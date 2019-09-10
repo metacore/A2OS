@@ -17,17 +17,17 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetSendReady*(): BOOLEAN; 
-		PROCEDURE ^ GetReplyCode*(VAR code: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ SendCommand*(CONST cmd, arg: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ Open*(CONST server, thisHost: ARRAY OF CHAR; port: LONGINT; VAR result: WORD); 
+		PROCEDURE ^ GetReplyCode*(VAR code: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ SendCommand*(CONST cmd, arg: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Open*(CONST server, thisHost: ARRAY OF CHAR; port: SIGNED32; VAR result: INTEGER); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ StartMailFrom*(CONST fromAddr: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ SendTo*(CONST toAddr: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ StartData*(): BOOLEAN; 
-		PROCEDURE ^ PrepareToSend*(m: Mail.Message; VAR result: LONGINT); 
+		PROCEDURE ^ PrepareToSend*(m: Mail.Message; VAR result: SIGNED32); 
 		PROCEDURE ^ SendRawLine*(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ FinishSendRaw*(): BOOLEAN; 
-		PROCEDURE ^ SendComplete*(m: Mail.Message; VAR result: LONGINT); 
+		PROCEDURE ^ SendComplete*(m: Mail.Message; VAR result: SIGNED32); 
 	END SMTPSession; 
 BEGIN
 END SMTPClient.

@@ -9,15 +9,15 @@ TYPE
 	Context* = POINTER TO ContextDesc; 
 
 	ContextDesc* = RECORD (GfxRaster.ContextDesc)
-		orgX*, orgY*: REAL; 
-		scale*: REAL; 
+		orgX*, orgY*: FLOAT32; 
+		scale*: FLOAT32; 
 		defClip*: GfxRegions.Region; 
 		prcol: Gfx.Color; 
 	END; 
 
 	RegData = RECORD (GfxRegions.EnumData)
 		pc: Context; 
-		dx, dy: INTEGER; 
+		dx, dy: SIGNED16; 
 		img: Images.Image; 
 		col: Images.Pixel; 
 	END; 
@@ -26,20 +26,20 @@ VAR
 	White: Images.Pixel; 
 
 	PROCEDURE ^ UseColor(pc: Context; col: Gfx.Color); 
-	PROCEDURE ^ Color(llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData); 
-	PROCEDURE ^ Tile(llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData); 
-	PROCEDURE ^ Dot(rc: GfxRaster.Context; x, y: LONGINT); 
-	PROCEDURE ^ Rect(rc: GfxRaster.Context; llx, lly, urx, ury: LONGINT); 
+	PROCEDURE ^ Color(llx, lly, urx, ury: SIGNED16; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ Tile(llx, lly, urx, ury: SIGNED16; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ Dot(rc: GfxRaster.Context; x, y: SIGNED32); 
+	PROCEDURE ^ Rect(rc: GfxRaster.Context; llx, lly, urx, ury: SIGNED32); 
 	PROCEDURE ^ SetColPat(rc: GfxRaster.Context; col: Gfx.Color; pat: Gfx.Pattern); 
 	PROCEDURE ^ ResetCTM(ctxt: Gfx.Context); 
 	PROCEDURE ^ ResetClip(ctxt: Gfx.Context); 
-	PROCEDURE ^ Show(ctxt: Gfx.Context; x, y: REAL; VAR str: ARRAY OF CHAR); 
-	PROCEDURE ^ Image(ctxt: Gfx.Context; x, y: REAL; img: Images.Image; VAR filter: GfxImages.Filter); 
-	PROCEDURE ^ NewPattern(ctxt: Gfx.Context; img: Images.Image; px, py: REAL): Gfx.Pattern; 
+	PROCEDURE ^ Show(ctxt: Gfx.Context; x, y: FLOAT32; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ Image(ctxt: Gfx.Context; x, y: FLOAT32; img: Images.Image; VAR filter: GfxImages.Filter); 
+	PROCEDURE ^ NewPattern(ctxt: Gfx.Context; img: Images.Image; px, py: FLOAT32): Gfx.Pattern; 
 	PROCEDURE ^ InitMethods; 
-	PROCEDURE ^ SetClipRect*(pc: Context; llx, lly, urx, ury: INTEGER); 
+	PROCEDURE ^ SetClipRect*(pc: Context; llx, lly, urx, ury: SIGNED16); 
 	PROCEDURE ^ SetClipRegion*(pc: Context; reg: GfxRegions.Region); 
-	PROCEDURE ^ SetCoordinates*(pc: Context; x, y, scale: REAL); 
+	PROCEDURE ^ SetCoordinates*(pc: Context; x, y, scale: FLOAT32); 
 	PROCEDURE ^ Init*(pc: Context); 
 BEGIN
 END GfxPrinter.

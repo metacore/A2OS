@@ -72,7 +72,7 @@ TYPE
 	VAR 
 		ctx: ShellCommands.Context; 
 		line: ARRAY (MaxLine + 1) OF CHAR; 
-		pos, len: LONGINT; 
+		pos, len: SIGNED32; 
 		term: ARRAY 32 OF CHAR; 
 
 		PROCEDURE ^ WILL*(option: CHAR); 

@@ -3,7 +3,7 @@ MODULE CryptoSHA1;
 CONST 
 	BlockSize = 64; 
 TYPE 
-	State = ARRAY 5 OF LONGINT; 
+	State = ARRAY 5 OF SIGNED32; 
 
 	Hash* = OBJECT (Hashes.Hash)
 	VAR 
@@ -20,24 +20,24 @@ TYPE
 	END Hash; 
 
 	PROCEDURE ^ NewHash*(): Hashes.Hash; 
-	PROCEDURE  - tr0019(a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR f: LONGINT; x: SET32);
+	PROCEDURE  - tr0019(a: SIGNED32; VAR b: SIGNED32; c, d, e: SIGNED32; VAR f: SIGNED32; x: SET32);
 	BEGIN
-		f := ((((S.VAL(LONGINT, x) + e) + 1518500249) + ROT(a, 5)) + S.VAL(LONGINT, (((S.VAL(SET32, c) / S.VAL(SET32, d)) * S.VAL(SET32, b)) / S.VAL(SET32, d)))); 
+		f := ((((S.VAL(SIGNED32, x) + e) + 1518500249) + ROT(a, 5)) + S.VAL(SIGNED32, (((S.VAL(SET32, c) / S.VAL(SET32, d)) * S.VAL(SET32, b)) / S.VAL(SET32, d)))); 
 		b := ROT(b, 30)
 	END tr0019; 
-	PROCEDURE  - tr2039(a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR f: LONGINT; x: SET32);
+	PROCEDURE  - tr2039(a: SIGNED32; VAR b: SIGNED32; c, d, e: SIGNED32; VAR f: SIGNED32; x: SET32);
 	BEGIN
-		f := ((((S.VAL(LONGINT, x) + e) + 1859775393) + ROT(a, 5)) + S.VAL(LONGINT, ((S.VAL(SET32, b) / S.VAL(SET32, c)) / S.VAL(SET32, d)))); 
+		f := ((((S.VAL(SIGNED32, x) + e) + 1859775393) + ROT(a, 5)) + S.VAL(SIGNED32, ((S.VAL(SET32, b) / S.VAL(SET32, c)) / S.VAL(SET32, d)))); 
 		b := ROT(b, 30)
 	END tr2039; 
-	PROCEDURE  - tr4059(a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR f: LONGINT; x: SET32);
+	PROCEDURE  - tr4059(a: SIGNED32; VAR b: SIGNED32; c, d, e: SIGNED32; VAR f: SIGNED32; x: SET32);
 	BEGIN
-		f := ((((S.VAL(LONGINT, x) + e) + LONGINT(2400959708)) + ROT(a, 5)) + S.VAL(LONGINT, ((S.VAL(SET32, b) * S.VAL(SET32, c)) + ((S.VAL(SET32, b) + S.VAL(SET32, c)) * S.VAL(SET32, d))))); 
+		f := ((((S.VAL(SIGNED32, x) + e) + SIGNED32(2400959708)) + ROT(a, 5)) + S.VAL(SIGNED32, ((S.VAL(SET32, b) * S.VAL(SET32, c)) + ((S.VAL(SET32, b) + S.VAL(SET32, c)) * S.VAL(SET32, d))))); 
 		b := ROT(b, 30)
 	END tr4059; 
-	PROCEDURE  - tr6079(a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR f: LONGINT; x: SET32);
+	PROCEDURE  - tr6079(a: SIGNED32; VAR b: SIGNED32; c, d, e: SIGNED32; VAR f: SIGNED32; x: SET32);
 	BEGIN
-		f := ((((S.VAL(LONGINT, x) + e) + LONGINT(3395469782)) + ROT(a, 5)) + S.VAL(LONGINT, ((S.VAL(SET32, b) / S.VAL(SET32, c)) / S.VAL(SET32, d)))); 
+		f := ((((S.VAL(SIGNED32, x) + e) + SIGNED32(3395469782)) + ROT(a, 5)) + S.VAL(SIGNED32, ((S.VAL(SET32, b) / S.VAL(SET32, c)) / S.VAL(SET32, d)))); 
 		b := ROT(b, 30)
 	END tr6079; 
 	PROCEDURE ^ HashBlock(VAR state: State; CONST buf: ARRAY OF CHAR; pos: SIZE); 

@@ -10,7 +10,7 @@ TYPE
 	Selection* = POINTER TO SelDesc; 
 
 	SelDesc* = RECORD (Objects.ObjDesc)
-		x*, y*, w*, h*: LONGREAL; 
+		x*, y*, w*, h*: FLOAT64; 
 	END; 
 
 	tCoordinate2d* = POINTER TO tCoordinate2dDesc; 
@@ -24,7 +24,7 @@ TYPE
 	END; 
 
 	CoordRgnMessage* = RECORD (CoordinateMessage)
-		X*, Y*, W*, H*: INTEGER; 
+		X*, Y*, W*, H*: SIGNED16; 
 	END; 
 
 	CoordSetMessage* = RECORD (CoordinateMessage)
@@ -32,14 +32,14 @@ TYPE
 
 	CoordZoomMessage* = RECORD (CoordinateMessage)
 		in*: BOOLEAN; 
-		x*, y*, w*, h*: INTEGER; 
+		x*, y*, w*, h*: SIGNED16; 
 	END; 
 
 	AdjustCoordMsg* = RECORD (CoordinateMessage)
 	END; 
 
 	ttt = RECORD 
-		x, y, dx, dy: INTEGER; 
+		x, y, dx, dy: SIGNED16; 
 		c: tCoordinate2d; 
 	END; 
 VAR 
@@ -48,15 +48,15 @@ VAR
 	passevent: BOOLEAN; 
 
 	PROCEDURE ^ ShiftCoordinate(c: tCoordinate2d; event: vyEvents.EventMsg); 
-	PROCEDURE ^ GrowRectangleRL*(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
-	PROCEDURE ^ AdjustRect(VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ GrowRectangleRL*(x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
+	PROCEDURE ^ AdjustRect(VAR x, y, w, h: SIGNED16); 
 	PROCEDURE ^ zoomin; 
 	PROCEDURE ^ zoomout; 
-	PROCEDURE ^ AdjustRectR(VAR x, y, w, h: LONGREAL); 
+	PROCEDURE ^ AdjustRectR(VAR x, y, w, h: FLOAT64); 
 	PROCEDURE ^ usecurrentsel; 
 	PROCEDURE ^ removesel; 
 	PROCEDURE ^ selectlayer; 
-	PROCEDURE ^ MakeSel*(c: tCoordinate2d; sel: Selection; x, y, w, h: INTEGER); 
+	PROCEDURE ^ MakeSel*(c: tCoordinate2d; sel: Selection; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ Select(c: tCoordinate2d; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ CopyC2d*(source, dest: tCoordinate2d); 
 	PROCEDURE ^ DoHandleC2dAttributes(o: tCoordinate2d; VAR M: Objects.AttrMsg); 

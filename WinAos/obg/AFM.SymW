@@ -3,7 +3,7 @@ MODULE AFM;
 CONST 
 TYPE 
 	CharInfo = RECORD 
-		w: LONGINT; 
+		w: SIGNED32; 
 	END; 
 
 	FontMetrics* = OBJECT 
@@ -11,16 +11,16 @@ TYPE
 		chars: ARRAY 256 OF CharInfo; 
 		fontName: ARRAY 64 OF CHAR; 
 
-		PROCEDURE ^ AddCharInfo(ucs: LONGINT; ci: CharInfo); 
-		PROCEDURE ^ InternalGetWidth(ucs: LONGINT): LONGINT; 
-		PROCEDURE ^ GetWidth*(size: REAL; ucs: LONGINT): REAL; 
-		PROCEDURE ^ Kerning(ucs0, ucs1: LONGINT): LONGINT; 
-		PROCEDURE ^ GetStringWidth*(size: REAL; str: ARRAY OF CHAR): REAL; 
-		PROCEDURE ^ LoadAFM(filename: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ AddCharInfo(ucs: SIGNED32; ci: CharInfo); 
+		PROCEDURE ^ InternalGetWidth(ucs: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetWidth*(size: FLOAT32; ucs: SIGNED32): FLOAT32; 
+		PROCEDURE ^ Kerning(ucs0, ucs1: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetStringWidth*(size: FLOAT32; str: ARRAY OF CHAR): FLOAT32; 
+		PROCEDURE ^ LoadAFM(filename: ARRAY OF CHAR; VAR res: INTEGER); 
 	END FontMetrics; 
 VAR 
 	times*, helvetica*, helveticaBold*: FontMetrics; 
-	res: WORD; 
+	res: INTEGER; 
 
 BEGIN
 END AFM.

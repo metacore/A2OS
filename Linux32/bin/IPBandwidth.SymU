@@ -9,7 +9,7 @@ TYPE
 		context: Commands.Context; 
 		diagnostics: Diagnostics.StreamDiagnostics; 
 		hostname: DNS.Name; 
-		port, result: WORD; 
+		port, result: INTEGER; 
 		address: IP.Adr; 
 		buffer: ARRAY 65000 OF CHAR; 
 

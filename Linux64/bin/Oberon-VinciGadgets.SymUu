@@ -6,20 +6,20 @@ TYPE
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
 		body*: Scheme.Object; 
-		ox*, oy*: INTEGER; 
-		scale*: REAL; 
+		ox*, oy*: SIGNED16; 
+		scale*: FLOAT32; 
 	END; 
 VAR 
 	DC: GfxDisplay.Context; 
 	ClipReg: GfxRegions.Region; 
 	W: Texts.Writer; 
 
-	PROCEDURE ^ Parse*(text: Texts.Text; pos: LONGINT; VAR body: Scheme.Object); 
+	PROCEDURE ^ Parse*(text: Texts.Text; pos: SIGNED32; VAR body: Scheme.Object); 
 	PROCEDURE ^ Evaluate*(frame: Frame; gc: Gfx.Context); 
-	PROCEDURE ^ AddMaskRect(x, y, w, h: INTEGER); 
-	PROCEDURE ^ RestoreFrame(frame: Frame; x, y, w, h, fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ AddMaskRect(x, y, w, h: SIGNED16); 
+	PROCEDURE ^ RestoreFrame(frame: Frame; x, y, w, h, fx, fy: SIGNED16; mask: Display3.Mask); 
 	PROCEDURE ^ DisplayFrame(frame: Frame; VAR msg: Display.DisplayMsg); 
-	PROCEDURE ^ TrackRect(frame: Frame; mx, my: INTEGER; keys: SET; VAR x, y, w, h: INTEGER; VAR keysum: SET); 
+	PROCEDURE ^ TrackRect(frame: Frame; mx, my: SIGNED16; keys: SET; VAR x, y, w, h: SIGNED16; VAR keysum: SET); 
 	PROCEDURE ^ TrackZoomIn(frame: Frame; VAR msg: Oberon.InputMsg); 
 	PROCEDURE ^ TrackZoomOut(frame: Frame; VAR msg: Oberon.InputMsg); 
 	PROCEDURE ^ TrackMove(frame: Frame; VAR msg: Oberon.InputMsg); 

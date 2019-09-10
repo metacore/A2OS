@@ -19,27 +19,27 @@ TYPE
 	enumMsg* = RECORD (Objects.ObjMsg)
 		Enum*: enumProc; 
 		EnumSender*: enumProc; 
-		mode*: INTEGER; 
-		x*, y*: INTEGER; 
+		mode*: SIGNED16; 
+		x*, y*: SIGNED16; 
 	END; 
 VAR 
 	dynamic*: List; 
 	msg*: enumMsg; 
 	res*: vyTracking.List; 
-	recentx*, recenty*: INTEGER; 
+	recentx*, recenty*: SIGNED16; 
 	noWait*: BOOLEAN; 
 	current*: List; 
-	currentmode*: INTEGER; 
+	currentmode*: SIGNED16; 
 
 	PROCEDURE ^ GetCopy(l: List): List; 
 	PROCEDURE ^ Add*(VAR l: List; command: PROC; name: ARRAY OF CHAR); 
 	PROCEDURE ^ Prev(VAR l: List; command: PROC; name: ARRAY OF CHAR); 
 	PROCEDURE ^ AddGeneric(name: ARRAY OF CHAR; cmd: PROC; obj: Objects.Object); 
 	PROCEDURE ^ AddSender(name: ARRAY OF CHAR; cmd: PROC; obj: Objects.Object); 
-	PROCEDURE ^ Init*(VAR l: List; atx, aty: INTEGER); 
+	PROCEDURE ^ Init*(VAR l: List; atx, aty: SIGNED16); 
 	PROCEDURE ^ Ask*(obj: Objects.Object); 
 	PROCEDURE ^ Wait*; 
-	PROCEDURE ^ ExecuteListedCommand*(atx, aty: INTEGER; VAR event: vyEvents.EventMsg; from: List); 
-	PROCEDURE ^ Execute*(atx, aty: INTEGER); 
+	PROCEDURE ^ ExecuteListedCommand*(atx, aty: SIGNED16; VAR event: vyEvents.EventMsg; from: List); 
+	PROCEDURE ^ Execute*(atx, aty: SIGNED16); 
 BEGIN
 END vyCommandMenus.

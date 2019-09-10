@@ -17,38 +17,38 @@ TYPE
 	Buffer* = ARRAY BlockSize OF CHAR; 
 
 	Block* = RECORD 
-		lba*: LONGINT; 
-		cylinder*, head*, sector*: LONGINT; 
+		lba*: SIGNED32; 
+		cylinder*, head*, sector*: SIGNED32; 
 	END; 
 
 	Partition* = RECORD 
 		flag*: CHAR; 
-		type*: LONGINT; 
+		type*: SIGNED32; 
 		start*, end*: Block; 
-		size*: LONGINT; 
+		size*: SIGNED32; 
 	END; 
 
 	PartitionTable* = ARRAY 4 OF Partition; 
 
 	DiskGeometry = RECORD 
-		cylinders, headsPerCylinder, sectorsPerTrack: LONGINT; 
+		cylinders, headsPerCylinder, sectorsPerTrack: SIGNED32; 
 	END; 
 
 	PROCEDURE ^ GetDevice(CONST devicename: ARRAY OF CHAR): Disks.Device; 
-	PROCEDURE ^ GetDiskGeometry(CONST devicename: ARRAY OF CHAR; VAR diskGeometry: DiskGeometry; VAR res: WORD); 
-	PROCEDURE ^ ReadBlock*(CONST devicename: ARRAY OF CHAR; block: LONGINT; VAR buffer: Buffer; VAR res: WORD); 
-	PROCEDURE ^ WriteBlock*(CONST devicename: ARRAY OF CHAR; block: LONGINT; VAR buffer: Buffer; VAR res: WORD); 
+	PROCEDURE ^ GetDiskGeometry(CONST devicename: ARRAY OF CHAR; VAR diskGeometry: DiskGeometry; VAR res: INTEGER); 
+	PROCEDURE ^ ReadBlock*(CONST devicename: ARRAY OF CHAR; block: SIGNED32; VAR buffer: Buffer; VAR res: INTEGER); 
+	PROCEDURE ^ WriteBlock*(CONST devicename: ARRAY OF CHAR; block: SIGNED32; VAR buffer: Buffer; VAR res: INTEGER); 
 	PROCEDURE ^ HasSignature*(CONST buffer: Buffer): BOOLEAN; 
 	PROCEDURE ^ WriteSignature(VAR buffer: Buffer); 
-	PROCEDURE ^ Get4(CONST buffer: ARRAY OF CHAR; offset: LONGINT): LONGINT; 
-	PROCEDURE ^ Put4(VAR buffer: ARRAY OF CHAR; value, offset: LONGINT); 
-	PROCEDURE ^ LoadPartitionTable*(CONST devicename: ARRAY OF CHAR; block: LONGINT; VAR res: WORD): PartitionTable; 
-	PROCEDURE ^ ParseBuffer*(CONST buffer: Buffer; VAR res: WORD): PartitionTable; 
-	PROCEDURE ^ StorePartitionTable*(CONST devicename: ARRAY OF CHAR; block: LONGINT; CONST pt: PartitionTable; VAR res: WORD); 
+	PROCEDURE ^ Get4(CONST buffer: ARRAY OF CHAR; offset: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Put4(VAR buffer: ARRAY OF CHAR; value, offset: SIGNED32); 
+	PROCEDURE ^ LoadPartitionTable*(CONST devicename: ARRAY OF CHAR; block: SIGNED32; VAR res: INTEGER): PartitionTable; 
+	PROCEDURE ^ ParseBuffer*(CONST buffer: Buffer; VAR res: INTEGER): PartitionTable; 
+	PROCEDURE ^ StorePartitionTable*(CONST devicename: ARRAY OF CHAR; block: SIGNED32; CONST pt: PartitionTable; VAR res: INTEGER); 
 	PROCEDURE ^ WriteToBuffer*(CONST pt: PartitionTable; VAR buffer: Buffer); 
-	PROCEDURE ^ Lba2Chs(lba: LONGINT; VAR c, h, s: LONGINT; geometry: DiskGeometry); 
-	PROCEDURE ^ Chs2Lba(c, h, s: LONGINT; VAR lba: LONGINT; geometry: DiskGeometry); 
-	PROCEDURE ^ Changed*(changeType: LONGINT; VAR partition: Partition; CONST devicename: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ Lba2Chs(lba: SIGNED32; VAR c, h, s: SIGNED32; geometry: DiskGeometry); 
+	PROCEDURE ^ Chs2Lba(c, h, s: SIGNED32; VAR lba: SIGNED32; geometry: DiskGeometry); 
+	PROCEDURE ^ Changed*(changeType: SIGNED32; VAR partition: Partition; CONST devicename: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ Clear*(VAR partitionTable: PartitionTable); 
 BEGIN
 END PartitionEditorTable.

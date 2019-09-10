@@ -18,18 +18,18 @@ CONST
 TYPE 
 	Writer* = RECORD 
 		file-: Files.File; 
-		res-: LONGINT; 
-		start: LONGINT; 
-		pos: LONGINT; 
+		res-: SIGNED32; 
+		start: SIGNED32; 
+		pos: SIGNED32; 
 		zw: ZlibWriters.Writer; 
 	END; 
 
 	PROCEDURE ^ WriteHeader(VAR w: Writer; VAR r: Files.Rider); 
-	PROCEDURE ^ SetParams*(VAR w: Writer; level, strategy: SHORTINT); 
-	PROCEDURE ^ Open*(VAR w: Writer; level, strategy: SHORTINT; file: Files.File); 
-	PROCEDURE ^ WriteBytes*(VAR w: Writer; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR written: LONGINT); 
+	PROCEDURE ^ SetParams*(VAR w: Writer; level, strategy: SIGNED8); 
+	PROCEDURE ^ Open*(VAR w: Writer; level, strategy: SIGNED8; file: Files.File); 
+	PROCEDURE ^ WriteBytes*(VAR w: Writer; VAR buf: ARRAY OF CHAR; offset, len: SIGNED32; VAR written: SIGNED32); 
 	PROCEDURE ^ Write*(VAR w: Writer; ch: CHAR); 
 	PROCEDURE ^ Close*(VAR w: Writer); 
-	PROCEDURE ^ Pos*(VAR w: Writer): LONGINT; 
+	PROCEDURE ^ Pos*(VAR w: Writer): SIGNED32; 
 BEGIN
 END GZWriters.

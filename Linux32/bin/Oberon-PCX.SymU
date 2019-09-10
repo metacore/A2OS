@@ -4,17 +4,17 @@ CONST
 TYPE 
 	PCXHeader = RECORD 
 		creator, version, encoding, bits: CHAR; 
-		xMin, yMin, xMax, yMax, hRes, vRes: INTEGER; 
-		palPos, picPos: LONGINT; 
+		xMin, yMin, xMax, yMax, hRes, vRes: SIGNED16; 
+		palPos, picPos: SIGNED32; 
 		vMode, planes: CHAR; 
-		bytesPerLine, paletteInfo: INTEGER; 
+		bytesPerLine, paletteInfo: SIGNED16; 
 	END; 
 VAR 
-	colorMap: ARRAY 256 OF INTEGER; 
+	colorMap: ARRAY 256 OF SIGNED16; 
 
 	PROCEDURE ^ ReadPCXHeader(VAR R: Files.Rider; VAR pcxh: PCXHeader): BOOLEAN; 
-	PROCEDURE ^ ScanCol(VAR R: Files.Rider; pict: Pictures.Picture; nrColor: LONGINT; conversion: BOOLEAN); 
-	PROCEDURE ^ LoadPCX(VAR R: Files.Rider; transparentCol: INTEGER; colorConversion: BOOLEAN; pict: Pictures.Picture); 
+	PROCEDURE ^ ScanCol(VAR R: Files.Rider; pict: Pictures.Picture; nrColor: SIGNED32; conversion: BOOLEAN); 
+	PROCEDURE ^ LoadPCX(VAR R: Files.Rider; transparentCol: SIGNED16; colorConversion: BOOLEAN; pict: Pictures.Picture); 
 	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ InitPicture*; 
 	PROCEDURE ^ NewPicture*; 

@@ -5,30 +5,30 @@ TYPE
 	tZoom* = POINTER TO tZoomDesc; 
 
 	tZoomDesc* = RECORD 
-		x-, y-, dx-, dy-: INTEGER; 
+		x-, y-, dx-, dy-: SIGNED16; 
 		next: tZoom; 
 	END; 
 
 	Selection* = POINTER TO SelectionDesc; 
 
 	SelectionDesc* = RECORD (vyDisplay2d.SelDesc)
-		px*, py*, pw*, ph*: INTEGER; 
+		px*, py*, pw*, ph*: SIGNED16; 
 	END; 
 
 	tCoordinate* = POINTER TO tCoordinateDesc; 
 
 	tCoordinateDesc* = RECORD (vyDisplay2d.tCoordinate2dDesc)
-		x-, y-, dx-, dy-, X-, Y-, W-, H-: INTEGER; 
-		vx-, vy-, px-, py-, pw-, ph-: INTEGER; 
+		x-, y-, dx-, dy-, X-, Y-, W-, H-: SIGNED16; 
+		vx-, vy-, px-, py-, pw-, ph-: SIGNED16; 
 		zoom: tZoom; 
-		pictW*, pictH*: INTEGER; 
+		pictW*, pictH*: SIGNED16; 
 		fixed*, free*: BOOLEAN; 
 		p*: Pictures.Picture; 
 		i*: Images.Image; 
 	END; 
 
 	ttt = RECORD 
-		x, y, dx, dy: INTEGER; 
+		x, y, dx, dy: SIGNED16; 
 		c: tCoordinate; 
 	END; 
 VAR 
@@ -38,31 +38,31 @@ VAR
 	passevent: BOOLEAN; 
 	globalHost: Objects.Object; 
 
-	PROCEDURE ^ GrowRectangleRL*(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
-	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
-	PROCEDURE ^ Max(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ GrowRectangleRL*(x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
+	PROCEDURE ^ Min(a, b: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Max(a, b: SIGNED32): SIGNED32; 
 	PROCEDURE ^ ShiftCoordinate(c: tCoordinate; event: vyEvents.EventMsg); 
 	PROCEDURE ^ zoomin; 
 	PROCEDURE ^ zoomout; 
 	PROCEDURE ^ usecurrentsel; 
-	PROCEDURE ^ MakeSel*(cc: tCoordinate; sel: Selection; xx, yy, ww, hh: INTEGER); 
+	PROCEDURE ^ MakeSel*(cc: tCoordinate; sel: Selection; xx, yy, ww, hh: SIGNED16); 
 	PROCEDURE ^ removesel; 
 	PROCEDURE ^ selectlayer; 
 	PROCEDURE ^ Select(c: tCoordinate; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ ZoomOut(c: tCoordinate); 
-	PROCEDURE ^ AdjustRect(VAR x, y, w, h: INTEGER): BOOLEAN; 
-	PROCEDURE ^ GetXY*(c: tCoordinate; fromx, fromy: INTEGER; VAR x, y: INTEGER); 
-	PROCEDURE ^ ZoomIn(c: tCoordinate; x, y, w, h: INTEGER); 
+	PROCEDURE ^ AdjustRect(VAR x, y, w, h: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ GetXY*(c: tCoordinate; fromx, fromy: SIGNED16; VAR x, y: SIGNED16); 
+	PROCEDURE ^ ZoomIn(c: tCoordinate; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ IncSize*(c: tCoordinate); 
 	PROCEDURE ^ DecSize*(c: tCoordinate); 
-	PROCEDURE ^ Center*(w, h: INTEGER; c: tCoordinate); 
+	PROCEDURE ^ Center*(w, h: SIGNED16; c: tCoordinate); 
 	PROCEDURE ^ CopyC(source, dest: tCoordinate); 
 	PROCEDURE ^ CalcV(c: tCoordinate); 
 	PROCEDURE ^ WriteCoordinate*(VAR R: Files.Rider; VAR c: tCoordinate); 
 	PROCEDURE ^ ReadCoordinate*(VAR R: Files.Rider; VAR c: tCoordinate); 
 	PROCEDURE ^ DoHandleAttributes(o: tCoordinate; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ CHandler(o: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ OpenC*(c: tCoordinate; dx, dy: INTEGER); 
+	PROCEDURE ^ OpenC*(c: tCoordinate; dx, dy: SIGNED16); 
 	PROCEDURE ^ Gen*; 
 BEGIN
 END antsPictCoordinate.

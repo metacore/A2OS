@@ -60,7 +60,7 @@ TYPE
 		allowColResize-, allowRowResize-: WMProperties.BooleanProperty; 
 		adjustFocusPosition-: WMProperties.BooleanProperty; 
 		focus, focusCell, highlight: CellPos; 
-		selectionMode: WORD; 
+		selectionMode: INTEGER; 
 		selStart, selEnd: CellPos; 
 		selA: CellPos; 
 		selecting: BOOLEAN; 
@@ -93,8 +93,8 @@ TYPE
 		PROCEDURE ^ GetRowSpacings*(): Spacings; 
 		PROCEDURE ^ SetSelectOnPointerOver*(select: BOOLEAN); 
 		PROCEDURE ^ GetRowHeight*(i: SIZE): SIZE; 
-		PROCEDURE ^ SetSelectionMode*(mode: WORD); 
-		PROCEDURE ^ GetSelectionMode*(): WORD; 
+		PROCEDURE ^ SetSelectionMode*(mode: INTEGER); 
+		PROCEDURE ^ GetSelectionMode*(): INTEGER; 
 		PROCEDURE ^ SetDrawCellProc*(dcp: DrawCellProc); 
 		PROCEDURE ^ GetFixedPixels*(VAR w, h: SIZE); 
 		PROCEDURE ^ SetCellSpansProc*(gcsp: GetCellSpansProc); 

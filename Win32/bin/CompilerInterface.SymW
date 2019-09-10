@@ -9,7 +9,7 @@ TYPE
 
 	FileExtension* = ARRAY 16 OF CHAR; 
 
-	CompileTextProc* = PROCEDURE {DELEGATE}(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	CompileTextProc* = PROCEDURE {DELEGATE}(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 
 	Compiler* = OBJECT 
 	VAR 
@@ -19,7 +19,7 @@ TYPE
 		compileText: CompileTextProc; 
 		next: Compiler; 
 
-		PROCEDURE ^ CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+		PROCEDURE ^ CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 		PROCEDURE ^ Show(out: Streams.Writer); 
 		PROCEDURE ^  & Init*(CONST name: Name; CONST description: Description; CONST fileExtension: FileExtension; compileText: CompileTextProc); 
 	END Compiler; 

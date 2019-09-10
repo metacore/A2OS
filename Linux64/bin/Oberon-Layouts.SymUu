@@ -48,7 +48,7 @@ TYPE
 	Node* = POINTER TO NodeDesc; 
 
 	NodeDesc* = RECORD 
-		id*: INTEGER; 
+		id*: SIGNED16; 
 		copy: PROCEDURE (node: Node):Node; 
 		dsc, last, next: Node; 
 	END; 
@@ -58,10 +58,10 @@ TYPE
 	ValNodeDesc = RECORD (NodeDesc)
 		str: POINTER TO ARRAY OF CHAR; 
 		char: CHAR; 
-		int, fills: LONGINT; 
-		real: REAL; 
+		int, fills: SIGNED32; 
+		real: FLOAT32; 
 		bool: BOOLEAN; 
-		format: INTEGER; 
+		format: SIGNED16; 
 		node: Node; 
 	END; 
 
@@ -76,22 +76,22 @@ TYPE
 
 	SizeProc = PROCEDURE (node: ObjNode); 
 
-	MakeProc = PROCEDURE (node: ObjNode; hfill, vfill: INTEGER); 
+	MakeProc = PROCEDURE (node: ObjNode; hfill, vfill: SIGNED16); 
 
-	IntLine = POINTER TO ARRAY OF INTEGER; 
+	IntLine = POINTER TO ARRAY OF SIGNED16; 
 
 	ObjNodeDesc = RECORD (NodeDesc)
 		obj: Objects.Object; 
-		type: INTEGER; 
+		type: SIGNED16; 
 		sized, made: BOOLEAN; 
-		x, y, w, h: INTEGER; 
-		row, col, spanw, spanh: INTEGER; 
-		minx, miny, minw, minh: INTEGER; 
-		hFactor, vFactor: INTEGER; 
+		x, y, w, h: SIGNED16; 
+		row, col, spanw, spanh: SIGNED16; 
+		minx, miny, minw, minh: SIGNED16; 
+		hFactor, vFactor: SIGNED16; 
 		gmaxw, gmaxh, hexpand, vexpand: IntLine; 
-		hfill, vfill: INTEGER; 
-		hdist, vdist, hborder, vborder: INTEGER; 
-		cols, rows: INTEGER; 
+		hfill, vfill: SIGNED16; 
+		hdist, vdist, hborder, vborder: SIGNED16; 
+		cols, rows: SIGNED16; 
 		format: SET; 
 		def, lastdef: AssignNode; 
 		size: SizeProc; 
@@ -112,17 +112,17 @@ VAR
 	PROCEDURE ^ Realize*(node: Node): Objects.Object; 
 	PROCEDURE ^ GetNodeRec(cur: AssignNode; val: Node): Node; 
 	PROCEDURE ^ GetNode(val: Node; firstTime: BOOLEAN): Node; 
-	PROCEDURE ^ NewValNode(type: INTEGER): ValNode; 
+	PROCEDURE ^ NewValNode(type: SIGNED16): ValNode; 
 	PROCEDURE ^ NewString*(str: ARRAY OF CHAR): Node; 
 	PROCEDURE ^ NewIdent*(str: ARRAY OF CHAR): Node; 
 	PROCEDURE ^ NewChar*(ch: CHAR): Node; 
-	PROCEDURE ^ NewInt*(int: LONGINT): Node; 
-	PROCEDURE ^ NewSize*(MinSize, ExpandFactor: INTEGER): Node; 
-	PROCEDURE ^ NewReal*(real: REAL): Node; 
+	PROCEDURE ^ NewInt*(int: SIGNED32): Node; 
+	PROCEDURE ^ NewSize*(MinSize, ExpandFactor: SIGNED16): Node; 
+	PROCEDURE ^ NewReal*(real: FLOAT32): Node; 
 	PROCEDURE ^ NewBool*(bool: BOOLEAN): Node; 
-	PROCEDURE ^ NewFormat*(sym: INTEGER): Node; 
-	PROCEDURE ^ NewNode*(id: INTEGER): Node; 
-	PROCEDURE ^ NewAssignNode(id: INTEGER; name: ARRAY OF CHAR; val: Node): Node; 
+	PROCEDURE ^ NewFormat*(sym: SIGNED16): Node; 
+	PROCEDURE ^ NewNode*(id: SIGNED16): Node; 
+	PROCEDURE ^ NewAssignNode(id: SIGNED16; name: ARRAY OF CHAR; val: Node): Node; 
 	PROCEDURE ^ NewSet*(Name: ARRAY OF CHAR; Value: Node): Node; 
 	PROCEDURE ^ NewDef*(Name: ARRAY OF CHAR; Value: Node): Node; 
 	PROCEDURE ^ NewObj(size: SizeProc; make: MakeProc; id: ARRAY OF CHAR): Node; 
@@ -134,29 +134,29 @@ VAR
 	PROCEDURE ^ Reset(node: ObjNode); 
 	PROCEDURE ^ FindIdents(node: Node); 
 	PROCEDURE ^ SizeOfNew(node: ObjNode); 
-	PROCEDURE ^ MakeNew(node: ObjNode; hfill, vfill: INTEGER); 
+	PROCEDURE ^ MakeNew(node: ObjNode; hfill, vfill: SIGNED16); 
 	PROCEDURE ^ SizeOfPlace(node: ObjNode); 
-	PROCEDURE ^ PlaceObjects(VAR last, obj: Objects.Object; w, h: INTEGER; VAR minx, miny: INTEGER); 
+	PROCEDURE ^ PlaceObjects(VAR last, obj: Objects.Object; w, h: SIGNED16; VAR minx, miny: SIGNED16); 
 	PROCEDURE ^ InsertObjects(node: ObjNode; obj: Objects.Object); 
-	PROCEDURE ^ MakePlace(node: ObjNode; hfill, vfill: INTEGER); 
-	PROCEDURE ^ CountRows(vert: BOOLEAN; obj: Node; cols: INTEGER; VAR rows: INTEGER); 
-	PROCEDURE ^ CalcSize(node: ObjNode; VAR minSize: INTEGER; VAR break: BOOLEAN); 
-	PROCEDURE ^ SetSize(VAR hfill, min, w: INTEGER; cols, minSize: INTEGER; VAR expand, max: IntLine; hor, sameWidth, setSize: BOOLEAN); 
+	PROCEDURE ^ MakePlace(node: ObjNode; hfill, vfill: SIGNED16); 
+	PROCEDURE ^ CountRows(vert: BOOLEAN; obj: Node; cols: SIGNED16; VAR rows: SIGNED16); 
+	PROCEDURE ^ CalcSize(node: ObjNode; VAR minSize: SIGNED16; VAR break: BOOLEAN); 
+	PROCEDURE ^ SetSize(VAR hfill, min, w: SIGNED16; cols, minSize: SIGNED16; VAR expand, max: IntLine; hor, sameWidth, setSize: BOOLEAN); 
 	PROCEDURE ^ SizeOfTable(node: ObjNode); 
-	PROCEDURE ^ FillCols(space, cols, fills: INTEGER; expand, max: IntLine; sameSize: BOOLEAN); 
-	PROCEDURE ^ SetOffset(cols, border, dist: INTEGER; VAR max, offset: IntLine); 
-	PROCEDURE ^ MakeTable(node: ObjNode; hfill, vfill: INTEGER); 
+	PROCEDURE ^ FillCols(space, cols, fills: SIGNED16; expand, max: IntLine; sameSize: BOOLEAN); 
+	PROCEDURE ^ SetOffset(cols, border, dist: SIGNED16; VAR max, offset: IntLine); 
+	PROCEDURE ^ MakeTable(node: ObjNode; hfill, vfill: SIGNED16); 
 	PROCEDURE ^ SizeOfTransient(node: ObjNode); 
-	PROCEDURE ^ MakeTransient(node: ObjNode; hfill, vfill: INTEGER); 
+	PROCEDURE ^ MakeTransient(node: ObjNode; hfill, vfill: SIGNED16); 
 	PROCEDURE ^ SizeOfConfig(node: ObjNode); 
-	PROCEDURE ^ MakeConfig(node: ObjNode; hfill, vfill: INTEGER); 
+	PROCEDURE ^ MakeConfig(node: ObjNode; hfill, vfill: SIGNED16); 
 	PROCEDURE ^ NewObject*(NewProc: ARRAY OF CHAR): Node; 
 	PROCEDURE ^ NewInstance*(Ident: ARRAY OF CHAR): Node; 
 	PROCEDURE ^ NewPlace*(NewProc: ARRAY OF CHAR): Node; 
 	PROCEDURE ^ NewHList*(NewProc: ARRAY OF CHAR): Node; 
 	PROCEDURE ^ NewVList*(NewProc: ARRAY OF CHAR): Node; 
 	PROCEDURE ^ NewTable*(NewProc: ARRAY OF CHAR): Node; 
-	PROCEDURE ^ NewSpan*(rows, cols: INTEGER): Node; 
+	PROCEDURE ^ NewSpan*(rows, cols: SIGNED16): Node; 
 	PROCEDURE ^ NewBreak*(): Node; 
 	PROCEDURE ^ NewConfig*(): Node; 
 	PROCEDURE ^ CopyPublicObj*(name: ARRAY OF CHAR; deep: BOOLEAN): Node; 

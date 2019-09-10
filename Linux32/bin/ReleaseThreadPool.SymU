@@ -36,12 +36,12 @@ TYPE
 	Worker = OBJECT {EXCLUSIVE} 
 	VAR 
 		job: Job; 
-		state: WORD; 
+		state: INTEGER; 
 		threadPool: ThreadPool; 
 		previous, next: Worker; 
 
 		PROCEDURE ^ SetJob(job: Job); 
-		PROCEDURE ^ SetState(state: WORD); 
+		PROCEDURE ^ SetState(state: INTEGER); 
 		PROCEDURE ^ DoJob; 
 		PROCEDURE ^ Terminate; 
 		PROCEDURE ^  & Init(threadPool: ThreadPool); 

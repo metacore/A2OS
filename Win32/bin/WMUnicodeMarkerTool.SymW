@@ -15,9 +15,9 @@ TYPE
 
 	ContextMenuData = OBJECT 
 	VAR 
-		val: LONGINT; 
+		val: SIGNED32; 
 
-		PROCEDURE ^  & New*(val: LONGINT); 
+		PROCEDURE ^  & New*(val: SIGNED32); 
 	END ContextMenuData; 
 
 	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -34,7 +34,7 @@ TYPE
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	ctxAlignLeft, ctxAlignCenter, ctxAlignRight, ctxAlignJustified: ContextMenuData; 
 	ctxRegular, ctxBold, ctxItalic, ctxBoldItalic: ContextMenuData; 
 

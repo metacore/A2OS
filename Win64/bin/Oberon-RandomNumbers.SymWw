@@ -1,10 +1,10 @@
 MODULE RandomNumbers IN Oberon;
 	IMPORT SYSTEM, Math IN A2, Oberon;
 VAR 
-	Z, t, d: LONGINT; 
+	Z, t, d: SIGNED32; 
 
-	PROCEDURE ^ Uniform*(): REAL; 
-	PROCEDURE ^ Exp*(mu: REAL): REAL; 
-	PROCEDURE ^ InitSeed*(seed: LONGINT); 
+	PROCEDURE ^ Uniform*(): FLOAT32; 
+	PROCEDURE ^ Exp*(mu: FLOAT32): FLOAT32; 
+	PROCEDURE ^ InitSeed*(seed: SIGNED32); 
 BEGIN
 END RandomNumbers.

@@ -27,16 +27,16 @@ TYPE
 		err: BOOLEAN; 
 	END; 
 
-	GetURLProc* = PROCEDURE (plugin: PlugIn; CONST url: ARRAY OF CHAR):LONGINT; 
+	GetURLProc* = PROCEDURE (plugin: PlugIn; CONST url: ARRAY OF CHAR):SIGNED32; 
 
-	PostURLProc* = PROCEDURE (plugin: PlugIn; CONST urlDest, urlSrc: ARRAY OF CHAR):LONGINT; 
+	PostURLProc* = PROCEDURE (plugin: PlugIn; CONST urlDest, urlSrc: ARRAY OF CHAR):SIGNED32; 
 
 	ErrorProc* = PROCEDURE (plugin: PlugIn; CONST msg1, msg2: ARRAY OF CHAR); 
 
 	Stream* = POINTER TO RECORD (Objects.Object)
 		file*: FileDir.FileName; 
 		url*: URLStr; 
-		state*: LONGINT; 
+		state*: SIGNED32; 
 	END; 
 
 	PROCEDURE ^ Error(plugin: PlugIn; CONST msg1, msg2: ARRAY OF CHAR); 
@@ -48,7 +48,7 @@ TYPE
 	PROCEDURE ^ AddURL(plugin: PlugIn; CONST url: ARRAY OF CHAR); 
 	PROCEDURE ^ UpdateStream*(plugin: PlugIn; stream: Stream); 
 	PROCEDURE ^ Requested*(plugin: PlugIn; CONST url: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ RequestURL*(plugin: Objects.Object; CONST url: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ RequestURL*(plugin: Objects.Object; CONST url: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ ProcessStream(plugin: PlugIn; stream: Stream); 
 	PROCEDURE ^ Handler*(plugin: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitPlugIn*(plugin: PlugIn); 

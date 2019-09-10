@@ -6,31 +6,31 @@ TYPE
 		gen*: vyRanBase.tRandom; 
 		error*: BOOLEAN; 
 		errormsg*: ARRAY 256 OF CHAR; 
-		pos*: LONGINT; 
-		temp*: LONGREAL; 
+		pos*: SIGNED32; 
+		temp*: FLOAT64; 
 	END; 
 
 	InitMsg* = RECORD (Msg)
 	END; 
 
 	StepMsg* = RECORD (Msg)
-		steps-: LONGINT; 
+		steps-: SIGNED32; 
 	END; 
 
 	Seed* = POINTER TO SeedDesc; 
 
 	SeedDesc* = RECORD 
-		pos-: LONGINT; 
+		pos-: SIGNED32; 
 		seed: vyRanBase.tSeed; 
-		seedval-: LONGINT; 
+		seedval-: SIGNED32; 
 		next-: Seed; 
 		prev-: Seed; 
 	END; 
 
 	Chain* = OBJECT (vyBase.Object)
 	VAR 
-		pos-: LONGINT; 
-		first, prev, next, last: LONGINT; 
+		pos-: SIGNED32; 
+		first, prev, next, last: SIGNED32; 
 		seed-: Seed; 
 		gen-: vyRanBase.tRandom; 
 		Kernels: vyLinks.Link; 
@@ -38,20 +38,20 @@ TYPE
 		initseed: vyRanBase.tSeed; 
 		error: BOOLEAN; 
 
-		PROCEDURE ^ forward*(n: LONGINT); 
-		PROCEDURE ^ moveTo*(pos: LONGINT); 
+		PROCEDURE ^ forward*(n: SIGNED32); 
+		PROCEDURE ^ moveTo*(pos: SIGNED32); 
 		PROCEDURE ^ toNext*(): BOOLEAN; 
 		PROCEDURE ^ toLast*; 
-		PROCEDURE ^ jumpTo*(to: LONGINT); 
+		PROCEDURE ^ jumpTo*(to: SIGNED32); 
 		PROCEDURE ^ toFirst*; 
 		PROCEDURE ^ repeat*; 
 		PROCEDURE ^ init*; 
 		PROCEDURE ^ Add*(Kernel: vyBase.Object); 
 		PROCEDURE ^ Remove*(Kernel: vyBase.Object); 
-		PROCEDURE ^ getKernel*(num: LONGINT): vyBase.Object; 
+		PROCEDURE ^ getKernel*(num: SIGNED32): vyBase.Object; 
 	END Chain; 
 
-	Transition* = PROCEDURE (c: Chain; n: LONGINT); 
+	Transition* = PROCEDURE (c: Chain; n: SIGNED32); 
 VAR 
 	stop*: BOOLEAN; 
 
@@ -63,14 +63,14 @@ VAR
 	PROCEDURE ^ ApplyInit(c: Chain; VAR error: BOOLEAN); 
 	PROCEDURE ^ Insert(VAR s: Seed; VAR temp: Seed); 
 	PROCEDURE ^ SyncSeed(c: Chain); 
-	PROCEDURE ^ GetMinPos(s: Seed; VAR pos: LONGINT); 
+	PROCEDURE ^ GetMinPos(s: Seed; VAR pos: SIGNED32); 
 	PROCEDURE ^ StoreSeed(VAR R: Files.Rider; s: Seed); 
 	PROCEDURE ^ LoadSeed(VAR R: Files.Rider; VAR s: Seed; allocs: vyRanBase.tRandom); 
 	PROCEDURE ^ Load(VAR R: Files.Rider; s: Chain); 
 	PROCEDURE ^ Store(VAR R: Files.Rider; s: Chain); 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ GetNextTo(VAR s: Seed; VAR pos: LONGINT); 
-	PROCEDURE ^ GetNextSeedPos(c: Chain; VAR pos: LONGINT); 
+	PROCEDURE ^ GetNextTo(VAR s: Seed; VAR pos: SIGNED32); 
+	PROCEDURE ^ GetNextSeedPos(c: Chain; VAR pos: SIGNED32); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ New*; 
 	PROCEDURE ^ DoApplyInit*(gen: vyRanBase.tRandom; c: Chain; kernel: vyBase.Object); 

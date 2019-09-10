@@ -16,7 +16,7 @@ CONST
 	FloatingPointCapability* = Global.FloatingPointCapability; 
 	TRMSCapability* = Global.TRMSCapability; 
 	TraceError = FALSE; 
-	BasePortAddress = LONGINT(4294967264); 
+	BasePortAddress = SIGNED32(4294967264); 
 	TraceSame = FALSE; 
 	CheckModules = 0; 
 	CheckParameters = 1; 
@@ -50,17 +50,17 @@ TYPE
 
 	Port* = OBJECT (Symbol)
 	VAR 
-		direction-: LONGINT; 
-		adr-: LONGINT; 
-		width-: LONGINT; 
+		direction-: SIGNED32; 
+		adr-: SIGNED32; 
+		width-: SIGNED32; 
 		delegate-: PortInstance; 
 		index-: SIZE; 
 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
-		PROCEDURE ^  & InitPort*(CONST name: ARRAY OF CHAR; scope: Scope; direction: LONGINT; adr: LONGINT); 
-		PROCEDURE ^ SetWidth*(widthInBits: LONGINT); 
+		PROCEDURE ^  & InitPort*(CONST name: ARRAY OF CHAR; scope: Scope; direction: SIGNED32; adr: SIGNED32); 
+		PROCEDURE ^ SetWidth*(widthInBits: SIGNED32); 
 		PROCEDURE ^ Delegate*(instance: Instance; port: Port); 
-		PROCEDURE ^ Write*(w: Streams.Writer; indent: LONGINT); 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
 		PROCEDURE ^ Read*(r: Streams.Reader): BOOLEAN; 
 	END Port; 
 
@@ -74,12 +74,12 @@ TYPE
 
 	Device* = OBJECT (Symbol)
 	VAR 
-		adr-: LONGINT; 
+		adr-: SIGNED32; 
 		index-: SIZE; 
 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
-		PROCEDURE ^  & InitDevice*(CONST name: ARRAY OF CHAR; scope: Scope; adr: LONGINT); 
-		PROCEDURE ^ Write*(w: Streams.Writer; indent: LONGINT); 
+		PROCEDURE ^  & InitDevice*(CONST name: ARRAY OF CHAR; scope: Scope; adr: SIGNED32); 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
 		PROCEDURE ^ Read*(r: Streams.Reader): BOOLEAN; 
 	END Device; 
 
@@ -98,7 +98,7 @@ TYPE
 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
 		PROCEDURE ^  & InitModule(CONST name: ARRAY OF CHAR; scope: Scope; CONST fileName: ARRAY OF CHAR); 
-		PROCEDURE ^ Write*(w: Streams.Writer; indent: LONGINT); 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
 		PROCEDURE ^ Read*(r: Streams.Reader): BOOLEAN; 
 	END Module; 
 
@@ -117,17 +117,17 @@ TYPE
 		String = 2; 
 	VAR 
 		index-: SIZE; 
-		parameterType-: SHORTINT; 
-		integer-: LONGINT; 
+		parameterType-: SIGNED8; 
+		integer-: SIGNED32; 
 		boolean-: BOOLEAN; 
 		string-: Strings.String; 
 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
 		PROCEDURE ^  & Init(CONST name: ARRAY OF CHAR; scope: Scope); 
 		PROCEDURE ^ SetBoolean*(b: BOOLEAN); 
-		PROCEDURE ^ SetInteger*(i: LONGINT); 
+		PROCEDURE ^ SetInteger*(i: SIGNED32); 
 		PROCEDURE ^ SetString*(CONST s: ARRAY OF CHAR); 
-		PROCEDURE ^ Write(w: Streams.Writer; indent: LONGINT); 
+		PROCEDURE ^ Write(w: Streams.Writer; indent: SIGNED32); 
 		PROCEDURE ^ Read(r: Streams.Reader): BOOLEAN; 
 	END Parameter; 
 
@@ -145,18 +145,18 @@ TYPE
 		parameters-: ParameterList; 
 		capabilityParameters-: ParameterList; 
 		index-: SIZE; 
-		instructionMemorySize-, dataMemorySize-: LONGINT; 
+		instructionMemorySize-, dataMemorySize-: SIGNED32; 
 		capabilities-: SET; 
 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
 		PROCEDURE ^ IsEngine*(): BOOLEAN; 
 		PROCEDURE ^  & Init(CONST name: ARRAY OF CHAR; scope: Scope; c: Type); 
 		PROCEDURE ^ SetType(type: Type); 
-		PROCEDURE ^ SetInstructionMemorySize*(value: LONGINT); 
-		PROCEDURE ^ SetDataMemorySize*(value: LONGINT); 
+		PROCEDURE ^ SetInstructionMemorySize*(value: SIGNED32); 
+		PROCEDURE ^ SetDataMemorySize*(value: SIGNED32); 
 		PROCEDURE ^ AddParameter*(CONST name: ARRAY OF CHAR): Parameter; 
 		PROCEDURE ^ AddCapabilityParameter*(CONST name: ARRAY OF CHAR): Parameter; 
-		PROCEDURE ^ Write(w: Streams.Writer; indent: LONGINT); 
+		PROCEDURE ^ Write(w: Streams.Writer; indent: SIGNED32); 
 		PROCEDURE ^ Read(r: Streams.Reader): BOOLEAN; 
 		PROCEDURE ^ AppendToMsg*(VAR msg: ARRAY OF CHAR); 
 	END Instance; 
@@ -188,7 +188,7 @@ TYPE
 		PROCEDURE ^ FindSymbol(CONST name: ARRAY OF CHAR; traverse: BOOLEAN): Symbol; 
 		PROCEDURE ^ NewInstance*(CONST name: ARRAY OF CHAR; type: Type): Instance; 
 		PROCEDURE ^ NewChannel*(): Channel; 
-		PROCEDURE ^ NewPort*(CONST name: ARRAY OF CHAR; direction: LONGINT; adr: LONGINT): Port; 
+		PROCEDURE ^ NewPort*(CONST name: ARRAY OF CHAR; direction: SIGNED32; adr: SIGNED32): Port; 
 		PROCEDURE ^ NewType*(CONST name: ARRAY OF CHAR): Type; 
 		PROCEDURE ^ ForEachInstanceDo*(method: InstanceMethod): BOOLEAN; 
 		PROCEDURE ^ ForEachTypeDo*(method: TypeMethod): BOOLEAN; 
@@ -198,18 +198,18 @@ TYPE
 	VAR 
 		devices-: DeviceList; 
 		modules-: ModuleList; 
-		instructionMemorySize-, dataMemorySize-: LONGINT; 
+		instructionMemorySize-, dataMemorySize-: SIGNED32; 
 		capabilities-: SET; 
 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
 		PROCEDURE ^  & InitType*(CONST name: ARRAY OF CHAR; scope: Scope); 
-		PROCEDURE ^ AddCapability*(capability: LONGINT); 
-		PROCEDURE ^ SetInstructionMemorySize*(value: LONGINT); 
-		PROCEDURE ^ SetDataMemorySize*(value: LONGINT); 
-		PROCEDURE ^ NewDevice*(CONST name: ARRAY OF CHAR; adr: LONGINT): Device; 
+		PROCEDURE ^ AddCapability*(capability: SIGNED32); 
+		PROCEDURE ^ SetInstructionMemorySize*(value: SIGNED32); 
+		PROCEDURE ^ SetDataMemorySize*(value: SIGNED32); 
+		PROCEDURE ^ NewDevice*(CONST name: ARRAY OF CHAR; adr: SIGNED32): Device; 
 		PROCEDURE ^ NewModule*(CONST moduleName, fileName: ARRAY OF CHAR): Module; 
 		PROCEDURE ^ Read(r: Streams.Reader): BOOLEAN; 
-		PROCEDURE ^ Write*(w: Streams.Writer; indent: LONGINT); 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
 	END Type; 
 
 	TypeList* = OBJECT (Basic.List)
@@ -223,18 +223,18 @@ TYPE
 	Channel* = OBJECT (Symbol)
 	VAR 
 		in-, out-: PortInstance; 
-		fifoSize-: LONGINT; 
-		widthInBits-: LONGINT; 
+		fifoSize-: SIGNED32; 
+		widthInBits-: SIGNED32; 
 		index-: SIZE; 
 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
 		PROCEDURE ^  & InitChannel(CONST name: ARRAY OF CHAR; scope: Scope); 
 		PROCEDURE ^ ConnectIn*(instance: Instance; port: Port); 
 		PROCEDURE ^ ConnectOut*(instance: Instance; port: Port); 
-		PROCEDURE ^ SetFifoSize*(size: LONGINT); 
-		PROCEDURE ^ SetWidth*(width: LONGINT); 
+		PROCEDURE ^ SetFifoSize*(size: SIGNED32); 
+		PROCEDURE ^ SetWidth*(width: SIGNED32); 
 		PROCEDURE ^ Read(r: Streams.Reader): BOOLEAN; 
-		PROCEDURE ^ Write*(w: Streams.Writer; indent: LONGINT); 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
 	END Channel; 
 
 	ChannelList* = OBJECT (Basic.List)
@@ -253,22 +253,22 @@ TYPE
 		log-: Streams.Writer; 
 		supportedDevices-: DeviceList; 
 		imports-: SymbolList; 
-		frequencyDivider-: LONGINT; 
+		frequencyDivider-: SIGNED32; 
 
-		PROCEDURE ^ AddDevice*(CONST name: ARRAY OF CHAR; adr: HUGEINT); 
+		PROCEDURE ^ AddDevice*(CONST name: ARRAY OF CHAR; adr: SIGNED64); 
 		PROCEDURE ^ Same*(as: Symbol; flags: SET): BOOLEAN; 
 		PROCEDURE ^ DefineDevices*(system: Global.System); 
 		PROCEDURE ^  & Init*(CONST name: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer); 
-		PROCEDURE ^ SetFrequencyDivider*(divider: LONGINT); 
+		PROCEDURE ^ SetFrequencyDivider*(divider: SIGNED32); 
 		PROCEDURE ^ AddImport*(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ SetInstructionSet*(CONST instructionSet: ARRAY OF CHAR); 
-		PROCEDURE ^ Write*(w: Streams.Writer; indent: LONGINT); 
+		PROCEDURE ^ Write*(w: Streams.Writer; indent: SIGNED32); 
 		PROCEDURE ^ Read*(r: Streams.Reader): BOOLEAN; 
-		PROCEDURE ^ GetPortAddress*(number: LONGINT): LONGINT; 
+		PROCEDURE ^ GetPortAddress*(number: SIGNED32): SIGNED32; 
 		PROCEDURE ^ Emit*(): BOOLEAN; 
 	END Specification; 
 
-	PROCEDURE ^ Indent(w: Streams.Writer; indent: LONGINT); 
+	PROCEDURE ^ Indent(w: Streams.Writer; indent: SIGNED32); 
 	PROCEDURE ^ CheckItem(VAR r: Streams.Reader; CONST name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetString(VAR r: Streams.Reader; VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetSet(VAR r: Streams.Reader; VAR set: SET): BOOLEAN; 

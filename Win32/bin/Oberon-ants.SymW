@@ -5,7 +5,7 @@ VAR
 	RR: antsReadWrite.Rider; 
 
 	PROCEDURE ^ Show*; 
-	PROCEDURE ^ getTimeSeries(x, y: LONGINT; o: Objects.Object; link: Objects.Object); 
+	PROCEDURE ^ getTimeSeries(x, y: SIGNED32; o: Objects.Object; link: Objects.Object); 
 	PROCEDURE ^ GetBrainTimeSeries*; 
 	PROCEDURE ^ GetRowCol*; 
 	PROCEDURE ^ NewVec*; 

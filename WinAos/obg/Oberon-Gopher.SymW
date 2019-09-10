@@ -11,24 +11,24 @@ CONST
 VAR 
 	W: Texts.Writer; 
 	proxyHost: ARRAY NetTools.ServerStrLen OF CHAR; 
-	proxyPort: INTEGER; 
+	proxyPort: SIGNED16; 
 	proxy: BOOLEAN; 
 
 	PROCEDURE ^ TextDoc(D: Documents.Document; C: NetSystem.Connection); 
 	PROCEDURE ^ CSODoc(D: Documents.Document; C: NetSystem.Connection); 
 	PROCEDURE ^ ReadLine(VAR R: Texts.Reader; VAR line: ARRAY OF CHAR); 
-	PROCEDURE ^ RegisterGopherAdr(host, selector, search: ARRAY OF CHAR; type: CHAR; port: INTEGER): LONGINT; 
-	PROCEDURE ^ SplitMenuLine(VAR line: ARRAY OF CHAR; desc: BOOLEAN; VAR type: CHAR; VAR selector, host: ARRAY OF CHAR; VAR port: LONGINT; VAR login, plus: BOOLEAN); 
-	PROCEDURE ^ WriteMenuLink(T: Texts.Text; type: CHAR; VAR selector, host: ARRAY OF CHAR; port: LONGINT; login, plus: BOOLEAN): LONGINT; 
+	PROCEDURE ^ RegisterGopherAdr(host, selector, search: ARRAY OF CHAR; type: CHAR; port: SIGNED16): SIGNED32; 
+	PROCEDURE ^ SplitMenuLine(VAR line: ARRAY OF CHAR; desc: BOOLEAN; VAR type: CHAR; VAR selector, host: ARRAY OF CHAR; VAR port: SIGNED32; VAR login, plus: BOOLEAN); 
+	PROCEDURE ^ WriteMenuLink(T: Texts.Text; type: CHAR; VAR selector, host: ARRAY OF CHAR; port: SIGNED32; login, plus: BOOLEAN): SIGNED32; 
 	PROCEDURE ^ HorzRule(): Objects.Object; 
-	PROCEDURE ^ MenuDoc(D: Documents.Document; C: NetSystem.Connection; mkey: LONGINT); 
+	PROCEDURE ^ MenuDoc(D: Documents.Document; C: NetSystem.Connection; mkey: SIGNED32); 
 	PROCEDURE ^ BinDoc(D: Documents.Document; C: NetSystem.Connection; typ: CHAR); 
-	PROCEDURE ^ GopherPlusAns(C: NetSystem.Connection; VAR maxLen: LONGINT; VAR mail: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ GopherPlusAns(C: NetSystem.Connection; VAR maxLen: SIGNED32; VAR mail: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ MimeDoc(D: Documents.Document; C: NetSystem.Connection; VAR selector: ARRAY OF CHAR); 
-	PROCEDURE ^ Connect(VAR C: NetSystem.Connection; host, selector: ARRAY OF CHAR; port: INTEGER; plus: CHAR; crlf: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Connect(VAR C: NetSystem.Connection; host, selector: ARRAY OF CHAR; port: SIGNED16; plus: CHAR; crlf: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ DocHandler(D: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ Request(D: Documents.Document; key: LONGINT; VAR host, selector, search: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER); 
-	PROCEDURE ^ SplitGopherAdr(VAR url, host, selector, search: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER): LONGINT; 
+	PROCEDURE ^ Request(D: Documents.Document; key: SIGNED32; VAR host, selector, search: ARRAY OF CHAR; VAR type: CHAR; VAR port: SIGNED16); 
+	PROCEDURE ^ SplitGopherAdr(VAR url, host, selector, search: ARRAY OF CHAR; VAR type: CHAR; VAR port: SIGNED16): SIGNED32; 
 	PROCEDURE ^ ParseAttrs(T, OutT: Texts.Text); 
 	PROCEDURE ^ Info*; 
 	PROCEDURE ^ LinkSchemeHandler(L: Objects.Object; VAR M: Objects.ObjMsg); 

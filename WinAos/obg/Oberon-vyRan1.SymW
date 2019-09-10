@@ -21,21 +21,21 @@ TYPE
 
 	tSeed = OBJECT (vyRanBase.tLongintSeed)
 	VAR 
-		ix1, ix2, ix3: LONGINT; 
-		r: ARRAY 98 OF LONGREAL; 
-		iff: LONGINT; 
+		ix1, ix2, ix3: SIGNED32; 
+		r: ARRAY 98 OF FLOAT64; 
+		iff: SIGNED32; 
 
 		PROCEDURE ^ Store*(VAR r: Files.Rider); 
-		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: SIGNED16); 
 	END tSeed; 
 
 	PROCEDURE ^ AllocSeed*(): vyRanBase.tSeed; 
-	PROCEDURE ^ Ran1*(s: tSeed): LONGREAL; 
+	PROCEDURE ^ Ran1*(s: tSeed): FLOAT64; 
 	PROCEDURE ^ Next*(r: tRandom); 
 	PROCEDURE ^ Max(r: tRandom): Bits; 
 	PROCEDURE ^ Get(r: tRandom): Bits; 
-	PROCEDURE ^ GetUniform(r: tRandom): LONGREAL; 
-	PROCEDURE ^ GetL(r: tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ GetUniform(r: tRandom): FLOAT64; 
+	PROCEDURE ^ GetL(r: tRandom; top: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Reset(r: tRandom); 
 	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 

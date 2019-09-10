@@ -28,9 +28,9 @@ TYPE
 	Generator* = OBJECT (SyntaxTree.Visitor)
 	VAR 
 		w, ws: Streams.StringWriter; 
-		case: LONGINT; 
+		case: SIGNED32; 
 		diagnostics: Diagnostics.Diagnostics; 
-		level: ARRAY MaxLevels OF LONGINT; 
+		level: ARRAY MaxLevels OF SIGNED32; 
 		current: State; 
 		document: DocumentationTree.Document; 
 		parameterDocument: DocumentationTree.Document; 
@@ -85,7 +85,7 @@ TYPE
 		PROCEDURE ^ VisitCharacterValue*(x: SyntaxTree.CharacterValue); 
 		PROCEDURE ^ VisitSetValue*(x: SyntaxTree.SetValue); 
 		PROCEDURE ^ VisitMathArrayValue*(x: SyntaxTree.MathArrayValue); 
-		PROCEDURE ^ FormatedFloat(value: LONGREAL; subtype: LONGINT); 
+		PROCEDURE ^ FormatedFloat(value: FLOAT64; subtype: SIGNED32); 
 		PROCEDURE ^ VisitRealValue*(x: SyntaxTree.RealValue); 
 		PROCEDURE ^ VisitComplexValue*(x: SyntaxTree.ComplexValue); 
 		PROCEDURE ^ VisitStringValue*(x: SyntaxTree.StringValue); 
@@ -106,7 +106,7 @@ TYPE
 		PROCEDURE ^ VisitVariable*(x: SyntaxTree.Variable); 
 		PROCEDURE ^ Flag(identifier: SyntaxTree.Identifier; VAR first: BOOLEAN); 
 		PROCEDURE ^ FlagEnd(first: BOOLEAN); 
-		PROCEDURE ^ Int(value: LONGINT); 
+		PROCEDURE ^ Int(value: SIGNED32); 
 		PROCEDURE ^ Value(identifier: SyntaxTree.Identifier; value: SIZE; VAR first: BOOLEAN); 
 		PROCEDURE ^ VisitProcedure*(x: SyntaxTree.Procedure); 
 		PROCEDURE ^ String(CONST name: ARRAY OF CHAR); 
@@ -160,7 +160,7 @@ TYPE
 	END DocumentationBackend; 
 
 	PROCEDURE ^ Small(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
-	PROCEDURE ^ Hex(w: Streams.Writer; x: HUGEINT); 
+	PROCEDURE ^ Hex(w: Streams.Writer; x: SIGNED64); 
 	PROCEDURE ^ ToText(w: Streams.StringWriter; text: DocumentationTree.Text; elementType: ElementType); 
 	PROCEDURE ^ WriteSymbolLabel(text: DocumentationTree.Text; symbol: SyntaxTree.Symbol); 
 	PROCEDURE ^ WriteReferenceInScope*(text: DocumentationTree.Text; symbol: SyntaxTree.Symbol; inScope: SyntaxTree.Scope); 

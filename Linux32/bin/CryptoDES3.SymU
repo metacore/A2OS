@@ -5,11 +5,11 @@ TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
 	VAR 
 		ske, skd: ARRAY 96 OF SET32; 
-		ski: LONGINT; 
+		ski: SIGNED32; 
 		ivx, ivy: SET32; 
 
-		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
-		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIGNED32); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ RoundE*(VAR x, y: SET32); 

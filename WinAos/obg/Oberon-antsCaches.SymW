@@ -3,27 +3,27 @@ MODULE antsCaches IN Oberon;
 CONST 
 	debug = FALSE; 
 TYPE 
-	Function* = PROCEDURE (VAR A: ARRAY OF INTEGER):LONGREAL; 
+	Function* = PROCEDURE (VAR A: ARRAY OF SIGNED16):FLOAT64; 
 
 	FullCache* = OBJECT 
 	VAR 
-		values*: POINTER TO ARRAY OF LONGREAL; 
-		offset: POINTER TO ARRAY OF LONGINT; 
-		len-: POINTER TO ARRAY OF LONGINT; 
-		d-, size-: LONGINT; 
+		values*: POINTER TO ARRAY OF FLOAT64; 
+		offset: POINTER TO ARRAY OF SIGNED32; 
+		len-: POINTER TO ARRAY OF SIGNED32; 
+		d-, size-: SIGNED32; 
 
-		PROCEDURE ^ Offset*(VAR point: ARRAY OF INTEGER; level: LONGINT): LONGINT; 
-		PROCEDURE ^ Point*(offset: LONGINT; VAR point: ARRAY OF INTEGER); 
-		PROCEDURE ^ NextPoint*(VAR offset: LONGINT; VAR point: ARRAY OF INTEGER; level: LONGINT): BOOLEAN; 
-		PROCEDURE ^ SetVal*(offset: LONGINT; val: LONGREAL); 
-		PROCEDURE ^ GetVal*(offset: LONGINT): LONGREAL; 
+		PROCEDURE ^ Offset*(VAR point: ARRAY OF SIGNED16; level: SIGNED32): SIGNED32; 
+		PROCEDURE ^ Point*(offset: SIGNED32; VAR point: ARRAY OF SIGNED16); 
+		PROCEDURE ^ NextPoint*(VAR offset: SIGNED32; VAR point: ARRAY OF SIGNED16; level: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ SetVal*(offset: SIGNED32; val: FLOAT64); 
+		PROCEDURE ^ GetVal*(offset: SIGNED32): FLOAT64; 
 	END FullCache; 
 VAR 
 	enabled: BOOLEAN; 
 
-	PROCEDURE ^ Create(c: FullCache; d: LONGINT); 
-	PROCEDURE ^ Cuboid*(d: LONGINT; VAR len: ARRAY OF INTEGER; maxsize: LONGINT): FullCache; 
-	PROCEDURE ^ Cube*(d: LONGINT; len: INTEGER; maxsize: LONGINT): FullCache; 
+	PROCEDURE ^ Create(c: FullCache; d: SIGNED32); 
+	PROCEDURE ^ Cuboid*(d: SIGNED32; VAR len: ARRAY OF SIGNED16; maxsize: SIGNED32): FullCache; 
+	PROCEDURE ^ Cube*(d: SIGNED32; len: SIGNED16; maxsize: SIGNED32): FullCache; 
 	PROCEDURE ^ Disable*; 
 	PROCEDURE ^ Enable*; 
 	PROCEDURE ^ Test*; 

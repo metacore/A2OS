@@ -30,7 +30,7 @@ TYPE
 		next: Reader; 
 	END; 
 
-	MacroHandler* = PROCEDURE (ch: CHAR; VAR T: Reader; VAR res: Texts.Text; VAR beg: LONGINT); 
+	MacroHandler* = PROCEDURE (ch: CHAR; VAR T: Reader; VAR res: Texts.Text; VAR beg: SIGNED32); 
 
 	Macro = POINTER TO MacroDesc; 
 
@@ -44,12 +44,12 @@ TYPE
 		R*: Reader; 
 		eot*: BOOLEAN; 
 		nextCh*: CHAR; 
-		class*: INTEGER; 
-		i*: LONGINT; 
-		x*: REAL; 
-		y*: LONGREAL; 
+		class*: SIGNED16; 
+		i*: SIGNED32; 
+		x*: FLOAT32; 
+		y*: FLOAT64; 
 		c*: CHAR; 
-		len*: SHORTINT; 
+		len*: SIGNED8; 
 		s*: ARRAY MaxLen OF CHAR; 
 		o*: Objects.Object; 
 	END; 
@@ -76,13 +76,13 @@ TYPE
 	IntAttr* = POINTER TO IntDesc; 
 
 	IntDesc* = RECORD (AttrDesc)
-		i*: LONGINT; 
+		i*: SIGNED32; 
 	END; 
 
 	RealAttr* = POINTER TO RealDesc; 
 
 	RealDesc* = RECORD (AttrDesc)
-		r*: LONGREAL; 
+		r*: FLOAT64; 
 	END; 
 
 	StringAttr* = POINTER TO StringDesc; 
@@ -97,15 +97,15 @@ VAR
 
 	PROCEDURE ^ StrToTxt*(s: ARRAY OF CHAR; VAR T: Texts.Text); 
 	PROCEDURE ^ TxtToStr*(T: Texts.Text; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ OpenR(VAR R: Reader; text: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ OpenR(VAR R: Reader; text: Texts.Text; pos: SIGNED32); 
 	PROCEDURE ^ Read*(VAR R: Reader; VAR ch: CHAR); 
-	PROCEDURE ^ OpenReader*(VAR R: Reader; text: Texts.Text; pos: LONGINT); 
-	PROCEDURE ^ Pos*(VAR R: Reader): LONGINT; 
+	PROCEDURE ^ OpenReader*(VAR R: Reader; text: Texts.Text; pos: SIGNED32); 
+	PROCEDURE ^ Pos*(VAR R: Reader): SIGNED32; 
 	PROCEDURE ^ IsAscii(ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ OpenScanner*(VAR S: Scanner; T: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ OpenScanner*(VAR S: Scanner; T: Texts.Text; pos: SIGNED32); 
 	PROCEDURE ^ Scan*(VAR S: Scanner); 
 	PROCEDURE ^ AddMacro*(ch: CHAR; handler: MacroHandler); 
-	PROCEDURE ^ StandardMacros(ch: CHAR; VAR T: Reader; VAR res: Texts.Text; VAR beg: LONGINT); 
+	PROCEDURE ^ StandardMacros(ch: CHAR; VAR T: Reader; VAR res: Texts.Text; VAR beg: SIGNED32); 
 	PROCEDURE ^ StoreAttributes*(VAR R: Files.Rider; A: Attr); 
 	PROCEDURE ^ LoadAttributes*(VAR R: Files.Rider; VAR A: Attr); 
 	PROCEDURE ^ CopyAttributes*(in: Attr; VAR out: Attr); 
@@ -114,14 +114,14 @@ VAR
 	PROCEDURE ^ DeleteAttr*(VAR list: Attr; name: ARRAY OF CHAR); 
 	PROCEDURE ^ WriteAttr*(obj: Objects.Object; attr: ARRAY OF CHAR; VAR W: Texts.Writer); 
 	PROCEDURE ^ GetBool*(obj: Objects.Object; name: ARRAY OF CHAR; VAR b: BOOLEAN); 
-	PROCEDURE ^ GetInt*(obj: Objects.Object; name: ARRAY OF CHAR; VAR i: LONGINT); 
-	PROCEDURE ^ GetReal*(obj: Objects.Object; name: ARRAY OF CHAR; VAR x: REAL); 
-	PROCEDURE ^ GetLongReal*(obj: Objects.Object; name: ARRAY OF CHAR; VAR y: LONGREAL); 
+	PROCEDURE ^ GetInt*(obj: Objects.Object; name: ARRAY OF CHAR; VAR i: SIGNED32); 
+	PROCEDURE ^ GetReal*(obj: Objects.Object; name: ARRAY OF CHAR; VAR x: FLOAT32); 
+	PROCEDURE ^ GetLongReal*(obj: Objects.Object; name: ARRAY OF CHAR; VAR y: FLOAT64); 
 	PROCEDURE ^ GetString*(obj: Objects.Object; name: ARRAY OF CHAR; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ SetBool*(obj: Objects.Object; name: ARRAY OF CHAR; b: BOOLEAN); 
-	PROCEDURE ^ SetInt*(obj: Objects.Object; name: ARRAY OF CHAR; i: LONGINT); 
-	PROCEDURE ^ SetReal*(obj: Objects.Object; name: ARRAY OF CHAR; x: REAL); 
-	PROCEDURE ^ SetLongReal*(obj: Objects.Object; name: ARRAY OF CHAR; y: LONGREAL); 
+	PROCEDURE ^ SetInt*(obj: Objects.Object; name: ARRAY OF CHAR; i: SIGNED32); 
+	PROCEDURE ^ SetReal*(obj: Objects.Object; name: ARRAY OF CHAR; x: FLOAT32); 
+	PROCEDURE ^ SetLongReal*(obj: Objects.Object; name: ARRAY OF CHAR; y: FLOAT64); 
 	PROCEDURE ^ SetString*(obj: Objects.Object; name, s: ARRAY OF CHAR); 
 	PROCEDURE ^ Echo*; 
 BEGIN

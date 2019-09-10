@@ -42,7 +42,7 @@ TYPE
 
 	TGFrameDesc* = RECORD (TextGadgets.FrameDesc)
 		focus: BOOLEAN; 
-		lastPos*: LONGINT; 
+		lastPos*: SIGNED32; 
 		panel*: Panel; 
 	END; 
 
@@ -55,12 +55,12 @@ TYPE
 		imps*: Books0.ImpList; 
 		options*: SET; 
 		curC: Books0.ContElem; 
-		noteH*: INTEGER; 
+		noteH*: SIGNED16; 
 	END; 
 
 	ChainDesc = RECORD 
 		old: Books0.TextList; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		next: Chain; 
 	END; 
 VAR 
@@ -68,13 +68,13 @@ VAR
 	B: Texts.Buffer; 
 	tmpT: Texts.Text; 
 	m: TextGadgets0.Methods; 
-	newPos*, newInd*: LONGINT; 
+	newPos*, newInd*: SIGNED32; 
 
 	PROCEDURE ^ GetText*(P: Panel; VAR T: TGFrame); 
 	PROCEDURE ^ GetNote*(P: Panel; VAR T: TGFrame); 
-	PROCEDURE ^ ResizeControls*(P: Panel; T: TGFrame; w: INTEGER); 
-	PROCEDURE ^ MoveBar(P: Panel; M: Display.ModifyMsg; name: ARRAY OF CHAR; Y, mode: INTEGER; broadcast: BOOLEAN); 
-	PROCEDURE ^ ReDisplay*(VAR M: Display.ModifyMsg; mode: INTEGER; broadcast: BOOLEAN); 
+	PROCEDURE ^ ResizeControls*(P: Panel; T: TGFrame; w: SIGNED16); 
+	PROCEDURE ^ MoveBar(P: Panel; M: Display.ModifyMsg; name: ARRAY OF CHAR; Y, mode: SIGNED16; broadcast: BOOLEAN); 
+	PROCEDURE ^ ReDisplay*(VAR M: Display.ModifyMsg; mode: SIGNED16; broadcast: BOOLEAN); 
 	PROCEDURE ^ CopyText*(from: Texts.Text; VAR to: Texts.Text); 
 	PROCEDURE ^ PanelHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewPanel*; 
@@ -82,23 +82,23 @@ VAR
 	PROCEDURE ^ TextHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewText*(P: Panel); 
 	PROCEDURE ^ GetPanel*(VAR P: Panel); 
-	PROCEDURE ^ ShowText*(P: Panel; t: Books0.TextList; pos: LONGINT); 
-	PROCEDURE ^ GetPos(t: Texts.Text; obj: Objects.Object): LONGINT; 
+	PROCEDURE ^ ShowText*(P: Panel; t: Books0.TextList; pos: SIGNED32); 
+	PROCEDURE ^ GetPos(t: Texts.Text; obj: Objects.Object): SIGNED32; 
 	PROCEDURE ^ Push*(P: Panel); 
-	PROCEDURE ^ GetInd*(P: Panel; cur: Books0.TextList): LONGINT; 
+	PROCEDURE ^ GetInd*(P: Panel; cur: Books0.TextList): SIGNED32; 
 	PROCEDURE ^ ChapUp*; 
 	PROCEDURE ^ ChapDown*; 
 	PROCEDURE ^ History*(P: Panel; t: Texts.Text); 
 	PROCEDURE ^ OpenCont(F: Books0.ContElem); 
-	PROCEDURE ^ EndOfLine(T: TGFrame; pos: LONGINT): LONGINT; 
-	PROCEDURE ^ GotoText*(P: Panel; ind, pos: LONGINT; sel: BOOLEAN); 
+	PROCEDURE ^ EndOfLine(T: TGFrame; pos: SIGNED32): SIGNED32; 
+	PROCEDURE ^ GotoText*(P: Panel; ind, pos: SIGNED32; sel: BOOLEAN); 
 	PROCEDURE ^ GetIndex*(P: Panel): Books0.TextList; 
 	PROCEDURE ^ ShowBook(e: Books0.ExtFrame); 
-	PROCEDURE ^ ShowFootNote*(P: Panel; pos1, pos2: LONGINT); 
+	PROCEDURE ^ ShowFootNote*(P: Panel; pos1, pos2: SIGNED32); 
 	PROCEDURE ^ GetFrame(dlink: Objects.Object): Display.Frame; 
 	PROCEDURE ^ ShowCallErr(s: ARRAY OF CHAR); 
-	PROCEDURE ^ Call(F: TextGadgets0.Frame; pos: LONGINT; keysum: SET; dlink: Objects.Object); 
-	PROCEDURE ^ LocateString(F: TextGadgets0.Frame; x, y, X, Y: INTEGER; VAR loc: TextGadgets0.Loc); 
+	PROCEDURE ^ Call(F: TextGadgets0.Frame; pos: SIGNED32; keysum: SET; dlink: Objects.Object); 
+	PROCEDURE ^ LocateString(F: TextGadgets0.Frame; x, y, X, Y: SIGNED16; VAR loc: TextGadgets0.Loc); 
 	PROCEDURE ^ Pop*(P: Panel); 
 BEGIN
 END Books.

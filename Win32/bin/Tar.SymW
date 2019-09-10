@@ -29,11 +29,11 @@ TYPE
 	EntryInfo* = OBJECT (Archives.EntryInfo)
 	VAR 
 		name: ARRAY EntryNameSize OF CHAR; 
-		size: LONGINT; 
+		size: SIGNED32; 
 
-		PROCEDURE ^  & Init*(CONST name: ARRAY OF CHAR; size: LONGINT); 
+		PROCEDURE ^  & Init*(CONST name: ARRAY OF CHAR; size: SIGNED32); 
 		PROCEDURE ^ GetName*(): Strings.String; 
-		PROCEDURE ^ GetSize*(): LONGINT; 
+		PROCEDURE ^ GetSize*(): SIGNED32; 
 		PROCEDURE ^ GetInfoString*(): Strings.String; 
 	END EntryInfo; 
 
@@ -45,8 +45,8 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetName(CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ SetSize(size: LONGINT); 
-		PROCEDURE ^ GetSize(): LONGINT; 
+		PROCEDURE ^ SetSize(size: SIGNED32); 
+		PROCEDURE ^ GetSize(): SIGNED32; 
 		PROCEDURE ^ CalculateCheckSum; 
 	END Entry; 
 
@@ -56,13 +56,13 @@ TYPE
 		max: SIZE; 
 		archive: Archive; 
 
-		PROCEDURE ^  & Init*(input: Streams.Reader; size: LONGINT; archive: Archive); 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^  & Init*(input: Streams.Reader; size: SIGNED32; archive: Archive); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 	END SizeReader; 
 
 	Buffer = OBJECT 
 
-		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 	END Buffer; 
 
 	BufferSegment = OBJECT 
@@ -74,13 +74,13 @@ TYPE
 	MemoryBuffer = OBJECT (Buffer)
 	VAR 
 		first, current: BufferSegment; 
-		segmentCount, currentIndex: LONGINT; 
+		segmentCount, currentIndex: SIGNED32; 
 		archive: Archive; 
 		name: ARRAY NamSiz OF CHAR; 
 		closed: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(a: Archive; CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Send(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ NewSegment; 
 		PROCEDURE ^ WriteBuffer; 
 	END MemoryBuffer; 
@@ -106,15 +106,15 @@ TYPE
 		PROCEDURE ^ AddEntryNode(e: Entry); 
 	END Archive; 
 
-	PROCEDURE ^ ReadHeaderBytes(R: Streams.Reader; VAR buf: ARRAY OF CHAR; len: LONGINT; VAR chksum: LONGINT); 
+	PROCEDURE ^ ReadHeaderBytes(R: Streams.Reader; VAR buf: ARRAY OF CHAR; len: SIGNED32; VAR chksum: SIGNED32); 
 	PROCEDURE ^ ReadHeader(R: Streams.Reader; VAR hdr: Header): BOOLEAN; 
-	PROCEDURE ^ Empty(VAR buf: ARRAY OF CHAR; len: LONGINT); 
+	PROCEDURE ^ Empty(VAR buf: ARRAY OF CHAR; len: SIGNED32); 
 	PROCEDURE ^ EmptyHeader(VAR hdr: Header); 
-	PROCEDURE ^ CheckHeaderBytes(CONST buf: ARRAY OF CHAR; len: LONGINT; VAR chksum: LONGINT); 
+	PROCEDURE ^ CheckHeaderBytes(CONST buf: ARRAY OF CHAR; len: SIGNED32; VAR chksum: SIGNED32); 
 	PROCEDURE ^ CalcCheckSum(VAR hdr: Header); 
 	PROCEDURE ^ WriteHeader(W: Streams.Writer; VAR hdr: Header); 
-	PROCEDURE ^ OctStrToInt(CONST str: ARRAY OF CHAR; VAR val: LONGINT); 
-	PROCEDURE ^ IntToOctStr(val: HUGEINT; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ OctStrToInt(CONST str: ARRAY OF CHAR; VAR val: SIGNED32); 
+	PROCEDURE ^ IntToOctStr(val: SIGNED64; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ CopyArchiveName(CONST from: ARRAY OF CHAR; VAR to: ARRAY OF CHAR); 
 	PROCEDURE ^ Backup(f: Files.File); 
 	PROCEDURE ^ CopyFiles(VAR from, to: Files.File); 

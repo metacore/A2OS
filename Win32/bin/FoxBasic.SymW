@@ -36,7 +36,7 @@ TYPE
 
 	Set* = SET64; 
 
-	Real* = LONGREAL; 
+	Real* = FLOAT64; 
 
 	ObjectArray = POINTER TO ARRAY OF ANY; 
 
@@ -49,7 +49,7 @@ TYPE
 		reader*: Streams.Reader; 
 	END; 
 
-	ErrorCode* = WORD; 
+	ErrorCode* = INTEGER; 
 
 	Fingerprint* = ObjectFile.Fingerprint; 
 
@@ -100,7 +100,7 @@ TYPE
 		table: HashAnyArray; 
 		size: SIZE; 
 		used-: SIZE; 
-		maxLoadFactor: REAL; 
+		maxLoadFactor: FLOAT32; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
 		PROCEDURE ^ Put*(key, value: ANY); 
@@ -128,7 +128,7 @@ TYPE
 		table: HashIntArray; 
 		size: SIZE; 
 		used-: SIZE; 
-		maxLoadFactor: REAL; 
+		maxLoadFactor: FLOAT32; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
 		PROCEDURE ^ Put*(key: SIZE; value: ANY); 
@@ -155,7 +155,7 @@ TYPE
 		table: HashSegmentedNameArray; 
 		size: SIZE; 
 		used-: SIZE; 
-		maxLoadFactor: REAL; 
+		maxLoadFactor: FLOAT32; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
 		PROCEDURE ^ Put*(CONST key: SegmentedName; value: ANY); 
@@ -173,7 +173,7 @@ TYPE
 
 	Writer* = OBJECT (Streams.Writer)
 	VAR 
-		indent-: LONGINT; 
+		indent-: SIGNED32; 
 		doindent: BOOLEAN; 
 		w-: Streams.Writer; 
 
@@ -187,30 +187,30 @@ TYPE
 		PROCEDURE ^ Indent; 
 		PROCEDURE ^ Char*(x: CHAR); 
 		PROCEDURE ^ Bytes*(CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
-		PROCEDURE ^ RawSInt*(x: SHORTINT); 
-		PROCEDURE ^ RawInt*(x: INTEGER); 
-		PROCEDURE ^ RawLInt*(x: LONGINT); 
-		PROCEDURE ^ RawHInt*(x: HUGEINT); 
-		PROCEDURE ^ Net32*(x: LONGINT); 
-		PROCEDURE ^ Net16*(x: LONGINT); 
-		PROCEDURE ^ Net8*(x: LONGINT); 
+		PROCEDURE ^ RawSInt*(x: SIGNED8); 
+		PROCEDURE ^ RawInt*(x: SIGNED16); 
+		PROCEDURE ^ RawLInt*(x: SIGNED32); 
+		PROCEDURE ^ RawHInt*(x: SIGNED64); 
+		PROCEDURE ^ Net32*(x: SIGNED32); 
+		PROCEDURE ^ Net16*(x: SIGNED32); 
+		PROCEDURE ^ Net8*(x: SIGNED32); 
 		PROCEDURE ^ RawSet*(x: SET); 
 		PROCEDURE ^ RawBool*(x: BOOLEAN); 
-		PROCEDURE ^ RawReal*(x: REAL); 
+		PROCEDURE ^ RawReal*(x: FLOAT32); 
 		PROCEDURE ^ RawLReal*(x: Real); 
 		PROCEDURE ^ RawString*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ RawNum*(x: HUGEINT); 
+		PROCEDURE ^ RawNum*(x: SIGNED64); 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ String*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Int*(x: HUGEINT; wd: SIZE); 
+		PROCEDURE ^ Int*(x: SIGNED64; wd: SIZE); 
 		PROCEDURE ^ Set*(s: SET); 
-		PROCEDURE ^ Hex*(x: HUGEINT; wd: SIZE); 
+		PROCEDURE ^ Hex*(x: SIGNED64; wd: SIZE); 
 		PROCEDURE ^ Address*(x: ADDRESS); 
-		PROCEDURE ^ Date*(t, d: LONGINT); 
-		PROCEDURE ^ Date822*(t, d, tz: LONGINT); 
-		PROCEDURE ^ Float*(x: Real; n: LONGINT); 
-		PROCEDURE ^ FloatFix*(x: Real; n, f, D: LONGINT); 
-		PROCEDURE ^ SetIndent*(i: LONGINT); 
+		PROCEDURE ^ Date*(t, d: SIGNED32); 
+		PROCEDURE ^ Date822*(t, d, tz: SIGNED32); 
+		PROCEDURE ^ Float*(x: Real; n: SIGNED32); 
+		PROCEDURE ^ FloatFix*(x: Real; n, f, D: SIGNED32); 
+		PROCEDURE ^ SetIndent*(i: SIGNED32); 
 		PROCEDURE ^ IncIndent*; 
 		PROCEDURE ^ DecIndent*; 
 		PROCEDURE ^ BeginAlert*; 
@@ -264,7 +264,7 @@ VAR
 	PROCEDURE ^ Information*(diagnostics: Diagnostics.Diagnostics; CONST source: ARRAY OF CHAR; pos: Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ SetErrorMessage*(n: ErrorCode; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ SetErrorExpected*(n: ErrorCode; CONST msg: ARRAY OF CHAR); 
-	PROCEDURE ^ AppendNumber*(VAR s: ARRAY OF CHAR; num: HUGEINT); 
+	PROCEDURE ^ AppendNumber*(VAR s: ARRAY OF CHAR; num: SIGNED64); 
 	PROCEDURE ^ InitSegmentedName*(VAR name: SegmentedName); 
 	PROCEDURE ^ ToSegmentedName*(CONST name: ARRAY OF CHAR; VAR pooledName: SegmentedName); 
 	PROCEDURE ^ SegmentedNameToString*(CONST pooledName: SegmentedName; VAR name: ARRAY OF CHAR); 
@@ -279,7 +279,7 @@ VAR
 	PROCEDURE ^ Concat*(VAR result: ARRAY OF CHAR; CONST prefix, name, suffix: ARRAY OF CHAR); 
 	PROCEDURE ^ Lowercase*(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ Uppercase*(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
-	PROCEDURE ^ GetIntegerObj*(value: LONGINT): ANY; 
+	PROCEDURE ^ GetIntegerObj*(value: SIGNED32): ANY; 
 	PROCEDURE ^ Align*(VAR offset: SIZE; alignment: SIZE); 
 	PROCEDURE ^ InitErrorMessages; 
 	PROCEDURE ^ ActivateDebug*; 
@@ -295,8 +295,8 @@ VAR
 	OPERATOR ^ "="-(left: String; CONST right: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ MessageS*(CONST format, s0: ARRAY OF CHAR): MessageString; 
 	PROCEDURE ^ MessageSS*(CONST format, s0, s1: ARRAY OF CHAR): MessageString; 
-	PROCEDURE ^ MessageI*(CONST format: ARRAY OF CHAR; i0: LONGINT): MessageString; 
-	PROCEDURE ^ MessageSI*(CONST format: ARRAY OF CHAR; CONST s0: ARRAY OF CHAR; i1: LONGINT): MessageString; 
+	PROCEDURE ^ MessageI*(CONST format: ARRAY OF CHAR; i0: SIGNED32): MessageString; 
+	PROCEDURE ^ MessageSI*(CONST format: ARRAY OF CHAR; CONST s0: ARRAY OF CHAR; i1: SIGNED32): MessageString; 
 	PROCEDURE ^ GetStringParameter*(r: Streams.Reader; VAR string: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetTracingDiagnostics*(diagnostics: Diagnostics.Diagnostics): Diagnostics.Diagnostics; 
 BEGIN

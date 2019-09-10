@@ -83,16 +83,16 @@ TYPE
 
 	Score = RECORD 
 		name: Objects.Name; 
-		points: LONGINT; 
-		level, rows: INTEGER; 
+		points: SIGNED32; 
+		level, rows: SIGNED16; 
 	END; 
 
 	FieldDesc = RECORD (Gadgets.ObjDesc)
 		score: ARRAY Ranks OF Score; 
-		curr, next, angle, line, row, rank, mult: SHORTINT; 
-		delay, figures: INTEGER; 
+		curr, next, angle, line, row, rank, mult: SIGNED8; 
+		delay, figures: SIGNED16; 
 		focus, match, preview, paused: BOOLEAN; 
-		lap1, lap2: LONGINT; 
+		lap1, lap2: SIGNED32; 
 		timer: Timer; 
 		pot: Pot; 
 	END; 
@@ -100,61 +100,61 @@ TYPE
 	ScoreField = POINTER TO ScoreFieldDesc; 
 
 	ScoreFieldDesc = RECORD (TextFields.TextFieldDesc)
-		ndx, xofs: INTEGER; 
+		ndx, xofs: SIGNED16; 
 	END; 
 
 	Frame = POINTER TO FrameDesc; 
 
 	FrameDesc = RECORD (Panels.PanelDesc)
-		scale: INTEGER; 
+		scale: SIGNED16; 
 		blank: BOOLEAN; 
 	END; 
 
 	AlignMsg = RECORD (Objects.ObjMsg)
-		X, Y, W, H: INTEGER; 
+		X, Y, W, H: SIGNED16; 
 	END; 
 
 	BackdropMsg = RECORD (Display.FrameMsg)
 		model: Object; 
-		ndx: INTEGER; 
+		ndx: SIGNED16; 
 	END; 
 
 	FigureMsg = RECORD (Display.FrameMsg)
 		model: Object; 
-		id: INTEGER; 
-		ndx, angle0, line0, row0, angle1, line1, row1: SHORTINT; 
+		id: SIGNED16; 
+		ndx, angle0, line0, row0, angle1, line1, row1: SIGNED8; 
 	END; 
 VAR 
 	figure: ARRAY Figures OF ARRAY 4 OF Figure; 
-	color, xofs, yofs: ARRAY Figures OF SHORTINT; 
+	color, xofs, yofs: ARRAY Figures OF SIGNED8; 
 	clrpot: Pot; 
 	timers: Timer; 
-	delay: ARRAY Levels OF INTEGER; 
+	delay: ARRAY Levels OF SIGNED16; 
 	backdrop: ARRAY Levels OF Objects.Name; 
-	fudge: LONGINT; 
+	fudge: SIGNED32; 
 
 	PROCEDURE ^ OtherFrame(me: Object; VAR M: Objects.ObjMsg): BOOLEAN; 
 	PROCEDURE ^ RemoveTimer(T: Timer; verbose: BOOLEAN); 
 	PROCEDURE ^ NextFigure(F: Field); 
-	PROCEDURE ^ IncScore(F: Field; score, bonus: INTEGER); 
-	PROCEDURE ^ IncRows(F: Field; rows: INTEGER); 
+	PROCEDURE ^ IncScore(F: Field; score, bonus: SIGNED16); 
+	PROCEDURE ^ IncRows(F: Field; rows: SIGNED16); 
 	PROCEDURE ^ IncLevel(F: Field); 
 	PROCEDURE ^ ResetScore(VAR score: Score); 
-	PROCEDURE ^ UpdSelection(M: Display3.Mask; state: SET; x, y, w, h: INTEGER); 
+	PROCEDURE ^ UpdSelection(M: Display3.Mask; state: SET; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ Model(D: Object): Field; 
-	PROCEDURE ^ PX(R: Frame; dX, row, offs: INTEGER): INTEGER; 
-	PROCEDURE ^ PY(R: Frame; dY, line, offs: INTEGER): INTEGER; 
-	PROCEDURE ^ DrawBlock(R: Frame; c, x, y: INTEGER); 
-	PROCEDURE ^ DrawLine(R: Frame; line: ARRAY OF CHAR; dX, dY, l: INTEGER); 
-	PROCEDURE ^ DrawFigure(R: Frame; fig: Figure; dX, dY, c, r, l: INTEGER); 
-	PROCEDURE ^ DrawDrop(R: Frame; fig: Figure; dX, dY, c, r, l: INTEGER); 
-	PROCEDURE ^ DrawPot(R: Frame; dX, dY: INTEGER; pot: Pot); 
-	PROCEDURE ^ DrawPreview(R: Frame; fig: Figure; xofs, yofs, c: INTEGER); 
-	PROCEDURE ^ MatchFigure(F: Field; fig: Figure; r, l: SHORTINT): BOOLEAN; 
-	PROCEDURE ^ SetFigure(F: Field; fig: Figure; r, l: SHORTINT; c: CHAR); 
+	PROCEDURE ^ PX(R: Frame; dX, row, offs: SIGNED16): SIGNED16; 
+	PROCEDURE ^ PY(R: Frame; dY, line, offs: SIGNED16): SIGNED16; 
+	PROCEDURE ^ DrawBlock(R: Frame; c, x, y: SIGNED16); 
+	PROCEDURE ^ DrawLine(R: Frame; line: ARRAY OF CHAR; dX, dY, l: SIGNED16); 
+	PROCEDURE ^ DrawFigure(R: Frame; fig: Figure; dX, dY, c, r, l: SIGNED16); 
+	PROCEDURE ^ DrawDrop(R: Frame; fig: Figure; dX, dY, c, r, l: SIGNED16); 
+	PROCEDURE ^ DrawPot(R: Frame; dX, dY: SIGNED16; pot: Pot); 
+	PROCEDURE ^ DrawPreview(R: Frame; fig: Figure; xofs, yofs, c: SIGNED16); 
+	PROCEDURE ^ MatchFigure(F: Field; fig: Figure; r, l: SIGNED8): BOOLEAN; 
+	PROCEDURE ^ SetFigure(F: Field; fig: Figure; r, l: SIGNED8; c: CHAR); 
 	PROCEDURE ^ FieldFigure(F: Field; set: BOOLEAN); 
 	PROCEDURE ^ InitPot(VAR pot: Pot); 
-	PROCEDURE ^ CheckPot(VAR pot: Pot): INTEGER; 
+	PROCEDURE ^ CheckPot(VAR pot: Pot): SIGNED16; 
 	PROCEDURE ^ Move(F: Field; c: CHAR): BOOLEAN; 
 	PROCEDURE ^ Drop(F: Field); 
 	PROCEDURE ^ TimerHandler(me: Oberon.Task); 
@@ -197,8 +197,8 @@ VAR
 	PROCEDURE ^ DocAttr(D: Document; VAR M: AttrMsg); 
 	PROCEDURE ^ DocLink(D: Document; VAR M: LinkMsg); 
 	PROCEDURE ^ DocHandler*(D: Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ NewTop(txt: ARRAY OF CHAR; len, ofs: INTEGER): Object; 
-	PROCEDURE ^ NewScore(c: CHAR; num, len, ofs: INTEGER; model: Object): Object; 
+	PROCEDURE ^ NewTop(txt: ARRAY OF CHAR; len, ofs: SIGNED16): Object; 
+	PROCEDURE ^ NewScore(c: CHAR; num, len, ofs: SIGNED16; model: Object): Object; 
 	PROCEDURE ^ ScoreArray(model: Object): Object; 
 	PROCEDURE ^ NewButton(gen, capt: ARRAY OF CHAR; model: Object): Object; 
 	PROCEDURE ^ OldDocument(F: Files.File; D: Document; VAR f: Gadgets.Frame); 

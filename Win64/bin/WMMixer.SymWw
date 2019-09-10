@@ -38,7 +38,7 @@ VAR
 	master: SoundDevices.MixerChannel; 
 	StrMixer: Strings.String; 
 	PrototypedeviceName, PrototypechannelName: WMProperties.StringProperty; 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ IncCount; 

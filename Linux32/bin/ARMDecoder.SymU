@@ -135,57 +135,57 @@ TYPE
 
 	ARMArgImm = OBJECT (ARMArg)
 	VAR 
-		imm, rep: LONGINT; 
+		imm, rep: SIGNED32; 
 
-		PROCEDURE ^  & New*(imm, rep: LONGINT); 
+		PROCEDURE ^  & New*(imm, rep: SIGNED32); 
 	END ARMArgImm; 
 
 	ARMArgReg = OBJECT (ARMArg)
 	VAR 
-		reg: LONGINT; 
+		reg: SIGNED32; 
 		isCReg: BOOLEAN; 
 		sregMask: SET; 
 
-		PROCEDURE ^  & New*(reg: LONGINT); 
+		PROCEDURE ^  & New*(reg: SIGNED32); 
 	END ARMArgReg; 
 
 	ARMArgRList = OBJECT (ARMArg)
 	VAR 
 		regs: SET; 
-		addrMode: LONGINT; 
+		addrMode: SIGNED32; 
 
 		PROCEDURE ^  & New*(regs: SET); 
 	END ARMArgRList; 
 
 	ARMArgMem = OBJECT (ARMArg)
 	VAR 
-		addrMode, reg, regOffs, regScale, shift, immOffs: LONGINT; 
-		width: LONGINT; 
+		addrMode, reg, regOffs, regScale, shift, immOffs: SIGNED32; 
+		width: SIGNED32; 
 		signed, translation: BOOLEAN; 
-		regUpdate: LONGINT; 
+		regUpdate: SIGNED32; 
 
-		PROCEDURE ^  & New*(adrMode, reg: LONGINT); 
+		PROCEDURE ^  & New*(adrMode, reg: SIGNED32); 
 	END ARMArgMem; 
 
 	ARMArgShift = OBJECT (ARMArg)
 	VAR 
-		shiftImmOrReg, operation: LONGINT; 
+		shiftImmOrReg, operation: SIGNED32; 
 		reg: BOOLEAN; 
 
-		PROCEDURE ^  & New*(operation, shiftImmOrReg: LONGINT; reg: BOOLEAN); 
+		PROCEDURE ^  & New*(operation, shiftImmOrReg: SIGNED32; reg: BOOLEAN); 
 	END ARMArgShift; 
 
 	ARMArgCProc = OBJECT (ARMArg)
 	VAR 
-		cproc: LONGINT; 
+		cproc: SIGNED32; 
 
-		PROCEDURE ^  & New*(cproc: LONGINT); 
+		PROCEDURE ^  & New*(cproc: SIGNED32); 
 	END ARMArgCProc; 
 
 	ARMOpcode = OBJECT (Decoder.Opcode)
 	VAR 
-		argStructure: LONGINT; 
-		op, cond: LONGINT; 
+		argStructure: SIGNED32; 
+		op, cond: SIGNED32; 
 		ccUpdate: BOOLEAN; 
 		arg1, arg2, arg3, arg4, arg5, arg6: ARMArg; 
 
@@ -197,8 +197,8 @@ TYPE
 		PROCEDURE ^ PrintArguments*(w: Streams.Writer); 
 		PROCEDURE ^ WriteImm(immArg: ARMArgImm; w: Streams.Writer); 
 		PROCEDURE ^ WriteReg(regArg: ARMArgReg; w: Streams.Writer); 
-		PROCEDURE ^ WriteRegSymbol(reg: LONGINT; w: Streams.Writer); 
-		PROCEDURE ^ WriteShiftSymbol(op: LONGINT; w: Streams.Writer); 
+		PROCEDURE ^ WriteRegSymbol(reg: SIGNED32; w: Streams.Writer); 
+		PROCEDURE ^ WriteShiftSymbol(op: SIGNED32; w: Streams.Writer); 
 		PROCEDURE ^ WriteShift(shiftArg: ARMArgShift; w: Streams.Writer); 
 		PROCEDURE ^ WriteMem(memArg: ARMArgMem; w: Streams.Writer); 
 		PROCEDURE ^ WriteRegRList(regArg: ARMArgReg; rListArg: ARMArgRList; w: Streams.Writer); 
@@ -207,11 +207,11 @@ TYPE
 
 	ARMDecoder = OBJECT {EXCLUSIVE} (Decoder.Decoder)
 	VAR 
-		bit24To27, bit20To23, bit16To19, bit12To15, bit8To11, bit4To7, bit0To3: LONGINT; 
+		bit24To27, bit20To23, bit16To19, bit12To15, bit8To11, bit4To7, bit0To3: SIGNED32; 
 
 		PROCEDURE ^ NewOpcode*(): Decoder.Opcode; 
 		PROCEDURE ^ DecodeThis*(opcode: Decoder.Opcode); 
-		PROCEDURE ^ DecodeShifterOperand(op: LONGINT; VAR argStructure: LONGINT; VAR arg1, arg2: ARMArg); 
+		PROCEDURE ^ DecodeShifterOperand(op: SIGNED32; VAR argStructure: SIGNED32; VAR arg1, arg2: ARMArg); 
 		PROCEDURE ^ DataProcessing(opcode: ARMOpcode); 
 		PROCEDURE ^ Miscellaneous(opcode: ARMOpcode); 
 		PROCEDURE ^ MultipliesExtraLS(opcode: ARMOpcode); 
@@ -219,20 +219,20 @@ TYPE
 		PROCEDURE ^ LoadStore(opcode: ARMOpcode); 
 		PROCEDURE ^ LoadStoreMultiple(opcode: ARMOpcode); 
 		PROCEDURE ^ Branch(opcode: ARMOpcode); 
-		PROCEDURE ^ BranchToThumb(opcode: ARMOpcode; op: LONGINT); 
+		PROCEDURE ^ BranchToThumb(opcode: ARMOpcode; op: SIGNED32); 
 		PROCEDURE ^ CoprocLoadStoreDRegTransfer(opcode: ARMOpcode); 
 		PROCEDURE ^ CoprocDataProcessing(opcode: ARMOpcode); 
 		PROCEDURE ^ CoprocRegTransfer(opcode: ARMOpcode); 
 		PROCEDURE ^ SoftwareInterrupt(opcode: ARMOpcode); 
-		PROCEDURE ^ SignExtension(VAR x: LONGINT; length: LONGINT); 
+		PROCEDURE ^ SignExtension(VAR x: SIGNED32; length: SIGNED32); 
 	END ARMDecoder; 
 VAR 
 	bigEndian: BOOLEAN; 
 
 	PROCEDURE ^ SetBigEndian*; 
 	PROCEDURE ^ SetLittleEndian*; 
-	PROCEDURE ^ Hex(n: LONGINT; w: Streams.Writer); 
-	PROCEDURE ^ SwapBytes(VAR code: LONGINT); 
+	PROCEDURE ^ Hex(n: SIGNED32; w: Streams.Writer); 
+	PROCEDURE ^ SwapBytes(VAR code: SIGNED32); 
 	PROCEDURE ^ ARMDecoderFactory(reader: Streams.Reader): Decoder.Decoder; 
 	PROCEDURE ^ CodeScaleCallback(VAR codeSize: SIZE); 
 	PROCEDURE ^ Init*; 

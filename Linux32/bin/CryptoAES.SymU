@@ -19,15 +19,15 @@ TYPE
 		Block = ARRAY 4 OF SET32; 
 
 		Ind4 = RECORD 
-			a, b, c, d: LONGINT; 
+			a, b, c, d: SIGNED32; 
 		END; 
 	VAR 
-		rounds: SHORTINT; 
+		rounds: SIGNED8; 
 		key, dkey: RKeys; 
 		iv: Block; 
 
-		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
-		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIGNED32); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
 		PROCEDURE ^ IncIV; 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
@@ -35,14 +35,14 @@ TYPE
 		PROCEDURE ^ RoundD(VAR b: Block); 
 		PROCEDURE  - split(s: SET32; VAR b: Ind4);
 		BEGIN
-			b.a := (S.VAL(LONGINT, s) MOD 256); 
-			b.b := ((S.VAL(LONGINT, s) DIV 256) MOD 256); 
-			b.c := ((S.VAL(LONGINT, s) DIV 65536) MOD 256); 
-			b.d := ((S.VAL(LONGINT, s) DIV 16777216) MOD 256)
+			b.a := (S.VAL(SIGNED32, s) MOD 256); 
+			b.b := ((S.VAL(SIGNED32, s) DIV 256) MOD 256); 
+			b.c := ((S.VAL(SIGNED32, s) DIV 65536) MOD 256); 
+			b.d := ((S.VAL(SIGNED32, s) DIV 16777216) MOD 256)
 		END split; 
-		PROCEDURE ^ Init128(CONST src: ARRAY OF CHAR): SHORTINT; 
-		PROCEDURE ^ Init192(CONST src: ARRAY OF CHAR): SHORTINT; 
-		PROCEDURE ^ Init256(CONST src: ARRAY OF CHAR): SHORTINT; 
+		PROCEDURE ^ Init128(CONST src: ARRAY OF CHAR): SIGNED8; 
+		PROCEDURE ^ Init192(CONST src: ARRAY OF CHAR): SIGNED8; 
+		PROCEDURE ^ Init256(CONST src: ARRAY OF CHAR): SIGNED8; 
 		PROCEDURE ^ InvertKeys; 
 		PROCEDURE ^  & Init*; 
 	END Cipher; 

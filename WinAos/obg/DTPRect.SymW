@@ -10,21 +10,21 @@ CONST
 TYPE 
 	ContextMenuData = OBJECT 
 	VAR 
-		val: LONGINT; 
+		val: SIGNED32; 
 
-		PROCEDURE ^  & New*(val: LONGINT); 
+		PROCEDURE ^  & New*(val: SIGNED32); 
 	END ContextMenuData; 
 
 	RectObject* = OBJECT (DTPData.ContentObject)
 	VAR 
 		lineColor, rectColor, rectColor2: WMGraphics.Color; 
-		lineWidth: REAL; 
-		fillMode: WORD; 
+		lineWidth: FLOAT32; 
+		fillMode: INTEGER; 
 		gradientHorizontal: BOOLEAN; 
 		properties: RectPropWindow; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: SIZE; zoomFactor: REAL; quality, preview: BOOLEAN); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: SIZE; zoomFactor: FLOAT32; quality, preview: BOOLEAN); 
 		PROCEDURE ^ Redraw*; 
 		PROCEDURE ^ Clone*(): DTPData.ContentObject; 
 		PROCEDURE ^ Load*(elem: XML.Element); 

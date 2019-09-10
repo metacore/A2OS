@@ -15,88 +15,88 @@ TYPE
 	Channel = RECORD 
 		scfsi: ARRAY 4 OF BOOLEAN; 
 		gr: ARRAY 2 OF RECORD 
-			part23length, bigvalues, globalgain, scalefaccompress, blocktype, region0count, region1count: INTEGER; 
-			tableselect, subblockgain: ARRAY 3 OF INTEGER; 
+			part23length, bigvalues, globalgain, scalefaccompress, blocktype, region0count, region1count: SIGNED16; 
+			tableselect, subblockgain: ARRAY 3 OF SIGNED16; 
 			windowswitchingflag, mixedblockflag, preflag, scalefacscale, count1tableselect: BOOLEAN; 
 		END; 
 	END; 
 
 	Scalefactors = RECORD 
-		l: ARRAY 23 OF INTEGER; 
-		s: ARRAY 3 OF ARRAY 13 OF INTEGER; 
+		l: ARRAY 23 OF SIGNED16; 
+		s: ARRAY 3 OF ARRAY 13 OF SIGNED16; 
 	END; 
 
 	Frame = OBJECT 
 	VAR 
-		stereo: INTEGER; 
-		jsbound: INTEGER; 
-		single: INTEGER; 
-		lsd: INTEGER; 
-		mpeg25: INTEGER; 
-		headerchange: INTEGER; 
-		layer: INTEGER; 
-		errorprotection: INTEGER; 
-		bitrate: INTEGER; 
-		samplerate: INTEGER; 
+		stereo: SIGNED16; 
+		jsbound: SIGNED16; 
+		single: SIGNED16; 
+		lsd: SIGNED16; 
+		mpeg25: SIGNED16; 
+		headerchange: SIGNED16; 
+		layer: SIGNED16; 
+		errorprotection: SIGNED16; 
+		bitrate: SIGNED16; 
+		samplerate: SIGNED16; 
 		padding: BOOLEAN; 
 		extension: BOOLEAN; 
-		channelmode: INTEGER; 
-		modeextension: INTEGER; 
+		channelmode: SIGNED16; 
+		modeextension: SIGNED16; 
 		copyright: BOOLEAN; 
 		original: BOOLEAN; 
-		emphasis: INTEGER; 
-		nofSlots: INTEGER; 
+		emphasis: SIGNED16; 
+		nofSlots: SIGNED16; 
 		crc: BOOLEAN; 
-		maindatabegin: INTEGER; 
+		maindatabegin: SIGNED16; 
 		hsynth: BOOLEAN; 
-		store: ARRAY 2 OF ARRAY 32 OF ARRAY 18 OF REAL; 
+		store: ARRAY 2 OF ARRAY 32 OF ARRAY 18 OF FLOAT32; 
 		ssynth: BOOLEAN; 
 		ch: ARRAY 2 OF Channel; 
 		header: ARRAY 36 OF CHAR; 
-		curByte: INTEGER; 
-		curBit: INTEGER; 
-		tempVal: LONGINT; 
+		curByte: SIGNED16; 
+		curBit: SIGNED16; 
+		tempVal: SIGNED32; 
 		scalefactors: ARRAY 2 OF Scalefactors; 
 	END Frame; 
 
-	HuffDecoded = ARRAY (32 + 1) OF ARRAY 18 OF LONGINT; 
+	HuffDecoded = ARRAY (32 + 1) OF ARRAY 18 OF SIGNED32; 
 
-	Granule = ARRAY 32 OF ARRAY 18 OF REAL; 
+	Granule = ARRAY 32 OF ARRAY 18 OF FLOAT32; 
 
 	Stereo = ARRAY 2 OF Granule; 
 
 	PcmStereo = ARRAY 2304 OF CHAR; 
 
-	Raw3 = ARRAY 3 OF REAL; 
+	Raw3 = ARRAY 3 OF FLOAT32; 
 
-	Raw4 = ARRAY 4 OF REAL; 
+	Raw4 = ARRAY 4 OF FLOAT32; 
 
-	Raw5 = ARRAY 5 OF REAL; 
+	Raw5 = ARRAY 5 OF FLOAT32; 
 
-	Raw9 = ARRAY 9 OF REAL; 
+	Raw9 = ARRAY 9 OF FLOAT32; 
 
-	Raw18 = ARRAY 18 OF REAL; 
+	Raw18 = ARRAY 18 OF FLOAT32; 
 
-	Raw32 = ARRAY 32 OF REAL; 
+	Raw32 = ARRAY 32 OF FLOAT32; 
 
-	Raw36 = ARRAY 36 OF REAL; 
+	Raw36 = ARRAY 36 OF FLOAT32; 
 
 	MpstrPtr* = POINTER TO Mpstr; 
 
 	Mpstr* = RECORD 
 		head: SoundDevices.Buffer; 
 		tail: SoundDevices.Buffer; 
-		bsize: INTEGER; 
-		framesize*: INTEGER; 
-		fsizeold: INTEGER; 
+		bsize: SIGNED16; 
+		framesize*: SIGNED16; 
+		fsizeold: SIGNED16; 
 		fr: Frame; 
 		bsspace: ARRAY 2 OF ARRAY 2304 OF CHAR; 
-		hybridblock: ARRAY 2 OF ARRAY 2 OF ARRAY 576 OF REAL; 
-		hybridblc: ARRAY 2 OF INTEGER; 
-		header: LONGINT; 
-		bsnum: INTEGER; 
-		synthbuffs: ARRAY 2 OF ARRAY 2 OF ARRAY 272 OF REAL; 
-		synthbo: INTEGER; 
+		hybridblock: ARRAY 2 OF ARRAY 2 OF ARRAY 576 OF FLOAT32; 
+		hybridblc: ARRAY 2 OF SIGNED16; 
+		header: SIGNED32; 
+		bsnum: SIGNED16; 
+		synthbuffs: ARRAY 2 OF ARRAY 2 OF ARRAY 272 OF FLOAT32; 
+		synthbo: SIGNED16; 
 	END; 
 
 	MP3Decoder* = OBJECT (Codecs.AudioDecoder)
@@ -105,61 +105,61 @@ TYPE
 		fHeader: ARRAY 5 OF CHAR; 
 		cHeader: ARRAY 5 OF CHAR; 
 		data: ARRAY MAXBUF OF CHAR; 
-		curBit, curByte, tempVal, offset: INTEGER; 
-		totBits: LONGINT; 
-		mainDataEnd, frameStart: INTEGER; 
-		vVec: ARRAY 2 OF ARRAY 1024 OF REAL; 
-		vectIdx0, vectIdx1: LONGINT; 
-		frameNum: LONGINT; 
+		curBit, curByte, tempVal, offset: SIGNED16; 
+		totBits: SIGNED32; 
+		mainDataEnd, frameStart: SIGNED16; 
+		vVec: ARRAY 2 OF ARRAY 1024 OF FLOAT32; 
+		vectIdx0, vectIdx1: SIGNED32; 
+		frameNum: SIGNED32; 
 		first: BOOLEAN; 
 		paranoia: BOOLEAN; 
 		s: Streams.Reader; 
-		channels: LONGINT; 
-		bitsPerSample: LONGINT; 
-		samplesPerSec: LONGINT; 
-		bitRate: LONGINT; 
-		totSamples: LONGINT; 
+		channels: SIGNED32; 
+		bitsPerSample: SIGNED32; 
+		samplesPerSec: SIGNED32; 
+		bitRate: SIGNED32; 
+		totSamples: SIGNED32; 
 		hasMoreBytes: BOOLEAN; 
 		out: ARRAY 2 OF PcmStereo; 
-		gr: INTEGER; 
-		outBufferPos: LONGINT; 
+		gr: SIGNED16; 
+		outBufferPos: SIGNED32; 
 
 		PROCEDURE ^ Next*; 
 		PROCEDURE ^ GetHeaderInfo; 
 		PROCEDURE ^ GetSideInfo; 
-		PROCEDURE ^ GetScaleFactors(ch, gr: INTEGER); 
-		PROCEDURE ^ HuffDec(t: INTEGER; VAR x, y, v, w: INTEGER); 
-		PROCEDURE ^ L3HuffDec(VAR is: HuffDecoded; ch, gr: INTEGER; part2Start: LONGINT); 
-		PROCEDURE ^ Dequantize(is: HuffDecoded; VAR xr: Granule; ch, gr: INTEGER); 
-		PROCEDURE ^ JointStereo(ro: Stereo; VAR lr: Stereo; gr: INTEGER); 
-		PROCEDURE ^ Reorder(xr: Granule; VAR re: Granule; ch, gr: INTEGER); 
-		PROCEDURE ^ Antialias(xr: Granule; VAR hybridIn: Granule; ch, gr: INTEGER); 
-		PROCEDURE ^ HybridSynthesis(hybridIn: Granule; VAR hybridOut: Granule; ch, gr: INTEGER); 
-		PROCEDURE ^ IMDCT(in: Raw18; VAR out: Raw36; bt: INTEGER); 
+		PROCEDURE ^ GetScaleFactors(ch, gr: SIGNED16); 
+		PROCEDURE ^ HuffDec(t: SIGNED16; VAR x, y, v, w: SIGNED16); 
+		PROCEDURE ^ L3HuffDec(VAR is: HuffDecoded; ch, gr: SIGNED16; part2Start: SIGNED32); 
+		PROCEDURE ^ Dequantize(is: HuffDecoded; VAR xr: Granule; ch, gr: SIGNED16); 
+		PROCEDURE ^ JointStereo(ro: Stereo; VAR lr: Stereo; gr: SIGNED16); 
+		PROCEDURE ^ Reorder(xr: Granule; VAR re: Granule; ch, gr: SIGNED16); 
+		PROCEDURE ^ Antialias(xr: Granule; VAR hybridIn: Granule; ch, gr: SIGNED16); 
+		PROCEDURE ^ HybridSynthesis(hybridIn: Granule; VAR hybridOut: Granule; ch, gr: SIGNED16); 
+		PROCEDURE ^ IMDCT(in: Raw18; VAR out: Raw36; bt: SIGNED16); 
 		PROCEDURE ^ IMDCT3pt(in: Raw3; VAR out: Raw3); 
 		PROCEDURE ^ IMDCT4pt(in: Raw4; VAR out: Raw4); 
 		PROCEDURE ^ IMDCT5pt(in: Raw5; VAR out: Raw5); 
 		PROCEDURE ^ IMDCT9pt(in: Raw9; VAR out: Raw9); 
-		PROCEDURE ^ SubbandSynthesis(in: Granule; VAR out: PcmStereo; ch, gr: INTEGER); 
-		PROCEDURE ^ DCT(in: Raw32; VAR out: Raw32; n: INTEGER); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
-		PROCEDURE ^ GetCurrentSample*(): LONGINT; 
-		PROCEDURE ^ GetCurrentTime*(): LONGINT; 
-		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: LONGINT); 
-		PROCEDURE ^ GetTotalSamples*(): LONGINT; 
-		PROCEDURE ^ SetStreamLength*(length: LONGINT); 
+		PROCEDURE ^ SubbandSynthesis(in: Granule; VAR out: PcmStereo; ch, gr: SIGNED16); 
+		PROCEDURE ^ DCT(in: Raw32; VAR out: Raw32; n: SIGNED16); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetCurrentSample*(): SIGNED32; 
+		PROCEDURE ^ GetCurrentTime*(): SIGNED32; 
+		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: SIGNED32); 
+		PROCEDURE ^ GetTotalSamples*(): SIGNED32; 
+		PROCEDURE ^ SetStreamLength*(length: SIGNED32); 
 		PROCEDURE ^ CanSeek*(): BOOLEAN; 
-		PROCEDURE ^ SeekSample*(sample: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ GetAudioTime*(): HUGEINT; 
+		PROCEDURE ^ SeekSample*(sample: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ GetAudioTime*(): SIGNED64; 
 		PROCEDURE ^ FillBuffer*(buffer: SoundDevices.Buffer); 
 		PROCEDURE ^ DoLayer3; 
 		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
 		PROCEDURE ^ GetBit(): BOOLEAN; 
-		PROCEDURE ^ GetBits(count: INTEGER): INTEGER; 
+		PROCEDURE ^ GetBits(count: SIGNED16): SIGNED16; 
 		PROCEDURE ^ GetDataBit(): BOOLEAN; 
-		PROCEDURE ^ GetDataBits(count: INTEGER): INTEGER; 
-		PROCEDURE ^ GoBackNBits(n: INTEGER); 
+		PROCEDURE ^ GetDataBits(count: SIGNED16): SIGNED16; 
+		PROCEDURE ^ GoBackNBits(n: SIGNED16); 
 	END MP3Decoder; 
 
 	; 
@@ -168,43 +168,43 @@ TYPE
 
 	; 
 VAR 
-	JSBTABLE: ARRAY 4 OF INTEGER; 
-	BITRATE: ARRAY 15 OF INTEGER; 
-	FREQUENCY: ARRAY 4 OF REAL; 
+	JSBTABLE: ARRAY 4 OF SIGNED16; 
+	BITRATE: ARRAY 15 OF SIGNED16; 
+	FREQUENCY: ARRAY 4 OF FLOAT32; 
 	SFBTABLE: RECORD 
-		l: ARRAY 5 OF INTEGER; 
-		s: ARRAY 3 OF INTEGER; 
+		l: ARRAY 5 OF SIGNED16; 
+		s: ARRAY 3 OF SIGNED16; 
 	END; 
-	SLEN: ARRAY 2 OF ARRAY 16 OF INTEGER; 
+	SLEN: ARRAY 2 OF ARRAY 16 OF SIGNED16; 
 	SFBIDX: ARRAY 3 OF RECORD 
-		l: ARRAY 23 OF INTEGER; 
-		s: ARRAY 14 OF INTEGER; 
+		l: ARRAY 23 OF SIGNED16; 
+		s: ARRAY 14 OF SIGNED16; 
 	END; 
-	PRETAB: ARRAY 22 OF INTEGER; 
+	PRETAB: ARRAY 22 OF SIGNED16; 
 	H: ARRAY 34 OF RECORD 
-		len, xlen, ylen: INTEGER; 
-		linbits: INTEGER; 
-		v: POINTER TO ARRAY OF POINTER TO ARRAY OF INTEGER; 
+		len, xlen, ylen: SIGNED16; 
+		linbits: SIGNED16; 
+		v: POINTER TO ARRAY OF POINTER TO ARRAY OF SIGNED16; 
 	END; 
-	ISPOW: ARRAY 8207 OF REAL; 
-	GGPOW: ARRAY 256 OF REAL; 
-	SGPOW: ARRAY 8 OF REAL; 
-	SFSPOW: ARRAY 2 OF ARRAY 16 OF REAL; 
-	SFLPOW: ARRAY 2 OF ARRAY 16 OF ARRAY 2 OF ARRAY 22 OF REAL; 
-	STEREOTAN: ARRAY 8 OF REAL; 
-	CI, CA, CS: ARRAY 8 OF REAL; 
-	IMDCTWIN: ARRAY 4 OF ARRAY 36 OF REAL; 
-	IMDCTCOS: ARRAY 5 OF REAL; 
-	IMDCTSIN: ARRAY 4 OF REAL; 
-	IMDCTSQRT: REAL; 
-	POSTTWIDDLE6: ARRAY 3 OF REAL; 
-	POSTTWIDDLE9: ARRAY 4 OF REAL; 
-	POSTTWIDDLE12: ARRAY 6 OF REAL; 
-	POSTTWIDDLE18: ARRAY 9 OF REAL; 
-	POSTTWIDDLE36: ARRAY 18 OF REAL; 
-	GS: ARRAY 512 OF REAL; 
-	DCTCOS: ARRAY 2 OF ARRAY 2 OF REAL; 
-	DCTTWIDDLE: ARRAY 16 OF ARRAY 33 OF REAL; 
+	ISPOW: ARRAY 8207 OF FLOAT32; 
+	GGPOW: ARRAY 256 OF FLOAT32; 
+	SGPOW: ARRAY 8 OF FLOAT32; 
+	SFSPOW: ARRAY 2 OF ARRAY 16 OF FLOAT32; 
+	SFLPOW: ARRAY 2 OF ARRAY 16 OF ARRAY 2 OF ARRAY 22 OF FLOAT32; 
+	STEREOTAN: ARRAY 8 OF FLOAT32; 
+	CI, CA, CS: ARRAY 8 OF FLOAT32; 
+	IMDCTWIN: ARRAY 4 OF ARRAY 36 OF FLOAT32; 
+	IMDCTCOS: ARRAY 5 OF FLOAT32; 
+	IMDCTSIN: ARRAY 4 OF FLOAT32; 
+	IMDCTSQRT: FLOAT32; 
+	POSTTWIDDLE6: ARRAY 3 OF FLOAT32; 
+	POSTTWIDDLE9: ARRAY 4 OF FLOAT32; 
+	POSTTWIDDLE12: ARRAY 6 OF FLOAT32; 
+	POSTTWIDDLE18: ARRAY 9 OF FLOAT32; 
+	POSTTWIDDLE36: ARRAY 18 OF FLOAT32; 
+	GS: ARRAY 512 OF FLOAT32; 
+	DCTCOS: ARRAY 2 OF ARRAY 2 OF FLOAT32; 
+	DCTTWIDDLE: ARRAY 16 OF ARRAY 33 OF FLOAT32; 
 
 	PROCEDURE ^ LoadHuffmanTables; 
 	PROCEDURE ^ InitTables; 

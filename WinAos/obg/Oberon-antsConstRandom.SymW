@@ -3,30 +3,30 @@ MODULE antsConstRandom IN Oberon;
 CONST 
 	idversion* = \"constRandom"\; 
 TYPE 
-	Bits = LONGINT; 
+	Bits = SIGNED32; 
 
 	tRandom = POINTER TO tRandomDesc; 
 
 	tRandomDesc = RECORD (vyRanBase.tRandomNumberDesc)
-		constval: LONGINT; 
-		max: LONGINT; 
+		constval: SIGNED32; 
+		max: SIGNED32; 
 	END; 
 
 	PROCEDURE ^ Next(r: vyRanBase.tRandom); 
-	PROCEDURE ^ Max(r: vyRanBase.tRandom): LONGINT; 
+	PROCEDURE ^ Max(r: vyRanBase.tRandom): SIGNED32; 
 	PROCEDURE ^ Get(r: vyRanBase.tRandom): Bits; 
-	PROCEDURE ^ GetUniform(r: vyRanBase.tRandom): LONGREAL; 
-	PROCEDURE ^ RandomUVX(r: vyRanBase.tRandom; count: LONGINT; VAR nrs: ARRAY OF LONGREAL; start: LONGINT); 
-	PROCEDURE ^ RandomUV(r: vyRanBase.tRandom; count: LONGINT; VAR nrs: ARRAY OF REAL; start: LONGINT); 
-	PROCEDURE ^ GetL(r: vyRanBase.tRandom; top: LONGINT): LONGINT; 
-	PROCEDURE ^ RandomLV(r: vyRanBase.tRandom; top, count: LONGINT; VAR nrs: ARRAY OF LONGINT; start: LONGINT); 
+	PROCEDURE ^ GetUniform(r: vyRanBase.tRandom): FLOAT64; 
+	PROCEDURE ^ RandomUVX(r: vyRanBase.tRandom; count: SIGNED32; VAR nrs: ARRAY OF FLOAT64; start: SIGNED32); 
+	PROCEDURE ^ RandomUV(r: vyRanBase.tRandom; count: SIGNED32; VAR nrs: ARRAY OF FLOAT32; start: SIGNED32); 
+	PROCEDURE ^ GetL(r: vyRanBase.tRandom; top: SIGNED32): SIGNED32; 
+	PROCEDURE ^ RandomLV(r: vyRanBase.tRandom; top, count: SIGNED32; VAR nrs: ARRAY OF SIGNED32; start: SIGNED32); 
 	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ HandleFileMsg(obj: tRandom; VAR msg: Objects.FileMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitBasic(r: tRandom); 
 	PROCEDURE ^ Init(r: tRandom); 
 	PROCEDURE ^ Alloc*; 
-	PROCEDURE ^ New*(val, max: LONGINT): tRandom; 
+	PROCEDURE ^ New*(val, max: SIGNED32): tRandom; 
 	PROCEDURE ^ Install*; 
 BEGIN
 END antsConstRandom.

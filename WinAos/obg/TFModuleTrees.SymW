@@ -75,7 +75,7 @@ TYPE
 		references: Reference; 
 		errorHighlights, tempHighlights: CurrentHighlights; 
 		singleSuggestion: TS.NamedObject; 
-		suggestionStart: LONGINT; 
+		suggestionStart: SIGNED32; 
 		cursorScope: TS.Scope; 
 		cursorIsFirstLevelScope: BOOLEAN; 
 
@@ -99,16 +99,16 @@ TYPE
 		PROCEDURE ^ SelectRangeHandler(sender, data: ANY); 
 		PROCEDURE ^ DelActualParameterHandler(sender, data: ANY); 
 		PROCEDURE ^ NextUseHandler(sender, data: ANY); 
-		PROCEDURE ^ GetTextInfo(CONST name: ARRAY OF CHAR; fp, tp: LONGINT; color: LONGINT; style: SET; def: TS.NamedObject): TextInfo; 
+		PROCEDURE ^ GetTextInfo(CONST name: ARRAY OF CHAR; fp, tp: SIGNED32; color: SIGNED32; style: SET; def: TS.NamedObject): TextInfo; 
 		PROCEDURE ^ NewNode(parent: WMTrees.TreeNode; caption: Strings.String; ti: TextInfo): WMTrees.TreeNode; 
 		PROCEDURE ^ TraverseTypeScope(curNode: WMTrees.TreeNode; t: TS.Type); 
 		PROCEDURE ^ TraverseProcDecl(curNode: WMTrees.TreeNode; p: TS.ProcDecl); 
-		PROCEDURE ^ MakeReference(no: TS.NamedObject; from, to: LONGINT); 
+		PROCEDURE ^ MakeReference(no: TS.NamedObject; from, to: SIGNED32); 
 		PROCEDURE ^ UnknownIdentifierError(scope: TS.Scope; first: BOOLEAN; ident: TS.Ident); 
 		PROCEDURE ^ TraverseScope(curNode: WMTrees.TreeNode; scope: TS.Scope); 
 		PROCEDURE ^ GetNextNode(this: WMTrees.TreeNode; ignoreChildren: BOOLEAN): WMTrees.TreeNode; 
 		PROCEDURE ^ SelectNodeByNamedObject(no: TS.NamedObject; gotoDef: BOOLEAN): BOOLEAN; 
-		PROCEDURE ^ FindScopeByPos(pos: LONGINT); 
+		PROCEDURE ^ FindScopeByPos(pos: SIGNED32); 
 		PROCEDURE ^ FindIdentByPos(pos: SIZE); 
 		PROCEDURE ^ HandleMacro*(sender, data: ANY); 
 		PROCEDURE ^ Follow(sender, data: ANY); 
@@ -124,7 +124,7 @@ VAR
 
 	PROCEDURE ^ GetInsertString(ident: TS.NamedObject; VAR newStr: ARRAY OF CHAR); 
 	PROCEDURE ^ FindSuggestions(scope: TS.Scope; first: BOOLEAN; prefix: ARRAY OF CHAR; suggestions: TS.ObjectList); 
-	PROCEDURE ^ GetProcedureType(proc: TS.ProcDecl): LONGINT; 
+	PROCEDURE ^ GetProcedureType(proc: TS.ProcDecl): SIGNED32; 
 	PROCEDURE ^ GenModuleTree*(): PETTrees.Tree; 
 BEGIN
 END TFModuleTrees.

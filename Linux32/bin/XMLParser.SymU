@@ -12,14 +12,14 @@ TYPE
 		dtd: XML.DocTypeDecl; 
 		elemReg*: XML.ElementRegistry; 
 		reportError*: PROCEDURE {DELEGATE}(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
-		res*: LONGINT; 
+		res*: SIGNED32; 
 		ds1, ds2: DynamicStrings.DynamicString; 
 
 		PROCEDURE ^  & Init*(s: Scanner.Scanner); 
 		PROCEDURE ^ Error(CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ CheckSymbol(expectedSymbols: SET; CONST errormsg: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ ExpandCharacterRef(num: LONGINT): CHAR; 
-		PROCEDURE ^ ExpandEntityRef(CONST name: ARRAY OF CHAR; type: SHORTINT): String; 
+		PROCEDURE ^ ExpandCharacterRef(num: SIGNED32): CHAR; 
+		PROCEDURE ^ ExpandEntityRef(CONST name: ARRAY OF CHAR; type: SIGNED8): String; 
 		PROCEDURE ^ Parse*(): XML.Document; 
 		PROCEDURE ^ ParseExtGenEntity*(extEntityRef: XML.ExternalEntityRef); 
 		PROCEDURE ^ ParseXMLDecl(): XML.XMLDecl; 
@@ -30,7 +30,7 @@ TYPE
 		PROCEDURE ^ ParseMarkupDecls; 
 		PROCEDURE ^ ParseElementDecl(dtd: XML.DocTypeDecl); 
 		PROCEDURE ^ ParseAttListDecl(dtd: XML.DocTypeDecl); 
-		PROCEDURE ^ ParseContentParticle(VAR contentType: SHORTINT): XML.CollectionCP; 
+		PROCEDURE ^ ParseContentParticle(VAR contentType: SIGNED8): XML.CollectionCP; 
 		PROCEDURE ^ ParseElementContent(): XML.ContentParticle; 
 		PROCEDURE ^ ParseEntityDecl(dtd: XML.DocTypeDecl); 
 		PROCEDURE ^ ParseNotationDecl(dtd: XML.DocTypeDecl); 
@@ -57,7 +57,7 @@ VAR
 	END; 
 
 	PROCEDURE ^ IsPubidLiteral(CONST str: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ StrToInt(VAR str: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ StrToInt(VAR str: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ DefaultReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ ExpandPredefinedEntity(CONST name: ARRAY OF CHAR): Strings.String; 
 	PROCEDURE ^ Init; 

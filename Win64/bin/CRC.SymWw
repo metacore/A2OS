@@ -2,38 +2,38 @@ MODULE CRC;
 	IMPORT SYSTEM, Streams;
 CONST 
 	Init16 =  -1; 
-	Init32 = LONGINT(4294967295); 
+	Init32 = SIGNED32(4294967295); 
 TYPE 
 	CRC16Stream* = OBJECT (Streams.Writer)
 	VAR 
-		crc*: INTEGER; 
+		crc*: SIGNED16; 
 
 		PROCEDURE ^  & InitStream*; 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ SetCRC*(crc: INTEGER); 
-		PROCEDURE ^ GetCRC*(): INTEGER; 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SetCRC*(crc: SIGNED16); 
+		PROCEDURE ^ GetCRC*(): SIGNED16; 
 	END CRC16Stream; 
 
 	CRC32Stream* = OBJECT (Streams.Writer)
 	VAR 
-		crc: LONGINT; 
+		crc: SIGNED32; 
 
 		PROCEDURE ^  & InitStream*; 
 		PROCEDURE ^ Reset*; 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ SetCRC*(crc: LONGINT); 
-		PROCEDURE ^ GetCRC*(): LONGINT; 
-		PROCEDURE ^ GetUninvertedCRC*(): LONGINT; 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SetCRC*(crc: SIGNED32); 
+		PROCEDURE ^ GetCRC*(): SIGNED32; 
+		PROCEDURE ^ GetUninvertedCRC*(): SIGNED32; 
 	END CRC32Stream; 
 
 	CRC32* = OBJECT 
 	VAR 
-		crc: LONGINT; 
+		crc: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Char*(c: CHAR); 
-		PROCEDURE ^ Add*(i: LONGINT); 
-		PROCEDURE ^ Get*(): LONGINT; 
+		PROCEDURE ^ Add*(i: SIGNED32); 
+		PROCEDURE ^ Get*(): SIGNED32; 
 	END CRC32; 
 VAR 
 	CRC16Table, CRC32Table: ARRAY 256 OF SET32; 

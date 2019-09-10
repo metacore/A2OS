@@ -54,8 +54,8 @@ TYPE
 
 	Scanner* = OBJECT 
 	VAR 
-		sym-: SHORTINT; 
-		line-, col-, oldpos, pos: LONGINT; 
+		sym-: SIGNED8; 
+		line-, col-, oldpos, pos: SIGNED32; 
 		reportError*: PROCEDURE {DELEGATE}(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 		nextCh: CHAR; 
 		dynstr: DynamicStrings.DynamicString; 
@@ -78,9 +78,9 @@ TYPE
 		PROCEDURE ^ ScanPInstruction*; 
 		PROCEDURE ^ ScanMarkup*; 
 		PROCEDURE ^ ScanContent*; 
-		PROCEDURE ^ GetString*(type: LONGINT): String; 
-		PROCEDURE ^ GetPos*(): LONGINT; 
-		PROCEDURE ^ GetOldPos*(): LONGINT; 
+		PROCEDURE ^ GetString*(type: SIGNED32): String; 
+		PROCEDURE ^ GetPos*(): SIGNED32; 
+		PROCEDURE ^ GetOldPos*(): SIGNED32; 
 	END Scanner; 
 
 	PROCEDURE ^ IsWhiteSpace(ch: CHAR): BOOLEAN; 

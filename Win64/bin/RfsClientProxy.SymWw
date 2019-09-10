@@ -36,23 +36,23 @@ CONST
 	Ok = TCP.Ok; 
 	DefaultPort = 9107; 
 TYPE 
-	Address* = LONGINT; 
+	Address* = SIGNED32; 
 
 	Dir* = OBJECT 
 	VAR 
 		first*: Dirent; 
 		last*: Dirent; 
-		nbrOfEntrys*: LONGINT; 
+		nbrOfEntrys*: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Insert*(VAR name: ARRAY OF CHAR; off, len, time, date, size: LONGINT); 
-		PROCEDURE ^ Get*(VAR name: ARRAY OF CHAR; VAR time, date, size: LONGINT); 
+		PROCEDURE ^ Insert*(VAR name: ARRAY OF CHAR; off, len, time, date, size: SIGNED32); 
+		PROCEDURE ^ Get*(VAR name: ARRAY OF CHAR; VAR time, date, size: SIGNED32); 
 	END Dir; 
 
 	Dirent* = OBJECT 
 	VAR 
 		name: ARRAY MaxNameLen OF CHAR; 
-		time, date, size: LONGINT; 
+		time, date, size: SIGNED32; 
 		next: Dirent; 
 	END Dirent; 
 
@@ -60,41 +60,41 @@ TYPE
 	VAR 
 		connection: RfsConnection.Connection; 
 		user, passwd, host, path: ARRAY MaxNameLen OF CHAR; 
-		port: INTEGER; 
+		port: SIGNED16; 
 		buf, backupBuf: ARRAY BufSize OF CHAR; 
 
-		PROCEDURE ^  & InitProxy*(VAR user, passwd, host, path: ARRAY OF CHAR; port: INTEGER); 
-		PROCEDURE ^ Error*(VAR errorcode: WORD); 
-		PROCEDURE ^ GetAttr*(fileID: LONGINT; VAR fileLen, time, date: LONGINT; VAR errorcode: WORD); 
-		PROCEDURE ^ SetAttr*(VAR filename: ARRAY OF CHAR; time, date: LONGINT; VAR errorcode: LONGINT); 
-		PROCEDURE ^ Lookup*(VAR filename: ARRAY OF CHAR; VAR fileID: LONGINT; VAR errorcode: WORD); 
-		PROCEDURE ^ Read*(fileID, off, len: LONGINT; VAR buffer: ARRAY OF CHAR; dstOff: LONGINT; VAR received: SIZE; VAR errorcode: WORD); 
-		PROCEDURE ^ Write*(fileID, off, len: LONGINT; VAR buffer: ARRAY OF CHAR; VAR written: LONGINT; VAR errorcode: WORD); 
-		PROCEDURE ^ Create*(VAR filename: ARRAY OF CHAR; VAR fileID: LONGINT; VAR errorcode: WORD); 
-		PROCEDURE ^ Remove*(VAR filename: ARRAY OF CHAR; VAR errorcode: WORD); 
-		PROCEDURE ^ Rename*(VAR filenameFrom, filenameTo: ARRAY OF CHAR; VAR errorcode: WORD); 
-		PROCEDURE ^ ReadDir*(CONST filename, mask: ARRAY OF CHAR; detail, cookie: LONGINT; dir: Dir; VAR endOfDir: LONGINT; VAR errorcode: WORD); 
-		PROCEDURE ^ CreateTmp*(VAR filename: ARRAY OF CHAR; VAR hashval: LONGINT; VAR errorcode: WORD); 
-		PROCEDURE ^ ChDir*(VAR dir: ARRAY OF CHAR; VAR errorcode: WORD); 
-		PROCEDURE ^ Kill*(VAR errorcode: WORD); 
-		PROCEDURE ^ Authent*(VAR user, passwd, path: ARRAY OF CHAR; VAR errorcode: WORD); 
-		PROCEDURE ^ Mount*(VAR errorcode: WORD); 
-		PROCEDURE ^ Unmount*(VAR errorcode: WORD); 
+		PROCEDURE ^  & InitProxy*(VAR user, passwd, host, path: ARRAY OF CHAR; port: SIGNED16); 
+		PROCEDURE ^ Error*(VAR errorcode: INTEGER); 
+		PROCEDURE ^ GetAttr*(fileID: SIGNED32; VAR fileLen, time, date: SIGNED32; VAR errorcode: INTEGER); 
+		PROCEDURE ^ SetAttr*(VAR filename: ARRAY OF CHAR; time, date: SIGNED32; VAR errorcode: SIGNED32); 
+		PROCEDURE ^ Lookup*(VAR filename: ARRAY OF CHAR; VAR fileID: SIGNED32; VAR errorcode: INTEGER); 
+		PROCEDURE ^ Read*(fileID, off, len: SIGNED32; VAR buffer: ARRAY OF CHAR; dstOff: SIGNED32; VAR received: SIZE; VAR errorcode: INTEGER); 
+		PROCEDURE ^ Write*(fileID, off, len: SIGNED32; VAR buffer: ARRAY OF CHAR; VAR written: SIGNED32; VAR errorcode: INTEGER); 
+		PROCEDURE ^ Create*(VAR filename: ARRAY OF CHAR; VAR fileID: SIGNED32; VAR errorcode: INTEGER); 
+		PROCEDURE ^ Remove*(VAR filename: ARRAY OF CHAR; VAR errorcode: INTEGER); 
+		PROCEDURE ^ Rename*(VAR filenameFrom, filenameTo: ARRAY OF CHAR; VAR errorcode: INTEGER); 
+		PROCEDURE ^ ReadDir*(CONST filename, mask: ARRAY OF CHAR; detail, cookie: SIGNED32; dir: Dir; VAR endOfDir: SIGNED32; VAR errorcode: INTEGER); 
+		PROCEDURE ^ CreateTmp*(VAR filename: ARRAY OF CHAR; VAR hashval: SIGNED32; VAR errorcode: INTEGER); 
+		PROCEDURE ^ ChDir*(VAR dir: ARRAY OF CHAR; VAR errorcode: INTEGER); 
+		PROCEDURE ^ Kill*(VAR errorcode: INTEGER); 
+		PROCEDURE ^ Authent*(VAR user, passwd, path: ARRAY OF CHAR; VAR errorcode: INTEGER); 
+		PROCEDURE ^ Mount*(VAR errorcode: INTEGER); 
+		PROCEDURE ^ Unmount*(VAR errorcode: INTEGER); 
 		PROCEDURE ^ AllocBlock*(hint: Address; VAR adr: Address); 
 		PROCEDURE ^ FreeBlock*(adr: Address); 
 		PROCEDURE ^ MarkBlock*(adr: Address); 
 		PROCEDURE ^ Marked*(adr: Address): BOOLEAN; 
-		PROCEDURE ^ Available*(): LONGINT; 
-		PROCEDURE ^ GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR); 
-		PROCEDURE ^ PutBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR); 
+		PROCEDURE ^ Available*(): SIGNED32; 
+		PROCEDURE ^ GetBlock*(adr: SIGNED32; VAR blk: ARRAY OF CHAR); 
+		PROCEDURE ^ PutBlock*(adr: SIGNED32; VAR blk: ARRAY OF CHAR); 
 	END Proxy; 
 
 	PROCEDURE ^ New*(context: Files.Parameters); 
-	PROCEDURE ^ GetResult(connection: RfsConnection.Connection; VAR errorcode: WORD; VAR dataBytes, received: SIZE; VAR buf: ARRAY OF CHAR); 
+	PROCEDURE ^ GetResult(connection: RfsConnection.Connection; VAR errorcode: INTEGER; VAR dataBytes, received: SIZE; VAR buf: ARRAY OF CHAR); 
 	PROCEDURE ^ Int2Char*(int: SIZE; VAR buf: ARRAY OF CHAR; off: SIZE); 
-	PROCEDURE ^ Char2Int*(buf: ARRAY OF CHAR; off: LONGINT; VAR int: LONGINT); 
-	PROCEDURE ^ ReadInteger*(connection: RfsConnection.Connection; VAR res: WORD): LONGINT; 
-	PROCEDURE ^ Len(x: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ Char2Int*(buf: ARRAY OF CHAR; off: SIGNED32; VAR int: SIGNED32); 
+	PROCEDURE ^ ReadInteger*(connection: RfsConnection.Connection; VAR res: INTEGER): SIGNED32; 
+	PROCEDURE ^ Len(x: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ CopyBuffer*(CONST bufFrom: ARRAY OF CHAR; offFrom: SIZE; VAR bufTo: ARRAY OF CHAR; offTo, len: SIZE); 
 BEGIN
 END RfsClientProxy.

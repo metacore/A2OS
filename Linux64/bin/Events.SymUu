@@ -23,9 +23,9 @@ TYPE
 
 	Event* = RECORD 
 		originator*: Name; 
-		type*, class*, subclass*, code*: SHORTINT; 
+		type*, class*, subclass*, code*: SIGNED8; 
 		message*: Message; 
-		date*, time*: LONGINT; 
+		date*, time*: SIGNED32; 
 	END; 
 
 	Sink* = OBJECT {EXCLUSIVE} 
@@ -51,8 +51,8 @@ TYPE
 
 	EventQueue = OBJECT {EXCLUSIVE} 
 	VAR 
-		size: LONGINT; 
-		head, len: LONGINT; 
+		size: SIGNED32; 
+		head, len: SIGNED32; 
 		ringbuffer: POINTER TO ARRAY OF Event; 
 		running: BOOLEAN; 
 
@@ -62,12 +62,12 @@ TYPE
 		PROCEDURE ^ IsEmpty(): BOOLEAN; 
 		PROCEDURE ^ AwaitEvents; 
 		PROCEDURE ^ Stop; 
-		PROCEDURE ^  & Init*(size: LONGINT); 
+		PROCEDURE ^  & Init*(size: SIGNED32); 
 	END EventQueue; 
 
 	EventDispatcher = OBJECT {EXCLUSIVE} 
 	VAR 
-		state: LONGINT; 
+		state: SIGNED32; 
 		queue: EventQueue; 
 		sinks: Sink; 
 
@@ -81,13 +81,13 @@ TYPE
 	END EventDispatcher; 
 VAR 
 	dispatcher: EventDispatcher; 
-	NnofEvents-, NnofDiscarded-, NnofEventsHandled-, NnofEventsNotHandled-, NnofUnknown-, NnofUndefined-, NnofInformation-, NnofWarning-, NnofError-, NnofCritical-, NnofFailure-, NnofListeners-: LONGINT; 
+	NnofEvents-, NnofDiscarded-, NnofEventsHandled-, NnofEventsNotHandled-, NnofUnknown-, NnofUndefined-, NnofInformation-, NnofWarning-, NnofError-, NnofCritical-, NnofFailure-, NnofListeners-: SIGNED32; 
 
 	PROCEDURE ^ Register*(sink: Sink); 
 	PROCEDURE ^ Unregister*(sink: Sink); 
 	PROCEDURE ^ Add*(event: Event; showOnKernelLog: BOOLEAN); 
-	PROCEDURE ^ AddEvent*(CONST originator: Name; type, class, subclass, code: SHORTINT; CONST message: Message; showOnKernelLog: BOOLEAN); 
-	PROCEDURE ^ NewEvent*(CONST originator: Name; type, class, subclass, code: SHORTINT; CONST message: Message): Event; 
+	PROCEDURE ^ AddEvent*(CONST originator: Name; type, class, subclass, code: SIGNED8; CONST message: Message; showOnKernelLog: BOOLEAN); 
+	PROCEDURE ^ NewEvent*(CONST originator: Name; type, class, subclass, code: SIGNED8; CONST message: Message): Event; 
 	PROCEDURE ^ ShowOnKernelLog(event: Event); 
 	PROCEDURE ^ UpdateStats(event: Event; discarded: BOOLEAN); 
 	PROCEDURE ^ ClearStats*; 

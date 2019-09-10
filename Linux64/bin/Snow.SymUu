@@ -7,7 +7,7 @@ CONST
 	Terminating = 2; 
 	Terminated = 3; 
 VAR 
-	state: LONGINT; 
+	state: SIGNED32; 
 
 	PROCEDURE ^ Snow*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 

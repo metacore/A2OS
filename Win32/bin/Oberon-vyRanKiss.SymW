@@ -10,20 +10,20 @@ TYPE
 
 	tSeed = OBJECT (vyRanBase.tSeed)
 	VAR 
-		x, y, z, w, carry: LONGINT; 
+		x, y, z, w, carry: SIGNED32; 
 
 		PROCEDURE ^ Store*(VAR r: Files.Rider); 
-		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: SIGNED16); 
 	END tSeed; 
 
 	PROCEDURE ^ AllocSeed*(): vyRanBase.tSeed; 
-	PROCEDURE ^ Kiss(VAR x, y, z, w, carry: Bits; count: LONGINT; VAR nrs: ARRAY OF Bits; start: LONGINT); 
+	PROCEDURE ^ Kiss(VAR x, y, z, w, carry: Bits; count: SIGNED32; VAR nrs: ARRAY OF Bits; start: SIGNED32); 
 	PROCEDURE ^ Next(r: vyRanBase.tRandom); 
 	PROCEDURE ^ Max(r: vyRanBase.tRandom): Bits; 
 	PROCEDURE ^ Get(r: vyRanBase.tRandom): Bits; 
-	PROCEDURE ^ GetV(r: vyRanBase.tRandom; count: LONGINT; VAR nrs: ARRAY OF Bits; start: LONGINT); 
-	PROCEDURE ^ GetUniform(r: vyRanBase.tRandom): LONGREAL; 
-	PROCEDURE ^ GetL(r: vyRanBase.tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ GetV(r: vyRanBase.tRandom; count: SIGNED32; VAR nrs: ARRAY OF Bits; start: SIGNED32); 
+	PROCEDURE ^ GetUniform(r: vyRanBase.tRandom): FLOAT64; 
+	PROCEDURE ^ GetL(r: vyRanBase.tRandom; top: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Reset(r: vyRanBase.tRandom); 
 	PROCEDURE ^ HandleAttributes(obj: vyRanBase.tRandom; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 

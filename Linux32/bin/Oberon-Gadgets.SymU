@@ -19,13 +19,13 @@ TYPE
 	END; 
 
 	PriorityMsg* = RECORD (Display.FrameMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 		passon*: BOOLEAN; 
 	END; 
 
 	CmdMsg* = RECORD (Objects.ObjMsg)
 		cmd*: ARRAY 128 OF CHAR; 
-		res*: INTEGER; 
+		res*: SIGNED16; 
 	END; 
 
 	Object* = POINTER TO ObjDesc; 
@@ -48,19 +48,19 @@ TYPE
 	View* = POINTER TO ViewDesc; 
 
 	ViewDesc* = RECORD (FrameDesc)
-		absX*, absY*: INTEGER; 
-		border*: INTEGER; 
+		absX*, absY*: SIGNED16; 
+		border*: SIGNED16; 
 		ClipMask*: PROCEDURE (v: View; M: Display3.Mask; ondisplay: BOOLEAN); 
 	END; 
 
-	MakeMaskHandler* = PROCEDURE (G: Frame; X, Y: INTEGER; dlink: Objects.Object; VAR M: Display3.Mask); 
+	MakeMaskHandler* = PROCEDURE (G: Frame; X, Y: SIGNED16; dlink: Objects.Object; VAR M: Display3.Mask); 
 
 	RecursiveMsg = RECORD (Display.FrameMsg)
 	END; 
 
 	Stack = RECORD 
 		Mdlink, Fdlink: Objects.Object; 
-		absX, absY: INTEGER; 
+		absX, absY: SIGNED16; 
 	END; 
 
 	Alias = POINTER TO AliasDesc; 
@@ -85,7 +85,7 @@ VAR
 	W, WW, mW: Texts.Writer; 
 	recurse, uparrowdone, verbose, enableMove: BOOLEAN; 
 	pMask: Display3.Mask; 
-	tmpX, tmpY: INTEGER; 
+	tmpX, tmpY: SIGNED16; 
 
 	PROCEDURE ^ Log; 
 	PROCEDURE ^ Push(VAR S: Stack; F: View; VAR M: Display.FrameMsg); 
@@ -96,8 +96,8 @@ VAR
 	PROCEDURE ^ NameObj*(obj: Objects.Object; name: ARRAY OF CHAR); 
 	PROCEDURE ^ FindPublicObj*(name: ARRAY OF CHAR): Objects.Object; 
 	PROCEDURE ^ FindObj*(context: Objects.Object; name: ARRAY OF CHAR): Objects.Object; 
-	PROCEDURE ^ ModifySize*(F: Display.Frame; W, H: INTEGER); 
-	PROCEDURE ^ Consume*(F, f: Frame; u, v: INTEGER); 
+	PROCEDURE ^ ModifySize*(F: Display.Frame; W, H: SIGNED16); 
+	PROCEDURE ^ Consume*(F, f: Frame; u, v: SIGNED16); 
 	PROCEDURE ^ Clone*(obj: Objects.Object; deep: BOOLEAN): Objects.Object; 
 	PROCEDURE ^ RecursiveHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Recursive*(parent, newchild: Objects.Object): BOOLEAN; 
@@ -107,27 +107,27 @@ VAR
 	PROCEDURE ^ CopyObject*(VAR M: Objects.CopyMsg; obj, obj0: Object); 
 	PROCEDURE ^ EmptyHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Adjust*(F: Display.Frame; VAR M: Display.ModifyMsg); 
-	PROCEDURE ^ ThisFrame*(X, Y: INTEGER; VAR F: Display.Frame; VAR u, v: INTEGER); 
+	PROCEDURE ^ ThisFrame*(X, Y: SIGNED16; VAR F: Display.Frame; VAR u, v: SIGNED16); 
 	PROCEDURE ^ SizeFrame*(F: Display.Frame; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ MoveFrame*(F: Display.Frame; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ Integrate*(obj: Objects.Object); 
-	PROCEDURE ^ Atom(lib: Objects.Library; name: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ Atom(lib: Objects.Library; name: ARRAY OF CHAR): SIGNED16; 
 	PROCEDURE ^ WriteRef*(VAR r: Files.Rider; lib: Objects.Library; obj: Objects.Object); 
 	PROCEDURE ^ ReadRef*(VAR r: Files.Rider; lib: Objects.Library; VAR obj: Objects.Object); 
 	PROCEDURE ^ MakeMaskFor(G: Frame); 
-	PROCEDURE ^ MakeMask0(G: Frame; X, Y: INTEGER; dlink: Objects.Object; VAR M: Display3.Mask); 
-	PROCEDURE ^ P(x: INTEGER): INTEGER; 
-	PROCEDURE ^ EnumMakePrinterMask(X, Y, W, H: INTEGER); 
-	PROCEDURE ^ MakePMask0(G: Frame; X, Y: INTEGER; VAR M: Display3.Mask); 
-	PROCEDURE ^ ScaleMask(px, py: INTEGER; in: Display3.Mask; VAR out: Display3.Mask); 
-	PROCEDURE ^ MakePrinterMask0(G: Frame; X, Y: INTEGER; dlink: Objects.Object; VAR M: Display3.Mask); 
+	PROCEDURE ^ MakeMask0(G: Frame; X, Y: SIGNED16; dlink: Objects.Object; VAR M: Display3.Mask); 
+	PROCEDURE ^ P(x: SIGNED16): SIGNED16; 
+	PROCEDURE ^ EnumMakePrinterMask(X, Y, W, H: SIGNED16); 
+	PROCEDURE ^ MakePMask0(G: Frame; X, Y: SIGNED16; VAR M: Display3.Mask); 
+	PROCEDURE ^ ScaleMask(px, py: SIGNED16; in: Display3.Mask; VAR out: Display3.Mask); 
+	PROCEDURE ^ MakePrinterMask0(G: Frame; X, Y: SIGNED16; dlink: Objects.Object; VAR M: Display3.Mask); 
 	PROCEDURE ^ Execute*(cmd: ARRAY OF CHAR; executor, dlink, sender, receiver: Objects.Object); 
 	PROCEDURE ^ ReadName(VAR T: Attributes.Reader; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ Lookup0(VAR T: Attributes.Reader; VAR name: ARRAY OF CHAR; VAR context: Objects.Object); 
 	PROCEDURE ^ ObjAttr(name: ARRAY OF CHAR; context: Objects.Object; VAR W: Texts.Writer); 
-	PROCEDURE ^ StandardMacros(ch: CHAR; VAR T: Attributes.Reader; VAR res: Texts.Text; VAR beg: LONGINT); 
-	PROCEDURE ^ UpArrowMacro(ch: CHAR; VAR T: Attributes.Reader; VAR res: Texts.Text; VAR beg: LONGINT); 
-	PROCEDURE ^ Send*(from: View; X, Y: INTEGER; to: Display.Frame; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ StandardMacros(ch: CHAR; VAR T: Attributes.Reader; VAR res: Texts.Text; VAR beg: SIGNED32); 
+	PROCEDURE ^ UpArrowMacro(ch: CHAR; VAR T: Attributes.Reader; VAR res: Texts.Text; VAR beg: SIGNED32); 
+	PROCEDURE ^ Send*(from: View; X, Y: SIGNED16; to: Display.Frame; VAR M: Display.FrameMsg); 
 	PROCEDURE ^ HandleFrameAttributes(F: Frame; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ HandleObjectAttributes(obj: Object; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ BindObj*(obj: Objects.Object; lib: Objects.Library); 
@@ -143,7 +143,7 @@ VAR
 	PROCEDURE ^ CreateViewModel*(viewnewproc, modelnewproc: ARRAY OF CHAR): Display.Frame; 
 	PROCEDURE ^ AddAlias*(name, value: ARRAY OF CHAR); 
 	PROCEDURE ^ Insert*; 
-	PROCEDURE ^ GetSelection*(VAR objs: Objects.Object; VAR time: LONGINT); 
+	PROCEDURE ^ GetSelection*(VAR objs: Objects.Object; VAR time: SIGNED32); 
 	PROCEDURE ^ CopyPublicObject*(name: ARRAY OF CHAR; deep: BOOLEAN): Objects.Object; 
 	PROCEDURE ^ Change*; 
 	PROCEDURE ^ Copy*; 

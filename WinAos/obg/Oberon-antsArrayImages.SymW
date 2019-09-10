@@ -16,14 +16,14 @@ TYPE
 	PROCEDURE ^ FrameLinks(F: tObject; VAR M: Objects.LinkMsg); 
 	PROCEDURE ^ HandleFileMsg(obj: tObject; VAR msg: Objects.FileMsg); 
 	PROCEDURE ^ CheckDimensions(obj: tObject); 
-	PROCEDURE ^ MinMax(x, min, max: INTEGER): INTEGER; 
+	PROCEDURE ^ MinMax(x, min, max: SIGNED16): SIGNED16; 
 	PROCEDURE ^ Sync*(obj: tObject); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ Init*(obj: tObject); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ FromArray*(obj: tObject; A: antsArrayObjects.tINTEGERObject); 
 	PROCEDURE ^ New*; 
-	PROCEDURE ^ DoToArray*(obj: tObject; depth: LONGINT; name: vyName.tNameArray); 
+	PROCEDURE ^ DoToArray*(obj: tObject; depth: SIGNED32; name: vyName.tNameArray); 
 	PROCEDURE ^ ToArray*; 
 	PROCEDURE ^ finishFile*(VAR f: Files.File; name: ARRAY OF CHAR); 
 	PROCEDURE ^ Load*; 

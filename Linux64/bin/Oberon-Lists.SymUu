@@ -4,8 +4,8 @@ CONST
 	barw = 18; 
 TYPE 
 	Bar = RECORD 
-		bg, box: INTEGER; 
-		range, size, pos: LONGINT; 
+		bg, box: SIGNED16; 
+		range, size, pos: SIGNED32; 
 	END; 
 
 	Item* = POINTER TO ItemDesc; 
@@ -22,48 +22,48 @@ TYPE
 		items*, last*: Item; 
 		beg*: Item; 
 		pointed*: Item; 
-		time*: LONGINT; 
+		time*: SIGNED32; 
 		focus*: BOOLEAN; 
 		sorted*: BOOLEAN; 
-		noitems*: INTEGER; 
+		noitems*: SIGNED16; 
 		cmd*: ARRAY 256 OF CHAR; 
 		scrollbar*: BOOLEAN; 
 		bar: Bar; 
 	END; 
 VAR 
 	W: Texts.Writer; 
-	mayscroll, waittime: LONGINT; 
+	mayscroll, waittime: SIGNED32; 
 	pat, ss: ARRAY 256 OF CHAR; 
-	pos: INTEGER; 
+	pos: SIGNED16; 
 
-	PROCEDURE ^ Dot(R: Display3.Mask; x, y: INTEGER); 
-	PROCEDURE ^ Knob(M: Display3.Mask; x, y, w, h: INTEGER); 
-	PROCEDURE ^ DrawSlider(M: Display3.Mask; VAR bar: Bar; x, y, w, h: INTEGER); 
-	PROCEDURE ^ TrackSlider(M: Display3.Mask; VAR bar: Bar; x, y, w, h: INTEGER); 
-	PROCEDURE ^ Updatebar(F: List; H: INTEGER); 
+	PROCEDURE ^ Dot(R: Display3.Mask; x, y: SIGNED16); 
+	PROCEDURE ^ Knob(M: Display3.Mask; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ DrawSlider(M: Display3.Mask; VAR bar: Bar; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ TrackSlider(M: Display3.Mask; VAR bar: Bar; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ Updatebar(F: List; H: SIGNED16); 
 	PROCEDURE ^ InsertItem*(F: List; s: ARRAY OF CHAR); 
-	PROCEDURE ^ InsertItems*(F: List; T: Texts.Text; beg, end: LONGINT); 
+	PROCEDURE ^ InsertItems*(F: List; T: Texts.Text; beg, end: SIGNED32); 
 	PROCEDURE ^ Sort(F: List); 
 	PROCEDURE ^ ListAttr(F: List; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ RestoreList(F: List; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreList(F: List; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ PrintList(F: List; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ Update(F: List); 
 	PROCEDURE ^ CopyList*(VAR M: Objects.CopyMsg; from, to: List); 
-	PROCEDURE ^ LocateItem(F: List; x, y, MX, MY: INTEGER; VAR item: Item; VAR Y: INTEGER); 
-	PROCEDURE ^ InvertItem(F: List; M: Display3.Mask; x, y: INTEGER; VAR item: Item; VAR Y: INTEGER); 
-	PROCEDURE ^ SelectItem(F: List; M: Display3.Mask; x, y: INTEGER; VAR item: Item; VAR Y: INTEGER); 
+	PROCEDURE ^ LocateItem(F: List; x, y, MX, MY: SIGNED16; VAR item: Item; VAR Y: SIGNED16); 
+	PROCEDURE ^ InvertItem(F: List; M: Display3.Mask; x, y: SIGNED16; VAR item: Item; VAR Y: SIGNED16); 
+	PROCEDURE ^ SelectItem(F: List; M: Display3.Mask; x, y: SIGNED16; VAR item: Item; VAR Y: SIGNED16); 
 	PROCEDURE ^ TimeOk(): BOOLEAN; 
-	PROCEDURE ^ Check(F: List; R: Display3.Mask; x, y, w, h: INTEGER; item: Item; Y: INTEGER; VAR scroll: BOOLEAN); 
-	PROCEDURE ^ Check2(F: List; R: Display3.Mask; x, y, w, h: INTEGER; item: Item; Y: INTEGER; VAR scroll: BOOLEAN); 
+	PROCEDURE ^ Check(F: List; R: Display3.Mask; x, y, w, h: SIGNED16; item: Item; Y: SIGNED16; VAR scroll: BOOLEAN); 
+	PROCEDURE ^ Check2(F: List; R: Display3.Mask; x, y, w, h: SIGNED16; item: Item; Y: SIGNED16; VAR scroll: BOOLEAN); 
 	PROCEDURE ^ DeselectList*(F: List; VAR redraw: BOOLEAN); 
 	PROCEDURE ^ DeleteSelection*(F: List); 
 	PROCEDURE ^ GetSelection*(F: List; VAR T: Texts.Text); 
-	PROCEDURE ^ TrackList(F: List; R: Display3.Mask; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackList(F: List; R: Display3.Mask; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ Search(F: List; ch: CHAR); 
 	PROCEDURE ^ ListHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitList*(F: List); 
 	PROCEDURE ^ NewList*; 
-	PROCEDURE ^ ListFiles(name: ARRAY OF CHAR; time, date, size: LONGINT; VAR cont: BOOLEAN); 
+	PROCEDURE ^ ListFiles(name: ARRAY OF CHAR; time, date, size: SIGNED32; VAR cont: BOOLEAN); 
 	PROCEDURE ^ GetDir(mask: ARRAY OF CHAR; text: Texts.Text); 
 	PROCEDURE ^ Copy(source: ARRAY OF CHAR; VAR dest: ARRAY OF CHAR); 
 	PROCEDURE ^ Directory*; 

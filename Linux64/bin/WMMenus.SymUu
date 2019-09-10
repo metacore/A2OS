@@ -12,9 +12,9 @@ CONST
 	ShadowHeight = 5; 
 	ShadowOffsetVertical = 5; 
 	ShadowOffsetHorizontal = 5; 
-	LightGrey = LONGINT(3233857791); 
-	LightGreyDrag = LONGINT(3233857728); 
-	WhiteDrag = LONGINT(4294967232); 
+	LightGrey = SIGNED32(3233857791); 
+	LightGreyDrag = SIGNED32(3233857728); 
+	WhiteDrag = SIGNED32(4294967232); 
 	TextImageDistance = 4; 
 	MinImageWidth = 4; 
 	HMenuDistance = 8; 
@@ -35,7 +35,7 @@ TYPE
 		horizontal-: WMProperties.BooleanProperty; 
 		horizontalI: BOOLEAN; 
 		openDirection-: WMProperties.Int32Property; 
-		openDirectionI: LONGINT; 
+		openDirectionI: SIGNED32; 
 		clSelected: WMProperties.ColorProperty; 
 		onSelect-: WMEvents.EventSource; 
 		menu: WMTrees.Tree; 
@@ -47,7 +47,7 @@ TYPE
 		dragNode: WMTrees.TreeNode; 
 		dragObject: ANY; 
 		leftClick, dragPossible: BOOLEAN; 
-		downX, downY: LONGINT; 
+		downX, downY: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
@@ -88,10 +88,10 @@ TYPE
 
 	ShadowWindow = OBJECT (WMWindowManager.Window)
 	VAR 
-		type, color: LONGINT; 
+		type, color: SIGNED32; 
 
-		PROCEDURE ^  & New(type: LONGINT); 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: LONGINT); 
+		PROCEDURE ^  & New(type: SIGNED32); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: SIGNED32); 
 	END ShadowWindow; 
 
 	MenuWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -99,10 +99,10 @@ TYPE
 		menuPanel: MenuPanel; 
 		takesFocus: BOOLEAN; 
 
-		PROCEDURE ^  & Open*(x, y: SIZE; openDirection: LONGINT; menu: WMTrees.Tree; root: WMTrees.TreeNode; parent: MenuPanel; takesFocus, indicate: BOOLEAN); 
+		PROCEDURE ^  & Open*(x, y: SIZE; openDirection: SIGNED32; menu: WMTrees.Tree; root: WMTrees.TreeNode; parent: MenuPanel; takesFocus, indicate: BOOLEAN); 
 		PROCEDURE ^ CloseMenu(sender, data: ANY); 
 		PROCEDURE ^ FocusLost*; 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: SIGNED32); 
 	END MenuWindow; 
 VAR 
 	StrMenuPanel: Strings.String; 

@@ -20,10 +20,10 @@ TYPE
 
 	; 
 VAR 
-	N: LONGINT; 
+	N: SIGNED32; 
 	Fig: POINTER TO ARRAY MaxN OF Icon; 
-	State: INTEGER; 
-	x0, y0: INTEGER; 
+	State: SIGNED16; 
+	x0, y0: SIGNED16; 
 
 	PROCEDURE ^ Start; 
 	PROCEDURE ^ Step; 

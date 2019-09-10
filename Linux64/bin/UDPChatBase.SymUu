@@ -57,15 +57,15 @@ TYPE
 	String = Strings.String; 
 
 	ACKRec* = POINTER TO RECORD 
-		seqNum*: INTEGER; 
+		seqNum*: SIGNED16; 
 	END; 
 
 	Client* = OBJECT 
 	VAR 
 		ip*: IP.Adr; 
-		port*: LONGINT; 
-		inSeqNum*, outSeqNum*: INTEGER; 
-		uin*: LONGINT; 
+		port*: SIGNED32; 
+		inSeqNum*, outSeqNum*: SIGNED16; 
+		uin*: SIGNED32; 
 		keepAliveTimer*: Kernel.MilliTimer; 
 		ACKList-: List; 
 
@@ -74,25 +74,25 @@ TYPE
 	END Client; 
 
 	UserInfo* = POINTER TO RECORD 
-		uin*: LONGINT; 
+		uin*: SIGNED32; 
 		shortName*, fullName*, eMail*: ARRAY 65 OF CHAR; 
 	END; 
 
 	User* = POINTER TO RECORD (UserInfo)
-		password*: LONGINT; 
+		password*: SIGNED32; 
 	END; 
 
 	Users* = OBJECT 
 	VAR 
 		list: List; 
-		lastUIN: LONGINT; 
+		lastUIN: SIGNED32; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Load; 
 		PROCEDURE ^ Store*; 
 		PROCEDURE ^ Add*(password, shortName, fullName, eMail: String): User; 
-		PROCEDURE ^ Find*(uin: LONGINT): User; 
-		PROCEDURE ^ PasswordCorrect*(uin: LONGINT; password: String): BOOLEAN; 
+		PROCEDURE ^ Find*(uin: SIGNED32): User; 
+		PROCEDURE ^ PasswordCorrect*(uin: SIGNED32; password: String): BOOLEAN; 
 	END Users; 
 
 	Buffer* = OBJECT (Strings.Buffer)
@@ -105,30 +105,30 @@ TYPE
 	List* = OBJECT {EXCLUSIVE} 
 	VAR 
 		list: PArray; 
-		count: LONGINT; 
-		readLock: LONGINT; 
+		count: SIGNED32; 
+		readLock: SIGNED32; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ GetCount*(): LONGINT; 
+		PROCEDURE ^ GetCount*(): SIGNED32; 
 		PROCEDURE ^ Grow; 
 		PROCEDURE ^ Add*(x: ANY); 
-		PROCEDURE ^ IndexOf*(x: ANY): LONGINT; 
+		PROCEDURE ^ IndexOf*(x: ANY): SIGNED32; 
 		PROCEDURE ^ Remove*(x: ANY); 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ GetItem*(i: LONGINT): ANY; 
+		PROCEDURE ^ GetItem*(i: SIGNED32): ANY; 
 		PROCEDURE ^ Lock*; 
 		PROCEDURE ^ Unlock*; 
 	END List; 
 
-	PROCEDURE ^ Code(s: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ ServerPacketInit*(command, seqnum: INTEGER; buf: Buffer); 
-	PROCEDURE ^ ClientPacketInit*(command, seqnum: INTEGER; uin: LONGINT; buf: Buffer); 
-	PROCEDURE ^ BufGetSInt*(buf: String; VAR receiveBufOffset: LONGINT): INTEGER; 
-	PROCEDURE ^ BufGetInt*(buf: String; VAR receiveBufOffset: LONGINT): INTEGER; 
-	PROCEDURE ^ BufGetLInt*(buf: String; VAR receiveBufOffset: LONGINT): LONGINT; 
-	PROCEDURE ^ BufGetString*(buf: String; VAR receiveBufOffset: LONGINT): String; 
-	PROCEDURE ^ isNextSeqNum*(current, previous: INTEGER): BOOLEAN; 
-	PROCEDURE ^ SeqNumInACKList*(reqList: List; seqNum: INTEGER; VAR req: ACKRec): BOOLEAN; 
-	PROCEDURE ^ CommandDecode*(command: INTEGER; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ Code(s: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ ServerPacketInit*(command, seqnum: SIGNED16; buf: Buffer); 
+	PROCEDURE ^ ClientPacketInit*(command, seqnum: SIGNED16; uin: SIGNED32; buf: Buffer); 
+	PROCEDURE ^ BufGetSInt*(buf: String; VAR receiveBufOffset: SIGNED32): SIGNED16; 
+	PROCEDURE ^ BufGetInt*(buf: String; VAR receiveBufOffset: SIGNED32): SIGNED16; 
+	PROCEDURE ^ BufGetLInt*(buf: String; VAR receiveBufOffset: SIGNED32): SIGNED32; 
+	PROCEDURE ^ BufGetString*(buf: String; VAR receiveBufOffset: SIGNED32): String; 
+	PROCEDURE ^ isNextSeqNum*(current, previous: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ SeqNumInACKList*(reqList: List; seqNum: SIGNED16; VAR req: ACKRec): BOOLEAN; 
+	PROCEDURE ^ CommandDecode*(command: SIGNED16; VAR str: ARRAY OF CHAR); 
 BEGIN
 END UDPChatBase.

@@ -24,24 +24,24 @@ TYPE
 
 	TextStyle = RECORD 
 		font: String; 
-		size: LONGINT; 
-		style: LONGINT; 
-		color: LONGINT; 
+		size: SIGNED32; 
+		style: SIGNED32; 
+		color: SIGNED32; 
 		bgcolorPresent: BOOLEAN; 
-		bgcolor: LONGINT; 
+		bgcolor: SIGNED32; 
 		link: String; 
 		linktarget: String; 
-		shift: LONGINT; 
-		align: LONGINT; 
-		indent: LONGINT; 
-		enumtype: LONGINT; 
+		shift: SIGNED32; 
+		align: SIGNED32; 
+		indent: SIGNED32; 
+		enumtype: SIGNED32; 
 		preformatted: BOOLEAN; 
 		form: Form; 
 	END; 
 
 	OLULStackItem = POINTER TO RECORD 
 		prev: OLULStackItem; 
-		value: LONGINT; 
+		value: SIGNED32; 
 	END; 
 
 	EmbeddedObject* = POINTER TO RECORD 
@@ -63,22 +63,22 @@ TYPE
 		txtElem: XML.Element; 
 		paragraph: XML.Element; 
 		title-: String; 
-		pageBgColor-: LONGINT; 
+		pageBgColor-: SIGNED32; 
 		bgImage-: String; 
 		embeddedObjectsList-: EmbeddedObject; 
-		textColor: LONGINT; 
-		linkColor: LONGINT; 
-		vlinkColor: LONGINT; 
-		alinkColor: LONGINT; 
+		textColor: SIGNED32; 
+		linkColor: SIGNED32; 
+		vlinkColor: SIGNED32; 
+		alinkColor: SIGNED32; 
 		crlfStr: String; 
 		crlfDoubleStr: String; 
 		charsetConv: CharsetConvProc; 
-		currentText: LONGINT; 
+		currentText: SIGNED32; 
 		olulStackTop: OLULStackItem; 
-		ulDepth: LONGINT; 
+		ulDepth: SIGNED32; 
 		inDL: BOOLEAN; 
-		currentAlign: LONGINT; 
-		currentIndent: LONGINT; 
+		currentAlign: SIGNED32; 
+		currentIndent: SIGNED32; 
 		form: Form; 
 		formButton: FormButton; 
 		formCheckbox: FormCheckbox; 
@@ -86,7 +86,7 @@ TYPE
 		formRadioButton: FormRadioButton; 
 		formMenu: FormMenu; 
 		formHiddenControl: FormHiddenControl; 
-		initAlignment: LONGINT; 
+		initAlignment: SIGNED32; 
 		isTableContent: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(doc: XML.Container; url: String; initWidth: SIZE; loadLink: WMEvents.EventListener; charset: String; frameName: String); 
@@ -94,14 +94,14 @@ TYPE
 		PROCEDURE ^ TransformContent(container: XML.Container; style: TextStyle); 
 		PROCEDURE ^ GetText(container: XML.Container): String; 
 		PROCEDURE ^ TransformElement(elem: XML.Element; style: TextStyle); 
-		PROCEDURE ^ SetAlignmentAndIndent(align: LONGINT; indent: LONGINT); 
+		PROCEDURE ^ SetAlignmentAndIndent(align: SIGNED32; indent: SIGNED32); 
 		PROCEDURE ^ NewLine(allowMultiple: BOOLEAN); 
 		PROCEDURE ^ NewParagraph(allowMultiple: BOOLEAN); 
 		PROCEDURE ^ AddText(txt: String; style: TextStyle); 
-		PROCEDURE ^ AddImage(src: String; x: LONGINT; y: LONGINT; style: TextStyle); 
+		PROCEDURE ^ AddImage(src: String; x: SIGNED32; y: SIGNED32; style: TextStyle); 
 		PROCEDURE ^ AddSVG(svgRoot: XML.Element; style: TextStyle); 
 		PROCEDURE ^ ToEmbeddedObjectsList(obj: VisualComponent); 
-		PROCEDURE ^ AddHR(align: LONGINT); 
+		PROCEDURE ^ AddHR(align: SIGNED32); 
 		PROCEDURE ^ AddTable(tableElem: XML.Element; style: TextStyle); 
 		PROCEDURE ^ AddVisualComponent(vc: WMComponents.VisualComponent; style: TextStyle); 
 		PROCEDURE ^ AddLabel(s: String); 
@@ -121,8 +121,8 @@ TYPE
 	VAR 
 		tableElem: XML.Element; 
 		parentWidth: SIZE; 
-		align-: WORD; 
-		textColor, linkColor, vlinkColor, alinkColor: LONGINT; 
+		align-: INTEGER; 
+		textColor, linkColor, vlinkColor, alinkColor: SIGNED32; 
 		url: String; 
 		loadLink: WMEvents.EventListener; 
 		charset: String; 
@@ -131,24 +131,24 @@ TYPE
 		baseAddress: String; 
 		baseTarget: String; 
 		isSubtable: BOOLEAN; 
-		width: LONGINT; 
+		width: SIGNED32; 
 		relativeWidth: BOOLEAN; 
-		border: LONGINT; 
+		border: SIGNED32; 
 		rules: BOOLEAN; 
-		cellspacing: LONGINT; 
+		cellspacing: SIGNED32; 
 		relativeCellspacing: BOOLEAN; 
-		cellpadding: LONGINT; 
+		cellpadding: SIGNED32; 
 		relativeCellpadding: BOOLEAN; 
-		bgColor: LONGINT; 
+		bgColor: SIGNED32; 
 		grid: TableGrid; 
-		colsCnt: LONGINT; 
-		rowsCnt: LONGINT; 
+		colsCnt: SIGNED32; 
+		rowsCnt: SIGNED32; 
 		minCellWidths, maxCellWidths: CellSizes; 
 		minTableWidth, maxTableWidth: SIZE; 
-		x, y: LONGINT; 
-		internalWidth, internalHeight: LONGINT; 
+		x, y: SIGNED32; 
+		internalWidth, internalHeight: SIGNED32; 
 
-		PROCEDURE ^  & New*(tableElem: XML.Element; parentWidth: SIZE; align: LONGINT; textColor, linkColor, vlinkColor, alinkColor: LONGINT; url: String; loadLink: WMEvents.EventListener; charset: String; frameName: String; form: Form; baseAddress: String; baseTarget: String; seq: WMMessages.MsgSequencer; isSubtable: BOOLEAN); 
+		PROCEDURE ^  & New*(tableElem: XML.Element; parentWidth: SIZE; align: SIGNED32; textColor, linkColor, vlinkColor, alinkColor: SIGNED32; url: String; loadLink: WMEvents.EventListener; charset: String; frameName: String; form: Form; baseAddress: String; baseTarget: String; seq: WMMessages.MsgSequencer; isSubtable: BOOLEAN); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ BuildCellGrid; 
 		PROCEDURE ^ AddCell(elem: XML.Element; newRow: BOOLEAN); 
@@ -164,13 +164,13 @@ TYPE
 		tv: WMTextView.TextView; 
 		text: Texts.Text; 
 		minWidth, maxWidth: SIZE; 
-		width, height: LONGINT; 
-		colspan, rowspan: LONGINT; 
+		width, height: SIGNED32; 
+		colspan, rowspan: SIGNED32; 
 		bgImage: WebBrowserComponents.TileImagePanel; 
 		writer: Streams.Writer; 
 		textWriter: TextUtilities.TextWriter; 
 
-		PROCEDURE ^  & New*(seq: WMMessages.MsgSequencer; parentTable: Table; elem: XML.Element; textColor, linkColor, vlinkColor, alinkColor: LONGINT; url: String; loadLink: WMEvents.EventListener; charset: String; frameName: String; form: Form; baseAddress: String; baseTarget: String); 
+		PROCEDURE ^  & New*(seq: WMMessages.MsgSequencer; parentTable: Table; elem: XML.Element; textColor, linkColor, vlinkColor, alinkColor: SIGNED32; url: String; loadLink: WMEvents.EventListener; charset: String; frameName: String; form: Form; baseAddress: String; baseTarget: String); 
 		PROCEDURE ^ SetWidth(width: SIZE); 
 	END TableCell; 
 
@@ -228,7 +228,7 @@ TYPE
 		editor: WMEditors.Editor; 
 		init: String; 
 
-		PROCEDURE ^  & Init*(name: String; value: String; size: LONGINT; maxlength: LONGINT; isPassword: BOOLEAN); 
+		PROCEDURE ^  & Init*(name: String; value: String; size: SIGNED32; maxlength: SIGNED32; isPassword: BOOLEAN); 
 		PROCEDURE ^ IsSuccessful(): BOOLEAN; 
 		PROCEDURE ^ GetValue(): String; 
 		PROCEDURE ^ Reset; 
@@ -306,19 +306,19 @@ VAR
 	PROCEDURE ^ Iso2Utf8(VAR input: ARRAY OF CHAR): String; 
 	PROCEDURE ^ Utf82Utf8(VAR input: ARRAY OF CHAR): String; 
 	PROCEDURE ^ Gb23122Utf8(VAR input: ARRAY OF CHAR): String; 
-	PROCEDURE ^ GetColor(s: String): LONGINT; 
+	PROCEDURE ^ GetColor(s: String): SIGNED32; 
 	PROCEDURE ^ StringIsWhiteSpace(VAR txt: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ StringHasNewLine(VAR txt: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ ReplaceWhiteSpaces(VAR txt: String): String; 
 	PROCEDURE ^ TrimLineBreak(VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ ResolveAddress*(baseAddress: String; url: String): String; 
 	PROCEDURE ^ GetElemAttributeValue*(elem: XML.Element; key: ARRAY OF CHAR; lowerCase: BOOLEAN): String; 
-	PROCEDURE ^ MapFontSize(font: String; size: LONGINT): LONGINT; 
-	PROCEDURE ^ MapBaselineShift(size: LONGINT): LONGINT; 
+	PROCEDURE ^ MapFontSize(font: String; size: SIGNED32): SIGNED32; 
+	PROCEDURE ^ MapBaselineShift(size: SIGNED32): SIGNED32; 
 	PROCEDURE ^ GetExistingFontName(f: String): String; 
 	PROCEDURE ^ FontExists(f: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ IntToABCString(val: LONGINT; upperCase: BOOLEAN): String; 
-	PROCEDURE ^ IntToRomanString(val: LONGINT; uppercase: BOOLEAN): String; 
+	PROCEDURE ^ IntToABCString(val: SIGNED32; upperCase: BOOLEAN): String; 
+	PROCEDURE ^ IntToRomanString(val: SIGNED32; uppercase: BOOLEAN): String; 
 	PROCEDURE ^ TransformCharEnt*(in: String): String; 
 	PROCEDURE ^ GetCharEnt(VAR ent: ARRAY OF CHAR): String; 
 BEGIN

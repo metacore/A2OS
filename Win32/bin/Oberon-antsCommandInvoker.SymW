@@ -19,7 +19,7 @@ VAR
 
 	PROCEDURE ^ ForceString(F: Display.Frame; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ RestoreFrame(R: Display3.Mask; F: Frame; x, y, w, h, u, v, w1, h1: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ RestoreFrame(R: Display3.Mask; F: Frame; x, y, w, h, u, v, w1, h1: SIGNED16; dlink: Objects.Object); 
 	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
 	PROCEDURE ^ ComeBack(t: Oberon.Task); 
 	PROCEDURE ^ InvokeCommand(F: Frame); 

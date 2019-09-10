@@ -5,9 +5,9 @@ CONST
 TYPE 
 	WorkUnit = POINTER TO RECORD 
 		terminate: BOOLEAN; 
-		x0, y0, x1, y1: LONGREAL; 
+		x0, y0, x1, y1: FLOAT64; 
 		w, h, maxIter, ys, ye: SIZE; 
-		result: POINTER TO ARRAY OF LONGINT; 
+		result: POINTER TO ARRAY OF SIGNED32; 
 		next: WorkUnit; 
 	END; 
 
@@ -22,24 +22,24 @@ TYPE
 	CalcThread = OBJECT {EXCLUSIVE} 
 	VAR 
 		alive: BOOLEAN; 
-		i, j: LONGINT; 
-		dx, dy: LONGREAL; 
+		i, j: SIGNED32; 
+		dx, dy: FLOAT64; 
 		wu: WorkUnit; 
 		workQ, resultQ: WorkUnitQ; 
-		x, y: LONGREAL; 
+		x, y: FLOAT64; 
 
 		PROCEDURE ^  & Init*(workQ, resultQ: WorkUnitQ); 
 		PROCEDURE ^ StartWork; 
 		PROCEDURE ^ Finished; 
 		PROCEDURE ^ AwaitFinished; 
-		PROCEDURE ^ Calc(x, y: LONGREAL): LONGINT; 
+		PROCEDURE ^ Calc(x, y: FLOAT64): SIGNED32; 
 	BEGIN{ACTIVE, PRIORITY(Objects.Low)} 
 	END CalcThread; 
 
 	List = POINTER TO RECORD 
 		next: List; 
-		x0, x1, y0, y1: LONGREAL; 
-		depth: LONGINT; 
+		x0, x1, y0, y1: FLOAT64; 
+		depth: SIGNED32; 
 	END; 
 
 	MandelbrotSetViewer = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -47,7 +47,7 @@ TYPE
 		nofProcesses: WMProperties.Int32Property; 
 		backBmp: Raster.Image; 
 		bc: WMGraphics.BufferCanvas; 
-		dy: LONGREAL; 
+		dy: FLOAT64; 
 		list, l: List; 
 		selecting: BOOLEAN; 
 		x0, y0, x1, y1: SIZE; 

@@ -17,14 +17,14 @@ TYPE
 	Point* = POINTER TO PointDesc; 
 
 	PointDesc* = RECORD (Leonardo.ShapeDesc)
-		x*, y*: REAL; 
+		x*, y*: FLOAT32; 
 		link*: Leonardo.Shape; 
 	END; 
 
 	LinkMsg* = RECORD (Leonardo.LocalizedMsg)
-		id*: SHORTINT; 
+		id*: SIGNED8; 
 		done*: BOOLEAN; 
-		x*, y*: REAL; 
+		x*, y*: FLOAT32; 
 	END; 
 
 	LinkAction = POINTER TO LinkActionDesc; 
@@ -53,47 +53,47 @@ TYPE
 	SegmentDesc* = RECORD (Leonardo.ContainerDesc)
 		pen*: LeoPens.Pen; 
 		closed*: BOOLEAN; 
-		pred*, succ*: SHORTINT; 
-		boff*, eoff*: REAL; 
-		len*: REAL; 
+		pred*, succ*: SIGNED8; 
+		boff*, eoff*: FLOAT32; 
+		len*: FLOAT32; 
 	END; 
 
 	ConnectMsg* = RECORD (Leonardo.ShapeMsg)
-		id*: SHORTINT; 
-		pos*: SHORTINT; 
-		mode*: SHORTINT; 
+		id*: SIGNED8; 
+		pos*: SIGNED8; 
+		mode*: SIGNED8; 
 		done*: BOOLEAN; 
-		x*, y*: REAL; 
-		dx*, dy*: REAL; 
+		x*, y*: FLOAT32; 
+		dx*, dy*: FLOAT32; 
 	END; 
 
 	ValidateMsg* = RECORD (Leonardo.ShapeMsg)
-		pos*: SHORTINT; 
-		off*: REAL; 
+		pos*: SIGNED8; 
+		off*: FLOAT32; 
 	END; 
 
 	SplitMsg* = RECORD (Leonardo.LocalizedMsg)
-		llx*, lly*, urx*, ury*: REAL; 
+		llx*, lly*, urx*, ury*: FLOAT32; 
 	END; 
 
 	ModeAction = POINTER TO ModeActionDesc; 
 
 	ModeActionDesc = RECORD (Leonardo.ActionDesc)
 		seg: Segment; 
-		mode: SHORTINT; 
+		mode: SIGNED8; 
 	END; 
 
 	Arc* = POINTER TO ArcDesc; 
 
 	ArcDesc* = RECORD (SegmentDesc)
-		mode*: SHORTINT; 
+		mode*: SIGNED8; 
 		mat*: GfxMatrix.Matrix; 
-		dx0, dy0, dx1, dy1: REAL; 
+		dx0, dy0, dx1, dy1: FLOAT32; 
 	END; 
 
 	ArcData = RECORD (GfxPaths.EnumData)
-		n: LONGINT; 
-		dx0, dy0, dx1, dy1: REAL; 
+		n: SIGNED32; 
+		dx0, dy0, dx1, dy1: FLOAT32; 
 	END; 
 
 	Pathifier* = POINTER TO PathifierDesc; 
@@ -101,8 +101,8 @@ TYPE
 	PathifierDesc* = RECORD (LeoPens.PenDesc)
 		bot*, top*: Segment; 
 		enter: Segment; 
-		elem: SHORTINT; 
-		x0, y0, x, y: REAL; 
+		elem: SIGNED8; 
+		x0, y0, x, y: FLOAT32; 
 	END; 
 VAR 
 	Img*: ARRAY 4 OF GfxImages.Image; 
@@ -125,7 +125,7 @@ VAR
 	PROCEDURE ^ GetPointItem*(p: Point; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ CopyPoint*(VAR msg: Objects.CopyMsg; from, to: Point); 
 	PROCEDURE ^ HandlePoint*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ InitPoint*(p: Point; x, y: REAL); 
+	PROCEDURE ^ InitPoint*(p: Point; x, y: FLOAT32); 
 	PROCEDURE ^ NewPoint*; 
 	PROCEDURE ^ CalcPathBox(path: Path; VAR mat: GfxMatrix.Matrix); 
 	PROCEDURE ^ SelectPath*(path: Path; VAR msg: Leonardo.SelectMsg); 
@@ -141,12 +141,12 @@ VAR
 	PROCEDURE ^ GetFirstLast*(seg: Segment; VAR first, last: Point); 
 	PROCEDURE ^ Pred*(seg: Segment): Leonardo.Shape; 
 	PROCEDURE ^ Succ*(seg: Segment): Leonardo.Shape; 
-	PROCEDURE ^ GetPred*(seg: Segment; VAR dx, dy: REAL); 
-	PROCEDURE ^ GetSucc*(seg: Segment; VAR dx, dy: REAL); 
+	PROCEDURE ^ GetPred*(seg: Segment; VAR dx, dy: FLOAT32); 
+	PROCEDURE ^ GetSucc*(seg: Segment; VAR dx, dy: FLOAT32); 
 	PROCEDURE ^ SwapPred(fig: Leonardo.Figure; a: Leonardo.Action); 
-	PROCEDURE ^ ChangePred*(fig: Leonardo.Figure; seg: Segment; mode: SHORTINT); 
+	PROCEDURE ^ ChangePred*(fig: Leonardo.Figure; seg: Segment; mode: SIGNED8); 
 	PROCEDURE ^ SwapSucc(fig: Leonardo.Figure; a: Leonardo.Action); 
-	PROCEDURE ^ ChangeSucc*(fig: Leonardo.Figure; seg: Segment; mode: SHORTINT); 
+	PROCEDURE ^ ChangeSucc*(fig: Leonardo.Figure; seg: Segment; mode: SIGNED8); 
 	PROCEDURE ^ ConnectPred*(fig: Leonardo.Figure; seg: Segment; pred: Leonardo.Shape); 
 	PROCEDURE ^ ConnectSucc*(fig: Leonardo.Figure; seg: Segment; succ: Leonardo.Shape); 
 	PROCEDURE ^ ControlSegment*(seg: Segment; VAR msg: Leonardo.ControlMsg); 
@@ -162,25 +162,25 @@ VAR
 	PROCEDURE ^ CopySegment*(VAR msg: Objects.CopyMsg; from, to: Segment); 
 	PROCEDURE ^ HandleSegment*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ InitSegment*(seg: Segment; handle: Objects.Handler; bottom, top: Point; closed: BOOLEAN; pen: LeoPens.Pen); 
-	PROCEDURE ^ SplitSegment*(fig: Leonardo.Figure; seg, new: Segment; at: Point; mode: SHORTINT); 
-	PROCEDURE ^ SetPred*(fig: Leonardo.Figure; seg: Segment; mode: SHORTINT); 
-	PROCEDURE ^ SetSucc*(fig: Leonardo.Figure; seg: Segment; mode: SHORTINT); 
-	PROCEDURE ^ OnLine*(x0, y0, x1, y1, x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN; 
+	PROCEDURE ^ SplitSegment*(fig: Leonardo.Figure; seg, new: Segment; at: Point; mode: SIGNED8); 
+	PROCEDURE ^ SetPred*(fig: Leonardo.Figure; seg: Segment; mode: SIGNED8); 
+	PROCEDURE ^ SetSucc*(fig: Leonardo.Figure; seg: Segment; mode: SIGNED8); 
+	PROCEDURE ^ OnLine*(x0, y0, x1, y1, x, y, llx, lly, urx, ury: FLOAT32; VAR px, py: FLOAT32): BOOLEAN; 
 	PROCEDURE ^ DrawPolyline(poly: Segment; pen: LeoPens.Pen); 
 	PROCEDURE ^ DragPolyline(poly: Segment; ctxt: Gfx.Context); 
 	PROCEDURE ^ RenderPolyline(poly: Segment; VAR msg: Leonardo.RenderMsg); 
-	PROCEDURE ^ ProjectPolyline(poly: Segment; x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN; 
+	PROCEDURE ^ ProjectPolyline(poly: Segment; x, y, llx, lly, urx, ury: FLOAT32; VAR px, py: FLOAT32): BOOLEAN; 
 	PROCEDURE ^ LocatePolyline(poly: Segment; VAR msg: Leonardo.LocateMsg); 
 	PROCEDURE ^ SplitPolyline(poly: Segment; VAR msg: SplitMsg); 
 	PROCEDURE ^ HandlePolyline*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ InitPolyline*(poly: Segment; bottom, top: Point; closed: BOOLEAN; pen: LeoPens.Pen); 
 	PROCEDURE ^ NewPolyline*; 
-	PROCEDURE ^ SubdivideBezier(at, x0, y0, x1, y1, x2, y2, x3, y3: REAL; VAR x11, y11, x12, y12, xm, ym, x21, y21, x22, y22: REAL); 
-	PROCEDURE ^ OnBezier(x0, y0, x1, y1, x2, y2, x3, y3, x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN; 
+	PROCEDURE ^ SubdivideBezier(at, x0, y0, x1, y1, x2, y2, x3, y3: FLOAT32; VAR x11, y11, x12, y12, xm, ym, x21, y21, x22, y22: FLOAT32); 
+	PROCEDURE ^ OnBezier(x0, y0, x1, y1, x2, y2, x3, y3, x, y, llx, lly, urx, ury: FLOAT32; VAR px, py: FLOAT32): BOOLEAN; 
 	PROCEDURE ^ DrawBezier(bez: Segment; pen: LeoPens.Pen); 
 	PROCEDURE ^ DragBezier(bez: Segment; ctxt: Gfx.Context); 
 	PROCEDURE ^ RenderBezier(bez: Segment; VAR msg: Leonardo.RenderMsg); 
-	PROCEDURE ^ ProjectBezier(bez: Segment; x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN; 
+	PROCEDURE ^ ProjectBezier(bez: Segment; x, y, llx, lly, urx, ury: FLOAT32; VAR px, py: FLOAT32): BOOLEAN; 
 	PROCEDURE ^ LocateBezier(bez: Segment; VAR msg: Leonardo.LocateMsg); 
 	PROCEDURE ^ SplitBezier(bez: Segment; VAR msg: SplitMsg); 
 	PROCEDURE ^ HandleBezier*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
@@ -200,17 +200,17 @@ VAR
 	PROCEDURE ^ ConnectArc(arc: Arc; VAR msg: ConnectMsg); 
 	PROCEDURE ^ CopyArc*(VAR msg: Objects.CopyMsg; from, to: Arc); 
 	PROCEDURE ^ HandleArc*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ InitArc*(arc: Arc; x, y, rx, ry, start, end: REAL; pen: LeoPens.Pen); 
+	PROCEDURE ^ InitArc*(arc: Arc; x, y, rx, ry, start, end: FLOAT32; pen: LeoPens.Pen); 
 	PROCEDURE ^ NewArcX*; 
 	PROCEDURE ^ HandlePathifier*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ InitPathifier*(pen: Pathifier); 
 	PROCEDURE ^ NewPathifier*; 
 	PROCEDURE ^ BeginPathifier(pen: LeoPens.Pen; ctxt: Gfx.Context); 
-	PROCEDURE ^ EnterPathifier(pen: LeoPens.Pen; x, y, dx, dy, bdist: REAL); 
-	PROCEDURE ^ ExitPathifier(pen: LeoPens.Pen; dx, dy, dist: REAL); 
-	PROCEDURE ^ PathifyLine(pen: LeoPens.Pen; x, y: REAL); 
-	PROCEDURE ^ PathifyArc(pen: LeoPens.Pen; x, y, x0, y0, x1, y1, x2, y2: REAL); 
-	PROCEDURE ^ PathifyBezier(pen: LeoPens.Pen; x, y, x1, y1, x2, y2: REAL); 
+	PROCEDURE ^ EnterPathifier(pen: LeoPens.Pen; x, y, dx, dy, bdist: FLOAT32); 
+	PROCEDURE ^ ExitPathifier(pen: LeoPens.Pen; dx, dy, dist: FLOAT32); 
+	PROCEDURE ^ PathifyLine(pen: LeoPens.Pen; x, y: FLOAT32); 
+	PROCEDURE ^ PathifyArc(pen: LeoPens.Pen; x, y, x0, y0, x1, y1, x2, y2: FLOAT32); 
+	PROCEDURE ^ PathifyBezier(pen: LeoPens.Pen; x, y, x1, y1, x2, y2: FLOAT32); 
 	PROCEDURE ^ InitPathifiers; 
 	PROCEDURE ^ Realize*(path: Path); 
 	PROCEDURE ^ NewPolygon*; 

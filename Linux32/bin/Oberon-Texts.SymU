@@ -20,34 +20,34 @@ TYPE
 
 	PieceDesc = RECORD 
 		f: Files.File; 
-		off: LONGINT; 
-		len: LONGINT; 
+		off: SIGNED32; 
+		len: SIGNED32; 
 		obj: Objects.Object; 
 		lib: Objects.Library; 
-		ref: INTEGER; 
-		col: SHORTINT; 
-		voff: SHORTINT; 
+		ref: SIGNED16; 
+		col: SIGNED8; 
+		voff: SIGNED8; 
 		prev, next: Piece; 
 	END; 
 
 	Text* = POINTER TO TextDesc; 
 
 	TextDesc* = RECORD (Objects.ObjDesc)
-		len*: LONGINT; 
+		len*: SIGNED32; 
 		obs: Objects.Library; 
 		trailer: Piece; 
-		org: LONGINT; 
+		org: SIGNED32; 
 		pce: Piece; 
 	END; 
 
 	UpdateMsg* = RECORD (Display.FrameMsg)
 		text*: Text; 
-		beg*, end*, len*: LONGINT; 
+		beg*, end*, len*: SIGNED32; 
 	END; 
 
 	Finder* = RECORD 
 		eot*: BOOLEAN; 
-		pos*: LONGINT; 
+		pos*: SIGNED32; 
 		T: Text; 
 		ref: Piece; 
 	END; 
@@ -55,27 +55,27 @@ TYPE
 	Reader* = RECORD 
 		ref: Piece; 
 		T: Text; 
-		org: LONGINT; 
-		off: LONGINT; 
+		org: SIGNED32; 
+		off: SIGNED32; 
 		R: Files.Rider; 
-		stamp: LONGINT; 
+		stamp: SIGNED32; 
 		buf: ARRAY BufSize OF CHAR; 
-		bufpos, buflen: LONGINT; 
+		bufpos, buflen: SIGNED32; 
 		lib*: Objects.Library; 
-		col*: SHORTINT; 
-		voff*: SHORTINT; 
+		col*: SIGNED8; 
+		voff*: SIGNED8; 
 		eot*: BOOLEAN; 
 	END; 
 
 	Scanner* = RECORD (Reader)
 		nextCh*: CHAR; 
-		line*: INTEGER; 
-		class*: INTEGER; 
-		i*: LONGINT; 
-		x*: REAL; 
-		y*: LONGREAL; 
+		line*: SIGNED16; 
+		class*: SIGNED16; 
+		i*: SIGNED32; 
+		x*: FLOAT32; 
+		y*: FLOAT64; 
 		c*: CHAR; 
-		len*: SHORTINT; 
+		len*: SIGNED8; 
 		s*: ARRAY 256 OF CHAR; 
 		obj*: Objects.Object; 
 	END; 
@@ -83,7 +83,7 @@ TYPE
 	Buffer* = POINTER TO BufDesc; 
 
 	BufDesc* = RECORD 
-		len*: LONGINT; 
+		len*: SIGNED32; 
 		header, last: Piece; 
 	END; 
 
@@ -91,8 +91,8 @@ TYPE
 		R: Files.Rider; 
 		buf*: Buffer; 
 		lib*: Objects.Library; 
-		col*: SHORTINT; 
-		voff*: SHORTINT; 
+		col*: SIGNED8; 
+		voff*: SIGNED8; 
 	END; 
 VAR 
 	TextBlockId*, DocBlockId, NoSpex, NoSpex2, TextSpex: CHAR; 
@@ -105,47 +105,47 @@ VAR
 
 	PROCEDURE ^ LoadAscii*(T: Text; f: Files.File); 
 	PROCEDURE ^ ReadDocHeader(VAR R: Files.Rider; VAR ch: CHAR); 
-	PROCEDURE ^ Load*(T: Text; f: Files.File; pos: LONGINT; VAR len: LONGINT); 
+	PROCEDURE ^ Load*(T: Text; f: Files.File; pos: SIGNED32; VAR len: SIGNED32); 
 	PROCEDURE ^ SyncPiece(T: Text; p: Piece); 
-	PROCEDURE ^ Store*(T: Text; f: Files.File; pos: LONGINT; VAR len: LONGINT); 
+	PROCEDURE ^ Store*(T: Text; f: Files.File; pos: SIGNED32; VAR len: SIGNED32); 
 	PROCEDURE ^ GenNew(T: Text); 
 	PROCEDURE ^ Open*(T: Text; CONST name: ARRAY OF CHAR); 
 	PROCEDURE ^ New*; 
-	PROCEDURE ^ FindPiece(T: Text; pos: LONGINT; VAR org: LONGINT; VAR p: Piece); 
-	PROCEDURE ^ SplitPiece(p: Piece; off: LONGINT; VAR pr: Piece); 
-	PROCEDURE ^ Insert*(T: Text; pos: LONGINT; B: Buffer); 
+	PROCEDURE ^ FindPiece(T: Text; pos: SIGNED32; VAR org: SIGNED32; VAR p: Piece); 
+	PROCEDURE ^ SplitPiece(p: Piece; off: SIGNED32; VAR pr: Piece); 
+	PROCEDURE ^ Insert*(T: Text; pos: SIGNED32; B: Buffer); 
 	PROCEDURE ^ Append*(T: Text; B: Buffer); 
-	PROCEDURE ^ Delete*(T: Text; beg, end: LONGINT); 
-	PROCEDURE ^ Replace*(T: Text; beg, end: LONGINT; B: Buffer); 
-	PROCEDURE ^ ChangeLooks*(T: Text; beg, end: LONGINT; sel: SET; lib: Objects.Library; col, voff: SHORTINT); 
+	PROCEDURE ^ Delete*(T: Text; beg, end: SIGNED32); 
+	PROCEDURE ^ Replace*(T: Text; beg, end: SIGNED32; B: Buffer); 
+	PROCEDURE ^ ChangeLooks*(T: Text; beg, end: SIGNED32; sel: SET; lib: Objects.Library; col, voff: SIGNED8); 
 	PROCEDURE ^ OpenBuf*(B: Buffer); 
-	PROCEDURE ^ Save*(T: Text; beg, end: LONGINT; B: Buffer); 
+	PROCEDURE ^ Save*(T: Text; beg, end: SIGNED32; B: Buffer); 
 	PROCEDURE ^ Copy*(SB, DB: Buffer); 
 	PROCEDURE ^ Recall*(VAR B: Buffer); 
 	PROCEDURE ^ Handle*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ OpenFinder*(VAR F: Finder; T: Text; pos: LONGINT); 
+	PROCEDURE ^ OpenFinder*(VAR F: Finder; T: Text; pos: SIGNED32); 
 	PROCEDURE ^ FindObj*(VAR F: Finder; VAR obj: Objects.Object); 
-	PROCEDURE ^ OpenReader*(VAR R: Reader; T: Text; pos: LONGINT); 
+	PROCEDURE ^ OpenReader*(VAR R: Reader; T: Text; pos: SIGNED32); 
 	PROCEDURE ^ Read*(VAR R: Reader; VAR ch: CHAR); 
-	PROCEDURE ^ Pos*(VAR R: Reader): LONGINT; 
-	PROCEDURE ^ OpenScanner*(VAR S: Scanner; T: Text; pos: LONGINT); 
+	PROCEDURE ^ Pos*(VAR R: Reader): SIGNED32; 
+	PROCEDURE ^ OpenScanner*(VAR S: Scanner; T: Text; pos: SIGNED32); 
 	PROCEDURE ^ Scan*(VAR S: Scanner); 
 	PROCEDURE ^ OpenWriter*(VAR W: Writer); 
 	PROCEDURE ^ SetFont*(VAR W: Writer; fnt: Objects.Library); 
-	PROCEDURE ^ SetColor*(VAR W: Writer; col: SHORTINT); 
-	PROCEDURE ^ SetOffset*(VAR W: Writer; voff: SHORTINT); 
+	PROCEDURE ^ SetColor*(VAR W: Writer; col: SIGNED8); 
+	PROCEDURE ^ SetOffset*(VAR W: Writer; voff: SIGNED8); 
 	PROCEDURE ^ Write*(VAR W: Writer; ch: CHAR); 
 	PROCEDURE ^ WriteLn*(VAR W: Writer); 
 	PROCEDURE ^ WriteString*(VAR W: Writer; CONST s: ARRAY OF CHAR); 
-	PROCEDURE ^ WriteInt*(VAR W: Writer; x, n: LONGINT); 
-	PROCEDURE ^ WriteHex*(VAR W: Writer; x: LONGINT); 
-	PROCEDURE ^ WriteRealHex*(VAR W: Writer; x: REAL); 
-	PROCEDURE ^ WriteLongRealHex*(VAR W: Writer; x: LONGREAL); 
-	PROCEDURE ^ WriteReal*(VAR W: Writer; x: REAL; n: LONGINT); 
-	PROCEDURE ^ WriteRealFix*(VAR W: Writer; x: REAL; n, f, E: LONGINT); 
-	PROCEDURE ^ WriteLongReal*(VAR W: Writer; x: LONGREAL; n: LONGINT); 
-	PROCEDURE ^ WriteLongRealFix*(VAR W: Writer; x: LONGREAL; n, f, D: LONGINT); 
-	PROCEDURE ^ WriteDate*(VAR W: Writer; t, d: LONGINT); 
+	PROCEDURE ^ WriteInt*(VAR W: Writer; x, n: SIGNED32); 
+	PROCEDURE ^ WriteHex*(VAR W: Writer; x: SIGNED32); 
+	PROCEDURE ^ WriteRealHex*(VAR W: Writer; x: FLOAT32); 
+	PROCEDURE ^ WriteLongRealHex*(VAR W: Writer; x: FLOAT64); 
+	PROCEDURE ^ WriteReal*(VAR W: Writer; x: FLOAT32; n: SIGNED32); 
+	PROCEDURE ^ WriteRealFix*(VAR W: Writer; x: FLOAT32; n, f, E: SIGNED32); 
+	PROCEDURE ^ WriteLongReal*(VAR W: Writer; x: FLOAT64; n: SIGNED32); 
+	PROCEDURE ^ WriteLongRealFix*(VAR W: Writer; x: FLOAT64; n, f, D: SIGNED32); 
+	PROCEDURE ^ WriteDate*(VAR W: Writer; t, d: SIGNED32); 
 	PROCEDURE ^ WriteSet*(VAR W: Writer; s: SET); 
 	PROCEDURE ^ WriteObj*(VAR W: Writer; obj: Objects.Object); 
 	PROCEDURE ^ InitScan; 

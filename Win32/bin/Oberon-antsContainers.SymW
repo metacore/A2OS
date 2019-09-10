@@ -6,8 +6,8 @@ TYPE
 	SortList = POINTER TO SortListDesc; 
 
 	SortListDesc = RECORD (vyLinks.LinkDesc)
-		pos: LONGINT; 
-		size: INTEGER; 
+		pos: SIGNED32; 
+		size: SIGNED16; 
 		frames: vyLinks.Link; 
 	END; 
 VAR 
@@ -15,26 +15,26 @@ VAR
 	lastframe: Objects.Object; 
 
 	PROCEDURE ^ Next(l: SortList): SortList; 
-	PROCEDURE ^ InsertSorted(VAR list: SortList; f: Display.Frame; pos: LONGINT; VAR size: INTEGER); 
+	PROCEDURE ^ InsertSorted(VAR list: SortList; f: Display.Frame; pos: SIGNED32; VAR size: SIGNED16); 
 	PROCEDURE ^ InitMsg(f: Display.Frame; VAR msg: Display.ModifyMsg); 
-	PROCEDURE ^ ShiftTo(f: Display.Frame; x, y: INTEGER); 
+	PROCEDURE ^ ShiftTo(f: Display.Frame; x, y: SIGNED16); 
 	PROCEDURE ^ Update(f: Display.Frame); 
-	PROCEDURE ^ Resize*(f: Display.Frame; w, h: INTEGER); 
-	PROCEDURE ^ SetPosition(f: Objects.Object; posx, posy: LONGINT); 
-	PROCEDURE ^ GetPosition(f: Objects.Object; VAR posx, posy: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Resize*(f: Display.Frame; w, h: SIGNED16); 
+	PROCEDURE ^ SetPosition(f: Objects.Object; posx, posy: SIGNED32); 
+	PROCEDURE ^ GetPosition(f: Objects.Object; VAR posx, posy: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ MakePosLists(F: Display.Frame; VAR xlist, ylist, undeflist: SortList); 
-	PROCEDURE ^ GetPosList(VAR list: SortList; pos: LONGINT): vyLinks.Link; 
-	PROCEDURE ^ SizeOfFrame(ref: Display.Frame; xlist, ylist: SortList; VAR w, h: INTEGER); 
-	PROCEDURE ^ SameWidth(link: vyLinks.Link; width: INTEGER); 
-	PROCEDURE ^ SameHeight(link: vyLinks.Link; height: INTEGER); 
-	PROCEDURE ^ SameXPos(link: vyLinks.Link; posx: INTEGER); 
-	PROCEDURE ^ SameYPos(link: vyLinks.Link; posy: INTEGER); 
-	PROCEDURE ^ FindItemWithPosition(f: Display.Frame; posx, posy: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Max(x, y: LONGINT): LONGINT; 
-	PROCEDURE ^ NextFreePosition(f: Display.Frame; VAR posx, posy: LONGINT); 
+	PROCEDURE ^ GetPosList(VAR list: SortList; pos: SIGNED32): vyLinks.Link; 
+	PROCEDURE ^ SizeOfFrame(ref: Display.Frame; xlist, ylist: SortList; VAR w, h: SIGNED16); 
+	PROCEDURE ^ SameWidth(link: vyLinks.Link; width: SIGNED16); 
+	PROCEDURE ^ SameHeight(link: vyLinks.Link; height: SIGNED16); 
+	PROCEDURE ^ SameXPos(link: vyLinks.Link; posx: SIGNED16); 
+	PROCEDURE ^ SameYPos(link: vyLinks.Link; posy: SIGNED16); 
+	PROCEDURE ^ FindItemWithPosition(f: Display.Frame; posx, posy: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Max(x, y: SIGNED32): SIGNED32; 
+	PROCEDURE ^ NextFreePosition(f: Display.Frame; VAR posx, posy: SIGNED32); 
 	PROCEDURE ^ Position(ref: Panels.Panel; center: Display.Frame); 
 	PROCEDURE ^ AdjustPosition(ref: Display.Frame; center: Display.Frame); 
-	PROCEDURE ^ AdjustPositionFromL(ref: Display.Frame; center: Display.Frame; x, y: LONGINT); 
+	PROCEDURE ^ AdjustPositionFromL(ref: Display.Frame; center: Display.Frame; x, y: SIGNED32); 
 	PROCEDURE ^ FindCentral(o: Display.Frame): Display.Frame; 
 	PROCEDURE ^ handler(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitPanel*(F: Panels.Panel); 
@@ -42,7 +42,7 @@ VAR
 	PROCEDURE ^ Exchange*; 
 	PROCEDURE ^ myHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ GetContext(F: Display.Frame): Display.Frame; 
-	PROCEDURE ^ StickOn*(F: Display.Frame; sticker: Display.Frame; posx, posy: LONGINT); 
+	PROCEDURE ^ StickOn*(F: Display.Frame; sticker: Display.Frame; posx, posy: SIGNED32); 
 	PROCEDURE ^ Embed*; 
 BEGIN
 END antsContainers.

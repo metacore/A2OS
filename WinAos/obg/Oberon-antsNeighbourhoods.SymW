@@ -6,16 +6,16 @@ TYPE
 
 	pars* = antsGlobals.Parameters; 
 
-	NumOFN* = POINTER TO ARRAY OF INTEGER; 
+	NumOFN* = POINTER TO ARRAY OF SIGNED16; 
 
 	Index* = NumOFN; 
 
-	NeighbArray* = POINTER TO ARRAY OF ARRAY 8 OF INTEGER; 
+	NeighbArray* = POINTER TO ARRAY OF ARRAY 8 OF SIGNED16; 
 
 	Neighbours* = POINTER TO NeighboursDesc; 
 
 	NeighboursDesc* = RECORD (vyBase.ObjDesc)
-		dim-: INTEGER; 
+		dim-: SIGNED16; 
 		count-: NumOFN; 
 		x-, y-: NeighbArray; 
 		isotropic-: BOOLEAN; 
@@ -23,7 +23,7 @@ TYPE
 		parnames: antsGlobals.ParameterNames; 
 		cx-, cy-: Index; 
 		cpar-: pars; 
-		clen-: INTEGER; 
+		clen-: SIGNED16; 
 	END; 
 
 	PROCEDURE ^ FillParCache*(n: Neighbours); 
@@ -34,19 +34,19 @@ TYPE
 	PROCEDURE ^ ReadNeighbours(VAR R: Files.Rider; VAR n: Neighbours); 
 	PROCEDURE ^ ChangeIsotropy*(n: Neighbours; iso: BOOLEAN); 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ swap(VAR x, y: INTEGER); 
-	PROCEDURE ^ OpenL2*(n: Neighbours; dim: LONGINT; isotropic: BOOLEAN); 
+	PROCEDURE ^ swap(VAR x, y: SIGNED16); 
+	PROCEDURE ^ OpenL2*(n: Neighbours; dim: SIGNED32; isotropic: BOOLEAN); 
 	PROCEDURE ^ Gen*; 
-	PROCEDURE ^ NewL2*(dim: LONGINT; isotropic: BOOLEAN): Neighbours; 
-	PROCEDURE ^ Min(x, y: LONGINT): LONGINT; 
-	PROCEDURE ^ ChangeDim*(n: Neighbours; newdim: INTEGER); 
+	PROCEDURE ^ NewL2*(dim: SIGNED32; isotropic: BOOLEAN): Neighbours; 
+	PROCEDURE ^ Min(x, y: SIGNED32): SIGNED32; 
+	PROCEDURE ^ ChangeDim*(n: Neighbours; newdim: SIGNED16); 
 	PROCEDURE ^ ReadNew*; 
 	PROCEDURE ^ New*; 
 	PROCEDURE ^ DoWrite*(n: Neighbours); 
 	PROCEDURE ^ Write*; 
 	PROCEDURE ^ SortTable*; 
-	PROCEDURE ^ st(VAR A, B: ARRAY OF LONGINT; VAR equal: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ Insert(VAR A: ARRAY OF LONGINT; VAR to: ARRAY OF ARRAY OF LONGINT; VAR len: LONGINT); 
-	PROCEDURE ^ MakeNeighbourTable*(o: antsArrayObjects.tINTEGERObject; x0, y0, w0, h0: LONGINT; n: Neighbours): NeighbourTable; 
+	PROCEDURE ^ st(VAR A, B: ARRAY OF SIGNED32; VAR equal: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Insert(VAR A: ARRAY OF SIGNED32; VAR to: ARRAY OF ARRAY OF SIGNED32; VAR len: SIGNED32); 
+	PROCEDURE ^ MakeNeighbourTable*(o: antsArrayObjects.tINTEGERObject; x0, y0, w0, h0: SIGNED32; n: Neighbours): NeighbourTable; 
 BEGIN
 END antsNeighbourhoods.

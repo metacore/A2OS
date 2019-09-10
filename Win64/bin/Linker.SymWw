@@ -5,9 +5,9 @@ TYPE
 	ExportName = ARRAY 128 OF CHAR; 
 
 	PatchBlock* = POINTER TO RECORD 
-		baseAdr: LONGINT; 
+		baseAdr: SIGNED32; 
 		addresses: SIZE; 
-		address: ARRAY 1024 OF LONGINT; 
+		address: ARRAY 1024 OF SIGNED32; 
 		next: PatchBlock; 
 	END; 
 
@@ -18,21 +18,21 @@ TYPE
 		patchBlock: PatchBlock; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ GetPatchBlock(adr: LONGINT): PatchBlock; 
-		PROCEDURE ^ AddReloc(adr: LONGINT); 
+		PROCEDURE ^ GetPatchBlock(adr: SIGNED32): PatchBlock; 
+		PROCEDURE ^ AddReloc(adr: SIGNED32); 
 	END RelocationInfo; 
 
 	ExportInfo = OBJECT 
 	VAR 
-		exports: LONGINT; 
+		exports: SIGNED32; 
 		name: ExportName; 
 		symbolNames: POINTER TO ARRAY OF ExportName; 
 		exportNames: POINTER TO ARRAY OF ExportName; 
 		exportAddresses: POINTER TO ARRAY OF GenericLinker.Address; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Swap(i, j: LONGINT); 
-		PROCEDURE ^ QuickSort(lo, hi: LONGINT); 
+		PROCEDURE ^ Swap(i, j: SIGNED32); 
+		PROCEDURE ^ QuickSort(lo, hi: SIGNED32); 
 		PROCEDURE ^ Sort; 
 	END ExportInfo; 
 
@@ -65,7 +65,7 @@ VAR
 	PROCEDURE ^ WriteTRMFile(arrangement: Arrangement; writer: Files.Writer; bitsPerLine, lines: SIZE); 
 	PROCEDURE ^ WriteTRMCodeFile*(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
 	PROCEDURE ^ WriteTRMDataFile*(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
-	PROCEDURE ^ WritePEFile(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer; bitmode, subSystem: INTEGER; isDLL: BOOLEAN); 
+	PROCEDURE ^ WritePEFile(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer; bitmode, subSystem: SIGNED16; isDLL: BOOLEAN); 
 	PROCEDURE ^ WriteDLL32File(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
 	PROCEDURE ^ WriteDLL64File(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 
 	PROCEDURE ^ WritePE32File(linker: GenericLinker.Linker; arrangement: Arrangement; writer: Files.Writer); 

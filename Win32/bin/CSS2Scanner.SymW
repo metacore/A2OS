@@ -41,12 +41,12 @@ CONST
 TYPE 
 	Scanner* = OBJECT 
 	VAR 
-		sym-: LONGINT; 
-		numberType-: SHORTINT; 
-		intVal-: LONGINT; 
-		realVal-: LONGREAL; 
-		line-, row-, pos: LONGINT; 
-		reportError*: PROCEDURE (pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
+		sym-: SIGNED32; 
+		numberType-: SIGNED8; 
+		intVal-: SIGNED32; 
+		realVal-: FLOAT64; 
+		line-, row-, pos: SIGNED32; 
+		reportError*: PROCEDURE (pos, line, row: SIGNED32; msg: ARRAY OF CHAR); 
 		nextCh: CHAR; 
 		dynstr: DynamicStrings.DynamicString; 
 		f: Files.File; 
@@ -57,7 +57,7 @@ TYPE
 		PROCEDURE ^ NextCh; 
 		PROCEDURE ^ SkipWhiteSpace; 
 		PROCEDURE ^ ScanComment; 
-		PROCEDURE ^ ScanEscape(isString: BOOLEAN; VAR i: LONGINT); 
+		PROCEDURE ^ ScanEscape(isString: BOOLEAN; VAR i: SIGNED32); 
 		PROCEDURE ^ ScanIdent; 
 		PROCEDURE ^ ScanName; 
 		PROCEDURE ^ ScanString; 
@@ -65,7 +65,7 @@ TYPE
 		PROCEDURE ^ ScanNumber; 
 		PROCEDURE ^ Scan*; 
 		PROCEDURE ^ GetStr*(): Strings.String; 
-		PROCEDURE ^ GetPos*(): LONGINT; 
+		PROCEDURE ^ GetPos*(): SIGNED32; 
 	END Scanner; 
 
 	PROCEDURE ^ IsWhiteSpace(ch: CHAR): BOOLEAN; 
@@ -74,7 +74,7 @@ TYPE
 	PROCEDURE ^ IsNmStart(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ IsNmChar(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ IsDigit(ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ HexStrToInt(VAR str: ARRAY OF CHAR; VAR val: LONGINT); 
-	PROCEDURE ^ DefaultReportError(pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
+	PROCEDURE ^ HexStrToInt(VAR str: ARRAY OF CHAR; VAR val: SIGNED32); 
+	PROCEDURE ^ DefaultReportError(pos, line, row: SIGNED32; msg: ARRAY OF CHAR); 
 BEGIN
 END CSS2Scanner.

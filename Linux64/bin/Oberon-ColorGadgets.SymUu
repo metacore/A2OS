@@ -12,7 +12,7 @@ TYPE
 
 	DiscDesc* = RECORD (Gadgets.FrameDesc)
 		bg: Display.Color; 
-		hue, sat: REAL; 
+		hue, sat: FLOAT32; 
 		img: Images.Image; 
 	END; 
 
@@ -20,7 +20,7 @@ TYPE
 
 	WedgeDesc* = RECORD (Gadgets.FrameDesc)
 		bg: Display.Color; 
-		hue, sat, val: REAL; 
+		hue, sat, val: FLOAT32; 
 		img: Images.Image; 
 	END; 
 
@@ -30,18 +30,18 @@ VAR
 	MarkerFG, MarkerBG: Display.Pattern; 
 	Enum: RECORD 
 		img: Images.Image; 
-		x, y: INTEGER; 
+		x, y: SIGNED16; 
 	END; 
 
-	PROCEDURE ^ atan2(x, y: REAL): REAL; 
-	PROCEDURE ^ RestoreRuns(x, y, w, h: INTEGER); 
-	PROCEDURE ^ RestoreBlock(x, y, w, h: INTEGER); 
-	PROCEDURE ^ RestoreImageRect(img: Images.Image; x, y, w, h, dx, dy: INTEGER; mask: Display3.Mask); 
-	PROCEDURE ^ DrawMarker(x, y: INTEGER); 
-	PROCEDURE ^ FadeMarker(x, y: INTEGER); 
+	PROCEDURE ^ atan2(x, y: FLOAT32): FLOAT32; 
+	PROCEDURE ^ RestoreRuns(x, y, w, h: SIGNED16); 
+	PROCEDURE ^ RestoreBlock(x, y, w, h: SIGNED16); 
+	PROCEDURE ^ RestoreImageRect(img: Images.Image; x, y, w, h, dx, dy: SIGNED16; mask: Display3.Mask); 
+	PROCEDURE ^ DrawMarker(x, y: SIGNED16); 
+	PROCEDURE ^ FadeMarker(x, y: SIGNED16); 
 	PROCEDURE ^ InitDragMarker; 
 	PROCEDURE ^ TrackWell(well: Well; VAR msg: Oberon.InputMsg); 
-	PROCEDURE ^ RestoreWell(well: Well; fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ RestoreWell(well: Well; fx, fy: SIGNED16; mask: Display3.Mask); 
 	PROCEDURE ^ PrintWell(well: Well; VAR msg: Display.DisplayMsg); 
 	PROCEDURE ^ UpdateWell(well: Well; VAR msg: Display.FrameMsg); 
 	PROCEDURE ^ ConsumeWell(well: Well; VAR msg: Display.ConsumeMsg); 
@@ -49,22 +49,22 @@ VAR
 	PROCEDURE ^ CopyWell*(VAR msg: Objects.CopyMsg; from, to: Well); 
 	PROCEDURE ^ HandleWell*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ NewWell*; 
-	PROCEDURE ^ GetDiscCoords(disc: Disc; VAR x, y: INTEGER); 
+	PROCEDURE ^ GetDiscCoords(disc: Disc; VAR x, y: SIGNED16); 
 	PROCEDURE ^ UpdateDiscModel(disc: Disc); 
 	PROCEDURE ^ TrackDisc(disc: Disc; VAR msg: Oberon.InputMsg); 
 	PROCEDURE ^ RestoreDiscImage(disc: Disc); 
-	PROCEDURE ^ RestoreDisc(disc: Disc; fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ RestoreDisc(disc: Disc; fx, fy: SIGNED16; mask: Display3.Mask); 
 	PROCEDURE ^ PrintDisc(disc: Disc; VAR msg: Display.DisplayMsg); 
 	PROCEDURE ^ UpdateDisc(disc: Disc; VAR msg: Display.FrameMsg); 
 	PROCEDURE ^ DiscAttr(disc: Disc; VAR msg: Objects.AttrMsg); 
 	PROCEDURE ^ CopyDisc*(VAR msg: Objects.CopyMsg; from, to: Disc); 
 	PROCEDURE ^ HandleDisc*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ NewDisc*; 
-	PROCEDURE ^ GetWedgeCoords(wedge: Wedge; VAR x, y: INTEGER); 
+	PROCEDURE ^ GetWedgeCoords(wedge: Wedge; VAR x, y: SIGNED16); 
 	PROCEDURE ^ UpdateWedgeModel(wedge: Wedge); 
 	PROCEDURE ^ TrackWedge(wedge: Wedge; VAR msg: Oberon.InputMsg); 
 	PROCEDURE ^ RestoreWedgeImage(wedge: Wedge); 
-	PROCEDURE ^ RestoreWedge(wedge: Wedge; fx, fy: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ RestoreWedge(wedge: Wedge; fx, fy: SIGNED16; mask: Display3.Mask); 
 	PROCEDURE ^ PrintWedge(wedge: Wedge; VAR msg: Display.DisplayMsg); 
 	PROCEDURE ^ UpdateWedge(wedge: Wedge; VAR msg: Display.FrameMsg); 
 	PROCEDURE ^ WedgeAttr*(wedge: Wedge; VAR msg: Objects.AttrMsg); 

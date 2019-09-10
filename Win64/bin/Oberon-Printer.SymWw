@@ -7,33 +7,33 @@ TYPE
 	Printer* = POINTER TO PrinterDesc; 
 
 	PrinterDesc* = RECORD 
-		res*: INTEGER; 
+		res*: SIGNED16; 
 		gen*: ARRAY 64 OF CHAR; 
-		Height*, Width*, Depth*: INTEGER; 
-		FrameX*, FrameY*, FrameW*, FrameH*: INTEGER; 
-		Unit*: LONGINT; 
+		Height*, Width*, Depth*: SIGNED16; 
+		FrameX*, FrameY*, FrameW*, FrameH*: SIGNED16; 
+		Unit*: SIGNED32; 
 		InitMetrics*: PROCEDURE (P: Printer); 
 		Open*: PROCEDURE (P: Printer; printer, options: ARRAY OF CHAR); 
 		Close*: PROCEDURE (P: Printer); 
-		Page*: PROCEDURE (P: Printer; nofcopies: INTEGER); 
-		ReplConst*: PROCEDURE (P: Printer; x, y, w, h: INTEGER); 
-		ReplPattern*: PROCEDURE (P: Printer; x, y, w, h: INTEGER; patno: INTEGER); 
-		Line*: PROCEDURE (P: Printer; x0, y0, x1, y1: INTEGER); 
-		Circle*: PROCEDURE (P: Printer; x0, y0, r: INTEGER); 
-		Ellipse*: PROCEDURE (P: Printer; x0, y0, a, b: INTEGER); 
-		Spline*: PROCEDURE (P: Printer; x0, y0, n, open: INTEGER; VAR X, Y: ARRAY OF INTEGER); 
-		Picture*: PROCEDURE (P: Printer; pict: Pictures.Picture; sx, sy, sw, sh, dx, dy, dw, dh, mode: INTEGER); 
+		Page*: PROCEDURE (P: Printer; nofcopies: SIGNED16); 
+		ReplConst*: PROCEDURE (P: Printer; x, y, w, h: SIGNED16); 
+		ReplPattern*: PROCEDURE (P: Printer; x, y, w, h: SIGNED16; patno: SIGNED16); 
+		Line*: PROCEDURE (P: Printer; x0, y0, x1, y1: SIGNED16); 
+		Circle*: PROCEDURE (P: Printer; x0, y0, r: SIGNED16); 
+		Ellipse*: PROCEDURE (P: Printer; x0, y0, a, b: SIGNED16); 
+		Spline*: PROCEDURE (P: Printer; x0, y0, n, open: SIGNED16; VAR X, Y: ARRAY OF SIGNED16); 
+		Picture*: PROCEDURE (P: Printer; pict: Pictures.Picture; sx, sy, sw, sh, dx, dy, dw, dh, mode: SIGNED16); 
 		UseListFont*: PROCEDURE (P: Printer; name: ARRAY OF CHAR); 
-		String*: PROCEDURE (P: Printer; x, y: INTEGER; str: ARRAY OF CHAR; fnt: Fonts.Font); 
+		String*: PROCEDURE (P: Printer; x, y: SIGNED16; str: ARRAY OF CHAR; fnt: Fonts.Font); 
 		ContString*: PROCEDURE (P: Printer; str: ARRAY OF CHAR; fnt: Fonts.Font); 
-		UseColor*: PROCEDURE (P: Printer; red, green, blue: INTEGER); 
+		UseColor*: PROCEDURE (P: Printer; red, green, blue: SIGNED16); 
 		GetMetric*: PROCEDURE (P: Printer; fnt: Fonts.Font):Fonts.Font; 
 	END; 
 VAR 
-	Height*, Width*, Depth*: INTEGER; 
-	FrameX*, FrameY*, FrameW*, FrameH*: INTEGER; 
-	Unit*: LONGINT; 
-	res*: INTEGER; 
+	Height*, Width*, Depth*: SIGNED16; 
+	FrameX*, FrameY*, FrameW*, FrameH*: SIGNED16; 
+	Unit*: SIGNED32; 
+	res*: SIGNED16; 
 	current*: Printer; 
 
 	PROCEDURE ^ SplitName(VAR name, MName, PName: ARRAY OF CHAR); 
@@ -41,18 +41,18 @@ VAR
 	PROCEDURE ^ Install*(P: Printer); 
 	PROCEDURE ^ Open*(printer, options: ARRAY OF CHAR); 
 	PROCEDURE ^ Close*; 
-	PROCEDURE ^ Page*(nofcopies: INTEGER); 
-	PROCEDURE ^ ReplConst*(x, y, w, h: INTEGER); 
-	PROCEDURE ^ ReplPattern*(x, y, w, h: INTEGER; patno: INTEGER); 
-	PROCEDURE ^ Line*(x0, y0, x1, y1: INTEGER); 
-	PROCEDURE ^ Circle*(x0, y0, r: INTEGER); 
-	PROCEDURE ^ Ellipse*(x0, y0, a, b: INTEGER); 
-	PROCEDURE ^ Spline*(x0, y0, n, open: INTEGER; VAR X, Y: ARRAY OF INTEGER); 
-	PROCEDURE ^ Picture*(P: Pictures.Picture; sx, sy, sw, sh, dx, dy, dw, dh, mode: INTEGER); 
+	PROCEDURE ^ Page*(nofcopies: SIGNED16); 
+	PROCEDURE ^ ReplConst*(x, y, w, h: SIGNED16); 
+	PROCEDURE ^ ReplPattern*(x, y, w, h: SIGNED16; patno: SIGNED16); 
+	PROCEDURE ^ Line*(x0, y0, x1, y1: SIGNED16); 
+	PROCEDURE ^ Circle*(x0, y0, r: SIGNED16); 
+	PROCEDURE ^ Ellipse*(x0, y0, a, b: SIGNED16); 
+	PROCEDURE ^ Spline*(x0, y0, n, open: SIGNED16; VAR X, Y: ARRAY OF SIGNED16); 
+	PROCEDURE ^ Picture*(P: Pictures.Picture; sx, sy, sw, sh, dx, dy, dw, dh, mode: SIGNED16); 
 	PROCEDURE ^ UseListFont*(name: ARRAY OF CHAR); 
-	PROCEDURE ^ String*(x, y: INTEGER; str: ARRAY OF CHAR; fnt: Fonts.Font); 
+	PROCEDURE ^ String*(x, y: SIGNED16; str: ARRAY OF CHAR; fnt: Fonts.Font); 
 	PROCEDURE ^ ContString*(str: ARRAY OF CHAR; fnt: Fonts.Font); 
-	PROCEDURE ^ UseColor*(red, green, blue: INTEGER); 
+	PROCEDURE ^ UseColor*(red, green, blue: SIGNED16); 
 	PROCEDURE ^ GetMetric*(fnt: Fonts.Font): Fonts.Font; 
 BEGIN
 END Printer.

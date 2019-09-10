@@ -24,11 +24,11 @@ TYPE
 		moduleScope: SyntaxTree.ModuleScope; 
 		error-: BOOLEAN; 
 		Lax-: BOOLEAN; 
-		indent: LONGINT; 
+		indent: SIGNED32; 
 		hasToken: BOOLEAN; 
 		prevPosition-: Position; 
-		conditional: WORD; 
-		conditionals: ARRAY 10 OF WORD; 
+		conditional: INTEGER; 
+		conditionals: ARRAY 10 OF INTEGER; 
 		definitions: ARRAY 10 OF Scanner.IdentifierType; 
 		conditionalCount, definitionCount: SIZE; 
 
@@ -38,13 +38,13 @@ TYPE
 		PROCEDURE ^  & Init*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics; CONST definitions: ARRAY OF CHAR); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ SetLax*; 
-		PROCEDURE ^ Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(position: Position; code: SIGNED32; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ GetNextToken(VAR token: Scanner.Token): BOOLEAN; 
 		PROCEDURE ^ ConditionalStatement(VAR token: Scanner.Token): BOOLEAN; 
 		PROCEDURE ^ SkipComments(b: BOOLEAN); 
 		PROCEDURE ^ NextToken*; 
-		PROCEDURE ^ Symbol*(): LONGINT; 
-		PROCEDURE ^ TokenB*(): LONGINT; 
+		PROCEDURE ^ Symbol*(): SIGNED32; 
+		PROCEDURE ^ TokenB*(): SIGNED32; 
 		PROCEDURE ^ PeekB*(symbol: Scanner.Symbol): BOOLEAN; 
 		PROCEDURE ^ Peek*(symbol: Scanner.Symbol): BOOLEAN; 
 		PROCEDURE ^ Mandatory*(symbol: Scanner.Symbol): BOOLEAN; 

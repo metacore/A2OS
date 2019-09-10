@@ -6,7 +6,7 @@ TYPE
 
 	Parser* = OBJECT 
 	VAR 
-		reportError*: PROCEDURE (pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
+		reportError*: PROCEDURE (pos, line, row: SIGNED32; msg: ARRAY OF CHAR); 
 		scanner: Scanner.Scanner; 
 
 		PROCEDURE ^  & Init*(scanner: Scanner.Scanner); 
@@ -26,15 +26,15 @@ TYPE
 		PROCEDURE ^ ParsePseudo(): CSS2.Pseudo; 
 		PROCEDURE ^ ParseDeclaration(): CSS2.Declaration; 
 		PROCEDURE ^ ParseTerm(): CSS2.Term; 
-		PROCEDURE ^ ParseRGB(hasAlpha: BOOLEAN): LONGINT; 
+		PROCEDURE ^ ParseRGB(hasAlpha: BOOLEAN): SIGNED32; 
 		PROCEDURE ^ IgnoreKeyword; 
 	END Parser; 
 
-	PROCEDURE ^ GetMedium(mediumStr: ARRAY OF CHAR): SHORTINT; 
-	PROCEDURE ^ GetPseudoPage(pseudoPageStr: ARRAY OF CHAR): SHORTINT; 
-	PROCEDURE ^ GetTermUnit(unitStr: ARRAY OF CHAR): SHORTINT; 
-	PROCEDURE ^ ComputeRGB(VAR s: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ HexStrToInt(VAR str: ARRAY OF CHAR; VAR val: LONGINT); 
-	PROCEDURE ^ DefaultReportError(pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
+	PROCEDURE ^ GetMedium(mediumStr: ARRAY OF CHAR): SIGNED8; 
+	PROCEDURE ^ GetPseudoPage(pseudoPageStr: ARRAY OF CHAR): SIGNED8; 
+	PROCEDURE ^ GetTermUnit(unitStr: ARRAY OF CHAR): SIGNED8; 
+	PROCEDURE ^ ComputeRGB(VAR s: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ HexStrToInt(VAR str: ARRAY OF CHAR; VAR val: SIGNED32); 
+	PROCEDURE ^ DefaultReportError(pos, line, row: SIGNED32; msg: ARRAY OF CHAR); 
 BEGIN
 END CSS2Parser.

@@ -6,7 +6,7 @@ TYPE
 	VAR 
 		u-, w-, vt-: Mtx.Matrix; 
 		threshold*: Nbr.Real; 
-		iterations*: LONGINT; 
+		iterations*: SIGNED32; 
 		Reciprocal: Vec.Map; 
 		zero, mag: Nbr.Real; 
 
@@ -18,8 +18,8 @@ TYPE
 
 	PROCEDURE ^ pythag(a, b: Nbr.Real): Nbr.Real; 
 	PROCEDURE ^ Max(x, y: Nbr.Real): Nbr.Real; 
-	PROCEDURE ^ MinI(i, j: LONGINT): LONGINT; 
-	PROCEDURE ^ sign(x: Nbr.Real): LONGINT; 
+	PROCEDURE ^ MinI(i, j: SIGNED32): SIGNED32; 
+	PROCEDURE ^ sign(x: Nbr.Real): SIGNED32; 
 	PROCEDURE ^ Log(m: Mtx.Matrix); 
 	PROCEDURE ^ Test*; 
 BEGIN

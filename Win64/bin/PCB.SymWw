@@ -151,10 +151,10 @@ TYPE
 
 	StringBuf = ARRAY 256 OF CHAR; 
 
-	Operator = LONGINT; 
+	Operator = SIGNED32; 
 
 	SProcInfo = POINTER TO RECORD 
-		nr: LONGINT; 
+		nr: SIGNED32; 
 	END; 
 
 	Expression* = OBJECT (PCT.Node)
@@ -164,7 +164,7 @@ TYPE
 
 		PROCEDURE ^ Written; 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & Init*(pos: LONGINT; type: PCT.Struct); 
+		PROCEDURE ^  & Init*(pos: SIGNED32; type: PCT.Struct); 
 	END Expression; 
 
 	Const* = OBJECT (Expression)
@@ -173,25 +173,25 @@ TYPE
 		cd: ConstDesignator; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitC*(pos: LONGINT; con: PCT.Const); 
+		PROCEDURE ^  & InitC*(pos: SIGNED32; con: PCT.Const); 
 	END Const; 
 
 	ArrayQ* = POINTER TO RECORD 
 		next*: ArrayQ; 
 		e*: Expression; 
-		pos*: LONGINT; 
+		pos*: SIGNED32; 
 	END; 
 
 	ArrayExpression* = OBJECT (Expression)
 	VAR 
 		array-: ArrayQ; 
 		d*: Designator; 
-		length-: LONGINT; 
-		dim-: LONGINT; 
-		aindex: POINTER TO ARRAY OF LONGINT; 
+		length-: SIGNED32; 
+		dim-: SIGNED32; 
+		aindex: POINTER TO ARRAY OF SIGNED32; 
 		isConst*: BOOLEAN; 
 
-		PROCEDURE ^ AssignIndices(code: PCC.Code; ae: ArrayExpression; dim: LONGINT); 
+		PROCEDURE ^ AssignIndices(code: PCC.Code; ae: ArrayExpression; dim: SIGNED32); 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR l: PCC.Item); 
 		PROCEDURE ^  & InitArrayExpression*; 
 		PROCEDURE ^ SetType*(t: PCT.Struct); 
@@ -204,7 +204,7 @@ TYPE
 		lopd, ropd: Expression; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR l: PCC.Item); 
-		PROCEDURE ^  & InitD*(pos: LONGINT; op: Operator; restype: PCT.Struct; lopd, ropd: Expression); 
+		PROCEDURE ^  & InitD*(pos: SIGNED32; op: Operator; restype: PCT.Struct; lopd, ropd: Expression); 
 	END DOp; 
 
 	MOp* = OBJECT (Expression)
@@ -213,7 +213,7 @@ TYPE
 		opd: Expression; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitM*(pos: LONGINT; op: Operator; restype: PCT.Struct; opd: Expression); 
+		PROCEDURE ^  & InitM*(pos: SIGNED32; op: Operator; restype: PCT.Struct; opd: Expression); 
 	END MOp; 
 
 	Conversion* = OBJECT (Expression)
@@ -221,7 +221,7 @@ TYPE
 		exp: Expression; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitC*(pos: LONGINT; exp: Expression; type: PCT.Struct); 
+		PROCEDURE ^  & InitC*(pos: SIGNED32; exp: Expression; type: PCT.Struct); 
 		PROCEDURE ^ Written; 
 	END Conversion; 
 
@@ -230,7 +230,7 @@ TYPE
 		exp: Expression; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitP*(pos: LONGINT; exp: Expression; type: PCT.Struct); 
+		PROCEDURE ^  & InitP*(pos: SIGNED32; exp: Expression; type: PCT.Struct); 
 		PROCEDURE ^ Written; 
 	END Projection; 
 
@@ -239,7 +239,7 @@ TYPE
 		first*, last: Expression; 
 		params*, hidden: PCT.Parameter; 
 		suppress: BOOLEAN; 
-		parCount, openAryReturns, retDescSize*: LONGINT; 
+		parCount, openAryReturns, retDescSize*: SIGNED32; 
 		rType: PCT.Struct; 
 
 		PROCEDURE ^ ClearStack*(code: PCC.Code); 
@@ -248,14 +248,14 @@ TYPE
 		PROCEDURE ^ Emit*(code: PCC.Code); 
 		PROCEDURE ^ dbgReport; 
 		PROCEDURE ^ Append*(stat: Expression); 
-		PROCEDURE ^ GetParList(VAR count: LONGINT; VAR list: ARRAY OF PCT.Struct); 
-		PROCEDURE ^  & InitEL*(pos: LONGINT; rType: PCT.Struct); 
+		PROCEDURE ^ GetParList(VAR count: SIGNED32; VAR list: ARRAY OF PCT.Struct); 
+		PROCEDURE ^  & InitEL*(pos: SIGNED32; rType: PCT.Struct); 
 	END ExprList; 
 
 	BuiltInEl* = OBJECT (ExprList)
 	VAR 
-		fnr: LONGINT; 
-		pnr: LONGINT; 
+		fnr: SIGNED32; 
+		pnr: SIGNED32; 
 		array: PCT.Array; 
 		usearray: BOOLEAN; 
 		earray: PCT.EnhArray; 
@@ -263,17 +263,17 @@ TYPE
 
 		PROCEDURE ^ Append*(stat: Expression); 
 		PROCEDURE ^ NothingLeft*(): BOOLEAN; 
-		PROCEDURE ^  & Init*(pos: LONGINT; rType: PCT.Struct; fnr: LONGINT); 
+		PROCEDURE ^  & Init*(pos: SIGNED32; rType: PCT.Struct; fnr: SIGNED32); 
 	END BuiltInEl; 
 
 	FunCall* = OBJECT (Expression)
 	VAR 
 		proc*: Designator; 
 		params*: ExprList; 
-		curLevel: SHORTINT; 
+		curLevel: SIGNED8; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitF*(pos: LONGINT; proc: Designator; params: ExprList; curLevel: SHORTINT); 
+		PROCEDURE ^  & InitF*(pos: SIGNED32; proc: Designator; params: ExprList; curLevel: SIGNED8); 
 	END FunCall; 
 
 	Designator* = OBJECT (Expression)
@@ -294,15 +294,15 @@ TYPE
 		proc: PCT.Proc; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitR*(pos: LONGINT; proc: PCT.Proc); 
+		PROCEDURE ^  & InitR*(pos: SIGNED32; proc: PCT.Proc); 
 	END ReturnItem; 
 
 	StackItem = OBJECT (Designator)
 	VAR 
-		offset: LONGINT; 
+		offset: SIGNED32; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitS*(type: PCT.Struct; offset: LONGINT); 
+		PROCEDURE ^  & InitS*(type: PCT.Struct; offset: SIGNED32); 
 	END StackItem; 
 
 	Wrapper* = OBJECT (Designator)
@@ -319,25 +319,25 @@ TYPE
 		const: PCT.Const; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitC*(pos: LONGINT; const: PCT.Const); 
+		PROCEDURE ^  & InitC*(pos: SIGNED32; const: PCT.Const); 
 	END ConstDesignator; 
 
 	SProc* = OBJECT (Designator)
 	VAR 
-		nr-: LONGINT; 
+		nr-: SIGNED32; 
 
 		PROCEDURE ^ IsCallable*(): BOOLEAN; 
-		PROCEDURE ^  & SInit*(pos, nr: LONGINT); 
+		PROCEDURE ^  & SInit*(pos, nr: SIGNED32); 
 	END SProc; 
 
 	Var* = OBJECT (Designator)
 	VAR 
 		obj*: PCT.Variable; 
-		deltaLevel: SHORTINT; 
+		deltaLevel: SIGNED8; 
 
 		PROCEDURE ^ Written; 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitD*(pos: LONGINT; obj: PCT.Variable; curLevel: SHORTINT; readonly: BOOLEAN); 
+		PROCEDURE ^  & InitD*(pos: SIGNED32; obj: PCT.Variable; curLevel: SIGNED8; readonly: BOOLEAN); 
 	END Var; 
 
 	AnyProc* = OBJECT (Designator)
@@ -353,7 +353,7 @@ TYPE
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
 		PROCEDURE ^ IsCallable*(): BOOLEAN; 
 		PROCEDURE ^ Resolve(el: ExprList; list: PCT.Parameter); 
-		PROCEDURE ^  & InitP*(pos: LONGINT; scope: PCT.Scope; o: PCT.Symbol; self: Designator); 
+		PROCEDURE ^  & InitP*(pos: SIGNED32; scope: PCT.Scope; o: PCT.Symbol; self: Designator); 
 	END AnyProc; 
 
 	Type* = OBJECT (Designator)
@@ -361,7 +361,7 @@ TYPE
 		obj: PCT.Type; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitD*(pos: LONGINT; obj: PCT.Type); 
+		PROCEDURE ^  & InitD*(pos: SIGNED32; obj: PCT.Type); 
 	END Type; 
 
 	Deref* = OBJECT (Designator)
@@ -369,7 +369,7 @@ TYPE
 		ptr*: Designator; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitD*(pos: LONGINT; ptr: Designator; type: PCT.Struct); 
+		PROCEDURE ^  & InitD*(pos: SIGNED32; ptr: Designator; type: PCT.Struct); 
 		PROCEDURE ^ Written; 
 	END Deref; 
 
@@ -379,7 +379,7 @@ TYPE
 		field*: PCT.Field; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitF*(pos: LONGINT; rec: Designator; field: PCT.Field; readonly: BOOLEAN); 
+		PROCEDURE ^  & InitF*(pos: SIGNED32; rec: Designator; field: PCT.Field; readonly: BOOLEAN); 
 		PROCEDURE ^ Written; 
 	END Field; 
 
@@ -390,7 +390,7 @@ TYPE
 		check*: BOOLEAN; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR a: PCC.Item); 
-		PROCEDURE ^  & InitI*(pos: LONGINT; array: Designator; index: Expression; check: BOOLEAN); 
+		PROCEDURE ^  & InitI*(pos: SIGNED32; array: Designator; index: Expression; check: BOOLEAN); 
 		PROCEDURE ^ Written; 
 	END Index; 
 
@@ -401,7 +401,7 @@ TYPE
 		equal: BOOLEAN; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitG*(pos: LONGINT; des: Designator; type: PCT.Struct; equal: BOOLEAN); 
+		PROCEDURE ^  & InitG*(pos: SIGNED32; des: Designator; type: PCT.Struct; equal: BOOLEAN); 
 		PROCEDURE ^ Written; 
 	END Guard; 
 
@@ -426,15 +426,15 @@ TYPE
 		isRange*: BOOLEAN; 
 		first, last*: Entry; 
 		array: Designator; 
-		dim: LONGINT; 
+		dim: SIGNED32; 
 
-		PROCEDURE ^ EmitEntry(entry: Entry; dim: LONGINT; code: PCC.Code; VAR a, descr: PCC.Item); 
+		PROCEDURE ^ EmitEntry(entry: Entry; dim: SIGNED32; code: PCC.Code; VAR a, descr: PCC.Item); 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR a: PCC.Item); 
 		PROCEDURE ^ AppendEntry(e: Entry); 
-		PROCEDURE ^ AppendIndex*(pos: LONGINT; index: Expression); 
-		PROCEDURE ^ AppendRange*(pos: LONGINT; from, to, by: Expression); 
+		PROCEDURE ^ AppendIndex*(pos: SIGNED32; index: Expression); 
+		PROCEDURE ^ AppendRange*(pos: SIGNED32; from, to, by: Expression); 
 		PROCEDURE ^ Finish*; 
-		PROCEDURE ^  & InitI*(pos: LONGINT; array: Designator); 
+		PROCEDURE ^  & InitI*(pos: SIGNED32; array: Designator); 
 		PROCEDURE ^ Written; 
 	END EnhIndex; 
 
@@ -443,28 +443,28 @@ TYPE
 		isRange*: BOOLEAN; 
 		first, last*: Entry; 
 		array: Designator; 
-		dim, ndims: LONGINT; 
-		nRange, nIndex: LONGINT; 
+		dim, ndims: SIGNED32; 
+		nRange, nIndex: SIGNED32; 
 		one: PCC.Item; 
 
-		PROCEDURE ^ EmitEntry(entry: Entry; code: PCC.Code; VAR descr, a: PCC.Item; VAR dim: LONGINT); 
+		PROCEDURE ^ EmitEntry(entry: Entry; code: PCC.Code; VAR descr, a: PCC.Item; VAR dim: SIGNED32); 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR a: PCC.Item); 
 		PROCEDURE ^ AppendEntry(e: Entry); 
-		PROCEDURE ^ AppendIndex*(pos: LONGINT; index: Expression); 
-		PROCEDURE ^ AppendRange*(pos: LONGINT; from, to, by: Expression); 
-		PROCEDURE ^ AppendFiller*(pos: LONGINT); 
+		PROCEDURE ^ AppendIndex*(pos: SIGNED32; index: Expression); 
+		PROCEDURE ^ AppendRange*(pos: SIGNED32; from, to, by: Expression); 
+		PROCEDURE ^ AppendFiller*(pos: SIGNED32); 
 		PROCEDURE ^ Finish*; 
-		PROCEDURE ^  & InitA*(pos: LONGINT; array: Designator); 
+		PROCEDURE ^  & InitA*(pos: SIGNED32; array: Designator); 
 		PROCEDURE ^ Written; 
 	END AnyIndex; 
 
 	ArrayOperator* = OBJECT (FunCall)
 	VAR 
 		proc: PCT.Proc; 
-		op: LONGINT; 
+		op: SIGNED32; 
 
 		PROCEDURE ^ Emit*(code: PCC.Code; VAR i: PCC.Item); 
-		PROCEDURE ^  & InitD*(pos: LONGINT; d, lopd, ropd: Expression; restype: PCT.Struct; proc: PCT.Proc; p: PCT.Parameter; op: LONGINT); 
+		PROCEDURE ^  & InitD*(pos: SIGNED32; d, lopd, ropd: Expression; restype: PCT.Struct; proc: PCT.Proc; p: PCT.Parameter; op: SIGNED32); 
 		PROCEDURE ^ NewResult(d: Expression); 
 	END ArrayOperator; 
 
@@ -478,7 +478,7 @@ TYPE
 	END; 
 
 	CaseRange = POINTER TO RECORD 
-		min, max: LONGINT; 
+		min, max: SIGNED32; 
 		next: CaseRange; 
 	END; 
 
@@ -496,10 +496,10 @@ VAR
 	InvalidEL-: ExprList; 
 	Zero-, One-: Const; 
 	unknownObj-: PCT.Symbol; 
-	aConst, aDOp, aMOp, aConversion, aFunCall, aSFunCall, aExprList, aDesignator, aVar, aType, aDeref, aMethod, aField, aIndex, aGuard, aStatement: LONGINT; 
+	aConst, aDOp, aMOp, aConversion, aFunCall, aSFunCall, aExprList, aDesignator, aVar, aType, aDeref, aMethod, aField, aIndex, aGuard, aStatement: SIGNED32; 
 
-	PROCEDURE ^ DebugEnter(VAR x: LONGINT); 
-	PROCEDURE ^ DebugLeave(VAR x: LONGINT); 
+	PROCEDURE ^ DebugEnter(VAR x: SIGNED32); 
+	PROCEDURE ^ DebugLeave(VAR x: SIGNED32); 
 	PROCEDURE ^ IsInvalid(n: PCT.Node): BOOLEAN; 
 	PROCEDURE ^ IsVariable(n: PCT.Node): BOOLEAN; 
 	PROCEDURE ^ IsVariable2(n: PCT.Node): BOOLEAN; 
@@ -507,82 +507,82 @@ VAR
 	PROCEDURE ^ IsInterface*(n: Designator): BOOLEAN; 
 	PROCEDURE ^ GetProcedureInfo(e: Expression; VAR param: PCT.Parameter; VAR ret: PCT.Struct): BOOLEAN; 
 	PROCEDURE ^ IsProcReturningPointer*(d: Designator; VAR rtype: PCT.Struct): BOOLEAN; 
-	PROCEDURE ^ IsRealtimeProc*(d: Designator; pos: LONGINT): BOOLEAN; 
-	PROCEDURE ^ ConstExpression*(pos: LONGINT; e: Expression): Const; 
-	PROCEDURE ^ NewDynSizedArray*(len: Expression; base: PCT.Struct; VAR res: WORD): PCT.Array; 
+	PROCEDURE ^ IsRealtimeProc*(d: Designator; pos: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ ConstExpression*(pos: SIGNED32; e: Expression): Const; 
+	PROCEDURE ^ NewDynSizedArray*(len: Expression; base: PCT.Struct; VAR res: INTEGER): PCT.Array; 
 	PROCEDURE ^ TypeExtension(base, ext: PCT.Struct): BOOLEAN; 
 	PROCEDURE ^ ArrayCompatible(Ta, Tf: PCT.Struct): BOOLEAN; 
-	PROCEDURE ^ TensorCompatible(pos: LONGINT; ref: BOOLEAN; Ta, Tf: PCT.Struct): BOOLEAN; 
-	PROCEDURE ^ EnhArrayAssignmentC(pos: LONGINT; Ta, Tf: PCT.Struct; weak: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ TensorCompatible(pos: SIGNED32; ref: BOOLEAN; Ta, Tf: PCT.Struct): BOOLEAN; 
+	PROCEDURE ^ EnhArrayAssignmentC(pos: SIGNED32; Ta, Tf: PCT.Struct; weak: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ TypeCompatible(e: Expression; Tv: PCT.Struct): BOOLEAN; 
 	PROCEDURE ^ AssignmentCompatible(e: Expression; VAR v: Designator): BOOLEAN; 
 	PROCEDURE ^ ParameterCompatible(e: Expression; par: PCT.Parameter): BOOLEAN; 
 	PROCEDURE ^ SignatureCompatible(from, to: PCT.Parameter): BOOLEAN; 
 	PROCEDURE ^ TypeCompatible0(from, to: PCT.Struct): BOOLEAN; 
 	PROCEDURE ^ RealtimeCompatible(e: AnyProc; Tv: PCT.Delegate): BOOLEAN; 
-	PROCEDURE ^ NewValue*(pos: LONGINT; obj: PCT.Symbol): Expression; 
-	PROCEDURE ^ NewIntValue*(pos: LONGINT; i: LONGINT; type: PCT.Struct): Const; 
-	PROCEDURE ^ NewLongIntValue*(pos: LONGINT; i: HUGEINT): Const; 
-	PROCEDURE ^ NewFloatValue*(pos: LONGINT; r: LONGREAL; type: PCT.Struct): Const; 
-	PROCEDURE ^ NewStrValue*(pos: LONGINT; str: PCS.String): Const; 
-	PROCEDURE ^ NewArrayValue*(pos: LONGINT; VAR a: ARRAY OF SYSTEM.BYTE; VAR len: ARRAY OF LONGINT; dim: LONGINT; base: PCT.Struct): Const; 
-	PROCEDURE ^ NewBoolValue*(pos: LONGINT; b: BOOLEAN): Const; 
-	PROCEDURE ^ NewSetValue*(pos: LONGINT; s: SET): Const; 
-	PROCEDURE ^ NewNILValue*(pos: LONGINT): Const; 
-	PROCEDURE ^ NewConversion*(pos: LONGINT; exp: Expression; type: PCT.Struct): Expression; 
-	PROCEDURE ^ Project(pos: LONGINT; exp: Expression; type: PCT.Struct): Expression; 
+	PROCEDURE ^ NewValue*(pos: SIGNED32; obj: PCT.Symbol): Expression; 
+	PROCEDURE ^ NewIntValue*(pos: SIGNED32; i: SIGNED32; type: PCT.Struct): Const; 
+	PROCEDURE ^ NewLongIntValue*(pos: SIGNED32; i: SIGNED64): Const; 
+	PROCEDURE ^ NewFloatValue*(pos: SIGNED32; r: FLOAT64; type: PCT.Struct): Const; 
+	PROCEDURE ^ NewStrValue*(pos: SIGNED32; str: PCS.String): Const; 
+	PROCEDURE ^ NewArrayValue*(pos: SIGNED32; VAR a: ARRAY OF SYSTEM.BYTE; VAR len: ARRAY OF SIGNED32; dim: SIGNED32; base: PCT.Struct): Const; 
+	PROCEDURE ^ NewBoolValue*(pos: SIGNED32; b: BOOLEAN): Const; 
+	PROCEDURE ^ NewSetValue*(pos: SIGNED32; s: SET): Const; 
+	PROCEDURE ^ NewNILValue*(pos: SIGNED32): Const; 
+	PROCEDURE ^ NewConversion*(pos: SIGNED32; exp: Expression; type: PCT.Struct): Expression; 
+	PROCEDURE ^ Project(pos: SIGNED32; exp: Expression; type: PCT.Struct): Expression; 
 	PROCEDURE ^ RevertExprList(el: ExprList); 
-	PROCEDURE ^ NewFuncCall*(pos: LONGINT; proc: Designator; params: ExprList; curlevel: SHORTINT): Expression; 
-	PROCEDURE ^ NewExprList*(pos: LONGINT; d: Designator): ExprList; 
-	PROCEDURE ^ NewMOp*(pos: LONGINT; scope: PCT.Scope; op: Operator; opd: Expression): Expression; 
-	PROCEDURE ^ FoldConstASH(pos: LONGINT; l, r: PCT.Const): Expression; 
-	PROCEDURE ^ FoldConstROT(pos: LONGINT; l, r: PCT.Const): Expression; 
-	PROCEDURE ^ FoldConstLSH(pos: LONGINT; l, r: PCT.Const): Expression; 
+	PROCEDURE ^ NewFuncCall*(pos: SIGNED32; proc: Designator; params: ExprList; curlevel: SIGNED8): Expression; 
+	PROCEDURE ^ NewExprList*(pos: SIGNED32; d: Designator): ExprList; 
+	PROCEDURE ^ NewMOp*(pos: SIGNED32; scope: PCT.Scope; op: Operator; opd: Expression): Expression; 
+	PROCEDURE ^ FoldConstASH(pos: SIGNED32; l, r: PCT.Const): Expression; 
+	PROCEDURE ^ FoldConstROT(pos: SIGNED32; l, r: PCT.Const): Expression; 
+	PROCEDURE ^ FoldConstLSH(pos: SIGNED32; l, r: PCT.Const): Expression; 
 	PROCEDURE ^ ConvertOperands(VAR lo, ro: Expression); 
-	PROCEDURE ^ NewDOp*(pos: LONGINT; op: Operator; lopd, ropd: Expression): Expression; 
+	PROCEDURE ^ NewDOp*(pos: SIGNED32; op: Operator; lopd, ropd: Expression): Expression; 
 	PROCEDURE ^ MakeTemp(code: PCC.Code; suppress: BOOLEAN; VAR p: Expression); 
-	PROCEDURE ^ Finally*(pos: LONGINT; code: PCC.Code; obj: PCT.Symbol); 
-	PROCEDURE ^ MakeNode*(pos: LONGINT; scope: PCT.Scope; obj: PCT.Symbol): Designator; 
-	PROCEDURE ^ NewDeref*(pos: LONGINT; ptr: Designator): Designator; 
-	PROCEDURE ^ NewField0(scope: PCT.Scope; rec: Designator; fld: PCT.Symbol; pos: LONGINT): Designator; 
-	PROCEDURE ^ NewField*(current: PCT.Scope; rec: Designator; name: PCS.Name; pos: LONGINT): Designator; 
+	PROCEDURE ^ Finally*(pos: SIGNED32; code: PCC.Code; obj: PCT.Symbol); 
+	PROCEDURE ^ MakeNode*(pos: SIGNED32; scope: PCT.Scope; obj: PCT.Symbol): Designator; 
+	PROCEDURE ^ NewDeref*(pos: SIGNED32; ptr: Designator): Designator; 
+	PROCEDURE ^ NewField0(scope: PCT.Scope; rec: Designator; fld: PCT.Symbol; pos: SIGNED32): Designator; 
+	PROCEDURE ^ NewField*(current: PCT.Scope; rec: Designator; name: PCS.Name; pos: SIGNED32): Designator; 
 	PROCEDURE ^ MakeSelf(self: Designator): Expression; 
-	PROCEDURE ^ NewIndex*(pos: LONGINT; array: Designator; index: Expression): Designator; 
-	PROCEDURE ^ NewEnhIndex*(pos: LONGINT; array: Designator): EnhIndex; 
-	PROCEDURE ^ NewGuard*(pos: LONGINT; des: Designator; type: PCT.Symbol; equal: BOOLEAN): Designator; 
+	PROCEDURE ^ NewIndex*(pos: SIGNED32; array: Designator; index: Expression): Designator; 
+	PROCEDURE ^ NewEnhIndex*(pos: SIGNED32; array: Designator): EnhIndex; 
+	PROCEDURE ^ NewGuard*(pos: SIGNED32; des: Designator; type: PCT.Symbol; equal: BOOLEAN): Designator; 
 	PROCEDURE ^ Assign*(code: PCC.Code; suppress: BOOLEAN; lexpr: Designator; rexpr: Expression; arraycreation: BOOLEAN); 
-	PROCEDURE ^ CallSProc(code: PCC.Code; suppress: BOOLEAN; pos, fnr: LONGINT; params: BuiltInEl); 
-	PROCEDURE ^ CheckForCParams(e: Expression; VAR cparams: PCT.Parameter; VAR size: LONGINT); 
-	PROCEDURE ^ MakeCall(code: PCC.Code; proc: Designator; p: PCT.Proc; pars: ExprList; curlevel: SHORTINT; extC: BOOLEAN); 
-	PROCEDURE ^ CallProc*(code: PCC.Code; suppress: BOOLEAN; proc: Designator; params: ExprList; curlevel: SHORTINT); 
+	PROCEDURE ^ CallSProc(code: PCC.Code; suppress: BOOLEAN; pos, fnr: SIGNED32; params: BuiltInEl); 
+	PROCEDURE ^ CheckForCParams(e: Expression; VAR cparams: PCT.Parameter; VAR size: SIGNED32); 
+	PROCEDURE ^ MakeCall(code: PCC.Code; proc: Designator; p: PCT.Proc; pars: ExprList; curlevel: SIGNED8; extC: BOOLEAN); 
+	PROCEDURE ^ CallProc*(code: PCC.Code; suppress: BOOLEAN; proc: Designator; params: ExprList; curlevel: SIGNED8); 
 	PROCEDURE ^ dbgType(t: PCT.Struct); 
-	PROCEDURE ^ NewArrayConversion(pos: LONGINT; x: Expression; base: PCT.Struct): Expression; 
-	PROCEDURE ^ NewArrayOperator(pos: LONGINT; op: Operator; d, l, r: Expression; conversion: BOOLEAN): Expression; 
+	PROCEDURE ^ NewArrayConversion(pos: SIGNED32; x: Expression; base: PCT.Struct): Expression; 
+	PROCEDURE ^ NewArrayOperator(pos: SIGNED32; op: Operator; d, l, r: Expression; conversion: BOOLEAN): Expression; 
 	PROCEDURE ^ Interface*(intf, obj: Designator): Designator; 
-	PROCEDURE ^ Trap*(code: PCC.Code; suppress: BOOLEAN; nr: LONGINT); 
+	PROCEDURE ^ Trap*(code: PCC.Code; suppress: BOOLEAN; nr: SIGNED32); 
 	PROCEDURE ^ If*(code: PCC.Code; suppress: BOOLEAN; VAR info: LoopInfo; cond: Expression; elsif: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ Else*(code: PCC.Code; suppress: BOOLEAN; VAR info: LoopInfo): BOOLEAN; 
 	PROCEDURE ^ EndIf*(code: PCC.Code; suppress: BOOLEAN; VAR info: LoopInfo); 
 	PROCEDURE ^ While*(code: PCC.Code; suppress: BOOLEAN; VAR info: LoopInfo; cond: Expression); 
 	PROCEDURE ^ Repeat*(code: PCC.Code; suppress: BOOLEAN; VAR info: LoopInfo; cond: Expression); 
-	PROCEDURE ^ BeginFor*(code: PCC.Code; suppress: BOOLEAN; pos: LONGINT; var: Designator; from, to, by: Expression; VAR info: LoopInfo); 
-	PROCEDURE ^ EndFor*(code: PCC.Code; suppress: BOOLEAN; pos: LONGINT; var: Designator; step: Expression; VAR info: LoopInfo); 
+	PROCEDURE ^ BeginFor*(code: PCC.Code; suppress: BOOLEAN; pos: SIGNED32; var: Designator; from, to, by: Expression; VAR info: LoopInfo); 
+	PROCEDURE ^ EndFor*(code: PCC.Code; suppress: BOOLEAN; pos: SIGNED32; var: Designator; step: Expression; VAR info: LoopInfo); 
 	PROCEDURE ^ BeginLoop*(code: PCC.Code; suppress: BOOLEAN; VAR info: LoopInfo); 
 	PROCEDURE ^ EndLoop*(code: PCC.Code; suppress: BOOLEAN; VAR info: LoopInfo); 
-	PROCEDURE ^ Exit*(code: PCC.Code; suppress: BOOLEAN; VAR info: LoopInfo; forlevel: LONGINT); 
-	PROCEDURE ^ Return*(code: PCC.Code; suppress: BOOLEAN; scope: PCT.Scope; pos: LONGINT; expr: Expression; unlock: BOOLEAN; forlevel: LONGINT); 
-	PROCEDURE ^ Await*(code: PCC.Code; suppress: BOOLEAN; scope: PCT.Scope; pos: LONGINT; name: StringPool.Index); 
+	PROCEDURE ^ Exit*(code: PCC.Code; suppress: BOOLEAN; VAR info: LoopInfo; forlevel: SIGNED32); 
+	PROCEDURE ^ Return*(code: PCC.Code; suppress: BOOLEAN; scope: PCT.Scope; pos: SIGNED32; expr: Expression; unlock: BOOLEAN; forlevel: SIGNED32); 
+	PROCEDURE ^ Await*(code: PCC.Code; suppress: BOOLEAN; scope: PCT.Scope; pos: SIGNED32; name: StringPool.Index); 
 	PROCEDURE ^ Case*(code: PCC.Code; suppress: BOOLEAN; VAR info: CaseInfo; x: Expression); 
 	PROCEDURE ^ CaseLine*(code: PCC.Code; suppress: BOOLEAN; VAR info: CaseInfo; mine, maxe: Expression; firstline: BOOLEAN); 
 	PROCEDURE ^ CaseElse*(code: PCC.Code; suppress: BOOLEAN; VAR info: CaseInfo); 
 	PROCEDURE ^ CaseEnd*(code: PCC.Code; suppress: BOOLEAN; VAR info: CaseInfo); 
-	PROCEDURE ^ Lock*(code: PCC.Code; scope: PCT.Scope; pos: LONGINT; lock: BOOLEAN); 
+	PROCEDURE ^ Lock*(code: PCC.Code; scope: PCT.Scope; pos: SIGNED32; lock: BOOLEAN); 
 	PROCEDURE ^ Inline*(code: PCC.Code; inline: PCM.Attribute); 
 	PROCEDURE ^ AllocateArrays(code: PCC.Code; par: PCT.Parameter; var: PCT.Variable); 
 	PROCEDURE ^ InitInterfaces(code: PCC.Code; r, int: PCT.Record); 
 	PROCEDURE ^ InitRecords(code: PCC.Code; r: PCT.Record); 
 	PROCEDURE ^ Enter*(scope: PCT.Scope): PCC.Code; 
-	PROCEDURE ^ DumpCode(code: PCC.Code; name: ARRAY OF CHAR; phase: LONGINT); 
+	PROCEDURE ^ DumpCode(code: PCC.Code; name: ARRAY OF CHAR; phase: SIGNED32); 
 	PROCEDURE ^ Leave*(code: PCC.Code; scope: PCT.Scope; noTrap: BOOLEAN); 
 	PROCEDURE ^ Init; 
 BEGIN

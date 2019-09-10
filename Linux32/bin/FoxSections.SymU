@@ -21,25 +21,25 @@ TYPE
 	Section* = OBJECT 
 	VAR 
 		name-: SectionName; 
-		type-: SHORTINT; 
+		type-: SIGNED8; 
 		fixed-: BOOLEAN; 
 		positionOrAlignment-: SIZE; 
 		fingerprint-: Basic.Fingerprint; 
-		bitsPerUnit-: LONGINT; 
+		bitsPerUnit-: SIGNED32; 
 		symbol-: SyntaxTree.Symbol; 
 		offset-: SIZE; 
 		isReachable-: BOOLEAN; 
 
-		PROCEDURE ^  & InitSection*(type: SHORTINT; CONST n: ObjectFile.SegmentedName; symbol: SyntaxTree.Symbol); 
+		PROCEDURE ^  & InitSection*(type: SIGNED8; CONST n: ObjectFile.SegmentedName; symbol: SyntaxTree.Symbol); 
 		PROCEDURE ^ IsCode*(): BOOLEAN; 
 		PROCEDURE ^ SetOffset*(offset: SIZE); 
 		PROCEDURE ^ SetReachability*(isReachable: BOOLEAN); 
-		PROCEDURE ^ SetBitsPerUnit*(bitsPerUnit: LONGINT); 
+		PROCEDURE ^ SetBitsPerUnit*(bitsPerUnit: SIGNED32); 
 		PROCEDURE ^ IsAligned*(): BOOLEAN; 
 		PROCEDURE ^ SetPositionOrAlignment*(isFixed: BOOLEAN; positionOrAlignment: SIZE); 
-		PROCEDURE ^ GetSize*(): LONGINT; 
+		PROCEDURE ^ GetSize*(): SIGNED32; 
 		PROCEDURE ^ SetFingerprint*(fingerprint: Basic.Fingerprint); 
-		PROCEDURE ^ SetType*(type: SHORTINT); 
+		PROCEDURE ^ SetType*(type: SIGNED8); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 		PROCEDURE ^ WriteRaw*(w: Streams.Writer); 
 		PROCEDURE ^ DumpName*(w: Streams.Writer); 
@@ -64,10 +64,10 @@ TYPE
 	CommentWriter* = OBJECT (Streams.Writer)
 	VAR 
 		firstComment-, lastComment-: Comment; 
-		comments-: LONGINT; 
+		comments-: SIGNED32; 
 		getPC: GetPCProcedure; 
 
-		PROCEDURE ^ AppendToLine*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ AppendToLine*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^  & InitCommentWriter*(getPC: GetPCProcedure); 

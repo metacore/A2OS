@@ -16,25 +16,25 @@ CONST
 TYPE 
 	Type = RECORD 
 		ptag: ADDRESS; 
-		count: LONGINT; 
+		count: SIGNED32; 
 		size: SIZE; 
-		type: SHORTINT; 
+		type: SIGNED8; 
 		pc: ADDRESS; 
 	END; 
 
 	Analyzer = OBJECT 
 	VAR 
 		types: POINTER TO ARRAY OF Type; 
-		nofElements: LONGINT; 
-		nofHeapBlocks, nofFreeBlocks, nofSystemBlocks, nofRecordBlocks, nofProtRecBlocks, nofArrayBlocks: LONGINT; 
+		nofElements: SIGNED32; 
+		nofHeapBlocks, nofFreeBlocks, nofSystemBlocks, nofRecordBlocks, nofProtRecBlocks, nofArrayBlocks: SIGNED32; 
 		sizeHeapBlocks, sizeFreeBlocks, sizeSystemBlocks, sizeRecordBlocks, sizeProtRecBlocks, sizeArrayBlocks: SIZE; 
 
-		PROCEDURE ^  & Init(size: LONGINT); 
+		PROCEDURE ^  & Init(size: SIGNED32); 
 		PROCEDURE ^ Reset; 
-		PROCEDURE ^ SortBy(mode: LONGINT); 
+		PROCEDURE ^ SortBy(mode: SIGNED32); 
 		PROCEDURE ^ Add(CONST block: Heaps.HeapBlock; byPC: BOOLEAN); 
 		PROCEDURE ^ ShowBlocks(CONST mask: ARRAY OF CHAR; out: Streams.Writer); 
-		PROCEDURE ^ Show(out: Streams.Writer; CONST mask: ARRAY OF CHAR; sortMode: LONGINT; byPC: BOOLEAN); 
+		PROCEDURE ^ Show(out: Streams.Writer; CONST mask: ARRAY OF CHAR; sortMode: SIGNED32; byPC: BOOLEAN); 
 	END Analyzer; 
 
 	; 
@@ -42,16 +42,16 @@ VAR
 	currentMarkValueAddress: ADDRESS; 
 	recentAllocators*: ARRAY AllocatorHistorySize OF RECORD 
 		pc*: ARRAY 3 OF ADDRESS; 
-		time*: HUGEINT; 
+		time*: SIGNED64; 
 	END; 
-	numRecentAllocators*: LONGINT; 
+	numRecentAllocators*: SIGNED32; 
 
 	PROCEDURE ^ LogAlloc(p: ANY); 
 	PROCEDURE ^ WriteB(b: SIZE; out: Streams.Writer); 
 	PROCEDURE ^ ModuleDetails*(context: Commands.Context); 
 	PROCEDURE ^ ModulePC*(context: Commands.Context); 
 	PROCEDURE ^ AllObjects*(context: Commands.Context); 
-	PROCEDURE ^ ShowRecentAllocators*(out: Streams.Writer; scale: HUGEINT); 
+	PROCEDURE ^ ShowRecentAllocators*(out: Streams.Writer; scale: SIGNED64); 
 	PROCEDURE ^ ClearRecentAllocators*; 
 	PROCEDURE ^ AddAllocatorLogger*; 
 	PROCEDURE ^ RecentAllocators*(context: Commands.Context); 
@@ -59,12 +59,12 @@ VAR
 	PROCEDURE ^ TraceReference*(context: Commands.Context); 
 	PROCEDURE ^ MarkReference(analyzer: Analyzer; ref: ANY); 
 	PROCEDURE ^ TraceProcessID*(context: Commands.Context); 
-	PROCEDURE ^ FindProcessByID(id: LONGINT): Objects.Process; 
+	PROCEDURE ^ FindProcessByID(id: SIGNED32): Objects.Process; 
 	PROCEDURE ^ AnalyzeMarkedBlocks(analyzer: Analyzer); 
-	PROCEDURE ^ WriteType(adr: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ WriteType(adr: SIGNED32; out: Streams.Writer); 
 	PROCEDURE ^ GetName(adr: ADDRESS; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ GetCurrentMarkValue(): LONGINT; 
-	PROCEDURE ^ SetCurrentMarkValue(value: LONGINT); 
+	PROCEDURE ^ GetCurrentMarkValue(): SIGNED32; 
+	PROCEDURE ^ SetCurrentMarkValue(value: SIGNED32); 
 	PROCEDURE ^ IncrementCurrentMarkValue; 
 	PROCEDURE ^ GetCurrentMarkValueAddress(): ADDRESS; 
 	PROCEDURE ^ Terminate; 

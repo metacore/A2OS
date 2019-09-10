@@ -8,14 +8,14 @@ TYPE
 
 	tModelDesc* = RECORD (antsModels.tModelDesc)
 		cooling: antsFunctions.Function; 
-		curlen, curtemp: LONGREAL; 
+		curlen, curtemp: FLOAT64; 
 	END; 
 
 	PROCEDURE ^ StoreM(VAR R: Files.Rider; o: tModel); 
 	PROCEDURE ^ LoadM(VAR R: Files.Rider; o: tModel); 
-	PROCEDURE ^ Length(vx, vy: vyLongrealVec.tVector): LONGREAL; 
-	PROCEDURE ^ Swap(vx, vy: vyLongrealVec.tVector; a, b: LONGINT); 
-	PROCEDURE ^ OneSweep(s: antsKernel.Kernel; pos: LONGINT); 
+	PROCEDURE ^ Length(vx, vy: vyLongrealVec.tVector): FLOAT64; 
+	PROCEDURE ^ Swap(vx, vy: vyLongrealVec.tVector; a, b: SIGNED32); 
+	PROCEDURE ^ OneSweep(s: antsKernel.Kernel; pos: SIGNED32); 
 	PROCEDURE ^ Init(s: antsKernel.Kernel); 
 	PROCEDURE ^ HandleAttributes(o: tModel; VAR msg: Objects.AttrMsg); 
 	PROCEDURE ^ HandleLinks(o: tModel; VAR msg: Objects.LinkMsg); 

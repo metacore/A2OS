@@ -38,7 +38,7 @@ TYPE
 		PROCEDURE ^  & Init*; 
 	END PartitionEditor; 
 
-	ChangeHandler* = PROCEDURE {DELEGATE}(changeType: LONGINT; VAR partition: PartitionTable.Partition); 
+	ChangeHandler* = PROCEDURE {DELEGATE}(changeType: SIGNED32; VAR partition: PartitionTable.Partition); 
 
 	PartitionTableEditor* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
@@ -55,7 +55,7 @@ TYPE
 		PROCEDURE ^  & Init*; 
 	END PartitionTableEditor; 
 
-	PROCEDURE ^ CreateLabel(VAR label: WMStandardComponents.Label; CONST caption: ARRAY OF CHAR; width: LONGINT); 
-	PROCEDURE ^ CreateEditor(VAR editor: WMEditors.Editor; width: LONGINT); 
+	PROCEDURE ^ CreateLabel(VAR label: WMStandardComponents.Label; CONST caption: ARRAY OF CHAR; width: SIGNED32); 
+	PROCEDURE ^ CreateEditor(VAR editor: WMEditors.Editor; width: SIGNED32); 
 BEGIN
 END PartitionEditorComponents.

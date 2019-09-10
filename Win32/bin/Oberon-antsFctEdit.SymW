@@ -12,7 +12,7 @@ TYPE
 		f: antsFunctions.Function; 
 		xr, yr, wr, hr: Real; 
 		dx: Real; 
-		grid: INTEGER; 
+		grid: SIGNED16; 
 		inedit: BOOLEAN; 
 		viewEditWin: BOOLEAN; 
 		fcache: antsFunctions.Array; 

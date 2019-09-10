@@ -6,31 +6,31 @@ TYPE
 	Glyph = RECORD 
 		img: Graphics.Image; 
 		available: BOOLEAN; 
-		dx, x, y, w, h: LONGINT; 
+		dx, x, y, w, h: SIGNED32; 
 	END; 
 
 	Font = OBJECT (Graphics.Font)
 	VAR 
 		glyphs: ARRAY 256 OF Glyph; 
 		placeholderimg: Graphics.Image; 
-		height: LONGINT; 
+		height: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ MapChars(VAR ch: LONGINT); 
-		PROCEDURE ^ HasChar*(code: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetGlyphMap*(code: LONGINT; VAR map: Graphics.Image); 
-		PROCEDURE ^ GetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: Graphics.GlyphSpacings); 
+		PROCEDURE ^ MapChars(VAR ch: SIGNED32); 
+		PROCEDURE ^ HasChar*(code: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetGlyphMap*(code: SIGNED32; VAR map: Graphics.Image); 
+		PROCEDURE ^ GetGlyphSpacings*(code: SIGNED32; VAR glyphSpacings: Graphics.GlyphSpacings); 
 	END Font; 
 VAR 
 	bit: ARRAY 256 OF ARRAY 8 OF BOOLEAN; 
 	buffer: ARRAY 2500 OF CHAR; 
-	nof: LONGINT; 
+	nof: SIGNED32; 
 	f: Font; 
 
 	PROCEDURE ^ LoadDefaultFont*(): Font; 
 	PROCEDURE ^ StreamLoad(r: Streams.Reader): Font; 
 	PROCEDURE ^ InitBitTable; 
-	PROCEDURE ^ A(hv: HUGEINT); 
+	PROCEDURE ^ A(hv: SIGNED64); 
 	PROCEDURE ^ DefaultFont; 
 	PROCEDURE ^ Load*; 
 BEGIN

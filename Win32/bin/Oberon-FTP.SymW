@@ -15,7 +15,7 @@ CONST
 	LocFileNotFound = 6; 
 	Interrupted = 7; 
 	Disconnected = 8; 
-	Failed = MAX(INTEGER); 
+	Failed = MAX(SIGNED16); 
 	MinDataPort = 1100; 
 	MaxDataPort = 1500; 
 	Unknown =  -1; 
@@ -39,7 +39,7 @@ TYPE
 		reply: ARRAY MaxLine OF CHAR; 
 		usr, passw, host, portIPAddress: ARRAY 64 OF CHAR; 
 		dataIP: NetSystem.IPAdr; 
-		dataPort, status, system, res: INTEGER; 
+		dataPort, status, system, res: SIGNED16; 
 		ack: BOOLEAN; 
 	END; 
 
@@ -50,12 +50,12 @@ VAR
 	log: Texts.Text; 
 	line: ARRAY MaxLine OF CHAR; 
 	buffer: ARRAY BufLen OF CHAR; 
-	timeOut: LONGINT; 
-	dataPort, col: INTEGER; 
+	timeOut: SIGNED32; 
+	dataPort, col: SIGNED16; 
 
-	PROCEDURE ^ Connected(C: NetSystem.Connection; mode: INTEGER): BOOLEAN; 
+	PROCEDURE ^ Connected(C: NetSystem.Connection; mode: SIGNED16): BOOLEAN; 
 	PROCEDURE ^ Disconnect(VAR C: NetSystem.Connection); 
-	PROCEDURE ^ Connect(VAR C: NetSystem.Connection; port: INTEGER; host: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ Connect(VAR C: NetSystem.Connection; port: SIGNED16; host: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ UserBreak(): BOOLEAN; 
 	PROCEDURE ^ ReadResponse(S: Session; VAR sline: ARRAY OF CHAR); 
 	PROCEDURE ^ SendString(C: NetSystem.Connection; str: ARRAY OF CHAR); 
@@ -66,7 +66,7 @@ VAR
 	PROCEDURE ^ QuerySystem(S: Session); 
 	PROCEDURE ^ QueryString(key: ARRAY OF CHAR; VAR s: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetLogin(VAR host, usr, passw: ARRAY OF CHAR); 
-	PROCEDURE ^ OpenS(server, user, passwd: ARRAY OF CHAR; port: INTEGER; VAR S: Session); 
+	PROCEDURE ^ OpenS(server, user, passwd: ARRAY OF CHAR; port: SIGNED16; VAR S: Session); 
 	PROCEDURE ^ ChangeDirS(S: Session; newDir: ARRAY OF CHAR); 
 	PROCEDURE ^ SetDataPort(S: Session); 
 	PROCEDURE ^ WaitDataCon(S: Session): NetSystem.Connection; 
@@ -86,7 +86,7 @@ VAR
 	PROCEDURE ^ PutText(S: Session; remName: ARRAY OF CHAR; text: Texts.Text); 
 	PROCEDURE ^ ShowRes; 
 	PROCEDURE ^ OpenScanner(VAR S: Texts.Scanner); 
-	PROCEDURE ^ SplitFTPAdr(VAR url, host, path, user, passwd: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER): BOOLEAN; 
+	PROCEDURE ^ SplitFTPAdr(VAR url, host, path, user, passwd: ARRAY OF CHAR; VAR type: CHAR; VAR port: SIGNED16): BOOLEAN; 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ Con(): BOOLEAN; 
 	PROCEDURE ^ Close*; 

@@ -2,13 +2,13 @@ MODULE antsComet IN Oberon;
 	IMPORT antsObjects, Files, antsKernel, antsArrayObjects, antsModels, antsCommands, vyName, Objects, vyRanBase, vyRandom, vyBase, vyLongrealVec, Gadgets, aM := antsMessages;
 CONST 
 TYPE 
-	LRA = POINTER TO ARRAY OF LONGREAL; 
+	LRA = POINTER TO ARRAY OF FLOAT64; 
 
 	tModel* = POINTER TO tModelDesc; 
 
 	tModelDesc* = RECORD (antsModels.tModelDesc)
 		pointsx, pointsy, mass: LRA; 
-		points: LONGINT; 
+		points: SIGNED32; 
 		vertmassv: vyBase.tVector; 
 	END; 
 VAR 
@@ -16,13 +16,13 @@ VAR
 
 	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
 	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
-	PROCEDURE ^ Range(x, y, w, h: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Range(x, y, w, h: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
 	PROCEDURE ^ Uniform(s: antsKernel.Kernel); 
-	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
-	PROCEDURE ^ ChangePoints(m: tModel; points: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Min(a, b: SIGNED32): SIGNED32; 
+	PROCEDURE ^ ChangePoints(m: tModel; points: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ OpenModel*(M: tModel; name: vyName.tNameArray; points: LONGINT); 
+	PROCEDURE ^ OpenModel*(M: tModel; name: vyName.tNameArray; points: SIGNED32); 
 	PROCEDURE ^ NewPars(m: tModel); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ NewModel*; 

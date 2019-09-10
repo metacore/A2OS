@@ -8,7 +8,7 @@ TYPE
 		timeout, running: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ SetTimeout*(h: Objects.EventHandler; ms: LONGINT); 
+		PROCEDURE ^ SetTimeout*(h: Objects.EventHandler; ms: SIGNED32); 
 		PROCEDURE ^ CancelTimeout*; 
 		PROCEDURE ^ HandleTimeout; 
 		PROCEDURE ^ Finalize*; 

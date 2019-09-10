@@ -74,14 +74,14 @@ CONST
 	globalP* = 5; 
 	FP* = 4; 
 TYPE 
-	OperandType = INTEGER; 
+	OperandType = SIGNED16; 
 
-	OperandFormatType = INTEGER; 
+	OperandFormatType = SIGNED16; 
 
-	RegisterIndex = LONGINT; 
+	RegisterIndex = SIGNED32; 
 
 	InstructionFormat* = RECORD 
-		mnemonic-: LONGINT; 
+		mnemonic-: SIGNED32; 
 		code, mask: SET; 
 		capabilities-: SET; 
 		op1, op2: OperandFormatType; 
@@ -89,25 +89,25 @@ TYPE
 
 	Mnemonic* = RECORD 
 		name-: ARRAY maxMnemonicNameLength OF CHAR; 
-		number-: LONGINT; 
-		firstInstructionFormat, lastInstructionFormat: LONGINT; 
+		number-: SIGNED32; 
+		firstInstructionFormat, lastInstructionFormat: SIGNED32; 
 	END; 
 
 	NumberedName = RECORD 
 		name: ARRAY maxMnemonicNameLength OF CHAR; 
-		number: LONGINT; 
+		number: SIGNED32; 
 	END; 
 
 	Operand* = RECORD 
 		type-: OperandType; 
-		size: LONGINT; 
+		size: SIGNED32; 
 		register-: RegisterIndex; 
-		imm-: LONGINT; 
+		imm-: SIGNED32; 
 		fixup-: BinaryCode.Fixup; 
 	END; 
 
 	Instruction* = RECORD 
-		format-: LONGINT; 
+		format-: SIGNED32; 
 		op1-, op2-: Operand; 
 	END; 
 
@@ -116,42 +116,42 @@ TYPE
 		mnemonics-: ARRAY numberMnemonics OF Mnemonic; 
 		mnemonicsSorted-: ARRAY numberMnemonics OF NumberedName; 
 		instructionFormats-: ARRAY maxNumberInstructions OF InstructionFormat; 
-		numberInstructionFormats-: LONGINT; 
-		inverseCondition-: ARRAY numberMnemonics OF LONGINT; 
-		instructionW-: LONGINT; 
-		RelativeBranchFixupBits-: LONGINT; 
-		BranchAndLinkFixupBits-: LONGINT; 
-		ImmediateFixupBits-: LONGINT; 
-		MemoryOffsetFixupBits-: LONGINT; 
+		numberInstructionFormats-: SIGNED32; 
+		inverseCondition-: ARRAY numberMnemonics OF SIGNED32; 
+		instructionW-: SIGNED32; 
+		RelativeBranchFixupBits-: SIGNED32; 
+		BranchAndLinkFixupBits-: SIGNED32; 
+		ImmediateFixupBits-: SIGNED32; 
+		MemoryOffsetFixupBits-: SIGNED32; 
 
-		PROCEDURE ^  & InitInstructionSet*(instructionWidth: LONGINT); 
-		PROCEDURE ^ FindInstructionFormat(mnem: LONGINT; op1, op2: Operand): LONGINT; 
-		PROCEDURE ^ MakeInstruction*(VAR instruction: Instruction; mnemonic: LONGINT; op1, op2: Operand); 
+		PROCEDURE ^  & InitInstructionSet*(instructionWidth: SIGNED32); 
+		PROCEDURE ^ FindInstructionFormat(mnem: SIGNED32; op1, op2: Operand): SIGNED32; 
+		PROCEDURE ^ MakeInstruction*(VAR instruction: Instruction; mnemonic: SIGNED32; op1, op2: Operand); 
 		PROCEDURE ^ IsValidInstruction*(CONST instruction: Instruction): BOOLEAN; 
-		PROCEDURE ^ Encode*(CONST instruction: Instruction): LONGINT; 
-		PROCEDURE ^ Decode*(code: LONGINT; VAR instruction: Instruction); 
-		PROCEDURE ^ EmitInstruction*(CONST instruction: Instruction; mnem: LONGINT; code: BinaryCode.Section); 
-		PROCEDURE ^ Emit*(mnem: LONGINT; CONST op1, op2: Operand; code: BinaryCode.Section); 
-		PROCEDURE ^ FindMnemonic*(CONST mnem: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ FindRegister*(CONST name: ARRAY OF CHAR): SHORTINT; 
-		PROCEDURE ^ NumberToSet(code: LONGINT): SET; 
-		PROCEDURE ^ SetToNumber(set: SET): LONGINT; 
+		PROCEDURE ^ Encode*(CONST instruction: Instruction): SIGNED32; 
+		PROCEDURE ^ Decode*(code: SIGNED32; VAR instruction: Instruction); 
+		PROCEDURE ^ EmitInstruction*(CONST instruction: Instruction; mnem: SIGNED32; code: BinaryCode.Section); 
+		PROCEDURE ^ Emit*(mnem: SIGNED32; CONST op1, op2: Operand; code: BinaryCode.Section); 
+		PROCEDURE ^ FindMnemonic*(CONST mnem: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ FindRegister*(CONST name: ARRAY OF CHAR): SIGNED8; 
+		PROCEDURE ^ NumberToSet(code: SIGNED32): SET; 
+		PROCEDURE ^ SetToNumber(set: SET): SIGNED32; 
 		PROCEDURE ^ InitInstructions; 
-		PROCEDURE ^ InitRegister*(VAR operand: Operand; reg: LONGINT); 
-		PROCEDURE ^ InitImmediate*(VAR operand: Operand; bits: LONGINT; imm: LONGINT); 
-		PROCEDURE ^ InitMemory*(VAR operand: Operand; reg1: RegisterIndex; imm: LONGINT); 
-		PROCEDURE ^ InitFixup*(VAR operand: Operand; bits: SHORTINT; fixup: BinaryCode.Fixup); 
+		PROCEDURE ^ InitRegister*(VAR operand: Operand; reg: SIGNED32); 
+		PROCEDURE ^ InitImmediate*(VAR operand: Operand; bits: SIGNED32; imm: SIGNED32); 
+		PROCEDURE ^ InitMemory*(VAR operand: Operand; reg1: RegisterIndex; imm: SIGNED32); 
+		PROCEDURE ^ InitFixup*(VAR operand: Operand; bits: SIGNED8; fixup: BinaryCode.Fixup); 
 		PROCEDURE ^ AddFixup*(VAR operand: Operand; fixup: BinaryCode.Fixup); 
 		PROCEDURE ^ InitOperand*(VAR operand: Operand); 
 		PROCEDURE ^ DumpOperand*(w: Streams.Writer; CONST operand: Operand); 
 		PROCEDURE ^ DumpInstruction*(w: Streams.Writer; CONST instruction: Instruction); 
-		PROCEDURE ^ DumpBits*(w: Streams.Writer; set: SET; numberBits: LONGINT); 
+		PROCEDURE ^ DumpBits*(w: Streams.Writer; set: SET; numberBits: SIGNED32); 
 		PROCEDURE ^ DumpInstructionFormats*(context: Commands.Context); 
 	END InstructionSet; 
 VAR 
 	decodeInstance: InstructionSet; 
 
-	PROCEDURE ^ Hex(ch: CHAR): LONGINT; 
+	PROCEDURE ^ Hex(ch: CHAR): SIGNED32; 
 	PROCEDURE ^ ReadCode(file: Files.File): BitSets.BitSet; 
 	PROCEDURE ^ ReadData(file: Files.File): BitSets.BitSet; 
 	PROCEDURE ^ Disassemble*(context: Commands.Context); 

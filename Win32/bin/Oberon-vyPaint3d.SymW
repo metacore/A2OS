@@ -10,7 +10,7 @@ VAR
 	pen: ARRAY 3 OF Real; 
 
 	PROCEDURE ^ SetCoordinate*(c: vyPHIGS3D.tCoordinate3d); 
-	PROCEDURE ^ DisplayPointToPoint*(x, y: INTEGER; err: INTEGER; VAR x3d, y3d, z3d: Real); 
+	PROCEDURE ^ DisplayPointToPoint*(x, y: SIGNED16; err: SIGNED16; VAR x3d, y3d, z3d: Real); 
 	PROCEDURE ^ MoveTo*(x3d, y3d, z3d: Real); 
 	PROCEDURE ^ Line*(x3d0, y3d0, z3d0, x3d1, y3d1, z3d1: Real); 
 	PROCEDURE ^ LineTo*(x3d, y3d, z3d: Real); 

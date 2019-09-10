@@ -6,25 +6,25 @@ TYPE
 	TextReader = OBJECT 
 	VAR 
 		r: Texts.Reader; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 	END TextReader; 
 VAR 
-	Nrep0, Nrep1: LONGINT; 
+	Nrep0, Nrep1: SIGNED32; 
 	log: Streams.Writer; 
 	W: Texts.Writer; 
 
 	PROCEDURE ^ SignOn; 
 	PROCEDURE ^ GetOptions(VAR S: Texts.Scanner; VAR opts: ARRAY OF CHAR); 
 	PROCEDURE ^ InOptions(CONST opt: ARRAY OF CHAR; ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ Locate(F: Display.Frame; T: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ Locate(F: Display.Frame; T: Texts.Text; pos: SIGNED32); 
 	PROCEDURE ^ ReportError(entry: Diagnostics.Entry); 
-	PROCEDURE ^ GetBreakPC(): LONGINT; 
-	PROCEDURE ^ CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; frame: Display.Frame; CONST opt: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ GetBreakPC(): SIGNED32; 
+	PROCEDURE ^ CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; frame: Display.Frame; CONST opt: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ CompileFile*(CONST name, opt: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ CompileAsciiFile*(CONST name, opt: ARRAY OF CHAR; VAR error: BOOLEAN); 
 	PROCEDURE ^ Compile*; 
-	PROCEDURE ^ SenderToLog(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ SenderToLog(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 BEGIN
 END PC.

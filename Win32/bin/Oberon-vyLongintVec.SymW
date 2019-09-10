@@ -4,9 +4,9 @@ CONST
 	idversion* = \"vyLongintVec 0.0a4"\; 
 	cBadType* = 1; 
 TYPE 
-	integer* = LONGINT; 
+	integer* = SIGNED32; 
 
-	index* = LONGINT; 
+	index* = SIGNED32; 
 
 	tVector* = POINTER TO tVectorDesc; 
 
@@ -16,32 +16,32 @@ TYPE
 	tLONGINT* = POINTER TO tLONGINTDesc; 
 
 	tLONGINTDesc* = RECORD (vyBase.tDataDesc)
-		i*: LONGINT; 
+		i*: SIGNED32; 
 	END; 
 
 	tMinMaxCache = POINTER TO tMinMaxCacheDesc; 
 
 	tMinMaxCacheDesc = RECORD (vyBase.tCacheDesc)
 		min, max: integer; 
-		minpos, maxpos, nans: LONGINT; 
+		minpos, maxpos, nans: SIGNED32; 
 	END; 
 
 	tMeanCache = POINTER TO tMeanCacheDesc; 
 
 	tMeanCacheDesc = RECORD (vyBase.tCacheDesc)
-		mean, ssq: LONGREAL; 
-		nans: LONGINT; 
+		mean, ssq: FLOAT64; 
+		nans: SIGNED32; 
 	END; 
 
 	tBuf* = POINTER TO tBufDesc; 
 
 	tBufDesc* = RECORD (vyBase.tBufDesc)
-		data*: POINTER TO ARRAY OF LONGINT; 
+		data*: POINTER TO ARRAY OF SIGNED32; 
 	END; 
 
-	ArrayOp1Function* = PROCEDURE (VAR arg: ARRAY OF LONGINT); 
+	ArrayOp1Function* = PROCEDURE (VAR arg: ARRAY OF SIGNED32); 
 
-	ArrayOp2Function* = PROCEDURE (VAR arg1, arg2: ARRAY OF LONGINT); 
+	ArrayOp2Function* = PROCEDURE (VAR arg1, arg2: ARRAY OF SIGNED32); 
 VAR 
 	newv: tVector; 
 
@@ -58,32 +58,32 @@ VAR
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ SetNrData(vec: tVector; size: index); 
-	PROCEDURE ^ New*(size: LONGINT): tVector; 
+	PROCEDURE ^ New*(size: SIGNED32): tVector; 
 	PROCEDURE ^ GenLongintObject*; 
-	PROCEDURE ^ NewLongintObject*(i: LONGINT): tLONGINT; 
-	PROCEDURE ^ NewLongintMatrix*(rows, columns: LONGINT): vyBase.tVector; 
-	PROCEDURE ^ NewConstVector*(size: LONGINT; val: integer): vyBase.tVector; 
+	PROCEDURE ^ NewLongintObject*(i: SIGNED32): tLONGINT; 
+	PROCEDURE ^ NewLongintMatrix*(rows, columns: SIGNED32): vyBase.tVector; 
+	PROCEDURE ^ NewConstVector*(size: SIGNED32; val: integer): vyBase.tVector; 
 	PROCEDURE ^ GC*(vec: vyBase.tVector); 
 	PROCEDURE ^ Allocate*(vec: vyBase.tVector; size: index); 
 	PROCEDURE ^ SetLen*(vec: vyBase.tVector; size: index); 
-	PROCEDURE ^ Len*(vec: vyBase.tVector): LONGINT; 
-	PROCEDURE ^ NewLongintArray*(sizes: ARRAY OF LONGINT): vyBase.tVector; 
+	PROCEDURE ^ Len*(vec: vyBase.tVector): SIGNED32; 
+	PROCEDURE ^ NewLongintArray*(sizes: ARRAY OF SIGNED32): vyBase.tVector; 
 	PROCEDURE ^ NewAlikeVector*(model: vyBase.tVector): vyBase.tVector; 
-	PROCEDURE ^ Append*(x: LONGINT; v: vyBase.tVector); 
-	PROCEDURE ^ Get*(v: vyBase.tVector; pos: LONGINT): LONGINT; 
-	PROCEDURE ^ Set*(val: LONGINT; v: vyBase.tVector; pos: LONGINT); 
+	PROCEDURE ^ Append*(x: SIGNED32; v: vyBase.tVector); 
+	PROCEDURE ^ Get*(v: vyBase.tVector; pos: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Set*(val: SIGNED32; v: vyBase.tVector; pos: SIGNED32); 
 	PROCEDURE ^ GetIndexed*(v: vyBase.tVector; indexvec: vyBase.tVector; pos: index): integer; 
 	PROCEDURE ^ SetIndexed*(xval: integer; v: vyBase.tVector; indexvec: vyBase.tVector; pos: index); 
-	PROCEDURE ^ GetMinMax*(v: vyBase.tVector; VAR min, max: LONGINT; VAR nrNaNs: LONGINT); 
-	PROCEDURE ^ GetMeanSsq*(v: vyBase.tVector; VAR Mean, Ssq: LONGREAL; VAR nrNaNs: LONGINT); 
-	PROCEDURE ^ CopyToArray*(v: vyBase.tVector; VAR A: ARRAY OF LONGINT); 
+	PROCEDURE ^ GetMinMax*(v: vyBase.tVector; VAR min, max: SIGNED32; VAR nrNaNs: SIGNED32); 
+	PROCEDURE ^ GetMeanSsq*(v: vyBase.tVector; VAR Mean, Ssq: FLOAT64; VAR nrNaNs: SIGNED32); 
+	PROCEDURE ^ CopyToArray*(v: vyBase.tVector; VAR A: ARRAY OF SIGNED32); 
 	PROCEDURE ^ CopyData*(src, dest: vyBase.tVector); 
-	PROCEDURE ^ CopyToVec*(VAR A: ARRAY OF LONGINT; v: vyBase.tVector; len: LONGINT; srcoffs, destoffs: LONGINT); 
+	PROCEDURE ^ CopyToVec*(VAR A: ARRAY OF SIGNED32; v: vyBase.tVector; len: SIGNED32; srcoffs, destoffs: SIGNED32); 
 	PROCEDURE ^ DoArrayOp1*(v: vyBase.tVector; op1: ArrayOp1Function); 
 	PROCEDURE ^ DoArrayOp2*(v1, v2: vyBase.tVector; op2: ArrayOp2Function); 
-	PROCEDURE ^ Fill*(v: vyBase.tVector; val: LONGINT; offs, count: LONGINT); 
-	PROCEDURE ^ NewFilledNamed*(count: LONGINT; val: integer; name: ARRAY OF CHAR): tVector; 
-	PROCEDURE ^ FillSeq*(v: vyBase.tVector; startval: LONGINT; offs, count: LONGINT); 
+	PROCEDURE ^ Fill*(v: vyBase.tVector; val: SIGNED32; offs, count: SIGNED32); 
+	PROCEDURE ^ NewFilledNamed*(count: SIGNED32; val: integer; name: ARRAY OF CHAR): tVector; 
+	PROCEDURE ^ FillSeq*(v: vyBase.tVector; startval: SIGNED32; offs, count: SIGNED32); 
 	PROCEDURE ^ SortEachChunkLONGINT*(c: tBuf); 
 	PROCEDURE ^ SortEachChunkLONGINTWId*(c: tBuf; cid: tBuf); 
 	PROCEDURE ^ tcL*(c: vyBase.tBuf): tBuf; 
@@ -95,7 +95,7 @@ VAR
 	PROCEDURE ^ Sort*(VAR v: tVector); 
 	PROCEDURE ^ SortById*(VAR v: tVector; VAR WId: vyBase.tVector); 
 	PROCEDURE ^ SortWId*(VAR v: vyBase.tVector; VAR WId: vyBase.tVector); 
-	PROCEDURE ^ SSQ*(x, y: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ SSQ*(x, y: vyBase.tVector): FLOAT64; 
 	PROCEDURE ^ WriteChunk(VAR w: Texts.Writer; chunk: vyBase.tBuf); 
 	PROCEDURE ^ Write*(VAR w: Texts.Writer; v: vyBase.tData); 
 	PROCEDURE ^ ChunkSummary*(VAR w: Texts.Writer; chunk: vyBase.tBuf); 

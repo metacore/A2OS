@@ -117,13 +117,13 @@ TYPE
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 	END DragCommand; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	manager: WMWindowManager.WindowManager; 
 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
 	PROCEDURE ^ Clear(VAR windows: Windows); 
-	PROCEDURE ^ GetWindows(VAR windows: Windows; VAR nofWindows: LONGINT); 
+	PROCEDURE ^ GetWindows(VAR windows: Windows; VAR nofWindows: SIGNED32); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 
 	PROCEDURE ^ Cleanup; 

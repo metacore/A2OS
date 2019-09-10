@@ -144,7 +144,7 @@ TYPE
 
 	IdentifierString* = ARRAY (MaxIdentifierLength + 1) OF CHAR; 
 
-	SubType* = SHORTINT; 
+	SubType* = SIGNED8; 
 
 	Keyword* = ARRAY 32 OF CHAR; 
 
@@ -160,7 +160,7 @@ TYPE
 		PROCEDURE ^ PutString*(CONST name: ARRAY OF CHAR; symbol: Symbol); 
 	END KeywordTable; 
 
-	Symbol* = LONGINT; 
+	Symbol* = SIGNED32; 
 
 	Position* = Basic.Position; 
 
@@ -172,9 +172,9 @@ TYPE
 		string*: StringType; 
 		stringLength*: SIZE; 
 		numberType*: SubType; 
-		integer*: HUGEINT; 
+		integer*: SIGNED64; 
 		character*: CHAR; 
-		real*: LONGREAL; 
+		real*: FLOAT64; 
 	END; 
 
 	StringMaker* = OBJECT 
@@ -183,7 +183,7 @@ TYPE
 		data: StringType; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
-		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ Shorten*(n: SIZE); 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ GetWriter*(): Streams.Writer; 
@@ -201,16 +201,16 @@ TYPE
 		position-: Position; 
 		error-: BOOLEAN; 
 		firstIdentifier: BOOLEAN; 
-		case-: LONGINT; 
+		case-: SIGNED32; 
 		stringWriter: Streams.Writer; 
 		stringMaker: StringMaker; 
 		useLineNumbers*: BOOLEAN; 
 
 		PROCEDURE ^  & InitializeScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; pos: Position; diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ ResetCase*; 
-		PROCEDURE ^ SetCase*(c: LONGINT); 
+		PROCEDURE ^ SetCase*(c: SIGNED32); 
 		PROCEDURE ^ ErrorS(CONST msg: ARRAY OF CHAR); 
-		PROCEDURE ^ Error(code: INTEGER); 
+		PROCEDURE ^ Error(code: SIGNED16); 
 		PROCEDURE ^ GetNextCharacter*; 
 		PROCEDURE ^ ConsumeStringUntil(CONST endString: ARRAY OF CHAR; useControl: BOOLEAN); 
 		PROCEDURE ^ GetEscapedString(VAR token: Token); 
@@ -249,10 +249,10 @@ VAR
 
 	PROCEDURE ^ NewScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: Streams.Position; diagnostics: Diagnostics.Diagnostics): Scanner; 
 	PROCEDURE ^ NewAssemblerScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: Streams.Position; diagnostics: Diagnostics.Diagnostics): AssemblerScanner; 
-	PROCEDURE ^ TokenToString*(CONST token: Token; case: LONGINT; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ TokenToString*(CONST token: Token; case: SIGNED32; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ PrintToken*(w: Streams.Writer; CONST token: Token); 
 	PROCEDURE ^ InitReservedCharacters; 
-	PROCEDURE ^ GetKeyword*(case: WORD; symbol: Symbol; VAR identifier: IdentifierType); 
+	PROCEDURE ^ GetKeyword*(case: INTEGER; symbol: Symbol; VAR identifier: IdentifierType); 
 	PROCEDURE ^ InitSymbols; 
 	PROCEDURE ^ InitKeywords; 
 	PROCEDURE ^ ReportKeywords*(context: Commands.Context); 

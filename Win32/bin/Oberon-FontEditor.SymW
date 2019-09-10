@@ -16,22 +16,22 @@ CONST
 	idmetricdx = 2; 
 TYPE 
 	RunRec = RECORD 
-		beg, end: INTEGER; 
+		beg, end: SIGNED16; 
 	END; 
 
 	BoxRec = RECORD 
-		dx, x, y, w, h: INTEGER; 
+		dx, x, y, w, h: SIGNED16; 
 	END; 
 
 	Font = POINTER TO FontDesc; 
 
 	FontDesc = RECORD 
 		type, family, variant: CHAR; 
-		height, minX, maxX, minY, maxY, nofRuns: INTEGER; 
-		pos: LONGINT; 
+		height, minX, maxX, minY, maxY, nofRuns: SIGNED16; 
+		pos: SIGNED32; 
 		run: ARRAY 256 OF RunRec; 
 		box: ARRAY 256 OF BoxRec; 
-		p: ARRAY 256 OF LONGINT; 
+		p: ARRAY 256 OF SIGNED32; 
 		raster: POINTER TO ARRAY OF CHAR; 
 	END; 
 
@@ -39,80 +39,80 @@ TYPE
 
 	FonttableDesc = RECORD (Gadgets.FrameDesc)
 		f: Font; 
-		col: INTEGER; 
+		col: SIGNED16; 
 	END; 
 
 	Character = POINTER TO CharDesc; 
 
 	CharDesc = RECORD (Rembrandt.FrameDesc)
 		f: Font; 
-		char: INTEGER; 
-		x, y, dx: INTEGER; 
-		x0, y0: INTEGER; 
+		char: SIGNED16; 
+		x, y, dx: SIGNED16; 
+		x0, y0: SIGNED16; 
 	END; 
 
 	Preview = POINTER TO PreviewDesc; 
 
 	PreviewDesc = RECORD (Rembrandt.FrameDesc)
 		f: Font; 
-		char: INTEGER; 
+		char: SIGNED16; 
 	END; 
 
 	ChangeMsg = RECORD (Display.FrameMsg)
-		id: INTEGER; 
-		d: INTEGER; 
+		id: SIGNED16; 
+		d: SIGNED16; 
 		pict: Pictures.Picture; 
 	END; 
 
 	StoreMsg = RECORD (Display.FrameMsg)
 		obj: Character; 
-		pos: INTEGER; 
+		pos: SIGNED16; 
 	END; 
 
 	SelectMsg = RECORD (Display.SelectMsg)
 	END; 
 VAR 
-	fonttrackMM: PROCEDURE (F: Character; VAR M: Oberon.InputMsg; x, y: INTEGER); 
+	fonttrackMM: PROCEDURE (F: Character; VAR M: Oberon.InputMsg; x, y: SIGNED16); 
 	df: Font; 
 	F: Files.File; 
 	R: Files.Rider; 
 
-	PROCEDURE ^ Min(a, b: INTEGER): INTEGER; 
-	PROCEDURE ^ Max(a, b: INTEGER): INTEGER; 
-	PROCEDURE ^ Get(F: Font; beg, w, x, y: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Put(F: Font; beg, w, x, y: LONGINT; b: BOOLEAN); 
-	PROCEDURE ^ CharOrg(F: Font; VAR x0, y0: INTEGER); 
-	PROCEDURE ^ CharDim(F: Font; sel: INTEGER; VAR dx, dy, w, h: INTEGER); 
-	PROCEDURE ^ PostoString(pos: INTEGER; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ ConvertPostoString(pos: INTEGER; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ ConvertStringtoPos(s: ARRAY OF CHAR; VAR pos: INTEGER); 
+	PROCEDURE ^ Min(a, b: SIGNED16): SIGNED16; 
+	PROCEDURE ^ Max(a, b: SIGNED16): SIGNED16; 
+	PROCEDURE ^ Get(F: Font; beg, w, x, y: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Put(F: Font; beg, w, x, y: SIGNED32; b: BOOLEAN); 
+	PROCEDURE ^ CharOrg(F: Font; VAR x0, y0: SIGNED16); 
+	PROCEDURE ^ CharDim(F: Font; sel: SIGNED16; VAR dx, dy, w, h: SIGNED16); 
+	PROCEDURE ^ PostoString(pos: SIGNED16; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ ConvertPostoString(pos: SIGNED16; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ ConvertStringtoPos(s: ARRAY OF CHAR; VAR pos: SIGNED16); 
 	PROCEDURE ^ Inc*; 
 	PROCEDURE ^ Dec*; 
 	PROCEDURE ^ LoadDoc(D: Documents.Document); 
 	PROCEDURE ^ StoreDoc(D: Documents.Document); 
 	PROCEDURE ^ StoreCharacter*; 
 	PROCEDURE ^ DocHandler(D: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ OpenDoc(P: Pictures.Picture; f: Font; pos: INTEGER; name: ARRAY OF CHAR); 
+	PROCEDURE ^ OpenDoc(P: Pictures.Picture; f: Font; pos: SIGNED16; name: ARRAY OF CHAR); 
 	PROCEDURE ^ NewDoc*; 
-	PROCEDURE ^ DisplayChar(Q: D3.Mask; x, y: INTEGER; F: Font; pos: INTEGER); 
-	PROCEDURE ^ BoxesinTable(F: Font; w, h: INTEGER; VAR cw, ch: INTEGER); 
-	PROCEDURE ^ DisplayBoxBorder(F: Font; Q: D3.Mask; x, y, w, h, pos, col0, col1: INTEGER); 
-	PROCEDURE ^ CreateCharPict(F: Font; pos: INTEGER): Pictures.Picture; 
-	PROCEDURE ^ PreviewChar(F: Font; pos: INTEGER); 
-	PROCEDURE ^ RestoreTable(F: Fonttable; Q: D3.Mask; x, y, w, h: INTEGER); 
-	PROCEDURE ^ Selected(F: Font; x, y, w, h, mx, my: INTEGER): INTEGER; 
-	PROCEDURE ^ OpenCharDoc(F: Fonttable; sel: INTEGER); 
-	PROCEDURE ^ SelectChar(F: Fonttable; Q: D3.Mask; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ DisplayChar(Q: D3.Mask; x, y: SIGNED16; F: Font; pos: SIGNED16); 
+	PROCEDURE ^ BoxesinTable(F: Font; w, h: SIGNED16; VAR cw, ch: SIGNED16); 
+	PROCEDURE ^ DisplayBoxBorder(F: Font; Q: D3.Mask; x, y, w, h, pos, col0, col1: SIGNED16); 
+	PROCEDURE ^ CreateCharPict(F: Font; pos: SIGNED16): Pictures.Picture; 
+	PROCEDURE ^ PreviewChar(F: Font; pos: SIGNED16); 
+	PROCEDURE ^ RestoreTable(F: Fonttable; Q: D3.Mask; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ Selected(F: Font; x, y, w, h, mx, my: SIGNED16): SIGNED16; 
+	PROCEDURE ^ OpenCharDoc(F: Fonttable; sel: SIGNED16); 
+	PROCEDURE ^ SelectChar(F: Fonttable; Q: D3.Mask; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ CopyTable(VAR M: Objects.CopyMsg; from, to: Fonttable); 
-	PROCEDURE ^ StoreChar(F: Fonttable; M: StoreMsg; fx, fy, fw, fh: INTEGER); 
+	PROCEDURE ^ StoreChar(F: Fonttable; M: StoreMsg; fx, fy, fw, fh: SIGNED16); 
 	PROCEDURE ^ FtAttributes(F: Fonttable; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ HandleFonttable(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ CopyCharacter(VAR M: Objects.CopyMsg; from, to: Character); 
 	PROCEDURE ^ MarkedChar(): Character; 
-	PROCEDURE ^ GetSelectedChar(VAR f: Character; VAR x, y, w, h: INTEGER); 
-	PROCEDURE ^ HandlePixel(F: Character; VAR M: Oberon.InputMsg; x, y: INTEGER); 
-	PROCEDURE ^ DrawMetricLines(F: Character; Q: D3.Mask; x, y: INTEGER); 
-	PROCEDURE ^ HandleMetric(F: Character; VAR M: Oberon.InputMsg; x, y: INTEGER); 
+	PROCEDURE ^ GetSelectedChar(VAR f: Character; VAR x, y, w, h: SIGNED16); 
+	PROCEDURE ^ HandlePixel(F: Character; VAR M: Oberon.InputMsg; x, y: SIGNED16); 
+	PROCEDURE ^ DrawMetricLines(F: Character; Q: D3.Mask; x, y: SIGNED16); 
+	PROCEDURE ^ HandleMetric(F: Character; VAR M: Oberon.InputMsg; x, y: SIGNED16); 
 	PROCEDURE ^ HandleCharacter(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ CopyPreview(VAR M: Objects.CopyMsg; from, to: Preview); 
 	PROCEDURE ^ PreviewAttributes(F: Preview; VAR M: Objects.AttrMsg); 
@@ -122,7 +122,7 @@ VAR
 	PROCEDURE ^ FlipV*; 
 	PROCEDURE ^ Turn*; 
 	PROCEDURE ^ NewFonttable*; 
-	PROCEDURE ^ NewCharacter(pict: Pictures.Picture; f: Font; pos: INTEGER): Character; 
+	PROCEDURE ^ NewCharacter(pict: Pictures.Picture; f: Font; pos: SIGNED16): Character; 
 	PROCEDURE ^ NewPreview*; 
 	PROCEDURE ^ LoadFont(VAR F: Font; VAR R: Files.Rider); 
 	PROCEDURE ^ Load*; 

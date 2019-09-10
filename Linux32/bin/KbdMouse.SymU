@@ -18,11 +18,11 @@ VAR
 	disp: XDisplay.Display; 
 	MMseen, MRseen: BOOLEAN; 
 	poll: Poll; 
-	keySymbol: ARRAY 256 OF LONGINT; 
+	keySymbol: ARRAY 256 OF SIGNED32; 
 
 	PROCEDURE ^ TerminateA2; 
 	PROCEDURE ^ CheckAlternateKeys(VAR mb: SET); 
-	PROCEDURE ^ SendMouseMsg(x, y, dz: LONGINT; xbuttons: SET32); 
+	PROCEDURE ^ SendMouseMsg(x, y, dz: SIGNED32; xbuttons: SET32); 
 	PROCEDURE ^ SendKeyboardMsg(km: Inputs.KeyboardMsg); 
 	PROCEDURE ^ PollXQueue; 
 	PROCEDURE ^ KeyState(): SET; 

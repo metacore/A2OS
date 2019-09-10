@@ -3,27 +3,27 @@ MODULE WebDefaultSSMP;
 CONST 
 	Samples = 60; 
 TYPE 
-	TimeSampleQueryMethod = PROCEDURE {DELEGATE}():LONGINT; 
+	TimeSampleQueryMethod = PROCEDURE {DELEGATE}():SIGNED32; 
 
 	TimeSampler = OBJECT {EXCLUSIVE} 
 	VAR 
-		hits: POINTER TO ARRAY OF LONGINT; 
-		pos: LONGINT; 
+		hits: POINTER TO ARRAY OF SIGNED32; 
+		pos: SIGNED32; 
 		timer: Kernel.Timer; 
 		query: TimeSampleQueryMethod; 
-		interval, nofSamples: LONGINT; 
+		interval, nofSamples: SIGNED32; 
 		alive: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(queryMethod: TimeSampleQueryMethod; interval, samples: LONGINT); 
+		PROCEDURE ^  & Init*(queryMethod: TimeSampleQueryMethod; interval, samples: SIGNED32); 
 		PROCEDURE ^ Step; 
-		PROCEDURE ^ QuerySamples(VAR x: ARRAY OF LONGINT); 
+		PROCEDURE ^ QuerySamples(VAR x: ARRAY OF SIGNED32); 
 		PROCEDURE ^ Kill; 
 	BEGIN{ACTIVE} 
 	END TimeSampler; 
 VAR 
 	hitSampler: TimeSampler; 
 
-	PROCEDURE ^ HTMLBarChartVertical(VAR out: Streams.Writer; samples: ARRAY OF LONGINT; start, end: LONGINT; chartheight, barwidth, border, color: LONGINT); 
+	PROCEDURE ^ HTMLBarChartVertical(VAR out: Streams.Writer; samples: ARRAY OF SIGNED32; start, end: SIGNED32; chartheight, barwidth, border, color: SIGNED32); 
 	PROCEDURE ^ ServerNofRequests(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
 	PROCEDURE ^ ServerRPMChart(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
 	PROCEDURE ^ ServerNofRequestsPerMinute(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
@@ -37,6 +37,6 @@ VAR
 	PROCEDURE ^ SystemGet(VAR request: WebHTTP.RequestHeader; VAR in: Streams.Reader; VAR out: Streams.Writer); 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ Cleanup; 
-	PROCEDURE ^ QueryRPM(): LONGINT; 
+	PROCEDURE ^ QueryRPM(): SIGNED32; 
 BEGIN
 END WebDefaultSSMP.

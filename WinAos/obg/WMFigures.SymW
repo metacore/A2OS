@@ -22,7 +22,7 @@ TYPE
 		reshape-: WMProperties.BooleanProperty; 
 		arrow-: WMProperties.BooleanProperty; 
 		points-: Point; 
-		nofPoints: LONGINT; 
+		nofPoints: SIGNED32; 
 		hover, selectedPoint: WMProperties.Property; 
 		selectedLine: BOOLEAN; 
 		mouseOver: BOOLEAN; 
@@ -35,7 +35,7 @@ TYPE
 		PROCEDURE ^ MovePoint*(point: WMProperties.Property; fx, fy: SIZE); 
 		PROCEDURE ^ RemovePoint*(fx, fy: SIZE); 
 		PROCEDURE ^ ThisPoint*(fx, fy: SIZE): WMProperties.Property; 
-		PROCEDURE ^ IndexedPoint*(index: LONGINT): WMProperties.Property; 
+		PROCEDURE ^ IndexedPoint*(index: SIGNED32): WMProperties.Property; 
 		PROCEDURE ^ MoveFigure*(dx, dy: SIZE); 
 		PROCEDURE ^ PointerDown*(fx, fy: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(fx, fy: SIZE; keys: SET); 
@@ -44,7 +44,7 @@ TYPE
 		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ AddDisplayPoint(x, y: SIZE); 
-		PROCEDURE ^ MoveDisplayPoints(dx, dy: LONGINT); 
+		PROCEDURE ^ MoveDisplayPoints(dx, dy: SIGNED32); 
 		PROCEDURE ^ Normalize; 
 		PROCEDURE ^ Scale; 
 		PROCEDURE ^ GetBoundingBox(): WMRectangles.Rectangle; 
@@ -89,7 +89,7 @@ TYPE
 	Spline* = OBJECT {EXCLUSIVE} (Figure)
 	VAR 
 		pointArray: ARRAY 2048 OF WMGraphics.Point2d; 
-		nSegments: LONGINT; 
+		nSegments: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
@@ -101,7 +101,7 @@ TYPE
 	END Spline; 
 VAR 
 	log: Streams.Writer; 
-	gravity: LONGINT; 
+	gravity: SIGNED32; 
 	PrototypeWidth: WMProperties.Int32Property; 
 	PrototypeColor, PrototypeclHover: WMProperties.ColorProperty; 
 	PrototypeClosed: WMProperties.BooleanProperty; 
@@ -110,9 +110,9 @@ VAR
 	PrototypeArrow: WMProperties.BooleanProperty; 
 	StrFigure, StrLine, StrCircle, StrRectangle, StrSpline: Strings.String; 
 
-	PROCEDURE ^ arctan2(x, y: REAL): REAL; 
-	PROCEDURE ^ MakePoly(CONST RX, RY, RXstrich, RYstrich, RS: ARRAY OF REAL; n: LONGINT; VAR points: ARRAY OF WMGraphics.Point2d; VAR k: LONGINT); 
-	PROCEDURE ^ SplineToPoly(c: Point; closed: BOOLEAN; VAR points: ARRAY OF WMGraphics.Point2d; VAR k: LONGINT); 
+	PROCEDURE ^ arctan2(x, y: FLOAT32): FLOAT32; 
+	PROCEDURE ^ MakePoly(CONST RX, RY, RXstrich, RYstrich, RS: ARRAY OF FLOAT32; n: SIGNED32; VAR points: ARRAY OF WMGraphics.Point2d; VAR k: SIGNED32); 
+	PROCEDURE ^ SplineToPoly(c: Point; closed: BOOLEAN; VAR points: ARRAY OF WMGraphics.Point2d; VAR k: SIGNED32); 
 	PROCEDURE ^ Invicinity(mx, my, X, Y: SIZE): BOOLEAN; 
 	PROCEDURE ^ InLineVicinity(mx, my, X, Y, X1, Y1: SIZE): BOOLEAN; 
 	PROCEDURE ^ Intersect(X, Y, x0, y0, x1, y1: SIZE): BOOLEAN; 

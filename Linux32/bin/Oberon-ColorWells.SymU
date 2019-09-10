@@ -8,26 +8,26 @@ TYPE
 	ColorWell* = POINTER TO ColorWellDesc; 
 
 	ColorWellDesc* = RECORD (Gadgets.FrameDesc)
-		col*: INTEGER; 
+		col*: SIGNED16; 
 	END; 
 VAR 
 	DragColor: Oberon.Marker; 
 	FGPattern, BGPattern: Display.Pattern; 
 
-	PROCEDURE ^ DrawMarker(x, y: INTEGER); 
-	PROCEDURE ^ FadeMarker(x, y: INTEGER); 
+	PROCEDURE ^ DrawMarker(x, y: SIGNED16); 
+	PROCEDURE ^ FadeMarker(x, y: SIGNED16); 
 	PROCEDURE ^ InitMarker; 
-	PROCEDURE ^ TrackColor(well: ColorWell; fx, fy: INTEGER; VAR msg: Oberon.InputMsg); 
-	PROCEDURE ^ TrackMiddle(well: ColorWell; fx, fy: INTEGER; VAR msg: Oberon.InputMsg); 
-	PROCEDURE ^ Restore(well: ColorWell; fx, fy: INTEGER; mask: Display3.Mask); 
-	PROCEDURE ^ DisplayWell(well: ColorWell; fx, fy: INTEGER; VAR msg: Display.DisplayMsg); 
+	PROCEDURE ^ TrackColor(well: ColorWell; fx, fy: SIGNED16; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ TrackMiddle(well: ColorWell; fx, fy: SIGNED16; VAR msg: Oberon.InputMsg); 
+	PROCEDURE ^ Restore(well: ColorWell; fx, fy: SIGNED16; mask: Display3.Mask); 
+	PROCEDURE ^ DisplayWell(well: ColorWell; fx, fy: SIGNED16; VAR msg: Display.DisplayMsg); 
 	PROCEDURE ^ Field(frame: Gadgets.Frame; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ SetModel(well: ColorWell); 
 	PROCEDURE ^ UpdateModel(well: ColorWell); 
 	PROCEDURE ^ HandleAttr(well: ColorWell; VAR msg: Objects.AttrMsg); 
 	PROCEDURE ^ Copy*(VAR msg: Objects.CopyMsg; from, to: ColorWell); 
 	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ InitColorWell*(well: ColorWell; col: INTEGER); 
+	PROCEDURE ^ InitColorWell*(well: ColorWell; col: SIGNED16); 
 	PROCEDURE ^ NewColorWell*; 
 BEGIN
 END ColorWells.

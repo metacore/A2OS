@@ -4,12 +4,12 @@ TYPE
 	Hash* = OBJECT 
 	VAR 
 		name-: ARRAY 64 OF CHAR; 
-		size-: LONGINT; 
+		size-: SIGNED32; 
 		initialized*: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ SetNameAndSize*(CONST name: ARRAY OF CHAR; size: LONGINT); 
+		PROCEDURE ^ SetNameAndSize*(CONST name: ARRAY OF CHAR; size: SIGNED32); 
 		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ GetHash*(VAR buffer: ARRAY OF CHAR; position: SIZE); 
 	END Hash; 

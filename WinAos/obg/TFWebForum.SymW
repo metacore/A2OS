@@ -29,7 +29,7 @@ TYPE
 	EntryInfo = RECORD 
 		subject, id, datetime, author: String; 
 		entry: XML.Element; 
-		level: LONGINT; 
+		level: SIGNED32; 
 	END; 
 
 	EntryList = POINTER TO ARRAY OF EntryInfo; 
@@ -40,7 +40,7 @@ TYPE
 		forum: XML.Element; 
 		errors: BOOLEAN; 
 		entryList: EntryList; 
-		nofEntries: LONGINT; 
+		nofEntries: SIGNED32; 
 		title, editor, password: Strings.String; 
 		filename: ARRAY 128 OF CHAR; 
 
@@ -56,7 +56,7 @@ TYPE
 		PROCEDURE ^ GetEntryPath(e: XML.Element; VAR path: ARRAY OF CHAR); 
 		PROCEDURE ^ AddEntryToList(e: XML.Element); 
 		PROCEDURE ^ Traverse(c: XML.Content; data: ANY); 
-		PROCEDURE ^ GetSubjectList*(VAR e: EntryList; VAR nof: LONGINT); 
+		PROCEDURE ^ GetSubjectList*(VAR e: EntryList; VAR nof: SIGNED32); 
 		PROCEDURE ^ AddEntry*(CONST path: ARRAY OF CHAR; entry: XML.Element); 
 		PROCEDURE ^ DeleteEntry*(CONST path: ARRAY OF CHAR); 
 		PROCEDURE ^ EditEntry(parent: XML.Element; subject, author, email, datetime, ip, text: String); 
@@ -73,7 +73,7 @@ VAR
 	uriLiteral: ARRAY 256 OF BOOLEAN; 
 	empty: String; 
 	forumList: ForumList; 
-	nofForum: LONGINT; 
+	nofForum: SIGNED32; 
 
 	PROCEDURE ^ GetSubElementByType*(parent: XML.Element; CONST type: ARRAY OF CHAR): XML.Element; 
 	PROCEDURE ^ MakeEntry*(subject, author, email, datetime, ip, text: String): XML.Element; 

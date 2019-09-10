@@ -11,9 +11,9 @@ TYPE
 	PROCEDURE ^ BoolArg*(ctxt: Context; VAR args: Object): Object; 
 	PROCEDURE ^ BoolVal*(ctxt: Scheme.Context; VAR args: Object): BOOLEAN; 
 	PROCEDURE ^ IntArg*(ctxt: Scheme.Context; VAR args: Object): Object; 
-	PROCEDURE ^ IntVal*(ctxt: Scheme.Context; VAR args: Object): LONGINT; 
+	PROCEDURE ^ IntVal*(ctxt: Scheme.Context; VAR args: Object): SIGNED32; 
 	PROCEDURE ^ NumArg*(ctxt: Scheme.Context; VAR args: Object): Object; 
-	PROCEDURE ^ NumVal*(ctxt: Scheme.Context; VAR args: Object): LONGREAL; 
+	PROCEDURE ^ NumVal*(ctxt: Scheme.Context; VAR args: Object): FLOAT64; 
 	PROCEDURE ^ CharArg*(ctxt: Scheme.Context; VAR args: Object): Object; 
 	PROCEDURE ^ CharVal*(ctxt: Scheme.Context; VAR args: Object): CHAR; 
 	PROCEDURE ^ StringArg*(ctxt: Scheme.Context; VAR args: Object): Object; 

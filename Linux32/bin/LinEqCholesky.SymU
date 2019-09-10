@@ -4,7 +4,7 @@ CONST
 TYPE 
 	Solver* = OBJECT (LinEq.Solver)
 	VAR 
-		dim: LONGINT; 
+		dim: SIGNED32; 
 		mtxMag: Nbr.Real; 
 		lMtx: POINTER TO ARRAY OF POINTER TO ARRAY OF Nbr.Real; 
 

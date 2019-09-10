@@ -5,7 +5,7 @@ CONST
 	WindowHeight = 320; 
 	EditWindowWidth = 640; 
 	EditWindowHeight = 480; 
-	Invalid = MIN(LONGINT); 
+	Invalid = MIN(SIGNED32); 
 	UseMode = 0; 
 	EditMode = 1; 
 	No =  -1; 
@@ -39,7 +39,7 @@ TYPE
 
 	HelperWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 
-		PROCEDURE ^  & New(CONST windowTitle: ARRAY OF CHAR; component: WMComponents.VisualComponent; x, y, width, height: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^  & New(CONST windowTitle: ARRAY OF CHAR; component: WMComponents.VisualComponent; x, y, width, height: SIGNED32; alpha: BOOLEAN); 
 	END HelperWindow; 
 
 	ComponentWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -50,7 +50,7 @@ TYPE
 		filenameEditor: WMEditors.Editor; 
 		statusLabel: WMStandardComponents.Label; 
 		selection: WMRepositories.EntryWrapper; 
-		opNum: LONGINT; 
+		opNum: SIGNED32; 
 
 		PROCEDURE ^  & Init*(width, height: SIZE; alpha: BOOLEAN); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
@@ -66,7 +66,7 @@ TYPE
 
 	TreeNode = OBJECT (WMTrees.TreeNode)
 	VAR 
-		color, bgColor: LONGINT; 
+		color, bgColor: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 	END TreeNode; 
@@ -94,7 +94,7 @@ TYPE
 	Indicator = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
 	VAR 
 		value: ARRAY 128 OF CHAR; 
-		textColor: LONGINT; 
+		textColor: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetCaption(CONST x: ARRAY OF CHAR); 
@@ -115,7 +115,7 @@ TYPE
 
 	Clipboard = OBJECT {EXCLUSIVE} 
 	VAR 
-		nofComponents: LONGINT; 
+		nofComponents: SIGNED32; 
 		buffers: BufferArray; 
 
 		PROCEDURE ^  & Init; 
@@ -153,25 +153,25 @@ TYPE
 	VAR 
 		bounds: WMRectangles.Rectangle; 
 		activeHandles: SET; 
-		clLine0, clLine1, clActiveHandles, clInactiveHandles: LONGINT; 
+		clLine0, clLine1, clActiveHandles, clInactiveHandles: SIGNED32; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ GetWidth(): SIZE; 
 		PROCEDURE ^ GetHeight(): SIZE; 
 		PROCEDURE ^ IsValid(): BOOLEAN; 
-		PROCEDURE ^ SetFrameType(type: LONGINT); 
+		PROCEDURE ^ SetFrameType(type: SIGNED32); 
 		PROCEDURE ^ Clear; 
-		PROCEDURE ^ SetActiveHandlesFor(alignment: LONGINT); 
+		PROCEDURE ^ SetActiveHandlesFor(alignment: SIGNED32); 
 		PROCEDURE ^ SetActiveHandles(activeHandles: SET); 
 		PROCEDURE ^ FixBounds; 
-		PROCEDURE ^ IsInActiveFrameHandle(x, y: SIZE): WORD; 
-		PROCEDURE ^ IsInFrameHandle(x, y: SIZE): WORD; 
-		PROCEDURE ^ DrawFrameHandles(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; activeColor, inactiveColor: LONGINT; active: SET); 
+		PROCEDURE ^ IsInActiveFrameHandle(x, y: SIZE): INTEGER; 
+		PROCEDURE ^ IsInFrameHandle(x, y: SIZE): INTEGER; 
+		PROCEDURE ^ DrawFrameHandles(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; activeColor, inactiveColor: SIGNED32; active: SET); 
 		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas); 
 	END Frame; 
 
 	RectangleReal = RECORD 
-		l, t, b, r: REAL; 
+		l, t, b, r: FLOAT32; 
 	END; 
 
 	BoundsArray = POINTER TO ARRAY OF RectangleReal; 
@@ -182,14 +182,14 @@ TYPE
 		activeFrameHandles: SET; 
 		root: WMComponents.VisualComponent; 
 		parent: XML.Element; 
-		nofComponents: LONGINT; 
+		nofComponents: SIGNED32; 
 		components: ComponentArray; 
 		bounds: BoundsArray; 
 
 		PROCEDURE ^  & Init(root: WMComponents.VisualComponent); 
-		PROCEDURE ^ NofComponents(): LONGINT; 
-		PROCEDURE ^ NofVisualComponents(): LONGINT; 
-		PROCEDURE ^ NofLockedComponents(): LONGINT; 
+		PROCEDURE ^ NofComponents(): SIGNED32; 
+		PROCEDURE ^ NofVisualComponents(): SIGNED32; 
+		PROCEDURE ^ NofLockedComponents(): SIGNED32; 
 		PROCEDURE ^ GetParent(): XML.Element; 
 		PROCEDURE ^ Contains(component: Repositories.Component): BOOLEAN; 
 		PROCEDURE ^ GetFirst(): Repositories.Component; 
@@ -197,11 +197,11 @@ TYPE
 		PROCEDURE ^ Delete; 
 		PROCEDURE ^ ToFront; 
 		PROCEDURE ^ SetExtents(width, height: SIZE); 
-		PROCEDURE ^ SetLimit(rect: WMRectangles.Rectangle; mode: WORD); 
+		PROCEDURE ^ SetLimit(rect: WMRectangles.Rectangle; mode: INTEGER); 
 		PROCEDURE ^ MoveRelative(dx, dy: SIZE); 
 		PROCEDURE ^ InitResize(x0, y0, width0, height0: SIZE); 
 		PROCEDURE ^ ResizeProportional(x, y, width, height: SIZE; snapX, snapY: SIZE); 
-		PROCEDURE ^ Resize(mode: LONGINT; dx, dy: LONGINT); 
+		PROCEDURE ^ Resize(mode: SIGNED32; dx, dy: SIGNED32); 
 		PROCEDURE ^ Get(): ComponentArray; 
 		PROCEDURE ^ Set(component: Repositories.Component); 
 		PROCEDURE ^ Determine(rect: WMRectangles.Rectangle); 
@@ -220,14 +220,14 @@ TYPE
 	ComponentEditor = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		panel: WMComponents.VisualComponent; 
-		mode: LONGINT; 
+		mode: SIGNED32; 
 		selection: Selection; 
 		selectionFrame: Frame; 
 		frame, dragFrame: Frame; 
-		limitMode: LONGINT; 
+		limitMode: SIGNED32; 
 		insertObjAt: WMComponents.VisualComponent; 
 		downX, downY, lastX, lastY, dragX, dragY: SIZE; 
-		oldPointerInfo: WORD; 
+		oldPointerInfo: INTEGER; 
 		selectInsertObjAt: BOOLEAN; 
 		showSnapGrid: WMProperties.BooleanProperty; 
 		showSnapGridI: BOOLEAN; 
@@ -240,13 +240,13 @@ TYPE
 		snapgrid: SnapGrid; 
 		owner: MainWindow; 
 		manager: WMWindowManager.WindowManager; 
-		pointerMode: LONGINT; 
+		pointerMode: SIGNED32; 
 		frameResizeOrigin: WMRectangles.Rectangle; 
-		frameResizeMode: LONGINT; 
+		frameResizeMode: SIGNED32; 
 		modifierFlags, mouseKeys: SET; 
 		clipboard: Clipboard; 
 		paint: BOOLEAN; 
-		state: LONGINT; 
+		state: SIGNED32; 
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^  & Init*; 
@@ -254,8 +254,8 @@ TYPE
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ SetPaint(paint: BOOLEAN); 
-		PROCEDURE ^ SetMode(mode: LONGINT); 
-		PROCEDURE ^ GetMode(): LONGINT; 
+		PROCEDURE ^ SetMode(mode: SIGNED32); 
+		PROCEDURE ^ GetMode(): SIGNED32; 
 		PROCEDURE ^ ExtGetPositionOwnerHandler(x, y: SIZE; VAR pointerOwner: WMComponents.VisualComponent; VAR handled: BOOLEAN); 
 		PROCEDURE ^ Delete; 
 		PROCEDURE ^ ToFront; 
@@ -264,8 +264,8 @@ TYPE
 		PROCEDURE ^ SelectInsertAtObj(vc: WMComponents.VisualComponent); 
 		PROCEDURE ^ InvalidateRegion(frame, oldFrame: WMRectangles.Rectangle); 
 		PROCEDURE ^ InvalidateFrame(frame: Frame); 
-		PROCEDURE ^ GetLimitMode(x, y: SIZE; VAR bounds: WMRectangles.Rectangle): WORD; 
-		PROCEDURE ^ MoveFrame(direction: LONGINT); 
+		PROCEDURE ^ GetLimitMode(x, y: SIZE; VAR bounds: WMRectangles.Rectangle): INTEGER; 
+		PROCEDURE ^ MoveFrame(direction: SIGNED32); 
 		PROCEDURE ^ CheckSelectionFrame; 
 		PROCEDURE ^ CheckCursor(x, y: SIZE; keys, modifierFlags: SET); 
 		PROCEDURE ^ CheckSelection; 
@@ -277,17 +277,17 @@ TYPE
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keySym: SIZE); 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
-		PROCEDURE ^ DragAddComponent(component: Repositories.Component; VAR res: WORD); 
+		PROCEDURE ^ DragAddComponent(component: Repositories.Component; VAR res: INTEGER); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ UpdateFramePosition; 
 		PROCEDURE ^ FindPositionOwner(x, y: SIZE): WMComponents.VisualComponent; 
 		PROCEDURE ^ GetComponentInfo(component: WMComponents.VisualComponent): ComponentInfo; 
 		PROCEDURE ^ ToMyCoordinates(component: WMComponents.VisualComponent; x, y: SIZE; VAR myX, myY: SIZE); 
 		PROCEDURE ^ ToComponentCoordinates(component: WMComponents.VisualComponent; x, y: SIZE; VAR cx, cy: SIZE); 
-		PROCEDURE ^ DrawHorizontalLine(canvas: WMGraphics.Canvas; y: SIZE; color: LONGINT); 
-		PROCEDURE ^ DrawVerticalLine(canvas: WMGraphics.Canvas; x: SIZE; color: LONGINT); 
+		PROCEDURE ^ DrawHorizontalLine(canvas: WMGraphics.Canvas; y: SIZE; color: SIGNED32); 
+		PROCEDURE ^ DrawVerticalLine(canvas: WMGraphics.Canvas; x: SIZE; color: SIGNED32); 
 		PROCEDURE ^ DrawFrames(canvas: WMGraphics.Canvas; parent: WMComponents.VisualComponent; ofsX, ofsY: SIZE); 
-		PROCEDURE ^ DrawHelperLines(canvas: WMGraphics.Canvas; parent: WMComponents.VisualComponent; level: LONGINT; ofsX, ofsY: SIZE); 
+		PROCEDURE ^ DrawHelperLines(canvas: WMGraphics.Canvas; parent: WMComponents.VisualComponent; level: SIGNED32; ofsX, ofsY: SIZE); 
 		PROCEDURE ^ DrawForeground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ DrawSnapGrid(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
@@ -302,7 +302,7 @@ TYPE
 		filename: Files.FileName; 
 		owner: MainWindow; 
 		modified: BOOLEAN; 
-		id: LONGINT; 
+		id: SIGNED32; 
 		next: EditWindow; 
 
 		PROCEDURE ^ FocusGot*; 
@@ -320,7 +320,7 @@ TYPE
 		PROCEDURE ^ IsContained(window: EditWindow): BOOLEAN; 
 		PROCEDURE ^ Add(window: EditWindow); 
 		PROCEDURE ^ Remove(window: EditWindow); 
-		PROCEDURE ^ Get(id: LONGINT): EditWindow; 
+		PROCEDURE ^ Get(id: SIGNED32): EditWindow; 
 		PROCEDURE ^ GetAll(): WindowArray; 
 		PROCEDURE ^ SetActive(window: EditWindow); 
 		PROCEDURE ^ GetActive(): EditWindow; 
@@ -346,7 +346,7 @@ TYPE
 		PROCEDURE ^  & New(c: WMRestorable.Context); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ UpdateInfo; 
-		PROCEDURE ^ HandleDocumentInfo(CONST info: WMWindowManager.DocumentInfo; new: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ HandleDocumentInfo(CONST info: WMWindowManager.DocumentInfo; new: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ SetActiveEditor(window: EditWindow); 
 		PROCEDURE ^ RemoveEditor(window: EditWindow); 
 		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
@@ -364,25 +364,25 @@ TYPE
 		PROCEDURE ^ HandleNodeContextMenu(sender: ANY; x, y: SIZE); 
 		PROCEDURE ^ UpdateCursorPosition(x, y: SIZE); 
 		PROCEDURE ^ UpdateFramePosition(valid: BOOLEAN; frame: WMRectangles.Rectangle); 
-		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR; window: EditWindow; VAR res: WORD); 
+		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR; window: EditWindow; VAR res: INTEGER); 
 		PROCEDURE ^ LoadWindows(data: XML.Element); 
 		PROCEDURE ^ StoreWindows(): XML.Element; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ Close*; 
 	END MainWindow; 
 VAR 
-	nofWindows, nextId: LONGINT; 
+	nofWindows, nextId: SIGNED32; 
 	StrComponentEditor: Strings.String; 
 	leftLimit, topLeftLimit, topLimit, topRightLimit, rightLimit, bottomRightLimit, bottomLimit, bottomLeftLimit, sizeLimit, crosshair: WMWindowManager.PointerInfo; 
 
-	PROCEDURE ^ CreateIndicator(CONST content: ARRAY OF CHAR; width, alignment: LONGINT): Indicator; 
-	PROCEDURE ^ Distance(x0, y0, x1, y1: SIZE): REAL; 
-	PROCEDURE ^ DrawDashedLine(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color0, color1, width0, width1: LONGINT); 
-	PROCEDURE ^ DrawRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color: LONGINT); 
-	PROCEDURE ^ DrawDashedRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color0, color1, width0, width1: LONGINT); 
-	PROCEDURE ^ DrawIndication(canvas: WMGraphics.Canvas; xs, ys, xe, ye, width: SIZE; color: LONGINT); 
-	PROCEDURE ^ FillWithRectangles(canvas: WMGraphics.Canvas; rectangle: WMRectangles.Rectangle; width: LONGINT; color1, color2: LONGINT); 
+	PROCEDURE ^ CreateIndicator(CONST content: ARRAY OF CHAR; width, alignment: SIGNED32): Indicator; 
+	PROCEDURE ^ Distance(x0, y0, x1, y1: SIZE): FLOAT32; 
+	PROCEDURE ^ DrawDashedLine(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color0, color1, width0, width1: SIGNED32); 
+	PROCEDURE ^ DrawRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color: SIGNED32); 
+	PROCEDURE ^ DrawDashedRectangle(canvas: WMGraphics.Canvas; xs, ys, xe, ye: SIZE; color0, color1, width0, width1: SIGNED32); 
+	PROCEDURE ^ DrawIndication(canvas: WMGraphics.Canvas; xs, ys, xe, ye, width: SIZE; color: SIGNED32); 
+	PROCEDURE ^ FillWithRectangles(canvas: WMGraphics.Canvas; rectangle: WMRectangles.Rectangle; width: SIGNED32; color1, color2: SIGNED32); 
 	PROCEDURE ^ ShowComponent*(component: WMComponents.Component); 
 	PROCEDURE ^ ShowRect*(CONST name: ARRAY OF CHAR; rect: WMRectangles.Rectangle); 
 	PROCEDURE ^ LabelComponent(vc: WMComponents.VisualComponent); 
@@ -391,7 +391,7 @@ VAR
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
 	PROCEDURE ^ LoadCursors; 
 	PROCEDURE ^ LoadRepositories; 
-	PROCEDURE ^ GetId(): LONGINT; 
+	PROCEDURE ^ GetId(): SIGNED32; 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 
 	PROCEDURE ^ Cleanup; 

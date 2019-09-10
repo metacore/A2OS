@@ -36,9 +36,9 @@ TYPE
 	SectNode = POINTER TO SectNodeDesc; 
 
 	ChapterDesc = RECORD 
-		nObj: INTEGER; 
+		nObj: SIGNED16; 
 		text: Texts.Text; 
-		ind: LONGINT; 
+		ind: SIGNED32; 
 		next: Chapter; 
 	END; 
 
@@ -56,19 +56,19 @@ TYPE
 	END; 
 
 	NodeDesc = RECORD 
-		beg, end: LONGINT; 
+		beg, end: SIGNED32; 
 		pos: PosList; 
 		left, right: Node; 
 	END; 
 
 	PosListDesc = RECORD 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		chapter: Chapter; 
 		next: PosList; 
 	END; 
 
 	NotePosListDesc = RECORD (PosListDesc)
-		pos2: LONGINT; 
+		pos2: SIGNED32; 
 	END; 
 VAR 
 	chapters, contents, curChap: Chapter; 
@@ -81,22 +81,22 @@ VAR
 	inText, callText, noteText: Texts.Text; 
 	R: Texts.Reader; 
 	W, Wr: Texts.Writer; 
-	sym, width, heigth: INTEGER; 
+	sym, width, heigth: SIGNED16; 
 	ch: CHAR; 
-	number: LONGINT; 
-	begId, endId, lastPos, oldPos, nextChap: LONGINT; 
-	sections: ARRAY Books.maxSect OF INTEGER; 
+	number: SIGNED32; 
+	begId, endId, lastPos, oldPos, nextChap: SIGNED32; 
+	sections: ARRAY Books.maxSect OF SIGNED16; 
 	eol, expand, error: BOOLEAN; 
 	options, styleMode: SET; 
 	iconStr: ARRAY (2 * Books0.nameLen) OF CHAR; 
 	sectRoot: SectNode; 
 
 	PROCEDURE ^ Mark(msg1, msg2: ARRAY OF CHAR); 
-	PROCEDURE ^ MarkFnt(T: Texts.Text; beg, end: LONGINT; fnt: Fonts.Font); 
+	PROCEDURE ^ MarkFnt(T: Texts.Text; beg, end: SIGNED32; fnt: Fonts.Font); 
 	PROCEDURE ^ IncObj(c: Chapter); 
-	PROCEDURE ^ ChangeFont(t: Texts.Text; old, new: Fonts.Font; beg, end: LONGINT); 
+	PROCEDURE ^ ChangeFont(t: Texts.Text; old, new: Fonts.Font; beg, end: SIGNED32); 
 	PROCEDURE ^ NewSectNode(VAR nd: SectNode); 
-	PROCEDURE ^ Expand(VAR t: Texts.Text; beg, end: LONGINT); 
+	PROCEDURE ^ Expand(VAR t: Texts.Text; beg, end: SIGNED32); 
 	PROCEDURE ^ NewChapter(VAR c: Chapter); 
 	PROCEDURE ^ SearchLabel(): Label; 
 	PROCEDURE ^ DefChapLabel(curC: BOOLEAN): Label; 
@@ -104,13 +104,13 @@ VAR
 	PROCEDURE ^ DefFootnoteLabel(): Label; 
 	PROCEDURE ^ DefLink(): Books0.Frame; 
 	PROCEDURE ^ DefExtLink(i: Books0.ImpList; VAR name: ARRAY OF CHAR): Books0.Frame; 
-	PROCEDURE ^ DefCallGadgets(beg: LONGINT); 
-	PROCEDURE ^ MarkText(T: Texts.Text; beg, end: LONGINT; mode: SHORTINT; ft: BOOLEAN); 
-	PROCEDURE ^ Visit(VAR n: SectNode; d: INTEGER); 
-	PROCEDURE ^ DefSection(s: INTEGER; e: BOOLEAN); 
+	PROCEDURE ^ DefCallGadgets(beg: SIGNED32); 
+	PROCEDURE ^ MarkText(T: Texts.Text; beg, end: SIGNED32; mode: SIGNED8; ft: BOOLEAN); 
+	PROCEDURE ^ Visit(VAR n: SectNode; d: SIGNED16); 
+	PROCEDURE ^ DefSection(s: SIGNED16; e: BOOLEAN); 
 	PROCEDURE ^ DefChapter(e: BOOLEAN); 
-	PROCEDURE ^ Compare(a, b: Node): INTEGER; 
-	PROCEDURE ^ DefIndex(pos: LONGINT; mode: SHORTINT); 
+	PROCEDURE ^ Compare(a, b: Node): SIGNED16; 
+	PROCEDURE ^ DefIndex(pos: SIGNED32; mode: SIGNED8); 
 	PROCEDURE ^ InsertFootnote(pl: Label); 
 	PROCEDURE ^ CheckLabels; 
 	PROCEDURE ^ RegisterBook; 
@@ -121,14 +121,14 @@ VAR
 	PROCEDURE ^ GetIdent; 
 	PROCEDURE ^ GetNumber; 
 	PROCEDURE ^ Get; 
-	PROCEDURE ^ SymToName(s: INTEGER; VAR na: ARRAY OF CHAR); 
-	PROCEDURE ^ Check(sy: INTEGER); 
+	PROCEDURE ^ SymToName(s: SIGNED16; VAR na: ARRAY OF CHAR); 
+	PROCEDURE ^ Check(sy: SIGNED16); 
 	PROCEDURE ^ GetString(objs: BOOLEAN); 
 	PROCEDURE ^ GetName(VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Contents; 
 	PROCEDURE ^ GetBookName(VAR lname, name, ident: ARRAY OF CHAR); 
 	PROCEDURE ^ Import(VAR name: ARRAY OF CHAR): Books0.ImpList; 
-	PROCEDURE ^ PosToIdent(beg: LONGINT; VAR exp: BOOLEAN); 
+	PROCEDURE ^ PosToIdent(beg: SIGNED32; VAR exp: BOOLEAN); 
 	PROCEDURE ^ EmptyOpt; 
 	PROCEDURE ^ Chapters; 
 	PROCEDURE ^ BuildIndex; 

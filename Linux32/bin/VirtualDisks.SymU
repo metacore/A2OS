@@ -7,14 +7,14 @@ CONST
 TYPE 
 	VirtualDisk = OBJECT {EXCLUSIVE} (Disks.Device)
 	VAR 
-		size: LONGINT; 
-		cyls, hds, spt: LONGINT; 
+		size: SIGNED32; 
+		cyls, hds, spt: SIGNED32; 
 
-		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
-		PROCEDURE ^ TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
-		PROCEDURE ^ GetSize*(VAR size: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: WORD); 
-		PROCEDURE ^  & Init(CONST name: ARRAY OF CHAR; blockSize, cyls, hds, spt: LONGINT); 
+		PROCEDURE ^ Transfer*(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ TransferOperation(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ GetSize*(VAR size: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: INTEGER); 
+		PROCEDURE ^  & Init(CONST name: ARRAY OF CHAR; blockSize, cyls, hds, spt: SIGNED32); 
 	END VirtualDisk; 
 
 	FileDisk = OBJECT {EXCLUSIVE} (VirtualDisk)
@@ -22,8 +22,8 @@ TYPE
 		file: Files.File; 
 		rider: Files.Rider; 
 
-		PROCEDURE ^ TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
-		PROCEDURE ^  & New*(file: Files.File; CONST name, filename: ARRAY OF CHAR; blockSize, cyls, hds, spt: LONGINT); 
+		PROCEDURE ^ TransferOperation(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^  & New*(file: Files.File; CONST name, filename: ARRAY OF CHAR; blockSize, cyls, hds, spt: SIGNED32); 
 	END FileDisk; 
 
 	MemoryBlock = POINTER TO ARRAY OF CHAR; 
@@ -32,12 +32,12 @@ TYPE
 	VAR 
 		memory: MemoryBlock; 
 
-		PROCEDURE ^ TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
-		PROCEDURE ^  & New*(memory: MemoryBlock; CONST name: ARRAY OF CHAR; blockSize, cyls, hds, spt: LONGINT); 
+		PROCEDURE ^ TransferOperation(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^  & New*(memory: MemoryBlock; CONST name: ARRAY OF CHAR; blockSize, cyls, hds, spt: SIGNED32); 
 	END RamDisk; 
 
 	PROCEDURE ^ Create*(context: Commands.Context); 
-	PROCEDURE ^ GetOptions(context: Commands.Context; VAR blocksize, cylinders, heads, sectors: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetOptions(context: Commands.Context; VAR blocksize, cylinders, heads, sectors: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ Install*(context: Commands.Context); 
 	PROCEDURE ^ InstallRamdisk*(context: Commands.Context); 
 	PROCEDURE ^ Uninstall*(context: Commands.Context); 

@@ -19,8 +19,8 @@ CONST
 	PROCEDURE ^ EmptyPlot*; 
 	PROCEDURE ^ Lines*(VAR vx, vy: vyBase.tVector; namex, namey: vyName.tNameArray); 
 	PROCEDURE ^ Points*(VAR vx, vy: vyBase.tVector; namex, namey: vyName.tNameArray); 
-	PROCEDURE ^ AddData*(x, y: REAL; vx, vy: vyBase.tVector); 
-	PROCEDURE ^ AddDataArray*(x, y: ARRAY OF REAL; len: INTEGER; vx, vy: vyBase.tVector); 
+	PROCEDURE ^ AddData*(x, y: FLOAT32; vx, vy: vyBase.tVector); 
+	PROCEDURE ^ AddDataArray*(x, y: ARRAY OF FLOAT32; len: SIGNED16; vx, vy: vyBase.tVector); 
 	PROCEDURE ^ Update*(v: vyBase.tVector); 
 BEGIN
 END vyxPlots.

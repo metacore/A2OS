@@ -6,7 +6,7 @@ TYPE
 	Glyph = RECORD 
 		img: WMGraphics.Image; 
 		available: BOOLEAN; 
-		dx, x, y, w, h: LONGINT; 
+		dx, x, y, w, h: SIGNED32; 
 	END; 
 
 	Font* = OBJECT (WMGraphics.Font)
@@ -16,16 +16,16 @@ TYPE
 		glyphs: ARRAY 256 OF Glyph; 
 		placeholderimg: WMGraphics.Image; 
 		idch, typech, famch, varch: CHAR; 
-		height, minX, maxX, minY, maxY, nofRuns: INTEGER; 
+		height, minX, maxX, minY, maxY, nofRuns: SIGNED16; 
 		runs: ARRAY 32 OF RECORD 
-			beg, end: LONGINT; 
+			beg, end: SIGNED32; 
 		END; 
 
-		PROCEDURE ^ MapChars(VAR ch: LONGINT); 
+		PROCEDURE ^ MapChars(VAR ch: SIGNED32); 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetGlyphMap*(code: LONGINT; VAR map: WMGraphics.Image); 
-		PROCEDURE ^ HasChar*(code: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: WMGraphics.GlyphSpacings); 
+		PROCEDURE ^ GetGlyphMap*(code: SIGNED32; VAR map: WMGraphics.Image); 
+		PROCEDURE ^ HasChar*(code: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetGlyphSpacings*(code: SIGNED32; VAR glyphSpacings: WMGraphics.GlyphSpacings); 
 	END Font; 
 VAR 
 	bit: ARRAY 256 OF ARRAY 8 OF BOOLEAN; 

@@ -3,9 +3,9 @@ MODULE vyPLongComplex IN Oberon;
 CONST 
 	idversion* = \" v0r0d1"\; 
 TYPE 
-	real = LONGREAL; 
+	real = FLOAT64; 
 
-	index = LONGINT; 
+	index = SIGNED32; 
 
 	PROCEDURE ^ CToPolar*(len: index; VAR Re, Im: ARRAY OF real; rho, phi: ARRAY OF real; start: index); 
 BEGIN

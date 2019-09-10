@@ -19,16 +19,16 @@ TYPE
 	ProcessSelector* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		sort-: WMProperties.Int32Property; 
-		sortI: LONGINT; 
+		sortI: SIGNED32; 
 		processes: ARRAY MaxNofProcesses OF Objects.Process; 
-		nofProcesses: LONGINT; 
+		nofProcesses: SIGNED32; 
 		colWidth: WMGrids.Spacings; 
 		grid: WMStringGrids.StringGrid; 
-		lastProcTime: HUGEINT; 
+		lastProcTime: SIGNED64; 
 		sw: Streams.StringWriter; 
-		nofUpdates, interval, interleave: LONGINT; 
+		nofUpdates, interval, interleave: SIGNED32; 
 		timer: Kernel.Timer; 
-		state, currentState: LONGINT; 
+		state, currentState: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetSelection*(): Selection; 
@@ -48,10 +48,10 @@ TYPE
 
 	SortInfo = OBJECT 
 	VAR 
-		mode: LONGINT; 
+		mode: SIGNED32; 
 		name: ARRAY 64 OF CHAR; 
 
-		PROCEDURE ^  & New*(mode: LONGINT; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^  & New*(mode: SIGNED32; CONST name: ARRAY OF CHAR); 
 	END SortInfo; 
 
 	ProcessManager* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -76,10 +76,10 @@ VAR
 	StrProcessSelector, StrProcessManager: Strings.String; 
 	PrototypeSort: WMProperties.Int32Property; 
 
-	PROCEDURE ^ GetTitleStr(col: WORD; VAR x: ARRAY OF CHAR); 
-	PROCEDURE ^ GetAlign(col: LONGINT): LONGINT; 
+	PROCEDURE ^ GetTitleStr(col: INTEGER; VAR x: ARRAY OF CHAR); 
+	PROCEDURE ^ GetAlign(col: SIGNED32): SIGNED32; 
 	PROCEDURE ^ CheckBP(p: Objects.Process; bp: ADDRESS): ADDRESS; 
-	PROCEDURE ^ OpenCpuLoadWindow(pid: LONGINT); 
+	PROCEDURE ^ OpenCpuLoadWindow(pid: SIGNED32); 
 	PROCEDURE ^ InitStrings; 
 	PROCEDURE ^ InitPrototypes; 
 	PROCEDURE ^ GenProcessSelector*(): XML.Element; 

@@ -27,7 +27,7 @@ TYPE
 		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics; defaultBackend: Backend.Backend); 
 		PROCEDURE ^ PatchStackSize*(CONST typeName: SectionName; size: SIZE); 
 		PROCEDURE ^ EmitAt(section: IntermediateCode.Section; index: SIZE; CONST instruction: IntermediateCode.Instruction); 
-		PROCEDURE ^ PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: SIZE; value: HUGEINT; type: SyntaxTree.Type): BOOLEAN; 
+		PROCEDURE ^ PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: SIZE; value: SIGNED64; type: SyntaxTree.Type): BOOLEAN; 
 		PROCEDURE ^ PatchBooleanValue*(CONST sectionName: ARRAY OF CHAR; index: SIZE; value: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ PatchStringValue*(CONST sectionName: ARRAY OF CHAR; CONST value: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ LoadModule*(CONST moduleFileName: ARRAY OF CHAR; recursive: BOOLEAN): BOOLEAN; 
@@ -52,7 +52,7 @@ TYPE
 
 	PROCEDURE ^ FileNameToModuleName(CONST filename: ARRAY OF CHAR; VAR moduleName: ARRAY OF CHAR); 
 	PROCEDURE ^ SectionNameToFileName(CONST sectionName: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR); 
-	PROCEDURE ^ GetPriority*(block: Sections.Section): WORD; 
+	PROCEDURE ^ GetPriority*(block: Sections.Section): INTEGER; 
 	PROCEDURE ^ CopySections*(from, to: Sections.SectionList); 
 	PROCEDURE ^ Link*(context: Commands.Context); 
 	PROCEDURE ^ WriteCodeAndDataFiles*(CONST instanceName: ARRAY OF CHAR; CONST codeFileExtension, dataFileExtension: ARRAY OF CHAR; objectFile: Formats.ObjectFileFormat; VAR instructionMemorySize, dataMemorySize: BinaryCode.Unit; backend: Backend.Backend; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer): BOOLEAN; 

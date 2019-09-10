@@ -3,7 +3,7 @@ MODULE LeoPens IN Oberon;
 CONST 
 	CacheSize = 4; 
 TYPE 
-	DistArray* = POINTER TO ARRAY OF REAL; 
+	DistArray* = POINTER TO ARRAY OF FLOAT32; 
 
 	Methods* = POINTER TO MethodBlock; 
 
@@ -20,19 +20,19 @@ TYPE
 	MethodBlock* = RECORD 
 		begin*: PROCEDURE (pen: Pen; ctxt: Gfx.Context); 
 		end*: PROCEDURE (pen: Pen); 
-		enter*: PROCEDURE (pen: Pen; x, y, dxi, dyi, bdist: REAL); 
-		exit*: PROCEDURE (pen: Pen; dxo, dyo, edist: REAL); 
-		line*: PROCEDURE (pen: Pen; x, y: REAL); 
-		arc*: PROCEDURE (pen: Pen; x, y, x0, y0, x1, y1, x2, y2: REAL); 
-		bezier*: PROCEDURE (pen: Pen; x, y, x1, y1, x2, y2: REAL); 
-		render*: PROCEDURE (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT); 
+		enter*: PROCEDURE (pen: Pen; x, y, dxi, dyi, bdist: FLOAT32); 
+		exit*: PROCEDURE (pen: Pen; dxo, dyo, edist: FLOAT32); 
+		line*: PROCEDURE (pen: Pen; x, y: FLOAT32); 
+		arc*: PROCEDURE (pen: Pen; x, y, x0, y0, x1, y1, x2, y2: FLOAT32); 
+		bezier*: PROCEDURE (pen: Pen; x, y, x1, y1, x2, y2: FLOAT32); 
+		render*: PROCEDURE (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32); 
 	END; 
 
 	WidePen* = POINTER TO WidePenDesc; 
 
 	WidePenDesc* = RECORD (PenDesc)
-		width*: REAL; 
-		limit*: REAL; 
+		width*: FLOAT32; 
+		limit*: FLOAT32; 
 		capstyle*: Gfx.CapStyle; 
 		joinstyle*: Gfx.JoinStyle; 
 	END; 
@@ -48,7 +48,7 @@ TYPE
 	StrokerDesc* = RECORD (WidePenDesc)
 		col*: Gfx.Color; 
 		img*: Images.Image; 
-		px*, py*: REAL; 
+		px*, py*: FLOAT32; 
 		pat: Gfx.Pattern; 
 	END; 
 
@@ -57,7 +57,7 @@ TYPE
 	FillerDesc* = RECORD (PenDesc)
 		col*: Gfx.Color; 
 		img*: Images.Image; 
-		px*, py*: REAL; 
+		px*, py*: FLOAT32; 
 		pat: Gfx.Pattern; 
 	END; 
 
@@ -65,9 +65,9 @@ TYPE
 
 	DasherDesc* = RECORD (PenDesc)
 		base*: Pen; 
-		on*, off*, onbak, offbak: ARRAY Gfx.MaxDashPatSize OF REAL; 
-		len*, lenbak: LONGINT; 
-		phase*, phasebak: REAL; 
+		on*, off*, onbak, offbak: ARRAY Gfx.MaxDashPatSize OF FLOAT32; 
+		len*, lenbak: SIGNED32; 
+		phase*, phasebak: FLOAT32; 
 		continuous*: BOOLEAN; 
 	END; 
 
@@ -76,7 +76,7 @@ TYPE
 	ForkerDesc* = RECORD (PenDesc)
 		lower*, upper*: Pen; 
 		bdist, edist: DistArray; 
-		n: LONGINT; 
+		n: SIGNED32; 
 	END; 
 
 	UpdateMsg* = RECORD (Leonardo.BroadcastMsg)
@@ -86,22 +86,22 @@ VAR
 	Default*: Pen; 
 	RecorderMethods, StrokerMethods, FillerMethods, DasherMethods, ForkerMethods: Methods; 
 	Path: ARRAY CacheSize OF GfxPaths.Path; 
-	PathNo: LONGINT; 
+	PathNo: SIGNED32; 
 
-	PROCEDURE ^ Append*(VAR d: DistArray; pos: LONGINT; val: REAL); 
+	PROCEDURE ^ Append*(VAR d: DistArray; pos: SIGNED32; val: FLOAT32); 
 	PROCEDURE ^ Update*(pen: Pen); 
 	PROCEDURE ^ Copy*(VAR msg: Objects.CopyMsg; from, to: Pen); 
 	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ Begin*(pen: Pen; ctxt: Gfx.Context); 
 	PROCEDURE ^ End*(pen: Pen); 
-	PROCEDURE ^ Enter*(pen: Pen; x, y, dxi, dyi, bdist: REAL); 
-	PROCEDURE ^ Exit*(pen: Pen; dxo, dyo, edist: REAL); 
-	PROCEDURE ^ Line*(pen: Pen; x, y: REAL); 
-	PROCEDURE ^ Arc*(pen: Pen; x, y, x0, y0, x1, y1, x2, y2: REAL); 
-	PROCEDURE ^ Bezier*(pen: Pen; x, y, x1, y1, x2, y2: REAL); 
+	PROCEDURE ^ Enter*(pen: Pen; x, y, dxi, dyi, bdist: FLOAT32); 
+	PROCEDURE ^ Exit*(pen: Pen; dxo, dyo, edist: FLOAT32); 
+	PROCEDURE ^ Line*(pen: Pen; x, y: FLOAT32); 
+	PROCEDURE ^ Arc*(pen: Pen; x, y, x0, y0, x1, y1, x2, y2: FLOAT32); 
+	PROCEDURE ^ Bezier*(pen: Pen; x, y, x1, y1, x2, y2: FLOAT32); 
 	PROCEDURE ^ GetTempPath*(VAR path: GfxPaths.Path); 
 	PROCEDURE ^ ReleaseTempPath*(path: GfxPaths.Path); 
-	PROCEDURE ^ RenderPath*(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT); 
+	PROCEDURE ^ RenderPath*(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32); 
 	PROCEDURE ^ CopyWidePen*(VAR msg: Objects.CopyMsg; from, to: WidePen); 
 	PROCEDURE ^ WidePenAttr*(pen: WidePen; VAR msg: Objects.AttrMsg); 
 	PROCEDURE ^ WriteWidePen*(pen: WidePen; VAR r: Files.Rider); 
@@ -110,20 +110,20 @@ VAR
 	PROCEDURE ^ InitRecorder*(pen: Recorder); 
 	PROCEDURE ^ NewRecorder*; 
 	PROCEDURE ^ BeginRecorder(pen: Pen; ctxt: Gfx.Context); 
-	PROCEDURE ^ EnterRecorder(pen: Pen; x, y, dxi, dyi, bdist: REAL); 
-	PROCEDURE ^ ExitRecorder(pen: Pen; dxo, dyo, edist: REAL); 
-	PROCEDURE ^ RecordLine(pen: Pen; x, y: REAL); 
-	PROCEDURE ^ RecordArc(pen: Pen; x, y, x0, y0, x1, y1, x2, y2: REAL); 
-	PROCEDURE ^ RecordBezier(pen: Pen; x, y, x1, y1, x2, y2: REAL); 
-	PROCEDURE ^ RecordPath(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT); 
+	PROCEDURE ^ EnterRecorder(pen: Pen; x, y, dxi, dyi, bdist: FLOAT32); 
+	PROCEDURE ^ ExitRecorder(pen: Pen; dxo, dyo, edist: FLOAT32); 
+	PROCEDURE ^ RecordLine(pen: Pen; x, y: FLOAT32); 
+	PROCEDURE ^ RecordArc(pen: Pen; x, y, x0, y0, x1, y1, x2, y2: FLOAT32); 
+	PROCEDURE ^ RecordBezier(pen: Pen; x, y, x1, y1, x2, y2: FLOAT32); 
+	PROCEDURE ^ RecordPath(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32); 
 	PROCEDURE ^ InitRecorders; 
 	PROCEDURE ^ HandleStroker*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ InitStroker*(pen: Stroker; col: Gfx.Color; width: REAL); 
+	PROCEDURE ^ InitStroker*(pen: Stroker; col: Gfx.Color; width: FLOAT32); 
 	PROCEDURE ^ NewStroker*; 
 	PROCEDURE ^ UseStroker(pen: Stroker; ctxt: Gfx.Context); 
 	PROCEDURE ^ BeginStroker(pen: Pen; ctxt: Gfx.Context); 
 	PROCEDURE ^ EndStroker(pen: Pen); 
-	PROCEDURE ^ RenderStroker(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT); 
+	PROCEDURE ^ RenderStroker(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32); 
 	PROCEDURE ^ InitStrokers; 
 	PROCEDURE ^ HandleFiller*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ InitFiller*(pen: Filler; col: Gfx.Color); 
@@ -131,26 +131,26 @@ VAR
 	PROCEDURE ^ UseFiller(pen: Filler; ctxt: Gfx.Context); 
 	PROCEDURE ^ BeginFiller(pen: Pen; ctxt: Gfx.Context); 
 	PROCEDURE ^ EndFiller(pen: Pen); 
-	PROCEDURE ^ RenderFiller(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT); 
+	PROCEDURE ^ RenderFiller(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32); 
 	PROCEDURE ^ InitFillers; 
 	PROCEDURE ^ HandleDasher*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ InitDasher*(pen: Dasher; base: Pen; on, off: ARRAY OF REAL; len: LONGINT); 
+	PROCEDURE ^ InitDasher*(pen: Dasher; base: Pen; on, off: ARRAY OF FLOAT32; len: SIGNED32); 
 	PROCEDURE ^ NewDasher*; 
 	PROCEDURE ^ BeginDasher(pen: Pen; ctxt: Gfx.Context); 
 	PROCEDURE ^ EndDasher(pen: Pen); 
-	PROCEDURE ^ DashSubpath(pen: Pen; bdist, edist: REAL); 
-	PROCEDURE ^ EnterDasher(pen: Pen; x, y, dxi, dyi, bdist: REAL); 
-	PROCEDURE ^ ExitDasher(pen: Pen; dxo, dyo, edist: REAL); 
-	PROCEDURE ^ RenderDasher(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT); 
+	PROCEDURE ^ DashSubpath(pen: Pen; bdist, edist: FLOAT32); 
+	PROCEDURE ^ EnterDasher(pen: Pen; x, y, dxi, dyi, bdist: FLOAT32); 
+	PROCEDURE ^ ExitDasher(pen: Pen; dxo, dyo, edist: FLOAT32); 
+	PROCEDURE ^ RenderDasher(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32); 
 	PROCEDURE ^ InitDashers; 
 	PROCEDURE ^ HandleForker*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ InitForker*(pen: Forker; lower, upper: Pen); 
 	PROCEDURE ^ NewForker*; 
 	PROCEDURE ^ BeginForker(pen: Pen; ctxt: Gfx.Context); 
-	PROCEDURE ^ ForkPath(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT); 
+	PROCEDURE ^ ForkPath(pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32); 
 	PROCEDURE ^ EndForker(pen: Pen); 
-	PROCEDURE ^ EnterForker(pen: Pen; x, y, dx, dy, bdist: REAL); 
-	PROCEDURE ^ ExitForker(pen: Pen; dx, dy, edist: REAL); 
+	PROCEDURE ^ EnterForker(pen: Pen; x, y, dx, dy, bdist: FLOAT32); 
+	PROCEDURE ^ ExitForker(pen: Pen; dx, dy, edist: FLOAT32); 
 	PROCEDURE ^ InitForkers; 
 BEGIN
 END LeoPens.

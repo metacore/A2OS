@@ -14,7 +14,7 @@ TYPE
 		checker-: SemanticChecker.Checker; 
 		source-: SyntaxTree.String; 
 		findSectionName-: SectionName; 
-		findSectionOffset-: LONGINT; 
+		findSectionOffset-: SIGNED32; 
 		capabilities-: SET; 
 		oberon07-: BOOLEAN; 
 		instructionWidth-: SIZE; 
@@ -30,11 +30,11 @@ TYPE
 		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System); 
 		PROCEDURE ^ SetName*(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ GetSystem*(): Global.System; 
-		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Basic.Position; errorNumber: LONGINT; CONST err: ARRAY OF CHAR); 
+		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Basic.Position; errorNumber: SIGNED32; CONST err: ARRAY OF CHAR); 
 		PROCEDURE ^ ProcessSyntaxTreeModule*(syntaxTreeModule: SyntaxTree.Module): Formats.GeneratedModule; 
 		PROCEDURE ^ ProcessIntermediateCodeModule*(intermediateCodeModule: Formats.GeneratedModule): Formats.GeneratedModule; 
 		PROCEDURE ^ Emit*(backend: Backend): BOOLEAN; 
-		PROCEDURE ^ FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: LONGINT); 
+		PROCEDURE ^ FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: SIGNED32); 
 		PROCEDURE ^ CheckCodeAddress*(VAR adr: BinaryCode.Unit); 
 		PROCEDURE ^ GetDescription*(VAR instructionSet: ARRAY OF CHAR); 
 		PROCEDURE ^ CanPassInRegister*(type: SyntaxTree.Type): BOOLEAN; 

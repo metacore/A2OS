@@ -36,11 +36,11 @@ TYPE
 		dataC: NetSystem.Connection; 
 		log: Texts.Text; 
 		curDir: ARRAY NetTools.PathStrLen OF CHAR; 
-		system, dataPort: INTEGER; 
+		system, dataPort: SIGNED16; 
 		dataIP: NetSystem.IPAdr; 
 		portIPAddress: ARRAY 64 OF CHAR; 
 		usr, passw, host: ARRAY NetTools.ServerStrLen OF CHAR; 
-		port: INTEGER; 
+		port: SIGNED16; 
 		ack, bin: BOOLEAN; 
 	END; 
 
@@ -52,14 +52,14 @@ TYPE
 		S: Session; 
 	END; 
 VAR 
-	system: INTEGER; 
+	system: SIGNED16; 
 	W, dirW: Texts.Writer; 
 	line, link: ARRAY NetTools.MaxLine OF CHAR; 
 	cacheS, curS: Session; 
 	curF: Frame; 
 	message: BOOLEAN; 
 	proxyHost: ARRAY NetTools.ServerStrLen OF CHAR; 
-	proxyPort, dataPort: INTEGER; 
+	proxyPort, dataPort: SIGNED16; 
 	proxy: BOOLEAN; 
 
 	PROCEDURE ^ ReadResponse(S: Session; VAR sline: ARRAY OF CHAR); 
@@ -69,12 +69,12 @@ VAR
 	PROCEDURE ^ Close2(S: Session); 
 	PROCEDURE ^ QuerySystem(S: Session); 
 	PROCEDURE ^ GetLogin(VAR host, usr, passw: ARRAY OF CHAR); 
-	PROCEDURE ^ Open*(server, user, passwd: ARRAY OF CHAR; port: INTEGER; log: Texts.Text; VAR S: Session); 
+	PROCEDURE ^ Open*(server, user, passwd: ARRAY OF CHAR; port: SIGNED16; log: Texts.Text; VAR S: Session); 
 	PROCEDURE ^ ChangeDir*(S: Session; newDir: ARRAY OF CHAR); 
 	PROCEDURE ^ SetDataPort(S: Session); 
 	PROCEDURE ^ WaitDataCon(S: Session): NetSystem.Connection; 
 	PROCEDURE ^ EnumDir*(S: Session; enum: EnumProc); 
-	PROCEDURE ^ ScanLen(VAR reply: ARRAY OF CHAR; VAR len: LONGINT); 
+	PROCEDURE ^ ScanLen(VAR reply: ARRAY OF CHAR; VAR len: SIGNED32); 
 	PROCEDURE ^ GetF(S: Session; remName: ARRAY OF CHAR; VAR R: Files.Rider); 
 	PROCEDURE ^ GetFile*(S: Session; remName, locName: ARRAY OF CHAR); 
 	PROCEDURE ^ GetText*(S: Session; remName: ARRAY OF CHAR; VAR W: Texts.Writer); 
@@ -86,8 +86,8 @@ VAR
 	PROCEDURE ^ MakeDir*(S: Session; newDir: ARRAY OF CHAR); 
 	PROCEDURE ^ RmDir*(S: Session; dir: ARRAY OF CHAR); 
 	PROCEDURE ^ DocHandler(D: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ RegisterFTPAdr*(host, path, user, passwd: ARRAY OF CHAR; type: CHAR; port: INTEGER): LONGINT; 
-	PROCEDURE ^ SplitFTPAdr*(VAR url, host, path, user, passwd: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER): LONGINT; 
+	PROCEDURE ^ RegisterFTPAdr*(host, path, user, passwd: ARRAY OF CHAR; type: CHAR; port: SIGNED16): SIGNED32; 
+	PROCEDURE ^ SplitFTPAdr*(VAR url, host, path, user, passwd: ARRAY OF CHAR; VAR type: CHAR; VAR port: SIGNED16): SIGNED32; 
 	PROCEDURE ^ LinkSchemeHandler(L: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewLinkScheme*; 
 	PROCEDURE ^ TrimmVMS(VAR name: ARRAY OF CHAR); 

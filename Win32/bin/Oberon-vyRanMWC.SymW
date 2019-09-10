@@ -8,31 +8,31 @@ CONST
 TYPE 
 	tSeed = OBJECT (vyRanBase.tSeed)
 	VAR 
-		x, c: LONGINT; 
-		a: LONGINT; 
+		x, c: SIGNED32; 
+		a: SIGNED32; 
 		checkPeriod: BOOLEAN; 
 
 		PROCEDURE ^ Store*(VAR r: Files.Rider); 
-		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: SIGNED16); 
 	END tSeed; 
 
 	tRandom = vyRanBase.tRandom; 
 
 	Bits = vyRanBase.Bits; 
 VAR 
-	seedA: LONGINT; 
+	seedA: SIGNED32; 
 	seedCheckPeriod: BOOLEAN; 
 	useParam: BOOLEAN; 
 
 	PROCEDURE ^ AllocSeed*(): vyRanBase.tSeed; 
-	PROCEDURE ^ LongMultAdd*(VAR high, low: LONGINT; a, b, c: LONGINT); 
-	PROCEDURE ^ MWC*(VAR x, c: LONGINT; a: LONGINT); 
+	PROCEDURE ^ LongMultAdd*(VAR high, low: SIGNED32; a, b, c: SIGNED32); 
+	PROCEDURE ^ MWC*(VAR x, c: SIGNED32; a: SIGNED32); 
 	PROCEDURE ^ Next(r: tRandom); 
 	PROCEDURE ^ Max(r: tRandom): Bits; 
 	PROCEDURE ^ Get(r: tRandom): Bits; 
-	PROCEDURE ^ GetV(r: tRandom; count: LONGINT; VAR nrs: ARRAY OF Bits; start: LONGINT); 
-	PROCEDURE ^ GetUniform(r: tRandom): LONGREAL; 
-	PROCEDURE ^ GetL(r: tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ GetV(r: tRandom; count: SIGNED32; VAR nrs: ARRAY OF Bits; start: SIGNED32); 
+	PROCEDURE ^ GetUniform(r: tRandom): FLOAT64; 
+	PROCEDURE ^ GetL(r: tRandom; top: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Reset(r: tRandom); 
 	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
@@ -42,6 +42,6 @@ VAR
 	PROCEDURE ^ GetNew*(): tRandom; 
 	PROCEDURE ^ New*; 
 	PROCEDURE ^ Install*; 
-	PROCEDURE ^ SetParam*(a: LONGINT; checkPeriod: BOOLEAN); 
+	PROCEDURE ^ SetParam*(a: SIGNED32; checkPeriod: BOOLEAN); 
 BEGIN
 END vyRanMWC.

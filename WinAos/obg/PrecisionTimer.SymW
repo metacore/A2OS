@@ -2,7 +2,7 @@ MODULE PrecisionTimer;
 	IMPORT SYSTEM, Kernel32, KernelLog;
 CONST 
 TYPE 
-	Counter* = HUGEINT; 
+	Counter* = SIGNED64; 
 
 	PROCEDURE ^ GetCounter*(): Counter; 
 	PROCEDURE ^ GetFrequency*(): Counter; 

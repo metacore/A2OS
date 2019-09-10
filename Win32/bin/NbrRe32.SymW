@@ -4,7 +4,7 @@ CONST
 	E* = Math.e; 
 	Pi* = Math.pi; 
 TYPE 
-	Real* = REAL; 
+	Real* = FLOAT32; 
 VAR 
 	MinNbr-, MaxNbr-, reExp, Epsilon-: Real; 
 	minExp, maxExp, Radix-: NbrInt8.Integer; 

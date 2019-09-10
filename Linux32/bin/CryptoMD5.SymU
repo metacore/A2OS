@@ -2,14 +2,14 @@ MODULE CryptoMD5;
 	IMPORT S := SYSTEM, Hashes := CryptoHashes, U := CryptoUtils;
 CONST 
 TYPE 
-	Buffer = ARRAY 16 OF LONGINT; 
+	Buffer = ARRAY 16 OF SIGNED32; 
 
 	Hash* = OBJECT (Hashes.Hash)
 	VAR 
-		A, B, C, D: LONGINT; 
-		N: LONGINT; 
+		A, B, C, D: SIGNED32; 
+		N: SIGNED32; 
 		X: Buffer; 
-		cb: ARRAY 4 OF LONGINT; 
+		cb: ARRAY 4 OF SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
@@ -18,10 +18,10 @@ TYPE
 		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
 	END Hash; 
 VAR 
-	T: ARRAY 65 OF LONGINT; 
+	T: ARRAY 65 OF SIGNED32; 
 
 	PROCEDURE ^ NewHash*(): Hashes.Hash; 
-	PROCEDURE ^ MD5(CONST X: Buffer; VAR A, B, C, D: LONGINT); 
+	PROCEDURE ^ MD5(CONST X: Buffer; VAR A, B, C, D: SIGNED32); 
 	PROCEDURE ^ Initialize; 
 BEGIN
 END CryptoMD5.

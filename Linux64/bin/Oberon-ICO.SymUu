@@ -6,26 +6,26 @@ CONST
 TYPE 
 	IconDirEntry = RECORD 
 		width, height, colorCount: CHAR; 
-		planes, bitCount: INTEGER; 
-		bytesInRes, imageOffset: LONGINT; 
+		planes, bitCount: SIGNED16; 
+		bytesInRes, imageOffset: SIGNED32; 
 	END; 
 
 	BitmapInfoHeader = RECORD 
-		size, width, height: LONGINT; 
-		planes, bitCount: INTEGER; 
-		compression, sizeImage: LONGINT; 
-		xPelsPerMeter, yPelsPerMeter: LONGINT; 
-		clrUsed, clrImportant: LONGINT; 
+		size, width, height: SIGNED32; 
+		planes, bitCount: SIGNED16; 
+		compression, sizeImage: SIGNED32; 
+		xPelsPerMeter, yPelsPerMeter: SIGNED32; 
+		clrUsed, clrImportant: SIGNED32; 
 	END; 
 VAR 
-	colorMap: ARRAY 256 OF INTEGER; 
-	iconIndex: INTEGER; 
+	colorMap: ARRAY 256 OF SIGNED16; 
+	iconIndex: SIGNED16; 
 
-	PROCEDURE ^ ReadDir(VAR R: Files.Rider): INTEGER; 
+	PROCEDURE ^ ReadDir(VAR R: Files.Rider): SIGNED16; 
 	PROCEDURE ^ ReadDirEntry(VAR R: Files.Rider; VAR entry: IconDirEntry); 
 	PROCEDURE ^ ReadBitmapInfoHeader*(VAR R: Files.Rider; VAR bmih: BitmapInfoHeader): BOOLEAN; 
-	PROCEDURE ^ ScanCol(VAR R: Files.Rider; pict: Pictures.Picture; nrColor: LONGINT; conversion: BOOLEAN); 
-	PROCEDURE ^ LoadIcon(VAR R: Files.Rider; ndx, transparentCol: INTEGER; colorConversion: BOOLEAN; pict: Pictures.Picture); 
+	PROCEDURE ^ ScanCol(VAR R: Files.Rider; pict: Pictures.Picture; nrColor: SIGNED32; conversion: BOOLEAN); 
+	PROCEDURE ^ LoadIcon(VAR R: Files.Rider; ndx, transparentCol: SIGNED16; colorConversion: BOOLEAN; pict: Pictures.Picture); 
 	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ InitPicture*; 
 	PROCEDURE ^ NewPicture*; 

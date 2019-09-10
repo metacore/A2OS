@@ -29,44 +29,44 @@ TYPE
 	Library* = POINTER TO LibDesc; 
 
 	ObjMsg* = RECORD 
-		stamp*: LONGINT; 
+		stamp*: SIGNED32; 
 		dlink*: Object; 
 	END; 
 
 	Handler* = PROCEDURE (obj: Object; VAR M: ObjMsg); 
 
 	ObjDesc* = RECORD 
-		stamp*: LONGINT; 
+		stamp*: SIGNED32; 
 		dlink*, slink*: Object; 
 		lib*: Library; 
-		ref*: INTEGER; 
+		ref*: SIGNED16; 
 		handle*: Handler; 
 	END; 
 
 	AttrMsg* = RECORD (ObjMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 		Enum*: PROCEDURE (CONST name: ARRAY OF CHAR); 
 		name*: Name; 
-		res*: INTEGER; 
-		class*: INTEGER; 
-		i*: LONGINT; 
-		x*: REAL; 
-		y*: LONGREAL; 
+		res*: SIGNED16; 
+		class*: SIGNED16; 
+		i*: SIGNED32; 
+		x*: FLOAT32; 
+		y*: FLOAT64; 
 		c*: CHAR; 
 		b*: BOOLEAN; 
 		s*: ARRAY 256 OF CHAR; 
 	END; 
 
 	LinkMsg* = RECORD (ObjMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 		Enum*: PROCEDURE (CONST name: ARRAY OF CHAR); 
 		name*: Name; 
-		res*: INTEGER; 
+		res*: SIGNED16; 
 		obj*: Object; 
 	END; 
 
 	CopyMsg* = RECORD (ObjMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 		obj*: Object; 
 	END; 
 
@@ -75,8 +75,8 @@ TYPE
 	END; 
 
 	FileMsg* = RECORD (ObjMsg)
-		id*: INTEGER; 
-		len*: LONGINT; 
+		id*: SIGNED16; 
+		len*: SIGNED32; 
 		R*: Files.Rider; 
 	END; 
 
@@ -87,7 +87,7 @@ TYPE
 
 	DummyDesc* = RECORD (ObjDesc)
 		GName*: Name; 
-		len: LONGINT; 
+		len: SIGNED32; 
 		blk: POINTER TO ARRAY OF CHAR; 
 	END; 
 
@@ -107,22 +107,22 @@ TYPE
 
 	ArrayIndexDesc = RECORD (IndexDesc)
 		index: Block; 
-		org: LONGINT; 
-		size: INTEGER; 
+		org: SIGNED32; 
+		size: SIGNED16; 
 	END; 
 
 	Entry = POINTER TO EntryDesc; 
 
 	EntryDesc = RECORD 
 		next: Entry; 
-		key: INTEGER; 
+		key: SIGNED16; 
 		name: Name; 
 	END; 
 
 	ListDict = POINTER TO ListDictDesc; 
 
 	ListDictDesc = RECORD (DictionaryDesc)
-		key: INTEGER; 
+		key: SIGNED16; 
 		first: Entry; 
 	END; 
 
@@ -135,12 +135,12 @@ TYPE
 		R: Files.Rider; 
 		name*: Name; 
 		dict*: Dictionary; 
-		maxref*: INTEGER; 
+		maxref*: SIGNED16; 
 		GName: POINTER TO ARRAY OF GenName; 
-		GenRef*: PROCEDURE (L: Library; VAR ref: INTEGER); 
-		GetObj*: PROCEDURE (L: Library; ref: INTEGER; VAR obj: Object); 
-		PutObj*: PROCEDURE (L: Library; ref: INTEGER; obj: Object); 
-		FreeObj*: PROCEDURE (L: Library; ref: INTEGER); 
+		GenRef*: PROCEDURE (L: Library; VAR ref: SIGNED16); 
+		GetObj*: PROCEDURE (L: Library; ref: SIGNED16; VAR obj: Object); 
+		PutObj*: PROCEDURE (L: Library; ref: SIGNED16; obj: Object); 
+		FreeObj*: PROCEDURE (L: Library; ref: SIGNED16); 
 		Load*: PROCEDURE (L: Library); 
 		Store*: PROCEDURE (L: Library); 
 	END; 
@@ -150,7 +150,7 @@ TYPE
 	EnumProc* = PROCEDURE (L: Library); 
 
 	RunRec = RECORD 
-		beg, end: INTEGER; 
+		beg, end: SIGNED16; 
 	END; 
 
 	Alias = POINTER TO AliasDesc; 
@@ -165,15 +165,15 @@ VAR
 	FirstLib: Library; 
 	NoObj: Object; 
 	NewObj*: Object; 
-	stamp: LONGINT; 
-	nofreg: INTEGER; 
+	stamp: SIGNED32; 
+	nofreg: SIGNED16; 
 	LibExt: ARRAY 8 OF ARRAY 8 OF CHAR; 
 	LibNew: ARRAY 8 OF NewProc; 
 	FirstAlias: Alias; 
 
 	PROCEDURE ^ Stamp*(VAR M: ObjMsg); 
 	PROCEDURE ^ Cleanup(L: ANY); 
-	PROCEDURE ^ Match(CONST s, ext: ARRAY OF CHAR; VAR len: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Match(CONST s, ext: ARRAY OF CHAR; VAR len: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ ThisLibrary*(CONST name: ARRAY OF CHAR): Library; 
 	PROCEDURE ^ FreeLibrary*(CONST name: ARRAY OF CHAR); 
 	PROCEDURE ^ Enumerate*(P: EnumProc); 
@@ -182,20 +182,20 @@ VAR
 	PROCEDURE ^ SplitName(CONST name: ARRAY OF CHAR; VAR MName, PName: ARRAY OF CHAR); 
 	PROCEDURE ^ HandleDummy(obj: Object; VAR M: ObjMsg); 
 	PROCEDURE ^ NewDummy(CONST GName: ARRAY OF CHAR); 
-	PROCEDURE ^ GetObj(L: Library; ref: INTEGER; VAR obj: Object); 
-	PROCEDURE ^ PutObj(L: Library; ref: INTEGER; obj: Object); 
-	PROCEDURE ^ FreeObj(L: Library; ref: INTEGER); 
-	PROCEDURE ^ GenRef(L: Library; VAR ref: INTEGER); 
-	PROCEDURE ^ OldLoadLibrary(L: Library; f: Files.File; pos: LONGINT; VAR len: LONGINT); 
-	PROCEDURE ^ LoadLibrary*(L: Library; f: Files.File; pos: LONGINT; VAR len: LONGINT); 
-	PROCEDURE ^ StoreLibrary*(L: Library; f: Files.File; pos: LONGINT; VAR len: LONGINT); 
+	PROCEDURE ^ GetObj(L: Library; ref: SIGNED16; VAR obj: Object); 
+	PROCEDURE ^ PutObj(L: Library; ref: SIGNED16; obj: Object); 
+	PROCEDURE ^ FreeObj(L: Library; ref: SIGNED16); 
+	PROCEDURE ^ GenRef(L: Library; VAR ref: SIGNED16); 
+	PROCEDURE ^ OldLoadLibrary(L: Library; f: Files.File; pos: SIGNED32; VAR len: SIGNED32); 
+	PROCEDURE ^ LoadLibrary*(L: Library; f: Files.File; pos: SIGNED32; VAR len: SIGNED32); 
+	PROCEDURE ^ StoreLibrary*(L: Library; f: Files.File; pos: SIGNED32; VAR len: SIGNED32); 
 	PROCEDURE ^ LoadFileLib(L: Library); 
 	PROCEDURE ^ StoreFileLib(L: Library); 
 	PROCEDURE ^ OpenLibrary*(L: Library); 
 	PROCEDURE ^ NewLibrary(): Library; 
-	PROCEDURE ^ GetRef*(VAR D: Dictionary; CONST name: ARRAY OF CHAR; VAR ref: INTEGER); 
-	PROCEDURE ^ GetKey*(VAR D: Dictionary; CONST name: ARRAY OF CHAR; VAR key: INTEGER); 
-	PROCEDURE ^ GetName*(VAR D: Dictionary; key: INTEGER; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ PutName*(VAR D: Dictionary; key: INTEGER; CONST name: ARRAY OF CHAR); 
+	PROCEDURE ^ GetRef*(VAR D: Dictionary; CONST name: ARRAY OF CHAR; VAR ref: SIGNED16); 
+	PROCEDURE ^ GetKey*(VAR D: Dictionary; CONST name: ARRAY OF CHAR; VAR key: SIGNED16); 
+	PROCEDURE ^ GetName*(VAR D: Dictionary; key: SIGNED16; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ PutName*(VAR D: Dictionary; key: SIGNED16; CONST name: ARRAY OF CHAR); 
 BEGIN
 END Objects.

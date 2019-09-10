@@ -24,28 +24,28 @@ CONST
 	Debug = TRUE; 
 TYPE 
 	Settings = RECORD 
-		x, y: LONGINT; 
-		time, mode: LONGINT; 
+		x, y: SIGNED32; 
+		time, mode: SIGNED32; 
 	END; 
 
 	Decoder* = OBJECT (Codecs.AnimationDecoder)
 	VAR 
 		animation: XML.Element; 
-		width, height, bgcolor: LONGINT; 
+		width, height, bgcolor: SIGNED32; 
 		default: Settings; 
 		error: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ RestoreDefaultSettings; 
 		PROCEDURE ^ ReportError(pos, line, col: Streams.Position; CONST msg: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
-		PROCEDURE ^ ProcessFrame(frame: XML.Element; VAR desc: Codecs.ImageDescriptor; VAR res: WORD); 
-		PROCEDURE ^ ProcessFrames(frames: XML.Element; VAR sequence: Codecs.ImageSequence; VAR res: WORD); 
-		PROCEDURE ^ GetImageSequence*(VAR sequence: Codecs.ImageSequence; VAR res: WORD); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ ProcessFrame(frame: XML.Element; VAR desc: Codecs.ImageDescriptor; VAR res: INTEGER); 
+		PROCEDURE ^ ProcessFrames(frames: XML.Element; VAR sequence: Codecs.ImageSequence; VAR res: INTEGER); 
+		PROCEDURE ^ GetImageSequence*(VAR sequence: Codecs.ImageSequence; VAR res: INTEGER); 
 	END Decoder; 
 
 	PROCEDURE ^ GenerateFilename(CONST base: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR; suffix, minDigits: SIZE); 
-	PROCEDURE ^ GetInteger(element: XML.Element; CONST attributeName: ARRAY OF CHAR; VAR value: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetInteger(element: XML.Element; CONST attributeName: ARRAY OF CHAR; VAR value: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ GenDecoder*(): Codecs.AnimationDecoder; 
 BEGIN
 END AnimationCodec.

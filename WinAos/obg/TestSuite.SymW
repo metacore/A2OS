@@ -7,7 +7,7 @@ CONST
 	Negative* = 1; 
 	Failure* = 2; 
 TYPE 
-	TestType* = WORD; 
+	TestType* = INTEGER; 
 
 	TestName = ARRAY 100 OF CHAR; 
 
@@ -38,7 +38,7 @@ TYPE
 
 		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ Process*(r: Streams.Reader): BOOLEAN; 
-		PROCEDURE ^ Handle*(r: Streams.Reader; pos: Streams.Position; CONST name: ARRAY OF CHAR; type: TestType): WORD; 
+		PROCEDURE ^ Handle*(r: Streams.Reader; pos: Streams.Position; CONST name: ARRAY OF CHAR; type: TestType): INTEGER; 
 		PROCEDURE ^ Print*(report: Report); 
 	END Tester; 
 

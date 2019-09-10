@@ -5,7 +5,7 @@ CONST
 	GridBgFillColor = 1684301055; 
 TYPE 
 	CellData = POINTER TO RECORD 
-		id: LONGINT; 
+		id: SIGNED32; 
 	END; 
 
 	AlertsTab* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -27,12 +27,12 @@ TYPE
 
 		PROCEDURE ^ HandleButtons(sender, data: ANY); 
 		PROCEDURE ^ ResetSelectedAlerts; 
-		PROCEDURE ^ RemoveSelectedAlerts(): LONGINT; 
+		PROCEDURE ^ RemoveSelectedAlerts(): SIGNED32; 
 		PROCEDURE ^ Update; 
 		PROCEDURE ^ UpdateStatusIndicator(enabled: BOOLEAN); 
 		PROCEDURE ^ UpdateStatusLabel(status: Alerts.Status); 
-		PROCEDURE ^ ComputeAlertInfo(alerts: Alerts.Alerts; VAR nbrOfRules, nbrOfAlerts: LONGINT); 
-		PROCEDURE ^ SetRowText(grid: WMStringGrids.StringGrid; alert: Alerts.AlertInfo; row: LONGINT); 
+		PROCEDURE ^ ComputeAlertInfo(alerts: Alerts.Alerts; VAR nbrOfRules, nbrOfAlerts: SIGNED32); 
+		PROCEDURE ^ SetRowText(grid: WMStringGrids.StringGrid; alert: Alerts.AlertInfo; row: SIGNED32); 
 		PROCEDURE ^ UpdateGrids; 
 		PROCEDURE ^ NewGrid(): WMStringGrids.StringGrid; 
 		PROCEDURE ^ CreateStatusPanel(): WMStandardComponents.GroupPanel; 

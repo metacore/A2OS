@@ -2,10 +2,10 @@ MODULE ColorDriver IN Oberon;
 	IMPORT Display;
 TYPE 
 	ColorMsg* = RECORD (Display.FrameMsg)
-		col*: INTEGER; 
+		col*: SIGNED16; 
 	END; 
 VAR 
-	Color: INTEGER; 
+	Color: SIGNED16; 
 
 	PROCEDURE ^ NextCol*; 
 BEGIN

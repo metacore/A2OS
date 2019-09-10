@@ -6,14 +6,14 @@ TYPE
 
 	ContainerDesc* = RECORD (vyBase.ObjDesc)
 		vectors*: vyLinks.Link; 
-		num*: LONGINT; 
+		num*: SIGNED32; 
 	END; 
 
 	PROCEDURE ^ HandleAttributes(o: Container; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ FrameLinks(F: Container; VAR M: Objects.LinkMsg); 
 	PROCEDURE ^ HandleFileMsg(obj: Container; VAR msg: Objects.FileMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ GetVector*(c: Container; num: LONGINT): vyBase.tVector; 
+	PROCEDURE ^ GetVector*(c: Container; num: SIGNED32): vyBase.tVector; 
 	PROCEDURE ^ InsertVector*(c: Container; v: vyBase.Object); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ New*; 

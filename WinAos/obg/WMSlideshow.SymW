@@ -16,28 +16,28 @@ TYPE
 	Slide* = OBJECT 
 	VAR 
 		img, trans: String; 
-		dur: LONGINT; 
+		dur: SIGNED32; 
 		desc: String; 
 
-		PROCEDURE ^  & New*(img: String; trans: String; dur: LONGINT; desc: String); 
+		PROCEDURE ^  & New*(img: String; trans: String; dur: SIGNED32; desc: String); 
 	END Slide; 
 
 	List* = OBJECT {EXCLUSIVE} 
 	VAR 
 		list: ObjectArray; 
-		count: LONGINT; 
-		readLock: LONGINT; 
+		count: SIGNED32; 
+		readLock: SIGNED32; 
 
-		PROCEDURE ^  & New*(size: LONGINT); 
-		PROCEDURE ^ GetCount*(): LONGINT; 
+		PROCEDURE ^  & New*(size: SIGNED32); 
+		PROCEDURE ^ GetCount*(): SIGNED32; 
 		PROCEDURE ^ Grow; 
 		PROCEDURE ^ Add*(x: ANY); 
 		PROCEDURE ^ Replace*(x, y: ANY); 
-		PROCEDURE ^ IndexOf*(x: ANY): LONGINT; 
+		PROCEDURE ^ IndexOf*(x: ANY): SIGNED32; 
 		PROCEDURE ^ Remove*(x: ANY); 
-		PROCEDURE ^ RemoveByIndex*(index: LONGINT); 
+		PROCEDURE ^ RemoveByIndex*(index: SIGNED32); 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ GetItem*(i: LONGINT): ANY; 
+		PROCEDURE ^ GetItem*(i: SIGNED32): ANY; 
 		PROCEDURE ^ Lock*; 
 		PROCEDURE ^ Unlock*; 
 	END List; 
@@ -47,7 +47,7 @@ TYPE
 		data: SlideshowData; 
 		win: SlideshowWindow; 
 		nav: SlideshowNavigation; 
-		slideNr: LONGINT; 
+		slideNr: SIGNED32; 
 		fullscreen: BOOLEAN; 
 
 		PROCEDURE ^  & New*(CONST filename: ARRAY OF CHAR); 
@@ -66,7 +66,7 @@ TYPE
 	VAR 
 		data: SlideshowData; 
 		imageP: WMStandardComponents.ImagePanel; 
-		prevLen: LONGINT; 
+		prevLen: SIGNED32; 
 
 		PROCEDURE ^  & New*(data: SlideshowData); 
 		PROCEDURE ^ UpdatePreview; 
@@ -80,24 +80,24 @@ TYPE
 
 	URLDropTarget* = OBJECT (WMDropTarget.DropTarget)
 
-		PROCEDURE ^ GetInterface*(type: LONGINT): WMDropTarget.DropInterface; 
+		PROCEDURE ^ GetInterface*(type: SIGNED32): WMDropTarget.DropInterface; 
 	END URLDropTarget; 
 
 	DropURL* = OBJECT (WMDropTarget.DropURLs)
 
-		PROCEDURE ^ URL*(CONST url: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ URL*(CONST url: ARRAY OF CHAR; VAR res: INTEGER); 
 	END DropURL; 
 
 	SlideshowWindow = OBJECT {EXCLUSIVE} (WMWindowManager.DoubleBufferWindow)
 	VAR 
 		data: SlideshowData; 
 
-		PROCEDURE ^  & New*(width, height: LONGINT; alpha: BOOLEAN; data: SlideshowData); 
+		PROCEDURE ^  & New*(width, height: SIGNED32; alpha: BOOLEAN; data: SlideshowData); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
-		PROCEDURE ^ Show(nextSlideNr: LONGINT); 
-		PROCEDURE ^ ShowMask(current, next: Image; CONST mask: ARRAY OF CHAR; len: LONGINT); 
-		PROCEDURE ^ ShowFade(current, next: Image; len: LONGINT); 
+		PROCEDURE ^ Show(nextSlideNr: SIGNED32); 
+		PROCEDURE ^ ShowMask(current, next: Image; CONST mask: ARRAY OF CHAR; len: SIGNED32); 
+		PROCEDURE ^ ShowFade(current, next: Image; len: SIGNED32); 
 		PROCEDURE ^ ShowNone(next: Image); 
 		PROCEDURE ^ Update; 
 	END SlideshowWindow; 
@@ -108,13 +108,13 @@ TYPE
 		hasErrors: BOOLEAN; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ GetSlide(i: LONGINT): Slide; 
-		PROCEDURE ^ CountSlides(): LONGINT; 
+		PROCEDURE ^ GetSlide(i: SIGNED32): Slide; 
+		PROCEDURE ^ CountSlides(): SIGNED32; 
 		PROCEDURE ^ LoadSlideshow(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ LoadSlides(doc: XML.Document): BOOLEAN; 
 		PROCEDURE ^ ErrorReport(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ AddSlide(CONST filename: ARRAY OF CHAR); 
-		PROCEDURE ^ RemoveSlide(i: LONGINT); 
+		PROCEDURE ^ RemoveSlide(i: SIGNED32); 
 		PROCEDURE ^ ClearSlides; 
 	END SlideshowData; 
 VAR 

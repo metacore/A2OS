@@ -29,7 +29,7 @@ TYPE
 		mtx, enter: ADDRESS; 
 	END; 
 
-	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT; 
+	CpuCyclesArray* = ARRAY Machine.MaxCPU OF SIGNED64; 
 
 	ProtectedObject = POINTER TO RECORD 
 	END; 
@@ -43,7 +43,7 @@ TYPE
 	Timer* = OBJECT 
 	VAR 
 		next: Timer; 
-		trigger: LONGINT; 
+		trigger: SIGNED32; 
 		handler: EventHandler; 
 	END Timer; 
 
@@ -93,30 +93,30 @@ TYPE
 		threadId-: Unix.Thread_t; 
 		nextProcess-: Process; 
 		stackBottom-: ADDRESS; 
-		id-: WORD; 
+		id-: INTEGER; 
 		body: Body; 
-		mode-: WORD; 
+		mode-: INTEGER; 
 		flags-: SET; 
-		priority-: WORD; 
+		priority-: INTEGER; 
 		succ: Process; 
 		obj-: ProtectedObject; 
 		condition-: Condition; 
 		condFP-: ADDRESS; 
 		continue: Unix.Condition_t; 
 		waitingOn-: ProtectedObject; 
-		procID-: LONGINT; 
+		procID-: SIGNED32; 
 		state-: Machine.State; 
 		state0: ARRAY 2048 OF CHAR; 
 		context: ANY; 
-		lastThreadTimes: HUGEINT; 
+		lastThreadTimes: SIGNED64; 
 		gcContext: GCContext; 
 
-		PROCEDURE ^ SetMode(mode: WORD); 
+		PROCEDURE ^ SetMode(mode: INTEGER); 
 		PROCEDURE ^ FindRoots*; 
 		PROCEDURE ^ Cancel; 
-		PROCEDURE ^ GetPriority(): WORD; 
-		PROCEDURE ^ SetPriority(prio: WORD); 
-		PROCEDURE ^  & Initialize(obj: ProtectedObject; bodyProc: Body; prio: WORD; fl: SET; stacksize: SIZE); 
+		PROCEDURE ^ GetPriority(): INTEGER; 
+		PROCEDURE ^ SetPriority(prio: INTEGER); 
+		PROCEDURE ^  & Initialize(obj: ProtectedObject; bodyProc: Body; prio: INTEGER; fl: SET; stacksize: SIZE); 
 	END Process; 
 
 	GCStatusExt = OBJECT (Heaps.GCStatus)
@@ -147,7 +147,7 @@ VAR
 	childrunning: Unix.Condition_t; 
 	processPointer: Unix.Key_t; 
 	newProcess: Process; 
-	nextPID: WORD; 
+	nextPID: INTEGER; 
 	finalizerCaller: FinalizerCaller; 
 	mainthread: Unix.Thread_t; 
 	startedMainProcess := FALSE: BOOLEAN; 
@@ -156,7 +156,7 @@ VAR
 
 	PROCEDURE ^ BodyStarter; 
 	PROCEDURE ^ InitProtHeader(hdr{UNTRACED} : ObjectHeader); 
-	PROCEDURE ^ CreateProcess*(body: Body; priority: WORD; flags: SET; obj: ProtectedObject); 
+	PROCEDURE ^ CreateProcess*(body: Body; priority: INTEGER; flags: SET; obj: ProtectedObject); 
 	PROCEDURE ^ Lock*(obj: ProtectedObject; exclusive: BOOLEAN); 
 	PROCEDURE ^ Await*(cond: Condition; slink: ADDRESS; obj: ProtectedObject; flags: SET); 
 	PROCEDURE ^ Unlock*(obj: ProtectedObject; dummy: BOOLEAN); 
@@ -165,8 +165,8 @@ VAR
 	PROCEDURE ^ Put(VAR queue: ProcessQueue; t: Process); 
 	PROCEDURE ^ Terminate*; 
 	PROCEDURE ^ TerminateThis*(p: Process; unbreakable: BOOLEAN); 
-	PROCEDURE ^ SetPriority*(pri: WORD); 
-	PROCEDURE ^ Sleep*(ms: LONGINT); 
+	PROCEDURE ^ SetPriority*(pri: INTEGER); 
+	PROCEDURE ^ Sleep*(ms: SIGNED32); 
 	PROCEDURE ^ Yield*; 
 	PROCEDURE ^ CurrentProcess*(): {UNTRACED} Process; 
 	PROCEDURE ^ CurrentContext*(): ANY; 
@@ -175,7 +175,7 @@ VAR
 	PROCEDURE ^ GetStackBottom*(p: Process): ADDRESS; 
 	PROCEDURE ^ GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE); 
 	PROCEDURE ^ NextValidStackSegment*(p: Process; VAR bp, pc, sp: ADDRESS; VAR contextPos: SIZE): BOOLEAN; 
-	PROCEDURE ^ GetProcessID*(): WORD; 
+	PROCEDURE ^ GetProcessID*(): INTEGER; 
 	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
 	PROCEDURE ^ RegisterFinalizer(obj: ANY; fin: Heaps.Finalizer); 
 	PROCEDURE ^ FinalizeActiveObj(obj: ANY); 
@@ -185,8 +185,8 @@ VAR
 	PROCEDURE ^ ExitTrap*; 
 	PROCEDURE ^ Remove(t: Timer); 
 	PROCEDURE ^ Insert(t: Timer); 
-	PROCEDURE ^ SetTimeout*(t: Timer; h: EventHandler; ms: LONGINT); 
-	PROCEDURE ^ SetTimeoutAt*(t: Timer; h: EventHandler; ms: LONGINT); 
+	PROCEDURE ^ SetTimeout*(t: Timer; h: EventHandler; ms: SIGNED32); 
+	PROCEDURE ^ SetTimeoutAt*(t: Timer; h: EventHandler; ms: SIGNED32); 
 	PROCEDURE ^ CancelTimeout*(t: Timer); 
 	PROCEDURE ^ GetContext(ctxt: Unix.Ucontext); 
 	PROCEDURE ^ UpdateProcessState*(p: Process); 
@@ -195,8 +195,8 @@ VAR
 	PROCEDURE ^ SuspendActivities; 
 	PROCEDURE ^ ResumeActivities; 
 	PROCEDURE ^ GCLoop*; 
-	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
-	PROCEDURE ^ TimerFrequency*(): HUGEINT; 
+	PROCEDURE ^ CurrentProcessTime*(): SIGNED64; 
+	PROCEDURE ^ TimerFrequency*(): SIGNED64; 
 	PROCEDURE ^ LeaveA2*; 
 	PROCEDURE ^ ReenterA2*; 
 	PROCEDURE ^ StartTimerActivity; 

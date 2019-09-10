@@ -2,9 +2,9 @@ MODULE CryptoIDEA;
 	IMPORT S := SYSTEM, Ciphers := CryptoCiphers;
 CONST 
 TYPE 
-	CARD16 = LONGINT; 
+	CARD16 = SIGNED32; 
 
-	LI = LONGINT; 
+	LI = SIGNED32; 
 
 	Block = ARRAY 4 OF CARD16; 
 
@@ -15,8 +15,8 @@ TYPE
 		ekeys, dkeys: KeyBlock; 
 		iv: Block; 
 
-		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
-		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIGNED32); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; p: SIZE); 

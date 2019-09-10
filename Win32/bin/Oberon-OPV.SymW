@@ -154,36 +154,36 @@ CONST
 	LProcOff = 8; 
 	ExtProcOff = 8; 
 TYPE 
-	ParamAdrProc = PROCEDURE (VAR firstPar: OPT.Object; VAR psize, dsize: LONGINT; TProc, Inline, allocDesc: BOOLEAN); 
+	ParamAdrProc = PROCEDURE (VAR firstPar: OPT.Object; VAR psize, dsize: SIGNED32; TProc, Inline, allocDesc: BOOLEAN); 
 VAR 
 	dumpCode*: BOOLEAN; 
 	ProcName*: OPS.Name; 
-	EntryNr*: INTEGER; 
+	EntryNr*: SIGNED16; 
 	ExitChain: OPC.Label; 
 	UnlockOnExit: BOOLEAN; 
 	allocTd: BOOLEAN; 
 	dummy: OPC.Item; 
 	ParamAdr: ARRAY 6 OF ParamAdrProc; 
 
-	PROCEDURE ^ Init*(bpc: LONGINT); 
-	PROCEDURE ^ IncAdr(VAR adr: LONGINT; s: LONGINT); 
-	PROCEDURE ^ AlignFld(VAR offset: LONGINT; elemsize: LONGINT); 
-	PROCEDURE ^ AllocFld(VAR offset, this: LONGINT; elemsize: LONGINT); 
-	PROCEDURE ^ AlignRec(VAR size: LONGINT); 
-	PROCEDURE ^ AlignPar(VAR elemsize: LONGINT); 
-	PROCEDURE ^ AllocPar(VAR adr, this: LONGINT; elemsize: LONGINT); 
-	PROCEDURE ^ AlignVar(VAR adr: LONGINT; elemsize: LONGINT); 
-	PROCEDURE ^ AllocVar(VAR adr, this: LONGINT; elemsize: LONGINT); 
-	PROCEDURE ^ AlignBlock(adr: LONGINT; VAR dsize: LONGINT); 
-	PROCEDURE ^ RecursionTest(typ: OPT.Struct; mode: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Init*(bpc: SIGNED32); 
+	PROCEDURE ^ IncAdr(VAR adr: SIGNED32; s: SIGNED32); 
+	PROCEDURE ^ AlignFld(VAR offset: SIGNED32; elemsize: SIGNED32); 
+	PROCEDURE ^ AllocFld(VAR offset, this: SIGNED32; elemsize: SIGNED32); 
+	PROCEDURE ^ AlignRec(VAR size: SIGNED32); 
+	PROCEDURE ^ AlignPar(VAR elemsize: SIGNED32); 
+	PROCEDURE ^ AllocPar(VAR adr, this: SIGNED32; elemsize: SIGNED32); 
+	PROCEDURE ^ AlignVar(VAR adr: SIGNED32; elemsize: SIGNED32); 
+	PROCEDURE ^ AllocVar(VAR adr, this: SIGNED32; elemsize: SIGNED32); 
+	PROCEDURE ^ AlignBlock(adr: SIGNED32; VAR dsize: SIGNED32); 
+	PROCEDURE ^ RecursionTest(typ: OPT.Struct; mode: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ TypSize*(typ: OPT.Struct; allocDesc: BOOLEAN); 
-	PROCEDURE ^ ParamAdrLR(VAR firstPar: OPT.Object; VAR psize, dsize: LONGINT; TProc, Inline, allocDesc: BOOLEAN); 
-	PROCEDURE ^ ParamAdrRL(VAR firstPar: OPT.Object; VAR psize, dsize: LONGINT; TProc, Inline, allocDesc: BOOLEAN); 
-	PROCEDURE ^ VarAdr(var: OPT.Object; VAR dsize: LONGINT); 
-	PROCEDURE ^ ArgSize(par: OPT.Object): LONGINT; 
+	PROCEDURE ^ ParamAdrLR(VAR firstPar: OPT.Object; VAR psize, dsize: SIGNED32; TProc, Inline, allocDesc: BOOLEAN); 
+	PROCEDURE ^ ParamAdrRL(VAR firstPar: OPT.Object; VAR psize, dsize: SIGNED32; TProc, Inline, allocDesc: BOOLEAN); 
+	PROCEDURE ^ VarAdr(var: OPT.Object; VAR dsize: SIGNED32); 
+	PROCEDURE ^ ArgSize(par: OPT.Object): SIGNED32; 
 	PROCEDURE ^ ProcSize0(obj: OPT.Object; firstpass: BOOLEAN); 
 	PROCEDURE ^ ProcSize(obj: OPT.Object; firstpass: BOOLEAN); 
-	PROCEDURE ^ FindMth(curmod: LONGINT; VAR name: OPS.Name; typ: OPT.Struct; VAR res: OPT.Object); 
+	PROCEDURE ^ FindMth(curmod: SIGNED32; VAR name: OPS.Name; typ: OPT.Struct; VAR res: OPT.Object); 
 	PROCEDURE ^ VisitTProcs(obj: OPT.Object); 
 	PROCEDURE ^ Traverse(obj: OPT.Object; exported: BOOLEAN); 
 	PROCEDURE ^ AssignTent(obj: OPT.Object); 
@@ -198,7 +198,7 @@ VAR
 	PROCEDURE ^ Expression(n: OPT.Node; VAR z: OPC.Item; selfForUnlock: OPT.Node); 
 	PROCEDURE ^ IfStat(n, selfForUnlock: OPT.Node; VAR Lfix, Lcfix: OPC.Label; else: BOOLEAN); 
 	PROCEDURE ^ CaseStat(n, selfForUnlock: OPT.Node); 
-	PROCEDURE ^ Dim(VAR z, nofelem: OPC.Item; n: OPT.Node; typ: OPT.Struct; nofdim: LONGINT); 
+	PROCEDURE ^ Dim(VAR z, nofelem: OPC.Item; n: OPT.Node; typ: OPT.Struct; nofdim: SIGNED32); 
 	PROCEDURE ^ Statement(n, selfForUnlock: OPT.Node); 
 	PROCEDURE ^ Module*(prog: OPT.Node); 
 BEGIN

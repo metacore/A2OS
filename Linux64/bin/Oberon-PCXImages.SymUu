@@ -4,10 +4,10 @@ CONST
 TYPE 
 	PCXHeader = RECORD 
 		manufacturer, version, encoding, bits: CHAR; 
-		xMin, yMin, xMax, yMax, hRes, vRes: INTEGER; 
-		palPos, picPos: LONGINT; 
+		xMin, yMin, xMax, yMax, hRes, vRes: SIGNED16; 
+		palPos, picPos: SIGNED32; 
 		vMode, planes: CHAR; 
-		bytesPerLine, paletteInfo: INTEGER; 
+		bytesPerLine, paletteInfo: SIGNED16; 
 	END; 
 VAR 
 	pcxh: PCXHeader; 

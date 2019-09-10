@@ -6,14 +6,14 @@ TYPE
 	Assembler* = OBJECT (FoxAssembler.Assembler)
 
 		PROCEDURE ^  & Init2*(diagnostics: Diagnostics.Diagnostics); 
-		PROCEDURE ^ GetRegister*(VAR registerNumber: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetRegister*(VAR registerNumber: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ GetRegisterList(VAR registerList: SET): BOOLEAN; 
-		PROCEDURE ^ GetSpecialRegisterWithFields(VAR registerNumber: LONGINT; VAR fields: SET): BOOLEAN; 
-		PROCEDURE ^ GetShiftMode*(VAR shiftModeNumber: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetCoprocessor*(VAR coprocessorNumber: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetCoprocessorOpcode*(VAR coprocessorOpcode: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetPlainValue*(VAR value: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetImmediateValue*(VAR immediateValue: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetSpecialRegisterWithFields(VAR registerNumber: SIGNED32; VAR fields: SET): BOOLEAN; 
+		PROCEDURE ^ GetShiftMode*(VAR shiftModeNumber: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetCoprocessor*(VAR coprocessorNumber: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetCoprocessorOpcode*(VAR coprocessorOpcode: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetPlainValue*(VAR value: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetImmediateValue*(VAR immediateValue: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ Instruction*(CONST mnemonic: ARRAY OF CHAR); 
 	END Assembler; 
 BEGIN

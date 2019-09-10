@@ -8,11 +8,11 @@ CONST
 TYPE 
 	Entity* = RECORD 
 		country-, organisation-, organisationUnit-, distName-, state-, commonName-: POINTER TO ARRAY OF CHAR; 
-		serial-: LONGINT; 
+		serial-: SIGNED32; 
 	END; 
 
 	Certificate* = POINTER TO RECORD 
-		version-, serial-: LONGINT; 
+		version-, serial-: SIGNED32; 
 		algorithm-: POINTER TO ARRAY OF CHAR; 
 		validity-: RECORD 
 			notBefore-, notAfter-: Dates.DateTime; 

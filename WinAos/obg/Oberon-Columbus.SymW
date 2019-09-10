@@ -40,7 +40,7 @@ TYPE
 
 	ItemDesc = RECORD 
 		next: Item; 
-		class: INTEGER; 
+		class: SIGNED16; 
 		name: ARRAY 32 OF CHAR; 
 		val: Objects.Object; 
 	END; 
@@ -51,7 +51,7 @@ TYPE
 		next: HistoryItem; 
 		obj: Objects.Object; 
 		lib: Objects.Library; 
-		view: INTEGER; 
+		view: SIGNED16; 
 	END; 
 
 	Panel = POINTER TO PanelDesc; 
@@ -67,11 +67,11 @@ TYPE
 	END; 
 
 	Layout = RECORD 
-		align: INTEGER; 
-		X, Y, maxH: INTEGER; 
+		align: SIGNED16; 
+		X, Y, maxH: SIGNED16; 
 		frames: Display.Frame; 
 		items: Item; 
-		tabs: ARRAY Tabs OF INTEGER; 
+		tabs: ARRAY Tabs OF SIGNED16; 
 	END; 
 
 	CanProc = PROCEDURE (obj: Objects.Object; lib: Objects.Library):BOOLEAN; 
@@ -93,12 +93,12 @@ VAR
 	msgPrinted: BOOLEAN; 
 	viewGens: ARRAY NoView OF ViewGenDesc; 
 
-	PROCEDURE ^ RefToStr(i: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ RefToStr(i: SIGNED32; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ Append(CONST this: ARRAY OF CHAR; VAR to: ARRAY OF CHAR); 
 	PROCEDURE ^ AppendCh(this: CHAR; VAR to: ARRAY OF CHAR); 
 	PROCEDURE ^ Char(ch: CHAR); 
 	PROCEDURE ^ String(CONST str: ARRAY OF CHAR); 
-	PROCEDURE ^ Int(i: LONGINT); 
+	PROCEDURE ^ Int(i: SIGNED32); 
 	PROCEDURE ^ Ln; 
 	PROCEDURE ^ ToLog; 
 	PROCEDURE ^ PrintMsg; 
@@ -109,37 +109,37 @@ VAR
 	PROCEDURE ^ PanelHandler(P: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitPanel(P: Panel); 
 	PROCEDURE ^ NewPanel*; 
-	PROCEDURE ^ Max(x, x0: INTEGER): INTEGER; 
-	PROCEDURE ^ MakeCaption(CONST s: ARRAY OF CHAR; col: SHORTINT; bold: BOOLEAN): Display.Frame; 
+	PROCEDURE ^ Max(x, x0: SIGNED16): SIGNED16; 
+	PROCEDURE ^ MakeCaption(CONST s: ARRAY OF CHAR; col: SIGNED8; bold: BOOLEAN): Display.Frame; 
 	PROCEDURE ^ MakeCmd(CONST caption, cmd: ARRAY OF CHAR; isPict: BOOLEAN): Display.Frame; 
 	PROCEDURE ^ MakeBool(val: BOOLEAN): Display.Frame; 
 	PROCEDURE ^ MakeString(CONST val: ARRAY OF CHAR): Display.Frame; 
-	PROCEDURE ^ MakeInt(val: LONGINT): Display.Frame; 
-	PROCEDURE ^ MakeReal(val: LONGREAL): Display.Frame; 
+	PROCEDURE ^ MakeInt(val: SIGNED32): Display.Frame; 
+	PROCEDURE ^ MakeReal(val: FLOAT64): Display.Frame; 
 	PROCEDURE ^ MakeLink(val: Objects.Object; locked: BOOLEAN): Display.Frame; 
 	PROCEDURE ^ ClearTabs(VAR L: Layout); 
 	PROCEDURE ^ OpenLayout(VAR L: Layout); 
 	PROCEDURE ^ SetTab(VAR L: Layout); 
 	PROCEDURE ^ WriteLn(VAR L: Layout); 
-	PROCEDURE ^ WriteHSpace(VAR L: Layout; w: INTEGER); 
+	PROCEDURE ^ WriteHSpace(VAR L: Layout; w: SIGNED16); 
 	PROCEDURE ^ WriteTab(VAR L: Layout); 
-	PROCEDURE ^ WriteVSpace(VAR L: Layout; h: INTEGER); 
+	PROCEDURE ^ WriteVSpace(VAR L: Layout; h: SIGNED16); 
 	PROCEDURE ^ WriteFrame(VAR L: Layout; F: Display.Frame); 
 	PROCEDURE ^ WriteLine(VAR L: Layout); 
-	PROCEDURE ^ WriteCaption(VAR L: Layout; CONST s: ARRAY OF CHAR; col: SHORTINT; bold: BOOLEAN); 
+	PROCEDURE ^ WriteCaption(VAR L: Layout; CONST s: ARRAY OF CHAR; col: SIGNED8; bold: BOOLEAN); 
 	PROCEDURE ^ WriteCmd(VAR L: Layout; CONST caption, cmd: ARRAY OF CHAR; isPict: BOOLEAN); 
 	PROCEDURE ^ WriteLayout(VAR L, l: Layout); 
-	PROCEDURE ^ WriteLogo(VAR L: Layout; W: INTEGER); 
+	PROCEDURE ^ WriteLogo(VAR L: Layout; W: SIGNED16); 
 	PROCEDURE ^ WriteItems(VAR L: Layout; classes: SET); 
-	PROCEDURE ^ AddItem(VAR L: Layout; CONST name: ARRAY OF CHAR; class: INTEGER; val: Display.Frame); 
+	PROCEDURE ^ AddItem(VAR L: Layout; CONST name: ARRAY OF CHAR; class: SIGNED16; val: Display.Frame); 
 	PROCEDURE ^ AddTitleItem(VAR L: Layout; CONST str: ARRAY OF CHAR; cmds: Display.Frame); 
 	PROCEDURE ^ AddControlItem(VAR L: Layout; CONST name, caption: ARRAY OF CHAR; val: Display.Frame); 
 	PROCEDURE ^ EnumAttr(CONST name: ARRAY OF CHAR); 
 	PROCEDURE ^ EnumLink(CONST name: ARRAY OF CHAR); 
-	PROCEDURE ^ MakePanel(P: Panels.Panel; frames: Display.Frame; border: INTEGER; new: BOOLEAN); 
+	PROCEDURE ^ MakePanel(P: Panels.Panel; frames: Display.Frame; border: SIGNED16; new: BOOLEAN); 
 	PROCEDURE ^ WriteGeneralObjInfo(obj: Objects.Object; VAR L: Layout); 
 	PROCEDURE ^ WriteGeneralLibInfo(lib: Objects.Library; VAR L: Layout); 
-	PROCEDURE ^ InspectThis(VAR P: Panel; obj: Objects.Object; lib: Objects.Library; view: INTEGER); 
+	PROCEDURE ^ InspectThis(VAR P: Panel; obj: Objects.Object; lib: Objects.Library; view: SIGNED16); 
 	PROCEDURE ^ CanViewAttr(obj: Objects.Object; lib: Objects.Library): BOOLEAN; 
 	PROCEDURE ^ AttrViewButton(model, obj: Objects.Object; lib: Objects.Library): Display.Frame; 
 	PROCEDURE ^ MakeAttrView(obj: Objects.Object; lib: Objects.Library; VAR L: Layout); 
@@ -169,7 +169,7 @@ VAR
 	PROCEDURE ^ RemoveAttrLink(obj: Objects.Object; P: Panel); 
 	PROCEDURE ^ GetObjLib(VAR obj: Objects.Object; VAR lib: Objects.Library); 
 	PROCEDURE ^ FindPanel(): Panel; 
-	PROCEDURE ^ GetViewMode(P: Panel): INTEGER; 
+	PROCEDURE ^ GetViewMode(P: Panel): SIGNED16; 
 	PROCEDURE ^ InspectObj*(obj: Objects.Object); 
 	PROCEDURE ^ Inspect*; 
 	PROCEDURE ^ InspectLink*; 
@@ -185,7 +185,7 @@ VAR
 	PROCEDURE ^ SplitName(CONST name: ARRAY OF CHAR; VAR libname, objname: ARRAY OF CHAR); 
 	PROCEDURE ^ OpenText(CONST name: ARRAY OF CHAR; T: Texts.Text); 
 	PROCEDURE ^ SetTextToList(list: Objects.Object; T: Texts.Text); 
-	PROCEDURE ^ GetCopyStyle(): INTEGER; 
+	PROCEDURE ^ GetCopyStyle(): SIGNED16; 
 	PROCEDURE ^ GetObject(): Objects.Object; 
 	PROCEDURE ^ UpdateObjList(lib: Objects.Library; openDoc: BOOLEAN); 
 	PROCEDURE ^ EnumLib(L: Objects.Library); 
@@ -199,6 +199,6 @@ VAR
 	PROCEDURE ^ StoreLib*; 
 	PROCEDURE ^ UnloadLib*; 
 	PROCEDURE ^ CleanupLib*; 
-	PROCEDURE ^ InitViewDesc(nr: INTEGER; canProc: CanProc; makeProc: MakeProc; btnProc: ButtonProc); 
+	PROCEDURE ^ InitViewDesc(nr: SIGNED16; canProc: CanProc; makeProc: MakeProc; btnProc: ButtonProc); 
 BEGIN
 END Columbus.

@@ -12,7 +12,7 @@ TYPE
 
 	marshrunner = OBJECT {EXCLUSIVE} (srBase.V)
 	VAR 
-		i, j, k, ii, jj, kk, iii, jjj, kkk, t: INTEGER; 
+		i, j, k, ii, jj, kk, iii, jjj, kkk, t: SIGNED16; 
 		cost: SREAL; 
 		p, q, qq: srBase.PT; 
 		corridor, pillar, sky, cage, building, FLOWER, CRIMSONFLOWER, DAISY, BLOOM: MSpace.cell; 
@@ -74,14 +74,14 @@ TYPE
 		azure, crimson, yellow: srBase.COLOR; 
 		cp: srBase.PT; 
 		avatar: ARRAY 10 OF srBase.Voxel; 
-		av: LONGINT; 
+		av: SIGNED32; 
 		rota: srRotaVox.RVox; 
 		mrmkitty: ARRAY 77 OF srTexVox.TexVox; 
 		title: srBase.Name; 
 		frame: ARRAY 8 OF CHAR; 
 
 		PROCEDURE ^  & init*; 
-		PROCEDURE ^ cylinder(target: MSpace.cell; start, end: PT; radius: REAL; t: INTEGER; color: COLOR); 
+		PROCEDURE ^ cylinder(target: MSpace.cell; start, end: PT; radius: FLOAT32; t: SIGNED16; color: COLOR); 
 		PROCEDURE ^ cameratrail(v: Voxel; a, b: PT); 
 		PROCEDURE ^ tick*; 
 		PROCEDURE ^ fill5cosm; 

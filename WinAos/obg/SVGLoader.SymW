@@ -7,16 +7,16 @@ CONST
 TYPE 
 	SVGLoader = OBJECT 
 	VAR 
-		ppi: LONGREAL; 
+		ppi: FLOAT64; 
 		state: SVG.State; 
 		mainDocument: SVG.Document; 
 		renderer: SVGRenderer.Renderer; 
 		fePrev: SVGFilters.FilterElement; 
 		sizeForced: BOOLEAN; 
-		widthForced, heightForced: LONGINT; 
+		widthForced, heightForced: SIGNED32; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ ForceSize(width, height: LONGINT); 
+		PROCEDURE ^ ForceSize(width, height: SIGNED32); 
 		PROCEDURE ^ LoadRoot(e: XML.Element); 
 		PROCEDURE ^ GetDocument(): SVG.Document; 
 		PROCEDURE ^ GetActualWidth(): SVG.Length; 
@@ -58,16 +58,16 @@ TYPE
 		PROCEDURE ^ LoadPath(e: XML.Element); 
 		PROCEDURE ^ LoadPaintAttributes(e: XML.Element); 
 		PROCEDURE ^ LoadViewBoxAttributes(e: XML.Element; VAR transform: SVG.Transform; width0, height0: SVG.Length); 
-		PROCEDURE ^ LoadAttrNumber(e: XML.Element; name: ARRAY OF CHAR; VAR number: SVG.Number; percentageAllowed: BOOLEAN; percent100: SVG.Number; onOmitted: SHORTINT; default: ARRAY OF CHAR); 
-		PROCEDURE ^ LoadAttrLength(e: XML.Element; name: ARRAY OF CHAR; VAR length: SVG.Length; percent100: SVG.Number; onOmitted: SHORTINT; default: ARRAY OF CHAR); 
+		PROCEDURE ^ LoadAttrNumber(e: XML.Element; name: ARRAY OF CHAR; VAR number: SVG.Number; percentageAllowed: BOOLEAN; percent100: SVG.Number; onOmitted: SIGNED8; default: ARRAY OF CHAR); 
+		PROCEDURE ^ LoadAttrLength(e: XML.Element; name: ARRAY OF CHAR; VAR length: SVG.Length; percent100: SVG.Number; onOmitted: SIGNED8; default: ARRAY OF CHAR); 
 		PROCEDURE ^ LoadAttrTransform(e: XML.Element; name: ARRAY OF CHAR; VAR transform: SVG.Transform); 
-		PROCEDURE ^ LoadAttrParsed(e: XML.Element; name: ARRAY OF CHAR; VAR parsed: SHORTINT; onOmitted: SHORTINT; default: ARRAY OF CHAR; parser: PROCEDURE (value: XML.String; VAR parsed: SHORTINT)); 
+		PROCEDURE ^ LoadAttrParsed(e: XML.Element; name: ARRAY OF CHAR; VAR parsed: SIGNED8; onOmitted: SIGNED8; default: ARRAY OF CHAR; parser: PROCEDURE (value: XML.String; VAR parsed: SIGNED8)); 
 		PROCEDURE ^ LoadAttribute(e: XML.Element; name: ARRAY OF CHAR): XML.String; 
-		PROCEDURE ^ LoadOpacity(e: XML.Element; name: ARRAY OF CHAR; VAR color: SVG.Color; onOmitted: SHORTINT; default: ARRAY OF CHAR); 
+		PROCEDURE ^ LoadOpacity(e: XML.Element; name: ARRAY OF CHAR; VAR color: SVG.Color; onOmitted: SIGNED8; default: ARRAY OF CHAR); 
 	END SVGLoader; 
 
 	PROCEDURE ^ LoadSVG*(svgName: ARRAY OF CHAR): SVG.Document; 
 	PROCEDURE ^ LoadSVGEmbedded*(root: XML.Element): SVG.Document; 
-	PROCEDURE ^ LoadSizedSVG*(svgName: ARRAY OF CHAR; width, height: LONGINT): SVG.Document; 
+	PROCEDURE ^ LoadSizedSVG*(svgName: ARRAY OF CHAR; width, height: SIGNED32): SVG.Document; 
 BEGIN
 END SVGLoader.

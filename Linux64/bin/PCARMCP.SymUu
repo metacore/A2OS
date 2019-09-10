@@ -9,16 +9,16 @@ CONST
 TYPE 
 	UseList = OBJECT 
 	VAR 
-		pc: LONGINT; 
+		pc: SIGNED32; 
 		next: UseList; 
 
-		PROCEDURE ^  & Init*(pc: LONGINT); 
+		PROCEDURE ^  & Init*(pc: SIGNED32); 
 	END UseList; 
 
 	Element = OBJECT 
 	VAR 
-		pc: LONGINT; 
-		firstUse: LONGINT; 
+		pc: SIGNED32; 
+		firstUse: SIGNED32; 
 		next: Element; 
 		uses: UseList; 
 
@@ -27,9 +27,9 @@ TYPE
 
 	Constant = OBJECT (Element)
 	VAR 
-		value: LONGINT; 
+		value: SIGNED32; 
 
-		PROCEDURE ^  & Init*(value: LONGINT); 
+		PROCEDURE ^  & Init*(value: SIGNED32); 
 	END Constant; 
 
 	Address = OBJECT (Element)
@@ -42,15 +42,15 @@ TYPE
 	ConstantPool* = OBJECT {EXCLUSIVE} 
 	VAR 
 		items: Element; 
-		limitPC: LONGINT; 
+		limitPC: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Insert(i: Element); 
-		PROCEDURE ^ AddConstant*(pc, c: LONGINT): LONGINT; 
-		PROCEDURE ^ AddAddress*(pc: LONGINT; adr: PCM.Attribute): LONGINT; 
-		PROCEDURE ^ Flush*(pc: LONGINT); 
-		PROCEDURE ^ FlushCallback(pc: LONGINT); 
-		PROCEDURE ^ Error(pc: LONGINT; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ AddConstant*(pc, c: SIGNED32): SIGNED32; 
+		PROCEDURE ^ AddAddress*(pc: SIGNED32; adr: PCM.Attribute): SIGNED32; 
+		PROCEDURE ^ Flush*(pc: SIGNED32); 
+		PROCEDURE ^ FlushCallback(pc: SIGNED32); 
+		PROCEDURE ^ Error(pc: SIGNED32; CONST msg: ARRAY OF CHAR); 
 	END ConstantPool; 
 BEGIN
 END PCARMCP.

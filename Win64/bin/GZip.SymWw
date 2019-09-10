@@ -22,32 +22,32 @@ TYPE
 	VAR 
 		writer: Streams.Writer; 
 		s: ZlibDeflate.Stream; 
-		res: WORD; 
-		crc32-: LONGINT; 
+		res: INTEGER; 
+		crc32-: SIGNED32; 
 		out: POINTER TO ARRAY BufSize OF CHAR; 
-		flush: SHORTINT; 
+		flush: SIGNED8; 
 		inputsize: SIZE; 
 
 		PROCEDURE ^ WriteHeader(w: Streams.Writer); 
-		PROCEDURE ^  & Init*(writer: Streams.Writer; level, strategy, flush: SHORTINT); 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^  & Init*(writer: Streams.Writer; level, strategy, flush: SIGNED8); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 	END Deflator; 
 
 	Inflator* = OBJECT 
 	VAR 
 		reader: Streams.Reader; 
-		res: WORD; 
+		res: INTEGER; 
 		transparent: BOOLEAN; 
-		crc32-: LONGINT; 
+		crc32-: SIGNED32; 
 		in: POINTER TO ARRAY BufSize OF CHAR; 
 		s: ZlibInflate.Stream; 
 
 		PROCEDURE ^  & Init*(reader: Streams.Reader); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ CheckHeader; 
 	END Inflator; 
 
-	PROCEDURE ^ Deflate*(in, out: Files.File; level, strategy, flush: SHORTINT); 
+	PROCEDURE ^ Deflate*(in, out: Files.File; level, strategy, flush: SIGNED8); 
 	PROCEDURE ^ Inflate*(in, out: Files.File); 
 	PROCEDURE ^ GZip*(context: Commands.Context); 
 	PROCEDURE ^ UnGZip*(context: Commands.Context); 

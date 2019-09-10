@@ -45,49 +45,49 @@ TYPE
 
 	ContentDesc* = RECORD 
 		h: Header; 
-		pos, len*: LONGINT; 
+		pos, len*: SIGNED32; 
 		typ*: ContentType; 
-		encoding*: LONGINT; 
+		encoding*: SIGNED32; 
 	END; 
 
 	Part = POINTER TO PartDesc; 
 
 	PartDesc = RECORD 
 		name: ARRAY 64 OF CHAR; 
-		no: LONGINT; 
+		no: SIGNED32; 
 		next: Part; 
 	END; 
 VAR 
 	contTypes*: ContentType; 
 	textCont*: Content; 
 
-	PROCEDURE ^ ReadHeader*(S, echo: Streams.Stream; VAR h: Header; VAR len: LONGINT); 
-	PROCEDURE ^ FindFieldPos*(h: Header; field: ARRAY OF CHAR; VAR pos: LONGINT); 
-	PROCEDURE ^ FindField*(h: Header; field: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ NextValue*(h: Header; VAR pos: LONGINT); 
-	PROCEDURE ^ HexVal(ch: CHAR): LONGINT; 
+	PROCEDURE ^ ReadHeader*(S, echo: Streams.Stream; VAR h: Header; VAR len: SIGNED32); 
+	PROCEDURE ^ FindFieldPos*(h: Header; field: ARRAY OF CHAR; VAR pos: SIGNED32); 
+	PROCEDURE ^ FindField*(h: Header; field: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ NextValue*(h: Header; VAR pos: SIGNED32); 
+	PROCEDURE ^ HexVal(ch: CHAR): SIGNED32; 
 	PROCEDURE ^ DecodeValue(VAR value: ARRAY OF CHAR); 
-	PROCEDURE ^ ExtractValue*(h: Header; pos: LONGINT; VAR val: ARRAY OF CHAR); 
-	PROCEDURE ^ FindParam*(h: Header; pos: LONGINT; param: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
-	PROCEDURE ^ ExtractEMail*(h: Header; pos: LONGINT; VAR email: ARRAY OF CHAR); 
-	PROCEDURE ^ StrToMonth(VAR str: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ GMTTime(h, m, s: LONGINT; zone: ARRAY OF CHAR; VAR time, date: LONGINT): BOOLEAN; 
-	PROCEDURE ^ GetClock*(VAR time, date: LONGINT); 
-	PROCEDURE ^ ExtractGMTDate*(h: Header; pos: LONGINT; VAR time, date: LONGINT); 
+	PROCEDURE ^ ExtractValue*(h: Header; pos: SIGNED32; VAR val: ARRAY OF CHAR); 
+	PROCEDURE ^ FindParam*(h: Header; pos: SIGNED32; param: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
+	PROCEDURE ^ ExtractEMail*(h: Header; pos: SIGNED32; VAR email: ARRAY OF CHAR); 
+	PROCEDURE ^ StrToMonth(VAR str: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ GMTTime(h, m, s: SIGNED32; zone: ARRAY OF CHAR; VAR time, date: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ GetClock*(VAR time, date: SIGNED32); 
+	PROCEDURE ^ ExtractGMTDate*(h: Header; pos: SIGNED32; VAR time, date: SIGNED32); 
 	PROCEDURE ^ EnumMIME(key, value: ARRAY OF CHAR); 
 	PROCEDURE ^ GetContentType*(fullTyp: ARRAY OF CHAR): ContentType; 
 	PROCEDURE ^ LoadTypes; 
 	PROCEDURE ^ MakeTempName*(contType: ContentType; VAR tempName: ARRAY OF CHAR); 
-	PROCEDURE ^ ExtractContentType*(h: Header; pos: LONGINT; VAR cont: Content); 
+	PROCEDURE ^ ExtractContentType*(h: Header; pos: SIGNED32; VAR cont: Content); 
 	PROCEDURE ^ ReadText*(in: Streams.Stream; VAR W: Texts.Writer; cont: Content; mail: BOOLEAN); 
-	PROCEDURE ^ SearchBoundary(F: Files.File; VAR boundary: ARRAY OF CHAR; VAR pos: LONGINT): BOOLEAN; 
-	PROCEDURE ^ TextEncoding*(h: Header; pos: LONGINT; cont: Content); 
+	PROCEDURE ^ SearchBoundary(F: Files.File; VAR boundary: ARRAY OF CHAR; VAR pos: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ TextEncoding*(h: Header; pos: SIGNED32; cont: Content); 
 	PROCEDURE ^ HorzRule(VAR W: Texts.Writer; name: ARRAY OF CHAR); 
-	PROCEDURE ^ DecodePart(F: Files.File; beg, end: LONGINT; T: Texts.Text; VAR W: Texts.Writer; VAR parts: Part; mail: BOOLEAN); 
+	PROCEDURE ^ DecodePart(F: Files.File; beg, end: SIGNED32; T: Texts.Text; VAR W: Texts.Writer; VAR parts: Part; mail: BOOLEAN); 
 	PROCEDURE ^ DecodeMultipartFile(F: Files.File; VAR T: Texts.Text; boundary: ARRAY OF CHAR; mail: BOOLEAN); 
 	PROCEDURE ^ ReadMultipartText*(in: Streams.Stream; VAR T: Texts.Text; cont: Content; mail: BOOLEAN); 
-	PROCEDURE ^ HexDigit(i: LONGINT): CHAR; 
-	PROCEDURE ^ WriteText*(T: Texts.Text; beg, end: LONGINT; out: Streams.Stream; cont: Content; mail, crlf: BOOLEAN); 
+	PROCEDURE ^ HexDigit(i: SIGNED32): CHAR; 
+	PROCEDURE ^ WriteText*(T: Texts.Text; beg, end: SIGNED32; out: Streams.Stream; cont: Content; mail, crlf: BOOLEAN); 
 	PROCEDURE ^ WriteISOMime*(S: Streams.Stream; cont: Content); 
 BEGIN
 END MIME.

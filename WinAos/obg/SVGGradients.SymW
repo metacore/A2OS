@@ -16,8 +16,8 @@ TYPE
 	Gradient* = OBJECT 
 	VAR 
 		first, last: GradientStop; 
-		gradientUnits*: SHORTINT; 
-		spreadMethod*: SHORTINT; 
+		gradientUnits*: SIGNED8; 
+		spreadMethod*: SIGNED8; 
 		transform*: SVG.Transform; 
 
 		PROCEDURE ^  & New*; 
@@ -57,6 +57,6 @@ TYPE
 		PROCEDURE ^ GetGradientAsPattern*(ctx: Gfx.Context; id: SVG.String; worldBBox, objectBBox: SVG.Box; userToWorldSpace: SVG.Transform; viewport: SVG.Box): Gfx.Pattern; 
 	END GradientDict; 
 
-	PROCEDURE ^ ParseSpreadMethod*(value: SVG.String; VAR spreadMethod: SHORTINT); 
+	PROCEDURE ^ ParseSpreadMethod*(value: SVG.String; VAR spreadMethod: SIGNED8); 
 BEGIN
 END SVGGradients.

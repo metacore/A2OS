@@ -22,14 +22,14 @@ TYPE
 		y-: Number; 
 		inv, r: Number; 
 
-		PROCEDURE ^ Sign*(CONST digest: ARRAY OF CHAR; len: INTEGER): Signature; 
-		PROCEDURE ^ Verify*(CONST digest: ARRAY OF CHAR; dlen: INTEGER; sig: Signature): BOOLEAN; 
+		PROCEDURE ^ Sign*(CONST digest: ARRAY OF CHAR; len: SIGNED16): Signature; 
+		PROCEDURE ^ Verify*(CONST digest: ARRAY OF CHAR; dlen: SIGNED16; sig: Signature): BOOLEAN; 
 	END Key; 
 VAR 
 	one: Number; 
 
-	PROCEDURE ^ GenParams*(dsa: Key; bits: INTEGER; CONST seed: ARRAY OF CHAR); 
-	PROCEDURE ^ MakeKeys*(bits: INTEGER; CONST seed: ARRAY OF CHAR; VAR pub, priv: Key); 
+	PROCEDURE ^ GenParams*(dsa: Key; bits: SIGNED16; CONST seed: ARRAY OF CHAR); 
+	PROCEDURE ^ MakeKeys*(bits: SIGNED16; CONST seed: ARRAY OF CHAR; VAR pub, priv: Key); 
 	PROCEDURE ^ PubKey*(p, q, g, y: Number): Key; 
 	PROCEDURE ^ LoadPrivateKey*(r: Streams.Reader; CONST passwd: ARRAY OF CHAR): Key; 
 	PROCEDURE ^ StorePrivateKey*(w: Streams.Writer; k: Key; CONST passwd: ARRAY OF CHAR); 

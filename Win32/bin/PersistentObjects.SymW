@@ -9,18 +9,18 @@ TYPE
 	TYPE 
 		Entry = RECORD 
 			name: ARRAY 32 OF CHAR; 
-			key: LONGINT; 
+			key: SIGNED32; 
 		END; 
 
 		Table = POINTER TO ARRAY OF Entry; 
 	VAR 
 		table: Table; 
-		len: LONGINT; 
+		len: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Grow; 
-		PROCEDURE ^ Add*(CONST name: ARRAY OF CHAR; key: LONGINT); 
-		PROCEDURE ^ Key*(CONST name: ARRAY OF CHAR; VAR key: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Add*(CONST name: ARRAY OF CHAR; key: SIGNED32); 
+		PROCEDURE ^ Key*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ Name*(index: SIZE; VAR name: ARRAY OF CHAR): BOOLEAN; 
 	END Translation; 
 
@@ -38,8 +38,8 @@ TYPE
 		persistent*: BOOLEAN; 
 		object*: Object; 
 		char*: CHAR; 
-		integer*: HUGEINT; 
-		float*: LONGREAL; 
+		integer*: SIGNED64; 
+		float*: FLOAT64; 
 		boolean*: BOOLEAN; 
 		translation*: Translation; 
 		range*: RANGE; 
@@ -55,16 +55,16 @@ TYPE
 		PROCEDURE ^ Equals*(CONST s: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
 		PROCEDURE ^ SetName*(CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ GetInteger*(VAR integer: HUGEINT); 
+		PROCEDURE ^ GetInteger*(VAR integer: SIGNED64); 
 		PROCEDURE ^ SetInteger*(integer: SIZE); 
 		PROCEDURE ^ GetSet*(VAR set: SET); 
 		PROCEDURE ^ SetSet*(set: SET); 
-		PROCEDURE ^ GetEnum*(translation: Translation; VAR integer: HUGEINT); 
-		PROCEDURE ^ SetEnum*(translation: Translation; integer: HUGEINT); 
+		PROCEDURE ^ GetEnum*(translation: Translation; VAR integer: SIGNED64); 
+		PROCEDURE ^ SetEnum*(translation: Translation; integer: SIGNED64); 
 		PROCEDURE ^ GetRange*(VAR range: RANGE); 
 		PROCEDURE ^ SetRange*(CONST range: RANGE); 
-		PROCEDURE ^ GetFloat*(VAR float: LONGREAL); 
-		PROCEDURE ^ SetFloat*(float: LONGREAL); 
+		PROCEDURE ^ GetFloat*(VAR float: FLOAT64); 
+		PROCEDURE ^ SetFloat*(float: FLOAT64); 
 		PROCEDURE ^ GetBoolean*(VAR boolean: BOOLEAN); 
 		PROCEDURE ^ SetBoolean*(boolean: BOOLEAN); 
 		PROCEDURE ^ GetObject*(VAR object: Object); 
@@ -135,14 +135,14 @@ TYPE
 		PROCEDURE ^  & InitReader(gen: Generator); 
 		PROCEDURE ^ Error(CONST s1, s2: ARRAY OF CHAR); 
 		PROCEDURE ^ StringAttribute*(CONST name: ARRAY OF CHAR; VAR str: Strings.String): BOOLEAN; 
-		PROCEDURE ^ ReadObject*(CONST name, optionalType: ARRAY OF CHAR; index: LONGINT; VAR o: Object): BOOLEAN; 
+		PROCEDURE ^ ReadObject*(CONST name, optionalType: ARRAY OF CHAR; index: SIGNED32; VAR o: Object): BOOLEAN; 
 		PROCEDURE ^ NeedsTranslation(CONST s: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ AttributeNeedingTranslation*(CONST name: ARRAY OF CHAR; VAR str: Strings.String): BOOLEAN; 
 		PROCEDURE ^ NameAttribute*(CONST name: ARRAY OF CHAR; VAR str: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ BooleanAttribute*(CONST name: ARRAY OF CHAR; VAR value: BOOLEAN): BOOLEAN; 
-		PROCEDURE ^ IntegerAttribute*(CONST name: ARRAY OF CHAR; VAR value: HUGEINT): BOOLEAN; 
-		PROCEDURE ^ FloatAttribute*(CONST name: ARRAY OF CHAR; VAR value: LONGREAL): BOOLEAN; 
-		PROCEDURE ^ EnumAttribute*(CONST name: ARRAY OF CHAR; translation: Translation; VAR value: HUGEINT): BOOLEAN; 
+		PROCEDURE ^ IntegerAttribute*(CONST name: ARRAY OF CHAR; VAR value: SIGNED64): BOOLEAN; 
+		PROCEDURE ^ FloatAttribute*(CONST name: ARRAY OF CHAR; VAR value: FLOAT64): BOOLEAN; 
+		PROCEDURE ^ EnumAttribute*(CONST name: ARRAY OF CHAR; translation: Translation; VAR value: SIGNED64): BOOLEAN; 
 		PROCEDURE ^ RangeAttribute*(CONST name: ARRAY OF CHAR; VAR value: RANGE): BOOLEAN; 
 		PROCEDURE ^ SetAttribute*(CONST name: ARRAY OF CHAR; VAR set: SET): BOOLEAN; 
 	END Reader; 
@@ -152,13 +152,13 @@ TYPE
 		PROCEDURE ^  & InitWriter*; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ NameAttribute*(CONST name, str: ARRAY OF CHAR); 
-		PROCEDURE ^ WriteObject*(CONST name: ARRAY OF CHAR; index: LONGINT; o: Object); 
+		PROCEDURE ^ WriteObject*(CONST name: ARRAY OF CHAR; index: SIGNED32; o: Object); 
 		PROCEDURE ^ StartObjectArray*(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ StringAttribute*(CONST name: ARRAY OF CHAR; str: Strings.String); 
-		PROCEDURE ^ IntegerAttribute*(CONST name: ARRAY OF CHAR; value: HUGEINT); 
-		PROCEDURE ^ FloatAttribute*(CONST name: ARRAY OF CHAR; value: LONGREAL); 
+		PROCEDURE ^ IntegerAttribute*(CONST name: ARRAY OF CHAR; value: SIGNED64); 
+		PROCEDURE ^ FloatAttribute*(CONST name: ARRAY OF CHAR; value: FLOAT64); 
 		PROCEDURE ^ BooleanAttribute*(CONST name: ARRAY OF CHAR; value: BOOLEAN); 
-		PROCEDURE ^ EnumAttribute*(CONST name: ARRAY OF CHAR; translation: Translation; value: HUGEINT); 
+		PROCEDURE ^ EnumAttribute*(CONST name: ARRAY OF CHAR; translation: Translation; value: SIGNED64); 
 		PROCEDURE ^ RangeAttribute*(CONST name: ARRAY OF CHAR; value: RANGE); 
 		PROCEDURE ^ SetAttribute*(CONST name: ARRAY OF CHAR; value: SET); 
 	END Writer; 
@@ -166,12 +166,12 @@ TYPE
 	WrittenTable = OBJECT (Basic.HashTable)
 	TYPE 
 		ObjectId = POINTER TO RECORD 
-			num: LONGINT; 
+			num: SIGNED32; 
 		END; 
 	VAR 
-		length: LONGINT; 
+		length: SIGNED32; 
 
-		PROCEDURE ^ Enter(o: Object; VAR entry: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Enter(o: Object; VAR entry: SIGNED32): BOOLEAN; 
 	END WrittenTable; 
 
 	XMLWriter* = OBJECT (Writer)
@@ -188,17 +188,17 @@ TYPE
 		PROCEDURE ^ NameAttribute*(CONST name, str: ARRAY OF CHAR); 
 		PROCEDURE ^ Enter(CONST name: ARRAY OF CHAR; o: Object); 
 		PROCEDURE ^ Exit(CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ WriteObject*(CONST name: ARRAY OF CHAR; index: LONGINT; o: Object); 
+		PROCEDURE ^ WriteObject*(CONST name: ARRAY OF CHAR; index: SIGNED32; o: Object); 
 	END XMLWriter; 
 
 	ReadTable = OBJECT (Basic.List)
 
 		PROCEDURE ^ Enter(o: Object); 
-		PROCEDURE ^ GetObject(index: HUGEINT): Object; 
+		PROCEDURE ^ GetObject(index: SIGNED64): Object; 
 	END ReadTable; 
 
 	Element = POINTER TO RECORD 
-		index: LONGINT; 
+		index: SIGNED32; 
 		e: XML.Element; 
 		next: Element; 
 	END; 
@@ -206,7 +206,7 @@ TYPE
 	Symbol = POINTER TO RECORD 
 		name: StringPool.Index; 
 		first, last: Element; 
-		numberElements: LONGINT; 
+		numberElements: SIGNED32; 
 		next: Symbol; 
 	END; 
 
@@ -229,7 +229,7 @@ TYPE
 		PROCEDURE ^ Use(o: ANY); 
 		PROCEDURE ^ Used(o: ANY): BOOLEAN; 
 		PROCEDURE ^ AddSymbol(CONST name: ARRAY OF CHAR): Symbol; 
-		PROCEDURE ^ FindElement(CONST name: ARRAY OF CHAR; index: LONGINT): XML.Element; 
+		PROCEDURE ^ FindElement(CONST name: ARRAY OF CHAR; index: SIGNED32): XML.Element; 
 		PROCEDURE ^ PutElement(symbol: Symbol; element: Element); 
 		PROCEDURE ^ EnterElement(e: XML.Element); 
 		PROCEDURE ^ Write(w: Streams.Writer); 
@@ -246,10 +246,10 @@ TYPE
 		PROCEDURE ^  & InitXMLReader*(reader: Streams.Reader; generator: Generator); 
 		PROCEDURE ^ Error(CONST s1, s2: ARRAY OF CHAR); 
 		PROCEDURE ^ StringAttribute*(CONST name: ARRAY OF CHAR; VAR str: Strings.String): BOOLEAN; 
-		PROCEDURE ^ Enter(CONST name: ARRAY OF CHAR; index: LONGINT; VAR o: Object): BOOLEAN; 
+		PROCEDURE ^ Enter(CONST name: ARRAY OF CHAR; index: SIGNED32; VAR o: Object): BOOLEAN; 
 		PROCEDURE ^ Exit(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ CheckUse(o: ANY); 
-		PROCEDURE ^ ReadObject*(CONST name, optionalType: ARRAY OF CHAR; index: LONGINT; VAR o: Object): BOOLEAN; 
+		PROCEDURE ^ ReadObject*(CONST name, optionalType: ARRAY OF CHAR; index: SIGNED32; VAR o: Object): BOOLEAN; 
 	END XMLReader; 
 
 	PROCEDURE ^ NewXMLWriter*(w: Streams.Writer): Writer; 

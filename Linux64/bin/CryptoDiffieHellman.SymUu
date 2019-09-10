@@ -8,7 +8,7 @@ TYPE
 		priv: B.BigNumber; 
 		initstate: SET32; 
 
-		PROCEDURE ^  & Init*(prkeybits: INTEGER; CONST pname: ARRAY OF CHAR); 
+		PROCEDURE ^  & Init*(prkeybits: SIGNED16; CONST pname: ARRAY OF CHAR); 
 		PROCEDURE ^ ComputeKey*(pub: B.BigNumber): B.BigNumber; 
 		PROCEDURE ^ GenPubKey*(): B.BigNumber; 
 		PROCEDURE ^ SetPrime*(prime, gen: B.BigNumber); 

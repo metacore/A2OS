@@ -12,12 +12,12 @@ VAR
 	gM: antsMDimDiscreteIsingS.tModel; 
 	gA: antsArrayObjects.tINTEGERObject; 
 	gT: antsNeighbourhoods.NeighbourTable; 
-	lasttime: LONGINT; 
+	lasttime: SIGNED32; 
 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ New*; 
-	PROCEDURE ^ func(VAR Par: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ func(VAR Par: ARRAY OF FLOAT64): FLOAT64; 
 	PROCEDURE ^ Estimate*; 
 BEGIN
 END antsEstimate.

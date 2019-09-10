@@ -9,7 +9,7 @@ TYPE
 
 	TerminalDesc = RECORD (Terminals.TerminalDesc)
 		localecho, stop: BOOLEAN; 
-		port, bps, data, stopb, parity: LONGINT; 
+		port, bps, data, stopb, parity: SIGNED32; 
 	END; 
 
 	TaskDesc = RECORD (Oberon.TaskDesc)
@@ -25,7 +25,7 @@ VAR
 	PROCEDURE ^ WriteLn(T: Terminals.Terminal); 
 	PROCEDURE ^ Receiver(me: Oberon.Task); 
 	PROCEDURE ^ Cleanup(f: ANY); 
-	PROCEDURE ^ OpenConn(F: TerminalGadgets.Frame; port, bps, data, stop, parity: LONGINT); 
+	PROCEDURE ^ OpenConn(F: TerminalGadgets.Frame; port, bps, data, stop, parity: SIGNED32); 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ Close*; 
 	PROCEDURE ^ Reset*; 

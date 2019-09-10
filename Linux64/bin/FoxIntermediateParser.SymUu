@@ -27,8 +27,8 @@ TYPE
 		PROCEDURE ^ ExpectSymbol(x: Scanner.Symbol): BOOLEAN; 
 		PROCEDURE ^ ThisIdentifier(CONST this: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ ExpectAnyIdentifier(VAR pos: Position; VAR identifier: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ ExpectIntegerWithSign(VAR integer: LONGINT): BOOLEAN; 
-		PROCEDURE ^ ExpectIntegerWithoutSign(VAR integer: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ExpectIntegerWithSign(VAR integer: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ ExpectIntegerWithoutSign(VAR integer: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ IgnoreNewLines; 
 		PROCEDURE ^ ExpectLineDelimiter(): BOOLEAN; 
 		PROCEDURE ^ ParseLineNumber(expectedLineNumber: Streams.Position); 

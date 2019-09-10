@@ -33,7 +33,7 @@ TYPE
 	SetIntActionDesc = RECORD (Leonardo.ActionDesc)
 		pen: LeoPens.Pen; 
 		name: Objects.Name; 
-		val: LONGINT; 
+		val: SIGNED32; 
 	END; 
 
 	SetRealAction = POINTER TO SetRealActionDesc; 
@@ -41,7 +41,7 @@ TYPE
 	SetRealActionDesc = RECORD (Leonardo.ActionDesc)
 		pen: LeoPens.Pen; 
 		name: Objects.Name; 
-		val: REAL; 
+		val: FLOAT32; 
 	END; 
 
 	SetBoolAction = POINTER TO SetBoolActionDesc; 
@@ -70,12 +70,12 @@ VAR
 	PROCEDURE ^ DoSetLinkAction(fig: Leonardo.Figure; act: Leonardo.Action); 
 	PROCEDURE ^ SetLink*(fig: Leonardo.Figure; pen: LeoPens.Pen; CONST name: ARRAY OF CHAR; obj: Objects.Object); 
 	PROCEDURE ^ DoSetIntAction(fig: Leonardo.Figure; act: Leonardo.Action); 
-	PROCEDURE ^ SetInt*(fig: Leonardo.Figure; pen: LeoPens.Pen; CONST name: ARRAY OF CHAR; val: LONGINT); 
+	PROCEDURE ^ SetInt*(fig: Leonardo.Figure; pen: LeoPens.Pen; CONST name: ARRAY OF CHAR; val: SIGNED32); 
 	PROCEDURE ^ DoSetRealAction(fig: Leonardo.Figure; act: Leonardo.Action); 
-	PROCEDURE ^ SetReal*(fig: Leonardo.Figure; pen: LeoPens.Pen; CONST name: ARRAY OF CHAR; val: REAL); 
+	PROCEDURE ^ SetReal*(fig: Leonardo.Figure; pen: LeoPens.Pen; CONST name: ARRAY OF CHAR; val: FLOAT32); 
 	PROCEDURE ^ DoSetBoolAction(fig: Leonardo.Figure; act: Leonardo.Action); 
 	PROCEDURE ^ SetBool*(fig: Leonardo.Figure; pen: LeoPens.Pen; CONST name: ARRAY OF CHAR; val: BOOLEAN); 
-	PROCEDURE ^ SetColor*(fig: Leonardo.Figure; pen: LeoPens.Pen; col: LONGINT); 
+	PROCEDURE ^ SetColor*(fig: Leonardo.Figure; pen: LeoPens.Pen; col: SIGNED32); 
 	PROCEDURE ^ InitPenLib; 
 	PROCEDURE ^ MakePenList(list: Objects.Object); 
 	PROCEDURE ^ StorePenLib*; 
@@ -92,8 +92,8 @@ VAR
 	PROCEDURE ^ ApplySelect(e: LeoPanels.Editor); 
 	PROCEDURE ^ Select*; 
 	PROCEDURE ^ TrackPreview(prev: Preview; VAR msg: Oberon.InputMsg); 
-	PROCEDURE ^ RenderPreview(ctxt: Gfx.Context; pen: LeoPens.Pen; w, h: REAL); 
-	PROCEDURE ^ RestorePreview(prev: Preview; px, py: INTEGER; mask: Display3.Mask); 
+	PROCEDURE ^ RenderPreview(ctxt: Gfx.Context; pen: LeoPens.Pen; w, h: FLOAT32); 
+	PROCEDURE ^ RestorePreview(prev: Preview; px, py: SIGNED16; mask: Display3.Mask); 
 	PROCEDURE ^ PrintPreview(prev: Preview; VAR msg: Display.DisplayMsg); 
 	PROCEDURE ^ CopyPreview*(VAR msg: Objects.CopyMsg; from, to: Preview); 
 	PROCEDURE ^ HandlePreview*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 

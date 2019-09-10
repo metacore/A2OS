@@ -56,9 +56,9 @@ CONST
 	cOK* = {}; 
 	cpurgable = 1; 
 TYPE 
-	Index* = LONGINT; 
+	Index* = SIGNED32; 
 
-	Real* = LONGREAL; 
+	Real* = FLOAT64; 
 
 	Text* = Texts.Text; 
 
@@ -105,9 +105,9 @@ TYPE
 	tActionDesc* = RECORD (Oberon.TaskDesc)
 		Do*: tActionProc; 
 		failed-: BOOLEAN; 
-		todoCount-: LONGINT; 
+		todoCount-: SIGNED32; 
 		preAction-: tAction; 
-		TickDelta: LONGINT; 
+		TickDelta: SIGNED32; 
 		termination: tAction; 
 		Input*, Output*: vyLinks.Link; 
 		ControlPar*: vyLinks.Link; 
@@ -122,10 +122,10 @@ TYPE
 	Object* = POINTER TO ObjDesc; 
 
 	ObjDesc* = RECORD (Gadgets.ObjDesc)
-		ObjectId-: LONGINT; 
+		ObjectId-: SIGNED32; 
 		Name-: tName; 
-		createdT-, createdD-: LONGINT; 
-		modifiedT-, modifiedD-: LONGINT; 
+		createdT-, createdD-: SIGNED32; 
+		modifiedT-, modifiedD-: SIGNED32; 
 		key: tKey; 
 		struct-: OPTStruct; 
 		disposition-: SET; 
@@ -169,8 +169,8 @@ TYPE
 
 	tBufDesc* = RECORD 
 		str*: OPTStruct; 
-		len*: LONGINT; 
-		usedentries*: LONGINT; 
+		len*: SIGNED32; 
+		usedentries*: SIGNED32; 
 		aux*: tBuf; 
 		cache*: tCache; 
 		next*: tBuf; 
@@ -180,12 +180,12 @@ TYPE
 
 	tLenArray* = POINTER TO tLenArrayDesc; 
 
-	tLenArrayDesc = ARRAY OF LONGINT; 
+	tLenArrayDesc = ARRAY OF SIGNED32; 
 
 	tLayout* = POINTER TO tLayoutDesc; 
 
 	tLayoutDesc* = RECORD 
-		dim*: INTEGER; 
+		dim*: SIGNED16; 
 		transposed*: BOOLEAN; 
 	END; 
 
@@ -199,7 +199,7 @@ TYPE
 
 	tVectorDesc* = RECORD (tDataDesc)
 		Layout*: tLayout; 
-		nrData*: LONGINT; 
+		nrData*: SIGNED32; 
 		buf*: tBuf; 
 	END; 
 
@@ -225,8 +225,8 @@ TYPE
 
 	ProcQElem = RECORD 
 		Proc: TickProc; 
-		TickDelta: LONGINT; 
-		NextTime: LONGINT; 
+		TickDelta: SIGNED32; 
+		NextTime: SIGNED32; 
 		next: ProcQPtr; 
 	END; 
 
@@ -239,7 +239,7 @@ TYPE
 	END; 
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
-		borderW*: INTEGER; 
+		borderW*: SIGNED16; 
 		hotupdate*: BOOLEAN; 
 		vyobj: FrameObject; 
 		vylinks*: vyLinks.Link; 
@@ -252,25 +252,25 @@ VAR
 	currentThread-: tThread; 
 	lastThread-: tThread; 
 	Trash-: tThread; 
-	objcount-: LONGINT; 
+	objcount-: SIGNED32; 
 	objecthandle*: Objects.Handler; 
 	framehandle*: Objects.Handler; 
 	w*: TextsWriter; 
 	werr*: TextsWriter; 
 	Log*: Text; 
-	slow*: INTEGER; 
+	slow*: SIGNED16; 
 	lastmsg-: Objects.ObjMsg; 
 	ProcToCall: ProcQPtr; 
 	countTask: Oberon.Task; 
-	ticks-: LONGINT; 
+	ticks-: SIGNED32; 
 	showParameter*: vyLinks.Link; 
-	parameterCount*: INTEGER; 
+	parameterCount*: SIGNED16; 
 	recurse: BOOLEAN; 
 	Register*: PROCEDURE (ob: Object); 
 	DeRegister*: PROCEDURE (ob: Object); 
 
 	PROCEDURE ^ AppendToLog*(VAR w: TextsWriter); 
-	PROCEDURE ^ NextIdCount(): LONGINT; 
+	PROCEDURE ^ NextIdCount(): SIGNED32; 
 	PROCEDURE ^ DoHandle*(o: vyLinks.Link; VAR m: Objects.ObjMsg); 
 	PROCEDURE ^ DumpItem*(item: vyLinks.Link); 
 	PROCEDURE ^ Write*(VAR w: TextsWriter; ob: Object); 
@@ -301,7 +301,7 @@ VAR
 	PROCEDURE ^ GetUsers*(o: Object): vyLinks.Link; 
 	PROCEDURE ^ GetSources*(o: Object): vyLinks.Link; 
 	PROCEDURE ^ Test*; 
-	PROCEDURE ^ DateTimeString(d, t: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ DateTimeString(d, t: SIGNED32; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ HandleObjectAttributes(obj: Object; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ HandleObjectLinks(obj: Object; VAR M: Objects.LinkMsg); 
 	PROCEDURE ^ HandleObjectFind(obj: Object; VAR M: Objects.FindMsg); 
@@ -325,34 +325,34 @@ VAR
 	PROCEDURE ^ VectorHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitVector(obj: Object); 
 	PROCEDURE ^ NewVec*; 
-	PROCEDURE ^ FindAllocLen*(v: tVector; VAR l, freetrail: LONGINT; VAR firstfree: tBuf); 
-	PROCEDURE ^ MarkUsed*(count: LONGINT; v: tVector); 
-	PROCEDURE ^ Loc*(i: LONGINT; v: tVector; VAR chunk: tBuf; VAR loc: LONGINT); 
-	PROCEDURE ^ Pos*(v: tVector; chunk: tBuf; loc: LONGINT): LONGINT; 
-	PROCEDURE ^ Len*(v: tData; dim: INTEGER): LONGINT; 
+	PROCEDURE ^ FindAllocLen*(v: tVector; VAR l, freetrail: SIGNED32; VAR firstfree: tBuf); 
+	PROCEDURE ^ MarkUsed*(count: SIGNED32; v: tVector); 
+	PROCEDURE ^ Loc*(i: SIGNED32; v: tVector; VAR chunk: tBuf; VAR loc: SIGNED32); 
+	PROCEDURE ^ Pos*(v: tVector; chunk: tBuf; loc: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Len*(v: tData; dim: SIGNED16): SIGNED32; 
 	PROCEDURE ^ CloneLayout*(model: tData): tLayout; 
 	PROCEDURE ^ VecIndex*(VAR lens, indices: ARRAY OF Index): Index; 
 	PROCEDURE ^ VecIndexT*(VAR lens, indices: ARRAY OF Index): Index; 
 	PROCEDURE ^ VecIndex2*(len0, len1, index0, index1: Index): Index; 
 	PROCEDURE ^ VecIndex2T*(len0, len1, index0, index1: Index): Index; 
-	PROCEDURE ^ GC*(count: LONGINT; v: tData; pos: LONGINT); 
+	PROCEDURE ^ GC*(count: SIGNED32; v: tData; pos: SIGNED32); 
 	PROCEDURE ^ FlushCaches*(data: tData); 
 	PROCEDURE ^ DoToAllChunks*(src: tData; action: PROCEDURE (VAR buf: tBuf)); 
-	PROCEDURE ^ Piece*(VAR count: LONGINT; src: tVector; srcpos: LONGINT; dest: tVector; destpos: LONGINT; VAR piececount: LONGINT; VAR srcchunk: tBuf; VAR srcloc: LONGINT; VAR destchunk: tBuf; VAR destloc: LONGINT); 
-	PROCEDURE ^ DoToAllPieces*(src, dest: tData; action: PROCEDURE (VAR piececount: LONGINT; VAR srcchunk: tBuf; VAR srcloc: LONGINT; VAR destchunk: tBuf; VAR destloc: LONGINT)); 
+	PROCEDURE ^ Piece*(VAR count: SIGNED32; src: tVector; srcpos: SIGNED32; dest: tVector; destpos: SIGNED32; VAR piececount: SIGNED32; VAR srcchunk: tBuf; VAR srcloc: SIGNED32; VAR destchunk: tBuf; VAR destloc: SIGNED32); 
+	PROCEDURE ^ DoToAllPieces*(src, dest: tData; action: PROCEDURE (VAR piececount: SIGNED32; VAR srcchunk: tBuf; VAR srcloc: SIGNED32; VAR destchunk: tBuf; VAR destloc: SIGNED32)); 
 	PROCEDURE ^ ApndChunks*(chunk: tBuf; o: tVector); 
 	PROCEDURE ^ SortBufferList*(VAR chunk: tBuf; ordered: tSBLProc); 
 	PROCEDURE ^ HandletOp1*(VAR arg: tData; t: tOp1); 
 	PROCEDURE ^ HandletOp2*(VAR arg1, arg2: tData; t: tOp1); 
 	PROCEDURE ^ HandletOp3*(VAR arg1, arg2, arg3: tData; t: tOp1); 
-	PROCEDURE ^ GenericCatBuf*(ch: tBuf; len: LONGINT; VAR size: LONGINT; VAR first, last: tBuf); 
+	PROCEDURE ^ GenericCatBuf*(ch: tBuf; len: SIGNED32; VAR size: SIGNED32; VAR first, last: tBuf); 
 	PROCEDURE ^ NextBuf*(c: tBuf): tBuf; 
-	PROCEDURE ^ GetUsedEntries*(c: tBuf): LONGINT; 
-	PROCEDURE ^ MatrixLayout*(rows, columns: LONGINT): tArray; 
-	PROCEDURE ^ SetArrayLayout*(sizes: ARRAY OF LONGINT; v: tVector; VAR total: LONGINT); 
+	PROCEDURE ^ GetUsedEntries*(c: tBuf): SIGNED32; 
+	PROCEDURE ^ MatrixLayout*(rows, columns: SIGNED32): tArray; 
+	PROCEDURE ^ SetArrayLayout*(sizes: ARRAY OF SIGNED32; v: tVector; VAR total: SIGNED32); 
 	PROCEDURE ^ Clear*(v: tData); 
-	PROCEDURE ^ HexToStr(pre: ARRAY OF CHAR; i: LONGINT; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ StringSize(s: ARRAY OF CHAR; VAR w, h: INTEGER); 
+	PROCEDURE ^ HexToStr(pre: ARRAY OF CHAR; i: SIGNED32; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ StringSize(s: ARRAY OF CHAR; VAR w, h: SIGNED16); 
 	PROCEDURE ^ ButtonHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitButton(F: Objects.Object); 
 	PROCEDURE ^ NewButton*; 
@@ -360,7 +360,7 @@ VAR
 	PROCEDURE ^ ActionReset*; 
 	PROCEDURE ^ Stop*; 
 	PROCEDURE ^ Step*; 
-	PROCEDURE ^ ActionRegister*(p: TickProc; delta: LONGINT); 
+	PROCEDURE ^ ActionRegister*(p: TickProc; delta: SIGNED32); 
 	PROCEDURE ^ ActionDeRegister*(p: TickProc); 
 	PROCEDURE ^ Tick(me: Oberon.Task); 
 	PROCEDURE ^ NewCountTask(VAR T: Oberon.Task); 
@@ -371,18 +371,18 @@ VAR
 	PROCEDURE ^ Suspend*(action: tAction); 
 	PROCEDURE ^ Resume*(action: tAction); 
 	PROCEDURE ^ DoRunAction(action: Oberon.Task); 
-	PROCEDURE ^ RunAction*(action: tAction; requcount: LONGINT; delay: LONGINT; termination: tAction); 
-	PROCEDURE ^ COPYB*(VAR src: ARRAY OF BOOLEAN; srcoffs, len: LONGINT; VAR dest: ARRAY OF BOOLEAN; destoffs: LONGINT); 
-	PROCEDURE ^ COPYCHAR*(VAR src: ARRAY OF CHAR; srcoffs, len: LONGINT; VAR dest: ARRAY OF CHAR; destoffs: LONGINT); 
-	PROCEDURE ^ COPYSHORT*(VAR src: ARRAY OF SHORTINT; srcoffs, len: LONGINT; VAR dest: ARRAY OF SHORTINT; destoffs: LONGINT); 
-	PROCEDURE ^ COPYI*(VAR src: ARRAY OF INTEGER; srcoffs, len: LONGINT; VAR dest: ARRAY OF INTEGER; destoffs: LONGINT); 
-	PROCEDURE ^ COPYL*(VAR src: ARRAY OF LONGINT; srcoffs, len: LONGINT; VAR dest: ARRAY OF LONGINT; destoffs: LONGINT); 
-	PROCEDURE ^ COPYR*(VAR src: ARRAY OF REAL; srcoffs, len: LONGINT; VAR dest: ARRAY OF REAL; destoffs: LONGINT); 
-	PROCEDURE ^ COPYX*(VAR src: ARRAY OF LONGREAL; srcoffs, len: LONGINT; VAR dest: ARRAY OF LONGREAL; destoffs: LONGINT); 
-	PROCEDURE ^ COPYSET*(VAR src: ARRAY OF SET; srcoffs, len: LONGINT; VAR dest: ARRAY OF SET; destoffs: LONGINT); 
-	PROCEDURE ^ CallWString*(caller, name, pars: ARRAY OF CHAR; new: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ RunAction*(action: tAction; requcount: SIGNED32; delay: SIGNED32; termination: tAction); 
+	PROCEDURE ^ COPYB*(VAR src: ARRAY OF BOOLEAN; srcoffs, len: SIGNED32; VAR dest: ARRAY OF BOOLEAN; destoffs: SIGNED32); 
+	PROCEDURE ^ COPYCHAR*(VAR src: ARRAY OF CHAR; srcoffs, len: SIGNED32; VAR dest: ARRAY OF CHAR; destoffs: SIGNED32); 
+	PROCEDURE ^ COPYSHORT*(VAR src: ARRAY OF SIGNED8; srcoffs, len: SIGNED32; VAR dest: ARRAY OF SIGNED8; destoffs: SIGNED32); 
+	PROCEDURE ^ COPYI*(VAR src: ARRAY OF SIGNED16; srcoffs, len: SIGNED32; VAR dest: ARRAY OF SIGNED16; destoffs: SIGNED32); 
+	PROCEDURE ^ COPYL*(VAR src: ARRAY OF SIGNED32; srcoffs, len: SIGNED32; VAR dest: ARRAY OF SIGNED32; destoffs: SIGNED32); 
+	PROCEDURE ^ COPYR*(VAR src: ARRAY OF FLOAT32; srcoffs, len: SIGNED32; VAR dest: ARRAY OF FLOAT32; destoffs: SIGNED32); 
+	PROCEDURE ^ COPYX*(VAR src: ARRAY OF FLOAT64; srcoffs, len: SIGNED32; VAR dest: ARRAY OF FLOAT64; destoffs: SIGNED32); 
+	PROCEDURE ^ COPYSET*(VAR src: ARRAY OF SET; srcoffs, len: SIGNED32; VAR dest: ARRAY OF SET; destoffs: SIGNED32); 
+	PROCEDURE ^ CallWString*(caller, name, pars: ARRAY OF CHAR; new: BOOLEAN; VAR res: SIGNED16); 
 	PROCEDURE ^ GetVFromObj*(obj: Objects.Object): tVector; 
-	PROCEDURE ^ Show*(list: vyLinks.Link; obCount: INTEGER; as: ARRAY OF CHAR); 
+	PROCEDURE ^ Show*(list: vyLinks.Link; obCount: SIGNED16; as: ARRAY OF CHAR); 
 	PROCEDURE ^ NextParObj*(): Objects.Object; 
 BEGIN
 END vyBase.

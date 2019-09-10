@@ -8,7 +8,7 @@ TYPE
 
 	tObjectDesc* = RECORD (vyBase.ObjDesc)
 		x, y: vyBase.tVector; 
-		x0, y0, w, h: LONGREAL; 
+		x0, y0, w, h: FLOAT64; 
 	END; 
 
 	tView* = POINTER TO tViewDesc; 
@@ -23,12 +23,12 @@ TYPE
 VAR 
 	tempLayer: tView; 
 
-	PROCEDURE ^ GetPosition*(o: tObject; x, y, epsx, epsy: LONGREAL): LONGINT; 
-	PROCEDURE ^ SetXY*(o: tObject; x, y: LONGREAL; pos: LONGINT): BOOLEAN; 
-	PROCEDURE ^ GetValue*(o: tObject; x: LONGREAL): LONGREAL; 
-	PROCEDURE ^ AddPoint*(o: tObject; x: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ GetPosition*(o: tObject; x, y, epsx, epsy: FLOAT64): SIGNED32; 
+	PROCEDURE ^ SetXY*(o: tObject; x, y: FLOAT64; pos: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ GetValue*(o: tObject; x: FLOAT64): FLOAT64; 
+	PROCEDURE ^ AddPoint*(o: tObject; x: FLOAT64): BOOLEAN; 
 	PROCEDURE ^ AddGenericPoint*(o: tObject); 
-	PROCEDURE ^ InitObject*(o: tObject; x, y, w, h: LONGREAL); 
+	PROCEDURE ^ InitObject*(o: tObject; x, y, w, h: FLOAT64); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ Add*; 
 	PROCEDURE ^ Nothing; 
@@ -40,7 +40,7 @@ VAR
 	PROCEDURE ^ CopyV(VAR M: Objects.CopyMsg; obj, copy: tView); 
 	PROCEDURE ^ StoreV0(obj: tView; VAR M: Objects.FileMsg); 
 	PROCEDURE ^ LoadV0(obj: tView; VAR M: Objects.FileMsg); 
-	PROCEDURE ^ Min(a, b: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Min(a, b: FLOAT64): FLOAT64; 
 	PROCEDURE ^ ViewHandler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ HandleAttributes(o: tObject; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ FrameLinks(F: tObject; VAR M: Objects.LinkMsg); 
@@ -48,7 +48,7 @@ VAR
 	PROCEDURE ^ ObjectCopy(from: tObject): tObject; 
 	PROCEDURE ^ HandleFileMsg(obj: tObject; VAR msg: Objects.FileMsg); 
 	PROCEDURE ^ ObjectHandler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ DoShow*(o: tObject; x, y, w, h: LONGREAL); 
+	PROCEDURE ^ DoShow*(o: tObject; x, y, w, h: FLOAT64); 
 	PROCEDURE ^ Test*; 
 BEGIN
 END antsHistogramEdit.

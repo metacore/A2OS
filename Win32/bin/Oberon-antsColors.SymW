@@ -15,8 +15,8 @@ VAR
 	PROCEDURE ^ PNew*; 
 	PROCEDURE ^ Copy(source, dest: tLayer); 
 	PROCEDURE ^ Recall(layer: tLayer); 
-	PROCEDURE ^ LGetCol*(l: tLayer; x, y: INTEGER; VAR index: INTEGER): BOOLEAN; 
-	PROCEDURE ^ rgbp(p: Palette; first, last: INTEGER); 
+	PROCEDURE ^ LGetCol*(l: tLayer; x, y: SIGNED16; VAR index: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ rgbp(p: Palette; first, last: SIGNED16); 
 	PROCEDURE ^ Prompt(layer: tLayer; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ Select(layer: tLayer; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 

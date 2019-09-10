@@ -6,8 +6,8 @@ TYPE
 	Area = POINTER TO AreaDesc; 
 
 	AreaDesc = RECORD 
-		key: LONGINT; 
-		x, y: INTEGER; 
+		key: SIGNED32; 
+		x, y: SIGNED16; 
 		next: Area; 
 	END; 
 
@@ -22,7 +22,7 @@ TYPE
 	RectArea = POINTER TO RectAreaDesc; 
 
 	RectAreaDesc = RECORD (AreaDesc)
-		x2, y2: INTEGER; 
+		x2, y2: SIGNED16; 
 	END; 
 
 	Icon = POINTER TO IconDesc; 
@@ -54,7 +54,7 @@ VAR
 	PROCEDURE ^ NewAREA*; 
 	PROCEDURE ^ NewIMG*; 
 	PROCEDURE ^ FindMap(name: ARRAY OF CHAR): Map; 
-	PROCEDURE ^ EditArea(map: Map; F: Rembrandt.Frame; Q: Display3.Mask; VAR M: Oberon.InputMsg; x, y: INTEGER): BOOLEAN; 
+	PROCEDURE ^ EditArea(map: Map; F: Rembrandt.Frame; Q: Display3.Mask; VAR M: Oberon.InputMsg; x, y: SIGNED16): BOOLEAN; 
 	PROCEDURE ^ ImgHandle(F: Objects.Object; VAR M: Objects.ObjMsg); 
 BEGIN
 END HTMLImages.

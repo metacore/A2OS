@@ -12,28 +12,28 @@ TYPE
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
 		state0*: SET; 
-		backC*, knoblen: INTEGER; 
-		min*, max*, step*, val*, size*: LONGREAL; 
+		backC*, knoblen: SIGNED16; 
+		min*, max*, step*, val*, size*: FLOAT64; 
 		stepO*, minO*, maxO*: Objects.Object; 
 		vertical*: BOOLEAN; 
 	END; 
 VAR 
-	HoldTime, WaitTime, mayscroll: LONGINT; 
+	HoldTime, WaitTime, mayscroll: SIGNED32; 
 
 	PROCEDURE ^ TimeOk(): BOOLEAN; 
-	PROCEDURE ^ Value(F: Frame; x, y, w, h, X, Y: INTEGER; min, max: LONGREAL): LONGREAL; 
-	PROCEDURE ^ Pos(F: Frame; x, y, w, h, bw: INTEGER; min, max, val: LONGREAL): INTEGER; 
-	PROCEDURE ^ SendUpdate(F: Frame; px, py: INTEGER; dlink: Objects.Object; full: BOOLEAN); 
-	PROCEDURE ^ SetValue(F: Frame; val: LONGREAL); 
-	PROCEDURE ^ SetValueAndUpdate(F: Frame; val: LONGREAL; px, py: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ Value(F: Frame; x, y, w, h, X, Y: SIGNED16; min, max: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Pos(F: Frame; x, y, w, h, bw: SIGNED16; min, max, val: FLOAT64): SIGNED16; 
+	PROCEDURE ^ SendUpdate(F: Frame; px, py: SIGNED16; dlink: Objects.Object; full: BOOLEAN); 
+	PROCEDURE ^ SetValue(F: Frame; val: FLOAT64); 
+	PROCEDURE ^ SetValueAndUpdate(F: Frame; val: FLOAT64; px, py: SIGNED16; dlink: Objects.Object); 
 	PROCEDURE ^ GetValue(F: Frame); 
 	PROCEDURE ^ AdjustKnoblen(F: Frame); 
-	PROCEDURE ^ DrawKnob(Q: Display3.Mask; x, y, w, h: INTEGER; vertical: BOOLEAN); 
-	PROCEDURE ^ RestoreFrame(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
-	PROCEDURE ^ P(x: LONGINT): INTEGER; 
-	PROCEDURE ^ PrintKnob(Q: Display3.Mask; x, y, w, h: INTEGER; vertical: BOOLEAN); 
+	PROCEDURE ^ DrawKnob(Q: Display3.Mask; x, y, w, h: SIGNED16; vertical: BOOLEAN); 
+	PROCEDURE ^ RestoreFrame(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ P(x: SIGNED32): SIGNED16; 
+	PROCEDURE ^ PrintKnob(Q: Display3.Mask; x, y, w, h: SIGNED16; vertical: BOOLEAN); 
 	PROCEDURE ^ PrintFrame(F: Frame; VAR M: Display.DisplayMsg); 
-	PROCEDURE ^ TrackFrame(F: Frame; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackFrame(F: Frame; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ UpdateFrame(F: Frame; VAR M: Gadgets.UpdateMsg); 
 	PROCEDURE ^ ModifyFrame(F: Frame; VAR M: Display.ModifyMsg); 
 	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 

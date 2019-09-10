@@ -13,14 +13,14 @@ TYPE
 		img: WMGraphics.Image; 
 		picname: ARRAY 256 OF CHAR; 
 		changeable, stop: BOOLEAN; 
-		interval: LONGINT; 
+		interval: SIGNED32; 
 		timer: Kernel.Timer; 
-		currentImg: LONGINT; 
+		currentImg: SIGNED32; 
 		fullscreen: BOOLEAN; 
-		fullscreenX, fullscreenY, fullscreenW, fullscreenH: LONGINT; 
+		fullscreenX, fullscreenY, fullscreenW, fullscreenH: SIGNED32; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: SIGNED32); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ SetChangeable(c: BOOLEAN); 
 		PROCEDURE ^ HandleChangeable(sender, data: ANY); 
@@ -37,7 +37,7 @@ VAR
 
 	PROCEDURE ^ GetImage(CONST name: ARRAY OF CHAR; w, h: SIZE): WMGraphics.Image; 
 	PROCEDURE ^ GetResizedImage(image: WMGraphics.Image; width, height: SIZE): WMGraphics.Image; 
-	PROCEDURE ^ FindIndex(CONST imageName: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ FindIndex(CONST imageName: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ DefaultPos(VAR x, y, w, h: SIZE); 
 	PROCEDURE ^ Rearrange; 
 	PROCEDURE ^ AddBackdropImage*(context: Commands.Context); 

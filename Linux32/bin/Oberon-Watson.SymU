@@ -102,8 +102,8 @@ TYPE
 
 	CmntDesc = RECORD 
 		next: Cmnt; 
-		wPos, bPos, ePos, insert: LONGINT; 
-		cnt: INTEGER; 
+		wPos, bPos, ePos, insert: SIGNED32; 
+		cnt: SIGNED16; 
 		ln: BOOLEAN; 
 	END; 
 
@@ -118,15 +118,15 @@ TYPE
 	IdentDesc = RECORD 
 		next: LocalIdent; 
 		name: Name; 
-		beg, end: LONGINT; 
-		class: INTEGER; 
+		beg, end: SIGNED32; 
+		class: SIGNED16; 
 	END; 
 
 	Fixup = POINTER TO FixupDesc; 
 
 	FixupDesc = RECORD 
 		next: Fixup; 
-		insert: LONGINT; 
+		insert: SIGNED32; 
 		name: Name; 
 		qualified: BOOLEAN; 
 	END; 
@@ -135,13 +135,13 @@ TYPE
 
 	HistoryDesc = RECORD 
 		next, succ: History; 
-		nr: LONGINT; 
+		nr: SIGNED32; 
 		cmd: ARRAY 64 OF CHAR; 
 	END; 
 VAR 
 	W: Texts.Writer; 
 	history: History; 
-	lastHistNr: LONGINT; 
+	lastHistNr: SIGNED32; 
 	oObj: Objects.Object; 
 	linkText: Texts.Text; 
 	aObj: Objects.Object; 
@@ -150,7 +150,7 @@ VAR
 	defName: ARRAY 32 OF CHAR; 
 	defFound: BOOLEAN; 
 	msgPrinted: BOOLEAN; 
-	mods: INTEGER; 
+	mods: SIGNED16; 
 	mod: ARRAY MaxMods OF ModItem; 
 	options: ARRAY 12 OF CHAR; 
 	localIds: IdentDesc; 
@@ -159,62 +159,62 @@ VAR
 	ModT: Texts.Text; 
 	R: Texts.Reader; 
 	id, label: Name; 
-	num: LONGINT; 
-	begPos, wPos: LONGINT; 
-	numLines, lines: INTEGER; 
-	level, recLevel: INTEGER; 
+	num: SIGNED32; 
+	begPos, wPos: SIGNED32; 
+	numLines, lines: SIGNED16; 
+	level, recLevel: SIGNED16; 
 	wasRecord: BOOLEAN; 
 	newLine: BOOLEAN; 
 	ch: CHAR; 
-	sym: SHORTINT; 
+	sym: SIGNED8; 
 	OutT: Texts.Text; 
 	italic: Fonts.Font; 
-	lastPos, importPos: LONGINT; 
+	lastPos, importPos: SIGNED32; 
 	noerr: BOOLEAN; 
-	curErr: SHORTINT; 
+	curErr: SIGNED8; 
 	doItalic: BOOLEAN; 
 
 	PROCEDURE ^ Append(VAR d: ARRAY OF CHAR; s: ARRAY OF CHAR); 
 	PROCEDURE ^ AppendCh(VAR d: ARRAY OF CHAR; ch: CHAR); 
 	PROCEDURE ^ QualIdent(VAR qualifier, identifier: ARRAY OF CHAR); 
-	PROCEDURE ^ SetColor(col: SHORTINT); 
+	PROCEDURE ^ SetColor(col: SIGNED8); 
 	PROCEDURE ^ Char(ch: CHAR); 
 	PROCEDURE ^ Str(str: ARRAY OF CHAR); 
-	PROCEDURE ^ Int(i: LONGINT); 
-	PROCEDURE ^ Indent(i: INTEGER); 
+	PROCEDURE ^ Int(i: SIGNED32); 
+	PROCEDURE ^ Indent(i: SIGNED16); 
 	PROCEDURE ^ Ln; 
 	PROCEDURE ^ Object(obj: Objects.Object); 
 	PROCEDURE ^ ToLog; 
 	PROCEDURE ^ PrintMsg; 
-	PROCEDURE ^ AddDocToHistory(oldNr: LONGINT): History; 
-	PROCEDURE ^ GetDocSucc(nr: LONGINT): History; 
+	PROCEDURE ^ AddDocToHistory(oldNr: SIGNED32): History; 
+	PROCEDURE ^ GetDocSucc(nr: SIGNED32): History; 
 	PROCEDURE ^ MakeHistoryCmd(h: History; cmd, mod, obj: ARRAY OF CHAR); 
 	PROCEDURE ^ DocHandler(D: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ OpenDef(T: Texts.Text; mod: ARRAY OF CHAR; compressed: BOOLEAN); 
 	PROCEDURE ^ OpenTut(this: ARRAY OF CHAR); 
 	PROCEDURE ^ FindIdent(VAR name: Name): LocalIdent; 
-	PROCEDURE ^ InsertIdent(VAR name: Name; class: INTEGER; VAR obj: LocalIdent); 
+	PROCEDURE ^ InsertIdent(VAR name: Name; class: SIGNED16; VAR obj: LocalIdent); 
 	PROCEDURE ^ NeedsLn(): BOOLEAN; 
-	PROCEDURE ^ Copy(beg, end: LONGINT); 
-	PROCEDURE ^ Pos(): LONGINT; 
-	PROCEDURE ^ err(n: SHORTINT); 
+	PROCEDURE ^ Copy(beg, end: SIGNED32); 
+	PROCEDURE ^ Pos(): SIGNED32; 
+	PROCEDURE ^ err(n: SIGNED8); 
 	PROCEDURE ^ Control(name, cmd, par: ARRAY OF CHAR); 
 	PROCEDURE ^ Identifier(name: ARRAY OF CHAR); 
 	PROCEDURE ^ Keywords(VAR last: Cmnt; word: ARRAY OF CHAR; ln, indent: BOOLEAN); 
-	PROCEDURE ^ Cmnts(offset: LONGINT); 
+	PROCEDURE ^ Cmnts(offset: SIGNED32); 
 	PROCEDURE ^ Imports; 
 	PROCEDURE ^ Link(VAR name: Name; qualified: BOOLEAN); 
-	PROCEDURE ^ Fixups(offset: LONGINT); 
+	PROCEDURE ^ Fixups(offset: SIGNED32); 
 	PROCEDURE ^ GetCh; 
 	PROCEDURE ^ Ident; 
 	PROCEDURE ^ String(ch0: CHAR); 
 	PROCEDURE ^ Number(ch0: CHAR); 
-	PROCEDURE ^ Comment(VAR oLine: INTEGER); 
+	PROCEDURE ^ Comment(VAR oLine: SIGNED16); 
 	PROCEDURE ^ Sym; 
 	PROCEDURE ^ FindMod(VAR name: Name): BOOLEAN; 
-	PROCEDURE ^ CheckSym(s: INTEGER); 
-	PROCEDURE ^ CheckMark(VAR vis: SHORTINT); 
-	PROCEDURE ^ qualident(VAR end: LONGINT); 
+	PROCEDURE ^ CheckSym(s: SIGNED16); 
+	PROCEDURE ^ CheckMark(VAR vis: SIGNED8); 
+	PROCEDURE ^ qualident(VAR end: SIGNED32); 
 	PROCEDURE ^ ConstExpression; 
 	PROCEDURE ^ ConstDef; 
 	PROCEDURE ^ SysFlags(VAR flag: Name); 
@@ -237,10 +237,10 @@ VAR
 	PROCEDURE ^ Convert2HTML(in, out: Texts.Text); 
 	PROCEDURE ^ GetArgs(VAR S: Texts.Scanner; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ CheckDefName(h: Compress.Header; VAR stop: BOOLEAN); 
-	PROCEDURE ^ Which(VAR mod: ARRAY OF CHAR; VAR typ: INTEGER); 
-	PROCEDURE ^ JumpTo(F: TextGadgets.Frame; pos: LONGINT); 
-	PROCEDURE ^ FindMarker(T: Texts.Text; name: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ Open(mod: ARRAY OF CHAR; T: Texts.Text; pos: LONGINT): History; 
+	PROCEDURE ^ Which(VAR mod: ARRAY OF CHAR; VAR typ: SIGNED16); 
+	PROCEDURE ^ JumpTo(F: TextGadgets.Frame; pos: SIGNED32); 
+	PROCEDURE ^ FindMarker(T: Texts.Text; name: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ Open(mod: ARRAY OF CHAR; T: Texts.Text; pos: SIGNED32): History; 
 	PROCEDURE ^ StoreAscii(T: Texts.Text; name: ARRAY OF CHAR); 
 	PROCEDURE ^ Back*; 
 	PROCEDURE ^ Goto*; 

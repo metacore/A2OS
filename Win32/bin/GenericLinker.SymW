@@ -29,7 +29,7 @@ TYPE
 		table: HashSegmentedNameArray; 
 		size: SIZE; 
 		used-: SIZE; 
-		maxLoadFactor: REAL; 
+		maxLoadFactor: FLOAT32; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
 		PROCEDURE ^ Put*(CONST key: ObjectFile.SegmentedName; value: Block); 
@@ -53,7 +53,7 @@ TYPE
 		address*: Address; 
 		aliasOf*: Block; 
 		referenced, used: BOOLEAN; 
-		priority: WORD; 
+		priority: INTEGER; 
 	END; 
 
 	Linker* = OBJECT 
@@ -98,7 +98,7 @@ TYPE
 VAR 
 	unused: Block; 
 
-	PROCEDURE ^ GetPriority(block: Block): WORD; 
+	PROCEDURE ^ GetPriority(block: Block): INTEGER; 
 	PROCEDURE ^ ReadHeader(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList); 
 	PROCEDURE ^ OffersRequires*(reader: Streams.Reader; VAR offers, requires: ObjectFile.NameList); 
 	PROCEDURE ^ Load*(reader: Streams.Reader; linker: Linker); 

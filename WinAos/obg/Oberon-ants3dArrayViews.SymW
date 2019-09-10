@@ -11,23 +11,23 @@ TYPE
 	tLayerDesc* = RECORD (antsViews.tLayerDesc)
 		E-: ants3dArrayObjects.tObject; 
 		img: Pictures.Picture; 
-		type: INTEGER; 
+		type: SIGNED16; 
 		on: BOOLEAN; 
 	END; 
 
 	Pattern = RECORD 
-		w, h, d: INTEGER; 
-		vals: POINTER TO ARRAY OF ARRAY OF INTEGER; 
+		w, h, d: SIGNED16; 
+		vals: POINTER TO ARRAY OF ARRAY OF SIGNED16; 
 	END; 
 VAR 
 	newlayer-: tLayer; 
-	maxw, maxh: INTEGER; 
+	maxw, maxh: SIGNED16; 
 	texture: BOOLEAN; 
 
 	PROCEDURE ^ Copy(source, dest: tLayer); 
-	PROCEDURE ^ MakePattern(layer: tLayer; w, h: INTEGER): Pattern; 
-	PROCEDURE ^ Max(a, b: INTEGER): INTEGER; 
-	PROCEDURE ^ Line(p: Pictures.Picture; fx, fy, tx, ty: INTEGER; col: INTEGER); 
+	PROCEDURE ^ MakePattern(layer: tLayer; w, h: SIGNED16): Pattern; 
+	PROCEDURE ^ Max(a, b: SIGNED16): SIGNED16; 
+	PROCEDURE ^ Line(p: Pictures.Picture; fx, fy, tx, ty: SIGNED16; col: SIGNED16); 
 	PROCEDURE ^ Recall(layer: tLayer); 
 	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ HandleFileMsg(obj: tLayer; VAR msg: Objects.FileMsg); 
@@ -36,9 +36,9 @@ VAR
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ OnOff; 
 	PROCEDURE ^ Init(layer: tLayer); 
-	PROCEDURE ^ Open*(layer: tLayer; E: ants3dArrayObjects.tObject; type: INTEGER); 
+	PROCEDURE ^ Open*(layer: tLayer; E: ants3dArrayObjects.tObject; type: SIGNED16); 
 	PROCEDURE ^ New*; 
-	PROCEDURE ^ DoShow*(E: ants3dArrayObjects.tObject; type: INTEGER; add: BOOLEAN; VAR c: vyDisplay2d.tCoordinate2d): tLayer; 
+	PROCEDURE ^ DoShow*(E: ants3dArrayObjects.tObject; type: SIGNED16; add: BOOLEAN; VAR c: vyDisplay2d.tCoordinate2d): tLayer; 
 	PROCEDURE ^ Show*; 
 	PROCEDURE ^ ShowP*; 
 BEGIN

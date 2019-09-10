@@ -7,8 +7,8 @@ CONST
 	KindUse = 3; 
 TYPE 
 	Range = RECORD 
-		a, b: LONGINT; 
-		kind: LONGINT; 
+		a, b: SIGNED32; 
+		kind: SIGNED32; 
 		no: TS.NamedObject; 
 	END; 
 
@@ -16,7 +16,7 @@ TYPE
 
 	LocalExternalUsesSet = OBJECT 
 	VAR 
-		nof: LONGINT; 
+		nof: SIGNED32; 
 		items: NamedObjectArray; 
 
 		PROCEDURE ^  & Init; 
@@ -29,7 +29,7 @@ TYPE
 	GlobalUse = OBJECT 
 	VAR 
 		items: StringList; 
-		nofItems: LONGINT; 
+		nofItems: SIGNED32; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ AddFile(CONST filename: ARRAY OF CHAR); 
@@ -43,7 +43,7 @@ VAR
 	currentAuthor: ARRAY 128 OF CHAR; 
 	currentPurpose: ARRAY 4096 OF CHAR; 
 
-	PROCEDURE ^ MakeRange(from, to, kind: LONGINT; no: TS.NamedObject); 
+	PROCEDURE ^ MakeRange(from, to, kind: SIGNED32; no: TS.NamedObject); 
 	PROCEDURE ^ DumpConst(scope: TS.Scope; c: TS.Const); 
 	PROCEDURE ^ DumpObject(o: TS.Class); 
 	PROCEDURE ^ DumpArray(a: TS.Array; scope: TS.Scope); 
@@ -66,7 +66,7 @@ VAR
 	PROCEDURE ^ DumpM*(m: TS.Module); 
 	PROCEDURE ^ DumpLocalUses; 
 	PROCEDURE ^ GenerateModule(module: TS.Module; r: Streams.Reader; out: Streams.Writer); 
-	PROCEDURE ^ InitWithText(t: Texts.Text; pos: LONGINT): Strings.String; 
+	PROCEDURE ^ InitWithText(t: Texts.Text; pos: SIGNED32): Strings.String; 
 	PROCEDURE ^ ProcessFile(CONST filename, targetPath: ARRAY OF CHAR; indexFile: Streams.Writer); 
 	PROCEDURE ^ Generate*(par: Commands.Context); 
 	PROCEDURE ^ MakeXRef*(par: Commands.Context); 

@@ -36,7 +36,7 @@ TYPE
 	Fixup* = OBJECT 
 	VAR 
 		nextFixup-: Fixup; 
-		mode-: WORD; 
+		mode-: INTEGER; 
 		displacement-: Unit; 
 		scale-: ObjectFile.Bits; 
 		patterns-: SIZE; 
@@ -46,7 +46,7 @@ TYPE
 		symbolOffset-: SIZE; 
 		resolved*: Sections.Section; 
 
-		PROCEDURE ^  & InitFixup*(mode: WORD; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns); 
+		PROCEDURE ^  & InitFixup*(mode: INTEGER; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns); 
 		PROCEDURE ^ SetFixupOffset*(offset: Unit); 
 		PROCEDURE ^ SetSymbol*(symbol: Sections.SectionName; fp: ObjectFile.Fingerprint; symbolOffset: SIZE; displacement: Unit); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
@@ -80,7 +80,7 @@ TYPE
 		pc-: Unit; 
 
 		PROCEDURE ^ GetPC(): Unit; 
-		PROCEDURE ^  & InitBinarySection*(type: WORD; unit: Bits; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN); 
+		PROCEDURE ^  & InitBinarySection*(type: INTEGER; unit: Bits; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ AddLabel*(position: Basic.Position); 
 		PROCEDURE ^ SetPC*(pc: Unit); 
@@ -89,36 +89,36 @@ TYPE
 		PROCEDURE ^ SetAlignment*(fixed: BOOLEAN; alignat: Unit); 
 		PROCEDURE ^ CheckSize(size: SIZE); 
 		PROCEDURE ^ CopyBits*(src: BitSets.BitSet; srcPos, len: Bits); 
-		PROCEDURE ^ PutBits*(d: HUGEINT; size: Bits); 
-		PROCEDURE ^ PutBitsAt*(at: Unit; d: HUGEINT; size: Bits); 
-		PROCEDURE ^ PutByte*(b: WORD); 
-		PROCEDURE ^ PutWord*(w: WORD); 
-		PROCEDURE ^ PutDWord*(d: WORD); 
-		PROCEDURE ^ PutQWord*(q: HUGEINT); 
-		PROCEDURE ^ PutReal*(f: REAL); 
-		PROCEDURE ^ PutLongreal*(f: LONGREAL); 
-		PROCEDURE ^ PutByteAt*(at: Unit; d: WORD); 
-		PROCEDURE ^ PutWordAt*(at: Unit; d: WORD); 
-		PROCEDURE ^ PutDWordAt*(at: Unit; d: WORD); 
-		PROCEDURE ^ PutQWordAt*(at: Unit; d: HUGEINT); 
-		PROCEDURE ^ PutBytes*(data: HUGEINT; bytes: WORD); 
+		PROCEDURE ^ PutBits*(d: SIGNED64; size: Bits); 
+		PROCEDURE ^ PutBitsAt*(at: Unit; d: SIGNED64; size: Bits); 
+		PROCEDURE ^ PutByte*(b: INTEGER); 
+		PROCEDURE ^ PutWord*(w: INTEGER); 
+		PROCEDURE ^ PutDWord*(d: INTEGER); 
+		PROCEDURE ^ PutQWord*(q: SIGNED64); 
+		PROCEDURE ^ PutReal*(f: FLOAT32); 
+		PROCEDURE ^ PutLongreal*(f: FLOAT64); 
+		PROCEDURE ^ PutByteAt*(at: Unit; d: INTEGER); 
+		PROCEDURE ^ PutWordAt*(at: Unit; d: INTEGER); 
+		PROCEDURE ^ PutDWordAt*(at: Unit; d: INTEGER); 
+		PROCEDURE ^ PutQWordAt*(at: Unit; d: SIGNED64); 
+		PROCEDURE ^ PutBytes*(data: SIGNED64; bytes: INTEGER); 
 		PROCEDURE ^ GetByte*(pc: Unit): CHAR; 
-		PROCEDURE ^ GetWord*(pc: Unit): WORD; 
-		PROCEDURE ^ GetDWord*(pc: Unit): WORD; 
-		PROCEDURE ^ GetQWord*(pc: Unit): HUGEINT; 
-		PROCEDURE ^ GetReal*(pc: Unit): REAL; 
-		PROCEDURE ^ GetLongreal*(pc: Unit): LONGREAL; 
-		PROCEDURE ^ GetBits*(pc: Unit; size: Bits): WORD; 
+		PROCEDURE ^ GetWord*(pc: Unit): INTEGER; 
+		PROCEDURE ^ GetDWord*(pc: Unit): INTEGER; 
+		PROCEDURE ^ GetQWord*(pc: Unit): SIGNED64; 
+		PROCEDURE ^ GetReal*(pc: Unit): FLOAT32; 
+		PROCEDURE ^ GetLongreal*(pc: Unit): FLOAT64; 
+		PROCEDURE ^ GetBits*(pc: Unit; size: Bits): INTEGER; 
 		PROCEDURE ^ ApplyFixup*(fixup: Fixup): BOOLEAN; 
 		PROCEDURE ^ DumpCode*(w: Streams.Writer; from, to: Unit); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 	END Section; 
 
-	PROCEDURE ^ ConvertReal*(value: REAL): LONGINT; 
-	PROCEDURE ^ ConvertLongreal*(value: LONGREAL): HUGEINT; 
-	PROCEDURE ^ ConvertToReal*(x: LONGINT): REAL; 
-	PROCEDURE ^ ConvertToLongreal*(x: HUGEINT): LONGREAL; 
-	PROCEDURE ^ NewFixup*(mode: WORD; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns): Fixup; 
-	PROCEDURE ^ NewBinarySection*(type: WORD; unit: Bits; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN): Section; 
+	PROCEDURE ^ ConvertReal*(value: FLOAT32): SIGNED32; 
+	PROCEDURE ^ ConvertLongreal*(value: FLOAT64): SIGNED64; 
+	PROCEDURE ^ ConvertToReal*(x: SIGNED32): FLOAT32; 
+	PROCEDURE ^ ConvertToLongreal*(x: SIGNED64): FLOAT64; 
+	PROCEDURE ^ NewFixup*(mode: INTEGER; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns): Fixup; 
+	PROCEDURE ^ NewBinarySection*(type: INTEGER; unit: Bits; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN): Section; 
 BEGIN
 END FoxBinaryCode.

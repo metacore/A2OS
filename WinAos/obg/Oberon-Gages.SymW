@@ -6,16 +6,16 @@ TYPE
 	Frame* = POINTER TO FrameDesc; 
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
-		points*: ARRAY Max OF LONGINT; 
-		min, max: LONGINT; 
-		maxPoints: INTEGER; 
-		beg, end: INTEGER; 
+		points*: ARRAY Max OF SIGNED32; 
+		min, max: SIGNED32; 
+		maxPoints: SIGNED16; 
+		beg, end: SIGNED16; 
 	END; 
 VAR 
 	Mem, Load, Lap: BasicGadgets.Integer; 
 	task: Oberon.Task; 
-	time, lastmem: LONGINT; 
-	maxLoad, loadtime, load, laptime: LONGINT; 
+	time, lastmem: SIGNED32; 
+	maxLoad, loadtime, load, laptime: SIGNED32; 
 
 	PROCEDURE ^ NewMem*; 
 	PROCEDURE ^ NewLoad*; 
@@ -25,8 +25,8 @@ VAR
 	PROCEDURE ^ HandleLap(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ TaskHandle(me: Oberon.Task); 
 	PROCEDURE ^ Deinstall; 
-	PROCEDURE ^ AddPoint(F: Frame; x: LONGINT); 
-	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ AddPoint(F: Frame; x: SIGNED32); 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ PrintFrame(F: Frame; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ FrameHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 

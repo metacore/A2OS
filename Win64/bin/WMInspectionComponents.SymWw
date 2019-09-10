@@ -16,26 +16,26 @@ CONST
 	State_Terminated = 100; 
 	NofTabs = 5; 
 TYPE 
-	SetStringProcedure = PROCEDURE {DELEGATE}(CONST string: ARRAY OF CHAR; position: LONGINT; VAR res: WORD); 
+	SetStringProcedure = PROCEDURE {DELEGATE}(CONST string: ARRAY OF CHAR; position: SIGNED32; VAR res: INTEGER); 
 
 	DropTarget = OBJECT (WMDropTarget.DropTarget)
 	VAR 
 		originator: ANY; 
 		setString: SetStringProcedure; 
-		position: LONGINT; 
+		position: SIGNED32; 
 
-		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; position: LONGINT); 
-		PROCEDURE ^ GetInterface*(type: LONGINT): WMDropTarget.DropInterface; 
+		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; position: SIGNED32); 
+		PROCEDURE ^ GetInterface*(type: SIGNED32): WMDropTarget.DropInterface; 
 	END DropTarget; 
 
 	DropString = OBJECT (WMDropTarget.DropString)
 	VAR 
 		originator: ANY; 
 		setString: SetStringProcedure; 
-		position: LONGINT; 
+		position: SIGNED32; 
 
-		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; position: LONGINT); 
-		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; position: SIGNED32); 
+		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: INTEGER); 
 	END DropString; 
 
 	PropertyView = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -43,8 +43,8 @@ TYPE
 		property: WMProperties.Property; 
 		name, info: Strings.String; 
 		type: ARRAY 32 OF CHAR; 
-		ofsName, ofsInfo: LONGINT; 
-		lastTimestamp: LONGINT; 
+		ofsName, ofsInfo: SIGNED32; 
+		lastTimestamp: SIGNED32; 
 		next: PropertyView; 
 		nameLabel, infoLabel, adrLabel: WMStandardComponents.Label; 
 
@@ -55,7 +55,7 @@ TYPE
 		PROCEDURE ^ InfoLabelMove(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ InfoLabelStartDrag(sender, data: ANY); 
 		PROCEDURE ^ MyDragDropped(x, y: SIZE; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
-		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; position: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; position: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ Apply(force: BOOLEAN); 
 		PROCEDURE ^ Synchronize(force: BOOLEAN); 
 		PROCEDURE ^ IsCompatible(property: WMProperties.Property): BOOLEAN; 
@@ -72,7 +72,7 @@ TYPE
 	PropertyViewList = OBJECT {EXCLUSIVE} 
 	VAR 
 		head, tail: PropertyView; 
-		nofElements: LONGINT; 
+		nofElements: SIGNED32; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Add(p: PropertyView); 
@@ -150,7 +150,7 @@ TYPE
 		PROCEDURE ^ SetOutOfDate(value: SET); 
 		PROCEDURE ^ EditorContentChanged(sender, data: ANY); 
 		PROCEDURE ^ EnterPressed(sender, data: ANY); 
-		PROCEDURE ^ CreateEditor(CONST caption: ARRAY OF CHAR; VAR editor: WMEditors.TextField; leftBearing: LONGINT); 
+		PROCEDURE ^ CreateEditor(CONST caption: ARRAY OF CHAR; VAR editor: WMEditors.TextField; leftBearing: SIGNED32); 
 	END RectanglePropertyView; 
 
 	PointPropertyView = OBJECT {EXCLUSIVE} (PropertyView)
@@ -171,7 +171,7 @@ TYPE
 		PROCEDURE ^ SetOutOfDate(value: SET); 
 		PROCEDURE ^ EditorContentChanged(sender, data: ANY); 
 		PROCEDURE ^ EnterPressed(sender, data: ANY); 
-		PROCEDURE ^ CreateEditor(CONST caption: ARRAY OF CHAR; VAR editor: WMEditors.TextField; leftBearing: LONGINT); 
+		PROCEDURE ^ CreateEditor(CONST caption: ARRAY OF CHAR; VAR editor: WMEditors.TextField; leftBearing: SIGNED32); 
 	END PointPropertyView; 
 
 	StringPropertyView = OBJECT {EXCLUSIVE} (PropertyView)
@@ -197,7 +197,7 @@ TYPE
 		color: WMProperties.ColorProperty; 
 		editor: WMEditors.TextField; 
 		colorPot: WMColorComponents.ColorPot; 
-		res: WORD; 
+		res: INTEGER; 
 		outOfDate: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
@@ -230,7 +230,7 @@ TYPE
 		PROCEDURE ^ SetOutOfDate(value: SET); 
 		PROCEDURE ^ EditorContentChanged(sender, data: ANY); 
 		PROCEDURE ^ EnterPressed(sender, data: ANY); 
-		PROCEDURE ^ CreateEditor(CONST caption: ARRAY OF CHAR; VAR editor: WMEditors.TextField; leftBearing: LONGINT); 
+		PROCEDURE ^ CreateEditor(CONST caption: ARRAY OF CHAR; VAR editor: WMEditors.TextField; leftBearing: SIGNED32); 
 	END FontPropertyView; 
 
 	ReferencePropertyView = OBJECT {EXCLUSIVE} (PropertyView)
@@ -308,7 +308,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ResetProperties; 
-		PROCEDURE ^ SetProperty(property: WMProperties.Property; VAR res: WORD); 
+		PROCEDURE ^ SetProperty(property: WMProperties.Property; VAR res: INTEGER); 
 		PROCEDURE ^ Apply; 
 		PROCEDURE ^ Synchronize(force: BOOLEAN); 
 		PROCEDURE ^ Enable; 
@@ -326,8 +326,8 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ResetProperties; 
-		PROCEDURE ^ SetAlignment(alignmentMode: LONGINT); 
-		PROCEDURE ^ SetProperty(property: WMProperties.Property; VAR res: WORD); 
+		PROCEDURE ^ SetAlignment(alignmentMode: SIGNED32); 
+		PROCEDURE ^ SetProperty(property: WMProperties.Property; VAR res: INTEGER); 
 		PROCEDURE ^ Apply; 
 		PROCEDURE ^ Synchronize(force: BOOLEAN); 
 		PROCEDURE ^ Enable; 
@@ -371,7 +371,7 @@ TYPE
 	PropertySheetCache = OBJECT 
 	VAR 
 		entries: CacheEntry; 
-		nofEntries: LONGINT; 
+		nofEntries: SIGNED32; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Find(component: WMComponents.Component): ExtendedProperties; 
@@ -492,12 +492,12 @@ TYPE
 		tabPanel: WMScrollableComponents.ScrollableContainer; 
 		curTabPanel: ComponentElement; 
 		curTab: WMTabComponents.Tab; 
-		state, internalState: LONGINT; 
+		state, internalState: SIGNED32; 
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ UpdateTabCaptions; 
-		PROCEDURE ^ SetState(state: LONGINT); 
+		PROCEDURE ^ SetState(state: SIGNED32); 
 		PROCEDURE ^ PropertyListChanged(sender, data: ANY); 
 		PROCEDURE ^ LinkChanged*(sender, data: ANY); 
 		PROCEDURE ^ SetComponent*(sender, component: ANY); 
@@ -514,11 +514,11 @@ TYPE
 	RepositoryPanel* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		component: Repositories.Component; 
-		lastTimestamp: LONGINT; 
+		lastTimestamp: SIGNED32; 
 		repositoryName: WMStandardComponents.Label; 
 		editor: WMEditors.TextField; 
 		storeBtn, unbindBtn, removeBtn, updateBtn: WMStandardComponents.Button; 
-		state: LONGINT; 
+		state: SIGNED32; 
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^  & Init*; 
@@ -570,7 +570,7 @@ TYPE
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	StrNotAvailable, StrNoCaption, StrType, StrComponentInfo, StrStandardProperties, StrExtendedProperties, StrExtendedPropertiesView, StrEventListeners, StrEventSources, StrBooleanPropertyView, StrInt32PropertyView, StrRealPropertyView, StrRectanglePropertyView, StrPointPropertyView, StrStringPropertyView, StrColorPropertyView, StrEventSourceView, StrEventListenerView, StrUnknownPropertyView, StrFontPropertyView, StrReferencePropertyView, StrAlignmentPropertyView, StrModelView: Strings.String; 
 	StrBoolean, StrInteger, StrBoundedInteger, StrReal, StrLongreal, StrChar, StrString, StrSet, StrText, StrContainer, StrCustom, StrNil: Strings.String; 
 	StrWindowTitle: Strings.String; 
@@ -580,8 +580,8 @@ VAR
 	PROCEDURE ^ IsVisualComponentProperty(property: WMProperties.Property): BOOLEAN; 
 	PROCEDURE ^ CountExtendedProperties(component: WMComponents.Component): SIZE; 
 	PROCEDURE ^ CreateLine*(): WMStandardComponents.Panel; 
-	PROCEDURE ^ CreateLabel*(CONST caption: ARRAY OF CHAR; width, alignment: LONGINT): WMStandardComponents.Label; 
-	PROCEDURE ^ CreateEditor*(width: LONGINT): WMEditors.TextField; 
+	PROCEDURE ^ CreateLabel*(CONST caption: ARRAY OF CHAR; width, alignment: SIGNED32): WMStandardComponents.Label; 
+	PROCEDURE ^ CreateEditor*(width: SIGNED32): WMEditors.TextField; 
 	PROCEDURE ^ GetPropertyType(property: WMProperties.Property; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 

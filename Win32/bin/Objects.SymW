@@ -33,7 +33,7 @@ CONST
 	halt* = 2222; 
 	haltUnbreakable* = 2223; 
 TYPE 
-	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT; 
+	CpuCyclesArray* = ARRAY Machine.MaxCPU OF SIGNED64; 
 
 	ProtectedObject = POINTER TO RECORD 
 	END; 
@@ -50,17 +50,17 @@ TYPE
 
 	Timer* = POINTER TO RECORD 
 		next, prev: Timer; 
-		trigger: LONGINT; 
+		trigger: SIGNED32; 
 		handler: EventHandler; 
 	END; 
 
 	Clock = OBJECT {EXCLUSIVE} 
 	VAR 
 		h: Timer; 
-		ticks: LONGINT; 
+		ticks: SIGNED32; 
 		hevent: Kernel32.HANDLE; 
 		res: Kernel32.BOOL; 
-		mode: LONGINT; 
+		mode: SIGNED32; 
 		process: Process; 
 		exiting: BOOLEAN; 
 
@@ -91,19 +91,19 @@ TYPE
 		state-{ALIGNED(16)} : Kernel32.Context; 
 		condition-: Condition; 
 		condFP-: ADDRESS; 
-		mode-: LONGINT; 
-		procID-: LONGINT; 
+		mode-: SIGNED32; 
+		procID-: SIGNED32; 
 		waitingOn-: ProtectedObject; 
-		id-: WORD; 
+		id-: INTEGER; 
 		flags*: SET; 
-		priority-: LONGINT; 
+		priority-: SIGNED32; 
 		stackBottom: ADDRESS; 
 		handle-: Kernel32.HANDLE; 
 		body: Body; 
 		event: Win32Event; 
 		restartPC-: ADDRESS; 
 		restartSP-: ADDRESS; 
-		lastThreadTimes: HUGEINT; 
+		lastThreadTimes: SIGNED64; 
 		gcContext: GCContext; 
 		context: ANY; 
 
@@ -130,26 +130,26 @@ TYPE
 	BEGIN{ACTIVE, SAFE, PRIORITY(High)} 
 	END FinalizerCaller; 
 VAR 
-	awc-, awl-: LONGINT; 
+	awc-, awl-: SIGNED32; 
 	oberonLoop*: ANY; 
 	break: ARRAY 16 OF CHAR; 
 	terminateProc: PROCEDURE ; 
 	ready: ProcessQueue; 
 	startedMainProcess := FALSE: BOOLEAN; 
 	gcProcess: Process; 
-	numberOfProcessors: LONGINT; 
+	numberOfProcessors: SIGNED32; 
 	finalizerCaller: FinalizerCaller; 
 	event: Timer; 
 	clock: Clock; 
-	tlsIndex: LONGINT; 
-	nProcs: LONGINT; 
+	tlsIndex: SIGNED32; 
+	nProcs: SIGNED32; 
 	excplock: Kernel32.CriticalSection; 
 	exceptionhandler: ExceptionHandler; 
 	globalRunning: Process; 
 	GetProcedureName*: PROCEDURE (pc: ADDRESS; VAR n: ARRAY OF CHAR; VAR spc: ADDRESS); 
 	TraceProcessHook*: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS); 
 
-	PROCEDURE ^ SetPriority*(priority: LONGINT); 
+	PROCEDURE ^ SetPriority*(priority: SIGNED32); 
 	PROCEDURE ^ LockedByCurrent*(obj: ANY): BOOLEAN; 
 	PROCEDURE ^ Yield*; 
 	PROCEDURE ^ CurrentProcess*(): Process; 
@@ -159,7 +159,7 @@ VAR
 	PROCEDURE ^ GetStack*(p: Process; VAR pc, bp, sp, sb: ADDRESS; VAR contextPos: SIZE); 
 	PROCEDURE ^ NextValidStackSegment*(p: Process; VAR bp, pc, sp: ADDRESS; VAR contextPos: SIZE): BOOLEAN; 
 	PROCEDURE ^ ActiveObject*(): ANY; 
-	PROCEDURE ^ GetProcessID*(): WORD; 
+	PROCEDURE ^ GetProcessID*(): INTEGER; 
 	PROCEDURE ^ Get(VAR queue: ProcessQueue; VAR new: Process); 
 	PROCEDURE ^ Put(VAR queue: ProcessQueue; t: Process); 
 	PROCEDURE ^ {WINAPI} ExcpFrmHandler(CONST exceptionPointers: Kernel32.ExceptionPointers): Kernel32.DWORD; 
@@ -167,35 +167,35 @@ VAR
 	PROCEDURE ^ Remove(VAR queue: ProcessQueue; t: Process); 
 	PROCEDURE ^ WriteType(obj: ANY); 
 	PROCEDURE ^ terminate(t: Process); 
-	PROCEDURE ^ {WINAPI} Wrapper(lpParameter: ANY): LONGINT; 
+	PROCEDURE ^ {WINAPI} Wrapper(lpParameter: ANY): SIGNED32; 
 	PROCEDURE ^ FinalizeProcess(t: ANY); 
 	PROCEDURE ^ TerminateProc; 
-	PROCEDURE ^ NewProcess(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject; VAR new: Process); 
-	PROCEDURE ^ CreateProcess*(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject); 
+	PROCEDURE ^ NewProcess(body: Body; priority: SIGNED32; flags: SET; obj: ProtectedObject; VAR new: Process); 
+	PROCEDURE ^ CreateProcess*(body: Body; priority: SIGNED32; flags: SET; obj: ProtectedObject); 
 	PROCEDURE ^ Lock*(obj: ProtectedObject; exclusive: BOOLEAN); 
 	PROCEDURE ^ FindCondition(VAR q: ProcessQueue): Process; 
 	PROCEDURE ^ Unlock*(obj: ProtectedObject; dummy: BOOLEAN); 
-	PROCEDURE ^ Await*(cond: Condition; slink: LONGINT; obj: ProtectedObject; flags: SET); 
+	PROCEDURE ^ Await*(cond: Condition; slink: SIGNED32; obj: ProtectedObject; flags: SET); 
 	PROCEDURE ^ Break*(t: Process); 
 	PROCEDURE ^ TerminateThis*(t: Process; halt: BOOLEAN); 
 	PROCEDURE ^ Terminate*; 
 	PROCEDURE ^ Init; 
-	PROCEDURE ^ SetTimeout*(t: Timer; h: EventHandler; ms: LONGINT); 
-	PROCEDURE ^ SetTimeoutAt*(t: Timer; h: EventHandler; ms: LONGINT); 
+	PROCEDURE ^ SetTimeout*(t: Timer; h: EventHandler; ms: SIGNED32); 
+	PROCEDURE ^ SetTimeoutAt*(t: Timer; h: EventHandler; ms: SIGNED32); 
 	PROCEDURE ^ CancelTimeout*(t: Timer); 
 	PROCEDURE ^ InitEventHandling; 
 	PROCEDURE ^ InitGCHandling; 
 	PROCEDURE ^ GCStatusFactory(): Heaps.GCStatus; 
 	PROCEDURE ^ InstallExceptionHandler*(e: ExceptionHandler); 
 	PROCEDURE ^ UpdateProcessState*(p: Process); 
-	PROCEDURE ^ NumReady*(): LONGINT; 
+	PROCEDURE ^ NumReady*(): SIGNED32; 
 	PROCEDURE ^ GetCpuCycles*(process: Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN); 
 	PROCEDURE ^ Suspend(p: Process); 
 	PROCEDURE ^ Resume(p: Process); 
 	PROCEDURE ^ SuspendActivities; 
 	PROCEDURE ^ ResumeActivities; 
-	PROCEDURE ^ CurrentProcessTime*(): HUGEINT; 
-	PROCEDURE ^ TimerFrequency*(): HUGEINT; 
+	PROCEDURE ^ CurrentProcessTime*(): SIGNED64; 
+	PROCEDURE ^ TimerFrequency*(): SIGNED64; 
 	PROCEDURE ^ LeaveA2*; 
 	PROCEDURE ^ ReenterA2*; 
 BEGIN

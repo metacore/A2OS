@@ -8,9 +8,9 @@ TYPE
 		img: Raster.Image; 
 		width, height: SIZE; 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
-		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: LONGINT); 
-		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: SIGNED32); 
+		PROCEDURE ^ SetProgressionLevel*(progressionLevel: SIGNED32); 
 		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
 		PROCEDURE ^ Render*(img: Raster.Image); 
 	END SVGDecoder; 

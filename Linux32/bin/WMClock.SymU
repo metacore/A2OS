@@ -11,9 +11,9 @@ CONST
 TYPE 
 	ContextMenuPar = OBJECT 
 	VAR 
-		mode: LONGINT; 
+		mode: SIGNED32; 
 
-		PROCEDURE ^  & New*(m: LONGINT); 
+		PROCEDURE ^  & New*(m: SIGNED32); 
 	END ContextMenuPar; 
 
 	KillerMsg = OBJECT 
@@ -50,9 +50,9 @@ TYPE
 		currentTime: Dates.DateTime; 
 		lock: Locks.Lock; 
 		str: Strings.String; 
-		centerX, centerY: LONGINT; 
+		centerX, centerY: SIGNED32; 
 		image: WMGraphics.Image; 
-		updateInterval: LONGINT; 
+		updateInterval: SIGNED32; 
 		alive, dead: BOOLEAN; 
 		timer: Kernel.Timer; 
 
@@ -65,7 +65,7 @@ TYPE
 	BEGIN{ACTIVE} 
 	END Clock; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	StrClock: Strings.String; 
 	PrototypeViewMode: WMProperties.Int32Property; 
 	PrototypeColor: WMProperties.ColorProperty; 

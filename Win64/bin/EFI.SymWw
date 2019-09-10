@@ -6,7 +6,7 @@ CONST
 	WarnDeleteFailure* = 2; 
 	WarnWriteFailure* = 3; 
 	WarnBufferTooSmall* = 4; 
-	Error* = LONGINT(2147483648); 
+	Error* = SIGNED32(2147483648); 
 	ErrLoadError* = (Error + 1); 
 	ErrInvalidParameter* = (Error + 2); 
 	ErrUnsupported* = (Error + 3); 
@@ -43,21 +43,21 @@ CONST
 	NotifiyTPL* = 16; 
 	HighLevelTPL* = 31; 
 TYPE 
-	Char8* = SHORTINT; 
+	Char8* = SIGNED8; 
 
-	Char16* = INTEGER; 
+	Char16* = SIGNED16; 
 
 	Boolean* = BOOLEAN; 
 
 	Int* = SIZE; 
 
-	Int8* = SHORTINT; 
+	Int8* = SIGNED8; 
 
-	Int16* = INTEGER; 
+	Int16* = SIGNED16; 
 
-	Int32* = LONGINT; 
+	Int32* = SIGNED32; 
 
-	Int64* = HUGEINT; 
+	Int64* = SIGNED64; 
 
 	Address* = ADDRESS; 
 

@@ -7,8 +7,8 @@ TYPE
 	tModel* = POINTER TO tModelDesc; 
 
 	tModelDesc* = RECORD (antsModels.tModelDesc)
-		alpha: LONGREAL; 
-		lambda: LONGREAL; 
+		alpha: FLOAT64; 
+		lambda: FLOAT64; 
 	END; 
 
 	PROCEDURE ^ StoreM(VAR R: Files.Rider; o: tModel); 

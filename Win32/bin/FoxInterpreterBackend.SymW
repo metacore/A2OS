@@ -9,17 +9,17 @@ TYPE
 		index: SIZE; 
 	END; 
 
-	Int1 = SHORTINT; 
+	Int1 = SIGNED8; 
 
-	Int2 = INTEGER; 
+	Int2 = SIGNED16; 
 
-	Int4 = LONGINT; 
+	Int4 = SIGNED32; 
 
-	Int8 = HUGEINT; 
+	Int8 = SIGNED64; 
 
-	Float4 = REAL; 
+	Float4 = FLOAT32; 
 
-	Float8 = LONGREAL; 
+	Float8 = FLOAT64; 
 
 	Value = RECORD 
 		int1: Int1; 
@@ -62,7 +62,7 @@ TYPE
 		trace: Streams.Writer; 
 		module: Sections.Module; 
 
-		PROCEDURE ^  & InitInterpreter(backend: InterpreterBackend; addressSize: SHORTINT; m: Sections.Module); 
+		PROCEDURE ^  & InitInterpreter(backend: InterpreterBackend; addressSize: SIGNED8; m: Sections.Module); 
 		PROCEDURE ^ Dump(section: Intermediate.Section; address: Address; CONST instruction: Intermediate.Instruction); 
 		PROCEDURE ^ AllocateSection(s: Sections.Section); 
 		PROCEDURE ^ InitializeSection(s: Sections.Section); 
@@ -87,7 +87,7 @@ TYPE
 	InterpreterBackend = OBJECT (IntermediateBackend.IntermediateBackend)
 	VAR 
 		heap: Heap; 
-		addressSize, setSize: LONGINT; 
+		addressSize, setSize: SIGNED32; 
 
 		PROCEDURE ^  & InitInterpreterBackend; 
 		PROCEDURE ^ GetSystem*(): Global.System; 

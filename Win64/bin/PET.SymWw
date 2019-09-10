@@ -59,19 +59,19 @@ TYPE
 
 	Settings = OBJECT 
 	VAR 
-		backupOnStore: LONGINT; 
+		backupOnStore: SIGNED32; 
 		backupOnCompile: BOOLEAN; 
 		showPathInTabs: BOOLEAN; 
-		scratchPanelHeight: LONGINT; 
+		scratchPanelHeight: SIGNED32; 
 		enableWhitespaceWarnings: BOOLEAN; 
 		showLineNumbers: BOOLEAN; 
 		indicateTabs: BOOLEAN; 
-		currentLineColor: LONGINT; 
-		backgroundColor: LONGINT; 
+		currentLineColor: SIGNED32; 
+		backgroundColor: SIGNED32; 
 		defaultCompilerOptions: CompilerOptions; 
 		defaultCompilerSettings: CompilerSettings; 
 		compilers: ARRAY MaxNbrOfCompilers OF CompilerSettings; 
-		nofCompilers: LONGINT; 
+		nofCompilers: SIGNED32; 
 		diffCommand, diffPrefix, diffSuffix: String; 
 		searchWrap, searchHighlightAll, searchCaseSensitive: BOOLEAN; 
 
@@ -123,7 +123,7 @@ TYPE
 		win: Window; 
 
 		PROCEDURE ^  & New*(win: Window); 
-		PROCEDURE ^ GetInterface*(type: LONGINT): WMDropTarget.DropInterface; 
+		PROCEDURE ^ GetInterface*(type: SIGNED32): WMDropTarget.DropInterface; 
 	END URLDropTarget; 
 
 	DropURL = OBJECT (WMDropTarget.DropURLs)
@@ -131,7 +131,7 @@ TYPE
 		win: Window; 
 
 		PROCEDURE ^  & New*(win: Window); 
-		PROCEDURE ^ URL*(CONST url: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ URL*(CONST url: ARRAY OF CHAR; VAR res: INTEGER); 
 	END DropURL; 
 
 	TextWriter = OBJECT (TextUtilities.TextWriter)
@@ -155,7 +155,7 @@ TYPE
 		diagnostics: WMDiagnostics.Model; 
 		tree: PETTrees.Tree; 
 		modified, splitted, wrap: BOOLEAN; 
-		focus: LONGINT; 
+		focus: SIGNED32; 
 		codecFormat: ARRAY 128 OF CHAR; 
 		autoCodecFormat: ARRAY 128 OF CHAR; 
 		name: Filename; 
@@ -207,7 +207,7 @@ TYPE
 		pages: ARRAY MaxNbrOfTabs OF PETPanel; 
 		tabList: ARRAY MaxNbrOfTabs OF WMTabComponents.Tab; 
 		currentPage: PETPanel; 
-		currentPageNr: LONGINT; 
+		currentPageNr: SIGNED32; 
 		page: WMStandardComponents.Panel; 
 		xmlHasErrors: BOOLEAN; 
 		codecFormat: ARRAY 128 OF CHAR; 
@@ -238,17 +238,17 @@ TYPE
 		PROCEDURE ^ BrowseForward; 
 		PROCEDURE ^ GotoFile(CONST filename: ARRAY OF CHAR; pos: SIZE); 
 		PROCEDURE ^ GotoDefinition(info: PETTrees.ExternalDefinitionInfo); 
-		PROCEDURE ^ GetNrFromPage(page: PETPanel): LONGINT; 
+		PROCEDURE ^ GetNrFromPage(page: PETPanel): SIGNED32; 
 		PROCEDURE ^ TabSelected(sender, data: ANY); 
 		PROCEDURE ^ UpdatePages; 
 		PROCEDURE ^ UpdateInfo; 
-		PROCEDURE ^ HandleDocumentInfo(CONST info: WMWindowManager.DocumentInfo; new: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ HandleDocumentInfo(CONST info: WMWindowManager.DocumentInfo; new: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ UpdateState; 
 		PROCEDURE ^ DragDroppedHandler(x, y: SIZE; dragInfo: WMWindowManager.DragInfo; VAR handled: BOOLEAN); 
 		PROCEDURE ^ PositionHandler(sender, data: ANY); 
 		PROCEDURE ^ FormatHandler(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ SetFormatCaption(CONST format: ARRAY OF CHAR); 
-		PROCEDURE ^ SetCursorPosition(position: LONGINT); 
+		PROCEDURE ^ SetCursorPosition(position: SIGNED32); 
 		PROCEDURE ^ SetModified(modified: BOOLEAN); 
 		PROCEDURE ^ SetIcon*(icon: WMGraphics.Image); 
 		PROCEDURE ^ FormatPopupHandler(sender, data: ANY); 
@@ -277,7 +277,7 @@ TYPE
 		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	scratchText: Texts.Text; 
 	scratchModified: BOOLEAN; 
 	gsettings: Settings; 

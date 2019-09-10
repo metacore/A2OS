@@ -24,16 +24,16 @@ TYPE
 		desc*, file*: Strings.String; 
 		author*, purpose*: Strings.String; 
 		imports*: Import; 
-		linesOfCode: LONGINT; 
+		linesOfCode: SIGNED32; 
 		ok*: BOOLEAN; 
-		maxdepth: LONGINT; 
-		level*: LONGINT; 
-		nofTotalImports*: LONGINT; 
-		nofDirectImports*: LONGINT; 
+		maxdepth: SIGNED32; 
+		level*: SIGNED32; 
+		nofTotalImports*: SIGNED32; 
+		nofDirectImports*: SIGNED32; 
 		icMod: ModuleInfo; 
 		icDecision: BOOLEAN; 
 		reference*: ANY; 
-		group*, subgroup*: LONGINT; 
+		group*, subgroup*: SIGNED32; 
 		subsystems*: SET; 
 
 		PROCEDURE ^ Dump(details: BOOLEAN); 
@@ -45,7 +45,7 @@ TYPE
 	ModuleList* = OBJECT 
 	VAR 
 		modules*: ModuleArray; 
-		nofModules*: LONGINT; 
+		nofModules*: SIGNED32; 
 		errors: BOOLEAN; 
 		s: Scanner.Scanner; 
 		currentModule: ModuleInfo; 
@@ -55,14 +55,14 @@ TYPE
 		PROCEDURE ^ Grow; 
 		PROCEDURE ^ CalcNofDirectImports; 
 		PROCEDURE ^ CalcTotalImports*; 
-		PROCEDURE ^ CalcLevels*(maxLevel: LONGINT); 
-		PROCEDURE ^ GetDepth*(m: ModuleInfo): LONGINT; 
+		PROCEDURE ^ CalcLevels*(maxLevel: SIGNED32); 
+		PROCEDURE ^ GetDepth*(m: ModuleInfo): SIGNED32; 
 		PROCEDURE ^ Imports*(m, i: ModuleInfo): BOOLEAN; 
 		PROCEDURE ^ Dump*(details: BOOLEAN); 
 		PROCEDURE ^ GetModule*(CONST name, context: ARRAY OF CHAR): ModuleInfo; 
 		PROCEDURE ^ AddImport*(m: ModuleInfo; CONST importName, context: ARRAY OF CHAR); 
 		PROCEDURE ^ Error(CONST str: ARRAY OF CHAR); 
-		PROCEDURE ^ Eat(sym: LONGINT); 
+		PROCEDURE ^ Eat(sym: SIGNED32); 
 		PROCEDURE ^ CommentToStructure; 
 		PROCEDURE ^ Next; 
 		PROCEDURE ^ ParseImports; 
@@ -75,11 +75,11 @@ TYPE
 	END KillerMsg; 
 
 	RealRect* = RECORD 
-		l*, t*, r*, b*: LONGREAL; 
+		l*, t*, r*, b*: FLOAT64; 
 	END; 
 
 	Point = RECORD 
-		x, y: LONGREAL; 
+		x, y: FLOAT64; 
 	END; 
 
 	PointArray = POINTER TO ARRAY OF Point; 
@@ -89,7 +89,7 @@ TYPE
 		aabb: RealRect; 
 		parent: Object; 
 
-		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: FLOAT64); 
 	END Object; 
 
 	ObjectList = POINTER TO ARRAY OF Object; 
@@ -101,79 +101,79 @@ TYPE
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Add(o: Object); 
-		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: FLOAT64); 
 	END Graphic; 
 
 	Rectangle = OBJECT (Object)
 
-		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: FLOAT64); 
 	END Rectangle; 
 
 	Line = OBJECT (Object)
 
-		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: FLOAT64); 
 	END Line; 
 
 	Title = OBJECT (Object)
 	VAR 
 		title: ARRAY 100 OF CHAR; 
 
-		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: FLOAT64); 
 	END Title; 
 
 	SmartConnector = OBJECT (Object)
 	VAR 
 		from, to: Object; 
 		way: PointArray; 
-		nofPoints: LONGINT; 
+		nofPoints: SIGNED32; 
 		a, b: Point; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ SetFromTo(f, t: Object); 
-		PROCEDURE ^ CalcDirs(p, d: Point; VAR alternate: LONGINT; VAR d0, d1: LONGREAL): LONGINT; 
-		PROCEDURE ^ HasIntersection(p: Point; d: LONGINT; VAR mdist: LONGREAL; VAR colBox: RealRect): BOOLEAN; 
-		PROCEDURE ^ Go(VAR p: Point; d: LONGINT; dist: LONGREAL); 
+		PROCEDURE ^ CalcDirs(p, d: Point; VAR alternate: SIGNED32; VAR d0, d1: FLOAT64): SIGNED32; 
+		PROCEDURE ^ HasIntersection(p: Point; d: SIGNED32; VAR mdist: FLOAT64; VAR colBox: RealRect): BOOLEAN; 
+		PROCEDURE ^ Go(VAR p: Point; d: SIGNED32; dist: FLOAT64); 
 		PROCEDURE ^ CalcPath; 
-		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: FLOAT64); 
 	END SmartConnector; 
 
 	ModuleBox = OBJECT (Rectangle)
 	VAR 
 		name, info: ARRAY 64 OF CHAR; 
-		color: LONGINT; 
+		color: SIGNED32; 
 		m: ModuleInfo; 
-		rellayerpos: LONGREAL; 
+		rellayerpos: FLOAT64; 
 
-		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: LONGREAL); 
+		PROCEDURE ^ Draw(canvas: WMGraphics.Canvas; dx, dy, fx, fy: FLOAT64); 
 	END ModuleBox; 
 
 	DrawSpace = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		g: Graphic; 
-		dx, dy: LONGREAL; 
+		dx, dy: FLOAT64; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ XSetPos(dx, dy: LONGREAL); 
+		PROCEDURE ^ XSetPos(dx, dy: FLOAT64); 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
 	END DrawSpace; 
 
 	SubSystemInfo = RECORD 
 		mn: ARRAY 64 OF CHAR; 
 		m: ModuleInfo; 
-		color: LONGINT; 
-		nr, group: LONGINT; 
+		color: SIGNED32; 
+		nr, group: SIGNED32; 
 		propagate: BOOLEAN; 
 	END; 
 
 	SubSystems = OBJECT 
 	VAR 
 		s: ARRAY 1024 OF SubSystemInfo; 
-		scount, colorTable: ARRAY 64 OF LONGINT; 
-		nofSubSystemInfo: LONGINT; 
+		scount, colorTable: ARRAY 64 OF SIGNED32; 
+		nofSubSystemInfo: SIGNED32; 
 		ml: ModuleList; 
 
-		PROCEDURE ^ AddSubSystem(nr: LONGINT; CONST baseModule, context: ARRAY OF CHAR; color, group: LONGINT; propagate: BOOLEAN); 
-		PROCEDURE ^ GetColor(snr: LONGINT): LONGINT; 
+		PROCEDURE ^ AddSubSystem(nr: SIGNED32; CONST baseModule, context: ARRAY OF CHAR; color, group: SIGNED32; propagate: BOOLEAN); 
+		PROCEDURE ^ GetColor(snr: SIGNED32): SIGNED32; 
 		PROCEDURE ^  & Init(ml: ModuleList); 
 		PROCEDURE ^ CheckModule(m: ModuleInfo); 
 	END SubSystems; 
@@ -181,13 +181,13 @@ TYPE
 	ModuleInfoList = POINTER TO ARRAY OF ModuleInfo; 
 
 	Level = RECORD 
-		n: LONGINT; 
+		n: SIGNED32; 
 		m: ModuleInfoList; 
-		groupLength, groupStart: ARRAY 32 OF LONGINT; 
-		nofGroups: LONGINT; 
-		groupCounts: ARRAY 32 OF LONGINT; 
-		groupSlots: ARRAY 32 OF LONGINT; 
-		yAdvance: LONGINT; 
+		groupLength, groupStart: ARRAY 32 OF SIGNED32; 
+		nofGroups: SIGNED32; 
+		groupCounts: ARRAY 32 OF SIGNED32; 
+		groupSlots: ARRAY 32 OF SIGNED32; 
+		yAdvance: SIGNED32; 
 	END; 
 
 	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -208,9 +208,9 @@ TYPE
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
-	PROCEDURE ^ CountLines(text: Texts.Text): LONGINT; 
+	PROCEDURE ^ CountLines(text: Texts.Text): SIGNED32; 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 

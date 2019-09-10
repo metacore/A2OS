@@ -9,14 +9,14 @@ TYPE
 
 	RasterData* = RECORD (OType.RasterData)
 		adr*: ADDRESS; 
-		bpr*: LONGINT; 
-		len*: LONGINT; 
+		bpr*: SIGNED32; 
+		len*: SIGNED32; 
 	END; 
 
-	PROCEDURE ^ FillRect(llx, lly, urx, ury, opacity: INTEGER; VAR data: OType.RasterData0); 
+	PROCEDURE ^ FillRect(llx, lly, urx, ury, opacity: SIGNED16; VAR data: OType.RasterData0); 
 	PROCEDURE ^ MakeFont(inst: OType.Instance; glyph: OType.Glyph; name: ARRAY OF CHAR): Files.File; 
 	PROCEDURE ^ IsDigit(c: CHAR): BOOLEAN; 
-	PROCEDURE ^ MakeTtfName(CONST oname: ARRAY OF CHAR; VAR ttfname: Name; VAR size, res: INTEGER); 
+	PROCEDURE ^ MakeTtfName(CONST oname: ARRAY OF CHAR; VAR ttfname: Name; VAR size, res: SIGNED16); 
 	PROCEDURE ^ ProvideFont*(CONST oname: ARRAY OF CHAR); 
 	PROCEDURE ^ Allocatable*(CONST oname: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Install*; 

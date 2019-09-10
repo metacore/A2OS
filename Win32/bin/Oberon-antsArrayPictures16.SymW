@@ -20,12 +20,12 @@ VAR
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ A2P*(o: Objects.Object); 
 	PROCEDURE ^ Gen*; 
-	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ Min(a, b: SIGNED32): SIGNED32; 
 	PROCEDURE ^ AdjustCurve(obj: tObject); 
 	PROCEDURE ^ FromArray*(obj: tObject; A: antsArrayObjects.tINTEGERObject); 
 	PROCEDURE ^ DoShow*(A: antsArrayObjects.tINTEGERObject; VAR obj: tObject); 
-	PROCEDURE ^ DoShowI*(a: antsArrayObjects.tINTEGERArray; depth: LONGINT; VAR obj: tObject); 
-	PROCEDURE ^ DoShowR*(a: antsArrayObjects.tLONGREALArray; depth: LONGINT; VAR obj: tObject); 
+	PROCEDURE ^ DoShowI*(a: antsArrayObjects.tINTEGERArray; depth: SIGNED32; VAR obj: tObject); 
+	PROCEDURE ^ DoShowR*(a: antsArrayObjects.tLONGREALArray; depth: SIGNED32; VAR obj: tObject); 
 	PROCEDURE ^ New*; 
 	PROCEDURE ^ DoShowHistogram*(obj: tObject); 
 	PROCEDURE ^ viewhist; 

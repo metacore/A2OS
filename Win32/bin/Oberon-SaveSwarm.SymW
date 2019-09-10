@@ -30,32 +30,32 @@ CONST
 	defaultWvel = 10; 
 TYPE 
 	Bee = RECORD 
-		x, y: ARRAY 3 OF INTEGER; 
-		vx, vy: INTEGER; 
+		x, y: ARRAY 3 OF SIGNED16; 
+		vx, vy: SIGNED16; 
 	END; 
 
 	BeeSwarm = POINTER TO ARRAY OF Bee; 
 
 	Swarm = RECORD 
-		X, Y, W, H: INTEGER; 
-		speed, time: INTEGER; 
-		size: INTEGER; 
-		mincol, maxcol, col, colstep: INTEGER; 
-		waspcol: INTEGER; 
-		wacc, wvel: INTEGER; 
-		border: INTEGER; 
+		X, Y, W, H: SIGNED16; 
+		speed, time: SIGNED16; 
+		size: SIGNED16; 
+		mincol, maxcol, col, colstep: SIGNED16; 
+		waspcol: SIGNED16; 
+		wacc, wvel: SIGNED16; 
+		border: SIGNED16; 
 		wasp: Bee; 
-		bacc, bvel: INTEGER; 
+		bacc, bvel: SIGNED16; 
 		bees: BeeSwarm; 
 	END; 
 VAR 
 	swarm: Swarm; 
 	mask: Display3.Mask; 
-	speed, size, border, mincol, maxcol, waspcol, bacc, bvel, wacc, wvel: INTEGER; 
+	speed, size, border, mincol, maxcol, waspcol, bacc, bvel, wacc, wvel: SIGNED16; 
 
 	PROCEDURE ^ RandomizeSwarm(VAR s: Swarm); 
-	PROCEDURE ^ InitSwarm(VAR s: Swarm; speed, size, width, height, border, mincol, maxcol, waspcol, bacc, bvel, wacc, wvel: INTEGER); 
-	PROCEDURE ^ AgeSwarm(VAR s: Swarm; m: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ InitSwarm(VAR s: Swarm; speed, size, width, height, border, mincol, maxcol, waspcol, bacc, bvel, wacc, wvel: SIGNED16); 
+	PROCEDURE ^ AgeSwarm(VAR s: Swarm; m: Display3.Mask; x, y: SIGNED16); 
 	PROCEDURE ^ Start; 
 	PROCEDURE ^ Step; 
 	PROCEDURE ^ Stop; 

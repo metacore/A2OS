@@ -6,7 +6,7 @@ TYPE
 
 	ObjectDesc* = RECORD (vyBase.ObjDesc)
 		x-: vyBase.tVector; 
-		from-, to-: LONGREAL; 
+		from-, to-: FLOAT64; 
 		f-: antsFunctions.Function; 
 	END; 
 
@@ -17,10 +17,10 @@ TYPE
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ New*; 
-	PROCEDURE ^ DoNew*(name: vyName.tNameArray; fct: antsFunctions.Function; vect: vyLongrealVec.tVector; from, to: LONGREAL); 
-	PROCEDURE ^ DoSetObject*(VAR obj: Object; fct: antsFunctions.Function; vect: vyLongrealVec.tVector; from, to: LONGREAL); 
+	PROCEDURE ^ DoNew*(name: vyName.tNameArray; fct: antsFunctions.Function; vect: vyLongrealVec.tVector; from, to: FLOAT64); 
+	PROCEDURE ^ DoSetObject*(VAR obj: Object; fct: antsFunctions.Function; vect: vyLongrealVec.tVector; from, to: FLOAT64); 
 	PROCEDURE ^ NewVec*; 
-	PROCEDURE ^ DoNewVec1*(len: LONGINT; VAR vec: vyLongrealVec.tVector); 
+	PROCEDURE ^ DoNewVec1*(len: SIGNED32; VAR vec: vyLongrealVec.tVector); 
 	PROCEDURE ^ DoNewVec2*(from: vyBase.Object; VAR vec: vyLongrealVec.tVector); 
 	PROCEDURE ^ ClearVec*; 
 BEGIN

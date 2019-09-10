@@ -9,7 +9,7 @@ TYPE
 		commands: vyCommandMenus.List; 
 		viewnum: BOOLEAN; 
 		symmetric: BOOLEAN; 
-		method: INTEGER; 
+		method: SIGNED16; 
 	END; 
 VAR 
 	tempLayer: tLayer; 

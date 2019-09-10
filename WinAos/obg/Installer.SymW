@@ -45,9 +45,9 @@ CONST
 TYPE 
 	Configuration* = OBJECT 
 	VAR 
-		steps: ARRAY NofSteps OF LONGINT; 
+		steps: ARRAY NofSteps OF SIGNED32; 
 		mbrFile*: Files.FileName; 
-		size*: LONGINT; 
+		size*: SIGNED32; 
 		bootloader*: Files.FileName; 
 		bootfile*: Files.FileName; 
 		configTable-: PartitionsLib.ConfigTable; 
@@ -55,7 +55,7 @@ TYPE
 		mountPrefix*: Files.Prefix; 
 		packages: Packages; 
 		disk: PartitionsLib.Disk; 
-		partition: LONGINT; 
+		partition: SIGNED32; 
 		diskpartString: PartitionsLib.String; 
 
 		PROCEDURE ^ SetInstallStep*(step: SIZE; doStep: BOOLEAN; VAR msg: ARRAY OF CHAR): BOOLEAN; 
@@ -63,21 +63,21 @@ TYPE
 		PROCEDURE ^ DoStep*(step: SIZE): BOOLEAN; 
 		PROCEDURE ^ GetNofSteps(): SIZE; 
 		PROCEDURE ^ IsUsbDisk(): BOOLEAN; 
-		PROCEDURE ^ SpaceAvailable*(): LONGINT; 
+		PROCEDURE ^ SpaceAvailable*(): SIGNED32; 
 		PROCEDURE ^ CheckConfiguration*(w: Streams.Writer): BOOLEAN; 
 		PROCEDURE ^ ToStream*(w: Streams.Writer); 
 		PROCEDURE ^ DisallowAllSteps; 
 		PROCEDURE ^ DetectInstallSettings; 
 		PROCEDURE ^ Clone*(): Configuration; 
 		PROCEDURE ^ SetPackages*(packages: Packages); 
-		PROCEDURE ^  & Init*(disk: PartitionsLib.Disk; partition: LONGINT); 
+		PROCEDURE ^  & Init*(disk: PartitionsLib.Disk; partition: SIGNED32); 
 	END Configuration; 
 
 	Installer* = OBJECT {EXCLUSIVE} (PartitionsLib.Operation)
 	VAR 
 		config: Configuration; 
 		currentStep, nofSteps: SIZE; 
-		nofFiles: LONGINT; 
+		nofFiles: SIGNED32; 
 		installLog: Streams.Writer; 
 
 		PROCEDURE ^ SetInstallLog*(installLog: Streams.Writer); 
@@ -91,7 +91,7 @@ TYPE
 		PROCEDURE ^ DoInstallPackages(): BOOLEAN; 
 		PROCEDURE ^ DoWriteMBR(): BOOLEAN; 
 		PROCEDURE ^ DoCreatePartition(): BOOLEAN; 
-		PROCEDURE ^ DoChangePartitionTypeTo(oldType, newType: LONGINT): BOOLEAN; 
+		PROCEDURE ^ DoChangePartitionTypeTo(oldType, newType: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ DoActivatePartition(): BOOLEAN; 
 		PROCEDURE ^ DoInstallBootManager(): BOOLEAN; 
 		PROCEDURE ^ DoFormatPartition(): BOOLEAN; 
@@ -101,7 +101,7 @@ TYPE
 		PROCEDURE ^ DoUnmount; 
 		PROCEDURE ^ OperationDone(operation: PartitionsLib.Operation): BOOLEAN; 
 		PROCEDURE ^ ReportAbort; 
-		PROCEDURE ^  & Init*(disk: PartitionsLib.Disk; partition: LONGINT; out: Streams.Writer); 
+		PROCEDURE ^  & Init*(disk: PartitionsLib.Disk; partition: SIGNED32; out: Streams.Writer); 
 	END Installer; 
 
 	ReportProgressProc = PROCEDURE {DELEGATE}(nofFilesExtracted: SIZE); 
@@ -112,15 +112,15 @@ TYPE
 
 	Package* = OBJECT 
 	VAR 
-		number-: LONGINT; 
+		number-: SIGNED32; 
 		install-: BOOLEAN; 
-		installType-: LONGINT; 
+		installType-: SIGNED32; 
 		filename-: XML.String; 
 		file-: Files.File; 
 		name-, description-: XML.String; 
-		nofEntries-: LONGINT; 
-		size-: LONGINT; 
-		sizeOnDisk-: LONGINT; 
+		nofEntries-: SIGNED32; 
+		size-: SIGNED32; 
+		sizeOnDisk-: SIGNED32; 
 		user*: ANY; 
 		next: Package; 
 
@@ -139,18 +139,18 @@ TYPE
 		head, tail: Package; 
 		info: Streams.Writer; 
 		path: Files.FileName; 
-		nofFilesExtracted: LONGINT; 
+		nofFilesExtracted: SIGNED32; 
 		reportProgress: ReportProgressProc; 
 		Aborted: AbortedProc; 
 
-		PROCEDURE ^ GetNofPackages(): LONGINT; 
+		PROCEDURE ^ GetNofPackages(): SIGNED32; 
 		PROCEDURE ^ GetPackages*(): PackageArray; 
-		PROCEDURE ^ ReportProgress(nofFilesExtracted: LONGINT); 
-		PROCEDURE ^ ExtractEntry(zip: AosUnzip.ZipFile; entry: AosUnzip.Entry; CONST name: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ ReportProgress(nofFilesExtracted: SIGNED32); 
+		PROCEDURE ^ ExtractEntry(zip: AosUnzip.ZipFile; entry: AosUnzip.Entry; CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Unzip(zipFile: AosUnzip.ZipFile): BOOLEAN; 
 		PROCEDURE ^ OpenZipFile(CONST filename: ARRAY OF CHAR; reportErrors: BOOLEAN): AosUnzip.ZipFile; 
 		PROCEDURE ^ GetPackageSizes*; 
-		PROCEDURE ^ GetInstallSize*(VAR size, sizeOnDisk, nofEntries: LONGINT); 
+		PROCEDURE ^ GetInstallSize*(VAR size, sizeOnDisk, nofEntries: SIGNED32); 
 		PROCEDURE ^ InstallPackages*(CONST targetPath: ARRAY OF CHAR); 
 		PROCEDURE ^ DefaultReportError(CONST msg: ARRAY OF CHAR); 
 		PROCEDURE ^ SetInstallLog*(info: Streams.Writer); 
@@ -166,11 +166,11 @@ TYPE
 		PROCEDURE ^  & Init*; 
 	END Packages; 
 VAR 
-	suffix: LONGINT; 
+	suffix: SIGNED32; 
 
 	PROCEDURE ^ FileExists(CONST filename: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ GetInstallType(p: XML.Element): LONGINT; 
-	PROCEDURE ^ GetXmlNumber(p: XML.Element; CONST attributeName: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ GetInstallType(p: XML.Element): SIGNED32; 
+	PROCEDURE ^ GetXmlNumber(p: XML.Element; CONST attributeName: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ GetPrefix(): Files.Prefix; 
 	PROCEDURE ^ TestPackages*(context: Commands.Context); 
 	PROCEDURE ^ Install*(context: Commands.Context); 

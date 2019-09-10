@@ -5,23 +5,23 @@ CONST
 TYPE 
 	Mask* = OBJECT (vyBase.Object)
 	VAR 
-		enum-: ARRAY MAXSIZE OF ARRAY 2 OF INTEGER; 
+		enum-: ARRAY MAXSIZE OF ARRAY 2 OF SIGNED16; 
 		contained: ARRAY MAXSIZE OF BOOLEAN; 
-		enumsize-: INTEGER; 
-		posy-, posx-: INTEGER; 
+		enumsize-: SIGNED16; 
+		posy-, posx-: SIGNED16; 
 		on-: antsArrayObjects.tINTEGERObject; 
-		Ax*, Ay*, Aw*, Ah*: LONGINT; 
+		Ax*, Ay*, Aw*, Ah*: SIGNED32; 
 		onA: antsArrayObjects.tINTEGERArray; 
 
 		PROCEDURE ^ mask*(A: vyBase.Object); 
-		PROCEDURE ^ vals*(VAR val: ARRAY OF INTEGER; offset: LONGINT); 
-		PROCEDURE ^ vis*(y, x: INTEGER): BOOLEAN; 
-		PROCEDURE ^ add*(y, x: INTEGER; pos: INTEGER); 
+		PROCEDURE ^ vals*(VAR val: ARRAY OF SIGNED16; offset: SIGNED32); 
+		PROCEDURE ^ vis*(y, x: SIGNED16): BOOLEAN; 
+		PROCEDURE ^ add*(y, x: SIGNED16; pos: SIGNED16); 
 		PROCEDURE ^ init*; 
-		PROCEDURE ^ moveTo*(VAR y, x: INTEGER); 
-		PROCEDURE ^ valsAt*(VAR y, x: INTEGER; VAR val: ARRAY OF INTEGER; offset: LONGINT); 
+		PROCEDURE ^ moveTo*(VAR y, x: SIGNED16); 
+		PROCEDURE ^ valsAt*(VAR y, x: SIGNED16; VAR val: ARRAY OF SIGNED16; offset: SIGNED32); 
 	END Mask; 
 
-	PROCEDURE ^ Doadd(m: Mask; y, x: INTEGER; pos: INTEGER); 
+	PROCEDURE ^ Doadd(m: Mask; y, x: SIGNED16; pos: SIGNED16); 
 BEGIN
 END antsMasks.

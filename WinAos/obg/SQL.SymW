@@ -59,7 +59,7 @@ CONST
 TYPE 
 	SourcesHandler* = PROCEDURE (name, desc: ARRAY OF CHAR); 
 
-	ErrorProc* = PROCEDURE (state, msg: ARRAY OF CHAR; errorcode: LONGINT); 
+	ErrorProc* = PROCEDURE (state, msg: ARRAY OF CHAR; errorcode: SIGNED32); 
 
 	Connection* = POINTER TO ConnectionDesc; 
 
@@ -73,7 +73,7 @@ TYPE
 		hdbc: ODBC.HDBC; 
 		closed: BOOLEAN; 
 		stmt: Statement; 
-		res*: INTEGER; 
+		res*: SIGNED16; 
 	END; 
 
 	StatementDesc = RECORD 
@@ -83,13 +83,13 @@ TYPE
 		results, params: Row; 
 		firstExec, errBuffered: BOOLEAN; 
 		error: ErrBuff; 
-		res*: INTEGER; 
+		res*: SIGNED16; 
 	END; 
 
 	ErrBuffDesc = RECORD 
 		state: ARRAY 6 OF CHAR; 
 		msg: ARRAY 512 OF CHAR; 
-		native: LONGINT; 
+		native: SIGNED32; 
 		next: ErrBuff; 
 	END; 
 
@@ -97,10 +97,10 @@ TYPE
 
 	FieldDesc* = RECORD 
 		next, prev: Field; 
-		dir: INTEGER; 
+		dir: SIGNED16; 
 		name*: ARRAY 32 OF CHAR; 
-		len*: LONGINT; 
-		sqlType*: INTEGER; 
+		len*: SIGNED32; 
+		sqlType*: SIGNED16; 
 		isNull*: BOOLEAN; 
 		nullable*: BOOLEAN; 
 	END; 
@@ -108,7 +108,7 @@ TYPE
 	IntField* = POINTER TO IntFieldDesc; 
 
 	IntFieldDesc* = RECORD (FieldDesc)
-		i*: LONGINT; 
+		i*: SIGNED32; 
 	END; 
 
 	NumericField* = POINTER TO NumericFieldDesc; 
@@ -126,26 +126,26 @@ TYPE
 	RealField* = POINTER TO RealFieldDesc; 
 
 	RealFieldDesc* = RECORD (FieldDesc)
-		r*: LONGREAL; 
+		r*: FLOAT64; 
 	END; 
 
 	DateField* = POINTER TO DateFieldDesc; 
 
 	DateFieldDesc* = RECORD (FieldDesc)
-		year*, month*, day*: INTEGER; 
+		year*, month*, day*: SIGNED16; 
 	END; 
 
 	TimeField* = POINTER TO TimeFieldDesc; 
 
 	TimeFieldDesc* = RECORD (FieldDesc)
-		hour*, minute*, second*: INTEGER; 
+		hour*, minute*, second*: SIGNED16; 
 	END; 
 
 	TimeStampField* = POINTER TO TimeStampFieldDesc; 
 
 	TimeStampFieldDesc* = RECORD (FieldDesc)
-		year*, month*, day*, hour*, minute*, second*: INTEGER; 
-		fraction*: LONGINT; 
+		year*, month*, day*, hour*, minute*, second*: SIGNED16; 
+		fraction*: SIGNED32; 
 	END; 
 
 	FileField* = POINTER TO FileFieldDesc; 
@@ -173,11 +173,11 @@ TYPE
 
 	RowDesc* = RECORD 
 		dsc: Field; 
-		cols*: INTEGER; 
+		cols*: SIGNED16; 
 	END; 
 
 	ParamType* = RECORD 
-		oberonType*, sqlType*, inOut*: INTEGER; 
+		oberonType*, sqlType*, inOut*: SIGNED16; 
 		name*: ARRAY 32 OF CHAR; 
 	END; 
 
@@ -187,26 +187,26 @@ TYPE
 	PROCEDURE ^ NextField*(VAR f: Field); 
 	PROCEDURE ^ PrevField*(VAR f: Field); 
 	PROCEDURE ^ FindField*(r: Row; name: ARRAY OF CHAR; VAR f: Field); 
-	PROCEDURE ^ PrintError(state, msg: ARRAY OF CHAR; errorCode: LONGINT); 
-	PROCEDURE ^ DummyEnum(state, msg: ARRAY OF CHAR; code: LONGINT); 
-	PROCEDURE ^ InsertError(stmt: Statement; state, msg: ARRAY OF CHAR; nativeCode: LONGINT); 
+	PROCEDURE ^ PrintError(state, msg: ARRAY OF CHAR; errorCode: SIGNED32); 
+	PROCEDURE ^ DummyEnum(state, msg: ARRAY OF CHAR; code: SIGNED32); 
+	PROCEDURE ^ InsertError(stmt: Statement; state, msg: ARRAY OF CHAR; nativeCode: SIGNED32); 
 	PROCEDURE ^ EnumErrors*(c: Connection; s: Statement; enum: ErrorProc); 
 	PROCEDURE ^ FinalizeConnection(obj: ANY); 
 	PROCEDURE ^ Terminate; 
 	PROCEDURE ^ Open*(source, user, passwd: ARRAY OF CHAR): Connection; 
 	PROCEDURE ^ Close*(c: Connection); 
-	PROCEDURE ^ BindParameters*(s: Statement; types: ARRAY OF ParamType; numParams: INTEGER; VAR paramRow: Row); 
+	PROCEDURE ^ BindParameters*(s: Statement; types: ARRAY OF ParamType; numParams: SIGNED16; VAR paramRow: Row); 
 	PROCEDURE ^ PrepareStatement*(c: Connection; sqlStatement: ARRAY OF CHAR; VAR resultRow: Row): Statement; 
 	PROCEDURE ^ Execute*(s: Statement); 
-	PROCEDURE ^ RowCount*(s: Statement; VAR rows: LONGINT); 
+	PROCEDURE ^ RowCount*(s: Statement; VAR rows: SIGNED32); 
 	PROCEDURE ^ Fetch*(s: Statement); 
-	PROCEDURE ^ FetchExtended*(s: Statement; fetchType: INTEGER; rowToFetch: LONGINT; VAR numFetchedRows: LONGINT; VAR rowStatus: INTEGER); 
+	PROCEDURE ^ FetchExtended*(s: Statement; fetchType: SIGNED16; rowToFetch: SIGNED32; VAR numFetchedRows: SIGNED32; VAR rowStatus: SIGNED16); 
 	PROCEDURE ^ Commit*(c: Connection); 
 	PROCEDURE ^ Rollback*(c: Connection); 
-	PROCEDURE ^ EnumDataSources*(enum: SourcesHandler; VAR res: INTEGER); 
-	PROCEDURE ^ EnumDrivers*(enum: SourcesHandler; VAR res: INTEGER); 
+	PROCEDURE ^ EnumDataSources*(enum: SourcesHandler; VAR res: SIGNED16); 
+	PROCEDURE ^ EnumDrivers*(enum: SourcesHandler; VAR res: SIGNED16); 
 	PROCEDURE ^ Tables*(c: Connection; VAR row: Row): Statement; 
-	PROCEDURE ^ GetTypeName*(c: Connection; sqlType: INTEGER; VAR typeName: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ GetTypeName*(c: Connection; sqlType: SIGNED16; VAR typeName: ARRAY OF CHAR; VAR res: SIGNED16); 
 	PROCEDURE ^ CloseStatement*(s: Statement); 
 BEGIN
 END SQL.

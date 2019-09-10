@@ -108,17 +108,17 @@ TYPE
 
 	Symbol* = OBJECT (PCM.Attribute)
 	VAR 
-		fp*: LONGINT; 
+		fp*: SIGNED32; 
 		sibling: PCT.Symbol; 
 	END Symbol; 
 
 	Struct* = OBJECT (PCM.Attribute)
 	VAR 
-		fp*, pbfp*, pvfp*: LONGINT; 
+		fp*, pbfp*, pvfp*: SIGNED32; 
 		fpdone*{UNTRACED} : PCT.Module; 
-		strref*: LONGINT; 
-		tag: LONGINT; 
-		uref*: LONGINT; 
+		strref*: SIGNED32; 
+		tag: SIGNED32; 
+		uref*: SIGNED32; 
 		mod*: PCT.Module; 
 
 		PROCEDURE ^  & Init*(mod: PCT.Module); 
@@ -128,35 +128,35 @@ TYPE
 
 	Module* = OBJECT (PCM.Attribute)
 	VAR 
-		nofimp: LONGINT; 
+		nofimp: SIGNED32; 
 		import: PCT.ModuleArray; 
-		nofstr: LONGINT; 
+		nofstr: SIGNED32; 
 		struct: StructArray; 
-		nofreimp: LONGINT; 
+		nofreimp: SIGNED32; 
 		reimp: StructArray; 
-		expnumber: LONGINT; 
+		expnumber: SIGNED32; 
 		changed: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
 	END Module; 
 VAR 
 	predefStruct: ARRAY (SFlastStruct + 1) OF PCT.Struct; 
-	FParray: ARRAY 6 OF SHORTINT; 
+	FParray: ARRAY 6 OF SIGNED8; 
 	altSelf: PCS.Name; 
-	Ninterfaces, NpatchPointer0: LONGINT; 
+	Ninterfaces, NpatchPointer0: SIGNED32; 
 
-	PROCEDURE ^ FPrint(VAR fp: LONGINT; val: LONGINT); 
-	PROCEDURE ^ FPrintSet(VAR fp: LONGINT; set: SET); 
-	PROCEDURE ^ FPrintReal(VAR fp: LONGINT; real: REAL); 
-	PROCEDURE ^ FPrintLReal(VAR fp: LONGINT; lr: LONGREAL); 
-	PROCEDURE ^ FPrintName*(VAR fp: LONGINT; name: ARRAY OF CHAR); 
-	PROCEDURE ^ FPrintVis(VAR fp: LONGINT; vis: SET); 
-	PROCEDURE ^ FPrintSign(VAR fp: LONGINT; par: PCT.Parameter; self: PCT.Parameter; ret: PCT.Struct; current: PCT.Module; isOperator: BOOLEAN); 
-	PROCEDURE ^ FPrintMeth(VAR pbfp, pvfp: LONGINT; mth, init, body: PCT.Method; current: PCT.Module); 
+	PROCEDURE ^ FPrint(VAR fp: SIGNED32; val: SIGNED32); 
+	PROCEDURE ^ FPrintSet(VAR fp: SIGNED32; set: SET); 
+	PROCEDURE ^ FPrintReal(VAR fp: SIGNED32; real: FLOAT32); 
+	PROCEDURE ^ FPrintLReal(VAR fp: SIGNED32; lr: FLOAT64); 
+	PROCEDURE ^ FPrintName*(VAR fp: SIGNED32; name: ARRAY OF CHAR); 
+	PROCEDURE ^ FPrintVis(VAR fp: SIGNED32; vis: SET); 
+	PROCEDURE ^ FPrintSign(VAR fp: SIGNED32; par: PCT.Parameter; self: PCT.Parameter; ret: PCT.Struct; current: PCT.Module; isOperator: BOOLEAN); 
+	PROCEDURE ^ FPrintMeth(VAR pbfp, pvfp: SIGNED32; mth, init, body: PCT.Method; current: PCT.Module); 
 	PROCEDURE ^ FPrintRecord(typ: PCT.Record; current: PCT.Module); 
 	PROCEDURE ^ FPrintTyp0(typ: PCT.Struct; current: PCT.Module); 
 	PROCEDURE ^ FPrintTyp*(typ: PCT.Struct; current: PCT.Module); 
-	PROCEDURE ^ FPrintConstEnhArray(VAR fp: LONGINT; val: PCT.Value); 
+	PROCEDURE ^ FPrintConstEnhArray(VAR fp: SIGNED32; val: PCT.Value); 
 	PROCEDURE ^ FPrintObj*(obj: PCT.Symbol; current: PCT.Module); 
 	PROCEDURE ^ Export*(VAR r: PCM.Rider; M: PCT.Module; new, extend, skipImport: BOOLEAN; VAR msg: ARRAY OF CHAR); 
 	PROCEDURE ^ ExtendStructArray*(VAR a: StructArray); 
@@ -167,7 +167,7 @@ VAR
 	PROCEDURE ^ ImportComplete(m: PCT.Module); 
 	PROCEDURE ^ Import*(self: PCT.Module; VAR M: PCT.Module; modname: StringPool.Index); 
 	PROCEDURE ^ Cleanup; 
-	PROCEDURE ^ InitBasic(t: PCT.Struct; tag, fp: LONGINT); 
+	PROCEDURE ^ InitBasic(t: PCT.Struct; tag, fp: SIGNED32); 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ CreateString(VAR idx: StringPool.Index; str: ARRAY OF CHAR); 
 BEGIN

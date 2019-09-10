@@ -16,7 +16,7 @@ CONST
 	WindowHeight = 400; 
 	WindowMinWidth = 600; 
 	WindowMinHeight = 300; 
-	OberonColor = LONGINT(3512822959); 
+	OberonColor = SIGNED32(3512822959); 
 	UpperPanelHeight = 60; 
 	LowerPanelHeight = 60; 
 	ButtonPanelHeight = 20; 
@@ -52,7 +52,7 @@ TYPE
 		allBtn, noneBtn: WMStandardComponents.Button; 
 
 		PROCEDURE ^ ClickHandler(sender, data: ANY); 
-		PROCEDURE ^ GetTotalSize(VAR size, sizeOnDisk: LONGINT); 
+		PROCEDURE ^ GetTotalSize(VAR size, sizeOnDisk: SIGNED32); 
 		PROCEDURE ^ UpdateLabel; 
 		PROCEDURE ^ GetSizeString(package: Installer.Package; VAR caption: ARRAY OF CHAR); 
 		PROCEDURE ^ CreatePackagePanel(package: Installer.Package): WMStandardComponents.Panel; 
@@ -76,8 +76,8 @@ TYPE
 		PROCEDURE ^ CreateLine(lineNbr: SIZE): WMStandardComponents.Panel; 
 		PROCEDURE ^ ClickHandler(sender, data: ANY); 
 		PROCEDURE ^ ApplyConfiguration; 
-		PROCEDURE ^ NewLabel(CONST caption: ARRAY OF CHAR; width: LONGINT): WMStandardComponents.Label; 
-		PROCEDURE ^ NewEditor(VAR editor: WMEditors.Editor; CONST caption: ARRAY OF CHAR; width: LONGINT); 
+		PROCEDURE ^ NewLabel(CONST caption: ARRAY OF CHAR; width: SIGNED32): WMStandardComponents.Label; 
+		PROCEDURE ^ NewEditor(VAR editor: WMEditors.Editor; CONST caption: ARRAY OF CHAR; width: SIGNED32); 
 		PROCEDURE ^  & Init*; 
 	END ConfigurationSettings; 
 
@@ -112,7 +112,7 @@ TYPE
 		packageSelector: PackageSelector; 
 		configurationSettings: ConfigurationSettings; 
 		pages: ARRAY NofPages OF WMComponents.VisualComponent; 
-		currentPage: LONGINT; 
+		currentPage: SIGNED32; 
 		packages: Installer.Packages; 
 		installer: Installer.Installer; 
 		configuration: Installer.Configuration; 
@@ -138,7 +138,7 @@ TYPE
 		PROCEDURE ^ StartInstaller(selection: WMPartitionsComponents.Selection; configuration: Installer.Configuration); 
 		PROCEDURE ^ StopInstaller; 
 		PROCEDURE ^ QuickInstall(): BOOLEAN; 
-		PROCEDURE ^ SelectPage(pageNr: LONGINT); 
+		PROCEDURE ^ SelectPage(pageNr: SIGNED32); 
 		PROCEDURE ^ ClearText(text: Texts.Text); 
 		PROCEDURE ^ LoadText(text: Texts.Text; CONST filename: ARRAY OF CHAR); 
 		PROCEDURE ^ CreatePageSelectPackages(): WMComponents.VisualComponent; 
@@ -166,7 +166,7 @@ TYPE
 		progressBar: WMProgressComponents.ProgressBar; 
 		installer: Installer.Installer; 
 		notifyProc: NotifyProc; 
-		last: HUGEINT; 
+		last: SIGNED64; 
 		timer: Kernel.Timer; 
 		alive, dead: BOOLEAN; 
 

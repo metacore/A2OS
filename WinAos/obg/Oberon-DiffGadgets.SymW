@@ -9,13 +9,13 @@ TYPE
 
 	LineDesc = RECORD 
 		prev, next: Line; 
-		p1, p2, nr: LONGINT; 
+		p1, p2, nr: SIGNED32; 
 	END; 
 
 	Slider = POINTER TO SliderDesc; 
 
 	SliderDesc = RECORD (Gadgets.FrameDesc)
-		lines, curL: INTEGER; 
+		lines, curL: SIGNED16; 
 	END; 
 
 	Frame* = POINTER TO FrameDesc; 
@@ -31,26 +31,26 @@ VAR
 
 	PROCEDURE ^ S*; 
 	PROCEDURE ^ AttributesSlider(F: Slider; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ RestoreSlider(F: Slider; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreSlider(F: Slider; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ CopySlider(VAR M: Objects.CopyMsg; from, to: Slider); 
-	PROCEDURE ^ TrackLine(F: Frame; R: Display3.Mask; VAR keysum: SET; x, y: INTEGER; VAR L: Line); 
+	PROCEDURE ^ TrackLine(F: Frame; R: Display3.Mask; VAR keysum: SET; x, y: SIGNED16; VAR L: Line); 
 	PROCEDURE ^ ScrollTo(F: Frame; L: Line); 
 	PROCEDURE ^ ScrollUp(F: Frame; L: Line); 
-	PROCEDURE ^ Edit(F: Frame; R: Display3.Mask; VAR M: Oberon.InputMsg; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Edit(F: Frame; R: Display3.Mask; VAR M: Oberon.InputMsg; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ HandleSlider(F: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ InitSlider(F: Slider; lines: INTEGER); 
+	PROCEDURE ^ InitSlider(F: Slider; lines: SIGNED16); 
 	PROCEDURE ^ NewSlider*; 
 	PROCEDURE ^ SetMask(F: Display.Frame; Q: Display3.Mask); 
 	PROCEDURE ^ SetContentMask(F: Frame; subF: Display.Frame); 
-	PROCEDURE ^ ToContent(F: Frame; to: Display.Frame; x, y: INTEGER; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ ToContent(F: Frame; to: Display.Frame; x, y: SIGNED16; VAR M: Display.FrameMsg); 
 	PROCEDURE ^ ToKids(F: Frame; VAR M: Display.FrameMsg); 
 	PROCEDURE ^ Modify(F: Frame; VAR M: Display.ModifyMsg); 
-	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: Frame); 
 	PROCEDURE ^ Attributes(F: Frame; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ InChild(F: Display.Frame; x, y, MX, MY: INTEGER): BOOLEAN; 
+	PROCEDURE ^ InChild(F: Display.Frame; x, y, MX, MY: SIGNED16): BOOLEAN; 
 	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ MakeLines(t1, t2: Texts.Text; VAR first: Line; VAR lines: INTEGER); 
+	PROCEDURE ^ MakeLines(t1, t2: Texts.Text; VAR first: Line; VAR lines: SIGNED16); 
 	PROCEDURE ^ Init*(F: Frame; t1, t2: Texts.Text; n1, n2: ARRAY OF CHAR); 
 	PROCEDURE ^ New*; 
 	PROCEDURE ^ Load(D: Documents.Document); 

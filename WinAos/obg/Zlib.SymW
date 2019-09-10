@@ -25,10 +25,10 @@ CONST
 	Unknown* = 2; 
 	DeflateMethod* = 8; 
 VAR 
-	CRCTable: ARRAY 256 OF LONGINT; 
+	CRCTable: ARRAY 256 OF SIGNED32; 
 
-	PROCEDURE ^ Adler32*(adler: LONGINT; CONST buf: ARRAY OF CHAR; offset, len: SIZE): LONGINT; 
+	PROCEDURE ^ Adler32*(adler: SIGNED32; CONST buf: ARRAY OF CHAR; offset, len: SIZE): SIGNED32; 
 	PROCEDURE ^ InitCRCTable*; 
-	PROCEDURE ^ CRC32*(crc: LONGINT; CONST buf: ARRAY OF CHAR; offset, len: SIZE): LONGINT; 
+	PROCEDURE ^ CRC32*(crc: SIGNED32; CONST buf: ARRAY OF CHAR; offset, len: SIZE): SIGNED32; 
 BEGIN
 END Zlib.

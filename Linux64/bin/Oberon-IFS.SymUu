@@ -2,14 +2,14 @@ MODULE IFS IN Oberon;
 	IMPORT RandomNumbers, In, Out, XYplane;
 CONST 
 VAR 
-	a1, b1, c1, d1, e1, f1, p1: REAL; 
-	a2, b2, c2, d2, e2, f2, p2: REAL; 
-	a3, b3, c3, d3, e3, f3, p3: REAL; 
-	a4, b4, c4, d4, e4, f4, p4: REAL; 
-	X, Y: REAL; 
-	x0: INTEGER; 
-	y0: INTEGER; 
-	e: INTEGER; 
+	a1, b1, c1, d1, e1, f1, p1: FLOAT32; 
+	a2, b2, c2, d2, e2, f2, p2: FLOAT32; 
+	a3, b3, c3, d3, e3, f3, p3: FLOAT32; 
+	a4, b4, c4, d4, e4, f4, p4: FLOAT32; 
+	X, Y: FLOAT32; 
+	x0: SIGNED16; 
+	y0: SIGNED16; 
+	e: SIGNED16; 
 	initialized: BOOLEAN; 
 
 	PROCEDURE ^ Draw*; 

@@ -6,10 +6,10 @@ TYPE
 
 	PaletteDesc* = RECORD (vyBase.ObjDesc)
 		col-: ARRAY 256 OF Colors.Color; 
-		dcol-: ARRAY 256 OF LONGINT; 
+		dcol-: ARRAY 256 OF SIGNED32; 
 		icol-: ARRAY 256 OF Images.Pixel; 
-		used*: INTEGER; 
-		first*, last*: INTEGER; 
+		used*: SIGNED16; 
+		first*, last*: SIGNED16; 
 	END; 
 
 	NewColMsg* = RECORD (Objects.ObjMsg)
@@ -27,16 +27,16 @@ VAR
 	PROCEDURE ^ PHandleAttributes(obj: Palette; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ PHandler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ PNew*; 
-	PROCEDURE ^ SetCol*(p: Palette; index: INTEGER; col: LONGINT); 
-	PROCEDURE ^ GetRGBI(c: Colors.Color; VAR r, g, b: INTEGER); 
-	PROCEDURE ^ RGBPath*(p: Palette; first, last: INTEGER; r1, g1, b1, r2, g2, b2: REAL); 
-	PROCEDURE ^ ShiftPath*(p: Palette; tofirst, tolast: INTEGER); 
+	PROCEDURE ^ SetCol*(p: Palette; index: SIGNED16; col: SIGNED32); 
+	PROCEDURE ^ GetRGBI(c: Colors.Color; VAR r, g, b: SIGNED16); 
+	PROCEDURE ^ RGBPath*(p: Palette; first, last: SIGNED16; r1, g1, b1, r2, g2, b2: FLOAT32); 
+	PROCEDURE ^ ShiftPath*(p: Palette; tofirst, tolast: SIGNED16); 
 	PROCEDURE ^ PathFromTo*(from, to: Palette); 
 	PROCEDURE ^ DefaultPath*(p: Palette); 
 	PROCEDURE ^ DefaultPath2*(p: Palette); 
 	PROCEDURE ^ CopyPalette*(from, to: Palette); 
-	PROCEDURE ^ InitConversion*(depth: LONGINT; VAR p: Palette); 
-	PROCEDURE ^ Convert*(r, g, b: INTEGER): LONGINT; 
+	PROCEDURE ^ InitConversion*(depth: SIGNED32; VAR p: Palette); 
+	PROCEDURE ^ Convert*(r, g, b: SIGNED16): SIGNED32; 
 	PROCEDURE ^ InitPalette*(p: Palette); 
 BEGIN
 END vyColorPalettes.

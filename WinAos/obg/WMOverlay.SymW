@@ -18,7 +18,7 @@ CONST
 TYPE 
 	Item = RECORD 
 		isEnabled: BOOLEAN; 
-		bgEnabled: LONGINT; 
+		bgEnabled: SIGNED32; 
 		rect: WMRectangles.Rectangle; 
 		image, imageHover: WMGraphics.Image; 
 	END; 
@@ -26,14 +26,14 @@ TYPE
 	Window = OBJECT {EXCLUSIVE} (WMWindowManager.BufferWindow)
 	VAR 
 		lx, ly, stringX, stringY, stringX0, stringY0: SIZE; 
-		mode: WORD; 
+		mode: INTEGER; 
 		currentString: ARRAY 1024 OF CHAR; 
 		currentIdx: SIZE; 
 		mrEnabled: BOOLEAN; 
 		mouseOver: SIZE; 
-		currentPointer: WORD; 
+		currentPointer: INTEGER; 
 		currentIndex: SIZE; 
-		color, bgColor: LONGINT; 
+		color, bgColor: SIGNED32; 
 		dragStartX, dragStartY: SIZE; 
 		dragging, noDrag: BOOLEAN; 
 		modifierFlags: SET; 
@@ -42,14 +42,14 @@ TYPE
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ GetItemIndex(x, y: SIZE): SIZE; 
 		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; width, height: SIZE; quality: WORD); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; width, height: SIZE; quality: INTEGER); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
 		PROCEDURE ^ ProcessCommand(item: Item; index: SIZE); 
 		PROCEDURE ^ FocusLost*; 
-		PROCEDURE ^ Fill(color: LONGINT); 
+		PROCEDURE ^ Fill(color: SIGNED32); 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keySym: SIZE); 
 	END Window; 
 VAR 

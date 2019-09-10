@@ -37,7 +37,7 @@ TYPE
 	END; 
 
 	tSegment* = POINTER TO RECORD (tEntry)
-		nEntries: LONGINT; 
+		nEntries: SIGNED32; 
 		entries: tEntry; 
 	END; 
 
@@ -48,14 +48,14 @@ TYPE
 	tWriter = OBJECT 
 	VAR 
 		PutCh: WriterProc; 
-		EndOfLine: SHORTINT; 
+		EndOfLine: SIGNED8; 
 
-		PROCEDURE ^  & Init*(w: WriterProc; eol: SHORTINT); 
-		PROCEDURE ^ WriteSpace(level: LONGINT); 
+		PROCEDURE ^  & Init*(w: WriterProc; eol: SIGNED8); 
+		PROCEDURE ^ WriteSpace(level: SIGNED32); 
 		PROCEDURE ^ WriteLn; 
 		PROCEDURE ^ WriteString(str: ARRAY OF CHAR); 
-		PROCEDURE ^ WriteEntry(e: tEntry; VAR level: LONGINT); 
-		PROCEDURE ^ WriteSegment(s: tSegment; VAR level: LONGINT); 
+		PROCEDURE ^ WriteEntry(e: tEntry; VAR level: SIGNED32); 
+		PROCEDURE ^ WriteSegment(s: tSegment; VAR level: SIGNED32); 
 	END tWriter; 
 
 	tParser = OBJECT 
@@ -63,8 +63,8 @@ TYPE
 		writer: tWriter; 
 		ch, lastch: CHAR; 
 		noerr: BOOLEAN; 
-		pos: LONGINT; 
-		buflen, bufpos: LONGINT; 
+		pos: SIGNED32; 
+		buflen, bufpos: SIGNED32; 
 		buf: ARRAY (MaxIdLen + 2) OF CHAR; 
 		och: CHAR; 
 		GetCh: ReaderProc; 
@@ -73,20 +73,20 @@ TYPE
 		PROCEDURE ^ err(n: ARRAY OF CHAR); 
 		PROCEDURE ^ Getchb(VAR ch: CHAR); 
 		PROCEDURE ^ Getch(VAR ch: CHAR); 
-		PROCEDURE ^ Get(VAR sym: SHORTINT); 
-		PROCEDURE ^ White(VAR sym: SHORTINT); 
-		PROCEDURE ^ SkipNL(VAR sym: SHORTINT); 
-		PROCEDURE ^ Entry(VAR sym: SHORTINT; name: ARRAY OF CHAR; segment: tSegment); 
-		PROCEDURE ^ Subsection(VAR sym: SHORTINT; name: ARRAY OF CHAR; segment: tSegment): BOOLEAN; 
-		PROCEDURE ^ AssignHead(VAR sym: SHORTINT; VAR name: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ Segment(VAR sym: SHORTINT; segment: tSegment); 
+		PROCEDURE ^ Get(VAR sym: SIGNED8); 
+		PROCEDURE ^ White(VAR sym: SIGNED8); 
+		PROCEDURE ^ SkipNL(VAR sym: SIGNED8); 
+		PROCEDURE ^ Entry(VAR sym: SIGNED8; name: ARRAY OF CHAR; segment: tSegment); 
+		PROCEDURE ^ Subsection(VAR sym: SIGNED8; name: ARRAY OF CHAR; segment: tSegment): BOOLEAN; 
+		PROCEDURE ^ AssignHead(VAR sym: SIGNED8; VAR name: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Segment(VAR sym: SIGNED8; segment: tSegment); 
 		PROCEDURE ^ Configuration(): tSegment; 
 	END tParser; 
 VAR 
-	EndOfLine*: SHORTINT; 
+	EndOfLine*: SIGNED8; 
 	PathSeparator-: CHAR; 
 
-	PROCEDURE ^ Write*(e: tEntry; w: WriterProc; level: LONGINT); 
+	PROCEDURE ^ Write*(e: tEntry; w: WriterProc; level: SIGNED32); 
 	PROCEDURE ^ Append(e: tEntry; VAR to: tEntry); 
 	PROCEDURE ^ AddSegment*(to: tSegment; name: ARRAY OF CHAR): tSegment; 
 	PROCEDURE ^ AddValue*(to: tSegment; name, value: ARRAY OF CHAR); 

@@ -2,14 +2,14 @@ MODULE antsMDimDiscreteGS IN Oberon;
 	IMPORT antsObjects, antsFunctions, Objects, Files, Gadgets, antsNeighbourhoods, antsRegions, antsArrayObjects, Math := MathL IN A2, antsKernel, antsModels, antsCommands, vyName, vyBase, antsCaches, vyRanBase, Links, antsGlobals, aM := antsMessages;
 CONST 
 TYPE 
-	intArray = POINTER TO ARRAY OF INTEGER; 
+	intArray = POINTER TO ARRAY OF SIGNED16; 
 
-	realArray = POINTER TO ARRAY OF LONGREAL; 
+	realArray = POINTER TO ARRAY OF FLOAT64; 
 
 	tModel* = POINTER TO tModelDesc; 
 
 	tModelDesc* = RECORD (antsModels.tModelDesc)
-		dim-: LONGINT; 
+		dim-: SIGNED32; 
 		n*: antsNeighbourhoods.Neighbours; 
 		interactionF: antsFunctions.FunctionXd; 
 		current: realArray; 
@@ -18,10 +18,10 @@ TYPE
 
 	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
 	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
-	PROCEDURE ^ U(VAR values: ARRAY OF LONGREAL; M: tModel): LONGREAL; 
-	PROCEDURE ^ GetNeighbourValues(o, orig: antsArrayObjects.tINTEGERObject; n: antsNeighbourhoods.Neighbours; y, x: LONGINT; VAR values: ARRAY OF LONGREAL); 
-	PROCEDURE ^ MakeCaches(m: tModel; depth: LONGINT; data: BOOLEAN); 
-	PROCEDURE ^ Sync(m: tModel; depth: LONGINT); 
+	PROCEDURE ^ U(VAR values: ARRAY OF FLOAT64; M: tModel): FLOAT64; 
+	PROCEDURE ^ GetNeighbourValues(o, orig: antsArrayObjects.tINTEGERObject; n: antsNeighbourhoods.Neighbours; y, x: SIGNED32; VAR values: ARRAY OF FLOAT64); 
+	PROCEDURE ^ MakeCaches(m: tModel; depth: SIGNED32; data: BOOLEAN); 
+	PROCEDURE ^ Sync(m: tModel; depth: SIGNED32); 
 	PROCEDURE ^ OneSweep*(M: antsKernel.samplingMsg); 
 	PROCEDURE ^ Metropolis(msg: antsKernel.samplingMsg); 
 	PROCEDURE ^ Exchange(msg: antsKernel.samplingMsg); 

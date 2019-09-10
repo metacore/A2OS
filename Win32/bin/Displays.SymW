@@ -10,28 +10,28 @@ CONST
 	red* = 16711680; 
 	green* = 65280; 
 	blue* = 255; 
-	trans* = LONGINT(2147483648); 
+	trans* = SIGNED32(2147483648); 
 	invert* = 1073741824; 
 	BufSize = 65536; 
 TYPE 
 	Display* = OBJECT (Plugins.Plugin)
 	VAR 
-		width*, height*: LONGINT; 
-		offscreen*: LONGINT; 
-		format*: LONGINT; 
-		unit*: LONGINT; 
+		width*, height*: SIGNED32; 
+		offscreen*: SIGNED32; 
+		format*: SIGNED32; 
+		unit*: SIGNED32; 
 		fbadr-: ADDRESS; 
-		fbsize-, fbstride-: LONGINT; 
+		fbsize-, fbstride-: SIGNED32; 
 
-		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: WORD); 
-		PROCEDURE ^ Fill*(col, x, y, w, h: LONGINT); 
-		PROCEDURE ^ Dot*(col, x, y: LONGINT); 
-		PROCEDURE ^ Mask*(VAR buf: ARRAY OF CHAR; bitof, stride, fg, bg, x, y, w, h: LONGINT); 
-		PROCEDURE ^ Copy*(sx, sy, w, h, dx, dy: LONGINT); 
+		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: INTEGER); 
+		PROCEDURE ^ Fill*(col, x, y, w, h: SIGNED32); 
+		PROCEDURE ^ Dot*(col, x, y: SIGNED32); 
+		PROCEDURE ^ Mask*(VAR buf: ARRAY OF CHAR; bitof, stride, fg, bg, x, y, w, h: SIGNED32); 
+		PROCEDURE ^ Copy*(sx, sy, w, h, dx, dy: SIGNED32); 
 		PROCEDURE ^ Update*; 
-		PROCEDURE ^ ColorToIndex*(col: LONGINT): LONGINT; 
-		PROCEDURE ^ IndexToColor*(index: LONGINT): LONGINT; 
-		PROCEDURE ^ InitFrameBuffer*(adr: ADDRESS; size, stride: LONGINT); 
+		PROCEDURE ^ ColorToIndex*(col: SIGNED32): SIGNED32; 
+		PROCEDURE ^ IndexToColor*(index: SIGNED32): SIGNED32; 
+		PROCEDURE ^ InitFrameBuffer*(adr: ADDRESS; size, stride: SIGNED32); 
 		PROCEDURE ^ Finalize*; 
 	END Display; 
 VAR 
@@ -39,8 +39,8 @@ VAR
 	registry*: Plugins.Registry; 
 	buf: POINTER TO ARRAY BufSize OF CHAR; 
 
-	PROCEDURE ^ Fill0(d: Display; col, x, y, w, h: LONGINT); 
-	PROCEDURE ^ Copy0(d: Display; sx, sy, w, h, dx, dy: LONGINT); 
+	PROCEDURE ^ Fill0(d: Display; col, x, y, w, h: SIGNED32); 
+	PROCEDURE ^ Copy0(d: Display; sx, sy, w, h, dx, dy: SIGNED32); 
 	PROCEDURE ^ Reverse*; 
 BEGIN
 END Displays.

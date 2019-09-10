@@ -2,7 +2,7 @@ MODULE NbrInt16;
 	IMPORT NbrInt8, Streams;
 CONST 
 TYPE 
-	Integer* = INTEGER; 
+	Integer* = SIGNED16; 
 VAR 
 	MinNbr-, MaxNbr-: Integer; 
 

@@ -8,7 +8,7 @@ TYPE
 		pc, fp, sp: ADDRESS; 
 	END; 
 VAR 
-	trapHandlingLevel: LONGINT; 
+	trapHandlingLevel: SIGNED32; 
 	trace: BOOLEAN; 
 	unix: Commands.Context; 
 	trapMutex: Unix.Mutex_t; 
@@ -20,7 +20,7 @@ VAR
 	PROCEDURE ^ FinishTrap(w: Streams.Writer; p: Objects.Process); 
 	PROCEDURE ^ Register(w: Streams.Writer; CONST name: ARRAY OF CHAR; value: ADDRESS); 
 	PROCEDURE ^ Registers(CONST mc: Unix.Mcontext; w: Streams.Writer); 
-	PROCEDURE ^ Trap(sig: LONGINT; mc: Unix.Mcontext); 
+	PROCEDURE ^ Trap(sig: SIGNED32; mc: Unix.Mcontext); 
 	PROCEDURE ^ UnlockOberon; 
 	PROCEDURE ^ SearchExceptionHandler(process: Objects.Process; mc: Unix.Mcontext; VAR handler: ExceptionHandler); 
 BEGIN

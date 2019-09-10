@@ -21,9 +21,9 @@ TYPE
 	Page = POINTER TO PageDesc; 
 
 	PageDesc = RECORD 
-		org: LONGINT; 
-		p0: LONGINT; 
-		m: INTEGER; 
+		org: SIGNED32; 
+		p0: SIGNED32; 
+		m: SIGNED16; 
 		dirty: BOOLEAN; 
 		discard: BOOLEAN; 
 		next: Page; 
@@ -34,21 +34,21 @@ TYPE
 	TreeDesc = RECORD 
 		F: Files.File; 
 		cache: Page; 
-		org: LONGINT; 
-		root: LONGINT; 
-		free: LONGINT; 
-		class: INTEGER; 
-		noCache: INTEGER; 
-		maxCache: INTEGER; 
+		org: SIGNED32; 
+		root: SIGNED32; 
+		free: SIGNED32; 
+		class: SIGNED16; 
+		noCache: SIGNED16; 
+		maxCache: SIGNED16; 
 	END; 
 
 	Entry = RECORD 
-		org: LONGINT; 
-		p: LONGINT; 
+		org: SIGNED32; 
+		p: SIGNED32; 
 	END; 
 
 	LIntEntry = RECORD (Entry)
-		key: LONGINT; 
+		key: SIGNED32; 
 	END; 
 
 	LIntPage = POINTER TO LIntPageDesc; 
@@ -57,7 +57,7 @@ TYPE
 		e: ARRAY (2 * LIntPageN) OF LIntEntry; 
 	END; 
 
-	EnumLIntProc* = PROCEDURE (key, org: LONGINT; VAR cont: BOOLEAN); 
+	EnumLIntProc* = PROCEDURE (key, org: SIGNED32; VAR cont: BOOLEAN); 
 
 	StrEntry = RECORD (Entry)
 		key: ARRAY StrKeySize OF CHAR; 
@@ -69,45 +69,45 @@ TYPE
 		e: ARRAY (2 * StrPageN) OF StrEntry; 
 	END; 
 
-	EnumStrProc* = PROCEDURE (key: ARRAY OF CHAR; org: LONGINT; VAR cont: BOOLEAN); 
+	EnumStrProc* = PROCEDURE (key: ARRAY OF CHAR; org: SIGNED32; VAR cont: BOOLEAN); 
 VAR 
 	MINStrKey*, MAXStrKey*: ARRAY StrKeySize OF CHAR; 
 
-	PROCEDURE ^ AllocSpace(T: Tree; size: LONGINT): LONGINT; 
+	PROCEDURE ^ AllocSpace(T: Tree; size: SIGNED32): SIGNED32; 
 	PROCEDURE ^ ToFree(T: Tree; P: Page); 
 	PROCEDURE ^ WriteLIntPage(T: Tree; p: LIntPage); 
 	PROCEDURE ^ NewLIntPage(T: Tree): LIntPage; 
-	PROCEDURE ^ ReadLIntPage(T: Tree; org: LONGINT; VAR p: LIntPage); 
-	PROCEDURE ^ SearchLInt*(T: Tree; key: LONGINT; VAR org: LONGINT; VAR res: INTEGER); 
-	PROCEDURE ^ insertLInt(T: Tree; key, org: LONGINT; a: LIntPage; VAR h: BOOLEAN; VAR v: LIntEntry; VAR res: INTEGER); 
-	PROCEDURE ^ InsertLInt*(T: Tree; key, org: LONGINT; VAR res: INTEGER); 
-	PROCEDURE ^ underflowLInt(T: Tree; c, a: LIntPage; s: LONGINT; VAR h: BOOLEAN); 
-	PROCEDURE ^ deleteLInt(T: Tree; key: LONGINT; a: LIntPage; VAR h: BOOLEAN; VAR res: INTEGER); 
-	PROCEDURE ^ DeleteLInt*(T: Tree; key: LONGINT; VAR res: INTEGER); 
-	PROCEDURE ^ enumerateLInt(T: Tree; p: LIntPage; min, max: LONGINT; enum: EnumLIntProc; VAR cont: BOOLEAN); 
-	PROCEDURE ^ EnumLInt*(T: Tree; min, max: LONGINT; enum: EnumLIntProc); 
-	PROCEDURE ^ minLIntKey(T: Tree; p: LIntPage; VAR key: LONGINT); 
-	PROCEDURE ^ MinLIntKey*(T: Tree; VAR key: LONGINT; VAR res: INTEGER); 
-	PROCEDURE ^ maxLIntKey(T: Tree; p: LIntPage; VAR key: LONGINT); 
-	PROCEDURE ^ MaxLIntKey*(T: Tree; VAR key: LONGINT; VAR res: INTEGER); 
-	PROCEDURE ^ NewLInt*(F: Files.File; org: LONGINT; cache: INTEGER): Tree; 
+	PROCEDURE ^ ReadLIntPage(T: Tree; org: SIGNED32; VAR p: LIntPage); 
+	PROCEDURE ^ SearchLInt*(T: Tree; key: SIGNED32; VAR org: SIGNED32; VAR res: SIGNED16); 
+	PROCEDURE ^ insertLInt(T: Tree; key, org: SIGNED32; a: LIntPage; VAR h: BOOLEAN; VAR v: LIntEntry; VAR res: SIGNED16); 
+	PROCEDURE ^ InsertLInt*(T: Tree; key, org: SIGNED32; VAR res: SIGNED16); 
+	PROCEDURE ^ underflowLInt(T: Tree; c, a: LIntPage; s: SIGNED32; VAR h: BOOLEAN); 
+	PROCEDURE ^ deleteLInt(T: Tree; key: SIGNED32; a: LIntPage; VAR h: BOOLEAN; VAR res: SIGNED16); 
+	PROCEDURE ^ DeleteLInt*(T: Tree; key: SIGNED32; VAR res: SIGNED16); 
+	PROCEDURE ^ enumerateLInt(T: Tree; p: LIntPage; min, max: SIGNED32; enum: EnumLIntProc; VAR cont: BOOLEAN); 
+	PROCEDURE ^ EnumLInt*(T: Tree; min, max: SIGNED32; enum: EnumLIntProc); 
+	PROCEDURE ^ minLIntKey(T: Tree; p: LIntPage; VAR key: SIGNED32); 
+	PROCEDURE ^ MinLIntKey*(T: Tree; VAR key: SIGNED32; VAR res: SIGNED16); 
+	PROCEDURE ^ maxLIntKey(T: Tree; p: LIntPage; VAR key: SIGNED32); 
+	PROCEDURE ^ MaxLIntKey*(T: Tree; VAR key: SIGNED32; VAR res: SIGNED16); 
+	PROCEDURE ^ NewLInt*(F: Files.File; org: SIGNED32; cache: SIGNED16): Tree; 
 	PROCEDURE ^ WriteStrPage(T: Tree; p: StrPage); 
 	PROCEDURE ^ NewStrPage(T: Tree): StrPage; 
-	PROCEDURE ^ ReadStrPage(T: Tree; org: LONGINT; VAR p: StrPage); 
-	PROCEDURE ^ SearchStr*(T: Tree; key: ARRAY OF CHAR; VAR org: LONGINT; VAR res: INTEGER); 
-	PROCEDURE ^ insertStr(T: Tree; VAR key: ARRAY OF CHAR; org: LONGINT; a: StrPage; VAR h: BOOLEAN; VAR v: StrEntry; VAR res: INTEGER); 
-	PROCEDURE ^ InsertStr*(T: Tree; key: ARRAY OF CHAR; org: LONGINT; VAR res: INTEGER); 
-	PROCEDURE ^ underflowStr(T: Tree; c, a: StrPage; s: LONGINT; VAR h: BOOLEAN); 
-	PROCEDURE ^ deleteStr(T: Tree; VAR key: ARRAY OF CHAR; a: StrPage; VAR h: BOOLEAN; VAR res: INTEGER); 
-	PROCEDURE ^ DeleteStr*(T: Tree; key: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ ReadStrPage(T: Tree; org: SIGNED32; VAR p: StrPage); 
+	PROCEDURE ^ SearchStr*(T: Tree; key: ARRAY OF CHAR; VAR org: SIGNED32; VAR res: SIGNED16); 
+	PROCEDURE ^ insertStr(T: Tree; VAR key: ARRAY OF CHAR; org: SIGNED32; a: StrPage; VAR h: BOOLEAN; VAR v: StrEntry; VAR res: SIGNED16); 
+	PROCEDURE ^ InsertStr*(T: Tree; key: ARRAY OF CHAR; org: SIGNED32; VAR res: SIGNED16); 
+	PROCEDURE ^ underflowStr(T: Tree; c, a: StrPage; s: SIGNED32; VAR h: BOOLEAN); 
+	PROCEDURE ^ deleteStr(T: Tree; VAR key: ARRAY OF CHAR; a: StrPage; VAR h: BOOLEAN; VAR res: SIGNED16); 
+	PROCEDURE ^ DeleteStr*(T: Tree; key: ARRAY OF CHAR; VAR res: SIGNED16); 
 	PROCEDURE ^ enumerateStr(T: Tree; p: StrPage; VAR min, max: ARRAY OF CHAR; enum: EnumStrProc; VAR cont: BOOLEAN); 
 	PROCEDURE ^ EnumStr*(T: Tree; min, max: ARRAY OF CHAR; enum: EnumStrProc); 
 	PROCEDURE ^ minStrKey(T: Tree; p: StrPage; VAR key: ARRAY OF CHAR); 
-	PROCEDURE ^ MinStrKey*(T: Tree; VAR key: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ MinStrKey*(T: Tree; VAR key: ARRAY OF CHAR; VAR res: SIGNED16); 
 	PROCEDURE ^ maxStrKey(T: Tree; p: StrPage; VAR key: ARRAY OF CHAR); 
-	PROCEDURE ^ MaxStrKey*(T: Tree; VAR key: ARRAY OF CHAR; VAR res: INTEGER); 
-	PROCEDURE ^ NewStr*(F: Files.File; org: LONGINT; cache: INTEGER): Tree; 
-	PROCEDURE ^ Old*(F: Files.File; org: LONGINT): Tree; 
+	PROCEDURE ^ MaxStrKey*(T: Tree; VAR key: ARRAY OF CHAR; VAR res: SIGNED16); 
+	PROCEDURE ^ NewStr*(F: Files.File; org: SIGNED32; cache: SIGNED16): Tree; 
+	PROCEDURE ^ Old*(F: Files.File; org: SIGNED32): Tree; 
 	PROCEDURE ^ Flush*(T: Tree); 
 	PROCEDURE ^ Base*(T: Tree): Files.File; 
 	PROCEDURE ^ Init; 

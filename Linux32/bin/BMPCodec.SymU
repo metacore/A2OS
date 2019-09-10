@@ -11,17 +11,17 @@ TYPE
 	VAR 
 		errors: BOOLEAN; 
 		in: Streams.Reader; 
-		size, reserved, offset, width, height, compression, colors, importantColors, col, redMask, greenMask, blueMask: LONGINT; 
-		planes, bpp: INTEGER; 
+		size, reserved, offset, width, height, compression, colors, importantColors, col, redMask, greenMask, blueMask: SIGNED32; 
+		planes, bpp: SIGNED16; 
 		pal: Raster.Palette; 
 		img: Raster.Image; 
 		decoded: BOOLEAN; 
 
 		PROCEDURE ^ Error(x: ARRAY OF CHAR); 
 		PROCEDURE ^ Log(x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
-		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: LONGINT); 
-		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: SIGNED32); 
+		PROCEDURE ^ SetProgressionLevel*(progressionLevel: SIGNED32); 
 		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
 		PROCEDURE ^ Render*(img: Raster.Image); 
 	END BMPDecoder; 
@@ -31,23 +31,23 @@ TYPE
 		out: Streams.Writer; 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ SetQuality*(quality: LONGINT); 
-		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: WORD); 
+		PROCEDURE ^ SetQuality*(quality: SIGNED32); 
+		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: INTEGER); 
 	END BMPEncoder; 
 
-	PROCEDURE ^ Unmask(val, mask, nbits: LONGINT): LONGINT; 
-	PROCEDURE ^ Load1(img: Raster.Image; w, h: LONGINT; VAR pal: Raster.Palette; r: Streams.Reader); 
-	PROCEDURE ^ Load4(img: Raster.Image; w, h, compression: LONGINT; pal: Raster.Palette; r: Streams.Reader); 
-	PROCEDURE ^ Load8(img: Raster.Image; w, h, compression: LONGINT; pal: Raster.Palette; r: Streams.Reader); 
-	PROCEDURE ^ Load16(img: Raster.Image; w, h, compression, rMask, gMask, bMask: LONGINT; r: Streams.Reader); 
-	PROCEDURE ^ Load24(img: Raster.Image; w, h: LONGINT; r: Streams.Reader); 
-	PROCEDURE ^ Load32(img: Raster.Image; w, h, compression, rMask, gMask, bMask: LONGINT; r: Streams.Reader); 
+	PROCEDURE ^ Unmask(val, mask, nbits: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Load1(img: Raster.Image; w, h: SIGNED32; VAR pal: Raster.Palette; r: Streams.Reader); 
+	PROCEDURE ^ Load4(img: Raster.Image; w, h, compression: SIGNED32; pal: Raster.Palette; r: Streams.Reader); 
+	PROCEDURE ^ Load8(img: Raster.Image; w, h, compression: SIGNED32; pal: Raster.Palette; r: Streams.Reader); 
+	PROCEDURE ^ Load16(img: Raster.Image; w, h, compression, rMask, gMask, bMask: SIGNED32; r: Streams.Reader); 
+	PROCEDURE ^ Load24(img: Raster.Image; w, h: SIGNED32; r: Streams.Reader); 
+	PROCEDURE ^ Load32(img: Raster.Image; w, h, compression, rMask, gMask, bMask: SIGNED32; r: Streams.Reader); 
 	PROCEDURE ^ Store1(img: Raster.Image; w, h: SIZE; out: Streams.Writer); 
 	PROCEDURE ^ Store4(img: Raster.Image; w, h: SIZE; out: Streams.Writer); 
 	PROCEDURE ^ Store8(img: Raster.Image; w, h: SIZE; out: Streams.Writer); 
-	PROCEDURE ^ Store16(img: Raster.Image; w, h: SIZE; rMask, gMask, bMask: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ Store16(img: Raster.Image; w, h: SIZE; rMask, gMask, bMask: SIGNED32; out: Streams.Writer); 
 	PROCEDURE ^ Store24(img: Raster.Image; w, h: SIZE; out: Streams.Writer); 
-	PROCEDURE ^ Store32(img: Raster.Image; w, h: SIZE; rMask, gMask, bMask: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ Store32(img: Raster.Image; w, h: SIZE; rMask, gMask, bMask: SIGNED32; out: Streams.Writer); 
 	PROCEDURE ^ DecoderFactory*(): Codecs.ImageDecoder; 
 	PROCEDURE ^ EncoderFactory*(): Codecs.ImageEncoder; 
 BEGIN

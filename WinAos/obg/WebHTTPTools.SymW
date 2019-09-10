@@ -4,7 +4,7 @@ CONST
 VAR 
 	log: TFLog.Log; 
 
-	PROCEDURE ^ HexStrToIntDef(CONST x: ARRAY OF CHAR; def: LONGINT): LONGINT; 
+	PROCEDURE ^ HexStrToIntDef(CONST x: ARRAY OF CHAR; def: SIGNED32): SIGNED32; 
 	PROCEDURE ^ MatchPrefixI(CONST prefix, str: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Get*(context: Commands.Context); 
 	PROCEDURE ^ Head*(context: Commands.Context); 

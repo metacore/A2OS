@@ -2,7 +2,7 @@ MODULE LayLaDemo IN Oberon;
 	IMPORT Gadgets, Texts, Objects, LayLa, LayLa2, Layouts, Out, Oberon, PanelDocs, Documents, Desktops, Display;
 CONST 
 
-	PROCEDURE ^ GetText(VAR T: Texts.Text; VAR beg: LONGINT); 
+	PROCEDURE ^ GetText(VAR T: Texts.Text; VAR beg: SIGNED32); 
 	PROCEDURE ^ Insert*; 
 	PROCEDURE ^ InsertDoc*; 
 	PROCEDURE ^ Insert2*; 

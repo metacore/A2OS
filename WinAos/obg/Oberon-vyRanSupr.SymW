@@ -7,12 +7,12 @@ CONST
 TYPE 
 	tSeed = OBJECT (vyRanBase.tSeed)
 	VAR 
-		x, y: LONGINT; 
+		x, y: SIGNED32; 
 		add: BOOLEAN; 
-		n: LONGINT; 
+		n: SIGNED32; 
 
 		PROCEDURE ^ Store*(VAR r: Files.Rider); 
-		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: SIGNED16); 
 	END tSeed; 
 
 	tRandom = vyRanBase.tRandom; 
@@ -26,8 +26,8 @@ VAR
 	PROCEDURE ^ Next(r: tRandom); 
 	PROCEDURE ^ Max(r: tRandom): Bits; 
 	PROCEDURE ^ Get(r: tRandom): Bits; 
-	PROCEDURE ^ GetUniform(r: tRandom): LONGREAL; 
-	PROCEDURE ^ GetL(r: tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ GetUniform(r: tRandom): FLOAT64; 
+	PROCEDURE ^ GetL(r: tRandom; top: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Reset(r: tRandom); 
 	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 

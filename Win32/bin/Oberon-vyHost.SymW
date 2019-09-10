@@ -13,43 +13,43 @@ CONST
 	movie* = 15; 
 	maxdims* = 10; 
 TYPE 
-	Index* = LONGINT; 
+	Index* = SIGNED32; 
 
 	Viewer* = Viewers.Viewer; 
 
 	Frame* = Display.Frame; 
 VAR 
-	ticks-: LONGINT; 
+	ticks-: SIGNED32; 
 	w: Texts.Writer; 
 
 	PROCEDURE ^ Addr*(p: ANY): ADDRESS; 
-	PROCEDURE ^ GetCaret*(VAR F: Frame; VAR text: Texts.Text; VAR pos: LONGINT); 
-	PROCEDURE ^ GetSelectionText*(VAR text: Texts.Text; VAR beg, end: LONGINT); 
+	PROCEDURE ^ GetCaret*(VAR F: Frame; VAR text: Texts.Text; VAR pos: SIGNED32); 
+	PROCEDURE ^ GetSelectionText*(VAR text: Texts.Text; VAR beg, end: SIGNED32); 
 	PROCEDURE ^ GetPar*; 
-	PROCEDURE ^ GetParText*(VAR text: Texts.Text; VAR pos: LONGINT); 
+	PROCEDURE ^ GetParText*(VAR text: Texts.Text; VAR pos: SIGNED32); 
 	PROCEDURE ^ GetMarkedViewer*; 
 	PROCEDURE ^ GetMarkedText*(VAR text: Texts.Text); 
 	PROCEDURE ^ GetNamedText*(name: ARRAY OF CHAR; VAR text: Texts.Text); 
 	PROCEDURE ^ GetVisibleOutput(VAR F: Frame; VAR text: Texts.Text); 
 	PROCEDURE ^ StringLength*(s: ARRAY OF CHAR): Index; 
 	PROCEDURE ^ StringAppend*(extra: ARRAY OF CHAR; start: Index; VAR dest: ARRAY OF CHAR; VAR pos: Index); 
-	PROCEDURE ^ StringAppendInt*(x, n: LONGINT; VAR dest: ARRAY OF CHAR; VAR pos: Index); 
-	PROCEDURE ^ StringAppendHex*(x: LONGINT; VAR dest: ARRAY OF CHAR; VAR pos: Index); 
-	PROCEDURE ^ StringAppendDate*(t, d: LONGINT; VAR dest: ARRAY OF CHAR; VAR pos: Index); 
-	PROCEDURE ^ CallWString*(name: ARRAY OF CHAR; pars: ARRAY OF CHAR; new: BOOLEAN; VAR res: INTEGER); 
-	PROCEDURE ^ CallWStringX*(name, pre: ARRAY OF CHAR; pars: ARRAY OF CHAR; new: BOOLEAN; VAR res: INTEGER); 
-	PROCEDURE ^ XpwrI*(x: REAL; i: INTEGER): REAL; 
-	PROCEDURE ^ XLpwrIL*(x: LONGREAL; i: LONGINT): LONGREAL; 
-	PROCEDURE ^ Ten*(i: INTEGER): REAL; 
-	PROCEDURE ^ TenL*(i: LONGINT): LONGREAL; 
-	PROCEDURE ^ GetString*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR s: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ GetLInt*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: LONGINT): BOOLEAN; 
-	PROCEDURE ^ GetInt*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: INTEGER): BOOLEAN; 
-	PROCEDURE ^ GetSInt*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: SHORTINT): BOOLEAN; 
-	PROCEDURE ^ GetLReal*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: LONGREAL): BOOLEAN; 
-	PROCEDURE ^ GetReal*(VAR text: Texts.Text; pos: LONGINT; len: INTEGER; VAR x: REAL): BOOLEAN; 
+	PROCEDURE ^ StringAppendInt*(x, n: SIGNED32; VAR dest: ARRAY OF CHAR; VAR pos: Index); 
+	PROCEDURE ^ StringAppendHex*(x: SIGNED32; VAR dest: ARRAY OF CHAR; VAR pos: Index); 
+	PROCEDURE ^ StringAppendDate*(t, d: SIGNED32; VAR dest: ARRAY OF CHAR; VAR pos: Index); 
+	PROCEDURE ^ CallWString*(name: ARRAY OF CHAR; pars: ARRAY OF CHAR; new: BOOLEAN; VAR res: SIGNED16); 
+	PROCEDURE ^ CallWStringX*(name, pre: ARRAY OF CHAR; pars: ARRAY OF CHAR; new: BOOLEAN; VAR res: SIGNED16); 
+	PROCEDURE ^ XpwrI*(x: FLOAT32; i: SIGNED16): FLOAT32; 
+	PROCEDURE ^ XLpwrIL*(x: FLOAT64; i: SIGNED32): FLOAT64; 
+	PROCEDURE ^ Ten*(i: SIGNED16): FLOAT32; 
+	PROCEDURE ^ TenL*(i: SIGNED32): FLOAT64; 
+	PROCEDURE ^ GetString*(VAR text: Texts.Text; pos: SIGNED32; len: SIGNED16; VAR s: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ GetLInt*(VAR text: Texts.Text; pos: SIGNED32; len: SIGNED16; VAR x: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ GetInt*(VAR text: Texts.Text; pos: SIGNED32; len: SIGNED16; VAR x: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ GetSInt*(VAR text: Texts.Text; pos: SIGNED32; len: SIGNED16; VAR x: SIGNED8): BOOLEAN; 
+	PROCEDURE ^ GetLReal*(VAR text: Texts.Text; pos: SIGNED32; len: SIGNED16; VAR x: FLOAT64): BOOLEAN; 
+	PROCEDURE ^ GetReal*(VAR text: Texts.Text; pos: SIGNED32; len: SIGNED16; VAR x: FLOAT32): BOOLEAN; 
 	PROCEDURE ^ ShowId*; 
-	PROCEDURE ^ DisplayNewPattern*(x, y: INTEGER; VAR img: ARRAY OF SET): ADDRESS; 
+	PROCEDURE ^ DisplayNewPattern*(x, y: SIGNED16; VAR img: ARRAY OF SET): ADDRESS; 
 	PROCEDURE ^ StackFrame*(msg: ARRAY OF CHAR); 
 BEGIN
 END vyHost.

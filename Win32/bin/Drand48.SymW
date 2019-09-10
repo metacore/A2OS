@@ -7,17 +7,17 @@ CONST
 TYPE 
 	Generator* = OBJECT 
 	VAR 
-		x, a: HUGEINT; 
-		c: LONGINT; 
+		x, a: SIGNED64; 
+		c: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Drand48*(): LONGREAL; 
-		PROCEDURE ^ Lrand48*(): LONGINT; 
-		PROCEDURE ^ Mrand48*(): LONGINT; 
-		PROCEDURE ^ Xrand48*(): HUGEINT; 
-		PROCEDURE ^ Srand48*(seed: LONGINT); 
-		PROCEDURE ^ Seed48*(seed: HUGEINT): HUGEINT; 
-		PROCEDURE ^ Lcong48*(par: ARRAY OF HUGEINT); 
+		PROCEDURE ^ Drand48*(): FLOAT64; 
+		PROCEDURE ^ Lrand48*(): SIGNED32; 
+		PROCEDURE ^ Mrand48*(): SIGNED32; 
+		PROCEDURE ^ Xrand48*(): SIGNED64; 
+		PROCEDURE ^ Srand48*(seed: SIGNED32); 
+		PROCEDURE ^ Seed48*(seed: SIGNED64): SIGNED64; 
+		PROCEDURE ^ Lcong48*(par: ARRAY OF SIGNED64); 
 	END Generator; 
 BEGIN
 END Drand48.

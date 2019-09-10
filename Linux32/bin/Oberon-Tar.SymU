@@ -7,7 +7,7 @@ TYPE
 
 	EntryDesc = RECORD 
 		name: ARRAY 256 OF CHAR; 
-		pos, size: LONGINT; 
+		pos, size: SIGNED32; 
 		next: Entry; 
 	END; 
 
@@ -19,7 +19,7 @@ TYPE
 	END; 
 
 	PROCEDURE ^ ExtractFileName(CONST buf: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ ExtractSize(CONST buf: ARRAY OF CHAR; VAR size: LONGINT); 
+	PROCEDURE ^ ExtractSize(CONST buf: ARRAY OF CHAR; VAR size: SIGNED32); 
 	PROCEDURE ^ ReadEntries(CONST fileName: ARRAY OF CHAR; VAR F: Files.File; VAR entries: Entry); 
 	PROCEDURE ^ DisplayEntries(T: Texts.Text; e: Entry); 
 	PROCEDURE ^ GetFile(e: Entry; F: Files.File); 

@@ -167,7 +167,7 @@ TYPE
 	BEGIN{ACTIVE} 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ OutputError(CONST error: ARRAY OF CHAR); 
 	PROCEDURE ^ Open*; 

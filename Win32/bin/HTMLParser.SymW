@@ -25,7 +25,7 @@ TYPE
 		scanner: Scanner.Scanner; 
 		openTagStack: OpenTagStack; 
 		elemReg*: XML.ElementRegistry; 
-		reportError*: PROCEDURE {DELEGATE}(pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
+		reportError*: PROCEDURE {DELEGATE}(pos, line, row: SIGNED32; msg: ARRAY OF CHAR); 
 		closedTag: String; 
 		newTagName: String; 
 		closedTagPremature: BOOLEAN; 
@@ -48,7 +48,7 @@ TYPE
 	END Parser; 
 
 	PROCEDURE ^ IsPubidLiteral(CONST str: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ DefaultReportError(pos, line, col: LONGINT; msg: ARRAY OF CHAR); 
+	PROCEDURE ^ DefaultReportError(pos, line, col: SIGNED32; msg: ARRAY OF CHAR); 
 	PROCEDURE ^ IsSolitaryTag(name: String): BOOLEAN; 
 	PROCEDURE ^ PrematureTagClosing(name, next: String): BOOLEAN; 
 BEGIN

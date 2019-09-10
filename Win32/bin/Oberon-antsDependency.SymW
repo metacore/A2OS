@@ -4,14 +4,14 @@ CONST
 	sourcenode = 1; 
 	usernode = 2; 
 TYPE 
-	Real = LONGREAL; 
+	Real = FLOAT64; 
 
 	tNode = POINTER TO tNodeDesc; 
 
 	tNodeDesc = RECORD (vyGraph.tNodeDesc)
 		o: Objects.Object; 
-		dir: INTEGER; 
-		level, levelpos: INTEGER; 
+		dir: SIGNED16; 
+		level, levelpos: SIGNED16; 
 	END; 
 
 	tLayer* = POINTER TO tLayerDesc; 
@@ -23,11 +23,11 @@ TYPE
 VAR 
 	gNode: tNode; 
 	gObject: Objects.Object; 
-	minlevel, maxlevel: INTEGER; 
-	currange: POINTER TO ARRAY OF INTEGER; 
+	minlevel, maxlevel: SIGNED16; 
+	currange: POINTER TO ARRAY OF SIGNED16; 
 	graph: vyGraph.tGraph; 
-	min, max: INTEGER; 
-	rangex: LONGREAL; 
+	min, max: SIGNED16; 
+	rangex: FLOAT64; 
 	tempLayer: tLayer; 
 	vvv: tNode; 
 

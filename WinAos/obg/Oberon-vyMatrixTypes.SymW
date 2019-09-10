@@ -8,7 +8,7 @@ TYPE
 	labels = POINTER TO ARRAY OF label; 
 
 	par = RECORD 
-		min, max, mean: LONGREAL; 
+		min, max, mean: FLOAT64; 
 	END; 
 
 	pars = POINTER TO ARRAY OF par; 
@@ -23,18 +23,18 @@ TYPE
 	tMatrix* = POINTER TO tMatrixDesc; 
 
 	tMatrixDesc* = RECORD 
-		rows-, columns-: LONGINT; 
+		rows-, columns-: SIGNED32; 
 		transposed-: BOOLEAN; 
 		rowlabels*, collabels*: labels; 
 		firstrow: tRow; 
 		rowcache: tRow; 
-		cachedrow: LONGINT; 
+		cachedrow: SIGNED32; 
 		rParsCache, cParsCache: pars; 
 	END; 
 
-	tIntGetProc = PROCEDURE (me: tMatrix; row, col: LONGINT):INTEGER; 
+	tIntGetProc = PROCEDURE (me: tMatrix; row, col: SIGNED32):SIGNED16; 
 
-	tIntSetProc = PROCEDURE (val: INTEGER; me: tMatrix; row, col: LONGINT); 
+	tIntSetProc = PROCEDURE (val: SIGNED16; me: tMatrix; row, col: SIGNED32); 
 
 	tIntMatrix = POINTER TO tIntMatrixDesc; 
 
@@ -43,9 +43,9 @@ TYPE
 		Set: tIntSetProc; 
 	END; 
 
-	tRealGetProc = PROCEDURE (me: tMatrix; row, col: LONGINT):REAL; 
+	tRealGetProc = PROCEDURE (me: tMatrix; row, col: SIGNED32):FLOAT32; 
 
-	tRealSetProc = PROCEDURE (val: REAL; me: tMatrix; row, col: LONGINT); 
+	tRealSetProc = PROCEDURE (val: FLOAT32; me: tMatrix; row, col: SIGNED32); 
 
 	tRealMatrix = POINTER TO tRealMatrixDesc; 
 
@@ -54,54 +54,54 @@ TYPE
 		Set: tRealSetProc; 
 	END; 
 
-	VDist* = PROCEDURE (v1, v2: vyBase.tVector):LONGREAL; 
+	VDist* = PROCEDURE (v1, v2: vyBase.tVector):FLOAT64; 
 
 	PROCEDURE ^ copyLabel(VAR l1, l2: label); 
-	PROCEDURE ^ InsertLabel(from: labels; at: LONGINT; s: ARRAY OF CHAR): labels; 
-	PROCEDURE ^ DoInsertNewRow(me: tMatrix; at: LONGINT; typ: vyBase.OPTStruct); 
-	PROCEDURE ^ DoInsertNewCol(me: tMatrix; at: LONGINT; typ: vyBase.OPTStruct); 
-	PROCEDURE ^ InsertNewRow*(me: tMatrix; at: LONGINT); 
-	PROCEDURE ^ InsertNewColumn*(me: tMatrix; at: LONGINT); 
-	PROCEDURE ^ DoDeleteRow(M: tMatrix; at: LONGINT); 
-	PROCEDURE ^ DoDeleteColumn(M: tMatrix; at: LONGINT); 
-	PROCEDURE ^ DeleteRow*(M: tMatrix; at: LONGINT); 
-	PROCEDURE ^ DeleteColumn*(M: tMatrix; at: LONGINT); 
-	PROCEDURE ^ GetInt*(me: tMatrix; row, col: LONGINT): INTEGER; 
-	PROCEDURE ^ SetInt*(val: INTEGER; me: tMatrix; row, col: LONGINT); 
-	PROCEDURE ^ GetIRow*(M: tMatrix; row: LONGINT): vyBase.tVector; 
-	PROCEDURE ^ GetICol*(M: tMatrix; col: LONGINT): vyBase.tVector; 
-	PROCEDURE ^ SetIRow*(v: vyBase.tVector; M: tMatrix; row: LONGINT); 
-	PROCEDURE ^ SetICol*(v: vyBase.tVector; M: tMatrix; col: LONGINT); 
-	PROCEDURE ^ GetReal*(me: tMatrix; row, col: LONGINT): REAL; 
-	PROCEDURE ^ SetReal*(val: REAL; me: tMatrix; row, col: LONGINT); 
-	PROCEDURE ^ GetRRow*(M: tMatrix; row: LONGINT): vyBase.tVector; 
-	PROCEDURE ^ GetRCol*(M: tMatrix; col: LONGINT): vyBase.tVector; 
-	PROCEDURE ^ SetRRow*(v: vyBase.tVector; M: tMatrix; row: LONGINT); 
-	PROCEDURE ^ SetRCol*(v: vyBase.tVector; M: tMatrix; col: LONGINT); 
-	PROCEDURE ^ InsertRow*(M: tMatrix; rowv: vyBase.tVector; at: LONGINT); 
+	PROCEDURE ^ InsertLabel(from: labels; at: SIGNED32; s: ARRAY OF CHAR): labels; 
+	PROCEDURE ^ DoInsertNewRow(me: tMatrix; at: SIGNED32; typ: vyBase.OPTStruct); 
+	PROCEDURE ^ DoInsertNewCol(me: tMatrix; at: SIGNED32; typ: vyBase.OPTStruct); 
+	PROCEDURE ^ InsertNewRow*(me: tMatrix; at: SIGNED32); 
+	PROCEDURE ^ InsertNewColumn*(me: tMatrix; at: SIGNED32); 
+	PROCEDURE ^ DoDeleteRow(M: tMatrix; at: SIGNED32); 
+	PROCEDURE ^ DoDeleteColumn(M: tMatrix; at: SIGNED32); 
+	PROCEDURE ^ DeleteRow*(M: tMatrix; at: SIGNED32); 
+	PROCEDURE ^ DeleteColumn*(M: tMatrix; at: SIGNED32); 
+	PROCEDURE ^ GetInt*(me: tMatrix; row, col: SIGNED32): SIGNED16; 
+	PROCEDURE ^ SetInt*(val: SIGNED16; me: tMatrix; row, col: SIGNED32); 
+	PROCEDURE ^ GetIRow*(M: tMatrix; row: SIGNED32): vyBase.tVector; 
+	PROCEDURE ^ GetICol*(M: tMatrix; col: SIGNED32): vyBase.tVector; 
+	PROCEDURE ^ SetIRow*(v: vyBase.tVector; M: tMatrix; row: SIGNED32); 
+	PROCEDURE ^ SetICol*(v: vyBase.tVector; M: tMatrix; col: SIGNED32); 
+	PROCEDURE ^ GetReal*(me: tMatrix; row, col: SIGNED32): FLOAT32; 
+	PROCEDURE ^ SetReal*(val: FLOAT32; me: tMatrix; row, col: SIGNED32); 
+	PROCEDURE ^ GetRRow*(M: tMatrix; row: SIGNED32): vyBase.tVector; 
+	PROCEDURE ^ GetRCol*(M: tMatrix; col: SIGNED32): vyBase.tVector; 
+	PROCEDURE ^ SetRRow*(v: vyBase.tVector; M: tMatrix; row: SIGNED32); 
+	PROCEDURE ^ SetRCol*(v: vyBase.tVector; M: tMatrix; col: SIGNED32); 
+	PROCEDURE ^ InsertRow*(M: tMatrix; rowv: vyBase.tVector; at: SIGNED32); 
 	PROCEDURE ^ AppendR*(M: tMatrix; rowv: vyBase.tVector); 
-	PROCEDURE ^ InsertColumn*(M: tMatrix; colv: vyBase.tVector; at: LONGINT); 
+	PROCEDURE ^ InsertColumn*(M: tMatrix; colv: vyBase.tVector; at: SIGNED32); 
 	PROCEDURE ^ AppendC*(M: tMatrix; colv: vyBase.tVector); 
 	PROCEDURE ^ rParsCache(M: tMatrix); 
-	PROCEDURE ^ GetRPars*(M: tMatrix; row: LONGINT; VAR min, max, mean: LONGREAL); 
+	PROCEDURE ^ GetRPars*(M: tMatrix; row: SIGNED32; VAR min, max, mean: FLOAT64); 
 	PROCEDURE ^ cParsCache(M: tMatrix); 
-	PROCEDURE ^ GetCPars*(M: tMatrix; col: LONGINT; VAR min, max, mean: LONGREAL); 
-	PROCEDURE ^ GetPars*(M: tMatrix; VAR min, max, mean: LONGREAL); 
-	PROCEDURE ^ DoGetReal(M: tMatrix; row, col: LONGINT): REAL; 
-	PROCEDURE ^ DoGetRealTransposed(me: tMatrix; row, col: LONGINT): REAL; 
-	PROCEDURE ^ DoSetReal(val: REAL; M: tMatrix; row, col: LONGINT); 
-	PROCEDURE ^ DoSetRealTransposed(val: REAL; me: tMatrix; row, col: LONGINT); 
-	PROCEDURE ^ setRLabel*(s: ARRAY OF CHAR; M: tMatrix; row: LONGINT); 
-	PROCEDURE ^ setCLabel*(s: ARRAY OF CHAR; M: tMatrix; col: LONGINT); 
-	PROCEDURE ^ getRLabel*(VAR s: ARRAY OF CHAR; M: tMatrix; row: LONGINT); 
-	PROCEDURE ^ getCLabel*(VAR s: ARRAY OF CHAR; M: tMatrix; col: LONGINT); 
+	PROCEDURE ^ GetCPars*(M: tMatrix; col: SIGNED32; VAR min, max, mean: FLOAT64); 
+	PROCEDURE ^ GetPars*(M: tMatrix; VAR min, max, mean: FLOAT64); 
+	PROCEDURE ^ DoGetReal(M: tMatrix; row, col: SIGNED32): FLOAT32; 
+	PROCEDURE ^ DoGetRealTransposed(me: tMatrix; row, col: SIGNED32): FLOAT32; 
+	PROCEDURE ^ DoSetReal(val: FLOAT32; M: tMatrix; row, col: SIGNED32); 
+	PROCEDURE ^ DoSetRealTransposed(val: FLOAT32; me: tMatrix; row, col: SIGNED32); 
+	PROCEDURE ^ setRLabel*(s: ARRAY OF CHAR; M: tMatrix; row: SIGNED32); 
+	PROCEDURE ^ setCLabel*(s: ARRAY OF CHAR; M: tMatrix; col: SIGNED32); 
+	PROCEDURE ^ getRLabel*(VAR s: ARRAY OF CHAR; M: tMatrix; row: SIGNED32); 
+	PROCEDURE ^ getCLabel*(VAR s: ARRAY OF CHAR; M: tMatrix; col: SIGNED32); 
 	PROCEDURE ^ AdjustAccess(m: tMatrix); 
 	PROCEDURE ^ Transpose*(m: tMatrix); 
-	PROCEDURE ^ Init*(m: tMatrix; rows, columns: LONGINT); 
-	PROCEDURE ^ NewRealMatrix*(rows, columns: LONGINT): tMatrix; 
-	PROCEDURE ^ L1Dist*(v1, v2: vyBase.tVector): LONGREAL; 
-	PROCEDURE ^ L2Dist*(v1, v2: vyBase.tVector): LONGREAL; 
-	PROCEDURE ^ CorrDist*(v1, v2: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ Init*(m: tMatrix; rows, columns: SIGNED32); 
+	PROCEDURE ^ NewRealMatrix*(rows, columns: SIGNED32): tMatrix; 
+	PROCEDURE ^ L1Dist*(v1, v2: vyBase.tVector): FLOAT64; 
+	PROCEDURE ^ L2Dist*(v1, v2: vyBase.tVector): FLOAT64; 
+	PROCEDURE ^ CorrDist*(v1, v2: vyBase.tVector): FLOAT64; 
 	PROCEDURE ^ NewRowDistMatrix*(data: tMatrix; distf: VDist): tMatrix; 
 	PROCEDURE ^ NewColDistMatrix*(data: tMatrix; distf: VDist): tMatrix; 
 	PROCEDURE ^ WriteMatrix*(M: tMatrix); 

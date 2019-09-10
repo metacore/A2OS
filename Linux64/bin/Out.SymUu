@@ -6,10 +6,10 @@ MODULE Out;
 	PROCEDURE ^ Char*(c: CHAR); 
 	PROCEDURE ^ Ln*; 
 	PROCEDURE ^ Set*(s: SET); 
-	PROCEDURE ^ Int*(i: HUGEINT; n= 1: WORD); 
-	PROCEDURE ^ Hex*(i: HUGEINT; n=  -16: WORD); 
+	PROCEDURE ^ Int*(i: SIGNED64; n= 1: INTEGER); 
+	PROCEDURE ^ Hex*(i: SIGNED64; n=  -16: INTEGER); 
 	PROCEDURE ^ Address*(a: ADDRESS); 
-	PROCEDURE ^ Float*(x: LONGREAL; n= 4, f= 3, d= 0: WORD); 
+	PROCEDURE ^ Float*(x: FLOAT64; n= 4, f= 3, d= 0: INTEGER); 
 	PROCEDURE ^ Update*; 
 BEGIN
 END Out.

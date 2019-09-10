@@ -39,17 +39,17 @@ TYPE
 		rx: Streams.Reader; 
 		tx: Streams.Writer; 
 		crc: BOOLEAN; 
-		packetSize: LONGINT; 
-		retries: LONGINT; 
-		blockIndex: LONGINT; 
+		packetSize: SIGNED32; 
+		retries: SIGNED32; 
+		blockIndex: SIGNED32; 
 		msg: ARRAY 256 OF CHAR; 
 
 		PROCEDURE ^  & InitXModem*(rx: Streams.Reader; tx: Streams.Writer); 
-		PROCEDURE ^ Get(r: Streams.Reader; timeout: LONGINT; VAR ch: CHAR): LONGINT; 
-		PROCEDURE ^ Peek(r: Streams.Reader; timeout: LONGINT; VAR ch: CHAR): LONGINT; 
+		PROCEDURE ^ Get(r: Streams.Reader; timeout: SIGNED32; VAR ch: CHAR): SIGNED32; 
+		PROCEDURE ^ Peek(r: Streams.Reader; timeout: SIGNED32; VAR ch: CHAR): SIGNED32; 
 		PROCEDURE ^ Purge(r: Streams.Reader); 
-		PROCEDURE ^ CalcCheckSum(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT): CHAR; 
-		PROCEDURE ^ CalcCRC(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT; 
+		PROCEDURE ^ CalcCheckSum(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32): CHAR; 
+		PROCEDURE ^ CalcCRC(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32): SIGNED32; 
 		PROCEDURE ^ GetErrorMessage*(VAR string: ARRAY OF CHAR); 
 	END XModem; 
 
@@ -60,26 +60,26 @@ TYPE
 		resend: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(data, rx: Streams.Reader; tx: Streams.Writer); 
-		PROCEDURE ^ GetData(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT); 
-		PROCEDURE ^ SetHeader(VAR buf: ARRAY OF CHAR; index: LONGINT); 
+		PROCEDURE ^ GetData(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32); 
+		PROCEDURE ^ SetHeader(VAR buf: ARRAY OF CHAR; index: SIGNED32); 
 		PROCEDURE ^ SendInit; 
 		PROCEDURE ^ SendData; 
 		PROCEDURE ^ SendEOT; 
-		PROCEDURE ^ Send*(): LONGINT; 
+		PROCEDURE ^ Send*(): SIGNED32; 
 	END XMSender; 
 
 	XMReceiver* = OBJECT (XModem)
 	VAR 
 		data: Streams.Writer; 
-		crcThreshold: LONGINT; 
+		crcThreshold: SIGNED32; 
 
 		PROCEDURE ^  & Init*(data: Streams.Writer; rx: Streams.Reader; tx: Streams.Writer); 
-		PROCEDURE ^ PutData(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT); 
-		PROCEDURE ^ GetHeader(VAR buf: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ PutData(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32); 
+		PROCEDURE ^ GetHeader(VAR buf: ARRAY OF CHAR): SIGNED32; 
 		PROCEDURE ^ ReceiveInitCRC; 
 		PROCEDURE ^ ReceiveInitChecksum; 
 		PROCEDURE ^ ReceiveData; 
-		PROCEDURE ^ Receive*(): LONGINT; 
+		PROCEDURE ^ Receive*(): SIGNED32; 
 	END XMReceiver; 
 BEGIN
 END XModem.

@@ -10,26 +10,26 @@ TYPE
 	Buffer = ADDRESS; 
 
 	Char = RECORD 
-		dx*, x*, y*, w*, h*: INTEGER; 
+		dx*, x*, y*, w*, h*: SIGNED16; 
 		buffer*: Buffer; 
 	END; 
 
 	Font = RECORD 
-		height*, minX*, maxX*, minY*, maxY*: INTEGER; 
+		height*, minX*, maxX*, minY*, maxY*: SIGNED16; 
 		char: ARRAY 256 OF Char; 
 	END; 
 
 	GraphicsModeInfo = POINTER TO GraphicsModeInfoDescription; 
 
 	GraphicsModeInfoDescription = RECORD 
-		Version-: LONGINT; 
-		HorizontalResolution-: LONGINT; 
-		VerticalResolution-: LONGINT; 
-		PixelFormat-: LONGINT; 
+		Version-: SIGNED32; 
+		HorizontalResolution-: SIGNED32; 
+		VerticalResolution-: SIGNED32; 
+		PixelFormat-: SIGNED32; 
 		PixelBitmask-: RECORD 
-			RedMask-, GreenMask-, BlueMask-, ReservedMask-: LONGINT; 
+			RedMask-, GreenMask-, BlueMask-, ReservedMask-: SIGNED32; 
 		END; 
-		PixelsPerScanline-: LONGINT; 
+		PixelsPerScanline-: SIGNED32; 
 	END; 
 VAR 
 	font: Font; 
@@ -44,7 +44,7 @@ VAR
 	PROCEDURE ^ Mask(buf: ADDRESS; bitof, stride, x, y, w, h, adr, dstride, depth: SIZE); 
 	PROCEDURE ^ RenderChar0(c: CHAR; adr: ADDRESS; VAR x, y: SIZE; w, h, depth: SIZE); 
 	PROCEDURE ^ RenderChar(c: CHAR); 
-	PROCEDURE ^ GetDepth(info: GraphicsModeInfo): LONGINT; 
+	PROCEDURE ^ GetDepth(info: GraphicsModeInfo): SIGNED32; 
 	PROCEDURE ^ SetupConsole*(graphicsModeInfo: ADDRESS; frameBufferAdr: ADDRESS); 
 	PROCEDURE ^ Init*; 
 BEGIN

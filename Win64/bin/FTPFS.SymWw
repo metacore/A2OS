@@ -11,12 +11,12 @@ CONST
 	DirRootAdr = (1 * SF); 
 	DirPgSize = 102; 
 	N = (DirPgSize DIV 2); 
-	DirMark = LONGINT(2602476429); 
-	HeaderMark = LONGINT(2611420550); 
+	DirMark = SIGNED32(2602476429); 
+	HeaderMark = SIGNED32(2611420550); 
 	FillerSize = 4; 
 	MapIndexSize = ((SS - 4) DIV 4); 
 	MapSize = (SS DIV SIZEOF(SET)); 
-	MapMark = LONGINT(2620364671); 
+	MapMark = SIGNED32(2620364671); 
 	MaxBufs = 4; 
 	InitHint = (200 * SF); 
 	Closed = 0X; 
@@ -32,17 +32,17 @@ TYPE
 
 	DiskSectorArr = ARRAY SS OF CHAR; 
 
-	DiskAdr = LONGINT; 
+	DiskAdr = SIGNED32; 
 
 	FileName = ARRAY FnLength OF CHAR; 
 
 	SectorTable = ARRAY STS OF DiskAdr; 
 
 	FileHeader = RECORD (DiskSector)
-		mark: LONGINT; 
+		mark: SIGNED32; 
 		name: FileName; 
-		aleng, bleng: LONGINT; 
-		date, time: LONGINT; 
+		aleng, bleng: SIGNED32; 
+		date, time: SIGNED32; 
 		sec: SectorTable; 
 		ext: DiskAdr; 
 		data: ARRAY (SS - HS) OF CHAR; 
@@ -63,15 +63,15 @@ TYPE
 	END; 
 
 	DirPage = RECORD (DiskSector)
-		mark: LONGINT; 
-		m: LONGINT; 
+		mark: SIGNED32; 
+		m: SIGNED32; 
 		p0: DiskAdr; 
 		fill: ARRAY FillerSize OF CHAR; 
 		e: ARRAY DirPgSize OF DirEntry; 
 	END; 
 
 	MapIndex = RECORD (DiskSector)
-		mark: LONGINT; 
+		mark: SIGNED32; 
 		index: ARRAY MapIndexSize OF DiskAdr; 
 	END; 
 
@@ -82,7 +82,7 @@ TYPE
 	FileHd = POINTER TO FileHeader; 
 
 	Buffer = POINTER TO RECORD (Files.Hint)
-		apos, lim: LONGINT; 
+		apos, lim: SIGNED32; 
 		mod: BOOLEAN; 
 		next: Buffer; 
 		data: DataSector; 
@@ -111,7 +111,7 @@ TYPE
 		PROCEDURE ^ Search(VAR name: FileName; VAR A: DiskAdr); 
 		PROCEDURE ^ insert(VAR name: FileName; dpg0: DiskAdr; VAR h: BOOLEAN; VAR v: DirEntry; fad: DiskAdr); 
 		PROCEDURE ^ Insert(VAR name: FileName; fad: DiskAdr); 
-		PROCEDURE ^ underflow(VAR c: DirPage; dpg0: DiskAdr; s: LONGINT; VAR h: BOOLEAN); 
+		PROCEDURE ^ underflow(VAR c: DirPage; dpg0: DiskAdr; s: SIGNED32; VAR h: BOOLEAN); 
 		PROCEDURE ^ delete(VAR name: FileName; dpg0: DiskAdr; VAR h: BOOLEAN; VAR fad: DiskAdr); 
 		PROCEDURE ^ Delete(VAR name: FileName; VAR fad: DiskAdr); 
 		PROCEDURE ^ Startup; 
@@ -122,7 +122,7 @@ TYPE
 	RecursiveLock* = OBJECT {EXCLUSIVE} 
 	VAR 
 		lockedBy: ANY; 
-		level: LONGINT; 
+		level: SIGNED32; 
 
 		PROCEDURE ^ Acquire*; 
 		PROCEDURE ^ Release*; 
@@ -139,26 +139,26 @@ TYPE
 
 		PROCEDURE ^  & Init*(fhost, fpath, fuser, fpass: String); 
 		PROCEDURE ^ HandleClose; 
-		PROCEDURE ^ ScheduleClose(ms: LONGINT); 
+		PROCEDURE ^ ScheduleClose(ms: SIGNED32); 
 		PROCEDURE ^ New0*(CONST name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Receive(rs: Files.FileSystem; bareFN, localFN: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
-		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
+		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER); 
 		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
-		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
 		PROCEDURE ^ Finalize*; 
 	END FileSystem; 
 
 	File = OBJECT {EXCLUSIVE} (Files.File)
 	VAR 
-		aleng, bleng: LONGINT; 
-		nofbufs: LONGINT; 
+		aleng, bleng: SIGNED32; 
+		nofbufs: SIGNED32; 
 		modH, registered: BOOLEAN; 
 		firstbuf: Buffer; 
 		sechint: DiskAdr; 
 		name: FileName; 
-		time, date: LONGINT; 
+		time, date: SIGNED32; 
 		ext: SuperIndex; 
 		sec: SectorTable; 
 
@@ -169,10 +169,10 @@ TYPE
 		PROCEDURE ^ Write*(VAR r: Files.Rider; x: CHAR); 
 		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Length*(): Files.Size; 
-		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
-		PROCEDURE ^ SetDate*(t, d: LONGINT); 
+		PROCEDURE ^ GetDate*(VAR t, d: SIGNED32); 
+		PROCEDURE ^ SetDate*(t, d: SIGNED32); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ Register0*(VAR res: WORD); 
+		PROCEDURE ^ Register0*(VAR res: INTEGER); 
 		PROCEDURE ^ Update*; 
 	END File; 
 VAR 
@@ -181,19 +181,19 @@ VAR
 	PROCEDURE ^ GetSector(vol: Files.Volume; src: DiskAdr; VAR dest: DiskSector); 
 	PROCEDURE ^ PutSector(vol: Files.Volume; dest: DiskAdr; VAR src: DiskSector); 
 	PROCEDURE ^ AllocSector(vol: Files.Volume; hint: DiskAdr; VAR sec: DiskAdr); 
-	PROCEDURE ^ MarkSector(vol: Files.Volume; sec: LONGINT); 
-	PROCEDURE ^ FreeSector(vol: Files.Volume; sec: LONGINT); 
-	PROCEDURE ^ Marked(vol: Files.Volume; sec: LONGINT): BOOLEAN; 
-	PROCEDURE ^ MatchPrefix(CONST mask, name: ARRAY OF CHAR; VAR pos, diff: LONGINT); 
-	PROCEDURE ^ Match(pos: LONGINT; CONST pat, name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ MarkSector(vol: Files.Volume; sec: SIGNED32); 
+	PROCEDURE ^ FreeSector(vol: Files.Volume; sec: SIGNED32); 
+	PROCEDURE ^ Marked(vol: Files.Volume; sec: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ MatchPrefix(CONST mask, name: ARRAY OF CHAR; VAR pos, diff: SIGNED32); 
+	PROCEDURE ^ Match(pos: SIGNED32; CONST pat, name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ enumerate(fs: Files.FileSystem; CONST mask: ARRAY OF CHAR; dpg: DiskAdr; flags: SET; enum: Files.Enumerator; VAR continue: BOOLEAN; VAR fh: FileHeader; VAR fn: ARRAY OF CHAR); 
-	PROCEDURE ^ Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD); 
+	PROCEDURE ^ Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: INTEGER); 
 	PROCEDURE ^ UpdateHeader(f: File; VAR h: FileHeader); 
-	PROCEDURE ^ ReadBuf(f: File; buf: Buffer; pos: LONGINT); 
+	PROCEDURE ^ ReadBuf(f: File; buf: Buffer; pos: SIGNED32); 
 	PROCEDURE ^ NewSuper(f: File); 
 	PROCEDURE ^ WriteBuf(f: File; buf: Buffer); 
-	PROCEDURE ^ SearchBuf(f: File; pos: LONGINT): Buffer; 
-	PROCEDURE ^ GetBuf(f: File; pos: LONGINT): Buffer; 
+	PROCEDURE ^ SearchBuf(f: File; pos: SIGNED32): Buffer; 
+	PROCEDURE ^ GetBuf(f: File; pos: SIGNED32): Buffer; 
 	PROCEDURE ^ Unbuffer(f: File); 
 	PROCEDURE ^ NewSub(f: File); 
 	PROCEDURE ^ NewFS*(context: Files.Parameters); 

@@ -105,45 +105,45 @@ TYPE
 
 	Buffer = POINTER TO ARRAY OF CHAR; 
 
-	Token* = SHORTINT; 
+	Token* = SIGNED8; 
 
 	Scanner* = OBJECT 
 	VAR 
 		buffer: Buffer; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		ch-: CHAR; 
 		name-: Name; 
 		str*: String; 
-		numtyp-: INTEGER; 
-		intval-: LONGINT; 
-		longintval-: HUGEINT; 
-		realval-: REAL; 
-		lrlval-: LONGREAL; 
-		numStartPos, numEndPos: LONGINT; 
-		curpos-, errpos-: LONGINT; 
+		numtyp-: SIGNED16; 
+		intval-: SIGNED32; 
+		longintval-: SIGNED64; 
+		realval-: FLOAT32; 
+		lrlval-: FLOAT64; 
+		numStartPos, numEndPos: SIGNED32; 
+		curpos-, errpos-: SIGNED32; 
 		isNummer: BOOLEAN; 
 		lcase-, ucase-: BOOLEAN; 
 		firstId: BOOLEAN; 
 		n1: CHAR; 
 
-		PROCEDURE ^ err(n: INTEGER); 
+		PROCEDURE ^ err(n: SIGNED16); 
 		PROCEDURE ^ NextChar*; 
-		PROCEDURE ^ SkipUntilNextEnd*(VAR sym: SHORTINT); 
-		PROCEDURE ^ Str(VAR sym: SHORTINT); 
-		PROCEDURE ^ Identifier(VAR sym: SHORTINT; check: BOOLEAN); 
+		PROCEDURE ^ SkipUntilNextEnd*(VAR sym: SIGNED8); 
+		PROCEDURE ^ Str(VAR sym: SIGNED8); 
+		PROCEDURE ^ Identifier(VAR sym: SIGNED8; check: BOOLEAN); 
 		PROCEDURE ^ Number; 
 		PROCEDURE ^ GetNumAsString*(VAR val: ARRAY OF CHAR); 
-		PROCEDURE ^ Get*(VAR s: SHORTINT); 
+		PROCEDURE ^ Get*(VAR s: SIGNED8); 
 		PROCEDURE ^ IsOperatorValid*(): BOOLEAN; 
 	END Scanner; 
 VAR 
 	opTable: ARRAY 86 OF Name; 
 	reservedChar-, newChar: ARRAY 256 OF BOOLEAN; 
 
-	PROCEDURE ^ GetOpName*(op: SHORTINT; VAR name: Name); 
+	PROCEDURE ^ GetOpName*(op: SIGNED8; VAR name: Name); 
 	PROCEDURE ^ ForkScanner*(s: Scanner): Scanner; 
-	PROCEDURE ^ NewScanner(b: Buffer; pos, curpos: LONGINT): Scanner; 
-	PROCEDURE ^ InitWithText*(t: Texts.Text; pos: LONGINT): Scanner; 
+	PROCEDURE ^ NewScanner(b: Buffer; pos, curpos: SIGNED32): Scanner; 
+	PROCEDURE ^ InitWithText*(t: Texts.Text; pos: SIGNED32): Scanner; 
 	PROCEDURE ^ ExpandBuf(VAR oldBuf: Buffer; newSize: SIZE); 
 	PROCEDURE ^ InitWithReader*(r: Streams.Reader; size: SIZE; pos: Streams.Position): Scanner; 
 	PROCEDURE ^ InitReservedChars; 

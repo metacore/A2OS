@@ -8,20 +8,20 @@ VAR
 	traceBufSize: SIZE; 
 	traceHead, traceTail: ADDRESS; 
 
-	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 	PROCEDURE ^ String*(CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ Ln*; 
 	PROCEDURE ^ Char*(c: CHAR); 
-	PROCEDURE ^ Int*(x: HUGEINT; w: WORD); 
+	PROCEDURE ^ Int*(x: SIGNED64; w: INTEGER); 
 	PROCEDURE ^ Boolean*(x: BOOLEAN); 
-	PROCEDURE ^ IntSuffix*(x: HUGEINT; w: WORD; CONST suffix: ARRAY OF CHAR); 
-	PROCEDURE ^ Hex*(x: HUGEINT; w: WORD); 
+	PROCEDURE ^ IntSuffix*(x: SIGNED64; w: INTEGER; CONST suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ Hex*(x: SIGNED64; w: INTEGER); 
 	PROCEDURE ^ Address*(x: ADDRESS); 
 	PROCEDURE ^ Size*(x: SIZE); 
-	PROCEDURE ^ HIntHex*(x: HUGEINT; w: WORD); 
+	PROCEDURE ^ HIntHex*(x: SIGNED64; w: INTEGER); 
 	PROCEDURE ^ Memory*(adr: ADDRESS; size: SIZE); 
 	PROCEDURE ^ Buffer*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE); 
-	PROCEDURE ^ Bits*(x: SET; ofs, n: WORD); 
+	PROCEDURE ^ Bits*(x: SET; ofs, n: INTEGER); 
 	PROCEDURE ^ Set*(x: SET); 
 	PROCEDURE ^ Enter*; 
 	PROCEDURE ^ Exit*; 

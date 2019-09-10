@@ -6,9 +6,9 @@ CONST
 	MaxConcurrentSorters = 5; 
 	WindowSize = (N * ElemSize); 
 TYPE 
-	ElementType = LONGINT; 
+	ElementType = SIGNED32; 
 
-	Index = INTEGER; 
+	Index = SIGNED16; 
 
 	SortValues = ARRAY N OF ElementType; 
 
@@ -18,12 +18,12 @@ TYPE
 		white, grey, col1, yellow: Raster.Pixel; 
 		mode: Raster.Mode; 
 		sortname: ARRAY 32 OF CHAR; 
-		delay: LONGINT; 
+		delay: SIGNED32; 
 		ha, hb: Index; 
 		concurrent: BOOLEAN; 
-		concSorters: LONGINT; 
-		nofcomps, nofswaps, nofmoves: LONGINT; 
-		compareWeight, swapWeight: LONGREAL; 
+		concSorters: SIGNED32; 
+		nofcomps, nofswaps, nofmoves: SIGNED32; 
+		compareWeight, swapWeight: FLOAT64; 
 		timer: Kernel.Timer; 
 		data, backup: SortValues; 
 		highlighted: ARRAY N OF BOOLEAN; 
@@ -39,7 +39,7 @@ TYPE
 		PROCEDURE ^ UnHighlight(n: Index); 
 		PROCEDURE ^ Highlight(n: Index); 
 		PROCEDURE ^ Highlight2(a, b: Index); 
-		PROCEDURE ^ Randomize(n: INTEGER); 
+		PROCEDURE ^ Randomize(n: SIGNED16); 
 		PROCEDURE ^ OrderData; 
 		PROCEDURE ^ RevOrderData; 
 		PROCEDURE ^ BadOrder; 

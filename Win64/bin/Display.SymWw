@@ -145,65 +145,65 @@ CONST
 	DBT_DEVTYP_VOLUME = 2; 
 TYPE 
 	DEV_BROADCAST_HDR = RECORD 
-		dbch_size: LONGINT; 
-		dbch_devicetype: LONGINT; 
-		dbch_reserved: LONGINT; 
+		dbch_size: SIGNED32; 
+		dbch_devicetype: SIGNED32; 
+		dbch_reserved: SIGNED32; 
 	END; 
 
 	DEV_BROADCAST_HDRP = POINTER TO DEV_BROADCAST_HDR; 
 
 	DEV_BROADCAST_VOLUME = RECORD (DEV_BROADCAST_HDR)
 		dbcv_unitmask: SET; 
-		dbcv_flags: INTEGER; 
-		padding: INTEGER; 
+		dbcv_flags: SIGNED16; 
+		padding: SIGNED16; 
 	END; 
 
 	DEV_BROADCAST_VOLUMEP = POINTER TO DEV_BROADCAST_VOLUME; 
 
 	Inputs = RECORD 
 		keys: SET; 
-		X, Y, Z, dx, dy: LONGINT; 
+		X, Y, Z, dx, dy: SIGNED32; 
 		flags: SET; 
 	END; 
 
 	BitmapInfo* = RECORD 
 		bmiHeader*: GDI32.BitmapInfoHeader; 
-		colors: ARRAY 3 OF LONGINT; 
+		colors: ARRAY 3 OF SIGNED32; 
 	END; 
 
 	Window = POINTER TO RECORD 
 		hWnd: User32.HWND; 
 		hWndParent: User32.HWND; 
 		hDC: User32.HDC; 
-		width, height: LONGINT; 
+		width, height: SIGNED32; 
 		defWindowProc: User32.WndProc; 
 		windowRect: User32.Rect; 
 		state: SET; 
 		link: Window; 
 		bmp: GDI32.HBitmap; 
-		bmadr: LONGINT; 
+		bmadr: SIGNED32; 
 		bmphdc: User32.HDC; 
 		track: Inputs; 
 		pal: POINTER TO ARRAY OF GDI32.PaletteEntry; 
-		dx, dy: LONGINT; 
+		dx, dy: SIGNED32; 
 		hBrush: GDI32.HBrush; 
 		frame: BOOLEAN; 
 	END; 
 
 	DisplayProc* = PROCEDURE (disp: Window); 
 
-	PaintProc* = PROCEDURE (disp: Window; x, y, w, h: LONGINT); 
+	PaintProc* = PROCEDURE (disp: Window; x, y, w, h: SIGNED32); 
 
 	CreateStruct = POINTER TO RECORD 
 		win: Window; 
 		finished: BOOLEAN; 
 		className: ARRAY 32 OF CHAR; 
-		style: WORDSET; 
-		x, y, w, h: LONGINT; 
+		style: INTEGERSET; 
+		x, y, w, h: SIGNED32; 
 		hMenu: User32.HMenu; 
 	END; 
 
-	WindowHandlerProc* = PROCEDURE {WINAPI}(win: Window; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam):User32.LResult; 
+	WindowHandlerProc* = PROCEDURE {WINAPI}(win: Window; uMsg: SIGNED32; wParam: User32.WParam; lParam: User32.LParam):User32.LResult; 
 
 	WinMain = OBJECT {EXCLUSIVE} 
 	VAR 
@@ -217,16 +217,16 @@ TYPE
 
 	Display = OBJECT (Displays.Display)
 
-		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: LONGINT); 
+		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: SIGNED32); 
 	END Display; 
 
 	; 
 VAR 
 	dummyClass, windowClass: User32.WndClassEx; 
 	dummyClassName, windowClassName, controlClassName, windowTitle: ARRAY 32 OF CHAR; 
-	nWindows: LONGINT; 
-	aControlWinClass: LONGINT; 
-	fixedFrameX, fixedFrameY, frameX, frameY, captionY, menuY: LONGINT; 
+	nWindows: SIGNED32; 
+	aControlWinClass: SIGNED32; 
+	fixedFrameX, fixedFrameY, frameX, frameY, captionY, menuY: SIGNED32; 
 	hCurrentCursor, hAlternativeCursor: User32.HCursor; 
 	capture, hook, mouse: Window; 
 	kioskmode*: BOOLEAN; 
@@ -239,40 +239,40 @@ VAR
 		pal: ARRAY 256 OF GDI32.ColorRef; 
 	END; 
 	disp: Display; 
-	format*: SHORTINT; 
+	format*: SIGNED8; 
 	KeyHandled: BOOLEAN; 
 	fullscreen: BOOLEAN; 
-	closeRequests: LONGINT; 
+	closeRequests: SIGNED32; 
 	traceDisplay: BOOLEAN; 
 
 	PROCEDURE ^ CreateHWND(create: CreateStruct); 
-	PROCEDURE ^ DecomposeKeyEvent(wParam, lParam: LONGINT; VAR ch: CHAR; VAR key: LONGINT; char: BOOLEAN); 
-	PROCEDURE ^ GetChar(wParam, lParam: LONGINT; VAR ch: CHAR; VAR key: LONGINT); 
-	PROCEDURE ^ GetKeyState(key: LONGINT; what: INTEGER): BOOLEAN; 
-	PROCEDURE ^ DummyHandler(win: Window; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
-	PROCEDURE ^ HandleFocus(win: Window; uMsg: LONGINT; wParam: User32.WParam); 
+	PROCEDURE ^ DecomposeKeyEvent(wParam, lParam: SIGNED32; VAR ch: CHAR; VAR key: SIGNED32; char: BOOLEAN); 
+	PROCEDURE ^ GetChar(wParam, lParam: SIGNED32; VAR ch: CHAR; VAR key: SIGNED32); 
+	PROCEDURE ^ GetKeyState(key: SIGNED32; what: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ DummyHandler(win: Window; uMsg: SIGNED32; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ HandleFocus(win: Window; uMsg: SIGNED32; wParam: User32.WParam); 
 	PROCEDURE ^ Add(disp: Window; noView: BOOLEAN); 
 	PROCEDURE ^ SetupWin(win: Window); 
-	PROCEDURE ^ {WINAPI} DummyProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ {WINAPI} DummyProc(hwnd: User32.HWND; uMsg: SIGNED32; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
 	PROCEDURE ^ ChangeCursor; 
 	PROCEDURE ^ SetCursor(hCursor: User32.HCursor); 
-	PROCEDURE ^ HandleMouse(win: Window; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam); 
+	PROCEDURE ^ HandleMouse(win: Window; uMsg: SIGNED32; wParam: User32.WParam; lParam: User32.LParam); 
 	PROCEDURE ^ GetKeyFlags(VAR flags: SET); 
 	PROCEDURE ^ HandleChar(win: Window; wParam: User32.WParam; lParam: User32.LParam); 
 	PROCEDURE ^ HandleKey(win: Window; wParam: User32.WParam; lParam: User32.LParam); 
 	PROCEDURE ^ HandleKeyUp(win: Window; wParam: User32.WParam; lParam: User32.LParam); 
 	PROCEDURE ^ SetDocRect(win: Window; resize: BOOLEAN); 
-	PROCEDURE ^ UpdateDisplay(win: Window; id: LONGINT; lParam: User32.LParam; wParam: User32.WParam); 
+	PROCEDURE ^ UpdateDisplay(win: Window; id: SIGNED32; lParam: User32.LParam; wParam: User32.WParam); 
 	PROCEDURE ^ FromMemory(win: Window; VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE); 
 	PROCEDURE ^ ToMemory(win: Window; VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE); 
-	PROCEDURE ^ ToWindow*(win: Window; x, y, w, h: SIZE; dx, dy: LONGINT); 
+	PROCEDURE ^ ToWindow*(win: Window; x, y, w, h: SIZE; dx, dy: SIGNED32); 
 	PROCEDURE ^ GetMinMaxInfo(win: Window; lParam: User32.LParam): BOOLEAN; 
 	PROCEDURE ^ Minimize(win: Window); 
 	PROCEDURE ^ Maximize(win: Window); 
 	PROCEDURE ^ Restore(win: Window); 
 	PROCEDURE ^ PosChanging(win: Window; lParam: User32.LParam); 
-	PROCEDURE ^ WindowHandler(win: Window; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
-	PROCEDURE ^ {WINAPI} WindowProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ WindowHandler(win: Window; uMsg: SIGNED32; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ {WINAPI} WindowProc(hwnd: User32.HWND; uMsg: SIGNED32; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
 	PROCEDURE ^ GetDC(win: Window); 
 	PROCEDURE ^ InstallW(win: Window; ctrl: BOOLEAN); 
 	PROCEDURE ^ Init(win: Window); 
@@ -280,13 +280,13 @@ VAR
 	PROCEDURE ^ UnregisterClasses; 
 	PROCEDURE ^ FirstWindow(): Window; 
 	PROCEDURE ^ CreateWin(create: CreateStruct); 
-	PROCEDURE ^ {WINAPI} ControlWindowProc(hwnd: User32.HWND; uMsg: LONGINT; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
+	PROCEDURE ^ {WINAPI} ControlWindowProc(hwnd: User32.HWND; uMsg: SIGNED32; wParam: User32.WParam; lParam: User32.LParam): User32.LResult; 
 	PROCEDURE ^ {WINAPI} UnregisterControlWinClass; 
 	PROCEDURE ^ InitMod; 
 	PROCEDURE ^ DisableCursor*; 
 	PROCEDURE ^ InitBMI; 
 	PROCEDURE ^ Shutdown; 
-	PROCEDURE ^ DoInstall(w, h, left, top: LONGINT); 
+	PROCEDURE ^ DoInstall(w, h, left, top: SIGNED32); 
 	PROCEDURE ^ Install*(context: Commands.Context); 
 	PROCEDURE ^ TraceDisplay*; 
 BEGIN

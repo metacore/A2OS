@@ -27,13 +27,13 @@ TYPE
 		owner: ANY; 
 		finder: CompCommandFinder; 
 		next: EventSource; 
-		minimalDelay: LONGINT; 
+		minimalDelay: SIGNED32; 
 		updateTimer: Kernel.MilliTimer; 
 		lastFrameTimer: Objects.Timer; 
 		lastPar: ANY; 
 
 		PROCEDURE ^  & New*(owner: ANY; name, info: String; finder: CompCommandFinder); 
-		PROCEDURE ^ SetMinimalDelay*(ms: LONGINT); 
+		PROCEDURE ^ SetMinimalDelay*(ms: SIGNED32); 
 		PROCEDURE ^ GetName*(): String; 
 		PROCEDURE ^ GetInfo*(): String; 
 		PROCEDURE ^ Add*(observer: EventListener); 
@@ -51,7 +51,7 @@ TYPE
 	EventSourceList* = OBJECT {EXCLUSIVE} 
 	VAR 
 		head: EventSource; 
-		nofEventSources: LONGINT; 
+		nofEventSources: SIGNED32; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Add*(x: EventSource); 
@@ -77,7 +77,7 @@ TYPE
 	EventListenerList* = OBJECT {EXCLUSIVE} 
 	VAR 
 		head: EventListenerInfo; 
-		nofEventListeners: LONGINT; 
+		nofEventListeners: SIGNED32; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Add*(x: EventListenerInfo); 

@@ -13,43 +13,43 @@ TYPE
 		rider: Files.Rider; 
 		reader: Texts.Reader; 
 		text: Texts.Text; 
-		ofs: LONGINT; 
+		ofs: SIGNED32; 
 		str, eof: BOOLEAN; 
 		Read: PROCEDURE (VAR R: Rider; VAR c: CHAR); 
-		Pos: PROCEDURE (VAR R: Rider):LONGINT; 
-		Set: PROCEDURE (VAR R: Rider; pos: LONGINT); 
+		Pos: PROCEDURE (VAR R: Rider):SIGNED32; 
+		Set: PROCEDURE (VAR R: Rider; pos: SIGNED32); 
 	END; 
 
 	ColorEntry = POINTER TO ColorEntryDesc; 
 
 	ColorEntryDesc = RECORD 
 		name: Objects.Name; 
-		r, g, b: REAL; 
+		r, g, b: FLOAT32; 
 		next: ColorEntry; 
 	END; 
 VAR 
 	colorEntry: ColorEntry; 
-	colorMap: ARRAY 256 OF INTEGER; 
+	colorMap: ARRAY 256 OF SIGNED16; 
 	charMap: POINTER TO ARRAY OF CHAR; 
 	xpmLogo, noColor: ARRAY 10 OF CHAR; 
 	credit: BOOLEAN; 
 
 	PROCEDURE ^ ReadFile(VAR R: Rider; VAR c: CHAR); 
-	PROCEDURE ^ PosFile(VAR R: Rider): LONGINT; 
-	PROCEDURE ^ SetFile(VAR R: Rider; pos: LONGINT); 
+	PROCEDURE ^ PosFile(VAR R: Rider): SIGNED32; 
+	PROCEDURE ^ SetFile(VAR R: Rider; pos: SIGNED32); 
 	PROCEDURE ^ ReadText(VAR R: Rider; VAR c: CHAR); 
-	PROCEDURE ^ PosText(VAR R: Rider): LONGINT; 
-	PROCEDURE ^ SetText(VAR R: Rider; pos: LONGINT); 
+	PROCEDURE ^ PosText(VAR R: Rider): SIGNED32; 
+	PROCEDURE ^ SetText(VAR R: Rider; pos: SIGNED32); 
 	PROCEDURE ^ FindUserColor(s: ARRAY OF CHAR): ColorEntry; 
-	PROCEDURE ^ GetColorEntry(s: ARRAY OF CHAR; VAR r, g, b: REAL; VAR ok: BOOLEAN); 
-	PROCEDURE ^ OpenRider(VAR FR: Files.Rider; VAR R: Rider; pos: LONGINT); 
+	PROCEDURE ^ GetColorEntry(s: ARRAY OF CHAR; VAR r, g, b: FLOAT32; VAR ok: BOOLEAN); 
+	PROCEDURE ^ OpenRider(VAR FR: Files.Rider; VAR R: Rider; pos: SIGNED32); 
 	PROCEDURE ^ MagicString(VAR R: Rider): BOOLEAN; 
 	PROCEDURE ^ ScanChar(VAR R: Rider): CHAR; 
 	PROCEDURE ^ XpmName(VAR R: Rider; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ XpmAttr(VAR R: Rider; VAR w, h, c, p: INTEGER); 
-	PROCEDURE ^ XpmColor(VAR R: Rider; pict: Pictures.Picture; nrColor, pixChr, traCol: INTEGER; conversion: BOOLEAN); 
-	PROCEDURE ^ XpmLine(VAR R: Rider; y, w, cpp: INTEGER; pict: Pictures.Picture); 
-	PROCEDURE ^ LoadXPM(VAR R: Rider; transparentCol: INTEGER; colorConversion: BOOLEAN; pict: Pictures.Picture); 
+	PROCEDURE ^ XpmAttr(VAR R: Rider; VAR w, h, c, p: SIGNED16); 
+	PROCEDURE ^ XpmColor(VAR R: Rider; pict: Pictures.Picture; nrColor, pixChr, traCol: SIGNED16; conversion: BOOLEAN); 
+	PROCEDURE ^ XpmLine(VAR R: Rider; y, w, cpp: SIGNED16; pict: Pictures.Picture); 
+	PROCEDURE ^ LoadXPM(VAR R: Rider; transparentCol: SIGNED16; colorConversion: BOOLEAN; pict: Pictures.Picture); 
 	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ InitPicture*; 
 	PROCEDURE ^ NewPicture*; 

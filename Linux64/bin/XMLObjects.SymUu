@@ -5,7 +5,7 @@ TYPE
 
 	Collection* = OBJECT 
 
-		PROCEDURE ^ GetNumberOfElements*(): LONGINT; 
+		PROCEDURE ^ GetNumberOfElements*(): SIGNED32; 
 		PROCEDURE ^ GetEnumerator*(): Enumerator; 
 		PROCEDURE ^ Add*(p: ANY); 
 		PROCEDURE ^ Remove*(p: ANY); 
@@ -22,10 +22,10 @@ TYPE
 	List* = OBJECT {EXCLUSIVE} (Collection)
 	VAR 
 		first, last: ListElem; 
-		nofElems: LONGINT; 
+		nofElems: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetNumberOfElements*(): LONGINT; 
+		PROCEDURE ^ GetNumberOfElements*(): SIGNED32; 
 		PROCEDURE ^ GetEnumerator*(): Enumerator; 
 		PROCEDURE ^ Add*(p: ANY); 
 		PROCEDURE ^ Remove*(p: ANY); 
@@ -36,19 +36,19 @@ TYPE
 	ArrayCollection* = OBJECT {EXCLUSIVE} (Collection)
 	VAR 
 		elems: PTRArray; 
-		nofElems: LONGINT; 
+		nofElems: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetNumberOfElements*(): LONGINT; 
+		PROCEDURE ^ GetNumberOfElements*(): SIGNED32; 
 		PROCEDURE ^ GetEnumerator*(): Enumerator; 
 		PROCEDURE ^ Grow; 
 		PROCEDURE ^ Add*(p: ANY); 
 		PROCEDURE ^ Remove*(p: ANY); 
-		PROCEDURE ^ GetElement*(i: LONGINT): ANY; 
+		PROCEDURE ^ GetElement*(i: SIGNED32): ANY; 
 		PROCEDURE ^ Invert*(ptr1, ptr2: ANY): BOOLEAN; 
-		PROCEDURE ^ GetElementPos*(ptr: ANY): LONGINT; 
-		PROCEDURE ^ MoveUp*(ptr: ANY; i: LONGINT): BOOLEAN; 
-		PROCEDURE ^ MoveDown*(ptr: ANY; i: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetElementPos*(ptr: ANY): SIGNED32; 
+		PROCEDURE ^ MoveUp*(ptr: ANY; i: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ MoveDown*(ptr: ANY; i: SIGNED32): BOOLEAN; 
 	END ArrayCollection; 
 
 	Enumerator* = OBJECT 
@@ -72,7 +72,7 @@ TYPE
 	ArrayEnumerator* = OBJECT (Enumerator)
 	VAR 
 		array: PTRArray; 
-		current: LONGINT; 
+		current: SIGNED32; 
 
 		PROCEDURE ^  & Init*(array: PTRArray); 
 		PROCEDURE ^ HasMoreElements*(): BOOLEAN; 
@@ -82,7 +82,7 @@ TYPE
 
 	Dictionary* = OBJECT 
 
-		PROCEDURE ^ GetNumberOfElements*(): LONGINT; 
+		PROCEDURE ^ GetNumberOfElements*(): SIGNED32; 
 		PROCEDURE ^ Get*(key: ARRAY OF CHAR): ANY; 
 		PROCEDURE ^ GetEnumerator*(): Enumerator; 
 		PROCEDURE ^ Add*(key: ARRAY OF CHAR; p: ANY); 
@@ -93,12 +93,12 @@ TYPE
 
 	ArrayDict* = OBJECT {EXCLUSIVE} (Dictionary)
 	VAR 
-		nofElems: LONGINT; 
+		nofElems: SIGNED32; 
 		keys: StringArray; 
 		elems: PTRArray; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetNumberOfElements*(): LONGINT; 
+		PROCEDURE ^ GetNumberOfElements*(): SIGNED32; 
 		PROCEDURE ^ Get*(key: ARRAY OF CHAR): ANY; 
 		PROCEDURE ^ GetEnumerator*(): Enumerator; 
 		PROCEDURE ^ Grow; 

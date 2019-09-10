@@ -17,9 +17,9 @@ TYPE
 	Picture* = POINTER TO PictureDesc; 
 
 	PictureDesc* = RECORD (vyBase.FrameDesc)
-		Pictx, Picty, Pictw, Picth: REAL; 
+		Pictx, Picty, Pictw, Picth: FLOAT32; 
 		needsRedraw*: BOOLEAN; 
-		hx, hy: INTEGER; 
+		hx, hy: SIGNED16; 
 		header: BOOLEAN; 
 		backGround*: Display.Color; 
 		gcontext*: Objects.Object; 
@@ -37,7 +37,7 @@ TYPE
 	END; 
 
 	FindMsg = RECORD (Display.FrameMsg)
-		fx, fy: INTEGER; 
+		fx, fy: SIGNED16; 
 	END; 
 
 	ExtractContentMsg = RECORD (Objects.ObjMsg)
@@ -63,40 +63,40 @@ VAR
 	focusLayer-: tLayer; 
 	newpicture-: Picture; 
 	newframe-: Frame; 
-	stdFrameCol: INTEGER; 
+	stdFrameCol: SIGNED16; 
 	setfrontmostcalled: BOOLEAN; 
-	DfltFramesPLine-, defFramehwRelation: REAL; 
-	screenRatio*: REAL; 
+	DfltFramesPLine-, defFramehwRelation: FLOAT32; 
+	screenRatio*: FLOAT32; 
 	updatesuspend: BOOLEAN; 
 	BGPicture: Pictures.Picture; 
 	foreColor*, backGround: Display.Color; 
 	PrintHeaders*: BOOLEAN; 
 	undoPict: Picture; 
 	undoLayer: tLayer; 
-	undoAction: INTEGER; 
+	undoAction: SIGNED16; 
 	onTheFly*: BOOLEAN; 
-	DefaultWidth: INTEGER; 
+	DefaultWidth: SIGNED16; 
 
 	PROCEDURE ^ SetFocusPicture*(p: Picture); 
 	PROCEDURE ^ SetFocusPort*(p: Frame); 
 	PROCEDURE ^ SetNewC2d*(p: Picture; x, y, w, h: Real); 
-	PROCEDURE ^ SetC2d*(p: Picture; x, y, w, h: LONGREAL); 
-	PROCEDURE ^ GetPictureScreenRegion*(picture: Picture; VAR x, y, w, h: INTEGER); 
-	PROCEDURE ^ GetPictureXY*(frame: Frame; X, Y: INTEGER): Picture; 
+	PROCEDURE ^ SetC2d*(p: Picture; x, y, w, h: FLOAT64); 
+	PROCEDURE ^ GetPictureScreenRegion*(picture: Picture; VAR x, y, w, h: SIGNED16); 
+	PROCEDURE ^ GetPictureXY*(frame: Frame; X, Y: SIGNED16): Picture; 
 	PROCEDURE ^ GetFocus*(): Frame; 
 	PROCEDURE ^ GetFocusPicture*(): Picture; 
 	PROCEDURE ^ PictureCopy(VAR M: Objects.CopyMsg; source, dest: Picture); 
 	PROCEDURE ^ AdjustPict(frame: Frame; ppict: Picture); 
 	PROCEDURE ^ FrameHandleAttributes(obj: Frame; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ FrameHandler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ AddPicture*(frame: Frame; picture: Picture; x, y, w, h: REAL); 
+	PROCEDURE ^ AddPicture*(frame: Frame; picture: Picture; x, y, w, h: FLOAT32); 
 	PROCEDURE ^ RemovePicture*(frame: Frame; picture: Picture); 
-	PROCEDURE ^ SetDefaultFrameRatio*(framesPerLine, whRelation: REAL); 
-	PROCEDURE ^ InitFrame(frame: Frame; w, h: INTEGER); 
+	PROCEDURE ^ SetDefaultFrameRatio*(framesPerLine, whRelation: FLOAT32); 
+	PROCEDURE ^ InitFrame(frame: Frame; w, h: SIGNED16); 
 	PROCEDURE ^ NewFrame*; 
-	PROCEDURE ^ ResizeFrame*(f: Frame; w, h: INTEGER); 
-	PROCEDURE ^ XNewFrame*(w, h: INTEGER): Frame; 
-	PROCEDURE ^ InsertNewFrame*(w, h: INTEGER): Frame; 
+	PROCEDURE ^ ResizeFrame*(f: Frame; w, h: SIGNED16); 
+	PROCEDURE ^ XNewFrame*(w, h: SIGNED16): Frame; 
+	PROCEDURE ^ InsertNewFrame*(w, h: SIGNED16): Frame; 
 	PROCEDURE ^ PictureUpdate*(picture: Picture); 
 	PROCEDURE ^ RedrawFocusPict*; 
 	PROCEDURE ^ RedrawFocusFrame*; 
@@ -108,7 +108,7 @@ VAR
 	PROCEDURE ^ RemoveLayer*(picture: Picture; layer: tLayer); 
 	PROCEDURE ^ AddLayer*(picture: Picture; layer: tLayer); 
 	PROCEDURE ^ PictureHandleSetPicture*(pict: Picture); 
-	PROCEDURE ^ GetHeaderRect(picture: Picture; VAR x, y, w, h: INTEGER); 
+	PROCEDURE ^ GetHeaderRect(picture: Picture; VAR x, y, w, h: SIGNED16); 
 	PROCEDURE ^ CopyLayerOver(picture: Picture; layer: tLayer; list: vyTracking.List); 
 	PROCEDURE ^ HeaderEdit(picture: Picture; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ ReverseOrdered(link: vyLinks.Link): vyLinks.Link; 
@@ -125,7 +125,7 @@ VAR
 	PROCEDURE ^ alllayers; 
 	PROCEDURE ^ ContextResponding(picture: Picture; VAR msg: vyEvents.EventMsg): BOOLEAN; 
 	PROCEDURE ^ PictureHandleEventMsg(picture: Picture; VAR event: vyEvents.EventMsg); 
-	PROCEDURE ^ PictureHandleInputMsg(obj: Picture; VAR msg: Oberon.InputMsg; x, y, w, h: INTEGER); 
+	PROCEDURE ^ PictureHandleInputMsg(obj: Picture; VAR msg: Oberon.InputMsg; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ PictureHandleExtract(picture: Picture; VAR msg: ExtractContentMsg); 
 	PROCEDURE ^ PictureHandleConsume(ppict: Picture; VAR msg: Display.ConsumeMsg); 
 	PROCEDURE ^ PictureHandleUpdate(ppict: Picture); 
@@ -147,8 +147,8 @@ VAR
 	PROCEDURE ^ PictureInit(picture: Picture); 
 	PROCEDURE ^ NewPicture*; 
 	PROCEDURE ^ PictureSetgcontext(picture: Picture; gc: vyBase.Object); 
-	PROCEDURE ^ InsertNewCPicture*(x, y, w, h: REAL; gc: vyBase.Object): Picture; 
-	PROCEDURE ^ XNewCPicture*(x, y, w, h: REAL; gc: vyBase.Object): Picture; 
+	PROCEDURE ^ InsertNewCPicture*(x, y, w, h: FLOAT32; gc: vyBase.Object): Picture; 
+	PROCEDURE ^ XNewCPicture*(x, y, w, h: FLOAT32; gc: vyBase.Object): Picture; 
 	PROCEDURE ^ NewP*(gc: vyBase.Object): Picture; 
 	PROCEDURE ^ InsertNewVecPicture*(vx, vy: vyBase.tVector): Picture; 
 	PROCEDURE ^ Write*(picture: Picture); 

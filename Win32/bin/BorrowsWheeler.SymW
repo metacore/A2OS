@@ -30,7 +30,7 @@ TYPE
 		PROCEDURE ^ Swap(a, b: Index); 
 		PROCEDURE ^ InsertSort(lo, hi: Index); 
 		PROCEDURE ^ SortR(lo, hi: SIZE); 
-		PROCEDURE ^ EncodeBlock*(VAR buf: ARRAY OF CHAR; len: SIZE): LONGINT; 
+		PROCEDURE ^ EncodeBlock*(VAR buf: ARRAY OF CHAR; len: SIZE): SIGNED32; 
 	END Encoder; 
 
 	Decoder* = OBJECT 
@@ -39,7 +39,7 @@ TYPE
 	VAR 
 		mtf: MTF; 
 		f, l: ARRAY BlockSize OF CHAR; 
-		lc, fc: ARRAY BlockSize OF INTEGER; 
+		lc, fc: ARRAY BlockSize OF SIGNED16; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE  - Swap(a, b: Index);

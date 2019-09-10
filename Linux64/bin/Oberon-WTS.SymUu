@@ -4,19 +4,19 @@ CONST
 	MaxStyles = 48; 
 VAR 
 	R*: Files.Rider; 
-	E: INTEGER; 
+	E: SIGNED16; 
 	elem: ARRAY 32 OF ARRAY 32 OF CHAR; 
 	W, X: Texts.Writer; 
 	L: Objects.Library; 
 	styleOk: BOOLEAN; 
 	styles: ARRAY MaxStyles OF TextGadgets.Style; 
-	nofStyles: INTEGER; 
+	nofStyles: SIGNED16; 
 
 	PROCEDURE ^ Msg(s: ARRAY OF CHAR; cr: BOOLEAN); 
-	PROCEDURE ^ WriteText(VAR R: Files.Rider; lib: Objects.Library; col, voff: SHORTINT; len: LONGINT); 
-	PROCEDURE ^ Parc(VAR R: Files.Rider; n: INTEGER); 
-	PROCEDURE ^ PutObj(F: Display.Frame; w, h: INTEGER); 
-	PROCEDURE ^ Elem(VAR R, S: Files.Rider; n: LONGINT); 
+	PROCEDURE ^ WriteText(VAR R: Files.Rider; lib: Objects.Library; col, voff: SIGNED8; len: SIGNED32); 
+	PROCEDURE ^ Parc(VAR R: Files.Rider; n: SIGNED16); 
+	PROCEDURE ^ PutObj(F: Display.Frame; w, h: SIGNED16); 
+	PROCEDURE ^ Elem(VAR R, S: Files.Rider; n: SIGNED32); 
 	PROCEDURE ^ Conv(VAR R: Files.Rider; VAR T: Texts.Text); 
 	PROCEDURE ^ Backup(name: ARRAY OF CHAR); 
 	PROCEDURE ^ Convert*; 

@@ -2,12 +2,12 @@ MODULE antsMatrixPar IN Oberon;
 	IMPORT antsObjects, Files, vyBase, Objects, vyName, antsCommands, aM := antsMessages;
 CONST 
 TYPE 
-	MatrixArray* = POINTER TO ARRAY OF ARRAY OF LONGREAL; 
+	MatrixArray* = POINTER TO ARRAY OF ARRAY OF FLOAT64; 
 
 	Matrix* = POINTER TO MatrixDesc; 
 
 	MatrixDesc* = RECORD (vyBase.ObjDesc)
-		dimx-, dimy-: INTEGER; 
+		dimx-, dimy-: SIGNED16; 
 		par*: MatrixArray; 
 	END; 
 
@@ -15,13 +15,13 @@ TYPE
 	PROCEDURE ^ ReadMatrix(VAR R: Files.Rider; VAR n: Matrix); 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Gen*; 
-	PROCEDURE ^ DoNew*(dimy, dimx: INTEGER): Matrix; 
-	PROCEDURE ^ Min(x, y: INTEGER): INTEGER; 
+	PROCEDURE ^ DoNew*(dimy, dimx: SIGNED16): Matrix; 
+	PROCEDURE ^ Min(x, y: SIGNED16): SIGNED16; 
 	PROCEDURE ^ CopyMatrixArray(n: Matrix; from: MatrixArray); 
-	PROCEDURE ^ Fill(a: MatrixArray; with: LONGREAL); 
-	PROCEDURE ^ ChangeDim*(n: Matrix; dimy, dimx: INTEGER); 
+	PROCEDURE ^ Fill(a: MatrixArray; with: FLOAT64); 
+	PROCEDURE ^ ChangeDim*(n: Matrix; dimy, dimx: SIGNED16); 
 	PROCEDURE ^ Symmetry*(n: Matrix); 
-	PROCEDURE ^ MinMax*(n: Matrix; VAR min, max: LONGREAL); 
+	PROCEDURE ^ MinMax*(n: Matrix; VAR min, max: FLOAT64); 
 	PROCEDURE ^ Standardize*(n: Matrix); 
 	PROCEDURE ^ L0*(n: Matrix); 
 	PROCEDURE ^ L1*(n: Matrix); 

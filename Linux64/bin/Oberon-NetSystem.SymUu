@@ -39,7 +39,7 @@ TYPE
 		next: Password; 
 	END; 
 
-	Bytes = ARRAY MAX(LONGINT) OF CHAR; 
+	Bytes = ARRAY MAX(SIGNED32) OF CHAR; 
 VAR 
 	hostIP*: IPAdr; 
 	anyIP*, allIP*: IPAdr; 
@@ -60,34 +60,34 @@ VAR
 	PROCEDURE ^ DelPassword*(CONST pservice, user, phost: ARRAY OF CHAR); 
 	PROCEDURE ^ SetUser*; 
 	PROCEDURE ^ ClearUser*; 
-	PROCEDURE ^ Available*(conn: Connection): LONGINT; 
-	PROCEDURE ^ OpenConnection*(VAR conn: Connection; locPort: INTEGER; remIP: IPAdr; remPort: INTEGER; VAR res: INTEGER); 
-	PROCEDURE ^ AsyncOpenConnection*(VAR conn: Connection; locPort: INTEGER; remIP: IPAdr; remPort: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ Available*(conn: Connection): SIGNED32; 
+	PROCEDURE ^ OpenConnection*(VAR conn: Connection; locPort: SIGNED16; remIP: IPAdr; remPort: SIGNED16; VAR res: SIGNED16); 
+	PROCEDURE ^ AsyncOpenConnection*(VAR conn: Connection; locPort: SIGNED16; remIP: IPAdr; remPort: SIGNED16; VAR res: SIGNED16); 
 	PROCEDURE ^ CloseConnection*(conn: Connection); 
 	PROCEDURE ^ Requested*(conn: Connection): BOOLEAN; 
-	PROCEDURE ^ Accept*(conn: Connection; VAR newC: Connection; VAR res: INTEGER); 
-	PROCEDURE ^ State*(conn: Connection): INTEGER; 
-	PROCEDURE ^ GetPartner*(conn: Connection; VAR remIP: IPAdr; VAR remPort: INTEGER); 
+	PROCEDURE ^ Accept*(conn: Connection; VAR newC: Connection; VAR res: SIGNED16); 
+	PROCEDURE ^ State*(conn: Connection): SIGNED16; 
+	PROCEDURE ^ GetPartner*(conn: Connection; VAR remIP: IPAdr; VAR remPort: SIGNED16); 
 	PROCEDURE ^ Read*(conn: Connection; VAR ch: CHAR); 
-	PROCEDURE ^ ReadBytes*(conn: Connection; pos, len: LONGINT; VAR buf: ARRAY OF S.BYTE); 
+	PROCEDURE ^ ReadBytes*(conn: Connection; pos, len: SIGNED32; VAR buf: ARRAY OF S.BYTE); 
 	PROCEDURE ^ ReadBool*(conn: Connection; VAR b: BOOLEAN); 
-	PROCEDURE ^ ReadInt*(conn: Connection; VAR x: INTEGER); 
-	PROCEDURE ^ ReadLInt*(conn: Connection; VAR x: LONGINT); 
+	PROCEDURE ^ ReadInt*(conn: Connection; VAR x: SIGNED16); 
+	PROCEDURE ^ ReadLInt*(conn: Connection; VAR x: SIGNED32); 
 	PROCEDURE ^ ReadString*(conn: Connection; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ Write*(conn: Connection; ch: CHAR); 
-	PROCEDURE ^ WriteBytes*(conn: Connection; pos, len: LONGINT; CONST buf: ARRAY OF S.BYTE); 
+	PROCEDURE ^ WriteBytes*(conn: Connection; pos, len: SIGNED32; CONST buf: ARRAY OF S.BYTE); 
 	PROCEDURE ^ WriteBool*(conn: Connection; b: BOOLEAN); 
-	PROCEDURE ^ WriteInt*(conn: Connection; x: INTEGER); 
-	PROCEDURE ^ WriteLInt*(conn: Connection; x: LONGINT); 
+	PROCEDURE ^ WriteInt*(conn: Connection; x: SIGNED16); 
+	PROCEDURE ^ WriteLInt*(conn: Connection; x: SIGNED32); 
 	PROCEDURE ^ WriteString*(conn: Connection; CONST s: ARRAY OF CHAR); 
-	PROCEDURE ^ OpenSocket*(VAR soc: Socket; locPort: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ OpenSocket*(VAR soc: Socket; locPort: SIGNED16; VAR res: SIGNED16); 
 	PROCEDURE ^ CloseSocket*(S: Socket); 
-	PROCEDURE ^ AvailableDG*(soc: Socket): LONGINT; 
-	PROCEDURE ^ SendDG*(soc: Socket; remIP: IPAdr; remport: INTEGER; pos, len: LONGINT; CONST buf: ARRAY OF S.BYTE); 
-	PROCEDURE ^ ReceiveDG*(soc: Socket; VAR remIP: IPAdr; VAR remport: INTEGER; pos: LONGINT; VAR len: LONGINT; VAR buf: ARRAY OF S.BYTE); 
-	PROCEDURE ^ PutInt*(VAR buf: ARRAY OF S.BYTE; pos: INTEGER; x: INTEGER); 
-	PROCEDURE ^ PutLInt*(VAR buf: ARRAY OF S.BYTE; pos: INTEGER; x: LONGINT); 
-	PROCEDURE ^ GetInt*(CONST buf: ARRAY OF S.BYTE; pos: INTEGER; VAR x: INTEGER); 
-	PROCEDURE ^ GetLInt*(CONST buf: ARRAY OF S.BYTE; pos: INTEGER; VAR x: LONGINT); 
+	PROCEDURE ^ AvailableDG*(soc: Socket): SIGNED32; 
+	PROCEDURE ^ SendDG*(soc: Socket; remIP: IPAdr; remport: SIGNED16; pos, len: SIGNED32; CONST buf: ARRAY OF S.BYTE); 
+	PROCEDURE ^ ReceiveDG*(soc: Socket; VAR remIP: IPAdr; VAR remport: SIGNED16; pos: SIGNED32; VAR len: SIGNED32; VAR buf: ARRAY OF S.BYTE); 
+	PROCEDURE ^ PutInt*(VAR buf: ARRAY OF S.BYTE; pos: SIGNED16; x: SIGNED16); 
+	PROCEDURE ^ PutLInt*(VAR buf: ARRAY OF S.BYTE; pos: SIGNED16; x: SIGNED32); 
+	PROCEDURE ^ GetInt*(CONST buf: ARRAY OF S.BYTE; pos: SIGNED16; VAR x: SIGNED16); 
+	PROCEDURE ^ GetLInt*(CONST buf: ARRAY OF S.BYTE; pos: SIGNED16; VAR x: SIGNED32); 
 BEGIN
 END NetSystem.

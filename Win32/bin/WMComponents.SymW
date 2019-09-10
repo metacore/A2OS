@@ -57,7 +57,7 @@ TYPE
 
 	Recursion* = ENUM None* = 0, FromComponent* = 1, FromBottom* = 2 END; 
 
-	SetStringProcedure = PROCEDURE {DELEGATE}(CONST string: ARRAY OF CHAR; x, y: SIZE; VAR res: WORD); 
+	SetStringProcedure = PROCEDURE {DELEGATE}(CONST string: ARRAY OF CHAR; x, y: SIZE; VAR res: INTEGER); 
 
 	DropTarget = OBJECT (WMDropTarget.DropTarget)
 	VAR 
@@ -66,7 +66,7 @@ TYPE
 		x, y: SIZE; 
 
 		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; x, y: SIZE); 
-		PROCEDURE ^ GetInterface*(type: WORD): WMDropTarget.DropInterface; 
+		PROCEDURE ^ GetInterface*(type: INTEGER): WMDropTarget.DropInterface; 
 	END DropTarget; 
 
 	DropString = OBJECT (WMDropTarget.DropString)
@@ -76,7 +76,7 @@ TYPE
 		x, y: SIZE; 
 
 		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; x, y: SIZE); 
-		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: INTEGER); 
 	END DropString; 
 
 	LanguageExtension* = POINTER TO RECORD (Messages.MessageExtension)
@@ -108,7 +108,7 @@ TYPE
 	VAR 
 		originator-: Component; 
 		command-: Strings.String; 
-		timestamp-: LONGINT; 
+		timestamp-: SIGNED32; 
 
 		PROCEDURE ^  & New*(originator: Component; command: Strings.String; in, arg: Streams.Reader; out, error: Streams.Writer; caller: OBJECT); 
 	END EventContext; 
@@ -139,7 +139,7 @@ TYPE
 		internal-: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Write*(w: Streams.Writer; context: ANY; level: LONGINT); 
+		PROCEDURE ^ Write*(w: Streams.Writer; context: ANY; level: SIGNED32); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ IsCallFromSequencer*(): BOOLEAN; 
 		PROCEDURE ^ AssertLock*; 
@@ -153,7 +153,7 @@ TYPE
 		PROCEDURE ^ GetComponentRoot*(): Component; 
 		PROCEDURE ^ Find*(id: ARRAY OF CHAR): Component; 
 		PROCEDURE ^ FindByUID*(CONST uid: ARRAY OF CHAR): Component; 
-		PROCEDURE ^ FindByPath*(CONST path: ARRAY OF CHAR; pos: LONGINT): Component; 
+		PROCEDURE ^ FindByPath*(CONST path: ARRAY OF CHAR; pos: SIGNED32): Component; 
 		PROCEDURE ^ StringToComponent*(str: Strings.String): Component; 
 		PROCEDURE ^ StringToCompCommand*(eventstr: Strings.String): WMEvents.EventListener; 
 		PROCEDURE ^ Finalize*; 
@@ -209,7 +209,7 @@ TYPE
 		layoutManager: LayoutManager; 
 		aligning*: BOOLEAN; 
 		pointerInfo: WM.PointerInfo; 
-		editRegion: LONGINT; 
+		editRegion: SIGNED32; 
 		editX, editY: SIZE; 
 		keyFlags: SET; 
 		oldPointerInfo: WM.PointerInfo; 
@@ -241,7 +241,7 @@ TYPE
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ AddVisualComponent(c: VisualComponent; x, y: SIZE); 
 		PROCEDURE ^ EditDragDropped(x, y: SIZE; dragInfo: WM.DragInfo): BOOLEAN; 
-		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; x, y: SIZE; VAR res: WORD); 
+		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; x, y: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ DragResult*(accepted: BOOLEAN; recipient: ANY; dragInfo: WM.DragInfo); 
 		PROCEDURE ^ StartDrag*(data: ANY; img: WMGraphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
 		PROCEDURE ^ ConfirmDrag*(accept: BOOLEAN; dragInfo: WM.DragInfo); 
@@ -254,7 +254,7 @@ TYPE
 		PROCEDURE ^ DrawSubComponents*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ GetFont*(): WMGraphics.Font; 
 		PROCEDURE ^ SetFont*(font: WMGraphics.Font); 
-		PROCEDURE ^ ScaleFont*(height: SIZE; percent: WORD); 
+		PROCEDURE ^ ScaleFont*(height: SIZE; percent: INTEGER); 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ InvalidateRect*(r: Rectangles.Rectangle); 
 		PROCEDURE ^ PostInvalidateCommand*(sender, par: ANY); 
@@ -288,7 +288,7 @@ TYPE
 		PROCEDURE ^ CheckKeyEvents(ucs: SIZE; flags: SET; VAR keySym: SIZE); 
 		PROCEDURE ^ CheckPointerEvent(x, y, z: SIZE; keys: SET); 
 		PROCEDURE ^ CheckPointerUpEvent(x, y, z: SIZE; keys: SET); 
-		PROCEDURE ^ InEditBounds(x, y: SIZE): WORD; 
+		PROCEDURE ^ InEditBounds(x, y: SIZE): INTEGER; 
 		PROCEDURE ^ Edit(VAR msg: Messages.Message); 
 		PROCEDURE ^ SetEditMode*(mode: BOOLEAN; recurse: BOOLEAN); 
 		PROCEDURE ^ EditMoved(sender, data: ANY); 
@@ -303,7 +303,7 @@ TYPE
 	VAR 
 		form-: Form; 
 		cs: WMGraphics.CanvasState; 
-		disableUpdate: LONGINT; 
+		disableUpdate: SIGNED32; 
 		content: VisualComponent; 
 		scaling*: BOOLEAN; 
 
@@ -368,8 +368,8 @@ TYPE
 	SelectionList* = OBJECT {EXCLUSIVE} 
 	VAR 
 		first, last: ComponentListEntry; 
-		number: LONGINT; 
-		state: LONGINT; 
+		number: SIGNED32; 
+		state: SIGNED32; 
 		timer: Kernel.Timer; 
 		onChanged-: WMEvents.EventSource; 
 		lock: Locks.RecursiveLock; 
@@ -384,7 +384,7 @@ TYPE
 		PROCEDURE ^ GetSelection*(): SelectionArray; 
 		PROCEDURE ^ Toggle*(this: VisualComponent); 
 		PROCEDURE ^ Update; 
-		PROCEDURE ^ Shift(dx, dy: LONGINT); 
+		PROCEDURE ^ Shift(dx, dy: SIGNED32); 
 		PROCEDURE ^ ToImg(start: VisualComponent; VAR this: ComponentListEntry): WMGraphics.Image; 
 	BEGIN{ACTIVE} 
 	END SelectionList; 
@@ -408,7 +408,7 @@ VAR
 	propertyListList-: PropertyListList; 
 	currentStyle-: XML.Element; 
 	componentStyleMsg-: ComponentStyleChanged; 
-	timestamp: LONGINT; 
+	timestamp: SIGNED32; 
 	macroHandlers: MacroHandler; 
 	selection-: SelectionList; 
 
@@ -428,15 +428,15 @@ VAR
 	PROCEDURE ^ GetPropertyValue(originator: Component; CONST fullname: ARRAY OF CHAR): Strings.String; 
 	PROCEDURE ^ DefaultMacroHandler(CONST macro: Macro; originator: Component; w: Streams.Writer; VAR handled: BOOLEAN); 
 	PROCEDURE ^ FindMacroHandler(CONST namespace: ARRAY OF CHAR): MacroHandlerProcedure; 
-	PROCEDURE ^ AddMacroHandler*(CONST namespace: Namespace; handler: MacroHandlerProcedure; VAR res: WORD); 
+	PROCEDURE ^ AddMacroHandler*(CONST namespace: Namespace; handler: MacroHandlerProcedure; VAR res: INTEGER); 
 	PROCEDURE ^ RemoveMacroHandler*(handler: MacroHandlerProcedure); 
 	PROCEDURE ^ SetAttribute*(context: Commands.Context); 
-	PROCEDURE ^ Call*(cmds: ARRAY OF CHAR; caller: Component; flags: SET; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Call*(cmds: ARRAY OF CHAR; caller: Component; flags: SET; VAR res: INTEGER; VAR msg: ARRAY OF CHAR); 
 	PROCEDURE ^ GetComponent*(CONST name: ARRAY OF CHAR): Component; 
 	PROCEDURE ^ GetVisualComponent*(CONST name: ARRAY OF CHAR): VisualComponent; 
 	PROCEDURE ^ SetStyle*(style: XML.Element); 
 	PROCEDURE ^ SetStyleInternal(style: XML.Element); 
-	PROCEDURE ^ FindRelativePath(x: Component; CONST path: ARRAY OF CHAR; pos: LONGINT): Component; 
+	PROCEDURE ^ FindRelativePath(x: Component; CONST path: ARRAY OF CHAR; pos: SIGNED32): Component; 
 	PROCEDURE ^ Error(pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Load*(CONST filename: ARRAY OF CHAR): XML.Content; 
 	PROCEDURE ^ FormWindowGen*(xml: XML.Content): WM.Window; 
@@ -448,7 +448,7 @@ VAR
 	PROCEDURE ^ InitStrings; 
 	PROCEDURE ^ InitPrototypes; 
 	PROCEDURE ^ ShowComponent(component: Component); 
-	PROCEDURE ^ NewLine(w: Streams.Writer; level: LONGINT); 
+	PROCEDURE ^ NewLine(w: Streams.Writer; level: SIGNED32); 
 	PROCEDURE ^ InstallDefaultMacroHandler; 
 	PROCEDURE ^ GetElementByName(parent: XML.Element; CONST name: ARRAY OF CHAR): XML.Element; 
 	PROCEDURE ^ NewComponent*(): XML.Element; 

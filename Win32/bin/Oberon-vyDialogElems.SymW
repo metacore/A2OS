@@ -6,23 +6,23 @@ TYPE
 	tButton* = POINTER TO tButtonDesc; 
 
 	tButtonDesc* = RECORD 
-		x, y, w, h, dsr: INTEGER; 
+		x, y, w, h, dsr: SIGNED16; 
 		text: ARRAY 32 OF CHAR; 
 		sign: vyHostDisplay.tSign; 
 		pressed: BOOLEAN; 
-		recall*: PROCEDURE (b: tButton; x0, y0: INTEGER); 
-		track*: PROCEDURE (b: tButton; x0, y0: INTEGER); 
-		press*: PROCEDURE (b: tButton; x0, y0: INTEGER):BOOLEAN; 
-		switch*: PROCEDURE (b: tButton; x0, y0: INTEGER):BOOLEAN; 
-		pointInButton*: PROCEDURE (x, y: INTEGER; b: tButton; x0, y0: INTEGER):BOOLEAN; 
+		recall*: PROCEDURE (b: tButton; x0, y0: SIGNED16); 
+		track*: PROCEDURE (b: tButton; x0, y0: SIGNED16); 
+		press*: PROCEDURE (b: tButton; x0, y0: SIGNED16):BOOLEAN; 
+		switch*: PROCEDURE (b: tButton; x0, y0: SIGNED16):BOOLEAN; 
+		pointInButton*: PROCEDURE (x, y: SIGNED16; b: tButton; x0, y0: SIGNED16):BOOLEAN; 
 	END; 
 
-	PROCEDURE ^ RecallButton(b: tButton; x0, y0: INTEGER); 
-	PROCEDURE ^ EraseButton(b: tButton; x0, y0: INTEGER); 
-	PROCEDURE ^ TrackButton(b: tButton; x0, y0: INTEGER); 
-	PROCEDURE ^ PointInButton(x, y: INTEGER; b: tButton; x0, y0: INTEGER): BOOLEAN; 
-	PROCEDURE ^ PressButton(b: tButton; x0, y0: INTEGER): BOOLEAN; 
-	PROCEDURE ^ SwitchButton(b: tButton; x0, y0: INTEGER): BOOLEAN; 
-	PROCEDURE ^ OpenButton*(b: tButton; x, y, w, h, dsr: INTEGER; text: ARRAY OF CHAR; sign: vyHostDisplay.tSign); 
+	PROCEDURE ^ RecallButton(b: tButton; x0, y0: SIGNED16); 
+	PROCEDURE ^ EraseButton(b: tButton; x0, y0: SIGNED16); 
+	PROCEDURE ^ TrackButton(b: tButton; x0, y0: SIGNED16); 
+	PROCEDURE ^ PointInButton(x, y: SIGNED16; b: tButton; x0, y0: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ PressButton(b: tButton; x0, y0: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ SwitchButton(b: tButton; x0, y0: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ OpenButton*(b: tButton; x, y, w, h, dsr: SIGNED16; text: ARRAY OF CHAR; sign: vyHostDisplay.tSign); 
 BEGIN
 END vyDialogElems.

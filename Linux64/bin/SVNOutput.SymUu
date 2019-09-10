@@ -28,7 +28,7 @@ TYPE
 		context: Commands.Context; 
 
 		PROCEDURE ^  & Init*(c: Commands.Context); 
-		PROCEDURE ^ Print*(num: WORD; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ Print*(num: INTEGER; CONST msg: ARRAY OF CHAR); 
 	END Message; 
 BEGIN
 END SVNOutput.

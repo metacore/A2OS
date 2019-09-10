@@ -13,9 +13,9 @@ TYPE
 		start, alive: BOOLEAN; 
 		c, cflash: ARRAY 4 OF WMGraphics.Color; 
 		random: Random.Generator; 
-		game: ARRAY MaxLevel OF SHORTINT; 
-		level: LONGINT; 
-		step: LONGINT; 
+		game: ARRAY MaxLevel OF SIGNED8; 
+		level: SIGNED32; 
+		step: SIGNED32; 
 		error: BOOLEAN; 
 		timer: Kernel.Timer; 
 		s, levelStr: ARRAY 32 OF CHAR; 
@@ -35,7 +35,7 @@ TYPE
 	BEGIN{ACTIVE} 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ IncCount; 

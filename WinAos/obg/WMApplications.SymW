@@ -34,7 +34,7 @@ TYPE
 	WindowInfo = RECORD 
 		title: Strings.String; 
 		icon: Strings.String; 
-		width, height: LONGINT; 
+		width, height: SIGNED32; 
 		alpha: BOOLEAN; 
 		flags: SET; 
 		alternativeMoveResize: BOOLEAN; 
@@ -63,13 +63,13 @@ TYPE
 	GadgetWindow = OBJECT {EXCLUSIVE} (Window)
 	VAR 
 		lastX, lastY: SIZE; 
-		mode: WORD; 
+		mode: INTEGER; 
 		resized: BOOLEAN; 
 		viewport: WMWindowManager.ViewPort; 
 
 		PROCEDURE ^  & New(CONST info: ApplicationInfo; context: WMRestorable.Context); 
-		PROCEDURE ^ GetMode(x, y: SIZE): WORD; 
-		PROCEDURE ^ UpdatePointerInfo(mode: LONGINT); 
+		PROCEDURE ^ GetMode(x, y: SIZE): INTEGER; 
+		PROCEDURE ^ UpdatePointerInfo(mode: SIGNED32); 
 		PROCEDURE ^ MoveOrResize(): BOOLEAN; 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
@@ -78,15 +78,15 @@ TYPE
 		PROCEDURE ^ PointerLeave*; 
 	END GadgetWindow; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
-	PROCEDURE ^ ShowRes(res: WORD; CONST repositoryName, applicationName: ARRAY OF CHAR; out: Streams.Writer); 
-	PROCEDURE ^ GetApplicationInfo(CONST repositoryName, applicationName: ARRAY OF CHAR; VAR info: ApplicationInfo): WORD; 
+	PROCEDURE ^ ShowRes(res: INTEGER; CONST repositoryName, applicationName: ARRAY OF CHAR; out: Streams.Writer); 
+	PROCEDURE ^ GetApplicationInfo(CONST repositoryName, applicationName: ARRAY OF CHAR; VAR info: ApplicationInfo): INTEGER; 
 	PROCEDURE ^ ParseApplication(CONST applicationName: ARRAY OF CHAR; CONST application: XML.Element; VAR info: ApplicationInfo): BOOLEAN; 
 	PROCEDURE ^ GetApplication(repository: Repositories.Repository; CONST applicationName: ARRAY OF CHAR): XML.Element; 
-	PROCEDURE ^ GetInteger(element: XML.Element; CONST attributeName: ARRAY OF CHAR; VAR value: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetInteger(element: XML.Element; CONST attributeName: ARRAY OF CHAR; VAR value: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ GetBoolean(element: XML.Element; CONST attributeName: ARRAY OF CHAR; VAR value: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 

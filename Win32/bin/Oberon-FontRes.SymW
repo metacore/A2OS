@@ -10,46 +10,46 @@ CONST
 	medium = 3; 
 TYPE 
 	FontInfo = RECORD 
-		version: INTEGER; 
-		size: LONGINT; 
+		version: SIGNED16; 
+		size: SIGNED32; 
 		copyright: ARRAY 60 OF CHAR; 
-		type: INTEGER; 
-		points: INTEGER; 
-		vertRes, horizRes: INTEGER; 
-		ascent: INTEGER; 
-		internalLeading, externalLeading: INTEGER; 
+		type: SIGNED16; 
+		points: SIGNED16; 
+		vertRes, horizRes: SIGNED16; 
+		ascent: SIGNED16; 
+		internalLeading, externalLeading: SIGNED16; 
 		italic, underline, strikeOut: CHAR; 
-		weight: INTEGER; 
+		weight: SIGNED16; 
 		charSet: CHAR; 
-		pixWidth, pixHeight: INTEGER; 
+		pixWidth, pixHeight: SIGNED16; 
 		pitchAndFamily: CHAR; 
-		avgWidth, maxWidth: INTEGER; 
+		avgWidth, maxWidth: SIGNED16; 
 		firstChar, lastChar, defaultChar, breakChar: CHAR; 
-		widthBytes: INTEGER; 
-		device: LONGINT; 
-		face: LONGINT; 
-		bitsPointer: LONGINT; 
-		bitsOffset: LONGINT; 
+		widthBytes: SIGNED16; 
+		device: SIGNED32; 
+		face: SIGNED32; 
+		bitsPointer: SIGNED32; 
+		bitsOffset: SIGNED32; 
 		res: CHAR; 
 	END; 
 
 	CharEntry = RECORD 
-		width: INTEGER; 
-		offs: INTEGER; 
+		width: SIGNED16; 
+		offs: SIGNED16; 
 	END; 
 VAR 
 	oname: ARRAY 64 OF CHAR; 
 	Info: FontInfo; 
 	CharTab: ARRAY 257 OF CharEntry; 
-	PowTwo: ARRAY 9 OF INTEGER; 
-	C: ARRAY 50 OF LONGINT; 
+	PowTwo: ARRAY 9 OF SIGNED16; 
+	C: ARRAY 50 OF SIGNED32; 
 
 	PROCEDURE ^ Append(VAR s: ARRAY OF CHAR; suff: ARRAY OF CHAR); 
-	PROCEDURE ^ WriteStringFix(VAR out: Files.Rider; s: ARRAY OF CHAR; len: INTEGER); 
-	PROCEDURE ^ Do(VAR R, out: Files.Rider; face: ARRAY OF CHAR; size: INTEGER; style: INTEGER; res: INTEGER); 
-	PROCEDURE ^ ParseName(VAR name, faceName: ARRAY OF CHAR; VAR res, size, style: INTEGER); 
+	PROCEDURE ^ WriteStringFix(VAR out: Files.Rider; s: ARRAY OF CHAR; len: SIGNED16); 
+	PROCEDURE ^ Do(VAR R, out: Files.Rider; face: ARRAY OF CHAR; size: SIGNED16; style: SIGNED16; res: SIGNED16); 
+	PROCEDURE ^ ParseName(VAR name, faceName: ARRAY OF CHAR; VAR res, size, style: SIGNED16); 
 	PROCEDURE ^ Convert*; 
-	PROCEDURE ^ SetUnsigned(VAR dest: LONGINT; src: HUGEINT); 
+	PROCEDURE ^ SetUnsigned(VAR dest: SIGNED32; src: SIGNED64); 
 	PROCEDURE ^ Init; 
 BEGIN
 END FontRes.

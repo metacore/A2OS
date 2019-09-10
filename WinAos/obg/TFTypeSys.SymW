@@ -63,7 +63,7 @@ TYPE
 
 	Position* = RECORD 
 		valid*: BOOLEAN; 
-		a*, b*: LONGINT; 
+		a*, b*: SIGNED32; 
 	END; 
 
 	Comment* = POINTER TO RECORD 
@@ -77,8 +77,8 @@ TYPE
 	END; 
 
 	Expression* = POINTER TO RECORD 
-		kind*, op*, basicType*: LONGINT; 
-		intValue*: HUGEINT; 
+		kind*, op*, basicType*: SIGNED32; 
+		intValue*: SIGNED64; 
 		strValue*: Strings.String; 
 		setValue*: Set; 
 		a*, b*: Expression; 
@@ -205,7 +205,7 @@ TYPE
 	Array* = POINTER TO RECORD 
 		container*: Scope; 
 		open*: BOOLEAN; 
-		len*: LONGINT; 
+		len*: SIGNED32; 
 		expression*: Expression; 
 		base*: Type; 
 	END; 
@@ -226,7 +226,7 @@ TYPE
 
 	Type* = POINTER TO RECORD 
 		container*: Scope; 
-		kind*, basicType*: LONGINT; 
+		kind*, basicType*: SIGNED32; 
 		qualident*: Designator; 
 		type*: TypeDecl; 
 		array*: Array; 
@@ -259,7 +259,7 @@ TYPE
 
 	Var* = POINTER TO RECORD (NamedObject)
 		type*: Type; 
-		varNr*: LONGINT; 
+		varNr*: SIGNED32; 
 		parameterType*: SET; 
 	END; 
 
@@ -268,7 +268,7 @@ TYPE
 	ObjectList* = OBJECT 
 	VAR 
 		objs-: NamedObjectArray; 
-		nofObjs-: LONGINT; 
+		nofObjs-: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Add*(m: NamedObject); 
@@ -331,14 +331,14 @@ VAR
 
 	PROCEDURE ^ GetModule*(imp: Import): Module; 
 	PROCEDURE ^ FindType*(d: Designator; scope: Scope): Type; 
-	PROCEDURE ^ PrimitiveExpressionInt*(value: HUGEINT): Expression; 
+	PROCEDURE ^ PrimitiveExpressionInt*(value: SIGNED64): Expression; 
 	PROCEDURE ^ PrimitiveExpressionString*(CONST str: ARRAY OF CHAR): Expression; 
 	PROCEDURE ^ PrimitiveExpressionBool*(value: BOOLEAN): Expression; 
 	PROCEDURE ^ PrimitiveExpressionSet*(value: Set): Expression; 
 	PROCEDURE ^ PrimitiveExpressionNIL*(): Expression; 
 	PROCEDURE ^ IllegalExpression*(): Expression; 
-	PROCEDURE ^ UnaryExpression*(op: INTEGER; exp: Expression): Expression; 
-	PROCEDURE ^ BinaryExpression*(op: LONGINT; expa, expb: Expression): Expression; 
+	PROCEDURE ^ UnaryExpression*(op: SIGNED16; exp: Expression): Expression; 
+	PROCEDURE ^ BinaryExpression*(op: SIGNED32; expa, expb: Expression): Expression; 
 	PROCEDURE ^ CreateDesignatorExpression*(designator: Designator): Expression; 
 	PROCEDURE ^ CreateAssignment*(designator: Designator; expression: Expression): Statement; 
 	PROCEDURE ^ CreateProcedureCall*(designator: Designator): Statement; 
@@ -355,8 +355,8 @@ VAR
 	PROCEDURE ^ NewEmptyStatement*(): Statement; 
 	PROCEDURE ^ ExportQualident(w: Streams.Writer; ident: Designator; scope: Scope); 
 	PROCEDURE ^ ExportSignature(w: Streams.Writer; signature: ProcedureSignature; scope: Scope); 
-	PROCEDURE ^ ExportType(w: Streams.Writer; t: Type; level: LONGINT; scope: Scope); 
-	PROCEDURE ^ ExportScope(w: Streams.Writer; scope: Scope; level: LONGINT); 
+	PROCEDURE ^ ExportType(w: Streams.Writer; t: Type; level: SIGNED32; scope: Scope); 
+	PROCEDURE ^ ExportScope(w: Streams.Writer; scope: Scope; level: SIGNED32); 
 	PROCEDURE ^ WriteSymbolFile*(m: Module); 
 	PROCEDURE ^ ImportQualident(r: Streams.Reader): Designator; 
 	PROCEDURE ^ ImportSignature(r: Streams.Reader; scope: Scope; owner: NamedObject): ProcedureSignature; 

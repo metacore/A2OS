@@ -44,7 +44,7 @@ TYPE
 		originator*, sender*: ANY; 
 		token*: AsyncToken; 
 		event*: CompCommand; 
-		msgType*, msgSubType*: LONGINT; 
+		msgType*, msgSubType*: SIGNED32; 
 		x*, y*, z*, dx*, dy*, dz*: SIZE; 
 		flags*: SET; 
 		ext*: ANY; 
@@ -108,9 +108,9 @@ TYPE
 VAR 
 	tokenCache: Kernel.FinalizedCollection; 
 	ttoken: AsyncToken; 
-	messagesAddedByType-: ARRAY MsgTypeMax OF LONGINT; 
-	messagesAdded-: LONGINT; 
-	messagesDiscarded-: LONGINT; 
+	messagesAddedByType-: ARRAY MsgTypeMax OF SIGNED32; 
+	messagesAdded-: SIGNED32; 
+	messagesDiscarded-: SIGNED32; 
 	debug*: ANY; 
 	MsgName: ARRAY 32 OF ARRAY 32 OF CHAR; 
 

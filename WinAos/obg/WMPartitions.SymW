@@ -44,7 +44,7 @@ TYPE
 		owner: Window; 
 		selection: WMPartitionsComponents.Selection; 
 
-		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): SIGNED32; 
 		PROCEDURE ^ IsValid(selection: WMPartitionsComponents.Selection): BOOLEAN; 
 	END Plugin; 
 
@@ -65,18 +65,18 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ Resized*; 
-		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
-		PROCEDURE ^ WriteK(k: LONGINT; VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): SIGNED32; 
+		PROCEDURE ^ WriteK(k: SIGNED32; VAR string: ARRAY OF CHAR); 
 		PROCEDURE ^ GenPrefix(): Files.Prefix; 
 		PROCEDURE ^ SetPrefixUsed(CONST prefix: ARRAY OF CHAR); 
-		PROCEDURE ^ GetPrefixNbr(CONST iprefix: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ GetPrefixNbr(CONST iprefix: ARRAY OF CHAR): SIGNED32; 
 		PROCEDURE ^ GetFATspecific(VAR volPar: ARRAY OF CHAR); 
 		PROCEDURE ^ Mount(sender, data: ANY); 
 		PROCEDURE ^ Force(sender, data: ANY); 
 		PROCEDURE ^ ForceRW(sender, data: ANY); 
 		PROCEDURE ^ EnableWB(sender, data: ANY); 
 		PROCEDURE ^ Unmount(sender, data: ANY); 
-		PROCEDURE ^ DetectFS(dev: Disks.Device; part: LONGINT): LONGINT; 
+		PROCEDURE ^ DetectFS(dev: Disks.Device; part: SIGNED32): SIGNED32; 
 	END FSToolsPlugin; 
 
 	ConfigEditor = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -99,7 +99,7 @@ TYPE
 		set, get: WMStandardComponents.Button; 
 		toFile, toPartition: WMStandardComponents.Button; 
 		editorFile, editorPartition: WMEditors.Editor; 
-		target: LONGINT; 
+		target: SIGNED32; 
 		fileLeft: SIZE; 
 		statusLabel: WMStandardComponents.Label; 
 		hex: ARRAY 32 OF CHAR; 
@@ -126,7 +126,7 @@ TYPE
 		show, eject, checkPartition, activeBit, format, changeType, delete, create, partitionToFile, fileToPartition, writeMBR, editPBR: WMStandardComponents.Button; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): SIGNED32; 
 		PROCEDURE ^ Create(sender, data: ANY); 
 		PROCEDURE ^ Delete(sender, data: ANY); 
 		PROCEDURE ^ WriteMBR(sender, data: ANY); 
@@ -153,7 +153,7 @@ TYPE
 		PROCEDURE ^ InstallBootManager(sender, data: ANY); 
 		PROCEDURE ^ Install(sender, data: ANY); 
 		PROCEDURE ^ Finalize*; 
-		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): SIGNED32; 
 		PROCEDURE ^  & Init*; 
 	END A2Plugin; 
 
@@ -163,7 +163,7 @@ TYPE
 		surfaceScan, compareFats, lostClusters, write: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): SIGNED32; 
 		PROCEDURE ^ StartScan(sender, data: ANY); 
 		PROCEDURE ^ CheckboxHandler(sender, data: ANY); 
 	END ScavengerPlugin; 
@@ -172,12 +172,12 @@ TYPE
 	VAR 
 		writeDataBtn, testPartitionBtn, verifyDataBtn, writeZerosBtn, benchmarkBtn: WMStandardComponents.Button; 
 
-		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): SIGNED32; 
 		PROCEDURE ^ WriteTestData(sender, data: ANY); 
 		PROCEDURE ^ WriteZeros(sender, data: ANY); 
 		PROCEDURE ^ TestPartition(sender, data: ANY); 
 		PROCEDURE ^ VerifyTestData(sender, data: ANY); 
-		PROCEDURE ^ WriteK(k: LONGINT; VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^ WriteK(k: SIGNED32; VAR string: ARRAY OF CHAR); 
 		PROCEDURE ^ BenchPartition(sender, data: ANY); 
 		PROCEDURE ^  & Init*; 
 	END TestsPlugin; 
@@ -187,16 +187,16 @@ TYPE
 		textView: WMTextView.TextView; 
 
 		PROCEDURE ^ Show*; 
-		PROCEDURE ^  & New*(text: Texts.Text; width, height: LONGINT; visible: BOOLEAN); 
+		PROCEDURE ^  & New*(text: Texts.Text; width, height: SIGNED32; visible: BOOLEAN); 
 	END ReportWindow; 
 
 	Parameter = RECORD 
 		description: ARRAY 32 OF CHAR; 
-		type: LONGINT; 
-		resInteger: LONGINT; 
+		type: SIGNED32; 
+		resInteger: SIGNED32; 
 		resString: ARRAY 32 OF CHAR; 
 		resBoolean: BOOLEAN; 
-		width: LONGINT; 
+		width: SIGNED32; 
 		valid: BOOLEAN; 
 		optional: BOOLEAN; 
 		default: BOOLEAN; 
@@ -216,14 +216,14 @@ TYPE
 		textView: WMTextView.TextView; 
 		text: Texts.Text; 
 		attr: Texts.Attributes; 
-		result: LONGINT; 
+		result: SIGNED32; 
 		width, height: SIZE; 
 
 		PROCEDURE ^  & Init*(width, height: SIZE; alpha: BOOLEAN); 
 		PROCEDURE ^ SetText(text: Texts.Text); 
 		PROCEDURE ^ SetTextAsString(CONST string: ARRAY OF CHAR); 
 		PROCEDURE ^ SetParameters(CONST operationName: ARRAY OF CHAR; selection: PartitionsLib.Selection; VAR parameters: Parameters); 
-		PROCEDURE ^ Popup(x, y: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Popup(x, y: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ BuildLayout; 
 		PROCEDURE ^ EvalParameters(): BOOLEAN; 
 		PROCEDURE ^ CheckboxHandler(sender, data: ANY); 
@@ -269,7 +269,7 @@ TYPE
 	VAR 
 		abort, remove, showerrors: WMStandardComponents.Button; 
 		finished, all, selected: WMStandardComponents.Button; 
-		removeMode: LONGINT; 
+		removeMode: SIGNED32; 
 		info: WMStandardComponents.Label; 
 		selector: WMPartitionsComponents.OperationSelector; 
 
@@ -280,7 +280,7 @@ TYPE
 		PROCEDURE ^ UpdateInfoLabel(operation: WMPartitionsComponents.Operation); 
 		PROCEDURE ^ CheckBoxes(sender, data: ANY); 
 		PROCEDURE ^ Resized*; 
-		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): LONGINT; 
+		PROCEDURE ^ SelectionUpdated(selection: WMPartitionsComponents.Selection): SIGNED32; 
 		PROCEDURE ^ Abort(sender, data: ANY); 
 		PROCEDURE ^ Remove(sender, data: ANY); 
 		PROCEDURE ^ Showerrors(sender, data: ANY); 

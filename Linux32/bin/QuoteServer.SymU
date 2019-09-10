@@ -18,13 +18,13 @@ TYPE
 
 	Quote = POINTER TO RECORD 
 		msg: ARRAY MaxQuoteLen OF CHAR; 
-		len: LONGINT; 
+		len: SIGNED32; 
 		next: Quote; 
 	END; 
 VAR 
 	quoteService: TCPServices.Service; 
 	quotes: Quote; 
-	NnofQuotes-, Nrequests-: LONGINT; 
+	NnofQuotes-, Nrequests-: SIGNED32; 
 
 	PROCEDURE ^ NewQuoteAgent(c: TCP.Connection; s: TCPServices.Service): TCPServices.Agent; 
 	PROCEDURE ^ NextQuote(): Quote; 

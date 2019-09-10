@@ -24,7 +24,7 @@ TYPE
 	Worker* = POINTER TO WorkerDesc; 
 
 	EntryDesc* = RECORD 
-		basekey*, key*, pos*: LONGINT; 
+		basekey*, key*, pos*: SIGNED32; 
 		attrs*: Attributes.Attr; 
 		text*: Texts.Text; 
 		ol*: ObjList; 
@@ -36,7 +36,7 @@ TYPE
 
 	WorkerDesc* = RECORD (Oberon.TaskDesc)
 		entry*: Entry; 
-		state*: INTEGER; 
+		state*: SIGNED16; 
 		local*: BOOLEAN; 
 	END; 
 
@@ -44,21 +44,21 @@ TYPE
 
 	ProxyDesc* = RECORD 
 		host*: ARRAY 64 OF CHAR; 
-		port*: INTEGER; 
+		port*: SIGNED16; 
 	END; 
 VAR 
 	buf: ARRAY 2048 OF CHAR; 
 	entries*: Entry; 
-	noWorkers: INTEGER; 
+	noWorkers: SIGNED16; 
 	ImgHandle*: Objects.Handler; 
 	W: Texts.Writer; 
 	curNode*: HyperDocs.Node; 
 	httpProxy*: Proxy; 
-	requestDoc*: PROCEDURE (D: Documents.Document; proxy: Proxy; VAR key: LONGINT; method: ARRAY OF CHAR; main: BOOLEAN; E: Entry; query: Texts.Text); 
+	requestDoc*: PROCEDURE (D: Documents.Document; proxy: Proxy; VAR key: SIGNED32; method: ARRAY OF CHAR; main: BOOLEAN; E: Entry; query: Texts.Text); 
 
-	PROCEDURE ^ StripLoc*(key: LONGINT): LONGINT; 
-	PROCEDURE ^ RegisterHTTPAdr*(VAR host, path, label: ARRAY OF CHAR; VAR port: INTEGER): LONGINT; 
-	PROCEDURE ^ SplitHTTPAdr*(VAR url, host, path, label: ARRAY OF CHAR; VAR port: INTEGER): LONGINT; 
+	PROCEDURE ^ StripLoc*(key: SIGNED32): SIGNED32; 
+	PROCEDURE ^ RegisterHTTPAdr*(VAR host, path, label: ARRAY OF CHAR; VAR port: SIGNED16): SIGNED32; 
+	PROCEDURE ^ SplitHTTPAdr*(VAR url, host, path, label: ARRAY OF CHAR; VAR port: SIGNED16): SIGNED32; 
 	PROCEDURE ^ StopAll; 
 	PROCEDURE ^ StopDoc*(D: Documents.Document); 
 	PROCEDURE ^ Wait*; 
@@ -66,6 +66,6 @@ VAR
 	PROCEDURE ^ DoWork(me: Oberon.Task); 
 	PROCEDURE ^ StartWorker; 
 	PROCEDURE ^ Install(E: Entry); 
-	PROCEDURE ^ RequestDoc*(D: Documents.Document; proxy: Proxy; VAR key: LONGINT; method: ARRAY OF CHAR; main: BOOLEAN; E: Entry; query: Texts.Text); 
+	PROCEDURE ^ RequestDoc*(D: Documents.Document; proxy: Proxy; VAR key: SIGNED32; method: ARRAY OF CHAR; main: BOOLEAN; E: Entry; query: Texts.Text); 
 BEGIN
 END HTTPDocs0.

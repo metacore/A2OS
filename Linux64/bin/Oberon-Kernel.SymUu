@@ -17,23 +17,23 @@ TYPE
 VAR 
 	version*: ARRAY 64 OF CHAR; 
 	lockedBy: ANY; 
-	level: LONGINT; 
+	level: SIGNED32; 
 	oberon: ANY; 
 	finalizeRoot: OberonFinalizer; 
-	NfinalizeAlive, NfinalizeDead: LONGINT; 
+	NfinalizeAlive, NfinalizeDead: SIGNED32; 
 	finalizers: Kernel.FinalizedCollection; 
 
 	PROCEDURE ^ WriteChar*(c: CHAR); 
 	PROCEDURE ^ WriteString*(s: ARRAY OF CHAR); 
 	PROCEDURE ^ WriteLn*; 
-	PROCEDURE ^ WriteInt*(x, w: LONGINT); 
-	PROCEDURE ^ WriteHex*(x, w: LONGINT); 
-	PROCEDURE ^ WriteMemory*(adr, size: LONGINT); 
-	PROCEDURE ^ Used*(): LONGINT; 
+	PROCEDURE ^ WriteInt*(x, w: SIGNED32); 
+	PROCEDURE ^ WriteHex*(x, w: SIGNED32); 
+	PROCEDURE ^ WriteMemory*(adr, size: SIGNED32); 
+	PROCEDURE ^ Used*(): SIGNED32; 
 	PROCEDURE ^ GC*; 
 	PROCEDURE ^ RegisterObject*(obj: ANY; fin: Finalizer; basic: BOOLEAN); 
-	PROCEDURE ^ GetClock*(VAR time, date: LONGINT); 
-	PROCEDURE ^ SetClock*(time, date: LONGINT); 
+	PROCEDURE ^ GetClock*(VAR time, date: SIGNED32); 
+	PROCEDURE ^ SetClock*(time, date: SIGNED32); 
 	PROCEDURE ^ GetConfig*(name: ARRAY OF CHAR; VAR val: ARRAY OF CHAR); 
 	PROCEDURE ^ LockOberon*; 
 	PROCEDURE ^ UnlockOberon*; 

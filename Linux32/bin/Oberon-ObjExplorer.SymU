@@ -20,9 +20,9 @@ VAR
 
 	PROCEDURE ^ FindObj(obj: Objects.Object): BOOLEAN; 
 	PROCEDURE ^ AddObj(obj: Objects.Object); 
-	PROCEDURE ^ WriteObj(R: ListRiders.Rider; obj: Objects.Object; pos: LONGINT); 
+	PROCEDURE ^ WriteObj(R: ListRiders.Rider; obj: Objects.Object; pos: SIGNED32); 
 	PROCEDURE ^ EnumObjs(CONST name: ARRAY OF CHAR); 
-	PROCEDURE ^ Object(R: ListRiders.Rider; obj: Objects.Object; pos: LONGINT); 
+	PROCEDURE ^ Object(R: ListRiders.Rider; obj: Objects.Object; pos: SIGNED32); 
 	PROCEDURE ^ Inspect*; 
 	PROCEDURE ^ ShowObj*; 
 BEGIN

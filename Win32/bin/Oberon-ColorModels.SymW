@@ -7,25 +7,25 @@ TYPE
 
 	ColorSymDesc = RECORD 
 		name: Objects.Name; 
-		x, y, z: REAL; 
+		x, y, z: FLOAT32; 
 		next: ColorSym; 
 	END; 
 VAR 
 	RGBcolor, HSVcolor, CMYcolor: ColorSym; 
-	depth: INTEGER; 
-	dr, dg, db: ARRAY (RGBtop + 1) OF INTEGER; 
+	depth: SIGNED16; 
+	dr, dg, db: ARRAY (RGBtop + 1) OF SIGNED16; 
 
-	PROCEDURE ^ LoadPalette(VAR d: INTEGER; VAR r, g, b: ARRAY OF INTEGER); 
+	PROCEDURE ^ LoadPalette(VAR d: SIGNED16; VAR r, g, b: ARRAY OF SIGNED16); 
 	PROCEDURE ^ LoadColorSymbols(VAR sym: ColorSym; model: ARRAY OF CHAR); 
 	PROCEDURE ^ FindColorSymbol(sym: ColorSym; s: ARRAY OF CHAR): ColorSym; 
-	PROCEDURE ^ StrToRGB*(S: ARRAY OF CHAR; VAR r, g, b: REAL; VAR ok: BOOLEAN); 
-	PROCEDURE ^ StrToHSV*(S: ARRAY OF CHAR; VAR h, s, v: REAL; VAR ok: BOOLEAN); 
-	PROCEDURE ^ StrToCMY*(S: ARRAY OF CHAR; VAR c, m, y: REAL; VAR ok: BOOLEAN); 
-	PROCEDURE ^ RGBToHSV*(r, g, b: REAL; VAR h, s, v: REAL); 
-	PROCEDURE ^ HSVToRGB*(h, s, v: REAL; VAR r, g, b: REAL); 
-	PROCEDURE ^ RGBToCMY*(r, g, b: REAL; VAR c, m, y: REAL); 
-	PROCEDURE ^ CMYToRGB*(c, m, y: REAL; VAR r, g, b: REAL); 
-	PROCEDURE ^ RGBToColor*(r, g, b: REAL; VAR R, G, B: INTEGER); 
-	PROCEDURE ^ RGBToPalette*(r, g, b: REAL; VAR C, R, G, B: INTEGER; scanpal: BOOLEAN); 
+	PROCEDURE ^ StrToRGB*(S: ARRAY OF CHAR; VAR r, g, b: FLOAT32; VAR ok: BOOLEAN); 
+	PROCEDURE ^ StrToHSV*(S: ARRAY OF CHAR; VAR h, s, v: FLOAT32; VAR ok: BOOLEAN); 
+	PROCEDURE ^ StrToCMY*(S: ARRAY OF CHAR; VAR c, m, y: FLOAT32; VAR ok: BOOLEAN); 
+	PROCEDURE ^ RGBToHSV*(r, g, b: FLOAT32; VAR h, s, v: FLOAT32); 
+	PROCEDURE ^ HSVToRGB*(h, s, v: FLOAT32; VAR r, g, b: FLOAT32); 
+	PROCEDURE ^ RGBToCMY*(r, g, b: FLOAT32; VAR c, m, y: FLOAT32); 
+	PROCEDURE ^ CMYToRGB*(c, m, y: FLOAT32; VAR r, g, b: FLOAT32); 
+	PROCEDURE ^ RGBToColor*(r, g, b: FLOAT32; VAR R, G, B: SIGNED16); 
+	PROCEDURE ^ RGBToPalette*(r, g, b: FLOAT32; VAR C, R, G, B: SIGNED16; scanpal: BOOLEAN); 
 BEGIN
 END ColorModels.

@@ -4,7 +4,7 @@ CONST
 	E* = MathL.e; 
 	Pi* = MathL.pi; 
 TYPE 
-	Real* = LONGREAL; 
+	Real* = FLOAT64; 
 VAR 
 	MinNbr-, MaxNbr-, reExp, Epsilon-: Real; 
 	minExp, maxExp: NbrInt16.Integer; 

@@ -11,12 +11,12 @@ CONST
 	nomorph = 0; 
 TYPE 
 	Point = RECORD 
-		x, y, z: REAL; 
+		x, y, z: FLOAT32; 
 	END; 
 
 	Figure = ARRAY MaxPoint OF Point; 
 
-	Movement = ARRAY MaxPoint OF INTEGER; 
+	Movement = ARRAY MaxPoint OF SIGNED16; 
 
 	Pat = POINTER TO RECORD 
 		w, h: CHAR; 
@@ -25,27 +25,27 @@ TYPE
 VAR 
 	figure: ARRAY MaxFig OF Figure; 
 	move: ARRAY MaxFig OF Movement; 
-	timefactor: ARRAY MaxFig OF REAL; 
+	timefactor: ARRAY MaxFig OF FLOAT32; 
 	attributes: ARRAY MaxFig OF SET; 
-	curfig, curpoint: INTEGER; 
+	curfig, curpoint: SIGNED16; 
 	min, max: Point; 
 	w: Texts.Writer; 
 
-	PROCEDURE ^ Rea(x: LONGREAL; n: INTEGER); 
+	PROCEDURE ^ Rea(x: FLOAT64; n: SIGNED16); 
 	PROCEDURE ^ Str(CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ Ch(ch: CHAR); 
 	PROCEDURE ^ Ln; 
-	PROCEDURE ^ Int(x: LONGINT; n: INTEGER); 
+	PROCEDURE ^ Int(x: SIGNED32; n: SIGNED16); 
 	PROCEDURE ^ Prepare; 
 	PROCEDURE ^ Postpare; 
-	PROCEDURE ^ GetPoint(VAR p: Point; n: INTEGER); 
-	PROCEDURE ^ SetPoint(VAR p: Point; x, y, z: REAL); 
-	PROCEDURE ^ Set(x, y, z: REAL); 
-	PROCEDURE ^ SetTimeFactor(t: REAL); 
+	PROCEDURE ^ GetPoint(VAR p: Point; n: SIGNED16); 
+	PROCEDURE ^ SetPoint(VAR p: Point; x, y, z: FLOAT32); 
+	PROCEDURE ^ Set(x, y, z: FLOAT32); 
+	PROCEDURE ^ SetTimeFactor(t: FLOAT32); 
 	PROCEDURE ^ SetAttributes(s: SET); 
-	PROCEDURE ^ From(f, t, p: REAL): REAL; 
-	PROCEDURE ^ Rotate(c, s: REAL; VAR x, y: REAL); 
-	PROCEDURE ^ DistanceSqr(p1, p2: Point): REAL; 
+	PROCEDURE ^ From(f, t, p: FLOAT32): FLOAT32; 
+	PROCEDURE ^ Rotate(c, s: FLOAT32; VAR x, y: FLOAT32); 
+	PROCEDURE ^ DistanceSqr(p1, p2: Point): FLOAT32; 
 	PROCEDURE ^ InitMovement; 
 	PROCEDURE ^ Sphere; 
 	PROCEDURE ^ Torus; 
@@ -67,12 +67,12 @@ VAR
 	PROCEDURE ^ Venus; 
 	PROCEDURE ^ Mars; 
 	PROCEDURE ^ Text(CONST font, text: ARRAY OF CHAR); 
-	PROCEDURE ^ Pyramid(n: INTEGER); 
+	PROCEDURE ^ Pyramid(n: SIGNED16); 
 	PROCEDURE ^ Hypercube; 
 	PROCEDURE ^ Mug; 
 	PROCEDURE ^ Eggs; 
 	PROCEDURE ^ ZAFlag; 
-	PROCEDURE ^ Component(n: INTEGER); 
+	PROCEDURE ^ Component(n: SIGNED16); 
 	PROCEDURE ^ PC; 
 	PROCEDURE ^ Pyramids; 
 	PROCEDURE ^ Countdown; 

@@ -6,12 +6,12 @@ CONST
 	file = 2; 
 VAR 
 	hin-, hout-, herr-: Kernel32.HANDLE; 
-	mode: LONGINT; 
+	mode: SIGNED32; 
 	traceChar0: PROCEDURE (ch: CHAR); 
 
-	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-	PROCEDURE ^ SendError*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-	PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ SendError*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ Close*; 
 	PROCEDURE ^ OpenConsole*; 

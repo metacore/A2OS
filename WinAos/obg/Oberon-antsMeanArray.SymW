@@ -2,7 +2,7 @@ MODULE antsMeanArray IN Oberon;
 	IMPORT vyBase, antsObjects, Objects, antsCommands, vyName, antsArrayObjects, Files, aM := antsMessages;
 CONST 
 TYPE 
-	tMeanArray = POINTER TO ARRAY OF ARRAY OF LONGREAL; 
+	tMeanArray = POINTER TO ARRAY OF ARRAY OF FLOAT64; 
 
 	tArray* = antsArrayObjects.tINTEGERArray; 
 
@@ -10,11 +10,11 @@ TYPE
 
 	tMeanDesc = RECORD (vyBase.ObjDesc)
 		A: tMeanArray; 
-		count: LONGINT; 
+		count: SIGNED32; 
 	END; 
 
 	PROCEDURE ^ Add*(A: tArray; to: tMean); 
-	PROCEDURE ^ Get*(from: tMean; to: tArray; depth: LONGINT); 
+	PROCEDURE ^ Get*(from: tMean; to: tArray; depth: SIGNED32); 
 	PROCEDURE ^ Update*(from: tMean; to: antsArrayObjects.tINTEGERObject); 
 	PROCEDURE ^ DoInit*(m: tMean); 
 	PROCEDURE ^ HandleAttributes(o: tMean; VAR M: Objects.AttrMsg); 

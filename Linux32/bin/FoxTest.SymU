@@ -12,17 +12,17 @@ TYPE
 		commandFlags: SET; 
 		command, prolog, epilog: Command; 
 		fileName: Files.FileName; 
-		dots: LONGINT; 
+		dots: SIGNED32; 
 
 		PROCEDURE ^  & InitTester(log, logFileWriter: Streams.Writer; diagnostics: Diagnostics.Diagnostics; mayTrap: BOOLEAN; CONST prolog, command, epilog: Command; CONST fileName: ARRAY OF CHAR); 
-		PROCEDURE ^ Handle*(r: Streams.Reader; position: Streams.Position; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): WORD; 
+		PROCEDURE ^ Handle*(r: Streams.Reader; position: Streams.Position; CONST name: ARRAY OF CHAR; type: TestSuite.TestType): INTEGER; 
 	END Tester; 
 
 	PROCEDURE ^ GetOptions(): Options.Options; 
 	PROCEDURE ^ DriveTest(options: Options.Options; diagnostics: Diagnostics.Diagnostics; reader: Streams.Reader; error, writer: Streams.Writer): BOOLEAN; 
 	PROCEDURE ^ Compile*(context: Commands.Context); 
 	PROCEDURE ^ GetTextReader(text: Texts.Text): Streams.Reader; 
-	PROCEDURE ^ RunTests(text: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ RunTests(text: Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ Cleanup; 
 BEGIN
 END FoxTest.

@@ -20,13 +20,13 @@ TYPE
 VAR 
 	W, LogW: Texts.Writer; 
 	init: BOOLEAN; 
-	count: LONGINT; 
+	count: SIGNED32; 
 	task: Oberon.Task; 
 	fixed: Fonts.Font; 
 	buf: POINTER TO ARRAY OF CHAR; 
 	log: Texts.Text; 
 	oberonRunner: OberonRunner; 
-	time0, date0: LONGINT; 
+	time0, date0: SIGNED32; 
 
 	PROCEDURE ^ OpenText(title: ARRAY OF CHAR; T: Texts.Text; system: BOOLEAN); 
 	PROCEDURE ^ SetFont*; 
@@ -43,7 +43,7 @@ VAR
 	PROCEDURE ^ Copy*; 
 	PROCEDURE ^ Grow*; 
 	PROCEDURE ^ Free*; 
-	PROCEDURE ^ WriteK(VAR W: Texts.Writer; k: LONGINT); 
+	PROCEDURE ^ WriteK(VAR W: Texts.Writer; k: SIGNED32); 
 	PROCEDURE ^ ShowModules*; 
 	PROCEDURE ^ ListLibrary(L: Objects.Library); 
 	PROCEDURE ^ ShowLibraries*; 
@@ -56,10 +56,10 @@ VAR
 	PROCEDURE ^ DeleteFile(VAR name: ARRAY OF CHAR; VAR S: Texts.Scanner); 
 	PROCEDURE ^ DeleteFiles*; 
 	PROCEDURE ^ Watch*; 
-	PROCEDURE ^ GetNum(refs: Bytes; VAR i: SIZE; VAR num: LONGINT); 
-	PROCEDURE ^ FindProc(refs: Bytes; ofs: LONGINT): SIZE; 
-	PROCEDURE ^ WriteProc(mod: Modules.Module; pc, fp: ADDRESS; VAR refs: Bytes; VAR refpos: SIZE; VAR base: LONGINT); 
-	PROCEDURE ^ Variables(refs: Bytes; i: SIZE; base: LONGINT); 
+	PROCEDURE ^ GetNum(refs: Bytes; VAR i: SIZE; VAR num: SIGNED32); 
+	PROCEDURE ^ FindProc(refs: Bytes; ofs: SIGNED32): SIZE; 
+	PROCEDURE ^ WriteProc(mod: Modules.Module; pc, fp: ADDRESS; VAR refs: Bytes; VAR refpos: SIZE; VAR base: SIGNED32); 
+	PROCEDURE ^ Variables(refs: Bytes; i: SIZE; base: SIGNED32); 
 	PROCEDURE ^ OutState(VAR name: ARRAY OF CHAR; t: Texts.Text); 
 	PROCEDURE ^ State*; 
 	PROCEDURE ^ ShowCommands*; 
@@ -72,7 +72,7 @@ VAR
 	PROCEDURE ^ OpenKernelLog*; 
 	PROCEDURE ^ Init*; 
 	PROCEDURE ^ Greetings; 
-	PROCEDURE ^ WriteType(VAR W: Texts.Writer; adr: LONGINT); 
+	PROCEDURE ^ WriteType(VAR W: Texts.Writer; adr: SIGNED32); 
 	PROCEDURE ^ ShowActive*; 
 	PROCEDURE ^ StopProcess(halt: BOOLEAN); 
 	PROCEDURE ^ HaltObject*; 

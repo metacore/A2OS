@@ -16,19 +16,19 @@ TYPE
 	END; 
 
 	MilliTimer* = RECORD 
-		start, target: LONGINT; 
+		start, target: SIGNED32; 
 	END; 
 
 	Timer* = OBJECT {EXCLUSIVE} 
 	VAR 
 		timer: Objects.Timer; 
-		state-: SHORTINT; 
-		nofHandleTimeout-, nofHandleTimeout2-: LONGINT; 
-		nofSleeps-, nofSleepsLeft-: LONGINT; 
-		nofAwaits-, nofAwaitsLeft-: LONGINT; 
+		state-: SIGNED8; 
+		nofHandleTimeout-, nofHandleTimeout2-: SIGNED32; 
+		nofSleeps-, nofSleepsLeft-: SIGNED32; 
+		nofAwaits-, nofAwaitsLeft-: SIGNED32; 
 
 		PROCEDURE ^ HandleTimeout; 
-		PROCEDURE ^ Sleep*(ms: LONGINT); 
+		PROCEDURE ^ Sleep*(ms: SIGNED32); 
 		PROCEDURE ^ Wakeup*; 
 		PROCEDURE ^  & Init*; 
 	END Timer; 
@@ -45,14 +45,14 @@ TYPE
 		PROCEDURE ^  & Clear*; 
 	END FinalizedCollection; 
 VAR 
-	second-: LONGINT; 
+	second-: SIGNED32; 
 
-	PROCEDURE ^ GetTicks*(): LONGINT; 
+	PROCEDURE ^ GetTicks*(): SIGNED32; 
 	PROCEDURE ^ GC*; 
-	PROCEDURE ^ SetTimer*(VAR t: MilliTimer; ms: LONGINT); 
+	PROCEDURE ^ SetTimer*(VAR t: MilliTimer; ms: SIGNED32); 
 	PROCEDURE ^ Expired*(VAR t: MilliTimer): BOOLEAN; 
-	PROCEDURE ^ Elapsed*(VAR t: MilliTimer): LONGINT; 
-	PROCEDURE ^ Left*(VAR t: MilliTimer): LONGINT; 
+	PROCEDURE ^ Elapsed*(VAR t: MilliTimer): SIGNED32; 
+	PROCEDURE ^ Left*(VAR t: MilliTimer): SIGNED32; 
 	PROCEDURE ^ Nothing; 
 BEGIN
 END Kernel.

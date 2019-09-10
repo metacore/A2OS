@@ -8,8 +8,8 @@ TYPE
 		n-: antsNeighbourhoods.Neighbours; 
 		r-: antsRegions.tRegion; 
 		mapping: antsFunctions.Function; 
-		maxx, maxy: LONGINT; 
-		dim: INTEGER; 
+		maxx, maxy: SIGNED32; 
+		dim: SIGNED16; 
 		Correlations: POINTER TO ARRAY OF antsArrayObjects.tLONGINTArray; 
 		isotropic: BOOLEAN; 
 	END; 

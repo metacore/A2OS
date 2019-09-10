@@ -15,26 +15,26 @@ CONST
 	DragMinDistance = 5; 
 	TextBorder = 4; 
 TYPE 
-	SetStringProcedure = PROCEDURE {DELEGATE}(CONST string: ARRAY OF CHAR; position: LONGINT; VAR res: WORD); 
+	SetStringProcedure = PROCEDURE {DELEGATE}(CONST string: ARRAY OF CHAR; position: SIGNED32; VAR res: INTEGER); 
 
 	DropTarget = OBJECT (WMDropTarget.DropTarget)
 	VAR 
 		originator: ANY; 
 		setString: SetStringProcedure; 
-		position: LONGINT; 
+		position: SIGNED32; 
 
-		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; position: LONGINT); 
-		PROCEDURE ^ GetInterface*(type: LONGINT): WMDropTarget.DropInterface; 
+		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; position: SIGNED32); 
+		PROCEDURE ^ GetInterface*(type: SIGNED32): WMDropTarget.DropInterface; 
 	END DropTarget; 
 
 	DropString = OBJECT (WMDropTarget.DropString)
 	VAR 
 		originator: ANY; 
 		setString: SetStringProcedure; 
-		position: LONGINT; 
+		position: SIGNED32; 
 
-		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; position: LONGINT); 
-		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^  & Init(originator: ANY; setString: SetStringProcedure; position: SIGNED32); 
+		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: INTEGER); 
 	END DropString; 
 
 	TextField* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
@@ -42,7 +42,7 @@ TYPE
 		; 
 	VAR 
 		type-: WMProperties.Int32Property; 
-		typeI: LONGINT; 
+		typeI: SIGNED32; 
 		readOnly-: WMProperties.BooleanProperty; 
 		readOnlyI: BOOLEAN; 
 		textBorder-: WMProperties.Int32Property; 
@@ -62,7 +62,7 @@ TYPE
 		cursorIsVisible: BOOLEAN; 
 		selecting, doubleClicking: BOOLEAN; 
 		selectingCursorPos: SIZE; 
-		interclick: LONGINT; 
+		interclick: SIGNED32; 
 		dragPossible: BOOLEAN; 
 		dragString: Strings.String; 
 		dragCopy: BOOLEAN; 
@@ -81,15 +81,15 @@ TYPE
 		PROCEDURE ^ LinkChanged*(sender, object: ANY); 
 		PROCEDURE ^ UpdateModel; 
 		PROCEDURE ^ Changed; 
-		PROCEDURE ^ GetCursorPosition(x: SIZE): LONGINT; 
-		PROCEDURE ^ GetCursorCoordinateX(): LONGINT; 
+		PROCEDURE ^ GetCursorPosition(x: SIZE): SIGNED32; 
+		PROCEDURE ^ GetCursorCoordinateX(): SIGNED32; 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ SelectionIsValid(): BOOLEAN; 
 		PROCEDURE ^ IsAllowedCharacter(ch: Texts.Char32): BOOLEAN; 
 		PROCEDURE ^ IsAllowedString(CONST string: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ IsValidUCS32String(CONST string: Texts.UCS32String): BOOLEAN; 
-		PROCEDURE ^ InsertChar(ch: LONGINT); 
-		PROCEDURE ^ InsertStringAt(CONST x: ARRAY OF CHAR; position: SIZE; VAR res: WORD); 
+		PROCEDURE ^ InsertChar(ch: SIGNED32); 
+		PROCEDURE ^ InsertStringAt(CONST x: ARRAY OF CHAR; position: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ InsertUCS32(atPosition: SIZE; CONST string: Texts.UCS32String); 
 		PROCEDURE ^ Backspace; 
 		PROCEDURE ^ Delete; 
@@ -112,7 +112,7 @@ TYPE
 		PROCEDURE ^ DragWasAccepted(sender, data: ANY); 
 		PROCEDURE ^ DragOver*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WMWindowManager.DragInfo); 
-		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; position: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ SetDroppedString(CONST string: ARRAY OF CHAR; position: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ SetCursorInfo(charsAdded: SIZE); 
 		PROCEDURE ^ GetCurrentCursorPosition(): SIZE; 
 		PROCEDURE ^ GetCursorScreenPosition(VAR x, y: SIZE); 
@@ -127,7 +127,7 @@ TYPE
 		unitModel-: WMProperties.ReferenceProperty; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetUnit(VAR u: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ GetUnit(VAR u: FLOAT64): BOOLEAN; 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ LinkChanged*(sender, data: ANY); 
 		PROCEDURE ^ UpdateModel; 

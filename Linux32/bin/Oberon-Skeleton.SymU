@@ -7,11 +7,11 @@ TYPE
 	Frame* = POINTER TO FrameDesc; 
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
-		col*: INTEGER; 
+		col*: SIGNED16; 
 	END; 
 
 	PROCEDURE ^ Attributes(F: Frame; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: Frame); 
 	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 

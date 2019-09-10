@@ -3,8 +3,8 @@ MODULE antsEffects IN Oberon;
 CONST 
 TYPE 
 	tBuffer = RECORD 
-		X, Y, W, H: INTEGER; 
-		x, y: INTEGER; 
+		X, Y, W, H: SIGNED16; 
+		x, y: SIGNED16; 
 		buf: Images.Image; 
 		img: Images.Image; 
 	END; 
@@ -13,11 +13,11 @@ VAR
 	db: vyGraphBase.doubleBuffer; 
 	fb: tBuffer; 
 
-	PROCEDURE ^ OpenBuffer(VAR buf: tBuffer; x, y, w, h: INTEGER); 
-	PROCEDURE ^ Ants*(x, y, w, h: INTEGER; num: INTEGER; dur: LONGINT); 
-	PROCEDURE ^ FadeImage*(fimg, timg: Images.Image; factor: REAL); 
-	PROCEDURE ^ FadeIn*(pict: Images.Image; time: LONGINT; x, y, w, h: INTEGER); 
-	PROCEDURE ^ Launch*(pict: Images.Image; x, y, w, h: INTEGER); 
+	PROCEDURE ^ OpenBuffer(VAR buf: tBuffer; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ Ants*(x, y, w, h: SIGNED16; num: SIGNED16; dur: SIGNED32); 
+	PROCEDURE ^ FadeImage*(fimg, timg: Images.Image; factor: FLOAT32); 
+	PROCEDURE ^ FadeIn*(pict: Images.Image; time: SIGNED32; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ Launch*(pict: Images.Image; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ Init; 
 BEGIN
 END antsEffects.

@@ -8,18 +8,18 @@ TYPE
 	VAR 
 		rpcConn: TCP.Connection; 
 		host: ARRAY MaxNameLen OF CHAR; 
-		port: INTEGER; 
+		port: SIGNED16; 
 
-		PROCEDURE ^  & Init*(host: ARRAY OF CHAR; port: INTEGER); 
-		PROCEDURE ^ Open*(VAR res: WORD); 
+		PROCEDURE ^  & Init*(host: ARRAY OF CHAR; port: SIGNED16); 
+		PROCEDURE ^ Open*(VAR res: INTEGER); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; off, len: SIZE; VAR received: SIZE; VAR res: WORD); 
-		PROCEDURE ^ Send*(VAR buf: ARRAY OF CHAR; off, len: SIZE; VAR res: WORD); 
-		PROCEDURE ^ AwaitState*(good, bad: SET; ms: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; off, len: SIZE; VAR received: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ Send*(VAR buf: ARRAY OF CHAR; off, len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ AwaitState*(good, bad: SET; ms: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ Reset*; 
 	END Connection; 
 
-	PROCEDURE ^ Len(VAR x: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ CopyBuffer(VAR buf1: ARRAY OF CHAR; len: LONGINT; VAR buf2: ARRAY OF CHAR; off: LONGINT); 
+	PROCEDURE ^ Len(VAR x: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ CopyBuffer(VAR buf1: ARRAY OF CHAR; len: SIGNED32; VAR buf2: ARRAY OF CHAR; off: SIGNED32); 
 BEGIN
 END RfsConnection.

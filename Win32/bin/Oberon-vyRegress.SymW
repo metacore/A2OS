@@ -6,16 +6,16 @@ TYPE
 	Real = vyBase.Real; 
 
 	tRegression = RECORD 
-		slope, intercept, errvar: LONGREAL; 
-		count: LONGINT; 
-		ymean, yssq: LONGREAL; 
+		slope, intercept, errvar: FLOAT64; 
+		count: SIGNED32; 
+		ymean, yssq: FLOAT64; 
 	END; 
 
 	tFBandParameter = POINTER TO tFBandParameterDesc; 
 
 	tFBandParameterDesc = RECORD (vyLinePlot.tParameterDesc)
 		Regression: tRegression; 
-		UpBand, F: LONGREAL; 
+		UpBand, F: FLOAT64; 
 	END; 
 
 	tEstimator* = PROCEDURE (Regressor, Response: vyBase.tData; VAR Estimation: vyBase.tData); 
@@ -32,12 +32,12 @@ VAR
 	level*: Real; 
 
 	PROCEDURE ^ SetEstimator*(Estimator: tEstimator; Confidence: tConfidence); 
-	PROCEDURE ^ WR(x: LONGREAL); 
+	PROCEDURE ^ WR(x: FLOAT64); 
 	PROCEDURE ^ WS(x: ARRAY OF CHAR); 
 	PROCEDURE ^ ReportStattyp(VAR name: ARRAY OF CHAR; VAR s: vyQFisher.Stattyp); 
 	PROCEDURE ^ ReportRegression(VAR namey, namex: ARRAY OF CHAR; par: tFBandParameter); 
 	PROCEDURE ^ FBand(x: Real; para: vyLinePlot.tParameter): Real; 
-	PROCEDURE ^ NewResidualsAndFit*(response, regressor: vyBase.tVector; offs, slope: LONGREAL; VAR residuals, fit: vyBase.tVector); 
+	PROCEDURE ^ NewResidualsAndFit*(response, regressor: vyBase.tVector; offs, slope: FLOAT64; VAR residuals, fit: vyBase.tVector); 
 	PROCEDURE ^ CalcRegress(response, regressor: vyBase.tVector; VAR regression: tRegression); 
 	PROCEDURE ^ DoRegress*(response, regressor: vyBase.tVector; inSim: BOOLEAN); 
 	PROCEDURE ^ Regress*; 

@@ -7,7 +7,7 @@ TYPE
 	ReaderStreamDesc = RECORD (Streams.StreamDesc)
 		R: Texts.Reader; 
 		T: Texts.Text; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		ch: CHAR; 
 	END; 
 
@@ -21,24 +21,24 @@ TYPE
 	PROCEDURE ^ Read*(S: Streams.Stream; VAR ch: CHAR); 
 	PROCEDURE ^ ReadString*(S: Streams.Stream; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ Write*(S: Streams.Stream; ch: CHAR); 
-	PROCEDURE ^ WriteDate*(S: Streams.Stream; t, d: LONGINT); 
-	PROCEDURE ^ WriteHex*(S: Streams.Stream; x: LONGINT); 
+	PROCEDURE ^ WriteDate*(S: Streams.Stream; t, d: SIGNED32); 
+	PROCEDURE ^ WriteHex*(S: Streams.Stream; x: SIGNED32); 
 	PROCEDURE ^ WriteString*(S: Streams.Stream; s: ARRAY OF CHAR); 
-	PROCEDURE ^ WriteInt*(S: Streams.Stream; x, n: LONGINT); 
+	PROCEDURE ^ WriteInt*(S: Streams.Stream; x, n: SIGNED32); 
 	PROCEDURE ^ WriteLn*(S: Streams.Stream); 
-	PROCEDURE ^ WriteLongReal*(S: Streams.Stream; x: LONGREAL; n: LONGINT); 
-	PROCEDURE ^ WriteLongRealFix*(S: Streams.Stream; x: LONGREAL; n, f, D: LONGINT); 
-	PROCEDURE ^ WriteLongRealHex*(S: Streams.Stream; x: LONGREAL); 
-	PROCEDURE ^ WriteReal*(S: Streams.Stream; x: REAL; n: LONGINT); 
-	PROCEDURE ^ WriteRealFix*(S: Streams.Stream; x: REAL; n, f, E: LONGINT); 
-	PROCEDURE ^ WriteRealHex*(S: Streams.Stream; x: REAL); 
-	PROCEDURE ^ ReadTextBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT); 
-	PROCEDURE ^ ReaderAvailable(S: Streams.Stream): LONGINT; 
-	PROCEDURE ^ ReaderState(S: Streams.Stream): INTEGER; 
+	PROCEDURE ^ WriteLongReal*(S: Streams.Stream; x: FLOAT64; n: SIGNED32); 
+	PROCEDURE ^ WriteLongRealFix*(S: Streams.Stream; x: FLOAT64; n, f, D: SIGNED32); 
+	PROCEDURE ^ WriteLongRealHex*(S: Streams.Stream; x: FLOAT64); 
+	PROCEDURE ^ WriteReal*(S: Streams.Stream; x: FLOAT32; n: SIGNED32); 
+	PROCEDURE ^ WriteRealFix*(S: Streams.Stream; x: FLOAT32; n, f, E: SIGNED32); 
+	PROCEDURE ^ WriteRealHex*(S: Streams.Stream; x: FLOAT32); 
+	PROCEDURE ^ ReadTextBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED32); 
+	PROCEDURE ^ ReaderAvailable(S: Streams.Stream): SIGNED32; 
+	PROCEDURE ^ ReaderState(S: Streams.Stream): SIGNED16; 
 	PROCEDURE ^ CloseReader(S: Streams.Stream); 
-	PROCEDURE ^ OpenReader*(T: Texts.Text; pos: LONGINT): Streams.Stream; 
-	PROCEDURE ^ WriteTextBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT); 
-	PROCEDURE ^ WriterState(S: Streams.Stream): INTEGER; 
+	PROCEDURE ^ OpenReader*(T: Texts.Text; pos: SIGNED32): Streams.Stream; 
+	PROCEDURE ^ WriteTextBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED32); 
+	PROCEDURE ^ WriterState(S: Streams.Stream): SIGNED16; 
 	PROCEDURE ^ FlushWriter(S: Streams.Stream); 
 	PROCEDURE ^ CloseWriter(S: Streams.Stream); 
 	PROCEDURE ^ OpenWriter*(Log: Texts.Text): Streams.Stream; 

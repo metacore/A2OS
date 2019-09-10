@@ -2,17 +2,17 @@ MODULE DOS IN Oberon;
 	IMPORT SYSTEM, Files, Fonts, Texts, Modules, Oberon, FATFiles;
 CONST 
 	BufSize = 32768; 
-	N2KDirMark = LONGINT(2602476429); 
+	N2KDirMark = SIGNED32(2602476429); 
 VAR 
 	wd, wn: Texts.Writer; 
-	count: LONGINT; 
+	count: SIGNED32; 
 	dir: ARRAY 64 OF CHAR; 
 	cleanup: Oberon.Task; 
 	dostable: ARRAY 32 OF CHAR; 
 
 	PROCEDURE ^ OpenScanner(VAR s: Texts.Scanner); 
-	PROCEDURE ^ DirHandler(name: ARRAY OF CHAR; time, date, size: LONGINT; attr: SET; VAR continue: BOOLEAN); 
-	PROCEDURE ^ Error(VAR w: Texts.Writer; err: LONGINT); 
+	PROCEDURE ^ DirHandler(name: ARRAY OF CHAR; time, date, size: SIGNED32; attr: SET; VAR continue: BOOLEAN); 
+	PROCEDURE ^ Error(VAR w: Texts.Writer; err: SIGNED32); 
 	PROCEDURE ^ Cleanup; 
 	PROCEDURE ^ CleanupTask(me: Oberon.Task); 
 	PROCEDURE ^ StartTask; 
@@ -22,7 +22,7 @@ VAR
 	PROCEDURE ^ OberonName(s: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Copy*; 
 	PROCEDURE ^ JoinName(dir, name: ARRAY OF CHAR; VAR path: ARRAY OF CHAR); 
-	PROCEDURE ^ CopyHandler(name: ARRAY OF CHAR; time, date, size: LONGINT; attr: SET; VAR continue: BOOLEAN); 
+	PROCEDURE ^ CopyHandler(name: ARRAY OF CHAR; time, date, size: SIGNED32; attr: SET; VAR continue: BOOLEAN); 
 	PROCEDURE ^ CopyFrom*; 
 	PROCEDURE ^ CopyTo*; 
 	PROCEDURE ^ Delete*; 

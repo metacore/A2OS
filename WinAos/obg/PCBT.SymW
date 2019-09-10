@@ -15,7 +15,7 @@ CONST
 	interfacelookup* = 9; 
 	registerinterface* = 10; 
 	getprocedure* = 11; 
-	FixupSentinel* = LONGINT(4294967295); 
+	FixupSentinel* = SIGNED32(4294967295); 
 	UndefEntryNo* =  -1; 
 	OberonCC* = 1; 
 	OberonPassivateCC* = 2; 
@@ -26,9 +26,9 @@ TYPE
 
 	Size* = OBJECT (PCM.Attribute)
 	VAR 
-		size*: LONGINT; 
-		align*: LONGINT; 
-		type*: SHORTINT; 
+		size*: SIGNED32; 
+		align*: SIGNED32; 
+		type*: SIGNED8; 
 		signed*: BOOLEAN; 
 		containPtrs*: BOOLEAN; 
 		needsrecursion*: BOOLEAN; 
@@ -37,97 +37,97 @@ TYPE
 	RecSize* = OBJECT (Size)
 	VAR 
 		td*: GlobalVariable; 
-		level*: LONGINT; 
-		nofMethods*, nofLocalMethods*: LONGINT; 
+		level*: SIGNED32; 
+		nofMethods*, nofLocalMethods*: SIGNED32; 
 	END RecSize; 
 
 	Fixup* = POINTER TO RECORD 
-		offset-: LONGINT; 
+		offset-: SIGNED32; 
 		next-: Fixup; 
 	END; 
 
 	Variable* = OBJECT (PCM.Attribute)
 	VAR 
-		offset*: LONGINT; 
+		offset*: SIGNED32; 
 	END Variable; 
 
 	GlobalVariable* = OBJECT (Variable)
 	VAR 
 		owner-: Module; 
-		entryNo*: INTEGER; 
+		entryNo*: SIGNED16; 
 		link-: Fixup; 
 		next-: GlobalVariable; 
 
-		PROCEDURE ^ AddFixup(offset: LONGINT); 
+		PROCEDURE ^ AddFixup(offset: SIGNED32); 
 		PROCEDURE ^  & Init*(owner: Module); 
 	END GlobalVariable; 
 
 	Attribute* = OBJECT (PCM.Attribute)
 	VAR 
-		codeoffset-: LONGINT; 
-		beginOffset-: LONGINT; 
-		endOffset-: LONGINT; 
+		codeoffset-: SIGNED32; 
+		beginOffset-: SIGNED32; 
+		endOffset-: SIGNED32; 
 
-		PROCEDURE ^ SetBeginOffset*(offset: LONGINT); 
-		PROCEDURE ^ SetEndOffset*(offset: LONGINT); 
+		PROCEDURE ^ SetBeginOffset*(offset: SIGNED32); 
+		PROCEDURE ^ SetEndOffset*(offset: SIGNED32); 
 	END Attribute; 
 
 	Procedure* = OBJECT (Attribute)
 	VAR 
 		owner-: Module; 
 		public-: BOOLEAN; 
-		locsize*: LONGINT; 
-		parsize*: LONGINT; 
-		entryNr*, fixlist*: LONGINT; 
+		locsize*: SIGNED32; 
+		parsize*: SIGNED32; 
+		entryNr*, fixlist*: SIGNED32; 
 		next-: Procedure; 
 		link-: Fixup; 
-		finallyOff*: LONGINT; 
+		finallyOff*: SIGNED32; 
 
-		PROCEDURE ^ AddFixup(offset: LONGINT); 
+		PROCEDURE ^ AddFixup(offset: SIGNED32); 
 		PROCEDURE ^  & Init*(owner: Module; public: BOOLEAN); 
 	END Procedure; 
 
 	Method* = OBJECT (Procedure)
 	VAR 
-		mthNo*: LONGINT; 
+		mthNo*: SIGNED32; 
 	END Method; 
 
 	Module* = OBJECT {EXCLUSIVE} (Attribute)
 	VAR 
-		locsize*: LONGINT; 
-		constsize*: INTEGER; 
-		casetablesize*: INTEGER; 
-		nr*: INTEGER; 
+		locsize*: SIGNED32; 
+		constsize*: SIGNED16; 
+		casetablesize*: SIGNED16; 
+		nr*: SIGNED16; 
 		const*: ConstArray; 
 		OwnProcs-: Procedure; 
 		ExtProcs-: Procedure; 
 		OwnVars-: GlobalVariable; 
 		ExtVars-: GlobalVariable; 
 		syscalls-: POINTER TO ARRAY OF Fixup; 
-		finallyOff*: LONGINT; 
+		finallyOff*: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ResetLists*; 
-		PROCEDURE ^ AddCasetable*(tablesize: LONGINT): LONGINT; 
-		PROCEDURE ^ NewConst*(VAR a: ARRAY OF SYSTEM.BYTE; len: LONGINT): LONGINT; 
-		PROCEDURE ^ NewStringConst*(VAR a: ARRAY OF SYSTEM.BYTE; len: LONGINT): LONGINT; 
-		PROCEDURE ^ NewArrayConst*(VAR a: ARRAY OF CHAR; VAR len: ARRAY OF LONGINT; blen: LONGINT): LONGINT; 
-		PROCEDURE ^ UseVariable*(v: GlobalVariable; offset: LONGINT); 
-		PROCEDURE ^ AddOwnProc*(p: Procedure; codeOffset: LONGINT); 
-		PROCEDURE ^ UseProcedure*(p: Procedure; offset: LONGINT); 
-		PROCEDURE ^ UseSyscall*(syscall, offset: LONGINT); 
+		PROCEDURE ^ AddCasetable*(tablesize: SIGNED32): SIGNED32; 
+		PROCEDURE ^ NewConst*(VAR a: ARRAY OF SYSTEM.BYTE; len: SIGNED32): SIGNED32; 
+		PROCEDURE ^ NewStringConst*(VAR a: ARRAY OF SYSTEM.BYTE; len: SIGNED32): SIGNED32; 
+		PROCEDURE ^ NewArrayConst*(VAR a: ARRAY OF CHAR; VAR len: ARRAY OF SIGNED32; blen: SIGNED32): SIGNED32; 
+		PROCEDURE ^ UseVariable*(v: GlobalVariable; offset: SIGNED32); 
+		PROCEDURE ^ AddOwnProc*(p: Procedure; codeOffset: SIGNED32); 
+		PROCEDURE ^ UseProcedure*(p: Procedure; offset: SIGNED32); 
+		PROCEDURE ^ UseSyscall*(syscall, offset: SIGNED32); 
 	END Module; 
 
-	ObjFGeneratorProc* = PROCEDURE (VAR R: PCM.Rider; scope: PCT.ModScope; VAR codeSize: LONGINT); 
+	ObjFGeneratorProc* = PROCEDURE (VAR R: PCM.Rider; scope: PCT.ModScope; VAR codeSize: SIGNED32); 
 VAR 
 	init: BOOLEAN; 
-	NofSysCalls-: LONGINT; 
+	NofSysCalls-: SIGNED32; 
 	sentinel-: GlobalVariable; 
 	psentinel-: Procedure; 
 	context*: Module; 
 	generate*: ObjFGeneratorProc; 
 
-	PROCEDURE ^ SetNumberOfSyscalls*(nofsyscalls: LONGINT); 
+	PROCEDURE ^ SetNumberOfSyscalls*(nofsyscalls: SIGNED32); 
 	PROCEDURE ^ AllocateTD*(size: RecSize); 
 BEGIN
 END PCBT.

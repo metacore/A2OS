@@ -22,7 +22,7 @@ TYPE
 		selChanges: vyBase.tVector; 
 		oldSelection: vyBase.tVector; 
 		selection: vyBase.tVector; 
-		nrData-: LONGINT; 
+		nrData-: SIGNED32; 
 		layer: vyPort.tLayer; 
 		picture: vyPort.Picture; 
 		visualize: tVisualizer; 
@@ -30,20 +30,20 @@ TYPE
 		do*: PROCEDURE (selector: tSelector; VAR event: vyEvents.EventMsg); 
 	END; 
 VAR 
-	selectionMode*: INTEGER; 
-	lastDataSize: LONGINT; 
+	selectionMode*: SIGNED16; 
+	lastDataSize: SIGNED32; 
 	newselector*: tSelector; 
 
 	PROCEDURE ^ New*; 
 	PROCEDURE ^ HandleFileMsg(obj: tSelector; VAR msg: Objects.FileMsg); 
 	PROCEDURE ^ HandleAttributes(obj: tSelector; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ GetAttribute(n: LONGINT; type: INTEGER; name: vyName.tNameArray): vyBase.tVector; 
+	PROCEDURE ^ GetAttribute(n: SIGNED32; type: SIGNED16; name: vyName.tNameArray): vyBase.tVector; 
 	PROCEDURE ^ GetSelectionAttribute*(selector: Objects.Object): vyBase.tVector; 
 	PROCEDURE ^ Actor(selector: tSelector; x0, y0, xLast, yLast, xNew, yNew: Coordinate); 
 	PROCEDURE ^ DoSelection(selector: tSelector; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ AdjustHighlight*(layer: vyPort.tLayer); 
-	PROCEDURE ^ OpenSelector*(layer: vyPort.tLayer; n: LONGINT; vizor: tVisualizer; actor: tIdentifier; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ OpenSelector*(layer: vyPort.tLayer; n: SIGNED32; vizor: tVisualizer; actor: tIdentifier; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ SetMode*; 
 BEGIN
 END vyHighlight.

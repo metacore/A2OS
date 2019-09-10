@@ -13,16 +13,16 @@ TYPE
 		v3: vyBase.Object; 
 		v2: vyBase.Object; 
 		v1: vyBase.Object; 
-		modeltype: INTEGER; 
+		modeltype: SIGNED16; 
 	END; 
 
-	function* = PROCEDURE (VAR v1, v2, v3: LONGREAL); 
+	function* = PROCEDURE (VAR v1, v2, v3: FLOAT64); 
 VAR 
 	gitter*: function; 
 
 	PROCEDURE ^ StoreM(VAR R: Files.Rider; o: tModel); 
 	PROCEDURE ^ LoadM(VAR R: Files.Rider; o: tModel); 
-	PROCEDURE ^ Gitter(VAR val1, val2, val3: LONGREAL); 
+	PROCEDURE ^ Gitter(VAR val1, val2, val3: FLOAT64); 
 	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
 	PROCEDURE ^ Init(s: antsKernel.Kernel); 
 	PROCEDURE ^ HandleAttributes(o: tModel; VAR msg: Objects.AttrMsg); 

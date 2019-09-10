@@ -6,7 +6,7 @@ TYPE
 	Executor = OBJECT {EXCLUSIVE} 
 	VAR 
 		done := FALSE: BOOLEAN; 
-		code := Modules.PowerDown: LONGINT; 
+		code := Modules.PowerDown: SIGNED32; 
 
 		PROCEDURE ^ Wait; 
 	BEGIN{ACTIVE, EXCLUSIVE} 

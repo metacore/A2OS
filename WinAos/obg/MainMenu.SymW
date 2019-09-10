@@ -19,7 +19,7 @@ TYPE
 		PROCEDURE ^ PointerLeave*; 
 		PROCEDURE ^ SetOriginator*(extView: ANY); 
 		PROCEDURE ^ UpdatePages; 
-		PROCEDURE ^ TryLoad(CONST name: ARRAY OF CHAR; pos: LONGINT); 
+		PROCEDURE ^ TryLoad(CONST name: ARRAY OF CHAR; pos: SIGNED32); 
 		PROCEDURE ^ LoadPages*; 
 		PROCEDURE ^ Refresh(sender, data: ANY); 
 		PROCEDURE ^ TabSelected(sender, data: ANY); 

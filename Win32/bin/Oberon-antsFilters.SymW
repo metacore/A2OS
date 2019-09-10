@@ -11,7 +11,7 @@ TYPE
 	tFilterDesc* = RECORD (vyBase.ObjDesc)
 		weights: antsNeighbourhoods.Neighbours; 
 		fct: antsFunctions.Function; 
-		type: INTEGER; 
+		type: SIGNED16; 
 	END; 
 
 	PROCEDURE ^ HandleFileMsg(obj: tFilter; VAR msg: Objects.FileMsg); 
@@ -20,18 +20,18 @@ TYPE
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ New*; 
-	PROCEDURE ^ ksmallest(VAR a: ARRAY OF LONGREAL; n, k: LONGINT): LONGREAL; 
-	PROCEDURE ^ Median(VAR a: ARRAY OF LONGREAL; n: LONGINT): LONGREAL; 
+	PROCEDURE ^ ksmallest(VAR a: ARRAY OF FLOAT64; n, k: SIGNED32): FLOAT64; 
+	PROCEDURE ^ Median(VAR a: ARRAY OF FLOAT64; n: SIGNED32): FLOAT64; 
 	PROCEDURE ^ WeightsToMedian(filter: tFilter); 
 	PROCEDURE ^ ApplyFilter(A: antsArrayObjects.tINTEGERArray; VAR res: antsArrayObjects.tINTEGERArray; filter: tFilter); 
-	PROCEDURE ^ MinMax(VAR S: ARRAY OF ARRAY OF INTEGER; VAR min, max: INTEGER); 
-	PROCEDURE ^ Rescale*(A: antsArrayObjects.tINTEGERArray; VAR depth: LONGINT); 
-	PROCEDURE ^ ApplyFilters(A: antsArrayObjects.tINTEGERArray; VAR res: antsArrayObjects.tINTEGERArray; filter: tFilter; VAR depth: LONGINT; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ MinMax(VAR S: ARRAY OF ARRAY OF SIGNED16; VAR min, max: SIGNED16); 
+	PROCEDURE ^ Rescale*(A: antsArrayObjects.tINTEGERArray; VAR depth: SIGNED32); 
+	PROCEDURE ^ ApplyFilters(A: antsArrayObjects.tINTEGERArray; VAR res: antsArrayObjects.tINTEGERArray; filter: tFilter; VAR depth: SIGNED32; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ Apply*; 
 	PROCEDURE ^ Constant*; 
 	PROCEDURE ^ DoApplyFunction(f: tFilter); 
 	PROCEDURE ^ ApplyFunction*; 
-	PROCEDURE ^ dist(n: antsNeighbourhoods.Neighbours; pos: LONGINT; VAR xd, yd: LONGINT); 
+	PROCEDURE ^ dist(n: antsNeighbourhoods.Neighbours; pos: SIGNED32; VAR xd, yd: SIGNED32); 
 	PROCEDURE ^ Inverse*; 
 BEGIN
 END antsFilters.

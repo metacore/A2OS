@@ -11,18 +11,18 @@ TYPE
 
 	tRandom = vyRanBase.tRandom; 
 
-	PROCEDURE ^ ParksMiller*(VAR s: LONGINT); 
+	PROCEDURE ^ ParksMiller*(VAR s: SIGNED32); 
 	PROCEDURE ^ Next*(r: tRandom); 
 	PROCEDURE ^ Max(r: tRandom): Bits; 
 	PROCEDURE ^ Get(gen: tRandom): Bits; 
-	PROCEDURE ^ GetV(gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF Bits; start: LONGINT); 
-	PROCEDURE ^ GetUniform(gen: tRandom): LONGREAL; 
-	PROCEDURE ^ RandomUVX(gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF LONGREAL; start: LONGINT); 
-	PROCEDURE ^ RandomUV(gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF REAL; start: LONGINT); 
-	PROCEDURE ^ GetL(gen: tRandom; top: LONGINT): LONGINT; 
-	PROCEDURE ^ RandomLV(r: tRandom; top, count: LONGINT; VAR nrs: ARRAY OF LONGINT; start: LONGINT); 
+	PROCEDURE ^ GetV(gen: tRandom; count: SIGNED32; VAR nrs: ARRAY OF Bits; start: SIGNED32); 
+	PROCEDURE ^ GetUniform(gen: tRandom): FLOAT64; 
+	PROCEDURE ^ RandomUVX(gen: tRandom; count: SIGNED32; VAR nrs: ARRAY OF FLOAT64; start: SIGNED32); 
+	PROCEDURE ^ RandomUV(gen: tRandom; count: SIGNED32; VAR nrs: ARRAY OF FLOAT32; start: SIGNED32); 
+	PROCEDURE ^ GetL(gen: tRandom; top: SIGNED32): SIGNED32; 
+	PROCEDURE ^ RandomLV(r: tRandom; top, count: SIGNED32; VAR nrs: ARRAY OF SIGNED32; start: SIGNED32); 
 	PROCEDURE ^ Reset(r: tRandom); 
-	PROCEDURE ^ SumPSqr*(gen: tRandom; top: LONGINT): LONGREAL; 
+	PROCEDURE ^ SumPSqr*(gen: tRandom; top: SIGNED32): FLOAT64; 
 	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitBasic(r: tRandom); 

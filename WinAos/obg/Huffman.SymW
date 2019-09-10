@@ -4,42 +4,42 @@ TYPE
 	BitReader = OBJECT 
 	VAR 
 		in: Streams.Reader; 
-		curByte, curBit: LONGINT; 
+		curByte, curBit: SIGNED32; 
 
 		PROCEDURE ^  & New(r: Streams.Reader); 
 		PROCEDURE ^ Initialize; 
-		PROCEDURE ^ Bit(): LONGINT; 
+		PROCEDURE ^ Bit(): SIGNED32; 
 	END BitReader; 
 
 	BitWriter = OBJECT 
 	VAR 
 		out: Streams.Writer; 
-		curByte, curBit: LONGINT; 
+		curByte, curBit: SIGNED32; 
 
 		PROCEDURE ^  & New(w: Streams.Writer); 
-		PROCEDURE ^ Bit(bit: LONGINT); 
+		PROCEDURE ^ Bit(bit: SIGNED32); 
 		PROCEDURE ^ Finish; 
 	END BitWriter; 
 
-	PatternCounts = ARRAY 256 OF LONGINT; 
+	PatternCounts = ARRAY 256 OF SIGNED32; 
 
 	Pattern = RECORD 
-		patt, weight: LONGINT; 
+		patt, weight: SIGNED32; 
 	END; 
 
 	PatternWeights = POINTER TO ARRAY OF Pattern; 
 
 	HuffCode = RECORD 
-		bits, val: LONGINT; 
+		bits, val: SIGNED32; 
 	END; 
 
 	Node = OBJECT 
 	VAR 
-		weight: LONGINT; 
-		pattern: LONGINT; 
+		weight: SIGNED32; 
+		pattern: SIGNED32; 
 		left, right: Node; 
 
-		PROCEDURE ^  & Init(patt, w: LONGINT); 
+		PROCEDURE ^  & Init(patt, w: SIGNED32); 
 		PROCEDURE ^ AddChildren(l, r: Node); 
 	END Node; 
 
@@ -65,7 +65,7 @@ TYPE
 
 		PROCEDURE ^  & New*(input: Streams.Reader); 
 		PROCEDURE ^ ReadFrequencies(r: Streams.Reader): PatternWeights; 
-		PROCEDURE ^ ExtractBlock*(VAR buf: ARRAY OF CHAR; len: LONGINT); 
+		PROCEDURE ^ ExtractBlock*(VAR buf: ARRAY OF CHAR; len: SIGNED32); 
 	END Decoder; 
 
 	PROCEDURE ^ ContainedPatterns(VAR pc: PatternCounts): PatternWeights; 

@@ -7,9 +7,9 @@ CONST
 TYPE 
 	ContextMenuPar = OBJECT 
 	VAR 
-		mode: LONGINT; 
+		mode: SIGNED32; 
 
-		PROCEDURE ^  & New*(mode: LONGINT); 
+		PROCEDURE ^  & New*(mode: SIGNED32); 
 	END ContextMenuPar; 
 
 	KillerMsg = OBJECT 
@@ -42,7 +42,7 @@ TYPE
 		border-: WMProperties.Int32Property; 
 		image: WMGraphics.Image; 
 		hover: BOOLEAN; 
-		borderI: LONGINT; 
+		borderI: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
@@ -52,7 +52,7 @@ TYPE
 		PROCEDURE ^ RecacheProperties*; 
 	END IconComponent; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	prototypeCommandString, prototypeImageName, prototypeCaption: WMProperties.StringProperty; 
 	prototypeColor, prototypeBorder: WMProperties.Int32Property; 
 	cmSetImageName, cmSetCommandString, cmSetCaption: ContextMenuPar; 

@@ -4,9 +4,9 @@ CONST
 	idversion* = \"Voyager v0.1a3"\; 
 	cDefaultPlotName = \"vyScatter"\; 
 TYPE 
-	tGeneratorProc = PROCEDURE ():LONGREAL; 
+	tGeneratorProc = PROCEDURE ():FLOAT64; 
 VAR 
-	gnrObjects: INTEGER; 
+	gnrObjects: SIGNED16; 
 	gplotname: vyName.tNameArray; 
 	gobjects: Objects.Object; 
 	gGenerator: tGeneratorProc; 
@@ -18,12 +18,12 @@ VAR
 	PROCEDURE ^ Summary*; 
 	PROCEDURE ^ Regress*; 
 	PROCEDURE ^ capsarg(VAR arg: vyName.tNameArray); 
-	PROCEDURE ^ NextDot(VAR str: ARRAY OF CHAR; VAR i: INTEGER; VAR part: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ NextDot(VAR str: ARRAY OF CHAR; VAR i: SIGNED16; VAR part: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Locate(VAR procname: ARRAY OF CHAR; VAR name: ARRAY OF CHAR; context: Objects.Object): Objects.Object; 
 	PROCEDURE ^ Show*; 
 	PROCEDURE ^ Sort*; 
-	PROCEDURE ^ StdGauss(): LONGREAL; 
-	PROCEDURE ^ TrappedMouse(): LONGREAL; 
+	PROCEDURE ^ StdGauss(): FLOAT64; 
+	PROCEDURE ^ TrappedMouse(): FLOAT64; 
 	PROCEDURE ^ Random*; 
 	PROCEDURE ^ NewSampleMd*; 
 	PROCEDURE ^ NewSample*; 

@@ -31,12 +31,12 @@ TYPE
 		PROCEDURE ^  & Init*(realFS: UnixFileSystem); 
 		PROCEDURE ^ New0*(CONST name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
-		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; fold: Files.File; VAR res: WORD); 
+		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; fold: Files.File; VAR res: INTEGER); 
 		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
-		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	END AliasFileSystem; 
 
@@ -69,12 +69,12 @@ TYPE
 		PROCEDURE ^ New0*(CONST name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ IsDirectory(VAR stat: Unix.Status): BOOLEAN; 
 		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
-		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ TryRename*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD): LONGINT; 
-		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
-		PROCEDURE ^ CreateDirectory0*(CONST path: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ RemoveDirectory0*(CONST path: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ TryRename*(old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER): SIGNED32; 
+		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER); 
+		PROCEDURE ^ CreateDirectory0*(CONST path: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ RemoveDirectory0*(CONST path: ARRAY OF CHAR; force: BOOLEAN; VAR key: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
 		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	END UnixFileSystem; 
@@ -87,16 +87,16 @@ TYPE
 
 	File* = OBJECT {EXCLUSIVE} (Files.File)
 	VAR 
-		fd: LONGINT; 
+		fd: SIGNED32; 
 		workName, registerName: Filename; 
 		tempFile: BOOLEAN; 
 		dev: Unix.dev_t; 
 		ino: Unix.ino_t; 
-		mtime: HUGEINT; 
+		mtime: SIGNED64; 
 		fsize, fpos: SIZE; 
 		bufs: ARRAY NBufs OF Buffer; 
 		swapper: SIZE; 
-		state: LONGINT; 
+		state: SIGNED32; 
 
 		PROCEDURE ^  & Init(fs: Files.FileSystem); 
 		PROCEDURE ^ CreateUnixFile; 
@@ -109,11 +109,11 @@ TYPE
 		PROCEDURE ^ Write*(VAR r: Files.Rider; x: CHAR); 
 		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Length*(): Files.Size; 
-		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
-		PROCEDURE ^ SetDate*(t, d: LONGINT); 
+		PROCEDURE ^ GetDate*(VAR t, d: SIGNED32); 
+		PROCEDURE ^ SetDate*(t, d: SIGNED32); 
 		PROCEDURE ^ GetAttributes*(): SET; 
 		PROCEDURE ^ SetAttributes*(attr: SET); 
-		PROCEDURE ^ Register0*(VAR res: WORD); 
+		PROCEDURE ^ Register0*(VAR res: INTEGER); 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ FlushBuffers; 
 		PROCEDURE ^ Finalize*; 
@@ -121,8 +121,8 @@ TYPE
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
 	END File; 
 VAR 
-	tempno: INTEGER; 
-	openfiles: LONGINT; 
+	tempno: SIGNED16; 
+	openfiles: SIGNED32; 
 	searchPath: ARRAY 1024 OF CHAR; 
 	cwd: ARRAY 256 OF CHAR; 
 	unixFS: UnixFileSystem; 
@@ -133,26 +133,26 @@ VAR
 	PROCEDURE ^ ChangeDirectory*(CONST path: ARRAY OF CHAR; VAR done: BOOLEAN); 
 	PROCEDURE ^ StripPath*(CONST path: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ CleanPath*(VAR path: ARRAY OF CHAR); 
-	PROCEDURE ^ Match(CONST name, pat: ARRAY OF CHAR; i, j: INTEGER): BOOLEAN; 
+	PROCEDURE ^ Match(CONST name, pat: ARRAY OF CHAR; i, j: SIGNED16): BOOLEAN; 
 	PROCEDURE ^ Append(VAR a: Filename; CONST this: ARRAY OF CHAR); 
 	PROCEDURE ^ AppendName(VAR path: Filename; CONST filename: ARRAY OF CHAR); 
-	PROCEDURE ^ AppendInt(VAR str: Filename; n: LONGINT); 
+	PROCEDURE ^ AppendInt(VAR str: Filename; n: SIGNED32); 
 	PROCEDURE ^ IsFullName(CONST name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Halt(f: File; unixError: BOOLEAN; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ ResetBuffers(f: File; VAR stat: Unix.Status); 
 	PROCEDURE ^ MakePath(CONST dir, name: ARRAY OF CHAR; VAR dest: ARRAY OF CHAR); 
-	PROCEDURE ^ ScanPath(VAR pos: LONGINT; VAR dir: ARRAY OF CHAR); 
+	PROCEDURE ^ ScanPath(VAR pos: SIGNED32; VAR dir: ARRAY OF CHAR); 
 	PROCEDURE ^ GetTempName(CONST finalName: ARRAY OF CHAR; VAR tempName: Filename); 
 	PROCEDURE ^ Install; 
 	PROCEDURE ^ Initialize; 
-	PROCEDURE ^ UnixOpen(path: ADDRESS; flags: SET32; permissions: Unix.mode_t): LONGINT; 
-	PROCEDURE ^ UnixRead(fd: LONGINT; buf: ADDRESS; len: SIZE): SIZE; 
-	PROCEDURE ^ UnixWrite(fd: LONGINT; buf: ADDRESS; len: SIZE): SIZE; 
+	PROCEDURE ^ UnixOpen(path: ADDRESS; flags: SET32; permissions: Unix.mode_t): SIGNED32; 
+	PROCEDURE ^ UnixRead(fd: SIGNED32; buf: ADDRESS; len: SIZE): SIZE; 
+	PROCEDURE ^ UnixWrite(fd: SIGNED32; buf: ADDRESS; len: SIZE): SIZE; 
 	PROCEDURE ^ AddSearchPath*(context: Commands.Context); 
 	PROCEDURE ^ SetWorkPath*(context: Commands.Context); 
 	PROCEDURE ^ Finalization; 
 	PROCEDURE ^ DecOpenFiles; 
 	PROCEDURE ^ IncOpenFiles; 
-	PROCEDURE ^ WaitClose(no: LONGINT); 
+	PROCEDURE ^ WaitClose(no: SIGNED32); 
 BEGIN
 END UnixFiles.

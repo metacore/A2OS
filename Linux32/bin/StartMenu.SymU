@@ -27,7 +27,7 @@ TYPE
 		plugin: Plugin; 
 		currentPluginName: Strings.String; 
 		factory: PluginFactory; 
-		startIndex: LONGINT; 
+		startIndex: SIGNED32; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Refresh; 
@@ -64,13 +64,13 @@ TYPE
 	FancyStartMenu = OBJECT {EXCLUSIVE} (Plugin)
 	VAR 
 		startMenu: WMComponents.FormWindow; 
-		nofLayouts, nofButtons, nofSMOs: LONGINT; 
+		nofLayouts, nofButtons, nofSMOs: SIGNED32; 
 		menuButtons: MenuButtons; 
 		smos: SMOArr; 
 
-		PROCEDURE ^ CountLayouts(): LONGINT; 
+		PROCEDURE ^ CountLayouts(): SIGNED32; 
 		PROCEDURE ^ FindSMO(c: XML.Content; VAR smo: SubMenuOpener); 
-		PROCEDURE ^ FindMenuButtonsSMO(c: XML.Content; VAR menuButtons: MenuButtons; VAR smos: SMOArr; VAR n, m: LONGINT); 
+		PROCEDURE ^ FindMenuButtonsSMO(c: XML.Content; VAR menuButtons: MenuButtons; VAR smos: SMOArr; VAR n, m: SIGNED32); 
 		PROCEDURE ^ Open; 
 		PROCEDURE ^ Close; 
 		PROCEDURE ^ ReplaceMenuButtonsSMO(CONST mb, newmb: MenuButtons; CONST smos, newsmos: SMOArr); 

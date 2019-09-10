@@ -13,8 +13,8 @@ TYPE
 		domainPart*: String; 
 	END; 
 VAR 
-	base64Table: ARRAY 128 OF LONGINT; 
-	index: LONGINT; 
+	base64Table: ARRAY 128 OF SIGNED32; 
+	index: SIGNED32; 
 
 	PROCEDURE ^ ParseAddresses*(string: String; VAR addresses: Classes.List); 
 	PROCEDURE ^ AddressesToString*(list: Classes.List; VAR string: String); 

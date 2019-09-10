@@ -3,9 +3,9 @@ MODULE GfxImages IN Oberon;
 TYPE 
 	Image* = Images.Image; 
 
-	ShiftProc* = PROCEDURE (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; t: REAL); 
+	ShiftProc* = PROCEDURE (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; t: FLOAT32); 
 
-	ScaleProc* = PROCEDURE (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; xy, dxy: REAL); 
+	ScaleProc* = PROCEDURE (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; xy, dxy: FLOAT32); 
 
 	Filter* = RECORD (Images.Mode)
 		hshift*, vshift*: ShiftProc; 
@@ -16,27 +16,27 @@ VAR
 	LinearFilter*: Filter; 
 	PreCache, Cache: Image; 
 
-	PROCEDURE ^ HShift*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; tx: REAL); 
-	PROCEDURE ^ VShift*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; ty: REAL); 
-	PROCEDURE ^ HScale*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, dlen: LONGINT; x, dx: REAL); 
-	PROCEDURE ^ VScale*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, dlen: LONGINT; y, dy: REAL); 
-	PROCEDURE ^ LinearHShift*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; tx: REAL); 
-	PROCEDURE ^ LinearVShift*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; ty: REAL); 
-	PROCEDURE ^ LinearHScale*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, dlen: LONGINT; x, dx: REAL); 
-	PROCEDURE ^ LinearVScale*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, dlen: LONGINT; y, dy: REAL); 
-	PROCEDURE ^ InitFilter*(VAR filter: Filter; op: SHORTINT; hshift, vshift: ShiftProc; hscale, vscale: ScaleProc); 
-	PROCEDURE ^ GetTempImage(VAR img, cache: Images.Image; w, h: INTEGER); 
+	PROCEDURE ^ HShift*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; tx: FLOAT32); 
+	PROCEDURE ^ VShift*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; ty: FLOAT32); 
+	PROCEDURE ^ HScale*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, dlen: SIGNED32; x, dx: FLOAT32); 
+	PROCEDURE ^ VScale*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, dlen: SIGNED32; y, dy: FLOAT32); 
+	PROCEDURE ^ LinearHShift*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; tx: FLOAT32); 
+	PROCEDURE ^ LinearVShift*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; ty: FLOAT32); 
+	PROCEDURE ^ LinearHScale*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, dlen: SIGNED32; x, dx: FLOAT32); 
+	PROCEDURE ^ LinearVScale*(VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, dlen: SIGNED32; y, dy: FLOAT32); 
+	PROCEDURE ^ InitFilter*(VAR filter: Filter; op: SIGNED8; hshift, vshift: ShiftProc; hscale, vscale: ScaleProc); 
+	PROCEDURE ^ GetTempImage(VAR img, cache: Images.Image; w, h: SIGNED16); 
 	PROCEDURE ^ FreeTempImage(VAR img, cache: Images.Image); 
 	PROCEDURE ^ Preprocess(VAR src: Images.Image; VAR m: GfxMatrix.Matrix; VAR filter: Filter); 
-	PROCEDURE ^ SkewRow(src, dst: Image; si, sj, w, di, dj: INTEGER; tx: REAL; VAR filter: Filter); 
-	PROCEDURE ^ SkewRows(src, dst: Image; si, sj, w, h, dj: INTEGER; x, dx: REAL; VAR filter: Filter); 
-	PROCEDURE ^ SkewCol(src, dst: Image; si, sj, h, di, dj: INTEGER; ty: REAL; VAR filter: Filter); 
-	PROCEDURE ^ SkewCols(src, dst: Image; si, sj, w, h, di: INTEGER; y, dy: REAL; VAR filter: Filter); 
-	PROCEDURE ^ Translate*(src, dst: Image; tx, ty: REAL; VAR filter: Filter); 
-	PROCEDURE ^ Scale*(src, dst: Image; sx, sy, tx, ty: REAL; VAR filter: Filter); 
-	PROCEDURE ^ Rotate*(src, dst: Image; sin, cos, tx, ty: REAL; VAR filter: Filter); 
-	PROCEDURE ^ ShearRows*(src, dst: Image; sx, tx: REAL; VAR filter: Filter); 
-	PROCEDURE ^ ShearCols*(src, dst: Image; sy, ty: REAL; VAR filter: Filter); 
+	PROCEDURE ^ SkewRow(src, dst: Image; si, sj, w, di, dj: SIGNED16; tx: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ SkewRows(src, dst: Image; si, sj, w, h, dj: SIGNED16; x, dx: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ SkewCol(src, dst: Image; si, sj, h, di, dj: SIGNED16; ty: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ SkewCols(src, dst: Image; si, sj, w, h, di: SIGNED16; y, dy: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ Translate*(src, dst: Image; tx, ty: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ Scale*(src, dst: Image; sx, sy, tx, ty: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ Rotate*(src, dst: Image; sin, cos, tx, ty: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ ShearRows*(src, dst: Image; sx, tx: FLOAT32; VAR filter: Filter); 
+	PROCEDURE ^ ShearCols*(src, dst: Image; sy, ty: FLOAT32; VAR filter: Filter); 
 	PROCEDURE ^ Transform*(src, dst: Image; m: GfxMatrix.Matrix; VAR filter: Filter); 
 BEGIN
 END GfxImages.

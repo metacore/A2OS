@@ -6,8 +6,8 @@ TYPE
 	tLayer* = POINTER TO tLayerDesc; 
 
 	tLayerDesc = RECORD (vyCharts.tLayerDesc)
-		breaks: ARRAY 32 OF LONGINT; 
-		nrOfBreaks: INTEGER; 
+		breaks: ARRAY 32 OF SIGNED32; 
+		nrOfBreaks: SIGNED16; 
 	END; 
 
 	PROCEDURE ^ Recall(sketch: tLayer); 

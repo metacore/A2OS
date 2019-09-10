@@ -79,8 +79,8 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetMedia*(): SET; 
-		PROCEDURE ^ IsMediumSupported*(medium: SHORTINT): BOOLEAN; 
-		PROCEDURE ^ AddMedium*(medium: SHORTINT); 
+		PROCEDURE ^ IsMediumSupported*(medium: SIGNED8): BOOLEAN; 
+		PROCEDURE ^ AddMedium*(medium: SIGNED8); 
 		PROCEDURE ^ SetMedia*(media: SET); 
 		PROCEDURE ^ GetSelectors*(): Objects.Enumerator; 
 		PROCEDURE ^ AddSelector*(selector: Selector); 
@@ -92,12 +92,12 @@ TYPE
 
 	Selector* = OBJECT 
 	VAR 
-		a, b, c: LONGINT; 
+		a, b, c: SIGNED32; 
 		simpleSelectors: Objects.Collection; 
 		lastSimpleSel: SimpleSelector; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetSpecifity*(VAR a, b, c: LONGINT); 
+		PROCEDURE ^ GetSpecifity*(VAR a, b, c: SIGNED32); 
 		PROCEDURE ^ GetSimpleSelectors*(): Objects.Enumerator; 
 		PROCEDURE ^ AddSimpleSelector*(simpleSelector: SimpleSelector); 
 	END Selector; 
@@ -105,14 +105,14 @@ TYPE
 	SimpleSelector* = OBJECT 
 	VAR 
 		next: SimpleSelector; 
-		combinator: SHORTINT; 
+		combinator: SIGNED8; 
 		elementName: String; 
 		subSelectors: Objects.Collection; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetNext*(): SimpleSelector; 
-		PROCEDURE ^ GetCombinator*(): SHORTINT; 
-		PROCEDURE ^ SetCombinator*(combinator: SHORTINT); 
+		PROCEDURE ^ GetCombinator*(): SIGNED8; 
+		PROCEDURE ^ SetCombinator*(combinator: SIGNED8); 
 		PROCEDURE ^ GetElementName*(): String; 
 		PROCEDURE ^ SetElementName*(VAR elementName: ARRAY OF CHAR); 
 		PROCEDURE ^ GetSubSelectors*(): Objects.Enumerator; 
@@ -141,13 +141,13 @@ TYPE
 	Attribute* = OBJECT (SubSelector)
 	VAR 
 		name, value: String; 
-		relation: SHORTINT; 
+		relation: SIGNED8; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetName*(): String; 
 		PROCEDURE ^ SetName*(VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ GetRelation*(): SHORTINT; 
-		PROCEDURE ^ SetRelation*(relation: SHORTINT); 
+		PROCEDURE ^ GetRelation*(): SIGNED8; 
+		PROCEDURE ^ SetRelation*(relation: SIGNED8); 
 		PROCEDURE ^ GetValue*(): String; 
 		PROCEDURE ^ SetValue*(VAR value: ARRAY OF CHAR); 
 	END Attribute; 
@@ -182,31 +182,31 @@ TYPE
 
 	Term* = OBJECT 
 	VAR 
-		operator, unaryOperator: SHORTINT; 
-		type: SHORTINT; 
-		intVal: LONGINT; 
-		realVal: LONGREAL; 
+		operator, unaryOperator: SIGNED8; 
+		type: SIGNED8; 
+		intVal: SIGNED32; 
+		realVal: FLOAT64; 
 		stringVal: String; 
-		unit: SHORTINT; 
+		unit: SIGNED8; 
 		expr: Objects.Collection; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetOperator*(): SHORTINT; 
-		PROCEDURE ^ SetOperator*(operator: SHORTINT); 
-		PROCEDURE ^ GetUnaryOperator*(): SHORTINT; 
-		PROCEDURE ^ SetUnaryOperator*(unaryOperator: SHORTINT); 
-		PROCEDURE ^ GetType*(): SHORTINT; 
-		PROCEDURE ^ SetType*(type: SHORTINT); 
-		PROCEDURE ^ GetIntVal*(): LONGINT; 
-		PROCEDURE ^ SetIntVal*(intVal: LONGINT); 
-		PROCEDURE ^ GetRealVal*(): LONGREAL; 
-		PROCEDURE ^ SetRealVal*(realVal: LONGREAL); 
+		PROCEDURE ^ GetOperator*(): SIGNED8; 
+		PROCEDURE ^ SetOperator*(operator: SIGNED8); 
+		PROCEDURE ^ GetUnaryOperator*(): SIGNED8; 
+		PROCEDURE ^ SetUnaryOperator*(unaryOperator: SIGNED8); 
+		PROCEDURE ^ GetType*(): SIGNED8; 
+		PROCEDURE ^ SetType*(type: SIGNED8); 
+		PROCEDURE ^ GetIntVal*(): SIGNED32; 
+		PROCEDURE ^ SetIntVal*(intVal: SIGNED32); 
+		PROCEDURE ^ GetRealVal*(): FLOAT64; 
+		PROCEDURE ^ SetRealVal*(realVal: FLOAT64); 
 		PROCEDURE ^ GetStringVal*(): String; 
 		PROCEDURE ^ SetStringVal*(VAR stringVal: ARRAY OF CHAR); 
 		PROCEDURE ^ IsStringIdent*(ident: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ IsIdent*(ident: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetUnit*(): SHORTINT; 
-		PROCEDURE ^ SetUnit*(unit: SHORTINT); 
+		PROCEDURE ^ IsIdent*(ident: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetUnit*(): SIGNED8; 
+		PROCEDURE ^ SetUnit*(unit: SIGNED8); 
 		PROCEDURE ^ IsLength*(): BOOLEAN; 
 		PROCEDURE ^ IsAngle*(): BOOLEAN; 
 		PROCEDURE ^ IsTime*(): BOOLEAN; 
@@ -220,14 +220,14 @@ TYPE
 	Page* = OBJECT 
 	VAR 
 		selector: String; 
-		pseudoPage: SHORTINT; 
+		pseudoPage: SIGNED8; 
 		declarations: Objects.Collection; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetSelector*(): String; 
 		PROCEDURE ^ SetSelector*(VAR selector: ARRAY OF CHAR); 
-		PROCEDURE ^ GetPseudoPage*(): SHORTINT; 
-		PROCEDURE ^ SetPseudoPage*(pseudoPage: SHORTINT); 
+		PROCEDURE ^ GetPseudoPage*(): SIGNED8; 
+		PROCEDURE ^ SetPseudoPage*(pseudoPage: SIGNED8); 
 		PROCEDURE ^ GetDeclarations*(): Objects.Enumerator; 
 		PROCEDURE ^ AddDeclaration*(declaration: Declaration); 
 	END Page; 
@@ -241,8 +241,8 @@ TYPE
 		PROCEDURE ^ AddDeclaration*(declaration: Declaration); 
 	END FontFace; 
 
-	PROCEDURE ^ IntToRGBA*(color: LONGINT; VAR r, g, b, a: CHAR); 
-	PROCEDURE ^ RGBAToInt*(r, g, b, a: CHAR; VAR color: LONGINT); 
+	PROCEDURE ^ IntToRGBA*(color: SIGNED32; VAR r, g, b, a: CHAR); 
+	PROCEDURE ^ RGBAToInt*(r, g, b, a: CHAR; VAR color: SIGNED32); 
 	PROCEDURE ^ NewString(VAR value: ARRAY OF CHAR): String; 
 BEGIN
 END CSS2.

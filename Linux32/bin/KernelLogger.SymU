@@ -1,10 +1,10 @@
 MODULE KernelLogger;
 	IMPORT SYSTEM, KernelLog, Texts, TextUtilities, Kernel, Modules;
 CONST 
-	BufSize = (LONGINT(8192) * 8); 
+	BufSize = (SIGNED32(8192) * 8); 
 	DeleteSize = (BufSize DIV 8); 
 	UpdateInterval = 200; 
-	LocalBuf = (LONGINT(4096) * 2); 
+	LocalBuf = (SIGNED32(4096) * 2); 
 	MaxLogSize = (4 * BufSize); 
 TYPE 
 	Logger = OBJECT {EXCLUSIVE} 

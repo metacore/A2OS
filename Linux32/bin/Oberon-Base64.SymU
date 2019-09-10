@@ -3,10 +3,10 @@ MODULE Base64 IN Oberon;
 CONST 
 VAR 
 	encTable: ARRAY 64 OF CHAR; 
-	decTable: ARRAY 128 OF INTEGER; 
+	decTable: ARRAY 128 OF SIGNED16; 
 	W: Texts.Writer; 
 
-	PROCEDURE ^ DecodeText*(T: Texts.Text; beg: LONGINT; F: Files.File): BOOLEAN; 
+	PROCEDURE ^ DecodeText*(T: Texts.Text; beg: SIGNED32; F: Files.File): BOOLEAN; 
 	PROCEDURE ^ Decode*; 
 	PROCEDURE ^ EncodeFile*(F: Files.File; T: Texts.Text); 
 	PROCEDURE ^ Encode*; 

@@ -23,7 +23,7 @@ CONST
 	TicksLength = (8 * vyHostDisplay.pixel); 
 	MinorTicksLength = (4 * vyHostDisplay.pixel); 
 	EPS = (1 / 10000); 
-	infinity = MAX(INTEGER); 
+	infinity = MAX(SIGNED16); 
 	MinLabelRoom = (30 * vyHostDisplay.pixel); 
 TYPE 
 	Real = vyBase.Real; 
@@ -60,10 +60,10 @@ TYPE
 		TickRoot: Tick; 
 		LabelRoot: Label; 
 		tdx, tdy: Coordinate; 
-		DigitsAfterPoint: INTEGER; 
+		DigitsAfterPoint: SIGNED16; 
 		Format: BOOLEAN; 
-		MinorTicks: INTEGER; 
-		Orientation: INTEGER; 
+		MinorTicks: SIGNED16; 
+		Orientation: SIGNED16; 
 		RtoXY: PROCEDURE (axe: tAxe; r: Real; VAR x, y: Coordinate); 
 		UsePaint2d: BOOLEAN; 
 	END; 
@@ -73,7 +73,7 @@ VAR
 	DefaultTicksColor*: vyGraphBase.Color; 
 	LabelFont: ARRAY 32 OF CHAR; 
 	LabelColor, AxeColor, TicksColor: Color; 
-	MinorTicks, DigitsAfterPoint: INTEGER; 
+	MinorTicks, DigitsAfterPoint: SIGNED16; 
 	EFormat, Opposite, TicksAutomatic: BOOLEAN; 
 	LabelsPlot: BOOLEAN; 
 	UsePaint2d*: BOOLEAN; 
@@ -89,17 +89,17 @@ VAR
 	PROCEDURE ^ LoadLabelsQueue(VAR R: Files.Rider; VAR t: Label); 
 	PROCEDURE ^ StoreAxe*(VAR R: Files.Rider; a: tAxe); 
 	PROCEDURE ^ LoadAxe*(VAR R: Files.Rider; VAR a: tAxe); 
-	PROCEDURE ^ DecExpR(m: INTEGER): LONGREAL; 
-	PROCEDURE ^ InRect(VAR X, Y, W, H: INTEGER; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DecExpR(m: SIGNED16): FLOAT64; 
+	PROCEDURE ^ InRect(VAR X, Y, W, H: SIGNED16; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ equals(r1, r2: Real): BOOLEAN; 
-	PROCEDURE ^ SetExponent(VAR r: LONGREAL; VAR Expo: INTEGER); 
-	PROCEDURE ^ AppendRealToString(l: LONGREAL; VAR s: ARRAY OF CHAR; E: BOOLEAN; m: INTEGER); 
+	PROCEDURE ^ SetExponent(VAR r: FLOAT64; VAR Expo: SIGNED16); 
+	PROCEDURE ^ AppendRealToString(l: FLOAT64; VAR s: ARRAY OF CHAR; E: BOOLEAN; m: SIGNED16); 
 	PROCEDURE ^ GetXbyY(axe: tAxe; yval: Coordinate): Coordinate; 
 	PROCEDURE ^ GetYbyX(axe: tAxe; xval: Coordinate): Coordinate; 
 	PROCEDURE ^ GetXYbyR(axe: tAxe; r: Real; VAR x, y: Coordinate); 
 	PROCEDURE ^ GetXYbyR2(axe: tAxe; r: Real; VAR x, y: Coordinate); 
 	PROCEDURE ^ TestTheLabels(axe: tAxe); 
-	PROCEDURE ^ MinStdWidth*(): INTEGER; 
+	PROCEDURE ^ MinStdWidth*(): SIGNED16; 
 	PROCEDURE ^ PlotTheLabels(axe: tAxe); 
 	PROCEDURE ^ PlotTheAxe(axe: tAxe); 
 	PROCEDURE ^ CalcTheLabels(axe: tAxe); 
@@ -119,8 +119,8 @@ VAR
 	PROCEDURE ^ SetExpFormat*(b: BOOLEAN); 
 	PROCEDURE ^ SetColors*(labelcolor, axecolor, tickscolor: Color); 
 	PROCEDURE ^ SetLabelFont*(font: ARRAY OF CHAR); 
-	PROCEDURE ^ SetNumOfMinorTicks*(ticks: INTEGER); 
-	PROCEDURE ^ SetDigitsAfterPoint*(digits: INTEGER); 
+	PROCEDURE ^ SetNumOfMinorTicks*(ticks: SIGNED16); 
+	PROCEDURE ^ SetDigitsAfterPoint*(digits: SIGNED16); 
 	PROCEDURE ^ FlipAxesOrientation*(flip: BOOLEAN); 
 	PROCEDURE ^ AutomaticTicks*(auto: BOOLEAN); 
 BEGIN

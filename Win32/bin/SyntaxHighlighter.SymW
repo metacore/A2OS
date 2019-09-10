@@ -45,7 +45,7 @@ CONST
 	Trace_1 = 1; 
 	Trace_Max = 2; 
 	Statistics = TRUE; 
-	NOTCLOSED = (MAX(LONGINT) - 128); 
+	NOTCLOSED = (MAX(SIGNED32) - 128); 
 	MaxOpenLength = 32; 
 	MaxCloseLength = 32; 
 	MaxWordLength = 32; 
@@ -81,7 +81,7 @@ TYPE
 		defined-: SET; 
 		next: Style; 
 
-		PROCEDURE ^  & Init(CONST name: Identifier; color, bgcolor, voff: LONGINT; CONST fontname: ARRAY OF CHAR; fontsize: LONGINT; fontstyle: SET); 
+		PROCEDURE ^  & Init(CONST name: Identifier; color, bgcolor, voff: SIGNED32; CONST fontname: ARRAY OF CHAR; fontsize: SIGNED32; fontstyle: SET); 
 	END Style; 
 
 	Styles = OBJECT {EXCLUSIVE} 
@@ -153,8 +153,8 @@ TYPE
 		firstOpenChar, nofOpenChars, firstCloseChar, nofCloseChars: SIZE; 
 		lastChar: CHAR; 
 		entry: DataEntry; 
-		level: LONGINT; 
-		state: LONGINT; 
+		level: SIGNED32; 
+		state: SIGNED32; 
 		firstPosition: SIZE; 
 		next: RegionMatcher; 
 
@@ -162,11 +162,11 @@ TYPE
 		PROCEDURE ^ GetEntry(): DataEntry; 
 		PROCEDURE ^ ResetMatching; 
 		PROCEDURE ^ CheckOpen(reader: Texts.TextReader; position: SIZE; VAR length: SIZE): BOOLEAN; 
-		PROCEDURE ^ FeedChar(char32: Texts.Char32; position: SIZE; VAR newState: LONGINT); 
+		PROCEDURE ^ FeedChar(char32: Texts.Char32; position: SIZE; VAR newState: SIGNED32); 
 	END RegionMatcher; 
 
 	Token* = RECORD 
-		type-, subtype-: SHORTINT; 
+		type-, subtype-: SIGNED8; 
 		startPosition-, endPosition-: SIZE; 
 		value-: ARRAY MaxTokenLength OF CHAR; 
 		length: SIZE; 
@@ -204,10 +204,10 @@ TYPE
 		PROCEDURE ^ GetWordStyle*(reader: Texts.TextReader; position: SIZE; VAR end: SIZE): Style; 
 		PROCEDURE ^ GetRegionStyle*(position: SIZE; state: State; VAR start, end: SIZE): Style; 
 		PROCEDURE ^ GetStyle*(CONST keyword: ARRAY OF CHAR; length: SIZE): Style; 
-		PROCEDURE ^ AddToken(CONST tokenname: ARRAY OF CHAR; style: Style; VAR res: WORD); 
-		PROCEDURE ^ AddWord(CONST keyword: ARRAY OF CHAR; style: Style; VAR res: WORD); 
+		PROCEDURE ^ AddToken(CONST tokenname: ARRAY OF CHAR; style: Style; VAR res: INTEGER); 
+		PROCEDURE ^ AddWord(CONST keyword: ARRAY OF CHAR; style: Style; VAR res: INTEGER); 
 		PROCEDURE ^ AddRegion(CONST open, close: ARRAY OF CHAR; nesting, multiline: BOOLEAN; styleOpen, styleClose, styleContent: Style); 
-		PROCEDURE ^ DebugInterface*(code: WORD; state: State); 
+		PROCEDURE ^ DebugInterface*(code: INTEGER; state: State); 
 		PROCEDURE ^ Dump(out: Streams.Writer); 
 	END Highlighter; 
 
@@ -225,7 +225,7 @@ VAR
 	diagnostics: Diagnostics.Diagnostics; 
 	error, autoinit: BOOLEAN; 
 	global_highlighters: Highlighters; 
-	traceLevel: LONGINT; 
+	traceLevel: SIGNED32; 
 	NnofRebuildRegions, NnofPatchRegions, NnofPatchInsert, NnofPatchInsertHit, NnofPiOpenClose, NnofPiNestedFull, NnofPiNestedSimple, NnofPiRescan, NnofPiSimple, NnofPiNoHit, NnofPiNoHitRescan, NnofPiNoHitFull: SIZE; 
 
 	PROCEDURE ^ GetHighlighter*(CONST name: ARRAY OF CHAR): Highlighter; 
@@ -233,11 +233,11 @@ VAR
 	PROCEDURE ^ Unescape(string: Strings.String); 
 	PROCEDURE ^ NofWildcards(CONST string: ARRAY OF CHAR): SIZE; 
 	PROCEDURE ^ Equal(CONST s1, s2: ARRAY OF CHAR; length: SIZE): BOOLEAN; 
-	PROCEDURE ^ Indent(out: Streams.Writer; level: LONGINT); 
-	PROCEDURE ^ GetLocation(position: SIZE; CONST entry: DataEntry): WORD; 
+	PROCEDURE ^ Indent(out: Streams.Writer; level: SIGNED32); 
+	PROCEDURE ^ GetLocation(position: SIZE; CONST entry: DataEntry): INTEGER; 
 	PROCEDURE ^ ParseStyle(CONST element: XML.Element; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ ParseStyles(CONST element: XML.Element; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
-	PROCEDURE ^ ParseGroup(CONST element: XML.Element; CONST highlighter: Highlighter; CONST styles: Styles; CONST type: LONGINT; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ ParseGroup(CONST element: XML.Element; CONST highlighter: Highlighter; CONST styles: Styles; CONST type: SIGNED32; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ ParseTokens(CONST element: XML.Element; CONST highlighter: Highlighter; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ ParseWords(CONST element: XML.Element; CONST highlighter: Highlighter; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ ParseRegion(CONST element: XML.Element; CONST highlighter: Highlighter; CONST styles: Styles; CONST source: ARRAY OF CHAR; CONST diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 

@@ -1,10 +1,10 @@
 MODULE ColorModels;
 
-	PROCEDURE ^ RGBToHSV*(r, g, b: LONGINT; VAR h, s, v: REAL); 
-	PROCEDURE ^ HSVToRGB*(h, s, v: REAL; VAR rl, gl, bl: LONGINT); 
-	PROCEDURE ^ RGBToCMY*(r, g, b: REAL; VAR c, m, y: REAL); 
-	PROCEDURE ^ CMYToRGB*(c, m, y: REAL; VAR r, g, b: LONGINT); 
-	PROCEDURE ^ RGBToCMYK*(rl, gl, bl: LONGINT; VAR c, m, y, k: REAL); 
-	PROCEDURE ^ CMYKToRGB*(c, m, y, k: REAL; VAR r, g, b: REAL); 
+	PROCEDURE ^ RGBToHSV*(r, g, b: SIGNED32; VAR h, s, v: FLOAT32); 
+	PROCEDURE ^ HSVToRGB*(h, s, v: FLOAT32; VAR rl, gl, bl: SIGNED32); 
+	PROCEDURE ^ RGBToCMY*(r, g, b: FLOAT32; VAR c, m, y: FLOAT32); 
+	PROCEDURE ^ CMYToRGB*(c, m, y: FLOAT32; VAR r, g, b: SIGNED32); 
+	PROCEDURE ^ RGBToCMYK*(rl, gl, bl: SIGNED32; VAR c, m, y, k: FLOAT32); 
+	PROCEDURE ^ CMYKToRGB*(c, m, y, k: FLOAT32; VAR r, g, b: FLOAT32); 
 BEGIN
 END ColorModels.

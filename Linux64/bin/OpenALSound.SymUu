@@ -21,13 +21,13 @@ TYPE
 		PROCEDURE ^ DestroyALContext; 
 		PROCEDURE ^ Enable*; 
 		PROCEDURE ^ Disable*; 
-		PROCEDURE ^ GetNativeFrequency*(nr: LONGINT): LONGINT; 
-		PROCEDURE ^ OpenPlayChannel*(VAR channel: SoundDevices.Channel; samplingRate, samplingResolution: LONGINT; nofSubChannels, format: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ OpenRecordChannel*(VAR channel: SoundDevices.Channel; samplingRate, samplingResolution: LONGINT; nofSubChannels, format: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ GetNativeFrequency*(nr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ OpenPlayChannel*(VAR channel: SoundDevices.Channel; samplingRate, samplingResolution: SIGNED32; nofSubChannels, format: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ OpenRecordChannel*(VAR channel: SoundDevices.Channel; samplingRate, samplingResolution: SIGNED32; nofSubChannels, format: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ RegisterMixerChangeListener*(mixChangedProc: SoundDevices.MixerChangedProc); 
 		PROCEDURE ^ UnregisterMixerChangeListener*(mixChangeProc: SoundDevices.MixerChangedProc); 
-		PROCEDURE ^ GetMixerChannel*(channelNr: LONGINT; VAR channel: SoundDevices.MixerChannel); 
-		PROCEDURE ^ GetNofMixerChannels*(): LONGINT; 
+		PROCEDURE ^ GetMixerChannel*(channelNr: SIGNED32; VAR channel: SoundDevices.MixerChannel); 
+		PROCEDURE ^ GetNofMixerChannels*(): SIGNED32; 
 	END Driver; 
 
 	PlayChannel = OBJECT {EXCLUSIVE} (SoundDevices.Channel)
@@ -38,17 +38,17 @@ TYPE
 		bufferListener: SoundDevices.BufferListener; 
 		frequency: AL.ALuint; 
 		format: AL.ALenum; 
-		count: LONGINT; 
-		volume: LONGINT; 
-		state: LONGINT; 
+		count: SIGNED32; 
+		volume: SIGNED32; 
+		state: SIGNED32; 
 		driver: Driver; 
 
-		PROCEDURE ^  & Initialize*(driver: Driver; samplingRate, bitsPerSample, nofChannels: LONGINT); 
+		PROCEDURE ^  & Initialize*(driver: Driver; samplingRate, bitsPerSample, nofChannels: SIGNED32); 
 		PROCEDURE ^ RegisterBufferListener*(bufferListener: SoundDevices.BufferListener); 
 		PROCEDURE ^ QueueBuffer*(x: SoundDevices.Buffer); 
-		PROCEDURE ^ SetVolume*(vol: LONGINT); 
-		PROCEDURE ^ GetVolume*(): LONGINT; 
-		PROCEDURE ^ GetPosition*(): LONGINT; 
+		PROCEDURE ^ SetVolume*(vol: SIGNED32); 
+		PROCEDURE ^ GetVolume*(): SIGNED32; 
+		PROCEDURE ^ GetPosition*(): SIGNED32; 
 		PROCEDURE ^ Start*; 
 		PROCEDURE ^ Pause*; 
 		PROCEDURE ^ Stop*; 

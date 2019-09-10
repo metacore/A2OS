@@ -109,7 +109,7 @@ TYPE
 	VAR 
 		name-, archive-, source-: ARRAY 32 OF CHAR; 
 		description-: ARRAY 256 OF CHAR; 
-		installMode: LONGINT; 
+		installMode: SIGNED32; 
 		nofFiles-: SIZE; 
 		nofSources-: SIZE; 
 		position-: Files.Position; 
@@ -204,9 +204,9 @@ TYPE
 		PROCEDURE ^ PackageIsExcluded(package: Package): BOOLEAN; 
 		PROCEDURE ^ SetOptions(options: Options.Options); 
 		PROCEDURE ^ ToStream*(w: Streams.Writer; charactersPerLine: SIZE); 
-		PROCEDURE ^ GenerateToolFile*(CONST filename: Files.FileName; VAR res: WORD); 
-		PROCEDURE ^ GeneratePackageFile(CONST filename: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ GenerateZipFiles(out, error: Streams.Writer; diagnostics: Diagnostics.Diagnostics; level, strategy: LONGINT; VAR err: BOOLEAN); 
+		PROCEDURE ^ GenerateToolFile*(CONST filename: Files.FileName; VAR res: INTEGER); 
+		PROCEDURE ^ GeneratePackageFile(CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ GenerateZipFiles(out, error: Streams.Writer; diagnostics: Diagnostics.Diagnostics; level, strategy: SIGNED32; VAR err: BOOLEAN); 
 		PROCEDURE ^ FindPosition*(CONST filename: ARRAY OF CHAR; diagnostics: Diagnostics.DiagnosticsList): Streams.Position; 
 		PROCEDURE ^ FindModule(CONST moduleName: Modules.Name): File; 
 		PROCEDURE ^ FindFile(CONST filename: Files.FileName): File; 
@@ -217,7 +217,7 @@ TYPE
 		PROCEDURE ^ ShowDependencies(out: Streams.Writer); 
 		PROCEDURE ^ ClearMarks; 
 		PROCEDURE ^ MarkFiles(CONST filename: Files.FileName; VAR inBuild: BOOLEAN; VAR nofNewMarks: SIZE); 
-		PROCEDURE ^ ShowDependentModules(CONST modulename: Modules.Name; mode: WORD; out: Streams.Writer); 
+		PROCEDURE ^ ShowDependentModules(CONST modulename: Modules.Name; mode: INTEGER; out: Streams.Writer); 
 		PROCEDURE ^ GetCompilerOptions(VAR options: ARRAY OF CHAR); 
 		PROCEDURE ^ GetLinkerOptions(VAR options: ARRAY OF CHAR); 
 		PROCEDURE ^ GetNofSources(VAR nofMarked: SIZE): SIZE; 
@@ -229,7 +229,7 @@ TYPE
 	END BuildObj; 
 
 	Version = RECORD 
-		major, minor: WORD; 
+		major, minor: INTEGER; 
 	END; 
 
 	Builds* = OBJECT 
@@ -302,7 +302,7 @@ TYPE
 		PROCEDURE ^ ParseBuild(): BuildObj; 
 		PROCEDURE ^ ParsePackageHeader(): Package; 
 		PROCEDURE ^ ParsePackage(builds: Builds; VAR token: Token): BOOLEAN; 
-		PROCEDURE ^ ParseBuildPrefixes(builds: Builds; VAR token: Token; VAR release: Expression; VAR pos: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ParseBuildPrefixes(builds: Builds; VAR token: Token; VAR release: Expression; VAR pos: SIGNED32): BOOLEAN; 
 		PROCEDURE ^  & Init(scanner: Scanner; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics); 
 	END Parser; 
 
@@ -317,7 +317,7 @@ TYPE
 	PROCEDURE ^ Intersection(VAR s: Set; CONST t: Set); 
 	PROCEDURE ^ In(CONST s: Set; i: SIZE): BOOLEAN; 
 	PROCEDURE ^ GetModuleInfo(in: Streams.Reader; VAR mi: ModuleInfo; CONST source, filename: ARRAY OF CHAR; errorPosition: Streams.Position; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
-	PROCEDURE ^ VersionToString(major, minor: WORD; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ VersionToString(major, minor: INTEGER; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ SplitName(CONST name: ARRAY OF CHAR; VAR pre, mid, suf: ARRAY OF CHAR); 
 	PROCEDURE ^ CreateContext(VAR name: ARRAY OF CHAR; CONST context: ARRAY OF CHAR); 
 	PROCEDURE ^ MakeMessage(VAR msg: ARRAY OF CHAR; CONST string, par0, par1: ARRAY OF CHAR); 
@@ -325,14 +325,14 @@ TYPE
 	PROCEDURE ^ CallCommand(CONST command, arguments: ARRAY OF CHAR; context: Commands.Context); 
 	PROCEDURE ^ ParseBuildDescription*(text: Texts.Text; CONST source: ARRAY OF CHAR; VAR builds: Builds; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics): BOOLEAN; 
 	PROCEDURE ^ ParseBuildFile*(CONST filename: Files.FileName; VAR builds: Builds; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics): BOOLEAN; 
-	PROCEDURE ^ ParseText(text: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ ParseText(text: Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ CheckBuilds(builds: Builds; nofWorkers: SIZE; context: Commands.Context; diagnostics: Diagnostics.DiagnosticsList); 
 	PROCEDURE ^ CheckFiles*(context: Commands.Context); 
 	PROCEDURE ^ FindPosition*(context: Commands.Context); 
 	PROCEDURE ^ Analyze*(context: Commands.Context); 
 	PROCEDURE ^ Check*(context: Commands.Context); 
 	PROCEDURE ^ CheckDiagnostics(diagnostics: Diagnostics.DiagnosticsList; warnings: BOOLEAN; out: Streams.Writer): BOOLEAN; 
-	PROCEDURE ^ ImportInformation(mode: LONGINT; context: Commands.Context); 
+	PROCEDURE ^ ImportInformation(mode: SIGNED32; context: Commands.Context); 
 	PROCEDURE ^ WhoImports*(context: Commands.Context); 
 	PROCEDURE ^ RequiredModules*(context: Commands.Context); 
 	PROCEDURE ^ Rebuild*(context: Commands.Context); 

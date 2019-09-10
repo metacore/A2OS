@@ -13,15 +13,15 @@ TYPE
 	HashEntry = POINTER TO HashEntryDesc; 
 
 	LineDesc = RECORD 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		hash: HashEntry; 
 		next, list, corr: Line; 
-		nr, absNr: INTEGER; 
+		nr, absNr: SIGNED16; 
 	END; 
 
 	HashEntryDesc = RECORD 
 		next: HashEntry; 
-		hash: LONGINT; 
+		hash: SIGNED32; 
 		list: Line; 
 	END; 
 
@@ -32,18 +32,18 @@ TYPE
 		root: HashEntry; 
 		line: Line; 
 		name: ARRAY 64 OF CHAR; 
-		total, inserted: INTEGER; 
+		total, inserted: SIGNED16; 
 	END; 
 VAR 
 	R: Texts.Reader; 
 	W: Texts.Writer; 
 	opts: SET; 
-	nrSyncs: INTEGER; 
+	nrSyncs: SIGNED16; 
 
 	PROCEDURE ^ HashStat(T: Text); 
 	PROCEDURE ^ DiffStat(T1, T2: Text); 
-	PROCEDURE ^ HashLine(L: Line; VAR hash: LONGINT; VAR done: BOOLEAN); 
-	PROCEDURE ^ Insert(root: HashEntry; line: Line; hash: LONGINT); 
+	PROCEDURE ^ HashLine(L: Line; VAR hash: SIGNED32; VAR done: BOOLEAN); 
+	PROCEDURE ^ Insert(root: HashEntry; line: Line; hash: SIGNED32); 
 	PROCEDURE ^ HashText(T: Text); 
 	PROCEDURE ^ Compare(T1, T2: Text); 
 	PROCEDURE ^ PrepareTexts(d1, d2: Text); 

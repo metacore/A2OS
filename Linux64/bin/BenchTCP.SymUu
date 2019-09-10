@@ -12,38 +12,38 @@ TYPE
 
 	Sender = OBJECT {EXCLUSIVE} 
 	VAR 
-		res: WORD; 
+		res: INTEGER; 
 		c: TCP.Connection; 
 		num, num0: SIZE; 
 		buf: Bytes; 
 		done: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(c: TCP.Connection; buf: Bytes; num: SIZE); 
-		PROCEDURE ^ Join(): WORD; 
+		PROCEDURE ^ Join(): INTEGER; 
 	BEGIN{ACTIVE} 
 	END Sender; 
 
 	Tester = OBJECT {EXCLUSIVE} 
 	VAR 
-		res: WORD; 
+		res: INTEGER; 
 		c: TCP.Connection; 
 		num, num0: SIZE; 
-		port: LONGINT; 
+		port: SIGNED32; 
 		fip: IP.Adr; 
 		timer: Kernel.MilliTimer; 
 		sender: Sender; 
 		server: ARRAY 64 OF CHAR; 
 		total, len: SIZE; 
-		time: HUGEINT; 
+		time: SIGNED64; 
 
-		PROCEDURE ^  & Init*(CONST server: ARRAY OF CHAR; num, port: LONGINT); 
+		PROCEDURE ^  & Init*(CONST server: ARRAY OF CHAR; num, port: SIGNED32); 
 	BEGIN{ACTIVE} 
 	END Tester; 
 VAR 
 	buf: Bytes; 
 
-	PROCEDURE ^ Message(CONST msg1, msg2: ARRAY OF CHAR; res: WORD); 
-	PROCEDURE ^ Report(ms, port: LONGINT; total: SIZE; CONST msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Message(CONST msg1, msg2: ARRAY OF CHAR; res: INTEGER); 
+	PROCEDURE ^ Report(ms, port: SIGNED32; total: SIZE; CONST msg: ARRAY OF CHAR); 
 	PROCEDURE ^ Discard*(context: Commands.Context); 
 	PROCEDURE ^ Echo*(context: Commands.Context); 
 	PROCEDURE ^ Time*(context: Commands.Context); 

@@ -27,26 +27,26 @@ TYPE
 	TYPE 
 		; 
 	VAR 
-		state-: SHORTINT; 
+		state-: SIGNED8; 
 		tcp: TCP.Connection; 
 		servername: ARRAY 128 OF CHAR; 
 		cvers, svers: ARRAY 260 OF CHAR; 
 		sessionId-, hash: Key; 
 		secret: ARRAY 1024 OF CHAR; 
-		incount, outcount: LONGINT; 
+		incount, outcount: SIGNED32; 
 		inhkey, outhkey: Key; 
 		incipher, outcipher: Ciphers.Cipher; 
 		inmac, outmac: HMAC.HMac; 
-		inmaclen, outmaclen: LONGINT; 
+		inmaclen, outmaclen: SIGNED32; 
 		new: RECORD 
 			incipher, outcipher: Ciphers.Cipher; 
-			inkeybits, outkeybits: LONGINT; 
-			inmode, outmode: SHORTINT; 
+			inkeybits, outkeybits: SIGNED32; 
+			inmode, outmode: SIGNED8; 
 			inmac, outmac: HMAC.HMac; 
-			inmaclen, outmaclen: LONGINT; 
+			inmaclen, outmaclen: SIGNED32; 
 		END; 
 		cipherList, hmacList: ARRAY 1024 OF CHAR; 
-		clientChannelNo: LONGINT; 
+		clientChannelNo: SIGNED32; 
 
 		PROCEDURE ^  & Open*(CONST hostname: ARRAY OF CHAR); 
 		PROCEDURE ^ ReceiveServerVersion(): BOOLEAN; 
@@ -54,8 +54,8 @@ TYPE
 		PROCEDURE ^ SendPacket*(p: Packet); 
 		PROCEDURE ^ ReceivePacket*(VAR buf: ARRAY OF CHAR; VAR size: SIZE): CHAR; 
 		PROCEDURE ^ SendDebug*; 
-		PROCEDURE ^ Disconnect*(reason: SHORTINT; CONST msg: ARRAY OF CHAR); 
-		PROCEDURE ^ GetChannelNo*(): LONGINT; 
+		PROCEDURE ^ Disconnect*(reason: SIGNED8; CONST msg: ARRAY OF CHAR); 
+		PROCEDURE ^ GetChannelNo*(): SIGNED32; 
 		PROCEDURE ^ PacketAvailable*(): BOOLEAN; 
 		PROCEDURE ^ NegotiateAlgorythms; 
 		PROCEDURE ^ ClientAlgorythms(): Packet; 
@@ -64,7 +64,7 @@ TYPE
 		PROCEDURE ^ CheckSHK(CONST buf: ARRAY OF CHAR; shk, sig: SIZE); 
 		PROCEDURE ^ GroupExchange(sha1: SHA1.Hash); 
 		PROCEDURE ^ ActivateNewKeys; 
-		PROCEDURE ^ DeriveKey(keykind: CHAR; keylen: LONGINT; VAR key: ARRAY OF CHAR); 
+		PROCEDURE ^ DeriveKey(keykind: CHAR; keylen: SIGNED32; VAR key: ARRAY OF CHAR); 
 	END Connection; 
 
 	Packet* = OBJECT 
@@ -74,14 +74,14 @@ TYPE
 
 		PROCEDURE ^  & Init*(type: CHAR; size: SIZE); 
 		PROCEDURE ^ AppChar*(c: CHAR); 
-		PROCEDURE ^ AppInteger*(v: LONGINT); 
+		PROCEDURE ^ AppInteger*(v: SIGNED32); 
 		PROCEDURE ^ AppString*(CONST str: ARRAY OF CHAR); 
 		PROCEDURE ^ AppArray*(CONST arr: ARRAY OF CHAR; pos, arrlen: SIZE); 
 	END Packet; 
 VAR 
 	hexd: ARRAY 17 OF CHAR; 
 
-	PROCEDURE ^ Int2Chars(v: LONGINT; VAR buf: ARRAY OF CHAR); 
+	PROCEDURE ^ Int2Chars(v: SIGNED32; VAR buf: ARRAY OF CHAR); 
 	PROCEDURE ^ Head(CONST buf, s: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ ReceiveLine(tcp: TCP.Connection; VAR buf: ARRAY OF CHAR): SIZE; 
 	PROCEDURE ^ algoMatch(CONST cstr, sstr: ARRAY OF CHAR; VAR match: ARRAY OF CHAR); 

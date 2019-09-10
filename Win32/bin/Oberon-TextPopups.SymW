@@ -44,19 +44,19 @@ TYPE
 	PMarkerMenuItem = POINTER TO PMarkerMenuItemDesc; 
 
 	PMarkerMenuItemDesc = RECORD (MenuItemDesc)
-		pos: LONGINT; 
+		pos: SIGNED32; 
 	END; 
 
 	TMarkerMenuItem = POINTER TO TMarkerMenuItemDesc; 
 
 	TMarkerMenuItemDesc = RECORD (MenuItemDesc)
-		pos: LONGINT; 
+		pos: SIGNED32; 
 	END; 
 
 	LMarkerMenuItem = POINTER TO LMarkerMenuItemDesc; 
 
 	LMarkerMenuItemDesc = RECORD (MenuItemDesc)
-		pos: LONGINT; 
+		pos: SIGNED32; 
 	END; 
 
 	FileMenuItem = POINTER TO FileMenuItemDesc; 
@@ -72,25 +72,25 @@ TYPE
 	END; 
 VAR 
 	W: Texts.Writer; 
-	nofLines, width: INTEGER; 
+	nofLines, width: SIGNED16; 
 	itemList, lastItem: MenuItem; 
 	doItem: MenuItem; 
 	called: BOOLEAN; 
 	fileHistory: FileHistory; 
 	sections: ARRAY 7 OF ARRAY 14 OF CHAR; 
 
-	PROCEDURE ^ Call(F: TextGadgets.Frame; T: Texts.Text; x, y: INTEGER); 
+	PROCEDURE ^ Call(F: TextGadgets.Frame; T: Texts.Text; x, y: SIGNED16); 
 	PROCEDURE ^ Do*; 
-	PROCEDURE ^ AppendToTypeList(VAR list, last: MenuItem; CONST context, name: ARRAY OF CHAR; pos: LONGINT); 
+	PROCEDURE ^ AppendToTypeList(VAR list, last: MenuItem; CONST context, name: ARRAY OF CHAR; pos: SIGNED32); 
 	PROCEDURE ^ ExtractProcTypeNames(T: Texts.Text; VAR lastProc, lastType: MenuItem); 
-	PROCEDURE ^ ExtractHistory(nof: INTEGER); 
+	PROCEDURE ^ ExtractHistory(nof: SIGNED16); 
 	PROCEDURE ^ ExtractSections(t: Texts.Text); 
 	PROCEDURE ^ ExtractBibtex(t: Texts.Text); 
 	PROCEDURE ^ CreateMenuItems(listR: ListRiders.Rider; T: Texts.Text; CONST ext: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetFileExtension(CONST name: ARRAY OF CHAR; VAR ext: ARRAY OF CHAR); 
 	PROCEDURE ^ NewList(F: TextGadgets.Frame; D: Documents.Document): Gadgets.Frame; 
-	PROCEDURE ^ CalcPlace(VAR x, y, px, py, w, h: INTEGER); 
-	PROCEDURE ^ Popup(F: TextGadgets.Frame; x, y: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ CalcPlace(VAR x, y, px, py, w, h: SIGNED16); 
+	PROCEDURE ^ Popup(F: TextGadgets.Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ InsertIntoHistory(VAR D: Documents.Document); 
 	PROCEDURE ^ PopupHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Install*; 

@@ -14,16 +14,16 @@ CONST
 	TAB = 9X; 
 	SP = 20X; 
 TYPE 
-	Position* = HUGEINT; 
+	Position* = SIGNED64; 
 
-	Sender* = PROCEDURE {DELEGATE}(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+	Sender* = PROCEDURE {DELEGATE}(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 
-	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 
 	Connection* = OBJECT 
 
-		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ Close*; 
 	END Connection; 
 
@@ -31,7 +31,7 @@ TYPE
 	VAR 
 		tail: SIZE; 
 		buf: POINTER TO ARRAY OF CHAR; 
-		res*: WORD; 
+		res*: INTEGER; 
 		send: Sender; 
 		sent*: Position; 
 
@@ -43,40 +43,40 @@ TYPE
 		PROCEDURE ^ Pos*(): Position; 
 		PROCEDURE ^ Char*(x: CHAR); 
 		PROCEDURE ^ Bytes*(CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
-		PROCEDURE ^ RawSInt*(x: SHORTINT); 
-		PROCEDURE ^ RawInt*(x: INTEGER); 
-		PROCEDURE ^ RawLInt*(x: LONGINT); 
-		PROCEDURE ^ RawHInt*(x: HUGEINT); 
-		PROCEDURE ^ Net64*(x: HUGEINT); 
-		PROCEDURE ^ Net32*(x: LONGINT); 
-		PROCEDURE ^ Net16*(x: LONGINT); 
-		PROCEDURE ^ Net8*(x: LONGINT); 
+		PROCEDURE ^ RawSInt*(x: SIGNED8); 
+		PROCEDURE ^ RawInt*(x: SIGNED16); 
+		PROCEDURE ^ RawLInt*(x: SIGNED32); 
+		PROCEDURE ^ RawHInt*(x: SIGNED64); 
+		PROCEDURE ^ Net64*(x: SIGNED64); 
+		PROCEDURE ^ Net32*(x: SIGNED32); 
+		PROCEDURE ^ Net16*(x: SIGNED32); 
+		PROCEDURE ^ Net8*(x: SIGNED32); 
 		PROCEDURE ^ RawSet*(x: SET); 
 		PROCEDURE ^ RawSet32*(x: SET32); 
 		PROCEDURE ^ RawSet64*(x: SET64); 
 		PROCEDURE ^ RawBool*(x: BOOLEAN); 
-		PROCEDURE ^ RawReal*(x: REAL); 
-		PROCEDURE ^ RawLReal*(x: LONGREAL); 
+		PROCEDURE ^ RawReal*(x: FLOAT32); 
+		PROCEDURE ^ RawLReal*(x: FLOAT64); 
 		PROCEDURE ^ RawString*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ RawNum*(x: HUGEINT); 
+		PROCEDURE ^ RawNum*(x: SIGNED64); 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ String*(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Int*(x: HUGEINT; w: SIZE); 
+		PROCEDURE ^ Int*(x: SIGNED64; w: SIZE); 
 		PROCEDURE ^ Set*(s: SET); 
-		PROCEDURE ^ Hex*(x: HUGEINT; w: SIZE); 
+		PROCEDURE ^ Hex*(x: SIGNED64; w: SIZE); 
 		PROCEDURE ^ Address*(x: ADDRESS); 
 		PROCEDURE ^ Size*(x: SIZE); 
-		PROCEDURE ^ Pair(ch: CHAR; x: LONGINT); 
-		PROCEDURE ^ Date*(t, d: LONGINT); 
-		PROCEDURE ^ Date822*(t, d, tz: LONGINT); 
-		PROCEDURE ^ Float*(x: LONGREAL; n: WORD); 
-		PROCEDURE ^ FloatFix*(x: LONGREAL; n, f, D: WORD); 
+		PROCEDURE ^ Pair(ch: CHAR; x: SIGNED32); 
+		PROCEDURE ^ Date*(t, d: SIGNED32); 
+		PROCEDURE ^ Date822*(t, d, tz: SIGNED32); 
+		PROCEDURE ^ Float*(x: FLOAT64; n: INTEGER); 
+		PROCEDURE ^ FloatFix*(x: FLOAT64; n, f, D: INTEGER); 
 	END Writer; 
 
 	StringWriter* = OBJECT (Writer)
 
 		PROCEDURE ^  & InitStringWriter*(size: SIZE); 
-		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Position); 
 		PROCEDURE ^ Update*; 
@@ -88,7 +88,7 @@ TYPE
 	VAR 
 		head, tail: SIZE; 
 		buf: POINTER TO ARRAY OF CHAR; 
-		res*: WORD; 
+		res*: INTEGER; 
 		receive: Receiver; 
 		received*: Position; 
 
@@ -103,26 +103,26 @@ TYPE
 		PROCEDURE ^ Peek*(): CHAR; 
 		PROCEDURE ^ Bytes*(VAR x: ARRAY OF CHAR; ofs, size: SIZE; VAR len: SIZE); 
 		PROCEDURE ^ SkipBytes*(n: Position); 
-		PROCEDURE ^ RawSInt*(VAR x: SHORTINT); 
-		PROCEDURE ^ RawInt*(VAR x: INTEGER); 
-		PROCEDURE ^ RawLInt*(VAR x: LONGINT); 
-		PROCEDURE ^ RawHInt*(VAR x: HUGEINT); 
-		PROCEDURE ^ Net64*(): HUGEINT; 
-		PROCEDURE ^ Net32*(): LONGINT; 
-		PROCEDURE ^ Net16*(): LONGINT; 
-		PROCEDURE ^ Net8*(): LONGINT; 
+		PROCEDURE ^ RawSInt*(VAR x: SIGNED8); 
+		PROCEDURE ^ RawInt*(VAR x: SIGNED16); 
+		PROCEDURE ^ RawLInt*(VAR x: SIGNED32); 
+		PROCEDURE ^ RawHInt*(VAR x: SIGNED64); 
+		PROCEDURE ^ Net64*(): SIGNED64; 
+		PROCEDURE ^ Net32*(): SIGNED32; 
+		PROCEDURE ^ Net16*(): SIGNED32; 
+		PROCEDURE ^ Net8*(): SIGNED32; 
 		PROCEDURE ^ RawSet*(VAR x: SET); 
 		PROCEDURE ^ RawSet32*(VAR x: SET32); 
 		PROCEDURE ^ RawSet64*(VAR x: SET64); 
 		PROCEDURE ^ RawBool*(VAR x: BOOLEAN); 
-		PROCEDURE ^ RawReal*(VAR x: REAL); 
-		PROCEDURE ^ RawLReal*(VAR x: LONGREAL); 
+		PROCEDURE ^ RawReal*(VAR x: FLOAT32); 
+		PROCEDURE ^ RawLReal*(VAR x: FLOAT64); 
 		PROCEDURE ^ RawString*(VAR x: ARRAY OF CHAR); 
-		PROCEDURE ^ RawNum*(VAR x: LONGINT); 
-		PROCEDURE ^ RawHNum*(VAR x: HUGEINT); 
+		PROCEDURE ^ RawNum*(VAR x: SIGNED32); 
+		PROCEDURE ^ RawHNum*(VAR x: SIGNED64); 
 		PROCEDURE ^ RawSize*(VAR x: SIZE); 
-		PROCEDURE ^ Int*(VAR x: LONGINT; hex: BOOLEAN); 
-		PROCEDURE ^ HInt*(VAR x: HUGEINT; hex: BOOLEAN); 
+		PROCEDURE ^ Int*(VAR x: SIGNED32; hex: BOOLEAN); 
+		PROCEDURE ^ HInt*(VAR x: SIGNED64; hex: BOOLEAN); 
 		PROCEDURE ^ Size*(VAR x: SIZE; hex: BOOLEAN); 
 		PROCEDURE ^ EOLN*(): BOOLEAN; 
 		PROCEDURE ^ Ln*(VAR x: ARRAY OF CHAR); 
@@ -133,9 +133,9 @@ TYPE
 		PROCEDURE ^ Token*(VAR token: ARRAY OF CHAR); 
 		PROCEDURE ^ String*(VAR string: ARRAY OF CHAR); 
 		PROCEDURE ^ GetString*(VAR string: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ GetInteger*(VAR integer: LONGINT; isHexadecimal: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ GetInteger*(VAR integer: SIGNED32; isHexadecimal: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ GetSize*(VAR size: SIZE; isHexadecimal: BOOLEAN): BOOLEAN; 
-		PROCEDURE ^ GetReal*(VAR real: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ GetReal*(VAR real: FLOAT64): BOOLEAN; 
 		PROCEDURE ^ GetChar*(VAR ch: CHAR): BOOLEAN; 
 	END Reader; 
 
@@ -144,7 +144,7 @@ TYPE
 		PROCEDURE ^  & InitStringReader*(size: SIZE); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Position); 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ Set*(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ SetRaw*(CONST s: ARRAY OF CHAR; ofs, len: SIZE); 
 	END StringReader; 

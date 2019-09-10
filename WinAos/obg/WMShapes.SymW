@@ -15,7 +15,7 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
-		PROCEDURE ^ Set*(x0, y0, x1, y1: LONGINT); 
+		PROCEDURE ^ Set*(x0, y0, x1, y1: SIGNED32); 
 		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
 		PROCEDURE ^ SetArrowheads*(arrows: SET); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
@@ -59,6 +59,6 @@ VAR
 	PROCEDURE ^ GenCircle*(): XML.Element; 
 	PROCEDURE ^ GenEllipse*(): XML.Element; 
 	PROCEDURE ^ InitStrings; 
-	PROCEDURE ^ arctan2(x, y: REAL): REAL; 
+	PROCEDURE ^ arctan2(x, y: FLOAT32): FLOAT32; 
 BEGIN
 END WMShapes.

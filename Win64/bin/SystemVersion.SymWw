@@ -2,10 +2,10 @@ MODULE SystemVersion;
 	IMPORT Modules, CRC, KernelLog;
 CONST 
 VAR 
-	BootCRC-: LONGINT; 
+	BootCRC-: SIGNED32; 
 
-	PROCEDURE ^ GetKernelCRC*(): LONGINT; 
-	PROCEDURE ^ GetKernelDate(CONST name: ARRAY OF CHAR; VAR d, t: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetKernelCRC*(): SIGNED32; 
+	PROCEDURE ^ GetKernelDate(CONST name: ARRAY OF CHAR; VAR d, t: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ Test*; 
 BEGIN
 END SystemVersion.

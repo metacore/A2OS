@@ -3,29 +3,29 @@ MODULE antsHierarchicPotts2d IN Oberon;
 CONST 
 VAR 
 	globalStat: antsBellman.Statistic; 
-	globalGamma: LONGREAL; 
-	globaly1, globaly2: LONGINT; 
+	globalGamma: FLOAT64; 
+	globaly1, globaly2: SIGNED32; 
 	globalRstern: antsArrays.I1d; 
 	globalBellman: antsArrays.X1d; 
-	globalMinWeite, globalMaxWeite: LONGINT; 
+	globalMinWeite, globalMaxWeite: SIGNED32; 
 	inDirectory, outDirectory: ARRAY 256 OF CHAR; 
 
 	PROCEDURE ^ ApplyInteractively*; 
-	PROCEDURE ^ PottsFile(in, out: ARRAY OF CHAR; minWeite, maxWeite: LONGINT); 
-	PROCEDURE ^ FileEnum(path, name: ARRAY OF CHAR; time, date, size: LONGINT; attrs: SET); 
+	PROCEDURE ^ PottsFile(in, out: ARRAY OF CHAR; minWeite, maxWeite: SIGNED32); 
+	PROCEDURE ^ FileEnum(path, name: ARRAY OF CHAR; time, date, size: SIGNED32; attrs: SET); 
 	PROCEDURE ^ OnDirectory*; 
-	PROCEDURE ^ Function1d(from, to: LONGINT): LONGREAL; 
-	PROCEDURE ^ CumFunction(from, to: LONGINT): LONGREAL; 
-	PROCEDURE ^ MatrixFunction(from, to: LONGINT): LONGREAL; 
-	PROCEDURE ^ CumFunction2(from, to: LONGINT): LONGREAL; 
-	PROCEDURE ^ MatrixFunction2(from, to: LONGINT): LONGREAL; 
-	PROCEDURE ^ statMean(k1, k2: LONGINT): LONGREAL; 
-	PROCEDURE ^ CumWritePartition*(s: antsBellman.Statistic; VAR Parti: ARRAY OF ARRAY OF LONGREAL; rstern: antsArrays.I1d; y1, y2: LONGINT); 
-	PROCEDURE ^ MatrixWritePartition*(s: antsBellman.Statistic; VAR Parti: ARRAY OF ARRAY OF LONGREAL; rstern: antsArrays.I1d); 
-	PROCEDURE ^ Scale*(VAR orig: ARRAY OF LONGREAL; VAR gamma: LONGREAL); 
-	PROCEDURE ^ ScaleMatrix*(VAR S: ARRAY OF ARRAY OF LONGREAL; VAR gamma: LONGREAL); 
-	PROCEDURE ^ PottsStatLongreal*(VAR Orig, Pott: ARRAY OF ARRAY OF LONGREAL); 
-	PROCEDURE ^ MatrixPottsLongreal*(VAR Orig, Pott: ARRAY OF ARRAY OF LONGREAL; minweit, maxweit: LONGINT; lengths: BOOLEAN); 
+	PROCEDURE ^ Function1d(from, to: SIGNED32): FLOAT64; 
+	PROCEDURE ^ CumFunction(from, to: SIGNED32): FLOAT64; 
+	PROCEDURE ^ MatrixFunction(from, to: SIGNED32): FLOAT64; 
+	PROCEDURE ^ CumFunction2(from, to: SIGNED32): FLOAT64; 
+	PROCEDURE ^ MatrixFunction2(from, to: SIGNED32): FLOAT64; 
+	PROCEDURE ^ statMean(k1, k2: SIGNED32): FLOAT64; 
+	PROCEDURE ^ CumWritePartition*(s: antsBellman.Statistic; VAR Parti: ARRAY OF ARRAY OF FLOAT64; rstern: antsArrays.I1d; y1, y2: SIGNED32); 
+	PROCEDURE ^ MatrixWritePartition*(s: antsBellman.Statistic; VAR Parti: ARRAY OF ARRAY OF FLOAT64; rstern: antsArrays.I1d); 
+	PROCEDURE ^ Scale*(VAR orig: ARRAY OF FLOAT64; VAR gamma: FLOAT64); 
+	PROCEDURE ^ ScaleMatrix*(VAR S: ARRAY OF ARRAY OF FLOAT64; VAR gamma: FLOAT64); 
+	PROCEDURE ^ PottsStatLongreal*(VAR Orig, Pott: ARRAY OF ARRAY OF FLOAT64); 
+	PROCEDURE ^ MatrixPottsLongreal*(VAR Orig, Pott: ARRAY OF ARRAY OF FLOAT64; minweit, maxweit: SIGNED32; lengths: BOOLEAN); 
 	PROCEDURE ^ PottsToVec*; 
 BEGIN
 END antsHierarchicPotts2d.

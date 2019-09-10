@@ -72,11 +72,11 @@ CONST
 TYPE 
 	Name = ARRAY maxName OF CHAR; 
 
-	Size = LONGINT; 
+	Size = SIGNED32; 
 
 	Label = POINTER TO RECORD 
 		name: Name; 
-		pc, pass: LONGINT; 
+		pc, pass: SIGNED32; 
 		equ: BOOLEAN; 
 		next: Label; 
 	END; 
@@ -88,9 +88,9 @@ TYPE
 
 	Reg* = OBJECT (Operand)
 	VAR 
-		index-: LONGINT; 
+		index-: SIGNED32; 
 
-		PROCEDURE ^  & New*(i: LONGINT); 
+		PROCEDURE ^  & New*(i: SIGNED32); 
 	END Reg; 
 
 	Reg8* = OBJECT (Reg)
@@ -150,7 +150,7 @@ TYPE
 	VAR 
 		size-: Size; 
 		seg, reg, index: Reg; 
-		scale, displacement: LONGINT; 
+		scale, displacement: SIGNED32; 
 		fixup: PCM.Attribute; 
 
 		PROCEDURE ^  & New*(s: Size); 
@@ -160,11 +160,11 @@ TYPE
 	Imm* = OBJECT (Operand)
 	VAR 
 		size: Size; 
-		val-: HUGEINT; 
-		pc-: LONGINT; 
+		val-: SIGNED64; 
+		pc-: SIGNED32; 
 		fixup: PCM.Attribute; 
 
-		PROCEDURE ^  & New*(s: Size; v: HUGEINT); 
+		PROCEDURE ^  & New*(s: Size; v: SIGNED64); 
 		PROCEDURE ^ Matches(type: ASM.OperandType): BOOLEAN; 
 	END Imm; 
 
@@ -173,10 +173,10 @@ TYPE
 
 	Pntr1616 = OBJECT (Operand)
 	VAR 
-		selector, offset: LONGINT; 
+		selector, offset: SIGNED32; 
 
 		PROCEDURE ^ Matches(type: ASM.OperandType): BOOLEAN; 
-		PROCEDURE ^  & New*(s, o: LONGINT); 
+		PROCEDURE ^  & New*(s, o: SIGNED32); 
 	END Pntr1616; 
 
 	Pntr1632 = OBJECT (Pntr1616)
@@ -186,7 +186,7 @@ TYPE
 
 	Assembly* = OBJECT (PCLIR.AsmInline)
 	VAR 
-		pc-, pcOffset, errPos*: LONGINT; 
+		pc-, pcOffset, errPos*: SIGNED32; 
 		current: PCLIR.AsmBlock; 
 		bits: Size; 
 		cpuoptions: ASM.CPUOptions; 
@@ -196,63 +196,63 @@ TYPE
 
 		PROCEDURE ^  & Init*(d: Diagnostics.Diagnostics; list: Streams.Writer); 
 		PROCEDURE ^ Reset*; 
-		PROCEDURE ^ SetPC*(newPC: LONGINT); 
-		PROCEDURE ^ AddFixup(adr: PCM.Attribute; offset: LONGINT); 
-		PROCEDURE ^ PutByte*(b: LONGINT); 
+		PROCEDURE ^ SetPC*(newPC: SIGNED32); 
+		PROCEDURE ^ AddFixup(adr: PCM.Attribute; offset: SIGNED32); 
+		PROCEDURE ^ PutByte*(b: SIGNED32); 
 		PROCEDURE ^ GetByte*(): CHAR; 
-		PROCEDURE ^ GetWord*(): INTEGER; 
-		PROCEDURE ^ GetDWord*(): LONGINT; 
-		PROCEDURE ^ PutWord*(w: LONGINT); 
-		PROCEDURE ^ PutDWord*(d: LONGINT); 
-		PROCEDURE ^ PutQWord*(q: HUGEINT); 
-		PROCEDURE ^ Put(data: LONGINT; size: Size); 
+		PROCEDURE ^ GetWord*(): SIGNED16; 
+		PROCEDURE ^ GetDWord*(): SIGNED32; 
+		PROCEDURE ^ PutWord*(w: SIGNED32); 
+		PROCEDURE ^ PutDWord*(d: SIGNED32); 
+		PROCEDURE ^ PutQWord*(q: SIGNED64); 
+		PROCEDURE ^ Put(data: SIGNED32; size: Size); 
 		PROCEDURE ^ InsertLabel(CONST name: ARRAY OF CHAR): Label; 
 		PROCEDURE ^ GetLabel(CONST name: ARRAY OF CHAR): Label; 
 		PROCEDURE ^ Assemble(scan: PCS.Scanner; scope: PCT.Scope; exported, inlined, inlineAssembly: BOOLEAN); 
-		PROCEDURE ^ EmitPrefix*(prefix: LONGINT); 
-		PROCEDURE ^ Emit*(mnem: LONGINT; op1, op2, op3: Operand); 
-		PROCEDURE ^ EmitInstr(mnem: LONGINT; operands: ARRAY OF Operand; lastPass: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ EmitPrefix*(prefix: SIGNED32); 
+		PROCEDURE ^ Emit*(mnem: SIGNED32; op1, op2, op3: Operand); 
+		PROCEDURE ^ EmitInstr(mnem: SIGNED32; operands: ARRAY OF Operand; lastPass: BOOLEAN): BOOLEAN; 
 	END Assembly; 
 
-	PROCEDURE ^ AssembleText(text: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
+	PROCEDURE ^ AssembleText(text: Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; CONST pc, opt: ARRAY OF CHAR; log: Streams.Writer; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ AssembleFile*(CONST fileName: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; labels, listing: Streams.Writer); 
 	PROCEDURE ^ Assemble*(context: Commands.Context); 
 	PROCEDURE ^ InlineAssemble(scanner: PCS.Scanner; scope: PCT.Scope; exported, inlined: BOOLEAN): PCM.Attribute; 
 	PROCEDURE ^ WriteBinary(CONST filename: ARRAY OF CHAR; assembly: Assembly; diagnostics: Diagnostics.Diagnostics; VAR error: BOOLEAN); 
 	PROCEDURE ^ ReplaceSuffix(VAR destFile: ARRAY OF CHAR; CONST suffix: ARRAY OF CHAR); 
-	PROCEDURE ^ Ord(ch: CHAR): INTEGER; 
-	PROCEDURE ^ HexOrd(ch: CHAR): INTEGER; 
-	PROCEDURE ^ ValueInByteRange(value: HUGEINT): BOOLEAN; 
-	PROCEDURE ^ ValueInWordRange(value: HUGEINT): BOOLEAN; 
-	PROCEDURE ^ NewReg(type, index: LONGINT): Reg; 
-	PROCEDURE ^ NewReg8*(index: LONGINT): Reg8; 
-	PROCEDURE ^ NewReg16*(index: LONGINT): Reg16; 
-	PROCEDURE ^ NewReg32*(index: LONGINT): Reg32; 
-	PROCEDURE ^ NewReg64*(index: LONGINT): Reg64; 
-	PROCEDURE ^ NewRegCR*(index: LONGINT): RegCR; 
-	PROCEDURE ^ NewRegDR*(index: LONGINT): RegDR; 
-	PROCEDURE ^ NewSegReg*(index: LONGINT): SegReg; 
-	PROCEDURE ^ NewFPReg*(index: LONGINT): FPReg; 
-	PROCEDURE ^ NewMMXReg*(index: LONGINT): MMXReg; 
-	PROCEDURE ^ NewXMMReg*(index: LONGINT): XMMReg; 
-	PROCEDURE ^ NewMem(size: Size; reg: Reg; displacement: LONGINT): Mem; 
-	PROCEDURE ^ NewMem8*(reg: Reg; displacement: LONGINT): Mem; 
-	PROCEDURE ^ NewMem16*(reg: Reg; displacement: LONGINT): Mem; 
-	PROCEDURE ^ NewMem32*(reg: Reg; displacement: LONGINT): Mem; 
-	PROCEDURE ^ NewMem64*(reg: Reg; displacement: LONGINT): Mem; 
-	PROCEDURE ^ NewMem128*(reg: Reg; displacement: LONGINT): Mem; 
-	PROCEDURE ^ NewImm*(size: LONGINT; val: HUGEINT): Imm; 
-	PROCEDURE ^ NewImm8*(val: HUGEINT): Imm; 
-	PROCEDURE ^ NewImm16*(val: HUGEINT): Imm; 
-	PROCEDURE ^ NewImm32*(val: HUGEINT): Imm; 
-	PROCEDURE ^ NewImm64*(val: HUGEINT): Imm; 
-	PROCEDURE ^ NewOffset*(size: LONGINT; val: HUGEINT): Offset; 
-	PROCEDURE ^ NewOffset8*(val: HUGEINT): Offset; 
-	PROCEDURE ^ NewOffset16*(val: HUGEINT): Offset; 
-	PROCEDURE ^ NewOffset32*(val: HUGEINT): Offset; 
-	PROCEDURE ^ NewOffset64*(val: HUGEINT): Offset; 
-	PROCEDURE ^ NewPntr1616*(s, o: LONGINT): Pntr1616; 
-	PROCEDURE ^ NewPntr1632*(s, o: LONGINT): Pntr1632; 
+	PROCEDURE ^ Ord(ch: CHAR): SIGNED16; 
+	PROCEDURE ^ HexOrd(ch: CHAR): SIGNED16; 
+	PROCEDURE ^ ValueInByteRange(value: SIGNED64): BOOLEAN; 
+	PROCEDURE ^ ValueInWordRange(value: SIGNED64): BOOLEAN; 
+	PROCEDURE ^ NewReg(type, index: SIGNED32): Reg; 
+	PROCEDURE ^ NewReg8*(index: SIGNED32): Reg8; 
+	PROCEDURE ^ NewReg16*(index: SIGNED32): Reg16; 
+	PROCEDURE ^ NewReg32*(index: SIGNED32): Reg32; 
+	PROCEDURE ^ NewReg64*(index: SIGNED32): Reg64; 
+	PROCEDURE ^ NewRegCR*(index: SIGNED32): RegCR; 
+	PROCEDURE ^ NewRegDR*(index: SIGNED32): RegDR; 
+	PROCEDURE ^ NewSegReg*(index: SIGNED32): SegReg; 
+	PROCEDURE ^ NewFPReg*(index: SIGNED32): FPReg; 
+	PROCEDURE ^ NewMMXReg*(index: SIGNED32): MMXReg; 
+	PROCEDURE ^ NewXMMReg*(index: SIGNED32): XMMReg; 
+	PROCEDURE ^ NewMem(size: Size; reg: Reg; displacement: SIGNED32): Mem; 
+	PROCEDURE ^ NewMem8*(reg: Reg; displacement: SIGNED32): Mem; 
+	PROCEDURE ^ NewMem16*(reg: Reg; displacement: SIGNED32): Mem; 
+	PROCEDURE ^ NewMem32*(reg: Reg; displacement: SIGNED32): Mem; 
+	PROCEDURE ^ NewMem64*(reg: Reg; displacement: SIGNED32): Mem; 
+	PROCEDURE ^ NewMem128*(reg: Reg; displacement: SIGNED32): Mem; 
+	PROCEDURE ^ NewImm*(size: SIGNED32; val: SIGNED64): Imm; 
+	PROCEDURE ^ NewImm8*(val: SIGNED64): Imm; 
+	PROCEDURE ^ NewImm16*(val: SIGNED64): Imm; 
+	PROCEDURE ^ NewImm32*(val: SIGNED64): Imm; 
+	PROCEDURE ^ NewImm64*(val: SIGNED64): Imm; 
+	PROCEDURE ^ NewOffset*(size: SIGNED32; val: SIGNED64): Offset; 
+	PROCEDURE ^ NewOffset8*(val: SIGNED64): Offset; 
+	PROCEDURE ^ NewOffset16*(val: SIGNED64): Offset; 
+	PROCEDURE ^ NewOffset32*(val: SIGNED64): Offset; 
+	PROCEDURE ^ NewOffset64*(val: SIGNED64): Offset; 
+	PROCEDURE ^ NewPntr1616*(s, o: SIGNED32): Pntr1616; 
+	PROCEDURE ^ NewPntr1632*(s, o: SIGNED32): Pntr1632; 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ Cleanup; 
 BEGIN

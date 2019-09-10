@@ -3,7 +3,7 @@ MODULE vyStringVec IN Oberon;
 CONST 
 	idversion* = \"vyStringVec 0.0d0"\; 
 TYPE 
-	index* = LONGINT; 
+	index* = SIGNED32; 
 
 	nameptr* = vyName.tName; 
 
@@ -42,7 +42,7 @@ TYPE
 	PROCEDURE ^ GC*(vec: vyBase.tVector); 
 	PROCEDURE ^ Allocate*(vec: vyBase.tVector; size: index); 
 	PROCEDURE ^ SetLen*(vec: vyBase.tVector; size: index); 
-	PROCEDURE ^ Len*(vec: vyBase.tVector): LONGINT; 
+	PROCEDURE ^ Len*(vec: vyBase.tVector): SIGNED32; 
 	PROCEDURE ^ Store0(VAR R: Files.Rider; o: tVector); 
 	PROCEDURE ^ Load0(VAR R: Files.Rider; o: tVector); 
 	PROCEDURE ^ HandleAttributes(o: tVector; VAR M: Objects.AttrMsg); 
@@ -58,7 +58,7 @@ TYPE
 	PROCEDURE ^ GetIndexed*(v: vyBase.tVector; indexvec: vyBase.tVector; pos: index): nameptr; 
 	PROCEDURE ^ SetIndexed*(xval: nameptr; v: vyBase.tVector; indexvec: vyBase.tVector; pos: index); 
 	PROCEDURE ^ Fill*(v: vyBase.tVector; val: nameptr; offs, count: index); 
-	PROCEDURE ^ NewFilledNamed*(count: LONGINT; val: nameptr; name: ARRAY OF CHAR): tVector; 
+	PROCEDURE ^ NewFilledNamed*(count: SIGNED32; val: nameptr; name: ARRAY OF CHAR): tVector; 
 	PROCEDURE ^ EvaluateCaseWise*(new: vyBase.tData; regressor: vyBase.tData; Function: Op1Function); 
 BEGIN
 END vyStringVec.

@@ -16,10 +16,10 @@ TYPE
 
 	PROCEDURE ^ OpenScanner(VAR S: Texts.Scanner); 
 	PROCEDURE ^ GetString(VAR S: Texts.Scanner; VAR p: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ GetInteger(VAR S: Texts.Scanner; VAR v: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetInteger(VAR S: Texts.Scanner; VAR v: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ GetOption(VAR S: Texts.Scanner; VAR optionChar: CHAR): BOOLEAN; 
 	PROCEDURE ^ Split(p: ARRAY OF CHAR; VAR path: Path): BOOLEAN; 
-	PROCEDURE ^ GetErrorMsg(res: WORD; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ GetErrorMsg(res: INTEGER; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ SetRootDirectory*; 
 	PROCEDURE ^ CreateDirectory*; 
 	PROCEDURE ^ RemoveDirectory*; 

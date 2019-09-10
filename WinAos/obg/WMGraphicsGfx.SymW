@@ -5,23 +5,23 @@ TYPE
 	Canvas* = OBJECT (WMGraphics.BufferCanvas)
 	VAR 
 		gfxContext-: GfxBuffer.Context; 
-		fillColor: LONGINT; 
+		fillColor: SIGNED32; 
 		gfxStrokeColor: Gfx.Color; 
 		gfxFillColor: Gfx.Color; 
-		gfxLineWidth: REAL; 
-		dashLength: REAL; 
+		gfxLineWidth: FLOAT32; 
+		dashLength: FLOAT32; 
 
 		PROCEDURE ^  & New*(img: Raster.Image); 
 		PROCEDURE ^ SetupDrawing; 
-		PROCEDURE ^ SetLineWidth*(w: REAL); 
+		PROCEDURE ^ SetLineWidth*(w: FLOAT32); 
 		PROCEDURE ^ SetColor*(color: WMGraphics.Color); 
-		PROCEDURE ^ SetDashLength*(dl: REAL); 
-		PROCEDURE ^ SetFillColor*(fillColor: LONGINT); 
+		PROCEDURE ^ SetDashLength*(dl: FLOAT32); 
+		PROCEDURE ^ SetFillColor*(fillColor: SIGNED32); 
 		PROCEDURE ^ ColorToGfxColor(color: WMGraphics.Color): Gfx.Color; 
 		PROCEDURE ^ GfxColorToColor(gfxColor: Gfx.Color): WMGraphics.Color; 
 		PROCEDURE ^ DrawString*(x, y: SIZE; CONST text: ARRAY OF CHAR); 
-		PROCEDURE ^ Line*(x0, y0, x1, y1: SIZE; lineColor: WMGraphics.Color; mode: WORD); 
-		PROCEDURE ^ Circle(x, y, r: LONGINT); 
+		PROCEDURE ^ Line*(x0, y0, x1, y1: SIZE; lineColor: WMGraphics.Color; mode: INTEGER); 
+		PROCEDURE ^ Circle(x, y, r: SIGNED32); 
 	END Canvas; 
 
 	PROCEDURE ^ GenCanvas*(img: Raster.Image): WMGraphics.BufferCanvas; 

@@ -20,8 +20,8 @@ TYPE
 	END; 
 
 	FreeMsg = RECORD (Display.FrameMsg)
-		tempCnt: INTEGER; 
-		columnCnt: INTEGER; 
+		tempCnt: SIGNED16; 
+		columnCnt: SIGNED16; 
 	END; 
 
 	FitMsg = RECORD (Display.FrameMsg)
@@ -43,8 +43,8 @@ TYPE
 	Column = POINTER TO ColumnDesc; 
 
 	ColumnDesc = RECORD (Cards.StackDesc)
-		topY: INTEGER; 
-		nrCards: INTEGER; 
+		topY: SIGNED16; 
+		nrCards: SIGNED16; 
 		sel: BOOLEAN; 
 	END; 
 
@@ -52,22 +52,22 @@ TYPE
 
 	PanelDesc = RECORD (Panels.PanelDesc)
 		stack: Cards.Stack; 
-		count: INTEGER; 
+		count: SIGNED16; 
 		card: Cards.CardDesc; 
 	END; 
 VAR 
 	tempMethods: Cards.Methods; 
 	depotMethods: Cards.Methods; 
 	columnMethods: Cards.Methods; 
-	rowSize: ARRAY 5 OF ARRAY 5 OF INTEGER; 
+	rowSize: ARRAY 5 OF ARRAY 5 OF SIGNED16; 
 
 	PROCEDURE ^ StartGame(F: Display.Frame); 
 	PROCEDURE ^ WaitMouseRelease(VAR M: Oberon.InputMsg); 
-	PROCEDURE ^ GetRowSize(col, temp: INTEGER): INTEGER; 
+	PROCEDURE ^ GetRowSize(col, temp: SIGNED16): SIGNED16; 
 	PROCEDURE ^ TempAttr(T: Temp; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ CopyTemp(VAR M: Objects.CopyMsg; from, to: Temp); 
 	PROCEDURE ^ TempMoveCard(self, to: Cards.Stack; card: Cards.Card; undo: BOOLEAN); 
-	PROCEDURE ^ DrawTemp(T: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DrawTemp(T: Cards.Stack; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ TrackTemp(T: Cards.Stack; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ TempHandler(T: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewTemp*; 
@@ -79,7 +79,7 @@ VAR
 	PROCEDURE ^ ColumnAttr(C: Column; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ CopyColumn(VAR M: Objects.CopyMsg; from, to: Column); 
 	PROCEDURE ^ ColumnMoveCard(self, to: Cards.Stack; card: Cards.Card; undo: BOOLEAN); 
-	PROCEDURE ^ DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ TrackColumn(C: Cards.Stack; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ ColumnHandler*(C: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewColumn*; 

@@ -49,7 +49,7 @@ TYPE
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 

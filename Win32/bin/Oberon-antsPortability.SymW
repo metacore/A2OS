@@ -7,7 +7,7 @@ TYPE
 	dialog* = POINTER TO RECORD (Objects.ObjDesc)
 		context*: ANY; 
 		cmd*: ARRAY 64 OF CHAR; 
-		time: LONGINT; 
+		time: SIGNED32; 
 		filter: ARRAY 256 OF CHAR; 
 	END; 
 
@@ -21,14 +21,14 @@ TYPE
 
 	Type* = vyPortability.Type; 
 
-	FileEnum* = PROCEDURE (path, name: ARRAY OF CHAR; time, date, size: LONGINT; attrs: SET); 
+	FileEnum* = PROCEDURE (path, name: ARRAY OF CHAR; time, date, size: SIGNED32; attrs: SET); 
 
-	Hugeint* = HUGEINT; 
+	Hugeint* = SIGNED64; 
 VAR 
-	dialogtime: LONGINT; 
+	dialogtime: SIGNED32; 
 	thed: dialog; 
 	PathChar*: CHAR; 
-	ONE*: HUGEINT; 
+	ONE*: SIGNED64; 
 
 	PROCEDURE ^ SetMousePointDisplay*; 
 	PROCEDURE ^ GetCurrentDisplay*(): display; 
@@ -36,27 +36,27 @@ VAR
 	PROCEDURE ^ Desktop*(): display; 
 	PROCEDURE ^ EmptyFilter*(d: dialog); 
 	PROCEDURE ^ AddFilter*(d: dialog; filtername, filter: ARRAY OF CHAR); 
-	PROCEDURE ^ FilterName(d: dialog; VAR pos: LONGINT; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ FilterName(d: dialog; VAR pos: SIGNED32; VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ InitDialog*; 
 	PROCEDURE ^ ExecuteDialog*; 
 	PROCEDURE ^ ShowDialog*(d: dialog); 
 	PROCEDURE ^ FinishDialog*; 
 	PROCEDURE ^ TypesThis*(m: Modules.Module; name: ARRAY OF CHAR): Type; 
 	PROCEDURE ^ TypesTypeOf*(p: ANY): Type; 
-	PROCEDURE ^ TypesLevelOf*(t: Type): INTEGER; 
-	PROCEDURE ^ TypesBaseOf*(t: Type; level: INTEGER): Type; 
+	PROCEDURE ^ TypesLevelOf*(t: Type): SIGNED16; 
+	PROCEDURE ^ TypesBaseOf*(t: Type; level: SIGNED16): Type; 
 	PROCEDURE ^ GetWorkingDirectory*(VAR path: ARRAY OF CHAR); 
 	PROCEDURE ^ ChangeDirectory*(path: ARRAY OF CHAR; VAR done: BOOLEAN); 
 	PROCEDURE ^ EnumerateFiles*(indir, name: ARRAY OF CHAR; detailed: BOOLEAN; enum: FileEnum); 
-	PROCEDURE ^ HIToLR*(h: HUGEINT): LONGREAL; 
-	PROCEDURE ^ LRToHI*(l: LONGREAL): HUGEINT; 
-	PROCEDURE ^ LIToHI*(l: LONGINT): HUGEINT; 
-	PROCEDURE ^ Modulus*(x, y: HUGEINT): HUGEINT; 
-	PROCEDURE ^ Multiply*(x, y: HUGEINT): HUGEINT; 
-	PROCEDURE ^ Add*(x, y: HUGEINT): HUGEINT; 
-	PROCEDURE ^ Equal*(x, y: HUGEINT): BOOLEAN; 
-	PROCEDURE ^ IdentifyCommand*(m: Modules.Module; pc: LONGINT; VAR pname: ARRAY OF CHAR); 
-	PROCEDURE ^ IdentifyCaller*(VAR m: Modules.Module; VAR pc: LONGINT); 
+	PROCEDURE ^ HIToLR*(h: SIGNED64): FLOAT64; 
+	PROCEDURE ^ LRToHI*(l: FLOAT64): SIGNED64; 
+	PROCEDURE ^ LIToHI*(l: SIGNED32): SIGNED64; 
+	PROCEDURE ^ Modulus*(x, y: SIGNED64): SIGNED64; 
+	PROCEDURE ^ Multiply*(x, y: SIGNED64): SIGNED64; 
+	PROCEDURE ^ Add*(x, y: SIGNED64): SIGNED64; 
+	PROCEDURE ^ Equal*(x, y: SIGNED64): BOOLEAN; 
+	PROCEDURE ^ IdentifyCommand*(m: Modules.Module; pc: SIGNED32; VAR pname: ARRAY OF CHAR); 
+	PROCEDURE ^ IdentifyCaller*(VAR m: Modules.Module; VAR pc: SIGNED32); 
 	PROCEDURE ^ FileDirSameName*(VAR a, b: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ FileDirRelFileName*(fileName: ARRAY OF CHAR; VAR relFileName: ARRAY OF CHAR); 
 BEGIN

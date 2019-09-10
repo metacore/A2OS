@@ -24,7 +24,7 @@ TYPE
 
 	tEntryDesc = RECORD (vyLinks.LinkDesc)
 		name, val: ARRAY 256 OF CHAR; 
-		X, Y, W, H: INTEGER; 
+		X, Y, W, H: SIGNED16; 
 		selected: BOOLEAN; 
 		visible: BOOLEAN; 
 		node: tNode; 
@@ -35,10 +35,10 @@ TYPE
 		root: Objects.Object; 
 		name, val: ARRAY 256 OF CHAR; 
 		entriesvisible: BOOLEAN; 
-		entriescount: LONGINT; 
+		entriescount: SIGNED32; 
 		repetition: BOOLEAN; 
-		X, Y, W, H: INTEGER; 
-		x, y: LONGREAL; 
+		X, Y, W, H: SIGNED16; 
+		x, y: FLOAT64; 
 		selected: BOOLEAN; 
 		visible: BOOLEAN; 
 	END; 
@@ -47,11 +47,11 @@ TYPE
 
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
 		node: tNode; 
-		distance: INTEGER; 
+		distance: SIGNED16; 
 		forbidden: ARRAY 128 OF vyName.tNameArray; 
-		forbiddencount: INTEGER; 
+		forbiddencount: SIGNED16; 
 		commands: vyCommandMenus.List; 
-		lastLink: LONGINT; 
+		lastLink: SIGNED32; 
 		lifeUpdate: BOOLEAN; 
 	END; 
 
@@ -60,16 +60,16 @@ TYPE
 	EntryProc = PROCEDURE (e: tEntry); 
 VAR 
 	enumChar: ARRAY 1024 OF vyName.tNameArray; 
-	enumCount: INTEGER; 
+	enumCount: SIGNED16; 
 	ObjList: vyLinks.Link; 
 	LastObj: vyLinks.Link; 
 	tempLayer: tLayer; 
-	Xtemp, Ytemp, Wtemp, Htemp: INTEGER; 
+	Xtemp, Ytemp, Wtemp, Htemp: SIGNED16; 
 	tempNode: tNode; 
 	nousersandsources: BOOLEAN; 
 	GVList: ViewList; 
 	gadgets: ViewList; 
-	maxdepth: INTEGER; 
+	maxdepth: SIGNED16; 
 
 	PROCEDURE ^ StoreEntry(VAR R: Files.Rider; lib: Objects.Library; entry: vyLinks.Link); 
 	PROCEDURE ^ LoadEntry(VAR R: Files.Rider; lib: Objects.Library; VAR entry: vyLinks.Link); 
@@ -80,15 +80,15 @@ VAR
 	PROCEDURE ^ InList(obj: Objects.Object): BOOLEAN; 
 	PROCEDURE ^ PutInList(obj: Objects.Object); 
 	PROCEDURE ^ Equal(CONST s1, s2: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ Min(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ Min(a, b: SIGNED16): SIGNED16; 
 	PROCEDURE ^ MyEnum(CONST name: ARRAY OF CHAR); 
 	PROCEDURE ^ Enqueue(VAR start: vyLinks.Link; link: vyLinks.Link); 
-	PROCEDURE ^ Entries(node: tNode; CONST rname, rval: ARRAY OF CHAR; depth: LONGINT); 
+	PROCEDURE ^ Entries(node: tNode; CONST rname, rval: ARRAY OF CHAR; depth: SIGNED32); 
 	PROCEDURE ^ ListFromDummy(layer: tLayer); 
-	PROCEDURE ^ BoxedText(a1, a2: ARRAY OF CHAR; x, y: LONGREAL; VAR X, Y, W, H: INTEGER; n: tNode; selected: BOOLEAN); 
-	PROCEDURE ^ RecallNode(n: tNode; VAR x, y: LONGREAL; oldx, oldy: LONGREAL; drx, dry: LONGREAL; SY1, SY2: INTEGER); 
-	PROCEDURE ^ xyinNode(n: tNode; VAR x, y: INTEGER): tNode; 
-	PROCEDURE ^ xyinEntry(n: tNode; VAR x, y: INTEGER; VAR mynode: tNode): tEntry; 
+	PROCEDURE ^ BoxedText(a1, a2: ARRAY OF CHAR; x, y: FLOAT64; VAR X, Y, W, H: SIGNED16; n: tNode; selected: BOOLEAN); 
+	PROCEDURE ^ RecallNode(n: tNode; VAR x, y: FLOAT64; oldx, oldy: FLOAT64; drx, dry: FLOAT64; SY1, SY2: SIGNED16); 
+	PROCEDURE ^ xyinNode(n: tNode; VAR x, y: SIGNED16): tNode; 
+	PROCEDURE ^ xyinEntry(n: tNode; VAR x, y: SIGNED16; VAR mynode: tNode): tEntry; 
 	PROCEDURE ^ SelectNode(n: tNode); 
 	PROCEDURE ^ SelectEntry(e: tEntry); 
 	PROCEDURE ^ DeSelectNode(n: tNode); 
@@ -104,7 +104,7 @@ VAR
 	PROCEDURE ^ DoHideSelection(L: tLayer); 
 	PROCEDURE ^ SelectInRectNode(n: tNode); 
 	PROCEDURE ^ SelectInRectEntry(n: tEntry); 
-	PROCEDURE ^ DoSelect(L: tLayer; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DoSelect(L: tLayer; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ SubscribeNameNode(n: tNode); 
 	PROCEDURE ^ SubscribeNameEntry(n: tEntry); 
 	PROCEDURE ^ HideIfForbiddenNode(n: tNode); 
@@ -113,8 +113,8 @@ VAR
 	PROCEDURE ^ SelectIfForbiddenEntry(n: tEntry); 
 	PROCEDURE ^ HideNamed; 
 	PROCEDURE ^ Select(L: tLayer; VAR event: vyEvents.EventMsg); 
-	PROCEDURE ^ InNode(L: tLayer; x, y: INTEGER): tNode; 
-	PROCEDURE ^ InEntry(L: tLayer; x, y: INTEGER; VAR mynode: tNode): tEntry; 
+	PROCEDURE ^ InNode(L: tLayer; x, y: SIGNED16): tNode; 
+	PROCEDURE ^ InEntry(L: tLayer; x, y: SIGNED16; VAR mynode: tNode): tEntry; 
 	PROCEDURE ^ EntryUpdate(Entry: tEntry); 
 	PROCEDURE ^ SetTempNode(n: tNode); 
 	PROCEDURE ^ SubscribeMe(n: tNode); 

@@ -28,22 +28,22 @@ TYPE
 
 	PartitionTable* = Disks.PartitionTable; 
 
-	TransferProc* = PROCEDURE (dev: Device; op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
+	TransferProc* = PROCEDURE (dev: Device; op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIGNED32; VAR res: INTEGER); 
 
-	GetSizeProc* = PROCEDURE (dev: Device; VAR size, res: LONGINT); 
+	GetSizeProc* = PROCEDURE (dev: Device; VAR size, res: SIGNED32); 
 
-	HandleProc* = PROCEDURE (dev: Device; VAR msg: Message; VAR res: WORD); 
+	HandleProc* = PROCEDURE (dev: Device; VAR msg: Message; VAR res: INTEGER); 
 
 	DeviceDesc* = RECORD 
 		name*: Name; 
 		desc*: Description; 
-		blockSize*: LONGINT; 
+		blockSize*: SIGNED32; 
 		flags*: SET; 
 		transfer*: TransferProc; 
 		getSize*: GetSizeProc; 
 		handle*: HandleProc; 
 		table*: PartitionTable; 
-		openCount*: LONGINT; 
+		openCount*: SIGNED32; 
 		real: Disks.Device; 
 	END; 
 
@@ -62,12 +62,12 @@ TYPE
 	DeviceTable* = POINTER TO ARRAY OF Device; 
 
 	PROCEDURE ^ Update(dev: Device); 
-	PROCEDURE ^ Transfer(dev: Device; op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD); 
-	PROCEDURE ^ GetSize(dev: Device; VAR size, res: LONGINT); 
-	PROCEDURE ^ Handle(dev: Device; VAR msg: Message; VAR res: WORD); 
+	PROCEDURE ^ Transfer(dev: Device; op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ GetSize(dev: Device; VAR size, res: SIGNED32); 
+	PROCEDURE ^ Handle(dev: Device; VAR msg: Message; VAR res: INTEGER); 
 	PROCEDURE ^ GetRegistered*(VAR table: DeviceTable); 
-	PROCEDURE ^ UpdatePartitionTable*(dev: Device; VAR res: WORD); 
-	PROCEDURE ^ Open*(dev: Device; VAR res: WORD); 
-	PROCEDURE ^ Close*(dev: Device; VAR res: WORD); 
+	PROCEDURE ^ UpdatePartitionTable*(dev: Device; VAR res: INTEGER); 
+	PROCEDURE ^ Open*(dev: Device; VAR res: INTEGER); 
+	PROCEDURE ^ Close*(dev: Device; VAR res: INTEGER); 
 BEGIN
 END Disks.

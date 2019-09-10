@@ -44,10 +44,10 @@ TYPE
 	END NamedLabelList; 
 
 	Result* = RECORD 
-		type*: INTEGER; 
+		type*: SIGNED16; 
 		sizeInBits*: SIZE; 
-		value*: HUGEINT; 
-		valueR*: LONGREAL; 
+		value*: SIGNED64; 
+		valueR*: FLOAT64; 
 		fixup*: BinaryCode.Fixup; 
 	END; 
 
@@ -59,7 +59,7 @@ TYPE
 	NamedResultList* = OBJECT 
 	VAR 
 		first, last: NamedResult; 
-		number: LONGINT; 
+		number: SIGNED32; 
 
 		PROCEDURE ^  & InitNamedResultList; 
 		PROCEDURE ^ Add*(n: NamedResult); 
@@ -73,14 +73,14 @@ TYPE
 		errorPosition-: Position; 
 		token-: Scanner.Token; 
 		scanner: Scanner.AssemblerScanner; 
-		orgOffset: LONGINT; 
+		orgOffset: SIGNED32; 
 		section-: IntermediateCode.Section; 
 		code-: BinaryCode.Section; 
 		labels: NamedLabelList; 
 		results: NamedResultList; 
 		scope: SyntaxTree.Scope; 
 		module: Sections.Module; 
-		pass-: LONGINT; 
+		pass-: SIGNED32; 
 
 		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ SetContext(CONST context: Scanner.Context); 
@@ -111,7 +111,7 @@ TYPE
 		PROCEDURE ^ Expression*(VAR x: Result; critical: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ Data(CONST ident: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ Reserve(CONST ident: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ PutBitsIfLastPass(data: HUGEINT; size: BinaryCode.Bits); 
+		PROCEDURE ^ PutBitsIfLastPass(data: SIGNED64; size: BinaryCode.Bits); 
 		PROCEDURE ^ Instruction*(CONST mnemonic: ARRAY OF CHAR); 
 		PROCEDURE ^ IgnoreNewLines; 
 		PROCEDURE ^ DoAssemble; 

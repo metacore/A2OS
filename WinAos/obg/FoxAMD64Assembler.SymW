@@ -167,21 +167,21 @@ TYPE
 
 	OperandType = InstructionSet.OperandType; 
 
-	Size = SHORTINT; 
+	Size = SIGNED8; 
 
-	Register* = LONGINT; 
+	Register* = SIGNED32; 
 
 	Operand* = RECORD 
 		type-: OperandType; 
 		register-: Register; 
 		sizeInBytes-: Size; 
 		segment-, index-: Register; 
-		scale-, displacement-: LONGINT; 
+		scale-, displacement-: SIGNED32; 
 		symbol-: ObjectFile.Identifier; 
 		symbolOffset-: SIZE; 
-		val-: HUGEINT; 
+		val-: SIGNED64; 
 		pc-: SIZE; 
-		selector-, offset-: LONGINT; 
+		selector-, offset-: SIGNED32; 
 	END; 
 
 	Code* = BinaryCode.Section; 
@@ -191,7 +191,7 @@ TYPE
 		offset: SIZE; 
 		name-: SyntaxTree.IdentifierString; 
 		nextNamedLabel-: NamedLabel; 
-		index-: LONGINT; 
+		index-: SIGNED32; 
 
 		PROCEDURE ^  & InitNamedLabel(offset: SIZE; CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ SetOffset*(ofs: SIZE); 
@@ -200,7 +200,7 @@ TYPE
 	NamedLabelList* = OBJECT 
 	VAR 
 		first-, last-: NamedLabel; 
-		number-: LONGINT; 
+		number-: SIGNED32; 
 
 		PROCEDURE ^  & InitNamedLabelList; 
 		PROCEDURE ^ Add*(n: NamedLabel); 
@@ -219,26 +219,26 @@ TYPE
 
 		PROCEDURE ^  & InitEmitter*(diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ SetCode*(code: BinaryCode.Section); 
-		PROCEDURE ^ SetBits*(numberBits: LONGINT): BOOLEAN; 
+		PROCEDURE ^ SetBits*(numberBits: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ Error(CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ ErrorSS(CONST msg1, msg2: ARRAY OF CHAR); 
-		PROCEDURE ^ ErrorSI(CONST msg1: ARRAY OF CHAR; mnemonic: LONGINT; CONST operands: ARRAY OF Operand); 
-		PROCEDURE ^ AddFixup(mode: SHORTINT; size: SHORTINT; pc: SIZE; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: LONGINT); 
-		PROCEDURE ^ EmitInstruction(mnem: LONGINT; VAR operands: ARRAY OF Operand; lastPass: BOOLEAN): BOOLEAN; 
-		PROCEDURE ^ EmitPrefix*(prefix: LONGINT); 
-		PROCEDURE ^ Emit*(mnem: LONGINT; VAR op1, op2, op3: Operand); 
-		PROCEDURE ^ EmitAt*(pc: SIZE; mnem: LONGINT; VAR op1, op2, op3: Operand); 
+		PROCEDURE ^ ErrorSI(CONST msg1: ARRAY OF CHAR; mnemonic: SIGNED32; CONST operands: ARRAY OF Operand); 
+		PROCEDURE ^ AddFixup(mode: SIGNED8; size: SIGNED8; pc: SIZE; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: SIGNED32); 
+		PROCEDURE ^ EmitInstruction(mnem: SIGNED32; VAR operands: ARRAY OF Operand; lastPass: BOOLEAN): BOOLEAN; 
+		PROCEDURE ^ EmitPrefix*(prefix: SIGNED32); 
+		PROCEDURE ^ Emit*(mnem: SIGNED32; VAR op1, op2, op3: Operand); 
+		PROCEDURE ^ EmitAt*(pc: SIZE; mnem: SIGNED32; VAR op1, op2, op3: Operand); 
 		PROCEDURE ^ StartEmitAt*(VAR pc: SIZE): SIZE; 
 		PROCEDURE ^ EndEmitAt*(pc: SIZE); 
-		PROCEDURE ^ Emit0*(mnem: LONGINT); 
-		PROCEDURE ^ Emit1*(mnem: LONGINT; VAR op1: Operand); 
-		PROCEDURE ^ Emit2*(mnem: LONGINT; VAR op1, op2: Operand); 
-		PROCEDURE ^ Emit3*(mnem: LONGINT; VAR op1, op2, op3: Operand); 
+		PROCEDURE ^ Emit0*(mnem: SIGNED32); 
+		PROCEDURE ^ Emit1*(mnem: SIGNED32; VAR op1: Operand); 
+		PROCEDURE ^ Emit2*(mnem: SIGNED32; VAR op1, op2: Operand); 
+		PROCEDURE ^ Emit3*(mnem: SIGNED32; VAR op1, op2, op3: Operand); 
 	END Emitter; 
 
 	RegisterMap* = OBJECT 
 
-		PROCEDURE ^ Find*(CONST name: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ Find*(CONST name: ARRAY OF CHAR): SIGNED32; 
 	END RegisterMap; 
 
 	Assembly* = OBJECT 
@@ -263,54 +263,54 @@ TYPE
 VAR 
 	kernelWriter: Streams.Writer; 
 
-	PROCEDURE ^ Ord(ch: CHAR): INTEGER; 
-	PROCEDURE ^ HexOrd(ch: CHAR): INTEGER; 
+	PROCEDURE ^ Ord(ch: CHAR): SIGNED16; 
+	PROCEDURE ^ HexOrd(ch: CHAR): SIGNED16; 
 	PROCEDURE ^ IsRegisterOperand*(CONST op: Operand): BOOLEAN; 
 	PROCEDURE ^ IsMemoryOperand*(CONST op: Operand): BOOLEAN; 
 	PROCEDURE ^ IsImmediateOperand*(CONST op: Operand): BOOLEAN; 
-	PROCEDURE ^ DumpType*(w: Streams.Writer; type: LONGINT); 
+	PROCEDURE ^ DumpType*(w: Streams.Writer; type: SIGNED32); 
 	PROCEDURE ^ DumpOperand*(w: Streams.Writer; CONST operand: Operand); 
-	PROCEDURE ^ DumpInstruction(w: Streams.Writer; mnemonic: LONGINT; CONST operands: ARRAY OF Operand); 
+	PROCEDURE ^ DumpInstruction(w: Streams.Writer; mnemonic: SIGNED32; CONST operands: ARRAY OF Operand); 
 	PROCEDURE ^ Matches(CONST operand: Operand; type: OperandType): BOOLEAN; 
-	PROCEDURE ^ ValueInByteRange(value: HUGEINT): BOOLEAN; 
-	PROCEDURE ^ ValueInWordRange(value: HUGEINT): BOOLEAN; 
+	PROCEDURE ^ ValueInByteRange(value: SIGNED64): BOOLEAN; 
+	PROCEDURE ^ ValueInWordRange(value: SIGNED64): BOOLEAN; 
 	PROCEDURE ^ InitOperand*(VAR operand: Operand); 
 	PROCEDURE ^ InitRegister*(VAR operand: Operand; register: Register); 
 	PROCEDURE ^ NewRegister*(register: Register): Operand; 
-	PROCEDURE ^ InitMem*(VAR operand: Operand; size: Size; reg: Register; displacement: LONGINT); 
-	PROCEDURE ^ SetIndexScale*(VAR operand: Operand; index: Register; scale: LONGINT); 
-	PROCEDURE ^ NewMem*(size: Size; reg: Register; displacement: LONGINT): Operand; 
-	PROCEDURE ^ InitMem8*(VAR operand: Operand; reg: Register; displacement: LONGINT); 
-	PROCEDURE ^ NewMem8*(reg: Register; displacement: LONGINT): Operand; 
-	PROCEDURE ^ InitMem16*(VAR operand: Operand; reg: Register; displacement: LONGINT); 
-	PROCEDURE ^ NewMem16*(reg: Register; displacement: LONGINT): Operand; 
-	PROCEDURE ^ InitMem32*(VAR operand: Operand; reg: Register; displacement: LONGINT); 
-	PROCEDURE ^ NewMem32*(reg: Register; displacement: LONGINT): Operand; 
-	PROCEDURE ^ InitMem64*(VAR operand: Operand; reg: Register; displacement: LONGINT); 
-	PROCEDURE ^ NewMem64*(reg: Register; displacement: LONGINT): Operand; 
-	PROCEDURE ^ InitMem128*(VAR operand: Operand; reg: Register; displacement: LONGINT); 
-	PROCEDURE ^ NewMem128*(reg: Register; displacement: LONGINT): Operand; 
+	PROCEDURE ^ InitMem*(VAR operand: Operand; size: Size; reg: Register; displacement: SIGNED32); 
+	PROCEDURE ^ SetIndexScale*(VAR operand: Operand; index: Register; scale: SIGNED32); 
+	PROCEDURE ^ NewMem*(size: Size; reg: Register; displacement: SIGNED32): Operand; 
+	PROCEDURE ^ InitMem8*(VAR operand: Operand; reg: Register; displacement: SIGNED32); 
+	PROCEDURE ^ NewMem8*(reg: Register; displacement: SIGNED32): Operand; 
+	PROCEDURE ^ InitMem16*(VAR operand: Operand; reg: Register; displacement: SIGNED32); 
+	PROCEDURE ^ NewMem16*(reg: Register; displacement: SIGNED32): Operand; 
+	PROCEDURE ^ InitMem32*(VAR operand: Operand; reg: Register; displacement: SIGNED32); 
+	PROCEDURE ^ NewMem32*(reg: Register; displacement: SIGNED32): Operand; 
+	PROCEDURE ^ InitMem64*(VAR operand: Operand; reg: Register; displacement: SIGNED32); 
+	PROCEDURE ^ NewMem64*(reg: Register; displacement: SIGNED32): Operand; 
+	PROCEDURE ^ InitMem128*(VAR operand: Operand; reg: Register; displacement: SIGNED32); 
+	PROCEDURE ^ NewMem128*(reg: Register; displacement: SIGNED32): Operand; 
 	PROCEDURE ^ SetSymbol*(VAR operand: Operand; symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset: SIZE; displacement: SIZE); 
-	PROCEDURE ^ InitImm*(VAR operand: Operand; size: SHORTINT; val: HUGEINT); 
-	PROCEDURE ^ InitImm8*(VAR operand: Operand; val: HUGEINT); 
-	PROCEDURE ^ NewImm8*(val: HUGEINT): Operand; 
-	PROCEDURE ^ InitImm16*(VAR operand: Operand; val: HUGEINT); 
-	PROCEDURE ^ NewImm16*(val: HUGEINT): Operand; 
-	PROCEDURE ^ InitImm32*(VAR operand: Operand; val: HUGEINT); 
-	PROCEDURE ^ NewImm32*(val: HUGEINT): Operand; 
-	PROCEDURE ^ InitImm64*(VAR operand: Operand; val: HUGEINT); 
-	PROCEDURE ^ NewImm64*(val: HUGEINT): Operand; 
-	PROCEDURE ^ InitOffset*(VAR operand: Operand; size: SHORTINT; val: HUGEINT); 
-	PROCEDURE ^ InitOffset8*(VAR operand: Operand; val: HUGEINT); 
-	PROCEDURE ^ NewOffset8*(val: HUGEINT): Operand; 
-	PROCEDURE ^ InitOffset16*(VAR operand: Operand; val: HUGEINT); 
-	PROCEDURE ^ NewOffset16*(val: HUGEINT): Operand; 
-	PROCEDURE ^ InitOffset32*(VAR operand: Operand; val: HUGEINT); 
-	PROCEDURE ^ NewOffset32*(val: HUGEINT): Operand; 
-	PROCEDURE ^ InitOffset64*(VAR operand: Operand; val: HUGEINT); 
-	PROCEDURE ^ NewOffset64*(val: HUGEINT): Operand; 
-	PROCEDURE ^ InitPntr1616*(VAR operand: Operand; s, o: LONGINT); 
-	PROCEDURE ^ InitPntr1632*(VAR operand: Operand; s, o: LONGINT); 
+	PROCEDURE ^ InitImm*(VAR operand: Operand; size: SIGNED8; val: SIGNED64); 
+	PROCEDURE ^ InitImm8*(VAR operand: Operand; val: SIGNED64); 
+	PROCEDURE ^ NewImm8*(val: SIGNED64): Operand; 
+	PROCEDURE ^ InitImm16*(VAR operand: Operand; val: SIGNED64); 
+	PROCEDURE ^ NewImm16*(val: SIGNED64): Operand; 
+	PROCEDURE ^ InitImm32*(VAR operand: Operand; val: SIGNED64); 
+	PROCEDURE ^ NewImm32*(val: SIGNED64): Operand; 
+	PROCEDURE ^ InitImm64*(VAR operand: Operand; val: SIGNED64); 
+	PROCEDURE ^ NewImm64*(val: SIGNED64): Operand; 
+	PROCEDURE ^ InitOffset*(VAR operand: Operand; size: SIGNED8; val: SIGNED64); 
+	PROCEDURE ^ InitOffset8*(VAR operand: Operand; val: SIGNED64); 
+	PROCEDURE ^ NewOffset8*(val: SIGNED64): Operand; 
+	PROCEDURE ^ InitOffset16*(VAR operand: Operand; val: SIGNED64); 
+	PROCEDURE ^ NewOffset16*(val: SIGNED64): Operand; 
+	PROCEDURE ^ InitOffset32*(VAR operand: Operand; val: SIGNED64); 
+	PROCEDURE ^ NewOffset32*(val: SIGNED64): Operand; 
+	PROCEDURE ^ InitOffset64*(VAR operand: Operand; val: SIGNED64); 
+	PROCEDURE ^ NewOffset64*(val: SIGNED64): Operand; 
+	PROCEDURE ^ InitPntr1616*(VAR operand: Operand; s, o: SIGNED32); 
+	PROCEDURE ^ InitPntr1632*(VAR operand: Operand; s, o: SIGNED32); 
 	PROCEDURE ^ SetSize*(VAR operand: Operand; sizeInBytes: Size); 
 	PROCEDURE ^ SameOperand*(CONST left, right: Operand): BOOLEAN; 
 	PROCEDURE ^ Test*(context: Commands.Context); 

@@ -15,11 +15,11 @@ VAR
 	vector: BOOLEAN; 
 
 	PROCEDURE ^ DefaultDense(dense: vyBase.tVector); 
-	PROCEDURE ^ Integral(d: vyBase.tVector): REAL; 
+	PROCEDURE ^ Integral(d: vyBase.tVector): FLOAT32; 
 	PROCEDURE ^ CleanUp; 
 	PROCEDURE ^ Handler(o: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ Random*(): LONGREAL; 
-	PROCEDURE ^ RandomVector*(v: vyBase.tVector; nrData: LONGINT); 
+	PROCEDURE ^ Random*(): FLOAT64; 
+	PROCEDURE ^ RandomVector*(v: vyBase.tVector; nrData: SIGNED32); 
 	PROCEDURE ^ Recall(denseEditor: vyFctEdit.tLayer); 
 	PROCEDURE ^ EditHandler(o: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ Define*; 

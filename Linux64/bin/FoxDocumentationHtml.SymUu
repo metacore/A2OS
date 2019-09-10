@@ -11,16 +11,16 @@ TYPE
 	VAR 
 		writer: Streams.Writer; 
 		chars: ARRAY MaxLevel OF CHAR; 
-		listLevel: LONGINT; 
-		currentLevel: LONGINT; 
+		listLevel: SIGNED32; 
+		currentLevel: SIGNED32; 
 		printLabels: BOOLEAN; 
 
 		PROCEDURE ^  & InitPrinter*(writer: Streams.Writer); 
 		PROCEDURE ^ PrintLabel(section: Tree.Section); 
 		PROCEDURE ^ Section*(section: Tree.Section); 
 		PROCEDURE ^ SectionList*(sections: Tree.Sections); 
-		PROCEDURE ^ EndItem*(level: LONGINT); 
-		PROCEDURE ^ BeginItem*(level: LONGINT; c: CHAR); 
+		PROCEDURE ^ EndItem*(level: SIGNED32); 
+		PROCEDURE ^ BeginItem*(level: SIGNED32; c: CHAR); 
 		PROCEDURE ^ Paragraph*(paragraph: Tree.Paragraph); 
 		PROCEDURE ^ ParagraphList*(paragraphs: Tree.Paragraphs); 
 		PROCEDURE ^ WriteString(writer: Streams.Writer; string: Strings.String); 

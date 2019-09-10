@@ -2,7 +2,7 @@ MODULE ListDags IN Oberon;
 	IMPORT Files, Objects, Gadgets, Strings, ListRiders;
 CONST 
 	VersionNo = 1; 
-	NoKey = MIN(LONGINT); 
+	NoKey = MIN(SIGNED32); 
 	unique = 0; 
 TYPE 
 	Ref = POINTER TO RefDesc; 
@@ -12,20 +12,20 @@ TYPE
 	RefDesc = RECORD 
 		prev, next: Ref; 
 		node: Node; 
-		key, pos: LONGINT; 
+		key, pos: SIGNED32; 
 	END; 
 
 	NodeDesc = RECORD 
 		dsc: Ref; 
-		stamp, state: LONGINT; 
-		nr: LONGINT; 
+		stamp, state: SIGNED32; 
+		nr: SIGNED32; 
 		s: ARRAY 32 OF CHAR; 
 	END; 
 
 	Dag* = POINTER TO DagDesc; 
 
 	DagDesc* = RECORD (Gadgets.ObjDesc)
-		key: LONGINT; 
+		key: SIGNED32; 
 		tail: Ref; 
 		state0: SET; 
 	END; 
@@ -38,26 +38,26 @@ TYPE
 VAR 
 	method: ListRiders.Method; 
 
-	PROCEDURE ^ GetKey(obj: Dag): LONGINT; 
+	PROCEDURE ^ GetKey(obj: Dag): SIGNED32; 
 	PROCEDURE ^ SetNode(R: Rider; ref: Ref); 
 	PROCEDURE ^ MakeNode(d: ListRiders.Data): Node; 
 	PROCEDURE ^ MakeTail(asc: Node): Ref; 
 	PROCEDURE ^ IsUnique(n: Ref; val: ARRAY OF CHAR; acceptSelf: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ Key(R: ListRiders.Rider): LONGINT; 
-	PROCEDURE ^ Seek(R: ListRiders.Rider; key: LONGINT); 
-	PROCEDURE ^ Pos(R: ListRiders.Rider): LONGINT; 
-	PROCEDURE ^ Set(R: ListRiders.Rider; pos: LONGINT); 
+	PROCEDURE ^ Key(R: ListRiders.Rider): SIGNED32; 
+	PROCEDURE ^ Seek(R: ListRiders.Rider; key: SIGNED32); 
+	PROCEDURE ^ Pos(R: ListRiders.Rider): SIGNED32; 
+	PROCEDURE ^ Set(R: ListRiders.Rider; pos: SIGNED32); 
 	PROCEDURE ^ Write(R: ListRiders.Rider; d: ListRiders.Data); 
 	PROCEDURE ^ WriteLink(R, linkR: ListRiders.Rider); 
 	PROCEDURE ^ DeleteLink(R, linkR: ListRiders.Rider); 
-	PROCEDURE ^ GetStamp(R: ListRiders.Rider): LONGINT; 
-	PROCEDURE ^ SetStamp(R: ListRiders.Rider; stamp: LONGINT); 
-	PROCEDURE ^ State(R: ListRiders.Rider): LONGINT; 
-	PROCEDURE ^ SetState(R: ListRiders.Rider; s: LONGINT); 
+	PROCEDURE ^ GetStamp(R: ListRiders.Rider): SIGNED32; 
+	PROCEDURE ^ SetStamp(R: ListRiders.Rider; stamp: SIGNED32); 
+	PROCEDURE ^ State(R: ListRiders.Rider): SIGNED32; 
+	PROCEDURE ^ SetState(R: ListRiders.Rider; s: SIGNED32); 
 	PROCEDURE ^ Desc(R, old: ListRiders.Rider): ListRiders.Rider; 
 	PROCEDURE ^ ConnectRider(R: Rider; base: Dag); 
 	PROCEDURE ^ Unify(tail: Ref); 
-	PROCEDURE ^ FindNode(nodes: Ref; nr: LONGINT): Node; 
+	PROCEDURE ^ FindNode(nodes: Ref; nr: SIGNED32): Node; 
 	PROCEDURE ^ InsertNode(nodes: Ref; node: Node); 
 	PROCEDURE ^ CopyDag*(VAR M: Objects.CopyMsg; from, to: Dag); 
 	PROCEDURE ^ WriteDag(obj: Dag; VAR M: Objects.FileMsg); 

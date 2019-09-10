@@ -90,9 +90,9 @@ TYPE
 
 	RequestHeader* = RECORD 
 		fadr*: IP.Adr; 
-		fport*: LONGINT; 
-		method*: LONGINT; 
-		maj*, min*: LONGINT; 
+		fport*: SIGNED32; 
+		method*: SIGNED32; 
+		maj*, min*: SIGNED32; 
 		uri*: ARRAY 4096 OF CHAR; 
 		host*: ARRAY 256 OF CHAR; 
 		referer*: ARRAY 256 OF CHAR; 
@@ -103,8 +103,8 @@ TYPE
 	END; 
 
 	ResponseHeader* = RECORD 
-		maj*, min*: LONGINT; 
-		statuscode*: LONGINT; 
+		maj*, min*: SIGNED32; 
+		statuscode*: SIGNED32; 
 		reasonphrase*: ARRAY 256 OF CHAR; 
 		server*: ARRAY 256 OF CHAR; 
 		date*: ARRAY 32 OF CHAR; 
@@ -121,12 +121,12 @@ TYPE
 	VAR 
 		outW: Streams.Writer; 
 		buf: ARRAY BufSize OF CHAR; 
-		bufPos: LONGINT; 
+		bufPos: SIGNED32; 
 		chunked: BOOLEAN; 
 		token: ARRAY TokenSize OF CHAR; 
 
 		PROCEDURE ^  & Init*(VAR inW: Streams.Writer; outW: Streams.Writer; VAR request: RequestHeader; VAR reply: ResponseHeader); 
-		PROCEDURE ^ Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ WriteChunked; 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Close*; 
@@ -135,24 +135,24 @@ TYPE
 	ChunkedInStream* = OBJECT 
 	VAR 
 		inR: Streams.Reader; 
-		remain: LONGINT; 
+		remain: SIGNED32; 
 		eof: BOOLEAN; 
-		chunkSize: LONGINT; 
+		chunkSize: SIGNED32; 
 		first: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(VAR inR, outR: Streams.Reader); 
-		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 	END ChunkedInStream; 
 
 	LimitedOutStream* = OBJECT 
 	VAR 
 		outW: Streams.Writer; 
 		buf: ARRAY BufSize OF CHAR; 
-		bufPos: LONGINT; 
-		remain-: LONGINT; 
+		bufPos: SIGNED32; 
+		remain-: SIGNED32; 
 
-		PROCEDURE ^  & Init*(VAR inW, outW: Streams.Writer; size: LONGINT); 
-		PROCEDURE ^ Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^  & Init*(VAR inW, outW: Streams.Writer; size: SIGNED32); 
+		PROCEDURE ^ Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ Write; 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Padding*(ch: CHAR); 
@@ -164,36 +164,36 @@ TYPE
 		remain-: SIZE; 
 
 		PROCEDURE ^  & Init*(VAR inR, outR: Streams.Reader; size: SIZE); 
-		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 	END LimitedInStream; 
 
 	PROCEDURE ^ EOL(VAR in: Streams.Reader): BOOLEAN; 
 	PROCEDURE ^ GetToken(VAR in: Streams.Reader; VAR token: ARRAY OF CHAR); 
-	PROCEDURE ^ GetInt(VAR i: LONGINT; CONST buf: ARRAY OF CHAR; VAR x: LONGINT); 
-	PROCEDURE ^ Match(CONST buf: ARRAY OF CHAR; with: ARRAY OF CHAR; VAR i: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetInt(VAR i: SIGNED32; CONST buf: ARRAY OF CHAR; VAR x: SIGNED32); 
+	PROCEDURE ^ Match(CONST buf: ARRAY OF CHAR; with: ARRAY OF CHAR; VAR i: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ EqualsI(CONST buf: ARRAY OF CHAR; with: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ HasAdditionalField*(af: AdditionalField; fieldName: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetAdditionalField*(af: AdditionalField; fieldName: ARRAY OF CHAR): AdditionalField; 
 	PROCEDURE ^ GetAdditionalFieldValue*(af: AdditionalField; fieldName: ARRAY OF CHAR; VAR value: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetRequestPropertyValue*(VAR header: RequestHeader; propertyName: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
 	PROCEDURE ^ SetAdditionalFieldValue*(VAR af: AdditionalField; fieldName, value: ARRAY OF CHAR); 
-	PROCEDURE ^ GetVersion(VAR ver: ARRAY OF CHAR; VAR maj, min: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Version*(VAR h: RequestHeader; Maj, Min: LONGINT): BOOLEAN; 
-	PROCEDURE ^ GetMethod*(VAR s: ARRAY OF CHAR; VAR method: LONGINT); 
-	PROCEDURE ^ GetMethodName*(code: LONGINT; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ ParseRequest*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: WORD; log: TFLog.Log); 
-	PROCEDURE ^ ParseRequestHeaderFields*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: WORD); 
-	PROCEDURE ^ ParseReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: WORD; log: TFLog.Log); 
-	PROCEDURE ^ ModifyReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: WORD; log: TFLog.Log); 
+	PROCEDURE ^ GetVersion(VAR ver: ARRAY OF CHAR; VAR maj, min: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Version*(VAR h: RequestHeader; Maj, Min: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ GetMethod*(VAR s: ARRAY OF CHAR; VAR method: SIGNED32); 
+	PROCEDURE ^ GetMethodName*(code: SIGNED32; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ ParseRequest*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: INTEGER; log: TFLog.Log); 
+	PROCEDURE ^ ParseRequestHeaderFields*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: INTEGER); 
+	PROCEDURE ^ ParseReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: INTEGER; log: TFLog.Log); 
+	PROCEDURE ^ ModifyReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: INTEGER; log: TFLog.Log); 
 	PROCEDURE ^ LogRequestHeader*(log: TFLog.Log; VAR header: RequestHeader); 
 	PROCEDURE ^ LogResponseHeader*(log: TFLog.Log; VAR header: ResponseHeader); 
-	PROCEDURE ^ WriteRequestLine*(s: Streams.Writer; maj, min: LONGINT; method: LONGINT; uri, host: ARRAY OF CHAR); 
-	PROCEDURE ^ GetReasonPhrase*(code: LONGINT; VAR phrase: ARRAY OF CHAR); 
+	PROCEDURE ^ WriteRequestLine*(s: Streams.Writer; maj, min: SIGNED32; method: SIGNED32; uri, host: ARRAY OF CHAR); 
+	PROCEDURE ^ GetReasonPhrase*(code: SIGNED32; VAR phrase: ARRAY OF CHAR); 
 	PROCEDURE ^ WriteStatus*(VAR h: ResponseHeader; VAR dst: Streams.Writer); 
 	PROCEDURE ^ WriteHTMLStatus*(VAR h: ResponseHeader; dst: Streams.Writer); 
 	PROCEDURE ^ SendResponseHeader*(VAR h: ResponseHeader; VAR dst: Streams.Writer); 
-	PROCEDURE ^ SendStatusReply*(code: LONGINT; VAR request: RequestHeader; VAR reply: ResponseHeader; VAR out: Streams.Writer); 
+	PROCEDURE ^ SendStatusReply*(code: SIGNED32; VAR request: RequestHeader; VAR reply: ResponseHeader; VAR out: Streams.Writer); 
 	PROCEDURE ^ GetPath*(VAR url, path: ARRAY OF CHAR); 
-	PROCEDURE ^ SplitHTTPAdr*(url: ARRAY OF CHAR; VAR host, path: ARRAY OF CHAR; VAR port: LONGINT): BOOLEAN; 
+	PROCEDURE ^ SplitHTTPAdr*(url: ARRAY OF CHAR; VAR host, path: ARRAY OF CHAR; VAR port: SIGNED32): BOOLEAN; 
 BEGIN
 END WebHTTP.

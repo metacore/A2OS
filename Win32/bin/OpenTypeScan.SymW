@@ -16,7 +16,7 @@ TYPE
 
 	IntersectionDesc = RECORD 
 		xy: F26D6; 
-		up: INTEGER; 
+		up: SIGNED16; 
 		param: Fixed; 
 		next: Intersection; 
 		link: Intersection; 
@@ -31,7 +31,7 @@ TYPE
 	END; 
 
 	Rasterizer* = RECORD 
-		width*, height*: INTEGER; 
+		width*, height*: SIGNED16; 
 		xmin*, ymin*, xmax*, ymax*: F26D6; 
 		rules: SET; 
 		hor, ver: Scanline; 
@@ -40,7 +40,7 @@ TYPE
 	EnumData* = RECORD 
 	END; 
 
-	Enumerator* = PROCEDURE (rowcol: INTEGER; beg, end: F26D6; VAR data: EnumData); 
+	Enumerator* = PROCEDURE (rowcol: SIGNED16; beg, end: F26D6; VAR data: EnumData); 
 VAR 
 	scanlinePool: Scanline; 
 	intersectionPool: Intersection; 
@@ -51,7 +51,7 @@ VAR
 	PROCEDURE ^ DisposeScanlines(VAR first: Scanline); 
 	PROCEDURE ^ DisposeRasterizer*(VAR ras: Rasterizer); 
 	PROCEDURE ^ Init(VAR first: Scanline); 
-	PROCEDURE ^ Insert(VAR scan: Scanline; yx, xy: F26D6; up: INTEGER; hint: Intersection; t: Fixed); 
+	PROCEDURE ^ Insert(VAR scan: Scanline; yx, xy: F26D6; up: SIGNED16; hint: Intersection; t: Fixed); 
 	PROCEDURE ^ IntersectLine(x0, y0, x1, y1: F26D6; VAR scans: Scanline; hint: Intersection; t, dt: Fixed); 
 	PROCEDURE ^ IntersectBezier(x0, y0, x1, y1, x2, y2: F26D6; VAR scans: Scanline; hint: Intersection; t, dt: Fixed); 
 	PROCEDURE ^ Convert*(outline: OpenTypeInt.Zone; rules: SET; VAR r: Rasterizer); 

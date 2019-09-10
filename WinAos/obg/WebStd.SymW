@@ -35,7 +35,7 @@ TYPE
 
 	Sequence* = OBJECT (DynamicWebpage.StateFullActiveElement)
 	VAR 
-		stateCounter: LONGINT; 
+		stateCounter: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Transform*(elem: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
@@ -105,7 +105,7 @@ TYPE
 		PROCEDURE ^  & Create*; 
 		PROCEDURE ^ GetName*(): Strings.String; 
 		PROCEDURE ^ SetName*(n: ARRAY OF CHAR); 
-		PROCEDURE ^ GetObjectByOid*(objectId: LONGINT): PersistentDataObject; 
+		PROCEDURE ^ GetObjectByOid*(objectId: SIGNED32): PersistentDataObject; 
 		PROCEDURE ^ GetCount*(): SIZE; 
 		PROCEDURE ^ GetItem*(i: SIZE): PersistentDataObject; 
 		PROCEDURE ^ GetElementList*(filter: PersistentDataFilter; persComp: PersistentDataCompare): PersistentDataObjectList; 
@@ -135,7 +135,7 @@ TYPE
 
 	SessionDataObject* = OBJECT 
 	VAR 
-		oid*: LONGINT; 
+		oid*: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ToXML*(request: HTTPSupport.HTTPRequest): XML.Content; 
@@ -154,7 +154,7 @@ TYPE
 
 		PROCEDURE ^  & Create*(containerName: ARRAY OF CHAR); 
 		PROCEDURE ^ GetName*(): Strings.String; 
-		PROCEDURE ^ GetObjectByOid*(objectId: LONGINT): SessionDataObject; 
+		PROCEDURE ^ GetObjectByOid*(objectId: SIGNED32): SessionDataObject; 
 		PROCEDURE ^ GetCount*(): SIZE; 
 		PROCEDURE ^ GetItem*(i: SIZE): SessionDataObject; 
 		PROCEDURE ^ GetElementList*(filter: SessionDataFilter; sessComp: SessionDataCompare): SessionDataObjectList; 
@@ -179,7 +179,7 @@ TYPE
 
 	Datagrid* = OBJECT (DynamicWebpage.StateFullActiveElement)
 	VAR 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
@@ -202,7 +202,7 @@ TYPE
 	PersistentCounter = OBJECT {EXCLUSIVE} (PrevalenceSystem.PersistentObject)
 	VAR 
 		name: Strings.String; 
-		counter: LONGINT; 
+		counter: SIGNED32; 
 
 		PROCEDURE ^  & Initialize*; 
 		PROCEDURE ^ IncreaseCounter; 
@@ -229,11 +229,11 @@ VAR
 	persistentCounterDesc: PrevalenceSystem.PersistentObjectDescriptor; 
 	tempContainerName: Strings.String; 
 	qlock: BOOLEAN; 
-	oidCounter: LONGINT; 
+	oidCounter: SIGNED32; 
 
 	PROCEDURE ^ GetXMLSubElement*(parent: XML.Container; name: ARRAY OF CHAR): XML.Element; 
-	PROCEDURE ^ NofXMLSubElements*(parent: XML.Container; name: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ GetXMLSubElementByIndex*(parent: XML.Container; name: ARRAY OF CHAR; index: LONGINT): XML.Element; 
+	PROCEDURE ^ NofXMLSubElements*(parent: XML.Container; name: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ GetXMLSubElementByIndex*(parent: XML.Container; name: ARRAY OF CHAR; index: SIGNED32): XML.Element; 
 	PROCEDURE ^ GetXMLCharContent*(parent: XML.Container): Strings.String; 
 	PROCEDURE ^ SpecialCharacter(c: CHAR): BOOLEAN; 
 	PROCEDURE ^ CreateXMLText*(text: ARRAY OF CHAR): XML.Container; 
@@ -249,11 +249,11 @@ VAR
 	PROCEDURE ^ CompareDateTime*(VAR a, b: Dates.DateTime): BOOLEAN; 
 	PROCEDURE ^ InternalizeString*(container: XML.Container; elementName: ARRAY OF CHAR): Strings.String; 
 	PROCEDURE ^ InternalizeDateTime*(container: XML.Container; elementName: ARRAY OF CHAR): PtrDateTime; 
-	PROCEDURE ^ InternalizeInteger*(container: XML.Container; elementName: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ InternalizeInteger*(container: XML.Container; elementName: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ InternalizeBoolean*(container: XML.Container; elementName: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ ExternalizeString*(str: Strings.String; container: XML.Container; elementName: ARRAY OF CHAR); 
 	PROCEDURE ^ ExternalizeDateTime*(dateTime: PtrDateTime; container: XML.Container; elementName: ARRAY OF CHAR); 
-	PROCEDURE ^ ExternalizeInteger*(number: HUGEINT; container: XML.Container; elementName: ARRAY OF CHAR); 
+	PROCEDURE ^ ExternalizeInteger*(number: SIGNED64; container: XML.Container; elementName: ARRAY OF CHAR); 
 	PROCEDURE ^ ExternalizeBoolean*(boolVal: BOOLEAN; container: XML.Container; elementName: ARRAY OF CHAR); 
 	PROCEDURE ^ DefaultPersistentDataFilter*(obj: PersistentDataObject): BOOLEAN; 
 	PROCEDURE ^ DefaultSessionDataFilter*(obj: SessionDataObject): BOOLEAN; 
@@ -265,7 +265,7 @@ VAR
 	PROCEDURE ^ IsExternalHyperlink(href: ARRAY OF CHAR; host: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ QueryLock; 
 	PROCEDURE ^ QueryUnlock; 
-	PROCEDURE ^ GetNewOid(): LONGINT; 
+	PROCEDURE ^ GetNewOid(): SIGNED32; 
 	PROCEDURE ^ CreateHyperlinkElement(): DynamicWebpage.ActiveElement; 
 	PROCEDURE ^ CreateEventButtonElement(): DynamicWebpage.ActiveElement; 
 	PROCEDURE ^ CreateEventLinkElement(): DynamicWebpage.ActiveElement; 

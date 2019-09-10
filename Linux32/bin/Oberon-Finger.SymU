@@ -7,9 +7,9 @@ VAR
 	W: Texts.Writer; 
 	line: ARRAY NetTools.MaxLine OF CHAR; 
 
-	PROCEDURE ^ Split*(VAR url, host, request: ARRAY OF CHAR; VAR port: INTEGER): LONGINT; 
-	PROCEDURE ^ finger0(VAR host, request: ARRAY OF CHAR; port: INTEGER; VAR F: Files.File); 
-	PROCEDURE ^ finger*(VAR host, request: ARRAY OF CHAR; port: INTEGER; VAR T: Texts.Text); 
+	PROCEDURE ^ Split*(VAR url, host, request: ARRAY OF CHAR; VAR port: SIGNED16): SIGNED32; 
+	PROCEDURE ^ finger0(VAR host, request: ARRAY OF CHAR; port: SIGNED16; VAR F: Files.File); 
+	PROCEDURE ^ finger*(VAR host, request: ARRAY OF CHAR; port: SIGNED16; VAR T: Texts.Text); 
 	PROCEDURE ^ LinkSchemeHandler(L: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewLinkScheme*; 
 	PROCEDURE ^ LoadDoc(D: Documents.Document); 

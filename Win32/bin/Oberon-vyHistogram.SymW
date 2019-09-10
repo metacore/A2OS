@@ -13,15 +13,15 @@ TYPE
 	tLayer* = POINTER TO tLayerDesc; 
 
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
-		bins-: ARRAY (maxBins + 4096) OF LONGINT; 
-		selectBins-: ARRAY (maxBins + 4096) OF LONGINT; 
-		nrBins-: INTEGER; 
-		maxBinHeight: LONGINT; 
+		bins-: ARRAY (maxBins + 4096) OF SIGNED32; 
+		selectBins-: ARRAY (maxBins + 4096) OF SIGNED32; 
+		nrBins-: SIGNED16; 
+		maxBinHeight: SIGNED32; 
 		leftBound-, rightBound-, offset-: Real; 
 		leftHist-, rightHist-, width-: Real; 
 		adapting: BOOLEAN; 
 		respectBounds-: BOOLEAN; 
-		toosmall-, toolarge-, nans-: LONGINT; 
+		toosmall-, toolarge-, nans-: SIGNED32; 
 	END; 
 VAR 
 	gTop: Real; 
@@ -59,7 +59,7 @@ VAR
 	PROCEDURE ^ DoSetBounds*(h: tLayer; left, right: Real); 
 	PROCEDURE ^ TakeBoundsFromData*(h: tLayer); 
 	PROCEDURE ^ DoSetOffsetWidth*(h: tLayer; offset, width: Real); 
-	PROCEDURE ^ DoSet*(h: tLayer; left, right: Real; nrCells: LONGINT); 
+	PROCEDURE ^ DoSet*(h: tLayer; left, right: Real; nrCells: SIGNED32); 
 	PROCEDURE ^ SetBounds*; 
 	PROCEDURE ^ SetOffsetWidth*; 
 	PROCEDURE ^ SetBoundsAndCells*; 

@@ -11,7 +11,7 @@ CONST
 	DeviceNotFound* = 4000; 
 	DeviceError* = 4001; 
 	PartitionTooSmall* = 5000; 
-	SSFS_MagicNumber = LONGINT(2575857510); 
+	SSFS_MagicNumber = SIGNED32(2575857510); 
 	SSFS_Version = 1; 
 	BlockSize = 4096; 
 	DirectoryEntrySize = 256; 
@@ -27,56 +27,56 @@ TYPE
 	Volume = OBJECT 
 	VAR 
 		device: Disks.Device; 
-		partition: LONGINT; 
-		nofBlocks: LONGINT; 
-		sectorsPerBlock: LONGINT; 
+		partition: SIGNED32; 
+		nofBlocks: SIGNED32; 
+		sectorsPerBlock: SIGNED32; 
 
-		PROCEDURE ^ ReadBlock(blockNumber: LONGINT; VAR block: Block; VAR res: WORD); 
-		PROCEDURE ^ WriteBlock(blockNumber: LONGINT; VAR block: Block; VAR res: WORD); 
+		PROCEDURE ^ ReadBlock(blockNumber: SIGNED32; VAR block: Block; VAR res: INTEGER); 
+		PROCEDURE ^ WriteBlock(blockNumber: SIGNED32; VAR block: Block; VAR res: INTEGER); 
 		PROCEDURE ^ Finalize; 
-		PROCEDURE ^  & Init*(device: Disks.Device; partition: LONGINT; VAR res: WORD); 
+		PROCEDURE ^  & Init*(device: Disks.Device; partition: SIGNED32; VAR res: INTEGER); 
 	END Volume; 
 
 	BlockBitmap = OBJECT {EXCLUSIVE} 
 	VAR 
 		bitmap: POINTER TO ARRAY OF SET; 
-		hint: LONGINT; 
+		hint: SIGNED32; 
 		fileSystem: FileSystem; 
 
-		PROCEDURE ^ FreeBlock(blockNumber: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ AllocateBlock(VAR res: WORD): LONGINT; 
-		PROCEDURE ^ FindFreeBlock(VAR res: WORD; useHint: BOOLEAN): LONGINT; 
-		PROCEDURE ^ IsUsed(blockNumber: LONGINT): BOOLEAN; 
-		PROCEDURE ^ SetUsed(blockNumber: LONGINT; used: BOOLEAN); 
-		PROCEDURE ^ WriteBack(blockNumber: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ LoadFromDisk(VAR res: WORD); 
+		PROCEDURE ^ FreeBlock(blockNumber: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ AllocateBlock(VAR res: INTEGER): SIGNED32; 
+		PROCEDURE ^ FindFreeBlock(VAR res: INTEGER; useHint: BOOLEAN): SIGNED32; 
+		PROCEDURE ^ IsUsed(blockNumber: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ SetUsed(blockNumber: SIGNED32; used: BOOLEAN); 
+		PROCEDURE ^ WriteBack(blockNumber: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ LoadFromDisk(VAR res: INTEGER); 
 		PROCEDURE ^ Show; 
 		PROCEDURE ^  & Init*(fileSystem: FileSystem); 
 	END BlockBitmap; 
 
 	DirectoryEntry = RECORD 
 		name: ARRAY 252 OF CHAR; 
-		inode: LONGINT; 
+		inode: SIGNED32; 
 	END; 
 
 	DirectoryBlock = ARRAY DirectoryEntriesPerBlock OF DirectoryEntry; 
 
 	SuperBlock = RECORD 
-		magicNumber: LONGINT; 
-		version: LONGINT; 
-		rootDirectory: LONGINT; 
-		freeBlockBitmapFirst: LONGINT; 
-		freeBlockBitmapSize: LONGINT; 
-		firstDataBlock: LONGINT; 
+		magicNumber: SIGNED32; 
+		version: SIGNED32; 
+		rootDirectory: SIGNED32; 
+		freeBlockBitmapFirst: SIGNED32; 
+		freeBlockBitmapSize: SIGNED32; 
+		firstDataBlock: SIGNED32; 
 		filler: ARRAY (BlockSize - (6 * 4)) OF CHAR; 
 	END; 
 
 	Inode = RECORD 
-		size: LONGINT; 
+		size: SIGNED32; 
 		attributes: SET; 
-		date, time: LONGINT; 
-		unused: LONGINT; 
-		direct: ARRAY ((BlockSize - (5 * 4)) DIV 4) OF LONGINT; 
+		date, time: SIGNED32; 
+		unused: SIGNED32; 
+		direct: ARRAY ((BlockSize - (5 * 4)) DIV 4) OF SIGNED32; 
 	END; 
 
 	Dnode = Block; 
@@ -88,21 +88,21 @@ TYPE
 		rootDirectory: DirectoryBlock; 
 		bitmap: BlockBitmap; 
 
-		PROCEDURE ^  & Init*(volume: Volume; VAR res: WORD); 
+		PROCEDURE ^  & Init*(volume: Volume; VAR res: INTEGER); 
 		PROCEDURE ^ New0*(CONST name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
-		PROCEDURE ^ UpdateInode(inode: Inode; inodeAdr: LONGINT); 
+		PROCEDURE ^ UpdateInode(inode: Inode; inodeAdr: SIGNED32); 
 		PROCEDURE ^ GetFilename(name: ARRAY OF CHAR; VAR filename: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ FindEntry(CONST name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key, res: LONGINT); 
-		PROCEDURE ^ DeleteFile(inode: Inode; inodeAdr: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ DeleteDnodes(inode: Inode; VAR res: WORD); 
-		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
+		PROCEDURE ^ FindEntry(CONST name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key, res: SIGNED32); 
+		PROCEDURE ^ DeleteFile(inode: Inode; inodeAdr: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ DeleteDnodes(inode: Inode; VAR res: INTEGER); 
+		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER); 
 		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
-		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT); 
-		PROCEDURE ^ Format(VAR res: WORD); 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: SIGNED32); 
+		PROCEDURE ^ Format(VAR res: INTEGER); 
 		PROCEDURE ^ Finalize*; 
 	END FileSystem; 
 
@@ -113,7 +113,7 @@ TYPE
 		fileSystem: FileSystem; 
 		name: Files.FileName; 
 
-		PROCEDURE ^  & Init*(CONST name: ARRAY OF CHAR; inode: Inode; inodeAddress: LONGINT; fileSystem: FileSystem); 
+		PROCEDURE ^  & Init*(CONST name: ARRAY OF CHAR; inode: Inode; inodeAddress: SIGNED32; fileSystem: FileSystem); 
 		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: Files.Position); 
 		PROCEDURE ^ Pos*(VAR r: Files.Rider): Files.Position; 
 		PROCEDURE ^ Read*(VAR r: Files.Rider; VAR x: CHAR); 
@@ -121,16 +121,16 @@ TYPE
 		PROCEDURE ^ Write*(VAR r: Files.Rider; x: CHAR); 
 		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Length*(): Files.Size; 
-		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
-		PROCEDURE ^ SetDate*(t, d: LONGINT); 
+		PROCEDURE ^ GetDate*(VAR t, d: SIGNED32); 
+		PROCEDURE ^ SetDate*(t, d: SIGNED32); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ Register0*(VAR res: WORD); 
+		PROCEDURE ^ Register0*(VAR res: INTEGER); 
 		PROCEDURE ^ Update*; 
 	END File; 
 
 	PROCEDURE ^ ClearBlock(VAR block: Block); 
 	PROCEDURE ^ ClearInode(VAR inode: Inode); 
-	PROCEDURE ^ GetFileSystem(context: Commands.Context; VAR res: WORD): FileSystem; 
+	PROCEDURE ^ GetFileSystem(context: Commands.Context; VAR res: INTEGER): FileSystem; 
 	PROCEDURE ^ Format*(context: Commands.Context); 
 	PROCEDURE ^ Mount*(context: Commands.Context); 
 	PROCEDURE ^ Unmount*(context: Commands.Context); 

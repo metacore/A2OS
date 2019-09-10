@@ -26,7 +26,7 @@ TYPE
 	In* = POINTER TO InDesc; 
 
 	InDesc* = RECORD 
-		type*: SHORTINT; 
+		type*: SIGNED8; 
 		fe*: FilterElement; 
 	END; 
 
@@ -44,7 +44,7 @@ TYPE
 	feBlend* = OBJECT (FilterElement)
 	VAR 
 		in2*: In; 
-		mode*: SHORTINT; 
+		mode*: SIGNED8; 
 
 		PROCEDURE ^ ApplyFilter*(window: FilterWindow; target: Buffer); 
 		PROCEDURE ^ Blend(VAR a, b: Raster.Pixel); 
@@ -58,12 +58,12 @@ TYPE
 	END feOffset; 
 
 	ColorMatrix* = RECORD 
-		a: ARRAY 5 OF ARRAY 4 OF LONGREAL; 
+		a: ARRAY 5 OF ARRAY 4 OF FLOAT64; 
 	END; 
 
 	feColorMatrix* = OBJECT (FilterElement)
 	VAR 
-		type*: SHORTINT; 
+		type*: SIGNED8; 
 		matrix*: ColorMatrix; 
 
 		PROCEDURE ^ ApplyFilter*(window: FilterWindow; target: Buffer); 
@@ -133,10 +133,10 @@ TYPE
 		PROCEDURE ^ Pop*(VAR filter: Filter); 
 	END FilterStack; 
 
-	PROCEDURE ^ ParseIn*(value: SVG.String; VAR in: SHORTINT); 
-	PROCEDURE ^ ParseBlendMode*(value: SVG.String; VAR mode: SHORTINT); 
-	PROCEDURE ^ ParseColorMatrixType*(value: XML.String; VAR type: SHORTINT); 
-	PROCEDURE ^ ParseColorMatrixValues*(values: XML.String; type: SHORTINT; VAR matrix: ColorMatrix): BOOLEAN; 
+	PROCEDURE ^ ParseIn*(value: SVG.String; VAR in: SIGNED8); 
+	PROCEDURE ^ ParseBlendMode*(value: SVG.String; VAR mode: SIGNED8); 
+	PROCEDURE ^ ParseColorMatrixType*(value: XML.String; VAR type: SIGNED8); 
+	PROCEDURE ^ ParseColorMatrixValues*(values: XML.String; type: SIGNED8; VAR matrix: ColorMatrix): BOOLEAN; 
 	PROCEDURE ^ TransformByColorMatrix(VAR pix: Raster.Pixel; VAR matrix: ColorMatrix); 
 BEGIN
 END SVGFilters.

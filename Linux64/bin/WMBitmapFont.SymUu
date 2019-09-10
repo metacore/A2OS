@@ -2,19 +2,19 @@ MODULE WMBitmapFont;
 	IMPORT KernelLog, Commands, Graphics := WMGraphics, Raster, XML, Parser := XMLParser, Scanner := XMLScanner, Objects := XMLObjects, Strings, WMRectangles, Files;
 CONST 
 TYPE 
-	Char32 = LONGINT; 
+	Char32 = SIGNED32; 
 
 	Glyph = RECORD 
 		img: Graphics.Image; 
 		code: Char32; 
-		fpos: LONGINT; 
+		fpos: SIGNED32; 
 		loaded: BOOLEAN; 
 	END; 
 
 	GlyphArray = POINTER TO ARRAY OF Glyph; 
 
 	GlyphRange = RECORD 
-		firstCode, lastCode: LONGINT; 
+		firstCode, lastCode: SIGNED32; 
 		glyphs: GlyphArray; 
 	END; 
 
@@ -22,23 +22,23 @@ TYPE
 
 	Font = OBJECT (Graphics.Font)
 	VAR 
-		nofGlyphRanges: LONGINT; 
+		nofGlyphRanges: SIGNED32; 
 		glyphRanges: GlyphRangeArray; 
-		grc: LONGINT; 
+		grc: SIGNED32; 
 		placeholderimg: Graphics.Image; 
 		fontFile: Files.File; 
 		empty: WMRectangles.Rectangle; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetGlyphMap*(code: LONGINT; VAR map: Graphics.Image); 
-		PROCEDURE ^ HasChar*(char: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: Graphics.GlyphSpacings); 
-		PROCEDURE ^ LoadGlyph(code: LONGINT; VAR g: Glyph); 
-		PROCEDURE ^ FindGlyphRange(code: Char32; VAR gri: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetGlyphMap*(code: SIGNED32; VAR map: Graphics.Image); 
+		PROCEDURE ^ HasChar*(char: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetGlyphSpacings*(code: SIGNED32; VAR glyphSpacings: Graphics.GlyphSpacings); 
+		PROCEDURE ^ LoadGlyph(code: SIGNED32; VAR g: Glyph); 
+		PROCEDURE ^ FindGlyphRange(code: Char32; VAR gri: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ FindGlyph(code: Char32; VAR glyph: Glyph): BOOLEAN; 
-		PROCEDURE ^ CountGlyphes(): LONGINT; 
+		PROCEDURE ^ CountGlyphes(): SIGNED32; 
 		PROCEDURE ^ Import(filename: ARRAY OF CHAR); 
-		PROCEDURE ^ RasterToBWRLBytes(img: Raster.Image; VAR buf: ARRAY OF CHAR; VAR pos: LONGINT); 
+		PROCEDURE ^ RasterToBWRLBytes(img: Raster.Image; VAR buf: ARRAY OF CHAR; VAR pos: SIGNED32); 
 		PROCEDURE ^ Save(filename: ARRAY OF CHAR); 
 		PROCEDURE ^ ReadGlyph(VAR f: Files.File; VAR g: Glyph); 
 		PROCEDURE ^ Load(filename: ARRAY OF CHAR); 

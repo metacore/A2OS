@@ -9,7 +9,7 @@ TYPE
 	END; 
 VAR 
 	newlayer-: tLayer; 
-	maxw, maxh: INTEGER; 
+	maxw, maxh: SIGNED16; 
 	texture: BOOLEAN; 
 
 	PROCEDURE ^ Copy(msg: Objects.CopyMsg; source, dest: tLayer); 

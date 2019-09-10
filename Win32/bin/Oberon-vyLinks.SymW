@@ -24,7 +24,7 @@ TYPE
 	LinkL* = POINTER TO LinkLDesc; 
 
 	LinkLDesc* = RECORD (LinkDesc)
-		val-: LONGINT; 
+		val-: SIGNED32; 
 	END; 
 
 	Queue* = POINTER TO QueueDesc; 
@@ -33,21 +33,21 @@ TYPE
 		qlink*: Link; 
 		first-: Link; 
 		last-: Link; 
-		count-: LONGINT; 
+		count-: SIGNED32; 
 	END; 
 VAR 
 	caching-: BOOLEAN; 
 	ErrCache-: LinkL; 
 	lasterr: LinkL; 
-	errcode-: LONGINT; 
+	errcode-: SIGNED32; 
 	NoObject-: Objects.Object; 
 	NoObjectHandler*: Objects.Handler; 
 
 	PROCEDURE ^ ResetErr*; 
 	PROCEDURE ^ CacheErrors*; 
 	PROCEDURE ^ HaltErrors*; 
-	PROCEDURE ^ AddErr*(ob: Objects.Object; code: LONGINT); 
-	PROCEDURE ^ Atom(lib: Objects.Library; name: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ AddErr*(ob: Objects.Object; code: SIGNED32); 
+	PROCEDURE ^ Atom(lib: Objects.Library; name: ARRAY OF CHAR): SIGNED16; 
 	PROCEDURE ^ WriteRef(VAR r: Files.Rider; lib: Objects.Library; obj: Objects.Object); 
 	PROCEDURE ^ ReadRef(VAR r: Files.Rider; lib: Objects.Library; VAR obj: Objects.Object); 
 	PROCEDURE ^ StoreLinkObj*(VAR R: Files.Rider; lib: Objects.Library; listobj: Objects.Object); 
@@ -77,9 +77,9 @@ VAR
 	PROCEDURE ^ EnqueueLast*(queue: Queue; item: Link); 
 	PROCEDURE ^ Dequeue*(queue: Queue; item: Link); 
 	PROCEDURE ^ IsEmptyQueue*(queue: Queue): BOOLEAN; 
-	PROCEDURE ^ SeqName*(stub: ARRAY OF CHAR; sep: CHAR; seqnr: LONGINT; VAR res: ARRAY OF CHAR); 
-	PROCEDURE ^ NameToSeq*(name: ARRAY OF CHAR; sep: CHAR; VAR stub: ARRAY OF CHAR; VAR seqnr: LONGINT); 
-	PROCEDURE ^ LinkCount*(link: Link): LONGINT; 
+	PROCEDURE ^ SeqName*(stub: ARRAY OF CHAR; sep: CHAR; seqnr: SIGNED32; VAR res: ARRAY OF CHAR); 
+	PROCEDURE ^ NameToSeq*(name: ARRAY OF CHAR; sep: CHAR; VAR stub: ARRAY OF CHAR; VAR seqnr: SIGNED32); 
+	PROCEDURE ^ LinkCount*(link: Link): SIGNED32; 
 	PROCEDURE ^ DoHandleLinks*(VAR p: Link; NameStub: ARRAY OF CHAR; VAR M: Objects.LinkMsg); 
 BEGIN
 END vyLinks.

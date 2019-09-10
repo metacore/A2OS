@@ -14,7 +14,7 @@ VAR
 	PROCEDURE ^ GenCopyFiles*; 
 	PROCEDURE ^ StartScan(VAR S: Texts.Scanner); 
 	PROCEDURE ^ CopyTo*; 
-	PROCEDURE ^ WriteK(VAR W: Texts.Writer; k: LONGINT); 
+	PROCEDURE ^ WriteK(VAR W: Texts.Writer; k: SIGNED32); 
 	PROCEDURE ^ Watch*; 
 BEGIN
 END OFSTools.

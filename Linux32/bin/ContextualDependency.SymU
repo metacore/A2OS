@@ -32,9 +32,9 @@ TYPE
 
 	RangeNode = POINTER TO RECORD 
 		leftNode, rightNode: RangeNode; 
-		leftOuterBound, leftInnerBound: LONGINT; 
-		rightInnerBound, rightOuterBound: LONGINT; 
-		depth: LONGINT; 
+		leftOuterBound, leftInnerBound: SIGNED32; 
+		rightInnerBound, rightOuterBound: SIGNED32; 
+		depth: SIGNED32; 
 		target: RangedContextAnalyzer; 
 	END; 
 
@@ -43,20 +43,20 @@ TYPE
 		root, last: RangeNode; 
 
 		PROCEDURE ^ AddRange(target: RangedContextAnalyzer); 
-		PROCEDURE ^ RecursiveAdd(newNode: RangeNode; VAR thisNode: RangeNode; VAR left, right: LONGINT); 
-		PROCEDURE ^ Search(position: LONGINT): RangedContextAnalyzer; 
-		PROCEDURE ^ RecursiveSearch(position: LONGINT; thisNode: RangeNode): RangedContextAnalyzer; 
+		PROCEDURE ^ RecursiveAdd(newNode: RangeNode; VAR thisNode: RangeNode; VAR left, right: SIGNED32); 
+		PROCEDURE ^ Search(position: SIGNED32): RangedContextAnalyzer; 
+		PROCEDURE ^ RecursiveSearch(position: SIGNED32; thisNode: RangeNode): RangedContextAnalyzer; 
 		PROCEDURE ^ CompleteBalancing; 
-		PROCEDURE ^ RecursiveBalancing(VAR thisNode: RangeNode): LONGINT; 
+		PROCEDURE ^ RecursiveBalancing(VAR thisNode: RangeNode): SIGNED32; 
 		PROCEDURE ^ RotateRight(VAR thisNode: RangeNode); 
 		PROCEDURE ^ RotateLeft(VAR thisNode: RangeNode); 
-		PROCEDURE ^ GetNodeDepth(thisNode: RangeNode): LONGINT; 
+		PROCEDURE ^ GetNodeDepth(thisNode: RangeNode): SIGNED32; 
 	END RangeTree; 
 
 	Range = OBJECT 
 	VAR 
-		lowerBound: LONGINT; 
-		upperBound: LONGINT; 
+		lowerBound: SIGNED32; 
+		upperBound: SIGNED32; 
 		valid: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
@@ -88,10 +88,10 @@ TYPE
 	ContextCache = OBJECT 
 	VAR 
 		internalCache: POINTER TO ARRAY OF ContextCacheElement; 
-		cacheSize: LONGINT; 
+		cacheSize: SIGNED32; 
 		nextElement: ContextCacheElement; 
 
-		PROCEDURE ^  & Init*(hashMapSize: LONGINT); 
+		PROCEDURE ^  & Init*(hashMapSize: SIGNED32); 
 		PROCEDURE ^ Lookup(char: Texts.Char32; VAR done: BOOLEAN): GenericContext; 
 		PROCEDURE ^ Insert(char: Texts.Char32; value: GenericContext); 
 	END ContextCache; 
@@ -99,12 +99,12 @@ TYPE
 	RangedContextAnalyzer = OBJECT 
 	VAR 
 		language: XML.String; 
-		rangeLow, rangeHigh: LONGINT; 
+		rangeLow, rangeHigh: SIGNED32; 
 		closeContext, wideContext, wholeContext: BOOLEAN; 
 		contextCache: ContextCache; 
 		contextFile: XML.Document; 
 
-		PROCEDURE ^  & Init*(context: XML.Document; rangeLow, rangeHigh: LONGINT; language, mode: Strings.String); 
+		PROCEDURE ^  & Init*(context: XML.Document; rangeLow, rangeHigh: SIGNED32; language, mode: Strings.String); 
 		PROCEDURE ^ SetCloseContext; 
 		PROCEDURE ^ SetWideContext; 
 		PROCEDURE ^ SetWholeContext; 
@@ -131,7 +131,7 @@ VAR
 	ranges: RangeTree; 
 
 	PROCEDURE ^ RegisterRangedAnalyzer(language: Strings.String; contextFile: XML.Document); 
-	PROCEDURE ^ AnalyzeLine*(line: Texts.TextReader; start, end: LONGINT): Texts.TextReader; 
+	PROCEDURE ^ AnalyzeLine*(line: Texts.TextReader; start, end: SIGNED32): Texts.TextReader; 
 	PROCEDURE ^ InitRangedAnalyzer(CONST filename: ARRAY OF CHAR; VAR useThisContext: BOOLEAN; VAR context: XML.Document); 
 	PROCEDURE ^ LoadContextualDependencies; 
 BEGIN

@@ -5,8 +5,8 @@ CONST
 TYPE 
 	CharInfo = RECORD 
 		pinyin: ARRAY 8 OF CHAR; 
-		ucs: LONGINT; 
-		freq: LONGINT; 
+		ucs: SIGNED32; 
+		freq: SIGNED32; 
 		info: String; 
 	END; 
 
@@ -14,7 +14,7 @@ TYPE
 		next: ListElement; 
 	END; 
 
-	CompareProc = PROCEDURE {DELEGATE}(a, b: ListElement):LONGINT; 
+	CompareProc = PROCEDURE {DELEGATE}(a, b: ListElement):SIGNED32; 
 
 	PhraseInfo = POINTER TO RECORD (ListElement)
 		phrase: String; 
@@ -27,7 +27,7 @@ TYPE
 	ResultList = POINTER TO RECORD (ListElement)
 		pinyin: String; 
 		hanzi: String; 
-		freq: LONGINT; 
+		freq: SIGNED32; 
 	END; 
 
 	Characters = POINTER TO ARRAY OF CharInfo; 
@@ -36,14 +36,14 @@ TYPE
 
 	Table = OBJECT 
 	VAR 
-		nofChars: LONGINT; 
+		nofChars: SIGNED32; 
 		characters: Characters; 
 		phrases: Phrases; 
-		nofPhrases: LONGINT; 
+		nofPhrases: SIGNED32; 
 
 		PROCEDURE ^ LoadCharacters; 
 		PROCEDURE ^ LoadPhrases; 
-		PROCEDURE ^ FindMatches(CONST s: ARRAY OF CHAR; resultList: ResultList; VAR nofResults: LONGINT); 
+		PROCEDURE ^ FindMatches(CONST s: ARRAY OF CHAR; resultList: ResultList; VAR nofResults: SIGNED32); 
 	END Table; 
 
 	IMEWindow* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -89,8 +89,8 @@ VAR
 	PROCEDURE ^ MatchPinyinFirstChars*(pattern, string: ARRAY OF CHAR; complete: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ Sort(root: ListElement; compare: CompareProc); 
-	PROCEDURE ^ CompareResultListFreq(a, b: ListElement): LONGINT; 
-	PROCEDURE ^ SortPhraseInfoPinyin(a, b: ListElement): LONGINT; 
+	PROCEDURE ^ CompareResultListFreq(a, b: ListElement): SIGNED32; 
+	PROCEDURE ^ SortPhraseInfoPinyin(a, b: ListElement): SIGNED32; 
 	PROCEDURE ^ InitLookup; 
 	PROCEDURE ^ Cleanup; 
 BEGIN

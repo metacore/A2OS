@@ -6,13 +6,13 @@ CONST
 	StandardMenu = \"System.Close System.Copy System.Grow Edit.Search Edit.Store"\; 
 VAR 
 	W: Texts.Writer; 
-	time: LONGINT; 
-	M: INTEGER; 
+	time: SIGNED32; 
+	M: SIGNED16; 
 	pat: ARRAY maxlen OF CHAR; 
-	d: ARRAY 256 OF INTEGER; 
-	textX, pagenoX, headerY, topY, botY: INTEGER; 
+	d: ARRAY 256 OF SIGNED16; 
+	textX, pagenoX, headerY, topY, botY: SIGNED16; 
 
-	PROCEDURE ^ Max(i, j: LONGINT): LONGINT; 
+	PROCEDURE ^ Max(i, j: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ Show*; 
 	PROCEDURE ^ Store*; 

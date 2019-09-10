@@ -1,22 +1,22 @@
 MODULE CSS2Properties;
 	IMPORT DynamicStrings, XMLObjects, CSS2, WMWindowManager, WMGraphics, Raster, GfxImages, GfxFonts, Gfx;
 CONST 
-	Aqua* = LONGINT(4278255615); 
-	Black* = LONGINT(4278190080); 
-	Blue* = LONGINT(4278190335); 
-	Fuchsia* = LONGINT(4294902015); 
-	Gray* = LONGINT(4286611584); 
-	Green* = LONGINT(4278222848); 
-	Lime* = LONGINT(4278255360); 
-	Maroon* = LONGINT(4286578688); 
-	Navy* = LONGINT(4278190208); 
-	Olive* = LONGINT(4286611456); 
-	Purple* = LONGINT(4286578816); 
-	Red* = LONGINT(4294901760); 
-	Silver* = LONGINT(4290822336); 
-	Teal* = LONGINT(4278222976); 
-	White* = LONGINT(4294967295); 
-	Yellow* = LONGINT(4294967040); 
+	Aqua* = SIGNED32(4278255615); 
+	Black* = SIGNED32(4278190080); 
+	Blue* = SIGNED32(4278190335); 
+	Fuchsia* = SIGNED32(4294902015); 
+	Gray* = SIGNED32(4286611584); 
+	Green* = SIGNED32(4278222848); 
+	Lime* = SIGNED32(4278255360); 
+	Maroon* = SIGNED32(4286578688); 
+	Navy* = SIGNED32(4278190208); 
+	Olive* = SIGNED32(4286611456); 
+	Purple* = SIGNED32(4286578816); 
+	Red* = SIGNED32(4294901760); 
+	Silver* = SIGNED32(4290822336); 
+	Teal* = SIGNED32(4278222976); 
+	White* = SIGNED32(4294967295); 
+	Yellow* = SIGNED32(4294967040); 
 	Transparent* = 0; 
 	XXSmall* = 0; 
 	XSmall* = 1; 
@@ -180,7 +180,7 @@ TYPE
 	END; 
 
 	Ident* = RECORD (Value)
-		computed*: SHORTINT; 
+		computed*: SIGNED8; 
 	END; 
 
 	TRBLIdent* = RECORD 
@@ -188,7 +188,7 @@ TYPE
 	END; 
 
 	Dim* = RECORD (Value)
-		computed*: LONGREAL; 
+		computed*: FLOAT64; 
 	END; 
 
 	OrientDim* = RECORD 
@@ -257,9 +257,9 @@ TYPE
 	VAR 
 		dimensionChanged-: BOOLEAN; 
 		containingBlock: RECORD 
-			width, height: LONGREAL; 
+			width, height: FLOAT64; 
 		END; 
-		ppi*: LONGREAL; 
+		ppi*: FLOAT64; 
 		backgroundAttachment*: Bool; 
 		backgroundColor*: Color; 
 		backgroundImage*: Img; 
@@ -313,13 +313,13 @@ TYPE
 		textTransform*: Ident; 
 		unicodeBidi*: Ident; 
 		verticalAlign*: RECORD (Value)
-			computedLength*: LONGREAL; 
-			computed*: SHORTINT; 
+			computedLength*: FLOAT64; 
+			computed*: SIGNED8; 
 		END; 
 		visibility*: Ident; 
 		whiteSpace*: Ident; 
 		zIndex*: RECORD (Value)
-			computed*: LONGINT; 
+			computed*: SIGNED32; 
 		END; 
 
 		PROCEDURE ^  & Init*; 
@@ -336,25 +336,25 @@ TYPE
 		PROCEDURE ^ IsPositioned(): BOOLEAN; 
 	END VisualProperties; 
 VAR 
-	AbsoluteFontSizes: ARRAY 7 OF SHORTINT; 
-	defaultColor*: LONGINT; 
+	AbsoluteFontSizes: ARRAY 7 OF SIGNED8; 
+	defaultColor*: SIGNED32; 
 	defaultCursor*, crosshairCursor*, pointerCursor*, moveCursor*, eResizeCursor*, neResizeCursor*, nwResizeCursor*, nResizeCursor*, seResizeCursor*, swResizeCursor*, sResizeCursor*, wResizeCursor*, textCursor*, waitCursor*, helpCursor*: WMWindowManager.PointerInfo; 
 	defaultFont*, captionFont*, iconFont*, menuFont*, messageBoxFont*, smallCaptionFont*, statusBarFont*: GfxFonts.Font; 
-	thinBorder*, mediumBorder*, thickBorder*: LONGREAL; 
+	thinBorder*, mediumBorder*, thickBorder*: FLOAT64; 
 	m: WMWindowManager.WindowManager; 
 
 	PROCEDURE ^ IsAutoSize*(size: Dim): BOOLEAN; 
 	PROCEDURE ^ IsAutoMargin*(margin: Dim): BOOLEAN; 
-	PROCEDURE ^ ChangeToIdent(identValue: SHORTINT): CSS2.Term; 
+	PROCEDURE ^ ChangeToIdent(identValue: SIGNED8): CSS2.Term; 
 	PROCEDURE ^ ChangeToStringIdent(VAR term: CSS2.Term; identValue: ARRAY OF CHAR); 
 	PROCEDURE ^ SetNil(VAR property: CSS2.Term; term: CSS2.Term): BOOLEAN; 
 	PROCEDURE ^ SetIdentOrInherit(VAR property: CSS2.Term; term: CSS2.Term): BOOLEAN; 
 	PROCEDURE ^ SetNone(VAR property: CSS2.Term; term: CSS2.Term): BOOLEAN; 
-	PROCEDURE ^ ChangeToIdentCollection(VAR collection: XMLObjects.Collection; identValue: SHORTINT); 
+	PROCEDURE ^ ChangeToIdentCollection(VAR collection: XMLObjects.Collection; identValue: SIGNED8); 
 	PROCEDURE ^ SetNilCollection(VAR collection: XMLObjects.Collection; term: CSS2.Term): BOOLEAN; 
 	PROCEDURE ^ SetIdentOrInheritCollection(VAR collection: XMLObjects.Collection; term: CSS2.Term): BOOLEAN; 
-	PROCEDURE ^ GetPixels(term: CSS2.Term; ppi: LONGREAL; font: GfxFonts.Font): LONGREAL; 
-	PROCEDURE ^ ChangeToPixel(pixelVal: LONGREAL): CSS2.Term; 
+	PROCEDURE ^ GetPixels(term: CSS2.Term; ppi: FLOAT64; font: GfxFonts.Font): FLOAT64; 
+	PROCEDURE ^ ChangeToPixel(pixelVal: FLOAT64): CSS2.Term; 
 	PROCEDURE ^ SetColor(VAR property: CSS2.Term; term: CSS2.Term; invertAllowed: BOOLEAN); 
 	PROCEDURE ^ IsBorderStyle(term: CSS2.Term): BOOLEAN; 
 	PROCEDURE ^ BorderStyle(VAR position: CSS2.Term; term: CSS2.Term); 
@@ -368,15 +368,15 @@ VAR
 	PROCEDURE ^ MaxDimension(VAR dimension: CSS2.Term; term: CSS2.Term); 
 	PROCEDURE ^ MinDimension(VAR dimension: CSS2.Term; term: CSS2.Term); 
 	PROCEDURE ^ PaddingWidth(VAR position: CSS2.Term; term: CSS2.Term); 
-	PROCEDURE ^ ComputeBool(VAR property: Bool; parentProperty: Bool; trueIdent: LONGINT); 
+	PROCEDURE ^ ComputeBool(VAR property: Bool; parentProperty: Bool; trueIdent: SIGNED32); 
 	PROCEDURE ^ ComputeColor(VAR property: Color; parentProperty, initial: Color); 
 	PROCEDURE ^ ComputeImg(VAR property: Img; parentProperty: Img); 
-	PROCEDURE ^ ComputeDim(VAR property: Dim; parentProperty: Dim; ppi, referenceDim: LONGREAL; font: GfxFonts.Font); 
+	PROCEDURE ^ ComputeDim(VAR property: Dim; parentProperty: Dim; ppi, referenceDim: FLOAT64; font: GfxFonts.Font); 
 	PROCEDURE ^ ComputeIdent(VAR property: Ident; parentProperty: Ident); 
 	PROCEDURE ^ ComputeCursor(VAR property: Cursor; parentProperty: Cursor); 
 	PROCEDURE ^ SetZeroIfAutoSize(size: Dim); 
 	PROCEDURE ^ SetZeroIfAutoMargin(size: Dim); 
 	PROCEDURE ^ ToGfxColor*(color: Color): Gfx.Color; 
-	PROCEDURE ^ IntToColor(color: LONGINT): Color; 
+	PROCEDURE ^ IntToColor(color: SIGNED32): Color; 
 BEGIN
 END CSS2Properties.

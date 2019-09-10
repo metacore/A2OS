@@ -12,7 +12,7 @@ TYPE
 	Block = ARRAY BlockSize OF ARRAY BlockSize OF CHAR; 
 
 	TimeDate = RECORD 
-		h, m, s, day, month, year: LONGINT; 
+		h, m, s, day, month, year: SIGNED32; 
 	END; 
 
 	TT = OBJECT {EXCLUSIVE} 
@@ -20,14 +20,14 @@ TYPE
 		alive, dropped: BOOLEAN; 
 		field: ARRAY Width OF ARRAY Height OF CHAR; 
 		block: Block; 
-		posX, posY: LONGINT; 
+		posX, posY: SIGNED32; 
 		timer: Kernel.Timer; 
 		mode: Raster.Mode; 
 		random: Random.Generator; 
-		lines, blocks, delay, delayDec: LONGINT; 
+		lines, blocks, delay, delayDec: SIGNED32; 
 		img: Raster.Image; 
 		paused, run: BOOLEAN; 
-		cheated: LONGINT; 
+		cheated: SIGNED32; 
 		time: TimeDate; 
 		adrStr, timeStr: ARRAY 32 OF CHAR; 
 		vncInfo: VNCServer.VNCInfo; 
@@ -37,17 +37,17 @@ TYPE
 		PROCEDURE ^ Run; 
 		PROCEDURE ^ Bound(VAR x: SIZE; min, max: SIZE); 
 		PROCEDURE ^ ClipAtImage(VAR x: WMRectangles.Rectangle; img: Raster.Image); 
-		PROCEDURE ^ AddDirty(l, t, r, b: LONGINT); 
+		PROCEDURE ^ AddDirty(l, t, r, b: SIGNED32); 
 		PROCEDURE ^ Close; 
 		PROCEDURE ^ RotateBlock(VAR block: Block): Block; 
-		PROCEDURE ^ DrawBox(x, y: LONGINT; color: CHAR); 
-		PROCEDURE ^ SetBlock(x, y: LONGINT; clear: BOOLEAN); 
-		PROCEDURE ^ HasDownCollision(x, y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ HasCollision(VAR bl: Block; x, y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ Move(dir: LONGINT): BOOLEAN; 
-		PROCEDURE ^ KeyPressed(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ DrawBox(x, y: SIGNED32; color: CHAR); 
+		PROCEDURE ^ SetBlock(x, y: SIGNED32; clear: BOOLEAN); 
+		PROCEDURE ^ HasDownCollision(x, y: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ HasCollision(VAR bl: Block; x, y: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ Move(dir: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ KeyPressed(ucs: SIGNED32; flags: SET; keysym: SIGNED32); 
 		PROCEDURE ^ NewBlock; 
-		PROCEDURE ^ RemoveLine(y: LONGINT); 
+		PROCEDURE ^ RemoveLine(y: SIGNED32); 
 		PROCEDURE ^ ClearLines; 
 		PROCEDURE ^ DropStep; 
 		PROCEDURE ^ UpdateScore(eog: BOOLEAN); 
@@ -56,17 +56,17 @@ TYPE
 	END TT; 
 VAR 
 	colors: ARRAY (NofBlocks + 1) OF Raster.Pixel; 
-	gamesRunning, gamesTotal, maxConcurrent, highScore: LONGINT; 
+	gamesRunning, gamesTotal, maxConcurrent, highScore: SIGNED32; 
 	shuttingDown: BOOLEAN; 
 	server: VNCServer.Server; 
 
 	PROCEDURE ^ StartTT(vncInfo: VNCServer.VNCInfo); 
 	PROCEDURE ^ AddGame; 
-	PROCEDURE ^ ReportScore(score: LONGINT); 
-	PROCEDURE ^ GetGamesTotal(): LONGINT; 
-	PROCEDURE ^ GetMaxConcurrent(): LONGINT; 
-	PROCEDURE ^ GetHighscore(): LONGINT; 
-	PROCEDURE ^ GetGamesRunning(): LONGINT; 
+	PROCEDURE ^ ReportScore(score: SIGNED32); 
+	PROCEDURE ^ GetGamesTotal(): SIGNED32; 
+	PROCEDURE ^ GetMaxConcurrent(): SIGNED32; 
+	PROCEDURE ^ GetHighscore(): SIGNED32; 
+	PROCEDURE ^ GetGamesRunning(): SIGNED32; 
 	PROCEDURE ^ GetIsShuttingDown(): BOOLEAN; 
 	PROCEDURE ^ SubGame; 
 	PROCEDURE ^ Run*(context: Commands.Context); 

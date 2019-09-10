@@ -18,42 +18,42 @@ TYPE
 	FrameDesc* = RECORD (Display.FrameDesc)
 		text*: Terminals.Terminal; 
 		fnt*: Fonts.Font; 
-		cursorState*, charW*, lineH*: INTEGER; 
+		cursorState*, charW*, lineH*: SIGNED16; 
 		hasSel*: BOOLEAN; 
-		selTime*: LONGINT; 
+		selTime*: SIGNED32; 
 		selFrom*, selTo*: Terminals.Location; 
 	END; 
 
 	UpdateMsg* = RECORD (Display.FrameMsg)
 		text: Terminals.Terminal; 
-		op, fromLine, fromCol, toLine, toCol: INTEGER; 
+		op, fromLine, fromCol, toLine, toCol: SIGNED16; 
 		oldCur: Terminals.Location; 
 	END; 
 VAR 
 	w: Texts.Writer; 
 
-	PROCEDURE ^ NotifyDisplay*(t: Terminals.Terminal; op, fromLine, fromCol, toLine, toCol: INTEGER; oldCur: Terminals.Location); 
+	PROCEDURE ^ NotifyDisplay*(t: Terminals.Terminal; op, fromLine, fromCol, toLine, toCol: SIGNED16; oldCur: Terminals.Location); 
 	PROCEDURE ^ Open*(f: Frame; h: Objects.Handler; t: Terminals.Terminal; fnt: Fonts.Font); 
 	PROCEDURE ^ Copy*(from, to: Frame); 
-	PROCEDURE ^ DrawCursor(f: Frame; line, col: INTEGER; mode: INTEGER); 
-	PROCEDURE ^ SetCursor*(f: Frame; state: INTEGER); 
-	PROCEDURE ^ DrawSelection(f: Frame; fromLine, fromCol, toLine, toCol: INTEGER); 
+	PROCEDURE ^ DrawCursor(f: Frame; line, col: SIGNED16; mode: SIGNED16); 
+	PROCEDURE ^ SetCursor*(f: Frame; state: SIGNED16); 
+	PROCEDURE ^ DrawSelection(f: Frame; fromLine, fromCol, toLine, toCol: SIGNED16); 
 	PROCEDURE ^ RemoveSelection*(f: Frame); 
-	PROCEDURE ^ SetSelection*(f: Frame; fromLine, fromCol, toLine, toCol: INTEGER); 
+	PROCEDURE ^ SetSelection*(f: Frame; fromLine, fromCol, toLine, toCol: SIGNED16); 
 	PROCEDURE ^ TextOf(f: Frame): Texts.Text; 
-	PROCEDURE ^ TextPos(f: Frame; line, col: INTEGER): INTEGER; 
-	PROCEDURE ^ GetSelection*(f: Frame; VAR text: Texts.Text; VAR beg, end, time: LONGINT); 
+	PROCEDURE ^ TextPos(f: Frame; line, col: SIGNED16): SIGNED16; 
+	PROCEDURE ^ GetSelection*(f: Frame; VAR text: Texts.Text; VAR beg, end, time: SIGNED32); 
 	PROCEDURE ^ Neutralize*(f: Frame); 
-	PROCEDURE ^ DrawChar(f: Frame; x, y: INTEGER; char: Terminals.Char); 
-	PROCEDURE ^ UpdateLine(f: Frame; line, fromCol, toCol: INTEGER); 
-	PROCEDURE ^ UpdateScrolling(f: Frame; top, bot, dH: INTEGER); 
-	PROCEDURE ^ Update*(f: Frame; op, fromLine, fromCol, toLine, toCol: INTEGER; oldCur: Terminals.Location); 
-	PROCEDURE ^ TrackSelection*(f: Frame; VAR keySum: SET; x, y: INTEGER); 
-	PROCEDURE ^ Call*(f: Frame; cmdLine, cmdCol: INTEGER; new: BOOLEAN); 
+	PROCEDURE ^ DrawChar(f: Frame; x, y: SIGNED16; char: Terminals.Char); 
+	PROCEDURE ^ UpdateLine(f: Frame; line, fromCol, toCol: SIGNED16); 
+	PROCEDURE ^ UpdateScrolling(f: Frame; top, bot, dH: SIGNED16); 
+	PROCEDURE ^ Update*(f: Frame; op, fromLine, fromCol, toLine, toCol: SIGNED16; oldCur: Terminals.Location); 
+	PROCEDURE ^ TrackSelection*(f: Frame; VAR keySum: SET; x, y: SIGNED16); 
+	PROCEDURE ^ Call*(f: Frame; cmdLine, cmdCol: SIGNED16; new: BOOLEAN); 
 	PROCEDURE ^ DrawLine(f: Frame; from: Terminals.Location); 
-	PROCEDURE ^ TrackWord*(f: Frame; x, y: INTEGER; VAR cmdLine, cmdCol: INTEGER; VAR keySum: SET); 
-	PROCEDURE ^ Edit*(f: Frame; keys: SET; x, y: INTEGER); 
-	PROCEDURE ^ Modify*(f: Frame; id, Y, H, dY: INTEGER); 
+	PROCEDURE ^ TrackWord*(f: Frame; x, y: SIGNED16; VAR cmdLine, cmdCol: SIGNED16; VAR keySum: SET); 
+	PROCEDURE ^ Edit*(f: Frame; keys: SET; x, y: SIGNED16); 
+	PROCEDURE ^ Modify*(f: Frame; id, Y, H, dY: SIGNED16); 
 	PROCEDURE ^ Handle*(f: Objects.Object; VAR m: Objects.ObjMsg); 
 	PROCEDURE ^ New*(t: Terminals.Terminal): Frame; 
 BEGIN

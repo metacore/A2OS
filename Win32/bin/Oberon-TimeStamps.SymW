@@ -7,23 +7,23 @@ TYPE
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
 		font: Fonts.Font; 
 		cap: ARRAY 64 OF CHAR; 
-		col: INTEGER; 
-		w: INTEGER; 
+		col: SIGNED16; 
+		w: SIGNED16; 
 	END; 
 
 	RevFrame* = POINTER TO RevFrameDesc; 
 
 	RevFrameDesc* = RECORD (FrameDesc)
-		revision: LONGINT; 
+		revision: SIGNED32; 
 	END; 
 
-	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
-	PROCEDURE ^ P(x: LONGINT): INTEGER; 
-	PROCEDURE ^ DR(x: LONGINT): REAL; 
-	PROCEDURE ^ Print(F: Frame; Q: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ P(x: SIGNED32): SIGNED16; 
+	PROCEDURE ^ DR(x: SIGNED32): FLOAT32; 
+	PROCEDURE ^ Print(F: Frame; Q: Display3.Mask; x, y: SIGNED16); 
 	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: Frame); 
-	PROCEDURE ^ Caption(F: Frame; VAR w, h: INTEGER; newtime: BOOLEAN); 
-	PROCEDURE ^ Modify(F: Frame; w, h: INTEGER); 
+	PROCEDURE ^ Caption(F: Frame; VAR w, h: SIGNED16; newtime: BOOLEAN); 
+	PROCEDURE ^ Modify(F: Frame; w, h: SIGNED16); 
 	PROCEDURE ^ Attributes(F: Frame; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Init*(F: Frame); 

@@ -8,11 +8,11 @@ TYPE
 	tObject* = POINTER TO tObjectDesc; 
 
 	tObjectDesc* = RECORD (vyBase.ObjDesc)
-		w*, h*, d*, depth*: LONGINT; 
+		w*, h*, d*, depth*: SIGNED32; 
 		A*: tArray; 
 		ACache*: tArray; 
 		F: antsArrayObjects.tINTEGERObject; 
-		Fd: LONGINT; 
+		Fd: SIGNED32; 
 	END; 
 VAR 
 	newobject-: tObject; 
@@ -25,18 +25,18 @@ VAR
 	PROCEDURE ^ Init*(o: tObject); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ Refresh*(obj: vyBase.Object); 
-	PROCEDURE ^ SetDepth*(obj: tObject; depth: LONGINT); 
+	PROCEDURE ^ SetDepth*(obj: tObject; depth: SIGNED32); 
 	PROCEDURE ^ EmbedArray*(A: tArray; o: tObject); 
-	PROCEDURE ^ NewArray*(w, h, d: LONGINT): tArray; 
-	PROCEDURE ^ NewObject*(w, h, d, depth: LONGINT): tObject; 
-	PROCEDURE ^ Min(x, y: INTEGER): INTEGER; 
-	PROCEDURE ^ ChangeSize(o: tObject; w, h, d: INTEGER); 
+	PROCEDURE ^ NewArray*(w, h, d: SIGNED32): tArray; 
+	PROCEDURE ^ NewObject*(w, h, d, depth: SIGNED32): tObject; 
+	PROCEDURE ^ Min(x, y: SIGNED16): SIGNED16; 
+	PROCEDURE ^ ChangeSize(o: tObject; w, h, d: SIGNED16); 
 	PROCEDURE ^ HandleAttributes(o: tObject; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ FrameLinks(F: tObject; VAR M: Objects.LinkMsg); 
 	PROCEDURE ^ StoreA(VAR R: Files.Rider; A: tArray); 
 	PROCEDURE ^ LoadA(VAR R: Files.Rider): tArray; 
 	PROCEDURE ^ HandleFileMsg(obj: tObject; VAR msg: Objects.FileMsg); 
-	PROCEDURE ^ CopyArray*(a: tArray; VAR A: tArray; sx, sy, sz, w, h, zl, dx, dy, dz: LONGINT); 
+	PROCEDURE ^ CopyArray*(a: tArray; VAR A: tArray; sx, sy, sz, w, h, zl, dx, dy, dz: SIGNED32); 
 	PROCEDURE ^ CopyArrayPart*(from, to: tObject); 
 	PROCEDURE ^ CopyObject*(from, to: tObject); 
 	PROCEDURE ^ ObjectCopy(from: tObject): tObject; 

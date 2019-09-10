@@ -563,45 +563,45 @@ TYPE
 
 	IA32ImmArg = OBJECT (IA32Arg)
 	VAR 
-		imm: LONGINT; 
-		rep: LONGINT; 
-		width: LONGINT; 
+		imm: SIGNED32; 
+		rep: SIGNED32; 
+		width: SIGNED32; 
 
-		PROCEDURE ^  & New*(imm: LONGINT; rep, width: LONGINT); 
+		PROCEDURE ^  & New*(imm: SIGNED32; rep, width: SIGNED32); 
 	END IA32ImmArg; 
 
 	IA32RegArg = OBJECT (IA32Arg)
 	VAR 
-		reg, width: LONGINT; 
+		reg, width: SIGNED32; 
 
-		PROCEDURE ^  & New*(reg: LONGINT); 
+		PROCEDURE ^  & New*(reg: SIGNED32); 
 	END IA32RegArg; 
 
 	IA32SpecialRegArg = OBJECT (IA32RegArg)
 	VAR 
-		specialKind: LONGINT; 
+		specialKind: SIGNED32; 
 
 		PROCEDURE ^ GetRepresentation(w: Streams.Writer); 
 	END IA32SpecialRegArg; 
 
 	IA32MemArg = OBJECT (IA32Arg)
 	VAR 
-		base, index, scale, disp, fpSize: LONGINT; 
+		base, index, scale, disp, fpSize: SIGNED32; 
 		bytePtr, wordPtr: BOOLEAN; 
 
-		PROCEDURE ^  & New*(b, i, s, d: LONGINT); 
+		PROCEDURE ^  & New*(b, i, s, d: SIGNED32); 
 	END IA32MemArg; 
 
 	IA32Opcode = OBJECT (Decoder.Opcode)
 	VAR 
-		op: LONGINT; 
-		prefixes: LONGINT; 
+		op: SIGNED32; 
+		prefixes: SIGNED32; 
 		prefix: ARRAY 4 OF CHAR; 
 		adrPrefix, opPrefix: BOOLEAN; 
-		opcodeBytes: LONGINT; 
+		opcodeBytes: SIGNED32; 
 		opcodeByte: ARRAY 3 OF CHAR; 
-		argStructure: LONGINT; 
-		width: LONGINT; 
+		argStructure: SIGNED32; 
+		width: SIGNED32; 
 		arg1, arg2, arg3: IA32Arg; 
 
 		PROCEDURE ^  & New*(proc: Decoder.ProcedureInfo; stream: Streams.Writer); 
@@ -613,7 +613,7 @@ TYPE
 		PROCEDURE ^ PrintVariables*(w: Streams.Writer); 
 		PROCEDURE ^ ToString*(): Strings.String; 
 		PROCEDURE ^ WriteImm(immArg: IA32ImmArg; w: Streams.Writer); 
-		PROCEDURE ^ WriteAdrReg(regNr: LONGINT; w: Streams.Writer); 
+		PROCEDURE ^ WriteAdrReg(regNr: SIGNED32; w: Streams.Writer); 
 		PROCEDURE ^ WriteReg(regArg: IA32RegArg; writer: Streams.Writer); 
 		PROCEDURE ^ WriteMem(memArg: IA32MemArg; w: Streams.Writer); 
 	END IA32Opcode; 
@@ -623,9 +623,9 @@ TYPE
 		previousOpcode, opcodeBeforeWait: IA32Opcode; 
 
 		PROCEDURE ^ DoPrefixes(VAR opcode: IA32Opcode); 
-		PROCEDURE ^ GetImm(bytes: LONGINT): LONGINT; 
+		PROCEDURE ^ GetImm(bytes: SIGNED32): SIGNED32; 
 		PROCEDURE ^ ModRm(VAR regArg: IA32RegArg; VAR memOrRegArg: IA32Arg); 
-		PROCEDURE ^ Type1(opcode: IA32Opcode; baseOp: LONGINT); 
+		PROCEDURE ^ Type1(opcode: IA32Opcode; baseOp: SIGNED32); 
 		PROCEDURE ^ Push(opcode: IA32Opcode); 
 		PROCEDURE ^ Mov(opcode: IA32Opcode); 
 		PROCEDURE ^ Mov2(opcode: IA32Opcode); 
@@ -698,7 +698,7 @@ TYPE
 		PROCEDURE ^ NewOpcode*(): Decoder.Opcode; 
 	END IA32Decoder; 
 
-	PROCEDURE ^ IntToHex(h, width: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ IntToHex(h, width: SIGNED32; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ IA32DecoderFactory(reader: Streams.Reader): Decoder.Decoder; 
 	PROCEDURE ^ Init*; 
 BEGIN

@@ -67,8 +67,8 @@ TYPE
 	String = PartitionsLib.String; 
 
 	Node = POINTER TO RECORD 
-		cluster, offset: LONGINT; 
-		parent, first: LONGINT; 
+		cluster, offset: SIGNED32; 
+		parent, first: SIGNED32; 
 		next: Node; 
 	END; 
 
@@ -101,7 +101,7 @@ TYPE
 	VAR 
 		rawEntry, correctedEntry: ARRAY 32 OF CHAR; 
 		cluster: Files.Address; 
-		offset: LONGINT; 
+		offset: SIGNED32; 
 
 		PROCEDURE ^ ParseRawEntry; 
 		PROCEDURE ^ Print; 
@@ -111,25 +111,25 @@ TYPE
 	VAR 
 		shortName: ARRAY 12 OF CHAR; 
 		attr: SET; 
-		crtTime, crtDate: LONGINT; 
-		lstAccDate: LONGINT; 
-		firstCluster: LONGINT; 
-		wrtTime, wrtDate: LONGINT; 
-		fileSize: LONGINT; 
+		crtTime, crtDate: SIGNED32; 
+		lstAccDate: SIGNED32; 
+		firstCluster: SIGNED32; 
+		wrtTime, wrtDate: SIGNED32; 
+		fileSize: SIGNED32; 
 		directory: BOOLEAN; 
 
 		PROCEDURE ^ ParseRawEntry; 
-		PROCEDURE ^ GetChecksum(): LONGINT; 
+		PROCEDURE ^ GetChecksum(): SIGNED32; 
 		PROCEDURE ^ Print; 
 	END ShortEntry; 
 
 	LongEntry = OBJECT (Entry)
 	VAR 
-		order: INTEGER; 
-		name: ARRAY 13 OF LONGINT; 
-		type: INTEGER; 
-		chksum: LONGINT; 
-		FstClusLO: LONGINT; 
+		order: SIGNED16; 
+		name: ARRAY 13 OF SIGNED32; 
+		type: SIGNED16; 
+		chksum: SIGNED32; 
+		FstClusLO: SIGNED32; 
 		next: LongEntry; 
 		last: BOOLEAN; 
 
@@ -142,28 +142,28 @@ TYPE
 
 	ClusterBitmap = OBJECT 
 	VAR 
-		maxClusters: LONGINT; 
+		maxClusters: SIGNED32; 
 		bitmaps: POINTER TO ARRAY OF Bitmap; 
-		bitmapsPos, bmPos, bmOffset: LONGINT; 
+		bitmapsPos, bmPos, bmOffset: SIGNED32; 
 
-		PROCEDURE ^  & Init*(MaxClusters: LONGINT); 
-		PROCEDURE ^ CalcAddress(pos: LONGINT); 
-		PROCEDURE ^ SetBit(pos: LONGINT; VAR collision: BOOLEAN); 
-		PROCEDURE ^ IsSet(pos: LONGINT): BOOLEAN; 
+		PROCEDURE ^  & Init*(MaxClusters: SIGNED32); 
+		PROCEDURE ^ CalcAddress(pos: SIGNED32); 
+		PROCEDURE ^ SetBit(pos: SIGNED32; VAR collision: BOOLEAN); 
+		PROCEDURE ^ IsSet(pos: SIGNED32): BOOLEAN; 
 	END ClusterBitmap; 
 
 	Cluster = OBJECT 
 	VAR 
-		cluster: LONGINT; 
-		parent, first: LONGINT; 
-		clusterSize: LONGINT; 
-		currentEntry, maxEntries: LONGINT; 
+		cluster: SIGNED32; 
+		parent, first: SIGNED32; 
+		clusterSize: SIGNED32; 
+		currentEntry, maxEntries: SIGNED32; 
 		data: POINTER TO ARRAY OF CHAR; 
-		next: LONGINT; 
+		next: SIGNED32; 
 
-		PROCEDURE ^  & Init*(csize: LONGINT); 
-		PROCEDURE ^ SetPos(pos: LONGINT); 
-		PROCEDURE ^ GetPos(): LONGINT; 
+		PROCEDURE ^  & Init*(csize: SIGNED32); 
+		PROCEDURE ^ SetPos(pos: SIGNED32); 
+		PROCEDURE ^ GetPos(): SIGNED32; 
 		PROCEDURE ^ GetNext(): Entry; 
 		PROCEDURE ^ HasNext(): BOOLEAN; 
 	END Cluster; 
@@ -186,7 +186,7 @@ TYPE
 	END Path; 
 
 	LostCluster = POINTER TO RECORD 
-		cluster, link: LONGINT; 
+		cluster, link: SIGNED32; 
 		next: LostCluster; 
 		chain: LostCluster; 
 		terminated, crosslink: BOOLEAN; 
@@ -195,7 +195,7 @@ TYPE
 	ClusterList = OBJECT 
 	VAR 
 		head, tail, previous, current: LostCluster; 
-		size: LONGINT; 
+		size: SIGNED32; 
 		currentDeleted: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
@@ -212,13 +212,13 @@ TYPE
 	FATScavenger* = OBJECT {EXCLUSIVE} (PartitionsLib.Operation)
 	VAR 
 		doSurfaceScan, doCompareFATs, doLostClusters, doWrite: BOOLEAN; 
-		filesScanned-, directoriesScanned-: LONGINT; 
-		longEntriesScanned-, shortEntriesScanned-, emptyEntriesScanned-: LONGINT; 
-		freeClusters-, badClusters-, lostClusters-, lostClusterChains-: LONGINT; 
-		nbrFreeFragments: LONGINT; 
-		errorsFound: LONGINT; 
+		filesScanned-, directoriesScanned-: SIGNED32; 
+		longEntriesScanned-, shortEntriesScanned-, emptyEntriesScanned-: SIGNED32; 
+		freeClusters-, badClusters-, lostClusters-, lostClusterChains-: SIGNED32; 
+		nbrFreeFragments: SIGNED32; 
+		errorsFound: SIGNED32; 
 		ioError: BOOLEAN; 
-		curOp, maxOp: LONGINT; 
+		curOp, maxOp: SIGNED32; 
 		vol: FATVolumes.Volume; 
 		dev: Disks.Device; 
 		path: Path; 
@@ -226,21 +226,21 @@ TYPE
 		processStack: STACK; 
 		longList: LongEntryList; 
 		lostList, lostErrorList, fileList, xlinkedList: ClusterList; 
-		fsType: LONGINT; 
+		fsType: SIGNED32; 
 		FAT1216rootDir: Cluster; 
 		clusterBitmap: ClusterBitmap; 
 		fsinfo: ARRAY FATVolumes.BS OF CHAR; 
-		fsinfoAddress: LONGINT; 
+		fsinfoAddress: SIGNED32; 
 		fsInfoLoaded: BOOLEAN; 
-		deleted: LONGINT; 
+		deleted: SIGNED32; 
 
 		PROCEDURE ^ SetParameters*(doSurfaceScan, doCompareFATs, doLostClusters, doWrite: BOOLEAN); 
 		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
 		PROCEDURE ^ DoOperation*; 
-		PROCEDURE ^  & Init*(disk: PartitionsLib.Disk; partition: LONGINT; out: Streams.Writer); 
+		PROCEDURE ^  & Init*(disk: PartitionsLib.Disk; partition: SIGNED32; out: Streams.Writer); 
 		PROCEDURE ^ BuildInfo; 
-		PROCEDURE ^ GetFSInfo(VAR freeCount, nextFree: LONGINT): BOOLEAN; 
-		PROCEDURE ^ SetFSInfo(freeCount, nextFree: LONGINT); 
+		PROCEDURE ^ GetFSInfo(VAR freeCount, nextFree: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ SetFSInfo(freeCount, nextFree: SIGNED32); 
 		PROCEDURE ^ CompareFATs; 
 		PROCEDURE ^ TraverseFAT; 
 		PROCEDURE ^ SurfaceScan; 
@@ -251,8 +251,8 @@ TYPE
 		PROCEDURE ^ ProcessShortEntry(shortEntry: ShortEntry); 
 		PROCEDURE ^ ProcessHead*; 
 		PROCEDURE ^ WriteEntry(entry: Entry); 
-		PROCEDURE ^ GetString(cur, max: LONGINT; CONST unit, status: ARRAY OF CHAR): String; 
-		PROCEDURE ^ ReportTransferError(name: ARRAY OF CHAR; op, adr: LONGINT; res: WORD); 
+		PROCEDURE ^ GetString(cur, max: SIGNED32; CONST unit, status: ARRAY OF CHAR): String; 
+		PROCEDURE ^ ReportTransferError(name: ARRAY OF CHAR; op, adr: SIGNED32; res: INTEGER); 
 		PROCEDURE ^ ValidShortChar(ch: CHAR): BOOLEAN; 
 		PROCEDURE ^ ValidLongChar(ch: CHAR): BOOLEAN; 
 		PROCEDURE ^ Equals(CONST op1, op2: ARRAY OF CHAR): BOOLEAN; 
@@ -262,31 +262,31 @@ TYPE
 	VAR 
 		quickFormat: BOOLEAN; 
 		volumeName: Strings.String; 
-		fs: LONGINT; 
+		fs: SIGNED32; 
 		oemName: ARRAY 9 OF CHAR; 
-		rsvdSecCnt1216, rsvdSecCnt32: LONGINT; 
-		numFATs: LONGINT; 
-		rootEntCnt: LONGINT; 
-		fatsize: LONGINT; 
+		rsvdSecCnt1216, rsvdSecCnt32: SIGNED32; 
+		numFATs: SIGNED32; 
+		rootEntCnt: SIGNED32; 
+		fatsize: SIGNED32; 
 		volLab: ARRAY 12 OF CHAR; 
-		rootCluster32: LONGINT; 
-		fsinfo: LONGINT; 
-		backupBoot: LONGINT; 
+		rootCluster32: SIGNED32; 
+		fsinfo: SIGNED32; 
+		backupBoot: SIGNED32; 
 
 		PROCEDURE ^ SetParameters*(volumeName: Strings.String; quickFormat: BOOLEAN); 
 		PROCEDURE ^ ValidParameters*(): BOOLEAN; 
 		PROCEDURE ^ DoOperation*; 
-		PROCEDURE ^ ClearSectors(from, to: LONGINT); 
-		PROCEDURE ^ BuildBPB(secPerClus: LONGINT): Block; 
-		PROCEDURE ^ BuildFSInfo(freecount, nextfree: LONGINT): Block; 
-		PROCEDURE ^ GetFatSize(sectorPerCluster: LONGINT): LONGINT; 
-		PROCEDURE ^ GetSectorPerCluster(disksize: LONGINT): LONGINT; 
-		PROCEDURE ^ ValidClusterSize(clusterSize: LONGINT): BOOLEAN; 
-		PROCEDURE ^  & Init*(disk: PartitionsLib.Disk; partition: LONGINT; out: Streams.Writer); 
+		PROCEDURE ^ ClearSectors(from, to: SIGNED32); 
+		PROCEDURE ^ BuildBPB(secPerClus: SIGNED32): Block; 
+		PROCEDURE ^ BuildFSInfo(freecount, nextfree: SIGNED32): Block; 
+		PROCEDURE ^ GetFatSize(sectorPerCluster: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetSectorPerCluster(disksize: SIGNED32): SIGNED32; 
+		PROCEDURE ^ ValidClusterSize(clusterSize: SIGNED32): BOOLEAN; 
+		PROCEDURE ^  & Init*(disk: PartitionsLib.Disk; partition: SIGNED32; out: Streams.Writer); 
 	END FormatPartition; 
 VAR 
-	fsType2: LONGINT; 
+	fsType2: SIGNED32; 
 
-	PROCEDURE ^ GetVolume(dev: Disks.Device; partIdx: LONGINT; bpb: Block): FATVolumes.Volume; 
+	PROCEDURE ^ GetVolume(dev: Disks.Device; partIdx: SIGNED32; bpb: Block): FATVolumes.Volume; 
 BEGIN
 END FATScavenger.

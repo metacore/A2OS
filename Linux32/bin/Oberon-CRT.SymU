@@ -31,30 +31,30 @@ TYPE
 	Name* = ARRAY 32 OF CHAR; 
 
 	Position* = RECORD 
-		beg*: LONGINT; 
-		len*: LONGINT; 
-		col*: INTEGER; 
+		beg*: SIGNED32; 
+		len*: SIGNED32; 
+		col*: SIGNED16; 
 	END; 
 
 	SymbolNode* = RECORD 
-		typ*: INTEGER; 
+		typ*: SIGNED16; 
 		name*: Name; 
-		struct*: INTEGER; 
+		struct*: SIGNED16; 
 		deletable*: BOOLEAN; 
 		attrPos*: Position; 
 		semPos*: Position; 
-		line*: INTEGER; 
+		line*: SIGNED16; 
 	END; 
 
 	Set* = ARRAY (maxTerminals DIV Sets.size) OF SET; 
 
 	GraphNode* = RECORD 
-		typ*: INTEGER; 
-		next*: INTEGER; 
-		p1*: INTEGER; 
-		p2*: INTEGER; 
+		typ*: SIGNED16; 
+		next*: SIGNED16; 
+		p1*: SIGNED16; 
+		p2*: SIGNED16; 
 		pos*: Position; 
-		line*: INTEGER; 
+		line*: SIGNED16; 
 	END; 
 
 	MarkList* = ARRAY (maxNodes DIV Sets.size) OF SET; 
@@ -71,7 +71,7 @@ TYPE
 
 	CharClass = RECORD 
 		name: Name; 
-		set: INTEGER; 
+		set: SIGNED16; 
 	END; 
 
 	SymbolTable = ARRAY maxSymbols OF SymbolNode; 
@@ -84,19 +84,19 @@ TYPE
 
 	; 
 VAR 
-	maxSet*: INTEGER; 
-	maxT*: INTEGER; 
-	maxP*: INTEGER; 
-	firstNt*: INTEGER; 
-	lastNt*: INTEGER; 
-	maxC*: INTEGER; 
+	maxSet*: SIGNED16; 
+	maxT*: SIGNED16; 
+	maxP*: SIGNED16; 
+	firstNt*: SIGNED16; 
+	lastNt*: SIGNED16; 
+	maxC*: SIGNED16; 
 	semDeclPos*: Position; 
 	importPos*: Position; 
 	ignored*: Set; 
 	ignoreCase*: BOOLEAN; 
 	ddt*: ARRAY 10 OF BOOLEAN; 
-	nNodes*: INTEGER; 
-	root*: INTEGER; 
+	nNodes*: SIGNED16; 
+	root*: SIGNED16; 
 	w: Texts.Writer; 
 	st: SymbolTable; 
 	gn: GraphList; 
@@ -104,47 +104,47 @@ VAR
 	follow: FollowSets; 
 	chClass: ClassTable; 
 	set: ARRAY 128 OF Set; 
-	dummyName: INTEGER; 
+	dummyName: SIGNED16; 
 
 	PROCEDURE ^ Str(s: ARRAY OF CHAR); 
 	PROCEDURE ^ NL; 
-	PROCEDURE ^ Length(s: ARRAY OF CHAR): INTEGER; 
-	PROCEDURE ^ Restriction(n: INTEGER); 
+	PROCEDURE ^ Length(s: ARRAY OF CHAR): SIGNED16; 
+	PROCEDURE ^ Restriction(n: SIGNED16); 
 	PROCEDURE ^ ClearMarkList(VAR m: MarkList); 
-	PROCEDURE ^ GetNode*(gp: INTEGER; VAR n: GraphNode); 
-	PROCEDURE ^ PutNode*(gp: INTEGER; n: GraphNode); 
-	PROCEDURE ^ DelGraph*(gp: INTEGER): BOOLEAN; 
-	PROCEDURE ^ NewSym*(typ: INTEGER; name: Name; line: INTEGER): INTEGER; 
-	PROCEDURE ^ GetSym*(sp: INTEGER; VAR sn: SymbolNode); 
-	PROCEDURE ^ PutSym*(sp: INTEGER; sn: SymbolNode); 
-	PROCEDURE ^ FindSym*(name: Name): INTEGER; 
-	PROCEDURE ^ NewSet*(s: Set): INTEGER; 
-	PROCEDURE ^ PrintSet(s: ARRAY OF SET; indent: INTEGER); 
-	PROCEDURE ^ CompFirstSet*(gp: INTEGER; VAR fs: Set); 
+	PROCEDURE ^ GetNode*(gp: SIGNED16; VAR n: GraphNode); 
+	PROCEDURE ^ PutNode*(gp: SIGNED16; n: GraphNode); 
+	PROCEDURE ^ DelGraph*(gp: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ NewSym*(typ: SIGNED16; name: Name; line: SIGNED16): SIGNED16; 
+	PROCEDURE ^ GetSym*(sp: SIGNED16; VAR sn: SymbolNode); 
+	PROCEDURE ^ PutSym*(sp: SIGNED16; sn: SymbolNode); 
+	PROCEDURE ^ FindSym*(name: Name): SIGNED16; 
+	PROCEDURE ^ NewSet*(s: Set): SIGNED16; 
+	PROCEDURE ^ PrintSet(s: ARRAY OF SET; indent: SIGNED16); 
+	PROCEDURE ^ CompFirstSet*(gp: SIGNED16; VAR fs: Set); 
 	PROCEDURE ^ CompFirstSets; 
-	PROCEDURE ^ CompExpected*(gp, sp: INTEGER; VAR exp: Set); 
+	PROCEDURE ^ CompExpected*(gp, sp: SIGNED16; VAR exp: Set); 
 	PROCEDURE ^ CompFollowSets; 
 	PROCEDURE ^ CompAnySets; 
 	PROCEDURE ^ CompSyncSets; 
 	PROCEDURE ^ CompDeletableSymbols*; 
 	PROCEDURE ^ CompSymbolSets*; 
-	PROCEDURE ^ GetSet*(nr: INTEGER; VAR s: Set); 
+	PROCEDURE ^ GetSet*(nr: SIGNED16; VAR s: Set); 
 	PROCEDURE ^ MovePragmas; 
 	PROCEDURE ^ PrintSymbolTable*; 
-	PROCEDURE ^ NewClass*(name: Name; set: Set): INTEGER; 
-	PROCEDURE ^ ClassWithName*(name: Name): INTEGER; 
-	PROCEDURE ^ ClassWithSet*(s: Set): INTEGER; 
-	PROCEDURE ^ GetClass*(n: INTEGER; VAR s: Set); 
-	PROCEDURE ^ GetClassName*(n: INTEGER; VAR name: Name); 
+	PROCEDURE ^ NewClass*(name: Name; set: Set): SIGNED16; 
+	PROCEDURE ^ ClassWithName*(name: Name): SIGNED16; 
+	PROCEDURE ^ ClassWithSet*(s: Set): SIGNED16; 
+	PROCEDURE ^ GetClass*(n: SIGNED16; VAR s: Set); 
+	PROCEDURE ^ GetClassName*(n: SIGNED16; VAR name: Name); 
 	PROCEDURE ^ XRef*; 
-	PROCEDURE ^ NewNode*(typ, p1, line: INTEGER): INTEGER; 
-	PROCEDURE ^ CompleteGraph*(gp: INTEGER); 
-	PROCEDURE ^ ConcatAlt*(VAR gL1, gR1: INTEGER; gL2, gR2: INTEGER); 
-	PROCEDURE ^ ConcatSeq*(VAR gL1, gR1: INTEGER; gL2, gR2: INTEGER); 
-	PROCEDURE ^ MakeFirstAlt*(VAR gL, gR: INTEGER); 
-	PROCEDURE ^ MakeIteration*(VAR gL, gR: INTEGER); 
-	PROCEDURE ^ MakeOption*(VAR gL, gR: INTEGER); 
-	PROCEDURE ^ StrToGraph*(str: ARRAY OF CHAR; VAR gL, gR: INTEGER); 
+	PROCEDURE ^ NewNode*(typ, p1, line: SIGNED16): SIGNED16; 
+	PROCEDURE ^ CompleteGraph*(gp: SIGNED16); 
+	PROCEDURE ^ ConcatAlt*(VAR gL1, gR1: SIGNED16; gL2, gR2: SIGNED16); 
+	PROCEDURE ^ ConcatSeq*(VAR gL1, gR1: SIGNED16; gL2, gR2: SIGNED16); 
+	PROCEDURE ^ MakeFirstAlt*(VAR gL, gR: SIGNED16); 
+	PROCEDURE ^ MakeIteration*(VAR gL, gR: SIGNED16); 
+	PROCEDURE ^ MakeOption*(VAR gL, gR: SIGNED16); 
+	PROCEDURE ^ StrToGraph*(str: ARRAY OF CHAR; VAR gL, gR: SIGNED16); 
 	PROCEDURE ^ DelNode*(gn: GraphNode): BOOLEAN; 
 	PROCEDURE ^ PrintGraph*; 
 	PROCEDURE ^ FindCircularProductions*(VAR ok: BOOLEAN); 

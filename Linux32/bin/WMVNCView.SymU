@@ -17,18 +17,18 @@ TYPE
 		state: Graphics.CanvasState; 
 		navig: BOOLEAN; 
 		scrollLock: BOOLEAN; 
-		fx, fy, inffx, inffy, factor, intfactor: REAL; 
+		fx, fy, inffx, inffy, factor, intfactor: FLOAT32; 
 		active: BOOLEAN; 
 
-		PROCEDURE ^  & New*(manager: WMWindowManager.WindowManager; port, dx, dy, w, h: LONGINT; name, password: ARRAY OF CHAR); 
-		PROCEDURE ^ CheckActive(nof: LONGINT); 
+		PROCEDURE ^  & New*(manager: WMWindowManager.WindowManager; port, dx, dy, w, h: SIGNED32; name, password: ARRAY OF CHAR); 
+		PROCEDURE ^ CheckActive(nof: SIGNED32); 
 		PROCEDURE ^ Update*(r: Rectangle; top: WMWindowManager.Window); 
 		PROCEDURE ^ Refresh*(top: Window); 
 		PROCEDURE ^ Draw(r: Rectangle; top: Window); 
-		PROCEDURE ^ SetExtents(w, h: LONGINT); 
-		PROCEDURE ^ SetScaleFactor(factor: REAL); 
-		PROCEDURE ^ KeyEvent(ucs: LONGINT; flags: SET; keysym: LONGINT); 
-		PROCEDURE ^ MouseEvent(x, y, dz: LONGINT; keys: SET); 
+		PROCEDURE ^ SetExtents(w, h: SIGNED32); 
+		PROCEDURE ^ SetScaleFactor(factor: FLOAT32); 
+		PROCEDURE ^ KeyEvent(ucs: SIGNED32; flags: SET; keysym: SIGNED32); 
+		PROCEDURE ^ MouseEvent(x, y, dz: SIGNED32; keys: SET); 
 		PROCEDURE ^ ClipboardEvent(text: String); 
 		PROCEDURE ^ ClipboardChanged(sender, data: ANY); 
 		PROCEDURE ^ Close; 

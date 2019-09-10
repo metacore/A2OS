@@ -4,9 +4,9 @@ CONST
 VAR 
 	default-: vyRanBase.tRandom; 
 
-	PROCEDURE ^ max*(): LONGINT; 
+	PROCEDURE ^ max*(): SIGNED32; 
 	PROCEDURE ^ SetGen*(g: vyRanBase.tRandom); 
-	PROCEDURE ^ Laplace*(mu, lambda: LONGREAL): LONGREAL; 
+	PROCEDURE ^ Laplace*(mu, lambda: FLOAT64): FLOAT64; 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ LCG(a, b, c, seed: antsPortability.Hugeint): antsPortability.Hugeint; 
 	PROCEDURE ^ SetRandu*; 
@@ -14,15 +14,15 @@ VAR
 	PROCEDURE ^ SetExC*; 
 	PROCEDURE ^ SetExD*; 
 	PROCEDURE ^ SetMarsaglia*; 
-	PROCEDURE ^ DoApplyRNG(obj: vyBase.Object; VAR u: LONGREAL); 
+	PROCEDURE ^ DoApplyRNG(obj: vyBase.Object; VAR u: FLOAT64); 
 	PROCEDURE ^ ApplyRNG*; 
-	PROCEDURE ^ DoBoxMuller(obj: vyBase.Object; VAR n1, n2: LONGREAL); 
+	PROCEDURE ^ DoBoxMuller(obj: vyBase.Object; VAR n1, n2: FLOAT64); 
 	PROCEDURE ^ ApplyBoxMuller*; 
-	PROCEDURE ^ DoPolarMethod(obj: vyBase.Object; VAR n1, n2: LONGREAL); 
+	PROCEDURE ^ DoPolarMethod(obj: vyBase.Object; VAR n1, n2: FLOAT64); 
 	PROCEDURE ^ ApplyPolarMethod*; 
-	PROCEDURE ^ PowerH(this, power: LONGINT): antsPortability.Hugeint; 
+	PROCEDURE ^ PowerH(this, power: SIGNED32): antsPortability.Hugeint; 
 	PROCEDURE ^ NewDynamicRNG*; 
-	PROCEDURE ^ Max(i1, i2: LONGINT): LONGINT; 
+	PROCEDURE ^ Max(i1, i2: SIGNED32): SIGNED32; 
 	PROCEDURE ^ MakeShifted*; 
 	PROCEDURE ^ MakePaired*; 
 BEGIN

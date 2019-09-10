@@ -12,16 +12,16 @@ TYPE
 	END; 
 VAR 
 	sPat: ARRAY MaxPatLen OF CHAR; 
-	sDv: ARRAY (MaxPatLen + 1) OF INTEGER; 
-	sPatLen: INTEGER; 
-	lTime: LONGINT; 
+	sDv: ARRAY (MaxPatLen + 1) OF SIGNED16; 
+	sPatLen: SIGNED16; 
+	lTime: SIGNED32; 
 	rBuf: Texts.Buffer; 
-	InitW, InitH, InitLogW, InitLogH: INTEGER; 
-	sCol: INTEGER; 
+	InitW, InitH, InitLogW, InitLogH: SIGNED16; 
+	sCol: SIGNED16; 
 	W: Texts.Writer; 
 	FixedDocs: BOOLEAN; 
 
-	PROCEDURE ^ open(D: Documents.Document; T: Texts.Text; name: ARRAY OF CHAR; VAR w, h: INTEGER); 
+	PROCEDURE ^ open(D: Documents.Document; T: Texts.Text; name: ARRAY OF CHAR; VAR w, h: SIGNED16); 
 	PROCEDURE ^ LoadAttrs(D: Documents.Document; main: TextGadgets.Frame); 
 	PROCEDURE ^ LoadTextDocument(D: Documents.Document); 
 	PROCEDURE ^ StoreAttrs(D: Documents.Document; main: TextGadgets.Frame); 
@@ -39,13 +39,13 @@ VAR
 	PROCEDURE ^ InitLog*(D: Documents.Document); 
 	PROCEDURE ^ NewLog*; 
 	PROCEDURE ^ GetText*(VAR par: Display.Frame): Texts.Text; 
-	PROCEDURE ^ SetCaret*(F: Display.Frame; T: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ SetCaret*(F: Display.Frame; T: Texts.Text; pos: SIGNED32); 
 	PROCEDURE ^ Locate*; 
 	PROCEDURE ^ controls(F: TextGadgets.Frame); 
 	PROCEDURE ^ Controls*; 
-	PROCEDURE ^ MarkPatPos(tF: TextGadgets0.Frame; pos: LONGINT); 
-	PROCEDURE ^ CalcDispVec(time: LONGINT); 
-	PROCEDURE ^ SPatFound(text: Texts.Text; VAR pos: LONGINT): BOOLEAN; 
+	PROCEDURE ^ MarkPatPos(tF: TextGadgets0.Frame; pos: SIGNED32); 
+	PROCEDURE ^ CalcDispVec(time: SIGNED32); 
+	PROCEDURE ^ SPatFound(text: Texts.Text; VAR pos: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ search(VAR S: Attributes.Scanner; tF: TextGadgets.Frame); 
 	PROCEDURE ^ Search*; 
 	PROCEDURE ^ replace(all: BOOLEAN); 
@@ -61,7 +61,7 @@ VAR
 	PROCEDURE ^ ReplaceColor*; 
 	PROCEDURE ^ AdjustStyles*; 
 	PROCEDURE ^ PrintSetup*; 
-	PROCEDURE ^ ShowText*(title: ARRAY OF CHAR; T: Texts.Text; W, H: INTEGER); 
+	PROCEDURE ^ ShowText*(title: ARRAY OF CHAR; T: Texts.Text; W, H: SIGNED16); 
 	PROCEDURE ^ ReplaceSystemEditor*; 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ GetFrame(): TextGadgets0.Frame; 

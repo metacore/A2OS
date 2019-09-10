@@ -8,7 +8,7 @@ TYPE
 
 	tModelDesc* = RECORD (antsModels.tModelDesc)
 		datafct: antsFunctions.Function; 
-		ud, u: POINTER TO ARRAY OF ARRAY OF LONGREAL; 
+		ud, u: POINTER TO ARRAY OF ARRAY OF FLOAT64; 
 		fct: antsFunctions.Function; 
 	END; 
 
@@ -16,7 +16,7 @@ TYPE
 	PROCEDURE ^ LoadM(VAR R: Files.Rider; o: tModel); 
 	PROCEDURE ^ Metropolis(s: antsKernel.Kernel); 
 	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
-	PROCEDURE ^ Sync(m: tModel; depth: LONGINT); 
+	PROCEDURE ^ Sync(m: tModel; depth: SIGNED32); 
 	PROCEDURE ^ Init(s: antsKernel.Kernel); 
 	PROCEDURE ^ HandleAttributes(o: tModel; VAR msg: Objects.AttrMsg); 
 	PROCEDURE ^ HandleLinks(o: tModel; VAR msg: Objects.LinkMsg); 

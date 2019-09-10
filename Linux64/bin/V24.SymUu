@@ -22,29 +22,29 @@ CONST
 TYPE 
 	Port* = OBJECT {EXCLUSIVE} (Serials.Port)
 	VAR 
-		fd: LONGINT; 
+		fd: SIGNED32; 
 		portname: ARRAY 128 OF CHAR; 
 
-		PROCEDURE ^  & Init*(port: LONGINT; CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: WORD); 
+		PROCEDURE ^  & Init*(port: SIGNED32; CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ Open*(bps, data, parity, stop: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Available*(): SIZE; 
-		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: WORD); 
-		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: WORD); 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
-		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: LONGINT); 
+		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: SIGNED32); 
 		PROCEDURE ^ ClearMC*(s: SET); 
 		PROCEDURE ^ SetMC*(s: SET); 
 		PROCEDURE ^ GetMC*(VAR s: SET); 
 	END Port; 
 VAR 
-	tcgetattr: PROCEDURE {C}(fd: LONGINT; VAR tio: Unix.Termios):LONGINT; 
-	tcsetattr: PROCEDURE {C}(fd: LONGINT; action: LONGINT; VAR tio: Unix.Termios):LONGINT; 
-	cfsetispeed: PROCEDURE {C}(VAR tio: Unix.Termios; speed: LONGINT):LONGINT; 
-	cfsetospeed: PROCEDURE {C}(VAR tio: Unix.Termios; speed: LONGINT):LONGINT; 
-	cfgetispeed: PROCEDURE {C}(VAR tio: Unix.Termios):LONGINT; 
-	cfgetospeed: PROCEDURE {C}(VAR tio: Unix.Termios):LONGINT; 
+	tcgetattr: PROCEDURE {C}(fd: SIGNED32; VAR tio: Unix.Termios):SIGNED32; 
+	tcsetattr: PROCEDURE {C}(fd: SIGNED32; action: SIGNED32; VAR tio: Unix.Termios):SIGNED32; 
+	cfsetispeed: PROCEDURE {C}(VAR tio: Unix.Termios; speed: SIGNED32):SIGNED32; 
+	cfsetospeed: PROCEDURE {C}(VAR tio: Unix.Termios; speed: SIGNED32):SIGNED32; 
+	cfgetispeed: PROCEDURE {C}(VAR tio: Unix.Termios):SIGNED32; 
+	cfgetospeed: PROCEDURE {C}(VAR tio: Unix.Termios):SIGNED32; 
 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ Map*(context: Commands.Context); 

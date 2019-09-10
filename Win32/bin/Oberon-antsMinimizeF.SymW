@@ -2,16 +2,16 @@ MODULE antsMinimizeF IN Oberon;
 CONST 
 	range = 30; 
 TYPE 
-	Function = PROCEDURE (a: ARRAY OF LONGREAL):LONGREAL; 
+	Function = PROCEDURE (a: ARRAY OF FLOAT64):FLOAT64; 
 
-	Function2 = PROCEDURE (beta, h: LONGREAL):LONGREAL; 
+	Function2 = PROCEDURE (beta, h: FLOAT64):FLOAT64; 
 VAR 
 	exceeded*: BOOLEAN; 
 
-	PROCEDURE ^ AmoTry(VAR P: ARRAY OF ARRAY OF LONGREAL; VAR Y: ARRAY OF LONGREAL; VAR sum: ARRAY OF LONGREAL; ndim, ihi: LONGINT; func: Function; VAR nfunc: LONGINT; fac: LONGREAL): LONGREAL; 
-	PROCEDURE ^ swap*(VAR y1, y2: LONGREAL); 
-	PROCEDURE ^ swapv*(VAR y1, y2: ARRAY OF LONGREAL); 
-	PROCEDURE ^ Amoeba*(VAR P: ARRAY OF ARRAY OF LONGREAL; VAR Y: ARRAY OF LONGREAL; ndim: LONGINT; ftol: LONGREAL; func: Function; VAR nfunc: LONGINT); 
-	PROCEDURE ^ Downhill*(func: Function2; VAR beta, h: LONGREAL; prec: LONGREAL); 
+	PROCEDURE ^ AmoTry(VAR P: ARRAY OF ARRAY OF FLOAT64; VAR Y: ARRAY OF FLOAT64; VAR sum: ARRAY OF FLOAT64; ndim, ihi: SIGNED32; func: Function; VAR nfunc: SIGNED32; fac: FLOAT64): FLOAT64; 
+	PROCEDURE ^ swap*(VAR y1, y2: FLOAT64); 
+	PROCEDURE ^ swapv*(VAR y1, y2: ARRAY OF FLOAT64); 
+	PROCEDURE ^ Amoeba*(VAR P: ARRAY OF ARRAY OF FLOAT64; VAR Y: ARRAY OF FLOAT64; ndim: SIGNED32; ftol: FLOAT64; func: Function; VAR nfunc: SIGNED32); 
+	PROCEDURE ^ Downhill*(func: Function2; VAR beta, h: FLOAT64; prec: FLOAT64); 
 BEGIN
 END antsMinimizeF.

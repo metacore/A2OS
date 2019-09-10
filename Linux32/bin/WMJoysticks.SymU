@@ -37,9 +37,9 @@ TYPE
 		PROCEDURE ^ HandleJoystickMessage(VAR msg: Joysticks.JoystickMessage); 
 		PROCEDURE ^ HandleCalibrationButton(sender, data: ANY); 
 		PROCEDURE ^ InitNameLabel(CONST name, description: ARRAY OF CHAR); 
-		PROCEDURE ^ InitButtonsPanel(nbrOfButtons: LONGINT); 
-		PROCEDURE ^ InitCoolieHatPanels(nbrOfCoolieHats: LONGINT); 
-		PROCEDURE ^ InitAxisPanel(nbrOfAxis: LONGINT; implementedAxis: SET); 
+		PROCEDURE ^ InitButtonsPanel(nbrOfButtons: SIGNED32); 
+		PROCEDURE ^ InitCoolieHatPanels(nbrOfCoolieHats: SIGNED32); 
+		PROCEDURE ^ InitAxisPanel(nbrOfAxis: SIGNED32; implementedAxis: SET); 
 		PROCEDURE ^ InitToolbar; 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^  & New*(joystick: Joysticks.Joystick); 
@@ -52,7 +52,7 @@ TYPE
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	PrototypeAcMin*, PrototypeAcMax*, PrototypeAcCenter*, PrototypeAcCur*: WMProperties.Int32Property; 
 	PrototypeAcColor*, PrototypeAcBorderColor*: WMProperties.ColorProperty; 
 	PrototypeAcShowValues*: WMProperties.BooleanProperty; 

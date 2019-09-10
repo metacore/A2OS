@@ -13,7 +13,7 @@ TYPE
 		PROCEDURE ^ UpdateDataset*; 
 	END CpuLoad; 
 VAR 
-	nbrOfCpus-: LONGINT; 
+	nbrOfCpus-: SIGNED32; 
 
 	PROCEDURE ^ InitPlugins; 
 	PROCEDURE ^ Install*; 

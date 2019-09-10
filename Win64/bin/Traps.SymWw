@@ -10,7 +10,7 @@ CONST
 VAR 
 	modes: ARRAY 25 OF CHAR; 
 	flags: ARRAY 13 OF CHAR; 
-	trapState: LONGINT; 
+	trapState: SIGNED32; 
 	check: Objects.Process; 
 
 	PROCEDURE ^ Show*(p: Objects.Process; VAR int: Kernel32.Context; VAR exc: Kernel32.ExceptionRecord; long: BOOLEAN); 

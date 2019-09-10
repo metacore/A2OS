@@ -10,37 +10,37 @@ TYPE
 	BitReader = OBJECT 
 	VAR 
 		in: Streams.Reader; 
-		curByte, curBit: LONGINT; 
+		curByte, curBit: SIGNED32; 
 
 		PROCEDURE ^  & New(r: Streams.Reader); 
 		PROCEDURE ^ Initialize; 
-		PROCEDURE ^ Bit(): LONGINT; 
+		PROCEDURE ^ Bit(): SIGNED32; 
 	END BitReader; 
 
 	BitWriter = OBJECT 
 	VAR 
 		out: Streams.Writer; 
-		curByte, curBit: LONGINT; 
+		curByte, curBit: SIGNED32; 
 
 		PROCEDURE ^  & New(w: Streams.Writer); 
-		PROCEDURE ^ Bit(bit: LONGINT); 
+		PROCEDURE ^ Bit(bit: SIGNED32); 
 		PROCEDURE ^ Finish; 
 	END BitWriter; 
 
 	HuffmanCoder = OBJECT 
 	TYPE 
-		Index = INTEGER; 
+		Index = SIGNED16; 
 
-		Pattern = INTEGER; 
+		Pattern = SIGNED16; 
 
 		Node = RECORD 
-			weight: INTEGER; 
+			weight: SIGNED16; 
 			pattern: Pattern; 
 			up: Index; 
 			down: Index; 
 		END; 
 	VAR 
-		mode: SHORTINT; 
+		mode: SIGNED8; 
 		in: BitReader; 
 		out: BitWriter; 
 		esc: Index; 
@@ -48,7 +48,7 @@ TYPE
 		map: ARRAY AlphabetSize OF Index; 
 		table: ARRAY ((2 * AlphabetSize) + 2) OF Node; 
 
-		PROCEDURE ^  & New(m: SHORTINT; input: Streams.Reader; output: Streams.Writer); 
+		PROCEDURE ^  & New(m: SIGNED8; input: Streams.Reader; output: Streams.Writer); 
 		PROCEDURE ^ Initialize; 
 		PROCEDURE ^ Finish; 
 		PROCEDURE ^ GetPattern(): Pattern; 
@@ -75,7 +75,7 @@ TYPE
 		huff: HuffmanCoder; 
 
 		PROCEDURE ^  & New*(archive: Streams.Reader); 
-		PROCEDURE ^ ExtractBlock*(VAR buf: ARRAY OF CHAR; len: LONGINT); 
+		PROCEDURE ^ ExtractBlock*(VAR buf: ARRAY OF CHAR; len: SIGNED32); 
 	END Decoder; 
 BEGIN
 END AdaptiveHuffman.

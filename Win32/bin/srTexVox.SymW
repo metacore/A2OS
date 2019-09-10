@@ -36,7 +36,7 @@ TYPE
 		copy: Raster.Mode; 
 		w, h, bpr, adr: SIZE; 
 		transparent: BOOLEAN; 
-		off: INTEGER; 
+		off: SIGNED16; 
 
 		PROCEDURE ^  & init*(n: Name); 
 		PROCEDURE ^ Shade*(VAR ray: Ray); 
@@ -49,7 +49,7 @@ TYPE
 		copy: Raster.Mode; 
 		w, h, bpr, adr: SIZE; 
 		done: BOOLEAN; 
-		off: INTEGER; 
+		off: SIGNED16; 
 
 		PROCEDURE ^  & init*(n, m: Name); 
 		PROCEDURE ^ Shade*(VAR ray: Ray); 

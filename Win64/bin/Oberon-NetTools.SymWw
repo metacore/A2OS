@@ -8,12 +8,12 @@ CONST
 	Esc = 1BX; 
 	BreakChar = Esc; 
 	Done* = 0; 
-	Failed* = MAX(INTEGER); 
+	Failed* = MAX(SIGNED16); 
 TYPE 
 	ProxyMsg* = RECORD (HyperDocs.LinkSchemeMsg)
 		host*: ARRAY ServerStrLen OF CHAR; 
 		D*: Documents.Document; 
-		port*: INTEGER; 
+		port*: SIGNED16; 
 	END; 
 
 	Session* = POINTER TO SessionDesc; 
@@ -22,45 +22,45 @@ TYPE
 		C*: NetSystem.Connection; 
 		S*: Streams.Stream; 
 		reply*: ARRAY MaxLine OF CHAR; 
-		status*: INTEGER; 
-		res*: INTEGER; 
+		status*: SIGNED16; 
+		res*: SIGNED16; 
 	END; 
 
 	TCPStream* = POINTER TO TCPStreamDesc; 
 
 	TCPStreamDesc* = RECORD (Streams.StreamDesc)
 		C*: NetSystem.Connection; 
-		avail: LONGINT; 
+		avail: SIGNED32; 
 	END; 
 VAR 
 	W: Texts.Writer; 
-	curLen*: LONGINT; 
-	prevPos, curPos*: LONGINT; 
-	TimeOut*: LONGINT; 
+	curLen*: SIGNED32; 
+	prevPos, curPos*: SIGNED32; 
+	TimeOut*: SIGNED32; 
 	progM: Objects.Object; 
 	buffer: ARRAY BufLen OF CHAR; 
 	proxyDomain: ARRAY 64 OF CHAR; 
 
 	PROCEDURE ^ UserBreak*(): BOOLEAN; 
 	PROCEDURE ^ ProgMNotify*; 
-	PROCEDURE ^ Connect*(VAR C: NetSystem.Connection; port: INTEGER; host: ARRAY OF CHAR; log: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ AsyncConnect*(VAR C: NetSystem.Connection; port: INTEGER; host: ARRAY OF CHAR; log: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ Connected*(C: NetSystem.Connection; mode: INTEGER): BOOLEAN; 
+	PROCEDURE ^ Connect*(VAR C: NetSystem.Connection; port: SIGNED16; host: ARRAY OF CHAR; log: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ AsyncConnect*(VAR C: NetSystem.Connection; port: SIGNED16; host: ARRAY OF CHAR; log: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ Connected*(C: NetSystem.Connection; mode: SIGNED16): BOOLEAN; 
 	PROCEDURE ^ Disconnect*(VAR C: NetSystem.Connection); 
 	PROCEDURE ^ SendString*(C: NetSystem.Connection; str: ARRAY OF CHAR); 
-	PROCEDURE ^ ReadTCPBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT); 
-	PROCEDURE ^ WriteTCPBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT); 
-	PROCEDURE ^ TCPAvailable*(S: Streams.Stream): LONGINT; 
-	PROCEDURE ^ TCPState(S: Streams.Stream): INTEGER; 
+	PROCEDURE ^ ReadTCPBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED32); 
+	PROCEDURE ^ WriteTCPBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED32); 
+	PROCEDURE ^ TCPAvailable*(S: Streams.Stream): SIGNED32; 
+	PROCEDURE ^ TCPState(S: Streams.Stream): SIGNED16; 
 	PROCEDURE ^ TCPFlush(S: Streams.Stream); 
 	PROCEDURE ^ TCPClose(S: Streams.Stream); 
 	PROCEDURE ^ OpenStream*(C: NetSystem.Connection): Streams.Stream; 
-	PROCEDURE ^ ReadData*(C: NetSystem.Connection; VAR R: Files.Rider; maxLen: LONGINT); 
+	PROCEDURE ^ ReadData*(C: NetSystem.Connection; VAR R: Files.Rider; maxLen: SIGNED32); 
 	PROCEDURE ^ WriteData*(C: NetSystem.Connection; VAR R: Files.Rider); 
 	PROCEDURE ^ QueryString*(key: ARRAY OF CHAR; VAR s: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ GetHostPort*(key: ARRAY OF CHAR; VAR host: ARRAY OF CHAR; VAR port: INTEGER; defPort: INTEGER); 
+	PROCEDURE ^ GetHostPort*(key: ARRAY OF CHAR; VAR host: ARRAY OF CHAR; VAR port: SIGNED16; defPort: SIGNED16); 
 	PROCEDURE ^ QueryBool*(key: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ SplitHostPort*(VAR url, host: ARRAY OF CHAR; VAR port: INTEGER); 
+	PROCEDURE ^ SplitHostPort*(VAR url, host: ARRAY OF CHAR; VAR port: SIGNED16); 
 	PROCEDURE ^ UseProxy*(VAR host: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ InitProxy; 
 BEGIN

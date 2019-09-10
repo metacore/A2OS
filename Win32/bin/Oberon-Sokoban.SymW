@@ -38,31 +38,31 @@ TYPE
 	END; 
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
-		level: INTEGER; 
-		world: ARRAY (MaxN + 2) OF ARRAY (MaxM + 2) OF SHORTINT; 
-		mani, manj, oldmani, oldmanj, n, m, moves: INTEGER; 
+		level: SIGNED16; 
+		world: ARRAY (MaxN + 2) OF ARRAY (MaxM + 2) OF SIGNED8; 
+		mani, manj, oldmani, oldmanj, n, m, moves: SIGNED16; 
 		backPictName, wallPictName, parkPictName, userName: ARRAY 32 OF CHAR; 
 		backPict, wallPict, parkPict: Pictures.Picture; 
 		focus, nameFocus, done, movedCan: BOOLEAN; 
-		startTime, time: LONGINT; 
+		startTime, time: SIGNED32; 
 		task: Task; 
 	END; 
 
 	UpdateMsg = RECORD (Display.FrameMsg)
 		name, moves, time: BOOLEAN; 
-		points: INTEGER; 
+		points: SIGNED16; 
 		new: ARRAY 4 OF RECORD 
-			x, y: INTEGER; 
+			x, y: SIGNED16; 
 		END; 
 	END; 
 VAR 
-	statusBarH: INTEGER; 
+	statusBarH: SIGNED16; 
 	W: Texts.Writer; 
 
-	PROCEDURE ^ RestoreField(F: Frame; field: SHORTINT; Q: Display3.Mask; x, y, w, h: INTEGER); 
-	PROCEDURE ^ CalcSize(F: Frame; x, y: INTEGER; VAR xo, yo, dx, dy: INTEGER); 
-	PROCEDURE ^ ShowStatus(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; level, moves, time, name: BOOLEAN); 
-	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreField(F: Frame; field: SIGNED8; Q: Display3.Mask; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ CalcSize(F: Frame; x, y: SIGNED16; VAR xo, yo, dx, dy: SIGNED16); 
+	PROCEDURE ^ ShowStatus(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; level, moves, time, name: BOOLEAN); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ CheckDone(F: Frame); 
 	PROCEDURE ^ StopTask(F: Frame); 
 	PROCEDURE ^ LoadLevel(F: Frame); 

@@ -5,21 +5,21 @@ VAR
 	W: Texts.Writer; 
 	fontname: ARRAY 8 OF ARRAY 32 OF CHAR; 
 	libname: ARRAY 8 OF ARRAY 32 OF CHAR; 
-	elem: ARRAY 8 OF PROCEDURE (VAR R: Files.Rider; col, x, y, w, h: INTEGER):Display.Frame; 
+	elem: ARRAY 8 OF PROCEDURE (VAR R: Files.Rider; col, x, y, w, h: SIGNED16):Display.Frame; 
 
-	PROCEDURE ^ Data(VAR R: Files.Rider; VAR x, y, w, h, color: INTEGER); 
+	PROCEDURE ^ Data(VAR R: Files.Rider; VAR x, y, w, h, color: SIGNED16); 
 	PROCEDURE ^ ReadString(VAR R: Files.Rider; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ RLine(col, x, y, w, h: INTEGER): Display.Frame; 
-	PROCEDURE ^ Line(col, x, y, w, h: INTEGER): Display.Frame; 
-	PROCEDURE ^ NewCap*(fnt: Objects.Library; col, X, Y: INTEGER; s: ARRAY OF CHAR): TextFields.Caption; 
-	PROCEDURE ^ Caption(fnt: Fonts.Font; col, X, Y: INTEGER; VAR s: ARRAY OF CHAR): Display.Frame; 
-	PROCEDURE ^ Rect(VAR R: Files.Rider; col, x, y, w, h: INTEGER): Display.Frame; 
-	PROCEDURE ^ Curves(VAR R: Files.Rider; col, x, y, w, h: INTEGER): Display.Frame; 
-	PROCEDURE ^ Macro(lib: Objects.Library; col, X, Y: INTEGER; VAR s: ARRAY OF CHAR): Display.Frame; 
+	PROCEDURE ^ RLine(col, x, y, w, h: SIGNED16): Display.Frame; 
+	PROCEDURE ^ Line(col, x, y, w, h: SIGNED16): Display.Frame; 
+	PROCEDURE ^ NewCap*(fnt: Objects.Library; col, X, Y: SIGNED16; s: ARRAY OF CHAR): TextFields.Caption; 
+	PROCEDURE ^ Caption(fnt: Fonts.Font; col, X, Y: SIGNED16; VAR s: ARRAY OF CHAR): Display.Frame; 
+	PROCEDURE ^ Rect(VAR R: Files.Rider; col, x, y, w, h: SIGNED16): Display.Frame; 
+	PROCEDURE ^ Curves(VAR R: Files.Rider; col, x, y, w, h: SIGNED16): Display.Frame; 
+	PROCEDURE ^ Macro(lib: Objects.Library; col, X, Y: SIGNED16; VAR s: ARRAY OF CHAR): Display.Frame; 
 	PROCEDURE ^ ThisLib(name: ARRAY OF CHAR): Objects.Library; 
-	PROCEDURE ^ Item(VAR R: Files.Rider; type: SHORTINT): Display.Frame; 
+	PROCEDURE ^ Item(VAR R: Files.Rider; type: SIGNED8): Display.Frame; 
 	PROCEDURE ^ Load(VAR R: Files.Rider; VAR link: Objects.Object); 
-	PROCEDURE ^ CoordCheck(obj: Objects.Object): INTEGER; 
+	PROCEDURE ^ CoordCheck(obj: Objects.Object): SIGNED16; 
 	PROCEDURE ^ New*; 
 BEGIN
 END WTSDraw.

@@ -8,7 +8,7 @@ TYPE
 
 	NoteBookDesc* = RECORD (Gadgets.FrameDesc)
 		pages*: Display.Frame; 
-		time*: LONGINT; 
+		time*: SIGNED32; 
 	END; 
 
 	PageMsg = RECORD (Display.FrameMsg)
@@ -17,18 +17,18 @@ TYPE
 
 	PROCEDURE ^ SetMask(F: Display.Frame; M: Display3.Mask); 
 	PROCEDURE ^ SetMainMask(F: NoteBook); 
-	PROCEDURE ^ ToMain(F: NoteBook; x, y: INTEGER; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ ToMain(F: NoteBook; x, y: SIGNED16; VAR M: Display.FrameMsg); 
 	PROCEDURE ^ Adjust(F: NoteBook; VAR M: Display.ModifyMsg); 
 	PROCEDURE ^ AdjustChild(F: NoteBook; VAR M: Display.ModifyMsg); 
-	PROCEDURE ^ UpdateTitle(F: NoteBook; R: Display3.Mask; x, y, w, h: INTEGER); 
-	PROCEDURE ^ Restore(F: NoteBook; R: Display3.Mask; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg); 
-	PROCEDURE ^ HandlePageMsg(F: NoteBook; x, y: INTEGER; VAR M: PageMsg); 
+	PROCEDURE ^ UpdateTitle(F: NoteBook; R: Display3.Mask; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ Restore(F: NoteBook; R: Display3.Mask; x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ HandlePageMsg(F: NoteBook; x, y: SIGNED16; VAR M: PageMsg); 
 	PROCEDURE ^ GotoPage(F: NoteBook; f: Display.Frame); 
 	PROCEDURE ^ InsertPage(F: NoteBook; f: Display.Frame); 
 	PROCEDURE ^ RemovePage(F: NoteBook; f: Display.Frame); 
 	PROCEDURE ^ LocatePage(F: NoteBook; type: ARRAY OF CHAR): Display.Frame; 
 	PROCEDURE ^ HandleSelect(F: NoteBook; VAR M: Oberon.InputMsg); 
-	PROCEDURE ^ Edit(F: NoteBook; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ Edit(F: NoteBook; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ Neutralize(F: NoteBook); 
 	PROCEDURE ^ ConsumeMsg(F: NoteBook; VAR M: Display.ConsumeMsg); 
 	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: NoteBook); 

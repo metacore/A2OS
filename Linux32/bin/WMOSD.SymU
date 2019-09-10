@@ -24,15 +24,15 @@ TYPE
 	END Window; 
 VAR 
 	window: Window; 
-	width, height: LONGINT; 
-	timeleft: LONGINT; 
-	nofWindows: LONGINT; 
-	testsRunning: LONGINT; 
+	width, height: SIGNED32; 
+	timeleft: SIGNED32; 
+	nofWindows: SIGNED32; 
+	testsRunning: SIGNED32; 
 	stopSelftest: BOOLEAN; 
 
 	PROCEDURE ^ DecNofWindows; 
 	PROCEDURE ^ TimeExpired(): BOOLEAN; 
-	PROCEDURE ^ Show*(CONST message: ARRAY OF CHAR; duration: LONGINT); 
+	PROCEDURE ^ Show*(CONST message: ARRAY OF CHAR; duration: SIGNED32); 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Close*; 
 	PROCEDURE ^ Test*(context: Commands.Context); 

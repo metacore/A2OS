@@ -19,7 +19,7 @@ TYPE
 
 	Bits* = SIZE; 
 
-	Fingerprint* = HUGEINT; 
+	Fingerprint* = SIGNED64; 
 
 	SegmentedName* = ARRAY 8 OF StringPool.Index; 
 
@@ -37,7 +37,7 @@ TYPE
 	END; 
 
 	Pattern* = POINTER TO RECORD 
-		mode-: WORD; 
+		mode-: INTEGER; 
 		scale-: Bits; 
 		patterns-: SIZE; 
 		pattern-: FixupPatterns; 
@@ -67,7 +67,7 @@ TYPE
 	Aliases* = POINTER TO ARRAY OF Alias; 
 
 	Section* = RECORD 
-		type*: WORD; 
+		type*: INTEGER; 
 		identifier*: Identifier; 
 		unit*: Bits; 
 		fixed*: BOOLEAN; 
@@ -90,7 +90,7 @@ TYPE
 		table: Table; 
 		size: SIZE; 
 		used: SIZE; 
-		maxLoadFactor: REAL; 
+		maxLoadFactor: FLOAT32; 
 		writer: Streams.Writer; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
@@ -123,7 +123,7 @@ VAR
 	statBodySections, statBodySectionsSize: SIZE; 
 	statSections, statSectionsTotalSize: SIZE; 
 
-	PROCEDURE ^ IsCode*(type: WORD): BOOLEAN; 
+	PROCEDURE ^ IsCode*(type: INTEGER): BOOLEAN; 
 	PROCEDURE ^ Matches*(CONST this, that: Identifier): BOOLEAN; 
 	PROCEDURE ^ CopyIdentifier(CONST source: Identifier; VAR dest: Identifier); 
 	PROCEDURE ^ CopyPattern(source: Pattern; VAR dest: Pattern); 
@@ -132,8 +132,8 @@ VAR
 	PROCEDURE ^ CopyAlias*(CONST source: Alias; VAR dest: Alias); 
 	PROCEDURE ^ CopySection*(CONST source: Section; VAR dest: Section); 
 	PROCEDURE ^ InitSection*(VAR dest: Section); 
-	PROCEDURE ^ NibbleToCharacter*(value: WORD): CHAR; 
-	PROCEDURE ^ CharacterToNibble*(char: CHAR): WORD; 
+	PROCEDURE ^ NibbleToCharacter*(value: INTEGER): CHAR; 
+	PROCEDURE ^ CharacterToNibble*(char: CHAR): INTEGER; 
 	PROCEDURE ^ WriteSectionTextual(writer: Streams.Writer; CONST section: Section); 
 	PROCEDURE ^ ReadSectionTextual(reader: Streams.Reader; VAR section: Section); 
 	PROCEDURE ^ ReadNameList*(reader: Streams.Reader; VAR nameList: NameList; binary: BOOLEAN; poolMap: PoolMap); 
@@ -146,12 +146,12 @@ VAR
 	PROCEDURE ^ SetAliases*(VAR section: Section; aliases: SIZE; alias: Aliases); 
 	PROCEDURE ^ AddPatch*(VAR patches: SIZE; VAR patch: Patches; disp, ofs: Unit); 
 	PROCEDURE ^ SameFixupPattern(patterns: SIZE; left, right: FixupPatterns): BOOLEAN; 
-	PROCEDURE ^ HasPattern(pat: Pattern; mode: WORD; scale: Bits; patterns: SIZE; pattern: FixupPatterns): BOOLEAN; 
-	PROCEDURE ^ AddFixup*(VAR fixups: SIZE; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: WORD; scale: Bits; patterns: SIZE; pattern: FixupPatterns): SIZE; 
+	PROCEDURE ^ HasPattern(pat: Pattern; mode: INTEGER; scale: Bits; patterns: SIZE; pattern: FixupPatterns): BOOLEAN; 
+	PROCEDURE ^ AddFixup*(VAR fixups: SIZE; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: INTEGER; scale: Bits; patterns: SIZE; pattern: FixupPatterns): SIZE; 
 	PROCEDURE ^ AddAlias*(VAR aliases: SIZE; VAR alias: Aliases; CONST name: SegmentedName; fingerprint: Fingerprint; offset: Unit): SIZE; 
 	PROCEDURE ^ StringToSegmentedName*(CONST name: ARRAY OF CHAR; VAR segmentedName: SegmentedName); 
 	PROCEDURE ^ SegmentedNameToString*(CONST segmentedName: SegmentedName; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ CompareSegmentedNames*(CONST s1, s2: SegmentedName): WORD; 
+	PROCEDURE ^ CompareSegmentedNames*(CONST s1, s2: SegmentedName): INTEGER; 
 	PROCEDURE ^ IsPrefix*(CONST prefix, of: SegmentedName): BOOLEAN; 
 	OPERATOR ^ "="-(CONST l, r: SegmentedName): BOOLEAN; 
 	OPERATOR ^ "="-(CONST l, r: Identifier): BOOLEAN; 

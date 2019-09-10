@@ -12,6 +12,6 @@ CONST
 	PROCEDURE ^ SkipChar*(VAR i: SIZE; s: Strings.String; c: CHAR); 
 	PROCEDURE ^ SkipCharOptional*(VAR i: SIZE; s: Strings.String; c: CHAR); 
 	PROCEDURE ^ SkipCommaWhiteSpace*(VAR i: SIZE; s: Strings.String); 
-	PROCEDURE ^ StrToFloatPos*(VAR str: ARRAY OF CHAR; VAR val: LONGREAL; VAR i: SIZE); 
+	PROCEDURE ^ StrToFloatPos*(VAR str: ARRAY OF CHAR; VAR val: FLOAT64; VAR i: SIZE); 
 BEGIN
 END SVGUtilities.

@@ -42,30 +42,30 @@ TYPE
 		dropped: BOOLEAN; 
 		field: ARRAY Width OF ARRAY Height OF CHAR; 
 		rotBlock, block, nextBlock: Block; 
-		posX, posY: LONGINT; 
+		posX, posY: SIGNED32; 
 		mode: Raster.Mode; 
 		random: Random.Generator; 
-		lines, blocks, delay, delayDec, level, points: LONGINT; 
+		lines, blocks, delay, delayDec, level, points: SIGNED32; 
 		generateNewBlock: BOOLEAN; 
 		timer: Kernel.Timer; 
-		state: LONGINT; 
+		state: SIGNED32; 
 		backgroundImage: WMGraphics.Image; 
 
 		PROCEDURE ^  & New*(alpha: BOOLEAN); 
-		PROCEDURE ^ SetState(state: LONGINT); 
-		PROCEDURE ^ AwaitState(state: LONGINT); 
+		PROCEDURE ^ SetState(state: SIGNED32); 
+		PROCEDURE ^ AwaitState(state: SIGNED32); 
 		PROCEDURE ^ DrawInfo; 
 		PROCEDURE ^ StyleChanged*; 
 		PROCEDURE ^ RotateBlock(CONST block: Block): Block; 
-		PROCEDURE ^ DrawBox(x, y: LONGINT; color: CHAR); 
+		PROCEDURE ^ DrawBox(x, y: SIGNED32; color: CHAR); 
 		PROCEDURE ^ DrawPreview(CONST block: Block); 
-		PROCEDURE ^ SetBlock(x, y: LONGINT; clear: BOOLEAN); 
-		PROCEDURE ^ HasDownCollision(x, y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ HasCollision(CONST bl: Block; x, y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ Move(dir: LONGINT): BOOLEAN; 
+		PROCEDURE ^ SetBlock(x, y: SIGNED32; clear: BOOLEAN); 
+		PROCEDURE ^ HasDownCollision(x, y: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ HasCollision(CONST bl: Block; x, y: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ Move(dir: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 		PROCEDURE ^ NewBlock(): Block; 
-		PROCEDURE ^ RemoveLine(y: LONGINT); 
+		PROCEDURE ^ RemoveLine(y: SIGNED32); 
 		PROCEDURE ^ ClearLines; 
 		PROCEDURE ^ DropStep; 
 		PROCEDURE ^ Reset; 
@@ -75,7 +75,7 @@ TYPE
 	END Window; 
 VAR 
 	colors: ARRAY (NofBlocks + 1) OF Raster.Pixel; 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ IncCount; 

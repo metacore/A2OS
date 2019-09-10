@@ -11,7 +11,7 @@ TYPE
 		editor-: WMDocumentEditor.Editor; 
 		visible: BOOLEAN; 
 
-		PROCEDURE ^  & New*(CONST title: ARRAY OF CHAR; width, height: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^  & New*(CONST title: ARRAY OF CHAR; width, height: SIGNED32; alpha: BOOLEAN); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ Close*; 
 	END Window; 
@@ -21,13 +21,13 @@ TYPE
 		window-: Window; 
 
 		PROCEDURE ^ IsVisible*(): BOOLEAN; 
-		PROCEDURE ^ SetWindowBgColor*(color: LONGINT); 
+		PROCEDURE ^ SetWindowBgColor*(color: SIGNED32); 
 		PROCEDURE ^ SetWindowIcon*(image: WMGraphics.Image); 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^  & New*(CONST title: ARRAY OF CHAR; width, height: LONGINT; alpha: BOOLEAN); 
+		PROCEDURE ^  & New*(CONST title: ARRAY OF CHAR; width, height: SIGNED32; alpha: BOOLEAN); 
 	END WindowWriter; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	timeout: BOOLEAN; 
 
 	PROCEDURE ^ Call*(context: Commands.Context); 

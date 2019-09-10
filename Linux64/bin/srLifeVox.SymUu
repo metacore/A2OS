@@ -15,9 +15,9 @@ TYPE
 	LifeVox* = OBJECT (Voxel)
 	VAR 
 		m: ARRAY M OF ARRAY N OF BOOLEAN; 
-		n: ARRAY M OF ARRAY N OF INTEGER; 
-		gen: INTEGER; 
-		i: LONGINT; 
+		n: ARRAY M OF ARRAY N OF SIGNED16; 
+		gen: SIGNED16; 
+		i: SIGNED32; 
 
 		PROCEDURE ^  & init*; 
 		PROCEDURE ^ seed*; 
@@ -27,9 +27,9 @@ TYPE
 
 	RDVox* = OBJECT (Voxel)
 	VAR 
-		m1, m2, n1, n2: ARRAY M OF ARRAY N OF REAL; 
-		gen: INTEGER; 
-		i: LONGINT; 
+		m1, m2, n1, n2: ARRAY M OF ARRAY N OF FLOAT32; 
+		gen: SIGNED16; 
+		i: SIGNED32; 
 		BLUE, RED: Voxel; 
 		Cell: srM5Space.cell; 
 
@@ -44,20 +44,20 @@ TYPE
 
 	RDVolVox* = OBJECT (Voxel)
 	VAR 
-		m1*, m2, n1, n2: ARRAY V OF ARRAY V OF ARRAY V OF REAL; 
-		gen: INTEGER; 
-		i: LONGINT; 
-		tock*: INTEGER; 
+		m1*, m2, n1, n2: ARRAY V OF ARRAY V OF ARRAY V OF FLOAT32; 
+		gen: SIGNED16; 
+		i: SIGNED32; 
+		tock*: SIGNED16; 
 		BLUE: Voxel; 
 		RED: Voxel; 
 		YELLOW: Voxel; 
 		timer: Kernel.Timer; 
-		frame: LONGINT; 
+		frame: SIGNED32; 
 
 		PROCEDURE ^  & init*(red, blue, yellow: Voxel); 
 		PROCEDURE ^ clear*; 
 		PROCEDURE ^ seed*; 
-		PROCEDURE ^ bounds(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ bounds(i, j, k: SIGNED32; VAR out: BOOLEAN); 
 		PROCEDURE ^ tick*; 
 		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
 		PROCEDURE ^ Shade*(VAR ray: srBase.Ray); 

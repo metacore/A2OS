@@ -26,7 +26,7 @@ TYPE
 		table: HashIntArray; 
 		size: SIZE; 
 		used-: SIZE; 
-		maxLoadFactor: REAL; 
+		maxLoadFactor: FLOAT32; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
 		PROCEDURE ^ Put*(key: SIZE; value: SIZE); 
@@ -43,7 +43,7 @@ TYPE
 		table: HashIntAnyArray; 
 		size: SIZE; 
 		used-: SIZE; 
-		maxLoadFactor: REAL; 
+		maxLoadFactor: FLOAT32; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
 		PROCEDURE ^ Put*(key: SIZE; value: ANY); 
@@ -99,7 +99,7 @@ VAR
 	PROCEDURE ^ InitData(VAR data: Data); 
 	PROCEDURE ^ DoPreallocate(CONST section: ObjectFile.Section; VAR data: Data); 
 	PROCEDURE ^ DoAllocate(CONST section: ObjectFile.Section; VAR data: Data): ADDRESS; 
-	PROCEDURE ^ LoadObj*(CONST name, fileName: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR): Modules.Module; 
+	PROCEDURE ^ LoadObj*(CONST name, fileName: ARRAY OF CHAR; VAR res: INTEGER; VAR msg: ARRAY OF CHAR): Modules.Module; 
 	PROCEDURE ^ Install*; 
 	PROCEDURE ^ Remove*; 
 BEGIN

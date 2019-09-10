@@ -7,29 +7,29 @@ TYPE
 	LCDFrame* = POINTER TO LCDFrameDesc; 
 
 	LCDFrameDesc* = RECORD (Gadgets.FrameDesc)
-		val: LONGINT; 
-		backCol, digiCol, shadowCol: INTEGER; 
-		digits, width: INTEGER; 
-		border: INTEGER; 
+		val: SIGNED32; 
+		backCol, digiCol, shadowCol: SIGNED16; 
+		digits, width: SIGNED16; 
+		border: SIGNED16; 
 	END; 
 
 	TrackFrame* = POINTER TO TrackFrameDesc; 
 
 	TrackFrameDesc* = RECORD (Gadgets.FrameDesc)
 		tobj: Objects.Object; 
-		tracks, first, val, point, rows, cols: INTEGER; 
+		tracks, first, val, point, rows, cols: SIGNED16; 
 	END; 
 
-	PROCEDURE ^ RestoreLCD(F: LCDFrame; Q: Display3.Mask; x, y, w, h: INTEGER; back: BOOLEAN); 
+	PROCEDURE ^ RestoreLCD(F: LCDFrame; Q: Display3.Mask; x, y, w, h: SIGNED16; back: BOOLEAN); 
 	PROCEDURE ^ CopyLCD*(VAR M: Objects.CopyMsg; from, to: LCDFrame); 
 	PROCEDURE ^ LCDHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitLCD*(F: LCDFrame); 
 	PROCEDURE ^ NewLCD*; 
-	PROCEDURE ^ Calc(F: TrackFrame; VAR x, y, w, h, law, raw, hb, track: INTEGER); 
+	PROCEDURE ^ Calc(F: TrackFrame; VAR x, y, w, h, law, raw, hb, track: SIGNED16); 
 	PROCEDURE ^ UpdateValue(F: TrackFrame; scroll: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ UpdateTracks(F: TrackFrame): BOOLEAN; 
-	PROCEDURE ^ RestoreTrack(F: TrackFrame; Q: Display3.Mask; x, y, w, h: INTEGER; update: BOOLEAN); 
-	PROCEDURE ^ Track(F: TrackFrame; x, y: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ RestoreTrack(F: TrackFrame; Q: Display3.Mask; x, y, w, h: SIGNED16; update: BOOLEAN); 
+	PROCEDURE ^ Track(F: TrackFrame; x, y: SIGNED16; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ CopyTrack*(VAR C: Objects.CopyMsg; VAR F, F1: TrackFrame); 
 	PROCEDURE ^ TrackHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitTrack*(F: TrackFrame); 

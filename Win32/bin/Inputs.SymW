@@ -89,23 +89,23 @@ TYPE
 	KeyboardMsg* = RECORD (Message)
 		ch*: CHAR; 
 		flags*: SET; 
-		keysym*: LONGINT; 
+		keysym*: SIGNED32; 
 	END; 
 
 	MouseMsg* = RECORD (Message)
 		keys*: SET; 
-		dx*, dy*, dz*: LONGINT; 
+		dx*, dy*, dz*: SIGNED32; 
 	END; 
 
 	AbsMouseMsg* = RECORD (Message)
 		keys*: SET; 
-		x*, y*, z*, dx*, dy*, dz*: LONGINT; 
+		x*, y*, z*, dx*, dy*, dz*: SIGNED32; 
 	END; 
 
 	PointerMsg* = RECORD (Message)
 		keys*: SET; 
-		x*, y*, z*: LONGINT; 
-		mx*, my*, mz*: LONGINT; 
+		x*, y*, z*: SIGNED32; 
+		mx*, my*, mz*: SIGNED32; 
 	END; 
 
 	Sink* = OBJECT 
@@ -123,14 +123,14 @@ TYPE
 	Pointer* = OBJECT {EXCLUSIVE} (Sink)
 	VAR 
 		cur: PointerMsg; 
-		threshold, speedup: LONGINT; 
+		threshold, speedup: SIGNED32; 
 		fixedKeys: SET; 
 
 		PROCEDURE ^ Update; 
 		PROCEDURE ^ SetKeys(keys: SET); 
 		PROCEDURE ^ Handle*(VAR m: Message); 
-		PROCEDURE ^ SetLimits*(mx, my, mz: LONGINT); 
-		PROCEDURE ^  & Init*(t, s: LONGINT); 
+		PROCEDURE ^ SetLimits*(mx, my, mz: SIGNED32); 
+		PROCEDURE ^  & Init*(t, s: SIGNED32); 
 	END Pointer; 
 
 	List = POINTER TO RECORD 
@@ -151,9 +151,9 @@ TYPE
 	VAR 
 		timer-: Kernel.Timer; 
 
-		PROCEDURE ^ Mouse*(VAR x, y: INTEGER; VAR keys: SET); 
+		PROCEDURE ^ Mouse*(VAR x, y: SIGNED16; VAR keys: SET); 
 		PROCEDURE ^ Read*(VAR ch: CHAR; VAR break: BOOLEAN); 
-		PROCEDURE ^ Available*(VAR num: INTEGER; VAR break: BOOLEAN); 
+		PROCEDURE ^ Available*(VAR num: SIGNED16; VAR break: BOOLEAN); 
 		PROCEDURE ^ KeyState*(VAR k: SET); 
 		PROCEDURE ^  & Init*; 
 	END OberonInput; 

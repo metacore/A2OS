@@ -20,9 +20,9 @@ TYPE
 	TableCell* = OBJECT 
 	VAR 
 		content*: XML.Content; 
-		modus*: LONGINT; 
+		modus*: SIGNED32; 
 
-		PROCEDURE ^  & Init*(cellContent: XML.Content; cellModus: LONGINT); 
+		PROCEDURE ^  & Init*(cellContent: XML.Content; cellModus: SIGNED32); 
 	END TableCell; 
 
 	HeaderCell* = OBJECT 
@@ -50,19 +50,19 @@ TYPE
 		PROCEDURE ^ DetailView*(forum: WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ EditView*(forum: WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ ToXML*(request: HTTPSupport.HTTPRequest): XML.Content; 
-		PROCEDURE ^ RecursiveToXML(depth: LONGINT; request: HTTPSupport.HTTPRequest; container: XML.Container; entry: WebForumEntry); 
+		PROCEDURE ^ RecursiveToXML(depth: SIGNED32; request: HTTPSupport.HTTPRequest; container: XML.Container; entry: WebForumEntry); 
 	END WebForumEntry; 
 
 	WebForum* = OBJECT (DynamicWebpage.StateFullActiveElement)
 	VAR 
 		allowEdit*, allowInsert*, allowDelete*: BOOLEAN; 
-		state: LONGINT; 
-		pos: LONGINT; 
+		state: SIGNED32; 
+		pos: SIGNED32; 
 		containerName: Strings.String; 
 		objectId: Strings.String; 
-		entryOid: LONGINT; 
+		entryOid: SIGNED32; 
 		statusContent: XML.Content; 
-		superEntryOid: LONGINT; 
+		superEntryOid: SIGNED32; 
 		compareFunct: WebStd.PersistentDataCompare; 
 		isOrderingApplied: BOOLEAN; 
 		filterFunct: WebStd.PersistentDataFilter; 
@@ -74,7 +74,7 @@ TYPE
 		PROCEDURE ^ RootEntryFilter(obj: WebStd.PersistentDataObject): BOOLEAN; 
 		PROCEDURE ^ Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ GetMainOverview(persCont: WebStd.PersistentDataContainer; input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
-		PROCEDURE ^ RecursiveEntryOverview(depth: LONGINT; table: XML.Element; entryObj: WebForumEntry; request: HTTPSupport.HTTPRequest; moduleName, objectName: Strings.String): SIZE; 
+		PROCEDURE ^ RecursiveEntryOverview(depth: SIGNED32; table: XML.Element; entryObj: WebForumEntry; request: HTTPSupport.HTTPRequest; moduleName, objectName: Strings.String): SIZE; 
 		PROCEDURE ^ GetSearchFormular(labelName, buttonName: Strings.String): XML.Content; 
 		PROCEDURE ^ AddStatusMessage(container: XML.Container); 
 		PROCEDURE ^ GetMainDetailView(persCont: WebStd.PersistentDataContainer; input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
@@ -100,17 +100,17 @@ TYPE
 		PROCEDURE ^ GetHeaderXMLContent*(container: WebStd.PersistentDataContainer; input: XML.Element; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ InsertObject*(container: WebStd.PersistentDataContainer; superEntry: WebForumEntry; request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content): BOOLEAN; 
 		PROCEDURE ^ UpdateObject*(obj: WebForumEntry; request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList; VAR statusMsg: XML.Content): BOOLEAN; 
-		PROCEDURE ^ OnPositionChanged*(pos: LONGINT; request: HTTPSupport.HTTPRequest); 
-		PROCEDURE ^ OnInsertViewActivated*(superEntryOid: LONGINT; request: HTTPSupport.HTTPRequest); 
-		PROCEDURE ^ OnEditViewActivated*(entryOid: LONGINT; request: HTTPSupport.HTTPRequest); 
+		PROCEDURE ^ OnPositionChanged*(pos: SIGNED32; request: HTTPSupport.HTTPRequest); 
+		PROCEDURE ^ OnInsertViewActivated*(superEntryOid: SIGNED32; request: HTTPSupport.HTTPRequest); 
+		PROCEDURE ^ OnEditViewActivated*(entryOid: SIGNED32; request: HTTPSupport.HTTPRequest); 
 		PROCEDURE ^ OnSetOverview*(request: HTTPSupport.HTTPRequest); 
-		PROCEDURE ^ OnDetailViewActivated*(entryOid: LONGINT; request: HTTPSupport.HTTPRequest); 
+		PROCEDURE ^ OnDetailViewActivated*(entryOid: SIGNED32; request: HTTPSupport.HTTPRequest); 
 		PROCEDURE ^ OnDelete*(obj: WebForumEntry; request: HTTPSupport.HTTPRequest); 
 		PROCEDURE ^ ThisObjectName*(): Strings.String; 
 		PROCEDURE ^ ThisModuleName*(): Strings.String; 
 		PROCEDURE ^ GetInsertView*(superEntry: WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ GetTableHeader*(request: HTTPSupport.HTTPRequest): HeaderRow; 
-		PROCEDURE ^ GetIndent*(depth: LONGINT; request: HTTPSupport.HTTPRequest): XML.Content; 
+		PROCEDURE ^ GetIndent*(depth: SIGNED32; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ GetDefaultOrdering*(): WebStd.PersistentDataCompare; 
 		PROCEDURE ^ GetDefaultSearchFilter*(): WebStd.PersistentDataFilter; 
 		PROCEDURE ^ GetSearchFilter*(text: Strings.String): WebStd.PersistentDataFilter; 
@@ -122,9 +122,9 @@ TYPE
 		PROCEDURE ^ GetUnapplyFilterLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 
 	END WebForum; 
 
-	PROCEDURE ^ GetTableCell*(str: Strings.String; modus: LONGINT): TableCell; 
-	PROCEDURE ^ GetEmailTableCell*(str: Strings.String; modus: LONGINT): TableCell; 
-	PROCEDURE ^ GetTableCellForText*(text: ARRAY OF CHAR; modus: LONGINT): TableCell; 
+	PROCEDURE ^ GetTableCell*(str: Strings.String; modus: SIGNED32): TableCell; 
+	PROCEDURE ^ GetEmailTableCell*(str: Strings.String; modus: SIGNED32): TableCell; 
+	PROCEDURE ^ GetTableCellForText*(text: ARRAY OF CHAR; modus: SIGNED32): TableCell; 
 	PROCEDURE ^ GetHeaderCellForText*(text: ARRAY OF CHAR; compareFunct: WebStd.PersistentDataCompare): HeaderCell; 
 	PROCEDURE ^ GetMailtoElement*(mailAdr: ARRAY OF CHAR): XML.Element; 
 	PROCEDURE ^ AddStandardDetailView*(container: XML.Container; name: ARRAY OF CHAR; str: Strings.String); 

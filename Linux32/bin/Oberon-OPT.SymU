@@ -182,34 +182,34 @@ TYPE
 
 	ConstDesc* = RECORD 
 		ext*: ConstExt; 
-		intval*: LONGINT; 
-		intval2*: LONGINT; 
+		intval*: SIGNED32; 
+		intval2*: SIGNED32; 
 		setval*: SET; 
-		realval*: LONGREAL; 
+		realval*: FLOAT64; 
 	END; 
 
 	ObjDesc* = RECORD 
 		left*, right*, link*, scope*: Object; 
 		myscope*: Object; 
 		link2*, old: Object; 
-		prio*, sysflag*: SHORTINT; 
+		prio*, sysflag*: SIGNED8; 
 		code*: Node; 
 		name*: OPS.Name; 
 		leaf*: BOOLEAN; 
-		mode*: SHORTINT; 
-		mnolev*: LONGINT; 
-		vis*: SHORTINT; 
+		mode*: SIGNED8; 
+		mnolev*: SIGNED32; 
+		vis*: SIGNED8; 
 		typ*: Struct; 
 		conval*: Const; 
-		adr*, linkadr*: LONGINT; 
+		adr*, linkadr*: SIGNED32; 
 		nxtobj*, sibling*: Object; 
 		par: BOOLEAN; 
 		inited*, used*: BOOLEAN; 
-		fp*: LONGINT; 
-		history*: SHORTINT; 
-		txtpos*: LONGINT; 
+		fp*: SIGNED32; 
+		history*: SIGNED8; 
+		txtpos*: SIGNED32; 
 		flag*: SET; 
-		finallyOff*: LONGINT; 
+		finallyOff*: SIGNED32; 
 	END; 
 
 	StructArr = POINTER TO ARRAY OF Struct; 
@@ -219,71 +219,71 @@ TYPE
 	ModDesc* = RECORD (ObjDesc)
 		publics*: Object; 
 		directImp*: BOOLEAN; 
-		nofimp: INTEGER; 
+		nofimp: SIGNED16; 
 		import: ModArr; 
-		nofstr: INTEGER; 
+		nofstr: SIGNED16; 
 		struct: StructArr; 
-		nofreimp: INTEGER; 
+		nofreimp: SIGNED16; 
 		reimp: StructArr; 
 	END; 
 
 	StrDesc* = RECORD 
-		form*, comp*, extlev*: SHORTINT; 
-		mno*: LONGINT; 
-		ref*: INTEGER; 
-		align*, sysflag*: SHORTINT; 
-		rectest*, n*, size*, tdadr*, offset*, txtpos*, txtpos2*: LONGINT; 
+		form*, comp*, extlev*: SIGNED8; 
+		mno*: SIGNED32; 
+		ref*: SIGNED16; 
+		align*, sysflag*: SIGNED8; 
+		rectest*, n*, size*, tdadr*, offset*, txtpos*, txtpos2*: SIGNED32; 
 		BaseTyp*: Struct; 
 		link*, strobj*: Object; 
-		fpdone*, sref*, oref*: INTEGER; 
+		fpdone*, sref*, oref*: SIGNED16; 
 		pvused*, pbused*: BOOLEAN; 
-		fp*, pvfp*, pbfp*: LONGINT; 
+		fp*, pvfp*, pbfp*: SIGNED32; 
 		incomplete*: BOOLEAN; 
 		ptr*: Struct; 
 	END; 
 
 	NodeDesc* = RECORD 
 		left*, right*, link*: Node; 
-		class*, subcl*: SHORTINT; 
+		class*, subcl*: SIGNED8; 
 		readonly*: BOOLEAN; 
 		typ*: Struct; 
 		obj*: Object; 
 		conval*: Const; 
 		global*: BOOLEAN; 
 		up*, down*: Node; 
-		ref*: LONGINT; 
-		flag*, subflg*: SHORTINT; 
+		ref*: SIGNED32; 
+		flag*, subflg*: SIGNED8; 
 	END; 
 VAR 
 	topScope*, objects*: Object; 
 	undftyp*, bytetyp*, booltyp*, chartyp*, sinttyp*, inttyp*, linttyp*, hinttyp*, realtyp*, lrltyp*, settyp*, stringtyp*, niltyp*, notyp*, ptrtyp*: Struct; 
 	char16typ, char32typ: Struct; 
 	SYSimported*: BOOLEAN; 
-	nofmod*: LONGINT; 
+	nofmod*: SIGNED32; 
 	modules*: ModArr; 
-	nofemod: SHORTINT; 
+	nofemod: SIGNED8; 
 	emodules: ModArr; 
-	modNo*: INTEGER; 
+	modNo*: SIGNED16; 
 	universe, syslink: Object; 
-	strucForm: ARRAY (SFtypEnhArray + 1) OF SHORTINT; 
-	strucComp: ARRAY (SFtypEnhArray + 1) OF SHORTINT; 
+	strucForm: ARRAY (SFtypEnhArray + 1) OF SIGNED8; 
+	strucComp: ARRAY (SFtypEnhArray + 1) OF SIGNED8; 
 	predefStruct: ARRAY (SFlastStruct + 1) OF Struct; 
-	strucFormSF: ARRAY (Comp + 1) OF SHORTINT; 
-	strucCompSF: ARRAY (Comp + 1) OF SHORTINT; 
+	strucFormSF: ARRAY (Comp + 1) OF SIGNED8; 
+	strucCompSF: ARRAY (Comp + 1) OF SIGNED8; 
 	export: BOOLEAN; 
 	exp: ARRAY (Operator + 1) OF Object; 
-	nofstruc: INTEGER; 
+	nofstruc: SIGNED16; 
 	newSF, extSF, symNew, symExtended, sfpresent, impSelf, expGlobal: BOOLEAN; 
 	typSize*: PROCEDURE (typ: Struct; allocDesc: BOOLEAN); 
 	ToBeFixed*: Struct; 
 
-	PROCEDURE ^ err(n: INTEGER); 
+	PROCEDURE ^ err(n: SIGNED16); 
 	PROCEDURE ^ Close*; 
 	PROCEDURE ^ NewMod(): Module; 
 	PROCEDURE ^ NewConst*(): Const; 
 	PROCEDURE ^ NewObj*(): Object; 
-	PROCEDURE ^ NewStr*(form, comp: SHORTINT): Struct; 
-	PROCEDURE ^ NewNode*(class: SHORTINT): Node; 
+	PROCEDURE ^ NewStr*(form, comp: SIGNED8): Struct; 
+	PROCEDURE ^ NewNode*(class: SIGNED8): Node; 
 	PROCEDURE ^ NewExt*(): ConstExt; 
 	PROCEDURE ^ DoubleStructArr(VAR x: StructArr); 
 	PROCEDURE ^ DoubleModArr(VAR x: ModArr); 
@@ -298,15 +298,15 @@ VAR
 	PROCEDURE ^ CopyOp(VAR new, obj: Object); 
 	PROCEDURE ^ IsExtern(obj: Object): BOOLEAN; 
 	PROCEDURE ^ Contextualize*(VAR sentinel: Object); 
-	PROCEDURE ^ Distance(typ, otyp: Struct; VAR distance: SHORTINT); 
-	PROCEDURE ^ QualResolve*(VAR obj: Object; VAR x, y: Node; VAR distance: SHORTINT; VAR wrn: BOOLEAN); 
+	PROCEDURE ^ Distance(typ, otyp: Struct; VAR distance: SIGNED8); 
+	PROCEDURE ^ QualResolve*(VAR obj: Object; VAR x, y: Node; VAR distance: SIGNED8; VAR wrn: BOOLEAN); 
 	PROCEDURE ^ Resolve*(VAR name: ARRAY OF CHAR; VAR x, y: Node): Object; 
-	PROCEDURE ^ OpenScope*(level: SHORTINT; owner: Object); 
+	PROCEDURE ^ OpenScope*(level: SIGNED8; owner: Object); 
 	PROCEDURE ^ CloseScope*; 
 	PROCEDURE ^ Init*(VAR name: OPS.Name); 
-	PROCEDURE ^ FPrintName(VAR fp: LONGINT; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ FPrintSign(VAR fp: LONGINT; result: Struct; par: Object); 
-	PROCEDURE ^ FPrintMeth(VAR pbfp, pvfp: LONGINT; fld: Object); 
+	PROCEDURE ^ FPrintName(VAR fp: SIGNED32; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ FPrintSign(VAR fp: SIGNED32; result: Struct; par: Object); 
+	PROCEDURE ^ FPrintMeth(VAR pbfp, pvfp: SIGNED32; fld: Object); 
 	PROCEDURE ^ FPrintRecord(typ: Struct); 
 	PROCEDURE ^ FPrintTyp0(typ: Struct); 
 	PROCEDURE ^ FPrintTyp*(typ: Struct); 
@@ -314,7 +314,7 @@ VAR
 	PROCEDURE ^ FPrintErr(obj: Object); 
 	PROCEDURE ^ MatchOp(op, list: Object): Object; 
 	PROCEDURE ^ InsertImport(obj: Object; root: Object); 
-	PROCEDURE ^ CompOldTyp(typ, oldtyp: Struct): SHORTINT; 
+	PROCEDURE ^ CompOldTyp(typ, oldtyp: Struct): SIGNED8; 
 	PROCEDURE ^ CompOldSym(obj: Object); 
 	PROCEDURE ^ ReadString(VAR R: Files.Rider; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ ReadStringNoZeroCompress(VAR R: Files.Rider; VAR string: ARRAY OF CHAR); 
@@ -327,15 +327,15 @@ VAR
 	PROCEDURE ^ OutFld(fld: Object); 
 	PROCEDURE ^ OutRecord(typ: Struct); 
 	PROCEDURE ^ OutStruct(typ: Struct); 
-	PROCEDURE ^ OutConst(form: SHORTINT; conval: Const); 
+	PROCEDURE ^ OutConst(form: SIGNED8; conval: Const); 
 	PROCEDURE ^ OutObj(obj: Object); 
 	PROCEDURE ^ OutScope*(scope: Object; public: BOOLEAN); 
 	PROCEDURE ^ Export*(VAR modName: OPS.Name; VAR newsf, extsf: BOOLEAN); 
-	PROCEDURE ^ InitStruct(VAR typ: Struct; form, sref: SHORTINT); 
-	PROCEDURE ^ EnterIntConst(name: ARRAY OF CHAR; value: LONGINT); 
-	PROCEDURE ^ EnterTyp(name: ARRAY OF CHAR; form: SHORTINT; size: INTEGER; VAR res: Struct; sref: SHORTINT); 
+	PROCEDURE ^ InitStruct(VAR typ: Struct; form, sref: SIGNED8); 
+	PROCEDURE ^ EnterIntConst(name: ARRAY OF CHAR; value: SIGNED32); 
+	PROCEDURE ^ EnterTyp(name: ARRAY OF CHAR; form: SIGNED8; size: SIGNED16; VAR res: Struct; sref: SIGNED8); 
 	PROCEDURE ^ EnterTypAlias(name: ARRAY OF CHAR; typ: Struct); 
-	PROCEDURE ^ EnterProc(name: ARRAY OF CHAR; num: INTEGER); 
-	PROCEDURE ^ EnterPtr(name: ARRAY OF CHAR; num: LONGINT); 
+	PROCEDURE ^ EnterProc(name: ARRAY OF CHAR; num: SIGNED16); 
+	PROCEDURE ^ EnterPtr(name: ARRAY OF CHAR; num: SIGNED32); 
 BEGIN
 END OPT.

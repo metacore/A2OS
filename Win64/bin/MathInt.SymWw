@@ -4,7 +4,7 @@ CONST
 	MaxFactorial* = 12; 
 VAR 
 	rng: AosRandom.Sequence; 
-	nbr: LONGINT; 
+	nbr: SIGNED32; 
 
 	PROCEDURE ^ Factorial*(n: NbrInt.Integer): NbrInt.Integer; 
 	PROCEDURE ^ Power*(x, n: NbrInt.Integer): NbrInt.Integer; 

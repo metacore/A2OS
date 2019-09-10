@@ -29,7 +29,7 @@ TYPE
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ IncCount; 

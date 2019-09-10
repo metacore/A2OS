@@ -22,17 +22,17 @@ TYPE
 		lastX, lastY: SIZE; 
 		useBitmaps*, dragging: BOOLEAN; 
 		resized: BOOLEAN; 
-		mode*: LONGINT; 
-		corner: LONGINT; 
+		mode*: SIGNED32; 
+		corner: SIGNED32; 
 		mode0Move: BOOLEAN; 
 		hasFocus: BOOLEAN; 
 		picAa*, picBa*, picCa*, picAb*, picBb*, picCb*: Graphics.Image; 
-		distXY*: LONGINT; 
+		distXY*: SIGNED32; 
 		vertical*: BOOLEAN; 
-		focusthreshold*, threshold*: LONGINT; 
+		focusthreshold*, threshold*: SIGNED32; 
 		draggingWidth, draggingHeight: SIZE; 
-		draggingSnapRange: LONGINT; 
-		sac, sic, basw, bisw: LONGINT; 
+		draggingSnapRange: SIGNED32; 
+		sac, sic, basw, bisw: SIGNED32; 
 		modKeys: SET; 
 
 		PROCEDURE ^ SetMasterFocus*(hasFocus: BOOLEAN); 
@@ -50,38 +50,38 @@ TYPE
 	TopWindow* = OBJECT (DecorWindow)
 	VAR 
 		closeInactive*, closeActive*, closeSelected*, closeHover*, minimizeInactive*, minimizeActive*, minimizeHover*, titleImg: Graphics.Image; 
-		minimizeOffset: LONGINT; 
+		minimizeOffset: SIGNED32; 
 		titleCanvas: Graphics.BufferCanvas; 
-		down, hover: LONGINT; 
-		tac, tic, tax, tix, tay, tiy: LONGINT; 
+		down, hover: SIGNED32; 
+		tac, tic, tax, tix, tay, tiy: SIGNED32; 
 
-		PROCEDURE ^ CheckButtons(x, y: SIZE; VAR button: LONGINT); 
+		PROCEDURE ^ CheckButtons(x, y: SIZE; VAR button: SIGNED32); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: SIGNED32); 
 		PROCEDURE ^ CloseDispatch*(sender, data: ANY); 
 		PROCEDURE ^ StyleChanged*; 
 	END TopWindow; 
 
 	LeftWindow* = OBJECT (DecorWindow)
 
-		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: SIGNED32); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ StyleChanged*; 
 	END LeftWindow; 
 
 	RightWindow* = OBJECT (DecorWindow)
 
-		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: SIGNED32); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ StyleChanged*; 
 	END RightWindow; 
 
 	BottomWindow* = OBJECT (DecorWindow)
 
-		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: SIGNED32); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ StyleChanged*; 
 	END BottomWindow; 
@@ -90,12 +90,12 @@ TYPE
 	VAR 
 		color: Graphics.Color; 
 
-		PROCEDURE ^  & New*(bgColor: LONGINT); 
+		PROCEDURE ^  & New*(bgColor: SIGNED32); 
 		PROCEDURE ^ StyleChanged*; 
-		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: SIGNED32); 
 	END BackWindow; 
 
-	PROCEDURE ^ RepeatMiddleVertical*(canvas: Graphics.Canvas; csw, csh, w, h: SIZE; q: WORD; top, middle, bottom: Graphics.Image); 
-	PROCEDURE ^ RepeatMiddleHorizontal*(canvas: Graphics.Canvas; csw, csh, w, h: SIZE; q: WORD; left, middle, right: Graphics.Image); 
+	PROCEDURE ^ RepeatMiddleVertical*(canvas: Graphics.Canvas; csw, csh, w, h: SIZE; q: INTEGER; top, middle, bottom: Graphics.Image); 
+	PROCEDURE ^ RepeatMiddleHorizontal*(canvas: Graphics.Canvas; csw, csh, w, h: SIZE; q: INTEGER; left, middle, right: Graphics.Image); 
 BEGIN
 END WMDefaultWindows.

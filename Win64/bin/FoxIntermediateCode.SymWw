@@ -83,24 +83,24 @@ CONST
 	NotYetCalculatedSize =  -2; 
 TYPE 
 	Type* = RECORD 
-		form-: SHORTINT; 
-		sizeInBits-: INTEGER; 
-		length-: LONGINT; 
+		form-: SIGNED8; 
+		sizeInBits-: SIGNED16; 
+		length-: SIGNED32; 
 	END; 
 
 	RegisterClass* = RECORD 
-		class-: SHORTINT; 
-		number-: INTEGER; 
+		class-: SIGNED8; 
+		number-: SIGNED16; 
 	END; 
 
 	Operand* = RECORD 
-		mode-: SHORTINT; 
+		mode-: SIGNED8; 
 		type-: Type; 
 		register-: SIZE; 
 		registerClass-: RegisterClass; 
 		offset-: SIZE; 
-		intValue-: HUGEINT; 
-		floatValue-: LONGREAL; 
+		intValue-: SIGNED64; 
+		floatValue-: FLOAT64; 
 		symbol-: ObjectFile.Identifier; 
 		symbolOffset-: SIZE; 
 		resolved*: Sections.Section; 
@@ -108,8 +108,8 @@ TYPE
 	END; 
 
 	Instruction* = POINTER TO RECORD 
-		opcode-: SHORTINT; 
-		subtype-: SHORTINT; 
+		opcode-: SIGNED8; 
+		subtype-: SIGNED8; 
 		textPosition-: Basic.Position; 
 		pc-: SIZE; 
 		scope-: SyntaxTree.Scope; 
@@ -132,18 +132,18 @@ TYPE
 		resolved-, alias-: BinaryCode.Section; 
 		aliasOffset-: SIZE; 
 		comments-: Sections.CommentWriter; 
-		sizeInUnits: LONGINT; 
+		sizeInUnits: SIGNED32; 
 		exported-: BOOLEAN; 
 
 		PROCEDURE ^ GetPC(): SIZE; 
-		PROCEDURE ^  & InitIntermediateSection*(type: SHORTINT; CONST n: Basic.SegmentedName; symbol: SyntaxTree.Symbol; comment: BOOLEAN); 
+		PROCEDURE ^  & InitIntermediateSection*(type: SIGNED8; CONST n: Basic.SegmentedName; symbol: SyntaxTree.Symbol; comment: BOOLEAN); 
 		PROCEDURE ^ SetExported*(e: BOOLEAN); 
 		PROCEDURE ^ EnableComments*(enabled: BOOLEAN); 
 		PROCEDURE ^ DeleteComments*; 
 		PROCEDURE ^ SetResolved*(section: BinaryCode.Section); 
 		PROCEDURE ^ SetAlias*(section: BinaryCode.Section; offset: SIZE); 
 		PROCEDURE ^ SetFinally*(atPc: SIZE); 
-		PROCEDURE ^ GetSize*(): LONGINT; 
+		PROCEDURE ^ GetSize*(): SIGNED32; 
 		PROCEDURE ^ Emit*(instruction: Instruction); 
 		PROCEDURE ^ EmitAt*(at: SIZE; instruction: Instruction); 
 		PROCEDURE ^ Reset*; 
@@ -169,9 +169,9 @@ VAR
 	empty: Operand; 
 
 	PROCEDURE ^ Assert(condition: BOOLEAN; CONST reason: ARRAY OF CHAR); 
-	PROCEDURE ^ NewSection*(list: Sections.SectionList; type: SHORTINT; CONST name: Basic.SegmentedName; syntaxTreeSymbol: SyntaxTree.Symbol; dump: BOOLEAN): Section; 
+	PROCEDURE ^ NewSection*(list: Sections.SectionList; type: SIGNED8; CONST name: Basic.SegmentedName; syntaxTreeSymbol: SyntaxTree.Symbol; dump: BOOLEAN): Section; 
 	PROCEDURE ^ SameOperand*(CONST left, right: Operand): BOOLEAN; 
-	PROCEDURE ^ CheckOperand*(operand: Operand; opCode, location: LONGINT; VAR message: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ CheckOperand*(operand: Operand; opCode, location: SIGNED32; VAR message: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ CheckInstruction*(instruction: Instruction; VAR message: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ DumpRegister*(w: Streams.Writer; registerNumber: SIZE; CONST registerClass: RegisterClass); 
 	PROCEDURE ^ DumpType*(w: Streams.Writer; type: Type); 
@@ -183,49 +183,49 @@ VAR
 	PROCEDURE ^ WriteRawInstruction*(w: Streams.Writer; CONST instr: Instruction); 
 	PROCEDURE ^ DumpInstruction*(w: Streams.Writer; CONST instr: Instruction); 
 	PROCEDURE ^ InitInstructions; 
-	PROCEDURE ^ InitInstruction*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; CONST op1, op2, op3: Operand); 
-	PROCEDURE ^ InitInstruction2*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; op1, op2: Operand); 
-	PROCEDURE ^ InitInstruction1*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT; op1: Operand); 
-	PROCEDURE ^ InitInstruction0*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SHORTINT); 
-	PROCEDURE ^ SetSubType*(VAR instr: Instruction; subType: SHORTINT); 
+	PROCEDURE ^ InitInstruction*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SIGNED8; CONST op1, op2, op3: Operand); 
+	PROCEDURE ^ InitInstruction2*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SIGNED8; op1, op2: Operand); 
+	PROCEDURE ^ InitInstruction1*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SIGNED8; op1: Operand); 
+	PROCEDURE ^ InitInstruction0*(VAR instr: Instruction; textPosition: Basic.Position; opcode: SIGNED8); 
+	PROCEDURE ^ SetSubType*(VAR instr: Instruction; subType: SIGNED8); 
 	PROCEDURE ^ InitOperand*(VAR op: Operand); 
 	PROCEDURE ^ InitRegister*(VAR op: Operand; type: Type; registerClass: RegisterClass; register: SIZE); 
 	PROCEDURE ^ Register*(type: Type; registerClass: RegisterClass; register: SIZE): Operand; 
-	PROCEDURE ^ RegisterOffset*(type: Type; registerClass: RegisterClass; register: SIZE; offset: LONGINT): Operand; 
+	PROCEDURE ^ RegisterOffset*(type: Type; registerClass: RegisterClass; register: SIZE; offset: SIGNED32): Operand; 
 	PROCEDURE ^ AddOffset*(VAR op: Operand; offset: SIZE); 
-	PROCEDURE ^ SetOffset*(VAR op: Operand; offset: LONGINT); 
+	PROCEDURE ^ SetOffset*(VAR op: Operand; offset: SIGNED32); 
 	PROCEDURE ^ SetSymbol*(VAR op: Operand; symbol: Sections.SectionName; fp: Basic.Fingerprint); 
 	PROCEDURE ^ SetScope*(VAR instr: Instruction; scope: SyntaxTree.Scope); 
-	PROCEDURE ^ SetIntValue*(VAR op: Operand; intValue: HUGEINT); 
+	PROCEDURE ^ SetIntValue*(VAR op: Operand; intValue: SIGNED64); 
 	PROCEDURE ^ MakeMemory*(VAR op: Operand; type: Type); 
 	PROCEDURE ^ MakeAddress*(VAR op: Operand; CONST type: Type); 
 	PROCEDURE ^ InitAddress*(VAR op: Operand; type: Type; symbol: Sections.SectionName; fp: Basic.Fingerprint; symbolOffset: SIZE); 
 	PROCEDURE ^ Address*(type: Type; symbol: Sections.SectionName; fp: Basic.Fingerprint; offset: SIZE): Operand; 
 	PROCEDURE ^ InitMemory*(VAR op: Operand; type: Type; base: Operand; offset: SIZE); 
 	PROCEDURE ^ Memory*(type: Type; base: Operand; offset: SIZE): Operand; 
-	PROCEDURE ^ IsConstantInteger*(CONST op: Operand; VAR value: HUGEINT): BOOLEAN; 
-	PROCEDURE ^ InitImmediate*(VAR op: Operand; type: Type; value: HUGEINT); 
-	PROCEDURE ^ Immediate*(type: Type; value: HUGEINT): Operand; 
-	PROCEDURE ^ InitFloatImmediate*(VAR op: Operand; type: Type; value: LONGREAL); 
-	PROCEDURE ^ FloatImmediate*(type: Type; value: LONGREAL): Operand; 
-	PROCEDURE ^ InitNumber*(VAR op: Operand; value: HUGEINT); 
-	PROCEDURE ^ Number*(value: HUGEINT): Operand; 
+	PROCEDURE ^ IsConstantInteger*(CONST op: Operand; VAR value: SIGNED64): BOOLEAN; 
+	PROCEDURE ^ InitImmediate*(VAR op: Operand; type: Type; value: SIGNED64); 
+	PROCEDURE ^ Immediate*(type: Type; value: SIGNED64): Operand; 
+	PROCEDURE ^ InitFloatImmediate*(VAR op: Operand; type: Type; value: FLOAT64); 
+	PROCEDURE ^ FloatImmediate*(type: Type; value: FLOAT64): Operand; 
+	PROCEDURE ^ InitNumber*(VAR op: Operand; value: SIGNED64); 
+	PROCEDURE ^ Number*(value: SIGNED64): Operand; 
 	PROCEDURE ^ InitString*(VAR op: Operand; string: SyntaxTree.SourceCode); 
 	PROCEDURE ^ SetString*(VAR op: Operand; string: POINTER TO ARRAY OF CHAR); 
 	PROCEDURE ^ String*(string: SyntaxTree.SourceCode): Operand; 
-	PROCEDURE ^ InitType*(VAR type: Type; form: SHORTINT; sizeInBits: INTEGER); 
-	PROCEDURE ^ ToVectorType*(VAR type: Type; length: LONGINT); 
+	PROCEDURE ^ InitType*(VAR type: Type; form: SIGNED8; sizeInBits: SIGNED16); 
+	PROCEDURE ^ ToVectorType*(VAR type: Type; length: SIGNED32); 
 	PROCEDURE ^ IsVectorRegister*(CONST op: Operand): BOOLEAN; 
-	PROCEDURE ^ InitRegisterClass*(VAR registerClass: RegisterClass; class: SHORTINT; number: SIZE); 
-	PROCEDURE ^ InitParameterRegisterClass*(VAR registerClass: RegisterClass; number: LONGINT); 
-	PROCEDURE ^ NewType*(form: SHORTINT; sizeInBits: INTEGER): Type; 
+	PROCEDURE ^ InitRegisterClass*(VAR registerClass: RegisterClass; class: SIGNED8; number: SIZE); 
+	PROCEDURE ^ InitParameterRegisterClass*(VAR registerClass: RegisterClass; number: SIGNED32); 
+	PROCEDURE ^ NewType*(form: SIGNED8; sizeInBits: SIGNED16): Type; 
 	PROCEDURE ^ SetType*(VAR op: Operand; CONST type: Type); 
-	PROCEDURE ^ FindMnemonic*(CONST name: ARRAY OF CHAR): SHORTINT; 
+	PROCEDURE ^ FindMnemonic*(CONST name: ARRAY OF CHAR): SIGNED8; 
 	PROCEDURE ^ SetRegister*(VAR op: Operand; reg: SIZE); 
-	PROCEDURE ^ DecimalNumber(ch: CHAR; VAR nr: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Numbers(CONST name: ARRAY OF CHAR; VAR pos: SIZE; VAR number: LONGINT): BOOLEAN; 
+	PROCEDURE ^ DecimalNumber(ch: CHAR; VAR nr: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Numbers(CONST name: ARRAY OF CHAR; VAR pos: SIZE; VAR number: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ Character(CONST name: ARRAY OF CHAR; VAR pos: SIZE; char: CHAR): BOOLEAN; 
-	PROCEDURE ^ DenotesRegister*(CONST name: ARRAY OF CHAR; VAR registerClass: RegisterClass; VAR register: LONGINT): BOOLEAN; 
+	PROCEDURE ^ DenotesRegister*(CONST name: ARRAY OF CHAR; VAR registerClass: RegisterClass; VAR register: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ UnsignedIntegerType*(bits: SIZE): Type; 
 	PROCEDURE ^ SignedIntegerType*(bits: SIZE): Type; 
 	PROCEDURE ^ FloatType*(bits: SIZE): Type; 

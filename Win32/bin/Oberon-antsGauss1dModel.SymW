@@ -5,15 +5,15 @@ TYPE
 	tModel* = POINTER TO tModelDesc; 
 
 	tModelDesc* = RECORD (antsModels.tModelDesc)
-		a: ARRAY 6 OF LONGREAL; 
+		a: ARRAY 6 OF FLOAT64; 
 	END; 
 
-	PROCEDURE ^ Open*(M: tModel; a: ARRAY OF LONGREAL); 
+	PROCEDURE ^ Open*(M: tModel; a: ARRAY OF FLOAT64); 
 	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
 	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
 	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
 	PROCEDURE ^ Uniform(s: antsKernel.Kernel); 
-	PROCEDURE ^ ArrayHandleAttribute(VAR M: Objects.AttrMsg; prefix: ARRAY OF CHAR; VAR array: ARRAY OF LONGREAL): BOOLEAN; 
+	PROCEDURE ^ ArrayHandleAttribute(VAR M: Objects.AttrMsg; prefix: ARRAY OF CHAR; VAR array: ARRAY OF FLOAT64): BOOLEAN; 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ NewModel*; 

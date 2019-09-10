@@ -15,7 +15,7 @@ VAR
 
 	PROCEDURE ^ Copy(src, dest: tLayer); 
 	PROCEDURE ^ Recall(scatter: tLayer); 
-	PROCEDURE ^ Vizor(x0, y0, x1, y1: INTEGER); 
+	PROCEDURE ^ Vizor(x0, y0, x1, y1: SIGNED16); 
 	PROCEDURE ^ Actor(layer: vyPort.tLayer; sel: vyBase.tVector; x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real; VAR somethingChanged: BOOLEAN); 
 	PROCEDURE ^ Select(scatter: tLayer; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ Prompt(scatter: tLayer; VAR event: vyEvents.EventMsg); 

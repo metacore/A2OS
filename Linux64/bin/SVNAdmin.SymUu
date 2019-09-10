@@ -4,10 +4,10 @@ CONST
 	EntryFileFormat* = 8; 
 TYPE 
 	EntryEntity* = RECORD 
-		Format*: LONGINT; 
+		Format*: SIGNED32; 
 		Name*: ARRAY 256 OF CHAR; 
 		NodeKind*: ARRAY 32 OF CHAR; 
-		Revision*: LONGINT; 
+		Revision*: SIGNED32; 
 		GlobalRemoval*: BOOLEAN; 
 		Url*, UrlConst*: ARRAY 256 OF CHAR; 
 		RepositoryRoot*: ARRAY 256 OF CHAR; 
@@ -15,7 +15,7 @@ TYPE
 		TextLastUpdated*: ARRAY 32 OF CHAR; 
 		Checksum*: ARRAY 33 OF CHAR; 
 		LastChangedDate*: ARRAY 32 OF CHAR; 
-		LastChangedRevision*: LONGINT; 
+		LastChangedRevision*: SIGNED32; 
 		LastChangedAuthor*: ARRAY 256 OF CHAR; 
 		Props*: ARRAY 256 OF CHAR; 
 		RepositoryUUID*: ARRAY 37 OF CHAR; 
@@ -39,22 +39,22 @@ TYPE
 
 		PROCEDURE ^  & Init*(c: Commands.Context); 
 		PROCEDURE ^ ReadVersionUrl*(CONST filename: ARRAY OF CHAR); 
-		PROCEDURE ^ SetPath*(CONST p: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ AnalyzePath(VAR res: WORD); 
+		PROCEDURE ^ SetPath*(CONST p: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ AnalyzePath(VAR res: INTEGER); 
 		PROCEDURE ^ CreateTempfile*; 
 		PROCEDURE ^ ReadFromTempfile*(b: BOOLEAN); 
 		PROCEDURE ^ GetUrl*(VAR url: ARRAY OF CHAR); 
 		PROCEDURE ^ GetRepo*(VAR repos: ARRAY OF CHAR); 
-		PROCEDURE ^ GetVersion*(): LONGINT; 
+		PROCEDURE ^ GetVersion*(): SIGNED32; 
 		PROCEDURE ^ SkipGlobalData; 
 		PROCEDURE ^ SkipReaderToEOE; 
 		PROCEDURE ^ IsItemVersioned*(CONST filename: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ Add*(CONST path: ARRAY OF CHAR; CONST name: ARRAY OF CHAR; addGlobal: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Add*(CONST path: ARRAY OF CHAR; CONST name: ARRAY OF CHAR; addGlobal: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ CreateDummy*(CONST path, urlRepoDir: ARRAY OF CHAR): Files.Writer; 
-		PROCEDURE ^ ReadData*(VAR res: WORD); 
-		PROCEDURE ^ ReadFileData(CONST name: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ ReadData*(VAR res: INTEGER); 
+		PROCEDURE ^ ReadFileData(CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ PrintData*; 
-		PROCEDURE ^ ReadWriteLines*(count: LONGINT); 
+		PROCEDURE ^ ReadWriteLines*(count: SIGNED32); 
 		PROCEDURE ^ ReadWriteLine*(VAR str: ARRAY OF CHAR); 
 		PROCEDURE ^ ReadWriteRest*; 
 		PROCEDURE ^ ReadWriteString*(CONST str: ARRAY OF CHAR); 
@@ -66,13 +66,13 @@ TYPE
 
 	PROCEDURE ^ WriteAddEntry*(w: Files.Writer; CONST name: ARRAY OF CHAR; file: BOOLEAN); 
 	PROCEDURE ^ WriteString(w: Files.Writer; CONST line: ARRAY OF CHAR); 
-	PROCEDURE ^ WriteInt(w: Files.Writer; line: LONGINT); 
+	PROCEDURE ^ WriteInt(w: Files.Writer; line: SIGNED32); 
 	PROCEDURE ^ Write*(w: Files.Writer; data: EntryEntity); 
 	PROCEDURE ^ WriteWCPROPS*(CONST path, filename, verurl: ARRAY OF CHAR); 
 	PROCEDURE ^ CreateDirectory*(CONST path: ARRAY OF CHAR); 
 	PROCEDURE ^ ReadChecksum*(CONST file: ARRAY OF CHAR): Strings.String; 
 	PROCEDURE ^ CheckChecksum*(CONST file: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ Traverse*(CONST path: ARRAY OF CHAR; handler: TraverseHandler; data: ANY; verurl: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ Traverse*(CONST path: ARRAY OF CHAR; handler: TraverseHandler; data: ANY; verurl: BOOLEAN; VAR res: INTEGER); 
 	PROCEDURE ^ CopyToBaseFile*(CONST file: ARRAY OF CHAR); 
 	PROCEDURE ^ SetFileAttribute*(file: ARRAY OF CHAR); 
 	PROCEDURE ^ RemoveFileAttribute*(file: ARRAY OF CHAR); 

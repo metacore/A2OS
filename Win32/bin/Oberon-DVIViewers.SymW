@@ -6,14 +6,14 @@ CONST
 TYPE 
 	Frame* = POINTER TO FrameDesc; 
 
-	DrawCharHook = PROCEDURE (c: CHAR; x, y, dviWidth: LONGREAL; F: Frame); 
+	DrawCharHook = PROCEDURE (c: CHAR; x, y, dviWidth: FLOAT64; F: Frame); 
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
-		pageNo: LONGINT; 
-		zoom: REAL; 
-		conv: LONGREAL; 
-		hOffset, vOffset: LONGREAL; 
-		b, l, h, w: INTEGER; 
+		pageNo: SIGNED32; 
+		zoom: FLOAT32; 
+		conv: FLOAT64; 
+		hOffset, vOffset: FLOAT64; 
+		b, l, h, w: SIGNED16; 
 		M: Display3.Mask; 
 		clipReg: GfxRegions.Region; 
 		context: Gfx.Context; 
@@ -24,35 +24,35 @@ TYPE
 
 	StackElementDesc = RECORD 
 		next: StackElement; 
-		h, v, w, x, y, z: LONGREAL; 
+		h, v, w, x, y, z: FLOAT64; 
 	END; 
 
 	PSFileSpecial = POINTER TO PSFileSpecialDesc; 
 
 	PSFileSpecialDesc = RECORD (DVIFiles.SpecialDesc)
 		name: POINTER TO ARRAY OF CHAR; 
-		llx, lly, urx, ury: LONGREAL; 
-		angle: REAL; 
+		llx, lly, urx, ury: FLOAT64; 
+		angle: FLOAT32; 
 		image: Images.Image; 
 	END; 
 VAR 
 	tmpRgn: GfxRegions.Region; 
 
 	PROCEDURE ^ Assert(expr: BOOLEAN; msg: ARRAY OF CHAR); 
-	PROCEDURE ^ DVIToScreenX(F: Frame; x: LONGREAL): LONGREAL; 
-	PROCEDURE ^ DVIToScreenY(F: Frame; y: LONGREAL): LONGREAL; 
-	PROCEDURE ^ ScreenToDVIX(F: Frame; x: INTEGER): LONGREAL; 
-	PROCEDURE ^ ScreenToDVIY(F: Frame; y: INTEGER): LONGREAL; 
-	PROCEDURE ^ Push(VAR s: StackElement; h, v, w, x, y, z: LONGREAL); 
-	PROCEDURE ^ Pop(VAR s: StackElement; VAR h, v, w, x, y, z: LONGREAL); 
-	PROCEDURE ^ GetResolution(): LONGREAL; 
-	PROCEDURE ^ DrawCharImage(c: CHAR; x, y, dviWidth: LONGREAL; F: Frame); 
-	PROCEDURE ^ DrawChar(c: CHAR; x, y, dviWidth: LONGREAL; F: Frame); 
-	PROCEDURE ^ DrawRule(x, y, h, w: LONGREAL; F: Frame); 
+	PROCEDURE ^ DVIToScreenX(F: Frame; x: FLOAT64): FLOAT64; 
+	PROCEDURE ^ DVIToScreenY(F: Frame; y: FLOAT64): FLOAT64; 
+	PROCEDURE ^ ScreenToDVIX(F: Frame; x: SIGNED16): FLOAT64; 
+	PROCEDURE ^ ScreenToDVIY(F: Frame; y: SIGNED16): FLOAT64; 
+	PROCEDURE ^ Push(VAR s: StackElement; h, v, w, x, y, z: FLOAT64); 
+	PROCEDURE ^ Pop(VAR s: StackElement; VAR h, v, w, x, y, z: FLOAT64); 
+	PROCEDURE ^ GetResolution(): FLOAT64; 
+	PROCEDURE ^ DrawCharImage(c: CHAR; x, y, dviWidth: FLOAT64; F: Frame); 
+	PROCEDURE ^ DrawChar(c: CHAR; x, y, dviWidth: FLOAT64; F: Frame); 
+	PROCEDURE ^ DrawRule(x, y, h, w: FLOAT64; F: Frame); 
 	PROCEDURE ^ SetCurrentFont(F: Frame; font: DVIFiles.FontInfo); 
 	PROCEDURE ^ ReadPSPreview(s: PSFileSpecial); 
-	PROCEDURE ^ ParseSpecial(M: DVIFiles.File; VAR r: Files.Rider; pageNo, len: LONGINT): DVIFiles.Special; 
-	PROCEDURE ^ DoSpecial(F: Frame; M: DVIFiles.File; h, v: LONGREAL; VAR r: Files.Rider; len: LONGINT); 
+	PROCEDURE ^ ParseSpecial(M: DVIFiles.File; VAR r: Files.Rider; pageNo, len: SIGNED32): DVIFiles.Special; 
+	PROCEDURE ^ DoSpecial(F: Frame; M: DVIFiles.File; h, v: FLOAT64; VAR r: Files.Rider; len: SIGNED32); 
 	PROCEDURE ^ DrawPage(F: Frame; M: DVIFiles.File); 
 	PROCEDURE ^ UpdateModels(F: Frame); 
 	PROCEDURE ^ DoAttributeMsg(F: Frame; VAR M: Objects.AttrMsg); 
@@ -60,10 +60,10 @@ VAR
 	PROCEDURE ^ DoCopyMsg(F: Frame; VAR M: Objects.CopyMsg); 
 	PROCEDURE ^ DoStore(F: Frame; M: Objects.FileMsg); 
 	PROCEDURE ^ DoLoad(F: Frame; M: Objects.FileMsg); 
-	PROCEDURE ^ AddMaskRect(x, y, w, h: INTEGER); 
+	PROCEDURE ^ AddMaskRect(x, y, w, h: SIGNED16); 
 	PROCEDURE ^ DoRestore(F: Frame); 
 	PROCEDURE ^ DoPrint(F: Frame; VAR M: Display.DisplayMsg); 
-	PROCEDURE ^ MoveViewToMouse(F: Frame; dviX, dviY: LONGREAL; mX, mY: INTEGER); 
+	PROCEDURE ^ MoveViewToMouse(F: Frame; dviX, dviY: FLOAT64; mX, mY: SIGNED16); 
 	PROCEDURE ^ DoMouseEvent(F: Frame; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ CheckModels(M: Gadgets.UpdateMsg; F: Frame); 
 	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 

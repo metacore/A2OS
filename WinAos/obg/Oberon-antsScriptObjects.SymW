@@ -9,7 +9,7 @@ TYPE
 
 	ObjListDesc = RECORD 
 		obj: Objects.Object; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		next: ObjList; 
 	END; 
 
@@ -30,7 +30,7 @@ VAR
 	PROCEDURE ^ OpenCommandText(b: Object; name: ARRAY OF CHAR; cmd: ARRAY OF CHAR); 
 	PROCEDURE ^ ConvertText(text: Texts.Text; VAR ntext: Texts.Text); 
 	PROCEDURE ^ ExecuteCommandText(b: Object; VAR context: Objects.Object); 
-	PROCEDURE ^ FindObj(VAR sc: Texts.Finder; VAR pos: LONGINT; VAR obj: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ FindObj(VAR sc: Texts.Finder; VAR pos: SIGNED32; VAR obj: Objects.Object): BOOLEAN; 
 	PROCEDURE ^ ComeBack(t: Oberon.Task); 
 	PROCEDURE ^ SetTextLibs(b: Object; lib: Objects.Library); 
 	PROCEDURE ^ RestoreTextList(F: Object); 

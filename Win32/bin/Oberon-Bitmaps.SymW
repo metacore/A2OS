@@ -7,8 +7,8 @@ TYPE
 	Bitmap* = POINTER TO BitmapDesc; 
 
 	BitmapDesc* = RECORD 
-		width*, height*, depth*: INTEGER; 
-		wth*, size: LONGINT; 
+		width*, height*, depth*: SIGNED16; 
+		wth*, size: SIGNED32; 
 		address*: ADDRESS; 
 	END; 
 
@@ -18,26 +18,26 @@ TYPE
 VAR 
 	buffer: POINTER TO Buffer; 
 
-	PROCEDURE ^ Define*(B: Bitmap; width, height, depth: INTEGER; address: ADDRESS); 
-	PROCEDURE ^ Get*(B: Bitmap; X, Y: INTEGER): INTEGER; 
+	PROCEDURE ^ Define*(B: Bitmap; width, height, depth: SIGNED16; address: ADDRESS); 
+	PROCEDURE ^ Get*(B: Bitmap; X, Y: SIGNED16): SIGNED16; 
 	PROCEDURE ^ Clear*(B: Bitmap); 
-	PROCEDURE ^ Dot*(B: Bitmap; col, X, Y, mode: INTEGER); 
-	PROCEDURE ^ CopyBlock0(n, w: LONGINT; adr: ADDRESS; buf: ADDRESS; width: LONGINT; from: BOOLEAN); 
-	PROCEDURE ^ CopyBlock*(sB, dB: Bitmap; SX, SY, W, H, DX, DY, mode: INTEGER); 
-	PROCEDURE ^ CopyPattern0(ofs: LONGINT; src, dst: ADDRESS; w, col, mode: LONGINT); 
-	PROCEDURE ^ CopyPattern1(B: Bitmap; src: ADDRESS; x, y, w, col, mode: LONGINT); 
-	PROCEDURE ^ CopyPattern*(B: Bitmap; col: INTEGER; pat: Display.Pattern; X, Y, mode: INTEGER); 
-	PROCEDURE ^ ReplConst*(B: Bitmap; col, X, Y, W, H, mode: INTEGER); 
-	PROCEDURE ^ FillPattern0(ofs: LONGINT; src, dst: ADDRESS; w, pw, col, mode: LONGINT); 
-	PROCEDURE ^ ReplPattern*(B: Bitmap; col: INTEGER; pat: LONGINT; X, Y, W, H, mode: INTEGER); 
-	PROCEDURE ^ DisplayBlock*(B: Bitmap; SX, SY, W, H, DX, DY, mode: INTEGER; VAR colortable: ARRAY OF LONGINT); 
-	PROCEDURE ^ GetPix*(VAR addr: ADDRESS; VAR buf: SYSTEM.BYTE; depth: INTEGER); 
-	PROCEDURE ^ PutPix*(VAR addr: ADDRESS; border: ADDRESS; buf: SYSTEM.BYTE; depth: INTEGER); 
-	PROCEDURE {Fingerprint(-664009434103430530)}  - Copy0(src, dst: ADDRESS; hx, sw2, dw2: LONGINT);
+	PROCEDURE ^ Dot*(B: Bitmap; col, X, Y, mode: SIGNED16); 
+	PROCEDURE ^ CopyBlock0(n, w: SIGNED32; adr: ADDRESS; buf: ADDRESS; width: SIGNED32; from: BOOLEAN); 
+	PROCEDURE ^ CopyBlock*(sB, dB: Bitmap; SX, SY, W, H, DX, DY, mode: SIGNED16); 
+	PROCEDURE ^ CopyPattern0(ofs: SIGNED32; src, dst: ADDRESS; w, col, mode: SIGNED32); 
+	PROCEDURE ^ CopyPattern1(B: Bitmap; src: ADDRESS; x, y, w, col, mode: SIGNED32); 
+	PROCEDURE ^ CopyPattern*(B: Bitmap; col: SIGNED16; pat: Display.Pattern; X, Y, mode: SIGNED16); 
+	PROCEDURE ^ ReplConst*(B: Bitmap; col, X, Y, W, H, mode: SIGNED16); 
+	PROCEDURE ^ FillPattern0(ofs: SIGNED32; src, dst: ADDRESS; w, pw, col, mode: SIGNED32); 
+	PROCEDURE ^ ReplPattern*(B: Bitmap; col: SIGNED16; pat: SIGNED32; X, Y, W, H, mode: SIGNED16); 
+	PROCEDURE ^ DisplayBlock*(B: Bitmap; SX, SY, W, H, DX, DY, mode: SIGNED16; VAR colortable: ARRAY OF SIGNED32); 
+	PROCEDURE ^ GetPix*(VAR addr: ADDRESS; VAR buf: SYSTEM.BYTE; depth: SIGNED16); 
+	PROCEDURE ^ PutPix*(VAR addr: ADDRESS; border: ADDRESS; buf: SYSTEM.BYTE; depth: SIGNED16); 
+	PROCEDURE {Fingerprint(-664009434103430530)}  - Copy0(src, dst: ADDRESS; hx, sw2, dw2: SIGNED32);
 	CODE
 	END Copy0; 
-	PROCEDURE ^ Copy*(sB, dB: Bitmap; SX, SY, SW, SH, DX, DY, DW, DH, mode: INTEGER); 
-	PROCEDURE ^ PutLine*(B: Bitmap; VAR data: ARRAY OF INTEGER; X, Y, W: INTEGER); 
-	PROCEDURE ^ GetLine*(B: Bitmap; VAR data: ARRAY OF INTEGER; X, Y, W: INTEGER); 
+	PROCEDURE ^ Copy*(sB, dB: Bitmap; SX, SY, SW, SH, DX, DY, DW, DH, mode: SIGNED16); 
+	PROCEDURE ^ PutLine*(B: Bitmap; VAR data: ARRAY OF SIGNED16; X, Y, W: SIGNED16); 
+	PROCEDURE ^ GetLine*(B: Bitmap; VAR data: ARRAY OF SIGNED16; X, Y, W: SIGNED16); 
 BEGIN
 END Bitmaps.

@@ -6,50 +6,50 @@ TYPE
 
 	Command = RECORD 
 		name: Name; 
-		offset: LONGINT; 
+		offset: SIGNED32; 
 	END; 
 
 	Module = POINTER TO RECORD 
 		name: Name; 
-		key: LONGINT; 
-		dbase, pbase: LONGINT; 
-		size, refcnt: LONGINT; 
+		key: SIGNED32; 
+		dbase, pbase: SIGNED32; 
+		size, refcnt: SIGNED32; 
 		next: Module; 
-		entries: LONGINT; 
-		entry: ARRAY 256 OF LONGINT; 
+		entries: SIGNED32; 
+		entry: ARRAY 256 OF SIGNED32; 
 		command: ARRAY 64 OF Command; 
 	END; 
 
 	Linker* = OBJECT 
 	VAR 
 		first, last: Module; 
-		base, heap, descriptorBase, bodyBase: LONGINT; 
+		base, heap, descriptorBase, bodyBase: SIGNED32; 
 		W: Streams.Writer; 
 		Out: Files.File; 
 		Rout: Files.Writer; 
-		code: ARRAY (256 * 1024) OF LONGINT; 
+		code: ARRAY (256 * 1024) OF SIGNED32; 
 		plain, descriptors: BOOLEAN; 
 
 		PROCEDURE ^  & InitLinker*(w: Streams.Writer; plain, descriptors: BOOLEAN); 
 		PROCEDURE ^ SetPos(pos: Files.Position); 
-		PROCEDURE ^ WriteCodeBlock(len, adr: LONGINT); 
-		PROCEDURE ^ Fixup(fixloc, offset, base: LONGINT; VAR entry: ARRAY OF LONGINT); 
-		PROCEDURE ^ FixSelf(fixloc, base: LONGINT); 
+		PROCEDURE ^ WriteCodeBlock(len, adr: SIGNED32); 
+		PROCEDURE ^ Fixup(fixloc, offset, base: SIGNED32; VAR entry: ARRAY OF SIGNED32); 
+		PROCEDURE ^ FixSelf(fixloc, base: SIGNED32); 
 		PROCEDURE ^ ThisMod(VAR modname: ARRAY OF CHAR; VAR success: BOOLEAN): Module; 
 		PROCEDURE ^ Bodies; 
-		PROCEDURE ^ String(VAR str: ARRAY OF CHAR; VAR index: LONGINT); 
+		PROCEDURE ^ String(VAR str: ARRAY OF CHAR; VAR index: SIGNED32); 
 		PROCEDURE ^ ModuleDescriptors; 
 		PROCEDURE ^ AddHeader(fileHeader: ARRAY OF CHAR; VAR success: BOOLEAN); 
-		PROCEDURE ^ Begin*(base: LONGINT; fileOut, fileHeader: ARRAY OF CHAR; VAR success: BOOLEAN); 
+		PROCEDURE ^ Begin*(base: SIGNED32; fileOut, fileHeader: ARRAY OF CHAR; VAR success: BOOLEAN); 
 		PROCEDURE ^ Link*(fileIn: ARRAY OF CHAR; VAR success: BOOLEAN); 
 		PROCEDURE ^ End*; 
 	END Linker; 
 VAR 
 	log: Streams.Writer; 
 
-	PROCEDURE ^ Branch(dest, pc: LONGINT): LONGINT; 
-	PROCEDURE ^ BranchLink(dest, pc: LONGINT): LONGINT; 
-	PROCEDURE ^ BodyBranch(m: Module; pc: LONGINT): LONGINT; 
+	PROCEDURE ^ Branch(dest, pc: SIGNED32): SIGNED32; 
+	PROCEDURE ^ BranchLink(dest, pc: SIGNED32): SIGNED32; 
+	PROCEDURE ^ BodyBranch(m: Module; pc: SIGNED32): SIGNED32; 
 	PROCEDURE ^ ThisFile(name: ARRAY OF CHAR): Files.File; 
 	PROCEDURE ^ DoLink(linker: Linker; addHeaderFile: BOOLEAN; context: Commands.Context); 
 	PROCEDURE ^ Link*(context: Commands.Context); 

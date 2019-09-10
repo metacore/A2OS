@@ -2,11 +2,11 @@ MODULE CryptoCAST;
 	IMPORT S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
 CONST 
 TYPE 
-	LI = LONGINT; 
+	LI = SIGNED32; 
 
 	Key = RECORD 
-		val: LONGINT; 
-		rot: SHORTINT; 
+		val: SIGNED32; 
+		rot: SIGNED8; 
 	END; 
 
 	Keys = RECORD 
@@ -21,8 +21,8 @@ TYPE
 		keys: Keys; 
 		iv: Block; 
 
-		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
-		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIGNED32); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; p: SIZE); 
@@ -30,11 +30,11 @@ TYPE
 		PROCEDURE ^  & Init*; 
 	END Cipher; 
 VAR 
-	T0, T1, T2, T3: ARRAY 256 OF LONGINT; 
+	T0, T1, T2, T3: ARRAY 256 OF SIGNED32; 
 	T4, T5, T6, T7: ARRAY 256 OF SET32; 
 
 	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
-	PROCEDURE ^ InitKeys(VAR keys: Keys; CONST src: ARRAY OF CHAR; len: LONGINT); 
+	PROCEDURE ^ InitKeys(VAR keys: Keys; CONST src: ARRAY OF CHAR; len: SIGNED32); 
 	PROCEDURE ^ CAST1(VAR k: Key; VAR L, R: SET32); 
 	PROCEDURE ^ CAST2(VAR k: Key; VAR L, R: SET32); 
 	PROCEDURE ^ CAST3(VAR k: Key; VAR L, R: SET32); 

@@ -3,7 +3,7 @@ MODULE FoxIntermediateAssembler;
 CONST 
 	Trace = FoxAssembler.Trace; 
 TYPE 
-	Register* = LONGINT; 
+	Register* = SIGNED32; 
 
 	Operand* = IntermediateCode.Operand; 
 

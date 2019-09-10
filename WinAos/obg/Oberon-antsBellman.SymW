@@ -9,42 +9,42 @@ CONST
 	cSaegezahn* = 4; 
 	cHuber* = 5; 
 TYPE 
-	Function* = PROCEDURE (k, n: LONGINT):LONGREAL; 
+	Function* = PROCEDURE (k, n: SIGNED32):FLOAT64; 
 
 	Statistic* = POINTER TO StatisticDesc; 
 
 	StatisticDesc* = RECORD 
-		type*: INTEGER; 
+		type*: SIGNED16; 
 		m*, s*: antsArrays.X2d; 
-		n*, N*: LONGINT; 
+		n*, N*: SIGNED32; 
 	END; 
 
-	PROCEDURE ^ Max(i, j: LONGINT): LONGINT; 
-	PROCEDURE ^ Min(i, j: LONGINT): LONGINT; 
-	PROCEDURE ^ Step(VAR argmin: ARRAY OF INTEGER; VAR min: ARRAY OF LONGREAL; n, minw, maxw: LONGINT; p: Function); 
-	PROCEDURE ^ Bellman*(VAR argmin: antsArrays.I1d; VAR min: antsArrays.X1d; N, minw, maxw: LONGINT; p: Function; initvalue: LONGREAL); 
-	PROCEDURE ^ BellmanMatrix*(VAR argmin: antsArrays.I2d; VAR min: antsArrays.X2d; N: LONGINT; p: Function); 
+	PROCEDURE ^ Max(i, j: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Min(i, j: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Step(VAR argmin: ARRAY OF SIGNED16; VAR min: ARRAY OF FLOAT64; n, minw, maxw: SIGNED32; p: Function); 
+	PROCEDURE ^ Bellman*(VAR argmin: antsArrays.I1d; VAR min: antsArrays.X1d; N, minw, maxw: SIGNED32; p: Function; initvalue: FLOAT64); 
+	PROCEDURE ^ BellmanMatrix*(VAR argmin: antsArrays.I2d; VAR min: antsArrays.X2d; N: SIGNED32; p: Function); 
 	PROCEDURE ^ PartitionMatrix*(argmin: antsArrays.I2d; VAR result: antsArrays.X2d; p: Function); 
 	PROCEDURE ^ IntervalLenMatrix*(argmin: antsArrays.I2d; VAR result: antsArrays.I2d); 
 	PROCEDURE ^ InterVarMatrix*(rstern: antsArrays.I2d; s: Statistic; VAR intVar: antsArrays.X2d); 
 	PROCEDURE ^ IntervalLen*(argmin: antsArrays.I1d; VAR result: antsArrays.I1d); 
 	PROCEDURE ^ Partition*(argmin: antsArrays.I1d; VAR result: antsArrays.X1d; p: Function); 
-	PROCEDURE ^ InitStatistic1d*(VAR statistic: Statistic; N: LONGINT); 
-	PROCEDURE ^ InitStatistic2d*(VAR statistic: Statistic; N, M: LONGINT); 
-	PROCEDURE ^ ComputeMeanStat1d*(VAR A: ARRAY OF LONGREAL; VAR s: Statistic); 
-	PROCEDURE ^ median(y: ARRAY OF LONGREAL; start, ende: LONGINT): LONGREAL; 
-	PROCEDURE ^ ComputeMedianStat1d*(VAR A: ARRAY OF LONGREAL; VAR s: Statistic); 
-	PROCEDURE ^ ComputeHampelStat1d*(VAR A: ARRAY OF LONGREAL; VAR s: Statistic); 
-	PROCEDURE ^ ComputeSaegezahnStat1d*(VAR A: ARRAY OF LONGREAL; VAR s: Statistic); 
-	PROCEDURE ^ ComputeHuberStat1d*(VAR A: ARRAY OF LONGREAL; VAR s: Statistic); 
-	PROCEDURE ^ CreateSortedArray(y: ARRAY OF LONGREAL; start, ende: LONGINT): antsArrays.X1d; 
-	PROCEDURE ^ ComputeMeanStat2d*(VAR A: ARRAY OF ARRAY OF LONGREAL; VAR s: Statistic); 
-	PROCEDURE ^ GetMean1d*(s: Statistic; from, to: LONGINT): LONGREAL; 
-	PROCEDURE ^ GetMedian1d*(s: Statistic; from, to: LONGINT): LONGREAL; 
-	PROCEDURE ^ GetSsq1d*(s: Statistic; from, to: LONGINT): LONGREAL; 
-	PROCEDURE ^ GetSAbs1d*(s: Statistic; from, to: LONGINT): LONGREAL; 
-	PROCEDURE ^ GetMean2d*(s: Statistic; fromx, fromy, tox, toy: LONGINT): LONGREAL; 
-	PROCEDURE ^ GetSsq2d*(s: Statistic; fromx, fromy, tox, toy: LONGINT): LONGREAL; 
+	PROCEDURE ^ InitStatistic1d*(VAR statistic: Statistic; N: SIGNED32); 
+	PROCEDURE ^ InitStatistic2d*(VAR statistic: Statistic; N, M: SIGNED32); 
+	PROCEDURE ^ ComputeMeanStat1d*(VAR A: ARRAY OF FLOAT64; VAR s: Statistic); 
+	PROCEDURE ^ median(y: ARRAY OF FLOAT64; start, ende: SIGNED32): FLOAT64; 
+	PROCEDURE ^ ComputeMedianStat1d*(VAR A: ARRAY OF FLOAT64; VAR s: Statistic); 
+	PROCEDURE ^ ComputeHampelStat1d*(VAR A: ARRAY OF FLOAT64; VAR s: Statistic); 
+	PROCEDURE ^ ComputeSaegezahnStat1d*(VAR A: ARRAY OF FLOAT64; VAR s: Statistic); 
+	PROCEDURE ^ ComputeHuberStat1d*(VAR A: ARRAY OF FLOAT64; VAR s: Statistic); 
+	PROCEDURE ^ CreateSortedArray(y: ARRAY OF FLOAT64; start, ende: SIGNED32): antsArrays.X1d; 
+	PROCEDURE ^ ComputeMeanStat2d*(VAR A: ARRAY OF ARRAY OF FLOAT64; VAR s: Statistic); 
+	PROCEDURE ^ GetMean1d*(s: Statistic; from, to: SIGNED32): FLOAT64; 
+	PROCEDURE ^ GetMedian1d*(s: Statistic; from, to: SIGNED32): FLOAT64; 
+	PROCEDURE ^ GetSsq1d*(s: Statistic; from, to: SIGNED32): FLOAT64; 
+	PROCEDURE ^ GetSAbs1d*(s: Statistic; from, to: SIGNED32): FLOAT64; 
+	PROCEDURE ^ GetMean2d*(s: Statistic; fromx, fromy, tox, toy: SIGNED32): FLOAT64; 
+	PROCEDURE ^ GetSsq2d*(s: Statistic; fromx, fromy, tox, toy: SIGNED32): FLOAT64; 
 	PROCEDURE ^ gammaScanning*(min: antsArrays.X2d; VAR jumps: antsArrays.I1d; VAR gamma: antsArrays.X1d); 
 BEGIN
 END antsBellman.

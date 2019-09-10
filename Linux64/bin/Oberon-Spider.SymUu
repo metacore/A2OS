@@ -34,7 +34,7 @@ TYPE
 	DistributeMsg = RECORD (Display.FrameMsg)
 		tail: Cards.Card; 
 		to: ARRAY COLUMN OF Cards.Stack; 
-		index: INTEGER; 
+		index: SIGNED16; 
 	END; 
 
 	FitMsg = RECORD (Display.FrameMsg)
@@ -55,8 +55,8 @@ TYPE
 	Column = POINTER TO ColumnDesc; 
 
 	ColumnDesc = RECORD (Cards.StackDesc)
-		topY: INTEGER; 
-		nrCards: INTEGER; 
+		topY: SIGNED16; 
+		nrCards: SIGNED16; 
 		first: BOOLEAN; 
 	END; 
 VAR 
@@ -66,7 +66,7 @@ VAR
 	king: Cards.Card; 
 
 	PROCEDURE ^ StartGame(F: Display.Frame); 
-	PROCEDURE ^ DrawRect(x, y: INTEGER; card: Cards.Card); 
+	PROCEDURE ^ DrawRect(x, y: SIGNED16; card: Cards.Card); 
 	PROCEDURE ^ WaitMouseRelease(M: Oberon.InputMsg); 
 	PROCEDURE ^ DropOnFittingStack(M: Oberon.InputMsg; c: Cards.Card; self: Cards.Stack); 
 	PROCEDURE ^ TalonAttr(T: Talon; VAR M: Objects.AttrMsg); 
@@ -85,7 +85,7 @@ VAR
 	PROCEDURE ^ CanDropColumn(C: Cards.Stack; card: Cards.Card): BOOLEAN; 
 	PROCEDURE ^ ColumnMoveCard(self, to: Cards.Stack; card: Cards.Card; undo: BOOLEAN); 
 	PROCEDURE ^ ColumnUndoMove(C: Cards.Stack; M: Cards.Move); 
-	PROCEDURE ^ DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ TrackColumn(C: Cards.Stack; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ ColumnHandler*(C: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewColumn*; 

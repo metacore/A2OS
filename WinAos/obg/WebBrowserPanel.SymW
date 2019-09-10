@@ -18,7 +18,7 @@ TYPE
 	NotifyMsg* = POINTER TO RECORD 
 		url*: String; 
 		title*: String; 
-		loadID*: LONGINT; 
+		loadID*: SIGNED32; 
 	END; 
 
 	LoadedMsg* = POINTER TO RECORD 
@@ -31,7 +31,7 @@ TYPE
 		next: FrameNode; 
 		name: String; 
 		scrolling: BOOLEAN; 
-		size: LONGINT; 
+		size: SIGNED32; 
 		relative: BOOLEAN; 
 		panel: VisualComponent; 
 		isLast: BOOLEAN; 
@@ -39,8 +39,8 @@ TYPE
 
 	FrameslotNode = POINTER TO RECORD 
 		next: FrameslotNode; 
-		size: LONGINT; 
-		type: LONGINT; 
+		size: SIGNED32; 
+		type: SIGNED32; 
 	END; 
 
 	FramesetNode = POINTER TO RECORD 
@@ -60,10 +60,10 @@ TYPE
 		vc: VisualComponent; 
 		loadingText: WebBrowserComponents.ShortText; 
 		pending: BOOLEAN; 
-		loadID: LONGINT; 
+		loadID: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Load*(loadID: LONGINT); 
+		PROCEDURE ^ Load*(loadID: SIGNED32); 
 		PROCEDURE ^ Loaded(sender, data: ANY); 
 		PROCEDURE ^ LoadLink(sender, data: ANY); 
 	END WebPanel; 
@@ -105,7 +105,7 @@ TYPE
 		decoder: Codecs.TextDecoder; 
 		bbtDecoder: TextUtilities.BluebottleDecoder; 
 		encoder: Codecs.TextEncoder; 
-		res: WORD; 
+		res: INTEGER; 
 		contents: XMLObjects.Enumerator; 
 		content: ANY; 
 		framesetElem: XML.Element; 
@@ -125,8 +125,8 @@ TYPE
 		width: SIZE; 
 		height: SIZE; 
 		loadLink: WMEvents.EventListener; 
-		frameborderSize: LONGINT; 
-		totalFixSizes: LONGINT; 
+		frameborderSize: SIGNED32; 
+		totalFixSizes: SIGNED32; 
 		nodeIsCol: BOOLEAN; 
 		firstFrame: FrameNode; 
 
@@ -143,13 +143,13 @@ TYPE
 		PROCEDURE ^ FindAndReloadFrame(link, target: String): BOOLEAN; 
 	END FramesetPanel; 
 VAR 
-	frameNameCount: LONGINT; 
+	frameNameCount: SIGNED32; 
 
 	PROCEDURE ^ GetContent(VAR url: String; VAR title: String; initWidth: SIZE; initHeight: SIZE; scrollbars: BOOLEAN; loadLink: WMEvents.EventListener; frameName: String): VisualComponent; 
 	PROCEDURE ^ DecodeLinkData*(data: ANY; VAR link: String; VAR target: String); 
 	PROCEDURE ^ GetElement(name: ARRAY OF CHAR; root: XML.Element): XML.Element; 
-	PROCEDURE ^ ParseFramesetAttr(frameset: XML.Element; VAR frameSlots: FrameslotNode; VAR frameborderSize: LONGINT; VAR fixSizes: LONGINT; VAR nodeIsCol: BOOLEAN); 
-	PROCEDURE ^ ParseFramesetRowsOrCols(attrValue: String; VAR firstSlot: FrameslotNode; VAR nodeCount: LONGINT; VAR fixSizes: LONGINT); 
+	PROCEDURE ^ ParseFramesetAttr(frameset: XML.Element; VAR frameSlots: FrameslotNode; VAR frameborderSize: SIGNED32; VAR fixSizes: SIGNED32; VAR nodeIsCol: BOOLEAN); 
+	PROCEDURE ^ ParseFramesetRowsOrCols(attrValue: String; VAR firstSlot: FrameslotNode; VAR nodeCount: SIGNED32; VAR fixSizes: SIGNED32); 
 	PROCEDURE ^ ParseFramesetContent(frameset: XML.Element; VAR first: FramesetNode); 
 	PROCEDURE ^ GetNewFrameName(): String; 
 BEGIN

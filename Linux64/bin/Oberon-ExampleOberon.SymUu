@@ -4,7 +4,7 @@ CONST
 TYPE 
 	Example = OBJECT {EXCLUSIVE} 
 	VAR 
-		i: LONGINT; 
+		i: SIGNED32; 
 		w: Texts.Writer; 
 		t: Texts.Text; 
 		timer: AosKernel.Timer; 

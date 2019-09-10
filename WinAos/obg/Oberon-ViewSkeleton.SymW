@@ -7,11 +7,11 @@ TYPE
 	FrameDesc* = RECORD (Gadgets.ViewDesc)
 	END; 
 
-	PROCEDURE ^ ToModel(F: Frame; x, y: INTEGER; VAR M: Display.FrameMsg); 
-	PROCEDURE ^ Restore(F: Frame; x, y: INTEGER; dlink: Objects.Object); 
-	PROCEDURE ^ Adjust(F: Frame; X, Y, W, H: INTEGER); 
-	PROCEDURE ^ Consume(F: Frame; x, y: INTEGER; VAR M: Display.ConsumeMsg); 
-	PROCEDURE ^ UpdateMask(F: Frame; x, y: INTEGER; VAR M: Display3.UpdateMaskMsg); 
+	PROCEDURE ^ ToModel(F: Frame; x, y: SIGNED16; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ Restore(F: Frame; x, y: SIGNED16; dlink: Objects.Object); 
+	PROCEDURE ^ Adjust(F: Frame; X, Y, W, H: SIGNED16); 
+	PROCEDURE ^ Consume(F: Frame; x, y: SIGNED16; VAR M: Display.ConsumeMsg); 
+	PROCEDURE ^ UpdateMask(F: Frame; x, y: SIGNED16; VAR M: Display3.UpdateMaskMsg); 
 	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitFrame*(F: Frame); 
 	PROCEDURE ^ NewFrame*; 

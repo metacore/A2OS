@@ -5,11 +5,11 @@ TYPE
 	Hash* = OBJECT (Hashes.Hash)
 	VAR 
 		sponge: Sponge.Instance; 
-		capacity: LONGINT; 
+		capacity: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^ SetNameAndSize*(CONST name: ARRAY OF CHAR; bytesize: LONGINT); 
+		PROCEDURE ^ SetNameAndSize*(CONST name: ARRAY OF CHAR; bytesize: SIGNED32); 
 		PROCEDURE ^ Update*(CONST data: ARRAY OF CHAR; pos, len: SIZE); 
 		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
 	END Hash; 

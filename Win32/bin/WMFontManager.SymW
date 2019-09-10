@@ -22,7 +22,7 @@ TYPE
 	VAR 
 		fontCache: Kernel.FinalizedCollection; 
 		lru: ARRAY 64 OF WMGraphics.Font; 
-		lruPosition: LONGINT; 
+		lruPosition: SIGNED32; 
 		defaultFont: WMGraphics.Font; 
 		font: WMGraphics.Font; 
 		searchName: ARRAY 256 OF CHAR; 
@@ -31,7 +31,7 @@ TYPE
 		found: BOOLEAN; 
 		exactLoaders, approximateLoaders: LoaderInfo; 
 		defaultFontName: ARRAY 256 OF CHAR; 
-		defaultFontSize: LONGINT; 
+		defaultFontSize: SIGNED32; 
 		defaultFontStyle: SET; 
 
 		PROCEDURE ^  & Init*; 

@@ -2,7 +2,7 @@ MODULE Partitions;
 	IMPORT KernelLog, Texts, TextUtilities, Disks, Files, Lib := PartitionsLib, Plugins, Commands, Streams, Strings, FATScavenger;
 CONST 
 	Trace = FALSE; 
-	Invalid = MIN(LONGINT); 
+	Invalid = MIN(SIGNED32); 
 	BootManagerMBRFile = \"BootManagerMBR.Bin"\; 
 	BootManagerTailFile = \"BootManagerTail.Bin"\; 
 

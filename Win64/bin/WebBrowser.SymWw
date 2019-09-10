@@ -25,7 +25,7 @@ TYPE
 		topToolbar: WMStandardComponents.Panel; 
 		urlEdit: WMEditors.Editor; 
 		back, forward, reload, home, bookm, addBM, go: WMStandardComponents.Button; 
-		loadID: LONGINT; 
+		loadID: SIGNED32; 
 		actualURL: URLNode; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
@@ -44,7 +44,7 @@ TYPE
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ AddBookmarkToFile(CONST link: ARRAY OF CHAR; title: ARRAY OF CHAR); 
 	PROCEDURE ^ Open*; 

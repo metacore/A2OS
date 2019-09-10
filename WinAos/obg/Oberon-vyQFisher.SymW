@@ -2,16 +2,16 @@ MODULE vyQFisher IN Oberon;
 	IMPORT MathL IN A2, Texts, In, vyBase, vyHostTexts;
 TYPE 
 	Stattyp* = RECORD 
-		Count*: INTEGER; 
-		Mean*: LONGREAL; 
-		Ssq*: LONGREAL; 
+		Count*: SIGNED16; 
+		Mean*: FLOAT64; 
+		Ssq*: FLOAT64; 
 	END; 
 VAR 
 	w: vyBase.TextsWriter; 
 
-	PROCEDURE ^ Qfisher*(N, M: INTEGER; Percentage: LONGREAL; VAR ErrCode: INTEGER): LONGREAL; 
+	PROCEDURE ^ Qfisher*(N, M: SIGNED16; Percentage: FLOAT64; VAR ErrCode: SIGNED16): FLOAT64; 
 	PROCEDURE ^ QF*; 
 	PROCEDURE ^ initstat*(VAR s: Stattyp); 
-	PROCEDURE ^ Addbistat*(X, Y: LONGREAL; VAR Xstat, Ystat: Stattyp; VAR Xyssq: LONGREAL); 
+	PROCEDURE ^ Addbistat*(X, Y: FLOAT64; VAR Xstat, Ystat: Stattyp; VAR Xyssq: FLOAT64); 
 BEGIN
 END vyQFisher.

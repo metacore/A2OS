@@ -4,9 +4,9 @@ CONST
 TYPE 
 	Solver* = OBJECT (LinEq.Solver)
 	VAR 
-		rank, dim: LONGINT; 
+		rank, dim: SIGNED32; 
 		mtxMag: Nbr.Real; 
-		colPivot, rowPivot: POINTER TO ARRAY OF LONGINT; 
+		colPivot, rowPivot: POINTER TO ARRAY OF SIGNED32; 
 		lu: Mtx.Matrix; 
 
 		PROCEDURE ^ Decompose; 

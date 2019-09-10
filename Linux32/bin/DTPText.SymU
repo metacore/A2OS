@@ -45,7 +45,7 @@ TYPE
 	END TabStops; 
 
 	LineInfo = RECORD 
-		height, ascent, spaceSize: REAL; 
+		height, ascent, spaceSize: FLOAT32; 
 		width: SIZE; 
 		pos: SIZE; 
 		align: SIZE; 
@@ -53,7 +53,7 @@ TYPE
 		tabStops: TabStops; 
 		firstInParagraph, lastInParagraph, lastInText: BOOLEAN; 
 		eotSize: SIZE; 
-		leading, firstIndent, leftIndent, rightIndent, spaceBefore, spaceAfter: REAL; 
+		leading, firstIndent, leftIndent, rightIndent, spaceBefore, spaceAfter: FLOAT32; 
 	END; 
 
 	LineInfoArray = POINTER TO ARRAY OF LineInfo; 
@@ -66,7 +66,7 @@ TYPE
 		paperWidth: SIZE; 
 		textWidth: SIZE; 
 		textHeight: SIZE; 
-		realHeight, realWidth: REAL; 
+		realHeight, realWidth: FLOAT32; 
 		layoutLineProc: PROCEDURE {DELEGATE}(VAR pos: SIZE; VAR lineInfo: LineInfo; lineNr: SIZE; wrapWidth: SIZE; stopPos: SIZE; stopXPos: SIZE; fcur: BOOLEAN); 
 
 		PROCEDURE ^  & New*; 
@@ -83,7 +83,7 @@ TYPE
 
 	Highlight* = OBJECT 
 	VAR 
-		kind: WORD; 
+		kind: INTEGER; 
 		from*, to*: Texts.TextPosition; 
 		a*, b*: SIZE; 
 		active*: BOOLEAN; 
@@ -95,7 +95,7 @@ TYPE
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ SetOwner(owner: TextObject); 
-		PROCEDURE ^ SetKind*(kind: WORD); 
+		PROCEDURE ^ SetKind*(kind: INTEGER); 
 		PROCEDURE ^ SetColor*(color: WMGraphics.Color); 
 		PROCEDURE ^ SetFrom*(from: SIZE); 
 		PROCEDURE ^ SetTo*(to: SIZE); 
@@ -155,7 +155,7 @@ TYPE
 		chainPrev*: TextObject; 
 		chainNextN*: ARRAY 128 OF CHAR; 
 		chainPrevN*: ARRAY 128 OF CHAR; 
-		vAlign*: LONGINT; 
+		vAlign*: SIGNED32; 
 		showBorders: BOOLEAN; 
 		bordersI, borderClip: WMRectangles.Rectangle; 
 		borders*: WMProperties.RectangleProperty; 
@@ -163,12 +163,12 @@ TYPE
 		layout: Layout; 
 		utilreader: Texts.TextReader; 
 		firstInParagraph: BOOLEAN; 
-		jSpaceSize: REAL; 
-		defaultTextColor*, defaultTextBgColor*: LONGINT; 
+		jSpaceSize: FLOAT32; 
+		defaultTextColor*, defaultTextBgColor*: SIGNED32; 
 		defaultAttr: Texts.Attributes; 
 		defaultFont: WMGraphics.Font; 
 		fStyle: Texts.CharacterStyle; 
-		fZoom: REAL; 
+		fZoom: FLOAT32; 
 		wrap: SET; 
 		clipState: WMGraphics.CanvasState; 
 		defaultTabStops: TabStops; 
@@ -202,7 +202,7 @@ TYPE
 		PROCEDURE ^ GetPluginPointer*(): WMWindowManager.PointerInfo; 
 		PROCEDURE ^ BordersChanged; 
 		PROCEDURE ^ SetSize*(w, h: SIZE); 
-		PROCEDURE ^ Resize*(zoom: REAL); 
+		PROCEDURE ^ Resize*(zoom: FLOAT32); 
 		PROCEDURE ^ ChainUpdate*; 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ SetText*(t: Texts.Text); 
@@ -227,7 +227,7 @@ TYPE
 		PROCEDURE ^ LineYPos(lineNr: SIZE; VAR y0, y1: SIZE); 
 		PROCEDURE ^ FindScreenPos*(pos: SIZE; VAR x, y: SIZE): BOOLEAN; 
 		PROCEDURE ^ RenderLine*(canvas: WMGraphics.Canvas; VAR l: LineInfo; linenr: SIZE; top: SIZE; llen: SIZE); 
-		PROCEDURE ^ RenderChar(canvas: WMGraphics.Canvas; x, y: REAL; char: Char32; font: WMGraphics.Font; color: LONGINT); 
+		PROCEDURE ^ RenderChar(canvas: WMGraphics.Canvas; x, y: FLOAT32; char: Char32; font: WMGraphics.Font; color: SIGNED32); 
 		PROCEDURE ^ RenderAboveTextMarkers*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
@@ -255,7 +255,7 @@ TYPE
 		PROCEDURE ^ CursorRight*(word, select: BOOLEAN); 
 		PROCEDURE ^ Home*(ctrl, select: BOOLEAN); 
 		PROCEDURE ^ End*(ctrl, select: BOOLEAN); 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: SIZE; zoomF: REAL; quality, preview: BOOLEAN); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: SIZE; zoomF: FLOAT32; quality, preview: BOOLEAN); 
 		PROCEDURE ^ Redraw*; 
 		PROCEDURE ^ StoreLineEnter; 
 		PROCEDURE ^ GetFont(): WMGraphics.Font; 

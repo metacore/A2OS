@@ -17,7 +17,7 @@ TYPE
 		changed*: vyBase.Object; 
 	END; 
 
-	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ Min(a, b: SIGNED32): SIGNED32; 
 	PROCEDURE ^ HandleAttributes(o: tObject; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ FrameLinks(F: tObject; VAR M: Objects.LinkMsg); 
 	PROCEDURE ^ HandleFileMsg(obj: tObject; VAR msg: Objects.FileMsg); 
@@ -28,8 +28,8 @@ TYPE
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ FromArray*(obj: tObject; A: antsArrayObjects.tINTEGERObject); 
 	PROCEDURE ^ New*; 
-	PROCEDURE ^ P2A(obj: tObject; depth: LONGINT); 
-	PROCEDURE ^ DoToArray*(obj: tObject; depth: LONGINT; name: vyName.tNameArray); 
+	PROCEDURE ^ P2A(obj: tObject; depth: SIGNED32); 
+	PROCEDURE ^ DoToArray*(obj: tObject; depth: SIGNED32; name: vyName.tNameArray); 
 	PROCEDURE ^ SetPicture*(obj: tObject; pict: Pictures.Picture; syncarray: BOOLEAN); 
 	PROCEDURE ^ ToArray*; 
 	PROCEDURE ^ Load*; 

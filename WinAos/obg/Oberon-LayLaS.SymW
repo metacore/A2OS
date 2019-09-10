@@ -50,23 +50,23 @@ VAR
 	W: Texts.Writer; 
 	error*: BOOLEAN; 
 	eot*: BOOLEAN; 
-	errpos: LONGINT; 
+	errpos: SIGNED32; 
 	s*: ARRAY strlen OF CHAR; 
 	ident*: ARRAY idlen OF CHAR; 
-	int*: LONGINT; 
-	real*: REAL; 
+	int*: SIGNED32; 
+	real*: FLOAT32; 
 	char*: CHAR; 
 	bool*: BOOLEAN; 
 
-	PROCEDURE ^ Pos*(): LONGINT; 
-	PROCEDURE ^ Mark*(pos: LONGINT; t: ARRAY OF CHAR); 
+	PROCEDURE ^ Pos*(): SIGNED32; 
+	PROCEDURE ^ Mark*(pos: SIGNED32; t: ARRAY OF CHAR); 
 	PROCEDURE ^ ReadChar; 
 	PROCEDURE ^ Comment; 
-	PROCEDURE ^ ReadString(VAR sym: INTEGER); 
-	PROCEDURE ^ ReadNumber(VAR sym: INTEGER); 
-	PROCEDURE ^ ReadIdent(VAR sym: INTEGER); 
-	PROCEDURE ^ Get*(VAR sym: INTEGER); 
-	PROCEDURE ^ OpenText*(text: Texts.Text; pos: LONGINT); 
+	PROCEDURE ^ ReadString(VAR sym: SIGNED16); 
+	PROCEDURE ^ ReadNumber(VAR sym: SIGNED16); 
+	PROCEDURE ^ ReadIdent(VAR sym: SIGNED16); 
+	PROCEDURE ^ Get*(VAR sym: SIGNED16); 
+	PROCEDURE ^ OpenText*(text: Texts.Text; pos: SIGNED32); 
 	PROCEDURE ^ Init*; 
 BEGIN
 END LayLaS.

@@ -30,7 +30,7 @@ CONST
 TYPE 
 	IntObj = OBJECT 
 	VAR 
-		number: LONGINT; 
+		number: SIGNED32; 
 	END IntObj; 
 
 	IntList = OBJECT {EXCLUSIVE} 
@@ -40,10 +40,10 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetCount(): SIZE; 
-		PROCEDURE ^ GetItem(pos: SIZE): LONGINT; 
+		PROCEDURE ^ GetItem(pos: SIZE): SIGNED32; 
 		PROCEDURE ^ GetIntObj(pos: SIZE): IntObj; 
-		PROCEDURE ^ Exchange(pos: SIZE; newNumber: LONGINT); 
-		PROCEDURE ^ Add(newNumber: LONGINT); 
+		PROCEDURE ^ Exchange(pos: SIZE; newNumber: SIGNED32); 
+		PROCEDURE ^ Add(newNumber: SIGNED32); 
 		PROCEDURE ^ Remove(pos: SIZE); 
 		PROCEDURE ^ Lock; 
 		PROCEDURE ^ Unlock; 
@@ -111,7 +111,7 @@ TYPE
 		PROCEDURE ^ Internalize*(input: XML.Content); 
 		PROCEDURE ^ Externalize*(): XML.Content; 
 		PROCEDURE ^ GetReferrencedObjects*(): PrevalenceSystem.PersistentObjectList; 
-		PROCEDURE ^ UpdateGrade(personOid, exerciseNo, newGrade: LONGINT); 
+		PROCEDURE ^ UpdateGrade(personOid, exerciseNo, newGrade: SIGNED32); 
 		PROCEDURE ^ GetFreePlaces(): Strings.String; 
 		PROCEDURE ^ TableView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): WebComplex.TableRow; 
 		PROCEDURE ^ DetailView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest): XML.Content; 
@@ -135,7 +135,7 @@ TYPE
 		PROCEDURE ^ ThisObjectName*(): Strings.String; 
 		PROCEDURE ^ ThisModuleName*(): Strings.String; 
 		PROCEDURE ^ GetInsertView*(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content; 
-		PROCEDURE ^ OnDetailViewActivated*(entryOid: LONGINT; request: HTTPSupport.HTTPRequest); 
+		PROCEDURE ^ OnDetailViewActivated*(entryOid: SIGNED32; request: HTTPSupport.HTTPRequest); 
 		PROCEDURE ^ GetTableHeader*(request: HTTPSupport.HTTPRequest): WebComplex.HeaderRow; 
 		PROCEDURE ^ GetEmptyListMessage*(request: HTTPSupport.HTTPRequest): XML.Container; 
 		PROCEDURE ^ GetBackButtonLabel*(request: HTTPSupport.HTTPRequest): Strings.String; 

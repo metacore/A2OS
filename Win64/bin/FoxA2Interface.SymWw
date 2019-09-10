@@ -5,7 +5,7 @@ CONST
 TYPE 
 	Writer* = OBJECT (Basic.Writer)
 	VAR 
-		alertCount, commentCount, keywordCount: LONGINT; 
+		alertCount, commentCount, keywordCount: SIGNED32; 
 
 		PROCEDURE ^  & InitA2Writer(w: Streams.Writer); 
 		PROCEDURE ^ SetFontStyle*(style: SET); 
@@ -30,7 +30,7 @@ TYPE
 		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
 	END StreamDiagnostics; 
 
-	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position: Streams.Position; type: WORD; CONST message: ARRAY OF CHAR); 
+	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position: Streams.Position; type: INTEGER; CONST message: ARRAY OF CHAR); 
 	PROCEDURE ^ DebugWriterFactory(CONST title: ARRAY OF CHAR): Streams.Writer; 
 	PROCEDURE ^ WriterFactory(w: Streams.Writer): Basic.Writer; 
 	PROCEDURE ^ DiagnosticsFactory(w: Streams.Writer): Diagnostics.Diagnostics; 

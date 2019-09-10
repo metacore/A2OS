@@ -385,7 +385,7 @@ CONST
 	noInx = OPO.noInx; 
 	noImm = OPO.noImm; 
 	free =  -1; 
-	Occupied = MIN(INTEGER); 
+	Occupied = MIN(SIGNED16); 
 	Splitted = (Occupied + 1); 
 	Ror = OPO.Ror; 
 	opROL = OPO.opROL; 
@@ -486,7 +486,7 @@ CONST
 	STI = OPO.STI; 
 	EUEnd = 0X; 
 	EURecord = 1X; 
-	EUProcFlag = LONGINT(2147483648); 
+	EUProcFlag = SIGNED32(2147483648); 
 	notag = 1; 
 	stdcall = 2; 
 	cdecl = 3; 
@@ -494,10 +494,10 @@ CONST
 	delegate = 5; 
 TYPE 
 	Instruction* = RECORD 
-		scale*, reg*: SHORTINT; 
-		op*: INTEGER; 
-		dest*, src1*, src2*, inx*, pc*, hint*: LONGINT; 
-		link*, used*: INTEGER; 
+		scale*, reg*: SIGNED8; 
+		op*: SIGNED16; 
+		dest*, src1*, src2*, inx*, pc*, hint*: SIGNED32; 
+		link*, used*: SIGNED16; 
 		node*: OPT.Node; 
 		abs*: BOOLEAN; 
 	END; 
@@ -507,47 +507,47 @@ TYPE
 	Map* = POINTER TO MapDesc; 
 
 	MapDesc* = ARRAY OF RECORD 
-		pos*, pc*: LONGINT; 
+		pos*, pc*: SIGNED32; 
 	END; 
 
 	LinkRec = RECORD 
-		offset, mod, entry: INTEGER; 
+		offset, mod, entry: SIGNED16; 
 	END; 
 
 	VarConsRec = RECORD 
-		mod: LONGINT; 
-		entry, noflinks, index: INTEGER; 
+		mod: SIGNED32; 
+		entry, noflinks, index: SIGNED16; 
 	END; 
 
 	VarConsTable = POINTER TO ARRAY OF VarConsRec; 
 
 	VarConsLinkRec = RECORD 
-		offset, next: INTEGER; 
+		offset, next: SIGNED16; 
 	END; 
 
 	VarConsLinkTable = POINTER TO ARRAY OF VarConsLinkRec; 
 
 	SavedRegRec = RECORD 
-		reg, sreg, freg: ARRAY 8 OF INTEGER; 
+		reg, sreg, freg: ARRAY 8 OF SIGNED16; 
 	END; 
 
-	PtrTable = POINTER TO ARRAY OF LONGINT; 
+	PtrTable = POINTER TO ARRAY OF SIGNED32; 
 
 	RecTable = POINTER TO ARRAY OF OPT.Struct; 
 
-	EntryTable = POINTER TO ARRAY OF INTEGER; 
+	EntryTable = POINTER TO ARRAY OF SIGNED16; 
 
-	ExpTable = POINTER TO ARRAY OF LONGINT; 
+	ExpTable = POINTER TO ARRAY OF SIGNED32; 
 
 	ExTableEntry = POINTER TO RECORD 
-		pcFrom, pcTo, pcHandler: LONGINT; 
+		pcFrom, pcTo, pcHandler: SIGNED32; 
 		next: ExTableEntry; 
 	END; 
 
 	; 
 VAR 
 	Instr*: InstructionTable; 
-	mapSize*: LONGINT; 
+	mapSize*: SIGNED32; 
 	map*: Map; 
 	ptrTab: PtrTable; 
 	recTab: RecTable; 
@@ -555,49 +555,49 @@ VAR
 	varConsLink: VarConsTable; 
 	link: ARRAY LinkLength OF LinkRec; 
 	varConsTab: VarConsLinkTable; 
-	nofVarCons, noVarEntries, nofEntries, nofVarConsLinks, nofLinks, nofrecs: INTEGER; 
-	nofptrs: LONGINT; 
+	nofVarCons, noVarEntries, nofEntries, nofVarConsLinks, nofLinks, nofrecs: SIGNED16; 
+	nofptrs: SIGNED32; 
 	ConstErr, RegErr, VarEntryErr, LinkErr: BOOLEAN; 
-	regTab, sregTab, fregTab: ARRAY 8 OF LONGINT; 
+	regTab, sregTab, fregTab: ARRAY 8 OF SIGNED32; 
 	savedRegs: ARRAY MaxSaveLevel OF SavedRegRec; 
-	nofSavedLevel: INTEGER; 
-	ftop: SHORTINT; 
-	trapFixupTab: ARRAY nofTrapFixups OF LONGINT; 
-	JmpConvert: ARRAY ((Jnc - Je) + 1) OF SHORTINT; 
-	SetccConvert: ARRAY ((Setnc - Sete) + 1) OF SHORTINT; 
-	FreeRegDisp: SHORTINT; 
-	exTableLen: LONGINT; 
+	nofSavedLevel: SIGNED16; 
+	ftop: SIGNED8; 
+	trapFixupTab: ARRAY nofTrapFixups OF SIGNED32; 
+	JmpConvert: ARRAY ((Jnc - Je) + 1) OF SIGNED8; 
+	SetccConvert: ARRAY ((Setnc - Sete) + 1) OF SIGNED8; 
+	FreeRegDisp: SIGNED8; 
+	exTableLen: SIGNED32; 
 	exTable: ExTableEntry; 
-	nofStr: INTEGER; 
-	linkTable*: LONGINT; 
-	gVarLink*: LONGINT; 
+	nofStr: SIGNED16; 
+	linkTable*: SIGNED32; 
+	gVarLink*: SIGNED32; 
 	explist: ExpTable; 
-	exppos: LONGINT; 
+	exppos: SIGNED32; 
 
 	PROCEDURE ^ Init*; 
-	PROCEDURE ^ GetReg8(VAR reg: SHORTINT); 
-	PROCEDURE ^ GetThisReg8(this: SHORTINT); 
-	PROCEDURE ^ GetSplittableReg(VAR reg: SHORTINT); 
-	PROCEDURE ^ GetReg(VAR reg: SHORTINT); 
-	PROCEDURE ^ GetThisReg(this: SHORTINT); 
-	PROCEDURE ^ AssignNewReg(pReg: LONGINT); 
-	PROCEDURE ^ AssignThisReg(pReg: LONGINT; this: SHORTINT); 
-	PROCEDURE ^ AssignReg(pReg: LONGINT; VAR reg, base, inx: SHORTINT); 
-	PROCEDURE ^ FreeReg(reg: SHORTINT); 
-	PROCEDURE ^ DecReg(reg: SHORTINT); 
-	PROCEDURE ^ DecCheckReg(pReg: LONGINT; src, base, inx: SHORTINT); 
-	PROCEDURE ^ loaded(pReg: LONGINT): BOOLEAN; 
-	PROCEDURE ^ FindReg(pReg: LONGINT; VAR reg: SHORTINT); 
-	PROCEDURE ^ FindLoadReg(pReg: LONGINT; VAR reg: SHORTINT); 
-	PROCEDURE ^ LastUse(reg: SHORTINT): BOOLEAN; 
-	PROCEDURE ^ FindMemReg(VAR instr: Instruction; VAR mode, scale, size, base, inx: SHORTINT; VAR disp: LONGINT); 
+	PROCEDURE ^ GetReg8(VAR reg: SIGNED8); 
+	PROCEDURE ^ GetThisReg8(this: SIGNED8); 
+	PROCEDURE ^ GetSplittableReg(VAR reg: SIGNED8); 
+	PROCEDURE ^ GetReg(VAR reg: SIGNED8); 
+	PROCEDURE ^ GetThisReg(this: SIGNED8); 
+	PROCEDURE ^ AssignNewReg(pReg: SIGNED32); 
+	PROCEDURE ^ AssignThisReg(pReg: SIGNED32; this: SIGNED8); 
+	PROCEDURE ^ AssignReg(pReg: SIGNED32; VAR reg, base, inx: SIGNED8); 
+	PROCEDURE ^ FreeReg(reg: SIGNED8); 
+	PROCEDURE ^ DecReg(reg: SIGNED8); 
+	PROCEDURE ^ DecCheckReg(pReg: SIGNED32; src, base, inx: SIGNED8); 
+	PROCEDURE ^ loaded(pReg: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ FindReg(pReg: SIGNED32; VAR reg: SIGNED8); 
+	PROCEDURE ^ FindLoadReg(pReg: SIGNED32; VAR reg: SIGNED8); 
+	PROCEDURE ^ LastUse(reg: SIGNED8): BOOLEAN; 
+	PROCEDURE ^ FindMemReg(VAR instr: Instruction; VAR mode, scale, size, base, inx: SIGNED8; VAR disp: SIGNED32); 
 	PROCEDURE ^ Load(VAR instr: Instruction); 
 	PROCEDURE ^ LoadProc(VAR instr: Instruction); 
 	PROCEDURE ^ Store(VAR instr: Instruction); 
 	PROCEDURE ^ GenPortIO(VAR instr: Instruction); 
 	PROCEDURE ^ GenPush(VAR instr: Instruction); 
 	PROCEDURE ^ GenPop(VAR instr: Instruction); 
-	PROCEDURE ^ Gen1(VAR instr: Instruction; RiscPC: LONGINT); 
+	PROCEDURE ^ Gen1(VAR instr: Instruction; RiscPC: SIGNED32); 
 	PROCEDURE ^ Gen2(VAR instr: Instruction); 
 	PROCEDURE ^ Gen3(VAR instr: Instruction); 
 	PROCEDURE ^ Flags(VAR instr: Instruction); 
@@ -607,53 +607,53 @@ VAR
 	PROCEDURE ^ GenRepMovs(VAR instr: Instruction); 
 	PROCEDURE ^ GenCmpString(VAR instr: Instruction); 
 	PROCEDURE ^ Setcc(VAR instr: Instruction); 
-	PROCEDURE ^ GenTrap(trapNr: LONGINT); 
+	PROCEDURE ^ GenTrap(trapNr: SIGNED32); 
 	PROCEDURE ^ GenTrapCC(VAR instr: Instruction); 
 	PROCEDURE ^ FixupAndGenTrap; 
 	PROCEDURE ^ GenShort(VAR instr: Instruction); 
 	PROCEDURE ^ GenPhi(VAR instr: Instruction); 
-	PROCEDURE ^ GetFreg(VAR freg: SHORTINT); 
-	PROCEDURE ^ FreeFreg(freg: SHORTINT); 
-	PROCEDURE ^ ReleaseFreg(freg: SHORTINT); 
-	PROCEDURE ^ AssignFreg(pReg: LONGINT); 
-	PROCEDURE ^ TakeFreg(pReg: LONGINT; freg: SHORTINT); 
-	PROCEDURE ^ FindFreg(pReg: LONGINT; VAR freg: SHORTINT); 
-	PROCEDURE ^ LastUseF(freg: SHORTINT): BOOLEAN; 
-	PROCEDURE ^ DecCheckFreg(freg: SHORTINT); 
+	PROCEDURE ^ GetFreg(VAR freg: SIGNED8); 
+	PROCEDURE ^ FreeFreg(freg: SIGNED8); 
+	PROCEDURE ^ ReleaseFreg(freg: SIGNED8); 
+	PROCEDURE ^ AssignFreg(pReg: SIGNED32); 
+	PROCEDURE ^ TakeFreg(pReg: SIGNED32; freg: SIGNED8); 
+	PROCEDURE ^ FindFreg(pReg: SIGNED32; VAR freg: SIGNED8); 
+	PROCEDURE ^ LastUseF(freg: SIGNED8): BOOLEAN; 
+	PROCEDURE ^ DecCheckFreg(freg: SIGNED8); 
 	PROCEDURE ^ Fload(VAR instr: Instruction); 
 	PROCEDURE ^ Fstore(VAR instr: Instruction); 
 	PROCEDURE ^ FloatGen1(VAR instr: Instruction); 
 	PROCEDURE ^ FloatGen3(VAR instr: Instruction); 
 	PROCEDURE ^ FloatCmp(VAR instr: Instruction); 
-	PROCEDURE ^ AddExceptionHandler(pcFrom, pcTo, pcHandler: LONGINT); 
+	PROCEDURE ^ AddExceptionHandler(pcFrom, pcTo, pcHandler: SIGNED32); 
 	PROCEDURE ^ GenFinally(VAR instr: Instruction); 
 	PROCEDURE ^ GenEntier(VAR instr: Instruction); 
 	PROCEDURE ^ ClearSDynArr(VAR instr: Instruction); 
-	PROCEDURE ^ GenEnter(locSize: LONGINT; locals: OPT.Object; sysflag: SHORTINT); 
-	PROCEDURE ^ GenLeave(sysflag: SHORTINT); 
+	PROCEDURE ^ GenEnter(locSize: SIGNED32; locals: OPT.Object; sysflag: SIGNED8); 
+	PROCEDURE ^ GenLeave(sysflag: SIGNED8); 
 	PROCEDURE ^ PushRegs; 
 	PROCEDURE ^ PopRegs(VAR instr: Instruction); 
-	PROCEDURE ^ FixupJcc(label: LONGINT); 
+	PROCEDURE ^ FixupJcc(label: SIGNED32); 
 	PROCEDURE ^ FixupCaseTab(VAR instr: Instruction); 
-	PROCEDURE ^ EncodeFixup(i: LONGINT); 
+	PROCEDURE ^ EncodeFixup(i: SIGNED32); 
 	PROCEDURE ^ GenAsm(instr: Instruction); 
-	PROCEDURE ^ GenCode*(pSize: INTEGER); 
+	PROCEDURE ^ GenCode*(pSize: SIGNED16); 
 	PROCEDURE ^ FixupLocalProcCall*(proc: OPT.Object); 
-	PROCEDURE ^ NewVarCons*(mod: LONGINT; entry: INTEGER; VAR index: LONGINT); 
-	PROCEDURE ^ VarConsLink(index, offset: LONGINT); 
-	PROCEDURE ^ AbsAccess(node: OPT.Node; offset: LONGINT); 
-	PROCEDURE ^ NewEntry*(VAR entryNr: LONGINT); 
-	PROCEDURE ^ NewLink*(mod, entry: LONGINT; VAR index: LONGINT); 
-	PROCEDURE ^ AddLink(index, offset: LONGINT); 
-	PROCEDURE ^ AllocConst*(VAR s: ARRAY OF SYSTEM.BYTE; len, align: LONGINT; VAR adr: LONGINT); 
-	PROCEDURE ^ AllocCaseTab*(low, high: LONGINT; VAR tab: LONGINT); 
+	PROCEDURE ^ NewVarCons*(mod: SIGNED32; entry: SIGNED16; VAR index: SIGNED32); 
+	PROCEDURE ^ VarConsLink(index, offset: SIGNED32); 
+	PROCEDURE ^ AbsAccess(node: OPT.Node; offset: SIGNED32); 
+	PROCEDURE ^ NewEntry*(VAR entryNr: SIGNED32); 
+	PROCEDURE ^ NewLink*(mod, entry: SIGNED32; VAR index: SIGNED32); 
+	PROCEDURE ^ AddLink(index, offset: SIGNED32); 
+	PROCEDURE ^ AllocConst*(VAR s: ARRAY OF SYSTEM.BYTE; len, align: SIGNED32; VAR adr: SIGNED32); 
+	PROCEDURE ^ AllocCaseTab*(low, high: SIGNED32; VAR tab: SIGNED32); 
 	PROCEDURE ^ AllocTypDesc*(typ: OPT.Struct); 
-	PROCEDURE ^ CaseJump*(Label, tab, from, to: LONGINT); 
+	PROCEDURE ^ CaseJump*(Label, tab, from, to: SIGNED32); 
 	PROCEDURE ^ OutRefPoint*(proc: OPT.Object); 
 	PROCEDURE ^ OutRefName*(name: ARRAY OF CHAR); 
 	PROCEDURE ^ OutRefs*(obj: OPT.Object); 
-	PROCEDURE ^ LSW(x: LONGINT): LONGINT; 
-	PROCEDURE ^ Export(obj: OPT.Object; VAR nofExp: INTEGER); 
+	PROCEDURE ^ LSW(x: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Export(obj: OPT.Object; VAR nofExp: SIGNED16); 
 	PROCEDURE ^ Use(obj: OPT.Object); 
 	PROCEDURE ^ OutCode*(VAR modName: ARRAY OF CHAR); 
 	PROCEDURE ^ Close*; 

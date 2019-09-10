@@ -60,8 +60,8 @@ TYPE
 		PROCEDURE ^ GetLastChild*(node: TreeNode): TreeNode; 
 		PROCEDURE ^ GetParent*(node: TreeNode): TreeNode; 
 		PROCEDURE ^ SetNodeState*(node: TreeNode; state: SET); 
-		PROCEDURE ^ InclNodeState*(node: TreeNode; state: WORD); 
-		PROCEDURE ^ ExclNodeState*(node: TreeNode; state: WORD); 
+		PROCEDURE ^ InclNodeState*(node: TreeNode; state: INTEGER); 
+		PROCEDURE ^ ExclNodeState*(node: TreeNode; state: INTEGER); 
 		PROCEDURE ^ GetNodeState*(node: TreeNode): SET; 
 		PROCEDURE ^ SetNodeCaption*(node: TreeNode; caption: String); 
 		PROCEDURE ^ GetNodeCaption*(node: TreeNode): String; 

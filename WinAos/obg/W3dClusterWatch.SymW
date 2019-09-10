@@ -18,17 +18,17 @@ TYPE
 		host: ARRAY 64 OF CHAR; 
 		os, oldos: ARRAY 32 OF CHAR; 
 		load: ARRAY 32 OF CHAR; 
-		running, oldrunning: LONGINT; 
+		running, oldrunning: SIGNED32; 
 		obj: AbstractWorld.Object; 
 		timer: Kernel.Timer; 
-		interval: LONGINT; 
+		interval: SIGNED32; 
 		world: AbstractWorld.World; 
 		connection: TCP.Connection; 
 		alive: BOOLEAN; 
-		index: LONGINT; 
+		index: SIGNED32; 
 		render: UpdateProc; 
 
-		PROCEDURE ^  & Init*(world: AbstractWorld.World; pos: Vectors.TVector3d; host: ARRAY OF CHAR; interval: LONGINT; update: UpdateProc); 
+		PROCEDURE ^  & Init*(world: AbstractWorld.World; pos: Vectors.TVector3d; host: ARRAY OF CHAR; interval: SIGNED32; update: UpdateProc); 
 		PROCEDURE ^ RefreshInfo(host: ARRAY OF CHAR; VAR osName, osLoad: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ Update; 
 		PROCEDURE ^ Kill; 
@@ -39,20 +39,20 @@ TYPE
 	VAR 
 		alive, dead: BOOLEAN; 
 		timer: Kernel.Timer; 
-		interval: LONGINT; 
+		interval: SIGNED32; 
 		lookat: Vectors.TVector3d; 
-		radius, angle, height: LONGREAL; 
+		radius, angle, height: FLOAT64; 
 		mouseKeys: SET; 
 		oldX, oldY: SIZE; 
 		world: World.World; 
-		mx, my, mz: LONGREAL; 
+		mx, my, mz: FLOAT64; 
 		infoList: Classes.List; 
-		index: LONGINT; 
+		index: SIGNED32; 
 
 		PROCEDURE ^ ParseLine(line: XML.Element; pos: Vectors.TVector3d); 
 		PROCEDURE ^ ParseLayer(layer: XML.Element; pos: Vectors.TVector3d); 
 		PROCEDURE ^ Load(filename: ARRAY OF CHAR); 
-		PROCEDURE ^  & New*(interval: LONGINT; fileName: ARRAY OF CHAR); 
+		PROCEDURE ^  & New*(interval: SIGNED32; fileName: ARRAY OF CHAR); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Render; 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
@@ -60,7 +60,7 @@ TYPE
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 	END Window; 
 VAR 
-	OSColor: ARRAY 6 OF LONGINT; 
+	OSColor: ARRAY 6 OF SIGNED32; 
 	OSImg: ARRAY 6 OF Raster.Image; 
 	w: Window; 
 	timg: Raster.Image; 

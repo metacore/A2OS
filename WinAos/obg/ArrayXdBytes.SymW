@@ -4,11 +4,11 @@ CONST
 	strongIndexChecking = TRUE; 
 	debug = FALSE; 
 TYPE 
-	Index* = LONGINT; 
+	Index* = SIGNED32; 
 
 	IndexArray* = POINTER TO ARRAY OF Index; 
 
-	Address* = LONGINT; 
+	Address* = SIGNED32; 
 
 	ArrayMemoryStructure* = OBJECT 
 	VAR 
@@ -24,10 +24,10 @@ TYPE
 
 	Enumerator* = OBJECT 
 	VAR 
-		dim: LONGINT; 
+		dim: SIGNED32; 
 		mem: ArrayMemoryStructure; 
-		adr-, size-: LONGINT; 
-		lncdim: LONGINT; 
+		adr-, size-: SIGNED32; 
+		lncdim: SIGNED32; 
 		pos-, origin, len: IndexArray; 
 
 		PROCEDURE ^  & Init*(mem: ArrayMemoryStructure; enumorigin, enumlen: IndexArray; block: BOOLEAN); 
@@ -38,16 +38,16 @@ TYPE
 	VAR 
 		protector: ANY; 
 		permutation-: IndexArray; 
-		bc-: SHORTINT; 
+		bc-: SIGNED8; 
 		f0, f1, f2, f3: Index; 
 		o0-, o1-, o2-, o3-, l0-, l1-, l2-, l3-: Index; 
 
 		PROCEDURE ^ dbgWriteInfo*; 
-		PROCEDURE ^ GetInfo*(VAR elementsize: LONGINT); 
-		PROCEDURE ^ SetBoundaryCondition*(c: SHORTINT); 
-		PROCEDURE ^ Allocate*(size: LONGINT; VAR baseadr: LONGINT; VAR protector: ANY); 
+		PROCEDURE ^ GetInfo*(VAR elementsize: SIGNED32); 
+		PROCEDURE ^ SetBoundaryCondition*(c: SIGNED8); 
+		PROCEDURE ^ Allocate*(size: SIGNED32; VAR baseadr: SIGNED32; VAR protector: ANY); 
 		PROCEDURE ^ ValidateCache*; 
-		PROCEDURE ^ Init(newdim: LONGINT); 
+		PROCEDURE ^ Init(newdim: SIGNED32); 
 		PROCEDURE ^  & NewXdB*(neworigin, newlen: IndexArray); 
 		PROCEDURE ^ AlikeX*(): Array; 
 		PROCEDURE ^ CopyX*(): Array; 
@@ -79,12 +79,12 @@ TYPE
 		PROCEDURE ^ Get*(VAR origin, len: IndexArray): BOOLEAN; 
 	END BoundaryEnum; 
 
-	PROCEDURE ^ StoreMemory(W: DataIO.Writer; baseadr: LONGINT; len: LONGINT); 
-	PROCEDURE ^ ReadMemory(R: DataIO.Reader; baseadr: LONGINT; size: LONGINT; VAR len: LONGINT); 
+	PROCEDURE ^ StoreMemory(W: DataIO.Writer; baseadr: SIGNED32; len: SIGNED32); 
+	PROCEDURE ^ ReadMemory(R: DataIO.Reader; baseadr: SIGNED32; size: SIGNED32; VAR len: SIGNED32); 
 	PROCEDURE ^ CheckIndexArray(dim: Index; VAR a: IndexArray); 
 	PROCEDURE ^ CopyIndexArray(src: ARRAY OF Index; dest: IndexArray); 
 	PROCEDURE ^ Intersect*(org1, len1, org2, len2: IndexArray; VAR org, len: IndexArray): BOOLEAN; 
-	PROCEDURE {Fingerprint(-3384028770393575390)}  - CheckLEQ*(lesseq, than: LONGINT);
+	PROCEDURE {Fingerprint(-3384028770393575390)}  - CheckLEQ*(lesseq, than: SIGNED32);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  than
 		MOV	EBX, [ESP+4]	;  less
@@ -96,7 +96,7 @@ TYPE
 		ADD	ESP, 8
 	
 	END CheckLEQ; 
-	PROCEDURE {Fingerprint(-517850902884937723)}  - CheckLE*(lesseq, than: LONGINT);
+	PROCEDURE {Fingerprint(-517850902884937723)}  - CheckLE*(lesseq, than: SIGNED32);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  than
 		MOV	EBX, [ESP+4]	;  less
@@ -108,7 +108,7 @@ TYPE
 		ADD	ESP, 8
 	
 	END CheckLE; 
-	PROCEDURE {Fingerprint(-3386681152820725278)}  - CheckEQ*(equals, this: LONGINT);
+	PROCEDURE {Fingerprint(-3386681152820725278)}  - CheckEQ*(equals, this: SIGNED32);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  this
 		MOV	EBX, [ESP+4]	;  equals
@@ -120,11 +120,11 @@ TYPE
 		ADD	ESP, 8
 	
 	END CheckEQ; 
-	PROCEDURE ^ CheckPermutation(dim: LONGINT; VAR permutation: ARRAY OF LONGINT): BOOLEAN; 
-	PROCEDURE ^ CompletePermutation(beginning: ARRAY OF LONGINT; full: ARRAY OF LONGINT): BOOLEAN; 
+	PROCEDURE ^ CheckPermutation(dim: SIGNED32; VAR permutation: ARRAY OF SIGNED32): BOOLEAN; 
+	PROCEDURE ^ CompletePermutation(beginning: ARRAY OF SIGNED32; full: ARRAY OF SIGNED32): BOOLEAN; 
 	PROCEDURE ^ ApplyPermutation(permutation: ARRAY OF Index; VAR array: ARRAY OF Index); 
-	PROCEDURE ^ IdentityPermutation(dim: LONGINT): IndexArray; 
-	PROCEDURE ^ ComputeIncrease(len: IndexArray; permutation: IndexArray; elementsize: LONGINT; diminc: IndexArray); 
+	PROCEDURE ^ IdentityPermutation(dim: SIGNED32): IndexArray; 
+	PROCEDURE ^ ComputeIncrease(len: IndexArray; permutation: IndexArray; elementsize: SIGNED32; diminc: IndexArray); 
 	PROCEDURE ^ AMSCopyDescr(src: ArrayMemoryStructure; dest: ArrayMemoryStructure); 
 	PROCEDURE ^ EnumArrayPart(mem: ArrayMemoryStructure; pos, len: IndexArray; chunks: BOOLEAN): Enumerator; 
 	PROCEDURE ^ TraverseMemory*(proc: Address; mem: ArrayMemoryStructure); 
@@ -134,29 +134,29 @@ TYPE
 	PROCEDURE ^ CopyDataByCoordinateTraversal*(srcmem, destmem: ArrayMemoryStructure); 
 	PROCEDURE ^ CopyDataRaw*(srcmem, destmem: ArrayMemoryStructure); 
 	PROCEDURE ^ CopyDataPositionPreserving*(srcmem, destmem: ArrayMemoryStructure); 
-	PROCEDURE ^ MakeMemoryStructure*(dim: LONGINT; origin, len: IndexArray; elementsize: Index; baseadr: Address): ArrayMemoryStructure; 
-	PROCEDURE ^ MakeContinuousMemStruct*(adr, elements, elementsize: LONGINT; VAR memory: ArrayMemoryStructure); 
+	PROCEDURE ^ MakeMemoryStructure*(dim: SIGNED32; origin, len: IndexArray; elementsize: Index; baseadr: Address): ArrayMemoryStructure; 
+	PROCEDURE ^ MakeContinuousMemStruct*(adr, elements, elementsize: SIGNED32; VAR memory: ArrayMemoryStructure); 
 	PROCEDURE ^ CheckEqDimensions*(l, r: Array); 
-	PROCEDURE ^ ToggleDimensions*(a: Array; d1, d2: LONGINT; rearrangeMemory: BOOLEAN); 
+	PROCEDURE ^ ToggleDimensions*(a: Array; d1, d2: SIGNED32; rearrangeMemory: BOOLEAN); 
 	PROCEDURE ^ dbgS(s: ARRAY OF CHAR); 
-	PROCEDURE ^ dbgSI(s: ARRAY OF CHAR; i: LONGINT); 
-	PROCEDURE ^ dbgSISI(s: ARRAY OF CHAR; i: LONGINT; s2: ARRAY OF CHAR; i2: LONGINT); 
-	PROCEDURE ^ dbgSISISI(s: ARRAY OF CHAR; i: LONGINT; s2: ARRAY OF CHAR; i2: LONGINT; s3: ARRAY OF CHAR; i3: LONGINT); 
+	PROCEDURE ^ dbgSI(s: ARRAY OF CHAR; i: SIGNED32); 
+	PROCEDURE ^ dbgSISI(s: ARRAY OF CHAR; i: SIGNED32; s2: ARRAY OF CHAR; i2: SIGNED32); 
+	PROCEDURE ^ dbgSISISI(s: ARRAY OF CHAR; i: SIGNED32; s2: ARRAY OF CHAR; i2: SIGNED32; s3: ARRAY OF CHAR; i3: SIGNED32); 
 	PROCEDURE ^ dbgWriteMemoryInfo*(a: ArrayMemoryStructure); 
 	PROCEDURE ^ Adr1*(a: Array; x: Index): Index; 
 	PROCEDURE ^ Adr2*(a: Array; x, y: Index): Index; 
 	PROCEDURE ^ Adr3*(a: Array; x, y, z: Index): Index; 
 	PROCEDURE ^ Adr4*(a: Array; x, y, z, t: Index): Index; 
 	PROCEDURE ^ AdrX*(a: ArrayMemoryStructure; VAR b: ARRAY OF Index; dim: Index): Index; 
-	PROCEDURE ^ Index1*(x: LONGINT): IndexArray; 
-	PROCEDURE ^ Array1*(x: LONGINT): IndexArray; 
-	PROCEDURE ^ Index2*(x, y: LONGINT): IndexArray; 
-	PROCEDURE ^ Array2*(x, y: LONGINT): IndexArray; 
-	PROCEDURE ^ Array3*(x, y, z: LONGINT): IndexArray; 
-	PROCEDURE ^ Index3*(x, y, z: LONGINT): IndexArray; 
-	PROCEDURE ^ Index4*(x, y, z, t: LONGINT): IndexArray; 
-	PROCEDURE ^ Array4*(x, y, z, t: LONGINT): IndexArray; 
-	PROCEDURE ^ IndexX*(VAR a: ARRAY OF LONGINT): IndexArray; 
+	PROCEDURE ^ Index1*(x: SIGNED32): IndexArray; 
+	PROCEDURE ^ Array1*(x: SIGNED32): IndexArray; 
+	PROCEDURE ^ Index2*(x, y: SIGNED32): IndexArray; 
+	PROCEDURE ^ Array2*(x, y: SIGNED32): IndexArray; 
+	PROCEDURE ^ Array3*(x, y, z: SIGNED32): IndexArray; 
+	PROCEDURE ^ Index3*(x, y, z: SIGNED32): IndexArray; 
+	PROCEDURE ^ Index4*(x, y, z, t: SIGNED32): IndexArray; 
+	PROCEDURE ^ Array4*(x, y, z, t: SIGNED32): IndexArray; 
+	PROCEDURE ^ IndexX*(VAR a: ARRAY OF SIGNED32): IndexArray; 
 	PROCEDURE ^ IndexCpy*(src: IndexArray): IndexArray; 
 	PROCEDURE ^ Get1*(a: Array; x: Index; VAR v: ARRAY OF SYSTEM.BYTE); 
 	PROCEDURE ^ Get2*(a: Array; x, y: Index; VAR v: ARRAY OF SYSTEM.BYTE); 

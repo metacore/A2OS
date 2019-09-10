@@ -11,15 +11,15 @@ TYPE
 
 	TCW* = OBJECT {EXCLUSIVE} (WM.BufferWindow)
 	VAR 
-		mesh1, mesh2, n1: ARRAY m OF ARRAY m OF REAL; 
+		mesh1, mesh2, n1: ARRAY m OF ARRAY m OF FLOAT32; 
 		random: Random.Generator; 
 		alive, dead, alpha, delay: BOOLEAN; 
-		t0: LONGINT; 
+		t0: SIGNED32; 
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^  & New*(alpha, delay: BOOLEAN); 
 		PROCEDURE ^ Handle*(VAR m: WMMessages.Message); 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: SIGNED32); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Delay; 
 		PROCEDURE ^ Generation; 
@@ -27,7 +27,7 @@ TYPE
 	BEGIN{ACTIVE} 
 	END TCW; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ IncCount; 

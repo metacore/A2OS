@@ -3,7 +3,7 @@ MODULE FileDir IN Oberon;
 TYPE 
 	FileName* = Files.FileName; 
 
-	EntryHandler* = PROCEDURE (name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN); 
+	EntryHandler* = PROCEDURE (name: ARRAY OF CHAR; time, date, size: SIGNED32; VAR continue: BOOLEAN); 
 VAR 
 	PathChar*: CHAR; 
 

@@ -18,7 +18,7 @@ TYPE
 	Connection* = POINTER TO ConnectionDesc; 
 
 	ConnectionDesc* = RECORD 
-		res*: INTEGER; 
+		res*: SIGNED16; 
 		pcb: TCP.Connection; 
 	END; 
 
@@ -27,7 +27,7 @@ TYPE
 	Socket* = POINTER TO SocketDesc; 
 
 	SocketDesc* = RECORD 
-		res*: INTEGER; 
+		res*: SIGNED16; 
 		pcb: UDP.Socket; 
 	END; 
 
@@ -38,7 +38,7 @@ TYPE
 		next: Password; 
 	END; 
 
-	Bytes = ARRAY MAX(LONGINT) OF CHAR; 
+	Bytes = ARRAY MAX(SIGNED32) OF CHAR; 
 VAR 
 	int*: IP.Interface; 
 	anyIP*: IPAdr; 
@@ -49,41 +49,41 @@ VAR
 	started: BOOLEAN; 
 	passwords: Password; 
 	w: Texts.Writer; 
-	state: ARRAY TCP.NumStates OF INTEGER; 
+	state: ARRAY TCP.NumStates OF SIGNED16; 
 
 	PROCEDURE ^ ToHost*(num: ARRAY OF CHAR; VAR adr: IPAdr; VAR done: BOOLEAN); 
 	PROCEDURE ^ ToNum*(adr: IPAdr; VAR num: ARRAY OF CHAR); 
 	PROCEDURE ^ GetIP*(name: ARRAY OF CHAR; VAR adr: IPAdr); 
 	PROCEDURE ^ GetName*(IP: IPAdr; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ OpenConnection*(VAR C: Connection; locPort: INTEGER; remIP: IPAdr; remPort: INTEGER; VAR res: INTEGER); 
-	PROCEDURE ^ AsyncOpenConnection*(VAR C: Connection; locPort: INTEGER; remIP: IPAdr; remPort: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ OpenConnection*(VAR C: Connection; locPort: SIGNED16; remIP: IPAdr; remPort: SIGNED16; VAR res: SIGNED16); 
+	PROCEDURE ^ AsyncOpenConnection*(VAR C: Connection; locPort: SIGNED16; remIP: IPAdr; remPort: SIGNED16; VAR res: SIGNED16); 
 	PROCEDURE ^ CloseConnection*(C: Connection); 
 	PROCEDURE ^ DiscardConnection*(C: Connection); 
 	PROCEDURE ^ Cleanup(c: ANY); 
 	PROCEDURE ^ Requested*(C: Connection): BOOLEAN; 
-	PROCEDURE ^ Accept*(C: Connection; VAR newC: Connection; VAR res: INTEGER); 
-	PROCEDURE ^ State*(C: Connection): INTEGER; 
-	PROCEDURE ^ Available*(C: Connection): LONGINT; 
+	PROCEDURE ^ Accept*(C: Connection; VAR newC: Connection; VAR res: SIGNED16); 
+	PROCEDURE ^ State*(C: Connection): SIGNED16; 
+	PROCEDURE ^ Available*(C: Connection): SIGNED32; 
 	PROCEDURE ^ Read*(C: Connection; VAR ch: CHAR); 
-	PROCEDURE ^ ReadBytes*(C: Connection; pos, len: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE); 
-	PROCEDURE ^ ReadInt*(C: Connection; VAR x: INTEGER); 
-	PROCEDURE ^ ReadLInt*(C: Connection; VAR x: LONGINT); 
+	PROCEDURE ^ ReadBytes*(C: Connection; pos, len: SIGNED32; VAR buf: ARRAY OF SYSTEM.BYTE); 
+	PROCEDURE ^ ReadInt*(C: Connection; VAR x: SIGNED16); 
+	PROCEDURE ^ ReadLInt*(C: Connection; VAR x: SIGNED32); 
 	PROCEDURE ^ ReadString*(C: Connection; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ Write*(C: Connection; ch: CHAR); 
-	PROCEDURE ^ WriteBytes*(C: Connection; pos, len: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE); 
-	PROCEDURE ^ WriteInt*(C: Connection; x: INTEGER); 
-	PROCEDURE ^ WriteLInt*(C: Connection; x: LONGINT); 
+	PROCEDURE ^ WriteBytes*(C: Connection; pos, len: SIGNED32; VAR buf: ARRAY OF SYSTEM.BYTE); 
+	PROCEDURE ^ WriteInt*(C: Connection; x: SIGNED16); 
+	PROCEDURE ^ WriteLInt*(C: Connection; x: SIGNED32); 
 	PROCEDURE ^ WriteString*(C: Connection; s: ARRAY OF CHAR); 
-	PROCEDURE ^ GetPartner*(C: Connection; VAR remIP: IPAdr; VAR remPort: INTEGER); 
-	PROCEDURE ^ OpenSocket*(VAR S: Socket; locPort: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ GetPartner*(C: Connection; VAR remIP: IPAdr; VAR remPort: SIGNED16); 
+	PROCEDURE ^ OpenSocket*(VAR S: Socket; locPort: SIGNED16; VAR res: SIGNED16); 
 	PROCEDURE ^ CloseSocket*(S: Socket); 
-	PROCEDURE ^ SendDG*(S: Socket; remIP: IPAdr; remPort: INTEGER; pos, len: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE); 
-	PROCEDURE ^ ReceiveDG*(S: Socket; VAR remIP: IPAdr; VAR remPort: INTEGER; pos: LONGINT; VAR len: LONGINT; VAR buf: ARRAY OF SYSTEM.BYTE); 
-	PROCEDURE ^ AvailableDG*(S: Socket): LONGINT; 
-	PROCEDURE ^ PutInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: INTEGER; x: INTEGER); 
-	PROCEDURE ^ PutLInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: INTEGER; x: LONGINT); 
-	PROCEDURE ^ GetInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: INTEGER; VAR x: INTEGER); 
-	PROCEDURE ^ GetLInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: INTEGER; VAR x: LONGINT); 
+	PROCEDURE ^ SendDG*(S: Socket; remIP: IPAdr; remPort: SIGNED16; pos, len: SIGNED32; VAR buf: ARRAY OF SYSTEM.BYTE); 
+	PROCEDURE ^ ReceiveDG*(S: Socket; VAR remIP: IPAdr; VAR remPort: SIGNED16; pos: SIGNED32; VAR len: SIGNED32; VAR buf: ARRAY OF SYSTEM.BYTE); 
+	PROCEDURE ^ AvailableDG*(S: Socket): SIGNED32; 
+	PROCEDURE ^ PutInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: SIGNED16; x: SIGNED16); 
+	PROCEDURE ^ PutLInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: SIGNED16; x: SIGNED32); 
+	PROCEDURE ^ GetInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: SIGNED16; VAR x: SIGNED16); 
+	PROCEDURE ^ GetLInt*(VAR buf: ARRAY OF SYSTEM.BYTE; pos: SIGNED16; VAR x: SIGNED32); 
 	PROCEDURE ^ WriteURL(VAR service, user, host: ARRAY OF CHAR); 
 	PROCEDURE ^ GetPassword*(service, host: ARRAY OF CHAR; VAR user, password: ARRAY OF CHAR); 
 	PROCEDURE ^ DelPassword*(service, user, host: ARRAY OF CHAR); 
@@ -91,6 +91,6 @@ VAR
 	PROCEDURE ^ ClearUser*; 
 	PROCEDURE ^ Start*; 
 	PROCEDURE ^ Stop*; 
-	PROCEDURE ^ WriteIPPortAdr(VAR w: Texts.Writer; adr: IP.Adr; port: LONGINT); 
+	PROCEDURE ^ WriteIPPortAdr(VAR w: Texts.Writer; adr: IP.Adr; port: SIGNED32); 
 BEGIN
 END NetSystem.

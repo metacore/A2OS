@@ -36,7 +36,7 @@ TYPE
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	FileListPathProt: WMProperties.StringProperty; 
 	FileListFilterProt: WMProperties.StringProperty; 
 	StrFileListPanel: Strings.String; 

@@ -25,8 +25,8 @@ CONST
 	Interclick02 = 2; 
 	InterclickCancelled = 99; 
 	SelectionColor = 65376; 
-	SelectionColorInterclick01 = LONGINT(4294901856); 
-	SelectionColorInterclick02 = LONGINT(4278190176); 
+	SelectionColorInterclick01 = SIGNED32(4294901856); 
+	SelectionColorInterclick02 = SIGNED32(4278190176); 
 	HLOver* = 0; 
 	HLUnder* = 1; 
 	HLWave* = 2; 
@@ -91,7 +91,7 @@ TYPE
 
 	Highlight* = OBJECT 
 	VAR 
-		kind: WORD; 
+		kind: INTEGER; 
 		from*, to*: Texts.TextPosition; 
 		a*, b*: SIZE; 
 		active*: BOOLEAN; 
@@ -101,7 +101,7 @@ TYPE
 		onChanged: WMMessages.CompCommand; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ SetKind*(kind: WORD); 
+		PROCEDURE ^ SetKind*(kind: INTEGER); 
 		PROCEDURE ^ SetColor*(color: WMGraphics.Color); 
 		PROCEDURE ^ SetFrom*(from: SIZE); 
 		PROCEDURE ^ SetTo*(to: SIZE); 
@@ -154,14 +154,14 @@ TYPE
 	VAR 
 		cursor: ANY; 
 		callback: CursorBlinkerCallback; 
-		interval: LONGINT; 
+		interval: SIGNED32; 
 		isVisible: BOOLEAN; 
 		alive, dead: BOOLEAN; 
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Set*(cursor: ANY; callback: CursorBlinkerCallback); 
-		PROCEDURE ^ SetInterval*(ms: LONGINT); 
+		PROCEDURE ^ SetInterval*(ms: SIGNED32); 
 		PROCEDURE ^ Remove*(cursor: ANY); 
 		PROCEDURE ^ Show*(cursor: ANY); 
 		PROCEDURE ^ Finalize; 
@@ -174,7 +174,7 @@ TYPE
 		pos: Texts.TextPosition; 
 
 		PROCEDURE ^  & New*(text: Texts.Text; pos: Texts.TextPosition); 
-		PROCEDURE ^ GetInterface*(type: WORD): WMDropTarget.DropInterface; 
+		PROCEDURE ^ GetInterface*(type: INTEGER): WMDropTarget.DropInterface; 
 	END TextDropTarget; 
 
 	LinkWrapper* = POINTER TO RECORD 
@@ -188,7 +188,7 @@ TYPE
 		isMultiLine-: WMProperties.BooleanProperty; 
 		isMultiLineI: BOOLEAN; 
 		wrapMode-: WMProperties.Int32Property; 
-		wrapModeI: LONGINT; 
+		wrapModeI: SIGNED32; 
 		firstLine-: WMProperties.SizeProperty; 
 		firstLineI: SIZE; 
 		leftShift-: WMProperties.SizeProperty; 
@@ -205,7 +205,7 @@ TYPE
 		isPasswordI: BOOLEAN; 
 		passwordChar-: WMProperties.Int32Property; 
 		mouseWheelScrollSpeed-: WMProperties.Int32Property; 
-		mouseWheelScrollSpeedI: LONGINT; 
+		mouseWheelScrollSpeedI: SIGNED32; 
 		allowCommandExecution-: WMProperties.BooleanProperty; 
 		allowTextSelection-: WMProperties.BooleanProperty; 
 		allowPiemenu-: WMProperties.BooleanProperty; 
@@ -257,8 +257,8 @@ TYPE
 		lineEnter: SIZE; 
 		modifierFlags: SET; 
 		oldFlags: SET; 
-		interclick: LONGINT; 
-		lastTimeStamp: LONGINT; 
+		interclick: SIGNED32; 
+		lastTimeStamp: SIGNED32; 
 		oldObject, focusObject: ANY; 
 		oldPos, focusPos: SIZE; 
 		objHasFocus: BOOLEAN; 
@@ -268,7 +268,7 @@ TYPE
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ FocusReceived*; 
 		PROCEDURE ^ FocusLost*; 
-		PROCEDURE ^ InsertChar(char: Char32): INTEGER; 
+		PROCEDURE ^ InsertChar(char: Char32): SIGNED16; 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ SetScrollbars*(hScrollbar, vScrollbar: WMStandardComponents.Scrollbar); 
 		PROCEDURE ^ ScrollbarsChanged(sender, data: ANY); 
@@ -315,7 +315,7 @@ TYPE
 		PROCEDURE ^ WheelMove*(dz: SIZE); 
 		PROCEDURE ^ AbortStart; 
 		PROCEDURE ^ DoubleClickSelect(pos: SIZE); 
-		PROCEDURE ^ SetInterclick(new: LONGINT); 
+		PROCEDURE ^ SetInterclick(new: SIGNED32); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
@@ -430,7 +430,7 @@ VAR
 	PROCEDURE ^ EnablePiemenu*; 
 	PROCEDURE ^ DisablePiemenu*; 
 	PROCEDURE ^ TextViewFactory*(): XML.Element; 
-	PROCEDURE ^ InsertChar*(newChar: Char32): INTEGER; 
+	PROCEDURE ^ InsertChar*(newChar: Char32): SIGNED16; 
 	PROCEDURE ^ Refresh*; 
 	PROCEDURE ^ Cleanup; 
 	PROCEDURE ^ GenTextView*(): XML.Element; 

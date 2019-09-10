@@ -40,9 +40,9 @@ CONST
 	LF = 0AX; 
 	CR = 0DX; 
 TYPE 
-	ErrorProc* = PROCEDURE (n: INTEGER); 
+	ErrorProc* = PROCEDURE (n: SIGNED16); 
 
-	StartTable = ARRAY 128 OF INTEGER; 
+	StartTable = ARRAY 128 OF SIGNED16; 
 
 	SymbolSet = ARRAY nSets OF SET; 
 
@@ -70,16 +70,16 @@ TYPE
 	SmtpAgent* = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
 		ch: CHAR; 
-		res: WORD; 
+		res: INTEGER; 
 		out: Streams.Writer; 
 		in: Streams.Reader; 
 		log: Files.Writer; 
 		env: Envelope; 
 		thisName, verbSy: String; 
 		finished: BOOLEAN; 
-		sym: INTEGER; 
-		state: INTEGER; 
-		badTokens: LONGINT; 
+		sym: SIGNED16; 
+		state: SIGNED16; 
+		badTokens: SIGNED32; 
 		auxString: String; 
 
 		PROCEDURE ^ GetCh(): CHAR; 
@@ -89,9 +89,9 @@ TYPE
 		PROCEDURE ^ ToMemory*(VAR token: ARRAY OF CHAR); 
 		PROCEDURE ^ DebugMsg1*(msg: ARRAY OF CHAR); 
 		PROCEDURE ^ PutStatus1*(msg: ARRAY OF CHAR); 
-		PROCEDURE ^ ChangeStatus1*(newsym: INTEGER; msg: ARRAY OF CHAR); 
+		PROCEDURE ^ ChangeStatus1*(newsym: SIGNED16; msg: ARRAY OF CHAR); 
 		PROCEDURE ^ PutStatus2*(msg0, msg1: ARRAY OF CHAR); 
-		PROCEDURE ^ ChangeStatus2*(newsym: INTEGER; msg0, msg1: ARRAY OF CHAR); 
+		PROCEDURE ^ ChangeStatus2*(newsym: SIGNED16; msg0, msg1: ARRAY OF CHAR); 
 		PROCEDURE ^ AddExt*(VAR name: String; ext: ARRAY OF CHAR); 
 		PROCEDURE ^ PutBareName(name: String; VAR wr: Files.Writer); 
 		PROCEDURE ^ PutEnvelope(name: String); 
@@ -109,23 +109,23 @@ TYPE
 		PROCEDURE ^ reset; 
 		PROCEDURE ^ Get; 
 		PROCEDURE ^ ErrMsg(msg: String); 
-		PROCEDURE ^ Error1(n: INTEGER); 
-		PROCEDURE ^ Error2(n, sym: INTEGER); 
-		PROCEDURE ^ Confirm(n: INTEGER); 
-		PROCEDURE ^ Expect(n: INTEGER); 
-		PROCEDURE ^ StartOf(s: INTEGER): BOOLEAN; 
+		PROCEDURE ^ Error1(n: SIGNED16); 
+		PROCEDURE ^ Error2(n, sym: SIGNED16); 
+		PROCEDURE ^ Confirm(n: SIGNED16); 
+		PROCEDURE ^ Expect(n: SIGNED16); 
+		PROCEDURE ^ StartOf(s: SIGNED16): BOOLEAN; 
 		PROCEDURE ^ Who; 
 		PROCEDURE ^ BackStagePass(pass: String): BOOLEAN; 
 	BEGIN{ACTIVE} 
 	END SmtpAgent; 
 VAR 
-	errors*: INTEGER; 
-	lasterror*: INTEGER; 
-	charcount: LONGINT; 
-	getCalls: LONGINT; 
+	errors*: SIGNED16; 
+	lasterror*: SIGNED16; 
+	charcount: SIGNED32; 
+	getCalls: SIGNED32; 
 	start: StartTable; 
 	Pattern, Ack: ARRAY 6 OF CHAR; 
-	active: LONGINT; 
+	active: SIGNED32; 
 	symSet: ARRAY nrSets OF SymbolSet; 
 	smtp: TCPServices.Service; 
 	nextName: String; 

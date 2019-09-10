@@ -15,46 +15,46 @@ CONST
 	TextFontName = \"Oberon24b.Scn.Fnt"\; 
 TYPE 
 	Tile = RECORD 
-		x, y: INTEGER; 
-		left, right, top: INTEGER; 
-		face, col: INTEGER; 
+		x, y: SIGNED16; 
+		left, right, top: SIGNED16; 
+		face, col: SIGNED16; 
 		valid: BOOLEAN; 
 	END; 
 
 	Frame = POINTER TO FrameDesc; 
 
 	FrameDesc = RECORD (Gadgets.FrameDesc)
-		time: LONGINT; 
-		nofTiles: INTEGER; 
-		sel1, sel2: INTEGER; 
+		time: SIGNED32; 
+		nofTiles: SIGNED16; 
+		sel1, sel2: SIGNED16; 
 		over: BOOLEAN; 
-		moves: ARRAY Tiles OF INTEGER; 
+		moves: ARRAY Tiles OF SIGNED16; 
 		board: ARRAY (Tiles + 1) OF Tile; 
 	END; 
 
 	UndoMsg = RECORD (Display.FrameMsg)
 	END; 
 VAR 
-	DoubleClick: LONGINT; 
-	seed: LONGINT; 
+	DoubleClick: SIGNED32; 
+	seed: SIGNED32; 
 	faceFnt, textFnt: Fonts.Font; 
 	W: Texts.Writer; 
 
-	PROCEDURE ^ Random(z: INTEGER): INTEGER; 
+	PROCEDURE ^ Random(z: SIGNED16): SIGNED16; 
 	PROCEDURE ^ InitBoard(F: Frame); 
 	PROCEDURE ^ NewGame(F: Frame); 
-	PROCEDURE ^ FindTile(F: Frame; x, y, X, Y: INTEGER): INTEGER; 
+	PROCEDURE ^ FindTile(F: Frame; x, y, X, Y: SIGNED16): SIGNED16; 
 	PROCEDURE ^ IsFree(F: Frame; VAR tile: Tile): BOOLEAN; 
-	PROCEDURE ^ GetTile(F: Frame; x, y, X, Y: INTEGER): INTEGER; 
-	PROCEDURE ^ IsSame(face1, face2: INTEGER): BOOLEAN; 
-	PROCEDURE ^ FindSame(F: Frame; tileNr: INTEGER; VAR same: ARRAY OF INTEGER; VAR cnt: INTEGER); 
+	PROCEDURE ^ GetTile(F: Frame; x, y, X, Y: SIGNED16): SIGNED16; 
+	PROCEDURE ^ IsSame(face1, face2: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ FindSame(F: Frame; tileNr: SIGNED16; VAR same: ARRAY OF SIGNED16; VAR cnt: SIGNED16); 
 	PROCEDURE ^ IsOver(F: Frame): BOOLEAN; 
-	PROCEDURE ^ DrawTile(Q: Display3.Mask; col, x, y: INTEGER; VAR tile: Tile); 
-	PROCEDURE ^ DrawCount(Q: Display3.Mask; x, y, cnt: INTEGER); 
-	PROCEDURE ^ DrawGameOver(F: Frame; Q: Display3.Mask; x, y: INTEGER); 
-	PROCEDURE ^ FlashTiles(F: Frame; Q: Display3.Mask; x, y: INTEGER; tiles: ARRAY OF INTEGER; cnt: INTEGER); 
-	PROCEDURE ^ RemoveTiles(F: Frame; Q: Display3.Mask; x, y: INTEGER); 
-	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DrawTile(Q: Display3.Mask; col, x, y: SIGNED16; VAR tile: Tile); 
+	PROCEDURE ^ DrawCount(Q: Display3.Mask; x, y, cnt: SIGNED16); 
+	PROCEDURE ^ DrawGameOver(F: Frame; Q: Display3.Mask; x, y: SIGNED16); 
+	PROCEDURE ^ FlashTiles(F: Frame; Q: Display3.Mask; x, y: SIGNED16; tiles: ARRAY OF SIGNED16; cnt: SIGNED16); 
+	PROCEDURE ^ RemoveTiles(F: Frame; Q: Display3.Mask; x, y: SIGNED16); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ Track(F: Frame; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ Attributes(F: Frame; VAR M: Objects.AttrMsg); 

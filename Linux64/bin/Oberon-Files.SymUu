@@ -8,22 +8,22 @@ CONST
 TYPE 
 	File* = POINTER TO RECORD 
 		buf: Buffer; 
-		bufs: LONGINT; 
-		alen, blen: LONGINT; 
+		bufs: SIGNED32; 
+		alen, blen: SIGNED32; 
 		r: Files.Rider; 
-		checktime, checkdate, checklen: LONGINT; 
+		checktime, checkdate, checklen: SIGNED32; 
 	END; 
 
 	Rider* = RECORD 
 		buf: Buffer; 
-		apos, bpos: LONGINT; 
+		apos, bpos: SIGNED32; 
 		eof*: BOOLEAN; 
-		res*: LONGINT; 
+		res*: SIGNED32; 
 		f: File; 
 	END; 
 
 	Buffer = POINTER TO RECORD 
-		apos, lim: LONGINT; 
+		apos, lim: SIGNED32; 
 		mod: BOOLEAN; 
 		next: Buffer; 
 		data: ARRAY BufSize OF CHAR; 
@@ -44,39 +44,39 @@ VAR
 	PROCEDURE ^ Old*(CONST name: ARRAY OF CHAR): File; 
 	PROCEDURE ^ Register*(f: File); 
 	PROCEDURE ^ Close*(f: File); 
-	PROCEDURE ^ Length*(f: File): LONGINT; 
-	PROCEDURE ^ GetDate*(f: File; VAR t, d: LONGINT); 
-	PROCEDURE ^ SetDate*(f: File; t, d: LONGINT); 
-	PROCEDURE ^ Set*(VAR r: Rider; f: File; pos: LONGINT); 
-	PROCEDURE ^ Pos*(VAR r: Rider): LONGINT; 
+	PROCEDURE ^ Length*(f: File): SIGNED32; 
+	PROCEDURE ^ GetDate*(f: File; VAR t, d: SIGNED32); 
+	PROCEDURE ^ SetDate*(f: File; t, d: SIGNED32); 
+	PROCEDURE ^ Set*(VAR r: Rider; f: File; pos: SIGNED32); 
+	PROCEDURE ^ Pos*(VAR r: Rider): SIGNED32; 
 	PROCEDURE ^ Base*(VAR r: Rider): File; 
 	PROCEDURE ^ Read*(VAR r: Rider; VAR x: SYSTEM.BYTE); 
-	PROCEDURE ^ ReadBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; len: LONGINT); 
-	PROCEDURE ^ ReadInt*(VAR r: Rider; VAR x: INTEGER); 
-	PROCEDURE ^ ReadLInt*(VAR r: Rider; VAR x: LONGINT); 
+	PROCEDURE ^ ReadBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; len: SIGNED32); 
+	PROCEDURE ^ ReadInt*(VAR r: Rider; VAR x: SIGNED16); 
+	PROCEDURE ^ ReadLInt*(VAR r: Rider; VAR x: SIGNED32); 
 	PROCEDURE ^ ReadSet*(VAR r: Rider; VAR x: SET); 
 	PROCEDURE ^ ReadBool*(VAR r: Rider; VAR x: BOOLEAN); 
-	PROCEDURE ^ ReadReal*(VAR r: Rider; VAR x: REAL); 
-	PROCEDURE ^ ReadLReal*(VAR r: Rider; VAR x: LONGREAL); 
+	PROCEDURE ^ ReadReal*(VAR r: Rider; VAR x: FLOAT32); 
+	PROCEDURE ^ ReadLReal*(VAR r: Rider; VAR x: FLOAT64); 
 	PROCEDURE ^ ReadString*(VAR r: Rider; VAR x: ARRAY OF CHAR); 
-	PROCEDURE ^ ReadNum*(VAR r: Rider; VAR x: LONGINT); 
+	PROCEDURE ^ ReadNum*(VAR r: Rider; VAR x: SIGNED32); 
 	PROCEDURE ^ Write*(VAR r: Rider; x: SYSTEM.BYTE); 
-	PROCEDURE ^ WriteBytes*(VAR r: Rider; CONST x: ARRAY OF SYSTEM.BYTE; len: LONGINT); 
-	PROCEDURE ^ WriteInt*(VAR r: Rider; x: INTEGER); 
-	PROCEDURE ^ WriteLInt*(VAR r: Rider; x: LONGINT); 
+	PROCEDURE ^ WriteBytes*(VAR r: Rider; CONST x: ARRAY OF SYSTEM.BYTE; len: SIGNED32); 
+	PROCEDURE ^ WriteInt*(VAR r: Rider; x: SIGNED16); 
+	PROCEDURE ^ WriteLInt*(VAR r: Rider; x: SIGNED32); 
 	PROCEDURE ^ WriteSet*(VAR r: Rider; x: SET); 
 	PROCEDURE ^ WriteBool*(VAR r: Rider; x: BOOLEAN); 
-	PROCEDURE ^ WriteReal*(VAR r: Rider; x: REAL); 
-	PROCEDURE ^ WriteLReal*(VAR r: Rider; x: LONGREAL); 
+	PROCEDURE ^ WriteReal*(VAR r: Rider; x: FLOAT32); 
+	PROCEDURE ^ WriteLReal*(VAR r: Rider; x: FLOAT64); 
 	PROCEDURE ^ WriteString*(VAR r: Rider; CONST x: ARRAY OF CHAR); 
-	PROCEDURE ^ WriteNum*(VAR r: Rider; x: LONGINT); 
-	PROCEDURE ^ Delete*(name: ARRAY OF CHAR; VAR res: INTEGER); 
-	PROCEDURE ^ Rename*(CONST old, new: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ WriteNum*(VAR r: Rider; x: SIGNED32); 
+	PROCEDURE ^ Delete*(name: ARRAY OF CHAR; VAR res: SIGNED16); 
+	PROCEDURE ^ Rename*(CONST old, new: ARRAY OF CHAR; VAR res: SIGNED16); 
 	PROCEDURE ^ GetName*(f: File; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ ReadBuf(f: File; buf: Buffer; pos: LONGINT); 
+	PROCEDURE ^ ReadBuf(f: File; buf: Buffer; pos: SIGNED32); 
 	PROCEDURE ^ WriteBuf(f: File; buf: Buffer); 
-	PROCEDURE ^ SearchBuf(f: File; pos: LONGINT): Buffer; 
-	PROCEDURE ^ GetBuf(f: File; pos: LONGINT): Buffer; 
+	PROCEDURE ^ SearchBuf(f: File; pos: SIGNED32): Buffer; 
+	PROCEDURE ^ GetBuf(f: File; pos: SIGNED32): Buffer; 
 	PROCEDURE ^ Update(f: File); 
 	PROCEDURE ^ WriteFile(f: File); 
 BEGIN

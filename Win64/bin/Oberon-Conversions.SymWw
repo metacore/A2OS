@@ -7,9 +7,9 @@ VAR
 	Min: ARRAY 16 OF String; 
 	Digit: ARRAY 17 OF CHAR; 
 
-	PROCEDURE ^ BitPatternToStr(val: LONGINT; VAR str: ARRAY OF CHAR; base: LONGINT); 
-	PROCEDURE ^ IntToStr*(val: LONGINT; VAR str: ARRAY OF CHAR; base: LONGINT); 
-	PROCEDURE ^ RealToStr*(x: LONGREAL; VAR s: ARRAY OF CHAR; base: LONGINT); 
-	PROCEDURE ^ StrToInt*(s: ARRAY OF CHAR; VAR val: LONGINT; base: LONGINT); 
+	PROCEDURE ^ BitPatternToStr(val: SIGNED32; VAR str: ARRAY OF CHAR; base: SIGNED32); 
+	PROCEDURE ^ IntToStr*(val: SIGNED32; VAR str: ARRAY OF CHAR; base: SIGNED32); 
+	PROCEDURE ^ RealToStr*(x: FLOAT64; VAR s: ARRAY OF CHAR; base: SIGNED32); 
+	PROCEDURE ^ StrToInt*(s: ARRAY OF CHAR; VAR val: SIGNED32; base: SIGNED32); 
 BEGIN
 END Conversions.

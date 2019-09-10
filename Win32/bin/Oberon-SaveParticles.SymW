@@ -21,19 +21,19 @@ CONST
 	defOrigin = randomOrigin; 
 TYPE 
 	Particle = RECORD 
-		x, y, vx, vy: INTEGER; 
-		tolive: INTEGER; 
-		color: INTEGER; 
+		x, y, vx, vy: SIGNED16; 
+		tolive: SIGNED16; 
+		color: SIGNED16; 
 	END; 
 VAR 
-	particleCount: INTEGER; 
-	particleSize: INTEGER; 
-	speed: INTEGER; 
-	frameRate: INTEGER; 
-	origin: INTEGER; 
+	particleCount: SIGNED16; 
+	particleSize: SIGNED16; 
+	speed: SIGNED16; 
+	frameRate: SIGNED16; 
+	origin: SIGNED16; 
 	particle: ARRAY maxParticleCount OF Particle; 
 
-	PROCEDURE ^ CreateParticle(VAR p: Particle; color: INTEGER); 
+	PROCEDURE ^ CreateParticle(VAR p: Particle; color: SIGNED16); 
 	PROCEDURE ^ StartParticles; 
 	PROCEDURE ^ StepParticles; 
 	PROCEDURE ^ StopParticles; 

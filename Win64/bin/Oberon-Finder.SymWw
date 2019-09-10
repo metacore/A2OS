@@ -37,7 +37,7 @@ TYPE
 	FindMsg = RECORD (Display.FrameMsg)
 		desk: Desktops.DocViewer; 
 		finder: Frame; 
-		cnt: INTEGER; 
+		cnt: SIGNED16; 
 	END; 
 VAR 
 	pict: Pictures.Picture; 
@@ -46,15 +46,15 @@ VAR
 	W: Texts.Writer; 
 
 	PROCEDURE ^ FormatLine(F: ListGadgets.Frame; R: ListRiders.Rider; L: ListGadgets.Line); 
-	PROCEDURE ^ DisplayLine(F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: INTEGER; R: ListRiders.Rider; L: ListGadgets.Line); 
+	PROCEDURE ^ DisplayLine(F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; R: ListRiders.Rider; L: ListGadgets.Line); 
 	PROCEDURE ^ GetRider(F: Frame); 
 	PROCEDURE ^ RemoveFrame(F: Display.Frame); 
-	PROCEDURE ^ InsertFrame(this, context: Display.Frame; u, v: INTEGER); 
+	PROCEDURE ^ InsertFrame(this, context: Display.Frame; u, v: SIGNED16); 
 	PROCEDURE ^ ListDocs(F: Frame; context: Display.Frame): Display.Frame; 
-	PROCEDURE ^ CalcPlace(x, y: INTEGER; VAR px, py, w, h: INTEGER); 
+	PROCEDURE ^ CalcPlace(x, y: SIGNED16; VAR px, py, w, h: SIGNED16); 
 	PROCEDURE ^ PopupList(F: Frame; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ Consume(doc: Desktops.DocGadget); 
-	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
 	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 

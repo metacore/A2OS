@@ -23,7 +23,7 @@ TYPE
 		head, num: SIZE; 
 		buffer: POINTER TO ARRAY OF Buffer; 
 
-		PROCEDURE ^  & Init*(n: LONGINT); 
+		PROCEDURE ^  & Init*(n: SIGNED32); 
 		PROCEDURE ^ Add*(x: Buffer); 
 		PROCEDURE ^ Remove*(): Buffer; 
 		PROCEDURE ^ NofBuffers*(): SIZE; 
@@ -35,8 +35,8 @@ TYPE
 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
 		PROCEDURE ^ GetDesc*(VAR desc: ARRAY OF CHAR); 
-		PROCEDURE ^ SetVolume*(volume: WORD); 
-		PROCEDURE ^ GetVolume*(): WORD; 
+		PROCEDURE ^ SetVolume*(volume: INTEGER); 
+		PROCEDURE ^ GetVolume*(): INTEGER; 
 		PROCEDURE ^ SetMute*(mute: BOOLEAN); 
 		PROCEDURE ^ GetIsMute*(): BOOLEAN; 
 	END MixerChannel; 
@@ -45,10 +45,10 @@ TYPE
 
 	Channel* = OBJECT 
 
-		PROCEDURE ^ GetChannelKind*(): LONGINT; 
-		PROCEDURE ^ SetVolume*(volume: LONGINT); 
-		PROCEDURE ^ GetVolume*(): LONGINT; 
-		PROCEDURE ^ GetPosition*(): LONGINT; 
+		PROCEDURE ^ GetChannelKind*(): SIGNED32; 
+		PROCEDURE ^ SetVolume*(volume: SIGNED32); 
+		PROCEDURE ^ GetVolume*(): SIGNED32; 
+		PROCEDURE ^ GetPosition*(): SIGNED32; 
 		PROCEDURE ^ RegisterBufferListener*(bufferListener: BufferListener); 
 		PROCEDURE ^ Start*; 
 		PROCEDURE ^ QueueBuffer*(x: Buffer); 
@@ -64,20 +64,20 @@ TYPE
 		PROCEDURE ^ Init*; 
 		PROCEDURE ^ Enable*; 
 		PROCEDURE ^ Disable*; 
-		PROCEDURE ^ NofNativeFrequencies*(): LONGINT; 
-		PROCEDURE ^ GetNativeFrequency*(nr: LONGINT): LONGINT; 
-		PROCEDURE ^ NofSamplingResolutions*(): LONGINT; 
-		PROCEDURE ^ GetSamplingResolution*(nr: LONGINT): LONGINT; 
-		PROCEDURE ^ NofSubChannelSettings*(): LONGINT; 
-		PROCEDURE ^ GetSubChannelSetting*(nr: LONGINT): LONGINT; 
-		PROCEDURE ^ NofWaveFormats*(): LONGINT; 
-		PROCEDURE ^ GetWaveFormat*(nr: LONGINT): LONGINT; 
-		PROCEDURE ^ OpenPlayChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ OpenRecordChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ NofNativeFrequencies*(): SIGNED32; 
+		PROCEDURE ^ GetNativeFrequency*(nr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ NofSamplingResolutions*(): SIGNED32; 
+		PROCEDURE ^ GetSamplingResolution*(nr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ NofSubChannelSettings*(): SIGNED32; 
+		PROCEDURE ^ GetSubChannelSetting*(nr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ NofWaveFormats*(): SIGNED32; 
+		PROCEDURE ^ GetWaveFormat*(nr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ OpenPlayChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ OpenRecordChannel*(VAR channel: Channel; samplingRate, samplingResolution, nofSubChannels, format: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ RegisterMixerChangeListener*(mixChangedProc: MixerChangedProc); 
 		PROCEDURE ^ UnregisterMixerChangeListener*(mixChangedProc: MixerChangedProc); 
-		PROCEDURE ^ GetMixerChannel*(channelNr: LONGINT; VAR channel: MixerChannel); 
-		PROCEDURE ^ GetNofMixerChannels*(): LONGINT; 
+		PROCEDURE ^ GetMixerChannel*(channelNr: SIGNED32; VAR channel: MixerChannel); 
+		PROCEDURE ^ GetNofMixerChannels*(): SIGNED32; 
 	END Driver; 
 VAR 
 	devices*: Plugins.Registry; 

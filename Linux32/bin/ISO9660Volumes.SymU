@@ -9,12 +9,12 @@ TYPE
 	Volume* = OBJECT {EXCLUSIVE} (Files.Volume)
 	VAR 
 		dev-: Disks.Device; 
-		bpc: LONGINT; 
-		spc: LONGINT; 
+		bpc: SIGNED32; 
+		spc: SIGNED32; 
 
 		PROCEDURE ^ Finalize*; 
-		PROCEDURE ^ Available*(): LONGINT; 
-		PROCEDURE ^ GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR); 
+		PROCEDURE ^ Available*(): SIGNED32; 
+		PROCEDURE ^ GetBlock*(adr: SIGNED32; VAR blk: ARRAY OF CHAR); 
 		PROCEDURE ^ AllocBlock*(hint: Files.Address; VAR adr: Files.Address); 
 		PROCEDURE ^ FreeBlock*(adr: Files.Address); 
 		PROCEDURE ^ MarkBlock*(adr: Files.Address); 

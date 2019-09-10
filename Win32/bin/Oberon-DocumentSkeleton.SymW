@@ -6,7 +6,7 @@ VAR
 	W: Texts.Writer; 
 
 	PROCEDURE ^ Cycle*; 
-	PROCEDURE ^ NextColor(doc: Documents.Document; col: INTEGER); 
+	PROCEDURE ^ NextColor(doc: Documents.Document; col: SIGNED16); 
 	PROCEDURE ^ Load(D: Documents.Document); 
 	PROCEDURE ^ Store(D: Documents.Document); 
 	PROCEDURE ^ Handler(D: Objects.Object; VAR M: Objects.ObjMsg); 

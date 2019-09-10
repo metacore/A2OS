@@ -7,7 +7,7 @@ CONST
 	classString* = \"String"\; 
 	classUnknown* = \"Unknown"\; 
 TYPE 
-	Index* = LONGINT; 
+	Index* = SIGNED32; 
 
 	tObject* = POINTER TO tObjectDesc; 
 
@@ -29,9 +29,9 @@ TYPE
 	UpdateTask = POINTER TO UpdateTaskDesc; 
 
 	UpdateTaskDesc = RECORD (Oberon.TaskDesc)
-		nexttime: LONGINT; 
+		nexttime: SIGNED32; 
 		t: Texts.Text; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		D: Documents.Document; 
 		l: vyLinks.Link; 
 	END; 
@@ -39,7 +39,7 @@ VAR
 	obj-: tObject; 
 	antsObjects: vyLinks.Link; 
 	currobj: Objects.Object; 
-	currcount: LONGINT; 
+	currcount: SIGNED32; 
 	currName: ARRAY 64 OF ARRAY 32 OF CHAR; 
 	linklist*, curlinklist: tlinkList; 
 	found: BOOLEAN; 

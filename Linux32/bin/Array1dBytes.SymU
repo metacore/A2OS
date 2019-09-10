@@ -11,7 +11,7 @@ TYPE
 
 	QWord* = ARRAY 8 OF SYSTEM.BYTE; 
 
-	PROCEDURE {Fingerprint(-3278844956768021457)}  - AdrCheck*(adr, lower, size: LONGINT);
+	PROCEDURE {Fingerprint(-3278844956768021457)}  - AdrCheck*(adr, lower, size: SIGNED32);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  upper
 		MOV	EBX, [ESP+4]	;  lower
@@ -30,7 +30,7 @@ TYPE
 		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
 	
 	END AdrCheck; 
-	PROCEDURE {Fingerprint(-5146111304864836664)}  - RangeCheck*(offset, len, upper: LONGINT);
+	PROCEDURE {Fingerprint(-5146111304864836664)}  - RangeCheck*(offset, len, upper: SIGNED32);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  upper
 		MOV	EBX, [ESP+4]	;  len
@@ -54,7 +54,7 @@ TYPE
 		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
 	
 	END RangeCheck; 
-	PROCEDURE {Fingerprint(-1098150644346745417)}  - RangeCheck2*(x, y, w, h, width, height: LONGINT);
+	PROCEDURE {Fingerprint(-1098150644346745417)}  - RangeCheck2*(x, y, w, h, width, height: SIGNED32);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  upper = height
 		MOV	EBX, [ESP+8]	;  len = h
@@ -97,7 +97,7 @@ TYPE
 		ADD	ESP, 24	;  adjust stack pointer(inline procedure!)
 	
 	END RangeCheck2; 
-	PROCEDURE {Fingerprint(1862454106549315888)}  - PatRangeCheck*(offset, step, piecelen, pieces, upper: LONGINT);
+	PROCEDURE {Fingerprint(1862454106549315888)}  - PatRangeCheck*(offset, step, piecelen, pieces, upper: SIGNED32);
 	CODE {SYSTEM.i386}
 		MOV	EDI, [ESP]	;  upper
 		MOV	EDX, [ESP+4]	;  pieces
@@ -139,7 +139,7 @@ TYPE
 		ADD	ESP, 20	;  adjust stack pointer(inline procedure!)
 	
 	END PatRangeCheck; 
-	PROCEDURE {Fingerprint(78838314184799104)}  - MoveB*(srcadr, destadr, len: LONGINT);
+	PROCEDURE {Fingerprint(78838314184799104)}  - MoveB*(srcadr, destadr, len: SIGNED32);
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  len
 		MOV	EDI, [ESP+4]	;  destadr
@@ -172,17 +172,17 @@ TYPE
 		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
 	
 	END MoveB; 
-	PROCEDURE ^ MoveBPat*(srcadr, destadr, srcstep, deststep, piecelen, pieces: LONGINT); 
-	PROCEDURE ^ FillB*(adr: LONGINT; byte: SYSTEM.BYTE; count: LONGINT); 
-	PROCEDURE ^ FillBPat*(adr: LONGINT; byte: SYSTEM.BYTE; step, piecelen, pieces: LONGINT); 
-	PROCEDURE ^ FillW*(adr: LONGINT; word: Word; count: LONGINT); 
-	PROCEDURE ^ FillWPat*(adr: LONGINT; word: Word; step, piecelen, pieces: LONGINT); 
-	PROCEDURE ^ FillD*(adr: LONGINT; dword: DWord; count: LONGINT); 
-	PROCEDURE ^ FillDPat*(adr: LONGINT; dword: DWord; step, piecelen, pieces: LONGINT); 
-	PROCEDURE ^ FillQ*(adr: LONGINT; qword: QWord; count: LONGINT); 
-	PROCEDURE ^ FillG*(adr: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; count: LONGINT); 
-	PROCEDURE ^ FillGPat*(adr: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; step, piecelen, pieces: LONGINT); 
-	PROCEDURE ^ Fill*(adr: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; len: LONGINT); 
-	PROCEDURE ^ FillPat*(adr: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; step, piecelen, pieces: LONGINT); 
+	PROCEDURE ^ MoveBPat*(srcadr, destadr, srcstep, deststep, piecelen, pieces: SIGNED32); 
+	PROCEDURE ^ FillB*(adr: SIGNED32; byte: SYSTEM.BYTE; count: SIGNED32); 
+	PROCEDURE ^ FillBPat*(adr: SIGNED32; byte: SYSTEM.BYTE; step, piecelen, pieces: SIGNED32); 
+	PROCEDURE ^ FillW*(adr: SIGNED32; word: Word; count: SIGNED32); 
+	PROCEDURE ^ FillWPat*(adr: SIGNED32; word: Word; step, piecelen, pieces: SIGNED32); 
+	PROCEDURE ^ FillD*(adr: SIGNED32; dword: DWord; count: SIGNED32); 
+	PROCEDURE ^ FillDPat*(adr: SIGNED32; dword: DWord; step, piecelen, pieces: SIGNED32); 
+	PROCEDURE ^ FillQ*(adr: SIGNED32; qword: QWord; count: SIGNED32); 
+	PROCEDURE ^ FillG*(adr: SIGNED32; VAR data: ARRAY OF SYSTEM.BYTE; count: SIGNED32); 
+	PROCEDURE ^ FillGPat*(adr: SIGNED32; VAR data: ARRAY OF SYSTEM.BYTE; step, piecelen, pieces: SIGNED32); 
+	PROCEDURE ^ Fill*(adr: SIGNED32; VAR data: ARRAY OF SYSTEM.BYTE; len: SIGNED32); 
+	PROCEDURE ^ FillPat*(adr: SIGNED32; VAR data: ARRAY OF SYSTEM.BYTE; step, piecelen, pieces: SIGNED32); 
 BEGIN
 END Array1dBytes.

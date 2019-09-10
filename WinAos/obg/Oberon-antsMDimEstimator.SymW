@@ -5,25 +5,25 @@ TYPE
 	Estimator = POINTER TO EstimatorDesc; 
 
 	EstimatorDesc = RECORD (vyBase.ObjDesc)
-		lowdim, highdim: LONGINT; 
+		lowdim, highdim: SIGNED32; 
 		Isotropic: vyLinks.Link; 
 		NonIsotropic: vyLinks.Link; 
 		nisoAIC, isoAIC: vyBase.tVector; 
-		nisoAICMin, isoAICMin: INTEGER; 
+		nisoAICMin, isoAICMin: SIGNED16; 
 		nisoAICMinTotal, isoAICMinTotal: BOOLEAN; 
-		current: INTEGER; 
+		current: SIGNED16; 
 	END; 
 VAR 
 	tempO: antsArrayObjects.tINTEGERObject; 
-	tempDim: LONGINT; 
-	tx-, ty-, tw-, th-: LONGINT; 
-	temptable: POINTER TO ARRAY OF ARRAY OF LONGINT; 
+	tempDim: SIGNED32; 
+	tx-, ty-, tw-, th-: SIGNED32; 
+	temptable: POINTER TO ARRAY OF ARRAY OF SIGNED32; 
 	n: antsNeighbourhoods.Neighbours; 
 
-	PROCEDURE ^ tabelize(o: antsArrayObjects.tINTEGERObject; dim: LONGINT); 
-	PROCEDURE ^ Calc(pos: LONGINT; dim: LONGINT; par: ARRAY OF LONGREAL): LONGREAL; 
-	PROCEDURE ^ IsingPMLE(o: antsArrayObjects.tObject; dim: LONGINT; par: ARRAY OF LONGREAL): LONGREAL; 
-	PROCEDURE ^ func(VAR Par: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ tabelize(o: antsArrayObjects.tINTEGERObject; dim: SIGNED32); 
+	PROCEDURE ^ Calc(pos: SIGNED32; dim: SIGNED32; par: ARRAY OF FLOAT64): FLOAT64; 
+	PROCEDURE ^ IsingPMLE(o: antsArrayObjects.tObject; dim: SIGNED32; par: ARRAY OF FLOAT64): FLOAT64; 
+	PROCEDURE ^ func(VAR Par: ARRAY OF FLOAT64): FLOAT64; 
 	PROCEDURE ^ StoreF(VAR R: Files.Rider; s: Estimator); 
 	PROCEDURE ^ LoadF(VAR R: Files.Rider; s: Estimator); 
 	PROCEDURE ^ Bind(o: Objects.Object; VAR M: Objects.BindMsg); 

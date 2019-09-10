@@ -16,14 +16,14 @@ TYPE
 	Data = POINTER TO DataDesc; 
 
 	DataDesc = RECORD (ListRiders.StringDesc)
-		pictNr: LONGINT; 
+		pictNr: SIGNED32; 
 	END; 
 
 	Item = POINTER TO ItemDesc; 
 
 	ItemDesc = RECORD 
 		s: ARRAY 64 OF CHAR; 
-		key, pos, stamp, state: LONGINT; 
+		key, pos, stamp, state: SIGNED32; 
 		dsc, asc, next, prev: Item; 
 	END; 
 
@@ -33,7 +33,7 @@ TYPE
 		tail: Item; 
 		mask: ARRAY 32 OF CHAR; 
 		rootDir: FileDir.FileName; 
-		key: LONGINT; 
+		key: SIGNED32; 
 	END; 
 
 	Rider* = POINTER TO RiderDesc; 
@@ -49,31 +49,31 @@ VAR
 	mMethod: ListRiders.Method; 
 	vMethod: ListGadgets.Method; 
 	drvPicts: ARRAY Picts OF Pictures.Picture; 
-	maxW: INTEGER; 
+	maxW: SIGNED16; 
 	drv: Objects.Object; 
 	StringHandler: Objects.Handler; 
 
 	PROCEDURE ^ IsOnlyDrive(path: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ IsDirectory(path: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ CheckPath(VAR path: ARRAY OF CHAR); 
-	PROCEDURE ^ GetKey(obj: Model): LONGINT; 
-	PROCEDURE ^ NewItem(name: ARRAY OF CHAR; key: LONGINT): Item; 
+	PROCEDURE ^ GetKey(obj: Model): SIGNED32; 
+	PROCEDURE ^ NewItem(name: ARRAY OF CHAR; key: SIGNED32): Item; 
 	PROCEDURE ^ InsertItem(item, n: Item); 
-	PROCEDURE ^ Enum(name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN); 
+	PROCEDURE ^ Enum(name: ARRAY OF CHAR; time, date, size: SIGNED32; VAR continue: BOOLEAN); 
 	PROCEDURE ^ BuildList(obj: Model; tail: Item; path, mask: ARRAY OF CHAR); 
 	PROCEDURE ^ SetItem(R: Rider; item: Item); 
-	PROCEDURE ^ Key(R: ListRiders.Rider): LONGINT; 
-	PROCEDURE ^ Seek(R: ListRiders.Rider; key: LONGINT); 
-	PROCEDURE ^ Pos(R: ListRiders.Rider): LONGINT; 
-	PROCEDURE ^ Set(R: ListRiders.Rider; pos: LONGINT); 
+	PROCEDURE ^ Key(R: ListRiders.Rider): SIGNED32; 
+	PROCEDURE ^ Seek(R: ListRiders.Rider; key: SIGNED32); 
+	PROCEDURE ^ Pos(R: ListRiders.Rider): SIGNED32; 
+	PROCEDURE ^ Set(R: ListRiders.Rider; pos: SIGNED32); 
 	PROCEDURE ^ Write(R: ListRiders.Rider; d: ListRiders.Data); 
 	PROCEDURE ^ WriteLink(R, linkR: ListRiders.Rider); 
 	PROCEDURE ^ DeleteLink(R, linkR: ListRiders.Rider); 
 	PROCEDURE ^ Desc(R, old: ListRiders.Rider): ListRiders.Rider; 
-	PROCEDURE ^ GetStamp(R: ListRiders.Rider): LONGINT; 
-	PROCEDURE ^ SetStamp(R: ListRiders.Rider; stamp: LONGINT); 
-	PROCEDURE ^ State(R: ListRiders.Rider): LONGINT; 
-	PROCEDURE ^ SetState(R: ListRiders.Rider; s: LONGINT); 
+	PROCEDURE ^ GetStamp(R: ListRiders.Rider): SIGNED32; 
+	PROCEDURE ^ SetStamp(R: ListRiders.Rider; stamp: SIGNED32); 
+	PROCEDURE ^ State(R: ListRiders.Rider): SIGNED32; 
+	PROCEDURE ^ SetState(R: ListRiders.Rider; s: SIGNED32); 
 	PROCEDURE ^ ConnectRider(R: Rider; base: Model); 
 	PROCEDURE ^ UpdateModel*(obj: Model); 
 	PROCEDURE ^ ModelAttr(obj: Model; VAR M: Objects.AttrMsg); 
@@ -81,15 +81,15 @@ VAR
 	PROCEDURE ^ InitModel*(obj: Model; rootDir, mask: ARRAY OF CHAR); 
 	PROCEDURE ^ New*; 
 	PROCEDURE ^ FormatLine(F: ListGadgets.Frame; R: ListRiders.Rider; L: ListGadgets.Line); 
-	PROCEDURE ^ DisplayLine(F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: INTEGER; R: ListRiders.Rider; L: ListGadgets.Line); 
-	PROCEDURE ^ P(x: LONGINT): INTEGER; 
+	PROCEDURE ^ DisplayLine(F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; R: ListRiders.Rider; L: ListGadgets.Line); 
+	PROCEDURE ^ P(x: SIGNED32): SIGNED16; 
 	PROCEDURE ^ PrintFormatLine(F: ListGadgets.Frame; R: ListRiders.Rider; L: ListGadgets.Line); 
-	PROCEDURE ^ PrintLine(F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: INTEGER; R: ListRiders.Rider; L: ListGadgets.Line); 
+	PROCEDURE ^ PrintLine(F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; R: ListRiders.Rider; L: ListGadgets.Line); 
 	PROCEDURE ^ GadgetHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewDirList*; 
 	PROCEDURE ^ HandleDrv(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewDrv*; 
-	PROCEDURE ^ EnumForList(name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN); 
+	PROCEDURE ^ EnumForList(name: ARRAY OF CHAR; time, date, size: SIGNED32; VAR continue: BOOLEAN); 
 	PROCEDURE ^ Directory*; 
 	PROCEDURE ^ GetPicts; 
 BEGIN

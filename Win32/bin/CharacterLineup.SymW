@@ -8,7 +8,7 @@ TYPE
 	CharacterArray = POINTER TO ARRAY OF WMCCGFonts.Glyph; 
 
 	HistoEntry = RECORD 
-		ucs, freq: LONGINT; 
+		ucs, freq: SIGNED32; 
 	END; 
 
 	FilterHisto = POINTER TO ARRAY OF HistoEntry; 
@@ -19,32 +19,32 @@ TYPE
 		characterEdit, pinyinEdit, mandarinEdit, cantoneseEdit, koreanEdit, definitionEdit, codeEdit: WMEditors.Editor; 
 		characters, filterComponents: WMGrids.GenericGrid; 
 		toggleFilter: WMStandardComponents.Button; 
-		curChar: LONGINT; 
+		curChar: SIGNED32; 
 		fontinfo: WMCCGFonts.GenericFont; 
 		bigFont: WMGraphics.Font; 
 		charInfo: UnihanParser.Character; 
 		allCharacters: CharacterArray; 
-		nofCharacters: LONGINT; 
+		nofCharacters: SIGNED32; 
 		filtered: CharacterArray; 
-		filterArray: ARRAY MaxFilters OF LONGINT; 
-		nofFilters: LONGINT; 
-		nofInFilter: LONGINT; 
+		filterArray: ARRAY MaxFilters OF SIGNED32; 
+		nofFilters: SIGNED32; 
+		nofInFilter: SIGNED32; 
 		useFilter: BOOLEAN; 
 		relevantSubcomponents: FilterHisto; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ LoadAllCharacters; 
 		PROCEDURE ^ Update; 
-		PROCEDURE ^ IsComponentUsed(glyph: WMCCGFonts.Glyph; code: LONGINT): BOOLEAN; 
-		PROCEDURE ^ Filter(nofSubs: LONGINT; CONST subs: ARRAY OF LONGINT); 
+		PROCEDURE ^ IsComponentUsed(glyph: WMCCGFonts.Glyph; code: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ Filter(nofSubs: SIGNED32; CONST subs: ARRAY OF SIGNED32); 
 		PROCEDURE ^ ToggleFilter(sender, data: ANY); 
 		PROCEDURE ^ NewCharacter(sender, data: ANY); 
 		PROCEDURE ^ NewCode(sender, data: ANY); 
 		PROCEDURE ^ SelectChar(sender, data: ANY); 
 		PROCEDURE ^ FilterSelection(sender, data: ANY); 
-		PROCEDURE ^ IsInFilterArray(ucs: LONGINT): BOOLEAN; 
-		PROCEDURE ^ AddToFilter(ucs: LONGINT); 
-		PROCEDURE ^ RemoveFromFilter(ucs: LONGINT); 
+		PROCEDURE ^ IsInFilterArray(ucs: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ AddToFilter(ucs: SIGNED32); 
+		PROCEDURE ^ RemoveFromFilter(ucs: SIGNED32); 
 		PROCEDURE ^ PaintCharacter(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ DrawAll(canvas: WMGraphics.Canvas; w, h: SIZE; state: SET; x, y: SIZE); 

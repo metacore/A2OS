@@ -31,38 +31,38 @@ TYPE
 	Connection* = OBJECT {EXCLUSIVE} (Streams.Connection)
 	VAR 
 		int-: IP.Interface; 
-		lport-: LONGINT; 
+		lport-: SIGNED32; 
 		fip-: IP.Adr; 
-		fport-: LONGINT; 
-		state*: SHORTINT; 
-		sndnxt-: LONGINT; 
-		iss-: LONGINT; 
-		rcvnxt-: LONGINT; 
-		irs-: LONGINT; 
+		fport-: SIGNED32; 
+		state*: SIGNED8; 
+		sndnxt-: SIGNED32; 
+		iss-: SIGNED32; 
+		rcvnxt-: SIGNED32; 
+		irs-: SIGNED32; 
 		socket: WSock32.Socket; 
-		sndwnd-: LONGINT; 
-		sndcwnd-: LONGINT; 
-		sndcc-: LONGINT; 
-		rcvwnd-: LONGINT; 
-		srtt-: LONGINT; 
+		sndwnd-: SIGNED32; 
+		sndcwnd-: SIGNED32; 
+		sndcc-: SIGNED32; 
+		rcvwnd-: SIGNED32; 
+		srtt-: SIGNED32; 
 		timeout: Objects.Timer; 
 		flags: SET; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
-		PROCEDURE ^ State*(): LONGINT; 
+		PROCEDURE ^ Open*(lport: SIGNED32; fip: IP.Adr; fport: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ State*(): SIGNED32; 
 		PROCEDURE ^ HandleTimeout; 
-		PROCEDURE ^ AwaitState*(good, bad: SET; ms: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ AwaitState*(good, bad: SET; ms: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ SetPortAndIp; 
-		PROCEDURE ^ Accept*(VAR client: Connection; VAR res: WORD); 
+		PROCEDURE ^ Accept*(VAR client: Connection; VAR res: INTEGER); 
 		PROCEDURE ^ DelaySend*(enable: BOOLEAN); 
 		PROCEDURE ^ KeepAlive*(enable: BOOLEAN); 
 		PROCEDURE ^ Discard*; 
 		PROCEDURE ^ Requested*(): BOOLEAN; 
-		PROCEDURE ^ Available*(): LONGINT; 
+		PROCEDURE ^ Available*(): SIGNED32; 
 		PROCEDURE ^ Finalize(ptr: ANY); 
 	END Connection; 
 VAR 
@@ -72,8 +72,8 @@ VAR
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ Finalize(obj: ANY; VAR cont: BOOLEAN); 
 	PROCEDURE ^ Cleanup; 
-	PROCEDURE ^ ReportState(state: LONGINT); 
+	PROCEDURE ^ ReportState(state: SIGNED32); 
 	PROCEDURE ^ Report(c: Connection); 
-	PROCEDURE ^ ReportResult(res: WORD); 
+	PROCEDURE ^ ReportResult(res: INTEGER); 
 BEGIN
 END TCP.

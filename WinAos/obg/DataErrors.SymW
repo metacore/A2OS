@@ -8,29 +8,29 @@ CONST
 	SepLen = 2; 
 TYPE 
 	Variable = RECORD 
-		adr, type, size, n, tdadr: LONGINT; 
+		adr, type, size, n, tdadr: SIGNED32; 
 	END; 
 VAR 
 	beepedError, beepedWarning: BOOLEAN; 
 	F: Files.File; 
 	W: Files.Writer; 
 
-	PROCEDURE ^ FindProc(refs: Modules.Bytes; modpc: LONGINT): LONGINT; 
-	PROCEDURE ^ WriteProc0(mod: Modules.Module; pc, fp: LONGINT; VAR refs: Modules.Bytes; VAR refpos, base: LONGINT); 
-	PROCEDURE ^ WriteProc(pc: LONGINT); 
-	PROCEDURE ^ WriteSimpleVar(adr, type, tdadr: LONGINT; VAR col: LONGINT); 
-	PROCEDURE ^ WriteVar(v: Variable; VAR col: LONGINT); 
-	PROCEDURE ^ GetNum(refs: Modules.Bytes; VAR i, num: LONGINT); 
-	PROCEDURE ^ NextVar(refs: Modules.Bytes; VAR refpos: LONGINT; base: LONGINT; VAR name: ARRAY OF CHAR; VAR v: Variable); 
-	PROCEDURE ^ Variables(refs: Modules.Bytes; refpos, base: LONGINT); 
-	PROCEDURE ^ InitVar(mod: Modules.Module; VAR refs: Modules.Bytes; VAR refpos, base: LONGINT); 
+	PROCEDURE ^ FindProc(refs: Modules.Bytes; modpc: SIGNED32): SIGNED32; 
+	PROCEDURE ^ WriteProc0(mod: Modules.Module; pc, fp: SIGNED32; VAR refs: Modules.Bytes; VAR refpos, base: SIGNED32); 
+	PROCEDURE ^ WriteProc(pc: SIGNED32); 
+	PROCEDURE ^ WriteSimpleVar(adr, type, tdadr: SIGNED32; VAR col: SIGNED32); 
+	PROCEDURE ^ WriteVar(v: Variable; VAR col: SIGNED32); 
+	PROCEDURE ^ GetNum(refs: Modules.Bytes; VAR i, num: SIGNED32); 
+	PROCEDURE ^ NextVar(refs: Modules.Bytes; VAR refpos: SIGNED32; base: SIGNED32; VAR name: ARRAY OF CHAR; VAR v: Variable); 
+	PROCEDURE ^ Variables(refs: Modules.Bytes; refpos, base: SIGNED32); 
+	PROCEDURE ^ InitVar(mod: Modules.Module; VAR refs: Modules.Bytes; VAR refpos, base: SIGNED32); 
 	PROCEDURE ^ ModuleState(mod: Modules.Module); 
-	PROCEDURE ^ StackTraceBack(eip, ebp: LONGINT; long: BOOLEAN); 
+	PROCEDURE ^ StackTraceBack(eip, ebp: SIGNED32; long: BOOLEAN); 
 	PROCEDURE ^ ErrorCaller(VAR m: Modules.Module; VAR pc, ebp, eip: NbrInt.Integer); 
 	PROCEDURE ^ WarningCaller(VAR m: Modules.Module; VAR pc, ebp, eip: NbrInt.Integer); 
 	PROCEDURE ^ IdentifyProcedure(VAR m: Modules.Module; pc: NbrInt.Integer; VAR module, type, proc: ARRAY OF CHAR); 
 	PROCEDURE ^ Location(module, type, proc: ARRAY OF CHAR); 
-	PROCEDURE ^ DetailedErrorReport(VAR m: Modules.Module; pc: LONGINT; eip, ebp: LONGINT); 
+	PROCEDURE ^ DetailedErrorReport(VAR m: Modules.Module; pc: SIGNED32; eip, ebp: SIGNED32); 
 	PROCEDURE ^ Error*(message: ARRAY OF CHAR); 
 	PROCEDURE ^ IntError*(int: NbrInt.Integer; message: ARRAY OF CHAR); 
 	PROCEDURE ^ RatError*(rat: NbrRat.Rational; message: ARRAY OF CHAR); 

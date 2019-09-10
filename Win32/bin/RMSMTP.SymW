@@ -17,7 +17,7 @@ TYPE
 	String* = Strings.String; 
 
 	PROCEDURE ^ Send*(context: Commands.Context); 
-	PROCEDURE ^ SendMessage*(message: IMAPClient.Message; CONST server, thisHost: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ SendMessage*(message: IMAPClient.Message; CONST server, thisHost: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ parse*(context: Commands.Context; VAR message: IMAPClient.Message); 
 	PROCEDURE ^ readRestOfLine*(context: Commands.Context): String; 
 	PROCEDURE ^ AddressToSMTPString(address: IMAPUtilities.Address; VAR string: String); 

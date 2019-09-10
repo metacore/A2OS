@@ -23,15 +23,15 @@ TYPE
 		lastKeys: SET; 
 		modifierKeys: SET; 
 		meta: BOOLEAN; 
-		fx, fy, inffx, inffy, factor, intfactor: REAL; 
+		fx, fy, inffx, inffy, factor, intfactor: FLOAT32; 
 
 		PROCEDURE ^  & New*(disp: Displays.Display); 
 		PROCEDURE ^ GetKeyState*(VAR state: SET); 
-		PROCEDURE ^ KeyEvent(ucs: LONGINT; flags: SET; keysym: LONGINT); 
+		PROCEDURE ^ KeyEvent(ucs: SIGNED32; flags: SET; keysym: SIGNED32); 
 		PROCEDURE ^ PointerEvent(x, y, z, dx, dy, dz: SIZE; keys: SET); 
 		PROCEDURE ^ ZoomToWindow(w: Window); 
 		PROCEDURE ^ SetInitialWindowBounds(w: Window); 
-		PROCEDURE ^ SetRange*(x, y, w, h: REAL; showTransition: BOOLEAN); 
+		PROCEDURE ^ SetRange*(x, y, w, h: FLOAT32; showTransition: BOOLEAN); 
 		PROCEDURE ^ Update*(r: Rectangle; top: Window); 
 		PROCEDURE ^ Refresh*(top: Window); 
 		PROCEDURE ^ GetWMCoordinates*(CONST r: Rect.Rectangle): Rect.Rectangle; 
@@ -40,7 +40,7 @@ TYPE
 
 	DirtyQ = OBJECT {EXCLUSIVE} 
 	VAR 
-		dirtyHead, dirtyTail: LONGINT; 
+		dirtyHead, dirtyTail: SIGNED32; 
 		dirtyBuf: ARRAY DirtyBufSize OF Rectangle; 
 		overflow: BOOLEAN; 
 
@@ -61,7 +61,7 @@ TYPE
 		patches: ARRAY CombineLookahead OF Rectangle; 
 		running: BOOLEAN; 
 		views: WM.ViewPort; 
-		kdprev: LONGINT; 
+		kdprev: SIGNED32; 
 		pointerKeys: SET; 
 		pointerOwner: Window; 
 		pointerX, pointerY: SIZE; 
@@ -86,7 +86,7 @@ TYPE
 		PROCEDURE ^ Remove*(w: Window); 
 		PROCEDURE ^ ToFront*(x: Window); 
 		PROCEDURE ^ ToBack*(x: Window); 
-		PROCEDURE ^ SetWindowFlag*(w: Window; flag: LONGINT; include: BOOLEAN); 
+		PROCEDURE ^ SetWindowFlag*(w: Window; flag: SIGNED32; include: BOOLEAN); 
 		PROCEDURE ^ SetWindowPos*(w: Window; x, y: SIZE); 
 		PROCEDURE ^ SetWindowSize*(w: Window; VAR width, height: SIZE); 
 		PROCEDURE ^ AddView*(v: WM.ViewPort); 
@@ -120,24 +120,24 @@ TYPE
 	VAR 
 		view: ViewPort; 
 		x, y, z: SIZE; 
-		threshold, speedup: LONGINT; 
+		threshold, speedup: SIGNED32; 
 		enableMMEmulation: BOOLEAN; 
-		lastTime: LONGINT; 
+		lastTime: SIGNED32; 
 		lastX, lastY: SIZE; 
 		prevKeys: SET; 
 		inDoubleClick: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(t, s: LONGINT); 
+		PROCEDURE ^  & Init*(t, s: SIGNED32); 
 		PROCEDURE ^ Handle*(VAR msg: Inputs.Message); 
 	END MouseObj; 
 
 	KeyboardObj = OBJECT {EXCLUSIVE} (Inputs.Sink)
 	VAR 
 		view: ViewPort; 
-		ch: LONGINT; 
+		ch: SIGNED32; 
 
 		PROCEDURE ^ Handle*(VAR msg: Inputs.Message); 
-		PROCEDURE ^ MapChars(VAR ch: LONGINT); 
+		PROCEDURE ^ MapChars(VAR ch: SIGNED32); 
 		PROCEDURE ^  & Init*; 
 	END KeyboardObj; 
 
@@ -152,28 +152,28 @@ TYPE
 	Fifi = OBJECT {EXCLUSIVE} 
 	VAR 
 		timer: Kernel.Timer; 
-		delay: LONGINT; 
+		delay: SIGNED32; 
 		time: Kernel.MilliTimer; 
 		alive, done: BOOLEAN; 
 
 		PROCEDURE ^ Cleanup; 
 		PROCEDURE ^ Done; 
 		PROCEDURE ^ Reset; 
-		PROCEDURE ^  & Init*(delay: LONGINT); 
+		PROCEDURE ^  & Init*(delay: SIGNED32); 
 	BEGIN{ACTIVE} 
 	END Fifi; 
 VAR 
-	DoubleClick: LONGINT; 
+	DoubleClick: SIGNED32; 
 	session: WindowManager; 
 	toucher: Toucher; 
 	defaultKeyboard: KeyboardObj; 
 	defaultMouse: MouseObj; 
-	CharToUnicode: ARRAY 256 OF LONGINT; 
+	CharToUnicode: ARRAY 256 OF SIGNED32; 
 
 	PROCEDURE ^ Bound(VAR x: SIZE; min, max: SIZE); 
 	PROCEDURE ^ ClipAtImage(VAR x: Rectangle; img: Raster.Image); 
-	PROCEDURE ^ FillSession(wm: WindowManager; bgColor: LONGINT; noPointer: BOOLEAN); 
-	PROCEDURE ^ Replace*(color: LONGINT; noPointer: BOOLEAN); 
+	PROCEDURE ^ FillSession(wm: WindowManager; bgColor: SIGNED32; noPointer: BOOLEAN); 
+	PROCEDURE ^ Replace*(color: SIGNED32; noPointer: BOOLEAN); 
 	PROCEDURE ^ InitCharMaps; 
 	PROCEDURE ^ CleanUp; 
 	PROCEDURE ^ Install*(context: Commands.Context); 

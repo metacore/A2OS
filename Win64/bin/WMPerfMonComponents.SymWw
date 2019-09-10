@@ -15,7 +15,7 @@ CONST
 	LineHeight* = 20; 
 	ButtonWidth* = 80; 
 	PerfViewFillColor = 1145324799; 
-	PerfViewColor = LONGINT(4278190335); 
+	PerfViewColor = SIGNED32(4278190335); 
 	UseSkinColors* = FALSE; 
 TYPE 
 	PluginContainer* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -26,15 +26,15 @@ TYPE
 		PROCEDURE ^ SetPluginHeights; 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ AlignSubComponents*; 
-		PROCEDURE ^ AddPlugin*(plugin: Plugins.Plugin; viewType: LONGINT); 
+		PROCEDURE ^ AddPlugin*(plugin: Plugins.Plugin; viewType: SIGNED32); 
 		PROCEDURE ^ LocatePlugins*(): BOOLEAN; 
 		PROCEDURE ^  & Init*; 
 	END PluginContainer; 
 
 	UpdateInfo = RECORD 
 		events: SET; 
-		perf: REAL; 
-		sampleInterval, sampleBufferSize, screenInterval: LONGINT; 
+		perf: FLOAT32; 
+		sampleInterval, sampleBufferSize, screenInterval: SIGNED32; 
 	END; 
 
 	SelectionComponent* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -50,15 +50,15 @@ TYPE
 		alive, dead, update: BOOLEAN; 
 
 		PROCEDURE ^ Resized*; 
-		PROCEDURE ^ CreatePluginWindows(viewType: LONGINT); 
+		PROCEDURE ^ CreatePluginWindows(viewType: SIGNED32); 
 		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
-		PROCEDURE ^ GetSampleParameters(VAR ui, bs, si: LONGINT); 
-		PROCEDURE ^ SetSampleParameters(ui, bs, si: LONGINT); 
+		PROCEDURE ^ GetSampleParameters(VAR ui, bs, si: SIGNED32); 
+		PROCEDURE ^ SetSampleParameters(ui, bs, si: SIGNED32); 
 		PROCEDURE ^ UpdateGrid; 
 		PROCEDURE ^ CreateSelectionPanel(): WMStandardComponents.GroupPanel; 
 		PROCEDURE ^ CreateBottomPanel(): WMStandardComponents.GroupPanel; 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ EventHandler(events: SET; perf: REAL); 
+		PROCEDURE ^ EventHandler(events: SET; perf: FLOAT32); 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ Update; 
 	BEGIN{ACTIVE} 
@@ -67,7 +67,7 @@ TYPE
 	Indicator* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
 	VAR 
 		value: ARRAY 128 OF CHAR; 
-		textColor: LONGINT; 
+		textColor: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ SetCaption*(CONST x: ARRAY OF CHAR); 
@@ -84,7 +84,7 @@ TYPE
 		PROCEDURE ^ InitView*; 
 		PROCEDURE ^ UpdateStats*(): BOOLEAN; 
 		PROCEDURE ^ Finalize*; 
-		PROCEDURE ^ ScaleDataset(scale: REAL; VAR dataset: WMDiagramComponents.Dataset); 
+		PROCEDURE ^ ScaleDataset(scale: FLOAT32; VAR dataset: WMDiagramComponents.Dataset); 
 		PROCEDURE ^ InitStats(dimensions: SIZE); 
 	END PluginView; 
 
@@ -105,9 +105,9 @@ TYPE
 		grid: WMStringGrids.StringGrid; 
 		ds: Plugins.DatasetDescriptor; 
 		spacings: WMGrids.Spacings; 
-		nofRows: LONGINT; 
+		nofRows: SIGNED32; 
 
-		PROCEDURE ^ NbrToStr(nbr: LONGREAL; VAR string: ARRAY OF CHAR); 
+		PROCEDURE ^ NbrToStr(nbr: FLOAT64; VAR string: ARRAY OF CHAR); 
 		PROCEDURE ^ UpdateGrid(sender, data: ANY); 
 		PROCEDURE ^ InitGrid; 
 		PROCEDURE ^ InitView*; 
@@ -119,7 +119,7 @@ TYPE
 	VAR 
 		barChart: WMDiagramComponents.BarChart; 
 		ds: Plugins.DatasetDescriptor; 
-		heights: POINTER TO ARRAY OF LONGREAL; 
+		heights: POINTER TO ARRAY OF FLOAT64; 
 
 		PROCEDURE ^ InitView*; 
 		PROCEDURE ^ UpdateChart(sender, data: ANY); 
@@ -135,7 +135,7 @@ TYPE
 		pluginInstance: Plugins.Plugin; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ InitDiagram(pluginInstance: Plugins.Plugin; index: LONGINT); 
+		PROCEDURE ^ InitDiagram(pluginInstance: Plugins.Plugin; index: SIGNED32); 
 		PROCEDURE ^ InstallPlugin; 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
@@ -194,17 +194,17 @@ VAR
 	PrototypePlugin: WMProperties.StringProperty; 
 	PrototypeShowValues: WMProperties.BooleanProperty; 
 	StrPluginContainer, StrSelectionComponent, StrPluginView, StrPluginGraphView, StrPluginGridView, StrPerfMonSimpleGraph, StrYes, StrNo, StrNotAvailable, StrIndicator, StrColor, StrName, StrCurrent, StrMin, StrMax, StrAvg, StrSum, StrMode, StrHidden, StrNormal: Strings.String; 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ GenPerfMonSimpleGraph*(): XML.Element; 
 	PROCEDURE ^ InitStrings; 
 	PROCEDURE ^ InitPrototypes; 
 	PROCEDURE ^ NewButton*(CONST caption: ARRAY OF CHAR; handler: WMEvents.EventListener): WMStandardComponents.Button; 
-	PROCEDURE ^ NewGroupPanel*(CONST caption: ARRAY OF CHAR; alignment, height: LONGINT): WMStandardComponents.GroupPanel; 
-	PROCEDURE ^ NewIndicator*(CONST caption: ARRAY OF CHAR; alignment, width, height: LONGINT): Indicator; 
-	PROCEDURE ^ NewLabel*(CONST caption: ARRAY OF CHAR; alignment, width, height: LONGINT): WMStandardComponents.Label; 
-	PROCEDURE ^ NewTextField*(width: LONGINT): WMEditors.TextField; 
-	PROCEDURE ^ NewPanel*(alignment, width, height: LONGINT): WMStandardComponents.Panel; 
+	PROCEDURE ^ NewGroupPanel*(CONST caption: ARRAY OF CHAR; alignment, height: SIGNED32): WMStandardComponents.GroupPanel; 
+	PROCEDURE ^ NewIndicator*(CONST caption: ARRAY OF CHAR; alignment, width, height: SIGNED32): Indicator; 
+	PROCEDURE ^ NewLabel*(CONST caption: ARRAY OF CHAR; alignment, width, height: SIGNED32): WMStandardComponents.Label; 
+	PROCEDURE ^ NewTextField*(width: SIGNED32): WMEditors.TextField; 
+	PROCEDURE ^ NewPanel*(alignment, width, height: SIGNED32): WMStandardComponents.Panel; 
 	PROCEDURE ^ RestorePlugin*(c: WMRestorable.Context); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 

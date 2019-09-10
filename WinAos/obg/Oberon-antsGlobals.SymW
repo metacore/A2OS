@@ -2,7 +2,7 @@ MODULE antsGlobals IN Oberon;
 	IMPORT Objects, antsPortability, aM := antsMessages, vyHostStrings;
 CONST 
 TYPE 
-	Parameters* = POINTER TO ARRAY OF LONGREAL; 
+	Parameters* = POINTER TO ARRAY OF FLOAT64; 
 
 	ParameterNames* = POINTER TO ARRAY OF ARRAY 64 OF CHAR; 
 

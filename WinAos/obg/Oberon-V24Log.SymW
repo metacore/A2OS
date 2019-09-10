@@ -7,12 +7,12 @@ CONST
 VAR 
 	W: Texts.Writer; 
 	T: Oberon.Task; 
-	res: WORD; 
+	res: INTEGER; 
 	last: CHAR; 
-	Port: LONGINT; 
+	Port: SIGNED32; 
 
 	PROCEDURE ^ Poller(me: Oberon.Task); 
-	PROCEDURE ^ GetPar(VAR port, bps, data, parity, stop: LONGINT); 
+	PROCEDURE ^ GetPar(VAR port, bps, data, parity, stop: SIGNED32); 
 	PROCEDURE ^ Start*; 
 	PROCEDURE ^ stop; 
 	PROCEDURE ^ Stop*; 

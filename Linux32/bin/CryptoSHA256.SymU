@@ -5,7 +5,7 @@ CONST
 TYPE 
 	Hash* = OBJECT (Hashes.Hash)
 	VAR 
-		hash: ARRAY 8 OF LONGINT; 
+		hash: ARRAY 8 OF SIGNED32; 
 		Nl, Nh: SIZE; 
 		cdata: ARRAY BlockSize OF CHAR; 
 		cn: SIZE; 
@@ -18,10 +18,10 @@ TYPE
 		PROCEDURE ^ GetHash*(VAR buf: ARRAY OF CHAR; pos: SIZE); 
 	END Hash; 
 VAR 
-	K256: ARRAY 64 OF LONGINT; 
+	K256: ARRAY 64 OF SIGNED32; 
 
 	PROCEDURE ^ NewHash*(): Hashes.Hash; 
-	PROCEDURE  - Sigma0Maj(px, py, pz: LONGINT): LONGINT;
+	PROCEDURE  - Sigma0Maj(px, py, pz: SIGNED32): SIGNED32;
 	VAR 
 		x, y, z, a, b: SET32; 
 	BEGIN
@@ -30,9 +30,9 @@ VAR
 		z := S.VAL(SET32, pz); 
 		a := ((ROT(x, 30) / ROT(x, 19)) / ROT(x, 10)); 
 		b := (((x * y) / (x * z)) / (y * z)); 
-		RETURN (S.VAL(LONGINT, a) + S.VAL(LONGINT, b))
+		RETURN (S.VAL(SIGNED32, a) + S.VAL(SIGNED32, b))
 	END Sigma0Maj; 
-	PROCEDURE  - Sigma1Ch(px, py, pz: LONGINT): LONGINT;
+	PROCEDURE  - Sigma1Ch(px, py, pz: SIGNED32): SIGNED32;
 	VAR 
 		x, y, z, a, b: SET32; 
 	BEGIN
@@ -41,21 +41,21 @@ VAR
 		z := S.VAL(SET32, pz); 
 		a := ((ROT(x, 26) / ROT(x, 21)) / ROT(x, 7)); 
 		b := ((x * y) / ( -x * z)); 
-		RETURN (S.VAL(LONGINT, a) + S.VAL(LONGINT, b))
+		RETURN (S.VAL(SIGNED32, a) + S.VAL(SIGNED32, b))
 	END Sigma1Ch; 
-	PROCEDURE  - sigma0(px: LONGINT): LONGINT;
+	PROCEDURE  - sigma0(px: SIGNED32): SIGNED32;
 	VAR 
 		x: SET32; 
 	BEGIN
 		x := S.VAL(SET32, px); 
-		RETURN S.VAL(LONGINT, ((ROT(x, 25) / ROT(x, 14)) / LSH(x,  -3)))
+		RETURN S.VAL(SIGNED32, ((ROT(x, 25) / ROT(x, 14)) / LSH(x,  -3)))
 	END sigma0; 
-	PROCEDURE  - sigma1(px: LONGINT): LONGINT;
+	PROCEDURE  - sigma1(px: SIGNED32): SIGNED32;
 	VAR 
 		x: SET32; 
 	BEGIN
 		x := S.VAL(SET32, px); 
-		RETURN S.VAL(LONGINT, ((ROT(x, 15) / ROT(x, 13)) / LSH(x,  -10)))
+		RETURN S.VAL(SIGNED32, ((ROT(x, 15) / ROT(x, 13)) / LSH(x,  -10)))
 	END sigma1; 
 	PROCEDURE ^ InitializeK; 
 BEGIN

@@ -1,25 +1,25 @@
 MODULE antsDirSet IN Oberon;
 	IMPORT Math := MathL IN A2;
 TYPE 
-	VectorFunction* = PROCEDURE (VAR A: ARRAY OF LONGREAL):LONGREAL; 
+	VectorFunction* = PROCEDURE (VAR A: ARRAY OF FLOAT64):FLOAT64; 
 
-	Func = PROCEDURE (x: LONGREAL):LONGREAL; 
+	Func = PROCEDURE (x: FLOAT64):FLOAT64; 
 VAR 
-	tempXI: POINTER TO ARRAY OF ARRAY OF LONGREAL; 
-	PT, PTT, XIT: POINTER TO ARRAY OF LONGREAL; 
-	XT: POINTER TO ARRAY OF LONGREAL; 
-	LinMinPCom, LinMinXCom: POINTER TO ARRAY OF LONGREAL; 
+	tempXI: POINTER TO ARRAY OF ARRAY OF FLOAT64; 
+	PT, PTT, XIT: POINTER TO ARRAY OF FLOAT64; 
+	XT: POINTER TO ARRAY OF FLOAT64; 
+	LinMinPCom, LinMinXCom: POINTER TO ARRAY OF FLOAT64; 
 	rcheck*: BOOLEAN; 
 	VFunc: VectorFunction; 
 
-	PROCEDURE ^ Brent*(ax, bx, cx: LONGREAL; func: Func; tol: LONGREAL; VAR xmin: LONGREAL): LONGREAL; 
-	PROCEDURE ^ Golden*(ax, bx, cx: LONGREAL; func: Func; tol: LONGREAL; VAR xmin: LONGREAL): LONGREAL; 
-	PROCEDURE ^ MnBrak*(VAR ax, bx, cx, fa, fb, fc: LONGREAL; func: Func); 
-	PROCEDURE ^ F1Dim*(x: LONGREAL; VAR LinMinPCom, LinMinXCom: ARRAY OF LONGREAL; fnc: VectorFunction): LONGREAL; 
-	PROCEDURE ^ func(x: LONGREAL): LONGREAL; 
-	PROCEDURE ^ LinMin*(VAR P, XI: ARRAY OF LONGREAL; VAR fret: LONGREAL; vf: VectorFunction); 
-	PROCEDURE ^ Powell*(VAR P: ARRAY OF LONGREAL; VAR XI: ARRAY OF ARRAY OF LONGREAL; ftol: LONGREAL; VAR iter: LONGINT; VAR fret: LONGREAL; fncP: VectorFunction; range: LONGREAL); 
-	PROCEDURE ^ EasyMinimize*(VAR P: ARRAY OF LONGREAL; VAR fret: LONGREAL; ftol: LONGREAL; fncP: VectorFunction; init: BOOLEAN); 
-	PROCEDURE ^ mfncP(VAR P: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ Brent*(ax, bx, cx: FLOAT64; func: Func; tol: FLOAT64; VAR xmin: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Golden*(ax, bx, cx: FLOAT64; func: Func; tol: FLOAT64; VAR xmin: FLOAT64): FLOAT64; 
+	PROCEDURE ^ MnBrak*(VAR ax, bx, cx, fa, fb, fc: FLOAT64; func: Func); 
+	PROCEDURE ^ F1Dim*(x: FLOAT64; VAR LinMinPCom, LinMinXCom: ARRAY OF FLOAT64; fnc: VectorFunction): FLOAT64; 
+	PROCEDURE ^ func(x: FLOAT64): FLOAT64; 
+	PROCEDURE ^ LinMin*(VAR P, XI: ARRAY OF FLOAT64; VAR fret: FLOAT64; vf: VectorFunction); 
+	PROCEDURE ^ Powell*(VAR P: ARRAY OF FLOAT64; VAR XI: ARRAY OF ARRAY OF FLOAT64; ftol: FLOAT64; VAR iter: SIGNED32; VAR fret: FLOAT64; fncP: VectorFunction; range: FLOAT64); 
+	PROCEDURE ^ EasyMinimize*(VAR P: ARRAY OF FLOAT64; VAR fret: FLOAT64; ftol: FLOAT64; fncP: VectorFunction; init: BOOLEAN); 
+	PROCEDURE ^ mfncP(VAR P: ARRAY OF FLOAT64): FLOAT64; 
 BEGIN
 END antsDirSet.

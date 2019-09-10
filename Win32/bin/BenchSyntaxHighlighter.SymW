@@ -9,7 +9,7 @@ CONST
 	PROCEDURE ^ RebuildRegions(reader: Texts.TextReader; highlighter: SyntaxHighlighter.Highlighter; nofIterations: SIZE; out: Streams.Writer); 
 	PROCEDURE ^ RegionLookup(reader: Texts.TextReader; highlighter: SyntaxHighlighter.Highlighter; nofIterations: SIZE; out: Streams.Writer); 
 	PROCEDURE ^ Full(reader: Texts.TextReader; highlighter: SyntaxHighlighter.Highlighter; nofIterations: SIZE; out: Streams.Writer); 
-	PROCEDURE ^ Indent(writer: Streams.Writer; width: LONGINT); 
+	PROCEDURE ^ Indent(writer: Streams.Writer; width: SIGNED32); 
 	PROCEDURE ^ Bench*(context: Commands.Context); 
 	PROCEDURE ^ TestScanner*(context: Commands.Context); 
 BEGIN

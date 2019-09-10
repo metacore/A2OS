@@ -76,37 +76,37 @@ TYPE
 
 	InstrDesc = RECORD 
 		name: Mnemo; 
-		start, end: INTEGER; 
+		start, end: SIGNED16; 
 		target: SET; 
 	END; 
 
 	OpCode = RECORD 
-		op: ARRAY 3 OF INTEGER; 
-		op0, op1, op2: INTEGER; 
-		opc: INTEGER; 
-		reg: INTEGER; 
+		op: ARRAY 3 OF SIGNED16; 
+		op0, op1, op2: SIGNED16; 
+		opc: SIGNED16; 
+		reg: SIGNED16; 
 	END; 
 VAR 
 	OpTab: POINTER TO ARRAY OF OpCode; 
-	OpTabN: INTEGER; 
+	OpTabN: SIGNED16; 
 	InstrTab: POINTER TO ARRAY OF InstrDesc; 
-	OpTabLen, InstrTabLen: INTEGER; 
-	Clash: ARRAY 32 OF LONGINT; 
-	InstrCount, Average: LONGINT; 
+	OpTabLen, InstrTabLen: SIGNED16; 
+	Clash: ARRAY 32 OF SIGNED32; 
+	InstrCount, Average: SIGNED32; 
 	Docu: BOOLEAN; 
 	W: Texts.Writer; 
 
 	PROCEDURE ^ Message(CONST str: ARRAY OF CHAR); 
-	PROCEDURE ^ IntToHexStr(h, width: LONGINT; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ DumpMode(VAR W: Texts.Writer; mode: INTEGER); 
-	PROCEDURE ^ HashFn(CONST name: ARRAY OF CHAR; VAR k, n: INTEGER); 
-	PROCEDURE ^ FindInstruction(CONST name: ARRAY OF CHAR; VAR inx: INTEGER); 
-	PROCEDURE ^ InsertMnemo(CONST name: ARRAY OF CHAR; VAR k: INTEGER; target: SET); 
+	PROCEDURE ^ IntToHexStr(h, width: SIGNED32; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ DumpMode(VAR W: Texts.Writer; mode: SIGNED16); 
+	PROCEDURE ^ HashFn(CONST name: ARRAY OF CHAR; VAR k, n: SIGNED16); 
+	PROCEDURE ^ FindInstruction(CONST name: ARRAY OF CHAR; VAR inx: SIGNED16); 
+	PROCEDURE ^ InsertMnemo(CONST name: ARRAY OF CHAR; VAR k: SIGNED16; target: SET); 
 	PROCEDURE ^ InsertAlias(CONST name, alias: ARRAY OF CHAR); 
-	PROCEDURE ^ InsertOp3Ext(idx, dest, src, o3, op0, op1, op3, opc, om: INTEGER); 
-	PROCEDURE ^ InsertOp3(idx, dest, src, o3, op0, op1, opc, om: INTEGER); 
-	PROCEDURE ^ InsertOpExt(idx, dest, src, op0, op1, op2, opc, om: INTEGER); 
-	PROCEDURE ^ InsertOp(idx, dest, src, op0, op1, opc, om: INTEGER); 
+	PROCEDURE ^ InsertOp3Ext(idx, dest, src, o3, op0, op1, op3, opc, om: SIGNED16); 
+	PROCEDURE ^ InsertOp3(idx, dest, src, o3, op0, op1, opc, om: SIGNED16); 
+	PROCEDURE ^ InsertOpExt(idx, dest, src, op0, op1, op2, opc, om: SIGNED16); 
+	PROCEDURE ^ InsertOp(idx, dest, src, op0, op1, opc, om: SIGNED16); 
 	PROCEDURE ^ InsertFloatInstr1; 
 	PROCEDURE ^ InsertFloatInstr2; 
 	PROCEDURE ^ InsertInstr1; 
@@ -118,7 +118,7 @@ VAR
 	PROCEDURE ^ InsertSSE2; 
 	PROCEDURE ^ InsertSSE3; 
 	PROCEDURE ^ InsertSSE4; 
-	PROCEDURE ^ Insert(nofInstr, nofOps: INTEGER); 
+	PROCEDURE ^ Insert(nofInstr, nofOps: SIGNED16); 
 	PROCEDURE ^ FindSize*; 
 	PROCEDURE ^ FillTable*; 
 	PROCEDURE ^ ExportTables*; 

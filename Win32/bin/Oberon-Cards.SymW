@@ -10,7 +10,7 @@ TYPE
 
 	CardDesc* = RECORD 
 		next*, prev*: Card; 
-		suit*, nr*: INTEGER; 
+		suit*, nr*: SIGNED16; 
 		visible*: BOOLEAN; 
 	END; 
 
@@ -18,7 +18,7 @@ TYPE
 
 	MoveDesc* = RECORD 
 		next: Move; 
-		time: LONGINT; 
+		time: SIGNED32; 
 	END; 
 
 	Stack* = POINTER TO StackDesc; 
@@ -29,7 +29,7 @@ TYPE
 		move: Move; 
 		tail*: Card; 
 		do*: Methods; 
-		bgNr*: INTEGER; 
+		bgNr*: SIGNED16; 
 	END; 
 
 	MethodBlock* = RECORD 
@@ -37,7 +37,7 @@ TYPE
 		dropCard*: PROCEDURE (S: Stack; C: Card); 
 		moveCard*: PROCEDURE (self, to: Stack; C: Card; undo: BOOLEAN); 
 		undoMove*: PROCEDURE (S: Stack; M: Move); 
-		restoreStack*: PROCEDURE (S: Stack; M: Display3.Mask; x, y, w, h: INTEGER); 
+		restoreStack*: PROCEDURE (S: Stack; M: Display3.Mask; x, y, w, h: SIGNED16); 
 		trackMouse*: PROCEDURE (S: Stack; VAR M: Oberon.InputMsg); 
 	END; 
 
@@ -53,23 +53,23 @@ TYPE
 	END; 
 
 	UndoMsg* = RECORD (Display.FrameMsg)
-		time: LONGINT; 
+		time: SIGNED32; 
 		stack: Stack; 
 	END; 
 
 	BGMsg* = RECORD (Display.FrameMsg)
-		bgNr*: INTEGER; 
+		bgNr*: SIGNED16; 
 	END; 
 VAR 
 	methods*: Methods; 
-	seed: LONGINT; 
+	seed: SIGNED32; 
 	cardPicts: Pictures.Picture; 
 
-	PROCEDURE ^ Random*(range: LONGINT): LONGINT; 
+	PROCEDURE ^ Random*(range: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Shuffle*(tail: Card); 
-	PROCEDURE ^ TrackMove*(VAR M: Oberon.InputMsg; x, y: INTEGER; self: Stack; card: Card; draw, fade: PROCEDURE (x, y: INTEGER; card: Card)); 
-	PROCEDURE ^ DrawCard*(R: Display3.Mask; card: Card; x, y, w, h, bgNr: INTEGER); 
-	PROCEDURE ^ NewCard*(suit, nr: INTEGER; visible: BOOLEAN): Card; 
+	PROCEDURE ^ TrackMove*(VAR M: Oberon.InputMsg; x, y: SIGNED16; self: Stack; card: Card; draw, fade: PROCEDURE (x, y: SIGNED16; card: Card)); 
+	PROCEDURE ^ DrawCard*(R: Display3.Mask; card: Card; x, y, w, h, bgNr: SIGNED16); 
+	PROCEDURE ^ NewCard*(suit, nr: SIGNED16; visible: BOOLEAN): Card; 
 	PROCEDURE ^ CloneCard*(card: Card): Card; 
 	PROCEDURE ^ WriteCard*(VAR R: Files.Rider; card: Card); 
 	PROCEDURE ^ ReadCard*(VAR R: Files.Rider; VAR card: Card); 
@@ -83,7 +83,7 @@ VAR
 	PROCEDURE ^ DropCard(S: Stack; card: Card); 
 	PROCEDURE ^ MoveCard(self, to: Stack; card: Card; undo: BOOLEAN); 
 	PROCEDURE ^ UndoMove(S: Stack; M: Move); 
-	PROCEDURE ^ DrawStack(S: Stack; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DrawStack(S: Stack; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ TrackMouse(S: Stack; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ StackAttr(S: Stack; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ PrintStack(S: Stack; VAR M: Display.DisplayMsg); 

@@ -1,14 +1,14 @@
 MODULE vyChiSquare IN Oberon;
 	IMPORT MathL IN A2;
 CONST 
-	INF = MAX(LONGREAL); 
+	INF = MAX(FLOAT64); 
 TYPE 
-	extended = LONGREAL; 
+	extended = FLOAT64; 
 
-	integer = LONGINT; 
+	integer = SIGNED32; 
 
 	PROCEDURE ^ SChiSq*(n: integer; x: extended): extended; 
 	PROCEDURE ^ PFChiSq*(n: integer; x: extended): extended; 
-	PROCEDURE ^ chs1*(bins: ARRAY OF LONGINT; ebins: ARRAY OF LONGREAL; nbins: LONGINT; knstrn: LONGINT; VAR df, chsq, prob: LONGREAL); 
+	PROCEDURE ^ chs1*(bins: ARRAY OF SIGNED32; ebins: ARRAY OF FLOAT64; nbins: SIGNED32; knstrn: SIGNED32; VAR df, chsq, prob: FLOAT64); 
 BEGIN
 END vyChiSquare.

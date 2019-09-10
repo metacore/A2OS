@@ -17,14 +17,14 @@ CONST
 TYPE 
 	Name* = ARRAY 32 OF CHAR; 
 
-	SREAL* = REAL; 
+	SREAL* = FLOAT32; 
 
 	PT* = RECORD 
 		x*, y*, z*: SREAL; 
 	END; 
 
 	IPT* = RECORD 
-		i*, j*, k*: INTEGER; 
+		i*, j*, k*: SIGNED16; 
 	END; 
 
 	BOX* = RECORD 
@@ -32,7 +32,7 @@ TYPE
 	END; 
 
 	Aperture* = RECORD 
-		width*, height*: REAL; 
+		width*, height*: FLOAT32; 
 	END; 
 
 	COLOR* = RECORD 
@@ -54,11 +54,11 @@ TYPE
 		theta*, phi*: SREAL; 
 		xyz*, dxyz*, ddxyz*, lxyz*, origin*: PT; 
 		r*, g*, b*, ra*, ga*, ba*, a*: SREAL; 
-		i*, j*, k*, recursion*: INTEGER; 
+		i*, j*, k*, recursion*: SIGNED16; 
 		scale*: SREAL; 
 		length*: SREAL; 
 		changed*, traced*: BOOLEAN; 
-		face*: INTEGER; 
+		face*: SIGNED16; 
 		normal*: PT; 
 	END; 
 
@@ -73,7 +73,7 @@ TYPE
 	Voxel* = OBJECT (V)
 	VAR 
 		passable*: BOOLEAN; 
-		rlimit*: INTEGER; 
+		rlimit*: SIGNED16; 
 		complex*: BOOLEAN; 
 
 		PROCEDURE ^ Shade*(VAR ray: Ray); 
@@ -82,9 +82,9 @@ TYPE
 		PROCEDURE ^ tick*; 
 		PROCEDURE ^ move*(VAR dx, dy, dz: SREAL; VAR blocked: BOOLEAN); 
 		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
-		PROCEDURE ^ stroke*(p: PT; level: LONGINT; normal: PT; color: COLOR; mirror: BOOLEAN); 
-		PROCEDURE ^ strokevoxel*(p: PT; level: LONGINT; voxel: Voxel); 
-		PROCEDURE ^ linevoxel*(a, b: PT; level: LONGINT; v: Voxel); 
+		PROCEDURE ^ stroke*(p: PT; level: SIGNED32; normal: PT; color: COLOR; mirror: BOOLEAN); 
+		PROCEDURE ^ strokevoxel*(p: PT; level: SIGNED32; voxel: Voxel); 
+		PROCEDURE ^ linevoxel*(a, b: PT; level: SIGNED32; v: Voxel); 
 		PROCEDURE ^ setcamera*(x, y, z: SREAL); 
 		PROCEDURE ^ deathray*(VAR ray: Ray); 
 		PROCEDURE ^ mutateray*(ray: Ray); 
@@ -98,10 +98,10 @@ TYPE
 	END Voxel; 
 VAR 
 	voxelist: ARRAY 100 OF V; 
-	fog*: REAL; 
-	rlimit*: INTEGER; 
-	iterlimit*: LONGINT; 
-	frame*: LONGINT; 
+	fog*: FLOAT32; 
+	rlimit*: SIGNED16; 
+	iterlimit*: SIGNED32; 
+	frame*: SIGNED32; 
 	img*: Raster.Image; 
 	copy*: Raster.Mode; 
 	light*: Light; 

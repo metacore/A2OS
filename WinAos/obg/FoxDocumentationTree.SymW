@@ -39,14 +39,14 @@ TYPE
 	Paragraph* = OBJECT 
 	VAR 
 		type-: ParagraphType; 
-		level-: LONGINT; 
+		level-: SIGNED32; 
 		text*: Text; 
 		description-: Text; 
 		label*: Strings.String; 
 
 		PROCEDURE ^ SetLabel*(label: String); 
 		PROCEDURE ^  & InitParagraph*(type: ParagraphType); 
-		PROCEDURE ^ SetLevel*(level: LONGINT); 
+		PROCEDURE ^ SetLevel*(level: SIGNED32); 
 	END Paragraph; 
 
 	Paragraphs* = OBJECT (Basic.List)
@@ -60,21 +60,21 @@ TYPE
 
 	Section* = OBJECT 
 	VAR 
-		level-: LONGINT; 
+		level-: SIGNED32; 
 		title-: Text; 
 		contents-: Paragraphs; 
 		label-: String; 
 
-		PROCEDURE ^  & InitSection*(level: LONGINT); 
+		PROCEDURE ^  & InitSection*(level: SIGNED32); 
 		PROCEDURE ^ SetLabel*(label: String); 
 		PROCEDURE ^ SetContents*(paragraphs: Paragraphs); 
 		PROCEDURE ^ WriteLabel*(CONST l: ARRAY OF CHAR); 
-		PROCEDURE ^ WriteHeading*(level: LONGINT; CONST string: ARRAY OF CHAR); 
+		PROCEDURE ^ WriteHeading*(level: SIGNED32; CONST string: ARRAY OF CHAR); 
 	END Section; 
 
 	Sections* = OBJECT (Basic.List)
 
-		PROCEDURE ^ AppendNew*(level: LONGINT): Section; 
+		PROCEDURE ^ AppendNew*(level: SIGNED32): Section; 
 		PROCEDURE ^ AddSection*(x: Section); 
 		PROCEDURE ^ GetSection*(index: SIZE): Section; 
 		PROCEDURE ^ Last*(): Section; 
@@ -107,8 +107,8 @@ TYPE
 	PROCEDURE ^ NewTextElement*(type: ElementType): TextElement; 
 	PROCEDURE ^ NewParagraph*(type: ParagraphType): Paragraph; 
 	PROCEDURE ^ NewParagraphs*(): Paragraphs; 
-	PROCEDURE ^ NewSection*(level: LONGINT): Section; 
-	PROCEDURE ^ NewSections*(level: LONGINT): Sections; 
+	PROCEDURE ^ NewSection*(level: SIGNED32): Section; 
+	PROCEDURE ^ NewSections*(level: SIGNED32): Sections; 
 	PROCEDURE ^ NewDocument*(): Document; 
 	PROCEDURE ^ Test; 
 BEGIN

@@ -14,7 +14,7 @@ TYPE
 	VAR 
 		arabicButton, russianButton, ukrainianButton, armenianButton, hebrewButton, pinyinButton, unicodeButton, noIMEButton, switchIMEButton, utfModeButton: WMStandardComponents.Button; 
 		currentIME: ARRAY 32 OF CHAR; 
-		currentUtfState: LONGINT; 
+		currentUtfState: SIGNED32; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
@@ -27,7 +27,7 @@ TYPE
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	currentWindow: Window; 
 
 	PROCEDURE ^ ChangeAppearance*; 

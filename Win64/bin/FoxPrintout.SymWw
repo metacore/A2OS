@@ -10,14 +10,14 @@ TYPE
 	Printer* = OBJECT (SyntaxTree.Visitor)
 	VAR 
 		w-: Basic.Writer; 
-		mode: LONGINT; 
+		mode: SIGNED32; 
 		singleStatement: BOOLEAN; 
 		currentScope: SyntaxTree.Scope; 
 		ws: Streams.StringWriter; 
 		info: BOOLEAN; 
-		case: LONGINT; 
+		case: SIGNED32; 
 		useCase: BOOLEAN; 
-		alertCount, commentCount: LONGINT; 
+		alertCount, commentCount: SIGNED32; 
 		fingerprinter: Fingerprinter.Fingerprinter; 
 
 		PROCEDURE ^ Small(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR); 
@@ -56,7 +56,7 @@ TYPE
 		PROCEDURE ^ VisitRecordType*(x: SyntaxTree.RecordType); 
 		PROCEDURE ^ Flag(identifier: SyntaxTree.Identifier; VAR first: BOOLEAN); 
 		PROCEDURE ^ FlagEnd(first: BOOLEAN); 
-		PROCEDURE ^ Value(identifier: SyntaxTree.Identifier; value: HUGEINT; VAR first: BOOLEAN); 
+		PROCEDURE ^ Value(identifier: SyntaxTree.Identifier; value: SIGNED64; VAR first: BOOLEAN); 
 		PROCEDURE ^ VisitProcedureType*(x: SyntaxTree.ProcedureType); 
 		PROCEDURE ^ ExpressionList(x: SyntaxTree.ExpressionList); 
 		PROCEDURE ^ Expression*(x: SyntaxTree.Expression); 
@@ -87,12 +87,12 @@ TYPE
 		PROCEDURE ^ VisitBuiltinCallDesignator*(x: SyntaxTree.BuiltinCallDesignator); 
 		PROCEDURE ^ VisitValue*(x: SyntaxTree.Value); 
 		PROCEDURE ^ VisitBooleanValue*(x: SyntaxTree.BooleanValue); 
-		PROCEDURE ^ Hex(x: HUGEINT); 
+		PROCEDURE ^ Hex(x: SIGNED64); 
 		PROCEDURE ^ VisitIntegerValue*(x: SyntaxTree.IntegerValue); 
 		PROCEDURE ^ VisitCharacterValue*(x: SyntaxTree.CharacterValue); 
 		PROCEDURE ^ VisitSetValue*(x: SyntaxTree.SetValue); 
 		PROCEDURE ^ VisitMathArrayValue*(x: SyntaxTree.MathArrayValue); 
-		PROCEDURE ^ FormatedFloat(value: LONGREAL; subtype: LONGINT); 
+		PROCEDURE ^ FormatedFloat(value: FLOAT64; subtype: SIGNED32); 
 		PROCEDURE ^ VisitRealValue*(x: SyntaxTree.RealValue); 
 		PROCEDURE ^ VisitComplexValue*(x: SyntaxTree.ComplexValue); 
 		PROCEDURE ^ VisitStringValue*(x: SyntaxTree.StringValue); 
@@ -156,12 +156,12 @@ TYPE
 		PROCEDURE ^ TemplateParameter(x: SyntaxTree.TemplateParameter); 
 		PROCEDURE ^ Module*(x: SyntaxTree.Module); 
 		PROCEDURE ^ SingleStatement*(b: BOOLEAN); 
-		PROCEDURE ^  & Init*(w: Streams.Writer; mode: LONGINT; info: BOOLEAN); 
+		PROCEDURE ^  & Init*(w: Streams.Writer; mode: SIGNED32; info: BOOLEAN); 
 	END Printer; 
 VAR 
 	debug: Printer; 
 
-	PROCEDURE ^ NewPrinter*(w: Streams.Writer; mode: LONGINT; info: BOOLEAN): Printer; 
+	PROCEDURE ^ NewPrinter*(w: Streams.Writer; mode: SIGNED32; info: BOOLEAN): Printer; 
 	PROCEDURE ^ Info*(CONST info: ARRAY OF CHAR; a: ANY); 
 	PROCEDURE ^ Init; 
 BEGIN

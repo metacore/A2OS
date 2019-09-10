@@ -2,7 +2,7 @@ MODULE CryptoTestHMAC;
 	IMPORT CryptoHMAC, Utils := CryptoUtils, Out := KernelLog;
 CONST 
 
-	PROCEDURE ^ DoTest(modname, data, key, expDigest: ARRAY OF CHAR; dataLen, keyLen: LONGINT); 
+	PROCEDURE ^ DoTest(modname, data, key, expDigest: ARRAY OF CHAR; dataLen, keyLen: SIGNED32); 
 	PROCEDURE ^ ConcatenateTest(modname: ARRAY OF CHAR); 
 	PROCEDURE ^ Test1MD5*; 
 	PROCEDURE ^ Test1SHA1*; 

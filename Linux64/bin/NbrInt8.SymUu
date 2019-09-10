@@ -2,7 +2,7 @@ MODULE NbrInt8;
 	IMPORT Streams;
 CONST 
 TYPE 
-	Integer* = SHORTINT; 
+	Integer* = SIGNED8; 
 VAR 
 	MinNbr-, MaxNbr-: Integer; 
 

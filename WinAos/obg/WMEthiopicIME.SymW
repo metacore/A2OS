@@ -5,17 +5,17 @@ CONST
 TYPE 
 	IME* = OBJECT {EXCLUSIVE} (WMInputMethods.IME)
 	VAR 
-		cons, vow: LONGINT; 
+		cons, vow: SIGNED32; 
 		ucs0: SIZE; 
-		geez: LONGINT; 
+		geez: SIGNED32; 
 
 		PROCEDURE ^ GetName*(): Strings.String; 
 		PROCEDURE ^ Reset; 
-		PROCEDURE ^ Remap(ucs1: LONGINT): LONGINT; 
+		PROCEDURE ^ Remap(ucs1: SIGNED32): SIGNED32; 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
 	END IME; 
 VAR 
-	i: LONGINT; 
+	i: SIGNED32; 
 	done: BOOLEAN; 
 
 	PROCEDURE ^ Install*; 

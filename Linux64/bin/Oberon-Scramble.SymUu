@@ -18,29 +18,29 @@ TYPE
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
 		pict: Pictures.Picture; 
-		n, m: INTEGER; 
+		n, m: SIGNED16; 
 		arrange: ARRAY MaxN OF ARRAY MaxM OF RECORD 
-			x, y: INTEGER; 
+			x, y: SIGNED16; 
 		END; 
 		empty: RECORD 
-			x, y: INTEGER; 
+			x, y: SIGNED16; 
 		END; 
 		focus, done, num: BOOLEAN; 
 	END; 
 
 	UpdateMsg = RECORD (Display.FrameMsg)
-		i0, i1, j0, j1: INTEGER; 
+		i0, i1, j0, j1: SIGNED16; 
 	END; 
 VAR 
 	W: Texts.Writer; 
 
-	PROCEDURE ^ CalcSize(F: Frame; x, y: INTEGER; VAR xo, yo, dx, dy: INTEGER); 
-	PROCEDURE ^ DrawRect(F: Frame; Q: Display3.Mask; i0, i1, j0, j1, xo, yo, dx, dy: INTEGER); 
-	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
-	PROCEDURE ^ Update(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; VAR U: UpdateMsg); 
+	PROCEDURE ^ CalcSize(F: Frame; x, y: SIGNED16; VAR xo, yo, dx, dy: SIGNED16); 
+	PROCEDURE ^ DrawRect(F: Frame; Q: Display3.Mask; i0, i1, j0, j1, xo, yo, dx, dy: SIGNED16); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ Update(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; VAR U: UpdateMsg); 
 	PROCEDURE ^ CheckDone(F: Frame); 
 	PROCEDURE ^ Consume(F: Frame; VAR M: Oberon.InputMsg); 
-	PROCEDURE ^ Track(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ Track(F: Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ Arrange(F: Frame; scramble: BOOLEAN); 
 	PROCEDURE ^ CopyFrame(VAR M: Objects.CopyMsg; F, F1: Frame); 
 	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 

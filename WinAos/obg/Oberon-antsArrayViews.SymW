@@ -10,16 +10,16 @@ TYPE
 
 	tLayerDesc* = RECORD (antsViews.tLayerDesc)
 		E-: antsArrayObjects.tINTEGERObject; 
-		type: INTEGER; 
+		type: SIGNED16; 
 	END; 
 VAR 
 	newlayer-: tLayer; 
-	maxw, maxh: INTEGER; 
+	maxw, maxh: SIGNED16; 
 	texture: BOOLEAN; 
 
 	PROCEDURE ^ Copy(source, dest: tLayer); 
-	PROCEDURE ^ GetRunX(A: antsArrayObjects.tINTEGERArray; VAR col: INTEGER; VAR x, y, w: INTEGER); 
-	PROCEDURE ^ GetRunY(A: antsArrayObjects.tINTEGERArray; VAR col: INTEGER; VAR x, y, h: INTEGER); 
+	PROCEDURE ^ GetRunX(A: antsArrayObjects.tINTEGERArray; VAR col: SIGNED16; VAR x, y, w: SIGNED16); 
+	PROCEDURE ^ GetRunY(A: antsArrayObjects.tINTEGERArray; VAR col: SIGNED16; VAR x, y, h: SIGNED16); 
 	PROCEDURE ^ Recall(layer: tLayer); 
 	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ Center; 
@@ -28,9 +28,9 @@ VAR
 	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ Init(layer: tLayer); 
-	PROCEDURE ^ Open*(layer: tLayer; E: antsArrayObjects.tINTEGERObject; type: INTEGER); 
+	PROCEDURE ^ Open*(layer: tLayer; E: antsArrayObjects.tINTEGERObject; type: SIGNED16); 
 	PROCEDURE ^ New*; 
-	PROCEDURE ^ DoShow*(E: antsArrayObjects.tINTEGERObject; type: INTEGER; add: BOOLEAN; VAR c: antsPictCoordinate.tCoordinate): tLayer; 
+	PROCEDURE ^ DoShow*(E: antsArrayObjects.tINTEGERObject; type: SIGNED16; add: BOOLEAN; VAR c: antsPictCoordinate.tCoordinate): tLayer; 
 	PROCEDURE ^ Show*; 
 	PROCEDURE ^ ShowP*; 
 BEGIN

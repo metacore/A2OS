@@ -7,7 +7,7 @@ TYPE
 	tModel* = POINTER TO tModelDesc; 
 
 	tModelDesc* = RECORD (antsModels.tModelDesc)
-		dim-: LONGINT; 
+		dim-: SIGNED32; 
 		n*: antsNeighbourhoods.Neighbours; 
 		f: antsMatrixPar.Matrix; 
 		l: antsMatrixPar.Matrix; 
@@ -16,8 +16,8 @@ TYPE
 
 	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
 	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
-	PROCEDURE ^ Local(o, c: antsArrayObjects.tINTEGERObject; dim: LONGINT; par: array; x, y: LONGINT; M: tModel; s: antsKernel.Kernel); 
-	PROCEDURE ^ Sync(m: tModel; depth: LONGINT); 
+	PROCEDURE ^ Local(o, c: antsArrayObjects.tINTEGERObject; dim: SIGNED32; par: array; x, y: SIGNED32; M: tModel; s: antsKernel.Kernel); 
+	PROCEDURE ^ Sync(m: tModel; depth: SIGNED32); 
 	PROCEDURE ^ OneSweep*(s: antsKernel.Kernel); 
 	PROCEDURE ^ Uniform*(s: antsKernel.Kernel); 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 

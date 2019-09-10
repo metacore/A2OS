@@ -4,11 +4,11 @@ CONST
 	ModuleName = \"WMPerfMonPluginHeap"\; 
 	BlockSize = (8 * SIZEOF(ADDRESS)); 
 TYPE 
-	SizeArray = ARRAY 27 OF LONGINT; 
+	SizeArray = ARRAY 27 OF SIGNED32; 
 
 	BlocksHelper = OBJECT (WMPerfMonPlugins.Helper)
 	VAR 
-		blocks, recblks, sysblks, arrblks, protrecblks, freeblks, unknowns: LONGINT; 
+		blocks, recblks, sysblks, arrblks, protrecblks, freeblks, unknowns: SIGNED32; 
 		blockssize, recblksize, sysblksize, arrblksize, protrecblksize, freeblksize, unknownsize: SIZE; 
 		heapsize: SIZE; 
 		blockSizes, recblkSizes, sysblkSizes, arrblkSizes, protrecblkSizes, freeblkSizes: SizeArray; 

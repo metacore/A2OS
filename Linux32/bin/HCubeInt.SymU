@@ -5,7 +5,7 @@ CONST
 TYPE 
 	Value* = ArrayXd.Value; 
 
-	Index* = LONGINT; 
+	Index* = SIGNED32; 
 
 	Array* = ArrayXd.Array; 
 
@@ -15,27 +15,27 @@ TYPE
 
 	HCube* = OBJECT {EXCLUSIVE} (ArrayXd.Array)
 	VAR 
-		lenx-, leny-, lenz-, lent-: LONGINT; 
-		ox-, oy-, oz-, ot-: LONGINT; 
+		lenx-, leny-, lenz-, lent-: SIGNED32; 
+		ox-, oy-, oz-, ot-: SIGNED32; 
 		Get-: PROCEDURE {DELEGATE}(x, y, z, t: Index):Value; 
 
 		PROCEDURE ^ AlikeX*(): ArrayXdBytes.Array; 
 		PROCEDURE ^ NewRangeX*(neworigin, newlen: ArrayXdBytes.IndexArray; copydata: BOOLEAN); 
 		PROCEDURE ^ ValidateCache*; 
-		PROCEDURE ^ SetBoundaryCondition*(c: SHORTINT); 
-		PROCEDURE ^  & New*(ox, w, oy, h, oz, d, ot, td: LONGINT); 
+		PROCEDURE ^ SetBoundaryCondition*(c: SIGNED8); 
+		PROCEDURE ^  & New*(ox, w, oy, h, oz, d, ot, td: SIGNED32); 
 		PROCEDURE ^ Alike*(): HCube; 
-		PROCEDURE ^ NewRange*(ox, w, oy, h, oz, d, ot, td: LONGINT; copydata: BOOLEAN); 
+		PROCEDURE ^ NewRange*(ox, w, oy, h, oz, d, ot, td: SIGNED32; copydata: BOOLEAN); 
 		PROCEDURE ^ Copy*(): HCube; 
 		PROCEDURE ^ Set*(x, y, z, t: Index; v: Value); 
 		PROCEDURE ^ CopyToVec*(dest: Array; dim: Index; srcx, srcy, srcz, srct, destx, len: Index); 
 		PROCEDURE ^ CopyToMtx*(dest: Array; dimx, dimy: Index; srcx, srcy, srcz, srct, destx, desty, lenx, leny: Index); 
 		PROCEDURE ^ CopyToCube*(dest: Array; dimx, dimy, dimz: Index; srcx, srcy, srcz, srct, destx, desty, destz, lenx, leny, lenz: Index); 
 		PROCEDURE ^ CopyToHCube*(dest: Array; srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index); 
-		PROCEDURE ^ CopyTo1dArray*(VAR dest: ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dpos, dlen: LONGINT); 
-		PROCEDURE ^ CopyTo2dArray*(VAR dest: ARRAY OF ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dposx, dposy, dlenx, dleny: LONGINT); 
-		PROCEDURE ^ CopyTo3dArray*(VAR dest: ARRAY OF ARRAY OF ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dposx, dposy, dposz, dlenx, dleny, dlenz: LONGINT); 
-		PROCEDURE ^ CopyTo4dArray*(VAR dest: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dposx, dposy, dposz, dpost, dlenx, dleny, dlenz, dlent: LONGINT); 
+		PROCEDURE ^ CopyTo1dArray*(VAR dest: ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dpos, dlen: SIGNED32); 
+		PROCEDURE ^ CopyTo2dArray*(VAR dest: ARRAY OF ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dposx, dposy, dlenx, dleny: SIGNED32); 
+		PROCEDURE ^ CopyTo3dArray*(VAR dest: ARRAY OF ARRAY OF ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dposx, dposy, dposz, dlenx, dleny, dlenz: SIGNED32); 
+		PROCEDURE ^ CopyTo4dArray*(VAR dest: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value; sx, sy, sz, st, slenx, sleny, slenz, slent: Index; dposx, dposy, dposz, dpost, dlenx, dleny, dlenz, dlent: SIGNED32); 
 		PROCEDURE ^ CopyFrom1dArray*(VAR src: ARRAY OF Value; spos, slen: Index; dx, dy, dz, dt, dlenx, dleny, dlenz, dlent: Index); 
 		PROCEDURE ^ CopyFrom2dArray*(VAR src: ARRAY OF ARRAY OF Value; sposx, spoxy, slenx, sleny: Index; dx, dy, dz, dt, dlenx, dleny, dlenz, dlent: Index); 
 		PROCEDURE ^ CopyFrom3dArray*(VAR src: ARRAY OF ARRAY OF ARRAY OF Value; sposx, spoxy, sposz, slenx, sleny, slenz: Index; dx, dy, dz, dt, dlenx, dleny, dlenz, dlent: Index); 

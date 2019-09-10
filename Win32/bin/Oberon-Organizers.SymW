@@ -2,20 +2,20 @@ MODULE Organizers IN Oberon;
 	IMPORT Objects, Display, Effects, Gadgets, Panels, Oberon, Strings;
 CONST 
 	outofboundsmodify = 3; 
-	DontCare = MAX(LONGINT); 
-	DontCareR = MAX(LONGREAL); 
+	DontCare = MAX(SIGNED32); 
+	DontCareR = MAX(FLOAT64); 
 VAR 
 	methods: Panels.Methods; 
 
-	PROCEDURE ^ Parse(s: ARRAY OF CHAR; VAR l, t, r, b: LONGINT); 
-	PROCEDURE ^ ParseGeneral(s: ARRAY OF CHAR; VAR l, t, r, b: LONGINT; VAR lrel, trel, rrel, brel: LONGREAL); 
-	PROCEDURE ^ HasConstraints*(f: Display.Frame; VAR l, t, r, b: LONGINT): BOOLEAN; 
-	PROCEDURE ^ HasGeneralConstraints*(f: Display.Frame; VAR l, t, r, b: LONGINT; VAR lrel, trel, rrel, brel: LONGREAL): BOOLEAN; 
-	PROCEDURE ^ SolveGadget*(PW, PH: INTEGER; f: Display.Frame; l, t, r, b: LONGINT; VAR X, Y, W, H: INTEGER); 
-	PROCEDURE ^ SolveGadgetGeneral*(PW, PH: INTEGER; f: Display.Frame; l, t, r, b: LONGINT; lrel, trel, rrel, brel: LONGREAL; VAR X, Y, W, H: INTEGER); 
-	PROCEDURE ^ Solve*(F: Panels.Panel; dX, dY, W, H: INTEGER; mode: INTEGER); 
+	PROCEDURE ^ Parse(s: ARRAY OF CHAR; VAR l, t, r, b: SIGNED32); 
+	PROCEDURE ^ ParseGeneral(s: ARRAY OF CHAR; VAR l, t, r, b: SIGNED32; VAR lrel, trel, rrel, brel: FLOAT64); 
+	PROCEDURE ^ HasConstraints*(f: Display.Frame; VAR l, t, r, b: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ HasGeneralConstraints*(f: Display.Frame; VAR l, t, r, b: SIGNED32; VAR lrel, trel, rrel, brel: FLOAT64): BOOLEAN; 
+	PROCEDURE ^ SolveGadget*(PW, PH: SIGNED16; f: Display.Frame; l, t, r, b: SIGNED32; VAR X, Y, W, H: SIGNED16); 
+	PROCEDURE ^ SolveGadgetGeneral*(PW, PH: SIGNED16; f: Display.Frame; l, t, r, b: SIGNED32; lrel, trel, rrel, brel: FLOAT64; VAR X, Y, W, H: SIGNED16); 
+	PROCEDURE ^ Solve*(F: Panels.Panel; dX, dY, W, H: SIGNED16; mode: SIGNED16); 
 	PROCEDURE ^ Handler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ InsertChild(F: Panels.Panel; f: Display.Frame; u, v: INTEGER); 
+	PROCEDURE ^ InsertChild(F: Panels.Panel; f: Display.Frame; u, v: SIGNED16); 
 	PROCEDURE ^ TrackMouse(F: Panels.Panel; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ InitPanel*(F: Panels.Panel); 
 	PROCEDURE ^ NewPanel*; 

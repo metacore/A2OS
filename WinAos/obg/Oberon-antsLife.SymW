@@ -13,7 +13,7 @@ TYPE
 	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
 	PROCEDURE ^ Uniform(s: antsKernel.Kernel); 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ OpenModel*(M: tModel; name: vyName.tNameArray; beta, h: LONGREAL); 
+	PROCEDURE ^ OpenModel*(M: tModel; name: vyName.tNameArray; beta, h: FLOAT64); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ NewModel*; 
 BEGIN

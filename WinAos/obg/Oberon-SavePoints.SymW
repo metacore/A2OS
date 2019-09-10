@@ -29,11 +29,11 @@ CONST
 	nomorph = 0; 
 TYPE 
 	IntPoint = RECORD 
-		x, y, z: INTEGER; 
+		x, y, z: SIGNED16; 
 	END; 
 
 	Point = RECORD 
-		x, y, z: REAL; 
+		x, y, z: FLOAT32; 
 	END; 
 
 	Figure = POINTER TO ARRAY OF Point; 
@@ -41,56 +41,56 @@ TYPE
 	Control = ARRAY 3 OF Point; 
 
 	Rotor = RECORD 
-		from, to, curr, peak: REAL; 
+		from, to, curr, peak: FLOAT32; 
 	END; 
 
 	Colour = RECORD 
-		r, g, b: INTEGER; 
+		r, g, b: SIGNED16; 
 	END; 
 VAR 
-	numfig: INTEGER; 
-	numpoint: INTEGER; 
+	numfig: SIGNED16; 
+	numpoint: SIGNED16; 
 	figure: POINTER TO ARRAY OF ARRAY OF IntPoint; 
-	move: POINTER TO ARRAY OF ARRAY OF INTEGER; 
-	timefactor: POINTER TO ARRAY OF REAL; 
+	move: POINTER TO ARRAY OF ARRAY OF SIGNED16; 
+	timefactor: POINTER TO ARRAY OF FLOAT32; 
 	attributes: POINTER TO ARRAY OF SET; 
-	maxint, minint, max, min, factor: REAL; 
-	curfig: INTEGER; 
+	maxint, minint, max, min, factor: FLOAT32; 
+	curfig: SIGNED16; 
 	actv, curr, next: Figure; 
 	control: Control; 
 	rx, ry, rz: Rotor; 
 	morphoff: BOOLEAN; 
-	timefac: REAL; 
-	time: REAL; 
-	step: REAL; 
-	coltime: INTEGER; 
-	curcol: INTEGER; 
-	thick: INTEGER; 
-	dura: INTEGER; 
-	morph: INTEGER; 
-	frames: INTEGER; 
-	W, H: INTEGER; 
+	timefac: FLOAT32; 
+	time: FLOAT32; 
+	step: FLOAT32; 
+	coltime: SIGNED16; 
+	curcol: SIGNED16; 
+	thick: SIGNED16; 
+	dura: SIGNED16; 
+	morph: SIGNED16; 
+	frames: SIGNED16; 
+	W, H: SIGNED16; 
 	mypal, yourpal: ARRAY 256 OF Colour; 
 	avoid: ARRAY 8 OF SET; 
-	numcol: INTEGER; 
-	BG: INTEGER; 
+	numcol: SIGNED16; 
+	BG: SIGNED16; 
 	mask: Display3.Mask; 
 	w: Texts.Writer; 
 
-	PROCEDURE ^ Int2Fig(i: INTEGER; VAR f: Figure); 
+	PROCEDURE ^ Int2Fig(i: SIGNED16; VAR f: Figure); 
 	PROCEDURE ^ ReadData; 
-	PROCEDURE ^ InitRotor(VAR r: Rotor; f, t, p: REAL); 
+	PROCEDURE ^ InitRotor(VAR r: Rotor; f, t, p: FLOAT32); 
 	PROCEDURE ^ GetPal(VAR pal: ARRAY OF Colour); 
 	PROCEDURE ^ SetPal(VAR pal: ARRAY OF Colour); 
 	PROCEDURE ^ ClearAvoid; 
-	PROCEDURE ^ HSV2RGB(H, S, V: REAL; VAR R, G, B: INTEGER); 
+	PROCEDURE ^ HSV2RGB(H, S, V: FLOAT32; VAR R, G, B: SIGNED16); 
 	PROCEDURE ^ InitColour; 
 	PROCEDURE ^ InitVars; 
-	PROCEDURE ^ Rotate(c, s: REAL; VAR x, y: REAL); 
-	PROCEDURE ^ Draw(VAR p: Point; c: INTEGER); 
+	PROCEDURE ^ Rotate(c, s: FLOAT32; VAR x, y: FLOAT32); 
+	PROCEDURE ^ Draw(VAR p: Point; c: SIGNED16); 
 	PROCEDURE ^ Position(VAR F: Figure); 
 	PROCEDURE ^ Start; 
-	PROCEDURE ^ UpdateRotor(VAR r: Rotor; VAR a: REAL); 
+	PROCEDURE ^ UpdateRotor(VAR r: Rotor; VAR a: FLOAT32); 
 	PROCEDURE ^ Step; 
 	PROCEDURE ^ Stop; 
 	PROCEDURE ^ Install*; 

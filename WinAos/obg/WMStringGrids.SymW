@@ -10,7 +10,7 @@ TYPE
 	VAR 
 		caption: String; 
 		color, textColor: WMGraphics.Color; 
-		align: WORD; 
+		align: INTEGER; 
 		img: WMGraphics.Image; 
 		data: ANY; 
 		flags: SET; 
@@ -54,8 +54,8 @@ TYPE
 		PROCEDURE ^ GetCellData*(col, row: SIZE): ANY; 
 		PROCEDURE ^ SetCellImage*(col, row: SIZE; img: WMGraphics.Image); 
 		PROCEDURE ^ GetCellImage*(col, row: SIZE): WMGraphics.Image; 
-		PROCEDURE ^ SetTextAlign*(col, row: SIZE; align: WORD); 
-		PROCEDURE ^ GetTextAlign*(col, row: SIZE): WORD; 
+		PROCEDURE ^ SetTextAlign*(col, row: SIZE; align: INTEGER); 
+		PROCEDURE ^ GetTextAlign*(col, row: SIZE): INTEGER; 
 		PROCEDURE ^ DeleteRow*(rowNo: SIZE; viewChanged: BOOLEAN); 
 		PROCEDURE ^ InsertEmptyRow*(atRowNo: SIZE); 
 	END StringGridModel; 

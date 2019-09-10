@@ -5,28 +5,28 @@ CONST
 	Trace = FALSE; 
 TYPE 
 	ChunkHeader = RECORD 
-		length: LONGINT; 
+		length: SIGNED32; 
 		name: ARRAY 5 OF CHAR; 
 	END; 
 
 	PNGHead = RECORD 
-		width: LONGINT; 
-		height: LONGINT; 
-		bitDepth: LONGINT; 
-		colorType: LONGINT; 
-		compressMethod: LONGINT; 
-		filterMethod: LONGINT; 
-		interlaceMethod: LONGINT; 
+		width: SIGNED32; 
+		height: SIGNED32; 
+		bitDepth: SIGNED32; 
+		colorType: SIGNED32; 
+		compressMethod: SIGNED32; 
+		filterMethod: SIGNED32; 
+		interlaceMethod: SIGNED32; 
 	END; 
 
 	IDATReader* = OBJECT 
 	VAR 
 		inR: Streams.Reader; 
-		remain: LONGINT; 
+		remain: SIGNED32; 
 		eof: BOOLEAN; 
 
-		PROCEDURE ^  & Init*(firstChunk: LONGINT; inR: Streams.Reader; VAR outR: Streams.Reader); 
-		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^  & Init*(firstChunk: SIGNED32; inR: Streams.Reader; VAR outR: Streams.Reader); 
+		PROCEDURE ^ Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 	END IDATReader; 
 
 	PNGDecoder = OBJECT (Codecs.ImageDecoder)
@@ -39,10 +39,10 @@ TYPE
 		pic: Raster.Image; 
 		format8: Raster.Format; 
 		palette: Raster.Palette; 
-		bpp: LONGINT; 
+		bpp: SIGNED32; 
 		decoder: Inflate.Reader; 
 
-		PROCEDURE ^ GetLineSize(width: LONGINT): LONGINT; 
+		PROCEDURE ^ GetLineSize(width: SIGNED32): SIGNED32; 
 		PROCEDURE ^ Init; 
 		PROCEDURE ^ Decode; 
 		PROCEDURE ^ ReadChunkHeader(VAR x: ChunkHeader); 
@@ -51,17 +51,17 @@ TYPE
 		PROCEDURE ^ CheckCRC; 
 		PROCEDURE ^ ProcessChunk(x: ChunkHeader); 
 		PROCEDURE ^ GetByte(): CHAR; 
-		PROCEDURE ^ GetLongint(): LONGINT; 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
-		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: LONGINT); 
+		PROCEDURE ^ GetLongint(): SIGNED32; 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: SIGNED32); 
 		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
 		PROCEDURE ^ Render*(img: Raster.Image); 
 	END PNGDecoder; 
 VAR 
-	StartingRow, StartingCol, RowIncrement, ColIncrement: ARRAY 7 OF LONGINT; 
+	StartingRow, StartingCol, RowIncrement, ColIncrement: ARRAY 7 OF SIGNED32; 
 	MagicID: ARRAY 8 OF CHAR; 
 
-	PROCEDURE ^ PaethPredictor(a, b, c: LONGINT): CHAR; 
+	PROCEDURE ^ PaethPredictor(a, b, c: SIGNED32): CHAR; 
 	PROCEDURE ^ Factory*(): Codecs.ImageDecoder; 
 BEGIN
 END PNGDecoder.

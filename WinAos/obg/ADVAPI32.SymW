@@ -1,8 +1,8 @@
 MODULE ADVAPI32;
 	IMPORT SYSTEM, Kernel32, Modules, KernelLog;
 CONST 
-	HKEYClassesRoot* = LONGINT(2147483648); 
-	HKEYCurrentUser* = LONGINT(2147483649); 
+	HKEYClassesRoot* = SIGNED32(2147483648); 
+	HKEYCurrentUser* = SIGNED32(2147483649); 
 	RegNone* = 0; 
 	RegSZ* = 1; 
 	KeyQueryValue* = 0; 
@@ -38,13 +38,13 @@ TYPE
 
 	HINSTANCE* = Kernel32.HINSTANCE; 
 
-	INT* = LONGINT; 
+	INT* = SIGNED32; 
 
 	LPCTSTR* = LPCSTR; 
 
 	SC_HANDLE* = Kernel32.HANDLE; 
 
-	DWORD* = LONGINT; 
+	DWORD* = SIGNED32; 
 
 	LPDWORD* = ADDRESS; 
 
@@ -69,19 +69,19 @@ TYPE
 		dwServiceType*, dwCurrentState*, dwControlsAccepted*, dwWin32ExitCode*, dwServiceSpecificExitCode*, dwCheckPoint*, dwWaitHint*: DWORD; 
 	END; 
 VAR 
-	GetUserName-: PROCEDURE {WINAPI}(VAR lpBuffer: ARRAY OF CHAR; VAR nSize: LONGINT):Kernel32.BOOL; 
-	RegCloseKey-: PROCEDURE {WINAPI}(hKey: HKEY):LONGINT; 
-	RegCreateKeyEx-: PROCEDURE {WINAPI}(hKey: HKEY; lpSubKey: ARRAY OF CHAR; Reserved: LONGINT; lpClass: ARRAY OF CHAR; dwOptions, samDesired: SET; lpSecurityAttributes: ANY; VAR phkResult: HKEY; VAR lpdwDisposition: LONGINT):LONGINT; 
-	RegDeleteKey-: PROCEDURE {WINAPI}(hKey: HKEY; lpSubKey: ARRAY OF CHAR):LONGINT; 
-	RegDeleteValue-: PROCEDURE {WINAPI}(hKey: HKEY; lpValueName: ARRAY OF CHAR):LONGINT; 
-	RegEnumKeyEx-: PROCEDURE {WINAPI}(hKey: HKEY; dwIndex: LONGINT; VAR lpName: ARRAY OF CHAR; VAR lpcbName: LONGINT; VAR lpReserved: LONGINT; VAR lpClass: ARRAY OF CHAR; VAR lpcbClass: LONGINT; VAR lpftLastWriteTime: Kernel32.FileTime):LONGINT; 
-	RegEnumValue-: PROCEDURE {WINAPI}(hKey: HKEY; dwIndex: LONGINT; VAR lpValueName: ARRAY OF CHAR; VAR lpcbValueName: LONGINT; VAR lpReserved, type: LONGINT; VAR lpData: ARRAY OF SYSTEM.BYTE; VAR lpcbData: LONGINT):LONGINT; 
-	RegOpenKeyEx-: PROCEDURE {WINAPI}(hKey: HKEY; lpSubKey: ARRAY OF CHAR; ulOptions: LONGINT; samDesired: SET; VAR phkResult: HKEY):LONGINT; 
-	RegQueryValueEx-: PROCEDURE {WINAPI}(hKey: HKEY; lpValueName: ARRAY OF CHAR; VAR lpReserved, lpType: LONGINT; VAR lpData: ARRAY OF SYSTEM.BYTE; VAR lpcbData: LONGINT):LONGINT; 
-	RegSetValueEx-: PROCEDURE {WINAPI}(hKey: HKEY; lpValueName: ARRAY OF CHAR; Reserved, dwType: LONGINT; VAR lpData: ARRAY OF SYSTEM.BYTE; cbData: LONGINT):LONGINT; 
-	GetFileVersionInfo-: PROCEDURE {WINAPI}(lpstrFilename: ARRAY OF CHAR; dwHandle, dwLen: LONGINT; VAR lpDate: ARRAY OF SYSTEM.BYTE):Kernel32.BOOL; 
-	GetFileVersionInfoSize-: PROCEDURE {WINAPI}(lpstrFilename: ARRAY OF CHAR; VAR lpdwHandle: LONGINT):LONGINT; 
-	VerQueryValue-: PROCEDURE {WINAPI}(pBlock: ARRAY OF SYSTEM.BYTE; lpSubBlock: ARRAY OF CHAR; VAR lplpBuffer: ADDRESS; VAR puLen: LONGINT):Kernel32.BOOL; 
+	GetUserName-: PROCEDURE {WINAPI}(VAR lpBuffer: ARRAY OF CHAR; VAR nSize: SIGNED32):Kernel32.BOOL; 
+	RegCloseKey-: PROCEDURE {WINAPI}(hKey: HKEY):SIGNED32; 
+	RegCreateKeyEx-: PROCEDURE {WINAPI}(hKey: HKEY; lpSubKey: ARRAY OF CHAR; Reserved: SIGNED32; lpClass: ARRAY OF CHAR; dwOptions, samDesired: SET; lpSecurityAttributes: ANY; VAR phkResult: HKEY; VAR lpdwDisposition: SIGNED32):SIGNED32; 
+	RegDeleteKey-: PROCEDURE {WINAPI}(hKey: HKEY; lpSubKey: ARRAY OF CHAR):SIGNED32; 
+	RegDeleteValue-: PROCEDURE {WINAPI}(hKey: HKEY; lpValueName: ARRAY OF CHAR):SIGNED32; 
+	RegEnumKeyEx-: PROCEDURE {WINAPI}(hKey: HKEY; dwIndex: SIGNED32; VAR lpName: ARRAY OF CHAR; VAR lpcbName: SIGNED32; VAR lpReserved: SIGNED32; VAR lpClass: ARRAY OF CHAR; VAR lpcbClass: SIGNED32; VAR lpftLastWriteTime: Kernel32.FileTime):SIGNED32; 
+	RegEnumValue-: PROCEDURE {WINAPI}(hKey: HKEY; dwIndex: SIGNED32; VAR lpValueName: ARRAY OF CHAR; VAR lpcbValueName: SIGNED32; VAR lpReserved, type: SIGNED32; VAR lpData: ARRAY OF SYSTEM.BYTE; VAR lpcbData: SIGNED32):SIGNED32; 
+	RegOpenKeyEx-: PROCEDURE {WINAPI}(hKey: HKEY; lpSubKey: ARRAY OF CHAR; ulOptions: SIGNED32; samDesired: SET; VAR phkResult: HKEY):SIGNED32; 
+	RegQueryValueEx-: PROCEDURE {WINAPI}(hKey: HKEY; lpValueName: ARRAY OF CHAR; VAR lpReserved, lpType: SIGNED32; VAR lpData: ARRAY OF SYSTEM.BYTE; VAR lpcbData: SIGNED32):SIGNED32; 
+	RegSetValueEx-: PROCEDURE {WINAPI}(hKey: HKEY; lpValueName: ARRAY OF CHAR; Reserved, dwType: SIGNED32; VAR lpData: ARRAY OF SYSTEM.BYTE; cbData: SIGNED32):SIGNED32; 
+	GetFileVersionInfo-: PROCEDURE {WINAPI}(lpstrFilename: ARRAY OF CHAR; dwHandle, dwLen: SIGNED32; VAR lpDate: ARRAY OF SYSTEM.BYTE):Kernel32.BOOL; 
+	GetFileVersionInfoSize-: PROCEDURE {WINAPI}(lpstrFilename: ARRAY OF CHAR; VAR lpdwHandle: SIGNED32):SIGNED32; 
+	VerQueryValue-: PROCEDURE {WINAPI}(pBlock: ARRAY OF SYSTEM.BYTE; lpSubBlock: ARRAY OF CHAR; VAR lplpBuffer: ADDRESS; VAR puLen: SIGNED32):Kernel32.BOOL; 
 	CloseServiceHandle-: PROCEDURE {WINAPI}(hSCObject: SC_HANDLE):BOOL; 
 	CreateService-: PROCEDURE {WINAPI}(hSCManager: SC_HANDLE; VAR lpServiceName, lpDisplayName: LPCTSTR; dwDesiredAccess, dwServiceType, dwStartType, dwErrorControl: DWORD; VAR lpBinaryPathName, lpLoadOrderGroup: LPCTSTR; lpdwTagId: LPDWORD; VAR lpDependencies, lpServiceStartName, lpPassword: LPCTSTR):SC_HANDLE; 
 	DeleteService-: PROCEDURE {WINAPI}(hService: SC_HANDLE):BOOL; 
@@ -95,7 +95,7 @@ VAR
 
 	PROCEDURE ^ InstallService*(srvName, serviceDesc, exeFile: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ UninstallService*(srvName: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ OutError*(funcName: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ OutError*(funcName: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ TermMod; 
 	PROCEDURE ^ GetProcAddress(hModule: ADDRESS; VAR adr: ADDRESS; procName: ARRAY OF CHAR); 
 	PROCEDURE ^ Init; 

@@ -28,7 +28,7 @@ TYPE
 	tFace = POINTER TO tFaceDesc; 
 
 	tVertexDesc = RECORD 
-		i, j: INTEGER; 
+		i, j: SIGNED16; 
 		between: BOOLEAN; 
 		x, y, z: Real; 
 		nx, ny, nz: Real; 
@@ -65,14 +65,14 @@ TYPE
 		vx, vy, vz: Real; 
 	END; 
 
-	ColorMap* = ARRAY 256 OF LONGINT; 
+	ColorMap* = ARRAY 256 OF SIGNED32; 
 VAR 
 	theHLHSRroutine: tPlotRoutine; 
-	PHIGS3DError: INTEGER; 
+	PHIGS3DError: SIGNED16; 
 	lightDirX, lightDirY, lightDirZ: Real; 
-	maxFaces: LONGINT; 
-	faceDepths: POINTER TO ARRAY OF LONGREAL; 
-	faceIndex: POINTER TO ARRAY OF LONGINT; 
+	maxFaces: SIGNED32; 
+	faceDepths: POINTER TO ARRAY OF FLOAT64; 
+	faceIndex: POINTER TO ARRAY OF SIGNED32; 
 	triangulate: BOOLEAN; 
 	lines: BOOLEAN; 
 	colorTable*: ColorMap; 
@@ -116,12 +116,12 @@ VAR
 	PROCEDURE ^ ReplBackFaceColoring(map: tMap); 
 	PROCEDURE ^ BackFaceColoringMap(o3d: tObject); 
 	PROCEDURE ^ OpenMap*(x0, y0, x1, y1: Real; m: vyRealVec.tChunkedMatrix): tObject; 
-	PROCEDURE ^ SetHLHSRIdentifier*(HLHSRidentifier: INTEGER); 
-	PROCEDURE ^ SetRendering*(map: tObject; HLHSRidentifier: INTEGER); 
-	PROCEDURE ^ GetRendering(map: tObject; VAR HLHSRidentifier: INTEGER); 
+	PROCEDURE ^ SetHLHSRIdentifier*(HLHSRidentifier: SIGNED16); 
+	PROCEDURE ^ SetRendering*(map: tObject; HLHSRidentifier: SIGNED16); 
+	PROCEDURE ^ GetRendering(map: tObject; VAR HLHSRidentifier: SIGNED16); 
 	PROCEDURE ^ SetInteractiveMode*(switch: BOOLEAN); 
 	PROCEDURE ^ InitColorMap; 
-	PROCEDURE ^ SetColorMap*(colors: ARRAY OF LONGINT); 
+	PROCEDURE ^ SetColorMap*(colors: ARRAY OF SIGNED32); 
 	PROCEDURE ^ SetLines*(VAR b: BOOLEAN); 
 BEGIN
 END vyPolyWorld.

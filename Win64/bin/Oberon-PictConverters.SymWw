@@ -4,20 +4,20 @@ CONST
 	dummy =  -1; 
 TYPE 
 	CodePages = RECORD 
-		code, ref: INTEGER; 
+		code, ref: SIGNED16; 
 	END; 
 
 	CodeBook = ARRAY 4096 OF CodePages; 
 VAR 
 	W: Texts.Writer; 
 	CB: CodeBook; 
-	LastBlock: ARRAY 4096 OF INTEGER; 
+	LastBlock: ARRAY 4096 OF SIGNED16; 
 
 	PROCEDURE ^ WriteScrDesc(VAR R: Files.Rider; P: Pictures.Picture); 
 	PROCEDURE ^ WriteColMap(VAR R: Files.Rider; P: Pictures.Picture); 
 	PROCEDURE ^ WriteGlobal(VAR R: Files.Rider; P: Pictures.Picture); 
 	PROCEDURE ^ WriteImageDesc(VAR R: Files.Rider; P: Pictures.Picture); 
-	PROCEDURE ^ InitCodeBook(codeLen: INTEGER); 
+	PROCEDURE ^ InitCodeBook(codeLen: SIGNED16); 
 	PROCEDURE ^ WriteData(VAR r: Files.Rider; pict: Pictures.Picture); 
 	PROCEDURE ^ Pict2GIF*(P: Pictures.Picture; VAR R: Files.Rider); 
 	PROCEDURE ^ PictToGIF*; 

@@ -5,7 +5,7 @@ CONST
 	PH = 820; 
 	EOL = 0DX; 
 
-	PROCEDURE ^ FadeUp(P: Pictures.Picture; max: INTEGER); 
+	PROCEDURE ^ FadeUp(P: Pictures.Picture; max: SIGNED16); 
 	PROCEDURE ^ ChName(VAR t: ARRAY OF CHAR); 
 	PROCEDURE ^ PictToPost*; 
 BEGIN

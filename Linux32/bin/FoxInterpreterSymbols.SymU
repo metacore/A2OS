@@ -57,26 +57,26 @@ TYPE
 		data: ARRAY 1024 OF CHAR; 
 		pos: SIZE; 
 		size: SIZE; 
-		H: HUGEINT; 
-		pPos: LONGINT; 
+		H: SIGNED64; 
+		pPos: SIGNED32; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Next(s: SIZE): ADDRESS; 
-		PROCEDURE ^ PushH(h: HUGEINT); 
-		PROCEDURE ^ PushL(i: LONGINT); 
-		PROCEDURE ^ PushI(i: INTEGER); 
-		PROCEDURE ^ PushS(i: SHORTINT); 
+		PROCEDURE ^ PushH(h: SIGNED64); 
+		PROCEDURE ^ PushL(i: SIGNED32); 
+		PROCEDURE ^ PushI(i: SIGNED16); 
+		PROCEDURE ^ PushS(i: SIGNED8); 
 		PROCEDURE ^ PushB(b: BOOLEAN); 
 		PROCEDURE ^ PushC(c: CHAR); 
 		PROCEDURE ^ PushSet(set: SET); 
-		PROCEDURE ^ PushR(r: REAL); 
-		PROCEDURE ^ PushX(x: LONGREAL); 
+		PROCEDURE ^ PushR(r: FLOAT32); 
+		PROCEDURE ^ PushX(x: FLOAT64); 
 		PROCEDURE ^ PushA(a: ADDRESS); 
 		PROCEDURE ^ PushSz(s: SIZE); 
 		PROCEDURE ^ Call(adr: ADDRESS); 
-		PROCEDURE ^ CallH(adr: ADDRESS): HUGEINT; 
-		PROCEDURE ^ CallR(adr: ADDRESS): REAL; 
-		PROCEDURE ^ CallX(adr: ADDRESS): LONGREAL; 
+		PROCEDURE ^ CallH(adr: ADDRESS): SIGNED64; 
+		PROCEDURE ^ CallR(adr: ADDRESS): FLOAT32; 
+		PROCEDURE ^ CallX(adr: ADDRESS): FLOAT64; 
 	END Callstack; 
 
 	ProcedureResult* = OBJECT (SymbolResult)
@@ -84,7 +84,7 @@ TYPE
 		meta: Meta; 
 		address: ADDRESS; 
 		stack: Callstack; 
-		index: LONGINT; 
+		index: SIGNED32; 
 		caller-: Result; 
 		parameters: Meta; 
 		flags: SET; 
@@ -118,9 +118,9 @@ TYPE
 
 		PROCEDURE ^  & InitValue; 
 		PROCEDURE ^ Evaluate*(): Value; 
-		PROCEDURE ^ GetInt*(VAR h: HUGEINT): BOOLEAN; 
+		PROCEDURE ^ GetInt*(VAR h: SIGNED64): BOOLEAN; 
 		PROCEDURE ^ GetAddress*(VAR a: ADDRESS): BOOLEAN; 
-		PROCEDURE ^ GetReal*(VAR x: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ GetReal*(VAR x: FLOAT64): BOOLEAN; 
 		PROCEDURE ^ GetBoolean*(VAR x: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ GetSet*(VAR x: SET): BOOLEAN; 
 		PROCEDURE ^ GetChar*(VAR x: CHAR): BOOLEAN; 
@@ -156,27 +156,27 @@ TYPE
 
 	IntegerValue* = OBJECT (Value)
 	VAR 
-		value*: HUGEINT; 
+		value*: SIGNED64; 
 
-		PROCEDURE ^  & InitInteger*(value: HUGEINT); 
+		PROCEDURE ^  & InitInteger*(value: SIGNED64); 
 		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
 		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content); 
 		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content); 
-		PROCEDURE ^ GetInt*(VAR v: HUGEINT): BOOLEAN; 
-		PROCEDURE ^ GetReal*(VAR x: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ GetInt*(VAR v: SIGNED64): BOOLEAN; 
+		PROCEDURE ^ GetReal*(VAR x: FLOAT64): BOOLEAN; 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
 		PROCEDURE ^ Address*(): ADDRESS; 
 	END IntegerValue; 
 
 	RealValue* = OBJECT (Value)
 	VAR 
-		value*: LONGREAL; 
+		value*: FLOAT64; 
 
-		PROCEDURE ^  & InitReal*(value: LONGREAL); 
+		PROCEDURE ^  & InitReal*(value: FLOAT64); 
 		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
 		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content); 
 		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content); 
-		PROCEDURE ^ GetReal*(VAR x: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ GetReal*(VAR x: FLOAT64): BOOLEAN; 
 		PROCEDURE ^ WriteValue*(w: Streams.Writer); 
 		PROCEDURE ^ Address*(): ADDRESS; 
 	END RealValue; 
@@ -247,10 +247,10 @@ TYPE
 
 	EnumValue* = OBJECT (Value)
 	VAR 
-		value: HUGEINT; 
+		value: SIGNED64; 
 		translation: PersistentObjects.Translation; 
 
-		PROCEDURE ^  & InitEnumValue*(trans: PersistentObjects.Translation; v: HUGEINT); 
+		PROCEDURE ^  & InitEnumValue*(trans: PersistentObjects.Translation; v: SIGNED64); 
 		PROCEDURE ^ Enumerate*(enum: PersistentObjects.Enumerator); 
 		PROCEDURE ^ Set*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content); 
 		PROCEDURE ^ Get*(CONST name: ARRAY OF CHAR; index: SIZE; c: Content); 
@@ -300,7 +300,7 @@ TYPE
 	VAR 
 		outer-: Scope; 
 		object-: Object; 
-		level: LONGINT; 
+		level: SIGNED32; 
 
 		PROCEDURE ^  & InitScope*(outer: Scope; object: Object); 
 		PROCEDURE ^ Enter*(object: Object): Scope; 
@@ -332,20 +332,20 @@ TYPE
 	PROCEDURE ^ SymbolAddress*(meta: Meta; base: ADDRESS): ADDRESS; 
 	PROCEDURE ^ FindInType(scope: Result; address: ADDRESS; type: ADDRESS; CONST name: ARRAY OF CHAR): Result; 
 	PROCEDURE ^ FindConstructor(scope: Result; type: ADDRESS): ProcedureResult; 
-	PROCEDURE ^ Indent(w: Streams.Writer; level: LONGINT); 
+	PROCEDURE ^ Indent(w: Streams.Writer; level: SIGNED32); 
 	PROCEDURE ^ Test*(context: Commands.Context); 
 	PROCEDURE ^ ContentGetValue(c: Content): Value; 
-	PROCEDURE ^ NewIntegerValue(value: HUGEINT): IntegerValue; 
-	PROCEDURE ^ NewFloatValue(value: LONGREAL): RealValue; 
+	PROCEDURE ^ NewIntegerValue(value: SIGNED64): IntegerValue; 
+	PROCEDURE ^ NewFloatValue(value: FLOAT64): RealValue; 
 	PROCEDURE ^ NewBooleanValue(value: BOOLEAN): BooleanValue; 
 	PROCEDURE ^ NewStringValue(CONST value: ARRAY OF CHAR): StringValue; 
 	PROCEDURE ^ NewNameValue(CONST value: ARRAY OF CHAR): StringValue; 
 	PROCEDURE ^ NewRangeValue(value: RANGE): RangeValue; 
 	PROCEDURE ^ NewCharValue(value: CHAR): CharValue; 
 	PROCEDURE ^ NewSetValue(value: SET): SetValue; 
-	PROCEDURE ^ NewEnumValue(translation: PersistentObjects.Translation; value: HUGEINT): EnumValue; 
+	PROCEDURE ^ NewEnumValue(translation: PersistentObjects.Translation; value: SIGNED64): EnumValue; 
 	PROCEDURE ^ FindInObject*(in: Object; CONST name: ARRAY OF CHAR; index: SIZE): Object; 
 	PROCEDURE ^ GetModule*(CONST name: ARRAY OF CHAR): ModuleResult; 
-	PROCEDURE ^ FindInObject1*(in: Object; name: StringPool.Index; index: LONGINT): Object; 
+	PROCEDURE ^ FindInObject1*(in: Object; name: StringPool.Index; index: SIGNED32): Object; 
 BEGIN
 END FoxInterpreterSymbols.

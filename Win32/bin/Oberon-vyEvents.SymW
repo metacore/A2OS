@@ -34,18 +34,18 @@ CONST
 	copyAttrKeys = (pointKeys + selectKeys); 
 TYPE 
 	EventMsg* = RECORD (Objects.ObjMsg)
-		gesture-: INTEGER; 
-		x-, y-: INTEGER; 
-		time-: LONGINT; 
+		gesture-: SIGNED16; 
+		x-, y-: SIGNED16; 
+		time-: SIGNED32; 
 		keys: SET; 
 		callForResponder*: BOOLEAN; 
 		responder*: Objects.Object; 
-		priority*: INTEGER; 
+		priority*: SIGNED16; 
 	END; 
 VAR 
 	context: EventMsg; 
-	lastloc: LONGINT; 
-	doubleClickTime*: LONGINT; 
+	lastloc: SIGNED32; 
+	doubleClickTime*: SIGNED32; 
 
 	PROCEDURE ^ GetWheelEvent*(VAR event: EventMsg; up: BOOLEAN); 
 	PROCEDURE ^ GetEvent*(VAR nextEvent: EventMsg); 

@@ -6,7 +6,7 @@ TYPE
 	VAR 
 		s: S.Scanner; 
 		m*: TS.Module; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		comments: TS.Comments; 
 		lastStatement: TS.Statement; 
 
@@ -15,7 +15,7 @@ TYPE
 		PROCEDURE ^ StorePos(VAR pos: TS.Position); 
 		PROCEDURE ^ Error(CONST str: ARRAY OF CHAR); 
 		PROCEDURE ^ Warn(CONST str: ARRAY OF CHAR); 
-		PROCEDURE ^ Eat(sym: LONGINT); 
+		PROCEDURE ^ Eat(sym: SIGNED32); 
 		PROCEDURE ^ ImportList; 
 		PROCEDURE ^ ProcedureType(scope: TS.Scope): TS.ProcedureType; 
 		PROCEDURE ^ Type(scope: TS.Scope; CONST name: ARRAY OF CHAR): TS.Type; 
@@ -68,7 +68,7 @@ VAR
 	System: TS.Module; 
 	release: TS.ObjectList; 
 	fileList: FileListEntry; 
-	nofWorkers: LONGINT; 
+	nofWorkers: SIGNED32; 
 
 	PROCEDURE ^ GetTask(VAR filename: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ AddTask(CONST filename: ARRAY OF CHAR); 
@@ -81,6 +81,6 @@ VAR
 	PROCEDURE ^ MakeSymbolFiles*(par: Commands.Context); 
 	PROCEDURE ^ MakeSym*(par: Commands.Context); 
 	PROCEDURE ^ AddStandardProc(scope: TS.Scope; CONST name: ARRAY OF CHAR); 
-	PROCEDURE ^ AddBasicType(scope: TS.Scope; CONST name: ARRAY OF CHAR; type: LONGINT); 
+	PROCEDURE ^ AddBasicType(scope: TS.Scope; CONST name: ARRAY OF CHAR; type: SIGNED32); 
 BEGIN
 END TFAOParser.

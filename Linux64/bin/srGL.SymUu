@@ -10,7 +10,7 @@ TYPE
 	Context* = OBJECT 
 	VAR 
 		Stack: ARRAY 20 OF Matrix; 
-		spointer: INTEGER; 
+		spointer: SIGNED16; 
 
 		PROCEDURE ^  & new*; 
 		PROCEDURE ^ push*; 

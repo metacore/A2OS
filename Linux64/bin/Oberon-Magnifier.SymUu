@@ -2,18 +2,18 @@ MODULE Magnifier IN Oberon;
 	IMPORT SYSTEM, Modules, Display, Oberon, Effects, In, Out;
 CONST 
 VAR 
-	W, H, W2, H2, Z: INTEGER; 
+	W, H, W2, H2, Z: SIGNED16; 
 	Marker, eArrow, oArrow: Oberon.Marker; 
 	buf, buf1, buf2: POINTER TO ARRAY OF CHAR; 
-	vX, vY, pix: LONGINT; 
+	vX, vY, pix: SIGNED32; 
 	installed: BOOLEAN; 
 
-	PROCEDURE ^ FlipArrow(X, Y: LONGINT); 
-	PROCEDURE ^ Rect(VAR X, Y: INTEGER); 
+	PROCEDURE ^ FlipArrow(X, Y: SIGNED32); 
+	PROCEDURE ^ Rect(VAR X, Y: SIGNED16); 
 	PROCEDURE ^ FadeView; 
 	PROCEDURE ^ ShowView; 
-	PROCEDURE ^ Draw(X, Y: INTEGER); 
-	PROCEDURE ^ Fade(X, Y: INTEGER); 
+	PROCEDURE ^ Draw(X, Y: SIGNED16); 
+	PROCEDURE ^ Fade(X, Y: SIGNED16); 
 	PROCEDURE ^ OK(): BOOLEAN; 
 	PROCEDURE ^ GetParams(): BOOLEAN; 
 	PROCEDURE ^ Zoom*; 

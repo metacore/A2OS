@@ -7,16 +7,16 @@ TYPE
 	Frame* = POINTER TO FrameDesc; 
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
-		col*: INTEGER; 
+		col*: SIGNED16; 
 	END; 
 
 	UpdateMsg* = RECORD (Display.FrameMsg)
-		n*: INTEGER; 
+		n*: SIGNED16; 
 	END; 
 
 	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
-	PROCEDURE ^ UpdateDiagram(F: Frame; M: Display3.Mask; n, x, y, w, h: INTEGER; VAR res: INTEGER); 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ UpdateDiagram(F: Frame; M: Display3.Mask; n, x, y, w, h: SIGNED16; VAR res: SIGNED16); 
 	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
 	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewFrame*; 

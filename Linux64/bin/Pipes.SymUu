@@ -10,13 +10,13 @@ TYPE
 		closed: BOOLEAN; 
 
 		PROCEDURE ^ Available*(): SIZE; 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^  & Init*(size: SIZE); 
 		PROCEDURE ^ Close*; 
 	END Pipe; 
 
-	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+	Receiver* = PROCEDURE {DELEGATE}(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 
 	ReadDecoupler* = OBJECT {EXCLUSIVE} 
 	VAR 
@@ -24,10 +24,10 @@ TYPE
 		inputReceiver: Receiver; 
 		smallbuf: ARRAY [128] OF CHAR; 
 		len: SIZE; 
-		res: WORD; 
+		res: INTEGER; 
 
 		PROCEDURE ^  & InitReadDecoupler*(inputReceiver: Receiver); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 	BEGIN{ACTIVE} 
 	END ReadDecoupler; 
 BEGIN

@@ -6,12 +6,12 @@ TYPE
 
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
 		n-: antsNeighbourhoods.Neighbours; 
-		maxx, maxy: LONGINT; 
-		dim: INTEGER; 
+		maxx, maxy: SIGNED32; 
+		dim: SIGNED16; 
 		isotropic: BOOLEAN; 
 		commands: vyCommandMenus.List; 
 		viewnum: BOOLEAN; 
-		max: LONGREAL; 
+		max: FLOAT64; 
 	END; 
 VAR 
 	tempLayer: tLayer; 

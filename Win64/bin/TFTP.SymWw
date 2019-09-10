@@ -20,24 +20,24 @@ TYPE
 
 	TFTPClient* = OBJECT 
 
-		PROCEDURE ^ LogEnter(level: LONGINT); 
-		PROCEDURE ^ LogExit(level: LONGINT); 
-		PROCEDURE ^ Log(level: LONGINT; s: ARRAY OF CHAR); 
+		PROCEDURE ^ LogEnter(level: SIGNED32); 
+		PROCEDURE ^ LogExit(level: SIGNED32); 
+		PROCEDURE ^ Log(level: SIGNED32; s: ARRAY OF CHAR); 
 		PROCEDURE ^ LogInt(level, i: SIZE); 
-		PROCEDURE ^ Get2(VAR buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT; 
-		PROCEDURE ^ Put2(VAR buf: ARRAY OF CHAR; ofs, value: LONGINT); 
-		PROCEDURE ^ PacketType(VAR buf: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ ExtractString(VAR buf: ARRAY OF CHAR; VAR ofs: LONGINT; VAR s: ARRAY OF CHAR); 
-		PROCEDURE ^ PutString(VAR buf: ARRAY OF CHAR; VAR ofs: LONGINT; s: ARRAY OF CHAR); 
-		PROCEDURE ^ ReceiveAck(socket: UDP.Socket; VAR fip: IP.Adr; VAR fport: LONGINT; blockNr: LONGINT; VAR ack: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ SendAck(socket: UDP.Socket; fip: IP.Adr; fport: LONGINT; blockNr: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ SendError(socket: UDP.Socket; fip: IP.Adr; fport: LONGINT; errNo: INTEGER; s: ErrorMsg; VAR res: WORD); 
+		PROCEDURE ^ Get2(VAR buf: ARRAY OF CHAR; ofs: SIGNED32): SIGNED32; 
+		PROCEDURE ^ Put2(VAR buf: ARRAY OF CHAR; ofs, value: SIGNED32); 
+		PROCEDURE ^ PacketType(VAR buf: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ ExtractString(VAR buf: ARRAY OF CHAR; VAR ofs: SIGNED32; VAR s: ARRAY OF CHAR); 
+		PROCEDURE ^ PutString(VAR buf: ARRAY OF CHAR; VAR ofs: SIGNED32; s: ARRAY OF CHAR); 
+		PROCEDURE ^ ReceiveAck(socket: UDP.Socket; VAR fip: IP.Adr; VAR fport: SIGNED32; blockNr: SIGNED32; VAR ack: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ SendAck(socket: UDP.Socket; fip: IP.Adr; fport: SIGNED32; blockNr: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ SendError(socket: UDP.Socket; fip: IP.Adr; fport: SIGNED32; errNo: SIGNED16; s: ErrorMsg; VAR res: INTEGER); 
 		PROCEDURE ^ GetSocket*(VAR socket: UDP.Socket): BOOLEAN; 
-		PROCEDURE ^ Send*(localFN, remoteFN: ARRAY OF CHAR; fip: IP.Adr; fport: LONGINT): BOOLEAN; 
-		PROCEDURE ^ Receive*(remoteFN, localFN: ARRAY OF CHAR; fip: IP.Adr; fport: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Send*(localFN, remoteFN: ARRAY OF CHAR; fip: IP.Adr; fport: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ Receive*(remoteFN, localFN: ARRAY OF CHAR; fip: IP.Adr; fport: SIGNED32): BOOLEAN; 
 	END TFTPClient; 
 VAR 
-	TraceLevel: LONGINT; 
+	TraceLevel: SIGNED32; 
 	errorMsg: ARRAY 8 OF ErrorMsg; 
 	generator: Random.Generator; 
 

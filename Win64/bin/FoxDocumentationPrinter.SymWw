@@ -15,7 +15,7 @@ TYPE
 		PROCEDURE ^ Section*(section: Tree.Section); 
 		PROCEDURE ^ SectionList*(sections: Tree.Sections); 
 		PROCEDURE ^ Document*(document: Tree.Document); 
-		PROCEDURE ^ Chars*(c: CHAR; rep: LONGINT); 
+		PROCEDURE ^ Chars*(c: CHAR; rep: SIGNED32); 
 		PROCEDURE ^ Paragraph*(paragraph: Tree.Paragraph); 
 		PROCEDURE ^ ParagraphList*(paragraphs: Tree.Paragraphs); 
 		PROCEDURE ^ PrintText*(textElement: Tree.TextElement; separator: CHAR); 

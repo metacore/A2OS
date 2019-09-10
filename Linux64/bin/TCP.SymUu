@@ -31,29 +31,29 @@ TYPE
 	Connection* = OBJECT {EXCLUSIVE} (Streams.Connection)
 	VAR 
 		int-: IP.Interface; 
-		lport-: LONGINT; 
+		lport-: SIGNED32; 
 		fip-: IP.Adr; 
-		fport-: LONGINT; 
-		state*: SHORTINT; 
-		socket: LONGINT; 
+		fport-: SIGNED32; 
+		state*: SIGNED8; 
+		socket: SIGNED32; 
 		sender: Sender; 
-		irs-: LONGINT; 
-		rcvnxt-: LONGINT; 
-		iss-: LONGINT; 
-		sndnxt-: LONGINT; 
+		irs-: SIGNED32; 
+		rcvnxt-: SIGNED32; 
+		iss-: SIGNED32; 
+		sndnxt-: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Open*(lport: SIGNED32; fip: IP.Adr; fport: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ DelaySend*(enable: BOOLEAN); 
 		PROCEDURE ^ KeepAlive*(enable: BOOLEAN); 
-		PROCEDURE ^ Available*(): LONGINT; 
-		PROCEDURE ^ State*(): LONGINT; 
-		PROCEDURE ^ AwaitState*(good, bad: SET; ms: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Available*(): SIGNED32; 
+		PROCEDURE ^ State*(): SIGNED32; 
+		PROCEDURE ^ AwaitState*(good, bad: SET; ms: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Discard*; 
-		PROCEDURE ^ Accept*(VAR client: Connection; VAR res: WORD); 
+		PROCEDURE ^ Accept*(VAR client: Connection; VAR res: INTEGER); 
 		PROCEDURE ^ Requested*(): BOOLEAN; 
 	END Connection; 
 VAR 

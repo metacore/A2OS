@@ -32,7 +32,7 @@ TYPE
 		titleText: Strings.String; 
 		detailText: Strings.String; 
 		modifiedDate: WebStd.PtrDateTime; 
-		priority: LONGINT; 
+		priority: SIGNED32; 
 		type: Strings.String; 
 		status: Strings.String; 
 
@@ -49,7 +49,7 @@ TYPE
 		searchText: Strings.String; 
 		thisContainerName: Strings.String; 
 		lastLoginTime: WebStd.PtrDateTime; 
-		maxPrio: LONGINT; 
+		maxPrio: SIGNED32; 
 		types: StringList; 
 		status: StringList; 
 

@@ -36,7 +36,7 @@ TYPE
 		panel: BevelPanel; 
 		label: WMStandardComponents.Label; 
 		buttons: POINTER TO ARRAY OF WMStandardComponents.Button; 
-		mapping: POINTER TO ARRAY OF LONGINT; 
+		mapping: POINTER TO ARRAY OF SIGNED32; 
 		vtable: AosDisks.PartitionTable; 
 		grid, titlegrid: NoWheelGrid; 
 	END; 
@@ -74,7 +74,7 @@ TYPE
 		diskOverviewScrollPanel: WMStandardComponents.Panel; 
 		diskOverviewPanel: WMStandardComponents.Panel; 
 		scrollbarX, scrollbarY: WMStandardComponents.Scrollbar; 
-		scrollX, scrollY: LONGINT; 
+		scrollX, scrollY: SIGNED32; 
 		titleGrid: NoWheelGrid; 
 		maxWidths: ARRAY DiskOverviewTableColumns OF SIZE; 
 		maxHeight: SIZE; 
@@ -101,7 +101,7 @@ TYPE
 		PROCEDURE ^ DiskPanelHandler(owner, par: ANY); 
 		PROCEDURE ^ RebuildDiskOverview; 
 		PROCEDURE ^ BuildSkeleton; 
-		PROCEDURE ^ GetSizeString(nbrOfBlocks, blockSize: LONGINT): Strings.String; 
+		PROCEDURE ^ GetSizeString(nbrOfBlocks, blockSize: SIGNED32): Strings.String; 
 		PROCEDURE ^ UpdateDiskGrids; 
 		PROCEDURE ^ CalcDiskPanelBounds(VAR minWidth, minHeight: SIZE); 
 		PROCEDURE ^ BuildTitleGrid(): NoWheelGrid; 
@@ -123,13 +123,13 @@ TYPE
 		onSelection-: WMEvents.EventSource; 
 		grid, titleGrid: NoWheelGrid; 
 		spacings: WMGrids.Spacings; 
-		noOfCols: LONGINT; 
+		noOfCols: SIGNED32; 
 		operations: PartitionsLib.AllOperations; 
 		selectedOperation: PartitionsLib.Operation; 
 		scrollbarY: WMStandardComponents.Scrollbar; 
 		scrollPanel: WMStandardComponents.Panel; 
-		scrollY: LONGINT; 
-		state: LONGINT; 
+		scrollY: SIGNED32; 
+		state: SIGNED32; 
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^  & Init*; 

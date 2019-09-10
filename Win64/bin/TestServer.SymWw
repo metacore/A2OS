@@ -18,7 +18,7 @@ TYPE
 	DiscardAgent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
 		len: SIZE; 
-		res: WORD; 
+		res: INTEGER; 
 		buf: ARRAY DiscardBufSize OF CHAR; 
 
 	BEGIN{ACTIVE} 
@@ -27,7 +27,7 @@ TYPE
 	EchoAgent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
 		len: SIZE; 
-		res: WORD; 
+		res: INTEGER; 
 		buf: ARRAY EchoBufSize OF CHAR; 
 
 	BEGIN{ACTIVE} 
@@ -35,14 +35,14 @@ TYPE
 
 	ChargenAgent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
-		res: WORD; 
+		res: INTEGER; 
 
 	BEGIN{ACTIVE} 
 	END ChargenAgent; 
 
 	DayTimeAgent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
-		time, date: LONGINT; 
+		time, date: SIGNED32; 
 		w: Streams.Writer; 
 
 	BEGIN{ACTIVE} 

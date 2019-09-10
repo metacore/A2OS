@@ -11,7 +11,7 @@ TYPE
 VAR 
 	Sin, Cos: ARRAY R OF SREAL; 
 	Norm: ARRAY N OF ARRAY N OF srBase.PT; 
-	i, j: LONGINT; 
+	i, j: SIGNED32; 
 	x, theta, phi: SREAL; 
 
 	PROCEDURE ^ sin*(x: SREAL): SREAL; 

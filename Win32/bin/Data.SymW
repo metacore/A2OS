@@ -24,7 +24,7 @@ TYPE
 	Word* = ARRAY (CHARACTERS + 1) OF CHAR; 
 VAR 
 	intToChar: POINTER TO ARRAY OF CHAR; 
-	charToInt: POINTER TO ARRAY OF LONGINT; 
+	charToInt: POINTER TO ARRAY OF SIGNED32; 
 	Sentinel-: Key; 
 
 	OPERATOR ^ ":="-(VAR l: Key; r: NbrInt.Integer); 

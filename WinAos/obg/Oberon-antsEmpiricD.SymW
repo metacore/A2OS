@@ -13,7 +13,7 @@ TYPE
 		CEDo*: EmpiricalDistribution; 
 		CEDe*: EmpiricalDistribution; 
 		A*: antsArrayObjects.tINTEGERObject; 
-		x*, y*, w*, h*: LONGINT; 
+		x*, y*, w*, h*: SIGNED32; 
 	END; 
 
 BEGIN

@@ -28,7 +28,7 @@ TYPE
 	Samples = POINTER TO ARRAY OF Sample; 
 
 	SampleInfo = RECORD 
-		processorID: LONGINT; 
+		processorID: SIGNED32; 
 		process: Objects.Process; 
 	END; 
 
@@ -39,16 +39,16 @@ TYPE
 		parent-: Node; 
 		child-: Node; 
 		sibling-: Node; 
-		count-: LONGINT; 
-		percent-: REAL; 
-		nofChildren-: LONGINT; 
+		count-: SIGNED32; 
+		percent-: FLOAT32; 
+		nofChildren-: SIGNED32; 
 		name-: Name; 
 		extern*: BOOLEAN; 
 		marked*: BOOLEAN; 
 		next: Node; 
 
 		PROCEDURE ^ GetCaption*(): Strings.String; 
-		PROCEDURE ^ Show(out: Streams.Writer; indent: LONGINT); 
+		PROCEDURE ^ Show(out: Streams.Writer; indent: SIGNED32); 
 		PROCEDURE ^  & Init*; 
 	END Node; 
 
@@ -57,19 +57,19 @@ TYPE
 	Profile* = OBJECT {EXCLUSIVE} 
 	VAR 
 		nodes-: Node; 
-		nofSamples-: LONGINT; 
+		nofSamples-: SIGNED32; 
 		nofProcessors-: SIZE; 
-		nofRunsTooDeep-: LONGINT; 
-		nofUnwindingFaults-: LONGINT; 
-		nofSamplesNotStored-: LONGINT; 
+		nofRunsTooDeep-: SIGNED32; 
+		nofUnwindingFaults-: SIGNED32; 
+		nofSamplesNotStored-: SIGNED32; 
 		pattern: ARRAY 64 OF CHAR; 
-		minPercent: LONGINT; 
+		minPercent: SIGNED32; 
 
 		PROCEDURE ^ FindNode(CONST name: Name; list: Node): Node; 
 		PROCEDURE ^ MergeNode(newNode, parent: Node); 
 		PROCEDURE ^ Flatten*(parent: Node); 
 		PROCEDURE ^ VisitorClearMark(node: Node); 
-		PROCEDURE ^ Mark*(CONST pattern: ARRAY OF CHAR; minPercent: LONGINT); 
+		PROCEDURE ^ Mark*(CONST pattern: ARRAY OF CHAR; minPercent: SIGNED32); 
 		PROCEDURE ^ VisitorSetMark(node: Node); 
 		PROCEDURE ^ VisitNodes(node: Node; visitorProc: VisitorProcedure); 
 		PROCEDURE ^ Visit*(visitorProc: VisitorProcedure); 
@@ -79,32 +79,32 @@ VAR
 	samples: Samples; 
 	sampleInfos: SampleInfos; 
 	maxNofSamples: SIZE; 
-	nofRunsTooDeep: LONGINT; 
-	nofUnwindingFaults: LONGINT; 
-	nofSamplesNotStored: LONGINT; 
-	nofSamples: LONGINT; 
-	currentIndex: LONGINT; 
+	nofRunsTooDeep: SIGNED32; 
+	nofUnwindingFaults: SIGNED32; 
+	nofSamplesNotStored: SIGNED32; 
+	nofSamples: SIGNED32; 
+	currentIndex: SIGNED32; 
 	locked: BOOLEAN; 
-	state: LONGINT; 
+	state: SIGNED32; 
 
 	PROCEDURE ^ FindChildNode(CONST name: Name; parent: Node): Node; 
 	PROCEDURE ^ MergeChildNode(CONST procedureName: ARRAY OF CHAR; parent: Node): Node; 
-	PROCEDURE ^ AddSample(profile: Node; type, info: LONGINT; CONST sampleInfo: SampleInfo; CONST sample: Sample); 
-	PROCEDURE ^ HandleTimer(id: LONGINT; process: Objects.Process; pc, bp, lowAdr, highAdr: ADDRESS); 
+	PROCEDURE ^ AddSample(profile: Node; type, info: SIGNED32; CONST sampleInfo: SampleInfo; CONST sample: Sample); 
+	PROCEDURE ^ HandleTimer(id: SIGNED32; process: Objects.Process; pc, bp, lowAdr, highAdr: ADDRESS); 
 	PROCEDURE ^ InvalidateSample(VAR sample: Sample); 
 	PROCEDURE ^ SortChildren(parent: Node); 
 	PROCEDURE ^ PostProcessNode(profile: Profile; node: Node); 
 	PROCEDURE ^ PostProcessProfile(profile: Profile); 
-	PROCEDURE ^ CreateProfile(type: LONGINT; info: LONGINT): Profile; 
-	PROCEDURE ^ GetBufferSize*(time: LONGINT): SIZE; 
-	PROCEDURE ^ GetProfile*(type, info: LONGINT; VAR profile: Profile; VAR res: WORD); 
+	PROCEDURE ^ CreateProfile(type: SIGNED32; info: SIGNED32): Profile; 
+	PROCEDURE ^ GetBufferSize*(time: SIGNED32): SIZE; 
+	PROCEDURE ^ GetProfile*(type, info: SIGNED32; VAR profile: Profile; VAR res: INTEGER); 
 	PROCEDURE ^ Start*(context: Commands.Context); 
-	PROCEDURE ^ StartProfiling*(maxTime: LONGINT; VAR res: WORD); 
+	PROCEDURE ^ StartProfiling*(maxTime: SIGNED32; VAR res: INTEGER); 
 	PROCEDURE ^ Stop*(context: Commands.Context); 
-	PROCEDURE ^ StopProfiling*(VAR res: WORD); 
+	PROCEDURE ^ StopProfiling*(VAR res: INTEGER); 
 	PROCEDURE ^ Continue*(context: Commands.Context); 
-	PROCEDURE ^ ContinueProfiling*(VAR res: WORD); 
-	PROCEDURE ^ GetState*(VAR currentSamples, maxSamples: SIZE): WORD; 
+	PROCEDURE ^ ContinueProfiling*(VAR res: INTEGER); 
+	PROCEDURE ^ GetState*(VAR currentSamples, maxSamples: SIZE): INTEGER; 
 	PROCEDURE ^ Show*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 
 BEGIN

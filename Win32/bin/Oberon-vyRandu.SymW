@@ -9,17 +9,17 @@ TYPE
 
 	tRandom = vyRanBase.tRandom; 
 VAR 
-	cuti: LONGINT; 
-	maxsi: LONGINT; 
+	cuti: SIGNED32; 
+	maxsi: SIGNED32; 
 
-	PROCEDURE ^ Add(VAR x: SET; y: SET; shift: LONGINT); 
-	PROCEDURE ^ TruncatedProd(x, y: LONGINT): LONGINT; 
-	PROCEDURE ^ Randu*(VAR s: LONGINT); 
+	PROCEDURE ^ Add(VAR x: SET; y: SET; shift: SIGNED32); 
+	PROCEDURE ^ TruncatedProd(x, y: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Randu*(VAR s: SIGNED32); 
 	PROCEDURE ^ Next*(r: tRandom); 
 	PROCEDURE ^ Max(r: tRandom): Bits; 
 	PROCEDURE ^ Get(r: tRandom): Bits; 
-	PROCEDURE ^ GetUniform(r: tRandom): LONGREAL; 
-	PROCEDURE ^ GetL(r: tRandom; top: LONGINT): LONGINT; 
+	PROCEDURE ^ GetUniform(r: tRandom): FLOAT64; 
+	PROCEDURE ^ GetL(r: tRandom; top: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Reset(r: tRandom); 
 	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 

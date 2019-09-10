@@ -9,15 +9,15 @@ TYPE
 	Type* = Modules.TypeDesc; 
 
 	PROCEDURE ^ DisplayAvailable*(): BOOLEAN; 
-	PROCEDURE ^ DisplayWidth*(): LONGINT; 
-	PROCEDURE ^ DisplayHeight*(): LONGINT; 
+	PROCEDURE ^ DisplayWidth*(): SIGNED32; 
+	PROCEDURE ^ DisplayHeight*(): SIGNED32; 
 	PROCEDURE ^ DisplayUpdate*; 
-	PROCEDURE ^ OpenBuffer*(VAR db: displayBuffer; VAR w, h: INTEGER); 
+	PROCEDURE ^ OpenBuffer*(VAR db: displayBuffer; VAR w, h: SIGNED16); 
 	PROCEDURE ^ CloseBuffer*(db: displayBuffer); 
-	PROCEDURE ^ WriteBuffer*(db: displayBuffer; m: Display3.Mask; atx, aty: INTEGER); 
+	PROCEDURE ^ WriteBuffer*(db: displayBuffer; m: Display3.Mask; atx, aty: SIGNED16); 
 	PROCEDURE ^ LockOberon*; 
 	PROCEDURE ^ UnlockOberon*; 
-	PROCEDURE ^ StretchedPict*(M: Display3.Mask; pict: Pictures.Picture; x, y, w, h, dx, dy, dw, dh, mode: INTEGER); 
+	PROCEDURE ^ StretchedPict*(M: Display3.Mask; pict: Pictures.Picture; x, y, w, h, dx, dy, dw, dh, mode: SIGNED16); 
 	PROCEDURE ^ TypeOf*(p: ANY): Type; 
 BEGIN
 END vyPortability.

@@ -11,11 +11,11 @@ TYPE
 	String* = POINTER TO ARRAY OF CHAR; 
 
 	Symbol* = RECORD 
-		position*: LONGINT; 
+		position*: SIGNED32; 
 		token*: Token; 
-		level*: LONGINT; 
+		level*: SIGNED32; 
 		string*: String; 
-		stringLength*: LONGINT; 
+		stringLength*: SIGNED32; 
 		hasWhitespace*: BOOLEAN; 
 	END; 
 
@@ -24,19 +24,19 @@ TYPE
 		reader: Streams.Reader; 
 		diagnostics: Diagnostics.Diagnostics; 
 		ch: CHAR; 
-		position-: LONGINT; 
+		position-: SIGNED32; 
 		prevToken: Token; 
 
-		PROCEDURE ^  & InitializeScanner*(reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^  & InitializeScanner*(reader: Streams.Reader; position: SIGNED32; diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ GetNextCharacter; 
 		PROCEDURE ^ Peek(): CHAR; 
 		PROCEDURE ^ BreaksLiteral(): BOOLEAN; 
 		PROCEDURE ^ IdentifierStart(ch: CHAR): BOOLEAN; 
 		PROCEDURE ^ AppendCharacter(VAR symbol: Symbol; ch: CHAR); 
-		PROCEDURE ^ AppendCharacters(VAR symbol: Symbol; ch: CHAR; number: LONGINT); 
+		PROCEDURE ^ AppendCharacters(VAR symbol: Symbol; ch: CHAR; number: SIGNED32); 
 		PROCEDURE ^ ReadLiteral(VAR symbol: Symbol; token: Token); 
 		PROCEDURE ^ ReadLiteralWS(VAR symbol: Symbol; token: Token); 
-		PROCEDURE ^ ReadCharacters(this: CHAR; min, max: LONGINT; VAR symbol: Symbol; token: Token); 
+		PROCEDURE ^ ReadCharacters(this: CHAR; min, max: SIGNED32; VAR symbol: Symbol; token: Token); 
 		PROCEDURE ^ IsWhitespace(ch: CHAR; includeNewLine: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ GetNextSymbol*(VAR symbol: Symbol); 
 	END Scanner; 

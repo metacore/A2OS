@@ -29,27 +29,27 @@ TYPE
 	Message = Messages.Message; 
 
 	RealRect* = RECORD 
-		l*, t*, r*, b*: REAL; 
+		l*, t*, r*, b*: FLOAT32; 
 	END; 
 
 	PointerInfo* = OBJECT 
 	VAR 
-		hotX*, hotY*: LONGINT; 
+		hotX*, hotY*: SIGNED32; 
 		img*: Graphics.Image; 
 	END PointerInfo; 
 
 	WindowStyle* = OBJECT 
 	VAR 
 		useBitmaps*: BOOLEAN; 
-		baCol*, biCol*: LONGINT; 
-		basw*, bisw*: LONGINT; 
+		baCol*, biCol*: SIGNED32; 
+		basw*, bisw*: SIGNED32; 
 		th*, bh*, lw*, rw*: SIZE; 
 		taa*, tab*, tac*, tia*, tib*, tic*, laa*, lab*, lac*, lia*, lib*, lic*, raa*, rab*, rac*, ria*, rib*, ric*, baa*, bab*, bac*, bia*, bib*, bic*: Graphics.Image; 
 		ca*, ci*, closeHover*, ma*, mi*, minimizeHover*: Graphics.Image; 
-		minimizeOffset*: LONGINT; 
-		atextX*, atextY*, atextColor*, itextX*, itextY*, itextColor*: LONGINT; 
+		minimizeOffset*: SIGNED32; 
+		atextX*, atextY*, atextColor*, itextX*, itextY*, itextColor*: SIGNED32; 
 		bgColor*, fgColor*, selectCol*, desktopColor*: Graphics.Color; 
-		topFocusThreshold*, topThreshold*, bottomFocusThreshold*, bottomThreshold*, leftFocusThreshold*, leftThreshold*, rightFocusThreshold*, rightThreshold*: LONGINT; 
+		topFocusThreshold*, topThreshold*, bottomFocusThreshold*, bottomThreshold*, leftFocusThreshold*, leftThreshold*, rightFocusThreshold*, rightThreshold*: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
@@ -77,20 +77,20 @@ TYPE
 	END MessagePreviewList; 
 
 	DocumentInfo* = RECORD 
-		id*: LONGINT; 
+		id*: SIGNED32; 
 		name*: ARRAY 32 OF CHAR; 
 		fullname*: ARRAY 256 OF CHAR; 
 		modified*, hasFocus*: BOOLEAN; 
 	END; 
 
 	VisualComponentInfo* = RECORD 
-		width*, height*: LONGINT; 
+		width*, height*: SIGNED32; 
 		generator*: PROCEDURE {DELEGATE}():ANY; 
 	END; 
 
 	WindowInfo* = RECORD 
 		openDocuments*: ARRAY 16 OF DocumentInfo; 
-		handleDocumentInfo*: PROCEDURE {DELEGATE}(CONST info: DocumentInfo; new: BOOLEAN; VAR res: WORD); 
+		handleDocumentInfo*: PROCEDURE {DELEGATE}(CONST info: DocumentInfo; new: BOOLEAN; VAR res: INTEGER); 
 		vc*: VisualComponentInfo; 
 	END; 
 
@@ -98,8 +98,8 @@ TYPE
 
 	Window* = OBJECT 
 	VAR 
-		id-: LONGINT; 
-		timestamp*: LONGINT; 
+		id-: SIGNED32; 
+		timestamp*: SIGNED32; 
 		bounds*: Rectangle; 
 		initialBounds*: Rectangle; 
 		normalBounds*: Rectangle; 
@@ -151,7 +151,7 @@ TYPE
 		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
 		PROCEDURE ^ SetPointerInfo*(pi: PointerInfo); 
 		PROCEDURE ^ Handle*(VAR m: Message); 
-		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: WORD); 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: INTEGER); 
 		PROCEDURE ^ HintReduceQuality*(reduce: BOOLEAN); 
 	END Window; 
 
@@ -160,12 +160,12 @@ TYPE
 		img*: Graphics.Image; 
 		canvas*: Graphics.BufferCanvas; 
 		canvasGen-: Graphics.CanvasGenerator; 
-		pointerThreshold*, maxInterpolation*: LONGINT; 
+		pointerThreshold*, maxInterpolation*: SIGNED32; 
 
 		PROCEDURE ^  & Init*(w, h: SIZE; alpha: BOOLEAN); 
 		PROCEDURE ^ SetCanvasGenerator*(canvasGen: Graphics.CanvasGenerator); 
 		PROCEDURE ^ IsHit*(x, y: SIZE): BOOLEAN; 
-		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: WORD); 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: INTEGER); 
 		PROCEDURE ^ Invalidate*(rect: Rectangle); 
 		PROCEDURE ^ Handle*(VAR m: Message); 
 	END BufferWindow; 
@@ -179,7 +179,7 @@ TYPE
 		PROCEDURE ^  & Init*(w, h: SIZE; alpha: BOOLEAN); 
 		PROCEDURE ^ ReInit*(w, h: SIZE); 
 		PROCEDURE ^ SetCanvasGenerator*(canvasGen: Graphics.CanvasGenerator); 
-		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: WORD); 
+		PROCEDURE ^ Draw*(canvas: Graphics.Canvas; w, h: SIZE; q: INTEGER); 
 		PROCEDURE ^ CopyRect*(rect: Rectangle); 
 		PROCEDURE ^ Swap*; 
 	END DoubleBufferWindow; 
@@ -193,7 +193,7 @@ TYPE
 
 		PROCEDURE ^ Update*(r: Rectangle; top: Window); 
 		PROCEDURE ^ Refresh*(top: Window); 
-		PROCEDURE ^ SetRange*(x, y, w, h: REAL; showTransition: BOOLEAN); 
+		PROCEDURE ^ SetRange*(x, y, w, h: FLOAT32; showTransition: BOOLEAN); 
 		PROCEDURE ^ GetKeyState*(VAR state: SET); 
 	END ViewPort; 
 
@@ -234,7 +234,7 @@ TYPE
 		PROCEDURE ^ GetWindowTitle*(w: Window): String; 
 		PROCEDURE ^ SetWindowInfo*(w: Window; CONST info: WindowInfo); 
 		PROCEDURE ^ GetWindowInfo*(w: Window; VAR info: WindowInfo): BOOLEAN; 
-		PROCEDURE ^ SetWindowFlag*(w: Window; flag: LONGINT; value: BOOLEAN); 
+		PROCEDURE ^ SetWindowFlag*(w: Window; flag: SIGNED32; value: BOOLEAN); 
 		PROCEDURE ^ SetAcceptDrag*(w: Window; accept: BOOLEAN); 
 		PROCEDURE ^ StartDrag*(w: Window; sender, data: ANY; img: Graphics.Image; offsetX, offsetY: SIZE; onAccept, onReject: Messages.CompCommand): BOOLEAN; 
 		PROCEDURE ^ TransferPointer*(to: Window): BOOLEAN; 
@@ -258,20 +258,20 @@ TYPE
 VAR 
 	registry-: Plugins.Registry; 
 	pointerNull: PointerInfo; 
-	wTimestamp-: LONGINT; 
-	oTimestamp-: LONGINT; 
+	wTimestamp-: SIGNED32; 
+	oTimestamp-: SIGNED32; 
 	x1, y1: SIZE; 
 	format*: Raster.Format; 
-	nextId: LONGINT; 
+	nextId: SIGNED32; 
 	standardCursorImage: Graphics.Image; 
 
-	PROCEDURE ^ GetId(): LONGINT; 
+	PROCEDURE ^ GetId(): SIGNED32; 
 	PROCEDURE ^ IncWTimestamp*; 
 	PROCEDURE ^ IncOTimestamp*; 
-	PROCEDURE ^ AwaitChange*(wTs, oTs: LONGINT); 
+	PROCEDURE ^ AwaitChange*(wTs, oTs: SIGNED32); 
 	PROCEDURE ^ ClearInfo*(VAR info: WindowInfo); 
 	PROCEDURE ^ NewString*(CONST x: ARRAY OF CHAR): String; 
-	PROCEDURE ^ LoadCursor*(CONST name: ARRAY OF CHAR; hx, hy: LONGINT; VAR pi: PointerInfo); 
+	PROCEDURE ^ LoadCursor*(CONST name: ARRAY OF CHAR; hx, hy: SIGNED32; VAR pi: PointerInfo); 
 	PROCEDURE ^ GetDefaultManager*(): WindowManager; 
 	PROCEDURE ^ GetDefaultView*(): ViewPort; 
 	PROCEDURE ^ ResetNextPosition*; 

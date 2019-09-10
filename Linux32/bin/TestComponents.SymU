@@ -39,7 +39,7 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 	END StringGrids; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Test*(context: Commands.Context); 
 	PROCEDURE ^ TestComponent*(vc: WMComponents.VisualComponent); 

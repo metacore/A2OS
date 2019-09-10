@@ -3,8 +3,8 @@ MODULE antsToolbox IN Oberon;
 CONST 
 TYPE 
 	tBuffer* = RECORD 
-		X, Y, W, H: INTEGER; 
-		x, y: INTEGER; 
+		X, Y, W, H: SIGNED16; 
+		x, y: SIGNED16; 
 		buf: Images.Image; 
 		img: Images.Image; 
 	END; 
@@ -18,9 +18,9 @@ TYPE
 	END; 
 
 	GetCoordMsg* = RECORD (Objects.ObjMsg)
-		x*, y*: INTEGER; 
-		xr*, yr*: LONGREAL; 
-		w*, h*: LONGINT; 
+		x*, y*: SIGNED16; 
+		xr*, yr*: FLOAT64; 
+		w*, h*: SIGNED32; 
 		layer*: vyPort.tLayer; 
 		update*: BOOLEAN; 
 		a*: vyBase.Object; 
@@ -28,13 +28,13 @@ TYPE
 
 	FileFinalize* = PROCEDURE (VAR f: Files.File; name: ARRAY OF CHAR); 
 
-	ObjProc* = PROCEDURE (x, y: LONGINT; a: Objects.Object; link: Objects.Object); 
+	ObjProc* = PROCEDURE (x, y: SIGNED32; a: Objects.Object; link: Objects.Object); 
 VAR 
 	finalize: FileFinalize; 
 	suffix: ARRAY 32 OF CHAR; 
 	imgconversions: POINTER TO ARRAY OF ARRAY 64 OF CHAR; 
 	pictconversions: POINTER TO ARRAY OF ARRAY 64 OF CHAR; 
-	tempX, tempY: INTEGER; 
+	tempX, tempY: SIGNED16; 
 	lastframe: Display.Frame; 
 	oldhh: PROCEDURE (VAR D: Documents.Document); 
 	dhist: hist; 
@@ -60,40 +60,40 @@ VAR
 	PROCEDURE ^ StoreImageAsGIF*(img: Images.Image; R: Files.Rider); 
 	PROCEDURE ^ InitConversions; 
 	PROCEDURE ^ SplitName*(VAR name, MName, PName: ARRAY OF CHAR); 
-	PROCEDURE ^ GetLayerXY*(x, y: INTEGER; VAR pict: vyPort.Picture): vyLinks.Link; 
-	PROCEDURE ^ FrontLayerXY*(x, y: INTEGER; VAR pict: vyPort.Picture): vyPort.tLayer; 
-	PROCEDURE ^ MsgToXY*(x, y: INTEGER; VAR msg: Objects.ObjMsg); 
+	PROCEDURE ^ GetLayerXY*(x, y: SIGNED16; VAR pict: vyPort.Picture): vyLinks.Link; 
+	PROCEDURE ^ FrontLayerXY*(x, y: SIGNED16; VAR pict: vyPort.Picture): vyPort.tLayer; 
+	PROCEDURE ^ MsgToXY*(x, y: SIGNED16; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ SplitNameM(str: ARRAY OF CHAR; VAR mod: Modules.Module; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ GetType*(type: ARRAY OF CHAR): antsPortability.Type; 
 	PROCEDURE ^ IsType*(obj: ANY; t: antsPortability.Type): BOOLEAN; 
 	PROCEDURE ^ TypedLayer*(llist: vyLinks.Link; type: ARRAY OF CHAR): Objects.Object; 
-	PROCEDURE ^ TypedLayerXY*(x, y: INTEGER; type: ARRAY OF CHAR; VAR pict: vyPort.Picture): vyPort.tLayer; 
-	PROCEDURE ^ MsgToTypedXY*(x, y: INTEGER; VAR msg: Objects.ObjMsg; type: ARRAY OF CHAR); 
+	PROCEDURE ^ TypedLayerXY*(x, y: SIGNED16; type: ARRAY OF CHAR; VAR pict: vyPort.Picture): vyPort.tLayer; 
+	PROCEDURE ^ MsgToTypedXY*(x, y: SIGNED16; VAR msg: Objects.ObjMsg; type: ARRAY OF CHAR); 
 	PROCEDURE ^ SelectFrame*(): Display.Frame; 
 	PROCEDURE ^ SetSize*; 
 	PROCEDURE ^ CopyCoordinates*; 
-	PROCEDURE ^ GetDisplay(X, Y, W, H: INTEGER): Images.Image; 
+	PROCEDURE ^ GetDisplay(X, Y, W, H: SIGNED16): Images.Image; 
 	PROCEDURE ^ TempHandle(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ DoFrameToGIF*(f: Display.Frame; name: ARRAY OF CHAR); 
 	PROCEDURE ^ MakefileName*(prefix, suffix: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ Adjust(VAR x, y, w, h: INTEGER); 
-	PROCEDURE ^ OpenBigBuffer(VAR buf: tBuffer; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Adjust(VAR x, y, w, h: SIGNED16); 
+	PROCEDURE ^ OpenBigBuffer(VAR buf: tBuffer; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ CloseBuffer(buf: tBuffer); 
 	PROCEDURE ^ WriteBufferImg(buf: tBuffer); 
-	PROCEDURE ^ GetBufRect(buf: tBuffer; x, y, w, h: INTEGER; VAR X, Y, W, H: INTEGER); 
-	PROCEDURE ^ CheckBuffer(VAR buf: tBuffer; x, y, w, h: INTEGER); 
-	PROCEDURE ^ ZoomRect*(r, g, b: INTEGER; x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ GetBufRect(buf: tBuffer; x, y, w, h: SIGNED16; VAR X, Y, W, H: SIGNED16); 
+	PROCEDURE ^ CheckBuffer(VAR buf: tBuffer; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ ZoomRect*(r, g, b: SIGNED16; x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
 	PROCEDURE ^ HistoryHook(VAR D: Documents.Document); 
 	PROCEDURE ^ LoadAlpha*(VAR img: Images.Image; name: ARRAY OF CHAR; VAR done: BOOLEAN); 
 	PROCEDURE ^ Launch*; 
 	PROCEDURE ^ Ants*; 
 	PROCEDURE ^ FrameToGIF*; 
 	PROCEDURE ^ FrameToGIF2*; 
-	PROCEDURE ^ InteractiveGetCoordinates*(VAR xr, yr: LONGREAL; VAR wr, hr: LONGREAL); 
+	PROCEDURE ^ InteractiveGetCoordinates*(VAR xr, yr: FLOAT64; VAR wr, hr: FLOAT64); 
 	PROCEDURE ^ InteractiveMsg*(VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ Test*; 
 	PROCEDURE ^ ShowFrame*; 
-	PROCEDURE ^ CountMultipleObj*(name: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ CountMultipleObj*(name: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ SetDocName*(d: Documents.Document; name: ARRAY OF CHAR); 
 	PROCEDURE ^ NameOpened*(name: ARRAY OF CHAR); 
 	PROCEDURE ^ NameOpenedWId*(name: ARRAY OF CHAR; obj: vyBase.Object); 

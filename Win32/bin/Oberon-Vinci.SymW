@@ -33,10 +33,10 @@ TYPE
 	Scanner = RECORD 
 		ctxt: Scheme.Context; 
 		ch: CHAR; 
-		token: INTEGER; 
-		errors: INTEGER; 
+		token: SIGNED16; 
+		errors: SIGNED16; 
 		obj: Object; 
-		pos, prev: LONGINT; 
+		pos, prev: SIGNED32; 
 	END; 
 
 	Context* = POINTER TO ContextDesc; 
@@ -46,7 +46,7 @@ TYPE
 		pen: LeoPens.Pen; 
 		mode: SET; 
 		evenodd: BOOLEAN; 
-		x, y: REAL; 
+		x, y: FLOAT32; 
 	END; 
 
 	Package = POINTER TO RECORD 
@@ -117,11 +117,11 @@ VAR
 	PROCEDURE ^ InitContext*(ctxt: Context; in, out, err: Scheme.Object; gc: Gfx.Context); 
 	PROCEDURE ^ MakeContext*(ctxt: Context; in: Object; gc: Gfx.Context); 
 	PROCEDURE ^ ShowError*; 
-	PROCEDURE ^ NumVal(ctxt: Scheme.Context; VAR args: Object): REAL; 
+	PROCEDURE ^ NumVal(ctxt: Scheme.Context; VAR args: Object): FLOAT32; 
 	PROCEDURE ^ PenVal*(ctxt: Scheme.Context; VAR args: Object): LeoPens.Pen; 
 	PROCEDURE ^ GetColorVal*(ctxt: Scheme.Context; VAR args: Object; VAR col: Gfx.Color); 
-	PROCEDURE ^ GetPatternVal*(ctxt: Scheme.Context; VAR args: Object; VAR img: Images.Image; VAR px, py: REAL); 
-	PROCEDURE ^ GetDashVal*(ctxt: Scheme.Context; VAR args: Object; VAR on, off: ARRAY OF REAL; VAR n: LONGINT); 
+	PROCEDURE ^ GetPatternVal*(ctxt: Scheme.Context; VAR args: Object; VAR img: Images.Image; VAR px, py: FLOAT32); 
+	PROCEDURE ^ GetDashVal*(ctxt: Scheme.Context; VAR args: Object; VAR on, off: ARRAY OF FLOAT32; VAR n: SIGNED32); 
 	PROCEDURE ^ CapVal*(ctxt: Scheme.Context; VAR args: Object): Gfx.CapStyle; 
 	PROCEDURE ^ JoinVal*(ctxt: Scheme.Context; VAR args: Object): Gfx.JoinStyle; 
 	PROCEDURE ^ GetMatrixVal*(ctxt: Scheme.Context; VAR args: Object; VAR m: GfxMatrix.Matrix); 
@@ -161,7 +161,7 @@ VAR
 	PROCEDURE ^ EvalSetCTM(ctxt: Scheme.Context; args: Object; VAR res: Object); 
 	PROCEDURE ^ EvalClipRect(ctxt: Scheme.Context; args: Object; VAR res: Object); 
 	PROCEDURE ^ EvalShape(ctxt: Scheme.Context; args: Object; VAR res: Object); 
-	PROCEDURE ^ MakeColor(r, g, b: LONGINT): Object; 
+	PROCEDURE ^ MakeColor(r, g, b: SIGNED32): Object; 
 	PROCEDURE ^ EvalColorsRGB(c: Scheme.Context; args: Object; VAR res: Object); 
 	PROCEDURE ^ EvalColorsGray(c: Scheme.Context; args: Object; VAR res: Object); 
 	PROCEDURE ^ EvalColorsIndex(c: Scheme.Context; args: Object; VAR res: Object); 

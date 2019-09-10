@@ -4,7 +4,7 @@ CONST
 VAR 
 	w*: Streams.Writer; 
 	ml: MultiLogger.LogWindow; 
-	indent: LONGINT; 
+	indent: SIGNED32; 
 
 	PROCEDURE ^ Indent; 
 	PROCEDURE ^ DumpConst(c: TS.Const); 

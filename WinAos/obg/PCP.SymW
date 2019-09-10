@@ -98,14 +98,14 @@ TYPE
 
 	Barrier = OBJECT {EXCLUSIVE} (Kernel.Timer)
 	VAR 
-		timeout: LONGINT; 
-		started, ended: LONGINT; 
+		timeout: SIGNED32; 
+		started, ended: SIGNED32; 
 
-		PROCEDURE ^  & SInit*(timeout: LONGINT); 
+		PROCEDURE ^  & SInit*(timeout: SIGNED32); 
 		PROCEDURE ^ Enter; 
 		PROCEDURE ^ Exit; 
 		PROCEDURE ^ Await; 
-		PROCEDURE ^ Stats(VAR started, inside: LONGINT); 
+		PROCEDURE ^ Stats(VAR started, inside: SIGNED32); 
 	END Barrier; 
 
 	Parser* = OBJECT {EXCLUSIVE} 
@@ -116,8 +116,8 @@ TYPE
 		sym, savedsym: PCS.Token; 
 		scanner, savedscanner: PCS.Scanner; 
 		scope, codescope: PCT.Scope; 
-		looplevel, scopelevel: SHORTINT; 
-		forexitcount, forretcount, retcount, fincount: LONGINT; 
+		looplevel, scopelevel: SIGNED8; 
+		forexitcount, forretcount, retcount, fincount: SIGNED32; 
 		curloop: PCB.LoopInfo; 
 		code: PCC.Code; 
 		inline: BOOLEAN; 
@@ -131,9 +131,9 @@ TYPE
 			ptr: PCT.Pointer; 
 			name: PCS.Name; 
 		END; 
-		nofForwardPtr: LONGINT; 
+		nofForwardPtr: SIGNED32; 
 
-		PROCEDURE ^ Error(n: WORD; pos: LONGINT); 
+		PROCEDURE ^ Error(n: INTEGER; pos: SIGNED32); 
 		PROCEDURE ^ Check(x: PCS.Token); 
 		PROCEDURE ^ CheckSemicolons; 
 		PROCEDURE ^ CheckSysImported(module: PCT.Module); 
@@ -142,11 +142,11 @@ TYPE
 		PROCEDURE ^ OperatorDef(VAR i: IdentDefDesc; allowRO: BOOLEAN); 
 		PROCEDURE ^ FPSection(scope: PCT.ProcScope; pflags: SET); 
 		PROCEDURE ^ FormalPars(scope: PCT.ProcScope; VAR rtype: PCT.Struct; pflags: SET); 
-		PROCEDURE ^ CheckOperator(scope: PCT.ProcScope; VAR name: PCS.Name; rtype: PCT.Struct; pos: LONGINT); 
+		PROCEDURE ^ CheckOperator(scope: PCT.ProcScope; VAR name: PCS.Name; rtype: PCT.Struct; pos: SIGNED32); 
 		PROCEDURE ^ RecordType(VAR t: PCT.Struct; pointed: BOOLEAN); 
 		PROCEDURE ^ Interface(): PCT.Interface; 
 		PROCEDURE ^ ObjectType(VAR t: PCT.Struct; name: StringPool.Index); 
-		PROCEDURE ^ DefinitionType(pos: LONGINT; VAR t: PCT.Struct; name: StringPool.Index); 
+		PROCEDURE ^ DefinitionType(pos: SIGNED32; VAR t: PCT.Struct; name: StringPool.Index); 
 		PROCEDURE ^ TensorType(VAR t: PCT.Struct); 
 		PROCEDURE ^ ArrayType(VAR t: PCT.Struct; enhArray: BOOLEAN); 
 		PROCEDURE ^ PointerType(VAR t: PCT.Struct; name: StringPool.Index); 
@@ -168,17 +168,17 @@ TYPE
 		PROCEDURE ^ MathArray(VAR x: PCB.Expression); 
 		PROCEDURE ^ Factor(VAR x: PCB.Expression); 
 		PROCEDURE ^ Term(VAR x: PCB.Expression); 
-		PROCEDURE ^ CallAssignmentOp(op: PCS.Token; mod: PCT.Symbol; p1: PCB.Designator; p2: PCB.Expression; pos: LONGINT; suppress: BOOLEAN); 
-		PROCEDURE ^ CallOperator(op: PCS.Token; mod: PCT.Symbol; pars: ARRAY OF PCB.Expression; pos: LONGINT): PCB.Expression; 
+		PROCEDURE ^ CallAssignmentOp(op: PCS.Token; mod: PCT.Symbol; p1: PCB.Designator; p2: PCB.Expression; pos: SIGNED32; suppress: BOOLEAN); 
+		PROCEDURE ^ CallOperator(op: PCS.Token; mod: PCT.Symbol; pars: ARRAY OF PCB.Expression; pos: SIGNED32): PCB.Expression; 
 		PROCEDURE ^ SimpleExpr(VAR x: PCB.Expression); 
 		PROCEDURE ^ Expr(VAR x: PCB.Expression); 
 		PROCEDURE ^ ConstExpr(VAR x: PCB.Const); 
-		PROCEDURE ^ Case(body, suppress: BOOLEAN; VAR awaitCount: LONGINT; VAR caseinfo: PCB.CaseInfo); 
-		PROCEDURE ^ If(body, suppress: BOOLEAN; VAR awaitCount: LONGINT); 
+		PROCEDURE ^ Case(body, suppress: BOOLEAN; VAR awaitCount: SIGNED32; VAR caseinfo: PCB.CaseInfo); 
+		PROCEDURE ^ If(body, suppress: BOOLEAN; VAR awaitCount: SIGNED32); 
 		PROCEDURE ^ BlockModifier(allowBody, suppress: BOOLEAN; VAR locked: BOOLEAN); 
-		PROCEDURE ^ StatementBlock(body, suppress: BOOLEAN; VAR awaitCount: LONGINT); 
-		PROCEDURE ^ CallNewOnObject(code: PCC.Code; suppress: BOOLEAN; proc: PCB.Designator; params: PCB.ExprList; curlevel: SHORTINT); 
-		PROCEDURE ^ StatementSeq(body, suppress: BOOLEAN; VAR awaitCount: LONGINT); 
+		PROCEDURE ^ StatementBlock(body, suppress: BOOLEAN; VAR awaitCount: SIGNED32); 
+		PROCEDURE ^ CallNewOnObject(code: PCC.Code; suppress: BOOLEAN; proc: PCB.Designator; params: PCB.ExprList; curlevel: SIGNED8); 
+		PROCEDURE ^ StatementSeq(body, suppress: BOOLEAN; VAR awaitCount: SIGNED32); 
 		PROCEDURE ^ Body(suppress: BOOLEAN); 
 		PROCEDURE ^ ProcDecl; 
 		PROCEDURE ^ SkipScope; 
@@ -245,7 +245,7 @@ TYPE
 VAR 
 	Assemble*: PROCEDURE (scanner: PCS.Scanner; scope: PCT.Scope; exported, inlined: BOOLEAN):PCM.Attribute; 
 	noname, self, untraced, delegate, overloading, exclusive, active, safe, priority, realtime, winapi, clang, notag, deltype, hiddenptr, procfld, ptrfld: StringPool.Index; 
-	NModules, NObjects, NDefinitions, NArrays, NRecords, NPointers, NDelegates, NProcedureTypes, NExclusive, NExclusiveMain, NActive, NSyncsCount: LONGINT; 
+	NModules, NObjects, NDefinitions, NArrays, NRecords, NPointers, NDelegates, NProcedureTypes, NExclusive, NExclusiveMain, NActive, NSyncsCount: SIGNED32; 
 
 	PROCEDURE ^ InitializationWarning(s: PCT.Symbol); 
 	PROCEDURE ^ UsageWarning(s: PCT.Symbol); 

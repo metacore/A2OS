@@ -14,21 +14,21 @@ TYPE
 	Font* = POINTER TO FontDesc; 
 
 	CharDesc* = RECORD (Objects.ObjDesc)
-		dx*, x*, y*, w*, h*: INTEGER; 
+		dx*, x*, y*, w*, h*: SIGNED16; 
 		pat*: Display.Pattern; 
 	END; 
 
 	FontDesc* = RECORD (Objects.LibDesc)
-		type*: SHORTINT; 
-		height*, minX*, maxX*, minY*, maxY*: INTEGER; 
+		type*: SIGNED8; 
+		height*, minX*, maxX*, minY*, maxY*: SIGNED16; 
 	END; 
 
 	RunRec = RECORD 
-		beg, end: INTEGER; 
+		beg, end: SIGNED16; 
 	END; 
 
 	BoxRec = RECORD 
-		dx, x, y, w, h: INTEGER; 
+		dx, x, y, w, h: SIGNED16; 
 	END; 
 VAR 
 	FontId*: CHAR; 
@@ -36,13 +36,13 @@ VAR
 	theChar: Char; 
 	conv: BOOLEAN; 
 
-	PROCEDURE ^ Put1(VAR a: ADDRESS; x: INTEGER); 
-	PROCEDURE ^ Put2(VAR a: ADDRESS; x: LONGINT); 
+	PROCEDURE ^ Put1(VAR a: ADDRESS; x: SIGNED16); 
+	PROCEDURE ^ Put2(VAR a: ADDRESS; x: SIGNED32); 
 	PROCEDURE ^ PutAdr(VAR a: ADDRESS; x: ADDRESS); 
-	PROCEDURE ^ ReadInt(VAR R: Files.Rider; VAR x: INTEGER); 
-	PROCEDURE ^ GetCharObj(L: Objects.Library; ref: INTEGER; VAR obj: Objects.Object); 
-	PROCEDURE ^ GetChar*(F: Font; ch: CHAR; VAR dx, x, y, w, h: INTEGER; VAR pat: Display.Pattern); 
-	PROCEDURE ^ Internalize(F: Font; VAR R: Files.Rider; type: SHORTINT); 
+	PROCEDURE ^ ReadInt(VAR R: Files.Rider; VAR x: SIGNED16); 
+	PROCEDURE ^ GetCharObj(L: Objects.Library; ref: SIGNED16; VAR obj: Objects.Object); 
+	PROCEDURE ^ GetChar*(F: Font; ch: CHAR; VAR dx, x, y, w, h: SIGNED16; VAR pat: Display.Pattern); 
+	PROCEDURE ^ Internalize(F: Font; VAR R: Files.Rider; type: SIGNED8); 
 	PROCEDURE ^ Substitute(F: Font); 
 	PROCEDURE ^ Load(L: Objects.Library); 
 	PROCEDURE ^ This*(CONST name: ARRAY OF CHAR): Font; 

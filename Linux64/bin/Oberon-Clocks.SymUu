@@ -15,44 +15,44 @@ TYPE
 	AlarmHandler* = PROCEDURE (alarm: Alarm; VAR handled: BOOLEAN); 
 
 	AlarmDesc* = RECORD 
-		at: LONGINT; 
+		at: SIGNED32; 
 		handle*: AlarmHandler; 
 		handled: BOOLEAN; 
 		next: Alarm; 
 	END; 
 
-	EnumAlarmHandler* = PROCEDURE (alarm: Alarm; t, d: LONGINT; VAR handled: BOOLEAN); 
+	EnumAlarmHandler* = PROCEDURE (alarm: Alarm; t, d: SIGNED32; VAR handled: BOOLEAN); 
 
 	TickMsg* = RECORD (Display.FrameMsg)
-		id*: INTEGER; 
-		date*, time*: LONGINT; 
+		id*: SIGNED16; 
+		date*, time*: SIGNED32; 
 	END; 
 
 	Clock* = POINTER TO ClockDesc; 
 
 	ClockDesc* = RECORD (Gadgets.FrameDesc)
-		date, time, timeDiff: LONGINT; 
+		date, time, timeDiff: SIGNED32; 
 		state0: SET; 
-		col: INTEGER; 
+		col: SIGNED16; 
 	END; 
 VAR 
 	alarms: BOOLEAN; 
 	firstAlarm: Alarm; 
-	lastTask, lastAlarm, lastTick, zeroY: LONGINT; 
+	lastTask, lastAlarm, lastTick, zeroY: SIGNED32; 
 	task: Oberon.Task; 
 	W: Texts.Writer; 
 	font: ARRAY 3 OF Fonts.Font; 
 
-	PROCEDURE ^ ToLinearForm(t, d: LONGINT): LONGINT; 
-	PROCEDURE ^ ToOberonForm(time: LONGINT; VAR t, d: LONGINT); 
-	PROCEDURE ^ GetClock(): LONGINT; 
+	PROCEDURE ^ ToLinearForm(t, d: SIGNED32): SIGNED32; 
+	PROCEDURE ^ ToOberonForm(time: SIGNED32; VAR t, d: SIGNED32); 
+	PROCEDURE ^ GetClock(): SIGNED32; 
 	PROCEDURE ^ AlarmTask(me: Oberon.Task); 
-	PROCEDURE ^ InstallAlarm*(alarm: Alarm; time, date: LONGINT; handle: AlarmHandler); 
+	PROCEDURE ^ InstallAlarm*(alarm: Alarm; time, date: SIGNED32; handle: AlarmHandler); 
 	PROCEDURE ^ RemoveAlarm*(alarm: Alarm); 
 	PROCEDURE ^ ShowAlarms*(enum: EnumAlarmHandler); 
 	PROCEDURE ^ ClockAttr(F: Clock; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ Line2(M: Display3.Mask; ang: INTEGER; x0, y0, r1, r2, color: INTEGER); 
-	PROCEDURE ^ RestoreClock(F: Clock; M: Display3.Mask; x, y, w, h: INTEGER; alarm: BOOLEAN); 
+	PROCEDURE ^ Line2(M: Display3.Mask; ang: SIGNED16; x0, y0, r1, r2, color: SIGNED16); 
+	PROCEDURE ^ RestoreClock(F: Clock; M: Display3.Mask; x, y, w, h: SIGNED16; alarm: BOOLEAN); 
 	PROCEDURE ^ PrintClock(F: Clock; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ CopyClock*(VAR M: Objects.CopyMsg; from, to: Clock); 
 	PROCEDURE ^ ClockHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 

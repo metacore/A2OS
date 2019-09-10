@@ -2,7 +2,7 @@ MODULE antsFunctions IN Oberon;
 	IMPORT antsObjects, vyName, antsCommands, vyBase, vyLongrealVec, Files, Objects, Gadgets, vyHostTexts, antsOnTheFly, Texts, Links, aM := antsMessages;
 CONST 
 TYPE 
-	Array* = POINTER TO ARRAY OF LONGREAL; 
+	Array* = POINTER TO ARRAY OF FLOAT64; 
 
 	Function* = POINTER TO FunctionDesc; 
 
@@ -11,8 +11,8 @@ TYPE
 		x, val: vyBase.tVector; 
 		f1d: antsOnTheFly.Function1d; 
 		Mapping-: ARRAY 1024 OF CHAR; 
-		set*: PROCEDURE (f: Function; at, val: LONGREAL); 
-		get*: PROCEDURE (f: Function; at: LONGREAL):LONGREAL; 
+		set*: PROCEDURE (f: Function; at, val: FLOAT64); 
+		get*: PROCEDURE (f: Function; at: FLOAT64):FLOAT64; 
 		editable-: BOOLEAN; 
 	END; 
 
@@ -20,22 +20,22 @@ TYPE
 
 	FunctionXdDesc* = RECORD (vyBase.ObjDesc)
 		Mapping-: ARRAY 1024 OF CHAR; 
-		get*: PROCEDURE (f: FunctionXd; at: ARRAY OF LONGREAL):LONGREAL; 
+		get*: PROCEDURE (f: FunctionXd; at: ARRAY OF FLOAT64):FLOAT64; 
 		fxd: antsOnTheFly.FunctionXd; 
 	END; 
 
-	PROCEDURE ^ GetInterpolated(f: Function; at: LONGREAL): LONGREAL; 
-	PROCEDURE ^ GetDefault(f: Function; at: LONGREAL): LONGREAL; 
-	PROCEDURE ^ GetDefaultXd(f: FunctionXd; at: ARRAY OF LONGREAL): LONGREAL; 
-	PROCEDURE ^ SetValue(f: Function; at, val: LONGREAL); 
-	PROCEDURE ^ SetCreate(f: Function; at, val: LONGREAL); 
-	PROCEDURE ^ NoopSet(f: Function; at, val: LONGREAL); 
-	PROCEDURE ^ GetF1d(f: Function; at: LONGREAL): LONGREAL; 
-	PROCEDURE ^ GetFxd(f: FunctionXd; at: ARRAY OF LONGREAL): LONGREAL; 
-	PROCEDURE ^ Get1dOf(f: Function; at: LONGREAL): LONGREAL; 
+	PROCEDURE ^ GetInterpolated(f: Function; at: FLOAT64): FLOAT64; 
+	PROCEDURE ^ GetDefault(f: Function; at: FLOAT64): FLOAT64; 
+	PROCEDURE ^ GetDefaultXd(f: FunctionXd; at: ARRAY OF FLOAT64): FLOAT64; 
+	PROCEDURE ^ SetValue(f: Function; at, val: FLOAT64); 
+	PROCEDURE ^ SetCreate(f: Function; at, val: FLOAT64); 
+	PROCEDURE ^ NoopSet(f: Function; at, val: FLOAT64); 
+	PROCEDURE ^ GetF1d(f: Function; at: FLOAT64): FLOAT64; 
+	PROCEDURE ^ GetFxd(f: FunctionXd; at: ARRAY OF FLOAT64): FLOAT64; 
+	PROCEDURE ^ Get1dOf(f: Function; at: FLOAT64): FLOAT64; 
 	PROCEDURE ^ SetProcedures(f: Function); 
-	PROCEDURE ^ GetCache*(f: Function; from, to, by: LONGREAL; VAR a: Array); 
-	PROCEDURE ^ SetCache*(f: Function; from, to, by: LONGREAL; a: Array); 
+	PROCEDURE ^ GetCache*(f: Function; from, to, by: FLOAT64; VAR a: Array); 
+	PROCEDURE ^ SetCache*(f: Function; from, to, by: FLOAT64; a: Array); 
 	PROCEDURE ^ StoreFXd(VAR R: Files.Rider; s: FunctionXd); 
 	PROCEDURE ^ LoadFXd(VAR R: Files.Rider; s: FunctionXd); 
 	PROCEDURE ^ StoreF(VAR R: Files.Rider; s: Function); 

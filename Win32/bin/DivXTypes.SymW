@@ -31,44 +31,44 @@ CONST
 TYPE 
 	PointerToArrayOfCHAR* = POINTER TO ARRAY OF CHAR; 
 
-	PointerToArrayOfLONGINT* = POINTER TO ARRAY OF LONGINT; 
+	PointerToArrayOfLONGINT* = POINTER TO ARRAY OF SIGNED32; 
 
-	PointerToArrayOfSHORTINT* = POINTER TO ARRAY OF SHORTINT; 
+	PointerToArrayOfSHORTINT* = POINTER TO ARRAY OF SIGNED8; 
 
-	DCStoreLumArray* = POINTER TO ARRAY OF ARRAY OF LONGINT; 
+	DCStoreLumArray* = POINTER TO ARRAY OF ARRAY OF SIGNED32; 
 
-	ACLeftLumArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF LONGINT; 
+	ACLeftLumArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
 
-	ACTopLumArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF LONGINT; 
+	ACTopLumArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
 
-	DCStoreChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF LONGINT; 
+	DCStoreChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
 
-	ACLeftChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGINT; 
+	ACLeftChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
 
-	ACTopChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGINT; 
+	ACTopChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
 
 	VideoBuffer* = RECORD 
 		data*: POINTER TO ARRAY OF CHAR; 
-		index*: LONGINT; 
-		size*: LONGINT; 
+		index*: SIGNED32; 
+		size*: SIGNED32; 
 	END; 
 
 	MyUtils* = OBJECT 
 
-		PROCEDURE ^ CompareCharArrays*(VAR ar1, ar2: ARRAY OF CHAR; len: LONGINT): BOOLEAN; 
-		PROCEDURE ^ MemSet*(d: PointerToArrayOfCHAR; offset: LONGINT; val: CHAR; len: LONGINT); 
+		PROCEDURE ^ CompareCharArrays*(VAR ar1, ar2: ARRAY OF CHAR; len: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ MemSet*(d: PointerToArrayOfCHAR; offset: SIGNED32; val: CHAR; len: SIGNED32); 
 	END MyUtils; 
 
 	TabTypePtr* = POINTER TO TabType; 
 
 	TabType* = RECORD 
-		val*, len*: LONGINT; 
+		val*, len*: SIGNED32; 
 	END; 
 
 	MP4Tables* = OBJECT 
 	VAR 
-		intraQuantMatrix*: ARRAY 64 OF LONGINT; 
-		nonIntraQuantMatrix*: ARRAY 64 OF LONGINT; 
+		intraQuantMatrix*: ARRAY 64 OF SIGNED32; 
+		nonIntraQuantMatrix*: ARRAY 64 OF SIGNED32; 
 		zigZagScan*, alternateHorizontalScan*, alternateVerticalScan*: PointerToArrayOfLONGINT; 
 
 		PROCEDURE ^  & init*; 
@@ -82,7 +82,7 @@ TYPE
 		dcStoreChr*: DCStoreChrArray; 
 		acLeftChr*: ACLeftChrArray; 
 		acTopChr*: ACTopChrArray; 
-		predictDir*: LONGINT; 
+		predictDir*: SIGNED32; 
 
 		PROCEDURE ^  & init*; 
 	END ACDC; 
@@ -91,18 +91,18 @@ TYPE
 	VAR 
 		hdr*: MP4Header; 
 		mp4Tables*: MP4Tables; 
-		quantStore*: ARRAY (DecMbr + 1) OF ARRAY (DecMbc + 1) OF LONGINT; 
+		quantStore*: ARRAY (DecMbr + 1) OF ARRAY (DecMbc + 1) OF SIGNED32; 
 		coeffPred*: ACDC; 
-		clpData*, clp*: POINTER TO ARRAY OF LONGINT; 
-		horizontalSize*, verticalSize*, juiceHor*, juiceVer*, codedPictureWidth*, codedPictureHeight*, chromWidth*, chromHeight*: LONGINT; 
+		clpData*, clp*: POINTER TO ARRAY OF SIGNED32; 
+		horizontalSize*, verticalSize*, juiceHor*, juiceVer*, codedPictureWidth*, codedPictureHeight*, chromWidth*, chromHeight*: SIGNED32; 
 		edgedRef*, edgedFor*, frameRef*, frameFor*, displayFrame*: PointerToArrayOfCHAR; 
-		edgedRefBaseOffset*: ARRAY 3 OF LONGINT; 
-		edgedForBaseOffset*: ARRAY 3 OF LONGINT; 
-		frameRefBaseOffset*: ARRAY 3 OF LONGINT; 
-		frameForBaseOffset*: ARRAY 3 OF LONGINT; 
-		displayFrameBaseOffset*: ARRAY 3 OF LONGINT; 
-		modeMap*: ARRAY (DecMbr + 1) OF ARRAY (DecMbc + 2) OF LONGINT; 
-		mbWidth*, mbHeight*: LONGINT; 
+		edgedRefBaseOffset*: ARRAY 3 OF SIGNED32; 
+		edgedForBaseOffset*: ARRAY 3 OF SIGNED32; 
+		frameRefBaseOffset*: ARRAY 3 OF SIGNED32; 
+		frameForBaseOffset*: ARRAY 3 OF SIGNED32; 
+		displayFrameBaseOffset*: ARRAY 3 OF SIGNED32; 
+		modeMap*: ARRAY (DecMbr + 1) OF ARRAY (DecMbc + 2) OF SIGNED32; 
+		mbWidth*, mbHeight*: SIGNED32; 
 
 		PROCEDURE ^  & init*; 
 		PROCEDURE ^ SetUpState*(buffers: MP4Buffers); 
@@ -110,10 +110,10 @@ TYPE
 
 	MP4Header = OBJECT 
 	VAR 
-		ident*, randomAccessibleVol*, typeIndication*, isObjectLayerIdentifier*, visualObjectLayerVerId*, visualObjectLayerPriority*, aspectRatioInfo*, volControlParameters*, chromaFormat*, lowDelay*, vbvParameters*, firstHalfBitRate*, latterHalfBitRate*, firstHalfvbvBufferSize*, latterHalfvbvBufferSize*, firstHalfvbvOccupancy*, latterHalfvbvOccupancy*, shape*, timeIncrementResolution*, fixedVopRate*, fixedVopTimeIncrement*, width*, height*, interlaced*, obmcDisable*, spriteUsage*, not8Bit*, quantPrecision*, bitsPerPixel*, quantType*, loadIntraQuantMatrix*, loadNonIntraQuantMatrix*, quarterPixel*, complexityEstimationDisable*, errorResDisable*, dataPartitioning*, intraacdcPredDisable*, scalability*: LONGINT; 
-		timeCode*, closedGov*, brokenLink*, vop*, predictionType*, timeBase*, timeInc*, vopCoded*, roundingType*, horSpatRef*, verSpatRef*, changeCRDisable*, constantAlpha*, constantAlphaValue*, intradcvlcthr*, quantizer*, fCodeFor*, shapeCodingType*: LONGINT; 
-		notCoded*, mcbpc*, derivedMbType*, cbpc*, acPredFlag*, cbpy*, dQuant*, cbp*: LONGINT; 
-		mbASize*, mbXSize*, mbYSize*, picNum*, mba*, mbXPos*, mbYPos*, intraBlockRescaled*: LONGINT; 
+		ident*, randomAccessibleVol*, typeIndication*, isObjectLayerIdentifier*, visualObjectLayerVerId*, visualObjectLayerPriority*, aspectRatioInfo*, volControlParameters*, chromaFormat*, lowDelay*, vbvParameters*, firstHalfBitRate*, latterHalfBitRate*, firstHalfvbvBufferSize*, latterHalfvbvBufferSize*, firstHalfvbvOccupancy*, latterHalfvbvOccupancy*, shape*, timeIncrementResolution*, fixedVopRate*, fixedVopTimeIncrement*, width*, height*, interlaced*, obmcDisable*, spriteUsage*, not8Bit*, quantPrecision*, bitsPerPixel*, quantType*, loadIntraQuantMatrix*, loadNonIntraQuantMatrix*, quarterPixel*, complexityEstimationDisable*, errorResDisable*, dataPartitioning*, intraacdcPredDisable*, scalability*: SIGNED32; 
+		timeCode*, closedGov*, brokenLink*, vop*, predictionType*, timeBase*, timeInc*, vopCoded*, roundingType*, horSpatRef*, verSpatRef*, changeCRDisable*, constantAlpha*, constantAlphaValue*, intradcvlcthr*, quantizer*, fCodeFor*, shapeCodingType*: SIGNED32; 
+		notCoded*, mcbpc*, derivedMbType*, cbpc*, acPredFlag*, cbpy*, dQuant*, cbp*: SIGNED32; 
+		mbASize*, mbXSize*, mbYSize*, picNum*, mba*, mbXPos*, mbYPos*, intraBlockRescaled*: SIGNED32; 
 
 		PROCEDURE ^  & init*; 
 		PROCEDURE ^ FinishHeader*; 
@@ -121,17 +121,17 @@ TYPE
 
 	DecoderOptions* = OBJECT 
 	VAR 
-		xDim*, yDim*, displayYSize*, displayCSize*: LONGINT; 
+		xDim*, yDim*, displayYSize*, displayCSize*: SIGNED32; 
 		deblockYH*, deblockYV*, deringY*, deblockCH*, deblockCV*, deringC*: BOOLEAN; 
 
-		PROCEDURE ^  & init*(width: LONGINT; height: LONGINT); 
-		PROCEDURE ^ SetPostProcessLevel*(n: LONGINT); 
+		PROCEDURE ^  & init*(width: SIGNED32; height: SIGNED32); 
+		PROCEDURE ^ SetPostProcessLevel*(n: SIGNED32); 
 	END DecoderOptions; 
 
 	MP4Buffers* = OBJECT 
 	VAR 
 		displayBuffer*, edgedRefBuffer*, edgedForBuffer*: PointerToArrayOfCHAR; 
-		edgedRefBufferSize*, edgedForBufferSize*, displayBufferSize*: LONGINT; 
+		edgedRefBufferSize*, edgedForBufferSize*, displayBufferSize*: SIGNED32; 
 
 		PROCEDURE ^  & init*(opt: DecoderOptions); 
 	END MP4Buffers; 

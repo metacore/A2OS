@@ -26,10 +26,10 @@ TYPE
 	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
 		grid: WMStringGrids.StringGrid; 
-		delay: LONGINT; 
+		delay: SIGNED32; 
 		timer: Kernel.Timer; 
-		state: LONGINT; 
-		currentIndex, nofConnections: LONGINT; 
+		state: SIGNED32; 
+		currentIndex, nofConnections: SIGNED32; 
 		currentList: ConnectionArray; 
 		colWidth: WMGrids.Spacings; 
 		selectedConnection: TCP.Connection; 
@@ -37,14 +37,14 @@ TYPE
 		closeBtn, discardBtn: WMStandardComponents.Button; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
-		PROCEDURE ^  & New*(delay: LONGINT; c: WMRestorable.Context); 
-		PROCEDURE ^ GetTitleStr(col: LONGINT; VAR x: ARRAY OF CHAR); 
+		PROCEDURE ^  & New*(delay: SIGNED32; c: WMRestorable.Context); 
+		PROCEDURE ^ GetTitleStr(col: SIGNED32; VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ Click(sender, data: ANY); 
 		PROCEDURE ^ CloseConnection(sender, data: ANY); 
 		PROCEDURE ^ DiscardConnection(sender, data: ANY); 
-		PROCEDURE ^ GetAlign(col: LONGINT): LONGINT; 
-		PROCEDURE ^ StateToString(state: LONGINT; VAR str: ARRAY OF CHAR); 
-		PROCEDURE ^ GetConnectionStr(x, col: LONGINT; VAR str: ARRAY OF CHAR); 
+		PROCEDURE ^ GetAlign(col: SIGNED32): SIGNED32; 
+		PROCEDURE ^ StateToString(state: SIGNED32; VAR str: ARRAY OF CHAR); 
+		PROCEDURE ^ GetConnectionStr(x, col: SIGNED32; VAR str: ARRAY OF CHAR); 
 		PROCEDURE ^ AddConnection(obj: ANY; VAR cont: BOOLEAN); 
 		PROCEDURE ^ ScanConnections; 
 		PROCEDURE ^ Update; 

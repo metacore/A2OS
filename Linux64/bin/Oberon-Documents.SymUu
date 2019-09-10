@@ -9,17 +9,17 @@ TYPE
 		name*: ARRAY 128 OF CHAR; 
 		Load*: PROCEDURE (D: Document); 
 		Store*: PROCEDURE (D: Document); 
-		time: LONGINT; 
+		time: SIGNED32; 
 	END; 
 
 	LocateMsg* = RECORD (Display.FrameMsg)
 		doc*: Document; 
-		X*, Y*: INTEGER; 
+		X*, Y*: SIGNED16; 
 	END; 
 VAR 
-	Id*: INTEGER; 
+	Id*: SIGNED16; 
 	historyHook*: PROCEDURE (VAR D: Document); 
-	reg: INTEGER; 
+	reg: SIGNED16; 
 	DocExt: ARRAY MaxDocTypes OF ARRAY 32 OF CHAR; 
 	DocNewProc: ARRAY MaxDocTypes OF ARRAY 64 OF CHAR; 
 	DocService: ARRAY MaxDocTypes OF BOOLEAN; 
@@ -36,12 +36,12 @@ VAR
 	PROCEDURE ^ RegisterStandardTypes(section: ARRAY OF CHAR; service: BOOLEAN); 
 	PROCEDURE ^ SetMask(F: Display.Frame; M: Display3.Mask); 
 	PROCEDURE ^ SetMainMask(F: Document); 
-	PROCEDURE ^ ToMain(F: Document; ox, oy: INTEGER; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ ToMain(F: Document; ox, oy: SIGNED16; VAR M: Display.FrameMsg); 
 	PROCEDURE ^ Absolute(dlink: Objects.Object): BOOLEAN; 
 	PROCEDURE ^ AdjustDocument(F: Document; VAR M: Display.ModifyMsg); 
 	PROCEDURE ^ AdjustChildDocument(F: Document; VAR M: Display.ModifyMsg); 
 	PROCEDURE ^ check(F: Document); 
-	PROCEDURE ^ RestoreDocument(F: Document; R: Display3.Mask; ox, oy, x, y, w, h: INTEGER; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ RestoreDocument(F: Document; R: Display3.Mask; ox, oy, x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: Document); 
 	PROCEDURE ^ DocumentAttr(F: Document; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ Neutralize(F: Document); 

@@ -103,28 +103,28 @@ TYPE
 		frame: Display.Frame; 
 		text: Texts.Text; 
 		changed: BOOLEAN; 
-		lastchanged: LONGINT; 
+		lastchanged: SIGNED32; 
 	END; 
 VAR 
-	sym, level: SHORTINT; 
+	sym, level: SIGNED8; 
 	noerr: BOOLEAN; 
 	inFormPar: BOOLEAN; 
-	exprdepth: INTEGER; 
-	sline: INTEGER; 
+	exprdepth: SIGNED16; 
+	sline: SIGNED16; 
 	found: BOOLEAN; 
 	silent, notrap: BOOLEAN; 
 	forceNL: BOOLEAN; 
 	nobp: BreakPoint; 
 
 	PROCEDURE ^ debug(s: ARRAY OF CHAR); 
-	PROCEDURE ^ clearBPS(bps: ssBP; k: INTEGER); 
+	PROCEDURE ^ clearBPS(bps: ssBP; k: SIGNED16); 
 	PROCEDURE ^ DecExprdepth(bps: ssBP); 
-	PROCEDURE ^ getBP(bps: ssBP; k: SHORTINT); 
+	PROCEDURE ^ getBP(bps: ssBP; k: SIGNED8); 
 	PROCEDURE ^ checkLine(bps: ssBP); 
 	PROCEDURE ^ doForcedNL; 
 	PROCEDURE ^ markIndent; 
-	PROCEDURE ^ err(n: INTEGER); 
-	PROCEDURE ^ CheckSym(s: INTEGER); 
+	PROCEDURE ^ err(n: SIGNED16); 
+	PROCEDURE ^ CheckSym(s: SIGNED16); 
 	PROCEDURE ^ qualident; 
 	PROCEDURE ^ ConstExpression; 
 	PROCEDURE ^ CheckMark; 

@@ -14,15 +14,15 @@ CONST
 	INFIX = 3; 
 	OPERAND = 4; 
 TYPE 
-	UnaryFunc* = PROCEDURE (x: LONGREAL):LONGREAL; 
+	UnaryFunc* = PROCEDURE (x: FLOAT64):FLOAT64; 
 
-	BinaryFunc* = PROCEDURE (x: LONGREAL; y: LONGREAL):LONGREAL; 
+	BinaryFunc* = PROCEDURE (x: FLOAT64; y: FLOAT64):FLOAT64; 
 
 	Reference = POINTER TO ReferenceDesc; 
 
 	ReferenceDesc = RECORD 
 		name: Objects.Name; 
-		weight: INTEGER; 
+		weight: SIGNED16; 
 		next: Reference; 
 	END; 
 
@@ -58,28 +58,28 @@ TYPE
 	Value = POINTER TO ValueDesc; 
 
 	ValueDesc = RECORD (NodeDesc)
-		value: LONGREAL; 
+		value: FLOAT64; 
 	END; 
 
 	Expression* = POINTER TO ExpressionDesc; 
 
 	ExpressionDesc* = RECORD 
 		root, curr: Node; 
-		res*, nest, last: INTEGER; 
+		res*, nest, last: SIGNED16; 
 	END; 
 VAR 
-	F, D: LONGINT; 
+	F, D: SIGNED32; 
 	ref: Reference; 
 	test*: Expression; 
 
-	PROCEDURE ^ Add(to, this: LONGREAL): LONGREAL; 
-	PROCEDURE ^ Subtract(this, from: LONGREAL): LONGREAL; 
-	PROCEDURE ^ Multiply(by, this: LONGREAL): LONGREAL; 
-	PROCEDURE ^ Divide(by, this: LONGREAL): LONGREAL; 
-	PROCEDURE ^ Power*(base, exponent: LONGREAL): LONGREAL; 
-	PROCEDURE ^ Fac*(this: LONGREAL): LONGREAL; 
-	PROCEDURE ^ Calc(node: Node; VAR res: INTEGER): LONGREAL; 
-	PROCEDURE ^ Weight(node: Node): INTEGER; 
+	PROCEDURE ^ Add(to, this: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Subtract(this, from: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Multiply(by, this: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Divide(by, this: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Power*(base, exponent: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Fac*(this: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Calc(node: Node; VAR res: SIGNED16): FLOAT64; 
+	PROCEDURE ^ Weight(node: Node): SIGNED16; 
 	PROCEDURE ^ InitNode(node: Node); 
 	PROCEDURE ^ NewResult(): Result; 
 	PROCEDURE ^ InitExpression*(VAR exp: Expression); 
@@ -87,15 +87,15 @@ VAR
 	PROCEDURE ^ AppendBracket*(VAR exp: Expression; bracket: CHAR); 
 	PROCEDURE ^ CloseAllBrackets*(VAR exp: Expression); 
 	PROCEDURE ^ AppendOperator*(VAR exp: Expression; op: ARRAY OF CHAR); 
-	PROCEDURE ^ AppendOperand*(VAR exp: Expression; op: LONGREAL); 
+	PROCEDURE ^ AppendOperand*(VAR exp: Expression; op: FLOAT64); 
 	PROCEDURE ^ Scan*(VAR exp: Expression; VAR S: Texts.Scanner); 
-	PROCEDURE ^ EvaluateCurrent*(exp: Expression): LONGREAL; 
-	PROCEDURE ^ EvaluateRoot*(exp: Expression): LONGREAL; 
+	PROCEDURE ^ EvaluateCurrent*(exp: Expression): FLOAT64; 
+	PROCEDURE ^ EvaluateRoot*(exp: Expression): FLOAT64; 
 	PROCEDURE ^ Fraction*; 
 	PROCEDURE ^ Exponent*; 
 	PROCEDURE ^ Calculate*; 
 	PROCEDURE ^ AddPrefixOperator*(name: ARRAY OF CHAR; f: UnaryFunc); 
-	PROCEDURE ^ AddInfixOperator*(name: ARRAY OF CHAR; w: INTEGER; f: BinaryFunc); 
+	PROCEDURE ^ AddInfixOperator*(name: ARRAY OF CHAR; w: SIGNED16; f: BinaryFunc); 
 	PROCEDURE ^ AddPostfixOperator*(name: ARRAY OF CHAR; f: UnaryFunc); 
 BEGIN
 END Calculator.

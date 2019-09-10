@@ -3,7 +3,7 @@ MODULE Plot IN Oberon;
 CONST 
 
 	PROCEDURE ^ FindY(): BasicGadgets.Integer; 
-	PROCEDURE ^ GetValue(name: ARRAY OF CHAR; default: REAL): REAL; 
+	PROCEDURE ^ GetValue(name: ARRAY OF CHAR; default: FLOAT32): FLOAT32; 
 	PROCEDURE ^ Plot*; 
 BEGIN
 END Plot.

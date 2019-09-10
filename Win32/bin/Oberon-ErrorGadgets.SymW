@@ -6,7 +6,7 @@ TYPE
 	ErrorGadget* = POINTER TO ErrorGadgetDesc; 
 
 	ErrorGadgetDesc* = RECORD (Gadgets.FrameDesc)
-		errno*: INTEGER; 
+		errno*: SIGNED16; 
 		showstr: BOOLEAN; 
 		str*: ARRAY 64 OF CHAR; 
 	END; 
@@ -16,18 +16,18 @@ VAR
 
 	PROCEDURE ^ GetText(VAR par: Display.Frame): Texts.Text; 
 	PROCEDURE ^ ErrorGadgetAttr(F: ErrorGadget; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ RestoreErrorGadget(F: ErrorGadget; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreErrorGadget(F: ErrorGadget; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ PrintErrorGadget(F: ErrorGadget; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ CopyErrorGadget*(VAR M: Objects.CopyMsg; from, to: ErrorGadget); 
 	PROCEDURE ^ FlipMsg(F: ErrorGadget); 
 	PROCEDURE ^ ErrorGadgetHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewErrorGadget*; 
-	PROCEDURE ^ MarkErrorPos(T: Texts.Text; pos: LONGINT; err: INTEGER; str: ARRAY OF CHAR); 
+	PROCEDURE ^ MarkErrorPos(T: Texts.Text; pos: SIGNED32; err: SIGNED16; str: ARRAY OF CHAR); 
 	PROCEDURE ^ RemoveErrors*(T: Texts.Text); 
 	PROCEDURE ^ markErrors*(VAR S: Texts.Scanner; errtext: Texts.Text; par: Display.Frame); 
 	PROCEDURE ^ MarkErrors*; 
 	PROCEDURE ^ ClearErrors*; 
-	PROCEDURE ^ ErrorAfter(T: Texts.Text; VAR pos: LONGINT); 
+	PROCEDURE ^ ErrorAfter(T: Texts.Text; VAR pos: SIGNED32); 
 	PROCEDURE ^ NextError*; 
 BEGIN
 END ErrorGadgets.

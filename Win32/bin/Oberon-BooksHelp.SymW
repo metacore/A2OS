@@ -21,10 +21,10 @@ VAR
 	PROCEDURE ^ InitQM; 
 	PROCEDURE ^ InitBook; 
 	PROCEDURE ^ SetTutorial*(obj: Objects.Object; val: ARRAY OF CHAR); 
-	PROCEDURE ^ DrawHand(x, y: INTEGER); 
-	PROCEDURE ^ Fade(x, y: INTEGER); 
+	PROCEDURE ^ DrawHand(x, y: SIGNED16); 
+	PROCEDURE ^ Fade(x, y: SIGNED16); 
 	PROCEDURE ^ ShowDoc(activator: ARRAY OF CHAR); 
-	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ Track(VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ FrameHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewIcon*; 

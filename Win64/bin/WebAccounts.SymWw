@@ -153,7 +153,7 @@ TYPE
 		PROCEDURE ^ ThisModuleName*(): Strings.String; 
 		PROCEDURE ^ GetInsertView*(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content; 
 		PROCEDURE ^ GetTableHeader*(request: HTTPSupport.HTTPRequest): WebComplex.HeaderRow; 
-		PROCEDURE ^ OnDetailViewActivated*(entryOid: LONGINT; request: HTTPSupport.HTTPRequest); 
+		PROCEDURE ^ OnDetailViewActivated*(entryOid: SIGNED32; request: HTTPSupport.HTTPRequest); 
 		PROCEDURE ^ GetSearchFilter*(text: Strings.String): WebStd.PersistentDataFilter; 
 		PROCEDURE ^ SearchFilter(obj: WebStd.PersistentDataObject): BOOLEAN; 
 		PROCEDURE ^ CompareName(obj1, obj2: WebStd.PersistentDataObject): BOOLEAN; 

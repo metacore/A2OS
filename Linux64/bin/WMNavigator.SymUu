@@ -16,7 +16,7 @@ TYPE
 		canvas: WMGraphics.BufferCanvas; 
 		state: WMGraphics.CanvasState; 
 		internnavig, navig: BOOLEAN; 
-		fx, fy, inffx, inffy, factor, intfactor: REAL; 
+		fx, fy, inffx, inffy, factor, intfactor: FLOAT32; 
 		lock: Locks.Lock; 
 		onDrawn: OnDrawnProc; 
 		zoomLevel: ARRAY 7 OF Level; 
@@ -26,11 +26,11 @@ TYPE
 		PROCEDURE ^ SetZoomLevels(width, height: SIZE); 
 		PROCEDURE ^ SetZoomLevel(level, xg, yg: SIZE); 
 		PROCEDURE ^ ChangeZoom(dz, xg, yg: SIZE); 
-		PROCEDURE ^ ReInit(width, height: SIZE; format: WORD; onDrawn: OnDrawnProc); 
+		PROCEDURE ^ ReInit(width, height: SIZE; format: INTEGER; onDrawn: OnDrawnProc); 
 		PROCEDURE ^ GetWMCoordinates*(CONST r: WMRectangles.Rectangle): WMRectangles.Rectangle; 
 		PROCEDURE ^ GetWMPosition(x, y: SIZE; VAR xg, yg: SIZE); 
 		PROCEDURE ^ GetKeyState*(VAR state: SET); 
-		PROCEDURE ^ SetRange*(x, y, w, h: REAL; showTransition: BOOLEAN); 
+		PROCEDURE ^ SetRange*(x, y, w, h: FLOAT32; showTransition: BOOLEAN); 
 		PROCEDURE ^ Update*(r: WMRectangles.Rectangle; top: WMWindowManager.Window); 
 		PROCEDURE ^ Refresh*(top: WMWindowManager.Window); 
 		PROCEDURE ^ DrawWindow(window: WMWindowManager.Window): BOOLEAN; 

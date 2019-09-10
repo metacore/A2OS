@@ -6,30 +6,30 @@ CONST
 	maxLexLen = 127; 
 	noSym = 38; 
 TYPE 
-	ErrorProc* = PROCEDURE (n: INTEGER; pos: LONGINT); 
+	ErrorProc* = PROCEDURE (n: SIGNED16; pos: SIGNED32); 
 
-	StartTable = ARRAY 128 OF INTEGER; 
+	StartTable = ARRAY 128 OF SIGNED16; 
 VAR 
 	src*: Texts.Text; 
-	pos*: LONGINT; 
-	line*, col*, len*: INTEGER; 
-	nextPos*: LONGINT; 
-	nextLine*, nextCol*, nextLen*: INTEGER; 
-	errors*: INTEGER; 
+	pos*: SIGNED32; 
+	line*, col*, len*: SIGNED16; 
+	nextPos*: SIGNED32; 
+	nextLine*, nextCol*, nextLen*: SIGNED16; 
+	errors*: SIGNED16; 
 	Error*: ErrorProc; 
 	ch: CHAR; 
 	r: Texts.Reader; 
-	chPos: LONGINT; 
-	chLine: INTEGER; 
-	lineStart: LONGINT; 
-	oldEols: INTEGER; 
+	chPos: SIGNED32; 
+	chLine: SIGNED16; 
+	lineStart: SIGNED32; 
+	oldEols: SIGNED16; 
 	start: StartTable; 
 
 	PROCEDURE ^ NextCh; 
 	PROCEDURE ^ Comment(): BOOLEAN; 
-	PROCEDURE ^ Get*(VAR sym: INTEGER); 
-	PROCEDURE ^ GetName*(pos: LONGINT; len: INTEGER; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ StdErrorProc*(n: INTEGER; pos: LONGINT); 
-	PROCEDURE ^ Reset*(t: Texts.Text; pos: LONGINT; errProc: ErrorProc); 
+	PROCEDURE ^ Get*(VAR sym: SIGNED16); 
+	PROCEDURE ^ GetName*(pos: SIGNED32; len: SIGNED16; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ StdErrorProc*(n: SIGNED16; pos: SIGNED32); 
+	PROCEDURE ^ Reset*(t: Texts.Text; pos: SIGNED32; errProc: ErrorProc); 
 BEGIN
 END CRS.

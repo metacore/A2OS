@@ -24,7 +24,7 @@ TYPE
 		PROCEDURE ^ Clear; 
 		PROCEDURE ^ ExtPointerUp(x, y: SIZE; keys: SET; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ExtKeyPressed(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
-		PROCEDURE ^ Wait(ms: LONGINT); 
+		PROCEDURE ^ Wait(ms: SIGNED32); 
 		PROCEDURE ^ InitShell; 
 		PROCEDURE ^ CopyFromClipboard; 
 		PROCEDURE ^ Finalize*; 
@@ -41,7 +41,7 @@ TYPE
 	VAR 
 		shell: ShellComponent; 
 
-		PROCEDURE ^ HandleUpcall(command: WORD); 
+		PROCEDURE ^ HandleUpcall(command: INTEGER); 
 		PROCEDURE ^  & New*(c: WMRestorable.Context); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 

@@ -3,9 +3,9 @@ MODULE antsOnTheFly IN Oberon;
 CONST 
 	standardModule = \"antsOnTheFlyMod.Text"\; 
 TYPE 
-	Function1d* = PROCEDURE {DELEGATE}(x: LONGREAL):LONGREAL; 
+	Function1d* = PROCEDURE {DELEGATE}(x: FLOAT64):FLOAT64; 
 
-	FunctionXd* = PROCEDURE {DELEGATE}(x: ARRAY OF LONGREAL):LONGREAL; 
+	FunctionXd* = PROCEDURE {DELEGATE}(x: ARRAY OF FLOAT64):FLOAT64; 
 VAR 
 	debug*: BOOLEAN; 
 	f1d*: Function1d; 
@@ -15,8 +15,8 @@ VAR
 	W: Texts.Writer; 
 
 	PROCEDURE ^ Module(source: Texts.Text; opt: ARRAY OF CHAR; log: Texts.Text; VAR error: BOOLEAN); 
-	PROCEDURE ^ InsertArray(t: Texts.Text; at: LONGINT; Array: ARRAY OF CHAR); 
-	PROCEDURE ^ Find(a: ARRAY OF CHAR; t: Texts.Text; VAR at: LONGINT): BOOLEAN; 
+	PROCEDURE ^ InsertArray(t: Texts.Text; at: SIGNED32; Array: ARRAY OF CHAR); 
+	PROCEDURE ^ Find(a: ARRAY OF CHAR; t: Texts.Text; VAR at: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ Replace(t: Texts.Text; pattern: ARRAY OF CHAR; by: ARRAY OF CHAR); 
 	PROCEDURE ^ Set1d*(const, function: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ SetXd*(const, function: ARRAY OF CHAR): BOOLEAN; 
@@ -26,9 +26,9 @@ VAR
 	PROCEDURE ^ LoadFXd*(R: Files.Rider; VAR mapping: ARRAY OF CHAR; VAR fxd: FunctionXd); 
 	PROCEDURE ^ Test1d*; 
 	PROCEDURE ^ TestXd*; 
-	PROCEDURE ^ MarkErrorPos(T: Texts.Text; pos: LONGINT; err: INTEGER); 
+	PROCEDURE ^ MarkErrorPos(T: Texts.Text; pos: SIGNED32; err: SIGNED16); 
 	PROCEDURE ^ RemoveErrors(T: Texts.Text); 
-	PROCEDURE ^ markErrors(VAR S: Texts.Scanner; errtext: Texts.Text; par: Display.Frame; offset, len: LONGINT); 
+	PROCEDURE ^ markErrors(VAR S: Texts.Scanner; errtext: Texts.Text; par: Display.Frame; offset, len: SIGNED32); 
 	PROCEDURE ^ GetModuleName*(VAR modName: ARRAY OF CHAR); 
 	PROCEDURE ^ CompileText*(t: Texts.Text; inModule, cmd: ARRAY OF CHAR; begpat, endpat: ARRAY OF CHAR): BOOLEAN; 
 BEGIN

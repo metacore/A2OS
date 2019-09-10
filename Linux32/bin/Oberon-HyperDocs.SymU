@@ -18,19 +18,19 @@ TYPE
 	END; 
 
 	LinkSchemeMsg* = RECORD (Objects.ObjMsg)
-		key*: LONGINT; 
-		res*: INTEGER; 
+		key*: SIGNED32; 
+		res*: SIGNED16; 
 	END; 
 
 	DefURL* = POINTER TO DefURLDesc; 
 
 	DefURLDesc* = RECORD 
-		key*: LONGINT; 
+		key*: SIGNED32; 
 		prefix*: ARRAY PrefixStrLen OF CHAR; 
 		host*: ARRAY ServerStrLen OF CHAR; 
 		path*: ARRAY PathStrLen OF CHAR; 
 		label*: ARRAY 64 OF CHAR; 
-		port*: INTEGER; 
+		port*: SIGNED16; 
 	END; 
 
 	RegisterLinkMsg* = RECORD (LinkSchemeMsg)
@@ -40,7 +40,7 @@ TYPE
 
 	InfoMsg* = RECORD (LinkSchemeMsg)
 		contType*: MIME.ContentType; 
-		size*, date*, time*: LONGINT; 
+		size*, date*, time*: SIGNED32; 
 	END; 
 
 	FetchMsg* = RECORD (LinkSchemeMsg)
@@ -48,7 +48,7 @@ TYPE
 	END; 
 
 	NodeDesc* = RECORD 
-		id, key*, org*: LONGINT; 
+		id, key*, org*: SIGNED32; 
 		old*, prev*: Node; 
 	END; 
 
@@ -63,67 +63,67 @@ VAR
 	linkSchemes: LinkScheme; 
 	linksIndex, keysIndex: BTrees.Tree; 
 	linksFile: Files.File; 
-	curKey, curID, loadingKey*: LONGINT; 
+	curKey, curID, loadingKey*: SIGNED32; 
 	history: Node; 
 	context*: Context; 
-	linkC*, oldLinkC*: INTEGER; 
+	linkC*, oldLinkC*: SIGNED16; 
 	linkMethods*, linkPictMethods*: TextGadgets0.Methods; 
 	link, cmpBuf: ARRAY MaxLink OF CHAR; 
 	diskCache: Files.File; 
-	linkBeg, linkEnd: LONGINT; 
+	linkBeg, linkEnd: SIGNED32; 
 	linkF: Gadgets.Frame; 
-	docW*, docH*: INTEGER; 
+	docW*, docH*: SIGNED16; 
 	keepurls: BOOLEAN; 
 
-	PROCEDURE ^ HexVal(ch: CHAR): INTEGER; 
-	PROCEDURE ^ HexDigit(i: INTEGER): CHAR; 
+	PROCEDURE ^ HexVal(ch: CHAR): SIGNED16; 
+	PROCEDURE ^ HexDigit(i: SIGNED16): CHAR; 
 	PROCEDURE ^ UnESC*(VAR url: ARRAY OF CHAR); 
 	PROCEDURE ^ ESC*(VAR str: ARRAY OF CHAR; special: CHAR); 
 	PROCEDURE ^ LinkSchemeByPrefix*(prefix: ARRAY OF CHAR): LinkScheme; 
-	PROCEDURE ^ LinkSchemeByKey*(key: LONGINT): LinkScheme; 
-	PROCEDURE ^ RegisterLink*(VAR link: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ BuildKey*(base: DefURL; link: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ TempDocName*(prefix: ARRAY OF CHAR; VAR name: ARRAY OF CHAR; VAR key: LONGINT); 
-	PROCEDURE ^ RetrieveLink*(key: LONGINT; VAR link: ARRAY OF CHAR); 
-	PROCEDURE ^ StoreLink*(VAR R: Files.Rider; key: LONGINT); 
-	PROCEDURE ^ LoadLink*(VAR R: Files.Rider; VAR key: LONGINT); 
+	PROCEDURE ^ LinkSchemeByKey*(key: SIGNED32): LinkScheme; 
+	PROCEDURE ^ RegisterLink*(VAR link: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ BuildKey*(base: DefURL; link: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ TempDocName*(prefix: ARRAY OF CHAR; VAR name: ARRAY OF CHAR; VAR key: SIGNED32); 
+	PROCEDURE ^ RetrieveLink*(key: SIGNED32; VAR link: ARRAY OF CHAR); 
+	PROCEDURE ^ StoreLink*(VAR R: Files.Rider; key: SIGNED32); 
+	PROCEDURE ^ LoadLink*(VAR R: Files.Rider; VAR key: SIGNED32); 
 	PROCEDURE ^ LinkSchemeHandler*(L: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ LinkControlHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewLinkControl*; 
-	PROCEDURE ^ LinkControl*(key: LONGINT): Objects.Object; 
+	PROCEDURE ^ LinkControl*(key: SIGNED32): Objects.Object; 
 	PROCEDURE ^ NodeByDoc*(doc: Documents.Document): Node; 
 	PROCEDURE ^ LinkNodeToDoc*(doc: Documents.Document; node: Node); 
-	PROCEDURE ^ Remember*(key: LONGINT; old: Node; VAR new: Node); 
-	PROCEDURE ^ RememberOrg*(org: LONGINT; old: Node; VAR new: Node); 
+	PROCEDURE ^ Remember*(key: SIGNED32; old: Node; VAR new: Node); 
+	PROCEDURE ^ RememberOrg*(org: SIGNED32; old: Node; VAR new: Node); 
 	PROCEDURE ^ RemoveNode(node: Node); 
-	PROCEDURE ^ DocNameByKey*(VAR name: ARRAY OF CHAR; key: LONGINT); 
-	PROCEDURE ^ SetVisited(key: LONGINT); 
+	PROCEDURE ^ DocNameByKey*(VAR name: ARRAY OF CHAR; key: SIGNED32); 
+	PROCEDURE ^ SetVisited(key: SIGNED32); 
 	PROCEDURE ^ SetVisitedCol(doc: Documents.Document); 
 	PROCEDURE ^ Open(VAR name: ARRAY OF CHAR): Documents.Document; 
-	PROCEDURE ^ FollowKeyLink*(cont: Context; newDoc: LONGINT); 
+	PROCEDURE ^ FollowKeyLink*(cont: Context; newDoc: SIGNED32); 
 	PROCEDURE ^ FollowLink*; 
-	PROCEDURE ^ ReplaceCurDoc*(key: LONGINT; newD: Documents.Document); 
-	PROCEDURE ^ FindBeg(T: Texts.Text; VAR pos: LONGINT); 
-	PROCEDURE ^ ScrollTo*(F: TextGadgets.Frame; pos: LONGINT); 
+	PROCEDURE ^ ReplaceCurDoc*(key: SIGNED32; newD: Documents.Document); 
+	PROCEDURE ^ FindBeg(T: Texts.Text; VAR pos: SIGNED32); 
+	PROCEDURE ^ ScrollTo*(F: TextGadgets.Frame; pos: SIGNED32); 
 	PROCEDURE ^ VisitNode(curDoc: Documents.Document; cnode, node: Node); 
 	PROCEDURE ^ Back*; 
-	PROCEDURE ^ LocateString(F: TextGadgets0.Frame; x, y, X, Y: INTEGER; VAR loc: TextGadgets0.Loc); 
-	PROCEDURE ^ SplitFileAdr*(VAR url, path, label: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ LocateString(F: TextGadgets0.Frame; x, y, X, Y: SIGNED16; VAR loc: TextGadgets0.Loc); 
+	PROCEDURE ^ SplitFileAdr*(VAR url, path, label: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ DecPath(VAR path, dpath: ARRAY OF CHAR); 
 	PROCEDURE ^ Path*(base: DefURL; VAR url, value: ARRAY OF CHAR); 
-	PROCEDURE ^ CheckPrefix*(VAR link: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ CheckPrefix*(VAR link: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ FileSchemeHandler(L: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewLinkScheme*; 
 	PROCEDURE ^ LoadDoc(D: Documents.Document); 
 	PROCEDURE ^ NewDoc*; 
-	PROCEDURE ^ CacheText*(key: LONGINT; text: Texts.Text); 
-	PROCEDURE ^ CacheDoc*(key: LONGINT; doc: Documents.Document); 
+	PROCEDURE ^ CacheText*(key: SIGNED32; text: Texts.Text); 
+	PROCEDURE ^ CacheDoc*(key: SIGNED32; doc: Documents.Document); 
 	PROCEDURE ^ Reload*; 
-	PROCEDURE ^ GetCachedDoc*(key: LONGINT): Documents.Document; 
-	PROCEDURE ^ GetCachedText*(key: LONGINT): Texts.Text; 
+	PROCEDURE ^ GetCachedDoc*(key: SIGNED32): Documents.Document; 
+	PROCEDURE ^ GetCachedText*(key: SIGNED32): Texts.Text; 
 	PROCEDURE ^ ClearCache*; 
-	PROCEDURE ^ Background(F: TextGadgets0.Frame; R: Display3.Mask; X, Y, x, y, w, h: INTEGER); 
-	PROCEDURE ^ Visited*(key: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Background(F: TextGadgets0.Frame; R: Display3.Mask; X, Y, x, y, w, h: SIGNED16); 
+	PROCEDURE ^ Visited*(key: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ InitIndex(new: BOOLEAN); 
 	PROCEDURE ^ FreeMod; 
 	PROCEDURE ^ Init; 

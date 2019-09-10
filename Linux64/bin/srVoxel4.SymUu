@@ -130,7 +130,7 @@ TYPE
 		ar: ARRAY 20 OF ARRAY 20 OF ARRAY 20 OF cube; 
 
 		PROCEDURE ^  & init*; 
-		PROCEDURE ^ bounds*(i, j, k: INTEGER; VAR out: BOOLEAN); 
+		PROCEDURE ^ bounds*(i, j, k: SIGNED16; VAR out: BOOLEAN); 
 		PROCEDURE ^ Shade*(VAR ray: Ray); 
 	END ArVox; 
 

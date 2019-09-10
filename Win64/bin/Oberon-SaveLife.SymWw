@@ -45,27 +45,27 @@ CONST
 	pseudoNormal = 3; 
 	numPseudos = 4; 
 TYPE 
-	RGB = ARRAY 3 OF INTEGER; 
+	RGB = ARRAY 3 OF SIGNED16; 
 
-	Fader = ARRAY maxFadeSteps OF INTEGER; 
+	Fader = ARRAY maxFadeSteps OF SIGNED16; 
 
-	Generation = POINTER TO ARRAY OF SHORTINT; 
+	Generation = POINTER TO ARRAY OF SIGNED8; 
 
 	DisplayList = POINTER TO DisplayListDesc; 
 
 	DisplayListDesc = RECORD 
 		next: DisplayList; 
-		x, y: INTEGER; 
+		x, y: SIGNED16; 
 		c: Fader; 
 	END; 
 VAR 
 	savedCmap: ARRAY 256 OF RGB; 
-	cellWidth, cellHeight: INTEGER; 
-	screenWidth, screenHeight: INTEGER; 
-	xOffset, yOffset: INTEGER; 
-	cols, rows: INTEGER; 
-	nw, nn, ne: LONGINT; 
-	sw, ss, se: LONGINT; 
+	cellWidth, cellHeight: SIGNED16; 
+	screenWidth, screenHeight: SIGNED16; 
+	xOffset, yOffset: SIGNED16; 
+	cols, rows: SIGNED16; 
+	nw, nn, ne: SIGNED32; 
+	sw, ss, se: SIGNED32; 
 	g0: Generation; 
 	g1: Generation; 
 	n0: Generation; 
@@ -73,34 +73,34 @@ VAR
 	dlist: DisplayList; 
 	dlistEnd: DisplayList; 
 	offscreen: Pictures.Picture; 
-	state: INTEGER; 
-	step: INTEGER; 
-	generations: LONGINT; 
-	times: ARRAY 4 OF LONGINT; 
-	timeStarted: LONGINT; 
-	nrCellsChanged: LONGINT; 
-	nrGensUnchanged: LONGINT; 
-	nrCellsChangedLimit: LONGINT; 
+	state: SIGNED16; 
+	step: SIGNED16; 
+	generations: SIGNED32; 
+	times: ARRAY 4 OF SIGNED32; 
+	timeStarted: SIGNED32; 
+	nrCellsChanged: SIGNED32; 
+	nrGensUnchanged: SIGNED32; 
+	nrCellsChangedLimit: SIGNED32; 
 	timing: BOOLEAN; 
-	frameRate: INTEGER; 
-	offscreenMode: INTEGER; 
-	alive: ARRAY 2 OF ARRAY 9 OF SHORTINT; 
-	toPseudo: ARRAY 2 OF ARRAY 9 OF SHORTINT; 
+	frameRate: SIGNED16; 
+	offscreenMode: SIGNED16; 
+	alive: ARRAY 2 OF ARRAY 9 OF SIGNED8; 
+	toPseudo: ARRAY 2 OF ARRAY 9 OF SIGNED8; 
 	pseudoToRGBColor: ARRAY numPseudos OF RGB; 
 	faderTable: ARRAY numPseudos OF ARRAY numPseudos OF Fader; 
-	curFadeSteps: INTEGER; 
-	m: REAL; 
+	curFadeSteps: SIGNED16; 
+	m: FLOAT32; 
 
-	PROCEDURE ^ SetRGB(VAR color: RGB; n: LONGINT); 
+	PROCEDURE ^ SetRGB(VAR color: RGB; n: SIGNED32); 
 	PROCEDURE ^ SaveCMap; 
 	PROCEDURE ^ RestoreCMap; 
 	PROCEDURE ^ CustomizeCMap; 
 	PROCEDURE ^ MakeDisplayList(all: BOOLEAN); 
-	PROCEDURE ^ DrawDisplayList(step: INTEGER); 
+	PROCEDURE ^ DrawDisplayList(step: SIGNED16); 
 	PROCEDURE ^ UpdateDisplay; 
 	PROCEDURE ^ CopyGeneration(src, dst: Generation); 
 	PROCEDURE ^ ClearGeneration(g: Generation); 
-	PROCEDURE ^ Randomize(proportion: REAL); 
+	PROCEDURE ^ Randomize(proportion: FLOAT32); 
 	PROCEDURE ^ RecomputeNeighbors; 
 	PROCEDURE ^ Setup; 
 	PROCEDURE ^ Generate; 

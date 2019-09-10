@@ -22,7 +22,7 @@ TYPE
 		PROCEDURE ^ Unlock*; 
 	END List; 
 
-	CompareMethod* = PROCEDURE {DELEGATE}(first, second: ANY):WORD; 
+	CompareMethod* = PROCEDURE {DELEGATE}(first, second: ANY):INTEGER; 
 
 	SortedList* = OBJECT {EXCLUSIVE} (List)
 	VAR 

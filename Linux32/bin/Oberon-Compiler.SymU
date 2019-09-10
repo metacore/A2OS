@@ -11,12 +11,12 @@ VAR
 	PROCEDURE ^ SignOn; 
 	PROCEDURE ^ GetOptions(VAR S: Texts.Scanner; VAR opts: ARRAY OF CHAR); 
 	PROCEDURE ^ InOptions(VAR opt: ARRAY OF CHAR; ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ Locate(F: Display.Frame; T: Texts.Text; pos: LONGINT); 
-	PROCEDURE ^ GetBreakPC(): LONGINT; 
+	PROCEDURE ^ Locate(F: Display.Frame; T: Texts.Text; pos: SIGNED32); 
+	PROCEDURE ^ GetBreakPC(): SIGNED32; 
 	PROCEDURE ^ ParseOptions(VAR name, options, path, pref, extension: ARRAY OF CHAR; VAR codeOpt, parserOpt: SET); 
 	PROCEDURE ^ WriteMsg(source: Texts.Reader; log: Texts.Text); 
-	PROCEDURE ^ Module*(source: Texts.Reader; name, options: ARRAY OF CHAR; breakpc: LONGINT; log: Texts.Text; VAR error: BOOLEAN); 
-	PROCEDURE ^ CompileText(t: Texts.Text; pos: LONGINT; frame: Display.Frame; opt: ARRAY OF CHAR; VAR error: BOOLEAN); 
+	PROCEDURE ^ Module*(source: Texts.Reader; name, options: ARRAY OF CHAR; breakpc: SIGNED32; log: Texts.Text; VAR error: BOOLEAN); 
+	PROCEDURE ^ CompileText(t: Texts.Text; pos: SIGNED32; frame: Display.Frame; opt: ARRAY OF CHAR; VAR error: BOOLEAN); 
 	PROCEDURE ^ CompileFile*(name, opt: ARRAY OF CHAR; VAR error: BOOLEAN); 
 	PROCEDURE ^ Compile*; 
 BEGIN

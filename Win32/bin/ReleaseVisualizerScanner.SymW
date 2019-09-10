@@ -89,7 +89,7 @@ TYPE
 		data: Strings.String; 
 
 		PROCEDURE ^  & Init(initialSize: SIZE); 
-		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ GetWriter*(): Streams.Writer; 
 		PROCEDURE ^ GetLength*(): SIZE; 
@@ -99,29 +99,29 @@ TYPE
 	Scanner* = OBJECT 
 	VAR 
 		buffer: Strings.String; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		ch-: CHAR; 
 		str-: ARRAY 1024 OF CHAR; 
-		sym-: LONGINT; 
-		numStartPos, numEndPos: LONGINT; 
-		curpos-, errpos-: LONGINT; 
+		sym-: SIGNED32; 
+		numStartPos, numEndPos: SIGNED32; 
+		curpos-, errpos-: SIGNED32; 
 		isNummer: BOOLEAN; 
 		commentStr-: StringMaker; 
 		cw: Streams.Writer; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ err(n: INTEGER); 
+		PROCEDURE ^ err(n: SIGNED16); 
 		PROCEDURE ^ NextChar*; 
-		PROCEDURE ^ Str(VAR sym: LONGINT); 
-		PROCEDURE ^ Identifier(VAR sym: LONGINT); 
+		PROCEDURE ^ Str(VAR sym: SIGNED32); 
+		PROCEDURE ^ Identifier(VAR sym: SIGNED32); 
 		PROCEDURE ^ GetNumAsString*(VAR val: ARRAY OF CHAR); 
-		PROCEDURE ^ Get(VAR s: LONGINT); 
+		PROCEDURE ^ Get(VAR s: SIGNED32); 
 		PROCEDURE ^ Next*; 
 	END Scanner; 
 VAR 
 	reservedChar-, newChar: ARRAY 256 OF BOOLEAN; 
 
-	PROCEDURE ^ InitWithText*(t: Texts.Text; pos: LONGINT): Scanner; 
+	PROCEDURE ^ InitWithText*(t: Texts.Text; pos: SIGNED32): Scanner; 
 	PROCEDURE ^ ExpandBuf(VAR oldBuf: Strings.String; newSize: SIZE); 
 	PROCEDURE ^ InitReservedChars; 
 	PROCEDURE ^ InitNewChar; 

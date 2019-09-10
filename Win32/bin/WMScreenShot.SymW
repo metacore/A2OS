@@ -8,12 +8,12 @@ TYPE
 		deviceRect: WMRectangles.Rectangle; 
 		c: WMGraphics.BufferCanvas; 
 		state: WMGraphics.CanvasState; 
-		fx, fy, inffx, inffy, factor, intfactor: REAL; 
+		fx, fy, inffx, inffy, factor, intfactor: FLOAT32; 
 
-		PROCEDURE ^  & New*(manager: WM.WindowManager; w, h: LONGINT); 
+		PROCEDURE ^  & New*(manager: WM.WindowManager; w, h: SIGNED32); 
 		PROCEDURE ^ Update*(r: WMRectangles.Rectangle; top: WM.Window); 
 		PROCEDURE ^ Refresh*(top: WM.Window); 
-		PROCEDURE ^ SetRange*(x, y, w, h: REAL; showTransition: BOOLEAN); 
+		PROCEDURE ^ SetRange*(x, y, w, h: FLOAT32; showTransition: BOOLEAN); 
 		PROCEDURE ^ Draw(r: WMRectangles.Rectangle; top: WM.Window); 
 		PROCEDURE ^ Close; 
 	END View; 

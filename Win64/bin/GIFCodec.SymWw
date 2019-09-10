@@ -9,7 +9,7 @@ CONST
 	BlockTerminator = 0X; 
 TYPE 
 	CodePages = RECORD 
-		code, ref: LONGINT; 
+		code, ref: SIGNED32; 
 	END; 
 
 	CodeBook = ARRAY 4096 OF CodePages; 
@@ -22,16 +22,16 @@ TYPE
 	VAR 
 		w: Streams.Writer; 
 		cb: CodeBook; 
-		lastBlock: ARRAY 4096 OF LONGINT; 
+		lastBlock: ARRAY 4096 OF SIGNED32; 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ SetQuality*(quality: LONGINT); 
-		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: WORD); 
+		PROCEDURE ^ SetQuality*(quality: SIGNED32); 
+		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: INTEGER); 
 		PROCEDURE ^ WriteScrDesc(w: Streams.Writer; img: Raster.Image); 
 		PROCEDURE ^ WriteColMap(w: Streams.Writer; img: Raster.Image; pal: Raster.Palette); 
 		PROCEDURE ^ WriteGlobal(w: Streams.Writer; img: Raster.Image; pal: Raster.Palette); 
 		PROCEDURE ^ WriteImageDesc(w: Streams.Writer; img: Raster.Image); 
-		PROCEDURE ^ InitCodeBook(codeLen: LONGINT); 
+		PROCEDURE ^ InitCodeBook(codeLen: SIGNED32); 
 		PROCEDURE ^ WriteData(w: Streams.Writer; img: Raster.Image; pal: Raster.Palette); 
 	END GIFEncoder; 
 
@@ -39,7 +39,7 @@ TYPE
 	VAR 
 		r: Streams.Reader; 
 		errors: BOOLEAN; 
-		width, height: LONGINT; 
+		width, height: SIGNED32; 
 		pal, localPal, globalPal: Raster.Palette; 
 		backGrndCol: Raster.Pixel; 
 		transparent, interlaced: BOOLEAN; 
@@ -47,9 +47,9 @@ TYPE
 		img: Raster.Image; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
-		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: LONGINT); 
-		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: SIGNED32); 
+		PROCEDURE ^ SetProgressionLevel*(progressionLevel: SIGNED32); 
 		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
 		PROCEDURE ^ Render*(img: Raster.Image); 
 	END GIFDecoder; 
@@ -58,21 +58,21 @@ TYPE
 	VAR 
 		r: Streams.Reader; 
 		errors: BOOLEAN; 
-		width, height: LONGINT; 
+		width, height: SIGNED32; 
 		pal, localPal, globalPal: Raster.Palette; 
 		backGrndCol: Raster.Pixel; 
 		transparent, interlaced: BOOLEAN; 
 		lcdFlags, backGrndIdx: CHAR; 
 
 		PROCEDURE ^ Error(CONST x: ARRAY OF CHAR); 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
-		PROCEDURE ^ GetImageSequence*(VAR sequence: Codecs.ImageSequence; VAR res: WORD); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetImageSequence*(VAR sequence: Codecs.ImageSequence; VAR res: INTEGER); 
 	END GIFAnimationDecoder; 
 VAR 
-	red, green, blue: ARRAY 256 OF INTEGER; 
+	red, green, blue: ARRAY 256 OF SIGNED16; 
 
 	PROCEDURE ^ LoadData(r: Streams.Reader; pal: Raster.Palette; img: Raster.Image; interlaced: BOOLEAN; VAR error: BOOLEAN); 
-	PROCEDURE ^ GetColor(CONST pixel: Raster.Pixel): LONGINT; 
+	PROCEDURE ^ GetColor(CONST pixel: Raster.Pixel): SIGNED32; 
 	PROCEDURE ^ InitDefaultPalette; 
 	PROCEDURE ^ ImageEncoderFactory*(): Codecs.ImageEncoder; 
 	PROCEDURE ^ ImageDecoderFactory*(): Codecs.ImageDecoder; 

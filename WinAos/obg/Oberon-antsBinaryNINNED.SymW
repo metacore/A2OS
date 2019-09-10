@@ -1,11 +1,11 @@
 MODULE antsBinaryNINNED IN Oberon;
 	IMPORT vyBase, antsArrayObjects, antsEmpiricD, Objects, aM := antsMessages;
 TYPE 
-	Index = LONGINT; 
+	Index = SIGNED32; 
 
-	NINNED* = ARRAY 2 OF ARRAY 16 OF LONGINT; 
+	NINNED* = ARRAY 2 OF ARRAY 16 OF SIGNED32; 
 
-	NINSSProb* = ARRAY 16 OF LONGREAL; 
+	NINSSProb* = ARRAY 16 OF FLOAT64; 
 
 	EmpiricalDistribution* = POINTER TO EDDesc; 
 
@@ -26,12 +26,12 @@ TYPE
 	END; 
 VAR 
 	lastprob*: NINSSProb; 
-	black*: LONGREAL; 
+	black*: FLOAT64; 
 
-	PROCEDURE ^ Prob*(E: EmpiricalDistribution; conf: LONGINT): LONGREAL; 
+	PROCEDURE ^ Prob*(E: EmpiricalDistribution; conf: SIGNED32): FLOAT64; 
 	PROCEDURE ^ ProbA*(E: EmpiricalDistribution; VAR a: NINSSProb); 
 	PROCEDURE ^ InitED(E: EmpiricalDistribution); 
-	PROCEDURE ^ EmpiricalDistribute(VAR E: EmpiricalDistribution; A: antsArrayObjects.tINTEGERArray; Sx, Sy, Sw, Sh: LONGINT); 
+	PROCEDURE ^ EmpiricalDistribute(VAR E: EmpiricalDistribution; A: antsArrayObjects.tINTEGERArray; Sx, Sy, Sw, Sh: SIGNED32); 
 	PROCEDURE ^ GenerateED(g: tEDGenerator); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ Open*(gen: tEDGenerator; from: vyBase.Object); 

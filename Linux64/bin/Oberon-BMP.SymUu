@@ -9,31 +9,31 @@ CONST
 TYPE 
 	FileHeader = RECORD 
 		type: ARRAY 4 OF CHAR; 
-		size: LONGINT; 
-		res1, res2: INTEGER; 
-		offBits: LONGINT; 
+		size: SIGNED32; 
+		res1, res2: SIGNED16; 
+		offBits: SIGNED32; 
 	END; 
 
 	BitmapHeader = RECORD 
-		size: LONGINT; 
-		width, height: LONGINT; 
-		planes: INTEGER; 
-		depth: INTEGER; 
-		compression: LONGINT; 
-		sizeImage: LONGINT; 
-		Xppm, Yppm: LONGINT; 
-		clrUsed: LONGINT; 
-		clrImportant: LONGINT; 
+		size: SIGNED32; 
+		width, height: SIGNED32; 
+		planes: SIGNED16; 
+		depth: SIGNED16; 
+		compression: SIGNED32; 
+		sizeImage: SIGNED32; 
+		Xppm, Yppm: SIGNED32; 
+		clrUsed: SIGNED32; 
+		clrImportant: SIGNED32; 
 	END; 
 VAR 
-	ColorMap: ARRAY 256 OF INTEGER; 
+	ColorMap: ARRAY 256 OF SIGNED16; 
 	W: Texts.Writer; 
 	error: BOOLEAN; 
 
 	PROCEDURE ^ WriteError(str: ARRAY OF CHAR); 
 	PROCEDURE ^ ScanFileHeader(VAR R: Files.Rider; VAR header: FileHeader); 
 	PROCEDURE ^ ScanBitmapHeader(VAR R: Files.Rider; VAR header: BitmapHeader); 
-	PROCEDURE ^ ScanCol(VAR R: Files.Rider; pict: Pictures.Picture; nrColor: LONGINT; conversion: BOOLEAN); 
+	PROCEDURE ^ ScanCol(VAR R: Files.Rider; pict: Pictures.Picture; nrColor: SIGNED32; conversion: BOOLEAN); 
 	PROCEDURE ^ LoadRLE8(VAR R: Files.Rider; pict: Pictures.Picture); 
 	PROCEDURE ^ LoadRLE4(VAR R: Files.Rider; pict: Pictures.Picture); 
 	PROCEDURE ^ LoadRGB8(VAR R: Files.Rider; pict: Pictures.Picture); 

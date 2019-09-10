@@ -20,7 +20,7 @@ TYPE
 		host: ARRAY NetTools.ServerStrLen OF CHAR; 
 		path: ARRAY NetTools.PathStrLen OF CHAR; 
 		coded: ARRAY 64 OF CHAR; 
-		port: INTEGER; 
+		port: SIGNED16; 
 		next: Authorization; 
 	END; 
 
@@ -29,37 +29,37 @@ TYPE
 	CookieDesc = RECORD 
 		name, domain: ARRAY 64 OF CHAR; 
 		val, path: ARRAY 256 OF CHAR; 
-		d, t: LONGINT; 
+		d, t: SIGNED32; 
 		next: Cookie; 
 	END; 
 VAR 
 	W: Texts.Writer; 
 	buf: ARRAY NetTools.BufLen OF CHAR; 
-	noWorkers: INTEGER; 
+	noWorkers: SIGNED16; 
 	encTable: ARRAY 64 OF CHAR; 
 	authorizations: Authorization; 
 	cookies: Cookie; 
 	EMail: ARRAY NetTools.ServerStrLen OF CHAR; 
 	client: ARRAY 64 OF CHAR; 
 
-	PROCEDURE ^ TCPAvailable(S: Streams.Stream): LONGINT; 
+	PROCEDURE ^ TCPAvailable(S: Streams.Stream): SIGNED32; 
 	PROCEDURE ^ OpenStream(C: NetSystem.Connection): Streams.Stream; 
 	PROCEDURE ^ EncBase64(VAR src, dest: ARRAY OF CHAR); 
-	PROCEDURE ^ GetAuthorization(VAR host, path: ARRAY OF CHAR; port: INTEGER): Authorization; 
+	PROCEDURE ^ GetAuthorization(VAR host, path: ARRAY OF CHAR; port: SIGNED16): Authorization; 
 	PROCEDURE ^ FindCookie(root: Cookie; VAR host, path: ARRAY OF CHAR): Cookie; 
 	PROCEDURE ^ AddCookie(VAR host, path, value: ARRAY OF CHAR); 
 	PROCEDURE ^ ListCookies*; 
-	PROCEDURE ^ NetLen(T: Texts.Text): LONGINT; 
-	PROCEDURE ^ Request*(C: NetSystem.Connection; method: ARRAY OF CHAR; VAR key: LONGINT; proxy: BOOLEAN; VAR query: Texts.Text; log: BOOLEAN); 
-	PROCEDURE ^ Response*(VAR C: NetSystem.Connection; key: LONGINT; main: BOOLEAN; VAR cont: MIME.Content; VAR location: ARRAY OF CHAR; log: BOOLEAN): LONGINT; 
-	PROCEDURE ^ Connect(VAR C: NetSystem.Connection; proxy: HTTPDocs0.Proxy; main, waitR, reloc, block: BOOLEAN; method: ARRAY OF CHAR; VAR key: LONGINT; VAR cont: MIME.Content; query: Texts.Text; log: BOOLEAN; VAR useProxy: BOOLEAN): LONGINT; 
+	PROCEDURE ^ NetLen(T: Texts.Text): SIGNED32; 
+	PROCEDURE ^ Request*(C: NetSystem.Connection; method: ARRAY OF CHAR; VAR key: SIGNED32; proxy: BOOLEAN; VAR query: Texts.Text; log: BOOLEAN); 
+	PROCEDURE ^ Response*(VAR C: NetSystem.Connection; key: SIGNED32; main: BOOLEAN; VAR cont: MIME.Content; VAR location: ARRAY OF CHAR; log: BOOLEAN): SIGNED32; 
+	PROCEDURE ^ Connect(VAR C: NetSystem.Connection; proxy: HTTPDocs0.Proxy; main, waitR, reloc, block: BOOLEAN; method: ARRAY OF CHAR; VAR key: SIGNED32; VAR cont: MIME.Content; query: Texts.Text; log: BOOLEAN; VAR useProxy: BOOLEAN): SIGNED32; 
 	PROCEDURE ^ LinkSchemeHandler(L: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewLinkScheme*; 
 	PROCEDURE ^ DoWork(me: Oberon.Task); 
 	PROCEDURE ^ StartWorker; 
 	PROCEDURE ^ Install(E: HTTPDocs0.Entry); 
-	PROCEDURE ^ requestDoc(D: Documents.Document; proxy: HTTPDocs0.Proxy; VAR key: LONGINT; method: ARRAY OF CHAR; main: BOOLEAN; E: HTTPDocs0.Entry; query: Texts.Text); 
-	PROCEDURE ^ OpenHTTPDoc(D: Documents.Document; key: LONGINT; proxy: HTTPDocs0.Proxy); 
+	PROCEDURE ^ requestDoc(D: Documents.Document; proxy: HTTPDocs0.Proxy; VAR key: SIGNED32; method: ARRAY OF CHAR; main: BOOLEAN; E: HTTPDocs0.Entry; query: Texts.Text); 
+	PROCEDURE ^ OpenHTTPDoc(D: Documents.Document; key: SIGNED32; proxy: HTTPDocs0.Proxy); 
 	PROCEDURE ^ LoadDoc*(D: Documents.Document); 
 	PROCEDURE ^ NewDoc*; 
 	PROCEDURE ^ InitTables; 

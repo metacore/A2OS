@@ -11,12 +11,12 @@ TYPE
 	END; 
 
 	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ Cx(F: Frame; x: LONGINT): INTEGER; 
-	PROCEDURE ^ Cy(F: Frame; y: LONGINT): INTEGER; 
-	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER; dlink: Objects.Object); 
+	PROCEDURE ^ Cx(F: Frame; x: SIGNED32): SIGNED16; 
+	PROCEDURE ^ Cy(F: Frame; y: SIGNED32): SIGNED16; 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: SIGNED16; dlink: Objects.Object); 
 	PROCEDURE ^ PrintFrame(F: Frame; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
-	PROCEDURE ^ Focus(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ Focus(F: Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitNavigator*(F: Frame); 
 	PROCEDURE ^ NewNavigator*; 

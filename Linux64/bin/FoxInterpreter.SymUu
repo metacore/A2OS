@@ -32,14 +32,14 @@ TYPE
 
 	Builtin* = OBJECT (InterpreterSymbols.Object)
 	VAR 
-		id: LONGINT; 
+		id: SIGNED32; 
 	END Builtin; 
 
 	Item* = RECORD 
 		object*: InterpreterSymbols.Item; 
 		in*: InterpreterSymbols.Item; 
 		name*: StringPool.Index; 
-		i*: ARRAY MaxIndex OF LONGINT; 
+		i*: ARRAY MaxIndex OF SIGNED32; 
 	END; 
 
 	CommandStatement = OBJECT (SyntaxTree.Statement)
@@ -82,8 +82,8 @@ TYPE
 		PROCEDURE ^ ErrorSS(CONST msg: ARRAY OF CHAR; id: StringPool.Index); 
 		PROCEDURE ^ VisitSet*(x: SyntaxTree.Set); 
 		PROCEDURE ^ VisitMathArrayExpression*(x: SyntaxTree.MathArrayExpression); 
-		PROCEDURE ^ NewInt(i: HUGEINT); 
-		PROCEDURE ^ NewReal(i: LONGREAL); 
+		PROCEDURE ^ NewInt(i: SIGNED64); 
+		PROCEDURE ^ NewReal(i: FLOAT64); 
 		PROCEDURE ^ NewBool(b: BOOLEAN); 
 		PROCEDURE ^ NewSet(s: SET); 
 		PROCEDURE ^ NewString(CONST s: ARRAY OF CHAR); 
@@ -182,24 +182,24 @@ TYPE
 
 	TestO = OBJECT 
 	VAR 
-		i: LONGINT; 
+		i: SIGNED32; 
 
-		PROCEDURE ^  & P(s: SHORTINT); 
+		PROCEDURE ^  & P(s: SIGNED8); 
 	END TestO; 
 
 	; 
 VAR 
 	global-: Scope; 
-	c: LONGINT; 
+	c: SIGNED32; 
 	d: RECORD 
-		e: LONGINT; 
+		e: SIGNED32; 
 	END; 
 
 	PROCEDURE ^ Statements*(context: Commands.Context); 
 	PROCEDURE ^ Expression*(context: Commands.Context); 
 	PROCEDURE ^ TranslateString*(context: Commands.Context); 
 	PROCEDURE ^ InitGlobalScope; 
-	PROCEDURE ^ Getter(): LONGINT; 
-	PROCEDURE ^ Setter(a: LONGINT): LONGINT; 
+	PROCEDURE ^ Getter(): SIGNED32; 
+	PROCEDURE ^ Setter(a: SIGNED32): SIGNED32; 
 BEGIN
 END FoxInterpreter.

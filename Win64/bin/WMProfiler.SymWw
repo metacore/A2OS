@@ -13,7 +13,7 @@ TYPE
 		tree: WMTrees.Tree; 
 		treeView: WMTrees.TreeView; 
 		lastSelectedNode: HierarchicalProfiler.Node; 
-		lastState: LONGINT; 
+		lastState: SIGNED32; 
 		statusLabel: WMStandardComponents.Label; 
 		progressBar: WMProgressComponents.ProgressBar; 
 		profile: HierarchicalProfiler.Profile; 
@@ -27,8 +27,8 @@ TYPE
 		PROCEDURE ^ UpdateStatusBar(forceUpdate: BOOLEAN); 
 		PROCEDURE ^ HandleNodeClicked(sender, data: ANY); 
 		PROCEDURE ^ HandleNodeSelected(sender, data: ANY); 
-		PROCEDURE ^ GetTypeAndInfo(VAR type, info: LONGINT); 
-		PROCEDURE ^ GetFilterMask(VAR mask: ARRAY OF CHAR; VAR minPercent: LONGINT); 
+		PROCEDURE ^ GetTypeAndInfo(VAR type, info: SIGNED32); 
+		PROCEDURE ^ GetFilterMask(VAR mask: ARRAY OF CHAR; VAR minPercent: SIGNED32); 
 		PROCEDURE ^ HandleButtons(sender, data: ANY); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(context: WMRestorable.Context); 
@@ -37,7 +37,7 @@ TYPE
 	BEGIN{ACTIVE} 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 

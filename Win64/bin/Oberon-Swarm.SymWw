@@ -39,8 +39,8 @@ CONST
 	GadgetBAccDef = 2; 
 TYPE 
 	Bee = RECORD 
-		x, y: ARRAY 3 OF INTEGER; 
-		vx, vy: INTEGER; 
+		x, y: ARRAY 3 OF SIGNED16; 
+		vx, vy: SIGNED16; 
 	END; 
 
 	BeeSwarm = POINTER TO ARRAY OF Bee; 
@@ -48,23 +48,23 @@ TYPE
 	Swarm = POINTER TO SwarmDesc; 
 
 	SwarmDesc = RECORD (Gadgets.FrameDesc)
-		speed, time: INTEGER; 
-		size: INTEGER; 
-		mincol, maxcol, col, colstep: INTEGER; 
-		wacc, wvel: INTEGER; 
-		border: INTEGER; 
+		speed, time: SIGNED16; 
+		size: SIGNED16; 
+		mincol, maxcol, col, colstep: SIGNED16; 
+		wacc, wvel: SIGNED16; 
+		border: SIGNED16; 
 		wasp: Bee; 
-		bacc, bvel: INTEGER; 
+		bacc, bvel: SIGNED16; 
 		bees: BeeSwarm; 
 	END; 
 
 	Task = POINTER TO TaskDesc; 
 
 	TaskDesc = RECORD (Oberon.TaskDesc)
-		x, y: INTEGER; 
+		x, y: SIGNED16; 
 		keys: SET; 
-		timeout: LONGINT; 
-		ticks: LONGINT; 
+		timeout: SIGNED32; 
+		ticks: SIGNED32; 
 	END; 
 
 	SwarmMsg = RECORD (Display.FrameMsg)
@@ -72,14 +72,14 @@ TYPE
 VAR 
 	W: Texts.Writer; 
 	task: Task; 
-	Second, Tick: LONGINT; 
+	Second, Tick: SIGNED32; 
 	warn: BOOLEAN; 
 
 	PROCEDURE ^ RandomizeSwarm(VAR s: Swarm); 
-	PROCEDURE ^ InitSwarm(VAR s: Swarm; speed, size, width, height, border, mincol, maxcol, bacc, bvel, wacc, wvel: INTEGER); 
-	PROCEDURE ^ ResizeSwarm(s: Swarm; size: INTEGER); 
-	PROCEDURE ^ AgeSwarm(s: Swarm; m: Display3.Mask; x, y: INTEGER); 
-	PROCEDURE ^ DrawSwarm(s: Swarm; m: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ InitSwarm(VAR s: Swarm; speed, size, width, height, border, mincol, maxcol, bacc, bvel, wacc, wvel: SIGNED16); 
+	PROCEDURE ^ ResizeSwarm(s: Swarm; size: SIGNED16); 
+	PROCEDURE ^ AgeSwarm(s: Swarm; m: Display3.Mask; x, y: SIGNED16); 
+	PROCEDURE ^ DrawSwarm(s: Swarm; m: Display3.Mask; x, y: SIGNED16); 
 	PROCEDURE ^ PrintSwarm(s: Swarm; M: Display.DisplayMsg); 
 	PROCEDURE ^ CopySwarm(from: Swarm; to: Swarm); 
 	PROCEDURE ^ HandleAttributes(s: Swarm; VAR M: Objects.AttrMsg); 
@@ -90,11 +90,11 @@ VAR
 	PROCEDURE ^ Exec*; 
 	PROCEDURE ^ Warning(name: ARRAY OF CHAR); 
 	PROCEDURE ^ GetBool(name: ARRAY OF CHAR; default: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ GetInt(name: ARRAY OF CHAR; default: LONGINT): LONGINT; 
-	PROCEDURE ^ GetSleepTime(): LONGINT; 
+	PROCEDURE ^ GetInt(name: ARRAY OF CHAR; default: SIGNED32): SIGNED32; 
+	PROCEDURE ^ GetSleepTime(): SIGNED32; 
 	PROCEDURE ^ FadeAway(): BOOLEAN; 
 	PROCEDURE ^ RestoreDisplay; 
-	PROCEDURE ^ SwarmOut(speed, size, border, mincol, maxcol, bacc, bvel, wacc, wvel: INTEGER); 
+	PROCEDURE ^ SwarmOut(speed, size, border, mincol, maxcol, bacc, bvel, wacc, wvel: SIGNED16); 
 	PROCEDURE ^ Screensaver*; 
 	PROCEDURE ^ TaskHandler(task: Oberon.Task); 
 	PROCEDURE ^ RemoveTask; 

@@ -15,7 +15,7 @@ TYPE
 	NCUBE = RECORD 
 		filled: BOOLEAN; 
 		mirror: BOOLEAN; 
-		reflectivity: REAL; 
+		reflectivity: FLOAT32; 
 		normal: PT; 
 		color: COLOR; 
 	END; 
@@ -29,7 +29,7 @@ TYPE
 
 		PROCEDURE ^  & init*; 
 		PROCEDURE ^ SetColor*(R, G, B, BL: SREAL); 
-		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ bounds*(i, j, k: SIGNED32; VAR out: BOOLEAN); 
 		PROCEDURE ^ fill*(v: Voxel); 
 		PROCEDURE ^ erase*; 
 		PROCEDURE ^ fillwithprobability*(v: Voxel; p: SREAL); 
@@ -39,11 +39,11 @@ TYPE
 		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
 		PROCEDURE ^ probeShade*(VAR ray: Ray; VAR dx, dy, dz: SREAL); 
 		PROCEDURE ^ deathray*(VAR ray: Ray); 
-		PROCEDURE ^ stroke*(p: PT; level: LONGINT; normal: PT; color: COLOR; mirror: BOOLEAN); 
-		PROCEDURE ^ strokevoxel*(p: PT; level: LONGINT; voxel: Voxel); 
-		PROCEDURE ^ line*(a, b: PT; level: LONGINT; color: COLOR; mirror: BOOLEAN); 
-		PROCEDURE ^ nline*(a, b: PT; level: LONGINT; normal: PT; color: COLOR; mirror: BOOLEAN); 
-		PROCEDURE ^ linevoxel*(a, b: PT; level: LONGINT; v: Voxel); 
+		PROCEDURE ^ stroke*(p: PT; level: SIGNED32; normal: PT; color: COLOR; mirror: BOOLEAN); 
+		PROCEDURE ^ strokevoxel*(p: PT; level: SIGNED32; voxel: Voxel); 
+		PROCEDURE ^ line*(a, b: PT; level: SIGNED32; color: COLOR; mirror: BOOLEAN); 
+		PROCEDURE ^ nline*(a, b: PT; level: SIGNED32; normal: PT; color: COLOR; mirror: BOOLEAN); 
+		PROCEDURE ^ linevoxel*(a, b: PT; level: SIGNED32; v: Voxel); 
 	END cell; 
 
 	AR3 = ARRAY 3 OF ARRAY 3 OF ARRAY 3 OF Voxel; 

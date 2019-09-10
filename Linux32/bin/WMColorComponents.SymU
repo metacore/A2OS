@@ -16,7 +16,7 @@ TYPE
 		setColor: ColorChangeHandler; 
 
 		PROCEDURE ^  & Init*(cch: ColorChangeHandler); 
-		PROCEDURE ^ GetInterface*(type: LONGINT): WMDropTarget.DropInterface; 
+		PROCEDURE ^ GetInterface*(type: SIGNED32): WMDropTarget.DropInterface; 
 	END ColorDropTarget; 
 
 	ColorDropInterface = OBJECT (WMDropTarget.DropInt32)
@@ -24,7 +24,7 @@ TYPE
 		setColor: ColorChangeHandler; 
 
 		PROCEDURE ^  & Init*(cch: ColorChangeHandler); 
-		PROCEDURE ^ Set*(i: LONGINT); 
+		PROCEDURE ^ Set*(i: SIGNED32); 
 	END ColorDropInterface; 
 
 	NumberInput* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)

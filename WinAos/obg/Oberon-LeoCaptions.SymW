@@ -22,21 +22,21 @@ TYPE
 
 	CaptionDesc* = RECORD (Leonardo.ShapeDesc)
 		text*: Text; 
-		len*: LONGINT; 
+		len*: SIGNED32; 
 		font*: GfxFonts.Font; 
 		mat*: GfxMatrix.Matrix; 
 		color*: Gfx.Color; 
-		width: REAL; 
-		caret: LONGINT; 
-		update: SHORTINT; 
-		from, to: LONGINT; 
+		width: FLOAT32; 
+		caret: SIGNED32; 
+		update: SIGNED8; 
+		from, to: SIGNED32; 
 	END; 
 
 	FocusMsg* = RECORD (Leonardo.LocalizedMsg)
-		id*: SHORTINT; 
+		id*: SIGNED8; 
 		char*: CHAR; 
-		res*: INTEGER; 
-		fx*, fy*: REAL; 
+		res*: SIGNED16; 
+		fx*, fy*: FLOAT32; 
 		gdm*: GfxMatrix.Matrix; 
 		shape*: Leonardo.Shape; 
 	END; 
@@ -45,18 +45,18 @@ TYPE
 
 	EditActionDesc = RECORD (Leonardo.ActionDesc)
 		cap: Caption; 
-		pos: LONGINT; 
-		update: SHORTINT; 
+		pos: SIGNED32; 
+		update: SIGNED8; 
 		char: CHAR; 
 	END; 
 VAR 
 	FontMat, FontInv: GfxMatrix.Matrix; 
 
-	PROCEDURE ^ Accept*(fig: Leonardo.Figure; x, y: REAL; gdm: GfxMatrix.Matrix): Leonardo.Shape; 
+	PROCEDURE ^ Accept*(fig: Leonardo.Figure; x, y: FLOAT32; gdm: GfxMatrix.Matrix): Leonardo.Shape; 
 	PROCEDURE ^ Release*(fig: Leonardo.Figure; shape: Leonardo.Shape); 
-	PROCEDURE ^ Consume*(fig: Leonardo.Figure; shape: Leonardo.Shape; ch: CHAR; VAR res: INTEGER); 
-	PROCEDURE ^ GetOffset(cap: Caption; len: LONGINT; font: GfxFonts.Font; VAR x, y: REAL); 
-	PROCEDURE ^ Set(cap: Caption; VAR text: ARRAY OF CHAR; len: LONGINT); 
+	PROCEDURE ^ Consume*(fig: Leonardo.Figure; shape: Leonardo.Shape; ch: CHAR; VAR res: SIGNED16); 
+	PROCEDURE ^ GetOffset(cap: Caption; len: SIGNED32; font: GfxFonts.Font; VAR x, y: FLOAT32); 
+	PROCEDURE ^ Set(cap: Caption; VAR text: ARRAY OF CHAR; len: SIGNED32); 
 	PROCEDURE ^ CalcBox(cap: Caption; VAR mat: GfxMatrix.Matrix); 
 	PROCEDURE ^ Validate(cap: Caption; VAR msg: Leonardo.ValidateMsg); 
 	PROCEDURE ^ Outline(cap: Caption; VAR msg: LeoPaths.RenderMsg); 
@@ -64,14 +64,14 @@ VAR
 	PROCEDURE ^ Locate(cap: Caption; VAR msg: Leonardo.LocateMsg); 
 	PROCEDURE ^ Transform(cap: Caption; VAR msg: Leonardo.TransformMsg); 
 	PROCEDURE ^ DoEditAction(fig: Leonardo.Figure; a: Leonardo.Action); 
-	PROCEDURE ^ AddCommand(fig: Leonardo.Figure; cap: Caption; update: SHORTINT; pos: LONGINT; char: CHAR); 
-	PROCEDURE ^ Update(fig: Leonardo.Figure; cap: Caption; from, to: LONGINT); 
+	PROCEDURE ^ AddCommand(fig: Leonardo.Figure; cap: Caption; update: SIGNED8; pos: SIGNED32; char: CHAR); 
+	PROCEDURE ^ Update(fig: Leonardo.Figure; cap: Caption; from, to: SIGNED32); 
 	PROCEDURE ^ Edit(fig: Leonardo.Figure; cap: Caption; ch: CHAR); 
 	PROCEDURE ^ Focus(cap: Caption; VAR msg: FocusMsg); 
 	PROCEDURE ^ HandleAttr(cap: Caption; VAR msg: Objects.AttrMsg); 
 	PROCEDURE ^ Copy*(VAR msg: Objects.CopyMsg; from, to: Caption); 
 	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ Init*(cap: Caption; x, y: REAL; text: ARRAY OF CHAR; font: GfxFonts.Font; col: Gfx.Color); 
+	PROCEDURE ^ Init*(cap: Caption; x, y: FLOAT32; text: ARRAY OF CHAR; font: GfxFonts.Font; col: Gfx.Color); 
 	PROCEDURE ^ New*; 
 BEGIN
 END LeoCaptions.

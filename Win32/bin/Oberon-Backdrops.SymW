@@ -5,13 +5,13 @@ TYPE
 	ptr = POINTER TO complex; 
 
 	complex = RECORD 
-		r, i: REAL; 
+		r, i: FLOAT32; 
 	END; 
 VAR 
-	seed: LONGINT; 
-	noisetable: ARRAY 99 OF ARRAY 99 OF INTEGER; 
-	maxnoise, px, py: INTEGER; 
-	r0, r1, g0, g1, b0, b1: INTEGER; 
+	seed: SIGNED32; 
+	noisetable: ARRAY 99 OF ARRAY 99 OF SIGNED16; 
+	maxnoise, px, py: SIGNED16; 
+	r0, r1, g0, g1, b0, b1: SIGNED16; 
 
 	PROCEDURE ^ SetColorRamp; 
 	PROCEDURE ^ SetVal*; 
@@ -20,38 +20,38 @@ VAR
 	PROCEDURE ^ SetBackground*; 
 	PROCEDURE ^ SetColor*; 
 	PROCEDURE ^ SetNoColor*; 
-	PROCEDURE ^ Random(): LONGINT; 
+	PROCEDURE ^ Random(): SIGNED32; 
 	PROCEDURE ^ CheckKeyboard(): BOOLEAN; 
 	PROCEDURE ^ Initcolor(P: Pictures.Picture); 
-	PROCEDURE ^ Integer(CONST name: ARRAY OF CHAR): INTEGER; 
-	PROCEDURE ^ Real(CONST name: ARRAY OF CHAR): REAL; 
+	PROCEDURE ^ Integer(CONST name: ARRAY OF CHAR): SIGNED16; 
+	PROCEDURE ^ Real(CONST name: ARRAY OF CHAR): FLOAT32; 
 	PROCEDURE ^ LoadPalette*; 
 	PROCEDURE ^ CreatePict(VAR P: Pictures.Picture); 
 	PROCEDURE ^ EmptyPicture*; 
 	PROCEDURE ^ Reduce*; 
-	PROCEDURE ^ WraplConst(P: Pictures.Picture; col, x, y, w, h: INTEGER); 
-	PROCEDURE ^ Circle(P: Pictures.Picture; xm, ym, r, dc, fac: INTEGER; bres: BOOLEAN; dis: INTEGER); 
-	PROCEDURE ^ Ellipse(P: Pictures.Picture; a, b, xm, ym, col: INTEGER; both: BOOLEAN); 
-	PROCEDURE ^ Spirale(P: Pictures.Picture; r0, r1, a0, a1, xm, ym, col, b: INTEGER); 
+	PROCEDURE ^ WraplConst(P: Pictures.Picture; col, x, y, w, h: SIGNED16); 
+	PROCEDURE ^ Circle(P: Pictures.Picture; xm, ym, r, dc, fac: SIGNED16; bres: BOOLEAN; dis: SIGNED16); 
+	PROCEDURE ^ Ellipse(P: Pictures.Picture; a, b, xm, ym, col: SIGNED16; both: BOOLEAN); 
+	PROCEDURE ^ Spirale(P: Pictures.Picture; r0, r1, a0, a1, xm, ym, col, b: SIGNED16); 
 	PROCEDURE ^ Fractal*; 
 	PROCEDURE ^ Initnoise; 
-	PROCEDURE ^ noise(x, y: REAL): REAL; 
+	PROCEDURE ^ noise(x, y: FLOAT32): FLOAT32; 
 	PROCEDURE ^ Marble*; 
-	PROCEDURE ^ turbulence(x, y: REAL): REAL; 
+	PROCEDURE ^ turbulence(x, y: FLOAT32): FLOAT32; 
 	PROCEDURE ^ Preview*; 
 	PROCEDURE ^ Textils*; 
 	PROCEDURE ^ Clouds*; 
 	PROCEDURE ^ Molecules*; 
 	PROCEDURE ^ Threads*; 
-	PROCEDURE ^ Damage(P: Pictures.Picture; col, dx, dy, x, y, w, h: INTEGER); 
-	PROCEDURE ^ Brick(P: Pictures.Picture; col, dam, x, y, w, h: INTEGER); 
+	PROCEDURE ^ Damage(P: Pictures.Picture; col, dx, dy, x, y, w, h: SIGNED16); 
+	PROCEDURE ^ Brick(P: Pictures.Picture; col, dam, x, y, w, h: SIGNED16); 
 	PROCEDURE ^ Bricks*; 
 	PROCEDURE ^ Surface*; 
 	PROCEDURE ^ Plasma*; 
 	PROCEDURE ^ Coins*; 
 	PROCEDURE ^ Bows*; 
 	PROCEDURE ^ Spirals*; 
-	PROCEDURE ^ Tree(P: Pictures.Picture; x, y, dir, col, count, max, len: INTEGER); 
+	PROCEDURE ^ Tree(P: Pictures.Picture; x, y, dir, col, count, max, len: SIGNED16); 
 	PROCEDURE ^ Trees*; 
 	PROCEDURE ^ Cells*; 
 BEGIN

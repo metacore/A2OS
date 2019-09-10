@@ -4,7 +4,7 @@ CONST
 	dummy =  -1; 
 TYPE 
 	CodePages = RECORD 
-		code, ref: INTEGER; 
+		code, ref: SIGNED16; 
 	END; 
 
 	CodeBook = ARRAY 4096 OF CodePages; 
@@ -14,25 +14,25 @@ TYPE
 	END; 
 
 	ColorTable = RECORD 
-		colTrans, IcolTrans: ARRAY 256 OF INTEGER; 
+		colTrans, IcolTrans: ARRAY 256 OF SIGNED16; 
 		rgb: ARRAY 256 OF RGBType; 
 	END; 
 
 	LogicalScrDesc = RECORD 
-		width, height: INTEGER; 
-		GCTSize: INTEGER; 
+		width, height: SIGNED16; 
+		GCTSize: SIGNED16; 
 		GCTFlag: BOOLEAN; 
 	END; 
 
 	ImageDesc = RECORD 
-		left, top, width, height: INTEGER; 
+		left, top, width, height: SIGNED16; 
 		sequential, LCTFlag: BOOLEAN; 
-		LCTSize: INTEGER; 
+		LCTSize: SIGNED16; 
 		LCT: ColorTable; 
 	END; 
 
 	ExtBlock = RECORD 
-		transparencyIndex: INTEGER; 
+		transparencyIndex: SIGNED16; 
 		transparency: BOOLEAN; 
 	END; 
 
@@ -48,13 +48,13 @@ VAR
 
 	PROCEDURE ^ ComputeColors(VAR CT: ColorTable; colorConversion: BOOLEAN); 
 	PROCEDURE ^ GetLogicalScrDesc(VAR R: Files.Rider; VAR LSD: LogicalScrDesc); 
-	PROCEDURE ^ GetCMap(VAR R: Files.Rider; VAR map: ColorTable; size: LONGINT); 
+	PROCEDURE ^ GetCMap(VAR R: Files.Rider; VAR map: ColorTable; size: SIGNED32); 
 	PROCEDURE ^ GetExtBlock(VAR R: Files.Rider; VAR Ext: ExtBlock); 
 	PROCEDURE ^ GetImageDesc(VAR R: Files.Rider; VAR IDesc: ImageDesc); 
-	PROCEDURE ^ InitCodeBook(codeLen: LONGINT); 
+	PROCEDURE ^ InitCodeBook(codeLen: SIGNED32); 
 	PROCEDURE ^ GetData(VAR r: Files.Rider; VAR Image: Gif; P: Pictures.Picture); 
 	PROCEDURE ^ CheckFile*(f: Files.File): BOOLEAN; 
-	PROCEDURE ^ Load*(VAR R: Files.Rider; transparentCol: INTEGER; colorConversion: BOOLEAN; pict: Pictures.Picture); 
+	PROCEDURE ^ Load*(VAR R: Files.Rider; transparentCol: SIGNED16; colorConversion: BOOLEAN; pict: Pictures.Picture); 
 	PROCEDURE ^ Handle*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitPicture*; 
 	PROCEDURE ^ NewPicture*; 

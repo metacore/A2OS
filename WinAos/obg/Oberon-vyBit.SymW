@@ -7,24 +7,24 @@ CONST
 	fmtplain* = 1; 
 	fmtpacked* = 2; 
 
-	PROCEDURE ^ Write*(VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF BOOLEAN; start: LONGINT); 
-	PROCEDURE ^ Read*(VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF BOOLEAN; start: LONGINT); 
-	PROCEDURE ^ WriteFmt*(prefform: LONGINT; VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF BOOLEAN; start: LONGINT); 
-	PROCEDURE ^ ReadFmt*(VAR form: LONGINT; VAR R: Files.Rider; count: LONGINT; VAR x: ARRAY OF BOOLEAN; start: LONGINT); 
-	PROCEDURE ^ Fill*(len: LONGINT; VAR x: ARRAY OF BOOLEAN; start: LONGINT; val: BOOLEAN); 
-	PROCEDURE ^ FillPat*(count: LONGINT; VAR x: ARRAY OF BOOLEAN; start, step: LONGINT; val: BOOLEAN); 
-	PROCEDURE ^ Copy*(len: LONGINT; VAR src: ARRAY OF BOOLEAN; srcstart: LONGINT; VAR dest: ARRAY OF BOOLEAN; deststart: LONGINT); 
-	PROCEDURE ^ CopyPat*(count: LONGINT; VAR src: ARRAY OF BOOLEAN; start, step: LONGINT; VAR dest: ARRAY OF BOOLEAN; deststart, deststep: LONGINT); 
-	PROCEDURE ^ Count*(len: LONGINT; VAR x: ARRAY OF BOOLEAN): LONGINT; 
-	PROCEDURE ^ And*(VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: LONGINT); 
-	PROCEDURE ^ Or*(VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: LONGINT); 
-	PROCEDURE ^ XOr*(VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: LONGINT); 
-	PROCEDURE ^ Not*(VAR x: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: LONGINT); 
-	PROCEDURE ^ Get2d*(VAR x: ARRAY OF BOOLEAN; rows, row, column: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Set2d*(VAR x: ARRAY OF BOOLEAN; rows, row, column: LONGINT; val: BOOLEAN); 
-	PROCEDURE ^ Get2dM*(VAR x: ARRAY OF BOOLEAN; rowoffset, coloffset, nrrows, nrcolumns: LONGINT; VAR dest: ARRAY OF ARRAY OF BOOLEAN); 
-	PROCEDURE ^ Set2dM*(VAR x: ARRAY OF BOOLEAN; rowoffset, coloffset, nrrows, nrcolumns: LONGINT; VAR src: ARRAY OF ARRAY OF BOOLEAN); 
-	PROCEDURE ^ Get2dF*(VAR x: ARRAY OF BOOLEAN; columns, row, column: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Set2dF*(VAR x: ARRAY OF BOOLEAN; columns, row, column: LONGINT; val: BOOLEAN); 
+	PROCEDURE ^ Write*(VAR R: Files.Rider; count: SIGNED32; VAR x: ARRAY OF BOOLEAN; start: SIGNED32); 
+	PROCEDURE ^ Read*(VAR R: Files.Rider; count: SIGNED32; VAR x: ARRAY OF BOOLEAN; start: SIGNED32); 
+	PROCEDURE ^ WriteFmt*(prefform: SIGNED32; VAR R: Files.Rider; count: SIGNED32; VAR x: ARRAY OF BOOLEAN; start: SIGNED32); 
+	PROCEDURE ^ ReadFmt*(VAR form: SIGNED32; VAR R: Files.Rider; count: SIGNED32; VAR x: ARRAY OF BOOLEAN; start: SIGNED32); 
+	PROCEDURE ^ Fill*(len: SIGNED32; VAR x: ARRAY OF BOOLEAN; start: SIGNED32; val: BOOLEAN); 
+	PROCEDURE ^ FillPat*(count: SIGNED32; VAR x: ARRAY OF BOOLEAN; start, step: SIGNED32; val: BOOLEAN); 
+	PROCEDURE ^ Copy*(len: SIGNED32; VAR src: ARRAY OF BOOLEAN; srcstart: SIGNED32; VAR dest: ARRAY OF BOOLEAN; deststart: SIGNED32); 
+	PROCEDURE ^ CopyPat*(count: SIGNED32; VAR src: ARRAY OF BOOLEAN; start, step: SIGNED32; VAR dest: ARRAY OF BOOLEAN; deststart, deststep: SIGNED32); 
+	PROCEDURE ^ Count*(len: SIGNED32; VAR x: ARRAY OF BOOLEAN): SIGNED32; 
+	PROCEDURE ^ And*(VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: SIGNED32); 
+	PROCEDURE ^ Or*(VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: SIGNED32); 
+	PROCEDURE ^ XOr*(VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: SIGNED32); 
+	PROCEDURE ^ Not*(VAR x: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN; len: SIGNED32); 
+	PROCEDURE ^ Get2d*(VAR x: ARRAY OF BOOLEAN; rows, row, column: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Set2d*(VAR x: ARRAY OF BOOLEAN; rows, row, column: SIGNED32; val: BOOLEAN); 
+	PROCEDURE ^ Get2dM*(VAR x: ARRAY OF BOOLEAN; rowoffset, coloffset, nrrows, nrcolumns: SIGNED32; VAR dest: ARRAY OF ARRAY OF BOOLEAN); 
+	PROCEDURE ^ Set2dM*(VAR x: ARRAY OF BOOLEAN; rowoffset, coloffset, nrrows, nrcolumns: SIGNED32; VAR src: ARRAY OF ARRAY OF BOOLEAN); 
+	PROCEDURE ^ Get2dF*(VAR x: ARRAY OF BOOLEAN; columns, row, column: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Set2dF*(VAR x: ARRAY OF BOOLEAN; columns, row, column: SIGNED32; val: BOOLEAN); 
 BEGIN
 END vyBit.

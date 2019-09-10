@@ -31,19 +31,19 @@ TYPE
 	Int* = POINTER TO IntDesc; 
 
 	IntDesc* = RECORD (DataDesc)
-		i*: LONGINT; 
+		i*: SIGNED32; 
 	END; 
 
 	Real* = POINTER TO RealDesc; 
 
 	RealDesc* = RECORD (DataDesc)
-		x*: REAL; 
+		x*: FLOAT32; 
 	END; 
 
 	LReal* = POINTER TO LRealDesc; 
 
 	LRealDesc* = RECORD (DataDesc)
-		x*: LONGREAL; 
+		x*: FLOAT64; 
 	END; 
 
 	Method* = POINTER TO MethodDesc; 
@@ -58,18 +58,18 @@ TYPE
 	END; 
 
 	MethodDesc* = RECORD 
-		Key*: PROCEDURE (R: Rider):LONGINT; 
-		Seek*: PROCEDURE (R: Rider; key: LONGINT); 
-		Pos*: PROCEDURE (R: Rider):LONGINT; 
-		Set*: PROCEDURE (R: Rider; pos: LONGINT); 
+		Key*: PROCEDURE (R: Rider):SIGNED32; 
+		Seek*: PROCEDURE (R: Rider; key: SIGNED32); 
+		Pos*: PROCEDURE (R: Rider):SIGNED32; 
+		Set*: PROCEDURE (R: Rider; pos: SIGNED32); 
 		Write*: PROCEDURE (R: Rider; d: Data); 
 		WriteLink*: PROCEDURE (R, linkR: Rider); 
 		DeleteLink*: PROCEDURE (R, linkR: Rider); 
-		State*: PROCEDURE (R: Rider):LONGINT; 
-		SetState*: PROCEDURE (R: Rider; s: LONGINT); 
+		State*: PROCEDURE (R: Rider):SIGNED32; 
+		SetState*: PROCEDURE (R: Rider; s: SIGNED32); 
 		Desc*: PROCEDURE (R, old: Rider):Rider; 
-		GetStamp*: PROCEDURE (R: Rider):LONGINT; 
-		SetStamp*: PROCEDURE (R: Rider; stamp: LONGINT); 
+		GetStamp*: PROCEDURE (R: Rider):SIGNED32; 
+		SetStamp*: PROCEDURE (R: Rider; stamp: SIGNED32); 
 	END; 
 
 	ConnectMsg* = RECORD (Objects.ObjMsg)
@@ -77,11 +77,11 @@ TYPE
 	END; 
 
 	UpdateMsg* = RECORD (Gadgets.UpdateMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 	END; 
 VAR 
-	stamp: LONGINT; 
+	stamp: SIGNED32; 
 
-	PROCEDURE ^ Stamp*(): LONGINT; 
+	PROCEDURE ^ Stamp*(): SIGNED32; 
 BEGIN
 END ListRiders.

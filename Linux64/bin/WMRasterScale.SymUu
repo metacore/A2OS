@@ -30,7 +30,7 @@ TYPE
 	PROCEDURE ^ Q1BGRA8888BGRA8888(srcadr, dstadr: ADDRESS; srcbpr, dstbpr, dl, dt, dr, db, sx, sy, sdx, sdy, sw, sh: SIZE); 
 	PROCEDURE ^ Q1BGRA8888BGRA8888Copy(srcadr, dstadr: ADDRESS; srcbpr, dstbpr, dl, dt, dr, db, sx, sy, sdx, sdy, sw, sh: SIZE); 
 	PROCEDURE ^ SSE2Q0BGRA8888BGR565(srcadr, dstadr: ADDRESS; srcbpr, dstbpr, dl, dt, dr, db, sx, sy, sdx, sdy, sw, sh: SIZE); 
-	PROCEDURE ^ Scale*(src: Image; sr: Rectangle; dst: Image; dr: Rectangle; clip: Rectangle; copyMode, scaleMode: LONGINT); 
+	PROCEDURE ^ Scale*(src: Image; sr: Rectangle; dst: Image; dr: Rectangle; clip: Rectangle; copyMode, scaleMode: SIGNED32); 
 	PROCEDURE ^ Bounds(val, min, max: SIZE): SIZE; 
 BEGIN
 END WMRasterScale.

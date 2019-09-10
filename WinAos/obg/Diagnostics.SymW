@@ -14,7 +14,7 @@ TYPE
 	END Diagnostics; 
 
 	Entry* = POINTER TO RECORD 
-		type*: WORD; 
+		type*: INTEGER; 
 		source*: ARRAY 128 OF CHAR; 
 		position*: Streams.Position; 
 		message*: ARRAY 256 OF CHAR; 
@@ -40,8 +40,8 @@ TYPE
 		PROCEDURE ^  & Reset*; 
 		PROCEDURE ^ ForAll*(proc: EnumProc); 
 		PROCEDURE ^ GetEntries*(): EntryArray; 
-		PROCEDURE ^ InsertSorted(type: WORD; CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR; VAR counter: SIZE); 
-		PROCEDURE ^ NewEntry*(type: WORD; CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR; next: Entry): Entry; 
+		PROCEDURE ^ InsertSorted(type: INTEGER; CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR; VAR counter: SIZE); 
+		PROCEDURE ^ NewEntry*(type: INTEGER; CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR; next: Entry): Entry; 
 	END DiagnosticsList; 
 
 	StreamDiagnostics* = OBJECT (Diagnostics)
@@ -54,6 +54,6 @@ TYPE
 		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
 	END StreamDiagnostics; 
 
-	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position: Streams.Position; type: WORD; CONST message: ARRAY OF CHAR); 
+	PROCEDURE ^ Print(w: Streams.Writer; CONST source: ARRAY OF CHAR; position: Streams.Position; type: INTEGER; CONST message: ARRAY OF CHAR); 
 BEGIN
 END Diagnostics.

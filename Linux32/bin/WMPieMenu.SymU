@@ -13,7 +13,7 @@ TYPE
 	VAR 
 		lastX, lastY: SIZE; 
 		dir: ARRAY (4 * MenuPoints) OF RECORD 
-			x, y: LONGINT; 
+			x, y: SIGNED32; 
 		END; 
 		clDefault, clHover, clShadow, clLine: WMProperties.ColorProperty; 
 		useBgBitmap: WMProperties.BooleanProperty; 
@@ -21,7 +21,7 @@ TYPE
 		bgBitmap: WMGraphics.Image; 
 		shadow: WMProperties.Int32Property; 
 		dx, dy: SIZE; 
-		dirNr: LONGINT; 
+		dirNr: SIGNED32; 
 		on0, on1, on2, on3, closeIt: WMEvents.EventSource; 
 		images: ARRAY 4 OF WMGraphics.Image; 
 		texts: ARRAY 4 OF Strings.String; 
@@ -32,8 +32,8 @@ TYPE
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ PropertyChanged*(sender, prop: ANY); 
 		PROCEDURE ^ GetSector(nr: SIZE; VAR s: ARRAY OF WMGraphics.Point2d); 
-		PROCEDURE ^ SetImage(nr: LONGINT; image: WMGraphics.Image); 
-		PROCEDURE ^ SetText(nr: LONGINT; text: Strings.String); 
+		PROCEDURE ^ SetImage(nr: SIGNED32; image: WMGraphics.Image); 
+		PROCEDURE ^ SetText(nr: SIGNED32; text: Strings.String); 
 		PROCEDURE ^ SetEnabled(s: SET); 
 		PROCEDURE ^ SetHover(s: SET); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
@@ -56,8 +56,8 @@ TYPE
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ CloseIt(sender, data: ANY); 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ SetImage*(nr: LONGINT; image: WMGraphics.Image); 
-		PROCEDURE ^ SetText*(nr: LONGINT; text: Strings.String); 
+		PROCEDURE ^ SetImage*(nr: SIGNED32; image: WMGraphics.Image); 
+		PROCEDURE ^ SetText*(nr: SIGNED32; text: Strings.String); 
 		PROCEDURE ^ SetEnabled*(enabled: SET); 
 		PROCEDURE ^ Show*(caller: WMWindowManager.Window; x, y: SIZE; bt: BOOLEAN); 
 		PROCEDURE ^ Close*; 

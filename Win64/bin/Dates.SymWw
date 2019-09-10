@@ -3,29 +3,29 @@ MODULE Dates;
 CONST 
 TYPE 
 	DateTime* = RECORD 
-		year*, month*, day*, hour*, minute*, second*: LONGINT; 
+		year*, month*, day*, hour*, minute*, second*: SIGNED32; 
 	END; 
 VAR 
 	Months-: ARRAY 12 OF ARRAY 10 OF CHAR; 
 	Days-: ARRAY 7 OF ARRAY 10 OF CHAR; 
-	NoDays: ARRAY 12 OF INTEGER; 
+	NoDays: ARRAY 12 OF SIGNED16; 
 	ZeroDateUnix-, ZeroDateRFC868-, ZeroDateNTP-: DateTime; 
 
-	PROCEDURE ^ LeapYear*(year: LONGINT): BOOLEAN; 
-	PROCEDURE ^ NofDays*(year, month: LONGINT): LONGINT; 
+	PROCEDURE ^ LeapYear*(year: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ NofDays*(year, month: SIGNED32): SIGNED32; 
 	PROCEDURE ^ ValidDateTime*(dt: DateTime): BOOLEAN; 
-	PROCEDURE ^ OberonToDateTime*(Date, Time: LONGINT): DateTime; 
-	PROCEDURE ^ DateTimeToOberon*(dt: DateTime; VAR date, time: LONGINT); 
+	PROCEDURE ^ OberonToDateTime*(Date, Time: SIGNED32): DateTime; 
+	PROCEDURE ^ DateTimeToOberon*(dt: DateTime; VAR date, time: SIGNED32); 
 	PROCEDURE ^ Now*(): DateTime; 
-	PROCEDURE ^ WeekDate*(Date: DateTime; VAR year, week, weekday: LONGINT); 
+	PROCEDURE ^ WeekDate*(Date: DateTime; VAR year, week, weekday: SIGNED32); 
 	PROCEDURE ^ Equal*(t1, t2: DateTime): BOOLEAN; 
-	PROCEDURE ^ CompareDateTime*(t1, t2: DateTime): LONGINT; 
-	PROCEDURE ^ TimeDifference*(t1, t2: DateTime; VAR days, hours, minutes, seconds: LONGINT); 
-	PROCEDURE ^ AddYears*(VAR dt: DateTime; years: LONGINT); 
-	PROCEDURE ^ AddMonths*(VAR dt: DateTime; months: LONGINT); 
-	PROCEDURE ^ AddDays*(VAR dt: DateTime; days: LONGINT); 
-	PROCEDURE ^ AddHours*(VAR dt: DateTime; hours: LONGINT); 
-	PROCEDURE ^ AddMinutes*(VAR dt: DateTime; minutes: LONGINT); 
-	PROCEDURE ^ AddSeconds*(VAR dt: DateTime; seconds: LONGINT); 
+	PROCEDURE ^ CompareDateTime*(t1, t2: DateTime): SIGNED32; 
+	PROCEDURE ^ TimeDifference*(t1, t2: DateTime; VAR days, hours, minutes, seconds: SIGNED32); 
+	PROCEDURE ^ AddYears*(VAR dt: DateTime; years: SIGNED32); 
+	PROCEDURE ^ AddMonths*(VAR dt: DateTime; months: SIGNED32); 
+	PROCEDURE ^ AddDays*(VAR dt: DateTime; days: SIGNED32); 
+	PROCEDURE ^ AddHours*(VAR dt: DateTime; hours: SIGNED32); 
+	PROCEDURE ^ AddMinutes*(VAR dt: DateTime; minutes: SIGNED32); 
+	PROCEDURE ^ AddSeconds*(VAR dt: DateTime; seconds: SIGNED32); 
 BEGIN
 END Dates.

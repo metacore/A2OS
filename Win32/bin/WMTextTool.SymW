@@ -17,8 +17,8 @@ TYPE
 	VAR 
 		name: ARRAY 128 OF CHAR; 
 		fgColor, bgColor: WMGraphics.Color; 
-		deltaSize: LONGINT; 
-		deltaSizeMode: LONGINT; 
+		deltaSize: SIGNED32; 
+		deltaSizeMode: SIGNED32; 
 		style: SET; 
 		fields: SET; 
 	END ChangeInfo; 
@@ -52,9 +52,9 @@ TYPE
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
-	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; mode, value: LONGINT; currentSize: SIZE; VAR newSize: SIZE); 
+	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; mode, value: SIGNED32; currentSize: SIZE; VAR newSize: SIZE); 
 	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
 	PROCEDURE ^ ChangeAttribute(VAR attr: Texts.Attributes; userData: ANY); 
 	PROCEDURE ^ ApplyChange(changeInfo: ChangeInfo); 

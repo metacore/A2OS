@@ -5,8 +5,8 @@ TYPE
 	Explorer = OBJECT {EXCLUSIVE} (WM.BufferWindow)
 	VAR 
 		lookat: Vectors.TVector3d; 
-		radius, angle, height: LONGREAL; 
-		quality: LONGINT; 
+		radius, angle, height: FLOAT64; 
+		quality: SIGNED32; 
 		mouseKeys: SET; 
 		world: World.World; 
 		oldX, oldY: SIZE; 

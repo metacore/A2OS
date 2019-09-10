@@ -18,50 +18,50 @@ TYPE
 
 	TraceSubscriber = OBJECT 
 	VAR 
-		processID: LONGINT; 
+		processID: SIGNED32; 
 		color: WMGraphics.Color; 
 		date: BOOLEAN; 
 
-		PROCEDURE ^  & New*(processID: LONGINT; color: WMGraphics.Color; date: BOOLEAN); 
+		PROCEDURE ^  & New*(processID: SIGNED32; color: WMGraphics.Color; date: BOOLEAN); 
 	END TraceSubscriber; 
 
 	SubscriberList = POINTER TO ARRAY OF TraceSubscriber; 
 VAR 
 	logwindow: LogWindow; 
-	nrSubscriptions: LONGINT; 
+	nrSubscriptions: SIGNED32; 
 	subscriptions: SubscriberList; 
 	gen: Random.Sequence; 
 	defaultColor: WMGraphics.Color; 
 	me: Modules.Module; 
 	date: BOOLEAN; 
 
-	PROCEDURE ^ AlreadySubscribed(processID: LONGINT; VAR sub: TraceSubscriber): BOOLEAN; 
+	PROCEDURE ^ AlreadySubscribed(processID: SIGNED32; VAR sub: TraceSubscriber): BOOLEAN; 
 	PROCEDURE ^ SetDate*(new: BOOLEAN); 
 	PROCEDURE ^ GetDate*(): BOOLEAN; 
 	PROCEDURE ^ GetNextColor(): WMGraphics.Color; 
 	PROCEDURE ^ Grow; 
-	PROCEDURE ^ Subscribe(processID: LONGINT); 
-	PROCEDURE ^ GetColor(processID: LONGINT): WMGraphics.Color; 
-	PROCEDURE ^ GetSubscription(processID: LONGINT): TraceSubscriber; 
+	PROCEDURE ^ Subscribe(processID: SIGNED32); 
+	PROCEDURE ^ GetColor(processID: SIGNED32): WMGraphics.Color; 
+	PROCEDURE ^ GetSubscription(processID: SIGNED32): TraceSubscriber; 
 	PROCEDURE ^ TraceIdString; 
 	PROCEDURE ^ String*(CONST str: ARRAY OF CHAR); 
 	PROCEDURE ^ TwoStrings*(CONST str1, str2: ARRAY OF CHAR); 
 	PROCEDURE ^ Boolean*(x: BOOLEAN); 
 	PROCEDURE ^ TraceDebugBoolean*(CONST name: ARRAY OF CHAR; x: BOOLEAN); 
 	PROCEDURE ^ Memory*(adr: ADDRESS; size: SIZE); 
-	PROCEDURE ^ Buffer*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT); 
-	PROCEDURE ^ HIntHex*(x: HUGEINT; w: LONGINT); 
-	PROCEDURE ^ IntSuffix*(x, w: LONGINT; CONST suffix: ARRAY OF CHAR); 
+	PROCEDURE ^ Buffer*(VAR buf: ARRAY OF CHAR; ofs, len: SIGNED32); 
+	PROCEDURE ^ HIntHex*(x: SIGNED64; w: SIGNED32); 
+	PROCEDURE ^ IntSuffix*(x, w: SIGNED32; CONST suffix: ARRAY OF CHAR); 
 	PROCEDURE ^ Enter*; 
 	PROCEDURE ^ Exit*; 
 	PROCEDURE ^ GetWriter*(): Streams.Writer; 
-	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+	PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 	PROCEDURE ^ TraceDebugString*(CONST name, value: ARRAY OF CHAR); 
 	PROCEDURE ^ Ln*; 
-	PROCEDURE ^ Int*(x, w: LONGINT); 
-	PROCEDURE ^ TraceDebugInt*(CONST name: ARRAY OF CHAR; value, w: LONGINT); 
-	PROCEDURE ^ Hex*(x, w: LONGINT); 
-	PROCEDURE ^ TraceDebugHex*(CONST name: ARRAY OF CHAR; value, w: LONGINT); 
+	PROCEDURE ^ Int*(x, w: SIGNED32); 
+	PROCEDURE ^ TraceDebugInt*(CONST name: ARRAY OF CHAR; value, w: SIGNED32); 
+	PROCEDURE ^ Hex*(x, w: SIGNED32); 
+	PROCEDURE ^ TraceDebugHex*(CONST name: ARRAY OF CHAR; value, w: SIGNED32); 
 	PROCEDURE ^ Char*(c: CHAR); 
 	PROCEDURE ^ TraceDebugChar*(CONST name: ARRAY OF CHAR; c: CHAR); 
 	PROCEDURE ^ Set*(s: SET); 
@@ -69,7 +69,7 @@ VAR
 	PROCEDURE ^ SubscribeProcess*(color: WMGraphics.Color; date, overwrite: BOOLEAN); 
 	PROCEDURE ^ CheckColor(color: WMGraphics.Color): BOOLEAN; 
 	PROCEDURE ^ FindProc(refs: Modules.Bytes; modpc: ADDRESS): SIZE; 
-	PROCEDURE ^ GetNum(refs: Modules.Bytes; VAR i: SIZE; num: LONGINT); 
+	PROCEDURE ^ GetNum(refs: Modules.Bytes; VAR i: SIZE; num: SIGNED32); 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ IntOpen; 
 	PROCEDURE ^ Close; 

@@ -10,7 +10,7 @@ VAR
 	selectionData: POINTER TO ARRAY OF CHAR; 
 	ownSelection: BOOLEAN; 
 	myProperty, oberonType: X11.Atom; 
-	retries: INTEGER; 
+	retries: SIGNED16; 
 	disp: XDisplay.Display; 
 
 	PROCEDURE ^ ClearSelection; 

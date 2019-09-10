@@ -18,28 +18,28 @@ TYPE
 		refreshOn: BOOLEAN; 
 		timer: Kernel.Timer; 
 		module: Modules.Module; 
-		interval: LONGINT; 
+		interval: SIGNED32; 
 		autorefresh: WMStandardComponents.Checkbox; 
 
-		PROCEDURE ^  & New*(title: ARRAY OF CHAR; interval: LONGINT; name: Modules.Name); 
+		PROCEDURE ^  & New*(title: ARRAY OF CHAR; interval: SIGNED32; name: Modules.Name); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ ClearText(sender, data: ANY); 
 		PROCEDURE ^ Load(sender, data: ANY); 
 		PROCEDURE ^ OutState(name: Modules.Name); 
 		PROCEDURE ^ RefreshSwitch(sender, data: ANY); 
 		PROCEDURE ^ Refresh(sender, data: ANY); 
-		PROCEDURE ^ SetInterval*(interval: LONGINT); 
+		PROCEDURE ^ SetInterval*(interval: SIGNED32); 
 		PROCEDURE ^ Variables(refs: Bytes; i: SIZE; base: ADDRESS; w: Streams.Writer); 
 		PROCEDURE ^ FindProc(refs: Bytes; ofs: ADDRESS): SIZE; 
 		PROCEDURE ^ WriteProc(mod: Modules.Module; pc, fp: ADDRESS; VAR refs: Bytes; VAR refpos: SIZE; VAR base: ADDRESS; w: Streams.Writer); 
-		PROCEDURE ^ GetNum(refs: Bytes; VAR i: SIZE; VAR num: LONGINT); 
+		PROCEDURE ^ GetNum(refs: Bytes; VAR i: SIZE; VAR num: SIGNED32); 
 	BEGIN{ACTIVE} 
 	END StateWindow; 
 
 	WinCollection = POINTER TO ARRAY OF StateWindow; 
 VAR 
 	stateWins: WinCollection; 
-	nrWins: LONGINT; 
+	nrWins: SIGNED32; 
 
 	PROCEDURE ^ Remove(stateWin: StateWindow); 
 	PROCEDURE ^ Open*(context: Commands.Context); 

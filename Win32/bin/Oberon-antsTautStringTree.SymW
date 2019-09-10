@@ -10,15 +10,15 @@ TYPE
 
 	NodeDesc = RECORD 
 		left, right: Node; 
-		value: LONGREAL; 
-		start, ende: LONGINT; 
+		value: FLOAT64; 
+		start, ende: SIGNED32; 
 	END; 
 
-	PROCEDURE ^ InitWithLength(t: Tree; n: LONGINT; y: ARRAY OF LONGREAL); 
-	PROCEDURE ^ Init*(VAR z: ARRAY OF LONGINT; n: LONGINT; y: ARRAY OF LONGREAL; thr: LONGREAL; squeezing: ARRAY OF CHAR); 
-	PROCEDURE ^ Set(VAR x: Node; y: ARRAY OF LONGREAL; n: LONGINT; start: LONGINT; ende: LONGINT); 
-	PROCEDURE ^ SetValue(VAR x: Node): LONGREAL; 
-	PROCEDURE ^ CheckThresh(t: Tree; VAR z: ARRAY OF LONGINT; thr: LONGREAL; squeezing: ARRAY OF CHAR); 
-	PROCEDURE ^ CheckNode(VAR z: ARRAY OF LONGINT; VAR x: Node; thr: LONGREAL; squeezing: ARRAY OF CHAR); 
+	PROCEDURE ^ InitWithLength(t: Tree; n: SIGNED32; y: ARRAY OF FLOAT64); 
+	PROCEDURE ^ Init*(VAR z: ARRAY OF SIGNED32; n: SIGNED32; y: ARRAY OF FLOAT64; thr: FLOAT64; squeezing: ARRAY OF CHAR); 
+	PROCEDURE ^ Set(VAR x: Node; y: ARRAY OF FLOAT64; n: SIGNED32; start: SIGNED32; ende: SIGNED32); 
+	PROCEDURE ^ SetValue(VAR x: Node): FLOAT64; 
+	PROCEDURE ^ CheckThresh(t: Tree; VAR z: ARRAY OF SIGNED32; thr: FLOAT64; squeezing: ARRAY OF CHAR); 
+	PROCEDURE ^ CheckNode(VAR z: ARRAY OF SIGNED32; VAR x: Node; thr: FLOAT64; squeezing: ARRAY OF CHAR); 
 BEGIN
 END antsTautStringTree.

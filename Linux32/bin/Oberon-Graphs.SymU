@@ -7,14 +7,14 @@ TYPE
 	Graph* = POINTER TO GraphDesc; 
 
 	GraphDesc* = RECORD (Gadgets.FrameDesc)
-		col*: INTEGER; 
-		beg*, end*: INTEGER; 
-		x*: ARRAY BufSize OF REAL; 
-		y*: ARRAY BufSize OF REAL; 
+		col*: SIGNED16; 
+		beg*, end*: SIGNED16; 
+		x*: ARRAY BufSize OF FLOAT32; 
+		y*: ARRAY BufSize OF FLOAT32; 
 	END; 
 
 	PROCEDURE ^ GraphAttr(F: Graph; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ RestoreGraph(F: Graph; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreGraph(F: Graph; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ CopyGraph*(VAR M: Objects.CopyMsg; from, to: Graph); 
 	PROCEDURE ^ GraphHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewGraph*; 

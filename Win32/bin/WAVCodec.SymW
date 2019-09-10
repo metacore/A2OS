@@ -9,16 +9,16 @@ TYPE
 		chunkRIFF: Chunk; 
 		chunkWAVE: Chunk; 
 		chunkfmt: Chunk; 
-		waveFormatSize: LONGINT; 
-		formatTag: INTEGER; 
-		nofCh: INTEGER; 
-		sRate: LONGINT; 
-		bRate: LONGINT; 
-		blockAlign: INTEGER; 
-		bitsPerSample: INTEGER; 
+		waveFormatSize: SIGNED32; 
+		formatTag: SIGNED16; 
+		nofCh: SIGNED16; 
+		sRate: SIGNED32; 
+		bRate: SIGNED32; 
+		blockAlign: SIGNED16; 
+		bitsPerSample: SIGNED16; 
 		chunkdata: Chunk; 
-		fileSize: LONGINT; 
-		dataSize: LONGINT; 
+		fileSize: SIGNED32; 
+		dataSize: SIGNED32; 
 	END; 
 
 	WAVEncoder* = OBJECT (Codecs.AudioEncoder)
@@ -26,8 +26,8 @@ TYPE
 		out: Streams.Writer; 
 		h: WaveHeader; 
 
-		PROCEDURE ^ Open*(out: Streams.Writer; sRate, sRes, nofCh: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Write*(buffer: SoundDevices.Buffer; VAR res: WORD); 
+		PROCEDURE ^ Open*(out: Streams.Writer; sRate, sRes, nofCh: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Write*(buffer: SoundDevices.Buffer; VAR res: INTEGER); 
 	END WAVEncoder; 
 
 	WAVDecoder* = OBJECT (Codecs.AudioDecoder)
@@ -36,17 +36,17 @@ TYPE
 		h: WaveHeader; 
 		hasMoreBytes: BOOLEAN; 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
 		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
-		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: LONGINT); 
+		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: SIGNED32); 
 		PROCEDURE ^ DumpHeader; 
 		PROCEDURE ^ CanSeek*(): BOOLEAN; 
-		PROCEDURE ^ GetCurrentSample*(): LONGINT; 
-		PROCEDURE ^ GetTotalSamples*(): LONGINT; 
-		PROCEDURE ^ GetCurrentTime*(): LONGINT; 
-		PROCEDURE ^ SetStreamLength*(length: LONGINT); 
-		PROCEDURE ^ SeekSample*(sample: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ GetCurrentSample*(): SIGNED32; 
+		PROCEDURE ^ GetTotalSamples*(): SIGNED32; 
+		PROCEDURE ^ GetCurrentTime*(): SIGNED32; 
+		PROCEDURE ^ SetStreamLength*(length: SIGNED32); 
+		PROCEDURE ^ SeekSample*(sample: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ Next*; 
 		PROCEDURE ^ FillBuffer*(buffer: SoundDevices.Buffer); 
 	END WAVDecoder; 
@@ -57,25 +57,25 @@ TYPE
 		h: WaveHeader; 
 		hasMoreBytes: BOOLEAN; 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
 		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
-		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: LONGINT); 
-		PROCEDURE ^ SetAudioInfo*(nofChannels, samplesPerSecond, bitsPerSample: LONGINT); 
+		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: SIGNED32); 
+		PROCEDURE ^ SetAudioInfo*(nofChannels, samplesPerSecond, bitsPerSample: SIGNED32); 
 		PROCEDURE ^ CanSeek*(): BOOLEAN; 
-		PROCEDURE ^ GetCurrentSample*(): LONGINT; 
-		PROCEDURE ^ GetTotalSamples*(): LONGINT; 
-		PROCEDURE ^ GetCurrentTime*(): LONGINT; 
-		PROCEDURE ^ SetStreamLength*(length: LONGINT); 
-		PROCEDURE ^ SeekSample*(sample: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ GetCurrentSample*(): SIGNED32; 
+		PROCEDURE ^ GetTotalSamples*(): SIGNED32; 
+		PROCEDURE ^ GetCurrentTime*(): SIGNED32; 
+		PROCEDURE ^ SetStreamLength*(length: SIGNED32); 
+		PROCEDURE ^ SeekSample*(sample: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ Next*; 
 		PROCEDURE ^ FillBuffer*(buffer: SoundDevices.Buffer); 
 	END PCMDecoder; 
 
-	PROCEDURE ^ ReadRawBEInteger(VAR r: Streams.Reader; VAR value: INTEGER); 
-	PROCEDURE ^ ReadRawBELongInt(VAR r: Streams.Reader; VAR value: LONGINT); 
-	PROCEDURE ^ WriteRawBEInteger(VAR w: Streams.Writer; value: INTEGER); 
-	PROCEDURE ^ WriteRawBELongInt(VAR w: Streams.Writer; value: LONGINT); 
+	PROCEDURE ^ ReadRawBEInteger(VAR r: Streams.Reader; VAR value: SIGNED16); 
+	PROCEDURE ^ ReadRawBELongInt(VAR r: Streams.Reader; VAR value: SIGNED32); 
+	PROCEDURE ^ WriteRawBEInteger(VAR w: Streams.Writer; value: SIGNED16); 
+	PROCEDURE ^ WriteRawBELongInt(VAR w: Streams.Writer; value: SIGNED32); 
 	PROCEDURE ^ EncoderFactory*(): Codecs.AudioEncoder; 
 	PROCEDURE ^ DecoderFactory*(): Codecs.AudioDecoder; 
 	PROCEDURE ^ PCMDecoderFactory*(): Codecs.AudioDecoder; 

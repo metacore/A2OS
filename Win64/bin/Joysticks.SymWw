@@ -66,7 +66,7 @@ CONST
 	ErrorNoValidCenterPosition = \"Axis must be centerd when stopping calibration"\; 
 TYPE 
 	JoystickMessage* = RECORD 
-		id-: LONGINT; 
+		id-: SIGNED32; 
 	END; 
 
 	JoystickDisconnectedMessage* = RECORD (JoystickMessage)
@@ -77,7 +77,7 @@ TYPE
 
 	JoystickDataMessage* = RECORD (JoystickMessage)
 		buttons*: SET; 
-		axis*: ARRAY MaxNbrOfAxis OF LONGINT; 
+		axis*: ARRAY MaxNbrOfAxis OF SIGNED32; 
 		coolieHat*: ARRAY MaxNbrOfCoolieHats OF SET; 
 	END; 
 
@@ -89,19 +89,19 @@ TYPE
 	END; 
 
 	Axis = RECORD 
-		minValue, maxValue, centerValue: LONGINT; 
-		calMinValue, calMaxValue, calCenterValue: LONGINT; 
-		calCenterOffset: LONGINT; 
-		scaleFactorLow, scaleFactorHigh: REAL; 
-		deadzone: REAL; 
+		minValue, maxValue, centerValue: SIGNED32; 
+		calMinValue, calMaxValue, calCenterValue: SIGNED32; 
+		calCenterOffset: SIGNED32; 
+		scaleFactorLow, scaleFactorHigh: FLOAT32; 
+		deadzone: FLOAT32; 
 	END; 
 
 	Joystick* = OBJECT {EXCLUSIVE} (Plugins.Plugin)
 	VAR 
-		id-: LONGINT; 
-		nbrOfButtons-: LONGINT; 
-		nbrOfCoolieHats-: LONGINT; 
-		nbrOfAxis-: LONGINT; 
+		id-: SIGNED32; 
+		nbrOfButtons-: SIGNED32; 
+		nbrOfCoolieHats-: SIGNED32; 
+		nbrOfAxis-: SIGNED32; 
 		implementedAxis-: SET; 
 		connected-: BOOLEAN; 
 		calibrationMode-: BOOLEAN; 
@@ -113,30 +113,30 @@ TYPE
 		PROCEDURE ^ Register*(handler: JoystickMessageHandler); 
 		PROCEDURE ^ Unregister*(handler: JoystickMessageHandler); 
 		PROCEDURE ^ Poll*(VAR message: JoystickDataMessage): BOOLEAN; 
-		PROCEDURE ^ SetGlobalDeadzone*(deadzone: REAL; VAR errorMessage: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ SetDeadzone*(axisNbr: LONGINT; deadzone: REAL; VAR errorMessage: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ SetGlobalDeadzone*(deadzone: FLOAT32; VAR errorMessage: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ SetDeadzone*(axisNbr: SIGNED32; deadzone: FLOAT32; VAR errorMessage: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ StartCalibration*; 
-		PROCEDURE ^ StopCalibration*(VAR errorMsg: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ StopCalibration*(VAR errorMsg: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Handle*(VAR message: JoystickMessage); 
-		PROCEDURE ^ AddAxis*(index, minValue, maxValue: LONGINT); 
+		PROCEDURE ^ AddAxis*(index, minValue, maxValue: SIGNED32); 
 		PROCEDURE ^ AddCoolieHat*; 
 		PROCEDURE ^ ScaleRawValues(VAR message: JoystickDataMessage); 
 		PROCEDURE ^ ApplyDeadzone(VAR message: JoystickDataMessage); 
 		PROCEDURE ^ GetCalibrationData(VAR message: JoystickDataMessage); 
 		PROCEDURE ^ Show*(w: Streams.Writer); 
 		PROCEDURE ^ ShowAxis; 
-		PROCEDURE ^ ShowAxisNbr(axisNbr: LONGINT); 
+		PROCEDURE ^ ShowAxisNbr(axisNbr: SIGNED32); 
 		PROCEDURE ^ ShowDataMessage(msg: JoystickDataMessage); 
-		PROCEDURE ^  & Init*(nbrOfButtons: LONGINT); 
+		PROCEDURE ^  & Init*(nbrOfButtons: SIGNED32); 
 	END Joystick; 
 VAR 
 	registry-: Plugins.Registry; 
-	nextId: LONGINT; 
+	nextId: SIGNED32; 
 
-	PROCEDURE ^ EventHandler(event: WORD; plugin: Plugins.Plugin); 
-	PROCEDURE ^ GetId(): LONGINT; 
-	PROCEDURE ^ Round(value: REAL): LONGINT; 
-	PROCEDURE ^ GetAxisName*(axisNbr: LONGINT; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ EventHandler(event: INTEGER; plugin: Plugins.Plugin); 
+	PROCEDURE ^ GetId(): SIGNED32; 
+	PROCEDURE ^ Round(value: FLOAT32): SIGNED32; 
+	PROCEDURE ^ GetAxisName*(axisNbr: SIGNED32; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ Show*(context: Commands.Context); 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ Cleanup; 

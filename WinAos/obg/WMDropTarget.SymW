@@ -17,7 +17,7 @@ TYPE
 
 	DropTarget* = OBJECT 
 
-		PROCEDURE ^ GetInterface*(type: LONGINT): DropInterface; 
+		PROCEDURE ^ GetInterface*(type: SIGNED32): DropInterface; 
 	END DropTarget; 
 
 	DropText* = OBJECT (DropInterface)
@@ -28,31 +28,31 @@ TYPE
 
 	DropInt32* = OBJECT (DropInterface)
 
-		PROCEDURE ^ Set*(i: LONGINT); 
+		PROCEDURE ^ Set*(i: SIGNED32); 
 	END DropInt32; 
 
 	DropString* = OBJECT (DropInterface)
 
-		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ Set*(CONST string: ARRAY OF CHAR; VAR res: INTEGER); 
 	END DropString; 
 
 	DropURLs* = OBJECT (DropInterface)
 
-		PROCEDURE ^ URL*(CONST url: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ URL*(CONST url: ARRAY OF CHAR; VAR res: INTEGER); 
 	END DropURLs; 
 
 	DropFiles* = OBJECT (DropInterface)
 
 		PROCEDURE ^ IsHierarchical*(): BOOLEAN; 
-		PROCEDURE ^ OpenPut*(CONST remoteName: ARRAY OF CHAR; VAR outw: Streams.Writer; VAR res: WORD); 
-		PROCEDURE ^ ClosePut*(VAR res: WORD); 
-		PROCEDURE ^ ChangeDir*(CONST dir: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ MakeDir*(CONST dir: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ OpenPut*(CONST remoteName: ARRAY OF CHAR; VAR outw: Streams.Writer; VAR res: INTEGER); 
+		PROCEDURE ^ ClosePut*(VAR res: INTEGER); 
+		PROCEDURE ^ ChangeDir*(CONST dir: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ MakeDir*(CONST dir: ARRAY OF CHAR; VAR res: INTEGER); 
 	END DropFiles; 
 
 	DropObject* = OBJECT (DropInterface)
 
-		PROCEDURE ^ Set*(object: ANY; VAR res: WORD); 
+		PROCEDURE ^ Set*(object: ANY; VAR res: INTEGER); 
 	END DropObject; 
 BEGIN
 END WMDropTarget.

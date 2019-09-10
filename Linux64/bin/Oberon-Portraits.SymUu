@@ -6,15 +6,15 @@ TYPE
 	Portrait = POINTER TO PortraitDesc; 
 
 	PortraitDesc = RECORD (Gadgets.FrameDesc)
-		time*: LONGINT; 
+		time*: SIGNED32; 
 	END; 
 
 	PROCEDURE ^ SetMask(F: Display.Frame; Q: Display3.Mask); 
 	PROCEDURE ^ SetContentMask(F: Portrait); 
-	PROCEDURE ^ ToContent(F: Portrait; x, y: INTEGER; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ ToContent(F: Portrait; x, y: SIGNED16; VAR M: Display.FrameMsg); 
 	PROCEDURE ^ Modify(F: Portrait; VAR M: Display.ModifyMsg); 
 	PROCEDURE ^ ModifyContent(F: Portrait; VAR M: Display.ModifyMsg); 
-	PROCEDURE ^ Restore(F: Portrait; Q: Display3.Mask; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ Restore(F: Portrait; Q: Display3.Mask; x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ Copy*(VAR M: Objects.CopyMsg; from, to: Portrait); 
 	PROCEDURE ^ Attributes(F: Portrait; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ RemoveObj(obj: Display.Frame); 

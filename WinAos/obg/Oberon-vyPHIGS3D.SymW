@@ -30,18 +30,18 @@ TYPE
 		mtVRP, mrx, mry, mrxy, mrz, mr: tMatrix; 
 		VWLu0, VWLv0, VWLu1, VWLv1: Real; 
 		PVLu0, PVLu1, PVLv0, PVLv1, PVLn0, PVLn1: Real; 
-		ProjectionType: INTEGER; 
+		ProjectionType: SIGNED16; 
 		PRPu, PRPv, PRPn: Real; 
 		VPd, BPd, FPd: Real; 
 		MappingMatrix: tMatrix; 
 		mtPRP, B1, B2, B: tMatrix; 
 		View: tMatrix; 
-		definitionTime: LONGINT; 
+		definitionTime: SIGNED32; 
 	END; 
 VAR 
 	m1, m2, m3, m4, m5, smrx, smry, smrz, smr: tMatrix; 
 	defVRPx, defVRPy, defVRPz, defNx, defNy, defNz, defVUVx, defVUVy, defVUVz, defVWLu0, defVWLu1, defVWLv0, defVWLv1, defPVLu0, defPVLu1, defPVLv0, defPVLv1, defPVLn0, defPVLn1, defPRPu, defPRPv, defPRPn, defVPd, defBPd, defFPd: Real; 
-	defProjectionType: INTEGER; 
+	defProjectionType: SIGNED16; 
 	theC3D: tCoordinate3d; 
 	rotate*: PROCEDURE (countinously: BOOLEAN; x0, y0, x1, y1: Coordiate); 
 	rotation: tMatrix; 
@@ -53,7 +53,7 @@ VAR
 	PROCEDURE ^ StoreCoord3d*(VAR R: Files.Rider; c: tCoordinate3d); 
 	PROCEDURE ^ LoadCoord3d*(VAR R: Files.Rider; VAR c: tCoordinate3d); 
 	PROCEDURE ^ CopyCoordinate*(src, dest: tCoordinate3d); 
-	PROCEDURE ^ ErrorMsg(code: INTEGER); 
+	PROCEDURE ^ ErrorMsg(code: SIGNED16); 
 	PROCEDURE ^ SumOfSquare(x, y, z: Real): Real; 
 	PROCEDURE ^ Norm(x, y, z: Real): Real; 
 	PROCEDURE ^ ScalarMultiplication(VAR x, y, z: Real; s: Real); 
@@ -71,18 +71,18 @@ VAR
 	PROCEDURE ^ RotateY(py: Real; m: tMatrix); 
 	PROCEDURE ^ RotateZ(pz: Real; m: tMatrix); 
 	PROCEDURE ^ RotateAxis(x, y, z, phi: Real; m: tMatrix); 
-	PROCEDURE ^ EvalViewOrientMatrix3(VRPx, VRPy, VRPz, Nx, Ny, Nz, VUVx, VUVy, VUVz: Real; err: INTEGER); 
-	PROCEDURE ^ EvalViewMappingMatrix3(wlUmin, wlUmax, wlVmin, wlVmax: Real; PVlXmin, PVlXmax, PVlYmin, PVlYmax, PVlBack, PVlFront: Real; projection: INTEGER; PRPu, PRPv, PRPn: Real; VPd, BPd, FPd: Real; VAR err: INTEGER); 
+	PROCEDURE ^ EvalViewOrientMatrix3(VRPx, VRPy, VRPz, Nx, Ny, Nz, VUVx, VUVy, VUVz: Real; err: SIGNED16); 
+	PROCEDURE ^ EvalViewMappingMatrix3(wlUmin, wlUmax, wlVmin, wlVmax: Real; PVlXmin, PVlXmax, PVlYmin, PVlYmax, PVlBack, PVlFront: Real; projection: SIGNED16; PRPu, PRPv, PRPn: Real; VPd, BPd, FPd: Real; VAR err: SIGNED16); 
 	PROCEDURE ^ GetViewDirection*(VAR Nx, Ny, Nz: Real); 
 	PROCEDURE ^ SetCoordinate*(c: tCoordinate3d); 
-	PROCEDURE ^ SetViewRefSystem(VRPx, VRPy, VRPz, Nx, Ny, Nz, VUVx, VUVy, VUVz: Real; err: INTEGER); 
-	PROCEDURE ^ SetNormProjSystem(VWLu0, VWLu1, VWLv0, VWLv1, PVLu0, PVLu1, PVLv0, PVLv1, PVLBack, PVLFront: Real; projection: INTEGER; PRPu, PRPv, PRPn, VPd, BPd, FPd: Real; VAR err: INTEGER); 
+	PROCEDURE ^ SetViewRefSystem(VRPx, VRPy, VRPz, Nx, Ny, Nz, VUVx, VUVy, VUVz: Real; err: SIGNED16); 
+	PROCEDURE ^ SetNormProjSystem(VWLu0, VWLu1, VWLv0, VWLv1, PVLu0, PVLu1, PVLv0, PVLv1, PVLBack, PVLFront: Real; projection: SIGNED16; PRPu, PRPv, PRPn, VPd, BPd, FPd: Real; VAR err: SIGNED16); 
 	PROCEDURE ^ SetViewMatrix; 
-	PROCEDURE ^ OpenCoordinate*(c: tCoordinate3d; VAR err: INTEGER); 
-	PROCEDURE ^ PointToDisplayPoint*(x3d, y3d, z3d: Real; err: INTEGER; VAR x, y: Coordiate); 
-	PROCEDURE ^ PointToViewPoint*(x3d, y3d, z3d: Real; err: INTEGER; VAR vx, vy, vz: Real); 
-	PROCEDURE ^ ViewPointToDisplayPoint*(vx, vy, vz: Real; err: INTEGER; VAR x, y: Coordiate); 
-	PROCEDURE ^ DisplayPointToPoint*(x, y: Coordiate; err: INTEGER; VAR x3d, y3d, z3d: Real); 
+	PROCEDURE ^ OpenCoordinate*(c: tCoordinate3d; VAR err: SIGNED16); 
+	PROCEDURE ^ PointToDisplayPoint*(x3d, y3d, z3d: Real; err: SIGNED16; VAR x, y: Coordiate); 
+	PROCEDURE ^ PointToViewPoint*(x3d, y3d, z3d: Real; err: SIGNED16; VAR vx, vy, vz: Real); 
+	PROCEDURE ^ ViewPointToDisplayPoint*(vx, vy, vz: Real; err: SIGNED16; VAR x, y: Coordiate); 
+	PROCEDURE ^ DisplayPointToPoint*(x, y: Coordiate; err: SIGNED16; VAR x3d, y3d, z3d: Real); 
 	PROCEDURE ^ SetViewDirection*(Nx, Ny, Nz: Real); 
 	PROCEDURE ^ RotateFree(countinously: BOOLEAN; x0, y0, x1, y1: Coordiate); 
 	PROCEDURE ^ RotateN(countinously: BOOLEAN; x0, y0, x1, y1: Coordiate); 
@@ -96,7 +96,7 @@ VAR
 	PROCEDURE ^ InitGlobals; 
 	PROCEDURE ^ InitDefaults; 
 	PROCEDURE ^ InitCoordinate; 
-	PROCEDURE ^ UpToDate*(date: LONGINT): BOOLEAN; 
+	PROCEDURE ^ UpToDate*(date: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ DumpSpec*; 
 BEGIN
 END vyPHIGS3D.

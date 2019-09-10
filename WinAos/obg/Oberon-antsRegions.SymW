@@ -5,7 +5,7 @@ TYPE
 	tRegion* = POINTER TO tRegionDesc; 
 
 	tRegionDesc* = RECORD (vyBase.ObjDesc)
-		x*, y*, w*, h*: INTEGER; 
+		x*, y*, w*, h*: SIGNED16; 
 		view*: antsViews.tLayer; 
 		valid*: BOOLEAN; 
 	END; 
@@ -30,10 +30,10 @@ VAR
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ New*; 
-	PROCEDURE ^ GrowRectangleRLFilled*(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ GrowRectangleRLFilled*(x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
 	PROCEDURE ^ DoSelectRegion*(r: tRegion); 
 	PROCEDURE ^ SelectRegion*; 
-	PROCEDURE ^ Get*(r: tRegion; A: antsArrayObjects.tObject; VAR x, y, w, h: LONGINT); 
+	PROCEDURE ^ Get*(r: tRegion; A: antsArrayObjects.tObject; VAR x, y, w, h: SIGNED32); 
 	PROCEDURE ^ InteractiveGetArray*(r: tRegion): antsArrayObjects.tObject; 
 	PROCEDURE ^ Init*; 
 BEGIN

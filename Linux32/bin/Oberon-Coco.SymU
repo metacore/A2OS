@@ -4,9 +4,9 @@ CONST
 	minErrDist = 8; 
 VAR 
 	w: Texts.Writer; 
-	lastErrPos: LONGINT; 
+	lastErrPos: SIGNED32; 
 
-	PROCEDURE ^ Error(n: INTEGER; pos: LONGINT); 
+	PROCEDURE ^ Error(n: SIGNED16; pos: SIGNED32); 
 	PROCEDURE ^ Options(VAR s: Texts.Scanner); 
 	PROCEDURE ^ Compile*; 
 BEGIN

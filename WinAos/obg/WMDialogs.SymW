@@ -43,12 +43,12 @@ CONST
 TYPE 
 	Dialog* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
-		result*: WORD; 
+		result*: INTEGER; 
 		x*, y*: SIZE; 
 		errors*: BOOLEAN; 
 
 		PROCEDURE ^ Show*; 
-		PROCEDURE ^ SetType*(type: WORD); 
+		PROCEDURE ^ SetType*(type: INTEGER); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Ok*(sender, data: ANY); 
 		PROCEDURE ^ Abort*(sender, data: ANY); 
@@ -109,13 +109,13 @@ TYPE
 	MiniStringInput* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
 		edit: WMEditors.Editor; 
-		result: WORD; 
+		result: INTEGER; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Ok*(sender, data: ANY); 
 		PROCEDURE ^ Abort*(sender, data: ANY); 
-		PROCEDURE ^ Show*(x, y: SIZE; VAR text: ARRAY OF CHAR): WORD; 
+		PROCEDURE ^ Show*(x, y: SIZE; VAR text: ARRAY OF CHAR): INTEGER; 
 		PROCEDURE ^ FocusLost*; 
 	END MiniStringInput; 
 
@@ -125,7 +125,7 @@ TYPE
 		closingComponent: WMComponents.Component; 
 		xflags: SET; 
 
-		PROCEDURE ^  & New*(CONST dialog: ARRAY OF CHAR; VAR width, height: SIZE; VAR res: WORD); 
+		PROCEDURE ^  & New*(CONST dialog: ARRAY OF CHAR; VAR width, height: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ Show*(x, y: SIZE; flags: SET; VAR res: ARRAY OF CHAR); 
 		PROCEDURE ^ WireComponents(c: XML.Content; data: ANY); 
 		PROCEDURE ^ HandleEvents(sender, data: ANY); 
@@ -133,29 +133,29 @@ TYPE
 		PROCEDURE ^ Close*; 
 	END CustomDialog; 
 
-	PROCEDURE ^ NewPanel(fillColor: WMGraphics.Color; alignment: WORD; width, height: SIZE): WMStandardComponents.Panel; 
-	PROCEDURE ^ NewLabel*(CONST caption: ARRAY OF CHAR; alignment: WORD; width, height: SIZE): WMStandardComponents.Label; 
-	PROCEDURE ^ NewEditor*(CONST uid: ARRAY OF CHAR; textColor, textBgColor: WMGraphics.Color; alignment: WORD; width, height: SIZE): WMEditors.Editor; 
+	PROCEDURE ^ NewPanel(fillColor: WMGraphics.Color; alignment: INTEGER; width, height: SIZE): WMStandardComponents.Panel; 
+	PROCEDURE ^ NewLabel*(CONST caption: ARRAY OF CHAR; alignment: INTEGER; width, height: SIZE): WMStandardComponents.Label; 
+	PROCEDURE ^ NewEditor*(CONST uid: ARRAY OF CHAR; textColor, textBgColor: WMGraphics.Color; alignment: INTEGER; width, height: SIZE): WMEditors.Editor; 
 	PROCEDURE ^ InstantiateButton*(CONST uid, caption: ARRAY OF CHAR): WMStandardComponents.Button; 
 	PROCEDURE ^ FindComponent*(c: WMComponents.Component; CONST id: ARRAY OF CHAR): WMComponents.Component; 
 	PROCEDURE ^ FindButton*(c: WMComponents.Component; CONST id: ARRAY OF CHAR): WMStandardComponents.Button; 
 	PROCEDURE ^ DefaultPos*(VAR x, y: SIZE; width, height: SIZE); 
-	PROCEDURE ^ QueryStringXY*(x, y: SIZE; CONST caption: ARRAY OF CHAR; VAR string: ARRAY OF CHAR): WORD; 
-	PROCEDURE ^ QueryString*(CONST caption: ARRAY OF CHAR; VAR string: ARRAY OF CHAR): WORD; 
-	PROCEDURE ^ QueryPasswordXY*(x, y: SIZE; CONST caption: ARRAY OF CHAR; VAR string: ARRAY OF CHAR): WORD; 
-	PROCEDURE ^ QueryPassword*(CONST caption: ARRAY OF CHAR; VAR string: ARRAY OF CHAR): WORD; 
-	PROCEDURE ^ MessageXY*(type: WORD; x, y: SIZE; CONST caption, string: ARRAY OF CHAR; buttons: SET): WORD; 
-	PROCEDURE ^ Message*(type: WORD; CONST caption, string: ARRAY OF CHAR; buttons: SET): WORD; 
+	PROCEDURE ^ QueryStringXY*(x, y: SIZE; CONST caption: ARRAY OF CHAR; VAR string: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ QueryString*(CONST caption: ARRAY OF CHAR; VAR string: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ QueryPasswordXY*(x, y: SIZE; CONST caption: ARRAY OF CHAR; VAR string: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ QueryPassword*(CONST caption: ARRAY OF CHAR; VAR string: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ MessageXY*(type: INTEGER; x, y: SIZE; CONST caption, string: ARRAY OF CHAR; buttons: SET): INTEGER; 
+	PROCEDURE ^ Message*(type: INTEGER; CONST caption, string: ARRAY OF CHAR; buttons: SET): INTEGER; 
 	PROCEDURE ^ Information*(CONST caption, string: ARRAY OF CHAR); 
 	PROCEDURE ^ Warning*(CONST caption, string: ARRAY OF CHAR); 
 	PROCEDURE ^ Error*(CONST caption, string: ARRAY OF CHAR); 
-	PROCEDURE ^ Confirmation*(CONST caption, string: ARRAY OF CHAR): WORD; 
-	PROCEDURE ^ TextMessageXY*(type: WORD; x, y: SIZE; CONST caption: ARRAY OF CHAR; text: Texts.Text; buttons: SET): WORD; 
-	PROCEDURE ^ TextMessage*(type: WORD; CONST caption: ARRAY OF CHAR; text: Texts.Text; buttons: SET): WORD; 
-	PROCEDURE ^ QueryLoginXY*(x, y: SIZE; CONST caption: ARRAY OF CHAR; VAR login, password: ARRAY OF CHAR): WORD; 
-	PROCEDURE ^ QueryLogin*(CONST caption: ARRAY OF CHAR; VAR login, password: ARRAY OF CHAR): WORD; 
-	PROCEDURE ^ QueryUserInfoXY*(x, y: SIZE; CONST caption: ARRAY OF CHAR; VAR shortName, fullName, eMail, password, passwordConfirm: ARRAY OF CHAR): WORD; 
-	PROCEDURE ^ QueryUserInfo*(CONST caption: ARRAY OF CHAR; VAR shortName, fullName, eMail, password, passwordConfirm: ARRAY OF CHAR): WORD; 
+	PROCEDURE ^ Confirmation*(CONST caption, string: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ TextMessageXY*(type: INTEGER; x, y: SIZE; CONST caption: ARRAY OF CHAR; text: Texts.Text; buttons: SET): INTEGER; 
+	PROCEDURE ^ TextMessage*(type: INTEGER; CONST caption: ARRAY OF CHAR; text: Texts.Text; buttons: SET): INTEGER; 
+	PROCEDURE ^ QueryLoginXY*(x, y: SIZE; CONST caption: ARRAY OF CHAR; VAR login, password: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ QueryLogin*(CONST caption: ARRAY OF CHAR; VAR login, password: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ QueryUserInfoXY*(x, y: SIZE; CONST caption: ARRAY OF CHAR; VAR shortName, fullName, eMail, password, passwordConfirm: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ QueryUserInfo*(CONST caption: ARRAY OF CHAR; VAR shortName, fullName, eMail, password, passwordConfirm: ARRAY OF CHAR): INTEGER; 
 	PROCEDURE ^ CustomDialogXY*(x, y: SIZE; flags: SET; CONST dialog: ARRAY OF CHAR; VAR answer: ARRAY OF CHAR); 
 	PROCEDURE ^ Test*; 
 	PROCEDURE ^ TestMsg*; 

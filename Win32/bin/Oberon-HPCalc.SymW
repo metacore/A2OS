@@ -25,10 +25,10 @@ TYPE
 	CalcModel = POINTER TO CalcModelDesc; 
 
 	CalcModelDesc = RECORD (Gadgets.ObjDesc)
-		Stack: ARRAY StackSize OF LONGINT; 
-		TOS: LONGINT; 
-		Mode, Base: SHORTINT; 
-		Status: SHORTINT; 
+		Stack: ARRAY StackSize OF SIGNED32; 
+		TOS: SIGNED32; 
+		Mode, Base: SIGNED8; 
+		Status: SIGNED8; 
 		SubPanel: Objects.Object; 
 	END; 
 
@@ -50,18 +50,18 @@ VAR
 	Func: FunctionClass; 
 	W: Texts.Writer; 
 
-	PROCEDURE ^ Push(m: CalcModel; i: LONGINT); 
-	PROCEDURE ^ Pop(m: CalcModel; VAR i: LONGINT); 
-	PROCEDURE ^ PushI(m: CalcModel; i: LONGINT); 
-	PROCEDURE ^ PopI(m: CalcModel; VAR i: LONGINT); 
-	PROCEDURE ^ PushR(m: CalcModel; r: LONGREAL); 
-	PROCEDURE ^ PopR(m: CalcModel; VAR r: LONGREAL); 
+	PROCEDURE ^ Push(m: CalcModel; i: SIGNED32); 
+	PROCEDURE ^ Pop(m: CalcModel; VAR i: SIGNED32); 
+	PROCEDURE ^ PushI(m: CalcModel; i: SIGNED32); 
+	PROCEDURE ^ PopI(m: CalcModel; VAR i: SIGNED32); 
+	PROCEDURE ^ PushR(m: CalcModel; r: FLOAT64); 
+	PROCEDURE ^ PopR(m: CalcModel; VAR r: FLOAT64); 
 	PROCEDURE ^ RotateStack(m: CalcModel); 
 	PROCEDURE ^ RemoveSub(m: CalcModel); 
 	PROCEDURE ^ ResetStack(m: CalcModel); 
 	PROCEDURE ^ ResetModel(m: CalcModel); 
-	PROCEDURE ^ ChangeMode(m: CalcModel; from, to: SHORTINT); 
-	PROCEDURE ^ GetModelValue(F: CalcModel; pos: INTEGER; VAR s: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ ChangeMode(m: CalcModel; from, to: SIGNED8); 
+	PROCEDURE ^ GetModelValue(F: CalcModel; pos: SIGNED16; VAR s: ARRAY OF CHAR): SIGNED16; 
 	PROCEDURE ^ HandleAttributes(F: CalcModel; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ ModelHandler(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewModel*; 

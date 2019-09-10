@@ -18,7 +18,7 @@ TYPE
 
 	Element = RECORD 
 		val: SIZE; 
-		dir: WORD; 
+		dir: INTEGER; 
 	END; 
 
 	Handler* = PROCEDURE {DELEGATE}(pos, line: SIZE; string: Strings.String; out: Streams.Writer); 

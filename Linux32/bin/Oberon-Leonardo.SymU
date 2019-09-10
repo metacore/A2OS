@@ -29,8 +29,8 @@ TYPE
 	ShapeDesc* = RECORD (Objects.ObjDesc)
 		cont*: Shape; 
 		up*, down*: Shape; 
-		llx*, lly*, urx*, ury*: REAL; 
-		bw*: REAL; 
+		llx*, lly*, urx*, ury*: FLOAT32; 
+		bw*: FLOAT32; 
 		sel*: BOOLEAN; 
 		marked*: BOOLEAN; 
 	END; 
@@ -57,12 +57,12 @@ TYPE
 	FigureDesc* = RECORD (Objects.ObjDesc)
 		bottom*, top*: Shape; 
 		active*: Layer; 
-		seltime*: LONGINT; 
+		seltime*: SIGNED32; 
 		damage: GfxRegions.Region; 
-		bw: REAL; 
-		lockLevel: INTEGER; 
-		cmdLevel: INTEGER; 
-		maxCmds, nofCmds: INTEGER; 
+		bw: FLOAT32; 
+		lockLevel: SIGNED16; 
+		cmdLevel: SIGNED16; 
+		maxCmds, nofCmds: SIGNED16; 
 		curCmd: Command; 
 		firstCmd: Command; 
 		undoCmd: Command; 
@@ -99,13 +99,13 @@ TYPE
 	IntAction = POINTER TO IntActionDesc; 
 
 	IntActionDesc = RECORD (AttrActionDesc)
-		int: LONGINT; 
+		int: SIGNED32; 
 	END; 
 
 	RealAction = POINTER TO RealActionDesc; 
 
 	RealActionDesc = RECORD (AttrActionDesc)
-		real: REAL; 
+		real: FLOAT32; 
 	END; 
 
 	StringAction = POINTER TO StringActionDesc; 
@@ -117,7 +117,7 @@ TYPE
 	UpdateMsg* = RECORD (Display.FrameMsg)
 		fig*: Figure; 
 		reg*: GfxRegions.Region; 
-		bw*: REAL; 
+		bw*: FLOAT32; 
 	END; 
 
 	ShapeMsg* = RECORD (Objects.ObjMsg)
@@ -128,18 +128,18 @@ TYPE
 	END; 
 
 	SelectMsg* = RECORD (ShapeMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 		res*: Shape; 
 	END; 
 
 	ControlMsg* = RECORD (ShapeMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 		bottom*, top*: Shape; 
 		cont*, up*, down*: Shape; 
 	END; 
 
 	OrderMsg* = RECORD (ShapeMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 	END; 
 
 	LocalizedMsg* = RECORD (ShapeMsg)
@@ -155,36 +155,36 @@ TYPE
 	END; 
 
 	ConsumeMsg* = RECORD (LocalizedMsg)
-		llx*, lly*, urx*, ury*: REAL; 
+		llx*, lly*, urx*, ury*: FLOAT32; 
 		bottom*, top*: Shape; 
 		slgm*: GfxMatrix.Matrix; 
 		recv*: Shape; 
 	END; 
 
 	RenderMsg* = RECORD (LocalizedMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 		ctxt*: Gfx.Context; 
 		gsm*: GfxMatrix.Matrix; 
-		llx*, lly*, urx*, ury*: REAL; 
+		llx*, lly*, urx*, ury*: FLOAT32; 
 	END; 
 
 	LocateMsg* = RECORD (LocalizedMsg)
-		id*: INTEGER; 
-		llx*, lly*, urx*, ury*: REAL; 
+		id*: SIGNED16; 
+		llx*, lly*, urx*, ury*: FLOAT32; 
 		res*: Shape; 
-		x*, y*: REAL; 
-		px*, py*: REAL; 
+		x*, y*: FLOAT32; 
+		px*, py*: FLOAT32; 
 	END; 
 
 	TransformMsg* = RECORD (LocalizedMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 		notify*: BOOLEAN; 
 		mat*: GfxMatrix.Matrix; 
 	END; 
 
 	MatrixMsg* = RECORD (LocalizedMsg)
 		dest*: Shape; 
-		x0*, y0*, x1*, y1*, tol*: REAL; 
+		x0*, y0*, x1*, y1*, tol*: FLOAT32; 
 		done*: BOOLEAN; 
 		mat*: GfxMatrix.Matrix; 
 	END; 
@@ -197,7 +197,7 @@ VAR
 	PROCEDURE ^ Update(fig: Figure); 
 	PROCEDURE ^ DisableUpdate*(fig: Figure); 
 	PROCEDURE ^ EnableUpdate*(fig: Figure); 
-	PROCEDURE ^ UpdateRect*(fig: Figure; llx, lly, urx, ury, bw: REAL); 
+	PROCEDURE ^ UpdateRect*(fig: Figure; llx, lly, urx, ury, bw: FLOAT32); 
 	PROCEDURE ^ UpdateShape*(fig: Figure; shape: Shape); 
 	PROCEDURE ^ ValidateSelection*(fig: Figure); 
 	PROCEDURE ^ Selection*(fig: Figure): Shape; 
@@ -218,9 +218,9 @@ VAR
 	PROCEDURE ^ DoBoolAction(fig: Figure; act: Action); 
 	PROCEDURE ^ SetBool*(fig: Figure; shape: Shape; name: ARRAY OF CHAR; val: BOOLEAN); 
 	PROCEDURE ^ DoIntAction(fig: Figure; act: Action); 
-	PROCEDURE ^ SetInt*(fig: Figure; shape: Shape; name: ARRAY OF CHAR; val: LONGINT); 
+	PROCEDURE ^ SetInt*(fig: Figure; shape: Shape; name: ARRAY OF CHAR; val: SIGNED32); 
 	PROCEDURE ^ DoRealAction(fig: Figure; act: Action); 
-	PROCEDURE ^ SetReal*(fig: Figure; shape: Shape; name: ARRAY OF CHAR; val: REAL); 
+	PROCEDURE ^ SetReal*(fig: Figure; shape: Shape; name: ARRAY OF CHAR; val: FLOAT32); 
 	PROCEDURE ^ DoStringAction(fig: Figure; act: Action); 
 	PROCEDURE ^ SetString*(fig: Figure; shape: Shape; name, val: ARRAY OF CHAR); 
 	PROCEDURE ^ SetColor*(fig: Figure; shape: Shape; col: Display.Color); 
@@ -233,13 +233,13 @@ VAR
 	PROCEDURE ^ Integrate*(fig: Figure; shapes: Shape); 
 	PROCEDURE ^ Delete*(fig: Figure; shapes: Shape); 
 	PROCEDURE ^ Clone*(fig: Figure; shapes: Shape; VAR copy: Shape); 
-	PROCEDURE ^ Consume*(fig: Figure; llx, lly, urx, ury: REAL; shapes: Shape; VAR recv: Shape); 
-	PROCEDURE ^ Render*(fig: Figure; id: INTEGER; ctxt: Gfx.Context); 
-	PROCEDURE ^ Locate*(fig: Figure; id: INTEGER; llx, lly, urx, ury: REAL): Shape; 
-	PROCEDURE ^ Project*(fig: Figure; x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL; VAR res: Shape); 
-	PROCEDURE ^ DrawHandles*(llx, lly, urx, ury: REAL; VAR rm: RenderMsg); 
-	PROCEDURE ^ ProjectToHandles*(shape: Shape; llx, lly, urx, ury: REAL; VAR lm: LocateMsg); 
-	PROCEDURE ^ GetHandleMatrix*(llx, lly, urx, ury: REAL; VAR msg: MatrixMsg); 
+	PROCEDURE ^ Consume*(fig: Figure; llx, lly, urx, ury: FLOAT32; shapes: Shape; VAR recv: Shape); 
+	PROCEDURE ^ Render*(fig: Figure; id: SIGNED16; ctxt: Gfx.Context); 
+	PROCEDURE ^ Locate*(fig: Figure; id: SIGNED16; llx, lly, urx, ury: FLOAT32): Shape; 
+	PROCEDURE ^ Project*(fig: Figure; x, y, llx, lly, urx, ury: FLOAT32; VAR px, py: FLOAT32; VAR res: Shape); 
+	PROCEDURE ^ DrawHandles*(llx, lly, urx, ury: FLOAT32; VAR rm: RenderMsg); 
+	PROCEDURE ^ ProjectToHandles*(shape: Shape; llx, lly, urx, ury: FLOAT32; VAR lm: LocateMsg); 
+	PROCEDURE ^ GetHandleMatrix*(llx, lly, urx, ury: FLOAT32; VAR msg: MatrixMsg); 
 	PROCEDURE ^ ContainingFigure*(shape: Shape): Figure; 
 	PROCEDURE ^ GetCoordSystem*(shape: Shape; VAR lgm: GfxMatrix.Matrix); 
 	PROCEDURE ^ ShapeAttr*(shape: Shape; VAR msg: Objects.AttrMsg); 
@@ -250,7 +250,7 @@ VAR
 	PROCEDURE ^ CopyComponents*(VAR msg: Objects.CopyMsg; srcbot: Shape; VAR dstbot, dsttop: Shape); 
 	PROCEDURE ^ WriteComponents*(VAR r: Files.Rider; lib: Objects.Library; bottom: Shape); 
 	PROCEDURE ^ ReadComponents*(VAR r: Files.Rider; lib: Objects.Library; VAR bottom, top: Shape); 
-	PROCEDURE ^ GetComponentsBox*(bottom: Shape; VAR llx, lly, urx, ury, bw: REAL); 
+	PROCEDURE ^ GetComponentsBox*(bottom: Shape; VAR llx, lly, urx, ury, bw: FLOAT32); 
 	PROCEDURE ^ SelectContainer*(cont: Container; VAR msg: SelectMsg); 
 	PROCEDURE ^ ConsumeAction(fig: Figure; action: Action); 
 	PROCEDURE ^ DeleteAction(fig: Figure; action: Action); 

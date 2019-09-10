@@ -1,7 +1,7 @@
 MODULE vyLongComplex IN Oberon;
 	IMPORT M := MathL IN A2;
 TYPE 
-	real = LONGREAL; 
+	real = FLOAT64; 
 
 	Complex* = OBJECT 
 	VAR 

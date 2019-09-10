@@ -32,11 +32,11 @@ VAR
 
 	PROCEDURE ^ Send0(T: Terminals.Terminal; ch: CHAR); 
 	PROCEDURE ^ Break0(T: Terminals.Terminal); 
-	PROCEDURE ^ Sb(C: NetSystem.Connection; VAR l: INTEGER); 
-	PROCEDURE ^ Will(C: NetSystem.Connection; VAR l: INTEGER); 
-	PROCEDURE ^ Wont(C: NetSystem.Connection; VAR l: INTEGER); 
-	PROCEDURE ^ Do(C: NetSystem.Connection; VAR l: INTEGER); 
-	PROCEDURE ^ Dont(C: NetSystem.Connection; VAR l: INTEGER); 
+	PROCEDURE ^ Sb(C: NetSystem.Connection; VAR l: SIGNED16); 
+	PROCEDURE ^ Will(C: NetSystem.Connection; VAR l: SIGNED16); 
+	PROCEDURE ^ Wont(C: NetSystem.Connection; VAR l: SIGNED16); 
+	PROCEDURE ^ Do(C: NetSystem.Connection; VAR l: SIGNED16); 
+	PROCEDURE ^ Dont(C: NetSystem.Connection; VAR l: SIGNED16); 
 	PROCEDURE ^ Receiver(me: Oberon.Task); 
 	PROCEDURE ^ SetUp(C: NetSystem.Connection; localecho: BOOLEAN); 
 	PROCEDURE ^ Open*; 

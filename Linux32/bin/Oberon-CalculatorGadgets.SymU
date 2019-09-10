@@ -13,8 +13,8 @@ CONST
 	GRAD = 2; 
 TYPE 
 	Operand = RECORD 
-		value: LONGREAL; 
-		factor, base, angle: INTEGER; 
+		value: FLOAT64; 
+		factor, base, angle: SIGNED16; 
 	END; 
 
 	Button* = POINTER TO ButtonDesc; 
@@ -27,28 +27,28 @@ TYPE
 
 	EngineDesc* = RECORD (Gadgets.ObjDesc)
 		expr*: Calculator.Expression; 
-		state: INTEGER; 
+		state: SIGNED16; 
 		op: ARRAY CalcUndoOp OF Operand; 
-		mem: ARRAY CalcMem OF LONGREAL; 
-		undo: ARRAY CalcUndoKey OF LONGREAL; 
+		mem: ARRAY CalcMem OF FLOAT64; 
+		undo: ARRAY CalcUndoKey OF FLOAT64; 
 		tag: ARRAY 32 OF CHAR; 
 	END; 
 
-	PROCEDURE ^ and(x, y: LONGREAL): LONGREAL; 
-	PROCEDURE ^ or(x, y: LONGREAL): LONGREAL; 
-	PROCEDURE ^ nor(x, y: LONGREAL): LONGREAL; 
-	PROCEDURE ^ xor(x, y: LONGREAL): LONGREAL; 
-	PROCEDURE ^ xnor(x, y: LONGREAL): LONGREAL; 
-	PROCEDURE ^ not(x: LONGREAL): LONGREAL; 
-	PROCEDURE ^ Rad(value: LONGREAL; angle: INTEGER): LONGREAL; 
-	PROCEDURE ^ Deg(value: LONGREAL; angle: INTEGER): LONGREAL; 
-	PROCEDURE ^ RadOp(op: Operand): LONGREAL; 
+	PROCEDURE ^ and(x, y: FLOAT64): FLOAT64; 
+	PROCEDURE ^ or(x, y: FLOAT64): FLOAT64; 
+	PROCEDURE ^ nor(x, y: FLOAT64): FLOAT64; 
+	PROCEDURE ^ xor(x, y: FLOAT64): FLOAT64; 
+	PROCEDURE ^ xnor(x, y: FLOAT64): FLOAT64; 
+	PROCEDURE ^ not(x: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Rad(value: FLOAT64; angle: SIGNED16): FLOAT64; 
+	PROCEDURE ^ Deg(value: FLOAT64; angle: SIGNED16): FLOAT64; 
+	PROCEDURE ^ RadOp(op: Operand): FLOAT64; 
 	PROCEDURE ^ arcsin(VAR op: Operand): BOOLEAN; 
 	PROCEDURE ^ arccos(VAR op: Operand): BOOLEAN; 
 	PROCEDURE ^ cot(VAR op: Operand): BOOLEAN; 
 	PROCEDURE ^ tan(VAR op: Operand): BOOLEAN; 
-	PROCEDURE ^ InitOperand(VAR O: Operand; base: INTEGER); 
-	PROCEDURE ^ OperandToDisplay(O: Operand; w: INTEGER; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ InitOperand(VAR O: Operand; base: SIGNED16); 
+	PROCEDURE ^ OperandToDisplay(O: Operand; w: SIGNED16; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ AddDigit(E: Engine; c: CHAR): BOOLEAN; 
 	PROCEDURE ^ RemDigit(E: Engine): BOOLEAN; 
 	PROCEDURE ^ ApplyFunction(E: Engine; s: ARRAY OF CHAR): BOOLEAN; 

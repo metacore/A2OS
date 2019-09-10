@@ -20,11 +20,11 @@ CONST
 TYPE 
 	Beeper = OBJECT {EXCLUSIVE} 
 	VAR 
-		state: LONGINT; 
-		hz, intervall: LONGINT; 
+		state: SIGNED32; 
+		hz, intervall: SIGNED32; 
 		timer: Kernel.Timer; 
 
-		PROCEDURE ^ Signal(type: LONGINT); 
+		PROCEDURE ^ Signal(type: SIGNED32); 
 		PROCEDURE ^ Stop; 
 		PROCEDURE ^  & Init*; 
 	BEGIN{ACTIVE} 
@@ -32,7 +32,7 @@ TYPE
 VAR 
 	beeper: Beeper; 
 
-	PROCEDURE ^ Signal*(type: LONGINT); 
+	PROCEDURE ^ Signal*(type: SIGNED32); 
 	PROCEDURE ^ SignalCmd*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 
 BEGIN

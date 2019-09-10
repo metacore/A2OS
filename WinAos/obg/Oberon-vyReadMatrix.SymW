@@ -12,17 +12,17 @@ TYPE
 	ListItem* = POINTER TO ListItemDesc; 
 
 	ListItemDesc = RECORD (vyLinks.LinkDesc)
-		row-, col-: INTEGER; 
+		row-, col-: SIGNED16; 
 		cname-, rname-: StringVec; 
 	END; 
 
-	PROCEDURE ^ InitList(row, col: INTEGER; rowheader, colheader: BOOLEAN): ListItem; 
-	PROCEDURE ^ Adjustcr(VAR check: BOOLEAN; VAR cr: INTEGER); 
-	PROCEDURE ^ readMatrix(VAR List: ListItem; pos: LONGINT; selend: LONGINT; text: Texts.Text); 
-	PROCEDURE ^ readMatrixwrownames(VAR List: ListItem; pos: LONGINT; selend: LONGINT; text: Texts.Text); 
-	PROCEDURE ^ Countrows(pos: LONGINT; selend: LONGINT; text: Texts.Text): INTEGER; 
-	PROCEDURE ^ ReadColumnHeader*(VAR M: ListItem; VAR pos: LONGINT; selend: LONGINT; text: Texts.Text); 
-	PROCEDURE ^ Countcolumn(pos: LONGINT; selend: LONGINT; text: Texts.Text): INTEGER; 
-	PROCEDURE ^ ReadMatrix*(VAR C: ListItem; colheader, rowheader: BOOLEAN; text: Texts.Text; pos, end: LONGINT); 
+	PROCEDURE ^ InitList(row, col: SIGNED16; rowheader, colheader: BOOLEAN): ListItem; 
+	PROCEDURE ^ Adjustcr(VAR check: BOOLEAN; VAR cr: SIGNED16); 
+	PROCEDURE ^ readMatrix(VAR List: ListItem; pos: SIGNED32; selend: SIGNED32; text: Texts.Text); 
+	PROCEDURE ^ readMatrixwrownames(VAR List: ListItem; pos: SIGNED32; selend: SIGNED32; text: Texts.Text); 
+	PROCEDURE ^ Countrows(pos: SIGNED32; selend: SIGNED32; text: Texts.Text): SIGNED16; 
+	PROCEDURE ^ ReadColumnHeader*(VAR M: ListItem; VAR pos: SIGNED32; selend: SIGNED32; text: Texts.Text); 
+	PROCEDURE ^ Countcolumn(pos: SIGNED32; selend: SIGNED32; text: Texts.Text): SIGNED16; 
+	PROCEDURE ^ ReadMatrix*(VAR C: ListItem; colheader, rowheader: BOOLEAN; text: Texts.Text; pos, end: SIGNED32); 
 BEGIN
 END vyReadMatrix.

@@ -13,28 +13,28 @@ CONST
 VAR 
 	W: Texts.Writer; 
 	sPat: ARRAY MaxPatLen OF CHAR; 
-	sTab: ARRAY 256 OF INTEGER; 
-	sPatLen: INTEGER; 
+	sTab: ARRAY 256 OF SIGNED16; 
+	sPatLen: SIGNED16; 
 	rBuf: Texts.Buffer; 
-	lTime: LONGINT; 
-	lastPno: INTEGER; 
+	lTime: SIGNED32; 
+	lastPno: SIGNED16; 
 	printer, ext, options: ARRAY 32 OF CHAR; 
 	open: BOOLEAN; 
-	leftX, headY, topY, botY, pagY, pagW: INTEGER; 
+	leftX, headY, topY, botY, pagY, pagW: SIGNED16; 
 	head, tail: Objects.Object; 
-	pages: INTEGER; 
+	pages: SIGNED16; 
 
-	PROCEDURE ^ MarkBrk(pos: LONGINT); 
+	PROCEDURE ^ MarkBrk(pos: SIGNED32); 
 	PROCEDURE ^ OpenViewer(name: ARRAY OF CHAR; F: Display.Frame); 
 	PROCEDURE ^ OpenScanner(VAR S: Texts.Scanner; F: TextFrames.Frame); 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ Backup(VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ Store*; 
-	PROCEDURE ^ SetCaret(F: Display.Frame; text: Texts.Text; pos: LONGINT); 
-	PROCEDURE ^ SetSelection(F: Display.Frame; text: Texts.Text; beg, end: LONGINT; VAR time: LONGINT); 
-	PROCEDURE ^ GetCaret(VAR F: Display.Frame; VAR text: Texts.Text; VAR pos: LONGINT); 
-	PROCEDURE ^ FindPat(F: Display.Frame; text: Texts.Text; pos, time: LONGINT): BOOLEAN; 
-	PROCEDURE ^ GetFrame(VAR F: Display.Frame; VAR text: Texts.Text; VAR pos: LONGINT); 
+	PROCEDURE ^ SetCaret(F: Display.Frame; text: Texts.Text; pos: SIGNED32); 
+	PROCEDURE ^ SetSelection(F: Display.Frame; text: Texts.Text; beg, end: SIGNED32; VAR time: SIGNED32); 
+	PROCEDURE ^ GetCaret(VAR F: Display.Frame; VAR text: Texts.Text; VAR pos: SIGNED32); 
+	PROCEDURE ^ FindPat(F: Display.Frame; text: Texts.Text; pos, time: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ GetFrame(VAR F: Display.Frame; VAR text: Texts.Text; VAR pos: SIGNED32); 
 	PROCEDURE ^ Search*; 
 	PROCEDURE ^ replace(): BOOLEAN; 
 	PROCEDURE ^ Replace*; 
@@ -48,9 +48,9 @@ VAR
 	PROCEDURE ^ SetStyle*; 
 	PROCEDURE ^ GetStyle*; 
 	PROCEDURE ^ Style*; 
-	PROCEDURE ^ PrintUnit(T: Texts.Text; name: ARRAY OF CHAR; fnt: Fonts.Font; opts: SET; pn0, pnb, pne, copies: INTEGER); 
-	PROCEDURE ^ Options(VAR S: Texts.Scanner; VAR fnt: Fonts.Font; VAR opts: SET; VAR pn0, pnb, pne, copies: INTEGER); 
-	PROCEDURE ^ Scale(VAR x: INTEGER); 
+	PROCEDURE ^ PrintUnit(T: Texts.Text; name: ARRAY OF CHAR; fnt: Fonts.Font; opts: SET; pn0, pnb, pne, copies: SIGNED16); 
+	PROCEDURE ^ Options(VAR S: Texts.Scanner; VAR fnt: Fonts.Font; VAR opts: SET; VAR pn0, pnb, pne, copies: SIGNED16); 
+	PROCEDURE ^ Scale(VAR x: SIGNED16); 
 	PROCEDURE ^ Print*; 
 	PROCEDURE ^ PageBreaks*; 
 BEGIN

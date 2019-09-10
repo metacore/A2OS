@@ -7,13 +7,13 @@ TYPE
 
 	LongerValue* = NbrInt64.Integer; 
 
-	ShorterValue* = INTEGER; 
+	ShorterValue* = SIGNED16; 
 
 	RealValue* = NbrRe.Real; 
 
 	Array* = POINTER TO ARRAY OF Value; 
 
-	Index* = LONGINT; 
+	Index* = SIGNED32; 
 
 	Map* = PROCEDURE {DELEGATE}(VAR i: Value); 
 
@@ -58,9 +58,9 @@ TYPE
 	PROCEDURE ^ MinMax*(VAR x: ARRAY OF Value; offset, len: Index; VAR min, max: Value; minpos, maxpos: Index); 
 	PROCEDURE ^ MinMaxPat*(map: Map; VAR x: ARRAY OF Value; offset, step, piecelen, pieces: Index; VAR min, max: Value; minpos, maxpos: Index); 
 	PROCEDURE ^ MeanSsq*(VAR x: ARRAY OF Value; offset, len: Index; VAR mean, ssq: RealValue); 
-	PROCEDURE ^ kSmallestModify*(k: Index; VAR a: ARRAY OF Value; len: LONGINT): Value; 
-	PROCEDURE ^ kSmallest*(k: Index; VAR a: ARRAY OF Value; len: LONGINT): Value; 
-	PROCEDURE ^ Median*(VAR a: ARRAY OF Value; len: LONGINT): Value; 
+	PROCEDURE ^ kSmallestModify*(k: Index; VAR a: ARRAY OF Value; len: SIGNED32): Value; 
+	PROCEDURE ^ kSmallest*(k: Index; VAR a: ARRAY OF Value; len: SIGNED32): Value; 
+	PROCEDURE ^ Median*(VAR a: ARRAY OF Value; len: SIGNED32): Value; 
 	PROCEDURE ^ HammingWeight*(VAR x: ARRAY OF Value; offset, len: Index): Index; 
 	PROCEDURE ^ HammingWeightPat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: Index): Index; 
 	PROCEDURE ^ HammingDist*(VAR x, y: ARRAY OF Value; xoffset, yoffset, len: Index): Index; 
@@ -81,11 +81,11 @@ TYPE
 	PROCEDURE ^ RemoveBlock*(VAR x: ARRAY OF Value; offset, len: Index); 
 	PROCEDURE ^ InsertBlock*(VAR x: ARRAY OF Value; offset, len: Index); 
 	PROCEDURE ^ ShiftBlock*(VAR x: ARRAY OF Value; from, to, len: Index); 
-	PROCEDURE ^ RemovePat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: LONGINT): Array; 
-	PROCEDURE ^ Remove*(VAR x: ARRAY OF Value; offset, len: LONGINT): Array; 
-	PROCEDURE ^ InsertPat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: LONGINT): Array; 
-	PROCEDURE ^ Insert*(VAR x: ARRAY OF Value; offset, len: LONGINT): Array; 
-	PROCEDURE ^ GetPieces*(VAR a: ARRAY OF Value; offset, step, piecelen: LONGINT): LONGINT; 
+	PROCEDURE ^ RemovePat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: SIGNED32): Array; 
+	PROCEDURE ^ Remove*(VAR x: ARRAY OF Value; offset, len: SIGNED32): Array; 
+	PROCEDURE ^ InsertPat*(VAR x: ARRAY OF Value; offset, step, piecelen, pieces: SIGNED32): Array; 
+	PROCEDURE ^ Insert*(VAR x: ARRAY OF Value; offset, len: SIGNED32): Array; 
+	PROCEDURE ^ GetPieces*(VAR a: ARRAY OF Value; offset, step, piecelen: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Long*(VAR x: ARRAY OF Value; res: ARRAY OF LongerValue; len: Index); 
 	PROCEDURE ^ Short*(VAR x: ARRAY OF Value; res: ARRAY OF ShorterValue; len: Index); 
 	PROCEDURE ^ Sort*(VAR x: ARRAY OF Value; offset, len: Index); 

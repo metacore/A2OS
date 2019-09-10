@@ -115,11 +115,11 @@ CONST
 	NofOpcodes* = (saveregsaligned + 1); 
 	PieceLen = 128; 
 TYPE 
-	Opcode* = SHORTINT; 
+	Opcode* = SIGNED8; 
 
-	Register* = LONGINT; 
+	Register* = SIGNED32; 
 
-	Size* = SHORTINT; 
+	Size* = SIGNED8; 
 
 	InstructionAttribute* = OBJECT 
 	END InstructionAttribute; 
@@ -127,18 +127,18 @@ TYPE
 	Instruction* = RECORD 
 		op*: Opcode; 
 		src1*, src2*, src3*: Register; 
-		val*: LONGINT; 
+		val*: SIGNED32; 
 		adr-: PCM.Attribute; 
-		barrier-: LONGINT; 
+		barrier-: SIGNED32; 
 		suppress*: BOOLEAN; 
-		dstCount*: SHORTINT; 
+		dstCount*: SIGNED8; 
 		dstSize-: Size; 
 		dstSigned-: BOOLEAN; 
 		info*: InstructionAttribute; 
 	END; 
 
 	InstructionSetDescription* = ARRAY NofOpcodes OF RECORD 
-		format-: SHORTINT; 
+		format-: SIGNED8; 
 		flags-: SET; 
 		name-: ARRAY 9 OF CHAR; 
 		emit-: EmitProc; 
@@ -147,7 +147,7 @@ TYPE
 	Piece* = OBJECT 
 	VAR 
 		instr*: ARRAY PieceLen OF Instruction; 
-		len: LONGINT; 
+		len: SIGNED32; 
 		next, prev: Piece; 
 
 		PROCEDURE ^  & Init*; 
@@ -158,30 +158,30 @@ TYPE
 
 	Code* = OBJECT (PCM.Attribute)
 	VAR 
-		pc-: LONGINT; 
+		pc-: SIGNED32; 
 		first, last: Piece; 
-		barrier-: LONGINT; 
+		barrier-: SIGNED32; 
 		info-: CodeAttributes; 
 		name*: ARRAY 32 OF CHAR; 
 
 		PROCEDURE ^ NewInstruction; 
-		PROCEDURE ^ GetPiece*(VAR src: LONGINT; VAR p: Piece); 
+		PROCEDURE ^ GetPiece*(VAR src: SIGNED32; VAR p: Piece); 
 		PROCEDURE ^ Traverse*(proc: TraverseProc; reversed: BOOLEAN; context: ANY); 
 		PROCEDURE ^  & Init*; 
 	END Code; 
 
-	EmitProc* = PROCEDURE (code: Code; VAR instr: Instruction; pc: LONGINT); 
+	EmitProc* = PROCEDURE (code: Code; VAR instr: Instruction; pc: SIGNED32); 
 
-	TraverseProc* = PROCEDURE (code: Code; VAR instr: Instruction; pc: LONGINT; context: ANY); 
+	TraverseProc* = PROCEDURE (code: Code; VAR instr: Instruction; pc: SIGNED32; context: ANY); 
 
 	AsmFixup* = POINTER TO RECORD 
-		offset*: LONGINT; 
+		offset*: SIGNED32; 
 		adr*: PCM.Attribute; 
 		next*: AsmFixup; 
 	END; 
 
 	AsmBlock* = POINTER TO RECORD 
-		len*: LONGINT; 
+		len*: SIGNED32; 
 		code*: ARRAY 256 OF CHAR; 
 		next*: AsmBlock; 
 	END; 
@@ -196,19 +196,19 @@ TYPE
 
 	InitHandler* = PROCEDURE ():BOOLEAN; 
 
-	DoneHandler* = PROCEDURE (VAR res: WORD); 
+	DoneHandler* = PROCEDURE (VAR res: INTEGER); 
 
-	GetCodeHandler* = PROCEDURE (VAR code: CodeArray; VAR codelength, hdrlength, addressFactor: LONGINT); 
+	GetCodeHandler* = PROCEDURE (VAR code: CodeArray; VAR codelength, hdrlength, addressFactor: SIGNED32); 
 
 	CodeGenerator* = RECORD 
-		MaxCodeSize*: LONGINT; 
+		MaxCodeSize*: SIGNED32; 
 		SysCallMap*: POINTER TO ARRAY OF CHAR; 
 		Init*: InitHandler; 
 		Done*: DoneHandler; 
 		Optimize*: PROCEDURE (code: Code); 
 		GetCode*: GetCodeHandler; 
 		DumpCode*: TraverseProc; 
-		ParamAlign*: LONGINT; 
+		ParamAlign*: SIGNED32; 
 	END; 
 
 	; 
@@ -218,53 +218,53 @@ VAR
 	CG*: CodeGenerator; 
 	Address*, Set*, SizeType*: Size; 
 	RegName: ARRAY 8 OF CHAR; 
-	aTotalInstructions, aSuppressedInstructions, aCodeCount, aPieceCount: LONGINT; 
-	aInstrCount, aSupprInstrCount: ARRAY NofOpcodes OF LONGINT; 
+	aTotalInstructions, aSuppressedInstructions, aCodeCount, aPieceCount: SIGNED32; 
+	aInstrCount, aSupprInstrCount: ARRAY NofOpcodes OF SIGNED32; 
 
-	PROCEDURE ^ InitInstr(VAR instr: Instruction; op: Opcode; size: Size; signed: BOOLEAN; val: LONGINT; src1, src2, src3: Register; adr: PCM.Attribute; barrier: LONGINT); 
+	PROCEDURE ^ InitInstr(VAR instr: Instruction; op: Opcode; size: Size; signed: BOOLEAN; val: SIGNED32; src1, src2, src3: Register; adr: PCM.Attribute; barrier: SIGNED32); 
 	PROCEDURE ^ Use(code: Code; reg: Register); 
 	PROCEDURE ^ SizeOf*(code: Code; reg: Register): Size; 
 	PROCEDURE ^ Signed*(code: Code; reg: Register): BOOLEAN; 
-	PROCEDURE ^ NofBytes*(size: Size): SHORTINT; 
-	PROCEDURE ^ NewInstr(code: Code; op: Opcode; size: Size; signed: BOOLEAN; val: LONGINT; s1, s2, s3: Register; adr: PCM.Attribute); 
-	PROCEDURE ^ EmitStoreAbsolute*(code: Code; offset: LONGINT; addr: PCM.Attribute; source: Register); 
-	PROCEDURE ^ EmitStoreRelative*(code: Code; offset: LONGINT; base, source: Register); 
+	PROCEDURE ^ NofBytes*(size: Size): SIGNED8; 
+	PROCEDURE ^ NewInstr(code: Code; op: Opcode; size: Size; signed: BOOLEAN; val: SIGNED32; s1, s2, s3: Register; adr: PCM.Attribute); 
+	PROCEDURE ^ EmitStoreAbsolute*(code: Code; offset: SIGNED32; addr: PCM.Attribute; source: Register); 
+	PROCEDURE ^ EmitStoreRelative*(code: Code; offset: SIGNED32; base, source: Register); 
 	PROCEDURE ^ EmitStoreReg*(code: Code; dst, source: Register); 
-	PROCEDURE ^ EmitLoadAbsolute*(code: Code; size: Size; signed: BOOLEAN; VAR dest: Register; offs: LONGINT; addr: PCM.Attribute); 
-	PROCEDURE ^ EmitLoadRelative*(code: Code; size: Size; signed: BOOLEAN; VAR dest: Register; offset: LONGINT; base: Register); 
-	PROCEDURE ^ EmitLoadConst*(code: Code; VAR dest: Register; size: Size; signed: BOOLEAN; value: LONGINT); 
-	PROCEDURE ^ EmitLoadAddr*(code: Code; VAR dest: Register; offset: LONGINT; addr: PCM.Attribute); 
-	PROCEDURE ^ Emit0C*(code: Code; op: Opcode; val: LONGINT); 
+	PROCEDURE ^ EmitLoadAbsolute*(code: Code; size: Size; signed: BOOLEAN; VAR dest: Register; offs: SIGNED32; addr: PCM.Attribute); 
+	PROCEDURE ^ EmitLoadRelative*(code: Code; size: Size; signed: BOOLEAN; VAR dest: Register; offset: SIGNED32; base: Register); 
+	PROCEDURE ^ EmitLoadConst*(code: Code; VAR dest: Register; size: Size; signed: BOOLEAN; value: SIGNED32); 
+	PROCEDURE ^ EmitLoadAddr*(code: Code; VAR dest: Register; offset: SIGNED32; addr: PCM.Attribute); 
+	PROCEDURE ^ Emit0C*(code: Code; op: Opcode; val: SIGNED32); 
 	PROCEDURE ^ EmitCall*(code: Code; proc: PCM.Attribute); 
-	PROCEDURE ^ EmitEnter*(code: Code; callconv: LONGINT; attr: PCM.Attribute); 
+	PROCEDURE ^ EmitEnter*(code: Code; callconv: SIGNED32; attr: PCM.Attribute); 
 	PROCEDURE ^ EmitFinallyLabel*(code: Code; attr: PCM.Attribute); 
-	PROCEDURE ^ EmitExit*(code: Code; callconv, parSize: LONGINT; attr: PCM.Attribute); 
+	PROCEDURE ^ EmitExit*(code: Code; callconv, parSize: SIGNED32; attr: PCM.Attribute); 
 	PROCEDURE ^ Emit00*(code: Code; op: Opcode); 
 	PROCEDURE ^ Emit01*(code: Code; op: Opcode; src: Register); 
 	PROCEDURE ^ Emit10*(code: Code; op: Opcode; VAR dest: Register; size: Size; signed: BOOLEAN); 
 	PROCEDURE ^ EmitConv*(code: Code; op: Opcode; VAR dest: Register; size: Size; signed: BOOLEAN; src: Register); 
 	PROCEDURE ^ Emit11*(code: Code; op: Opcode; VAR dest: Register; src1: Register); 
 	PROCEDURE ^ Emit02*(code: Code; op: Opcode; src1, src2: Register); 
-	PROCEDURE ^ Emit02C*(code: Code; op: Opcode; src1, src2: Register; val: LONGINT); 
+	PROCEDURE ^ Emit02C*(code: Code; op: Opcode; src1, src2: Register; val: SIGNED32); 
 	PROCEDURE ^ Emit03*(code: Code; op: Opcode; src1, src2, src3: Register); 
 	PROCEDURE ^ Emit12*(code: Code; op: Opcode; VAR dest: Register; src1, src2: Register); 
 	PROCEDURE ^ Emit12Sized*(code: Code; op: Opcode; VAR dest: Register; size: Size; src1, src2: Register); 
 	PROCEDURE ^ EmitInline*(code: Code; adr: PCM.Attribute); 
 	PROCEDURE ^ EmitCase*(code: Code; VAR dst: Register; src: Register); 
-	PROCEDURE ^ EmitCaseLine*(code: Code; base: Register; val: LONGINT); 
+	PROCEDURE ^ EmitCaseLine*(code: Code; base: Register; val: SIGNED32); 
 	PROCEDURE ^ EmitCaseElse*(code: Code; base: Register); 
 	PROCEDURE ^ EmitPhi*(code: Code; VAR dest: Register; src1, src2: Register); 
 	PROCEDURE ^ PatchPhi*(code: Code; dest: Register; src2: Register); 
-	PROCEDURE ^ FixList*(code: Code; VAR pos: LONGINT; val: LONGINT); 
-	PROCEDURE ^ MergeList*(code: Code; l1, l2: LONGINT): LONGINT; 
+	PROCEDURE ^ FixList*(code: Code; VAR pos: SIGNED32; val: SIGNED32); 
+	PROCEDURE ^ MergeList*(code: Code; l1, l2: SIGNED32): SIGNED32; 
 	PROCEDURE ^ SwapSources*(VAR instr: Instruction); 
-	PROCEDURE ^ DumpCode*(code: Code; VAR instr: Instruction; pc: LONGINT; context: ANY); 
+	PROCEDURE ^ DumpCode*(code: Code; VAR instr: Instruction; pc: SIGNED32; context: ANY); 
 	PROCEDURE ^ Emit*(code: Code); 
 	PROCEDURE ^ SetMethods*(op: Opcode; p: EmitProc); 
 	PROCEDURE ^ CGInit(): BOOLEAN; 
-	PROCEDURE ^ CGDone(VAR res: WORD); 
-	PROCEDURE ^ CGGetCode(VAR code: CodeArray; VAR codelen, hdrlen, addressFactor: LONGINT); 
-	PROCEDURE ^ CGDumpCode(code: Code; VAR instr: Instruction; pc: LONGINT; context: ANY); 
+	PROCEDURE ^ CGDone(VAR res: INTEGER); 
+	PROCEDURE ^ CGGetCode(VAR code: CodeArray; VAR codelen, hdrlen, addressFactor: SIGNED32); 
+	PROCEDURE ^ CGDumpCode(code: Code; VAR instr: Instruction; pc: SIGNED32; context: ANY); 
 	PROCEDURE ^ InitDefaultSyscalls*; 
 	PROCEDURE ^ ShowStatistics*; 
 	PROCEDURE ^ InitModule; 

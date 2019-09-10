@@ -15,13 +15,13 @@ CONST
 	SSE* = 1; 
 	SSE2* = 2; 
 VAR 
-	RNDINVROW, RNDINVCOL, RNDINVCORR: INTEGER; 
-	M128onecorr, M128roundinvrow, M128roundinvcol, M128roundinvcorr, M128tg116, M128tg216, M128tg316, M128cos416: POINTER TO ARRAY OF INTEGER; 
-	M128tabi04, M128tabi17, M128tabi26, M128tabi35: POINTER TO ARRAY OF INTEGER; 
+	RNDINVROW, RNDINVCOL, RNDINVCORR: SIGNED16; 
+	M128onecorr, M128roundinvrow, M128roundinvcol, M128roundinvcorr, M128tg116, M128tg216, M128tg316, M128cos416: POINTER TO ARRAY OF SIGNED16; 
+	M128tabi04, M128tabi17, M128tabi26, M128tabi35: POINTER TO ARRAY OF SIGNED16; 
 	tabi04adr, tabi17adr, tabi26adr, tabi35adr, onecorradr, roundinvrowadr, roundinvcoladr, roundinvcorradr, tg116adr, tg216adr, tg316adr, cos416adr: ADDRESS; 
 	Transform*: PROCEDURE (src, dst: ADDRESS); 
-	intTab: POINTER TO ARRAY OF INTEGER; 
-	status*: WORD; 
+	intTab: POINTER TO ARRAY OF SIGNED16; 
+	status*: INTEGER; 
 
 	PROCEDURE {Fingerprint(-2987779864456514201)}  - MOVDQA1;
 	CODE

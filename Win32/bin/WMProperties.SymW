@@ -10,7 +10,7 @@ TYPE
 		prototype: Property; 
 		nonDefault: BOOLEAN; 
 		list: PropertyList; 
-		timestamp: LONGINT; 
+		timestamp: SIGNED32; 
 		repository: Repositories.Repository; 
 		object: Repositories.Component; 
 		repositoryName: Strings.String; 
@@ -25,7 +25,7 @@ TYPE
 		PROCEDURE ^ SetLinkAsString*(CONST string: ARRAY OF CHAR); 
 		PROCEDURE ^ GetLinkAsString*(VAR string: ARRAY OF CHAR); 
 		PROCEDURE ^ IsLink(p: ANY): BOOLEAN; 
-		PROCEDURE ^ WriteLink*(w: Streams.Writer; context: ANY; indent: LONGINT): BOOLEAN; 
+		PROCEDURE ^ WriteLink*(w: Streams.Writer; context: ANY; indent: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ UpdateModel; 
 		PROCEDURE ^ UpdateProperty; 
 		PROCEDURE ^ SetLink*(object: Repositories.Component); 
@@ -35,7 +35,7 @@ TYPE
 		PROCEDURE ^ GetInfo*(): String; 
 		PROCEDURE ^ GetName*(): String; 
 		PROCEDURE ^ Stamp*; 
-		PROCEDURE ^ GetTimestamp*(): LONGINT; 
+		PROCEDURE ^ GetTimestamp*(): SIGNED32; 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ Changed*; 
 		PROCEDURE ^ AcquireWrite*; 
@@ -48,7 +48,7 @@ TYPE
 		PROCEDURE ^ ToStream*(w: Streams.Writer); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 		PROCEDURE ^ Finalize*; 
 	END Property; 
 
@@ -65,15 +65,15 @@ TYPE
 		PROCEDURE ^ SetPassive*(value: BOOLEAN); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 	END BooleanProperty; 
 
 	SetProperty* = OBJECT (Property)
 	VAR 
 		value: SET; 
 
-		PROCEDURE ^ IntToSet(h: LONGINT): SET; 
-		PROCEDURE ^ SetToInt(set: SET): HUGEINT; 
+		PROCEDURE ^ IntToSet(h: SIGNED32): SET; 
+		PROCEDURE ^ SetToInt(set: SET): SIGNED64; 
 		PROCEDURE ^ FromStream*(r: Streams.Reader); 
 		PROCEDURE ^ ToStream*(w: Streams.Writer); 
 		PROCEDURE ^ UpdateProperty; 
@@ -83,53 +83,53 @@ TYPE
 		PROCEDURE ^ SetPassive*(value: SET); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 	END SetProperty; 
 
 	Int32Property* = OBJECT (Property)
 	VAR 
-		value: LONGINT; 
-		min, max: LONGINT; 
+		value: SIGNED32; 
+		min, max: SIGNED32; 
 		bounded: BOOLEAN; 
 
 		PROCEDURE ^ UpdateProperty; 
 		PROCEDURE ^ UpdateModel; 
-		PROCEDURE ^ SetBounds*(min, max: LONGINT); 
-		PROCEDURE ^ GetBounds*(VAR min, max: LONGINT); 
+		PROCEDURE ^ SetBounds*(min, max: SIGNED32); 
+		PROCEDURE ^ GetBounds*(VAR min, max: SIGNED32); 
 		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
 		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
-		PROCEDURE ^ Validate(v: LONGINT): LONGINT; 
+		PROCEDURE ^ Validate(v: SIGNED32): SIGNED32; 
 		PROCEDURE ^ FromStream*(r: Streams.Reader); 
 		PROCEDURE ^ ToStream*(w: Streams.Writer); 
-		PROCEDURE ^ Get*(): LONGINT; 
-		PROCEDURE ^ Set*(value: LONGINT); 
-		PROCEDURE ^ SetPassive*(value: LONGINT); 
+		PROCEDURE ^ Get*(): SIGNED32; 
+		PROCEDURE ^ Set*(value: SIGNED32); 
+		PROCEDURE ^ SetPassive*(value: SIGNED32); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 	END Int32Property; 
 
 	IntegerProperty* = OBJECT (Property)
 	VAR 
-		value: HUGEINT; 
-		min, max: HUGEINT; 
+		value: SIGNED64; 
+		min, max: SIGNED64; 
 		bounded: BOOLEAN; 
 
 		PROCEDURE ^ UpdateProperty; 
 		PROCEDURE ^ UpdateModel; 
-		PROCEDURE ^ SetBounds*(min, max: HUGEINT); 
-		PROCEDURE ^ GetBounds*(VAR min, max: HUGEINT); 
+		PROCEDURE ^ SetBounds*(min, max: SIGNED64); 
+		PROCEDURE ^ GetBounds*(VAR min, max: SIGNED64); 
 		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
 		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
-		PROCEDURE ^ Validate(v: HUGEINT): HUGEINT; 
+		PROCEDURE ^ Validate(v: SIGNED64): SIGNED64; 
 		PROCEDURE ^ FromStream*(r: Streams.Reader); 
 		PROCEDURE ^ ToStream*(w: Streams.Writer); 
-		PROCEDURE ^ Get*(): HUGEINT; 
-		PROCEDURE ^ Set*(value: HUGEINT); 
-		PROCEDURE ^ SetPassive*(value: HUGEINT); 
+		PROCEDURE ^ Get*(): SIGNED64; 
+		PROCEDURE ^ Set*(value: SIGNED64); 
+		PROCEDURE ^ SetPassive*(value: SIGNED64); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 	END IntegerProperty; 
 
 	SizeProperty* = OBJECT (Property)
@@ -152,30 +152,30 @@ TYPE
 		PROCEDURE ^ SetPassive*(value: SIZE); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 	END SizeProperty; 
 
 	RealProperty* = OBJECT (Property)
 	VAR 
-		value: LONGREAL; 
-		min, max: LONGREAL; 
+		value: FLOAT64; 
+		min, max: FLOAT64; 
 		bounded: BOOLEAN; 
 
-		PROCEDURE ^ SetBounds*(min, max: LONGREAL); 
-		PROCEDURE ^ GetBounds*(VAR min, max: LONGREAL); 
+		PROCEDURE ^ SetBounds*(min, max: FLOAT64); 
+		PROCEDURE ^ GetBounds*(VAR min, max: FLOAT64); 
 		PROCEDURE ^ SetIsBounded*(isBounded: BOOLEAN); 
 		PROCEDURE ^ GetIsBounded*(VAR isBounded: BOOLEAN); 
-		PROCEDURE ^ Validate(v: LONGREAL): LONGREAL; 
+		PROCEDURE ^ Validate(v: FLOAT64): FLOAT64; 
 		PROCEDURE ^ FromStream*(r: Streams.Reader); 
 		PROCEDURE ^ ToStream*(w: Streams.Writer); 
 		PROCEDURE ^ UpdateProperty; 
 		PROCEDURE ^ UpdateModel; 
-		PROCEDURE ^ Get*(): LONGREAL; 
-		PROCEDURE ^ Set*(value: LONGREAL); 
-		PROCEDURE ^ SetPassive*(value: LONGREAL); 
+		PROCEDURE ^ Get*(): FLOAT64; 
+		PROCEDURE ^ Set*(value: FLOAT64); 
+		PROCEDURE ^ SetPassive*(value: FLOAT64); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 	END RealProperty; 
 
 	StringProperty* = OBJECT (Property)
@@ -200,7 +200,7 @@ TYPE
 		PROCEDURE ^ SetAOC*(CONST value: ARRAY OF CHAR); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 	END StringProperty; 
 
 	ColorProperty* = OBJECT (Property)
@@ -212,11 +212,11 @@ TYPE
 		PROCEDURE ^ UpdateProperty; 
 		PROCEDURE ^ UpdateModel; 
 		PROCEDURE ^ Get*(): WMGraphics.Color; 
-		PROCEDURE ^ Set*(value: HUGEINT); 
-		PROCEDURE ^ SetPassive*(value: HUGEINT); 
+		PROCEDURE ^ Set*(value: SIGNED64); 
+		PROCEDURE ^ SetPassive*(value: SIGNED64); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 	END ColorProperty; 
 
 	FontProperty* = OBJECT (Property)
@@ -230,7 +230,7 @@ TYPE
 		PROCEDURE ^ Set*(font: WMGraphics.Font); 
 		PROCEDURE ^ SetPassive*(font: WMGraphics.Font); 
 		PROCEDURE ^ GetFont*(VAR name: ARRAY OF CHAR; VAR size: SIZE; VAR style: SET); 
-		PROCEDURE ^ SetFont*(CONST name: ARRAY OF CHAR; size: LONGINT; style: SET); 
+		PROCEDURE ^ SetFont*(CONST name: ARRAY OF CHAR; size: SIGNED32; style: SET); 
 		PROCEDURE ^ SetFontName*(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ GetFontName*(VAR name: ARRAY OF CHAR); 
 		PROCEDURE ^ SetSize*(size: SIZE); 
@@ -239,7 +239,7 @@ TYPE
 		PROCEDURE ^ GetSyle*(): SET; 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 	END FontProperty; 
 
 	PointProperty* = OBJECT (Property)
@@ -259,7 +259,7 @@ TYPE
 		PROCEDURE ^ GetY*(): SIZE; 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 	END PointProperty; 
 
 	RectangleProperty* = OBJECT (Property)
@@ -287,12 +287,12 @@ TYPE
 		PROCEDURE ^ GetExtents*(VAR width, height: SIZE); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 	END RectangleProperty; 
 
 	ReferenceProperty* = OBJECT (Property)
 	VAR 
-		level: LONGINT; 
+		level: SIGNED32; 
 
 		PROCEDURE ^  & NewRef*(prototype: Property; name, info: String); 
 		PROCEDURE ^ FromStream*(r: Streams.Reader); 
@@ -306,7 +306,7 @@ TYPE
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 		PROCEDURE ^ Finalize*; 
 	END ReferenceProperty; 
 
@@ -315,11 +315,11 @@ TYPE
 	PropertyList* = OBJECT 
 	VAR 
 		properties: PropertyArray; 
-		nofProperties-: LONGINT; 
+		nofProperties-: SIGNED32; 
 		onPropertyChanged-: WMEvents.EventSource; 
 		onLinkChanged-: WMEvents.EventSource; 
 		lock: Locks.RWLock; 
-		upNofChanges: LONGINT; 
+		upNofChanges: SIGNED32; 
 		upChanged: Property; 
 		propertyChanged, linkChanged: WMEvents.EventListener; 
 
@@ -339,7 +339,7 @@ TYPE
 		PROCEDURE ^ SetXML*(xml: XML.Element); 
 		PROCEDURE ^ FromXML*(xml: XML.Element); 
 		PROCEDURE ^ ToXML*(VAR element: XML.Element); 
-		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: LONGINT); 
+		PROCEDURE ^ WriteXML*(w: Streams.Writer; context: ANY; indent: SIGNED32); 
 		PROCEDURE ^ Changed(p: Property); 
 		PROCEDURE ^ Finalize*; 
 	END PropertyList; 
@@ -350,9 +350,9 @@ VAR
 	StringPropertiesInfo, StringLinksInfo: String; 
 	anonymous: String; 
 
-	PROCEDURE ^ Indent(w: Streams.Writer; indent: LONGINT); 
-	PROCEDURE ^ ReadCharDataInt(xml: XML.Element): LONGINT; 
-	PROCEDURE ^ NewIntChars(i: HUGEINT): XML.Chars; 
+	PROCEDURE ^ Indent(w: Streams.Writer; indent: SIGNED32); 
+	PROCEDURE ^ ReadCharDataInt(xml: XML.Element): SIGNED32; 
+	PROCEDURE ^ NewIntChars(i: SIGNED64): XML.Chars; 
 	PROCEDURE ^ NewBoolean*(): Property; 
 	PROCEDURE ^ NewSet*(): Property; 
 	PROCEDURE ^ NewInt32*(): Property; 

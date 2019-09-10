@@ -16,8 +16,8 @@ VAR
 	PROCEDURE ^ Halt*(cause: ARRAY OF CHAR); 
 	PROCEDURE ^ Kill*; 
 	PROCEDURE ^ Stop*; 
-	PROCEDURE ^ OpenScript*(t: Texts.Text; pos, num: LONGINT; executorObj, context: Objects.Object): BOOLEAN; 
-	PROCEDURE ^ SetProgress*(i: INTEGER); 
+	PROCEDURE ^ OpenScript*(t: Texts.Text; pos, num: SIGNED32; executorObj, context: Objects.Object): BOOLEAN; 
+	PROCEDURE ^ SetProgress*(i: SIGNED16); 
 	PROCEDURE ^ Init*; 
 BEGIN
 END antsSecurity.

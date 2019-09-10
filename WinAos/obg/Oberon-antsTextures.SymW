@@ -5,8 +5,8 @@ TYPE
 	tArrayChain* = POINTER TO tArrayChainDesc; 
 
 	tArrayChainDesc* = RECORD 
-		A: POINTER TO ARRAY OF ARRAY OF LONGREAL; 
-		msize: INTEGER; 
+		A: POINTER TO ARRAY OF ARRAY OF FLOAT64; 
+		msize: SIGNED16; 
 		next: tArrayChain; 
 	END; 
 

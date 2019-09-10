@@ -13,7 +13,7 @@ TYPE
 	Connection = POINTER TO RECORD 
 		out: Streams.Writer; 
 		in: Streams.Reader; 
-		tid, uid, sid: INTEGER; 
+		tid, uid, sid: SIGNED16; 
 		ipaddr: ARRAY 16 OF CHAR; 
 		user, pw: ARRAY 64 OF CHAR; 
 		path, mask, fnLast: ARRAY 256 OF CHAR; 
@@ -27,12 +27,12 @@ TYPE
 
 		PROCEDURE ^ New0*(CONST name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
-		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD); 
+		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER); 
 		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
-		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ Finalize*; 
 	END FileSystem; 
 
@@ -49,10 +49,10 @@ TYPE
 		PROCEDURE ^ Write*(VAR r: Files.Rider; x: CHAR); 
 		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Length*(): Files.Size; 
-		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
-		PROCEDURE ^ SetDate*(t, d: LONGINT); 
+		PROCEDURE ^ GetDate*(VAR t, d: SIGNED32); 
+		PROCEDURE ^ SetDate*(t, d: SIGNED32); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
-		PROCEDURE ^ Register0*(VAR res: WORD); 
+		PROCEDURE ^ Register0*(VAR res: INTEGER); 
 		PROCEDURE ^ Update*; 
 	END File; 
 
@@ -60,21 +60,21 @@ TYPE
 	VAR 
 		connection: TCP.Connection; 
 
-		PROCEDURE ^ Connect(CONST host: ARRAY OF CHAR; port: LONGINT; VAR c: Connection); 
+		PROCEDURE ^ Connect(CONST host: ARRAY OF CHAR; port: SIGNED32; VAR c: Connection); 
 	END TCPSender; 
 
-	PROCEDURE ^ SendSMBHeader(ntb: INTEGER; cmd: CHAR; c: Connection); 
+	PROCEDURE ^ SendSMBHeader(ntb: SIGNED16; cmd: CHAR; c: Connection); 
 	PROCEDURE ^ RecieveResponse(cmd: CHAR; c: Connection): BOOLEAN; 
 	PROCEDURE ^ CheckFFSMB(c: Connection): BOOLEAN; 
 	PROCEDURE ^ ReplaceSlash(VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ NegotiateProtocol(c: Connection): BOOLEAN; 
 	PROCEDURE ^ SessionSetup(c: Connection): BOOLEAN; 
 	PROCEDURE ^ TreeConnect(c: Connection): BOOLEAN; 
-	PROCEDURE ^ Trans2Find(c: Connection; cmd: INTEGER): BOOLEAN; 
-	PROCEDURE ^ OpenAndX(c: Connection; name: ARRAY OF CHAR; access: INTEGER; create: BOOLEAN): INTEGER; 
-	PROCEDURE ^ CloseFile(c: Connection; key: LONGINT); 
+	PROCEDURE ^ Trans2Find(c: Connection; cmd: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ OpenAndX(c: Connection; name: ARRAY OF CHAR; access: SIGNED16; create: BOOLEAN): SIGNED16; 
+	PROCEDURE ^ CloseFile(c: Connection; key: SIGNED32); 
 	PROCEDURE ^ NewFS*(context: Files.Parameters); 
 	PROCEDURE ^ StartClient(VAR c: Connection; VAR connection: TCP.Connection): BOOLEAN; 
-	PROCEDURE ^ GetDateTime(t: ARRAY OF LONGINT; VAR datetime: Dates.DateTime); 
+	PROCEDURE ^ GetDateTime(t: ARRAY OF SIGNED32; VAR datetime: Dates.DateTime); 
 BEGIN
 END SambaClient.

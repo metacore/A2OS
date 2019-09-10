@@ -14,7 +14,7 @@ TYPE
 		w: Streams.Writer; 
 
 		PROCEDURE ^  & Init*(initialSize: SIZE); 
-		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ GetWriter*(): Streams.Writer; 
 		PROCEDURE ^ GetLength*(): SIZE; 
@@ -27,8 +27,8 @@ VAR
 	OPERATOR ^ "+"-(a: String; CONST b: ARRAY OF CHAR): String; 
 	OPERATOR ^ "+"-(a: String; b: CHAR): String; 
 	OPERATOR ^ "+"-(a, b: String): String; 
-	OPERATOR ^ "+"-(a: String; b: HUGEINT): String; 
-	OPERATOR ^ "+"-(a: String; b: LONGREAL): String; 
+	OPERATOR ^ "+"-(a: String; b: SIGNED64): String; 
+	OPERATOR ^ "+"-(a: String; b: FLOAT64): String; 
 	PROCEDURE ^ Length*(CONST string: ARRAY OF CHAR): SIZE; 
 	PROCEDURE ^ Find*(CONST string: ARRAY OF CHAR; pos: SIZE; ch: CHAR): SIZE; 
 	PROCEDURE ^ Count*(CONST string: ARRAY OF CHAR; ch: CHAR): SIZE; 
@@ -41,7 +41,7 @@ VAR
 	PROCEDURE ^ ConcatX*(CONST s1, s2: ARRAY OF CHAR; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ Append*(VAR s: ARRAY OF CHAR; CONST appendix: ARRAY OF CHAR); 
 	PROCEDURE ^ AppendX*(VAR s: ARRAY OF CHAR; CONST appendix: ARRAY OF CHAR); 
-	PROCEDURE ^ AppendInt*(VAR s: ARRAY OF CHAR; num: HUGEINT); 
+	PROCEDURE ^ AppendInt*(VAR s: ARRAY OF CHAR; num: SIGNED64); 
 	PROCEDURE ^ AppendChar*(VAR s: ARRAY OF CHAR; ch: CHAR); 
 	PROCEDURE ^ Copy*(CONST src: ARRAY OF CHAR; index, len: SIZE; VAR dst: ARRAY OF CHAR); 
 	PROCEDURE ^ Delete*(VAR s: ARRAY OF CHAR; index, count: SIZE); 
@@ -59,19 +59,19 @@ VAR
 	PROCEDURE ^ IsPrintable*(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ BoolToStr*(b: BOOLEAN; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ StrToBool*(CONST s: ARRAY OF CHAR; VAR b: BOOLEAN); 
-	PROCEDURE ^ IntToStr*(x: HUGEINT; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ StrToInt*(CONST str: ARRAY OF CHAR; VAR val: LONGINT); 
-	PROCEDURE ^ StrToHInt*(CONST str: ARRAY OF CHAR; VAR val: HUGEINT); 
+	PROCEDURE ^ IntToStr*(x: SIGNED64; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ StrToInt*(CONST str: ARRAY OF CHAR; VAR val: SIGNED32); 
+	PROCEDURE ^ StrToHInt*(CONST str: ARRAY OF CHAR; VAR val: SIGNED64); 
 	PROCEDURE ^ StrToSize*(CONST str: ARRAY OF CHAR; VAR val: SIZE); 
-	PROCEDURE ^ StrToIntPos*(CONST str: ARRAY OF CHAR; VAR val: LONGINT; VAR i: SIZE); 
-	PROCEDURE ^ StrToHIntPos*(CONST str: ARRAY OF CHAR; VAR val: HUGEINT; VAR i: SIZE); 
+	PROCEDURE ^ StrToIntPos*(CONST str: ARRAY OF CHAR; VAR val: SIGNED32; VAR i: SIZE); 
+	PROCEDURE ^ StrToHIntPos*(CONST str: ARRAY OF CHAR; VAR val: SIGNED64; VAR i: SIZE); 
 	PROCEDURE ^ StrToSizePos*(CONST str: ARRAY OF CHAR; VAR val: SIZE; VAR i: SIZE); 
-	PROCEDURE ^ IntToHexStr*(h: HUGEINT; width: WORD; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ HexStrToInt*(CONST string: ARRAY OF CHAR; VAR val: LONGINT; VAR res: WORD); 
-	PROCEDURE ^ HexStrToSize*(CONST string: ARRAY OF CHAR; VAR val: SIZE; VAR res: WORD); 
-	PROCEDURE ^ FloatToStr*(x: LONGREAL; n, f, D: LONGINT; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ IntToHexStr*(h: SIGNED64; width: INTEGER; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ HexStrToInt*(CONST string: ARRAY OF CHAR; VAR val: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ HexStrToSize*(CONST string: ARRAY OF CHAR; VAR val: SIZE; VAR res: INTEGER); 
+	PROCEDURE ^ FloatToStr*(x: FLOAT64; n, f, D: SIGNED32; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ AddressToStr*(adr: ADDRESS; VAR str: ARRAY OF CHAR); 
-	PROCEDURE ^ StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL); 
+	PROCEDURE ^ StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: FLOAT64); 
 	PROCEDURE ^ SetToStr*(set: SET; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ StrToSet*(CONST str: ARRAY OF CHAR; VAR set: SET); 
 	PROCEDURE ^ TimeToStr*(time: Dates.DateTime; VAR s: ARRAY OF CHAR); 

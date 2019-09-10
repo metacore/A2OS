@@ -15,9 +15,9 @@ CONST
 VAR 
 	W: Texts.Writer; 
 
-	PROCEDURE ^ UnzipFile*(in, out: Files.File; VAR res: WORD); 
+	PROCEDURE ^ UnzipFile*(in, out: Files.File; VAR res: INTEGER); 
 	PROCEDURE ^ Unzip*; 
-	PROCEDURE ^ ZipFile*(in, out: Files.File; level, strategy: SHORTINT; VAR res: WORD); 
+	PROCEDURE ^ ZipFile*(in, out: Files.File; level, strategy: SIGNED8; VAR res: INTEGER); 
 	PROCEDURE ^ Zip*; 
 BEGIN
 END GZip.

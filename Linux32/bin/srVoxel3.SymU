@@ -58,7 +58,7 @@ TYPE
 
 	SlantBloc* = OBJECT (SerpBloc)
 
-		PROCEDURE ^ fn(i, j, k: INTEGER): INTEGER; 
+		PROCEDURE ^ fn(i, j, k: SIGNED16): SIGNED16; 
 		PROCEDURE ^  & init*(a, b: Voxel); 
 	END SlantBloc; 
 

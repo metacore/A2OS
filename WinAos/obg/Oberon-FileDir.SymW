@@ -5,9 +5,9 @@ CONST
 TYPE 
 	FileName* = Files.FileName; 
 
-	EntryHandler* = PROCEDURE (name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN); 
+	EntryHandler* = PROCEDURE (name: ARRAY OF CHAR; time, date, size: SIGNED32; VAR continue: BOOLEAN); 
 
-	FileEnumerator* = PROCEDURE (path, name: ARRAY OF CHAR; time, date, size: LONGINT; attrs: SET); 
+	FileEnumerator* = PROCEDURE (path, name: ARRAY OF CHAR; time, date, size: SIGNED32; attrs: SET); 
 VAR 
 	PathChar*: CHAR; 
 

@@ -20,7 +20,7 @@ TYPE
 		PROCEDURE ^  & Init*(scanner: Scanner.Scanner); 
 		PROCEDURE ^ Next; 
 		PROCEDURE ^ IsCurrent(token: Token): BOOLEAN; 
-		PROCEDURE ^ SkipSpace(): LONGINT; 
+		PROCEDURE ^ SkipSpace(): SIGNED32; 
 		PROCEDURE ^ Expect(token: Token); 
 		PROCEDURE ^ Get(token: Token): BOOLEAN; 
 		PROCEDURE ^ ParseDocument*(document: Tree.Document); 

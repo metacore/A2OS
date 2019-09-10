@@ -11,14 +11,14 @@ TYPE
 	Remapping = POINTER TO RECORD 
 		ch: CHAR; 
 		flags: SET; 
-		keysym: LONGINT; 
+		keysym: SIGNED32; 
 	END; 
 
 	HotKey = POINTER TO RECORD 
 		ch: CHAR; 
 		flags: SET; 
 		keyString: XML.String; 
-		keysym: LONGINT; 
+		keysym: SIGNED32; 
 		command: XML.String; 
 		remapping: Remapping; 
 		next: HotKey; 
@@ -28,9 +28,9 @@ VAR
 	hasErrors: BOOLEAN; 
 	manager: WMWindowManager.WindowManager; 
 
-	PROCEDURE ^ ParseKeyString(keyString: XML.String; VAR ch: CHAR; VAR flags: SET; VAR keysym: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ParseKeyString(keyString: XML.String; VAR ch: CHAR; VAR flags: SET; VAR keysym: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ ParseRemapping(hk: HotKey): BOOLEAN; 
-	PROCEDURE ^ StringToKeysym(CONST string: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ StringToKeysym(CONST string: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ IsDuplicate(hotkey: HotKey): BOOLEAN; 
 	PROCEDURE ^ AddHotKey(keys, command: XML.String); 
 	PROCEDURE ^ CreateHotKeyList(doc: XML.Document); 

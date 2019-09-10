@@ -3,9 +3,9 @@ MODULE vyLCpx IN Oberon;
 CONST 
 	idversion* = \" v0r0d1"\; 
 TYPE 
-	real = LONGREAL; 
+	real = FLOAT64; 
 
-	index = LONGINT; 
+	index = SIGNED32; 
 
 	PROCEDURE ^ PolarToC*(len: index; VAR rho, phi: ARRAY OF real; VAR Re, Im: ARRAY OF real; start: index); 
 BEGIN

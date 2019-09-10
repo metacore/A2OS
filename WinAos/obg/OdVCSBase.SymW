@@ -25,7 +25,7 @@ TYPE
 
 	TLinkNode = RECORD 
 		next: PLinkNode; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 	END; 
 
 	THashList = ARRAY HashLen OF PLinkNode; 
@@ -37,12 +37,12 @@ TYPE
 	TData = POINTER TO ARRAY OF CHAR; 
 
 	TLog* = RECORD 
-		versionID*: LONGINT; 
+		versionID*: SIGNED32; 
 		author*: ARRAY 127 OF CHAR; 
 		logText*: ARRAY 256 OF CHAR; 
 		date*: ARRAY 22 OF CHAR; 
-		lenOfDelta: LONGINT; 
-		lenOfOld: LONGINT; 
+		lenOfDelta: SIGNED32; 
+		lenOfOld: SIGNED32; 
 		flags*: SET; 
 	END; 
 
@@ -54,34 +54,34 @@ TYPE
 VAR 
 	errMsg*: ARRAY 256 OF CHAR; 
 	formatStr: ARRAY (FormatLen + 1) OF CHAR; 
-	res: WORD; 
+	res: INTEGER; 
 
 	PROCEDURE ^ splitDirBase(fileName: ARRAY OF CHAR; VAR dir, base: ARRAY OF CHAR); 
-	PROCEDURE ^ makeDirs(name: ARRAY OF CHAR): WORD; 
+	PROCEDURE ^ makeDirs(name: ARRAY OF CHAR): INTEGER; 
 	PROCEDURE ^ DateTime*(VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ Hash(toHash: TWorkBytes): LONGINT; 
-	PROCEDURE ^ AccessArray(arr: TData; len, left, right: LONGINT; VAR ret: ARRAY OF CHAR); 
-	PROCEDURE ^ BuildLinkList(new: TData; lenNew: LONGINT; hashList: PHashList); 
-	PROCEDURE ^ FindLongest(old, new: TData; lenOld, lenNew, oldPos: LONGINT; VAR copyStart: PLinkNode; VAR copyLen: LONGINT; hashList: PHashList); 
-	PROCEDURE ^ EmitAdd(old: TData; VAR dr: Files.Rider; offset, length: LONGINT); 
-	PROCEDURE ^ EmitCopy(VAR dr: Files.Rider; offset, length: LONGINT); 
-	PROCEDURE ^ CreateDelta*(old, new: TData; VAR dr: Files.Rider; lenOld, lenNew: LONGINT); 
+	PROCEDURE ^ Hash(toHash: TWorkBytes): SIGNED32; 
+	PROCEDURE ^ AccessArray(arr: TData; len, left, right: SIGNED32; VAR ret: ARRAY OF CHAR); 
+	PROCEDURE ^ BuildLinkList(new: TData; lenNew: SIGNED32; hashList: PHashList); 
+	PROCEDURE ^ FindLongest(old, new: TData; lenOld, lenNew, oldPos: SIGNED32; VAR copyStart: PLinkNode; VAR copyLen: SIGNED32; hashList: PHashList); 
+	PROCEDURE ^ EmitAdd(old: TData; VAR dr: Files.Rider; offset, length: SIGNED32); 
+	PROCEDURE ^ EmitCopy(VAR dr: Files.Rider; offset, length: SIGNED32); 
+	PROCEDURE ^ CreateDelta*(old, new: TData; VAR dr: Files.Rider; lenOld, lenNew: SIGNED32); 
 	PROCEDURE ^ ApplyDelta*(old, new: TData; dr: Files.Rider); 
 	PROCEDURE ^ NameToDelta(name: TFileName; VAR df: TFileName); 
 	PROCEDURE ^ NameToBak(name: TFileName; VAR df: TFileName); 
-	PROCEDURE ^ GetTextLen(VAR fr: Files.Rider; f: Files.File): LONGINT; 
-	PROCEDURE ^ GetNewestVersion(fr: Files.Rider; f: Files.File): LONGINT; 
-	PROCEDURE ^ GetDiffPos(fr: Files.Rider; f: Files.File; n: LONGINT): Files.Position; 
-	PROCEDURE ^ Init*(name: TFileName): LONGINT; 
-	PROCEDURE ^ GetLog*(name: TFileName; n: LONGINT; VAR log: TLog); 
-	PROCEDURE ^ GetDelta*(name: TFileName; n: LONGINT; VAR df: Files.File; VAR dr: Files.Rider); 
-	PROCEDURE ^ SetLog*(name: TFileName; n: INTEGER; log: TLog); 
-	PROCEDURE ^ GetDeltaList*(name: TFileName; VAR list: TDList): INTEGER; 
+	PROCEDURE ^ GetTextLen(VAR fr: Files.Rider; f: Files.File): SIGNED32; 
+	PROCEDURE ^ GetNewestVersion(fr: Files.Rider; f: Files.File): SIGNED32; 
+	PROCEDURE ^ GetDiffPos(fr: Files.Rider; f: Files.File; n: SIGNED32): Files.Position; 
+	PROCEDURE ^ Init*(name: TFileName): SIGNED32; 
+	PROCEDURE ^ GetLog*(name: TFileName; n: SIGNED32; VAR log: TLog); 
+	PROCEDURE ^ GetDelta*(name: TFileName; n: SIGNED32; VAR df: Files.File; VAR dr: Files.Rider); 
+	PROCEDURE ^ SetLog*(name: TFileName; n: SIGNED16; log: TLog); 
+	PROCEDURE ^ GetDeltaList*(name: TFileName; VAR list: TDList): SIGNED16; 
 	PROCEDURE ^ WriteTag(VAR rdr: Files.Rider; tag: CHAR; len: SIZE; VAR data: ARRAY OF CHAR); 
-	PROCEDURE ^ Create*(historyName, name: TFileName; log: TLog; flags: SET): LONGINT; 
-	PROCEDURE ^ NewVersion*(name: TFileName; log: TLog; flags: SET): LONGINT; 
-	PROCEDURE ^ newVersion(historyName, name: TFileName; log: TLog; flags: SET): LONGINT; 
-	PROCEDURE ^ View*(name: TFileName; n: LONGINT; newFileName: TFileName): WORD; 
-	PROCEDURE ^ Extract*(name: TFileName; n: LONGINT): LONGINT; 
+	PROCEDURE ^ Create*(historyName, name: TFileName; log: TLog; flags: SET): SIGNED32; 
+	PROCEDURE ^ NewVersion*(name: TFileName; log: TLog; flags: SET): SIGNED32; 
+	PROCEDURE ^ newVersion(historyName, name: TFileName; log: TLog; flags: SET): SIGNED32; 
+	PROCEDURE ^ View*(name: TFileName; n: SIGNED32; newFileName: TFileName): INTEGER; 
+	PROCEDURE ^ Extract*(name: TFileName; n: SIGNED32): SIGNED32; 
 BEGIN
 END OdVCSBase.

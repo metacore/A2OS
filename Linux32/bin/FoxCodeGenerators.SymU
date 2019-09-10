@@ -70,7 +70,7 @@ TYPE
 		class-: IntermediateCode.RegisterClass; 
 		lastuse-: SIZE; 
 		spilled*, spillable*: BOOLEAN; 
-		register*, offset*: LONGINT; 
+		register*, offset*: SIGNED32; 
 		parts-: SIZE; 
 	END; 
 
@@ -80,7 +80,7 @@ TYPE
 		free: Ticket; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Enter*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; spillable, spilled: BOOLEAN; offset: LONGINT; lastuse: SIZE): Ticket; 
+		PROCEDURE ^ Enter*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: SIGNED32; spillable, spilled: BOOLEAN; offset: SIGNED32; lastuse: SIZE): Ticket; 
 		PROCEDURE ^ Remove*(ticket: Ticket); 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 	END Tickets; 
@@ -105,28 +105,28 @@ TYPE
 	PhysicalRegisters* = OBJECT 
 
 		PROCEDURE ^  & InitPhysicalRegisters; 
-		PROCEDURE ^ Allocate*(index: LONGINT; virtualRegister: Ticket); 
-		PROCEDURE ^ Mapped*(physical: LONGINT): Ticket; 
-		PROCEDURE ^ Free*(index: LONGINT); 
-		PROCEDURE ^ NextFree*(CONST type: IntermediateCode.Type): LONGINT; 
-		PROCEDURE ^ AllocationHint*(index: LONGINT); 
-		PROCEDURE ^ SetReserved*(index: LONGINT; res: BOOLEAN); 
-		PROCEDURE ^ Reserved*(index: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Allocate*(index: SIGNED32; virtualRegister: Ticket); 
+		PROCEDURE ^ Mapped*(physical: SIGNED32): Ticket; 
+		PROCEDURE ^ Free*(index: SIGNED32); 
+		PROCEDURE ^ NextFree*(CONST type: IntermediateCode.Type): SIGNED32; 
+		PROCEDURE ^ AllocationHint*(index: SIGNED32); 
+		PROCEDURE ^ SetReserved*(index: SIGNED32; res: BOOLEAN); 
+		PROCEDURE ^ Reserved*(index: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
-		PROCEDURE ^ NumberRegisters*(): LONGINT; 
+		PROCEDURE ^ NumberRegisters*(): SIGNED32; 
 	END PhysicalRegisters; 
 
 	SpillStack* = OBJECT 
 	VAR 
 		spillStack: ARRAY MaxSpilledRegisters OF Ticket; 
-		spillStackSize, maxSpillStackSize: LONGINT; 
+		spillStackSize, maxSpillStackSize: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ NextFree*(): LONGINT; 
-		PROCEDURE ^ Allocate*(offset: LONGINT; ticket: Ticket); 
-		PROCEDURE ^ Free*(offset: LONGINT); 
-		PROCEDURE ^ Size*(): LONGINT; 
-		PROCEDURE ^ MaxSize*(): LONGINT; 
+		PROCEDURE ^ NextFree*(): SIGNED32; 
+		PROCEDURE ^ Allocate*(offset: SIGNED32; ticket: Ticket); 
+		PROCEDURE ^ Free*(offset: SIGNED32); 
+		PROCEDURE ^ Size*(): SIGNED32; 
+		PROCEDURE ^ MaxSize*(): SIGNED32; 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 	END SpillStack; 
 
@@ -137,26 +137,26 @@ TYPE
 		tickets-: Tickets; 
 		spillStack-: SpillStack; 
 
-		PROCEDURE ^  & InitTicketGenerator*(diagnostics: Diagnostics.Diagnostics; optimize: BOOLEAN; numberRegisterParts: LONGINT; physicalRegisters: PhysicalRegisters); 
+		PROCEDURE ^  & InitTicketGenerator*(diagnostics: Diagnostics.Diagnostics; optimize: BOOLEAN; numberRegisterParts: SIGNED32; physicalRegisters: PhysicalRegisters); 
 		PROCEDURE ^ Section*(in: IntermediateCode.Section; out: BinaryCode.Section); 
-		PROCEDURE ^ GetPartType*(CONST type: IntermediateCode.Type; part: LONGINT; VAR typePart: IntermediateCode.Type); 
+		PROCEDURE ^ GetPartType*(CONST type: IntermediateCode.Type; part: SIGNED32; VAR typePart: IntermediateCode.Type); 
 		PROCEDURE ^ ToSpillStack*(ticket: Ticket); 
-		PROCEDURE ^ AllocateSpillStack*(size: LONGINT); 
+		PROCEDURE ^ AllocateSpillStack*(size: SIGNED32); 
 		PROCEDURE ^ ToRegister*(ticket: Ticket); 
 		PROCEDURE ^ ExchangeTickets*(ticket1, ticket2: Ticket); 
 		PROCEDURE ^ Spill*(ticket: Ticket); 
 		PROCEDURE ^ UnSpill*(ticket: Ticket); 
 		PROCEDURE ^ GetPreferredSpill*(CONST type: IntermediateCode.Type): Ticket; 
-		PROCEDURE ^ ForceFreeRegister*(CONST type: IntermediateCode.Type): LONGINT; 
-		PROCEDURE ^ ReservePhysicalRegister*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; lastUse: SIZE): Ticket; 
+		PROCEDURE ^ ForceFreeRegister*(CONST type: IntermediateCode.Type): SIGNED32; 
+		PROCEDURE ^ ReservePhysicalRegister*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: SIGNED32; lastUse: SIZE): Ticket; 
 		PROCEDURE ^ TemporaryTicket*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type): Ticket; 
-		PROCEDURE ^ MapVirtualRegister*(virtualRegister: SIZE; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type; part: LONGINT); 
+		PROCEDURE ^ MapVirtualRegister*(virtualRegister: SIZE; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type; part: SIGNED32); 
 		PROCEDURE ^ ResetTicket(ticket: Ticket); 
 		PROCEDURE ^ FreeTicket(ticket: Ticket); 
 		PROCEDURE ^ UnmapTicket*(ticket: Ticket); 
-		PROCEDURE ^ TryAllocate*(CONST operand: IntermediateCode.Operand; part: LONGINT); 
+		PROCEDURE ^ TryAllocate*(CONST operand: IntermediateCode.Operand; part: SIGNED32); 
 		PROCEDURE ^ TryUnmap*(CONST operand: IntermediateCode.Operand); 
-		PROCEDURE ^ ReleaseHint*(register: LONGINT); 
+		PROCEDURE ^ ReleaseHint*(register: SIGNED32); 
 		PROCEDURE ^ ReserveTicketRegister*(ticket: Ticket; reserved: BOOLEAN); 
 		PROCEDURE ^ ReserveOperandRegisters*(CONST operand: IntermediateCode.Operand; reserved: BOOLEAN); 
 	END GeneratorWithTickets; 

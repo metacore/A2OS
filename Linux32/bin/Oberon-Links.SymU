@@ -10,7 +10,7 @@ TYPE
 		obj*: Objects.Object; 
 	END; 
 
-	PROCEDURE ^ Atom(lib: Objects.Library; name: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ Atom(lib: Objects.Library; name: ARRAY OF CHAR): SIGNED16; 
 	PROCEDURE ^ WriteRef(VAR r: Files.Rider; lib: Objects.Library; obj: Objects.Object); 
 	PROCEDURE ^ ReadRef(VAR r: Files.Rider; lib: Objects.Library; VAR obj: Objects.Object); 
 	PROCEDURE ^ StoreLinks*(VAR R: Files.Rider; lib: Objects.Library; list: Link); 

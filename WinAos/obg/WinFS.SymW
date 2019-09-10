@@ -22,7 +22,7 @@ TYPE
 
 	PFileName = POINTER TO FileName; 
 
-	NotificationProc* = PROCEDURE (type: LONGINT; drives: SET); 
+	NotificationProc* = PROCEDURE (type: SIGNED32; drives: SET); 
 
 	Notification = POINTER TO RECORD 
 		p: NotificationProc; 
@@ -42,10 +42,10 @@ TYPE
 	VAR 
 		oldFiles, newFiles: Kernel.FinalizedCollection; 
 		search: SearchByName; 
-		fileKey: LONGINT; 
+		fileKey: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ GetNextFileKey(): LONGINT; 
+		PROCEDURE ^ GetNextFileKey(): SIGNED32; 
 		PROCEDURE ^ Register(F: File); 
 		PROCEDURE ^ Unregister(F: File); 
 		PROCEDURE ^ AddNew(F: File); 
@@ -65,12 +65,12 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ New0*(CONST name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
-		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; fold: Files.File; VAR res: WORD); 
+		PROCEDURE ^ Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Rename0*(CONST old, new: ARRAY OF CHAR; fold: Files.File; VAR res: INTEGER); 
 		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
-		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	END AliasFileSystem; 
 
@@ -81,19 +81,19 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ New0(name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Old0(name: ARRAY OF CHAR): Files.File; 
-		PROCEDURE ^ Delete0(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Rename0(old, new: ARRAY OF CHAR; fold: Files.File; VAR res: WORD); 
+		PROCEDURE ^ Delete0(name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Rename0(old, new: ARRAY OF CHAR; fold: Files.File; VAR res: INTEGER); 
 		PROCEDURE ^ Enumerate1(mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator; useprefix: BOOLEAN); 
-		PROCEDURE ^ FileKey(name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ CreateDirectory0(name: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ RemoveDirectory0(name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ FileKey(name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ CreateDirectory0(name: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ RemoveDirectory0(name: ARRAY OF CHAR; force: BOOLEAN; VAR key: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ Finalize; 
 		PROCEDURE ^ Has*(CONST fileName: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN; 
 	END WinFileSystem; 
 
 	Buffer = POINTER TO RECORD 
 		data: ARRAY BufferSize OF CHAR; 
-		apos, len: LONGINT; 
+		apos, len: SIGNED32; 
 		dirty: BOOLEAN; 
 	END; 
 
@@ -103,26 +103,26 @@ TYPE
 		tfname: PFileName; 
 		hfile: Kernel32.HANDLE; 
 		buffer: Buffer; 
-		fsize, fpos: LONGINT; 
+		fsize, fpos: SIGNED32; 
 		fileSystem: WinFileSystem; 
 
-		PROCEDURE ^  & Init*(VAR name: ARRAY OF CHAR; hfile: Kernel32.HANDLE; key: LONGINT; fs: WinFileSystem); 
+		PROCEDURE ^  & Init*(VAR name: ARRAY OF CHAR; hfile: Kernel32.HANDLE; key: SIGNED32; fs: WinFileSystem); 
 		PROCEDURE ^ Set*(VAR r: Files.Rider; pos: Files.Position); 
 		PROCEDURE ^ Pos*(VAR r: Files.Rider): Files.Position; 
 		PROCEDURE ^ WriteBuffer; 
-		PROCEDURE ^ ReadBuffer(apos: LONGINT); 
+		PROCEDURE ^ ReadBuffer(apos: SIGNED32); 
 		PROCEDURE ^ Read*(VAR r: Files.Rider; VAR x: CHAR); 
 		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Write*(VAR r: Files.Rider; x: CHAR); 
 		PROCEDURE ^ WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Length*(): Files.Size; 
-		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
-		PROCEDURE ^ SetDate*(t, d: LONGINT); 
+		PROCEDURE ^ GetDate*(VAR t, d: SIGNED32); 
+		PROCEDURE ^ SetDate*(t, d: SIGNED32); 
 		PROCEDURE ^ GetAttributes*(): SET; 
 		PROCEDURE ^ SetAttributes*(a: SET); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
 		PROCEDURE ^ ToTemp(): BOOLEAN; 
-		PROCEDURE ^ Register0*(VAR res: WORD); 
+		PROCEDURE ^ Register0*(VAR res: INTEGER); 
 		PROCEDURE ^ Update*; 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ Close*; 
@@ -141,8 +141,8 @@ VAR
 	PROCEDURE ^ UpperCase(VAR src, dst: ARRAY OF CHAR); 
 	PROCEDURE ^ TempName(VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ FullPathName(name: ARRAY OF CHAR; VAR fname: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ FileFlags(flags: WORDSET): SET; 
-	PROCEDURE ^ WindowsFlags(flags: SET): WORDSET; 
+	PROCEDURE ^ FileFlags(flags: INTEGERSET): SET; 
+	PROCEDURE ^ WindowsFlags(flags: SET): INTEGERSET; 
 	PROCEDURE ^ NewFS*(context: Files.Parameters); 
 	PROCEDURE ^ Join(a1, a2, a3: ARRAY OF CHAR; VAR res: ARRAY OF CHAR); 
 	PROCEDURE ^ MountDrive(CONST drive: ARRAY OF CHAR; context: Commands.Context); 
@@ -156,14 +156,14 @@ VAR
 	PROCEDURE ^ SameName*(VAR a, b: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ CheckPath(fullName: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ CheckName*(name: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ GetAttributes*(file: ARRAY OF CHAR): WORDSET; 
-	PROCEDURE ^ SetAttributes*(file: ARRAY OF CHAR; attrs: WORDSET); 
-	PROCEDURE ^ SetFileAttributes*(file: ARRAY OF CHAR; attrs: WORDSET); 
+	PROCEDURE ^ GetAttributes*(file: ARRAY OF CHAR): INTEGERSET; 
+	PROCEDURE ^ SetAttributes*(file: ARRAY OF CHAR; attrs: INTEGERSET); 
+	PROCEDURE ^ SetFileAttributes*(file: ARRAY OF CHAR; attrs: INTEGERSET); 
 	PROCEDURE ^ GetWorkingDirectory*(VAR path: ARRAY OF CHAR); 
 	PROCEDURE ^ ChangeDirectory*(path: ARRAY OF CHAR; VAR done: BOOLEAN); 
 	PROCEDURE ^ GetTempDirectory*(VAR path: ARRAY OF CHAR); 
 	PROCEDURE ^ RelFileName*(fileName: ARRAY OF CHAR; VAR relFileName: ARRAY OF CHAR); 
-	PROCEDURE ^ DeviceNotification*(type: LONGINT; drives: SET); 
+	PROCEDURE ^ DeviceNotification*(type: SIGNED32; drives: SET); 
 	PROCEDURE ^ RegisterNotification*(p: NotificationProc); 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ AddSearchPath*(context: Commands.Context); 

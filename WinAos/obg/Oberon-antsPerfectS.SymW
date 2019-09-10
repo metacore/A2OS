@@ -6,8 +6,8 @@ TYPE
 
 	tSamplingSchemeDesc = RECORD (vyBase.ObjDesc)
 		c: antsMC.Chain; 
-		nrsamples: LONGINT; 
-		maxnrsamples: LONGINT; 
+		nrsamples: SIGNED32; 
+		maxnrsamples: SIGNED32; 
 		coalescence: BOOLEAN; 
 	END; 
 
@@ -17,7 +17,7 @@ TYPE
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Compare(A1, A2: antsArrayObjects.tINTEGERObject): BOOLEAN; 
-	PROCEDURE ^ Power2(l: LONGINT): LONGINT; 
+	PROCEDURE ^ Power2(l: SIGNED32): SIGNED32; 
 	PROCEDURE ^ DoRunScheme(S: tSamplingScheme); 
 	PROCEDURE ^ RunScheme*; 
 	PROCEDURE ^ InitScheme*; 

@@ -14,6 +14,6 @@ TYPE
 
 	PROCEDURE ^ GetDescription*(CONST name: ARRAY OF CHAR): Description; 
 	PROCEDURE ^ Emit*(context: Commands.Context); 
-	PROCEDURE ^ SizeInBlocks*(sizeInUnits, blockSize: LONGINT): LONGINT; 
+	PROCEDURE ^ SizeInBlocks*(sizeInUnits, blockSize: SIGNED32): SIGNED32; 
 BEGIN
 END FoxHardware.

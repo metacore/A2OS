@@ -16,8 +16,8 @@ TYPE
 		ftp: FTPClient.FTPClient; 
 
 		PROCEDURE ^  & New*(ftp: FTPClient.FTPClient); 
-		PROCEDURE ^ OpenPut*(CONST remoteName: ARRAY OF CHAR; VAR outw: Streams.Writer; VAR res: WORD); 
-		PROCEDURE ^ ClosePut*(VAR res: WORD); 
+		PROCEDURE ^ OpenPut*(CONST remoteName: ARRAY OF CHAR; VAR outw: Streams.Writer; VAR res: INTEGER); 
+		PROCEDURE ^ ClosePut*(VAR res: INTEGER); 
 	END FTPDropInterface; 
 
 	FTPDropTarget = OBJECT (WMDropTarget.DropTarget)
@@ -25,7 +25,7 @@ TYPE
 		ftp: FTPClient.FTPClient; 
 
 		PROCEDURE ^  & New*(ftp: FTPClient.FTPClient); 
-		PROCEDURE ^ GetInterface*(type: LONGINT): WMDropTarget.DropInterface; 
+		PROCEDURE ^ GetInterface*(type: SIGNED32): WMDropTarget.DropInterface; 
 	END FTPDropTarget; 
 
 	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -87,12 +87,12 @@ TYPE
 		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
 		PROCEDURE ^ DragArrivedList(sender, data: ANY); 
 		PROCEDURE ^ GetSelection(): FTPClient.FTPListing; 
-		PROCEDURE ^ CopyFile(target: WMDropTarget.DropFiles; CONST local, remote: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ CopyFile(target: WMDropTarget.DropFiles; CONST local, remote: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ IsFolder(entry: FTPClient.FTPEntry): BOOLEAN; 
 		PROCEDURE ^ GetImage(entry: FTPClient.FTPEntry): WMGraphics.Image; 
 	END FTPPanel; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	FileListPathProt: WMProperties.StringProperty; 
 	FileListFilterProt: WMProperties.StringProperty; 
 	FileListPrefixSearchProt: WMProperties.BooleanProperty; 

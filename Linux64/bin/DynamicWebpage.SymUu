@@ -75,7 +75,7 @@ TYPE
 
 	ActiveElementDescSetFactory* = PROCEDURE ():ActiveElementDescSet; 
 VAR 
-	idCounter: LONGINT; 
+	idCounter: SIGNED32; 
 
 	PROCEDURE ^ CreateNewObjectId*(): Strings.String; 
 BEGIN

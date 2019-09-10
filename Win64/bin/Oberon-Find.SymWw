@@ -19,7 +19,7 @@ VAR
 	PROCEDURE ^ ScanPar(VAR s: Texts.Scanner); 
 	PROCEDURE ^ OpenViewer(name: ARRAY OF CHAR; T: Texts.Text); 
 	PROCEDURE ^ BrowseFile(filename: ARRAY OF CHAR); 
-	PROCEDURE ^ ListFiles(name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN); 
+	PROCEDURE ^ ListFiles(name: ARRAY OF CHAR; time, date, size: SIGNED32; VAR continue: BOOLEAN); 
 	PROCEDURE ^ GetStrAttr(obj: Objects.Object; name: ARRAY OF CHAR; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ Search*; 
 	PROCEDURE ^ SetDetOutput*; 

@@ -10,35 +10,35 @@ TYPE
 	VAR 
 		data*: POINTER TO ARRAY OF CHAR; 
 		dev*: Disks.Device; 
-		block*: LONGINT; 
+		block*: SIGNED32; 
 		state: SET; 
 		nextHash, prevHash, nextLRU, prevLRU, nextDirty: Buffer; 
 
-		PROCEDURE ^  & Init*(size: LONGINT); 
+		PROCEDURE ^  & Init*(size: SIGNED32); 
 	END Buffer; 
 
 	Cache* = OBJECT {EXCLUSIVE} 
 	VAR 
-		blockSize*: LONGINT; 
+		blockSize*: SIGNED32; 
 		hashTable: POINTER TO ARRAY OF Buffer; 
 		lru: Buffer; 
-		lruClean: LONGINT; 
+		lruClean: SIGNED32; 
 		syncNow: BOOLEAN; 
 		timer: Objects.Timer; 
 
-		PROCEDURE ^ Acquire*(dev: Disks.Device; block: LONGINT; VAR buffer: Buffer; VAR valid: BOOLEAN); 
+		PROCEDURE ^ Acquire*(dev: Disks.Device; block: SIGNED32; VAR buffer: Buffer; VAR valid: BOOLEAN); 
 		PROCEDURE ^ Release*(buffer: Buffer; modified, written: BOOLEAN); 
 		PROCEDURE ^ Synchronize*; 
 		PROCEDURE ^ AcquireDirty(VAR list: Buffer); 
 		PROCEDURE ^ ReleaseDirty(buffer: Buffer); 
 		PROCEDURE ^ AwaitSync; 
-		PROCEDURE ^ Hash(dev: Disks.Device; block: LONGINT): LONGINT; 
-		PROCEDURE ^ MoveBuffer(buf: Buffer; from, to: LONGINT); 
+		PROCEDURE ^ Hash(dev: Disks.Device; block: SIGNED32): SIGNED32; 
+		PROCEDURE ^ MoveBuffer(buf: Buffer; from, to: SIGNED32); 
 		PROCEDURE ^ HandleTimeout; 
-		PROCEDURE ^  & Init*(blockSize, hashSize, cacheSize: LONGINT); 
+		PROCEDURE ^  & Init*(blockSize, hashSize, cacheSize: SIGNED32); 
 	BEGIN{ACTIVE, SAFE} 
 	END Cache; 
 
-	PROCEDURE ^ ReportError(dev: Disks.Device; block, num: LONGINT; res: WORD); 
+	PROCEDURE ^ ReportError(dev: Disks.Device; block, num: SIGNED32; res: INTEGER); 
 BEGIN
 END Caches.

@@ -6,12 +6,12 @@ TYPE
 	Device = OBJECT (Disks.Device)
 	VAR 
 		f: Files.File; 
-		size, cyls, hds, spt: LONGINT; 
+		size, cyls, hds, spt: SIGNED32; 
 		new: BOOLEAN; 
 
-		PROCEDURE ^ Transfer*(op, lba, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
-		PROCEDURE ^ GetSize*(VAR size, res: LONGINT); 
-		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: WORD); 
+		PROCEDURE ^ Transfer*(op, lba, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ GetSize*(VAR size, res: SIGNED32); 
+		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: INTEGER); 
 	END Device; 
 
 	PROCEDURE ^ Open*; 

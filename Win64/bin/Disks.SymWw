@@ -24,28 +24,28 @@ TYPE
 	END; 
 
 	Partition* = RECORD 
-		type*: LONGINT; 
-		start*, size*: LONGINT; 
+		type*: SIGNED32; 
+		start*, size*: SIGNED32; 
 		flags*: SET; 
-		ptblock*: LONGINT; 
-		ptoffset*: LONGINT; 
+		ptblock*: SIGNED32; 
+		ptoffset*: SIGNED32; 
 	END; 
 
 	PartitionTable* = POINTER TO ARRAY OF Partition; 
 
 	Device* = OBJECT (Plugins.Plugin)
 	VAR 
-		blockSize*: LONGINT; 
+		blockSize*: SIGNED32; 
 		flags*: SET; 
 		table*: PartitionTable; 
-		openCount*: LONGINT; 
-		NbytesRead*, NbytesWritten*, NnofReads*, NnofWrites*, NnofOthers*, NnofErrors*: HUGEINT; 
+		openCount*: SIGNED32; 
+		NbytesRead*, NbytesWritten*, NnofReads*, NnofWrites*, NnofOthers*, NnofErrors*: SIGNED64; 
 
-		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
-		PROCEDURE ^ GetSize*(VAR size: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Handle*(VAR msg: Message; VAR res: WORD); 
-		PROCEDURE ^ Open*(VAR res: WORD); 
-		PROCEDURE ^ Close*(VAR res: WORD); 
+		PROCEDURE ^ Transfer*(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ GetSize*(VAR size: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Handle*(VAR msg: Message; VAR res: INTEGER); 
+		PROCEDURE ^ Open*(VAR res: INTEGER); 
+		PROCEDURE ^ Close*(VAR res: INTEGER); 
 	END Device; 
 
 	EjectMsg* = RECORD (Message)
@@ -64,7 +64,7 @@ TYPE
 	END; 
 
 	GetGeometryMsg* = RECORD (Message)
-		cyls*, hds*, spt*: LONGINT; 
+		cyls*, hds*, spt*: SIGNED32; 
 	END; 
 
 	ShutdownMsg* = RECORD (Message)
@@ -76,12 +76,12 @@ VAR
 
 	PROCEDURE ^ InitDevice*(d: Device); 
 	PROCEDURE ^ Resize(VAR p: PartitionTable; n: SIZE); 
-	PROCEDURE ^ Get4(VAR b: ARRAY OF CHAR; i: LONGINT): LONGINT; 
-	PROCEDURE ^ Extended(type: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Get4(VAR b: ARRAY OF CHAR; i: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Extended(type: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ ValidFlag(f: CHAR): BOOLEAN; 
-	PROCEDURE ^ ReadPrimary(VAR b: DiskBlock; dev: Device; VAR p: PartitionTable; VAR n: LONGINT; VAR res: WORD; VAR valid: BOOLEAN); 
-	PROCEDURE ^ ReadLogical(VAR b: DiskBlock; dev: Device; first: LONGINT; VAR p: PartitionTable; VAR n: LONGINT; VAR res: WORD); 
-	PROCEDURE ^ UpdatePartitionTable*(dev: Device; VAR res: WORD); 
+	PROCEDURE ^ ReadPrimary(VAR b: DiskBlock; dev: Device; VAR p: PartitionTable; VAR n: SIGNED32; VAR res: INTEGER; VAR valid: BOOLEAN); 
+	PROCEDURE ^ ReadLogical(VAR b: DiskBlock; dev: Device; first: SIGNED32; VAR p: PartitionTable; VAR n: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ UpdatePartitionTable*(dev: Device; VAR res: INTEGER); 
 	PROCEDURE ^ Cleanup; 
 BEGIN
 END Disks.

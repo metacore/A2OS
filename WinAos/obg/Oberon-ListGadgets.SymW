@@ -28,14 +28,14 @@ TYPE
 
 	Loc* = RECORD 
 		line*: Line; 
-		y*: INTEGER; 
+		y*: SIGNED16; 
 	END; 
 
 	LineDesc* = RECORD 
 		next*, prev*: Line; 
-		key*: LONGINT; 
-		dx*, w*, h*, dsr*: INTEGER; 
-		n*, lev*: INTEGER; 
+		key*: SIGNED32; 
+		dx*, w*, h*, dsr*: SIGNED16; 
+		n*, lev*: SIGNED16; 
 		sel*: BOOLEAN; 
 		folded*: BOOLEAN; 
 		hasSub: BOOLEAN; 
@@ -44,18 +44,18 @@ TYPE
 	MethodBlock* = RECORD 
 		GetRider*: PROCEDURE (F: Frame; new: BOOLEAN):ListRiders.Rider; 
 		Format*: PROCEDURE (F: Frame; R: ListRiders.Rider; L: Line); 
-		Display*: PROCEDURE (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; R: ListRiders.Rider; L: Line); 
+		Display*: PROCEDURE (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; R: ListRiders.Rider; L: Line); 
 		PrintFormat*: PROCEDURE (F: Frame; R: ListRiders.Rider; L: Line); 
-		Print*: PROCEDURE (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; R: ListRiders.Rider; L: Line); 
+		Print*: PROCEDURE (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; R: ListRiders.Rider; L: Line); 
 	END; 
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
 		R*: ListRiders.Rider; 
 		state0*: SET; 
-		time*: LONGINT; 
-		left*, right*, top*, bottom*: INTEGER; 
-		hoff, levs, tab*: INTEGER; 
-		textC*, pointC*, backC*: INTEGER; 
+		time*: SIGNED32; 
+		left*, right*, top*, bottom*: SIGNED16; 
+		hoff, levs, tab*: SIGNED16; 
+		textC*, pointC*, backC*: SIGNED16; 
 		lines*: Line; 
 		first, point: Line; 
 		vPos, vMax: Objects.Object; 
@@ -68,62 +68,62 @@ TYPE
 	END; 
 
 	CaretMsg = RECORD (Display.FrameMsg)
-		carY: INTEGER; 
+		carY: SIGNED16; 
 	END; 
 VAR 
 	methods*: Method; 
-	WaitTime, mayscroll: LONGINT; 
+	WaitTime, mayscroll: SIGNED32; 
 	W: Texts.Writer; 
 	pointText: Texts.Text; 
 	saved: Oberon.CaretMsg; 
 
-	PROCEDURE ^ P(x: LONGINT): INTEGER; 
+	PROCEDURE ^ P(x: SIGNED32): SIGNED16; 
 	PROCEDURE ^ TimeOk(): BOOLEAN; 
 	PROCEDURE ^ ValueToStr(d: ListRiders.Data; VAR str: ARRAY OF CHAR); 
-	PROCEDURE ^ ClipAgainst(VAR x, y, w, h: INTEGER; X, Y, W, H: INTEGER); 
-	PROCEDURE ^ DrawFold*(Q: Display3.Mask; x, y, dim, col: INTEGER; folded: BOOLEAN); 
-	PROCEDURE ^ PrintFold*(Q: Display3.Mask; x, y, dim, col: INTEGER; folded: BOOLEAN); 
+	PROCEDURE ^ ClipAgainst(VAR x, y, w, h: SIGNED16; X, Y, W, H: SIGNED16); 
+	PROCEDURE ^ DrawFold*(Q: Display3.Mask; x, y, dim, col: SIGNED16; folded: BOOLEAN); 
+	PROCEDURE ^ PrintFold*(Q: Display3.Mask; x, y, dim, col: SIGNED16; folded: BOOLEAN); 
 	PROCEDURE ^ SetVPos(F: Frame; update: BOOLEAN); 
 	PROCEDURE ^ SetVRange(F: Frame); 
 	PROCEDURE ^ SetHPos(F: Frame); 
 	PROCEDURE ^ SetHRange(F: Frame); 
-	PROCEDURE ^ FormatLevel(F: Frame; R: ListRiders.Rider; level: INTEGER; L: Line); 
-	PROCEDURE ^ UpdateLevel(F: Frame; R: ListRiders.Rider; VAR L: Line; level: INTEGER); 
+	PROCEDURE ^ FormatLevel(F: Frame; R: ListRiders.Rider; level: SIGNED16; L: Line); 
+	PROCEDURE ^ UpdateLevel(F: Frame; R: ListRiders.Rider; VAR L: Line; level: SIGNED16); 
 	PROCEDURE ^ ReformatFrame(F: Frame); 
-	PROCEDURE ^ LocateLine(F: Frame; y, Y: INTEGER; VAR loc: Loc; VAR cnt: INTEGER); 
-	PROCEDURE ^ LocatePos(F: Frame; L: Line): INTEGER; 
+	PROCEDURE ^ LocateLine(F: Frame; y, Y: SIGNED16; VAR loc: Loc; VAR cnt: SIGNED16); 
+	PROCEDURE ^ LocatePos(F: Frame; L: Line): SIGNED16; 
 	PROCEDURE ^ NextSelLine(F: Frame; L: Line): Line; 
-	PROCEDURE ^ FindParent(F: Frame; L: Line; level: INTEGER): Line; 
+	PROCEDURE ^ FindParent(F: Frame; L: Line; level: SIGNED16): Line; 
 	PROCEDURE ^ DeleteLine(F: Frame; R, linkR: ListRiders.Rider; L: Line); 
-	PROCEDURE ^ WritePath(F: Frame; L: Line; level: INTEGER); 
+	PROCEDURE ^ WritePath(F: Frame; L: Line; level: SIGNED16); 
 	PROCEDURE ^ GetSelection(F: Frame; VAR T: Texts.Text); 
 	PROCEDURE ^ RemoveSelection(F: Frame); 
-	PROCEDURE ^ InvertSelection(F: Frame; Q: Display3.Mask; x, y, Y0: INTEGER; L0, L1: Line); 
+	PROCEDURE ^ InvertSelection(F: Frame; Q: Display3.Mask; x, y, Y0: SIGNED16; L0, L1: Line); 
 	PROCEDURE ^ DeleteSelection(F: Frame); 
 	PROCEDURE ^ AscSelection(F: Frame); 
 	PROCEDURE ^ DescSelection(F: Frame); 
-	PROCEDURE ^ FlipCaret(F: Frame; Q: Display3.Mask; x, y, Y: INTEGER); 
-	PROCEDURE ^ FlipCaretMsg(F: Frame; carY: INTEGER); 
+	PROCEDURE ^ FlipCaret(F: Frame; Q: Display3.Mask; x, y, Y: SIGNED16); 
+	PROCEDURE ^ FlipCaretMsg(F: Frame; carY: SIGNED16); 
 	PROCEDURE ^ RemoveCaret(F: Frame); 
-	PROCEDURE ^ SetCaret(F: Frame; carline: Line; carpos: INTEGER); 
-	PROCEDURE ^ ScrollUpdate(F: Frame; Q: Display3.Mask; x, y, dy: INTEGER; dlink: Objects.Object); 
-	PROCEDURE ^ ScrollSilent(F: Frame; dline: INTEGER; adjust: BOOLEAN; VAR dy: INTEGER); 
-	PROCEDURE ^ Scroll(F: Frame; Q: Display3.Mask; x, y, dline: INTEGER; dlink: Objects.Object; VAR dy: INTEGER); 
+	PROCEDURE ^ SetCaret(F: Frame; carline: Line; carpos: SIGNED16); 
+	PROCEDURE ^ ScrollUpdate(F: Frame; Q: Display3.Mask; x, y, dy: SIGNED16; dlink: Objects.Object); 
+	PROCEDURE ^ ScrollSilent(F: Frame; dline: SIGNED16; adjust: BOOLEAN; VAR dy: SIGNED16); 
+	PROCEDURE ^ Scroll(F: Frame; Q: Display3.Mask; x, y, dline: SIGNED16; dlink: Objects.Object; VAR dy: SIGNED16); 
 	PROCEDURE ^ ToggleLine*(F: Frame; line: Line); 
-	PROCEDURE ^ InsertItems(F: Frame; T: Texts.Text; beg, end: LONGINT; L: Line); 
+	PROCEDURE ^ InsertItems(F: Frame; T: Texts.Text; beg, end: SIGNED32; L: Line); 
 	PROCEDURE ^ InsertLink(F: Frame; L: Line); 
 	PROCEDURE ^ GetStandardRider*(F: Frame; new: BOOLEAN): ListRiders.Rider; 
 	PROCEDURE ^ FormatLine*(F: Frame; R: ListRiders.Rider; L: Line); 
-	PROCEDURE ^ DisplayLine*(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; R: ListRiders.Rider; L: Line); 
+	PROCEDURE ^ DisplayLine*(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; R: ListRiders.Rider; L: Line); 
 	PROCEDURE ^ PrintFormatLine*(F: Frame; R: ListRiders.Rider; L: Line); 
-	PROCEDURE ^ PrintLine*(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; R: ListRiders.Rider; L: Line); 
-	PROCEDURE ^ RestoreFrame(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ PrintLine*(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; R: ListRiders.Rider; L: Line); 
+	PROCEDURE ^ RestoreFrame(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ PrintFrame(F: Frame; VAR M: Display.DisplayMsg); 
-	PROCEDURE ^ TrackSelection(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg); 
-	PROCEDURE ^ TrackPoint(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg); 
-	PROCEDURE ^ TrackWheel(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg); 
-	PROCEDURE ^ TrackCaret(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg); 
-	PROCEDURE ^ Consume(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackSelection(F: Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackPoint(F: Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackWheel(F: Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackCaret(F: Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ Consume(F: Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ UpdateModel(F: Frame); 
 	PROCEDURE ^ UpdateFrame(F: Frame; M: Gadgets.UpdateMsg); 
 	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 

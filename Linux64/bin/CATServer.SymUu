@@ -8,7 +8,7 @@ TYPE
 		in: Streams.Reader; 
 		out: Streams.Writer; 
 		token: ARRAY 16 OF CHAR; 
-		x: LONGINT; 
+		x: SIGNED32; 
 
 	BEGIN{ACTIVE} 
 	END CATAgent; 

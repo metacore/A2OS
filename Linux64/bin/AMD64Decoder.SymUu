@@ -691,34 +691,34 @@ TYPE
 
 	ArgImm = OBJECT (Arg)
 	VAR 
-		imm: HUGEINT; 
+		imm: SIGNED64; 
 
-		PROCEDURE ^  & New*(imm: HUGEINT); 
+		PROCEDURE ^  & New*(imm: SIGNED64); 
 		PROCEDURE ^ Print(w: Streams.Writer); 
 	END ArgImm; 
 
 	ArgReg = OBJECT (Arg)
 	VAR 
-		reg: LONGINT; 
+		reg: SIGNED32; 
 
-		PROCEDURE ^  & New*(reg: LONGINT); 
+		PROCEDURE ^  & New*(reg: SIGNED32); 
 		PROCEDURE ^ Print(w: Streams.Writer); 
 	END ArgReg; 
 
 	ArgMem = OBJECT (Arg)
 	VAR 
-		segment, reg, scale, base: LONGINT; 
-		disp: HUGEINT; 
+		segment, reg, scale, base: SIGNED32; 
+		disp: SIGNED64; 
 
-		PROCEDURE ^  & New*(segment, reg, scale, base: LONGINT; disp: HUGEINT); 
+		PROCEDURE ^  & New*(segment, reg, scale, base: SIGNED32; disp: SIGNED64); 
 		PROCEDURE ^ Print(w: Streams.Writer); 
 	END ArgMem; 
 
 	AMD64Opcode = OBJECT (Decoder.Opcode)
 	VAR 
-		prefixCount: LONGINT; 
+		prefixCount: SIGNED32; 
 		prefixes: SET; 
-		instr: LONGINT; 
+		instr: SIGNED32; 
 		arg: ARRAY maxArgs OF Arg; 
 		hidePrefixes: BOOLEAN; 
 
@@ -735,8 +735,8 @@ TYPE
 		PROCEDURE ^ DecodeThis*(opcode: Decoder.Opcode); 
 	END AMD64Decoder; 
 
-	PROCEDURE ^ PrintReg(w: Streams.Writer; reg: LONGINT); 
-	PROCEDURE ^ PrintImm(n: HUGEINT; w: Streams.Writer); 
+	PROCEDURE ^ PrintReg(w: Streams.Writer; reg: SIGNED32); 
+	PROCEDURE ^ PrintImm(n: SIGNED64; w: Streams.Writer); 
 	PROCEDURE ^ AMD64DecoderFactory(reader: Streams.Reader): Decoder.Decoder; 
 	PROCEDURE ^ Init*; 
 BEGIN

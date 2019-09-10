@@ -10,7 +10,7 @@ VAR
 	PROCEDURE ^ GetTime(server: ARRAY OF CHAR; VAR time: ARRAY OF CHAR); 
 	PROCEDURE ^ WriteTime(VAR w: Texts.Writer; time: ARRAY OF CHAR); 
 	PROCEDURE ^ Show*; 
-	PROCEDURE ^ StrToMonth(VAR str: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ StrToMonth(VAR str: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ SetClock*; 
 BEGIN
 END DayTime.

@@ -3,14 +3,14 @@ MODULE PSD IN Oberon;
 CONST 
 TYPE 
 	Header = RECORD 
-		width, height: LONGINT; 
-		channels, depth, mode: INTEGER; 
-		data: LONGINT; 
+		width, height: SIGNED32; 
+		channels, depth, mode: SIGNED16; 
+		data: SIGNED32; 
 		pal: ARRAY 256 OF Display.Color; 
 	END; 
 
-	PROCEDURE ^ ReadLInt(VAR R: Files.Rider; VAR i: LONGINT); 
-	PROCEDURE ^ ReadInt(VAR R: Files.Rider; VAR i: INTEGER); 
+	PROCEDURE ^ ReadLInt(VAR R: Files.Rider; VAR i: SIGNED32); 
+	PROCEDURE ^ ReadInt(VAR R: Files.Rider; VAR i: SIGNED16); 
 	PROCEDURE ^ CheckFormat(VAR R: Files.Rider): BOOLEAN; 
 	PROCEDURE ^ ReadHeader(VAR R: Files.Rider; VAR h: Header); 
 	PROCEDURE ^ ReadColors(VAR R: Files.Rider; VAR h: Header); 

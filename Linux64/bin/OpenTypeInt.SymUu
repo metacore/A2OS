@@ -4,22 +4,22 @@ CONST
 	Y* = 0; 
 	StackSize* = 8192; 
 TYPE 
-	F26D6* = LONGINT; 
+	F26D6* = SIGNED32; 
 
-	F2D14* = INTEGER; 
+	F2D14* = SIGNED16; 
 
-	FUnit* = INTEGER; 
+	FUnit* = SIGNED16; 
 
-	Fixed* = LONGINT; 
+	Fixed* = SIGNED32; 
 
 	Code* = POINTER TO ARRAY OF CHAR; 
 
-	Stack* = ARRAY StackSize OF LONGINT; 
+	Stack* = ARRAY StackSize OF SIGNED32; 
 
 	Address* = RECORD 
 		code*: Code; 
-		len*: LONGINT; 
-		pc*: LONGINT; 
+		len*: SIGNED32; 
+		pc*: SIGNED32; 
 	END; 
 
 	Functions* = POINTER TO ARRAY OF Address; 
@@ -33,17 +33,17 @@ TYPE
 
 	Frame* = RECORD 
 		ret*: Address; 
-		start*: LONGINT; 
-		count*: INTEGER; 
+		start*: SIGNED32; 
+		count*: SIGNED16; 
 	END; 
 
 	CallStack* = ARRAY 32 OF Frame; 
 
-	Store* = POINTER TO ARRAY OF LONGINT; 
+	Store* = POINTER TO ARRAY OF SIGNED32; 
 
 	CVT* = POINTER TO ARRAY OF F26D6; 
 
-	Contours* = POINTER TO ARRAY OF INTEGER; 
+	Contours* = POINTER TO ARRAY OF SIGNED16; 
 
 	Coord* = ARRAY 2 OF F26D6; 
 
@@ -58,7 +58,7 @@ TYPE
 	Zone* = POINTER TO ZoneDesc; 
 
 	ZoneDesc* = RECORD 
-		contours*: INTEGER; 
+		contours*: SIGNED16; 
 		first*: Contours; 
 		pt*: Points; 
 	END; 
@@ -69,12 +69,12 @@ TYPE
 
 	Context* = RECORD 
 		code*: Code; 
-		codeLen*: LONGINT; 
+		codeLen*: SIGNED32; 
 		stack*: Stack; 
 		callStack*: CallStack; 
-		pc*: LONGINT; 
-		tos*: INTEGER; 
-		ctos*: INTEGER; 
+		pc*: SIGNED32; 
+		tos*: SIGNED16; 
+		ctos*: SIGNED16; 
 		func*: Functions; 
 		instr*: Instructions; 
 		store*: Store; 
@@ -82,34 +82,34 @@ TYPE
 		zone*: ARRAY 2 OF Zone; 
 		ptsize*: F26D6; 
 		xppm*, yppm*, ppm: F26D6; 
-		upm*: INTEGER; 
+		upm*: SIGNED16; 
 		rotated*, stretched*: BOOLEAN; 
 		xratio, yratio, ratio*: Fixed; 
 		minDist*: F26D6; 
 		cvtCutIn*: F26D6; 
 		swVal*, swCutIn*: F26D6; 
-		deltaBase*, deltaShift*: INTEGER; 
+		deltaBase*, deltaShift*: SIGNED16; 
 		autoFlip*: BOOLEAN; 
 		inhibitFit*, ignorePrep*: BOOLEAN; 
 		fixDropouts*: BOOLEAN; 
-		scanType*: INTEGER; 
-		rp0*, rp1*, rp2*: INTEGER; 
-		gep0*, gep1*, gep2*: INTEGER; 
+		scanType*: SIGNED16; 
+		rp0*, rp1*, rp2*: SIGNED16; 
+		gep0*, gep1*, gep2*: SIGNED16; 
 		zp0, zp1, zp2: Zone; 
 		free*, proj*, proj2*: Vector; 
 		period*, phase*, threshold*: F26D6; 
-		loop*: INTEGER; 
+		loop*: SIGNED16; 
 	END; 
 
 	State* = RECORD 
 		minDist: F26D6; 
 		cvtCutIn: F26D6; 
 		swVal, swCutIn: F26D6; 
-		deltaBase, deltaShift: INTEGER; 
+		deltaBase, deltaShift: SIGNED16; 
 		autoFlip: BOOLEAN; 
 		inhibitFit, ignorePrep: BOOLEAN; 
 		fixDropouts: BOOLEAN; 
-		scanType: INTEGER; 
+		scanType: SIGNED16; 
 	END; 
 
 	NotifierData* = POINTER TO NotifierDesc; 
@@ -126,19 +126,19 @@ VAR
 	Notify: Notifier; 
 	NotifyData: NotifierData; 
 
-	PROCEDURE ^ ShiftDiv*(a, n, d: LONGINT): LONGINT; 
-	PROCEDURE ^ MulShift*(a, b, n: LONGINT): LONGINT; 
-	PROCEDURE ^ MulDiv*(a, b, c: LONGINT): LONGINT; 
+	PROCEDURE ^ ShiftDiv*(a, n, d: SIGNED32): SIGNED32; 
+	PROCEDURE ^ MulShift*(a, b, n: SIGNED32): SIGNED32; 
+	PROCEDURE ^ MulDiv*(a, b, c: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Norm*(x, y: F26D6): F26D6; 
 	PROCEDURE ^ Ratio(VAR c: Context): Fixed; 
 	PROCEDURE ^ PPEm(VAR c: Context): F26D6; 
 	PROCEDURE ^ FUnitToPixel(fu: FUnit; VAR c: Context): F26D6; 
-	PROCEDURE ^ CVTValue(n: LONGINT; VAR c: Context): F26D6; 
+	PROCEDURE ^ CVTValue(n: SIGNED32; VAR c: Context): F26D6; 
 	PROCEDURE ^ Round(x, period, phase, threshold: F26D6): F26D6; 
 	PROCEDURE ^ Project(crd: Coord; proj: Vector): F26D6; 
 	PROCEDURE ^ GetDistance(from, to: Coord; VAR dx, dy: F26D6); 
 	PROCEDURE ^ Move(VAR p: Point; free, proj: Vector; dist: F26D6); 
-	PROCEDURE ^ GetRefDist(VAR c: Context; flag: BOOLEAN; VAR zone: Zone; VAR ref: LONGINT; VAR dx, dy: F26D6); 
+	PROCEDURE ^ GetRefDist(VAR c: Context; flag: BOOLEAN; VAR zone: Zone; VAR ref: SIGNED32; VAR dx, dy: F26D6); 
 	PROCEDURE ^ NPUSHB(VAR c: Context); 
 	PROCEDURE ^ NPUSHW(VAR c: Context); 
 	PROCEDURE ^ PUSHB(VAR c: Context); 
@@ -198,7 +198,7 @@ VAR
 	PROCEDURE ^ MDRP(VAR c: Context); 
 	PROCEDURE ^ MIRP(VAR c: Context); 
 	PROCEDURE ^ ALIGNRP(VAR c: Context); 
-	PROCEDURE ^ DivHL(a, b: HUGEINT): LONGINT; 
+	PROCEDURE ^ DivHL(a, b: SIGNED64): SIGNED32; 
 	PROCEDURE ^ ISECT(VAR c: Context); 
 	PROCEDURE ^ ALIGNPTS(VAR c: Context); 
 	PROCEDURE ^ IP(VAR c: Context); 
@@ -248,19 +248,19 @@ VAR
 	PROCEDURE ^ DEBUG(VAR c: Context); 
 	PROCEDURE ^ GETINFO(VAR c: Context); 
 	PROCEDURE ^ InitBuiltins; 
-	PROCEDURE ^ NewCode*(VAR code: Code; size: LONGINT); 
-	PROCEDURE ^ NewFunctions*(VAR func: Functions; size: LONGINT); 
-	PROCEDURE ^ NewInstructions*(VAR instr: Instructions; size: LONGINT); 
-	PROCEDURE ^ NewStore*(VAR store: Store; size: LONGINT); 
-	PROCEDURE ^ NewCVT*(VAR cvt: CVT; size: LONGINT); 
-	PROCEDURE ^ NewZone*(VAR zone: Zone; contours, points: INTEGER); 
+	PROCEDURE ^ NewCode*(VAR code: Code; size: SIGNED32); 
+	PROCEDURE ^ NewFunctions*(VAR func: Functions; size: SIGNED32); 
+	PROCEDURE ^ NewInstructions*(VAR instr: Instructions; size: SIGNED32); 
+	PROCEDURE ^ NewStore*(VAR store: Store; size: SIGNED32); 
+	PROCEDURE ^ NewCVT*(VAR cvt: CVT; size: SIGNED32); 
+	PROCEDURE ^ NewZone*(VAR zone: Zone; contours, points: SIGNED16); 
 	PROCEDURE ^ SetStacks*(VAR c: Context; stack: Stack; callStack: CallStack); 
 	PROCEDURE ^ SetStructures*(VAR c: Context; func: Functions; instr: Instructions; store: Store; cvt: CVT); 
-	PROCEDURE ^ SetResolution*(VAR c: Context; ptsize, xppm, yppm: F26D6; upm: INTEGER; rotated, stretched: BOOLEAN); 
+	PROCEDURE ^ SetResolution*(VAR c: Context; ptsize, xppm, yppm: F26D6; upm: SIGNED16; rotated, stretched: BOOLEAN); 
 	PROCEDURE ^ InitState*(VAR c: Context); 
 	PROCEDURE ^ SaveState*(VAR c: Context; VAR s: State); 
 	PROCEDURE ^ RestoreState*(VAR c: Context; VAR s: State); 
-	PROCEDURE ^ Execute*(VAR c: Context; code: Code; len: LONGINT; z0, z1: Zone); 
+	PROCEDURE ^ Execute*(VAR c: Context; code: Code; len: SIGNED32; z0, z1: Zone); 
 	PROCEDURE ^ InstallNotifier*(notify: Notifier; data: NotifierData); 
 BEGIN
 END OpenTypeInt.

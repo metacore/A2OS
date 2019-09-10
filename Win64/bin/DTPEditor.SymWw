@@ -33,8 +33,8 @@ TYPE
 		plugName: ARRAY 32 OF CHAR; 
 		previewON, masterON, gridON: BOOLEAN; 
 		pbuttons: pluginButtons; 
-		numberOfPlugs: LONGINT; 
-		fileFormat: LONGINT; 
+		numberOfPlugs: SIGNED32; 
+		fileFormat: SIGNED32; 
 		modified: BOOLEAN; 
 		fullScreen-: BOOLEAN; 
 		currentWidth, currentHeight: SIZE; 
@@ -67,14 +67,14 @@ TYPE
 		PROCEDURE ^ LoadHandler(sender, data: ANY); 
 		PROCEDURE ^ LoadCharacterStyle(cstyle: DTPData.CharacterStyleObject); 
 		PROCEDURE ^ LoadParagraphStyle(pstyle: DTPData.ParagraphStyleObject); 
-		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR; format: LONGINT); 
+		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR; format: SIGNED32); 
 		PROCEDURE ^ BuildDocFromXML; 
 		PROCEDURE ^ StoreHandler(sender, data: ANY); 
-		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR; format: LONGINT); 
+		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR; format: SIGNED32); 
 		PROCEDURE ^ ExportHandler(sender, data: ANY); 
 		PROCEDURE ^ NewHandler(sender, data: ANY); 
 		PROCEDURE ^ CreateNew; 
-		PROCEDURE ^ CreateDoc(w, h, mt, mb, ml, mr: REAL; fp: BOOLEAN); 
+		PROCEDURE ^ CreateDoc(w, h, mt, mb, ml, mr: FLOAT32; fp: BOOLEAN); 
 		PROCEDURE ^ ObjectCutHandler(sender, data: ANY); 
 		PROCEDURE ^ ObjectCopyHandler(sender, data: ANY); 
 		PROCEDURE ^ ObjectPasteHandler(sender, data: ANY); 
@@ -104,10 +104,10 @@ TYPE
 	NewDialog* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
 		content: WMComponents.VisualComponent; 
-		result: LONGINT; 
+		result: SIGNED32; 
 		dhe, dwe, dmte, dmbe, dmle, dmre, dfpe: WMEditors.Editor; 
 		dhs, dws, dmts, dmbs, dmls, dmrs, dfps: ARRAY 256 OF CHAR; 
-		dhr, dwr, dmtr, dmbr, dmlr, dmrr, dfpr: LONGREAL; 
+		dhr, dwr, dmtr, dmbr, dmlr, dmrr, dfpr: FLOAT64; 
 		fpCheck: DTPUtilities.Checkbox; 
 		facep: BOOLEAN; 
 		theCaller: Window; 
@@ -129,15 +129,15 @@ TYPE
 		panel: WMStandardComponents.Panel; 
 		container: WMStandardComponents.Panel; 
 		button*: WMStandardComponents.Button; 
-		mode: LONGINT; 
+		mode: SIGNED32; 
 		shown: BOOLEAN; 
 		x, y: SIZE; 
-		progress: LONGINT; 
+		progress: SIGNED32; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ SetMessage(CONST msg: ARRAY OF CHAR); 
-		PROCEDURE ^ SetColor(color: LONGINT); 
+		PROCEDURE ^ SetColor(color: SIGNED32); 
 		PROCEDURE ^ Show*; 
 		PROCEDURE ^ Hide*; 
 	BEGIN{ACTIVE} 
@@ -174,12 +174,12 @@ TYPE
 		PROCEDURE ^ RegisterPluginByName*(CONST name: ARRAY OF CHAR; CONST generatorName: Modules.Name); 
 		PROCEDURE ^ UnregisterPlugin*(CONST name: ARRAY OF CHAR); 
 		PROCEDURE ^ InstantiatePlugin*(CONST name: ARRAY OF CHAR): DTPData.ContentObject; 
-		PROCEDURE ^ GetNumberOfPlugins*(): LONGINT; 
+		PROCEDURE ^ GetNumberOfPlugins*(): SIGNED32; 
 		PROCEDURE ^ GetPluginList*(): PluginList; 
 		PROCEDURE ^ GetPlugins*(): XMLObjects.Enumerator; 
 	END PluginRegistry; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	plugRegistry*: PluginRegistry; 
 	Unassigned: DTPData.ContentFactory; 
 

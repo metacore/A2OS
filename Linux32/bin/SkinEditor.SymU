@@ -27,7 +27,7 @@ TYPE
 	ErrorList = OBJECT 
 	VAR 
 		errors: ARRAY MaxErrors OF ErrorInfo; 
-		size: LONGINT; 
+		size: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 	END ErrorList; 
@@ -55,7 +55,7 @@ TYPE
 		archiveTree: WMArchives.ArchiveTree; 
 		history: FNHistories.History; 
 		modified, splitted: BOOLEAN; 
-		focus: LONGINT; 
+		focus: SIGNED32; 
 		originalSkin: SkinEngine.Skin; 
 		skinFile: Archives.Archive; 
 
@@ -83,12 +83,12 @@ TYPE
 		PROCEDURE ^ CheckSkin(warnings: BOOLEAN): SkinEngine.Skin; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
-		PROCEDURE ^ ReportError(pos, line, col: LONGINT; msg: String); 
+		PROCEDURE ^ ReportError(pos, line, col: SIGNED32; msg: String); 
 		PROCEDURE ^ RemovePositionMarkers; 
 		PROCEDURE ^ CopyText(from, to: Texts.Text); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	StrPreviewPanel: String; 
 
 	PROCEDURE ^ Open*(context: Commands.Context); 

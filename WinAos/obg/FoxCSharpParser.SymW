@@ -11,7 +11,7 @@ TYPE
 	LocalIdentEntry = OBJECT 
 	VAR 
 		next: LocalIdentEntry; 
-		level: LONGINT; 
+		level: SIGNED32; 
 		name: SyntaxTree.Identifier; 
 		local: SyntaxTree.Identifier; 
 	END LocalIdentEntry; 
@@ -19,8 +19,8 @@ TYPE
 	LocalIdentTable = OBJECT 
 	VAR 
 		head: LocalIdentEntry; 
-		level: LONGINT; 
-		suffix: LONGINT; 
+		level: SIGNED32; 
+		suffix: SIGNED32; 
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Reset; 
@@ -71,7 +71,7 @@ TYPE
 		lynxType: SyntaxTree.Identifier; 
 		identMain: SyntaxTree.Identifier; 
 		localIdentTable: LocalIdentTable; 
-		indent: LONGINT; 
+		indent: SIGNED32; 
 
 		PROCEDURE ^  & Init*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ InitDelegateModifiers; 
@@ -79,7 +79,7 @@ TYPE
 		PROCEDURE ^ S(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ E(CONST s: ARRAY OF CHAR); 
 		PROCEDURE ^ EE(CONST s, t: ARRAY OF CHAR); 
-		PROCEDURE ^ Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR); 
+		PROCEDURE ^ Error(position: Position; code: SIGNED32; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ NextToken; 
 		PROCEDURE ^ Peek(symbol: Scanner.Symbol): BOOLEAN; 
 		PROCEDURE ^ Mandatory(symbol: Scanner.Symbol): BOOLEAN; 
@@ -90,12 +90,12 @@ TYPE
 		PROCEDURE ^ Ignore(symbol: Scanner.Symbol); 
 		PROCEDURE ^ SetNextInComment(c: SyntaxTree.Comment; this: ANY); 
 		PROCEDURE ^ CommentSymbol(symbol: SyntaxTree.Symbol); 
-		PROCEDURE ^ MapOperator(symbol: Scanner.Symbol): LONGINT; 
-		PROCEDURE ^ NewUnaryExpression(position: Position; operand: SyntaxTree.Expression; operator: LONGINT): SyntaxTree.Expression; 
-		PROCEDURE ^ NewBinaryExpression(position: Position; left, right: SyntaxTree.Expression; operator: LONGINT): SyntaxTree.Expression; 
+		PROCEDURE ^ MapOperator(symbol: Scanner.Symbol): SIGNED32; 
+		PROCEDURE ^ NewUnaryExpression(position: Position; operand: SyntaxTree.Expression; operator: SIGNED32): SyntaxTree.Expression; 
+		PROCEDURE ^ NewBinaryExpression(position: Position; left, right: SyntaxTree.Expression; operator: SIGNED32): SyntaxTree.Expression; 
 		PROCEDURE ^ NewTypeExpression(position: Position): SyntaxTree.Expression; 
 		PROCEDURE ^ NewReceiveExpression(position: Position; left, right: SyntaxTree.Expression): SyntaxTree.Expression; 
-		PROCEDURE ^ MapNumberType(numberType: LONGINT): LONGINT; 
+		PROCEDURE ^ MapNumberType(numberType: SIGNED32): SIGNED32; 
 		PROCEDURE ^ EnterInit; 
 		PROCEDURE ^ QualifiedIdentifier(): SyntaxTree.QualifiedIdentifier; 
 		PROCEDURE ^ ExpressionList(expressionList: SyntaxTree.ExpressionList); 
@@ -117,7 +117,7 @@ TYPE
 		PROCEDURE ^ LocalVariableDeclaration(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement; type: SyntaxTree.Type); 
 		PROCEDURE ^ LocalConstantDeclaration(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
 		PROCEDURE ^ Block(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
-		PROCEDURE ^ NewAsopStatement(position: Position; operator: LONGINT; left: SyntaxTree.Designator; right: SyntaxTree.Expression; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
+		PROCEDURE ^ NewAsopStatement(position: Position; operator: SIGNED32; left: SyntaxTree.Designator; right: SyntaxTree.Expression; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
 		PROCEDURE ^ PatchPortReference(expression: SyntaxTree.Expression): SyntaxTree.Expression; 
 		PROCEDURE ^ NewPortStatement(position: Position; name: SyntaxTree.Identifier; left: SyntaxTree.Designator; right: SyntaxTree.Expression; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
 		PROCEDURE ^ StatementExpression(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement; expression: SyntaxTree.Expression): BOOLEAN; 
@@ -126,10 +126,10 @@ TYPE
 		PROCEDURE ^ SwitchSection(caseStatement: SyntaxTree.CaseStatement; VAR haveDefault: BOOLEAN); 
 		PROCEDURE ^ SwitchStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
 		PROCEDURE ^ NewLynxNewsel(position: Position; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
-		PROCEDURE ^ NewLynxAddsel(position: Position; index: LONGINT; variable: SyntaxTree.Identifier; channel: SyntaxTree.Expression; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
+		PROCEDURE ^ NewLynxAddsel(position: Position; index: SIGNED32; variable: SyntaxTree.Identifier; channel: SyntaxTree.Expression; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
 		PROCEDURE ^ NewLynxSelect(position: Position): SyntaxTree.Expression; 
 		PROCEDURE ^ NewLynxSelidx(position: Position; variable: SyntaxTree.Identifier; outer: SyntaxTree.Statement): SyntaxTree.Statement; 
-		PROCEDURE ^ SelectSection(statements: SyntaxTree.StatementSequence; caseStatement: SyntaxTree.CaseStatement; index: LONGINT; outer: SyntaxTree.Statement); 
+		PROCEDURE ^ SelectSection(statements: SyntaxTree.StatementSequence; caseStatement: SyntaxTree.CaseStatement; index: SIGNED32; outer: SyntaxTree.Statement); 
 		PROCEDURE ^ SelectStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
 		PROCEDURE ^ WhileStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 
 		PROCEDURE ^ DoStatement(statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement); 

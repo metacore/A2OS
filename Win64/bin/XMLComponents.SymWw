@@ -13,19 +13,19 @@ TYPE
 
 	ValueMessage* = OBJECT 
 	VAR 
-		value*: LONGINT; 
+		value*: SIGNED32; 
 	END ValueMessage; 
 
 	MouseMessage* = OBJECT 
 	VAR 
-		x*, y*: LONGINT; 
+		x*, y*: SIGNED32; 
 		keys*: SET; 
 	END MouseMessage; 
 
 	KeyMessage* = OBJECT 
 	VAR 
 		ch*: CHAR; 
-		keySym*: LONGINT; 
+		keySym*: SIGNED32; 
 		flags*: SET; 
 	END KeyMessage; 
 
@@ -71,17 +71,17 @@ TYPE
 
 	Component* = OBJECT {EXCLUSIVE} (XML.Element)
 	VAR 
-		locks: LONGINT; 
+		locks: SIGNED32; 
 
 		PROCEDURE ^ AddAttribute*(attribute: XML.Attribute); 
 		PROCEDURE ^ LockUpdate*; 
 		PROCEDURE ^ UnlockUpdate*; 
 		PROCEDURE ^ IsLocked*(): BOOLEAN; 
-		PROCEDURE ^ GetNumberOfEvents*(): LONGINT; 
-		PROCEDURE ^ GetEventName*(i: LONGINT): String; 
+		PROCEDURE ^ GetNumberOfEvents*(): SIGNED32; 
+		PROCEDURE ^ GetEventName*(i: SIGNED32): String; 
 		PROCEDURE ^ AddEventListener*(listener: Listener; event: ARRAY OF CHAR); 
-		PROCEDURE ^ GetNumberOfListeners*(): LONGINT; 
-		PROCEDURE ^ GetListenerName*(i: LONGINT): String; 
+		PROCEDURE ^ GetNumberOfListeners*(): SIGNED32; 
+		PROCEDURE ^ GetListenerName*(i: SIGNED32): String; 
 		PROCEDURE ^ GetListener*(name: ARRAY OF CHAR): Listener; 
 		PROCEDURE ^ Connect*; 
 		PROCEDURE ^ Finalize*; 
@@ -106,18 +106,18 @@ TYPE
 
 	Box* = OBJECT 
 	VAR 
-		x*, y*, w*, h*: LONGINT; 
+		x*, y*, w*, h*: SIGNED32; 
 
-		PROCEDURE ^ InBox*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ InBox*(x, y: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ IsEmpty*(): BOOLEAN; 
 		PROCEDURE ^ SetBox*(box: Box); 
-		PROCEDURE ^ SetRect*(x, y, w, h: LONGINT); 
+		PROCEDURE ^ SetRect*(x, y, w, h: SIGNED32); 
 		PROCEDURE ^ Intersect*(box: Box): BOOLEAN; 
-		PROCEDURE ^ IntersectRect*(x, y, w, h: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IntersectRect*(x, y, w, h: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ Clip*(box: Box); 
-		PROCEDURE ^ ClipRect*(x, y, w, h: LONGINT); 
+		PROCEDURE ^ ClipRect*(x, y, w, h: SIGNED32); 
 		PROCEDURE ^ Extend*(box: Box); 
-		PROCEDURE ^ ExtendRect*(x, y, w, h: LONGINT); 
+		PROCEDURE ^ ExtendRect*(x, y, w, h: SIGNED32); 
 	END Box; 
 
 	VisualComponent* = OBJECT {EXCLUSIVE} (CSS2Component)
@@ -128,7 +128,7 @@ TYPE
 		pointerOwner, focusOwner: VisualComponent; 
 		isHovered*, hasFocus*, isActive*, isLink*, isVisited*, dragable*: BOOLEAN; 
 		lastMouseKeys-: SET; 
-		lastX-, lastY-: LONGINT; 
+		lastX-, lastY-: SIGNED32; 
 		trueStateMsg, falseStateMsg: StateMessage; 
 
 		PROCEDURE ^  & Init*; 
@@ -136,49 +136,49 @@ TYPE
 		PROCEDURE ^ SetProperties*(p: CSS2Properties.AllMediaProperties); 
 		PROCEDURE ^ GetBounds*(): Box; 
 		PROCEDURE ^ SetBounds*(bounds: Box); 
-		PROCEDURE ^ GetWidth*(): LONGINT; 
-		PROCEDURE ^ SetWidth*(w: LONGINT); 
-		PROCEDURE ^ GetHeight*(): LONGINT; 
-		PROCEDURE ^ SetHeight*(h: LONGINT); 
-		PROCEDURE ^ GetX*(): LONGINT; 
-		PROCEDURE ^ SetX*(x: LONGINT); 
-		PROCEDURE ^ GetY*(): LONGINT; 
-		PROCEDURE ^ SetY*(y: LONGINT); 
+		PROCEDURE ^ GetWidth*(): SIGNED32; 
+		PROCEDURE ^ SetWidth*(w: SIGNED32); 
+		PROCEDURE ^ GetHeight*(): SIGNED32; 
+		PROCEDURE ^ SetHeight*(h: SIGNED32); 
+		PROCEDURE ^ GetX*(): SIGNED32; 
+		PROCEDURE ^ SetX*(x: SIGNED32); 
+		PROCEDURE ^ GetY*(): SIGNED32; 
+		PROCEDURE ^ SetY*(y: SIGNED32); 
 		PROCEDURE ^ GetContentBox*(): Box; 
 		PROCEDURE ^ SetContentBox*(contentBox: Box); 
-		PROCEDURE ^ GetContentWidth*(): LONGINT; 
-		PROCEDURE ^ SetContentWidth*(w: LONGINT); 
-		PROCEDURE ^ GetContentHeight*(): LONGINT; 
-		PROCEDURE ^ SetContentHeight*(h: LONGINT); 
-		PROCEDURE ^ GetContentX*(): LONGINT; 
-		PROCEDURE ^ GetContentY*(): LONGINT; 
+		PROCEDURE ^ GetContentWidth*(): SIGNED32; 
+		PROCEDURE ^ SetContentWidth*(w: SIGNED32); 
+		PROCEDURE ^ GetContentHeight*(): SIGNED32; 
+		PROCEDURE ^ SetContentHeight*(h: SIGNED32); 
+		PROCEDURE ^ GetContentX*(): SIGNED32; 
+		PROCEDURE ^ GetContentY*(): SIGNED32; 
 		PROCEDURE ^ GetBorderBox*(): Box; 
-		PROCEDURE ^ GetBorderWidth*(): LONGINT; 
-		PROCEDURE ^ GetBorderHeight*(): LONGINT; 
-		PROCEDURE ^ GetBorderX*(): LONGINT; 
-		PROCEDURE ^ GetBorderY*(): LONGINT; 
+		PROCEDURE ^ GetBorderWidth*(): SIGNED32; 
+		PROCEDURE ^ GetBorderHeight*(): SIGNED32; 
+		PROCEDURE ^ GetBorderX*(): SIGNED32; 
+		PROCEDURE ^ GetBorderY*(): SIGNED32; 
 		PROCEDURE ^ GetPaddingBox*(): Box; 
-		PROCEDURE ^ GetPaddingWidth*(): LONGINT; 
-		PROCEDURE ^ GetPaddingHeight*(): LONGINT; 
-		PROCEDURE ^ GetPaddingX*(): LONGINT; 
-		PROCEDURE ^ GetPaddingY*(): LONGINT; 
+		PROCEDURE ^ GetPaddingWidth*(): SIGNED32; 
+		PROCEDURE ^ GetPaddingHeight*(): SIGNED32; 
+		PROCEDURE ^ GetPaddingX*(): SIGNED32; 
+		PROCEDURE ^ GetPaddingY*(): SIGNED32; 
 		PROCEDURE ^ ComputeWidths*; 
 		PROCEDURE ^ ComputeHeights*; 
-		PROCEDURE ^ GetNumberOfEvents*(): LONGINT; 
-		PROCEDURE ^ GetEventName*(i: LONGINT): String; 
+		PROCEDURE ^ GetNumberOfEvents*(): SIGNED32; 
+		PROCEDURE ^ GetEventName*(i: SIGNED32): String; 
 		PROCEDURE ^ AddEventListener*(listener: Listener; event: ARRAY OF CHAR); 
 		PROCEDURE ^ UnlockUpdate*; 
 		PROCEDURE ^ SetActive*(isActive: BOOLEAN); 
 		PROCEDURE ^ IsActive(): BOOLEAN; 
 		PROCEDURE ^ SetPointer*(pointerInfo: WMWindowManager.PointerInfo); 
 		PROCEDURE ^ GetPointerOwner*(): VisualComponent; 
-		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
-		PROCEDURE ^ PositionOwner*(x, y: LONGINT): VisualComponent; 
+		PROCEDURE ^ IsHit*(x, y: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ PositionOwner*(x, y: SIGNED32): VisualComponent; 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ PointerDown*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerMove*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ PointerUp*(x, y: LONGINT; keys: SET); 
-		PROCEDURE ^ KeyPressed*(ch: CHAR; flags: SET; VAR keySym: LONGINT); 
+		PROCEDURE ^ PointerDown*(x, y: SIGNED32; keys: SET); 
+		PROCEDURE ^ PointerMove*(x, y: SIGNED32; keys: SET); 
+		PROCEDURE ^ PointerUp*(x, y: SIGNED32; keys: SET); 
+		PROCEDURE ^ KeyPressed*(ch: CHAR; flags: SET; VAR keySym: SIGNED32); 
 		PROCEDURE ^ FocusReceived*; 
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ ProcessMessage*(m: ANY); 
@@ -186,14 +186,14 @@ TYPE
 		PROCEDURE ^ Format*; 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ PropertiesChanged*; 
-		PROCEDURE ^ InvalidateRange*(x, y, w, h: LONGINT); 
+		PROCEDURE ^ InvalidateRange*(x, y, w, h: SIGNED32); 
 		PROCEDURE ^ Invalidate*; 
 		PROCEDURE ^ Draw*(ctxt: Gfx.Context); 
 	END VisualComponent; 
 VAR 
 	Unassigned: Listener; 
 
-	PROCEDURE ^ NoReportError(pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
+	PROCEDURE ^ NoReportError(pos, line, row: SIGNED32; msg: ARRAY OF CHAR); 
 	PROCEDURE ^ NewString*(value: ARRAY OF CHAR): String; 
 	PROCEDURE ^ ExtractEvent(CONST string: ARRAY OF CHAR): String; 
 BEGIN

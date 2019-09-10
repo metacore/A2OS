@@ -17,7 +17,7 @@ TYPE
 	tLayerDesc = RECORD (vyPort.tLayerDesc)
 		D1, D2: Real; 
 		f: tFunction; 
-		ticks: LONGINT; 
+		ticks: SIGNED32; 
 		parameter: tParameter; 
 		sign: vyHostDisplay.tSign; 
 	END; 
@@ -34,7 +34,7 @@ VAR
 	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
 	PROCEDURE ^ HandleLinks(obj: tLayer; VAR msg: Objects.LinkMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ Open*(linePlot: tLayer; data: Objects.Object; D1, D2: Real; f: tFunction; p: tParameter; ticks: LONGINT); 
+	PROCEDURE ^ Open*(linePlot: tLayer; data: Objects.Object; D1, D2: Real; f: tFunction; p: tParameter; ticks: SIGNED32); 
 	PROCEDURE ^ Alloc*; 
 	PROCEDURE ^ New*; 
 	PROCEDURE ^ ShowP*; 

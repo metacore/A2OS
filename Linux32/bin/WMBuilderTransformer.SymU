@@ -85,21 +85,21 @@ TYPE
 		createFormReturnIdent: Identifier; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ Transform(component, parent: WMComponents.Component; VAR res: WORD); 
-		PROCEDURE ^ GenerateCode(CONST targetName, templateName, skeletonName, moduleName: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ ApplyBase(text: Texts.Text; CONST moduleName: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ ApplySkeleton(text: Texts.Text; CONST moduleName: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ Transform(component, parent: WMComponents.Component; VAR res: INTEGER); 
+		PROCEDURE ^ GenerateCode(CONST targetName, templateName, skeletonName, moduleName: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ ApplyBase(text: Texts.Text; CONST moduleName: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ ApplySkeleton(text: Texts.Text; CONST moduleName: ARRAY OF CHAR; VAR res: INTEGER); 
 	END Transformer; 
 
 	PROCEDURE ^ GetUCS32String(string: Strings.String): Texts.PUCS32String; 
 	PROCEDURE ^ Replace(CONST pattern: ARRAY OF CHAR; by: Strings.Buffer; text: Texts.Text; VAR error: BOOLEAN); 
 	PROCEDURE ^ ReplaceString(CONST string, by: ARRAY OF CHAR; text: Texts.Text; VAR error: BOOLEAN); 
-	PROCEDURE ^ AlignmentToStream(alignment: LONGINT; w: Streams.Writer); 
+	PROCEDURE ^ AlignmentToStream(alignment: SIGNED32; w: Streams.Writer); 
 	PROCEDURE ^ GetPropertyNameAsString(property: WMProperties.Property; VAR value: ARRAY OF CHAR); 
-	PROCEDURE ^ Indent(writer: Streams.Writer; level: LONGINT); 
+	PROCEDURE ^ Indent(writer: Streams.Writer; level: SIGNED32); 
 	PROCEDURE ^ TypeToSuffix(CONST moduleName, typeName: ARRAY OF CHAR; VAR suffix: ARRAY OF CHAR); 
 	PROCEDURE ^ GetTypeAsString(component: Repositories.Component; VAR typeString: ARRAY OF CHAR); 
-	PROCEDURE ^ TransformComponent*(component: WMComponents.Component; CONST base, skeleton, fileName, moduleName: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ TransformComponent*(component: WMComponents.Component; CONST base, skeleton, fileName, moduleName: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ Transform*(context: Commands.Context); 
 BEGIN
 END WMBuilderTransformer.

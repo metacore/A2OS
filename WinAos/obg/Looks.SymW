@@ -13,17 +13,17 @@ TYPE
 	LookList* = OBJECT {EXCLUSIVE} 
 	VAR 
 		list: LookArray; 
-		count: LONGINT; 
-		readLock: LONGINT; 
+		count: SIGNED32; 
+		readLock: SIGNED32; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ GetCount*(): LONGINT; 
+		PROCEDURE ^ GetCount*(): SIGNED32; 
 		PROCEDURE ^ Grow; 
 		PROCEDURE ^ Add*(x: Look); 
-		PROCEDURE ^ IndexOf*(x: Look): LONGINT; 
+		PROCEDURE ^ IndexOf*(x: Look): SIGNED32; 
 		PROCEDURE ^ Remove*(x: Look); 
 		PROCEDURE ^ Clear*; 
-		PROCEDURE ^ GetItem*(i: LONGINT): Look; 
+		PROCEDURE ^ GetItem*(i: SIGNED32): Look; 
 		PROCEDURE ^ Lock*; 
 		PROCEDURE ^ Unlock*; 
 	END LookList; 

@@ -47,97 +47,97 @@ CONST
 	ModeEXE = 2; 
 	EUEnd = 0X; 
 	EURecord = 1X; 
-	EUProcFlag = LONGINT(2147483648); 
+	EUProcFlag = SIGNED32(2147483648); 
 TYPE 
 	ImageFileHeader = RECORD 
-		Machine: INTEGER; 
-		NumberOfSections: INTEGER; 
-		TimeDateStamp: LONGINT; 
-		PointerToSymbolTable: LONGINT; 
-		NumberOfSymbols: LONGINT; 
-		SizeOfOptionalHeader: INTEGER; 
-		Characteristics: INTEGER; 
+		Machine: SIGNED16; 
+		NumberOfSections: SIGNED16; 
+		TimeDateStamp: SIGNED32; 
+		PointerToSymbolTable: SIGNED32; 
+		NumberOfSymbols: SIGNED32; 
+		SizeOfOptionalHeader: SIGNED16; 
+		Characteristics: SIGNED16; 
 	END; 
 
 	ImageDataDirectory = RECORD 
-		VirtualAddress, Size: LONGINT; 
+		VirtualAddress, Size: SIGNED32; 
 	END; 
 
 	ImageOptionalHeader = RECORD 
-		Magic: INTEGER; 
+		Magic: SIGNED16; 
 		MajorLinkerVersion, MinorLinkerVersion: CHAR; 
-		SizeOfCode, SizeOfInitializedData, SizeOfUninitializedData, AddressOfEntryPoint, BaseOfCode, BaseOfData, ImageBase, SectionAlignment, FileAlignment: LONGINT; 
-		MajorOperatingSystemVersion, MinorOperatingSystemVersion, MajorImageVersion, MinorImageVersion, MajorSubsystemVersion, MinorSubsystemVersion: INTEGER; 
-		Win32VersionValue, SizeOfImage, SizeOfHeaders, CheckSum: LONGINT; 
-		Subsystem, DllCharacteristics: INTEGER; 
-		SizeOfStackReserve, SizeOfStackCommit, SizeOfHeapReserve, SizeOfHeapCommit, LoaderFlags, NumberOfRvaAndSizes: LONGINT; 
+		SizeOfCode, SizeOfInitializedData, SizeOfUninitializedData, AddressOfEntryPoint, BaseOfCode, BaseOfData, ImageBase, SectionAlignment, FileAlignment: SIGNED32; 
+		MajorOperatingSystemVersion, MinorOperatingSystemVersion, MajorImageVersion, MinorImageVersion, MajorSubsystemVersion, MinorSubsystemVersion: SIGNED16; 
+		Win32VersionValue, SizeOfImage, SizeOfHeaders, CheckSum: SIGNED32; 
+		Subsystem, DllCharacteristics: SIGNED16; 
+		SizeOfStackReserve, SizeOfStackCommit, SizeOfHeapReserve, SizeOfHeapCommit, LoaderFlags, NumberOfRvaAndSizes: SIGNED32; 
 		DataDirectory: ARRAY ImageNumberOfDirectoryEntries OF ImageDataDirectory; 
 	END; 
 
 	ImageSectionHeader = RECORD 
 		Name: ARRAY ImageSizeOfShortName OF CHAR; 
-		VirtualSize: LONGINT; 
-		VirtualAddress: LONGINT; 
-		SizeOfRawData: LONGINT; 
-		PointerToRawData: LONGINT; 
-		PointerToRelocations: LONGINT; 
-		PointerToLinenumbers: LONGINT; 
-		NumberOfRelocations: INTEGER; 
-		NumberOfLinenumbers: INTEGER; 
+		VirtualSize: SIGNED32; 
+		VirtualAddress: SIGNED32; 
+		SizeOfRawData: SIGNED32; 
+		PointerToRawData: SIGNED32; 
+		PointerToRelocations: SIGNED32; 
+		PointerToLinenumbers: SIGNED32; 
+		NumberOfRelocations: SIGNED16; 
+		NumberOfLinenumbers: SIGNED16; 
 		Characteristics: SET; 
 	END; 
 
 	ImageExportDirectory = RECORD 
-		Characteristics, TimeDateStamp: LONGINT; 
-		MajorVersion, MinorVersion: INTEGER; 
-		Name, Base, NumberOfFunctions, NumberOfNames, AddressOfFunctions, AddressOfNames, AddressOfNameOrdinals: LONGINT; 
+		Characteristics, TimeDateStamp: SIGNED32; 
+		MajorVersion, MinorVersion: SIGNED16; 
+		Name, Base, NumberOfFunctions, NumberOfNames, AddressOfFunctions, AddressOfNames, AddressOfNameOrdinals: SIGNED32; 
 	END; 
 
 	ImageImportDescriptor = RECORD 
-		Characteristics, TimeDateStamp, ForwarderChain, Name, FirstThunk: LONGINT; 
+		Characteristics, TimeDateStamp, ForwarderChain, Name, FirstThunk: SIGNED32; 
 	END; 
 
 	Bytes = POINTER TO ARRAY OF CHAR; 
 
 	Name = ARRAY 256 OF CHAR; 
 
-	ExportFPList = POINTER TO ARRAY OF LONGINT; 
+	ExportFPList = POINTER TO ARRAY OF SIGNED32; 
 
 	SectionReader = OBJECT (Streams.Reader)
 	VAR 
 		sect: Section; 
 		org, ofs: SIZE; 
 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ Pos*(): Streams.Position; 
 		PROCEDURE ^ SetPos*(ofs: Streams.Position); 
-		PROCEDURE ^  & Open*(sect: Section; ofs: LONGINT); 
+		PROCEDURE ^  & Open*(sect: Section; ofs: SIGNED32); 
 	END SectionReader; 
 
 	SectionWriter = OBJECT (Streams.Writer)
 	VAR 
 		sect: Section; 
-		org, ofs: LONGINT; 
+		org, ofs: SIGNED32; 
 
-		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ Pos*(): Streams.Position; 
 		PROCEDURE ^ SetPos*(ofs: Streams.Position); 
-		PROCEDURE ^  & Open*(sect: Section; ofs: LONGINT); 
+		PROCEDURE ^  & Open*(sect: Section; ofs: SIGNED32); 
 	END SectionWriter; 
 
 	Section = OBJECT 
 	VAR 
 		head: ImageSectionHeader; 
 		data: Bytes; 
-		len, used: LONGINT; 
+		len, used: SIGNED32; 
 		imports: ImportReloc; 
 		relocs: BaseReloc; 
 		W: SectionWriter; 
 		R: SectionReader; 
 		next: Section; 
 
-		PROCEDURE ^ Resize(min: LONGINT); 
-		PROCEDURE ^ SetBase(VAR base: LONGINT); 
+		PROCEDURE ^ Resize(min: SIGNED32); 
+		PROCEDURE ^ SetBase(VAR base: SIGNED32); 
 		PROCEDURE ^  & New*(pe: PEModule; name: ARRAY OF CHAR; chars: SET); 
 	END Section; 
 
@@ -157,7 +157,7 @@ TYPE
 	ImportObj = POINTER TO RECORD 
 		name: Name; 
 		next: ImportObj; 
-		iat: LONGINT; 
+		iat: SIGNED32; 
 	END; 
 
 	ImportReloc = POINTER TO RECORD 
@@ -170,7 +170,7 @@ TYPE
 	ExportObj = POINTER TO RECORD 
 		name: Name; 
 		sect: Section; 
-		ofs: LONGINT; 
+		ofs: SIGNED32; 
 		next: ExportObj; 
 	END; 
 
@@ -182,21 +182,21 @@ TYPE
 		mod: PCT.Module; 
 		adr: PCBT.Module; 
 		codearr: PCLIR.CodeArray; 
-		hdrCodeSize, addressFactor: LONGINT; 
+		hdrCodeSize, addressFactor: SIGNED32; 
 		fileHdr: ImageFileHeader; 
 		optHdr: ImageOptionalHeader; 
 		sects, type, var, const, code, idata, edata, reloc: Section; 
 		exports: ExportObj; 
 		imports: ImportMod; 
 		explist: ExportFPList; 
-		exppos, explen, nofstr, nofImp, count: LONGINT; 
+		exppos, explen, nofstr, nofImp, count: SIGNED32; 
 		desc: RECORD 
-			modules, commands, methods, pointers, exports, imports, types: LONGINT; 
-			iatfix: LONGINT; 
+			modules, commands, methods, pointers, exports, imports, types: SIGNED32; 
+			iatfix: SIGNED32; 
 		END; 
 
 		PROCEDURE ^ AddImportMod(name: ARRAY OF CHAR): ImportMod; 
-		PROCEDURE ^ FixupSysCall(l: PCBT.Fixup; entry: LONGINT); 
+		PROCEDURE ^ FixupSysCall(l: PCBT.Fixup; entry: SIGNED32); 
 		PROCEDURE ^ FixupCase(l: PCBT.Fixup); 
 		PROCEDURE ^ FixupLinks; 
 		PROCEDURE ^ TypeAlign4; 
@@ -205,24 +205,24 @@ TYPE
 		PROCEDURE ^ UseModules; 
 		PROCEDURE ^ FixupProc(p: PCBT.Procedure); 
 		PROCEDURE ^ FixupOwnProcs; 
-		PROCEDURE ^ PtrAdr(W: SectionWriter; offset: LONGINT; type: PCT.Struct; fixadr: BOOLEAN); 
+		PROCEDURE ^ PtrAdr(W: SectionWriter; offset: SIGNED32; type: PCT.Struct; fixadr: BOOLEAN); 
 		PROCEDURE ^ Pointers; 
 		PROCEDURE ^ FixupVar(p: PCBT.GlobalVariable); 
 		PROCEDURE ^ FixupOwnVars; 
-		PROCEDURE ^ AddExport(sect: Section; ofs: LONGINT; name: ARRAY OF CHAR); 
+		PROCEDURE ^ AddExport(sect: Section; ofs: SIGNED32; name: ARRAY OF CHAR); 
 		PROCEDURE ^ ExportType(W: SectionWriter; t: PCT.Struct); 
-		PROCEDURE ^ ExportSymbol(W: SectionWriter; p: PCT.Symbol; sect: Section; ofs: LONGINT); 
+		PROCEDURE ^ ExportSymbol(W: SectionWriter; p: PCT.Symbol; sect: Section; ofs: SIGNED32); 
 		PROCEDURE ^ ExportConsts(W: SectionWriter); 
 		PROCEDURE ^ ExportVars(W: SectionWriter); 
 		PROCEDURE ^ ExportTypes(W: SectionWriter); 
 		PROCEDURE ^ ExportProcs(W: SectionWriter); 
 		PROCEDURE ^ CheckExport(name: ARRAY OF CHAR); 
 		PROCEDURE ^ Exports; 
-		PROCEDURE ^ UseEntry(W: SectionWriter; m: PCT.Module; p: PCT.Symbol; offset: LONGINT; imp: ImportMod): ImportObj; 
-		PROCEDURE ^ UseType(W: SectionWriter; m: PCT.Module; i: LONGINT; t: PCT.Struct); 
+		PROCEDURE ^ UseEntry(W: SectionWriter; m: PCT.Module; p: PCT.Symbol; offset: SIGNED32; imp: ImportMod): ImportObj; 
+		PROCEDURE ^ UseType(W: SectionWriter; m: PCT.Module; i: SIGNED32; t: PCT.Struct); 
 		PROCEDURE ^ ImportConsts(W: SectionWriter; m: PCT.Module); 
-		PROCEDURE ^ ImportVars(W: SectionWriter; m: PCT.Module; i: LONGINT; imp: ImportMod); 
-		PROCEDURE ^ ImportTypes(W: SectionWriter; m: PCT.Module; i: LONGINT); 
+		PROCEDURE ^ ImportVars(W: SectionWriter; m: PCT.Module; i: SIGNED32; imp: ImportMod); 
+		PROCEDURE ^ ImportTypes(W: SectionWriter; m: PCT.Module; i: SIGNED32); 
 		PROCEDURE ^ ImportProcs(W: SectionWriter; m: PCT.Module; imp: ImportMod); 
 		PROCEDURE ^ Imports; 
 		PROCEDURE ^ WriteType(W: SectionWriter; rec: PCT.Record); 
@@ -231,30 +231,30 @@ TYPE
 		PROCEDURE ^ ModDesc; 
 		PROCEDURE ^ IATFix; 
 		PROCEDURE ^ GenStub; 
-		PROCEDURE ^ GenIData(base: LONGINT); 
-		PROCEDURE ^ GenEData(base: LONGINT); 
-		PROCEDURE ^ BeginBlock(W: SectionWriter; adr: LONGINT; VAR blockva, blocksize: LONGINT; VAR blockfix: Streams.Position); 
-		PROCEDURE ^ EndBlock(W: SectionWriter; blockfix: Streams.Position; VAR blocksize: LONGINT); 
+		PROCEDURE ^ GenIData(base: SIGNED32); 
+		PROCEDURE ^ GenEData(base: SIGNED32); 
+		PROCEDURE ^ BeginBlock(W: SectionWriter; adr: SIGNED32; VAR blockva, blocksize: SIGNED32; VAR blockfix: Streams.Position); 
+		PROCEDURE ^ EndBlock(W: SectionWriter; blockfix: Streams.Position; VAR blocksize: SIGNED32); 
 		PROCEDURE ^ LocalRelocs; 
-		PROCEDURE ^ GenReloc(base: LONGINT); 
+		PROCEDURE ^ GenReloc(base: SIGNED32); 
 		PROCEDURE ^ ToFile; 
 		PROCEDURE ^  & New*(mod: PCT.Module; adr: PCBT.Module); 
 	END PEModule; 
 VAR 
-	mode: LONGINT; 
-	subsystem: LONGINT; 
+	mode: SIGNED32; 
+	subsystem: SIGNED32; 
 
 	PROCEDURE ^ WriteImageFileHeader(W: Streams.Writer; VAR head: ImageFileHeader); 
 	PROCEDURE ^ WriteImageOptionalHeader(W: Streams.Writer; VAR head: ImageOptionalHeader); 
 	PROCEDURE ^ WriteImageSectionHeader(W: Streams.Writer; VAR head: ImageSectionHeader); 
 	PROCEDURE ^ WriteImageImportDescriptor(W: Streams.Writer; VAR desc: ImageImportDescriptor); 
 	PROCEDURE ^ WriteImageExportDirectory(W: Streams.Writer; VAR dir: ImageExportDirectory); 
-	PROCEDURE ^ TimeDateStamp(): LONGINT; 
+	PROCEDURE ^ TimeDateStamp(): SIGNED32; 
 	PROCEDURE ^ AddOfsReloc(sect: Section; ofs: Streams.Position; base: Section); 
 	PROCEDURE ^ AddImportObj(mod: ImportMod; name: ARRAY OF CHAR): ImportObj; 
 	PROCEDURE ^ AddImportReloc(sect: Section; offset: Streams.Position; obj: ImportObj; iat, abs, ofs: BOOLEAN); 
-	PROCEDURE ^ Align(value, align: LONGINT): LONGINT; 
-	PROCEDURE ^ Generate*(VAR R: PCM.Rider; scope: PCT.ModScope; VAR codeSize: LONGINT); 
+	PROCEDURE ^ Align(value, align: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Generate*(VAR R: PCM.Rider; scope: PCT.ModScope; VAR codeSize: SIGNED32); 
 	PROCEDURE ^ SetDLL*; 
 	PROCEDURE ^ SetEXE*; 
 	PROCEDURE ^ SetCUI*; 

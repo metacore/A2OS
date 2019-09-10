@@ -6,12 +6,12 @@ VAR
 	W: Texts.Writer; 
 
 	PROCEDURE ^ Explain; 
-	PROCEDURE ^ OpenPanel*(D: Documents.Document; name: ARRAY OF CHAR; VAR VW, VH: INTEGER): Gadgets.Frame; 
+	PROCEDURE ^ OpenPanel*(D: Documents.Document; name: ARRAY OF CHAR; VAR VW, VH: SIGNED16): Gadgets.Frame; 
 	PROCEDURE ^ LoadPanel*(D: Documents.Document); 
 	PROCEDURE ^ StorePanel*(D: Documents.Document); 
 	PROCEDURE ^ PrintPanelDoc(F: Panels.Panel; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ DocHandle*(D: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ InitDoc*(D: Documents.Document; W, H: INTEGER); 
+	PROCEDURE ^ InitDoc*(D: Documents.Document; W, H: SIGNED16); 
 	PROCEDURE ^ NewDoc*; 
 	PROCEDURE ^ AppendPanel*; 
 	PROCEDURE ^ RemovePanel*; 

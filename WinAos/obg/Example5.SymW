@@ -3,7 +3,7 @@ TYPE
 	Entry = OBJECT 
 	VAR 
 		next: Entry; 
-		priority: WORD; 
+		priority: INTEGER; 
 		turn: BOOLEAN; 
 	END Entry; 
 
@@ -11,7 +11,7 @@ TYPE
 	VAR 
 		root: Entry; 
 
-		PROCEDURE ^ Wait(priority: LONGINT); 
+		PROCEDURE ^ Wait(priority: SIGNED32); 
 		PROCEDURE ^ Signal; 
 		PROCEDURE ^ Waiting(): BOOLEAN; 
 		PROCEDURE ^  & Init*; 
@@ -20,10 +20,10 @@ TYPE
 	DiskScheduler* = OBJECT {EXCLUSIVE} 
 	VAR 
 		busy, up: BOOLEAN; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		upsweep, downsweep: PriorityScheduler; 
 
-		PROCEDURE ^ Request*(dest: LONGINT); 
+		PROCEDURE ^ Request*(dest: SIGNED32); 
 		PROCEDURE ^ Release*; 
 		PROCEDURE ^  & Init*; 
 	END DiskScheduler; 

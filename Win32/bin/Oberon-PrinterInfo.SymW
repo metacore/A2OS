@@ -4,9 +4,9 @@ CONST
 VAR 
 	W: Texts.Writer; 
 
-	PROCEDURE ^ Int(name: ARRAY OF CHAR; val: LONGINT); 
-	PROCEDURE ^ FixedStr(val: REAL; VAR str: ARRAY OF CHAR); 
-	PROCEDURE ^ Fixed(name: ARRAY OF CHAR; val: REAL); 
+	PROCEDURE ^ Int(name: ARRAY OF CHAR; val: SIGNED32); 
+	PROCEDURE ^ FixedStr(val: FLOAT32; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ Fixed(name: ARRAY OF CHAR; val: FLOAT32); 
 	PROCEDURE ^ Str(name, val: ARRAY OF CHAR); 
 	PROCEDURE ^ unit(VAR cm: BOOLEAN); 
 	PROCEDURE ^ PrInfo; 

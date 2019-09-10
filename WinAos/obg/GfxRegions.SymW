@@ -2,79 +2,79 @@ MODULE GfxRegions;
 CONST 
 	Winding* = 0; 
 	EvenOdd* = 1; 
-	UBound* = (MAX(INTEGER) DIV 2); 
-	LBound* = (MIN(INTEGER) DIV 2); 
+	UBound* = (MAX(SIGNED16) DIV 2); 
+	LBound* = (MIN(SIGNED16) DIV 2); 
 	BlockSize = 512; 
 	Enter = 1; 
 	Exit =  -1; 
 	FirstSlice = 2; 
-	Bottom = MIN(INTEGER); 
-	Top = MAX(INTEGER); 
+	Bottom = MIN(SIGNED16); 
+	Top = MAX(SIGNED16); 
 TYPE 
-	RegionData = POINTER TO ARRAY OF LONGINT; 
+	RegionData = POINTER TO ARRAY OF SIGNED32; 
 
 	Region* = POINTER TO RegionDesc; 
 
 	RegionDesc* = RECORD 
-		llx*, lly*, urx*, ury*: INTEGER; 
-		mode*: INTEGER; 
+		llx*, lly*, urx*, ury*: SIGNED16; 
+		mode*: SIGNED16; 
 		valid: BOOLEAN; 
 		data: RegionData; 
-		points: LONGINT; 
+		points: SIGNED32; 
 	END; 
 
 	EnumData* = RECORD 
 	END; 
 
-	Enumerator* = PROCEDURE (llx, lly, urx, ury: INTEGER; VAR edata: EnumData); 
+	Enumerator* = PROCEDURE (llx, lly, urx, ury: SIGNED16; VAR edata: EnumData); 
 VAR 
 	Data: RegionData; 
-	DataSize: LONGINT; 
+	DataSize: SIGNED32; 
 	RectRegion: Region; 
 
-	PROCEDURE ^ IncludePoint*(VAR llx, lly, urx, ury: INTEGER; x, y: INTEGER); 
-	PROCEDURE ^ IncludeRect*(VAR llx, lly, urx, ury: INTEGER; illx, illy, iurx, iury: INTEGER); 
-	PROCEDURE ^ ClipRect*(VAR llx, lly, urx, ury: INTEGER; cllx, clly, curx, cury: INTEGER); 
-	PROCEDURE ^ RectEmpty*(llx, lly, urx, ury: INTEGER): BOOLEAN; 
-	PROCEDURE ^ RectInRect*(llx, lly, urx, ury, illx, illy, iurx, iury: INTEGER): BOOLEAN; 
-	PROCEDURE ^ RectsIntersect*(llx, lly, urx, ury, illx, illy, iurx, iury: INTEGER): BOOLEAN; 
-	PROCEDURE ^ PointInRect*(x, y: INTEGER; llx, lly, urx, ury: INTEGER): BOOLEAN; 
-	PROCEDURE ^ Encode(VAR item: LONGINT; u, v, dir: LONGINT); 
-	PROCEDURE ^ Decode(item: LONGINT; VAR u, v, dir: INTEGER); 
-	PROCEDURE ^ CopyPoints(src, dst: RegionData; points: LONGINT); 
-	PROCEDURE ^ Append(reg: Region; u, v, dir: INTEGER); 
+	PROCEDURE ^ IncludePoint*(VAR llx, lly, urx, ury: SIGNED16; x, y: SIGNED16); 
+	PROCEDURE ^ IncludeRect*(VAR llx, lly, urx, ury: SIGNED16; illx, illy, iurx, iury: SIGNED16); 
+	PROCEDURE ^ ClipRect*(VAR llx, lly, urx, ury: SIGNED16; cllx, clly, curx, cury: SIGNED16); 
+	PROCEDURE ^ RectEmpty*(llx, lly, urx, ury: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ RectInRect*(llx, lly, urx, ury, illx, illy, iurx, iury: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ RectsIntersect*(llx, lly, urx, ury, illx, illy, iurx, iury: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ PointInRect*(x, y: SIGNED16; llx, lly, urx, ury: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ Encode(VAR item: SIGNED32; u, v, dir: SIGNED32); 
+	PROCEDURE ^ Decode(item: SIGNED32; VAR u, v, dir: SIGNED16); 
+	PROCEDURE ^ CopyPoints(src, dst: RegionData; points: SIGNED32); 
+	PROCEDURE ^ Append(reg: Region; u, v, dir: SIGNED16); 
 	PROCEDURE ^ CopyData(src, dst: Region); 
 	PROCEDURE ^ CalcRect(reg: Region); 
-	PROCEDURE ^ SafeQuickSort(VAR data: ARRAY OF LONGINT; lo, hi: LONGINT); 
+	PROCEDURE ^ SafeQuickSort(VAR data: ARRAY OF SIGNED32; lo, hi: SIGNED32); 
 	PROCEDURE ^ Compact(reg: Region; src: RegionData); 
-	PROCEDURE ^ Merge(reg: Region; split: LONGINT); 
+	PROCEDURE ^ Merge(reg: Region; split: SIGNED32); 
 	PROCEDURE ^ Validate(reg: Region); 
-	PROCEDURE ^ FindUpper(reg: Region; y: INTEGER; VAR n: LONGINT); 
-	PROCEDURE ^ FindLower(reg: Region; y: INTEGER; VAR n: LONGINT); 
-	PROCEDURE ^ Enum(reg: Region; llx, lly, urx, ury: INTEGER; enum: Enumerator; VAR edata: EnumData; enter: INTEGER); 
+	PROCEDURE ^ FindUpper(reg: Region; y: SIGNED16; VAR n: SIGNED32); 
+	PROCEDURE ^ FindLower(reg: Region; y: SIGNED16; VAR n: SIGNED32); 
+	PROCEDURE ^ Enum(reg: Region; llx, lly, urx, ury: SIGNED16; enum: Enumerator; VAR edata: EnumData; enter: SIGNED16); 
 	PROCEDURE ^ MakeData(reg: Region); 
 	PROCEDURE ^ Empty*(reg: Region): BOOLEAN; 
 	PROCEDURE ^ IsRect*(reg: Region): BOOLEAN; 
-	PROCEDURE ^ PointInside*(x, y: INTEGER; reg: Region): BOOLEAN; 
-	PROCEDURE ^ RectInside*(llx, lly, urx, ury: INTEGER; reg: Region): BOOLEAN; 
-	PROCEDURE ^ RectOverlaps*(llx, lly, urx, ury: INTEGER; reg: Region): BOOLEAN; 
+	PROCEDURE ^ PointInside*(x, y: SIGNED16; reg: Region): BOOLEAN; 
+	PROCEDURE ^ RectInside*(llx, lly, urx, ury: SIGNED16; reg: Region): BOOLEAN; 
+	PROCEDURE ^ RectOverlaps*(llx, lly, urx, ury: SIGNED16; reg: Region): BOOLEAN; 
 	PROCEDURE ^ RegionInside*(inner, outer: Region): BOOLEAN; 
 	PROCEDURE ^ RegionOverlaps*(reg, arg: Region): BOOLEAN; 
-	PROCEDURE ^ Enumerate*(reg: Region; llx, lly, urx, ury: INTEGER; enum: Enumerator; VAR edata: EnumData); 
-	PROCEDURE ^ EnumerateInv*(reg: Region; llx, lly, urx, ury: INTEGER; enum: Enumerator; VAR edata: EnumData); 
+	PROCEDURE ^ Enumerate*(reg: Region; llx, lly, urx, ury: SIGNED16; enum: Enumerator; VAR edata: EnumData); 
+	PROCEDURE ^ EnumerateInv*(reg: Region; llx, lly, urx, ury: SIGNED16; enum: Enumerator; VAR edata: EnumData); 
 	PROCEDURE ^ Clear*(reg: Region); 
-	PROCEDURE ^ SetMode*(reg: Region; mode: INTEGER); 
-	PROCEDURE ^ Init*(reg: Region; mode: INTEGER); 
-	PROCEDURE ^ SetToRect*(reg: Region; llx, lly, urx, ury: INTEGER); 
-	PROCEDURE ^ Shift*(reg: Region; dx, dy: INTEGER); 
+	PROCEDURE ^ SetMode*(reg: Region; mode: SIGNED16); 
+	PROCEDURE ^ Init*(reg: Region; mode: SIGNED16); 
+	PROCEDURE ^ SetToRect*(reg: Region; llx, lly, urx, ury: SIGNED16); 
+	PROCEDURE ^ Shift*(reg: Region; dx, dy: SIGNED16); 
 	PROCEDURE ^ Copy*(from, to: Region); 
 	PROCEDURE ^ Add*(reg, arg: Region); 
-	PROCEDURE ^ AddRect*(reg: Region; llx, lly, urx, ury: INTEGER); 
+	PROCEDURE ^ AddRect*(reg: Region; llx, lly, urx, ury: SIGNED16); 
 	PROCEDURE ^ Subtract*(reg, arg: Region); 
-	PROCEDURE ^ SubtractRect*(reg: Region; llx, lly, urx, ury: INTEGER); 
+	PROCEDURE ^ SubtractRect*(reg: Region; llx, lly, urx, ury: SIGNED16); 
 	PROCEDURE ^ Intersect*(reg, arg: Region); 
-	PROCEDURE ^ IntersectRect*(reg: Region; llx, lly, urx, ury: INTEGER); 
+	PROCEDURE ^ IntersectRect*(reg: Region; llx, lly, urx, ury: SIGNED16); 
 	PROCEDURE ^ Invert*(reg: Region); 
-	PROCEDURE ^ AddPoint*(reg: Region; x, y, dy: INTEGER); 
+	PROCEDURE ^ AddPoint*(reg: Region; x, y, dy: SIGNED16); 
 BEGIN
 END GfxRegions.

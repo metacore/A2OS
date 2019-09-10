@@ -11,7 +11,7 @@ TYPE
 		bufferPool: SoundDevices.BufferPool; 
 		buffer: SoundDevices.Buffer; 
 		out: Streams.Writer; 
-		channels, rate, bits: LONGINT; 
+		channels, rate, bits: SIGNED32; 
 		recLength: SIZE; 
 		t: Kernel.Timer; 
 		ready, recording, paused, finished: BOOLEAN; 
@@ -33,7 +33,7 @@ TYPE
 		playChannel: SoundDevices.Channel; 
 		bufferPool: SoundDevices.BufferPool; 
 		buffer: SoundDevices.Buffer; 
-		channels, rate, bits: LONGINT; 
+		channels, rate, bits: SIGNED32; 
 		t: Kernel.Timer; 
 		ready, recording, paused, finished: BOOLEAN; 
 

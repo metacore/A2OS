@@ -3,12 +3,12 @@ MODULE UUDecoder IN Oberon;
 CONST 
 VAR 
 	encTable: ARRAY 64 OF CHAR; 
-	decTable: ARRAY 97 OF INTEGER; 
+	decTable: ARRAY 97 OF SIGNED16; 
 	W: Texts.Writer; 
 
-	PROCEDURE ^ GetName*(T: Texts.Text; VAR beg: LONGINT; VAR name: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ DecodeText*(T: Texts.Text; beg: LONGINT; F: Files.File): BOOLEAN; 
-	PROCEDURE ^ Do(T: Texts.Text; beg: LONGINT); 
+	PROCEDURE ^ GetName*(T: Texts.Text; VAR beg: SIGNED32; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ DecodeText*(T: Texts.Text; beg: SIGNED32; F: Files.File): BOOLEAN; 
+	PROCEDURE ^ Do(T: Texts.Text; beg: SIGNED32); 
 	PROCEDURE ^ Decode*; 
 	PROCEDURE ^ InitUUTables; 
 BEGIN

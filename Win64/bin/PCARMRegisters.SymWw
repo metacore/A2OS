@@ -21,27 +21,27 @@ TYPE
 
 	MemoryContent* = OBJECT (Content)
 	VAR 
-		baseReg-, offset-, size-: LONGINT; 
+		baseReg-, offset-, size-: SIGNED32; 
 
-		PROCEDURE ^  & Init*(baseReg, offset, size: LONGINT); 
+		PROCEDURE ^  & Init*(baseReg, offset, size: SIGNED32); 
 		PROCEDURE ^ Equals(c: Content): BOOLEAN; 
 		PROCEDURE ^ Overlapps(c: Content): BOOLEAN; 
 	END MemoryContent; 
 
 	PCRelMemContent* = OBJECT (MemoryContent)
 	VAR 
-		pc-: LONGINT; 
+		pc-: SIGNED32; 
 
-		PROCEDURE ^  & Init*(pc, offset, size: LONGINT); 
+		PROCEDURE ^  & Init*(pc, offset, size: SIGNED32); 
 		PROCEDURE ^ Equals(c: Content): BOOLEAN; 
 	END PCRelMemContent; 
 
 	Address* = OBJECT (Content)
 	VAR 
 		adr: PCM.Attribute; 
-		offset: LONGINT; 
+		offset: SIGNED32; 
 
-		PROCEDURE ^  & Init*(adr: PCM.Attribute; offset: LONGINT); 
+		PROCEDURE ^  & Init*(adr: PCM.Attribute; offset: SIGNED32); 
 		PROCEDURE ^ Equals(c: Content): BOOLEAN; 
 	END Address; 
 
@@ -50,37 +50,37 @@ TYPE
 
 	IntConstant* = OBJECT (ConstantContent)
 	VAR 
-		v-: LONGINT; 
+		v-: SIGNED32; 
 
-		PROCEDURE ^  & Init*(value: LONGINT); 
+		PROCEDURE ^  & Init*(value: SIGNED32); 
 		PROCEDURE ^ Equals(c: Content): BOOLEAN; 
 	END IntConstant; 
 
 	RealConstant* = OBJECT (ConstantContent)
 	VAR 
-		v-: REAL; 
+		v-: FLOAT32; 
 
-		PROCEDURE ^  & Init*(value: REAL); 
+		PROCEDURE ^  & Init*(value: FLOAT32); 
 		PROCEDURE ^ Equals(c: Content): BOOLEAN; 
 	END RealConstant; 
 
 	LongRealConstant* = OBJECT (ConstantContent)
 	VAR 
-		v-: LONGREAL; 
+		v-: FLOAT64; 
 
-		PROCEDURE ^  & Init*(value: LONGREAL); 
+		PROCEDURE ^  & Init*(value: FLOAT64); 
 		PROCEDURE ^ Equals(c: Content): BOOLEAN; 
 	END LongRealConstant; 
 
 	Register* = OBJECT 
 	VAR 
-		id-: LONGINT; 
-		free-: LONGINT; 
+		id-: SIGNED32; 
+		free-: SIGNED32; 
 		value: Content; 
 		memory: Content; 
 		prevLRU, nextLRU: Register; 
 
-		PROCEDURE ^  & Init*(ID: LONGINT); 
+		PROCEDURE ^  & Init*(ID: SIGNED32); 
 		PROCEDURE ^ AddContent(c: Content); 
 		PROCEDURE ^ RemoveContent(r: Content); 
 		PROCEDURE ^ Equals(c: Content): BOOLEAN; 
@@ -89,37 +89,37 @@ TYPE
 	ARMRegisters* = OBJECT {EXCLUSIVE} 
 	VAR 
 		registers: POINTER TO ARRAY OF Register; 
-		nofRegs: LONGINT; 
+		nofRegs: SIGNED32; 
 		reuse: SET; 
 		lru: Register; 
 
-		PROCEDURE ^  & Init*(nofRegs: LONGINT; reuseFlags: SET); 
+		PROCEDURE ^  & Init*(nofRegs: SIGNED32; reuseFlags: SET); 
 		PROCEDURE ^ ReuseType(c: Content): BOOLEAN; 
-		PROCEDURE ^ AllocDestReg*(useCount: LONGINT): LONGINT; 
-		PROCEDURE ^ AllocReg*(content: Content; VAR contentValid: BOOLEAN; useCount: LONGINT): LONGINT; 
-		PROCEDURE ^ AllocSpecialReg*(reg: LONGINT; content: Content; useCount: LONGINT); 
-		PROCEDURE ^ InAllocReg(reg, useCount: LONGINT); 
-		PROCEDURE ^ FixRegisterUse*(reg, deltaUse: LONGINT); 
-		PROCEDURE ^ FreeReg*(reg: LONGINT); 
+		PROCEDURE ^ AllocDestReg*(useCount: SIGNED32): SIGNED32; 
+		PROCEDURE ^ AllocReg*(content: Content; VAR contentValid: BOOLEAN; useCount: SIGNED32): SIGNED32; 
+		PROCEDURE ^ AllocSpecialReg*(reg: SIGNED32; content: Content; useCount: SIGNED32); 
+		PROCEDURE ^ InAllocReg(reg, useCount: SIGNED32); 
+		PROCEDURE ^ FixRegisterUse*(reg, deltaUse: SIGNED32); 
+		PROCEDURE ^ FreeReg*(reg: SIGNED32); 
 		PROCEDURE ^ FreeAll*; 
-		PROCEDURE ^ SetRegisterContent*(reg: LONGINT; content: Content); 
-		PROCEDURE ^ AddRegisterContent*(reg: LONGINT; content: Content); 
+		PROCEDURE ^ SetRegisterContent*(reg: SIGNED32; content: Content); 
+		PROCEDURE ^ AddRegisterContent*(reg: SIGNED32; content: Content); 
 		PROCEDURE ^ Invalidate*(content: Content); 
 		PROCEDURE ^ InvalidateAll*; 
-		PROCEDURE ^ GetReg*(reg: LONGINT): Register; 
+		PROCEDURE ^ GetReg*(reg: SIGNED32): Register; 
 		PROCEDURE ^ GetUsedRegisterSet*(): SET; 
-		PROCEDURE ^ IsRegisterFree*(reg: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetRegisterUseCount*(reg: LONGINT): LONGINT; 
+		PROCEDURE ^ IsRegisterFree*(reg: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetRegisterUseCount*(reg: SIGNED32): SIGNED32; 
 	END ARMRegisters; 
 VAR 
 	bimboTrace*: BOOLEAN; 
 
-	PROCEDURE ^ SpecialReg(r: LONGINT): BOOLEAN; 
-	PROCEDURE ^ NewMemContent*(pc, rBase, offset, size: LONGINT): MemoryContent; 
-	PROCEDURE ^ NewPCRelMemContent*(pc, offset, size: LONGINT): PCRelMemContent; 
-	PROCEDURE ^ NewMemAddress*(adr: PCM.Attribute; offset: LONGINT): Address; 
-	PROCEDURE ^ NewIntConst*(v: LONGINT): IntConstant; 
-	PROCEDURE ^ NewRealConst*(v: REAL): RealConstant; 
-	PROCEDURE ^ NewLongRealConst*(v: LONGREAL): LongRealConstant; 
+	PROCEDURE ^ SpecialReg(r: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ NewMemContent*(pc, rBase, offset, size: SIGNED32): MemoryContent; 
+	PROCEDURE ^ NewPCRelMemContent*(pc, offset, size: SIGNED32): PCRelMemContent; 
+	PROCEDURE ^ NewMemAddress*(adr: PCM.Attribute; offset: SIGNED32): Address; 
+	PROCEDURE ^ NewIntConst*(v: SIGNED32): IntConstant; 
+	PROCEDURE ^ NewRealConst*(v: FLOAT32): RealConstant; 
+	PROCEDURE ^ NewLongRealConst*(v: FLOAT64): LongRealConstant; 
 BEGIN
 END PCARMRegisters.

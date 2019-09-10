@@ -12,18 +12,18 @@ TYPE
 	Buffer = POINTER TO ARRAY OF CHAR; 
 VAR 
 	buf: Buffer; 
-	bp: LONGINT; 
+	bp: SIGNED32; 
 	debug-: SET; 
 	hexd: ARRAY 17 OF CHAR; 
 
 	PROCEDURE ^ SetDebug*(context: Commands.Context); 
 	PROCEDURE ^ NextLine; 
 	PROCEDURE ^ GetConfigString(VAR str: ARRAY OF CHAR); 
-	PROCEDURE ^ GetConfigInt(VAR i: LONGINT); 
+	PROCEDURE ^ GetConfigInt(VAR i: SIGNED32); 
 	PROCEDURE ^ GetCipherList*(VAR list: ARRAY OF CHAR); 
 	PROCEDURE ^ GetHMacList*(VAR list: ARRAY OF CHAR); 
-	PROCEDURE ^ GetCipherParams*(CONST name: ARRAY OF CHAR; VAR modname: ARRAY OF CHAR; VAR bits: LONGINT; VAR mode: SHORTINT); 
-	PROCEDURE ^ GetHMacParams*(CONST name: ARRAY OF CHAR; VAR modname: ARRAY OF CHAR; VAR bytes: LONGINT); 
+	PROCEDURE ^ GetCipherParams*(CONST name: ARRAY OF CHAR; VAR modname: ARRAY OF CHAR; VAR bits: SIGNED32; VAR mode: SIGNED8); 
+	PROCEDURE ^ GetHMacParams*(CONST name: ARRAY OF CHAR; VAR modname: ARRAY OF CHAR; VAR bytes: SIGNED32); 
 	PROCEDURE ^ ExpandBuf(VAR buf: Buffer; newSize: SIZE); 
 	PROCEDURE ^ GetConfigBuffer(): Buffer; 
 BEGIN

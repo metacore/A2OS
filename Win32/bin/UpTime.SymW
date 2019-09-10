@@ -4,7 +4,7 @@ CONST
 VAR 
 	startTime: Dates.DateTime; 
 
-	PROCEDURE ^ Get*(VAR days, hours, minutes, seconds: LONGINT); 
+	PROCEDURE ^ Get*(VAR days, hours, minutes, seconds: SIGNED32); 
 	PROCEDURE ^ ToStream*(stream: Streams.Writer); 
 	PROCEDURE ^ GetStartTime*(): Dates.DateTime; 
 	PROCEDURE ^ Show*(context: Commands.Context); 

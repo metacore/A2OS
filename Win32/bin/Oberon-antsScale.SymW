@@ -11,14 +11,14 @@ TYPE
 	tLayer* = POINTER TO tLayerDesc; 
 
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
-		pos: INTEGER; 
-		digits: INTEGER; 
+		pos: SIGNED16; 
+		digits: SIGNED16; 
 	END; 
 VAR 
 	newlayer-: tLayer; 
 
-	PROCEDURE ^ Min(a, b: INTEGER): INTEGER; 
-	PROCEDURE ^ Max(a, b: INTEGER): INTEGER; 
+	PROCEDURE ^ Min(a, b: SIGNED16): SIGNED16; 
+	PROCEDURE ^ Max(a, b: SIGNED16): SIGNED16; 
 	PROCEDURE ^ Recall(scale: tLayer; VAR msg: Display.DisplayMsg); 
 	PROCEDURE ^ DoControl2(scale: tLayer; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ Responsible(scale: tLayer; VAR event: vyEvents.EventMsg); 
@@ -30,7 +30,7 @@ VAR
 	PROCEDURE ^ Open*(scale: tLayer; id: ARRAY OF CHAR); 
 	PROCEDURE ^ New*; 
 	PROCEDURE ^ Insert*; 
-	PROCEDURE ^ ScaleToPicture(p: vyPort.Picture; posx, posy: LONGINT); 
+	PROCEDURE ^ ScaleToPicture(p: vyPort.Picture; posx, posy: SIGNED32); 
 	PROCEDURE ^ ScalesToPort*; 
 BEGIN
 END antsScale.

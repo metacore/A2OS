@@ -12,14 +12,14 @@ TYPE
 	DocGadget* = POINTER TO DocGadgetDesc; 
 
 	DocGadgetDesc* = RECORD (Gadgets.FrameDesc)
-		time: LONGINT; 
+		time: SIGNED32; 
 	END; 
 
 	DocViewer* = POINTER TO DocViewerDesc; 
 
 	DocViewerDesc* = RECORD (Viewers.ViewerDesc)
-		menuH*: INTEGER; 
-		time: LONGINT; 
+		menuH*: SIGNED16; 
+		time: SIGNED32; 
 	END; 
 
 	Dummy = POINTER TO RECORD (Display.FrameDesc)
@@ -33,11 +33,11 @@ TYPE
 		parent: Objects.Object; 
 	END; 
 VAR 
-	menuH*: INTEGER; 
-	menuC*: INTEGER; 
-	menuButtonW*: INTEGER; 
-	namePlateW*: INTEGER; 
-	recDocWidth*: INTEGER; 
+	menuH*: SIGNED16; 
+	menuC*: SIGNED16; 
+	menuButtonW*: SIGNED16; 
+	namePlateW*: SIGNED16; 
+	recDocWidth*: SIGNED16; 
 	W: Texts.Writer; 
 	recall: Display.Frame; 
 
@@ -45,26 +45,26 @@ VAR
 	PROCEDURE ^ NewDummy(): Dummy; 
 	PROCEDURE ^ HasMenu*(V: DocViewer): BOOLEAN; 
 	PROCEDURE ^ CopyDocViewer(V: DocViewer; VAR V1: DocViewer); 
-	PROCEDURE ^ ModifyFrame(V: DocViewer; F: Display.Frame; id, Y, H: INTEGER); 
+	PROCEDURE ^ ModifyFrame(V: DocViewer; F: Display.Frame; id, Y, H: SIGNED16); 
 	PROCEDURE ^ Restore(V: DocViewer); 
-	PROCEDURE ^ ModifyDocViewer(V: DocViewer; id, Y, H: INTEGER); 
-	PROCEDURE ^ Change(V: DocViewer; X, Y: INTEGER; Keys: SET); 
+	PROCEDURE ^ ModifyDocViewer(V: DocViewer; id, Y, H: SIGNED16); 
+	PROCEDURE ^ Change(V: DocViewer; X, Y: SIGNED16; Keys: SET); 
 	PROCEDURE ^ Suspend(V: DocViewer); 
 	PROCEDURE ^ DocViewerNeutralize(F: DocViewer); 
 	PROCEDURE ^ DocViewerHandleSelect(F: DocViewer; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ DocViewerHandle*(V: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ NewDocViewer*(Menu, Main: Display.Frame; menuH, X, Y: INTEGER): DocViewer; 
+	PROCEDURE ^ NewDocViewer*(Menu, Main: Display.Frame; menuH, X, Y: SIGNED16): DocViewer; 
 	PROCEDURE ^ Menu*(F: DocGadget): Gadgets.Frame; 
 	PROCEDURE ^ Main*(F: DocGadget): Gadgets.Frame; 
 	PROCEDURE ^ SetMask(F: Gadgets.Frame; M: Display3.Mask); 
 	PROCEDURE ^ SetMainMask(F: DocGadget); 
 	PROCEDURE ^ SetMenuMask(F: DocGadget); 
-	PROCEDURE ^ ToMain(F: DocGadget; x, y: INTEGER; VAR M: Display.FrameMsg); 
-	PROCEDURE ^ ToMenu(F: DocGadget; x, y: INTEGER; VAR M: Display.FrameMsg); 
-	PROCEDURE ^ PositionMain(F: DocGadget; VAR X, Y, W, H: INTEGER); 
+	PROCEDURE ^ ToMain(F: DocGadget; x, y: SIGNED16; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ ToMenu(F: DocGadget; x, y: SIGNED16; VAR M: Display.FrameMsg); 
+	PROCEDURE ^ PositionMain(F: DocGadget; VAR X, Y, W, H: SIGNED16); 
 	PROCEDURE ^ AdjustDocGadget(F: DocGadget; VAR M: Display.ModifyMsg); 
 	PROCEDURE ^ AdjustChildDocGadget(F: DocGadget; VAR M: Display.ModifyMsg); 
-	PROCEDURE ^ RestoreDocGadget(F: DocGadget; R: Display3.Mask; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg); 
+	PROCEDURE ^ RestoreDocGadget(F: DocGadget; R: Display3.Mask; x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ PrintDocGadget(F: DocGadget; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ CopyDocGadget*(VAR M: Objects.CopyMsg; from, to: DocGadget); 
 	PROCEDURE ^ StoreDocGadget(F: DocGadget; VAR M: Objects.FileMsg); 
@@ -74,7 +74,7 @@ VAR
 	PROCEDURE ^ DocGadgetLink(F: DocGadget; VAR M: Objects.LinkMsg); 
 	PROCEDURE ^ Neutralize(F: DocGadget); 
 	PROCEDURE ^ HandleSelect(F: DocGadget; VAR M: Oberon.InputMsg); 
-	PROCEDURE ^ TrackDocGadget(F: DocGadget; x, y, w, h, border: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackDocGadget(F: DocGadget; x, y, w, h, border: SIGNED16; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ DocGadgetHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewDocGadget*; 
 	PROCEDURE ^ Init*(F: DocGadget; menu, main: Gadgets.Frame; adjust: BOOLEAN); 
@@ -92,7 +92,7 @@ VAR
 	PROCEDURE ^ Grow*; 
 	PROCEDURE ^ Copy*; 
 	PROCEDURE ^ Close*; 
-	PROCEDURE ^ AllocateDocGadget(V: DocViewer; w, h: INTEGER; VAR F: Display.Frame; VAR u, v: INTEGER); 
+	PROCEDURE ^ AllocateDocGadget(V: DocViewer; w, h: SIGNED16; VAR F: Display.Frame; VAR u, v: SIGNED16); 
 	PROCEDURE ^ CreateMenu(D: Documents.Document; desktop, system: BOOLEAN): Display.Frame; 
 	PROCEDURE ^ ShowDoc*(D: Documents.Document); 
 	PROCEDURE ^ ReplaceCurrentDoc*(D: Documents.Document); 

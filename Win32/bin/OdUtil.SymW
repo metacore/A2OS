@@ -12,21 +12,21 @@ TYPE
 	Log* = OBJECT {EXCLUSIVE} (TFLog.Log)
 	VAR 
 		appName: ARRAY 64 OF CHAR; 
-		logPos: LONGINT; 
+		logPos: SIGNED32; 
 		logLine: ARRAY 1024 OF CHAR; 
-		kind: LONGINT; 
+		kind: SIGNED32; 
 		locked: BOOLEAN; 
 		disableLogToOut: BOOLEAN; 
 		f: Files.File; 
 		w: Streams.Writer; 
 		fsw: Files.Writer; 
-		mode: INTEGER; 
+		mode: SIGNED16; 
 
 		PROCEDURE ^  & Init*(logName: ARRAY OF CHAR); 
 		PROCEDURE ^ SetLogFile*(fn: ARRAY OF CHAR); 
 		PROCEDURE ^ SetLogWriter*(w: Streams.Writer); 
 		PROCEDURE ^ SetLogToOut*(enabled: BOOLEAN); 
-		PROCEDURE ^ SetKind(kind: LONGINT); 
+		PROCEDURE ^ SetKind(kind: SIGNED32); 
 		PROCEDURE ^ InternalLn; 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ Enter*; 
@@ -35,8 +35,8 @@ TYPE
 		PROCEDURE ^ Char*(x: CHAR); 
 		PROCEDURE ^ InternalString*(VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ String*(x: ARRAY OF CHAR); 
-		PROCEDURE ^ Hex*(x, w: LONGINT); 
-		PROCEDURE ^ Int*(x: HUGEINT; w: LONGINT); 
+		PROCEDURE ^ Hex*(x, w: SIGNED32); 
+		PROCEDURE ^ Int*(x: SIGNED64; w: SIGNED32); 
 		PROCEDURE ^ TimeStamp*; 
 		PROCEDURE ^ Close*; 
 	END Log; 
@@ -79,8 +79,8 @@ VAR
 
 	PROCEDURE ^ padColl*(VAR conf: ARRAY OF CHAR); 
 	PROCEDURE ^ unpadColl*(VAR conf: ARRAY OF CHAR); 
-	PROCEDURE ^ Dev0*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-	PROCEDURE ^ I*(i: LONGINT): Array8; 
+	PROCEDURE ^ Dev0*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ I*(i: SIGNED32): Array8; 
 	PROCEDURE ^ B*(b: BOOLEAN): Array8; 
 	PROCEDURE ^ msg1(CONST s1: ARRAY OF CHAR); 
 	PROCEDURE ^ Msg1*(CONST s1: ARRAY OF CHAR); 

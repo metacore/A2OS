@@ -11,19 +11,19 @@ TYPE
 		bufferPool: SoundDevices.BufferPool; 
 		buffer: SoundDevices.Buffer; 
 		in: Streams.Reader; 
-		channels, rate, bits: LONGINT; 
+		channels, rate, bits: SIGNED32; 
 		ready, paused, finished: BOOLEAN; 
-		pos, oldPos: LONGINT; 
-		setup*: PROCEDURE {DELEGATE}(canSeek: BOOLEAN; totTime, totSamp: LONGINT); 
-		update*: PROCEDURE {DELEGATE}(status: BOOLEAN; pos, displayTime: LONGINT); 
+		pos, oldPos: SIGNED32; 
+		setup*: PROCEDURE {DELEGATE}(canSeek: BOOLEAN; totTime, totSamp: SIGNED32); 
+		update*: PROCEDURE {DELEGATE}(status: BOOLEAN; pos, displayTime: SIGNED32); 
 		eof*: PROCEDURE {DELEGATE}(sender, data: ANY); 
 
-		PROCEDURE ^  & Init*(in: Streams.Reader; length: LONGINT); 
+		PROCEDURE ^  & Init*(in: Streams.Reader; length: SIGNED32); 
 		PROCEDURE ^ Play*; 
 		PROCEDURE ^ Stop*; 
 		PROCEDURE ^ Pause*; 
-		PROCEDURE ^ SetPos*(pos: LONGINT); 
-		PROCEDURE ^ GetPos*(): LONGINT; 
+		PROCEDURE ^ SetPos*(pos: SIGNED32); 
+		PROCEDURE ^ GetPos*(): SIGNED32; 
 		PROCEDURE ^ Close*; 
 	BEGIN{ACTIVE} 
 	END Player; 

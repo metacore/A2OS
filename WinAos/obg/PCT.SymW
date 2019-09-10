@@ -98,7 +98,7 @@ TYPE
 		inScope-: Scope; 
 		dlink*: Symbol; 
 		info*: ANY; 
-		pos-: LONGINT; 
+		pos-: SIGNED32; 
 
 		PROCEDURE ^ Use; 
 		PROCEDURE ^ Write; 
@@ -106,12 +106,12 @@ TYPE
 
 	Node* = OBJECT 
 	VAR 
-		pos*: LONGINT; 
+		pos*: SIGNED32; 
 	END Node; 
 
 	Scope* = OBJECT {EXCLUSIVE} 
 	VAR 
-		state-: SHORTINT; 
+		state-: SIGNED8; 
 		flags-: SET; 
 		ownerID-: ADDRESS; 
 		module-: Module; 
@@ -124,27 +124,27 @@ TYPE
 		parent-: Scope; 
 		code*: PCM.Attribute; 
 		imported-: BOOLEAN; 
-		valueCount-, varCount-, procCount-, typeCount-: LONGINT; 
-		tmpCount: LONGINT; 
+		valueCount-, varCount-, procCount-, typeCount-: SIGNED32; 
+		tmpCount: SIGNED32; 
 
-		PROCEDURE ^ Await*(state: SHORTINT); 
-		PROCEDURE ^ ChangeState(state: SHORTINT); 
-		PROCEDURE ^ CreateSymbol*(name: StringIndex; vis: SET; type: Struct; VAR res: WORD); 
-		PROCEDURE ^ CreateValue*(name: StringIndex; vis: SET; c: Const; pos: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ CreateType*(name: StringIndex; vis: SET; type: Struct; pos: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ CreateAlias*(ov: Variable; type: Struct; VAR res: WORD); 
-		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: LONGINT; info: ANY; VAR res: WORD); 
-		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Await*(state: SIGNED8); 
+		PROCEDURE ^ ChangeState(state: SIGNED8); 
+		PROCEDURE ^ CreateSymbol*(name: StringIndex; vis: SET; type: Struct; VAR res: INTEGER); 
+		PROCEDURE ^ CreateValue*(name: StringIndex; vis: SET; c: Const; pos: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ CreateType*(name: StringIndex; vis: SET; type: Struct; pos: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ CreateAlias*(ov: Variable; type: Struct; VAR res: INTEGER); 
+		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY; VAR res: INTEGER); 
+		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ CreateHiddenVarName*(VAR name: StringIndex); 
-		PROCEDURE ^ CreateAwaitProcName*(VAR name: StringIndex; count: LONGINT); 
-		PROCEDURE ^ FindHiddenVar*(pos: LONGINT; info: ANY): Variable; 
+		PROCEDURE ^ CreateAwaitProcName*(VAR name: StringIndex; count: SIGNED32); 
+		PROCEDURE ^ FindHiddenVar*(pos: SIGNED32; info: ANY): Variable; 
 	END Scope; 
 
 	WithScope* = OBJECT {EXCLUSIVE} (Scope)
 	VAR 
 		withGuard*, withSym*: Symbol; 
 
-		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: LONGINT; info: ANY; VAR res: WORD); 
+		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY; VAR res: INTEGER); 
 	END WithScope; 
 
 	ProcScope* = OBJECT {EXCLUSIVE} (Scope)
@@ -152,17 +152,17 @@ TYPE
 		ownerS-: Delegate; 
 		ownerO-: Proc; 
 		firstPar-, lastPar-: Parameter; 
-		formalParCount-, parCount-: LONGINT; 
-		cc-: LONGINT; 
+		formalParCount-, parCount-: SIGNED32; 
+		cc-: SIGNED32; 
 		returnParameter-: ReturnParameter; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ SetCC*(cc: LONGINT); 
-		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: LONGINT; info: ANY; VAR res: WORD); 
+		PROCEDURE ^ SetCC*(cc: SIGNED32); 
+		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY; VAR res: INTEGER); 
 		PROCEDURE ^ ReversePars*; 
-		PROCEDURE ^ CreatePar*(vis: SET; ref: BOOLEAN; name: StringIndex; flags: SET; type: Struct; pos: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ CreateReturnPar*(type: Struct; VAR res: WORD); 
-		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ CreatePar*(vis: SET; ref: BOOLEAN; name: StringIndex; flags: SET; type: Struct; pos: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ CreateReturnPar*(type: Struct; VAR res: INTEGER); 
+		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: SIGNED32; VAR res: INTEGER); 
 	END ProcScope; 
 
 	RecScope* = OBJECT {EXCLUSIVE} (Scope)
@@ -170,10 +170,10 @@ TYPE
 		owner-: Record; 
 		body-, initproc-: Method; 
 		firstMeth-, lastMeth-: Method; 
-		totalVarCount-, totalProcCount-: LONGINT; 
+		totalVarCount-, totalProcCount-: SIGNED32; 
 
-		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: LONGINT; info: ANY; VAR res: WORD); 
-		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY; VAR res: INTEGER); 
+		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ IsProtected*(): BOOLEAN; 
 	END RecScope; 
 
@@ -184,31 +184,31 @@ TYPE
 	VAR 
 		owner-: Module; 
 		records-: Record; 
-		nofRecs-: INTEGER; 
+		nofRecs-: SIGNED16; 
 
-		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: LONGINT; info: ANY; VAR res: WORD); 
-		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ AddModule*(alias: StringIndex; m: Module; pos: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ CreateVar*(name: StringIndex; vis, flags: SET; type: Struct; pos: SIGNED32; info: ANY; VAR res: INTEGER); 
+		PROCEDURE ^ CreateProc*(name: StringIndex; vis, flags: SET; scope: Scope; return: Struct; pos: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ AddModule*(alias: StringIndex; m: Module; pos: SIGNED32; VAR res: INTEGER); 
 	END ModScope; 
 
 	Basic* = POINTER TO RECORD (Struct)
 	END; 
 
 	Array* = POINTER TO RECORD (Struct)
-		mode-: SHORTINT; 
+		mode-: SIGNED8; 
 		base-: Struct; 
-		len-: LONGINT; 
-		opendim-: LONGINT; 
+		len-: SIGNED32; 
+		opendim-: SIGNED32; 
 		isDynSized*: BOOLEAN; 
 	END; 
 
 	EnhArray* = POINTER TO RECORD (Struct)
-		mode-: SHORTINT; 
+		mode-: SIGNED8; 
 		base-: Struct; 
-		len-: LONGINT; 
-		inc-: LONGINT; 
-		dim-: LONGINT; 
-		opendim-: LONGINT; 
+		len-: SIGNED32; 
+		inc-: SIGNED32; 
+		dim-: SIGNED32; 
+		opendim-: SIGNED32; 
 	END; 
 
 	Tensor* = POINTER TO RECORD (Struct)
@@ -222,14 +222,14 @@ TYPE
 		ptr-: Pointer; 
 		intf-: POINTER TO Interfaces; 
 		mode*: SET; 
-		prio*: LONGINT; 
+		prio*: SIGNED32; 
 		imported-: BOOLEAN; 
 		link-: Record; 
 		pvused*, pbused*: BOOLEAN; 
 	END; 
 
 	CustomArray* = POINTER TO RECORD (Record)
-		dim-: LONGINT; 
+		dim-: SIGNED32; 
 		etyp: Struct; 
 	END; 
 
@@ -250,9 +250,9 @@ TYPE
 
 	Const* = POINTER TO RECORD 
 		type-: Struct; 
-		int-: LONGINT; 
-		real-: LONGREAL; 
-		long-: HUGEINT; 
+		int-: SIGNED32; 
+		real-: FLOAT64; 
+		long-: SIGNED64; 
 		set-: SET; 
 		bool-: BOOLEAN; 
 		ptr-: ANY; 
@@ -262,7 +262,7 @@ TYPE
 
 	ConstArray* = POINTER TO RECORD (Const)
 		data-: POINTER TO ARRAY OF CHAR; 
-		len-: POINTER TO ARRAY OF LONGINT; 
+		len-: POINTER TO ARRAY OF SIGNED32; 
 	END; 
 
 	Value* = OBJECT (Symbol)
@@ -273,7 +273,7 @@ TYPE
 
 	Variable* = OBJECT (Symbol)
 	VAR 
-		level-: SHORTINT; 
+		level-: SIGNED8; 
 		nextVar-: Variable; 
 	END Variable; 
 
@@ -307,7 +307,7 @@ TYPE
 	VAR 
 		scope-: ProcScope; 
 		nextProc-: Proc; 
-		level-: SHORTINT; 
+		level-: SIGNED8; 
 	END Proc; 
 
 	Method* = OBJECT (Proc)
@@ -346,7 +346,7 @@ TYPE
 	ImporterPlugin* = PROCEDURE (self: Module; VAR new: Module; name: StringIndex); 
 VAR 
 	BodyName-, SelfName-, Anonymous-, PtrReturnType-: StringIndex; 
-	AWait, ANoWait: LONGINT; 
+	AWait, ANoWait: SIGNED32; 
 	Byte-, Bool-, Char8-, Char16-, Char32-: Struct; 
 	Int8-, Int16-, Int32-, Int64-, Float32-, Float64-: Struct; 
 	Set-, Ptr-, String-, NilType-, NoType-, UndefType-, Address*, SetType*, Size*: Struct; 
@@ -357,9 +357,9 @@ VAR
 	Universe-, System-: Module; 
 	True-, False-: Const; 
 	SystemAddress-, SystemSize-: Type; 
-	AddressSize*, SetSize*: LONGINT; 
+	AddressSize*, SetSize*: SIGNED32; 
 	import: ARRAY MaxPlugins OF ImporterPlugin; 
-	nofImportPlugins: LONGINT; 
+	nofImportPlugins: SIGNED32; 
 	database*: ModuleDB; 
 
 	PROCEDURE ^ ExtendModArray*(VAR a: ModuleArray); 
@@ -372,83 +372,83 @@ VAR
 	PROCEDURE ^ IsDynamicDelegate*(t: Struct): BOOLEAN; 
 	PROCEDURE ^ IsRecord*(t: Struct): BOOLEAN; 
 	PROCEDURE ^ IsBasic*(t: Struct): BOOLEAN; 
-	PROCEDURE ^ BasicTypeDistance*(from, to: Basic): LONGINT; 
-	PROCEDURE ^ RecordTypeDistance*(from, to: Record): LONGINT; 
-	PROCEDURE ^ PointerTypeDistance*(from, to: Pointer): LONGINT; 
-	PROCEDURE ^ ArrayTypeDistance*(from, to: Array): LONGINT; 
-	PROCEDURE ^ TypeDistance*(from, to: Struct): LONGINT; 
-	PROCEDURE ^ SignatureDistance*(from, to: Parameter): LONGINT; 
-	PROCEDURE ^ SignatureDistance0*(parCount: LONGINT; CONST pars: ARRAY OF Struct; to: Parameter): LONGINT; 
+	PROCEDURE ^ BasicTypeDistance*(from, to: Basic): SIGNED32; 
+	PROCEDURE ^ RecordTypeDistance*(from, to: Record): SIGNED32; 
+	PROCEDURE ^ PointerTypeDistance*(from, to: Pointer): SIGNED32; 
+	PROCEDURE ^ ArrayTypeDistance*(from, to: Array): SIGNED32; 
+	PROCEDURE ^ TypeDistance*(from, to: Struct): SIGNED32; 
+	PROCEDURE ^ SignatureDistance*(from, to: Parameter): SIGNED32; 
+	PROCEDURE ^ SignatureDistance0*(parCount: SIGNED32; CONST pars: ARRAY OF Struct; to: Parameter): SIGNED32; 
 	PROCEDURE ^ IsLegalReturnType(t: Struct): BOOLEAN; 
 	PROCEDURE ^ ParameterMatch*(Pa, Pb: Parameter; VAR faulty: Symbol): BOOLEAN; 
 	PROCEDURE ^ EqualTypes*(Ta, Tb: Struct): BOOLEAN; 
 	PROCEDURE ^ CheckForRecursion(type, banned: Struct): BOOLEAN; 
-	PROCEDURE ^ CompareSignature(s1, s2: Parameter): WORD; 
+	PROCEDURE ^ CompareSignature(s1, s2: Parameter): INTEGER; 
 	PROCEDURE ^ GetProcedureAllowed*(scope: ProcScope; returnType: Struct): BOOLEAN; 
 	PROCEDURE ^ SetOwner*(scope: Scope); 
 	PROCEDURE ^ InitScope*(scope, parent: Scope; flags: SET; imported: BOOLEAN); 
-	PROCEDURE ^ Insert(scope: Scope; obj: Symbol; VAR res: WORD); 
+	PROCEDURE ^ Insert(scope: Scope; obj: Symbol; VAR res: INTEGER); 
 	PROCEDURE ^ Lookup(scope: Scope; name: StringIndex): Symbol; 
 	PROCEDURE ^ HiddenVarExists*(scope: Scope; info: ANY): BOOLEAN; 
 	PROCEDURE ^ IsVisible(vis: SET; current, search: Scope; localsearch: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ Find*(current, search: Scope; name: StringIndex; mode: SHORTINT; mark: BOOLEAN): Symbol; 
+	PROCEDURE ^ Find*(current, search: Scope; name: StringIndex; mode: SIGNED8; mark: BOOLEAN): Symbol; 
 	PROCEDURE ^ FindIndexer*(scope: RecScope; name: StringIndex): Method; 
-	PROCEDURE ^ FindOperator*(current, search: Scope; parents: BOOLEAN; name: StringIndex; CONST pars: ARRAY OF Struct; parCount: SIZE; pos: LONGINT): Proc; 
+	PROCEDURE ^ FindOperator*(current, search: Scope; parents: BOOLEAN; name: StringIndex; CONST pars: ARRAY OF Struct; parCount: SIZE; pos: SIGNED32): Proc; 
 	PROCEDURE ^ PrintString*(s: StringIndex); 
-	PROCEDURE ^ Distance(CONST pars: ARRAY OF Struct; param: Parameter; parCount: SIZE): LONGINT; 
-	PROCEDURE ^ FindProcedure*(current, search: Scope; name: StringIndex; parCount: LONGINT; CONST pars: ARRAY OF Struct; identicSignature, mark: BOOLEAN): Proc; 
+	PROCEDURE ^ Distance(CONST pars: ARRAY OF Struct; param: Parameter; parCount: SIZE): SIGNED32; 
+	PROCEDURE ^ FindProcedure*(current, search: Scope; name: StringIndex; parCount: SIGNED32; CONST pars: ARRAY OF Struct; identicSignature, mark: BOOLEAN): Proc; 
 	PROCEDURE ^ FindSameSignature*(search: Scope; name: StringIndex; par: Parameter; identic: BOOLEAN): Proc; 
-	PROCEDURE ^ CheckInterfaceImpl(rec, int: Record; VAR res: WORD); 
+	PROCEDURE ^ CheckInterfaceImpl(rec, int: Record; VAR res: INTEGER); 
 	PROCEDURE ^ StateStructShallowAllocated*(scope: Scope); 
-	PROCEDURE ^ ChangeState*(scope: Scope; state: SHORTINT; pos: LONGINT); 
+	PROCEDURE ^ ChangeState*(scope: Scope; state: SIGNED8; pos: SIGNED32); 
 	PROCEDURE ^ Import*(self: Module; VAR new: Module; name: StringIndex); 
 	PROCEDURE ^ TraverseScopes*(top: Scope; proc: PROCEDURE (s: Scope)); 
 	PROCEDURE ^ AddRecord*(scope: Scope; rec: Record); 
-	PROCEDURE ^ CommitParList(scope: ProcScope; level: SHORTINT); 
-	PROCEDURE ^ GetIntType*(i: LONGINT): Struct; 
-	PROCEDURE ^ GetCharType*(i: LONGINT): Struct; 
-	PROCEDURE ^ NewIntConst*(i: LONGINT; type: Struct): Const; 
-	PROCEDURE ^ NewInt64Const*(i: HUGEINT): Const; 
+	PROCEDURE ^ CommitParList(scope: ProcScope; level: SIGNED8); 
+	PROCEDURE ^ GetIntType*(i: SIGNED32): Struct; 
+	PROCEDURE ^ GetCharType*(i: SIGNED32): Struct; 
+	PROCEDURE ^ NewIntConst*(i: SIGNED32; type: Struct): Const; 
+	PROCEDURE ^ NewInt64Const*(i: SIGNED64): Const; 
 	PROCEDURE ^ NewBoolConst(b: BOOLEAN): Const; 
 	PROCEDURE ^ NewSetConst*(s: SET): Const; 
-	PROCEDURE ^ NewFloatConst*(r: LONGREAL; type: Struct): Const; 
+	PROCEDURE ^ NewFloatConst*(r: FLOAT64; type: Struct): Const; 
 	PROCEDURE ^ NewStringConst*(CONST str: ARRAY OF CHAR): Const; 
 	PROCEDURE ^ NewPtrConst*(p: ANY; type: Struct): Const; 
-	PROCEDURE ^ MakeArrayType*(len: ARRAY OF LONGINT; dim: LONGINT; base: Struct; basesize: LONGINT): Struct; 
-	PROCEDURE ^ NewArrayConst*(VAR data: ARRAY OF SYSTEM.BYTE; len: ARRAY OF LONGINT; dim: LONGINT; base: Struct; basesize: LONGINT): Const; 
-	PROCEDURE ^ CheckArrayBase(a: Array; allowedMode: SET; VAR res: WORD); 
-	PROCEDURE ^ CheckEnhArrayBase(a: EnhArray; allowedMode: SET; VAR res: WORD); 
+	PROCEDURE ^ MakeArrayType*(len: ARRAY OF SIGNED32; dim: SIGNED32; base: Struct; basesize: SIGNED32): Struct; 
+	PROCEDURE ^ NewArrayConst*(VAR data: ARRAY OF SYSTEM.BYTE; len: ARRAY OF SIGNED32; dim: SIGNED32; base: Struct; basesize: SIGNED32): Const; 
+	PROCEDURE ^ CheckArrayBase(a: Array; allowedMode: SET; VAR res: INTEGER); 
+	PROCEDURE ^ CheckEnhArrayBase(a: EnhArray; allowedMode: SET; VAR res: INTEGER); 
 	PROCEDURE ^ ElementType*(a: Struct): Struct; 
-	PROCEDURE ^ InitOpenArray*(a: Array; base: Struct; VAR res: WORD); 
-	PROCEDURE ^ InitStaticArray*(a: Array; len: LONGINT; base: Struct; VAR res: WORD); 
-	PROCEDURE ^ InitTensor*(a: Tensor; base: Struct; VAR res: WORD); 
-	PROCEDURE ^ InitOpenEnhArray*(a: EnhArray; base: Struct; allow: SET; VAR res: WORD); 
-	PROCEDURE ^ InitStaticEnhArray*(a: EnhArray; len: LONGINT; base: Struct; allow: SET; VAR res: WORD); 
-	PROCEDURE ^ SetEnhArrayLen*(a: EnhArray; len: LONGINT); 
-	PROCEDURE ^ SetEnhArrayInc*(a: EnhArray; inc: LONGINT); 
-	PROCEDURE ^ BuildOpenArray*(base: Struct; dim: LONGINT): Struct; 
+	PROCEDURE ^ InitOpenArray*(a: Array; base: Struct; VAR res: INTEGER); 
+	PROCEDURE ^ InitStaticArray*(a: Array; len: SIGNED32; base: Struct; VAR res: INTEGER); 
+	PROCEDURE ^ InitTensor*(a: Tensor; base: Struct; VAR res: INTEGER); 
+	PROCEDURE ^ InitOpenEnhArray*(a: EnhArray; base: Struct; allow: SET; VAR res: INTEGER); 
+	PROCEDURE ^ InitStaticEnhArray*(a: EnhArray; len: SIGNED32; base: Struct; allow: SET; VAR res: INTEGER); 
+	PROCEDURE ^ SetEnhArrayLen*(a: EnhArray; len: SIGNED32); 
+	PROCEDURE ^ SetEnhArrayInc*(a: EnhArray; inc: SIGNED32); 
+	PROCEDURE ^ BuildOpenArray*(base: Struct; dim: SIGNED32): Struct; 
 	PROCEDURE ^ BuildTensor*(base: Struct): Tensor; 
 	PROCEDURE ^ CopyMethods(scope: RecScope; CONST intf: Interfaces; isImported: BOOLEAN); 
-	PROCEDURE ^ InitRecord*(r: Record; base: Struct; CONST intf: Interfaces; scope: RecScope; isInterface, isImported, isDynamic: BOOLEAN; VAR res: WORD); 
-	PROCEDURE ^ NewRecord*(base: Struct; scope: RecScope; flags: SET; imported: BOOLEAN; VAR res: WORD): Record; 
-	PROCEDURE ^ InitCustomArray*(r: CustomArray; base: Struct; dim: LONGINT; scope: CustomArrayScope; VAR res: WORD); 
-	PROCEDURE ^ NewCustomArray*(base: Struct; dim: LONGINT; scope: CustomArrayScope; VAR res: WORD): Pointer; 
-	PROCEDURE ^ NewClass*(base: Struct; CONST implements: Interfaces; scope: RecScope; imported: BOOLEAN; VAR res: WORD): Pointer; 
-	PROCEDURE ^ NewInterface*(CONST implements: Interfaces; scope: RecScope; imported: BOOLEAN; VAR res: WORD): Pointer; 
-	PROCEDURE ^ InitPointer*(ptr: Pointer; base: Struct; VAR res: WORD); 
-	PROCEDURE ^ InitDelegate*(p: Delegate; return: Struct; scope: ProcScope; flags: SET; VAR res: WORD); 
+	PROCEDURE ^ InitRecord*(r: Record; base: Struct; CONST intf: Interfaces; scope: RecScope; isInterface, isImported, isDynamic: BOOLEAN; VAR res: INTEGER); 
+	PROCEDURE ^ NewRecord*(base: Struct; scope: RecScope; flags: SET; imported: BOOLEAN; VAR res: INTEGER): Record; 
+	PROCEDURE ^ InitCustomArray*(r: CustomArray; base: Struct; dim: SIGNED32; scope: CustomArrayScope; VAR res: INTEGER); 
+	PROCEDURE ^ NewCustomArray*(base: Struct; dim: SIGNED32; scope: CustomArrayScope; VAR res: INTEGER): Pointer; 
+	PROCEDURE ^ NewClass*(base: Struct; CONST implements: Interfaces; scope: RecScope; imported: BOOLEAN; VAR res: INTEGER): Pointer; 
+	PROCEDURE ^ NewInterface*(CONST implements: Interfaces; scope: RecScope; imported: BOOLEAN; VAR res: INTEGER): Pointer; 
+	PROCEDURE ^ InitPointer*(ptr: Pointer; base: Struct; VAR res: INTEGER); 
+	PROCEDURE ^ InitDelegate*(p: Delegate; return: Struct; scope: ProcScope; flags: SET; VAR res: INTEGER); 
 	PROCEDURE ^ InitSymbol*(o: Symbol; name: StringIndex; vis: SET; type: Struct); 
 	PROCEDURE ^ InitType*(t: Type; name: StringIndex; vis: SET; type: Struct); 
 	PROCEDURE ^ NewValue*(name: StringIndex; vis: SET; c: Const): Value; 
-	PROCEDURE ^ CheckVar(v: Variable; allowedArray: SET; allowedEnhArray: SET; VAR res: WORD); 
-	PROCEDURE ^ NewGlobalVar*(vis: SET; name: StringIndex; flags: SET; type: Struct; VAR res: WORD): GlobalVar; 
-	PROCEDURE ^ InitProc(p: Proc; vis: SET; name: StringIndex; scope: ProcScope; return: Struct; VAR res: WORD); 
-	PROCEDURE ^ NewProc*(vis: SET; name: StringIndex; flags: SET; scope: ProcScope; return: Struct; VAR res: WORD): Proc; 
-	PROCEDURE ^ FindOverwrittenMethod(owner: Record; name: StringIndex; mscope: ProcScope; VAR res: WORD): Method; 
-	PROCEDURE ^ NewMethod(vis: SET; name: StringIndex; flags: SET; scope: ProcScope; return: Struct; boundTo: Record; pos: LONGINT; VAR res: WORD): Method; 
+	PROCEDURE ^ CheckVar(v: Variable; allowedArray: SET; allowedEnhArray: SET; VAR res: INTEGER); 
+	PROCEDURE ^ NewGlobalVar*(vis: SET; name: StringIndex; flags: SET; type: Struct; VAR res: INTEGER): GlobalVar; 
+	PROCEDURE ^ InitProc(p: Proc; vis: SET; name: StringIndex; scope: ProcScope; return: Struct; VAR res: INTEGER); 
+	PROCEDURE ^ NewProc*(vis: SET; name: StringIndex; flags: SET; scope: ProcScope; return: Struct; VAR res: INTEGER): Proc; 
+	PROCEDURE ^ FindOverwrittenMethod(owner: Record; name: StringIndex; mscope: ProcScope; VAR res: INTEGER): Method; 
+	PROCEDURE ^ NewMethod(vis: SET; name: StringIndex; flags: SET; scope: ProcScope; return: Struct; boundTo: Record; pos: SIGNED32; VAR res: INTEGER): Method; 
 	PROCEDURE ^ NewModule*(name: StringIndex; imported: BOOLEAN; flags: SET; scope: ModScope): Module; 
-	PROCEDURE ^ SetMode*(scope: Scope; mode: LONGINT; VAR res: WORD); 
-	PROCEDURE ^ SetProcFlag*(scope: Scope; flag: LONGINT; VAR res: WORD); 
+	PROCEDURE ^ SetMode*(scope: Scope; mode: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ SetProcFlag*(scope: Scope; flag: SIGNED32; VAR res: INTEGER); 
 	PROCEDURE ^ IsRealtimeScope*(scope: Scope): BOOLEAN; 
 	PROCEDURE ^ RecordSizeUsed*(rec: Record); 
 	PROCEDURE ^ Written*(s: Symbol); 

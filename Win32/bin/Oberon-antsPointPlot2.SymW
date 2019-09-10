@@ -12,19 +12,19 @@ TYPE
 	END; 
 VAR 
 	tempLayer: tLayer; 
-	tempNum: LONGINT; 
-	tempX, tempY: LONGREAL; 
+	tempNum: SIGNED32; 
+	tempX, tempY: FLOAT64; 
 	dlink-: Objects.Object; 
 	newlayer-: tLayer; 
 
 	PROCEDURE ^ Copy(src, dest: tLayer); 
-	PROCEDURE ^ Min(x, y: LONGINT): LONGINT; 
+	PROCEDURE ^ Min(x, y: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Recall(scatter: tLayer); 
-	PROCEDURE ^ Vizor(x0, y0, x1, y1: INTEGER); 
+	PROCEDURE ^ Vizor(x0, y0, x1, y1: SIGNED16); 
 	PROCEDURE ^ Actor(layer: vyPort.tLayer; sel: vyBase.tVector; x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real; VAR somethingChanged: BOOLEAN); 
 	PROCEDURE ^ Select(scatter: tLayer; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ Prompt(scatter: tLayer; VAR event: vyEvents.EventMsg); 
-	PROCEDURE ^ InPoint(scatter: tLayer; x, y: INTEGER; VAR i: LONGINT): BOOLEAN; 
+	PROCEDURE ^ InPoint(scatter: tLayer; x, y: SIGNED16; VAR i: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ Loc(scatter: tLayer; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ Responsible(scatter: tLayer; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ Consume(o: tLayer; msg: Display.ConsumeMsg); 

@@ -14,7 +14,7 @@ TYPE
 		decEd, hexEd: WMEditors.Editor; 
 		copyButton: WMStandardComponents.Button; 
 		prevFont, font: WMGraphics.Font; 
-		nofCharacters, curChar: LONGINT; 
+		nofCharacters, curChar: SIGNED32; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
@@ -26,7 +26,7 @@ TYPE
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ IncCount; 

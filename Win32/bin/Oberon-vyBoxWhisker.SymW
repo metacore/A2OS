@@ -8,7 +8,7 @@ TYPE
 	tLayer* = POINTER TO tLayerDesc; 
 
 	tLayerDesc = RECORD (vyPort.tLayerDesc)
-		yLoc, height: REAL; 
+		yLoc, height: FLOAT32; 
 	END; 
 VAR 
 	slink*, dlink*: Objects.Object; 

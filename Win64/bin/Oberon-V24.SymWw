@@ -39,16 +39,16 @@ CONST
 VAR 
 	ports: ARRAY (Serials.MaxPorts + 1) OF Serials.Port; 
 
-	PROCEDURE ^ NumberOfPorts*(): LONGINT; 
-	PROCEDURE ^ Start*(portNo, bps, data, parity, stop: LONGINT; VAR res: WORD); 
-	PROCEDURE ^ Stop*(portNo: LONGINT); 
-	PROCEDURE ^ Send*(portNo: LONGINT; x: SYSTEM.BYTE; VAR res: WORD); 
-	PROCEDURE ^ SendBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: WORD); 
-	PROCEDURE ^ Receive*(portNo: LONGINT; VAR x: SYSTEM.BYTE; VAR res: WORD); 
-	PROCEDURE ^ ReceiveBytes*(portNo: LONGINT; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT; VAR res: WORD); 
-	PROCEDURE ^ ClearMC*(portNo: LONGINT; s: SET); 
-	PROCEDURE ^ SetMC*(portNo: LONGINT; s: SET); 
-	PROCEDURE ^ GetMC*(portNo: LONGINT; VAR s: SET); 
-	PROCEDURE ^ Available*(portNo: LONGINT): SIZE; 
+	PROCEDURE ^ NumberOfPorts*(): SIGNED32; 
+	PROCEDURE ^ Start*(portNo, bps, data, parity, stop: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ Stop*(portNo: SIGNED32); 
+	PROCEDURE ^ Send*(portNo: SIGNED32; x: SYSTEM.BYTE; VAR res: INTEGER); 
+	PROCEDURE ^ SendBytes*(portNo: SIGNED32; VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ Receive*(portNo: SIGNED32; VAR x: SYSTEM.BYTE; VAR res: INTEGER); 
+	PROCEDURE ^ ReceiveBytes*(portNo: SIGNED32; VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ ClearMC*(portNo: SIGNED32; s: SET); 
+	PROCEDURE ^ SetMC*(portNo: SIGNED32; s: SET); 
+	PROCEDURE ^ GetMC*(portNo: SIGNED32; VAR s: SET); 
+	PROCEDURE ^ Available*(portNo: SIGNED32): SIZE; 
 BEGIN
 END V24.

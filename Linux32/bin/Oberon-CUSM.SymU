@@ -27,9 +27,9 @@ CONST
 	MSECINDAY = 86400000; 
 TYPE 
 	Addr = RECORD 
-		family: INTEGER; 
-		port: INTEGER; 
-		addr: LONGINT; 
+		family: SIGNED16; 
+		port: SIGNED16; 
+		addr: SIGNED32; 
 	END; 
 
 	Routing = RECORD 
@@ -41,17 +41,17 @@ TYPE
 
 	VideoPacketHeaderDesc = RECORD 
 		routing: Routing; 
-		seqNum: LONGINT; 
-		message: INTEGER; 
-		dataType: INTEGER; 
-		len: INTEGER; 
+		seqNum: SIGNED32; 
+		message: SIGNED16; 
+		dataType: SIGNED16; 
+		len: SIGNED16; 
 	END; 
 
 	OpenContinueData = POINTER TO OpenContinueDataDesc; 
 
 	OpenContinueDataDesc = RECORD 
-		clientCount: INTEGER; 
-		seqNum: LONGINT; 
+		clientCount: SIGNED16; 
+		seqNum: SIGNED32; 
 		name: ARRAY 20 OF CHAR; 
 		sendMode: CHAR; 
 		recvMode: CHAR; 
@@ -62,8 +62,8 @@ TYPE
 	Image = POINTER TO ImageDesc; 
 
 	ImageDesc = RECORD 
-		width: INTEGER; 
-		height: INTEGER; 
+		width: SIGNED16; 
+		height: SIGNED16; 
 		picture: Pictures.Picture; 
 	END; 
 
@@ -71,13 +71,13 @@ TYPE
 
 	ClientDesc = RECORD 
 		next: Client; 
-		clAdr: LONGINT; 
+		clAdr: SIGNED32; 
 		clAdrStr: ARRAY 16 OF CHAR; 
 		name: ARRAY 256 OF CHAR; 
-		lastSeqNum: LONGINT; 
-		sndBufOffset: INTEGER; 
+		lastSeqNum: SIGNED32; 
+		sndBufOffset: SIGNED16; 
 		sender: BOOLEAN; 
-		timeOut: SHORTINT; 
+		timeOut: SIGNED8; 
 		wantVideo: BOOLEAN; 
 		image: Image; 
 	END; 
@@ -85,23 +85,23 @@ TYPE
 	Connection = POINTER TO ConnectionDesc; 
 
 	ConnectionDesc = RECORD 
-		reflAdr: LONGINT; 
+		reflAdr: SIGNED32; 
 		reflAdrStr: ARRAY 16 OF CHAR; 
-		confID: INTEGER; 
+		confID: SIGNED16; 
 		connected: BOOLEAN; 
-		timeOut: INTEGER; 
+		timeOut: SIGNED16; 
 		sndBuf: ARRAY MAXSNDBUFLEN OF CHAR; 
-		sndBufLen: INTEGER; 
-		vphSeqNum: INTEGER; 
-		ocdSeqNum: INTEGER; 
-		timeToSend, timeToUpdate: LONGINT; 
+		sndBufLen: SIGNED16; 
+		vphSeqNum: SIGNED16; 
+		ocdSeqNum: SIGNED16; 
+		timeToSend, timeToUpdate: SIGNED32; 
 		clientsList: Client; 
 		next: Connection; 
 	END; 
 VAR 
 	connectionsList: Connection; 
 	currentConnection: Connection; 
-	hostAdr, reflAdr: LONGINT; 
+	hostAdr, reflAdr: SIGNED32; 
 	rcvBuf: ARRAY MAXRCVBUFLEN OF CHAR; 
 	sndTask, rcvTask: Oberon.Task; 
 	rcvScktStarted, sndScktStarted: BOOLEAN; 
@@ -112,13 +112,13 @@ VAR
 	conferenceID: BasicGadgets.Integer; 
 	hostName: BasicGadgets.String; 
 	connectionsLog, videosLog*: Texts.Text; 
-	intraRowBytes: ARRAY 16 OF INTEGER; 
-	interRowDiff: ARRAY 16 OF LONGINT; 
-	wordDiff: ARRAY 256 OF INTEGER; 
-	longDiff: ARRAY 256 OF LONGINT; 
-	conv4To8Bit: ARRAY 256 OF INTEGER; 
-	lumin, contr: INTEGER; 
-	gamma: REAL; 
+	intraRowBytes: ARRAY 16 OF SIGNED16; 
+	interRowDiff: ARRAY 16 OF SIGNED32; 
+	wordDiff: ARRAY 256 OF SIGNED16; 
+	longDiff: ARRAY 256 OF SIGNED32; 
+	conv4To8Bit: ARRAY 256 OF SIGNED16; 
+	lumin, contr: SIGNED16; 
+	gamma: FLOAT32; 
 
 	PROCEDURE ^ ReflAdrStrHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ ConfIDHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
@@ -132,7 +132,7 @@ VAR
 	PROCEDURE ^ NewVideosLog*; 
 	PROCEDURE ^ SetPalette; 
 	PROCEDURE ^ InitVideo; 
-	PROCEDURE ^ Decode*(VAR image: Image; VAR data: ARRAY OF CHAR; pos: INTEGER; imType: INTEGER; name: ARRAY OF CHAR); 
+	PROCEDURE ^ Decode*(VAR image: Image; VAR data: ARRAY OF CHAR; pos: SIGNED16; imType: SIGNED16; name: ARRAY OF CHAR); 
 	PROCEDURE ^ BlackPicture(im: Image); 
 	PROCEDURE ^ SetLum*; 
 	PROCEDURE ^ SetContr*; 
@@ -141,22 +141,22 @@ VAR
 	PROCEDURE ^ StopSndTask; 
 	PROCEDURE ^ StartRcvTask; 
 	PROCEDURE ^ StopRcvTask; 
-	PROCEDURE ^ ConvIpAdrLtoS(adr: LONGINT; VAR ip: ARRAY OF CHAR); 
+	PROCEDURE ^ ConvIpAdrLtoS(adr: SIGNED32; VAR ip: ARRAY OF CHAR); 
 	PROCEDURE ^ UpdateConnLog; 
 	PROCEDURE ^ UpdateVideoStreamsLog; 
-	PROCEDURE ^ SearchConnection(rAddr: LONGINT): Connection; 
+	PROCEDURE ^ SearchConnection(rAddr: SIGNED32): Connection; 
 	PROCEDURE ^ RemoveConnection(con: Connection); 
-	PROCEDURE ^ SearchClientByAdr(con: Connection; ipAdr: LONGINT): Client; 
+	PROCEDURE ^ SearchClientByAdr(con: Connection; ipAdr: SIGNED32): Client; 
 	PROCEDURE ^ SearchClientByStrAdr(con: Connection; adr: ARRAY OF CHAR): Client; 
 	PROCEDURE ^ RemoveClient(con: Connection; cl: Client); 
-	PROCEDURE ^ Turn(ipAdr: LONGINT): LONGINT; 
-	PROCEDURE ^ FullSndBuf(con: Connection; conferenceID: INTEGER; VAR hostName: ARRAY OF CHAR); 
-	PROCEDURE ^ InsertClientInfo(con: Connection; ipAdr: LONGINT; recv: BOOLEAN); 
-	PROCEDURE ^ ReadVPH(VAR vph: VideoPacketHeader; VAR pos: INTEGER); 
-	PROCEDURE ^ ReadOCD(VAR ocd: OpenContinueData; VAR pos: INTEGER); 
+	PROCEDURE ^ Turn(ipAdr: SIGNED32): SIGNED32; 
+	PROCEDURE ^ FullSndBuf(con: Connection; conferenceID: SIGNED16; VAR hostName: ARRAY OF CHAR); 
+	PROCEDURE ^ InsertClientInfo(con: Connection; ipAdr: SIGNED32; recv: BOOLEAN); 
+	PROCEDURE ^ ReadVPH(VAR vph: VideoPacketHeader; VAR pos: SIGNED16); 
+	PROCEDURE ^ ReadOCD(VAR ocd: OpenContinueData; VAR pos: SIGNED16); 
 	PROCEDURE ^ UpdateClientsList(con: Connection); 
 	PROCEDURE ^ Sender(me: Oberon.Task); 
-	PROCEDURE ^ OutMsg(mLen: INTEGER; pos: INTEGER); 
+	PROCEDURE ^ OutMsg(mLen: SIGNED16; pos: SIGNED16); 
 	PROCEDURE ^ Receiver(me: Oberon.Task); 
 	PROCEDURE ^ Connect*; 
 	PROCEDURE ^ GetHostAdr; 

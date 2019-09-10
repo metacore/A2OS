@@ -9,9 +9,9 @@ VAR
 	task: Oberon.Task; 
 	sock: NetSystem.Socket; 
 	w: Texts.Writer; 
-	hz: LONGINT; 
+	hz: SIGNED32; 
 
-	PROCEDURE ^ WriteLog(VAR w: Texts.Writer; VAR buf: ARRAY OF CHAR; len: LONGINT); 
+	PROCEDURE ^ WriteLog(VAR w: Texts.Writer; VAR buf: ARRAY OF CHAR; len: SIGNED32); 
 	PROCEDURE ^ WriteLogString(VAR w: Texts.Writer; s: ARRAY OF CHAR); 
 	PROCEDURE ^ Logger(me: Oberon.Task); 
 	PROCEDURE ^ Start*; 

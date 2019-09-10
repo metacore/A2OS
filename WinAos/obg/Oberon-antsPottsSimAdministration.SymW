@@ -37,33 +37,33 @@ CONST
 	cHuberMonotone* = 4; 
 VAR 
 	globalStat: antsBellman.Statistic; 
-	globalGamma: LONGREAL; 
+	globalGamma: FLOAT64; 
 
-	PROCEDURE ^ DoSetMonotone*(monotone: ARRAY OF CHAR): INTEGER; 
-	PROCEDURE ^ DoSetNoise*(noise: ARRAY OF CHAR): INTEGER; 
-	PROCEDURE ^ DoSetReko*(reko: ARRAY OF CHAR): INTEGER; 
-	PROCEDURE ^ DoSetGamma*(gamma: ARRAY OF CHAR): INTEGER; 
+	PROCEDURE ^ DoSetMonotone*(monotone: ARRAY OF CHAR): SIGNED16; 
+	PROCEDURE ^ DoSetNoise*(noise: ARRAY OF CHAR): SIGNED16; 
+	PROCEDURE ^ DoSetReko*(reko: ARRAY OF CHAR): SIGNED16; 
+	PROCEDURE ^ DoSetGamma*(gamma: ARRAY OF CHAR): SIGNED16; 
 	PROCEDURE ^ DoReadData*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname, file: ARRAY OF CHAR); 
 	PROCEDURE ^ DoMonotone*(x: antsArrays.X1d; VAR y: antsArrays.X1d; monotonetype: ARRAY OF CHAR); 
-	PROCEDURE ^ CalcDiffAndEN*(x: antsArrays.X1d; y: antsArrays.X1d; VAR diff: LONGREAL; VAR eN: LONGREAL); 
-	PROCEDURE ^ Mad(x: antsArrays.X1d): LONGREAL; 
-	PROCEDURE ^ Max*(x: antsArrays.X1d; VAR m: LONGINT): LONGREAL; 
-	PROCEDURE ^ Min*(x: antsArrays.X1d; VAR m: LONGINT): LONGREAL; 
+	PROCEDURE ^ CalcDiffAndEN*(x: antsArrays.X1d; y: antsArrays.X1d; VAR diff: FLOAT64; VAR eN: FLOAT64); 
+	PROCEDURE ^ Mad(x: antsArrays.X1d): FLOAT64; 
+	PROCEDURE ^ Max*(x: antsArrays.X1d; VAR m: SIGNED32): FLOAT64; 
+	PROCEDURE ^ Min*(x: antsArrays.X1d; VAR m: SIGNED32): FLOAT64; 
 	PROCEDURE ^ SetName*(VAR one: ARRAY OF CHAR; two: ARRAY OF CHAR); 
-	PROCEDURE ^ DoCreateData*(VAR set: antsPottsSimDataStructure.SetChain; function: vyName.tNameArray; datanumber: LONGINT; fct: vyBase.Object; VAR datavec: vyBase.Object; VAR dataname: ARRAY OF CHAR); 
-	PROCEDURE ^ DoDataRekoLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname: ARRAY OF CHAR; rekotype, gammatype: ARRAY OF CHAR; gamma: LONGREAL; VAR datarekoname: ARRAY OF CHAR); 
-	PROCEDURE ^ DoDataReko*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname, dataname: ARRAY OF CHAR; rekotype, gammatype: ARRAY OF CHAR; gamma: LONGREAL); 
-	PROCEDURE ^ DoReko*(x: antsArrays.X1d; VAR y: antsArrays.X1d; VAR jumps: antsArrays.L1d; rekotype, gammatype: ARRAY OF CHAR; var: LONGREAL; gamma: LONGREAL; VAR actgamma: LONGREAL); 
-	PROCEDURE ^ statMean(k1, k2: LONGINT): LONGREAL; 
-	PROCEDURE ^ Function1d(from, to: LONGINT): LONGREAL; 
-	PROCEDURE ^ DoResults*(x, y: antsArrays.X1d; VAR z: antsArrays.X1d; jumps: antsArrays.L1d; gamma: LONGREAL; eN: antsArrays.X1d; noisetype: LONGINT); 
-	PROCEDURE ^ DoAddNoise*(x: antsArrays.X1d; VAR y: antsArrays.X1d; parameter: LONGREAL; noisetype: ARRAY OF CHAR); 
-	PROCEDURE ^ DoDataLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname: ARRAY OF CHAR; meanM, medianM, hampelM, saegezahnM, huberM: ARRAY OF CHAR; gaussN, laplaceN, expN, uniformN: ARRAY OF CHAR; noiseParameter: LONGREAL; noiseNumber: LONGINT; rekotype: ARRAY OF CHAR; gammatype: ARRAY OF CHAR; gamma: LONGREAL; estimateNoise: ARRAY OF CHAR); 
-	PROCEDURE ^ DoMonotoneLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname, dataname: ARRAY OF CHAR; meanM, medianM, hampelM, saegezahnM, huberM: ARRAY OF CHAR; gaussN, laplaceN, expN, uniformN: ARRAY OF CHAR; noiseParameter: LONGREAL; noiseNumber: LONGINT; rekotype: ARRAY OF CHAR; gammatype: ARRAY OF CHAR; gamma: LONGREAL; estimateNoise: ARRAY OF CHAR); 
-	PROCEDURE ^ DoDegradedLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR; gaussN, laplaceN, expN, uniformN: ARRAY OF CHAR; noiseParameter: LONGREAL; noiseNumber: LONGINT; rekotype: ARRAY OF CHAR; gammatype: ARRAY OF CHAR; gamma: LONGREAL; estimateNoise: ARRAY OF CHAR); 
-	PROCEDURE ^ CalcNearestNoiseP*(x, y: antsArrays.X1d; actualDiff: LONGREAL): LONGREAL; 
-	PROCEDURE ^ Mean*(x: antsArrays.X1d): LONGREAL; 
-	PROCEDURE ^ DoRekoLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR; rekotype: ARRAY OF CHAR; gammatype: ARRAY OF CHAR; gamma: LONGREAL; var: LONGREAL; rekotypenumb: LONGINT); 
-	PROCEDURE ^ DoREKOLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname: ARRAY OF CHAR; rekotype: ARRAY OF CHAR; gammatype: ARRAY OF CHAR; gamma: LONGREAL); 
+	PROCEDURE ^ DoCreateData*(VAR set: antsPottsSimDataStructure.SetChain; function: vyName.tNameArray; datanumber: SIGNED32; fct: vyBase.Object; VAR datavec: vyBase.Object; VAR dataname: ARRAY OF CHAR); 
+	PROCEDURE ^ DoDataRekoLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname: ARRAY OF CHAR; rekotype, gammatype: ARRAY OF CHAR; gamma: FLOAT64; VAR datarekoname: ARRAY OF CHAR); 
+	PROCEDURE ^ DoDataReko*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname, dataname: ARRAY OF CHAR; rekotype, gammatype: ARRAY OF CHAR; gamma: FLOAT64); 
+	PROCEDURE ^ DoReko*(x: antsArrays.X1d; VAR y: antsArrays.X1d; VAR jumps: antsArrays.L1d; rekotype, gammatype: ARRAY OF CHAR; var: FLOAT64; gamma: FLOAT64; VAR actgamma: FLOAT64); 
+	PROCEDURE ^ statMean(k1, k2: SIGNED32): FLOAT64; 
+	PROCEDURE ^ Function1d(from, to: SIGNED32): FLOAT64; 
+	PROCEDURE ^ DoResults*(x, y: antsArrays.X1d; VAR z: antsArrays.X1d; jumps: antsArrays.L1d; gamma: FLOAT64; eN: antsArrays.X1d; noisetype: SIGNED32); 
+	PROCEDURE ^ DoAddNoise*(x: antsArrays.X1d; VAR y: antsArrays.X1d; parameter: FLOAT64; noisetype: ARRAY OF CHAR); 
+	PROCEDURE ^ DoDataLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname: ARRAY OF CHAR; meanM, medianM, hampelM, saegezahnM, huberM: ARRAY OF CHAR; gaussN, laplaceN, expN, uniformN: ARRAY OF CHAR; noiseParameter: FLOAT64; noiseNumber: SIGNED32; rekotype: ARRAY OF CHAR; gammatype: ARRAY OF CHAR; gamma: FLOAT64; estimateNoise: ARRAY OF CHAR); 
+	PROCEDURE ^ DoMonotoneLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname, dataname: ARRAY OF CHAR; meanM, medianM, hampelM, saegezahnM, huberM: ARRAY OF CHAR; gaussN, laplaceN, expN, uniformN: ARRAY OF CHAR; noiseParameter: FLOAT64; noiseNumber: SIGNED32; rekotype: ARRAY OF CHAR; gammatype: ARRAY OF CHAR; gamma: FLOAT64; estimateNoise: ARRAY OF CHAR); 
+	PROCEDURE ^ DoDegradedLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname, dataname, monotonename: ARRAY OF CHAR; gaussN, laplaceN, expN, uniformN: ARRAY OF CHAR; noiseParameter: FLOAT64; noiseNumber: SIGNED32; rekotype: ARRAY OF CHAR; gammatype: ARRAY OF CHAR; gamma: FLOAT64; estimateNoise: ARRAY OF CHAR); 
+	PROCEDURE ^ CalcNearestNoiseP*(x, y: antsArrays.X1d; actualDiff: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Mean*(x: antsArrays.X1d): FLOAT64; 
+	PROCEDURE ^ DoRekoLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR; rekotype: ARRAY OF CHAR; gammatype: ARRAY OF CHAR; gamma: FLOAT64; var: FLOAT64; rekotypenumb: SIGNED32); 
+	PROCEDURE ^ DoREKOLoop*(VAR set: antsPottsSimDataStructure.SetChain; dataChainname: ARRAY OF CHAR; rekotype: ARRAY OF CHAR; gammatype: ARRAY OF CHAR; gamma: FLOAT64); 
 BEGIN
 END antsPottsSimAdministration.

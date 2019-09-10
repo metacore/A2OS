@@ -28,7 +28,7 @@ TYPE
 		blox*: AR2; 
 
 		PROCEDURE ^ split*; 
-		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ bounds*(i, j, k: SIGNED32; VAR out: BOOLEAN); 
 		PROCEDURE ^ turn; 
 		PROCEDURE ^ Shade*(VAR ray: Ray); 
 	END Bloc2; 
@@ -37,7 +37,7 @@ TYPE
 	VAR 
 		blox*: AR3; 
 
-		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ bounds*(i, j, k: SIGNED32; VAR out: BOOLEAN); 
 		PROCEDURE ^ flipx*; 
 		PROCEDURE ^ flipy*; 
 		PROCEDURE ^ flipz*; 
@@ -55,7 +55,7 @@ TYPE
 
 		PROCEDURE ^  & init*; 
 		PROCEDURE ^ SetColor*(R, G, B, BL: SREAL); 
-		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ bounds*(i, j, k: SIGNED32; VAR out: BOOLEAN); 
 		PROCEDURE ^ fill*(v: Voxel); 
 		PROCEDURE ^ Shade*(VAR ray: Ray); 
 		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
@@ -70,7 +70,7 @@ TYPE
 		PROCEDURE ^  & init*; 
 		PROCEDURE ^ SetColor*(R, G, B, BL: SREAL); 
 		PROCEDURE ^ fill*(v: Voxel); 
-		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ bounds*(i, j, k: SIGNED32; VAR out: BOOLEAN); 
 		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
 		PROCEDURE ^ Shade*(VAR ray: Ray); 
 		PROCEDURE ^ deathray*(VAR ray: Ray); 

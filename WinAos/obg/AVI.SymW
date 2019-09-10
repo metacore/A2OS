@@ -7,37 +7,37 @@ CONST
 TYPE 
 	MainAVIHeaderDesc* = OBJECT 
 	VAR 
-		microSecsPerFrame*: LONGINT; 
-		maxBytesPerSec*: LONGINT; 
-		reserved1*: LONGINT; 
-		flags*: LONGINT; 
-		totalFrames*: LONGINT; 
-		initialFrames*: LONGINT; 
-		streams*: LONGINT; 
-		suggestedBufferSize*: LONGINT; 
-		width*: LONGINT; 
-		height*: LONGINT; 
-		reserved*: ARRAY 4 OF LONGINT; 
+		microSecsPerFrame*: SIGNED32; 
+		maxBytesPerSec*: SIGNED32; 
+		reserved1*: SIGNED32; 
+		flags*: SIGNED32; 
+		totalFrames*: SIGNED32; 
+		initialFrames*: SIGNED32; 
+		streams*: SIGNED32; 
+		suggestedBufferSize*: SIGNED32; 
+		width*: SIGNED32; 
+		height*: SIGNED32; 
+		reserved*: ARRAY 4 OF SIGNED32; 
 	END MainAVIHeaderDesc; 
 
 	AVIStreamHeader* = OBJECT 
 	VAR 
 		fccType*: ARRAY 4 OF CHAR; 
 		fccHandler*: ARRAY 4 OF CHAR; 
-		flags*: LONGINT; 
-		priority*: LONGINT; 
-		initialFrames*: LONGINT; 
-		scale*: LONGINT; 
-		rate*: LONGINT; 
-		start*: LONGINT; 
-		length*: LONGINT; 
-		suggestedBufferSize*: LONGINT; 
-		quality*: LONGINT; 
-		sampleSize*: LONGINT; 
-		left*: LONGINT; 
-		top*: LONGINT; 
-		right*: LONGINT; 
-		bottom*: LONGINT; 
+		flags*: SIGNED32; 
+		priority*: SIGNED32; 
+		initialFrames*: SIGNED32; 
+		scale*: SIGNED32; 
+		rate*: SIGNED32; 
+		start*: SIGNED32; 
+		length*: SIGNED32; 
+		suggestedBufferSize*: SIGNED32; 
+		quality*: SIGNED32; 
+		sampleSize*: SIGNED32; 
+		left*: SIGNED32; 
+		top*: SIGNED32; 
+		right*: SIGNED32; 
+		bottom*: SIGNED32; 
 		streamIdentifier*: ARRAY 4 OF CHAR; 
 		bitMapInfo*: BitMapInfo; 
 		waveFormatEx*: WAVEFormatEx; 
@@ -45,36 +45,36 @@ TYPE
 
 	BitMapInfo = OBJECT 
 	VAR 
-		size*: LONGINT; 
-		width*: LONGINT; 
-		height*: LONGINT; 
-		planes*: LONGINT; 
-		bitCount*: LONGINT; 
-		compression*: LONGINT; 
-		sizeImage*: LONGINT; 
-		xPelsPerMeter*: LONGINT; 
-		yPelsPerMeter*: LONGINT; 
-		clrUsed*: LONGINT; 
-		clrImportant*: LONGINT; 
+		size*: SIGNED32; 
+		width*: SIGNED32; 
+		height*: SIGNED32; 
+		planes*: SIGNED32; 
+		bitCount*: SIGNED32; 
+		compression*: SIGNED32; 
+		sizeImage*: SIGNED32; 
+		xPelsPerMeter*: SIGNED32; 
+		yPelsPerMeter*: SIGNED32; 
+		clrUsed*: SIGNED32; 
+		clrImportant*: SIGNED32; 
 	END BitMapInfo; 
 
 	WAVEFormatEx* = OBJECT 
 	VAR 
-		formatTag*: LONGINT; 
-		channels*: LONGINT; 
-		samplesPerSec*: LONGINT; 
-		avgBytesPerSec*: LONGINT; 
-		blockAlign*: LONGINT; 
-		bitsPerSample*: LONGINT; 
-		cbSize*: LONGINT; 
+		formatTag*: SIGNED32; 
+		channels*: SIGNED32; 
+		samplesPerSec*: SIGNED32; 
+		avgBytesPerSec*: SIGNED32; 
+		blockAlign*: SIGNED32; 
+		bitsPerSample*: SIGNED32; 
+		cbSize*: SIGNED32; 
 	END WAVEFormatEx; 
 
 	AVIIndexEntry* = RECORD 
-		ckid*: LONGINT; 
-		flags*: LONGINT; 
-		offset*: LONGINT; 
-		length*: LONGINT; 
-		tot*: LONGINT; 
+		ckid*: SIGNED32; 
+		flags*: SIGNED32; 
+		offset*: SIGNED32; 
+		length*: SIGNED32; 
+		tot*: SIGNED32; 
 	END; 
 
 	IndexArrayPointer* = POINTER TO ARRAY OF AVIIndexEntry; 
@@ -85,16 +85,16 @@ TYPE
 		r: Streams.Reader; 
 		chunkSize*: SIZE; 
 		streamHeader: AVIStreamHeader; 
-		stuffByte*: LONGINT; 
+		stuffByte*: SIGNED32; 
 		eof*: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(r: Streams.Reader; streamHdr: AVIStreamHeader); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
-		PROCEDURE ^ CompareCharArrays(ar1, ar2: ARRAY OF CHAR; len: LONGINT): BOOLEAN; 
+		PROCEDURE ^ CompareCharArrays(ar1, ar2: ARRAY OF CHAR; len: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ ReadNextChunk(VAR buf: ARRAY OF CHAR); 
 		PROCEDURE ^ Resynch*(VAR buf: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ Pos*(): Streams.Position; 
-		PROCEDURE ^ SetAVIPos*(pos: LONGINT; VAR retPos: LONGINT); 
+		PROCEDURE ^ SetAVIPos*(pos: SIGNED32; VAR retPos: SIGNED32); 
 		PROCEDURE ^ Bytes*(VAR x: ARRAY OF CHAR; ofs, size: SIZE; VAR len: SIZE); 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 	END AVIStream; 
@@ -106,24 +106,24 @@ TYPE
 		aviHeader: MainAVIHeaderDesc; 
 		audioStreamHeader: AVIStreamHeader; 
 		videoStreamHeader: AVIStreamHeader; 
-		riffLength: LONGINT; 
+		riffLength: SIGNED32; 
 		movieBeginPos: Streams.Position; 
 		indexStart: Streams.Position; 
-		videoFrames: LONGINT; 
-		audioChunks: LONGINT; 
+		videoFrames: SIGNED32; 
+		audioChunks: SIGNED32; 
 		videoIndex: IndexArrayPointer; 
 		audioIndex: IndexArrayPointer; 
-		audioBytes: LONGINT; 
-		videoBufferIndex: LONGINT; 
-		audioChunkSize: LONGINT; 
+		audioBytes: SIGNED32; 
+		videoBufferIndex: SIGNED32; 
+		audioChunkSize: SIGNED32; 
 		audioStream: AVIStream; 
 		videoStream: AVIStream; 
-		videoFramePos: LONGINT; 
-		audioFramePos: LONGINT; 
+		videoFramePos: SIGNED32; 
+		audioFramePos: SIGNED32; 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
 		PROCEDURE ^ GetAVIHeader*(): MainAVIHeaderDesc; 
-		PROCEDURE ^ CompareCharArrays(ar1, ar2: ARRAY OF CHAR; len: LONGINT): BOOLEAN; 
+		PROCEDURE ^ CompareCharArrays(ar1, ar2: ARRAY OF CHAR; len: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ ReadHeader*(): BOOLEAN; 
 		PROCEDURE ^ ReadIndex*; 
 		PROCEDURE ^ SkipHeader*; 
@@ -136,35 +136,35 @@ TYPE
 		PROCEDURE ^ DumpAudioIndex*; 
 		PROCEDURE ^ GetAudioStreamHeader*(): AVIStreamHeader; 
 		PROCEDURE ^ GetVideoStreamHeader*(): AVIStreamHeader; 
-		PROCEDURE ^ GetStream*(streamNr: LONGINT): Codecs.DemuxStream; 
-		PROCEDURE ^ GetMilliSecondsPerFrame*(): LONGINT; 
-		PROCEDURE ^ GetNofChannels*(): LONGINT; 
-		PROCEDURE ^ GetSamplesPerSecond*(): LONGINT; 
-		PROCEDURE ^ GetBitsPerSample*(): LONGINT; 
+		PROCEDURE ^ GetStream*(streamNr: SIGNED32): Codecs.DemuxStream; 
+		PROCEDURE ^ GetMilliSecondsPerFrame*(): SIGNED32; 
+		PROCEDURE ^ GetNofChannels*(): SIGNED32; 
+		PROCEDURE ^ GetSamplesPerSecond*(): SIGNED32; 
+		PROCEDURE ^ GetBitsPerSample*(): SIGNED32; 
 		PROCEDURE ^ GetVideoIndex*(): IndexArrayPointer; 
 		PROCEDURE ^ GetAudioIndex*(): IndexArrayPointer; 
-		PROCEDURE ^ GetAudioChunks*(): LONGINT; 
-		PROCEDURE ^ GetAudioBytes*(): LONGINT; 
-		PROCEDURE ^ GetVideoFrames*(): LONGINT; 
-		PROCEDURE ^ GetNumberOfStreams*(): LONGINT; 
-		PROCEDURE ^ GetStreamInfo*(streamNr: LONGINT): Codecs.AVStreamInfo; 
-		PROCEDURE ^ GetStreamType*(streamNr: LONGINT): LONGINT; 
-		PROCEDURE ^ GetInfo*(VAR vl, vf, vr, mspf, al, af, ar: LONGINT); 
-		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
-		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ GetVideoWidth*(): LONGINT; 
-		PROCEDURE ^ GetVideoHeight*(): LONGINT; 
-		PROCEDURE ^ GetNextFrameSize*(streamNr: LONGINT): LONGINT; 
-		PROCEDURE ^ GetSampleSize*(): LONGINT; 
+		PROCEDURE ^ GetAudioChunks*(): SIGNED32; 
+		PROCEDURE ^ GetAudioBytes*(): SIGNED32; 
+		PROCEDURE ^ GetVideoFrames*(): SIGNED32; 
+		PROCEDURE ^ GetNumberOfStreams*(): SIGNED32; 
+		PROCEDURE ^ GetStreamInfo*(streamNr: SIGNED32): Codecs.AVStreamInfo; 
+		PROCEDURE ^ GetStreamType*(streamNr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetInfo*(VAR vl, vf, vr, mspf, al, af, ar: SIGNED32); 
+		PROCEDURE ^ GetData*(streamNr: SIGNED32; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ SetStreamPos*(streamNr: SIGNED32; seekType: SIGNED32; pos: SIGNED32; VAR itemSize: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ GetVideoWidth*(): SIGNED32; 
+		PROCEDURE ^ GetVideoHeight*(): SIGNED32; 
+		PROCEDURE ^ GetNextFrameSize*(streamNr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetSampleSize*(): SIGNED32; 
 	END AVIDemux; 
 
-	PROCEDURE ^ Align*(VAR index: LONGINT); 
-	PROCEDURE ^ IsAligned*(index: LONGINT): BOOLEAN; 
-	PROCEDURE ^ ShowBitsSlow*(n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT; 
-	PROCEDURE ^ ShowBits*(n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT; 
-	PROCEDURE ^ ShowBitsByteAligned*(n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT; 
-	PROCEDURE ^ GetBits*(n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT; 
-	PROCEDURE ^ SkipBits*(n: LONGINT; VAR index: LONGINT); 
+	PROCEDURE ^ Align*(VAR index: SIGNED32); 
+	PROCEDURE ^ IsAligned*(index: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ ShowBitsSlow*(n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32; 
+	PROCEDURE ^ ShowBits*(n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32; 
+	PROCEDURE ^ ShowBitsByteAligned*(n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32; 
+	PROCEDURE ^ GetBits*(n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32; 
+	PROCEDURE ^ SkipBits*(n: SIGNED32; VAR index: SIGNED32); 
 	PROCEDURE ^ Factory*(): Codecs.AVDemultiplexer; 
 BEGIN
 END AVI.

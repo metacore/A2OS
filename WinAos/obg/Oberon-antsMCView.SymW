@@ -4,7 +4,7 @@ CONST
 	mappertype = 1; 
 	matrixtype = 2; 
 TYPE 
-	Map* = POINTER TO ARRAY OF LONGINT; 
+	Map* = POINTER TO ARRAY OF SIGNED32; 
 
 	Usage* = POINTER TO ARRAY OF BOOLEAN; 
 
@@ -17,21 +17,21 @@ TYPE
 		coal: BOOLEAN; 
 	END; 
 
-	Mapper* = PROCEDURE (VAR A: ARRAY OF LONGINT); 
+	Mapper* = PROCEDURE (VAR A: ARRAY OF SIGNED32); 
 
-	Matrix* = POINTER TO ARRAY OF ARRAY OF LONGREAL; 
+	Matrix* = POINTER TO ARRAY OF ARRAY OF FLOAT64; 
 
-	Vector* = POINTER TO ARRAY OF LONGREAL; 
+	Vector* = POINTER TO ARRAY OF FLOAT64; 
 
 	Chain = POINTER TO ChainDesc; 
 
 	ChainDesc = RECORD (vyBase.ObjDesc)
 		backwards: BOOLEAN; 
 		q: MapQueue; 
-		qlen: LONGINT; 
+		qlen: SIGNED32; 
 		m: Mapper; 
 		A, cA: Matrix; 
-		dim: LONGINT; 
+		dim: SIGNED32; 
 		ran: Vector; 
 	END; 
 
@@ -39,12 +39,12 @@ TYPE
 
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
 		c: Chain; 
-		type: INTEGER; 
+		type: SIGNED16; 
 	END; 
 VAR 
 	cur: vyBase.Object; 
 	templ: tLayer; 
-	globalCount: LONGINT; 
+	globalCount: SIGNED32; 
 
 	PROCEDURE ^ StoreVector(VAR R: Files.Rider; VAR V: Vector); 
 	PROCEDURE ^ LoadVector(VAR R: Files.Rider; VAR V: Vector); 
@@ -60,15 +60,15 @@ VAR
 	PROCEDURE ^ LoadMapper(VAR R: Files.Rider; VAR m: Mapper); 
 	PROCEDURE ^ StoreChain(VAR R: Files.Rider; VAR c: Chain); 
 	PROCEDURE ^ LoadChain(VAR R: Files.Rider; VAR c: Chain); 
-	PROCEDURE ^ DefaultMapper(VAR m: ARRAY OF LONGINT); 
-	PROCEDURE ^ OneRMapper(VAR m: ARRAY OF LONGINT); 
-	PROCEDURE ^ Count(VAR m: ARRAY OF LONGINT; dim: LONGINT): LONGINT; 
-	PROCEDURE ^ Copy(VAR from, to: ARRAY OF LONGINT; dim: LONGINT); 
-	PROCEDURE ^ ItApply(VAR m, n: ARRAY OF LONGINT; dim: LONGINT; count: LONGINT); 
-	PROCEDURE ^ MapperIt(VAR m: ARRAY OF LONGINT); 
-	PROCEDURE ^ PaintPoint(dim: LONGINT; at: LONGINT; q: MapQueue); 
-	PROCEDURE ^ PaintPoint2(dim: LONGINT; at: LONGINT; q: MapQueue); 
-	PROCEDURE ^ PaintMap(q: MapQueue; at: LONGINT); 
+	PROCEDURE ^ DefaultMapper(VAR m: ARRAY OF SIGNED32); 
+	PROCEDURE ^ OneRMapper(VAR m: ARRAY OF SIGNED32); 
+	PROCEDURE ^ Count(VAR m: ARRAY OF SIGNED32; dim: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Copy(VAR from, to: ARRAY OF SIGNED32; dim: SIGNED32); 
+	PROCEDURE ^ ItApply(VAR m, n: ARRAY OF SIGNED32; dim: SIGNED32; count: SIGNED32); 
+	PROCEDURE ^ MapperIt(VAR m: ARRAY OF SIGNED32); 
+	PROCEDURE ^ PaintPoint(dim: SIGNED32; at: SIGNED32; q: MapQueue); 
+	PROCEDURE ^ PaintPoint2(dim: SIGNED32; at: SIGNED32; q: MapQueue); 
+	PROCEDURE ^ PaintMap(q: MapQueue; at: SIGNED32); 
 	PROCEDURE ^ PaintChain(c: Chain); 
 	PROCEDURE ^ PaintMatrix(c: Chain); 
 	PROCEDURE ^ Recall(layer: tLayer); 
@@ -84,7 +84,7 @@ VAR
 	PROCEDURE ^ GenL*; 
 	PROCEDURE ^ New*; 
 	PROCEDURE ^ SetMapper*; 
-	PROCEDURE ^ NewQueue(dim: LONGINT): MapQueue; 
+	PROCEDURE ^ NewQueue(dim: SIGNED32): MapQueue; 
 	PROCEDURE ^ Init*; 
 	PROCEDURE ^ Check*; 
 	PROCEDURE ^ SetQUsage(first: MapQueue); 
@@ -92,7 +92,7 @@ VAR
 	PROCEDURE ^ ApplyMapper*; 
 	PROCEDURE ^ DoApplyMapperForw(c: Chain); 
 	PROCEDURE ^ ApplyMapperForw*; 
-	PROCEDURE ^ TimeSlice(time: LONGREAL); 
+	PROCEDURE ^ TimeSlice(time: FLOAT64); 
 	PROCEDURE ^ ApplyMapperR*; 
 BEGIN
 END antsMCView.

@@ -10,43 +10,43 @@ CONST
 	Escape = 7167; 
 TYPE 
 	Event = RECORD 
-		last, run, level: LONGINT; 
+		last, run, level: SIGNED32; 
 	END; 
 
 	TextureDecoding* = OBJECT 
 	VAR 
 		block*: DT.PointerToArrayOfLONGINT; 
 		mp4State: DT.MP4State; 
-		dcScaler: LONGINT; 
-		saiAcLeftIndex: ARRAY 8 OF LONGINT; 
+		dcScaler: SIGNED32; 
+		saiAcLeftIndex: ARRAY 8 OF SIGNED32; 
 		vld: VLD; 
 		log: Streams.Writer; 
-		srcBlock, dstBlock*: POINTER TO ARRAY 68 OF INTEGER; 
+		srcBlock, dstBlock*: POINTER TO ARRAY 68 OF SIGNED16; 
 
 		PROCEDURE ^  & init*(state: DT.MP4State; logWriter: Streams.Writer); 
 		PROCEDURE ^ ClearBlock; 
 		PROCEDURE ^ ClearBlockGeneric; 
-		PROCEDURE ^ ClearBlockMMX(dst: LONGINT); 
-		PROCEDURE ^ BlockIntra*(blockNum: LONGINT; coded: BOOLEAN; VAR r: DT.VideoBuffer): LONGINT; 
-		PROCEDURE ^ BlockInter*(blockNum: LONGINT; coded: BOOLEAN; VAR r: DT.VideoBuffer): LONGINT; 
+		PROCEDURE ^ ClearBlockMMX(dst: SIGNED32); 
+		PROCEDURE ^ BlockIntra*(blockNum: SIGNED32; coded: BOOLEAN; VAR r: DT.VideoBuffer): SIGNED32; 
+		PROCEDURE ^ BlockInter*(blockNum: SIGNED32; coded: BOOLEAN; VAR r: DT.VideoBuffer): SIGNED32; 
 		PROCEDURE ^ DumpMacroBlock; 
-		PROCEDURE ^ GetDCSizeLum(VAR r: DT.VideoBuffer): LONGINT; 
-		PROCEDURE ^ GetDCSizeChr(VAR r: DT.VideoBuffer): LONGINT; 
-		PROCEDURE ^ GetDCDiff(dctDCSize: LONGINT; VAR r: DT.VideoBuffer): LONGINT; 
-		PROCEDURE ^ Pow(x, y: LONGINT): LONGINT; 
-		PROCEDURE ^ SetDCScaler(blockNum: LONGINT); 
-		PROCEDURE ^ DCRecon(blockNum: LONGINT; dcValue: DT.PointerToArrayOfLONGINT); 
-		PROCEDURE ^ DivDiv(a, b: LONGINT): LONGINT; 
-		PROCEDURE ^ ACRecon(blockNum: LONGINT; psBlock: DT.PointerToArrayOfLONGINT); 
-		PROCEDURE ^ ACStore(blockNum: LONGINT; psBlock: DT.PointerToArrayOfLONGINT); 
-		PROCEDURE ^ Rescale(predictQuant, currentQuant, coeff: LONGINT): LONGINT; 
-		PROCEDURE ^ ACRescaling(blockNum: LONGINT; psBlock: DT.PointerToArrayOfLONGINT): LONGINT; 
-		PROCEDURE ^ IsIntra(mbY, mbX: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetDCSizeLum(VAR r: DT.VideoBuffer): SIGNED32; 
+		PROCEDURE ^ GetDCSizeChr(VAR r: DT.VideoBuffer): SIGNED32; 
+		PROCEDURE ^ GetDCDiff(dctDCSize: SIGNED32; VAR r: DT.VideoBuffer): SIGNED32; 
+		PROCEDURE ^ Pow(x, y: SIGNED32): SIGNED32; 
+		PROCEDURE ^ SetDCScaler(blockNum: SIGNED32); 
+		PROCEDURE ^ DCRecon(blockNum: SIGNED32; dcValue: DT.PointerToArrayOfLONGINT); 
+		PROCEDURE ^ DivDiv(a, b: SIGNED32): SIGNED32; 
+		PROCEDURE ^ ACRecon(blockNum: SIGNED32; psBlock: DT.PointerToArrayOfLONGINT); 
+		PROCEDURE ^ ACStore(blockNum: SIGNED32; psBlock: DT.PointerToArrayOfLONGINT); 
+		PROCEDURE ^ Rescale(predictQuant, currentQuant, coeff: SIGNED32): SIGNED32; 
+		PROCEDURE ^ ACRescaling(blockNum: SIGNED32; psBlock: DT.PointerToArrayOfLONGINT): SIGNED32; 
+		PROCEDURE ^ IsIntra(mbY, mbX: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ RescuePredict; 
-		PROCEDURE ^ FastCopy(from, sizefrom, offsetfrom, to, sizeto, offsetto: LONGINT); 
+		PROCEDURE ^ FastCopy(from, sizefrom, offsetfrom, to, sizeto, offsetto: SIGNED32); 
 		PROCEDURE ^ IDCT(block: DT.PointerToArrayOfLONGINT); 
-		PROCEDURE ^ IDCTRow(blk: DT.PointerToArrayOfLONGINT; baseIndex: LONGINT); 
-		PROCEDURE ^ IDCTCol(blk: DT.PointerToArrayOfLONGINT; baseIndex: LONGINT); 
+		PROCEDURE ^ IDCTRow(blk: DT.PointerToArrayOfLONGINT; baseIndex: SIGNED32); 
+		PROCEDURE ^ IDCTCol(blk: DT.PointerToArrayOfLONGINT; baseIndex: SIGNED32); 
 		PROCEDURE ^ IQuant(psBlock: DT.PointerToArrayOfLONGINT; intraFlag: BOOLEAN); 
 		PROCEDURE ^ IQuantTypeFirst(psblock: DT.PointerToArrayOfLONGINT); 
 	END TextureDecoding; 
@@ -65,12 +65,12 @@ TYPE
 		PROCEDURE ^ VldIntraDCT(VAR event: Event; VAR r: DT.VideoBuffer); 
 		PROCEDURE ^ VldInterDCT(VAR event: Event; VAR r: DT.VideoBuffer); 
 		PROCEDURE ^ VldEvent(intraFlag: BOOLEAN; VAR event: Event; VAR r: DT.VideoBuffer); 
-		PROCEDURE ^ VldTableB19(last, run: LONGINT): LONGINT; 
-		PROCEDURE ^ VldTableB20(last, run: LONGINT): LONGINT; 
-		PROCEDURE ^ VldTableB21(last, level: LONGINT): LONGINT; 
-		PROCEDURE ^ VldTableB22(last, level: LONGINT): LONGINT; 
-		PROCEDURE ^ VldTableB16(code: LONGINT; VAR r: DT.VideoBuffer): DT.TabType; 
-		PROCEDURE ^ VldTableB17(code: LONGINT; VAR r: DT.VideoBuffer): DT.TabType; 
+		PROCEDURE ^ VldTableB19(last, run: SIGNED32): SIGNED32; 
+		PROCEDURE ^ VldTableB20(last, run: SIGNED32): SIGNED32; 
+		PROCEDURE ^ VldTableB21(last, level: SIGNED32): SIGNED32; 
+		PROCEDURE ^ VldTableB22(last, level: SIGNED32): SIGNED32; 
+		PROCEDURE ^ VldTableB16(code: SIGNED32; VAR r: DT.VideoBuffer): DT.TabType; 
+		PROCEDURE ^ VldTableB17(code: SIGNED32; VAR r: DT.VideoBuffer): DT.TabType; 
 	END VLD; 
 BEGIN
 END DivXHelper.

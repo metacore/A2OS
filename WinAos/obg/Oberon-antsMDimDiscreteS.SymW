@@ -2,16 +2,16 @@ MODULE antsMDimDiscreteS IN Oberon;
 	IMPORT antsObjects, antsFunctions, Objects, Files, Gadgets, antsNeighbourhoods, antsRegions, aM := antsMessages, antsArrayObjects, Math := MathL IN A2, antsKernel, antsModels, antsCommands, vyName, vyBase, antsCaches, vyRanBase, Links;
 CONST 
 TYPE 
-	intArray = POINTER TO ARRAY OF INTEGER; 
+	intArray = POINTER TO ARRAY OF SIGNED16; 
 
-	realArray = POINTER TO ARRAY OF LONGREAL; 
+	realArray = POINTER TO ARRAY OF FLOAT64; 
 
-	realArrayArray = POINTER TO ARRAY OF ARRAY OF LONGREAL; 
+	realArrayArray = POINTER TO ARRAY OF ARRAY OF FLOAT64; 
 
 	tModel* = POINTER TO tModelDesc; 
 
 	tModelDesc* = RECORD (antsModels.tModelDesc)
-		dim-: LONGINT; 
+		dim-: SIGNED32; 
 		n*: antsNeighbourhoods.Neighbours; 
 		externalF: antsFunctions.FunctionXd; 
 		interactionF: antsFunctions.FunctionXd; 
@@ -25,13 +25,13 @@ TYPE
 
 	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
 	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
-	PROCEDURE ^ U(VAR values: ARRAY OF INTEGER; M: tModel): LONGREAL; 
-	PROCEDURE ^ GetNeighbourValues(o, orig: antsArrayObjects.tINTEGERObject; n: antsNeighbourhoods.Neighbours; y, x: LONGINT; VAR values: ARRAY OF INTEGER); 
+	PROCEDURE ^ U(VAR values: ARRAY OF SIGNED16; M: tModel): FLOAT64; 
+	PROCEDURE ^ GetNeighbourValues(o, orig: antsArrayObjects.tINTEGERObject; n: antsNeighbourhoods.Neighbours; y, x: SIGNED32; VAR values: ARRAY OF SIGNED16); 
 	PROCEDURE ^ PseudoLikPrepare*(o: antsArrayObjects.tINTEGERObject; M: tModel; VAR T: antsNeighbourhoods.NeighbourTable); 
-	PROCEDURE ^ PseudoLik*(o: antsNeighbourhoods.NeighbourTable; M: tModel; AIC: BOOLEAN): LONGREAL; 
+	PROCEDURE ^ PseudoLik*(o: antsNeighbourhoods.NeighbourTable; M: tModel; AIC: BOOLEAN): FLOAT64; 
 	PROCEDURE ^ Sync1(m: tModel); 
-	PROCEDURE ^ MakeCaches(m: tModel; depth: LONGINT; data: BOOLEAN); 
-	PROCEDURE ^ Sync(m: tModel; depth: LONGINT); 
+	PROCEDURE ^ MakeCaches(m: tModel; depth: SIGNED32; data: BOOLEAN); 
+	PROCEDURE ^ Sync(m: tModel; depth: SIGNED32); 
 	PROCEDURE ^ OneSweep*(M: antsKernel.samplingMsg); 
 	PROCEDURE ^ Metropolis(msg: antsKernel.samplingMsg); 
 	PROCEDURE ^ Exchange(msg: antsKernel.samplingMsg); 

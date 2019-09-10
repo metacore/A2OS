@@ -1,16 +1,16 @@
 MODULE antsDiscreteEmpiricD IN Oberon;
 	IMPORT vyBase, antsArrayObjects, antsEmpiricD, Objects, aM := antsMessages;
 TYPE 
-	Index = LONGINT; 
+	Index = SIGNED32; 
 
-	txv = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGINT; 
+	txv = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
 
-	tv = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGINT; 
+	tv = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF SIGNED32; 
 
 	EmpiricalDistribution* = POINTER TO EDDesc; 
 
 	EDDesc = RECORD (antsEmpiricD.EDDesc)
-		card-: LONGINT; 
+		card-: SIGNED32; 
 		xv: txv; 
 		v: tv; 
 	END; 
@@ -18,7 +18,7 @@ TYPE
 	tParameter* = POINTER TO tParameterDesc; 
 
 	tParameterDesc* = RECORD (antsEmpiricD.tParameterDesc)
-		card: LONGINT; 
+		card: SIGNED32; 
 	END; 
 
 	tEDGenerator* = POINTER TO tEDGeneratorDesc; 
@@ -31,12 +31,12 @@ VAR
 	debug: BOOLEAN; 
 
 	PROCEDURE ^ InitED(E: EmpiricalDistribution); 
-	PROCEDURE ^ R*(E: EmpiricalDistribution; x, v1, v2, v3, v4: LONGINT): LONGINT; 
-	PROCEDURE ^ M*(E: EmpiricalDistribution; v1, v2, v3, v4: Index): LONGINT; 
-	PROCEDURE ^ F*(E: EmpiricalDistribution; x, v1, v2, v3, v4: Index): LONGREAL; 
-	PROCEDURE ^ Sort4(v1, v2, v3, v4: LONGINT; VAR e1, e2, e3, e4: LONGINT); 
-	PROCEDURE ^ EmpiricalDistributeS(VAR E: EmpiricalDistribution; A: antsArrayObjects.tINTEGERArray; Sx, Sy, Sw, Sh: LONGINT); 
-	PROCEDURE ^ EmpiricalDistributeCS(Eo, Ee: EmpiricalDistribution; A: antsArrayObjects.tINTEGERArray; Sx, Sy, Sw, Sh: LONGINT); 
+	PROCEDURE ^ R*(E: EmpiricalDistribution; x, v1, v2, v3, v4: SIGNED32): SIGNED32; 
+	PROCEDURE ^ M*(E: EmpiricalDistribution; v1, v2, v3, v4: Index): SIGNED32; 
+	PROCEDURE ^ F*(E: EmpiricalDistribution; x, v1, v2, v3, v4: Index): FLOAT64; 
+	PROCEDURE ^ Sort4(v1, v2, v3, v4: SIGNED32; VAR e1, e2, e3, e4: SIGNED32); 
+	PROCEDURE ^ EmpiricalDistributeS(VAR E: EmpiricalDistribution; A: antsArrayObjects.tINTEGERArray; Sx, Sy, Sw, Sh: SIGNED32); 
+	PROCEDURE ^ EmpiricalDistributeCS(Eo, Ee: EmpiricalDistribution; A: antsArrayObjects.tINTEGERArray; Sx, Sy, Sw, Sh: SIGNED32); 
 	PROCEDURE ^ GenerateED(g: tEDGenerator); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ Open*(gen: tEDGenerator; from: vyBase.Object); 

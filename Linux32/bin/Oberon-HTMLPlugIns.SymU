@@ -25,13 +25,13 @@ VAR
 	cache: StreamList; 
 	createF: BOOLEAN; 
 	context: Objects.Object; 
-	rec: LONGINT; 
+	rec: SIGNED32; 
 
 	PROCEDURE ^ Error(plugin: PlugIns.PlugIn; CONST msg1, msg2: ARRAY OF CHAR); 
 	PROCEDURE ^ GetStream(plugin: PlugIns.PlugIn; url: ARRAY OF CHAR): PlugIns.Stream; 
 	PROCEDURE ^ DoNotify(me: Oberon.Task); 
-	PROCEDURE ^ GetURL0(plugin: PlugIns.PlugIn; CONST url: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ GetURL(plugin: PlugIns.PlugIn; CONST url: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ GetURL0(plugin: PlugIns.PlugIn; CONST url: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ GetURL(plugin: PlugIns.PlugIn; CONST url: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ FindContext(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ FindPlugIn(V: View; VAR F: Objects.FindMsg); 
 	PROCEDURE ^ ViewHandler(view: Objects.Object; VAR M: Objects.ObjMsg); 

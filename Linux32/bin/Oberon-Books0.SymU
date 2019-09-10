@@ -28,11 +28,11 @@ TYPE
 	Bar* = POINTER TO BarDesc; 
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
-		mode*: SHORTINT; 
+		mode*: SIGNED8; 
 	END; 
 
 	LocFrameDesc* = RECORD (FrameDesc)
-		pos1*, pos2*: LONGINT; 
+		pos1*, pos2*: SIGNED32; 
 	END; 
 
 	ExtFrameDesc* = RECORD (FrameDesc)
@@ -42,7 +42,7 @@ TYPE
 	ImpListDesc* = RECORD 
 		name*: ARRAY nameLen OF CHAR; 
 		notes*: Texts.Text; 
-		ind*: LONGINT; 
+		ind*: SIGNED32; 
 		extLabels*: ExtLabel; 
 		next*: ImpList; 
 	END; 
@@ -51,8 +51,8 @@ TYPE
 		frame*: Frame; 
 		book*: ImpList; 
 		name*: ARRAY identLen OF CHAR; 
-		mode*: SHORTINT; 
-		pos1*, pos2*: LONGINT; 
+		mode*: SIGNED8; 
+		pos1*, pos2*: SIGNED32; 
 		next*: ExtLabel; 
 	END; 
 
@@ -62,13 +62,13 @@ TYPE
 	END; 
 
 	ContElemDesc* = RECORD (Gadgets.FrameDesc)
-		mode*: SHORTINT; 
-		beg*, end*: LONGINT; 
-		col: INTEGER; 
+		mode*: SIGNED8; 
+		beg*, end*: SIGNED32; 
+		col: SIGNED16; 
 	END; 
 
 	BarDesc = RECORD (Gadgets.FrameDesc)
-		col: INTEGER; 
+		col: SIGNED16; 
 	END; 
 VAR 
 	W: Texts.Writer; 
@@ -79,16 +79,16 @@ VAR
 	PROCEDURE ^ FrameHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewLoc*; 
 	PROCEDURE ^ NewExt*; 
-	PROCEDURE ^ RestoreContElem(F: ContElem; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreContElem(F: ContElem; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ TrackMouse(F: ContElem; M: Oberon.InputMsg); 
 	PROCEDURE ^ ContElemHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewContElem*; 
-	PROCEDURE ^ InsertFrame*(T: Texts.Text; pos: LONGINT; obj: Gadgets.Frame); 
+	PROCEDURE ^ InsertFrame*(T: Texts.Text; pos: SIGNED32; obj: Gadgets.Frame); 
 	PROCEDURE ^ AppendFrame*(T: Texts.Text; obj: Gadgets.Frame); 
 	PROCEDURE ^ StrConcat*(VAR str0: ARRAY OF CHAR; str1: ARRAY OF CHAR); 
 	PROCEDURE ^ CutSuffix*(VAR str: ARRAY OF CHAR); 
-	PROCEDURE ^ ColorBar*(F: Bar; col: INTEGER); 
-	PROCEDURE ^ RestoreBarFrame(F: Bar; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ ColorBar*(F: Bar; col: SIGNED16); 
+	PROCEDURE ^ RestoreBarFrame(F: Bar; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ BarFrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewBar*; 
 BEGIN

@@ -87,10 +87,10 @@ TYPE
 		PROCEDURE ^ Compute; 
 	END MultiplyObjectX; 
 VAR 
-	cBlockSize*: LONGINT; 
-	nrProcesses*: LONGINT; 
+	cBlockSize*: SIGNED32; 
+	nrProcesses*: SIGNED32; 
 	lastUsedBlockSize*: SIZE; 
-	allocT-, copyT-, zeroT-, compT-: HUGEINT; 
+	allocT-, copyT-, zeroT-, compT-: SIGNED64; 
 	cachePool: CachePool; 
 
 	PROCEDURE {Fingerprint(-5294964266247806206)}  - L1Block1XA(adrA, adrB, adrC: ADDRESS; K: SIZE);
@@ -189,8 +189,8 @@ VAR
 	PROCEDURE ^ CopyAR(matrixA, dest: ADDRESS; IncA, StrideA: SIZE; K, M, L2BlockK, L2BlockM: SIZE); 
 	PROCEDURE ^ CopyBX(matrixB, dest: ADDRESS; IncB, StrideB: SIZE; N, K, L2BlockN, L2BlockK: SIZE); 
 	PROCEDURE ^ CopyBR(matrixB, dest: ADDRESS; IncB, StrideB: SIZE; N, K, L2BlockN, L2BlockK: SIZE); 
-	PROCEDURE ^ Tic(VAR t: HUGEINT); 
-	PROCEDURE ^ Toc(VAR t, addto: HUGEINT); 
+	PROCEDURE ^ Tic(VAR t: SIGNED64); 
+	PROCEDURE ^ Toc(VAR t, addto: SIGNED64); 
 	PROCEDURE ^ MultiplyX(A, B, C: ADDRESS; M, N, K, L2BlockM, L2BlockN, L2BlockK: SIZE; IncA, StrideA, IncB, StrideB, IncC, StrideC: SIZE; add: BOOLEAN); 
 	PROCEDURE ^ MultiplyR(A, B, C: ADDRESS; M, N, K, L2BlockM, L2BlockN, L2BlockK: SIZE; IncA, StrideA, IncB, StrideB, IncC, StrideC: SIZE; add: BOOLEAN); 
 	PROCEDURE ^ MatMulAXAXLoopA(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
@@ -211,7 +211,7 @@ VAR
 	PROCEDURE ^ MatMulAXAXSSEStride(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE; add: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ MatMulARARNaiive(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, M, N, K: SIZE; add: BOOLEAN); 
 	PROCEDURE ^ MatMulAXAXNaiive(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, M, N, K: SIZE; add: BOOLEAN); 
-	PROCEDURE ^ BestMethod(M, N, K: SIZE): LONGINT; 
+	PROCEDURE ^ BestMethod(M, N, K: SIZE): SIGNED32; 
 	PROCEDURE ^ MatMulR(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
 	PROCEDURE ^ MatMulX(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
 	PROCEDURE ^ MatMulIncR(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
@@ -234,7 +234,7 @@ VAR
 	PROCEDURE ^ MatMulIncRBlocked(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
 	PROCEDURE ^ MatMulXBlocked(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
 	PROCEDURE ^ MatMulIncXBlocked(matrixA, matrixB, matrixC: ADDRESS; IncA, StrideA, IncB, StrideB, IncC, StrideC, RowsA, ColsA, RowsB, ColsB: SIZE): BOOLEAN; 
-	PROCEDURE ^ SetMatMulMethod*(i: LONGINT); 
+	PROCEDURE ^ SetMatMulMethod*(i: SIGNED32); 
 	PROCEDURE ^ MatMulR2x2(dadr, ladr, radr: ADDRESS); 
 	PROCEDURE ^ MatMulR3x3(dadr, ladr, radr: ADDRESS); 
 	PROCEDURE ^ MatMulR4x4(dadr, ladr, radr: ADDRESS); 

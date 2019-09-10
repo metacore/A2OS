@@ -27,16 +27,16 @@ CONST
 	Menu = \"Desktops.Copy[Copy] Hex.Search[Search] Desktops.StoreDoc[Store]"\; 
 TYPE 
 	Loc* = RECORD 
-		org*, pos*: LONGINT; 
-		x*, y*, w*: INTEGER; 
-		x1, w1: INTEGER; 
+		org*, pos*: SIGNED32; 
+		x*, y*, w*: SIGNED16; 
+		x1, w1: SIGNED16; 
 	END; 
 
 	Frame* = POINTER TO FrameDesc; 
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
 		file: Texts.Text; 
-		org*: LONGINT; 
+		org*: SIGNED32; 
 		nibble, insert: BOOLEAN; 
 		car*: BOOLEAN; 
 		carloc*: Loc; 
@@ -48,9 +48,9 @@ TYPE
 	END; 
 
 	ScrollMsg = RECORD (Display.FrameMsg)
-		org: LONGINT; 
-		oldLines, newLines: LONGINT; 
-		dy: INTEGER; 
+		org: SIGNED32; 
+		oldLines, newLines: SIGNED32; 
+		dy: SIGNED16; 
 	END; 
 
 	StoreMsg = RECORD (Display.FrameMsg)
@@ -62,40 +62,40 @@ VAR
 	fnt: Fonts.Font; 
 	list: Gadgets.Frame; 
 	lastF: Frame; 
-	hBlock, tBlock: INTEGER; 
-	charW, lineH: INTEGER; 
+	hBlock, tBlock: SIGNED16; 
+	charW, lineH: SIGNED16; 
 	ch: CHAR; 
 	Hex: ARRAY 16 OF CHAR; 
 	buf: ARRAY bufSize OF CHAR; 
 	sPat: ARRAY MaxPatLen OF CHAR; 
-	sDv: ARRAY (MaxPatLen + 1) OF INTEGER; 
-	sLen: LONGINT; 
-	PrintertopY, PrinterbotY, PrinterleftX, PagenoX, HeaderY: INTEGER; 
+	sDv: ARRAY (MaxPatLen + 1) OF SIGNED16; 
+	sLen: SIGNED32; 
+	PrintertopY, PrinterbotY, PrinterleftX, PagenoX, HeaderY: SIGNED16; 
 
-	PROCEDURE ^ P(x: LONGINT): INTEGER; 
+	PROCEDURE ^ P(x: SIGNED32): SIGNED16; 
 	PROCEDURE ^ IsHexDigit(ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ HexToInt(ch: CHAR): LONGINT; 
-	PROCEDURE ^ ClipAgainst(VAR x, y, w, h: INTEGER; X, Y, W, H: INTEGER); 
-	PROCEDURE ^ LinesVisible*(H: INTEGER): LONGINT; 
-	PROCEDURE ^ CalcPlace(x, y, w, h: INTEGER; VAR px, py: INTEGER); 
-	PROCEDURE ^ LocateLine*(F: Frame; y, Y: INTEGER; VAR loc: Loc); 
-	PROCEDURE ^ LocateChar*(F: Frame; x, y, X, Y: INTEGER; VAR loc: Loc); 
-	PROCEDURE ^ LocatePos*(F: Frame; pos: LONGINT; hexBlock: BOOLEAN; VAR loc: Loc); 
-	PROCEDURE ^ ScrollTo*(F: Frame; pos: LONGINT); 
+	PROCEDURE ^ HexToInt(ch: CHAR): SIGNED32; 
+	PROCEDURE ^ ClipAgainst(VAR x, y, w, h: SIGNED16; X, Y, W, H: SIGNED16); 
+	PROCEDURE ^ LinesVisible*(H: SIGNED16): SIGNED32; 
+	PROCEDURE ^ CalcPlace(x, y, w, h: SIGNED16; VAR px, py: SIGNED16); 
+	PROCEDURE ^ LocateLine*(F: Frame; y, Y: SIGNED16; VAR loc: Loc); 
+	PROCEDURE ^ LocateChar*(F: Frame; x, y, X, Y: SIGNED16; VAR loc: Loc); 
+	PROCEDURE ^ LocatePos*(F: Frame; pos: SIGNED32; hexBlock: BOOLEAN; VAR loc: Loc); 
+	PROCEDURE ^ ScrollTo*(F: Frame; pos: SIGNED32); 
 	PROCEDURE ^ RemoveCaret(F: Frame); 
-	PROCEDURE ^ SetCaret(F: Frame; pos: LONGINT); 
-	PROCEDURE ^ FlipCaret(F: Frame; Q: Display3.Mask; x, y: INTEGER; loc: Loc); 
-	PROCEDURE ^ RestoreSlider(F: Frame; Q: Display3.Mask; x, y: INTEGER); 
-	PROCEDURE ^ UpdateArea(F: Frame; u, v, w, h, px, py: INTEGER; dlink: Objects.Object); 
-	PROCEDURE ^ ScrollUpdate(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; VAR M: ScrollMsg); 
-	PROCEDURE ^ DrawChar(Q: Display3.Mask; VAR X, Y: INTEGER; ch: CHAR); 
-	PROCEDURE ^ DrawLine(Q: Display3.Mask; x, Y, w, h: INTEGER; pos: LONGINT); 
-	PROCEDURE ^ RestoreFrame(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
-	PROCEDURE ^ RestoreFrameArea(F: Frame; Q: Display3.Mask; x, y, w, h, U, V, W, H: INTEGER); 
+	PROCEDURE ^ SetCaret(F: Frame; pos: SIGNED32); 
+	PROCEDURE ^ FlipCaret(F: Frame; Q: Display3.Mask; x, y: SIGNED16; loc: Loc); 
+	PROCEDURE ^ RestoreSlider(F: Frame; Q: Display3.Mask; x, y: SIGNED16); 
+	PROCEDURE ^ UpdateArea(F: Frame; u, v, w, h, px, py: SIGNED16; dlink: Objects.Object); 
+	PROCEDURE ^ ScrollUpdate(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; VAR M: ScrollMsg); 
+	PROCEDURE ^ DrawChar(Q: Display3.Mask; VAR X, Y: SIGNED16; ch: CHAR); 
+	PROCEDURE ^ DrawLine(Q: Display3.Mask; x, Y, w, h: SIGNED16; pos: SIGNED32); 
+	PROCEDURE ^ RestoreFrame(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16); 
+	PROCEDURE ^ RestoreFrameArea(F: Frame; Q: Display3.Mask; x, y, w, h, U, V, W, H: SIGNED16); 
 	PROCEDURE ^ PrintFrame(F: Frame; M: Display.DisplayMsg); 
-	PROCEDURE ^ TrackFrame(F: Frame; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg); 
+	PROCEDURE ^ TrackFrame(F: Frame; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ Write(F: Frame; VAR M: Oberon.InputMsg); 
-	PROCEDURE ^ Update(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; M: Texts.UpdateMsg); 
+	PROCEDURE ^ Update(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; M: Texts.UpdateMsg); 
 	PROCEDURE ^ Modify(F: Frame; VAR M: Display.ModifyMsg); 
 	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ FrameFile(F: Frame; VAR M: Objects.FileMsg); 
@@ -109,9 +109,9 @@ VAR
 	PROCEDURE ^ ToggleMenu(set: BOOLEAN; dlink: Objects.Object); 
 	PROCEDURE ^ SetCheck(D: Documents.Document; text: Texts.Text; dlink: Objects.Object); 
 	PROCEDURE ^ ClearCheck(D: Documents.Document; text: Texts.Text; dlink: Objects.Object); 
-	PROCEDURE ^ PrintHeader(title: ARRAY OF CHAR; page: LONGINT); 
+	PROCEDURE ^ PrintHeader(title: ARRAY OF CHAR; page: SIGNED32); 
 	PROCEDURE ^ InitPagePosition; 
-	PROCEDURE ^ PrintLine(X, Y: INTEGER; pos: LONGINT); 
+	PROCEDURE ^ PrintLine(X, Y: SIGNED16; pos: SIGNED32); 
 	PROCEDURE ^ PrintDoc(D: Documents.Document); 
 	PROCEDURE ^ DocHandler(D: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ InitDoc(D: Documents.Document); 

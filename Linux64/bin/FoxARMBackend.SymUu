@@ -180,8 +180,8 @@ TYPE
 	Citation = OBJECT 
 	VAR 
 		pc: SIZE; 
-		bits: LONGINT; 
-		shift: LONGINT; 
+		bits: SIGNED32; 
+		shift: SIGNED32; 
 		next: Citation; 
 	END Citation; 
 
@@ -189,26 +189,26 @@ TYPE
 	VAR 
 		firstCitation, lastCitation: Citation; 
 		next: Reference; 
-		size: LONGINT; 
+		size: SIGNED32; 
 
-		PROCEDURE ^  & Init(size: LONGINT); 
+		PROCEDURE ^  & Init(size: SIGNED32); 
 		PROCEDURE ^ Emit(out: BinaryCode.Section); 
-		PROCEDURE ^ AddCitation(pc: SIZE; bits: LONGINT; shift: LONGINT); 
+		PROCEDURE ^ AddCitation(pc: SIZE; bits: SIGNED32; shift: SIGNED32); 
 	END Reference; 
 
 	ImmediateReference = OBJECT (Reference)
 	VAR 
-		value: LONGINT; 
+		value: SIGNED32; 
 
-		PROCEDURE ^  & InitImm(v: LONGINT); 
+		PROCEDURE ^  & InitImm(v: SIGNED32); 
 		PROCEDURE ^ Emit(out: BinaryCode.Section); 
 	END ImmediateReference; 
 
 	ImmediateHReference = OBJECT (Reference)
 	VAR 
-		value: HUGEINT; 
+		value: SIGNED64; 
 
-		PROCEDURE ^  & InitImm(v: HUGEINT); 
+		PROCEDURE ^  & InitImm(v: SIGNED64); 
 		PROCEDURE ^ Emit(out: BinaryCode.Section); 
 	END ImmediateHReference; 
 
@@ -224,16 +224,16 @@ TYPE
 	ListOfReferences = OBJECT 
 	VAR 
 		firstReference, lastReference: Reference; 
-		size: LONGINT; 
+		size: SIGNED32; 
 		due: SIZE; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ UpdateDue(pc: SIZE; bits: LONGINT; shift: LONGINT); 
-		PROCEDURE ^ AddCitation(reference: Reference; pc: SIZE; bits: LONGINT; shift: LONGINT); 
+		PROCEDURE ^ UpdateDue(pc: SIZE; bits: SIGNED32; shift: SIGNED32); 
+		PROCEDURE ^ AddCitation(reference: Reference; pc: SIZE; bits: SIGNED32; shift: SIGNED32); 
 		PROCEDURE ^ AddReference(reference: Reference): Reference; 
-		PROCEDURE ^ AddSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset: SIZE; pc: SIZE; bits: LONGINT); 
-		PROCEDURE ^ AddImmediate(value: LONGINT; pc: SIZE; bits: LONGINT); 
-		PROCEDURE ^ AddHImmediate(value: HUGEINT; pc: SIZE; bits: LONGINT); 
+		PROCEDURE ^ AddSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset: SIZE; pc: SIZE; bits: SIGNED32); 
+		PROCEDURE ^ AddImmediate(value: SIGNED32; pc: SIZE; bits: SIGNED32); 
+		PROCEDURE ^ AddHImmediate(value: SIGNED64; pc: SIZE; bits: SIGNED32); 
 	END ListOfReferences; 
 
 	PhysicalRegisters* = OBJECT (CodeGenerators.PhysicalRegisters)
@@ -242,19 +242,19 @@ TYPE
 		reserved: ARRAY InstructionSet.NumberRegisters OF BOOLEAN; 
 		unusable: Ticket; 
 		blocked: Ticket; 
-		hint: LONGINT; 
+		hint: SIGNED32; 
 		useFPU32: BOOLEAN; 
 		useFPU64: BOOLEAN; 
 
 		PROCEDURE ^  & InitPhysicalRegisters(supportFramePointer, useFPU32, useFPU64, cooperative: BOOLEAN); 
-		PROCEDURE ^ NumberRegisters*(): LONGINT; 
-		PROCEDURE ^ Allocate*(physicalRegisterNumber: LONGINT; ticket: Ticket); 
-		PROCEDURE ^ SetReserved*(physicalRegisterNumber: LONGINT; isReserved: BOOLEAN); 
-		PROCEDURE ^ Reserved*(physicalRegisterNumber: LONGINT): BOOLEAN; 
-		PROCEDURE ^ Free*(physicalRegisterNumber: LONGINT); 
-		PROCEDURE ^ NextFree*(CONST type: IntermediateCode.Type): LONGINT; 
-		PROCEDURE ^ AllocationHint*(physicalRegisterNumber: LONGINT); 
-		PROCEDURE ^ Mapped*(physicalRegisterNumber: LONGINT): Ticket; 
+		PROCEDURE ^ NumberRegisters*(): SIGNED32; 
+		PROCEDURE ^ Allocate*(physicalRegisterNumber: SIGNED32; ticket: Ticket); 
+		PROCEDURE ^ SetReserved*(physicalRegisterNumber: SIGNED32; isReserved: BOOLEAN); 
+		PROCEDURE ^ Reserved*(physicalRegisterNumber: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ Free*(physicalRegisterNumber: SIGNED32); 
+		PROCEDURE ^ NextFree*(CONST type: IntermediateCode.Type): SIGNED32; 
+		PROCEDURE ^ AllocationHint*(physicalRegisterNumber: SIGNED32); 
+		PROCEDURE ^ Mapped*(physicalRegisterNumber: SIGNED32): Ticket; 
 		PROCEDURE ^ Dump*(w: Streams.Writer); 
 	END PhysicalRegisters; 
 
@@ -274,34 +274,34 @@ TYPE
 		PROCEDURE ^ Supported*(CONST irInstruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ GetRuntimeProcedureName(CONST irInstruction: IntermediateCode.Instruction; VAR resultingName: ARRAY OF CHAR); 
 		PROCEDURE ^ CheckStackPointer(CONST destination: Operand); 
-		PROCEDURE ^ Emit(opCode, condition: LONGINT; flags: SET; CONST operands: ARRAY InstructionSet.MaxOperands OF Operand); 
-		PROCEDURE ^ Emit0(opCode: LONGINT); 
-		PROCEDURE ^ Emit1(opCode: LONGINT; op: Operand); 
-		PROCEDURE ^ Emit2(opCode: LONGINT; op1, op2: Operand); 
-		PROCEDURE ^ Emit3(opCode: LONGINT; op1, op2, op3: Operand); 
-		PROCEDURE ^ Emit4(opCode: LONGINT; op1, op2, op3, op4: Operand); 
-		PROCEDURE ^ Emit6(opCode: LONGINT; op1, op2, op3, op4, op5, op6: Operand); 
-		PROCEDURE ^ Emit2WithFlags(opCode: LONGINT; op1, op2: Operand; flags: SET); 
-		PROCEDURE ^ Emit3WithFlags(opCode: LONGINT; op1, op2, op3: Operand; flags: SET); 
-		PROCEDURE ^ Emit1WithCondition(opCode: LONGINT; op1: Operand; condition: LONGINT); 
-		PROCEDURE ^ Emit2WithCondition(opCode: LONGINT; op1, op2: Operand; condition: LONGINT); 
-		PROCEDURE ^ Emit3WithCondition(opCode: LONGINT; op1, op2, op3: Operand; condition: LONGINT); 
-		PROCEDURE ^ ValueComposition(value: LONGINT; doEmit: BOOLEAN; CONST targetRegister: Operand): LONGINT; 
-		PROCEDURE ^ ValueComposition2(value: Basic.Integer; doEmit: BOOLEAN; CONST targetRegister: Operand): LONGINT; 
-		PROCEDURE ^ PhysicalRegisterNumber(virtualRegisterNumber: SIZE; part: LONGINT): LONGINT; 
+		PROCEDURE ^ Emit(opCode, condition: SIGNED32; flags: SET; CONST operands: ARRAY InstructionSet.MaxOperands OF Operand); 
+		PROCEDURE ^ Emit0(opCode: SIGNED32); 
+		PROCEDURE ^ Emit1(opCode: SIGNED32; op: Operand); 
+		PROCEDURE ^ Emit2(opCode: SIGNED32; op1, op2: Operand); 
+		PROCEDURE ^ Emit3(opCode: SIGNED32; op1, op2, op3: Operand); 
+		PROCEDURE ^ Emit4(opCode: SIGNED32; op1, op2, op3, op4: Operand); 
+		PROCEDURE ^ Emit6(opCode: SIGNED32; op1, op2, op3, op4, op5, op6: Operand); 
+		PROCEDURE ^ Emit2WithFlags(opCode: SIGNED32; op1, op2: Operand; flags: SET); 
+		PROCEDURE ^ Emit3WithFlags(opCode: SIGNED32; op1, op2, op3: Operand; flags: SET); 
+		PROCEDURE ^ Emit1WithCondition(opCode: SIGNED32; op1: Operand; condition: SIGNED32); 
+		PROCEDURE ^ Emit2WithCondition(opCode: SIGNED32; op1, op2: Operand; condition: SIGNED32); 
+		PROCEDURE ^ Emit3WithCondition(opCode: SIGNED32; op1, op2, op3: Operand; condition: SIGNED32); 
+		PROCEDURE ^ ValueComposition(value: SIGNED32; doEmit: BOOLEAN; CONST targetRegister: Operand): SIGNED32; 
+		PROCEDURE ^ ValueComposition2(value: Basic.Integer; doEmit: BOOLEAN; CONST targetRegister: Operand): SIGNED32; 
+		PROCEDURE ^ PhysicalRegisterNumber(virtualRegisterNumber: SIZE; part: SIGNED32): SIGNED32; 
 		PROCEDURE ^ GetSpillOperand(ticket: Ticket): Operand; 
 		PROCEDURE ^ OperandFromTicket(ticket: Ticket): Operand; 
 		PROCEDURE ^ GetFreeRegister(CONST type: IntermediateCode.Type): Operand; 
 		PROCEDURE ^ GetFreeRegisterOrHint(CONST type: IntermediateCode.Type; CONST registerHint: Operand): Operand; 
-		PROCEDURE ^ IsRegisterForType(registerNumber: LONGINT; CONST type: IntermediateCode.Type): BOOLEAN; 
+		PROCEDURE ^ IsRegisterForType(registerNumber: SIGNED32; CONST type: IntermediateCode.Type): BOOLEAN; 
 		PROCEDURE ^ RegisterAfterAppliedOffset(register: Operand; offset: SIZE; registerHint: Operand): Operand; 
-		PROCEDURE ^ RegisterFromIrRegister(CONST irRegisterOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 
+		PROCEDURE ^ RegisterFromIrRegister(CONST irRegisterOperand: IntermediateCode.Operand; part: SIGNED32; registerHint: Operand): Operand; 
 		PROCEDURE ^ Load(targetRegister, memoryOperand: Operand; irType: IntermediateCode.Type); 
 		PROCEDURE ^ Store(sourceRegister, memoryOperand: Operand; type: IntermediateCode.Type); 
 		PROCEDURE ^ RegisterFromSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; resolved: Sections.Section; symbolOffset: SIZE; CONST registerHint: Operand): Operand; 
-		PROCEDURE ^ MemoryOperandFromIrMemoryOperand(VAR irMemoryOperand: IntermediateCode.Operand; part: LONGINT; CONST registerHint: Operand): Operand; 
-		PROCEDURE ^ RegisterOrImmediateFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 
-		PROCEDURE ^ RegisterFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 
+		PROCEDURE ^ MemoryOperandFromIrMemoryOperand(VAR irMemoryOperand: IntermediateCode.Operand; part: SIGNED32; CONST registerHint: Operand): Operand; 
+		PROCEDURE ^ RegisterOrImmediateFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: SIGNED32; registerHint: Operand): Operand; 
+		PROCEDURE ^ RegisterFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: SIGNED32; registerHint: Operand): Operand; 
 		PROCEDURE ^ IsComplex(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ IsSinglePrecisionFloat(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ IsDoublePrecisionFloat(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
@@ -309,44 +309,44 @@ TYPE
 		PROCEDURE ^ IsInteger(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ IsNonComplexInteger(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
 		PROCEDURE ^ IsInteger64(CONST irOperand: IntermediateCode.Operand): BOOLEAN; 
-		PROCEDURE ^ PartType(CONST type: IntermediateCode.Type; part: LONGINT): IntermediateCode.Type; 
-		PROCEDURE ^ GetPartType*(CONST type: IntermediateCode.Type; part: LONGINT; VAR partType: IntermediateCode.Type); 
-		PROCEDURE ^ ValueOfPart(value: HUGEINT; part: LONGINT): LONGINT; 
-		PROCEDURE ^ ValueIsDirectlyEncodable(value: LONGINT): BOOLEAN; 
-		PROCEDURE ^ IrOperandIsDirectlyEncodable(irOperand: IntermediateCode.Operand; part: LONGINT): BOOLEAN; 
-		PROCEDURE ^ NegatedIrOperandIsDirectlyEncodable(irOperand: IntermediateCode.Operand; part: LONGINT): BOOLEAN; 
+		PROCEDURE ^ PartType(CONST type: IntermediateCode.Type; part: SIGNED32): IntermediateCode.Type; 
+		PROCEDURE ^ GetPartType*(CONST type: IntermediateCode.Type; part: SIGNED32; VAR partType: IntermediateCode.Type); 
+		PROCEDURE ^ ValueOfPart(value: SIGNED64; part: SIGNED32): SIGNED32; 
+		PROCEDURE ^ ValueIsDirectlyEncodable(value: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ IrOperandIsDirectlyEncodable(irOperand: IntermediateCode.Operand; part: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ NegatedIrOperandIsDirectlyEncodable(irOperand: IntermediateCode.Operand; part: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ Generate*(VAR irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ PostGenerate*(CONST instruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitFinalFixupBlock; 
 		PROCEDURE ^ EmitFixupBlockIfNeeded; 
 		PROCEDURE ^ EmitFixupBlock; 
-		PROCEDURE ^ OperandFromValue(value: LONGINT; registerHint: Operand): Operand; 
-		PROCEDURE ^ SinglePrecisionFloatRegisterFromValue(value: REAL; registerHint: Operand): Operand; 
-		PROCEDURE ^ DoublePrecisionFloatRegisterFromValue(value: LONGREAL; registerHint: Operand): Operand; 
-		PROCEDURE ^ RegisterFromValue(value: LONGINT; registerHint: Operand): Operand; 
+		PROCEDURE ^ OperandFromValue(value: SIGNED32; registerHint: Operand): Operand; 
+		PROCEDURE ^ SinglePrecisionFloatRegisterFromValue(value: FLOAT32; registerHint: Operand): Operand; 
+		PROCEDURE ^ DoublePrecisionFloatRegisterFromValue(value: FLOAT64; registerHint: Operand): Operand; 
+		PROCEDURE ^ RegisterFromValue(value: SIGNED32; registerHint: Operand): Operand; 
 		PROCEDURE ^ AllocateStack(allocationSize: SIZE; doUpdateStackSize: BOOLEAN; clear: BOOLEAN); 
 		PROCEDURE ^ IsSameRegister(CONST a, b: Operand): BOOLEAN; 
-		PROCEDURE ^ MovIfDifferent(CONST a, b: Operand; part= Low: LONGINT); 
-		PROCEDURE ^ AcquireDestinationRegister(CONST irDestinationOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand; 
-		PROCEDURE ^ WriteBack(VAR irDestinationOperand: IntermediateCode.Operand; part: LONGINT; register: Operand); 
-		PROCEDURE ^ ZeroExtendOperand(operand: Operand; sizeInBits: LONGINT); 
-		PROCEDURE ^ SignExtendOperand(operand: Operand; sizeInBits: LONGINT); 
+		PROCEDURE ^ MovIfDifferent(CONST a, b: Operand; part= Low: SIGNED32); 
+		PROCEDURE ^ AcquireDestinationRegister(CONST irDestinationOperand: IntermediateCode.Operand; part: SIGNED32; registerHint: Operand): Operand; 
+		PROCEDURE ^ WriteBack(VAR irDestinationOperand: IntermediateCode.Operand; part: SIGNED32; register: Operand); 
+		PROCEDURE ^ ZeroExtendOperand(operand: Operand; sizeInBits: SIGNED32); 
+		PROCEDURE ^ SignExtendOperand(operand: Operand; sizeInBits: SIGNED32); 
 		PROCEDURE ^ SignOrZeroExtendOperand(operand: Operand; irType: IntermediateCode.Type); 
-		PROCEDURE ^ EmitPush(VAR irOperand: IntermediateCode.Operand; part: LONGINT); 
-		PROCEDURE ^ EmitPop(VAR irOperand: IntermediateCode.Operand; part: LONGINT); 
+		PROCEDURE ^ EmitPush(VAR irOperand: IntermediateCode.Operand; part: SIGNED32); 
+		PROCEDURE ^ EmitPop(VAR irOperand: IntermediateCode.Operand; part: SIGNED32); 
 		PROCEDURE ^ Resolve(VAR op: IntermediateCode.Operand); 
 		PROCEDURE ^ EmitCall(VAR irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitEnter(CONST irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitLeave(CONST irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitExit(CONST irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitMov(VAR irInstruction: IntermediateCode.Instruction); 
-		PROCEDURE ^ EmitNot(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
-		PROCEDURE ^ EmitAndP(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
+		PROCEDURE ^ EmitNot(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32); 
+		PROCEDURE ^ EmitAndP(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32); 
 		PROCEDURE ^ EmitAnd(VAR irInstruction: IntermediateCode.Instruction); 
-		PROCEDURE ^ EmitOr(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
-		PROCEDURE ^ EmitXor(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
+		PROCEDURE ^ EmitOr(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32); 
+		PROCEDURE ^ EmitXor(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32); 
 		PROCEDURE ^ EmitAddOrSub(VAR irInstruction: IntermediateCode.Instruction); 
-		PROCEDURE ^ EmitPartialAddOrSub(CONST irInstruction: IntermediateCode.Instruction; part: LONGINT; doUpdateFlags: BOOLEAN); 
+		PROCEDURE ^ EmitPartialAddOrSub(CONST irInstruction: IntermediateCode.Instruction; part: SIGNED32; doUpdateFlags: BOOLEAN); 
 		PROCEDURE ^ EmitMul(VAR irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitDiv(VAR irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitMod(CONST irInstruction: IntermediateCode.Instruction); 
@@ -359,18 +359,18 @@ TYPE
 		PROCEDURE ^ RoundDown(VAR fpstatus: Operand); 
 		PROCEDURE ^ ResetRounding(VAR fpstatus: Operand); 
 		PROCEDURE ^ EmitConv(VAR irInstruction: IntermediateCode.Instruction); 
-		PROCEDURE ^ ResultRegister(part: LONGINT; type: IntermediateCode.Type): InstructionSet.Operand; 
-		PROCEDURE ^ EmitReturn(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
-		PROCEDURE ^ EmitResult(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT); 
+		PROCEDURE ^ ResultRegister(part: SIGNED32; type: IntermediateCode.Type): InstructionSet.Operand; 
+		PROCEDURE ^ EmitReturn(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32); 
+		PROCEDURE ^ EmitResult(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32); 
 		PROCEDURE ^ EmitTrap(CONST irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitCas(VAR irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitCopy(VAR irInstruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ EmitFill(CONST irInstruction: IntermediateCode.Instruction; down: BOOLEAN); 
 		PROCEDURE ^ SwapIrOperands(VAR left, right: IntermediateCode.Operand); 
-		PROCEDURE ^ PrepareSingleSourceOp(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT; VAR destinationRegister, sourceOperand: Operand); 
-		PROCEDURE ^ PrepareSingleSourceOpWithImmediate(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT; VAR destinationRegister, sourceOperand: Operand); 
-		PROCEDURE ^ PrepareDoubleSourceOpWithImmediate(CONST irInstruction: IntermediateCode.Instruction; part: LONGINT; VAR destinationRegister, leftSourceOperand, rightSourceOperand: Operand; VAR isSwapped: BOOLEAN); 
-		PROCEDURE ^ PrepareDoubleSourceOp(CONST irInstruction: IntermediateCode.Instruction; part: LONGINT; VAR destinationRegister, leftSourceOperand, rightSourceOperand: Operand); 
+		PROCEDURE ^ PrepareSingleSourceOp(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32; VAR destinationRegister, sourceOperand: Operand); 
+		PROCEDURE ^ PrepareSingleSourceOpWithImmediate(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32; VAR destinationRegister, sourceOperand: Operand); 
+		PROCEDURE ^ PrepareDoubleSourceOpWithImmediate(CONST irInstruction: IntermediateCode.Instruction; part: SIGNED32; VAR destinationRegister, leftSourceOperand, rightSourceOperand: Operand; VAR isSwapped: BOOLEAN); 
+		PROCEDURE ^ PrepareDoubleSourceOp(CONST irInstruction: IntermediateCode.Instruction; part: SIGNED32; VAR destinationRegister, leftSourceOperand, rightSourceOperand: Operand); 
 	END CodeGeneratorARM; 
 
 	BackendARM = OBJECT (IntermediateBackend.IntermediateBackend)
@@ -394,7 +394,7 @@ TYPE
 		PROCEDURE ^ DefaultObjectFileFormat*(): Formats.ObjectFileFormat; 
 		PROCEDURE ^ DefaultSymbolFileFormat*(): Formats.SymbolFileFormat; 
 		PROCEDURE ^ GetDescription*(VAR instructionSet: ARRAY OF CHAR); 
-		PROCEDURE ^ FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: LONGINT); 
+		PROCEDURE ^ FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: SIGNED32); 
 	END BackendARM; 
 VAR 
 	emptyOperand: Operand; 
@@ -406,6 +406,6 @@ VAR
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ Get*(): Backend.Backend; 
 	PROCEDURE ^ Test*; 
-	PROCEDURE ^ DBin*(value: HUGEINT; numberDigits: LONGINT); 
+	PROCEDURE ^ DBin*(value: SIGNED64; numberDigits: SIGNED32); 
 BEGIN
 END FoxARMBackend.

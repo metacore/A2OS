@@ -252,7 +252,7 @@ TYPE
 	IdentDef* = OBJECT 
 	VAR 
 		ident*: InfoItem; 
-		vis*: SHORTINT; 
+		vis*: SIGNED8; 
 		initializer*: InfoItem; 
 		external*: Strings.String; 
 	END IdentDef; 
@@ -341,7 +341,7 @@ TYPE
 
 	PROCEDURE ^ AppendLast(head, node: NodeList); 
 	PROCEDURE ^ SplitName*(CONST name: ARRAY OF CHAR; VAR moduleName, typeName: ARRAY OF CHAR); 
-	PROCEDURE ^ FindType(CONST name: ARRAY OF CHAR; type: WORD; definitionModule: Module; cache: ModuleCache): TypeDecl; 
+	PROCEDURE ^ FindType(CONST name: ARRAY OF CHAR; type: INTEGER; definitionModule: Module; cache: ModuleCache): TypeDecl; 
 	PROCEDURE ^ ResolveTypeHierarchy(module: Module; cache: ModuleCache); 
 	PROCEDURE ^ ResolveMethodOverwrites(module: Module; cache: ModuleCache); 
 	PROCEDURE ^ ParseFile*(CONST filename: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics): Module; 

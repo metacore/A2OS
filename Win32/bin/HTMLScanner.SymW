@@ -41,9 +41,9 @@ TYPE
 
 	Scanner* = OBJECT 
 	VAR 
-		sym-: SHORTINT; 
-		line-, col-, oldpos, pos: LONGINT; 
-		reportError*: PROCEDURE {DELEGATE}(pos, line, row: LONGINT; msg: ARRAY OF CHAR); 
+		sym-: SIGNED8; 
+		line-, col-, oldpos, pos: SIGNED32; 
+		reportError*: PROCEDURE {DELEGATE}(pos, line, row: SIGNED32; msg: ARRAY OF CHAR); 
 		nextCh: CHAR; 
 		dynstr: DynamicStrings.DynamicString; 
 		r: Streams.Reader; 
@@ -62,11 +62,11 @@ TYPE
 		PROCEDURE ^ ScanContent*; 
 		PROCEDURE ^ ScanAttributeValue*; 
 		PROCEDURE ^ GetStr*(): String; 
-		PROCEDURE ^ GetPos*(): LONGINT; 
-		PROCEDURE ^ GetOldPos*(): LONGINT; 
+		PROCEDURE ^ GetPos*(): SIGNED32; 
+		PROCEDURE ^ GetOldPos*(): SIGNED32; 
 	END Scanner; 
 
 	PROCEDURE ^ IsWhiteSpace(ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ DefaultReportError(pos, line, col: LONGINT; msg: ARRAY OF CHAR); 
+	PROCEDURE ^ DefaultReportError(pos, line, col: SIGNED32; msg: ARRAY OF CHAR); 
 BEGIN
 END HTMLScanner.

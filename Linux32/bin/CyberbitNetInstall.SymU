@@ -15,14 +15,14 @@ TYPE
 
 	StatusWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
-		nofFiles*: LONGINT; 
-		currentFile*: LONGINT; 
-		fileSize*: LONGINT; 
-		transferred*: LONGINT; 
+		nofFiles*: SIGNED32; 
+		currentFile*: SIGNED32; 
+		fileSize*: SIGNED32; 
+		transferred*: SIGNED32; 
 		currentFilename*: ARRAY 256 OF CHAR; 
 		shown: BOOLEAN; 
-		windowWidth, windowHeight: LONGINT; 
-		px, py: LONGINT; 
+		windowWidth, windowHeight: SIGNED32; 
+		px, py: SIGNED32; 
 		bar: WMStandardComponents.Panel; 
 
 		PROCEDURE ^  & New*; 
@@ -34,7 +34,7 @@ TYPE
 
 	BevelPanel* = OBJECT {EXCLUSIVE} (WMStandardComponents.Panel)
 	VAR 
-		bevelWidth*: LONGINT; 
+		bevelWidth*: SIGNED32; 
 		bevelColor*: WMGraphics.Color; 
 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 

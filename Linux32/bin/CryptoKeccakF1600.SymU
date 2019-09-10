@@ -29,7 +29,7 @@ TYPE
 	END Instance; 
 VAR 
 	roundConstants: ARRAY nrRounds OF Lane; 
-	rhoOffsets: ARRAY nrLanes OF LONGINT; 
+	rhoOffsets: ARRAY nrLanes OF SIGNED32; 
 
 	PROCEDURE ^ ToBitInterleaving(CONST in: Lane; VAR out: Lane); 
 	PROCEDURE ^ FromBitInterleaving(CONST in: Lane; VAR out: Lane); 

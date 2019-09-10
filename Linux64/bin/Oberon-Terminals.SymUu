@@ -32,16 +32,16 @@ CONST
 TYPE 
 	Char* = RECORD 
 		ch*: CHAR; 
-		attr*: SHORTINT; 
+		attr*: SIGNED8; 
 	END; 
 
 	Line* = POINTER TO RECORD 
-		len*: INTEGER; 
+		len*: SIGNED16; 
 		ch*: ARRAY (MaxWidth + 1) OF Char; 
 	END; 
 
 	Location* = RECORD 
-		line*, col*: INTEGER; 
+		line*, col*: SIGNED16; 
 	END; 
 
 	Terminal* = POINTER TO TerminalDesc; 
@@ -50,12 +50,12 @@ TYPE
 
 	Breaker* = PROCEDURE (T: Terminal); 
 
-	Notifier* = PROCEDURE (T: Terminal; op, fromLine, fromCol, toLine, toCol: INTEGER; oldCursor: Location); 
+	Notifier* = PROCEDURE (T: Terminal; op, fromLine, fromCol, toLine, toCol: SIGNED16; oldCursor: Location); 
 
 	TerminalDesc* = RECORD 
-		attr*: SHORTINT; 
-		width*, height*: INTEGER; 
-		top, bottom: INTEGER; 
+		attr*: SIGNED8; 
+		width*, height*: SIGNED16; 
+		top, bottom: SIGNED16; 
 		cursor*: Location; 
 		wrapBefore: BOOLEAN; 
 		notify*: Notifier; 
@@ -63,37 +63,37 @@ TYPE
 		flags*: SET; 
 		send: Sender; 
 		break: Breaker; 
-		state, parPos, strPos: INTEGER; 
+		state, parPos, strPos: SIGNED16; 
 		parBuf: ARRAY 32 OF CHAR; 
 		strBuf: ARRAY 256 OF CHAR; 
 		tabs: ARRAY (MaxWidth + 1) OF BOOLEAN; 
 		answerback*: ARRAY 32 OF CHAR; 
-		oldAttr: SHORTINT; 
+		oldAttr: SIGNED8; 
 		oldCursor: Location; 
 		oldRelative: BOOLEAN; 
 		cache*: Texts.Writer; 
 		text*: Texts.Text; 
-		pin*: LONGINT; 
+		pin*: SIGNED32; 
 	END; 
 
-	PROCEDURE ^ MoveLines(t: Terminal; top, bot, dH: INTEGER); 
-	PROCEDURE ^ Erase(t: Terminal; fromLine, fromCol, toLine, toCol: INTEGER); 
-	PROCEDURE ^ DeleteChars(t: Terminal; n: INTEGER); 
-	PROCEDURE ^ DeleteLines(t: Terminal; n: INTEGER); 
-	PROCEDURE ^ InsertChars(t: Terminal; n: INTEGER); 
-	PROCEDURE ^ InsertLines(t: Terminal; n: INTEGER); 
+	PROCEDURE ^ MoveLines(t: Terminal; top, bot, dH: SIGNED16); 
+	PROCEDURE ^ Erase(t: Terminal; fromLine, fromCol, toLine, toCol: SIGNED16); 
+	PROCEDURE ^ DeleteChars(t: Terminal; n: SIGNED16); 
+	PROCEDURE ^ DeleteLines(t: Terminal; n: SIGNED16); 
+	PROCEDURE ^ InsertChars(t: Terminal; n: SIGNED16); 
+	PROCEDURE ^ InsertLines(t: Terminal; n: SIGNED16); 
 	PROCEDURE ^ Scroll(t: Terminal; up: BOOLEAN); 
-	PROCEDURE ^ SetCursor(t: Terminal; line, col: INTEGER; relative: BOOLEAN); 
-	PROCEDURE ^ SetMargins(t: Terminal; top, bottom: INTEGER); 
-	PROCEDURE ^ SetWidth(t: Terminal; width: INTEGER); 
-	PROCEDURE ^ SetAttribute(t: Terminal; attr: SHORTINT); 
-	PROCEDURE ^ PutChar(t: Terminal; VAR cursor: Location; VAR wrapBefore: BOOLEAN; ch: Char; VAR dH: INTEGER); 
-	PROCEDURE ^ WriteString(t: Terminal; CONST s: ARRAY OF CHAR; n: INTEGER); 
+	PROCEDURE ^ SetCursor(t: Terminal; line, col: SIGNED16; relative: BOOLEAN); 
+	PROCEDURE ^ SetMargins(t: Terminal; top, bottom: SIGNED16); 
+	PROCEDURE ^ SetWidth(t: Terminal; width: SIGNED16); 
+	PROCEDURE ^ SetAttribute(t: Terminal; attr: SIGNED8); 
+	PROCEDURE ^ PutChar(t: Terminal; VAR cursor: Location; VAR wrapBefore: BOOLEAN; ch: Char; VAR dH: SIGNED16); 
+	PROCEDURE ^ WriteString(t: Terminal; CONST s: ARRAY OF CHAR; n: SIGNED16); 
 	PROCEDURE ^ EFill(t: Terminal); 
 	PROCEDURE ^ DelLast(T: Terminal); 
 	PROCEDURE ^ Reset*(T: Terminal); 
 	PROCEDURE ^ SendStr(T: Terminal; CONST s: ARRAY OF CHAR); 
-	PROCEDURE ^ SendInt(T: Terminal; x: INTEGER); 
+	PROCEDURE ^ SendInt(T: Terminal; x: SIGNED16); 
 	PROCEDURE ^ Update(T: Terminal); 
 	PROCEDURE ^ Flush*(T: Terminal); 
 	PROCEDURE ^ Write(T: Terminal; ch: CHAR); 
@@ -102,7 +102,7 @@ TYPE
 	PROCEDURE ^ Receive*(T: Terminal; ch: CHAR); 
 	PROCEDURE ^ Send*(T: Terminal; ch: CHAR); 
 	PROCEDURE ^ SendString*(T: Terminal; CONST s: ARRAY OF CHAR); 
-	PROCEDURE ^ SendText*(T: Terminal; text: Texts.Text; beg, end: LONGINT); 
-	PROCEDURE ^ Open*(T: Terminal; text: Texts.Text; send: Sender; break: Breaker; notify: Notifier; height: INTEGER); 
+	PROCEDURE ^ SendText*(T: Terminal; text: Texts.Text; beg, end: SIGNED32); 
+	PROCEDURE ^ Open*(T: Terminal; text: Texts.Text; send: Sender; break: Breaker; notify: Notifier; height: SIGNED16); 
 BEGIN
 END Terminals.

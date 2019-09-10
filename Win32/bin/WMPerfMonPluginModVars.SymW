@@ -32,7 +32,7 @@ TYPE
 		PROCEDURE ^ UpdateDataset*; 
 	END ModVar; 
 
-	PROCEDURE ^ GetValueOf(v: Reflection.Variable; VAR value: LONGREAL): BOOLEAN; 
+	PROCEDURE ^ GetValueOf(v: Reflection.Variable; VAR value: FLOAT64): BOOLEAN; 
 	PROCEDURE ^ GetDatasetDescriptor(vd: VariableDescriptors): WMPerfMonPlugins.DatasetDescriptor; 
 	PROCEDURE ^ InstallPlugin*(CONST name: WMPerfMonPlugins.Name; vd: VariableDescriptors); 
 	PROCEDURE ^ Add(VAR vd: VariableDescriptors; CONST moduleName, variableName: ARRAY OF CHAR); 

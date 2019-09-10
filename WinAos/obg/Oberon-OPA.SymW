@@ -123,29 +123,29 @@ TYPE
 
 	InstrDesc = RECORD 
 		name: Mnemo; 
-		start, end: INTEGER; 
+		start, end: SIGNED16; 
 		target: SET; 
 	END; 
 
 	OpCode = RECORD 
-		op: ARRAY 3 OF INTEGER; 
-		op0, op1, op2: INTEGER; 
-		opc: INTEGER; 
-		reg: INTEGER; 
+		op: ARRAY 3 OF SIGNED16; 
+		op0, op1, op2: SIGNED16; 
+		opc: SIGNED16; 
+		reg: SIGNED16; 
 	END; 
 
 	Operand = RECORD 
-		mode: LONGINT; 
-		imm: LONGINT; 
-		disp: LONGINT; 
-		index, base, reg: INTEGER; 
-		seg, scale: INTEGER; 
+		mode: SIGNED32; 
+		imm: SIGNED32; 
+		disp: SIGNED32; 
+		index, base, reg: SIGNED16; 
+		seg, scale: SIGNED16; 
 		obj: Object; 
 	END; 
 
 	ObjDesc = RECORD 
-		typ: LONGINT; 
-		val, size: LONGINT; 
+		typ: SIGNED32; 
+		val, size: SIGNED32; 
 		name: Name; 
 		left, right, next: Object; 
 		fix: FixPnt; 
@@ -153,9 +153,9 @@ TYPE
 	END; 
 
 	FixPntDesc = RECORD 
-		pc: LONGINT; 
+		pc: SIGNED32; 
 		node: OPT.Node; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		next: FixPnt; 
 	END; 
 
@@ -163,72 +163,72 @@ TYPE
 VAR 
 	root: Object; 
 	OpTab: POINTER TO ARRAY OF OpCode; 
-	OpTabLen: LONGINT; 
+	OpTabLen: SIGNED32; 
 	InstrTab: POINTER TO ARRAY OF InstrDesc; 
-	InstrTabLen: LONGINT; 
-	SizeTab: ARRAY 17 OF SHORTINT; 
+	InstrTabLen: SIGNED32; 
+	SizeTab: ARRAY 17 OF SIGNED8; 
 	TargetTab: ARRAY 32 OF RECORD 
 		name: Name; 
 		flag: SET; 
 	END; 
-	TargetCount: LONGINT; 
+	TargetCount: SIGNED32; 
 	export, inline: BOOLEAN; 
 	FirstTime: BOOLEAN; 
 	Target: SET; 
-	pc: LONGINT; 
-	sym: LONGINT; 
+	pc: SIGNED32; 
+	sym: SIGNED32; 
 	ident: Name; 
-	val: LONGINT; 
+	val: SIGNED32; 
 	str: ARRAY MaxStrLen OF CHAR; 
-	errpos: LONGINT; 
+	errpos: SIGNED32; 
 	first, last: OPT.Node; 
 	fixlist: OPT.Node; 
 
-	PROCEDURE ^ AND(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ AND(a, b: SIGNED32): SIGNED32; 
 	PROCEDURE ^ IsFix(name: Mnemo): BOOLEAN; 
-	PROCEDURE ^ ModeSize(mode: LONGINT): LONGINT; 
-	PROCEDURE ^ ConstSize(i: LONGINT; signed: BOOLEAN): INTEGER; 
-	PROCEDURE ^ IsRegMode(m: LONGINT; strict: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ IsSRegMode(m: LONGINT; strict: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ IsSpecRegMode(m: LONGINT): BOOLEAN; 
-	PROCEDURE ^ IsMMode(m: LONGINT): BOOLEAN; 
-	PROCEDURE ^ IsRMMode(m: LONGINT): BOOLEAN; 
-	PROCEDURE ^ IsMMMode(m: LONGINT): BOOLEAN; 
-	PROCEDURE ^ IsXMMMode(m: LONGINT): BOOLEAN; 
-	PROCEDURE ^ IsFRegMode(m: LONGINT; strict: BOOLEAN): BOOLEAN; 
-	PROCEDURE ^ IsRegister(mode: LONGINT): BOOLEAN; 
-	PROCEDURE ^ NeedModRM(mode, regpos: LONGINT): BOOLEAN; 
-	PROCEDURE ^ IsImmMode(m: LONGINT): BOOLEAN; 
-	PROCEDURE ^ IsRelMode(m: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Evaluate(VAR op: Operand; mode: LONGINT): LONGINT; 
-	PROCEDURE ^ Match(ind: LONGINT; VAR op: ARRAY OF Operand): LONGINT; 
+	PROCEDURE ^ ModeSize(mode: SIGNED32): SIGNED32; 
+	PROCEDURE ^ ConstSize(i: SIGNED32; signed: BOOLEAN): SIGNED16; 
+	PROCEDURE ^ IsRegMode(m: SIGNED32; strict: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ IsSRegMode(m: SIGNED32; strict: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ IsSpecRegMode(m: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ IsMMode(m: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ IsRMMode(m: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ IsMMMode(m: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ IsXMMMode(m: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ IsFRegMode(m: SIGNED32; strict: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ IsRegister(mode: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ NeedModRM(mode, regpos: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ IsImmMode(m: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ IsRelMode(m: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Evaluate(VAR op: Operand; mode: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Match(ind: SIGNED32; VAR op: ARRAY OF Operand): SIGNED32; 
 	PROCEDURE ^ insert(VAR name: ARRAY OF CHAR; VAR obj: Object); 
 	PROCEDURE ^ ConvertObj(ob: OPT.Object): Object; 
 	PROCEDURE ^ find(VAR name: Name; VAR obj: Object); 
-	PROCEDURE ^ HashFn(VAR name: ARRAY OF CHAR; VAR k, n: LONGINT); 
-	PROCEDURE ^ FindInstruction(VAR name: ARRAY OF CHAR; VAR inx: LONGINT); 
+	PROCEDURE ^ HashFn(VAR name: ARRAY OF CHAR; VAR k, n: SIGNED32); 
+	PROCEDURE ^ FindInstruction(VAR name: ARRAY OF CHAR; VAR inx: SIGNED32); 
 	PROCEDURE ^ skipBlanks; 
 	PROCEDURE ^ GetIdent(VAR name: Name); 
-	PROCEDURE ^ Get(VAR sym: LONGINT); 
-	PROCEDURE ^ Check(s: LONGINT); 
+	PROCEDURE ^ Get(VAR sym: SIGNED32); 
+	PROCEDURE ^ Check(s: SIGNED32); 
 	PROCEDURE ^ Qualident(VAR obj: Object); 
-	PROCEDURE ^ Expression(VAR x: LONGINT); 
-	PROCEDURE ^ GetBaseIndex(VAR o: Operand; size: LONGINT); 
+	PROCEDURE ^ Expression(VAR x: SIGNED32); 
+	PROCEDURE ^ GetBaseIndex(VAR o: Operand; size: SIGNED32); 
 	PROCEDURE ^ GetOperand(VAR o: Operand); 
 	PROCEDURE ^ CheckLabels; 
-	PROCEDURE ^ InsertFix(VAR obj: Object; pc: LONGINT); 
+	PROCEDURE ^ InsertFix(VAR obj: Object; pc: SIGNED32); 
 	PROCEDURE ^ FixDisp(VAR fix: FixPnt); 
 	PROCEDURE ^ NewNode; 
-	PROCEDURE ^ PutByte(b: LONGINT); 
-	PROCEDURE ^ PutBytes(b, size: LONGINT); 
-	PROCEDURE ^ ModRM(VAR modrm: LONGINT; VAR op: Operand; mode, regpos: LONGINT; UseSpecReg, fix: BOOLEAN); 
-	PROCEDURE ^ SIB(op: Operand): SHORTINT; 
-	PROCEDURE ^ GenCode(ind: LONGINT; VAR op: ARRAY OF Operand); 
+	PROCEDURE ^ PutByte(b: SIGNED32); 
+	PROCEDURE ^ PutBytes(b, size: SIGNED32); 
+	PROCEDURE ^ ModRM(VAR modrm: SIGNED32; VAR op: Operand; mode, regpos: SIGNED32; UseSpecReg, fix: BOOLEAN); 
+	PROCEDURE ^ SIB(op: Operand): SIGNED8; 
+	PROCEDURE ^ GenCode(ind: SIGNED32; VAR op: ARRAY OF Operand); 
 	PROCEDURE ^ ParseLabel; 
 	PROCEDURE ^ ParseInstruction; 
 	PROCEDURE ^ ParseTarget; 
-	PROCEDURE ^ InsertReg(name: ARRAY OF CHAR; t, v: LONGINT); 
-	PROCEDURE ^ InsertType(name: ARRAY OF CHAR; s: LONGINT); 
+	PROCEDURE ^ InsertReg(name: ARRAY OF CHAR; t, v: SIGNED32); 
+	PROCEDURE ^ InsertType(name: ARRAY OF CHAR; s: SIGNED32); 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ Close; 
 	PROCEDURE ^ InsertTarget(name: ARRAY OF CHAR; flag: SET); 

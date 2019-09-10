@@ -8,13 +8,13 @@ TYPE
 
 	tModel* = POINTER TO tModelDesc; 
 
-	PotentialFunction* = PROCEDURE (M: tModel; A: vyBase.Object):LONGREAL; 
+	PotentialFunction* = PROCEDURE (M: tModel; A: vyBase.Object):FLOAT64; 
 
 	tModelDesc* = RECORD (vyBase.ObjDesc)
-		coolingTemp-: LONGREAL; 
+		coolingTemp-: FLOAT64; 
 		synced*: BOOLEAN; 
 		MCache*: antsCaches.FullCache; 
-		maxCacheSize-: LONGINT; 
+		maxCacheSize-: SIGNED32; 
 		region*: antsRegions.tRegion; 
 		par*: Parameters; 
 		parNames*: ParameterNames; 
@@ -28,8 +28,8 @@ TYPE
 	PROCEDURE ^ Init(s: antsKernel.Kernel); 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Open*(par: tModel); 
-	PROCEDURE ^ SetTemperature*(par: tModel; temp: LONGREAL); 
-	PROCEDURE ^ SetMaxCache*(par: tModel; maxCacheSize: LONGINT); 
+	PROCEDURE ^ SetTemperature*(par: tModel; temp: FLOAT64); 
+	PROCEDURE ^ SetMaxCache*(par: tModel; maxCacheSize: SIGNED32); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ DoAttachRegion*(model: tModel; region: antsRegions.tRegion); 
 	PROCEDURE ^ AttachRegion*; 

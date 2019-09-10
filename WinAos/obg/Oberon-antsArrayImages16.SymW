@@ -20,7 +20,7 @@ VAR
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ A2P*(o: Objects.Object); 
 	PROCEDURE ^ Gen*; 
-	PROCEDURE ^ Min(a, b: LONGINT): LONGINT; 
+	PROCEDURE ^ Min(a, b: SIGNED32): SIGNED32; 
 	PROCEDURE ^ AdjustCurve(obj: tObject); 
 	PROCEDURE ^ FromArray*(obj: tObject; A: antsArrayObjects.tINTEGERObject); 
 	PROCEDURE ^ New*; 

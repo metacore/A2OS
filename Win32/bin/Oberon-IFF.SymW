@@ -11,24 +11,24 @@ TYPE
 
 	ChunkHeader = RECORD 
 		id: ChunkId; 
-		len: LONGINT; 
+		len: SIGNED32; 
 	END; 
 
 	ILBMHD = RECORD 
-		w, h, x, y: INTEGER; 
+		w, h, x, y: SIGNED16; 
 		planes, masking, compression: CHAR; 
-		transparentCol: INTEGER; 
+		transparentCol: SIGNED16; 
 		xAspect, yAspect: CHAR; 
-		pageWidth, pageHeight: INTEGER; 
+		pageWidth, pageHeight: SIGNED16; 
 	END; 
 VAR 
-	ColorMap: ARRAY 256 OF INTEGER; 
+	ColorMap: ARRAY 256 OF SIGNED16; 
 
 	PROCEDURE ^ ReadChunkId(VAR R: Files.Rider; VAR id: ChunkId); 
 	PROCEDURE ^ ReadChunkHeader(VAR R: Files.Rider; VAR hd: ChunkHeader); 
 	PROCEDURE ^ ReadILBMHD(VAR R: Files.Rider; VAR ilbmhd: ILBMHD); 
-	PROCEDURE ^ ScanCol(VAR R: Files.Rider; pict: Pictures.Picture; nrColor: LONGINT; conversion: BOOLEAN); 
-	PROCEDURE ^ LoadIFF(VAR R: Files.Rider; transparentCol: INTEGER; colorConversion: BOOLEAN; pict: Pictures.Picture); 
+	PROCEDURE ^ ScanCol(VAR R: Files.Rider; pict: Pictures.Picture; nrColor: SIGNED32; conversion: BOOLEAN); 
+	PROCEDURE ^ LoadIFF(VAR R: Files.Rider; transparentCol: SIGNED16; colorConversion: BOOLEAN; pict: Pictures.Picture); 
 	PROCEDURE ^ Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ InitPicture*; 
 	PROCEDURE ^ NewPicture*; 

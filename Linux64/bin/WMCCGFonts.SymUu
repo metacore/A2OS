@@ -7,31 +7,31 @@ CONST
 	MaxSplineSeg = 16; 
 TYPE 
 	StrokeElement* = RECORD 
-		cmd*: LONGINT; 
-		x*, y*: LONGINT; 
+		cmd*: SIGNED32; 
+		x*, y*: SIGNED32; 
 	END; 
 
 	StrokeArray* = POINTER TO ARRAY OF StrokeElement; 
 
 	GlyphRef* = RECORD 
-		x*, y*, w*, h*: LONGINT; 
-		refucs*, refvariant*: LONGINT; 
+		x*, y*, w*, h*: SIGNED32; 
+		refucs*, refvariant*: SIGNED32; 
 		refPtr*: Glyph; 
 	END; 
 
 	GlyphRefArray* = POINTER TO ARRAY OF GlyphRef; 
 
 	Glyph* = POINTER TO RECORD 
-		ucs*, variant*: LONGINT; 
-		nofStrokes*, nofSubComponents*: LONGINT; 
+		ucs*, variant*: SIGNED32; 
+		nofStrokes*, nofSubComponents*: SIGNED32; 
 		strokes*: StrokeArray; 
 		subComponents*: GlyphRefArray; 
 		nextVariant*: Glyph; 
 	END; 
 
 	GlyphRange = RECORD 
-		firstCode, lastCode: LONGINT; 
-		filePos: LONGINT; 
+		firstCode, lastCode: SIGNED32; 
+		filePos: SIGNED32; 
 		glyphs: POINTER TO ARRAY OF Glyph; 
 	END; 
 
@@ -42,9 +42,9 @@ TYPE
 		gf*: GenericFont; 
 
 		PROCEDURE ^  & New*(gf: GenericFont; size: SIZE; style: SET); 
-		PROCEDURE ^ HasChar*(code: LONGINT): BOOLEAN; 
-		PROCEDURE ^ RenderChar*(canvas: WMGraphics.Canvas; x, y: REAL; char: LONGINT); 
-		PROCEDURE ^ GetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: WMGraphics.GlyphSpacings); 
+		PROCEDURE ^ HasChar*(code: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ RenderChar*(canvas: WMGraphics.Canvas; x, y: FLOAT32; char: SIGNED32); 
+		PROCEDURE ^ GetGlyphSpacings*(code: SIGNED32; VAR glyphSpacings: WMGraphics.GlyphSpacings); 
 	END Font; 
 
 	GenericFont* = OBJECT 
@@ -53,23 +53,23 @@ TYPE
 		fontFile: Files.File; 
 		name: ARRAY 256 OF CHAR; 
 
-		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR glyphRangeIndex: SIZE): BOOLEAN; 
+		PROCEDURE ^ FindGlyphRange(code: SIGNED32; VAR glyphRangeIndex: SIZE): BOOLEAN; 
 		PROCEDURE ^ ReadPackedGlyph(r: Streams.Reader; VAR glyph: Glyph); 
 		PROCEDURE ^ LoadRange(f: Files.File; rangeIndex: SIZE); 
-		PROCEDURE ^ GetGlyph*(ucs, variant: LONGINT): Glyph; 
+		PROCEDURE ^ GetGlyph*(ucs, variant: SIGNED32): Glyph; 
 		PROCEDURE ^ Load*(fontName: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ FindGlyphSubComponent(VAR ref: GlyphRef): Glyph; 
 		PROCEDURE ^ CalcBB(glyph: Glyph): WMRectangles.Rectangle; 
-		PROCEDURE ^ RenderGlyphReal*(canvas: WMGraphics.Canvas; glyph: Glyph; x, y, w, h: REAL; level: LONGINT; filled: BOOLEAN; color: WMGraphics.Color; mode: LONGINT; VAR points: ARRAY OF WMGraphics.Point2d); 
+		PROCEDURE ^ RenderGlyphReal*(canvas: WMGraphics.Canvas; glyph: Glyph; x, y, w, h: FLOAT32; level: SIGNED32; filled: BOOLEAN; color: WMGraphics.Color; mode: SIGNED32; VAR points: ARRAY OF WMGraphics.Point2d); 
 	END GenericFont; 
 VAR 
 	fontCache: Kernel.FinalizedCollection; 
 	searchName: ARRAY 256 OF CHAR; 
 	foundFont: GenericFont; 
 
-	PROCEDURE ^ AddPoint(VAR points: ARRAY OF WMGraphics.Point2d; VAR nofPoints: LONGINT; x, y: LONGINT); 
-	PROCEDURE ^ SplineReal(canvas: WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h: REAL; color: WMGraphics.Color; mode: LONGINT); 
-	PROCEDURE ^ AddSplinePoints(VAR points: ARRAY OF WMGraphics.Point2d; VAR nofPoints: LONGINT; x0, y0, x1, y1, x2, y2, x, y, w, h: REAL); 
+	PROCEDURE ^ AddPoint(VAR points: ARRAY OF WMGraphics.Point2d; VAR nofPoints: SIGNED32; x, y: SIGNED32); 
+	PROCEDURE ^ SplineReal(canvas: WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h: FLOAT32; color: WMGraphics.Color; mode: SIGNED32); 
+	PROCEDURE ^ AddSplinePoints(VAR points: ARRAY OF WMGraphics.Point2d; VAR nofPoints: SIGNED32; x0, y0, x1, y1, x2, y2, x, y, w, h: FLOAT32); 
 	PROCEDURE ^ CheckFont(obj: ANY; VAR cont: BOOLEAN); 
 	PROCEDURE ^ LoadExactFont*(fi: WMFontManager.FontInfo): WMGraphics.Font; 
 BEGIN

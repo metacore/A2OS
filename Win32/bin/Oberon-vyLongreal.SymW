@@ -7,9 +7,9 @@ CONST
 	fmtplain* = 1; 
 	fmtpacked* = 2; 
 TYPE 
-	real = LONGREAL; 
+	real = FLOAT64; 
 
-	index = LONGINT; 
+	index = SIGNED32; 
 
 	tOp1* = PROCEDURE (VAR arg: real); 
 
@@ -17,14 +17,14 @@ TYPE
 
 	tOp3* = PROCEDURE (VAR arg1: real; arg2, arg3: real); 
 VAR 
-	IBETA-, IEXP-, IRND-, IT-, MACHEP-, MAXEXP-, MINEXP-, NEGEP-, NGRD-: INTEGER; 
+	IBETA-, IEXP-, IRND-, IT-, MACHEP-, MAXEXP-, MINEXP-, NEGEP-, NGRD-: SIGNED16; 
 	EPS-, EPSNEG-, XMAX-, XMIN-: real; 
 
 	PROCEDURE ^ Machar; 
 	PROCEDURE ^ Write*(VAR R: Files.Rider; count: index; VAR x: ARRAY OF real; start: index); 
 	PROCEDURE ^ Read*(VAR R: Files.Rider; count: index; VAR x: ARRAY OF real; start: index); 
-	PROCEDURE ^ WriteFmt*(prefform: LONGINT; VAR R: Files.Rider; count: index; VAR x: ARRAY OF real; start: index); 
-	PROCEDURE ^ ReadFmt*(VAR form: LONGINT; VAR R: Files.Rider; count: index; VAR x: ARRAY OF real; start: index); 
+	PROCEDURE ^ WriteFmt*(prefform: SIGNED32; VAR R: Files.Rider; count: index; VAR x: ARRAY OF real; start: index); 
+	PROCEDURE ^ ReadFmt*(VAR form: SIGNED32; VAR R: Files.Rider; count: index; VAR x: ARRAY OF real; start: index); 
 	PROCEDURE ^ Fill*(len: index; VAR x: ARRAY OF real; start: index; val: real); 
 	PROCEDURE ^ FillPat*(count: index; VAR x: ARRAY OF real; start, step: index; val: real); 
 	PROCEDURE ^ Copy*(len: index; VAR src: ARRAY OF real; srcstart: index; VAR dest: ARRAY OF real; deststart: index); 
@@ -40,8 +40,8 @@ VAR
 	PROCEDURE ^ SortIndexed*(count: index; VAR data: ARRAY OF real; start: index; VAR Index: ARRAY OF index); 
 	PROCEDURE ^ SortTwoDepArrays*(VAR reg, resp: ARRAY OF real); 
 	PROCEDURE ^ Order*(count: index; x: ARRAY OF real; start: index; ith: index): real; 
-	PROCEDURE ^ Summary*(len: index; VAR x: ARRAY OF real; start: index; VAR min, max, mean, ssq: LONGREAL); 
-	PROCEDURE ^ MeanSSq*(len: index; VAR x: ARRAY OF real; start: index; VAR mean, ssq: LONGREAL; VAR nans: index); 
+	PROCEDURE ^ Summary*(len: index; VAR x: ARRAY OF real; start: index; VAR min, max, mean, ssq: FLOAT64); 
+	PROCEDURE ^ MeanSSq*(len: index; VAR x: ARRAY OF real; start: index; VAR mean, ssq: FLOAT64; VAR nans: index); 
 	PROCEDURE ^ Abs*(len: index; VAR x: ARRAY OF real; start: index); 
 	PROCEDURE ^ AddConst*(len: index; VAR x: ARRAY OF real; start: index; y: real); 
 	PROCEDURE ^ AddConstPat*(count: index; VAR x: ARRAY OF real; start, step: index; y: real); 
@@ -57,30 +57,30 @@ VAR
 	PROCEDURE ^ Sub*(VAR x, y: ARRAY OF real; VAR z: ARRAY OF real; len: index); 
 	PROCEDURE ^ Mul*(VAR x, y: ARRAY OF real; VAR z: ARRAY OF real; len: index); 
 	PROCEDURE ^ Div*(VAR x, y: ARRAY OF real; VAR z: ARRAY OF real; len: index); 
-	PROCEDURE ^ SSQxy*(VAR x, y: ARRAY OF real; mx, my: LONGREAL; len: index): LONGREAL; 
+	PROCEDURE ^ SSQxy*(VAR x, y: ARRAY OF real; mx, my: FLOAT64; len: index): FLOAT64; 
 	PROCEDURE ^ Get2d*(VAR x: ARRAY OF real; rows, row, column: index): real; 
 	PROCEDURE ^ Set2d*(VAR x: ARRAY OF real; rows, row, column: index; val: real); 
 	PROCEDURE ^ Get2dM*(VAR x: ARRAY OF real; rowoffset, coloffset, nrrows, nrcolumns: index; VAR dest: ARRAY OF ARRAY OF real); 
 	PROCEDURE ^ Set2dM*(VAR x: ARRAY OF real; rowoffset, coloffset, nrrows, nrcolumns: index; VAR src: ARRAY OF ARRAY OF real); 
 	PROCEDURE ^ Get2dF*(VAR x: ARRAY OF real; columns, row, column: index): real; 
 	PROCEDURE ^ Set2dF*(VAR x: ARRAY OF real; columns, row, column: index; val: real); 
-	PROCEDURE ^ SkalProd*(len: index; VAR x: ARRAY OF real; xstart: index; VAR y: ARRAY OF real; ystart: index): LONGREAL; 
-	PROCEDURE ^ SkalProdPat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index; VAR y: ARRAY OF real; ystart, ystep: index): LONGREAL; 
-	PROCEDURE ^ Norm2Sq*(len: index; VAR x: ARRAY OF real; xstart: index): LONGREAL; 
-	PROCEDURE ^ Norm2SqPat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index): LONGREAL; 
-	PROCEDURE ^ Dist2Sq*(len: index; VAR x: ARRAY OF real; xstart: index; VAR y: ARRAY OF real; ystart: index): LONGREAL; 
-	PROCEDURE ^ Dist2SqPat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index; VAR y: ARRAY OF real; ystart, ystep: index): LONGREAL; 
-	PROCEDURE ^ Norm1*(len: index; VAR x: ARRAY OF real; xstart: index): LONGREAL; 
-	PROCEDURE ^ Norm1Pat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index): LONGREAL; 
-	PROCEDURE ^ Dist1*(len: index; VAR x: ARRAY OF real; xstart: index; VAR y: ARRAY OF real; ystart: index): LONGREAL; 
+	PROCEDURE ^ SkalProd*(len: index; VAR x: ARRAY OF real; xstart: index; VAR y: ARRAY OF real; ystart: index): FLOAT64; 
+	PROCEDURE ^ SkalProdPat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index; VAR y: ARRAY OF real; ystart, ystep: index): FLOAT64; 
+	PROCEDURE ^ Norm2Sq*(len: index; VAR x: ARRAY OF real; xstart: index): FLOAT64; 
+	PROCEDURE ^ Norm2SqPat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index): FLOAT64; 
+	PROCEDURE ^ Dist2Sq*(len: index; VAR x: ARRAY OF real; xstart: index; VAR y: ARRAY OF real; ystart: index): FLOAT64; 
+	PROCEDURE ^ Dist2SqPat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index; VAR y: ARRAY OF real; ystart, ystep: index): FLOAT64; 
+	PROCEDURE ^ Norm1*(len: index; VAR x: ARRAY OF real; xstart: index): FLOAT64; 
+	PROCEDURE ^ Norm1Pat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index): FLOAT64; 
+	PROCEDURE ^ Dist1*(len: index; VAR x: ARRAY OF real; xstart: index; VAR y: ARRAY OF real; ystart: index): FLOAT64; 
 	PROCEDURE ^ Dist1Pat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index; VAR y: ARRAY OF real; ystart, ystep: index): real; 
-	PROCEDURE ^ NormSup*(len: index; VAR x: ARRAY OF real; xstart: index; VAR mindist: LONGREAL): LONGREAL; 
+	PROCEDURE ^ NormSup*(len: index; VAR x: ARRAY OF real; xstart: index; VAR mindist: FLOAT64): FLOAT64; 
 	PROCEDURE ^ NormSupPat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index; VAR mindist: real): real; 
-	PROCEDURE ^ DistSup*(len: index; VAR x: ARRAY OF real; xstart: index; VAR y: ARRAY OF real; ystart: index; VAR mindist: LONGREAL): LONGREAL; 
-	PROCEDURE ^ DistSupPat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index; VAR y: ARRAY OF real; ystart, ystep: index; VAR mindist: LONGREAL): LONGREAL; 
+	PROCEDURE ^ DistSup*(len: index; VAR x: ARRAY OF real; xstart: index; VAR y: ARRAY OF real; ystart: index; VAR mindist: FLOAT64): FLOAT64; 
+	PROCEDURE ^ DistSupPat*(count: index; VAR x: ARRAY OF real; xstart, xstep: index; VAR y: ARRAY OF real; ystart, ystep: index; VAR mindist: FLOAT64): FLOAT64; 
 	PROCEDURE ^ Entier*(len: index; VAR x: ARRAY OF real; start: index; offs, factor: real; VAR result: ARRAY OF index); 
-	PROCEDURE ^ Short*(len: index; VAR x: ARRAY OF real; start: index; VAR result: ARRAY OF REAL); 
-	PROCEDURE ^ Long*(len: index; VAR x: ARRAY OF REAL; start: index; VAR result: ARRAY OF real); 
+	PROCEDURE ^ Short*(len: index; VAR x: ARRAY OF real; start: index; VAR result: ARRAY OF FLOAT32); 
+	PROCEDURE ^ Long*(len: index; VAR x: ARRAY OF FLOAT32; start: index; VAR result: ARRAY OF real); 
 	PROCEDURE ^ Convolution*(len, start: index; VAR src, dest, kernel: ARRAY OF real; kernelw: index); 
 BEGIN
 END vyLongreal.

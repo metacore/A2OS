@@ -13,7 +13,7 @@ TYPE
 	EntryInfo* = OBJECT 
 
 		PROCEDURE ^ GetName*(): Strings.String; 
-		PROCEDURE ^ GetSize*(): LONGINT; 
+		PROCEDURE ^ GetSize*(): SIGNED32; 
 		PROCEDURE ^ GetInfoString*(): Strings.String; 
 	END EntryInfo; 
 

@@ -464,46 +464,46 @@ TYPE
 
 	Entry = RECORD 
 		name: Name; 
-		number: LONGINT; 
+		number: SIGNED32; 
 	END; 
 
 	Mnemonic = RECORD 
 		name: Name; 
-		number: INTEGER; 
-		firstInstructionFormat, lastInstructionFormat: LONGINT; 
+		number: SIGNED16; 
+		firstInstructionFormat, lastInstructionFormat: SIGNED32; 
 	END; 
 
 	InstructionFormat = RECORD 
-		mnemonic: INTEGER; 
+		mnemonic: SIGNED16; 
 		opcode, mask: SET; 
 		flags: SET; 
-		operands: ARRAY MaxOperands OF INTEGER; 
+		operands: ARRAY MaxOperands OF SIGNED16; 
 		isNEON: BOOLEAN; 
 		Unsigned, Quadword, Length, Float, Operation: SET; 
-		SizeH: INTEGER; 
+		SizeH: SIGNED16; 
 	END; 
 
 	Instruction* = RECORD 
 		format: SIZE; 
-		condition: LONGINT; 
+		condition: SIGNED32; 
 		flags: SET; 
 		operands: ARRAY MaxOperands OF Operand; 
 	END; 
 
 	Operand* = RECORD 
-		mode*: INTEGER; 
-		register*: LONGINT; 
-		immediate*, shiftImmediate: LONGINT; 
-		shiftRegister: LONGINT; 
-		shiftMode: INTEGER; 
-		offsetImmediate: LONGINT; 
-		offsetRegister: LONGINT; 
+		mode*: SIGNED16; 
+		register*: SIGNED32; 
+		immediate*, shiftImmediate: SIGNED32; 
+		shiftRegister: SIGNED32; 
+		shiftMode: SIGNED16; 
+		offsetImmediate: SIGNED32; 
+		offsetRegister: SIGNED32; 
 		indexing: SET; 
 		registerList: SET; 
-		coprocessor: INTEGER; 
-		opcode: LONGINT; 
+		coprocessor: SIGNED16; 
+		opcode: SIGNED32; 
 		fields: SET; 
-		option: LONGINT; 
+		option: SIGNED32; 
 		fixup-: BinaryCode.Fixup; 
 	END; 
 VAR 
@@ -515,41 +515,41 @@ VAR
 	coprocessorNames: ARRAY NumberCoprocessors OF Name; 
 	instructionFormats: ARRAY NumberInstructions OF InstructionFormat; 
 
-	PROCEDURE ^ RegisterNumberFromName*(registerName: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ CoprocessorNumberFromName*(coprocessorName: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ ShiftModeNumberFromName*(shiftModeName: ARRAY OF CHAR): LONGINT; 
-	PROCEDURE ^ FindMnemonic*(CONST name: ARRAY OF CHAR; VAR mnemonic, condition: LONGINT; VAR flags: SET): BOOLEAN; 
+	PROCEDURE ^ RegisterNumberFromName*(registerName: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ CoprocessorNumberFromName*(coprocessorName: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ ShiftModeNumberFromName*(shiftModeName: ARRAY OF CHAR): SIGNED32; 
+	PROCEDURE ^ FindMnemonic*(CONST name: ARRAY OF CHAR; VAR mnemonic, condition: SIGNED32; VAR flags: SET): BOOLEAN; 
 	PROCEDURE ^ InitInstruction*(VAR instruction: Instruction); 
-	PROCEDURE ^ InitFixup*(VAR operand: Operand; bits: SHORTINT; fixup: BinaryCode.Fixup); 
+	PROCEDURE ^ InitFixup*(VAR operand: Operand; bits: SIGNED8; fixup: BinaryCode.Fixup); 
 	PROCEDURE ^ AddFixup*(VAR operand: Operand; fixup: BinaryCode.Fixup); 
 	PROCEDURE ^ InitOperand*(VAR operand: Operand); 
-	PROCEDURE ^ InitRegister*(VAR operand: Operand; registerNumber: LONGINT; shiftMode: LONGINT; shiftAmountRegisterNumber: LONGINT; shiftImmediate: LONGINT); 
+	PROCEDURE ^ InitRegister*(VAR operand: Operand; registerNumber: SIGNED32; shiftMode: SIGNED32; shiftAmountRegisterNumber: SIGNED32; shiftImmediate: SIGNED32); 
 	PROCEDURE ^ InitImmediate*(VAR operand: Operand; immediate: Basic.Integer); 
-	PROCEDURE ^ InitImmediateOffsetMemory*(VAR operand: Operand; register: LONGINT; offset: LONGINT; indexing: SET); 
-	PROCEDURE ^ InitRegisterOffsetMemory*(VAR operand: Operand; register, offsetRegister: LONGINT; shiftMode: LONGINT; shiftImmediate: LONGINT; indexing: SET); 
-	PROCEDURE ^ NewRegister*(registerNumber: LONGINT; shiftMode: LONGINT; shiftAmountRegisterNumber: LONGINT; shiftImmediate: LONGINT): Operand; 
+	PROCEDURE ^ InitImmediateOffsetMemory*(VAR operand: Operand; register: SIGNED32; offset: SIGNED32; indexing: SET); 
+	PROCEDURE ^ InitRegisterOffsetMemory*(VAR operand: Operand; register, offsetRegister: SIGNED32; shiftMode: SIGNED32; shiftImmediate: SIGNED32; indexing: SET); 
+	PROCEDURE ^ NewRegister*(registerNumber: SIGNED32; shiftMode: SIGNED32; shiftAmountRegisterNumber: SIGNED32; shiftImmediate: SIGNED32): Operand; 
 	PROCEDURE ^ NewImmediate*(immediate: Basic.Integer): Operand; 
-	PROCEDURE ^ NewImmediateOffsetMemory*(register: LONGINT; offset: LONGINT; indexing: SET): Operand; 
-	PROCEDURE ^ NewRegisterOffsetMemory*(register, offsetRegister: LONGINT; shiftMode: LONGINT; shiftImmediate: LONGINT; indexing: SET): Operand; 
-	PROCEDURE ^ NewRegisterList*(registerBase: LONGINT; registerList: SET): Operand; 
-	PROCEDURE ^ InitOption*(VAR operand: Operand; register: LONGINT; option: LONGINT); 
-	PROCEDURE ^ InitCoprocessor*(VAR operand: Operand; coprocessor: LONGINT); 
-	PROCEDURE ^ InitOpcode*(VAR operand: Operand; opcode: LONGINT); 
-	PROCEDURE ^ InitRegisterList*(VAR operand: Operand; registerBase: LONGINT; registerList: SET); 
-	PROCEDURE ^ InitRegisterWithFields*(VAR operand: Operand; registerNumber: LONGINT; fields: SET); 
-	PROCEDURE ^ NewRegisterWithFields*(registerNumber: LONGINT; fields: SET): Operand; 
-	PROCEDURE ^ MakeInstruction*(VAR instruction: Instruction; mnemonic, condition: LONGINT; flags: SET; CONST operands: ARRAY OF Operand): BOOLEAN; 
-	PROCEDURE ^ NumberToSet(code: LONGINT): SET; 
-	PROCEDURE ^ SetToNumber(set: SET): LONGINT; 
-	PROCEDURE ^ RotateRight(val, rot: LONGINT): LONGINT; 
-	PROCEDURE ^ EncodeImmediate*(imm: LONGINT; VAR val, rot: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Encode(CONST instruction: Instruction; VAR code: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Decode(code: LONGINT; VAR instruction: Instruction): BOOLEAN; 
+	PROCEDURE ^ NewImmediateOffsetMemory*(register: SIGNED32; offset: SIGNED32; indexing: SET): Operand; 
+	PROCEDURE ^ NewRegisterOffsetMemory*(register, offsetRegister: SIGNED32; shiftMode: SIGNED32; shiftImmediate: SIGNED32; indexing: SET): Operand; 
+	PROCEDURE ^ NewRegisterList*(registerBase: SIGNED32; registerList: SET): Operand; 
+	PROCEDURE ^ InitOption*(VAR operand: Operand; register: SIGNED32; option: SIGNED32); 
+	PROCEDURE ^ InitCoprocessor*(VAR operand: Operand; coprocessor: SIGNED32); 
+	PROCEDURE ^ InitOpcode*(VAR operand: Operand; opcode: SIGNED32); 
+	PROCEDURE ^ InitRegisterList*(VAR operand: Operand; registerBase: SIGNED32; registerList: SET); 
+	PROCEDURE ^ InitRegisterWithFields*(VAR operand: Operand; registerNumber: SIGNED32; fields: SET); 
+	PROCEDURE ^ NewRegisterWithFields*(registerNumber: SIGNED32; fields: SET): Operand; 
+	PROCEDURE ^ MakeInstruction*(VAR instruction: Instruction; mnemonic, condition: SIGNED32; flags: SET; CONST operands: ARRAY OF Operand): BOOLEAN; 
+	PROCEDURE ^ NumberToSet(code: SIGNED32): SET; 
+	PROCEDURE ^ SetToNumber(set: SET): SIGNED32; 
+	PROCEDURE ^ RotateRight(val, rot: SIGNED32): SIGNED32; 
+	PROCEDURE ^ EncodeImmediate*(imm: SIGNED32; VAR val, rot: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Encode(CONST instruction: Instruction; VAR code: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Decode(code: SIGNED32; VAR instruction: Instruction): BOOLEAN; 
 	PROCEDURE ^ EmitInstruction*(CONST instruction: Instruction; code: BinaryCode.Section): BOOLEAN; 
-	PROCEDURE ^ Emit*(mnemonic, condition: LONGINT; flags: SET; CONST operands: ARRAY OF Operand; code: BinaryCode.Section); 
+	PROCEDURE ^ Emit*(mnemonic, condition: SIGNED32; flags: SET; CONST operands: ARRAY OF Operand; code: BinaryCode.Section); 
 	PROCEDURE ^ Init*; 
-	PROCEDURE ^ DumpConditionName*(w: Streams.Writer; CONST conditionNumber: LONGINT); 
-	PROCEDURE ^ DumpRegisterName*(w: Streams.Writer; registerNumber: LONGINT); 
+	PROCEDURE ^ DumpConditionName*(w: Streams.Writer; CONST conditionNumber: SIGNED32); 
+	PROCEDURE ^ DumpRegisterName*(w: Streams.Writer; registerNumber: SIGNED32); 
 	PROCEDURE ^ DumpOperand*(w: Streams.Writer; CONST operand: Operand); 
 	PROCEDURE ^ DumpInstruction*(w: Streams.Writer; CONST instruction: Instruction); 
 	PROCEDURE ^ Test*(context: Commands.Context); 

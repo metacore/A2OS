@@ -6,9 +6,9 @@ CONST
 	cBadLen* = 2; 
 	cOK* = {}; 
 TYPE 
-	real* = LONGREAL; 
+	real* = FLOAT64; 
 
-	index* = LONGINT; 
+	index* = SIGNED32; 
 
 	tVector* = POINTER TO tVectorDesc; 
 
@@ -18,21 +18,21 @@ TYPE
 	tLONGREAL* = POINTER TO tLONGREALDesc; 
 
 	tLONGREALDesc* = RECORD (vyBase.tDataDesc)
-		x*: LONGREAL; 
+		x*: FLOAT64; 
 	END; 
 
 	tMinMaxCache = POINTER TO tMinMaxCacheDesc; 
 
 	tMinMaxCacheDesc = RECORD (vyBase.tCacheDesc)
 		min, max: real; 
-		minpos, maxpos, nans: LONGINT; 
+		minpos, maxpos, nans: SIGNED32; 
 	END; 
 
 	tMeanCache = POINTER TO tMeanCacheDesc; 
 
 	tMeanCacheDesc = RECORD (vyBase.tCacheDesc)
-		mean, ssq: LONGREAL; 
-		nans: LONGINT; 
+		mean, ssq: FLOAT64; 
+		nans: SIGNED32; 
 	END; 
 
 	tBuf* = POINTER TO tBufDesc; 
@@ -59,7 +59,7 @@ TYPE
 		buf*: tMatrixChunk; 
 	END; 
 VAR 
-	globallongreal: LONGREAL; 
+	globallongreal: FLOAT64; 
 
 	PROCEDURE ^ DoOp1*(v: vyBase.tVector; function: Op1Function); 
 	PROCEDURE ^ NewBufs(size: index): tBuf; 
@@ -81,19 +81,19 @@ VAR
 	PROCEDURE ^ GC*(vec: vyBase.tVector); 
 	PROCEDURE ^ Allocate*(vec: vyBase.tVector; size: index); 
 	PROCEDURE ^ SetLen*(vec: vyBase.tVector; size: index); 
-	PROCEDURE ^ Len*(vec: vyBase.tVector): LONGINT; 
-	PROCEDURE ^ NewLongrealMatrix*(rows, columns: LONGINT): tVector; 
-	PROCEDURE ^ NewLongrealArray*(sizes: ARRAY OF LONGINT): tVector; 
+	PROCEDURE ^ Len*(vec: vyBase.tVector): SIGNED32; 
+	PROCEDURE ^ NewLongrealMatrix*(rows, columns: SIGNED32): tVector; 
+	PROCEDURE ^ NewLongrealArray*(sizes: ARRAY OF SIGNED32): tVector; 
 	PROCEDURE ^ NewAlikeVector*(model: vyBase.tVector): vyBase.tVector; 
 	PROCEDURE ^ Append*(x: real; v: vyBase.tVector); 
-	PROCEDURE ^ GetMinMax*(v: vyBase.tVector; VAR min, max: real; VAR nrNaNs: LONGINT); 
-	PROCEDURE ^ GetMeanSsq*(v: vyBase.tVector; VAR Mean, Ssq: real; VAR nrNaNs: LONGINT); 
-	PROCEDURE ^ kSmallestX(VAR a: ARRAY OF LONGREAL; n, k: LONGINT): LONGREAL; 
-	PROCEDURE ^ GetMedian*(v: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ GetMinMax*(v: vyBase.tVector; VAR min, max: real; VAR nrNaNs: SIGNED32); 
+	PROCEDURE ^ GetMeanSsq*(v: vyBase.tVector; VAR Mean, Ssq: real; VAR nrNaNs: SIGNED32); 
+	PROCEDURE ^ kSmallestX(VAR a: ARRAY OF FLOAT64; n, k: SIGNED32): FLOAT64; 
+	PROCEDURE ^ GetMedian*(v: vyBase.tVector): FLOAT64; 
 	PROCEDURE ^ Get*(v: vyBase.tVector; pos: index): real; 
-	PROCEDURE ^ Set*(val: LONGREAL; v: vyBase.tVector; pos: index); 
+	PROCEDURE ^ Set*(val: FLOAT64; v: vyBase.tVector; pos: index); 
 	PROCEDURE ^ GetIndexed*(v: vyBase.tVector; indexvec: vyBase.tVector; pos: index): real; 
-	PROCEDURE ^ SetIndexed*(xval: LONGREAL; v: vyBase.tVector; indexvec: vyBase.tVector; pos: index); 
+	PROCEDURE ^ SetIndexed*(xval: FLOAT64; v: vyBase.tVector; indexvec: vyBase.tVector; pos: index); 
 	PROCEDURE ^ CopyData*(src, dest: vyBase.tVector); 
 	PROCEDURE ^ CopyToVec*(VAR A: ARRAY OF real; v: vyBase.tVector; len: index; srcoffs, destoffs: index); 
 	PROCEDURE ^ CopyToArray*(v: vyBase.tVector; VAR A: ARRAY OF real); 
@@ -110,8 +110,8 @@ VAR
 	PROCEDURE ^ Sort*(VAR v: tVector); 
 	PROCEDURE ^ SortWId*(VAR v: vyBase.tVector; VAR WId: vyBase.tVector); 
 	PROCEDURE ^ Fill*(v: vyBase.tVector; val: real; offs, count: index); 
-	PROCEDURE ^ NewFilledNamed*(count: LONGINT; val: real; name: ARRAY OF CHAR): tVector; 
-	PROCEDURE ^ SSQ*(x, y: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ NewFilledNamed*(count: SIGNED32; val: real; name: ARRAY OF CHAR): tVector; 
+	PROCEDURE ^ SSQ*(x, y: vyBase.tVector): FLOAT64; 
 	PROCEDURE ^ WriteChunk(VAR w: vyBase.TextsWriter; chunk: vyBase.tBuf); 
 	PROCEDURE ^ Write*(VAR w: vyBase.TextsWriter; v: vyBase.tData); 
 	PROCEDURE ^ EvaluateCaseWise*(new: vyBase.tData; regressor: vyBase.tData; Function: Op1Function); 
@@ -120,15 +120,15 @@ VAR
 	PROCEDURE ^ Sub*(new, x, y: vyBase.tData); 
 	PROCEDURE ^ Mult*(new, x, y: vyBase.tData); 
 	PROCEDURE ^ Div*(new, x, y: vyBase.tData); 
-	PROCEDURE ^ Norm1*(v: vyBase.tVector): LONGREAL; 
-	PROCEDURE ^ Norm2Sq*(v: vyBase.tVector): LONGREAL; 
-	PROCEDURE ^ NormSup*(v: vyBase.tVector): LONGREAL; 
-	PROCEDURE ^ adddist1(VAR piececount: LONGINT; VAR srcchunk: vyBase.tBuf; VAR srcloc: LONGINT; VAR destchunk: vyBase.tBuf; VAR destloc: LONGINT); 
-	PROCEDURE ^ Dist1*(v, w: vyBase.tVector): LONGREAL; 
-	PROCEDURE ^ adddist2(VAR piececount: LONGINT; VAR srcchunk: vyBase.tBuf; VAR srcloc: LONGINT; VAR destchunk: vyBase.tBuf; VAR destloc: LONGINT); 
-	PROCEDURE ^ Dist2Sq*(v, w: vyBase.tVector): LONGREAL; 
-	PROCEDURE ^ adddistsup(VAR piececount: LONGINT; VAR srcchunk: vyBase.tBuf; VAR srcloc: LONGINT; VAR destchunk: vyBase.tBuf; VAR destloc: LONGINT); 
-	PROCEDURE ^ DistSup*(v, w: vyBase.tVector): LONGREAL; 
+	PROCEDURE ^ Norm1*(v: vyBase.tVector): FLOAT64; 
+	PROCEDURE ^ Norm2Sq*(v: vyBase.tVector): FLOAT64; 
+	PROCEDURE ^ NormSup*(v: vyBase.tVector): FLOAT64; 
+	PROCEDURE ^ adddist1(VAR piececount: SIGNED32; VAR srcchunk: vyBase.tBuf; VAR srcloc: SIGNED32; VAR destchunk: vyBase.tBuf; VAR destloc: SIGNED32); 
+	PROCEDURE ^ Dist1*(v, w: vyBase.tVector): FLOAT64; 
+	PROCEDURE ^ adddist2(VAR piececount: SIGNED32; VAR srcchunk: vyBase.tBuf; VAR srcloc: SIGNED32; VAR destchunk: vyBase.tBuf; VAR destloc: SIGNED32); 
+	PROCEDURE ^ Dist2Sq*(v, w: vyBase.tVector): FLOAT64; 
+	PROCEDURE ^ adddistsup(VAR piececount: SIGNED32; VAR srcchunk: vyBase.tBuf; VAR srcloc: SIGNED32; VAR destchunk: vyBase.tBuf; VAR destloc: SIGNED32); 
+	PROCEDURE ^ DistSup*(v, w: vyBase.tVector): FLOAT64; 
 	PROCEDURE ^ ChunkSummary*(VAR w: vyBase.TextsWriter; buf: vyBase.tBuf); 
 BEGIN
 END vyLongrealVec.

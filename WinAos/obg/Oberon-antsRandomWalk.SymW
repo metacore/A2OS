@@ -9,8 +9,8 @@ TYPE
 	tModelDesc* = RECORD (antsModels.tModelDesc)
 		v2: vyBase.Object; 
 		v1: vyBase.Object; 
-		ph: LONGREAL; 
-		pv: LONGREAL; 
+		ph: FLOAT64; 
+		pv: FLOAT64; 
 	END; 
 
 	PROCEDURE ^ StoreM(VAR R: Files.Rider; o: tModel); 

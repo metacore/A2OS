@@ -7,7 +7,7 @@ TYPE
 	PreviewWindow* = OBJECT {EXCLUSIVE} (WMWindowManager.BufferWindow)
 
 		PROCEDURE ^  & New*(width, height: SIZE); 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: WORD); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: INTEGER); 
 	END PreviewWindow; 
 
 	Starter* = OBJECT {EXCLUSIVE} 
@@ -27,8 +27,8 @@ VAR
 	frameHandler: FrameHandler; 
 
 	PROCEDURE ^ SimulateImage*(context: Commands.Context); 
-	PROCEDURE ^ GetTimer(): HUGEINT; 
-	PROCEDURE ^ GetFreq(): HUGEINT; 
+	PROCEDURE ^ GetTimer(): SIGNED64; 
+	PROCEDURE ^ GetFreq(): SIGNED64; 
 	PROCEDURE ^ {WINAPI} FrameReceived(hWnd: VfW.HWND; VAR lpVHdr: VfW.VHdr): User32.LResult; 
 	PROCEDURE ^ {WINAPI} YieldCallback(hWnd: VfW.HWND): User32.LResult; 
 	PROCEDURE ^ SnapshotFirstPossible*; 

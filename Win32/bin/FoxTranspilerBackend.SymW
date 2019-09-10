@@ -18,9 +18,9 @@ CONST
 	DefaultStyle = 0; 
 	StailaStyle = 1; 
 TYPE 
-	Style = WORD; 
+	Style = INTEGER; 
 
-	Indent = WORD; 
+	Indent = INTEGER; 
 
 	Identifier = ARRAY Scanner.MaxIdentifierLength OF CHAR; 
 
@@ -119,7 +119,7 @@ TYPE
 	TranspilerBackend* = OBJECT (Backend.Backend)
 	VAR 
 		defineMain, declarations, initLocalData: BOOLEAN; 
-		addressSize: LONGINT; 
+		addressSize: SIGNED32; 
 		style: Style; 
 		traceModule: Identifier; 
 

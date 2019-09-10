@@ -19,21 +19,21 @@ CONST
 	BufSize = 65536; 
 TYPE 
 	Writer* = RECORD 
-		res-: LONGINT; 
-		flush-: SHORTINT; 
+		res-: SIGNED32; 
+		flush-: SIGNED8; 
 		wrapper-: BOOLEAN; 
 		r: Files.Rider; 
-		pos: LONGINT; 
-		crc32-: LONGINT; 
+		pos: SIGNED32; 
+		crc32-: SIGNED32; 
 		out: POINTER TO ARRAY BufSize OF CHAR; 
 		s: ZlibDeflate.Stream; 
 	END; 
 
-	PROCEDURE ^ SetParams*(VAR w: Writer; level, strategy, flush: SHORTINT); 
-	PROCEDURE ^ Open*(VAR w: Writer; level, strategy, flush: SHORTINT; wrapper: BOOLEAN; r: Files.Rider); 
+	PROCEDURE ^ SetParams*(VAR w: Writer; level, strategy, flush: SIGNED8); 
+	PROCEDURE ^ Open*(VAR w: Writer; level, strategy, flush: SIGNED8; wrapper: BOOLEAN; r: Files.Rider); 
 	PROCEDURE ^ WriteBytes*(VAR w: Writer; VAR buf: ARRAY OF CHAR; offset, len: SIZE; VAR written: SIZE); 
 	PROCEDURE ^ Write*(VAR w: Writer; ch: CHAR); 
 	PROCEDURE ^ Close*(VAR w: Writer); 
-	PROCEDURE ^ Compress*(VAR src, dst: Files.Rider; srclen: LONGINT; VAR dstlen: LONGINT; level, strategy: SHORTINT; VAR crc32: LONGINT; VAR res: WORD); 
+	PROCEDURE ^ Compress*(VAR src, dst: Files.Rider; srclen: SIGNED32; VAR dstlen: SIGNED32; level, strategy: SIGNED8; VAR crc32: SIGNED32; VAR res: INTEGER); 
 BEGIN
 END ZlibWriters.

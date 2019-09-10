@@ -14,12 +14,12 @@ TYPE
 
 	ParagraphStyleObject* = OBJECT (StyleObject)
 	VAR 
-		alignment*: LONGINT; 
-		spaceBefore*: REAL; 
-		spaceAfter*: REAL; 
-		leftIndent*: REAL; 
-		rightIndent*: REAL; 
-		firstIndent*: REAL; 
+		alignment*: SIGNED32; 
+		spaceBefore*: FLOAT32; 
+		spaceAfter*: FLOAT32; 
+		leftIndent*: FLOAT32; 
+		rightIndent*: FLOAT32; 
+		firstIndent*: FLOAT32; 
 		charStyle*: CharacterStyleObject; 
 
 		PROCEDURE ^ Clone*(): ParagraphStyleObject; 
@@ -29,15 +29,15 @@ TYPE
 	VAR 
 		family*: ARRAY 32 OF CHAR; 
 		style*: SET; 
-		size*: REAL; 
-		leading*: REAL; 
-		baselineShift*: REAL; 
-		tracking*: REAL; 
-		kerning*: REAL; 
-		scaleHorizontal*: REAL; 
-		scaleVertical*: REAL; 
-		color*: LONGINT; 
-		bgColor*: LONGINT; 
+		size*: FLOAT32; 
+		leading*: FLOAT32; 
+		baselineShift*: FLOAT32; 
+		tracking*: FLOAT32; 
+		kerning*: FLOAT32; 
+		scaleHorizontal*: FLOAT32; 
+		scaleVertical*: FLOAT32; 
+		color*: SIGNED32; 
+		bgColor*: SIGNED32; 
 
 		PROCEDURE ^ Clone*(): CharacterStyleObject; 
 	END CharacterStyleObject; 
@@ -58,19 +58,19 @@ TYPE
 
 	Document* = OBJECT 
 	VAR 
-		pageWidth, pageHeight: REAL; 
-		marginTop, marginBottom, marginLeft, marginRight: REAL; 
+		pageWidth, pageHeight: FLOAT32; 
+		marginTop, marginBottom, marginLeft, marginRight: FLOAT32; 
 		facingPages: BOOLEAN; 
 		meta: MetaInformation; 
-		objectCounter*: LONGINT; 
-		copyCounter*: LONGINT; 
-		nofPStyles*: LONGINT; 
+		objectCounter*: SIGNED32; 
+		copyCounter*: SIGNED32; 
+		nofPStyles*: SIGNED32; 
 		pStyles*: PStyles; 
-		nofCStyles*: LONGINT; 
+		nofCStyles*: SIGNED32; 
 		cStyles*: CStyles; 
-		nofGStyles*: LONGINT; 
+		nofGStyles*: SIGNED32; 
 		gStyles*: GStyles; 
-		nofCustomStyles*: LONGINT; 
+		nofCustomStyles*: SIGNED32; 
 		customStyles*: CustomStyles; 
 		defaultParagraphStyle*: ParagraphStyleObject; 
 		defaultCharacterStyle*: CharacterStyleObject; 
@@ -79,15 +79,15 @@ TYPE
 		pages*: ContentPages; 
 		mpages*: MasterPages; 
 		contents*: Contents; 
-		nofContents*: LONGINT; 
+		nofContents*: SIGNED32; 
 		frames*: Frames; 
 		dollyGuide*: GuideObject; 
 		currentPage*, firstPage*, lastPage*: PageObject; 
-		pageNumber*, nofPages*: LONGINT; 
+		pageNumber*, nofPages*: SIGNED32; 
 		currentMPage*, firstMPage*, lastMPage*: MasterPageObject; 
-		mpageNumber*, nofMPages*: LONGINT; 
+		mpageNumber*, nofMPages*: SIGNED32; 
 
-		PROCEDURE ^  & New*(width, height, margintop, marginbottom, marginleft, marginright: REAL; facingpages: BOOLEAN); 
+		PROCEDURE ^  & New*(width, height, margintop, marginbottom, marginleft, marginright: FLOAT32; facingpages: BOOLEAN); 
 		PROCEDURE ^ AddDefaultStyles; 
 		PROCEDURE ^ AddStyle*(style: StyleObject); 
 		PROCEDURE ^ RemoveStyle*(style: StyleObject); 
@@ -110,15 +110,15 @@ TYPE
 		PROCEDURE ^ PrevMasterPage*; 
 		PROCEDURE ^ FirstMasterPage*; 
 		PROCEDURE ^ LastMasterPage*; 
-		PROCEDURE ^ SetPageWidth*(pagewidth: REAL); 
-		PROCEDURE ^ GetPageWidth*(): REAL; 
-		PROCEDURE ^ SetPageHeight*(pageheight: REAL); 
-		PROCEDURE ^ GetPageHeight*(): REAL; 
-		PROCEDURE ^ SetMargins*(top, bottom, left, right: REAL); 
-		PROCEDURE ^ GetMarginTop*(): REAL; 
-		PROCEDURE ^ GetMarginBottom*(): REAL; 
-		PROCEDURE ^ GetMarginLeft*(): REAL; 
-		PROCEDURE ^ GetMarginRight*(): REAL; 
+		PROCEDURE ^ SetPageWidth*(pagewidth: FLOAT32); 
+		PROCEDURE ^ GetPageWidth*(): FLOAT32; 
+		PROCEDURE ^ SetPageHeight*(pageheight: FLOAT32); 
+		PROCEDURE ^ GetPageHeight*(): FLOAT32; 
+		PROCEDURE ^ SetMargins*(top, bottom, left, right: FLOAT32); 
+		PROCEDURE ^ GetMarginTop*(): FLOAT32; 
+		PROCEDURE ^ GetMarginBottom*(): FLOAT32; 
+		PROCEDURE ^ GetMarginLeft*(): FLOAT32; 
+		PROCEDURE ^ GetMarginRight*(): FLOAT32; 
 		PROCEDURE ^ SetFacingPages*(fpages: BOOLEAN); 
 		PROCEDURE ^ GetFacingPages*(): BOOLEAN; 
 		PROCEDURE ^ GetCurrentPage*(): PageObject; 
@@ -128,8 +128,8 @@ TYPE
 		PROCEDURE ^ GetFirstMasterPage*(): MasterPageObject; 
 		PROCEDURE ^ GetLastMasterPage*(): MasterPageObject; 
 		PROCEDURE ^ GetMasterByName*(name: Strings.String): MasterPageObject; 
-		PROCEDURE ^ GetCurrentPageNumber*(): LONGINT; 
-		PROCEDURE ^ GetCurrentMasterPageNumber*(): LONGINT; 
+		PROCEDURE ^ GetCurrentPageNumber*(): SIGNED32; 
+		PROCEDURE ^ GetCurrentMasterPageNumber*(): SIGNED32; 
 	END Document; 
 
 	PageObject* = OBJECT 
@@ -144,12 +144,12 @@ TYPE
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ SetMasterPage*(master: MasterPageObject); 
 		PROCEDURE ^ GetMasterPage*(): MasterPageObject; 
-		PROCEDURE ^ AddFrame*(x, y, w, h: REAL); 
+		PROCEDURE ^ AddFrame*(x, y, w, h: FLOAT32); 
 		PROCEDURE ^ InsertFrame*(frame: FrameObject); 
 		PROCEDURE ^ DeleteFrame*; 
 		PROCEDURE ^ NextFrame*; 
 		PROCEDURE ^ PrevFrame*; 
-		PROCEDURE ^ AddGuide*(position: REAL; horizontal: BOOLEAN); 
+		PROCEDURE ^ AddGuide*(position: FLOAT32; horizontal: BOOLEAN); 
 		PROCEDURE ^ DeleteGuide*; 
 		PROCEDURE ^ Move2Front*; 
 		PROCEDURE ^ Move2Back*; 
@@ -177,14 +177,14 @@ TYPE
 	GuideObject* = OBJECT 
 	VAR 
 		horizontal: BOOLEAN; 
-		position: REAL; 
+		position: FLOAT32; 
 		prev*, next*: GuideObject; 
 
-		PROCEDURE ^  & New*(posi: REAL; horiz: BOOLEAN); 
+		PROCEDURE ^  & New*(posi: FLOAT32; horiz: BOOLEAN); 
 		PROCEDURE ^ SetHorizontal*(isHorizontal: BOOLEAN); 
 		PROCEDURE ^ GetHorizontal*(): BOOLEAN; 
-		PROCEDURE ^ SetPosition*(posi: REAL); 
-		PROCEDURE ^ GetPosition*(): REAL; 
+		PROCEDURE ^ SetPosition*(posi: FLOAT32); 
+		PROCEDURE ^ GetPosition*(): FLOAT32; 
 		PROCEDURE ^ Clone*(): GuideObject; 
 	END GuideObject; 
 
@@ -192,11 +192,11 @@ TYPE
 	VAR 
 		frameName: Strings.String; 
 		frameType: Strings.String; 
-		x, y, w, h: REAL; 
+		x, y, w, h: FLOAT32; 
 		style: StyleObject; 
 		content: ContentObject; 
 		textwrapON: BOOLEAN; 
-		twrapTop, twrapBottom, twrapLeft, twrapRight: REAL; 
+		twrapTop, twrapBottom, twrapLeft, twrapRight: FLOAT32; 
 		next*, prev*: FrameObject; 
 
 		PROCEDURE ^  & New*; 
@@ -205,24 +205,24 @@ TYPE
 		PROCEDURE ^ SetType*(type: Strings.String); 
 		PROCEDURE ^ GetType*(): Strings.String; 
 		PROCEDURE ^ FixExtent*; 
-		PROCEDURE ^ SetExtent*(x, y, w, h: REAL); 
-		PROCEDURE ^ SetSize*(w, h: REAL); 
-		PROCEDURE ^ SetPosition*(x, y: REAL); 
-		PROCEDURE ^ GetX*(): REAL; 
-		PROCEDURE ^ GetY*(): REAL; 
-		PROCEDURE ^ GetWidth*(): REAL; 
-		PROCEDURE ^ GetHeight*(): REAL; 
+		PROCEDURE ^ SetExtent*(x, y, w, h: FLOAT32); 
+		PROCEDURE ^ SetSize*(w, h: FLOAT32); 
+		PROCEDURE ^ SetPosition*(x, y: FLOAT32); 
+		PROCEDURE ^ GetX*(): FLOAT32; 
+		PROCEDURE ^ GetY*(): FLOAT32; 
+		PROCEDURE ^ GetWidth*(): FLOAT32; 
+		PROCEDURE ^ GetHeight*(): FLOAT32; 
 		PROCEDURE ^ SetStyle*(style: StyleObject); 
 		PROCEDURE ^ GetStyle*(): StyleObject; 
 		PROCEDURE ^ SetContent*(content: ContentObject); 
 		PROCEDURE ^ GetContent*(): ContentObject; 
 		PROCEDURE ^ SetWrap*(wrap: BOOLEAN); 
 		PROCEDURE ^ GetWrap*(): BOOLEAN; 
-		PROCEDURE ^ SetWrapSize*(t, b, l, r: REAL); 
-		PROCEDURE ^ GetWrapTop*(): REAL; 
-		PROCEDURE ^ GetWrapBottom*(): REAL; 
-		PROCEDURE ^ GetWrapLeft*(): REAL; 
-		PROCEDURE ^ GetWrapRight*(): REAL; 
+		PROCEDURE ^ SetWrapSize*(t, b, l, r: FLOAT32); 
+		PROCEDURE ^ GetWrapTop*(): FLOAT32; 
+		PROCEDURE ^ GetWrapBottom*(): FLOAT32; 
+		PROCEDURE ^ GetWrapLeft*(): FLOAT32; 
+		PROCEDURE ^ GetWrapRight*(): FLOAT32; 
 		PROCEDURE ^ Clone*(): FrameObject; 
 	END FrameObject; 
 
@@ -232,18 +232,18 @@ TYPE
 		redrawProc*: PROCEDURE {DELEGATE}; 
 		updatePropsPosition*: PROCEDURE {DELEGATE}(x, y: SIZE); 
 		contentWidth*, contentHeight*: SIZE; 
-		zoomFactor*: REAL; 
+		zoomFactor*: FLOAT32; 
 		ownerDoc*: Document; 
 		hasFocus-: BOOLEAN; 
 		running-: BOOLEAN; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Clone*(): ContentObject; 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: SIZE; zoomFactor: REAL; quality, preview: BOOLEAN); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: SIZE; zoomFactor: FLOAT32; quality, preview: BOOLEAN); 
 		PROCEDURE ^ Redraw*; 
 		PROCEDURE ^ UpdatePosition*(x, y: SIZE); 
 		PROCEDURE ^ SetSize*(w, h: SIZE); 
-		PROCEDURE ^ Resize*(zoomF: REAL); 
+		PROCEDURE ^ Resize*(zoomF: FLOAT32); 
 		PROCEDURE ^ Show*(x, y: SIZE); 
 		PROCEDURE ^ Hide*; 
 		PROCEDURE ^ Close*; 
@@ -255,7 +255,7 @@ TYPE
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ IsHit*(x, y: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsHit*(x, y: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; VAR keyCode: SIZE); 
 		PROCEDURE ^ Start*; 
 		PROCEDURE ^ Stop*; 

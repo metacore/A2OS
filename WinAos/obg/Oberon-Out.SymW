@@ -7,12 +7,12 @@ VAR
 
 	PROCEDURE ^ Char*(ch: CHAR); 
 	PROCEDURE ^ String*(str: ARRAY OF CHAR); 
-	PROCEDURE ^ Int*(i, n: LONGINT); 
-	PROCEDURE ^ Hex*(i: LONGINT); 
-	PROCEDURE ^ Real*(x: REAL; n: INTEGER); 
-	PROCEDURE ^ RealFix*(x: REAL; n, f: INTEGER); 
-	PROCEDURE ^ LongReal*(x: LONGREAL; n: INTEGER); 
-	PROCEDURE ^ LongRealFix*(x: LONGREAL; n, f: INTEGER); 
+	PROCEDURE ^ Int*(i, n: SIGNED32); 
+	PROCEDURE ^ Hex*(i: SIGNED32); 
+	PROCEDURE ^ Real*(x: FLOAT32; n: SIGNED16); 
+	PROCEDURE ^ RealFix*(x: FLOAT32; n, f: SIGNED16); 
+	PROCEDURE ^ LongReal*(x: FLOAT64; n: SIGNED16); 
+	PROCEDURE ^ LongRealFix*(x: FLOAT64; n, f: SIGNED16); 
 	PROCEDURE ^ Ln*; 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ Close*; 

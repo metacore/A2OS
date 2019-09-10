@@ -63,8 +63,8 @@ TYPE
 		fp-: Basic.Fingerprint; 
 		fingerprint: SyntaxTree.Fingerprint; 
 		deep: BOOLEAN; 
-		traceLevel: LONGINT; 
-		level: LONGINT; 
+		traceLevel: SIGNED32; 
+		level: SIGNED32; 
 
 		PROCEDURE ^  & InitFingerprinter*; 
 		PROCEDURE ^ VisitBasicType*(x: SyntaxTree.BasicType); 
@@ -127,9 +127,9 @@ TYPE
 	END Fingerprinter; 
 
 	PROCEDURE ^ IsOberonProcedure(type: SyntaxTree.ProcedureType): BOOLEAN; 
-	PROCEDURE ^ FPNumber*(VAR fp: Basic.Fingerprint; val: HUGEINT); 
+	PROCEDURE ^ FPNumber*(VAR fp: Basic.Fingerprint; val: SIGNED64); 
 	PROCEDURE ^ FPSet*(VAR fp: Basic.Fingerprint; set: SET64); 
-	PROCEDURE ^ FPReal*(VAR fp: Basic.Fingerprint; real: LONGREAL); 
+	PROCEDURE ^ FPReal*(VAR fp: Basic.Fingerprint; real: FLOAT64); 
 	PROCEDURE ^ FPName*(VAR fp: Basic.Fingerprint; x: SyntaxTree.Identifier); 
 	PROCEDURE ^ FPString*(VAR fp: Basic.Fingerprint; CONST str: ARRAY OF CHAR); 
 	PROCEDURE ^ FPVisibility*(VAR fp: Basic.Fingerprint; vis: SET); 

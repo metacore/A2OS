@@ -17,7 +17,7 @@ CONST
 	NoLoader = 3400; 
 	TraceBoot = FALSE; 
 	PreciseGC* = 0; 
-	ModuleInitTimeout = HUGEINT(3000000000); 
+	ModuleInitTimeout = SIGNED64(3000000000); 
 TYPE 
 	Name* = ARRAY 32 OF CHAR; 
 
@@ -30,7 +30,7 @@ TYPE
 	END; 
 
 	ExportDesc* = RECORD 
-		fp*: HUGEINT; 
+		fp*: SIGNED64; 
 		name*{UNTRACED} : DynamicName; 
 		adr*: ADDRESS; 
 		exports*: SIZE; 
@@ -88,13 +88,13 @@ TYPE
 		internal-: POINTER TO ARRAY OF ANY; 
 		body*: PROCEDURE ; 
 		flags*: SET; 
-		crc*: LONGINT; 
+		crc*: SIGNED32; 
 		init, published: BOOLEAN; 
 
 		PROCEDURE ^ FindRoots*; 
 	END Module; 
 
-	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR):Module; 
+	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: INTEGER; VAR msg: ARRAY OF CHAR):Module; 
 
 	; 
 VAR 
@@ -103,7 +103,7 @@ VAR
 	numLoaders: SIZE; 
 	freeRoot*: Module; 
 	root-: Module; 
-	shutdown*: WORD; 
+	shutdown*: INTEGER; 
 	trace: BOOLEAN; 
 	register: RECORD 
 		first{UNTRACED} , last{UNTRACED} : Module; 
@@ -123,7 +123,7 @@ VAR
 	PROCEDURE ^ GetFileName(CONST name, extension: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR); 
 	PROCEDURE ^ SortProcedureDescs(p: ProcedureDescs); 
 	PROCEDURE ^ SortExceptionTable(p: ExceptionTable); 
-	PROCEDURE ^ ThisModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR): Module; 
+	PROCEDURE ^ ThisModule*(CONST name: ARRAY OF CHAR; VAR res: INTEGER; VAR msg: ARRAY OF CHAR): Module; 
 	PROCEDURE ^ ThisModuleByAdr0*(pc: ADDRESS): Module; 
 	PROCEDURE ^ ThisModuleByAdr*(pc: ADDRESS): Module; 
 	PROCEDURE ^ GetProcedure*(CONST moduleName, procedureName: ARRAY OF CHAR; argTdAdr, retTdAdr: ADDRESS; VAR entryAdr: ADDRESS); 
@@ -133,8 +133,8 @@ VAR
 	PROCEDURE ^ TypeOf*(obj: ANY): TypeDesc; 
 	PROCEDURE ^ FindProc*(pc: ADDRESS; p: ProcedureDescs): ProcedureDescPointer; 
 	PROCEDURE ^ InstallTermHandler*(h: TerminationHandler); 
-	PROCEDURE ^ FreeModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR); 
-	PROCEDURE ^ Shutdown*(code: WORD); 
+	PROCEDURE ^ FreeModule*(CONST name: ARRAY OF CHAR; VAR res: INTEGER; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ Shutdown*(code: INTEGER); 
 	PROCEDURE ^ IsExceptionHandled*(VAR pc, fp: ADDRESS; deep: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ GetExceptionHandler*(pc: ADDRESS): ADDRESS; 
 	PROCEDURE ^ Initialized*(m: Module): BOOLEAN; 

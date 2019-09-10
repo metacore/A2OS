@@ -38,7 +38,7 @@ TYPE
 
 	Char = RECORD 
 		attr: Attribute; 
-		char: LONGINT; 
+		char: SIGNED32; 
 	END; 
 
 	Data = POINTER TO ARRAY OF Char; 
@@ -72,25 +72,25 @@ TYPE
 		doEcho: BOOLEAN; 
 
 		PROCEDURE ^ GetCol(): SIZE; 
-		PROCEDURE ^ GetRow(): LONGINT; 
+		PROCEDURE ^ GetRow(): SIGNED32; 
 		PROCEDURE ^ appendLine(): Line; 
 		PROCEDURE ^ AppendLine(): Line; 
 		PROCEDURE ^ UpdateBox(line: Line; ofs: SIZE); 
 		PROCEDURE ^ UpdateRect(al, bl: Line; aofs, bofs: SIZE; cur: SET); 
 		PROCEDURE ^ UpdateAll; 
-		PROCEDURE ^ writeChars(VAR buf: ARRAY OF LONGINT; n: SIZE); 
-		PROCEDURE ^ WriteChars(VAR buf: ARRAY OF LONGINT; n: SIZE); 
+		PROCEDURE ^ writeChars(VAR buf: ARRAY OF SIGNED32; n: SIZE); 
+		PROCEDURE ^ WriteChars(VAR buf: ARRAY OF SIGNED32; n: SIZE); 
 		PROCEDURE ^ Delete; 
 		PROCEDURE ^ goto(col, row: SIZE; scroll: BOOLEAN); 
 		PROCEDURE ^ Goto(col, row: SIZE; scroll: BOOLEAN); 
-		PROCEDURE ^ SetTop(row: LONGINT); 
+		PROCEDURE ^ SetTop(row: SIGNED32); 
 		PROCEDURE ^ RightTab; 
 		PROCEDURE ^ EraseLine(l: Line; from, to: SIZE); 
-		PROCEDURE ^ Erase(mode: CHAR; par: ARRAY OF LONGINT; n: LONGINT); 
+		PROCEDURE ^ Erase(mode: CHAR; par: ARRAY OF SIGNED32; n: SIGNED32); 
 		PROCEDURE ^ NewAttr; 
 		PROCEDURE ^ Bright; 
 		PROCEDURE ^ Dim; 
-		PROCEDURE ^ SetAttributes(attrs: ARRAY OF LONGINT; n: LONGINT); 
+		PROCEDURE ^ SetAttributes(attrs: ARRAY OF SIGNED32; n: SIGNED32); 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ FocusReceived*; 
 		PROCEDURE ^ FocusLost*; 
@@ -107,7 +107,7 @@ TYPE
 		PROCEDURE ^ resized; 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ Initialize*; 
-		PROCEDURE ^  & New*(C: Connection; cols, rows: LONGINT); 
+		PROCEDURE ^  & New*(C: Connection; cols, rows: SIGNED32); 
 	END Frame; 
 
 	Window = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -120,10 +120,10 @@ TYPE
 		PROCEDURE ^ Close*; 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
-	PROCEDURE ^ Open*(CONST name: ARRAY OF CHAR; port: LONGINT; type: LONGINT; error: Streams.Writer): Window; 
-	PROCEDURE ^ GetRemote(context: Commands.Context; VAR name: ARRAY OF CHAR; VAR port: LONGINT); 
+	PROCEDURE ^ Open*(CONST name: ARRAY OF CHAR; port: SIGNED32; type: SIGNED32; error: Streams.Writer): Window; 
+	PROCEDURE ^ GetRemote(context: Commands.Context; VAR name: ARRAY OF CHAR; VAR port: SIGNED32); 
 	PROCEDURE ^ Start*(context: Commands.Context); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 

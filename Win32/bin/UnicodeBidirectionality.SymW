@@ -188,8 +188,8 @@ TYPE
 		PROCEDURE ^ GetNextEvenEmbeddingLevel(thisLevel: SIZE; VAR nextLevel: SIZE); 
 		PROCEDURE ^ GetNextOddEmbeddingLevel(thisLevel: SIZE; VAR nextLevel: SIZE); 
 		PROCEDURE ^ GetBorderOfRunCharacterType(thisLevel, otherLevel: SIZE; VAR result: Strings.String); 
-		PROCEDURE ^ IsEuropeanNumberAdjacent(pos: SIZE; terminators: BOOLEAN; VAR cacheElement: LineElement; VAR max: SIZE; VAR state: LONGINT; VAR ENstate: LONGINT): BOOLEAN; 
-		PROCEDURE ^ IsArabicNumberAdjacent(pos: SIZE; VAR cacheElement: LineElement; VAR max: SIZE; VAR state: LONGINT; VAR ENstate: LONGINT): BOOLEAN; 
+		PROCEDURE ^ IsEuropeanNumberAdjacent(pos: SIZE; terminators: BOOLEAN; VAR cacheElement: LineElement; VAR max: SIZE; VAR state: SIGNED32; VAR ENstate: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ IsArabicNumberAdjacent(pos: SIZE; VAR cacheElement: LineElement; VAR max: SIZE; VAR state: SIGNED32; VAR ENstate: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ FindFirstStrongCharacter(start, end: SIZE; VAR charType: Strings.String); 
 		PROCEDURE ^ IsStrongCharacter(CONST char: Texts.Char32; VAR charType: Strings.String): BOOLEAN; 
 		PROCEDURE ^ IsStrongCharacterType(CONST charType: Strings.String): BOOLEAN; 
@@ -209,13 +209,13 @@ TYPE
 		PROCEDURE ^ PrintLineEmbeddingLevels(CONST levels: IntegerArray); 
 	END BidiFormatter; 
 
-	HigherLevelProtocol1* = PROCEDURE (textReader: Texts.TextReader; start, end: SIZE):LONGINT; 
+	HigherLevelProtocol1* = PROCEDURE (textReader: Texts.TextReader; start, end: SIZE):SIGNED32; 
 
-	HigherLevelProtocol2* = PROCEDURE (cacheLine: LineElement; pos: SIZE; lastStrongType: LONGINT):Strings.String; 
+	HigherLevelProtocol2* = PROCEDURE (cacheLine: LineElement; pos: SIZE; lastStrongType: SIGNED32):Strings.String; 
 
-	HigherLevelProtocol3* = PROCEDURE (characters: CharArray; embeddingLevels: IntegerArray; originalTypes, types: Strings.StringArray; char: Texts.Char32; charType: Strings.String; VAR hlCharacterType: Strings.String; VAR hlEmbeddingLevel: LONGINT):BOOLEAN; 
+	HigherLevelProtocol3* = PROCEDURE (characters: CharArray; embeddingLevels: IntegerArray; originalTypes, types: Strings.StringArray; char: Texts.Char32; charType: Strings.String; VAR hlCharacterType: Strings.String; VAR hlEmbeddingLevel: SIGNED32):BOOLEAN; 
 
-	HigherLevelProtocol5* = PROCEDURE (cacheElement: LineElement; pos: SIZE; VAR thisCharacterType: Strings.String; VAR state, ENstate: LONGINT; placeOfVenue: LONGINT):BOOLEAN; 
+	HigherLevelProtocol5* = PROCEDURE (cacheElement: LineElement; pos: SIZE; VAR thisCharacterType: Strings.String; VAR state, ENstate: SIGNED32; placeOfVenue: SIGNED32):BOOLEAN; 
 
 	HigherLevelProtocol6* = PROCEDURE (originalChar: Texts.Char32):Texts.Char32; 
 VAR 

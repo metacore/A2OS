@@ -9,7 +9,7 @@ TYPE
 	Char* = POINTER TO CharDesc; 
 
 	CharDesc* = RECORD (Fonts.CharDesc)
-		dy*: INTEGER; 
+		dy*: SIGNED16; 
 	END; 
 
 	TheChars = ARRAY MAXCHARS OF Char; 
@@ -25,7 +25,7 @@ VAR
 	Anchor: Font; 
 	bP: Pictures.Picture; 
 
-	PROCEDURE ^ GetChar*(F: Font; ch: CHAR; VAR dy, x, y, w, h: INTEGER; VAR pat: Display.Pattern); 
+	PROCEDURE ^ GetChar*(F: Font; ch: CHAR; VAR dy, x, y, w, h: SIGNED16; VAR pat: Display.Pattern); 
 	PROCEDURE ^ NewVerticalFont(vertical: Font; orig: Fonts.Font); 
 	PROCEDURE ^ This*(name: ARRAY OF CHAR): Font; 
 BEGIN

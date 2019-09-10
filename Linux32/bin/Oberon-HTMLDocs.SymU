@@ -24,7 +24,7 @@ TYPE
 	DocURL* = POINTER TO DocURLDesc; 
 
 	DocURLDesc* = RECORD (HyperDocs.DefURLDesc)
-		dockey*: LONGINT; 
+		dockey*: SIGNED32; 
 	END; 
 
 	TextAttrs = POINTER TO TextAttrsDesc; 
@@ -32,7 +32,7 @@ TYPE
 	TextAttrsDesc = RECORD 
 		lib: Objects.Library; 
 		style: TextGadgets.Style; 
-		col, voff: SHORTINT; 
+		col, voff: SIGNED8; 
 		next: TextAttrs; 
 	END; 
 
@@ -41,18 +41,18 @@ TYPE
 	Scanner* = RECORD 
 		page*: Page; 
 		S*: Streams.Stream; 
-		class*, state*: INTEGER; 
+		class*, state*: SIGNED16; 
 		value*: ARRAY 1024 OF CHAR; 
 		pre*, end*: BOOLEAN; 
 		ch*, next*, char*: CHAR; 
-		avail: LONGINT; 
+		avail: SIGNED32; 
 	END; 
 
 	List = POINTER TO ListDesc; 
 
 	ListDesc = RECORD 
 		style: TextGadgets.Style; 
-		kind, nesting, itemNr: INTEGER; 
+		kind, nesting, itemNr: SIGNED16; 
 		dtok: BOOLEAN; 
 		next: List; 
 	END; 
@@ -73,10 +73,10 @@ TYPE
 		base*: DocURL; 
 		orgLabel: ARRAY 64 OF CHAR; 
 		lists: List; 
-		orgPos, linkkey*, headerLen, docKey*: LONGINT; 
+		orgPos, linkkey*, headerLen, docKey*: SIGNED32; 
 		next*: Page; 
 		task: Oberon.Task; 
-		textC*, linkC*, oldLinkC*, textbackC*, lines*: INTEGER; 
+		textC*, linkC*, oldLinkC*, textbackC*, lines*: SIGNED16; 
 		left*, blank*, head, cacheSource*: BOOLEAN; 
 	END; 
 
@@ -128,7 +128,7 @@ VAR
 	searchAttr: ARRAY 32 OF CHAR; 
 	mono: Fonts.Font; 
 	found: BOOLEAN; 
-	dispW: INTEGER; 
+	dispW: SIGNED16; 
 	GreekTab: ARRAY 128 OF CHAR; 
 
 	PROCEDURE ^ WriteLn*(P: Page); 
@@ -136,19 +136,19 @@ VAR
 	PROCEDURE ^ WriteObj*(P: Page; obj: Objects.Object); 
 	PROCEDURE ^ InitTabs(style: TextGadgets.Style); 
 	PROCEDURE ^ NewStyle(): TextGadgets.Style; 
-	PROCEDURE ^ Syntax(size: INTEGER; attr: CHAR): Fonts.Font; 
+	PROCEDURE ^ Syntax(size: SIGNED16; attr: CHAR): Fonts.Font; 
 	PROCEDURE ^ PushTextAttrs*(P: Page); 
 	PROCEDURE ^ PopTextAttrs*(P: Page); 
-	PROCEDURE ^ SplitFontName(f: Fonts.Font; VAR family: ARRAY OF CHAR; VAR size: INTEGER; VAR attr: CHAR); 
-	PROCEDURE ^ FontSize(f: Fonts.Font; VAR size: INTEGER); 
-	PROCEDURE ^ GetFontSize*(P: Page): INTEGER; 
+	PROCEDURE ^ SplitFontName(f: Fonts.Font; VAR family: ARRAY OF CHAR; VAR size: SIGNED16; VAR attr: CHAR); 
+	PROCEDURE ^ FontSize(f: Fonts.Font; VAR size: SIGNED16); 
+	PROCEDURE ^ GetFontSize*(P: Page): SIGNED16; 
 	PROCEDURE ^ ChangeFontAttr(f: Fonts.Font; attr: CHAR): Fonts.Font; 
-	PROCEDURE ^ ChangeFontSize(f: Fonts.Font; size: INTEGER): Fonts.Font; 
-	PROCEDURE ^ SetFontSize*(P: Page; size: INTEGER); 
-	PROCEDURE ^ HorzRule*(P: Page; w, h: INTEGER); 
+	PROCEDURE ^ ChangeFontSize(f: Fonts.Font; size: SIGNED16): Fonts.Font; 
+	PROCEDURE ^ SetFontSize*(P: Page; size: SIGNED16); 
+	PROCEDURE ^ HorzRule*(P: Page; w, h: SIGNED16); 
 	PROCEDURE ^ TextAlign*(CONST align: ARRAY OF CHAR): TextGadgets.Style; 
 	PROCEDURE ^ CloseA*(P: Page); 
-	PROCEDURE ^ OpenList(P: Page; kind: INTEGER); 
+	PROCEDURE ^ OpenList(P: Page; kind: SIGNED16); 
 	PROCEDURE ^ CloseList(P: Page); 
 	PROCEDURE ^ FindFormObj*(form: Form; CONST name: ARRAY OF CHAR): Objects.Object; 
 	PROCEDURE ^ RememberValue*(obj: Objects.Object); 
@@ -164,11 +164,11 @@ VAR
 	PROCEDURE ^ CopyForm(VAR M: Objects.CopyMsg; from, to: Form); 
 	PROCEDURE ^ FormHandler(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewForm*; 
-	PROCEDURE ^ HexDigit(i: INTEGER): CHAR; 
-	PROCEDURE ^ MapCoord(obj: Objects.Object; VAR x, y: INTEGER); 
+	PROCEDURE ^ HexDigit(i: SIGNED16): CHAR; 
+	PROCEDURE ^ MapCoord(obj: Objects.Object; VAR x, y: SIGNED16); 
 	PROCEDURE ^ ComposeQuery(form: Form; exec: Objects.Object; VAR query: Texts.Text); 
 	PROCEDURE ^ SubmitQuery*; 
-	PROCEDURE ^ HREF(P: Page; VAR href, cmd: ARRAY OF CHAR; VAR key: LONGINT); 
+	PROCEDURE ^ HREF(P: Page; VAR href, cmd: ARRAY OF CHAR; VAR key: SIGNED32); 
 	PROCEDURE ^ Read*(VAR S: Scanner); 
 	PROCEDURE ^ ChangeFontFamily(f: Fonts.Font; CONST newfamily: ARRAY OF CHAR): Fonts.Font; 
 	PROCEDURE ^ WriteCharRef*(P: Page; VAR S: Scanner); 
@@ -181,15 +181,15 @@ VAR
 	PROCEDURE ^ A(VAR S: Scanner; on: BOOLEAN); 
 	PROCEDURE ^ Address(VAR S: Scanner; on: BOOLEAN); 
 	PROCEDURE ^ B(VAR S: Scanner; on: BOOLEAN); 
-	PROCEDURE ^ SplitHostPort*(VAR url, host: ARRAY OF CHAR; VAR port: INTEGER); 
+	PROCEDURE ^ SplitHostPort*(VAR url, host: ARRAY OF CHAR; VAR port: SIGNED16); 
 	PROCEDURE ^ BASE(VAR S: Scanner; on: BOOLEAN); 
-	PROCEDURE ^ HexVal(ch: CHAR): INTEGER; 
-	PROCEDURE ^ Color(CONST val: ARRAY OF CHAR; VAR col: INTEGER); 
+	PROCEDURE ^ HexVal(ch: CHAR): SIGNED16; 
+	PROCEDURE ^ Color(CONST val: ARRAY OF CHAR; VAR col: SIGNED16); 
 	PROCEDURE ^ BASEFONT(VAR S: Scanner; on: BOOLEAN); 
 	PROCEDURE ^ BIG(VAR S: Scanner; on: BOOLEAN); 
 	PROCEDURE ^ BLINK(VAR S: Scanner; on: BOOLEAN); 
 	PROCEDURE ^ BLOCKQUOTE(VAR S: Scanner; on: BOOLEAN); 
-	PROCEDURE ^ ChangeColors(P: Page; from, to: SHORTINT); 
+	PROCEDURE ^ ChangeColors(P: Page; from, to: SIGNED8); 
 	PROCEDURE ^ BODY(VAR S: Scanner; on: BOOLEAN); 
 	PROCEDURE ^ BR(VAR S: Scanner; on: BOOLEAN); 
 	PROCEDURE ^ ExecAttrs*; 
@@ -246,12 +246,12 @@ VAR
 	PROCEDURE ^ XMP(VAR S: Scanner; on: BOOLEAN); 
 	PROCEDURE ^ HandleTag(VAR S: Scanner); 
 	PROCEDURE ^ DocHandler(D: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ TextColor(col: INTEGER): SHORTINT; 
+	PROCEDURE ^ TextColor(col: SIGNED16): SIGNED8; 
 	PROCEDURE ^ EndPage(P: Page); 
 	PROCEDURE ^ ParseNext(me: Oberon.Task); 
 	PROCEDURE ^ QueryString(CONST key: ARRAY OF CHAR; VAR s: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ QueryBool(CONST key: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ Parse*(D: Documents.Document; basekey: LONGINT; S: Streams.Stream; head, cache, blocking: BOOLEAN); 
+	PROCEDURE ^ Parse*(D: Documents.Document; basekey: SIGNED32; S: Streams.Stream; head, cache, blocking: BOOLEAN); 
 	PROCEDURE ^ Show*; 
 	PROCEDURE ^ Stop*; 
 	PROCEDURE ^ LoadDoc(D: Documents.Document); 

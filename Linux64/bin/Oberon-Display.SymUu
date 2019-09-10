@@ -33,7 +33,7 @@ CONST
 	color888* = 24; 
 	color8888* = 32; 
 TYPE 
-	Color* = LONGINT; 
+	Color* = SIGNED32; 
 
 	Pattern* = ADDRESS; 
 
@@ -52,87 +52,87 @@ TYPE
 
 	FrameDesc* = RECORD (Objects.ObjDesc)
 		next*, dsc*: Frame; 
-		X*, Y*, W*, H*: INTEGER; 
+		X*, Y*, W*, H*: SIGNED16; 
 	END; 
 
 	FrameMsg* = RECORD (Objects.ObjMsg)
 		F*: Frame; 
-		x*, y*: INTEGER; 
-		res*: INTEGER; 
+		x*, y*: SIGNED16; 
+		res*: SIGNED16; 
 	END; 
 
 	ControlMsg* = RECORD (FrameMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 	END; 
 
 	ModifyMsg* = RECORD (FrameMsg)
-		id*: INTEGER; 
-		mode*: INTEGER; 
-		dX*, dY*, dW*, dH*: INTEGER; 
-		X*, Y*, W*, H*: INTEGER; 
+		id*: SIGNED16; 
+		mode*: SIGNED16; 
+		dX*, dY*, dW*, dH*: SIGNED16; 
+		X*, Y*, W*, H*: SIGNED16; 
 	END; 
 
 	DisplayMsg* = RECORD (FrameMsg)
-		device*: INTEGER; 
-		id*: INTEGER; 
-		u*, v*, w*, h*: INTEGER; 
+		device*: SIGNED16; 
+		id*: SIGNED16; 
+		u*, v*, w*, h*: SIGNED16; 
 	END; 
 
 	LocateMsg* = RECORD (FrameMsg)
 		loc*: Frame; 
-		X*, Y*: INTEGER; 
-		u*, v*: INTEGER; 
+		X*, Y*: SIGNED16; 
+		u*, v*: SIGNED16; 
 	END; 
 
 	SelectMsg* = RECORD (FrameMsg)
-		id*: INTEGER; 
-		time*: LONGINT; 
+		id*: SIGNED16; 
+		time*: SIGNED32; 
 		sel*: Frame; 
 		obj*: Objects.Object; 
 	END; 
 
 	ConsumeMsg* = RECORD (FrameMsg)
-		id*: INTEGER; 
-		u*, v*: INTEGER; 
+		id*: SIGNED16; 
+		u*, v*: SIGNED16; 
 		obj*: Objects.Object; 
 	END; 
 
 	MsgProc* = PROCEDURE (VAR M: FrameMsg); 
 VAR 
-	Unit*: LONGINT; 
-	Left*, ColLeft*, Bottom*, UBottom*, Width*, Height*: INTEGER; 
+	Unit*: SIGNED32; 
+	Left*, ColLeft*, Bottom*, UBottom*, Width*, Height*: SIGNED16; 
 	arrow*, star*, cross*, downArrow*, hook*, grey0*, grey1*, grey2*, ticks*, solid*: Pattern; 
 	Broadcast*: MsgProc; 
-	palette: ARRAY 256 OF LONGINT; 
-	clipX1, clipY1, clipX2, clipY2: LONGINT; 
+	palette: ARRAY 256 OF SIGNED32; 
+	clipX1, clipY1, clipX2, clipY2: SIGNED32; 
 	pattern: List; 
 	buf: POINTER TO ARRAY OF CHAR; 
 	disp: Displays.Display; 
-	height: LONGINT; 
+	height: SIGNED32; 
 
-	PROCEDURE ^ SetColor*(col: Color; red, green, blue: LONGINT); 
-	PROCEDURE ^ GetColor*(col: Color; VAR red, green, blue: INTEGER); 
-	PROCEDURE ^ RGB*(red, green, blue: LONGINT): Color; 
-	PROCEDURE ^ Depth*(x: LONGINT): INTEGER; 
-	PROCEDURE ^ TrueColor*(x: LONGINT): BOOLEAN; 
-	PROCEDURE ^ GetClip*(VAR x, y, w, h: INTEGER); 
-	PROCEDURE ^ SetClip*(x, y, w, h: LONGINT); 
-	PROCEDURE ^ AdjustClip*(x, y, w, h: LONGINT); 
+	PROCEDURE ^ SetColor*(col: Color; red, green, blue: SIGNED32); 
+	PROCEDURE ^ GetColor*(col: Color; VAR red, green, blue: SIGNED16); 
+	PROCEDURE ^ RGB*(red, green, blue: SIGNED32): Color; 
+	PROCEDURE ^ Depth*(x: SIGNED32): SIGNED16; 
+	PROCEDURE ^ TrueColor*(x: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ GetClip*(VAR x, y, w, h: SIGNED16); 
+	PROCEDURE ^ SetClip*(x, y, w, h: SIGNED32); 
+	PROCEDURE ^ AdjustClip*(x, y, w, h: SIGNED32); 
 	PROCEDURE ^ ResetClip*; 
-	PROCEDURE ^ CopyBlock*(sx, sy, w, h, dx, dy, mode: LONGINT); 
-	PROCEDURE ^ CopyPattern*(col: Color; pat: Pattern; x, y, mode: LONGINT); 
-	PROCEDURE ^ FillPattern*(col: Color; pat: Pattern; px, py, x, y, w, h, mode: LONGINT); 
-	PROCEDURE ^ ReplPattern*(col: Color; pat: Pattern; x, y, w, h, mode: LONGINT); 
-	PROCEDURE ^ ReplConst*(col: Color; x, y, w, h, mode: LONGINT); 
-	PROCEDURE ^ Dot*(col: Color; x, y, mode: LONGINT); 
-	PROCEDURE ^ GetDim*(pat: Pattern; VAR w, h: INTEGER); 
-	PROCEDURE ^ NewPattern*(w, h: LONGINT; VAR image: ARRAY OF SET): Pattern; 
+	PROCEDURE ^ CopyBlock*(sx, sy, w, h, dx, dy, mode: SIGNED32); 
+	PROCEDURE ^ CopyPattern*(col: Color; pat: Pattern; x, y, mode: SIGNED32); 
+	PROCEDURE ^ FillPattern*(col: Color; pat: Pattern; px, py, x, y, w, h, mode: SIGNED32); 
+	PROCEDURE ^ ReplPattern*(col: Color; pat: Pattern; x, y, w, h, mode: SIGNED32); 
+	PROCEDURE ^ ReplConst*(col: Color; x, y, w, h, mode: SIGNED32); 
+	PROCEDURE ^ Dot*(col: Color; x, y, mode: SIGNED32); 
+	PROCEDURE ^ GetDim*(pat: Pattern; VAR w, h: SIGNED16); 
+	PROCEDURE ^ NewPattern*(w, h: SIGNED32; VAR image: ARRAY OF SET): Pattern; 
 	PROCEDURE ^ CreatePatterns; 
-	PROCEDURE ^ TransferFormat*(x: LONGINT): LONGINT; 
-	PROCEDURE ^ TransferBlock*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, mode: LONGINT); 
-	PROCEDURE ^ SetMode*(x: LONGINT; s: SET); 
-	PROCEDURE ^ DisplayBlock*(adr: ADDRESS; dx, dy, w, h, sx, sy, mode: LONGINT; VAR palette: ARRAY OF LONGINT); 
-	PROCEDURE ^ Map*(x: LONGINT): LONGINT; 
+	PROCEDURE ^ TransferFormat*(x: SIGNED32): SIGNED32; 
+	PROCEDURE ^ TransferBlock*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h, mode: SIGNED32); 
+	PROCEDURE ^ SetMode*(x: SIGNED32; s: SET); 
+	PROCEDURE ^ DisplayBlock*(adr: ADDRESS; dx, dy, w, h, sx, sy, mode: SIGNED32; VAR palette: ARRAY OF SIGNED32); 
+	PROCEDURE ^ Map*(x: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Update*; 
 	PROCEDURE ^ Cleanup; 
 BEGIN

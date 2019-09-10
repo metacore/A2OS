@@ -6,7 +6,7 @@ CONST
 	BUFSIZE = 1024; 
 TYPE 
 	Color* = RECORD 
-		r*, g*, b*: INTEGER; 
+		r*, g*, b*: SIGNED16; 
 	END; 
 
 	Colors* = ARRAY 256 OF Color; 
@@ -22,24 +22,24 @@ TYPE
 	tBitmap* = POINTER TO tBitmapDesc; 
 
 	tBitmapDesc* = RECORD (vyBase.ObjDesc)
-		W-, H-, Depth-, ColorDepth-: INTEGER; 
+		W-, H-, Depth-, ColorDepth-: SIGNED16; 
 		PCluster: POINTER TO PClusterArray; 
 		colors-: Colors; 
 	END; 
 VAR 
-	NPOS, NCLUSTER, NSET, NBIT: LONGINT; 
+	NPOS, NCLUSTER, NSET, NBIT: SIGNED32; 
 	BUFFER: ARRAY BUFSIZE OF CHAR; 
 
-	PROCEDURE ^ exp2*(z: INTEGER): INTEGER; 
-	PROCEDURE ^ bit*(VAR pos: SHORTINT; VAR number: INTEGER): INTEGER; 
-	PROCEDURE ^ NewBitmap*(W, H, Depth, ColorDepth: LONGINT): tBitmap; 
-	PROCEDURE ^ GetPosition(bmp: tBitmap; x, y: LONGINT; VAR pos, cluster, set, bit: LONGINT); 
-	PROCEDURE ^ SetNextPixel*(Bitmap: tBitmap; val: LONGINT); 
-	PROCEDURE ^ SetAPixel*(Bitmap: tBitmap; X, Y: LONGINT; val: LONGINT); 
-	PROCEDURE ^ SetARect*(Bitmap: tBitmap; RectX, RectY, W, H: LONGINT; val: LONGINT); 
-	PROCEDURE ^ SetALine*(Bitmap: tBitmap; FromX, FromY, ToX, ToY: LONGINT; val: LONGINT); 
-	PROCEDURE ^ GetAPixel*(Bitmap: tBitmap; X, Y: LONGINT): LONGINT; 
-	PROCEDURE ^ SetAColor*(Bitmap: tBitmap; i: INTEGER; col: Color); 
+	PROCEDURE ^ exp2*(z: SIGNED16): SIGNED16; 
+	PROCEDURE ^ bit*(VAR pos: SIGNED8; VAR number: SIGNED16): SIGNED16; 
+	PROCEDURE ^ NewBitmap*(W, H, Depth, ColorDepth: SIGNED32): tBitmap; 
+	PROCEDURE ^ GetPosition(bmp: tBitmap; x, y: SIGNED32; VAR pos, cluster, set, bit: SIGNED32); 
+	PROCEDURE ^ SetNextPixel*(Bitmap: tBitmap; val: SIGNED32); 
+	PROCEDURE ^ SetAPixel*(Bitmap: tBitmap; X, Y: SIGNED32; val: SIGNED32); 
+	PROCEDURE ^ SetARect*(Bitmap: tBitmap; RectX, RectY, W, H: SIGNED32; val: SIGNED32); 
+	PROCEDURE ^ SetALine*(Bitmap: tBitmap; FromX, FromY, ToX, ToY: SIGNED32; val: SIGNED32); 
+	PROCEDURE ^ GetAPixel*(Bitmap: tBitmap; X, Y: SIGNED32): SIGNED32; 
+	PROCEDURE ^ SetAColor*(Bitmap: tBitmap; i: SIGNED16; col: Color); 
 	PROCEDURE ^ WriteColor(RF: vyBase.FilesWriter; col: Color); 
 	PROCEDURE ^ ReadColor(RF: vyBase.FilesReader; VAR col: Color); 
 	PROCEDURE ^ Write*(VAR RF: vyBase.FilesWriter; Bitmap: tBitmap); 
@@ -48,6 +48,6 @@ VAR
 	PROCEDURE ^ ExportGIF*(VAR RF: vyBase.FilesWriter; Bitmap: tBitmap); 
 	PROCEDURE ^ CopyColors*(source: tBitmap; VAR dest: tBitmap); 
 	PROCEDURE ^ CopyBitmap*(source: tBitmap; VAR dest: tBitmap); 
-	PROCEDURE ^ ResizedBitmap*(source: tBitmap; w, h: INTEGER): tBitmap; 
+	PROCEDURE ^ ResizedBitmap*(source: tBitmap; w, h: SIGNED16): tBitmap; 
 BEGIN
 END vyBitmaps.

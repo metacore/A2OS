@@ -7,16 +7,16 @@ CONST
 	ALT* = 2; 
 	Trace = FALSE; 
 VAR 
-	minX, minY, maxX, maxY: LONGINT; 
+	minX, minY, maxX, maxY: SIGNED32; 
 	input: Inputs.OberonInput; 
 
-	PROCEDURE ^ Available*(): INTEGER; 
-	PROCEDURE ^ Mouse*(VAR keys: SET; VAR x, y: INTEGER); 
+	PROCEDURE ^ Available*(): SIGNED16; 
+	PROCEDURE ^ Mouse*(VAR keys: SET; VAR x, y: SIGNED16); 
 	PROCEDURE ^ Read*(VAR ch: CHAR); 
-	PROCEDURE ^ Time*(): LONGINT; 
+	PROCEDURE ^ Time*(): SIGNED32; 
 	PROCEDURE ^ KeyState*(VAR keys: SET); 
-	PROCEDURE ^ Await*(delay: LONGINT); 
-	PROCEDURE ^ SetMouseLimits*(x, y, w, h: INTEGER); 
-	PROCEDURE ^ Init*(x: LONGINT); 
+	PROCEDURE ^ Await*(delay: SIGNED32); 
+	PROCEDURE ^ SetMouseLimits*(x, y, w, h: SIGNED16); 
+	PROCEDURE ^ Init*(x: SIGNED32); 
 BEGIN
 END Input.

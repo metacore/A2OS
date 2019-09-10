@@ -8,7 +8,7 @@ CONST
 	State_Finalizing = 9; 
 	State_Finalized = 10; 
 TYPE 
-	AddComponentProcedure* = PROCEDURE {DELEGATE}(component: Repositories.Component; VAR res: WORD); 
+	AddComponentProcedure* = PROCEDURE {DELEGATE}(component: Repositories.Component; VAR res: INTEGER); 
 
 	DropTarget* = OBJECT (WMDropTarget.DropTarget)
 	VAR 
@@ -16,7 +16,7 @@ TYPE
 		addComponent: AddComponentProcedure; 
 
 		PROCEDURE ^  & Init*(originator: ANY; addComponent: AddComponentProcedure); 
-		PROCEDURE ^ GetInterface*(type: LONGINT): WMDropTarget.DropInterface; 
+		PROCEDURE ^ GetInterface*(type: SIGNED32): WMDropTarget.DropInterface; 
 	END DropTarget; 
 
 	DropComponent* = OBJECT (WMDropTarget.DropInterface)
@@ -25,15 +25,15 @@ TYPE
 		addComponent: AddComponentProcedure; 
 
 		PROCEDURE ^  & Init*(originator: ANY; addComponent: AddComponentProcedure); 
-		PROCEDURE ^ Set(component: Repositories.Component; VAR res: WORD); 
+		PROCEDURE ^ Set(component: Repositories.Component; VAR res: INTEGER); 
 	END DropComponent; 
 
 	RepositoriesView* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		grid-: WMStringGrids.StringGrid; 
 		repositories: Repositories.Repositories; 
-		lastTimestamp: LONGINT; 
-		state: LONGINT; 
+		lastTimestamp: SIGNED32; 
+		state: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
@@ -61,8 +61,8 @@ TYPE
 		thisRepository: Repositories.Repository; 
 		enum: XMLObjects.Enumerator; 
 		draggedComponent: Repositories.Component; 
-		lastTimestamp, lastRepositoryTimestamp: LONGINT; 
-		state: LONGINT; 
+		lastTimestamp, lastRepositoryTimestamp: SIGNED32; 
+		state: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
@@ -90,7 +90,7 @@ TYPE
 		loadBtn, storeBtn, unloadBtn: WMStandardComponents.Button; 
 		filenameEditor: WMEditors.Editor; 
 		statusLabel: WMStandardComponents.Label; 
-		opNum: LONGINT; 
+		opNum: SIGNED32; 
 
 		PROCEDURE ^  & New(context: WMRestorable.Context); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
@@ -103,7 +103,7 @@ TYPE
 		PROCEDURE ^ Close*; 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	StrID, StrName, StrType, StrParameter, StrInstance: Strings.String; 
 	StrYes, StrNo: Strings.String; 
 

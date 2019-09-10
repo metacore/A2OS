@@ -64,7 +64,7 @@ TYPE
 	BEGIN{ACTIVE} 
 	END Searcher; 
 
-	GridDisplayHandler = PROCEDURE {DELEGATE}(CONST data: ARRAY OF WMSystemComponents.DirEntry; noEl: LONGINT); 
+	GridDisplayHandler = PROCEDURE {DELEGATE}(CONST data: ARRAY OF WMSystemComponents.DirEntry; noEl: SIGNED32); 
 
 	SearchStatusHandler = PROCEDURE {DELEGATE}; 
 
@@ -85,13 +85,13 @@ TYPE
 
 	RetrievedList = RECORD 
 		data: ARRAY RListSize OF WMSystemComponents.DirEntry; 
-		noEl: INTEGER; 
+		noEl: SIGNED16; 
 	END; 
 
 	ListBuffer = OBJECT {EXCLUSIVE} 
 	VAR 
 		data: ARRAY RListSize OF WMSystemComponents.DirEntry; 
-		in, out, maxNoEl: INTEGER; 
+		in, out, maxNoEl: SIGNED16; 
 		finished: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
@@ -101,7 +101,7 @@ TYPE
 		PROCEDURE ^ Get(VAR rlist: RetrievedList); 
 	END ListBuffer; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
 	PROCEDURE ^ Open*; 

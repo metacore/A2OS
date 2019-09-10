@@ -28,7 +28,7 @@ TYPE
 
 	Char = RECORD 
 		attr: Attribute; 
-		char: LONGINT; 
+		char: SIGNED32; 
 	END; 
 
 	Data = POINTER TO ARRAY OF Char; 
@@ -93,11 +93,11 @@ TYPE
 		PROCEDURE ^ SetMargins(beg, end: SIZE); 
 		PROCEDURE ^ RightTab; 
 		PROCEDURE ^ EraseLine(l: Line; from, to: SIZE); 
-		PROCEDURE ^ Erase(mode: CHAR; CONST par: ARRAY OF LONGINT; n: SIZE); 
+		PROCEDURE ^ Erase(mode: CHAR; CONST par: ARRAY OF SIGNED32; n: SIZE); 
 		PROCEDURE ^ NewAttr; 
 		PROCEDURE ^ Bright; 
 		PROCEDURE ^ Dim; 
-		PROCEDURE ^ SetAttributes(CONST attrs: ARRAY OF LONGINT; n: SIZE); 
+		PROCEDURE ^ SetAttributes(CONST attrs: ARRAY OF SIGNED32; n: SIZE); 
 		PROCEDURE ^ Draw*(canvas: WMG.Canvas); 
 		PROCEDURE ^ MoveCursor(dr, dc: SIZE); 
 		PROCEDURE ^ ESCSequence(ch: CHAR); 

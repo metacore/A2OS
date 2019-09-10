@@ -23,18 +23,18 @@ TYPE
 
 	ContextMenuData = OBJECT 
 	VAR 
-		val: LONGINT; 
+		val: SIGNED32; 
 
-		PROCEDURE ^  & New*(val: LONGINT); 
+		PROCEDURE ^  & New*(val: SIGNED32); 
 	END ContextMenuData; 
 
 	ChangeInfo = OBJECT (Texts.Attributes)
 	VAR 
 		fields: SET; 
 		name: ARRAY 128 OF CHAR; 
-		deltaSizeMode: LONGINT; 
-		deltaSize: LONGINT; 
-		fgColor, bgColor: LONGINT; 
+		deltaSizeMode: SIGNED32; 
+		deltaSize: SIGNED32; 
+		fgColor, bgColor: SIGNED32; 
 		style: SET; 
 
 		PROCEDURE ^  & Init*; 
@@ -87,7 +87,7 @@ TYPE
 		shown: BOOLEAN; 
 		popup: WMPopups.Popup; 
 		oldPStyleName, oldCStyleName: ARRAY 256 OF CHAR; 
-		tabColor, tabSelectedColor: LONGINT; 
+		tabColor, tabSelectedColor: SIGNED32; 
 		previewLabel, fontNotFound: WMStandardComponents.Label; 
 		tabPanel, buttonPanel, pstylePanel, cstylePanel: WMStandardComponents.Panel; 
 		pstyleButton, cstyleButton, button: WMStandardComponents.Button; 
@@ -102,7 +102,7 @@ TYPE
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Show*(x, y: LONGINT); 
+		PROCEDURE ^ Show*(x, y: SIGNED32); 
 		PROCEDURE ^ Hide*; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ LoadStyleList; 
@@ -134,13 +134,13 @@ TYPE
 		PROCEDURE ^ BGColorPopupHandler(result: WMGraphics.Color); 
 	END StyleEditor; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	ctxAlignLeft, ctxAlignCenter, ctxAlignRight, ctxAlignJustified: ContextMenuData; 
 	ctxRegular, ctxBold, ctxItalic, ctxBoldItalic: ContextMenuData; 
 
-	PROCEDURE ^ CreateStyleName(CONST fontname: ARRAY OF CHAR; style: SET; size: SIZE; fgColor, bgColor: LONGINT; VAR name: ARRAY OF CHAR); 
+	PROCEDURE ^ CreateStyleName(CONST fontname: ARRAY OF CHAR; style: SET; size: SIZE; fgColor, bgColor: SIGNED32; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ EnsureAttribute(VAR attr: Texts.Attributes); 
-	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; mode, value: LONGINT; currentSize: SIZE; VAR newSize: SIZE); 
+	PROCEDURE ^ GetNewSize(CONST fontname: ARRAY OF CHAR; mode, value: SIGNED32; currentSize: SIZE; VAR newSize: SIZE); 
 	PROCEDURE ^ ChangeFontSize(VAR attr: Texts.Attributes; userData: ANY); 
 	PROCEDURE ^ ChangeFontColor(VAR attr: Texts.Attributes; userData: ANY); 
 	PROCEDURE ^ ChangeFontStyle(VAR attr: Texts.Attributes; userData: ANY); 

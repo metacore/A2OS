@@ -19,9 +19,9 @@ TYPE
 
 	Kernel* = POINTER TO KernelDesc; 
 
-	temperatureScheme* = PROCEDURE (k: Kernel; pos: LONGINT); 
+	temperatureScheme* = PROCEDURE (k: Kernel; pos: SIGNED32); 
 
-	visitingScheme* = PROCEDURE (x, w: LONGINT):LONGINT; 
+	visitingScheme* = PROCEDURE (x, w: SIGNED32):SIGNED32; 
 
 	KernelDesc* = RECORD (vyBase.ObjDesc)
 		A*: vyBase.Object; 
@@ -30,26 +30,26 @@ TYPE
 		visit-: visitingScheme; 
 		parallel-: BOOLEAN; 
 		ModelClass*: vyLinks.Link; 
-		ModelClassCount*: INTEGER; 
+		ModelClassCount*: SIGNED16; 
 		makeTemperature*: temperatureScheme; 
-		cacheSize*: LONGINT; 
-		temperature*: LONGREAL; 
+		cacheSize*: SIGNED32; 
+		temperature*: FLOAT64; 
 		samplerType*: vyName.tNameArray; 
 	END; 
 VAR 
 	constScheme*, loganneal, expanneal, linanneal: temperatureScheme; 
 	linearv, chequerboardv, randomv: visitingScheme; 
 
-	PROCEDURE ^ linearVisit*(x, w: LONGINT): LONGINT; 
-	PROCEDURE ^ checkerBoardVisit*(x, w: LONGINT): LONGINT; 
-	PROCEDURE ^ randomVisit*(x, w: LONGINT): LONGINT; 
+	PROCEDURE ^ linearVisit*(x, w: SIGNED32): SIGNED32; 
+	PROCEDURE ^ checkerBoardVisit*(x, w: SIGNED32): SIGNED32; 
+	PROCEDURE ^ randomVisit*(x, w: SIGNED32): SIGNED32; 
 	PROCEDURE ^ MMCopy(VAR from, to: antsMC.Msg); 
 	PROCEDURE ^ Prepare(s: Kernel; VAR omsg: antsMC.Msg; VAR msg: samplingMsg); 
 	PROCEDURE ^ Finish(s: Kernel; VAR omsg: antsMC.Msg; VAR msg: samplingMsg); 
-	PROCEDURE ^ LogAnneal(s: Kernel; pos: LONGINT); 
-	PROCEDURE ^ LinAnneal(s: Kernel; pos: LONGINT); 
-	PROCEDURE ^ ExpAnneal(s: Kernel; pos: LONGINT); 
-	PROCEDURE ^ Const(s: Kernel; pos: LONGINT); 
+	PROCEDURE ^ LogAnneal(s: Kernel; pos: SIGNED32); 
+	PROCEDURE ^ LinAnneal(s: Kernel; pos: SIGNED32); 
+	PROCEDURE ^ ExpAnneal(s: Kernel; pos: SIGNED32); 
+	PROCEDURE ^ Const(s: Kernel; pos: SIGNED32); 
 	PROCEDURE ^ Store(VAR R: Files.Rider; s: Kernel); 
 	PROCEDURE ^ Load(VAR R: Files.Rider; s: Kernel); 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 

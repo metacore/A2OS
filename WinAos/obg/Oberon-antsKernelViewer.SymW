@@ -8,7 +8,7 @@ TYPE
 		kernel: antsKernel.Kernel; 
 	END; 
 
-	Real = LONGREAL; 
+	Real = FLOAT64; 
 
 	PROCEDURE ^ Copy(source, dest: tLayer); 
 	PROCEDURE ^ Recall(layer: tLayer; msg: Display.DisplayMsg); 

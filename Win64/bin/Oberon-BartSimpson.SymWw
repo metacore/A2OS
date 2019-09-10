@@ -12,14 +12,14 @@ TYPE
 	MouseCoord* = POINTER TO MouseCoordDesc; 
 
 	MouseCoordDesc* = RECORD (Gadgets.ObjDesc)
-		x, y: INTEGER; 
+		x, y: SIGNED16; 
 	END; 
 
 	Frame* = POINTER TO FrameDesc; 
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
-		oldLX, oldLY, oldRX, oldRY: INTEGER; 
-		col: INTEGER; 
+		oldLX, oldLY, oldRX, oldRY: SIGNED16; 
+		col: SIGNED16; 
 	END; 
 
 	MoveMsg* = RECORD (Display.FrameMsg)
@@ -29,14 +29,14 @@ VAR
 	mouse: MouseCoord; 
 	bart: Pictures.Picture; 
 	keys: SET; 
-	oldX, oldY: INTEGER; 
+	oldX, oldY: SIGNED16; 
 
 	PROCEDURE ^ MouseSpy(me: Oberon.Task); 
 	PROCEDURE ^ MouseAttr(F: MouseCoord; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ MouseHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ DrawEyes(F: Frame; M: Display3.Mask; x, y: INTEGER); 
-	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DrawEyes(F: Frame; M: Display3.Mask; x, y: SIGNED16); 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
 	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 

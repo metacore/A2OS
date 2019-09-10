@@ -135,7 +135,7 @@ VAR
 	PROCEDURE ^ GetVariableAdr*(fp, pc: ADDRESS; CONST name: ARRAY OF CHAR): SIZE; 
 	PROCEDURE ^ GetProcedureName*(pc: ADDRESS; VAR name: ARRAY OF CHAR; VAR startpc: ADDRESS); 
 	PROCEDURE ^ FindVar*(mod: Modules.Module; CONST name: ARRAY OF CHAR; VAR v: Variable): BOOLEAN; 
-	PROCEDURE ^ WriteVar*(w: Streams.Writer; v: Variable; VAR col: LONGINT); 
+	PROCEDURE ^ WriteVar*(w: Streams.Writer; v: Variable; VAR col: SIGNED32); 
 	PROCEDURE ^ ReportType*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE); 
 	PROCEDURE ^ ReportProcedure*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE); 
 	PROCEDURE ^ ReportVariable*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE); 
@@ -143,7 +143,7 @@ VAR
 	PROCEDURE ^ ReportScope*(w: Streams.Writer; refs: Modules.Bytes; VAR offset: SIZE); 
 	PROCEDURE ^ ReportModule*(w: Streams.Writer; refs: Modules.Bytes; offset: SIZE); 
 	PROCEDURE ^ Report*(w: Streams.Writer; refs: Modules.Bytes; offset: SIZE); 
-	PROCEDURE ^ WriteMode*(mode: LONGINT; out: Streams.Writer); 
+	PROCEDURE ^ WriteMode*(mode: SIGNED32; out: Streams.Writer); 
 	PROCEDURE ^ WriteWaitingOn*(t: Objects.Process; out: Streams.Writer); 
 	PROCEDURE ^ WriteFlags*(flags: SET; out: Streams.Writer); 
 	PROCEDURE ^ TraceH(process: Objects.Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS); 

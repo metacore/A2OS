@@ -1,14 +1,14 @@
 MODULE EFIMachine;
 	IMPORT SYSTEM, EFI;
 
-	PROCEDURE ^ JumpTo*(adr: ADDRESS; eax, esi, edi, ecx, edx: LONGINT); 
-	PROCEDURE ^ Portin8*(port: LONGINT; VAR val: CHAR); 
-	PROCEDURE ^ Portin16*(port: LONGINT; VAR val: INTEGER); 
-	PROCEDURE ^ Portin32*(port: LONGINT; VAR val: LONGINT); 
-	PROCEDURE ^ Portout8*(port: LONGINT; val: CHAR); 
-	PROCEDURE ^ Portout16*(port: LONGINT; val: INTEGER); 
-	PROCEDURE ^ Portout32*(port: LONGINT; val: LONGINT); 
-	PROCEDURE {Fingerprint(-7553062953140062096)}  - GetParameter(offset: LONGINT): LONGINT;
+	PROCEDURE ^ JumpTo*(adr: ADDRESS; eax, esi, edi, ecx, edx: SIGNED32); 
+	PROCEDURE ^ Portin8*(port: SIGNED32; VAR val: CHAR); 
+	PROCEDURE ^ Portin16*(port: SIGNED32; VAR val: SIGNED16); 
+	PROCEDURE ^ Portin32*(port: SIGNED32; VAR val: SIGNED32); 
+	PROCEDURE ^ Portout8*(port: SIGNED32; val: CHAR); 
+	PROCEDURE ^ Portout16*(port: SIGNED32; val: SIGNED16); 
+	PROCEDURE ^ Portout32*(port: SIGNED32; val: SIGNED32); 
+	PROCEDURE {Fingerprint(-7553062953140062096)}  - GetParameter(offset: SIGNED32): SIGNED32;
 	CODE
 	END GetParameter; 
 BEGIN

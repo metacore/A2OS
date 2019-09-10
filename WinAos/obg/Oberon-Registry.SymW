@@ -12,8 +12,8 @@ TYPE
 	KeyValueEnumerator* = PROCEDURE (key, value: ARRAY OF CHAR); 
 VAR 
 	oberonRoot*, oberonSystem*: ARRAY Kernel32.MaxPath OF CHAR; 
-	res*: LONGINT; 
-	stamp*: LONGINT; 
+	res*: SIGNED32; 
+	stamp*: SIGNED32; 
 	hFile: Kernel32.HANDLE; 
 	logfile: BOOLEAN; 
 

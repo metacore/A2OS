@@ -17,7 +17,7 @@ CONST
 TYPE 
 	Opcode* = OBJECT 
 	VAR 
-		instr*: LONGINT; 
+		instr*: SIGNED32; 
 		offset*: ADDRESS; 
 		code*: Modules.Bytes; 
 		length-: SIZE; 
@@ -32,9 +32,9 @@ TYPE
 		PROCEDURE ^ PrintArguments*(w: Streams.Writer); 
 		PROCEDURE ^ PrintVariables*(w: Streams.Writer); 
 		PROCEDURE ^ ToString*(): Strings.String; 
-		PROCEDURE ^ WriteHex8*(x: LONGINT; w: Streams.Writer); 
-		PROCEDURE ^ WriteHex16*(x: LONGINT; w: Streams.Writer); 
-		PROCEDURE ^ WriteHex32*(x: LONGINT; w: Streams.Writer); 
+		PROCEDURE ^ WriteHex8*(x: SIGNED32; w: Streams.Writer); 
+		PROCEDURE ^ WriteHex16*(x: SIGNED32; w: Streams.Writer); 
+		PROCEDURE ^ WriteHex32*(x: SIGNED32; w: Streams.Writer); 
 	END Opcode; 
 
 	Decoder* = OBJECT {EXCLUSIVE} 
@@ -45,19 +45,19 @@ TYPE
 		firstOpcode, lastOpcode, currentOpcode: Opcode; 
 		completed: BOOLEAN; 
 		currentBufferPos, currentCodePos, opcodes: SIZE; 
-		mode: LONGINT; 
+		mode: SIGNED32; 
 		currentProc*: ProcedureInfo; 
 
 		PROCEDURE ^  & New*(reader: Streams.Reader); 
-		PROCEDURE ^ Bug*(op, no: LONGINT); 
+		PROCEDURE ^ Bug*(op, no: SIGNED32); 
 		PROCEDURE ^ NewOpcode*(): Opcode; 
 		PROCEDURE ^ DecodeThis*(opcode: Opcode); 
 		PROCEDURE ^ Decode*(proc: ProcedureInfo): Opcode; 
 		PROCEDURE ^ CopyBufferToOpcode(opcode: Opcode); 
 		PROCEDURE ^ InsertBytesAtBufferHead*(bytes: Modules.Bytes); 
 		PROCEDURE ^ ReadChar*(): CHAR; 
-		PROCEDURE ^ ReadInt*(): INTEGER; 
-		PROCEDURE ^ ReadLInt*(): LONGINT; 
+		PROCEDURE ^ ReadInt*(): SIGNED16; 
+		PROCEDURE ^ ReadLInt*(): SIGNED32; 
 	END Decoder; 
 
 	DecoderFactory = PROCEDURE {DELEGATE}(reader: Streams.Reader):Decoder; 
@@ -71,12 +71,12 @@ TYPE
 	TYPE 
 		; 
 	VAR 
-		offset, mode, kind, type, dim, tdadr: LONGINT; 
+		offset, mode, kind, type, dim, tdadr: SIGNED32; 
 		markerPositions, temp: POINTER TO ARRAY OF RECORD 
 			pos: Streams.Position; 
 			marker: WMTextView.PositionMarker; 
 		END; 
-		nextMarker, markerSize: LONGINT; 
+		nextMarker, markerSize: SIGNED32; 
 		markersCreated: BOOLEAN; 
 		procedure: ProcedureInfo; 
 
@@ -93,16 +93,16 @@ TYPE
 	VAR 
 		codeOffset: ADDRESS; 
 		codeSize: SIZE; 
-		retType: LONGINT; 
+		retType: SIGNED32; 
 		index: SIZE; 
 		fields: FieldArray; 
-		fieldCount: LONGINT; 
+		fieldCount: SIGNED32; 
 		method: BOOLEAN; 
 		gcInfo: GCInfo; 
 
 		PROCEDURE ^  & New(CONST n: ARRAY OF CHAR; ofs: ADDRESS; idx: SIZE); 
 		PROCEDURE ^ AddField(fldInfo: FieldInfo); 
-		PROCEDURE ^ GetFieldAtOffset*(offset: LONGINT): FieldInfo; 
+		PROCEDURE ^ GetFieldAtOffset*(offset: SIGNED32): FieldInfo; 
 	END ProcedureInfo; 
 
 	ProcedureArray = POINTER TO ARRAY OF ProcedureInfo; 
@@ -111,7 +111,7 @@ TYPE
 	VAR 
 		procedures: ProcedureArray; 
 		fields: FieldArray; 
-		procedureCount, fieldCount: LONGINT; 
+		procedureCount, fieldCount: SIGNED32; 
 
 		PROCEDURE ^  & New(CONST n: ARRAY OF CHAR); 
 		PROCEDURE ^ AddProcedure(procInfo: ProcedureInfo); 
@@ -121,17 +121,17 @@ TYPE
 
 	Export* = POINTER TO RECORD 
 		next: Export; 
-		fp: LONGINT; 
-		type: LONGINT; 
-		val: LONGINT; 
+		fp: SIGNED32; 
+		type: SIGNED32; 
+		val: SIGNED32; 
 		name: ARRAY 256 OF CHAR; 
 	END; 
 
 	Use = POINTER TO RECORD 
 		next: Use; 
-		fp: LONGINT; 
-		type: LONGINT; 
-		val: LONGINT; 
+		fp: SIGNED32; 
+		type: SIGNED32; 
+		val: SIGNED32; 
 		name: ARRAY 256 OF CHAR; 
 	END; 
 
@@ -147,26 +147,26 @@ TYPE
 	VarConstLink = RECORD 
 		num: SIZE; 
 		ch: CHAR; 
-		links: POINTER TO ARRAY OF LONGINT; 
+		links: POINTER TO ARRAY OF SIGNED32; 
 	END; 
 
 	Link = RECORD 
-		num: LONGINT; 
+		num: SIGNED32; 
 	END; 
 
 	Entry = RECORD 
-		num: LONGINT; 
+		num: SIGNED32; 
 	END; 
 
 	GCInfo = POINTER TO RECORD 
-		codeOffset, beginOffset, endOffset: LONGINT; 
-		pointers: POINTER TO ARRAY OF LONGINT; 
+		codeOffset, beginOffset, endOffset: SIGNED32; 
+		pointers: POINTER TO ARRAY OF SIGNED32; 
 	END; 
 
 	ObjHeader = RECORD 
 		entries, commands, pointers, types, modules, links, dataLinks: SIZE; 
 		codeSize, dataSize, refSize, constSize, exTableLen, procs, maxPtrs: SIZE; 
-		crc: LONGINT; 
+		crc: SIGNED32; 
 		staticTdSize: SIZE; 
 		name: Modules.Name; 
 	END; 
@@ -175,7 +175,7 @@ TYPE
 	VAR 
 		module: Modules.Module; 
 		header: ObjHeader; 
-		representationMode: LONGINT; 
+		representationMode: SIGNED32; 
 		procedures: ProcedureArray; 
 		procedureCount: SIZE; 
 		types: TypeArray; 
@@ -187,7 +187,7 @@ TYPE
 		editor: WMEditors.Editor; 
 		textWriter: TextUtilities.TextWriter; 
 		currentProcInfo: ProcedureInfo; 
-		markPC: LONGINT; 
+		markPC: SIGNED32; 
 		ext: Extension; 
 		codeScaleCallback: CodeScaleCallback; 
 		exports: Export; 
@@ -207,11 +207,11 @@ TYPE
 		PROCEDURE ^ DecodeRefs(reader: Streams.Reader); 
 		PROCEDURE ^ DecodeTypes; 
 		PROCEDURE ^ DecodeField(reader: Streams.Reader): FieldInfo; 
-		PROCEDURE ^ FindProcedureFromPC(pc: LONGINT): ProcedureInfo; 
+		PROCEDURE ^ FindProcedureFromPC(pc: SIGNED32): ProcedureInfo; 
 		PROCEDURE ^ Init; 
 		PROCEDURE ^ ClickNode(sender, data: ANY); 
 		PROCEDURE ^ OutlineNamedProcedure(CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ OutlinePC(pc: LONGINT); 
+		PROCEDURE ^ OutlinePC(pc: SIGNED32); 
 		PROCEDURE ^ InitializeOutline(panel: WMStandardComponents.Panel): Streams.Writer; 
 		PROCEDURE ^ OutlineProcedure(proc: ProcedureInfo; panel: WMStandardComponents.Panel); 
 		PROCEDURE ^ OutlineType(typeInfo: TypeInfo; panel: WMStandardComponents.Panel); 
@@ -232,10 +232,10 @@ TYPE
 	VAR 
 		f: Files.File; 
 		r: Files.Reader; 
-		version: LONGINT; 
+		version: SIGNED32; 
 		nofLinks, nofVarConstLinks: SIZE; 
-		symSize: LONGINT; 
-		noProcs: LONGINT; 
+		symSize: SIGNED32; 
+		noProcs: SIGNED32; 
 
 		PROCEDURE ^ DecodeEntries; 
 		PROCEDURE ^ SkipCommands; 
@@ -280,7 +280,7 @@ TYPE
 		PROCEDURE ^ DecodeBytesHandler(sender, data: ANY); 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ OutlineProcedure(CONST name: ARRAY OF CHAR); 
-		PROCEDURE ^ OutlinePC(pc: LONGINT); 
+		PROCEDURE ^ OutlinePC(pc: SIGNED32); 
 		PROCEDURE ^ Close*; 
 	END DecoderWindow; 
 
@@ -295,23 +295,23 @@ TYPE
 		PROCEDURE ^  & New(CONST ext: Extension; decoderFactory: DecoderFactory; codeScaleCallback: CodeScaleCallback); 
 	END DecoderType; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	win: DecoderWindow; 
 	decoderTypes: ARRAY maxDecoders OF DecoderType; 
-	nofDecoders: LONGINT; 
+	nofDecoders: SIGNED32; 
 	lastExt: Extension; 
 
 	PROCEDURE ^ OpenEmpty*; 
 	PROCEDURE ^ MakeHeader(module: Modules.Module; VAR header: ObjHeader); 
 	PROCEDURE ^ RemoveTypeName(VAR procName: ARRAY OF CHAR; CONST typeName: ARRAY OF CHAR); 
 	PROCEDURE ^ HexBytes2Code(CONST bytes: ARRAY OF CHAR): Modules.Bytes; 
-	PROCEDURE ^ IntToHex(h: SIZE; width: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ IntToHex(h: SIZE; width: SIGNED32; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 
 	PROCEDURE ^ Cleanup; 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ OpenProcedure*(CONST moduleName, procedureName: ARRAY OF CHAR); 
-	PROCEDURE ^ OpenPC*(CONST moduleName: ARRAY OF CHAR; pc: LONGINT); 
+	PROCEDURE ^ OpenPC*(CONST moduleName: ARRAY OF CHAR; pc: SIGNED32); 
 	PROCEDURE ^ GetDecoderType(CONST ext: Extension): DecoderType; 
 	PROCEDURE ^ GetDecoder(CONST ext: Extension; reader: Streams.Reader): Decoder; 
 	PROCEDURE ^ RegisterDecoder*(CONST ext: Extension; decFactory: DecoderFactory; csclCallback: CodeScaleCallback); 

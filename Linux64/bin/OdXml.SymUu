@@ -6,7 +6,7 @@ TYPE
 	StringSplitter* = OBJECT 
 	VAR 
 		s: POINTER TO ARRAY OF CHAR; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		done: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(CONST s: ARRAY OF CHAR); 
@@ -77,7 +77,7 @@ TYPE
 		url: ARRAY 128 OF CHAR; 
 
 		PROCEDURE ^  & Init1*(CONST url: ARRAY OF CHAR); 
-		PROCEDURE ^ addVersion*(CONST ver, author, date, logText, state, dateTime: ARRAY OF CHAR; length: LONGINT); 
+		PROCEDURE ^ addVersion*(CONST ver, author, date, logText, state, dateTime: ARRAY OF CHAR; length: SIGNED32); 
 	END PropfindRes; 
 
 	PropfindCollectionRes* = OBJECT {EXCLUSIVE} (XML.Document)
@@ -91,7 +91,7 @@ TYPE
 		PROCEDURE ^ addResourceType*(CONST type: ARRAY OF CHAR); 
 		PROCEDURE ^ addNotFound*(name: ARRAY OF CHAR); 
 		PROCEDURE ^ addConfiguration*(CONST name, version, state: ARRAY OF CHAR); 
-		PROCEDURE ^ addMember*(CONST name, type, dateTime: ARRAY OF CHAR; length: LONGINT); 
+		PROCEDURE ^ addMember*(CONST name, type, dateTime: ARRAY OF CHAR; length: SIGNED32); 
 	END PropfindCollectionRes; 
 
 	Scanner* = OBJECT (XMLScanner.Scanner)
@@ -113,7 +113,7 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ShowDAVError*(doc: XML.Document): BOOLEAN; 
 		PROCEDURE ^ IsDAVError*(doc: XML.Document; VAR name: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ Dev0(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ Dev0(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ XmlSize*(doc: XML.Document): Streams.Position; 
 		PROCEDURE ^ GetXmlns*(el: XML.Element); 
 		PROCEDURE ^ AbsXmlName*(rawName: XML.String): OdUtil.Line; 

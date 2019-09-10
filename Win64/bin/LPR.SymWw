@@ -18,11 +18,11 @@ CONST
 	RECEIVEPRINTJOBFAILED =  -8; 
 	NOTCONNECTED =  -9; 
 VAR 
-	jobNr: INTEGER; 
+	jobNr: SIGNED16; 
 
-	PROCEDURE ^ Print*(CONST host, queue, docName, email: ARRAY OF CHAR; banner, mail: BOOLEAN; data: Streams.Reader; size: Streams.Position; VAR res: WORD); 
-	PROCEDURE ^ ShowJobs*(out: Streams.Writer; CONST host, queue: ARRAY OF CHAR; VAR res: WORD); 
-	PROCEDURE ^ RemoveJob*(CONST host, queue, email, job: ARRAY OF CHAR; VAR res: WORD); 
-	PROCEDURE ^ PrintFile*(CONST fn: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ Print*(CONST host, queue, docName, email: ARRAY OF CHAR; banner, mail: BOOLEAN; data: Streams.Reader; size: Streams.Position; VAR res: INTEGER); 
+	PROCEDURE ^ ShowJobs*(out: Streams.Writer; CONST host, queue: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ RemoveJob*(CONST host, queue, email, job: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ PrintFile*(CONST fn: ARRAY OF CHAR; VAR res: INTEGER); 
 BEGIN
 END LPR.

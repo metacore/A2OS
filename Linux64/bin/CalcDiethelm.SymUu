@@ -4,7 +4,7 @@ CONST
 TYPE 
 	Romberg = OBJECT 
 	VAR 
-		index: LONGINT; 
+		index: SIGNED32; 
 		error, soln: NbrRe.Real; 
 		factors: POINTER TO ARRAY OF NbrRe.Real; 
 		tableau: ARRAY 8 OF POINTER TO ARRAY OF NbrRe.Real; 

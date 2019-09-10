@@ -10,12 +10,12 @@ CONST
 	ScrollbarWidth = 15; 
 	OverviewWidth = 10; 
 	DarkGreen = 12583167; 
-	DarkRed = LONGINT(3221225727); 
-	DiffColorLeft = LONGINT(4278190128); 
+	DarkRed = SIGNED32(3221225727); 
+	DiffColorLeft = SIGNED32(4278190128); 
 	DiffColorRight = 65328; 
 	EmptyLineColor = WMGraphics.White; 
-	LineNbrBgColor = LONGINT(3772841983); 
-	BgColor = LONGINT(3435973887); 
+	LineNbrBgColor = SIGNED32(3772841983); 
+	BgColor = SIGNED32(3435973887); 
 	MouseWheelMultiplier = 3; 
 	NonDefaultFont = FALSE; 
 	FontName = \"Oberon"\; 
@@ -30,7 +30,7 @@ TYPE
 
 	DiffState = OBJECT 
 	VAR 
-		state: LONGINT; 
+		state: SIGNED32; 
 	END DiffState; 
 
 	DiffView = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -38,10 +38,10 @@ TYPE
 		filenameEdit: WMEditors.Editor; 
 		lineNbr, grid: NoWheelGrid; 
 		colWidths: WMGrids.Spacings; 
-		commonLines, diffLines: LONGINT; 
-		diffColor: LONGINT; 
+		commonLines, diffLines: SIGNED32; 
+		diffColor: SIGNED32; 
 		maxLineWidth, minLineWidth: SIZE; 
-		curLine: LONGINT; 
+		curLine: SIGNED32; 
 		font: WMGraphics.Font; 
 		onPropertyChange, onResized: WMEvents.EventSource; 
 
@@ -69,7 +69,7 @@ TYPE
 		img: WMGraphics.Image; 
 		nofRows, pageStart, pageSize: SIZE; 
 		showPage: BOOLEAN; 
-		diffColor: LONGINT; 
+		diffColor: SIGNED32; 
 
 		PROCEDURE ^  & New*(view: DiffView); 
 		PROCEDURE ^ SetPage(pageStart, pageSize: SIZE); 
@@ -107,7 +107,7 @@ TYPE
 		PROCEDURE ^ WheelMove*(dz: SIZE); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	StrDiffView, StrOverview, StrNoWheelGrid: Strings.String; 
 
 	PROCEDURE ^ InitStrings; 

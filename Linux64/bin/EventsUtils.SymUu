@@ -29,13 +29,13 @@ TYPE
 		PROCEDURE ^  & Init*(maxNofWrappers, eventsPerWrapper: SIZE); 
 	END EventContainer; 
 
-	PROCEDURE ^ LoadFromFile*(CONST filename: ARRAY OF CHAR; VAR events: EventContainer; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
-	PROCEDURE ^ StoreToFile*(CONST filename: ARRAY OF CHAR; events: EventContainer; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ LoadFromFile*(CONST filename: ARRAY OF CHAR; VAR events: EventContainer; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ StoreToFile*(CONST filename: ARRAY OF CHAR; events: EventContainer; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ ToStream*(w: Streams.Writer; event: Events.Event); 
-	PROCEDURE ^ FromStream*(r: Streams.Reader; VAR event: Events.Event; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ FromStream*(r: Streams.Reader; VAR event: Events.Event; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ DateTimeFromStream(r: Streams.Reader; VAR dt: Dates.DateTime): BOOLEAN; 
-	PROCEDURE ^ GetTypeString*(type: LONGINT; VAR string: ARRAY OF CHAR); 
-	PROCEDURE ^ GetType*(CONST string: ARRAY OF CHAR): SHORTINT; 
+	PROCEDURE ^ GetTypeString*(type: SIGNED32; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ GetType*(CONST string: ARRAY OF CHAR): SIGNED8; 
 	PROCEDURE ^ GenerateEvent*(context: Commands.Context); 
 BEGIN
 END EventsUtils.

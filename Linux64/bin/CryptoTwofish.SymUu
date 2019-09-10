@@ -15,13 +15,13 @@ TYPE
 
 	Cipher* = OBJECT (Ciphers.Cipher)
 	VAR 
-		keybits: LONGINT; 
-		sbox: ARRAY 4 OF LONGINT; 
-		subkeys: ARRAY (8 + (2 * N)) OF LONGINT; 
+		keybits: SIGNED32; 
+		sbox: ARRAY 4 OF SIGNED32; 
+		subkeys: ARRAY (8 + (2 * N)) OF SIGNED32; 
 		iv: Block; 
 
-		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
-		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIGNED32); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; pos: SIZE); 
@@ -33,16 +33,16 @@ VAR
 	tab1: ARRAY 256 OF SET32; 
 
 	PROCEDURE ^ NewCipher*(): Ciphers.Cipher; 
-	PROCEDURE ^ m1(x: LONGINT): SET32; 
-	PROCEDURE ^ mx(x: LONGINT): SET32; 
-	PROCEDURE ^ my(x: LONGINT): SET32; 
-	PROCEDURE ^ split(x: LONGINT; VAR v: SKey); 
-	PROCEDURE  - Int(x: SET32): LONGINT;
+	PROCEDURE ^ m1(x: SIGNED32): SET32; 
+	PROCEDURE ^ mx(x: SIGNED32): SET32; 
+	PROCEDURE ^ my(x: SIGNED32): SET32; 
+	PROCEDURE ^ split(x: SIGNED32; VAR v: SKey); 
+	PROCEDURE  - Int(x: SET32): SIGNED32;
 	BEGIN
-		RETURN S.VAL(LONGINT, x)
+		RETURN S.VAL(SIGNED32, x)
 	END Int; 
-	PROCEDURE ^ F32(x: SET32; CONST k32: ARRAY OF LONGINT; keybits: LONGINT): LONGINT; 
-	PROCEDURE ^ Encode(k0, k1: LONGINT): LONGINT; 
+	PROCEDURE ^ F32(x: SET32; CONST k32: ARRAY OF SIGNED32; keybits: SIGNED32): SIGNED32; 
+	PROCEDURE ^ Encode(k0, k1: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Init0; 
 BEGIN
 END CryptoTwofish.

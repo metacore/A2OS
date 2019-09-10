@@ -29,7 +29,7 @@ TYPE
 
 		PROCEDURE ^  & init*; 
 		PROCEDURE ^ SetColor*(R, G, B, BL: SREAL); 
-		PROCEDURE ^ bounds*(i, j, k: LONGINT; VAR out: BOOLEAN); 
+		PROCEDURE ^ bounds*(i, j, k: SIGNED32; VAR out: BOOLEAN); 
 		PROCEDURE ^ fill*(v: Voxel); 
 		PROCEDURE ^ fillwithprobability*(v: Voxel; p: SREAL); 
 		PROCEDURE ^ fillchequer*(v, w: Voxel); 
@@ -38,9 +38,9 @@ TYPE
 		PROCEDURE ^ probe*(x, y, z: SREAL): Voxel; 
 		PROCEDURE ^ probeShade*(VAR ray: Ray; VAR dx, dy, dz: SREAL); 
 		PROCEDURE ^ deathray*(VAR ray: Ray); 
-		PROCEDURE ^ stroke*(p: PT; level: LONGINT; normal: PT; color: COLOR; mirror: BOOLEAN); 
-		PROCEDURE ^ strokevoxel*(p: PT; level: LONGINT; voxel: Voxel); 
-		PROCEDURE ^ line*(a, b: PT; level: LONGINT; v: Voxel); 
+		PROCEDURE ^ stroke*(p: PT; level: SIGNED32; normal: PT; color: COLOR; mirror: BOOLEAN); 
+		PROCEDURE ^ strokevoxel*(p: PT; level: SIGNED32; voxel: Voxel); 
+		PROCEDURE ^ line*(a, b: PT; level: SIGNED32; v: Voxel); 
 	END cell; 
 
 	AR6 = ARRAY 6 OF ARRAY 6 OF ARRAY 6 OF Voxel; 

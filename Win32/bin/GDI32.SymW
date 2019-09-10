@@ -81,9 +81,9 @@ TYPE
 	ColorRef* = User32.ColorRef; 
 
 	LogFont* = RECORD 
-		lfHeight*, lfWidth*, lfEscapement*, lfOrientation*, lfWeight*: LONGINT; 
+		lfHeight*, lfWidth*, lfEscapement*, lfOrientation*, lfWeight*: SIGNED32; 
 		lfItalic*, lfUnderline*, lfStrikeOut*: BOOLEAN; 
-		lfCharSet*, lfOutPrecision*, lfClipPrecision*, lfQuality*, lfPitchAndFamily*: SHORTINT; 
+		lfCharSet*, lfOutPrecision*, lfClipPrecision*, lfQuality*, lfPitchAndFamily*: SIGNED8; 
 		lfFaceName*: ARRAY LFFaceSize OF CHAR; 
 	END; 
 
@@ -94,28 +94,28 @@ TYPE
 	END; 
 
 	TextMetric* = RECORD 
-		tmHeight*, tmAscent*, tmDescent*, tmInternalLeading*, tmExternalLeading*: LONGINT; 
-		tmAveCharWidth*, tmMaxCharWidth*, tmWeight*, tmOverhang*: LONGINT; 
-		tmDigitizedAspectX*, tmDigitizedAspectY*: LONGINT; 
+		tmHeight*, tmAscent*, tmDescent*, tmInternalLeading*, tmExternalLeading*: SIGNED32; 
+		tmAveCharWidth*, tmMaxCharWidth*, tmWeight*, tmOverhang*: SIGNED32; 
+		tmDigitizedAspectX*, tmDigitizedAspectY*: SIGNED32; 
 		tmFirstChar*, tmLastChar*, tmDefaultChar*, tmBreakChar*: CHAR; 
 		tmItalic*, tmUnderlined*, tmStruckOut*: BOOLEAN; 
-		tmPitchAndFamily*, tmCharSet*: SHORTINT; 
+		tmPitchAndFamily*, tmCharSet*: SIGNED8; 
 	END; 
 
-	EnumFontFamProc* = PROCEDURE {WINAPI}(VAR lpelf: EnumLogFont; VAR lpntm: TextMetric; FontType: DWORD; lParam: User32.LParam):LONGINT; 
+	EnumFontFamProc* = PROCEDURE {WINAPI}(VAR lpelf: EnumLogFont; VAR lpntm: TextMetric; FontType: DWORD; lParam: User32.LParam):SIGNED32; 
 
-	EnumFontsProc* = PROCEDURE {WINAPI}(VAR lplf: LogFont; VAR lptm: TextMetric; dwType: DWORD; lpData: User32.LParam):LONGINT; 
+	EnumFontsProc* = PROCEDURE {WINAPI}(VAR lplf: LogFont; VAR lptm: TextMetric; dwType: DWORD; lpData: User32.LParam):SIGNED32; 
 
 	ABC* = RECORD 
-		abcA*, abcB*, abcC*: LONGINT; 
+		abcA*, abcB*, abcC*: SIGNED32; 
 	END; 
 
 	BitmapInfoHeader* = RECORD 
-		biSize*, biWidth*, biHeight*: LONGINT; 
-		biPlanes*, biBitCount*: INTEGER; 
-		biCompression*, biSizeImage*: LONGINT; 
-		biXPelsPerMeter*, biYPelsPerMeter*: LONGINT; 
-		biClrUsed*, biClrImportant*: LONGINT; 
+		biSize*, biWidth*, biHeight*: SIGNED32; 
+		biPlanes*, biBitCount*: SIGNED16; 
+		biCompression*, biSizeImage*: SIGNED32; 
+		biXPelsPerMeter*, biYPelsPerMeter*: SIGNED32; 
+		biClrUsed*, biClrImportant*: SIGNED32; 
 	END; 
 
 	BitmapInfo* = RECORD 
@@ -123,9 +123,9 @@ TYPE
 	END; 
 
 	DocInfo* = RECORD 
-		cbSize*: LONGINT; 
+		cbSize*: SIGNED32; 
 		lpszDocName*, lpszOutput*, lpszDatatype*: Kernel32.LPSTR; 
-		fwType*: LONGINT; 
+		fwType*: SIGNED32; 
 	END; 
 
 	PaletteEntry* = RECORD 
@@ -133,18 +133,18 @@ TYPE
 	END; 
 
 	LogPalette* = RECORD 
-		palVersion*, palNumEntries*: INTEGER; 
+		palVersion*, palNumEntries*: SIGNED16; 
 		palPalEntry*: ARRAY 1 OF PaletteEntry; 
 	END; 
 
 	GlyphMetrics* = RECORD 
-		gmBlackBoxX*, gmBlackBoxY*: LONGINT; 
+		gmBlackBoxX*, gmBlackBoxY*: SIGNED32; 
 		gmptGlyphOrigin*: User32.Point; 
-		gmCellIncX*, gmCellIncY*: INTEGER; 
+		gmCellIncX*, gmCellIncY*: SIGNED16; 
 	END; 
 
 	Fixed* = RECORD 
-		fract*, value*: INTEGER; 
+		fract*, value*: SIGNED16; 
 	END; 
 
 	Mat2* = RECORD 
@@ -153,87 +153,87 @@ TYPE
 	END; 
 
 	RgnDataHeader* = RECORD 
-		dwSize*, iType*, nCount*, nRgnSize*: LONGINT; 
+		dwSize*, iType*, nCount*, nRgnSize*: SIGNED32; 
 		rcBound*: User32.Rect; 
 	END; 
 VAR 
-	AddFontResource-: PROCEDURE {WINAPI}(VAR lpszFilename: ARRAY OF CHAR):LONGINT; 
-	BitBlt-: PROCEDURE {WINAPI}(hdcDest: User32.HDC; nXDest, nYDest, nWidth, nHeight: LONGINT; hdcSrc: User32.HDC; nXSrc, nYSrc, dwRop: LONGINT):Kernel32.BOOL; 
+	AddFontResource-: PROCEDURE {WINAPI}(VAR lpszFilename: ARRAY OF CHAR):SIGNED32; 
+	BitBlt-: PROCEDURE {WINAPI}(hdcDest: User32.HDC; nXDest, nYDest, nWidth, nHeight: SIGNED32; hdcSrc: User32.HDC; nXSrc, nYSrc, dwRop: SIGNED32):Kernel32.BOOL; 
 	CloseEnhMetaFile-: PROCEDURE {WINAPI}(hdc: User32.HDC):HEnhMetafile; 
 	CloseMetaFile-: PROCEDURE {WINAPI}(hdc: User32.HDC):HMetafile; 
-	CreateBitmap-: PROCEDURE {WINAPI}(nWidth, nHeight, cPlanes, cBitsPerPixel: LONGINT; VAR lpvBits: ARRAY OF SYSTEM.BYTE):HBitmap; 
-	CreateCompatibleBitmap-: PROCEDURE {WINAPI}(hdc: User32.HDC; nWidth, nHeight: LONGINT):HBitmap; 
+	CreateBitmap-: PROCEDURE {WINAPI}(nWidth, nHeight, cPlanes, cBitsPerPixel: SIGNED32; VAR lpvBits: ARRAY OF SYSTEM.BYTE):HBitmap; 
+	CreateCompatibleBitmap-: PROCEDURE {WINAPI}(hdc: User32.HDC; nWidth, nHeight: SIGNED32):HBitmap; 
 	CreateCompatibleDC-: PROCEDURE {WINAPI}(hdc: User32.HDC):User32.HDC; 
 	CreateDC-: PROCEDURE {WINAPI}(VAR lpszDriver, lpszDevice, lpszOuput: ARRAY OF CHAR; lpInitData: ANY):User32.HDC; 
-	CreateDIBSection-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpbi: BitmapInfo; iUsage: LONGINT; VAR adr: LONGINT; hSection: LONGINT; dwOffset: LONGINT):HBitmap; 
+	CreateDIBSection-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpbi: BitmapInfo; iUsage: SIGNED32; VAR adr: SIGNED32; hSection: SIGNED32; dwOffset: SIGNED32):HBitmap; 
 	CreateEnhMetaFile-: PROCEDURE {WINAPI}(VAR hdcRef: User32.HDC; VAR lpFilename: ARRAY OF CHAR; VAR lpRect: User32.Rect; VAR lpDescription: ARRAY OF CHAR):User32.HDC; 
 	CreateFontIndirect-: PROCEDURE {WINAPI}(VAR lplf: LogFont):HFont; 
-	CreateHatchBrush-: PROCEDURE {WINAPI}(fnStyle: LONGINT; clrref: ColorRef):HBrush; 
+	CreateHatchBrush-: PROCEDURE {WINAPI}(fnStyle: SIGNED32; clrref: ColorRef):HBrush; 
 	CreateMetaFile-: PROCEDURE {WINAPI}(VAR lpszFile: ARRAY OF CHAR):User32.HDC; 
 	CreatePatternBrush-: PROCEDURE {WINAPI}(hbmp: HBitmap):HBrush; 
-	CreatePen-: PROCEDURE {WINAPI}(fnPenStyle, nWidth: LONGINT; crColor: ColorRef):HPen; 
+	CreatePen-: PROCEDURE {WINAPI}(fnPenStyle, nWidth: SIGNED32; crColor: ColorRef):HPen; 
 	CreateSolidBrush-: PROCEDURE {WINAPI}(crColor: ColorRef):HBrush; 
-	CreateRectRgn-: PROCEDURE {WINAPI}(nLeftRect, nTopRect, nRightRect, nBottomRect: LONGINT):HRgn; 
+	CreateRectRgn-: PROCEDURE {WINAPI}(nLeftRect, nTopRect, nRightRect, nBottomRect: SIGNED32):HRgn; 
 	CreateRectRgnIndirect-: PROCEDURE {WINAPI}(lprc: User32.Rect):HRgn; 
 	DeleteDC-: PROCEDURE {WINAPI}(hdc: User32.HDC):Kernel32.BOOL; 
 	DeleteObject-: PROCEDURE {WINAPI}(hObject: HGDIObj):Kernel32.BOOL; 
-	DPtoLP-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpPoints: ARRAY OF User32.Point; nCount: LONGINT):Kernel32.BOOL; 
-	Ellipse-: PROCEDURE {WINAPI}(hdc: User32.HDC; nLeftRect, nTopRect, nRightRect, nBottomRect: LONGINT):Kernel32.BOOL; 
-	EndDoc-: PROCEDURE {WINAPI}(hdc: User32.HDC):LONGINT; 
-	EndPage-: PROCEDURE {WINAPI}(hdc: User32.HDC):LONGINT; 
-	EnumFontFamilies-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpszFamily: ARRAY OF CHAR; lpEnumFontFamProc: EnumFontFamProc; lParam: User32.LParam):LONGINT; 
-	EnumFonts-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpFaceName: ARRAY OF CHAR; lpFontFunc: EnumFontsProc; lParam: User32.LParam):LONGINT; 
-	ExtSelectClipRgn-: PROCEDURE {WINAPI}(hdc: User32.HDC; hrgn: HRgn; fnMode: LONGINT):LONGINT; 
+	DPtoLP-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpPoints: ARRAY OF User32.Point; nCount: SIGNED32):Kernel32.BOOL; 
+	Ellipse-: PROCEDURE {WINAPI}(hdc: User32.HDC; nLeftRect, nTopRect, nRightRect, nBottomRect: SIGNED32):Kernel32.BOOL; 
+	EndDoc-: PROCEDURE {WINAPI}(hdc: User32.HDC):SIGNED32; 
+	EndPage-: PROCEDURE {WINAPI}(hdc: User32.HDC):SIGNED32; 
+	EnumFontFamilies-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpszFamily: ARRAY OF CHAR; lpEnumFontFamProc: EnumFontFamProc; lParam: User32.LParam):SIGNED32; 
+	EnumFonts-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpFaceName: ARRAY OF CHAR; lpFontFunc: EnumFontsProc; lParam: User32.LParam):SIGNED32; 
+	ExtSelectClipRgn-: PROCEDURE {WINAPI}(hdc: User32.HDC; hrgn: HRgn; fnMode: SIGNED32):SIGNED32; 
 	GdiFlush-: PROCEDURE {WINAPI}():Kernel32.BOOL; 
-	GetBitmapBits-: PROCEDURE {WINAPI}(hbmp: HBitmap; cbBuffer: LONGINT; lpvBits: ADDRESS):LONGINT; 
-	GetCharABCWidths-: PROCEDURE {WINAPI}(hdc: User32.HDC; uFirstChar, uLastChar: LONGINT; VAR lpabc: ABC):Kernel32.BOOL; 
-	GetCharWidth32-: PROCEDURE {WINAPI}(hdc: User32.HDC; iFirstChar, iLastChar: LONGINT; VAR lpBuffer: ARRAY OF LONGINT):Kernel32.BOOL; 
-	GetClipBox-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lprc: User32.Rect):LONGINT; 
-	GetClipRgn-: PROCEDURE {WINAPI}(hdc: User32.HDC; hrgn: HRgn):LONGINT; 
-	GetDeviceCaps-: PROCEDURE {WINAPI}(hdc: User32.HDC; nIndex: LONGINT):LONGINT; 
-	GetDIBits-: PROCEDURE {WINAPI}(hdc: User32.HDC; hbmp: HBitmap; uStartScanLine, cScanLines: LONGINT; lpvBits: ADDRESS; VAR lpbi: BitmapInfo; uUsage: LONGINT):LONGINT; 
-	GetGlyphOutline-: PROCEDURE {WINAPI}(hdc: User32.HDC; uChar, uFormat: LONGINT; lpgm: GlyphMetrics; cbBuffer: LONGINT; VAR lpvBuffer: ARRAY OF SYSTEM.BYTE; lpmat2: Mat2):LONGINT; 
-	GetMapMode-: PROCEDURE {WINAPI}(hdc: User32.HDC):LONGINT; 
+	GetBitmapBits-: PROCEDURE {WINAPI}(hbmp: HBitmap; cbBuffer: SIGNED32; lpvBits: ADDRESS):SIGNED32; 
+	GetCharABCWidths-: PROCEDURE {WINAPI}(hdc: User32.HDC; uFirstChar, uLastChar: SIGNED32; VAR lpabc: ABC):Kernel32.BOOL; 
+	GetCharWidth32-: PROCEDURE {WINAPI}(hdc: User32.HDC; iFirstChar, iLastChar: SIGNED32; VAR lpBuffer: ARRAY OF SIGNED32):Kernel32.BOOL; 
+	GetClipBox-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lprc: User32.Rect):SIGNED32; 
+	GetClipRgn-: PROCEDURE {WINAPI}(hdc: User32.HDC; hrgn: HRgn):SIGNED32; 
+	GetDeviceCaps-: PROCEDURE {WINAPI}(hdc: User32.HDC; nIndex: SIGNED32):SIGNED32; 
+	GetDIBits-: PROCEDURE {WINAPI}(hdc: User32.HDC; hbmp: HBitmap; uStartScanLine, cScanLines: SIGNED32; lpvBits: ADDRESS; VAR lpbi: BitmapInfo; uUsage: SIGNED32):SIGNED32; 
+	GetGlyphOutline-: PROCEDURE {WINAPI}(hdc: User32.HDC; uChar, uFormat: SIGNED32; lpgm: GlyphMetrics; cbBuffer: SIGNED32; VAR lpvBuffer: ARRAY OF SYSTEM.BYTE; lpmat2: Mat2):SIGNED32; 
+	GetMapMode-: PROCEDURE {WINAPI}(hdc: User32.HDC):SIGNED32; 
 	GetNearestColor-: PROCEDURE {WINAPI}(hdc: User32.HDC; crColor: ColorRef):ColorRef; 
-	GetRegionData-: PROCEDURE {WINAPI}(hRgn: HRgn; dwCount: LONGINT; VAR lpRgnData: RgnDataHeader):LONGINT; 
-	GetStockObject-: PROCEDURE {WINAPI}(fnObject: LONGINT):HGDIObj; 
-	GetSystemPaletteEntries-: PROCEDURE {WINAPI}(hdc: User32.HDC; iStartIndex, nEntries: LONGINT; VAR lppe: ARRAY OF PaletteEntry):LONGINT; 
-	GetTextExtentPoint-: PROCEDURE {WINAPI}(hDC: User32.HDC; VAR lpString: ARRAY OF CHAR; cbString: LONGINT; VAR lpSize: User32.Size):Kernel32.BOOL; 
+	GetRegionData-: PROCEDURE {WINAPI}(hRgn: HRgn; dwCount: SIGNED32; VAR lpRgnData: RgnDataHeader):SIGNED32; 
+	GetStockObject-: PROCEDURE {WINAPI}(fnObject: SIGNED32):HGDIObj; 
+	GetSystemPaletteEntries-: PROCEDURE {WINAPI}(hdc: User32.HDC; iStartIndex, nEntries: SIGNED32; VAR lppe: ARRAY OF PaletteEntry):SIGNED32; 
+	GetTextExtentPoint-: PROCEDURE {WINAPI}(hDC: User32.HDC; VAR lpString: ARRAY OF CHAR; cbString: SIGNED32; VAR lpSize: User32.Size):Kernel32.BOOL; 
 	GetTextMetrics-: PROCEDURE {WINAPI}(hDC: User32.HDC; VAR lptm: TextMetric):Kernel32.BOOL; 
-	IntersectClipRect-: PROCEDURE {WINAPI}(hDC: User32.HDC; nLeftRect, nTopRect, nRightRect, nBottomRect: LONGINT):LONGINT; 
-	LineTo-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXEnd, nYEnd: LONGINT):Kernel32.BOOL; 
-	LPtoDP-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpPoints: ARRAY OF User32.Point; nCount: LONGINT):Kernel32.BOOL; 
-	MoveToEx-: PROCEDURE {WINAPI}(hdc: User32.HDC; X, Y: LONGINT; VAR lpPoint: User32.Rect):Kernel32.BOOL; 
-	PatBlt-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXLeft, nLeft, nWidth, nHeight, dwRop: LONGINT):Kernel32.BOOL; 
+	IntersectClipRect-: PROCEDURE {WINAPI}(hDC: User32.HDC; nLeftRect, nTopRect, nRightRect, nBottomRect: SIGNED32):SIGNED32; 
+	LineTo-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXEnd, nYEnd: SIGNED32):Kernel32.BOOL; 
+	LPtoDP-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpPoints: ARRAY OF User32.Point; nCount: SIGNED32):Kernel32.BOOL; 
+	MoveToEx-: PROCEDURE {WINAPI}(hdc: User32.HDC; X, Y: SIGNED32; VAR lpPoint: User32.Rect):Kernel32.BOOL; 
+	PatBlt-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXLeft, nLeft, nWidth, nHeight, dwRop: SIGNED32):Kernel32.BOOL; 
 	PlayEnhMetaFile-: PROCEDURE {WINAPI}(hdc: User32.HDC; hemf: HEnhMetafile; lpRect: User32.Rect):Kernel32.BOOL; 
 	PlayMetaFile-: PROCEDURE {WINAPI}(hdc: User32.HDC; hmf: HMetafile):Kernel32.BOOL; 
-	Rectangle-: PROCEDURE {WINAPI}(hdc: User32.HDC; nLeftRect, nTopRect, nRightRect, nBottomRect: LONGINT):Kernel32.BOOL; 
+	Rectangle-: PROCEDURE {WINAPI}(hdc: User32.HDC; nLeftRect, nTopRect, nRightRect, nBottomRect: SIGNED32):Kernel32.BOOL; 
 	RemoveFontResource-: PROCEDURE {WINAPI}(VAR lpFileName: ARRAY OF CHAR):Kernel32.BOOL; 
-	RestoreDC-: PROCEDURE {WINAPI}(hdc: User32.HDC; nSavedDC: LONGINT):Kernel32.BOOL; 
-	SaveDC-: PROCEDURE {WINAPI}(hdc: User32.HDC):LONGINT; 
-	SelectClipRgn-: PROCEDURE {WINAPI}(hdc: User32.HDC; hrgn: HRgn):LONGINT; 
+	RestoreDC-: PROCEDURE {WINAPI}(hdc: User32.HDC; nSavedDC: SIGNED32):Kernel32.BOOL; 
+	SaveDC-: PROCEDURE {WINAPI}(hdc: User32.HDC):SIGNED32; 
+	SelectClipRgn-: PROCEDURE {WINAPI}(hdc: User32.HDC; hrgn: HRgn):SIGNED32; 
 	SelectObject-: PROCEDURE {WINAPI}(hdc: User32.HDC; hgdiobj: HGDIObj):HGDIObj; 
 	SetBkColor-: PROCEDURE {WINAPI}(hdc: User32.HDC; crColor: ColorRef):ColorRef; 
-	SetBkMode-: PROCEDURE {WINAPI}(hdc: User32.HDC; iBkMode: LONGINT):LONGINT; 
-	SetBrushOrgEx-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXOrg, nYOrg: LONGINT; VAR lppt: User32.Point):Kernel32.BOOL; 
-	SetDIBitsToDevice-: PROCEDURE {WINAPI}(hdc: User32.HDC; XDest, YDest, dwWidth, dwHeight, XSrc, YSrc, uStartScan, cScanLines: LONGINT; lpvBits: ADDRESS; VAR lpbmi: BitmapInfo; fuColorUse: LONGINT):LONGINT; 
-	SetMapMode-: PROCEDURE {WINAPI}(hdc: User32.HDC; fnMapMode: LONGINT):LONGINT; 
-	SetROP2-: PROCEDURE {WINAPI}(hdc: User32.HDC; fnDrawMode: LONGINT):LONGINT; 
-	SetTextAlign-: PROCEDURE {WINAPI}(hdc: User32.HDC; fMode: DWORD):LONGINT; 
+	SetBkMode-: PROCEDURE {WINAPI}(hdc: User32.HDC; iBkMode: SIGNED32):SIGNED32; 
+	SetBrushOrgEx-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXOrg, nYOrg: SIGNED32; VAR lppt: User32.Point):Kernel32.BOOL; 
+	SetDIBitsToDevice-: PROCEDURE {WINAPI}(hdc: User32.HDC; XDest, YDest, dwWidth, dwHeight, XSrc, YSrc, uStartScan, cScanLines: SIGNED32; lpvBits: ADDRESS; VAR lpbmi: BitmapInfo; fuColorUse: SIGNED32):SIGNED32; 
+	SetMapMode-: PROCEDURE {WINAPI}(hdc: User32.HDC; fnMapMode: SIGNED32):SIGNED32; 
+	SetROP2-: PROCEDURE {WINAPI}(hdc: User32.HDC; fnDrawMode: SIGNED32):SIGNED32; 
+	SetTextAlign-: PROCEDURE {WINAPI}(hdc: User32.HDC; fMode: DWORD):SIGNED32; 
 	SetTextColor-: PROCEDURE {WINAPI}(hdc: User32.HDC; crColor: ColorRef):ColorRef; 
-	SetWindowExtEx-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXExtent, nYExtent: LONGINT; VAR lpSize: User32.Size):Kernel32.BOOL; 
-	SetWindowOrgEx-: PROCEDURE {WINAPI}(hdc: User32.HDC; X, Y: LONGINT; VAR lpPoint: User32.Point):Kernel32.BOOL; 
-	StartDoc-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpdi: DocInfo):LONGINT; 
-	StartPage-: PROCEDURE {WINAPI}(hdc: User32.HDC):LONGINT; 
-	StretchBlt-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXOriginDest, nYOriginDest, nWidthDest, nHeightDest: LONGINT; hdcSrc: User32.HDC; nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc, dwRop: LONGINT):Kernel32.BOOL; 
-	StretchDIBits-: PROCEDURE {WINAPI}(hdc: User32.HDC; XDest, YDest, nDestWidth, nDestHeight, XSrc, YSrc, nSrcWidth, nSrcHeight: LONGINT; lpBits: ADDRESS; VAR lpBitsInfo: BitmapInfo; iUsage, dwRop: LONGINT):LONGINT; 
-	TextOut-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXStart, nYStart: LONGINT; VAR lpString: ARRAY OF CHAR; cbString: LONGINT):Kernel32.BOOL; 
+	SetWindowExtEx-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXExtent, nYExtent: SIGNED32; VAR lpSize: User32.Size):Kernel32.BOOL; 
+	SetWindowOrgEx-: PROCEDURE {WINAPI}(hdc: User32.HDC; X, Y: SIGNED32; VAR lpPoint: User32.Point):Kernel32.BOOL; 
+	StartDoc-: PROCEDURE {WINAPI}(hdc: User32.HDC; VAR lpdi: DocInfo):SIGNED32; 
+	StartPage-: PROCEDURE {WINAPI}(hdc: User32.HDC):SIGNED32; 
+	StretchBlt-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXOriginDest, nYOriginDest, nWidthDest, nHeightDest: SIGNED32; hdcSrc: User32.HDC; nXOriginSrc, nYOriginSrc, nWidthSrc, nHeightSrc, dwRop: SIGNED32):Kernel32.BOOL; 
+	StretchDIBits-: PROCEDURE {WINAPI}(hdc: User32.HDC; XDest, YDest, nDestWidth, nDestHeight, XSrc, YSrc, nSrcWidth, nSrcHeight: SIGNED32; lpBits: ADDRESS; VAR lpBitsInfo: BitmapInfo; iUsage, dwRop: SIGNED32):SIGNED32; 
+	TextOut-: PROCEDURE {WINAPI}(hdc: User32.HDC; nXStart, nYStart: SIGNED32; VAR lpString: ARRAY OF CHAR; cbString: SIGNED32):Kernel32.BOOL; 
 	T-: ARRAY 256 OF CHAR; 
 
-	PROCEDURE ^ RGB*(red, green, blue: LONGINT): ColorRef; 
-	PROCEDURE ^ Red*(col: ColorRef): LONGINT; 
-	PROCEDURE ^ Green*(col: ColorRef): LONGINT; 
-	PROCEDURE ^ Blue*(col: ColorRef): LONGINT; 
+	PROCEDURE ^ RGB*(red, green, blue: SIGNED32): ColorRef; 
+	PROCEDURE ^ Red*(col: ColorRef): SIGNED32; 
+	PROCEDURE ^ Green*(col: ColorRef): SIGNED32; 
+	PROCEDURE ^ Blue*(col: ColorRef): SIGNED32; 
 	PROCEDURE ^ GetProcAddress(hModule: ADDRESS; VAR adr: ADDRESS; procName: ARRAY OF CHAR); 
 	PROCEDURE ^ Init; 
 BEGIN

@@ -15,7 +15,7 @@ TYPE
 
 	tLayerDesc = RECORD (vyCharts.tLayerDesc)
 		locked: BOOLEAN; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		slider: tCtlSlider; 
 	END; 
 
@@ -24,8 +24,8 @@ TYPE
 VAR 
 	ball, canal: vyHostDisplay.tSign; 
 
-	PROCEDURE ^ Line(x, y, X, Y: INTEGER); 
-	PROCEDURE ^ MoveBallTo(slider2d: tLayer; pos: LONGINT); 
+	PROCEDURE ^ Line(x, y, X, Y: SIGNED16); 
+	PROCEDURE ^ MoveBallTo(slider2d: tLayer; pos: SIGNED32); 
 	PROCEDURE ^ Recall(slider2d: tLayer; VAR msg: Display.DisplayMsg); 
 	PROCEDURE ^ Copy(sLayer, dLayer: tLayer); 
 	PROCEDURE ^ DefinePath(slider2d: tLayer; VAR event: vyEvents.EventMsg); 

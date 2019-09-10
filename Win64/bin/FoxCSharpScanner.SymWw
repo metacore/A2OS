@@ -126,7 +126,7 @@ TYPE
 
 	KeywordTable* = FoxScanner.KeywordTable; 
 
-	Symbol* = LONGINT; 
+	Symbol* = SIGNED32; 
 
 	Position* = Basic.Position; 
 
@@ -138,9 +138,9 @@ TYPE
 		string*: StringType; 
 		stringLength*: SIZE; 
 		numberType*: FoxScanner.SubType; 
-		integer*: HUGEINT; 
+		integer*: SIGNED64; 
 		character*: CHAR; 
-		real*: LONGREAL; 
+		real*: FLOAT64; 
 	END; 
 
 	StringMaker* = FoxScanner.StringMaker; 
@@ -156,9 +156,9 @@ TYPE
 		stringWriter: Streams.Writer; 
 		stringMaker: StringMaker; 
 
-		PROCEDURE ^  & InitializeScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics); 
+		PROCEDURE ^  & InitializeScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: SIGNED32; diagnostics: Diagnostics.Diagnostics); 
 		PROCEDURE ^ ErrorS(CONST msg: ARRAY OF CHAR); 
-		PROCEDURE ^ Error(code: INTEGER); 
+		PROCEDURE ^ Error(code: SIGNED16); 
 		PROCEDURE ^ GetNextCharacter; 
 		PROCEDURE ^ IsNewlineCharacter(ch: CHAR): BOOLEAN; 
 		PROCEDURE ^ GetEscapeSequence(VAR esc: CHAR); 
@@ -178,11 +178,11 @@ VAR
 	symbols-: ARRAY (EndOfText + 1) OF Keyword; 
 	keywords: KeywordTable; 
 
-	PROCEDURE ^ NewScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics): Scanner; 
+	PROCEDURE ^ NewScanner*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: SIGNED32; diagnostics: Diagnostics.Diagnostics): Scanner; 
 	PROCEDURE ^ TokenToString*(CONST token: Token; VAR str: ARRAY OF CHAR); 
 	PROCEDURE ^ OutToken*(w: Streams.Writer; CONST token: Token); 
 	PROCEDURE ^ InitReservedCharacters; 
-	PROCEDURE ^ GetKeyword*(symbol: LONGINT; VAR identifier: IdentifierType); 
+	PROCEDURE ^ GetKeyword*(symbol: SIGNED32; VAR identifier: IdentifierType); 
 	PROCEDURE ^ InitSymbols; 
 	PROCEDURE ^ InitKeywords; 
 	PROCEDURE ^ ReportKeywords*(context: Commands.Context); 

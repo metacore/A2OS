@@ -17,40 +17,40 @@ CONST
 	DebugLiner = FALSE; 
 TYPE 
 	LabelInfo* = RECORD 
-		firstPos: LONGINT; 
-		nofPixels: LONGINT; 
-		label: INTEGER; 
+		firstPos: SIGNED32; 
+		nofPixels: SIGNED32; 
+		label: SIGNED16; 
 	END; 
 
 	Point = RECORD 
 		x, y: SIZE; 
 	END; 
 VAR 
-	threshold, pixThreshold: LONGINT; 
-	labelBuffer: POINTER TO ARRAY OF INTEGER; 
-	equivalence: ARRAY (32 * 1024) OF INTEGER; 
+	threshold, pixThreshold: SIGNED32; 
+	labelBuffer: POINTER TO ARRAY OF SIGNED16; 
+	equivalence: ARRAY (32 * 1024) OF SIGNED16; 
 	labelInfo: ARRAY (32 * 1024) OF LabelInfo; 
-	labelColor: ARRAY (32 * 1024) OF LONGINT; 
+	labelColor: ARRAY (32 * 1024) OF SIGNED32; 
 	g: WMGraphics.BufferCanvas; 
-	dirX, dirY: ARRAY 8 OF LONGINT; 
+	dirX, dirY: ARRAY 8 OF SIGNED32; 
 	rectified: VideoExample.PreviewWindow; 
 	intensityBuffer, thresholdBuffer: POINTER TO ARRAY OF CHAR; 
 
-	PROCEDURE ^ RGBToYUVReal(r, g, b: LONGINT; VAR y, u, v: LONGINT); 
-	PROCEDURE ^ CalculateUnitSquareHomography(CONST p: ARRAY OF Point; VAR H, inverse: ARRAY OF LONGREAL); 
-	PROCEDURE ^ MapProjective(CONST H: ARRAY OF LONGREAL; u, v: LONGREAL; VAR x, y: LONGREAL); 
-	PROCEDURE ^ MapInverseProjective(CONST H: ARRAY OF LONGREAL; u, v: LONGREAL; VAR x, y: LONGREAL); 
+	PROCEDURE ^ RGBToYUVReal(r, g, b: SIGNED32; VAR y, u, v: SIGNED32); 
+	PROCEDURE ^ CalculateUnitSquareHomography(CONST p: ARRAY OF Point; VAR H, inverse: ARRAY OF FLOAT64); 
+	PROCEDURE ^ MapProjective(CONST H: ARRAY OF FLOAT64; u, v: FLOAT64; VAR x, y: FLOAT64); 
+	PROCEDURE ^ MapInverseProjective(CONST H: ARRAY OF FLOAT64; u, v: FLOAT64; VAR x, y: FLOAT64); 
 	PROCEDURE ^ Transform(src, dst: Raster.Image; CONST points: ARRAY OF Point); 
 	PROCEDURE ^ SearchHVLines(buffer: Raster.Image); 
 	PROCEDURE ^ IsEmptyField(buffer: Raster.Image; x, y, w, h: SIZE): BOOLEAN; 
-	PROCEDURE ^ Dist(buffer: Raster.Image; x0, y0, x1, y1, w, h: SIZE): LONGINT; 
+	PROCEDURE ^ Dist(buffer: Raster.Image; x0, y0, x1, y1, w, h: SIZE): SIGNED32; 
 	PROCEDURE ^ CheckFields(buffer: Raster.Image); 
-	PROCEDURE ^ BinaryLabler*(buffer: Raster.Image; VAR labelBuffer, equivalence: ARRAY OF INTEGER; colorThreshold, pixelThreshold, maxLabels: LONGINT; VAR labelInfo: ARRAY OF LabelInfo; unifyLabels: BOOLEAN; VAR nofFLabels: LONGINT; VAR res: WORD); 
-	PROCEDURE ^ Trace(buffer: Raster.Image; CONST labelBuffer: ARRAY OF INTEGER; VAR labelInfo: LabelInfo; VAR length: LONGINT; VAR path: ARRAY OF Point; VAR res: WORD); 
-	PROCEDURE ^ SimplifyPoly(VAR path: ARRAY OF Point; nofPoints, tolerance: LONGINT; VAR resultPoint: LONGINT); 
-	PROCEDURE ^ ExtractLines(buffer: Raster.Image; CONST path: ARRAY OF Point; pathLength: LONGINT; VAR poly: ARRAY OF Point; VAR nofPoints: LONGINT); 
-	PROCEDURE ^ GetTimer(): HUGEINT; 
-	PROCEDURE ^ GetFreq(): HUGEINT; 
+	PROCEDURE ^ BinaryLabler*(buffer: Raster.Image; VAR labelBuffer, equivalence: ARRAY OF SIGNED16; colorThreshold, pixelThreshold, maxLabels: SIGNED32; VAR labelInfo: ARRAY OF LabelInfo; unifyLabels: BOOLEAN; VAR nofFLabels: SIGNED32; VAR res: INTEGER); 
+	PROCEDURE ^ Trace(buffer: Raster.Image; CONST labelBuffer: ARRAY OF SIGNED16; VAR labelInfo: LabelInfo; VAR length: SIGNED32; VAR path: ARRAY OF Point; VAR res: INTEGER); 
+	PROCEDURE ^ SimplifyPoly(VAR path: ARRAY OF Point; nofPoints, tolerance: SIGNED32; VAR resultPoint: SIGNED32); 
+	PROCEDURE ^ ExtractLines(buffer: Raster.Image; CONST path: ARRAY OF Point; pathLength: SIGNED32; VAR poly: ARRAY OF Point; VAR nofPoints: SIGNED32); 
+	PROCEDURE ^ GetTimer(): SIGNED64; 
+	PROCEDURE ^ GetFreq(): SIGNED64; 
 	PROCEDURE ^ Label2(buffer: Raster.Image); 
 	PROCEDURE ^ YUVFilter(buffer: Raster.Image); 
 	PROCEDURE ^ SetYUVFilter*; 

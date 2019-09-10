@@ -20,15 +20,15 @@ TYPE
 		random: Random.Generator; 
 		timer: Kernel.Timer; 
 		alive, dead: BOOLEAN; 
-		i, minValue, maxValue: LONGINT; 
+		i, minValue, maxValue: SIGNED32; 
 
 		PROCEDURE ^ Stop; 
-		PROCEDURE ^  & Init*(nbrOfButtons: LONGINT); 
+		PROCEDURE ^  & Init*(nbrOfButtons: SIGNED32); 
 	BEGIN{ACTIVE} 
 	END SimulatedJoystick; 
 VAR 
 	joysticks: ARRAY MaxSimulatedJoysticks OF SimulatedJoystick; 
-	nbrOfJoysticks: LONGINT; 
+	nbrOfJoysticks: SIGNED32; 
 
 	PROCEDURE ^ CreateJoystick*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 

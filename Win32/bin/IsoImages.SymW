@@ -27,40 +27,40 @@ TYPE
 	BCValidationEntry = RECORD 
 		HeaderId: CHAR; 
 		PlatformId: CHAR; 
-		Reserved: INTEGER; 
+		Reserved: SIGNED16; 
 		IdString: ARRAY 24 OF CHAR; 
-		Checksum: INTEGER; 
+		Checksum: SIGNED16; 
 		KeyBytes: ARRAY 2 OF CHAR; 
 	END; 
 
 	BCInitialDefaultEntry = RECORD 
 		BootIndicator: CHAR; 
 		BootMediaType: CHAR; 
-		LoadSegment: INTEGER; 
+		LoadSegment: SIGNED16; 
 		SystemType: CHAR; 
 		Unused1: CHAR; 
-		SectorCount: INTEGER; 
-		LoadRBA: LONGINT; 
+		SectorCount: SIGNED16; 
+		LoadRBA: SIGNED32; 
 		Unused2: ARRAY 20 OF CHAR; 
 	END; 
 
-	PROCEDURE ^ WriteImage(w: Streams.Writer; r: Streams.Reader; imageSize: LONGINT); 
+	PROCEDURE ^ WriteImage(w: Streams.Writer; r: Streams.Reader; imageSize: SIGNED32); 
 	PROCEDURE ^ WriteElToritoDescriptor(w: Streams.Writer); 
 	PROCEDURE ^ WriteBootCatalog(w: Streams.Writer); 
 	PROCEDURE ^ WriteIsoFSData(w: Streams.Writer); 
 	PROCEDURE ^ WriteTypeLPathTable(w: Streams.Writer); 
 	PROCEDURE ^ WriteTypeMPathTable(w: Streams.Writer); 
-	PROCEDURE ^ WritePrimaryVolumeDescriptor(w: Streams.Writer; isoImageSectorCount: LONGINT); 
+	PROCEDURE ^ WritePrimaryVolumeDescriptor(w: Streams.Writer; isoImageSectorCount: SIGNED32); 
 	PROCEDURE ^ WriteSetTerminatorDescriptor(w: Streams.Writer); 
 	PROCEDURE ^ WriteDirectoryRecord(w: Streams.Writer); 
-	PROCEDURE ^ CalcIsoImageSectorCount(inputImageSize: LONGINT): LONGINT; 
-	PROCEDURE ^ WriteBothByteOrder32(w: Streams.Writer; x: LONGINT); 
-	PROCEDURE ^ WriteBothByteOrder16(w: Streams.Writer; x: INTEGER); 
+	PROCEDURE ^ CalcIsoImageSectorCount(inputImageSize: SIGNED32): SIGNED32; 
+	PROCEDURE ^ WriteBothByteOrder32(w: Streams.Writer; x: SIGNED32); 
+	PROCEDURE ^ WriteBothByteOrder16(w: Streams.Writer; x: SIGNED16); 
 	PROCEDURE ^ WriteByteRep(w: Streams.Writer; b: CHAR; n: SIZE); 
-	PROCEDURE ^ WriteStringWithPadding(w: Streams.Writer; CONST str: ARRAY OF CHAR; padChar: CHAR; len: LONGINT); 
-	PROCEDURE ^ WriteEmptySectors(w: Streams.Writer; n: LONGINT); 
-	PROCEDURE ^ CalcChecksum16(CONST buf: ARRAY OF CHAR): INTEGER; 
-	PROCEDURE ^ MakeImage*(CONST input, output: ARRAY OF CHAR; VAR imageSize, res: LONGINT); 
+	PROCEDURE ^ WriteStringWithPadding(w: Streams.Writer; CONST str: ARRAY OF CHAR; padChar: CHAR; len: SIGNED32); 
+	PROCEDURE ^ WriteEmptySectors(w: Streams.Writer; n: SIGNED32); 
+	PROCEDURE ^ CalcChecksum16(CONST buf: ARRAY OF CHAR): SIGNED16; 
+	PROCEDURE ^ MakeImage*(CONST input, output: ARRAY OF CHAR; VAR imageSize, res: SIGNED32); 
 	PROCEDURE ^ Make*(context: Commands.Context); 
 BEGIN
 END IsoImages.

@@ -8,7 +8,7 @@ TYPE
 
 	ModuleName* = Modules.Name; 
 VAR 
-	res*: INTEGER; 
+	res*: SIGNED16; 
 	resMsg*: ARRAY 256 OF CHAR; 
 	extension*: ARRAY 8 OF CHAR; 
 

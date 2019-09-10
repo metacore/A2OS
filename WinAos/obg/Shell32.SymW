@@ -9,7 +9,7 @@ TYPE
 
 	HINSTANCE* = Kernel32.HINSTANCE; 
 
-	INT* = LONGINT; 
+	INT* = SIGNED32; 
 VAR 
 	shell32: Kernel32.HMODULE; 
 	ShellExecute-: PROCEDURE {WINAPI}(hwnd: HWND; lpOperation, lpFile: ARRAY OF CHAR; lpParameters, lpDirectory: LPCSTR; nShowCmd: INT):HINSTANCE; 

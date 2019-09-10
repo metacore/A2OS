@@ -2,10 +2,10 @@ MODULE Builtins;
 	IMPORT SYSTEM;
 VAR 
 	kernelModule-: ARRAY 32 OF ADDRESS; 
-	modules-: LONGINT; 
+	modules-: SIGNED32; 
 
 	PROCEDURE ^ InsertModule*(a: ADDRESS): BOOLEAN; 
-	PROCEDURE ^ CompareString*(CONST left, right: ARRAY OF CHAR): SHORTINT; 
+	PROCEDURE ^ CompareString*(CONST left, right: ARRAY OF CHAR): SIGNED8; 
 	PROCEDURE ^ CopyString*(VAR dest: ARRAY OF CHAR; CONST src: ARRAY OF CHAR); 
 	PROCEDURE ^ EnsureAllocatedStack*(size: SIZE); 
 BEGIN

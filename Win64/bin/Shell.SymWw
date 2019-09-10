@@ -66,14 +66,14 @@ TYPE
 		next: Alias; 
 	END; 
 
-	NotifyProcedure* = PROCEDURE {DELEGATE}(command: WORD); 
+	NotifyProcedure* = PROCEDURE {DELEGATE}(command: INTEGER); 
 
 	Shell* = OBJECT {EXCLUSIVE} 
 	VAR 
 		echo, dead, close: BOOLEAN; 
 		context: Commands.Context; 
 		command: ARRAY MaxLen OF CHAR; 
-		res: WORD; 
+		res: INTEGER; 
 		nestingLevel: SIZE; 
 		aliases: Alias; 
 		prompt: ARRAY 32 OF CHAR; 
@@ -86,7 +86,7 @@ TYPE
 		PROCEDURE ^ Exit*; 
 		PROCEDURE ^ DeleteStringFromDisplay(CONST x: ARRAY OF CHAR); 
 		PROCEDURE ^ ReadCommand(VAR command: ARRAY OF CHAR): CHAR; 
-		PROCEDURE ^ Parse(VAR cmd: Command; VAR wait: BOOLEAN): WORD; 
+		PROCEDURE ^ Parse(VAR cmd: Command; VAR wait: BOOLEAN): INTEGER; 
 		PROCEDURE ^ ReadAlias(cmd: Command; verbose: BOOLEAN); 
 		PROCEDURE ^ ReplaceAlias(cmd: Command): BOOLEAN; 
 		PROCEDURE ^ ShowHelp; 

@@ -40,17 +40,17 @@ TYPE
 	Palette* = OBJECT 
 	VAR 
 		col*: POINTER TO ARRAY OF Pixel; 
-		used*: LONGINT; 
+		used*: SIGNED32; 
 		clut: CLUTs.CLUT; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Init*(used: LONGINT); 
+		PROCEDURE ^ Init*(used: SIGNED32); 
 	END Palette; 
 
 	Format0* = RECORD 
-		code*: SHORTINT; 
-		bpp*: SHORTINT; 
-		align*: SHORTINT; 
+		code*: SIGNED8; 
+		bpp*: SIGNED8; 
+		align*: SIGNED8; 
 		components*: SET; 
 		pal*: Palette; 
 	END; 
@@ -73,10 +73,10 @@ TYPE
 
 	Mode0* = RECORD 
 		src*, dst*: Format; 
-		op*: WORD; 
+		op*: INTEGER; 
 		col*: Pixel; 
 		buf: Pixel; 
-		map: POINTER TO ARRAY OF INTEGER; 
+		map: POINTER TO ARRAY OF SIGNED16; 
 	END; 
 
 	TransferProc* = PROCEDURE (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
@@ -99,14 +99,14 @@ VAR
 	Set, Clr: ARRAY 256 OF ARRAY 8 OF CHAR; 
 	MMXenabled*, SSE2enabled*: BOOLEAN; 
 
-	PROCEDURE ^ SetRGB*(VAR pix: Pixel; red, green, blue: WORD); 
-	PROCEDURE ^ SetRGBA*(VAR pix: Pixel; red, green, blue, alpha: WORD); 
-	PROCEDURE ^ GetRGBA*(pix: Pixel; VAR red, green, blue, alpha: WORD); 
-	PROCEDURE ^ PaletteIndex*(pal: Palette; red, green, blue: WORD): LONGINT; 
-	PROCEDURE ^ InitPalette*(pal: Palette; used, bits: LONGINT); 
-	PROCEDURE ^ InitGrayPalette*(pal: Palette; used, bits: LONGINT); 
+	PROCEDURE ^ SetRGB*(VAR pix: Pixel; red, green, blue: INTEGER); 
+	PROCEDURE ^ SetRGBA*(VAR pix: Pixel; red, green, blue, alpha: INTEGER); 
+	PROCEDURE ^ GetRGBA*(pix: Pixel; VAR red, green, blue, alpha: INTEGER); 
+	PROCEDURE ^ PaletteIndex*(pal: Palette; red, green, blue: INTEGER): SIGNED32; 
+	PROCEDURE ^ InitPalette*(pal: Palette; used, bits: SIGNED32); 
+	PROCEDURE ^ InitGrayPalette*(pal: Palette; used, bits: SIGNED32); 
 	PROCEDURE ^ CopyPalette*(from, to: Palette); 
-	PROCEDURE ^ ComputePalette*(img: Image; pal: Palette; reservedcols, maxcols, bits: LONGINT); 
+	PROCEDURE ^ ComputePalette*(img: Image; pal: Palette; reservedcols, maxcols, bits: SIGNED32); 
 	PROCEDURE ^ PackA1(VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel); 
 	PROCEDURE ^ UnpackA1(VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel); 
 	PROCEDURE ^ PackA8(VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel); 
@@ -127,8 +127,8 @@ VAR
 	PROCEDURE ^ UnpackBGR888(VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel); 
 	PROCEDURE ^ PackBGRA8888(VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel); 
 	PROCEDURE ^ UnpackBGRA8888(VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel); 
-	PROCEDURE ^ DisplayFormat*(format: LONGINT): Format; 
-	PROCEDURE ^ InitFormat*(VAR fmt: Format; code, bpp, align: SHORTINT; comps: SET; pal: Palette; pack, unpack: PackProc); 
+	PROCEDURE ^ DisplayFormat*(format: SIGNED32): Format; 
+	PROCEDURE ^ InitFormat*(VAR fmt: Format; code, bpp, align: SIGNED8; comps: SET; pal: Palette; pack, unpack: PackProc); 
 	PROCEDURE ^ InitPaletteFormat*(VAR fmt: Format; pal: Palette); 
 	PROCEDURE ^ Same*(VAR fmt0, fmt1: Format): BOOLEAN; 
 	PROCEDURE ^ Init*(img: Image; width, height: SIZE; VAR fmt: Format; bpr: SIZE; adr: ADDRESS); 
@@ -136,10 +136,10 @@ VAR
 	PROCEDURE ^ InitRect*(img, base: Image; x, y, w, h: SIZE); 
 	PROCEDURE ^ Create*(img: Image; width, height: SIZE; fmt: Format); 
 	PROCEDURE ^ CreateWithBuffer*(img: Image; width, height: SIZE; fmt: Format; mem: POINTER TO ARRAY OF CHAR; VAR adr: ADDRESS); 
-	PROCEDURE ^ InitMode*(VAR mode: Mode; op: SHORTINT); 
-	PROCEDURE ^ InitModeColor*(VAR mode: Mode; op: SHORTINT; red, green, blue: WORD); 
-	PROCEDURE ^ SetModeColor*(VAR mode: Mode; red, green, blue: WORD); 
-	PROCEDURE ^ Blend*(op: LONGINT; VAR src, dst: Pixel); 
+	PROCEDURE ^ InitMode*(VAR mode: Mode; op: SIGNED8); 
+	PROCEDURE ^ InitModeColor*(VAR mode: Mode; op: SIGNED8; red, green, blue: INTEGER); 
+	PROCEDURE ^ SetModeColor*(VAR mode: Mode; red, green, blue: INTEGER); 
+	PROCEDURE ^ Blend*(op: SIGNED32; VAR src, dst: Pixel); 
 	PROCEDURE ^ AnyBlendAny(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ InvAny(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ InvOverAny(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
@@ -147,10 +147,10 @@ VAR
 	PROCEDURE ^ Clear1(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ ClearBytes(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ Clear32(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
-	PROCEDURE ^ Fill8(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
-	PROCEDURE ^ Fill16(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
-	PROCEDURE ^ Fill24(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
-	PROCEDURE ^ Fill32(destAdr: ADDRESS; size: SIZE; filler: LONGINT); 
+	PROCEDURE ^ Fill8(destAdr: ADDRESS; size: SIZE; filler: SIGNED32); 
+	PROCEDURE ^ Fill16(destAdr: ADDRESS; size: SIZE; filler: SIGNED32); 
+	PROCEDURE ^ Fill24(destAdr: ADDRESS; size: SIZE; filler: SIGNED32); 
+	PROCEDURE ^ Fill32(destAdr: ADDRESS; size: SIZE; filler: SIGNED32); 
 	PROCEDURE ^ Set1(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ ConstCopy8(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
 	PROCEDURE ^ ConstCopy16(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE); 
@@ -236,9 +236,9 @@ VAR
 	PROCEDURE ^ PutPixels*(img: Image; x, y, w: SIZE; VAR fmt: Format; VAR buf: ARRAY OF CHAR; ofs: SIZE; VAR mode: Mode); 
 	PROCEDURE ^ Copy*(src, dst: Image; llx, lly, urx, ury, dx, dy: SIZE; VAR mode: Mode); 
 	PROCEDURE ^ FillPattern*(pat, dst: Image; llx, lly, urx, ury, px, py: SIZE; VAR mode: Mode); 
-	PROCEDURE ^ Darken*(img: Image; factor: REAL); 
-	PROCEDURE ^ Fade*(img: Image; factor: REAL); 
-	PROCEDURE ^ Opaque*(img: Image; factor: REAL); 
+	PROCEDURE ^ Darken*(img: Image; factor: FLOAT32); 
+	PROCEDURE ^ Fade*(img: Image; factor: FLOAT32); 
+	PROCEDURE ^ Opaque*(img: Image; factor: FLOAT32); 
 	PROCEDURE ^ Add*(i, j, res: Image); 
 	PROCEDURE ^ Dither*(src, dst: Image); 
 	PROCEDURE ^ Write*(VAR fr: Streams.Writer; img: Image); 
@@ -247,7 +247,7 @@ VAR
 	PROCEDURE ^ InitClamp; 
 	PROCEDURE ^ ToggleMMX*; 
 	PROCEDURE ^ ToggleSSE2*; 
-	PROCEDURE ^ ColorToIndex*(col: LONGINT): LONGINT; 
-	PROCEDURE ^ IndexToColor*(index: LONGINT): LONGINT; 
+	PROCEDURE ^ ColorToIndex*(col: SIGNED32): SIGNED32; 
+	PROCEDURE ^ IndexToColor*(index: SIGNED32): SIGNED32; 
 BEGIN
 END Raster.

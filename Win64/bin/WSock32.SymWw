@@ -41,7 +41,7 @@ CONST
 	SORcvBuf* = 4098; 
 	SOSndTimeo* = 4101; 
 	SORcvTimeo* = 4102; 
-	SIORcvAll* = LONGINT(2550136833); 
+	SIORcvAll* = SIGNED32(2550136833); 
 	SDReceive* = 0; 
 	SDSend* = 1; 
 	SDboth* = 2; 
@@ -52,23 +52,23 @@ TYPE
 	TimeVal* = POINTER TO TimeValDesc; 
 
 	TimeValDesc* = RECORD 
-		sec*, musec*: LONGINT; 
+		sec*, musec*: SIGNED32; 
 	END; 
 
 	WSAData* = RECORD 
-		wVersion*, wHighVersion*: INTEGER; 
+		wVersion*, wHighVersion*: SIGNED16; 
 		szDescription*: ARRAY (WSADescriptionLen + 1) OF CHAR; 
 		szSystemStatus*: ARRAY (WSASysStatusLen + 1) OF CHAR; 
-		iMaxSockets*, iMaxUdpDg*: INTEGER; 
+		iMaxSockets*, iMaxUdpDg*: SIGNED16; 
 		lpVendorInfo*: ADDRESS; 
 	END; 
 
-	inAddr* = LONGINT; 
+	inAddr* = SIGNED32; 
 
 	PsockaddrIn* = POINTER TO sockaddrIn; 
 
 	sockaddrIn* = RECORD 
-		sinFamily*, sinPort*: INTEGER; 
+		sinFamily*, sinPort*: SIGNED16; 
 		sinAddr*: inAddr; 
 		inZero: ARRAY 8 OF CHAR; 
 	END; 
@@ -77,8 +77,8 @@ TYPE
 
 	addrinfo* = RECORD 
 		aiFlags*: SET; 
-		aiFamily*, aiSocktype*, aiProtocol*: LONGINT; 
-		aiAddrlen*: LONGINT; 
+		aiFamily*, aiSocktype*, aiProtocol*: SIGNED32; 
+		aiAddrlen*: SIGNED32; 
 		aiCanonname*: ADDRESS; 
 		aiAddr*{UNTRACED} : PsockaddrIn; 
 		aiNext*{UNTRACED} : Paddrinfo; 
@@ -86,10 +86,10 @@ TYPE
 
 	Socket* = Kernel32.HANDLE; 
 
-	Group* = LONGINT; 
+	Group* = SIGNED32; 
 
 	FDSet* = RECORD 
-		fdcount*: LONGINT; 
+		fdcount*: SIGNED32; 
 		socket*: ARRAY 64 OF Socket; 
 	END; 
 
@@ -104,13 +104,13 @@ TYPE
 	Hostent* = RECORD 
 		hName*: ADDRESS; 
 		hAliases*: ADDRESS; 
-		hAddrtype*, hLength*: INTEGER; 
+		hAddrtype*, hLength*: SIGNED16; 
 		hAddrList*: ADDRESS; 
 	END; 
 
 	Error = OBJECT 
 	VAR 
-		nr: LONGINT; 
+		nr: SIGNED32; 
 		name: ARRAY 64 OF CHAR; 
 		msg: ARRAY 256 OF CHAR; 
 		left, right: Error; 
@@ -120,46 +120,46 @@ VAR
 	wship6: Kernel32.HMODULE; 
 	wsaStarted: BOOLEAN; 
 	errors: Error; 
-	WSACleanup-: PROCEDURE {WINAPI}():WORD; 
-	WSAAsyncGetHostByAddr-: PROCEDURE {WINAPI}(hWnd: User32.HWND; wMsg: LONGINT; VAR addr: ARRAY OF SYSTEM.BYTE; len: WORD; type: WORD; VAR buf: ARRAY OF SYSTEM.BYTE; buflen: WORD):Kernel32.HANDLE; 
-	WSAAsyncGetHostByName-: PROCEDURE {WINAPI}(hWnd: User32.HWND; wMsg: LONGINT; name: ARRAY OF CHAR; VAR buf: ARRAY OF SYSTEM.BYTE; buflen: WORD):Kernel32.HANDLE; 
-	WSAAsyncSelect-: PROCEDURE {WINAPI}(s: Socket; hWnd: User32.HWND; wMsg: LONGINT; lEvent: WORD):WORD; 
-	WSAGetLastError-: PROCEDURE {WINAPI}():WORD; 
-	WSASocket-: PROCEDURE {WINAPI}(af, type, protocol: WORD; VAR lpProtocolInfo: WSAProtocolInfo; g: Group; dwFlags: DWORD):Socket; 
-	WSAStartup-: PROCEDURE {WINAPI}(wVersionRequested: INTEGER; VAR lpWSAData: WSAData):WORD; 
-	WSAIoctl-: PROCEDURE {WINAPI}(s: Socket; ioControlCode: DWORD; VAR in: DWORD; inSize: DWORD; VAR outBuffer: ARRAY OF CHAR; outBufLen: DWORD; VAR lenReturned: DWORD; Overlapped: ADDRESS; completionRoutine: ADDRESS):WORD; 
-	accept-: PROCEDURE {WINAPI}(s: Socket; VAR addr: ARRAY OF SYSTEM.BYTE; VAR addrlen: WORD):Socket; 
-	bind-: PROCEDURE {WINAPI}(s: Socket; VAR name: ARRAY OF SYSTEM.BYTE; namelen: WORD):WORD; 
-	closesocket-: PROCEDURE {WINAPI}(s: Socket):WORD; 
-	connect-: PROCEDURE {WINAPI}(s: Socket; VAR name: ARRAY OF SYSTEM.BYTE; namelen: WORD):WORD; 
+	WSACleanup-: PROCEDURE {WINAPI}():INTEGER; 
+	WSAAsyncGetHostByAddr-: PROCEDURE {WINAPI}(hWnd: User32.HWND; wMsg: SIGNED32; VAR addr: ARRAY OF SYSTEM.BYTE; len: INTEGER; type: INTEGER; VAR buf: ARRAY OF SYSTEM.BYTE; buflen: INTEGER):Kernel32.HANDLE; 
+	WSAAsyncGetHostByName-: PROCEDURE {WINAPI}(hWnd: User32.HWND; wMsg: SIGNED32; name: ARRAY OF CHAR; VAR buf: ARRAY OF SYSTEM.BYTE; buflen: INTEGER):Kernel32.HANDLE; 
+	WSAAsyncSelect-: PROCEDURE {WINAPI}(s: Socket; hWnd: User32.HWND; wMsg: SIGNED32; lEvent: INTEGER):INTEGER; 
+	WSAGetLastError-: PROCEDURE {WINAPI}():INTEGER; 
+	WSASocket-: PROCEDURE {WINAPI}(af, type, protocol: INTEGER; VAR lpProtocolInfo: WSAProtocolInfo; g: Group; dwFlags: DWORD):Socket; 
+	WSAStartup-: PROCEDURE {WINAPI}(wVersionRequested: SIGNED16; VAR lpWSAData: WSAData):INTEGER; 
+	WSAIoctl-: PROCEDURE {WINAPI}(s: Socket; ioControlCode: DWORD; VAR in: DWORD; inSize: DWORD; VAR outBuffer: ARRAY OF CHAR; outBufLen: DWORD; VAR lenReturned: DWORD; Overlapped: ADDRESS; completionRoutine: ADDRESS):INTEGER; 
+	accept-: PROCEDURE {WINAPI}(s: Socket; VAR addr: ARRAY OF SYSTEM.BYTE; VAR addrlen: INTEGER):Socket; 
+	bind-: PROCEDURE {WINAPI}(s: Socket; VAR name: ARRAY OF SYSTEM.BYTE; namelen: INTEGER):INTEGER; 
+	closesocket-: PROCEDURE {WINAPI}(s: Socket):INTEGER; 
+	connect-: PROCEDURE {WINAPI}(s: Socket; VAR name: ARRAY OF SYSTEM.BYTE; namelen: INTEGER):INTEGER; 
 	freeaddrinfo-: PROCEDURE {WINAPI}(ai: Paddrinfo); 
-	getaddrinfo-: PROCEDURE {WINAPI}(VAR nodename, servname: ARRAY OF CHAR; VAR hints: ARRAY OF SYSTEM.BYTE; VAR res: Paddrinfo):WORD; 
+	getaddrinfo-: PROCEDURE {WINAPI}(VAR nodename, servname: ARRAY OF CHAR; VAR hints: ARRAY OF SYSTEM.BYTE; VAR res: Paddrinfo):INTEGER; 
 	gethostbyname-: PROCEDURE {WINAPI}(VAR name: ARRAY OF CHAR):PHostent; 
-	gethostname-: PROCEDURE {WINAPI}(VAR name: ARRAY OF CHAR; namelen: WORD):WORD; 
-	getpeername-: PROCEDURE {WINAPI}(s: Socket; VAR name: ARRAY OF SYSTEM.BYTE; VAR namelen: WORD):WORD; 
-	getsockname-: PROCEDURE {WINAPI}(s: Socket; VAR name: ARRAY OF SYSTEM.BYTE; VAR namelen: WORD):WORD; 
-	htonl-: PROCEDURE {WINAPI}(x: LONGINT):LONGINT; 
-	htons-: PROCEDURE {WINAPI}(x: INTEGER):INTEGER; 
-	ioctlsocket-: PROCEDURE {WINAPI}(s: Socket; cmd: LONGWORD; VAR argp: LONGINT):WORD; 
-	listen-: PROCEDURE {WINAPI}(s: Socket; backlog: WORD):WORD; 
-	ntohl-: PROCEDURE {WINAPI}(x: LONGINT):LONGINT; 
-	ntohs-: PROCEDURE {WINAPI}(x: INTEGER):INTEGER; 
-	recv-: PROCEDURE {WINAPI}(s: Socket; VAR buf: ARRAY OF SYSTEM.BYTE; len: WORD; flags: WORDSET):WORD; 
-	recvfrom-: PROCEDURE {WINAPI}(s: Socket; VAR buf: ARRAY OF SYSTEM.BYTE; len: WORD; flags: WORDSET; VAR from: sockaddrIn; VAR fromlen: WORD):WORD; 
-	select-: PROCEDURE {WINAPI}(nfds: WORD; VAR readfds, writefds, exceptfds: FDSet; timeout: TimeVal):WORD; 
-	send-: PROCEDURE {WINAPI}(s: Socket; CONST buf: ARRAY OF SYSTEM.BYTE; len: WORD; flags: WORDSET):WORD; 
-	sendto-: PROCEDURE {WINAPI}(s: Socket; CONST buf: ARRAY OF SYSTEM.BYTE; len: WORD; flags: WORDSET; VAR to: ARRAY OF SYSTEM.BYTE; tolen: WORD):WORD; 
-	setsockopt-: PROCEDURE {WINAPI}(s: Socket; level, optname: WORD; VAR optval: ARRAY OF SYSTEM.BYTE; optlen: WORD):WORD; 
-	getsockopt-: PROCEDURE {WINAPI}(s: Socket; level, optname: WORD; VAR optval: ARRAY OF SYSTEM.BYTE; VAR optlen: WORD):WORD; 
-	socket-: PROCEDURE {WINAPI}(af, type, protocol: WORD):Socket; 
-	shutdown-: PROCEDURE {WINAPI}(s: Socket; how: WORD):WORD; 
+	gethostname-: PROCEDURE {WINAPI}(VAR name: ARRAY OF CHAR; namelen: INTEGER):INTEGER; 
+	getpeername-: PROCEDURE {WINAPI}(s: Socket; VAR name: ARRAY OF SYSTEM.BYTE; VAR namelen: INTEGER):INTEGER; 
+	getsockname-: PROCEDURE {WINAPI}(s: Socket; VAR name: ARRAY OF SYSTEM.BYTE; VAR namelen: INTEGER):INTEGER; 
+	htonl-: PROCEDURE {WINAPI}(x: SIGNED32):SIGNED32; 
+	htons-: PROCEDURE {WINAPI}(x: SIGNED16):SIGNED16; 
+	ioctlsocket-: PROCEDURE {WINAPI}(s: Socket; cmd: LONGINTEGER; VAR argp: SIGNED32):INTEGER; 
+	listen-: PROCEDURE {WINAPI}(s: Socket; backlog: INTEGER):INTEGER; 
+	ntohl-: PROCEDURE {WINAPI}(x: SIGNED32):SIGNED32; 
+	ntohs-: PROCEDURE {WINAPI}(x: SIGNED16):SIGNED16; 
+	recv-: PROCEDURE {WINAPI}(s: Socket; VAR buf: ARRAY OF SYSTEM.BYTE; len: INTEGER; flags: INTEGERSET):INTEGER; 
+	recvfrom-: PROCEDURE {WINAPI}(s: Socket; VAR buf: ARRAY OF SYSTEM.BYTE; len: INTEGER; flags: INTEGERSET; VAR from: sockaddrIn; VAR fromlen: INTEGER):INTEGER; 
+	select-: PROCEDURE {WINAPI}(nfds: INTEGER; VAR readfds, writefds, exceptfds: FDSet; timeout: TimeVal):INTEGER; 
+	send-: PROCEDURE {WINAPI}(s: Socket; CONST buf: ARRAY OF SYSTEM.BYTE; len: INTEGER; flags: INTEGERSET):INTEGER; 
+	sendto-: PROCEDURE {WINAPI}(s: Socket; CONST buf: ARRAY OF SYSTEM.BYTE; len: INTEGER; flags: INTEGERSET; VAR to: ARRAY OF SYSTEM.BYTE; tolen: INTEGER):INTEGER; 
+	setsockopt-: PROCEDURE {WINAPI}(s: Socket; level, optname: INTEGER; VAR optval: ARRAY OF SYSTEM.BYTE; optlen: INTEGER):INTEGER; 
+	getsockopt-: PROCEDURE {WINAPI}(s: Socket; level, optname: INTEGER; VAR optval: ARRAY OF SYSTEM.BYTE; VAR optlen: INTEGER):INTEGER; 
+	socket-: PROCEDURE {WINAPI}(af, type, protocol: INTEGER):Socket; 
+	shutdown-: PROCEDURE {WINAPI}(s: Socket; how: INTEGER):INTEGER; 
 
 	PROCEDURE ^ TermMod; 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ Startup*; 
 	PROCEDURE ^ CleanUp*; 
 	PROCEDURE ^ DispError*; 
-	PROCEDURE ^ Enter(nr: LONGINT; short, desc: ARRAY OF CHAR); 
+	PROCEDURE ^ Enter(nr: SIGNED32; short, desc: ARRAY OF CHAR); 
 	PROCEDURE ^ InitErrs; 
 BEGIN
 END WSock32.

@@ -3,7 +3,7 @@ MODULE FoxTRMAssembler;
 CONST 
 	Trace = FoxAssembler.Trace; 
 TYPE 
-	Register* = LONGINT; 
+	Register* = SIGNED32; 
 
 	Operand* = InstructionSet.Operand; 
 
@@ -14,7 +14,7 @@ TYPE
 
 		PROCEDURE ^  & Init2*(diagnostics: Diagnostics.Diagnostics; capabilities: SET; instructionSet: InstructionSet.InstructionSet); 
 		PROCEDURE ^ Instruction*(CONST mnemonic: ARRAY OF CHAR); 
-		PROCEDURE ^ GetRegister(CONST ident: ARRAY OF CHAR; VAR register: SHORTINT): BOOLEAN; 
+		PROCEDURE ^ GetRegister(CONST ident: ARRAY OF CHAR; VAR register: SIGNED8): BOOLEAN; 
 	END Assembler; 
 BEGIN
 END FoxTRMAssembler.

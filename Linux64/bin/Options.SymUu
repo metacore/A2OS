@@ -17,34 +17,34 @@ TYPE
 
 	Option = RECORD 
 		isSet: BOOLEAN; 
-		timestamp: LONGINT; 
+		timestamp: SIGNED32; 
 		ch: CHAR; 
 		name: Name; 
-		type: LONGINT; 
-		value: LONGINT; 
-		rvalue: LONGREAL; 
+		type: SIGNED32; 
+		value: SIGNED32; 
+		rvalue: FLOAT64; 
 		string: Parameter; 
 	END; 
 
 	Options* = OBJECT {EXCLUSIVE} 
 	VAR 
 		options: ARRAY MaxOptions OF Option; 
-		nofOptions: LONGINT; 
+		nofOptions: SIGNED32; 
 		arg: Streams.Reader; 
 		error: Streams.Writer; 
 		setError: BOOLEAN; 
 		flagUnknownOptions: BOOLEAN; 
-		timestamp: LONGINT; 
+		timestamp: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Add*(ch: CHAR; CONST name: Name; type: LONGINT); 
+		PROCEDURE ^ Add*(ch: CHAR; CONST name: Name; type: SIGNED32); 
 		PROCEDURE ^ GetFlag*(CONST name: Name): BOOLEAN; 
 		PROCEDURE ^ SetFlag*(ch: CHAR; CONST name: Name): BOOLEAN; 
-		PROCEDURE ^ GetInteger*(CONST name: Name; VAR integer: LONGINT): BOOLEAN; 
+		PROCEDURE ^ GetInteger*(CONST name: Name; VAR integer: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ SetInteger*(ch: CHAR; CONST name: Name; CONST string: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ GetString*(CONST name: Name; VAR string: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ SetString*(ch: CHAR; CONST name: Name; CONST string: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ GetReal*(CONST name: Name; VAR real: LONGREAL): BOOLEAN; 
+		PROCEDURE ^ GetReal*(CONST name: Name; VAR real: FLOAT64): BOOLEAN; 
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ Parse*(arg: Streams.Reader; error: Streams.Writer): BOOLEAN; 
@@ -60,7 +60,7 @@ TYPE
 		PROCEDURE ^ ParseChar(VAR ch: CHAR): BOOLEAN; 
 		PROCEDURE ^ SetFlagIntern(ch: CHAR; CONST name: Name; checkTimestamp: BOOLEAN): BOOLEAN; 
 		PROCEDURE ^ SetStringIntern(ch: CHAR; CONST name: Name; CONST string: ARRAY OF CHAR; checkTimestamp: BOOLEAN): BOOLEAN; 
-		PROCEDURE ^ FindOption(CONST name: Name): LONGINT; 
+		PROCEDURE ^ FindOption(CONST name: Name): SIGNED32; 
 		PROCEDURE ^ WrongUsage(option: Option); 
 		PROCEDURE ^ ShowPos(pos: Streams.Position); 
 		PROCEDURE ^ ShowOption(ch: CHAR; CONST name: Name); 
@@ -86,7 +86,7 @@ TYPE
 
 	PROCEDURE ^ Merge*(VAR this: Options; base: Options); 
 	PROCEDURE ^ IsValidChar(ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ StringToInteger*(CONST string: ARRAY OF CHAR; VAR x: LONGINT; hex: BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ StringToInteger*(CONST string: ARRAY OF CHAR; VAR x: SIGNED32; hex: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ Test*(context: Commands.Context); 
 BEGIN
 END Options.

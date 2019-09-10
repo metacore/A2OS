@@ -144,25 +144,25 @@ TYPE
 
 	ALbyte* = CHAR; 
 
-	ALshort* = INTEGER; 
+	ALshort* = SIGNED16; 
 
-	ALint* = LONGINT; 
+	ALint* = SIGNED32; 
 
-	ALfloat* = REAL; 
+	ALfloat* = FLOAT32; 
 
-	ALdouble* = LONGREAL; 
+	ALdouble* = FLOAT64; 
 
 	ALboolean* = BOOLEAN; 
 
 	ALubyte* = CHAR; 
 
-	ALushort* = INTEGER; 
+	ALushort* = SIGNED16; 
 
-	ALuint* = LONGINT; 
+	ALuint* = SIGNED32; 
 
-	ALsizei* = LONGINT; 
+	ALsizei* = SIGNED32; 
 
-	ALenum* = LONGINT; 
+	ALenum* = SIGNED32; 
 
 	PALboolean* = ADDRESS; 
 
@@ -184,25 +184,25 @@ TYPE
 
 	ALCbyte* = CHAR; 
 
-	ALCshort* = INTEGER; 
+	ALCshort* = SIGNED16; 
 
-	ALCint* = LONGINT; 
+	ALCint* = SIGNED32; 
 
-	ALCfloat* = REAL; 
+	ALCfloat* = FLOAT32; 
 
-	ALCdouble* = LONGREAL; 
+	ALCdouble* = FLOAT64; 
 
 	ALCboolean* = BOOLEAN; 
 
 	ALCubyte* = CHAR; 
 
-	ALCushort* = INTEGER; 
+	ALCushort* = SIGNED16; 
 
-	ALCuint* = LONGINT; 
+	ALCuint* = SIGNED32; 
 
-	ALCsizei* = LONGINT; 
+	ALCsizei* = SIGNED32; 
 
-	ALCenum* = LONGINT; 
+	ALCenum* = SIGNED32; 
 
 	ALCcontext* = ADDRESS; 
 

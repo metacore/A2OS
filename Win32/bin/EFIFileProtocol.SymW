@@ -4,7 +4,7 @@ CONST
 	Revision* = 65536; 
 	ModeRead* = 1; 
 	ModeWrite* = 2; 
-	ModeCreate* = MIN(HUGEINT); 
+	ModeCreate* = MIN(SIGNED64); 
 	ReadOnly* = 1; 
 	Hidden* = 2; 
 	System* = 4; 

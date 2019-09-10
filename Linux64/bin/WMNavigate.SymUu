@@ -50,7 +50,7 @@ TYPE
 
 		PROCEDURE ^ GetIndexOf(x, y: SIZE): SIZE; 
 		PROCEDURE ^ GetPositionOf(x, y: SIZE): WMRectangles.Rectangle; 
-		PROCEDURE ^ Compute(nofEntries, width, height, desiredEntryWidth, desiredEntryHeight: SIZE; mode: LONGINT); 
+		PROCEDURE ^ Compute(nofEntries, width, height, desiredEntryWidth, desiredEntryHeight: SIZE; mode: SIGNED32); 
 		PROCEDURE ^ ComputeDefault; 
 		PROCEDURE ^ ComputeAspect; 
 		PROCEDURE ^ Show; 
@@ -65,12 +65,12 @@ TYPE
 	END DoCloseWindow; 
 
 	Info = RECORD 
-		nofWindows: LONGINT; 
+		nofWindows: SIGNED32; 
 		windows: Windows; 
 		extImages: POINTER TO ARRAY OF WMGraphics.Image; 
-		focusIdx: LONGINT; 
-		wTimestamp: LONGINT; 
-		oTimestamp: LONGINT; 
+		focusIdx: SIGNED32; 
+		wTimestamp: SIGNED32; 
+		oTimestamp: SIGNED32; 
 	END; 
 
 	Base* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
@@ -82,7 +82,7 @@ TYPE
 		info: Info; 
 		layout: Layout; 
 		lock: Locks.Lock; 
-		state: LONGINT; 
+		state: SIGNED32; 
 		mouseOverIdx, lastMouseOverIdx: SIZE; 
 
 		PROCEDURE ^  & Init*; 
@@ -143,9 +143,9 @@ TYPE
 		nofDocuments: SIZE; 
 		documentOffset, commandOffset, imageOffset: SIZE; 
 		owner: MenuWindow; 
-		menuLocation: LONGINT; 
+		menuLocation: SIGNED32; 
 		showThumbnails: BOOLEAN; 
-		type: WORD; 
+		type: INTEGER; 
 		index: SIZE; 
 		keys: SET; 
 		xt, yt: SIZE; 
@@ -153,7 +153,7 @@ TYPE
 		imgX, imgY: SIZE; 
 		imageYes, imageNo: WMGraphics.Image; 
 
-		PROCEDURE ^  & New(owner: MenuWindow; menuLocation: LONGINT; showThumbnails: BOOLEAN); 
+		PROCEDURE ^  & New(owner: MenuWindow; menuLocation: SIGNED32; showThumbnails: BOOLEAN); 
 		PROCEDURE ^ SetInfo(window: WMWindowManager.Window; CONST info: WMWindowManager.WindowInfo); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
@@ -169,9 +169,9 @@ TYPE
 		info: WMWindowManager.WindowInfo; 
 		close: BOOLEAN; 
 
-		PROCEDURE ^ GetSelection(VAR type: WORD; VAR index: SIZE; VAR keys: SET); 
-		PROCEDURE ^  & New(x, y, width: SIZE; menuLocation: WORD; showThumbnails: BOOLEAN; window: WMWindowManager.Window; CONST info: WMWindowManager.WindowInfo); 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: WORD); 
+		PROCEDURE ^ GetSelection(VAR type: INTEGER; VAR index: SIZE; VAR keys: SET); 
+		PROCEDURE ^  & New(x, y, width: SIZE; menuLocation: INTEGER; showThumbnails: BOOLEAN; window: WMWindowManager.Window; CONST info: WMWindowManager.WindowInfo); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: INTEGER); 
 		PROCEDURE ^ SetClosed; 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
@@ -196,8 +196,8 @@ VAR
 	StrBase: Strings.String; 
 	StrTaskList: Strings.String; 
 	StrOverview: Strings.String; 
-	width, height: LONGINT; 
-	windowShotScale*: REAL; 
+	width, height: SIGNED32; 
+	windowShotScale*: FLOAT32; 
 	windowsAreHidden: BOOLEAN; 
 	navigationIsHidden: BOOLEAN; 
 	showWindowNames: BOOLEAN; 
@@ -210,12 +210,12 @@ VAR
 
 	PROCEDURE ^ GetWindowImage(window: WMWindowManager.Window; width, height: SIZE): WMGraphics.Image; 
 	PROCEDURE ^ GenerateName(prefix: Strings.String; VAR str: ARRAY OF CHAR); 
-	PROCEDURE ^ WindowShot(window: WMWindowManager.Window; scale: REAL); 
+	PROCEDURE ^ WindowShot(window: WMWindowManager.Window; scale: FLOAT32); 
 	PROCEDURE ^ StoreWindow(window: WMWindowManager.Window); 
 	PROCEDURE ^ DrawIntoCanvas(window: WMWindowManager.Window; canvas: WMGraphics.BufferCanvas; width, height: SIZE; VAR offsetX, offsetY: SIZE); 
 	PROCEDURE ^ Clear(VAR windows: Windows); 
-	PROCEDURE ^ GetFocusOwnerIndex(CONST windows: Windows; nofWindows: LONGINT): LONGINT; 
-	PROCEDURE ^ GetWindows(VAR windows: Windows; VAR nofWindows: LONGINT); 
+	PROCEDURE ^ GetFocusOwnerIndex(CONST windows: Windows; nofWindows: SIGNED32): SIGNED32; 
+	PROCEDURE ^ GetWindows(VAR windows: Windows; VAR nofWindows: SIGNED32); 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Close*(context: Commands.Context); 
 	PROCEDURE ^ ToggleVisibility*(context: Commands.Context); 

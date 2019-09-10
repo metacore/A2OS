@@ -10,7 +10,7 @@ VAR
 	W: Texts.Writer; 
 
 	PROCEDURE ^ GetArcName(VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ doExtract(action: INTEGER); 
+	PROCEDURE ^ doExtract(action: SIGNED16); 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ Extract*; 
 	PROCEDURE ^ ExtractAll*; 

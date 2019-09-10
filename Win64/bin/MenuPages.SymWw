@@ -5,9 +5,9 @@ CONST
 	ColumnWidth = 120; 
 
 	PROCEDURE ^ GetColumn(): WMStandardComponents.Panel; 
-	PROCEDURE ^ GetButton(CONST caption, command: ARRAY OF CHAR; color, colorHover: LONGINT): WMStandardComponents.Button; 
-	PROCEDURE ^ GetColor(in: Streams.Reader): LONGINT; 
-	PROCEDURE ^ GetEntry(in: Streams.Reader; VAR name, command: ARRAY OF CHAR; VAR color, colorHover: LONGINT); 
+	PROCEDURE ^ GetButton(CONST caption, command: ARRAY OF CHAR; color, colorHover: SIGNED32): WMStandardComponents.Button; 
+	PROCEDURE ^ GetColor(in: Streams.Reader): SIGNED32; 
+	PROCEDURE ^ GetEntry(in: Streams.Reader; VAR name, command: ARRAY OF CHAR; VAR color, colorHover: SIGNED32); 
 	PROCEDURE ^ AddEntries(menuPage: WMStandardComponents.Panel; in: Streams.Reader); 
 	PROCEDURE ^ Generate*(context: Commands.Context); 
 BEGIN

@@ -16,11 +16,11 @@ CONST
 	HLUnder* = 1; 
 	HLWave* = 2; 
 TYPE 
-	UCS32String* = ARRAY OF LONGINT; 
+	UCS32String* = ARRAY OF SIGNED32; 
 
 	PUCS32String* = POINTER TO UCS32String; 
 
-	Char32* = LONGINT; 
+	Char32* = SIGNED32; 
 
 	FontInfo* = OBJECT 
 	VAR 
@@ -35,11 +35,11 @@ TYPE
 
 	Attributes* = OBJECT 
 	VAR 
-		color*, bgcolor*: LONGINT; 
-		voff*: LONGINT; 
+		color*, bgcolor*: SIGNED32; 
+		voff*: SIGNED32; 
 		fontInfo*: FontInfo; 
 
-		PROCEDURE ^ Set*(color, bgcolor, voff: LONGINT; CONST name: ARRAY OF CHAR; size: SIZE; style: SET); 
+		PROCEDURE ^ Set*(color, bgcolor, voff: SIGNED32; CONST name: ARRAY OF CHAR; size: SIZE; style: SET); 
 		PROCEDURE ^ IsEqual*(attr: Attributes): BOOLEAN; 
 		PROCEDURE ^ Clone*(): Attributes; 
 	END Attributes; 
@@ -52,12 +52,12 @@ TYPE
 	ParagraphStyle* = OBJECT 
 	VAR 
 		name*: ARRAY 128 OF CHAR; 
-		alignment*: LONGINT; 
-		spaceBefore*: LONGINT; 
-		spaceAfter*: LONGINT; 
-		leftIndent*: LONGINT; 
-		rightIndent*: LONGINT; 
-		firstIndent*: LONGINT; 
+		alignment*: SIGNED32; 
+		spaceBefore*: SIGNED32; 
+		spaceAfter*: SIGNED32; 
+		leftIndent*: SIGNED32; 
+		rightIndent*: SIGNED32; 
+		firstIndent*: SIGNED32; 
 		charStyle*: CharacterStyle; 
 		tabStops*: ARRAY 256 OF CHAR; 
 
@@ -74,13 +74,13 @@ TYPE
 		family*: ARRAY 32 OF CHAR; 
 		style*: SET; 
 		size*: SIZE; 
-		leading*: LONGINT; 
-		baselineShift*: LONGINT; 
-		tracking*: LONGINT; 
-		scaleHorizontal*: LONGINT; 
-		scaleVertical*: LONGINT; 
-		color*: LONGINT; 
-		bgColor*: LONGINT; 
+		leading*: SIGNED32; 
+		baselineShift*: SIGNED32; 
+		tracking*: SIGNED32; 
+		scaleHorizontal*: SIGNED32; 
+		scaleVertical*: SIGNED32; 
+		color*: SIGNED32; 
+		bgColor*: SIGNED32; 
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ IsEqual*(cstyle: CharacterStyle): BOOLEAN; 
@@ -91,7 +91,7 @@ TYPE
 
 	HighlightStyle* = OBJECT 
 	VAR 
-		kind*: WORD; 
+		kind*: INTEGER; 
 
 		PROCEDURE ^ IsEqual*(hstyle: HighlightStyle): BOOLEAN; 
 	END HighlightStyle; 
@@ -114,7 +114,7 @@ TYPE
 
 	UnicodePiece* = OBJECT (Piece)
 
-		PROCEDURE ^ GetUCS32Buf*(index: SIZE; length: SIZE; VAR ucs: UCS32String; VAR res: WORD); 
+		PROCEDURE ^ GetUCS32Buf*(index: SIZE; length: SIZE; VAR ucs: UCS32String; VAR res: INTEGER); 
 		PROCEDURE ^ GetUCS32*(index: SIZE; VAR ucs: Char32); 
 	END UnicodePiece; 
 
@@ -125,7 +125,7 @@ TYPE
 		PROCEDURE ^ SetBuf(CONST buffer: UCS32String); 
 		PROCEDURE ^ SetBufAsUTF8(CONST buffer: ARRAY OF CHAR); 
 		PROCEDURE ^ Clone*(): Piece; 
-		PROCEDURE ^ GetUCS32Buf*(index: SIZE; length: SIZE; VAR ucs: UCS32String; VAR res: WORD); 
+		PROCEDURE ^ GetUCS32Buf*(index: SIZE; length: SIZE; VAR ucs: UCS32String; VAR res: INTEGER); 
 		PROCEDURE ^ GetUCS32*(index: SIZE; VAR ucs: Char32); 
 		PROCEDURE ^ Split*(pos: SIZE; VAR right: Piece); 
 		PROCEDURE ^ Merge*(right: Piece): BOOLEAN; 
@@ -162,7 +162,7 @@ TYPE
 		nextInternalPos*: SIZE; 
 
 		PROCEDURE ^  & New*(t: UnicodeText); 
-		PROCEDURE ^ Changed*(op: WORD; pos, len: SIZE); 
+		PROCEDURE ^ Changed*(op: INTEGER; pos, len: SIZE); 
 		PROCEDURE ^ SetPosition*(pos: SIZE); 
 		PROCEDURE ^ GetPosition*(): SIZE; 
 		PROCEDURE ^ SetInternalPositionTranslator*(getInternalPos: PositionTranslator); 
@@ -174,7 +174,7 @@ TYPE
 		piece: Piece; 
 		backwards: BOOLEAN; 
 		eot-: BOOLEAN; 
-		voff-, color-, bgcolor-: LONGINT; 
+		voff-, color-, bgcolor-: SIGNED32; 
 		font-: FontInfo; 
 		attributes-: Attributes; 
 		cstyle-: CharacterStyle; 
@@ -184,16 +184,16 @@ TYPE
 
 		PROCEDURE ^  & New*(t: UnicodeText); 
 		PROCEDURE ^ CloneProperties*(CONST otherReader: TextReader); 
-		PROCEDURE ^ Changed*(op: WORD; pos, len: SIZE); 
-		PROCEDURE ^ ReadCh*(VAR ucs32: LONGINT); 
+		PROCEDURE ^ Changed*(op: INTEGER; pos, len: SIZE); 
+		PROCEDURE ^ ReadCh*(VAR ucs32: SIGNED32); 
 		PROCEDURE ^ SetPosition*(pos: SIZE); 
-		PROCEDURE ^ SetDirection*(dir: WORD); 
+		PROCEDURE ^ SetDirection*(dir: INTEGER); 
 	END TextReader; 
 
 	TextChangeInfo* = OBJECT 
 	VAR 
-		timestamp*: LONGINT; 
-		op*: WORD; 
+		timestamp*: SIGNED32; 
+		op*: INTEGER; 
 		pos*, len*: SIZE; 
 	END TextChangeInfo; 
 
@@ -202,8 +202,8 @@ TYPE
 		PROCEDURE ^ InsertText*(pos: SIZE; text: Text); 
 		PROCEDURE ^ DeleteText*(pos: SIZE; text: Text); 
 		PROCEDURE ^ BeginObjectChange*(pos: SIZE); 
-		PROCEDURE ^ ObjectChanged*(pos, len: SIZE; type: WORD; obj: ANY); 
-		PROCEDURE ^ EndObjectChange*(len: SIZE; type: WORD; to: ANY); 
+		PROCEDURE ^ ObjectChanged*(pos, len: SIZE; type: INTEGER; obj: ANY); 
+		PROCEDURE ^ EndObjectChange*(len: SIZE; type: INTEGER; to: ANY); 
 		PROCEDURE ^ SetText*(text: Text); 
 		PROCEDURE ^ Undo*; 
 		PROCEDURE ^ Redo*; 
@@ -216,10 +216,10 @@ TYPE
 		length: SIZE; 
 		nofPieces: SIZE; 
 		posObjects: Kernel.FinalizedCollection; 
-		pop: WORD; 
+		pop: INTEGER; 
 		ppos, plen: SIZE; 
-		timestamp: LONGINT; 
-		upOp: WORD; 
+		timestamp: SIGNED32; 
+		upOp: INTEGER; 
 		upPos, upLen: SIZE; 
 		onTextChanged*: WMEvents.EventSource; 
 		lock: Locks.RWLock; 
@@ -237,12 +237,12 @@ TYPE
 		PROCEDURE ^ AcquireRead*; 
 		PROCEDURE ^ ReleaseRead*; 
 		PROCEDURE ^ HasReadLock*(): BOOLEAN; 
-		PROCEDURE ^ InformListeners(timestamp: LONGINT; op: WORD; pos, len: SIZE); 
+		PROCEDURE ^ InformListeners(timestamp: SIGNED32; op: INTEGER; pos, len: SIZE); 
 		PROCEDURE ^ UpdatePieceTable; 
 		PROCEDURE ^ FindPiece(pos: SIZE; VAR piece: Piece); 
 		PROCEDURE ^ SendPositionUpdate(obj: ANY; VAR cont: BOOLEAN); 
-		PROCEDURE ^ UpdatePositionObjects(op: WORD; pos, len: SIZE); 
-		PROCEDURE ^ AccumulateChanges(op: WORD; pos, len: SIZE); 
+		PROCEDURE ^ UpdatePositionObjects(op: INTEGER; pos, len: SIZE); 
+		PROCEDURE ^ AccumulateChanges(op: INTEGER; pos, len: SIZE); 
 		PROCEDURE ^ RegisterPositionObject*(po: TextPosition); 
 		PROCEDURE ^ GetSplittedPos(pos: SIZE; VAR left, right: Piece); 
 		PROCEDURE ^ InsertPiece*(pos: SIZE; n: Piece); 
@@ -258,7 +258,7 @@ TYPE
 		PROCEDURE ^ SetParagraphStyle*(pos, len: SIZE; pstyle: ParagraphStyle); 
 		PROCEDURE ^ SetLink*(pos, len: SIZE; link: Link); 
 		PROCEDURE ^ GetLength*(): SIZE; 
-		PROCEDURE ^ GetTimestamp*(): LONGINT; 
+		PROCEDURE ^ GetTimestamp*(): SIGNED32; 
 		PROCEDURE ^ CheckHealth*; 
 		PROCEDURE ^ DumpPieces*; 
 	END UnicodeText; 

@@ -16,7 +16,7 @@ TYPE
 		properties: ImagePropWindow; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: SIZE; zoomFactor: REAL; quality, preview: BOOLEAN); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; x, y, w, h: SIZE; zoomFactor: FLOAT32; quality, preview: BOOLEAN); 
 		PROCEDURE ^ Clone*(): DTPData.ContentObject; 
 		PROCEDURE ^ LoadImg(CONST file: ARRAY OF CHAR); 
 		PROCEDURE ^ Load*(elem: XML.Element); 

@@ -6,7 +6,7 @@ CONST
 	ln2* =   6.9314718E-001; 
 	eps =   1.2000000E-007; 
 TYPE 
-	Value = REAL; 
+	Value = FLOAT32; 
 
 	PROCEDURE ^ Expo(x: Value): UNSIGNED32; 
 	PROCEDURE ^ Mantissa(x: Value): UNSIGNED32; 

@@ -15,26 +15,26 @@ TYPE
 	FaderProc* = PROCEDURE ; 
 VAR 
 	W: Texts.Writer; 
-	seed: LONGINT; 
+	seed: SIGNED32; 
 	Start, Step, Stop: FaderProc; 
-	waitLimit: LONGINT; 
-	waitTime, waitPeriod, drawPeriod: LONGINT; 
-	oldMouseX, oldMouseY: INTEGER; 
-	state: INTEGER; 
+	waitLimit: SIGNED32; 
+	waitTime, waitPeriod, drawPeriod: SIGNED32; 
+	oldMouseX, oldMouseY: SIGNED16; 
+	state: SIGNED16; 
 	task: Oberon.Task; 
 	filler: Viewers.Viewer; 
 
 	PROCEDURE ^ Msg(s: ARRAY OF CHAR); 
-	PROCEDURE ^ Rand*(range: INTEGER): INTEGER; 
-	PROCEDURE ^ Limit*(min, val, max: INTEGER): INTEGER; 
+	PROCEDURE ^ Rand*(range: SIGNED16): SIGNED16; 
+	PROCEDURE ^ Limit*(min, val, max: SIGNED16): SIGNED16; 
 	PROCEDURE ^ HandleFiller(V: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ TaskHandler(task: Oberon.Task); 
-	PROCEDURE ^ ChangeState(newState: INTEGER); 
+	PROCEDURE ^ ChangeState(newState: SIGNED16); 
 	PROCEDURE ^ StartDefault; 
 	PROCEDURE ^ StepDefault; 
 	PROCEDURE ^ StopDefault; 
-	PROCEDURE ^ SetWaitTime*(seconds: LONGINT); 
-	PROCEDURE ^ SetFrameRate*(framesPerSecond: INTEGER); 
+	PROCEDURE ^ SetWaitTime*(seconds: SIGNED32); 
+	PROCEDURE ^ SetFrameRate*(framesPerSecond: SIGNED16); 
 	PROCEDURE ^ InstallFader*(newStart, newStep, newStop: FaderProc); 
 	PROCEDURE ^ InstallDefault*; 
 	PROCEDURE ^ RemoveFader*(start, step, stop: FaderProc); 

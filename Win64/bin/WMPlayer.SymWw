@@ -39,7 +39,7 @@ TYPE
 		search: WMStandardComponents.Scrollbar; 
 		timeLbl, totTimeLbl: WMStandardComponents.Label; 
 		player: MediaPlayer.Player; 
-		stepSize: LONGINT; 
+		stepSize: SIGNED32; 
 		filename: Files.FileName; 
 		setupData: MediaPlayer.Setup; 
 		infos: InfoWindow; 
@@ -53,14 +53,14 @@ TYPE
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ SliderSearch(sender, data: ANY); 
-		PROCEDURE ^ Update*(status, pos, maxpos, displayTime: LONGINT); 
+		PROCEDURE ^ Update*(status, pos, maxpos, displayTime: SIGNED32); 
 		PROCEDURE ^ SetUpController*(setup: MediaPlayer.Setup); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
-	PROCEDURE ^ ConvertTime(ms: LONGINT; VAR hours, minutes, seconds: LONGINT); 
-	PROCEDURE ^ ConvertTimeToStr(ms: LONGINT; VAR timeStr: ARRAY OF CHAR); 
+	PROCEDURE ^ ConvertTime(ms: SIGNED32; VAR hours, minutes, seconds: SIGNED32); 
+	PROCEDURE ^ ConvertTimeToStr(ms: SIGNED32; VAR timeStr: ARRAY OF CHAR); 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 

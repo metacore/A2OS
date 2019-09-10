@@ -17,7 +17,7 @@ TYPE
 	END Basic; 
 VAR 
 	encTable: ARRAY 64 OF CHAR; 
-	decTable: ARRAY 128 OF INTEGER; 
+	decTable: ARRAY 128 OF SIGNED16; 
 	defaultAuth*: Basic; 
 	defaultHost*: ARRAY 64 OF CHAR; 
 

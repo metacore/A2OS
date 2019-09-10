@@ -15,7 +15,7 @@ TYPE
 		PROCEDURE ^  & New*(CheckScrollbars: WMMessages.CompCommand); 
 		PROCEDURE ^ AlignSubComponents*; 
 		PROCEDURE ^ CheckLeftTop; 
-		PROCEDURE ^ SetLeftTop(dxf, dyf: REAL); 
+		PROCEDURE ^ SetLeftTop(dxf, dyf: FLOAT32); 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ InvalidateRect*(r: WMRectangles.Rectangle); 
 		PROCEDURE ^ InvalidateCommand*(sender, par: ANY); 

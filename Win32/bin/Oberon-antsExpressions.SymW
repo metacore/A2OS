@@ -47,16 +47,16 @@ CONST
 TYPE 
 	Value* = RECORD 
 		name*: OPS.String; 
-		class*: SHORTINT; 
+		class*: SIGNED8; 
 		b*: BOOLEAN; 
 		c*: CHAR; 
-		i*: LONGINT; 
-		x*: REAL; 
-		y*: LONGREAL; 
+		i*: SIGNED32; 
+		x*: FLOAT32; 
+		y*: FLOAT64; 
 		s*: OPS.String; 
-		ptr*: LONGINT; 
+		ptr*: SIGNED32; 
 		p*: ANY; 
-		adr*: LONGINT; 
+		adr*: SIGNED32; 
 		obj*: OPT.Object; 
 	END; 
 
@@ -78,9 +78,9 @@ TYPE
 
 	CallStack = RECORD 
 		code: ARRAY 128 OF CHAR; 
-		i, pc: LONGINT; 
-		resadr, npar: LONGINT; 
-		class: SHORTINT; 
+		i, pc: SIGNED32; 
+		resadr, npar: SIGNED32; 
+		class: SIGNED8; 
 		obj: OPT.Object; 
 	END; 
 
@@ -88,7 +88,7 @@ TYPE
 		top: Item; 
 	END; 
 
-	PtrTable = POINTER TO ARRAY OF LONGINT; 
+	PtrTable = POINTER TO ARRAY OF SIGNED32; 
 
 	StringStack = POINTER TO StringStackDesc; 
 
@@ -99,33 +99,33 @@ TYPE
 VAR 
 	oldHook, thisHook: Objects.Handler; 
 	map: ARRAY 17 OF CHAR; 
-	sym: SHORTINT; 
+	sym: SIGNED8; 
 	W: Texts.Writer; 
 	ptrTab: PtrTable; 
-	nofptrs: INTEGER; 
+	nofptrs: SIGNED16; 
 	foundSTRING: BOOLEAN; 
 	strings: StringStack; 
 	debug*, Note*: BOOLEAN; 
 	enableCR*: BOOLEAN; 
-	itnr: LONGINT; 
+	itnr: SIGNED32; 
 	WLog: PROCEDURE ; 
 
 	PROCEDURE ^ WriteTextToLog(T: Texts.Text); 
 	PROCEDURE ^ WLogLog; 
 	PROCEDURE ^ WLogToCaret; 
-	PROCEDURE ^ err(n: INTEGER); 
+	PROCEDURE ^ err(n: SIGNED16); 
 	PROCEDURE ^ Str(s: ARRAY OF CHAR); 
 	PROCEDURE ^ Ch(ch: CHAR); 
 	PROCEDURE ^ Ln; 
 	PROCEDURE ^ Nt; 
 	PROCEDURE ^ WChar(ch: CHAR); 
 	PROCEDURE ^ Gap; 
-	PROCEDURE ^ WReal(x: REAL; n: INTEGER); 
-	PROCEDURE ^ WLongReal*(x: LONGREAL; n: INTEGER); 
-	PROCEDURE ^ WInt(i, n: LONGINT); 
-	PROCEDURE ^ WClass(c: INTEGER); 
-	PROCEDURE ^ WMode(c: INTEGER); 
-	PROCEDURE ^ WComp(c: INTEGER); 
+	PROCEDURE ^ WReal(x: FLOAT32; n: SIGNED16); 
+	PROCEDURE ^ WLongReal*(x: FLOAT64; n: SIGNED16); 
+	PROCEDURE ^ WInt(i, n: SIGNED32); 
+	PROCEDURE ^ WClass(c: SIGNED16); 
+	PROCEDURE ^ WMode(c: SIGNED16); 
+	PROCEDURE ^ WComp(c: SIGNED16); 
 	PROCEDURE ^ OutType*(p: ANY); 
 	PROCEDURE ^ WType*(p: ANY); 
 	PROCEDURE ^ OutVal(VAR val: Value); 
@@ -137,16 +137,16 @@ VAR
 	PROCEDURE ^ WStruct(s: OPT.Struct); 
 	PROCEDURE ^ WObj(obj: OPT.Object); 
 	PROCEDURE ^ Dump(S: Stack); 
-	PROCEDURE ^ GetSym(VAR sym: SHORTINT); 
+	PROCEDURE ^ GetSym(VAR sym: SIGNED8); 
 	PROCEDURE ^ NewV(VAR stack: Stack): ValueItem; 
 	PROCEDURE ^ PushBool*(VAR stack: Stack; b: BOOLEAN); 
 	PROCEDURE ^ PushChar*(VAR stack: Stack; c: CHAR); 
 	PROCEDURE ^ PushString*(VAR stack: Stack; str: OPS.String); 
-	PROCEDURE ^ PushSInt*(VAR stack: Stack; i: SHORTINT); 
-	PROCEDURE ^ PushInt*(VAR stack: Stack; i: INTEGER); 
-	PROCEDURE ^ PushLInt*(VAR stack: Stack; i: LONGINT); 
-	PROCEDURE ^ PushReal*(VAR stack: Stack; x: REAL); 
-	PROCEDURE ^ PushLReal*(VAR stack: Stack; y: LONGREAL); 
+	PROCEDURE ^ PushSInt*(VAR stack: Stack; i: SIGNED8); 
+	PROCEDURE ^ PushInt*(VAR stack: Stack; i: SIGNED16); 
+	PROCEDURE ^ PushLInt*(VAR stack: Stack; i: SIGNED32); 
+	PROCEDURE ^ PushReal*(VAR stack: Stack; x: FLOAT32); 
+	PROCEDURE ^ PushLReal*(VAR stack: Stack; y: FLOAT64); 
 	PROCEDURE ^ PushValue*(VAR stack: Stack; VAR val: Value); 
 	PROCEDURE ^ PushOp*(VAR stack: Stack; op: ARRAY OF CHAR); 
 	PROCEDURE ^ PushItem*(VAR stack: Stack; item: ARRAY OF CHAR); 
@@ -154,21 +154,21 @@ VAR
 	PROCEDURE ^ Term(VAR stack: Stack); 
 	PROCEDURE ^ SimpleExpr(VAR stack: Stack); 
 	PROCEDURE ^ Expr(VAR stack: Stack); 
-	PROCEDURE ^ StringPtr(VAR s: OPS.String): LONGINT; 
-	PROCEDURE ^ Ptr(ptr: LONGINT): ANY; 
-	PROCEDURE ^ AsPointer(a: Value; VAR varadr: LONGINT): ANY; 
+	PROCEDURE ^ StringPtr(VAR s: OPS.String): SIGNED32; 
+	PROCEDURE ^ Ptr(ptr: SIGNED32): ANY; 
+	PROCEDURE ^ AsPointer(a: Value; VAR varadr: SIGNED32): ANY; 
 	PROCEDURE ^ ValPointer(VAR val: Value; p: ANY); 
 	PROCEDURE ^ EvalOp(VAR stack: Stack; op: OpItem; VAR val: Value); 
-	PROCEDURE ^ GetRefNum(mod: Modules.Module; VAR i, num: LONGINT); 
-	PROCEDURE ^ FindAdr(mod: Modules.Module; obj: OPT.Object): LONGINT; 
+	PROCEDURE ^ GetRefNum(mod: Modules.Module; VAR i, num: SIGNED32); 
+	PROCEDURE ^ FindAdr(mod: Modules.Module; obj: OPT.Object): SIGNED32; 
 	PROCEDURE ^ FindObj(mod: Modules.Module; name: ARRAY OF CHAR): OPT.Object; 
 	PROCEDURE ^ SplitName(str: ARRAY OF CHAR; VAR mod: Modules.Module; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ TryDefaultMods(str: ARRAY OF CHAR; VAR mod: Modules.Module; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ IsTypeOf*(t: Types.Type; ref: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ PointerIs*(p: ANY; ref: ARRAY OF CHAR): BOOLEAN; 
-	PROCEDURE ^ GetObjClass(obj: OPT.Object): SHORTINT; 
+	PROCEDURE ^ GetObjClass(obj: OPT.Object): SIGNED8; 
 	PROCEDURE ^ EvalConObj(obj: OPT.Object; VAR val: Value); 
-	PROCEDURE ^ FindPtrs(typ: OPT.Struct; adr: LONGINT); 
+	PROCEDURE ^ FindPtrs(typ: OPT.Struct; adr: SIGNED32); 
 	PROCEDURE ^ EvalVarObj(obj: OPT.Object; VAR val: Value); 
 	PROCEDURE ^ PopWrVar(VAR stack: Stack; VAR global: BOOLEAN; VAR nil: BOOLEAN): OPT.Object; 
 	PROCEDURE ^ ShortInt(VAR val: Value); 
@@ -176,10 +176,10 @@ VAR
 	PROCEDURE ^ OutFile(VAR stack: Stack; VAR res: Value; append: BOOLEAN); 
 	PROCEDURE ^ InFile(VAR stack: Stack; VAR res: Value); 
 	PROCEDURE ^ Assign(VAR stack: Stack; VAR res: Value); 
-	PROCEDURE ^ PushLIntPar(VAR call: CallStack; val: LONGINT); 
-	PROCEDURE ^ PushStringPar(VAR call: CallStack; VAR s: ARRAY OF CHAR; len: LONGINT): BOOLEAN; 
-	PROCEDURE ^ PushRealPar(VAR call: CallStack; val: REAL); 
-	PROCEDURE ^ PushLRealPar(VAR call: CallStack; val: LONGREAL); 
+	PROCEDURE ^ PushLIntPar(VAR call: CallStack; val: SIGNED32); 
+	PROCEDURE ^ PushStringPar(VAR call: CallStack; VAR s: ARRAY OF CHAR; len: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ PushRealPar(VAR call: CallStack; val: FLOAT32); 
+	PROCEDURE ^ PushLRealPar(VAR call: CallStack; val: FLOAT64); 
 	PROCEDURE ^ PopCallPar(VAR stack: Stack; VAR call: CallStack; fpar: OPT.Object): BOOLEAN; 
 	PROCEDURE ^ PI0Prepare(VAR call: CallStack; obj: OPT.Object); 
 	PROCEDURE ^ PI1Result(VAR call: CallStack); 
@@ -202,7 +202,7 @@ VAR
 	PROCEDURE ^ Key(frame: TextGadgets.Frame; ch: CHAR; VAR handled: BOOLEAN); 
 	PROCEDURE ^ Handle*(F: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ GetKeyCode*; 
-	PROCEDURE ^ TestAdr*(adr: LONGINT); 
+	PROCEDURE ^ TestAdr*(adr: SIGNED32); 
 	PROCEDURE ^ Install*; 
 BEGIN
 END antsExpressions.

@@ -29,7 +29,7 @@ TYPE
 		p: T.Packet; 
 		buf: ARRAY 64 OF CHAR; 
 		len: SIZE; 
-		res: WORD; 
+		res: INTEGER; 
 
 		PROCEDURE ^  & Init(forw: Forwarder); 
 	BEGIN{ACTIVE} 
@@ -40,48 +40,48 @@ TYPE
 		next: Forwarder; 
 		active: BOOLEAN; 
 		timer: Kernel.Timer; 
-		localPort: LONGINT; 
+		localPort: SIGNED32; 
 		localConn: TCP.Connection; 
 		clientConn: TCP.Connection; 
-		destPort: LONGINT; 
+		destPort: SIGNED32; 
 		remConn: T.Connection; 
 		chan: Channel; 
 		buf: ARRAY 4096 OF CHAR; 
 		type: CHAR; 
 		len: SIZE; 
-		res: WORD; 
+		res: INTEGER; 
 		clientHandlerRunning: BOOLEAN; 
 		clientHandler: ClientHandler; 
 
 		PROCEDURE ^ OpenTunnel(): BOOLEAN; 
 		PROCEDURE ^ Stop; 
 		PROCEDURE ^ CloseAllConnections; 
-		PROCEDURE ^  & Init*(lConn: TCP.Connection; lPort: LONGINT; rConn: T.Connection; dPort: LONGINT); 
+		PROCEDURE ^  & Init*(lConn: TCP.Connection; lPort: SIGNED32; rConn: T.Connection; dPort: SIGNED32); 
 	BEGIN{ACTIVE} 
 	END Forwarder; 
 
 	Channel* = OBJECT (Streams.Connection)
 	VAR 
-		state-: SHORTINT; 
+		state-: SIGNED8; 
 		conn-: T.Connection; 
-		rchan: LONGINT; 
+		rchan: SIGNED32; 
 		wsize-: SIZE; 
-		clchan: LONGINT; 
-		clwsize: LONGINT; 
-		pmax: LONGINT; 
+		clchan: SIGNED32; 
+		clwsize: SIGNED32; 
+		pmax: SIGNED32; 
 		noneblocking: BOOLEAN; 
 		recBuffer: POINTER TO ARRAY OF CHAR; 
-		rbstart, rbend: LONGINT; 
+		rbstart, rbend: SIGNED32; 
 		interactive: BOOLEAN; 
 
-		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^ Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ NewDataPacket(size: SIZE): T.Packet; 
 		PROCEDURE ^ SendPacket*(p: T.Packet); 
 		PROCEDURE ^ SendBuffer*(CONST buf: ARRAY OF CHAR; len: SIZE); 
 		PROCEDURE ^ SendChar*(ch: CHAR); 
 		PROCEDURE ^ ReceivePacket*(VAR buf: ARRAY OF CHAR; VAR len: SIZE): CHAR; 
-		PROCEDURE ^ ReceiveLine*(VAR line: ARRAY OF CHAR; VAR len: LONGINT); 
+		PROCEDURE ^ ReceiveLine*(VAR line: ARRAY OF CHAR; VAR len: SIGNED32); 
 		PROCEDURE ^ WindowChange*(width, height: SIZE); 
 		PROCEDURE ^ RemoteCommand*(CONST cmd: ARRAY OF CHAR); 
 		PROCEDURE ^ Sync*; 
@@ -101,7 +101,7 @@ VAR
 	PROCEDURE ^ ErrorResponse(CONST msg, buf: ARRAY OF CHAR; len: SIZE); 
 	PROCEDURE ^ ShowChar(c: CHAR); 
 	PROCEDURE ^ ShowPacket(CONST buf: ARRAY OF CHAR; len: SIZE); 
-	PROCEDURE ^ Pause(ms: LONGINT); 
+	PROCEDURE ^ Pause(ms: SIGNED32); 
 	PROCEDURE ^ Connect(arg: Streams.Reader; VAR remHost: ARRAY OF CHAR): A.Connection; 
 	PROCEDURE ^ Send*(context: Commands.Context); 
 	PROCEDURE ^ SendFile(f: Files.File; chan: Channel; CONST name: ARRAY OF CHAR); 

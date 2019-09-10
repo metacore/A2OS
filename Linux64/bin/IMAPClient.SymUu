@@ -43,17 +43,17 @@ TYPE
 		message*: String; 
 		bodystructure*: Bodystructure; 
 		internalDate*: String; 
-		size*: LONGINT; 
+		size*: SIGNED32; 
 		flags*: Flags; 
-		uID*: LONGINT; 
+		uID*: SIGNED32; 
 
 		PROCEDURE ^ ToString*(): String; 
 	END Message; 
 
 	Client* = OBJECT {EXCLUSIVE} 
 	VAR 
-		status-: LONGINT; 
-		currentWork-: LONGINT; 
+		status-: SIGNED32; 
+		currentWork-: SIGNED32; 
 		abort*, userAbort*: BOOLEAN; 
 		c: IMAP.Connection; 
 		currentFolder-: Folder; 
@@ -61,7 +61,7 @@ TYPE
 		getSubFoldersContext: Folder; 
 		FolderIsSynchronized: BOOLEAN; 
 		FolderComplete: BOOLEAN; 
-		Task*: LONGINT; 
+		Task*: SIGNED32; 
 		searchResult-: POINTER TO ARRAY OF SIZE; 
 		timer*: Kernel.Timer; 
 		observer: EventListener; 
@@ -76,8 +76,8 @@ TYPE
 		PROCEDURE ^ CallObserverMethod; 
 		PROCEDURE ^ SetErrorHandler*(m: ErrorListener); 
 		PROCEDURE ^ CallErrorHandler(CONST string: ARRAY OF CHAR); 
-		PROCEDURE ^ Connect*(CONST host, user, pass: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ ConnectUnlocked(host, user, pass: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ Connect*(CONST host, user, pass: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ ConnectUnlocked(host, user, pass: ARRAY OF CHAR): SIGNED32; 
 		PROCEDURE ^ Disconnect*; 
 		PROCEDURE ^ SwitchToOffline*; 
 		PROCEDURE ^ SwitchToOnline*(CONST password: ARRAY OF CHAR); 
@@ -89,38 +89,38 @@ TYPE
 		PROCEDURE ^ CheckStatus(answer: IMAP.Entry); 
 		PROCEDURE ^ CheckList(answer: IMAP.Entry); 
 		PROCEDURE ^ CheckFetch(answer: IMAP.Entry); 
-		PROCEDURE ^ Synchronize(): LONGINT; 
-		PROCEDURE ^ DownloadAllMessages(): LONGINT; 
-		PROCEDURE ^ FetchSomeHeaders(idx, len: SIZE): LONGINT; 
-		PROCEDURE ^ FetchSomeUIDs(idx, len: SIZE): LONGINT; 
-		PROCEDURE ^ FetchSomeMessages(idx, len: SIZE): LONGINT; 
-		PROCEDURE ^ FetchMessage*(message: Message): LONGINT; 
-		PROCEDURE ^ DeleteMessage*(message: Message; expunge: BOOLEAN): LONGINT; 
-		PROCEDURE ^ MoveMessageToTrashBin*(message: Message): LONGINT; 
-		PROCEDURE ^ RestoreMessage*(message: Message): LONGINT; 
-		PROCEDURE ^ CopyMessage*(message: Message; path: String): LONGINT; 
-		PROCEDURE ^ CopyMessageUnlocked*(message: Message; path: String): LONGINT; 
-		PROCEDURE ^ AppendMessage*(message: Message; path: String): LONGINT; 
-		PROCEDURE ^ SetAnsweredFlag*(message: Message): LONGINT; 
-		PROCEDURE ^ SaveSentMessage*(message: Message): LONGINT; 
-		PROCEDURE ^ Expunge*(): LONGINT; 
-		PROCEDURE ^ ExpungeUnlocked(): LONGINT; 
-		PROCEDURE ^ SelectFolder*(folder: Folder): LONGINT; 
-		PROCEDURE ^ SelectFolderUnlocked(folder: Folder): LONGINT; 
-		PROCEDURE ^ GetSubFolders(VAR folder: Folder): LONGINT; 
+		PROCEDURE ^ Synchronize(): SIGNED32; 
+		PROCEDURE ^ DownloadAllMessages(): SIGNED32; 
+		PROCEDURE ^ FetchSomeHeaders(idx, len: SIZE): SIGNED32; 
+		PROCEDURE ^ FetchSomeUIDs(idx, len: SIZE): SIGNED32; 
+		PROCEDURE ^ FetchSomeMessages(idx, len: SIZE): SIGNED32; 
+		PROCEDURE ^ FetchMessage*(message: Message): SIGNED32; 
+		PROCEDURE ^ DeleteMessage*(message: Message; expunge: BOOLEAN): SIGNED32; 
+		PROCEDURE ^ MoveMessageToTrashBin*(message: Message): SIGNED32; 
+		PROCEDURE ^ RestoreMessage*(message: Message): SIGNED32; 
+		PROCEDURE ^ CopyMessage*(message: Message; path: String): SIGNED32; 
+		PROCEDURE ^ CopyMessageUnlocked*(message: Message; path: String): SIGNED32; 
+		PROCEDURE ^ AppendMessage*(message: Message; path: String): SIGNED32; 
+		PROCEDURE ^ SetAnsweredFlag*(message: Message): SIGNED32; 
+		PROCEDURE ^ SaveSentMessage*(message: Message): SIGNED32; 
+		PROCEDURE ^ Expunge*(): SIGNED32; 
+		PROCEDURE ^ ExpungeUnlocked(): SIGNED32; 
+		PROCEDURE ^ SelectFolder*(folder: Folder): SIGNED32; 
+		PROCEDURE ^ SelectFolderUnlocked(folder: Folder): SIGNED32; 
+		PROCEDURE ^ GetSubFolders(VAR folder: Folder): SIGNED32; 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ Update(): LONGINT; 
-		PROCEDURE ^ Rename*(folder: Folder; VAR name: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ Delete*(folder: Folder): LONGINT; 
-		PROCEDURE ^ Create*(folder: Folder; name: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ Update(): SIGNED32; 
+		PROCEDURE ^ Rename*(folder: Folder; VAR name: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ Delete*(folder: Folder): SIGNED32; 
+		PROCEDURE ^ Create*(folder: Folder; name: ARRAY OF CHAR): SIGNED32; 
 		PROCEDURE ^ Search*(CONST string: ARRAY OF CHAR): SIZE; 
 		PROCEDURE ^ OfflineSearch(CONST string: ARRAY OF CHAR): SIZE; 
-		PROCEDURE ^ Save*(VAR doc: XML.Document): LONGINT; 
+		PROCEDURE ^ Save*(VAR doc: XML.Document): SIGNED32; 
 		PROCEDURE ^ SavePreferences(element: XML.Element); 
 		PROCEDURE ^ ExtractMailboxContent(folder: Folder; element: XML.Element); 
-		PROCEDURE ^ Load*(document: XML.Document): LONGINT; 
-		PROCEDURE ^ LoadPreferences(element: XML.Element): LONGINT; 
-		PROCEDURE ^ InsertMailboxContent(folder: Folder; element: XML.Element): LONGINT; 
+		PROCEDURE ^ Load*(document: XML.Document): SIGNED32; 
+		PROCEDURE ^ LoadPreferences(element: XML.Element): SIGNED32; 
+		PROCEDURE ^ InsertMailboxContent(folder: Folder; element: XML.Element): SIGNED32; 
 	BEGIN{ACTIVE} 
 	END Client; 
 
@@ -200,7 +200,7 @@ TYPE
 
 	Date* = OBJECT 
 	VAR 
-		day, month, year: LONGINT; 
+		day, month, year: SIGNED32; 
 
 		PROCEDURE ^ Equal*(otherDate: Date): BOOLEAN; 
 		PROCEDURE ^ Before*(otherDate: Date): BOOLEAN; 
@@ -209,7 +209,7 @@ TYPE
 
 	Time* = OBJECT 
 	VAR 
-		hour, minute, second: LONGINT; 
+		hour, minute, second: SIGNED32; 
 
 		PROCEDURE ^ Equal*(otherTime: Time): BOOLEAN; 
 		PROCEDURE ^ Before*(otherTime: Time): BOOLEAN; 
@@ -227,9 +227,9 @@ TYPE
 		PROCEDURE ^ FromInternalDate*(string: String); 
 	END DateTime; 
 VAR 
-	globalR: LONGINT; 
+	globalR: SIGNED32; 
 
-	PROCEDURE ^ OldestFirst*(x, y: ANY): LONGINT; 
-	PROCEDURE ^ BiggestUIDFirst*(x, y: ANY): LONGINT; 
+	PROCEDURE ^ OldestFirst*(x, y: ANY): SIGNED32; 
+	PROCEDURE ^ BiggestUIDFirst*(x, y: ANY): SIGNED32; 
 BEGIN
 END IMAPClient.

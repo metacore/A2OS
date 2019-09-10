@@ -7,10 +7,10 @@ VAR
 	shells: ARRAY (Serials.MaxPorts + 1) OF Shell.Shell; 
 
 	PROCEDURE ^ Yield(): BOOLEAN; 
-	PROCEDURE ^ ModemReceive(context: Commands.Context; modemMode: LONGINT); 
+	PROCEDURE ^ ModemReceive(context: Commands.Context; modemMode: SIGNED32); 
 	PROCEDURE ^ XReceive*(context: Commands.Context); 
 	PROCEDURE ^ YReceive*(context: Commands.Context); 
-	PROCEDURE ^ Wait(ms: LONGINT); 
+	PROCEDURE ^ Wait(ms: SIGNED32); 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Cleanup; 
 BEGIN

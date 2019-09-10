@@ -14,7 +14,7 @@ TYPE
 VAR 
 	tempLayer-: tLayer; 
 
-	PROCEDURE ^ CheckColors*(l: tLayer; depth: LONGINT); 
+	PROCEDURE ^ CheckColors*(l: tLayer; depth: SIGNED32); 
 	PROCEDURE ^ Recall(layer: tLayer); 
 	PROCEDURE ^ Responsible(layer: tLayer; VAR event: vyEvents.EventMsg); 
 	PROCEDURE ^ incSize; 
@@ -39,8 +39,8 @@ VAR
 	PROCEDURE ^ Init*(layer: tLayer); 
 	PROCEDURE ^ DefaultPath*(layer: tLayer; textureplot: BOOLEAN); 
 	PROCEDURE ^ Open*(layer: tLayer; id: vyName.tNameArray); 
-	PROCEDURE ^ DoShowI*(a: antsArrayObjects.tINTEGERArray; depth: LONGINT); 
-	PROCEDURE ^ DoShowR*(a: antsArrayObjects.tLONGREALArray; depth: LONGINT); 
+	PROCEDURE ^ DoShowI*(a: antsArrayObjects.tINTEGERArray; depth: SIGNED32); 
+	PROCEDURE ^ DoShowR*(a: antsArrayObjects.tLONGREALArray; depth: SIGNED32); 
 	PROCEDURE ^ DoShow*(obj: vyBase.Object); 
 	PROCEDURE ^ Show*; 
 	PROCEDURE ^ ShowP*; 

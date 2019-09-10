@@ -21,7 +21,7 @@ TYPE
 		PROCEDURE ^ GetName*(): Strings.String; 
 		PROCEDURE ^ SetInterface*(i: IMEInterface); 
 		PROCEDURE ^ InsertChar*(ucs: SIZE); 
-		PROCEDURE ^ InsertMultiChar*(CONST ucs: ARRAY OF LONGINT); 
+		PROCEDURE ^ InsertMultiChar*(CONST ucs: ARRAY OF SIGNED32); 
 		PROCEDURE ^ InsertUTF8String*(CONST string: ARRAY OF CHAR); 
 		PROCEDURE ^ GetCursorScreenPosition*(VAR x, y: SIZE); 
 		PROCEDURE ^ KeyEvent*(ucs: SIZE; flags: SET; keysym: SIZE); 
@@ -38,7 +38,7 @@ VAR
 	toolSwitch*: IMToolSwitchCallback; 
 	None-: IMEInterface; 
 
-	PROCEDURE ^ GetIME*(CONST name: ARRAY OF CHAR; VAR res: WORD): IMEInstaller; 
+	PROCEDURE ^ GetIME*(CONST name: ARRAY OF CHAR; VAR res: INTEGER): IMEInstaller; 
 	PROCEDURE ^ SwitchIME*(): IME; 
 	PROCEDURE ^ InstallIME*(newIME: IME); 
 BEGIN

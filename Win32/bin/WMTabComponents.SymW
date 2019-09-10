@@ -50,7 +50,7 @@ TYPE
 		PROCEDURE ^ CalcSize; 
 		PROCEDURE ^ SetTabCaption*(tab: Tab; caption: Strings.String); 
 		PROCEDURE ^ SetTabColor*(tab: Tab; color: WMGraphics.Color); 
-		PROCEDURE ^ SetTabWidth*(tab: Tab; width: LONGINT); 
+		PROCEDURE ^ SetTabWidth*(tab: Tab; width: SIGNED32); 
 		PROCEDURE ^ SetTabData*(tab: Tab; data: ANY); 
 		PROCEDURE ^ NewTab*(): Tab; 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
@@ -92,7 +92,7 @@ VAR
 	PROCEDURE ^ GenTabPanel*(): XML.Element; 
 	PROCEDURE ^ GenTabControl*(): XML.Element; 
 	PROCEDURE ^ GenTab*(): XML.Element; 
-	PROCEDURE ^ RectGlassShade*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; openSides: SET; borderWidth: LONGINT; down: BOOLEAN); 
+	PROCEDURE ^ RectGlassShade*(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; openSides: SET; borderWidth: SIGNED32; down: BOOLEAN); 
 	PROCEDURE ^ InitStrings; 
 	PROCEDURE ^ InitPrototypes; 
 BEGIN

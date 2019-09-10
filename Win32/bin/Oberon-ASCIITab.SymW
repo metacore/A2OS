@@ -11,9 +11,9 @@ TYPE
 VAR 
 	W: Texts.Writer; 
 
-	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
-	PROCEDURE ^ Track(F: Frame; VAR M: Oberon.InputMsg; x, y: INTEGER); 
+	PROCEDURE ^ Track(F: Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16); 
 	PROCEDURE ^ CopyFrame(VAR M: Objects.CopyMsg; F, F1: Frame); 
 	PROCEDURE ^ Handle*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewFrame*; 

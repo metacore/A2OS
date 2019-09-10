@@ -42,7 +42,7 @@ TYPE
 		fullname: ARRAY 256 OF CHAR; 
 		file: Files.File; 
 		in: Streams.Reader; 
-		decoderRes: WORD; 
+		decoderRes: INTEGER; 
 
 		PROCEDURE ^ LoadTxtFile; 
 		PROCEDURE ^ FindStartPos; 

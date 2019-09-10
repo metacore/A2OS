@@ -12,7 +12,7 @@ TYPE
 	Link* = POINTER TO LinkDesc; 
 
 	LinkDesc* = RECORD (LeoPaths.PointDesc)
-		lx*, ly*: REAL; 
+		lx*, ly*: FLOAT32; 
 	END; 
 
 	Rectangle* = Frame; 
@@ -23,7 +23,7 @@ TYPE
 
 	PROCEDURE ^ CopyLink*(VAR msg: Objects.CopyMsg; from, to: Link); 
 	PROCEDURE ^ HandleLink*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ InitLink*(l: Link; lx, ly: REAL); 
+	PROCEDURE ^ InitLink*(l: Link; lx, ly: FLOAT32); 
 	PROCEDURE ^ NewLink*; 
 	PROCEDURE ^ CalcFrameRect*(f: Frame; VAR mat: GfxMatrix.Matrix); 
 	PROCEDURE ^ SelectFrame*(f: Frame; VAR msg: Leonardo.SelectMsg); 
@@ -42,14 +42,14 @@ TYPE
 	PROCEDURE ^ RenderRect(rect: Rectangle; VAR msg: Leonardo.RenderMsg); 
 	PROCEDURE ^ LocateRect(rect: Rectangle; VAR msg: Leonardo.LocateMsg); 
 	PROCEDURE ^ HandleRect*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ InitRect*(rect: Rectangle; x0, y0, x1, y1: REAL; pen: LeoPens.Pen); 
+	PROCEDURE ^ InitRect*(rect: Rectangle; x0, y0, x1, y1: FLOAT32; pen: LeoPens.Pen); 
 	PROCEDURE ^ NewRect*; 
 	PROCEDURE ^ ConsumeEllipse(e: Ellipse; VAR msg: Leonardo.ConsumeMsg); 
 	PROCEDURE ^ DrawEllipse(e: Ellipse; pen: LeoPens.Pen); 
 	PROCEDURE ^ RenderEllipse(e: Ellipse; VAR msg: Leonardo.RenderMsg); 
 	PROCEDURE ^ LocateEllipse(e: Ellipse; VAR msg: Leonardo.LocateMsg); 
 	PROCEDURE ^ HandleEllipse*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ InitEllipse*(e: Ellipse; x, y, rx, ry: REAL; pen: LeoPens.Pen); 
+	PROCEDURE ^ InitEllipse*(e: Ellipse; x, y, rx, ry: FLOAT32; pen: LeoPens.Pen); 
 	PROCEDURE ^ NewEllipse*; 
 	PROCEDURE ^ HandleGroup*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ InitGroup*(group: Group; bottom, top: Leonardo.Shape); 

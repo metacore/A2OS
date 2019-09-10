@@ -14,7 +14,7 @@ VAR
 	PROCEDURE ^ NewSegment*; 
 	PROCEDURE ^ RevertTool*(e: LeoPanels.Editor); 
 	PROCEDURE ^ ApplyTool*(e: LeoPanels.Editor); 
-	PROCEDURE ^ DragPoint*(tool: LeoTools.Tool; fx, fy: INTEGER; mask: Display3.Mask; c: Leonardo.Container; ox, oy: REAL; CONST str: ARRAY OF CHAR; VAR keys: SET); 
+	PROCEDURE ^ DragPoint*(tool: LeoTools.Tool; fx, fy: SIGNED16; mask: Display3.Mask; c: Leonardo.Container; ox, oy: FLOAT32; CONST str: ARRAY OF CHAR; VAR keys: SET); 
 	PROCEDURE ^ Append*(cont: Leonardo.Container; p: LeoPaths.Point); 
 	PROCEDURE ^ TrackPolyline(frame: LeoFrames.Frame; VAR msg: Oberon.InputMsg); 
 	PROCEDURE ^ PolylineTool(obj: Objects.Object; VAR msg: Objects.ObjMsg); 

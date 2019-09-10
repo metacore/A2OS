@@ -51,9 +51,9 @@ VAR
 	PROCEDURE ^ GetSelection*; 
 	PROCEDURE ^ OpenDoc*; 
 	PROCEDURE ^ Print*; 
-	PROCEDURE ^ ExportFigure(fig: Leonardo.Figure; x0, y0, x1, y1: INTEGER); 
-	PROCEDURE ^ ExportImage(fig: Leonardo.Figure; x0, y0, x1, y1: INTEGER); 
-	PROCEDURE ^ ExportEPS(fig: Leonardo.Figure; x0, y0, x1, y1: INTEGER); 
+	PROCEDURE ^ ExportFigure(fig: Leonardo.Figure; x0, y0, x1, y1: SIGNED16); 
+	PROCEDURE ^ ExportImage(fig: Leonardo.Figure; x0, y0, x1, y1: SIGNED16); 
+	PROCEDURE ^ ExportEPS(fig: Leonardo.Figure; x0, y0, x1, y1: SIGNED16); 
 	PROCEDURE ^ Export*; 
 	PROCEDURE ^ RevertFrame(editor: Editor); 
 	PROCEDURE ^ ApplyFrame(editor: Editor); 
@@ -83,7 +83,7 @@ VAR
 	PROCEDURE ^ OrderSelection*; 
 	PROCEDURE ^ Arrange*; 
 	PROCEDURE ^ EditTool*; 
-	PROCEDURE ^ atan2(x, y: REAL): REAL; 
+	PROCEDURE ^ atan2(x, y: FLOAT32): FLOAT32; 
 	PROCEDURE ^ RevertFocus(e: Editor); 
 	PROCEDURE ^ ApplyFocus(e: Editor); 
 	PROCEDURE ^ NewFocus*; 

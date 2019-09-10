@@ -27,16 +27,16 @@ TYPE
 		login: ARRAY 9 OF CHAR; 
 		password, passwordConfirm: ARRAY 33 OF CHAR; 
 		shortName, fullName, eMail: ARRAY 65 OF CHAR; 
-		uin: LONGINT; 
-		res: WORD; 
+		uin: SIGNED32; 
+		res: INTEGER; 
 		dt: Dates.DateTime; 
 		keepAliveTimer: Kernel.MilliTimer; 
 		s: UDP.Socket; 
 		serverIP, ip: IP.Adr; 
 		running, terminated, onLine: BOOLEAN; 
 		str1, str2: ARRAY 256 OF CHAR; 
-		branch, command, seqNum, messageType, inSeqNum, outSeqNum: INTEGER; 
-		senderUin, receiverUin, port, receiveBufOffset: LONGINT; 
+		branch, command, seqNum, messageType, inSeqNum, outSeqNum: SIGNED16; 
+		senderUin, receiverUin, port, receiveBufOffset: SIGNED32; 
 		len: SIZE; 
 		sendBuf-: Base.Buffer; 
 		receiveBuf, message, string: String; 
@@ -49,15 +49,15 @@ TYPE
 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Finalize; 
-		PROCEDURE ^ Client_ACK(seqNum: INTEGER; uin: LONGINT; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
-		PROCEDURE ^ Client_NewUserReg(password, shortName, fullName, eMail: ARRAY OF CHAR; VAR seqNum: INTEGER; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
-		PROCEDURE ^ Client_Login(password: ARRAY OF CHAR; VAR seqNum: INTEGER; uin: LONGINT; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
-		PROCEDURE ^ Client_InfoReq(userUIN: LONGINT; VAR seqNum: INTEGER; uin: LONGINT; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
-		PROCEDURE ^ Client_SendMessage(userUIN: LONGINT; messageType: INTEGER; message: String; VAR seqNum: INTEGER; uin: LONGINT; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
-		PROCEDURE ^ Client_SendTextCode(code: String; VAR seqNum: INTEGER; uin: LONGINT; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
-		PROCEDURE ^ Client_KeepAlive(VAR seqNum: INTEGER; uin: LONGINT; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
-		PROCEDURE ^ FindUserInfo(list: Base.List; uin: LONGINT): Base.UserInfo; 
-		PROCEDURE ^ Log(type, code: SHORTINT; msg: ARRAY OF CHAR; showOnKernelLog: BOOLEAN); 
+		PROCEDURE ^ Client_ACK(seqNum: SIGNED16; uin: SIGNED32; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
+		PROCEDURE ^ Client_NewUserReg(password, shortName, fullName, eMail: ARRAY OF CHAR; VAR seqNum: SIGNED16; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
+		PROCEDURE ^ Client_Login(password: ARRAY OF CHAR; VAR seqNum: SIGNED16; uin: SIGNED32; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
+		PROCEDURE ^ Client_InfoReq(userUIN: SIGNED32; VAR seqNum: SIGNED16; uin: SIGNED32; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
+		PROCEDURE ^ Client_SendMessage(userUIN: SIGNED32; messageType: SIGNED16; message: String; VAR seqNum: SIGNED16; uin: SIGNED32; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
+		PROCEDURE ^ Client_SendTextCode(code: String; VAR seqNum: SIGNED16; uin: SIGNED32; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
+		PROCEDURE ^ Client_KeepAlive(VAR seqNum: SIGNED16; uin: SIGNED32; sendBuf: Base.Buffer; s: UDP.Socket; ip: IP.Adr); 
+		PROCEDURE ^ FindUserInfo(list: Base.List; uin: SIGNED32): Base.UserInfo; 
+		PROCEDURE ^ Log(type, code: SIGNED8; msg: ARRAY OF CHAR; showOnKernelLog: BOOLEAN); 
 	BEGIN{ACTIVE} 
 	END Instance; 
 

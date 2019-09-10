@@ -4,12 +4,12 @@ CONST
 TYPE 
 	Loop = OBJECT 
 	VAR 
-		startpos: LONGINT; 
-		total: LONGINT; 
-		current: LONGINT; 
+		startpos: SIGNED32; 
+		total: SIGNED32; 
+		current: SIGNED32; 
 		loop: Loop; 
 
-		PROCEDURE ^  & Init(pos: LONGINT); 
+		PROCEDURE ^  & Init(pos: SIGNED32); 
 	END Loop; 
 
 	Task = POINTER TO TaskDesc; 
@@ -17,28 +17,28 @@ TYPE
 	TaskDesc = RECORD (Oberon.TaskDesc)
 		executorObj: Objects.Object; 
 		context: Objects.Object; 
-		curnum, num: LONGINT; 
+		curnum, num: SIGNED32; 
 		interactive: BOOLEAN; 
 		text: Texts.Text; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		curtext: Texts.Text; 
-		curpos: LONGINT; 
-		checktime: LONGINT; 
+		curpos: SIGNED32; 
+		checktime: SIGNED32; 
 		contextFrame: Display.Frame; 
 		mynext: Task; 
 	END; 
 VAR 
 	diag: BOOLEAN; 
-	mintime, maxtime, minchecktime: LONGINT; 
-	tempX: INTEGER; 
+	mintime, maxtime, minchecktime: SIGNED32; 
+	tempX: SIGNED16; 
 	lastcontext: Objects.Object; 
 	found: BOOLEAN; 
 	tasks: Task; 
 	current*, stopped*, demon*: Oberon.Task; 
 	locked*: BOOLEAN; 
 
-	PROCEDURE ^ NextLine(text: Texts.Text; pos: LONGINT): LONGINT; 
-	PROCEDURE ^ NextCommand(VAR text: Texts.Text; VAR pos: LONGINT; execute: BOOLEAN; VAR bt: LONGINT); 
+	PROCEDURE ^ NextLine(text: Texts.Text; pos: SIGNED32): SIGNED32; 
+	PROCEDURE ^ NextCommand(VAR text: Texts.Text; VAR pos: SIGNED32; execute: BOOLEAN; VAR bt: SIGNED32); 
 	PROCEDURE ^ OneTimeSlice(t: Oberon.Task): BOOLEAN; 
 	PROCEDURE ^ TempHandle(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ CheckOnDisplay(t: Task): BOOLEAN; 
@@ -46,7 +46,7 @@ VAR
 	PROCEDURE ^ Search(c: Objects.Object): Task; 
 	PROCEDURE ^ Remove(t: Task); 
 	PROCEDURE ^ Install(t: Task); 
-	PROCEDURE ^ TCopy(t: Texts.Text; from, to: LONGINT): Texts.Text; 
+	PROCEDURE ^ TCopy(t: Texts.Text; from, to: SIGNED32): Texts.Text; 
 	PROCEDURE ^ Do*; 
 	PROCEDURE ^ Schedule*; 
 	PROCEDURE ^ Pause*; 

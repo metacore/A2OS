@@ -8,18 +8,18 @@ TYPE
 	Cipher* = OBJECT 
 	VAR 
 		name-: ARRAY 64 OF CHAR; 
-		blockSize-: LONGINT; 
+		blockSize-: SIGNED32; 
 		isKeyInitialized*: BOOLEAN; 
-		mode-: SHORTINT; 
-		len1, len2: INTEGER; 
+		mode-: SIGNED8; 
+		len1, len2: SIGNED16; 
 
-		PROCEDURE ^ appsize(size: LONGINT); 
+		PROCEDURE ^ appsize(size: SIGNED32); 
 		PROCEDURE ^ appmode(CONST str: ARRAY OF CHAR); 
-		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
-		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIGNED32); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; pos, len: SIZE); 
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; pos, len: SIZE); 
-		PROCEDURE ^ SetNameAndBlocksize*(CONST name: ARRAY OF CHAR; size: LONGINT); 
+		PROCEDURE ^ SetNameAndBlocksize*(CONST name: ARRAY OF CHAR; size: SIGNED32); 
 		PROCEDURE ^  & Init*; 
 	END Cipher; 
 

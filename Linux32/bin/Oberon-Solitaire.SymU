@@ -24,7 +24,7 @@ TYPE
 	END; 
 
 	SetDrawMsg = RECORD (Display.FrameMsg)
-		drawNum: INTEGER; 
+		drawNum: SIGNED16; 
 	END; 
 
 	FlipMove = POINTER TO FlipMoveDesc; 
@@ -35,17 +35,17 @@ TYPE
 	SwapMove = POINTER TO SwapMoveDesc; 
 
 	SwapMoveDesc = RECORD (Cards.MoveDesc)
-		nrVis: ARRAY CARDS OF SHORTINT; 
-		curSwap: INTEGER; 
+		nrVis: ARRAY CARDS OF SIGNED8; 
+		curSwap: SIGNED16; 
 	END; 
 
 	Talon = POINTER TO TalonDesc; 
 
 	TalonDesc = RECORD (Cards.StackDesc)
 		visTail: Cards.Card; 
-		nrVis: ARRAY CARDS OF SHORTINT; 
-		curSwap: INTEGER; 
-		nrDraw: INTEGER; 
+		nrVis: ARRAY CARDS OF SIGNED8; 
+		curSwap: SIGNED16; 
+		nrDraw: SIGNED16; 
 	END; 
 
 	Depot = POINTER TO DepotDesc; 
@@ -56,8 +56,8 @@ TYPE
 	Column = POINTER TO ColumnDesc; 
 
 	ColumnDesc = RECORD (Cards.StackDesc)
-		topY: INTEGER; 
-		nrCards: INTEGER; 
+		topY: SIGNED16; 
+		nrCards: SIGNED16; 
 	END; 
 VAR 
 	talonMethods: Cards.Methods; 
@@ -65,12 +65,12 @@ VAR
 	columnMethods: Cards.Methods; 
 
 	PROCEDURE ^ StartGame(F: Display.Frame); 
-	PROCEDURE ^ DrawRect(x, y: INTEGER; card: Cards.Card); 
+	PROCEDURE ^ DrawRect(x, y: SIGNED16; card: Cards.Card); 
 	PROCEDURE ^ WaitMouseRelease(M: Oberon.InputMsg); 
 	PROCEDURE ^ DropOnFittingStack(M: Oberon.InputMsg; c: Cards.Card; self: Cards.Stack); 
 	PROCEDURE ^ TalonAttr(T: Talon; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ CopyTalon(VAR M: Objects.CopyMsg; from, to: Talon); 
-	PROCEDURE ^ DrawTalon(T: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DrawTalon(T: Cards.Stack; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ TalonDrop(T: Cards.Stack; card: Cards.Card); 
 	PROCEDURE ^ TalonMove(self, to: Cards.Stack; card: Cards.Card; undo: BOOLEAN); 
 	PROCEDURE ^ TalonUndoMove(T: Cards.Stack; M: Cards.Move); 
@@ -86,7 +86,7 @@ VAR
 	PROCEDURE ^ CopyColumn(VAR M: Objects.CopyMsg; from, to: Column); 
 	PROCEDURE ^ ColumnCanDrop(C: Cards.Stack; card: Cards.Card): BOOLEAN; 
 	PROCEDURE ^ ColumnUndoMove(C: Cards.Stack; M: Cards.Move); 
-	PROCEDURE ^ DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ TrackColumn(C: Cards.Stack; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ ColumnHandler*(C: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewColumn*; 

@@ -14,19 +14,19 @@ TYPE
 	Attributes* = OBJECT 
 	VAR 
 		attributes: AttributeArray; 
-		nofAttributes: LONGINT; 
+		nofAttributes: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ ResizeArrayIfNecessary; 
 		PROCEDURE ^ AddObject(object: ANY; flags: SET; data: ANY); 
-		PROCEDURE ^ RemoveObject(object: ANY; hint: LONGINT); 
-		PROCEDURE ^ GetIndexOf(object: ANY): LONGINT; 
+		PROCEDURE ^ RemoveObject(object: ANY; hint: SIGNED32); 
+		PROCEDURE ^ GetIndexOf(object: ANY): SIGNED32; 
 		PROCEDURE ^ Get*(object: ANY): Attribute; 
 		PROCEDURE ^ Set*(object: ANY; flags: SET; data: ANY); 
 		PROCEDURE ^ GetFlags*(object: ANY): SET; 
 		PROCEDURE ^ SetFlags*(object: ANY; flags: SET); 
-		PROCEDURE ^ Include*(object: ANY; flag: LONGINT); 
-		PROCEDURE ^ Exclude*(object: ANY; flag: LONGINT); 
+		PROCEDURE ^ Include*(object: ANY; flag: SIGNED32); 
+		PROCEDURE ^ Exclude*(object: ANY; flag: SIGNED32); 
 		PROCEDURE ^ GetData*(object: ANY): ANY; 
 		PROCEDURE ^ SetData*(object, data: ANY); 
 		PROCEDURE ^ Clear*; 

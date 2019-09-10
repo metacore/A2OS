@@ -45,7 +45,7 @@ CONST
 TYPE 
 	User = POINTER TO RECORD 
 		name: ARRAY nameLen OF CHAR; 
-		password, currentlogins, maxlogins: LONGINT; 
+		password, currentlogins, maxlogins: SIGNED32; 
 		permissions: SET; 
 		root: ARRAY dirLen OF CHAR; 
 		next: User; 
@@ -56,8 +56,8 @@ TYPE
 		ip: IP.Adr; 
 		method: ARRAY 16 OF CHAR; 
 		uri: ARRAY 1024 OF CHAR; 
-		status: LONGINT; 
-		result: WORD; 
+		status: SIGNED32; 
+		result: INTEGER; 
 		pending: BOOLEAN; 
 	END; 
 
@@ -67,19 +67,19 @@ TYPE
 		in: Streams.Reader; 
 		out: Streams.Writer; 
 		dataAdr: IP.Adr; 
-		dataPort: LONGINT; 
+		dataPort: SIGNED32; 
 		timeout, pasvTimeout: Objects.Timer; 
 		line: ARRAY LineLen OF CHAR; 
 		cmd: ARRAY CmdLen OF CHAR; 
 		logged, quit: BOOLEAN; 
 		user: User; 
-		type: SHORTINT; 
+		type: SIGNED8; 
 		workDir: ARRAY dirLen OF CHAR; 
 		rnfrName: ARRAY dirLen OF CHAR; 
-		state: LONGINT; 
-		mode: LONGINT; 
-		consecutiveErrors: LONGINT; 
-		restMarker: LONGINT; 
+		state: SIGNED32; 
+		mode: SIGNED32; 
+		consecutiveErrors: SIGNED32; 
+		restMarker: SIGNED32; 
 		pasvListener: TCP.Connection; 
 		logEntry: LogEntry; 
 
@@ -87,14 +87,14 @@ TYPE
 		PROCEDURE ^ PasvTimeoutHandler; 
 		PROCEDURE ^ ReadCommand(VAR cmd, param: ARRAY OF CHAR); 
 		PROCEDURE ^ SendString(str: ARRAY OF CHAR); 
-		PROCEDURE ^ SendMessage(code: LONGINT; msg: ARRAY OF CHAR); 
+		PROCEDURE ^ SendMessage(code: SIGNED32; msg: ARRAY OF CHAR); 
 		PROCEDURE ^ GetWorkingDirMsg(VAR msg: ARRAY OF CHAR); 
 		PROCEDURE ^ GetDirectories(name: ARRAY OF CHAR; VAR usr, system: ARRAY OF CHAR); 
 		PROCEDURE ^ CheckDirectory(name: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ Directory(name: ARRAY OF CHAR; full: BOOLEAN); 
 		PROCEDURE ^ Size(name: ARRAY OF CHAR); 
 		PROCEDURE ^ WaitEstablished(c: TCP.Connection); 
-		PROCEDURE ^ Retrieve(name: ARRAY OF CHAR; marker: LONGINT); 
+		PROCEDURE ^ Retrieve(name: ARRAY OF CHAR; marker: SIGNED32); 
 		PROCEDURE ^ Store(name: ARRAY OF CHAR; marker: Files.Position); 
 		PROCEDURE ^ Execute(VAR cmd, param: ARRAY OF CHAR); 
 	BEGIN{ACTIVE, SAFE} 
@@ -106,19 +106,19 @@ VAR
 	shutdown: BOOLEAN; 
 	w3cf: Files.File; 
 	w3cw: Streams.Writer; 
-	NclientsTotal*, NclientsActive*, NMebiBReceived*, NMebiBSent*, NbytesReceived*, NbytesSent*: LONGINT; 
+	NclientsTotal*, NclientsActive*, NMebiBReceived*, NMebiBSent*, NbytesReceived*, NbytesSent*: SIGNED32; 
 
-	PROCEDURE ^ IncreaseSent(delta: LONGINT); 
-	PROCEDURE ^ IncreaseReceived(delta: LONGINT); 
-	PROCEDURE ^ IncreaseActive(delta: LONGINT); 
+	PROCEDURE ^ IncreaseSent(delta: SIGNED32); 
+	PROCEDURE ^ IncreaseReceived(delta: SIGNED32); 
+	PROCEDURE ^ IncreaseActive(delta: SIGNED32); 
 	PROCEDURE ^ IsDigit(ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ StrToInt(str: ARRAY OF CHAR; VAR val: LONGINT); 
-	PROCEDURE ^ StrToIntPos(VAR str: ARRAY OF CHAR; VAR i: INTEGER): LONGINT; 
-	PROCEDURE ^ SplitPort(parm: ARRAY OF CHAR; VAR adr: IP.Adr; VAR port: LONGINT); 
-	PROCEDURE ^ SplitEPRT(param: ARRAY OF CHAR; VAR adr: IP.Adr; VAR port: LONGINT); 
+	PROCEDURE ^ StrToInt(str: ARRAY OF CHAR; VAR val: SIGNED32); 
+	PROCEDURE ^ StrToIntPos(VAR str: ARRAY OF CHAR; VAR i: SIGNED16): SIGNED32; 
+	PROCEDURE ^ SplitPort(parm: ARRAY OF CHAR; VAR adr: IP.Adr; VAR port: SIGNED32); 
+	PROCEDURE ^ SplitEPRT(param: ARRAY OF CHAR; VAR adr: IP.Adr; VAR port: SIGNED32); 
 	PROCEDURE ^ BinaryTransfer(r: Streams.Reader; w: Streams.Writer); 
 	PROCEDURE ^ ASCIITransfer(r: Streams.Reader; w: Streams.Writer); 
-	PROCEDURE ^ Code(VAR s: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ Code(VAR s: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ ComposeDirectory(path, name: ARRAY OF CHAR; VAR res: ARRAY OF CHAR); 
 	PROCEDURE ^ NewFTPAgent(c: TCP.Connection; s: TCPServices.Service): TCPServices.Agent; 
 	PROCEDURE ^ Start*(context: Commands.Context); 

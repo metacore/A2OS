@@ -13,20 +13,20 @@ CONST
 	maxCol = 255; 
 TYPE 
 	Rect = RECORD 
-		x1, y1, x2, y2: INTEGER; 
+		x1, y1, x2, y2: SIGNED16; 
 	END; 
 VAR 
-	W, H: INTEGER; 
+	W, H: SIGNED16; 
 	rect: ARRAY MaxRect OF Rect; 
-	count: INTEGER; 
-	prop, limit: INTEGER; 
+	count: SIGNED16; 
+	prop, limit: SIGNED16; 
 	cols: ARRAY 8 OF SET; 
-	col: INTEGER; 
+	col: SIGNED16; 
 	mask: Display3.Mask; 
 
-	PROCEDURE ^ Proportion(a, b: INTEGER): INTEGER; 
-	PROCEDURE ^ Add(x1, y1, x2, y2: INTEGER); 
-	PROCEDURE ^ Select(VAR x1, y1, x2, y2: INTEGER); 
+	PROCEDURE ^ Proportion(a, b: SIGNED16): SIGNED16; 
+	PROCEDURE ^ Add(x1, y1, x2, y2: SIGNED16); 
+	PROCEDURE ^ Select(VAR x1, y1, x2, y2: SIGNED16); 
 	PROCEDURE ^ Reset; 
 	PROCEDURE ^ Start; 
 	PROCEDURE ^ Step; 

@@ -4,7 +4,7 @@ TYPE
 	Viewer* = POINTER TO ViewerDesc; 
 
 	ViewerDesc* = RECORD (Display.FrameDesc)
-		state*: INTEGER; 
+		state*: SIGNED16; 
 	END; 
 
 	Track = POINTER TO TrackDesc; 
@@ -13,25 +13,25 @@ TYPE
 		under: Display.Frame; 
 	END; 
 VAR 
-	curW*: INTEGER; 
-	minH*: INTEGER; 
-	DH: INTEGER; 
+	curW*: SIGNED16; 
+	minH*: SIGNED16; 
+	DH: SIGNED16; 
 	FillerTrack: Track; 
 	FillerViewer, buf: Viewer; 
 	bcF: Display.Frame; 
-	bcLev: LONGINT; 
+	bcLev: SIGNED32; 
 
-	PROCEDURE ^ Open*(V: Viewer; X, Y: INTEGER); 
-	PROCEDURE ^ Change*(V: Viewer; Y: INTEGER); 
+	PROCEDURE ^ Open*(V: Viewer; X, Y: SIGNED16); 
+	PROCEDURE ^ Change*(V: Viewer; Y: SIGNED16); 
 	PROCEDURE ^ RestoreTrack(S: Display.Frame); 
 	PROCEDURE ^ Close*(V: Viewer); 
 	PROCEDURE ^ Recall*(VAR V: Viewer); 
-	PROCEDURE ^ This*(X, Y: INTEGER): Viewer; 
+	PROCEDURE ^ This*(X, Y: SIGNED16): Viewer; 
 	PROCEDURE ^ Next*(V: Viewer): Viewer; 
-	PROCEDURE ^ Locate*(X, H: INTEGER; VAR fil, bot, alt, max: Display.Frame); 
-	PROCEDURE ^ InitTrack*(W, H: INTEGER; Filler: Viewer); 
-	PROCEDURE ^ OpenTrack*(X, W: INTEGER; Filler: Viewer); 
-	PROCEDURE ^ CloseTrack*(X: INTEGER); 
+	PROCEDURE ^ Locate*(X, H: SIGNED16; VAR fil, bot, alt, max: Display.Frame); 
+	PROCEDURE ^ InitTrack*(W, H: SIGNED16; Filler: Viewer); 
+	PROCEDURE ^ OpenTrack*(X, W: SIGNED16; Filler: Viewer); 
+	PROCEDURE ^ CloseTrack*(X: SIGNED16); 
 	PROCEDURE ^ Broadcast(VAR M: Display.FrameMsg); 
 BEGIN
 END Viewers.

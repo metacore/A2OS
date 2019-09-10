@@ -6,10 +6,10 @@ TYPE
 	TP = ARRAY (N + 2) OF SET32; 
 
 	TS = RECORD 
-		a: ARRAY 256 OF LONGINT; 
-		b: ARRAY 256 OF LONGINT; 
+		a: ARRAY 256 OF SIGNED32; 
+		b: ARRAY 256 OF SIGNED32; 
 		c: ARRAY 256 OF SET32; 
-		d: ARRAY 256 OF LONGINT; 
+		d: ARRAY 256 OF SIGNED32; 
 	END; 
 
 	Cipher* = OBJECT (Ciphers.Cipher)
@@ -18,13 +18,13 @@ TYPE
 		s: TS; 
 		ivl, ivr: SET32; 
 
-		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: LONGINT); 
-		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SHORTINT); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIGNED32); 
+		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Decrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ EncryptBlock(VAR buf: ARRAY OF CHAR; pos: SIZE); 
 		PROCEDURE ^ DecryptBlock(VAR buf: ARRAY OF CHAR; pos: SIZE); 
-		PROCEDURE ^ F(x: LONGINT): SET32; 
+		PROCEDURE ^ F(x: SIGNED32): SET32; 
 		PROCEDURE ^ encrypt0(xl, xr: SET32; VAR yl, yr: SET32); 
 		PROCEDURE ^ decrypt0(xl, xr: SET32; VAR yl, yr: SET32); 
 		PROCEDURE ^  & Init*; 

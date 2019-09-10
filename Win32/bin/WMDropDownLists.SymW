@@ -7,7 +7,7 @@ CONST
 	Ok* = 0; 
 	NotFound* = 1; 
 	DuplicateEntry* = 2; 
-	NoKey* = MIN(LONGINT); 
+	NoKey* = MIN(SIGNED32); 
 	InitialEntryArraySize = 4; 
 	ShadowWidth = 5; 
 TYPE 
@@ -19,7 +19,7 @@ TYPE
 		shadowRect, borderRect: WMRectangles.Rectangle; 
 
 		PROCEDURE ^  & New(x, y, width, height: SIZE; grid: WMStringGrids.StringGrid; dropDownList: DropDownList); 
-		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: LONGINT); 
+		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas; w, h: SIZE; q: SIGNED32); 
 		PROCEDURE ^ Clicked(sender, data: ANY); 
 		PROCEDURE ^ PropagateSelection; 
 		PROCEDURE ^ Close*; 
@@ -29,34 +29,34 @@ TYPE
 	END Window; 
 
 	Entry* = POINTER TO RECORD 
-		key-: LONGINT; 
+		key-: SIGNED32; 
 		name-: Strings.String; 
 	END; 
 
 	EntryArray = POINTER TO ARRAY OF Entry; 
 
-	EnumeratorProcedure* = PROCEDURE {DELEGATE}(entry: Entry; index: LONGINT); 
+	EnumeratorProcedure* = PROCEDURE {DELEGATE}(entry: Entry; index: SIGNED32); 
 
 	DropDownListModel* = OBJECT {EXCLUSIVE} 
 	VAR 
 		onChanged-: WMEvents.EventSource; 
 		entries: EntryArray; 
-		nofEntries: LONGINT; 
-		lockLevel: LONGINT; 
+		nofEntries: SIGNED32; 
+		lockLevel: SIGNED32; 
 		lockedBy: ANY; 
 		viewChanged: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Acquire*; 
 		PROCEDURE ^ Release*; 
-		PROCEDURE ^ GetNofEntries*(): LONGINT; 
-		PROCEDURE ^ Add*(key: LONGINT; CONST name: ARRAY OF CHAR; VAR res: WORD); 
-		PROCEDURE ^ Remove*(CONST name: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ GetNofEntries*(): SIGNED32; 
+		PROCEDURE ^ Add*(key: SIGNED32; CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Remove*(CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Enumerate*(CONST mask: ARRAY OF CHAR; proc: EnumeratorProcedure); 
-		PROCEDURE ^ GetNofMatches*(CONST mask: ARRAY OF CHAR): LONGINT; 
-		PROCEDURE ^ FindDuplicate*(key: LONGINT; CONST name: ARRAY OF CHAR): Entry; 
+		PROCEDURE ^ GetNofMatches*(CONST mask: ARRAY OF CHAR): SIGNED32; 
+		PROCEDURE ^ FindDuplicate*(key: SIGNED32; CONST name: ARRAY OF CHAR): Entry; 
 		PROCEDURE ^ FindByName*(CONST name: ARRAY OF CHAR): Entry; 
-		PROCEDURE ^ FindByKey*(key: LONGINT): Entry; 
+		PROCEDURE ^ FindByKey*(key: SIGNED32): Entry; 
 		PROCEDURE ^ ResizeEntryArray; 
 	END DropDownListModel; 
 
@@ -75,13 +75,13 @@ TYPE
 		editor: WMEditors.Editor; 
 		captionI: Strings.String; 
 		currentMask: ARRAY 128 OF CHAR; 
-		nofMatches: LONGINT; 
+		nofMatches: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Initialize*; 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ SetSelection*(entry: Entry); 
-		PROCEDURE ^ SelectKey*(key: LONGINT); 
+		PROCEDURE ^ SelectKey*(key: SIGNED32); 
 		PROCEDURE ^ GetSelection*(): Entry; 
 		PROCEDURE ^ SetModel*(model: DropDownListModel); 
 		PROCEDURE ^ TextChanged(sender, data: ANY); 
@@ -89,10 +89,10 @@ TYPE
 		PROCEDURE ^ KeyPressed(ucs: SIZE; flags: SET; VAR keySym: SIZE; VAR handled: BOOLEAN); 
 		PROCEDURE ^ ShowDropDownList(sender, data: ANY); 
 		PROCEDURE ^ InitGrid; 
-		PROCEDURE ^ AddRow(entry: Entry; index: LONGINT); 
+		PROCEDURE ^ AddRow(entry: Entry; index: SIGNED32); 
 		PROCEDURE ^ UpdateGrid; 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
-		PROCEDURE ^ SetMode(mode: LONGINT); 
+		PROCEDURE ^ SetMode(mode: SIGNED32); 
 	END DropDownList; 
 VAR 
 	StrDropDownList: Strings.String; 

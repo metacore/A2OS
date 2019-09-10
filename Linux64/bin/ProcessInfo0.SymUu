@@ -4,6 +4,6 @@ TYPE
 	ProcessArray* = ARRAY OF Objects.Process; 
 
 	PROCEDURE ^ GetProcesses*(VAR array: ProcessArray; VAR nofProcesses: SIZE); 
-	PROCEDURE ^ GetProcess*(id: WORD): Objects.Process; 
+	PROCEDURE ^ GetProcess*(id: INTEGER): Objects.Process; 
 BEGIN
 END ProcessInfo0.

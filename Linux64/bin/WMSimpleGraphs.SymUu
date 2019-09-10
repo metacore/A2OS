@@ -1,0 +1,106 @@
+MODULE WMSimpleGraphs;
+	IMPORT Strings, WMGraphics, WMRectangles, WMMessages, Modules, Reals, Files, Streams, WM := WMWindowManager, MathL, Raster, Commands, FoxArrayBase;
+CONST 
+	Colors = [WMGraphics.Red, WMGraphics.Blue, WMGraphics.Green, WMGraphics.Yellow, WMGraphics.Magenta, WMGraphics.Cyan, WMGraphics.Gray]; 
+	MinSize = 30; 
+	MaxSize = 2048; 
+TYPE 
+	Regressor = PROCEDURE {DELEGATE}(CONST data: ARRAY [*, *] OF FLOAT64; VAR slope, intercept: FLOAT64); 
+
+	Window = OBJECT {EXCLUSIVE} (WM.BufferWindow)
+	VAR 
+		width, height: SIZE; 
+		data: ARRAY [?] OF FLOAT64; 
+
+		PROCEDURE ^ Update(w, h: SIZE); 
+		PROCEDURE ^  & Init*(w, h: SIZE; alpha: BOOLEAN); 
+		PROCEDURE ^ Resized*(width, height: SIZE); 
+		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
+	END Window; 
+
+	Histogram* = OBJECT {EXCLUSIVE} (Window)
+
+		PROCEDURE ^  & New*(CONST data: ARRAY [*] OF FLOAT64; CONST title: ARRAY OF CHAR); 
+		PROCEDURE ^ NewData*(CONST data: ARRAY [*] OF FLOAT64); 
+		PROCEDURE ^ Update(w, h: SIZE); 
+	END Histogram; 
+
+	Matrix* = OBJECT {EXCLUSIVE} (Window)
+	VAR 
+		max, min, offset, gain: FLOAT64; 
+
+		PROCEDURE ^  & New*(CONST data: ARRAY [*, *] OF FLOAT64; CONST title: ARRAY OF CHAR); 
+		PROCEDURE ^ NewData*(CONST data: ARRAY [*, *] OF FLOAT64); 
+		PROCEDURE ^ Update(w, h: SIZE); 
+	END Matrix; 
+
+	Graph* = OBJECT {EXCLUSIVE} (Window)
+	CONST 
+		border = 5; 
+	VAR 
+		max, min: FLOAT64; 
+
+		PROCEDURE ^  & New*(CONST data: ARRAY [*] OF FLOAT64; CONST title: ARRAY OF CHAR); 
+		PROCEDURE ^ NewData*(CONST data: ARRAY [*] OF FLOAT64); 
+		PROCEDURE ^ Update(w, h: SIZE); 
+	END Graph; 
+
+	Graphs* = OBJECT {EXCLUSIVE} (Window)
+	CONST 
+		border = 5; 
+	VAR 
+		max, min: FLOAT64; 
+
+		PROCEDURE ^  & New*(CONST data: ARRAY [*, *] OF FLOAT64; CONST title: ARRAY OF CHAR); 
+		PROCEDURE ^ NewData*(CONST data: ARRAY [*, *] OF FLOAT64); 
+		PROCEDURE ^ Update(w, h: SIZE); 
+	END Graphs; 
+
+	GraphXY* = OBJECT {EXCLUSIVE} (Window)
+	CONST 
+		border = 5; 
+		scaleRatio =   9.4999999E-001; 
+	VAR 
+		minx, miny, maxx, maxy: FLOAT64; 
+		ticks: ARRAY [*, *] OF FLOAT64; 
+
+		PROCEDURE ^  & New*(CONST data: ARRAY [*, *] OF FLOAT64; CONST title: ARRAY OF CHAR); 
+		PROCEDURE ^ NewData*(CONST data: ARRAY [*, *] OF FLOAT64); 
+		PROCEDURE ^ GetTicks; 
+		PROCEDURE ^ Axes(canvas: WMGraphics.Canvas; w, h, mnw, mnh: SIZE; scalex, scaley: FLOAT32); 
+		PROCEDURE ^ Update(w, h: SIZE); 
+	END GraphXY; 
+
+	Scatter* = OBJECT {EXCLUSIVE} (GraphXY)
+
+		PROCEDURE ^ Update(w, h: SIZE); 
+	END Scatter; 
+
+	Regression* = OBJECT {EXCLUSIVE} (Scatter)
+	VAR 
+		slope, intercept: FLOAT64; 
+		regressor: Regressor; 
+
+		PROCEDURE ^  & Initialize*(CONST data: ARRAY [*, *] OF FLOAT64; CONST title: ARRAY OF CHAR; regress: Regressor); 
+		PROCEDURE ^ NewData*(CONST data: ARRAY [*, *] OF FLOAT64); 
+		PROCEDURE ^ Update(w, h: SIZE); 
+	END Regression; 
+
+	; 
+VAR 
+	Pos, PosX, PosY: SIZE; 
+
+	PROCEDURE ^ NewWindowPos(dx: SIZE); 
+	PROCEDURE ^ Log10(x: FLOAT64): FLOAT64; 
+	PROCEDURE ^ Exp10(x: FLOAT64): FLOAT64; 
+	PROCEDURE ^ DummyRegressor(CONST data: ARRAY [*, *] OF FLOAT64; VAR slope, intercept: FLOAT64); 
+	PROCEDURE ^ WriteLR(W: Streams.Writer; CONST t: ARRAY [?] OF FLOAT64); 
+	PROCEDURE ^ StoreLR(W: Streams.Writer; CONST t: ARRAY [?] OF FLOAT64); 
+	PROCEDURE ^ GenerateName(prefix: Strings.String; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ Demo*; 
+	PROCEDURE ^ LoadData(R: Streams.Reader): ARRAY [?] OF FLOAT64; 
+	PROCEDURE ^ ReadLR(R: Streams.Reader; VAR t: ARRAY [?] OF FLOAT64); 
+	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMSimpleGraphs.

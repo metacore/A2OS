@@ -2,11 +2,11 @@ MODULE Example8;
 TYPE 
 	Semaphore* = OBJECT {EXCLUSIVE} 
 	VAR 
-		s: WORD; 
+		s: INTEGER; 
 
 		PROCEDURE ^ V*; 
 		PROCEDURE ^ P*; 
-		PROCEDURE ^  & Init*(s: INTEGER); 
+		PROCEDURE ^  & Init*(s: SIGNED16); 
 	END Semaphore; 
 BEGIN
 END Example8.

@@ -26,19 +26,19 @@ TYPE
 	VAR 
 		task: TaskScheduler.Task; 
 		taskInfo: TaskScheduler.TaskInfo; 
-		timestamp: LONGINT; 
+		timestamp: SIGNED32; 
 		image: WMGraphics.Image; 
 		indicateTriggered: BOOLEAN; 
-		indicationValue: LONGINT; 
-		indicationStep: LONGINT; 
-		dateStringType: LONGINT; 
+		indicationValue: SIGNED32; 
+		indicationStep: SIGNED32; 
+		dateStringType: SIGNED32; 
 		dateString: ARRAY 32 OF CHAR; 
 		timeString: ARRAY 32 OF CHAR; 
 		fontName: WMGraphics.Font; 
 
 		PROCEDURE ^  & New(task: TaskScheduler.Task); 
 		PROCEDURE ^ UpdateTaskInfo(forceUpdate: BOOLEAN); 
-		PROCEDURE ^ GetFillColor(secondsLeft: LONGINT): WMGraphics.Color; 
+		PROCEDURE ^ GetFillColor(secondsLeft: SIGNED32): WMGraphics.Color; 
 		PROCEDURE ^ GetIndicationColor(): WMGraphics.Color; 
 		PROCEDURE ^ Update(dt: Dates.DateTime); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
@@ -54,9 +54,9 @@ TYPE
 		imageList, repeatList: WMDropDownLists.DropDownList; 
 		calendar: WMCalendar.Calendar; 
 		control: WMCalendar.CalendarController; 
-		state: LONGINT; 
+		state: SIGNED32; 
 
-		PROCEDURE ^  & New(x, y, width, height: LONGINT); 
+		PROCEDURE ^  & New(x, y, width, height: SIGNED32); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ GetNewTask(): TaskScheduler.Task; 
 		PROCEDURE ^ EditTask(VAR task: TaskScheduler.Task; VAR error: BOOLEAN); 
@@ -64,7 +64,7 @@ TYPE
 		PROCEDURE ^ SetTaskContent(task: TaskScheduler.Task); 
 		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
 		PROCEDURE ^ HandleDateSelected(sender, data: ANY); 
-		PROCEDURE ^ SetState(state: LONGINT); 
+		PROCEDURE ^ SetState(state: SIGNED32); 
 	END InputWindow; 
 
 	KillerMsg = OBJECT 
@@ -75,7 +75,7 @@ TYPE
 		taskList: TaskScheduler.TaskList; 
 		newTasks, currentTasks: TaskScheduler.TaskArray; 
 		scrollpanel: WMStandardComponents.Panel; 
-		selectMode: LONGINT; 
+		selectMode: SIGNED32; 
 		statusLabel: WMStandardComponents.Label; 
 		lastNofSelectedTasks, lastNofTasks: SIZE; 
 		filenameEditor: WMEditors.Editor; 
@@ -91,14 +91,14 @@ TYPE
 		PROCEDURE ^ EditTask(task: TaskScheduler.Task); 
 		PROCEDURE ^ Load(CONST filename: ARRAY OF CHAR); 
 		PROCEDURE ^ Store(CONST filename: ARRAY OF CHAR); 
-		PROCEDURE ^ SetSelectMode(mode: LONGINT); 
+		PROCEDURE ^ SetSelectMode(mode: SIGNED32); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ Selector(time: Dates.DateTime; task: TaskScheduler.Task): BOOLEAN; 
 		PROCEDURE ^ CreateTaskViews(tasks: TaskScheduler.TaskArray); 
 		PROCEDURE ^ RemoveTaskViews(tasks: TaskScheduler.TaskArray); 
 		PROCEDURE ^ UpdateTaskViews(dt: Dates.DateTime; tasks: TaskScheduler.TaskArray); 
-		PROCEDURE ^ UpdateStatusLabel(nofSelectedTasks, nofTasks: LONGINT); 
+		PROCEDURE ^ UpdateStatusLabel(nofSelectedTasks, nofTasks: SIGNED32); 
 		PROCEDURE ^ CheckTasks; 
 	BEGIN{ACTIVE} 
 	END Window; 
@@ -109,7 +109,7 @@ VAR
 	PROCEDURE ^ SameDay(dt1, dt2: Dates.DateTime): BOOLEAN; 
 	PROCEDURE ^ IsTomorrow(start, end: Dates.DateTime): BOOLEAN; 
 	PROCEDURE ^ SameWeek(dt1, dt2: Dates.DateTime): BOOLEAN; 
-	PROCEDURE ^ ToSeconds(days, hours, minutes, seconds: LONGINT): LONGINT; 
+	PROCEDURE ^ ToSeconds(days, hours, minutes, seconds: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 
 	PROCEDURE ^ Init; 

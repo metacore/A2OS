@@ -2,23 +2,23 @@ MODULE antsBinaryIsingS2 IN Oberon;
 	IMPORT antsObjects, Objects, Files, antsArrayObjects, Math := MathL IN A2, antsKernel, antsModels, antsCommands, vyName, Gadgets, antsCaches, Links, Attributes, antsArrays, aM := antsMessages;
 CONST 
 TYPE 
-	RandomArray = POINTER TO ARRAY OF LONGREAL; 
+	RandomArray = POINTER TO ARRAY OF FLOAT64; 
 
 	tModel* = POINTER TO tModelDesc; 
 
 	tModelDesc* = RECORD (antsModels.tModelDesc)
-		ccool: LONGREAL; 
+		ccool: FLOAT64; 
 		ran: RandomArray; 
 	END; 
 
 	PROCEDURE ^ Open*(M: tModel); 
 	PROCEDURE ^ StoreM(VAR R: Files.Rider; s: tModel); 
 	PROCEDURE ^ LoadM(VAR R: Files.Rider; s: tModel); 
-	PROCEDURE ^ U(m: tModel; a: ARRAY OF INTEGER): LONGREAL; 
+	PROCEDURE ^ U(m: tModel; a: ARRAY OF SIGNED16): FLOAT64; 
 	PROCEDURE ^ Cache(m: tModel); 
 	PROCEDURE ^ OneSweep(s: antsKernel.Kernel); 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ OpenModel*(M: tModel; name: vyName.tNameArray; beta, h, penalty: LONGREAL); 
+	PROCEDURE ^ OpenModel*(M: tModel; name: vyName.tNameArray; beta, h, penalty: FLOAT64); 
 	PROCEDURE ^ Gen*; 
 	PROCEDURE ^ NewModel*; 
 BEGIN

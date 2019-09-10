@@ -15,20 +15,20 @@ CONST
 	invert = 2; 
 TYPE 
 	RGB = RECORD 
-		r, g, b: INTEGER; 
+		r, g, b: SIGNED16; 
 	END; 
 
 	Clip* = OBJECT 
 	VAR 
 		d: Display; 
-		lx, ly, lw, lh: LONGINT; 
+		lx, ly, lw, lh: SIGNED32; 
 
 		PROCEDURE ^  & Init(disp: Display); 
-		PROCEDURE ^ Set*(x, y, w, h: LONGINT); 
-		PROCEDURE ^ Get*(VAR x, y, w, h: LONGINT); 
-		PROCEDURE ^ InClip*(x, y, w, h: LONGINT): BOOLEAN; 
+		PROCEDURE ^ Set*(x, y, w, h: SIGNED32); 
+		PROCEDURE ^ Get*(VAR x, y, w, h: SIGNED32); 
+		PROCEDURE ^ InClip*(x, y, w, h: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ Reset*; 
-		PROCEDURE ^ Adjust*(x, y, w, h: LONGINT); 
+		PROCEDURE ^ Adjust*(x, y, w, h: SIGNED32); 
 	END Clip; 
 
 	Display* = OBJECT (Displays.Display)
@@ -38,34 +38,34 @@ TYPE
 		secondary-: X11.Window; 
 		currwin: X11.Window; 
 		wmDelete-: X11.Atom; 
-		screen: LONGINT; 
+		screen: SIGNED32; 
 		visual{UNTRACED} : X11.VisualPtr; 
-		depth: LONGINT; 
+		depth: SIGNED32; 
 		bigEndian: BOOLEAN; 
 		gc: X11.GC; 
 		clip: Clip; 
 		cmap: X11.Colormap; 
-		planesMask: LONGINT; 
-		foreground, background: LONGWORD; 
+		planesMask: SIGNED32; 
+		foreground, background: LONGINTEGER; 
 		rgb, defPal: ARRAY 256 OF RGB; 
-		pixel: ARRAY 256 OF LONGINT; 
-		xformat: LONGINT; 
-		currcol, currmode: LONGINT; 
-		xfunc: ARRAY 3 OF LONGINT; 
+		pixel: ARRAY 256 OF SIGNED32; 
+		xformat: SIGNED32; 
+		currcol, currmode: SIGNED32; 
+		xfunc: ARRAY 3 OF SIGNED32; 
 
-		PROCEDURE ^ SetMode(col: LONGINT); 
-		PROCEDURE ^ Dot*(col, x, y: LONGINT); 
-		PROCEDURE ^ Fill*(col, x, y, w, h: LONGINT); 
-		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, left, top, width, height: SIZE; op: WORD); 
-		PROCEDURE ^ Mask*(VAR buf: ARRAY OF CHAR; bitofs, stride, fg, bg, x, y, w, h: LONGINT); 
-		PROCEDURE ^ Copy*(sx, sy, w, h, dx, dy: LONGINT); 
+		PROCEDURE ^ SetMode(col: SIGNED32); 
+		PROCEDURE ^ Dot*(col, x, y: SIGNED32); 
+		PROCEDURE ^ Fill*(col, x, y, w, h: SIGNED32); 
+		PROCEDURE ^ Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, left, top, width, height: SIZE; op: INTEGER); 
+		PROCEDURE ^ Mask*(VAR buf: ARRAY OF CHAR; bitofs, stride, fg, bg, x, y, w, h: SIGNED32); 
+		PROCEDURE ^ Copy*(sx, sy, w, h, dx, dy: SIGNED32); 
 		PROCEDURE ^ Update*; 
-		PROCEDURE ^ ColorToIndex*(col: LONGINT): LONGINT; 
-		PROCEDURE ^ IndexToColor*(n: LONGINT): LONGINT; 
-		PROCEDURE ^ SetColor*(col, red, green, blue: INTEGER); 
-		PROCEDURE ^ GetColor*(col: INTEGER; VAR red, green, blue: INTEGER); 
-		PROCEDURE ^ ColorToPixel*(col: LONGINT): LONGINT; 
-		PROCEDURE ^  & Initialize(disp: X11.DisplayPtr; absWidth, absHeight, relWidth, relHeight: LONGINT); 
+		PROCEDURE ^ ColorToIndex*(col: SIGNED32): SIGNED32; 
+		PROCEDURE ^ IndexToColor*(n: SIGNED32): SIGNED32; 
+		PROCEDURE ^ SetColor*(col, red, green, blue: SIGNED16); 
+		PROCEDURE ^ GetColor*(col: SIGNED16; VAR red, green, blue: SIGNED16); 
+		PROCEDURE ^ ColorToPixel*(col: SIGNED32): SIGNED32; 
+		PROCEDURE ^  & Initialize(disp: X11.DisplayPtr; absWidth, absHeight, relWidth, relHeight: SIGNED32); 
 		PROCEDURE ^ Finalize*; 
 	END Display; 
 VAR 
@@ -73,12 +73,12 @@ VAR
 	dispname: ARRAY 128 OF CHAR; 
 	imgBuffer: POINTER TO ARRAY OF CHAR; 
 
-	PROCEDURE ^ ColorToIndex0(disp: Display; col: LONGINT): INTEGER; 
-	PROCEDURE ^ PutLine(xformat, width: LONGINT; ip, bp: ADDRESS); 
-	PROCEDURE ^ GetLine(xformat, width: LONGINT; ip, bp: ADDRESS); 
-	PROCEDURE ^ PutLineBE(xformat, width: LONGINT; ip, bp: ADDRESS); 
-	PROCEDURE ^ GetLineBE(xformat, width: LONGINT; ip, bp: ADDRESS); 
-	PROCEDURE ^ NewPattern(d: Display; CONST image: ARRAY OF SET; width, height: INTEGER): X11.Pattern; 
+	PROCEDURE ^ ColorToIndex0(disp: Display; col: SIGNED32): SIGNED16; 
+	PROCEDURE ^ PutLine(xformat, width: SIGNED32; ip, bp: ADDRESS); 
+	PROCEDURE ^ GetLine(xformat, width: SIGNED32; ip, bp: ADDRESS); 
+	PROCEDURE ^ PutLineBE(xformat, width: SIGNED32; ip, bp: ADDRESS); 
+	PROCEDURE ^ GetLineBE(xformat, width: SIGNED32; ip, bp: ADDRESS); 
+	PROCEDURE ^ NewPattern(d: Display; CONST image: ARRAY OF SET; width, height: SIGNED16): X11.Pattern; 
 	PROCEDURE ^ InitNames; 
 	PROCEDURE ^ getDisplayName; 
 	PROCEDURE ^ OpenX11Display(): X11.DisplayPtr; 
@@ -88,7 +88,7 @@ VAR
 	PROCEDURE ^ InitFormat(d: Display); 
 	PROCEDURE ^ CreateGC(d: Display); 
 	PROCEDURE ^ InitFunctions(d: Display); 
-	PROCEDURE ^ GetDisplaySize(VAR width, height: LONGINT): LONGINT; 
+	PROCEDURE ^ GetDisplaySize(VAR width, height: SIGNED32): SIGNED32; 
 	PROCEDURE ^ Install*; 
 BEGIN
 END XDisplay.

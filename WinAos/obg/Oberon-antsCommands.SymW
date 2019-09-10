@@ -26,13 +26,13 @@ TYPE
 	tReal* = POINTER TO tRealDesc; 
 
 	tRealDesc* = RECORD (tParameterDesc)
-		real-: LONGREAL; 
+		real-: FLOAT64; 
 	END; 
 
 	tNumber* = POINTER TO tNumberDesc; 
 
 	tNumberDesc* = RECORD (tRealDesc)
-		number-: LONGINT; 
+		number-: SIGNED32; 
 	END; 
 
 	tObject* = POINTER TO tObjectDesc; 
@@ -53,10 +53,10 @@ TYPE
 		keyname: vyName.tNameArray; 
 		pars: tParameter; 
 		text: Texts.Text; 
-		pos: LONGINT; 
-		end: LONGINT; 
+		pos: SIGNED32; 
+		end: SIGNED32; 
 		next: tScanList; 
-		spos*: LONGINT; 
+		spos*: SIGNED32; 
 	END; 
 VAR 
 	keytoken*: CHAR; 
@@ -64,13 +64,13 @@ VAR
 	usageS, callerS: ARRAY 256 OF CHAR; 
 	haveCaller: BOOLEAN; 
 
-	PROCEDURE ^ NewItem(VAR item: tScanList; keyname: ARRAY OF CHAR; text: Texts.Text; start, pos: LONGINT); 
+	PROCEDURE ^ NewItem(VAR item: tScanList; keyname: ARRAY OF CHAR; text: Texts.Text; start, pos: SIGNED32); 
 	PROCEDURE ^ AppendParameter(item: tScanList; par: tParameter); 
 	PROCEDURE ^ GetSymbol(sc: vyScanners.Scanner): CHAR; 
-	PROCEDURE ^ ReadUntilChar(text: Texts.Text; VAR pos: LONGINT; start: CHAR; VAR s: ARRAY OF CHAR; VAR eot: BOOLEAN); 
-	PROCEDURE ^ ReadString(text: Texts.Text; VAR pos: LONGINT; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ Qualifier(VAR scanner: vyScanners.Scanner; VAR start, pos: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Qualifier2(VAR scanner: vyScanners.Scanner; VAR start, pos: LONGINT; VAR name: ARRAY OF CHAR): BOOLEAN; 
+	PROCEDURE ^ ReadUntilChar(text: Texts.Text; VAR pos: SIGNED32; start: CHAR; VAR s: ARRAY OF CHAR; VAR eot: BOOLEAN); 
+	PROCEDURE ^ ReadString(text: Texts.Text; VAR pos: SIGNED32; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ Qualifier(VAR scanner: vyScanners.Scanner; VAR start, pos: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Qualifier2(VAR scanner: vyScanners.Scanner; VAR start, pos: SIGNED32; VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ WaitForEndOfComment(VAR sc: vyScanners.Scanner; VAR eot: BOOLEAN); 
 	PROCEDURE ^ Scan*(VAR sc: vyScanners.Scanner): tScanList; 
 	PROCEDURE ^ ScanFromPar*(usage: ARRAY OF CHAR): tScanList; 
@@ -79,10 +79,10 @@ VAR
 	PROCEDURE ^ ParsFromKeyword*(list: tScanList; key: ARRAY OF CHAR): tParameter; 
 	PROCEDURE ^ SetPosition(list: tScanList; to: tScanList); 
 	PROCEDURE ^ GetFromPosition*(list: tScanList): tParameter; 
-	PROCEDURE ^ GetRealFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR r: LONGREAL): BOOLEAN; 
-	PROCEDURE ^ GetReal*(key: ARRAY OF CHAR; VAR r: LONGREAL): BOOLEAN; 
-	PROCEDURE ^ GetNumberFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR l: LONGINT): BOOLEAN; 
-	PROCEDURE ^ GetNumber*(key: ARRAY OF CHAR; VAR l: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetRealFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR r: FLOAT64): BOOLEAN; 
+	PROCEDURE ^ GetReal*(key: ARRAY OF CHAR; VAR r: FLOAT64): BOOLEAN; 
+	PROCEDURE ^ GetNumberFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR l: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ GetNumber*(key: ARRAY OF CHAR; VAR l: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ GetStringFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetString*(key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ GetNameFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
@@ -90,10 +90,10 @@ VAR
 	PROCEDURE ^ GetObjectInContext*(key: ARRAY OF CHAR): Objects.Object; 
 	PROCEDURE ^ GetObjectFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR obj: vyBase.Object): BOOLEAN; 
 	PROCEDURE ^ GetObject*(key: ARRAY OF CHAR; VAR obj: vyBase.Object): BOOLEAN; 
-	PROCEDURE ^ ExpectRealFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR r: LONGREAL): BOOLEAN; 
-	PROCEDURE ^ ExpectReal*(key: ARRAY OF CHAR; VAR r: LONGREAL): BOOLEAN; 
-	PROCEDURE ^ ExpectNumberFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR l: LONGINT): BOOLEAN; 
-	PROCEDURE ^ ExpectNumber*(key: ARRAY OF CHAR; VAR l: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ExpectRealFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR r: FLOAT64): BOOLEAN; 
+	PROCEDURE ^ ExpectReal*(key: ARRAY OF CHAR; VAR r: FLOAT64): BOOLEAN; 
+	PROCEDURE ^ ExpectNumberFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR l: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ ExpectNumber*(key: ARRAY OF CHAR; VAR l: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ ExpectStringFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ ExpectString*(key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ ExpectNameFromKeyword*(list: tScanList; key: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): BOOLEAN; 

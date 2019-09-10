@@ -33,12 +33,12 @@ TYPE
 
 	Statistics = OBJECT {EXCLUSIVE} 
 	VAR 
-		bucket: LONGINT; 
-		secondBuckets: ARRAY 60 OF LONGINT; 
+		bucket: SIGNED32; 
+		secondBuckets: ARRAY 60 OF SIGNED32; 
 		timer: Kernel.Timer; 
-		avg: LONGINT; 
+		avg: SIGNED32; 
 		alive: BOOLEAN; 
-		logCounter: LONGINT; 
+		logCounter: SIGNED32; 
 
 		PROCEDURE ^ Hit; 
 		PROCEDURE ^ Update; 
@@ -69,7 +69,7 @@ TYPE
 
 	HTTPAgent = OBJECT {EXCLUSIVE} (TCPServices.Agent)
 	VAR 
-		res: WORD; 
+		res: INTEGER; 
 		len: SIZE; 
 		body, closeRequested: BOOLEAN; 
 		out: Streams.Writer; 
@@ -97,9 +97,9 @@ VAR
 	hosts: Classes.List; 
 	log: AosLog.Log; 
 	hitStat: Statistics; 
-	nofRequests*: LONGINT; 
-	requestsPerMinute*: LONGINT; 
-	nofConnects*: LONGINT; 
+	nofRequests*: SIGNED32; 
+	requestsPerMinute*: SIGNED32; 
+	nofConnects*: SIGNED32; 
 	defaultHost: Host; 
 	defaultPlugin: DefaultPlugin; 
 	logEnabled: BOOLEAN; 
@@ -107,7 +107,7 @@ VAR
 	logFile: Files.File; 
 	listener*: ListenerProc; 
 
-	PROCEDURE ^ GetRequests*(): LONGINT; 
+	PROCEDURE ^ GetRequests*(): SIGNED32; 
 	PROCEDURE ^ NewHTTPAgent(c: TCP.Connection; s: TCPServices.Service): TCPServices.Agent; 
 	PROCEDURE ^ NewHTTPSAgent(c: TCP.Connection; s: TCPServices.Service): TCPServices.Agent; 
 	PROCEDURE ^ OpenW3CLog(CONST fn: ARRAY OF CHAR); 
@@ -117,11 +117,11 @@ VAR
 	PROCEDURE ^ SendData*(src: Streams.Reader; dst: Streams.Writer); 
 	PROCEDURE ^ AddHost*(host: Host); 
 	PROCEDURE ^ FindHosts*(CONST host: ARRAY OF CHAR): HostList; 
-	PROCEDURE ^ RemoveHost*(CONST host: ARRAY OF CHAR; VAR res: WORD); 
-	PROCEDURE ^ StartHTTP*(root: ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
-	PROCEDURE ^ StartHTTPS*(root: ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: WORD); 
-	PROCEDURE ^ StopHTTP*(VAR msg: ARRAY OF CHAR; VAR res: WORD); 
-	PROCEDURE ^ StopHTTPS*(VAR msg: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ RemoveHost*(CONST host: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ StartHTTP*(root: ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ StartHTTPS*(root: ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ StopHTTP*(VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ StopHTTPS*(VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ ShowHosts*(out: Streams.Writer); 
 	PROCEDURE ^ Cleanup; 
 BEGIN

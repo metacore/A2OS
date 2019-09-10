@@ -5,7 +5,7 @@ TYPE
 	Watchdog* = OBJECT {EXCLUSIVE} 
 	VAR 
 		timer: Kernel.Timer; 
-		delay: LONGINT; 
+		delay: SIGNED32; 
 		time: Kernel.MilliTimer; 
 		alive, done: BOOLEAN; 
 		name: ARRAY 32 OF CHAR; 
@@ -13,7 +13,7 @@ TYPE
 		PROCEDURE ^ Cleanup; 
 		PROCEDURE ^ Done; 
 		PROCEDURE ^ Reset*; 
-		PROCEDURE ^  & Init*(CONST name: ARRAY OF CHAR; delay: LONGINT); 
+		PROCEDURE ^  & Init*(CONST name: ARRAY OF CHAR; delay: SIGNED32); 
 	BEGIN{ACTIVE} 
 	END Watchdog; 
 VAR 

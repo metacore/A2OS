@@ -12,32 +12,32 @@ TYPE
 	Outline = POINTER TO OutlineDesc; 
 
 	OutlineDesc = RECORD 
-		width: ARRAY 256 OF REAL; 
-		len: ARRAY 256 OF SHORTINT; 
+		width: ARRAY 256 OF FLOAT32; 
+		len: ARRAY 256 OF SIGNED8; 
 		path: GfxPaths.Path; 
-		pos: ARRAY 256 OF INTEGER; 
-		xmin, ymin, xmax, ymax: REAL; 
+		pos: ARRAY 256 OF SIGNED16; 
+		xmin, ymin, xmax, ymax: FLOAT32; 
 	END; 
 
 	Char = POINTER TO CharDesc; 
 
 	CharDesc = RECORD 
-		x, y, dx, dy: REAL; 
+		x, y, dx, dy: FLOAT32; 
 		map: Images.Image; 
-		used: INTEGER; 
+		used: SIGNED16; 
 	END; 
 
 	RasterChar = POINTER TO RasterCharDesc; 
 
 	RasterCharDesc = RECORD 
-		dx, x, y, w, h: INTEGER; 
+		dx, x, y, w, h: SIGNED16; 
 		adr: ADDRESS; 
 	END; 
 
 	RasterFile = POINTER TO RasterFileDesc; 
 
 	RasterFileDesc = RECORD 
-		xmin, ymin, xmax, ymax: INTEGER; 
+		xmin, ymin, xmax, ymax: SIGNED16; 
 		char: ARRAY 256 OF RasterChar; 
 		mem: POINTER TO ARRAY OF CHAR; 
 	END; 
@@ -49,9 +49,9 @@ TYPE
 	FontDesc* = RECORD 
 		class*: Methods; 
 		name*: FontName; 
-		ptsize*: INTEGER; 
+		ptsize*: SIGNED16; 
 		mat*, wmat: GfxMatrix.Matrix; 
-		xmin*, ymin*, xmax*, ymax*: INTEGER; 
+		xmin*, ymin*, xmax*, ymax*: SIGNED16; 
 		rfont*, wfont: Fonts.Font; 
 		niceMaps*: BOOLEAN; 
 		outline: Outline; 
@@ -61,72 +61,72 @@ TYPE
 	END; 
 
 	MethodDesc* = RECORD 
-		derive*: PROCEDURE (font: Font; ptsize: INTEGER; VAR mat: GfxMatrix.Matrix):Font; 
-		getwidth*: PROCEDURE (font: Font; ch: CHAR; VAR dx, dy: REAL); 
-		getmap*: PROCEDURE (font: Font; ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Images.Image); 
-		getoutline*: PROCEDURE (font: Font; ch: CHAR; x, y: REAL; path: GfxPaths.Path); 
+		derive*: PROCEDURE (font: Font; ptsize: SIGNED16; VAR mat: GfxMatrix.Matrix):Font; 
+		getwidth*: PROCEDURE (font: Font; ch: CHAR; VAR dx, dy: FLOAT32); 
+		getmap*: PROCEDURE (font: Font; ch: CHAR; VAR x, y, dx, dy: FLOAT32; VAR map: Images.Image); 
+		getoutline*: PROCEDURE (font: Font; ch: CHAR; x, y: FLOAT32; path: GfxPaths.Path); 
 	END; 
 
 	PathEnumData = RECORD (GfxPaths.EnumData)
-		xc, yc: ARRAY MaxBezierPoints OF REAL; 
-		n: INTEGER; 
-		lx, ly: REAL; 
-		px, py: INTEGER; 
+		xc, yc: ARRAY MaxBezierPoints OF FLOAT32; 
+		n: SIGNED16; 
+		lx, ly: FLOAT32; 
+		px, py: SIGNED16; 
 		region: GfxRegions.Region; 
 	END; 
 
 	RegEnumData = RECORD (GfxRegions.EnumData)
 		map: Images.Image; 
-		dx, dy: INTEGER; 
+		dx, dy: SIGNED16; 
 	END; 
 VAR 
 	Default*: Font; 
 	RClass, ORClass, FClass, OFClass, WRClass, OWRClass, WFClass, OWFClass, OClass: Methods; 
 	Cache: Font; 
-	Chars: LONGINT; 
+	Chars: SIGNED32; 
 	TmpPath: GfxPaths.Path; 
 	TmpRegion: GfxRegions.Region; 
 	Inv: ARRAY 256 OF CHAR; 
-	OpenProc*: PROCEDURE (VAR family, style: ARRAY OF CHAR; size: INTEGER; VAR mat: GfxMatrix.Matrix):Font; 
+	OpenProc*: PROCEDURE (VAR family, style: ARRAY OF CHAR; size: SIGNED16; VAR mat: GfxMatrix.Matrix):Font; 
 
 	PROCEDURE ^ AddSplineElem(VAR data: GfxPaths.EnumData); 
-	PROCEDURE ^ SplineToBezier(VAR x, y: ARRAY OF REAL; VAR n: LONGINT; closed: BOOLEAN); 
-	PROCEDURE ^ Bezier2ToBezier(VAR x, y: ARRAY OF REAL; VAR n: LONGINT); 
+	PROCEDURE ^ SplineToBezier(VAR x, y: ARRAY OF FLOAT32; VAR n: SIGNED32; closed: BOOLEAN); 
+	PROCEDURE ^ Bezier2ToBezier(VAR x, y: ARRAY OF FLOAT32; VAR n: SIGNED32); 
 	PROCEDURE ^ LoadOutline(outline: Outline; VAR r: Files.Rider); 
 	PROCEDURE ^ CacheFont(font: Font); 
-	PROCEDURE ^ CacheChar(font: Font; ch: CHAR; x, y, dx, dy: REAL; map: Images.Image); 
+	PROCEDURE ^ CacheChar(font: Font; ch: CHAR; x, y, dx, dy: FLOAT32; map: Images.Image); 
 	PROCEDURE ^ CachedChar(font: Font; ch: CHAR): Char; 
 	PROCEDURE ^ SplitName(name: ARRAY OF CHAR; VAR fam, style: ARRAY OF CHAR); 
 	PROCEDURE ^ BuildName(fam, style: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ OpenOutline(VAR family, style: ARRAY OF CHAR): Outline; 
 	PROCEDURE ^ LoadRaster(VAR name: ARRAY OF CHAR): RasterFile; 
-	PROCEDURE ^ OpenRaster(VAR family, style: ARRAY OF CHAR; ptsize: INTEGER; VAR mat: GfxMatrix.Matrix; outline: Outline): Font; 
-	PROCEDURE ^ Open*(name: ARRAY OF CHAR; ptsize: INTEGER; mat: GfxMatrix.Matrix): Font; 
-	PROCEDURE ^ OpenSize*(name: ARRAY OF CHAR; ptsize: INTEGER): Font; 
-	PROCEDURE ^ GetWidth*(font: Font; ch: CHAR; VAR dx, dy: REAL); 
-	PROCEDURE ^ GetMap*(font: Font; ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Images.Image); 
-	PROCEDURE ^ GetOutline*(font: Font; ch: CHAR; x, y: REAL; path: GfxPaths.Path); 
-	PROCEDURE ^ GetStringWidth*(font: Font; str: ARRAY OF CHAR; VAR dx, dy: REAL); 
-	PROCEDURE ^ RFDerive(font: Font; ptsize: INTEGER; VAR mat: GfxMatrix.Matrix): Font; 
-	PROCEDURE ^ ODerive(font: Font; ptsize: INTEGER; VAR mat: GfxMatrix.Matrix): Font; 
-	PROCEDURE ^ RGetWidth(font: Font; ch: CHAR; VAR dx, dy: REAL); 
-	PROCEDURE ^ WRGetWidth(font: Font; ch: CHAR; VAR dx, dy: REAL); 
-	PROCEDURE ^ FGetWidth(font: Font; ch: CHAR; VAR dx, dy: REAL); 
-	PROCEDURE ^ WFGetWidth(font: Font; ch: CHAR; VAR dx, dy: REAL); 
-	PROCEDURE ^ OGetWidth(font: Font; ch: CHAR; VAR dx, dy: REAL); 
-	PROCEDURE ^ WarpMap(src: Images.Image; mat: GfxMatrix.Matrix; VAR x, y: REAL; VAR dst: Images.Image); 
-	PROCEDURE ^ RGetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Images.Image); 
-	PROCEDURE ^ WRGetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Images.Image); 
-	PROCEDURE ^ FGetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Images.Image); 
-	PROCEDURE ^ WFGetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Images.Image); 
+	PROCEDURE ^ OpenRaster(VAR family, style: ARRAY OF CHAR; ptsize: SIGNED16; VAR mat: GfxMatrix.Matrix; outline: Outline): Font; 
+	PROCEDURE ^ Open*(name: ARRAY OF CHAR; ptsize: SIGNED16; mat: GfxMatrix.Matrix): Font; 
+	PROCEDURE ^ OpenSize*(name: ARRAY OF CHAR; ptsize: SIGNED16): Font; 
+	PROCEDURE ^ GetWidth*(font: Font; ch: CHAR; VAR dx, dy: FLOAT32); 
+	PROCEDURE ^ GetMap*(font: Font; ch: CHAR; VAR x, y, dx, dy: FLOAT32; VAR map: Images.Image); 
+	PROCEDURE ^ GetOutline*(font: Font; ch: CHAR; x, y: FLOAT32; path: GfxPaths.Path); 
+	PROCEDURE ^ GetStringWidth*(font: Font; str: ARRAY OF CHAR; VAR dx, dy: FLOAT32); 
+	PROCEDURE ^ RFDerive(font: Font; ptsize: SIGNED16; VAR mat: GfxMatrix.Matrix): Font; 
+	PROCEDURE ^ ODerive(font: Font; ptsize: SIGNED16; VAR mat: GfxMatrix.Matrix): Font; 
+	PROCEDURE ^ RGetWidth(font: Font; ch: CHAR; VAR dx, dy: FLOAT32); 
+	PROCEDURE ^ WRGetWidth(font: Font; ch: CHAR; VAR dx, dy: FLOAT32); 
+	PROCEDURE ^ FGetWidth(font: Font; ch: CHAR; VAR dx, dy: FLOAT32); 
+	PROCEDURE ^ WFGetWidth(font: Font; ch: CHAR; VAR dx, dy: FLOAT32); 
+	PROCEDURE ^ OGetWidth(font: Font; ch: CHAR; VAR dx, dy: FLOAT32); 
+	PROCEDURE ^ WarpMap(src: Images.Image; mat: GfxMatrix.Matrix; VAR x, y: FLOAT32; VAR dst: Images.Image); 
+	PROCEDURE ^ RGetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: FLOAT32; VAR map: Images.Image); 
+	PROCEDURE ^ WRGetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: FLOAT32; VAR map: Images.Image); 
+	PROCEDURE ^ FGetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: FLOAT32; VAR map: Images.Image); 
+	PROCEDURE ^ WFGetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: FLOAT32; VAR map: Images.Image); 
 	PROCEDURE ^ AddElem(VAR data: GfxPaths.EnumData); 
-	PROCEDURE ^ FillRect(llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData); 
-	PROCEDURE ^ OGetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Images.Image); 
-	PROCEDURE ^ RGetOutline(font: Font; ch: CHAR; x, y: REAL; path: GfxPaths.Path); 
-	PROCEDURE ^ WRGetOutline(font: Font; ch: CHAR; x, y: REAL; path: GfxPaths.Path); 
-	PROCEDURE ^ FGetOutline(font: Font; ch: CHAR; x, y: REAL; path: GfxPaths.Path); 
-	PROCEDURE ^ WFGetOutline(font: Font; ch: CHAR; x, y: REAL; path: GfxPaths.Path); 
-	PROCEDURE ^ OGetOutline(font: Font; ch: CHAR; x, y: REAL; path: GfxPaths.Path); 
+	PROCEDURE ^ FillRect(llx, lly, urx, ury: SIGNED16; VAR data: GfxRegions.EnumData); 
+	PROCEDURE ^ OGetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: FLOAT32; VAR map: Images.Image); 
+	PROCEDURE ^ RGetOutline(font: Font; ch: CHAR; x, y: FLOAT32; path: GfxPaths.Path); 
+	PROCEDURE ^ WRGetOutline(font: Font; ch: CHAR; x, y: FLOAT32; path: GfxPaths.Path); 
+	PROCEDURE ^ FGetOutline(font: Font; ch: CHAR; x, y: FLOAT32; path: GfxPaths.Path); 
+	PROCEDURE ^ WFGetOutline(font: Font; ch: CHAR; x, y: FLOAT32; path: GfxPaths.Path); 
+	PROCEDURE ^ OGetOutline(font: Font; ch: CHAR; x, y: FLOAT32; path: GfxPaths.Path); 
 	PROCEDURE ^ InitClasses; 
 	PROCEDURE ^ InitDefault; 
 	PROCEDURE ^ InitInv; 

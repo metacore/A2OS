@@ -9,7 +9,7 @@ TYPE
 		PROCEDURE ^  & Init*(zip: Unzip.ZipFile); 
 		PROCEDURE ^ Old0*(CONST name: ARRAY OF CHAR): Files.File; 
 		PROCEDURE ^ Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator); 
-		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): LONGINT; 
+		PROCEDURE ^ FileKey*(CONST name: ARRAY OF CHAR): SIGNED32; 
 		PROCEDURE ^ Finalize*; 
 	END FileSystem; 
 
@@ -23,7 +23,7 @@ TYPE
 		PROCEDURE ^ Read*(VAR r: Files.Rider; VAR x: CHAR); 
 		PROCEDURE ^ ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE); 
 		PROCEDURE ^ Length*(): Files.Size; 
-		PROCEDURE ^ GetDate*(VAR t, d: LONGINT); 
+		PROCEDURE ^ GetDate*(VAR t, d: SIGNED32); 
 		PROCEDURE ^ GetName*(VAR name: ARRAY OF CHAR); 
 		PROCEDURE ^ Update*; 
 	END File; 

@@ -17,8 +17,8 @@ TYPE
 		overwriteOnce, overwriteAll, overwriteNever, abort: BOOLEAN; 
 
 		PROCEDURE ^  & New*(CONST str: ARRAY OF CHAR); 
-		PROCEDURE ^ OpenPut*(CONST remoteName: ARRAY OF CHAR; VAR outw: Streams.Writer; VAR res: WORD); 
-		PROCEDURE ^ ClosePut*(VAR res: WORD); 
+		PROCEDURE ^ OpenPut*(CONST remoteName: ARRAY OF CHAR; VAR outw: Streams.Writer; VAR res: INTEGER); 
+		PROCEDURE ^ ClosePut*(VAR res: INTEGER); 
 	END FilesDropInterface; 
 
 	FilesDropTarget = OBJECT (WMDropTarget.DropTarget)
@@ -27,7 +27,7 @@ TYPE
 		eh: WMEvents.EventListener; 
 
 		PROCEDURE ^  & New*(str: Strings.String; e: WMEvents.EventListener); 
-		PROCEDURE ^ GetInterface*(type: LONGINT): WMDropTarget.DropInterface; 
+		PROCEDURE ^ GetInterface*(type: SIGNED32): WMDropTarget.DropInterface; 
 	END FilesDropTarget; 
 
 	TreeData = OBJECT 
@@ -57,13 +57,13 @@ TYPE
 	DirEntry* = OBJECT 
 	VAR 
 		name*, path-: Strings.String; 
-		time, date: LONGINT; 
+		time, date: SIGNED32; 
 		size*: Files.Size; 
 		flags: SET; 
 		visible: BOOLEAN; 
 		node*: WMTrees.TreeNode; 
 
-		PROCEDURE ^  & Init*(name, path: Strings.String; time, date: LONGINT; size: Files.Size; flags: SET); 
+		PROCEDURE ^  & Init*(name, path: Strings.String; time, date: SIGNED32; size: Files.Size; flags: SET); 
 	END DirEntry; 
 
 	DirEntries* = POINTER TO ARRAY OF DirEntry; 
@@ -88,7 +88,7 @@ TYPE
 		dir: DirEntries; 
 		selection: DirEntries; 
 		nfiles: SIZE; 
-		nofRows: LONGINT; 
+		nofRows: SIGNED32; 
 		px, py: SIZE; 
 		colWidths: WMGrids.Spacings; 
 
@@ -107,14 +107,14 @@ TYPE
 		PROCEDURE ^ MyDragDropped(x, y: SIZE; dragInfo: WM.DragInfo; VAR handled: BOOLEAN); 
 		PROCEDURE ^ DragDropped*(x, y: SIZE; dragInfo: WM.DragInfo); 
 		PROCEDURE ^ MyStartDrag(sender, data: ANY); 
-		PROCEDURE ^ CopyFile(target: WMDropTarget.DropFiles; CONST local, remote: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ CopyFile(target: WMDropTarget.DropFiles; CONST local, remote: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Refresh(sender, data: ANY); 
 		PROCEDURE ^ Resized*; 
 		PROCEDURE ^ DragArrived(sender, data: ANY); 
 		PROCEDURE ^ ResetGrid*; 
-		PROCEDURE ^ DisplayGrid*(CONST data: ARRAY OF DirEntry; noEl: LONGINT); 
+		PROCEDURE ^ DisplayGrid*(CONST data: ARRAY OF DirEntry; noEl: SIGNED32); 
 		PROCEDURE ^ ToggleProps*; 
-		PROCEDURE ^ FillGridRow(rowNo: LONGINT; dir: DirEntry); 
+		PROCEDURE ^ FillGridRow(rowNo: SIGNED32; dir: DirEntry); 
 		PROCEDURE ^ PrepareList; 
 		PROCEDURE ^ ScanPath; 
 		PROCEDURE ^ StartNewPath*(path: Strings.String); 

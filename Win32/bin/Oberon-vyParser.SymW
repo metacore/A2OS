@@ -26,10 +26,10 @@ TYPE
 	END; 
 VAR 
 	w: vyBase.TextsWriter; 
-	class-: INTEGER; 
+	class-: SIGNED16; 
 	copy: Scanner; 
 
-	PROCEDURE ^ NextSyntaxItem(syntaxString: ARRAY OF CHAR; VAR pos: INTEGER; VAR sit: tSyntaxItem); 
+	PROCEDURE ^ NextSyntaxItem(syntaxString: ARRAY OF CHAR; VAR pos: SIGNED16; VAR sit: tSyntaxItem); 
 	PROCEDURE ^ MsgSyntax*(caller: ARRAY OF CHAR; syntaxString: ARRAY OF CHAR); 
 	PROCEDURE ^ OpenParScanner*(VAR sc: Scanner); 
 	PROCEDURE ^ Name*(VAR sc: Scanner; VAR name: ARRAY OF CHAR): BOOLEAN; 
@@ -38,15 +38,15 @@ VAR
 	PROCEDURE ^ LinkedObject*(VAR sc: Scanner; linkof: Objects.Object; VAR ob: Objects.Object): BOOLEAN; 
 	PROCEDURE ^ qnamedobject(VAR sc: Scanner; context: Objects.Object; VAR ob: Objects.Object; verbose: BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ QNamedObject*(VAR sc: Scanner; context: Objects.Object; VAR ob: Objects.Object): BOOLEAN; 
-	PROCEDURE ^ Real*(VAR sc: Scanner; VAR x: REAL): BOOLEAN; 
-	PROCEDURE ^ Number*(VAR sc: Scanner; VAR i: LONGINT): BOOLEAN; 
+	PROCEDURE ^ Real*(VAR sc: Scanner; VAR x: FLOAT32): BOOLEAN; 
+	PROCEDURE ^ Number*(VAR sc: Scanner; VAR i: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ Symbol*(VAR sc: Scanner; VAR sym: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ PosMsg(sc: Scanner); 
 	PROCEDURE ^ ExpectName*(VAR sc: Scanner; VAR name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ ExpectNamedObject*(VAR sc: Scanner; VAR ob: vyBase.Object): BOOLEAN; 
 	PROCEDURE ^ ExpectLinkedObject*(VAR sc: Scanner; linkof: Objects.Object; VAR ob: Objects.Object): BOOLEAN; 
 	PROCEDURE ^ ExpectQNamedObject*(VAR sc: Scanner; context: Objects.Object; VAR ob: Objects.Object): BOOLEAN; 
-	PROCEDURE ^ ExpectReal*(VAR sc: Scanner; VAR x: REAL): BOOLEAN; 
-	PROCEDURE ^ ExpectNumber*(VAR sc: Scanner; VAR i: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ExpectReal*(VAR sc: Scanner; VAR x: FLOAT32): BOOLEAN; 
+	PROCEDURE ^ ExpectNumber*(VAR sc: Scanner; VAR i: SIGNED32): BOOLEAN; 
 BEGIN
 END vyParser.

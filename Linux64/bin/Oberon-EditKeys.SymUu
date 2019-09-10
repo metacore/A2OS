@@ -46,7 +46,7 @@ TYPE
 
 	SequenceDesc = RECORD 
 		next: Sequence; 
-		sym: INTEGER; 
+		sym: SIGNED16; 
 		cmd: CHAR; 
 		def: Definition; 
 		stretch: Texts.Buffer; 
@@ -56,8 +56,8 @@ TYPE
 VAR 
 	defs, dmy: Definition; 
 	ch, cmd, hotKey: CHAR; 
-	sym, errs: INTEGER; 
-	errpos: LONGINT; 
+	sym, errs: SIGNED16; 
+	errpos: SIGNED32; 
 	name, trig: Ident; 
 	stretch, buf, indent: Texts.Buffer; 
 	T: Texts.Text; 
@@ -66,10 +66,10 @@ VAR
 	map: ARRAY 17 OF CHAR; 
 	preset: RECORD 
 		set: SET; 
-		pos, caret: LONGINT; 
+		pos, caret: SIGNED32; 
 		frame: TextGadgets.Frame; 
 		def, fnt: Fonts.Font; 
-		voff: SHORTINT; 
+		voff: SIGNED8; 
 	END; 
 
 	PROCEDURE ^ OpenText(title: ARRAY OF CHAR; T: Texts.Text; systemtrack: BOOLEAN); 
@@ -89,22 +89,22 @@ VAR
 	PROCEDURE ^ GetCh; 
 	PROCEDURE ^ CharCode; 
 	PROCEDURE ^ Name; 
-	PROCEDURE ^ Save(text: Texts.Text; beg, end: LONGINT; buf: Texts.Buffer); 
+	PROCEDURE ^ Save(text: Texts.Text; beg, end: SIGNED32; buf: Texts.Buffer); 
 	PROCEDURE ^ Stretch; 
 	PROCEDURE ^ Comment; 
 	PROCEDURE ^ GetSym; 
 	PROCEDURE ^ ParseText; 
-	PROCEDURE ^ ReadText(name: ARRAY OF CHAR; beg: LONGINT); 
+	PROCEDURE ^ ReadText(name: ARRAY OF CHAR; beg: SIGNED32); 
 	PROCEDURE ^ Insert(frame: TextGadgets.Frame; buf: Texts.Buffer); 
-	PROCEDURE ^ Delete(frame: TextGadgets.Frame; beg, end: LONGINT); 
+	PROCEDURE ^ Delete(frame: TextGadgets.Frame; beg, end: SIGNED32); 
 	PROCEDURE ^ Err(def: Definition; s: ARRAY OF CHAR); 
-	PROCEDURE ^ PopArg(def: Definition; class: SHORTINT; VAR S: Texts.Scanner; VAR stack: Sequence); 
+	PROCEDURE ^ PopArg(def: Definition; class: SIGNED8; VAR S: Texts.Scanner; VAR stack: Sequence); 
 	PROCEDURE ^ PushArg(buf: Texts.Buffer; VAR stack: Sequence); 
-	PROCEDURE ^ ThisArg(n: LONGINT; args: Sequence): Sequence; 
-	PROCEDURE ^ GetArguments(text: Texts.Text; pos: LONGINT; VAR pin: LONGINT; VAR args: Sequence); 
+	PROCEDURE ^ ThisArg(n: SIGNED32; args: Sequence): Sequence; 
+	PROCEDURE ^ GetArguments(text: Texts.Text; pos: SIGNED32; VAR pin: SIGNED32; VAR args: Sequence); 
 	PROCEDURE ^ Expand(def: Definition; VAR stack, args, params: Sequence); 
 	PROCEDURE ^ InitialExec(name: Ident); 
-	PROCEDURE ^ Process(frame: TextGadgets.Frame; ch: CHAR; VAR del: LONGINT); 
+	PROCEDURE ^ Process(frame: TextGadgets.Frame; ch: CHAR; VAR del: SIGNED32); 
 	PROCEDURE ^ Key(frame: TextGadgets.Frame; ch: CHAR; VAR handled: BOOLEAN); 
 	PROCEDURE ^ Handle*(F: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ Reset*; 

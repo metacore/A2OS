@@ -56,8 +56,8 @@ TYPE
 	Object* = POINTER TO ObjDesc; 
 
 	ObjDesc = RECORD 
-		type: SHORTINT; 
-		sub: SHORTINT; 
+		type: SIGNED8; 
+		sub: SIGNED8; 
 		dsc, next: Object; 
 	END; 
 
@@ -68,18 +68,18 @@ TYPE
 	Buffer = POINTER TO ARRAY OF CHAR; 
 
 	Stretch = RECORD 
-		pos, len: LONGINT; 
+		pos, len: SIGNED32; 
 		buf: Buffer; 
 	END; 
 
 	Pool* = RECORD 
-		avail, pos: LONGINT; 
+		avail, pos: SIGNED32; 
 		buf: Buffer; 
 	END; 
 
 	Symbol = POINTER TO RECORD (ObjDesc)
 		stretch: Stretch; 
-		hash: LONGINT; 
+		hash: SIGNED32; 
 		link: Symbol; 
 	END; 
 
@@ -107,15 +107,15 @@ TYPE
 	END; 
 
 	Fixnum = POINTER TO RECORD (ObjDesc)
-		int: LONGINT; 
+		int: SIGNED32; 
 	END; 
 
 	Flonum = POINTER TO RECORD (ObjDesc)
-		real: LONGREAL; 
+		real: FLOAT64; 
 	END; 
 
 	Rational = POINTER TO RECORD (ObjDesc)
-		num, denom: LONGINT; 
+		num, denom: SIGNED32; 
 	END; 
 
 	Reference = POINTER TO RECORD (ObjDesc)
@@ -123,7 +123,7 @@ TYPE
 	END; 
 
 	Vector = POINTER TO RECORD (ObjDesc)
-		size: LONGINT; 
+		size: SIGNED32; 
 		elem: POINTER TO ARRAY OF Object; 
 	END; 
 
@@ -144,7 +144,7 @@ TYPE
 		open, ready, eof: BOOLEAN; 
 		read: PROCEDURE (port: Input; VAR ch: CHAR); 
 		unread: PROCEDURE (port: Input); 
-		getpos: PROCEDURE (port: Input):LONGINT; 
+		getpos: PROCEDURE (port: Input):SIGNED32; 
 	END; 
 
 	FileInput = POINTER TO RECORD (InputDesc)
@@ -157,7 +157,7 @@ TYPE
 	END; 
 
 	StringInput = POINTER TO RECORD (InputDesc)
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		ps: POINTER TO ARRAY OF CHAR; 
 	END; 
 
@@ -185,26 +185,26 @@ TYPE
 
 	Stack = RECORD 
 		obj: RECORD 
-			size, top: LONGINT; 
+			size, top: SIGNED32; 
 			elem: ObjectElems; 
 		END; 
 		eval: RECORD 
-			size, top: LONGINT; 
+			size, top: SIGNED32; 
 			elem: EvalElems; 
 		END; 
 		env: RECORD 
-			size, top: LONGINT; 
+			size, top: SIGNED32; 
 			elem: EnvElems; 
 		END; 
 	END; 
 
 	Token = RECORD 
-		pos: LONGINT; 
-		kind: INTEGER; 
+		pos: SIGNED32; 
+		kind: SIGNED16; 
 		bool: BOOLEAN; 
 		char: CHAR; 
-		num, denom: LONGINT; 
-		real: LONGREAL; 
+		num, denom: SIGNED32; 
+		real: FLOAT64; 
 		s: ARRAY 256 OF CHAR; 
 	END; 
 
@@ -228,10 +228,10 @@ VAR
 	OutW: Texts.Writer; 
 
 	PROCEDURE ^ InitPool*(VAR pool: Pool); 
-	PROCEDURE ^ AllocStretch(len: LONGINT; VAR pool: Pool; VAR str: Stretch); 
+	PROCEDURE ^ AllocStretch(len: SIGNED32; VAR pool: Pool; VAR str: Stretch); 
 	PROCEDURE ^ MakeStretch(VAR s: ARRAY OF CHAR; VAR pool: Pool; VAR str: Stretch); 
 	PROCEDURE ^ GetStretch(VAR str: Stretch; pos, len: SIZE; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ SetStretch(VAR str: Stretch; pos, len: LONGINT; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ SetStretch(VAR str: Stretch; pos, len: SIGNED32; VAR s: ARRAY OF CHAR); 
 	PROCEDURE ^ StretchEquals(VAR str: Stretch; VAR s: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ NewNull(): Object; 
 	PROCEDURE ^ IsNull*(obj: Object): BOOLEAN; 
@@ -242,21 +242,21 @@ VAR
 	PROCEDURE ^ IsChar*(obj: Object): BOOLEAN; 
 	PROCEDURE ^ CharValue*(obj: Object): CHAR; 
 	PROCEDURE ^ NewLiteral*(val: ARRAY OF CHAR; VAR pool: Pool): Object; 
-	PROCEDURE ^ NewString*(len: LONGINT; fill: CHAR; VAR pool: Pool): Object; 
+	PROCEDURE ^ NewString*(len: SIGNED32; fill: CHAR; VAR pool: Pool): Object; 
 	PROCEDURE ^ IsString*(obj: Object): BOOLEAN; 
-	PROCEDURE ^ StringLen*(obj: Object): LONGINT; 
-	PROCEDURE ^ GetString*(obj: Object; pos, len: LONGINT; VAR s: ARRAY OF CHAR); 
-	PROCEDURE ^ SetString*(obj: Object; pos, len: LONGINT; s: ARRAY OF CHAR); 
-	PROCEDURE ^ CopyString*(src, dst: Object; spos, len, dpos: LONGINT); 
-	PROCEDURE ^ GCD(a, b: LONGINT): LONGINT; 
-	PROCEDURE ^ NewInteger*(val: LONGINT): Object; 
-	PROCEDURE ^ NewRational*(num, denom: LONGINT): Object; 
-	PROCEDURE ^ NewReal*(val: LONGREAL): Object; 
+	PROCEDURE ^ StringLen*(obj: Object): SIGNED32; 
+	PROCEDURE ^ GetString*(obj: Object; pos, len: SIGNED32; VAR s: ARRAY OF CHAR); 
+	PROCEDURE ^ SetString*(obj: Object; pos, len: SIGNED32; s: ARRAY OF CHAR); 
+	PROCEDURE ^ CopyString*(src, dst: Object; spos, len, dpos: SIGNED32); 
+	PROCEDURE ^ GCD(a, b: SIGNED32): SIGNED32; 
+	PROCEDURE ^ NewInteger*(val: SIGNED32): Object; 
+	PROCEDURE ^ NewRational*(num, denom: SIGNED32): Object; 
+	PROCEDURE ^ NewReal*(val: FLOAT64): Object; 
 	PROCEDURE ^ ToExact*(obj: Object): Object; 
 	PROCEDURE ^ ToInexact*(obj: Object): Object; 
-	PROCEDURE ^ GetInteger*(obj: Object; VAR val: LONGINT; VAR exact: BOOLEAN); 
-	PROCEDURE ^ GetRational*(obj: Object; VAR num, denom: LONGINT; VAR exact: BOOLEAN); 
-	PROCEDURE ^ GetReal*(obj: Object; VAR val: LONGREAL); 
+	PROCEDURE ^ GetInteger*(obj: Object; VAR val: SIGNED32; VAR exact: BOOLEAN); 
+	PROCEDURE ^ GetRational*(obj: Object; VAR num, denom: SIGNED32; VAR exact: BOOLEAN); 
+	PROCEDURE ^ GetReal*(obj: Object; VAR val: FLOAT64); 
 	PROCEDURE ^ IsNumber*(obj: Object): BOOLEAN; 
 	PROCEDURE ^ IsComplex*(obj: Object): BOOLEAN; 
 	PROCEDURE ^ IsReal*(obj: Object): BOOLEAN; 
@@ -264,7 +264,7 @@ VAR
 	PROCEDURE ^ IsInteger*(obj: Object): BOOLEAN; 
 	PROCEDURE ^ IsExact*(obj: Object): BOOLEAN; 
 	PROCEDURE ^ IsInexact*(obj: Object): BOOLEAN; 
-	PROCEDURE ^ Compare*(obj1, obj2: Object): LONGINT; 
+	PROCEDURE ^ Compare*(obj1, obj2: Object): SIGNED32; 
 	PROCEDURE ^ Add*(obj1, obj2: Object): Object; 
 	PROCEDURE ^ Neg*(obj: Object): Object; 
 	PROCEDURE ^ Sub*(obj1, obj2: Object): Object; 
@@ -288,7 +288,7 @@ VAR
 	PROCEDURE ^ NewRef*(refobj: Objects.Object): Object; 
 	PROCEDURE ^ IsReference*(obj: Object): BOOLEAN; 
 	PROCEDURE ^ RefValue*(obj: Object): Objects.Object; 
-	PROCEDURE ^ HashCode(VAR s: ARRAY OF CHAR): LONGINT; 
+	PROCEDURE ^ HashCode(VAR s: ARRAY OF CHAR): SIGNED32; 
 	PROCEDURE ^ NewSymbol*(name: ARRAY OF CHAR): Object; 
 	PROCEDURE ^ IsSymbol*(obj: Object): BOOLEAN; 
 	PROCEDURE ^ GetSymbol*(obj: Object; VAR s: ARRAY OF CHAR); 
@@ -299,11 +299,11 @@ VAR
 	PROCEDURE ^ SetCar*(p, obj: Object); 
 	PROCEDURE ^ Cdr*(obj: Object): Object; 
 	PROCEDURE ^ SetCdr*(p, obj: Object); 
-	PROCEDURE ^ NewVector*(size: LONGINT; fill: Object): Object; 
+	PROCEDURE ^ NewVector*(size: SIGNED32; fill: Object): Object; 
 	PROCEDURE ^ IsVector*(obj: Object): BOOLEAN; 
-	PROCEDURE ^ VectorLen*(obj: Object): LONGINT; 
-	PROCEDURE ^ VectorAt*(obj: Object; idx: LONGINT): Object; 
-	PROCEDURE ^ SetVectorAt*(obj: Object; idx: LONGINT; val: Object); 
+	PROCEDURE ^ VectorLen*(obj: Object): SIGNED32; 
+	PROCEDURE ^ VectorAt*(obj: Object; idx: SIGNED32): Object; 
+	PROCEDURE ^ SetVectorAt*(obj: Object; idx: SIGNED32; val: Object); 
 	PROCEDURE ^ NewPrimitive*(sym: Object; eval: PrimEval): Object; 
 	PROCEDURE ^ NewProcedure*(env: Environment; par, body: Object): Object; 
 	PROCEDURE ^ IsProcedure*(obj: Object): BOOLEAN; 
@@ -317,19 +317,19 @@ VAR
 	PROCEDURE ^ ReadCh*(obj: Object; VAR ch: CHAR); 
 	PROCEDURE ^ PeekCh*(obj: Object; VAR ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ Unread*(obj: Object); 
-	PROCEDURE ^ Pos*(obj: Object): LONGINT; 
+	PROCEDURE ^ Pos*(obj: Object): SIGNED32; 
 	PROCEDURE ^ CloseInput*(obj: Object); 
 	PROCEDURE ^ ReadFile(ip: Input; VAR ch: CHAR); 
 	PROCEDURE ^ UnreadFile(ip: Input); 
-	PROCEDURE ^ FilePos(ip: Input): LONGINT; 
+	PROCEDURE ^ FilePos(ip: Input): SIGNED32; 
 	PROCEDURE ^ NewFileInput*(file: Files.File): Object; 
 	PROCEDURE ^ ReadText(ip: Input; VAR ch: CHAR); 
 	PROCEDURE ^ UnreadText(ip: Input); 
-	PROCEDURE ^ TextPos(ip: Input): LONGINT; 
-	PROCEDURE ^ NewTextInput*(text: Texts.Text; pos: LONGINT): Object; 
+	PROCEDURE ^ TextPos(ip: Input): SIGNED32; 
+	PROCEDURE ^ NewTextInput*(text: Texts.Text; pos: SIGNED32): Object; 
 	PROCEDURE ^ ReadString(ip: Input; VAR ch: CHAR); 
 	PROCEDURE ^ UnreadString(ip: Input); 
-	PROCEDURE ^ StringPos(ip: Input): LONGINT; 
+	PROCEDURE ^ StringPos(ip: Input): SIGNED32; 
 	PROCEDURE ^ NewStringInput*(s: ARRAY OF CHAR): Object; 
 	PROCEDURE ^ IsOutput*(obj: Object): BOOLEAN; 
 	PROCEDURE ^ IsOpenOutput*(obj: Object): BOOLEAN; 
@@ -356,7 +356,7 @@ VAR
 	PROCEDURE ^ PopEval(VAR stack: Stack; VAR eval: Evaluator); 
 	PROCEDURE ^ InitContext*(ctxt: Context; in, out, err: Object); 
 	PROCEDURE ^ Fail*(ctxt: Context; msg: ARRAY OF CHAR; obj: Object); 
-	PROCEDURE ^ FailCode*(ctxt: Context; code: INTEGER; obj: Object); 
+	PROCEDURE ^ FailCode*(ctxt: Context; code: SIGNED16; obj: Object); 
 	PROCEDURE ^ NewEnvironment*(outer: Environment): Environment; 
 	PROCEDURE ^ Extend*(outer: Environment; par, arg: Object; ctxt: Context): Environment; 
 	PROCEDURE ^ DefineVariable*(var, val: Object; env: Environment); 
@@ -392,13 +392,13 @@ VAR
 	PROCEDURE ^ EvaluateSequence*(ctxt: Context; env: Environment; seq: Object); 
 	PROCEDURE ^ Call*(ctxt: Context; proc, args: Object); 
 	PROCEDURE ^ ScanCh(in: Object; VAR ch: CHAR); 
-	PROCEDURE ^ ScanNumber(in: Object; VAR ch: CHAR; radix: LONGINT; VAR t: Token); 
+	PROCEDURE ^ ScanNumber(in: Object; VAR ch: CHAR; radix: SIGNED32; VAR t: Token); 
 	PROCEDURE ^ Scan(in: Object; VAR t: Token); 
 	PROCEDURE ^ ReadObj(ctxt: Context; VAR token: Token; VAR obj: Object): BOOLEAN; 
 	PROCEDURE ^ Read*(ctxt: Context): Object; 
 	PROCEDURE ^ Load*(ctxt: Context; from: Object); 
-	PROCEDURE ^ NumberToString*(obj: Object; radix: LONGINT; VAR pool: Pool): Object; 
-	PROCEDURE ^ StringToNumber*(obj: Object; radix: LONGINT): Object; 
+	PROCEDURE ^ NumberToString*(obj: Object; radix: SIGNED32; VAR pool: Pool): Object; 
+	PROCEDURE ^ StringToNumber*(obj: Object; radix: SIGNED32): Object; 
 	PROCEDURE ^ SymbolToString*(obj: Object): Object; 
 	PROCEDURE ^ StringToSymbol*(obj: Object): Object; 
 	PROCEDURE ^ Execute*; 

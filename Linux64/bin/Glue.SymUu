@@ -11,11 +11,11 @@ VAR
 	baseAdr*: ADDRESS; 
 	endAdr*: ADDRESS; 
 	dlsym-: PROCEDURE {C}(handle: ADDRESS; name: ADDRESS):ADDRESS; 
-	dlopen-: PROCEDURE {C}(pathname: ADDRESS; mode: WORD):ADDRESS; 
+	dlopen-: PROCEDURE {C}(pathname: ADDRESS; mode: INTEGER):ADDRESS; 
 	dlclose-: PROCEDURE {C}(handle: ADDRESS); 
-	exit-: PROCEDURE {C}(status: WORD); 
+	exit-: PROCEDURE {C}(status: INTEGER); 
 	stackBottom-: ADDRESS; 
-	argc-: WORD; 
+	argc-: INTEGER; 
 	argv-: ADDRESS; 
 	environ-: ADDRESS; 
 

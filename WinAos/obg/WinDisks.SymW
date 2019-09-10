@@ -14,42 +14,42 @@ CONST
 	FSCTL_DISMOUNT_VOLUME = 589856; 
 TYPE 
 	DISK_GEOMETRY = RECORD 
-		Cylinders: HUGEINT; 
-		MediaType: LONGINT; 
-		TracksPerCylinder: LONGINT; 
-		SectorsPerTrack: LONGINT; 
-		BytesPerSector: LONGINT; 
+		Cylinders: SIGNED64; 
+		MediaType: SIGNED32; 
+		TracksPerCylinder: SIGNED32; 
+		SectorsPerTrack: SIGNED32; 
+		BytesPerSector: SIGNED32; 
 	END; 
 
 	DISK_EXTENT = RECORD 
-		DiskNumber: LONGINT; 
-		padding: LONGINT; 
-		StartingOffset: HUGEINT; 
-		ExtentLength: HUGEINT; 
+		DiskNumber: SIGNED32; 
+		padding: SIGNED32; 
+		StartingOffset: SIGNED64; 
+		ExtentLength: SIGNED64; 
 	END; 
 
 	VOLUME_DISK_EXTENTS = RECORD 
-		NumberOfDiskExtents: LONGINT; 
-		padding: LONGINT; 
+		NumberOfDiskExtents: SIGNED32; 
+		padding: SIGNED32; 
 		extents: ARRAY MaxExtents OF DISK_EXTENT; 
 	END; 
 
 	VirtualDisk = OBJECT {EXCLUSIVE} (Disks.Device)
 	VAR 
 		handle: Kernel32.HANDLE; 
-		size: LONGINT; 
+		size: SIGNED32; 
 		next: VirtualDisk; 
-		drive: LONGINT; 
+		drive: SIGNED32; 
 
-		PROCEDURE ^ Finish(VAR res: WORD); 
-		PROCEDURE ^ Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD); 
-		PROCEDURE ^ GetSize*(VAR size: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: WORD); 
-		PROCEDURE ^  & New*(handle: Kernel32.HANDLE; CONST diskname: ARRAY OF CHAR; drive: LONGINT; flags: SET; blockSize, blocks: LONGINT); 
+		PROCEDURE ^ Finish(VAR res: INTEGER); 
+		PROCEDURE ^ Transfer*(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ GetSize*(VAR size: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Handle*(VAR msg: Disks.Message; VAR res: INTEGER); 
+		PROCEDURE ^  & New*(handle: Kernel32.HANDLE; CONST diskname: ARRAY OF CHAR; drive: SIGNED32; flags: SET; blockSize, blocks: SIGNED32); 
 	END VirtualDisk; 
 VAR 
-	DeviceIoControl: PROCEDURE {WINAPI}(hDevice: Kernel32.HANDLE; dwIoControlCode: LONGINT; VAR lpInBuffer: ARRAY OF SYSTEM.BYTE; nInBufferSize: LONGINT; VAR lpOutBuffer: ARRAY OF SYSTEM.BYTE; nOutBufferSize: LONGINT; VAR lpBytesReturned: LONGINT; lpOverlapped: ANY):Kernel32.BOOL; 
-	SetFilePointer: PROCEDURE {WINAPI}(hFile: Kernel32.HANDLE; lDistanceToMove: LONGINT; VAR lpDistanceToMoveHigh: LONGINT; dwMoveMethod: LONGINT):LONGINT; 
+	DeviceIoControl: PROCEDURE {WINAPI}(hDevice: Kernel32.HANDLE; dwIoControlCode: SIGNED32; VAR lpInBuffer: ARRAY OF SYSTEM.BYTE; nInBufferSize: SIGNED32; VAR lpOutBuffer: ARRAY OF SYSTEM.BYTE; nOutBufferSize: SIGNED32; VAR lpBytesReturned: SIGNED32; lpOverlapped: ANY):Kernel32.BOOL; 
+	SetFilePointer: PROCEDURE {WINAPI}(hFile: Kernel32.HANDLE; lDistanceToMove: SIGNED32; VAR lpDistanceToMoveHigh: SIGNED32; dwMoveMethod: SIGNED32):SIGNED32; 
 	disks: VirtualDisk; 
 
 	PROCEDURE ^ AddDisk(vd: VirtualDisk); 
@@ -62,12 +62,12 @@ VAR
 	PROCEDURE ^ LockVolume(handle: Kernel32.HANDLE): BOOLEAN; 
 	PROCEDURE ^ UnlockVolume(handle: Kernel32.HANDLE): BOOLEAN; 
 	PROCEDURE ^ DismountVolume(handle: Kernel32.HANDLE): BOOLEAN; 
-	PROCEDURE ^ AppendInt(VAR name: ARRAY OF CHAR; i: LONGINT); 
+	PROCEDURE ^ AppendInt(VAR name: ARRAY OF CHAR; i: SIGNED32); 
 	PROCEDURE ^ OpenVolume(VAR handle: Kernel32.HANDLE; flags: SET; CONST name: ARRAY OF CHAR; context: Commands.Context): BOOLEAN; 
-	PROCEDURE ^ OutSize(f: LONGREAL; out: Streams.Writer); 
+	PROCEDURE ^ OutSize(f: FLOAT64; out: Streams.Writer); 
 	PROCEDURE ^ GetPhysicalDrive(VAR handle: Kernel32.HANDLE; flags: SET; VAR name: ARRAY OF CHAR; context: Commands.Context); 
 	PROCEDURE ^ Install*(context: Commands.Context); 
-	PROCEDURE ^ Notification(type: LONGINT; drives: SET); 
+	PROCEDURE ^ Notification(type: SIGNED32; drives: SET); 
 	PROCEDURE ^ Init; 
 BEGIN
 END WinDisks.

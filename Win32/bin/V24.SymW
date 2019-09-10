@@ -10,16 +10,16 @@ TYPE
 		timer: Kernel.Timer; 
 		rOverlapped, wOverlapped: Kernel32.Overlapped; 
 
-		PROCEDURE ^  & Init*(port: LONGINT); 
-		PROCEDURE ^ Open*(bps, data, parity, stop: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: WORD); 
-		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
-		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: WORD); 
+		PROCEDURE ^  & Init*(port: SIGNED32); 
+		PROCEDURE ^ Open*(bps, data, parity, stop: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SendChar*(ch: CHAR; VAR res: INTEGER); 
+		PROCEDURE ^ Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ ReceiveChar*(VAR ch: CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Available*(): SIZE; 
-		PROCEDURE ^ SetPortState(bps, data, parity, stop: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ SetPortState(bps, data, parity, stop: SIGNED32; VAR res: INTEGER); 
 		PROCEDURE ^ FinalizePort(ptr: ANY); 
-		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: LONGINT); 
+		PROCEDURE ^ GetPortState*(VAR openstat: BOOLEAN; VAR bps, data, parity, stop: SIGNED32); 
 		PROCEDURE ^ ClearMC*(s: SET); 
 		PROCEDURE ^ SetMC*(s: SET); 
 		PROCEDURE ^ GetMC*(VAR s: SET); 

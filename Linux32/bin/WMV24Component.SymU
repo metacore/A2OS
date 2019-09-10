@@ -50,13 +50,13 @@ TYPE
 
 	Lock = OBJECT {EXCLUSIVE} 
 	VAR 
-		lock: LONGINT; 
-		locklevel: LONGINT; 
+		lock: SIGNED32; 
+		locklevel: SIGNED32; 
 
-		PROCEDURE ^ TryAcquire(lock: LONGINT): BOOLEAN; 
-		PROCEDURE ^ Acquire(lock: LONGINT); 
+		PROCEDURE ^ TryAcquire(lock: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ Acquire(lock: SIGNED32); 
 		PROCEDURE ^ Release; 
-		PROCEDURE ^ TakeLock(lock: LONGINT); 
+		PROCEDURE ^ TakeLock(lock: SIGNED32); 
 		PROCEDURE ^  & Init*; 
 	END Lock; 
 
@@ -100,7 +100,7 @@ TYPE
 		in: Streams.Reader; 
 		out: Streams.Writer; 
 		port: Serials.Port; 
-		portNr, bps, databits, parity, stop: LONGINT; 
+		portNr, bps, databits, parity, stop: SIGNED32; 
 		open: BOOLEAN; 
 		lock: Lock; 
 		w: TextUtilities.TextWriter; 
@@ -119,7 +119,7 @@ TYPE
 		status: WMStandardComponents.Label; 
 		dsr: WMStandardComponents.Label; 
 		clearStatusBtn: WMStandardComponents.Button; 
-		overrunErrors, framingErrors, parityErrors, breakInterrupts, transportErrors, otherErrors: LONGINT; 
+		overrunErrors, framingErrors, parityErrors, breakInterrupts, transportErrors, otherErrors: SIGNED32; 
 		statusUpdater: StatusUpdater; 
 		running: BOOLEAN; 
 		timer: Kernel.Timer; 
@@ -142,20 +142,20 @@ TYPE
 		PROCEDURE ^ CreateLowerToolBar(): WMStandardComponents.Panel; 
 		PROCEDURE ^ CreateStatusBar(): WMStandardComponents.Panel; 
 		PROCEDURE ^ CreateContent; 
-		PROCEDURE ^ Wait(ms: LONGINT); 
+		PROCEDURE ^ Wait(ms: SIGNED32); 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ GetPanelCoordinates(VAR gx, gy: SIZE); 
 		PROCEDURE ^ CopyFromClipboard; 
-		PROCEDURE ^ GetXYCommand(send: BOOLEAN; mode: LONGINT): Strings.String; 
+		PROCEDURE ^ GetXYCommand(send: BOOLEAN; mode: SIGNED32): Strings.String; 
 		PROCEDURE ^ SendXYCommand(send: BOOLEAN; CONST command, filename: ARRAY OF CHAR); 
-		PROCEDURE ^ SendXYModem(CONST filename: ARRAY OF CHAR; mode: LONGINT); 
-		PROCEDURE ^ ReceiveXYModem(filename: ARRAY OF CHAR; mode: LONGINT); 
+		PROCEDURE ^ SendXYModem(CONST filename: ARRAY OF CHAR; mode: SIGNED32); 
+		PROCEDURE ^ ReceiveXYModem(filename: ARRAY OF CHAR; mode: SIGNED32); 
 		PROCEDURE ^ ResetStatus; 
 		PROCEDURE ^ ToggleOpen(sender, data: ANY); 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ DeleteNCharacters(nbrOfCharacters: SIZE); 
-		PROCEDURE ^ ReportError(CONST title: ARRAY OF CHAR; res: WORD); 
-		PROCEDURE ^ EvaluateError(res: WORD); 
+		PROCEDURE ^ ReportError(CONST title: ARRAY OF CHAR; res: INTEGER); 
+		PROCEDURE ^ EvaluateError(res: INTEGER); 
 		PROCEDURE ^ ReceiveCharacters; 
 	BEGIN{ACTIVE} 
 	END TerminalComponent; 
@@ -187,14 +187,14 @@ TYPE
 	VAR 
 		terminal: TerminalComponent; 
 
-		PROCEDURE ^ GetStartupSize(VAR width, height: LONGINT); 
+		PROCEDURE ^ GetStartupSize(VAR width, height: SIGNED32); 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(c: WMRestorable.Context; context: Commands.Context); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	timeout: BOOLEAN; 
 	StrProgressInfo, StrCustomTextView, StrTerminalComponent: Strings.String; 
 

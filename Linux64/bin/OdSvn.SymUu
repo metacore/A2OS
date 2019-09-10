@@ -14,7 +14,7 @@ TYPE
 
 	StringReader = OBJECT 
 	VAR 
-		res, pos: LONGINT; 
+		res, pos: SIGNED32; 
 		s: U.String; 
 
 		PROCEDURE ^  & Init(s: U.String); 
@@ -31,7 +31,7 @@ TYPE
 	Activity* = OBJECT 
 	VAR 
 		url: U.String; 
-		statuscode*: LONGINT; 
+		statuscode*: SIGNED32; 
 		log: Log.Log; 
 		client: OdClient.OdClient; 
 
@@ -43,25 +43,25 @@ TYPE
 
 	UpdateReq* = OBJECT {EXCLUSIVE} (XML.Document)
 
-		PROCEDURE ^  & InitUpdateReq*(client: OdClient.OdClient; svn: OdSvn; CONST pathName: ARRAY OF CHAR; headVersion, version: LONGINT); 
+		PROCEDURE ^  & InitUpdateReq*(client: OdClient.OdClient; svn: OdSvn; CONST pathName: ARRAY OF CHAR; headVersion, version: SIGNED32); 
 	END UpdateReq; 
 
 	LogReq = OBJECT {EXCLUSIVE} (XML.Document)
 
-		PROCEDURE ^  & InitLogReq(start, end: LONGINT); 
+		PROCEDURE ^  & InitLogReq(start, end: SIGNED32); 
 	END LogReq; 
 
 	OdSvn* = OBJECT 
 	VAR 
 		useSvn: BOOLEAN; 
-		globalVersion: LONGINT; 
+		globalVersion: SIGNED32; 
 		svnFileUpdate: BOOLEAN; 
 		traverseDummy*, useUpdateTarget*, checkout*: BOOLEAN; 
 		client*: OdClient.OdClient; 
 		xml: OdXml.OdXml; 
 		wrk*, ver*, errorMsg, repositoryURL*: ARRAY 256 OF CHAR; 
-		pfStatus*: LONGINT; 
-		countChanges*: LONGINT; 
+		pfStatus*: SIGNED32; 
+		countChanges*: SIGNED32; 
 		repositoryPathLength*: SIZE; 
 		removeDir*, svnUpdated*: BOOLEAN; 
 		resultDoc*: XML.Document; 
@@ -77,26 +77,26 @@ TYPE
 		PROCEDURE ^ Versions*(context: Commands.Context); 
 		PROCEDURE ^ UseSvn*(b: BOOLEAN); 
 		PROCEDURE ^ FileUpdate*(b: BOOLEAN); 
-		PROCEDURE ^ UpdateReport*(pathName, vcc: ARRAY OF CHAR; CONST workUrl: ARRAY OF CHAR; headVersion, version: LONGINT; CONST workName: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ UpdateReport*(pathName, vcc: ARRAY OF CHAR; CONST workUrl: ARRAY OF CHAR; headVersion, version: SIGNED32; CONST workName: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Update*(context: Commands.Context); 
 		PROCEDURE ^ ParseVersions(url: ARRAY OF CHAR; doc: XML.Document; VAR versions: OdUtil.Dict); 
-		PROCEDURE ^ LogReport(CONST url: ARRAY OF CHAR; bc: ARRAY OF CHAR; start, end: LONGINT); 
+		PROCEDURE ^ LogReport(CONST url: ARRAY OF CHAR; bc: ARRAY OF CHAR; start, end: SIGNED32); 
 		PROCEDURE ^ Add*(context: Commands.Context); 
 		PROCEDURE ^ Commit*(context: Commands.Context); 
 		PROCEDURE ^ CollHead(CONST path: ARRAY OF CHAR; VAR resUrl: ARRAY OF CHAR); 
 		PROCEDURE ^ Checkout*(url: ARRAY OF CHAR; VAR resHeader: WebHTTP.ResponseHeader; CONST err: ARRAY OF CHAR); 
 		PROCEDURE ^ Proppatch*(url: ARRAY OF CHAR; VAR props: WebHTTP.AdditionalField; CONST err: ARRAY OF CHAR); 
 		PROCEDURE ^ Merge*(url: ARRAY OF CHAR; actUrl: U.String; VAR resHeader: WebHTTP.ResponseHeader; CONST err: ARRAY OF CHAR); 
-		PROCEDURE ^ SvnWrite(parent: XML.Element; CONST path, filename, version: ARRAY OF CHAR; added: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ SvnParseUpdate(doc: XML.Document; CONST workUrl, workName: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ SvnWrite(parent: XML.Element; CONST path, filename, version: ARRAY OF CHAR; added: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SvnParseUpdate(doc: XML.Document; CONST workUrl, workName: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ SvnWritePROPS(CONST path, filename: ARRAY OF CHAR; props: SvnProps); 
 	END OdSvn; 
 VAR 
 	log: Log.Log; 
 	encTable: ARRAY 64 OF CHAR; 
-	decTable: ARRAY 128 OF INTEGER; 
+	decTable: ARRAY 128 OF SIGNED16; 
 
 	PROCEDURE ^ InitTables; 
-	PROCEDURE ^ RawNum(VAR delta: Files.Reader; VAR li: LONGINT); 
+	PROCEDURE ^ RawNum(VAR delta: Files.Reader; VAR li: SIGNED32); 
 BEGIN
 END OdSvn.

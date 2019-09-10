@@ -13,9 +13,9 @@ TYPE
 	VbiBuffer* = OBJECT {EXCLUSIVE} 
 	VAR 
 		data*: ARRAY VbiBufferSize OF CHAR; 
-		readPos*: LONGINT; 
-		insertPos*: LONGINT; 
-		vbiSize*: LONGINT; 
+		readPos*: SIGNED32; 
+		insertPos*: SIGNED32; 
+		vbiSize*: SIGNED32; 
 		timeout: BOOLEAN; 
 		timer: ActiveTimers.Timer; 
 
@@ -27,46 +27,46 @@ TYPE
 
 	TVTuner* = OBJECT 
 	VAR 
-		frequency*: LONGINT; 
+		frequency*: SIGNED32; 
 
 		PROCEDURE ^  & Init*(vcd: VideoCaptureDevice); 
-		PROCEDURE ^ OpenVbi*(): LONGINT; 
+		PROCEDURE ^ OpenVbi*(): SIGNED32; 
 		PROCEDURE ^ CloseVbi*; 
 		PROCEDURE ^ Open*; 
 		PROCEDURE ^ Close*; 
-		PROCEDURE ^ SetChannelSet*(chnlSet: LONGINT); 
-		PROCEDURE ^ GetChannelSet*(): LONGINT; 
-		PROCEDURE ^ SetChannel*(chnl: LONGINT); 
-		PROCEDURE ^ GetChannel*(): LONGINT; 
-		PROCEDURE ^ GetMaxChannel*(): LONGINT; 
-		PROCEDURE ^ SetTVFrequency*(freq: LONGINT); 
-		PROCEDURE ^ SetTVFrequencyImpl*(freq: LONGINT); 
-		PROCEDURE ^ GetFrequency*(): LONGINT; 
-		PROCEDURE ^ SetRadioFrequency*(freq: LONGINT); 
+		PROCEDURE ^ SetChannelSet*(chnlSet: SIGNED32); 
+		PROCEDURE ^ GetChannelSet*(): SIGNED32; 
+		PROCEDURE ^ SetChannel*(chnl: SIGNED32); 
+		PROCEDURE ^ GetChannel*(): SIGNED32; 
+		PROCEDURE ^ GetMaxChannel*(): SIGNED32; 
+		PROCEDURE ^ SetTVFrequency*(freq: SIGNED32); 
+		PROCEDURE ^ SetTVFrequencyImpl*(freq: SIGNED32); 
+		PROCEDURE ^ GetFrequency*(): SIGNED32; 
+		PROCEDURE ^ SetRadioFrequency*(freq: SIGNED32); 
 		PROCEDURE ^ InstallChannelSwitchHandler*(handler: ChannelSwitchHandler); 
-		PROCEDURE ^ NotifyChannelSwitchObservers(freq: LONGINT); 
-		PROCEDURE ^ GetTunerStatus*(): LONGINT; 
-		PROCEDURE ^ CalcFieldStrength*(): LONGINT; 
+		PROCEDURE ^ NotifyChannelSwitchObservers(freq: SIGNED32); 
+		PROCEDURE ^ GetTunerStatus*(): SIGNED32; 
+		PROCEDURE ^ CalcFieldStrength*(): SIGNED32; 
 		PROCEDURE ^ IsLocked*(): BOOLEAN; 
 		PROCEDURE ^ IsStereo*(): BOOLEAN; 
-		PROCEDURE ^ SetHue*(hue: LONGINT); 
-		PROCEDURE ^ GetHue*(): LONGINT; 
-		PROCEDURE ^ SetBrightness*(brightness: LONGINT); 
-		PROCEDURE ^ GetBrightness*(): LONGINT; 
-		PROCEDURE ^ SetChromaSaturation*(saturation: LONGINT); 
-		PROCEDURE ^ GetChromaSaturation*(): LONGINT; 
-		PROCEDURE ^ SetChromaVSaturation*(saturation: LONGINT); 
-		PROCEDURE ^ GetChromaVSaturation*(): LONGINT; 
-		PROCEDURE ^ SetChromaUSaturation*(saturation: LONGINT); 
-		PROCEDURE ^ GetChromaUSaturation*(): LONGINT; 
-		PROCEDURE ^ SetLumaNotch*(notch: LONGINT); 
-		PROCEDURE ^ GetLumaNotch*(): LONGINT; 
-		PROCEDURE ^ SetContrast*(contrast: LONGINT); 
-		PROCEDURE ^ GetContrast*(): LONGINT; 
+		PROCEDURE ^ SetHue*(hue: SIGNED32); 
+		PROCEDURE ^ GetHue*(): SIGNED32; 
+		PROCEDURE ^ SetBrightness*(brightness: SIGNED32); 
+		PROCEDURE ^ GetBrightness*(): SIGNED32; 
+		PROCEDURE ^ SetChromaSaturation*(saturation: SIGNED32); 
+		PROCEDURE ^ GetChromaSaturation*(): SIGNED32; 
+		PROCEDURE ^ SetChromaVSaturation*(saturation: SIGNED32); 
+		PROCEDURE ^ GetChromaVSaturation*(): SIGNED32; 
+		PROCEDURE ^ SetChromaUSaturation*(saturation: SIGNED32); 
+		PROCEDURE ^ GetChromaUSaturation*(): SIGNED32; 
+		PROCEDURE ^ SetLumaNotch*(notch: SIGNED32); 
+		PROCEDURE ^ GetLumaNotch*(): SIGNED32; 
+		PROCEDURE ^ SetContrast*(contrast: SIGNED32); 
+		PROCEDURE ^ GetContrast*(): SIGNED32; 
 		PROCEDURE ^ SetColorBars*(enable: BOOLEAN); 
 	END TVTuner; 
 
-	ChannelSwitchHandler* = PROCEDURE {DELEGATE}(freq: LONGINT; tuner: TVTuner); 
+	ChannelSwitchHandler* = PROCEDURE {DELEGATE}(freq: SIGNED32; tuner: TVTuner); 
 
 	ChannelSwitchObserver = OBJECT 
 	VAR 
@@ -78,7 +78,7 @@ TYPE
 
 	VideoCaptureDevice* = OBJECT (Plugins.Plugin)
 
-		PROCEDURE ^  & Init*(base: ADDRESS; irq, product, rev: LONGINT); 
+		PROCEDURE ^  & Init*(base: ADDRESS; irq, product, rev: SIGNED32); 
 		PROCEDURE ^ GetVbiBuffer*(): VbiBuffer; 
 		PROCEDURE ^ GetTuner*(): TVTuner; 
 		PROCEDURE ^ GetAudio*(): Audio; 
@@ -88,10 +88,10 @@ TYPE
 		PROCEDURE ^ IsVideoOpen*(): BOOLEAN; 
 		PROCEDURE ^ IsVbiOpen*(): BOOLEAN; 
 		PROCEDURE ^ SetClipRegion*; 
-		PROCEDURE ^ GetStatus*(): LONGINT; 
-		PROCEDURE ^ SetInputFormat*(format: LONGINT); 
-		PROCEDURE ^ GetInputFormat*(): LONGINT; 
-		PROCEDURE ^ SetPixelFormat*(format: LONGINT); 
+		PROCEDURE ^ GetStatus*(): SIGNED32; 
+		PROCEDURE ^ SetInputFormat*(format: SIGNED32); 
+		PROCEDURE ^ GetInputFormat*(): SIGNED32; 
+		PROCEDURE ^ SetPixelFormat*(format: SIGNED32); 
 		PROCEDURE ^ SetInputDev0*; 
 		PROCEDURE ^ SetInputDev1*; 
 		PROCEDURE ^ SetInputDev2*; 
@@ -101,7 +101,7 @@ TYPE
 		PROCEDURE ^ CaptureSingle*; 
 		PROCEDURE ^ CaptureContinuous*; 
 		PROCEDURE ^ StopCaptureContinuous*; 
-		PROCEDURE ^ SetGeometry*(columns, rows, frames: LONGINT; format: SET); 
+		PROCEDURE ^ SetGeometry*(columns, rows, frames: SIGNED32; format: SET); 
 	END VideoCaptureDevice; 
 
 	Audio* = OBJECT 
@@ -118,7 +118,7 @@ VAR
 	channelSwitchObservers: ChannelSwitchObserver; 
 	devices*: Plugins.Registry; 
 
-	PROCEDURE ^ GetVideoDevice*(idx: LONGINT): VideoCaptureDevice; 
+	PROCEDURE ^ GetVideoDevice*(idx: SIGNED32): VideoCaptureDevice; 
 	PROCEDURE ^ GetDefaultDevice*(): VideoCaptureDevice; 
 	PROCEDURE ^ Cleanup; 
 BEGIN

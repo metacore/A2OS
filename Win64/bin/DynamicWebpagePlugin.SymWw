@@ -55,7 +55,7 @@ VAR
 	PROCEDURE ^ BackRefreshButtonWasPressed(request: HTTPSupport.HTTPRequest; session: HTTPSession.Session): BOOLEAN; 
 	PROCEDURE ^ HandleBackRefreshButtonError(request: HTTPSupport.HTTPRequest; w: Streams.Writer); 
 	PROCEDURE ^ GenerateDynamicWebpage(f: Files.File; request: HTTPSupport.HTTPRequest; w: Streams.Writer); 
-	PROCEDURE ^ TransformXMLTree(file: Files.File; VAR n: XML.Content; VAR request: HTTPSupport.HTTPRequest; transformationDepth: INTEGER; w: Streams.Writer): BOOLEAN; 
+	PROCEDURE ^ TransformXMLTree(file: Files.File; VAR n: XML.Content; VAR request: HTTPSupport.HTTPRequest; transformationDepth: SIGNED16; w: Streams.Writer): BOOLEAN; 
 	PROCEDURE ^ Log(elem: XML.Element); 
 	PROCEDURE ^ ExtractContentsOfContainer(input: XML.Container; VAR output: XML.Container); 
 	PROCEDURE ^ IsActive(n: XML.Element): BOOLEAN; 

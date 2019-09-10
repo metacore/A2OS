@@ -23,10 +23,10 @@ CONST
 	NilAdrIdent =  -1; 
 TYPE 
 	Adr* = RECORD 
-		ipv4Adr*: LONGINT; 
+		ipv4Adr*: SIGNED32; 
 		ipv6Adr*: ARRAY 16 OF CHAR; 
-		usedProtocol*: LONGINT; 
-		data*: LONGINT; 
+		usedProtocol*: SIGNED32; 
+		data*: SIGNED32; 
 	END; 
 
 	Name* = ARRAY 128 OF CHAR; 
@@ -46,12 +46,12 @@ VAR
 	PROCEDURE ^ AdrsEqual*(adr1, adr2: Adr): BOOLEAN; 
 	PROCEDURE ^ StrToAdr*(CONST s: ARRAY OF CHAR): Adr; 
 	PROCEDURE ^ AdrToStr*(adr: Adr; VAR string: ARRAY OF CHAR); 
-	PROCEDURE ^ ArrayToAdr*(CONST array: ARRAY OF CHAR; ofs, protocol: LONGINT; LSBfirst: BOOLEAN): Adr; 
-	PROCEDURE ^ AdrToArray*(adr: Adr; CONST array: ARRAY OF CHAR; ofs: LONGINT; LSBfirst: BOOLEAN); 
+	PROCEDURE ^ ArrayToAdr*(CONST array: ARRAY OF CHAR; ofs, protocol: SIGNED32; LSBfirst: BOOLEAN): Adr; 
+	PROCEDURE ^ AdrToArray*(adr: Adr; CONST array: ARRAY OF CHAR; ofs: SIGNED32; LSBfirst: BOOLEAN); 
 	PROCEDURE ^ InterfaceByDstIP*(dst: Adr): Interface; 
-	PROCEDURE ^ InitInterfaces(hostname: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ InitInterfaces(hostname: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ Init; 
-	PROCEDURE {Fingerprint(7622940362159962290)}  - SwapEndian(VAR adr: LONGINT);
+	PROCEDURE {Fingerprint(7622940362159962290)}  - SwapEndian(VAR adr: SIGNED32);
 	CODE
 	END SwapEndian; 
 BEGIN

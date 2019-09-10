@@ -12,17 +12,17 @@ CONST
 TYPE 
 	Reader* = RECORD 
 		file-: Files.File; 
-		res-: LONGINT; 
+		res-: SIGNED32; 
 		transparent: BOOLEAN; 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		zr: ZlibReaders.Reader; 
 	END; 
 
 	PROCEDURE ^ CheckHeader(VAR r: Reader; VAR fr: Files.Rider); 
 	PROCEDURE ^ Open*(VAR r: Reader; file: Files.File); 
 	PROCEDURE ^ Close*(VAR r: Reader); 
-	PROCEDURE ^ ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT); 
+	PROCEDURE ^ ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: SIGNED32; VAR read: SIGNED32); 
 	PROCEDURE ^ Read*(VAR r: Reader; VAR ch: CHAR); 
-	PROCEDURE ^ Pos*(VAR r: Reader): LONGINT; 
+	PROCEDURE ^ Pos*(VAR r: Reader): SIGNED32; 
 BEGIN
 END GZReaders.

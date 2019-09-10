@@ -6,13 +6,13 @@ TYPE
 
 	FileObjDesc* = RECORD (Gadgets.ObjDesc)
 		F*: Files.File; 
-		beg*, len*: LONGINT; 
+		beg*, len*: SIGNED32; 
 	END; 
 
 	Suitcase* = POINTER TO SuitcaseDesc; 
 
 	SuitcaseDesc* = RECORD (Gadgets.FrameDesc)
-		col*: INTEGER; 
+		col*: SIGNED16; 
 		label*: ARRAY 64 OF CHAR; 
 	END; 
 
@@ -21,7 +21,7 @@ TYPE
 	PROCEDURE ^ NewFileObj*; 
 	PROCEDURE ^ UnpackFileObj*(obj: FileObj; CONST filename: ARRAY OF CHAR); 
 	PROCEDURE ^ SuitcaseAttr(F: Suitcase; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ RestoreSuitcase(F: Suitcase; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreSuitcase(F: Suitcase; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ Print(F: Suitcase; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ CopySuitcase*(VAR M: Objects.CopyMsg; from, to: Suitcase); 
 	PROCEDURE ^ OpenSuitcase(F: Suitcase; obj: Objects.Object); 

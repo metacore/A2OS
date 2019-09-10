@@ -3,7 +3,7 @@ MODULE ComponentViewer;
 CONST 
 	DefaultWidth = 320; 
 	DefaultHeight = 240; 
-	InvalidPosition* = MIN(LONGINT); 
+	InvalidPosition* = MIN(SIGNED32); 
 	FlagMoveable* = 20; 
 	FlagSmoothGraphics* = 21; 
 TYPE 

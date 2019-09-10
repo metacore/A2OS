@@ -3,23 +3,23 @@ MODULE vyRandom IN Oberon;
 CONST 
 	idversion* = \"Random v0.1d4"\; 
 VAR 
-	twopi: LONGREAL; 
+	twopi: FLOAT64; 
 
-	PROCEDURE ^ Uniform*(): LONGREAL; 
-	PROCEDURE ^ UniformV*(count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
-	PROCEDURE ^ Exp*(mu: LONGREAL): LONGREAL; 
-	PROCEDURE ^ ExpV*(mu: LONGREAL; count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
-	PROCEDURE ^ Cauchy*(): LONGREAL; 
-	PROCEDURE ^ CauchyV*(count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
-	PROCEDURE ^ Gauss*(mu, sigmasq: LONGREAL): LONGREAL; 
-	PROCEDURE ^ GaussV*(mu, sigmasq: LONGREAL; count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
-	PROCEDURE ^ GaussM*(mu, sigmasq: LONGREAL): LONGREAL; 
-	PROCEDURE ^ GaussMV*(mu, sigmasq: LONGREAL; count: LONGINT; VAR gauss: ARRAY OF LONGREAL; start: LONGINT); 
-	PROCEDURE ^ Weibull*(beta: LONGREAL): LONGREAL; 
-	PROCEDURE ^ WeibullV*(beta: LONGREAL; count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
-	PROCEDURE ^ Gumbel*(): LONGREAL; 
-	PROCEDURE ^ GumbelV*(count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
-	PROCEDURE ^ VonMises*(Kappa: LONGREAL): LONGREAL; 
-	PROCEDURE ^ VonMisesV*(Kappa: LONGREAL; count: LONGINT; VAR x: ARRAY OF LONGREAL; start: LONGINT); 
+	PROCEDURE ^ Uniform*(): FLOAT64; 
+	PROCEDURE ^ UniformV*(count: SIGNED32; VAR x: ARRAY OF FLOAT64; start: SIGNED32); 
+	PROCEDURE ^ Exp*(mu: FLOAT64): FLOAT64; 
+	PROCEDURE ^ ExpV*(mu: FLOAT64; count: SIGNED32; VAR x: ARRAY OF FLOAT64; start: SIGNED32); 
+	PROCEDURE ^ Cauchy*(): FLOAT64; 
+	PROCEDURE ^ CauchyV*(count: SIGNED32; VAR x: ARRAY OF FLOAT64; start: SIGNED32); 
+	PROCEDURE ^ Gauss*(mu, sigmasq: FLOAT64): FLOAT64; 
+	PROCEDURE ^ GaussV*(mu, sigmasq: FLOAT64; count: SIGNED32; VAR x: ARRAY OF FLOAT64; start: SIGNED32); 
+	PROCEDURE ^ GaussM*(mu, sigmasq: FLOAT64): FLOAT64; 
+	PROCEDURE ^ GaussMV*(mu, sigmasq: FLOAT64; count: SIGNED32; VAR gauss: ARRAY OF FLOAT64; start: SIGNED32); 
+	PROCEDURE ^ Weibull*(beta: FLOAT64): FLOAT64; 
+	PROCEDURE ^ WeibullV*(beta: FLOAT64; count: SIGNED32; VAR x: ARRAY OF FLOAT64; start: SIGNED32); 
+	PROCEDURE ^ Gumbel*(): FLOAT64; 
+	PROCEDURE ^ GumbelV*(count: SIGNED32; VAR x: ARRAY OF FLOAT64; start: SIGNED32); 
+	PROCEDURE ^ VonMises*(Kappa: FLOAT64): FLOAT64; 
+	PROCEDURE ^ VonMisesV*(Kappa: FLOAT64; count: SIGNED32; VAR x: ARRAY OF FLOAT64; start: SIGNED32); 
 BEGIN
 END vyRandom.

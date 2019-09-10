@@ -9,10 +9,10 @@ TYPE
 	END; 
 
 	PROCEDURE ^ Exchange(old, new: Documents.Document); 
-	PROCEDURE ^ GetStream(doc: Documents.Document; R: Request; stream: PlugIns.Stream; state: LONGINT): BOOLEAN; 
+	PROCEDURE ^ GetStream(doc: Documents.Document; R: Request; stream: PlugIns.Stream; state: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ GetHandler(doc: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Load*; 
-	PROCEDURE ^ PostStream(doc: Documents.Document; R: Request; stream: PlugIns.Stream; state: LONGINT): BOOLEAN; 
+	PROCEDURE ^ PostStream(doc: Documents.Document; R: Request; stream: PlugIns.Stream; state: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ PostHandler(doc: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ PostNames(VAR url, file: ARRAY OF CHAR); 
 	PROCEDURE ^ Store*; 

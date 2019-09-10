@@ -18,7 +18,7 @@ TYPE
 	VAR 
 		sessionId*: SessionId; 
 		sessionVariables*: TFClasses.List; 
-		leaseTime*: REAL; 
+		leaseTime*: FLOAT32; 
 
 		PROCEDURE ^  & Init*(sessionId: SessionId); 
 		PROCEDURE ^ GetVariableValue*(name: ARRAY OF CHAR): ANY; 
@@ -54,7 +54,7 @@ VAR
 	expirationHandlers: TFClasses.List; 
 	leaseManager: LeaseManager; 
 	randomSequence: Random.Sequence; 
-	date, time: LONGINT; 
+	date, time: SIGNED32; 
 
 	PROCEDURE ^ GetSessionId*(request: HTTPSupport.HTTPRequest; VAR sessionId: SessionId); 
 	PROCEDURE ^ GetExistingSession*(request: HTTPSupport.HTTPRequest): Session; 

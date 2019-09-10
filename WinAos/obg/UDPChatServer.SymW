@@ -20,10 +20,10 @@ TYPE
 		dt: Dates.DateTime; 
 		running, terminated: BOOLEAN; 
 		ip: IP.Adr; 
-		branch, command, seqNum, messageType: INTEGER; 
-		uin, receiverUin, port, receiveBufOffset: LONGINT; 
+		branch, command, seqNum, messageType: SIGNED16; 
+		uin, receiverUin, port, receiveBufOffset: SIGNED32; 
 		len: SIZE; 
-		res: WORD; 
+		res: INTEGER; 
 		user: Base.User; 
 		users: Base.Users; 
 		clients: Base.List; 
@@ -36,22 +36,22 @@ TYPE
 		PROCEDURE ^  & New*(udp: UDP.Socket); 
 		PROCEDURE ^ Destroy; 
 		PROCEDURE ^ FinalizeClients(clients: Base.List); 
-		PROCEDURE ^ FindClient(clients: Base.List; uin: LONGINT; VAR client: Base.Client): BOOLEAN; 
+		PROCEDURE ^ FindClient(clients: Base.List; uin: SIGNED32; VAR client: Base.Client): BOOLEAN; 
 		PROCEDURE ^ CheckKeepAlive(clients: Base.List); 
-		PROCEDURE ^ Server_NewUserReply(ip: IP.Adr; port: LONGINT; uin: LONGINT; seqNum: INTEGER; sendBuf: Base.Buffer; s: UDP.Socket); 
+		PROCEDURE ^ Server_NewUserReply(ip: IP.Adr; port: SIGNED32; uin: SIGNED32; seqNum: SIGNED16; sendBuf: Base.Buffer; s: UDP.Socket); 
 		PROCEDURE ^ Server_LoginReply(client: Base.Client; sendBuf: Base.Buffer; s: UDP.Socket); 
 		PROCEDURE ^ Server_InfoReply(client: Base.Client; user: Base.User; sendBuf: Base.Buffer; s: UDP.Socket); 
 		PROCEDURE ^ Server_ACK(client: Base.Client; sendBuf: Base.Buffer; s: UDP.Socket); 
-		PROCEDURE ^ Server_UserStatus(client, receiver: Base.Client; status: INTEGER; sendBuf: Base.Buffer; s: UDP.Socket); 
-		PROCEDURE ^ Server_ReceiveMessage(client, receiver: Base.Client; dt: Dates.DateTime; messageType: INTEGER; message: String; sendBuf: Base.Buffer; s: UDP.Socket); 
-		PROCEDURE ^ MulticastStatus(clients: Base.List; client: Base.Client; status: INTEGER; sendBuf: Base.Buffer; s: UDP.Socket); 
-		PROCEDURE ^ MulticastMessage(clients: Base.List; client: Base.Client; dt: Dates.DateTime; messageType: INTEGER; message: String; sendBuf: Base.Buffer; s: UDP.Socket); 
+		PROCEDURE ^ Server_UserStatus(client, receiver: Base.Client; status: SIGNED16; sendBuf: Base.Buffer; s: UDP.Socket); 
+		PROCEDURE ^ Server_ReceiveMessage(client, receiver: Base.Client; dt: Dates.DateTime; messageType: SIGNED16; message: String; sendBuf: Base.Buffer; s: UDP.Socket); 
+		PROCEDURE ^ MulticastStatus(clients: Base.List; client: Base.Client; status: SIGNED16; sendBuf: Base.Buffer; s: UDP.Socket); 
+		PROCEDURE ^ MulticastMessage(clients: Base.List; client: Base.Client; dt: Dates.DateTime; messageType: SIGNED16; message: String; sendBuf: Base.Buffer; s: UDP.Socket); 
 	BEGIN{ACTIVE} 
 	END Instance; 
 VAR 
 	instance: Instance; 
 
-	PROCEDURE ^ Log(type, code: SHORTINT; msg: ARRAY OF CHAR; showOnKernelLog: BOOLEAN); 
+	PROCEDURE ^ Log(type, code: SIGNED8; msg: ARRAY OF CHAR; showOnKernelLog: BOOLEAN); 
 	PROCEDURE ^ Start*; 
 	PROCEDURE ^ Stop*; 
 	PROCEDURE ^ Cleanup; 

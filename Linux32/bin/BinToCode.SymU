@@ -8,7 +8,7 @@ TYPE
 VAR 
 	hexdigit: ARRAY 17 OF CHAR; 
 
-	PROCEDURE ^ WriteBuffer(w: Streams.Writer; CONST buffer: Buffer; offset, size: LONGINT); 
+	PROCEDURE ^ WriteBuffer(w: Streams.Writer; CONST buffer: Buffer; offset, size: SIGNED32); 
 	PROCEDURE ^ Convert*(context: Commands.Context); 
 BEGIN
 END BinToCode.

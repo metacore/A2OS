@@ -3,7 +3,7 @@ MODULE vyBooleanVec IN Oberon;
 CONST 
 	idversion* = \"vyBooleanVec 0.0a3"\; 
 TYPE 
-	index* = LONGINT; 
+	index* = SIGNED32; 
 
 	tVector* = POINTER TO tVectorDesc; 
 
@@ -22,7 +22,7 @@ TYPE
 		data: POINTER TO ARRAY OF BOOLEAN; 
 	END; 
 
-	PROCEDURE ^ NewBufs(size: LONGINT): tBuf; 
+	PROCEDURE ^ NewBufs(size: SIGNED32): tBuf; 
 	PROCEDURE ^ SetNrData(vec: tVector; size: index); 
 	PROCEDURE ^ Store0(VAR R: Files.Rider; o: tVector); 
 	PROCEDURE ^ Store0BOOLEAN(VAR R: Files.Rider; o: tBOOLEAN); 
@@ -32,27 +32,27 @@ TYPE
 	PROCEDURE ^ HandleAttributesBOOLEAN(o: tBOOLEAN; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ Handler*(o: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Gen*; 
-	PROCEDURE ^ New*(size: LONGINT): tVector; 
+	PROCEDURE ^ New*(size: SIGNED32): tVector; 
 	PROCEDURE ^ GenBooleanObject*; 
 	PROCEDURE ^ NewBooleanObject*(b: BOOLEAN): tBOOLEAN; 
-	PROCEDURE ^ NewBooleanMatrix*(rows, columns: LONGINT): vyBase.tVector; 
-	PROCEDURE ^ NewBooleanArray*(sizes: ARRAY OF LONGINT): vyBase.tVector; 
+	PROCEDURE ^ NewBooleanMatrix*(rows, columns: SIGNED32): vyBase.tVector; 
+	PROCEDURE ^ NewBooleanArray*(sizes: ARRAY OF SIGNED32): vyBase.tVector; 
 	PROCEDURE ^ NewAlikeVector*(model: vyBase.tVector): vyBase.tVector; 
 	PROCEDURE ^ GC*(vec: vyBase.tVector); 
 	PROCEDURE ^ Allocate*(vec: vyBase.tVector; size: index); 
 	PROCEDURE ^ SetLen*(vec: vyBase.tVector; size: index); 
-	PROCEDURE ^ Len*(vec: tVector): LONGINT; 
-	PROCEDURE ^ NewConstVector*(size: LONGINT; val: BOOLEAN): vyBase.tVector; 
+	PROCEDURE ^ Len*(vec: tVector): SIGNED32; 
+	PROCEDURE ^ NewConstVector*(size: SIGNED32; val: BOOLEAN): vyBase.tVector; 
 	PROCEDURE ^ Append*(x: BOOLEAN; v: vyBase.tVector); 
-	PROCEDURE ^ Get*(v: vyBase.tVector; i: LONGINT): BOOLEAN; 
-	PROCEDURE ^ Set*(val: BOOLEAN; v: vyBase.tVector; pos: LONGINT); 
+	PROCEDURE ^ Get*(v: vyBase.tVector; i: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ Set*(val: BOOLEAN; v: vyBase.tVector; pos: SIGNED32); 
 	PROCEDURE ^ GetIndexed*(v: vyBase.tVector; indexvec: vyBase.tVector; pos: index): BOOLEAN; 
 	PROCEDURE ^ SetIndexed*(xval: BOOLEAN; v: vyBase.tVector; indexvec: vyBase.tVector; pos: index); 
 	PROCEDURE ^ CopyToArray*(v: vyBase.tVector; VAR A: ARRAY OF BOOLEAN); 
 	PROCEDURE ^ CopyData*(src, dest: vyBase.tVector); 
-	PROCEDURE ^ CopyToVec*(VAR A: ARRAY OF BOOLEAN; v: vyBase.tVector; len: LONGINT; srcoffs, destoffs: LONGINT); 
-	PROCEDURE ^ Fill*(v: vyBase.tVector; val: BOOLEAN; offs, count: LONGINT); 
-	PROCEDURE ^ NewFilledNamed*(count: LONGINT; val: BOOLEAN; name: ARRAY OF CHAR): tVector; 
+	PROCEDURE ^ CopyToVec*(VAR A: ARRAY OF BOOLEAN; v: vyBase.tVector; len: SIGNED32; srcoffs, destoffs: SIGNED32); 
+	PROCEDURE ^ Fill*(v: vyBase.tVector; val: BOOLEAN; offs, count: SIGNED32); 
+	PROCEDURE ^ NewFilledNamed*(count: SIGNED32; val: BOOLEAN; name: ARRAY OF CHAR): tVector; 
 	PROCEDURE ^ WriteChunk*(VAR w: vyBase.TextsWriter; chunk: vyBase.tBuf); 
 	PROCEDURE ^ Write*(VAR w: vyBase.TextsWriter; v: vyBase.tData); 
 	PROCEDURE ^ ChunkSummary*(VAR w: vyBase.TextsWriter; chunk: vyBase.tBuf); 

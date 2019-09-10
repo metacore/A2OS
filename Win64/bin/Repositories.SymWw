@@ -71,7 +71,7 @@ TYPE
 		name: Strings.String; 
 		refNum: SIZE; 
 		flags: SET; 
-		timestamp-: LONGINT; 
+		timestamp-: SIGNED32; 
 		onChanged*: WMEvents.EventSource; 
 
 		PROCEDURE ^  & Init*; 
@@ -90,7 +90,7 @@ TYPE
 	ComponentInfo = OBJECT {EXCLUSIVE} (XML.Element)
 	VAR 
 		name, source: Strings.String; 
-		type: WORD; 
+		type: INTEGER; 
 		id: SIZE; 
 		instance: ANY; 
 		next: ComponentInfo; 
@@ -118,7 +118,7 @@ TYPE
 
 		PROCEDURE ^  & Init; 
 		PROCEDURE ^ Add(word, translation: Strings.String); 
-		PROCEDURE ^ Parse(reader: Streams.Reader; VAR res: WORD); 
+		PROCEDURE ^ Parse(reader: Streams.Reader; VAR res: INTEGER); 
 		PROCEDURE ^ Find(CONST word: ARRAY OF CHAR): Entry; 
 		PROCEDURE ^ ComplexTranslation(CONST word: ARRAY OF CHAR): Strings.String; 
 		PROCEDURE ^ TranslateAOC(CONST word: ARRAY OF CHAR): Strings.String; 
@@ -147,7 +147,7 @@ TYPE
 		PROCEDURE ^ GetDefaultTranslator(): Translator; 
 		PROCEDURE ^ FindBestMatch(languages: Localization.Languages): Translator; 
 		PROCEDURE ^ AddAttribute*(attribute: XML.Attribute); 
-		PROCEDURE ^ LoadLanguage(VAR language: Language; VAR res: WORD); 
+		PROCEDURE ^ LoadLanguage(VAR language: Language; VAR res: INTEGER); 
 		PROCEDURE ^ TranslateAOC*(CONST word: ARRAY OF CHAR; languages: Localization.Languages): Strings.String; 
 		PROCEDURE ^ Translate*(word: Strings.String; languages: Localization.Languages): Strings.String; 
 		PROCEDURE ^ GetLanguages*(): Localization.Languages; 
@@ -158,7 +158,7 @@ TYPE
 		name-: Name; 
 		filename-: Files.FileName; 
 		archive: Archives.Archive; 
-		timestamp-: LONGINT; 
+		timestamp-: SIGNED32; 
 		modified: BOOLEAN; 
 		nextID: SIZE; 
 		components: ComponentInfo; 
@@ -168,7 +168,7 @@ TYPE
 		next: Repository; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Initialize(): WORD; 
+		PROCEDURE ^ Initialize(): INTEGER; 
 		PROCEDURE ^ FindComponentInfo(CONST name: ARRAY OF CHAR; id: SIZE): ComponentInfo; 
 		PROCEDURE ^ GetDictionary*(CONST name: ARRAY OF CHAR): Dictionary; 
 		PROCEDURE ^ AddComponentInfo(ci: ComponentInfo); 
@@ -178,15 +178,15 @@ TYPE
 		PROCEDURE ^ GetFile(CONST name: ARRAY OF CHAR): Streams.Reader; 
 		PROCEDURE ^ Check(): BOOLEAN; 
 		PROCEDURE ^ GetComponent*(CONST name: ARRAY OF CHAR; id: SIZE): Component; 
-		PROCEDURE ^ PutComponent*(component: Component; CONST name: ARRAY OF CHAR; VAR id: SIZE; VAR res: WORD); 
-		PROCEDURE ^ UnbindComponent*(CONST name: ARRAY OF CHAR; id: SIZE; VAR res: WORD); 
+		PROCEDURE ^ PutComponent*(component: Component; CONST name: ARRAY OF CHAR; VAR id: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ UnbindComponent*(CONST name: ARRAY OF CHAR; id: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ Unbind*(component: Component); 
-		PROCEDURE ^ RemoveComponent*(CONST name: ARRAY OF CHAR; refNum: SIZE; VAR res: WORD); 
-		PROCEDURE ^ Remove*(component: Component; VAR res: WORD); 
+		PROCEDURE ^ RemoveComponent*(CONST name: ARRAY OF CHAR; refNum: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ Remove*(component: Component; VAR res: INTEGER); 
 		PROCEDURE ^ LoadComponent(CONST filename: ARRAY OF CHAR): Component; 
 		PROCEDURE ^ GetID*(): SIZE; 
-		PROCEDURE ^ Store*(VAR res: WORD); 
-		PROCEDURE ^ StoreComponent(CONST filename: ARRAY OF CHAR; component: Component; VAR res: WORD); 
+		PROCEDURE ^ Store*(VAR res: INTEGER); 
+		PROCEDURE ^ StoreComponent(CONST filename: ARRAY OF CHAR; component: Component; VAR res: INTEGER); 
 		PROCEDURE ^ Dump*(writer: Streams.Writer); 
 	END Repository; 
 
@@ -219,16 +219,16 @@ VAR
 	registry-: Registry; 
 	indexRegistry: IndexRegistry; 
 	repositories: Repository; 
-	globalTimestamp: LONGINT; 
+	globalTimestamp: SIGNED32; 
 	StrNoName, StrRepository, StrComponent, StrApplication, StrDictionary: Strings.String; 
 
 	PROCEDURE ^ SetLockedFlag(component: Component; locked: BOOLEAN); 
 	PROCEDURE ^ LockChildren(component: Component); 
 	PROCEDURE ^ GenerateComponent*(CONST generator: ARRAY OF CHAR): Component; 
 	PROCEDURE ^ FindChild(parent: XML.Element; CONST elementName: ARRAY OF CHAR): XML.Element; 
-	PROCEDURE ^ IncrementTimestamp*(VAR timestamp: LONGINT); 
-	PROCEDURE ^ GetTimestamp*(): LONGINT; 
-	PROCEDURE ^ AwaitChange*(VAR curTimestamp: LONGINT); 
+	PROCEDURE ^ IncrementTimestamp*(VAR timestamp: SIGNED32); 
+	PROCEDURE ^ GetTimestamp*(): SIGNED32; 
+	PROCEDURE ^ AwaitChange*(VAR curTimestamp: SIGNED32); 
 	PROCEDURE ^ IsXmlFilename(string: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ Parse(reader: Streams.Reader; elemReg: XML.ElementRegistry; errors: ErrorReporter): XML.Element; 
 	PROCEDURE ^ GetWriter(archive: Archives.Archive; CONST filename: ARRAY OF CHAR): Streams.Writer; 
@@ -238,30 +238,30 @@ VAR
 	PROCEDURE ^ IsNumber*(CONST name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ NewJoinName*(CONST repositoryName, componentName: ARRAY OF CHAR; id: SIZE): Strings.String; 
 	PROCEDURE ^ SplitFilename(CONST fullname: ARRAY OF CHAR; VAR repositoryName, extension: ARRAY OF CHAR); 
-	PROCEDURE ^ GetCommand*(CONST command: ARRAY OF CHAR; VAR res: WORD): Command; 
+	PROCEDURE ^ GetCommand*(CONST command: ARRAY OF CHAR; VAR res: INTEGER): Command; 
 	PROCEDURE ^ IsCommandString*(CONST string: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ ExtractCommand*(CONST string: ARRAY OF CHAR; VAR command: ARRAY OF CHAR); 
-	PROCEDURE ^ CallCommand*(CONST command: ARRAY OF CHAR; VAR context: Context; VAR res: WORD); 
-	PROCEDURE ^ GetTranslationInfo*(CONST string: ARRAY OF CHAR; VAR dictionary: Dictionary; VAR word: Strings.String; VAR res: WORD); 
+	PROCEDURE ^ CallCommand*(CONST command: ARRAY OF CHAR; VAR context: Context; VAR res: INTEGER); 
+	PROCEDURE ^ GetTranslationInfo*(CONST string: ARRAY OF CHAR; VAR dictionary: Dictionary; VAR word: Strings.String; VAR res: INTEGER); 
 	PROCEDURE ^ Translate*(CONST string: ARRAY OF CHAR; languages: Localization.Languages): Strings.String; 
-	PROCEDURE ^ GetDictionary*(CONST repositoryName, dictionaryName: ARRAY OF CHAR; VAR dictionary: Dictionary; VAR res: WORD); 
-	PROCEDURE ^ GetDictionaryByString*(CONST string: ARRAY OF CHAR; VAR dictionary: Dictionary; VAR res: WORD); 
-	PROCEDURE ^ GetComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: SIZE; VAR component: Component; VAR res: WORD); 
-	PROCEDURE ^ GetComponentByString*(CONST string: ARRAY OF CHAR; VAR component: Component; VAR res: WORD); 
-	PROCEDURE ^ PutComponent*(component: Component; CONST repositoryName, componentName: ARRAY OF CHAR; VAR id: SIZE; VAR res: WORD); 
-	PROCEDURE ^ UnbindComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: SIZE; VAR res: WORD); 
-	PROCEDURE ^ RemoveComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: SIZE; VAR res: WORD); 
-	PROCEDURE ^ Add(repository: Repository; VAR res: WORD); 
-	PROCEDURE ^ Remove(repository: Repository; VAR res: WORD); 
+	PROCEDURE ^ GetDictionary*(CONST repositoryName, dictionaryName: ARRAY OF CHAR; VAR dictionary: Dictionary; VAR res: INTEGER); 
+	PROCEDURE ^ GetDictionaryByString*(CONST string: ARRAY OF CHAR; VAR dictionary: Dictionary; VAR res: INTEGER); 
+	PROCEDURE ^ GetComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: SIZE; VAR component: Component; VAR res: INTEGER); 
+	PROCEDURE ^ GetComponentByString*(CONST string: ARRAY OF CHAR; VAR component: Component; VAR res: INTEGER); 
+	PROCEDURE ^ PutComponent*(component: Component; CONST repositoryName, componentName: ARRAY OF CHAR; VAR id: SIZE; VAR res: INTEGER); 
+	PROCEDURE ^ UnbindComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: SIZE; VAR res: INTEGER); 
+	PROCEDURE ^ RemoveComponent*(CONST repositoryName, componentName: ARRAY OF CHAR; refNum: SIZE; VAR res: INTEGER); 
+	PROCEDURE ^ Add(repository: Repository; VAR res: INTEGER); 
+	PROCEDURE ^ Remove(repository: Repository; VAR res: INTEGER); 
 	PROCEDURE ^ FindRepository(CONST name: ARRAY OF CHAR): Repository; 
 	PROCEDURE ^ ThisRepository*(CONST name: ARRAY OF CHAR): Repository; 
 	PROCEDURE ^ GetAll*(VAR reps: Repositories); 
-	PROCEDURE ^ LoadRepository(CONST name: ARRAY OF CHAR; VAR res: WORD): Repository; 
-	PROCEDURE ^ UnloadRepository*(CONST name: ARRAY OF CHAR; VAR res: WORD); 
-	PROCEDURE ^ StoreRepository*(CONST name: ARRAY OF CHAR; VAR res: WORD); 
-	PROCEDURE ^ CreateRepository*(CONST filename: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ LoadRepository(CONST name: ARRAY OF CHAR; VAR res: INTEGER): Repository; 
+	PROCEDURE ^ UnloadRepository*(CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ StoreRepository*(CONST name: ARRAY OF CHAR; VAR res: INTEGER); 
+	PROCEDURE ^ CreateRepository*(CONST filename: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ ComponentFromXML*(xml: XML.Element): Component; 
-	PROCEDURE ^ ShowRes*(res: WORD; out: Streams.Writer); 
+	PROCEDURE ^ ShowRes*(res: INTEGER; out: Streams.Writer); 
 	PROCEDURE ^ Create*(context: Commands.Context); 
 	PROCEDURE ^ Store*(context: Commands.Context); 
 	PROCEDURE ^ Load*(context: Commands.Context); 

@@ -4,7 +4,7 @@ TYPE
 	Vertex* = OBJECT 
 
 		PROCEDURE ^ SetPos*(p: Vectors.TVector3d); 
-		PROCEDURE ^ SetUV*(u, v: LONGREAL); 
+		PROCEDURE ^ SetUV*(u, v: FLOAT64); 
 	END Vertex; 
 
 	Texture* = OBJECT 
@@ -12,10 +12,10 @@ TYPE
 
 	Object* = OBJECT 
 
-		PROCEDURE ^ SetIndex*(idx: LONGINT); 
+		PROCEDURE ^ SetIndex*(idx: SIGNED32); 
 		PROCEDURE ^ AddTexture*(img: Raster.Image): Texture; 
 		PROCEDURE ^ AddVertex*(p: Vectors.TVector3d): Vertex; 
-		PROCEDURE ^ AddTriangle*(a, b, c: Vertex; color: LONGINT; tex: Texture; mask0, culled: BOOLEAN); 
+		PROCEDURE ^ AddTriangle*(a, b, c: Vertex; color: SIGNED32; tex: Texture; mask0, culled: BOOLEAN); 
 		PROCEDURE ^ Clear*; 
 	END Object; 
 
@@ -28,7 +28,7 @@ TYPE
 		PROCEDURE ^ Clear*; 
 		PROCEDURE ^ SetCamera*(p, d, u: Vectors.TVector3d); 
 		PROCEDURE ^ Render*(img: Raster.Image; movingOnly: BOOLEAN); 
-		PROCEDURE ^ GetOwnerIndex*(x, y: SIZE): LONGINT; 
+		PROCEDURE ^ GetOwnerIndex*(x, y: SIZE): SIGNED32; 
 	END World; 
 BEGIN
 END W3dAbstractWorld.

@@ -16,8 +16,8 @@ TYPE
 	END; 
 
 	Frame* = POINTER TO RECORD (Gadgets.FrameDesc)
-		col*: INTEGER; 
-		age*: LONGINT; 
+		col*: SIGNED16; 
+		age*: SIGNED32; 
 	END; 
 
 	NotifyMsg = RECORD (Display.FrameMsg)
@@ -28,19 +28,19 @@ TYPE
 
 	; 
 VAR 
-	N: LONGINT; 
+	N: SIGNED32; 
 	Task: Oberon.Task; 
 	Fig: ARRAY MaxN OF Icon; 
 
 	PROCEDURE ^ EmptyFig; 
 	PROCEDURE ^ LoadFig(file: ARRAY OF CHAR); 
-	PROCEDURE ^ Draw(M: Display3.Mask; VAR icn: Icon; x, y, color: INTEGER); 
-	PROCEDURE ^ P(x: INTEGER): INTEGER; 
-	PROCEDURE ^ PrintIcn(VAR icn: Icon; x, y: INTEGER); 
-	PROCEDURE ^ HotSpot(X, Y, W, H, X0, Y0: INTEGER); 
-	PROCEDURE ^ SaveScreen(x0, y0: INTEGER; keys: SET; col: INTEGER; VAR State: LONGINT); 
+	PROCEDURE ^ Draw(M: Display3.Mask; VAR icn: Icon; x, y, color: SIGNED16); 
+	PROCEDURE ^ P(x: SIGNED16): SIGNED16; 
+	PROCEDURE ^ PrintIcn(VAR icn: Icon; x, y: SIGNED16); 
+	PROCEDURE ^ HotSpot(X, Y, W, H, X0, Y0: SIGNED16); 
+	PROCEDURE ^ SaveScreen(x0, y0: SIGNED16; keys: SET; col: SIGNED16; VAR State: SIGNED32); 
 	PROCEDURE ^ FrameAttr(F: Frame; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ CopyFrame*(VAR M: Objects.CopyMsg; from, to: Frame); 
 	PROCEDURE ^ FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 

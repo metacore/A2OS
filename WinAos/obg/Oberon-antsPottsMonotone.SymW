@@ -8,18 +8,18 @@ CONST
 	cIncr* = 0; 
 	cDecr* = 1; 
 TYPE 
-	ArrayFunction = PROCEDURE (VAR f: ARRAY OF LONGREAL; i: LONGINT):LONGREAL; 
+	ArrayFunction = PROCEDURE (VAR f: ARRAY OF FLOAT64; i: SIGNED32):FLOAT64; 
 
 	PROCEDURE ^ MakeMonotoneRec*; 
-	PROCEDURE ^ DoMonotone(degraded: vyBase.Object; type: INTEGER; VAR vec: vyLongrealVec.tVector); 
-	PROCEDURE ^ DropX1d*(vec: antsArrays.X1d; position: LONGINT; VAR new: antsArrays.X1d); 
-	PROCEDURE ^ DropL1d*(vec: antsArrays.L1d; position: LONGINT; VAR new: antsArrays.L1d); 
-	PROCEDURE ^ TestMonotone(VAR vector: ARRAY OF LONGREAL; montype: INTEGER): BOOLEAN; 
+	PROCEDURE ^ DoMonotone(degraded: vyBase.Object; type: SIGNED16; VAR vec: vyLongrealVec.tVector); 
+	PROCEDURE ^ DropX1d*(vec: antsArrays.X1d; position: SIGNED32; VAR new: antsArrays.X1d); 
+	PROCEDURE ^ DropL1d*(vec: antsArrays.L1d; position: SIGNED32; VAR new: antsArrays.L1d); 
+	PROCEDURE ^ TestMonotone(VAR vector: ARRAY OF FLOAT64; montype: SIGNED16): BOOLEAN; 
 	PROCEDURE ^ MakeMatrix*(VAR Xstern: antsArrays.X2d; VAR jumps: antsArrays.I1d; VAR gamma: antsArrays.X1d; VAR matrix: antsArrays.X2d); 
-	PROCEDURE ^ LastMonotone*(VAR matrix: antsArrays.X2d; montype: INTEGER; VAR lastmon: antsArrays.X1d); 
+	PROCEDURE ^ LastMonotone*(VAR matrix: antsArrays.X2d; montype: SIGNED16; VAR lastmon: antsArrays.X1d); 
 	PROCEDURE ^ FindLastMonotonePotts*; 
 	PROCEDURE ^ FindLastMonotone*; 
 	PROCEDURE ^ ApproxMonotone*; 
-	PROCEDURE ^ DoApproxMonotonePotts(VAR Matrix: antsArrays.X2d; type: INTEGER; VAR MatrixOut: antsArrays.X2d); 
+	PROCEDURE ^ DoApproxMonotonePotts(VAR Matrix: antsArrays.X2d; type: SIGNED16; VAR MatrixOut: antsArrays.X2d); 
 BEGIN
 END antsPottsMonotone.

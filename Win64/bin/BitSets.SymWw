@@ -18,9 +18,9 @@ TYPE
 		PROCEDURE ^ GetSize*(): SIZE; 
 		PROCEDURE ^ SetBit*(pos: Bits; value: BOOLEAN); 
 		PROCEDURE ^ GetBit*(pos: Bits): BOOLEAN; 
-		PROCEDURE ^ SetBits*(startPos, bits: Bits; value: HUGEINT); 
+		PROCEDURE ^ SetBits*(startPos, bits: Bits; value: SIGNED64); 
 		PROCEDURE ^ SetBytes*(startPos, bytes: SIZE; CONST values: ARRAY OF CHAR); 
-		PROCEDURE ^ GetBits*(startPos, bits: Bits): WORD; 
+		PROCEDURE ^ GetBits*(startPos, bits: Bits): INTEGER; 
 		PROCEDURE ^ CopyTo*(address: ADDRESS; bits: Bits); 
 	END BitSet; 
 

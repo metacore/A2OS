@@ -18,9 +18,9 @@ VAR
 	PROCEDURE ^ Compress*(src, dest: Files.File); 
 	PROCEDURE ^ Expand*(src, dest: Files.File); 
 	PROCEDURE ^ Code*(from: Files.File; to: Texts.Text); 
-	PROCEDURE ^ Decode*(from: Texts.Text; VAR pos: LONGINT; to: Files.File; VAR ok: BOOLEAN); 
+	PROCEDURE ^ Decode*(from: Texts.Text; VAR pos: SIGNED32; to: Files.File; VAR ok: BOOLEAN); 
 	PROCEDURE ^ OpenViewer(name: ARRAY OF CHAR; text: Texts.Text); 
-	PROCEDURE ^ ReadFileNames(t: Texts.Text; beg, end: LONGINT; VAR names: NameList; VAR pos: LONGINT); 
+	PROCEDURE ^ ReadFileNames(t: Texts.Text; beg, end: SIGNED32; VAR names: NameList; VAR pos: SIGNED32); 
 	PROCEDURE ^ CodeFiles*; 
 	PROCEDURE ^ DecodeFiles*; 
 	PROCEDURE ^ CodeText*; 

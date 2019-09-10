@@ -2,7 +2,7 @@ MODULE OZip;
 	IMPORT Streams, Commands, Files, Strings, BW := BorrowsWheeler, Huffman;
 CONST 
 	BlockSize* = (8 * 1024); 
-	ComprTag = LONGINT(4278001455); 
+	ComprTag = SIGNED32(4278001455); 
 	Suffix = \".oz"\; 
 
 	PROCEDURE ^ Compress*(r: Streams.Reader; w: Streams.Writer); 

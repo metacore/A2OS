@@ -3,14 +3,14 @@ MODULE antsStatistics IN Oberon;
 CONST 
 VAR 
 	v1, v2: vyBase.tVector; 
-	t1d, t2d, ph1, ph2: LONGREAL; 
-	wd, hd: LONGINT; 
-	t1, t2: POINTER TO ARRAY OF LONGREAL; 
+	t1d, t2d, ph1, ph2: FLOAT64; 
+	wd, hd: SIGNED32; 
+	t1, t2: POINTER TO ARRAY OF FLOAT64; 
 
-	PROCEDURE ^ bin(x: INTEGER): INTEGER; 
+	PROCEDURE ^ bin(x: SIGNED16): SIGNED16; 
 	PROCEDURE ^ t1t2*; 
-	PROCEDURE ^ Max(x1, x2: LONGREAL): LONGREAL; 
-	PROCEDURE ^ est(VAR A: ARRAY OF LONGREAL): LONGREAL; 
+	PROCEDURE ^ Max(x1, x2: FLOAT64): FLOAT64; 
+	PROCEDURE ^ est(VAR A: ARRAY OF FLOAT64): FLOAT64; 
 	PROCEDURE ^ DefineValues*; 
 	PROCEDURE ^ Estimate*; 
 	PROCEDURE ^ WriteOutInter*; 

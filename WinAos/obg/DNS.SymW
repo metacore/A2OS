@@ -13,11 +13,11 @@ TYPE
 VAR 
 	server*: ARRAY 4 OF IP.Adr; 
 	domain*: DomainName; 
-	currentServer*, serverCount*: LONGINT; 
+	currentServer*, serverCount*: SIGNED32; 
 	trace: BOOLEAN; 
 
-	PROCEDURE ^ HostByName*(hostname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR res: WORD); 
-	PROCEDURE ^ HostByNumber*(adr: IP.Adr; VAR hostname: ARRAY OF CHAR; VAR res: WORD); 
+	PROCEDURE ^ HostByName*(hostname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR res: INTEGER); 
+	PROCEDURE ^ HostByNumber*(adr: IP.Adr; VAR hostname: ARRAY OF CHAR; VAR res: INTEGER); 
 	PROCEDURE ^ InstallDomain*(CONST name: ARRAY OF CHAR); 
 	PROCEDURE ^ InstallDNS*(adr: IP.Adr); 
 	PROCEDURE ^ ToggleTrace*; 

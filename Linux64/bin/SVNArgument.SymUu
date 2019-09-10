@@ -10,24 +10,24 @@ TYPE
 	TYPE 
 		; 
 	VAR 
-		next, error*, last, unkeyed: INTEGER; 
+		next, error*, last, unkeyed: SIGNED16; 
 		msg*: ARRAY 256 OF CHAR; 
 		arguments: ARRAY 256 OF RECORD 
 			key: ARRAY 32 OF CHAR; 
 			value: ARRAY MaxArgumentValues OF ARRAY 256 OF CHAR; 
-			expParams: INTEGER; 
+			expParams: SIGNED16; 
 			isset: BOOLEAN; 
 		END; 
 		arguments2: ARRAY MaxArgumentValues OF ARRAY 256 OF CHAR; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ Push*(CONST key: ARRAY OF CHAR; expParams: INTEGER); 
-		PROCEDURE ^ GetKeyedArgument*(CONST key: ARRAY OF CHAR; VAR value: ARRAY OF CHAR; index: INTEGER); 
-		PROCEDURE ^ GetUnkeyedArgument*(VAR value: ARRAY OF CHAR; index: INTEGER); 
-		PROCEDURE ^ CountUnkeyedArguments*(): INTEGER; 
+		PROCEDURE ^ Push*(CONST key: ARRAY OF CHAR; expParams: SIGNED16); 
+		PROCEDURE ^ GetKeyedArgument*(CONST key: ARRAY OF CHAR; VAR value: ARRAY OF CHAR; index: SIGNED16); 
+		PROCEDURE ^ GetUnkeyedArgument*(VAR value: ARRAY OF CHAR; index: SIGNED16); 
+		PROCEDURE ^ CountUnkeyedArguments*(): SIGNED16; 
 		PROCEDURE ^ IsSet*(CONST key: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ Read*(context: Commands.Context); 
-		PROCEDURE ^ FindKey(CONST s: ARRAY OF CHAR; VAR index: INTEGER; VAR found: BOOLEAN); 
+		PROCEDURE ^ FindKey(CONST s: ARRAY OF CHAR; VAR index: SIGNED16; VAR found: BOOLEAN); 
 	BEGIN
 	END Argument; 
 BEGIN

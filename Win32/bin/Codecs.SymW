@@ -25,12 +25,12 @@ CONST
 	WaitForUserInput* = 0; 
 TYPE 
 	AVStreamInfo* = RECORD 
-		streamType*: LONGINT; 
+		streamType*: SIGNED32; 
 		seekability*: SET; 
 		contentType*: ARRAY 16 OF CHAR; 
-		length*: LONGINT; 
-		frames*: LONGINT; 
-		rate*: LONGINT; 
+		length*: SIGNED32; 
+		frames*: SIGNED32; 
+		rate*: SIGNED32; 
 	END; 
 
 	FileInputStream* = OBJECT (Streams.Reader)
@@ -39,85 +39,85 @@ TYPE
 		f*: Files.File; 
 		streamInfo*: AVStreamInfo; 
 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
-		PROCEDURE ^  & InitFileReader*(f: Files.File; pos: LONGINT); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^  & InitFileReader*(f: Files.File; pos: SIGNED32); 
 		PROCEDURE ^ CanSetPos*(): BOOLEAN; 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
 	END FileInputStream; 
 
 	AVDemultiplexer* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
-		PROCEDURE ^ GetNumberOfStreams*(): LONGINT; 
-		PROCEDURE ^ GetStreamType*(streamNr: LONGINT): LONGINT; 
-		PROCEDURE ^ GetStreamInfo*(streamNr: LONGINT): AVStreamInfo; 
-		PROCEDURE ^ GetStream*(streamNr: LONGINT): DemuxStream; 
-		PROCEDURE ^ GetData*(streamNr: LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
-		PROCEDURE ^ SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetNumberOfStreams*(): SIGNED32; 
+		PROCEDURE ^ GetStreamType*(streamNr: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetStreamInfo*(streamNr: SIGNED32): AVStreamInfo; 
+		PROCEDURE ^ GetStream*(streamNr: SIGNED32): DemuxStream; 
+		PROCEDURE ^ GetData*(streamNr: SIGNED32; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+		PROCEDURE ^ SetStreamPos*(streamNr: SIGNED32; seekType: SIGNED32; pos: SIGNED32; VAR itemSize: SIGNED32; VAR res: INTEGER); 
 	END AVDemultiplexer; 
 
 	DemuxStream* = OBJECT (Streams.Reader)
 	VAR 
 		demultiplexer*: AVDemultiplexer; 
-		streamNr*: LONGINT; 
+		streamNr*: SIGNED32; 
 		streamInfo*: AVStreamInfo; 
 
-		PROCEDURE ^  & Open*(demultiplexer: AVDemultiplexer; streamNr: LONGINT); 
-		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD); 
+		PROCEDURE ^  & Open*(demultiplexer: AVDemultiplexer; streamNr: SIGNED32); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
 		PROCEDURE ^ SetPos*(pos: Streams.Position); 
-		PROCEDURE ^ SetPosX*(seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD); 
+		PROCEDURE ^ SetPosX*(seekType: SIGNED32; pos: SIGNED32; VAR itemSize: SIGNED32; VAR res: INTEGER); 
 	END DemuxStream; 
 
 	AudioDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
 		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
-		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: LONGINT); 
-		PROCEDURE ^ SetAudioInfo*(nofChannels, samplesPerSecond, bitsPerSample: LONGINT); 
+		PROCEDURE ^ GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: SIGNED32); 
+		PROCEDURE ^ SetAudioInfo*(nofChannels, samplesPerSecond, bitsPerSample: SIGNED32); 
 		PROCEDURE ^ CanSeek*(): BOOLEAN; 
-		PROCEDURE ^ GetCurrentSample*(): LONGINT; 
-		PROCEDURE ^ GetTotalSamples*(): LONGINT; 
-		PROCEDURE ^ GetCurrentTime*(): LONGINT; 
-		PROCEDURE ^ SetStreamLength*(length: LONGINT); 
-		PROCEDURE ^ SeekSample*(sample: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeySample: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ GetCurrentSample*(): SIGNED32; 
+		PROCEDURE ^ GetTotalSamples*(): SIGNED32; 
+		PROCEDURE ^ GetCurrentTime*(): SIGNED32; 
+		PROCEDURE ^ SetStreamLength*(length: SIGNED32); 
+		PROCEDURE ^ SeekSample*(sample: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: SIGNED32; goKeySample: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ Next*; 
 		PROCEDURE ^ FillBuffer*(buffer: SoundDevices.Buffer); 
 	END AudioDecoder; 
 
 	AudioEncoder* = OBJECT 
 
-		PROCEDURE ^ Open*(out: Streams.Writer; sRate, sRes, nofCh: LONGINT; VAR res: WORD); 
-		PROCEDURE ^ Write*(buffer: SoundDevices.Buffer; VAR res: WORD); 
-		PROCEDURE ^ Close*(VAR res: WORD); 
+		PROCEDURE ^ Open*(out: Streams.Writer; sRate, sRes, nofCh: SIGNED32; VAR res: INTEGER); 
+		PROCEDURE ^ Write*(buffer: SoundDevices.Buffer; VAR res: INTEGER); 
+		PROCEDURE ^ Close*(VAR res: INTEGER); 
 	END AudioEncoder; 
 
 	VideoDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
 		PROCEDURE ^ HasMoreData*(): BOOLEAN; 
-		PROCEDURE ^ GetVideoInfo*(VAR width, height, millisecondsPerFrame: LONGINT); 
+		PROCEDURE ^ GetVideoInfo*(VAR width, height, millisecondsPerFrame: SIGNED32); 
 		PROCEDURE ^ CanSeek*(): BOOLEAN; 
-		PROCEDURE ^ GetCurrentFrame*(): LONGINT; 
-		PROCEDURE ^ GetCurrentTime*(): LONGINT; 
-		PROCEDURE ^ SeekFrame*(frame: LONGINT; goKeyFrame: BOOLEAN; VAR res: WORD); 
-		PROCEDURE ^ SeekMillisecond*(millisecond: LONGINT; goKeyFrame: BOOLEAN; VAR res: WORD); 
+		PROCEDURE ^ GetCurrentFrame*(): SIGNED32; 
+		PROCEDURE ^ GetCurrentTime*(): SIGNED32; 
+		PROCEDURE ^ SeekFrame*(frame: SIGNED32; goKeyFrame: BOOLEAN; VAR res: INTEGER); 
+		PROCEDURE ^ SeekMillisecond*(millisecond: SIGNED32; goKeyFrame: BOOLEAN; VAR res: INTEGER); 
 		PROCEDURE ^ Next*; 
 		PROCEDURE ^ Render*(img: Raster.Image); 
 	END VideoDecoder; 
 
 	VideoEncoder* = OBJECT 
 
-		PROCEDURE ^ Open*(out: Streams.Writer; VAR res: WORD); 
+		PROCEDURE ^ Open*(out: Streams.Writer; VAR res: INTEGER); 
 		PROCEDURE ^ Write*(img: Raster.Image); 
-		PROCEDURE ^ Close*(VAR res: WORD); 
+		PROCEDURE ^ Close*(VAR res: INTEGER); 
 	END VideoEncoder; 
 
 	ImageDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
-		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: LONGINT); 
-		PROCEDURE ^ SetProgressionLevel*(progressionLevel: LONGINT); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetImageInfo*(VAR width, height: SIZE; VAR format, maxProgressionLevel: SIGNED32); 
+		PROCEDURE ^ SetProgressionLevel*(progressionLevel: SIGNED32); 
 		PROCEDURE ^ GetNativeImage*(VAR img: Raster.Image); 
 		PROCEDURE ^ Render*(img: Raster.Image); 
 	END ImageDecoder; 
@@ -125,25 +125,25 @@ TYPE
 	ImageEncoder* = OBJECT 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ SetQuality*(quality: LONGINT); 
-		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: WORD); 
+		PROCEDURE ^ SetQuality*(quality: SIGNED32); 
+		PROCEDURE ^ WriteImage*(img: Raster.Image; VAR res: INTEGER); 
 	END ImageEncoder; 
 
 	TextDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
 		PROCEDURE ^ GetText*(): Texts.Text; 
 	END TextDecoder; 
 
 	TextEncoder* = OBJECT 
 
 		PROCEDURE ^ Open*(out: Streams.Writer); 
-		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: WORD); 
+		PROCEDURE ^ WriteText*(text: Texts.Text; VAR res: INTEGER); 
 	END TextEncoder; 
 
 	CryptoDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
 		PROCEDURE ^ GetReader*(): Streams.Reader; 
 	END CryptoDecoder; 
 
@@ -157,8 +157,8 @@ TYPE
 	VAR 
 		left*, top*, width*, height*: SIZE; 
 		image*: Raster.Image; 
-		delayTime*: LONGINT; 
-		disposeMode*: LONGINT; 
+		delayTime*: SIGNED32; 
+		disposeMode*: SIGNED32; 
 		flags*: SET; 
 		previous*, next*: ImageDescriptor; 
 
@@ -167,14 +167,14 @@ TYPE
 
 	ImageSequence* = RECORD 
 		width*, height*: SIZE; 
-		bgColor*: LONGINT; 
+		bgColor*: SIGNED32; 
 		images*: ImageDescriptor; 
 	END; 
 
 	AnimationDecoder* = OBJECT 
 
-		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: WORD); 
-		PROCEDURE ^ GetImageSequence*(VAR sequence: ImageSequence; VAR res: WORD); 
+		PROCEDURE ^ Open*(in: Streams.Reader; VAR res: INTEGER); 
+		PROCEDURE ^ GetImageSequence*(VAR sequence: ImageSequence; VAR res: INTEGER); 
 	END AnimationDecoder; 
 
 	DemuxFactory = PROCEDURE ():AVDemultiplexer; 
@@ -201,9 +201,9 @@ TYPE
 
 	AnimationDecoderFactory = PROCEDURE ():AnimationDecoder; 
 
-	PROCEDURE ^ GetDemuxFactoryName(CONST name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: WORD); 
-	PROCEDURE ^ GetDecoderFactoryName(CONST type, name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: WORD); 
-	PROCEDURE ^ GetEncoderFactoryName(CONST type, name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: WORD); 
+	PROCEDURE ^ GetDemuxFactoryName(CONST name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: INTEGER); 
+	PROCEDURE ^ GetDecoderFactoryName(CONST type, name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: INTEGER); 
+	PROCEDURE ^ GetEncoderFactoryName(CONST type, name: ARRAY OF CHAR; VAR module, procedure: Modules.Name; VAR res: INTEGER); 
 	PROCEDURE ^ GetDemultiplexer*(CONST name: ARRAY OF CHAR): AVDemultiplexer; 
 	PROCEDURE ^ GetImageDecoder*(CONST name: ARRAY OF CHAR): ImageDecoder; 
 	PROCEDURE ^ GetImageEncoder*(CONST name: ARRAY OF CHAR): ImageEncoder; 

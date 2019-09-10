@@ -14,50 +14,50 @@ TYPE
 
 	ListDesc* = RECORD 
 		name*: vyName.tNameArray; 
-		x, y, w, h, dsr: INTEGER; 
+		x, y, w, h, dsr: SIGNED16; 
 		fnt: ARRAY 32 OF CHAR; 
-		nr: INTEGER; 
+		nr: SIGNED16; 
 		next*: List; 
 	END; 
 
 	fofPopup = RECORD 
-		x, y, w, h, dh: INTEGER; 
-		nr: INTEGER; 
+		x, y, w, h, dh: SIGNED16; 
+		nr: SIGNED16; 
 		e: List; 
 	END; 
 VAR 
 	Wr: vyBase.TextsWriter; 
 	BorderBGColor, BorderFGColor, BGColor, FGColor, SelectColor: Display.Color; 
 	inHelp: BOOLEAN; 
-	Rectangle*: PROCEDURE (x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
-	Rectangles*: PROCEDURE (x, y, w, h: ARRAY OF INTEGER; rectCount: INTEGER; VAR dx, dy: INTEGER); 
-	GrowRectangleRL*: PROCEDURE (x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
-	GrowRectangleR*: PROCEDURE (x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
-	ZoomCentralRect*: PROCEDURE (x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
-	TrackMouse*: PROCEDURE (VAR keys: SET; VAR X, Y: INTEGER; marker: Oberon.Marker); 
-	ScrollList*: PROCEDURE (e0: List; x0, y0: INTEGER; VAR res: List); 
-	MoveListEntry*: PROCEDURE (list: List; VAR x, y, dx, dy: INTEGER); 
-	FramedString*: PROCEDURE (X, Y: INTEGER; fnt, str: ARRAY OF CHAR; VAR dx, dy: INTEGER); 
-	String*: PROCEDURE (X, Y: INTEGER; fnt, str: ARRAY OF CHAR; VAR dx, dy: INTEGER); 
+	Rectangle*: PROCEDURE (x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
+	Rectangles*: PROCEDURE (x, y, w, h: ARRAY OF SIGNED16; rectCount: SIGNED16; VAR dx, dy: SIGNED16); 
+	GrowRectangleRL*: PROCEDURE (x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
+	GrowRectangleR*: PROCEDURE (x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
+	ZoomCentralRect*: PROCEDURE (x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
+	TrackMouse*: PROCEDURE (VAR keys: SET; VAR X, Y: SIGNED16; marker: Oberon.Marker); 
+	ScrollList*: PROCEDURE (e0: List; x0, y0: SIGNED16; VAR res: List); 
+	MoveListEntry*: PROCEDURE (list: List; VAR x, y, dx, dy: SIGNED16); 
+	FramedString*: PROCEDURE (X, Y: SIGNED16; fnt, str: ARRAY OF CHAR; VAR dx, dy: SIGNED16); 
+	String*: PROCEDURE (X, Y: SIGNED16; fnt, str: ARRAY OF CHAR; VAR dx, dy: SIGNED16); 
 	Help*: PROCEDURE (s: ARRAY OF CHAR); 
-	HelpAt*: PROCEDURE (x, y: INTEGER; s: ARRAY OF CHAR); 
+	HelpAt*: PROCEDURE (x, y: SIGNED16; s: ARRAY OF CHAR); 
 	HelpEnd*: PROCEDURE ; 
-	TrackMouseCont*: PROCEDURE (VAR keys: SET; VAR x, y: INTEGER; marker: Oberon.Marker); 
+	TrackMouseCont*: PROCEDURE (VAR keys: SET; VAR x, y: SIGNED16; marker: Oberon.Marker); 
 
-	PROCEDURE ^ rectangle(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
-	PROCEDURE ^ rectangles(x, y, w, h: ARRAY OF INTEGER; rectCount: INTEGER; VAR dx, dy: INTEGER); 
-	PROCEDURE ^ growRectangleRL(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
-	PROCEDURE ^ growRectangleR(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
-	PROCEDURE ^ zoomCentralRect(x, y, w, h: INTEGER; VAR dx, dy: INTEGER); 
-	PROCEDURE ^ trackMouse(VAR keys: SET; VAR x, y: INTEGER; marker: Oberon.Marker); 
-	PROCEDURE ^ scrollList(e0: List; x0, y0: INTEGER; VAR res: List); 
-	PROCEDURE ^ moveListEntry(list: List; VAR x, y, dx, dy: INTEGER); 
-	PROCEDURE ^ ArrayToList*(names: ARRAY OF ARRAY OF CHAR; nr: INTEGER): List; 
-	PROCEDURE ^ framedString(X, Y: INTEGER; fnt, str: ARRAY OF CHAR; VAR dx, dy: INTEGER); 
-	PROCEDURE ^ string(X, Y: INTEGER; fnt, str: ARRAY OF CHAR; VAR dx, dy: INTEGER); 
+	PROCEDURE ^ rectangle(x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
+	PROCEDURE ^ rectangles(x, y, w, h: ARRAY OF SIGNED16; rectCount: SIGNED16; VAR dx, dy: SIGNED16); 
+	PROCEDURE ^ growRectangleRL(x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
+	PROCEDURE ^ growRectangleR(x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
+	PROCEDURE ^ zoomCentralRect(x, y, w, h: SIGNED16; VAR dx, dy: SIGNED16); 
+	PROCEDURE ^ trackMouse(VAR keys: SET; VAR x, y: SIGNED16; marker: Oberon.Marker); 
+	PROCEDURE ^ scrollList(e0: List; x0, y0: SIGNED16; VAR res: List); 
+	PROCEDURE ^ moveListEntry(list: List; VAR x, y, dx, dy: SIGNED16); 
+	PROCEDURE ^ ArrayToList*(names: ARRAY OF ARRAY OF CHAR; nr: SIGNED16): List; 
+	PROCEDURE ^ framedString(X, Y: SIGNED16; fnt, str: ARRAY OF CHAR; VAR dx, dy: SIGNED16); 
+	PROCEDURE ^ string(X, Y: SIGNED16; fnt, str: ARRAY OF CHAR; VAR dx, dy: SIGNED16); 
 	PROCEDURE ^ help(s: ARRAY OF CHAR); 
-	PROCEDURE ^ helpAt(x, y: INTEGER; s: ARRAY OF CHAR); 
+	PROCEDURE ^ helpAt(x, y: SIGNED16; s: ARRAY OF CHAR); 
 	PROCEDURE ^ helpEnd; 
-	PROCEDURE ^ trackMouseCont(VAR keys: SET; VAR x, y: INTEGER; marker: Oberon.Marker); 
+	PROCEDURE ^ trackMouseCont(VAR keys: SET; VAR x, y: SIGNED16; marker: Oberon.Marker); 
 BEGIN
 END vyTracking.

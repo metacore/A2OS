@@ -17,9 +17,9 @@ TYPE
 		next*: Parameter; 
 		name*: ARRAY 64 OF CHAR; 
 		sym*: Scheme.Object; 
-		kind*: INTEGER; 
-		imin*, imax*: LONGINT; 
-		rmin*, rmax*: REAL; 
+		kind*: SIGNED16; 
+		imin*, imax*: SIGNED32; 
+		rmin*, rmax*: FLOAT32; 
 	END; 
 
 	Shape* = POINTER TO ShapeDesc; 
@@ -34,19 +34,19 @@ TYPE
 	Frame* = POINTER TO FrameDesc; 
 
 	FrameDesc* = RECORD (Leonardo.ShapeDesc)
-		w*, h*: REAL; 
+		w*, h*: FLOAT32; 
 		mat*: GfxMatrix.Matrix; 
 	END; 
 VAR 
 	render, drag, matrix, bbox, locate, colorSym, shapeSym, quoteSym: Scheme.Object; 
 	strPool: Scheme.Pool; 
 
-	PROCEDURE ^ ColorToInt(col: Scheme.Object; VAR i: LONGINT); 
-	PROCEDURE ^ IntToColor(i: LONGINT; VAR col: Scheme.Object); 
+	PROCEDURE ^ ColorToInt(col: Scheme.Object; VAR i: SIGNED32); 
+	PROCEDURE ^ IntToColor(i: SIGNED32; VAR col: Scheme.Object); 
 	PROCEDURE ^ Evaluate(ctxt: Scheme.Context; env: Scheme.Environment; obj: Scheme.Object): Scheme.Object; 
 	PROCEDURE ^ IsMatrix(obj: Scheme.Object): BOOLEAN; 
 	PROCEDURE ^ GetMatrix(s: Shape; VAR m: GfxMatrix.Matrix); 
-	PROCEDURE ^ GetBox(s: Shape; VAR m: GfxMatrix.Matrix; VAR llx, lly, urx, ury, bw: REAL); 
+	PROCEDURE ^ GetBox(s: Shape; VAR m: GfxMatrix.Matrix; VAR llx, lly, urx, ury, bw: FLOAT32); 
 	PROCEDURE ^ CalcBox(s: Shape; VAR mat: GfxMatrix.Matrix); 
 	PROCEDURE ^ Select(s: Shape; VAR msg: Leonardo.SelectMsg); 
 	PROCEDURE ^ Control(s: Shape; VAR msg: Leonardo.ControlMsg); 
@@ -67,10 +67,10 @@ VAR
 	PROCEDURE ^ Integrate*; 
 	PROCEDURE ^ CopyFrame*(VAR msg: Objects.CopyMsg; from, to: Frame); 
 	PROCEDURE ^ HandleFrame*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
-	PROCEDURE ^ InitFrame*(frame: Frame; w, h: REAL); 
+	PROCEDURE ^ InitFrame*(frame: Frame; w, h: FLOAT32); 
 	PROCEDURE ^ NewFrame*; 
 	PROCEDURE ^ Append(vs: Shape; par: Parameter); 
-	PROCEDURE ^ NumVal(ctxt: Scheme.Context; VAR args: Scheme.Object): REAL; 
+	PROCEDURE ^ NumVal(ctxt: Scheme.Context; VAR args: Scheme.Object): FLOAT32; 
 	PROCEDURE ^ FindShape(ctxt: Scheme.Context): Shape; 
 	PROCEDURE ^ ShapeArg(ctxt: Scheme.Context; VAR args: Scheme.Object): Leonardo.Shape; 
 	PROCEDURE ^ EvalFrame(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
@@ -85,7 +85,7 @@ VAR
 	PROCEDURE ^ EvalPen(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
 	PROCEDURE ^ EvalName(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
 	PROCEDURE ^ EvalRectInit(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
-	PROCEDURE ^ GetRectArg(ctxt: Scheme.Context; VAR args: Scheme.Object; VAR llx, lly, urx, ury: REAL); 
+	PROCEDURE ^ GetRectArg(ctxt: Scheme.Context; VAR args: Scheme.Object; VAR llx, lly, urx, ury: FLOAT32); 
 	PROCEDURE ^ EvalRectApply(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
 	PROCEDURE ^ EvalRectOverlap(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 
 	PROCEDURE ^ EvalRectInside(ctxt: Scheme.Context; args: Scheme.Object; VAR res: Scheme.Object); 

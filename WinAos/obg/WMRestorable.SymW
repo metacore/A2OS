@@ -44,9 +44,9 @@ VAR
 	PROCEDURE ^ GetElement*(c: Context; CONST path: ARRAY OF CHAR): XmlElement; 
 	PROCEDURE ^ LoadBoolean*(elem: XML.Element; CONST name: ARRAY OF CHAR; VAR value: BOOLEAN); 
 	PROCEDURE ^ StoreBoolean*(elem: XML.Element; CONST name: ARRAY OF CHAR; value: BOOLEAN); 
-	PROCEDURE ^ LoadLongint*(elem: XML.Element; CONST name: ARRAY OF CHAR; VAR value: LONGINT); 
+	PROCEDURE ^ LoadLongint*(elem: XML.Element; CONST name: ARRAY OF CHAR; VAR value: SIGNED32); 
 	PROCEDURE ^ LoadSize*(elem: XML.Element; CONST name: ARRAY OF CHAR; VAR value: SIZE); 
-	PROCEDURE ^ StoreLongint*(elem: XML.Element; CONST name: ARRAY OF CHAR; value: LONGINT); 
+	PROCEDURE ^ StoreLongint*(elem: XML.Element; CONST name: ARRAY OF CHAR; value: SIGNED32); 
 	PROCEDURE ^ StoreSize*(elem: XML.Element; CONST name: ARRAY OF CHAR; value: SIZE); 
 	PROCEDURE ^ LoadString*(elem: XML.Element; CONST name: ARRAY OF CHAR; VAR value: ARRAY OF CHAR); 
 	PROCEDURE ^ StoreString*(elem: XML.Element; CONST name, value: ARRAY OF CHAR); 

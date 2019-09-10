@@ -1,14 +1,14 @@
 MODULE JPEG2000DecoderCS;
 	IMPORT SYSTEM, J2KU := JPEG2000DecoderUtil, KernelLog, Machine, Streams;
 CONST 
-	MAX_IMG_WIDTH = MAX(LONGINT); 
-	MAX_IMG_HEIGHT = MAX(LONGINT); 
+	MAX_IMG_WIDTH = MAX(SIGNED32); 
+	MAX_IMG_HEIGHT = MAX(SIGNED32); 
 	MAX_TILES = 65535; 
 	MAX_COMPONENTS = 16384; 
 	MAX_LAYERS = 65535; 
 	CODESTREAM_READER* = 0; 
 	BUF_CODESTREAM_READER* = 1; 
-	REBUILD_TILEPART* = MAX(LONGINT); 
+	REBUILD_TILEPART* = MAX(SIGNED32); 
 	SOC = 65359; 
 	SOT = 65424; 
 	SOD = 65427; 
@@ -44,31 +44,31 @@ CONST
 	MAX_PREC_SIZ = 15; 
 TYPE 
 	PrecinctExp = RECORD 
-		ppx: LONGINT; 
-		ppy: LONGINT; 
+		ppx: SIGNED32; 
+		ppy: SIGNED32; 
 	END; 
 
 	CodingStyle = OBJECT 
 	VAR 
 		maxps: BOOLEAN; 
-		ndec: LONGINT; 
-		cblw: LONGINT; 
-		cblh: LONGINT; 
+		ndec: SIGNED32; 
+		cblw: SIGNED32; 
+		cblh: SIGNED32; 
 		selcb: BOOLEAN; 
 		rescp: BOOLEAN; 
 		term: BOOLEAN; 
 		vert: BOOLEAN; 
 		pred: BOOLEAN; 
 		segs: BOOLEAN; 
-		trans: LONGINT; 
+		trans: SIGNED32; 
 		precs: POINTER TO ARRAY OF PrecinctExp; 
 	END CodingStyle; 
 
 	CICodingStyle = OBJECT 
 	VAR 
-		po: LONGINT; 
-		nl: LONGINT; 
-		mct: LONGINT; 
+		po: SIGNED32; 
+		nl: SIGNED32; 
+		mct: SIGNED32; 
 		sop: BOOLEAN; 
 		eph: BOOLEAN; 
 	END CICodingStyle; 
@@ -76,53 +76,53 @@ TYPE
 	Component = OBJECT 
 	VAR 
 		signed: BOOLEAN; 
-		depth: LONGINT; 
-		subsx: LONGINT; 
-		subsy: LONGINT; 
+		depth: SIGNED32; 
+		subsx: SIGNED32; 
+		subsy: SIGNED32; 
 	END Component; 
 
 	Quantization = OBJECT 
 	VAR 
-		style: LONGINT; 
-		nguardb: LONGINT; 
-		nstepsiz: LONGINT; 
+		style: SIGNED32; 
+		nguardb: SIGNED32; 
+		nstepsiz: SIGNED32; 
 		stepsiz: POINTER TO ARRAY OF QuantStep; 
 	END Quantization; 
 
 	QuantStep = OBJECT 
 	VAR 
-		mant: LONGINT; 
-		exp: LONGINT; 
+		mant: SIGNED32; 
+		exp: SIGNED32; 
 	END QuantStep; 
 
 	ImageInfo* = OBJECT 
 	VAR 
-		xsiz, ysiz: LONGINT; 
-		xos, yos: LONGINT; 
-		nt: LONGINT; 
-		nxt, nyt: LONGINT; 
-		xt, yt: LONGINT; 
-		xtos, ytos: LONGINT; 
-		ncomp: LONGINT; 
+		xsiz, ysiz: SIGNED32; 
+		xos, yos: SIGNED32; 
+		nt: SIGNED32; 
+		nxt, nyt: SIGNED32; 
+		xt, yt: SIGNED32; 
+		xtos, ytos: SIGNED32; 
+		ncomp: SIGNED32; 
 		comps: POINTER TO ARRAY OF Component; 
 
-		PROCEDURE ^ GetImgWidth*(declevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetImgHeight*(declevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetImgULX*(declevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetImgULY*(declevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetCompImgWidth*(component, declevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetCompImgHeight*(component, declevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetNumTiles*(): LONGINT; 
-		PROCEDURE ^ GetNumTilesX*(): LONGINT; 
-		PROCEDURE ^ GetNumTilesY*(): LONGINT; 
-		PROCEDURE ^ GetTileWidth*(tile, declevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetTileHeight*(tile, declevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetTileULX*(tile, declevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetTileULY*(tile, declevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetNumComponents*(): LONGINT; 
-		PROCEDURE ^ GetSubsX*(component: LONGINT): LONGINT; 
-		PROCEDURE ^ GetSubsY*(component: LONGINT): LONGINT; 
-		PROCEDURE ^ GetBitDepth*(component: LONGINT): LONGINT; 
+		PROCEDURE ^ GetImgWidth*(declevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetImgHeight*(declevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetImgULX*(declevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetImgULY*(declevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetCompImgWidth*(component, declevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetCompImgHeight*(component, declevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetNumTiles*(): SIGNED32; 
+		PROCEDURE ^ GetNumTilesX*(): SIGNED32; 
+		PROCEDURE ^ GetNumTilesY*(): SIGNED32; 
+		PROCEDURE ^ GetTileWidth*(tile, declevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetTileHeight*(tile, declevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetTileULX*(tile, declevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetTileULY*(tile, declevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetNumComponents*(): SIGNED32; 
+		PROCEDURE ^ GetSubsX*(component: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetSubsY*(component: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetBitDepth*(component: SIGNED32): SIGNED32; 
 	END ImageInfo; 
 
 	DecoderSpecs* = OBJECT 
@@ -131,61 +131,61 @@ TYPE
 		cstyle: POINTER TO ARRAY OF ARRAY OF CodingStyle; 
 		cics: POINTER TO ARRAY OF CICodingStyle; 
 		quant: POINTER TO ARRAY OF ARRAY OF Quantization; 
-		roiShift: POINTER TO ARRAY OF ARRAY OF LONGINT; 
+		roiShift: POINTER TO ARRAY OF ARRAY OF SIGNED32; 
 
 		PROCEDURE ^  & InitNew*; 
 		PROCEDURE ^ GetImageInfo*(): ImageInfo; 
-		PROCEDURE ^ BypassCoding*(tile, component: LONGINT): BOOLEAN; 
-		PROCEDURE ^ RegularTermination*(tile, component: LONGINT): BOOLEAN; 
-		PROCEDURE ^ VerticallyCausalContext*(tile, component: LONGINT): BOOLEAN; 
-		PROCEDURE ^ PredictableTermination*(tile, component: LONGINT): BOOLEAN; 
-		PROCEDURE ^ ResetContexts*(tile, component: LONGINT): BOOLEAN; 
-		PROCEDURE ^ SegmentationSymbols*(tile, component: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetWavTransType*(tile, component: LONGINT): LONGINT; 
-		PROCEDURE ^ IsReversibleWavTrans*(tile, component: LONGINT): BOOLEAN; 
-		PROCEDURE ^ CompTransUsed*(tile: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetNumDecLevels*(tile, component: LONGINT): LONGINT; 
-		PROCEDURE ^ GetImgMinDecLevels*(): LONGINT; 
-		PROCEDURE ^ GetImgMaxDecLevels*(): LONGINT; 
-		PROCEDURE ^ GetMinDecLevels*(tile: LONGINT): LONGINT; 
-		PROCEDURE ^ GetMaxDecLevels*(tile: LONGINT): LONGINT; 
-		PROCEDURE ^ GetNumLayers*(tile: LONGINT): LONGINT; 
-		PROCEDURE ^ GetMinNumLayers*(): LONGINT; 
-		PROCEDURE ^ GetPPX(tile, comp, reslevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetPPY(tile, comp, reslevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetMaxCblkWidthExp*(tile: LONGINT): LONGINT; 
-		PROCEDURE ^ GetMaxCblkHeightExp*(tile: LONGINT): LONGINT; 
-		PROCEDURE ^ GetQuantStyle*(tile, comp: LONGINT): LONGINT; 
-		PROCEDURE ^ GetQuantExponent*(tile, comp, reslevel, subband: LONGINT): LONGINT; 
-		PROCEDURE ^ GetQuantMantissa*(tile, comp, reslevel, subband: LONGINT): LONGINT; 
-		PROCEDURE ^ ROIUsed*(tile, comp: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetROIShift*(tile, comp: LONGINT): LONGINT; 
+		PROCEDURE ^ BypassCoding*(tile, component: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ RegularTermination*(tile, component: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ VerticallyCausalContext*(tile, component: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ PredictableTermination*(tile, component: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ ResetContexts*(tile, component: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ SegmentationSymbols*(tile, component: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetWavTransType*(tile, component: SIGNED32): SIGNED32; 
+		PROCEDURE ^ IsReversibleWavTrans*(tile, component: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ CompTransUsed*(tile: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetNumDecLevels*(tile, component: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetImgMinDecLevels*(): SIGNED32; 
+		PROCEDURE ^ GetImgMaxDecLevels*(): SIGNED32; 
+		PROCEDURE ^ GetMinDecLevels*(tile: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetMaxDecLevels*(tile: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetNumLayers*(tile: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetMinNumLayers*(): SIGNED32; 
+		PROCEDURE ^ GetPPX(tile, comp, reslevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetPPY(tile, comp, reslevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetMaxCblkWidthExp*(tile: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetMaxCblkHeightExp*(tile: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetQuantStyle*(tile, comp: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetQuantExponent*(tile, comp, reslevel, subband: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetQuantMantissa*(tile, comp, reslevel, subband: SIGNED32): SIGNED32; 
+		PROCEDURE ^ ROIUsed*(tile, comp: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetROIShift*(tile, comp: SIGNED32): SIGNED32; 
 	END DecoderSpecs; 
 
 	ProgState = RECORD 
-		progNr: LONGINT; 
-		progOrder: LONGINT; 
-		curLay: LONGINT; 
+		progNr: SIGNED32; 
+		progOrder: SIGNED32; 
+		curLay: SIGNED32; 
 		startLay: J2KU.LongInt2DArrayPtr; 
-		endLay: LONGINT; 
-		startRes: LONGINT; 
-		curRes: LONGINT; 
-		endRes: LONGINT; 
-		startComp: LONGINT; 
-		curComp: LONGINT; 
-		endComp: LONGINT; 
+		endLay: SIGNED32; 
+		startRes: SIGNED32; 
+		curRes: SIGNED32; 
+		endRes: SIGNED32; 
+		startComp: SIGNED32; 
+		curComp: SIGNED32; 
+		endComp: SIGNED32; 
 		curPrec: J2KU.LongInt3DArrayPtr; 
-		curX: LONGINT; 
-		curY: LONGINT; 
+		curX: SIGNED32; 
+		curY: SIGNED32; 
 	END; 
 
 	ProgChange = RECORD 
-		progOrder: LONGINT; 
-		startRes: LONGINT; 
-		startComp: LONGINT; 
-		endLay: LONGINT; 
-		endRes: LONGINT; 
-		endComp: LONGINT; 
+		progOrder: SIGNED32; 
+		startRes: SIGNED32; 
+		startComp: SIGNED32; 
+		endLay: SIGNED32; 
+		endRes: SIGNED32; 
+		endComp: SIGNED32; 
 	END; 
 
 	ProgChangeArrayPtr = POINTER TO ARRAY OF ProgChange; 
@@ -197,29 +197,29 @@ TYPE
 	END DataListElement; 
 
 	PrecinctInfo = RECORD 
-		nblocks: POINTER TO ARRAY OF ARRAY OF ARRAY 2 OF LONGINT; 
-		nprecx: LONGINT; 
-		nprecy: LONGINT; 
+		nblocks: POINTER TO ARRAY OF ARRAY OF ARRAY 2 OF SIGNED32; 
+		nprecx: SIGNED32; 
+		nprecy: SIGNED32; 
 	END; 
 
 	PacketDecoder = OBJECT (J2KU.BitSource)
 	VAR 
 		cr: CodestreamReader; 
-		curTile: LONGINT; 
-		curByte: LONGINT; 
-		curBytePos: LONGINT; 
+		curTile: SIGNED32; 
+		curByte: SIGNED32; 
+		curBytePos: SIGNED32; 
 		decSpec: DecoderSpecs; 
 		pph: DataListElement; 
-		pphPos: LONGINT; 
+		pphPos: SIGNED32; 
 		pphTileFirstLast: POINTER TO ARRAY OF ARRAY OF DataListElement; 
 		pphTilePos: J2KU.LongIntArrayPtr; 
 		pphMainUsed: BOOLEAN; 
 		pphTileUsed: POINTER TO ARRAY OF BOOLEAN; 
 		sopUsed, ephUsed: BOOLEAN; 
-		incStep: POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF ARRAY 2 OF LONGINT; 
-		minIncStep: POINTER TO ARRAY OF ARRAY OF ARRAY 2 OF LONGINT; 
-		sotEot: POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF ARRAY 2 OF ARRAY 2 OF LONGINT; 
-		maxSotEot: POINTER TO ARRAY OF ARRAY OF ARRAY 2 OF ARRAY 2 OF LONGINT; 
+		incStep: POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF ARRAY 2 OF SIGNED32; 
+		minIncStep: POINTER TO ARRAY OF ARRAY OF ARRAY 2 OF SIGNED32; 
+		sotEot: POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF ARRAY 2 OF ARRAY 2 OF SIGNED32; 
+		maxSotEot: POINTER TO ARRAY OF ARRAY OF ARRAY 2 OF ARRAY 2 OF SIGNED32; 
 		inclTrees: POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF J2KU.TagTree; 
 		zeroTrees: POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF J2KU.TagTree; 
 		lblock: POINTER TO ARRAY OF ARRAY OF J2KU.LongInt4DArrayPtr; 
@@ -228,67 +228,67 @@ TYPE
 
 		PROCEDURE ^  & InitNew*(cr: CodestreamReader; decSpec: DecoderSpecs; pphMain: DataListElement); 
 		PROCEDURE ^ ReInit(cr: CodestreamReader; decSpec: DecoderSpecs; pphMain: DataListElement); 
-		PROCEDURE ^ SetAndInitTile(t: LONGINT); 
-		PROCEDURE ^ SetTile(t: LONGINT); 
-		PROCEDURE ^ BuildIncSotEotArrays(tile: LONGINT); 
-		PROCEDURE ^ CreatePrecinctInfo(tile, comp, reslevel: LONGINT; VAR precInfo: PrecinctInfo); 
-		PROCEDURE ^ InitSubbands(tile, comp, reslevel: LONGINT; VAR precInfo: PrecinctInfo); 
-		PROCEDURE ^ SetPPHeadersTile(pphNewFirst, pphNewLast: DataListElement; tile: LONGINT); 
+		PROCEDURE ^ SetAndInitTile(t: SIGNED32); 
+		PROCEDURE ^ SetTile(t: SIGNED32); 
+		PROCEDURE ^ BuildIncSotEotArrays(tile: SIGNED32); 
+		PROCEDURE ^ CreatePrecinctInfo(tile, comp, reslevel: SIGNED32; VAR precInfo: PrecinctInfo); 
+		PROCEDURE ^ InitSubbands(tile, comp, reslevel: SIGNED32; VAR precInfo: PrecinctInfo); 
+		PROCEDURE ^ SetPPHeadersTile(pphNewFirst, pphNewLast: DataListElement; tile: SIGNED32); 
 		PROCEDURE ^ PPHTileUsed(): BOOLEAN; 
 		PROCEDURE ^ PPHMainAvailable(): BOOLEAN; 
 		PROCEDURE ^ PPHTileAvailable(): BOOLEAN; 
-		PROCEDURE ^ DecodePacket(comp, reslevel, layer, precno: LONGINT; VAR cblk: ARRAY OF J2KU.CodedCblk; VAR cblkInfo: ARRAY OF J2KU.CblkInfo): LONGINT; 
-		PROCEDURE ^ ReadCodingPasses(): LONGINT; 
-		PROCEDURE ^ GetNumPrecincts(comp, reslevel: LONGINT): LONGINT; 
-		PROCEDURE ^ GetMaxNumCodeblocksPkt(): LONGINT; 
-		PROCEDURE ^ GetCblkInfo(comp, reslevel, subband, cblkSubbIdx: LONGINT): J2KU.CblkInfo; 
-		PROCEDURE ^ GetIncStep(comp, reslevel: LONGINT; VAR xStep, yStep: LONGINT); 
-		PROCEDURE ^ GetMinIncStep(comp: LONGINT; VAR xStep, yStep: LONGINT); 
-		PROCEDURE ^ GetSotEot(comp, reslevel: LONGINT; VAR sotX, eotX, sotY, eotY: LONGINT); 
-		PROCEDURE ^ GetMaxSotEot(comp: LONGINT; VAR sotX, eotX, sotY, eotY: LONGINT); 
+		PROCEDURE ^ DecodePacket(comp, reslevel, layer, precno: SIGNED32; VAR cblk: ARRAY OF J2KU.CodedCblk; VAR cblkInfo: ARRAY OF J2KU.CblkInfo): SIGNED32; 
+		PROCEDURE ^ ReadCodingPasses(): SIGNED32; 
+		PROCEDURE ^ GetNumPrecincts(comp, reslevel: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetMaxNumCodeblocksPkt(): SIGNED32; 
+		PROCEDURE ^ GetCblkInfo(comp, reslevel, subband, cblkSubbIdx: SIGNED32): J2KU.CblkInfo; 
+		PROCEDURE ^ GetIncStep(comp, reslevel: SIGNED32; VAR xStep, yStep: SIGNED32); 
+		PROCEDURE ^ GetMinIncStep(comp: SIGNED32; VAR xStep, yStep: SIGNED32); 
+		PROCEDURE ^ GetSotEot(comp, reslevel: SIGNED32; VAR sotX, eotX, sotY, eotY: SIGNED32); 
+		PROCEDURE ^ GetMaxSotEot(comp: SIGNED32; VAR sotX, eotX, sotY, eotY: SIGNED32); 
 		PROCEDURE ^ ReadSOP; 
 		PROCEDURE ^ ReadEPH; 
-		PROCEDURE ^ NextByte(): LONGINT; 
-		PROCEDURE ^ NextBit*(): LONGINT; 
-		PROCEDURE ^ NextBits(n: LONGINT): LONGINT; 
+		PROCEDURE ^ NextByte(): SIGNED32; 
+		PROCEDURE ^ NextBit*(): SIGNED32; 
+		PROCEDURE ^ NextBits(n: SIGNED32): SIGNED32; 
 	END PacketDecoder; 
 
 	CodestreamReader* = OBJECT 
 	VAR 
 		s: Streams.Reader; 
-		ntp: LONGINT; 
+		ntp: SIGNED32; 
 		ntilePartsRead: J2KU.LongIntArrayPtr; 
 		ntilePartsAvailable: J2KU.LongIntArrayPtr; 
-		curTile: LONGINT; 
-		curPart: LONGINT; 
+		curTile: SIGNED32; 
+		curPart: SIGNED32; 
 		partRem: Streams.Position; 
 		initError: BOOLEAN; 
 		pktDec: PacketDecoder; 
 		cblkBuf: POINTER TO ARRAY OF J2KU.CodedCblk; 
 		cblkInfoBuf: POINTER TO ARRAY OF J2KU.CblkInfo; 
-		cblkBufSize: LONGINT; 
-		ncblkInBuf: LONGINT; 
-		cblkBufPos: LONGINT; 
+		cblkBufSize: SIGNED32; 
+		ncblkInBuf: SIGNED32; 
+		cblkBufPos: SIGNED32; 
 		endOfCS: BOOLEAN; 
-		curMarker: LONGINT; 
+		curMarker: SIGNED32; 
 		subbInfos: POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF J2KU.SubbandInfo; 
 		decSpec: DecoderSpecs; 
 		ppmUsed: BOOLEAN; 
-		buf8: LONGINT; 
+		buf8: SIGNED32; 
 		buf8Valid: BOOLEAN; 
 		progChanges: POINTER TO ARRAY OF ProgChangeArrayPtr; 
 		progStates: POINTER TO ARRAY OF ProgState; 
-		curLay, curComp, curRes: LONGINT; 
+		curLay, curComp, curRes: SIGNED32; 
 		curPrec: J2KU.LongInt3DArrayPtr; 
 		lmin: J2KU.LongInt2DArrayPtr; 
-		lmax, cmax, rmax, rmin, cmin: LONGINT; 
-		curX, curY, incX, incY: LONGINT; 
-		xmax, ymax, xmin, ymin: LONGINT; 
-		progOrder: LONGINT; 
-		maxStartLayer, maxEndLayer: LONGINT; 
-		startLayer, endLayer: LONGINT; 
-		maxStartDecLvl, maxEndDecLvl: LONGINT; 
-		startDecLvl, endDecLvl: LONGINT; 
+		lmax, cmax, rmax, rmin, cmin: SIGNED32; 
+		curX, curY, incX, incY: SIGNED32; 
+		xmax, ymax, xmin, ymin: SIGNED32; 
+		progOrder: SIGNED32; 
+		maxStartLayer, maxEndLayer: SIGNED32; 
+		startLayer, endLayer: SIGNED32; 
+		maxStartDecLvl, maxEndDecLvl: SIGNED32; 
+		startDecLvl, endDecLvl: SIGNED32; 
 		printCSInfo: BOOLEAN; 
 		printCOM: BOOLEAN; 
 
@@ -297,14 +297,14 @@ TYPE
 		PROCEDURE ^ InitError*(): BOOLEAN; 
 		PROCEDURE ^ NextTilePart*(): BOOLEAN; 
 		PROCEDURE ^ InitTile(): BOOLEAN; 
-		PROCEDURE ^ SetMaxLayerRange*(maxStartLayer, maxEndLayer: LONGINT); 
-		PROCEDURE ^ SetLayerRange*(startLayer, endLayer: LONGINT); 
-		PROCEDURE ^ GetLayerRange*(VAR startLayer, endLayer: LONGINT); 
-		PROCEDURE ^ SetMaxDecLevelRange*(maxStartDecLvl, maxEndDecLvl: LONGINT); 
-		PROCEDURE ^ SetDecLevelRange*(startDecLvl, endDecLvl: LONGINT); 
-		PROCEDURE ^ GetDecLevelRange*(VAR startDecLvl, endDecLvl: LONGINT); 
+		PROCEDURE ^ SetMaxLayerRange*(maxStartLayer, maxEndLayer: SIGNED32); 
+		PROCEDURE ^ SetLayerRange*(startLayer, endLayer: SIGNED32); 
+		PROCEDURE ^ GetLayerRange*(VAR startLayer, endLayer: SIGNED32); 
+		PROCEDURE ^ SetMaxDecLevelRange*(maxStartDecLvl, maxEndDecLvl: SIGNED32); 
+		PROCEDURE ^ SetDecLevelRange*(startDecLvl, endDecLvl: SIGNED32); 
+		PROCEDURE ^ GetDecLevelRange*(VAR startDecLvl, endDecLvl: SIGNED32); 
 		PROCEDURE ^ SetReBuildMode*; 
-		PROCEDURE ^ GetCodeBlocks*(VAR cblocks: ARRAY OF J2KU.CodedCblk; VAR cblockInfos: ARRAY OF J2KU.CblkInfo; ncblocks: LONGINT): LONGINT; 
+		PROCEDURE ^ GetCodeBlocks*(VAR cblocks: ARRAY OF J2KU.CodedCblk; VAR cblockInfos: ARRAY OF J2KU.CblkInfo; ncblocks: SIGNED32): SIGNED32; 
 		PROCEDURE ^ AdvanceLayResComPos(): BOOLEAN; 
 		PROCEDURE ^ AdvanceResLayComPos(): BOOLEAN; 
 		PROCEDURE ^ AdvanceResPosComLay(): BOOLEAN; 
@@ -315,14 +315,14 @@ TYPE
 		PROCEDURE ^ JumpToTilePartEnd(): Streams.Position; 
 		PROCEDURE ^ GetDecoderSpecs*(): DecoderSpecs; 
 		PROCEDURE ^ CreateSubbandInfos; 
-		PROCEDURE ^ GetNumMagBits(tile, comp, reslevel, subband: LONGINT): LONGINT; 
+		PROCEDURE ^ GetNumMagBits(tile, comp, reslevel, subband: SIGNED32): SIGNED32; 
 		PROCEDURE ^ CreatePrecCounter; 
-		PROCEDURE ^ GetSubbandInfo*(tile, comp, reslevel, subband: LONGINT): J2KU.SubbandInfo; 
-		PROCEDURE ^ Peek16(): LONGINT; 
+		PROCEDURE ^ GetSubbandInfo*(tile, comp, reslevel, subband: SIGNED32): J2KU.SubbandInfo; 
+		PROCEDURE ^ Peek16(): SIGNED32; 
 		PROCEDURE ^ ReadByte(VAR byte: CHAR); 
-		PROCEDURE ^ ReadBytes(VAR bytes: ARRAY OF CHAR; nbytes: LONGINT); 
-		PROCEDURE ^ CurrentTile*(): LONGINT; 
-		PROCEDURE ^ CurrentTilePart*(): LONGINT; 
+		PROCEDURE ^ ReadBytes(VAR bytes: ARRAY OF CHAR; nbytes: SIGNED32); 
+		PROCEDURE ^ CurrentTile*(): SIGNED32; 
+		PROCEDURE ^ CurrentTilePart*(): SIGNED32; 
 		PROCEDURE ^ TilePartAvailable*(): BOOLEAN; 
 		PROCEDURE ^ AllTilePartsRead*(): BOOLEAN; 
 		PROCEDURE ^ FreeNonRebuildResources*; 
@@ -330,10 +330,10 @@ TYPE
 		PROCEDURE ^ ReadSOTSegment(): BOOLEAN; 
 		PROCEDURE ^ ReadSIZSegment(VAR imgInfo: ImageInfo): BOOLEAN; 
 		PROCEDURE ^ ReadCODSegment(VAR cod: CodingStyle; VAR cics: CICodingStyle): BOOLEAN; 
-		PROCEDURE ^ ReadCOCSegment(VAR coc: CodingStyle; VAR comp: LONGINT): BOOLEAN; 
-		PROCEDURE ^ ReadRGNSegment(VAR roiShift, comp: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ReadCOCSegment(VAR coc: CodingStyle; VAR comp: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ ReadRGNSegment(VAR roiShift, comp: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ ReadQCDSegment(VAR quant: Quantization): BOOLEAN; 
-		PROCEDURE ^ ReadQCCSegment(VAR quant: Quantization; VAR comp: LONGINT): BOOLEAN; 
+		PROCEDURE ^ ReadQCCSegment(VAR quant: Quantization; VAR comp: SIGNED32): BOOLEAN; 
 		PROCEDURE ^ ReadPOCSegment(VAR changes: ProgChangeArrayPtr): BOOLEAN; 
 		PROCEDURE ^ ReadTLMSegment(): BOOLEAN; 
 		PROCEDURE ^ ReadPLMSegment(): BOOLEAN; 
@@ -348,8 +348,8 @@ TYPE
 	VAR 
 		bufferedBlocks: POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF J2KU.CodedCblk; 
 		reBuildMode: BOOLEAN; 
-		curSubbIdx, curSubbCblk: LONGINT; 
-		maxSubbIdx, maxSubbCblk: LONGINT; 
+		curSubbIdx, curSubbCblk: SIGNED32; 
+		maxSubbIdx, maxSubbCblk: SIGNED32; 
 		getAllLayers: BOOLEAN; 
 
 		PROCEDURE ^  & InitNew*(crOpt: J2KU.CodestreamReaderOptions; stream: Streams.Reader); 
@@ -358,8 +358,8 @@ TYPE
 		PROCEDURE ^ SetReBuildMode*; 
 		PROCEDURE ^ AddBlock(VAR cblock: J2KU.CodedCblk; cblockInfo: J2KU.CblkInfo); 
 		PROCEDURE ^ UpdateBufferedBlock(VAR cblk: J2KU.CodedCblk; cblkInfo: J2KU.CblkInfo); 
-		PROCEDURE ^ GetCodeBlocks*(VAR cblocks: ARRAY OF J2KU.CodedCblk; VAR cblockInfos: ARRAY OF J2KU.CblkInfo; ncblocks: LONGINT): LONGINT; 
-		PROCEDURE ^ GetBufferedBlocks(VAR cblocks: ARRAY OF J2KU.CodedCblk; VAR cblockInfos: ARRAY OF J2KU.CblkInfo; ncblocks: LONGINT): LONGINT; 
+		PROCEDURE ^ GetCodeBlocks*(VAR cblocks: ARRAY OF J2KU.CodedCblk; VAR cblockInfos: ARRAY OF J2KU.CblkInfo; ncblocks: SIGNED32): SIGNED32; 
+		PROCEDURE ^ GetBufferedBlocks(VAR cblocks: ARRAY OF J2KU.CodedCblk; VAR cblockInfos: ARRAY OF J2KU.CblkInfo; ncblocks: SIGNED32): SIGNED32; 
 		PROCEDURE ^ TilePartAvailable*(): BOOLEAN; 
 		PROCEDURE ^ JumpToTilePartEnd(): Streams.Position; 
 		PROCEDURE ^ NextTilePart*(): BOOLEAN; 
@@ -368,6 +368,6 @@ TYPE
 		PROCEDURE ^ FreeResources*; 
 	END BufferedCodestreamReader; 
 
-	PROCEDURE ^ MarkerToString(marker: LONGINT; VAR str: ARRAY OF CHAR); 
+	PROCEDURE ^ MarkerToString(marker: SIGNED32; VAR str: ARRAY OF CHAR); 
 BEGIN
 END JPEG2000DecoderCS.

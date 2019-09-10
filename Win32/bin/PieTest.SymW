@@ -23,7 +23,7 @@ TYPE
 		PROCEDURE ^ TestHandler(sender, data: ANY); 
 	END SomePanel; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ IncCount; 

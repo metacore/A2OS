@@ -22,7 +22,7 @@ TYPE
 	ErrorGadget* = POINTER TO ErrorGadgetDesc; 
 
 	ErrorGadgetDesc* = RECORD (Gadgets.FrameDesc)
-		errno*: INTEGER; 
+		errno*: SIGNED16; 
 		msg*: POINTER TO ARRAY 128 OF CHAR; 
 	END; 
 
@@ -38,13 +38,13 @@ TYPE
 	ModDesc* = RECORD 
 		name*, fname*: FileDir.FileName; 
 		opts*: ARRAY 64 OF CHAR; 
-		ref*, layer*: INTEGER; 
+		ref*, layer*: SIGNED16; 
 		impl*: Ref; 
 		next*: Mod; 
 	END; 
 
 	Tree* = RECORD 
-		maxlayer*: INTEGER; 
+		maxlayer*: SIGNED16; 
 		list*: Mod; 
 	END; 
 
@@ -56,35 +56,35 @@ TYPE
 	END; 
 VAR 
 	W: Texts.Writer; 
-	sym: SHORTINT; 
+	sym: SIGNED8; 
 	error, autoMark: BOOLEAN; 
 	sourceS: Texts.Scanner; 
 	targetW: Texts.Writer; 
 	Flags: List; 
 	lib: Objects.Library; 
-	col: SHORTINT; 
-	ifdepth: LONGINT; 
+	col: SIGNED8; 
+	ifdepth: SIGNED32; 
 	OPSGet: OPS.GetProc; 
 	skipping: BOOLEAN; 
 	first: BOOLEAN; 
 
 	PROCEDURE ^ GetText(VAR par: Display.Frame): Texts.Text; 
 	PROCEDURE ^ ErrorGadgetAttr(F: ErrorGadget; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ RestoreErrorGadget(F: ErrorGadget; M: Display3.Mask; x, y, w, h: INTEGER); 
+	PROCEDURE ^ RestoreErrorGadget(F: ErrorGadget; M: Display3.Mask; x, y, w, h: SIGNED16); 
 	PROCEDURE ^ PrintErrorGadget(F: ErrorGadget; VAR M: Display.DisplayMsg); 
 	PROCEDURE ^ CopyErrorGadget*(VAR M: Objects.CopyMsg; from, to: ErrorGadget); 
-	PROCEDURE ^ GetErrMsg(errNr: INTEGER; VAR msg: ARRAY OF CHAR); 
+	PROCEDURE ^ GetErrMsg(errNr: SIGNED16; VAR msg: ARRAY OF CHAR); 
 	PROCEDURE ^ FlipMsg(F: ErrorGadget); 
 	PROCEDURE ^ ErrorGadgetHandler*(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewErrorGadget*; 
-	PROCEDURE ^ MarkErrorPos(T: Texts.Text; pos: LONGINT; err: INTEGER); 
+	PROCEDURE ^ MarkErrorPos(T: Texts.Text; pos: SIGNED32; err: SIGNED16); 
 	PROCEDURE ^ RemoveErrors(T: Texts.Text); 
 	PROCEDURE ^ markErrors(VAR S: Texts.Scanner; errtext: Texts.Text; par: Display.Frame); 
 	PROCEDURE ^ MarkErrors*; 
 	PROCEDURE ^ ClearErrors*; 
-	PROCEDURE ^ ErrorAfter(T: Texts.Text; VAR pos: LONGINT); 
+	PROCEDURE ^ ErrorAfter(T: Texts.Text; VAR pos: SIGNED32); 
 	PROCEDURE ^ NextError*; 
-	PROCEDURE ^ err(pos: LONGINT; msg: ARRAY OF CHAR); 
+	PROCEDURE ^ err(pos: SIGNED32; msg: ARRAY OF CHAR); 
 	PROCEDURE ^ FindFlag(name: ARRAY OF CHAR): BOOLEAN; 
 	PROCEDURE ^ InsertFlag(name: ARRAY OF CHAR); 
 	PROCEDURE ^ ResetFlags; 
@@ -95,14 +95,14 @@ VAR
 	PROCEDURE ^ Expression(): BOOLEAN; 
 	PROCEDURE ^ PreCopy(ch: CHAR; copy: BOOLEAN); 
 	PROCEDURE ^ Preprocess*; 
-	PROCEDURE ^ get(VAR sym: SHORTINT); 
+	PROCEDURE ^ get(VAR sym: SIGNED8); 
 	PROCEDURE ^ InitPreprocessor; 
-	PROCEDURE ^ MatchSym(s: INTEGER): BOOLEAN; 
+	PROCEDURE ^ MatchSym(s: SIGNED16): BOOLEAN; 
 	PROCEDURE ^ GetOptions(VAR S: Attributes.Scanner; VAR opts: ARRAY OF CHAR); 
 	PROCEDURE ^ Import(VAR T: Tree; M: Mod); 
 	PROCEDURE ^ ImportList(VAR T: Tree; M: Mod); 
 	PROCEDURE ^ AddModule*(VAR T: Tree; s: ARRAY OF CHAR; opts: ARRAY OF CHAR); 
-	PROCEDURE ^ Mark(VAR T: Tree; m: Mod; layer, n: INTEGER); 
+	PROCEDURE ^ Mark(VAR T: Tree; m: Mod; layer, n: SIGNED16); 
 	PROCEDURE ^ Hierarchy*(VAR T: Tree); 
 	PROCEDURE ^ Append(VAR list: Display.Frame; f: Display.Frame); 
 	PROCEDURE ^ InsertHierarchy*; 

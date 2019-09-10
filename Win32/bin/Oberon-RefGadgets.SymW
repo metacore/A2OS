@@ -27,9 +27,9 @@ VAR
 	PROCEDURE ^ UpdateFrameModel(F: Frame); 
 	PROCEDURE ^ FrameAttrs(F: Frame; VAR M: Objects.AttrMsg); 
 	PROCEDURE ^ FrameLinks(F: Frame; VAR M: Objects.LinkMsg); 
-	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; pressed: BOOLEAN); 
+	PROCEDURE ^ Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; pressed: BOOLEAN); 
 	PROCEDURE ^ Print(F: Frame; VAR M: Display.DisplayMsg); 
-	PROCEDURE ^ DropObject(obj: Objects.Object; X, Y: INTEGER; copy: BOOLEAN); 
+	PROCEDURE ^ DropObject(obj: Objects.Object; X, Y: SIGNED16; copy: BOOLEAN); 
 	PROCEDURE ^ TrackRight(F: Frame; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ TrackMiddle(F: Frame; VAR M: Oberon.InputMsg); 
 	PROCEDURE ^ TrackLeft(F: Frame; VAR M: Oberon.InputMsg); 

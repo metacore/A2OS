@@ -4,8 +4,8 @@ CONST
 	TypeInformation* = Diagnostics.TypeInformation; 
 	TypeWarning* = Diagnostics.TypeWarning; 
 	TypeError* = Diagnostics.TypeError; 
-	ColorError = LONGINT(4281348256); 
-	ColorWarning = LONGINT(3503308992); 
+	ColorError = SIGNED32(4281348256); 
+	ColorWarning = SIGNED32(3503308992); 
 	ColorPCPosition = 8323232; 
 	PictureError = \"PETIcons.tar://errorpos.png"\; 
 	PictureWarning = \"PETIcons.tar://warningpos.png"\; 
@@ -20,7 +20,7 @@ CONST
 	SortByPositionDescending* = 3; 
 TYPE 
 	Entry* = RECORD 
-		type-: WORD; 
+		type-: INTEGER; 
 		source-: Files.FileName; 
 		position-: Streams.Position; 
 		message-: ARRAY 256 OF CHAR; 
@@ -31,7 +31,7 @@ TYPE
 	Model* = OBJECT (Diagnostics.Diagnostics)
 	VAR 
 		entries: EntryArray; 
-		nofEntries-: LONGINT; 
+		nofEntries-: SIGNED32; 
 		nofInformations: SIZE; 
 		nofWarnings: SIZE; 
 		nofErrors: SIZE; 
@@ -52,13 +52,13 @@ TYPE
 		PROCEDURE ^ Error*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ Warning*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
 		PROCEDURE ^ Information*(CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR); 
-		PROCEDURE ^ Exists(type: WORD; position: Streams.Position; CONST message: ARRAY OF CHAR): BOOLEAN; 
-		PROCEDURE ^ Add(type: WORD; CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR; VAR counter: SIZE); 
+		PROCEDURE ^ Exists(type: INTEGER; position: Streams.Position; CONST message: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ Add(type: INTEGER; CONST source: ARRAY OF CHAR; position: Streams.Position; CONST message: ARRAY OF CHAR; VAR counter: SIZE); 
 		PROCEDURE ^ GetSummary(VAR summary: ARRAY OF CHAR); 
-		PROCEDURE ^ Synchronize(VAR entries: ViewEntryArray; VAR nofEntries: LONGINT); 
+		PROCEDURE ^ Synchronize(VAR entries: ViewEntryArray; VAR nofEntries: SIGNED32); 
 	END Model; 
 
-	CompareProcedure = PROCEDURE (CONST entry1, entry2: Entry):WORD; 
+	CompareProcedure = PROCEDURE (CONST entry1, entry2: Entry):INTEGER; 
 
 	ViewEntry* = RECORD (Entry)
 		pos-: POINTER TO ARRAY OF WMTextView.PositionMarker; 
@@ -79,9 +79,9 @@ TYPE
 		showMarkers-: WMProperties.BooleanProperty; 
 		showMarkersI: BOOLEAN; 
 		sortBy-: WMProperties.Int32Property; 
-		sortByI: LONGINT; 
+		sortByI: SIGNED32; 
 		entries: ViewEntryArray; 
-		nofEntries: LONGINT; 
+		nofEntries: SIGNED32; 
 		model: Model; 
 		textViews: POINTER TO ARRAY OF WMTextView.TextView; 
 		summary: ARRAY 256 OF CHAR; 
@@ -91,11 +91,11 @@ TYPE
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ OnClickHandler(sender, data: ANY); 
 		PROCEDURE ^ ShowMarkers(enable: BOOLEAN); 
-		PROCEDURE ^ SortBy(mode: WORD); 
+		PROCEDURE ^ SortBy(mode: INTEGER); 
 		PROCEDURE ^ GetCellData*(column, row: SIZE): ANY; 
 		PROCEDURE ^ AddPositionMarkers; 
 		PROCEDURE ^ RemovePositionMarkers; 
-		PROCEDURE ^ GetFirstPosition*(VAR positions: ARRAY OF SIZE; VAR type: LONGINT); 
+		PROCEDURE ^ GetFirstPosition*(VAR positions: ARRAY OF SIZE; VAR type: SIGNED32); 
 		PROCEDURE ^ GetNearestPosition*(cursorPosition, editorIndex: SIZE; forward: BOOLEAN; VAR nearestPosition: SIZE; VAR number: SIZE); 
 		PROCEDURE ^ SelectEntry*(number: SIZE; moveTo: BOOLEAN); 
 		PROCEDURE ^ SortEntries(compare: CompareProcedure; ascending: BOOLEAN); 
@@ -109,8 +109,8 @@ VAR
 	PrototypeShowMarkers: WMProperties.BooleanProperty; 
 	PrototypeSortBy: WMProperties.Int32Property; 
 
-	PROCEDURE ^ CompareByPosition(CONST e1, e2: Entry): WORD; 
-	PROCEDURE ^ CompareByType(CONST e1, e2: Entry): WORD; 
+	PROCEDURE ^ CompareByPosition(CONST e1, e2: Entry): INTEGER; 
+	PROCEDURE ^ CompareByType(CONST e1, e2: Entry): INTEGER; 
 	PROCEDURE ^ InitStrings; 
 	PROCEDURE ^ InitPrototypes; 
 BEGIN

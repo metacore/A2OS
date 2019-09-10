@@ -9,18 +9,18 @@ CONST
 	ccbase = 100; 
 	sysBitsTypeSize* = 4; 
 	sysHalfBitsType* = 65536; 
-	sysMaskFirstHalf* = LONGINT(4294901760); 
+	sysMaskFirstHalf* = SIGNED32(4294901760); 
 	sysMaskSecondHalf* = 65535; 
-	sysMaxUnsigned* = LONGINT(4294967295); 
+	sysMaxUnsigned* = SIGNED32(4294967295); 
 	sysSHL* = 1; 
 	sysSHR* =  -1; 
 TYPE 
-	Bits* = LONGINT; 
+	Bits* = SIGNED32; 
 
 	tMsg* = OBJECT 
 
 		PROCEDURE ^ Store*(VAR r: Files.Rider); 
-		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: SIGNED16); 
 		PROCEDURE ^ Copy*(): tSeed; 
 	END tMsg; 
 
@@ -33,21 +33,21 @@ TYPE
 	tRandom* = POINTER TO tRandomNumberDesc; 
 
 	tRandomNumberDesc* = RECORD (Gadgets.ObjDesc)
-		seedVersion*: INTEGER; 
+		seedVersion*: SIGNED16; 
 		seed-: tSeed; 
 		shortid*: tShortIdStr; 
 		id*: tIdStr; 
 		Reset*: PROCEDURE (gen: tRandom); 
 		GetRandom*: PROCEDURE (gen: tRandom):Bits; 
-		GetRandomU*: PROCEDURE (gen: tRandom):LONGREAL; 
+		GetRandomU*: PROCEDURE (gen: tRandom):FLOAT64; 
 		NextRandom*: PROCEDURE (gen: tRandom); 
 		Max*: PROCEDURE (gen: tRandom):Bits; 
-		GetRandomBitV*: PROCEDURE (gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF Bits; start: LONGINT); 
-		GetRandomUV*: PROCEDURE (gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF REAL; start: LONGINT); 
-		GetRandomUVX*: PROCEDURE (gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF LONGREAL; start: LONGINT); 
-		SumPSqr*: PROCEDURE (gen: tRandom; top: LONGINT):LONGREAL; 
-		GetRandomL*: PROCEDURE (gen: tRandom; top: LONGINT):LONGINT; 
-		GetRandomLV*: PROCEDURE (gen: tRandom; top: LONGINT; count: LONGINT; VAR nrs: ARRAY OF LONGINT; start: LONGINT); 
+		GetRandomBitV*: PROCEDURE (gen: tRandom; count: SIGNED32; VAR nrs: ARRAY OF Bits; start: SIGNED32); 
+		GetRandomUV*: PROCEDURE (gen: tRandom; count: SIGNED32; VAR nrs: ARRAY OF FLOAT32; start: SIGNED32); 
+		GetRandomUVX*: PROCEDURE (gen: tRandom; count: SIGNED32; VAR nrs: ARRAY OF FLOAT64; start: SIGNED32); 
+		SumPSqr*: PROCEDURE (gen: tRandom; top: SIGNED32):FLOAT64; 
+		GetRandomL*: PROCEDURE (gen: tRandom; top: SIGNED32):SIGNED32; 
+		GetRandomLV*: PROCEDURE (gen: tRandom; top: SIGNED32; count: SIGNED32; VAR nrs: ARRAY OF SIGNED32; start: SIGNED32); 
 		GetRandomSet*: PROCEDURE (gen: tRandom):SET; 
 		MAXSet*: PROCEDURE (gen: tRandom):SET; 
 		RandomHandler*: PROCEDURE (r: tRandom; VAR msg: tMsg); 
@@ -59,47 +59,47 @@ TYPE
 
 	tLongintSeed* = OBJECT (tSeed)
 	VAR 
-		val*: LONGINT; 
+		val*: SIGNED32; 
 
 		PROCEDURE ^ Store*(VAR r: Files.Rider); 
-		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: INTEGER); 
+		PROCEDURE ^ Load*(VAR r: Files.Rider; seedVersion: SIGNED16); 
 		PROCEDURE ^ Copy*(): tSeed; 
 	END tLongintSeed; 
 VAR 
 	RandomGenerator-: tRandom; 
-	initSeed1, initSeed2, initSeed3: LONGINT; 
+	initSeed1, initSeed2, initSeed3: SIGNED32; 
 
-	PROCEDURE ^ WriteSeedVersion*(VAR r: Files.Rider; seedVersion: INTEGER); 
-	PROCEDURE ^ ReadSeedVersion*(VAR r: Files.Rider; VAR seedVersion: INTEGER); 
+	PROCEDURE ^ WriteSeedVersion*(VAR r: Files.Rider; seedVersion: SIGNED16); 
+	PROCEDURE ^ ReadSeedVersion*(VAR r: Files.Rider; VAR seedVersion: SIGNED16); 
 	PROCEDURE ^ RandomBits*(): Bits; 
-	PROCEDURE ^ RandomU*(): LONGREAL; 
+	PROCEDURE ^ RandomU*(): FLOAT64; 
 	PROCEDURE ^ RandomName*(pre: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 
-	PROCEDURE ^ RandomBitV*(count: LONGINT; VAR nrs: ARRAY OF Bits; start: LONGINT); 
-	PROCEDURE ^ RandomLV*(top: LONGINT; exact: BOOLEAN; count: LONGINT; VAR nrs: ARRAY OF LONGINT; start: LONGINT); 
-	PROCEDURE ^ RandomUV*(count: LONGINT; VAR nrs: ARRAY OF REAL; start: LONGINT); 
-	PROCEDURE ^ RandomUVX*(count: LONGINT; VAR nrs: ARRAY OF LONGREAL; start: LONGINT); 
-	PROCEDURE ^ GetRandomLExact*(gen: tRandom; max, top, maxtries: LONGINT): LONGINT; 
-	PROCEDURE ^ DefaultRandomBitV*(gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF Bits; start: LONGINT); 
-	PROCEDURE ^ DefaultRandomLV*(gen: tRandom; top: LONGINT; count: LONGINT; VAR nrs: ARRAY OF LONGINT; start: LONGINT); 
-	PROCEDURE ^ DefaultRandomUV*(gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF REAL; start: LONGINT); 
-	PROCEDURE ^ DefaultRandomUVX*(gen: tRandom; count: LONGINT; VAR nrs: ARRAY OF LONGREAL; start: LONGINT); 
+	PROCEDURE ^ RandomBitV*(count: SIGNED32; VAR nrs: ARRAY OF Bits; start: SIGNED32); 
+	PROCEDURE ^ RandomLV*(top: SIGNED32; exact: BOOLEAN; count: SIGNED32; VAR nrs: ARRAY OF SIGNED32; start: SIGNED32); 
+	PROCEDURE ^ RandomUV*(count: SIGNED32; VAR nrs: ARRAY OF FLOAT32; start: SIGNED32); 
+	PROCEDURE ^ RandomUVX*(count: SIGNED32; VAR nrs: ARRAY OF FLOAT64; start: SIGNED32); 
+	PROCEDURE ^ GetRandomLExact*(gen: tRandom; max, top, maxtries: SIGNED32): SIGNED32; 
+	PROCEDURE ^ DefaultRandomBitV*(gen: tRandom; count: SIGNED32; VAR nrs: ARRAY OF Bits; start: SIGNED32); 
+	PROCEDURE ^ DefaultRandomLV*(gen: tRandom; top: SIGNED32; count: SIGNED32; VAR nrs: ARRAY OF SIGNED32; start: SIGNED32); 
+	PROCEDURE ^ DefaultRandomUV*(gen: tRandom; count: SIGNED32; VAR nrs: ARRAY OF FLOAT32; start: SIGNED32); 
+	PROCEDURE ^ DefaultRandomUVX*(gen: tRandom; count: SIGNED32; VAR nrs: ARRAY OF FLOAT64; start: SIGNED32); 
 	PROCEDURE ^ DefaultGetSet*(gen: tRandom): SET; 
 	PROCEDURE ^ DefaultMAXSet*(gen: tRandom): SET; 
 	PROCEDURE ^ GetSeed(r: tRandom; VAR s: tSeed); 
 	PROCEDURE ^ SetSeed(r: tRandom; s: tSeed); 
 	PROCEDURE ^ DefaultName(r: tRandom; pre: ARRAY OF CHAR; VAR name: ARRAY OF CHAR); 
 	PROCEDURE ^ HandleAttributes(obj: tRandom; VAR M: Objects.AttrMsg); 
-	PROCEDURE ^ StoreVersionInformation(VAR r: Files.Rider; shortid: tShortIdStr; seedVersion: INTEGER); 
-	PROCEDURE ^ LoadVersionInformation(VAR r: Files.Rider; VAR shortid: tShortIdStr; VAR baseVersion, seedVersion: INTEGER); 
+	PROCEDURE ^ StoreVersionInformation(VAR r: Files.Rider; shortid: tShortIdStr; seedVersion: SIGNED16); 
+	PROCEDURE ^ LoadVersionInformation(VAR r: Files.Rider; VAR shortid: tShortIdStr; VAR baseVersion, seedVersion: SIGNED16); 
 	PROCEDURE ^ Store(obj: tRandom; VAR M: Objects.FileMsg); 
 	PROCEDURE ^ Load(obj: tRandom; VAR M: Objects.FileMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ SetDefaultProcs*(gen: tRandom); 
-	PROCEDURE ^ Combo(VAR x, y, z: LONGINT): LONGINT; 
+	PROCEDURE ^ Combo(VAR x, y, z: SIGNED32): SIGNED32; 
 	PROCEDURE ^ SetInitSeeds; 
-	PROCEDURE ^ DefaultLongSeed*(): LONGINT; 
+	PROCEDURE ^ DefaultLongSeed*(): SIGNED32; 
 	PROCEDURE ^ DefaultLongintReset*(gen: tRandom); 
-	PROCEDURE ^ DefaultSumPSqr*(gen: tRandom; top: LONGINT): LONGREAL; 
+	PROCEDURE ^ DefaultSumPSqr*(gen: tRandom; top: SIGNED32): FLOAT64; 
 	PROCEDURE ^ AllocLongintSeed*(): tSeed; 
 	PROCEDURE ^ Install*(generator: tRandom); 
 	PROCEDURE ^ NewAbstractGenerator; 

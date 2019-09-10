@@ -9,8 +9,8 @@ TYPE
 	Cache = RECORD 
 		name: ARRAY 32 OF CHAR; 
 		text: Texts.Text; 
-		cmd: INTEGER; 
-		count: LONGINT; 
+		cmd: SIGNED16; 
+		count: SIGNED32; 
 	END; 
 VAR 
 	cache: ARRAY 4 OF Cache; 
@@ -19,18 +19,18 @@ VAR
 	W: Texts.Writer; 
 	buf: POINTER TO ARRAY OF CHAR; 
 
-	PROCEDURE ^ GetChar(F: Fonts.Font; ch: CHAR; VAR dx, x, y, w, h: INTEGER; VAR pat: Display.Pattern); 
+	PROCEDURE ^ GetChar(F: Fonts.Font; ch: CHAR; VAR dx, x, y, w, h: SIGNED16; VAR pat: Display.Pattern); 
 	PROCEDURE ^ FontOf(VAR R: Texts.Reader): Fonts.Font; 
-	PROCEDURE ^ CopyArea(x, y, w, h: INTEGER; save: BOOLEAN); 
+	PROCEDURE ^ CopyArea(x, y, w, h: SIGNED16; save: BOOLEAN); 
 	PROCEDURE ^ MainFrame(ch: CHAR): BOOLEAN; 
 	PROCEDURE ^ WaitRelease; 
-	PROCEDURE ^ SelectItem(cmd, x, y, w, h, entryH: INTEGER); 
-	PROCEDURE ^ Area(fnt: Fonts.Font; VAR entryH, width, height: INTEGER); 
-	PROCEDURE ^ Write(fnt: Fonts.Font; X, Y, entryH: INTEGER); 
-	PROCEDURE ^ MenuDraw(fnt: Fonts.Font; x, y, w, h, entryH: INTEGER); 
-	PROCEDURE ^ AdjustCoords(dx, dy: INTEGER; VAR x, y, w, h: INTEGER); 
-	PROCEDURE ^ Show(T: Texts.Text; x, y: INTEGER; VAR cmd: INTEGER; VAR cancel: BOOLEAN); 
-	PROCEDURE ^ CmdMenu*(menu: Texts.Text; x, y: INTEGER; VAR cmd: INTEGER); 
+	PROCEDURE ^ SelectItem(cmd, x, y, w, h, entryH: SIGNED16); 
+	PROCEDURE ^ Area(fnt: Fonts.Font; VAR entryH, width, height: SIGNED16); 
+	PROCEDURE ^ Write(fnt: Fonts.Font; X, Y, entryH: SIGNED16); 
+	PROCEDURE ^ MenuDraw(fnt: Fonts.Font; x, y, w, h, entryH: SIGNED16); 
+	PROCEDURE ^ AdjustCoords(dx, dy: SIGNED16; VAR x, y, w, h: SIGNED16); 
+	PROCEDURE ^ Show(T: Texts.Text; x, y: SIGNED16; VAR cmd: SIGNED16; VAR cancel: BOOLEAN); 
+	PROCEDURE ^ CmdMenu*(menu: Texts.Text; x, y: SIGNED16; VAR cmd: SIGNED16); 
 	PROCEDURE ^ ShowCmd*; 
 	PROCEDURE ^ Reset*; 
 BEGIN

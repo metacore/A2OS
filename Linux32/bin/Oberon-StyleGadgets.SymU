@@ -30,34 +30,34 @@ TYPE
 
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
 		style*: Styles.Style; 
-		col*: INTEGER; 
+		col*: SIGNED16; 
 	END; 
 VAR 
 	W: Texts.Writer; 
 	dash, dash2: Display.Pattern; 
 	nfnt: Fonts.Font; 
 
-	PROCEDURE ^ Screen(x: LONGINT): INTEGER; 
-	PROCEDURE ^ Doc(x: INTEGER): LONGINT; 
-	PROCEDURE ^ DrawTab(F: Frame; msk: Display3.Mask; sel, x, y, mode: INTEGER); 
-	PROCEDURE ^ DrawMode(F: Frame; msk: Display3.Mask; opts: SET; x, y, w, mode: INTEGER); 
-	PROCEDURE ^ DrawName(style: Styles.Style; msk: Display3.Mask; x, y, w: INTEGER); 
-	PROCEDURE ^ DrawBox(F: Frame; msk: Display3.Mask; x, y, X, Y, W: INTEGER); 
+	PROCEDURE ^ Screen(x: SIGNED32): SIGNED16; 
+	PROCEDURE ^ Doc(x: SIGNED16): SIGNED32; 
+	PROCEDURE ^ DrawTab(F: Frame; msk: Display3.Mask; sel, x, y, mode: SIGNED16); 
+	PROCEDURE ^ DrawMode(F: Frame; msk: Display3.Mask; opts: SET; x, y, w, mode: SIGNED16); 
+	PROCEDURE ^ DrawName(style: Styles.Style; msk: Display3.Mask; x, y, w: SIGNED16); 
+	PROCEDURE ^ DrawBox(F: Frame; msk: Display3.Mask; x, y, X, Y, W: SIGNED16); 
 	PROCEDURE ^ Wide(F: Frame): BOOLEAN; 
-	PROCEDURE ^ DrawTabs(F: Frame; msk: Display3.Mask; x, y: INTEGER); 
-	PROCEDURE ^ DrawBar(F: Frame; msk: Display3.Mask; x, y, w: INTEGER); 
-	PROCEDURE ^ Update(style: Styles.Style; what, dX: INTEGER); 
-	PROCEDURE ^ CheckTab(style: Styles.Style; i: INTEGER); 
-	PROCEDURE ^ FindTab(F: Frame; x: INTEGER; VAR d, t: INTEGER); 
-	PROCEDURE ^ TrackMouse(VAR x, y: INTEGER; VAR keys, keysum: SET); 
-	PROCEDURE ^ TrackLeft(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR left: INTEGER; VAR keysum: SET); 
-	PROCEDURE ^ TrackRight(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR w: INTEGER; VAR keysum: SET); 
-	PROCEDURE ^ LocTab(style: Styles.Style; t, x: INTEGER): INTEGER; 
-	PROCEDURE ^ TrackTab(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR tabX, t: INTEGER; VAR keysum: SET); 
-	PROCEDURE ^ TrackMode(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR keysum: SET); 
-	PROCEDURE ^ Edit(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; Keys: SET; VAR res: INTEGER); 
+	PROCEDURE ^ DrawTabs(F: Frame; msk: Display3.Mask; x, y: SIGNED16); 
+	PROCEDURE ^ DrawBar(F: Frame; msk: Display3.Mask; x, y, w: SIGNED16); 
+	PROCEDURE ^ Update(style: Styles.Style; what, dX: SIGNED16); 
+	PROCEDURE ^ CheckTab(style: Styles.Style; i: SIGNED16); 
+	PROCEDURE ^ FindTab(F: Frame; x: SIGNED16; VAR d, t: SIGNED16); 
+	PROCEDURE ^ TrackMouse(VAR x, y: SIGNED16; VAR keys, keysum: SET); 
+	PROCEDURE ^ TrackLeft(F: Frame; msk: Display3.Mask; x, y, X, Y: SIGNED16; VAR left: SIGNED16; VAR keysum: SET); 
+	PROCEDURE ^ TrackRight(F: Frame; msk: Display3.Mask; x, y, X, Y: SIGNED16; VAR w: SIGNED16; VAR keysum: SET); 
+	PROCEDURE ^ LocTab(style: Styles.Style; t, x: SIGNED16): SIGNED16; 
+	PROCEDURE ^ TrackTab(F: Frame; msk: Display3.Mask; x, y, X, Y: SIGNED16; VAR tabX, t: SIGNED16; VAR keysum: SET); 
+	PROCEDURE ^ TrackMode(F: Frame; msk: Display3.Mask; x, y, X, Y: SIGNED16; VAR keysum: SET); 
+	PROCEDURE ^ Edit(F: Frame; msk: Display3.Mask; x, y, X, Y: SIGNED16; Keys: SET; VAR res: SIGNED16); 
 	PROCEDURE ^ CopyF(s, d: Frame); 
-	PROCEDURE ^ Restore(F: Frame; msk: Display3.Mask; x, y: INTEGER); 
+	PROCEDURE ^ Restore(F: Frame; msk: Display3.Mask; x, y: SIGNED16); 
 	PROCEDURE ^ Handle(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ NewFrame*(style: Styles.Style): Display.Frame; 
 	PROCEDURE ^ Insert*; 

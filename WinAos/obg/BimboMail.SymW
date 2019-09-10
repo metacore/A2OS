@@ -15,13 +15,13 @@ TYPE
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ SetMailbox(mb: MailStorage.Storage); 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ GetTitleStr(col: LONGINT; VAR x: ARRAY OF CHAR); 
+		PROCEDURE ^ GetTitleStr(col: SIGNED32; VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ MessageClick(sender, data: ANY); 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ IncCount; 

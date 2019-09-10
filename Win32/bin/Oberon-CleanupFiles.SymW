@@ -7,7 +7,7 @@ TYPE
 
 	Node = POINTER TO RECORD 
 		name, full: FileName; 
-		time, date, size: LONGINT; 
+		time, date, size: SIGNED32; 
 		found: BOOLEAN; 
 		next: Node; 
 	END; 
@@ -15,7 +15,7 @@ VAR
 	root: Node; 
 	w: Texts.Writer; 
 
-	PROCEDURE ^ Insert(VAR name: FileName; time, date, size: LONGINT; t: Texts.Text); 
+	PROCEDURE ^ Insert(VAR name: FileName; time, date, size: SIGNED32; t: Texts.Text); 
 	PROCEDURE ^ FindDuplicates*; 
 BEGIN
 END CleanupFiles.

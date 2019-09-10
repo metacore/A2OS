@@ -12,11 +12,11 @@ TYPE
 	RVox* = OBJECT (Voxel)
 	VAR 
 		child: Voxel; 
-		phi: REAL; 
-		dtick: REAL; 
+		phi: FLOAT32; 
+		dtick: FLOAT32; 
 		center: PT; 
 
-		PROCEDURE ^  & init*(c: Voxel; dt: REAL); 
+		PROCEDURE ^  & init*(c: Voxel; dt: FLOAT32); 
 		PROCEDURE ^ tick*; 
 		PROCEDURE ^ d2(a, b: PT): SREAL; 
 		PROCEDURE ^ dia(a, b: PT): SREAL; 

@@ -3,7 +3,7 @@ MODULE SaveDecay IN Oberon;
 CONST 
 	versionString = \"SaveDecay 1999.11.05"\; 
 VAR 
-	depth: ARRAY 1280 OF INTEGER; 
+	depth: ARRAY 1280 OF SIGNED16; 
 
 	PROCEDURE ^ Start; 
 	PROCEDURE ^ Step; 

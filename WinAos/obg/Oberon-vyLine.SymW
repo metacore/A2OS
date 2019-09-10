@@ -9,8 +9,8 @@ TYPE
 
 	tLayerDesc = RECORD (vyPort.tLayerDesc)
 		lBounded, rBounded: BOOLEAN; 
-		lBound, rBound: REAL; 
-		a, b: REAL; 
+		lBound, rBound: FLOAT32; 
+		a, b: FLOAT32; 
 	END; 
 
 	PROCEDURE ^ New*; 
@@ -23,7 +23,7 @@ TYPE
 	PROCEDURE ^ Load0(obj: tLayer; VAR M: Objects.FileMsg); 
 	PROCEDURE ^ Handler*(obj: Objects.Object; VAR msg: Objects.ObjMsg); 
 	PROCEDURE ^ Init(F: tLayer); 
-	PROCEDURE ^ Open*(F: tLayer; lBounded, rBounded: BOOLEAN; lBound, rBound, a, b: REAL); 
+	PROCEDURE ^ Open*(F: tLayer; lBounded, rBounded: BOOLEAN; lBound, rBound, a, b: FLOAT32); 
 	PROCEDURE ^ Insert*; 
 BEGIN
 END vyLine.

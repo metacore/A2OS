@@ -17,7 +17,7 @@ CONST
 TYPE 
 	Value* = Array1d.Value; 
 
-	Index* = LONGINT; 
+	Index* = SIGNED32; 
 
 	Array1* = Array1d.Array; 
 
@@ -33,12 +33,12 @@ TYPE
 	VAR 
 		data-: Array1; 
 
-		PROCEDURE ^ Allocate*(size: LONGINT; VAR adr: Index; VAR ptr: ANY); 
+		PROCEDURE ^ Allocate*(size: SIGNED32; VAR adr: Index; VAR ptr: ANY); 
 		PROCEDURE ^ GetInfo*(VAR elementsize: Index); 
 		PROCEDURE ^ AlikeX*(): ArrayXdBytes.Array; 
 		PROCEDURE ^ Read*(R: DataIO.Reader); 
 		PROCEDURE ^ Write*(W: DataIO.Writer); 
-		PROCEDURE ^ Type*(): SHORTINT; 
+		PROCEDURE ^ Type*(): SIGNED8; 
 		PROCEDURE ^ Get1*(x: Index): Value; 
 		PROCEDURE ^ Set1*(x: Index; v: Value); 
 		PROCEDURE ^ Get2*(x, y: Index): Value; 
@@ -118,7 +118,7 @@ TYPE
 	PROCEDURE ^ CopyCubeToArray*(src: Array; VAR dest: ARRAY OF ARRAY OF ARRAY OF Value; srcx, srcy, srcz, destx, desty, destz, lenx, leny, lenz: Index); 
 	PROCEDURE ^ CopyArrayToHCube*(VAR src: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value; dest: Array; srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index); 
 	PROCEDURE ^ CopyHCubeToArray*(src: Array; VAR dest: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value; srcx, srcy, srcz, srct, destx, desty, destz, destt, lenx, leny, lenz, lent: Index); 
-	PROCEDURE ^ CopyArrayToArrayPartB*(src: Array; dest: ArrayXdBytes.ArrayMemoryStructure; boundaryCondition: SHORTINT; srcpos, srclen, destpos, destlen: ArrayXdBytes.IndexArray); 
+	PROCEDURE ^ CopyArrayToArrayPartB*(src: Array; dest: ArrayXdBytes.ArrayMemoryStructure; boundaryCondition: SIGNED8; srcpos, srclen, destpos, destlen: ArrayXdBytes.IndexArray); 
 	OPERATOR ^ ":="-(VAR l: Array; VAR r: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value); 
 	OPERATOR ^ ":="-(VAR l: Array; VAR r: ARRAY OF ARRAY OF ARRAY OF Value); 
 	OPERATOR ^ ":="-(VAR l: Array1; r: Array); 

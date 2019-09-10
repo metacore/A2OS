@@ -47,29 +47,29 @@ TYPE
 
 	StyleDesc* = RECORD (Objects.ObjDesc)
 		opts*: SET; 
-		paraW*: LONGINT; 
-		left*: LONGINT; 
-		lsp*, dsr*: LONGINT; 
-		gap*: LONGINT; 
-		nTabs*: SHORTINT; 
-		tab*: ARRAY MaxTabs OF LONGINT; 
+		paraW*: SIGNED32; 
+		left*: SIGNED32; 
+		lsp*, dsr*: SIGNED32; 
+		gap*: SIGNED32; 
+		nTabs*: SIGNED8; 
+		tab*: ARRAY MaxTabs OF SIGNED32; 
 	END; 
 
 	Frame* = POINTER TO FrameDesc; 
 
 	FrameDesc* = RECORD (Display.FrameDesc)
 		style*: Style; 
-		sel*, col*: INTEGER; 
+		sel*, col*: SIGNED16; 
 	END; 
 
 	UpdateMsg* = RECORD (Display.FrameMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 		obj*: Style; 
-		dX*: INTEGER; 
+		dX*: SIGNED16; 
 	END; 
 
 	ParamMsg* = RECORD (Objects.ObjMsg)
-		id*: INTEGER; 
+		id*: SIGNED16; 
 		S*: Texts.Scanner; 
 		T*: Texts.Text; 
 	END; 
@@ -80,7 +80,7 @@ TYPE
 		next: FontList; 
 		name: Objects.Name; 
 		mfnt: Fonts.Font; 
-		unit: LONGINT; 
+		unit: SIGNED32; 
 	END; 
 VAR 
 	defStyle*: Style; 
@@ -89,47 +89,47 @@ VAR
 	dash, dash2: Display.Pattern; 
 	nfnt: Fonts.Font; 
 
-	PROCEDURE ^ Screen(x: LONGINT): INTEGER; 
-	PROCEDURE ^ Doc(x: INTEGER): LONGINT; 
+	PROCEDURE ^ Screen(x: SIGNED32): SIGNED16; 
+	PROCEDURE ^ Doc(x: SIGNED16): SIGNED32; 
 	PROCEDURE ^ Uncache(p: FontList); 
-	PROCEDURE ^ OpenMetricFont(fnt: Fonts.Font; VAR unit: LONGINT; VAR mfnt: Fonts.Font); 
-	PROCEDURE ^ MetricFnt*(fnt: Fonts.Font; VAR unit: LONGINT; VAR mfnt: Fonts.Font); 
-	PROCEDURE ^ Tab*(style: Style; fnt: Fonts.Font; x, X: LONGINT; VAR dx: INTEGER; VAR dX: LONGINT); 
-	PROCEDURE ^ Height*(fnt: Fonts.Font; VAR asr, dsr: LONGINT); 
+	PROCEDURE ^ OpenMetricFont(fnt: Fonts.Font; VAR unit: SIGNED32; VAR mfnt: Fonts.Font); 
+	PROCEDURE ^ MetricFnt*(fnt: Fonts.Font; VAR unit: SIGNED32; VAR mfnt: Fonts.Font); 
+	PROCEDURE ^ Tab*(style: Style; fnt: Fonts.Font; x, X: SIGNED32; VAR dx: SIGNED16; VAR dX: SIGNED32); 
+	PROCEDURE ^ Height*(fnt: Fonts.Font; VAR asr, dsr: SIGNED32); 
 	PROCEDURE ^ Similar*(s0, s1: Style): BOOLEAN; 
-	PROCEDURE ^ ReadLong(VAR R: Files.Rider; VAR x: LONGINT); 
-	PROCEDURE ^ IntToSet(n: LONGINT): SET; 
-	PROCEDURE ^ SetToInt(s: SET): LONGINT; 
+	PROCEDURE ^ ReadLong(VAR R: Files.Rider; VAR x: SIGNED32); 
+	PROCEDURE ^ IntToSet(n: SIGNED32): SET; 
+	PROCEDURE ^ SetToInt(s: SET): SIGNED32; 
 	PROCEDURE ^ WriteData(VAR W: Files.Rider; style: Style); 
 	PROCEDURE ^ ReadData(VAR R: Files.Rider; style: Style); 
-	PROCEDURE ^ DrawTab(F: Frame; sel, x, y: INTEGER); 
-	PROCEDURE ^ DrawMode(F: Frame; opts: SET; x, y, w: INTEGER); 
-	PROCEDURE ^ DrawName(style: Style; x, y, w: INTEGER); 
-	PROCEDURE ^ DrawBox(F: Frame; x, y, X, Y, W: INTEGER); 
+	PROCEDURE ^ DrawTab(F: Frame; sel, x, y: SIGNED16); 
+	PROCEDURE ^ DrawMode(F: Frame; opts: SET; x, y, w: SIGNED16); 
+	PROCEDURE ^ DrawName(style: Style; x, y, w: SIGNED16); 
+	PROCEDURE ^ DrawBox(F: Frame; x, y, X, Y, W: SIGNED16); 
 	PROCEDURE ^ Wide(F: Frame): BOOLEAN; 
-	PROCEDURE ^ DrawTabs(F: Frame; x, y: INTEGER); 
-	PROCEDURE ^ DrawBar(F: Frame; x, y, w: INTEGER); 
-	PROCEDURE ^ Update(style: Style; what, dX: INTEGER); 
-	PROCEDURE ^ CheckTab(style: Style; i: INTEGER); 
-	PROCEDURE ^ FindTab(F: Frame; x: INTEGER; VAR d, t: INTEGER); 
-	PROCEDURE ^ TrackMouse(VAR x, y: INTEGER; VAR keys, keysum: SET); 
-	PROCEDURE ^ TrackLeft(F: Frame; x, y, X, Y: INTEGER; VAR left: INTEGER; VAR keysum: SET); 
-	PROCEDURE ^ TrackRight(F: Frame; x, y, X, Y: INTEGER; VAR w: INTEGER; VAR keysum: SET); 
-	PROCEDURE ^ LocTab(style: Style; t, x: INTEGER): INTEGER; 
-	PROCEDURE ^ TrackTab(F: Frame; x, y, X, Y: INTEGER; VAR tabX, t: INTEGER; VAR keysum: SET); 
-	PROCEDURE ^ TrackMode(F: Frame; x, y, X, Y: INTEGER; VAR keysum: SET); 
+	PROCEDURE ^ DrawTabs(F: Frame; x, y: SIGNED16); 
+	PROCEDURE ^ DrawBar(F: Frame; x, y, w: SIGNED16); 
+	PROCEDURE ^ Update(style: Style; what, dX: SIGNED16); 
+	PROCEDURE ^ CheckTab(style: Style; i: SIGNED16); 
+	PROCEDURE ^ FindTab(F: Frame; x: SIGNED16; VAR d, t: SIGNED16); 
+	PROCEDURE ^ TrackMouse(VAR x, y: SIGNED16; VAR keys, keysum: SET); 
+	PROCEDURE ^ TrackLeft(F: Frame; x, y, X, Y: SIGNED16; VAR left: SIGNED16; VAR keysum: SET); 
+	PROCEDURE ^ TrackRight(F: Frame; x, y, X, Y: SIGNED16; VAR w: SIGNED16; VAR keysum: SET); 
+	PROCEDURE ^ LocTab(style: Style; t, x: SIGNED16): SIGNED16; 
+	PROCEDURE ^ TrackTab(F: Frame; x, y, X, Y: SIGNED16; VAR tabX, t: SIGNED16; VAR keysum: SET); 
+	PROCEDURE ^ TrackMode(F: Frame; x, y, X, Y: SIGNED16; VAR keysum: SET); 
 	PROCEDURE ^ SelStyle*(VAR style: Style); 
-	PROCEDURE ^ Edit(F: Frame; x, y, X, Y: INTEGER; Keys: SET; VAR res: INTEGER); 
+	PROCEDURE ^ Edit(F: Frame; x, y, X, Y: SIGNED16; Keys: SET; VAR res: SIGNED16); 
 	PROCEDURE ^ CopyF(s, d: Frame); 
 	PROCEDURE ^ ToLib(lib: Objects.Library; obj: Objects.Object); 
-	PROCEDURE ^ Restore(F: Frame; x, y: INTEGER); 
+	PROCEDURE ^ Restore(F: Frame; x, y: SIGNED16); 
 	PROCEDURE ^ FHandle(F: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ Copy(s, d: Style); 
-	PROCEDURE ^ WTenth(n: LONGINT); 
-	PROCEDURE ^ Tenth(VAR M: ParamMsg; max: LONGINT; VAR n: LONGINT); 
-	PROCEDURE ^ LibMetrics(VAR M: ParamMsg; VAR height, dsr: LONGINT); 
+	PROCEDURE ^ WTenth(n: SIGNED32); 
+	PROCEDURE ^ Tenth(VAR M: ParamMsg; max: SIGNED32; VAR n: SIGNED32); 
+	PROCEDURE ^ LibMetrics(VAR M: ParamMsg; VAR height, dsr: SIGNED32); 
 	PROCEDURE ^ WString(first: BOOLEAN; s, t: ARRAY OF CHAR); 
-	PROCEDURE ^ String(VAR M: ParamMsg; flag: INTEGER; VAR set: SET; s, t: ARRAY OF CHAR); 
+	PROCEDURE ^ String(VAR M: ParamMsg; flag: SIGNED16; VAR set: SET; s, t: ARRAY OF CHAR); 
 	PROCEDURE ^ Params(s: Style; VAR M: ParamMsg); 
 	PROCEDURE ^ Handle(obj: Objects.Object; VAR M: Objects.ObjMsg); 
 	PROCEDURE ^ DefStyle(style: Style); 

@@ -1,11 +1,11 @@
 MODULE Clock;
 	IMPORT Unix;
 VAR 
-	tz*: LONGINT; 
-	starttime*, startdate*: LONGINT; 
+	tz*: SIGNED32; 
+	starttime*, startdate*: SIGNED32; 
 
-	PROCEDURE ^ Get*(VAR time, date: LONGINT); 
-	PROCEDURE ^ Set*(time, date: LONGINT); 
+	PROCEDURE ^ Get*(VAR time, date: SIGNED32); 
+	PROCEDURE ^ Set*(time, date: SIGNED32); 
 	PROCEDURE ^ Init; 
 BEGIN
 END Clock.

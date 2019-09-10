@@ -13,7 +13,7 @@ TYPE
 	DataPointModel* = OBJECT {EXCLUSIVE} 
 	VAR 
 		lockedBy: ANY; 
-		lockLevel: LONGINT; 
+		lockLevel: SIGNED32; 
 		viewChanged: BOOLEAN; 
 		onChanged-: WMEvents.EventSource; 
 
@@ -31,14 +31,14 @@ TYPE
 
 	DatasetDescriptor* = POINTER TO ARRAY OF DataDescriptor; 
 
-	Dataset* = POINTER TO ARRAY OF REAL; 
+	Dataset* = POINTER TO ARRAY OF FLOAT32; 
 
-	LongintDataset* = POINTER TO ARRAY OF LONGINT; 
+	LongintDataset* = POINTER TO ARRAY OF SIGNED32; 
 
 	Statistics* = RECORD 
 		valid-: BOOLEAN; 
 		cur*, min*, max*, avg*, sum*: Dataset; 
-		nbrOfSamples-: LONGINT; 
+		nbrOfSamples-: SIGNED32; 
 	END; 
 
 	MultiPointModel* = OBJECT {EXCLUSIVE} (DataPointModel)
@@ -47,17 +47,17 @@ TYPE
 		buffer: POINTER TO ARRAY OF Dataset; 
 		pos, nofItems, dimensions: SIZE; 
 		bufferSize: SIZE; 
-		viewSampleCount: LONGINT; 
+		viewSampleCount: SIGNED32; 
 		statistics: BOOLEAN; 
 		valid: BOOLEAN; 
-		nbrOfValues: LONGINT; 
+		nbrOfValues: SIGNED32; 
 		cur, min, max, sum: Dataset; 
 
 		PROCEDURE ^  & Init*(bufferSize, dimensions: SIZE); 
 		PROCEDURE ^ Reset*; 
 		PROCEDURE ^ GetStatistics*(VAR statistics: Statistics); 
-		PROCEDURE ^ FindMinMax*(from, len: SIZE; VAR min, max: REAL); 
-		PROCEDURE ^ FindAllMinMax*(from, len: SIZE; VAR min, max: REAL); 
+		PROCEDURE ^ FindMinMax*(from, len: SIZE; VAR min, max: FLOAT32); 
+		PROCEDURE ^ FindAllMinMax*(from, len: SIZE; VAR min, max: FLOAT32); 
 		PROCEDURE ^ SetDescriptor*(ds: DatasetDescriptor); 
 		PROCEDURE ^ PutValues*(values: Dataset); 
 		PROCEDURE ^ GetValues*(index: SIZE; VAR dataset: Dataset); 
@@ -71,14 +71,14 @@ TYPE
 	VAR 
 		model-: MultiPointModel; 
 		min-, max-, deltax-, deltaXGrid-, deltaXGridSmall-, glassShade-, valueWidth-: WMProperties.Int32Property; 
-		minI, maxI, deltaxI, deltaXGridI, deltaXGridSmallI, glassShadeI, valueWidthI: LONGINT; 
+		minI, maxI, deltaxI, deltaXGridI, deltaXGridSmallI, glassShadeI, valueWidthI: SIGNED32; 
 		color-, gridColor-: WMProperties.ColorProperty; 
 		colorI, gridColorI: WMGraphics.Color; 
 		autoMin-, autoMax-, showValues-: WMProperties.BooleanProperty; 
 		autoMinI, autoMaxI, showValuesI: BOOLEAN; 
 		unit-: WMProperties.StringProperty; 
 		style-: WMProperties.Int32Property; 
-		styleI: LONGINT; 
+		styleI: SIGNED32; 
 		extUpdate: ExtUpdateHandler; 
 		dimensions: SIZE; 
 		points: Dataset; 
@@ -92,9 +92,9 @@ TYPE
 		PROCEDURE ^ SetExtModel*(model: MultiPointModel); 
 		PROCEDURE ^ SetExtUpdate*(extUpdate: ExtUpdateHandler); 
 		PROCEDURE ^ Update(sender, data: ANY); 
-		PROCEDURE ^ Scale(factor, min: REAL; srcPoints: Dataset; tarPoints: LongintDataset; height, border: SIZE); 
-		PROCEDURE ^ DrawLines(canvas: WMGraphics.Canvas; w, h, border: SIZE; VAR tmin, tmax: REAL); 
-		PROCEDURE ^ DrawAreas(canvas: WMGraphics.Canvas; w, h, border: SIZE; VAR tmin, tmax: REAL); 
+		PROCEDURE ^ Scale(factor, min: FLOAT32; srcPoints: Dataset; tarPoints: LongintDataset; height, border: SIZE); 
+		PROCEDURE ^ DrawLines(canvas: WMGraphics.Canvas; w, h, border: SIZE; VAR tmin, tmax: FLOAT32); 
+		PROCEDURE ^ DrawAreas(canvas: WMGraphics.Canvas; w, h, border: SIZE; VAR tmin, tmax: FLOAT32); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 		PROCEDURE ^ Finalize*; 
 	END MultiPointView; 
@@ -105,7 +105,7 @@ TYPE
 		names, colors: POINTER TO ARRAY OF WMStandardComponents.Label; 
 		checkboxes: POINTER TO ARRAY OF WMStandardComponents.Checkbox; 
 		checkAllBtn, checkNoneBtn: WMStandardComponents.Button; 
-		optWidth-, optHeight-: LONGINT; 
+		optWidth-, optHeight-: SIGNED32; 
 
 		PROCEDURE ^ HandleClick(sender, data: ANY); 
 		PROCEDURE ^ HandleButton(sender, data: ANY); 
@@ -113,15 +113,15 @@ TYPE
 	END DescriptorView; 
 
 	CoordinateSystem = RECORD 
-		l, t, r, b: LONGREAL; 
+		l, t, r, b: FLOAT64; 
 	END; 
 
 	BarChart* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		barColor-, lineColor-, textColor-, backgroundColor-: WMProperties.ColorProperty; 
-		width-, offset-: LONGREAL; 
-		numberData-: LONGINT; 
-		heights-: POINTER TO ARRAY OF LONGREAL; 
+		width-, offset-: FLOAT64; 
+		numberData-: SIGNED32; 
+		heights-: POINTER TO ARRAY OF FLOAT64; 
 		labels-: POINTER TO ARRAY OF Strings.String; 
 		colors-: POINTER TO ARRAY OF WMGraphics.Color; 
 		c: CoordinateSystem; 
@@ -129,10 +129,10 @@ TYPE
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ UpdateCoordinateSystem; 
-		PROCEDURE ^ SetData*(CONST heights: ARRAY OF LONGREAL; numberData: LONGINT); 
+		PROCEDURE ^ SetData*(CONST heights: ARRAY OF FLOAT64; numberData: SIGNED32); 
 		PROCEDURE ^ SetLabels*(CONST labels: ARRAY OF Strings.String); 
 		PROCEDURE ^ SetColors*(CONST colors: ARRAY OF WMGraphics.Color); 
-		PROCEDURE ^ SetWidthOffset*(width, offset: LONGREAL); 
+		PROCEDURE ^ SetWidthOffset*(width, offset: FLOAT64); 
 		PROCEDURE ^ SetVertical*(vertical: BOOLEAN); 
 		PROCEDURE ^ PropertyChanged*(sender, property: ANY); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
@@ -147,11 +147,11 @@ VAR
 
 	PROCEDURE ^ InitStrings; 
 	PROCEDURE ^ InitProtoTypes; 
-	PROCEDURE ^ FindIndexOf*(flag: LONGINT; ds: DatasetDescriptor): SIZE; 
-	PROCEDURE ^ GetNumberOf*(flag: LONGINT; startIndex, endIndex: SIZE; ds: DatasetDescriptor): SIZE; 
-	PROCEDURE ^ ClearFlag*(flag: LONGINT; ds: DatasetDescriptor); 
-	PROCEDURE ^ RMin(a, b: REAL): REAL; 
-	PROCEDURE ^ RMax(a, b: REAL): REAL; 
+	PROCEDURE ^ FindIndexOf*(flag: SIGNED32; ds: DatasetDescriptor): SIZE; 
+	PROCEDURE ^ GetNumberOf*(flag: SIGNED32; startIndex, endIndex: SIZE; ds: DatasetDescriptor): SIZE; 
+	PROCEDURE ^ ClearFlag*(flag: SIGNED32; ds: DatasetDescriptor); 
+	PROCEDURE ^ RMin(a, b: FLOAT32): FLOAT32; 
+	PROCEDURE ^ RMax(a, b: FLOAT32): FLOAT32; 
 	PROCEDURE ^ CopyDatasetDescriptor*(ds: DatasetDescriptor): DatasetDescriptor; 
 	PROCEDURE ^ Cleanup; 
 BEGIN

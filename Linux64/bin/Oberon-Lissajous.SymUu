@@ -2,7 +2,7 @@ MODULE Lissajous IN Oberon;
 	IMPORT Math IN A2, Objects, Gadgets, BasicGadgets, Complex;
 CONST 
 
-	PROCEDURE ^ GetValue(name: ARRAY OF CHAR; default: REAL): REAL; 
+	PROCEDURE ^ GetValue(name: ARRAY OF CHAR; default: FLOAT32): FLOAT32; 
 	PROCEDURE ^ Do*; 
 BEGIN
 END Lissajous.

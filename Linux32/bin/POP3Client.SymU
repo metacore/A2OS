@@ -19,14 +19,14 @@ TYPE
 		connection: TCP.Connection; 
 		w: Streams.Writer; 
 		r: Streams.Reader; 
-		state: LONGINT; 
+		state: SIGNED32; 
 		message: ARRAY 513 OF CHAR; 
 
-		PROCEDURE ^ Connect*(CONST host: ARRAY OF CHAR; port: LONGINT; CONST user, password: ARRAY OF CHAR; VAR res: WORD); 
+		PROCEDURE ^ Connect*(CONST host: ARRAY OF CHAR; port: SIGNED32; CONST user, password: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Login*(CONST user, password: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ Quit*; 
 		PROCEDURE ^ List*; 
-		PROCEDURE ^ GetMessage*(nr: LONGINT; CONST filename: ARRAY OF CHAR): BOOLEAN; 
+		PROCEDURE ^ GetMessage*(nr: SIGNED32; CONST filename: ARRAY OF CHAR): BOOLEAN; 
 		PROCEDURE ^ NOOP*; 
 		PROCEDURE ^ ReadResponse(VAR message: ARRAY OF CHAR): BOOLEAN; 
 	END POP3Client; 

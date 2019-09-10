@@ -11,8 +11,8 @@ TYPE
 	tNameDesc = RECORD (Gadgets.ObjDesc)
 		Object*: vyBase.Object; 
 		Name: tNameArray; 
-		id: LONGINT; 
-		highid: LONGINT; 
+		id: SIGNED32; 
+		highid: SIGNED32; 
 		prev, next: tName; 
 	END; 
 VAR 
@@ -38,8 +38,8 @@ VAR
 	PROCEDURE ^ FindMult*(NameBase: tName; Name: tNameArray): vyLinks.Link; 
 	PROCEDURE ^ FindMultObj*(name: ARRAY OF CHAR): vyLinks.Link; 
 	PROCEDURE ^ GetName*(NameBase: tName; VAR Name: ARRAY OF CHAR); 
-	PROCEDURE ^ ExtName*(stub: tNameArray; ext: tNameArray; extnum: LONGINT; VAR name: tNameArray); 
-	PROCEDURE ^ IsExtName*(VAR name: tNameArray; ext: tNameArray; VAR stub: tNameArray; VAR extnum: LONGINT): BOOLEAN; 
+	PROCEDURE ^ ExtName*(stub: tNameArray; ext: tNameArray; extnum: SIGNED32; VAR name: tNameArray); 
+	PROCEDURE ^ IsExtName*(VAR name: tNameArray; ext: tNameArray; VAR stub: tNameArray; VAR extnum: SIGNED32): BOOLEAN; 
 	PROCEDURE ^ UniqueExtName*(NameBase: tName; stub: tNameArray; ext: tNameArray; VAR newname: tNameArray); 
 	PROCEDURE ^ Dump*; 
 	PROCEDURE ^ GetObjId*(o: vyBase.Object; VAR id: ARRAY OF CHAR); 

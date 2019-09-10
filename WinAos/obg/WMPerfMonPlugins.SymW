@@ -33,12 +33,12 @@ TYPE
 		modulename*: ARRAY 128 OF CHAR; 
 		datasetDescriptor*: WMDiagramComponents.DatasetDescriptor; 
 		noSuperSampling*: BOOLEAN; 
-		min*, max*: LONGINT; 
+		min*, max*: SIGNED32; 
 		autoMin*, autoMax*: BOOLEAN; 
 		unit*: ARRAY 16 OF CHAR; 
 		perSecond*: BOOLEAN; 
-		scale*: REAL; 
-		minDigits*, fraction*: LONGINT; 
+		scale*: FLOAT32; 
+		minDigits*, fraction*: SIGNED32; 
 		statsUnit*: ARRAY 16 OF CHAR; 
 		showPercent*: BOOLEAN; 
 		showSum*: BOOLEAN; 
@@ -52,9 +52,9 @@ TYPE
 		p-: Parameter; 
 		datamodel-: WMDiagramComponents.MultiPointModel; 
 		active: BOOLEAN; 
-		nbrOfClients: LONGINT; 
+		nbrOfClients: SIGNED32; 
 		currentDataset: Dataset; 
-		sample, nbrOfSamples, nbrOfValidSamples: LONGINT; 
+		sample, nbrOfSamples, nbrOfValidSamples: SIGNED32; 
 		samples: POINTER TO ARRAY OF Dataset; 
 		milliTimer: Kernel.MilliTimer; 
 		lastDataset, temp: Dataset; 
@@ -69,7 +69,7 @@ TYPE
 		PROCEDURE ^ SetActive*(active: BOOLEAN); 
 		PROCEDURE ^ IsActive*(): BOOLEAN; 
 		PROCEDURE ^ Reset*; 
-		PROCEDURE ^ SetSampleBufferSize*(size: LONGINT); 
+		PROCEDURE ^ SetSampleBufferSize*(size: SIGNED32); 
 		PROCEDURE ^ Finalize*; 
 		PROCEDURE ^ Update; 
 		PROCEDURE ^ UpdateScreen; 
@@ -87,7 +87,7 @@ TYPE
 		PROCEDURE ^ Update*; 
 	END Helper; 
 
-	Notifier = PROCEDURE {DELEGATE}(events: SET; perf: REAL); 
+	Notifier = PROCEDURE {DELEGATE}(events: SET; perf: FLOAT32); 
 
 	Notifiers = POINTER TO RECORD 
 		events: SET; 
@@ -99,25 +99,25 @@ TYPE
 
 	Updater = OBJECT {EXCLUSIVE} 
 	VAR 
-		sampleInterval-: LONGINT; 
-		sampleBufferSize-: LONGINT; 
-		screenInterval-: LONGINT; 
+		sampleInterval-: SIGNED32; 
+		sampleBufferSize-: SIGNED32; 
+		screenInterval-: SIGNED32; 
 		plugins: Plugin; 
 		notifiers: Notifiers; 
-		lastCycles, lastTimestamp: HUGEINT; 
-		sample: LONGINT; 
-		sampleBuffer: POINTER TO ARRAY OF REAL; 
+		lastCycles, lastTimestamp: SIGNED64; 
+		sample: SIGNED32; 
+		sampleBuffer: POINTER TO ARRAY OF FLOAT32; 
 		me: Objects.Process; 
 		milliTimer: Kernel.MilliTimer; 
-		left, samplingLeft: LONGINT; 
+		left, samplingLeft: SIGNED32; 
 		screenTimer: Kernel.MilliTimer; 
 		alive, dead: BOOLEAN; 
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^ AddListener*(events: SET; proc: Notifier); 
 		PROCEDURE ^ RemoveListener*(proc: Notifier); 
-		PROCEDURE ^ NotifyListeners*(events: SET; perf: REAL); 
-		PROCEDURE ^ GetByFullname*(CONST fullname: ARRAY OF CHAR; VAR index: LONGINT; VAR msg: ARRAY OF CHAR): Plugin; 
+		PROCEDURE ^ NotifyListeners*(events: SET; perf: FLOAT32); 
+		PROCEDURE ^ GetByFullname*(CONST fullname: ARRAY OF CHAR; VAR index: SIGNED32; VAR msg: ARRAY OF CHAR): Plugin; 
 		PROCEDURE ^ GetByName*(CONST name: Name; CONST devicename: DeviceName): Plugin; 
 		PROCEDURE ^ GetByNameX(CONST name: Name; CONST devicename: DeviceName): Plugin; 
 		PROCEDURE ^ RemoveByName*(CONST name: Name; CONST devicename: DeviceName); 
@@ -127,7 +127,7 @@ TYPE
 		PROCEDURE ^ GetPlugins*(): PluginArray; 
 		PROCEDURE ^ ClearAll*; 
 		PROCEDURE ^ Show; 
-		PROCEDURE ^ SetIntervals*(VAR sampleInterval, sampleBufferSize, screenInterval: LONGINT); 
+		PROCEDURE ^ SetIntervals*(VAR sampleInterval, sampleBufferSize, screenInterval: SIGNED32); 
 		PROCEDURE ^ AddPlugin(plugin: Plugin); 
 		PROCEDURE ^ UpdatePlugin(p: Plugin); 
 		PROCEDURE ^ UpdatePlugins(screen: BOOLEAN); 
@@ -142,9 +142,9 @@ VAR
 	updater-: Updater; 
 	NnofPlugins-, NnofValues-: SIZE; 
 
-	PROCEDURE ^ EstimateCpuClockrate*(VAR clockrate: LONGINT): BOOLEAN; 
-	PROCEDURE ^ CyclesToMs*(cycles: HUGEINT; mhz: LONGINT): LONGINT; 
-	PROCEDURE ^ MsToString*(ms: LONGINT; VAR string: ARRAY OF CHAR); 
+	PROCEDURE ^ EstimateCpuClockrate*(VAR clockrate: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ CyclesToMs*(cycles: SIGNED64; mhz: SIGNED32): SIGNED32; 
+	PROCEDURE ^ MsToString*(ms: SIGNED32; VAR string: ARRAY OF CHAR); 
 	PROCEDURE ^ GetNameDesc*(plugin: Plugins.Plugin; VAR devicename: DeviceName); 
 	PROCEDURE ^ Show*(context: Commands.Context); 
 	PROCEDURE ^ LoadPlugin(CONST name: ARRAY OF CHAR); 

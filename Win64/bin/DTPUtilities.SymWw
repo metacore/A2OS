@@ -34,14 +34,14 @@ TYPE
 	RealPropertyEntry* = OBJECT (PropertyEntry)
 	VAR 
 		name: ARRAY 16 OF CHAR; 
-		value: REAL; 
+		value: FLOAT32; 
 		onClick: WMEvents.EventSource; 
 	END RealPropertyEntry; 
 
 	IntPropertyEntry* = OBJECT (PropertyEntry)
 	VAR 
 		name: ARRAY 16 OF CHAR; 
-		value: LONGINT; 
+		value: SIGNED32; 
 		onClick: WMEvents.EventSource; 
 	END IntPropertyEntry; 
 
@@ -72,7 +72,7 @@ TYPE
 		label: WMStandardComponents.Label; 
 		panel: WMStandardComponents.Panel; 
 		button: WMStandardComponents.Button; 
-		result: WORD; 
+		result: INTEGER; 
 		chosenColor*: WMGraphics.Color; 
 		shown: BOOLEAN; 
 
@@ -83,13 +83,13 @@ TYPE
 		PROCEDURE ^ FocusLost*; 
 		PROCEDURE ^ PressHandler(sender, data: ANY); 
 		PROCEDURE ^ OKHandler(sender, data: ANY); 
-		PROCEDURE ^ SetResult(res: WORD); 
+		PROCEDURE ^ SetResult(res: INTEGER); 
 		PROCEDURE ^ GetFieldContent(VAR string: ARRAY OF CHAR); 
 	END ColorChooserWindow; 
 
 	ColorChooser* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
-		colors: ARRAY 19 OF LONGINT; 
+		colors: ARRAY 19 OF SIGNED32; 
 		theCaller: ColorChooserWindow; 
 
 		PROCEDURE ^  & Init*; 
@@ -101,9 +101,9 @@ TYPE
 
 	ContextMenuData = OBJECT 
 	VAR 
-		val: LONGINT; 
+		val: SIGNED32; 
 
-		PROCEDURE ^  & New*(val: LONGINT); 
+		PROCEDURE ^  & New*(val: SIGNED32); 
 	END ContextMenuData; 
 
 	StyleEditor* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
@@ -120,13 +120,13 @@ TYPE
 		previewLabel: PreviewPanel; 
 		fontNotFound: WMStandardComponents.Label; 
 		tabPanel, buttonPanel: WMStandardComponents.Panel; 
-		tabColor, tabSelectedColor: LONGINT; 
+		tabColor, tabSelectedColor: SIGNED32; 
 		UpdateProc*: PROCEDURE {DELEGATE}; 
 		pstylePanel, cstylePanel, gstylePanel, customPanel: WMStandardComponents.Panel; 
 		pList, cList, gList, customList: WMStringGrids.StringGrid; 
 		pName, pAlign, pFirstIndent, pLeftIndent, pRightIndent, pSpaceBefore, pSpaceAfter, pDefCharStyle: WMEditors.Editor; 
 		cName, cFont, cSize, cStyle, cBaselineShift, cLeading, cColor, cBackColor, cTracking, cKerning, cStretchH, cStretchV: WMEditors.Editor; 
-		styleCounter: LONGINT; 
+		styleCounter: SIGNED32; 
 
 		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ CreateEditorField(): WMEditors.Editor; 
@@ -173,7 +173,7 @@ TYPE
 	Checkbox* = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
 		caption*: ARRAY 64 OF CHAR; 
-		leftBorder*: LONGINT; 
+		leftBorder*: SIGNED32; 
 		font: WMGraphics.Font; 
 		checked*, default*, hasThreeStates*, inactive*: BOOLEAN; 
 		imgChecked, imgUnchecked, imgCheckedDefault, imgCheckedInactive, imgUncheckedInactive: WMGraphics.Image; 
@@ -197,7 +197,7 @@ TYPE
 	VAR 
 		isHorizontal: BOOLEAN; 
 		caption*: ARRAY 64 OF CHAR; 
-		captionColor*: LONGINT; 
+		captionColor*: SIGNED32; 
 		captionFont: WMGraphics.Font; 
 
 		PROCEDURE ^  & Init*; 
@@ -229,7 +229,7 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ CreateComponent; 
 		PROCEDURE ^ UpdateBorder; 
-		PROCEDURE ^ SetBorder*(left, top, right, bottom: LONGINT); 
+		PROCEDURE ^ SetBorder*(left, top, right, bottom: SIGNED32); 
 		PROCEDURE ^ GetBorder*(): WMRectangles.Rectangle; 
 		PROCEDURE ^ AddContent*(content: XML.Content); 
 	END BorderPanel; 
@@ -242,43 +242,43 @@ TYPE
 		caption*: ARRAY 128 OF CHAR; 
 		textColor*: WMGraphics.Color; 
 		font*: WMGraphics.Font; 
-		alignH*, alignV*: LONGINT; 
+		alignH*, alignV*: SIGNED32; 
 		hasBevel*: BOOLEAN; 
-		bevelWidth*: LONGINT; 
+		bevelWidth*: SIGNED32; 
 		bevelColor*: WMGraphics.Color; 
 		bevelDown*: BOOLEAN; 
 		hasInnerBevel*: BOOLEAN; 
-		innerBevelWidth*: LONGINT; 
+		innerBevelWidth*: SIGNED32; 
 		innerBevelColor*: WMGraphics.Color; 
 		innerBevelDown*: BOOLEAN; 
 		hasGlass*: BOOLEAN; 
-		glassWidth*: LONGINT; 
+		glassWidth*: SIGNED32; 
 		glassDown*: BOOLEAN; 
 		glassOpenSides*: SET; 
 		img*: Raster.Image; 
-		imgBorderWidth*: LONGINT; 
+		imgBorderWidth*: SIGNED32; 
 		altFillColor*: WMGraphics.Color; 
-		fillMode*: LONGINT; 
+		fillMode*: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ CreateComponent; 
 		PROCEDURE ^ UpdateBorder; 
-		PROCEDURE ^ SetBorder*(left, top, right, bottom: LONGINT); 
+		PROCEDURE ^ SetBorder*(left, top, right, bottom: SIGNED32); 
 		PROCEDURE ^ GetBorder*(): WMRectangles.Rectangle; 
 		PROCEDURE ^ AddContent*(content: XML.Content); 
 		PROCEDURE ^ Draw*(canvas: WMGraphics.Canvas); 
-		PROCEDURE ^ DrawRepeating(canvas: WMGraphics.Canvas; rectangle: WMRectangles.Rectangle; image: Raster.Image; mode: LONGINT); 
+		PROCEDURE ^ DrawRepeating(canvas: WMGraphics.Canvas; rectangle: WMRectangles.Rectangle; image: Raster.Image; mode: SIGNED32); 
 	END CustomPanel; 
 VAR 
 	ctxAlignLeft, ctxAlignCenter, ctxAlignRight, ctxAlignJustified: ContextMenuData; 
 	ctxRegular, ctxBold, ctxItalic, ctxBoldItalic: ContextMenuData; 
 
-	PROCEDURE ^ Inc*(VAR a, b: REAL); 
-	PROCEDURE ^ Dec*(VAR a, b: REAL); 
-	PROCEDURE ^ FixpToFloat*(x: SIZE): REAL; 
-	PROCEDURE ^ FloatToFixp*(x: REAL): LONGINT; 
-	PROCEDURE ^ OutReal*(input: REAL; digits: LONGINT); 
-	PROCEDURE ^ ROUND*(input: REAL): LONGINT; 
-	PROCEDURE ^ RANDOM*(upperBound, lowerBound: LONGINT): LONGINT; 
+	PROCEDURE ^ Inc*(VAR a, b: FLOAT32); 
+	PROCEDURE ^ Dec*(VAR a, b: FLOAT32); 
+	PROCEDURE ^ FixpToFloat*(x: SIZE): FLOAT32; 
+	PROCEDURE ^ FloatToFixp*(x: FLOAT32): SIGNED32; 
+	PROCEDURE ^ OutReal*(input: FLOAT32; digits: SIGNED32); 
+	PROCEDURE ^ ROUND*(input: FLOAT32): SIGNED32; 
+	PROCEDURE ^ RANDOM*(upperBound, lowerBound: SIGNED32): SIGNED32; 
 BEGIN
 END DTPUtilities.

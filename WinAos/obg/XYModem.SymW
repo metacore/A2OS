@@ -30,14 +30,14 @@ TYPE
 		W: Streams.Writer; 
 		R: Streams.Reader; 
 		F: Files.File; 
-		mode: LONGINT; 
-		timeout: LONGINT; 
+		mode: SIGNED32; 
+		timeout: SIGNED32; 
 		data: ARRAY 1024 OF CHAR; 
 		error: ARRAY 64 OF CHAR; 
 		done, fail: BOOLEAN; 
 		bytesProcessed-, totalBytes-: SIZE; 
 
-		PROCEDURE ^  & Init*(W: Streams.Writer; R: Streams.Reader; F: Files.File; mode: LONGINT); 
+		PROCEDURE ^  & Init*(W: Streams.Writer; R: Streams.Reader; F: Files.File; mode: SIGNED32); 
 		PROCEDURE ^ IsDone*(): BOOLEAN; 
 		PROCEDURE ^ Await*(VAR err: ARRAY OF CHAR); 
 		PROCEDURE ^ AwaitF*(VAR F: Files.File; VAR err: ARRAY OF CHAR); 
@@ -54,24 +54,24 @@ TYPE
 
 	Receiver* = OBJECT {EXCLUSIVE} (Modem)
 
-		PROCEDURE ^ YHeader(len: LONGINT; VAR name: ARRAY OF CHAR; VAR size: LONGINT); 
+		PROCEDURE ^ YHeader(len: SIGNED32; VAR name: ARRAY OF CHAR; VAR size: SIGNED32); 
 		PROCEDURE ^ ReceiveFile; 
 	BEGIN{ACTIVE} 
 	END Receiver; 
 
-	PROCEDURE ^ WaitForData(reader: Streams.Reader; minAvailable, timeout: LONGINT; yield: PROCEDURE {DELEGATE}():BOOLEAN): BOOLEAN; 
+	PROCEDURE ^ WaitForData(reader: Streams.Reader; minAvailable, timeout: SIGNED32; yield: PROCEDURE {DELEGATE}():BOOLEAN): BOOLEAN; 
 	PROCEDURE ^ AbortTransfer(modemWriter: Streams.Writer); 
-	PROCEDURE ^ InitReceiveTransfer(modemReader: Streams.Reader; modemWriter: Streams.Writer; mode, initTimeout, dataTimeout: LONGINT; yield: PROCEDURE {DELEGATE}():BOOLEAN; VAR fileName: ARRAY OF CHAR; VAR fileLength: LONGINT; VAR res: LONGINT); 
-	PROCEDURE ^ ReceiveFileData(modemReader: Streams.Reader; modemWriter, dataWriter: Streams.Writer; mode, length, timeout: LONGINT; yield: PROCEDURE {DELEGATE}():BOOLEAN; VAR numBytesReceived: LONGINT; VAR res: LONGINT); 
-	PROCEDURE ^ Receive*(modemReader: Streams.Reader; modemWriter: Streams.Writer; VAR fileName: Files.FileName; mode: LONGINT; initTimeout, dataTimeout: LONGINT; VAR numBytesReceived: LONGINT; yield: PROCEDURE {DELEGATE}():BOOLEAN; VAR res: LONGINT); 
+	PROCEDURE ^ InitReceiveTransfer(modemReader: Streams.Reader; modemWriter: Streams.Writer; mode, initTimeout, dataTimeout: SIGNED32; yield: PROCEDURE {DELEGATE}():BOOLEAN; VAR fileName: ARRAY OF CHAR; VAR fileLength: SIGNED32; VAR res: SIGNED32); 
+	PROCEDURE ^ ReceiveFileData(modemReader: Streams.Reader; modemWriter, dataWriter: Streams.Writer; mode, length, timeout: SIGNED32; yield: PROCEDURE {DELEGATE}():BOOLEAN; VAR numBytesReceived: SIGNED32; VAR res: SIGNED32); 
+	PROCEDURE ^ Receive*(modemReader: Streams.Reader; modemWriter: Streams.Writer; VAR fileName: Files.FileName; mode: SIGNED32; initTimeout, dataTimeout: SIGNED32; VAR numBytesReceived: SIGNED32; yield: PROCEDURE {DELEGATE}():BOOLEAN; VAR res: SIGNED32); 
 	PROCEDURE ^ IsDigit(ch: CHAR): BOOLEAN; 
-	PROCEDURE ^ CRC16(VAR buf: ARRAY OF CHAR; len: LONGINT): LONGINT; 
-	PROCEDURE ^ GetPars(context: Commands.Context; VAR name: ARRAY OF CHAR; VAR port, bps, parity, stop: LONGINT): BOOLEAN; 
-	PROCEDURE ^ xySend(context: Commands.Context; mode: LONGINT); 
+	PROCEDURE ^ CRC16(VAR buf: ARRAY OF CHAR; len: SIGNED32): SIGNED32; 
+	PROCEDURE ^ GetPars(context: Commands.Context; VAR name: ARRAY OF CHAR; VAR port, bps, parity, stop: SIGNED32): BOOLEAN; 
+	PROCEDURE ^ xySend(context: Commands.Context; mode: SIGNED32); 
 	PROCEDURE ^ XSend*(context: Commands.Context); 
 	PROCEDURE ^ XSend1K*(context: Commands.Context); 
 	PROCEDURE ^ YSend*(context: Commands.Context); 
-	PROCEDURE ^ xyReceive(context: Commands.Context; mode: LONGINT); 
+	PROCEDURE ^ xyReceive(context: Commands.Context; mode: SIGNED32); 
 	PROCEDURE ^ XReceive*(context: Commands.Context); 
 	PROCEDURE ^ YReceive*(context: Commands.Context); 
 BEGIN

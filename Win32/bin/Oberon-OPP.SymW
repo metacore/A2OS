@@ -182,25 +182,25 @@ CONST
 	FReturn = 9; 
 TYPE 
 	CaseTable = ARRAY OPM.MaxCases OF RECORD 
-		low, high: LONGINT; 
+		low, high: SIGNED32; 
 	END; 
 
 	FixPtr = POINTER TO FixDesc; 
 
 	FixDesc = RECORD 
-		mode: LONGINT; 
+		mode: SIGNED32; 
 		scope: OPT.Object; 
-		level: SHORTINT; 
+		level: SIGNED8; 
 		node: OPT.Node; 
 		stream: OPS.TokenStream; 
 		next: FixPtr; 
 	END; 
 
 	TypeFix = RECORD 
-		pos: LONGINT; 
+		pos: SIGNED32; 
 		name: OPS.Name; 
 		scope: OPT.Object; 
-		level: SHORTINT; 
+		level: SIGNED8; 
 	END; 
 
 	ObjFixDesc = RECORD (TypeFix)
@@ -216,17 +216,17 @@ TYPE
 	; 
 VAR 
 	SignOnMessage*: ARRAY 80 OF CHAR; 
-	sym, level: SHORTINT; 
-	LoopLevel: INTEGER; 
+	sym, level: SIGNED8; 
+	LoopLevel: SIGNED16; 
 	TDinit, lastTDinit: OPT.Node; 
 	RecInit, lastRecInit: OPT.Node; 
 	CondNodes: OPT.Node; 
-	CondCount: SHORTINT; 
+	CondCount: SIGNED8; 
 	UndefFlag, FixPhase: BOOLEAN; 
 	UndefObj: OPT.Object; 
 	scopeLock: BOOLEAN; 
-	retcount: LONGINT; 
-	fincount: LONGINT; 
+	retcount: SIGNED32; 
+	fincount: SIGNED32; 
 	FixList, FixLast: FixPtr; 
 	ExtObj: OPT.Object; 
 	inc: OPT.Object; 
@@ -234,13 +234,13 @@ VAR
 	ObjFix: ARRAY 128 OF ObjFixDesc; 
 	ObjCheck: ARRAY 256 OF RECORD 
 		obj: OPT.Object; 
-		level: SHORTINT; 
+		level: SIGNED8; 
 	END; 
 	TypFix: ARRAY 128 OF StructFixDesc; 
-	nofCheck, nofObjFix, nofTypFix: LONGINT; 
+	nofCheck, nofObjFix, nofTypFix: SIGNED32; 
 
-	PROCEDURE ^ err(n: INTEGER); 
-	PROCEDURE ^ CheckSym(s: INTEGER); 
+	PROCEDURE ^ err(n: SIGNED16); 
+	PROCEDURE ^ CheckSym(s: SIGNED16); 
 	PROCEDURE ^ IsModuleScope(): BOOLEAN; 
 	PROCEDURE ^ IsObjectScope(): BOOLEAN; 
 	PROCEDURE ^ IsRecordScope(): BOOLEAN; 
@@ -248,7 +248,7 @@ VAR
 	PROCEDURE ^ GetFlags(obj: OPT.Object): SET; 
 	PROCEDURE ^ DumpScope(o: OPT.Object); 
 	PROCEDURE ^ GetSelf(): OPT.Object; 
-	PROCEDURE ^ InsertFix(mode: LONGINT; stream: OPS.TokenStream; node: OPT.Node); 
+	PROCEDURE ^ InsertFix(mode: SIGNED32; stream: OPS.TokenStream; node: OPT.Node); 
 	PROCEDURE ^ NewFix(VAR f: TypeFix; name: OPS.Name); 
 	PROCEDURE ^ NewCheck(obj: OPT.Object); 
 	PROCEDURE ^ NewType(obj: OPT.Object); 
@@ -260,20 +260,20 @@ VAR
 	PROCEDURE ^ CheckObj(obj: OPT.Object); 
 	PROCEDURE ^ qualident(VAR id: OPT.Object); 
 	PROCEDURE ^ ConstExpression(VAR x: OPT.Node); 
-	PROCEDURE ^ CheckMark(VAR vis: SHORTINT; rdonlyAllowed: BOOLEAN); 
-	PROCEDURE ^ CheckSysFlag(VAR sysflag: SHORTINT; default: SHORTINT; allowed: SET); 
+	PROCEDURE ^ CheckMark(VAR vis: SIGNED8; rdonlyAllowed: BOOLEAN); 
+	PROCEDURE ^ CheckSysFlag(VAR sysflag: SIGNED8; default: SIGNED8; allowed: SET); 
 	PROCEDURE ^ BlockMode(VAR flag: SET; local: BOOLEAN; VAR lock: BOOLEAN); 
 	PROCEDURE ^ RecordType(VAR typ, banned: OPT.Struct; owner: OPT.Object); 
 	PROCEDURE ^ OwnScope(VAR obj: OPT.Object); 
 	PROCEDURE ^ ArrayType(VAR typ, banned: OPT.Struct); 
 	PROCEDURE ^ ObjectType(VAR typ, banned: OPT.Struct); 
 	PROCEDURE ^ PointerType(VAR typ, banned: OPT.Struct); 
-	PROCEDURE ^ FormalParameters(VAR firstPar: OPT.Object; VAR resTyp: OPT.Struct; sysflag: SHORTINT); 
+	PROCEDURE ^ FormalParameters(VAR firstPar: OPT.Object; VAR resTyp: OPT.Struct; sysflag: SIGNED8); 
 	PROCEDURE ^ CheckAndFix(typ: OPT.Struct); 
 	PROCEDURE ^ TypeDecl(VAR typ, banned: OPT.Struct; owner: OPT.Object); 
 	PROCEDURE ^ selector(VAR x: OPT.Node); 
 	PROCEDURE ^ ActualParameters(VAR aparlist: OPT.Node; fpar: OPT.Object); 
-	PROCEDURE ^ Await(VAR x: OPT.Node; VAR n: INTEGER); 
+	PROCEDURE ^ Await(VAR x: OPT.Node; VAR n: SIGNED16); 
 	PROCEDURE ^ StandProcCall(VAR x: OPT.Node); 
 	PROCEDURE ^ InlineProc(VAR x: OPT.Node; VAR apar: OPT.Node; fpar: OPT.Object); 
 	PROCEDURE ^ Element(VAR x: OPT.Node); 
@@ -285,7 +285,7 @@ VAR
 	PROCEDURE ^ SimpleExpression(VAR x: OPT.Node); 
 	PROCEDURE ^ Expression(VAR x: OPT.Node); 
 	PROCEDURE ^ ProcedureDeclaration(VAR x: OPT.Node); 
-	PROCEDURE ^ CaseLabelList(VAR lab: OPT.Node; LabelForm: INTEGER; VAR n: INTEGER; VAR tab: CaseTable); 
+	PROCEDURE ^ CaseLabelList(VAR lab: OPT.Node; LabelForm: SIGNED16; VAR n: SIGNED16; VAR tab: CaseTable); 
 	PROCEDURE ^ CheckBool(VAR x: OPT.Node); 
 	PROCEDURE ^ DoFixes; 
 	PROCEDURE ^ StatSeq(VAR stat: OPT.Node; local: BOOLEAN); 

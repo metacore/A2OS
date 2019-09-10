@@ -5,13 +5,13 @@ CONST
 	DefaultWidth = 640; 
 	DefaultHeight = 300; 
 	PollingInterval = 1000; 
-	GridBgFillColor = LONGINT(3772834047); 
+	GridBgFillColor = SIGNED32(3772834047); 
 	NofColumns = 7; 
-	ColorUnknown = LONGINT(3233857791); 
+	ColorUnknown = SIGNED32(3233857791); 
 	ColorInformation = WMGraphics.White; 
 	ColorWarning = WMGraphics.Yellow; 
-	ColorError = LONGINT(4278190272); 
-	ColorCritical = LONGINT(4278190304); 
+	ColorError = SIGNED32(4278190272); 
+	ColorCritical = SIGNED32(4278190304); 
 	ColorAlert = WMGraphics.Blue; 
 	ColorFailure = WMGraphics.Red; 
 	ColorOther = WMGraphics.White; 
@@ -32,7 +32,7 @@ TYPE
 		nofEventsInGrid, nofEventsTot, containerSize: SIZE; 
 		lastCleared, stamp, lastStamp: SIZE; 
 		update, fullUpdate: BOOLEAN; 
-		state: LONGINT; 
+		state: SIGNED32; 
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^ HandleButtons(sender, data: ANY); 
@@ -43,7 +43,7 @@ TYPE
 		PROCEDURE ^ FilterClassification(event: Events.Event; VAR discard: BOOLEAN); 
 		PROCEDURE ^ FilterMessage(event: Events.Event; VAR discard: BOOLEAN); 
 		PROCEDURE ^ Filter(event: Events.Event; VAR discard: BOOLEAN); 
-		PROCEDURE ^ UpdateRow(row: LONGINT; event: Events.Event); 
+		PROCEDURE ^ UpdateRow(row: SIGNED32; event: Events.Event); 
 		PROCEDURE ^ FullUpdate(wrapper: EventsUtils.EventWrapper; nofEvents: SIZE); 
 		PROCEDURE ^ IncrementalUpdate(wrapper: EventsUtils.EventWrapper; nofEvents: SIZE): SIZE; 
 		PROCEDURE ^ UpdateStatusLabel; 
@@ -77,11 +77,11 @@ TYPE
 		PROCEDURE ^ Close*; 
 	END Window; 
 VAR 
-	nofWindows: LONGINT; 
+	nofWindows: SIGNED32; 
 	StrEventLog: Strings.String; 
 
 	PROCEDURE ^ InitStrings; 
-	PROCEDURE ^ NewEditor(CONST caption: ARRAY OF CHAR; alignment: WORD; width: SIZE; onEnter: WMEvents.EventListener): WMEditors.Editor; 
+	PROCEDURE ^ NewEditor(CONST caption: ARRAY OF CHAR; alignment: INTEGER; width: SIZE; onEnter: WMEvents.EventListener): WMEditors.Editor; 
 	PROCEDURE ^ Open*; 
 	PROCEDURE ^ OpenFile*(context: Commands.Context); 
 	PROCEDURE ^ Restore*(context: WMRestorable.Context); 

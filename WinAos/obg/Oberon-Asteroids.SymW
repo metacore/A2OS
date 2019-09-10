@@ -64,26 +64,26 @@ TYPE
 		paused: BOOLEAN; 
 	END; 
 
-	Vertices = POINTER TO ARRAY OF INTEGER; 
+	Vertices = POINTER TO ARRAY OF SIGNED16; 
 
 	Starfield = POINTER TO StarfieldDesc; 
 
 	StarfieldDesc = RECORD (Panels.PanelDesc)
-		scaleX, scaleY: REAL; 
-		fdx: INTEGER; 
+		scaleX, scaleY: FLOAT32; 
+		fdx: SIGNED16; 
 	END; 
 
 	Shape = POINTER TO ShapeDesc; 
 
 	ShapeDesc = RECORD 
-		n: INTEGER; 
+		n: SIGNED16; 
 		px, py: Vertices; 
 	END; 
 
 	SpaceObj = POINTER TO SpaceObjDesc; 
 
 	SpaceObjDesc = RECORD 
-		x, y, x0, y0: REAL; 
+		x, y, x0, y0: FLOAT32; 
 		alive: BOOLEAN; 
 		next: SpaceObj; 
 	END; 
@@ -91,29 +91,29 @@ TYPE
 	Detonation = POINTER TO DetonationDesc; 
 
 	DetonationDesc = RECORD (SpaceObjDesc)
-		r0, r: INTEGER; 
+		r0, r: SIGNED16; 
 	END; 
 
 	Mass = POINTER TO MassDesc; 
 
 	MassDesc = RECORD (SpaceObjDesc)
-		mass: LONGREAL; 
-		rot, xvel, yvel, rotvel: REAL; 
+		mass: FLOAT64; 
+		rot, xvel, yvel, rotvel: FLOAT32; 
 		shape: Shape; 
-		n0, u, v, w, h: INTEGER; 
+		n0, u, v, w, h: SIGNED16; 
 		px0, py0, px1, py1: Vertices; 
 	END; 
 
 	FlyingObj = POINTER TO FlyingObjDesc; 
 
 	FlyingObjDesc = RECORD (MassDesc)
-		bullets: INTEGER; 
+		bullets: SIGNED16; 
 	END; 
 
 	Bullet = POINTER TO BulletDesc; 
 
 	BulletDesc = RECORD (MassDesc)
-		time, rpos: INTEGER; 
+		time, rpos: SIGNED16; 
 		ship: FlyingObj; 
 	END; 
 
@@ -121,8 +121,8 @@ TYPE
 
 	ShipDesc = RECORD (FlyingObjDesc)
 		thrust0, thrust: BOOLEAN; 
-		shield0, shield: SHORTINT; 
-		shieldval, warpval: INTEGER; 
+		shield0, shield: SIGNED8; 
+		shieldval, warpval: SIGNED16; 
 		shape0: Shape; 
 		px2, py2: Vertices; 
 	END; 
@@ -152,8 +152,8 @@ TYPE
 	FieldDesc = RECORD (Gadgets.ObjDesc)
 		ship: Ship; 
 		started, changed, paused: BOOLEAN; 
-		ships, ufos, frames: INTEGER; 
-		score, high0, high: LONGINT; 
+		ships, ufos, frames: SIGNED16; 
+		score, high0, high: SIGNED32; 
 		line0, line: ARRAY 80 OF CHAR; 
 		objects: SpaceObj; 
 	END; 
@@ -166,20 +166,20 @@ TYPE
 	END; 
 VAR 
 	shAsteroid1, shAsteroid2, shAsteroid3, shEnemy, shEBullet, shShip, shThrShip, shSBullet: Shape; 
-	hitscore: ARRAY 4 OF INTEGER; 
+	hitscore: ARRAY 4 OF SIGNED16; 
 	fnt: ARRAY 7 OF Fonts.Font; 
-	fw, fh: ARRAY 7 OF INTEGER; 
-	b, w: INTEGER; 
+	fw, fh: ARRAY 7 OF SIGNED16; 
+	b, w: SIGNED16; 
 	timer: Timer; 
 
-	PROCEDURE ^ FontGeometry(dim: ARRAY OF CHAR; fdx: INTEGER); 
-	PROCEDURE ^ Intersect(x11, y11, x12, y12, x21, y21, x22, y22: INTEGER; VAR x3, y3: INTEGER): BOOLEAN; 
-	PROCEDURE ^ Sign(v: REAL): INTEGER; 
-	PROCEDURE ^ TransX(x, y: INTEGER; p, v: REAL): REAL; 
-	PROCEDURE ^ TransY(x, y: INTEGER; p, v: REAL): REAL; 
+	PROCEDURE ^ FontGeometry(dim: ARRAY OF CHAR; fdx: SIGNED16); 
+	PROCEDURE ^ Intersect(x11, y11, x12, y12, x21, y21, x22, y22: SIGNED16; VAR x3, y3: SIGNED16): BOOLEAN; 
+	PROCEDURE ^ Sign(v: FLOAT32): SIGNED16; 
+	PROCEDURE ^ TransX(x, y: SIGNED16; p, v: FLOAT32): FLOAT32; 
+	PROCEDURE ^ TransY(x, y: SIGNED16; p, v: FLOAT32): FLOAT32; 
 	PROCEDURE ^ Model(D: Object): Field; 
-	PROCEDURE ^ Score(F: Field; score: INTEGER); 
-	PROCEDURE ^ Pair(sh: Shape; n, x, y: INTEGER); 
+	PROCEDURE ^ Score(F: Field; score: SIGNED16); 
+	PROCEDURE ^ Pair(sh: Shape; n, x, y: SIGNED16); 
 	PROCEDURE ^ Tag(obj: SpaceObj; VAR tag: Objects.Name); 
 	PROCEDURE ^ ShowStatus(obj: Field; VAR status: ARRAY OF CHAR); 
 	PROCEDURE ^ Asteroid1Shape(VAR sh: Shape); 
@@ -193,42 +193,42 @@ VAR
 	PROCEDURE ^ InitSpaceObj(obj: SpaceObj); 
 	PROCEDURE ^ InitMass(obj: Mass; shape: Shape); 
 	PROCEDURE ^ InitFlyingObj(obj: FlyingObj; shape: Shape); 
-	PROCEDURE ^ InitBullet(obj: Bullet; shape: Shape; ship: FlyingObj; grant: INTEGER); 
-	PROCEDURE ^ InitShip(obj: Ship; x, y: REAL); 
+	PROCEDURE ^ InitBullet(obj: Bullet; shape: Shape; ship: FlyingObj; grant: SIGNED16); 
+	PROCEDURE ^ InitShip(obj: Ship; x, y: FLOAT32); 
 	PROCEDURE ^ InitSBullet(obj: SBullet; ship: Ship); 
 	PROCEDURE ^ InitEnemy(obj: Enemy); 
 	PROCEDURE ^ InitEBullet(obj: EBullet; ufo: Enemy; ship: Ship); 
-	PROCEDURE ^ InitAsteroid(obj, father: Asteroid; shape: Shape; hx, hy: INTEGER); 
+	PROCEDURE ^ InitAsteroid(obj, father: Asteroid; shape: Shape; hx, hy: SIGNED16); 
 	PROCEDURE ^ InitField(obj: Field); 
 	PROCEDURE ^ StoreShapeRef(VAR R: Files.Rider; shape: Shape); 
 	PROCEDURE ^ LoadShapeRef(VAR R: Files.Rider; VAR shape: Shape); 
-	PROCEDURE ^ FileSpaceObj(VAR R: Files.Rider; id: INTEGER; obj, root: SpaceObj); 
-	PROCEDURE ^ FileDetonation(VAR R: Files.Rider; id: INTEGER; obj: Detonation; root: SpaceObj); 
-	PROCEDURE ^ FileMass(VAR R: Files.Rider; id: INTEGER; obj: Mass; root: SpaceObj); 
-	PROCEDURE ^ FileFlyingObj(VAR R: Files.Rider; id: INTEGER; obj: FlyingObj; root: SpaceObj); 
-	PROCEDURE ^ FileBullet(VAR R: Files.Rider; id: INTEGER; obj: Bullet; root: SpaceObj); 
-	PROCEDURE ^ FileShip(VAR R: Files.Rider; id: INTEGER; obj: Ship; root: SpaceObj); 
-	PROCEDURE ^ FileEnemy(VAR R: Files.Rider; id: INTEGER; obj: Enemy; root: SpaceObj); 
-	PROCEDURE ^ FileSBullet(VAR R: Files.Rider; id: INTEGER; obj: SBullet; root: SpaceObj); 
-	PROCEDURE ^ FileEBullet(VAR R: Files.Rider; id: INTEGER; obj: EBullet; root: SpaceObj); 
-	PROCEDURE ^ FileAsteroid(VAR R: Files.Rider; id: INTEGER; obj: Asteroid; root: SpaceObj); 
-	PROCEDURE ^ ModifyStatus(F: Starfield; obj: Field; mx, my: INTEGER); 
-	PROCEDURE ^ RestoreStatus(F: Starfield; obj: Field; mx, my: INTEGER); 
-	PROCEDURE ^ DrawDetonation(F: Starfield; obj: Detonation; mx, my: INTEGER): INTEGER; 
-	PROCEDURE ^ DrawMass(F: Starfield; obj: Mass; mx, my: INTEGER): INTEGER; 
-	PROCEDURE ^ DrawShip(F: Starfield; obj: Ship; mx, my: INTEGER): INTEGER; 
+	PROCEDURE ^ FileSpaceObj(VAR R: Files.Rider; id: SIGNED16; obj, root: SpaceObj); 
+	PROCEDURE ^ FileDetonation(VAR R: Files.Rider; id: SIGNED16; obj: Detonation; root: SpaceObj); 
+	PROCEDURE ^ FileMass(VAR R: Files.Rider; id: SIGNED16; obj: Mass; root: SpaceObj); 
+	PROCEDURE ^ FileFlyingObj(VAR R: Files.Rider; id: SIGNED16; obj: FlyingObj; root: SpaceObj); 
+	PROCEDURE ^ FileBullet(VAR R: Files.Rider; id: SIGNED16; obj: Bullet; root: SpaceObj); 
+	PROCEDURE ^ FileShip(VAR R: Files.Rider; id: SIGNED16; obj: Ship; root: SpaceObj); 
+	PROCEDURE ^ FileEnemy(VAR R: Files.Rider; id: SIGNED16; obj: Enemy; root: SpaceObj); 
+	PROCEDURE ^ FileSBullet(VAR R: Files.Rider; id: SIGNED16; obj: SBullet; root: SpaceObj); 
+	PROCEDURE ^ FileEBullet(VAR R: Files.Rider; id: SIGNED16; obj: EBullet; root: SpaceObj); 
+	PROCEDURE ^ FileAsteroid(VAR R: Files.Rider; id: SIGNED16; obj: Asteroid; root: SpaceObj); 
+	PROCEDURE ^ ModifyStatus(F: Starfield; obj: Field; mx, my: SIGNED16); 
+	PROCEDURE ^ RestoreStatus(F: Starfield; obj: Field; mx, my: SIGNED16); 
+	PROCEDURE ^ DrawDetonation(F: Starfield; obj: Detonation; mx, my: SIGNED16): SIGNED16; 
+	PROCEDURE ^ DrawMass(F: Starfield; obj: Mass; mx, my: SIGNED16): SIGNED16; 
+	PROCEDURE ^ DrawShip(F: Starfield; obj: Ship; mx, my: SIGNED16): SIGNED16; 
 	PROCEDURE ^ MoveMass(obj: Mass); 
-	PROCEDURE ^ IntersectMass(obj1, obj2: Mass; VAR x, y: INTEGER): BOOLEAN; 
+	PROCEDURE ^ IntersectMass(obj1, obj2: Mass; VAR x, y: SIGNED16): BOOLEAN; 
 	PROCEDURE ^ SFire(F: Field; ship: Ship); 
 	PROCEDURE ^ SShield(F: Field; ship: Ship); 
 	PROCEDURE ^ SWarp(F: Field; ship: Ship); 
 	PROCEDURE ^ EFire(F: Field; ufo: Enemy); 
-	PROCEDURE ^ Hit(F: Field; x, y: REAL); 
+	PROCEDURE ^ Hit(F: Field; x, y: FLOAT32); 
 	PROCEDURE ^ HitShip(F: Field; obj: Ship); 
-	PROCEDURE ^ SplitAsteroid(F: Field; obj: Asteroid; x, y: INTEGER): INTEGER; 
-	PROCEDURE ^ NewShip(F: Field; x, y: REAL); 
+	PROCEDURE ^ SplitAsteroid(F: Field; obj: Asteroid; x, y: SIGNED16): SIGNED16; 
+	PROCEDURE ^ NewShip(F: Field; x, y: FLOAT32); 
 	PROCEDURE ^ NewEnemy(F: Field); 
-	PROCEDURE ^ NewRound(F: Field; amt: INTEGER); 
+	PROCEDURE ^ NewRound(F: Field; amt: SIGNED16); 
 	PROCEDURE ^ MoveShip(F: Field; obj: Ship); 
 	PROCEDURE ^ MoveEnemy(F: Field; obj: Enemy); 
 	PROCEDURE ^ MoveSBullet(F: Field; obj: SBullet); 

@@ -2,7 +2,7 @@ MODULE NbrInt32;
 	IMPORT NbrInt8, NbrInt16, Streams;
 CONST 
 TYPE 
-	Integer* = LONGINT; 
+	Integer* = SIGNED32; 
 VAR 
 	MinNbr-, MaxNbr-: Integer; 
 

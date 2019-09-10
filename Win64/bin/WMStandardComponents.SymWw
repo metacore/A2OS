@@ -28,7 +28,7 @@ TYPE
 		onTimer-: EventSource; 
 		eStart-, eStop-: EventListenerInfo; 
 		interval-, delay-: WMProperties.Int32Property; 
-		wait-: LONGINT; 
+		wait-: SIGNED32; 
 		alive: BOOLEAN; 
 		timer: Kernel.Timer; 
 		internalEnabled: BOOLEAN; 
@@ -46,13 +46,13 @@ TYPE
 	Blinker* = OBJECT {EXCLUSIVE} 
 	VAR 
 		events-: WMEvents.EventSource; 
-		interval: LONGINT; 
+		interval: SIGNED32; 
 		visible-: BOOLEAN; 
 		alive, dead: BOOLEAN; 
 		timer: Kernel.Timer; 
 
 		PROCEDURE ^  & Init; 
-		PROCEDURE ^ SetInterval*(ms: LONGINT); 
+		PROCEDURE ^ SetInterval*(ms: SIGNED32); 
 		PROCEDURE ^ Finalize; 
 	BEGIN{ACTIVE} 
 	END Blinker; 
@@ -60,12 +60,12 @@ TYPE
 	InternalTimer* = OBJECT {EXCLUSIVE} 
 	VAR 
 		onTimer: WMEvents.EventListener; 
-		interval: LONGINT; 
+		interval: SIGNED32; 
 		timer: Kernel.Timer; 
 		alive, dead, enabled: BOOLEAN; 
 
 		PROCEDURE ^  & Init*(onTimer: WMEvents.EventListener); 
-		PROCEDURE ^ SetInterval*(ms: LONGINT); 
+		PROCEDURE ^ SetInterval*(ms: SIGNED32); 
 		PROCEDURE ^ Start*; 
 		PROCEDURE ^ Stop*; 
 		PROCEDURE ^ Finalize*; 
@@ -157,7 +157,7 @@ TYPE
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ CheckClickHandler; 
 		PROCEDURE ^ ExecuteClickHandler; 
-		PROCEDURE ^ ScaleFont*(height: SIZE; percent: WORD); 
+		PROCEDURE ^ ScaleFont*(height: SIZE; percent: INTEGER); 
 		PROCEDURE ^ RecacheProperties*; 
 		PROCEDURE ^ LinkChanged*(sender, data: ANY); 
 		PROCEDURE ^ ChangeModel(value: BOOLEAN); 
@@ -216,7 +216,7 @@ TYPE
 		arrowLeftDefault, arrowLeftHover, arrowLeftPressed, arrowUpDefault, arrowUpHover, arrowUpPressed, arrowRightDefault, arrowRightHover, arrowRightPressed, arrowDownDefault, arrowDownHover, arrowDownPressed: WMGraphics.Image; 
 		onPositionChanged-: EventSource; 
 		areas: ARRAY 5 OF Area; 
-		down, pressed, hover: SHORTINT; 
+		down, pressed, hover: SIGNED8; 
 		timer: InternalTimer; 
 		ts, tp, tDownX, tDownY: SIZE; 
 
@@ -226,12 +226,12 @@ TYPE
 		PROCEDURE ^ ChangeModel(value: SIZE); 
 		PROCEDURE ^ TimerCallback(sender, data: ANY); 
 		PROCEDURE ^ CheckRepeating(start: BOOLEAN); 
-		PROCEDURE ^ Down(area: SHORTINT); 
+		PROCEDURE ^ Down(area: SIGNED8); 
 		PROCEDURE ^ PointerDown*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerMove*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerUp*(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ PointerLeave*; 
-		PROCEDURE ^ FindArea(x, y: SIZE): SHORTINT; 
+		PROCEDURE ^ FindArea(x, y: SIZE): SIGNED8; 
 		PROCEDURE ^ TrackerMove(x, y: SIZE; keys: SET); 
 		PROCEDURE ^ RecacheImages; 
 		PROCEDURE ^ RecacheProperties*; 
@@ -241,15 +241,15 @@ TYPE
 		PROCEDURE ^ PageUp*(sender, par: ANY); 
 		PROCEDURE ^ PageDown*(sender, par: ANY); 
 		PROCEDURE ^ UpdateLayout; 
-		PROCEDURE ^ GetButtonColor(area: SHORTINT): WMGraphics.Color; 
-		PROCEDURE ^ GetPageColor(area: SHORTINT): WMGraphics.Color; 
-		PROCEDURE ^ GetMinusButtonImage(vertical: BOOLEAN; area: SHORTINT; VAR image: WMGraphics.Image); 
-		PROCEDURE ^ GetPlusButtonImage(vertical: BOOLEAN; area: SHORTINT; VAR image: WMGraphics.Image); 
-		PROCEDURE ^ GetTrackerImages(vertical: BOOLEAN; area: SHORTINT; VAR a, b, c: WMGraphics.Image); 
-		PROCEDURE ^ GetBgImage(vertical: BOOLEAN; area: SHORTINT; VAR image: WMGraphics.Image); 
+		PROCEDURE ^ GetButtonColor(area: SIGNED8): WMGraphics.Color; 
+		PROCEDURE ^ GetPageColor(area: SIGNED8): WMGraphics.Color; 
+		PROCEDURE ^ GetMinusButtonImage(vertical: BOOLEAN; area: SIGNED8; VAR image: WMGraphics.Image); 
+		PROCEDURE ^ GetPlusButtonImage(vertical: BOOLEAN; area: SIGNED8; VAR image: WMGraphics.Image); 
+		PROCEDURE ^ GetTrackerImages(vertical: BOOLEAN; area: SIGNED8; VAR a, b, c: WMGraphics.Image); 
+		PROCEDURE ^ GetBgImage(vertical: BOOLEAN; area: SIGNED8; VAR image: WMGraphics.Image); 
 		PROCEDURE ^ DrawHorizontalBackground(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; image, imgLeft, imgMiddle, imgRight: WMGraphics.Image); 
 		PROCEDURE ^ DrawVerticalBackground(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; image, imgTop, imgMiddle, imgBottom: WMGraphics.Image); 
-		PROCEDURE ^ DrawSimpleRepresentation(canvas: WMGraphics.Canvas; area: LONGINT; rect: WMRectangles.Rectangle; color: WMGraphics.Color; effect3D: LONGINT); 
+		PROCEDURE ^ DrawSimpleRepresentation(canvas: WMGraphics.Canvas; area: SIGNED32; rect: WMRectangles.Rectangle; color: WMGraphics.Color; effect3D: SIGNED32); 
 		PROCEDURE ^ DrawImage(canvas: WMGraphics.Canvas; rect: WMRectangles.Rectangle; image: WMGraphics.Image; repeat, vertical: BOOLEAN); 
 		PROCEDURE ^ DrawBackground*(canvas: WMGraphics.Canvas); 
 	END Scrollbar; 

@@ -10,8 +10,8 @@ CONST
 	BufSize = 16384; 
 TYPE 
 	Reader* = RECORD 
-		res-: LONGINT; 
-		crc32-: LONGINT; 
+		res-: SIGNED32; 
+		crc32-: SIGNED32; 
 		wrapper-: BOOLEAN; 
 		eof: BOOLEAN; 
 		r: Files.Rider; 
@@ -20,9 +20,9 @@ TYPE
 	END; 
 
 	PROCEDURE ^ Open*(VAR r: Reader; wrapper: BOOLEAN; VAR fr: Files.Rider); 
-	PROCEDURE ^ ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT); 
+	PROCEDURE ^ ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: SIGNED32; VAR read: SIGNED32); 
 	PROCEDURE ^ Read*(VAR r: Reader; VAR ch: CHAR); 
 	PROCEDURE ^ Close*(VAR r: Reader); 
-	PROCEDURE ^ Uncompress*(VAR src, dst: Files.Rider; VAR crc32: LONGINT; VAR res: WORD); 
+	PROCEDURE ^ Uncompress*(VAR src, dst: Files.Rider; VAR crc32: SIGNED32; VAR res: INTEGER); 
 BEGIN
 END ZlibReaders.

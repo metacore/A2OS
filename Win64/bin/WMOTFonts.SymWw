@@ -6,14 +6,14 @@ CONST
 TYPE 
 	Glyph* = RECORD 
 		img-: WMGraphics.Image; 
-		code-: LONGINT; 
-		dx, x, y, w, h: LONGINT; 
+		code-: SIGNED32; 
+		dx, x, y, w, h: SIGNED32; 
 	END; 
 
 	GlyphArray* = POINTER TO ARRAY OF Glyph; 
 
 	GlyphRange* = RECORD 
-		firstCode-, lastCode-: LONGINT; 
+		firstCode-, lastCode-: SIGNED32; 
 		glyphs-: GlyphArray; 
 		loaded-: BOOLEAN; 
 	END; 
@@ -26,8 +26,8 @@ TYPE
 
 	Font* = OBJECT {EXCLUSIVE} (WMGraphics.Font)
 	VAR 
-		nofGlyphs-: LONGINT; 
-		nofGlyphRanges-: LONGINT; 
+		nofGlyphs-: SIGNED32; 
+		nofGlyphRanges-: SIGNED32; 
 		glyphRanges: GlyphRangeArray; 
 		placeholderimg: WMGraphics.Image; 
 		fontFile: Files.File; 
@@ -40,21 +40,21 @@ TYPE
 		ras: OpenTypeScan.Rasterizer; 
 
 		PROCEDURE ^  & Init*; 
-		PROCEDURE ^ MapCode(VAR code: LONGINT); 
-		PROCEDURE ^ GetGlyphMap*(code: LONGINT; VAR map: WMGraphics.Image); 
-		PROCEDURE ^ HasChar*(code: LONGINT): BOOLEAN; 
-		PROCEDURE ^ GetGlyphSpacings*(code: LONGINT; VAR glyphSpacings: WMGraphics.GlyphSpacings); 
+		PROCEDURE ^ MapCode(VAR code: SIGNED32); 
+		PROCEDURE ^ GetGlyphMap*(code: SIGNED32; VAR map: WMGraphics.Image); 
+		PROCEDURE ^ HasChar*(code: SIGNED32): BOOLEAN; 
+		PROCEDURE ^ GetGlyphSpacings*(code: SIGNED32; VAR glyphSpacings: WMGraphics.GlyphSpacings); 
 		PROCEDURE ^ LoadGlyphRange(gri: SIZE); 
-		PROCEDURE ^ FindGlyphRange(code: LONGINT; VAR gri: SIZE): BOOLEAN; 
-		PROCEDURE ^ FindGlyph(code: LONGINT; VAR glyph: Glyph): BOOLEAN; 
-		PROCEDURE ^ CountGlyphes(): LONGINT; 
-		PROCEDURE ^ ReadGlyph(code: LONGINT; VAR g: Glyph); 
+		PROCEDURE ^ FindGlyphRange(code: SIGNED32; VAR gri: SIZE): BOOLEAN; 
+		PROCEDURE ^ FindGlyph(code: SIGNED32; VAR glyph: Glyph): BOOLEAN; 
+		PROCEDURE ^ CountGlyphes(): SIGNED32; 
+		PROCEDURE ^ ReadGlyph(code: SIGNED32; VAR g: Glyph); 
 		PROCEDURE ^ Load(filename: ARRAY OF CHAR; size: SIZE): BOOLEAN; 
 	END Font; 
 VAR 
 	bit: ARRAY 256 OF ARRAY 8 OF BOOLEAN; 
 
-	PROCEDURE ^ FillRect*(llx, lly, urx, ury, opacity: INTEGER; VAR data: OpenType.RasterData0); 
+	PROCEDURE ^ FillRect*(llx, lly, urx, ury, opacity: SIGNED16; VAR data: OpenType.RasterData0); 
 	PROCEDURE ^ InitBitTable; 
 	PROCEDURE ^ LoadFont(name: ARRAY OF CHAR; size: SIZE): Font; 
 	PROCEDURE ^ LoadExactFont*(fi: WMFontManager.FontInfo): WMGraphics.Font; 

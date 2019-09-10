@@ -46,9 +46,9 @@ TYPE
 	KolSmirXP* = OBJECT (ActiveXPValue)
 	VAR 
 		source-: vyLongrealVec.tLONGREAL; 
-		n-: LONGINT; 
+		n-: SIGNED32; 
 		values: POINTER TO ARRAY OF Real; 
-		cur: LONGINT; 
+		cur: SIGNED32; 
 
 		PROCEDURE ^ GetGenString*(VAR s: ARRAY OF CHAR); 
 		PROCEDURE ^ NewData*; 
@@ -60,7 +60,7 @@ TYPE
 	KolSmirVecXP* = OBJECT (ActiveXPValue)
 	VAR 
 		source-: vyBase.tVector; 
-		n-: LONGINT; 
+		n-: SIGNED32; 
 		a: POINTER TO ARRAY OF Real; 
 
 		PROCEDURE ^ GetGenString*(VAR s: ARRAY OF CHAR); 
@@ -84,12 +84,12 @@ TYPE
 	PROCEDURE ^ ExpXPGetName(VAR s: ARRAY OF CHAR; lambda: Real); 
 	PROCEDURE ^ InitExpXP*(obj: ExpXP; lambda: Real; x, p: vyLongrealVec.tLONGREAL); 
 	PROCEDURE ^ AllocExpXP*; 
-	PROCEDURE ^ KolSmirXPGetName(VAR s: ARRAY OF CHAR; n: LONGINT); 
+	PROCEDURE ^ KolSmirXPGetName(VAR s: ARRAY OF CHAR; n: SIGNED32); 
 	PROCEDURE ^ KolSmirXPClear*(obj: KolSmirXP); 
 	PROCEDURE ^ HandleKolSmirXP*(obj: Objects.Object; VAR M: Objects.ObjMsg); 
-	PROCEDURE ^ InitKolSmirXP*(obj: KolSmirXP; n: LONGINT; source, x, p: vyLongrealVec.tLONGREAL); 
+	PROCEDURE ^ InitKolSmirXP*(obj: KolSmirXP; n: SIGNED32; source, x, p: vyLongrealVec.tLONGREAL); 
 	PROCEDURE ^ AllocKolSmirXP*; 
-	PROCEDURE ^ KolSmirVecXPGetName(VAR s: ARRAY OF CHAR; n: LONGINT); 
+	PROCEDURE ^ KolSmirVecXPGetName(VAR s: ARRAY OF CHAR; n: SIGNED32); 
 	PROCEDURE ^ KolSmirVecXPNewSource(obj: KolSmirVecXP; source: vyBase.tVector); 
 	PROCEDURE ^ InitKolSmirVecXP*(obj: KolSmirVecXP; source: vyBase.tVector; x, p: vyLongrealVec.tLONGREAL); 
 	PROCEDURE ^ AllocKolSmirVecXP*; 

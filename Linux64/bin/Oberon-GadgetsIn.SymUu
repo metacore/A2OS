@@ -10,9 +10,9 @@ VAR
 	PROCEDURE ^ OpenGadget(gadgetlist: ARRAY OF CHAR); 
 	PROCEDURE ^ Open*(gadgetlist: ARRAY OF CHAR); 
 	PROCEDURE ^ Char*(VAR x: CHAR); 
-	PROCEDURE ^ Int*(VAR x: LONGINT); 
-	PROCEDURE ^ Real*(VAR x: REAL); 
-	PROCEDURE ^ LongReal*(VAR x: LONGREAL); 
+	PROCEDURE ^ Int*(VAR x: SIGNED32); 
+	PROCEDURE ^ Real*(VAR x: FLOAT32); 
+	PROCEDURE ^ LongReal*(VAR x: FLOAT64); 
 	PROCEDURE ^ Name*(VAR x: ARRAY OF CHAR); 
 	PROCEDURE ^ String*(VAR x: ARRAY OF CHAR); 
 	PROCEDURE ^ Boolean*(VAR x: BOOLEAN); 

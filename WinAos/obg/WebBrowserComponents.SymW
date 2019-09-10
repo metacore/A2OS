@@ -75,7 +75,7 @@ TYPE
 	HTTPConnectionPool* = OBJECT {EXCLUSIVE} 
 	VAR 
 		connection: ARRAY MaxHTTPConnections OF ResourceConnection; 
-		conCnt: LONGINT; 
+		conCnt: SIGNED32; 
 
 		PROCEDURE ^  & Init*; 
 		PROCEDURE ^ Get*(url: String): ResourceConnection; 

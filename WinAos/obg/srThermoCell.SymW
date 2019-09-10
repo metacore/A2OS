@@ -24,7 +24,7 @@ TYPE
 	VAR 
 		space: srM3Space.cell; 
 		v: srVoxel.DiffuseVox; 
-		frame: LONGINT; 
+		frame: SIGNED32; 
 
 		PROCEDURE ^  & init*; 
 		PROCEDURE ^ tick*; 

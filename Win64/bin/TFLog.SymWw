@@ -9,9 +9,9 @@ TYPE
 	Log* = OBJECT {EXCLUSIVE} 
 	VAR 
 		appName: ARRAY 64 OF CHAR; 
-		logPos: LONGINT; 
+		logPos: SIGNED32; 
 		logLine: ARRAY 1024 OF CHAR; 
-		kind: LONGINT; 
+		kind: SIGNED32; 
 		locked: BOOLEAN; 
 		disableLogToOut: BOOLEAN; 
 		f: Files.File; 
@@ -20,7 +20,7 @@ TYPE
 		PROCEDURE ^  & Init*(logName: ARRAY OF CHAR); 
 		PROCEDURE ^ SetLogFile*(fn: ARRAY OF CHAR); 
 		PROCEDURE ^ SetLogToOut*(enabled: BOOLEAN); 
-		PROCEDURE ^ SetKind(kind: LONGINT); 
+		PROCEDURE ^ SetKind(kind: SIGNED32); 
 		PROCEDURE ^ InternalLn; 
 		PROCEDURE ^ Ln*; 
 		PROCEDURE ^ Enter*; 
@@ -29,8 +29,8 @@ TYPE
 		PROCEDURE ^ Char*(x: CHAR); 
 		PROCEDURE ^ InternalString*(VAR x: ARRAY OF CHAR); 
 		PROCEDURE ^ String*(x: ARRAY OF CHAR); 
-		PROCEDURE ^ Hex*(x, w: LONGINT); 
-		PROCEDURE ^ Int*(x: HUGEINT; w: LONGINT); 
+		PROCEDURE ^ Hex*(x, w: SIGNED32); 
+		PROCEDURE ^ Int*(x: SIGNED64; w: SIGNED32); 
 		PROCEDURE ^ TimeStamp*; 
 		PROCEDURE ^ Close*; 
 	END Log; 

@@ -13,10 +13,10 @@ END Shader;
 
 TYPE checkerboard3d*= OBJECT(Shader)
 VAR
-	isquish*, jsquish*, ksquish*: INTEGER;
+	isquish*, jsquish*, ksquish*: SIGNED16;
 	black, white: Color;
 
-PROCEDURE squish*(i,j,k: INTEGER);
+PROCEDURE squish*(i,j,k: SIGNED16);
 BEGIN
 	isquish:=i; jsquish:=j; ksquish:=k;
 END squish;
@@ -28,7 +28,7 @@ END set;
 
 PROCEDURE Shade*(VAR x,y,z,r,g,b,a: SREAL);
 VAR
-	i,j,k:INTEGER;
+	i,j,k:SIGNED16;
 BEGIN
 	i:=SHORT(ENTIER(x*isquish));
 	j:=SHORT(ENTIER(y*jsquish));

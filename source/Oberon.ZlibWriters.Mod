@@ -28,19 +28,19 @@ CONST
 TYPE
 	(** structure for writing deflated data in a file **)
 	Writer* = RECORD
-		res-: LONGINT;	(** current stream state **)
-		flush-: SHORTINT;	(** flush strategy **)
+		res-: SIGNED32;	(** current stream state **)
+		flush-: SIGNED8;	(** flush strategy **)
 		wrapper-: BOOLEAN;	(** if set, zlib header and checksum are generated **)
 		r: Files.Rider;	(* file rider *)
-		pos: LONGINT;	(* logical position in uncompressed input stream *)
-		crc32-: LONGINT;	(** crc32 of uncompressed data **)
+		pos: SIGNED32;	(* logical position in uncompressed input stream *)
+		crc32-: SIGNED32;	(** crc32 of uncompressed data **)
 		out: POINTER TO ARRAY BufSize OF CHAR;	(* output buffer space *)
 		s: ZlibDeflate.Stream	(* compression stream *)
 	END;
 
 
 (** change deflate parameters within the writer **)
-PROCEDURE SetParams*(VAR w: Writer; level, strategy, flush: SHORTINT);
+PROCEDURE SetParams*(VAR w: Writer; level, strategy, flush: SIGNED8);
 BEGIN
 	IF flush IN {NoFlush, SyncFlush, FullFlush} THEN
 		ZlibDeflate.SetParams(w.s, level, strategy);
@@ -52,7 +52,7 @@ BEGIN
 END SetParams;
 
 (** open writer on a Files.Rider **)
-PROCEDURE Open*(VAR w: Writer; level, strategy, flush: SHORTINT; wrapper: BOOLEAN; r: Files.Rider);
+PROCEDURE Open*(VAR w: Writer; level, strategy, flush: SIGNED8; wrapper: BOOLEAN; r: Files.Rider);
 BEGIN
 	IF flush IN {NoFlush, SyncFlush, FullFlush} THEN
 		w.flush := flush;
@@ -72,7 +72,7 @@ BEGIN
 END Open;
 
 (** write specified number of bytes from buffer into and return number of bytes actually written **)
-PROCEDURE WriteBytes*(VAR w: Writer; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR written: LONGINT);
+PROCEDURE WriteBytes*(VAR w: Writer; VAR buf: ARRAY OF CHAR; offset, len: SIGNED32; VAR written: SIGNED32);
 BEGIN
 	ASSERT((0 <= offset) & (0 <= len) & (len <= LEN(buf)), 110);
 	IF ~w.s.open THEN
@@ -92,7 +92,7 @@ BEGIN
 			END
 		END;
 		w.crc32 := Zlib.CRC32(w.crc32, buf, offset, len - w.s.in.avail);
-		written := (len - w.s.in.avail)(LONGINT);
+		written := (len - w.s.in.avail)(SIGNED32);
 	END;
 END WriteBytes;
 
@@ -100,7 +100,7 @@ END WriteBytes;
 PROCEDURE Write*(VAR w: Writer; ch: CHAR);
 VAR
 	buf: ARRAY 1 OF CHAR;
-	written: LONGINT;
+	written: SIGNED32;
 BEGIN
 	buf[0] := ch;
 	WriteBytes(w, buf, 0, 1, written)
@@ -110,12 +110,12 @@ END Write;
 PROCEDURE Close*(VAR w: Writer);
 VAR
 	done: BOOLEAN;
-	len: LONGINT;
+	len: SIGNED32;
 BEGIN
 	ASSERT(w.s.in.avail = 0, 110);
 	done := FALSE;
 	LOOP
-		len := (BufSize - w.s.out.avail)(LONGINT);
+		len := (BufSize - w.s.out.avail)(SIGNED32);
 		IF len # 0 THEN
 			Files.WriteBytes(w.r, w.out^, len);
 			ZlibBuffers.Rewrite(w.s.out)
@@ -135,9 +135,9 @@ BEGIN
 END Close;
 
 (** compress srclen bytes from src to dst with specified level and strategy. dstlen returns how many bytes have been written. **)
-PROCEDURE Compress*(VAR src, dst: Files.Rider; srclen: LONGINT; VAR dstlen: LONGINT; level, strategy: SHORTINT; VAR crc32: LONGINT; VAR res: WORD);
+PROCEDURE Compress*(VAR src, dst: Files.Rider; srclen: SIGNED32; VAR dstlen: SIGNED32; level, strategy: SIGNED8; VAR crc32: SIGNED32; VAR res: INTEGER);
 VAR
-	w: Writer; buf: ARRAY BufSize OF CHAR; totWritten, written, read: LONGINT;
+	w: Writer; buf: ARRAY BufSize OF CHAR; totWritten, written, read: SIGNED32;
 BEGIN
 	Open(w, level, strategy, NoFlush, FALSE, dst);
 	IF w.res = Ok THEN

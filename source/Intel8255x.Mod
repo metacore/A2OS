@@ -92,32 +92,32 @@ CONST
 	Interrupt = {29};	(* I Bit *)
 
 VAR
-	nCUWaitActive: LONGINT;
+	nCUWaitActive: SIGNED32;
 
 TYPE
 	ByteField = POINTER TO ARRAY OF CHAR;
 
 	DataBlock = POINTER TO RECORD
 		next: DataBlock;
-		size: LONGINT;
+		size: SIGNED32;
 		data: ByteField;
 	END;
 
 	LinkDevice = OBJECT(Network.LinkDevice)
 		VAR
 			ctrl: Controller;
-			txTrials: LONGINT;
+			txTrials: SIGNED32;
 
 		(*
 			send a frame
 			padding and checksum are inserted directly by the device
 		*)
-		PROCEDURE DoSend*(dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE DoSend*(dst: Network.LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32);
 		CONST
 			DataOfs = 10H;	(* data block offset in transmit command block *)
 			C = 15;
 		VAR
-			actAdr, prevAdr: ADDRESS; txLen, i: LONGINT;
+			actAdr, prevAdr: ADDRESS; txLen, i: SIGNED32;
 			byteCount, EOF, TxThreshold, state, cmdHdr, sendStatus: SET;
 		BEGIN {EXCLUSIVE}
 			(* if C Bit in next TxCmd Block is not set, the transmit command has not yet finished processing all bytes
@@ -150,7 +150,7 @@ TYPE
 			(* set data field *)
 			SYSTEM.MOVE(ADDRESSOF(dst[0]), actAdr + DataOfs, 6);	(* the first 6 bytes of data field are dst address *)
 			SYSTEM.MOVE(ADDRESSOF(local[0]), actAdr + DataOfs + 6, 6);
-			SYSTEM.PUT16(actAdr + DataOfs + 12, ROT(SYSTEM.VAL(INTEGER, SHORT(type)), 8));
+			SYSTEM.PUT16(actAdr + DataOfs + 12, ROT(SYSTEM.VAL(SIGNED16, SHORT(type)), 8));
 			i := 14;
 			IF h3len > 0 THEN SYSTEM.MOVE(ADDRESSOF(l3hdr[0]), actAdr + DataOfs + i, h3len); INC(i, h3len) END;
 			IF h4len > 0 THEN SYSTEM.MOVE(ADDRESSOF(l4hdr[0]), actAdr + DataOfs + i, h4len); INC(i, h4len) END;
@@ -182,7 +182,7 @@ TYPE
 			(* ctrl.ExecCmd(CXMask + CNAMask + ERMask, ~keepMasks); *)
 		END DoSend;
 
-		PROCEDURE ReceiveData(VAR data: ARRAY OF CHAR; ofs, size: LONGINT);
+		PROCEDURE ReceiveData(VAR data: ARRAY OF CHAR; ofs, size: SIGNED32);
 		BEGIN
 			ASSERT(size <= ctrl.rcvSize);	(* enough data left *)
 			ASSERT((size >= 0) & (ofs+size <= LEN(data)));	(* index check *)
@@ -202,14 +202,14 @@ TYPE
 	Controller = OBJECT
 		VAR
 			next: Controller;
-			base: ADDRESS; irq: LONGINT;
+			base: ADDRESS; irq: SIGNED32;
 			dev: LinkDevice;
 			actRFD, lastRFD: DataBlock;
 			actTxCmd: DataBlock;
-			rcvAdr, rcvSize: LONGINT;
+			rcvAdr, rcvSize: SIGNED32;
 
-		PROCEDURE &Init*(dev: LinkDevice; base: ADDRESS; irq: LONGINT);
-		VAR res: WORD; i: LONGINT;
+		PROCEDURE &Init*(dev: LinkDevice; base: ADDRESS; irq: SIGNED32);
+		VAR res: INTEGER; i: SIGNED32;
 			configCmd, iASetupCmd: DataBlock;
 		BEGIN
 			SELF.next := installedControllers; installedControllers := SELF;
@@ -276,7 +276,7 @@ TYPE
 		PROCEDURE SetMACAddress(VAR cmd: DataBlock);
 		CONST
 			MacAdrBase = 0;
-		VAR reg, i: INTEGER;
+		VAR reg, i: SIGNED16;
 		BEGIN
 			(* read permanent MAC address *)
 			FOR i := 0 TO 2 DO
@@ -292,7 +292,7 @@ TYPE
 
 			PROCEDURE ToChar(s: SET): CHAR;
 			BEGIN
-				RETURN SYSTEM.VAL(CHAR, SHORT(SHORT(SYSTEM.VAL(LONGINT, s))));
+				RETURN SYSTEM.VAL(CHAR, SHORT(SHORT(SYSTEM.VAL(SIGNED32, s))));
 			END ToChar;
 
 		BEGIN
@@ -324,7 +324,7 @@ TYPE
 
 		PROCEDURE SetupTxRing;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			adr, physAdr: ADDRESS;
 			txCmd, prev: DataBlock;
 		BEGIN
@@ -352,7 +352,7 @@ TYPE
 
 		PROCEDURE SetupRxRing;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			adr, physAdr: ADDRESS;
 			rxFrame, prev: DataBlock;
 		BEGIN
@@ -396,7 +396,7 @@ TYPE
 			SYSTEM.PUT32(ADDRESSOF(cmd.data[0]), bits * {16..31});	(* set status word bits to 0 *)
 		END SetCmdHdr;
 
-		PROCEDURE MakeBlock(VAR cmd: DataBlock; dataSize: LONGINT);
+		PROCEDURE MakeBlock(VAR cmd: DataBlock; dataSize: SIGNED32);
 		BEGIN
 			NEW(cmd);
 			cmd.size := dataSize;
@@ -405,7 +405,7 @@ TYPE
 
 		PROCEDURE AckIntr(interrupts: SET);
 		BEGIN
-			SYSTEM.PUT16(base + SCBStatus, SHORT(SYSTEM.VAL(LONGINT, interrupts)));
+			SYSTEM.PUT16(base + SCBStatus, SHORT(SYSTEM.VAL(SIGNED32, interrupts)));
 		END AckIntr;
 
 		PROCEDURE GetStatus():SET;
@@ -501,12 +501,12 @@ TYPE
 			SYSTEM.PUT32(base + PORTReg, p);
 		END WritePORT;
 
-		PROCEDURE WriteSCBGenPtr(val: LONGINT);
+		PROCEDURE WriteSCBGenPtr(val: SIGNED32);
 		BEGIN
 			SYSTEM.PUT32(base + SCBGenPtr, val);
 		END WriteSCBGenPtr;
 
-		PROCEDURE ReadEEPROM(reg: INTEGER; VAR res: INTEGER);
+		PROCEDURE ReadEEPROM(reg: SIGNED16; VAR res: SIGNED16);
 		CONST
 			EESK = 0;
 			EECS = 1;
@@ -515,31 +515,31 @@ TYPE
 			ReadOpcode = 6;
 		VAR
 			x: SET;
-			bits: INTEGER;
+			bits: SIGNED16;
 
 			PROCEDURE RaiseClk(VAR x: SET);
-			VAR dummy: LONGINT;
+			VAR dummy: SIGNED32;
 			BEGIN
 				INCL(x, EESK);
-				SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(LONGINT, x)));
+				SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(SIGNED32, x)));
 				dummy := SYSTEM.GET16(base + SCBStatus);
 				Delay(1);
 			END RaiseClk;
 
 			PROCEDURE LowerClk(VAR x: SET);
-			VAR dummy: LONGINT;
+			VAR dummy: SIGNED32;
 			BEGIN
 				EXCL(x, EESK);
-				SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(LONGINT, x)));
+				SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(SIGNED32, x)));
 				dummy := SYSTEM.GET16(base + SCBStatus);
 				Delay(1);
 			END LowerClk;
 
-			PROCEDURE ShiftOutBits(data, count: INTEGER);
+			PROCEDURE ShiftOutBits(data, count: SIGNED16);
 			VAR
-				mask: INTEGER;
+				mask: SIGNED16;
 				x: SET;
-				dummy: LONGINT;
+				dummy: SIGNED32;
 			BEGIN
 				mask := LSH(1, count-1);
 				x := GetEEPROMReg();
@@ -549,7 +549,7 @@ TYPE
 					IF (SYSTEM.VAL(SET, LONG(data)) * SYSTEM.VAL(SET, LONG(mask)) # {}) THEN
 						INCL(x, EEDI);
 					END;
-					SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(LONGINT, x)));
+					SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(SIGNED32, x)));
 					dummy := SYSTEM.GET16(base + SCBStatus);
 					Delay(1);
 					RaiseClk(x);
@@ -558,13 +558,13 @@ TYPE
 				UNTIL mask = 0;
 
 				EXCL(x, EEDI);
-				SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(LONGINT, x)));
+				SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(SIGNED32, x)));
 			END ShiftOutBits;
 
-			PROCEDURE ShiftInBits(): INTEGER;
+			PROCEDURE ShiftInBits(): SIGNED16;
 			VAR
 				x: SET;
-				d, i: INTEGER;
+				d, i: SIGNED16;
 			BEGIN
 				x := GetEEPROMReg();
 				EXCL(x, EEDO); EXCL(x, EEDI);
@@ -595,11 +595,11 @@ TYPE
 				returns number of bits in eeprom address
 				typically 6 or 8 bits according to eeprom size of 64 or 256 registers
 			*)
-			PROCEDURE GetEEPROMAdrSize(): INTEGER;
+			PROCEDURE GetEEPROMAdrSize(): SIGNED16;
 			VAR
 				x: SET;
-				size: INTEGER;
-				dummy: LONGINT;
+				size: SIGNED16;
+				dummy: SIGNED32;
 				err: BOOLEAN;
 			BEGIN
 				err := FALSE;
@@ -608,7 +608,7 @@ TYPE
 				x := GetEEPROMReg();
 				EXCL(x, EEDI); EXCL(x, EEDO); EXCL(x, EESK);
 				INCL(x, EECS);
-				SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(LONGINT, x)));
+				SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(SIGNED32, x)));
 
 				ShiftOutBits(ReadOpcode, 3);	(* opcodes are 3 bits *)
 
@@ -618,7 +618,7 @@ TYPE
 					INC(size);
 					INCL(x, EEDO);
 					EXCL(x, EEDI);
-					SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(LONGINT, x)));
+					SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(SIGNED32, x)));
 					dummy := SYSTEM.GET16(base + SCBStatus);
 					Delay(1);
 					RaiseClk(x);
@@ -643,7 +643,7 @@ TYPE
 				x := GetEEPROMReg();
 
 				EXCL(x, EECS); EXCL(x, EEDI);
-				SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(LONGINT, x)));
+				SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(SIGNED32, x)));
 
 				RaiseClk(x);
 				LowerClk(x);
@@ -654,7 +654,7 @@ TYPE
 			x := GetEEPROMReg();
 			EXCL(x, EEDI); EXCL(x, EEDO); EXCL(x, EESK);
 			INCL(x, EECS);
-			SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(LONGINT, x)));
+			SYSTEM.PUT16(base + SCBEeprom, SHORT(SYSTEM.VAL(SIGNED32, x)));
 
 			ShiftOutBits(ReadOpcode, 3);	(* opcodes are 3 bits *)
 			ShiftOutBits(reg, bits);
@@ -730,14 +730,14 @@ TYPE
 		CONST
 			DataOfs = 10H;	(* receive buffer offset *)
 		VAR
-			frameAdr: ADDRESS; type, actualCount: LONGINT;
+			frameAdr: ADDRESS; type, actualCount: SIGNED32;
 			srcAdr (* , dstAdr *) : Network.LinkAdr;
 			(* handler: Network.Receiver; *)
 			buf: Network.Buffer;
 		BEGIN
 			WHILE ContainsRxData(actRFD) DO
 				frameAdr := ADDRESSOF(actRFD.data[0]);
-				actualCount := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, SYSTEM.GET32(frameAdr + 0CH)) * {0..13});
+				actualCount := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, SYSTEM.GET32(frameAdr + 0CH)) * {0..13});
 
 				(*SYSTEM.MOVE(frameAdr + DataOfs, ADDRESSOF(dstAdr), 6);*)
 				SYSTEM.MOVE(frameAdr + DataOfs + 6, ADDRESSOF(srcAdr), 6);
@@ -780,7 +780,7 @@ TYPE
 
 VAR
 	installedControllers: Controller;
-	installed: LONGINT;
+	installed: SIGNED32;
 
 PROCEDURE Install*;
 BEGIN {EXCLUSIVE}
@@ -814,9 +814,9 @@ BEGIN {EXCLUSIVE}
 	installed := 0;
 END Remove;
 
-PROCEDURE ScanPCI(vendor, device: LONGINT);
+PROCEDURE ScanPCI(vendor, device: SIGNED32);
 VAR
-	index, bus, dev, fct, irq, i: LONGINT; res: WORD;
+	index, bus, dev, fct, irq, i: SIGNED32; res: INTEGER;
 	base: ADDRESS;
 	d: LinkDevice;
 	c: Controller;
@@ -860,7 +860,7 @@ END Cleanup;
 (*
 	busy wait for ms milliseconds
 *)
-PROCEDURE Delay(ms: LONGINT);
+PROCEDURE Delay(ms: SIGNED32);
 VAR t: Kernel.MilliTimer;
 BEGIN
 	Kernel.SetTimer(t, ms);

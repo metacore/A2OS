@@ -45,7 +45,7 @@ CONST
 	TLoadAllMessages *= 1;
 
 VAR
-	globalR: LONGINT;
+	globalR: SIGNED32;
 
 TYPE
 	String = Strings.String;
@@ -59,9 +59,9 @@ TYPE
 			message*: String;
 			bodystructure*: Bodystructure;
 			internalDate*: String;
-			size*: LONGINT;
+			size*: SIGNED32;
 			flags*: Flags;
-			uID*: LONGINT;
+			uID*: SIGNED32;
 
 		PROCEDURE ToString*():String;
 		VAR
@@ -112,8 +112,8 @@ TYPE
 
 	Client* = OBJECT
 		VAR
-			status-: LONGINT;
-			currentWork-: LONGINT;
+			status-: SIGNED32;
+			currentWork-: SIGNED32;
 			abort*, userAbort*: BOOLEAN;
 			c: IMAP.Connection;
 
@@ -123,7 +123,7 @@ TYPE
 
 			FolderIsSynchronized: BOOLEAN; (* is set to FALSE by SelectFolder and tells the client to synchronize itself. Synchronization happens on timer wakeup *)
 			FolderComplete: BOOLEAN; (* is set to FALSE by SelectFolder an means that Synchronize has not yet been executed completly *)
-			Task*: LONGINT;
+			Task*: SIGNED32;
 
 			searchResult-: POINTER TO ARRAY OF SIZE;
 			timer*: Kernel.Timer;
@@ -184,14 +184,14 @@ TYPE
 			END;
 		END CallErrorHandler;
 
-		PROCEDURE Connect*(CONST host, user, pass: ARRAY OF CHAR): LONGINT;
+		PROCEDURE Connect*(CONST host, user, pass: ARRAY OF CHAR): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN ConnectUnlocked(host, user, pass);
 		END Connect;
 
-		PROCEDURE ConnectUnlocked(host, user, pass: ARRAY OF CHAR):LONGINT;
+		PROCEDURE ConnectUnlocked(host, user, pass: ARRAY OF CHAR):SIGNED32;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
 			errorString: String;
@@ -254,7 +254,7 @@ TYPE
 
 		PROCEDURE Disconnect*;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF status = ONLINE THEN
 				r := c.Logout();
@@ -270,7 +270,7 @@ TYPE
 
 		PROCEDURE SwitchToOffline*;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF status = ONLINE THEN
 				r := c.Logout();
@@ -281,7 +281,7 @@ TYPE
 
 		PROCEDURE SwitchToOnline*(CONST password: ARRAY OF CHAR);
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF status = OFFLINE THEN
 				(* authenticate to the server *)
@@ -298,7 +298,7 @@ TYPE
 
 		PROCEDURE CheckAnswer(ret: Classes.List);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			answerP: ANY;
 			answer: IMAP.Entry;
 		BEGIN
@@ -359,7 +359,7 @@ TYPE
 		PROCEDURE CheckSearch(answer: IMAP.Entry);
 		VAR
 			list: Classes.List;
-			number: LONGINT;
+			number: SIGNED32;
 			j, count: SIZE;
 			entP: ANY;
 			ent: IMAP.Entry;
@@ -399,7 +399,7 @@ TYPE
 
 		PROCEDURE CheckList(answer: IMAP.Entry);
 		VAR
-			j: LONGINT;
+			j: SIGNED32;
 			list, flags: Classes.List;
 			entP, flagP: ANY;
 			ent, flag: IMAP.Entry;
@@ -595,10 +595,10 @@ TYPE
 			END;
 		END CheckFetch;
 
-		PROCEDURE Synchronize(): LONGINT;
+		PROCEDURE Synchronize(): SIGNED32;
 		VAR
 			path, items: String;
-			r: WORD;
+			r: INTEGER;
 			i, count, step, start, stop, single, fetchStart, fetchStop: SIZE;
 			oldMessages, newMessages: Classes.List;
 			p, pOld: ANY;
@@ -741,9 +741,9 @@ TYPE
 			RETURN OK;
 		END Synchronize;
 
-		PROCEDURE DownloadAllMessages(): LONGINT;
+		PROCEDURE DownloadAllMessages(): SIGNED32;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			count, step, start, end: SIZE;
 			message: Message;
 			p: ANY;
@@ -791,10 +791,10 @@ TYPE
 		END DownloadAllMessages;
 
 		(* fetches starting from idx the following len Messages *)
-		PROCEDURE FetchSomeHeaders(idx, len: SIZE): LONGINT;
+		PROCEDURE FetchSomeHeaders(idx, len: SIZE): SIGNED32;
 		VAR
 			ret: Classes.List;
-			r: LONGINT;
+			r: SIGNED32;
 			start, end, set: ARRAY 64 OF CHAR;
 		BEGIN
 			Strings.IntToStr(idx+1, start);
@@ -812,10 +812,10 @@ TYPE
 		END FetchSomeHeaders;
 
 		(* fetches starting from idx the following len Messages *)
-		PROCEDURE FetchSomeUIDs(idx, len: SIZE): LONGINT;
+		PROCEDURE FetchSomeUIDs(idx, len: SIZE): SIGNED32;
 		VAR
 			ret: Classes.List;
-			r: LONGINT;
+			r: SIGNED32;
 			start, end, set: ARRAY 64 OF CHAR;
 		BEGIN
 			Strings.IntToStr(idx+1, start);
@@ -832,10 +832,10 @@ TYPE
 			RETURN OK;
 		END FetchSomeUIDs;
 
-		PROCEDURE FetchSomeMessages(idx, len: SIZE): LONGINT;
+		PROCEDURE FetchSomeMessages(idx, len: SIZE): SIGNED32;
 		VAR
 			ret: Classes.List;
-			r: LONGINT;
+			r: SIGNED32;
 			start, end, set: ARRAY 64 OF CHAR;
 		BEGIN
 			Strings.IntToStr(idx+1, start);
@@ -852,9 +852,9 @@ TYPE
 			RETURN OK;
 		END FetchSomeMessages;
 
-		PROCEDURE FetchMessage*(message: Message): LONGINT;
+		PROCEDURE FetchMessage*(message: Message): SIGNED32;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			number: ARRAY 20 OF CHAR;
 			ret: Classes.List;
 		BEGIN {EXCLUSIVE}
@@ -876,11 +876,11 @@ TYPE
 			RETURN OK;
 		END FetchMessage;
 
-		PROCEDURE DeleteMessage*(message: Message; expunge: BOOLEAN): LONGINT;
+		PROCEDURE DeleteMessage*(message: Message; expunge: BOOLEAN): SIGNED32;
 		VAR
 			set: ARRAY 20 OF CHAR;
 			ret: Classes.List;
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF status # ONLINE THEN
 				CallErrorHandler("An error happend while trying to delete a message. The Client is not online.");
@@ -907,11 +907,11 @@ TYPE
 			RETURN OK;
 		END DeleteMessage;
 
-		PROCEDURE MoveMessageToTrashBin*(message: Message): LONGINT;
+		PROCEDURE MoveMessageToTrashBin*(message: Message): SIGNED32;
 		VAR
 			set: ARRAY 20 OF CHAR;
 			ret: Classes.List;
-			r: LONGINT;
+			r: SIGNED32;
 			folder: String;
 		BEGIN {EXCLUSIVE}
 			IF preferences.TrashBin^ = "" THEN
@@ -967,11 +967,11 @@ TYPE
 			RETURN OK;
 		END MoveMessageToTrashBin;
 
-		PROCEDURE RestoreMessage*(message: Message): LONGINT;
+		PROCEDURE RestoreMessage*(message: Message): SIGNED32;
 		VAR
 			set: ARRAY 20 OF CHAR;
 			ret: Classes.List;
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF status # ONLINE THEN
 				CallErrorHandler("An error happend while trying to restore a message. The Client is not online.");
@@ -991,15 +991,15 @@ TYPE
 			RETURN OK;
 		END RestoreMessage;
 
-		PROCEDURE CopyMessage*(message: Message; path: String): LONGINT;
+		PROCEDURE CopyMessage*(message: Message; path: String): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN CopyMessageUnlocked(message, path);
 		END CopyMessage;
 
 		(* copy the Message message to the Folder target *)
-		PROCEDURE CopyMessageUnlocked*(message: Message; path: String): LONGINT;
+		PROCEDURE CopyMessageUnlocked*(message: Message; path: String): SIGNED32;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			set: ARRAY 20 OF CHAR;
 			ret: Classes.List;
 		BEGIN
@@ -1025,10 +1025,10 @@ TYPE
 			RETURN OK;
 		END CopyMessageUnlocked;
 
-		PROCEDURE AppendMessage*(message: Message; path: String): LONGINT;
+		PROCEDURE AppendMessage*(message: Message; path: String): SIGNED32;
 		VAR
 			string: String;
-			r: LONGINT;
+			r: SIGNED32;
 			ret: Classes.List;
 		BEGIN {EXCLUSIVE}
 			IF status # ONLINE THEN
@@ -1050,11 +1050,11 @@ TYPE
 			RETURN OK;
 		END AppendMessage;
 
-		PROCEDURE SetAnsweredFlag*(message: Message): LONGINT;
+		PROCEDURE SetAnsweredFlag*(message: Message): SIGNED32;
 		VAR
 			set: ARRAY 20 OF CHAR;
 			ret: Classes.List;
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF status # ONLINE THEN
 				CallErrorHandler("An error happend while trying to set the answered flag of a message. The Client is not online.");
@@ -1074,9 +1074,9 @@ TYPE
 			RETURN OK;
 		END SetAnsweredFlag;
 
-		PROCEDURE SaveSentMessage*(message: Message):LONGINT;
+		PROCEDURE SaveSentMessage*(message: Message):SIGNED32;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			string: String;
 			ret: Classes.List;
 		BEGIN {EXCLUSIVE}
@@ -1103,14 +1103,14 @@ TYPE
 			RETURN OK;
 		END SaveSentMessage;
 
-		PROCEDURE Expunge*(): LONGINT;
+		PROCEDURE Expunge*(): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN ExpungeUnlocked();
 		END Expunge;
 
-		PROCEDURE ExpungeUnlocked(): LONGINT;
+		PROCEDURE ExpungeUnlocked(): SIGNED32;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			ret: Classes.List;
 		BEGIN
 			IF status # ONLINE THEN
@@ -1130,15 +1130,15 @@ TYPE
 			RETURN OK;
 		END ExpungeUnlocked;
 
-		PROCEDURE SelectFolder*(folder: Folder): LONGINT;
+		PROCEDURE SelectFolder*(folder: Folder): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN SelectFolderUnlocked(folder);
 		END SelectFolder;
 
-		PROCEDURE  SelectFolderUnlocked(folder: Folder): LONGINT;
+		PROCEDURE  SelectFolderUnlocked(folder: Folder): SIGNED32;
 		VAR
 			ret: Classes.List;
-			i: LONGINT;
+			i: SIGNED32;
 			path: String;
 		BEGIN
 			currentWork := CWLOADING;
@@ -1187,11 +1187,11 @@ TYPE
 			RETURN OK;
 		END SelectFolderUnlocked;
 
-		PROCEDURE GetSubFolders(VAR  folder: Folder): LONGINT;
+		PROCEDURE GetSubFolders(VAR  folder: Folder): SIGNED32;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			p: ANY;
-			r: LONGINT;
+			r: SIGNED32;
 			temp: Folder;
 			path: String;
 			ret: Classes.List;
@@ -1270,7 +1270,7 @@ TYPE
 
 		PROCEDURE Close*;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF DEBUG THEN 	KernelLog.String("Client is closing..."); KernelLog.Ln(); 	END;
 			currentWork := CWCLOSING;
@@ -1283,9 +1283,9 @@ TYPE
 			timer.Wakeup();
 		END Close;
 
-		PROCEDURE Update(): LONGINT;
+		PROCEDURE Update(): SIGNED32;
 		VAR
-			i, count: LONGINT;
+			i, count: SIGNED32;
 			p: ANY;
 			message: Message;
 			ret: Classes.List;
@@ -1311,11 +1311,11 @@ TYPE
 		END Update;
 
 		(* tries to rename the folder *)
-		PROCEDURE Rename*(folder: Folder; VAR name:  ARRAY OF CHAR): LONGINT;
+		PROCEDURE Rename*(folder: Folder; VAR name:  ARRAY OF CHAR): SIGNED32;
 		VAR
 			newName: String;
 			oldName: String;
-			r: LONGINT;
+			r: SIGNED32;
 			pathLen: SIZE;
 			ret: Classes.List;
 			parent: Folder;
@@ -1362,9 +1362,9 @@ TYPE
 		END Rename;
 
 		(* tries to delete the folder *)
-		PROCEDURE Delete*(folder: Folder): LONGINT;
+		PROCEDURE Delete*(folder: Folder): SIGNED32;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			path: String;
 			ret: Classes.List;
 			parent: Folder;
@@ -1394,9 +1394,9 @@ TYPE
 			RETURN r;
 		END Delete;
 
-		PROCEDURE Create*(folder: Folder; name: ARRAY OF CHAR): LONGINT;
+		PROCEDURE Create*(folder: Folder; name: ARRAY OF CHAR): SIGNED32;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			string: String;
 			newName: String;
 			len, pos: SIZE;
@@ -1433,7 +1433,7 @@ TYPE
 
 		PROCEDURE Search*(CONST string: ARRAY OF CHAR): SIZE;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			ret: Classes.List;
 		BEGIN {EXCLUSIVE}
 			IF status = OFFLINE THEN
@@ -1470,7 +1470,7 @@ TYPE
 				p: ANY;
 				message: Message;
 				string, string2: String;
-				value: LONGINT;
+				value: SIGNED32;
 				date, internalDate: Date;
 				temp1, temp2: POINTER TO ARRAY OF BOOLEAN;
 			BEGIN
@@ -1745,7 +1745,7 @@ TYPE
 			RETURN LEN(searchResult);
 		END OfflineSearch;
 
-		PROCEDURE Save*(VAR doc: XML.Document): LONGINT;
+		PROCEDURE Save*(VAR doc: XML.Document): SIGNED32;
 		VAR
 			element, sub: XML.Element;
 
@@ -1861,11 +1861,11 @@ TYPE
 			messages: Classes.List;
 			message: Message;
 			cdata: XML.CDataSect;
-			i: LONGINT;
+			i: SIGNED32;
 
 			PROCEDURE ExtractAddresses(addresses: Classes.List; CONST tag: ARRAY OF CHAR);
 			VAR
-				i: LONGINT;
+				i: SIGNED32;
 				part: XML.Element;
 			BEGIN
 				i := 0;
@@ -1962,13 +1962,13 @@ TYPE
 			END;
 		END ExtractMailboxContent;
 
-		PROCEDURE Load*(document:XML.Document): LONGINT;
+		PROCEDURE Load*(document:XML.Document): SIGNED32;
 		VAR
 			buffer: Strings.Buffer;
 			writer: Streams.Writer;
 			string: String;
 			i: SIZE;
-			r: LONGINT;
+			r: SIGNED32;
 			element, subElement: XML.Element;
 			subElements, subSubElements, data: XMLObjects.Enumerator;
 			cdata: XML.CDataSect;
@@ -2048,7 +2048,7 @@ TYPE
 			RETURN OK;
 		END Load;
 
-		PROCEDURE LoadPreferences(element: XML.Element): LONGINT;
+		PROCEDURE LoadPreferences(element: XML.Element): SIGNED32;
 		VAR
 			subElements, data: XMLObjects.Enumerator;
 			subElement: XML.Element;
@@ -2108,7 +2108,7 @@ TYPE
 			RETURN OK;
 		END LoadPreferences;
 
-		PROCEDURE InsertMailboxContent(folder: Folder; element: XML.Element): LONGINT;
+		PROCEDURE InsertMailboxContent(folder: Folder; element: XML.Element): SIGNED32;
 		VAR
 			subElements, messageElements, data: XMLObjects.Enumerator;
 			elementP: ANY;
@@ -2120,14 +2120,14 @@ TYPE
 			message: Message;
 			header: HeaderElement;
 			flag : Flags;
-			i, r: LONGINT;
+			i, r: SIGNED32;
 
 			PROCEDURE GetAddress(element: XML.Element): IMAPUtilities.Address;
 			VAR
 				addressParts: XMLObjects.Enumerator;
 				part: XML.Element;
 				address: IMAPUtilities.Address;
-				i: LONGINT;
+				i: SIGNED32;
 			BEGIN
 				NEW(address);
 				addressParts := element.GetContents();
@@ -2339,7 +2339,7 @@ TYPE
 
 		PROCEDURE FindSubFolder(CONST n: ARRAY OF CHAR): Folder;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			sub: Folder;
 			p: ANY;
 		BEGIN
@@ -2545,7 +2545,7 @@ TYPE
 
 	Date* = OBJECT
 	VAR
-		day, month, year: LONGINT;
+		day, month, year: SIGNED32;
 
 		(* Returns TRUE if this date is equal to otherDate *)
 		PROCEDURE Equal*(otherDate: Date): BOOLEAN;
@@ -2627,7 +2627,7 @@ TYPE
 
 	Time *= OBJECT
 	VAR
-		hour, minute, second: LONGINT;
+		hour, minute, second: SIGNED32;
 
 		(* Returns TRUE if this time is equal to otherTime *)
 		PROCEDURE Equal*(otherTime: Time): BOOLEAN;
@@ -2714,7 +2714,7 @@ TYPE
 
 
 	(* defines the ordering of the Messages of a Mailbox as oldest first *)
-	PROCEDURE OldestFirst*(x,y: ANY): LONGINT;
+	PROCEDURE OldestFirst*(x,y: ANY): SIGNED32;
 	VAR
 		m1, m2: Message;
 		h1, h2: HeaderElement;
@@ -2749,7 +2749,7 @@ TYPE
 		END;
 	END OldestFirst;
 
-	PROCEDURE BiggestUIDFirst*(x,y: ANY): LONGINT;
+	PROCEDURE BiggestUIDFirst*(x,y: ANY): SIGNED32;
 	VAR
 		m1, m2: Message;
 		h1, h2: HeaderElement;

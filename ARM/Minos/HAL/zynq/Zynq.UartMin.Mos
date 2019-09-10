@@ -7,30 +7,30 @@ MODULE UartMin;
 IMPORT SYSTEM, Platform, Board, Trace;
 
 CONST
- 	BaseUART0 				= LONGINT( 0E0000000H );
-	BaseUART1 				= LONGINT( 0E0001000H );
+ 	BaseUART0 				= SIGNED32( 0E0000000H );
+	BaseUART1 				= SIGNED32( 0E0001000H );
 
-	CONTROLREG0			= LONGINT( 00H );
-	MODEREG0				= LONGINT( 04H );
-	INTRPENREG0				= LONGINT( 08H );
-	INTERDISREG0				= LONGINT( 0CH );
-	INTERMASKREG0			= LONGINT( 10H );	(* read only *)
-	CHNLINTSTSREG0			= LONGINT( 14H );
-	BAUDRATEGENREG0		= LONGINT( 18H );	
-	RCVRTIMEOUTREG0		= LONGINT( 1CH );
-	RCVRFIFOTRIGLEV0		= LONGINT( 20H );
-	MODEMCTRLREG0		= LONGINT( 24H );
-	MODEMSTATUSREG0		= LONGINT( 28H );
-	CHANNELSTATUSREG0	= LONGINT( 2CH );
-	TXRXFIFO0					= LONGINT( 30H );
-	BAUDRATEDIVREG0		= LONGINT( 34H );
-	FLOWDELAYREG0			= LONGINT( 38H );
-	TXFIFOTRIGLEV0			= LONGINT( 44H );
+	CONTROLREG0			= SIGNED32( 00H );
+	MODEREG0				= SIGNED32( 04H );
+	INTRPENREG0				= SIGNED32( 08H );
+	INTERDISREG0				= SIGNED32( 0CH );
+	INTERMASKREG0			= SIGNED32( 10H );	(* read only *)
+	CHNLINTSTSREG0			= SIGNED32( 14H );
+	BAUDRATEGENREG0		= SIGNED32( 18H );	
+	RCVRTIMEOUTREG0		= SIGNED32( 1CH );
+	RCVRFIFOTRIGLEV0		= SIGNED32( 20H );
+	MODEMCTRLREG0		= SIGNED32( 24H );
+	MODEMSTATUSREG0		= SIGNED32( 28H );
+	CHANNELSTATUSREG0	= SIGNED32( 2CH );
+	TXRXFIFO0					= SIGNED32( 30H );
+	BAUDRATEDIVREG0		= SIGNED32( 34H );
+	FLOWDELAYREG0			= SIGNED32( 38H );
+	TXFIFOTRIGLEV0			= SIGNED32( 44H );
 
 
 VAR 
 
-	base : LONGINT;
+	base : SIGNED32;
 	lnk : PROCEDURE;
 
 	PROCEDURE Flush*;  
@@ -44,13 +44,13 @@ VAR
 
 	PROCEDURE WriteChar (ch: CHAR);
 	VAR 
-		i : LONGINT;
+		i : SIGNED32;
 	BEGIN
 		SYSTEM.PUT( TXRXFIFO0 + base, ch); Flush;
 	END WriteChar;  
 
-	PROCEDURE OpenComPort*( baudrate, parity, databits (* fof *) : LONGINT; flowControl: BOOLEAN );  
-	VAR b, reg: LONGINT; s: SET;  
+	PROCEDURE OpenComPort*( baudrate, parity, databits (* fof *) : SIGNED32; flowControl: BOOLEAN );  
+	VAR b, reg: SIGNED32; s: SET;  
 	BEGIN 
 	(*
 			SYSTEM.PUT8( UARTIER + Base, 0 );   (* disable UART *)
@@ -81,7 +81,7 @@ VAR
 	
 	PROCEDURE Init*;  
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		reg, tempSet: SET;
 	BEGIN 		
 		
@@ -106,7 +106,7 @@ VAR
 	END Ch;
 	
 	PROCEDURE Str* (CONST text: ARRAY OF CHAR);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0; WHILE (i # LEN (text)) & (text[i] # 0X) DO WriteChar (text[i]); INC (i) END; 
 	END Str;
@@ -116,10 +116,10 @@ VAR
 		Str (text); Ln;
 	END StrLn;
 	
-	PROCEDURE HexValue*( val: LONGINT);  
+	PROCEDURE HexValue*( val: SIGNED32);  
 	VAR 
-		i, j: LONGINT;
-		digits: ARRAY 36 OF LONGINT;
+		i, j: SIGNED32;
+		digits: ARRAY 36 OF SIGNED32;
 		str: ARRAY 36 OF CHAR;
 	BEGIN
 		i := 0; j := 0;
@@ -140,25 +140,25 @@ VAR
 		Str(str);
 	END HexValue;
 
-	PROCEDURE Hex* (val: LONGINT);
+	PROCEDURE Hex* (val: SIGNED32);
 	BEGIN 
 		HexValue (val)
 	END Hex;
 
-(*	PROCEDURE Int* (val: LONGINT);
+(*	PROCEDURE Int* (val: SIGNED32);
 	BEGIN Value (val, 10)
 	END Int;
 
 	PROCEDURE Bits* (val: SET);
-	BEGIN HexValue (SYSTEM.VAL (LONGINT, val), 2);
+	BEGIN HexValue (SYSTEM.VAL (SIGNED32, val), 2);
 	END Bits;
 *)
 	PROCEDURE Bool* (bol: BOOLEAN);
 	BEGIN IF bol THEN Str ("TRUE") ELSE Str ("FALSE") END
 	END Bool;
 	
-	PROCEDURE Mem* (adr, size: LONGINT);
-	VAR b: CHAR; byte, val, i: LONGINT;
+	PROCEDURE Mem* (adr, size: SIGNED32);
+	VAR b: CHAR; byte, val, i: SIGNED32;
 	BEGIN
 		WHILE size # 0 DO
 			Hex (adr); Ch (20X);
@@ -174,7 +174,7 @@ VAR
 	END Mem;
 
 	PROCEDURE Set* (val: SET);
-	VAR i: LONGINT; comma: BOOLEAN;
+	VAR i: SIGNED32; comma: BOOLEAN;
 	BEGIN
 		Ch ('{'); i := 0; comma := FALSE;
 		WHILE i # 32 DO
@@ -214,7 +214,7 @@ VAR
 	END PrintComPortSettings;
 	
 	PROCEDURE IsAvailable*() : BOOLEAN;
-	VAR tmp : LONGINT;
+	VAR tmp : SIGNED32;
 		 ret : BOOLEAN;
 	BEGIN
 		ret := FALSE;
@@ -228,8 +228,8 @@ VAR
 *)
 	END IsAvailable;  
 	
-	PROCEDURE GetChar*() : LONGINT;
-	VAR tmp : LONGINT;
+	PROCEDURE GetChar*() : SIGNED32;
+	VAR tmp : SIGNED32;
 	BEGIN
 		SYSTEM.GET( TXRXFIFO0+base, tmp );
 		RETURN tmp

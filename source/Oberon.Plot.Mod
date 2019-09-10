@@ -14,7 +14,7 @@ BEGIN
 	END
 END FindY;
 
-PROCEDURE GetValue(name: ARRAY OF CHAR; default: REAL): REAL;
+PROCEDURE GetValue(name: ARRAY OF CHAR; default: FLOAT32): FLOAT32;
 VAR obj: Objects.Object;
 BEGIN
 	obj := Gadgets.FindObj(Gadgets.context, name);
@@ -25,8 +25,8 @@ BEGIN
 END GetValue;
 
 PROCEDURE Plot*;
-VAR y: BasicGadgets.Integer; i: INTEGER;
-	AmpA, FreqA, AmpB, FreqB, tmp: REAL;
+VAR y: BasicGadgets.Integer; i: SIGNED16;
+	AmpA, FreqA, AmpB, FreqB, tmp: FLOAT32;
 BEGIN
 	AmpA := GetValue("AmpA", 200); FreqA := GetValue("FreqA", 40);
 	AmpB := GetValue("AmpB", 200); FreqB := GetValue("FreqB", 40);

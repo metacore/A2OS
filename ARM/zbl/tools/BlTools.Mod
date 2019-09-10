@@ -30,7 +30,7 @@ VAR
 		udp: BlCommands.UdpSession;
 		uart: BlCommands.UartSession;
 		arg: ARRAY 32 OF CHAR;
-		uartPort: LONGINT;
+		uartPort: SIGNED32;
 	BEGIN
 		IF context.arg.GetString(arg) THEN
 			IF arg = 'UART' THEN
@@ -120,7 +120,7 @@ VAR
 		mem: BlCommands.MemoryDest;
 		zfpga: BlCommands.ZynqFpgaDest;
 		file: BlCommands.FileDest;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		IF context.arg.GetString(resource) THEN
 			IF context.arg.GetString(dest) THEN
@@ -304,7 +304,7 @@ VAR
 	PROCEDURE Mount * (context: Commands.Context);
 	VAR
 		prefix, disk: ARRAY 128 OF CHAR;
-		partition: LONGINT;
+		partition: SIGNED32;
 	BEGIN
 		IF ~context.arg.GetString(prefix) THEN
 			context.error.String("Error: expected prefix");
@@ -405,7 +405,7 @@ VAR
 
 	PROCEDURE Timeout*(context: Commands.Context);
 	VAR
-		time: LONGINT;
+		time: SIGNED32;
 	BEGIN
 		IF context.arg.GetInteger(time, FALSE) THEN
 			IF session.SetTimeout(time) THEN

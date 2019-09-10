@@ -11,16 +11,16 @@ CONST
 	firstY* = 1901;
 
 VAR
-	TimeDiff*: LONGINT;	(** local difference to universal time in minutes *)
-	A : ARRAY 13 OF INTEGER;
-	T : ARRAY 365 OF SHORTINT;
+	TimeDiff*: SIGNED32;	(** local difference to universal time in minutes *)
+	A : ARRAY 13 OF SIGNED16;
+	T : ARRAY 365 OF SIGNED8;
 
 (** Returns TRUE if year is a leap year *)
-PROCEDURE IsLeapYear* (year: INTEGER): BOOLEAN;
+PROCEDURE IsLeapYear* (year: SIGNED16): BOOLEAN;
 BEGIN RETURN (year MOD 4 = 0) & (~(year MOD 100 = 0) OR (year MOD 400 = 0))
 END IsLeapYear;
 
-PROCEDURE LastDay (year, month: INTEGER): INTEGER;
+PROCEDURE LastDay (year, month: SIGNED16): SIGNED16;
 BEGIN
 	IF (month < 8) & ODD(month) OR (month > 7) & ~ODD(month) THEN RETURN 31
 	ELSIF month = 2 THEN
@@ -30,8 +30,8 @@ BEGIN
 END LastDay;
 
 (** Returns the number of days since 1.1.[firstY] *)
-PROCEDURE NumberOfDays* (date: LONGINT): LONGINT;
-VAR num: LONGINT; y, m: INTEGER;
+PROCEDURE NumberOfDays* (date: SIGNED32): SIGNED32;
+VAR num: SIGNED32; y, m: SIGNED16;
 BEGIN
 	y := SHORT(date DIV 512) + zeroY - firstY;
 	m := SHORT(date DIV 32) MOD 16;
@@ -41,8 +41,8 @@ BEGIN
 END NumberOfDays;
 
 (** Returns the date 1.1.[firstY] + days *)
-PROCEDURE NumberOfDaysToDate* (days: LONGINT): LONGINT;
-VAR M, m, y, d: LONGINT;
+PROCEDURE NumberOfDaysToDate* (days: SIGNED32): SIGNED32;
+VAR M, m, y, d: SIGNED32;
 BEGIN
 	IF (days + 307) MOD 1461 = 0 THEN d := 2 ELSE d := 1 END;
 	days := days - (days + 307) DIV 1461; y := firstY + days DIV 365;
@@ -54,8 +54,8 @@ END NumberOfDaysToDate;
 
 
 (** Converts year, month and day into an Oberon date *)
-PROCEDURE ToDate* (year, month, day: INTEGER): LONGINT;
-VAR d: INTEGER;
+PROCEDURE ToDate* (year, month, day: SIGNED16): SIGNED32;
+VAR d: SIGNED16;
 BEGIN
 	month := 1 + (month - 1) MOD 12;
 	d := LastDay(year, month); day := 1 + (day - 1) MOD d;
@@ -63,35 +63,35 @@ BEGIN
 END ToDate;
 
 (** Converts hour, min and sec into an Oberon time *)
-PROCEDURE ToTime* (hour, min, sec: INTEGER): LONGINT;
+PROCEDURE ToTime* (hour, min, sec: SIGNED16): SIGNED32;
 BEGIN RETURN ((LONG(hour) MOD 24)*64 + (min MOD 60))*64 + (sec MOD 60)
 END ToTime;
 
 
 (** Extracts year, month and day of an Oberon date *)
-PROCEDURE ToYMD* (date: LONGINT; VAR year, month, day: INTEGER);
+PROCEDURE ToYMD* (date: SIGNED32; VAR year, month, day: SIGNED16);
 BEGIN
 	year := SHORT(date DIV 512) + zeroY;
 	month := SHORT((date DIV 32) MOD 16); day := SHORT(date MOD 32)
 END ToYMD;
 
 (** Extracts hour, min and sec of an Oberon time *)
-PROCEDURE ToHMS* (time: LONGINT; VAR hour, min, sec: INTEGER);
+PROCEDURE ToHMS* (time: SIGNED32; VAR hour, min, sec: SIGNED16);
 BEGIN
 	hour := SHORT(time DIV 4096); min := SHORT((time DIV 64) MOD 64); sec := SHORT(time MOD 64)
 END ToHMS;
 
 (** Returns weekday from date, where 0 is monday *)
-PROCEDURE DayOfWeek* (date: LONGINT): INTEGER;
-VAR num: LONGINT;
+PROCEDURE DayOfWeek* (date: SIGNED32): SIGNED16;
+VAR num: SIGNED32;
 BEGIN
 	num := NumberOfDays(date);
 	RETURN SHORT((num+1) MOD 7)
 END DayOfWeek;
 
 (** Returns number of days in a month *)
-PROCEDURE DaysOfMonth* (date: LONGINT): INTEGER;	(* returns last day in month *)
-VAR year, month: LONGINT;
+PROCEDURE DaysOfMonth* (date: SIGNED32): SIGNED16;	(* returns last day in month *)
+VAR year, month: SIGNED32;
 BEGIN
 	month := (date DIV 32) MOD 16; year := (date DIV 512) + zeroY;
 	RETURN LastDay(SHORT(year), SHORT(month))
@@ -99,8 +99,8 @@ END DaysOfMonth;
 
 
 (** Following three procedures are used to add/subtract a certain amount of days/month/years. *)
-PROCEDURE AddYear* (date: LONGINT; years: INTEGER): LONGINT;
-VAR y, m, d: INTEGER;
+PROCEDURE AddYear* (date: SIGNED32; years: SIGNED16): SIGNED32;
+VAR y, m, d: SIGNED16;
 BEGIN
 	ToYMD(date, y, m, d);
 	IF firstY <= y + years THEN
@@ -110,8 +110,8 @@ BEGIN
 	RETURN date
 END AddYear;
 
-PROCEDURE AddMonth* (date: LONGINT; months: INTEGER): LONGINT;
-VAR y, m, d: INTEGER;
+PROCEDURE AddMonth* (date: SIGNED32; months: SIGNED16): SIGNED32;
+VAR y, m, d: SIGNED16;
 BEGIN
 	ToYMD(date, y, m, d); INC(m, months - 1);
 	y :=  y + m DIV 12;
@@ -128,28 +128,28 @@ BEGIN
 	RETURN date
 END AddMonth;
 
-PROCEDURE AddDay* (date: LONGINT; days: INTEGER): LONGINT;
-VAR num: LONGINT;
+PROCEDURE AddDay* (date: SIGNED32; days: SIGNED16): SIGNED32;
+VAR num: SIGNED32;
 BEGIN num := NumberOfDays(date); num := num + days; RETURN NumberOfDaysToDate(num)
 END AddDay;
 
 
 (** Following three procedures are used to add/subtract a certain amount of time. *)
-PROCEDURE AddHour* (time: LONGINT; hour: INTEGER): LONGINT;
-VAR s, m, h: INTEGER;
+PROCEDURE AddHour* (time: SIGNED32; hour: SIGNED16): SIGNED32;
+VAR s, m, h: SIGNED16;
 BEGIN ToHMS(time, h, m, s); RETURN ToTime((h + hour) MOD 24, m, s)
 END AddHour;
 
-PROCEDURE AddMinute* (time: LONGINT; min: INTEGER): LONGINT;
-VAR s, m, h: INTEGER;
+PROCEDURE AddMinute* (time: SIGNED32; min: SIGNED16): SIGNED32;
+VAR s, m, h: SIGNED16;
 BEGIN
 	ToHMS(time, h, m, s); INC(m, min);
 	IF (m < 0) OR (m >= 60) THEN h := (h + m DIV 60) MOD 24; m := m MOD 60 END;
 	RETURN ToTime(h, m, s)
 END AddMinute;
 
-PROCEDURE AddSecond* (time: LONGINT; sec: INTEGER): LONGINT;
-VAR s, m, h: INTEGER;
+PROCEDURE AddSecond* (time: SIGNED32; sec: SIGNED16): SIGNED32;
+VAR s, m, h: SIGNED16;
 BEGIN
 	ToHMS(time, h, m, s); INC(s, sec);
 	IF (s < 0) OR (s >= 60) THEN
@@ -160,8 +160,8 @@ BEGIN
 END AddSecond;
 
 (** Following procedure adds/subtracts a certain amount seconds to time/date. *)
-PROCEDURE AddTime* (VAR time, date: LONGINT; sec: LONGINT);
-VAR h, m, s: LONGINT; ss, mm, hh: INTEGER;
+PROCEDURE AddTime* (VAR time, date: SIGNED32; sec: SIGNED32);
+VAR h, m, s: SIGNED32; ss, mm, hh: SIGNED16;
 BEGIN
 	ToHMS(time, hh, mm, ss); s := sec + ss; h := hh; m := mm;
 	IF (s < 0) OR (s >= 60) THEN
@@ -180,7 +180,7 @@ PROCEDURE Init;
 	VAR
 		diff: ARRAY 8 OF CHAR;
 		S: Texts.Scanner;
-		i, j: LONGINT;
+		i, j: SIGNED32;
 BEGIN
 	A[0] := 0; A[1] := 31; A[2] := 59; A[3] := 90; A[4] := 120; A[5] := 151; A[6] := 181;
 	A[7] := 212; A[8] := 243; A[9] :=  273; A[10] := 304; A[11] := 334; A[12] := 365;

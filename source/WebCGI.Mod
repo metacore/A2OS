@@ -64,7 +64,7 @@ VAR
 	cgiProcs : CGIProcInfo;
 
 PROCEDURE MyMatch(VAR uri : ARRAY OF CHAR; y : ARRAY OF CHAR) : BOOLEAN;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	WHILE (i < LEN(uri)) & (i < LEN(y)) & (uri[i] = y[i]) &(y[i] # 0X) DO INC(i) END;
 	RETURN(i < LEN(uri)) & (i < LEN(y)) & (y[i] = 0X)
@@ -73,7 +73,7 @@ END MyMatch;
 PROCEDURE FindProcedure(name : ARRAY OF CHAR) : CGIContextProc;
 VAR
 	cur : CGIProcInfo; cgiProc : CGIContextProc;
-	moduleName, procedureName : Modules.Name; msg : ARRAY 32 OF CHAR; res : WORD;
+	moduleName, procedureName : Modules.Name; msg : ARRAY 32 OF CHAR; res : INTEGER;
 BEGIN {EXCLUSIVE}
 	Strings.Delete(name, 0, 5);
 	cur := cgiProcs;
@@ -104,7 +104,7 @@ PROCEDURE StoreCGIs;
 VAR f : Files.File;
 	w : Files.Writer;
 	cur : CGIProcInfo;
-	res : WORD;
+	res : INTEGER;
 	n0, n1 : ARRAY 64 OF CHAR;
 BEGIN
 	n0 := "CGIConfig.dat"; n1 := "CGIConfig.dat.Bak";

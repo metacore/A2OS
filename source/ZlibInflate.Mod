@@ -59,50 +59,50 @@ MODULE ZlibInflate;	(** eos  **)
 
 		(** result codes **)
 		Result* = RECORD
-			code-: WORD;	(** result code including special conditions and errors **)
+			code-: INTEGER;	(** result code including special conditions and errors **)
 			msg-: POINTER TO ARRAY OF CHAR;	(** detailed error description if available **)
 		END;
 
 		(* code parameters *)
-		Lengths = ARRAY OF SHORTINT;
+		Lengths = ARRAY OF SIGNED8;
 		Code = RECORD
-			bits: INTEGER;	(* number of lookup bits *)
-			offset: INTEGER;	(* offset in length array *)
-			size: INTEGER;	(* number of codes *)
-			simple: INTEGER;	(* number of simple codes *)
-			extra: ARRAY MaxNonSimpleCodes OF SHORTINT;	(* number of extra bits for non-simple codes *)
-			base: ARRAY MaxNonSimpleCodes OF INTEGER;	(* base length/distance for non-simple codes *)
+			bits: SIGNED16;	(* number of lookup bits *)
+			offset: SIGNED16;	(* offset in length array *)
+			size: SIGNED16;	(* number of codes *)
+			simple: SIGNED16;	(* number of simple codes *)
+			extra: ARRAY MaxNonSimpleCodes OF SIGNED8;	(* number of extra bits for non-simple codes *)
+			base: ARRAY MaxNonSimpleCodes OF SIGNED16;	(* base length/distance for non-simple codes *)
 		END;
 
 		(* tree nodes for decoding Huffman trees *)
 		Node = RECORD
-			base: INTEGER;	(* literal, length base, distance base, or table offset *)
-			exop: SHORTINT;	(* number of extra bits or operation *)
-			bits: SHORTINT;	(* number of bits in this code or subcode *)
+			base: SIGNED16;	(* literal, length base, distance base, or table offset *)
+			exop: SIGNED8;	(* number of extra bits or operation *)
+			bits: SIGNED8;	(* number of bits in this code or subcode *)
 		END;
 		Nodes = POINTER TO ARRAY OF Node;
 
 		TreeNodes = RECORD
 			node: Nodes;	(* available nodes *)
-			next: LONGINT;	(* index of next available node *)
+			next: SIGNED32;	(* index of next available node *)
 		END;
 
 		Tree = RECORD
 			node: Nodes;	(* nodes where tree is stored *)
-			base: LONGINT;	(* index of root table *)
-			bits: INTEGER;	(* number of lookup bits *)
+			base: SIGNED32;	(* index of root table *)
+			bits: SIGNED16;	(* number of lookup bits *)
 		END;
 
 		(* memory containing last WindowSize bytes of output *)
 		Window = ARRAY WindowSize OF CHAR;
 
 		(* check function *)
-		CheckFunc = PROCEDURE (old: LONGINT; CONST buf: ARRAY OF CHAR; idx, len: SIZE): LONGINT;
+		CheckFunc = PROCEDURE (old: SIGNED32; CONST buf: ARRAY OF CHAR; idx, len: SIZE): SIGNED32;
 
 		(** inflate stream **)
 		Stream* = RECORD
 			in*, out*: ZlibBuffers.Buffer;	(** input and output buffers (initialized by client) **)
-			(* totalIn-, totalOut-: LONGINT;	(** number of bytes processed **)	*)
+			(* totalIn-, totalOut-: SIGNED32;	(** number of bytes processed **)	*)
 			res-: Result;	(** result of last operation **)
 			wrapper-: BOOLEAN;	(** if set, the stream has a zlib header and a checksum **)
 			open-: BOOLEAN;	(** if set, stream is initialized **)
@@ -111,44 +111,44 @@ MODULE ZlibInflate;	(** eos  **)
 			window: POINTER TO Window;	(* memory for the decompression window *)
 			read, write: SIZE;	(* window read and write index *)
 			checkFn: CheckFunc;	(* function calculating checksum over output bytes *)
-			check: LONGINT;	(* current output checksum *)
-			buf: LONGINT;	(* bit buffer containing up to 32 lookup bits *)
+			check: SIGNED32;	(* current output checksum *)
+			buf: SIGNED32;	(* bit buffer containing up to 32 lookup bits *)
 			bits: SIZE;	(* number of bits in lookup buffer = position of next bit *)
 
 			(* inflate state machine *)
 			inf: RECORD
-				state: INTEGER;	(* current state of stream *)
-				method: INTEGER;	(* method byte for state InfFlag *)
-				marker: INTEGER;	(* marker bytes for state InfBad *)
+				state: SIGNED16;	(* current state of stream *)
+				method: SIGNED16;	(* method byte for state InfFlag *)
+				marker: SIGNED16;	(* marker bytes for state InfBad *)
 				check: RECORD
-					calc: LONGINT;	(* calculated sum *)
-					stored: LONGINT;	(* stored sum *)
+					calc: SIGNED32;	(* calculated sum *)
+					stored: SIGNED32;	(* stored sum *)
 				END
 			END;
 
 			(* block state machine *)
 			block: RECORD
-				state: SHORTINT;	(* current block state *)
+				state: SIGNED8;	(* current block state *)
 				last: BOOLEAN;	(* set for last block *)
 				left: SIZE;	(* bytes left to copy for non-compressed blocks *)
-				nlit: INTEGER;	(* number of literal/length codes *)
-				ndist: SHORTINT;	(* number of distance codes *)
-				nclen: SHORTINT;	(* number of code lengths *)
-				clen: ARRAY MaxLitLenCodes + MaxDistCodes OF SHORTINT;	(* code lengths of bit, lit/len, or distance code *)
-				index: INTEGER;	(* index of next code length *)
+				nlit: SIGNED16;	(* number of literal/length codes *)
+				ndist: SIGNED8;	(* number of distance codes *)
+				nclen: SIGNED8;	(* number of code lengths *)
+				clen: ARRAY MaxLitLenCodes + MaxDistCodes OF SIGNED8;	(* code lengths of bit, lit/len, or distance code *)
+				index: SIGNED16;	(* index of next code length *)
 				nodes: Nodes;	(* memory for Huffman trees *)
 				btree: Tree;	(* bit decoding tree *)
 			END;
 
 			(* code state machine *)
 			decode: RECORD
-				state: SHORTINT;	(* current decode state *)
+				state: SIGNED8;	(* current decode state *)
 				lltree, dtree: Tree;	(* literal/length and distance tree *)
 				tree: Tree;	(* current decoding table *)
-				lit: INTEGER;	(* decoded literal *)
-				extra: INTEGER;	(* extra bits to get *)
-				len: INTEGER;	(* decoded length *)
-				dist: INTEGER;	(* distance back to copy from *)
+				lit: SIGNED16;	(* decoded literal *)
+				extra: SIGNED16;	(* extra bits to get *)
+				len: SIGNED16;	(* decoded length *)
+				dist: SIGNED16;	(* distance back to copy from *)
 			END;
 		END;
 
@@ -156,14 +156,14 @@ MODULE ZlibInflate;	(** eos  **)
 	VAR
 		FixedBuilt: BOOLEAN;	(* set if fixed Huffman tables have been built *)
 		FixedLitLenTree, FixedDistTree: Tree;	(* nodes for fixed literal/length and distance tree *)
-		Order: ARRAY 19 OF SHORTINT;	(* order of code bit lengths *)
+		Order: ARRAY 19 OF SIGNED8;	(* order of code bit lengths *)
 
 
 	(*--- Results ---*)
 
 	(* set error message *)
 	PROCEDURE SetMsg (VAR res: Result; msg: ARRAY OF CHAR);
-		VAR l: LONGINT;
+		VAR l: SIGNED32;
 	BEGIN
 		l := 0; WHILE msg[l] # 0X DO INC(l) END;
 		NEW(res.msg, l+1); COPY(msg, res.msg^)
@@ -172,7 +172,7 @@ MODULE ZlibInflate;	(** eos  **)
 
 	(*--- Huffman Decoding Tables ---*)
 
-	PROCEDURE MakeLitLenCode (VAR code: Code; bits, offset, size, simple: INTEGER);
+	PROCEDURE MakeLitLenCode (VAR code: Code; bits, offset, size, simple: SIGNED16);
 	BEGIN
 		code.bits := bits; code.offset := offset; code.size := size; code.simple := simple;
 		IF simple < size THEN
@@ -195,7 +195,7 @@ MODULE ZlibInflate;	(** eos  **)
 		END
 	END MakeLitLenCode;
 
-	PROCEDURE MakeDistCode (VAR code: Code; bits, offset, size, simple: INTEGER);
+	PROCEDURE MakeDistCode (VAR code: Code; bits, offset, size, simple: SIGNED16);
 	BEGIN
 		code.bits := bits; code.offset := offset; code.size := size; code.simple := simple;
 		IF simple < size THEN
@@ -219,7 +219,7 @@ MODULE ZlibInflate;	(** eos  **)
 	END MakeDistCode;
 
 	PROCEDURE MakeFixedLitLenCode (VAR len: Lengths; VAR code: Code);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		ASSERT(LEN(len) >= 288, 100);
 		FOR i := 0 TO 143 DO len[i] := 8 END;
@@ -230,7 +230,7 @@ MODULE ZlibInflate;	(** eos  **)
 	END MakeFixedLitLenCode;
 
 	PROCEDURE MakeFixedDistCode (VAR len: Lengths; VAR code: Code);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		ASSERT(LEN(len) >= 30, 100);
 		FOR i := 0 TO 29 DO len[i] := 5 END;
@@ -238,22 +238,22 @@ MODULE ZlibInflate;	(** eos  **)
 	END MakeFixedDistCode;
 
 	(* build huffman tree for given code *)
-	PROCEDURE BuildTree (VAR clen: Lengths; VAR code: Code; VAR tn: TreeNodes; VAR tree: Tree; VAR res: WORD);
+	PROCEDURE BuildTree (VAR clen: Lengths; VAR code: Code; VAR tn: TreeNodes; VAR tree: Tree; VAR res: INTEGER);
 		CONST
 			maxLen = 15;	(* maximum bit length of any code *)
 		VAR
-			l, lbits, min, max, dbits, len, bits, b: LONGINT;	(* bit lengths *)
-			c, idx: LONGINT;	(* code index *)
-			codes: ARRAY maxLen+1 OF INTEGER;	(* number of codes of each length *)
-			unused, size, count, entries: LONGINT;	(* code counts *)
-			offset: ARRAY maxLen+1 OF INTEGER;	(* offset into index table for each length *)
-			off: INTEGER;
-			index: ARRAY MaxLitLenCodes OF INTEGER;	(* symbol numbers ordered by code length *)
-			backup: ARRAY maxLen OF LONGINT;	(* projection of current pattern to each level *)
-			pat, p, inc: LONGINT;	(* current code pattern *)
-			tab, t: LONGINT;	(* pointers into Huffman nodes *)
-			level: LONGINT;	(* current table level *)
-			table: ARRAY maxLen OF LONGINT;	(* current table index for each open level *)
+			l, lbits, min, max, dbits, len, bits, b: SIGNED32;	(* bit lengths *)
+			c, idx: SIGNED32;	(* code index *)
+			codes: ARRAY maxLen+1 OF SIGNED16;	(* number of codes of each length *)
+			unused, size, count, entries: SIGNED32;	(* code counts *)
+			offset: ARRAY maxLen+1 OF SIGNED16;	(* offset into index table for each length *)
+			off: SIGNED16;
+			index: ARRAY MaxLitLenCodes OF SIGNED16;	(* symbol numbers ordered by code length *)
+			backup: ARRAY maxLen OF SIGNED32;	(* projection of current pattern to each level *)
+			pat, p, inc: SIGNED32;	(* current code pattern *)
+			tab, t: SIGNED32;	(* pointers into Huffman nodes *)
+			level: SIGNED32;	(* current table level *)
+			table: ARRAY maxLen OF SIGNED32;	(* current table index for each open level *)
 			node: Node;
 	BEGIN
 		(* compute number of codes for each bit length *)
@@ -436,7 +436,7 @@ MODULE ZlibInflate;	(** eos  **)
 	END Flush;
 
 	(* transfer bits from input buffer to bit buffer and return if successful *)
-	PROCEDURE Need (VAR s: Stream; bits: LONGINT): BOOLEAN;
+	PROCEDURE Need (VAR s: Stream; bits: SIGNED32): BOOLEAN;
 		VAR byte: CHAR;
 	BEGIN
 		WHILE s.bits < bits DO
@@ -495,7 +495,7 @@ MODULE ZlibInflate;	(** eos  **)
 		string length) and number of input bytes available (s.in.avail) at least ten.  The ten bytes
 		are six bytes for the longest length/distance pair plus four bytes for overloading the bit buffer. *)
 	PROCEDURE InflateFast (VAR s: Stream; VAR wavail: SIZE);
-		VAR inavail, index, len: SIZE; base, dist: LONGINT; byte: CHAR; node: Node; exop: INTEGER;
+		VAR inavail, index, len: SIZE; base, dist: SIGNED32; byte: CHAR; node: Node; exop: SIGNED16;
 	BEGIN
 		inavail := s.in.avail;
 		REPEAT
@@ -591,7 +591,7 @@ MODULE ZlibInflate;	(** eos  **)
 	END InflateFast;
 
 	PROCEDURE InflateCodes (VAR s: Stream);
-		VAR wavail: SIZE; base: LONGINT; index: SIZE; node: Node; exop: INTEGER;
+		VAR wavail: SIZE; base: SIGNED32; index: SIZE; node: Node; exop: SIGNED16;
 	BEGIN
 		IF s.write < s.read THEN wavail := s.read - s.write - 1
 		ELSE wavail := WindowSize - s.write
@@ -714,7 +714,7 @@ MODULE ZlibInflate;	(** eos  **)
 
 	(*--- Block Handling ---*)
 
-	PROCEDURE ResetBlocks (VAR s: Stream; VAR check: LONGINT);
+	PROCEDURE ResetBlocks (VAR s: Stream; VAR check: SIGNED32);
 		VAR buf: ARRAY 1 OF CHAR;
 	BEGIN
 		check := s.check;
@@ -746,7 +746,7 @@ MODULE ZlibInflate;	(** eos  **)
 
 	PROCEDURE InflateBlocks (VAR s: Stream);
 		VAR
-			wavail, t: SIZE; cnt, len: LONGINT; tn: TreeNodes; clen: ARRAY MaxLitLenCodes OF SHORTINT; code: Code; res: WORD;
+			wavail, t: SIZE; cnt, len: SIGNED32; tn: TreeNodes; clen: ARRAY MaxLitLenCodes OF SIGNED8; code: Code; res: INTEGER;
 			node: Node; lltree, dtree: Tree;
 	BEGIN
 		IF s.write < s.read THEN wavail := s.read - s.write - 1
@@ -826,9 +826,9 @@ MODULE ZlibInflate;	(** eos  **)
 			| BlkTable:	(* get number of code lengths for each tree *)
 				IF ~Need(s, 14) THEN EXIT END;	(* 5 (#lit/len-257) + 5 (#dist-1) + 4 (#codelen-4) *)
 				t := s.buf MOD 4000H;
-				s.block.nlit := INTEGER(257 + t MOD 20H); t := t DIV 20H;
-				s.block.ndist := SHORTINT(1 + t MOD 20H); t := t DIV 20H;
-				s.block.nclen := SHORTINT(4 + t);
+				s.block.nlit := SIGNED16(257 + t MOD 20H); t := t DIV 20H;
+				s.block.ndist := SIGNED8(1 + t MOD 20H); t := t DIV 20H;
+				s.block.nclen := SIGNED8(4 + t);
 				IF (s.block.nlit > 286) OR (s.block.ndist > 30) THEN
 					SetMsg(s.res, "too many length or distance symbols");
 					s.block.state := BlkBad; s.res.code := DataError;
@@ -973,7 +973,7 @@ MODULE ZlibInflate;	(** eos  **)
 		END
 	END InflateBlocks;
 
-	PROCEDURE SetBlockDict (VAR s: Stream; VAR dict: ARRAY OF CHAR; offset, len: LONGINT);
+	PROCEDURE SetBlockDict (VAR s: Stream; VAR dict: ARRAY OF CHAR; offset, len: SIGNED32);
 	BEGIN
 		ASSERT((len <= WindowSize) & (offset + len <= LEN(dict)), 100);
 		SYSTEM.MOVE(ADDRESSOF(dict[0]), ADDRESSOF(s.window[0]), len);
@@ -989,7 +989,7 @@ MODULE ZlibInflate;	(** eos  **)
 	(*--- Inflate Streams ---*)
 
 	PROCEDURE Reset0(VAR stream: Stream);
-			VAR check: LONGINT;
+			VAR check: SIGNED32;
 	BEGIN
 		IF stream.open THEN
 			stream.res.msg := NIL;
@@ -1031,8 +1031,8 @@ MODULE ZlibInflate;	(** eos  **)
 	END Close;
 
 	(** inflate until either input or output buffer runs out; if op is 'Finish', Inflate returns with either 'StreamEnd' or an error **)
-	PROCEDURE Inflate* (VAR stream: Stream; flush: SHORTINT);
-		VAR res: WORD; byte: CHAR; (* inxt, onxt: LONGINT; *)
+	PROCEDURE Inflate* (VAR stream: Stream; flush: SIGNED8);
+		VAR res: INTEGER; byte: CHAR; (* inxt, onxt: SIGNED32; *)
 	BEGIN
 		IF ~stream.open THEN
 			stream.res.code := StreamError
@@ -1136,8 +1136,8 @@ MODULE ZlibInflate;	(** eos  **)
 	END Inflate;
 
 	(** set dictionary if inflate returned 'NeedDict' **)
-	PROCEDURE SetDictionary* (VAR stream: Stream; VAR dict: ARRAY OF CHAR; dictLen: LONGINT);
-		VAR len, idx: LONGINT;
+	PROCEDURE SetDictionary* (VAR stream: Stream; VAR dict: ARRAY OF CHAR; dictLen: SIGNED32);
+		VAR len, idx: SIGNED32;
 	BEGIN
 		IF stream.open & (stream.inf.state = InfDict0) THEN
 			IF Zlib.Adler32(1, dict, 0, dictLen) = stream.inf.check.stored THEN
@@ -1159,7 +1159,7 @@ MODULE ZlibInflate;	(** eos  **)
 
 	(** try to synchronize stream to end of block generated with 'SyncFlush' or 'FullFlush' **)
 	PROCEDURE Sync* (VAR stream: Stream);
-		VAR m: LONGINT; mark: ARRAY 4 OF CHAR; byte: CHAR;
+		VAR m: SIGNED32; mark: ARRAY 4 OF CHAR; byte: CHAR;
 	BEGIN
 		IF ~stream.open THEN
 			stream.res.code := StreamError
@@ -1204,7 +1204,7 @@ MODULE ZlibInflate;	(** eos  **)
 	END SyncPoint;
 
 	(** uncompress complete stream and return output length in len **)
-	PROCEDURE Uncompress* (VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: LONGINT; VAR len: SIZE; VAR res: Result);
+	PROCEDURE Uncompress* (VAR src, dst: ARRAY OF CHAR; srcoffset, srclen, dstoffset, dstlen: SIGNED32; VAR len: SIZE; VAR res: Result);
 		VAR s: Stream;
 	BEGIN
 		ZlibBuffers.Init(s.in, src, srcoffset, srclen, srclen);

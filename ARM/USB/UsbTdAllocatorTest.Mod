@@ -16,7 +16,7 @@ CONST
 		tds: ARRAY Nb OF ADDRESS;
 		t: Kernel.MilliTimer;
 		alloc: UsbVarTdAlloc.Allocator;
-		i, size, time: LONGINT;
+		i, size, time: SIGNED32;
 	BEGIN
 		context.out.String("Repetitions: ");
 		context.out.Int(Nb, 0);

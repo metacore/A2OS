@@ -12,12 +12,12 @@ CONST Colors=[WMGraphics.Red,WMGraphics.Blue,WMGraphics.Green,WMGraphics.Yellow,
 		MaxSize=2048;
 
 TYPE
-	Regressor=PROCEDURE{DELEGATE}(CONST data: ARRAY [*,*] OF LONGREAL; VAR slope,intercept: LONGREAL);
+	Regressor=PROCEDURE{DELEGATE}(CONST data: ARRAY [*,*] OF FLOAT64; VAR slope,intercept: FLOAT64);
 
 TYPE
 	Window=OBJECT(WM.BufferWindow);
 	VAR width,height:SIZE;
-		data:ARRAY [?] OF LONGREAL;
+		data:ARRAY [?] OF FLOAT64;
 
 		PROCEDURE Update(w,h: SIZE);
 		BEGIN
@@ -69,8 +69,8 @@ TYPE
 	Histogram* = OBJECT (Window);
 
 
-		PROCEDURE &New*(CONST data: ARRAY [*] OF LONGREAL; CONST title: ARRAY OF CHAR);
-		VAR max:LONGREAL; w0,h0:SIZE;
+		PROCEDURE &New*(CONST data: ARRAY [*] OF FLOAT64; CONST title: ARRAY OF CHAR);
+		VAR max:FLOAT64; w0,h0:SIZE;
 		BEGIN
 			SELF.data:=data;
 			max:=MAX(data);
@@ -86,7 +86,7 @@ TYPE
 
 
 
-		PROCEDURE NewData*(CONST data: ARRAY [*] OF LONGREAL);
+		PROCEDURE NewData*(CONST data: ARRAY [*] OF FLOAT64);
 		BEGIN
 			SELF.data:=data;
 			Update(GetWidth(), GetHeight());
@@ -111,10 +111,10 @@ TYPE
 	(** display matrix values in checkerboard like fashion. positive values are in black/grey/white, negative values in red*)
 	Matrix* = OBJECT (Window);
 	VAR
-		(*data:ARRAY [*,*] OF LONGREAL;*)
-		max,min, offset, gain:LONGREAL;
+		(*data:ARRAY [*,*] OF FLOAT64;*)
+		max,min, offset, gain:FLOAT64;
 
-		PROCEDURE &New*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR);
+		PROCEDURE &New*(CONST data: ARRAY [*,*] OF FLOAT64; CONST title: ARRAY OF CHAR);
 		BEGIN
 			SELF.data:=data;
 			min:=MIN(data); max:=MAX(data);
@@ -135,7 +135,7 @@ TYPE
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
 
-		PROCEDURE NewData*(CONST data: ARRAY [*,*] OF LONGREAL);
+		PROCEDURE NewData*(CONST data: ARRAY [*,*] OF FLOAT64);
 		BEGIN
 			SELF.data:=data;
 			min:=MIN(data); max:=MAX(data);
@@ -148,7 +148,7 @@ TYPE
 		END NewData;
 
 		PROCEDURE Update(w,h: SIZE);
-		VAR col: WMGraphics.Color; x,y:SIZE; val:LONGREAL; valI:LONGINT;
+		VAR col: WMGraphics.Color; x,y:SIZE; val:FLOAT64; valI:SIGNED32;
 		BEGIN
 			FOR y:=0 TO LEN(data,0)-1 DO
 				FOR x:=0 TO LEN(data,1)-1 DO
@@ -171,11 +171,11 @@ TYPE
 	Graph* = OBJECT (Window);
 	CONST border=5;
 	VAR
-		(*data:ARRAY [*] OF LONGREAL;*)
-		max,min:LONGREAL;
+		(*data:ARRAY [*] OF FLOAT64;*)
+		max,min:FLOAT64;
 
-		PROCEDURE &New*(CONST data: ARRAY [*] OF LONGREAL; CONST title: ARRAY OF CHAR);
-		VAR w0,h0:SIZE; range:LONGREAL;
+		PROCEDURE &New*(CONST data: ARRAY [*] OF FLOAT64; CONST title: ARRAY OF CHAR);
+		VAR w0,h0:SIZE; range:FLOAT64;
 		BEGIN
 			range:=MAX(ABS(MAX(data)), ABS(MIN(data)));
 			SELF.data:=data;
@@ -200,8 +200,8 @@ TYPE
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
 
-		PROCEDURE NewData*(CONST data: ARRAY [*] OF LONGREAL);
-		VAR range:LONGREAL;
+		PROCEDURE NewData*(CONST data: ARRAY [*] OF FLOAT64);
+		VAR range:FLOAT64;
 		BEGIN
 			range:=MAX(ABS(MAX(data)), ABS(MIN(data)));
 			IF range=0 THEN SELF.data:=data
@@ -215,7 +215,7 @@ TYPE
 		END NewData;
 (*
 		PROCEDURE Update(w,h: SIZE);
-		VAR i:SIZE; mn,mx,x0,y0,x1,y1:LONGINT;
+		VAR i:SIZE; mn,mx,x0,y0,x1,y1:SIGNED32;
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
 			mn:=-border+ENTIER(0.5+min*h / height);
@@ -257,10 +257,10 @@ END Graph;
 Graphs* = OBJECT (Window);
 	CONST border=5;
 	VAR
-		(*data:ARRAY [*,*] OF LONGREAL;*)
-		max,min:LONGREAL;
+		(*data:ARRAY [*,*] OF FLOAT64;*)
+		max,min:FLOAT64;
 
-		PROCEDURE &New*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR);
+		PROCEDURE &New*(CONST data: ARRAY [*,*] OF FLOAT64; CONST title: ARRAY OF CHAR);
 		VAR w0,h0:SIZE;
 		BEGIN
 			SELF.data:=data;
@@ -278,7 +278,7 @@ Graphs* = OBJECT (Window);
 			SetPointerInfo(manager.pointerCrosshair);
 		END New;
 
-		PROCEDURE NewData*(CONST data: ARRAY [*,*] OF LONGREAL);
+		PROCEDURE NewData*(CONST data: ARRAY [*,*] OF FLOAT64);
 		BEGIN
 			SELF.data:=data;
 			max:=MAX(1, MAX(data));
@@ -312,11 +312,11 @@ END Graphs;
 GraphXY* = OBJECT (Window);
 	CONST border=5; scaleRatio=0.95;
 	VAR
-		(*data:ARRAY [*,*] OF LONGREAL;*)
-		minx,miny,maxx,maxy:LONGREAL;
-		ticks: ARRAY [*,*] OF LONGREAL;
+		(*data:ARRAY [*,*] OF FLOAT64;*)
+		minx,miny,maxx,maxy:FLOAT64;
+		ticks: ARRAY [*,*] OF FLOAT64;
 
-		PROCEDURE &New*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR);
+		PROCEDURE &New*(CONST data: ARRAY [*,*] OF FLOAT64; CONST title: ARRAY OF CHAR);
 		VAR w0,h0:SIZE;
 		BEGIN
 			SELF.data:=data;
@@ -335,7 +335,7 @@ GraphXY* = OBJECT (Window);
 			GetTicks;
 		END New;
 
-		PROCEDURE NewData*(CONST data: ARRAY [*,*] OF LONGREAL);
+		PROCEDURE NewData*(CONST data: ARRAY [*,*] OF FLOAT64);
 		BEGIN
 			SELF.data:=data;
 			maxx:=MAX(0,MAX(data[0]));maxy:=MAX(0,MAX(data[1]));
@@ -346,7 +346,7 @@ GraphXY* = OBJECT (Window);
 
 
 		PROCEDURE GetTicks ; (*ticks along X, along Y, at decimal units*)
-		VAR maxx,maxy,stepx,stepy: LONGREAL; log:LONGREAL; steps,i:LONGINT;
+		VAR maxx,maxy,stepx,stepy: FLOAT64; log:FLOAT64; steps,i:SIGNED32;
 		BEGIN
 			maxx:=MAX(ABS(data[0,*]));
 			log:=Log10(maxx);
@@ -364,7 +364,7 @@ GraphXY* = OBJECT (Window);
 			END;
 		END GetTicks;
 
-		PROCEDURE Axes(canvas: WMGraphics.Canvas; w,h,mnw,mnh:SIZE; scalex,scaley:REAL);
+		PROCEDURE Axes(canvas: WMGraphics.Canvas; w,h,mnw,mnh:SIZE; scalex,scaley:FLOAT32);
 		VAR i:SIZE;
 		BEGIN
 			IF mnh#0 THEN canvas.Line(0, h+mnh, w, h+mnh, WMGraphics.Black, WMGraphics.ModeCopy)	END;
@@ -376,7 +376,7 @@ GraphXY* = OBJECT (Window);
 		END Axes;
 
 		PROCEDURE Update(w,h: SIZE);
-		VAR i:SIZE; mnw,mnh,mxw,mxh,x0,x1,y0,y1:SIZE; scalex,scaley:REAL;
+		VAR i:SIZE; mnw,mnh,mxw,mxh,x0,x1,y0,y1:SIZE; scalex,scaley:FLOAT32;
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
 			scalex:=scaleRatio*w/width; scaley:=scaleRatio*h/height;
@@ -404,7 +404,7 @@ END GraphXY;
 TYPE Scatter* = OBJECT (GraphXY);
 
 		PROCEDURE Update(w,h: SIZE);
-		VAR i:SIZE; mnw,mnh,mxw,mxh, x,y, ex,ey:SIZE; scalex,scaley:REAL; rect:WMRectangles.Rectangle;
+		VAR i:SIZE; mnw,mnh,mxw,mxh, x,y, ex,ey:SIZE; scalex,scaley:FLOAT32; rect:WMRectangles.Rectangle;
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), WMGraphics.White, WMGraphics.ModeCopy);
 			scalex:=scaleRatio*w/width;
@@ -432,23 +432,23 @@ END Scatter;
 
 (** Regression plot. requires computation of slope,intercept by suited procedure, e.g. derived from /Matrix/StatisticsLinearRegression.SimpleRegression()  *)
 TYPE Regression*= OBJECT (Scatter)
-	VAR slope,intercept: LONGREAL; regressor:Regressor;
+	VAR slope,intercept: FLOAT64; regressor:Regressor;
 
-	PROCEDURE &Initialize*(CONST data: ARRAY [*,*] OF LONGREAL; CONST title: ARRAY OF CHAR; regress:Regressor);
+	PROCEDURE &Initialize*(CONST data: ARRAY [*,*] OF FLOAT64; CONST title: ARRAY OF CHAR; regress:Regressor);
 	BEGIN
 		regressor:=regress;
 		regressor(data,slope,intercept);
 		New(data,title);
 	END Initialize;
 
-	PROCEDURE NewData*(CONST data: ARRAY [*,*] OF LONGREAL);
+	PROCEDURE NewData*(CONST data: ARRAY [*,*] OF FLOAT64);
 	BEGIN
 		regressor(data,slope,intercept);
 		NewData^(data);
 	END NewData;
 
 	PROCEDURE Update(w,h: SIZE);
-	VAR mnw,mnh,x,y,xx,yy:SIZE; scalex,scaley, x0, y0, x1, y1:LONGREAL;
+	VAR mnw,mnh,x,y,xx,yy:SIZE; scalex,scaley, x0, y0, x1, y1:FLOAT64;
 	BEGIN
 		Update^(w,h);
 		x0:= minx; y0:= x0*slope+intercept;
@@ -475,22 +475,22 @@ BEGIN
 	PosY:=100+ (Pos DIV 700)*50 MOD 700;
 END NewWindowPos;
 
-PROCEDURE Log10(x:LONGREAL):LONGREAL;
+PROCEDURE Log10(x:FLOAT64):FLOAT64;
 BEGIN RETURN MathL.ln(x)/MathL.ln(10);
 END Log10;
 
-PROCEDURE Exp10(x:LONGREAL):LONGREAL;
+PROCEDURE Exp10(x:FLOAT64):FLOAT64;
 BEGIN RETURN MathL.exp(ENTIER(x)*MathL.ln(10));
 END Exp10;
 
 
 
-PROCEDURE DummyRegressor(CONST data: ARRAY [*,*] OF LONGREAL; VAR slope,intercept:LONGREAL);
+PROCEDURE DummyRegressor(CONST data: ARRAY [*,*] OF FLOAT64; VAR slope,intercept:FLOAT64);
 BEGIN
 	slope:=1; intercept:=2;
 END DummyRegressor;
 
-PROCEDURE WriteLR(W:Streams.Writer; CONST t: ARRAY [?] OF LONGREAL);
+PROCEDURE WriteLR(W:Streams.Writer; CONST t: ARRAY [?] OF FLOAT64);
 VAR len: ARRAY [*] OF SIZE; i:SIZE;
 BEGIN
 	ASSERT(DIM(t)>0);
@@ -502,7 +502,7 @@ BEGIN
 	END;
 END WriteLR;
 
-PROCEDURE StoreLR(W:Streams.Writer; CONST t: ARRAY [?] OF LONGREAL);
+PROCEDURE StoreLR(W:Streams.Writer; CONST t: ARRAY [?] OF FLOAT64);
 VAR i:SIZE; len: ARRAY [*] OF SIZE;
 BEGIN
 	W.String("TENSOR 1.0 LR "); (* type, version *) W.Ln;
@@ -515,7 +515,7 @@ BEGIN
 END StoreLR;
 
 PROCEDURE GenerateName(prefix: Strings.String; VAR str: ARRAY OF CHAR);
-VAR  i,j:LONGINT; title: Files.FileName; c:CHAR;
+VAR  i,j:SIGNED32; title: Files.FileName; c:CHAR;
 BEGIN
 	i:=0; j:=0;
 	IF prefix#NIL THEN
@@ -557,7 +557,7 @@ BEGIN {EXCLUSIVE}
 END Demo;
 
 (*PROCEDURE Demo1*; (*associate new dataset with existing graph*)
-VAR h:Histogram; g:Graph; k: Graphs; gx:GraphXY; m:Matrix; s:Scatter; r:Regression; i:LONGINT;
+VAR h:Histogram; g:Graph; k: Graphs; gx:GraphXY; m:Matrix; s:Scatter; r:Regression; i:SIGNED32;
 BEGIN {EXCLUSIVE}
 	NEW(k, [[-2,7,8,4,5,9,6,4,7,8,4,5,9,6],
 			[5,3,2,12,21,3,0,5,3,-2,12,17,4,1]], "MultiGraph");
@@ -572,8 +572,8 @@ BEGIN {EXCLUSIVE}
 END Demo1;*)
 
 (* from MatrixUtilities.Mod*)
-PROCEDURE LoadData(R:Streams.Reader): ARRAY [?] OF LONGREAL;
-VAR s: ARRAY 16 OF CHAR; i, k:LONGINT; len: ARRAY [*] OF SIZE; n: LONGINT;
+PROCEDURE LoadData(R:Streams.Reader): ARRAY [?] OF FLOAT64;
+VAR s: ARRAY 16 OF CHAR; i, k:SIGNED32; len: ARRAY [*] OF SIZE; n: SIGNED32;
 BEGIN
 	R.Ln(s);
 	ASSERT((s="TENSOR 1.0 LR ") OR (s="TENSOR 2.0 LR "));
@@ -587,7 +587,7 @@ BEGIN
 	RETURN RESULT
 END LoadData;
 
-PROCEDURE ReadLR(R:Streams.Reader; VAR t: ARRAY [?] OF LONGREAL);
+PROCEDURE ReadLR(R:Streams.Reader; VAR t: ARRAY [?] OF FLOAT64);
 VAR i:SIZE;
 BEGIN
 	ASSERT(DIM(t)>0);
@@ -601,7 +601,7 @@ END ReadLR;
 (* Draw Graph from File, currently implemented for .MtA Files (see MatrixUtilities.Mod) *)
 PROCEDURE Open*(context:Commands.Context);
 VAR filename: Files.FileName; type: ARRAY 16 OF CHAR;
-	data: ARRAY [?] OF LONGREAL;
+	data: ARRAY [?] OF FLOAT64;
 	f:Files.File; r:Files.Reader;
 	h:Histogram; g:Graph; k: Graphs; gx:GraphXY; m:Matrix; s:Scatter; rg:Regression;
 BEGIN

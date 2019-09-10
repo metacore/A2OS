@@ -13,7 +13,7 @@ TYPE
 			name0 : Files.FileName;
 			path, mask : Strings.String;
 			flags0: SET;
-			time0, date0, size0 : LONGINT;
+			time0, date0, size0 : SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -50,7 +50,7 @@ TYPE
 			adding := FALSE;
 		END Open;
 
-		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: Files.Size): BOOLEAN;
+		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: SIGNED32; VAR size: Files.Size): BOOLEAN;
 		BEGIN
 			IF found THEN
 				COPY ( name0, name );
@@ -65,7 +65,7 @@ TYPE
 
 		(** For internal use only. *)
 
-		PROCEDURE PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size: Files.Size);
+		PROCEDURE PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date: SIGNED32; size: Files.Size);
 		BEGIN
 			ASSERT(adding);
 
@@ -158,7 +158,7 @@ PROCEDURE UrlEncode* ( CONST input : ARRAY OF CHAR; VAR output : ARRAY OF CHAR )
 CONST
 	unsafe = " <>#%[]|\^~[]'"; (* what about " *)
 VAR
-	i, j : LONGINT;
+	i, j : SIGNED32;
 	tmp : ARRAY 3 OF CHAR;
 BEGIN
 	i := 0; j := 0;
@@ -180,7 +180,7 @@ END UrlEncode;
 
 PROCEDURE UrlDecode* (CONST input : ARRAY OF CHAR; VAR output : ARRAY OF CHAR );
 VAR
-	i, j, value: LONGINT; res: WORD;
+	i, j, value: SIGNED32; res: INTEGER;
 	tmp : ARRAY 3 OF CHAR;
 BEGIN
 	i := 0; j := 0;

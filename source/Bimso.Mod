@@ -21,9 +21,9 @@ TYPE
 		start, alive : BOOLEAN;
 		c, cflash : ARRAY 4 OF WMGraphics.Color;
 		random : Random.Generator;
-		game : ARRAY MaxLevel OF SHORTINT;
-		level : LONGINT;
-		step : LONGINT;
+		game : ARRAY MaxLevel OF SIGNED8;
+		level : SIGNED32;
+		step : SIGNED32;
 		error : BOOLEAN;
 		timer : Kernel.Timer;
 		s, levelStr : ARRAY 32 OF CHAR;
@@ -31,10 +31,10 @@ TYPE
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
 		VAR
 			panel : WMStandardComponents.Panel;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			NEW(panel); panel.bounds.SetExtents(200, 200);
-			panel.fillColor.Set(LONGINT(0DDFFDDFFH)); panel.takesFocus.Set(TRUE);
+			panel.fillColor.Set(SIGNED32(0DDFFDDFFH)); panel.takesFocus.Set(TRUE);
 
 			NEW(b[0]); b[0].alignment.Set(WMComponents.AlignTop); b[0].bounds.SetHeight(50);
 			b[0].bearing.Set(WMRectangles.MakeRect(50,0,50,0));
@@ -68,7 +68,7 @@ TYPE
 
 		PROCEDURE &New*;
 		VAR vc : WMComponents.VisualComponent;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			IncCount;
 			(* initialize the button colours *)
@@ -115,7 +115,7 @@ TYPE
 		END CreateLevel;
 
 		PROCEDURE ShowLevel;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO level - 1 DO
 				b[game[i]].clDefault.Set(cflash[game[i]]);
@@ -126,19 +126,19 @@ TYPE
 		END ShowLevel;
 
 		PROCEDURE EnableInput;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO 3 DO b[i].enabled.Set(TRUE) END;
 		END EnableInput;
 
 		PROCEDURE DisableInput;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO 3 DO b[i].enabled.Set(FALSE) END;
 		END DisableInput;
 
 		PROCEDURE Evaluate(sender, data : ANY);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN  {EXCLUSIVE}
 			FOR i := 0 TO 3 DO
 				IF sender = b[i] THEN
@@ -199,7 +199,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*;
 VAR winstance : Window;

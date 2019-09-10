@@ -11,8 +11,8 @@ MODULE HTMLImages IN Oberon;	(** portable *)
 	TYPE
 		Area = POINTER TO AreaDesc;
 		AreaDesc = RECORD
-			key: LONGINT;
-			x, y: INTEGER;
+			key: SIGNED32;
+			x, y: SIGNED16;
 			next: Area
 		END;
 		Map = POINTER TO MapDesc;
@@ -23,7 +23,7 @@ MODULE HTMLImages IN Oberon;	(** portable *)
 		END;
 		RectArea = POINTER TO RectAreaDesc;
 		RectAreaDesc = RECORD (AreaDesc)
-			x2, y2: INTEGER
+			x2, y2: SIGNED16
 		END;
 		Icon = POINTER TO IconDesc;
 		IconDesc = RECORD (Rembrandt.FrameDesc)
@@ -129,10 +129,10 @@ Gadgets.objecthandle(obj, M);
 			attr: ARRAY 64 OF CHAR;
 			area: Area;
 			rarea: RectArea;
-			val: LONGINT;
+			val: SIGNED32;
 			obj: Objects.Object;
 			curMap: Map;
-			pos: INTEGER;
+			pos: SIGNED16;
 	BEGIN
 		IF on THEN
 			Links.GetLink(S.page, "CurMap", obj);
@@ -184,10 +184,10 @@ Gadgets.objecthandle(obj, M);
 		Load the image linked to the icon. *)
 	PROCEDURE LoadIMG*;
 		VAR
-			pos: LONGINT;
+			pos: SIGNED32;
 			F: Texts.Finder;
 			obj, icon: Objects.Object;
-			key: LONGINT;
+			key: SIGNED32;
 			text: Texts.Text;
 			node: HyperDocs.Node;
 			doc: Documents.Document;
@@ -225,9 +225,9 @@ HALT(99)
 		VAR
 			T: Texts.Text;
 			F: Texts.Finder;
-			pos: LONGINT;
+			pos: SIGNED32;
 			obj: Objects.Object;
-			key: LONGINT;
+			key: SIGNED32;
 			doc: Documents.Document;
 			node: HyperDocs.Node;
 	BEGIN
@@ -343,7 +343,7 @@ HALT(99)
 	PROCEDURE IconHandler(F: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
 			F1: Icon;
-			key: LONGINT;
+			key: SIGNED32;
 	BEGIN
 		WITH F: Icon DO
 			IF M IS Objects.AttrMsg THEN
@@ -405,7 +405,7 @@ HALT(99)
 	END NewIcon;
 
 	PROCEDURE LocalName(VAR url, name: ARRAY OF CHAR);
-		VAR i, j: LONGINT;
+		VAR i, j: SIGNED32;
 	BEGIN
 		i := 0; j := 0;
 		WHILE url[i] # 0X DO
@@ -422,7 +422,7 @@ HALT(99)
 		VAR
 			objname, libname: ARRAY 64 OF CHAR;
 			s: HyperDocs.LinkScheme;
-			key: LONGINT;
+			key: SIGNED32;
 			obj: Objects.Object;
 			C: Objects.CopyMsg;
 			lib: Objects.Library;
@@ -467,21 +467,21 @@ HALT(99)
 			P: HTMLDocs.Page;
 			attr, mapname: ARRAY 64 OF CHAR;
 			alt: ARRAY 512 OF CHAR;
-			okey, ikey, l: LONGINT;
+			okey, ikey, l: SIGNED32;
 			doc: Documents.Document;
 			ismap: BOOLEAN;
 			obj: Objects.Object;
 			form: HTMLDocs.Form;
-			border: INTEGER;
+			border: SIGNED16;
 			E: HTTPDocs0.Entry;
 			sattr: Attributes.StringAttr;
 			battr: Attributes.BoolAttr;
-			w, h, x, i, dsr: INTEGER;
+			w, h, x, i, dsr: SIGNED16;
 			icon: Display.Frame;
 			iCon: Icon;
 			C: Objects.CopyMsg;
 			locked: BOOLEAN;
-		PROCEDURE ImgIcon(keyAttr: ARRAY OF CHAR; key: LONGINT);
+		PROCEDURE ImgIcon(keyAttr: ARRAY OF CHAR; key: SIGNED32);
 		BEGIN
 			doc := NIL;
 			obj := Gadgets.FindPublicObj("Icons.Picture");
@@ -696,10 +696,10 @@ HALT(99)
 		RETURN map
 	END FindMap;
 
-	PROCEDURE EditArea(map: Map; F: Rembrandt.Frame; Q: Display3.Mask; VAR M: Oberon.InputMsg; x, y: INTEGER): BOOLEAN;
+	PROCEDURE EditArea(map: Map; F: Rembrandt.Frame; Q: Display3.Mask; VAR M: Oberon.InputMsg; x, y: SIGNED16): BOOLEAN;
 		VAR
 			area: Area;
-			u, v: INTEGER;
+			u, v: SIGNED16;
 			keysum: SET;
 		PROCEDURE FindArea;
 		BEGIN
@@ -772,7 +772,7 @@ Attributes.SetString(F, "Cmd", "HyperDocs.FollowLink  % R  #UseMapKey");
 		RETURN FALSE
 	END EditArea;
 
-(*	PROCEDURE Restore(map: Map; F: Rembrandt.Frame; Q: Display3.Mask; x, y: INTEGER);
+(*	PROCEDURE Restore(map: Map; F: Rembrandt.Frame; Q: Display3.Mask; x, y: SIGNED16);
 		VAR area: Area;
 	BEGIN
 		area := map.areas;
@@ -789,7 +789,7 @@ Attributes.SetString(F, "Cmd", "HyperDocs.FollowLink  % R  #UseMapKey");
 	PROCEDURE ImgHandle(F: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
 			Q: Display3.Mask;
-			x, y: INTEGER;
+			x, y: SIGNED16;
 			link: Links.Link;
 			name: ARRAY 64 OF CHAR;
 			map: Map;

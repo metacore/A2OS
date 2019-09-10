@@ -18,7 +18,7 @@ TYPE
 		editor-: WMDocumentEditor.Editor;
 		visible: BOOLEAN;
 
-		PROCEDURE &New*(CONST title : ARRAY OF CHAR; width, height : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &New*(CONST title : ARRAY OF CHAR; width, height : SIGNED32; alpha : BOOLEAN);
 		BEGIN
 			Init(width, height, alpha);
 			IncCount;
@@ -61,7 +61,7 @@ TYPE
 			RETURN window.visible;
 		END IsVisible;
 
-		PROCEDURE SetWindowBgColor*(color : LONGINT);
+		PROCEDURE SetWindowBgColor*(color : SIGNED32);
 		BEGIN
 			window.editor.fillColor.Set(color);
 			window.editor.editor.fillColor.Set(color);
@@ -77,7 +77,7 @@ TYPE
 			IF window.visible THEN window.Close; END;
 		END Close;
 
-		PROCEDURE &New*(CONST title : ARRAY OF CHAR; width, height : LONGINT; alpha : BOOLEAN);
+		PROCEDURE &New*(CONST title : ARRAY OF CHAR; width, height : SIGNED32; alpha : BOOLEAN);
 		BEGIN
 			NEW(window, title, width, height, alpha);
 
@@ -87,7 +87,7 @@ TYPE
 	END WindowWriter;
 
 VAR
-	nofWindows : LONGINT; timeout: BOOLEAN;
+	nofWindows : SIGNED32; timeout: BOOLEAN;
 
 (** Call the specified command and redirect its output streams to a WindowWriter *)
 PROCEDURE Call*(context : Commands.Context); (** command ~ *)
@@ -97,7 +97,7 @@ VAR
 	flags : SET;
 	options : Options.Options;
 	newContext : Commands.Context;
-	res : WORD;
+	res : INTEGER;
 	fontName: ARRAY 128 OF CHAR;
 BEGIN
 	NEW(options);

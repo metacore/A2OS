@@ -43,12 +43,12 @@ CONST
 TYPE
 	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc = RECORD (vyCharts.tLayerDesc)
-		breaks: ARRAY 32 OF LONGINT;
-		nrOfBreaks: INTEGER
+		breaks: ARRAY 32 OF SIGNED32;
+		nrOfBreaks: SIGNED16
 	END;
 
 	PROCEDURE Recall( sketch: tLayer );
-	VAR x1, y1, x0, y0: REAL;  break: INTEGER;  i, from, to: LONGINT;
+	VAR x1, y1, x0, y0: FLOAT32;  break: SIGNED16;  i, from, to: SIGNED32;
 	BEGIN
 		FOR break := 1 TO sketch.nrOfBreaks DO
 			from := sketch.breaks[break - 1];  to := sketch.breaks[break] - 1;  x0 := vyTypes.VGetR( sketch.x, from );
@@ -60,7 +60,7 @@ TYPE
 	END Recall;
 
 	PROCEDURE Copy( src, dest: tLayer );
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN
 		dest.nrOfBreaks := src.nrOfBreaks;  i := 0;
 		WHILE (i < 32) DO dest.breaks[i] := src.breaks[i];  INC( i ) END

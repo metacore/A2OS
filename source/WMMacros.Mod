@@ -18,7 +18,7 @@ CONST
 
 VAR
 	macros : XML.Element;
-	macroKeySym : LONGINT; (* keysym of key that invokes macros *)
+	macroKeySym : SIGNED32; (* keysym of key that invokes macros *)
 	hasErrors : BOOLEAN;
 
 PROCEDURE IsStop(ch : Char32) : BOOLEAN;
@@ -135,7 +135,7 @@ VAR
 		END HandleString;
 
 		PROCEDURE HandleArg(xml : XML.Element);
-		VAR s : String; nr : LONGINT;
+		VAR s : String; nr : SIGNED32;
 		BEGIN
 			s := xml.GetAttributeValue("nr");
 			IF s # NIL THEN
@@ -236,10 +236,10 @@ END Handle;
 (* <MacroKey keysym="..."/> can be used to specify the key to be used to invoke macros. This procedure tries to		*)
 (* find and parse this element in the Macro file. If the keysym value cannot be retrieved, the DefaultMacrokeysym is	*)
 (* returned.																										*)
-PROCEDURE GetMacroKeySym() : LONGINT;
+PROCEDURE GetMacroKeySym() : SIGNED32;
 VAR
 	enum : XMLObjects.Enumerator; elem : XML.Element; s : XML.String; p : ANY;
-	keysym : LONGINT; res: WORD;
+	keysym : SIGNED32; res: INTEGER;
 BEGIN
 	IF macros # NIL THEN
 		enum := macros.GetContents();

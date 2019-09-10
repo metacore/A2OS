@@ -8,15 +8,15 @@ MODULE Clipboard IN Oberon; (** non-portable / source: Windows.Clipboard.Mod *)	
 
 	VAR
 		W: Texts.Writer;
-		CFOberon: INTEGER;
+		CFOberon: SIGNED16;
 
 	(** Copy a text stretch to the Clipboard. *)
-	PROCEDURE PutToClipboard*(T: Texts.Text; beg, end: LONGINT);
+	PROCEDURE PutToClipboard*(T: Texts.Text; beg, end: SIGNED32);
 		VAR
 			buf: Texts.Buffer; t: Texts.Text;
 			f: Files.File; r: Files.Rider;
 			hMem: Kernel32.HGLOBAL; adr: ADDRESS;
-			size: LONGINT;
+			size: SIGNED32;
 			R: Texts.Reader; ch: CHAR;
 	BEGIN
 		IF User32.OpenClipboard(0) # Kernel32.False THEN
@@ -66,7 +66,7 @@ MODULE Clipboard IN Oberon; (** non-portable / source: Windows.Clipboard.Mod *)	
 		VAR
 			hMem: Kernel32.HGLOBAL; adr: ADDRESS;
 			f: Files.File; r: Files.Rider;
-			i: LONGINT;
+			i: SIGNED32;
 			ch: CHAR;
 	BEGIN
 		T := NIL;
@@ -105,7 +105,7 @@ MODULE Clipboard IN Oberon; (** non-portable / source: Windows.Clipboard.Mod *)	
 		END
 	END GetFromClipboard;
 
-	PROCEDURE GetTextSelection(VAR text: Texts.Text; VAR beg, end: LONGINT);
+	PROCEDURE GetTextSelection(VAR text: Texts.Text; VAR beg, end: SIGNED32);
 		VAR F: Display.Frame; M: Oberon.SelectMsg;
 	BEGIN
 		M.F := NIL; M.id := Oberon.get; M.text := NIL; M.time := -1;
@@ -120,7 +120,7 @@ MODULE Clipboard IN Oberon; (** non-portable / source: Windows.Clipboard.Mod *)	
 
 	(** Cut text selection. *)
 	PROCEDURE Cut*;
-		VAR T: Texts.Text; beg, end: LONGINT;
+		VAR T: Texts.Text; beg, end: SIGNED32;
 	BEGIN
 		GetTextSelection(T, beg, end);
 		IF T # NIL THEN
@@ -131,7 +131,7 @@ MODULE Clipboard IN Oberon; (** non-portable / source: Windows.Clipboard.Mod *)	
 
 	(** Copy text selection. *)
 	PROCEDURE Copy*;
-		VAR T: Texts.Text; beg, end: LONGINT;
+		VAR T: Texts.Text; beg, end: SIGNED32;
 	BEGIN
 		GetTextSelection(T, beg, end);
 		IF T # NIL THEN PutToClipboard( T, beg, end) END

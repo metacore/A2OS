@@ -6,7 +6,7 @@ MODULE Example8;	(* pjm *)
 
 TYPE
 	Semaphore* = OBJECT
-		VAR s: WORD;
+		VAR s: INTEGER;
 
 		PROCEDURE V*;
 		BEGIN {EXCLUSIVE} s := s+1 END V;
@@ -14,7 +14,7 @@ TYPE
 		PROCEDURE P*;
 		BEGIN {EXCLUSIVE} AWAIT(s > 0); s := s-1 END P;
 
-		PROCEDURE &Init*(s: INTEGER);
+		PROCEDURE &Init*(s: SIGNED16);
 		BEGIN SELF.s := s END Init;
 
 	END Semaphore;

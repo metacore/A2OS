@@ -44,11 +44,11 @@ TYPE
 	(* tSeed = vyRanBase.tSeed          jb 30.11.00 - inlined, causes trap when compiling *)
 
 VAR
-	cuti : LONGINT;
-	maxsi: LONGINT; 	(* maxs: SET; *)	(* jb 30.3.00 *)
+	cuti : SIGNED32;
+	maxsi: SIGNED32; 	(* maxs: SET; *)	(* jb 30.3.00 *)
 
-PROCEDURE Add (VAR x: SET;     y: SET;       shift: LONGINT);
-	VAR carry: BOOLEAN;     i: LONGINT;
+PROCEDURE Add (VAR x: SET;     y: SET;       shift: SIGNED32);
+	VAR carry: BOOLEAN;     i: SIGNED32;
 BEGIN
 	carry := FALSE;
 	FOR i := MAX(SET) - shift TO 1 BY - 1 DO
@@ -68,8 +68,8 @@ BEGIN
 	END
 END Add;
 
-PROCEDURE TruncatedProd (x, y: LONGINT ): LONGINT;
-	VAR ySET, ySET1, ySET2, ySET3 : SET;    ytemp, y1, y2, y3: LONGINT;
+PROCEDURE TruncatedProd (x, y: SIGNED32 ): SIGNED32;
+	VAR ySET, ySET1, ySET2, ySET3 : SET;    ytemp, y1, y2, y3: SIGNED32;
 BEGIN
 	ytemp := y;
 	ySET := SYSTEM.VAL(SET, ytemp);
@@ -91,10 +91,10 @@ BEGIN
 	ySET := ySET1;
 	Add(ySET, ySET2, MAX(SET) DIV 3 + 1);
 	Add(ySET, ySET3, 2 * MAX(SET) DIV 3 + 2);
-	RETURN SYSTEM.VAL(LONGINT, ySET)
+	RETURN SYSTEM.VAL(SIGNED32, ySET)
 END TruncatedProd;
 
-PROCEDURE Randu* (VAR s: LONGINT);
+PROCEDURE Randu* (VAR s: SIGNED32);
 	(*= One step of RANDU *)
 CONST
 	a = 65539;
@@ -112,22 +112,22 @@ BEGIN
 END Max ;
 
 PROCEDURE Get  (r: tRandom): Bits;
-	VAR seed: LONGINT;
+	VAR seed: SIGNED32;
 BEGIN	seed := r.seed(vyRanBase.tLongintSeed).val;    Randu(seed);    r.seed(vyRanBase.tLongintSeed).val := seed;
 	RETURN seed
 	(* better shift adjust: give preference to higher order bits *)
 END Get ;
 
-PROCEDURE GetUniform (r: tRandom): LONGREAL;
+PROCEDURE GetUniform (r: tRandom): FLOAT64;
 CONST (*a = 16807;*)	m = 2147483647;    	(*q = m DIV a;	r = m MOD a; *)scalefact = 1.0D0 / m;
-	VAR seed: LONGINT;
+	VAR seed: SIGNED32;
 BEGIN	 seed := r.seed(vyRanBase.tLongintSeed).val;    	Randu(seed);    r.seed(vyRanBase.tLongintSeed).val := seed;
 	RETURN seed * scalefact
 END GetUniform;
 
-PROCEDURE GetL (r: tRandom;    top: LONGINT): LONGINT;
+PROCEDURE GetL (r: tRandom;    top: SIGNED32): SIGNED32;
 CONST (*a = 16807;	m = 2147483647; 	q = m DIV a;	r = m MOD a; scalefact=1.0D0/m;*)
-	VAR seed: LONGINT;
+	VAR seed: SIGNED32;
 BEGIN	 (* better break if top is out of range *)
 	seed := r.seed(vyRanBase.tLongintSeed).val;    	Randu(seed);    r.seed(vyRanBase.tLongintSeed).val := seed;
 	RETURN ((seed - 1) MOD top)
@@ -249,15 +249,15 @@ BEGIN
 END Install;
 
 PROCEDURE InitConst;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	maxs: SET;
 BEGIN
-	cuti := SYSTEM.VAL(LONGINT, cut);
+	cuti := SYSTEM.VAL(SIGNED32, cut);
 	maxs := {};
 	FOR i := 1 TO MAX(SET) DO
 		INCL(maxs, i)
 	END;
-	maxsi := SYSTEM.VAL (LONGINT, maxs)
+	maxsi := SYSTEM.VAL (SIGNED32, maxs)
 END InitConst;
 
 
@@ -275,7 +275,7 @@ Voyager.Random 1000 ~
 (* debugging versions *)
 
 PROCEDURE Debug (a, b, c, d: SET);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 BEGIN
 	vyOut.Ln();     vyOut.String("val");     vyOut.Ln();    FOR i := 0 TO 2 * MAX(SET) DIV 3 + 1 DO vyOut.String("#")   END;
 	FOR i := 0 TO MAX(SET) DO
@@ -295,12 +295,12 @@ BEGIN
 	END
 END Debug;
 
-PROCEDURE TruncatedProdD (x, y: LONGINT ): LONGINT;
-	VAR ySET, ySET1, ySET2, ySET3, cut : SET;     i: LONGINT;     ytemp, y1, y2, y3, cuti: LONGINT;
+PROCEDURE TruncatedProdD (x, y: SIGNED32 ): SIGNED32;
+	VAR ySET, ySET1, ySET2, ySET3, cut : SET;     i: SIGNED32;     ytemp, y1, y2, y3, cuti: SIGNED32;
 BEGIN
 	cut := {};
 	INCL(cut, 2 * MAX(SET) DIV 3);
-	cuti := SYSTEM.VAL(LONGINT, cut);      (*! to const *)
+	cuti := SYSTEM.VAL(SIGNED32, cut);      (*! to const *)
 	ytemp := y;
 	ySET := SYSTEM.VAL(SET, ytemp);
 	y1 := ytemp MOD cuti;
@@ -355,13 +355,13 @@ BEGIN
 	Debug(ySET, ySET1, ySET2, ySET3);
 	Add(ySET, ySET3, 2 * MAX(SET) DIV 3 + 2);
 	Debug(ySET, ySET1, ySET2, ySET3);
-	vyOut.Int(ytemp, 20);     vyOut.Int(SYSTEM.VAL(LONGINT, ySET), 20);
-	ASSERT(ytemp = SYSTEM.VAL(LONGINT, ySET), 105);
+	vyOut.Int(ytemp, 20);     vyOut.Int(SYSTEM.VAL(SIGNED32, ySET), 20);
+	ASSERT(ytemp = SYSTEM.VAL(SIGNED32, ySET), 105);
 	RETURN 0
 END TruncatedProdD;
 
 PROCEDURE Test*;
-	VAR x, y, z, i: LONGINT;
+	VAR x, y, z, i: SIGNED32;
 BEGIN
 	FOR i := 0 TO 0 DO
 		y := vyRanBase.Random();

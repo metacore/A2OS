@@ -63,7 +63,7 @@ TYPE
 		END IsOpen;
 
 		PROCEDURE ReadACLPacket() : Bluetooth.Packet;
-		VAR acl: Bluetooth.ACLPacket; i : LONGINT;
+		VAR acl: Bluetooth.ACLPacket; i : SIGNED32;
 		BEGIN
 			NEW(acl);
 			i := ORD(in.Get()) + ORD(in.Get())*100H;
@@ -109,7 +109,7 @@ TYPE
 		END ReadACLPacket;
 
 		PROCEDURE ReadSCOPacket() : Bluetooth.Packet;
-		VAR sco: Bluetooth.SCOPacket; i : LONGINT;
+		VAR sco: Bluetooth.SCOPacket; i : SIGNED32;
 		BEGIN
 			KernelLog.String(ModuleName);
 			KernelLog.String("TransportLayer.ReadSCOPacket: uartSCOData received!! continue ....");
@@ -154,7 +154,7 @@ TYPE
 		END ReadSCOPacket;
 
 		PROCEDURE ReadEventPacket() : Bluetooth.Packet;
-		VAR event: Bluetooth.EventPacket; i : LONGINT;
+		VAR event: Bluetooth.EventPacket; i : SIGNED32;
 		BEGIN
 			NEW(event);
 			event.code :=in. Get();
@@ -276,7 +276,7 @@ TYPE
 			END;
 		END Read;
 
-		PROCEDURE GetPacketType(type: LONGINT; VAR c: CHAR): BOOLEAN;
+		PROCEDURE GetPacketType(type: SIGNED32; VAR c: CHAR): BOOLEAN;
 		VAR res: BOOLEAN;
 		BEGIN
 			res := TRUE;
@@ -289,8 +289,8 @@ TYPE
 			RETURN res
 		END GetPacketType;
 
-		PROCEDURE Send*(type: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
-		VAR  pt: CHAR; i: LONGINT;
+		PROCEDURE Send*(type: SIGNED32; VAR data: ARRAY OF CHAR; ofs, len: SIGNED32; VAR res: INTEGER);
+		VAR  pt: CHAR; i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF ~GetPacketType(type, pt) THEN
 				KernelLog.String(ModuleName);
@@ -312,8 +312,8 @@ TYPE
 			res := out.res
 		END Send;
 
-		PROCEDURE Send1H*(type: LONGINT; VAR hdr: ARRAY OF CHAR; hdrlen: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
-		VAR pt: CHAR; i: LONGINT;
+		PROCEDURE Send1H*(type: SIGNED32; VAR hdr: ARRAY OF CHAR; hdrlen: SIGNED32; VAR data: ARRAY OF CHAR; ofs, len: SIGNED32; VAR res: INTEGER);
+		VAR pt: CHAR; i: SIGNED32;
 		BEGIN
 			IF ~GetPacketType(type, pt) THEN
 				KernelLog.String(ModuleName);
@@ -337,10 +337,10 @@ TYPE
 			res := out.res
 		END Send1H;
 
-		PROCEDURE Send2H*(type: LONGINT; VAR hdr1: ARRAY OF CHAR; hdr1len: LONGINT;
-								VAR hdr2: ARRAY OF CHAR; hdr2len: LONGINT;
-								VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
-		VAR pt: CHAR; i: LONGINT;
+		PROCEDURE Send2H*(type: SIGNED32; VAR hdr1: ARRAY OF CHAR; hdr1len: SIGNED32;
+								VAR hdr2: ARRAY OF CHAR; hdr2len: SIGNED32;
+								VAR data: ARRAY OF CHAR; ofs, len: SIGNED32; VAR res: INTEGER);
+		VAR pt: CHAR; i: SIGNED32;
 		BEGIN
 			IF ~GetPacketType(type, pt) THEN
 				KernelLog.String(ModuleName);

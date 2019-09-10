@@ -17,7 +17,7 @@ TYPE
 	Description* = ARRAY 128 OF CHAR;
 	FileExtension* = ARRAY 16 OF CHAR;
 
-	CompileTextProc* = PROCEDURE {DELEGATE} (t : Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc,opt: ARRAY OF CHAR;
+	CompileTextProc* = PROCEDURE {DELEGATE} (t : Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; CONST pc,opt: ARRAY OF CHAR;
 		log: Streams.Writer; diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 
 TYPE
@@ -32,7 +32,7 @@ TYPE
 
 		next : Compiler;
 
-		PROCEDURE CompileText*(t : Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc,opt: ARRAY OF CHAR;
+		PROCEDURE CompileText*(t : Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; CONST pc,opt: ARRAY OF CHAR;
 			log: Streams.Writer; diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 		VAR
 			trap : BOOLEAN;

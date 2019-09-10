@@ -30,7 +30,7 @@ TYPE
 			y-	: Number;
 			inv, r : Number;
 
-			PROCEDURE Sign*( CONST digest: ARRAY OF CHAR;  len: INTEGER  ): Signature;
+			PROCEDURE Sign*( CONST digest: ARRAY OF CHAR;  len: SIGNED16  ): Signature;
 			VAR  m, xr, ss: Number;  sig: Signature;
 			BEGIN
 				ASSERT( private );
@@ -45,7 +45,7 @@ TYPE
 				RETURN sig
 			END Sign;
 
-			PROCEDURE Verify*(  CONST digest: ARRAY OF CHAR;  dlen: INTEGER;  sig: Signature ): BOOLEAN;
+			PROCEDURE Verify*(  CONST digest: ARRAY OF CHAR;  dlen: SIGNED16;  sig: Signature ): BOOLEAN;
 			VAR
 				u, v, w, t1, t2: Number;
 			BEGIN
@@ -73,10 +73,10 @@ VAR
 	one: Number;	(* constant *)
 
 
-	PROCEDURE GenParams*( dsa: Key;  bits: INTEGER;  CONST seed: ARRAY OF CHAR );
+	PROCEDURE GenParams*( dsa: Key;  bits: SIGNED16;  CONST seed: ARRAY OF CHAR );
 	VAR
 		randomseed, pfound: BOOLEAN;
-		i, k, n, count: INTEGER;
+		i, k, n, count: SIGNED16;
 		test, W, r0: Number;
 		sbuf, buf, buf2, md: ARRAY 20 OF CHAR;
 		h: SHA1.Hash;
@@ -170,7 +170,7 @@ VAR
 		END;
 	END GenParams;
 
-	PROCEDURE MakeKeys*( bits: INTEGER;  CONST seed: ARRAY OF CHAR;  VAR pub, priv: Key );
+	PROCEDURE MakeKeys*( bits: SIGNED16;  CONST seed: ARRAY OF CHAR;  VAR pub, priv: Key );
 	BEGIN
 		NEW( priv );
 		GenParams( priv, bits, seed );
@@ -227,7 +227,7 @@ VAR
 
 
 	PROCEDURE LoadPublicKey*( r: Streams.Reader ): Key;
-	VAR buf: ARRAY 4096 OF CHAR; len: LONGINT; pos: SIZE;
+	VAR buf: ARRAY 4096 OF CHAR; len: SIGNED32; pos: SIZE;
 		str: ARRAY 64 OF CHAR;
 		k: Key;
 	BEGIN

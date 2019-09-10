@@ -11,28 +11,28 @@ CONST
 	BufSize = 4096 * 8; Trace = FALSE;
 
 VAR
-	StartingRow, StartingCol, RowIncrement, ColIncrement: ARRAY 7 OF LONGINT;
+	StartingRow, StartingCol, RowIncrement, ColIncrement: ARRAY 7 OF SIGNED32;
 
 TYPE
 	(* lenght = Chunksize -ChunkHeader -ChunkChecksum*)
-	ChunkHeader = RECORD length : LONGINT; name : ARRAY 5 (* ....+0H*) OF CHAR END;
+	ChunkHeader = RECORD length : SIGNED32; name : ARRAY 5 (* ....+0H*) OF CHAR END;
 
 	PNGHead = RECORD
-		width : LONGINT;
-		height : LONGINT;
-		bitDepth : LONGINT; (* Byte *)
-		colorType : LONGINT; (* Byte *)
-		compressMethod : LONGINT; (* Byte *)
-		filterMethod: LONGINT; (* Byte *)
-		interlaceMethod: LONGINT; (* Byte *)
+		width : SIGNED32;
+		height : SIGNED32;
+		bitDepth : SIGNED32; (* Byte *)
+		colorType : SIGNED32; (* Byte *)
+		compressMethod : SIGNED32; (* Byte *)
+		filterMethod: SIGNED32; (* Byte *)
+		interlaceMethod: SIGNED32; (* Byte *)
 	END;
 
 	IDATReader* = OBJECT
 	VAR (* General vars: *)
 		inR: Streams.Reader;
-		remain: LONGINT;
+		remain: SIGNED32;
 		eof : BOOLEAN;
-		PROCEDURE &Init*(firstChunk : LONGINT; inR : Streams.Reader; VAR outR: Streams.Reader);
+		PROCEDURE &Init*(firstChunk : SIGNED32; inR : Streams.Reader; VAR outR: Streams.Reader);
 		BEGIN
 			SELF.inR := inR;
 			Streams.OpenReader(outR, Receiver);
@@ -40,8 +40,8 @@ TYPE
 			remain := firstChunk;
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
-		VAR i: SIZE; crc, tag: LONGINT; ch: CHAR;
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
+		VAR i: SIZE; crc, tag: SIGNED32; ch: CHAR;
 		BEGIN
 			IF ~eof THEN
 				ASSERT((size > 0) & (min <= size) & (min >= 0));
@@ -84,12 +84,12 @@ TYPE
 		format8 : Raster.Format;
 		palette : Raster.Palette;
 
-		bpp: LONGINT; (* bytes per complete pixel rounded up to bytes*)
+		bpp: SIGNED32; (* bytes per complete pixel rounded up to bytes*)
 
 		decoder : Inflate.Reader;
 
 		(* bytes per line - filtertyp byte *)
-		PROCEDURE GetLineSize(width : LONGINT) : LONGINT;
+		PROCEDURE GetLineSize(width : SIGNED32) : SIGNED32;
 		BEGIN
 			CASE hdr.colorType OF
 				 0: RETURN (hdr.bitDepth * width + 7) DIV 8
@@ -131,32 +131,32 @@ TYPE
 		END Init;
 
 		PROCEDURE Decode;
-		VAR x, y, cp : LONGINT;
-			filter, ls : LONGINT;
+		VAR x, y, cp : SIGNED32;
+			filter, ls : SIGNED32;
 			p : ADDRESS;
 			c, dummy : CHAR;
 			prior, current, temp : POINTER TO ARRAY OF CHAR;
 			currentByte : CHAR;
-			bitPos : LONGINT;
+			bitPos : SIGNED32;
 			lastRowStart : ADDRESS;
-			len: SIZE; time,t1,t2 : LONGINT;
+			len: SIZE; time,t1,t2 : SIGNED32;
 			color: RECORD b,g,r,a: CHAR END;
 
-			PROCEDURE GetNextBit() : LONGINT;
+			PROCEDURE GetNextBit() : SIGNED32;
 			BEGIN
 				IF bitPos MOD 8 = 0 THEN currentByte := GetNextFilterByte(); bitPos := 0  END;
 				INC(bitPos);
 				RETURN ORD(LSH(currentByte, bitPos-8 )) MOD 2
 			END GetNextBit;
 
-			PROCEDURE GetNext2Bits() : LONGINT;
+			PROCEDURE GetNext2Bits() : SIGNED32;
 			BEGIN
 				IF bitPos MOD 8 = 0 THEN currentByte := GetNextFilterByte(); bitPos := 0 END;
 				INC(bitPos, 2);
 				RETURN ORD(LSH(currentByte, bitPos-8)) MOD 4
 			END GetNext2Bits;
 
-			PROCEDURE GetNext4Bits() : LONGINT;
+			PROCEDURE GetNext4Bits() : SIGNED32;
 			BEGIN
 				IF bitPos MOD 8 = 0 THEN currentByte := GetNextFilterByte(); bitPos := 0 END;
 				INC(bitPos, 4);
@@ -166,7 +166,7 @@ TYPE
 
 			PROCEDURE GetNextFilterByte() : CHAR;
 			VAR result:CHAR;
-					t1, t2:LONGINT; f: LONGINT;
+					t1, t2:SIGNED32; f: SIGNED32;
 
 			BEGIN
 				CASE filter OF
@@ -300,9 +300,9 @@ TYPE
 									color.g := CHR(ORD(current[cp])); INC(cp);
 									color.b := CHR(ORD(current[cp])); INC(cp);
 									color.a := CHR(ORD(current[cp])); INC(cp);
-									(*SYSTEM.GET(SYSTEM.ADR(current[cp]), SYSTEM.VAL(LONGINT, color)); INC(cp,4);*)
+									(*SYSTEM.GET(SYSTEM.ADR(current[cp]), SYSTEM.VAL(SIGNED32, color)); INC(cp,4);*)
 									IF ORD(color.a) = 255 THEN
-										SYSTEM.PUT32(p,SYSTEM.VAL(LONGINT,color)); INC(p,4);
+										SYSTEM.PUT32(p,SYSTEM.VAL(SIGNED32,color)); INC(p,4);
 									ELSE
 										SYSTEM.PUT8(p, CHR(ORD(color.b)*ORD(color.a) DIV 256)); INC(p);
 										SYSTEM.PUT8(p, CHR(ORD(color.g)*ORD(color.a) DIV 256)); INC(p);
@@ -317,7 +317,7 @@ TYPE
 									color.b := CHR(ORD(current[cp])+ORD(current[cp-bpp])); current[cp] := color.b; INC(cp);
 									color.a := CHR(ORD(current[cp])+ORD(current[cp-bpp])); current[cp] := color.a; INC(cp);
 									IF ORD(color.a) = 255 THEN
-										SYSTEM.PUT32(p,SYSTEM.VAL(LONGINT,color)); INC(p,4);
+										SYSTEM.PUT32(p,SYSTEM.VAL(SIGNED32,color)); INC(p,4);
 									ELSE
 										SYSTEM.PUT8(p, CHR(ORD(color.b)*ORD(color.a) DIV 256)); INC(p);
 										SYSTEM.PUT8(p, CHR(ORD(color.g)*ORD(color.a) DIV 256)); INC(p);
@@ -332,7 +332,7 @@ TYPE
 									color.b := CHR(ORD(current[cp])+ORD(prior[cp])); current[cp] := color.b;INC(cp);
 									color.a := CHR(ORD(current[cp])+ORD(prior[cp])); current[cp] := color.a;INC(cp);
 									IF ORD(color.a) = 255 THEN
-										SYSTEM.PUT32(p,SYSTEM.VAL(LONGINT,color)); INC(p,4);
+										SYSTEM.PUT32(p,SYSTEM.VAL(SIGNED32,color)); INC(p,4);
 									ELSE
 										SYSTEM.PUT8(p, CHR(ORD(color.b)*ORD(color.a) DIV 256)); INC(p);
 										SYSTEM.PUT8(p, CHR(ORD(color.g)*ORD(color.a) DIV 256)); INC(p);
@@ -347,7 +347,7 @@ TYPE
 									t1 := ORD(current[cp-bpp]); t2 := ORD(prior[cp]); color.b:=CHR(ORD(current[cp])+(t1+t2) DIV 2); current[cp] := color.b;INC(cp);
 									t1 := ORD(current[cp-bpp]); t2 := ORD(prior[cp]); color.a:=CHR(ORD(current[cp])+(t1+t2) DIV 2); current[cp] := color.a;INC(cp);
 									IF ORD(color.a) = 255 THEN
-										SYSTEM.PUT32(p,SYSTEM.VAL(LONGINT,color)); INC(p,4);
+										SYSTEM.PUT32(p,SYSTEM.VAL(SIGNED32,color)); INC(p,4);
 									ELSE
 										SYSTEM.PUT8(p, CHR(ORD(color.b)*ORD(color.a) DIV 256)); INC(p);
 										SYSTEM.PUT8(p, CHR(ORD(color.g)*ORD(color.a) DIV 256)); INC(p);
@@ -362,7 +362,7 @@ TYPE
 									color.b := CHR(ORD(current[cp])+ORD(PaethPredictor(ORD(current[cp-bpp]), ORD(prior[cp]), ORD(prior[cp-bpp])))); current[cp] := color.b;INC(cp);
 									color.a := CHR(ORD(current[cp])+ORD(PaethPredictor(ORD(current[cp-bpp]), ORD(prior[cp]), ORD(prior[cp-bpp])))); current[cp] := color.a;INC(cp);
 									IF ORD(color.a) = 255 THEN
-										SYSTEM.PUT32(p,SYSTEM.VAL(LONGINT,color)); INC(p,4);
+										SYSTEM.PUT32(p,SYSTEM.VAL(SIGNED32,color)); INC(p,4);
 									ELSE
 										SYSTEM.PUT8(p, CHR(ORD(color.b)*ORD(color.a) DIV 256)); INC(p);
 										SYSTEM.PUT8(p, CHR(ORD(color.g)*ORD(color.a) DIV 256)); INC(p);
@@ -393,7 +393,7 @@ TYPE
 		END Decode;
 
 		PROCEDURE ReadChunkHeader(VAR x: ChunkHeader);
-		VAR i:LONGINT;
+		VAR i:SIGNED32;
 		BEGIN
 			x.length := in.Net32(); (* NOT IN CRC ! *)
 			crc.Reset;
@@ -409,13 +409,13 @@ TYPE
 		END Error;
 
 		PROCEDURE SkipChunk(x : ChunkHeader);
-		VAR i : LONGINT; dummy : CHAR;
+		VAR i : SIGNED32; dummy : CHAR;
 		BEGIN
 			FOR i := 0 TO x.length - 1 DO dummy := GetByte() END
 		END SkipChunk;
 
 		PROCEDURE CheckCRC;
-		VAR t, ccrc:LONGINT;
+		VAR t, ccrc:SIGNED32;
 		BEGIN
 			ccrc := crc.GetCRC();
 			t := in.Net32();
@@ -423,7 +423,7 @@ TYPE
 		END CheckCRC;
 
 		PROCEDURE ProcessChunk(x:ChunkHeader);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 			idatr : Streams.Reader;
 			idatReader : IDATReader;
 		BEGIN
@@ -483,8 +483,8 @@ TYPE
 			RETURN result
 		END GetByte;
 
-		PROCEDURE GetLongint():LONGINT;
-		VAR result:LONGINT;
+		PROCEDURE GetLongint():SIGNED32;
+		VAR result:SIGNED32;
 		BEGIN
 			result := ASH(ORD(GetByte()), 24);
 			INC(result, ASH(ORD(GetByte()), 16));
@@ -493,9 +493,9 @@ TYPE
 			RETURN result
 		END GetLongint;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
 		VAR ch : ChunkHeader;
-			i : LONGINT;
+			i : SIGNED32;
 			isPNG : BOOLEAN;
 		BEGIN
 			res := -1;
@@ -515,7 +515,7 @@ TYPE
 			END
 		END Open;
 
-		PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : LONGINT);
+		PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : SIGNED32);
 		BEGIN
 			width := hdr.width;
 			height := hdr.height;
@@ -547,8 +547,8 @@ TYPE
 
 VAR MagicID : ARRAY 8 OF CHAR;
 
-	PROCEDURE PaethPredictor(a, b, c : LONGINT) : CHAR;
-	VAR p, pa, pb, pc:LONGINT;
+	PROCEDURE PaethPredictor(a, b, c : SIGNED32) : CHAR;
+	VAR p, pa, pb, pc:SIGNED32;
 	BEGIN
 		(*
 		p := a + b - c; pa := ABS(p - a); pb := ABS(p - b); pc := ABS(p - c);

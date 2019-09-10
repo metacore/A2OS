@@ -61,7 +61,7 @@ MODULE Columbus IN Oberon; (** portable *)	(* PS  *)
 		Item = POINTER TO ItemDesc;
 		ItemDesc = RECORD
 			next: Item;
-			class: INTEGER;
+			class: SIGNED16;
 			name: ARRAY 32 OF CHAR;	(* attr./link name *)
 			val: Objects.Object;	(* model, representing attr./link value *)
 		END;
@@ -72,7 +72,7 @@ MODULE Columbus IN Oberon; (** portable *)	(* PS  *)
 			next: HistoryItem;
 			obj: Objects.Object;
 			lib: Objects.Library;
-			view: INTEGER
+			view: SIGNED16
 		END;
 
 		(* inspector panel *)
@@ -88,11 +88,11 @@ MODULE Columbus IN Oberon; (** portable *)	(* PS  *)
 		END;
 
 		Layout = RECORD
-			align: INTEGER;	(* 0: top / 1: middle / 2: bottom *)
-			X, Y, maxH: INTEGER;
+			align: SIGNED16;	(* 0: top / 1: middle / 2: bottom *)
+			X, Y, maxH: SIGNED16;
 			frames: Display.Frame;
 			items: Item;
-			tabs: ARRAY Tabs OF INTEGER
+			tabs: ARRAY Tabs OF SIGNED16
 		END;
 
 		(* miniframework to handle the different views *)
@@ -117,8 +117,8 @@ MODULE Columbus IN Oberon; (** portable *)	(* PS  *)
 	(* ---------------------- string opearation ----------------------- *)
 
 (* converts a referece into a string of the form "# <i>". *)
-PROCEDURE RefToStr(i: LONGINT; VAR s: ARRAY OF CHAR);
-	VAR k, j: INTEGER; a: ARRAY 10 OF CHAR;
+PROCEDURE RefToStr(i: SIGNED32; VAR s: ARRAY OF CHAR);
+	VAR k, j: SIGNED16; a: ARRAY 10 OF CHAR;
 BEGIN k:= 0;
 	REPEAT
 		a[k] := CHR(i MOD 10 + 30H); i := i DIV 10; INC(k)
@@ -141,7 +141,7 @@ END Append;
 
 (* Appends <this> to <to>. *)
 PROCEDURE AppendCh(this: CHAR; VAR to: ARRAY OF CHAR);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 BEGIN
 	i := 0; WHILE to[i] # 0X DO INC(i) END;
 	IF i < LEN(to) - 1 THEN to[i] := this; to[i+1] := 0X END
@@ -158,7 +158,7 @@ PROCEDURE String(CONST str: ARRAY OF CHAR);	(*  writes a string to W *)
 BEGIN Texts.WriteString(W, str)
 END String;
 
-PROCEDURE Int(i: LONGINT);	(*  writes an integer to W *)
+PROCEDURE Int(i: SIGNED32);	(*  writes an integer to W *)
 BEGIN Texts.WriteInt(W, i, 0)
 END Int;
 
@@ -183,7 +183,7 @@ END PrintMsg;
 	(* ---------------------- document related procedures ----------------------- *)
 
 PROCEDURE LoadDoc(D: Documents.Document);
-	VAR lib: Objects.Library; i: LONGINT; view: INTEGER; p: Panel; name: ARRAY 64 OF CHAR;
+	VAR lib: Objects.Library; i: SIGNED32; view: SIGNED16; p: Panel; name: ARRAY 64 OF CHAR;
 BEGIN
 	COPY(D.name, name);
 	p:= NIL; lib := NIL; view := NoView;
@@ -280,7 +280,7 @@ END CopyPanel;
 *)
 
 PROCEDURE PanelHandler(P: Objects.Object; VAR M: Objects.ObjMsg);
-	VAR P1: Panel; f: Display.Frame; x, y, w, h, count: INTEGER;
+	VAR P1: Panel; f: Display.Frame; x, y, w, h, count: SIGNED16;
 BEGIN
 	WITH P: Panel DO
 		IF M IS Objects.AttrMsg THEN
@@ -330,15 +330,15 @@ END NewPanel;
 
 	(* ---------------------- aux. proceudres ----------------------- *)
 
-PROCEDURE Max(x, x0: INTEGER): INTEGER;
+PROCEDURE Max(x, x0: SIGNED16): SIGNED16;
 BEGIN IF x >= x0 THEN RETURN x ELSE RETURN x0 END
 END Max;
 
 
 	(* ---------------------- frame generators ----------------------- *)
 
-PROCEDURE MakeCaption(CONST s: ARRAY OF CHAR; col: SHORTINT; bold: BOOLEAN): Display.Frame;
-	VAR F: TextFields.Caption; nolines: INTEGER;
+PROCEDURE MakeCaption(CONST s: ARRAY OF CHAR; col: SIGNED8; bold: BOOLEAN): Display.Frame;
+	VAR F: TextFields.Caption; nolines: SIGNED16;
 BEGIN
 	TextFields.NewCaption; F:= Objects.NewObj(TextFields.Caption);
 	Attributes.StrToTxt(s, F.text);
@@ -386,7 +386,7 @@ BEGIN
 	RETURN F
 END MakeString;
 
-PROCEDURE MakeInt(val: LONGINT): Display.Frame;
+PROCEDURE MakeInt(val: SIGNED32): Display.Frame;
 	VAR F: TextFields.TextField;
 BEGIN
 	TextFields.NewTextField; F:= Objects.NewObj(TextFields.TextField);
@@ -396,7 +396,7 @@ BEGIN
 	RETURN F
 END MakeInt;
 
-PROCEDURE MakeReal(val: LONGREAL): Display.Frame;
+PROCEDURE MakeReal(val: FLOAT64): Display.Frame;
 	VAR F: TextFields.TextField;
 BEGIN
 	TextFields.NewTextField; F:= Objects.NewObj(TextFields.TextField);
@@ -422,7 +422,7 @@ END MakeLink;
 	(* ---------------------- layout proceudres ----------------------- *)
 
 PROCEDURE  ClearTabs(VAR L: Layout);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN i:= 0; WHILE i < Tabs DO L.tabs[i]:= 0; INC(i) END
 END ClearTabs;
 
@@ -433,7 +433,7 @@ BEGIN
 END OpenLayout;
 
 PROCEDURE SetTab(VAR L: Layout);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	i:= 0; WHILE (i < Tabs) & (L.tabs[i] > 0) DO INC(i) END;
 	IF i < Tabs THEN L.tabs[i]:= L.X END
@@ -472,14 +472,14 @@ BEGIN
 	DEC(L.Y, L.maxH); L.maxH:= 0; L.X:= 0
 END WriteLn;
 
-PROCEDURE WriteHSpace(VAR L: Layout; w: INTEGER);
+PROCEDURE WriteHSpace(VAR L: Layout; w: SIGNED16);
 BEGIN INC(L.X, w)
 END WriteHSpace;
 
 (* Sets <L.X> to the next tab position or increments <L.X> by 20, if there is no
 	tab position anymore. *)
 PROCEDURE WriteTab(VAR L: Layout);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	i:= 0; WHILE (i < Tabs) & (L.tabs[i] # 0) & (L.tabs[i] <= L.X) DO INC(i) END;
 	IF (i < Tabs) & (L.tabs[i] # 0) THEN L.X:= L.tabs[i]
@@ -488,7 +488,7 @@ BEGIN
 END WriteTab;
 
 (* Writes a vertical space of length <h>. *)
-PROCEDURE WriteVSpace(VAR L: Layout; h: INTEGER);
+PROCEDURE WriteVSpace(VAR L: Layout; h: SIGNED16);
 BEGIN DEC(L.Y, h)
 END WriteVSpace;
 
@@ -509,7 +509,7 @@ BEGIN
 	F.slink:= L.frames; L.frames:= F
 END WriteLine;
 
-PROCEDURE WriteCaption(VAR L: Layout; CONST s: ARRAY OF CHAR; col: SHORTINT; bold: BOOLEAN);
+PROCEDURE WriteCaption(VAR L: Layout; CONST s: ARRAY OF CHAR; col: SIGNED8; bold: BOOLEAN);
 	VAR F: Display.Frame;
 BEGIN
 	F:= MakeCaption(s, col, bold);
@@ -528,7 +528,7 @@ END WriteCmd;
 (* Inserts a special frame, containing <l.frames> as its desc.. The subframes are added to <L> when
 	the next WriteLn is performed. *)
 PROCEDURE WriteLayout(VAR L, l: Layout);
-	VAR F: LayoutFrame; cnt: INTEGER;
+	VAR F: LayoutFrame; cnt: SIGNED16;
 BEGIN
 	NEW(F); Panels.BoundingBox(l.frames, F.X, F.Y, F.W, F.H, cnt);
 	F.dsc:= l.frames;
@@ -536,7 +536,7 @@ BEGIN
 	F.slink:= L.frames; L.frames:= F
 END WriteLayout;
 
-PROCEDURE WriteLogo(VAR L: Layout; W: INTEGER);
+PROCEDURE WriteLogo(VAR L: Layout; W: SIGNED16);
 	VAR obj: Objects.Object; F: Display.Frame; C: Objects.CopyMsg;
 BEGIN
 	obj:= Gadgets.FindPublicObj("Columbus.Logo");
@@ -565,9 +565,9 @@ PROCEDURE WriteItems(VAR L: Layout; classes: SET);
 	SS	SS	MMMMMMMMMMM
 	SS	SS	SS		SS
 *)
-	VAR width: ARRAY 6 OF INTEGER; index: INTEGER;
+	VAR width: ARRAY 6 OF SIGNED16; index: SIGNED16;
 
-	PROCEDURE AdjustIndex(W: INTEGER);
+	PROCEDURE AdjustIndex(W: SIGNED16);
 	BEGIN
 	(*
 		IF index > 5 THEN index:= 0
@@ -581,7 +581,7 @@ PROCEDURE WriteItems(VAR L: Layout; classes: SET);
 		END
 	END AdjustIndex;
 
-	PROCEDURE NextIndex(W: INTEGER);
+	PROCEDURE NextIndex(W: SIGNED16);
 	BEGIN
 	(*
 		IF index = 0 THEN index:= -1 END;
@@ -645,7 +645,7 @@ END WriteItems;
 
 	(* ---------------------- procs to create new items and add them to a layout ----------------------- *)
 
-PROCEDURE AddItem(VAR L: Layout; CONST name: ARRAY OF CHAR; class: INTEGER; val: Display.Frame);
+PROCEDURE AddItem(VAR L: Layout; CONST name: ARRAY OF CHAR; class: SIGNED16; val: Display.Frame);
 	VAR new: Item;
 BEGIN
 	val.next:= MakeCaption(name, Display.FG, FALSE);
@@ -710,8 +710,8 @@ END EnumLink;
 	(* ---------------------- main explore procedure ----------------------- *)
 
 (* Inserts <frames> into <P> and resizes the it. Old objects in the panel are removed. *)
-PROCEDURE MakePanel(P: Panels.Panel; frames: Display.Frame; border: INTEGER; new: BOOLEAN);
-	VAR f: Display.Frame; x, y, w, h, cnt: INTEGER; A: Objects.AttrMsg; R: Display.ControlMsg;
+PROCEDURE MakePanel(P: Panels.Panel; frames: Display.Frame; border: SIGNED16; new: BOOLEAN);
+	VAR f: Display.Frame; x, y, w, h, cnt: SIGNED16; A: Objects.AttrMsg; R: Display.ControlMsg;
 			C: Display.ConsumeMsg; M: Display.ModifyMsg;
 BEGIN
 	Panels.BoundingBox(frames, x, y, w, h, cnt);
@@ -763,9 +763,9 @@ BEGIN
 	END
 END WriteGeneralLibInfo;
 
-PROCEDURE InspectThis(VAR P: Panel; obj: Objects.Object; lib: Objects.Library; view: INTEGER);
+PROCEDURE InspectThis(VAR P: Panel; obj: Objects.Object; lib: Objects.Library; view: SIGNED16);
 	VAR int: BasicGadgets.Integer; h: HistoryItem; availViews:
-			SET; i: INTEGER; new: BOOLEAN; subLay: Layout;
+			SET; i: SIGNED16; new: BOOLEAN; subLay: Layout;
 BEGIN
 	new:= FALSE;
 	IF P = NIL THEN NEW(P); InitPanel(P); new:= TRUE END;
@@ -988,9 +988,9 @@ BEGIN
 END DscViewButton;
 
 PROCEDURE MakeDscView(obj: Objects.Object; lib: Objects.Library; VAR L: Layout);
-	VAR p: Panels.Panel; v: ScrollViews.View; o: Display.Frame; cnt: INTEGER;
+	VAR p: Panels.Panel; v: ScrollViews.View; o: Display.Frame; cnt: SIGNED16;
 			subLay: Layout; A: Objects.AttrMsg; M: Display.ModifyMsg;
-			Generator, Name: ARRAY 32 OF CHAR; offset: INTEGER;
+			Generator, Name: ARRAY 32 OF CHAR; offset: SIGNED16;
 BEGIN
 	(* write objects in library *)
 	OpenLayout(subLay); subLay.align:= middle;
@@ -1069,7 +1069,7 @@ BEGIN
 END LibEditorButton;
 
 PROCEDURE MakeLibContentsPanel(lib: Objects.Library): Panels.Panel;
-	VAR obj: Objects.Object; f: Display.Frame; p: Panels.Panel; ref, i, j: INTEGER; name, refStr: Objects.Name;
+	VAR obj: Objects.Object; f: Display.Frame; p: Panels.Panel; ref, i, j: SIGNED16; name, refStr: Objects.Name;
 			cmd: ARRAY 256 OF CHAR; A: Objects.AttrMsg; L: Layout;
 BEGIN
 	OpenLayout(L); L.align:= middle;
@@ -1136,7 +1136,7 @@ END WriteCopyStyles;
 
 PROCEDURE MakeLibEditor(obj: Objects.Object; lib: Objects.Library; VAR L: Layout);
 	VAR p: Panels.Panel; v: ScrollViews.View; f: Display.Frame; cmd, param0, param: ARRAY 64 OF CHAR;
-			i: INTEGER; M: Display.ModifyMsg;
+			i: SIGNED16; M: Display.ModifyMsg;
 BEGIN
 	WriteHSpace(L, 200);
 	WriteCmd(L, "Unload", "Columbus.UnloadLib", FALSE);
@@ -1210,8 +1210,8 @@ BEGIN
 END LibViewButton;
 
 PROCEDURE MakeLibView(obj: Objects.Object; lib: Objects.Library; VAR L: Layout);
-	VAR o: Objects.Object; v: ScrollViews.View; p: Panels.Panel; name: Objects.Name; ref, cnt: INTEGER;
-			col: SHORTINT; public: BOOLEAN; A: Objects.AttrMsg; subLay: Layout; M: Display.ModifyMsg;
+	VAR o: Objects.Object; v: ScrollViews.View; p: Panels.Panel; name: Objects.Name; ref, cnt: SIGNED16;
+			col: SIGNED8; public: BOOLEAN; A: Objects.AttrMsg; subLay: Layout; M: Display.ModifyMsg;
 BEGIN
 	public:= lib.name # "";
 	(* write objects in library *)
@@ -1496,10 +1496,10 @@ END RemoveAttrLink;
 
 (* Gets the object/library to inspect. The order is 1. parameter, 2. selection, 3. marker. *)
 PROCEDURE GetObjLib(VAR obj: Objects.Object; VAR lib: Objects.Library);
-	VAR f: Display.Frame; T: Texts.Text; t1, t2, beg, end: LONGINT; S: Attributes.Scanner;
+	VAR f: Display.Frame; T: Texts.Text; t1, t2, beg, end: SIGNED32; S: Attributes.Scanner;
 
 	PROCEDURE GetNamed;	(* affects local var lib, obj *)
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		obj:= Gadgets.FindPublicObj(S.s);
 		IF obj = NIL THEN
@@ -1542,8 +1542,8 @@ BEGIN
 	IF p  = NIL THEN RETURN NIL ELSE RETURN p(Panel) END
 END FindPanel;
 
-PROCEDURE GetViewMode(P: Panel): INTEGER;
-	VAR modeObj: Objects.Object; mode: INTEGER;
+PROCEDURE GetViewMode(P: Panel): SIGNED16;
+	VAR modeObj: Objects.Object; mode: SIGNED16;
 BEGIN
 	mode:= ObjAttrView;
 	IF P # NIL THEN
@@ -1765,7 +1765,7 @@ END Back;
 
 (* Renames the file "<name>" to "<name>.Bak". *)
 PROCEDURE Backup (CONST name: ARRAY OF CHAR);
-	VAR res, i: INTEGER; bak: ARRAY 64 OF CHAR;
+	VAR res, i: SIGNED16; bak: ARRAY 64 OF CHAR;
 BEGIN i := 0;
 	WHILE name[i] # 0X DO bak[i]:= name[i]; INC(i) END;
 	bak[i] := "."; bak[i+1] := "B"; bak[i+2] := "a"; bak[i+3] := "k"; bak[i+4] := 0X;
@@ -1776,7 +1776,7 @@ END Backup;
 	occurance of a "." or at the end of <name>. This part of the string will be copied to <libname>
 	and the ".Lib" extension is added. The rest of <name> is copied to <objname>. *)
 PROCEDURE SplitName(CONST name: ARRAY OF CHAR; VAR libname, objname: ARRAY OF CHAR);
-	VAR i, j, k: INTEGER;
+	VAR i, j, k: SIGNED16;
 BEGIN
 	i := 0; j := 0;
 	WHILE (name[i] # ".") & (name[i] # 0X) DO libname[j] := name[i]; INC(j); INC(i); END;
@@ -1817,8 +1817,8 @@ END SetTextToList;
 
 (* Returns value of object named "copystyle" in the current context. If the object could not
 	be found, copy style deep is returned. *)
-PROCEDURE GetCopyStyle(): INTEGER;
-	VAR obj: Objects.Object; style: INTEGER; A: Objects.AttrMsg;
+PROCEDURE GetCopyStyle(): SIGNED16;
+	VAR obj: Objects.Object; style: SIGNED16; A: Objects.AttrMsg;
 BEGIN
 	style:= Objects.deep;
 	obj:= Gadgets.FindObj(Gadgets.context, CopyStyleObj);
@@ -1832,7 +1832,7 @@ END GetCopyStyle;
 
 (* Returns an object from reference gadget named "value" in the current context. *)
 PROCEDURE GetObject(): Objects.Object;
-	VAR link, obj: Objects.Object; time: LONGINT; L: Objects.LinkMsg;
+	VAR link, obj: Objects.Object; time: SIGNED32; L: Objects.LinkMsg;
 BEGIN obj:= NIL;
 	link:= Gadgets.FindObj(Gadgets.context, RefObj);
 	IF link # NIL THEN
@@ -1848,7 +1848,7 @@ END GetObject;
 	If the named objects cannot be found in the current context, a text is opened (if <openDoc>
 	is true). *)
 PROCEDURE UpdateObjList(lib: Objects.Library; openDoc: BOOLEAN);
-	VAR obj, view: Objects.Object; P: Panels.Panel; T: Texts.Text; ref: INTEGER;
+	VAR obj, view: Objects.Object; P: Panels.Panel; T: Texts.Text; ref: SIGNED16;
 			A: Objects.AttrMsg; L: Objects.LinkMsg;
 BEGIN
 	view:= Gadgets.FindObj(Gadgets.context, ObjList);
@@ -1941,7 +1941,7 @@ END SetCurrent;
 Inserts a list of all named objects in <LibName> as panel into a scroll view named "objlist". <LibName> must include the ".Lib" extension. It also updates a text field named "thelib".  The view and the text field must be detectable in the current context. If the view can not be found, the list is shown as text.
 *)
 PROCEDURE ShowObjs*;
-	VAR lib: Objects.Library; dst: Objects.Object; i: INTEGER;
+	VAR lib: Objects.Library; dst: Objects.Object; i: SIGNED16;
 			S: Attributes.Scanner; A: Objects.AttrMsg;
 BEGIN
 	Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
@@ -1965,7 +1965,7 @@ END ShowObjs;
 If <LibName.ObjName> is a document gadget, a (deep) copy of the document is opened on the display. Frame gadget are inserted at the caret. A copy is made depending on the value of an object named "copystyle". If this object cannot be dedected in the current context, the copy style 'deep' is assumed. If <LibName.ObjName> is a model, the "Model" link of all selected frames is set to this model (No copies are made for modelsl).
 *)
 PROCEDURE GetObj*;
-	VAR obj, sel: Objects.Object; time: LONGINT; style: INTEGER; C: Objects.CopyMsg; L: Objects.LinkMsg;
+	VAR obj, sel: Objects.Object; time: SIGNED32; style: SIGNED16; C: Objects.CopyMsg; L: Objects.LinkMsg;
 			S: Attributes.Scanner;
 BEGIN
 	Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Attributes.Scan(S);
@@ -2005,7 +2005,7 @@ END GetObj;
 
 Frees <LibName.ObjName>. The scroll view named "objlist" in the current context is cleared, too. *)
 PROCEDURE FreeObj*;
-	VAR lib: Objects.Library; dst, obj: Objects.Object; ref: INTEGER; S: Attributes.Scanner; A: Objects.AttrMsg;
+	VAR lib: Objects.Library; dst, obj: Objects.Object; ref: SIGNED16; S: Attributes.Scanner; A: Objects.AttrMsg;
 BEGIN
 	Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Attributes.Scan(S);
 	IF S.class = Attributes.Name THEN
@@ -2035,7 +2035,7 @@ Inserts the object taken from the reference gadget in the current context named 
 *)
 PROCEDURE AddObj*;
 	VAR lib: Objects.Library; obj, old: Objects.Object; libname, objname: Objects.Name;
-			ref: INTEGER; B: Objects.BindMsg; S: Attributes.Scanner;
+			ref: SIGNED16; B: Objects.BindMsg; S: Attributes.Scanner;
 BEGIN
 	Oberon.Defocus;
 	Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Attributes.Scan(S);
@@ -2070,7 +2070,7 @@ END AddObj;
 Renames <LibName.ObjName> with <NewName>. It also updates the the scroll view in the current context named "objlist".
 *)
 PROCEDURE RenameObj*;
-	VAR lib: Objects.Library; obj: Objects.Object; name: Objects.Name; ref: INTEGER; S: Attributes.Scanner;
+	VAR lib: Objects.Library; obj: Objects.Object; name: Objects.Name; ref: SIGNED16; S: Attributes.Scanner;
 BEGIN
 	Oberon.Defocus;
 	Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Attributes.Scan(S);
@@ -2081,7 +2081,7 @@ BEGIN
 			IF S.class = Attributes.Name THEN
 				lib:= obj.lib;
 				Objects.GetRef(lib.dict, S.s, ref);
-				IF ref = MIN(INTEGER) THEN
+				IF ref = MIN(SIGNED16) THEN
 					Objects.PutName(lib.dict, obj.ref, S.s);
 					String(" rename object '"); String(name); String("' to '"); String(S.s); Char("'");
 					Ln; ToLog;
@@ -2128,7 +2128,7 @@ PROCEDURE StoreLib*;
 	VAR P: Panel; lib: Objects.Library; S: Attributes.Scanner;
 
 	PROCEDURE StoreThis(lib: Objects.Library);
-		VAR f: Files.File; obj: Objects.Object; len: LONGINT; ref: INTEGER; B: Objects.BindMsg;
+		VAR f: Files.File; obj: Objects.Object; len: SIGNED32; ref: SIGNED16; B: Objects.BindMsg;
 	BEGIN
 		String("Store "); Char(22X); String(lib.name); Char(22X); Ln; ToLog;
 		B.lib := lib; Objects.Stamp(B); B.dlink := NIL;
@@ -2199,7 +2199,7 @@ PROCEDURE CleanupLib*;
 	VAR P: Panel; S: Attributes.Scanner;
 
 	PROCEDURE CleanupThis(lib: Objects.Library);
-		VAR f: Files.File; lib0: Objects.Library; obj, obj0: Objects.Object; len: LONGINT; ref, cnt, cnt0: INTEGER;
+		VAR f: Files.File; lib0: Objects.Library; obj, obj0: Objects.Object; len: SIGNED32; ref, cnt, cnt0: SIGNED16;
 			name: Objects.Name; C: Objects.CopyMsg; B: Objects.BindMsg;
 	BEGIN
 		IF (lib # NIL) & ~(lib IS Fonts.Font) THEN
@@ -2263,7 +2263,7 @@ END CleanupLib;
 
 	(* ---------------------- init view generator structure ----------------------- *)
 
-PROCEDURE InitViewDesc(nr: INTEGER; canProc: CanProc; makeProc: MakeProc; btnProc: ButtonProc);
+PROCEDURE InitViewDesc(nr: SIGNED16; canProc: CanProc; makeProc: MakeProc; btnProc: ButtonProc);
 BEGIN
 	viewGens[nr].canView:= canProc;
 	viewGens[nr].makeView:= makeProc;

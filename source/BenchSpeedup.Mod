@@ -8,9 +8,9 @@ IMPORT Kernel, Commands;
 
 TYPE
 	Work = OBJECT
-		VAR n, i: LONGINT; done: BOOLEAN;
+		VAR n, i: SIGNED32; done: BOOLEAN;
 
-		PROCEDURE &Init*(n: LONGINT);
+		PROCEDURE &Init*(n: SIGNED32);
 		BEGIN
 			SELF.n := n; done := FALSE
 		END Init;
@@ -31,7 +31,7 @@ TYPE
 	END Work;
 
 PROCEDURE Mark*(context : Commands.Context);	(** procs n *)
-VAR i, p, n, t: LONGINT; w: POINTER TO ARRAY OF Work;
+VAR i, p, n, t: SIGNED32; w: POINTER TO ARRAY OF Work;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.Int(p, FALSE);
 	context.arg.SkipWhitespace; context.arg.Int(n, FALSE);

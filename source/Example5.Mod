@@ -11,14 +11,14 @@ TYPE
 	Entry = OBJECT
 		VAR
 			next: Entry;
-			priority: WORD;
+			priority: INTEGER;
 			turn: BOOLEAN;
 	END Entry;
 
 	PriorityScheduler = OBJECT
 		VAR root: Entry;
 
-		PROCEDURE Wait(priority: LONGINT);
+		PROCEDURE Wait(priority: SIGNED32);
 		VAR n, p: Entry;
 		BEGIN {EXCLUSIVE}
 			p := NIL; n := root;
@@ -51,16 +51,16 @@ TYPE
 
 	DiskScheduler* = OBJECT
 		VAR
-			busy, up: BOOLEAN; pos: LONGINT;
+			busy, up: BOOLEAN; pos: SIGNED32;
 			upsweep, downsweep: PriorityScheduler;
 
-		PROCEDURE Request*(dest: LONGINT);
+		PROCEDURE Request*(dest: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF busy THEN
 				IF (pos < dest) OR (pos = dest) & up THEN
 					upsweep.Wait(dest)
 				ELSE
-					downsweep.Wait(MAX(LONGINT)-dest)
+					downsweep.Wait(MAX(SIGNED32)-dest)
 				END
 			END;
 			busy := TRUE; pos := dest

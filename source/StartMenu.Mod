@@ -40,7 +40,7 @@ TYPE
 		plugin : Plugin;
 		currentPluginName : Strings.String; (* { currentPluginName # NIL } *)
 		factory : PluginFactory;
-		startIndex : LONGINT;
+		startIndex : SIGNED32;
 
 		PROCEDURE & New*;
 		BEGIN
@@ -146,12 +146,12 @@ TYPE
 
 	FancyStartMenu = OBJECT(Plugin)
 	VAR startMenu : WMComponents.FormWindow;
-		nofLayouts, nofButtons, nofSMOs : LONGINT;
+		nofLayouts, nofButtons, nofSMOs : SIGNED32;
 		menuButtons : MenuButtons;
 		smos : SMOArr;
 
-		PROCEDURE CountLayouts() : LONGINT;
-		VAR i, n : LONGINT; done : BOOLEAN; s : Strings.String;
+		PROCEDURE CountLayouts() : SIGNED32;
+		VAR i, n : SIGNED32; done : BOOLEAN; s : Strings.String;
 		BEGIN
 			n := 0; done := FALSE;
 			WHILE (i < LEN(layoutNames) - 1) & ~done DO
@@ -183,8 +183,8 @@ TYPE
 			END;
 		END FindSMO;
 
-		PROCEDURE FindMenuButtonsSMO(c : XML.Content; VAR menuButtons : MenuButtons; VAR smos: SMOArr; VAR n, m : LONGINT);
-		VAR enum : XMLObjects.Enumerator; i, j : LONGINT; ptr : ANY; s : Strings.String;
+		PROCEDURE FindMenuButtonsSMO(c : XML.Content; VAR menuButtons : MenuButtons; VAR smos: SMOArr; VAR n, m : SIGNED32);
+		VAR enum : XMLObjects.Enumerator; i, j : SIGNED32; ptr : ANY; s : Strings.String;
 			b : WMStandardComponents.Button; smo : SubMenuOpener;
 		BEGIN
 			IF c IS WMComponents.VisualComponent THEN
@@ -240,7 +240,7 @@ TYPE
 		END Close;
 
 		PROCEDURE ReplaceMenuButtonsSMO(CONST mb, newmb : MenuButtons; CONST smos, newsmos : SMOArr);
-		VAR i : LONGINT; s : Strings.String;
+		VAR i : SIGNED32; s : Strings.String;
 		BEGIN
 			FOR i := 0 TO nofButtons - 1 DO
 				s := newmb[i].caption.Get();
@@ -251,10 +251,10 @@ TYPE
 		END ReplaceMenuButtonsSMO;
 
 		PROCEDURE ReopenMenuItemsShifted(upwards : BOOLEAN);
-		VAR old, i : LONGINT; s : String; c : XML.Content;
+		VAR old, i : SIGNED32; s : String; c : XML.Content;
 			newMButtons : MenuButtons;
 			newsmos : SMOArr;
-			n, m : LONGINT;
+			n, m : SIGNED32;
 		BEGIN
 			old := pm.startIndex;
 			IF upwards THEN
@@ -399,7 +399,7 @@ VAR
 	PROCEDURE InitPrototypes;
 	VAR plStartMenu : WMProperties.PropertyList;
 		s0, s1 : ARRAY 128 OF CHAR;
-		i : LONGINT;
+		i : SIGNED32;
 	BEGIN
 		NEW(plStartMenu); 	WMComponents.propertyListList.Add("StartMenu", plStartMenu);
 

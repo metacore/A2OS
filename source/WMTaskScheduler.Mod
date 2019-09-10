@@ -46,15 +46,15 @@ TYPE
 	VAR
 		task : TaskScheduler.Task;
 		taskInfo : TaskScheduler.TaskInfo;
-		timestamp : LONGINT;
+		timestamp : SIGNED32;
 
 		image : WMGraphics.Image;
 
 		indicateTriggered : BOOLEAN;
-		indicationValue : LONGINT;
-		indicationStep : LONGINT;
+		indicationValue : SIGNED32;
+		indicationStep : SIGNED32;
 
-		dateStringType : LONGINT;
+		dateStringType : SIGNED32;
 
 		dateString : ARRAY 32 OF CHAR;
 		timeString : ARRAY 32 OF CHAR;
@@ -92,9 +92,9 @@ TYPE
 			END;
 	 	END UpdateTaskInfo;
 
-		PROCEDURE GetFillColor(secondsLeft : LONGINT) : WMGraphics.Color;
+		PROCEDURE GetFillColor(secondsLeft : SIGNED32) : WMGraphics.Color;
 		BEGIN
-			RETURN WMGraphicUtilities.InterpolateColorLinear(LONGINT(0FFFF00C0H), LONGINT(0FF0000FFH), ENTIER(256 * ((3600 - secondsLeft) / 3600)));
+			RETURN WMGraphicUtilities.InterpolateColorLinear(SIGNED32(0FFFF00C0H), SIGNED32(0FF0000FFH), ENTIER(256 * ((3600 - secondsLeft) / 3600)));
 		END GetFillColor;
 
 		PROCEDURE GetIndicationColor() : WMGraphics.Color;
@@ -105,7 +105,7 @@ TYPE
 				indicationStep := 256;
 			END;
 			indicationValue := indicationValue + indicationStep;
-			RETURN WMGraphicUtilities.InterpolateColorLinear(LONGINT(0FFFF00C0H), LONGINT(0FF0000FFH), indicationValue);
+			RETURN WMGraphicUtilities.InterpolateColorLinear(SIGNED32(0FFFF00C0H), SIGNED32(0FF0000FFH), indicationValue);
 		END GetIndicationColor;
 
 		PROCEDURE Update( dt : Dates.DateTime);
@@ -113,7 +113,7 @@ TYPE
 			trigger : Dates.DateTime;
 			newDateString : ARRAY 32 OF CHAR;
 			lastFillColor, newFillColor : WMGraphics.Color;
-			days, hours, minutes, seconds : LONGINT;
+			days, hours, minutes, seconds : SIGNED32;
 		BEGIN
 			COPY(dateString, newDateString);
 			trigger := task.GetTrigger();
@@ -133,17 +133,17 @@ TYPE
 					ELSIF indicateTriggered & (seconds = 0) THEN
 						newFillColor := GetIndicationColor();
 					ELSE
-						newFillColor := LONGINT(0FFFF00C0H);
+						newFillColor := SIGNED32(0FFFF00C0H);
 					END;
 					IF (newFillColor # lastFillColor) THEN
 						fillColor.Set(newFillColor);
 					END;
 				ELSIF IsTomorrow(dt, trigger) THEN
 					IF (dateStringType # Tomorrow) THEN newDateString := "Tomorrow"; dateStringType := Tomorrow; END;
-					fillColor.Set(LONGINT(0EEEEFFFFH));
+					fillColor.Set(SIGNED32(0EEEEFFFFH));
 				ELSIF SameWeek(trigger, dt) THEN
 					IF (dateStringType # ThisWeek) THEN Strings.FormatDateTime("wwww", trigger, newDateString); dateStringType := ThisWeek; END;
-					fillColor.Set(LONGINT(0EEEEFFFFH));
+					fillColor.Set(SIGNED32(0EEEEFFFFH));
 				ELSIF (dateStringType # Date) THEN
 					Strings.FormatDateTime("dd.mm.yyyy", trigger, newDateString); dateStringType := Date;
 					fillColor.Set(WMGraphics.White);
@@ -159,7 +159,7 @@ TYPE
 		END Update;
 
 		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
-		VAR days, hours, minutes, seconds : LONGINT;
+		VAR days, hours, minutes, seconds : SIGNED32;
 		BEGIN
 			PointerUp^(x, y, keys);
 			task.Left(days, hours, minutes, seconds);
@@ -274,9 +274,9 @@ TYPE
 		calendar : WMCalendar.Calendar;
 		control : WMCalendar.CalendarController;
 
-		state : LONGINT;
+		state : SIGNED32;
 
-		PROCEDURE &New(x, y, width, height : LONGINT);
+		PROCEDURE &New(x, y, width, height : SIGNED32);
 		BEGIN
 			Init(width, height, FALSE);
 			state := Waiting;
@@ -291,9 +291,9 @@ TYPE
 			label : WMStandardComponents.Label;
 			dt : Dates.DateTime;
 			string : ARRAY 32 OF CHAR;
-			ignoreRes : WORD;
+			ignoreRes : INTEGER;
 
-			PROCEDURE CreateLabel(CONST caption : ARRAY OF CHAR; width : LONGINT) : WMStandardComponents.Label;
+			PROCEDURE CreateLabel(CONST caption : ARRAY OF CHAR; width : SIGNED32) : WMStandardComponents.Label;
 			VAR label : WMStandardComponents.Label;
 			BEGIN
 				NEW(label); label.alignment.Set(WMComponents.AlignLeft);
@@ -467,7 +467,7 @@ TYPE
 			image, temp : Strings.String;
 			entry : WMDropDownLists.Entry;
 
-			PROCEDURE GetNumbers(stringArray : Strings.StringArray; VAR nbrArray : ARRAY OF LONGINT) : BOOLEAN;
+			PROCEDURE GetNumbers(stringArray : Strings.StringArray; VAR nbrArray : ARRAY OF SIGNED32) : BOOLEAN;
 			VAR i, j : SIZE; error : BOOLEAN;
 			BEGIN
 				ASSERT(LEN(nbrArray) >= LEN(stringArray));
@@ -486,7 +486,7 @@ TYPE
 			PROCEDURE ParseTime(VAR dt : Dates.DateTime) : BOOLEAN;
 			VAR
 				string : ARRAY 32 OF CHAR;
-				time : ARRAY 3 OF LONGINT;
+				time : ARRAY 3 OF SIGNED32;
 				stringArray : Strings.StringArray;
 				error : BOOLEAN;
 			BEGIN
@@ -513,7 +513,7 @@ TYPE
 			PROCEDURE ParseDate(VAR dt : Dates.DateTime) : BOOLEAN;
 			VAR
 				string : ARRAY 32 OF CHAR;
-				date : ARRAY 3 OF LONGINT;
+				date : ARRAY 3 OF SIGNED32;
 				stringArray : Strings.StringArray;
 				entry : WMDropDownLists.Entry;
 				error : BOOLEAN;
@@ -538,7 +538,7 @@ TYPE
 				RETURN ~error;
 			END ParseDate;
 
-			PROCEDURE GetString(editor : WMEditors.Editor; VAR string : ARRAY OF CHAR;  maxLength : LONGINT) : BOOLEAN;
+			PROCEDURE GetString(editor : WMEditors.Editor; VAR string : ARRAY OF CHAR;  maxLength : SIGNED32) : BOOLEAN;
 			VAR value : ARRAY 1024 OF CHAR;
 			BEGIN
 				editor.GetAsString(value);
@@ -642,7 +642,7 @@ TYPE
 			END;
 		END HandleDateSelected;
 
-		PROCEDURE SetState(state : LONGINT);
+		PROCEDURE SetState(state : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			SELF.state := state;
 		END SetState;
@@ -661,7 +661,7 @@ TYPE
 
 		scrollpanel : WMStandardComponents.Panel;
 
-		selectMode : LONGINT;
+		selectMode : SIGNED32;
 
 		statusLabel : WMStandardComponents.Label;
 		lastNofSelectedTasks, lastNofTasks : SIZE;
@@ -675,7 +675,7 @@ TYPE
 		timer : Kernel.Timer;
 
 		PROCEDURE &New(context : WMRestorable.Context);
-		VAR filename : Files.FileName; configuration : WMRestorable.XmlElement; mode : LONGINT;
+		VAR filename : Files.FileName; configuration : WMRestorable.XmlElement; mode : SIGNED32;
 		BEGIN
 			IncCount;
 			IF (context # NIL) THEN
@@ -846,7 +846,7 @@ TYPE
 			END;
 		END Store;
 
-		PROCEDURE SetSelectMode(mode : LONGINT);
+		PROCEDURE SetSelectMode(mode : SIGNED32);
 		BEGIN
 			todayBtn.SetPressed(FALSE);
 			thisWeekBtn.SetPressed(FALSE);
@@ -939,7 +939,7 @@ TYPE
 			END;
 		END UpdateTaskViews;
 
-		PROCEDURE UpdateStatusLabel(nofSelectedTasks, nofTasks : LONGINT);
+		PROCEDURE UpdateStatusLabel(nofSelectedTasks, nofTasks : SIGNED32);
 		VAR caption : ARRAY 256 OF CHAR; nbr : ARRAY 16 OF CHAR;
 		BEGIN
 			caption := "Displaying ";
@@ -951,7 +951,7 @@ TYPE
 		END UpdateStatusLabel;
 
 		PROCEDURE CheckTasks;
-		VAR dt : Dates.DateTime; nofSelectedTasks, nofTasks : LONGINT;
+		VAR dt : Dates.DateTime; nofSelectedTasks, nofTasks : SIGNED32;
 		BEGIN
 			dt := Dates.Now();
 			taskList.Select(Selector, dt, newTasks, nofSelectedTasks, nofTasks);
@@ -992,14 +992,14 @@ BEGIN
 END IsTomorrow;
 
 PROCEDURE SameWeek(dt1, dt2 : Dates.DateTime) : BOOLEAN;
-VAR year1, year2, week1, week2, ignoreWeekDay : LONGINT;
+VAR year1, year2, week1, week2, ignoreWeekDay : SIGNED32;
 BEGIN
 	Dates.WeekDate(dt1, year1, week1, ignoreWeekDay);
 	Dates.WeekDate(dt2, year2, week2, ignoreWeekDay);
 	RETURN (year1 = year2) & (week1 = week2);
 END SameWeek;
 
-PROCEDURE ToSeconds(days, hours, minutes, seconds : LONGINT) : LONGINT;
+PROCEDURE ToSeconds(days, hours, minutes, seconds : SIGNED32) : SIGNED32;
 BEGIN
 	RETURN (days * 86400) + (hours * 3600) + (minutes * 60) + seconds;
 END ToSeconds;

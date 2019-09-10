@@ -3,27 +3,27 @@ MODULE W3dMatrix;	(** AUTHOR "TF"; PURPOSE "Matrix operations for 3d (case study
 IMPORT
 	Vectors := W3dVectors, MathL;
 
-TYPE Matrix4x4* = ARRAY 4 OF ARRAY 4 OF LONGREAL;
+TYPE Matrix4x4* = ARRAY 4 OF ARRAY 4 OF FLOAT64;
 
 VAR Identity4x4- : Matrix4x4;
 
 (* BEGIN 4x4 implementation *)
-PROCEDURE Translation4x4*(dx, dy, dz : LONGREAL) : Matrix4x4;
+PROCEDURE Translation4x4*(dx, dy, dz : FLOAT64) : Matrix4x4;
 VAR result : Matrix4x4;
 BEGIN
   result := Identity4x4; result[3, 0] := dx; result[3, 1] := dy; result[3, 2] := dz;
   RETURN result
 END Translation4x4;
 
-PROCEDURE Stretch4x4*(dx, dy, dz : LONGREAL) : Matrix4x4;
+PROCEDURE Stretch4x4*(dx, dy, dz : FLOAT64) : Matrix4x4;
 VAR result : Matrix4x4;
 BEGIN
   result := Identity4x4; result[0, 0] := dx; result[1, 1] := dy; result[2, 2] := dz;
   RETURN result
 END Stretch4x4;
 
-PROCEDURE Rotation4x4*(u : Vectors.TVector3d; phi : LONGREAL) : Matrix4x4;
-VAR result : Matrix4x4; t, c, s : LONGREAL;
+PROCEDURE Rotation4x4*(u : Vectors.TVector3d; phi : FLOAT64) : Matrix4x4;
+VAR result : Matrix4x4; t, c, s : FLOAT64;
 BEGIN
 	s := MathL.sin(phi); c := MathL.cos(phi); t := 1 - c;
 	result := Identity4x4;
@@ -34,7 +34,7 @@ BEGIN
 END Rotation4x4;
 
 PROCEDURE MulMat*(A, B: Matrix4x4):Matrix4x4;
-VAR x, y, t: LONGINT;
+VAR x, y, t: SIGNED32;
 		result : Matrix4x4;
 BEGIN
   FOR x := 0 TO 3 DO FOR y := 0 TO 3 DO

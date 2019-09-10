@@ -20,7 +20,7 @@ MODULE SaveTiles IN Oberon;
 	IMPORT Modules, Display, In, Out, SaveScreen;
 
 	TYPE
-		NeighborList = ARRAY 4 OF RECORD col, row: INTEGER END;
+		NeighborList = ARRAY 4 OF RECORD col, row: SIGNED16 END;
 
 	CONST
 		versionString = "SaveTiles 1999.11.05";
@@ -40,29 +40,29 @@ MODULE SaveTiles IN Oberon;
 
 	VAR
 		tiles: RECORD
-			cols, rows: INTEGER;	(* number of columns and rows of tiles *)
-			colw, rowh: INTEGER;	(* width/heigh of rows/columns *)
-			ecol, erow: INTEGER;	(* the column/row location of the empty tile *)
-			pecol, perow: INTEGER;	(* col/row of previous position of empty tile, used to prevent repeats *)
+			cols, rows: SIGNED16;	(* number of columns and rows of tiles *)
+			colw, rowh: SIGNED16;	(* width/heigh of rows/columns *)
+			ecol, erow: SIGNED16;	(* the column/row location of the empty tile *)
+			pecol, perow: SIGNED16;	(* col/row of previous position of empty tile, used to prevent repeats *)
 			(* for controlling animation of sliding tile *)
-			cx, cy: INTEGER;	(* current x and y position of sliding tile *)
-			tx, ty: INTEGER;	(* target x and y position of sliding tile, so we know we're done.*)
-			dx, dy: INTEGER;	(* direction/speed to move tile per frame *)
+			cx, cy: SIGNED16;	(* current x and y position of sliding tile *)
+			tx, ty: SIGNED16;	(* target x and y position of sliding tile, so we know we're done.*)
+			dx, dy: SIGNED16;	(* direction/speed to move tile per frame *)
 		END;
 
-		rowCount: INTEGER;
-		columnCount: INTEGER;
-		speed: INTEGER;
+		rowCount: SIGNED16;
+		columnCount: SIGNED16;
+		speed: SIGNED16;
 
 
 
 
-	PROCEDURE GetTilePos(col, row: INTEGER; VAR x, y: INTEGER);
+	PROCEDURE GetTilePos(col, row: SIGNED16; VAR x, y: SIGNED16);
 	BEGIN
 		x := col * tiles.colw; y := row * tiles.rowh;
 	END GetTilePos;
 
-	PROCEDURE GetNeighbors(col, row: INTEGER; VAR neighbors: NeighborList; VAR n: INTEGER);
+	PROCEDURE GetNeighbors(col, row: SIGNED16; VAR neighbors: NeighborList; VAR n: SIGNED16);
 	BEGIN
 		n := 0;
 		IF col > 0 THEN
@@ -90,7 +90,7 @@ MODULE SaveTiles IN Oberon;
 	PROCEDURE ChooseSlidingTile;
 		VAR
 			neigh: NeighborList;
-			n: INTEGER;
+			n: SIGNED16;
 	BEGIN
 		GetTilePos(tiles.ecol, tiles.erow, tiles.tx, tiles.ty);
 		Display.ReplConst(Display.FG, tiles.tx, tiles.ty, tiles.colw, tiles.rowh, Display.replace);
@@ -113,7 +113,7 @@ MODULE SaveTiles IN Oberon;
 
 	PROCEDURE StartTiles;
 		VAR
-			slackW, slackH, i: INTEGER;
+			slackW, slackH, i: SIGNED16;
 	BEGIN
 		Display.ReplPattern(Display.FG, Display.grey1,
 			Display.Left, Display.Bottom, Display.Width, Display.Height, Display.paint);
@@ -178,7 +178,7 @@ MODULE SaveTiles IN Oberon;
 
 
 	PROCEDURE Install*;	(** {name value} *)
-		VAR name: ARRAY 32 OF CHAR; n: INTEGER;
+		VAR name: ARRAY 32 OF CHAR; n: SIGNED16;
 	BEGIN
 		In.Open;
 		LOOP

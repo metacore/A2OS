@@ -39,72 +39,72 @@ TYPE
 
 (*
 	type conversion C to Oberon:
-		UWORD / SWORD	->	INTEGER
-		UDWORD / SDWORD	->	LONGINT
+		UWORD / SWORD	->	SIGNED16
+		UDWORD / SDWORD	->	SIGNED32
 *)
 
 VAR
 	lib: ADDRESS;
 	env: HENV;
 
-	res1*: INTEGER;
+	res1*: SIGNED16;
 	nullString-: ARRAY 1 OF CHAR;
 
 (*	Core Functions Prototypes	*)
 
 	SQLAllocConnect: PROCEDURE {WINAPI} (
 		henv: Kernel32.HANDLE;
-		hdbc: ADDRESS): INTEGER;
+		hdbc: ADDRESS): SIGNED16;
 
 	SQLAllocEnv: PROCEDURE {WINAPI} (
-		henv: Kernel32.HANDLE): INTEGER;
+		henv: Kernel32.HANDLE): SIGNED16;
 
 	SQLAllocStmt: PROCEDURE {WINAPI} (
 		hdbc: ADDRESS;
-		hstmt: Kernel32.HANDLE): INTEGER;
+		hstmt: Kernel32.HANDLE): SIGNED16;
 
 	SQLBindCol: PROCEDURE {WINAPI} (
 		hstmt: ADDRESS;
-		icol: INTEGER;
-		fcType: INTEGER;
+		icol: SIGNED16;
+		fcType: SIGNED16;
 		rgbValue: ADDRESS;
-		cbValueMax: LONGINT;
-		pcbValue: ADDRESS): INTEGER;
+		cbValueMax: SIGNED32;
+		pcbValue: ADDRESS): SIGNED16;
 
 	SQLCancel: PROCEDURE {WINAPI} (
-		hstmt: ADDRESS): INTEGER;
+		hstmt: ADDRESS): SIGNED16;
 
 	SQLColAttributes: PROCEDURE {WINAPI} (
 		hstmt: ADDRESS;
-		icol: INTEGER;
-		fDescType: INTEGER;
+		icol: SIGNED16;
+		fDescType: SIGNED16;
 		rgbDesc: ADDRESS;
-		cbDescMax: INTEGER;
+		cbDescMax: SIGNED16;
 		pcbDesc: ADDRESS;
-		pfDesc: ADDRESS): INTEGER;
+		pfDesc: ADDRESS): SIGNED16;
 
 	SQLConnect: PROCEDURE {WINAPI} (
 		hdbc: ADDRESS;
 		DSN: ADDRESS;
-		DSNMax: INTEGER;
+		DSNMax: SIGNED16;
 		UID: ADDRESS;
-		UIDMax: INTEGER;
+		UIDMax: SIGNED16;
 		AuthStr: ADDRESS;
-		AuthStrMax: INTEGER): INTEGER;
+		AuthStrMax: SIGNED16): SIGNED16;
 
 	SQLDescribeCol: PROCEDURE {WINAPI} (
 		hstmt: ADDRESS;
-		icol: INTEGER;
+		icol: SIGNED16;
 		szColName: ADDRESS;
-		cbColNameMax: INTEGER;
+		cbColNameMax: SIGNED16;
 		pcbColName: ADDRESS;
 		pfSqlType: ADDRESS;
 		pcbColDef: ADDRESS;
 		pibScale: ADDRESS;
-		pfNullable: ADDRESS): INTEGER;
+		pfNullable: ADDRESS): SIGNED16;
 
 	SQLDisconnect: PROCEDURE {WINAPI} (
-		hdbc: Kernel32.HANDLE): INTEGER;
+		hdbc: Kernel32.HANDLE): SIGNED16;
 
 	SQLError: PROCEDURE {WINAPI} (
 		henv: ADDRESS;
@@ -113,407 +113,407 @@ VAR
 		szSqlState: ADDRESS;
 		pfNativeError: ADDRESS;
 		szErrorMessage: ADDRESS;
-		cbErrorMessage: INTEGER;
-		pcbErrorMessage: ADDRESS): INTEGER;
+		cbErrorMessage: SIGNED16;
+		pcbErrorMessage: ADDRESS): SIGNED16;
 
 	SQLExecDirect: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		szSqlStr: ADDRESS;
-		cbSqlStr: INTEGER): INTEGER;
+		cbSqlStr: SIGNED16): SIGNED16;
 
 	SQLExecute: PROCEDURE {WINAPI} (
-		hstmt: Kernel32.HANDLE): INTEGER;
+		hstmt: Kernel32.HANDLE): SIGNED16;
 
 	SQLFetch: PROCEDURE {WINAPI} (
-		hstmt: Kernel32.HANDLE): INTEGER;
+		hstmt: Kernel32.HANDLE): SIGNED16;
 
 	SQLFreeConnect: PROCEDURE {WINAPI} (
-		hdbc: Kernel32.HANDLE): INTEGER;
+		hdbc: Kernel32.HANDLE): SIGNED16;
 
 	SQLFreeEnv: PROCEDURE {WINAPI} (
-		henv: ADDRESS): INTEGER;
+		henv: ADDRESS): SIGNED16;
 
 	SQLFreeStmt: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		fOption: INTEGER): INTEGER;
+		fOption: SIGNED16): SIGNED16;
 
 	SQLGetCursorName: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		szCursor: ADDRESS;
-		cbCursorMax: INTEGER;
-		pcbCursor: ADDRESS): INTEGER;
+		cbCursorMax: SIGNED16;
+		pcbCursor: ADDRESS): SIGNED16;
 
 	SQLNumResultCols: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		pccol: ADDRESS): INTEGER;
+		pccol: ADDRESS): SIGNED16;
 
 	SQLPrepare: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		szSqlStr: ADDRESS;
-		cbSqlStr: ADDRESS): INTEGER;
+		cbSqlStr: ADDRESS): SIGNED16;
 
 	SQLRowCount: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		pcrow: ADDRESS): INTEGER;
+		pcrow: ADDRESS): SIGNED16;
 
 	SQLSetCursorName: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		szCursor: ADDRESS;
-		cbCursor: INTEGER): INTEGER;
+		cbCursor: SIGNED16): SIGNED16;
 
 	SQLTransact: PROCEDURE {WINAPI} (
 		henv: ADDRESS;
 		hdbc: Kernel32.HANDLE;
-		fType: INTEGER): INTEGER;
+		fType: SIGNED16): SIGNED16;
 
 (*	Level 1 Functions	*)
 
 	SQLColumns: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		tableQualifier: ADDRESS;
-		qualLen: INTEGER;
+		qualLen: SIGNED16;
 		tableOwner: ADDRESS;
-		ownerLen: INTEGER;
+		ownerLen: SIGNED16;
 		tableName: ADDRESS;
-		nameLen: INTEGER;
+		nameLen: SIGNED16;
 		columnName: ADDRESS;
-		colNameLen: INTEGER): INTEGER;
+		colNameLen: SIGNED16): SIGNED16;
 
 	SQLDriverConnect: PROCEDURE {WINAPI} (
 		hdbc: Kernel32.HANDLE;
 		hwnd: ADDRESS;
 		connStrIn: ADDRESS;
-		connStrInLen: INTEGER;
+		connStrInLen: SIGNED16;
 		connStrOut: ADDRESS;
-		connStrOutMaxSize: INTEGER;
+		connStrOutMaxSize: SIGNED16;
 		connStrOutActSize: ADDRESS;	(* address of integer containig result len *)
-		driverCompletion: INTEGER): INTEGER;
+		driverCompletion: SIGNED16): SIGNED16;
 
 	SQLGetConnectOption: PROCEDURE {WINAPI} (
 		hdbc: Kernel32.HANDLE;
-		whatOption: INTEGER;
-		option: ADDRESS): INTEGER;
+		whatOption: SIGNED16;
+		option: ADDRESS): SIGNED16;
 
 	SQLGetData: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		col: INTEGER;
-		resType: INTEGER;
+		col: SIGNED16;
+		resType: SIGNED16;
 		resValue: ADDRESS;
-		resMaxSize: LONGINT;
-		resActSize: ADDRESS): INTEGER;	(* address of longint containing result len *)
+		resMaxSize: SIGNED32;
+		resActSize: ADDRESS): SIGNED16;	(* address of longint containing result len *)
 
 	SQLGetFunctions: PROCEDURE {WINAPI} (
 		hdbc: Kernel32.HANDLE;
-		whichFunction: INTEGER;
-		functExists: ADDRESS): INTEGER;
+		whichFunction: SIGNED16;
+		functExists: ADDRESS): SIGNED16;
 
 	SQLGetInfo: PROCEDURE {WINAPI} (
 		hdbc: Kernel32.HANDLE;
-		infoType: INTEGER;
+		infoType: SIGNED16;
 		resInfo: ADDRESS;
-		resInfoMaxSize: INTEGER;
-		resInfoActSize: ADDRESS): INTEGER;	(* address of integer containing result len *)
+		resInfoMaxSize: SIGNED16;
+		resInfoActSize: ADDRESS): SIGNED16;	(* address of integer containing result len *)
 
 	SQLGetStmtOption: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		whichOption: INTEGER;
-		option: ADDRESS): INTEGER;
+		whichOption: SIGNED16;
+		option: ADDRESS): SIGNED16;
 
 	SQLGetTypeInfo: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		whichType: INTEGER): INTEGER;
+		whichType: SIGNED16): SIGNED16;
 
 	SQLParamData: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		dataAdr: ADDRESS): INTEGER;
+		dataAdr: ADDRESS): SIGNED16;
 
 	SQLPutData: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		dataAdr: ADDRESS;
-		dataSize: SIZE): INTEGER;
+		dataSize: SIZE): SIGNED16;
 
 	SQLSetConnectOption: PROCEDURE {WINAPI} (
 		hdbc: Kernel32.HANDLE;
-		whichOption: INTEGER;
-		option: ADDRESS): INTEGER;
+		whichOption: SIGNED16;
+		option: ADDRESS): SIGNED16;
 
 	SQLSetStmtOption: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		whichOption: INTEGER;
-		option: ADDRESS): INTEGER;
+		whichOption: SIGNED16;
+		option: ADDRESS): SIGNED16;
 
 	SQLSpecialColumns: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		whichColType: INTEGER;
+		whichColType: SIGNED16;
 		tableQualifier: ADDRESS;
-		tabelQualifierLen: INTEGER;
+		tabelQualifierLen: SIGNED16;
 		tableOwner: ADDRESS;
-		tableOwnerLen: INTEGER;
+		tableOwnerLen: SIGNED16;
 		tableName: ADDRESS;
-		tableNameLen: INTEGER;
-		scope: INTEGER;
-		nullableCols: INTEGER): INTEGER;
+		tableNameLen: SIGNED16;
+		scope: SIGNED16;
+		nullableCols: SIGNED16): SIGNED16;
 
 	SQLStatistics: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		tableQualifier: ADDRESS;
-		tableQualifierLen: INTEGER;
+		tableQualifierLen: SIGNED16;
 		tableOwner: ADDRESS;
-		tableOwnerLen: INTEGER;
+		tableOwnerLen: SIGNED16;
 		tableName: ADDRESS;
-		tableNameLen: INTEGER;
-		indexType: INTEGER;
-		accuracy: INTEGER): INTEGER;
+		tableNameLen: SIGNED16;
+		indexType: SIGNED16;
+		accuracy: SIGNED16): SIGNED16;
 
 	SQLTables: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		tableQualifier: ADDRESS;
-		tableQualifierLen: INTEGER;
+		tableQualifierLen: SIGNED16;
 		tableOwner: ADDRESS;
-		tableOwnerLen: INTEGER;
+		tableOwnerLen: SIGNED16;
 		tableName: ADDRESS;
-		tableNameLen: INTEGER;
+		tableNameLen: SIGNED16;
 		tableType: ADDRESS;
-		tableTypeLen: INTEGER): INTEGER;
+		tableTypeLen: SIGNED16): SIGNED16;
 
 (*	Level 2 Functions	*)
 
 	SQLBrowseConnect: PROCEDURE {WINAPI} (
 		hdbc: ADDRESS;
 		connStrIn: ADDRESS;
-		connStrInLen: INTEGER;
+		connStrInLen: SIGNED16;
 		connStrOut: ADDRESS;
-		connStrOutMaxLen: INTEGER;
-		connStrOutActLen: ADDRESS): INTEGER;	(* address of integer *)
+		connStrOutMaxLen: SIGNED16;
+		connStrOutActLen: ADDRESS): SIGNED16;	(* address of integer *)
 
 	SQLColumnPrivileges: PROCEDURE {WINAPI} (
 		hstmt: ADDRESS;
 		tableQualifier: ADDRESS;
-		tableQualifierLen: INTEGER;
+		tableQualifierLen: SIGNED16;
 		tableOwner: ADDRESS;
-		tableOwnerLen: INTEGER;
+		tableOwnerLen: SIGNED16;
 		tableName: ADDRESS;
-		tableNameLen: INTEGER;
+		tableNameLen: SIGNED16;
 		columnName: ADDRESS;
-		columnNameLen: INTEGER): INTEGER;
+		columnNameLen: SIGNED16): SIGNED16;
 
 	SQLDataSources: PROCEDURE {WINAPI} (
 		henv: ADDRESS;
-		direction: INTEGER;
+		direction: SIGNED16;
 		dataSourceName: ADDRESS;
-		dataSourceNameMaxLen: INTEGER;
+		dataSourceNameMaxLen: SIGNED16;
 		dataSourceNameActLen: ADDRESS;	(* address of integer *)
 		description: ADDRESS;
-		descriptionMaxLen: INTEGER;
-		descriptionActLen: ADDRESS): INTEGER;	(* address of integer *)
+		descriptionMaxLen: SIGNED16;
+		descriptionActLen: ADDRESS): SIGNED16;	(* address of integer *)
 
 	SQLDescribeParam: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		par: INTEGER;
+		par: SIGNED16;
 		sqlType: ADDRESS;	(* address of integer *)
 		colPrecision: ADDRESS;	(* address of longint *)
 		colScale: ADDRESS;	(* address of integer *)
-		colNullable: ADDRESS): INTEGER;	(* address of integer *)
+		colNullable: ADDRESS): SIGNED16;	(* address of integer *)
 
 	SQLExtendedFetch: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		fetchType: INTEGER;
-		rowToFetch: LONGINT;
+		fetchType: SIGNED16;
+		rowToFetch: SIGNED32;
 		numFetchedRows: ADDRESS;	(* address of longint *)
-		rowStatus: ADDRESS): INTEGER;	(* address of array of integer *)
+		rowStatus: ADDRESS): SIGNED16;	(* address of array of integer *)
 
 	SQLForeignKeys: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		primKeyTabQualifier: ADDRESS;
-		primKeyTabQualifierLen: INTEGER;
+		primKeyTabQualifierLen: SIGNED16;
 		primKeyTabOwner: ADDRESS;
-		primKeyTabOwnerLen: INTEGER;
+		primKeyTabOwnerLen: SIGNED16;
 		primKeyTabName: ADDRESS;
-		primKeyTabNameLen: INTEGER;
+		primKeyTabNameLen: SIGNED16;
 		forKeyTabQualifier: ADDRESS;
-		forKeyTabQualifierLen: INTEGER;
+		forKeyTabQualifierLen: SIGNED16;
 		forKeyTabOwner: ADDRESS;
-		forKeyTabOwnerLen: INTEGER;
+		forKeyTabOwnerLen: SIGNED16;
 		forKeyTabName: ADDRESS;
-		forKeyTabNameLen: INTEGER): INTEGER;
+		forKeyTabNameLen: SIGNED16): SIGNED16;
 
 	SQLMoreResults: PROCEDURE {WINAPI} (
-		hstmt: Kernel32.HANDLE): INTEGER;
+		hstmt: Kernel32.HANDLE): SIGNED16;
 
 	SQLNativeSql: PROCEDURE {WINAPI} (
 		hdbc: Kernel32.HANDLE;
 		sqlStrIn: ADDRESS;
-		sqlStrInLen: LONGINT;
+		sqlStrInLen: SIGNED32;
 		sqlStrOut: ADDRESS;
-		sqlStrOutMaxLen: LONGINT;
-		sqlStrOutActLen: ADDRESS): INTEGER;	(* address of longint *)
+		sqlStrOutMaxLen: SIGNED32;
+		sqlStrOutActLen: ADDRESS): SIGNED16;	(* address of longint *)
 
 	SQLNumParams: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		numParams: ADDRESS): INTEGER;	(* address of integer *)
+		numParams: ADDRESS): SIGNED16;	(* address of integer *)
 
 	SQLParamOptions: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		numRows: LONGINT;
-		curRow: ADDRESS): INTEGER;	(* address of longint *)
+		numRows: SIGNED32;
+		curRow: ADDRESS): SIGNED16;	(* address of longint *)
 
 	SQLPrimaryKeys: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		tableQualifier: ADDRESS;
-		tableQualifierLen: INTEGER;
+		tableQualifierLen: SIGNED16;
 		tableOwner: ADDRESS;
-		tableOwnerLen: INTEGER;
+		tableOwnerLen: SIGNED16;
 		tableName: ADDRESS;
-		tableNameLen: INTEGER): INTEGER;
+		tableNameLen: SIGNED16): SIGNED16;
 
 	SQLProcedureColumns: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		procQualifier: ADDRESS;
-		procQualifierLen: INTEGER;
+		procQualifierLen: SIGNED16;
 		procOwner: ADDRESS;
-		procOwnerLen: INTEGER;
+		procOwnerLen: SIGNED16;
 		procName: ADDRESS;
-		procNameLen: INTEGER;
+		procNameLen: SIGNED16;
 		columnName: ADDRESS;
-		columnNameLen: INTEGER): INTEGER;
+		columnNameLen: SIGNED16): SIGNED16;
 
 	SQLProcedures: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		procQualifier: ADDRESS;
-		procQualifierLen: INTEGER;
+		procQualifierLen: SIGNED16;
 		procOwner: ADDRESS;
-		procOwnerLen: INTEGER;
+		procOwnerLen: SIGNED16;
 		procName: ADDRESS;
-		procNameLen: INTEGER): INTEGER;
+		procNameLen: SIGNED16): SIGNED16;
 
 	SQLSetPos: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
-		row: INTEGER;
-		op: INTEGER;
-		lock: INTEGER): INTEGER;
+		row: SIGNED16;
+		op: SIGNED16;
+		lock: SIGNED16): SIGNED16;
 
 	SQLTablePrivileges: PROCEDURE {WINAPI} (
 		hstmt: Kernel32.HANDLE;
 		tableQualifier: ADDRESS;
-		tableQualifierLen: INTEGER;
+		tableQualifierLen: SIGNED16;
 		tableOwner: ADDRESS;
-		tableOwnerLen: INTEGER;
+		tableOwnerLen: SIGNED16;
 		tableName: ADDRESS;
-		tableNameLen: INTEGER): INTEGER;
+		tableNameLen: SIGNED16): SIGNED16;
 
 	SQLDrivers: PROCEDURE {WINAPI} (
 		henv: ADDRESS;
-		direction: INTEGER;
+		direction: SIGNED16;
 		driverDesc: ADDRESS;
-		driverDescMaxLen: INTEGER;
+		driverDescMaxLen: SIGNED16;
 		driverDescActLen: ADDRESS;	(* address of integer *)
 		driverAttributes: ADDRESS;
-		driverAttributesMaxLen: INTEGER;
-		driverAttributesActLen: ADDRESS): INTEGER;	(* address of integer *)
+		driverAttributesMaxLen: SIGNED16;
+		driverAttributesActLen: ADDRESS): SIGNED16;	(* address of integer *)
 
 	SQLBindParameter: PROCEDURE {WINAPI} (
 		hstmt: ADDRESS;
-		parNum: INTEGER;
-		paramType: INTEGER;
-		cType: INTEGER;
-		sqlType: INTEGER;
-		colPrec: LONGINT;
-		colScale: INTEGER;
+		parNum: SIGNED16;
+		paramType: SIGNED16;
+		cType: SIGNED16;
+		sqlType: SIGNED16;
+		colPrec: SIGNED32;
+		colScale: SIGNED16;
 		inOutBuff: ADDRESS;
-		inOutBuffMaxLen: LONGINT;
-		inOutBuffActLen: ADDRESS): INTEGER;	(* address of longint *)
+		inOutBuffMaxLen: SIGNED32;
+		inOutBuffActLen: ADDRESS): SIGNED16;	(* address of longint *)
 
 	(* Level 3 functions *)
 	SQLFetchScroll: PROCEDURE {WINAPI} (
 		hstmt: ADDRESS;
-		fetchorientation: INTEGER;
-		fetchoffset: LONGINT): INTEGER;
+		fetchorientation: SIGNED16;
+		fetchoffset: SIGNED32): SIGNED16;
 
 	SQLSetStmtAttr: PROCEDURE {WINAPI} (
 		hstmt: ADDRESS;
-		attribute: LONGINT;
-		value: LONGINT;
-		stringlength: LONGINT): INTEGER;
+		attribute: SIGNED32;
+		value: SIGNED32;
+		stringlength: SIGNED32): SIGNED16;
 
 	SQLSetConnectAttr: PROCEDURE {WINAPI} (
 		hdbc: ADDRESS;
-		attribute: LONGINT;
-		valuePtr: LONGINT;
-		stringLength: LONGINT): INTEGER;
+		attribute: SIGNED32;
+		valuePtr: SIGNED32;
+		stringLength: SIGNED32): SIGNED16;
 
 
 
 (*	-------------------------- interface to core functions --------------------------	*)
 
-PROCEDURE AllocConnect*(hdbc: HDBC; VAR res: INTEGER);
+PROCEDURE AllocConnect*(hdbc: HDBC; VAR res: SIGNED16);
 BEGIN
 	res:= SQLAllocConnect(env.henv, ADDRESSOF(hdbc.hdbc));
 END AllocConnect;
 
 (* don't export AllocEnv as it's called in module initialization *)
-PROCEDURE AllocEnv(henv: HENV; VAR res: INTEGER);
+PROCEDURE AllocEnv(henv: HENV; VAR res: SIGNED16);
 BEGIN
 	res:= SQLAllocEnv(ADDRESSOF(henv.henv));
 END AllocEnv;
 
-PROCEDURE AllocStmt*(hdbc: HDBC; hstmt: HSTMT; VAR res: INTEGER);
+PROCEDURE AllocStmt*(hdbc: HDBC; hstmt: HSTMT; VAR res: SIGNED16);
 BEGIN
 	res:= SQLAllocStmt(hdbc.hdbc, ADDRESSOF(hstmt.hstmt));
 END AllocStmt;
 
-PROCEDURE BindCol*(hstmt: HSTMT; col, retType: INTEGER; VAR buf: ARRAY OF S.BYTE; VAR resSize: LONGINT;
-VAR res: INTEGER);
+PROCEDURE BindCol*(hstmt: HSTMT; col, retType: SIGNED16; VAR buf: ARRAY OF S.BYTE; VAR resSize: SIGNED32;
+VAR res: SIGNED16);
 BEGIN
-	res:= SQLBindCol(hstmt.hstmt, col, retType, ADDRESSOF(buf), LEN(buf)(LONGINT), ADDRESSOF(resSize));
+	res:= SQLBindCol(hstmt.hstmt, col, retType, ADDRESSOF(buf), LEN(buf)(SIGNED32), ADDRESSOF(resSize));
 END BindCol;
 
-PROCEDURE Cancel*(hstmt: HSTMT; VAR res: INTEGER);
+PROCEDURE Cancel*(hstmt: HSTMT; VAR res: SIGNED16);
 BEGIN
 	res:= SQLCancel(hstmt.hstmt);
 END Cancel;
 
-PROCEDURE ColAttributes*(hstmt: HSTMT; col, fDescType: INTEGER; VAR rgbDesc: ARRAY OF CHAR; VAR pfDesc: ADDRESS;
-VAR res: INTEGER);
-	VAR DescLen: INTEGER;
+PROCEDURE ColAttributes*(hstmt: HSTMT; col, fDescType: SIGNED16; VAR rgbDesc: ARRAY OF CHAR; VAR pfDesc: ADDRESS;
+VAR res: SIGNED16);
+	VAR DescLen: SIGNED16;
 BEGIN
-	res:= SQLColAttributes(hstmt.hstmt, col, fDescType, ADDRESSOF(rgbDesc), INTEGER(LEN(rgbDesc)),
+	res:= SQLColAttributes(hstmt.hstmt, col, fDescType, ADDRESSOF(rgbDesc), SIGNED16(LEN(rgbDesc)),
 		ADDRESSOF(DescLen), ADDRESSOF(pfDesc));
 END ColAttributes;
 
-PROCEDURE Connect*(hdbc: HDBC; DSN, UID, PW: ARRAY OF CHAR; VAR res: INTEGER);
+PROCEDURE Connect*(hdbc: HDBC; DSN, UID, PW: ARRAY OF CHAR; VAR res: SIGNED16);
 BEGIN
 	res:= SQLConnect(hdbc.hdbc, ADDRESSOF(DSN), NTS, ADDRESSOF(UID), NTS, ADDRESSOF(PW), NTS);
 END Connect;
 
-PROCEDURE DescribeCol*(hstmt: HSTMT; icol: INTEGER; VAR ColName: ARRAY OF CHAR;VAR SqlType: INTEGER;
-VAR ColDef: LONGINT; VAR Scale: INTEGER; VAR Nullable: BOOLEAN; VAR res: INTEGER);
-	VAR colLen, null: INTEGER;
+PROCEDURE DescribeCol*(hstmt: HSTMT; icol: SIGNED16; VAR ColName: ARRAY OF CHAR;VAR SqlType: SIGNED16;
+VAR ColDef: SIGNED32; VAR Scale: SIGNED16; VAR Nullable: BOOLEAN; VAR res: SIGNED16);
+	VAR colLen, null: SIGNED16;
 BEGIN
-	res:= SQLDescribeCol(hstmt.hstmt, icol, ADDRESSOF(ColName), INTEGER(LEN(ColName)), ADDRESSOF(colLen),
+	res:= SQLDescribeCol(hstmt.hstmt, icol, ADDRESSOF(ColName), SIGNED16(LEN(ColName)), ADDRESSOF(colLen),
 				ADDRESSOF(SqlType), ADDRESSOF(ColDef), ADDRESSOF(Scale), ADDRESSOF(null));
 	Nullable:= (null # 0);
 END DescribeCol;
 
-PROCEDURE Disconnect*(hdbc: HDBC; VAR res: INTEGER);
+PROCEDURE Disconnect*(hdbc: HDBC; VAR res: SIGNED16);
 BEGIN
 	res:= SQLDisconnect(hdbc.hdbc);
 END Disconnect;
 
-PROCEDURE StatementError*(hstmt: HSTMT; VAR SqlState: ARRAY OF CHAR; VAR NativeError: LONGINT;
-VAR ErrorMsg: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR state: ARRAY 6 OF CHAR; len, msgSize: INTEGER;
+PROCEDURE StatementError*(hstmt: HSTMT; VAR SqlState: ARRAY OF CHAR; VAR NativeError: SIGNED32;
+VAR ErrorMsg: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR state: ARRAY 6 OF CHAR; len, msgSize: SIGNED16;
 BEGIN
-	len:= INTEGER(MIN(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
+	len:= SIGNED16(MIN(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
 	res:= SQLError(0, 0, hstmt.hstmt, ADDRESSOF(state), ADDRESSOF(NativeError), ADDRESSOF(ErrorMsg), len,
 		ADDRESSOF(msgSize));
 	COPY (state, SqlState);
 END StatementError;
 
-PROCEDURE ConnectionError*(hdbc: HDBC; VAR SqlState: ARRAY OF CHAR; VAR NativeError: LONGINT;
-ErrorMsg: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR state: ARRAY 6 OF CHAR; len, msgSize: INTEGER;
+PROCEDURE ConnectionError*(hdbc: HDBC; VAR SqlState: ARRAY OF CHAR; VAR NativeError: SIGNED32;
+ErrorMsg: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR state: ARRAY 6 OF CHAR; len, msgSize: SIGNED16;
 BEGIN
-	len:= INTEGER(MIN(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
+	len:= SIGNED16(MIN(MAXMESSAGELENGTH-1, LEN(ErrorMsg)));
 	IF hdbc # NIL THEN
 		res:= SQLError(0, hdbc.hdbc, 0, ADDRESSOF(state), ADDRESSOF(NativeError), ADDRESSOF(ErrorMsg), len, ADDRESSOF(msgSize))
 	ELSE
@@ -522,77 +522,77 @@ BEGIN
 	COPY (state, SqlState)
 END ConnectionError;
 
-PROCEDURE ExecDirect*(hstmt: HSTMT; SqlStr: ARRAY OF CHAR; VAR res: INTEGER);
+PROCEDURE ExecDirect*(hstmt: HSTMT; SqlStr: ARRAY OF CHAR; VAR res: SIGNED16);
 BEGIN
 	res:= SQLExecDirect(hstmt.hstmt, ADDRESSOF(SqlStr), NTS)
 END ExecDirect;
 
-PROCEDURE Execute*(hstmt: HSTMT; VAR res: INTEGER);
+PROCEDURE Execute*(hstmt: HSTMT; VAR res: SIGNED16);
 BEGIN
 	res:= SQLExecute(hstmt.hstmt)
 END Execute;
 
-PROCEDURE Fetch*(hstmt: HSTMT; VAR res: INTEGER);
+PROCEDURE Fetch*(hstmt: HSTMT; VAR res: SIGNED16);
 BEGIN
 	res:= SQLFetch(hstmt.hstmt)
 END Fetch;
 
-PROCEDURE FreeConnect*(hdbc: HDBC; VAR res: INTEGER);
+PROCEDURE FreeConnect*(hdbc: HDBC; VAR res: SIGNED16);
 BEGIN
 	res:= SQLFreeConnect(hdbc.hdbc)
 END FreeConnect;
 
 (* don't expor FreeEnv as it's called in the teminate procedure *)
-PROCEDURE FreeEnv(henv: HENV; VAR res: INTEGER);
+PROCEDURE FreeEnv(henv: HENV; VAR res: SIGNED16);
 BEGIN
 	res:= SQLFreeEnv(henv.henv)
 END FreeEnv;
 
-PROCEDURE FreeStmt*(hstmt: HSTMT; opt: INTEGER; VAR res: INTEGER);
+PROCEDURE FreeStmt*(hstmt: HSTMT; opt: SIGNED16; VAR res: SIGNED16);
 BEGIN
 	res:= SQLFreeStmt(hstmt.hstmt, opt)
 END FreeStmt;
 
-PROCEDURE GetCursorName*(hstmt: HSTMT; VAR Cursor: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR size: INTEGER;
+PROCEDURE GetCursorName*(hstmt: HSTMT; VAR Cursor: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR size: SIGNED16;
 BEGIN
-	res:= SQLGetCursorName(hstmt.hstmt, ADDRESSOF(Cursor), INTEGER(LEN(Cursor)), ADDRESSOF(size))
+	res:= SQLGetCursorName(hstmt.hstmt, ADDRESSOF(Cursor), SIGNED16(LEN(Cursor)), ADDRESSOF(size))
 END GetCursorName;
 
-PROCEDURE NumResultCols*(hstmt: HSTMT; VAR cols: INTEGER; VAR res: INTEGER);
+PROCEDURE NumResultCols*(hstmt: HSTMT; VAR cols: SIGNED16; VAR res: SIGNED16);
 BEGIN
 	res:= SQLNumResultCols(hstmt.hstmt, ADDRESSOF(cols))
 END NumResultCols;
 
-PROCEDURE Prepare*(hstmt: HSTMT; SqlStr: ARRAY OF CHAR; VAR res: INTEGER);
+PROCEDURE Prepare*(hstmt: HSTMT; SqlStr: ARRAY OF CHAR; VAR res: SIGNED16);
 BEGIN
 	res:= SQLPrepare(hstmt.hstmt, ADDRESSOF(SqlStr), NTS)
 END Prepare;
 
-PROCEDURE RowCount*(hstmt: HSTMT; VAR rows: LONGINT; VAR res: INTEGER);
+PROCEDURE RowCount*(hstmt: HSTMT; VAR rows: SIGNED32; VAR res: SIGNED16);
 BEGIN
 	res:= SQLRowCount(hstmt.hstmt, ADDRESSOF(rows))
 END RowCount;
 
-PROCEDURE SetCursorName*(hstmt: HSTMT; Cursor: ARRAY OF CHAR; VAR res: INTEGER);
+PROCEDURE SetCursorName*(hstmt: HSTMT; Cursor: ARRAY OF CHAR; VAR res: SIGNED16);
 BEGIN
 	res:= SQLSetCursorName(hstmt.hstmt, ADDRESSOF(Cursor), NTS)
 END SetCursorName;
 
-PROCEDURE Commit*(hdbc: HDBC; VAR res: INTEGER);
+PROCEDURE Commit*(hdbc: HDBC; VAR res: SIGNED16);
 BEGIN
 	res:= SQLTransact(0, hdbc.hdbc, 0)
 END Commit;
 
-PROCEDURE Rollback*(hdbc: HDBC; VAR res: INTEGER);
+PROCEDURE Rollback*(hdbc: HDBC; VAR res: SIGNED16);
 BEGIN
 	res:= SQLTransact(0, hdbc.hdbc, 1)
 END Rollback;
 
 (*	-------------------------- interface to level 1 functions --------------------------	*)
 
-PROCEDURE Columns*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, colName: ARRAY OF CHAR; VAR res: INTEGER): INTEGER;
-	VAR qualAdr, ownAdr, nameAdr, colAdr: ADDRESS; qualLen, ownLen, nameLen, colLen: INTEGER;
+PROCEDURE Columns*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, colName: ARRAY OF CHAR; VAR res: SIGNED16): SIGNED16;
+	VAR qualAdr, ownAdr, nameAdr, colAdr: ADDRESS; qualLen, ownLen, nameLen, colLen: SIGNED16;
 BEGIN
 	(* should be possible to pass NIL for the 4 arrays *)
 	IF (LEN(tabQualifier) = 1) & (tabQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -607,71 +607,71 @@ BEGIN
 	res:= SQLColumns(hstmt.hstmt, qualAdr, qualLen, ownAdr, ownLen, nameAdr, nameLen, colAdr, colLen)
 END Columns;
 
-PROCEDURE DriverConnect*(hdbc: HDBC; VAR connStrIn, connStrOut: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR connOutSize: INTEGER;
+PROCEDURE DriverConnect*(hdbc: HDBC; VAR connStrIn, connStrOut: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR connOutSize: SIGNED16;
 BEGIN
-	res:= SQLDriverConnect(hdbc.hdbc, 0, ADDRESSOF(connStrIn), NTS, ADDRESSOF(connStrOut), INTEGER(LEN(connStrOut)),
+	res:= SQLDriverConnect(hdbc.hdbc, 0, ADDRESSOF(connStrIn), NTS, ADDRESSOF(connStrOut), SIGNED16(LEN(connStrOut)),
 		ADDRESSOF(connOutSize), 0)	(* don't show a dialog box *)
 END DriverConnect;
 
-PROCEDURE GetConnectOption*(hdbc: HDBC; whichOption: INTEGER; VAR optValue: ARRAY OF S.BYTE; VAR res: INTEGER);
+PROCEDURE GetConnectOption*(hdbc: HDBC; whichOption: SIGNED16; VAR optValue: ARRAY OF S.BYTE; VAR res: SIGNED16);
 BEGIN
 	res:= SQLGetConnectOption(hdbc.hdbc, whichOption, ADDRESSOF(optValue))
 END GetConnectOption;
 
-PROCEDURE GetData*(hstmt: HSTMT; col, resType: INTEGER; VAR resValue: ARRAY OF S.BYTE; VAR resSize: LONGINT;
-VAR res: INTEGER);
+PROCEDURE GetData*(hstmt: HSTMT; col, resType: SIGNED16; VAR resValue: ARRAY OF S.BYTE; VAR resSize: SIGNED32;
+VAR res: SIGNED16);
 BEGIN
-	res:= SQLGetData(hstmt.hstmt, col, resType, ADDRESSOF(resValue), LEN(resValue)(LONGINT), ADDRESSOF(resSize))
+	res:= SQLGetData(hstmt.hstmt, col, resType, ADDRESSOF(resValue), LEN(resValue)(SIGNED32), ADDRESSOF(resSize))
 END GetData;
 
-PROCEDURE GetFunctions*(hdbc: HDBC; whichFunct: INTEGER; VAR exists: BOOLEAN; VAR res: INTEGER);
-	VAR ex: INTEGER;
+PROCEDURE GetFunctions*(hdbc: HDBC; whichFunct: SIGNED16; VAR exists: BOOLEAN; VAR res: SIGNED16);
+	VAR ex: SIGNED16;
 BEGIN
 	res:= SQLGetFunctions(hdbc.hdbc, whichFunct, ADDRESSOF(ex)); exists:= ex # 0
 END GetFunctions;
 
-PROCEDURE GetInfo*(hdbc: HDBC; infoType: INTEGER; VAR info: ARRAY OF S.BYTE; VAR res: INTEGER);
-	VAR actSize: INTEGER;
+PROCEDURE GetInfo*(hdbc: HDBC; infoType: SIGNED16; VAR info: ARRAY OF S.BYTE; VAR res: SIGNED16);
+	VAR actSize: SIGNED16;
 BEGIN
 	(* should check that the size of info is at least 4 bytes if infoType not of character type *)
-	res:= SQLGetInfo(hdbc.hdbc, infoType, ADDRESSOF(info), INTEGER(LEN(info)), ADDRESSOF(actSize))
+	res:= SQLGetInfo(hdbc.hdbc, infoType, ADDRESSOF(info), SIGNED16(LEN(info)), ADDRESSOF(actSize))
 END GetInfo;
 
-PROCEDURE GetStmtOption*(hstmt: HSTMT; whichOption: INTEGER; VAR optValue: ARRAY OF S.BYTE; VAR res: INTEGER);
+PROCEDURE GetStmtOption*(hstmt: HSTMT; whichOption: SIGNED16; VAR optValue: ARRAY OF S.BYTE; VAR res: SIGNED16);
 BEGIN
 	(* size of optValue should be at least 4 bytes *)
 	res:= SQLGetStmtOption(hstmt.hstmt, whichOption, ADDRESSOF(optValue))
 END GetStmtOption;
 
-PROCEDURE GetTypeInfo*(hstmt: HSTMT; whichSQLType: INTEGER; VAR res: INTEGER);
+PROCEDURE GetTypeInfo*(hstmt: HSTMT; whichSQLType: SIGNED16; VAR res: SIGNED16);
 BEGIN
 	res:= SQLGetTypeInfo(hstmt.hstmt, whichSQLType)
 END GetTypeInfo;
 
-PROCEDURE ParamData*(hstmt: HSTMT; VAR data:ARRAY OF S.BYTE; VAR res: INTEGER);
+PROCEDURE ParamData*(hstmt: HSTMT; VAR data:ARRAY OF S.BYTE; VAR res: SIGNED16);
 BEGIN
 	res:= SQLParamData(hstmt.hstmt, ADDRESSOF(data))
 END ParamData;
 
-PROCEDURE PutData*(hstmt: HSTMT; VAR data: ARRAY OF S.BYTE; len: SIZE; VAR res: INTEGER);
+PROCEDURE PutData*(hstmt: HSTMT; VAR data: ARRAY OF S.BYTE; len: SIZE; VAR res: SIGNED16);
 BEGIN
 	res:= SQLPutData(hstmt.hstmt, ADDRESSOF(data), len)
 END PutData;
 
-PROCEDURE SetConnectOption*(hdbc: HDBC; whichOpt: INTEGER; VAR option: ARRAY OF S.BYTE; VAR res: INTEGER);
+PROCEDURE SetConnectOption*(hdbc: HDBC; whichOpt: SIGNED16; VAR option: ARRAY OF S.BYTE; VAR res: SIGNED16);
 BEGIN
 	res:= SQLSetConnectOption(hdbc.hdbc, whichOpt, ADDRESSOF(option))
 END SetConnectOption;
 
-PROCEDURE SetStmtOption*(hstmt: HSTMT; whichOpt: INTEGER; VAR option: ARRAY OF S.BYTE; VAR res: INTEGER);
+PROCEDURE SetStmtOption*(hstmt: HSTMT; whichOpt: SIGNED16; VAR option: ARRAY OF S.BYTE; VAR res: SIGNED16);
 BEGIN
 	res:= SQLSetStmtOption(hstmt.hstmt, whichOpt, ADDRESSOF(option))
 END SetStmtOption;
 
-PROCEDURE SpecialColumns*(hstmt: HSTMT; colType: INTEGER; tabQualifier, tabOwner, tabName: ARRAY OF CHAR;
-scope: INTEGER; nullables: BOOLEAN; VAR res: INTEGER);
-	VAR nulls: INTEGER; qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: INTEGER;
+PROCEDURE SpecialColumns*(hstmt: HSTMT; colType: SIGNED16; tabQualifier, tabOwner, tabName: ARRAY OF CHAR;
+scope: SIGNED16; nullables: BOOLEAN; VAR res: SIGNED16);
+	VAR nulls: SIGNED16; qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: SIGNED16;
 BEGIN
 	IF nullables THEN nulls:= 1 ELSE nulls:= 0 END;
 	(* should be possible to pass NIL for the 3 arrays *)
@@ -686,8 +686,8 @@ BEGIN
 END SpecialColumns;
 
 PROCEDURE  Statistics*(hstmt: HSTMT; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; uniqueIndexes,
-accurate: BOOLEAN; VAR res: INTEGER);
-	VAR indexType, accuracy: INTEGER; qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: INTEGER;
+accurate: BOOLEAN; VAR res: SIGNED16);
+	VAR indexType, accuracy: SIGNED16; qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: SIGNED16;
 BEGIN
 	IF uniqueIndexes THEN indexType:= 0 ELSE indexType:= 1 END;
 	IF accurate THEN accuracy:= 1 ELSE accuracy:= 0 END;
@@ -702,8 +702,8 @@ BEGIN
 	res:= SQLStatistics(hstmt.hstmt, qualAdr, qualLen, ownAdr, ownLen, nameAdr, nameLen, indexType, accuracy)
 END Statistics;
 
-PROCEDURE Tables*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, tabType: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr, typeAdr: ADDRESS; qualLen, ownLen, nameLen, typeLen: INTEGER;
+PROCEDURE Tables*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, tabType: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR qualAdr, ownAdr, nameAdr, typeAdr: ADDRESS; qualLen, ownLen, nameLen, typeLen: SIGNED16;
 BEGIN
 	(* should be possible to pass NIL for the 4 tab... arrays *)
 	IF (LEN(tabQualifier) = 1) & (tabQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -719,15 +719,15 @@ END Tables;
 
 (*	-------------------------- interface to level 2 functions --------------------------	*)
 
-PROCEDURE BrowseConnect*(hdbc: HDBC; connStrIn: ARRAY OF CHAR; VAR connStrOut: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR outLen: INTEGER;
+PROCEDURE BrowseConnect*(hdbc: HDBC; connStrIn: ARRAY OF CHAR; VAR connStrOut: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR outLen: SIGNED16;
 BEGIN
-	res:= SQLBrowseConnect(hdbc.hdbc, ADDRESSOF(connStrIn), NTS, ADDRESSOF(connStrOut), INTEGER(LEN(connStrOut)),
+	res:= SQLBrowseConnect(hdbc.hdbc, ADDRESSOF(connStrIn), NTS, ADDRESSOF(connStrOut), SIGNED16(LEN(connStrOut)),
 		ADDRESSOF(outLen))
 END BrowseConnect;
 
-PROCEDURE ColumnPrivileges*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, colName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr, colAdr: ADDRESS; qualLen, ownLen, nameLen, colLen: INTEGER;
+PROCEDURE ColumnPrivileges*(hstmt: HSTMT; tabQualifier, tabOwner, tabName, colName: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR qualAdr, ownAdr, nameAdr, colAdr: ADDRESS; qualLen, ownLen, nameLen, colLen: SIGNED16;
 BEGIN
 	(* should be possible to pass NIL for the 4 arrays *)
 	IF (LEN(tabQualifier) = 1) & (tabQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -742,28 +742,28 @@ BEGIN
 	res:= SQLColumnPrivileges(hstmt.hstmt, qualAdr, qualLen, ownAdr, ownLen, nameAdr, nameLen, colAdr, colLen)
 END ColumnPrivileges;
 
-PROCEDURE DataSources*(direction: INTEGER; VAR dataSourceName, dataSourceDesc: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR nameLen, descLen: INTEGER;
+PROCEDURE DataSources*(direction: SIGNED16; VAR dataSourceName, dataSourceDesc: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR nameLen, descLen: SIGNED16;
 BEGIN
 	(* could implement it with enumerate procedure *)
-	res:= SQLDataSources(env.henv, direction, ADDRESSOF(dataSourceName), INTEGER(LEN(dataSourceName)),
-		ADDRESSOF(nameLen), ADDRESSOF(dataSourceDesc), INTEGER(LEN(dataSourceDesc)), ADDRESSOF(descLen))
+	res:= SQLDataSources(env.henv, direction, ADDRESSOF(dataSourceName), SIGNED16(LEN(dataSourceName)),
+		ADDRESSOF(nameLen), ADDRESSOF(dataSourceDesc), SIGNED16(LEN(dataSourceDesc)), ADDRESSOF(descLen))
 END DataSources;
 
-PROCEDURE DescribeParam*(hstmt: HSTMT; par: INTEGER; VAR sqlType: INTEGER; VAR prec: LONGINT; VAR scale,
-nullable: INTEGER; VAR res: INTEGER);
+PROCEDURE DescribeParam*(hstmt: HSTMT; par: SIGNED16; VAR sqlType: SIGNED16; VAR prec: SIGNED32; VAR scale,
+nullable: SIGNED16; VAR res: SIGNED16);
 BEGIN
 	res:= SQLDescribeParam(hstmt.hstmt, par, ADDRESSOF(sqlType), ADDRESSOF(prec), ADDRESSOF(scale),
 		ADDRESSOF(nullable))
 END DescribeParam;
 
-PROCEDURE ExtendedFetch*(hstmt: HSTMT; fetchType: INTEGER; rowToFetch: LONGINT; VAR numFetchedRows: LONGINT;
-VAR rowStatus: INTEGER; VAR res: INTEGER);
+PROCEDURE ExtendedFetch*(hstmt: HSTMT; fetchType: SIGNED16; rowToFetch: SIGNED32; VAR numFetchedRows: SIGNED32;
+VAR rowStatus: SIGNED16; VAR res: SIGNED16);
 BEGIN
 	res:= SQLExtendedFetch(hstmt.hstmt, fetchType, rowToFetch, ADDRESSOF(numFetchedRows), ADDRESSOF(rowStatus))
 END ExtendedFetch;
 
-PROCEDURE SetStmtAttr*(hstmt: HSTMT; attribute: LONGINT; valuePtr: LONGINT; stringLength: LONGINT; VAR res: INTEGER);
+PROCEDURE SetStmtAttr*(hstmt: HSTMT; attribute: SIGNED32; valuePtr: SIGNED32; stringLength: SIGNED32; VAR res: SIGNED16);
 
 BEGIN
 	res:= SQLSetStmtAttr(hstmt.hstmt, attribute, valuePtr, stringLength)
@@ -771,9 +771,9 @@ END SetStmtAttr;
 
 
 PROCEDURE ForeignKeys*(hstmt: HSTMT; primKeyTabQualifier, primKeyTabOwner, primKeyTabName, forKeyTabQualifier,
-forKeyTabOwner, forKeyTabName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR pQualAdr, pOwnAdr, pNameAdr: ADDRESS; pQualLen, pOwnLen, pNameLen: INTEGER;
-		fQualAdr, fOwnAdr, fNameAdr: ADDRESS; fQualLen, fOwnLen, fNameLen: INTEGER;
+forKeyTabOwner, forKeyTabName: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR pQualAdr, pOwnAdr, pNameAdr: ADDRESS; pQualLen, pOwnLen, pNameLen: SIGNED16;
+		fQualAdr, fOwnAdr, fNameAdr: ADDRESS; fQualLen, fOwnLen, fNameLen: SIGNED16;
 BEGIN
 	(* should be possible to pass NIL for the 6 arrays *)
 	IF (LEN(primKeyTabQualifier) = 1) & (primKeyTabQualifier[0] = 1X) THEN pQualAdr:= 0; pQualLen:= 0
@@ -795,32 +795,32 @@ BEGIN
 END ForeignKeys;
 
 PROCEDURE MoreResults*(hstmt: HSTMT): BOOLEAN;
-VAR more: INTEGER;
+VAR more: SIGNED16;
 BEGIN
 	more:= SQLMoreResults(hstmt.hstmt);
 	IF more = 0 THEN RETURN TRUE ELSE RETURN FALSE END
 END MoreResults;
 
-PROCEDURE NativeSql*(hdbc: HDBC; origSql: ARRAY OF CHAR; VAR nativeSql: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR len: LONGINT;
+PROCEDURE NativeSql*(hdbc: HDBC; origSql: ARRAY OF CHAR; VAR nativeSql: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR len: SIGNED32;
 BEGIN
-	res:= SQLNativeSql(hdbc.hdbc, ADDRESSOF(origSql), NTS, ADDRESSOF(nativeSql), LEN(nativeSql)(LONGINT), ADDRESSOF(len))
+	res:= SQLNativeSql(hdbc.hdbc, ADDRESSOF(origSql), NTS, ADDRESSOF(nativeSql), LEN(nativeSql)(SIGNED32), ADDRESSOF(len))
 END NativeSql;
 
-PROCEDURE NumParams*(hstmt: HSTMT; VAR res: INTEGER): INTEGER;
-	VAR num: INTEGER;
+PROCEDURE NumParams*(hstmt: HSTMT; VAR res: SIGNED16): SIGNED16;
+	VAR num: SIGNED16;
 BEGIN
 	res:= SQLNumParams(hstmt.hstmt, ADDRESSOF(num));
 	RETURN num
 END NumParams;
 
-PROCEDURE ParamOptions*(hstmt: HSTMT; numRows: LONGINT; VAR curRow: LONGINT; VAR res: INTEGER);
+PROCEDURE ParamOptions*(hstmt: HSTMT; numRows: SIGNED32; VAR curRow: SIGNED32; VAR res: SIGNED16);
 BEGIN
 	res:= SQLParamOptions(hstmt.hstmt, numRows, ADDRESSOF(curRow))
 END ParamOptions;
 
-PROCEDURE PrimaryKeys*(hstmt: HSTMT; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: INTEGER;
+PROCEDURE PrimaryKeys*(hstmt: HSTMT; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: SIGNED16;
 BEGIN
 	(* should be possible to pass NIL for the 3 arrays *)
 	IF (LEN(tabQualifier) = 1) & (tabQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -833,8 +833,8 @@ BEGIN
 	res:= SQLPrimaryKeys(hstmt.hstmt, qualAdr, qualLen, ownAdr, ownLen, nameAdr, nameLen)
 END PrimaryKeys;
 
-PROCEDURE ProcedureColumns*(hstmt: HSTMT; procQualifier, procOwner, procName, colName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr, colAdr: ADDRESS; qualLen, ownLen, nameLen, colLen: INTEGER;
+PROCEDURE ProcedureColumns*(hstmt: HSTMT; procQualifier, procOwner, procName, colName: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR qualAdr, ownAdr, nameAdr, colAdr: ADDRESS; qualLen, ownLen, nameLen, colLen: SIGNED16;
 BEGIN
 	(* should be possible to pass NIL for the 4 arrays *)
 	IF (LEN(procQualifier) = 1) & (procQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -849,8 +849,8 @@ BEGIN
 	res:= SQLProcedureColumns(hstmt.hstmt, qualAdr, qualLen, ownAdr, ownLen, nameAdr, nameLen, colAdr, colLen)
 END ProcedureColumns;
 
-PROCEDURE Procedures*(hstmt: HSTMT; procQualifier, procOwner, procName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: INTEGER;
+PROCEDURE Procedures*(hstmt: HSTMT; procQualifier, procOwner, procName: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: SIGNED16;
 BEGIN
 	(* should be possible to pass NIL for the 3 arrays *)
 	IF (LEN(procQualifier) = 1) & (procQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -863,13 +863,13 @@ BEGIN
 	res:= SQLProcedures(hstmt.hstmt, qualAdr, qualLen, ownAdr, ownLen, nameAdr, nameLen)
 END Procedures;
 
-PROCEDURE SetPos*(hstmt: HSTMT; row, op, lock: INTEGER; VAR res: INTEGER);
+PROCEDURE SetPos*(hstmt: HSTMT; row, op, lock: SIGNED16; VAR res: SIGNED16);
 BEGIN
 	res:= SQLSetPos(hstmt.hstmt, row, op, lock)
 END SetPos;
 
-PROCEDURE TablePrivileges*(hstmt: HSTMT; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: INTEGER;
+PROCEDURE TablePrivileges*(hstmt: HSTMT; tabQualifier, tabOwner, tabName: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR qualAdr, ownAdr, nameAdr: ADDRESS; qualLen, ownLen, nameLen: SIGNED16;
 BEGIN
 	(* should be possible to pass NIL for the 3 arrays *)
 	IF (LEN(tabQualifier) = 1) & (tabQualifier[0] = 1X) THEN qualAdr:= 0; qualLen:= 0
@@ -882,29 +882,29 @@ BEGIN
 	res:= SQLTablePrivileges(hstmt.hstmt, qualAdr, qualLen, ownAdr, ownLen, nameAdr, nameLen)
 END TablePrivileges;
 
-PROCEDURE Drivers*(dir: INTEGER; VAR driverDesc, driverAttr: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR descLen, attrLen: INTEGER;
+PROCEDURE Drivers*(dir: SIGNED16; VAR driverDesc, driverAttr: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR descLen, attrLen: SIGNED16;
 BEGIN
-	res:= SQLDrivers(env.henv, dir, ADDRESSOF(driverDesc), INTEGER(LEN(driverDesc)), ADDRESSOF(descLen),
-		ADDRESSOF(driverAttr), INTEGER(LEN(driverAttr)), ADDRESSOF(attrLen))
+	res:= SQLDrivers(env.henv, dir, ADDRESSOF(driverDesc), SIGNED16(LEN(driverDesc)), ADDRESSOF(descLen),
+		ADDRESSOF(driverAttr), SIGNED16(LEN(driverAttr)), ADDRESSOF(attrLen))
 END Drivers;
 
-PROCEDURE BindParameter*(hstmt: HSTMT; par, parType, cType, sqlType: INTEGER; prec: LONGINT; scale: INTEGER;
-VAR parBuff: ARRAY OF S.BYTE; VAR parBuffActLen: LONGINT; VAR res: INTEGER);
+PROCEDURE BindParameter*(hstmt: HSTMT; par, parType, cType, sqlType: SIGNED16; prec: SIGNED32; scale: SIGNED16;
+VAR parBuff: ARRAY OF S.BYTE; VAR parBuffActLen: SIGNED32; VAR res: SIGNED16);
 BEGIN
-	res:= SQLBindParameter(hstmt.hstmt, par, parType, cType, sqlType, prec, scale, ADDRESSOF(parBuff), LEN(parBuff)(LONGINT),
+	res:= SQLBindParameter(hstmt.hstmt, par, parType, cType, sqlType, prec, scale, ADDRESSOF(parBuff), LEN(parBuff)(SIGNED32),
 		ADDRESSOF(parBuffActLen))
 END BindParameter;
 
 (* Interface to Level 3 fucntions *)
 
-PROCEDURE FetchScroll*(hstmt: HSTMT; fetchOrientation: INTEGER; fetchOffset: LONGINT; VAR res: INTEGER);
+PROCEDURE FetchScroll*(hstmt: HSTMT; fetchOrientation: SIGNED16; fetchOffset: SIGNED32; VAR res: SIGNED16);
 
 BEGIN
 	res := SQLFetchScroll(hstmt.hstmt, fetchOrientation, fetchOffset)
 END FetchScroll;
 
-PROCEDURE SetConnectAttr*(hdbc: HDBC; attribute: LONGINT; valuePtr: LONGINT; stringLength: LONGINT; VAR res: INTEGER);
+PROCEDURE SetConnectAttr*(hdbc: HDBC; attribute: SIGNED32; valuePtr: SIGNED32; stringLength: SIGNED32; VAR res: SIGNED16);
 
 BEGIN
 	res := SQLSetConnectAttr(hdbc.hdbc, attribute, valuePtr, stringLength)

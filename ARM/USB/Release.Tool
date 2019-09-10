@@ -327,7 +327,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 # Active Oberon run-time
 
-	 # Runtime support for HUGEINT and strings
+	 # Runtime support for SIGNED64 and strings
 	UNCOOP { Runtime.Mod }
 	I386COOP { I386.CPU.Mod }
 	RPICOOP { RPI.CPU.Mod }

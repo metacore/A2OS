@@ -61,14 +61,14 @@ TYPE
 	Program * = RECORD
 		programs: ARRAY MaxBurstSize OF RewritableProgram;
 		src, dst: ADDRESS;
-		active, align, burstSize -, burstCount -, channel -, dstBlockSize, dstStridingSize, srcBlockSize, srcStridingSize, size: LONGINT;
+		active, align, burstSize -, burstCount -, channel -, dstBlockSize, dstStridingSize, srcBlockSize, srcStridingSize, size: SIGNED32;
 		state: SET;
 	END;
 
 	(**
 		Handler type for DMA completion. 'status' indicates the if an error occurred. 'param' is a user-specified parameter.
 	*)
-	Handler * = PROCEDURE {DELEGATE} (status: LONGINT; param: ANY);
+	Handler * = PROCEDURE {DELEGATE} (status: SIGNED32; param: ANY);
 
 	HandlerDesc = RECORD
 		handler: Handler;
@@ -77,7 +77,7 @@ TYPE
 
 	(** Extension of the hardware-specific program to support addresses and event rewriting *)
 	RewritableProgram = RECORD (DMA330.Program)
-		dstOfs, sevOfs, srcOfs: LONGINT;
+		dstOfs, sevOfs, srcOfs: SIGNED32;
 		created: BOOLEAN;
 	END;
 
@@ -87,7 +87,7 @@ VAR
 	(** Initializes a DMA program with default burst sizes and counts. *)
 	PROCEDURE InitProgram * (VAR program: Program);
 	VAR
-		ignore: LONGINT;
+		ignore: SIGNED32;
 	BEGIN
 		ASSERT(SetBurstParameters(program, DefaultBurstCount, DefaultBurstSize, ignore));
 		program.state := {Initialized}
@@ -99,7 +99,7 @@ VAR
 		DMA transfers data in bursts. Each burst consists of 'count' transfers of 'size' bytes. Depending on the underlying hardware, some
 		counts and sizes may lead to more efficient transfers than others.
 	*)
-	PROCEDURE SetBurstParameters * (VAR program: Program; count, size: LONGINT; VAR status: LONGINT): BOOLEAN;
+	PROCEDURE SetBurstParameters * (VAR program: Program; count, size: SIGNED32; VAR status: SIGNED32): BOOLEAN;
 	BEGIN
 		IF count > MaxBurstCount THEN
 			status := InvalidBurstCount;
@@ -129,11 +129,11 @@ VAR
 									VAR program: Program;
 									src: ADDRESS; srcBlockSize, srcStridingSize: SIZE;
 									dst: ADDRESS; dstBlockSize, dstStridingSize: SIZE;
-									len: LONGINT;
-									VAR status: LONGINT
+									len: SIGNED32;
+									VAR status: SIGNED32
 								): BOOLEAN;
 	VAR
-		iterations: LONGINT;
+		iterations: SIGNED32;
 		result: BOOLEAN;
 		incSrc, incDst: BOOLEAN;
 	BEGIN
@@ -247,9 +247,9 @@ VAR
 	END Generate;
 
 	(** Changes the destination address of a program to 'adr'. *)
-	PROCEDURE SetDst * (VAR program: Program; adr: ADDRESS; VAR status: LONGINT): BOOLEAN;
+	PROCEDURE SetDst * (VAR program: Program; adr: ADDRESS; VAR status: SIGNED32): BOOLEAN;
 	VAR
-		offset: LONGINT;
+		offset: SIGNED32;
 		result: BOOLEAN;
 	BEGIN
 		result := TRUE;
@@ -272,9 +272,9 @@ VAR
 	END SetDst;
 
 	(** Changes the source address of a program to 'adr'. *)
-	PROCEDURE SetSrc * (VAR program: Program; adr: ADDRESS; VAR status: LONGINT): BOOLEAN;
+	PROCEDURE SetSrc * (VAR program: Program; adr: ADDRESS; VAR status: SIGNED32): BOOLEAN;
 	VAR
-		offset: LONGINT;
+		offset: SIGNED32;
 		result: BOOLEAN;
 	BEGIN
 		result := TRUE;
@@ -295,9 +295,9 @@ VAR
 	END SetSrc;
 
 	(** Binds the program 'prog' to the channel 'channel'. This must be done before program execution. *)
-	PROCEDURE BindToChannel * (VAR program: Program; channel: LONGINT; VAR status: LONGINT): BOOLEAN;
+	PROCEDURE BindToChannel * (VAR program: Program; channel: SIGNED32; VAR status: SIGNED32): BOOLEAN;
 	VAR
-		offset: LONGINT;
+		offset: SIGNED32;
 		result: BOOLEAN;
 	BEGIN
 		result := TRUE;
@@ -319,9 +319,9 @@ VAR
 	END BindToChannel;
 
 	(** Starts executing the program. When the transfer is finished or triggers an error, 'handler' is called with the termination status and 'handlerParam' as parameters. *)
-	PROCEDURE Execute * (CONST program: Program; handler: Handler; handlerParam: ANY; VAR status: LONGINT): BOOLEAN;
+	PROCEDURE Execute * (CONST program: Program; handler: Handler; handlerParam: ANY; VAR status: SIGNED32): BOOLEAN;
 	VAR
-		channel: LONGINT;
+		channel: SIGNED32;
 		result: BOOLEAN;
 	BEGIN
 		result := TRUE;
@@ -341,7 +341,7 @@ VAR
 	END Execute;
 
 	(* Handler for normal transfer termination. *)
-	PROCEDURE DoneHandler (channel: LONGINT);
+	PROCEDURE DoneHandler (channel: SIGNED32);
 	VAR
 		handler: Handler;
 	BEGIN
@@ -351,11 +351,11 @@ VAR
 		END
 	END DoneHandler;
 
-	PROCEDURE FaultHandler (channel, fault: LONGINT);
+	PROCEDURE FaultHandler (channel, fault: SIGNED32);
 	VAR
 		handler: Handler;
 		errors: SET;
-		status: LONGINT;
+		status: SIGNED32;
 	BEGIN
 		(* Decode error *)
 		errors := SYSTEM.VAL(SET, fault);
@@ -377,7 +377,7 @@ VAR
 	END FaultHandler;
 
 	(** Writes the CCR, SAR and DAR registers of the channel to the values specified by the parameters. *)
-	PROCEDURE WriteProgramHeader (VAR program: Program; src: ADDRESS; incSrc: BOOLEAN; srcBurstCount, srcBurstSize: LONGINT; dst: ADDRESS; incDst: BOOLEAN; dstBurstCount, dstBurstSize: LONGINT);
+	PROCEDURE WriteProgramHeader (VAR program: Program; src: ADDRESS; incSrc: BOOLEAN; srcBurstCount, srcBurstSize: SIGNED32; dst: ADDRESS; incDst: BOOLEAN; dstBurstCount, dstBurstSize: SIGNED32);
 	BEGIN
 		IF Trace THEN
 			KernelLog.String("DMA Program Writer: ");
@@ -392,9 +392,9 @@ VAR
 		DMA330.DMAMOV(program.programs[program.active], DMA330.DAR, dst)
 	END WriteProgramHeader;
 
-	PROCEDURE WriteProgramBurstParameters (VAR program: Program; srcBurstCount, srcBurstSize, dstBurstCount, dstBurstSize: LONGINT; incSrc, incDst: BOOLEAN);
+	PROCEDURE WriteProgramBurstParameters (VAR program: Program; srcBurstCount, srcBurstSize, dstBurstCount, dstBurstSize: SIGNED32; incSrc, incDst: BOOLEAN);
 	VAR
-		val: LONGINT;
+		val: SIGNED32;
 	BEGIN
 		val := DMA330.SB(srcBurstCount) + DMA330.SS(srcBurstSize * 8) + DMA330.DB(dstBurstCount) + DMA330.DS(dstBurstSize * 8);
 		IF incSrc THEN INC(val, DMA330.SI) END;
@@ -402,9 +402,9 @@ VAR
 		DMA330.DMAMOV(program.programs[program.active], DMA330.CCR, val);
 	END WriteProgramBurstParameters;
 
-	PROCEDURE WriteProgramNestedLoop (VAR program: Program; iteration: LONGINT; read: BOOLEAN): LONGINT;
+	PROCEDURE WriteProgramNestedLoop (VAR program: Program; iteration: SIGNED32; read: BOOLEAN): SIGNED32;
 	VAR
-		inner, outer: LONGINT;
+		inner, outer: SIGNED32;
 	BEGIN
 		outer := 256;
 		LOOP
@@ -437,7 +437,7 @@ VAR
 		RETURN iteration - inner * outer
 	END WriteProgramNestedLoop;
 
-	PROCEDURE WriteProgramLoop (VAR program: Program; iteration: LONGINT; read: BOOLEAN): LONGINT;
+	PROCEDURE WriteProgramLoop (VAR program: Program; iteration: SIGNED32; read: BOOLEAN): SIGNED32;
 	BEGIN
 		IF Trace THEN
 			KernelLog.String("DMA Program Writer: ");
@@ -454,17 +454,17 @@ VAR
 		RETURN 0
 	END WriteProgramLoop;
 
-	PROCEDURE WriteProgramSrcAlign (VAR program: Program; align: LONGINT; incSrc, incDst, read: BOOLEAN);
+	PROCEDURE WriteProgramSrcAlign (VAR program: Program; align: SIGNED32; incSrc, incDst, read: BOOLEAN);
 	VAR
-		count, size: LONGINT;
+		count, size: SIGNED32;
 	BEGIN
 		(*IF read THEN DMA330.DMAWFP(program.programs[program.active], 0, DMA330.Single) END;*)
 		DMA330.DMALD(program.programs[program.active], FALSE, FALSE);
 	END WriteProgramSrcAlign;
 
-	PROCEDURE WriteProgramDstAlign (VAR program: Program; align: LONGINT; incSrc, incDst, read: BOOLEAN);
+	PROCEDURE WriteProgramDstAlign (VAR program: Program; align: SIGNED32; incSrc, incDst, read: BOOLEAN);
 	VAR
-		count, size: LONGINT;
+		count, size: SIGNED32;
 	BEGIN
 			size := 4;
 			LOOP

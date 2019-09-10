@@ -29,7 +29,7 @@ CONST
 TYPE
 	Opcode* = OBJECT
 		VAR
-			instr* : LONGINT; (* instruction code *)
+			instr* : SIGNED32; (* instruction code *)
 			offset* : ADDRESS;
 			code* : Modules.Bytes;
 			length- : SIZE;
@@ -69,19 +69,19 @@ TYPE
 			RETURN Strings.NewString(str)
 		END ToString;
 
-		PROCEDURE WriteHex8* (x : LONGINT; w : Streams.Writer);
+		PROCEDURE WriteHex8* (x : SIGNED32; w : Streams.Writer);
 		VAR result : ARRAY 3 OF CHAR;
 		BEGIN
 			IntToHex(x, 2, result); w.String(result)
 		END WriteHex8;
 
-		PROCEDURE WriteHex16* (x : LONGINT; w : Streams.Writer);
+		PROCEDURE WriteHex16* (x : SIGNED32; w : Streams.Writer);
 		VAR result : ARRAY 5 OF CHAR;
 		BEGIN
 			IntToHex(x, 4, result); w.String(result)
 		END WriteHex16;
 
-		PROCEDURE WriteHex32* (x : LONGINT; w : Streams.Writer);
+		PROCEDURE WriteHex32* (x : SIGNED32; w : Streams.Writer);
 		VAR result : ARRAY 10 OF CHAR;
 		BEGIN
 			IntToHex(x, 8, result); w.String(result)
@@ -96,7 +96,7 @@ TYPE
 			firstOpcode, lastOpcode, currentOpcode: Opcode;
 			completed : BOOLEAN;
 			currentBufferPos, currentCodePos, opcodes: SIZE;
-			mode : LONGINT;
+			mode : SIGNED32;
 			currentProc* : ProcedureInfo;
 
 		PROCEDURE &New* (reader : Streams.Reader);
@@ -109,7 +109,7 @@ TYPE
 			completed := FALSE
 		END New;
 
-		PROCEDURE Bug* (op, no: LONGINT);
+		PROCEDURE Bug* (op, no: SIGNED32);
 		BEGIN
 			KernelLog.Ln;  KernelLog.String("*** decode error ***; "); KernelLog.String("op = "); KernelLog.Hex(op, -1); KernelLog.String(", no = "); KernelLog.Int(no, 0); KernelLog.Ln;
 			completed := TRUE
@@ -202,9 +202,9 @@ TYPE
 			RETURN ch
 		END ReadChar;
 
-		PROCEDURE ReadInt* () : INTEGER;
+		PROCEDURE ReadInt* () : SIGNED16;
 		VAR
-			i : INTEGER;
+			i : SIGNED16;
 		BEGIN
 			reader.RawInt(i);
 			IF reader.res = Streams.Ok THEN
@@ -214,9 +214,9 @@ TYPE
 			RETURN i
 		END ReadInt;
 
-		PROCEDURE ReadLInt* () : LONGINT;
+		PROCEDURE ReadLInt* () : SIGNED32;
 		VAR
-			l, highByte, base : LONGINT;
+			l, highByte, base : SIGNED32;
 			ch : CHAR;
 		BEGIN
 			ch := ReadChar();
@@ -227,7 +227,7 @@ TYPE
 			l := l + LONG(ORD(ch)) * 10000H;
 			ch := ReadChar();
 			highByte := ORD(ch);
-			IF highByte >= 128 THEN base := MIN(LONGINT); DEC(highByte, 128) ELSE base := 0 END;
+			IF highByte >= 128 THEN base := MIN(SIGNED32); DEC(highByte, 128) ELSE base := 0 END;
 			l := base + highByte * 1000000H + l;
 			RETURN l
 		END ReadLInt;
@@ -242,12 +242,12 @@ TYPE
 
 	FieldInfo* = OBJECT (Info)
 		VAR
-			offset, mode, kind, type, dim, tdadr : LONGINT;
+			offset, mode, kind, type, dim, tdadr : SIGNED32;
 			markerPositions, temp : POINTER TO ARRAY OF RECORD
 								pos : Streams.Position;
 								marker : WMTextView.PositionMarker
 								END;
-			nextMarker, markerSize : LONGINT;
+			nextMarker, markerSize : SIGNED32;
 			markersCreated : BOOLEAN;
 			procedure : ProcedureInfo;
 
@@ -259,11 +259,11 @@ TYPE
 				1H : w.String("BYTE")
 				| 2H : w.String("BOOLEAN")
 				| 3H : w.String("CHAR")
-				| 4H : w.String("SHORTINT")
-				| 5H : w.String("INTEGER")
-				| 6H : w.String("LONGINT")
-				| 7H : w.String("REAL")
-				| 8H : w.String("LONGREAL")
+				| 4H : w.String("SIGNED8")
+				| 5H : w.String("SIGNED16")
+				| 6H : w.String("SIGNED32")
+				| 7H : w.String("FLOAT32")
+				| 8H : w.String("FLOAT64")
 				| 9H : w.String("SET")
 				| 0AH : w.String("?")
 				| 0BH : w.String("?")
@@ -271,7 +271,7 @@ TYPE
 				| 0DH : w.String("PTR")
 				| 0EH : w.String("PROC")
 				| 0FH : w.String("STRING")
-				| 10H : w.String("HUGEINT")
+				| 10H : w.String("SIGNED64")
 				| 16H : w.String("RECORD")
 				| 1DH : w.String("OBJECT")
 			ELSE
@@ -289,7 +289,7 @@ TYPE
 		END ToString;
 
 		PROCEDURE AddMarkerPosition* (pos : Streams.Position);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			markersCreated := FALSE;
 			IF markerPositions = NIL THEN markerSize := 5; NEW(markerPositions, markerSize); nextMarker := 0 END;
@@ -306,7 +306,7 @@ TYPE
 		END AddMarkerPosition;
 
 		PROCEDURE CreateMarkers (tv : WMTextView.TextView);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO nextMarker-1 DO
 				markerPositions[i].marker := tv.CreatePositionMarker();
@@ -318,7 +318,7 @@ TYPE
 		END CreateMarkers;
 
 		PROCEDURE ToggleMarkers(enabled : BOOLEAN);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			IF markersCreated THEN
 				FOR i := 0 TO nextMarker-1 DO
@@ -334,10 +334,10 @@ TYPE
 		VAR
 			codeOffset: ADDRESS;
 			codeSize: SIZE;
-			retType: LONGINT;
+			retType: SIGNED32;
 			index : SIZE;
 			fields : FieldArray;
-			fieldCount : LONGINT;
+			fieldCount : SIGNED32;
 			method : BOOLEAN;
 
 			gcInfo: GCInfo;
@@ -367,9 +367,9 @@ TYPE
 			INC(fieldCount)
 		END AddField;
 
-		PROCEDURE GetFieldAtOffset*(offset : LONGINT) : FieldInfo;
+		PROCEDURE GetFieldAtOffset*(offset : SIGNED32) : FieldInfo;
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE i < fieldCount DO
@@ -386,7 +386,7 @@ TYPE
 		VAR
 			procedures : ProcedureArray;
 			fields : FieldArray;
-			procedureCount, fieldCount : LONGINT;
+			procedureCount, fieldCount : SIGNED32;
 
 		PROCEDURE &New (CONST n : ARRAY OF CHAR);
 		BEGIN
@@ -418,17 +418,17 @@ TYPE
 
 	Export*=POINTER TO RECORD
 		next: Export;
-		fp: LONGINT;
-		type: LONGINT;
-		val: LONGINT;
+		fp: SIGNED32;
+		type: SIGNED32;
+		val: SIGNED32;
 		name: ARRAY 256 OF CHAR;
 	END;
 
 	Use= POINTER TO RECORD
 		next: Use;
-		fp: LONGINT;
-		type: LONGINT;
-		val: LONGINT;
+		fp: SIGNED32;
+		type: SIGNED32;
+		val: SIGNED32;
 		name: ARRAY 256 OF CHAR;
 	END;
 
@@ -452,26 +452,26 @@ TYPE
 	VarConstLink=RECORD
 		num: SIZE;
 		ch: CHAR;
-		links: POINTER TO ARRAY OF LONGINT;
+		links: POINTER TO ARRAY OF SIGNED32;
 	END;
 
 	Link=RECORD
-		num: LONGINT;
+		num: SIGNED32;
 	END;
 
 	Entry=RECORD
-		num: LONGINT;
+		num: SIGNED32;
 	END;
 
 	GCInfo= POINTER TO RECORD
-		codeOffset, beginOffset, endOffset: LONGINT;
-		pointers: POINTER TO ARRAY OF LONGINT
+		codeOffset, beginOffset, endOffset: SIGNED32;
+		pointers: POINTER TO ARRAY OF SIGNED32
 	END;
 
 	ObjHeader = RECORD (* data from object file header *)
 		entries, commands, pointers, types, modules, links, dataLinks: SIZE;
 		codeSize, dataSize, refSize, constSize, exTableLen, procs, maxPtrs: SIZE;
-		crc: LONGINT;
+		crc: SIGNED32;
 		staticTdSize: SIZE; (* ug *)
 		name: Modules.Name
 	END;
@@ -480,7 +480,7 @@ TYPE
 		VAR
 			module : Modules.Module;
 			header: ObjHeader;
-			representationMode : LONGINT;
+			representationMode : SIGNED32;
 			procedures : ProcedureArray; (* references to all procedures, including methods *)
 			procedureCount : SIZE;
 			types : TypeArray;
@@ -492,7 +492,7 @@ TYPE
 			editor : WMEditors.Editor;
 			textWriter : TextUtilities.TextWriter;
 			currentProcInfo : ProcedureInfo;
-			markPC : LONGINT;
+			markPC : SIGNED32;
 			ext : Extension;
 			codeScaleCallback: CodeScaleCallback;
 
@@ -599,7 +599,7 @@ TYPE
 			procInfo : ProcedureInfo;
 			fldInfo : FieldInfo;
 			ch : CHAR;
-			retType, tmp : LONGINT;
+			retType, tmp : SIGNED32;
 			name :ARRAY 256 OF CHAR;
 			ofs, prevOfs, i: SIZE;
 		BEGIN
@@ -704,9 +704,9 @@ TYPE
 			RETURN fieldInfo
 		END DecodeField;
 
-		PROCEDURE FindProcedureFromPC(pc : LONGINT) : ProcedureInfo;
+		PROCEDURE FindProcedureFromPC(pc : SIGNED32) : ProcedureInfo;
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			ASSERT(procedures # NIL);
 			WHILE i < procedureCount DO
@@ -731,7 +731,7 @@ TYPE
 		PROCEDURE ClickNode(sender, data : ANY);
 		VAR
 			d: ANY;
-			i : LONGINT;
+			i : SIGNED32;
 
 			PROCEDURE ChangeProcedure(proc : ProcedureInfo);
 			BEGIN
@@ -772,7 +772,7 @@ TYPE
 
 		PROCEDURE OutlineNamedProcedure(CONST name : ARRAY OF CHAR);
 		VAR found : BOOLEAN;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			i := 0; found := FALSE;
 			WHILE ~found & (i < procedureCount) DO
@@ -787,7 +787,7 @@ TYPE
 			END
 		END OutlineNamedProcedure;
 
-		PROCEDURE OutlinePC (pc : LONGINT);
+		PROCEDURE OutlinePC (pc : SIGNED32);
 		VAR proc : ProcedureInfo;
 		BEGIN
 			proc := FindProcedureFromPC(pc);
@@ -829,7 +829,7 @@ TYPE
 				opcodes : Opcode;
 				w : Streams.Writer;
 				i: SIZE;
-				opStart, opEnd: ADDRESS; pcPos : LONGINT;
+				opStart, opEnd: ADDRESS; pcPos : SIGNED32;
 				pcMarker : WMTextView.PositionMarker;
 (* ug *)			s2: Strings.String;
 		BEGIN
@@ -848,7 +848,7 @@ TYPE
 			WHILE opcodes # NIL DO
 
 				IF IsExceptionHandled(opcodes.offset) THEN
-					textWriter.SetBgColor(LONGINT(0C0D5FFFFH));
+					textWriter.SetBgColor(SIGNED32(0C0D5FFFFH));
 				ELSE
 					textWriter.SetBgColor(WMGraphics.White);
 				END;
@@ -863,14 +863,14 @@ TYPE
 					opStart := opcodes.offset;
 					opEnd := opStart + opcodes.length - 1;
 					IF (markPC >= opStart) &	(markPC <= opEnd) THEN
-						pcPos := (w.Pos()+ (markPC-opStart)*3)(LONGINT); (* text position within opcode bytes *)
+						pcPos := (w.Pos()+ (markPC-opStart)*3)(SIGNED32); (* text position within opcode bytes *)
 					END
 				END;
 				opcodes.PrintOpcodeBytes(w); w.Char(9X);
 				textWriter.SetFontColor(0000099FFH);
 				opcodes.PrintInstruction(w); w.Char(9X);
 				opcodes.PrintArguments(w); w.Char(9X);
-				textWriter.SetFontColor(LONGINT(0999999FFH));
+				textWriter.SetFontColor(SIGNED32(0999999FFH));
 				opcodes.PrintVariables(w);
 				w.Ln;
 				opcodes := opcodes.next
@@ -1079,13 +1079,13 @@ TYPE
 				moduleNode, fieldNode, typeNode : WMTrees.TreeNode;
 				stringWriter : Strings.Buffer;
 				w : Streams.Writer;
-				i, j : LONGINT;
+				i, j : SIGNED32;
 
 			PROCEDURE AddProcedureNode (parent : WMTrees.TreeNode; proc : ProcedureInfo; CONST typeName : ARRAY OF CHAR);
 			VAR
 				procedureNode : WMTrees.TreeNode;
 				fieldCaption, procCaption : Strings.String;
-				k : LONGINT;
+				k : SIGNED32;
 			BEGIN
 				NEW(procedureNode);
 				tree.AddChildNode(parent, procedureNode);
@@ -1206,14 +1206,14 @@ TYPE
 	VAR
 		f: Files.File;
 		r : Files.Reader;
-		version : LONGINT;
+		version : SIGNED32;
 		nofLinks, nofVarConstLinks : SIZE;
-		symSize : LONGINT;
-		noProcs : LONGINT; (* ug: temporary *)
+		symSize : SIGNED32;
+		noProcs : SIGNED32; (* ug: temporary *)
 
 		PROCEDURE DecodeEntries;
 		VAR
-			ch : CHAR; i : SIZE; e : LONGINT;
+			ch : CHAR; i : SIZE; e : SIGNED32;
 		BEGIN
 			ch := r.Get();
 			ASSERT(ch = 82X);
@@ -1227,7 +1227,7 @@ TYPE
 		PROCEDURE SkipCommands;
 		VAR
 			ch : CHAR;
-			i: SIZE; num : LONGINT;
+			i: SIZE; num : SIGNED32;
 			n : Modules.Name;
 		BEGIN
 			ch := r.Get();
@@ -1240,7 +1240,7 @@ TYPE
 		PROCEDURE SkipPointers;
 		VAR
 			ch : CHAR;
-			i: SIZE; num : LONGINT;
+			i: SIZE; num : SIGNED32;
 		BEGIN
 			ch := r.Get();
 			ASSERT(ch = 84X);
@@ -1265,7 +1265,7 @@ TYPE
 		PROCEDURE SkipVarConstLinks;
 		VAR
 			ch : CHAR;
-			i, j: SIZE; num, count : LONGINT;
+			i, j: SIZE; num, count : SIGNED32;
 		BEGIN
 			ch := r.Get();
 			ASSERT(ch = 8DX);
@@ -1287,7 +1287,7 @@ TYPE
 		PROCEDURE SkipLinks;
 		VAR
 			ch : CHAR;
-			i: SIZE; num : LONGINT;
+			i: SIZE; num : SIGNED32;
 		BEGIN
 			ch := r.Get();
 			ASSERT(ch = 86X);
@@ -1318,10 +1318,10 @@ TYPE
 		END SkipConsts;
 
 		PROCEDURE SkipExports;
-		VAR count: LONGINT; name: Modules.Name; ch : CHAR;
+		VAR count: SIGNED32; name: Modules.Name; ch : CHAR;
 
-			PROCEDURE LoadScope (level: LONGINT);
-			VAR adr, fp, off, i, len, exp: LONGINT; check: POINTER TO ARRAY OF LONGINT;export: Export;
+			PROCEDURE LoadScope (level: SIGNED32);
+			VAR adr, fp, off, i, len, exp: SIGNED32; check: POINTER TO ARRAY OF SIGNED32;export: Export;
 			BEGIN
 				r.RawLInt(exp);
 				r.RawNum(fp);
@@ -1376,7 +1376,7 @@ TYPE
 
 				PROCEDURE ReadEntry;
 				VAR
-					fp, arg : LONGINT;
+					fp, arg : SIGNED32;
 					name : ARRAY 256 OF CHAR;
 					use: Use;
 				BEGIN
@@ -1434,7 +1434,7 @@ TYPE
 
 		PROCEDURE DecodeTypes;
 		VAR
-			i: SIZE; j, size, entry, ptrOfs, tdaddr, moduleBase, nofMethods, nofInhMethods, nofNewMethods, nofPointers, tdSize (* ug *), methNr, entryNr : LONGINT;
+			i: SIZE; j, size, entry, ptrOfs, tdaddr, moduleBase, nofMethods, nofInhMethods, nofNewMethods, nofPointers, tdSize (* ug *), methNr, entryNr : SIGNED32;
 			name : ARRAY 256 OF CHAR; ch : CHAR;
 			type : TypeInfo;
 			procInfo : ProcedureInfo;
@@ -1495,7 +1495,7 @@ TYPE
 		VAR
 			i: SIZE;
 			tag: CHAR;
-			a: LONGINT;
+			a: SIGNED32;
 		BEGIN
 			NEW(module.exTable, header.exTableLen);
 			FOR i := 0 TO header.exTableLen -1 DO
@@ -1509,7 +1509,7 @@ TYPE
 
 		PROCEDURE SkipPointerInProc;
 		VAR ch : CHAR;
-			i, j, codeoffset, beginOffset, endOffset, p, nofptrs : LONGINT;
+			i, j, codeoffset, beginOffset, endOffset, p, nofptrs : SIGNED32;
 		BEGIN
 			ch := r.Get();
 			ASSERT(ch = 8FX);
@@ -1533,7 +1533,7 @@ TYPE
 		END SkipPointerInProc;
 
 		PROCEDURE &New (CONST fileName : ARRAY OF CHAR);
-		VAR ch : CHAR; tmp, res : LONGINT; j: SIZE; msg : ARRAY 255 OF CHAR; pos: Streams.Position;
+		VAR ch : CHAR; tmp, res : SIGNED32; j: SIZE; msg : ARRAY 255 OF CHAR; pos: Streams.Position;
 		BEGIN
 			Init;
 			Strings.GetExtension (fileName, msg, ext);
@@ -1766,7 +1766,7 @@ TYPE
 			msg : ARRAY 256 OF CHAR;
 			module : Modules.Module;
 			header: ObjHeader;
-			res: WORD; extPos : SIZE;
+			res: INTEGER; extPos : SIZE;
 		BEGIN
 			vc := CreateForm();
 			Init(vc.bounds.GetWidth(), vc.bounds.GetHeight(), FALSE);
@@ -1827,7 +1827,7 @@ TYPE
 		PROCEDURE DecodeModuleHandler(sender, data : ANY);
 		VAR moduleNameStr, msg : ARRAY 256 OF CHAR;
 			module : Modules.Module;
-			res : WORD;
+			res : INTEGER;
 			moduleInfoMemory : ModuleInfoMemory;
 			header: ObjHeader;
 		BEGIN
@@ -1878,7 +1878,7 @@ TYPE
 			END
 		END OutlineProcedure;
 
-		PROCEDURE OutlinePC (pc : LONGINT);
+		PROCEDURE OutlinePC (pc : SIGNED32);
 		BEGIN
 			IF (moduleInfo # NIL) & ~(moduleInfo IS ModuleInfoBytes) THEN
 				moduleInfo.OutlinePC(pc)
@@ -1910,10 +1910,10 @@ TYPE
 	END DecoderType;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 	win : DecoderWindow;
 	decoderTypes : ARRAY maxDecoders OF DecoderType;
-	nofDecoders : LONGINT;
+	nofDecoders : SIGNED32;
 	lastExt : Extension;
 
 	PROCEDURE OpenEmpty*;
@@ -1940,7 +1940,7 @@ VAR
 
 	PROCEDURE RemoveTypeName (VAR procName : ARRAY OF CHAR; CONST typeName : ARRAY OF CHAR);
 	VAR
-		i, j : LONGINT;
+		i, j : SIGNED32;
 	BEGIN
 		i := 0;
 		IF Strings.Length(typeName) > 0 THEN
@@ -1961,9 +1961,9 @@ VAR
 	VAR
 		buffer, result : Modules.Bytes;
 		byte : CHAR;
-		j, size : LONGINT;
+		j, size : SIGNED32;
 
-		PROCEDURE DecodeHexChar(ch : CHAR) : LONGINT;
+		PROCEDURE DecodeHexChar(ch : CHAR) : SIGNED32;
 		BEGIN
 			IF (ORD(ch) >= 48) & (ORD(ch) <= 57) THEN RETURN ORD(ch) - 48 END;
 			IF (ORD(ch) >= 65) & (ORD(ch) <= 70) THEN RETURN ORD(ch) - 55 END;
@@ -1989,7 +1989,7 @@ VAR
 		RETURN result
 	END HexBytes2Code;
 
-	PROCEDURE IntToHex(h: SIZE; width: LONGINT; VAR s: ARRAY OF CHAR);
+	PROCEDURE IntToHex(h: SIZE; width: SIGNED32; VAR s: ARRAY OF CHAR);
 	VAR c: CHAR;
 	BEGIN
 		IF (width <= 0) THEN width := 8 END;
@@ -2030,7 +2030,7 @@ VAR
 	PROCEDURE Open* (context : Commands.Context);
 	VAR
 		name : ARRAY Files.NameLength OF CHAR;
-		pc : LONGINT;
+		pc : SIGNED32;
 	BEGIN
 		context.arg.SkipWhitespace; context.arg.String(name);
 		NEW(win, name, NIL);
@@ -2050,14 +2050,14 @@ VAR
 		win.OutlineProcedure(procedureName)
 	END OpenProcedure;
 
-	PROCEDURE OpenPC* (CONST moduleName : ARRAY OF CHAR; pc : LONGINT);
+	PROCEDURE OpenPC* (CONST moduleName : ARRAY OF CHAR; pc : SIGNED32);
 	BEGIN
 		NEW(win, moduleName, NIL);
 		win.OutlinePC(pc)
 	END OpenPC;
 
 	PROCEDURE GetDecoderType (CONST ext : Extension) : DecoderType;
-	VAR i : LONGINT;
+	VAR i : SIGNED32;
 	BEGIN
 		IF nofDecoders < 1 THEN RETURN NIL END;
 		IF ext = "" THEN RETURN decoderTypes[0] END;

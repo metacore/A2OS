@@ -507,9 +507,9 @@ VAR
 		RETURN blockingCompletion
 	END GetBlockingCompletion;
 
-	PROCEDURE GetLocalPort (): LONGINT;
+	PROCEDURE GetLocalPort (): SIGNED32;
 	VAR
-		port: LONGINT;
+		port: SIGNED32;
 	BEGIN
 		port := lastPort;
 		INC(lastPort);

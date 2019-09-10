@@ -32,24 +32,24 @@ TYPE
 
 	tZoom* = POINTER TO tZoomDesc;
 	tZoomDesc* = RECORD
-		x-, y-, dx-, dy-: INTEGER;   (* x,y: Offset; dx,dy: PixelSize *)
+		x-, y-, dx-, dy-: SIGNED16;   (* x,y: Offset; dx,dy: PixelSize *)
 		next: tZoom
 	END;
 
 	Selection* = POINTER TO SelectionDesc;
 	SelectionDesc* = RECORD (vyDisplay2d.SelDesc)
-		px*, py*, pw*, ph*: INTEGER
+		px*, py*, pw*, ph*: SIGNED16
 	END;
 
 	tCoordinate* = POINTER TO tCoordinateDesc;
 	tCoordinateDesc* = RECORD (vyDisplay2d.tCoordinate2dDesc);
 	(* 	c*: vyGraphBase.tCoordinate;	*)  (* this coordinate system is the generic coordinate system of the host picture ! *)
-		x-, y-, dx-, dy-, X-, Y-, W-, H-: INTEGER;   (*= X,Y,W,H: cache, screen region of layers host's picture;
+		x-, y-, dx-, dy-, X-, Y-, W-, H-: SIGNED16;   (*= X,Y,W,H: cache, screen region of layers host's picture;
 		x,y: Offset of Picture`s screen region, dx,dy: PixelSize *)
-		vx-, vy-, px-, py-, pw-, ph-: INTEGER;   (* vx,vy: Coordinates of the first INT Rectangle (partially) viewed,
+		vx-, vy-, px-, py-, pw-, ph-: SIGNED16;   (* vx,vy: Coordinates of the first INT Rectangle (partially) viewed,
 		px,py,pw,ph: Picture Coordinate of viewed part *)
 		zoom: tZoom;   (* history of coordinates zoom *)
-		pictW*, pictH*: INTEGER (* pure cache for visualization *) ;
+		pictW*, pictH*: SIGNED16 (* pure cache for visualization *) ;
 		fixed*, free*: BOOLEAN;
 		p*: Pictures.Picture;
 		i*: Images.Image
@@ -57,7 +57,7 @@ TYPE
 	END;
 
 	ttt = RECORD
-		x, y, dx, dy: INTEGER;
+		x, y, dx, dy: SIGNED16;
 		c: tCoordinate
 	END;
 
@@ -66,9 +66,9 @@ VAR
 	tc*: tCoordinate;   (*=cache variable *)
 	currentsel*: Selection;  passevent: BOOLEAN;  globalHost: Objects.Object;
 
-	PROCEDURE GrowRectangleRL*( x, y, w, h: INTEGER;  VAR dx, dy: INTEGER );
+	PROCEDURE GrowRectangleRL*( x, y, w, h: SIGNED16;  VAR dx, dy: SIGNED16 );
 	(*vs 0.0a1  md  29.05.95 *)
-	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld: INTEGER;  oldm: INTEGER;
+	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld: SIGNED16;  oldm: SIGNED16;
 	BEGIN
 		(* antsToolbox.StartDisplayHelp("Hold buttons and zoom rect"); *)
 		vyGraphBase.GetDisplayMode( oldm );  vyGraphBase.SetDisplayMode( vyGraphBase.invert );
@@ -84,19 +84,19 @@ VAR
 		vyGraphBase.FrameRect( x, y, w, h );  dx := x1 - x0;  dy := y1 - y0;  vyGraphBase.SetDisplayMode( oldm )
 	END GrowRectangleRL;
 
-	PROCEDURE Min( a, b: LONGINT ): LONGINT;
+	PROCEDURE Min( a, b: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF a < b THEN RETURN a ELSE RETURN b END
 	END Min;
 
-	PROCEDURE Max( a, b: LONGINT ): LONGINT;
+	PROCEDURE Max( a, b: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF a > b THEN RETURN a ELSE RETURN b END
 	END Max;
 
 	PROCEDURE ShiftCoordinate( c: tCoordinate;  event: vyEvents.EventMsg );
-	VAR x0, y0, dx, dy: INTEGER;  zoom: vyDisplay2d.CoordZoomMessage;  vX, vY, vW, vH: INTEGER;  pW, pH, pX, pY: INTEGER;
-		xp0, yp0, xp1, yp1, wp, hp: LONGINT;  sizey, sizex: LONGINT;  msg: Display.DisplayMsg;
+	VAR x0, y0, dx, dy: SIGNED16;  zoom: vyDisplay2d.CoordZoomMessage;  vX, vY, vW, vH: SIGNED16;  pW, pH, pX, pY: SIGNED16;
+		xp0, yp0, xp1, yp1, wp, hp: SIGNED32;  sizey, sizex: SIGNED32;  msg: Display.DisplayMsg;
 	BEGIN
 		(* antsToolbox.StartDisplayHelp("hold LM to shift, LM+MM: zoom out, LM+RM: zoom in");*)
 		x0 := event.x;  y0 := event.y;
@@ -176,7 +176,7 @@ VAR
 
 (*
 PROCEDURE keepsel;
-VAR c: tCoordinate; x2,y2: LONGREAL;
+VAR c: tCoordinate; x2,y2: FLOAT64;
 BEGIN
 
 c := command.c;
@@ -207,8 +207,8 @@ END keepsel;
 		c := command.c;  c.sel := currentsel
 	END usecurrentsel;
 
-	PROCEDURE MakeSel*( cc: tCoordinate;  sel: Selection;  xx, yy, ww, hh: INTEGER );
-	VAR x2, y2: LONGREAL;
+	PROCEDURE MakeSel*( cc: tCoordinate;  sel: Selection;  xx, yy, ww, hh: SIGNED16 );
+	VAR x2, y2: FLOAT64;
 	CONST eps = 0.001;
 	BEGIN
 		vyDisplay2d.MakeSel( cc, sel, xx, yy, ww, hh );  x2 := sel.x + sel.w;  y2 := sel.y + sel.h;  sel.x := ENTIER( sel.x + eps );
@@ -234,7 +234,7 @@ END keepsel;
 	END selectlayer;
 
 	PROCEDURE Select( c: tCoordinate;  VAR event: vyEvents.EventMsg );
-	VAR x0, y0, dx, dy: INTEGER;  l: vyCommandMenus.List;
+	VAR x0, y0, dx, dy: SIGNED16;  l: vyCommandMenus.List;
 
 	BEGIN
 		IF c.sel # NIL THEN currentsel := c.sel( Selection ) ELSE currentsel := NIL END;
@@ -275,7 +275,7 @@ END keepsel;
 		END
 	END ZoomOut;
 
-	PROCEDURE AdjustRect( VAR x, y, w, h: INTEGER ): BOOLEAN;
+	PROCEDURE AdjustRect( VAR x, y, w, h: SIGNED16 ): BOOLEAN;
 	BEGIN
 		IF w < 0 THEN x := x + w;  w := -w
 		ELSIF w = 0 THEN RETURN FALSE
@@ -286,17 +286,17 @@ END keepsel;
 		RETURN TRUE
 	END AdjustRect;
 
-	PROCEDURE GetXY*( c: tCoordinate;  fromx, fromy: INTEGER;  VAR x, y: INTEGER );
-	VAR xr, yr: LONGREAL;
+	PROCEDURE GetXY*( c: tCoordinate;  fromx, fromy: SIGNED16;  VAR x, y: SIGNED16 );
+	VAR xr, yr: FLOAT64;
 	BEGIN
 		IF ~c.fixed THEN x := (fromx - (c.X + c.x)) DIV c.dx;  y := (fromy - (c.Y + c.y)) DIV c.dy
 		ELSE vyGraphBase.PointToPoint2d( fromx, fromy, xr, yr );  x := SHORT( ENTIER( xr + 0.5 ) );  y := SHORT( ENTIER( yr + 0.5 ) )
 		END
 	END GetXY;
 
-	PROCEDURE ZoomIn( c: tCoordinate;  x, y, w, h: INTEGER );
-	VAR lastzoom: tZoom;  newx, newy, newdx, newdy: LONGREAL;  a, b: INTEGER;  time: LONGINT;
-	VAR fact: LONGREAL;
+	PROCEDURE ZoomIn( c: tCoordinate;  x, y, w, h: SIGNED16 );
+	VAR lastzoom: tZoom;  newx, newy, newdx, newdy: FLOAT64;  a, b: SIGNED16;  time: SIGNED32;
+	VAR fact: FLOAT64;
 	BEGIN
 		lastzoom := c.zoom;
 		NEW( c.zoom );  c.zoom.next := lastzoom;   (* create new entry in zoom list *)
@@ -334,7 +334,7 @@ END keepsel;
 		IF c.dy = 0 THEN INC( c.dy ) END
 	END DecSize;
 
-	PROCEDURE Center*( w, h: INTEGER;  c: tCoordinate );
+	PROCEDURE Center*( w, h: SIGNED16;  c: tCoordinate );
 	BEGIN
 		c.x := (c.W - (w * c.dx)) DIV 2;  c.y := (c.H - (h * c.dy)) DIV 2
 	END Center;
@@ -370,14 +370,14 @@ END keepsel;
 		IF c.sel # NIL  THEN
 		Files.WriteLReal(R,c.sel.x); Files.WriteLReal(R,c.sel.y); Files.WriteLReal(R,c.sel.w); Files.WriteLReal(R,c.sel.h)
 		ELSE
-		Files.WriteLReal(R,MIN(LONGREAL)); Files.WriteLReal(R,MIN(LONGREAL)); Files.WriteLReal(R,MIN(LONGREAL)); Files.WriteLReal(R,MIN(LONGREAL))
+		Files.WriteLReal(R,MIN(FLOAT64)); Files.WriteLReal(R,MIN(FLOAT64)); Files.WriteLReal(R,MIN(FLOAT64)); Files.WriteLReal(R,MIN(FLOAT64))
 		END;
 		*)
 		END
 	END WriteCoordinate;
 
 	PROCEDURE ReadCoordinate*( VAR R: Files.Rider;  VAR  (*IN*) c: tCoordinate );
-	VAR flag: INTEGER;  b: BOOLEAN;
+	VAR flag: SIGNED16;  b: BOOLEAN;
 	BEGIN
 		Files.ReadInt( R, flag );
 		IF flag = 0 THEN c := NIL
@@ -393,7 +393,7 @@ END keepsel;
 				(*
 			IF c.sel # NIL THEN NEW(c.sel) END;
 			Files.ReadLReal(R,c.sel.x); Files.ReadLReal(R,c.sel.y); Files.ReadLReal(R,c.sel.w); Files.ReadLReal(R,c.sel.h);
-			IF c.sel.x = MIN(LONGREAL) THEN c.sel := NIL END;
+			IF c.sel.x = MIN(FLOAT64) THEN c.sel := NIL END;
 			*)
 			END;
 			IF flag > 89 THEN Files.ReadBool( R, c.free ) END;
@@ -496,7 +496,7 @@ END keepsel;
 		END
 	END CHandler;
 
-	PROCEDURE OpenC*( c: tCoordinate;  dx, dy: INTEGER );
+	PROCEDURE OpenC*( c: tCoordinate;  dx, dy: SIGNED16 );
 	BEGIN
 		c.x := 0;  c.y := 0;  c.dx := dx;  c.dy := dy;  vyDisplay2d.OpenC2d( c, c.x, c.y, c.dx, c.dy );  c.handle := CHandler
 	END OpenC;

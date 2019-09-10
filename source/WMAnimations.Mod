@@ -29,7 +29,7 @@ TYPE
 		image : Raster.Image;
 		aux_canvas : WMGraphics.BufferCanvas;
 
-		state : LONGINT;
+		state : SIGNED32;
 		timer : Kernel.Timer;
 
 		PROCEDURE &Init*;
@@ -66,7 +66,7 @@ TYPE
 		END PropertyChanged;
 
 		PROCEDURE LoadImages;
-		VAR name : Strings.String; res : WORD;
+		VAR name : Strings.String; res : INTEGER;
 		BEGIN
 			first := NIL; current := NIL; image := NIL;
 			name := imageName.Get();
@@ -111,7 +111,7 @@ TYPE
 			END
 		END DrawBackground;
 
-		PROCEDURE SetState(state : LONGINT);
+		PROCEDURE SetState(state : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF (SELF.state < State_Terminating) OR (state = State_Terminated) THEN
 				SELF.state := state;
@@ -127,7 +127,7 @@ TYPE
 		END Finalize;
 
 		PROCEDURE Update;
-		VAR imageDesc, p : Codecs.ImageDescriptor; delayTime : LONGINT;
+		VAR imageDesc, p : Codecs.ImageDescriptor; delayTime : SIGNED32;
 		BEGIN
 			Acquire;
 			IF (image = NIL) THEN Release; RETURN; END;
@@ -191,7 +191,7 @@ VAR
 
 	StrAnimation : Strings.String;
 
-PROCEDURE OpenAnimation(filename : ARRAY OF CHAR; VAR sequence : Codecs.ImageSequence; VAR res : WORD);
+PROCEDURE OpenAnimation(filename : ARRAY OF CHAR; VAR sequence : Codecs.ImageSequence; VAR res : INTEGER);
 VAR
 	name, extension : Files.FileName; reader : Streams.Reader;
 	animationDecoder : Codecs.AnimationDecoder; imageDecoder : Codecs.ImageDecoder;

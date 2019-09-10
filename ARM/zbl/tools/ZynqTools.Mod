@@ -103,8 +103,8 @@ TYPE
 		boardIpAdr: IP.Adr;
 		options: Options.Options;
 		socket: UDP.Socket;
-		loadAddress: LONGINT;
-		res: LONGINT;
+		loadAddress: SIGNED32;
+		res: SIGNED32;
 		loadBootloader, loadSoftware, loadHardware: BOOLEAN;
 	BEGIN
 		NEW(options);
@@ -278,11 +278,11 @@ TYPE
 		TFTPServer.Stop
 	END Deploy;
 
-	PROCEDURE SendCommand (out: Streams.Writer; socket: UDP.Socket; CONST adr: IP.Adr; port: LONGINT; CONST str: ARRAY OF CHAR; VAR res: LONGINT);
+	PROCEDURE SendCommand (out: Streams.Writer; socket: UDP.Socket; CONST adr: IP.Adr; port: SIGNED32; CONST str: ARRAY OF CHAR; VAR res: SIGNED32);
 	VAR
 		ack: ARRAY 64 OF CHAR;
 		hostAdr: IP.Adr;
-		len, hostPort: LONGINT;
+		len, hostPort: SIGNED32;
 	BEGIN
 		IF TraceDeployCommands THEN
 			out.String("Deploy Command: ");
@@ -482,7 +482,7 @@ TYPE
 		inFile, outFile: Files.File;
 		in: Files.Reader;
 		out: Files.Writer;
-		userWord: LONGINT;
+		userWord: SIGNED32;
 		read, size, wrote: SIZE;
 		encrypt, keyFromEFuse, keyFromRam, inPlace: BOOLEAN;
 	BEGIN
@@ -578,8 +578,8 @@ TYPE
 			registers[read + 7] := 0X
 		END;
 		
-		ASSERT(LONGINT(size) = size);
-		CreateBootHeader(userWord, LONGINT(size), 8C0H, 0, interrupts, registers, encrypt, keyFromEFuse, inPlace, header);
+		ASSERT(SIGNED32(size) = size);
+		CreateBootHeader(userWord, SIGNED32(size), 8C0H, 0, interrupts, registers, encrypt, keyFromEFuse, inPlace, header);
 		out.Bytes(header, 0, HeaderSize);
 		WHILE in.res = Streams.Ok DO
 			in.Bytes(buffer, 0, 1024, read);
@@ -620,7 +620,7 @@ TYPE
 		im, rom: Files.Reader;
 		out: Files.Writer;
 		ofs, pos, read: SIZE;
-		li: LONGINT;
+		li: SIGNED32;
 	BEGIN
 		romName := "cfsbl/BOOT.BIN";
 		imName := "Fsbl.Bin";
@@ -685,7 +685,7 @@ TYPE
 
 		pos := 34H;
 		WHILE pos < ofs DO
-			rom.Bytes(block, 0, MIN(LEN(block), LONGINT(ofs) - pos), read);
+			rom.Bytes(block, 0, MIN(LEN(block), SIGNED32(ofs) - pos), read);
 			out.Bytes(block, 0, read);
 			INC(pos, read);
 		END;
@@ -714,7 +714,7 @@ TYPE
 		rom: Files.Reader;
 		out: Files.Writer;
 		ofs, pos, read: SIZE;
-		li: LONGINT;
+		li: SIGNED32;
 	BEGIN
 		IF ~context.arg.GetString(romName) THEN
 			context.error.String("Error: expected input and output files as parameters");
@@ -777,7 +777,7 @@ TYPE
 
 		pos := 34H;
 		WHILE pos < ofs DO
-			rom.Bytes(block, 0, MIN(LEN(block), LONGINT(ofs) - pos), read);
+			rom.Bytes(block, 0, MIN(LEN(block), SIGNED32(ofs) - pos), read);
 			INC(pos, read)
 		END;
 
@@ -796,21 +796,21 @@ TYPE
 	END StripHeader;
 
 	(** Create a bootROM header from the given parameters. *)
-	PROCEDURE CreateBootHeader (userWord, imageSize, imageStartAdr, imageLoadAdr: LONGINT; CONST interrupts, registers: ARRAY OF CHAR;
+	PROCEDURE CreateBootHeader (userWord, imageSize, imageStartAdr, imageLoadAdr: SIGNED32; CONST interrupts, registers: ARRAY OF CHAR;
 			encrypt, keyFromEFuse, inPlace: BOOLEAN; VAR header: ARRAY OF CHAR);
 	CONST
 		InterruptSize		= 32;
-		WidthDetection	= LONGINT(0AA995566H);
-		ImageId			= LONGINT(0584C4E58H);
-		KeyFromEFuse		= LONGINT(0A5C3C5A3H);
-		KeyFromRam		= LONGINT(03A5C3C5AH);
+		WidthDetection	= SIGNED32(0AA995566H);
+		ImageId			= SIGNED32(0584C4E58H);
+		KeyFromEFuse		= SIGNED32(0A5C3C5A3H);
+		KeyFromRam		= SIGNED32(03A5C3C5AH);
 		NoEncryption		= 0H;
 		ChecksumStart		= 20H;
 		ChecksumStop		= 44H;
 		MaxRegisterLength	= 800H;
 		RegisterEnd		= 8A0H;
 	VAR
-		chk: LONGINT;
+		chk: SIGNED32;
 		i, pos: SIZE;
 	BEGIN
 		ASSERT(LEN(header) >= 8C0H);
@@ -904,21 +904,21 @@ TYPE
 		Strings.Move(registers, 0, LEN(registers), header, pos);
 		INC(pos, LEN(registers));
 		WHILE pos < RegisterEnd DO
-			MoveRawInt(LONGINT(0FFFFFFFFH), header, pos);
+			MoveRawInt(SIGNED32(0FFFFFFFFH), header, pos);
 			INC(pos, 4);
-			MoveRawInt(LONGINT(0), header, pos);
+			MoveRawInt(SIGNED32(0), header, pos);
 			INC(pos, 4);
 		END;
 
 		(* Unused *)
 		WHILE pos < HeaderSize DO
-			MoveRawInt(LONGINT(0FFFFFFFFH), header, pos);
+			MoveRawInt(SIGNED32(0FFFFFFFFH), header, pos);
 			INC(pos, 4)
 		END
 	END CreateBootHeader;
 
 	(** Insert a raw integer in the array at location [ofs .. ofs + 4). *)
-	PROCEDURE MoveRawInt (int: LONGINT; VAR dest: ARRAY OF CHAR; ofs: SIZE);
+	PROCEDURE MoveRawInt (int: SIGNED32; VAR dest: ARRAY OF CHAR; ofs: SIZE);
 	BEGIN
 		dest[ofs] := CHR(int MOD 100H);
 		dest[ofs + 1] := CHR(int DIV 100H MOD 100H);
@@ -927,18 +927,18 @@ TYPE
 	END MoveRawInt;
 
 	(** Get an integer from the array at positions [ofs .. ofs + 4). *)
-	PROCEDURE ReadRawInt (CONST src: ARRAY OF CHAR; ofs: SIZE): LONGINT;
+	PROCEDURE ReadRawInt (CONST src: ARRAY OF CHAR; ofs: SIZE): SIGNED32;
 	VAR
-		adr: LONGINT;
+		adr: SIGNED32;
 	BEGIN
-		adr := LONGINT(ORD(src[ofs])) + LONGINT(ORD(src[ofs + 1])) * 100H + LONGINT(ORD(src[ofs + 2])) * 10000H + LONGINT(ORD(src[ofs + 3])) * 1000000H;
+		adr := SIGNED32(ORD(src[ofs])) + SIGNED32(ORD(src[ofs + 1])) * 100H + SIGNED32(ORD(src[ofs + 2])) * 10000H + SIGNED32(ORD(src[ofs + 3])) * 1000000H;
 		RETURN adr
 	END ReadRawInt;
 
-	(** Invert bits of a LONGINT *)
-	PROCEDURE Invert (val: LONGINT): LONGINT;
+	(** Invert bits of a SIGNED32 *)
+	PROCEDURE Invert (val: SIGNED32): SIGNED32;
 	BEGIN
-		RETURN SYSTEM.VAL(LONGINT, -SYSTEM.VAL(SET, ADDRESS(val)))
+		RETURN SYSTEM.VAL(SIGNED32, -SYSTEM.VAL(SET, ADDRESS(val)))
 	END Invert;
 END ZynqTools.
 

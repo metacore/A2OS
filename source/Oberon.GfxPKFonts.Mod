@@ -21,12 +21,12 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 		BaseDesc = RECORD
 			next: Base;
 			name: ARRAY 32 OF CHAR;	(* TeX font file name *)
-			ptsize: INTEGER;	(* original point size of TeX font *)
-			scale: REAL;	(* scale factor from default to font coordinates (dpi/91.44) *)
-			xmin, ymin, xmax, ymax: LONGINT;	(* union of character bounding boxes *)
-			(*wscale: REAL;*)	(* scale factor for character widths *)
+			ptsize: SIGNED16;	(* original point size of TeX font *)
+			scale: FLOAT32;	(* scale factor from default to font coordinates (dpi/91.44) *)
+			xmin, ymin, xmax, ymax: SIGNED32;	(* union of character bounding boxes *)
+			(*wscale: FLOAT32;*)	(* scale factor for character widths *)
 			flag: ARRAY 256 OF CHAR;	(* character flag byte *)
-			pos: ARRAY 256 OF LONGINT;	(* character start position *)
+			pos: ARRAY 256 OF SIGNED32;	(* character start position *)
 			buf: POINTER TO ARRAY OF CHAR;	(* packed character descriptions *)
 		END;
 
@@ -45,15 +45,15 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 
 		Class: GfxFonts.Methods;
 
-		SizeScale, BestSizeScale, BestScale: REAL;
+		SizeScale, BestSizeScale, BestScale: FLOAT32;
 		Name: ARRAY 32 OF CHAR;
-		BestSize: LONGINT;
+		BestSize: SIGNED32;
 
 
 	(*--- Bases ---*)
 
 	PROCEDURE InitInv;
-		VAR i, b, j: LONGINT;
+		VAR i, b, j: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 0FFH DO
 			b := 0;
@@ -64,8 +64,8 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 		END
 	END InitInv;
 
-	PROCEDURE GetBaseWidth (base: Base; ch: CHAR; VAR dx, dy: LONGINT);
-		VAR pos: LONGINT;	(* tfm, n: LONGINT;*)
+	PROCEDURE GetBaseWidth (base: Base; ch: CHAR; VAR dx, dy: SIGNED32);
+		VAR pos: SIGNED32;	(* tfm, n: SIGNED32;*)
 	BEGIN
 		pos := base.pos[ORD(ch)];
 		IF pos >= 0 THEN
@@ -93,8 +93,8 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 		END
 	END GetBaseWidth;
 
-	PROCEDURE GetBaseDim (base: Base; ch: CHAR; VAR x, y, w, h: LONGINT);
-		VAR pos, i: LONGINT;
+	PROCEDURE GetBaseDim (base: Base; ch: CHAR; VAR x, y, w, h: SIGNED32);
+		VAR pos, i: SIGNED32;
 	BEGIN
 		pos := base.pos[ORD(ch)];
 		IF pos >= 0 THEN
@@ -124,18 +124,18 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 		END
 	END GetBaseDim;
 
-	PROCEDURE GetBaseMap (base: Base; ch: CHAR; VAR x, y: LONGINT; VAR map: Images.Image);
-		VAR pos, w, h, dynf, j, bit, len, bits, i, repeat, byte: LONGINT; buf: ARRAY 32 OF CHAR; set: BOOLEAN;
+	PROCEDURE GetBaseMap (base: Base; ch: CHAR; VAR x, y: SIGNED32; VAR map: Images.Image);
+		VAR pos, w, h, dynf, j, bit, len, bits, i, repeat, byte: SIGNED32; buf: ARRAY 32 OF CHAR; set: BOOLEAN;
 
-		PROCEDURE getnib (VAR nib: LONGINT);
+		PROCEDURE getnib (VAR nib: SIGNED32);
 		BEGIN
 			IF bit = 0 THEN byte := ORD(base.buf[pos]); INC(pos); nib := byte DIV 16; bit := 4
 			ELSE nib := byte MOD 16; bit := 0
 			END
 		END getnib;
 
-		PROCEDURE getlen (VAR len: LONGINT);
-			VAR digits, nib: LONGINT;
+		PROCEDURE getlen (VAR len: SIGNED32);
+			VAR digits, nib: SIGNED32;
 		BEGIN
 			getnib(len);
 			IF len = 0 THEN	(* large run *)
@@ -160,7 +160,7 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 			END
 		END getlen;
 
-		PROCEDURE fill (i, j, len: LONGINT);
+		PROCEDURE fill (i, j, len: SIGNED32);
 		BEGIN
 			IF set THEN
 				WHILE len > 8*LEN(buf) DO
@@ -239,7 +239,7 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE LoadBase (VAR name: ARRAY OF CHAR): Base;
 		VAR
-			base: Base; file: Files.File; r: Files.Rider; ch, id, flag: CHAR; i, pos, dsize, hppp, n, cc, xmin, ymin, xmax, ymax: LONGINT;
+			base: Base; file: Files.File; r: Files.Rider; ch, id, flag: CHAR; i, pos, dsize, hppp, n, cc, xmin, ymin, xmax, ymax: SIGNED32;
 			buf: ARRAY 4 OF CHAR;
 	BEGIN
 		base := NIL;
@@ -300,7 +300,7 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 			END;	(* LOOP *)
 
 			(* calculate bounding box *)
-			base.xmin := MAX(LONGINT); base.ymin := MAX(LONGINT); base.xmax := MIN(LONGINT); base.ymax := MIN(LONGINT);
+			base.xmin := MAX(SIGNED32); base.ymin := MAX(SIGNED32); base.xmax := MIN(SIGNED32); base.ymax := MIN(SIGNED32);
 			FOR i := 0 TO 0FFH DO
 				GetBaseDim(base, CHR(i), xmin, ymin, xmax, ymax);
 				IF xmax * ymax # 0 THEN
@@ -316,9 +316,9 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 	END LoadBase;
 
 
-	PROCEDURE EnumFile (name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN);
+	PROCEDURE EnumFile (name: ARRAY OF CHAR; time, date, size: SIGNED32; VAR continue: BOOLEAN);
 		CONST isDir = FALSE;
-		VAR i, pt, dpi: LONGINT; scale, pts: REAL;
+		VAR i, pt, dpi: SIGNED32; scale, pts: FLOAT32;
 
 	BEGIN
 		IF ~isDir THEN
@@ -345,7 +345,7 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 		END
 	END EnumFile;
 
-	PROCEDURE OpenBase (VAR name: ARRAY OF CHAR; ptsize: INTEGER; scale: REAL): Base;
+	PROCEDURE OpenBase (VAR name: ARRAY OF CHAR; ptsize: SIGNED16; scale: FLOAT32): Base;
 		VAR size: ARRAY 6 OF CHAR; pat: ARRAY 64 OF CHAR; base: Base;
 	BEGIN
 		(* first try with correct point size *)
@@ -387,21 +387,21 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 
 	(*--- Fonts ---*)
 
-	PROCEDURE Derive (gfont: GfxFonts.Font; ptsize: INTEGER; VAR mat: GfxMatrix.Matrix): GfxFonts.Font;
+	PROCEDURE Derive (gfont: GfxFonts.Font; ptsize: SIGNED16; VAR mat: GfxMatrix.Matrix): GfxFonts.Font;
 	BEGIN
 		RETURN NIL	(* base cache avoids multiple loading of same file *)
 	END Derive;
 
-	PROCEDURE GetWidth (gfont: GfxFonts.Font; ch: CHAR; VAR dx, dy: REAL);
-		VAR font: Font; bdx, bdy: LONGINT;
+	PROCEDURE GetWidth (gfont: GfxFonts.Font; ch: CHAR; VAR dx, dy: FLOAT32);
+		VAR font: Font; bdx, bdy: SIGNED32;
 	BEGIN
 		font := gfont(Font);
 		GetBaseWidth(font.base, ch, bdx, bdy);
 		GfxMatrix.ApplyToVector(font.bmat, bdx, bdy, dx, dy)
 	END GetWidth;
 
-	PROCEDURE GetMap (gfont: GfxFonts.Font; ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Images.Image);
-		VAR font: Font; bdx, bdy, bx, by: LONGINT; bmap, tmp: Images.Image; m: GfxMatrix.Matrix; llx, lly, urx, ury: REAL;
+	PROCEDURE GetMap (gfont: GfxFonts.Font; ch: CHAR; VAR x, y, dx, dy: FLOAT32; VAR map: Images.Image);
+		VAR font: Font; bdx, bdy, bx, by: SIGNED32; bmap, tmp: Images.Image; m: GfxMatrix.Matrix; llx, lly, urx, ury: FLOAT32;
 	BEGIN
 		font := gfont(Font);
 		GetBaseWidth(font.base, ch, bdx, bdy);
@@ -426,8 +426,8 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 		END
 	END GetMap;
 
-	PROCEDURE GetOutline (gfont: GfxFonts.Font; ch: CHAR; x, y: REAL; path: GfxPaths.Path);
-		VAR font: Font; bx, by, bw, bh: LONGINT; llx, lly, urx, ury, l: REAL;
+	PROCEDURE GetOutline (gfont: GfxFonts.Font; ch: CHAR; x, y: FLOAT32; path: GfxPaths.Path);
+		VAR font: Font; bx, by, bw, bh: SIGNED32; llx, lly, urx, ury, l: FLOAT32;
 	BEGIN
 		font := gfont(Font);
 		GfxPaths.Clear(path);
@@ -441,8 +441,8 @@ MODULE GfxPKFonts IN Oberon; (** portable *)	(* eos  *)
 		END
 	END GetOutline;
 
-	PROCEDURE Open* (VAR family, style: ARRAY OF CHAR; ptsize: INTEGER; VAR mat: GfxMatrix.Matrix): GfxFonts.Font;
-		VAR font: Font; name: ARRAY 64 OF CHAR; scale, xmin, ymin, xmax, ymax: REAL; base: Base;
+	PROCEDURE Open* (VAR family, style: ARRAY OF CHAR; ptsize: SIGNED16; VAR mat: GfxMatrix.Matrix): GfxFonts.Font;
+		VAR font: Font; name: ARRAY 64 OF CHAR; scale, xmin, ymin, xmax, ymax: FLOAT32; base: Base;
 	BEGIN
 		font := NIL;
 		COPY(family, name); Strings.Append(name, style);

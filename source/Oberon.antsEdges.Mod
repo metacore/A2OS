@@ -28,11 +28,11 @@ Report any problems as soon as possible to ants@AntsInFields.de
 IMPORT  antsArrayObjects, antsCommands, vyBase, aM := antsMessages;
 
 PROCEDURE MakeEdges*;
-	VAR l: antsCommands.tScanList;   beta: LONGREAL;    obj, objh, objv: vyBase.Object;
-	A, hor, ver: antsArrayObjects.tINTEGERObject;  x, y: LONGINT;
-	pyx, pyxm, pymx : INTEGER;
+	VAR l: antsCommands.tScanList;   beta: FLOAT64;    obj, objh, objv: vyBase.Object;
+	A, hor, ver: antsArrayObjects.tINTEGERObject;  x, y: SIGNED32;
+	pyx, pyxm, pymx : SIGNED16;
 BEGIN
-	l := antsCommands.ScanFromPar("from=OBJ ver=OBJ hor=OBJ threshold=REAL # make edge Arrays from Array ");
+	l := antsCommands.ScanFromPar("from=OBJ ver=OBJ hor=OBJ threshold=FLOAT32 # make edge Arrays from Array ");
 	IF antsCommands.ExpectObjectFromKeyword(l, "from", obj) &
 		antsCommands.ExpectObjectFromKeyword(l, "ver", objh) &
 		antsCommands.ExpectObjectFromKeyword(l, "hor", objv) &
@@ -53,7 +53,7 @@ END MakeEdges;
 
 
 PROCEDURE MakeDiff*;
-	VAR l: antsCommands.tScanList;   obj, objh, objv: vyBase.Object; 	A, hor, ver: antsArrayObjects.tINTEGERObject;  x, y: LONGINT;
+	VAR l: antsCommands.tScanList;   obj, objh, objv: vyBase.Object; 	A, hor, ver: antsArrayObjects.tINTEGERObject;  x, y: SIGNED32;
 
 BEGIN
 	l := antsCommands.ScanFromPar("from=OBJ ver=OBJ hor=OBJ  # make ABS(diff) Arrays from Array" );

@@ -34,8 +34,8 @@ MODULE Menu IN Oberon;	(** portable *)	(* rs/uh, Wed, 7-Jul-1993 *)
 		Cache = RECORD
 			name: ARRAY 32 OF CHAR;
 			text: Texts.Text;
-			cmd: INTEGER;
-			count: LONGINT
+			cmd: SIGNED16;
+			count: SIGNED32
 		END;
 
 	VAR
@@ -45,7 +45,7 @@ MODULE Menu IN Oberon;	(** portable *)	(* rs/uh, Wed, 7-Jul-1993 *)
 		W: Texts.Writer;
 		buf: POINTER TO ARRAY OF CHAR;
 
-	PROCEDURE GetChar(F: Fonts.Font; ch: CHAR; VAR dx, x, y, w, h: INTEGER; VAR pat: Display.Pattern);
+	PROCEDURE GetChar(F: Fonts.Font; ch: CHAR; VAR dx, x, y, w, h: SIGNED16; VAR pat: Display.Pattern);
 	BEGIN
 		Fonts.GetChar(F, ch, dx, x, y, w, h, pat)
 	END GetChar;
@@ -54,8 +54,8 @@ MODULE Menu IN Oberon;	(** portable *)	(* rs/uh, Wed, 7-Jul-1993 *)
 	BEGIN RETURN R.lib(Fonts.Font)
 	END FontOf;
 
-	PROCEDURE CopyArea(x, y, w, h: INTEGER; save: BOOLEAN);
-		VAR cx, cy, cw, ch, x0, h0: INTEGER; size, pix: LONGINT;
+	PROCEDURE CopyArea(x, y, w, h: SIGNED16; save: BOOLEAN);
+		VAR cx, cy, cw, ch, x0, h0: SIGNED16; size, pix: SIGNED32;
 	BEGIN
 		pix := Display.TransferFormat(0) DIV 8;
 		IF pix = 0 THEN	(* TransferBlock not available, use offscreen CopyBlock *)
@@ -91,20 +91,20 @@ MODULE Menu IN Oberon;	(** portable *)	(* rs/uh, Wed, 7-Jul-1993 *)
 	END MainFrame;
 
 	PROCEDURE WaitRelease;
-	VAR mx, my: INTEGER; keys: SET;
+	VAR mx, my: SIGNED16; keys: SET;
 	BEGIN
 		REPEAT Input.Mouse(keys, mx, my);
 			Oberon.DrawCursor(Oberon.Mouse, Oberon.Arrow, mx, my);
 		UNTIL keys = {};
 	END WaitRelease;
 
-	PROCEDURE SelectItem(cmd, x, y, w, h, entryH: INTEGER);
+	PROCEDURE SelectItem(cmd, x, y, w, h, entryH: SIGNED16);
 	BEGIN
 		Display.ReplConst(Display.FG, x+2, y+h-entryH-cmd*entryH, w-4, entryH, Display.invert)
 	END SelectItem;
 
-	PROCEDURE Area(fnt: Fonts.Font; VAR entryH, width, height: INTEGER);
-		VAR pat: Display.Pattern; dx, x, y, w, h, w0: INTEGER;
+	PROCEDURE Area(fnt: Fonts.Font; VAR entryH, width, height: SIGNED16);
+		VAR pat: Display.Pattern; dx, x, y, w, h, w0: SIGNED16;
 	BEGIN	(* ch read *)
 		entryH := fnt.height + 3; width := 0; height := entryH; w0 := 0;
 		REPEAT
@@ -121,8 +121,8 @@ MODULE Menu IN Oberon;	(** portable *)	(* rs/uh, Wed, 7-Jul-1993 *)
 		IF w0 > width THEN width := w0 END
 	END Area;
 
-	PROCEDURE Write(fnt: Fonts.Font; X, Y, entryH: INTEGER);
-		VAR pat: Display.Pattern; dx, x, y, w, h, xleft: INTEGER;
+	PROCEDURE Write(fnt: Fonts.Font; X, Y, entryH: SIGNED16);
+		VAR pat: Display.Pattern; dx, x, y, w, h, xleft: SIGNED16;
 	BEGIN	(* ch read *)
 		DEC(Y, entryH); xleft := X;
 		REPEAT
@@ -137,7 +137,7 @@ MODULE Menu IN Oberon;	(** portable *)	(* rs/uh, Wed, 7-Jul-1993 *)
 		UNTIL R.eot
 	END Write;
 
-	PROCEDURE MenuDraw(fnt: Fonts.Font; x, y, w, h, entryH: INTEGER);
+	PROCEDURE MenuDraw(fnt: Fonts.Font; x, y, w, h, entryH: SIGNED16);
 	BEGIN
 		Display.ReplConst(Display.BG, x, y+2, w, h, Display.replace);	(*background*)
 		Display.ReplConst(Display.FG, x, y+2, w, 1, Display.replace);	(*frame*)
@@ -152,8 +152,8 @@ MODULE Menu IN Oberon;	(** portable *)	(* rs/uh, Wed, 7-Jul-1993 *)
 		Write(fnt, x+2, y+h, entryH)
 	END MenuDraw;
 
-	PROCEDURE AdjustCoords(dx, dy: INTEGER; VAR x, y, w, h: INTEGER);
-		VAR off: INTEGER;
+	PROCEDURE AdjustCoords(dx, dy: SIGNED16; VAR x, y, w, h: SIGNED16);
+		VAR off: SIGNED16;
 	BEGIN
 		IF y +dy+ h > Display.Height THEN y := Display.Height - h
 		ELSIF y + dy < 0 THEN y := 0
@@ -167,8 +167,8 @@ MODULE Menu IN Oberon;	(** portable *)	(* rs/uh, Wed, 7-Jul-1993 *)
 		INC(x, off)
 	END AdjustCoords;
 
-	PROCEDURE Show(T: Texts.Text; x, y: INTEGER; VAR cmd: INTEGER; VAR cancel: BOOLEAN);
-		VAR keys: SET;	mx, my, W, H, w, h, newCmd, entryH: INTEGER;
+	PROCEDURE Show(T: Texts.Text; x, y: SIGNED16; VAR cmd: SIGNED16; VAR cancel: BOOLEAN);
+		VAR keys: SET;	mx, my, W, H, w, h, newCmd, entryH: SIGNED16;
 	BEGIN
 		Texts.OpenReader(R, T, 0); Texts.Read(R, ch);
 		IF ~R.eot THEN Area(FontOf(R), entryH, w, h);
@@ -208,9 +208,9 @@ MODULE Menu IN Oberon;	(** portable *)	(* rs/uh, Wed, 7-Jul-1993 *)
 		END
 	END Show;
 
-	PROCEDURE CmdMenu*(menu: Texts.Text; x, y: INTEGER; VAR cmd: INTEGER);
+	PROCEDURE CmdMenu*(menu: Texts.Text; x, y: SIGNED16; VAR cmd: SIGNED16);
 		VAR cmdStr: ARRAY 32 OF CHAR;
-			res, i, c: INTEGER;	mainF, cancel: BOOLEAN;
+			res, i, c: SIGNED16;	mainF, cancel: BOOLEAN;
 	BEGIN
 		Show(menu, x, y, cmd, cancel);
 		Texts.OpenReader(R, menu, 0);
@@ -239,7 +239,7 @@ MODULE Menu IN Oberon;	(** portable *)	(* rs/uh, Wed, 7-Jul-1993 *)
 	END CmdMenu;
 
 	PROCEDURE ShowCmd*;
-		VAR S: Texts.Scanner;	T: Texts.Text;	k: SET;	x, y, i, this: INTEGER;
+		VAR S: Texts.Scanner;	T: Texts.Text;	k: SET;	x, y, i, this: SIGNED16;
 	BEGIN
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 		IF S.class = Texts.Name THEN
@@ -271,7 +271,7 @@ MODULE Menu IN Oberon;	(** portable *)	(* rs/uh, Wed, 7-Jul-1993 *)
 	END ShowCmd;
 
 	PROCEDURE Reset*;
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN i := 0;
 		WHILE i < 4 DO
 			cache[i].name := "zzz"; cache[i].count := MaxCount; cache[i].cmd := -1;

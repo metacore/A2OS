@@ -18,7 +18,7 @@ TYPE
 	Window = OBJECT (Base.FormWindow)
 	VAR
 		vcd: TVDriver.VideoCaptureDevice;
-		devNr: LONGINT;
+		devNr: SIGNED32;
 		tuner: TVDriver.TVTuner;
 		audio: TVDriver.Audio;
 		tvWnd: TV.TvWindow;
@@ -28,7 +28,7 @@ TYPE
 		muteButton: Standard.Button;
 		next: Window;
 
-		PROCEDURE &New *(vcd: TVDriver.VideoCaptureDevice; devNr: LONGINT; openTV: BOOLEAN);
+		PROCEDURE &New *(vcd: TVDriver.VideoCaptureDevice; devNr: SIGNED32; openTV: BOOLEAN);
 		VAR
 			i: SIZE;
 			fix, panel: Standard.Panel;
@@ -130,11 +130,11 @@ TYPE
 			window := SELF;
 
 			channelList.model.Acquire;
-			channelList.model.SetNofRows(nofChannels(LONGINT));
+			channelList.model.SetNofRows(nofChannels(SIGNED32));
 			FOR i := 0 TO nofChannels-1 DO
 				channel := TVChannels.channels.GetItem(i);
-				channelList.model.SetCellText(0, LONGINT(i), Strings.NewString(channel.name));
-				channelList.model.SetCellData(0, LONGINT(i), channel);
+				channelList.model.SetCellText(0, SIGNED32(i), Strings.NewString(channel.name));
+				channelList.model.SetCellData(0, SIGNED32(i), channel);
 			END;
 			channelList.model.Release;
 			channelList.Invalidate;
@@ -148,8 +148,8 @@ TYPE
 		END New;
 
 		(** Find a button for correct action *)
-		PROCEDURE FindButton (button: Standard.Button): LONGINT;
-		VAR i: LONGINT;
+		PROCEDURE FindButton (button: Standard.Button): SIGNED32;
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < LEN(buttons)) & (buttons[i] # button) DO
@@ -210,7 +210,7 @@ TYPE
 		END OnTXT;
 
 		(** Select another VideoCaptureDevice *)
-		PROCEDURE SetDevice* (dev: LONGINT);
+		PROCEDURE SetDevice* (dev: SIGNED32);
 		BEGIN
 			vcd := TVDriver.GetVideoDevice (dev);
 			tuner := vcd.GetTuner();
@@ -253,7 +253,7 @@ VAR
 PROCEDURE Open* (context : Commands.Context);
 VAR
 	vcd : TVDriver.VideoCaptureDevice;
-	devNr: LONGINT;
+	devNr: SIGNED32;
 	wnd: Window;
 BEGIN {EXCLUSIVE}
 	IF context # NIL THEN
@@ -291,7 +291,7 @@ VAR
 	manager: WM.WindowManager;
 	xml: XML.Element;
 	s: Strings.String;
-	devNr: LONGINT;
+	devNr: SIGNED32;
 	vcd: TVDriver.VideoCaptureDevice;
 	wnd: Window;
 BEGIN

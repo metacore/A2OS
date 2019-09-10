@@ -108,7 +108,7 @@ VWLu0, VWLv0, VWLu1, VWLv1: Real;
 (* View window limits (VWL) - the window, you are looking through *)
 PVLu0, PVLu1, PVLv0, PVLv1, PVLn0, PVLn1: Real;
 (**)
-ProjectionType: INTEGER;
+ProjectionType: SIGNED16;
 (* perspectiv projection = 0
 parallel projection = 1 (not yet implemented) *)
 PRPu, PRPv, PRPn: Real;
@@ -126,7 +126,7 @@ mtPRP, B1, B2, B: tMatrix;
 View: tMatrix;
 (* represents the transformation of the RWS in the NPS
 simply the product: View = OrientationMatrix*MappingMatrix *)
-definitionTime: LONGINT
+definitionTime: SIGNED32
 END;
 
 VAR
@@ -137,7 +137,7 @@ defVRPx, defVRPy, defVRPz, defNx, defNy, defNz, defVUVx, defVUVy, defVUVz,
 defVWLu0, defVWLu1, defVWLv0, defVWLv1,
 defPVLu0, defPVLu1, defPVLv0, defPVLv1, defPVLn0, defPVLn1,
 defPRPu, defPRPv, defPRPn, defVPd, defBPd, defFPd: Real;
-defProjectionType: INTEGER;
+defProjectionType: SIGNED16;
 (* the actuall coordinate system *)
 theC3D: tCoordinate3d;
 (*rotation variables*)
@@ -151,7 +151,7 @@ PROCEDURE CopyMatrix (VAR src, dest: tMatrix);
 BEGIN CopyMatrixArray(src.m, dest.m);   CopyMatrixArray(src.inv, dest.inv) END CopyMatrix;
 
 PROCEDURE WriteMatrix (VAR R: Files.Rider;  m: tMatrix);
-VAR i, j: INTEGER;
+VAR i, j: SIGNED16;
 BEGIN
 IF m = NIL THEN Files.WriteInt(R, - 1);  Out.Ln;  Out.String("NIL Matrix");    RETURN ELSE Files.WriteInt(R, 4) END;  (* size *)
 FOR i := 0 TO 3 DO
@@ -162,7 +162,7 @@ END;
 END WriteMatrix;
 
 PROCEDURE ReadMatrix (VAR R: Files.Rider;  VAR m: tMatrix);
-VAR i, j: INTEGER;
+VAR i, j: SIGNED16;
 BEGIN
 Files.ReadInt(R, i);
 IF i > 0 THEN NEW(m) ELSE m := NIL;  Out.Ln;  Out.String("NIL Matrix");   RETURN END;
@@ -222,7 +222,7 @@ Files.WriteLInt(R, c.definitionTime);
 END StoreCoord3d;
 
 PROCEDURE LoadCoord3d* (VAR R: Files.Rider; VAR c: tCoordinate3d);
-VAR ver: INTEGER;
+VAR ver: SIGNED16;
 BEGIN
 Files.ReadInt(R, ver);  IF ver < 0 THEN c := NIL;  RETURN END;
 Out.Ln;  Out.String("Loading coord 3d ");
@@ -292,9 +292,9 @@ NEW(dest.B);   CopyMatrix(src.B, dest.B);
 NEW(dest.View);   CopyMatrix(src.View, dest.View)
 END CopyCoordinate;
 
-PROCEDURE ErrorMsg (code: INTEGER);
+PROCEDURE ErrorMsg (code: SIGNED16);
 
-PROCEDURE Msg (code: INTEGER;   errString: ARRAY OF CHAR);
+PROCEDURE Msg (code: SIGNED16;   errString: ARRAY OF CHAR);
 BEGIN vyHostTexts.NoteSIS (vyHostTexts.cWarning, "PHIGS3D: error ", code, errString) END Msg;
 
 BEGIN
@@ -380,7 +380,7 @@ END Angle3;
 
 PROCEDURE InitMatrix (m: tMatrix);
 (*= initializes the matrix m to the unit matrix *)
-VAR i, j: INTEGER;
+VAR i, j: SIGNED16;
 BEGIN
 FOR i := 0 TO 3 DO
 FOR j := 0 TO 3 DO	m.m[i, j] := 0;   m.inv[i, j] := 0	END;
@@ -396,7 +396,7 @@ PROCEDURE ComposeMatrix3 (InMatrixA, InMatrixB, m: tMatrix);
 (*= returns in m the product of InMatrixA and InMatrixB: m := InMatrixA*InMatrixB*)
 
 PROCEDURE MatrixProduct (A, B : tMatrixARRAY;   VAR res: tMatrixARRAY);
-VAR i, j, k: INTEGER;   sum: Real;
+VAR i, j, k: SIGNED16;   sum: Real;
 BEGIN
 FOR i := 0 TO 3 DO
 FOR j := 0 TO 3 DO
@@ -534,7 +534,7 @@ END ComposeTransformMatrix3;
 *)
 
 PROCEDURE EvalViewOrientMatrix3
- (VRPx, VRPy, VRPz, Nx, Ny, Nz, VUVx, VUVy, VUVz: Real;   err: INTEGER);
+ (VRPx, VRPy, VRPz, Nx, Ny, Nz, VUVx, VUVy, VUVz: Real;   err: SIGNED16);
 (*vs 0.0a1 *)	(* md  22.11.94 15:55:38 *)
 (*! optimieren *)
 (*= returns the matrix for the transformation from the
@@ -577,7 +577,7 @@ END EvalViewOrientMatrix3;
 
 PROCEDURE EvalViewMappingMatrix3
  (wlUmin, wlUmax, wlVmin, wlVmax: Real;   PVlXmin, PVlXmax, PVlYmin, PVlYmax, PVlBack, PVlFront: Real;
-projection: INTEGER;   PRPu, PRPv, PRPn: Real;   VPd, BPd, FPd: Real;   VAR err: INTEGER);
+projection: SIGNED16;   PRPu, PRPv, PRPn: Real;   VPd, BPd, FPd: Real;   VAR err: SIGNED16);
 (*vs 0.0a1 *)	(* md  22.11.94 15:56:03 *)
 (*= returns the matrix for the transformation from the
 view reference system in the normalized projection system
@@ -665,7 +665,7 @@ END GetViewDirection;
 PROCEDURE SetCoordinate* (c: tCoordinate3d);
 BEGIN	theC3D := c END SetCoordinate;
 
-PROCEDURE SetViewRefSystem (VRPx, VRPy, VRPz, Nx, Ny, Nz, VUVx, VUVy, VUVz: Real;   err: INTEGER);
+PROCEDURE SetViewRefSystem (VRPx, VRPy, VRPz, Nx, Ny, Nz, VUVx, VUVy, VUVz: Real;   err: SIGNED16);
 BEGIN
 theC3D.VRPx := VRPx;   	theC3D.VRPy := VRPy;   	theC3D.VRPz := VRPz;
 theC3D.Nx := Nx;   	theC3D.Ny := Ny;   	theC3D.Nz := Nz;
@@ -679,7 +679,7 @@ END SetViewRefSystem;
 
 PROCEDURE SetNormProjSystem (VWLu0, VWLu1, VWLv0, VWLv1,
 PVLu0, PVLu1, PVLv0, PVLv1, PVLBack, PVLFront: Real;
-projection: INTEGER;   PRPu, PRPv, PRPn, VPd, BPd, FPd: Real;   VAR err: INTEGER);
+projection: SIGNED16;   PRPu, PRPv, PRPn, VPd, BPd, FPd: Real;   VAR err: SIGNED16);
 BEGIN
 theC3D.VWLu0 := VWLu0;   	theC3D.VWLu1 := VWLu1;
 theC3D.VWLv0 := VWLv0;   	theC3D.VWLv1 := VWLv1;
@@ -704,7 +704,7 @@ BEGIN ComposeMatrix3 (theC3D.OrientationMatrix, theC3D.MappingMatrix, theC3D.Vie
 theC3D.definitionTime := Oberon.Time ()
 END SetViewMatrix;
 
-PROCEDURE OpenCoordinate* (c: tCoordinate3d;   VAR err: INTEGER);
+PROCEDURE OpenCoordinate* (c: tCoordinate3d;   VAR err: SIGNED16);
 PROCEDURE OpenMatrices;
 BEGIN
 NEW (theC3D.OrientationMatrix);
@@ -744,19 +744,19 @@ END OpenCoordinate;
 
 
 (* transformations *)
-PROCEDURE PointToDisplayPoint* (x3d, y3d, z3d: Real;   err: INTEGER;   VAR x, y: Coordiate);
+PROCEDURE PointToDisplayPoint* (x3d, y3d, z3d: Real;   err: SIGNED16;   VAR x, y: Coordiate);
 VAR vx, vy, vz: Real;
 BEGIN TransformPoint3 (x3d, y3d, z3d, theC3D.View.m, vx, vy, vz);
 vyGraphBase.Point2dToPoint (vx, vy, x, y)
 END PointToDisplayPoint;
 
-PROCEDURE PointToViewPoint* (x3d, y3d, z3d: Real;   err: INTEGER;   VAR vx, vy, vz: Real);
+PROCEDURE PointToViewPoint* (x3d, y3d, z3d: Real;   err: SIGNED16;   VAR vx, vy, vz: Real);
 BEGIN TransformPoint3 (x3d, y3d, z3d, theC3D.View.m, vx, vy, vz) END PointToViewPoint;
 
-PROCEDURE ViewPointToDisplayPoint* (vx, vy, vz: Real;   err: INTEGER;   VAR x, y: Coordiate);
+PROCEDURE ViewPointToDisplayPoint* (vx, vy, vz: Real;   err: SIGNED16;   VAR x, y: Coordiate);
 BEGIN vyGraphBase.Point2dToPoint (vx, vy, x, y) END ViewPointToDisplayPoint;
 
-PROCEDURE DisplayPointToPoint* (x, y: Coordiate;   err: INTEGER;   VAR x3d, y3d, z3d: Real);
+PROCEDURE DisplayPointToPoint* (x, y: Coordiate;   err: SIGNED16;   VAR x3d, y3d, z3d: Real);
 VAR vx, vy, vz: Real;
 BEGIN PointToViewPoint (theC3D.VRPx, theC3D.VRPy, theC3D.VRPz, err, vx, vy, vz);
 vyGraphBase.PointToPoint2d (x, y, vx, vy);
@@ -764,7 +764,7 @@ TransformPoint3 (vx, vy, vz, theC3D.View.inv, x3d, y3d, z3d)
 END DisplayPointToPoint;
 
 PROCEDURE SetViewDirection* (Nx, Ny, Nz: Real);
-VAR error: INTEGER;
+VAR error: SIGNED16;
 BEGIN
 theC3D.Nx := - Nx;   theC3D.Ny := - Ny;   theC3D.Nz := - Nz;
 EvalViewOrientMatrix3 (
@@ -778,7 +778,7 @@ END SetViewDirection;
 
 PROCEDURE RotateFree (countinously: BOOLEAN;   x0, y0, x1, y1: Coordiate);
 (*vs 0.0a1 *)	(* md  29.11.94 10:47:31 *)
-VAR error: INTEGER;   p0x, p0y, p0z, p1x, p1y, p1z, rx, ry, rz, alpha: Real;
+VAR error: SIGNED16;   p0x, p0y, p0z, p1x, p1y, p1z, rx, ry, rz, alpha: Real;
 
 PROCEDURE Pix2Sphere (x, y: Coordiate;   VAR sx, sy, sz: Real);
 (** vs 0.0d0 *)	(* md  19.12.94 11:04:00 *)
@@ -835,11 +835,11 @@ END RotateFree;
 
 PROCEDURE RotateN (countinously: BOOLEAN;   x0, y0, x1, y1: Coordiate);
 (*vs 0.0a1 *)	(* md  29.11.94 10:47:31 *)
-VAR error: INTEGER;   p0x, p0y, p0z, p1x, p1y, p1z, rx, ry, rz, alpha: Real;
+VAR error: SIGNED16;   p0x, p0y, p0z, p1x, p1y, p1z, rx, ry, rz, alpha: Real;
 
 PROCEDURE Pix2ViewPlane (x, y: Coordiate;   VAR sx, sy, sz: Real);
 (** vs 0.0d0 *)	(* md  19.12.94 11:04:00 *)
-VAR err: INTEGER;
+VAR err: SIGNED16;
 BEGIN DisplayPointToPoint (x, y, err, sx, sy, sz);
 sx := sx - theC3D.VRPx;   sy := sy - theC3D.VRPy;   sz := sz - theC3D.VRPz
 END Pix2ViewPlane;
@@ -876,7 +876,7 @@ END RotateN;
 
 PROCEDURE DisplayRotationControl;
 (*vs 0.0a1 *)	(* md  14.12.94 16:22:07 *)
-CONST ticks = 36;   VAR i: INTEGER;
+CONST ticks = 36;   VAR i: SIGNED16;
 BEGIN
 vyHostDisplay.SetForeColor (1);   vyHostDisplay.SetDisplayMode (2);   (* 2 = Display.invert *)
 vyGraphBase.MoveTo2d (1, 1 / 2);
@@ -895,7 +895,7 @@ IF ((X - 1 / 2) * (X - 1 / 2) + (Y - 1 / 2) * (Y - 1 / 2) > 1 / 4) THEN rotate :
 END SetRotationControl;
 
 PROCEDURE UpdateCoordinateSystem;
-VAR err: INTEGER;
+VAR err: SIGNED16;
 BEGIN
 SetViewRefSystem (		theC3D.VRPx, theC3D.VRPy, theC3D.VRPz, 			(*VPR*)
 theC3D.Nx, theC3D.Ny, theC3D.Nz, 				(*N*)
@@ -1042,10 +1042,10 @@ rotate := RotateN
 END InitDefaults;
 
 PROCEDURE InitCoordinate;
-VAR error: INTEGER;
+VAR error: SIGNED16;
 BEGIN NEW (theC3D);   OpenCoordinate (theC3D, error) END InitCoordinate;
 
-PROCEDURE UpToDate* (date: LONGINT): BOOLEAN;
+PROCEDURE UpToDate* (date: SIGNED32): BOOLEAN;
 BEGIN RETURN (date > theC3D.definitionTime) END UpToDate;
 
 PROCEDURE DumpSpec*;
@@ -1114,7 +1114,7 @@ VAR res: tMatrix;
 PROCEDURE MatrixProduct (A, B : tMatrixARRAY;   VAR res: tMatrixARRAY);
 (** vs 0.0d0 *)	(* md  21.11.94 13:40:41 *)
 (* returns in res the product of A and B: res := A*B*)
-VAR i, j, k: INTEGER;   sum: Real;
+VAR i, j, k: SIGNED16;   sum: Real;
 BEGIN
 FOR i := 0 TO 3 DO
 FOR j := 0 TO 3 DO
@@ -1136,7 +1136,7 @@ END InversionTest;
 PROCEDURE DumpMatrix (com: ARRAY OF CHAR;   m: tMatrixARRAY);
 (** vs 0.0d0 *)	(* md  24.11.94 13:03:39 *)
 CONST n = 3;   k = 9;
-VAR i, j: INTEGER;
+VAR i, j: SIGNED16;
 BEGIN
 Texts.WriteString (vyHostTexts.w, com);   Texts.WriteLn (vyHostTexts.w);
 FOR i := 0 TO 3 DO
@@ -1241,7 +1241,7 @@ END Test1;
 PROCEDURE Test2;
 (** vs 0.0d0 *)	(* md  19.12.94 11:35:39 *)
 CONST ticks = 12;
-VAR x, y, z, alpha: Real;   i: INTEGER;
+VAR x, y, z, alpha: Real;   i: SIGNED16;
 BEGIN x := 1;   y := 0;   z := 1;
 RotateZ (Math.pi * 2 / ticks, smr);
 FOR i := 0 TO ticks DO
@@ -1255,10 +1255,10 @@ END Test2;
 
 PROCEDURE Test3*;
 (** vs 0.0d0 *)	(*   26.01.95 09:06:47 *)
-VAR i: INTEGER;   X, Y, Z: Real;
+VAR i: SIGNED16;   X, Y, Z: Real;
 PROCEDURE ListCoordinates (x, y, z: Real);
 (** vs 0.0d0 *)	(*   31.01.95 13:19:25 *)
-VAR  xi, yi, err: INTEGER;   vx, vy, vz: Real;
+VAR  xi, yi, err: SIGNED16;   vx, vy, vz: Real;
 BEGIN
 DumpVector ("RWS: ", x, y, z);   vyHostTexts.Msg ("");
 
@@ -1292,9 +1292,9 @@ ListCoordinates (X, Y, - 1 + i * 1 / 3)
 END
 END Test3;
 
-PROCEDURE Test4* (X, Y: INTEGER;   VAR x, y, z: Real);
+PROCEDURE Test4* (X, Y: SIGNED16;   VAR x, y, z: Real);
 (** vs 0.0d0 *)	(*   26.01.95 10:27:09 *)
-VAR vx, vy, vz: Real;   err: INTEGER;
+VAR vx, vy, vz: Real;   err: SIGNED16;
 BEGIN PointToViewPoint (theC3D.VRPx, theC3D.VRPy, theC3D.VRPz, err, vx, vy, vz);
 vyGraphBase.PointToPoint2d (X, Y, vx, vy);
 DumpVector ("2d Display Coord.:   ", vx, vy, 0);   vyHostTexts.Msg ("");

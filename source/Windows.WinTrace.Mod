@@ -6,12 +6,12 @@ CONST
 	none = 0; console = 1; file = 2;
 VAR
 	hin-, hout-, herr-: Kernel32.HANDLE;
-	mode: LONGINT; (* none, console or file *)
+	mode: SIGNED32; (* none, console or file *)
 
 	traceChar0: PROCEDURE(ch: CHAR);
 
 (* Sender to be used with Stream.Writer *)
-PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 VAR b: Kernel32.BOOL; written: Kernel32.DWORD;
 BEGIN
 	IF mode # none THEN
@@ -21,7 +21,7 @@ BEGIN
 END Send;
 
 (* Sender to be used with Stream.Writer *)
-PROCEDURE SendError* (CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+PROCEDURE SendError* (CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 VAR b: Kernel32.BOOL; written: Kernel32.DWORD;
 BEGIN
 	IF mode # none THEN
@@ -32,8 +32,8 @@ END SendError;
 
 
 (* Receiver to be used with Stream.Reader *)
-PROCEDURE Receive* (VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
-VAR b: Kernel32.BOOL; tlen: LONGINT;
+PROCEDURE Receive* (VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
+VAR b: Kernel32.BOOL; tlen: SIGNED32;
 BEGIN
 	tlen := 0;
 	b := Kernel32.ReadFile (hin, buf[ofs], size(Kernel32.DWORD), tlen, NIL);
@@ -69,7 +69,7 @@ BEGIN
 END Close;
 
 PROCEDURE OpenConsole*;
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	IF mode = console THEN RETURN
 	ELSIF mode = file THEN Close
@@ -111,7 +111,7 @@ BEGIN
 END Terminate;
 
 PROCEDURE Char(c: CHAR);
-VAR len: LONGINT; b: Kernel32.BOOL;
+VAR len: SIGNED32; b: Kernel32.BOOL;
 BEGIN
 	len := 1;
 	b := Kernel32.WriteFile(hout,c,len,len,NIL);

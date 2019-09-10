@@ -8,7 +8,7 @@ TYPE
 
 	Collection* = OBJECT
 
-		PROCEDURE GetNumberOfElements*(): LONGINT;
+		PROCEDURE GetNumberOfElements*(): SIGNED32;
 		BEGIN
 			RETURN 0
 		END GetNumberOfElements;
@@ -42,14 +42,14 @@ TYPE
 	List* = OBJECT (Collection)
 	VAR
 		first, last: ListElem;
-		nofElems: LONGINT;
+		nofElems: SIGNED32;
 
 		PROCEDURE & Init*;
 		BEGIN
 			nofElems := 0
 		END Init;
 
-		PROCEDURE GetNumberOfElements*(): LONGINT;
+		PROCEDURE GetNumberOfElements*(): SIGNED32;
 		BEGIN
 			RETURN nofElems
 		END GetNumberOfElements;
@@ -102,7 +102,7 @@ TYPE
 	ArrayCollection* = OBJECT (Collection)
 	VAR
 		elems: PTRArray;
-		nofElems: LONGINT;
+		nofElems: SIGNED32;
 
 		PROCEDURE  &Init*;
 		BEGIN
@@ -110,7 +110,7 @@ TYPE
 			NEW(elems, 1)
 		END Init;
 
-		PROCEDURE GetNumberOfElements*(): LONGINT;
+		PROCEDURE GetNumberOfElements*(): SIGNED32;
 		BEGIN
 			RETURN nofElems
 		END GetNumberOfElements;
@@ -123,7 +123,7 @@ TYPE
 		END GetEnumerator;
 
 		PROCEDURE Grow;
-		VAR i: LONGINT; oldElems: PTRArray;
+		VAR i: SIGNED32; oldElems: PTRArray;
 		BEGIN
 			oldElems := elems;
 			NEW(elems, 2 * LEN(elems));
@@ -142,7 +142,7 @@ TYPE
 		END Add;
 
 		PROCEDURE Remove*(p: ANY);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			i := 0;
 			WHILE (i < nofElems) & (elems[i] # p) DO
@@ -156,7 +156,7 @@ TYPE
 			END
 		END Remove;
 
-		PROCEDURE GetElement*(i: LONGINT): ANY;
+		PROCEDURE GetElement*(i: SIGNED32): ANY;
 		BEGIN
 			IF (0 <= i) & (i < nofElems) THEN RETURN elems[i]
 			ELSE RETURN NIL
@@ -164,7 +164,7 @@ TYPE
 		END GetElement;
 
 		PROCEDURE Invert*(ptr1, ptr2: ANY): BOOLEAN;
-		VAR pos1, pos2, i: LONGINT; ptr: ANY;
+		VAR pos1, pos2, i: SIGNED32; ptr: ANY;
 		BEGIN {EXCLUSIVE}
 			i := 0;  pos1 := -1;  pos2 := -1;
 			WHILE (i < nofElems) & ((pos1 < 0) OR (pos2 < 0)) DO
@@ -179,8 +179,8 @@ TYPE
 			RETURN FALSE
 		END Invert;
 
-		PROCEDURE GetElementPos*(ptr: ANY): LONGINT;
-		VAR i: LONGINT;
+		PROCEDURE GetElementPos*(ptr: ANY): SIGNED32;
+		VAR i: SIGNED32;
 		BEGIN
 			WHILE i < nofElems DO
 				IF elems[i] = ptr THEN  RETURN i END;
@@ -189,7 +189,7 @@ TYPE
 			RETURN -1
 		END GetElementPos;
 
-		PROCEDURE MoveUp*(ptr: ANY;  i: LONGINT): BOOLEAN;
+		PROCEDURE MoveUp*(ptr: ANY;  i: SIGNED32): BOOLEAN;
 		VAR p: ANY;
 		BEGIN {EXCLUSIVE}
 			IF ptr # NIL THEN  i := GetElementPos(ptr)  END;
@@ -200,7 +200,7 @@ TYPE
 			RETURN FALSE
 		END MoveUp;
 
-		PROCEDURE MoveDown*(ptr: ANY;  i: LONGINT): BOOLEAN;
+		PROCEDURE MoveDown*(ptr: ANY;  i: SIGNED32): BOOLEAN;
 		VAR p: ANY;
 		BEGIN {EXCLUSIVE}
 			IF ptr # NIL THEN  i := GetElementPos(ptr)  END;
@@ -263,7 +263,7 @@ TYPE
 	ArrayEnumerator* = OBJECT (Enumerator)
 	VAR
 		array: PTRArray;
-		current: LONGINT;
+		current: SIGNED32;
 
 		PROCEDURE & Init*(array: PTRArray);
 		BEGIN
@@ -296,7 +296,7 @@ TYPE
 
 	Dictionary* = OBJECT
 
-		PROCEDURE GetNumberOfElements*(): LONGINT;
+		PROCEDURE GetNumberOfElements*(): SIGNED32;
 		BEGIN
 			RETURN 0
 		END GetNumberOfElements;
@@ -321,7 +321,7 @@ TYPE
 
 	ArrayDict* = OBJECT (Dictionary)
 	VAR
-		nofElems: LONGINT;
+		nofElems: SIGNED32;
 		keys: StringArray;
 		elems: PTRArray;
 
@@ -332,13 +332,13 @@ TYPE
 			NEW(elems, 16)
 		END Init;
 
-		PROCEDURE GetNumberOfElements*(): LONGINT;
+		PROCEDURE GetNumberOfElements*(): SIGNED32;
 		BEGIN
 			RETURN nofElems
 		END GetNumberOfElements;
 
 		PROCEDURE Get*(key: ARRAY OF CHAR): ANY;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < nofElems) & (keys[i]^ # key) DO
@@ -357,7 +357,7 @@ TYPE
 		END GetEnumerator;
 
 		PROCEDURE Grow;
-		VAR i: LONGINT; oldKeys: StringArray; oldElems: PTRArray;
+		VAR i: SIGNED32; oldKeys: StringArray; oldElems: PTRArray;
 		BEGIN
 			oldKeys := keys; oldElems := elems;
 			NEW(keys, 2 * LEN(keys)); NEW(elems, 2 * LEN(elems));
@@ -377,7 +377,7 @@ TYPE
 		END Add;
 
 		PROCEDURE Remove*(key: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			i := 0;
 			WHILE (i < nofElems) & (keys[i]^ # key) DO

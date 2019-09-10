@@ -98,8 +98,8 @@ MODULE i810Sound; (** AUTHOR "krijo210@student.liu.se"; PURPOSE "Intel 810 Sound
 			See Intel 82801xx Programmers manual for further details.
 		*)
 		DMABufferDescriptorList = POINTER TO ARRAY 32 OF RECORD
-			addr : LONGINT;
-			CmdAndLength : LONGINT;
+			addr : SIGNED32;
+			CmdAndLength : SIGNED32;
 		END;
 
 		(**
@@ -108,50 +108,50 @@ MODULE i810Sound; (** AUTHOR "krijo210@student.liu.se"; PURPOSE "Intel 810 Sound
 		*)
 		PCIAudioControl = OBJECT
 			VAR
-				base: LONGINT;
+				base: SIGNED32;
 
-			PROCEDURE &Constr*(base : LONGINT);
+			PROCEDURE &Constr*(base : SIGNED32);
 			BEGIN
 				SELF.base := base
 			END Constr;
 
 			(* Read from I/O register *)
-			PROCEDURE RegRead8(offset : LONGINT) : SHORTINT;
+			PROCEDURE RegRead8(offset : SIGNED32) : SIGNED8;
 			VAR
 				res : CHAR;
 			BEGIN
 				Machine.Portin8(base + offset, res);
-				RETURN SYSTEM.VAL(SHORTINT, res)
+				RETURN SYSTEM.VAL(SIGNED8, res)
 			END RegRead8;
 
-			PROCEDURE RegRead16(offset : LONGINT) : INTEGER;
+			PROCEDURE RegRead16(offset : SIGNED32) : SIGNED16;
 			VAR
-				res : INTEGER;
+				res : SIGNED16;
 			BEGIN
 				Machine.Portin16(base + offset, res);
-				RETURN SYSTEM.VAL(INTEGER, res)
+				RETURN SYSTEM.VAL(SIGNED16, res)
 			END RegRead16;
 
-			PROCEDURE RegRead32(offset : LONGINT) : LONGINT;
+			PROCEDURE RegRead32(offset : SIGNED32) : SIGNED32;
 			VAR
-				res: LONGINT;
+				res: SIGNED32;
 			BEGIN
 				Machine.Portin32(base + offset, res);
 				RETURN res
 			END RegRead32;
 
 			(* Write to I/O register *)
-			PROCEDURE RegWrite8(offset : LONGINT; val : LONGINT);
+			PROCEDURE RegWrite8(offset : SIGNED32; val : SIGNED32);
 			BEGIN
 				Machine.Portout8(base + offset, SYSTEM.VAL(CHAR, val))
 			END RegWrite8;
 
-			PROCEDURE RegWrite16(offset : LONGINT; val : LONGINT);
+			PROCEDURE RegWrite16(offset : SIGNED32; val : SIGNED32);
 			BEGIN
-				Machine.Portout16(base + offset, SYSTEM.VAL(INTEGER, val))
+				Machine.Portout16(base + offset, SYSTEM.VAL(SIGNED16, val))
 			END RegWrite16;
 
-			PROCEDURE RegWrite32(offset : LONGINT; val : LONGINT);
+			PROCEDURE RegWrite32(offset : SIGNED32; val : SIGNED32);
 			BEGIN
 				Machine.Portout32(base + offset, val)
 			END RegWrite32;
@@ -176,13 +176,13 @@ MODULE i810Sound; (** AUTHOR "krijo210@student.liu.se"; PURPOSE "Intel 810 Sound
 				SELF.NABMBAR := NABMBAR
 			END Constr;
 
-			PROCEDURE RegRead16(offset : LONGINT): LONGINT;
+			PROCEDURE RegRead16(offset : SIGNED32): SIGNED32;
 			BEGIN{EXCLUSIVE}
 				ASSERT(BusyWait());
 				RETURN NAMBAR.RegRead16(offset)
 			END RegRead16;
 
-			PROCEDURE RegWrite16(offset, value : LONGINT);
+			PROCEDURE RegWrite16(offset, value : SIGNED32);
 			BEGIN{EXCLUSIVE}
 				ASSERT(BusyWait());
 				NAMBAR.RegWrite16(offset, value)
@@ -223,12 +223,12 @@ MODULE i810Sound; (** AUTHOR "krijo210@student.liu.se"; PURPOSE "Intel 810 Sound
 				RegWrite16(AC97StatCtrlReg, 0001H)
 			END WriteCodec;
 
-			PROCEDURE SetDacRate*(rate : LONGINT);
+			PROCEDURE SetDacRate*(rate : SIGNED32);
 			BEGIN
 				RegWrite16(AC97DacRateReg, rate)
 			END SetDacRate;
 
-			PROCEDURE SetAdcRate*(rate : LONGINT);
+			PROCEDURE SetAdcRate*(rate : SIGNED32);
 			BEGIN
 				RegWrite16(AC97AdcRateReg, rate)
 			END SetAdcRate;
@@ -241,8 +241,8 @@ TYPE
 		 *)
 		Driver = OBJECT(SoundDevices.Driver)
 			VAR
-				base : LONGINT;
-				irq : LONGINT;
+				base : SIGNED32;
+				irq : SIGNED32;
 				AC97 : AC97Control;
 				NAMBAR, NABMBAR : PCIAudioControl;
 				DMAIn, DMAOut : DMABufferDescriptorList;
@@ -250,20 +250,20 @@ TYPE
 				firstRecChannel : RecChannelList;
 				mixerChannelList : ARRAY NofMixerChannels OF MixerChannel;
 				firstMixerChangedProc : MixerChangedProcList;
-				playCurrentBufferIndex, recCurrentBufferIndex : LONGINT;
-				playLastValidIndex, recLastValidIndex : LONGINT;
+				playCurrentBufferIndex, recCurrentBufferIndex : SIGNED32;
+				playLastValidIndex, recLastValidIndex : SIGNED32;
 				playBuffer, recBuffer, silentBuffer : SoundDevices.Buffer;
-				playSamplingRate : ARRAY 32 OF LONGINT;
-				recSamplingRate : LONGINT;
-				playCurrentSamplingRate : LONGINT;
+				playSamplingRate : ARRAY 32 OF SIGNED32;
+				recSamplingRate : SIGNED32;
+				playCurrentSamplingRate : SIGNED32;
 				playBufferList, recBufferList : ARRAY 32 OF SoundDevices.Buffer;
 				playInterrupt, recInterrupt : BOOLEAN;
 
-			PROCEDURE &Constr*(nambar, nabmbar, irq : LONGINT);
+			PROCEDURE &Constr*(nambar, nabmbar, irq : SIGNED32);
 			VAR
-				res : WORD;
-				DMAInPhysAdr, DMAOutPhysAdr: LONGINT;
-				i : LONGINT;
+				res : INTEGER;
+				DMAInPhysAdr, DMAOutPhysAdr: SIGNED32;
+				i : SIGNED32;
 			BEGIN
 				SELF.base := base;
 				SELF.irq := irq;
@@ -391,8 +391,8 @@ TYPE
 
 			PROCEDURE HandleInterrupt;
 			VAR
-				status : LONGINT;
-				interrupt : LONGINT;
+				status : SIGNED32;
+				interrupt : SIGNED32;
 			BEGIN
 				interrupt := NABMBAR.RegRead32(BMRGlobalStatusReg);
 
@@ -407,7 +407,7 @@ TYPE
 					(* Did a Buffer completion interrupt occur? *)
 					IF (19 IN SYSTEM.VAL(SET, status)) THEN
 						BEGIN {EXCLUSIVE}
-							playLastValidIndex := (SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, status)*{0..7}) + 2) MOD 32;
+							playLastValidIndex := (SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, status)*{0..7}) + 2) MOD 32;
 							playInterrupt := TRUE;
 						END;
 					END;
@@ -427,7 +427,7 @@ TYPE
 					(* Did a Buffer completion interrupt occur? *)
 					IF (19 IN SYSTEM.VAL(SET, status)) THEN
 						BEGIN {EXCLUSIVE}
-							recLastValidIndex := (SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, status)*{0..7}) + 2) MOD 32;
+							recLastValidIndex := (SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, status)*{0..7}) + 2) MOD 32;
 							recInterrupt := TRUE;
 						END;
 					END;
@@ -448,7 +448,7 @@ TYPE
 					ADDRESSOF(playBufferList[playCurrentBufferIndex].data[0]), BufferSize);
 
 				noOfSamples := LSH(playBufferList[playCurrentBufferIndex].len, -1);
-				DMAOut[playLastValidIndex].CmdAndLength := noOfSamples(LONGINT);
+				DMAOut[playLastValidIndex].CmdAndLength := noOfSamples(SIGNED32);
 				SetBit(DMAOut[playLastValidIndex].CmdAndLength, 31);
 
 				NABMBAR.RegWrite8(BMROutBase + BMRLastValidIndexReg, playLastValidIndex)
@@ -513,7 +513,7 @@ TYPE
 			(* Mix two buffers of the same sampling rate *)
 			PROCEDURE MixTwo(VAR buffer : SoundDevices.Buffer; buffer2 : SoundDevices.Buffer);
 			VAR
-				mix, sample1, sample2 : LONGINT;
+				mix, sample1, sample2 : SIGNED32;
 				i : SIZE;
 			BEGIN
 				(* First buffer don't have to be mixed *)
@@ -526,18 +526,18 @@ TYPE
 
 				FOR i := 0 TO buffer.len-1 DO
 					(* Lineary interpolate two samples *)
-					sample1 := SYSTEM.VAL(INTEGER, buffer.data[i]);
-					sample2 := SYSTEM.VAL(INTEGER, buffer2.data[i]);
+					sample1 := SYSTEM.VAL(SIGNED16, buffer.data[i]);
+					sample2 := SYSTEM.VAL(SIGNED16, buffer2.data[i]);
 
 					(* Lower volume to try to avoid clipping *)
 					mix := sample1+sample2;
 
 					(* Clip *)
-					IF mix > MAX(INTEGER) THEN
-						mix := MAX(INTEGER);
+					IF mix > MAX(SIGNED16) THEN
+						mix := MAX(SIGNED16);
 					END;
-					IF mix < MIN(INTEGER) THEN
-						mix := MIN(INTEGER);
+					IF mix < MIN(SIGNED16) THEN
+						mix := MIN(SIGNED16);
 					END;
 
 
@@ -596,22 +596,22 @@ TYPE
 				NABMBAR.RegWrite8(BMRInBase + BMRCtrlReg, 00H)
 			END Disable;
 
-			PROCEDURE NofNativeFrequences() : LONGINT;
+			PROCEDURE NofNativeFrequences() : SIGNED32;
 			BEGIN
 				RETURN 0;
 			END NofNativeFrequences;
 
-			PROCEDURE GetNativeFrequency*(nr : LONGINT) : LONGINT;
+			PROCEDURE GetNativeFrequency*(nr : SIGNED32) : SIGNED32;
 			BEGIN
 				RETURN 48000;
 			END GetNativeFrequency;
 
-			PROCEDURE NofSamplingResolutions*() : LONGINT;
+			PROCEDURE NofSamplingResolutions*() : SIGNED32;
 			BEGIN
 				RETURN 2 (* 16 Bit and 8 Bit *)
 			END NofSamplingResolutions;
 
-			PROCEDURE GetSamplingResolution(nr : LONGINT) : LONGINT;
+			PROCEDURE GetSamplingResolution(nr : SIGNED32) : SIGNED32;
 			BEGIN
 				ASSERT((nr >= 0) & (nr <2));
 				IF nr = 0 THEN
@@ -621,12 +621,12 @@ TYPE
 				END;
 			END GetSamplingResolution;
 
-			PROCEDURE NofSubChannelSettings*() : LONGINT;
+			PROCEDURE NofSubChannelSettings*() : SIGNED32;
 			BEGIN
 				RETURN 2 (* Mono and stereo *)
 			END NofSubChannelSettings;
 
-			PROCEDURE GetSubChannelSetting*(nr : LONGINT) : LONGINT;
+			PROCEDURE GetSubChannelSetting*(nr : SIGNED32) : SIGNED32;
 			BEGIN
 				ASSERT((nr >= 0) & (nr <= 2));
 				IF nr = 0 THEN
@@ -636,16 +636,16 @@ TYPE
 				END
 			END GetSubChannelSetting;
 
-			PROCEDURE NofWaveFormats*() : LONGINT;
+			PROCEDURE NofWaveFormats*() : SIGNED32;
 			BEGIN
 				RETURN 1 (* Only PCM *)
 			END NofWaveFormats;
 
 			PROCEDURE OpenPlayChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution,
-				nofSubChannels, format : LONGINT; VAR res : WORD);
+				nofSubChannels, format : SIGNED32; VAR res : INTEGER);
 			VAR
 				playChannel : PlayChannel;
-				sResolution : LONGINT;
+				sResolution : SIGNED32;
 			BEGIN {EXCLUSIVE}
 				channel := NIL;
 
@@ -724,11 +724,11 @@ TYPE
 			END AddPlayChannel;
 
 			PROCEDURE OpenRecordChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution,
-				nofSubChannels, format : LONGINT; VAR res : WORD);
+				nofSubChannels, format : SIGNED32; VAR res : INTEGER);
 			VAR
 				recChannel : RecChannel;
 				item : RecChannelList;
-				sResolution : LONGINT;
+				sResolution : SIGNED32;
 			BEGIN {EXCLUSIVE}
 				channel := NIL;
 
@@ -861,7 +861,7 @@ TYPE
 				END;
 			END UnregisterMixerChangeListener;
 
-			PROCEDURE GetMixerChannel*(channelNr : LONGINT; VAR channel : SoundDevices.MixerChannel);
+			PROCEDURE GetMixerChannel*(channelNr : SIGNED32; VAR channel : SoundDevices.MixerChannel);
 			BEGIN
 				IF (channelNr >= 0) & (channelNr < NofMixerChannels) THEN
 					channel := mixerChannelList[channelNr]
@@ -870,7 +870,7 @@ TYPE
 				END
 			END GetMixerChannel;
 
-			PROCEDURE GetNofMixerChannels*() : LONGINT;
+			PROCEDURE GetNofMixerChannels*() : SIGNED32;
 			BEGIN
 				RETURN NofMixerChannels
 			END GetNofMixerChannels;
@@ -904,12 +904,12 @@ TYPE
 			VAR
 				driver : Driver;
 				name, desc : POINTER TO ARRAY OF CHAR;
-				volumeReg : LONGINT;
-				volume, muteVol : LONGINT;
-				volBits : LONGINT;
+				volumeReg : SIGNED32;
+				volume, muteVol : SIGNED32;
+				volBits : SIGNED32;
 				mute : BOOLEAN;
 
-			PROCEDURE &Constr*(driver : Driver; volumeReg : LONGINT; mute : BOOLEAN; name, desc : ARRAY OF CHAR);
+			PROCEDURE &Constr*(driver : Driver; volumeReg : SIGNED32; mute : BOOLEAN; name, desc : ARRAY OF CHAR);
 			VAR
 				i : SIZE;
 			BEGIN
@@ -951,7 +951,7 @@ TYPE
 				COPY(SELF.desc^, desc)
 			END GetDesc;
 
-			PROCEDURE SetVolume*(volume : LONGINT);
+			PROCEDURE SetVolume*(volume : SIGNED32);
 			BEGIN {EXCLUSIVE}
 				ASSERT((volume >= 0) & (volume <= 255));
 				SELF.volume := volume;
@@ -967,7 +967,7 @@ TYPE
 				CallMixerListeners
 			END SetVolume;
 
-			PROCEDURE GetVolume*() : LONGINT;
+			PROCEDURE GetVolume*() : SIGNED32;
 			BEGIN
 				RETURN SELF.volume
 			END GetVolume;
@@ -975,7 +975,7 @@ TYPE
 			(* Volume has to be 0 <= volume < 256 *)
 			PROCEDURE SetMute*(mute : BOOLEAN);
 			VAR
-				volume : LONGINT;
+				volume : SIGNED32;
 			BEGIN {EXCLUSIVE}
 				SELF.mute := mute;
 				IF mute THEN muteVol := volume; volume := 0
@@ -1011,16 +1011,16 @@ TYPE
 		Channel = OBJECT(SoundDevices.Channel)
 			VAR
 				driver : Driver;
-				samplingRate, samplingResolution, nofSubChannels : LONGINT;
+				samplingRate, samplingResolution, nofSubChannels : SIGNED32;
 				bufferListener : SoundDevices.BufferListener;
 				firstBuffer, lastBuffer : BufferList;
 				playRecBuffer : SoundDevices.Buffer;
-				firstBufferPos : LONGINT;
-				volume : LONGINT;
-				state : LONGINT;
+				firstBufferPos : SIGNED32;
+				volume : SIGNED32;
+				state : SIGNED32;
 
 
-			PROCEDURE &Constr*(driver : Driver; samplingRate, samplingResolution, nofSubChannels : LONGINT);
+			PROCEDURE &Constr*(driver : Driver; samplingRate, samplingResolution, nofSubChannels : SIGNED32);
 			BEGIN
 				SELF.driver := driver;
 				SELF.samplingRate := samplingRate;
@@ -1035,12 +1035,12 @@ TYPE
 				SetVolume(255)
 			END Constr;
 
-			PROCEDURE GetChannelKind*() : LONGINT;
+			PROCEDURE GetChannelKind*() : SIGNED32;
 			BEGIN
 				HALT(99) (* ABSTRACT *)
 			END GetChannelKind;
 
-			PROCEDURE SetVolume*(volume : LONGINT);
+			PROCEDURE SetVolume*(volume : SIGNED32);
 			BEGIN
 				SELF.volume := volume
 			END SetVolume;
@@ -1048,15 +1048,15 @@ TYPE
 			(* Linear volume *)
 			PROCEDURE SampleSetVolume(VAR sample : Sample);
 			VAR
-				left, right : LONGINT;
-				volume : LONGINT;
+				left, right : SIGNED32;
+				volume : SIGNED32;
 			BEGIN
 				volume := SELF.volume;
 				IF (volume < 0) THEN volume := 0 END;
 				IF (volume > 255) THEN volume := 255 END;
 
-				left := SYSTEM.VAL(INTEGER, sample);
-				right := SYSTEM.VAL(INTEGER, sample[2]);
+				left := SYSTEM.VAL(SIGNED16, sample);
+				right := SYSTEM.VAL(SIGNED16, sample[2]);
 
 				(* Multiply volume with a number between 0 and 1. *)
 
@@ -1069,12 +1069,12 @@ TYPE
 				sample[3] := CHR(LSH(right, -8))
 			END SampleSetVolume;
 
-			PROCEDURE GetVolume*() : LONGINT;
+			PROCEDURE GetVolume*() : SIGNED32;
 			BEGIN
 				RETURN SELF.volume
 			END GetVolume;
 
-			PROCEDURE GetPosition*() : LONGINT;
+			PROCEDURE GetPosition*() : SIGNED32;
 			BEGIN
 				RETURN firstBufferPos
 			END GetPosition;
@@ -1160,7 +1160,7 @@ TYPE
 
 		PlayChannel = OBJECT(Channel);
 
-			PROCEDURE &ConstrPlay*(driver : Driver; samplingRate, samplingResolution, nofSubChannels : LONGINT);
+			PROCEDURE &ConstrPlay*(driver : Driver; samplingRate, samplingResolution, nofSubChannels : SIGNED32);
 			BEGIN
 				Constr(driver, samplingRate, samplingResolution, nofSubChannels);
 			END ConstrPlay;
@@ -1189,11 +1189,11 @@ TYPE
 				WavePlayer enqueues a buffer the the channel. When this channel has emptied the buffer
 				it calls the registered buffer listener and asks the player to enqueue another buffer.
 			*)
-			PROCEDURE PrepareData*(toRate : LONGINT);
+			PROCEDURE PrepareData*(toRate : SIGNED32);
 			VAR
-				playRecBufferPos : LONGINT;
+				playRecBufferPos : SIGNED32;
 				sample : Sample;
-				srate : LONGINT;
+				srate : SIGNED32;
 			BEGIN {EXCLUSIVE}
 				srate := 0;
 
@@ -1291,7 +1291,7 @@ TYPE
 			END MonoToStereo;
 
 			(* If there is no more data to fill up playRecBuffer with we output silent data. *)
-			PROCEDURE OutputSilentData(playRecBufferPos : LONGINT);
+			PROCEDURE OutputSilentData(playRecBufferPos : SIGNED32);
 			BEGIN
 				WHILE (playRecBufferPos < BufferSize) DO
 					playRecBuffer.data[playRecBufferPos] := silentData;
@@ -1322,12 +1322,12 @@ TYPE
 				PCM In Interrupt -> Driver::ReturnBuffers -> RecChannel::PrepareData
 				Prepares data and return it to RecPlayer
 			*)
-			PROCEDURE PrepareData(buffer : SoundDevices.Buffer; toRate : LONGINT);
+			PROCEDURE PrepareData(buffer : SoundDevices.Buffer; toRate : SIGNED32);
 			VAR
-				bufferPos : LONGINT;
+				bufferPos : SIGNED32;
 				sample : Sample;
-				sampleSize : SHORTINT;
-				srate : LONGINT;
+				sampleSize : SIGNED8;
+				srate : SIGNED32;
 			BEGIN
 				srate := 0;
 				bufferPos := 0;
@@ -1397,11 +1397,11 @@ TYPE
 			(* stereo => mono conversion *)
 			PROCEDURE StereoToMono(VAR sample : Sample);
 			VAR
-				mix, left, right : LONGINT;
+				mix, left, right : SIGNED32;
 			BEGIN
 				(* Take average of left and right channel *)
-				left := SYSTEM.VAL(INTEGER, sample);
-				right := SYSTEM.VAL(INTEGER, sample[2]);
+				left := SYSTEM.VAL(SIGNED16, sample);
+				right := SYSTEM.VAL(SIGNED16, sample[2]);
 				mix := LSH(left + right, -1);
 
 				sample[0] := CHR(mix);
@@ -1425,24 +1425,24 @@ TYPE
 
 
 
-	PROCEDURE SetBit(VAR a : LONGINT; n : LONGINT);
+	PROCEDURE SetBit(VAR a : SIGNED32; n : SIGNED32);
 	BEGIN
 		ASSERT((n >= 0) & (n < 32));
 		INCL(SYSTEM.VAL(SET, a), n)
 	END SetBit;
 
 (*
-	PROCEDURE ClearBit(VAR a : LONGINT; n : LONGINT);
+	PROCEDURE ClearBit(VAR a : SIGNED32; n : SIGNED32);
 	VAR t : SET;
 	BEGIN
 		ASSERT((n >= 0) & (n < 32));
 		t := SYSTEM.VAL(SET, a);
 		EXCL(t, n);
-		a := SYSTEM.VAL(LONGINT, t)
+		a := SYSTEM.VAL(SIGNED32, t)
 	END ClearBit;
 *)
 
-	PROCEDURE TestBit(a, n : LONGINT) : BOOLEAN;
+	PROCEDURE TestBit(a, n : SIGNED32) : BOOLEAN;
 	BEGIN
 		RETURN n IN SYSTEM.VAL(SET, a);
 	END TestBit;
@@ -1462,12 +1462,12 @@ TYPE
 	END GetPhysicalAdr;
 
 	(* Scan after PCI card and install it if found *)
-	PROCEDURE ScanPCI(vendid, devid : LONGINT);
+	PROCEDURE ScanPCI(vendid, devid : SIGNED32);
 	VAR
-		index, i : LONGINT; res: WORD;
-		CmdReg : LONGINT;
-		bus, dev, fkt : LONGINT;
-		nambar, nabmbar, irq : LONGINT;
+		index, i : SIGNED32; res: INTEGER;
+		CmdReg : SIGNED32;
+		bus, dev, fkt : SIGNED32;
+		nambar, nabmbar, irq : SIGNED32;
 		driver : Driver;
 		driverList : DriverList;
 

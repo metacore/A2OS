@@ -29,22 +29,22 @@ TYPE
 	ProcessSelector* = OBJECT (WMComponents.VisualComponent)
 	VAR
 		sort- : WMProperties.Int32Property;
-		sortI : LONGINT;
+		sortI : SIGNED32;
 
 		processes : ARRAY MaxNofProcesses OF Objects.Process;
-		nofProcesses : LONGINT;
+		nofProcesses : SIGNED32;
 
 		colWidth : WMGrids.Spacings;
 		grid : WMStringGrids.StringGrid;
 
-		lastProcTime : HUGEINT;
+		lastProcTime : SIGNED64;
 
 		sw : Streams.StringWriter; (* Only use in procedure Update *)
 
-		nofUpdates, interval, interleave : LONGINT;
+		nofUpdates, interval, interleave : SIGNED32;
 
 		timer : Kernel.Timer;
-		state, currentState : LONGINT;
+		state, currentState : SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -75,7 +75,7 @@ TYPE
 			processes : ARRAY ProcessInfo.MaxNofProcesses OF Objects.Process;
 			nofProcesses : SIZE;
 			scol, srow, ecol, erow, i : SIZE;
-			id: WORD;
+			id: INTEGER;
 			selection : Selection;
 			str : Strings.String;
 		BEGIN
@@ -140,7 +140,7 @@ TYPE
 		VAR
 			grid : WMStringGrids.StringGrid;
 			str : ARRAY 256 OF CHAR;
-			i : WORD; dx, dy, minWidth : SIZE;
+			i : INTEGER; dx, dy, minWidth : SIZE;
 			f : WMGraphics.Font;
 		BEGIN
 			NEW(grid); grid.alignment.Set(WMComponents.AlignClient);
@@ -208,15 +208,15 @@ TYPE
 		PROCEDURE Update;
 		VAR
 			cycles : Objects.CpuCyclesArray;
-			i, posP, beg : LONGINT;
+			i, posP, beg : SIGNED32;
 			mod : Modules.Module;
 			str : ARRAY 256 OF CHAR;
-			t0, t1 : HUGEINT;
+			t0, t1 : SIGNED64;
 
 			pc, relpc : ADDRESS;
-			mode: LONGINT;
+			mode: SIGNED32;
 
-			PROCEDURE SetText(line, cell : LONGINT; CONST str : ARRAY OF CHAR);
+			PROCEDURE SetText(line, cell : SIGNED32; CONST str : ARRAY OF CHAR);
 			VAR s : Strings.String;
 			BEGIN
 				s := grid.model.GetCellText(cell, line + 1); (* recycle the string *)
@@ -276,7 +276,7 @@ TYPE
 				(* PC - 5 *)
 				relpc := pc;
 				IF (mod # NIL) & (mod.code # NIL) THEN DEC(relpc, ADDRESSOF(mod.code[0])) END;
-				Strings.IntToStr(LONGINT(relpc), str); SetText(i, 5, str);
+				Strings.IntToStr(SIGNED32(relpc), str); SetText(i, 5, str);
 
 				(* active object type - 6 *)
 				sw.Reset; ProcessInfo.WriteActiveObject(processes[i], sw); sw.Get(str);
@@ -319,7 +319,7 @@ TYPE
 		BEGIN
 			Acquire;
 			ProcessInfo.GetProcesses(processes, nofProcesses);
-			SELF.nofProcesses := LONGINT (nofProcesses);
+			SELF.nofProcesses := SIGNED32 (nofProcesses);
 			CASE sortI OF
 			| ID: proc := ProcessInfo.SortByID;
 			| Priority : proc := ProcessInfo.SortByPriority;
@@ -371,10 +371,10 @@ TYPE
 
 	SortInfo = OBJECT
 	VAR
-		mode : LONGINT;
+		mode : SIGNED32;
 		name : ARRAY 64 OF CHAR;
 
-		PROCEDURE &New*(mode : LONGINT; CONST name : ARRAY OF CHAR);
+		PROCEDURE &New*(mode : SIGNED32; CONST name : ARRAY OF CHAR);
 		BEGIN
 			SELF.mode := mode;
 			COPY(name, SELF.name);
@@ -548,7 +548,7 @@ VAR
 	StrProcessSelector, StrProcessManager : Strings.String;
 	PrototypeSort : WMProperties.Int32Property;
 
-PROCEDURE GetTitleStr(col : WORD; VAR x : ARRAY OF CHAR);
+PROCEDURE GetTitleStr(col : INTEGER; VAR x : ARRAY OF CHAR);
 BEGIN
 	CASE col OF
 		| 0 : COPY("PID", x)
@@ -566,7 +566,7 @@ BEGIN
 	END
 END GetTitleStr;
 
-PROCEDURE GetAlign(col : LONGINT) : LONGINT;
+PROCEDURE GetAlign(col : SIGNED32) : SIGNED32;
 BEGIN
 	CASE col OF
 		| 6, 7, 8, 9, 10 : RETURN WMGraphics.AlignLeft;
@@ -586,8 +586,8 @@ BEGIN
 	END;
 END CheckBP;
 
-PROCEDURE OpenCpuLoadWindow(pid : LONGINT);
-VAR commandString, msg : ARRAY 128 OF CHAR; nbr : ARRAY 16 OF CHAR; res : WORD;
+PROCEDURE OpenCpuLoadWindow(pid : SIGNED32);
+VAR commandString, msg : ARRAY 128 OF CHAR; nbr : ARRAY 16 OF CHAR; res : INTEGER;
 BEGIN
 	commandString := "WMPerfMonPluginProcesses.Install ";
 	Strings.IntToStr(pid, nbr);

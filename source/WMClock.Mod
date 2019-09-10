@@ -18,9 +18,9 @@ TYPE
 
 	ContextMenuPar = OBJECT
 	VAR
-		mode : LONGINT;
+		mode : SIGNED32;
 
-		PROCEDURE &New*(m : LONGINT);
+		PROCEDURE &New*(m : SIGNED32);
 		BEGIN
 			mode := m;
 		END New;
@@ -41,7 +41,7 @@ TYPE
 		lastX, lastY : SIZE;
 
 		PROCEDURE &New*(context : WMRestorable.Context; flags : SET);
-		VAR configuration : WMRestorable.XmlElement; viewMode, color : LONGINT;
+		VAR configuration : WMRestorable.XmlElement; viewMode, color : SIGNED32;
 		BEGIN
 			IncCount;
 			IF (context # NIL) THEN
@@ -90,11 +90,11 @@ TYPE
 
 		PROCEDURE HandleToggleColor(sender, data: ANY);
 		BEGIN
-			IF (clock.color.Get() = 0FFH) THEN clock.color.Set(LONGINT(0FFFFFFFFH)) ELSE clock.color.Set(0FFH) END;
+			IF (clock.color.Get() = 0FFH) THEN clock.color.Set(SIGNED32(0FFFFFFFFH)) ELSE clock.color.Set(0FFH) END;
 		END HandleToggleColor;
 
 		PROCEDURE HandleToggleView(sender, par: ANY);
-		VAR manager : WMWindowManager.WindowManager; viewMode : LONGINT;
+		VAR manager : WMWindowManager.WindowManager; viewMode : SIGNED32;
 		BEGIN
 			manager := WMWindowManager.GetDefaultManager();
 			manager.SetFocus(SELF);
@@ -212,10 +212,10 @@ TYPE
 		lock : Locks.Lock; (* protects currentTime *)
 
 		str : Strings.String;
-		centerX, centerY : LONGINT;
+		centerX, centerY : SIGNED32;
 
 		image : WMGraphics.Image;
-		updateInterval : LONGINT;
+		updateInterval : SIGNED32;
 
 		alive, dead : BOOLEAN;
 		timer : Kernel.Timer;
@@ -246,7 +246,7 @@ TYPE
 		END Init;
 
 		PROCEDURE PropertyChanged*(sender, property : ANY);
-		VAR vmValue : LONGINT;
+		VAR vmValue : SIGNED32;
 		BEGIN
 			IF (property = viewMode) THEN
 				vmValue := viewMode.Get();
@@ -278,7 +278,7 @@ TYPE
 		END PropertyChanged;
 
 		PROCEDURE RecacheProperties*;
-		VAR string : Strings.String; newImage, resizedImage : WMGraphics.Image; vmValue : LONGINT;
+		VAR string : Strings.String; newImage, resizedImage : WMGraphics.Image; vmValue : SIGNED32;
 		BEGIN
 			RecacheProperties^;
 			vmValue := viewMode.Get();
@@ -313,8 +313,8 @@ TYPE
 
 		PROCEDURE DrawHands(canvas : WMGraphics.Canvas; time : Dates.DateTime);
 
-			PROCEDURE DrawLine(handLengthInPercent : LONGINT; color : WMGraphics.Color; angle : REAL);
-			VAR deltaX, deltaY : LONGINT; radiants : REAL; lengthX, lengthY : SIZE;
+			PROCEDURE DrawLine(handLengthInPercent : SIGNED32; color : WMGraphics.Color; angle : FLOAT32);
+			VAR deltaX, deltaY : SIGNED32; radiants : FLOAT32; lengthX, lengthY : SIZE;
 			BEGIN
 				lengthX := handLengthInPercent * bounds.GetWidth() DIV 2 DIV 100;
 				lengthY := handLengthInPercent * bounds.GetHeight() DIV 2 DIV 100;
@@ -381,7 +381,7 @@ TYPE
 	END Clock;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 	StrClock : Strings.String;
 

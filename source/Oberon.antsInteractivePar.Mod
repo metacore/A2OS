@@ -36,24 +36,24 @@ TYPE
 	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc* = RECORD (vyPort.tLayerDesc);
 		n-: antsNeighbourhoods.Neighbours;
-		maxx, maxy: LONGINT;
-		dim: INTEGER;
+		maxx, maxy: SIGNED32;
+		dim: SIGNED16;
 		isotropic: BOOLEAN;
 		commands: vyCommandMenus.List;
 		viewnum: BOOLEAN;
-		max: LONGREAL
+		max: FLOAT64
 	END;
 VAR
 	tempLayer: tLayer;
 
 	PROCEDURE Recall( layer: tLayer );
-	VAR cells: LONGINT;  cellsize: LONGREAL;  i, j: LONGINT;
+	VAR cells: SIGNED32;  cellsize: FLOAT64;  i, j: SIGNED32;
 		str: ARRAY 20 OF CHAR;
 
-		PROCEDURE PaintCell( x, y: LONGINT;  val: LONGREAL );
+		PROCEDURE PaintCell( x, y: SIGNED32;  val: FLOAT64 );
 		BEGIN
 			vyHostStrings.RealToFixStr( val, str, 1, 2, 0 );
-			IF val = MIN( LONGREAL ) THEN val := layer.max;  str := "";  vyGraphBase.SetForeColor( layer.style.bcol )
+			IF val = MIN( FLOAT64 ) THEN val := layer.max;  str := "";  vyGraphBase.SetForeColor( layer.style.bcol )
 			ELSIF val < 0 THEN val := -val;  vyGraphBase.SetForeColor( layer.style.selectcol )
 			ELSE vyGraphBase.SetForeColor( layer.style.fcol )
 			END;
@@ -85,7 +85,7 @@ VAR
 	END Recall;
 
 	PROCEDURE Responsible( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF ((event.gesture = vyEvents.EvtSelect) OR (event.gesture = vyEvents.EvtLoc) OR
@@ -107,10 +107,10 @@ VAR
 	END Prompt;
 
 	PROCEDURE OnLayer( layer: tLayer;  VAR event: vyEvents.EventMsg ): BOOLEAN;
-	VAR i, j: INTEGER;  cells: LONGINT;  cellsize: LONGREAL;
+	VAR i, j: SIGNED16;  cells: SIGNED32;  cellsize: FLOAT64;
 
-		PROCEDURE InCell( x, y: LONGINT;  cx, cy: INTEGER ): BOOLEAN;
-		VAR rx, ry, rw, rh: INTEGER;
+		PROCEDURE InCell( x, y: SIGNED32;  cx, cy: SIGNED16 ): BOOLEAN;
+		VAR rx, ry, rw, rh: SIGNED16;
 		BEGIN
 			vyGraphBase.Rect2dToRect( x * cellsize - cellsize / 2, y * cellsize - cellsize / 2, cellsize, cellsize, rx, ry, rw, rh );
 			IF vyRectangles.PointInRect( cx, cy, rx, ry, rw, rh ) THEN RETURN TRUE ELSE RETURN FALSE END
@@ -129,10 +129,10 @@ VAR
 	END OnLayer;
 
 	PROCEDURE Select( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR cells: LONGINT;  cellsize: LONGREAL;  i, j: LONGINT;  origx, origy: INTEGER;  gesture: INTEGER;  oldx: INTEGER;
+	VAR cells: SIGNED32;  cellsize: FLOAT64;  i, j: SIGNED32;  origx, origy: SIGNED16;  gesture: SIGNED16;  oldx: SIGNED16;
 
-		PROCEDURE InCell( x, y: LONGINT;  cx, cy: INTEGER ): BOOLEAN;
-		VAR rx, ry, rw, rh: INTEGER;
+		PROCEDURE InCell( x, y: SIGNED32;  cx, cy: SIGNED16 ): BOOLEAN;
+		VAR rx, ry, rw, rh: SIGNED16;
 		BEGIN
 			vyGraphBase.Rect2dToRect( x * cellsize - cellsize / 2, y * cellsize - cellsize / 2, cellsize, cellsize, rx, ry, rw, rh );
 			IF vyRectangles.PointInRect( cx, cy, rx, ry, rw, rh ) THEN RETURN TRUE ELSE RETURN FALSE END
@@ -140,9 +140,9 @@ VAR
 
 	BEGIN
 		IF layer.maxx > layer.maxy THEN cells := layer.maxx ELSE cells := layer.maxy END;
-		cellsize := 1 / (cells + 1);  oldx := MAX( INTEGER );
+		cellsize := 1 / (cells + 1);  oldx := MAX( SIGNED16 );
 		FOR i := 0 TO layer.n.dim - 1 DO
-			IF layer.n.par[i] # MIN( LONGREAL ) THEN
+			IF layer.n.par[i] # MIN( FLOAT64 ) THEN
 				FOR j := 0 TO layer.n.count[i] - 1 DO
 					IF InCell( layer.n.x[i, j], layer.n.y[i, j], event.x, event.y ) THEN
 						origx := event.x;  origy := event.y;  gesture := event.gesture;
@@ -171,10 +171,10 @@ VAR
 	END Select;
 
 	PROCEDURE Wheel( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR cells: LONGINT;  cellsize: LONGREAL;  i, j: LONGINT;  origx, origy: INTEGER;  gesture: INTEGER;  oldx: INTEGER;  add, val: LONGREAL;
+	VAR cells: SIGNED32;  cellsize: FLOAT64;  i, j: SIGNED32;  origx, origy: SIGNED16;  gesture: SIGNED16;  oldx: SIGNED16;  add, val: FLOAT64;
 
-		PROCEDURE InCell( x, y: LONGINT;  cx, cy: INTEGER ): BOOLEAN;
-		VAR rx, ry, rw, rh: INTEGER;
+		PROCEDURE InCell( x, y: SIGNED32;  cx, cy: SIGNED16 ): BOOLEAN;
+		VAR rx, ry, rw, rh: SIGNED16;
 		BEGIN
 			vyGraphBase.Rect2dToRect( x * cellsize - cellsize / 2, y * cellsize - cellsize / 2, cellsize, cellsize, rx, ry, rw, rh );
 			IF vyRectangles.PointInRect( cx, cy, rx, ry, rw, rh ) THEN RETURN TRUE ELSE RETURN FALSE END
@@ -182,9 +182,9 @@ VAR
 
 	BEGIN
 		IF layer.maxx > layer.maxy THEN cells := layer.maxx ELSE cells := layer.maxy END;
-		cellsize := 1 / (cells + 1);  oldx := MAX( INTEGER );
+		cellsize := 1 / (cells + 1);  oldx := MAX( SIGNED16 );
 		FOR i := 0 TO layer.n.dim - 1 DO
-			IF layer.n.par[i] # MIN( LONGREAL ) THEN
+			IF layer.n.par[i] # MIN( FLOAT64 ) THEN
 				FOR j := 0 TO layer.n.count[i] - 1 DO
 					IF InCell( layer.n.x[i, j], layer.n.y[i, j], event.x, event.y ) THEN
 						add := layer.max / 20;
@@ -199,7 +199,7 @@ VAR
 	END Wheel;
 
 	PROCEDURE HandleFileMsg( obj: tLayer;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 
 	BEGIN
 		IF msg.id = Objects.load THEN
@@ -342,7 +342,7 @@ VAR
 	END Init;
 
 	PROCEDURE AdjustXY( layer: tLayer );
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 	BEGIN
 		layer.maxx := 0;  layer.maxy := 0;
 		FOR i := 0 TO layer.n.dim - 1 DO
@@ -408,14 +408,14 @@ VAR
 [functionality to make panels easier to understand,  general method would be to kick off parameter (num) beforehand!!]
 *)
 	PROCEDURE ToggleDisable*;
-	VAR layer: tLayer;  l: vyPort.tLayer;  num: LONGINT;
+	VAR layer: tLayer;  l: vyPort.tLayer;  num: SIGNED32;
 	BEGIN
 		l := vyPort.FocusLayer();
 
 		IF (l # NIL ) & (l IS tLayer) THEN
 			layer := l( tLayer );  antsCommands.InitScan( "num=INT" );
 			IF antsCommands.ExpectNumber( "num", num ) THEN
-				IF layer.n.par[num] # MIN( LONGREAL ) THEN layer.n.par[num] := MIN( LONGREAL ) ELSE layer.n.par[num] := 0 END
+				IF layer.n.par[num] # MIN( FLOAT64 ) THEN layer.n.par[num] := MIN( FLOAT64 ) ELSE layer.n.par[num] := 0 END
 			END
 		END
 	END ToggleDisable;

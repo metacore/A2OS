@@ -131,7 +131,7 @@ VAR no, co : TS.NamedObject;
 	s : ARRAY 64 OF CHAR;
 	m : TS.Module;
 	te : TS.ExpressionList;
-	lastpos : LONGINT;
+	lastpos : SIGNED32;
 BEGIN
 	first := TRUE;
 	curScope := scope;
@@ -362,7 +362,7 @@ END CheckType;
 
 
 PROCEDURE CheckDeclarations*(d : TS.Scope);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 	last, cur : TS.NamedObject;
 BEGIN
 	IF d = NIL THEN RETURN END;

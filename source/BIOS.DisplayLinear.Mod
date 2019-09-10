@@ -18,8 +18,8 @@ IMPORT SYSTEM, Machine, KernelLog, MemCache, Displays, Strings, Commands, Option
 VAR
 	d: Displays.Display;
 
-PROCEDURE GetVal(name: ARRAY OF CHAR;  default: LONGINT): LONGINT;
-VAR v: LONGINT;  s: ARRAY 10 OF CHAR;  p: SIZE;
+PROCEDURE GetVal(name: ARRAY OF CHAR;  default: SIGNED32): SIGNED32;
+VAR v: SIGNED32;  s: ARRAY 10 OF CHAR;  p: SIZE;
 BEGIN
 	Machine.GetConfig(name, s);
 	IF s[0] = 0X THEN
@@ -41,7 +41,7 @@ BEGIN
 END Install;
 
 PROCEDURE InitPalette;
-VAR col: LONGINT; ch: CHAR;
+VAR col: SIGNED32; ch: CHAR;
 BEGIN
 	Machine.Portin8(3DAH, ch);
 	Machine.Portout8(3C0H, 11X);
@@ -49,14 +49,14 @@ BEGIN
 	Machine.Portout8(3C0H, 20X);
 	FOR col := 0 TO 255 DO
 		Machine.Portout8(3C8H, CHR(col));
-		Machine.Portout8(3C9H, CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, col) * {5..7}) DIV 4));
-		Machine.Portout8(3C9H, CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(col, 7-4)) * {5..7}) DIV 4));
-		Machine.Portout8(3C9H, CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(col, 7-1)) * {6..7}) DIV 4))
+		Machine.Portout8(3C9H, CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, col) * {5..7}) DIV 4));
+		Machine.Portout8(3C9H, CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(col, 7-4)) * {5..7}) DIV 4));
+		Machine.Portout8(3C9H, CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(col, 7-1)) * {6..7}) DIV 4))
 	END
 END InitPalette;
 
 PROCEDURE Init;
-VAR w, h, f, mem: LONGINT; res: WORD; ts : ARRAY 16 OF CHAR; padr, vadr: ADDRESS;
+VAR w, h, f, mem: SIGNED32; res: INTEGER; ts : ARRAY 16 OF CHAR; padr, vadr: ADDRESS;
 BEGIN
 	w := GetVal("DWidth", 1024); h := GetVal("DHeight", 768);
 	CASE GetVal("DDepth", 16) DIV 8 OF
@@ -70,7 +70,7 @@ BEGIN
 		mem := 512*1024;
 		WHILE w*h*f >= mem DO mem := mem*2 END
 	END;
-	Machine.GetInit(1, SYSTEM.VAL(LONGINT,padr));	(* DX:CX from Init code *)
+	Machine.GetInit(1, SYSTEM.VAL(SIGNED32,padr));	(* DX:CX from Init code *)
 	ASSERT((padr # 0) & (padr MOD 4096 = 0));
 	IF GetVal("DCache", 1) = 1 THEN
 		MemCache.GlobalSetCacheProperties(padr, mem, MemCache.WC, res);

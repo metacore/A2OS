@@ -4,10 +4,10 @@ MODULE SystemVersion; (** AUTHOR "Patrick Hunziker"; PURPOSE "unequivocally iden
 IMPORT
 	Modules, CRC, KernelLog;
 
-	VAR	BootCRC-: LONGINT;
+	VAR	BootCRC-: SIGNED32;
 
 	(* combined CRC of those Kernel Modules that loaded at this point in time.	 *)
-	PROCEDURE GetKernelCRC*():LONGINT;
+	PROCEDURE GetKernelCRC*():SIGNED32;
 	VAR m:Modules.Module; crc: CRC.CRC32;
 	BEGIN
 		NEW(crc);
@@ -29,7 +29,7 @@ IMPORT
 	END GetKernelCRC;
 
 
-	PROCEDURE GetKernelDate(CONST name: ARRAY OF CHAR; VAR d,t: LONGINT): BOOLEAN;
+	PROCEDURE GetKernelDate(CONST name: ARRAY OF CHAR; VAR d,t: SIGNED32): BOOLEAN;
 	BEGIN
 		(*! TBD*)
 		d:=0; t:=0; RETURN FALSE;

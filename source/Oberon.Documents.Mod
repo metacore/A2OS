@@ -38,19 +38,19 @@ TYPE
 		name*: ARRAY 128 OF CHAR;	(** Document name. *)
 		Load*: PROCEDURE (D: Document);	(** Load document contents from disk. *)
 		Store*: PROCEDURE (D: Document);	(** Store document contents to disk. *)
-		time: LONGINT
+		time: SIGNED32
 	END;
 
 	(** Find out what document is located at X, Y on the display. *)
 	LocateMsg* = RECORD (Display.FrameMsg)
 		doc*: Document;	(** Result, NIL if no document found. *)
-		X*, Y*: INTEGER;
+		X*, Y*: SIGNED16;
 	END;
 
 VAR
-	Id*: INTEGER;	(** 07F7H little-endian magic number/flag identifying document files. *)
+	Id*: SIGNED16;	(** 07F7H little-endian magic number/flag identifying document files. *)
 	historyHook*: PROCEDURE (VAR D: Document); (** Called for each document opened. *)
-	reg: INTEGER;
+	reg: SIGNED16;
 	DocExt: ARRAY MaxDocTypes, 32 OF CHAR;
 	DocNewProc: ARRAY MaxDocTypes, 64 OF CHAR;
 	DocService: ARRAY MaxDocTypes OF BOOLEAN;
@@ -67,7 +67,7 @@ VAR
 *)
 
 PROCEDURE LoadAttachments*(VAR R: Files.Rider; VAR attr: Attributes.Attr; VAR link: Links.Link);
-VAR len: LONGINT; F: Files.File; ch: CHAR; lib: Objects.Library;
+VAR len: SIGNED32; F: Files.File; ch: CHAR; lib: Objects.Library;
 BEGIN
 	F := Files.Base(R);
 	Files.Read(R, ch); ASSERT(ch = 08X);
@@ -81,7 +81,7 @@ BEGIN
 END LoadAttachments;
 
 PROCEDURE StoreAttachments*(VAR R: Files.Rider; attr: Attributes.Attr; link: Links.Link);
-VAR r: Files.Rider; F: Files.File; patch, len: LONGINT; lib: Objects.Library; M: Objects.BindMsg;
+VAR r: Files.Rider; F: Files.File; patch, len: SIGNED32; lib: Objects.Library; M: Objects.BindMsg;
 BEGIN
 	F := Files.Base(R);
 
@@ -102,7 +102,7 @@ END StoreAttachments;
 (* How to skip attachments:
 
 	PROCEDURE SkipAttachments(VAR R: Files.Rider);
-	VAR F: Files.File; len: LONGINT;
+	VAR F: Files.File; len: SIGNED32;
 	BEGIN
 		F := Files.Base(R);
 		Files.Read(R, ch); ASSERT(ch = 08X);
@@ -114,7 +114,7 @@ END StoreAttachments;
 (* ================ Loading of Document types ================= *)
 
 PROCEDURE SplitName (VAR name, MName, PName: ARRAY OF CHAR);
-VAR i, j: INTEGER;
+VAR i, j: SIGNED16;
 BEGIN i := 0;
 	WHILE name[i] # "." DO MName[i] := name[i]; INC(i) END;
 	MName[i] := 0X; INC(i); j := 0;
@@ -148,7 +148,7 @@ END generic;
 
 PROCEDURE Generic(name: ARRAY OF CHAR; VAR loaderror: BOOLEAN): Document;
 VAR D: Document; newproc: ARRAY 64 OF CHAR;
-	F: Files.File; R: Files.Rider; tag: INTEGER;
+	F: Files.File; R: Files.Rider; tag: SIGNED16;
 BEGIN
 	D := NIL; loaderror := FALSE;
 	F := Files.Old(name);
@@ -172,7 +172,7 @@ END Cap;
 
 (** Open the give document with name name. NIL is returned on failure. Unknown document types are opened as text documents. *)
 PROCEDURE Open*(name: ARRAY OF CHAR): Document;
-VAR i, j, colonpos, dotpos: INTEGER; ext: ARRAY 64 OF CHAR; D: Document;
+VAR i, j, colonpos, dotpos: SIGNED16; ext: ARRAY 64 OF CHAR; D: Document;
 	loaderror: BOOLEAN;
 BEGIN
 	COPY(name, errMsg); Strings.AppendCh(errMsg, " ");
@@ -226,7 +226,7 @@ BEGIN
 END Open;
 
 PROCEDURE Register(ext, newproc: ARRAY OF CHAR; service: BOOLEAN);
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN
 	i := 0; WHILE ext[i] # 0X DO ext[i] := Cap(ext[i]); INC(i) END;
 	i := 0;
@@ -286,8 +286,8 @@ BEGIN
 	END
 END SetMainMask;
 
-PROCEDURE ToMain(F: Document; ox, oy: INTEGER; VAR M: Display.FrameMsg);
-VAR Mdlink, Fdlink: Objects.Object; tx, ty: INTEGER;
+PROCEDURE ToMain(F: Document; ox, oy: SIGNED16; VAR M: Display.FrameMsg);
+VAR Mdlink, Fdlink: Objects.Object; tx, ty: SIGNED16;
 BEGIN
 	IF F.dsc # NIL THEN
 		tx := M.x; ty := M.y; M.x := ox; M.y := oy;
@@ -310,7 +310,7 @@ END Absolute;
 
 (* new *)
 PROCEDURE AdjustDocument(F: Document; VAR M: Display.ModifyMsg);
-VAR A: Display.ModifyMsg; old, x, y, w, h: INTEGER; R: Display3.Mask;
+VAR A: Display.ModifyMsg; old, x, y, w, h: SIGNED16; R: Display3.Mask;
 BEGIN
 	IF Absolute(M.dlink) (*TRUE (* 31 IN F.state *) *) THEN (* in viewer system, may optimize *)
 		old := M.mode; M.mode := Display.state; Gadgets.framehandle(F, M); M.mode := old;
@@ -364,11 +364,11 @@ BEGIN
 	END
 END check;
 
-PROCEDURE RestoreDocument(F: Document; R: Display3.Mask; ox, oy, x, y, w, h: INTEGER; VAR M: Display.DisplayMsg);
+PROCEDURE RestoreDocument(F: Document; R: Display3.Mask; ox, oy, x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg);
 VAR D: Display.DisplayMsg;
 
-	PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-	VAR r, t, r1, t1: INTEGER;
+	PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+	VAR r, t, r1, t1: SIGNED16;
 	BEGIN
 		r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 		IF x < x1 THEN x := x1 END;
@@ -487,7 +487,7 @@ BEGIN
 END HandleSelect;
 
 PROCEDURE Handler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: Document; R: Display3.Mask;
+VAR x, y, w, h: SIGNED16; F0: Document; R: Display3.Mask;
 	N: Oberon.ControlMsg; tmp: SET; tM: Display.DisplayMsg;
 	obj: Objects.Object; keys: SET; (*fof*)
 BEGIN
@@ -760,7 +760,7 @@ All documents are provided with a standard header on disk so that they can be re
 	Tag DocumentGeneratorProcedure X Y W H.
 	Tag = 0F7X 07X.
 	DocumentGeneratorProcedure = {alpha} 0X.		(* Generator name *)
-	X, Y, W, H = INTEGER.				(* Prefered document position and size. *)
+	X, Y, W, H = SIGNED16.				(* Prefered document position and size. *)
 
 The document header is followed by the byte stream content of the document. DocumentGeneratorProcedure is called by Documents.Open to create an empty instance of the document gadget, which is then filled by a call to the Load method (as described above). To provide compatibility with the non-Oberon world that does not use such an identification header, an internal table of the Documents module pairs file extensions with document generator procedures. Should no document header be present, the file extension is used to file the (hopefully) correct document generator. The Load method of this document must then load the headerless file. It is allowed (but not recommended) to store a document without a header, should the extension table be set up correctly. The extension table can be extended by adding an entry to the Documents section of the Oberon registry. Eeach entry is a "Extension=Generator" pair.
 

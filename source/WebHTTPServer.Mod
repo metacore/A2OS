@@ -43,7 +43,7 @@ TYPE
 		(** default LocateResource method *)
 		PROCEDURE LocateResource*(host: Host; VAR header: WebHTTP.RequestHeader; VAR reply: WebHTTP.ResponseHeader; VAR f: Files.File);
 		VAR
-			name, ext: Files.FileName; i, d, t: LONGINT; modsince: ARRAY 32 OF CHAR;
+			name, ext: Files.FileName; i, d, t: SIGNED32; modsince: ARRAY 32 OF CHAR;
 			path : ARRAY 1024 OF CHAR;
 
 			PROCEDURE Add(CONST s: ARRAY OF CHAR);
@@ -137,7 +137,7 @@ TYPE
 
 				IF (reply.statuscode = WebHTTP.OK) OR (reply.statuscode = WebHTTP.NotFound) THEN
 					IF (f # NIL) THEN
-						reply.contentlength := f.Length()(LONGINT);
+						reply.contentlength := f.Length()(SIGNED32);
 						WebHTTP.SendResponseHeader(reply, out);
 						IF (request.method = WebHTTP.GetM) THEN
 							Files.OpenReader(fr, f, 0);
@@ -178,12 +178,12 @@ TYPE
 
 	Statistics = OBJECT
 	VAR
-		bucket : LONGINT;
-		secondBuckets: ARRAY 60 OF LONGINT;
+		bucket : SIGNED32;
+		secondBuckets: ARRAY 60 OF SIGNED32;
 		timer : Kernel.Timer;
-		avg : LONGINT;
+		avg : SIGNED32;
 		alive : BOOLEAN;
-		logCounter: LONGINT;
+		logCounter: SIGNED32;
 
 		PROCEDURE Hit;
 		BEGIN {EXCLUSIVE}
@@ -300,7 +300,7 @@ TYPE
 
 	HTTPAgent = OBJECT (TCPServices.Agent)
 	VAR
-		res: WORD;
+		res: INTEGER;
 		len : SIZE;
 		body, closeRequested: BOOLEAN;
 		out: Streams.Writer; in, inR: Streams.Reader;
@@ -374,7 +374,7 @@ TYPE
 						listenerProc(request, reply);
 					END;
 				ELSE
-					reply.statuscode := LONGINT( res ); (*! result type *)
+					reply.statuscode := SIGNED32( res ); (*! result type *)
 					WebHTTP.WriteStatus(reply, out)
 				END;
 
@@ -408,9 +408,9 @@ VAR
 	hosts : Classes.List;
 	log : AosLog.Log;
 	hitStat : Statistics;
-	nofRequests* : LONGINT;
-	requestsPerMinute* : LONGINT;
-	nofConnects* : LONGINT;
+	nofRequests* : SIGNED32;
+	requestsPerMinute* : SIGNED32;
+	nofConnects* : SIGNED32;
 	defaultHost : Host;
 	defaultPlugin: DefaultPlugin;
 
@@ -420,7 +420,7 @@ VAR
 
 	listener* : ListenerProc;
 
-PROCEDURE GetRequests*():LONGINT;
+PROCEDURE GetRequests*():SIGNED32;
 BEGIN
 	RETURN nofRequests
 END GetRequests;
@@ -462,7 +462,7 @@ BEGIN
 END OpenW3CLog;
 
 PROCEDURE W3CLog(request : WebHTTP.RequestHeader; reply: WebHTTP.ResponseHeader);
-VAR time, date: LONGINT; s: ARRAY 36 OF CHAR;
+VAR time, date: SIGNED32; s: ARRAY 36 OF CHAR;
 BEGIN {EXCLUSIVE}
 	Clock.Get(time, date);
 	logWriter.Date( -1, date); logWriter.Char(Tab);
@@ -533,7 +533,7 @@ BEGIN {EXCLUSIVE}
 END FindHosts;
 
 (** remove the virtual host given by name *)
-PROCEDURE RemoveHost*(CONST host : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE RemoveHost*(CONST host : ARRAY OF CHAR; VAR res : INTEGER);
 VAR i : SIZE; o, h : ANY;
 BEGIN {EXCLUSIVE}
 	hosts.Lock;
@@ -549,7 +549,7 @@ BEGIN {EXCLUSIVE}
 END RemoveHost;
 
 (** Start the basic Server functionality. *)
-PROCEDURE StartHTTP*(root : ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE StartHTTP*(root : ARRAY OF CHAR; CONST logFile: ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 BEGIN {EXCLUSIVE}
 	IF (http = NIL) THEN
 		Strings.Trim(root, " "); defaultHost.SetPrefix(root);
@@ -568,7 +568,7 @@ BEGIN {EXCLUSIVE}
 END StartHTTP;
 
 (** Start the basic Server functionality. *)
-PROCEDURE StartHTTPS*(root : ARRAY OF CHAR; CONST  logFile: ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE StartHTTPS*(root : ARRAY OF CHAR; CONST  logFile: ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 BEGIN {EXCLUSIVE}
 	IF (https = NIL) THEN
 		Strings.Trim(root, " "); defaultHost.SetPrefix(root);
@@ -587,7 +587,7 @@ BEGIN {EXCLUSIVE}
 END StartHTTPS;
 
 (** Stop the server *)
-PROCEDURE StopHTTP*(VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE StopHTTP*(VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 BEGIN {EXCLUSIVE}
 	IF (http # NIL) THEN
 		res := Ok; COPY("", msg);
@@ -600,7 +600,7 @@ BEGIN {EXCLUSIVE}
 END StopHTTP;
 
 (** Stop the server *)
-PROCEDURE StopHTTPS*(VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE StopHTTPS*(VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 BEGIN {EXCLUSIVE}
 	IF (https # NIL) THEN
 		res := Ok; COPY("", msg);
@@ -646,7 +646,7 @@ BEGIN {EXCLUSIVE}
 END ShowHosts;
 
 PROCEDURE Cleanup;
-VAR t: Kernel.Timer; msg : ARRAY 32 OF CHAR; ignore : WORD;
+VAR t: Kernel.Timer; msg : ARRAY 32 OF CHAR; ignore : INTEGER;
 BEGIN
 	hitStat.Kill;
 	StopHTTP(msg, ignore);

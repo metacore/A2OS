@@ -18,8 +18,8 @@ CONST
 TYPE
 	EnhancedHostController = OBJECT (UsbEhci.EnhancedHostController)
 		(* Release the HC ownership semaphore; eecp is the EHCI Extended Capability Pointer *)
-		PROCEDURE ReleaseHcOwnerShip(bus, device, function, eecp : LONGINT);
-		VAR register : LONGINT; res : WORD; usblegsup : SET;
+		PROCEDURE ReleaseHcOwnerShip(bus, device, function, eecp : SIGNED32);
+		VAR register : SIGNED32; res : INTEGER; usblegsup : SET;
 		BEGIN
 			(* 00H: No capability list; > 40H to maintain consistency with PCI header *)
 			IF (eecp > 40H) THEN
@@ -29,7 +29,7 @@ TYPE
 					usblegsup := SYSTEM.VAL(SET, register);
 					IF usblegsup * bRequestOwnership # {} THEN
 						IF Debug.Trace & Debug.traceInit THEN KernelLog.String("UsbEhci: Release HC ownership semaphore... "); END;
-						res := PCI.WriteConfigByte(bus, device, function, eecp + 3, SYSTEM.VAL(LONGINT, LSH(usblegsup - bRequestOwnership, -24)));
+						res := PCI.WriteConfigByte(bus, device, function, eecp + 3, SYSTEM.VAL(SIGNED32, LSH(usblegsup - bRequestOwnership, -24)));
 						ASSERT(res = PCI.Done);
 					END;
 				END;
@@ -54,20 +54,20 @@ TYPE
 	 * @param iobase Virtual I/O base address of the HC
 	 * @return TRUE, if system software taken over the HC, false otherwise
 	 *)
-	PROCEDURE GetHcOwnerShip(bus, device, function: LONGINT; iobase : ADDRESS) : BOOLEAN;
+	PROCEDURE GetHcOwnerShip(bus, device, function: SIGNED32; iobase : ADDRESS) : BOOLEAN;
 	CONST
 		MaxWaits = 1000; (* Timeout for pre-OS to system software HC handoff [ms], not specified by EHCIspec *)
 	VAR
 		timer : Kernel.Timer;
 		usblegsup : SET;
-		eecp, reg, waits : LONGINT; res: WORD;
+		eecp, reg, waits : SIGNED32; res: INTEGER;
 		hcOwnedByOS : BOOLEAN;
 	BEGIN
 		(* Get the HC Capabilities Parameters register *)
 		reg := SYSTEM.GET32(iobase + UsbEhci.HcCapCparams);
 
 		(* Get the EHCI Extended Capabilities Pointer (EECP) *)
-		eecp := SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, reg) * {8..15}, - 8));
+		eecp := SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, reg) * {8..15}, - 8));
 
 		(* 00H: No capability list; > 40H to maintain consistency with PCI header *)
 		IF eecp > 40H THEN
@@ -86,12 +86,12 @@ TYPE
 					(* clear the bRequestOwnership bit now 																		*)
 					IF usblegsup * bRequestOwnership # {} THEN
 						KernelLog.Enter; KernelLog.String("UsbEhci: Warning: controller already owns HC."); KernelLog.Exit;
-						res := PCI.WriteConfigByte(bus, device, function, eecp + 3, SYSTEM.VAL(LONGINT, LSH(usblegsup - bRequestOwnership, -24)));
+						res := PCI.WriteConfigByte(bus, device, function, eecp + 3, SYSTEM.VAL(SIGNED32, LSH(usblegsup - bRequestOwnership, -24)));
 						ASSERT(res = PCI.Done);
 					END;
 
 					(* Set HC OS Owned Semaphore to indicate that we (want to) control the host controller... *)
-					res := PCI.WriteConfigByte(bus, device, function, eecp + 3, SYSTEM.VAL(LONGINT, LSH(usblegsup + bRequestOwnership, -24)));
+					res := PCI.WriteConfigByte(bus, device, function, eecp + 3, SYSTEM.VAL(SIGNED32, LSH(usblegsup + bRequestOwnership, -24)));
 
 					hcOwnedByOS := FALSE; waits := 0; NEW(timer);
 					WHILE ~hcOwnedByOS & (res = PCI.Done) & (waits < MaxWaits) DO
@@ -134,12 +134,12 @@ TYPE
 		PCIStatusErrorMask = {24,27,28,29,30,31};
 	VAR
 		hostController : EnhancedHostController;
-		bus, device, function : LONGINT;
-		iobasePhys, irq : LONGINT;
+		bus, device, function : SIGNED32;
+		iobasePhys, irq : SIGNED32;
 		iobaseVirt: ADDRESS;
-		pciCmdStsReg, sbrn  : LONGINT;
-		index : LONGINT;
-		res: WORD;
+		pciCmdStsReg, sbrn  : SIGNED32;
+		index : SIGNED32;
+		res: INTEGER;
 	BEGIN
 		IF Debug.Trace & Debug.traceInit THEN KernelLog.String("UsbEhci: Looking for PCI Enhanced USB Host Controllers..."); KernelLog.Ln; END;
 		(* Traverse all USB EHCI Host Controllers of all PCI busses in the system *)
@@ -163,7 +163,7 @@ TYPE
 				ELSIF irq = 0 THEN
 					KernelLog.String("UsbEhci: Error: Please enable interrupts for all USB Host Controllers."); KernelLog.Ln;
 				ELSE
-					iobasePhys := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, iobasePhys) * {4..31});
+					iobasePhys := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, iobasePhys) * {4..31});
 					(* Check the Serial Bus Release Number; 20H expected *)
 					res := PCI.ReadConfigDword(bus, device, function, 60H, sbrn); ASSERT(res = PCI.Done);
 

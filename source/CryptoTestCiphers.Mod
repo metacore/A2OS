@@ -6,7 +6,7 @@ IMPORT
 	PROCEDURE  Ecb1*(context : Commands.Context);
 		VAR
 			hex, bindata, binkey, modname, orig: ARRAY 64 + 1 OF CHAR; cipher: Ciphers.Cipher;
-			keybits: LONGINT;
+			keybits: SIGNED32;
 	BEGIN
 		(* read in the parameter *)
 		context.arg.SkipWhitespace; context.arg.String(modname);
@@ -36,7 +36,7 @@ IMPORT
 	PROCEDURE  Cbc1*(context : Commands.Context);
 		VAR
 			hex, bindata, binkey, modname, iv, orig: ARRAY 2 * 64 + 1 OF CHAR; cipher: Ciphers.Cipher;
-			keybits: LONGINT;
+			keybits: SIGNED32;
 	BEGIN
 		(* read in the parameter *)
 		context.arg.SkipWhitespace; context.arg.String(modname);
@@ -70,7 +70,7 @@ IMPORT
 	PROCEDURE  Ctr1*(context : Commands.Context);
 		VAR
 			hex, bindata, binkey, modname, iv, orig: ARRAY 64 OF CHAR; cipher: Ciphers.Cipher;
-			keybits: LONGINT;
+			keybits: SIGNED32;
 	BEGIN
 		(* read in the parameter *)
 		context.arg.SkipWhitespace; context.arg.String(modname);
@@ -103,7 +103,7 @@ IMPORT
 
 
 	(** encrypt input with key (ebc-mode). output is a testvector *)
-	PROCEDURE  Ecb2*( CONST modname, input, output, key: ARRAY OF CHAR; datalen, keybits: LONGINT );
+	PROCEDURE  Ecb2*( CONST modname, input, output, key: ARRAY OF CHAR; datalen, keybits: SIGNED32 );
 		VAR
 			cipher: Ciphers.Cipher;
 			temp1, temp2: ARRAY 256 OF CHAR;
@@ -127,7 +127,7 @@ IMPORT
 	END Ecb2;
 
 	(** encrypt input with key (cbc-mode). output is a testvector *)
-	PROCEDURE  Cbc2*( CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: LONGINT );
+	PROCEDURE  Cbc2*( CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32 );
 		VAR
 			cipher: Ciphers.Cipher;
 			temp1, temp2: ARRAY 64 OF CHAR;
@@ -153,7 +153,7 @@ IMPORT
 	END Cbc2;
 
 	(** decrypt input with key (cbc-mode). output is a testvector *)
-	PROCEDURE DecryptCbc2*(CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: LONGINT);
+	PROCEDURE DecryptCbc2*(CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32);
 		VAR
 			cipher: Ciphers.Cipher;
 			temp1, temp2: ARRAY 64 OF CHAR;
@@ -179,7 +179,7 @@ IMPORT
 	END DecryptCbc2;
 
 	(** encrypt input with key (counter-mode). output is a testvector *)
-	PROCEDURE  Ctr2*( CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: LONGINT );
+	PROCEDURE  Ctr2*( CONST modname, input, output, key, iv: ARRAY OF CHAR; datalen, keybits: SIGNED32 );
 		VAR
 			cipher: Ciphers.Cipher;
 			temp1, temp2: ARRAY 64 OF CHAR;
@@ -208,7 +208,7 @@ IMPORT
 		VAR
 			buf, key: ARRAY 1024 OF CHAR;
 			milliTimer : Kernel.MilliTimer;
-			i, j, k, t, keybits: LONGINT;
+			i, j, k, t, keybits: SIGNED32;
 			c: Ciphers.Cipher;
 			modname, mode, iv: ARRAY 64 OF CHAR;
 	BEGIN
@@ -365,7 +365,7 @@ IMPORT
 	PROCEDURE  CbcRandom*(context : Commands.Context);
 		VAR
 			bindata, binkey, modname, iv, orig: ARRAY 2 * 64 + 1 OF CHAR; cipher: Ciphers.Cipher;
-			keybits: LONGINT;
+			keybits: SIGNED32;
 	BEGIN
 		(* read in the parameter *)
 		context.arg.SkipWhitespace; context.arg.String(modname);

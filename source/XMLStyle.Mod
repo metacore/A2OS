@@ -78,7 +78,7 @@ VAR left, right: SIZE; elem: SelectorRuleSet;
 	VAR i, j: SIZE; elem: SelectorRuleSet;
 
 		PROCEDURE Less(VAR elem1, elem2: SelectorRuleSet): BOOLEAN;
-		VAR a1, a2, b1, b2, c1, c2: LONGINT;
+		VAR a1, a2, b1, b2, c1, c2: SIGNED32;
 		BEGIN
 			elem1.selector.GetSpecifity(a1, b1, c1); elem2.selector.GetSpecifity(a2, b2, c2);
 			RETURN (a1 < a2) OR ((a1 = a2) & (b1 < b2)) OR ((a1 = a2) & (b1 = b2) & (c1 < c2))
@@ -172,7 +172,7 @@ END MatchSimpleSelector;
 
 PROCEDURE MatchSubSelector(elem: XML.Element; subSelector: CSS2.SubSelector;
 		propChanger: XMLComponents.PropertyChanger; VAR hasDynamic: BOOLEAN): BOOLEAN;
-VAR s1, s2: String; rel: SHORTINT; attribute: XML.Attribute;
+VAR s1, s2: String; rel: SIGNED8; attribute: XML.Attribute;
 BEGIN
 	IF subSelector IS CSS2.Id THEN
 		s1 := elem.GetId(); s2 := subSelector(CSS2.Id).GetValue();

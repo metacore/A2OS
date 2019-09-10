@@ -14,16 +14,16 @@ TYPE
 	Target = POINTER TO TargetNode;
 
 	StateNode = RECORD         (*state of finite automaton*)
-		nr: INTEGER;  (*state number*)
+		nr: SIGNED16;  (*state number*)
 		firstAction: Action;   (*to first action of this state*)
-		endOf: INTEGER;  (*nr. of recognized token if state is final*)
+		endOf: SIGNED16;  (*nr. of recognized token if state is final*)
 		ctx: BOOLEAN;  (*TRUE: state reached by contextTrans*)
 		next: State
 	END;
 	ActionNode = RECORD    (*action of finite automaton*)
-		typ: INTEGER;       (*type of action symbol: char, class*)
-		sym: INTEGER;       (*action symbol*)
-		tc: INTEGER;       (*transition code: normTrans, contextTrans*)
+		typ: SIGNED16;       (*type of action symbol: char, class*)
+		sym: SIGNED16;       (*action symbol*)
+		tc: SIGNED16;       (*transition code: normTrans, contextTrans*)
 		target: Target;        (*states after transition with input symbol*)
 		next: Action;
 	END;
@@ -51,15 +51,15 @@ VAR
 	firstState: State;
 	lastState:    State;      (* last allocated state  *)
 	rootState:    State;      (* start state of DFA    *)
-	lastSimState: INTEGER;      (* last non melted state *)
-	stateNr: INTEGER;  (*number of last allocated state*)
+	lastSimState: SIGNED16;      (* last non melted state *)
+	stateNr: SIGNED16;  (*number of last allocated state*)
 	firstMelted:  Melted;       (* list of melted states *)
 	firstComment: Comment;      (* list of comments      *)
 	out: Texts.Writer;  (* current output *)
 	fram: Texts.Reader;  (* scanner frame input *)
 
 
-PROCEDURE SemErr(nr: INTEGER);
+PROCEDURE SemErr(nr: SIGNED16);
 BEGIN CRS.Error(200+nr, CRS.pos)
 END SemErr;
 
@@ -67,7 +67,7 @@ PROCEDURE Put(ch: CHAR);
 BEGIN Texts.Write(out, ch) END Put;
 
 PROCEDURE PutS(s: ARRAY OF CHAR);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN i := 0;
 	WHILE (i < LEN(s)) & (s[i] # 0X) DO
 		IF s[i] = "$" THEN Texts.WriteLn(out) ELSE Texts.Write(out, s[i]) END;
@@ -75,10 +75,10 @@ BEGIN i := 0;
 	END
 END PutS;
 
-PROCEDURE PutI(i: INTEGER);
+PROCEDURE PutI(i: SIGNED16);
 BEGIN Texts.WriteInt(out, i, 0) END PutI;
 
-PROCEDURE PutI2(i, n: INTEGER);
+PROCEDURE PutI2(i, n: SIGNED16);
 BEGIN Texts.WriteInt(out, i, n) END PutI2;
 
 PROCEDURE PutC(ch: CHAR);
@@ -89,7 +89,7 @@ BEGIN
 END PutC;
 
 PROCEDURE PutRange(s: CRT.Set);
-	VAR lo, hi: ARRAY 32 OF CHAR; top, i: INTEGER; s1: CRT.Set;
+	VAR lo, hi: ARRAY 32 OF CHAR; top, i: SIGNED16; s1: CRT.Set;
 BEGIN
 	(*----- fill lo and hi *)
 	top := -1; i := 0;
@@ -124,8 +124,8 @@ BEGIN
 	PutS("(ch ="); PutC(ch); Put(")")
 END PutChCond;
 
-PROCEDURE Length*(s: ARRAY OF CHAR): INTEGER;
-	VAR i: INTEGER;
+PROCEDURE Length*(s: ARRAY OF CHAR): SIGNED16;
+	VAR i: SIGNED16;
 BEGIN
 	i:=0; WHILE (i < LEN(s)) & (s[i] # 0X) DO INC(i) END;
 	RETURN i
@@ -216,7 +216,7 @@ BEGIN
 END NewState;
 
 
-PROCEDURE NewTransition(from, to: State; typ, sym, tc: INTEGER);
+PROCEDURE NewTransition(from, to: State; typ, sym, tc: SIGNED16);
 	VAR a: Action; t: Target;
 BEGIN
 	IF to = firstState THEN SemErr(21) END;
@@ -226,11 +226,11 @@ BEGIN
 END NewTransition;
 
 
-PROCEDURE NewComment*(from, to: INTEGER; nested: BOOLEAN);
+PROCEDURE NewComment*(from, to: SIGNED16; nested: BOOLEAN);
 	VAR com: Comment;
 
-	PROCEDURE MakeStr(gp: INTEGER; VAR s: ARRAY OF CHAR);
-		VAR i, n: INTEGER; gn: CRT.GraphNode; set: CRT.Set;
+	PROCEDURE MakeStr(gp: SIGNED16; VAR s: ARRAY OF CHAR);
+		VAR i, n: SIGNED16; gn: CRT.GraphNode; set: CRT.Set;
 	BEGIN
 		i := 0;
 		WHILE gp # 0 DO
@@ -265,7 +265,7 @@ END MakeSet;
 
 
 PROCEDURE ChangeAction(a: Action; set: CRT.Set);
-VAR nr: INTEGER;
+VAR nr: SIGNED16;
 BEGIN
 	IF Sets.Elements(set, nr) = 1 THEN a^.typ := CRT.char; a^.sym := nr
 	ELSE
@@ -363,11 +363,11 @@ BEGIN
 END DeleteRedundantStates;
 
 
-PROCEDURE ConvertToStates*(gp0, sp: INTEGER);
+PROCEDURE ConvertToStates*(gp0, sp: SIGNED16);
 (*note: gn.line is abused as a state number!*)
-	VAR n: INTEGER; S: ARRAY maxStates OF State;
+	VAR n: SIGNED16; S: ARRAY maxStates OF State;
 
-	PROCEDURE TheState(gp: INTEGER): State;
+	PROCEDURE TheState(gp: SIGNED16): State;
 		VAR state: State; gn: CRT.GraphNode;
 	BEGIN
 		IF gp = 0 THEN state := NewState(); state.endOf := sp; RETURN state
@@ -375,7 +375,7 @@ PROCEDURE ConvertToStates*(gp0, sp: INTEGER);
 		END
 	END TheState;
 
-	PROCEDURE Step(from: State; gp: INTEGER);
+	PROCEDURE Step(from: State; gp: SIGNED16);
 		VAR gn: CRT.GraphNode;
 	BEGIN
 		IF gp = 0 THEN RETURN END;
@@ -387,7 +387,7 @@ PROCEDURE ConvertToStates*(gp0, sp: INTEGER);
 		END
 	END Step;
 
-	PROCEDURE FindTrans(gp: INTEGER; state: State);
+	PROCEDURE FindTrans(gp: SIGNED16; state: State);
 		VAR gn: CRT.GraphNode; new: BOOLEAN;
 	BEGIN
 		IF gp = 0 THEN RETURN END;  (*end of graph*)
@@ -414,8 +414,8 @@ BEGIN
 END ConvertToStates;
 
 
-PROCEDURE MatchDFA* (s: ARRAY OF CHAR; sp: INTEGER; VAR matchedSp: INTEGER);
-	VAR state, to: State; a: Action; i, len: INTEGER;
+PROCEDURE MatchDFA* (s: ARRAY OF CHAR; sp: SIGNED16; VAR matchedSp: SIGNED16);
+	VAR state, to: State; a: Action; i, len: SIGNED16;
 BEGIN (*s with quotes*)
 	state := firstState; i := 1; len := Length(s) - 1;
 	LOOP (*try to match s against existing DFA*)
@@ -437,7 +437,7 @@ END MatchDFA;
 PROCEDURE SplitActions(a, b: Action);
 VAR c: Action; seta, setb, setc: CRT.Set;
 
-	PROCEDURE CombineTransCodes(t1, t2: INTEGER; VAR result:INTEGER);
+	PROCEDURE CombineTransCodes(t1, t2: SIGNED16; VAR result:SIGNED16);
 	BEGIN
 		IF t1 = CRT.contextTrans THEN result := t1 ELSE result := t2 END
 	END CombineTransCodes;
@@ -509,13 +509,13 @@ PROCEDURE MeltStates(state: State; VAR correct:BOOLEAN);
 VAR
 	action:  Action;
 	ctx:     BOOLEAN;
-	endOf:   INTEGER;
+	endOf:   SIGNED16;
 	melt:    Melted;
 	set:     CRT.Set;
 	s:      State;
 	changed: BOOLEAN;
 
-	PROCEDURE AddMeltedSet(nr: INTEGER; VAR set: CRT.Set);
+	PROCEDURE AddMeltedSet(nr: SIGNED16; VAR set: CRT.Set);
 	VAR m: Melted;
 	BEGIN
 		m := firstMelted;
@@ -524,8 +524,8 @@ VAR
 		Sets.Unite(set, m^.set);
 	END AddMeltedSet;
 
-	PROCEDURE GetStateSet(t: Target; VAR set: CRT.Set; VAR endOf: INTEGER; VAR ctx:BOOLEAN);
-	VAR statenr: INTEGER; (*lastS: State;*)
+	PROCEDURE GetStateSet(t: Target; VAR set: CRT.Set; VAR endOf: SIGNED16; VAR ctx:BOOLEAN);
+	VAR statenr: SIGNED16; (*lastS: State;*)
 	BEGIN
 		Sets.Clear(set); endOf := CRT.noSym; ctx := FALSE; (*lastS := NIL;*)
 		WHILE t # NIL DO
@@ -630,8 +630,8 @@ BEGIN
 END MakeDeterministic;
 
 
-PROCEDURE PrintSymbol(typ, val, width: INTEGER);
-VAR name: CRT.Name; len: INTEGER;
+PROCEDURE PrintSymbol(typ, val, width: SIGNED16);
+VAR name: CRT.Name; len: SIGNED16;
 BEGIN
 	IF typ = CRT.class THEN
 		CRT.GetClassName(val, name); PutS(name); len := Length(name)
@@ -645,7 +645,7 @@ END PrintSymbol;
 
 
 PROCEDURE PrintStates*;
-VAR action: Action; first: BOOLEAN; state: State; i: INTEGER; targ: Target; set: CRT.Set; name: CRT.Name;
+VAR action: Action; first: BOOLEAN; state: State; i: SIGNED16; targ: Target; set: CRT.Set; name: CRT.Name;
 BEGIN
 	PutS("$-------- states ---------$");
 	state := firstState;
@@ -733,7 +733,7 @@ BEGIN
 
 
 PROCEDURE CopyFramePart (stopStr: ARRAY OF CHAR); (*Copy from file <fram> to file <out> until <stopStr>*)
-	VAR ch, startCh: CHAR; i, j, high: INTEGER;
+	VAR ch, startCh: CHAR; i, j, high: SIGNED16;
 BEGIN
 	startCh := stopStr[0]; high := Length(stopStr) - 1; Texts.Read (fram, ch);
 	WHILE ch # 0X DO
@@ -752,9 +752,9 @@ END CopyFramePart;
 
 PROCEDURE GenLiterals;
 	VAR
-		i, j, k: INTEGER;
+		i, j, k: SIGNED16;
 		key: ARRAY 128 OF CRT.Name;
-		knr: ARRAY 128 OF INTEGER;
+		knr: ARRAY 128 OF SIGNED16;
 		ch: CHAR;
 		sn: CRT.SymbolNode;
 BEGIN
@@ -789,7 +789,7 @@ END GenLiterals;
 
 
 PROCEDURE WriteState(state: State);
-	VAR action: Action; first, ctxEnd: BOOLEAN; sn: CRT.SymbolNode; endOf: INTEGER;
+	VAR action: Action; first, ctxEnd: BOOLEAN; sn: CRT.SymbolNode; endOf: SIGNED16;
 		set: CRT.Set;
 BEGIN
 	endOf := state.endOf;
@@ -829,7 +829,7 @@ BEGIN
 END WriteState;
 
 PROCEDURE Backup*(VAR name: ARRAY OF CHAR);
-VAR res, i: INTEGER; bak: ARRAY 64 OF CHAR;
+VAR res, i: SIGNED16; bak: ARRAY 64 OF CHAR;
 BEGIN
 	i := 0;
 	WHILE name[i] # 0X DO
@@ -842,18 +842,18 @@ END Backup;
 PROCEDURE WriteScanner*;
 VAR
 	scanner: ARRAY 32 OF CHAR;
-	startTab: ARRAY 128 OF INTEGER;
+	startTab: ARRAY 128 OF SIGNED16;
 	com:      Comment;
-	i, j, l:  INTEGER;
+	i, j, l:  SIGNED16;
 	gn:       CRT.GraphNode;
 	sn:       CRT.SymbolNode;
 	state: State;
 	t: Texts.Text;
 	f: Files.File;
-	len: LONGINT;
+	len: SIGNED32;
 
 	PROCEDURE FillStartTab;
-		VAR action: Action; i, targetState: INTEGER; class: CRT.Set;
+		VAR action: Action; i, targetState: SIGNED16; class: CRT.Set;
 	BEGIN
 		startTab[0] := stateNr + 1; (*eof*)
 		i := 1; WHILE i < 128 DO startTab[i] := 0; INC(i) END;

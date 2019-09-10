@@ -115,10 +115,10 @@ TYPE
 	END NamedLabelList;
 
 	Result*= RECORD
-		type*: INTEGER; (* ConstantInteger, ConstantFloat, Fixup, Offset *)
+		type*: SIGNED16; (* ConstantInteger, ConstantFloat, Fixup, Offset *)
 		sizeInBits*: SIZE;
-		value*: HUGEINT;
-		valueR*: LONGREAL;
+		value*: SIGNED64;
+		valueR*: FLOAT64;
 		fixup*: BinaryCode.Fixup;
 	END;
 
@@ -128,7 +128,7 @@ TYPE
 	END;
 
 	NamedResultList*=OBJECT
-	VAR first, last: NamedResult; number: LONGINT;
+	VAR first, last: NamedResult; number: SIGNED32;
 
 		PROCEDURE & InitNamedResultList;
 		BEGIN first := NIL; last := NIL; number := 0;
@@ -158,14 +158,14 @@ TYPE
 		errorPosition-: Position;
 		token-: Scanner.Token;
 		scanner: Scanner.AssemblerScanner;
-		orgOffset: LONGINT;
+		orgOffset: SIGNED32;
 		section-: IntermediateCode.Section;
 		code-: BinaryCode.Section;
 		labels: NamedLabelList;
 		results: NamedResultList;
 		scope: SyntaxTree.Scope;
 		module: Sections.Module;
-		pass-: LONGINT;
+		pass-: SIGNED32;
 
 		PROCEDURE &Init*(diagnostics: Diagnostics.Diagnostics);
 		BEGIN
@@ -518,7 +518,7 @@ TYPE
 
 		(* term = Factor { ( "*" | "/" | "%" ) Factor } *)
 		PROCEDURE Term (VAR x: Result; critical: BOOLEAN): BOOLEAN;
-		VAR y: Result; op : LONGINT;
+		VAR y: Result; op : SIGNED32;
 		BEGIN
 			IF Factor (x, critical) THEN
 				WHILE (token.symbol = Scanner.Times) OR (token.symbol = Scanner.Div) OR (token.symbol = Scanner.Mod) DO
@@ -548,7 +548,7 @@ TYPE
 
 		(* Expression = [ "-" | "+" | "~" ] Term { ( "+" | "-" ) Term } *)
 		PROCEDURE Expression*(VAR x: Result; critical: BOOLEAN): BOOLEAN;
-		VAR y: Result; op : LONGINT;
+		VAR y: Result; op : SIGNED32;
 		BEGIN
 			op := token.symbol;
 			IF ThisSymbol(Scanner.Minus) THEN
@@ -604,8 +604,8 @@ TYPE
 		END Expression;
 
 		PROCEDURE Data(CONST ident: ARRAY OF CHAR): BOOLEAN;
-		VAR size,i,nr: LONGINT; x: Result; pos: Position; result: Result; patterns: ObjectFile.FixupPatterns;
-			PROCEDURE Number(ch: CHAR; VAR nr: LONGINT): BOOLEAN;
+		VAR size,i,nr: SIGNED32; x: Result; pos: Position; result: Result; patterns: ObjectFile.FixupPatterns;
+			PROCEDURE Number(ch: CHAR; VAR nr: SIGNED32): BOOLEAN;
 			BEGIN
 				IF (ch >= "0") & (ch <="9") THEN
 					nr := ORD(ch)-ORD("0");
@@ -700,7 +700,7 @@ TYPE
 		END Reserve;
 
 		(** if the assembler is at the last pass: put bits into the binary code section, otherwise only increment the PC **)
-		PROCEDURE PutBitsIfLastPass(data: HUGEINT; size: BinaryCode.Bits);
+		PROCEDURE PutBitsIfLastPass(data: SIGNED64; size: BinaryCode.Bits);
 		VAR
 			oldPC: BinaryCode.Unit;
 		BEGIN
@@ -714,9 +714,9 @@ TYPE
 		END PutBitsIfLastPass;
 
 		PROCEDURE Instruction*(CONST mnemonic: ARRAY OF CHAR);
-		VAR numberOperands: LONGINT;
+		VAR numberOperands: SIGNED32;
 
-			PROCEDURE ParseOperand(pos: Position; numberOperand: LONGINT);
+			PROCEDURE ParseOperand(pos: Position; numberOperand: SIGNED32);
 			(* stub, must be overwritten by implementation *)
 			VAR operand: OperandString;
 				result: Result; first: BOOLEAN; str: ARRAY 256 OF CHAR;
@@ -819,7 +819,7 @@ TYPE
 							ELSIF Reserve(identifier) THEN
 							ELSIF identifier = "fixed" THEN
 								IF ExpectConstantInteger(result,TRUE) THEN
-									code.SetAlignment(TRUE,LONGINT(result.value))
+									code.SetAlignment(TRUE,SIGNED32(result.value))
 								END;
 							ELSIF ~error THEN
 								errorPosition := pos;

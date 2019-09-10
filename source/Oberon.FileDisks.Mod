@@ -14,11 +14,11 @@ TYPE
 	Device = OBJECT (Disks.Device)
 		VAR
 			f: Files.File;
-			size, cyls, hds, spt: LONGINT;
+			size, cyls, hds, spt: SIGNED32;
 			new: BOOLEAN;
 
-		PROCEDURE Transfer*(op, lba, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
-		VAR pos, n: LONGINT; r: Files.Rider;
+		PROCEDURE Transfer*(op, lba, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER);
+		VAR pos, n: SIGNED32; r: Files.Rider;
 		BEGIN
 			ASSERT(ofs = 0);	(* implementation restriction *)
 			IF (op = Disks.Read) OR (op = Disks.Write) THEN
@@ -34,7 +34,7 @@ TYPE
 								r.res := num*SELF.blockSize
 							END;
 							IF r.res # 0 THEN	(* fill rest of block with 0 *)
-								pos := num*SELF.blockSize - r.res + LONGINT(ofs); n := r.res;
+								pos := num*SELF.blockSize - r.res + SIGNED32(ofs); n := r.res;
 								WHILE n # 0 DO data[pos] := 0X; INC(pos); DEC(n) END
 							END;
 							res := Disks.Ok
@@ -56,12 +56,12 @@ TYPE
 			END
 		END Transfer;
 
-		PROCEDURE GetSize*(VAR size, res: LONGINT);
+		PROCEDURE GetSize*(VAR size, res: SIGNED32);
 		BEGIN
 			size := SELF.size; res := Disks.Ok
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Disks.Message; VAR res: WORD);
+		PROCEDURE Handle*(VAR msg: Disks.Message; VAR res: INTEGER);
 		BEGIN
 			IF (msg IS Disks.GetGeometryMsg) & (SELF.cyls > 0) THEN
 				WITH msg: Disks.GetGeometryMsg DO
@@ -76,7 +76,7 @@ TYPE
 
 (** Open a new virtual disk volume in specified file.  If size is specified, a new file of the specified number of blocks is generated.  Afterwards the virtual disk device will be visible with Partitions.Show and can be used like any other device.  The file should preferably be on a boot volume, or otherwise Close must be called before rebooting, to ensure clean shutdown of the virtual device. *)
 PROCEDURE Open*;	(** name [size [cyls hds spt] ] ~ *)
-VAR name: ARRAY 64 OF CHAR; dev: Device; res: WORD;
+VAR name: ARRAY 64 OF CHAR; dev: Device; res: INTEGER;
 BEGIN
 	In.Open; In.Name(name);
 	IF In.Done THEN
@@ -111,7 +111,7 @@ BEGIN
 END Open;
 
 PROCEDURE Unregister(dev: Device);
-VAR n: LONGINT; r: Files.Rider;
+VAR n: SIGNED32; r: Files.Rider;
 BEGIN
 	Disks.registry.Remove(dev);
 	Out.String("Closing "); Out.String(dev.name); Out.Char(" ");

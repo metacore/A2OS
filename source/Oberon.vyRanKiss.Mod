@@ -44,7 +44,7 @@ TYPE
 	tSeed = OBJECT  (* POINTER TO tSeedDesc;
 	tSeedDesc = RECORD (vyRanBase.tSeedDesc)*)
 	(vyRanBase.tSeed)
-	VAR x, y, z, w, carry: LONGINT;
+	VAR x, y, z, w, carry: SIGNED32;
 
 		PROCEDURE  (*VAR seed: tSeedDesc*) Store*( VAR r: Files.Rider );
 		BEGIN
@@ -52,7 +52,7 @@ TYPE
 			Files.WriteLInt( r, SELF.carry )
 		END Store;
 
-		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: INTEGER );
+		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: SIGNED16 );
 		BEGIN
 			IF seedVersion # cSeedVersion THEN HALT( 100 ) END;
 			Files.ReadLInt( r, SELF.x );  Files.ReadLInt( r, SELF.y );  Files.ReadLInt( r, SELF.z );  Files.ReadLInt( r, SELF.w );
@@ -67,8 +67,8 @@ TYPE
 		NEW( seed );  RETURN seed
 	END AllocSeed;
 
-	PROCEDURE Kiss( VAR x, y, z, w, carry: Bits;  count: LONGINT;  VAR nrs: ARRAY OF Bits;  start: LONGINT );
-	VAR j: LONGINT;  k, m: Bits;
+	PROCEDURE Kiss( VAR x, y, z, w, carry: Bits;  count: SIGNED32;  VAR nrs: ARRAY OF Bits;  start: SIGNED32 );
+	VAR j: SIGNED32;  k, m: Bits;
 	BEGIN
 		FOR j := start TO start + count - 1 DO
 			x := 69069 * x + 1;  y := S.VAL( Bits, S.VAL( SET, y ) / S.VAL( SET, LSH( y, sysSHL * 13 ) ) );
@@ -105,7 +105,7 @@ TYPE
 		RETURN dummy[0]
 	END Get;
 
-	PROCEDURE GetV( r: vyRanBase.tRandom;  count: LONGINT;  VAR nrs: ARRAY OF Bits;  start: LONGINT );
+	PROCEDURE GetV( r: vyRanBase.tRandom;  count: SIGNED32;  VAR nrs: ARRAY OF Bits;  start: SIGNED32 );
 	VAR seed: vyRanBase.tSeed;
 	BEGIN
 		seed := r.seed;
@@ -113,9 +113,9 @@ TYPE
 		END
 	END GetV;
 
-	PROCEDURE GetUniform( r: vyRanBase.tRandom ): LONGREAL;
-	CONST posScalefact = 0.5 / MAX( LONGINT );  negScalefact = 0.5 / MIN( LONGINT );
-	VAR seed: vyRanBase.tSeed;  n: LONGINT;
+	PROCEDURE GetUniform( r: vyRanBase.tRandom ): FLOAT64;
+	CONST posScalefact = 0.5 / MAX( SIGNED32 );  negScalefact = 0.5 / MIN( SIGNED32 );
+	VAR seed: vyRanBase.tSeed;  n: SIGNED32;
 		dummy: ARRAY 1 OF Bits;
 	BEGIN
 		seed := r.seed;
@@ -125,14 +125,14 @@ TYPE
 		END
 	END GetUniform;
 
-	PROCEDURE GetL( r: vyRanBase.tRandom;  top: LONGINT ): LONGINT;
-	VAR seed: vyRanBase.tSeed;  n: LONGINT;
+	PROCEDURE GetL( r: vyRanBase.tRandom;  top: SIGNED32 ): SIGNED32;
+	VAR seed: vyRanBase.tSeed;  n: SIGNED32;
 		dummy: ARRAY 1 OF Bits;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
 			Kiss( seed.x, seed.y, seed.z, seed.w, seed.carry, 1, dummy, 0 );  n := dummy[0];
-			IF n < 0 THEN DEC( n, MIN( LONGINT ) ) END;
+			IF n < 0 THEN DEC( n, MIN( SIGNED32 ) ) END;
 			IF top <= 0 THEN RETURN n ELSE RETURN n MOD top END
 		END
 	END GetL;
@@ -264,7 +264,7 @@ TYPE
 		bits := LSH( bits, sysSHL );
 		ASSERT ( bits < 0, 102 );
 
-		ASSERT ( SIZEOF( LONGINT ) = 4, 103 );
+		ASSERT ( SIZEOF( SIGNED32 ) = 4, 103 );
 		ASSERT ( SIZEOF( SET ) = 4, 104 )
 	END DoAsserts;
 

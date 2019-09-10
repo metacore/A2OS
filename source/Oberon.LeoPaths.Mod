@@ -28,15 +28,15 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	TYPE
 		Point* = POINTER TO PointDesc;
 		PointDesc* = RECORD (Leonardo.ShapeDesc)
-			x*, y*: REAL;	(** point coordinates **)
+			x*, y*: FLOAT32;	(** point coordinates **)
 			link*: Leonardo.Shape;	(** shape controlled by point **)
 		END;
 
 		(** message for getting and setting positional shape links **)
 		LinkMsg* = RECORD (Leonardo.LocalizedMsg)
-			id*: SHORTINT;	(** get/set **)
+			id*: SIGNED8;	(** get/set **)
 			done*: BOOLEAN;	(** to be set by receiver **)
-			x*, y*: REAL;	(** coordinates in global space (in/out) **)
+			x*, y*: FLOAT32;	(** coordinates in global space (in/out) **)
 		END;
 
 		LinkAction = POINTER TO LinkActionDesc;
@@ -66,49 +66,49 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		SegmentDesc* = RECORD (Leonardo.ContainerDesc)
 			pen*: LeoPens.Pen;	(** pen for rendering **)
 			closed*: BOOLEAN;	(** set if segment returns to first point after last one **)
-			pred*, succ*: SHORTINT;	(** continuity mode **)
-			boff*, eoff*: REAL;	(** offsets from begin and to end of connected contour **)
-			len*: REAL;	(** segment length **)
+			pred*, succ*: SIGNED8;	(** continuity mode **)
+			boff*, eoff*: FLOAT32;	(** offsets from begin and to end of connected contour **)
+			len*: FLOAT32;	(** segment length **)
 		END;
 
 		(** message for exchanging information between neighboring contours **)
 		ConnectMsg* = RECORD (Leonardo.ShapeMsg)
-			id*: SHORTINT;	(** get/set **)
-			pos*: SHORTINT;	(** start/end **)
-			mode*: SHORTINT;	(** term/coincident/collinear/symmetric **)
+			id*: SIGNED8;	(** get/set **)
+			pos*: SIGNED8;	(** start/end **)
+			mode*: SIGNED8;	(** term/coincident/collinear/symmetric **)
 			done*: BOOLEAN;	(** to be set by receiver **)
-			x*, y*: REAL;	(** position in local space **)
-			dx*, dy*: REAL;	(** direction vector in local space **)
+			x*, y*: FLOAT32;	(** position in local space **)
+			dx*, dy*: FLOAT32;	(** direction vector in local space **)
 		END;
 
 		(** message for updating segment offsets **)
 		ValidateMsg* = RECORD (Leonardo.ShapeMsg)
-			pos*: SHORTINT;	(** start/end **)
-			off*: REAL;	(** start: boff, end: eoff **)
+			pos*: SIGNED8;	(** start/end **)
+			off*: FLOAT32;	(** start: boff, end: eoff **)
 		END;
 
 		(** segment splitting **)
 		SplitMsg* = RECORD (Leonardo.LocalizedMsg)
-			llx*, lly*, urx*, ury*: REAL;	(** split location **)
+			llx*, lly*, urx*, ury*: FLOAT32;	(** split location **)
 		END;
 
 		ModeAction = POINTER TO ModeActionDesc;
 		ModeActionDesc = RECORD (Leonardo.ActionDesc)
 			seg: Segment;
-			mode: SHORTINT;
+			mode: SIGNED8;
 		END;
 
 		(** arc segments **)
 		Arc* = POINTER TO ArcDesc;
 		ArcDesc* = RECORD (SegmentDesc)
-			mode*: SHORTINT;	(** close mode: wedge/segment **)
+			mode*: SIGNED8;	(** close mode: wedge/segment **)
 			mat*: GfxMatrix.Matrix;	(** ellipse specification **)
-			dx0, dy0, dx1, dy1: REAL;
+			dx0, dy0, dx1, dy1: FLOAT32;
 		END;
 
 		ArcData = RECORD (GfxPaths.EnumData)
-			n: LONGINT;
-			dx0, dy0, dx1, dy1: REAL;
+			n: SIGNED32;
+			dx0, dy0, dx1, dy1: FLOAT32;
 		END;
 
 		(** pen for realizing contour into segments **)
@@ -116,8 +116,8 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		PathifierDesc* = RECORD (LeoPens.PenDesc)
 			bot*, top*: Segment;
 			enter: Segment;
-			elem: SHORTINT;
-			x0, y0, x, y: REAL;
+			elem: SIGNED8;
+			x0, y0, x, y: FLOAT32;
 		END;
 
 
@@ -184,7 +184,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END ControlPoint;
 
 	PROCEDURE ValidatePoint (p: Point; VAR msg: Leonardo.ValidateMsg);
-		VAR x, y: REAL;
+		VAR x, y: FLOAT32;
 	BEGIN
 		IF p.marked THEN
 			Leonardo.UpdateShape(msg.fig, p);
@@ -218,7 +218,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END ConsumePoint;
 
 	PROCEDURE RenderPoint* (p: Point; VAR msg: Leonardo.RenderMsg);
-		VAR ctm: GfxMatrix.Matrix; x, y: REAL; col: Gfx.Color;
+		VAR ctm: GfxMatrix.Matrix; x, y: FLOAT32; col: Gfx.Color;
 	BEGIN
 		ctm := msg.ctxt.ctm; Gfx.ResetCTM(msg.ctxt);
 		GfxMatrix.Apply(ctm, p.x, p.y, x, y);
@@ -249,7 +249,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END LocatePoint;
 
 	PROCEDURE TransformPoint (p: Point; VAR msg: Leonardo.TransformMsg);
-		VAR x, y: REAL; lm: LinkMsg;
+		VAR x, y: FLOAT32; lm: LinkMsg;
 	BEGIN
 		IF msg.id = Leonardo.apply THEN
 			IF ~p.marked THEN
@@ -293,7 +293,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END TransformPoint;
 
 	PROCEDURE LinkPoint (p: Point; VAR msg: LinkMsg);
-		VAR x, y: REAL;
+		VAR x, y: FLOAT32;
 	BEGIN
 		IF msg.id = get THEN
 			GfxMatrix.Apply(msg.lgm, p.x, p.y, msg.x, msg.y);
@@ -328,7 +328,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END CopyPoint;
 
 	PROCEDURE HandlePoint* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR p, copy: Point; ver, pos: LONGINT; mode: SHORTINT;
+		VAR p, copy: Point; ver, pos: SIGNED32; mode: SIGNED8;
 	BEGIN
 		p := obj(Point);
 		IF msg IS Leonardo.ShapeMsg THEN
@@ -419,7 +419,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		END
 	END HandlePoint;
 
-	PROCEDURE InitPoint* (p: Point; x, y: REAL);
+	PROCEDURE InitPoint* (p: Point; x, y: FLOAT32);
 	BEGIN
 		Leonardo.InitShape(p, HandlePoint);
 		p.x := x; p.y := y;
@@ -437,7 +437,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	(**--- Paths ---**)
 
 	PROCEDURE CalcPathBox (path: Path; VAR mat: GfxMatrix.Matrix);
-		VAR bw: REAL;
+		VAR bw: FLOAT32;
 	BEGIN
 		Leonardo.GetComponentsBox(path.bottom, path.llx, path.lly, path.urx, path.ury, path.bw);
 		Attributes.GetReal(path.pen, "Border", bw);
@@ -524,9 +524,9 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END ConsumePath;
 
 	PROCEDURE RenderPath (path: Path; VAR msg: Leonardo.RenderMsg);
-		VAR state: Gfx.State; rm: RenderMsg; id: INTEGER;
+		VAR state: Gfx.State; rm: RenderMsg; id: SIGNED16;
 
-		PROCEDURE corner (x, y: REAL);
+		PROCEDURE corner (x, y: FLOAT32);
 		BEGIN
 			GfxMatrix.Apply(msg.gsm, x, y, x, y);
 			x := ENTIER(x); y := ENTIER(y);
@@ -591,7 +591,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END CopyPath;
 
 	PROCEDURE HandlePath* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR path, copy: Path; ver: LONGINT;
+		VAR path, copy: Path; ver: SIGNED32;
 	BEGIN
 		path := obj(Path);
 		IF msg IS Leonardo.ShapeMsg THEN
@@ -736,7 +736,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		END
 	END Succ;
 
-	PROCEDURE GetPred* (seg: Segment; VAR dx, dy: REAL);
+	PROCEDURE GetPred* (seg: Segment; VAR dx, dy: FLOAT32);
 		VAR pred: Leonardo.Shape; cm: ConnectMsg;
 	BEGIN
 		pred := Pred(seg); dx := 0; dy := 0;
@@ -748,7 +748,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		END
 	END GetPred;
 
-	PROCEDURE GetSucc* (seg: Segment; VAR dx, dy: REAL);
+	PROCEDURE GetSucc* (seg: Segment; VAR dx, dy: FLOAT32);
 		VAR succ: Leonardo.Shape; cm: ConnectMsg;
 	BEGIN
 		succ := Succ(seg); dx := 0; dy := 0;
@@ -761,14 +761,14 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END GetSucc;
 
 	PROCEDURE SwapPred (fig: Leonardo.Figure; a: Leonardo.Action);
-		VAR act: ModeAction; seg: Segment; mode: SHORTINT;
+		VAR act: ModeAction; seg: Segment; mode: SIGNED8;
 	BEGIN
 		act := a(ModeAction); seg := act.seg;
 		mode := seg.pred; seg.pred := act.mode; act.mode := mode;
 		seg.marked := TRUE; seg.sel := TRUE
 	END SwapPred;
 
-	PROCEDURE ChangePred* (fig: Leonardo.Figure; seg: Segment; mode: SHORTINT);
+	PROCEDURE ChangePred* (fig: Leonardo.Figure; seg: Segment; mode: SIGNED8);
 		VAR act: ModeAction;
 	BEGIN
 		NEW(act); act.do := SwapPred; act.undo := SwapPred; act.seg := seg; act.mode := mode;
@@ -776,14 +776,14 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END ChangePred;
 
 	PROCEDURE SwapSucc (fig: Leonardo.Figure; a: Leonardo.Action);
-		VAR act: ModeAction; seg: Segment; mode: SHORTINT;
+		VAR act: ModeAction; seg: Segment; mode: SIGNED8;
 	BEGIN
 		act := a(ModeAction); seg := act.seg;
 		mode := seg.succ; seg.succ := act.mode; act.mode := mode;
 		seg.marked := TRUE; seg.sel := TRUE
 	END SwapSucc;
 
-	PROCEDURE ChangeSucc* (fig: Leonardo.Figure; seg: Segment; mode: SHORTINT);
+	PROCEDURE ChangeSucc* (fig: Leonardo.Figure; seg: Segment; mode: SIGNED8);
 		VAR act: ModeAction;
 	BEGIN
 		NEW(act); act.do := SwapSucc; act.undo := SwapSucc; act.seg := seg; act.mode := mode;
@@ -825,7 +825,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END ConnectSucc;
 
 	PROCEDURE ControlSegment* (seg: Segment; VAR msg: Leonardo.ControlMsg);
-		VAR p: Leonardo.Shape; n: LONGINT; pred, succ, bot, top: Leonardo.Shape; cm: ConnectMsg; copy: Segment;
+		VAR p: Leonardo.Shape; n: SIGNED32; pred, succ, bot, top: Leonardo.Shape; cm: ConnectMsg; copy: Segment;
 	BEGIN
 		IF msg.id = Leonardo.delete THEN
 			Leonardo.ControlContainer(seg, msg);
@@ -892,7 +892,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END OrderSegment;
 
 	PROCEDURE CalcSegmentBox* (seg: Segment; VAR mat: GfxMatrix.Matrix);
-		VAR bw: REAL;
+		VAR bw: FLOAT32;
 	BEGIN
 		Leonardo.GetComponentsBox(seg.bottom, seg.llx, seg.lly, seg.urx, seg.ury, seg.bw);
 		Attributes.GetReal(seg.pen, "Border", bw);
@@ -901,7 +901,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END CalcSegmentBox;
 
 	PROCEDURE ValidateSegmentLength* (seg: Segment; VAR msg: Leonardo.ValidateMsg);
-		VAR rm: RenderMsg; len: REAL; vm: ValidateMsg;
+		VAR rm: RenderMsg; len: FLOAT32; vm: ValidateMsg;
 	BEGIN
 		Rec.do.begin(Rec, NIL);
 		rm.stamp := msg.stamp; rm.fig := msg.fig; rm.pen := Rec; seg.handle(seg, rm);
@@ -931,7 +931,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END ValidateSegment;
 
 	PROCEDURE ConsumeSegment* (seg: Segment; VAR msg: Leonardo.ConsumeMsg);
-		VAR t, b, succ, pred: Leonardo.Shape; cm: ConnectMsg; x, y: REAL;
+		VAR t, b, succ, pred: Leonardo.Shape; cm: ConnectMsg; x, y: FLOAT32;
 	BEGIN
 		IF (msg.recv = NIL) & (msg.top.cont # seg) & (msg.llx <= seg.urx + seg.bw) & (seg.llx - seg.bw <= msg.urx) &
 			(msg.lly <= seg.ury + seg.bw) & (seg.lly - seg.bw <= msg.ury)
@@ -1016,10 +1016,10 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 
 	PROCEDURE RenderSegment* (seg: Segment; VAR msg: Leonardo.RenderMsg);
 		VAR
-			state: Gfx.State; cm: ConnectMsg; x, y, dx, dy, d: REAL;
+			state: Gfx.State; cm: ConnectMsg; x, y, dx, dy, d: FLOAT32;
 
-		PROCEDURE coinc (x, y, dx, dy: REAL);
-			VAR x0, y0, x1, y1, x2, y2, x3, y3: REAL;
+		PROCEDURE coinc (x, y, dx, dy: FLOAT32);
+			VAR x0, y0, x1, y1, x2, y2, x3, y3: FLOAT32;
 		BEGIN
 			x0 := x + 4*dx; y0 := y + 4*dy; x1 := x + 12*dx; y1 := y + 12*dy;
 			x2 := x1 - 4*dy; y2 := y1 + 4*dx; x3 := x1 + 4*dy; y3 := y1 - 4*dx;
@@ -1031,8 +1031,8 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 			Gfx.End(msg.ctxt)
 		END coinc;
 
-		PROCEDURE coll (x, y, dx, dy: REAL);
-			VAR x0, y0, x1, y1, x2, y2, x3, y3: REAL;
+		PROCEDURE coll (x, y, dx, dy: FLOAT32);
+			VAR x0, y0, x1, y1, x2, y2, x3, y3: FLOAT32;
 		BEGIN
 			x0 := x + 4*dx; y0 := y + 4*dy; x1 := x + 12*dx; y1 := y + 12*dy;
 			x2 := x0 - 4*dy; y2 := y0 + 4*dx; x3 := x0 + 4*dy; y3 := y0 - 4*dx;
@@ -1044,8 +1044,8 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 			Gfx.End(msg.ctxt)
 		END coll;
 
-		PROCEDURE symm (x, y, dx, dy: REAL);
-			VAR x0, y0, x1, y1, x2, y2, x3, y3: REAL;
+		PROCEDURE symm (x, y, dx, dy: FLOAT32);
+			VAR x0, y0, x1, y1, x2, y2, x3, y3: FLOAT32;
 		BEGIN
 			x0 := x + 4*dx; y0 := y + 4*dy; x1 := x + 8*dx; y1 := y + 8*dy;
 			x2 := x1 - 3*dy; y2 := y1 + 3*dx; x3 := x1 + 3*dy; y3 := y1 - 3*dx;
@@ -1145,7 +1145,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END TransformSegment;
 
 	PROCEDURE ConnectSegment* (seg: Segment; VAR msg: ConnectMsg);
-		VAR first, last, p: Point; dx, dy, t, x, y: REAL;
+		VAR first, last, p: Point; dx, dy, t, x, y: FLOAT32;
 	BEGIN
 		IF ~seg.closed & (seg.bottom # NIL) & (seg.bottom # seg.top) THEN
 			first := seg.bottom(Point); last := seg.top(Point);
@@ -1286,7 +1286,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END CopySegment;
 
 	PROCEDURE HandleSegment* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR seg, copy: Segment; p: Leonardo.Shape; ver: LONGINT;
+		VAR seg, copy: Segment; p: Leonardo.Shape; ver: SIGNED32;
 	BEGIN
 		seg := obj(Segment);
 		IF msg IS Leonardo.ShapeMsg THEN
@@ -1422,7 +1422,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		CalcSegmentBox(seg, GfxMatrix.Identity)
 	END InitSegment;
 
-	PROCEDURE SplitSegment* (fig: Leonardo.Figure; seg, new: Segment; at: Point; mode: SHORTINT);
+	PROCEDURE SplitSegment* (fig: Leonardo.Figure; seg, new: Segment; at: Point; mode: SIGNED8);
 		VAR p: Point;
 	BEGIN
 		InitSegment(new, seg.handle, NIL, NIL, FALSE, seg.pen);
@@ -1436,7 +1436,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		ChangeSucc(fig, seg, mode)
 	END SplitSegment;
 
-	PROCEDURE SetPred* (fig: Leonardo.Figure; seg: Segment; mode: SHORTINT);
+	PROCEDURE SetPred* (fig: Leonardo.Figure; seg: Segment; mode: SIGNED8);
 		VAR pred: Leonardo.Shape; cm: ConnectMsg;
 	BEGIN
 		pred := Pred(seg);
@@ -1451,7 +1451,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		END
 	END SetPred;
 
-	PROCEDURE SetSucc* (fig: Leonardo.Figure; seg: Segment; mode: SHORTINT);
+	PROCEDURE SetSucc* (fig: Leonardo.Figure; seg: Segment; mode: SIGNED8);
 		VAR succ: Leonardo.Shape; cm: ConnectMsg;
 	BEGIN
 		succ := Succ(seg);
@@ -1469,8 +1469,8 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 
 	(**--- Polylines ---**)
 
-	PROCEDURE OnLine* (x0, y0, x1, y1, x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN;
-		VAR dx, dy: REAL;
+	PROCEDURE OnLine* (x0, y0, x1, y1, x, y, llx, lly, urx, ury: FLOAT32; VAR px, py: FLOAT32): BOOLEAN;
+		VAR dx, dy: FLOAT32;
 	BEGIN
 		GfxPaths.ProjectToLine(x0, y0, x1, y1, x, y, px, py);
 		IF (llx <= px) & (px <= urx) & (lly <= py) & (py <= ury) THEN
@@ -1486,7 +1486,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END OnLine;
 
 	PROCEDURE DrawPolyline (poly: Segment; pen: LeoPens.Pen);
-		VAR first, last, p: Point; dx, dy: REAL;
+		VAR first, last, p: Point; dx, dy: FLOAT32;
 	BEGIN
 		IF (poly.bottom # NIL) & (poly.bottom # poly.top) THEN
 			GetFirstLast(poly, first, last);
@@ -1556,7 +1556,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		END
 	END RenderPolyline;
 
-	PROCEDURE ProjectPolyline (poly: Segment; x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN;
+	PROCEDURE ProjectPolyline (poly: Segment; x, y, llx, lly, urx, ury: FLOAT32; VAR px, py: FLOAT32): BOOLEAN;
 		VAR first, last, p0, p1: Point;
 	BEGIN
 		IF (poly.bottom # NIL) & (poly.bottom # poly.top) THEN
@@ -1576,7 +1576,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END ProjectPolyline;
 
 	PROCEDURE LocatePolyline (poly: Segment; VAR msg: Leonardo.LocateMsg);
-		VAR res: Leonardo.Shape; glm: GfxMatrix.Matrix; llx, lly, urx, ury, px, py: REAL;
+		VAR res: Leonardo.Shape; glm: GfxMatrix.Matrix; llx, lly, urx, ury, px, py: FLOAT32;
 	BEGIN
 		IF (msg.llx <= poly.urx) & (poly.llx <= msg.urx) & (msg.lly <= poly.ury) & (poly.lly <= msg.ury) THEN
 			IF msg.id = Leonardo.inside THEN
@@ -1614,7 +1614,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	PROCEDURE SplitPolyline (poly: Segment; VAR msg: SplitMsg);
 		VAR
 			first, last, p, q: Point; succ, pred: Leonardo.Shape; cm: ConnectMsg; new: Segment; glm: GfxMatrix.Matrix;
-			llx, lly, urx, ury, x, y, px, py: REAL;
+			llx, lly, urx, ury, x, y, px, py: FLOAT32;
 	BEGIN
 		IF (poly.llx <= msg.urx) & (msg.llx <= poly.urx) & (poly.lly <= msg.ury) & (msg.lly <= poly.ury) THEN
 			GetFirstLast(poly, first, last);
@@ -1726,8 +1726,8 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 
 	(**--- Beziers ---**)
 
-	PROCEDURE SubdivideBezier (at, x0, y0, x1, y1, x2, y2, x3, y3: REAL; VAR x11, y11, x12, y12, xm, ym, x21, y21, x22, y22: REAL);
-		VAR as, xt, yt: REAL;
+	PROCEDURE SubdivideBezier (at, x0, y0, x1, y1, x2, y2, x3, y3: FLOAT32; VAR x11, y11, x12, y12, xm, ym, x21, y21, x22, y22: FLOAT32);
+		VAR as, xt, yt: FLOAT32;
 	BEGIN
 		as := 1 - at;
 		x11 := as * x0 + at * x1; y11 := as * y0 + at * y1;
@@ -1738,8 +1738,8 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		xm := as * x12 + at * x21; ym := as * y12 + at * y21
 	END SubdivideBezier;
 
-	PROCEDURE OnBezier (x0, y0, x1, y1, x2, y2, x3, y3, x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN;
-		VAR xa1, ya1, xa2, ya2, xm, ym, xb1, yb1, xb2, yb2: REAL;
+	PROCEDURE OnBezier (x0, y0, x1, y1, x2, y2, x3, y3, x, y, llx, lly, urx, ury: FLOAT32; VAR px, py: FLOAT32): BOOLEAN;
+		VAR xa1, ya1, xa2, ya2, xm, ym, xb1, yb1, xb2, yb2: FLOAT32;
 	BEGIN
 		IF ((llx <= x0) OR (llx <= x1) OR (llx <= x2) OR (llx <= x3)) &
 			((x0 <= urx) OR (x1 <= urx) OR (x2 <= urx) OR (x3 <= urx)) &
@@ -1759,7 +1759,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END OnBezier;
 
 	PROCEDURE DrawBezier (bez: Segment; pen: LeoPens.Pen);
-		VAR p0, p1, p2, p3: Point; x0, y0, dx, dy, x1, y1: REAL;
+		VAR p0, p1, p2, p3: Point; x0, y0, dx, dy, x1, y1: FLOAT32;
 	BEGIN
 		IF (bez.bottom # NIL) & (bez.bottom # bez.top) THEN
 			p0 := bez.bottom(Point);
@@ -1814,7 +1814,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END DrawBezier;
 
 	PROCEDURE DragBezier (bez: Segment; ctxt: Gfx.Context);
-		VAR s: Leonardo.Shape; p0, p1, p2, p3: Point; x0, y0, x1, y1: REAL; ctm: GfxMatrix.Matrix;
+		VAR s: Leonardo.Shape; p0, p1, p2, p3: Point; x0, y0, x1, y1: FLOAT32; ctm: GfxMatrix.Matrix;
 	BEGIN
 		s := bez.bottom; WHILE (s # NIL) & ~s.marked DO s := s.up END;
 		IF (s # NIL) & (bez.bottom # bez.top) & s.marked THEN
@@ -1889,8 +1889,8 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		END
 	END RenderBezier;
 
-	PROCEDURE ProjectBezier (bez: Segment; x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN;
-		VAR p0, p1, p2, p3: Point; x0, y0, x3, y3, x1, y1, x2, y2: REAL;
+	PROCEDURE ProjectBezier (bez: Segment; x, y, llx, lly, urx, ury: FLOAT32; VAR px, py: FLOAT32): BOOLEAN;
+		VAR p0, p1, p2, p3: Point; x0, y0, x3, y3, x1, y1, x2, y2: FLOAT32;
 	BEGIN
 		IF (bez.bottom # NIL) & (bez.bottom # bez.top) THEN
 			p0 := bez.bottom(Point);
@@ -1946,7 +1946,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END ProjectBezier;
 
 	PROCEDURE LocateBezier (bez: Segment; VAR msg: Leonardo.LocateMsg);
-		VAR res: Leonardo.Shape; glm: GfxMatrix.Matrix; llx, lly, urx, ury, px, py: REAL;
+		VAR res: Leonardo.Shape; glm: GfxMatrix.Matrix; llx, lly, urx, ury, px, py: FLOAT32;
 	BEGIN
 		IF (msg.llx <= bez.urx) & (bez.llx <= msg.urx) & (msg.lly <= bez.ury) & (bez.lly <= msg.ury) THEN
 			IF msg.id = Leonardo.inside THEN
@@ -1984,11 +1984,11 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	PROCEDURE SplitBezier (bez: Segment; VAR msg: SplitMsg);
 		VAR
 			p0, p1, p2, bt, tp, p3: Point; succ, pred: Leonardo.Shape; cm: ConnectMsg; glm: GfxMatrix.Matrix;
-			llx, lly, urx, ury, x, y, x0, y0, x3, y3, x1, y1, x2, y2, px, py, t, x11, y11, x12, y12, xm, ym, x21, y21, x22, y22: REAL;
+			llx, lly, urx, ury, x, y, x0, y0, x3, y3, x1, y1, x2, y2, px, py, t, x11, y11, x12, y12, xm, ym, x21, y21, x22, y22: FLOAT32;
 			s: Segment;
 
-		PROCEDURE split (x0, y0, x1, y1, x2, y2, x3, y3, x, y, t0, t1: REAL; VAR px, py, t: REAL): BOOLEAN;
-			VAR x11, y11, x12, y12, x21, y21, x22, y22: REAL;
+		PROCEDURE split (x0, y0, x1, y1, x2, y2, x3, y3, x, y, t0, t1: FLOAT32; VAR px, py, t: FLOAT32): BOOLEAN;
+			VAR x11, y11, x12, y12, x21, y21, x22, y22: FLOAT32;
 		BEGIN
 			IF (ABS(x3 - x0) <= 0.5*(urx - llx)) & (ABS(y3 - y0) <= 0.5*(ury - lly)) THEN
 				IF OnLine(x0, y0, x3, y3, x, y, llx, lly, urx, ury, px, py) THEN
@@ -2005,7 +2005,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 				split(xm, ym, x21, y21, x22, y22, x3, y3, x, y, 0.5*(t0 + t1), t1, px, py, t)
 		END split;
 
-		PROCEDURE unclose (x, y: REAL);
+		PROCEDURE unclose (x, y: FLOAT32);
 			VAR p: Point;
 		BEGIN
 			NEW(p); InitPoint(p, x, y);
@@ -2015,25 +2015,25 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 			ChangeSucc(msg.fig, bez, collinear + wrap)
 		END unclose;
 
-		PROCEDURE move (p: Point; x, y: REAL);
+		PROCEDURE move (p: Point; x, y: FLOAT32);
 		BEGIN
 			Leonardo.SetReal(msg.fig, p, "X", x);
 			Leonardo.SetReal(msg.fig, p, "Y", y)
 		END move;
 
-		PROCEDURE make (x, y: REAL; VAR b, t: Point);
+		PROCEDURE make (x, y: FLOAT32; VAR b, t: Point);
 		BEGIN
 			NEW(b); InitPoint(b, x, y); t := b
 		END make;
 
-		PROCEDURE add (x, y: REAL; VAR t: Point);
+		PROCEDURE add (x, y: FLOAT32; VAR t: Point);
 			VAR p: Point;
 		BEGIN
 			NEW(p); InitPoint(p, x, y);
 			p.down := t; t.up := p; t := p
 		END add;
 
-		PROCEDURE bezier (x0, y0, x1, y1, x2, y2, x3, y3: REAL): Segment;
+		PROCEDURE bezier (x0, y0, x1, y1, x2, y2, x3, y3: FLOAT32): Segment;
 			VAR p0, p3: Point; b: Segment;
 		BEGIN
 			make(x0, y0, p0, p3); add(x1, y1, p3); add(x2, y2, p3); add(x3, y3, p3);
@@ -2041,7 +2041,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 			RETURN b
 		END bezier;
 
-		PROCEDURE line (x0, y0, x1, y1: REAL): Segment;
+		PROCEDURE line (x0, y0, x1, y1: FLOAT32): Segment;
 			VAR p0, p1: Point; l: Segment;
 		BEGIN
 			make(x0, y0, p0, p1); add(x1, y1, p1);
@@ -2222,7 +2222,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	(**--- Arcs ---**)
 
 	PROCEDURE ArcToPath (arc: Arc; path: GfxPaths.Path);
-		VAR p0, p1: Point; x0, y0, x1, y1, x2, y2, dx, dy: REAL;
+		VAR p0, p1: Point; x0, y0, x1, y1, x2, y2, dx, dy: FLOAT32;
 	BEGIN
 		GfxPaths.Clear(path);
 		IF (arc.bottom # NIL) & (arc.bottom # arc.top) THEN
@@ -2260,7 +2260,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END EnumArc;
 
 	PROCEDURE CalcArcBox* (arc: Arc; VAR mat: GfxMatrix.Matrix);
-		VAR m: GfxMatrix.Matrix; p0, p1: Point; x0, y0, x1, y1, x2, y2: REAL; data: ArcData;
+		VAR m: GfxMatrix.Matrix; p0, p1: Point; x0, y0, x1, y1, x2, y2: FLOAT32; data: ArcData;
 	BEGIN
 		GfxMatrix.Concat(arc.mat, mat, m);
 		GfxMatrix.ApplyToRect(m, -1, -1, 1, 1, arc.llx, arc.lly, arc.urx, arc.ury);
@@ -2305,7 +2305,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END ValidateArc;
 
 	PROCEDURE DrawArc (arc: Arc; pen: LeoPens.Pen);
-		VAR p0, p1: Point; x0, y0, x1, y1, x2, y2, dx, dy: REAL;
+		VAR p0, p1: Point; x0, y0, x1, y1, x2, y2, dx, dy: FLOAT32;
 	BEGIN
 		IF (arc.bottom # NIL) & (arc.bottom # arc.top) THEN
 			p0 := arc.bottom(Point); p1 := arc.top(Point);
@@ -2330,7 +2330,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END DrawArc;
 
 	PROCEDURE DragArc (arc: Arc; ctxt: Gfx.Context);
-		VAR p0, p1: Point; x0, y0, x1, y1, x2, y2: REAL;
+		VAR p0, p1: Point; x0, y0, x1, y1, x2, y2: FLOAT32;
 	BEGIN
 		IF (arc.bottom # NIL) & (arc.bottom # arc.top) THEN
 			p0 := arc.bottom(Point); p1 := arc.top(Point);
@@ -2375,7 +2375,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END RenderArc;
 
 	PROCEDURE LocateArc (arc: Arc; VAR msg: Leonardo.LocateMsg);
-		VAR res: Leonardo.Shape; px, py: REAL;
+		VAR res: Leonardo.Shape; px, py: FLOAT32;
 	BEGIN
 		IF (msg.llx <= arc.urx) & (arc.llx <= msg.urx) & (msg.lly <= arc.ury) & (arc.lly <= msg.ury) THEN
 			IF msg.id = Leonardo.inside THEN
@@ -2414,7 +2414,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		VAR glm, m: GfxMatrix.Matrix; p: Point;
 
 		PROCEDURE apply (p: Point);
-			VAR x, y: REAL;
+			VAR x, y: FLOAT32;
 		BEGIN
 			IF msg.stamp # p.stamp THEN
 				p.stamp := msg.stamp;
@@ -2519,7 +2519,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END CopyArc;
 
 	PROCEDURE HandleArc* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR arc, copy: Arc; ver: LONGINT;
+		VAR arc, copy: Arc; ver: SIGNED32;
 	BEGIN
 		arc := obj(Arc);
 		IF msg IS Leonardo.ShapeMsg THEN
@@ -2607,7 +2607,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		END
 	END HandleArc;
 
-	PROCEDURE InitArc* (arc: Arc; x, y, rx, ry, start, end: REAL; pen: LeoPens.Pen);
+	PROCEDURE InitArc* (arc: Arc; x, y, rx, ry, start, end: FLOAT32; pen: LeoPens.Pen);
 		VAR p0, p1: Point;
 	BEGIN
 		NEW(p0); InitPoint(p0, x + rx * Math.cos(start), y + ry * Math.sin(start));
@@ -2630,7 +2630,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	(**--- Pathification ---**)
 
 	PROCEDURE HandlePathifier* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR pen, copy: Pathifier; ver: LONGINT;
+		VAR pen, copy: Pathifier; ver: SIGNED32;
 	BEGIN
 		pen := obj(Pathifier);
 		IF msg IS Objects.AttrMsg THEN
@@ -2684,14 +2684,14 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		pp.bot := NIL; pp.top := NIL; pp.elem := GfxPaths.Stop
 	END BeginPathifier;
 
-	PROCEDURE EnterPathifier (pen: LeoPens.Pen; x, y, dx, dy, bdist: REAL);
+	PROCEDURE EnterPathifier (pen: LeoPens.Pen; x, y, dx, dy, bdist: FLOAT32);
 		VAR pp: Pathifier;
 	BEGIN
 		pp := pen(Pathifier);
 		pp.x0 := x; pp.y0 := y; pp.x := x; pp.y := y; pp.elem := GfxPaths.Enter; pp.enter := NIL
 	END EnterPathifier;
 
-	PROCEDURE ExitPathifier (pen: LeoPens.Pen; dx, dy, dist: REAL);
+	PROCEDURE ExitPathifier (pen: LeoPens.Pen; dx, dy, dist: FLOAT32);
 		VAR pp: Pathifier;
 	BEGIN
 		pp := pen(Pathifier);
@@ -2706,7 +2706,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		pp.elem := GfxPaths.Exit
 	END ExitPathifier;
 
-	PROCEDURE PathifyLine (pen: LeoPens.Pen; x, y: REAL);
+	PROCEDURE PathifyLine (pen: LeoPens.Pen; x, y: FLOAT32);
 		VAR pp: Pathifier; seg: Segment; p, q: Point;
 	BEGIN
 		pp := pen(Pathifier);
@@ -2732,7 +2732,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		pp.x := x; pp.y := y; pp.elem := GfxPaths.Line
 	END PathifyLine;
 
-	PROCEDURE PathifyArc (pen: LeoPens.Pen; x, y, x0, y0, x1, y1, x2, y2: REAL);
+	PROCEDURE PathifyArc (pen: LeoPens.Pen; x, y, x0, y0, x1, y1, x2, y2: FLOAT32);
 		VAR pp: Pathifier; p0, p1: Point; arc: Arc;
 	BEGIN
 		pp := pen(Pathifier);
@@ -2754,7 +2754,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 		pp.x := x; pp.y := y; pp.elem := GfxPaths.Arc
 	END PathifyArc;
 
-	PROCEDURE PathifyBezier (pen: LeoPens.Pen; x, y, x1, y1, x2, y2: REAL);
+	PROCEDURE PathifyBezier (pen: LeoPens.Pen; x, y, x1, y1, x2, y2: FLOAT32);
 		VAR pp: Pathifier; p0, p1, p2, p: Point; seg: Segment;
 	BEGIN
 		pp := pen(Pathifier);
@@ -2834,8 +2834,8 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 
 	PROCEDURE ReadLegacyCurves (VAR r: Files.Rider; path: Path);
 		VAR
-			n, i, succ, pred, j, m: LONGINT; key: INTEGER; name: ARRAY 64 OF CHAR; obj: Objects.Object;
-			cv: ARRAY 64 OF Segment; last: ARRAY 64 OF LONGINT; p: Leonardo.Shape;
+			n, i, succ, pred, j, m: SIGNED32; key: SIGNED16; name: ARRAY 64 OF CHAR; obj: Objects.Object;
+			cv: ARRAY 64 OF Segment; last: ARRAY 64 OF SIGNED32; p: Leonardo.Shape;
 			curve: Segment; cm: Objects.CopyMsg;
 	BEGIN
 		Files.ReadNum(r, n);
@@ -2896,7 +2896,7 @@ MODULE LeoPaths IN Oberon; (** portable **)	(* eos  *)
 	END ReadLegacyCurves;
 
 	PROCEDURE HandleLegacyPath (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR path: Path; ver: LONGINT; i: INTEGER; real: REAL; cm: Objects.CopyMsg; s: Leonardo.Shape; bool: BOOLEAN;
+		VAR path: Path; ver: SIGNED32; i: SIGNED16; real: FLOAT32; cm: Objects.CopyMsg; s: Leonardo.Shape; bool: BOOLEAN;
 	BEGIN
 		IF msg IS Objects.FileMsg THEN
 			WITH msg: Objects.FileMsg DO

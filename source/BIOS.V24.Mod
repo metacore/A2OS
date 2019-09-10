@@ -61,13 +61,13 @@ TYPE
 
 	RS232Port = OBJECT (Serials.Port);
 		VAR
-			baseaddr, irq, maxbps: LONGINT;
+			baseaddr, irq, maxbps: SIGNED32;
 			buf: ARRAY BufSize OF CHAR;
-			head, tail: LONGINT;
+			head, tail: SIGNED32;
 			open, ox16: BOOLEAN;
-			diagnostic: LONGINT;
+			diagnostic: SIGNED32;
 
-		PROCEDURE &Init*(basespec, irqspec : LONGINT);
+		PROCEDURE &Init*(basespec, irqspec : SIGNED32);
 		BEGIN
 			baseaddr := basespec;
 			irq := irqspec;
@@ -79,7 +79,7 @@ TYPE
 			END
 		END Init;
 
-		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: WORD);
+		PROCEDURE Open*(bps, data, parity, stop : SIGNED32; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF open THEN
 				IF Verbose THEN KernelLog.String(ModuleName); KernelLog.String(": "); KernelLog.String(name); KernelLog.String(" already open"); KernelLog.Ln; END;
@@ -99,7 +99,7 @@ TYPE
 		END Open;
 
 		(** Send a single character to the UART. *)
-		PROCEDURE SendChar*(ch: CHAR; VAR res : WORD);
+		PROCEDURE SendChar*(ch: CHAR; VAR res : INTEGER);
 		VAR s: SET;
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
@@ -112,7 +112,7 @@ TYPE
 		END SendChar;
 
 		(** Wait for the next character is received in the input buffer. The buffer is fed by HandleInterrupt *)
-		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: WORD);
+		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN END;
 			AWAIT(tail # head);
@@ -126,7 +126,7 @@ TYPE
 
 		(** On detecting an interupt request, transfer the characters from the UART buffer to the input buffer *)
 		PROCEDURE HandleInterrupt;
-		VAR n: LONGINT; ch: CHAR; s: SET;
+		VAR n: SIGNED32; ch: CHAR; s: SET;
 		BEGIN {EXCLUSIVE}
 			LOOP	(* transfer all the data available in the UART buffer to buf *)
 				Machine.Portin8((baseaddr) + IIR, ch);
@@ -153,9 +153,9 @@ TYPE
 		END Available;
 
 		(* Set the port state: speed in bps, no. of data bits, parity, stop bit length. *)
-		PROCEDURE SetPortState(bps, data, parity, stop : LONGINT; VAR res: WORD);
+		PROCEDURE SetPortState(bps, data, parity, stop : SIGNED32; VAR res: INTEGER);
 		CONST TCR = 2;
-		VAR s: SET; tcr: LONGINT;
+		VAR s: SET; tcr: SIGNED32;
 		BEGIN
 			IF (bps > 0) & (maxbps MOD bps = 0) THEN
 				IF (data >= 5) & (data <= 8) & (parity >= Serials.ParNo) & (parity <= Serials.ParSpace) &
@@ -221,7 +221,7 @@ TYPE
 		END SetPortState;
 
 		(** Get the port state: state (open/closed), speed in bps, no. of data bits, parity, top bit length. *)
-		PROCEDURE GetPortState*(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : LONGINT);
+		PROCEDURE GetPortState*(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : SIGNED32);
 		CONST TCR = 2;
 		VAR savset, set: SET; ch: CHAR;
 		BEGIN {EXCLUSIVE}
@@ -331,7 +331,7 @@ TYPE
 
 	END RS232Port;
 
-PROCEDURE ReadICR(baseaddr, index: LONGINT): CHAR;
+PROCEDURE ReadICR(baseaddr, index: SIGNED32): CHAR;
 	CONST SPR = 7; ICR = 5; ICREnable = 6;
 	VAR ch: CHAR;
 BEGIN
@@ -344,14 +344,14 @@ BEGIN
 	RETURN ch
 END ReadICR;
 
-PROCEDURE WriteICR(baseaddr, index: LONGINT; ch: CHAR);
+PROCEDURE WriteICR(baseaddr, index: SIGNED32; ch: CHAR);
 	CONST SPR = 7; ICR = 5;
 BEGIN
 	Machine.Portout8((baseaddr) + SPR, CHR(index));
 	Machine.Portout8((baseaddr) + ICR, ch)
 END WriteICR;
 
-PROCEDURE CheckOX16PCI954(baseaddr: LONGINT): BOOLEAN;
+PROCEDURE CheckOX16PCI954(baseaddr: SIGNED32): BOOLEAN;
 	CONST ID1 = 8; ID2 = 9; ID3 = 10; REV = 11;
 BEGIN
 	RETURN (baseaddr >= 1000H) & (ReadICR(baseaddr, ID1) = 016X) & (ReadICR(baseaddr, ID2) = 0C9X) &
@@ -365,9 +365,9 @@ END ShowModule;
 
 (** Scan the installed serial ports and determine the chip type used *)
 PROCEDURE Scan*(context : Commands.Context);
-VAR i: LONGINT; port: RS232Port; serialPort : Serials.Port; portstatus: SET; found : BOOLEAN;
+VAR i: SIGNED32; port: RS232Port; serialPort : Serials.Port; portstatus: SET; found : BOOLEAN;
 
-	PROCEDURE DetectChip(baseaddr: LONGINT);
+	PROCEDURE DetectChip(baseaddr: SIGNED32);
 	VAR ch: CHAR;
 	BEGIN
 		context.out.String("  Detected UART  ");
@@ -420,7 +420,7 @@ END Scan;
 (** Set the essential port operating parameters as specified in Aos.Par
 		If omitted, default standard values are assigned to COM1 and COM2 *)
 PROCEDURE Install*(context : Commands.Context);
-VAR i: LONGINT; p : SIZE; name, s: ARRAY 16 OF CHAR; BASE, IRQ: LONGINT; port : RS232Port;
+VAR i: SIGNED32; p : SIZE; name, s: ARRAY 16 OF CHAR; BASE, IRQ: SIGNED32; port : RS232Port;
 BEGIN
 	FOR i := 0 TO MaxPortNo-1 DO
 		COPY("COM ", name);

@@ -249,8 +249,8 @@ TYPE
 		END UpdateStatus;
 
 		(* Set baudrate divisor; returns TRUE if operation succeeded, FALSE otherwise *)
-		PROCEDURE SetBaudrate(baudrate : LONGINT) : BOOLEAN;
-		VAR divisor : LONGINT; status : Usbdi.Status;
+		PROCEDURE SetBaudrate(baudrate : SIGNED32) : BOOLEAN;
+		VAR divisor : SIGNED32; status : Usbdi.Status;
 		BEGIN
 			IF Trace * TraceCommands # {} THEN ShowModule("SetBaudrate to "); KernelLog.Int(baudrate, 0); KernelLog.String(" bps."); KernelLog.Ln; END;
 			port.portbps := 0; (* indicates invalid value *)
@@ -352,7 +352,7 @@ TYPE
 			IF Serials.RTS IN set THEN INCL(mcr, MctMcrRts); ELSE EXCL(mcr, MctMcrRts); END;
 			INCL(mcr, MctMcrOut2); (* Always enable Out2 *)
 
-			data1[0] := CHR(SYSTEM.VAL(LONGINT, mcr));
+			data1[0] := CHR(SYSTEM.VAL(SIGNED32, mcr));
 
 			status := device.Request(Usbdi.ToDevice + Usbdi.Vendor + Usbdi.Device, MctSetModemCtrl, 0, 0, 1, data1^);
 			IF status # Usbdi.Ok THEN
@@ -398,14 +398,14 @@ TYPE
 	Port = OBJECT(Serials.Port)
 	VAR
 		driver : UsbRs232Driver;
-		portbps : LONGINT;
+		portbps : SIGNED32;
 		data1 : Usbdi.BufferPtr; (* datax -> ARRAY x OF CHAR *)
 		buf: ARRAY BufSize OF CHAR;
 		head, tail: SIZE;
 		open: BOOLEAN;
-		diagnostic: LONGINT;
+		diagnostic: SIGNED32;
 
-		PROCEDURE Open*(bps, data, parity, stop : LONGINT; VAR res: WORD);
+		PROCEDURE Open*(bps, data, parity, stop : SIGNED32; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF open THEN
 				IF Verbose THEN ShowModule(name); KernelLog.String(" already open"); KernelLog.Ln; END;
@@ -421,7 +421,7 @@ TYPE
 		END Open;
 
 		(** Send len characters from buf to output, starting at ofs. res is non-zero on error. *)
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR status : Usbdi.Status; buffer: POINTER TO ARRAY OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
@@ -438,7 +438,7 @@ TYPE
 		END Send;
 
 		(** Send a single character to the UART. *)
-		PROCEDURE SendChar*(ch: CHAR; VAR res : WORD);
+		PROCEDURE SendChar*(ch: CHAR; VAR res : INTEGER);
 		VAR status : Usbdi.Status;
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
@@ -455,7 +455,7 @@ TYPE
 		END SendChar;
 
 		(** Wait for the next character is received in the input buffer. The buffer is fed by HandleData *)
-		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: WORD);
+		PROCEDURE ReceiveChar*(VAR ch: CHAR; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
 			AWAIT(tail # head);
@@ -483,7 +483,7 @@ TYPE
 					IF Debug THEN KernelLog.String("Port: HandleData: Buffer overflow detected."); KernelLog.Ln; END;
 				END;
 				INC(i);
-				diagnostic := SYSTEM.VAL(LONGINT, driver.diagnostics); (* includes Serials.OE, Serials.PE, Serials.FE & Serials.BI *)
+				diagnostic := SYSTEM.VAL(SIGNED32, driver.diagnostics); (* includes Serials.OE, Serials.PE, Serials.FE & Serials.BI *)
 			END;
 		END HandleData;
 
@@ -492,7 +492,7 @@ TYPE
 			RETURN (tail - head) MOD BufSize
 		END Available;
 
-		PROCEDURE SetPortState(bps, data, parity, stop : LONGINT; VAR res: WORD);
+		PROCEDURE SetPortState(bps, data, parity, stop : SIGNED32; VAR res: INTEGER);
 		VAR s : SET;
 		BEGIN
 			IF (bps > 0) & (115200 MOD bps = 0) THEN
@@ -542,7 +542,7 @@ TYPE
 		END SetPortState;
 
 		(** Get the port state: speed, no. of data bits, parity, no. of stop bits *)
-		PROCEDURE GetPortState*(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : LONGINT);
+		PROCEDURE GetPortState*(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : SIGNED32);
 		VAR set : SET; res : BOOLEAN;
 		BEGIN
 			(* get parameters *)
@@ -626,7 +626,7 @@ TYPE
 		END GetMC;
 
 		PROCEDURE Close*;
-		VAR timer : Kernel.Timer; counter : LONGINT;
+		VAR timer : Kernel.Timer; counter : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN
 				IF Verbose THEN ShowModule(name); KernelLog.String(" not open"); KernelLog.Ln; END;

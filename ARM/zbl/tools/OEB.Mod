@@ -41,10 +41,10 @@ TYPE
 		session: OEBInterfaces.Session;
 		history: POINTER TO ARRAY OF ARRAY 128 OF CHAR;
 		prompt: ARRAY 128 OF CHAR;
-		id, state: LONGINT;
-		pos, tail: LONGINT; (* history positions *)
+		id, state: SIGNED32;
+		pos, tail: SIGNED32; (* history positions *)
 
-		PROCEDURE & Init * (sid, id: LONGINT; in: Streams.Reader; out: Streams.Writer; VAR res: LONGINT);
+		PROCEDURE & Init * (sid, id: SIGNED32; in: Streams.Reader; out: Streams.Writer; VAR res: SIGNED32);
 		VAR
 			s: OEBServers.Server;
 		BEGIN
@@ -68,14 +68,14 @@ TYPE
 			state := ShellClosed
 		END Close;
 
-		PROCEDURE State * (): LONGINT;
+		PROCEDURE State * (): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN state
 		END State;
 
 		(* Taken from Shell.Mod *)
 		PROCEDURE DeleteStringFromDisplay(CONST x : ARRAY OF CHAR);
-		VAR i, len : LONGINT;
+		VAR i, len : SIGNED32;
 		BEGIN
 			len := Strings.Length(x);
 			FOR i :=	 0 TO len-1 DO out.Char(Backspace); END;
@@ -87,7 +87,7 @@ TYPE
 		PROCEDURE ReadCommand(VAR command : ARRAY OF CHAR);
 		VAR
 			ch: CHAR;
-			currentIndex : LONGINT;
+			currentIndex : SIGNED32;
 
 			PROCEDURE IsAsciiCharacter(ch : CHAR) : BOOLEAN;
 			BEGIN
@@ -178,7 +178,7 @@ TYPE
 		PROCEDURE ExecuteCommand;
 		VAR
 			reply: ARRAY 128 OF CHAR;
-			res: LONGINT;
+			res: SIGNED32;
 		BEGIN
 			res := server.ExecuteCommand(id, history[tail MOD HistorySize], reply);
 			out.Ln;
@@ -214,7 +214,7 @@ VAR
 	VAR
 		param: POINTER TO ARRAY OF CHAR;
 		type: ARRAY 128 OF CHAR;
-		len: LONGINT;
+		len: SIGNED32;
 		opt: Options.Options;
 		s: OEBServers.Server;
 	BEGIN
@@ -252,7 +252,7 @@ VAR
 		opt: Options.Options;
 		server: OEBServers.Server;
 		ids: FoxBasic.IntegerList;
-		i, s: LONGINT;
+		i, s: SIGNED32;
 		all, kill, show, start, stop: BOOLEAN;
 	BEGIN
 		NEW(opt);
@@ -318,7 +318,7 @@ VAR
 		itf: OEBInterfaces.Interface;
 		param: POINTER TO ARRAY OF CHAR;
 		type: ARRAY 128 OF CHAR;
-		id, len: LONGINT;
+		id, len: SIGNED32;
 	BEGIN
 		NEW(opt);
 		opt.Add('t', "type", Options.String);
@@ -377,7 +377,7 @@ VAR
 		server: OEBServers.Server;
 		itf: OEBInterfaces.Interface;
 		ids: FoxBasic.IntegerList;
-		sid, id: LONGINT;
+		sid, id: SIGNED32;
 		all, connect, disconnect, kill, show, start, stop: BOOLEAN;
 	BEGIN
 		NEW(opt);
@@ -470,7 +470,7 @@ VAR
 		server: OEBServers.Server;
 		itf: OEBInterfaces.Interface;
 		session: OEBInterfaces.Session;
-		id, sid: LONGINT;
+		id, sid: SIGNED32;
 		all: BOOLEAN;
 	BEGIN
 		NEW(opt);
@@ -517,14 +517,14 @@ VAR
 
 		Remark: it is assumed that command string is whitespace trimmed
 	*)
-	PROCEDURE DeployFile(server: OEBInteractiveServers.Server; id: LONGINT; CONST command: ARRAY OF CHAR; VAR reply: ARRAY OF CHAR): LONGINT;
+	PROCEDURE DeployFile(server: OEBInteractiveServers.Server; id: SIGNED32; CONST command: ARRAY OF CHAR; VAR reply: ARRAY OF CHAR): SIGNED32;
 	VAR
 		fileName, resourceName: Files.FileName;
 		path: ARRAY 2 OF CHAR;
 		cmd, str: ARRAY MaxCmdLen OF CHAR;
-		res: LONGINT;
+		res: SIGNED32;
 
-		PROCEDURE ErrorInvalidFormat(): LONGINT;
+		PROCEDURE ErrorInvalidFormat(): SIGNED32;
 		BEGIN
 			reply := "invalid command format";
 			RETURN OEBInteractiveServers.CommandError;
@@ -533,7 +533,7 @@ VAR
 		PROCEDURE GetFileName(VAR cmd: ARRAY OF CHAR; VAR fileName: ARRAY OF CHAR): BOOLEAN;
 		VAR
 			ch: CHAR;
-			k, m: LONGINT;
+			k, m: SIGNED32;
 		BEGIN
 			Strings.TrimWS(cmd);
 			IF cmd[0] = 0X THEN RETURN FALSE; END;
@@ -585,7 +585,7 @@ VAR
 		opt: Options.Options;
 		server: OEBServers.Server;
 		cmd, reply: ARRAY MaxCmdLen OF CHAR;
-		sid, id, len, res: LONGINT;
+		sid, id, len, res: SIGNED32;
 	BEGIN
 		NEW(opt);
 		opt.Add('i', "id", Options.Integer);
@@ -667,7 +667,7 @@ VAR
 		END
 	END Command;
 
-	PROCEDURE ShowServer (server: OEBServers.Server; id: LONGINT; out: Streams.Writer);
+	PROCEDURE ShowServer (server: OEBServers.Server; id: SIGNED32; out: Streams.Writer);
 	BEGIN
 		out.String("Server #");
 		out.Int(id, 0);
@@ -676,7 +676,7 @@ VAR
 		out.String(")");
 	END ShowServer;
 
-	PROCEDURE ShowInterface (itf: OEBInterfaces.Interface; sid, id: LONGINT; out: Streams.Writer);
+	PROCEDURE ShowInterface (itf: OEBInterfaces.Interface; sid, id: SIGNED32; out: Streams.Writer);
 	BEGIN
 		out.String("Interface #");
 		out.Int(id, 0);
@@ -702,7 +702,7 @@ VAR
 		out.String("]");
 	END ShowInterface;
 
-	PROCEDURE ShowSession (server: OEBServers.Server; session: OEBInterfaces.Session; sid, id: LONGINT; out: Streams.Writer);
+	PROCEDURE ShowSession (server: OEBServers.Server; session: OEBInterfaces.Session; sid, id: SIGNED32; out: Streams.Writer);
 	BEGIN
 		out.String("Session #");
 		out.Int(id, 0);

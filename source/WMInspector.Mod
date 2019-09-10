@@ -115,8 +115,8 @@ TYPE
 			treeView.MeasureNode(dragged, w, h);
 			Raster.Create(img, w, h, Raster.BGRA8888);
 			NEW(canvas, img);
-			canvas.SetColor(LONGINT(0FFFF00FFH));
-			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(0FFFF00FFH), WMGraphics.ModeCopy);
+			canvas.SetColor(SIGNED32(0FFFF00FFH));
+			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), SIGNED32(0FFFF00FFH), WMGraphics.ModeCopy);
 			(*KernelLog.String("w= "); KernelLog.Int(w, 0); KernelLog.String("h= "); KernelLog.Int(h, 0); KernelLog.Ln;*)
 			canvas.SetColor(0FFH);
 			tree.Acquire();
@@ -292,7 +292,7 @@ TYPE
 		END AddNonFormWindow;
 
 		PROCEDURE Refresh(sender, data : ANY);
-		VAR root : WMTrees.TreeNode; nofWindows, i : LONGINT;
+		VAR root : WMTrees.TreeNode; nofWindows, i : SIGNED32;
 
 		BEGIN
 			ASSERT(tree # NIL);
@@ -920,7 +920,7 @@ TYPE
 		VAR r: WMRectangles.Rectangle; name: XML.String;
 		BEGIN
 			r := GetClientRect();
-			canvas.Fill(r,LONGINT(0FF00FFFFH),WMGraphics.ModeSrcOverDst);
+			canvas.Fill(r,SIGNED32(0FF00FFFFH),WMGraphics.ModeSrcOverDst);
 			name := caption.GetValue();
 			IF name # NIL THEN
 				r := GetClientRect();
@@ -984,12 +984,12 @@ TYPE
 
 		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		VAR
-			img,icon: WMGraphics.Image; canvas, iconCanvas: WMGraphics.BufferCanvas; color: LONGINT;
+			img,icon: WMGraphics.Image; canvas, iconCanvas: WMGraphics.BufferCanvas; color: SIGNED32;
 			r: WMRectangles.Rectangle; data: WMComponents.FindComponentMode;
 		BEGIN
 			IF 0 IN keys THEN
 				r := GetClientRect();
-				color := LONGINT(0AAFF00FFH);
+				color := SIGNED32(0AAFF00FFH);
 				NEW(img);
 				Raster.Create(img, 30,30, Raster.BGRA8888);
 				NEW(canvas,img);
@@ -1003,7 +1003,7 @@ TYPE
 	END DragCommand;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 	manager : WMWindowManager.WindowManager;
 
 PROCEDURE Open*;
@@ -1021,7 +1021,7 @@ BEGIN
 END Restore;
 
 PROCEDURE Clear(VAR windows : Windows);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(windows)-1 DO
 		windows[i] := NIL;
@@ -1029,7 +1029,7 @@ BEGIN
 END Clear;
 
 (** Postcondition: {(windows # NIL) & (0 <= nofWindows < MaxNofWindows) & (windows[i < nofWindows] # NIL)} *)
-PROCEDURE GetWindows(VAR windows : Windows; VAR nofWindows : LONGINT);
+PROCEDURE GetWindows(VAR windows : Windows; VAR nofWindows : SIGNED32);
 VAR
 	window : WMWindowManager.Window;
 
@@ -1040,7 +1040,7 @@ VAR
 	END IsUserWindow;
 
 	PROCEDURE SortWindowsById(VAR windows : Windows);
-	VAR temp : WMWindowManager.Window; i, j : LONGINT;
+	VAR temp : WMWindowManager.Window; i, j : SIGNED32;
 	BEGIN
 		(* for now bubble sort is sufficient *)
 		FOR i := 0 TO nofWindows-1 DO

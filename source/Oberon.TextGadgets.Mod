@@ -44,9 +44,9 @@ TYPE
 	StyleDesc* = RECORD (Gadgets.FrameDesc)
 		text*: Texts.Text;
 		mode*: SET;
-		leftM*, width*: INTEGER;
-		noTabs*: SHORTINT;
-		tab*: ARRAY MaxTabs OF INTEGER;
+		leftM*, width*: SIGNED16;
+		noTabs*: SIGNED8;
+		tab*: ARRAY MaxTabs OF SIGNED16;
 	END;
 
 	Control* = POINTER TO ControlDesc;
@@ -70,8 +70,8 @@ VAR
 
     stylefnt: Fonts.Font; (* only loaded when shared styles are used *)
 
-    dummyF: Display.Frame; dummydlink: Objects.Object; dx, dy: INTEGER;
-    dummyT: TextGadgets0.Frame; dTx, dTy: INTEGER;
+    dummyF: Display.Frame; dummydlink: Objects.Object; dx, dy: SIGNED16;
+    dummyT: TextGadgets0.Frame; dTx, dTy: SIGNED16;
 	dummyM: Display3.Mask;
 
 PROCEDURE Visible(F: Frame; obj: Objects.Object): BOOLEAN;
@@ -87,7 +87,7 @@ PROCEDURE PrintVisible(F: Frame; obj: Objects.Object): BOOLEAN;
 BEGIN RETURN ~(obj IS Control)
 END PrintVisible;
 
-PROCEDURE FindStyle*(T: Texts.Text; beg: LONGINT): Style;
+PROCEDURE FindStyle*(T: Texts.Text; beg: SIGNED32): Style;
 VAR F: Texts.Finder; obj: Objects.Object; style: Style;
 BEGIN
 	Texts.OpenFinder(F, T, 0); style := NIL;
@@ -97,21 +97,21 @@ BEGIN
 	RETURN style
 END FindStyle;
 
-PROCEDURE Max(x, y: INTEGER): INTEGER;
+PROCEDURE Max(x, y: SIGNED16): SIGNED16;
 BEGIN IF x > y THEN RETURN x ELSE RETURN y END
 END Max;
 
-PROCEDURE Below(x, y: INTEGER): INTEGER;
+PROCEDURE Below(x, y: SIGNED16): SIGNED16;
 BEGIN
 	IF x < y THEN RETURN y - x ELSE RETURN 0 END
 END Below;
 
-PROCEDURE Above(x, y: INTEGER): INTEGER;
+PROCEDURE Above(x, y: SIGNED16): SIGNED16;
 BEGIN
 	IF x > y THEN RETURN x - y ELSE RETURN 0 END
 END Above;
 
-PROCEDURE CurStyle(F: Frame; L: TextGadgets0.Line; VAR mode: SET; VAR leftM, width: INTEGER);
+PROCEDURE CurStyle(F: Frame; L: TextGadgets0.Line; VAR mode: SET; VAR leftM, width: SIGNED16);
 VAR style: Style;
 BEGIN
 	IF (L.obj # NIL) & (L.obj IS Style) THEN
@@ -125,7 +125,7 @@ BEGIN
 END CurStyle;
 
 (* indentation from leftM *)
-PROCEDURE DisplayParam(F: Frame; L: TextGadgets0.Line; VAR leftM, offset, width, a, b: INTEGER);
+PROCEDURE DisplayParam(F: Frame; L: TextGadgets0.Line; VAR leftM, offset, width, a, b: SIGNED16);
 VAR mode: SET;
 BEGIN
 	CurStyle(F, L, mode, leftM, width);
@@ -145,11 +145,11 @@ BEGIN
 	IF L.right > F.W - F.right THEN L.right := F.W - F.right END
 END DisplayParam;
 
-PROCEDURE Dev(x: INTEGER): INTEGER;
+PROCEDURE Dev(x: SIGNED16): SIGNED16;
 BEGIN RETURN SHORT(LONG(x) * Display.Unit DIV Printer.Unit)
 END Dev;
 
-PROCEDURE PrintParam(F: Frame; L: TextGadgets0.Line; VAR leftM, offset, width, a, b: INTEGER);
+PROCEDURE PrintParam(F: Frame; L: TextGadgets0.Line; VAR leftM, offset, width, a, b: SIGNED16);
 VAR mode: SET;
 BEGIN
 	CurStyle(F, L, mode, leftM, width); width := Dev(width);
@@ -164,8 +164,8 @@ BEGIN
 	IF L.extra = 1 THEN leftM := 0; offset := 0; END; (* !! special hack for styles *)
 END PrintParam;
 
-PROCEDURE Background(F: TextGadgets0.Frame; R: Display3.Mask; X, Y, x, y, w, h: INTEGER);
-VAR cx, cy, cw, ch: INTEGER;
+PROCEDURE Background(F: TextGadgets0.Frame; R: Display3.Mask; X, Y, x, y, w, h: SIGNED16);
+VAR cx, cy, cw, ch: SIGNED16;
 BEGIN
 	WITH F: Frame DO
 		IF ~(Gadgets.transparent IN F.state) THEN
@@ -202,7 +202,7 @@ PROCEDURE ClearCache;
 BEGIN lastfont := NIL; lastlib := NIL;
 END ClearCache;
 
-PROCEDURE Lookup(L: Fonts.Font; ch: CHAR; VAR minY, maxY, dx, y, h: INTEGER);
+PROCEDURE Lookup(L: Fonts.Font; ch: CHAR; VAR minY, maxY, dx, y, h: SIGNED16);
 VAR obj: Objects.Object; metric: Fonts.Font;
 BEGIN
 	IF L = lastfont THEN metric := lastlib
@@ -223,7 +223,7 @@ BEGIN
 	END
 END Lookup;
 
-PROCEDURE Voff(obj: Objects.Object): INTEGER;
+PROCEDURE Voff(obj: Objects.Object): SIGNED16;
 VAR A: Objects.AttrMsg;
 BEGIN
 	A.id := Objects.get; A.name := "LineupHY"; A.class := Objects.Inval; A.res := -1;
@@ -233,8 +233,8 @@ BEGIN
 	END
 END Voff;
 
-PROCEDURE TabSize(obj: Objects.Object; w: INTEGER; VAR dx, pdx: INTEGER);
-VAR t: INTEGER;
+PROCEDURE TabSize(obj: Objects.Object; w: SIGNED16; VAR dx, pdx: SIGNED16);
+VAR t: SIGNED16;
 BEGIN
 	IF (obj # NIL) & (obj IS Style) THEN
 		WITH obj: Style DO
@@ -250,14 +250,14 @@ BEGIN
 END TabSize;
 
 (* boxes must be inserted in sequence !*)
-PROCEDURE Format(F: TextGadgets0.Frame; org: LONGINT; L: TextGadgets0.Line);
+PROCEDURE Format(F: TextGadgets0.Frame; org: SIGNED32; L: TextGadgets0.Line);
 VAR obj, Tobj: Objects.Object; R: Texts.Reader; ch: CHAR; box: TextGadgets0.Box; style: SET;
 	(* adjust format *)
-	maxW, lastw, lastasr, lastdsr, leftM: INTEGER; lastlen: LONGINT; lastbox: TextGadgets0.Box;
+	maxW, lastw, lastasr, lastdsr, leftM: SIGNED16; lastlen: SIGNED32; lastbox: TextGadgets0.Box;
 	(* WYSIWYG *)
-	d, odx, dx, pmaxW, devw, pw: INTEGER;
+	d, odx, dx, pmaxW, devw, pw: SIGNED16;
 
-	objw: INTEGER; lastfnt: Objects.Library;
+	objw: SIGNED16; lastfnt: Objects.Library;
 BEGIN
 	IF (org < 0) OR (org > F.text.len) THEN HALT(99) END;
 	WITH F: Frame DO
@@ -396,8 +396,8 @@ BEGIN
 	END
 END Format;
 
-PROCEDURE PrinterTabSize(obj: Objects.Object; w: INTEGER; VAR dx, pdx: INTEGER);
-VAR t: INTEGER;
+PROCEDURE PrinterTabSize(obj: Objects.Object; w: SIGNED16; VAR dx, pdx: SIGNED16);
+VAR t: SIGNED16;
 BEGIN
 	(* convert w back to display coordinates *)
 	w := SHORT(LONG(w) * Printer.Unit DIV Display.Unit);
@@ -414,11 +414,11 @@ BEGIN
 	END
 END PrinterTabSize;
 
-PROCEDURE PrintFormat(F: TextGadgets0.Frame; org: LONGINT; L: TextGadgets0.Line; VAR break: BOOLEAN);
+PROCEDURE PrintFormat(F: TextGadgets0.Frame; org: SIGNED32; L: TextGadgets0.Line; VAR break: BOOLEAN);
 VAR obj: Objects.Object; R: Texts.Reader; ch: CHAR; box: TextGadgets0.Box; style: SET;
 	(* adjust format *)
-	pmaxW, lastw, lastasr, lastdsr, leftM: INTEGER; lastlen: LONGINT; lastbox: TextGadgets0.Box;
-	voff, minY, maxY, odx, oy, oh, dx, sw, maxW: INTEGER;
+	pmaxW, lastw, lastasr, lastdsr, leftM: SIGNED16; lastlen: SIGNED32; lastbox: TextGadgets0.Box;
+	voff, minY, maxY, odx, oy, oh, dx, sw, maxW: SIGNED16;
 BEGIN
 	WITH F: Frame DO
 		break := FALSE;
@@ -528,8 +528,8 @@ BEGIN
 	END;
 END PrintFormat;
 
-PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-VAR r, t, r1, t1: INTEGER;
+PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+VAR r, t, r1, t1: SIGNED16;
 BEGIN
 	r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 	IF x < x1 THEN x := x1 END;
@@ -539,7 +539,7 @@ BEGIN
 	w := r - x + 1; h := t - y + 1;
 END ClipAgainst;
 
-PROCEDURE RestoreFrame0(x, y, w, h: INTEGER);
+PROCEDURE RestoreFrame0(x, y, w, h: SIGNED16);
 VAR D: Display.DisplayMsg;
 BEGIN
 	ClipAgainst(x, y, w, h, dummyM.X, dummyM.Y, dummyM.W, dummyM.H);
@@ -549,8 +549,8 @@ BEGIN
 	Gadgets.Send(dummyT, dTx, dTy, dummyF, D);
 END RestoreFrame0;
 
-PROCEDURE RestoreFrame(F: Frame; M: Display3.Mask; X, Y, x, y: INTEGER; f: Display.Frame; dlink: Objects.Object);
-VAR dF: Display.Frame; dd: Objects.Object; dT: TextGadgets0.Frame; a, b, c, d: INTEGER; dM: Display3.Mask;
+PROCEDURE RestoreFrame(F: Frame; M: Display3.Mask; X, Y, x, y: SIGNED16; f: Display.Frame; dlink: Objects.Object);
+VAR dF: Display.Frame; dd: Objects.Object; dT: TextGadgets0.Frame; a, b, c, d: SIGNED16; dM: Display3.Mask;
 BEGIN
 	dF := dummyF; dd := dummydlink; dT := dummyT; a := dx; b := dy; c := dTx; d := dTy; dM := dummyM; (* save *)
 
@@ -560,15 +560,15 @@ BEGIN
 	dummyF := dF; dummydlink := dd; dummyT := dT; dx := a; dy := b; dTx := c; dTy := d; dummyM := dM (* restore *)
 END RestoreFrame;
 
-PROCEDURE DisplayLine(F: TextGadgets0.Frame; M: Display3.Mask; x, y: INTEGER; org: LONGINT; L: TextGadgets0.Line; dlink: Objects.Object);
-VAR X, Y: INTEGER; obj: Objects.Object; R: Texts.Reader; ch: CHAR; pos: LONGINT;
-	RM: Display.ControlMsg; cx, cy, cw, cch: INTEGER; box: TextGadgets0.Box;
+PROCEDURE DisplayLine(F: TextGadgets0.Frame; M: Display3.Mask; x, y: SIGNED16; org: SIGNED32; L: TextGadgets0.Line; dlink: Objects.Object);
+VAR X, Y: SIGNED16; obj: Objects.Object; R: Texts.Reader; ch: CHAR; pos: SIGNED32;
+	RM: Display.ControlMsg; cx, cy, cw, cch: SIGNED16; box: TextGadgets0.Box;
 	(* formatting control *)
-	leftM, offset, width, a, b, dx, d: INTEGER;
-	spaces: INTEGER;
+	leftM, offset, width, a, b, dx, d: SIGNED16;
+	spaces: SIGNED16;
 
 	(* optimize *)
-	start: LONGINT;
+	start: SIGNED32;
 BEGIN
 	cx := M.X; cy := M.Y; cw := M.W; cch := M.H;
 	WITH F: Frame DO
@@ -664,19 +664,19 @@ BEGIN
 	M.X := cx; M.Y := cy; M.W := cw; M.H := cch
 END DisplayLine;
 
-PROCEDURE PrintLine(F: TextGadgets0.Frame; M: Display3.Mask; x, y: INTEGER; org: LONGINT; L: TextGadgets0.Line; dlink: Objects.Object);
-VAR X, Y: INTEGER; obj: Objects.Object; R: Texts.Reader; ch: CHAR; pos: LONGINT;
-	dx, odx, d: INTEGER; box: TextGadgets0.Box;
+PROCEDURE PrintLine(F: TextGadgets0.Frame; M: Display3.Mask; x, y: SIGNED16; org: SIGNED32; L: TextGadgets0.Line; dlink: Objects.Object);
+VAR X, Y: SIGNED16; obj: Objects.Object; R: Texts.Reader; ch: CHAR; pos: SIGNED32;
+	dx, odx, d: SIGNED16; box: TextGadgets0.Box;
 	(* formatting control *)
-	leftM, offset, width, a, b: INTEGER;
-	spaces: INTEGER;
-	lastfnt: Objects.Library; lastvoff, lastcol: INTEGER; buf: ARRAY 1024 OF CHAR; bufp, pX, pY: INTEGER;
+	leftM, offset, width, a, b: SIGNED16;
+	spaces: SIGNED16;
+	lastfnt: Objects.Library; lastvoff, lastcol: SIGNED16; buf: ARRAY 1024 OF CHAR; bufp, pX, pY: SIGNED16;
 	P: Display.DisplayMsg;
 	Fdlink, Mdlink: Objects.Object;
 	RR: Display3.Mask; OM: Display3.OverlapMsg;
 
-	PROCEDURE Put(ch: CHAR; fnt: Objects.Library; voff, col: INTEGER);
-	VAR  d, dx: INTEGER;
+	PROCEDURE Put(ch: CHAR; fnt: Objects.Library; voff, col: SIGNED16);
+	VAR  d, dx: SIGNED16;
 	BEGIN
 		IF col < 0 THEN  col := col + 256  END;
 		IF (fnt # lastfnt) OR (voff # lastvoff) OR (col # lastcol) OR (ch = 0X) THEN (* new font or new vertical offset, break*)
@@ -756,16 +756,16 @@ BEGIN
 	Put(0X, NIL, 0, 0)
 END PrintLine;
 
-PROCEDURE FindLine(F: TextGadgets0.Frame; y, Y: INTEGER; VAR org: LONGINT; VAR L: TextGadgets0.Line);
+PROCEDURE FindLine(F: TextGadgets0.Frame; y, Y: SIGNED16; VAR org: SIGNED32; VAR L: TextGadgets0.Line);
 BEGIN
 	L := F.trailer.next; org := F.org;
 	WHILE (L.next # F.trailer) & (Y < y + F.H - 1 + L.base - L.dsr) DO org := org + L.len; L := L.next; END;
 END FindLine;
 
-PROCEDURE LocateChar(F: TextGadgets0.Frame; x, y, X, Y: INTEGER; VAR loc: TextGadgets0.Loc);
-VAR obj: Objects.Object; ox, dx: INTEGER; R: Texts.Reader; ch: CHAR; org: LONGINT;
+PROCEDURE LocateChar(F: TextGadgets0.Frame; x, y, X, Y: SIGNED16; VAR loc: TextGadgets0.Loc);
+VAR obj: Objects.Object; ox, dx: SIGNED16; R: Texts.Reader; ch: CHAR; org: SIGNED32;
 	(* format *)
-	leftM, offset, width, a, b, d: INTEGER;
+	leftM, offset, width, a, b, d: SIGNED16;
 BEGIN
 	WITH F: Frame DO
 		FindLine(F, y,  Y, org, loc.line); loc.org := org; loc.pos := org;
@@ -809,10 +809,10 @@ BEGIN
 	END
 END LocateChar;
 
-PROCEDURE LocatePos(F: TextGadgets0.Frame; pos: LONGINT; VAR loc: TextGadgets0.Loc);
-VAR l: TextGadgets0.Line; obj: Objects.Object; dx, ox: INTEGER; R: Texts.Reader; ch: CHAR; org: LONGINT;
+PROCEDURE LocatePos(F: TextGadgets0.Frame; pos: SIGNED32; VAR loc: TextGadgets0.Loc);
+VAR l: TextGadgets0.Line; obj: Objects.Object; dx, ox: SIGNED16; R: Texts.Reader; ch: CHAR; org: SIGNED32;
 	(* format *)
-	leftM, offset, width, a, b, d: INTEGER;
+	leftM, offset, width, a, b, d: SIGNED16;
 BEGIN
 	WITH F: Frame DO
 		l := F.trailer.next;
@@ -856,11 +856,11 @@ BEGIN
 	END
 END LocatePos;
 
-PROCEDURE LocateString*(F: TextGadgets0.Frame; x, y, X, Y: INTEGER; VAR loc: TextGadgets0.Loc);
-VAR R: Texts.Reader; ch: CHAR; obj: Objects.Object; lim, bpos, pos, org: LONGINT; L: TextGadgets0.Line;
-	bx, ox, ex, dx: INTEGER;
+PROCEDURE LocateString*(F: TextGadgets0.Frame; x, y, X, Y: SIGNED16; VAR loc: TextGadgets0.Loc);
+VAR R: Texts.Reader; ch: CHAR; obj: Objects.Object; lim, bpos, pos, org: SIGNED32; L: TextGadgets0.Line;
+	bx, ox, ex, dx: SIGNED16;
 	(* format *)
-	leftM, offset, width, a, b, d: INTEGER;
+	leftM, offset, width, a, b, d: SIGNED16;
 BEGIN
 	WITH F: Frame DO
 		FindLine(F, y, Y, org, L);
@@ -931,7 +931,7 @@ BEGIN
 	END
 END LocateString;
 
-  PROCEDURE Call (F: TextGadgets0.Frame; pos: LONGINT; keysum: SET; dlink: Objects.Object);
+  PROCEDURE Call (F: TextGadgets0.Frame; pos: SIGNED32; keysum: SET; dlink: Objects.Object);
     VAR obj: Objects.Object;
     	A: Objects.AttrMsg; R: Texts.Reader; ch: CHAR;
   BEGIN
@@ -966,7 +966,7 @@ BEGIN Gadgets.framehandle(F, M);
 END ForceString;
 
 PROCEDURE HandleStyleAdjust(F: Frame; Sobj: Style);
-VAR f: Texts.Finder; from, pos: LONGINT; obj: Objects.Object;
+VAR f: Texts.Finder; from, pos: SIGNED32; obj: Objects.Object;
 BEGIN
 	from := -1;
 	Texts.OpenFinder(f, F.text, 0);
@@ -1029,7 +1029,7 @@ BEGIN
 	END;
 END FrameAttr;
 
-PROCEDURE ConvertMsg(VAR M: Texts.UpdateMsg; VAR id: INTEGER; VAR beg, end: LONGINT);
+PROCEDURE ConvertMsg(VAR M: Texts.UpdateMsg; VAR id: SIGNED16; VAR beg, end: SIGNED32);
 (* CONST delete = 2; insert = 1; change = 0; *)
 BEGIN
 	IF M.len = 0 THEN id := delete; beg := M.beg; end := M.end
@@ -1047,8 +1047,8 @@ BEGIN
 	Display.Broadcast(A)
 END StyleChange;
 
-PROCEDURE AdjustStyle(F: Frame; style: Style; W: INTEGER);
-	VAR width, pw, fw: INTEGER;
+PROCEDURE AdjustStyle(F: Frame; style: Style; W: SIGNED16);
+	VAR width, pw, fw: SIGNED16;
 BEGIN
 	width := style.width; fw := width; pw := width;
 	IF frameW IN style.mode THEN
@@ -1073,7 +1073,7 @@ BEGIN
 	END
 END AdjustStyle;
 
-PROCEDURE AdjustStyles(F: Frame; W: INTEGER);
+PROCEDURE AdjustStyles(F: Frame; W: SIGNED16);
 	VAR f: Texts.Finder; obj: Objects.Object;
 BEGIN
 	Texts.OpenFinder(f, F.text, 0);
@@ -1085,7 +1085,7 @@ BEGIN
 END AdjustStyles;
 
 PROCEDURE FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR F0: Frame; style: Style; id: INTEGER; beg, end, pos: LONGINT; L: TextGadgets0.Line; M0: Texts.UpdateMsg;
+VAR F0: Frame; style: Style; id: SIGNED16; beg, end, pos: SIGNED32; L: TextGadgets0.Line; M0: Texts.UpdateMsg;
 BEGIN
 	WITH F: Frame DO
 		IF M IS Objects.CopyMsg THEN
@@ -1237,7 +1237,7 @@ END NewNote;
 (* ------------------------------- Style code ------------------------------ *)
 
 PROCEDURE StyleAttr(F: Style; VAR M: Objects.AttrMsg);
-VAR i, j, k: INTEGER; val: LONGINT; nr: ARRAY 6 OF CHAR;
+VAR i, j, k: SIGNED16; val: SIGNED32; nr: ARRAY 6 OF CHAR;
 BEGIN
 	IF M.id = Objects.get THEN
 		IF M.name = "Gen" THEN M.class := Objects.String; COPY("TextGadgets.NewStyleProc", M.s); M.res := 0
@@ -1327,11 +1327,11 @@ BEGIN
 	END
 END StyleAttr;
 
-PROCEDURE RestoreStyle(F: Style; M: Display3.Mask; x, y, w, h: INTEGER);
-VAR i, j: SHORTINT; name: ARRAY 128 OF CHAR; s: ARRAY 64 OF CHAR;
+PROCEDURE RestoreStyle(F: Style; M: Display3.Mask; x, y, w, h: SIGNED16);
+VAR i, j: SIGNED8; name: ARRAY 128 OF CHAR; s: ARRAY 64 OF CHAR;
 
 	PROCEDURE WriteTag(VAR s: ARRAY OF CHAR);
-	VAR W, H, dsr: INTEGER;
+	VAR W, H, dsr: SIGNED16;
 	BEGIN
 		IF stylefnt = NIL THEN stylefnt := Fonts.This("Default8.Scn.Fnt") END;
 		Display3.StringSize(s, stylefnt, W, H, dsr);
@@ -1383,8 +1383,8 @@ BEGIN
 	Gadgets.CopyFrame(M, from, to);
 END CopyStyle;
 
-PROCEDURE Highlight(R: Display3.Mask; x, y, w, h: INTEGER): BOOLEAN;
-VAR X, Y: INTEGER; keys, keysum: SET;
+PROCEDURE Highlight(R: Display3.Mask; x, y, w, h: SIGNED16): BOOLEAN;
+VAR X, Y: SIGNED16; keys, keysum: SET;
 BEGIN
 	IF w < 7 THEN w := 7 END;
 	keysum := {};
@@ -1401,13 +1401,13 @@ BEGIN
 	RETURN keysum = {1}
 END Highlight;
 
-PROCEDURE TrackStyle(F: Style; x, y: INTEGER; R: Display3.Mask; VAR M: Oberon.InputMsg);
-VAR bx, i, j: INTEGER; keysum: SET; do: BOOLEAN;
+PROCEDURE TrackStyle(F: Style; x, y: SIGNED16; R: Display3.Mask; VAR M: Oberon.InputMsg);
+VAR bx, i, j: SIGNED16; keysum: SET; do: BOOLEAN;
 
-	PROCEDURE TrackButton(VAR bx: INTEGER; VAR keysum: SET; y, w, h: INTEGER);
-	VAR offset, last: INTEGER;
+	PROCEDURE TrackButton(VAR bx: SIGNED16; VAR keysum: SET; y, w, h: SIGNED16);
+	VAR offset, last: SIGNED16;
 
-		PROCEDURE Draw(pos: INTEGER);
+		PROCEDURE Draw(pos: SIGNED16);
 		BEGIN Display3.ReplConst(NIL, Display3.invertC, pos, y, w, h, Display.invert) END Draw;
 
 	BEGIN
@@ -1516,7 +1516,7 @@ BEGIN
 END TrackStyle;
 
 PROCEDURE StyleHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: Style; R: Display3.Mask;
+VAR x, y, w, h: SIGNED16; F0: Style; R: Display3.Mask;
 BEGIN
 	WITH F: Style DO
 		IF M IS Display.FrameMsg THEN
@@ -1641,7 +1641,7 @@ BEGIN
 	END
 END ControlAttr;
 
-PROCEDURE RestoreControl(F: Control; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE RestoreControl(F: Control; M: Display3.Mask; x, y, w, h: SIGNED16);
 BEGIN
 	IF ~(Gadgets.selected IN F.state) THEN
 		Display3.Circle(M, Display.FG, Display.solid, x + w DIV 2, y + w DIV 2, w DIV 2 - 2, 1, {Display3.filled}, Display.replace);
@@ -1656,7 +1656,7 @@ BEGIN
 END CopyControl;
 
 PROCEDURE ControlHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: Control; R: Display3.Mask; keysum: SET; S: Display.SelectMsg;
+VAR x, y, w, h: SIGNED16; F0: Control; R: Display3.Mask; keysum: SET; S: Display.SelectMsg;
 BEGIN
 	WITH F: Control DO
 		IF M IS Display.FrameMsg THEN

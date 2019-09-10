@@ -71,7 +71,7 @@ TYPE
 	END FrameLinks;
 
 	PROCEDURE HandleFileMsg( obj: tObject;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  w, depth: LONGINT;  version: INTEGER;
+	VAR objsub: Objects.Object;  w, depth: SIGNED32;  version: SIGNED16;
 		(*! store Picts as GIF for color preserving or store colors *)
 	BEGIN
 		IF msg.id = Objects.load THEN
@@ -98,7 +98,7 @@ TYPE
 	END CheckDimensions;
 
 	PROCEDURE Sync*( obj: tObject );
-	VAR A: ants1dArrayObjects.tArray;  i: LONGINT;
+	VAR A: ants1dArrayObjects.tArray;  i: SIGNED32;
 	BEGIN
 		IF obj.A # NIL THEN
 			CheckDimensions( obj );  A := obj.A.A;

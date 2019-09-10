@@ -35,13 +35,13 @@ TYPE
 		BEGIN
 			NEW(panel); panel.bounds.SetExtents(400, 300); panel.fillColor.Set(01144AA80H);
 
-			NEW(tl); tl.alignment.Set(WMComponents.AlignTop); tl.fillColor.Set(LONGINT(0FF000080H));
+			NEW(tl); tl.alignment.Set(WMComponents.AlignTop); tl.fillColor.Set(SIGNED32(0FF000080H));
 			panel.AddContent(tl); tl.caption.SetAOC("Top"); tl.bounds.SetHeight(40); tl.bearing.Set(bear);
 
 			NEW(tl); tl.alignment.Set(WMComponents.AlignBottom); tl.fillColor.Set(00000FF80H);
 			panel.AddContent(tl); tl.caption.SetAOC("Bottom"); tl.bounds.SetHeight(40); tl.bearing.Set(bear);
 
-			NEW(tl); tl.alignment.Set(WMComponents.AlignLeft); tl.fillColor.Set(LONGINT(088FF0080H));
+			NEW(tl); tl.alignment.Set(WMComponents.AlignLeft); tl.fillColor.Set(SIGNED32(088FF0080H));
 			panel.AddContent(tl); tl.caption.SetAOC("Left"); tl.bounds.SetWidth(40); tl.bearing.Set(bear);
 
 			NEW(tl); tl.alignment.Set(WMComponents.AlignRight); tl.fillColor.Set(000FF8880H);
@@ -115,7 +115,7 @@ TYPE
 	END SomePanel;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*;
 VAR winstance : Window;

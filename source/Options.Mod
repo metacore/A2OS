@@ -66,12 +66,12 @@ TYPE
 
 	Option = RECORD
 		isSet : BOOLEAN;
-		timestamp : LONGINT;
+		timestamp : SIGNED32;
 		ch : CHAR; (* single character name *)
 		name : Name; (* multi character name *)
-		type : LONGINT; (* Flag, String or Integer *)
-		value : LONGINT; (* Integer value if type = Integer *)
-		rvalue: LONGREAL; (*real value if type = real*)
+		type : SIGNED32; (* Flag, String or Integer *)
+		value : SIGNED32; (* Integer value if type = Integer *)
+		rvalue: FLOAT64; (*real value if type = real*)
 		string : Parameter; (* String value if type = String *)
 	END;
 
@@ -80,14 +80,14 @@ TYPE
 	Options* = OBJECT
 	VAR
 		options : ARRAY MaxOptions OF Option;
-		nofOptions : LONGINT;
+		nofOptions : SIGNED32;
 
 		arg : Streams.Reader;
 		error : Streams.Writer;
 		setError : BOOLEAN;
 		flagUnknownOptions : BOOLEAN;
 
-		timestamp : LONGINT;
+		timestamp : SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -100,8 +100,8 @@ TYPE
 		(**	Add option declaration.
 			- Duplicate names are not allowed!
 			- Numbers are not allowed as option character or as first character of an option name *)
-		PROCEDURE Add*(ch : CHAR; CONST name : Name; type : LONGINT);
-		VAR index : LONGINT; char : Name;
+		PROCEDURE Add*(ch : CHAR; CONST name : Name; type : SIGNED32);
+		VAR index : SIGNED32; char : Name;
 		BEGIN {EXCLUSIVE}
 			IF (("0" <= ch) & (ch <= "9")) OR (("0" <= name[0]) & (name[0] <= "9")) THEN
 				KernelLog.String("Command implementation error: Numbers are not allowed as first character of an option name. Ignore option ");
@@ -131,7 +131,7 @@ TYPE
 
 		(** Check whether an option of type Flag is set *)
 		PROCEDURE GetFlag*(CONST name : Name) : BOOLEAN;
-		VAR index : LONGINT;
+		VAR index : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			index := FindOption(name);
 			IF (index # Invalid) THEN
@@ -150,8 +150,8 @@ TYPE
 		END SetFlag;
 
 		(** Check whether an option of type Integer is set and retrieve its value if so *)
-		PROCEDURE GetInteger*( CONST name : Name; VAR integer : LONGINT) : BOOLEAN;
-		VAR index : LONGINT;
+		PROCEDURE GetInteger*( CONST name : Name; VAR integer : SIGNED32) : BOOLEAN;
+		VAR index : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			index := FindOption(name);
 			IF (index # Invalid) THEN
@@ -168,7 +168,7 @@ TYPE
 		END GetInteger;
 
 		PROCEDURE SetInteger*(ch : CHAR; CONST name : Name; CONST string : ARRAY OF CHAR) : BOOLEAN;
-		VAR index : LONGINT; optionName : Name;
+		VAR index : SIGNED32; optionName : Name;
 		BEGIN {EXCLUSIVE}
 			IF (ch = 0X) THEN optionName := name; ELSE optionName[0] := ch; optionName[1] := 0X; END;
 			index := FindOption(optionName);
@@ -183,7 +183,7 @@ TYPE
 
 		(** Check whether an option of type String is set and retrieve its value if so *)
 		PROCEDURE GetString*(CONST name : Name; VAR string : ARRAY OF CHAR) : BOOLEAN;
-		VAR index : LONGINT;
+		VAR index : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			index := FindOption(name);
 			IF (index # Invalid) THEN
@@ -206,8 +206,8 @@ TYPE
 
 
 
-		PROCEDURE GetReal*(CONST name : Name; VAR real: LONGREAL) : BOOLEAN;
-		VAR index: LONGINT;
+		PROCEDURE GetReal*(CONST name : Name; VAR real: FLOAT64) : BOOLEAN;
+		VAR index: SIGNED32;
 		BEGIN{EXCLUSIVE}
 			index:=FindOption(name);
 			IF (index#Invalid) THEN
@@ -225,7 +225,7 @@ TYPE
 
 		(** Unset all options *)
 		PROCEDURE Clear*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			FOR i :=	 0 TO nofOptions-1 DO
 				options[i].isSet := FALSE;
@@ -235,7 +235,7 @@ TYPE
 
 		(** Remove all declared options *)
 		PROCEDURE Reset*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			nofOptions := 0; timestamp := 0;
 			FOR i := 0 TO MaxOptions-1 DO
@@ -358,7 +358,7 @@ TYPE
 
 		(*  Name = Char Char {Char} *)
 		PROCEDURE ParseName(VAR name : ARRAY OF CHAR; firstChar : CHAR) : BOOLEAN;
-		VAR ch : CHAR; i : LONGINT; pos : Streams.Position;
+		VAR ch : CHAR; i : SIGNED32; pos : Streams.Position;
 		BEGIN
 			pos := arg.Pos();
 			IF (firstChar # 0X) OR ParseChar(name[0]) THEN
@@ -382,7 +382,7 @@ TYPE
 
 		(* CharOption = Char [Assignment] | Flags *)
 		PROCEDURE ParseCharOption() : BOOLEAN;
-		VAR ch, optionChar : CHAR; parameter : Parameter; ignoreHere : BOOLEAN; count : LONGINT;
+		VAR ch, optionChar : CHAR; parameter : Parameter; ignoreHere : BOOLEAN; count : SIGNED32;
 		BEGIN
 			IF ParseChar(optionChar) THEN
 				ch := arg.Peek();
@@ -420,7 +420,7 @@ TYPE
 
 		(* Assignment  = "=" (EnquotedString | Name | Char) *)
 		PROCEDURE ParseAssignment(VAR parameter : Parameter) : BOOLEAN;
-		VAR ch : CHAR; delimiter : CHAR; i : LONGINT;
+		VAR ch : CHAR; delimiter : CHAR; i : SIGNED32;
 		BEGIN
 			arg.Char(ch);
 			ASSERT(ch = Assignment);
@@ -475,7 +475,7 @@ TYPE
 		END ParseChar;
 
 		PROCEDURE SetFlagIntern(ch : CHAR; CONST name : Name; checkTimestamp : BOOLEAN) : BOOLEAN;
-		VAR index : LONGINT; optionName : Name;
+		VAR index : SIGNED32; optionName : Name;
 		BEGIN
 			IF (ch = 0X) THEN optionName := name; ELSE optionName[0] := ch; optionName[1] := 0X; END;
 			index := FindOption(optionName);
@@ -501,7 +501,7 @@ TYPE
 		END SetFlagIntern;
 
 		PROCEDURE SetStringIntern(ch : CHAR; CONST name : Name; CONST string : ARRAY OF CHAR; checkTimestamp : BOOLEAN) : BOOLEAN;
-		VAR index : LONGINT; optionName : Name;
+		VAR index : SIGNED32; optionName : Name;
 		BEGIN
 			IF (ch = 0X) THEN optionName := name; ELSE optionName[0] := ch; optionName[1] := 0X; END;
 			index := FindOption(optionName);
@@ -549,8 +549,8 @@ TYPE
 		END SetStringIntern;
 
 		(* Returns the index of option with character 'ch' or name 'name' or Invalid, if option not found *)
-		PROCEDURE FindOption(CONST name : Name) : LONGINT;
-		VAR ch : CHAR;  i : LONGINT;
+		PROCEDURE FindOption(CONST name : Name) : SIGNED32;
+		VAR ch : CHAR;  i : SIGNED32;
 		BEGIN
 			IF (name[1] = 0X) THEN ch := name[0]; ELSE ch := 0X; END;
 			FOR i := 0 TO nofOptions-1 DO
@@ -587,7 +587,7 @@ TYPE
 
 		(** Debug: List all known options and their current values *)
 		PROCEDURE Show*(out : Streams.Writer);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF (nofOptions > 0) THEN
 				FOR i := 0 TO (nofOptions-1) DO
@@ -707,7 +707,7 @@ TYPE
 
 (** merge base options into options -- replacing only options that had not been set previously *)
 PROCEDURE Merge*(VAR this: Options;  base: Options);
-VAR i,index: LONGINT;
+VAR i,index: SIGNED32;
 BEGIN
 	IF (base # NIL) THEN
 		IF this = NIL THEN
@@ -730,8 +730,8 @@ BEGIN
 	RETURN (" " < ch) & (ch < CHR(128)) & (ch # OptionDelimiter) & (ch # Assignment);
 END IsValidChar;
 
-PROCEDURE StringToInteger*(CONST string : ARRAY OF CHAR;  VAR x: LONGINT;  hex: BOOLEAN) : BOOLEAN;
-VAR pos, vd, vh, sign, d: LONGINT;  ch: CHAR;  ok: BOOLEAN;
+PROCEDURE StringToInteger*(CONST string : ARRAY OF CHAR;  VAR x: SIGNED32;  hex: BOOLEAN) : BOOLEAN;
+VAR pos, vd, vh, sign, d: SIGNED32;  ch: CHAR;  ok: BOOLEAN;
 BEGIN
 	IF (LEN(string) <= 0) THEN RETURN FALSE; END;
 

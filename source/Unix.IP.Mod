@@ -20,10 +20,10 @@ CONST
 
 TYPE
 	Adr* = RECORD
-				ipv4Adr*: LONGINT;
+				ipv4Adr*: SIGNED32;
 				ipv6Adr*: ARRAY 16 OF CHAR;
-				usedProtocol*: LONGINT;
-				data*: LONGINT;
+				usedProtocol*: SIGNED32;
+				data*: SIGNED32;
 			END;
 			(** An IP Address.
 					usedProtocol = 0: No protocol yet used
@@ -38,7 +38,7 @@ TYPE
 
 	ARPHandler* = PROCEDURE {DELEGATE} ( ip: Adr; complete: BOOLEAN;
 											link: Network.LinkAdr;
-											size, sendTime, updateTime, updateDate, hash: LONGINT);
+											size, sendTime, updateTime, updateDate, hash: SIGNED32);
 
 	Interface* = OBJECT
 				(*! 	unused in UnixAos, included only for interface compatibility
@@ -56,12 +56,12 @@ TYPE
 
 				(** DNS server list - can be used by DNS, not used in IP itself *)
 				DNS-: ARRAY MaxNofDNS OF  Adr;   (* DNS server list *)
-				DNScount-: LONGINT;   (* number of DNS servers in list *)
+				DNScount-: SIGNED32;   (* number of DNS servers in list *)
 
 				(* interface *)
 				next*: Interface;   (* next pointer for interface list *)
 				closed-: BOOLEAN;   (* is interface already closed? *)
-				protocol-: LONGINT;
+				protocol-: SIGNED32;
 							 (* Interface for IPv4 or IPv6?. Only used by IP otherwise use dynamic type checking! *)
 
 
@@ -79,11 +79,11 @@ TYPE
 VAR
 	(* IP *)
 	NilAdr*: Adr;   (* To check if an IP address is NIL use IsNilAdr instead *)
-	preferredProtocol*: LONGINT;   (* Preferred IP protocol *)
+	preferredProtocol*: SIGNED32;   (* Preferred IP protocol *)
 
 	(** Is address not yet specified *)
 	PROCEDURE IsNilAdr*( adr: Adr ): BOOLEAN;
-	VAR isNil: BOOLEAN;  i: LONGINT;
+	VAR isNil: BOOLEAN;  i: SIGNED32;
 	BEGIN
 		CASE adr.usedProtocol OF
 		| IPv4:   RETURN (adr.ipv4Adr = NilAdrIPv4)
@@ -103,7 +103,7 @@ VAR
 
 	(* Checks if two addresses are equal *)
 	PROCEDURE AdrsEqual*( adr1, adr2: Adr ): BOOLEAN;
-	VAR equal: BOOLEAN;  i: LONGINT;
+	VAR equal: BOOLEAN;  i: SIGNED32;
 
 	BEGIN
 		IF adr1.usedProtocol # adr2.usedProtocol THEN  RETURN FALSE  END;
@@ -127,19 +127,19 @@ VAR
 
 	(** Convert a dotted-decimal string to an ip address. Return NilAdr on failure. *)
 	PROCEDURE StrToAdr*( ipString: ARRAY OF CHAR ): Adr;
-	VAR retAdr: Adr;  i, j, x: LONGINT;
+	VAR retAdr: Adr;  i, j, x: SIGNED32;
 		adr: ARRAY 4 OF CHAR;
 		ok: BOOLEAN;
-		charCount: LONGINT;   (* ipv6: number of character between two : *)
+		charCount: SIGNED32;   (* ipv6: number of character between two : *)
 		ipv6AdrPart: ARRAY 6 OF CHAR;   (* two bytes of an IPv6 address *)
 		ipv6AdrRight: ARRAY 16 OF CHAR;   (* right part of an IPv6 address; after :: *)
 		hexToChar: ARRAY 3 OF CHAR;
-		leftParts: LONGINT;   (* number of bytes before :: *)
-		rightParts: LONGINT;   (* number of bytes after :: *)
-		val: LONGINT; res: WORD;
-		state: LONGINT;   (* state of the FSM look at the eof for more info *)
+		leftParts: SIGNED32;   (* number of bytes before :: *)
+		rightParts: SIGNED32;   (* number of bytes after :: *)
+		val: SIGNED32; res: INTEGER;
+		state: SIGNED32;   (* state of the FSM look at the eof for more info *)
 		dPointOcc: BOOLEAN;   (* double point occured *)
-		prefixVal: LONGINT;
+		prefixVal: SIGNED32;
 
 		(* compute a subpart (two bytes) of a IPv6 address; subpart:=between two : *)
 		PROCEDURE ComputeIPv6Part( ): BOOLEAN;
@@ -209,7 +209,7 @@ VAR
 				END
 			END;
 
-			IF ok THEN  retAdr.ipv4Adr := S.VAL( LONGINT, adr );  retAdr.usedProtocol := IPv4;  RETURN retAdr;
+			IF ok THEN  retAdr.ipv4Adr := S.VAL( SIGNED32, adr );  retAdr.usedProtocol := IPv4;  RETURN retAdr;
 			ELSE  RETURN NilAdr;
 			END
 		ELSIF IsValidIPv6Str( ipString ) THEN
@@ -274,13 +274,13 @@ VAR
 
 (** Convert an IP address to a dotted-decimal string. *)
 	PROCEDURE AdrToStr*( adr: Adr;  VAR string: ARRAY OF CHAR );
-	VAR i, j, x: LONGINT;
+	VAR i, j, x: SIGNED32;
 		a: ARRAY 4 OF CHAR;
-		val: LONGINT;
+		val: SIGNED32;
 		hexToStr: ARRAY 5 OF CHAR;
 		prefixLenStr: ARRAY 64 OF CHAR;
-		maxZeroRow: LONGINT;  currentZeroRow: LONGINT;
-		maxZeroStart: LONGINT;  currentZeroStart: LONGINT;
+		maxZeroRow: SIGNED32;  currentZeroRow: SIGNED32;
+		maxZeroStart: SIGNED32;  currentZeroStart: SIGNED32;
 		lastZero: BOOLEAN;  lastDPoint: BOOLEAN;  countEnded: BOOLEAN;
 	BEGIN
 		CASE adr.usedProtocol OF
@@ -371,8 +371,8 @@ VAR
 		If the LSB is stored at the end [ofs+3], LSBfirst must be set to FALSE.
 			(address "a.b.c.d" is stored as [a,b,c,d])
 		*)
-	PROCEDURE ArrayToAdr*( CONST arr: ARRAY OF CHAR;  ofs, protocol: LONGINT;  LSBfirst: BOOLEAN ): Adr;
-	VAR adr: Adr;  i, swapTemp: LONGINT;
+	PROCEDURE ArrayToAdr*( CONST arr: ARRAY OF CHAR;  ofs, protocol: SIGNED32;  LSBfirst: BOOLEAN ): Adr;
+	VAR adr: Adr;  i, swapTemp: SIGNED32;
 
 	BEGIN
 		ASSERT( (protocol = 4) OR (protocol = 6) );
@@ -407,8 +407,8 @@ VAR
 		If the LSB should be stored at the end [ofs+3], LSBfirst must be set to FALSE.
 			(address "a.b.c.d" is stored as [a,b,c,d])
 		*)
-	PROCEDURE AdrToArray*( adr: Adr;  VAR arr: ARRAY OF CHAR;  ofs: LONGINT;  LSBfirst: BOOLEAN );
-	VAR tempAdr: Adr;  i, swapTemp: LONGINT;
+	PROCEDURE AdrToArray*( adr: Adr;  VAR arr: ARRAY OF CHAR;  ofs: SIGNED32;  LSBfirst: BOOLEAN );
+	VAR tempAdr: Adr;  i, swapTemp: SIGNED32;
 
 	BEGIN
 		tempAdr := adr;
@@ -442,7 +442,7 @@ VAR
 	(* Return TRUE if adr matches the prefix *)
 	PROCEDURE MatchPrefix*( adr: Adr;  prefix: Adr ): BOOLEAN;
 	VAR
-		bytesToCheck: LONGINT;  bitsToCheck: LONGINT;  i: LONGINT;  matches: BOOLEAN;  diffSet: SET;
+		bytesToCheck: SIGNED32;  bitsToCheck: SIGNED32;  i: SIGNED32;  matches: BOOLEAN;  diffSet: SET;
 	BEGIN
 		matches := TRUE;
 		bytesToCheck := prefix.data DIV 8;  bitsToCheck := prefix.data MOD 8;
@@ -461,9 +461,9 @@ VAR
 
 	(** Checks if a string is a valid IPv4 address *)
 	PROCEDURE IsValidIPv4Str( CONST ipString: ARRAY OF CHAR ): BOOLEAN;
-	VAR i, j: LONGINT;  ipNr: LONGINT;
+	VAR i, j: SIGNED32;  ipNr: SIGNED32;
 		digits: ARRAY 4 OF CHAR;
-		startClass: LONGINT;
+		startClass: SIGNED32;
 	BEGIN
 		i := 0;
 
@@ -538,13 +538,13 @@ VAR
 
 	(** Checks if a string is a valid IPv6 address *)
 	PROCEDURE IsValidIPv6Str( ipString: ARRAY OF CHAR ): BOOLEAN;
-	VAR i: LONGINT;
-		state: LONGINT;   (* -1: error *)
-		charCount: LONGINT;
-		ascD: LONGINT;  ascH: LONGINT;
+	VAR i: SIGNED32;
+		state: SIGNED32;   (* -1: error *)
+		charCount: SIGNED32;
+		ascD: SIGNED32;  ascH: SIGNED32;
 		dPointOcc: BOOLEAN;
-		prefixLenArr: ARRAY 3 OF LONGINT;
-		prefixLen: LONGINT;
+		prefixLenArr: ARRAY 3 OF SIGNED32;
+		prefixLen: SIGNED32;
 	BEGIN
 		i := 0;  state := 1;  dPointOcc := FALSE;
 		Strings.UpperCase( ipString );
@@ -604,14 +604,14 @@ VAR
 
 	(** Set IPv6 address to zero *)
 	PROCEDURE SetIPv6AdrNil( adr: Adr );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 15 DO  adr.ipv6Adr[i] := 0X  END;
 	END SetIPv6AdrNil;
 
 
 	(* Swap internal representation of an IP address from big to little endian or vice versa. *)
-	PROCEDURE  -SwapEndian(  VAR adr: LONGINT );
+	PROCEDURE  -SwapEndian(  VAR adr: SIGNED32 );
 	CODE
 	#IF I386 THEN
 		POP EAX

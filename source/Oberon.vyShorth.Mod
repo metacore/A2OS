@@ -57,11 +57,11 @@ VAR
 	(* converted from the shorth plot in Shorty (c) G. Sawitzki *)
 	CONST cPens = 10;
 	TYPE tPoint = RECORD
-			H, V: REAL
+			H, V: FLOAT32
 		END;
-	VAR lenv: vyBase.tVector;  xp, yp: REAL;  lenMin: REAL;  dataSpan: REAL;
+	VAR lenv: vyBase.tVector;  xp, yp: FLOAT32;  lenMin: FLOAT32;  dataSpan: FLOAT32;
 		penVec: ARRAY cPens + 1 OF tPoint;
-		yFac: REAL;  delta: INTEGER;  I, J, rightLim, leftLim, dataPoint, count: LONGINT;
+		yFac: FLOAT32;  delta: SIGNED16;  I, J, rightLim, leftLim, dataPoint, count: SIGNED32;
 	BEGIN
 		IF shorth.x # NIL THEN
 			count := shorth.x.nrData;
@@ -127,7 +127,7 @@ VAR
 	END Consume;
 
 	PROCEDURE AdjustCoord( pict: vyPort.Picture;  obj: tLayer );
-	VAR minX, maxX: REAL;  nans: LONGINT;
+	VAR minX, maxX: FLOAT32;  nans: SIGNED32;
 	BEGIN
 		IF pict # NIL THEN
 			IF obj.x # NIL THEN vyTypes.VGetMinMaxR( obj.x, minX, maxX, nans ) ELSE minX := 0;  maxX := 1 END;
@@ -189,7 +189,7 @@ VAR
 	END New;
 
 	PROCEDURE Handler*( obj: Objects.Object;  VAR msg: Objects.ObjMsg );   (*vs 0.0a1	md  20.07.94 *)
-	VAR minX, maxX: REAL;  pict: vyPort.Picture;  nans: LONGINT;
+	VAR minX, maxX: FLOAT32;  pict: vyPort.Picture;  nans: SIGNED32;
 	BEGIN
 		WITH obj: tLayer DO
 			IF msg IS Display.DisplayMsg THEN
@@ -266,8 +266,8 @@ END Init;*)
 (*	PROCEDURE ShowL* (list: vyLinks.Link);
 VAR F: tLayer;
 pict: vyPort.Picture;
-minX, maxX: REAL;
-nans: LONGINT;
+minX, maxX: FLOAT32;
+nans: SIGNED32;
 BEGIN
 WHILE list # NIL DO
 NEW (F); Init (F, list.obj);
@@ -289,8 +289,8 @@ END ShowL;*)
 (*	PROCEDURE ShowO* (obj : Objects.Object);
 VAR F: tLayer;
 pict: vyPort.Picture;
-minX, maxX: REAL;
-nans: LONGINT;
+minX, maxX: FLOAT32;
+nans: SIGNED32;
 BEGIN
 NEW (F); Init (F, obj);
 pict := vyPort.InsertNewCPicture (0, 0, 1, 1, vyDisplay2d.NewC2d (0, -1, F.x(vyBase.tVector).nrData, 1));

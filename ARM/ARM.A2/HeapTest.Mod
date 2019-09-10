@@ -10,7 +10,7 @@ MODULE HeapTest;
 
 	PROCEDURE Free * (context: Commands.Context);
 	VAR
-		total, low, high: LONGINT;
+		total, low, high: SIGNED32;
 	BEGIN
 		Machine.GetFreeK(total, low, high);
 		context.out.String("Free memory:");

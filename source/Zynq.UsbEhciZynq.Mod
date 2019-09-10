@@ -36,9 +36,9 @@ TYPE
 	(** Zynq-specific EHCI driver. Uses the main implementation and adds Zynq-specific initialization code where needed. *)
 	EnhancedHostController = OBJECT (UsbEhci.EnhancedHostController)
 	VAR
-		phyResetGpio: LONGINT;
+		phyResetGpio: SIGNED32;
 
-		PROCEDURE GetPortStatus * (port : LONGINT; ack : BOOLEAN) : SET;
+		PROCEDURE GetPortStatus * (port : SIGNED32; ack : BOOLEAN) : SET;
 		VAR
 			status, dword: SET;
 		BEGIN
@@ -61,7 +61,7 @@ TYPE
 			RETURN FALSE
 		END HasCompanion;
 
-		PROCEDURE ResetAndEnablePort (port: LONGINT): BOOLEAN;
+		PROCEDURE ResetAndEnablePort (port: SIGNED32): BOOLEAN;
 		VAR
 			dword: SET;
 			res: BOOLEAN;
@@ -79,7 +79,7 @@ TYPE
 		PROCEDURE HardwareReset() : BOOLEAN;
 		VAR
 			viewportInit: ARRAY 32 OF CHAR;
-			viewport: LONGINT;
+			viewport: SIGNED32;
 			dword: SET;
 			res: BOOLEAN;
 		BEGIN
@@ -145,7 +145,7 @@ TYPE
 
 		PROCEDURE Schedule * (transfer: UsbHcdi.TransferToken);
 		VAR
-			address: LONGINT;
+			address: SIGNED32;
 		BEGIN
 			IF (transfer.pipe.speed = UsbHcdi.LowSpeed) OR (transfer.pipe.speed = UsbHcdi.FullSpeed) THEN
 				address := transfer.pipe.device(Usb.UsbDevice).ttAddress;
@@ -159,13 +159,13 @@ TYPE
 	END EnhancedHostController;
 
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 
 	(**
 	 * Initializes and install the EHCI host controller driver on the host controller mapped at address iobase
 	 * and using interrupt number irq.
 	 *)
-	PROCEDURE Init(irq, phyResetGpio: LONGINT; iobase: ADDRESS);
+	PROCEDURE Init(irq, phyResetGpio: SIGNED32; iobase: ADDRESS);
 	CONST
 		(* Some part of the EHCI driver is PCI-related. These are dummy values for it. *)
 		bus = 0;

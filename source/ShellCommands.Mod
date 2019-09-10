@@ -158,7 +158,7 @@ BEGIN
 END Alias;
 
 PROCEDURE Delete*(context : Commands.Context);
-VAR filename: Files.FileName; res: WORD;
+VAR filename: Files.FileName; res: INTEGER;
 BEGIN
 	WHILE context.arg.GetString(filename) DO
 		context.out.String(filename); context.out.Char(09X);
@@ -176,7 +176,7 @@ END Delete;
 PROCEDURE Directory*(context : Commands.Context);
 VAR
 	enum: Files.Enumerator;
-	name: Files.FileName; flags: SET; time, date: LONGINT; size: Files.Size; tdrec: Dates.DateTime; str: ARRAY 32 OF CHAR;
+	name: Files.FileName; flags: SET; time, date: SIGNED32; size: Files.Size; tdrec: Dates.DateTime; str: ARRAY 32 OF CHAR;
 BEGIN
 	IF ~context.arg.GetString(str) THEN str := "*"; END;
 	NEW(enum);
@@ -216,7 +216,7 @@ BEGIN
 END Exit;
 
 PROCEDURE Free*(context : Commands.Context);
-VAR name: AosModules.Name; msg: String; res: WORD;
+VAR name: AosModules.Name; msg: String; res: INTEGER;
 BEGIN
 	IF context.arg.GetString(name) THEN
 		context.out.String(name); context.out.Char(09X);
@@ -262,7 +262,7 @@ END Modules;
 	cmdline = cmdpar { "|" cmdpar } [ ( ">" | ">>" ) file ] .
 	cmdpar = cmd { par } [ "<" file ] .
 *)
-PROCEDURE execute(context : Commands.Context; VAR cmdline: ARRAY OF CHAR; flags: SET; VAR res: WORD; VAR msg: ARRAY OF CHAR);
+PROCEDURE execute(context : Commands.Context; VAR cmdline: ARRAY OF CHAR; flags: SET; VAR res: INTEGER; VAR msg: ARRAY OF CHAR);
 VAR
 	ctx: Context; R: Streams.StringReader; cmd, prev, cmds: Command; i, j, p, ofs, len: SIZE; ch, filter: CHAR;
 	in, pR: Streams.Reader; out, err, pW: Streams.Writer; file: Files.FileName; F, newF: Files.File; fR: Files.Reader;
@@ -397,7 +397,7 @@ BEGIN
 END execute;
 
 PROCEDURE Start*(context : Commands.Context);
-VAR msg: String; len: SIZE; res: WORD; string : POINTER TO ARRAY OF CHAR;
+VAR msg: String; len: SIZE; res: INTEGER; string : POINTER TO ARRAY OF CHAR;
 BEGIN
 	IF (context.arg IS Streams.StringReader) & (context.arg.Available() > 0) THEN
 		NEW(string, context.arg.Available() +1);
@@ -417,7 +417,7 @@ BEGIN
 	Close(context);
 END Version;
 
-PROCEDURE Execute*(par: Commands.Context;  VAR cmdline: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR);
+PROCEDURE Execute*(par: Commands.Context;  VAR cmdline: ARRAY OF CHAR; VAR res: INTEGER; VAR msg: ARRAY OF CHAR);
 BEGIN
 	execute(par, cmdline, {Commands.Wait}, res, msg)
 END Execute;

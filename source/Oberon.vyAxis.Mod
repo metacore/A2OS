@@ -50,7 +50,7 @@ CONST
 	down = 0;  up = 1;  left = 2;  right = 3;
 	LabelDistance = 10 * vyHostDisplay.pixel;  MinLabelToLabelDistance = 2 * vyHostDisplay.pixel;
 	TicksLength = 8 * vyHostDisplay.pixel;  MinorTicksLength = 4 * vyHostDisplay.pixel;
-	EPS = 1 / 10000;  infinity = MAX(INTEGER);
+	EPS = 1 / 10000;  infinity = MAX(SIGNED16);
 	MinLabelRoom = 30 * vyHostDisplay.pixel;
 
 TYPE
@@ -83,10 +83,10 @@ TYPE
 		TickRoot: Tick;
 		LabelRoot: Label;
 		tdx, tdy: Coordinate;
-		DigitsAfterPoint: INTEGER;
+		DigitsAfterPoint: SIGNED16;
 		Format: BOOLEAN;
-		MinorTicks: INTEGER;
-		Orientation: INTEGER;
+		MinorTicks: SIGNED16;
+		Orientation: SIGNED16;
 		RtoXY: PROCEDURE (axe: tAxe;  r: Real;  VAR x, y: Coordinate);
 		UsePaint2d: BOOLEAN
 	END;
@@ -94,7 +94,7 @@ TYPE
 VAR
 	LabelFont : ARRAY 32 OF CHAR;
 	LabelColor, AxeColor, TicksColor : Color;
-	MinorTicks, DigitsAfterPoint: INTEGER;
+	MinorTicks, DigitsAfterPoint: SIGNED16;
 	EFormat, Opposite,  TicksAutomatic: BOOLEAN;
 	LabelsPlot : BOOLEAN;
 	UsePaint2d*: BOOLEAN;
@@ -121,7 +121,7 @@ BEGIN
 END StoreTicksQueue;
 
 PROCEDURE LoadTick (VAR R: Files.Rider;  VAR t: Tick);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	Files.ReadInt(R, i);
 	IF i = - 1 THEN t := NIL
@@ -166,7 +166,7 @@ END StoreLabelsQueue;
 
 
 PROCEDURE LoadLabel (VAR R: Files.Rider;  VAR t: Label);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	Files.ReadInt(R, i);
 	IF i = - 1 THEN t := NIL
@@ -212,7 +212,7 @@ BEGIN
 END StoreAxe;
 
 PROCEDURE LoadAxe* (VAR R: Files.Rider;  VAR a: tAxe);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	Files.ReadInt(R, i);
 	IF i = - 1 THEN a := NIL
@@ -239,9 +239,9 @@ BEGIN
 	END
 END LoadAxe;
 
-PROCEDURE DecExpR (m: INTEGER): LONGREAL;
+PROCEDURE DecExpR (m: SIGNED16): FLOAT64;
 	(*! ???? TenL aus vyBase benutzen. gs *)
-	VAR z : LONGREAL;
+	VAR z : FLOAT64;
 BEGIN
 	z := 1;
 	WHILE m > 0 DO DEC(m);  z := z * 10 END;
@@ -249,7 +249,7 @@ BEGIN
 	RETURN z
 END DecExpR;
 
-PROCEDURE InRect (VAR X, Y, W, H: INTEGER;  x, y, w, h: INTEGER);
+PROCEDURE InRect (VAR X, Y, W, H: SIGNED16;  x, y, w, h: SIGNED16);
 BEGIN
 	IF x < X THEN INC(W, X - x);  DEC(X, X - x)  END;
 	IF x + w > W + X THEN INC(W, x + w - X - W) END;
@@ -261,9 +261,9 @@ END InRect;
 PROCEDURE equals (r1, r2: Real): BOOLEAN;
 BEGIN IF ABS(r1 - r2) < EPS THEN RETURN TRUE ELSE RETURN FALSE END END equals;
 
-PROCEDURE SetExponent (VAR r: LONGREAL;  VAR Expo: INTEGER);  	(** vs 1.0d FOF	 27.06.94 15:30:37*)
+PROCEDURE SetExponent (VAR r: FLOAT64;  VAR Expo: SIGNED16);  	(** vs 1.0d FOF	 27.06.94 15:30:37*)
 	(*! ???? Intervallschachtelung benutzten ! gs *)
-	VAR m : INTEGER;
+	VAR m : SIGNED16;
 BEGIN
 	m := 0;
 	IF ~(equals(SHORT(r), 0))  THEN
@@ -277,12 +277,12 @@ BEGIN
 END SetExponent;
 
 
-PROCEDURE AppendRealToString (l: LONGREAL;  VAR s: ARRAY OF CHAR;  E: BOOLEAN;  m: INTEGER);
+PROCEDURE AppendRealToString (l: FLOAT64;  VAR s: ARRAY OF CHAR;  E: BOOLEAN;  m: SIGNED16);
 VAR
-	e, i: INTEGER;
-PROCEDURE RTS (r: LONGREAL;  m1: INTEGER;  VAR string: ARRAY OF CHAR);
+	e, i: SIGNED16;
+PROCEDURE RTS (r: FLOAT64;  m1: SIGNED16;  VAR string: ARRAY OF CHAR);
 VAR
-	r1: LONGREAL;  L, L1, L2: LONGINT;  h, a: INTEGER;  neg: BOOLEAN;
+	r1: FLOAT64;  L, L1, L2: SIGNED32;  h, a: SIGNED16;  neg: BOOLEAN;
 BEGIN
 	IF r < 0 THEN neg := TRUE;  r := - r ELSE neg := FALSE END;
 	r1 := vyHost.TenL(m1) * r;
@@ -308,7 +308,7 @@ END RTS;
 BEGIN
 	e := 0;
 	IF E = FALSE THEN
-		IF  (ABS(l) * vyHost.TenL(m) > MAX(LONGINT))  OR ((l > 0) & (ABS(l) * vyHost.TenL(m) < 1 / MAX(LONGINT)))  THEN
+		IF  (ABS(l) * vyHost.TenL(m) > MAX(SIGNED32))  OR ((l > 0) & (ABS(l) * vyHost.TenL(m) < 1 / MAX(SIGNED32)))  THEN
 			E := TRUE;  AppendRealToString(l, s, E, m);  RETURN
 		ELSE
 			RTS(l, m, s)
@@ -364,7 +364,7 @@ END GetXYbyR2;
 PROCEDURE TestTheLabels (axe: tAxe);
 	VAR 	label: Label;  x, y, w, h, X, Y: Coordinate;
 
-PROCEDURE ShiftTheLabels (dir: INTEGER);
+PROCEDURE ShiftTheLabels (dir: SIGNED16);
 BEGIN
 	label := axe.LabelRoot.next;
 	WHILE(label # NIL) DO
@@ -409,7 +409,7 @@ BEGIN
 	END
 END TestTheLabels;
 
-PROCEDURE MinStdWidth* (): INTEGER;
+PROCEDURE MinStdWidth* (): SIGNED16;
 BEGIN
 	RETURN LabelDistance
 END MinStdWidth;
@@ -468,8 +468,8 @@ END PlotTheAxe;
 
 PROCEDURE CalcTheLabels (axe: tAxe);
 	VAR  label: Label;  tick: Tick;  i, tpl, dsr: Coordinate;  (* adjusted for dsr *)
-PROCEDURE TicksPerLabel (): INTEGER;
-	VAR s1, s2: ARRAY 32 OF CHAR;  w1, w2, h1, h2: Coordinate;  i: INTEGER;
+PROCEDURE TicksPerLabel (): SIGNED16;
+	VAR s1, s2: ARRAY 32 OF CHAR;  w1, w2, h1, h2: Coordinate;  i: SIGNED16;
 BEGIN
 	s1 := "";   AppendRealToString(axe.r1, s1, axe.Format, axe.DigitsAfterPoint);
 	s2 := "";   AppendRealToString(axe.r2, s2, axe.Format, axe.DigitsAfterPoint);
@@ -530,7 +530,7 @@ END CalcTheLabels;
 
 
 PROCEDURE CalcTheTicks (axe: tAxe);
-	VAR tick: Tick;  i: INTEGER;  r: Real;
+	VAR tick: Tick;  i: SIGNED16;  r: Real;
 
 BEGIN
 	IF axe.Orientation = vertical THEN
@@ -582,7 +582,7 @@ END CalcTheTicks;
 
 
 PROCEDURE AutomaticMinorTicks (maxnumoflabels: Coordinate;  axe: tAxe);
-	VAR dr: LONGREAL;  e2: INTEGER;
+	VAR dr: FLOAT64;  e2: SIGNED16;
 BEGIN
 	dr := axe.dr;   SetExponent(dr, e2);
 	IF equals(SHORT(dr), 1) THEN axe.MinorTicks := 9
@@ -597,7 +597,7 @@ BEGIN
 END AutomaticMinorTicks;
 
 PROCEDURE Automaticdr (maxnumoflabels: Coordinate;  axe: tAxe);
-	VAR z: LONGREAL;  e2: INTEGER;
+	VAR z: FLOAT64;  e2: SIGNED16;
 BEGIN
 	z := axe.r2 - axe.r1;   SetExponent(z, e2);
 	z := axe.r2 - axe.r1;  axe.dr := SHORT( vyHost.TenL(e2));
@@ -610,7 +610,7 @@ BEGIN
 END Automaticdr;
 
 PROCEDURE Automaticr (axe: tAxe);
-	VAR e1: LONGINT;
+	VAR e1: SIGNED32;
 BEGIN e1 := ENTIER(axe.r1 / axe.dr);  axe.r := e1 * axe.dr;
 	WHILE(axe.r > axe.r1) OR equals(axe.r, axe.r1) DO
 		axe.r := axe.r - axe.dr
@@ -745,10 +745,10 @@ BEGIN LabelColor := labelcolor;  AxeColor := axecolor;  TicksColor := tickscolor
 PROCEDURE SetLabelFont* (font : ARRAY OF CHAR);
 BEGIN	COPY(font, LabelFont) 	END SetLabelFont;
 
-PROCEDURE SetNumOfMinorTicks* (ticks: INTEGER);
+PROCEDURE SetNumOfMinorTicks* (ticks: SIGNED16);
 BEGIN MinorTicks := ticks END SetNumOfMinorTicks;
 
-PROCEDURE SetDigitsAfterPoint* (digits: INTEGER);
+PROCEDURE SetDigitsAfterPoint* (digits: SIGNED16);
 BEGIN DigitsAfterPoint := digits END SetDigitsAfterPoint;
 
 PROCEDURE FlipAxesOrientation* (flip: BOOLEAN);

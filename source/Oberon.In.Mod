@@ -14,7 +14,7 @@ VAR
 (** Initializes the parameter scanner. The parameter stream is assumed to be the selection when ^ is scanned,
 the marked text viewer when * is scanned; otherwise the text that follows the command itself. *)
 PROCEDURE Open*;
-VAR beg, end, time: LONGINT; T: Texts.Text;
+VAR beg, end, time: SIGNED32; T: Texts.Text;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);  Texts.Scan(S);
 	IF (S.class = Texts.Char) & (S.c = "^") THEN
@@ -39,11 +39,11 @@ BEGIN
 END Char;
 
 (** Scan an integer. *)
-PROCEDURE Int*(VAR i: INTEGER);
+PROCEDURE Int*(VAR i: SIGNED16);
 BEGIN
 	IF Done THEN
 		Texts.Scan(S);
-		IF (S.class = Texts.Int) & (MIN(INTEGER) <= S.i) & (S.i <= MAX(INTEGER)) THEN
+		IF (S.class = Texts.Int) & (MIN(SIGNED16) <= S.i) & (S.i <= MAX(SIGNED16)) THEN
 			i := SHORT(S.i)
 		ELSE
 			Done := FALSE
@@ -52,7 +52,7 @@ BEGIN
 END Int;
 
 (** Scan a long integer. *)
-PROCEDURE LongInt* (VAR i: LONGINT);
+PROCEDURE LongInt* (VAR i: SIGNED32);
 BEGIN
 	IF Done THEN
 		Texts.Scan(S);
@@ -61,7 +61,7 @@ BEGIN
 END LongInt;
 
 (** Scan a real number. *)
-PROCEDURE Real* (VAR x: REAL);
+PROCEDURE Real* (VAR x: FLOAT32);
 BEGIN
 	IF Done THEN Texts.Scan(S);
 		IF S.class = Texts.Real THEN x := S.x
@@ -72,7 +72,7 @@ BEGIN
 END Real;
 
 (** Scan a long real number. *)
-PROCEDURE LongReal* (VAR y: LONGREAL);
+PROCEDURE LongReal* (VAR y: FLOAT64);
 BEGIN
 	IF Done THEN
 		Texts.Scan(S);

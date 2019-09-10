@@ -61,7 +61,7 @@ System.DoCommands
 		MODULE A2Dll;
 		IMPORT Kernel;
 		IMPORT SystemVersion;
-			PROCEDURE {WINAPI} Test*(): LONGINT;
+			PROCEDURE {WINAPI} Test*(): SIGNED32;
 			BEGIN
 				RETURN SystemVersion.GetKernelCRC();
 			END Test;

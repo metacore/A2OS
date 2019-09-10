@@ -29,8 +29,8 @@ Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
 IMPORT realmath := MathL IN A2;
 CONST idversion* = ' v0r0d1';
 TYPE
-	real = LONGREAL;  (* technical convenience, to avoid duplicate code for REAL and LONGREAL *)
-	index = LONGINT;
+	real = FLOAT64;  (* technical convenience, to avoid duplicate code for FLOAT32 and FLOAT64 *)
+	index = SIGNED32;
 
 	PROCEDURE CToPolar* (len: index;
 VAR (*IN*)Re, Im: ARRAY OF real;  (*OUT*)rho, phi: ARRAY OF real; start: index);

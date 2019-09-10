@@ -12,30 +12,30 @@ CONST
 
 TYPE
 	GTFConstants = RECORD
-		margin: LONGREAL;	(* Margin size as percentage of display *)
-		cellGran: LONGREAL;	(* Character cell granularity *)
-		minPorch: LONGREAL;	(* Minimum front porch in lines/chars *)
-		vSyncRqd: LONGREAL;	(* Width of V sync in lines *)
-		hSync: LONGREAL;	(* Width of H sync as percent of total *)
-		minVSyncBP: LONGREAL;	(* Minimum vertical sync + back porch (us) *)
-		m: LONGREAL;	(* Blanking formula gradient *)
-		c: LONGREAL;	(* Blanking formula offset *)
-		k: LONGREAL;	(* Blanking formula scaling factor *)
-		j: LONGREAL	(* Blanking formula scaling factor weight *)
+		margin: FLOAT64;	(* Margin size as percentage of display *)
+		cellGran: FLOAT64;	(* Character cell granularity *)
+		minPorch: FLOAT64;	(* Minimum front porch in lines/chars *)
+		vSyncRqd: FLOAT64;	(* Width of V sync in lines *)
+		hSync: FLOAT64;	(* Width of H sync as percent of total *)
+		minVSyncBP: FLOAT64;	(* Minimum vertical sync + back porch (us) *)
+		m: FLOAT64;	(* Blanking formula gradient *)
+		c: FLOAT64;	(* Blanking formula offset *)
+		k: FLOAT64;	(* Blanking formula scaling factor *)
+		j: FLOAT64	(* Blanking formula scaling factor weight *)
 	END;
 
 	GTFHCRTC = RECORD
-		hTotal: LONGINT;	(* Horizontal total *)
-		hDisp: LONGINT;	(* Horizontal displayed *)
-		hSyncStart: LONGINT;	(* Horizontal sync start *)
-		hSyncEnd: LONGINT;	(* Horizontal sync end *)
+		hTotal: SIGNED32;	(* Horizontal total *)
+		hDisp: SIGNED32;	(* Horizontal displayed *)
+		hSyncStart: SIGNED32;	(* Horizontal sync start *)
+		hSyncEnd: SIGNED32;	(* Horizontal sync end *)
 	END;
 
 	GTFVCRTC = RECORD
-		vTotal: LONGINT;	(* Vertical total *)
-		vDisp: LONGINT;	(* Vertical displayed *)
-		vSyncStart: LONGINT;	(* Vertical sync start *)
-		vSyncEnd: LONGINT;	(* Vertical sync end *)
+		vTotal: SIGNED32;	(* Vertical total *)
+		vDisp: SIGNED32;	(* Vertical displayed *)
+		vSyncStart: SIGNED32;	(* Vertical sync start *)
+		vSyncEnd: SIGNED32;	(* Vertical sync end *)
 	END;
 
 	GTFTimings = RECORD
@@ -44,22 +44,22 @@ TYPE
 		hSyncPol: CHAR;	(* Horizontal sync polarity *)
 		vSyncPol: CHAR;	(* Vertical sync polarity *)
 		interlace: CHAR;	(* 'I' for Interlace, 'N' for Non *)
-		vFreq: LONGREAL;	(* Vertical frequency (Hz) *)
-		hFreq: LONGREAL;	(* Horizontal frequency (KHz) *)
+		vFreq: FLOAT64;	(* Vertical frequency (Hz) *)
+		hFreq: FLOAT64;	(* Horizontal frequency (KHz) *)
 	END;
 VAR
 	conf*: ARRAY 512 OF CHAR;
 	hex: ARRAY 17 OF CHAR;
 
-PROCEDURE pow(x: LONGREAL; n: LONGINT): LONGREAL;
-VAR s: LONGREAL;
+PROCEDURE pow(x: FLOAT64; n: SIGNED32): FLOAT64;
+VAR s: FLOAT64;
 BEGIN
 	s := 1;
 	WHILE n > 0 DO s := s * x; DEC(n) END;
 	RETURN s
 END pow;
 
-PROCEDURE Round(v: LONGREAL): LONGREAL;
+PROCEDURE Round(v: FLOAT64): FLOAT64;
 BEGIN
 	RETURN ENTIER(v + 0.5)
 END Round;
@@ -94,17 +94,17 @@ wantInterlace - TRUE if interlaced timings to be generated
 t - Place to store the resulting timings
 *)
 
-PROCEDURE GTFCalcTimings(hPixels, vLines, freq: LONGREAL; type: LONGINT; wantMargins, wantInterlace: BOOLEAN; VAR t: GTFTimings);
+PROCEDURE GTFCalcTimings(hPixels, vLines, freq: FLOAT64; type: SIGNED32; wantMargins, wantInterlace: BOOLEAN; VAR t: GTFTimings);
 VAR
-	interlace,vFieldRate,hPeriod: LONGREAL;
-	topMarginLines,botMarginLines: LONGREAL;
-	leftMarginPixels,rightMarginPixels: LONGREAL;
-	hPeriodEst,vSyncBP,vBackPorch: LONGREAL;
-	vTotalLines,vFieldRateEst: LONGREAL;
-	hTotalPixels,hTotalActivePixels,hBlankPixels: LONGREAL;
-	idealDutyCycle,hSyncWidth,hSyncBP,hBackPorch: LONGREAL;
-	idealHPeriod: LONGREAL;
-	vFreq,hFreq,dotClock: LONGREAL;
+	interlace,vFieldRate,hPeriod: FLOAT64;
+	topMarginLines,botMarginLines: FLOAT64;
+	leftMarginPixels,rightMarginPixels: FLOAT64;
+	hPeriodEst,vSyncBP,vBackPorch: FLOAT64;
+	vTotalLines,vFieldRateEst: FLOAT64;
+	hTotalPixels,hTotalActivePixels,hBlankPixels: FLOAT64;
+	idealDutyCycle,hSyncWidth,hSyncBP,hBackPorch: FLOAT64;
+	idealHPeriod: FLOAT64;
+	vFreq,hFreq,dotClock: FLOAT64;
 	c: GTFConstants;
 BEGIN
 	GetInternalConstants(c);
@@ -262,10 +262,10 @@ BEGIN
 	t.vSyncPol := '+'
 END GTFCalcTimings;
 
-PROCEDURE VesaConf(mode, width, height, depth, hz: LONGINT; VAR conf: ARRAY OF CHAR);
-VAR mode1: LONGINT; flags: SET; t: GTFTimings; valstr : ARRAY 10 OF CHAR; cr : ARRAY 2 OF CHAR;
+PROCEDURE VesaConf(mode, width, height, depth, hz: SIGNED32; VAR conf: ARRAY OF CHAR);
+VAR mode1: SIGNED32; flags: SET; t: GTFTimings; valstr : ARRAY 10 OF CHAR; cr : ARRAY 2 OF CHAR;
 
-	PROCEDURE HexByte(x: LONGINT);
+	PROCEDURE HexByte(x: SIGNED32);
 	VAR s: ARRAY 3 OF CHAR;
 	BEGIN
 		s[0] := hex[x DIV 10H];
@@ -274,12 +274,12 @@ VAR mode1: LONGINT; flags: SET; t: GTFTimings; valstr : ARRAY 10 OF CHAR; cr : A
 		Strings.Append(conf, s);
 	END HexByte;
 
-	PROCEDURE HexWord(x: LONGINT);
+	PROCEDURE HexWord(x: SIGNED32);
 	BEGIN
 		HexByte(x MOD 100H); HexByte(x DIV 100H)
 	END HexWord;
 
-	PROCEDURE HexDWord(x: LONGINT);
+	PROCEDURE HexDWord(x: SIGNED32);
 	BEGIN
 		HexWord(x MOD 10000H); HexWord(x DIV 10000H)
 	END HexDWord;
@@ -303,7 +303,7 @@ BEGIN
 		IF t.interlace = "I" THEN INCL(flags, 1) END;
 		IF t.hSyncPol = "-" THEN INCL(flags, 2) END;
 		IF t.vSyncPol = "-" THEN INCL(flags, 3) END;
-		Strings.Append(conf, "26c6450c"); HexByte(LONGINT(flags));	(* mov [es:di+0CH], val *)
+		Strings.Append(conf, "26c6450c"); HexByte(SIGNED32(flags));	(* mov [es:di+0CH], val *)
 		Strings.Append(conf, "2666894d0d26c74511"); HexWord(hz*100);	(* mov [es:di+0DH], ecx; mov [es:di+11H], val *)
 		Strings.Append(conf, cr);
 
@@ -341,7 +341,7 @@ BEGIN
 		HexWord(t.v.vTotal);
 		HexWord(t.v.vSyncStart);
 		HexWord(t.v.vSyncEnd);
-		HexByte(SYSTEM.VAL(LONGINT, flags));
+		HexByte(SYSTEM.VAL(SIGNED32, flags));
 	ELSE	(* VESA 2.0 *)
 		HexWord(hz*100);
 		HexWord(mode1);
@@ -355,7 +355,7 @@ END VesaConf;
 	the VBE mode m to operate at a default 60Hz refresh rate. *)
 PROCEDURE Mode*(context : Commands.Context);	(* mode (in decimal) DWidth DHeight Frequency *)
 VAR display: ARRAY 512 OF CHAR;
-	m, w, h, d, f: LONGINT;
+	m, w, h, d, f: SIGNED32;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.Int(m, FALSE); context.out.Int(m, 5);
 	context.arg.SkipWhitespace; context.arg.Int(w, FALSE); context.out.Int(w, 5);

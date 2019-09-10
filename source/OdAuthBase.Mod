@@ -115,7 +115,7 @@ END Basic;
 
 VAR
 	encTable: ARRAY 64 OF CHAR;
-	decTable: ARRAY 128 OF INTEGER;
+	decTable: ARRAY 128 OF SIGNED16;
 	defaultAuth * : Basic;
 	defaultHost * : ARRAY 64 OF CHAR;
 
@@ -171,7 +171,7 @@ END GetAdditionalFieldVals;
 (* Base64 Utilities. Copied from Oberon.Base64.Mod because it's an Oberon module using Text,Files. *)
 
 PROCEDURE InitTables;
-	VAR i, max: INTEGER;
+	VAR i, max: SIGNED16;
 BEGIN
 	max := ORD("Z")-ORD("A");
 	FOR i := 0 TO max DO
@@ -198,9 +198,9 @@ END InitTables;
 (* Should be perhaps done with an AosIO.Reader, Writer. *)
 PROCEDURE EncodeString * (VAR in, out:  ARRAY OF CHAR);
 	VAR
-		i, j, c, c0, c1, c2, l: LONGINT;
+		i, j, c, c0, c1, c2, l: SIGNED32;
 		chars: ARRAY 3 OF CHAR;
-		inPos, outPos: LONGINT; eos: BOOLEAN;
+		inPos, outPos: SIGNED32; eos: BOOLEAN;
 
 	PROCEDURE OutCode;
 	BEGIN

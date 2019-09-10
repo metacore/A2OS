@@ -27,19 +27,19 @@ CONST
 
 TYPE
 	Tile = RECORD
-		x, y: INTEGER;
-		left, right, top: INTEGER;
-		face, col: INTEGER;
+		x, y: SIGNED16;
+		left, right, top: SIGNED16;
+		face, col: SIGNED16;
 		valid: BOOLEAN
 	END;
 
 	Frame = POINTER TO FrameDesc;
 	FrameDesc = RECORD (Gadgets.FrameDesc)
-		time: LONGINT;
-		nofTiles: INTEGER;
-		sel1, sel2: INTEGER;
+		time: SIGNED32;
+		nofTiles: SIGNED16;
+		sel1, sel2: SIGNED16;
 		over: BOOLEAN;
-		moves: ARRAY Tiles OF INTEGER;
+		moves: ARRAY Tiles OF SIGNED16;
 		board: ARRAY Tiles + 1 OF Tile
 	END;
 
@@ -47,14 +47,14 @@ TYPE
 	END;
 
 VAR
-	DoubleClick: LONGINT;
-	seed: LONGINT;
+	DoubleClick: SIGNED32;
+	seed: SIGNED32;
 	faceFnt, textFnt: Fonts.Font;
 	W: Texts.Writer;
 
-PROCEDURE Random ( z : INTEGER) : INTEGER;
+PROCEDURE Random ( z : SIGNED16) : SIGNED16;
 CONST a = 16807; m = 2147483647; q = m DIV a; r = m MOD a;
-VAR g: LONGINT;
+VAR g: SIGNED32;
 BEGIN
 	g := a*(seed MOD q) - r*(seed DIV q);
 	IF g > 0 THEN seed := g ELSE seed := g + m END;
@@ -63,9 +63,9 @@ END Random;
 
 PROCEDURE InitBoard (F: Frame);
 CONST MH = 4*TileH - TileH DIV 2;
-VAR c, i: INTEGER;
+VAR c, i: SIGNED16;
 
-	PROCEDURE InitTile (nr, x, y, l, r, t, col: INTEGER);
+	PROCEDURE InitTile (nr, x, y, l, r, t, col: SIGNED16);
 	BEGIN
 		F.board[nr].x := x; F.board[nr].y := y; F.board[nr].col := col;
 		F.board[nr].left := l; F.board[nr].right := r; F.board[nr].top := t
@@ -73,7 +73,7 @@ VAR c, i: INTEGER;
 
 BEGIN
 	(* init sentinel *)
-	InitTile(0, MIN(INTEGER), MIN(INTEGER), 0, 0, 0, 0); F.board[0].valid := FALSE;
+	InitTile(0, MIN(SIGNED16), MIN(SIGNED16), 0, 0, 0, 0); F.board[0].valid := FALSE;
 
 	(* init top level *)
 	c := 243;
@@ -135,7 +135,7 @@ BEGIN
 END InitBoard;
 
 PROCEDURE NewGame (F: Frame);
-VAR i, k: INTEGER; faces: ARRAY Tiles OF INTEGER;
+VAR i, k: SIGNED16; faces: ARRAY Tiles OF SIGNED16;
 BEGIN
 	(* init tiles array *)
 	k := 32;
@@ -156,8 +156,8 @@ BEGIN
 	END
 END NewGame;
 
-PROCEDURE FindTile (F: Frame; x, y, X, Y: INTEGER): INTEGER;
-VAR i: INTEGER;
+PROCEDURE FindTile (F: Frame; x, y, X, Y: SIGNED16): SIGNED16;
+VAR i: SIGNED16;
 BEGIN
 	i := 0; X := X - x; Y := Y - y;
 	REPEAT
@@ -172,15 +172,15 @@ BEGIN
 	RETURN ~F.board[tile.top].valid & ~(F.board[tile.right].valid & F.board[tile.left].valid)
 END IsFree;
 
-PROCEDURE GetTile (F: Frame; x, y, X, Y: INTEGER): INTEGER;
-VAR i: INTEGER;
+PROCEDURE GetTile (F: Frame; x, y, X, Y: SIGNED16): SIGNED16;
+VAR i: SIGNED16;
 BEGIN
 	i := FindTile(F, x, y, X, Y);
 	IF (i > Tiles) OR ~IsFree(F, F.board[i]) THEN i := Tiles + 1 END;
 	RETURN i
 END GetTile;
 
-PROCEDURE IsSame (face1, face2: INTEGER): BOOLEAN;
+PROCEDURE IsSame (face1, face2: SIGNED16): BOOLEAN;
 VAR res: BOOLEAN;
 BEGIN
 	IF (face1 < 66) & (face2 < 66) THEN res := (face1 = face2)
@@ -190,8 +190,8 @@ BEGIN
 	RETURN res
 END IsSame;
 
-PROCEDURE FindSame (F: Frame; tileNr: INTEGER; VAR same: ARRAY OF INTEGER; VAR cnt: INTEGER);
-VAR i, face: INTEGER; tile: Tile;
+PROCEDURE FindSame (F: Frame; tileNr: SIGNED16; VAR same: ARRAY OF SIGNED16; VAR cnt: SIGNED16);
+VAR i, face: SIGNED16; tile: Tile;
 BEGIN
 	i := 1; cnt := 0; face := F.board[tileNr].face;
 	WHILE (i <= Tiles) DO
@@ -204,7 +204,7 @@ BEGIN
 END FindSame;
 
 PROCEDURE IsOver (F: Frame): BOOLEAN;
-VAR same: ARRAY 4 OF INTEGER; i, cnt: INTEGER;
+VAR same: ARRAY 4 OF SIGNED16; i, cnt: SIGNED16;
 BEGIN
 	i := 1; cnt := 0;
 	WHILE (i <= Tiles) & (cnt = 0) DO
@@ -215,8 +215,8 @@ BEGIN
 	RETURN F.over
 END IsOver;
 
-PROCEDURE DrawTile (Q: Display3.Mask; col, x, y: INTEGER; VAR tile: Tile);
-VAR pat: Display.Pattern; cx, cy, cw, ch, cdx: INTEGER;
+PROCEDURE DrawTile (Q: Display3.Mask; col, x, y: SIGNED16; VAR tile: Tile);
+VAR pat: Display.Pattern; cx, cy, cw, ch, cdx: SIGNED16;
 BEGIN
 	Fonts.GetChar(faceFnt, CHR(tile.face), cdx, cx, cy, cw, ch, pat);
 	cx := x + tile.x; cy := y + tile.y;
@@ -224,8 +224,8 @@ BEGIN
 	Display3.CopyPattern(Q, Display3.black, pat, cx, cy, Display.paint)
 END DrawTile;
 
-PROCEDURE DrawCount (Q: Display3.Mask; x, y, cnt: INTEGER);
-VAR str: ARRAY 4 OF CHAR; bw, bh, w, h, dsr: INTEGER;
+PROCEDURE DrawCount (Q: Display3.Mask; x, y, cnt: SIGNED16);
+VAR str: ARRAY 4 OF CHAR; bw, bh, w, h, dsr: SIGNED16;
 BEGIN
 	x := x + BoardW - 20; y := y + BoardH - 20;
 	bw := 7*textFnt.maxX DIV 3; bh := textFnt.height;
@@ -236,8 +236,8 @@ BEGIN
 	Display3.String(Q, Display3.black, x - bw DIV 2 - w DIV 2, y - bh DIV 2 - (h - dsr) DIV 2, textFnt, str, Display.paint)
 END DrawCount;
 
-PROCEDURE DrawGameOver (F: Frame; Q: Display3.Mask; x, y: INTEGER);
-VAR w, h, dsr: INTEGER; text: ARRAY 24 OF CHAR;
+PROCEDURE DrawGameOver (F: Frame; Q: Display3.Mask; x, y: SIGNED16);
+VAR w, h, dsr: SIGNED16; text: ARRAY 24 OF CHAR;
 BEGIN
 	IF F.nofTiles = 0 THEN text := "Congratulations!" ELSE text := "Game Over..." END;
 	Display3.StringSize(text, textFnt, w, h, dsr); INC(w, 8); INC(h, 4);
@@ -246,8 +246,8 @@ BEGIN
 	Display3.CenterString(Q, Display3.black, x, y, w, h, textFnt, text, Display.paint)
 END DrawGameOver;
 
-PROCEDURE FlashTiles (F: Frame; Q: Display3.Mask; x, y: INTEGER; tiles: ARRAY OF INTEGER; cnt: INTEGER);
-VAR i, time: LONGINT;
+PROCEDURE FlashTiles (F: Frame; Q: Display3.Mask; x, y: SIGNED16; tiles: ARRAY OF SIGNED16; cnt: SIGNED16);
+VAR i, time: SIGNED32;
 BEGIN
 	FOR i := 0 TO cnt DO DrawTile(Q, 12, x, y, F.board[tiles[i]]) END;
 	time := Oberon.Time() + Input.TimeUnit;
@@ -256,10 +256,10 @@ BEGIN
 	FOR i := 0 TO cnt DO DrawTile(Q, F.board[tiles[i]].col, x, y, F.board[tiles[i]]) END
 END FlashTiles;
 
-PROCEDURE RemoveTiles (F: Frame; Q: Display3.Mask; x, y: INTEGER);
+PROCEDURE RemoveTiles (F: Frame; Q: Display3.Mask; x, y: SIGNED16);
 
-	PROCEDURE DrawBelow (tileNr: INTEGER);
-	VAR nr: INTEGER;
+	PROCEDURE DrawBelow (tileNr: SIGNED16);
+	VAR nr: SIGNED16;
 	BEGIN
 		IF tileNr = 1 THEN
 			DrawTile(Q, F.board[2].col, x, y, F.board[2]); DrawTile(Q, F.board[3].col, x, y, F.board[3]);
@@ -288,8 +288,8 @@ END RemoveTiles;
 
 (* ------------------------ frame stuff ------------------------ *)
 
-PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER);
-VAR i: INTEGER; tile: Tile;
+PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16);
+VAR i: SIGNED16; tile: Tile;
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
 	Display3.ReplConst(Q, Display3.groupC, x, y, w, h, Display.replace);
@@ -315,7 +315,7 @@ END Restore;
 PROCEDURE Print (F: Frame; VAR M: Display.DisplayMsg);
 VAR Q: Display3.Mask;
 
-	PROCEDURE P (x: INTEGER): INTEGER;
+	PROCEDURE P (x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(LONG(x) * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -326,7 +326,7 @@ BEGIN
 END Print;
 
 PROCEDURE Track (F: Frame; VAR M: Oberon.InputMsg);
-VAR Q: Display3.Mask; keysum: SET; x, y, nr, cnt: INTEGER; same: ARRAY 4 OF INTEGER;
+VAR Q: Display3.Mask; keysum: SET; x, y, nr, cnt: SIGNED16; same: ARRAY 4 OF SIGNED16;
 BEGIN
 	x := M.x + F.X + Border; y := M.y + F.Y + Border;
 	IF Effects.Inside(M.X, M.Y, x, y, BoardW, BoardH) THEN
@@ -418,7 +418,7 @@ BEGIN
 END Attributes;
 
 PROCEDURE Copy* (VAR M: Objects.CopyMsg; from, to: Frame);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	Gadgets.CopyFrame(M, from, to);
 	to.nofTiles := from.nofTiles;
@@ -426,7 +426,7 @@ BEGIN
 END Copy;
 
 PROCEDURE Handler* (F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR F0: Frame; Q: Display3.Mask; x, y, t1, t2: INTEGER;
+VAR F0: Frame; Q: Display3.Mask; x, y, t1, t2: SIGNED16;
 BEGIN
 	WITH F: Frame DO
 		IF M IS Display.FrameMsg THEN
@@ -502,7 +502,7 @@ END New;
 (* ------------------------ document stuff ------------------------ *)
 
 PROCEDURE Load (D: Documents.Document);
-VAR F: Files.File; R: Files.Rider; f: Frame; x, y, w, h: INTEGER; name: ARRAY 64 OF CHAR;
+VAR F: Files.File; R: Files.Rider; f: Frame; x, y, w, h: SIGNED16; name: ARRAY 64 OF CHAR;
 BEGIN
 	NEW(f); Init(f);
 

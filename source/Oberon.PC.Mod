@@ -11,16 +11,16 @@ CONST
 	NoBreakPC = -1;
 
 VAR
-	Nrep0, Nrep1: LONGINT;
+	Nrep0, Nrep1: SIGNED32;
 
 TYPE
 
 	TextReader = OBJECT
 	VAR
 		r: Texts.Reader;
-		pos: LONGINT;
+		pos: SIGNED32;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR ch: CHAR;
 		BEGIN
 			len := 0;
@@ -64,7 +64,7 @@ BEGIN
 END SignOn;
 
 PROCEDURE GetOptions(VAR S: Texts.Scanner; VAR opts: ARRAY OF CHAR);
-VAR i: LONGINT; ch: CHAR;
+VAR i: SIGNED32; ch: CHAR;
 BEGIN
 	i := 0;
 	WHILE opts[i] # 0X DO  INC(i)  END;
@@ -80,7 +80,7 @@ BEGIN
 END GetOptions;
 
 PROCEDURE InOptions(CONST opt: ARRAY OF CHAR; ch: CHAR): BOOLEAN;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	i := 0;
 	WHILE (opt[i] # 0X) & (opt[i] # ch) DO
@@ -91,7 +91,7 @@ BEGIN
 	RETURN opt[i] # 0X
 END InOptions;
 
-PROCEDURE Locate(F: Display.Frame;  T: Texts.Text;  pos: LONGINT);
+PROCEDURE Locate(F: Display.Frame;  T: Texts.Text;  pos: SIGNED32);
 VAR M: Oberon.CaretMsg;  N: Oberon.ControlMsg;
 BEGIN
 	IF pos < 0 THEN pos := 0
@@ -111,8 +111,8 @@ BEGIN
 	PCM.LogWLn;
 END ReportError;
 
-PROCEDURE GetBreakPC(): LONGINT;
-VAR S: Texts.Scanner; t: Texts.Text;  beg, end, time: LONGINT;
+PROCEDURE GetBreakPC(): SIGNED32;
+VAR S: Texts.Scanner; t: Texts.Text;  beg, end, time: SIGNED32;
 BEGIN
 	Oberon.GetSelection(t, beg, end, time);
 	IF time >= 0 THEN
@@ -144,8 +144,8 @@ END GetBreakPC;
 		\Ppre	prefix output files with "pre"
 		\Dproc	dump LIR code of "proc" (debug)
 *)
-PROCEDURE CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; frame: Display.Frame; CONST opt: ARRAY OF CHAR; diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
-VAR f: BOOLEAN; pc: LONGINT; r: TextReader; b: Streams.Reader;
+PROCEDURE CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; frame: Display.Frame; CONST opt: ARRAY OF CHAR; diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
+VAR f: BOOLEAN; pc: SIGNED32; r: TextReader; b: Streams.Reader;
 BEGIN
 	IF t = NIL THEN
 		Texts.WriteString(W, "No text marked"); Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf);
@@ -168,7 +168,7 @@ END CompileText;
 (** Compile a file *)
 
 PROCEDURE CompileFile*(CONST name, opt: ARRAY OF CHAR; diagnostics : Diagnostics.Diagnostics;VAR error: BOOLEAN);
-VAR pc: LONGINT;  text: Texts.Text; f: Files.File; r: Files.Rider;ch: CHAR; i: LONGINT;
+VAR pc: SIGNED32;  text: Texts.Text; f: Files.File; r: Files.Rider;ch: CHAR; i: SIGNED32;
 BEGIN
 	f := Files.Old(name); (* check for Oberon file format: reading it with Texts (i/o TextUtilities) is much faster (!) (*fof*)*)
 	IF f # NIL THEN
@@ -190,7 +190,7 @@ END CompileFile;
 (** CompileAsciiFile - this file is read using Files *)
 
 PROCEDURE CompileAsciiFile*(CONST name, opt: ARRAY OF CHAR; VAR error: BOOLEAN);
-VAR pc: LONGINT;
+VAR pc: SIGNED32;
 BEGIN
 	IF InOptions(opt, "f") THEN
 		pc := GetBreakPC();
@@ -202,8 +202,8 @@ END CompileAsciiFile;
 PROCEDURE Compile*;
 VAR
 	S: Texts.Scanner;  globalOpt, localOpt: PC.OptionString;
-	t: Texts.Text; pos, end, time, count: LONGINT;  frame: Display.Frame; (* fof *)
-	prefix, fullname, name: ARRAY 256 OF CHAR; error: BOOLEAN;fbeg: LONGINT;S1: Texts.Scanner; (* fof *)
+	t: Texts.Text; pos, end, time, count: SIGNED32;  frame: Display.Frame; (* fof *)
+	prefix, fullname, name: ARRAY 256 OF CHAR; error: BOOLEAN;fbeg: SIGNED32;S1: Texts.Scanner; (* fof *)
 	diagnostics : Diagnostics.DiagnosticsList;
 CONST autoMark=TRUE;   (* fof *)
 BEGIN
@@ -234,7 +234,7 @@ BEGIN
 			Oberon.GetSelection(t, pos, end, time);
 			Texts.OpenScanner(S, t, pos); Texts.Scan(S)
 		ELSE
-			end := MAX(LONGINT)
+			end := MAX(SIGNED32)
 		END;
 		count := 0;
 		WHILE (S.class = Texts.Name) & (Texts.Pos(S) - S.len <= end) & ~error DO
@@ -252,7 +252,7 @@ BEGIN
 	PCT.InitDB(PCT.database);
 END Compile;
 
-PROCEDURE SenderToLog(CONST  buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+PROCEDURE SenderToLog(CONST  buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 VAR i: SIZE; ch: CHAR;
 BEGIN
 	FOR i := 0 TO len-1 DO

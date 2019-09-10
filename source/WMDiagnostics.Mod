@@ -11,8 +11,8 @@ CONST
 	TypeError* = Diagnostics.TypeError;
 
 	(* Error grid colors *)
-	ColorError = LONGINT(0FF3030A0H);
-	ColorWarning = LONGINT(0D0D040C0H);
+	ColorError = SIGNED32(0FF3030A0H);
+	ColorWarning = SIGNED32(0D0D040C0H);
 	ColorPCPosition = 0007F00A0H;
 
 	(* Textview position marker pictures *)
@@ -34,7 +34,7 @@ CONST
 TYPE
 
 	Entry* = RECORD
-		type- : WORD;
+		type- : INTEGER;
 		source- : Files.FileName;
 		position-: Streams.Position;
 		message- : ARRAY 256 OF CHAR;
@@ -47,7 +47,7 @@ TYPE
 	Model* = OBJECT(Diagnostics.Diagnostics)
 	VAR
 		entries : EntryArray;
-		nofEntries- : LONGINT;
+		nofEntries- : SIGNED32;
 
 		nofInformations: SIZE;
 		nofWarnings : SIZE;
@@ -160,7 +160,7 @@ TYPE
 			Add(TypeInformation, source, position, message, nofInformations);
 		END Information;
 
-		PROCEDURE Exists(type: WORD; position : Streams.Position; CONST message: ARRAY OF CHAR) : BOOLEAN;
+		PROCEDURE Exists(type: INTEGER; position : Streams.Position; CONST message: ARRAY OF CHAR) : BOOLEAN;
 		VAR i : SIZE;
 		BEGIN
 			i := 0;
@@ -170,7 +170,7 @@ TYPE
 			RETURN (nofEntries > 0) & (i < nofEntries);
 		END Exists;
 
-		PROCEDURE Add(type: WORD; CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR; VAR counter: SIZE);
+		PROCEDURE Add(type: INTEGER; CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR; VAR counter: SIZE);
 		BEGIN
 			AcquireWrite;
 			IF ~Exists(type, position, message) THEN
@@ -212,10 +212,10 @@ TYPE
 			ReleaseRead;
 		END GetSummary;
 
-		PROCEDURE Synchronize(VAR entries : ViewEntryArray; VAR nofEntries : LONGINT);
+		PROCEDURE Synchronize(VAR entries : ViewEntryArray; VAR nofEntries : SIGNED32);
 		VAR dest : SIZE;
 
-			PROCEDURE Insert(type: WORD);
+			PROCEDURE Insert(type: INTEGER);
 			VAR i: SIZE;
 			BEGIN
 				FOR i := 0 TO nofEntries - 1 DO
@@ -247,7 +247,7 @@ TYPE
 
 TYPE
 
-	CompareProcedure = PROCEDURE(CONST entry1, entry2 : Entry) : WORD;
+	CompareProcedure = PROCEDURE(CONST entry1, entry2 : Entry) : INTEGER;
 
 
 	ViewEntry* = RECORD (Entry)
@@ -279,10 +279,10 @@ TYPE
 		showMarkersI : BOOLEAN;
 
 		sortBy- : WMProperties.Int32Property;
-		sortByI : LONGINT;
+		sortByI : SIGNED32;
 
 		entries : ViewEntryArray;
-		nofEntries : LONGINT;
+		nofEntries : SIGNED32;
 
 		model : Model;
 		textViews : POINTER TO ARRAY OF WMTextView.TextView;
@@ -328,7 +328,7 @@ TYPE
 
 		PROCEDURE OnClickHandler(sender, data : ANY);
 		CONST Position = 0;
-		VAR column, row : SIZE; newMode: WORD;
+		VAR column, row : SIZE; newMode: INTEGER;
 		BEGIN
 			IF ~IsCallFromSequencer() THEN sequencer.ScheduleEvent(SELF.OnClickHandler, sender, data)
 			ELSE
@@ -382,7 +382,7 @@ TYPE
 			Release;
 		END ShowMarkers;
 
-		PROCEDURE SortBy(mode : WORD);
+		PROCEDURE SortBy(mode : INTEGER);
 		BEGIN
 			ASSERT(
 				(mode = SortByTypeAscending) OR (mode = SortByTypeDescending) OR
@@ -459,7 +459,7 @@ TYPE
 			END;
 		END RemovePositionMarkers;
 
-		PROCEDURE GetFirstPosition*(VAR positions : ARRAY OF SIZE; VAR type: LONGINT);
+		PROCEDURE GetFirstPosition*(VAR positions : ARRAY OF SIZE; VAR type: SIGNED32);
 		VAR i : SIZE;
 		BEGIN
 			Acquire;
@@ -507,16 +507,16 @@ TYPE
 		BEGIN
 			Acquire;
 			IF (0 <= number) & (number <= nofEntries) THEN
-				SetSelection(0, number(LONGINT), 2, number(LONGINT));
+				SetSelection(0, number(SIGNED32), 2, number(SIGNED32));
 				IF moveTo THEN
-					SetTopPosition(0, number(LONGINT), TRUE);
+					SetTopPosition(0, number(SIGNED32), TRUE);
 				END;
 			END;
 			Release;
 		END SelectEntry;
 
 		PROCEDURE SortEntries(compare : CompareProcedure; ascending : BOOLEAN);
-		VAR result, i, j : LONGINT; temp : ViewEntry;
+		VAR result, i, j : SIGNED32; temp : ViewEntry;
 		BEGIN
 			(* caller must hold lock *)
 			ASSERT(compare # NIL);
@@ -634,8 +634,8 @@ VAR
 	PrototypeShowMarkers : WMProperties.BooleanProperty;
 	PrototypeSortBy : WMProperties.Int32Property;
 
-PROCEDURE CompareByPosition(CONST e1, e2 : Entry) : WORD;
-VAR result : WORD;
+PROCEDURE CompareByPosition(CONST e1, e2 : Entry) : INTEGER;
+VAR result : INTEGER;
 BEGIN
 	IF (e1.position < e2.position) THEN result := Less;
 	ELSIF (e1.position > e2.position) THEN result := Greater;
@@ -645,8 +645,8 @@ BEGIN
 	RETURN result;
 END CompareByPosition;
 
-PROCEDURE CompareByType(CONST e1, e2 : Entry) : WORD;
-VAR result : WORD;
+PROCEDURE CompareByType(CONST e1, e2 : Entry) : INTEGER;
+VAR result : INTEGER;
 BEGIN
 	IF (e1.type < e2.type) THEN result := Less;
 	ELSIF (e1.type > e2.type) THEN result := Greater;

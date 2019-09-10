@@ -53,7 +53,7 @@ VAR
 (*PROCEDURE^ Alloc*;*)
 
 	PROCEDURE Recall( F: tLayer );   (*vs 0.0a2	gs/fof  6.9.95 *)
-	VAR count, dataPoint: LONGINT;  xp, yp: REAL;
+	VAR count, dataPoint: SIGNED32;  xp, yp: FLOAT32;
 	BEGIN
 		IF F.x # NIL THEN
 			count := F.x.nrData;
@@ -79,7 +79,7 @@ VAR
 	END Copy;
 
 	PROCEDURE Consume( o: tLayer;  msg: Display.ConsumeMsg );
-	VAR v: vyBase.tVector;  minX, maxX: REAL;  pict: vyPort.Picture;  nans: LONGINT;
+	VAR v: vyBase.tVector;  minX, maxX: FLOAT32;  pict: vyPort.Picture;  nans: SIGNED32;
 
 	BEGIN
 		pict := msg.dlink( vyPort.Picture );  v := vyBase.GetVFromObj( msg.obj );
@@ -105,7 +105,7 @@ VAR
 	END HandleAttributes;
 
 	PROCEDURE AdjustCoord( pict: vyPort.Picture;  obj: tLayer );
-	VAR minX, maxX: REAL;  nans: LONGINT;
+	VAR minX, maxX: FLOAT32;  nans: SIGNED32;
 	BEGIN
 		IF pict # NIL THEN
 			IF obj.x # NIL THEN vyTypes.VGetMinMaxR( obj.x, minX, maxX, nans ) ELSE minX := 0;  maxX := 1 END;
@@ -163,7 +163,7 @@ VAR
 
 	PROCEDURE Handler*( obj: Objects.Object;  VAR msg: Objects.ObjMsg );
 	(*vs 0.0a1	md  20.07.94 *)
-	VAR minX, maxX: REAL;  pict: vyPort.Picture;  nans: LONGINT;
+	VAR minX, maxX: FLOAT32;  pict: vyPort.Picture;  nans: SIGNED32;
 	BEGIN
 		WITH obj: tLayer DO
 			IF msg IS Display.DisplayMsg THEN

@@ -9,12 +9,12 @@ CONST
 
 (** Sound the PC speaker continuously at the specified frequency.  Use 0 to switch off the sound.  Not sharable. *)
 
-PROCEDURE Beep*(hz: WORD);
+PROCEDURE Beep*(hz: INTEGER);
 VAR s: SET;
 BEGIN {EXCLUSIVE}
 		(* stop counter *)
 	Machine.Portin8(61H, SYSTEM.VAL(CHAR, s));
-	Machine.Portout8(61H, CHR(SYSTEM.VAL(WORD, s - {0,1})));
+	Machine.Portout8(61H, CHR(SYSTEM.VAL(INTEGER, s - {0,1})));
 	IF hz > 0 THEN
 		hz := Rate DIV hz;
 			(* init counter for hz *)

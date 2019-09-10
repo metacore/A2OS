@@ -8,7 +8,7 @@ VAR
 	context: srGL.Context;
 	cell*: srM2Space.cell;
 	a,b,c, z: PT;
-	angle: REAL;
+	angle: FLOAT32;
 
 PROCEDURE & new*;
 BEGIN
@@ -36,10 +36,10 @@ BEGIN
 	branch(1,2,1)
 END trunk;
 
-PROCEDURE branch(level, limit, rep: INTEGER);
+PROCEDURE branch(level, limit, rep: SIGNED16);
 VAR
 	p,q: PT;
-	i: INTEGER;
+	i: SIGNED16;
 BEGIN
 	FOR i := 0 TO rep DO
 		srBase.randPT(q);

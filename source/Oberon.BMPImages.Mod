@@ -30,8 +30,8 @@ MODULE BMPImages IN Oberon; (** portable **)	(* eos  *)
 		Texts.WriteString(W, "BMPImages: "); Texts.WriteString(W, msg); Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
 	END Log;
 
-	PROCEDURE LogInt (msg: ARRAY OF CHAR; val: LONGINT);
-		VAR i, j, n: LONGINT; s: ARRAY 100 OF CHAR;
+	PROCEDURE LogInt (msg: ARRAY OF CHAR; val: SIGNED32);
+		VAR i, j, n: SIGNED32; s: ARRAY 100 OF CHAR;
 	BEGIN
 		i := 0; WHILE msg[i] # "%" DO s[i] := msg[i]; INC(i) END; j := i+1;
 		n := 1000000; WHILE n > val DO n := n DIV 10 END;
@@ -42,8 +42,8 @@ MODULE BMPImages IN Oberon; (** portable **)	(* eos  *)
 		Log(s)
 	END LogInt;
 
-	PROCEDURE Unmask (val, mask, nbits: LONGINT): LONGINT;
-		VAR res, m, bits: LONGINT;
+	PROCEDURE Unmask (val, mask, nbits: SIGNED32): SIGNED32;
+		VAR res, m, bits: SIGNED32;
 	BEGIN
 		res := val; m := mask; bits := 0;
 		WHILE (m # 0) & ~ODD(m) DO	(* shift down to first valid bit *)
@@ -62,8 +62,8 @@ MODULE BMPImages IN Oberon; (** portable **)	(* eos  *)
 		RETURN res
 	END Unmask;
 
-	PROCEDURE Load1 (img: Images.Image; w, h: LONGINT; VAR pal: Images.Palette; VAR r: Files.Rider);
-		VAR y, dy, x, p, b, i: LONGINT; fmt: Images.Format; ch: CHAR;
+	PROCEDURE Load1 (img: Images.Image; w, h: SIGNED32; VAR pal: Images.Palette; VAR r: Files.Rider);
+		VAR y, dy, x, p, b, i: SIGNED32; fmt: Images.Format; ch: CHAR;
 	BEGIN
 		IF h > 0 THEN y := 0; dy := 1
 		ELSE h := -h; y := h-1; dy := -1
@@ -86,8 +86,8 @@ MODULE BMPImages IN Oberon; (** portable **)	(* eos  *)
 		END
 	END Load1;
 
-	PROCEDURE Load4 (img: Images.Image; w, h, compression: LONGINT; pal: Images.Palette; VAR r: Files.Rider);
-		VAR y, dy, x, p, b, i: LONGINT; fmt: Images.Format; ch: CHAR; col: ARRAY 2 OF CHAR;
+	PROCEDURE Load4 (img: Images.Image; w, h, compression: SIGNED32; pal: Images.Palette; VAR r: Files.Rider);
+		VAR y, dy, x, p, b, i: SIGNED32; fmt: Images.Format; ch: CHAR; col: ARRAY 2 OF CHAR;
 	BEGIN
 		IF h > 0 THEN y := 0; dy := 1
 		ELSE h := -h; y := h-1; dy := -1
@@ -138,8 +138,8 @@ MODULE BMPImages IN Oberon; (** portable **)	(* eos  *)
 		END
 	END Load4;
 
-	PROCEDURE Load8 (img: Images.Image; w, h, compression: LONGINT; pal: Images.Palette; VAR r: Files.Rider);
-		VAR y, dy, x, p, b, i: LONGINT; fmt: Images.Format; ch: CHAR;
+	PROCEDURE Load8 (img: Images.Image; w, h, compression: SIGNED32; pal: Images.Palette; VAR r: Files.Rider);
+		VAR y, dy, x, p, b, i: SIGNED32; fmt: Images.Format; ch: CHAR;
 	BEGIN
 		IF h > 0 THEN y := 0; dy := 1
 		ELSE h := -h; y := h-1; dy := -1
@@ -183,8 +183,8 @@ MODULE BMPImages IN Oberon; (** portable **)	(* eos  *)
 		END
 	END Load8;
 
-	PROCEDURE Load16 (img: Images.Image; w, h, compression, rMask, gMask, bMask: LONGINT; VAR r: Files.Rider);
-		VAR y, dy, x, p, val, red, green, blue: LONGINT; convert: BOOLEAN; align: ARRAY 2 OF CHAR;
+	PROCEDURE Load16 (img: Images.Image; w, h, compression, rMask, gMask, bMask: SIGNED32; VAR r: Files.Rider);
+		VAR y, dy, x, p, val, red, green, blue: SIGNED32; convert: BOOLEAN; align: ARRAY 2 OF CHAR;
 	BEGIN
 		IF h > 0 THEN y := 0; dy := 1
 		ELSE h := -h; y := h-1; dy := -1
@@ -217,8 +217,8 @@ MODULE BMPImages IN Oberon; (** portable **)	(* eos  *)
 		END
 	END Load16;
 
-	PROCEDURE Load24 (img: Images.Image; w, h: LONGINT; VAR r: Files.Rider);
-		VAR y, dy, x, p: LONGINT; align: ARRAY 3 OF CHAR;
+	PROCEDURE Load24 (img: Images.Image; w, h: SIGNED32; VAR r: Files.Rider);
+		VAR y, dy, x, p: SIGNED32; align: ARRAY 3 OF CHAR;
 	BEGIN
 		IF h > 0 THEN y := 0; dy := 1
 		ELSE h := -h; y := h-1; dy := -1
@@ -235,8 +235,8 @@ MODULE BMPImages IN Oberon; (** portable **)	(* eos  *)
 		END
 	END Load24;
 
-	PROCEDURE Load32 (img: Images.Image; w, h, compression, rMask, gMask, bMask: LONGINT; VAR r: Files.Rider);
-		VAR y, dy, x, p, val, red, green, blue: LONGINT; convert: BOOLEAN; ch: CHAR;
+	PROCEDURE Load32 (img: Images.Image; w, h, compression, rMask, gMask, bMask: SIGNED32; VAR r: Files.Rider);
+		VAR y, dy, x, p, val, red, green, blue: SIGNED32; convert: BOOLEAN; ch: CHAR;
 	BEGIN
 		IF h > 0 THEN y := 0; dy := 1
 		ELSE h := -h; y := h-1; dy := -1
@@ -261,8 +261,8 @@ MODULE BMPImages IN Oberon; (** portable **)	(* eos  *)
 	PROCEDURE Load (img: Images.Image; VAR fname: ARRAY OF CHAR; VAR done: BOOLEAN);
 		VAR
 			file: Files.File; r: Files.Rider; type: ARRAY 2 OF CHAR;
-			size, reserved, offset, width, height, compression, colors, importantColors, col, redMask, greenMask, blueMask: LONGINT;
-			planes, bpp: INTEGER; pal: Images.Palette; pix: Images.Pixel; ch: CHAR;
+			size, reserved, offset, width, height, compression, colors, importantColors, col, redMask, greenMask, blueMask: SIGNED32;
+			planes, bpp: SIGNED16; pal: Images.Palette; pix: Images.Pixel; ch: CHAR;
 	BEGIN
 		file := Files.Old(fname);
 		IF file = NIL THEN RETURN END;

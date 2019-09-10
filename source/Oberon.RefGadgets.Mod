@@ -173,8 +173,8 @@ BEGIN
 END FrameLinks;
 
 (* Draws a 'Frame' gadget. Switch 'pressed' indicates the gadget's state *)
-PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; pressed: BOOLEAN);
-	VAR x0, y0, r, r0: INTEGER;
+PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; pressed: BOOLEAN);
+	VAR x0, y0, r, r0: SIGNED16;
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
 	Display3.FilledRect3D(Q, Display3.bottomC, Display3.topC, Display3.textbackC, x, y, w, h, 1, Display.replace);
@@ -207,9 +207,9 @@ END Restore;
 
 (* Prints a 'Frame' gadget *)
 PROCEDURE Print (F: Frame; VAR M: Display.DisplayMsg);
-	VAR Q: Display3.Mask; x, y, w, h, r, x0, y0, r0: INTEGER;
+	VAR Q: Display3.Mask; x, y, w, h, r, x0, y0, r0: SIGNED16;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -238,7 +238,7 @@ END Print;
 
 (* Drops model to frame at point (X, Y). If model is of type 'Display.Frame' a 'ConsumeMsg' with id set to 'drop'
 	is sent, otherwise a 'LinkMsg' is sent to frame *)
-PROCEDURE DropObject(obj: Objects.Object; X, Y: INTEGER; copy: BOOLEAN);
+PROCEDURE DropObject(obj: Objects.Object; X, Y: SIGNED16; copy: BOOLEAN);
 	VAR F: Display.Frame; C: Objects.CopyMsg; D: Display.ConsumeMsg;
 			L: Objects.LinkMsg;
 BEGIN
@@ -265,7 +265,7 @@ END DropObject;
 (* Tracks mouse if right button was pressed entering frame handler.
 	Allows to delete current value (right, left) or integrate a copy of the value (right, middle). *)
 PROCEDURE TrackRight(F: Frame; VAR M: Oberon.InputMsg);
-	VAR Q: Display3.Mask; x, y, w, h: INTEGER; keysum: SET; C:Objects.CopyMsg;
+	VAR Q: Display3.Mask; x, y, w, h: SIGNED16; keysum: SET; C:Objects.CopyMsg;
 BEGIN
 	x:= M.x+F.X; y:= M.y+F.Y; w:= F.W; h:= F.H;
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
@@ -293,7 +293,7 @@ END TrackRight;
 (* Tracks mouse if middle button was pressed entering frame handler.
 	Allows to execute attibute 'Cmd' or drag and drop value (middle, left) or a copy (middle, right). *)
 PROCEDURE TrackMiddle(F: Frame; VAR M: Oberon.InputMsg);
-	VAR Q: Display3.Mask; x, y, w, h, r, s: INTEGER; keysum: SET; in, drag: BOOLEAN; cursor: Oberon.Marker;
+	VAR Q: Display3.Mask; x, y, w, h, r, s: SIGNED16; keysum: SET; in, drag: BOOLEAN; cursor: Oberon.Marker;
 BEGIN
 	x:= M.x+F.X; y:= M.y+F.Y; w:= F.W; h:= F.H; r:= x+w-1; s:= y+h-1;
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
@@ -328,7 +328,7 @@ END TrackMiddle;
 	Allows to copy over an object to be set as new value (left, middle). If succeeded
 	executes attribute 'ConsumeCmd'. *)
 PROCEDURE TrackLeft(F: Frame; VAR M: Oberon.InputMsg);
-	VAR Q: Display3.Mask; obj: Objects.Object; time: LONGINT; x, y, w, h: INTEGER; keysum: SET;
+	VAR Q: Display3.Mask; obj: Objects.Object; time: SIGNED32; x, y, w, h: SIGNED16; keysum: SET;
 BEGIN
 	x:= M.x+F.X; y:= M.y+F.Y; w:= F.W; h:= F.H;
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
@@ -359,7 +359,7 @@ BEGIN
 END CopyFrame;
 
 PROCEDURE FrameHandle* (F: Objects.Object; VAR M: Objects.ObjMsg);
-	VAR x, y, w, h: INTEGER; F1: Frame; Q: Display3.Mask;
+	VAR x, y, w, h: SIGNED16; F1: Frame; Q: Display3.Mask;
 BEGIN
 	WITH F: Frame DO
 		IF M IS Display.FrameMsg THEN
@@ -478,7 +478,7 @@ END NewFrame;
 	Creates a new object and set the value link of the specified RefGadget. A destination
 	RefGadget is either the executor, selected or marked gadget. *)
 PROCEDURE Create*;
-VAR obj, ref: Objects.Object; time: LONGINT; L: Objects.LinkMsg; S: Attributes.Scanner;
+VAR obj, ref: Objects.Object; time: SIGNED32; L: Objects.LinkMsg; S: Attributes.Scanner;
 BEGIN
 	Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Attributes.Scan(S);
 	IF S.class IN {Attributes.Name, Attributes.String} THEN

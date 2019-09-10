@@ -13,8 +13,8 @@ CONST
 TYPE
 	CharInfo = RECORD
 		pinyin : ARRAY 8 OF CHAR;
-		ucs : LONGINT;
-		freq : LONGINT;
+		ucs : SIGNED32;
+		freq : SIGNED32;
 		info : String;
 	END;
 
@@ -24,7 +24,7 @@ TYPE
 	END;
 
 	(* return -1, if a < b; 0, if a = b; 1, if a > b *)
-	CompareProc = PROCEDURE {DELEGATE} (a, b : ListElement) : LONGINT;
+	CompareProc = PROCEDURE {DELEGATE} (a, b : ListElement) : SIGNED32;
 
 	PhraseInfo = POINTER TO RECORD (ListElement)
 		phrase : String;
@@ -37,7 +37,7 @@ TYPE
 	ResultList = POINTER TO RECORD (ListElement)
 		pinyin : String;
 		hanzi : String;
-		freq : LONGINT;
+		freq : SIGNED32;
 	END;
 
 	Characters = POINTER TO ARRAY OF CharInfo;
@@ -45,15 +45,15 @@ TYPE
 	Phrases = POINTER TO ARRAY OF PhraseInfo;
 
 	Table = OBJECT
-	VAR nofChars : LONGINT;
+	VAR nofChars : SIGNED32;
 		characters : Characters;
 
 		phrases : Phrases;
-		nofPhrases : LONGINT;
+		nofPhrases : SIGNED32;
 
 		PROCEDURE LoadCharacters;
 		VAR f  : Files.File; r : Files.Reader;
-			i : LONGINT; errors : BOOLEAN;
+			i : SIGNED32; errors : BOOLEAN;
 			info: ARRAY 256 OF CHAR;
 		BEGIN
 			f := Files.Old("PinyinIMETable.txt");
@@ -89,7 +89,7 @@ TYPE
 
 		PROCEDURE LoadPhrases;
 		VAR f  : Files.File; r : Files.Reader;
-			i : LONGINT; errors : BOOLEAN;
+			i : SIGNED32; errors : BOOLEAN;
 			pinyin, hanzi, info: ARRAY 256 OF CHAR;
 			pi, cur : ListElement;
 			n : PhraseInfo; (* dummy root *)
@@ -129,7 +129,7 @@ TYPE
 			END
 		END LoadPhrases;
 
-		PROCEDURE FindMatches(CONST s : ARRAY OF CHAR; resultList : ResultList; VAR nofResults : LONGINT);
+		PROCEDURE FindMatches(CONST s : ARRAY OF CHAR; resultList : ResultList; VAR nofResults : SIGNED32);
 		VAR i, pos : SIZE;
 			r, tr, cur : ResultList;
 			cl : ListElement;
@@ -240,7 +240,7 @@ TYPE
 			sb.AddContent(gb);
 
 			(* edit panel *)
-			NEW(ep); ep.alignment.Set(WMComponents.AlignClient); ep.fillColor.Set(LONGINT(0DDDD00EEH));
+			NEW(ep); ep.alignment.Set(WMComponents.AlignClient); ep.fillColor.Set(SIGNED32(0DDDD00EEH));
 			panel.AddContent(ep);
 
 			NEW(edit); edit.bounds.SetHeight(20); edit.alignment.Set(WMComponents.AlignTop); edit.tv.showBorder.Set(TRUE);
@@ -258,7 +258,7 @@ TYPE
 			list.Acquire;
 			list.defaultRowHeight.Set(25);
 			list.cellDist.Set(0);
-			list.clCell.Set(LONGINT(0FFFFFFA0H));
+			list.clCell.Set(SIGNED32(0FFFFFFA0H));
 			list.SetColSpacings(spacings);
 			list.SetFont(WMGraphics.GetFont("Single", 20, {}));
 			list.Release;
@@ -356,7 +356,7 @@ TYPE
 		END Ok;
 
 		PROCEDURE TextChanged*(sender, data:ANY);
-		VAR cur : ListElement; nof, i : LONGINT;
+		VAR cur : ListElement; nof, i : SIGNED32;
 		BEGIN
 			(* avoid recursion *)
 			edit.text.onTextChanged.Remove(TextChanged);
@@ -447,7 +447,7 @@ TYPE
 			END; *)
 			IF (cap[ucs MOD 256] >= "A") & (cap[ucs MOD 256] <= "Z") THEN
 				GetCursorScreenPosition(x, y);
-				pos := 0; IF UTF8Strings.EncodeChar(ucs(LONGINT), str, pos) THEN END;
+				pos := 0; IF UTF8Strings.EncodeChar(ucs(SIGNED32), str, pos) THEN END;
 				NEW(w, SELF, x, y, str, table);
 			ELSE
 				InsertChar(ucs);
@@ -514,7 +514,7 @@ END Install;
 (** Merge-sort a single-linked list. The root element is a dummy node *)
 (* Algorithm by Simon Tatham *)
 PROCEDURE Sort(root: ListElement; compare : CompareProc);	(* root is dummy node *)
-VAR m, n, np, nq: LONGINT; p, q, tail: ListElement;
+VAR m, n, np, nq: SIGNED32; p, q, tail: ListElement;
 BEGIN
 	n := 1;
 	REPEAT
@@ -538,7 +538,7 @@ BEGIN
 	UNTIL m <= 1
 END Sort;
 
-PROCEDURE CompareResultListFreq(a, b: ListElement) : LONGINT;
+PROCEDURE CompareResultListFreq(a, b: ListElement) : SIGNED32;
 BEGIN
 	IF a(ResultList).freq < b(ResultList).freq THEN RETURN -1 END;
 	IF a(ResultList).freq > b(ResultList).freq THEN RETURN 1 END;
@@ -553,7 +553,7 @@ BEGIN
 	RETURN 0
 END CompareResultListFreq;
 
-PROCEDURE SortPhraseInfoPinyin(a, b: ListElement) : LONGINT;
+PROCEDURE SortPhraseInfoPinyin(a, b: ListElement) : SIGNED32;
 BEGIN
 	IF a(PhraseInfo).phrase^ < b(PhraseInfo).phrase^ THEN RETURN -1 END;
 	IF a(PhraseInfo).phrase^ > b(PhraseInfo).phrase^ THEN RETURN 1 END;
@@ -561,7 +561,7 @@ BEGIN
 END SortPhraseInfoPinyin;
 
 PROCEDURE InitLookup;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	(* to captial conversion table *)
 	FOR i := 0 TO 255 DO cap[i] := CHR(i) END;

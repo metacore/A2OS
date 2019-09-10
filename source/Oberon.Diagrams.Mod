@@ -10,11 +10,11 @@ CONST margin = 1; black = 15;
 TYPE
 	Frame* = POINTER TO FrameDesc;
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
-		col*: INTEGER;
+		col*: SIGNED16;
 	END;
 
     UpdateMsg* = RECORD (Display.FrameMsg)
-      n*: INTEGER
+      n*: SIGNED16
     END;
 
 PROCEDURE FrameAttr(F: Frame; VAR M: Objects.AttrMsg);
@@ -30,7 +30,7 @@ BEGIN
 	END
 END FrameAttr;
 
-PROCEDURE RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: SIGNED16);
 BEGIN
 	Display3.FilledRect3D(M, Display3.topC, Display3.bottomC, F.col, x, y, w, h, margin, Display.replace);
 	IF Gadgets.selected IN F.state THEN
@@ -38,7 +38,7 @@ BEGIN
 	END
 END RestoreFrame;
 
-PROCEDURE UpdateDiagram(F: Frame; M: Display3.Mask; n, x, y, w, h: INTEGER; VAR res: INTEGER);
+PROCEDURE UpdateDiagram(F: Frame; M: Display3.Mask; n, x, y, w, h: SIGNED16; VAR res: SIGNED16);
 BEGIN
 	IF Display3.Visible(M, x, y, w, h) THEN
       x := x + margin; y := y + margin; w := w - margin*2; h := h - margin*2;
@@ -59,7 +59,7 @@ BEGIN
 END CopyFrame;
 
 PROCEDURE FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: Frame; R: Display3.Mask;
+VAR x, y, w, h: SIGNED16; F0: Frame; R: Display3.Mask;
 BEGIN
 	WITH F: Frame DO
 		IF M IS Display.FrameMsg THEN

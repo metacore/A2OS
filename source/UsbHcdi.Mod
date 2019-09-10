@@ -156,7 +156,7 @@ TYPE
 
 	(** Aligned memory space. Use data[base] as first entry. *)
 	AlignedMemSpace* = POINTER TO RECORD
-		data- : POINTER TO ARRAY OF LONGINT;
+		data- : POINTER TO ARRAY OF SIGNED32;
 		base- : ADDRESS;
 	END;
 
@@ -187,7 +187,7 @@ TYPE
 		 * - None: The hub driver will not call this procedure
 		 * @param port Port to enable power for
 		 *)
-		PROCEDURE EnablePortPower*(port : LONGINT);
+		PROCEDURE EnablePortPower*(port : SIGNED32);
 		BEGIN HALT(301); END EnablePortPower;
 
 		(**
@@ -198,24 +198,24 @@ TYPE
 		 * - None: The hub driver will not call this procedure
 		 * @param port Port to disable power for
 		 *)
-		PROCEDURE DisablePortPower*(port : LONGINT);
+		PROCEDURE DisablePortPower*(port : SIGNED32);
 		BEGIN HALT(301); END DisablePortPower;
 
 		(**	Reset and then enable the specified port.
 			Resets the port, waits until reset is complete, enables the port and then returns. The client
 			(HubDriver) is responsible for waiting after the port is enabled *)
 
-		PROCEDURE ResetAndEnablePort*(port : LONGINT) : BOOLEAN;
+		PROCEDURE ResetAndEnablePort*(port : SIGNED32) : BOOLEAN;
 		BEGIN HALT(301); RETURN FALSE; END ResetAndEnablePort; (* abstract *)
 
 		(** Disable the specified port. *)
 
-		PROCEDURE DisablePort*(port: LONGINT);
+		PROCEDURE DisablePort*(port: SIGNED32);
 		BEGIN HALT(301); END DisablePort; (* abstract *)
 
 		(** Suspend the specified port *)
 
-		PROCEDURE SuspendPort*(port: LONGINT) : BOOLEAN;
+		PROCEDURE SuspendPort*(port: SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.Level >= Debug.Warnings THEN KernelLog.String("UsbHcdi: Port suspending not supported."); KernelLog.Ln; END;
 			RETURN FALSE;
@@ -223,7 +223,7 @@ TYPE
 
 		(** Resume the specified port *)
 
-		PROCEDURE ResumePort*(port: LONGINT) : BOOLEAN;
+		PROCEDURE ResumePort*(port: SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.Level >= Debug.Warnings  THEN KernelLog.String("UsbHcdi: Port resuming not supported."); KernelLog.Ln; END;
 			RETURN FALSE;
@@ -235,17 +235,17 @@ TYPE
 		 * @param ack Ackknowlegde status bits that are set
 		 * @return Port status
 		 *)
-		PROCEDURE GetPortStatus*(port : LONGINT; ack : BOOLEAN) : SET;
+		PROCEDURE GetPortStatus*(port : SIGNED32; ack : BOOLEAN) : SET;
 		BEGIN HALT(301); RETURN {}; END GetPortStatus; (* abstract *)
 
 		(** Indicate a port state using the port indicators *)
-		PROCEDURE IndicatePort*(port, indicate : LONGINT);
+		PROCEDURE IndicatePort*(port, indicate : SIGNED32);
 		BEGIN
 			IF Debug.Level >= Debug.Warnings THEN KernelLog.String("UsbHcdi: Port indicator control not supported."); KernelLog.Ln; END;
 		END IndicatePort;
 
 		(** Route the specified port to a companion host controller if supported. *)
-		PROCEDURE RoutePortToCompanion*(port : LONGINT);
+		PROCEDURE RoutePortToCompanion*(port : SIGNED32);
 		BEGIN
 			IF Debug.Level >= Debug.Warnings THEN KernelLog.String("UsbHcdi: Port routing not supported."); KernelLog.Ln; END;
 		END RoutePortToCompanion;
@@ -255,7 +255,7 @@ TYPE
 		PROCEDURE Schedule*(pipe : Pipe; bufferLen, offset: SIZE; VAR buffer : Usbdi.Buffer);
 		BEGIN HALT(301); END Schedule; (* abstract *)
 
-		PROCEDURE ScheduleControl*(pipe : Pipe; direction: LONGINT; msg: ControlMessage;  bufferLen : SIZE; VAR buffer : Usbdi.Buffer);
+		PROCEDURE ScheduleControl*(pipe : Pipe; direction: SIGNED32; msg: ControlMessage;  bufferLen : SIZE; VAR buffer : Usbdi.Buffer);
 		BEGIN HALT(301); END ScheduleControl; (* abstract *)
 
 		(** Inserts a QH for the specified USB pipe into the host controller's schedule data structure. *)
@@ -320,23 +320,23 @@ TYPE
 	VAR
 		(* Host controller configuration data - Consider this fields as read-only. *)
 		iobase*: Machine.Address32;
-		irq* : LONGINT;
-		portCount* : LONGINT;
+		irq* : SIGNED32;
+		portCount* : SIGNED32;
 		ports* : POINTER TO ARRAY OF Machine.Address32;  (* addresses of the Port Status Control registers  *)
 
 		(* PCI specific *)
-		bus-, device-, function- : LONGINT;
+		bus-, device-, function- : SIGNED32;
 
 		(* HC capabilities (consider read-only) *)
 		DMAchaining* : BOOLEAN; 	(* Can the HC do H/W scatter/gather? *)
-		sgListSize* : LONGINT; 		(* How many entries shall the SG list support? Only valid if DMAchaining is TRUE. *)
+		sgListSize* : SIGNED32; 		(* How many entries shall the SG list support? Only valid if DMAchaining is TRUE. *)
 		isHighSpeed* : BOOLEAN;	(* Does this host controller support high-speed transfer mode? *)
 
 		(* Emulated hub device descriptor *)
 		hubDescriptor* : HubDescriptor;
 
 		(* current state of the host controller (Undefined|Initialized|Operational|Suspended|Resuming|Error) *)
-		state- : LONGINT;
+		state- : SIGNED32;
 
 		(* Procedure called when the status of the root hub port changes *)
 		statusChangeHandler- : StatusChangeHandler;
@@ -354,19 +354,19 @@ TYPE
 
 
 		(* Per USB lock *)
-		buslock : LONGINT;
+		buslock : SIGNED32;
 
 		(* For the Wait procedure *)
 		timer : Kernel.Timer;
 
 		(* Performance monitoring *)
-		NbytesTransfered- : HUGEINT;
+		NbytesTransfered- : SIGNED64;
 
 		(* HC statistics *)
 		NnofTransfers-,
 		NnofBulkTransfers-, NnofControlTransfers-, NnofInterruptTransfers-, NnofIsochronousTransfers-,
 		NnofUnknownTransfers-,
-		NnofInterrupts*, NnofInterruptsHandled* : LONGINT;
+		NnofInterrupts*, NnofInterruptsHandled* : SIGNED32;
 
 		(** Bus Locking *)
 
@@ -383,7 +383,7 @@ TYPE
 		END Release;
 
 		(** Set the state of the HC *)
-		PROCEDURE SetState*(state : LONGINT);
+		PROCEDURE SetState*(state : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			SELF.state := state;
 		END SetState;
@@ -490,7 +490,7 @@ TYPE
 		END NotifyCompletionHandlers;
 
 		(* The default pipe (adr 0, ep 0) is only used to communicate with devices as long they are not in the addressed state. *)
-		PROCEDURE GetDefaultPipe*(speed, ttPort, ttAddress : LONGINT; device : Usbdi.UsbDevice) : Pipe;
+		PROCEDURE GetDefaultPipe*(speed, ttPort, ttAddress : SIGNED32; device : Usbdi.UsbDevice) : Pipe;
 		VAR pipe : Pipe;
 		BEGIN {EXCLUSIVE}
 			IF Debug.StrongChecks THEN ASSERT(pipes[0, 0, 0] # NIL); END; (* dummy default pipe is always present *)
@@ -511,7 +511,7 @@ TYPE
 
 		(** USB Pipe Handling *)
 
-		PROCEDURE GetPipe*(deviceAddress, endpointNbr : LONGINT; VAR pipe : Pipe);
+		PROCEDURE GetPipe*(deviceAddress, endpointNbr : SIGNED32; VAR pipe : Pipe);
 		VAR testaddr : ADDRESS;
 		BEGIN {EXCLUSIVE}
 			IF Debug.StrongChecks THEN
@@ -601,8 +601,8 @@ TYPE
 		END FreePipeInternal;
 
 		(** Free all pipes of the device with the address adr *)
-		PROCEDURE FreeAll*(adr : LONGINT);
-		VAR i, j : LONGINT;
+		PROCEDURE FreeAll*(adr : SIGNED32);
+		VAR i, j : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF Debug.StrongChecks THEN ASSERT((adr >= 0) & (adr < 128)); END;
 			IF adr = 0 THEN RETURN (* Emulated hub device has no pipes *) END;
@@ -618,8 +618,8 @@ TYPE
 
 		(** Returns a unused address and marks it as used; address 0 is the default address, to
 		 * which unaddressed USB devices at enabled endpoints will respond.  *)
-		PROCEDURE GetFreeAddress*() : LONGINT;
-		VAR adr : LONGINT;
+		PROCEDURE GetFreeAddress*() : SIGNED32;
+		VAR adr : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			FOR adr := 1 TO 127 DO
 				IF adrRange[adr] = FALSE THEN adrRange[adr] := TRUE; RETURN adr; END;
@@ -628,13 +628,13 @@ TYPE
 		END GetFreeAddress;
 
 		(** Marks the address <adr> as free *)
-		PROCEDURE FreeAddress*(adr : LONGINT);
+		PROCEDURE FreeAddress*(adr : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			adrRange[adr] := FALSE;
 		END FreeAddress;
 
 		(** Helper: Wait for the specified number of milliseconds *)
-		PROCEDURE Wait*(ms : LONGINT);
+		PROCEDURE Wait*(ms : SIGNED32);
 		BEGIN
 			timer.Sleep(ms);
 		END Wait;
@@ -644,8 +644,8 @@ TYPE
 			SetState(Shutdown); timer.Wakeup;
 		END Cleanup;
 
-		PROCEDURE &Default*(bus, device, funtion : LONGINT);
-		VAR pipe : Pipe; i : LONGINT;
+		PROCEDURE &Default*(bus, device, funtion : SIGNED32);
+		VAR pipe : Pipe; i : SIGNED32;
 		BEGIN
 			SELF.bus := bus; SELF.device := device; SELF.function := function;
 			NEW(timer);
@@ -671,7 +671,7 @@ TYPE
 
 		(** Show diagnostic of host controller *)
 		PROCEDURE Diag*;
-		VAR port : LONGINT; dword : SET;
+		VAR port : SIGNED32; dword : SET;
 		BEGIN
 			IF Debug.Trace THEN
 			KernelLog.String("Diagnostics of "); KernelLog.String(name);
@@ -716,7 +716,7 @@ TYPE
 			completiontimeout := TRUE;
 		END SetCompletionTimeout;
 
-		PROCEDURE AwaitDone(timeout : LONGINT) : BOOLEAN;
+		PROCEDURE AwaitDone(timeout : SIGNED32) : BOOLEAN;
 		VAR result : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			Objects.SetTimeout(timer, SELF.SetCompletionTimeout, timeout);
@@ -798,9 +798,9 @@ TYPE
 	Pipe* = OBJECT(Usbdi.Pipe)
 	VAR
 		(* Device endpoint *)
-		address* : LONGINT; 	(* USB device address *)
-		endpoint* : LONGINT; 	(* Endpoint address *)
-		direction* : LONGINT; 	(* Endpoint direction; Usbdi.In or Usbdi.Out; not used for control transfers *)
+		address* : SIGNED32; 	(* USB device address *)
+		endpoint* : SIGNED32; 	(* Endpoint address *)
+		direction* : SIGNED32; 	(* Endpoint direction; Usbdi.In or Usbdi.Out; not used for control transfers *)
 
 		(* Associated host controller & USB device *)
 		controller* : Hcd;
@@ -808,17 +808,17 @@ TYPE
 
 		(* Address of hub device that contains the transaction translator we're connected to and port of the TT *)
 		(* These fields are duplicate here (also available in Usb.UsbDevice to avoid the import of Usb.Mod in UsbEhci.Mod *)
-		ttPort*, ttAddress* : LONGINT;
+		ttPort*, ttAddress* : SIGNED32;
 
 		(* Information from endpoint descriptor *)
-		type* : LONGINT; 		(* PipeControl, PipeBulk, PipeInterrupt or PipeIsochronous *)
-		irqInterval* : LONGINT; 	(* Interrupt interval for PipeInterrupt (interrupt transfers) *)
-		mult* : LONGINT; 		(* For high-speed interrupt/isochronous pipes: How many transactions per microframe (1,2 or 3) *)
+		type* : SIGNED32; 		(* PipeControl, PipeBulk, PipeInterrupt or PipeIsochronous *)
+		irqInterval* : SIGNED32; 	(* Interrupt interval for PipeInterrupt (interrupt transfers) *)
+		mult* : SIGNED32; 		(* For high-speed interrupt/isochronous pipes: How many transactions per microframe (1,2 or 3) *)
 
 		(* Pipe specific features *)
-		speed* : LONGINT; 		 	(* LowSpeed, FullSpeed, HighSpeed *)
+		speed* : SIGNED32; 		 	(* LowSpeed, FullSpeed, HighSpeed *)
 		dataToggle* : BOOLEAN; 	(* 1bit sequence number *)
-(*		hostDelay, hubLsSetup : LONGINT; (* Delay introduced by host / hub in nanoseconds *)  *)
+(*		hostDelay, hubLsSetup : SIGNED32; (* Delay introduced by host / hub in nanoseconds *)  *)
 
 		(* Transfer status information *)
 		status* : Usbdi.Status	;	(* Status of the last tranfer from/to this endpoint *)
@@ -834,7 +834,7 @@ TYPE
 		sgList- : POINTER TO ARRAY OF Machine.Range;
 
 		(* Pipe parameters set by client software *)
-		timeout* : LONGINT;
+		timeout* : SIGNED32;
 
 		(* Data structures 																									*)
 		(* For control, bulk and interrupt transfers, each pipe has an associated queue head in the host controllers schedule.		*)
@@ -846,7 +846,7 @@ TYPE
 
 		(* Per pipe buffer for transfer descriptors *)
 		tdBuffer* : POINTER TO ARRAY OF CHAR;
-		tdBufferLen* : LONGINT;
+		tdBufferLen* : SIGNED32;
 		tdBase* : Machine.Address32;
 
 		(* Transfer completion handling related *)
@@ -861,7 +861,7 @@ TYPE
 		(* Control pipes only: 8 Byte message *)
 		message : ControlMessage;
 
-		PROCEDURE &New*(adr, ep : LONGINT; hcd : Hcd);
+		PROCEDURE &New*(adr, ep : SIGNED32; hcd : Hcd);
 		BEGIN
 			NEW(completion);
 			address := adr; endpoint := ep; controller := hcd; status := Usbdi.InProgress;
@@ -875,7 +875,7 @@ TYPE
 		(* 	- 	Returns TRUE and as a side effect copies the client buffer into the scatter/gather buffer for OUT transfers if the specified buffer	*)
 		(*		cannot directly be used by the host controller																					*)
 		(*	-	Returns FALSE when the client buffer meets the requirement of the host controller hardware									*)
-		PROCEDURE NeedSWScatterGather(direction: WORD; bufferLen, offset : SIZE; VAR buffer : Usbdi.Buffer; VAR doCopy : BOOLEAN) : BOOLEAN;
+		PROCEDURE NeedSWScatterGather(direction: INTEGER; bufferLen, offset : SIZE; VAR buffer : Usbdi.Buffer; VAR doCopy : BOOLEAN) : BOOLEAN;
 		VAR adr : ADDRESS;
 		BEGIN
 			doCopy := FALSE;
@@ -1002,13 +1002,13 @@ TYPE
 		END CheckBuffer;
 
 		(** For control transfers (only for Control Pipes) *)
-		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex : LONGINT; wLength : SIZE; VAR buffer : Usbdi.Buffer) : Usbdi. Status;
-		VAR dir : LONGINT; copy : BOOLEAN;
+		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex : SIGNED32; wLength : SIZE; VAR buffer : Usbdi.Buffer) : Usbdi. Status;
+		VAR dir : SIGNED32; copy : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			ASSERT(type = PipeControl);
 			ASSERT(LEN(buffer) >= wLength);
 			IF message = NIL THEN NEW(message); END;
-			message[0] := CHR(SYSTEM.VAL(LONGINT, bmRequestType));
+			message[0] := CHR(SYSTEM.VAL(SIGNED32, bmRequestType));
 			message[1] := CHR(bRequest);
 			message[2] := CHR(wValue);
 			message[3] := CHR(LSH(wValue, -8));
@@ -1074,7 +1074,7 @@ TYPE
 			RETURN actLen;
 		END GetActLen;
 
-		PROCEDURE SetTimeout*(timeout : LONGINT);
+		PROCEDURE SetTimeout*(timeout : SIGNED32);
 		BEGIN
 			SELF.timeout := timeout;
 		END SetTimeout;
@@ -1103,12 +1103,12 @@ TYPE
 		 * a transfer or pipe creation can be supported in a given USB configuration.
 		 * @return: Time in nanoseconds the transactions will take, -1: Error
 		 *)
-(*		PROCEDURE GetBusTime*() : REAL;
-		VAR time : REAL;
+(*		PROCEDURE GetBusTime*() : FLOAT32;
+		VAR time : FLOAT32;
 
 			(* Bitstuffing inserts 1 Bit for 6 Bits in worst case, so in a worst case scenario, the amount of data
 			 * to be sent over the bus would increase by a factor of 7/6 *)
-			PROCEDURE BitStuffTime(lenData : LONGINT) : REAL;
+			PROCEDURE BitStuffTime(lenData : SIGNED32) : FLOAT32;
 			BEGIN
 				RETURN 8.0 * 7.0 * lenData / 6.0;
 			END BitStuffTime;
@@ -1158,7 +1158,7 @@ TYPE
 			END;
 		END ShowTransfer;
 
-		PROCEDURE ShowMessage(bufferLen: SIZE; direction : LONGINT; msg : ControlMessage);
+		PROCEDURE ShowMessage(bufferLen: SIZE; direction : SIGNED32; msg : ControlMessage);
 		VAR i : SIZE;
 		BEGIN
 			IF Debug.Trace THEN
@@ -1253,12 +1253,12 @@ TYPE
 	Registry= OBJECT(Plugins.Registry) END Registry;
 
 VAR
-	controllerCount : LONGINT; (* Only used for name creation - does not necessary reflect the actual HC count *)
+	controllerCount : SIGNED32; (* Only used for name creation - does not necessary reflect the actual HC count *)
 	controllers- : (*Plugins.*)Registry;
 
 (** Assign a name to the host controller and add it to the controllers registry *)
 PROCEDURE RegisterHostController*(hcd : Hcd; CONST description : Plugins.Description);
-VAR name : Plugins.Name; res : WORD;
+VAR name : Plugins.Name; res : INTEGER;
 BEGIN {EXCLUSIVE}
 	name := "USBHC"; name[5] := CHR(controllerCount + 48); name[6] := 0X;
 	hcd.SetName(name); hcd.desc := description;
@@ -1297,7 +1297,7 @@ BEGIN
 	END;
 END Copy;
 
-PROCEDURE Align*(address: ADDRESS; size: LONGINT): ADDRESS;
+PROCEDURE Align*(address: ADDRESS; size: SIGNED32): ADDRESS;
 BEGIN
 	RETURN address + (-address) MOD size;
 END Align;
@@ -1306,7 +1306,7 @@ END Align;
  * Returns an AlignMemSpace with: memspace.data[memspace.base] is the first, <alignment>-aligned element of an
  * array of LONGINTs of the size <size>;  parameters in bytes; alignmet has to be a power of two
  *)
-PROCEDURE GetAlignedMemSpace*(size, alignment : LONGINT ) : AlignedMemSpace;
+PROCEDURE GetAlignedMemSpace*(size, alignment : SIGNED32 ) : AlignedMemSpace;
 VAR memspace : AlignedMemSpace; base, adr: ADDRESS;  len: SIZE;
 BEGIN
 	ASSERT(alignment >= 4);

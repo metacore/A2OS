@@ -14,7 +14,7 @@ MODULE PKCS1;
 		It uses a block type as specified by blockType. blockType can be 0, 1 or 2.
 		destLen = 0 iff encryption failed.
 	*)
-	PROCEDURE Encrypt * (CONST src: ARRAY OF CHAR; srcOfs, srcLen: SIZE; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: SIZE; VAR destLen: SIZE);
+	PROCEDURE Encrypt * (CONST src: ARRAY OF CHAR; srcOfs, srcLen: SIZE; key: CryptoRSA.Key; blockType: SIGNED32; VAR dest: ARRAY OF CHAR; destOfs: SIZE; VAR destLen: SIZE);
 		VAR
 			k, padd: SIZE;	(* Length of key modulus and padding string. *)
 			counter, ofs: SIZE;
@@ -86,7 +86,7 @@ MODULE PKCS1;
 		The result is written in dest[destOfs] .. dest[destOfs + destLen - 1]. destLen is written with the data length. destLen = 0
 		iff decryption failed or PKCS badly formatted.
 	*)
-	PROCEDURE Decrypt * (CONST src: ARRAY OF CHAR; srcOfs, srcLen: SIZE; key: CryptoRSA.Key; blockType: LONGINT; VAR dest: ARRAY OF CHAR; destOfs: SIZE; VAR destLen: SIZE);
+	PROCEDURE Decrypt * (CONST src: ARRAY OF CHAR; srcOfs, srcLen: SIZE; key: CryptoRSA.Key; blockType: SIGNED32; VAR dest: ARRAY OF CHAR; destOfs: SIZE; VAR destLen: SIZE);
 		VAR
 			k, padd: SIZE;
 			ofs, counter: SIZE;

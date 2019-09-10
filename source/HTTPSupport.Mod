@@ -54,7 +54,7 @@ TYPE
 				enc: BOOLEAN; (* true iff encoded *)
 
 			PROCEDURE Next;
-					VAR c0, c1: CHAR; val : WORD;
+					VAR c0, c1: CHAR; val : INTEGER;
 			BEGIN
 				ch := r.Get(); INC(pos); enc := FALSE;
 				IF ch = "%" THEN (* next byte is encoded *)
@@ -167,10 +167,10 @@ TYPE
 	(** HTTPEncode in by escaping illegal chars , author: "cs" *)
 	PROCEDURE HTTPEncode*(in: ARRAY OF CHAR; VAR enc: ARRAY OF CHAR);
 	VAR i,o: SIZE;
-		ch: WORD;
+		ch: INTEGER;
 
 		PROCEDURE ToHex(in: CHAR;VAR c1: CHAR; VAR c2: CHAR);
-			VAR i: INTEGER;
+			VAR i: SIGNED16;
 		BEGIN
 			i := ORD(in) DIV 16;
 			IF i < 10 THEN

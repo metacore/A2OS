@@ -3,7 +3,7 @@ MODULE CryptoTestHMAC;	(** AUTHOR "F.N."; PURPOSE "HMAC Test"; *)
 IMPORT
 		CryptoHMAC, Utils := CryptoUtils, Out := KernelLog;
 
-	PROCEDURE DoTest( modname, data, key, expDigest: ARRAY OF CHAR; dataLen, keyLen: LONGINT );
+	PROCEDURE DoTest( modname, data, key, expDigest: ARRAY OF CHAR; dataLen, keyLen: SIGNED32 );
 		VAR
 			hmac: CryptoHMAC.HMac;
 			output: ARRAY 20 OF CHAR;

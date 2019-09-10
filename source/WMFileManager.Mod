@@ -69,15 +69,15 @@ TYPE
 			resizerH : WMStandardComponents.Resizer;
 
 		BEGIN
-			NEW(panel); panel.alignment.Set(WMComponents.AlignClient); panel.fillColor.Set(LONGINT(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
-			NEW(toolbar); toolbar.fillColor.Set(LONGINT(0FFFFFFFFH)); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
+			NEW(panel); panel.alignment.Set(WMComponents.AlignClient); panel.fillColor.Set(SIGNED32(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
+			NEW(toolbar); toolbar.fillColor.Set(SIGNED32(0FFFFFFFFH)); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			panel.AddContent(toolbar);
 			NEW(button); button.alignment.Set(WMComponents.AlignLeft); button.caption.SetAOC("Refresh FileSystems");
 			toolbar.AddContent(button); button.bounds.SetWidth(150); button.onClick.Add(RefreshHandler);
 			NEW(button); button.alignment.Set(WMComponents.AlignLeft); button.caption.SetAOC("Toggle Properties");
 			toolbar.AddContent(button); button.bounds.SetWidth(150); button.onClick.Add(TogglePropsHandler);
 			NEW(status); status.alignment.Set(WMComponents.AlignBottom); status.bounds.SetHeight(20);
-			panel.AddContent(status); status.fillColor.Set(LONGINT(0CCCCCCFFH));
+			panel.AddContent(status); status.fillColor.Set(SIGNED32(0CCCCCCFFH));
 			NEW(label); label.bounds.SetWidth(100); label.caption.SetAOC(" Volume: "); label.alignment.Set(WMComponents.AlignLeft);
 			status.AddContent(label);
 			NEW(vol); vol.bounds.SetWidth(100); vol.caption.SetAOC("-"); vol.alignment.Set(WMComponents.AlignLeft);
@@ -143,7 +143,7 @@ TYPE
 		END PathChanged;
 
 		PROCEDURE UpdateStatus(alias : Strings.String);
-		VAR sfree, total: LONGINT; nfiles: SIZE; i: SIZE; fs: Files.FileSystem; ft: Files.FileSystemTable;
+		VAR sfree, total: SIGNED32; nfiles: SIZE; i: SIZE; fs: Files.FileSystem; ft: Files.FileSystemTable;
 			temp : ARRAY 32 OF CHAR;
 		BEGIN
 			Files.GetList(ft);
@@ -198,7 +198,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 	FileListPathProt : WMProperties.StringProperty;
 	FileListFilterProt : WMProperties.StringProperty;
 

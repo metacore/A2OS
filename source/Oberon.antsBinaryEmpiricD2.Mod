@@ -39,16 +39,16 @@ CONST
 	*)
 
 TYPE
-	Index = LONGINT;
-	States = LONGINT;
+	Index = SIGNED32;
+	States = SIGNED32;
 	(* Sums = ARRAY  (MaxSum+1) OF States;
 	StatesAndSums = ARRAY StateSpaceCard OF Sums; *)
 
 	EmpiricalDistribution* = POINTER TO EDDesc;   (* empirical Distribution of a binary state space model *)
 	EDDesc = RECORD (antsEmpiricD.EDDesc)
-		Mn: ARRAY size1 + 1 OF LONGINT;
-		Rn: ARRAY  size2 + 1 OF ARRAY size1 + 1 OF LONGINT
-		(*	Fn: ARRAY 4 OF ARRAY 64 OF LONGINT;*)
+		Mn: ARRAY size1 + 1 OF SIGNED32;
+		Rn: ARRAY  size2 + 1 OF ARRAY size1 + 1 OF SIGNED32
+		(*	Fn: ARRAY 4 OF ARRAY 64 OF SIGNED32;*)
 	END;
 
 	tParameter* = POINTER TO tParameterDesc;
@@ -64,7 +64,7 @@ TYPE
 	VAR debug: BOOLEAN;
 
 PROCEDURE InitED (E: EmpiricalDistribution);
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 BEGIN
 	FOR i := 0 TO size1 DO
 		E.Mn[i] := 0;
@@ -87,7 +87,7 @@ BEGIN
 	(*	RETURN E.v[v+4];  *)
 END M;
 
-PROCEDURE F* (E: EmpiricalDistribution;   x, v: Index): LONGREAL;
+PROCEDURE F* (E: EmpiricalDistribution;   x, v: Index): FLOAT64;
 BEGIN
 	IF E.Mn[v] = 0 THEN RETURN 0 ELSE RETURN E.Rn[x, v] / E.Mn[v] END
 	(* 	nv := M(E,v);
@@ -95,8 +95,8 @@ BEGIN
 END F;
 
 
-PROCEDURE EmpiricalDistribute (VAR E: EmpiricalDistribution;   A: antsArrayObjects.tINTEGERArray;   Sx, Sy, Sw, Sh: LONGINT);
-	VAR x, y: LONGINT ;   xt, vt: Index;
+PROCEDURE EmpiricalDistribute (VAR E: EmpiricalDistribution;   A: antsArrayObjects.tINTEGERArray;   Sx, Sy, Sw, Sh: SIGNED32);
+	VAR x, y: SIGNED32 ;   xt, vt: Index;
 BEGIN
 	IF E = NIL THEN NEW(E) END;
 	InitED(E);

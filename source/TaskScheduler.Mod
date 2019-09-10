@@ -27,7 +27,7 @@ TYPE
 		description* : ARRAY DescriptionLength OF CHAR;
 		command* : ARRAY CommandLength OF CHAR;
 		image* : ARRAY ImageNameLength OF CHAR;
-		repeatType* : LONGINT;
+		repeatType* : SIGNED32;
 		trigger* : Dates.DateTime;
 	END;
 
@@ -35,8 +35,8 @@ TYPE
 
 	Task* = OBJECT
 	VAR
-		id- : LONGINT;
-	 	timestamp- : LONGINT;
+		id- : SIGNED32;
+	 	timestamp- : SIGNED32;
 
 		info : TaskInfo;
 
@@ -44,7 +44,7 @@ TYPE
 
 		handled : BOOLEAN;
 
-	  	week, weekDay : LONGINT;
+	  	week, weekDay : SIGNED32;
 
 		list- : TaskList;
 		next : Task;
@@ -109,14 +109,14 @@ TYPE
 		END Confirm;
 
 		(* Returns time left until next time triggered in seconds or 0 if not triggered anymore *)
-		PROCEDURE Left*(VAR days, hours, minutes, seconds : LONGINT);
+		PROCEDURE Left*(VAR days, hours, minutes, seconds : SIGNED32);
 		VAR currentTime : Dates.DateTime;
 		BEGIN
 			currentTime := Dates.Now();
 			LeftFrom(currentTime, days, hours, minutes, seconds);
 		END Left;
 
-		PROCEDURE LeftFrom*(CONST dt : Dates.DateTime; VAR days, hours, minutes, seconds : LONGINT);
+		PROCEDURE LeftFrom*(CONST dt : Dates.DateTime; VAR days, hours, minutes, seconds : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF (Dates.CompareDateTime(dt, info.trigger) = -1) THEN
 				Dates.TimeDifference(dt, info.trigger, days, hours, minutes, seconds);
@@ -125,13 +125,13 @@ TYPE
 			END;
 		END LeftFrom;
 
-		PROCEDURE SetTrigger*(dt : Dates.DateTime; type : LONGINT);
+		PROCEDURE SetTrigger*(dt : Dates.DateTime; type : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			SetTriggerX(dt, type);
 		END SetTrigger;
 
-		PROCEDURE SetTriggerX(dt : Dates.DateTime; repeatType : LONGINT);
-		VAR currentTime : Dates.DateTime; ignoreYear : LONGINT;
+		PROCEDURE SetTriggerX(dt : Dates.DateTime; repeatType : SIGNED32);
+		VAR currentTime : Dates.DateTime; ignoreYear : SIGNED32;
 		BEGIN
 			ASSERT(Dates.ValidDateTime(dt));
 			INC(timestamp);
@@ -174,7 +174,7 @@ TYPE
 		END GetTrigger;
 
 		PROCEDURE TriggerNow*;
-		VAR msg: ARRAY 256 OF CHAR; res:WORD;
+		VAR msg: ARRAY 256 OF CHAR; res:INTEGER;
 		BEGIN
 			IF Strings.Length(info.command)>0 THEN
 				Commands.Call(info.command, {}, res, msg);
@@ -182,7 +182,7 @@ TYPE
 		END TriggerNow;
 
 
-		PROCEDURE Check(time : Dates.DateTime; VAR left : LONGINT);
+		PROCEDURE Check(time : Dates.DateTime; VAR left : SIGNED32);
 		BEGIN
 			IF (left = 0) & ~handled THEN
 				IF (info.repeatType = Once) THEN
@@ -203,7 +203,7 @@ TYPE
 	TaskList* = OBJECT
 	VAR
 		head : Task;
-		nofTasks : LONGINT;
+		nofTasks : SIGNED32;
 		lock : Locks.RWLock;
 
 		PROCEDURE &Init*;
@@ -278,7 +278,7 @@ TYPE
 			lock.ReleaseWrite;
 		END ConfirmTask;
 
-		PROCEDURE FindById*(id : LONGINT) : Task;
+		PROCEDURE FindById*(id : SIGNED32) : Task;
 		VAR task : Task;
 		BEGIN
 			lock.AcquireRead;
@@ -288,8 +288,8 @@ TYPE
 			RETURN task;
 		END FindById;
 
-		PROCEDURE Select*(selector : SelectorProcedure; CONST dt : Dates.DateTime; VAR tasks : TaskArray; VAR nofSelectedTasks, nofTasks : LONGINT);
-		VAR task : Task; i : LONGINT;
+		PROCEDURE Select*(selector : SelectorProcedure; CONST dt : Dates.DateTime; VAR tasks : TaskArray; VAR nofSelectedTasks, nofTasks : SIGNED32);
+		VAR task : Task; i : SIGNED32;
 		BEGIN
 			Clear(tasks);
 			lock.AcquireRead;
@@ -371,7 +371,7 @@ TYPE
 		END Remove;
 
 		(** Returns total number of tasks in this list *)
-		PROCEDURE GetNofTasks*() : LONGINT;
+		PROCEDURE GetNofTasks*() : SIGNED32;
 		BEGIN
 			RETURN nofTasks;
 		END GetNofTasks;
@@ -382,7 +382,7 @@ TYPE
 
 	Scheduler = OBJECT
 	VAR
-		sleepHint : LONGINT;
+		sleepHint : SIGNED32;
 
 		alive, dead : BOOLEAN;
 		timer : Kernel.Timer;
@@ -407,7 +407,7 @@ TYPE
 		END Update;
 
 		PROCEDURE CheckTask(time : Dates.DateTime; task : Task);
-		VAR hint : LONGINT;
+		VAR hint : SIGNED32;
 		BEGIN
 			task.Check(time, hint);
 			IF (hint > 0) & (hint < sleepHint) THEN sleepHint := hint; END;
@@ -415,7 +415,7 @@ TYPE
 
 	BEGIN {ACTIVE}
 		WHILE alive DO
-			sleepHint := MAX(LONGINT);
+			sleepHint := MAX(SIGNED32);
 			taskList.lock.AcquireRead;
 			taskList.Enumerate(Dates.Now(), CheckTask);
 			taskList.lock.ReleaseRead;
@@ -427,11 +427,11 @@ TYPE
 VAR
 	taskList : TaskList;
 	scheduler : Scheduler;
-	id : LONGINT;
+	id : SIGNED32;
 
 	StrNoName-, StrNoDescription-, StrNoCommand-, StrNoImage-: Strings.String;
 
-PROCEDURE TypeToStream(out : Streams.Writer; repeatType : LONGINT);
+PROCEDURE TypeToStream(out : Streams.Writer; repeatType : SIGNED32);
 BEGIN
 	ASSERT(out # NIL);
 	CASE repeatType OF
@@ -449,8 +449,8 @@ BEGIN
 	END;
 END TypeToStream;
 
-PROCEDURE TypeFromStream(in : Streams.Reader) : LONGINT;
-VAR repeatType : LONGINT; string : ARRAY 32 OF CHAR;
+PROCEDURE TypeFromStream(in : Streams.Reader) : SIGNED32;
+VAR repeatType : SIGNED32; string : ARRAY 32 OF CHAR;
 BEGIN
 	ASSERT(in # NIL);
 	repeatType := Unknown;
@@ -467,7 +467,7 @@ BEGIN
 	RETURN repeatType;
 END TypeFromStream;
 
-PROCEDURE GetId() : LONGINT;
+PROCEDURE GetId() : SIGNED32;
 BEGIN {EXCLUSIVE}
 	INC(id);
 	RETURN id;
@@ -482,7 +482,7 @@ END GetTaskList;
 
 (** Helper functions *)
 
-PROCEDURE GetRepeatTypeString*(repeatType : LONGINT; VAR string : ARRAY OF CHAR);
+PROCEDURE GetRepeatTypeString*(repeatType : SIGNED32; VAR string : ARRAY OF CHAR);
 BEGIN
 	CASE repeatType OF
 		|Unknown: string := "Unknown";
@@ -503,7 +503,7 @@ END GetRepeatTypeString;
 
 (** Returns TRUE if both task arrays contain exactly the same tasks in the same order, FALSE otherwise *)
 PROCEDURE IsEqual*(tasks1, tasks2 : TaskArray) : BOOLEAN;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 
 	PROCEDURE SameElement(t1, t2 : Task) : BOOLEAN;
 	BEGIN

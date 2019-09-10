@@ -36,7 +36,7 @@ CONST	(** Node id constants *)
 TYPE
 		Node* = POINTER TO NodeDesc;
 		NodeDesc* = RECORD
-			id* : INTEGER;
+			id* : SIGNED16;
 			copy : PROCEDURE (node : Node) : Node;
 			dsc, last, next : Node
 		END;
@@ -45,10 +45,10 @@ TYPE
 		ValNodeDesc = RECORD (NodeDesc)
 			str : POINTER TO ARRAY OF CHAR;
 			char : CHAR;
-			int, fills : LONGINT;
-			real : REAL;
+			int, fills : SIGNED32;
+			real : FLOAT32;
 			bool : BOOLEAN;
-			format : INTEGER;
+			format : SIGNED16;
 			node : Node;
 		END;
 
@@ -61,22 +61,22 @@ TYPE
 		ObjNode = POINTER TO ObjNodeDesc;
 
 		SizeProc = PROCEDURE (node : ObjNode);
-		MakeProc = PROCEDURE (node : ObjNode; hfill, vfill : INTEGER);
+		MakeProc = PROCEDURE (node : ObjNode; hfill, vfill : SIGNED16);
 
-		IntLine = POINTER TO ARRAY OF INTEGER;
+		IntLine = POINTER TO ARRAY OF SIGNED16;
 
 		ObjNodeDesc = RECORD (NodeDesc)
 			obj : Objects.Object;
-			type : INTEGER;
+			type : SIGNED16;
 			sized, made : BOOLEAN;
-			x, y, w, h : INTEGER;
-			row, col, spanw, spanh : INTEGER;
-			minx, miny, minw, minh : INTEGER;	(*  bounding box of components *)
-			hFactor, vFactor : INTEGER;	(* expansion factor *)
+			x, y, w, h : SIGNED16;
+			row, col, spanw, spanh : SIGNED16;
+			minx, miny, minw, minh : SIGNED16;	(*  bounding box of components *)
+			hFactor, vFactor : SIGNED16;	(* expansion factor *)
 			gmaxw, gmaxh, hexpand, vexpand : IntLine;
-			hfill, vfill : INTEGER;			(* number of fills in components *)
-			hdist, vdist, hborder, vborder : INTEGER;	(* border *)
-			cols, rows : INTEGER;				(* rows and columns in TABLE *)
+			hfill, vfill : SIGNED16;			(* number of fills in components *)
+			hdist, vdist, hborder, vborder : SIGNED16;	(* border *)
+			cols, rows : SIGNED16;				(* rows and columns in TABLE *)
 			format : SET;							(* special formatting *)
 			def, lastdef : AssignNode;		(* definitions in Configs *)
 			size : SizeProc;
@@ -190,7 +190,7 @@ BEGIN
 	IF firstTime THEN RETURN GetNodeRec (Definitions, val) ELSE RETURN val(ValNode).node END
 END GetNode;
 
-PROCEDURE NewValNode (type : INTEGER) : ValNode;
+PROCEDURE NewValNode (type : SIGNED16) : ValNode;
 VAR node : ValNode;
 BEGIN	NEW (node);
 	node.dsc := NIL; node.next := NIL; node.last := NIL;
@@ -221,21 +221,21 @@ BEGIN
 	RETURN node;
 END NewChar;
 
-PROCEDURE NewInt* (int : LONGINT) : Node;
+PROCEDURE NewInt* (int : SIGNED32) : Node;
 VAR node : ValNode;
 BEGIN
 	node := NewValNode (Int); node.int := int; node.fills := 0;
 	RETURN node
 END NewInt;
 
-PROCEDURE NewSize* (MinSize, ExpandFactor : INTEGER) : Node;
+PROCEDURE NewSize* (MinSize, ExpandFactor : SIGNED16) : Node;
 VAR node : ValNode;
 BEGIN
 	node := NewValNode (Int); node.int := MinSize; node.fills := ExpandFactor;
 	RETURN node
 END NewSize;
 
-PROCEDURE NewReal* (real : REAL) : Node;
+PROCEDURE NewReal* (real : FLOAT32) : Node;
 VAR node : ValNode;
 BEGIN
 	node := NewValNode (Real); node.real := real;
@@ -249,7 +249,7 @@ BEGIN
 	RETURN node
 END NewBool;
 
-PROCEDURE NewFormat* (sym : INTEGER) : Node;	(**	sym = Left | Right | Bottom | Top | Center | Static ...	*)
+PROCEDURE NewFormat* (sym : SIGNED16) : Node;	(**	sym = Left | Right | Bottom | Top | Center | Static ...	*)
 VAR node : ValNode;
 BEGIN
 	node := NewValNode (Format); node.format := sym;
@@ -258,7 +258,7 @@ END NewFormat;
 
 (**	create new Nodes	*)
 
-PROCEDURE NewNode* (id : INTEGER) : Node;		(**	LAYOUT, ATTR, LINKS, PARAMS	*)
+PROCEDURE NewNode* (id : SIGNED16) : Node;		(**	LAYOUT, ATTR, LINKS, PARAMS	*)
 			(**	id = Layout | Attributes | Links | Params.											 *)
 			(**	Params are not inserted but set with "SetParams (node, params)".	*)
 VAR node : Node;
@@ -268,7 +268,7 @@ BEGIN	NEW (node);
 	RETURN node
 END NewNode;
 
-PROCEDURE NewAssignNode (id : INTEGER; name : ARRAY OF CHAR; val : Node) : Node;
+PROCEDURE NewAssignNode (id : SIGNED16; name : ARRAY OF CHAR; val : Node) : Node;
 VAR node : AssignNode;
 BEGIN	NEW (node);
 	node.dsc := NIL;	node.next := NIL;	node.last := NIL;
@@ -299,7 +299,7 @@ BEGIN	NEW (node);
 	node.sized := FALSE; node.made := FALSE; node.size := size; node.make := make;
 	node.x := 0; node.y := 0; node.w := 0; node.h := 0;
 	node.col := 0; node.row := 0; node.spanw := 1; node.spanh := 1;
-	node.minx := MAX(INTEGER); node.miny := MAX(INTEGER); node.minw := 0; node.minh := 0;
+	node.minx := MAX(SIGNED16); node.miny := MAX(SIGNED16); node.minw := 0; node.minh := 0;
 	IF node.obj = NIL THEN node.hFactor := 1; node.vFactor := 1 ELSE node.hFactor := 0; node.vFactor := 0 END;
 	node.hfill := 0; node.vfill := 0; node.cols := 1; node.rows := 1;
 	node.gmaxw := NIL; node.gmaxh := NIL; node.hexpand := NIL; node.vexpand := NIL;
@@ -503,7 +503,7 @@ BEGIN
 	SizeOf (node);
 END SizeOfNew;
 
-PROCEDURE MakeNew (node : ObjNode; hfill, vfill : INTEGER);		(* node # NIL *)
+PROCEDURE MakeNew (node : ObjNode; hfill, vfill : SIGNED16);		(* node # NIL *)
 VAR obj : Display.Frame; M: Display.ModifyMsg;
 BEGIN
 	IF node.made THEN Reset (node); RETURN ELSE node.made := TRUE END;
@@ -548,7 +548,7 @@ BEGIN
 	IF node.vFactor+node.h = 0 THEN node.h := node.minh+2*node.vborder END;
 END SizeOfPlace;
 
-PROCEDURE PlaceObjects (VAR last, obj : Objects.Object; w, h : INTEGER; VAR minx, miny : INTEGER);		(* last # NIL *)
+PROCEDURE PlaceObjects (VAR last, obj : Objects.Object; w, h : SIGNED16; VAR minx, miny : SIGNED16);		(* last # NIL *)
 BEGIN
 	last.slink := obj;
 	WHILE last.slink # NIL DO
@@ -581,10 +581,10 @@ BEGIN
 	END
 END InsertObjects;
 
-PROCEDURE MakePlace (node : ObjNode; hfill, vfill : INTEGER);		(* node # NIL *)
+PROCEDURE MakePlace (node : ObjNode; hfill, vfill : SIGNED16);		(* node # NIL *)
 VAR dsc, objnode : Node;
 		obj, last : Objects.Object;
-		dh, dv : INTEGER;
+		dh, dv : SIGNED16;
 BEGIN
 	IF node.made THEN Reset (node); RETURN END;
 	MakeNew (node, hfill, vfill);
@@ -603,26 +603,26 @@ BEGIN
 	Settings (node)
 END MakePlace;
 
-PROCEDURE CountRows (vert : BOOLEAN; obj : Node; cols : INTEGER; VAR rows : INTEGER);
+PROCEDURE CountRows (vert : BOOLEAN; obj : Node; cols : SIGNED16; VAR rows : SIGNED16);
 TYPE Line = POINTER TO RECORD
 			cell : POINTER TO ARRAY OF BOOLEAN;
 			next : Line
 		END;
 
-VAR row, col : INTEGER;
+VAR row, col : SIGNED16;
 		free : Line;
 		node : Node;
 
-		PROCEDURE NewLine (n : INTEGER) : Line;
+		PROCEDURE NewLine (n : SIGNED16) : Line;
 		VAR line : Line;
 		BEGIN	NEW (line);	NEW (line.cell, n);
 			WHILE n # 0 DO DEC (n); line.cell[n] := TRUE END;
 			RETURN line
 		END NewLine;
 
-		PROCEDURE Mark (VAR sw, sh, myrow, mycol : INTEGER);
+		PROCEDURE Mark (VAR sw, sh, myrow, mycol : SIGNED16);
 		VAR cur : Line;
-				i, j : INTEGER;
+				i, j : SIGNED16;
 		BEGIN	myrow := row;	mycol := col;
 			IF col+sw > cols THEN Out.String ("Span too wide"); Out.Ln; sw := cols-col END;
 			FOR i := 0 TO sw-1 DO free.cell[col+i] := FALSE END;
@@ -657,54 +657,54 @@ BEGIN	row := 0;	col := 0;	free := NIL;
 	END
 END CountRows;
 
-PROCEDURE CalcSize (node : ObjNode; VAR minSize : INTEGER; VAR break : BOOLEAN);		(* node # NIL *)
+PROCEDURE CalcSize (node : ObjNode; VAR minSize : SIGNED16; VAR break : BOOLEAN);		(* node # NIL *)
 TYPE WideCell = POINTER TO RECORD
-			key : LONGINT;
-			col, span : INTEGER;
-			size, fills : INTEGER;
+			key : SIGNED32;
+			col, span : SIGNED16;
+			size, fills : SIGNED16;
 			next : WideCell
 		END;
 VAR dsc, obj : Node;
 		wanchor, hanchor : WideCell;
 		set : SET;
 
-		PROCEDURE Adjust (w, fill, col, span : INTEGER; max, expand : IntLine; anchor : WideCell);		(* max, expand # NIL *)
+		PROCEDURE Adjust (w, fill, col, span : SIGNED16; max, expand : IntLine; anchor : WideCell);		(* max, expand # NIL *)
 		VAR cur, new : WideCell;
-				key : LONGINT;
+				key : SIGNED32;
 		BEGIN
 			IF span = 1 THEN
-				IF fill = 0 THEN expand[col] := MAX(INTEGER)
+				IF fill = 0 THEN expand[col] := MAX(SIGNED16)
 				ELSIF fill > expand[col] THEN expand[col] := fill END;
 				IF max[col] < w THEN max[col] := w END;
-			ELSE	cur := anchor; key := LONG(col+span)*LONG(MAX(INTEGER)) - col;
+			ELSE	cur := anchor; key := LONG(col+span)*LONG(MAX(SIGNED16)) - col;
 				WHILE key > cur.next.key DO cur := cur.next END;
 				IF key = cur.next.key THEN cur := cur.next;
 					IF cur.size < w THEN cur.size := w END;
-					IF fill = 0 THEN cur.fills := MAX(INTEGER)
+					IF fill = 0 THEN cur.fills := MAX(SIGNED16)
 					ELSIF cur.fills < fill THEN cur.fills := fill END
 				ELSE	(* key < cur.next.key *)
 					NEW (new); new.key := key;
 					new.col := col; new.span := span; new.size := w;
-					IF fill = 0 THEN new.fills := MAX(INTEGER) ELSE new.fills := fill END;
+					IF fill = 0 THEN new.fills := MAX(SIGNED16) ELSE new.fills := fill END;
 					new.next := cur.next; cur.next := new;
 				END;
 			END;
 		END Adjust;
 
-		PROCEDURE EvalSpan (anchor : WideCell; dist : INTEGER; VAR nodefills : INTEGER; VAR max, expand : IntLine;
+		PROCEDURE EvalSpan (anchor : WideCell; dist : SIGNED16; VAR nodefills : SIGNED16; VAR max, expand : IntLine;
 											sameSize : BOOLEAN);
 		VAR cur : WideCell;
 				fillList : IntLine;
-				col, fills, cf, m, d : INTEGER;
+				col, fills, cf, m, d : SIGNED16;
 		BEGIN	cur := anchor.next;
 			WHILE cur # anchor DO
 				DEC (cur.size, (cur.span-1)*dist);
 				IF sameSize THEN
 					m := cur.size DIV cur.span; IF cur.size MOD cur.span > 0 THEN INC (m) END;
 					IF m > max[cur.col] THEN max[cur.col] := m END
-				ELSE fills := 0; IF cur.fills = MAX(INTEGER) THEN cur.fills := 0 END; cf := cur.fills;
+				ELSE fills := 0; IF cur.fills = MAX(SIGNED16) THEN cur.fills := 0 END; cf := cur.fills;
 					FOR col := cur.col TO cur.col+cur.span-1 DO
-						IF expand[col] = MAX(INTEGER) THEN expand[col] := 0 END;
+						IF expand[col] = MAX(SIGNED16) THEN expand[col] := 0 END;
 						INC (fills, expand[col]); DEC (cur.fills, expand[col]);
 						DEC (cur.size, max[col]);
 						d := col
@@ -730,8 +730,8 @@ VAR dsc, obj : Node;
 
 BEGIN
 	dsc := node.dsc;	minSize := 0;	break := FALSE;
-	NEW (wanchor); wanchor.key := MAX(LONGINT); wanchor.next := wanchor;
-	NEW (hanchor); hanchor.key := MAX(LONGINT); hanchor.next := hanchor;
+	NEW (wanchor); wanchor.key := MAX(SIGNED32); wanchor.next := wanchor;
+	NEW (hanchor); hanchor.key := MAX(SIGNED32); hanchor.next := hanchor;
 	node.minw := 2*node.hborder + (node.cols-1)*node.hdist;
 	node.minh := 2*node.vborder + (node.rows-1)*node.vdist;
 	WHILE dsc # NIL DO
@@ -767,13 +767,13 @@ BEGIN
 	EvalSpan (hanchor, node.vdist, node.vfill, node.gmaxh, node.vexpand, node.format*{sameHeight, vstatic} # {})
 END CalcSize;
 
-PROCEDURE SetSize (VAR hfill, min, w : INTEGER; cols, minSize : INTEGER; VAR expand, max : IntLine;
+PROCEDURE SetSize (VAR hfill, min, w : SIGNED16; cols, minSize : SIGNED16; VAR expand, max : IntLine;
 									hor, sameWidth, setSize : BOOLEAN);
-VAR col, n : INTEGER;
+VAR col, n : SIGNED16;
 BEGIN
 	IF sameWidth THEN	hfill := 0;
 		FOR col := 0 TO cols-1 DO
-			IF expand[col] = MAX(INTEGER) THEN expand[col] := 0 END;
+			IF expand[col] = MAX(SIGNED16) THEN expand[col] := 0 END;
 			INC (hfill, expand[col]);
 			INC (min, max[col])
 		END;
@@ -788,7 +788,7 @@ BEGIN
 END SetSize;
 
 PROCEDURE SizeOfTable (node : ObjNode);		(* node # NIL *)
-VAR n, minSize : INTEGER;
+VAR n, minSize : SIGNED16;
 		break : BOOLEAN;
 BEGIN
 	IF node.sized THEN Reset (node); RETURN END;
@@ -810,9 +810,9 @@ BEGIN
 	END
 END SizeOfTable;
 
-PROCEDURE FillCols (space, cols, fills : INTEGER; expand, max : IntLine; sameSize : BOOLEAN);		(* expand, max # NIL *)
+PROCEDURE FillCols (space, cols, fills : SIGNED16; expand, max : IntLine; sameSize : BOOLEAN);		(* expand, max # NIL *)
 VAR fillList : IntLine;
-		d, m, col : INTEGER;
+		d, m, col : SIGNED16;
 BEGIN
 	IF sameSize THEN
 		d := space DIV cols;	m := space MOD cols;
@@ -833,17 +833,17 @@ BEGIN
 	END;
 END FillCols;
 
-PROCEDURE SetOffset (cols, border, dist : INTEGER; VAR max, offset : IntLine);		(* max # NIL *)
-VAR col : INTEGER;
+PROCEDURE SetOffset (cols, border, dist : SIGNED16; VAR max, offset : IntLine);		(* max # NIL *)
+VAR col : SIGNED16;
 BEGIN	NEW (offset, cols+1);
 	offset[0] := border;
 	FOR col := 0 TO cols-1 DO offset[col+1] := offset[col]; INC (offset[col+1], max[col] + dist) END
 END SetOffset;
 
-PROCEDURE MakeTable (node : ObjNode; hfill, vfill : INTEGER);		(* node # NIL *)
+PROCEDURE MakeTable (node : ObjNode; hfill, vfill : SIGNED16);		(* node # NIL *)
 VAR dsc, objnode : Node;
 		obj, last : Objects.Object;
-		row, col, w, h : INTEGER;
+		row, col, w, h : SIGNED16;
 		hoffset, voffset : IntLine;
 		break : BOOLEAN;
 BEGIN
@@ -908,7 +908,7 @@ BEGIN
 	END;
 END SizeOfTransient;
 
-PROCEDURE MakeTransient (node : ObjNode; hfill, vfill : INTEGER);		(* node # NIL *)
+PROCEDURE MakeTransient (node : ObjNode; hfill, vfill : SIGNED16);		(* node # NIL *)
 VAR obj : Node;
 BEGIN
 	IF node.made THEN Reset (node); RETURN END;
@@ -970,7 +970,7 @@ BEGIN
 	Definitions := oldDefinitions;
 END SizeOfConfig;
 
-PROCEDURE MakeConfig (node : ObjNode; hfill, vfill : INTEGER);		(* node # NIL *)
+PROCEDURE MakeConfig (node : ObjNode; hfill, vfill : SIGNED16);		(* node # NIL *)
 VAR oldDefinitions : AssignNode;
 BEGIN
 	IF node.made THEN Reset (node); RETURN END;
@@ -1019,7 +1019,7 @@ BEGIN
 	RETURN node
 END NewTable;
 
-PROCEDURE NewSpan* (rows, cols : INTEGER) : Node;		(**	SPAN	*)
+PROCEDURE NewSpan* (rows, cols : SIGNED16) : Node;		(**	SPAN	*)
 VAR span : Node;
 BEGIN
 	IF rows < 1 THEN rows := 1 END; IF cols < 1 THEN cols := 1 END;

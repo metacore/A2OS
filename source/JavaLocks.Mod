@@ -13,7 +13,7 @@ IMPORT Objects;
 TYPE
 	JavaLock* = OBJECT
 		VAR
-			depth, in, out: LONGINT;
+			depth, in, out: SIGNED32;
 			locker: ANY;
 
 		PROCEDURE Lock*;
@@ -33,7 +33,7 @@ TYPE
 		END Unlock;
 
 		PROCEDURE Wait*;
-		VAR ticket, mydepth: LONGINT; me: ANY;
+		VAR ticket, mydepth: SIGNED32; me: ANY;
 		BEGIN {EXCLUSIVE}
 			me := Objects.ActiveObject();
 			ASSERT(locker = me);
@@ -43,8 +43,8 @@ TYPE
 			depth := mydepth; locker := me
 		END Wait;
 
-		PROCEDURE WaitTime*(ms: LONGINT);
-		VAR ticket, mydepth: LONGINT; me: ANY; sleeper: Sleeper;
+		PROCEDURE WaitTime*(ms: SIGNED32);
+		VAR ticket, mydepth: SIGNED32; me: ANY; sleeper: Sleeper;
 		BEGIN {EXCLUSIVE}
 			me := Objects.ActiveObject();
 			ASSERT(locker = me);
@@ -93,7 +93,7 @@ TYPE
 			lock := NIL; Objects.CancelTimeout(timer)
 		END Stop;
 
-		PROCEDURE &Start*(lock: JavaLock; ms: LONGINT);
+		PROCEDURE &Start*(lock: JavaLock; ms: SIGNED32);
 		BEGIN
 			NEW(timer);
 			SELF.lock := lock; done := FALSE;

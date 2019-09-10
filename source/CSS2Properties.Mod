@@ -7,22 +7,22 @@ IMPORT
 
 CONST
 	(** Colors *)
-	Aqua* = LONGINT(0FF00FFFFH);
-	Black* =LONGINT( 0FF000000H);
-	Blue* = LONGINT(0FF0000FFH);
-	Fuchsia* = LONGINT(0FFFF00FFH);
-	Gray* = LONGINT(0FF808080H);
-	Green* =LONGINT( 0FF008000H);
-	Lime* = LONGINT(0FF00FF00H);
-	Maroon* = LONGINT(0FF800000H);
-	Navy* = LONGINT(0FF000080H);
-	Olive* =LONGINT( 0FF808000H);
-	Purple* = LONGINT(0FF800080H);
-	Red* = LONGINT(0FFFF0000H);
-	Silver* = LONGINT(0FFC0C0C0H);
-	Teal* = LONGINT(0FF008080H);
-	White* = LONGINT(0FFFFFFFFH);
-	Yellow* = LONGINT(0FFFFFF00H);
+	Aqua* = SIGNED32(0FF00FFFFH);
+	Black* =SIGNED32( 0FF000000H);
+	Blue* = SIGNED32(0FF0000FFH);
+	Fuchsia* = SIGNED32(0FFFF00FFH);
+	Gray* = SIGNED32(0FF808080H);
+	Green* =SIGNED32( 0FF008000H);
+	Lime* = SIGNED32(0FF00FF00H);
+	Maroon* = SIGNED32(0FF800000H);
+	Navy* = SIGNED32(0FF000080H);
+	Olive* =SIGNED32( 0FF808000H);
+	Purple* = SIGNED32(0FF800080H);
+	Red* = SIGNED32(0FFFF0000H);
+	Silver* = SIGNED32(0FFC0C0C0H);
+	Teal* = SIGNED32(0FF008080H);
+	White* = SIGNED32(0FFFFFFFFH);
+	Yellow* = SIGNED32(0FFFFFF00H);
 	Transparent* = 00000000H;
 
 	(** font-size: <absolute-size> *)
@@ -136,13 +136,13 @@ CONST
 	DummyAuto = 0;
 
 VAR
-	AbsoluteFontSizes: ARRAY 7 OF SHORTINT;
-	defaultColor*: LONGINT;
+	AbsoluteFontSizes: ARRAY 7 OF SIGNED8;
+	defaultColor*: SIGNED32;
 	defaultCursor*, crosshairCursor*, pointerCursor*, moveCursor*, eResizeCursor*, neResizeCursor*, nwResizeCursor*,
 	nResizeCursor*, seResizeCursor*, swResizeCursor*, sResizeCursor*, wResizeCursor*, textCursor*, waitCursor*,
 	helpCursor* : WMWindowManager.PointerInfo;
 	defaultFont*, captionFont*, iconFont*, menuFont*, messageBoxFont*, smallCaptionFont*, statusBarFont*: GfxFonts.Font;
-	thinBorder*, mediumBorder*, thickBorder*: LONGREAL;
+	thinBorder*, mediumBorder*, thickBorder*: FLOAT64;
 
 TYPE
 	String = CSS2.String;
@@ -153,11 +153,11 @@ TYPE
 	TRBLColor* = RECORD
 		top*, right*, bottom*, left*: Color
 	END;
-	Ident* = RECORD (Value) computed*: SHORTINT END;
+	Ident* = RECORD (Value) computed*: SIGNED8 END;
 	TRBLIdent* = RECORD
 		top*, right*, bottom*, left*: Ident
 	END;
-	Dim* = RECORD (Value) computed*: LONGREAL END;
+	Dim* = RECORD (Value) computed*: FLOAT64 END;
 	OrientDim* = RECORD
 		horizontal*, vertical*: Dim
 	END;
@@ -269,9 +269,9 @@ TYPE
 		VAR
 			dimensionChanged-: BOOLEAN;
 			containingBlock: RECORD
-				width, height: LONGREAL
+				width, height: FLOAT64
 			END;
-			ppi*: LONGREAL;
+			ppi*: FLOAT64;
 			backgroundAttachment*: Bool;	(* Scroll = TRUE, Fixed = FALSE *)
 			backgroundColor*: Color;
 			backgroundImage*: Img;
@@ -316,10 +316,10 @@ TYPE
 			textShadow*: RECORD (Value) END;
 			textTransform*: Ident;
 			unicodeBidi*: Ident;
-			verticalAlign*: RECORD (Value) computedLength*: LONGREAL; computed*: SHORTINT END;
+			verticalAlign*: RECORD (Value) computedLength*: FLOAT64; computed*: SIGNED8 END;
 			visibility*: Ident;
 			whiteSpace*: Ident;
-			zIndex*: RECORD (Value) computed*: LONGINT END;	(* Auto = -1 *)
+			zIndex*: RECORD (Value) computed*: SIGNED32 END;	(* Auto = -1 *)
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -580,7 +580,7 @@ TYPE
 
 		PROCEDURE SetValue*(declaration: CSS2.Declaration);
 		VAR s: String; terms: XMLObjects.Enumerator; c: ANY;
-			term1, term2, term3, term4, term5, term6: CSS2.Term; i: LONGINT; imgTerm: ImgTerm;
+			term1, term2, term3, term4, term5, term6: CSS2.Term; i: SIGNED32; imgTerm: ImgTerm;
 		BEGIN
 			s := declaration.GetProperty();
 			terms := declaration.GetTerms();
@@ -1646,7 +1646,7 @@ TYPE
 				ComputeDim(width, parent.width, ppi, containingBlock.width, font.computed);
 				ComputeWidthsAndMargins();
 				IF (maxWidth.specified = NIL) OR maxWidth.specified.IsIdent(None) THEN
-					maxWidth.computed := MAX(LONGREAL)
+					maxWidth.computed := MAX(FLOAT64)
 				ELSE
 					ComputeDim(maxWidth, parent.maxWidth, ppi, containingBlock.width, font.computed)
 				END;
@@ -1692,7 +1692,7 @@ TYPE
 
 		PROCEDURE ComputeWidthsAndMargins;	(* 10.3 *)
 		VAR floating: BOOLEAN (* floating = TRUE, normal flow = FALSE *);
-			remainingWidth: LONGREAL;
+			remainingWidth: FLOAT64;
 		BEGIN
 			IF borderStyle.left.computed = None THEN borderWidth.left.computed := 0.0 END;
 			IF borderStyle.right.computed = None THEN borderWidth.right.computed := 0.0 END;
@@ -1778,7 +1778,7 @@ TYPE
 		END ComputeWidthsAndMargins;
 
 		PROCEDURE ComputeHeightsAndMargins;	(* 10.6 *)
-		VAR remainingHeight: LONGREAL;
+		VAR remainingHeight: FLOAT64;
 		BEGIN
 				IF borderStyle.top.computed = None THEN borderWidth.top.computed := 0.0 END;
 				IF borderStyle.bottom.computed = None THEN borderWidth.bottom.computed := 0.0 END;
@@ -1933,7 +1933,7 @@ VAR m : WMWindowManager.WindowManager;
 		RETURN (margin.specified # NIL) & (margin.specified.IsIdent(Auto) OR margin.specified.IsStringIdent("auto"))
 	END IsAutoMargin;
 
-	PROCEDURE ChangeToIdent(identValue: SHORTINT): CSS2.Term;
+	PROCEDURE ChangeToIdent(identValue: SIGNED8): CSS2.Term;
 	VAR term: CSS2.Term;
 	BEGIN
 		NEW(term); term.SetType(CSS2.Ident); term.SetIntVal(identValue); RETURN term
@@ -1975,7 +1975,7 @@ VAR m : WMWindowManager.WindowManager;
 		END
 	END SetNone;
 
-	PROCEDURE ChangeToIdentCollection(VAR collection: XMLObjects.Collection; identValue: SHORTINT);
+	PROCEDURE ChangeToIdentCollection(VAR collection: XMLObjects.Collection; identValue: SIGNED8);
 	VAR arrColl: XMLObjects.ArrayCollection; term: CSS2.Term;
 	BEGIN
 		IF collection = NIL THEN NEW(arrColl); collection := arrColl END;
@@ -2002,8 +2002,8 @@ VAR m : WMWindowManager.WindowManager;
 	END SetIdentOrInheritCollection;
 
 	(* ppi: pixel per inch *)
-	PROCEDURE GetPixels(term: CSS2.Term; ppi: LONGREAL; font: GfxFonts.Font): LONGREAL;
-	VAR fact, pixels: LONGREAL; x, y, dx, dy: REAL; map: Raster.Image;
+	PROCEDURE GetPixels(term: CSS2.Term; ppi: FLOAT64; font: GfxFonts.Font): FLOAT64;
+	VAR fact, pixels: FLOAT64; x, y, dx, dy: FLOAT32; map: Raster.Image;
 	BEGIN
 		IF (term # NIL) & term.IsLength() THEN
 			CASE term.GetUnit() OF
@@ -2028,7 +2028,7 @@ VAR m : WMWindowManager.WindowManager;
 		RETURN pixels
 	END GetPixels;
 
-	PROCEDURE ChangeToPixel(pixelVal: LONGREAL): CSS2.Term;
+	PROCEDURE ChangeToPixel(pixelVal: FLOAT64): CSS2.Term;
 	VAR term: CSS2.Term;
 	BEGIN
 		NEW(term); term.SetType(CSS2.RealDimension); term.SetRealVal(pixelVal); term.SetUnit(CSS2.px); RETURN term
@@ -2122,8 +2122,8 @@ VAR m : WMWindowManager.WindowManager;
 	END BoxOffset;
 
 (*
-	PROCEDURE GetSmallerFont(fontSize: LONGINT): LONGINT;
-	VAR i: SHORTINT;
+	PROCEDURE GetSmallerFont(fontSize: SIGNED32): SIGNED32;
+	VAR i: SIGNED8;
 	BEGIN
 		i := XXSmall;
 		WHILE (i <= XXLarge) & (AbsoluteFontSizes[i] < fontSize) DO INC(i) END;
@@ -2131,8 +2131,8 @@ VAR m : WMWindowManager.WindowManager;
 		RETURN AbsoluteFontSizes[i - 1]
 	END GetSmallerFont;
 
-	PROCEDURE GetLargerFont(fontSize: LONGINT): LONGINT;
-	VAR i: SHORTINT;
+	PROCEDURE GetLargerFont(fontSize: SIGNED32): SIGNED32;
+	VAR i: SIGNED8;
 	BEGIN
 		i := XXLarge;
 		WHILE (XXSmall <= i) & (fontSize < AbsoluteFontSizes[i]) DO DEC(i) END;
@@ -2220,7 +2220,7 @@ VAR m : WMWindowManager.WindowManager;
 		END
 	END PaddingWidth;
 
-	PROCEDURE ComputeBool(VAR property: Bool; parentProperty: Bool; trueIdent: LONGINT);
+	PROCEDURE ComputeBool(VAR property: Bool; parentProperty: Bool; trueIdent: SIGNED32);
 	BEGIN
 		IF property.specified # NIL THEN
 			IF property.specified.IsIdent(Inherit) THEN property.computed := parentProperty.computed
@@ -2266,7 +2266,7 @@ VAR m : WMWindowManager.WindowManager;
 		END
 	END ComputeImg;
 
-	PROCEDURE ComputeDim(VAR property: Dim; parentProperty: Dim; ppi, referenceDim: LONGREAL; font: GfxFonts.Font);
+	PROCEDURE ComputeDim(VAR property: Dim; parentProperty: Dim; ppi, referenceDim: FLOAT64; font: GfxFonts.Font);
 	BEGIN
 		IF (property.specified # NIL) THEN
 			IF property.specified.IsIdent(Inherit) THEN
@@ -2350,7 +2350,7 @@ VAR m : WMWindowManager.WindowManager;
 		RETURN c
 	END ToGfxColor;
 
-	PROCEDURE IntToColor(color: LONGINT): Color;
+	PROCEDURE IntToColor(color: SIGNED32): Color;
 	VAR c1: CSS2.Term; c2: Color;
 	BEGIN
 		NEW(c1); c1.SetType(CSS2.Color); c1.SetIntVal(color);

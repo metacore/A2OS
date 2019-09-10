@@ -12,7 +12,7 @@ END PortLink;
 	(*für anzeigen der PSNR Vec*)
 	PROCEDURE ShowVec*;
 	VAR layer: vyPort.tLayer; lineplot: vyLinePlot.tLayer; pointplot: antsPointPlot.tLayer; histogram: vyHistogram.tLayer; scatter: vyScatter1.tLayer;  vec, obj: vyBase.Object;
-		pict: vyPort.Picture;  c: vyDisplay2d.tCoordinate2d;  min, max: LONGREAL;  minY, maxY: LONGREAL;  nans: LONGINT;
+		pict: vyPort.Picture;  c: vyDisplay2d.tCoordinate2d;  min, max: FLOAT64;  minY, maxY: FLOAT64;  nans: SIGNED32;
 		port,as: ARRAY 256 OF CHAR;
 		portlink: PortLink;
 	BEGIN

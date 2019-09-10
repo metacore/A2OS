@@ -10,14 +10,14 @@ CONST
 	VERSION* = 1;
 
 TYPE
-	Value* = ArrayXd.Value;  Index* = LONGINT;  Array* = ArrayXd.Array;  IntValue = ArrayXd.IntValue;
+	Value* = ArrayXd.Value;  Index* = SIGNED32;  Array* = ArrayXd.Array;  IntValue = ArrayXd.IntValue;
 	RatValue = NbrRat.Rational;  ArrayH* = ArrayXd.Array4;  Map* = ArrayXd.Map;
 
 	(** Type HCube is DataIO registered, instances of it can therefore be made persistent. *)
 
 	HCube* = OBJECT (ArrayXd.Array)
-	VAR lenx-, leny-, lenz-, lent-: LONGINT;   (* lenx = nr.Columns, leny = nr.Rows *)
-		ox-, oy-, oz-, ot-: LONGINT;
+	VAR lenx-, leny-, lenz-, lent-: SIGNED32;   (* lenx = nr.Columns, leny = nr.Rows *)
+		ox-, oy-, oz-, ot-: SIGNED32;
 		Get-: PROCEDURE {DELEGATE} ( x, y, z, t: Index ): Value;
 
 		(** override *)
@@ -42,7 +42,7 @@ TYPE
 			ot := origin[2];
 		END ValidateCache;
 
-		PROCEDURE SetBoundaryCondition*( c: SHORTINT );   (* called by new, load and directly *)
+		PROCEDURE SetBoundaryCondition*( c: SIGNED8 );   (* called by new, load and directly *)
 		BEGIN
 			SetBoundaryCondition^( c );
 			CASE c OF
@@ -65,7 +65,7 @@ TYPE
 
 
 	(** new *)
-		PROCEDURE & New*( ox, w, oy, h, oz, d, ot, td: LONGINT );
+		PROCEDURE & New*( ox, w, oy, h, oz, d, ot, td: SIGNED32 );
 		BEGIN
 			NewXdB( ArrayXdBytes.Array4( ox, oy, oz, ot ), ArrayXdBytes.Array4( w, h, d, td ) );
 		END New;
@@ -76,7 +76,7 @@ TYPE
 			copy := AlikeX();  RETURN copy( HCube );
 		END Alike;
 
-		PROCEDURE NewRange*( ox, w, oy, h, oz, d, ot, td: LONGINT;  copydata: BOOLEAN );
+		PROCEDURE NewRange*( ox, w, oy, h, oz, d, ot, td: SIGNED32;  copydata: BOOLEAN );
 		BEGIN
 			IF (w # len[0]) OR (h # len[1]) OR (d # len[2]) OR (td # len[3]) OR (ox # origin[0]) OR (oy # origin[1]) OR
 			    (oz # origin[2]) OR (ot # origin[3]) THEN
@@ -133,7 +133,7 @@ TYPE
 								   slen );
 		END CopyToHCube;
 
-		PROCEDURE CopyTo1dArray*( VAR dest: ARRAY OF Value;  sx, sy, sz, st, slenx, sleny, slenz, slent: Index;  dpos, dlen: LONGINT );
+		PROCEDURE CopyTo1dArray*( VAR dest: ARRAY OF Value;  sx, sy, sz, st, slenx, sleny, slenz, slent: Index;  dpos, dlen: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -145,7 +145,7 @@ TYPE
 		END CopyTo1dArray;
 
 		PROCEDURE CopyTo2dArray*( VAR dest: ARRAY OF ARRAY OF Value;  sx, sy, sz, st, slenx, sleny, slenz, slent: Index;
-													   dposx, dposy, dlenx, dleny: LONGINT );
+													   dposx, dposy, dlenx, dleny: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -157,7 +157,7 @@ TYPE
 		END CopyTo2dArray;
 
 		PROCEDURE CopyTo3dArray*( VAR dest: ARRAY OF ARRAY OF ARRAY OF Value;  sx, sy, sz, st, slenx, sleny, slenz, slent: Index;
-													   dposx, dposy, dposz, dlenx, dleny, dlenz: LONGINT );
+													   dposx, dposy, dposz, dlenx, dleny, dlenz: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -172,7 +172,7 @@ TYPE
 
 		PROCEDURE CopyTo4dArray*( VAR dest: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value;
 													   sx, sy, sz, st, slenx, sleny, slenz, slent: Index;
-													   dposx, dposy, dposz, dpost, dlenx, dleny, dlenz, dlent: LONGINT );
+													   dposx, dposy, dposz, dpost, dlenx, dleny, dlenz, dlent: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -251,7 +251,7 @@ TYPE
 	END ":=";
 
 	OPERATOR ":="*( VAR l: HCube;  r: HCubeInt.HCube );
-	VAR i, last: LONGINT;
+	VAR i, last: SIGNED32;
 	BEGIN
 		IF r = NIL THEN l := NIL ELSE
 			IF l = NIL THEN NEW( l, r.origin[0], r.len[0], r.origin[1], r.len[1], r.origin[2], r.len[2], r.origin[3], r.len[3] );  END;
@@ -261,7 +261,7 @@ TYPE
 	END ":=";
 
 	OPERATOR ":="*( VAR l: HCube;  r: HCubeRat.HCube );
-	VAR i, last: LONGINT;
+	VAR i, last: SIGNED32;
 	BEGIN
 		IF r = NIL THEN l := NIL ELSE
 			IF l = NIL THEN NEW( l, r.origin[0], r.len[0], r.origin[1], r.len[1], r.origin[2], r.len[2], r.origin[3], r.len[3] );  END;
@@ -444,7 +444,7 @@ TYPE
 
 (* The procedures needed to register type HCube so that its instances can be made persistent. *)
 	PROCEDURE LoadHCube( R: DataIO.Reader;  VAR obj: OBJECT );
-	VAR a: HCube;  version: SHORTINT;  ver: NbrInt.Integer;
+	VAR a: HCube;  version: SIGNED8;  ver: NbrInt.Integer;
 	BEGIN
 		R.RawSInt( version );
 		IF version = -1 THEN

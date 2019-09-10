@@ -41,8 +41,8 @@ TYPE
 
 		PROCEDURE Info (context: Commands.Context);
 		VAR
-			i : INTEGER;
-			res : WORD;
+			i : SIGNED16;
+			res : INTEGER;
 			s : ARRAY 256 OF CHAR;
 			args : SVNArgument.Argument;
 			b : BOOLEAN;
@@ -88,11 +88,11 @@ TYPE
 		VAR
 			s, tmp, tmp2, svndir : ARRAY 256 OF CHAR;
 			b : BOOLEAN;
-			i : INTEGER;
+			i : SIGNED16;
 			args : SVNArgument.Argument;
 			adminEntry : SVNAdmin.Entry;
 			m : SVNOutput.Message;
-			res : WORD;
+			res : INTEGER;
 		BEGIN { EXCLUSIVE }
 			NEW ( adminEntry, context );
 			NEW ( args );
@@ -159,10 +159,10 @@ TYPE
 			adminEntry : SVNAdmin.Entry;
 			args : SVNArgument.Argument;
 			m : SVNOutput.Message;
-			i : INTEGER;
+			i : SIGNED16;
 			s, tmp, tmp2, svndir : ARRAY 256 OF CHAR;
 			b : BOOLEAN;
-			res : WORD;
+			res : INTEGER;
 		BEGIN { EXCLUSIVE }
 			NEW ( adminEntry, context );
 			NEW ( args );
@@ -228,8 +228,8 @@ TYPE
 		VAR
 			s : ARRAY 256 OF CHAR;
 			b : BOOLEAN;
-			i : INTEGER;
-			res : WORD;
+			i : SIGNED16;
+			res : INTEGER;
 			cnt, j : SIZE;
 			args : SVNArgument.Argument;
 			adminEntry : SVNAdmin.Entry;
@@ -364,7 +364,7 @@ TYPE
 			args : SVNArgument.Argument;
 			m : SVNOutput.Message;
 			tmp, svndir, tmp2 : ARRAY 256 OF CHAR;
-			res : WORD;
+			res : INTEGER;
 			adminEntry : SVNAdmin.Entry;
 			searcher : SVNUtil.FSItemSearch;
 		BEGIN { EXCLUSIVE }

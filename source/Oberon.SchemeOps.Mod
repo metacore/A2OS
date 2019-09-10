@@ -58,8 +58,8 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 		END
 	END IntArg;
 
-	PROCEDURE IntVal* (ctxt: Scheme.Context; VAR args: Object): LONGINT;
-		VAR i: LONGINT; exact: BOOLEAN;
+	PROCEDURE IntVal* (ctxt: Scheme.Context; VAR args: Object): SIGNED32;
+		VAR i: SIGNED32; exact: BOOLEAN;
 	BEGIN
 		Scheme.GetInteger(IntArg(ctxt, args), i, exact); RETURN i
 	END IntVal;
@@ -73,8 +73,8 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 		END
 	END NumArg;
 
-	PROCEDURE NumVal* (ctxt: Scheme.Context; VAR args: Object): LONGREAL;
-		VAR r: LONGREAL;
+	PROCEDURE NumVal* (ctxt: Scheme.Context; VAR args: Object): FLOAT64;
+		VAR r: FLOAT64;
 	BEGIN
 		Scheme.GetReal(NumArg(ctxt, args), r); RETURN r
 	END NumVal;
@@ -381,7 +381,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 	END Modulo;
 
 	PROCEDURE Denominator (ctxt: Context; args: Object; VAR res: Object);
-		VAR n, d: LONGINT; exact: BOOLEAN;
+		VAR n, d: SIGNED32; exact: BOOLEAN;
 	BEGIN
 		Scheme.GetRational(NumArg(ctxt, args), n, d, exact); CheckNull(ctxt, args);
 		IF exact THEN res := Scheme.NewInteger(d)
@@ -390,7 +390,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 	END Denominator;
 
 	PROCEDURE Numerator (ctxt: Context; args: Object; VAR res: Object);
-		VAR n, d: LONGINT; exact: BOOLEAN;
+		VAR n, d: SIGNED32; exact: BOOLEAN;
 	BEGIN
 		Scheme.GetRational(NumArg(ctxt, args), n, d, exact); CheckNull(ctxt, args);
 		IF exact THEN res := Scheme.NewInteger(n)
@@ -500,7 +500,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 	END InexactToExact;
 
 	PROCEDURE NumberToString (ctxt: Context; args: Object; VAR res: Object);
-		VAR obj: Object; radix: LONGINT;
+		VAR obj: Object; radix: SIGNED32;
 	BEGIN
 		obj := NumArg(ctxt, args); radix := 10;
 		IF Scheme.IsPair(args) THEN
@@ -514,7 +514,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 	END NumberToString;
 
 	PROCEDURE StringToNumber (ctxt: Context; args: Object; VAR res: Object);
-		VAR obj: Object; radix: LONGINT;
+		VAR obj: Object; radix: SIGNED32;
 	BEGIN
 		obj := StringArg(ctxt, args); radix := 10;
 		IF Scheme.IsPair(args) THEN
@@ -638,7 +638,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 	(*--- Strings ---*)
 
 	PROCEDURE MakeString (ctxt: Context; args: Object; VAR res: Object);
-		VAR len: LONGINT; fill: CHAR;
+		VAR len: SIGNED32; fill: CHAR;
 	BEGIN
 		len := IntVal(ctxt, args); fill := 0X;
 		IF Scheme.IsPair(args) THEN fill := CharVal(ctxt, args) END;
@@ -656,7 +656,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 	END StringLength;
 
 	PROCEDURE StringRef (ctxt: Context; args: Object; VAR res: Object);
-		VAR s: Object; idx: LONGINT; ch: ARRAY 2 OF CHAR;
+		VAR s: Object; idx: SIGNED32; ch: ARRAY 2 OF CHAR;
 	BEGIN
 		s := StringArg(ctxt, args); idx := IntVal(ctxt, args); CheckNull(ctxt, args);
 		IF (0 <= idx) & (idx < Scheme.StringLen(s)) THEN Scheme.GetString(s, idx, 1, ch); res := Scheme.NewChar(ch[0])
@@ -665,7 +665,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 	END StringRef;
 
 	PROCEDURE StringSet (ctxt: Context; args: Object; VAR res: Object);
-		VAR s: Object; idx: LONGINT; ch: ARRAY 2 OF CHAR;
+		VAR s: Object; idx: SIGNED32; ch: ARRAY 2 OF CHAR;
 	BEGIN
 		s := StringArg(ctxt, args); idx := IntVal(ctxt, args); ch[0] := CharVal(ctxt, args); CheckNull(ctxt, args);
 		IF (0 <= idx) & (idx < Scheme.StringLen(s)) THEN Scheme.SetString(s, idx, 1, ch); res := s
@@ -677,7 +677,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 	(*--- Vectors ---*)
 
 	PROCEDURE MakeVector (ctxt: Context; args: Object; VAR res: Object);
-		VAR n: LONGINT; fill: Object;
+		VAR n: SIGNED32; fill: Object;
 	BEGIN
 		n := IntVal(ctxt, args);
 		IF Scheme.IsPair(args) THEN fill := Arg(ctxt, args) ELSE fill := Scheme.nil END;
@@ -695,7 +695,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 	END VectorLength;
 
 	PROCEDURE VectorRef (ctxt: Context; args: Object; VAR res: Object);
-		VAR vec: Object; idx: LONGINT;
+		VAR vec: Object; idx: SIGNED32;
 	BEGIN
 		vec := VectorArg(ctxt, args); idx := IntVal(ctxt, args); CheckNull(ctxt, args);
 		IF (0 <= idx) & (idx < Scheme.VectorLen(vec)) THEN res := Scheme.VectorAt(vec, idx)
@@ -704,7 +704,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 	END VectorRef;
 
 	PROCEDURE VectorSet (ctxt: Context; args: Object; VAR res: Object);
-		VAR vec, val: Object; idx: LONGINT;
+		VAR vec, val: Object; idx: SIGNED32;
 	BEGIN
 		vec := VectorArg(ctxt, args); idx := IntVal(ctxt, args); val := Arg(ctxt, args); CheckNull(ctxt, args);
 		IF (0 <= idx) & (idx < Scheme.VectorLen(vec)) THEN Scheme.SetVectorAt(vec, idx, val); res := vec
@@ -934,7 +934,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 	END New;
 
 	PROCEDURE LibObj (c: Context; args: Object; VAR res: Object);
-		VAR str: Object; lname, oname: ARRAY 32 OF CHAR; lib: Objects.Library; obj: Objects.Object; ref: INTEGER;
+		VAR str: Object; lname, oname: ARRAY 32 OF CHAR; lib: Objects.Library; obj: Objects.Object; ref: SIGNED16;
 	BEGIN
 		str := StringArg(c, args); Scheme.GetString(str, 0, Scheme.StringLen(str), lname);
 		str := StringArg(c, args); Scheme.GetString(str, 0, Scheme.StringLen(str), oname);
@@ -943,7 +943,7 @@ MODULE SchemeOps IN Oberon; (** portable *)	(* eos  *)
 		lib := Objects.ThisLibrary(lname); obj := NIL;
 		IF lib # NIL THEN
 			Objects.GetRef(lib.dict, oname, ref);
-			IF ref # MIN(INTEGER) THEN
+			IF ref # MIN(SIGNED16) THEN
 				lib.GetObj(lib, ref, obj)
 			END
 		END;

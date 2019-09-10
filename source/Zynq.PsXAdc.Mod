@@ -301,7 +301,7 @@ VAR
 	initialized := FALSE : BOOLEAN;
 
 	PROCEDURE Initialize*();
-	VAR d: LONGINT;
+	VAR d: SIGNED32;
 	BEGIN
 		IF initialized THEN RETURN; END;
 
@@ -310,7 +310,7 @@ VAR
 
 		(* Enable the PS access of xadc and set FIFO thresholds *)
 		d := devCfg.XADCIF_CFG;
-		d := SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,d) + SYSTEM.VAL(SET,CFG_ENABLE_MASK + CFG_CFIFOTH_MASK + CFG_DFIFOTH_MASK));
+		d := SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,d) + SYSTEM.VAL(SET,CFG_ENABLE_MASK + CFG_CFIFOTH_MASK + CFG_DFIFOTH_MASK));
 		devCfg.XADCIF_CFG := d;
 
 		(* release xadc from reset *)
@@ -319,11 +319,11 @@ VAR
 	END Initialize;
 
 	PROCEDURE Deinitialize*();
-	VAR d: LONGINT;
+	VAR d: SIGNED32;
 	BEGIN
 		IF ~initialized THEN RETURN; END;
 		d := devCfg.XADCIF_CFG;
-		d := SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,d) - SYSTEM.VAL(SET,CFG_ENABLE_MASK));
+		d := SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,d) - SYSTEM.VAL(SET,CFG_ENABLE_MASK));
 		devCfg.XADCIF_CFG := d;
 	END Deinitialize;
 
@@ -338,8 +338,8 @@ VAR
 	END Reset;
 
 	(* read from an XADC register *)
-	PROCEDURE ReadReg(regOffset: ADDRESS): LONGINT;
-	VAR d: LONGINT;
+	PROCEDURE ReadReg(regOffset: ADDRESS): SIGNED32;
+	VAR d: SIGNED32;
 	BEGIN
 		devCfg.XADCIF_CMDFIFO := JTAG_CMD_READ_MASK + SYSTEM.MSK(LSH(regOffset,JTAG_ADDR_SHIFT),JTAG_ADDR_MASK);
 		d := devCfg.XADCIF_RDFIFO; (* do a dummy read *)
@@ -349,7 +349,7 @@ VAR
 	END ReadReg;
 
 	(* write to an XADC register *)
-	PROCEDURE WriteReg(regOffset: ADDRESS; regValue: LONGINT);
+	PROCEDURE WriteReg(regOffset: ADDRESS; regValue: SIGNED32);
 	BEGIN
 		devCfg.XADCIF_CMDFIFO := JTAG_CMD_WRITE_MASK + SYSTEM.MSK(LSH(regOffset,JTAG_ADDR_SHIFT),JTAG_ADDR_MASK) + SYSTEM.MSK(regValue,JTAG_DATA_MASK);
 		(* read the read FIFO after any write since for each write one location of read FIFO gets updated *)
@@ -359,8 +359,8 @@ VAR
 	(**
 		Setup ADC channel sequencer mode
 	*)
-	PROCEDURE SetSequencerMode*(mode: LONGINT);
-	VAR d: LONGINT;
+	PROCEDURE SetSequencerMode*(mode: SIGNED32);
+	VAR d: SIGNED32;
 	BEGIN
 		ASSERT(((mode >= SeqDefault) & (mode <= SeqSimultaneous)) OR (mode = SeqIndependent));
 		IF ~initialized THEN Initialize; END;
@@ -373,13 +373,13 @@ VAR
 	(**
 		Get ADC channel sequencer mode
 	*)
-	PROCEDURE GetSequencerMode*(): LONGINT;
+	PROCEDURE GetSequencerMode*(): SIGNED32;
 	BEGIN
 		IF ~initialized THEN Initialize; END;
 		RETURN LSH(SYSTEM.MSK(ReadReg(CFR1_REG),CFR1_SEQ_VALID_MASK),-CFR1_SEQ_SHIFT);
 	END GetSequencerMode;
 
-	PROCEDURE GetAdcData*(channel: LONGINT): LONGINT;
+	PROCEDURE GetAdcData*(channel: SIGNED32): SIGNED32;
 	BEGIN
 		ASSERT(((channel >= ChTemp) & (channel <= ChGainErrCalib)) OR ((channel >= ChVccpInt) & (channel <= ChAux15)));
 		IF ~initialized THEN Initialize; END;
@@ -389,17 +389,17 @@ VAR
 	(**
 		Convert raw ADC value to temperature in centigrades
 	*)
-	PROCEDURE RawToTemperature*(raw: LONGINT): REAL;
+	PROCEDURE RawToTemperature*(raw: SIGNED32): FLOAT32;
 	BEGIN
-		RETURN REAL(raw)*(1.0/(65536.0*0.00198421639)) - 273.15;
+		RETURN FLOAT32(raw)*(1.0/(65536.0*0.00198421639)) - 273.15;
 	END RawToTemperature;
 
 	(**
 		Convert raw ADC value to voltage in volts
 	*)
-	PROCEDURE RawToVoltage*(raw: LONGINT): REAL;
+	PROCEDURE RawToVoltage*(raw: SIGNED32): FLOAT32;
 	BEGIN
-		RETURN REAL(raw) * (3.0/65536.0);
+		RETURN FLOAT32(raw) * (3.0/65536.0);
 	END RawToVoltage;
 
 BEGIN

@@ -7,13 +7,13 @@ CONST
 	BlockSize = 64;
 
 VAR
-	K256: ARRAY 64 OF LONGINT;
+	K256: ARRAY 64 OF SIGNED32;
 
 
 TYPE
 	Hash* = OBJECT (Hashes.Hash)
 		VAR
-			hash: ARRAY 8 OF LONGINT;		(* state *)
+			hash: ARRAY 8 OF SIGNED32;		(* state *)
 			Nl, Nh: SIZE;
 			cdata: ARRAY BlockSize OF CHAR;	(* pending data *)
 			cn: SIZE	(* number of chars in cdata *)
@@ -26,10 +26,10 @@ TYPE
 
 		PROCEDURE Initialize*;
 		BEGIN
-			hash[0] := 6A09E667H;	hash[1] := LONGINT( 0BB67AE85H );
-			hash[2] := 3C6EF372H;	hash[3] := LONGINT( 0A54FF53AH );
-			hash[4] := 510E527FH;	hash[5] := LONGINT( 09B05688CH );
-			hash[6] := 1F83D9ABH;	hash[7] := LONGINT( 05BE0CD19H );
+			hash[0] := 6A09E667H;	hash[1] := SIGNED32( 0BB67AE85H );
+			hash[2] := 3C6EF372H;	hash[3] := SIGNED32( 0A54FF53AH );
+			hash[4] := 510E527FH;	hash[5] := SIGNED32( 09B05688CH );
+			hash[6] := 1F83D9ABH;	hash[7] := SIGNED32( 05BE0CD19H );
 			Nl := 0;
 			Nh := 0;
 			cn := 0;
@@ -37,8 +37,8 @@ TYPE
 		END Initialize;
 
 		PROCEDURE HashBlock( CONST buf: ARRAY OF CHAR;  pos: SIZE );
-		VAR a, b, c, d, e, f, g, h, s0, s1, s, T1, T2, i: LONGINT;
-			X: ARRAY 16 OF LONGINT
+		VAR a, b, c, d, e, f, g, h, s0, s1, s, T1, T2, i: SIGNED32;
+			X: ARRAY 16 OF SIGNED32
 		BEGIN
 			a := hash[0];  b := hash[1];  c := hash[2];  d := hash[3];
 			e := hash[4];  f := hash[5];  g := hash[6];  h := hash[7];
@@ -99,7 +99,7 @@ TYPE
 
 		(** get the hashvalue of length SELF.size *)
 		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
-			VAR p, i: LONGINT;
+			VAR p, i: SIGNED32;
 		BEGIN
 			cdata[cn] := 80X;  INC( cn );
 			IF cn > BlockSize - 8 THEN
@@ -108,7 +108,7 @@ TYPE
 			END;
 			p := BlockSize - 8;
 			WHILE cn < p  DO  cdata[cn] := 0X;  INC( cn )  END;
-			U.IntToBufferBE( Nh(LONGINT), cdata, p );  U.IntToBufferBE( Nl(LONGINT), cdata, p + 4 );
+			U.IntToBufferBE( Nh(SIGNED32), cdata, p );  U.IntToBufferBE( Nl(SIGNED32), cdata, p + 4 );
 			HashContextBlock;
 
 			FOR i := 0 TO 7 DO  U.IntToBufferBE( hash[i], buf, pos );  INC( pos, 4 )  END;
@@ -129,36 +129,36 @@ TYPE
 
 
 
-	PROCEDURE -Sigma0Maj( px, py, pz: LONGINT ): LONGINT;
+	PROCEDURE -Sigma0Maj( px, py, pz: SIGNED32 ): SIGNED32;
 	VAR x, y, z, a, b: SET32;
 	BEGIN
 		x := S.VAL( SET32, px );  y := S.VAL( SET32, py );  z := S.VAL( SET32, pz );
 		a := ROT( x, 30 ) / ROT( x, 19 ) / ROT( x, 10 );
 		b := (x*y) / (x*z) / (y*z);
-		RETURN S.VAL( LONGINT, a ) + S.VAL( LONGINT, b )
+		RETURN S.VAL( SIGNED32, a ) + S.VAL( SIGNED32, b )
 	END Sigma0Maj;
 
-	PROCEDURE -Sigma1Ch( px, py, pz: LONGINT ): LONGINT;
+	PROCEDURE -Sigma1Ch( px, py, pz: SIGNED32 ): SIGNED32;
 	VAR x, y, z, a, b: SET32;
 	BEGIN
 		x := S.VAL( SET32, px );  y := S.VAL( SET32, py );  z := S.VAL( SET32, pz );
 		a := ROT( x, 26 ) / ROT( x, 21 ) / ROT( x, 7 );
 		b := (x*y) / ((-x)*z);
-		RETURN S.VAL( LONGINT, a ) + S.VAL( LONGINT, b )
+		RETURN S.VAL( SIGNED32, a ) + S.VAL( SIGNED32, b )
 	END Sigma1Ch;
 
-	PROCEDURE -sigma0( px: LONGINT ): LONGINT;
+	PROCEDURE -sigma0( px: SIGNED32 ): SIGNED32;
 	VAR x: SET32;
 	BEGIN
 		x :=S.VAL( SET32, px );
-		RETURN S.VAL( LONGINT, ROT( x , 25 ) / ROT( x, 14 ) / LSH( x, -3 ) )
+		RETURN S.VAL( SIGNED32, ROT( x , 25 ) / ROT( x, 14 ) / LSH( x, -3 ) )
 	END sigma0;
 
-	PROCEDURE -sigma1( px: LONGINT ): LONGINT;
+	PROCEDURE -sigma1( px: SIGNED32 ): SIGNED32;
 	VAR x: SET32;
 	BEGIN
 		x := S.VAL( SET32, px );
-		RETURN S.VAL( LONGINT, ROT( x , 15 ) / ROT( x, 13 ) / LSH( x, -10 ) )
+		RETURN S.VAL( SIGNED32, ROT( x , 15 ) / ROT( x, 13 ) / LSH( x, -10 ) )
 	END sigma1;
 
 
@@ -166,7 +166,7 @@ TYPE
 
 	PROCEDURE InitializeK;
 	VAR
-		buf: U.InitBuffer; i: LONGINT;
+		buf: U.InitBuffer; i: SIGNED32;
 	BEGIN
 		NEW( buf, 2048 );
 		buf.Add( "428A2F98 71374491 B5C0FBCF E9B5DBA5  " );

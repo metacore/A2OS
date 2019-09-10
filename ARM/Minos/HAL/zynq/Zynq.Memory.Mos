@@ -46,7 +46,7 @@ CONST
 
 VAR
 	lnk : PROCEDURE;
-	dCacheBase : LONGINT;
+	dCacheBase : SIGNED32;
 	virtualPageTable- : ADDRESS;
 	
 	
@@ -200,7 +200,7 @@ CODE
 END EnableCoprocessors;
 
 
-(*PROCEDURE FlushDCacheRange*( adr:ADDRESS; len:LONGINT );
+(*PROCEDURE FlushDCacheRange*( adr:ADDRESS; len:SIGNED32 );
 CONST
 	cacheline = 32;
 	L2CCBBase				= 0F8F02000H; (*XPS_L2CC_BASEADDR*)
@@ -269,7 +269,7 @@ BEGIN
 	FlushDCacheRange( addr, M );
 END FlushDCache;
 	
-PROCEDURE InvalidateDCache*( dCacheBase: LONGINT );
+PROCEDURE InvalidateDCache*( dCacheBase: SIGNED32 );
 CODE
 	LDR R1, [FP, #dCacheBase]	; R1 contains the virtual address of a region of cacheable memory
 	LDR R1, [R1, #0]
@@ -332,7 +332,7 @@ CODE
 END InvalidateTLB;
 
 (* InvalidateTLBEntry - invalidates the TLB for a given virtual address. Works only in a priviledged mode *)
-PROCEDURE InvalidateTLBEntry(address: LONGINT);
+PROCEDURE InvalidateTLBEntry(address: SIGNED32);
 CODE
 	LDR R0, [FP, #address]
 	ADD SP, SP, #4	; remove parameter
@@ -395,7 +395,7 @@ BEGIN
 END ShowStack;
 
 (** SHR - logical shift right *)
-PROCEDURE SHR(value, shift: ADDRESS): LONGINT;
+PROCEDURE SHR(value, shift: ADDRESS): SIGNED32;
 CODE
 	LDR R0, [FP, #value]
 	LDR R1, [FP, #shift]
@@ -404,7 +404,7 @@ CODE
 END SHR;
 
 (** SHRL - shift right and left. Mask out 'shift' lowest bits *)
-PROCEDURE SHRL(value, shift: LONGINT): LONGINT;
+PROCEDURE SHRL(value, shift: SIGNED32): SIGNED32;
 (*CODE
 	LDR R0, [FP, #value]
 	LDR R1, [FP, #shift]
@@ -418,7 +418,7 @@ BEGIN
 END SHRL;
 
 (** Fills 'size' bytes with 'filler', from 'destAdr' on. size must be multiple of 4 *)
-PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: SIGNED32);
 CODE
 	LDR R0, [FP, #filler]
 	LDR R1, [FP, #size]
@@ -461,8 +461,8 @@ Exit:
 END Fill8;
 
 (* AllocateHeap - allocates and maps [physicalAddress...physicalAddress+size] to [virtualAddress...virtualAddress+size] *)
-PROCEDURE AllocateMmu*(virtualAddress, physicalAddress, size: ADDRESS; accessPermissions, flags: LONGINT);
-VAR i, index, entry: LONGINT;
+PROCEDURE AllocateMmu*(virtualAddress, physicalAddress, size: ADDRESS; accessPermissions, flags: SIGNED32);
+VAR i, index, entry: SIGNED32;
 BEGIN
 	ASSERT(size MOD M = 0);
 	index := SHR(virtualAddress, LogM - 2);
@@ -513,7 +513,7 @@ END EnableMM;
 PROCEDURE InitMemory *;
 	VAR
 		cr1: SET;
-		i, k, n: LONGINT;
+		i, k, n: SIGNED32;
 		base, adr: ADDRESS;
 	BEGIN
 		Caches.CleanDCacheRange(virtualPageTable, PageTableLength * 4);

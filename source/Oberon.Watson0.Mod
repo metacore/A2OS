@@ -55,7 +55,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 
 	(* vars used by symbol file reader *)
 		curObj: OPT.Object;	(* current object in process *)
-		syspos: LONGINT;	(* text pos where to write imported modules *)
+		syspos: SIGNED32;	(* text pos where to write imported modules *)
 		sysImported,	(* indicates whether SYSTEM is imported or not *)
 		first,	(* FALSE: keyword ['CONST' | 'TYPE' | 'VAR'] has already been written to text *)
 		showObj: BOOLEAN;	(* TRUE: only one object is showen *)
@@ -66,14 +66,14 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 	(* ---------------------- string funktions ----------------------- *)
 
 	PROCEDURE Append (VAR d: ARRAY OF CHAR; s: ARRAY OF CHAR);	(* appends string s to string d *)
-		VAR i, j: INTEGER; ch: CHAR;
+		VAR i, j: SIGNED16; ch: CHAR;
 	BEGIN
 		i := 0; WHILE d[i] # 0X DO INC(i) END;
 		j := 0; REPEAT ch := s[j]; d[i] := ch; INC(i); INC(j) UNTIL ch = 0X
 	END Append;
 
 	PROCEDURE AppendCh (VAR d: ARRAY OF CHAR; ch: CHAR);	(* appends char ch to string d *)
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		i := 0; WHILE d[i] # 0X DO INC(i) END;
 		d[i]:= ch; d[i+1]:= 0X
@@ -89,11 +89,11 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 	BEGIN Texts.Write(W, ch)
 	END Ch;
 
-	PROCEDURE Num (i: LONGINT);	(* writes number i to W *)
+	PROCEDURE Num (i: SIGNED32);	(* writes number i to W *)
 	BEGIN Texts.WriteInt(W, i, 0);
 	END Num;
 
-	PROCEDURE Hexa(i: LONGINT; short: BOOLEAN);	(* writes number i to W as a hex. number *)
+	PROCEDURE Hexa(i: SIGNED32; short: BOOLEAN);	(* writes number i to W as a hex. number *)
 	BEGIN
 		IF ~short THEN	(* fully 32 bit number *)
 			Ch(Hex[i DIV 10000000H]); i:= i MOD 10000000H;
@@ -110,7 +110,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 	BEGIN Texts.WriteLn(W)
 	END Ln;
 
-	PROCEDURE Indent (i: INTEGER);	(* writes i tabs to W *)
+	PROCEDURE Indent (i: SIGNED16);	(* writes i tabs to W *)
 	BEGIN WHILE i > 0 DO Ch(9X); DEC(i) END
 	END Indent;
 
@@ -133,7 +133,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 	END Control;
 
 	PROCEDURE Identifier(name: ARRAY OF CHAR);	(* writes a string name and a control to W *)
-		VAR i, j: INTEGER;
+		VAR i, j: SIGNED16;
 	BEGIN
 		Str(name);
 		IF showObj THEN	(* cut module qualifier *)
@@ -150,7 +150,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 	(* ---------------------- write sybol file info ----------------------- *)
 
 	PROCEDURE WriteConstValue (obj: OPT.Object);	(* writes the value of a constant object *)
-		VAR i: INTEGER; y: LONGINT; s: SET;
+		VAR i: SIGNED16; y: SIGNED32; s: SET;
 	BEGIN
 		y:= obj.conval.intval;
 		CASE obj.typ^.form OF
@@ -191,9 +191,9 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 		END
 	END WriteBase;
 
-	PROCEDURE WriteFields (VAR obj: OPT.Object; i: INTEGER; recField: BOOLEAN);
+	PROCEDURE WriteFields (VAR obj: OPT.Object; i: SIGNED16; recField: BOOLEAN);
 	(* writes field list of a proc. or record: all variables of same type *)
-		VAR typ: OPT.Struct; mode: LONGINT;
+		VAR typ: OPT.Struct; mode: SIGNED32;
 	BEGIN
 		(* obj.vis # internal *)
 		typ := obj.typ; mode := obj.mode;
@@ -238,7 +238,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 		Ch(";")
 	END WriteProc;
 
-	PROCEDURE WriteTProcs (obj: OPT.Object; i: INTEGER);	(* writes a type bound procedure *)
+	PROCEDURE WriteTProcs (obj: OPT.Object; i: SIGNED16);	(* writes a type bound procedure *)
 		VAR firstpar: OPT.Object;
 	BEGIN
 		IF obj # NIL THEN
@@ -258,7 +258,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 		END;
 	END WriteTProcs;
 
-	PROCEDURE WriteFieldList (obj: OPT.Object; i: INTEGER);	(* writes all record field lists, exept type bound proc.*)
+	PROCEDURE WriteFieldList (obj: OPT.Object; i: SIGNED16);	(* writes all record field lists, exept type bound proc.*)
 	BEGIN
 		WHILE (obj # NIL) & (obj.mode = Fld) DO
 			IF obj.vis # internal THEN Indent(i); WriteFields(obj, i, TRUE); Ch(";"); Ln
@@ -267,7 +267,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 		END
 	END WriteFieldList;
 
-	PROCEDURE WriteInstVars (typ: OPT.Struct; i: INTEGER; extlev: LONGINT);	(* writes a record definition *)
+	PROCEDURE WriteInstVars (typ: OPT.Struct; i: SIGNED16; extlev: SIGNED32);	(* writes a record definition *)
 	BEGIN
 		IF typ # NIL THEN
 			IF expandTypes & (extlev > 0) THEN
@@ -279,7 +279,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 		END
 	END WriteInstVars;
 
-	PROCEDURE WriteForm (typ: OPT.Struct; i: INTEGER);	(* writes a type *)
+	PROCEDURE WriteForm (typ: OPT.Struct; i: SIGNED16);	(* writes a type *)
 	BEGIN
 		IF (typ.form = Comp) & (typ.comp = Record) THEN
 			Str("RECORD"); WriteBase(typ);
@@ -313,7 +313,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 		END
 	END WriteForm;
 
-	PROCEDURE WriteType(typ: OPT.Struct; i: INTEGER);	(* writes a type declaration *)
+	PROCEDURE WriteType(typ: OPT.Struct; i: SIGNED16);	(* writes a type declaration *)
 		VAR cmd, par: ARRAY 64 OF CHAR; makeLink: BOOLEAN;
 	BEGIN
 		IF (typ.strobj # NIL) & (typ.strobj.name # "") THEN
@@ -350,7 +350,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 		END
 	END WriteType;
 
-	PROCEDURE WriteObject(obj: OPT.Object; mode: LONGINT);	(* writes any object as given mode *)
+	PROCEDURE WriteObject(obj: OPT.Object; mode: SIGNED32);	(* writes any object as given mode *)
 		VAR h: OPT.Object; name: ARRAY 64 OF CHAR;
 	BEGIN
 		curObj:= obj;	(* set cur. object in process *)
@@ -398,7 +398,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 	END WriteObject;
 
 	PROCEDURE WriteImports;	(* write imported modules *)
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		i:= 1; (* assume that OPT.modules[0] is "self" *)
 		first := TRUE;
@@ -415,8 +415,8 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 		IF ~first THEN Ch(";"); Ln; Ln END;
 	END WriteImports;
 
-	PROCEDURE WriteScope(obj: OPT.Object; mode: INTEGER);	(* writes all objects of given mode *)
-		PROCEDURE Scope (obj: OPT.Object; mode: INTEGER);
+	PROCEDURE WriteScope(obj: OPT.Object; mode: SIGNED16);	(* writes all objects of given mode *)
+		PROCEDURE Scope (obj: OPT.Object; mode: SIGNED16);
 		BEGIN
 			IF obj # NIL THEN
 				Scope(obj.left, mode);
@@ -541,8 +541,8 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 	(* ---------------------- write object info ----------------------- *)
 
 	PROCEDURE Commands(F: Files.File; VAR modName: ARRAY OF CHAR);	(* writes all commands of this module  *)
-	VAR R: Files.Rider; name: ARRAY 64 OF CHAR; key, ref, symSize: LONGINT;
-			i, c, e, nofentry, nofcmds: INTEGER; ch: CHAR;
+	VAR R: Files.Rider; name: ARRAY 64 OF CHAR; key, ref, symSize: SIGNED32;
+			i, c, e, nofentry, nofcmds: SIGNED16; ch: CHAR;
 	BEGIN Files.Set(R, F, 0);
 		(* check if it is an object file *)
 		Files.Read(R, ch);
@@ -585,7 +585,7 @@ MODULE Watson0 IN Oberon;	(** portable *)	(** PS	/		/	OP2-Version *)
 	(* *************** INTERFACE *************** *)
 
 	PROCEDURE SetOptions;	(* parses variable options and sets corresponding 'flags' *)
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		expandTypes:= FALSE; showAdr:= FALSE; i:= 0;
 		WHILE options[i] # 0X DO

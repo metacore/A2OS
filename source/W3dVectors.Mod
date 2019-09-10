@@ -13,27 +13,27 @@ MODULE W3dVectors; (** AUTHOR "TF"; PURPOSE "Vector operations for 3d partial po
 IMPORT Math := MathL;
 
 TYPE
-	 TVector2d* = RECORD x*, y*: LONGREAL END;
-     TVector3d* = RECORD x*, y*, z*: LONGREAL END;
+	 TVector2d* = RECORD x*, y*: FLOAT64 END;
+     TVector3d* = RECORD x*, y*, z*: FLOAT64 END;
 
      TLineSegment2d* = RECORD A*, B*: TVector2d END;
      TRectangle* = RECORD A*, B*: TVector2d END;
 
-     TBoundingSphere* = RECORD P*: TVector3d; r*:LONGREAL END;
+     TBoundingSphere* = RECORD P*: TVector3d; r*:FLOAT64 END;
 
 
 CONST TooSmall* = 0.00000000001;
 
-PROCEDURE Sqr(x: LONGREAL):LONGREAL;
+PROCEDURE Sqr(x: FLOAT64):FLOAT64;
 BEGIN
 	RETURN x * x
 END Sqr;
 
-PROCEDURE Vector2d*(x:LONGREAL; y:LONGREAL):TVector2d;
+PROCEDURE Vector2d*(x:FLOAT64; y:FLOAT64):TVector2d;
 VAR result : TVector2d;
 BEGIN result.x := x; result.y := y; RETURN result END Vector2d;
 
-PROCEDURE Vector3d*(x:LONGREAL; y:LONGREAL; z:LONGREAL):TVector3d;
+PROCEDURE Vector3d*(x:FLOAT64; y:FLOAT64; z:FLOAT64):TVector3d;
 VAR result : TVector3d;
 BEGIN result.x := x; result.y := y; result.z := z; RETURN result END Vector3d;
 
@@ -61,8 +61,8 @@ PROCEDURE VNeg3*(a: TVector3d):TVector3d;
 VAR result : TVector3d;
 BEGIN result.x:=-a.x; result.y:=-a.y; result.z:=-a.z; RETURN result END VNeg3;
 
-PROCEDURE VLength2*(a: TVector2d):LONGREAL;
-VAR t: LONGREAL;
+PROCEDURE VLength2*(a: TVector2d):FLOAT64;
+VAR t: FLOAT64;
 BEGIN
 	a.x := ABS(a.x); a.y:= ABS(a.y);
 	IF a.x > a.y THEN t := a.x; a.x := a.y; a.y:=t END;
@@ -71,18 +71,18 @@ BEGIN
 	END
 END VLength2;
 
-PROCEDURE VLength2VV*(a, b: TVector2d):LONGREAL;
+PROCEDURE VLength2VV*(a, b: TVector2d):FLOAT64;
 BEGIN
 	RETURN VLength2(VSub2(a, b))
 END VLength2VV;
 
-PROCEDURE VLength3VV*(a, b: TVector3d):LONGREAL;
+PROCEDURE VLength3VV*(a, b: TVector3d):FLOAT64;
 BEGIN
 	RETURN VLength3(VSub3(a, b))
 END VLength3VV;
 
-PROCEDURE VLength3*(a: TVector3d):LONGREAL;
-VAR t: LONGREAL;
+PROCEDURE VLength3*(a: TVector3d):FLOAT64;
+VAR t: FLOAT64;
 BEGIN
 	a.x := ABS(a.x); a.y:= ABS(a.y); a.z:=ABS(a.z);
 	IF a.x > a.y THEN t := a.x; a.x := a.y; a.y:=t END;
@@ -94,31 +94,31 @@ BEGIN
 END VLength3;
 
 (* squared length *)
-PROCEDURE VLength2Sq*(a: TVector2d):LONGREAL;
+PROCEDURE VLength2Sq*(a: TVector2d):FLOAT64;
 BEGIN
 	RETURN Sqr(a.x) + Sqr(a.y)
 END VLength2Sq;
 
-PROCEDURE VLength2VVSq*(a, b: TVector2d):LONGREAL;
+PROCEDURE VLength2VVSq*(a, b: TVector2d):FLOAT64;
 BEGIN
 	RETURN VLength2Sq(VSub2(a, b))
 END VLength2VVSq;
 
-PROCEDURE VLength3VVSq*(a, b: TVector3d):LONGREAL;
+PROCEDURE VLength3VVSq*(a, b: TVector3d):FLOAT64;
 BEGIN
 	RETURN VLength3Sq(VSub3(a, b))
 END VLength3VVSq;
 
-PROCEDURE VLength3Sq*(a: TVector3d):LONGREAL;
+PROCEDURE VLength3Sq*(a: TVector3d):FLOAT64;
 BEGIN
 	RETURN Sqr(a.x) + Sqr(a.y) + Sqr(a.z)
 END VLength3Sq;
 
-PROCEDURE VScaled2*(a:TVector2d; factor:LONGREAL):TVector2d;
+PROCEDURE VScaled2*(a:TVector2d; factor:FLOAT64):TVector2d;
 VAR result : TVector2d;
 BEGIN result.x:=factor*a.x; result.y:=factor*a.y; RETURN result END VScaled2;
 
-PROCEDURE VScaled3*(a:TVector3d; factor:LONGREAL):TVector3d;
+PROCEDURE VScaled3*(a:TVector3d; factor:FLOAT64):TVector3d;
 VAR result : TVector3d;
 BEGIN result.x:=factor*a.x; result.y:=factor*a.y; result.z:=factor*a.z; RETURN result  END VScaled3;
 
@@ -134,10 +134,10 @@ END VNormed2;
 PROCEDURE VNormed3*(a: TVector3d):TVector3d;
 BEGIN RETURN VScaled3(a, 1/VLength3(a)) END VNormed3;
 
-PROCEDURE Scalar2*(a, b: TVector2d):LONGREAL;
+PROCEDURE Scalar2*(a, b: TVector2d):FLOAT64;
 BEGIN RETURN a.x*b.x+a.y*b.y END Scalar2;
 
-PROCEDURE Scalar3*(a, b: TVector3d):LONGREAL;
+PROCEDURE Scalar3*(a, b: TVector3d):FLOAT64;
 BEGIN RETURN a.x*b.x+a.y*b.y +a.z*b.z END Scalar3;
 
 PROCEDURE Cross*(a, b: TVector3d):TVector3d;

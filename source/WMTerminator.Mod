@@ -7,7 +7,7 @@ CONST
 	Abort = WMDialogs.ResAbort;
 
 PROCEDURE Shutdown*;
-VAR res: WORD;  msg: ARRAY 128 OF CHAR;
+VAR res: INTEGER;  msg: ARRAY 128 OF CHAR;
 	t: Kernel.Timer;
 BEGIN
 	NEW( t );

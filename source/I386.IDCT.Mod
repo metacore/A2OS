@@ -26,13 +26,13 @@ CONST
 	SSE2* = 2;
 
 VAR
-	RNDINVROW, RNDINVCOL, RNDINVCORR: INTEGER;
-	M128onecorr, M128roundinvrow, M128roundinvcol, M128roundinvcorr, M128tg116, M128tg216, M128tg316, M128cos416: POINTER TO ARRAY OF INTEGER;
-	M128tabi04, M128tabi17, M128tabi26, M128tabi35: POINTER TO ARRAY OF INTEGER;
+	RNDINVROW, RNDINVCOL, RNDINVCORR: SIGNED16;
+	M128onecorr, M128roundinvrow, M128roundinvcol, M128roundinvcorr, M128tg116, M128tg216, M128tg316, M128cos416: POINTER TO ARRAY OF SIGNED16;
+	M128tabi04, M128tabi17, M128tabi26, M128tabi35: POINTER TO ARRAY OF SIGNED16;
 	tabi04adr, tabi17adr, tabi26adr, tabi35adr, onecorradr, roundinvrowadr, roundinvcoladr, roundinvcorradr, tg116adr, tg216adr, tg316adr, cos416adr: ADDRESS;
 	Transform*: PROCEDURE (src, dst: ADDRESS);
-	intTab: POINTER TO ARRAY OF INTEGER;
-	status*: WORD;
+	intTab: POINTER TO ARRAY OF SIGNED16;
+	status*: INTEGER;
 
 
 PROCEDURE -MOVDQA1;
@@ -582,7 +582,7 @@ BEGIN
 	Col( src +  14);
 
 	FOR i := 0 TO 63 DO
-		SYSTEM.PUT16(dst + SIZEOF(INTEGER) * i, SYSTEM.GET16(src + SIZEOF(INTEGER) * i) )
+		SYSTEM.PUT16(dst + SIZEOF(SIGNED16) * i, SYSTEM.GET16(src + SIZEOF(SIGNED16) * i) )
 	END
 
 END TransformINT;
@@ -601,36 +601,36 @@ END TransformINT;
 
 PROCEDURE Row( src: ADDRESS);
 VAR
-	x0, x1, x2, x3, x4, x5, x6, x7, x8: LONGINT;
+	x0, x1, x2, x3, x4, x5, x6, x7, x8: SIGNED32;
 	adr, tempAdr: ADDRESS;
 BEGIN
 	adr := src;
 
 	(* shortcut *)
-	x1 := LONG(SYSTEM.GET16( adr + 4*SIZEOF(INTEGER))) * 2048;
-	x2 := LONG(SYSTEM.GET16( adr + 6*SIZEOF(INTEGER)));
-	x3 := LONG(SYSTEM.GET16( adr + 2*SIZEOF(INTEGER)));
-	x4 := LONG(SYSTEM.GET16( adr + 1*SIZEOF(INTEGER)));
-	x5 := LONG(SYSTEM.GET16( adr + 7*SIZEOF(INTEGER)));
-	x6 := LONG(SYSTEM.GET16( adr + 5*SIZEOF(INTEGER)));
-	x7 := LONG(SYSTEM.GET16( adr + 3*SIZEOF(INTEGER)));
+	x1 := LONG(SYSTEM.GET16( adr + 4*SIZEOF(SIGNED16))) * 2048;
+	x2 := LONG(SYSTEM.GET16( adr + 6*SIZEOF(SIGNED16)));
+	x3 := LONG(SYSTEM.GET16( adr + 2*SIZEOF(SIGNED16)));
+	x4 := LONG(SYSTEM.GET16( adr + 1*SIZEOF(SIGNED16)));
+	x5 := LONG(SYSTEM.GET16( adr + 7*SIZEOF(SIGNED16)));
+	x6 := LONG(SYSTEM.GET16( adr + 5*SIZEOF(SIGNED16)));
+	x7 := LONG(SYSTEM.GET16( adr + 3*SIZEOF(SIGNED16)));
 
 	IF ( x1 = 0 ) & ( x2 = 0 ) & ( x3 = 0 ) & ( x4 = 0 ) & ( x5 = 0 ) & ( x6 = 0 ) & ( x7 = 0 )  THEN
 		x0 := SYSTEM.GET16( adr ) * 8;
 		SYSTEM.PUT16( adr , x0 );
-		tempAdr := adr + SIZEOF( INTEGER );
+		tempAdr := adr + SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr, SHORT(x0));
-		tempAdr := tempAdr + SIZEOF( INTEGER );
+		tempAdr := tempAdr + SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr, SHORT(x0));
-		tempAdr := tempAdr + SIZEOF( INTEGER );
+		tempAdr := tempAdr + SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr, SHORT(x0));
-		tempAdr := tempAdr + SIZEOF( INTEGER );
+		tempAdr := tempAdr + SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr, SHORT(x0));
-		tempAdr := tempAdr + SIZEOF( INTEGER );
+		tempAdr := tempAdr + SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr, SHORT(x0));
-		tempAdr := tempAdr + SIZEOF( INTEGER );
+		tempAdr := tempAdr + SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr, SHORT(x0));
-		tempAdr := tempAdr + SIZEOF( INTEGER );
+		tempAdr := tempAdr + SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr, SHORT(x0));
 		RETURN
 	END;
@@ -668,19 +668,19 @@ BEGIN
 
 	(* fourth stage *)
 	SYSTEM.PUT16( adr, SHORT(( x7 + x1 ) DIV 256));
-	tempAdr := adr + SIZEOF( INTEGER );
+	tempAdr := adr + SIZEOF( SIGNED16 );
 	SYSTEM.PUT16( tempAdr, SHORT(( x3 + x2 ) DIV 256));
-	tempAdr := tempAdr + SIZEOF( INTEGER );
+	tempAdr := tempAdr + SIZEOF( SIGNED16 );
 	SYSTEM.PUT16( tempAdr, SHORT(( x0 + x4 ) DIV 256));
-	tempAdr := tempAdr + SIZEOF( INTEGER );
+	tempAdr := tempAdr + SIZEOF( SIGNED16 );
 	SYSTEM.PUT16( tempAdr, SHORT(( x8 + x6 ) DIV 256));
-	tempAdr := tempAdr + SIZEOF( INTEGER );
+	tempAdr := tempAdr + SIZEOF( SIGNED16 );
 	SYSTEM.PUT16( tempAdr, SHORT(( x8 - x6 ) DIV 256));
-	tempAdr := tempAdr + SIZEOF( INTEGER );
+	tempAdr := tempAdr + SIZEOF( SIGNED16 );
 	SYSTEM.PUT16( tempAdr, SHORT(( x0 - x4 ) DIV 256));
-	tempAdr := tempAdr + SIZEOF( INTEGER );
+	tempAdr := tempAdr + SIZEOF( SIGNED16 );
 	SYSTEM.PUT16( tempAdr, SHORT(( x3 - x2 ) DIV 256));
-	tempAdr := tempAdr + SIZEOF( INTEGER );
+	tempAdr := tempAdr + SIZEOF( SIGNED16 );
 	SYSTEM.PUT16( tempAdr, SHORT(( x7 - x1 ) DIV 256))
 END Row;
 
@@ -693,36 +693,36 @@ END Row;
 *)
 PROCEDURE Col( src: ADDRESS);
 VAR
-	x0, x1, x2, x3, x4, x5, x6, x7, x8: LONGINT;
+	x0, x1, x2, x3, x4, x5, x6, x7, x8: SIGNED32;
 	adr, tempAdr, sourceAdr: ADDRESS;
 BEGIN
 	adr := src;
 
 	(* shortcut *)
-	x1 := LONG(SYSTEM.GET16( adr + 32*SIZEOF(INTEGER))) * 256;
-	x2 := LONG(SYSTEM.GET16( adr + 48*SIZEOF(INTEGER)));
-	x3 := LONG(SYSTEM.GET16( adr + 16*SIZEOF(INTEGER)));
-	x4 := LONG(SYSTEM.GET16( adr + 8*SIZEOF(INTEGER)));
-	x5 := LONG(SYSTEM.GET16( adr + 56*SIZEOF(INTEGER)));
-	x6 := LONG(SYSTEM.GET16( adr + 40*SIZEOF(INTEGER)));
-	x7 := LONG(SYSTEM.GET16( adr + 24*SIZEOF(INTEGER)));
+	x1 := LONG(SYSTEM.GET16( adr + 32*SIZEOF(SIGNED16))) * 256;
+	x2 := LONG(SYSTEM.GET16( adr + 48*SIZEOF(SIGNED16)));
+	x3 := LONG(SYSTEM.GET16( adr + 16*SIZEOF(SIGNED16)));
+	x4 := LONG(SYSTEM.GET16( adr + 8*SIZEOF(SIGNED16)));
+	x5 := LONG(SYSTEM.GET16( adr + 56*SIZEOF(SIGNED16)));
+	x6 := LONG(SYSTEM.GET16( adr + 40*SIZEOF(SIGNED16)));
+	x7 := LONG(SYSTEM.GET16( adr + 24*SIZEOF(SIGNED16)));
 
 	IF ( x1 = 0 ) & ( x2 = 0 ) & ( x3 = 0 ) & ( x4 = 0 ) & ( x5 = 0 ) & ( x6 = 0 ) & ( x7 = 0 )  THEN
 		x0 := LONG(intTab[(( SYSTEM.GET16(adr) + 32 ) DIV 64 ) + 512]);
 		SYSTEM.PUT16( adr , SHORT(x0));
-		tempAdr := adr + 8*SIZEOF( INTEGER );
+		tempAdr := adr + 8*SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr , SHORT(x0));
-		tempAdr := tempAdr + 8*SIZEOF( INTEGER );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr , SHORT(x0));
-		tempAdr := tempAdr + 8*SIZEOF( INTEGER );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr , SHORT(x0));
-		tempAdr := tempAdr + 8*SIZEOF( INTEGER );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr , SHORT(x0));
-		tempAdr := tempAdr + 8*SIZEOF( INTEGER );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr , SHORT(x0));
-		tempAdr := tempAdr + 8*SIZEOF( INTEGER );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr , SHORT(x0));
-		tempAdr := tempAdr + 8*SIZEOF( INTEGER );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
 		SYSTEM.PUT16( tempAdr , SHORT(x0));
 		RETURN
 	END;
@@ -761,21 +761,21 @@ BEGIN
 	(* fourth stage *)
 	tempAdr := adr;
 	sourceAdr := ADDRESSOF( intTab[512] );
-	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x7 + x1 ) DIV 16384 )*SIZEOF(INTEGER) ) + sourceAdr ));
-	tempAdr := tempAdr + 8*SIZEOF( INTEGER );
-	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x3 + x2 ) DIV 16384 )*SIZEOF(INTEGER) ) + sourceAdr ));
-	tempAdr := tempAdr + 8*SIZEOF( INTEGER );
-	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x0 + x4 ) DIV 16384 )*SIZEOF(INTEGER) ) + sourceAdr ));
-	tempAdr := tempAdr + 8*SIZEOF( INTEGER );
-	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x8 + x6 ) DIV 16384 )*SIZEOF(INTEGER) ) + sourceAdr ));
-	tempAdr := tempAdr + 8*SIZEOF( INTEGER );
-	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x8 - x6 ) DIV 16384 )*SIZEOF(INTEGER) ) + sourceAdr ));
-	tempAdr := tempAdr + 8*SIZEOF( INTEGER );
-	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x0 - x4 ) DIV 16384 )*SIZEOF(INTEGER) ) + sourceAdr ));
-	tempAdr := tempAdr + 8*SIZEOF( INTEGER );
-	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x3 - x2 ) DIV 16384 )*SIZEOF(INTEGER) ) + sourceAdr ));
-	tempAdr := tempAdr + 8*SIZEOF( INTEGER );
-	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x7 - x1 ) DIV 16384 )*SIZEOF(INTEGER) ) + sourceAdr ))
+	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x7 + x1 ) DIV 16384 )*SIZEOF(SIGNED16) ) + sourceAdr ));
+	tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
+	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x3 + x2 ) DIV 16384 )*SIZEOF(SIGNED16) ) + sourceAdr ));
+	tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
+	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x0 + x4 ) DIV 16384 )*SIZEOF(SIGNED16) ) + sourceAdr ));
+	tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
+	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x8 + x6 ) DIV 16384 )*SIZEOF(SIGNED16) ) + sourceAdr ));
+	tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
+	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x8 - x6 ) DIV 16384 )*SIZEOF(SIGNED16) ) + sourceAdr ));
+	tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
+	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x0 - x4 ) DIV 16384 )*SIZEOF(SIGNED16) ) + sourceAdr ));
+	tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
+	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x3 - x2 ) DIV 16384 )*SIZEOF(SIGNED16) ) + sourceAdr ));
+	tempAdr := tempAdr + 8*SIZEOF( SIGNED16 );
+	SYSTEM.PUT16( tempAdr, SYSTEM.GET16( ( ( ( x7 - x1 ) DIV 16384 )*SIZEOF(SIGNED16) ) + sourceAdr ))
 END Col;
 
 PROCEDURE FillTablesSSE2;
@@ -941,7 +941,7 @@ BEGIN
 END FillTablesSSE;
 
 PROCEDURE FillTablesINT;
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN
 	NEW(intTab, 1024);
 	FOR i := -512 TO 511 DO

@@ -42,20 +42,20 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 		ElemBlock = POINTER TO ElemBlockDesc;
 		ElemBlockDesc = RECORD
 			next: ElemBlock;
-			elem: ARRAY ElemBlockSize OF SHORTINT;
-			coords: INTEGER;
+			elem: ARRAY ElemBlockSize OF SIGNED8;
+			coords: SIGNED16;
 		END;
 
 		CoordBlock = POINTER TO CoordBlockDesc;
 		CoordBlockDesc = RECORD
 			next: CoordBlock;
-			x, y: ARRAY CoordBlockSize OF REAL;
+			x, y: ARRAY CoordBlockSize OF FLOAT32;
 		END;
 
 		(** path abstraction **)
 		Path* = POINTER TO PathDesc;
 		PathDesc* = RECORD
-			elems*, coords*: INTEGER;	(** number of elements/coordinate pairs in path **)
+			elems*, coords*: SIGNED16;	(** number of elements/coordinate pairs in path **)
 			firstEB, lastEB: ElemBlock;	(* path element types *)
 			firstCB, lastCB: CoordBlock;	(* path element coordinates *)
 		END;
@@ -63,55 +63,55 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 		(** path scanner **)
 		Scanner* = RECORD
 			path*: Path;	(** visited path **)
-			pos*: INTEGER;	(** element position **)
-			elem*: INTEGER;	(** current path element **)
-			x*, y*: REAL;	(** current end coordinates **)
-			dx*, dy*: REAL;	(** direction vector **)
-			x0*, y0*, x1*, y1*, x2*, y2*: REAL;	(** additional control point coordinates **)
+			pos*: SIGNED16;	(** element position **)
+			elem*: SIGNED16;	(** current path element **)
+			x*, y*: FLOAT32;	(** current end coordinates **)
+			dx*, dy*: FLOAT32;	(** direction vector **)
+			x0*, y0*, x1*, y1*, x2*, y2*: FLOAT32;	(** additional control point coordinates **)
 			curEB: ElemBlock;	(* current element block *)
 			curCB: CoordBlock;	(* current coordinate block *)
-			epos, cpos: INTEGER;	(* next element and coordinate position within current block *)
+			epos, cpos: SIGNED16;	(* next element and coordinate position within current block *)
 		END;
 
 		(** path enumeration **)
 		EnumData* = RECORD
-			elem*: INTEGER;	(** current path element **)
-			x*, y*, dx*, dy*, x0*, y0*, x1*, y1*, x2*, y2*: REAL;	(** element parameters **)
+			elem*: SIGNED16;	(** current path element **)
+			x*, y*, dx*, dy*, x0*, y0*, x1*, y1*, x2*, y2*: FLOAT32;	(** element parameters **)
 		END;
 
 		Enumerator* = PROCEDURE (VAR data: EnumData);
 
 		ProjectData = RECORD (EnumData)
-			px, py: REAL;	(* point coordinates *)
-			rx, ry: REAL;	(* projection coordinates *)
-			sx, sy: REAL;	(* previous coordinates *)
-			dist: REAL;	(* distance of projection to original point *)
+			px, py: FLOAT32;	(* point coordinates *)
+			rx, ry: FLOAT32;	(* projection coordinates *)
+			sx, sy: FLOAT32;	(* previous coordinates *)
+			dist: FLOAT32;	(* distance of projection to original point *)
 		END;
 
 		QueryData = RECORD (EnumData)
-			llx, lly, urx, ury: REAL;	(* query rectangle *)
-			sx, sy: REAL;	(* previous coordinates *)
+			llx, lly, urx, ury: FLOAT32;	(* query rectangle *)
+			sx, sy: FLOAT32;	(* previous coordinates *)
 			code: SET;	(* clip code of previous point *)
-			sum: LONGINT;	(* number of ray crossings for inside test *)
+			sum: SIGNED32;	(* number of ray crossings for inside test *)
 			hit, thorough: BOOLEAN;
 		END;
 
 		LengthData = RECORD (EnumData)
-			sx, sy: REAL;	(* previous coordinates *)
-			len: REAL;
+			sx, sy: FLOAT32;	(* previous coordinates *)
+			len: FLOAT32;
 		END;
 
 		DirData = RECORD (EnumData)
-			cx, cy: REAL;
-			sdx, sdy: REAL;
-			edx, edy: REAL;
+			cx, cy: FLOAT32;
+			sdx, sdy: FLOAT32;
+			edx, edy: FLOAT32;
 		END;
 
 		SplitData = RECORD (EnumData)
 			head, tail: Path;
-			offset: REAL;
-			sx, sy: REAL;
-			sdx, sdy: REAL
+			offset: FLOAT32;
+			sx, sy: FLOAT32;
+			sdx, sdy: FLOAT32
 		END;
 
 
@@ -144,13 +144,13 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 
 
 	VAR
-		Coords: ARRAY Exit+1 OF SHORTINT;	(* number of coordinate pairs for each element type *)
+		Coords: ARRAY Exit+1 OF SIGNED8;	(* number of coordinate pairs for each element type *)
 
 
 	(**--- Path Construction ---**)
 
-	PROCEDURE AddElem (path: Path; elem: SHORTINT);
-		VAR elems: INTEGER; eb: ElemBlock;
+	PROCEDURE AddElem (path: Path; elem: SIGNED8);
+		VAR elems: SIGNED16; eb: ElemBlock;
 	BEGIN
 		elems := path.elems MOD ElemBlockSize;
 		IF (elems = 0) & (path.elems > 0) THEN
@@ -160,8 +160,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 		INC(path.elems)
 	END AddElem;
 
-	PROCEDURE AddCoord (path: Path; x, y: REAL);
-		VAR coords: INTEGER; cb: CoordBlock;
+	PROCEDURE AddCoord (path: Path; x, y: FLOAT32);
+		VAR coords: SIGNED16; cb: CoordBlock;
 	BEGIN
 		coords := path.coords MOD CoordBlockSize;
 		IF (coords = 0) & (path.coords > 0) THEN
@@ -183,7 +183,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END Clear;
 
 	(** append enter element **)
-	PROCEDURE AddEnter* (path: Path; x, y, dx, dy: REAL);
+	PROCEDURE AddEnter* (path: Path; x, y, dx, dy: FLOAT32);
 	BEGIN
 		AddElem(path, Enter);
 		AddCoord(path, dx, dy);
@@ -191,14 +191,14 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END AddEnter;
 
 	(** append line element **)
-	PROCEDURE AddLine* (path: Path; x, y: REAL);
+	PROCEDURE AddLine* (path: Path; x, y: FLOAT32);
 	BEGIN
 		AddElem(path, Line);
 		AddCoord(path, x, y)
 	END AddLine;
 
 	(** append arc element **)
-	PROCEDURE AddArc* (path: Path; x, y, x0, y0, x1, y1, x2, y2: REAL);
+	PROCEDURE AddArc* (path: Path; x, y, x0, y0, x1, y1, x2, y2: FLOAT32);
 	BEGIN
 		AddElem(path, Arc);
 		AddCoord(path, x0, y0);
@@ -208,7 +208,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END AddArc;
 
 	(** append bezier element **)
-	PROCEDURE AddBezier* (path: Path; x, y, x1, y1, x2, y2: REAL);
+	PROCEDURE AddBezier* (path: Path; x, y, x1, y1, x2, y2: FLOAT32);
 	BEGIN
 		AddElem(path, Bezier);
 		AddCoord(path, x1, y1);
@@ -217,14 +217,14 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END AddBezier;
 
 	(** append exit element **)
-	PROCEDURE AddExit* (path: Path; dx, dy: REAL);
+	PROCEDURE AddExit* (path: Path; dx, dy: FLOAT32);
 	BEGIN
 		AddElem(path, Exit);
 		AddCoord(path, dx, dy)
 	END AddExit;
 
 	(** append subpath for axis-aligned rectangle **)
-	PROCEDURE AddRect* (path: Path; llx, lly, urx, ury: REAL);
+	PROCEDURE AddRect* (path: Path; llx, lly, urx, ury: FLOAT32);
 	BEGIN
 		AddEnter(path, llx, lly, 0, lly - ury);
 		AddLine(path, urx, lly); AddLine(path, urx, ury); AddLine(path, llx, ury); AddLine(path, llx, lly);
@@ -233,7 +233,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 
 	(** append one path to another **)
 	PROCEDURE Append* (to, from: Path);
-		VAR pos, epos, cpos, n: INTEGER; eb: ElemBlock; cb: CoordBlock; elem: SHORTINT;
+		VAR pos, epos, cpos, n: SIGNED16; eb: ElemBlock; cb: CoordBlock; elem: SIGNED8;
 	BEGIN
 		pos := 0; epos := 0; cpos := 0; eb := from.firstEB; cb := from.firstCB;
 		WHILE pos < from.elems DO
@@ -264,8 +264,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	**)
 
 	(** open scanner on path and load parameters of element at given position **)
-	PROCEDURE Open* (VAR s: Scanner; path: Path; pos: INTEGER);
-		PROCEDURE get (VAR x, y: REAL);
+	PROCEDURE Open* (VAR s: Scanner; path: Path; pos: SIGNED16);
+		PROCEDURE get (VAR x, y: FLOAT32);
 		BEGIN
 			IF s.cpos = CoordBlockSize THEN
 				s.curCB := s.curCB.next; s.cpos := 0
@@ -308,7 +308,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 
 	(** advance to next element and load its parameters **)
 	PROCEDURE Scan* (VAR s: Scanner);
-		PROCEDURE get (VAR x, y: REAL);
+		PROCEDURE get (VAR x, y: FLOAT32);
 		BEGIN
 			IF s.cpos = CoordBlockSize THEN
 				s.curCB := s.curCB.next; s.cpos := 0
@@ -346,11 +346,11 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	**)
 
 	(** enumerate arc as a sequence of lines with maximal error 'flatness'; current point must be in (data.x, data.y) **)
-	PROCEDURE EnumArc* (x0, y0, x1, y1, x2, y2, x, y, flatness: REAL; enum: Enumerator; VAR data: EnumData);
+	PROCEDURE EnumArc* (x0, y0, x1, y1, x2, y2, x, y, flatness: FLOAT32; enum: Enumerator; VAR data: EnumData);
 		CONST
 			eps = 1.0E-3;
 		VAR
-			lx, ly, sense, xs, ys, xe, ye, dt, p2, tmp, p1, dx1, dx2, dy1, dy2, sx, sy, tx, ty, limit, dx, dy, tlen, ex, ey: REAL;
+			lx, ly, sense, xs, ys, xe, ye, dt, p2, tmp, p1, dx1, dx2, dy1, dy2, sx, sy, tx, ty, limit, dx, dy, tlen, ex, ey: FLOAT32;
 			positive: BOOLEAN;
 	BEGIN
 		(* algorithm: D. Fellner & C. Helmberg, Robust Rendering of General Ellipses and Elliptical Arcs, ACM TOG July 1993 *)
@@ -454,12 +454,12 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END EnumArc;
 
 	(** enumerate bezier curve as a sequence of lines with maximal error 'flatness'; current point must be in (data.x, data.y) **)
-	PROCEDURE EnumBezier* (x1, y1, x2, y2, x, y, flatness: REAL; enum: Enumerator; VAR data: EnumData);
+	PROCEDURE EnumBezier* (x1, y1, x2, y2, x, y, flatness: FLOAT32; enum: Enumerator; VAR data: EnumData);
 		CONST eps = 1.0E-8;
-		VAR f2, ax, bx, t, x01, x11, x12, x22, x23, y01, y11, y12, y22, y23: REAL;
+		VAR f2, ax, bx, t, x01, x11, x12, x22, x23, y01, y11, y12, y22, y23: FLOAT32;
 
-		PROCEDURE subdiv (t, x0, x1, x2, x3: REAL; VAR a1, a2, m, b1, b2: REAL);
-			VAR s, x12: REAL;
+		PROCEDURE subdiv (t, x0, x1, x2, x3: FLOAT32; VAR a1, a2, m, b1, b2: FLOAT32);
+			VAR s, x12: FLOAT32;
 		BEGIN
 			s := 1-t;
 			a1 := s * x0 + t * x1; b2 := s * x2 + t * x3; x12 := s * x1 + t * x2;
@@ -467,8 +467,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			m := s * a2 + t * b1
 		END subdiv;
 
-		PROCEDURE draw (x1, y1, x2, y2, x, y: REAL);
-			VAR x01, x11, x12, x22, x23, y01, y11, y12, y22, y23, dx, dy, ex, ey, cp: REAL;
+		PROCEDURE draw (x1, y1, x2, y2, x, y: FLOAT32);
+			VAR x01, x11, x12, x22, x23, y01, y11, y12, y22, y23, dx, dy, ex, ey, cp: FLOAT32;
 		BEGIN
 			subdiv(0.5, data.x, x1, x2, x, x01, x11, x12, x22, x23);
 			subdiv(0.5, data.y, y1, y2, y, y01, y11, y12, y22, y23);
@@ -483,8 +483,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			END
 		END draw;
 
-		PROCEDURE solve (a, b, c: REAL; VAR t1, t2: REAL; VAR n: INTEGER);
-			VAR d, e, t: REAL;
+		PROCEDURE solve (a, b, c: FLOAT32; VAR t1, t2: FLOAT32; VAR n: SIGNED16);
+			VAR d, e, t: FLOAT32;
 		BEGIN
 			n := 0; d := b * b - a * c;
 			IF d >= 0 THEN
@@ -506,8 +506,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			ASSERT((n = 0) OR (n = 1) & (0 < t1) & (t1 < 1) OR (n = 2) & (0 < t1) & (t1 < t2) & (t2 < 1))
 		END solve;
 
-		PROCEDURE norm2y (x1, y1, x2, y2, x, y: REAL);
-			VAR t1, t2, x01, x11, x12, x22, x23, y01, y11, y12, y22, y23: REAL; n: INTEGER;
+		PROCEDURE norm2y (x1, y1, x2, y2, x, y: FLOAT32);
+			VAR t1, t2, x01, x11, x12, x22, x23, y01, y11, y12, y22, y23: FLOAT32; n: SIGNED16;
 		BEGIN
 			solve(y - data.y + 3*(y1 - y2), data.y - 2*y1 + y2, y1 - data.y, t1, t2, n);
 			IF n = 0 THEN
@@ -526,8 +526,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			END
 		END norm2y;
 
-		PROCEDURE norm2x (x1, y1, x2, y2, x, y: REAL);
-			VAR t1, t2, x01, x11, x12, x22, x23, y01, y11, y12, y22, y23: REAL; n: INTEGER;
+		PROCEDURE norm2x (x1, y1, x2, y2, x, y: FLOAT32);
+			VAR t1, t2, x01, x11, x12, x22, x23, y01, y11, y12, y22, y23: FLOAT32; n: SIGNED16;
 		BEGIN
 			solve(x - data.x + 3*(x1 - x2), data.x - 2*x1 + x2, x1 - data.x, t1, t2, n);
 			IF n = 0 THEN
@@ -546,8 +546,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			END
 		END norm2x;
 
-		PROCEDURE norm1y (x1, y1, x2, y2, x, y: REAL);
-			VAR ay, by, t, x01, x11, x12, x22, x23, y01, y11, y12, y22, y23: REAL;
+		PROCEDURE norm1y (x1, y1, x2, y2, x, y: FLOAT32);
+			VAR ay, by, t, x01, x11, x12, x22, x23, y01, y11, y12, y22, y23: FLOAT32;
 		BEGIN
 			ay := y - data.y + 3*(y1 - y2); by := data.y - 2*y1 + y2;
 			IF (ay * by < 0) & (ABS(by) < ABS(ay)) THEN
@@ -582,8 +582,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	 * and closed splines.
 	 *)
 
-	PROCEDURE SolveClosed (n: LONGINT; VAR x, y, d: ARRAY OF REAL);
-		VAR hn, dn, d0, d1, t1, t2: REAL; a, b, c, u: ARRAY MaxSplinePoints OF REAL; i: LONGINT;
+	PROCEDURE SolveClosed (n: SIGNED32; VAR x, y, d: ARRAY OF FLOAT32);
+		VAR hn, dn, d0, d1, t1, t2: FLOAT32; a, b, c, u: ARRAY MaxSplinePoints OF FLOAT32; i: SIGNED32;
 	BEGIN
 		hn := 1/(x[n - 1] - x[n - 2]); dn := 3 * (y[n - 1] - y[n - 2]) * hn * hn;
 		b[0] := 1/(x[1] - x[0]); a[0] := hn + 2*b[0]; c[0] := b[0];
@@ -633,8 +633,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 		d[n - 1] := d[0]
 	END SolveClosed;
 
-	PROCEDURE Solve (n: LONGINT; VAR x, y, d: ARRAY OF REAL);
-		VAR a, b, c: ARRAY MaxSplinePoints OF REAL; d0, d1, t: REAL; i: LONGINT;
+	PROCEDURE Solve (n: SIGNED32; VAR x, y, d: ARRAY OF FLOAT32);
+		VAR a, b, c: ARRAY MaxSplinePoints OF FLOAT32; d0, d1, t: FLOAT32; i: SIGNED32;
 	BEGIN
 		b[0] := 1/(x[1] - x[0]); a[0] := 2*b[0]; c[0] := b[0];
 		d0 := 3 * (y[1] - y[0]) * b[0] * b[0]; d[0] := d0;
@@ -668,8 +668,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END Solve;
 
 	(** enumerate natural spline as sequence of path elements; current point must be in (data.x, data.y) **)
-	PROCEDURE EnumSpline* (VAR x, y: ARRAY OF REAL; n: LONGINT; closed: BOOLEAN; enum: Enumerator; VAR data: EnumData);
-		VAR s, xp, yp: ARRAY MaxSplinePoints OF REAL; i: LONGINT; dx, dy, ds, ds2, bx, by, t: REAL;
+	PROCEDURE EnumSpline* (VAR x, y: ARRAY OF FLOAT32; n: SIGNED32; closed: BOOLEAN; enum: Enumerator; VAR data: EnumData);
+		VAR s, xp, yp: ARRAY MaxSplinePoints OF FLOAT32; i: SIGNED32; dx, dy, ds, ds2, bx, by, t: FLOAT32;
 	BEGIN
 		ASSERT((n >= 2) & (n <= MaxSplinePoints));
 		ASSERT(~closed OR (x[0] = x[n - 1]) & (y[0] = y[n - 1]));
@@ -719,9 +719,9 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 
 	(** enumerate path elements **)
 	PROCEDURE Enumerate* (path: Path; enum: Enumerator; VAR data: EnumData);
-		VAR eb: ElemBlock; cb: CoordBlock; pos, epos, cpos: INTEGER;
+		VAR eb: ElemBlock; cb: CoordBlock; pos, epos, cpos: SIGNED16;
 
-		PROCEDURE get (VAR x, y: REAL);
+		PROCEDURE get (VAR x, y: FLOAT32);
 		BEGIN
 			IF cpos = CoordBlockSize THEN
 				cb := cb.next; cpos := 0
@@ -750,10 +750,10 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END Enumerate;
 
 	(** enumerate flattened path, i.e. arcs and bezier curves will be approximated with lines **)
-	PROCEDURE EnumFlattened* (path: Path; flatness: REAL; enum: Enumerator; VAR data: EnumData);
-		VAR eb: ElemBlock; cb: CoordBlock; pos, epos, cpos: INTEGER; x0, y0, x1, y1, x2, y2, x, y: REAL;
+	PROCEDURE EnumFlattened* (path: Path; flatness: FLOAT32; enum: Enumerator; VAR data: EnumData);
+		VAR eb: ElemBlock; cb: CoordBlock; pos, epos, cpos: SIGNED16; x0, y0, x1, y1, x2, y2, x, y: FLOAT32;
 
-		PROCEDURE get (VAR x, y: REAL);
+		PROCEDURE get (VAR x, y: FLOAT32);
 		BEGIN
 			IF cpos = CoordBlockSize THEN
 				cb := cb.next; cpos := 0
@@ -800,7 +800,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 		RETURN path.elems = 0
 	END Empty;
 
-	PROCEDURE Code (VAR data: QueryData; x, y: REAL): SET;
+	PROCEDURE Code (VAR data: QueryData; x, y: FLOAT32): SET;
 		VAR code: SET;
 	BEGIN
 		code := {};
@@ -814,7 +814,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END Code;
 
 	PROCEDURE EnumQuery (VAR data: EnumData);
-		VAR x, y: REAL; code, cc: SET;
+		VAR x, y: FLOAT32; code, cc: SET;
 	BEGIN
 		(*
 			The procedure uses a simplified version of the Cohen-Sutherland clipping algorithm. The endpoint of
@@ -879,7 +879,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END EnumQuery;
 
 	(** return whether rectangle is completely inside (closed) path **)
-	PROCEDURE InPath* (llx, lly, urx, ury: REAL; path: Path; evenOdd: BOOLEAN): BOOLEAN;
+	PROCEDURE InPath* (llx, lly, urx, ury: FLOAT32; path: Path; evenOdd: BOOLEAN): BOOLEAN;
 		VAR data: QueryData;
 	BEGIN
 		data.thorough := TRUE; data.sum := 0; data.hit := FALSE; data.llx := llx; data.lly := lly; data.urx := urx; data.ury := ury;
@@ -888,7 +888,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END InPath;
 
 	(** return whether rectangle intersects path **)
-	PROCEDURE OnPath* (llx, lly, urx, ury: REAL; path: Path): BOOLEAN;
+	PROCEDURE OnPath* (llx, lly, urx, ury: FLOAT32; path: Path): BOOLEAN;
 		VAR data: QueryData;
 	BEGIN
 		data.thorough := FALSE; data.hit := FALSE; data.llx := llx; data.lly := lly; data.urx := urx; data.ury := ury;
@@ -909,24 +909,24 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END EnumBoxElem;
 
 	(** calculate bounding box of path **)
-	PROCEDURE GetBox* (path: Path; VAR llx, lly, urx, ury: REAL);
+	PROCEDURE GetBox* (path: Path; VAR llx, lly, urx, ury: FLOAT32);
 		VAR data: QueryData;
 	BEGIN
-		data.llx := MAX(REAL); data.lly := MAX(REAL); data.urx := MIN(REAL); data.ury := MIN(REAL);
+		data.llx := MAX(FLOAT32); data.lly := MAX(FLOAT32); data.urx := MIN(FLOAT32); data.ury := MIN(FLOAT32);
 		EnumFlattened(path, 1, EnumBoxElem, data);
 		llx := data.llx; lly := data.lly; urx := data.urx; ury := data.ury
 	END GetBox;
 
 	(** calculate line length **)
-	PROCEDURE LineLength* (x0, y0, x1, y1: REAL): REAL;
-		VAR dx, dy: REAL;
+	PROCEDURE LineLength* (x0, y0, x1, y1: FLOAT32): FLOAT32;
+		VAR dx, dy: FLOAT32;
 	BEGIN
 		dx := x1 - x0; dy := y1 - y0;
 		RETURN Math.sqrt(dx * dx + dy * dy)
 	END LineLength;
 
 	PROCEDURE EnumLength (VAR data: EnumData);
-		VAR dx, dy: REAL;
+		VAR dx, dy: FLOAT32;
 	BEGIN
 		WITH data: LengthData DO
 			IF data.elem = Line THEN
@@ -938,7 +938,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END EnumLength;
 
 	(** calculate arc length **)
-	PROCEDURE ArcLength* (sx, sy, ex, ey, x0, y0, x1, y1, x2, y2, flatness: REAL): REAL;
+	PROCEDURE ArcLength* (sx, sy, ex, ey, x0, y0, x1, y1, x2, y2, flatness: FLOAT32): FLOAT32;
 		VAR data: LengthData;
 	BEGIN
 		data.x := sx; data.y := sy; data.sx := sx; data.sy := sy; data.len := 0;
@@ -947,7 +947,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END ArcLength;
 
 	(** calculate bezier length **)
-	PROCEDURE BezierLength* (x0, y0, x1, y1, x2, y2, x3, y3, flatness: REAL): REAL;
+	PROCEDURE BezierLength* (x0, y0, x1, y1, x2, y2, x3, y3, flatness: FLOAT32): FLOAT32;
 		VAR data: LengthData;
 	BEGIN
 		data.x := x0; data.y := y0; data.sx := x0; data.sy := y0; data.len := 0;
@@ -956,7 +956,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END BezierLength;
 
 	(** calculate path length **)
-	PROCEDURE Length* (path: Path; flatness: REAL): REAL;
+	PROCEDURE Length* (path: Path; flatness: FLOAT32): FLOAT32;
 		VAR data: LengthData;
 	BEGIN
 		data.len := 0;
@@ -970,10 +970,10 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	(** put reversed source path into destination path; dst remains unchanged if src is empty **)
 	PROCEDURE Reverse* (src, dst: Path);
 		VAR
-			elems, sepos, scpos, depos, dcpos: INTEGER; dstEB, nextEB, srcEB, eb: ElemBlock;
-			dstCB, nextCB, srcCB: CoordBlock; dx, dy, x, y, x0, y0, x1, y1, x2, y2: REAL;
+			elems, sepos, scpos, depos, dcpos: SIGNED16; dstEB, nextEB, srcEB, eb: ElemBlock;
+			dstCB, nextCB, srcCB: CoordBlock; dx, dy, x, y, x0, y0, x1, y1, x2, y2: FLOAT32;
 
-		PROCEDURE get (VAR x, y: REAL);
+		PROCEDURE get (VAR x, y: FLOAT32);
 		BEGIN
 			IF scpos = CoordBlockSize THEN
 				srcCB := srcCB.next; scpos := 0
@@ -981,7 +981,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			x := srcCB.x[scpos]; y := srcCB.y[scpos]; INC(scpos)
 		END get;
 
-		PROCEDURE put (x, y: REAL);
+		PROCEDURE put (x, y: FLOAT32);
 			VAR cb: CoordBlock;
 		BEGIN
 			IF dcpos = 0 THEN
@@ -1058,7 +1058,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 
 	(** return copy of source path in destination path **)
 	PROCEDURE Copy* (src, dst: Path);
-		VAR srcEB, dstEB: ElemBlock; n: INTEGER; srcCB, dstCB: CoordBlock;
+		VAR srcEB, dstEB: ElemBlock; n: SIGNED16; srcCB, dstCB: CoordBlock;
 	BEGIN
 		IF src # dst THEN
 			IF dst.firstEB = NIL THEN NEW(dst.firstEB) END;
@@ -1097,9 +1097,9 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 
 	(** apply transformation to all coordinates in path **)
 	PROCEDURE Apply* (path: Path; VAR mat: GfxMatrix.Matrix);
-		VAR eb: ElemBlock; cb: CoordBlock; pos, epos, cpos: INTEGER;
+		VAR eb: ElemBlock; cb: CoordBlock; pos, epos, cpos: SIGNED16;
 
-		PROCEDURE point (VAR b: CoordBlock; VAR idx: INTEGER);
+		PROCEDURE point (VAR b: CoordBlock; VAR idx: SIGNED16);
 		BEGIN
 			IF idx = CoordBlockSize THEN
 				b := b.next; idx := 0
@@ -1108,7 +1108,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			INC(idx)
 		END point;
 
-		PROCEDURE vector (VAR b: CoordBlock; VAR idx: INTEGER);
+		PROCEDURE vector (VAR b: CoordBlock; VAR idx: SIGNED16);
 		BEGIN
 			IF idx = CoordBlockSize THEN
 				b := b.next; idx := 0
@@ -1152,10 +1152,10 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 			eps = 0.001;
 
 		VAR
-			pos, epos, cpos, p, spos: INTEGER; eb: ElemBlock; cb, b, sb: CoordBlock; dx, dy, cx, cy, sx, sy, sdx, sdy, x, y, edx, edy: REAL;
+			pos, epos, cpos, p, spos: SIGNED16; eb: ElemBlock; cb, b, sb: CoordBlock; dx, dy, cx, cy, sx, sy, sdx, sdy, x, y, edx, edy: FLOAT32;
 			data: DirData;
 
-		PROCEDURE get (VAR x, y: REAL);
+		PROCEDURE get (VAR x, y: FLOAT32);
 		BEGIN
 			IF cpos = CoordBlockSize THEN
 				cb := cb.next; cpos := 0
@@ -1215,7 +1215,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END Close;
 
 	PROCEDURE EnumSplit (VAR data: EnumData);
-		VAR dx, dy, d, s, sx, sy: REAL;
+		VAR dx, dy, d, s, sx, sy: FLOAT32;
 	BEGIN
 		WITH data: SplitData DO
 			CASE data.elem OF
@@ -1259,7 +1259,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END EnumSplit;
 
 	(** split subpath in two at given offset (resulting subpaths may be flattened in the process) **)
-	PROCEDURE Split* (path: Path; offset: REAL; head, tail: Path);
+	PROCEDURE Split* (path: Path; offset: FLOAT32; head, tail: Path);
 		VAR data: SplitData;
 	BEGIN
 		IF offset <= 0 THEN
@@ -1277,12 +1277,12 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	(**--- Geometry Support ---**)
 
 	(** compute intersection of two lines **)
-	PROCEDURE IntersectLines* (x1, y1, dx1, dy1, x2, y2, dx2, dy2: REAL; VAR x, y: REAL);
-		VAR d, t: REAL;
+	PROCEDURE IntersectLines* (x1, y1, dx1, dy1, x2, y2, dx2, dy2: FLOAT32; VAR x, y: FLOAT32);
+		VAR d, t: FLOAT32;
 	BEGIN
 		d := dx1 * dy2 - dy1 * dx2;
 		t := (x2 - x1) * dy2 - (y2 - y1) * dx2;
-		IF (ABS(d) >= 1) OR (ABS(d) * MAX(REAL) >= ABS(t)) THEN
+		IF (ABS(d) >= 1) OR (ABS(d) * MAX(FLOAT32) >= ABS(t)) THEN
 			t := t/d;
 			x := x1 + t * dx1; y := y1 + t * dy1
 		ELSE
@@ -1291,8 +1291,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END IntersectLines;
 
 	(** compute intersection(s) of line with circle; returns number of solutions in nsol **)
-	PROCEDURE IntersectLineCircle* (sx, sy, tx, ty, mx, my, r: REAL; VAR x1, y1, x2, y2: REAL; VAR nsol: LONGINT);
-		VAR dx, dy, cx, cy, a2, b, c, d, t: REAL;
+	PROCEDURE IntersectLineCircle* (sx, sy, tx, ty, mx, my, r: FLOAT32; VAR x1, y1, x2, y2: FLOAT32; VAR nsol: SIGNED32);
+		VAR dx, dy, cx, cy, a2, b, c, d, t: FLOAT32;
 	BEGIN
 		dx := tx - sx; dy := ty - sy;
 		cx := sx - mx; cy := sy - my;
@@ -1323,14 +1323,14 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END IntersectLineCircle;
 
 	(** return projection of point onto line **)
-	PROCEDURE ProjectToLine* (px, py, qx, qy, x, y: REAL; VAR u, v: REAL);
-		VAR vx, vy, vv, wx, wy, w, d: REAL;
+	PROCEDURE ProjectToLine* (px, py, qx, qy, x, y: FLOAT32; VAR u, v: FLOAT32);
+		VAR vx, vy, vv, wx, wy, w, d: FLOAT32;
 	BEGIN
 		vx := qx - px; vy := qy - py;
 		vv := vx * vx + vy * vy;
 		wx := x - px; wy := y - py;
 		w := wx * vx + wy * vy;
-		IF (vv >= 1) OR (vv * MAX(REAL) >= ABS(w)) THEN
+		IF (vv >= 1) OR (vv * MAX(FLOAT32) >= ABS(w)) THEN
 			d := w/vv;
 			u := px + d * vx; v := py + d * vy
 		ELSE
@@ -1339,8 +1339,8 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END ProjectToLine;
 
 	(** return projection of point onto ellipse at origin **)
-	PROCEDURE ProjectToEllipse* (ax, ay, bx, by, x, y: REAL; VAR u, v: REAL);
-		VAR a, sina, cosa, b, shear, l: REAL;
+	PROCEDURE ProjectToEllipse* (ax, ay, bx, by, x, y: FLOAT32; VAR u, v: FLOAT32);
+		VAR a, sina, cosa, b, shear, l: FLOAT32;
 	BEGIN
 		IF ABS(ax * by - ay * bx) < 1.0E-10 THEN
 			u := 0.0; v := 0.0
@@ -1364,7 +1364,7 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END ProjectToEllipse;
 
 	PROCEDURE EnumProject (VAR data: EnumData);
-		VAR x, y, dx, dy, d:REAL;
+		VAR x, y, dx, dy, d:FLOAT32;
 	BEGIN
 		WITH data: ProjectData DO
 			IF data.elem = Enter THEN
@@ -1385,10 +1385,10 @@ MODULE GfxPaths; (** portable *)	(* eos  *)
 	END EnumProject;
 
 	(** return projection of point onto path **)
-	PROCEDURE ProjectToPath* (path: Path; x, y: REAL; VAR u, v: REAL);
+	PROCEDURE ProjectToPath* (path: Path; x, y: FLOAT32; VAR u, v: FLOAT32);
 		VAR data: ProjectData;
 	BEGIN
-		data.px := x; data.py := y; data.dist := MAX(REAL); data.rx := MAX(REAL); data.ry := MAX(REAL);
+		data.px := x; data.py := y; data.dist := MAX(FLOAT32); data.rx := MAX(FLOAT32); data.ry := MAX(FLOAT32);
 		EnumFlattened(path, 1, EnumProject, data);
 		u := data.rx; v := data.ry
 	END ProjectToPath;

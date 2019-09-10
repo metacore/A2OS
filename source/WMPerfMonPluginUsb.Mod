@@ -75,7 +75,7 @@ BEGIN {EXCLUSIVE}
 	WMPerfMonPlugins.updater.RemoveByName(PluginName, devicename);
 END RemovePlugin;
 
-PROCEDURE EventHandler(event : WORD; plugin : Plugins.Plugin);
+PROCEDURE EventHandler(event : INTEGER; plugin : Plugins.Plugin);
 BEGIN
 	IF event = Plugins.EventAdd THEN
 		AddPlugin(plugin (UsbHcdi.Hcd));
@@ -85,7 +85,7 @@ BEGIN
 END EventHandler;
 
 PROCEDURE InitPlugins;
-VAR table : Plugins.Table; i : SIZE; res: WORD;
+VAR table : Plugins.Table; i : SIZE; res: INTEGER;
 BEGIN
 	IF UsbDebug.PerformanceMonitoring THEN
 		UsbHcdi.controllers.AddEventHandler(EventHandler, res);
@@ -99,7 +99,7 @@ PROCEDURE Install*;
 END Install;
 
 PROCEDURE Cleanup;
-VAR ignore : WORD;
+VAR ignore : INTEGER;
 BEGIN
 	IF UsbDebug.PerformanceMonitoring THEN
 		UsbHcdi.controllers.RemoveEventHandler(EventHandler, ignore);

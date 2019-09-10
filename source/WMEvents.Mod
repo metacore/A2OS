@@ -32,7 +32,7 @@ TYPE
 		finder : CompCommandFinder;
 		next : EventSource;
 
-		minimalDelay: LONGINT;
+		minimalDelay: SIGNED32;
 		updateTimer:Kernel.MilliTimer;
 		lastFrameTimer: Objects.Timer;
 		lastPar: ANY;
@@ -46,7 +46,7 @@ TYPE
 			minimalDelay:=0;
 		END New;
 
-		PROCEDURE SetMinimalDelay*(ms:LONGINT);
+		PROCEDURE SetMinimalDelay*(ms:SIGNED32);
 		BEGIN
 			minimalDelay:=MAX(0,ms);
 			IF minimalDelay>0 THEN
@@ -202,7 +202,7 @@ TYPE
 	EventSourceList* = OBJECT
 	VAR
 		head : EventSource;
-		nofEventSources : LONGINT;
+		nofEventSources : SIGNED32;
 
 		PROCEDURE &New *;
 		BEGIN
@@ -241,7 +241,7 @@ TYPE
 		END Remove;
 
 		PROCEDURE Enumerate*() : EventSourceArray;
-		VAR current : EventSourceArray; e : EventSource; i : LONGINT;
+		VAR current : EventSourceArray; e : EventSource; i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			NEW(current, nofEventSources);
 			e := head; i := 0;
@@ -303,7 +303,7 @@ TYPE
 	EventListenerList* = OBJECT
 	VAR
 		head : EventListenerInfo;
-		nofEventListeners : LONGINT;
+		nofEventListeners : SIGNED32;
 
 		PROCEDURE &New *;
 		BEGIN
@@ -342,7 +342,7 @@ TYPE
 		END Remove;
 
 		PROCEDURE Enumerate*() : EventListenerArray;
-		VAR current : EventListenerArray; e : EventListenerInfo; i : LONGINT;
+		VAR current : EventListenerArray; e : EventListenerInfo; i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			NEW(current, nofEventListeners);
 			e := head; i := 0;

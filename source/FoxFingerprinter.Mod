@@ -133,9 +133,9 @@ TYPE
 		fp-: Basic.Fingerprint; (* temporary fingerprint for values etc. *)
 		fingerprint: SyntaxTree.Fingerprint;
 		deep: BOOLEAN; (* public / private field of FP needed ? *)
-		traceLevel: LONGINT;
+		traceLevel: SIGNED32;
 
-		level: LONGINT;
+		level: SIGNED32;
 
 		PROCEDURE & InitFingerprinter*();
 		BEGIN fp:= 0; deep := FALSE; traceLevel := 0;
@@ -1117,7 +1117,7 @@ TYPE
 		*)
 		PROCEDURE VisitProcedure*(x: SyntaxTree.Procedure);
 		VAR fp: Basic.Fingerprint; access: SET; fingerprint: SyntaxTree.Fingerprint; deep: BOOLEAN; code: SyntaxTree.Code;
-			i, size: SIZE; value: WORD; name: ARRAY 256 OF CHAR;
+			i, size: SIZE; value: INTEGER; name: ARRAY 256 OF CHAR;
 		BEGIN
 			IF x.scope IS SyntaxTree.RecordScope THEN (* method *)
 				FPrintMethod(fp,fp,x,NIL);
@@ -1242,7 +1242,7 @@ TYPE
 		END VisitSymbol;
 
 		PROCEDURE TraceIndent;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i := 1 TO traceLevel DO D.Str(" "); END;
 		END TraceIndent;
@@ -1312,19 +1312,19 @@ TYPE
 	END IsOberonProcedure;
 
 	(* fp = fp <*> val *)
-	PROCEDURE FPNumber*(VAR fp: Basic.Fingerprint; val: HUGEINT);
+	PROCEDURE FPNumber*(VAR fp: Basic.Fingerprint; val: SIGNED64);
 	BEGIN
 		fp:=SYSTEM.VAL(Basic.Fingerprint, SYSTEM.VAL(SET64, ROT(fp, 7)) / SYSTEM.VAL(SET64, val))
 	END FPNumber;
 
 	(* fp = fp <*> set *)
 	PROCEDURE FPSet*(VAR fp: Basic.Fingerprint; set: SET64);
-	BEGIN FPNumber(fp, SYSTEM.VAL(HUGEINT, set))
+	BEGIN FPNumber(fp, SYSTEM.VAL(SIGNED64, set))
 	END FPSet;
 
 	(* fp = fp <*> real *)
-	PROCEDURE FPReal*(VAR fp: Basic.Fingerprint; real: LONGREAL);
-	BEGIN FPNumber(fp, SYSTEM.VAL(HUGEINT, real))
+	PROCEDURE FPReal*(VAR fp: Basic.Fingerprint; real: FLOAT64);
+	BEGIN FPNumber(fp, SYSTEM.VAL(SIGNED64, real))
 	END FPReal;
 
 	(* fp = fp -> String *)
@@ -1337,7 +1337,7 @@ TYPE
 
 	(* fp = fp {<*> str[i]} *)
 	PROCEDURE FPString*(VAR fp: Basic.Fingerprint; CONST str: ARRAY OF CHAR);
-	VAR i: INTEGER; ch: CHAR;
+	VAR i: SIGNED16; ch: CHAR;
 	BEGIN i:=0; REPEAT ch:=str[i]; FPNumber(fp, ORD(ch)); INC(i) UNTIL ch=0X
 	END FPString;
 

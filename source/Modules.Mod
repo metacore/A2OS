@@ -52,7 +52,7 @@ TYPE
 	END;
 
 	ExportDesc* = RECORD
-		fp*: HUGEINT;
+		fp*: SIGNED64;
 		name* {UNTRACED}: DynamicName;
 		adr*: ADDRESS;
 		exports*: SIZE; (* number of exports referenced by ExportArray *)
@@ -113,7 +113,7 @@ TYPE
 			internal-: POINTER TO ARRAY OF ANY;
 			body*: PROCEDURE;
 			flags*: SET;	 (* e.g. compilation flags *)
-			crc*: LONGINT;
+			crc*: SIGNED32;
 			init, published: BOOLEAN;
 
 		#IF ~COOP THEN
@@ -135,7 +135,7 @@ TYPE
 
 	END Module;
 
-	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: WORD;
+	LoaderProc* = PROCEDURE (CONST name, fileName: ARRAY OF CHAR; VAR res: INTEGER;
 			VAR msg: ARRAY OF CHAR): Module;	(** load an object file *)
 
 VAR
@@ -146,7 +146,7 @@ VAR
 	freeRoot*: Module;	(** list of freed modules (temporary) *)
 
 	root-: Module;	(** list of modules (read-only) *)
-	shutdown*: WORD;	(** None, Reboot, PowerDown *)
+	shutdown*: INTEGER;	(** None, Reboot, PowerDown *)
 	trace: BOOLEAN;
 	register: RECORD
 		first {UNTRACED}, last {UNTRACED}: Module;
@@ -430,7 +430,7 @@ END Initialize;
 	END SortExceptionTable;
 
 (** Load the module if it is not already loaded. *)	(* Algorithm J. Templ, ETHZ, 1994 *)
-PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR): Module;
+PROCEDURE ThisModule*(CONST name: ARRAY OF CHAR; VAR res: INTEGER; VAR msg: ARRAY OF CHAR): Module;
 VAR m: Module; fileName: ARRAY 64 OF CHAR; i: SIZE; registered: BOOLEAN;
 BEGIN
 	res := Ok; msg[0] := 0X; m := ByName(name, registered);
@@ -516,11 +516,11 @@ BEGIN
 	RETURN m
 END ThisModuleByAdr;
 
-CONST ModuleInitTimeout = HUGEINT(3000000000); (* Timeout for waiting until a module get initialized, 3 seconds for 1 GHz CPU *)
+CONST ModuleInitTimeout = SIGNED64(3000000000); (* Timeout for waiting until a module get initialized, 3 seconds for 1 GHz CPU *)
 
 (*	Retrieve a procedure given a module name, the procedure name and some type information (kernel call) *)
 PROCEDURE GetProcedure*(CONST moduleName, procedureName : ARRAY OF CHAR; argTdAdr, retTdAdr : ADDRESS; VAR entryAdr : ADDRESS);
-VAR module : Module; ignoreMsg : ARRAY 32 OF CHAR; i: SIZE; res : WORD; t: HUGEINT;
+VAR module : Module; ignoreMsg : ARRAY 32 OF CHAR; i: SIZE; res : INTEGER; t: SIGNED64;
 BEGIN
 	module := ThisModule(moduleName, res, ignoreMsg);
 	IF (res = Ok) THEN
@@ -627,7 +627,7 @@ BEGIN
 END InstallTermHandler;
 
 (** Free a module. The module's termination handler, if any, is called first. Then all objects that have finalizers in this module are finalized (even if they are still reachable). Then the module's data and code are invalidated. *)
-PROCEDURE FreeModule*(CONST name: ARRAY OF CHAR; VAR res: WORD; VAR msg: ARRAY OF CHAR);
+PROCEDURE FreeModule*(CONST name: ARRAY OF CHAR; VAR res: INTEGER; VAR msg: ARRAY OF CHAR);
 VAR p, m: Module; term: TerminationHandler; i: SIZE;
 BEGIN
 	m := ModuleByName(name);
@@ -677,7 +677,7 @@ BEGIN
 END FreeModule;
 
 (** Shut down all modules by calling their termination handlers and then call Machine.Shutdown. *)
-PROCEDURE Shutdown*(code: WORD);
+PROCEDURE Shutdown*(code: INTEGER);
 VAR m: Module; term: TerminationHandler;
 BEGIN
 	IF code # None THEN

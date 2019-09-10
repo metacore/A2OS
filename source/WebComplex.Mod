@@ -29,10 +29,10 @@ TYPE
 	 TableCell* = OBJECT
 	 VAR
 	 	content*: XML.Content;
-	 	modus*: LONGINT; (** WebForumNormalCell, WebForumDetailViewCell, WebForumEditViewCell,
+	 	modus*: SIGNED32; (** WebForumNormalCell, WebForumDetailViewCell, WebForumEditViewCell,
 	 										   WebForumDeleteCell, WebForumSubInsertViewCell *)
 
-	 	PROCEDURE &Init*(cellContent: XML.Content; cellModus: LONGINT);
+	 	PROCEDURE &Init*(cellContent: XML.Content; cellModus: SIGNED32);
 	 	BEGIN content := cellContent; modus := cellModus
 	 	END Init;
 	 END TableCell;
@@ -60,7 +60,7 @@ TYPE
 		(** override, methods Internalize/Externlaize , this methods persist subEntries and superEntry fields *)
 	    PROCEDURE Internalize*(input: XML.Content);
 	    VAR container: XML.Container; elem: XML.Element; oidStr: Strings.String;
-			persObj: PrevalenceSystem.PersistentObject; oidNr: LONGINT;
+			persObj: PrevalenceSystem.PersistentObject; oidNr: SIGNED32;
 	    BEGIN
 	    	container := input(XML.Container);
 
@@ -120,7 +120,7 @@ TYPE
 		END Init;
 
 		PROCEDURE GetReferrencedObjects*() : PrevalenceSystem.PersistentObjectList;
-		VAR list: PrevalenceSystem.PersistentObjectList; count, pos: LONGINT;
+		VAR list: PrevalenceSystem.PersistentObjectList; count, pos: SIGNED32;
 		BEGIN
 			count := 0;
 			IF (subEntries # NIL) THEN INC(count) END;
@@ -163,7 +163,7 @@ TYPE
 			END
 		END ToXML;
 
-		PROCEDURE RecursiveToXML(depth: LONGINT; request: HTTPSupport.HTTPRequest;
+		PROCEDURE RecursiveToXML(depth: SIGNED32; request: HTTPSupport.HTTPRequest;
 			container: XML.Container; entry: WebForumEntry);
 		VAR indent: Strings.String; row: TableRow; td, tr: XML.Element; i: SIZE; content: XML.Content;
 			list: WebStd.PersistentDataObjectList; subEntry: WebForumEntry;
@@ -223,14 +223,14 @@ TYPE
 	WebForum* = OBJECT (DynamicWebpage.StateFullActiveElement);
 		VAR
 			allowEdit*, allowInsert*, allowDelete*: BOOLEAN; (** true iff access right is granted *)
-			state: LONGINT; (* WebForumOverviewState, WebForumDetailViewState, WebForumEditViewState,
+			state: SIGNED32; (* WebForumOverviewState, WebForumDetailViewState, WebForumEditViewState,
 											WebForumInsertViewState *)
-			pos: LONGINT; (* position of the overview table *)
+			pos: SIGNED32; (* position of the overview table *)
 			containerName: Strings.String;
 			objectId: Strings.String; (* id of this statefull active element *)
-			entryOid: LONGINT; (* oid of the web forum entry selected to view or modify *)
+			entryOid: SIGNED32; (* oid of the web forum entry selected to view or modify *)
 			statusContent: XML.Content; (* save temporary status message of a event handler to display later *)
-			superEntryOid: LONGINT; (* oid of the hierachical parent web forum for which a subentry has to be inserted,
+			superEntryOid: SIGNED32; (* oid of the hierachical parent web forum for which a subentry has to be inserted,
 				0 if it has no super entry *)
 			compareFunct: WebStd.PersistentDataCompare; (* active comparation function *)
 			isOrderingApplied: BOOLEAN; (* true iff no default ordering is applied *)
@@ -316,7 +316,7 @@ TYPE
 				request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR table, tr, td, paging, eventButton, eventLink, eventParam, label, pTag, searching: XML.Element;
 			content: XML.Content; pagingSizeStr, labelName, buttonLabelName, moduleName, objectName: Strings.String;
-			pagingSize: LONGINT; index, listPos, columns, k, l: SIZE; persObjList: WebStd.PersistentDataObjectList;
+			pagingSize: SIGNED32; index, listPos, columns, k, l: SIZE; persObjList: WebStd.PersistentDataObjectList;
 			persObj: WebStd.PersistentDataObject; entryObj: WebForumEntry;  colString, posString, tableNoStr: ARRAY 14 OF CHAR;
 			headerRow: HeaderRow; headerCell: HeaderCell; container: XML.Container;
 		BEGIN (* persCont # NIL & objectId # NIL *)
@@ -456,7 +456,7 @@ TYPE
 						Strings.StrToInt(pagingSizeStr^, pagingSize)
 					END
 				ELSE
-					pagingSize := MAX(LONGINT)
+					pagingSize := MAX(SIGNED32)
 				END;
 
 				(* data rows *)
@@ -555,7 +555,7 @@ TYPE
 
 		(* displays 'entryObj' in table under depth 'depth' in the hierarchical view.
 		 * returns the number of columns in the entry *)
-		PROCEDURE RecursiveEntryOverview(depth: LONGINT; table: XML.Element; entryObj: WebForumEntry;
+		PROCEDURE RecursiveEntryOverview(depth: SIGNED32; table: XML.Element; entryObj: WebForumEntry;
 			request: HTTPSupport.HTTPRequest; moduleName, objectName: Strings.String) : SIZE;
 		VAR row: TableRow; cell: TableCell; columns, k, l, i: SIZE; tr, td, eventLink, eventParam, label: XML.Element;
 			oidString: ARRAY 14 OF CHAR; list: WebStd.PersistentDataObjectList; subEntry: WebForumEntry;
@@ -958,7 +958,7 @@ TYPE
 
 		PROCEDURE SetOrdering(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList);
 			(* parameters: ["tableno"] *)
-		VAR tableNoString: Strings.String; tableNo: LONGINT; headerRow: HeaderRow;
+		VAR tableNoString: Strings.String; tableNo: SIGNED32; headerRow: HeaderRow;
 		BEGIN
 			state := WebForumOverviewState; (* user could have pushed the back button in the browsers navigation bar *)
 			tableNoString := params.GetParameterValueByName("tableno");
@@ -992,7 +992,7 @@ TYPE
 
 		PROCEDURE DeleteEntry(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList);
 			(* parameters: "oid" *)
-		VAR oidString: Strings.String; oid: LONGINT; persObj: WebStd.PersistentDataObject;
+		VAR oidString: Strings.String; oid: SIGNED32; persObj: WebStd.PersistentDataObject;
 			persCont: WebStd.PersistentDataContainer; entry: WebForumEntry;
 		BEGIN
 			state := WebForumOverviewState; (* user could have pushed the back button in the browsers navigation bar *)
@@ -1057,7 +1057,7 @@ TYPE
 
 		PROCEDURE UpdateEditEntry(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList);
 			(* parameters: "oid" et alia *)
-		VAR oid: LONGINT; oidString, buttonName: Strings.String; persObj: WebStd.PersistentDataObject;
+		VAR oid: SIGNED32; oidString, buttonName: Strings.String; persObj: WebStd.PersistentDataObject;
 			obj: WebForumEntry; persCont: WebStd.PersistentDataContainer;
 		BEGIN
 			buttonName := params.GetParameterValueByName("backbutton");
@@ -1195,17 +1195,17 @@ TYPE
 		END UpdateObject;
 
 		(** override, supplemental tasks if the position is changed to 'pos' *)
-		PROCEDURE OnPositionChanged*(pos: LONGINT; request: HTTPSupport.HTTPRequest);
+		PROCEDURE OnPositionChanged*(pos: SIGNED32; request: HTTPSupport.HTTPRequest);
 		(* do nothing *)
 		END OnPositionChanged;
 
 		(** override, supplemental tasks if the insert view for an object with super entry with oid 'superENtryOid' is activated *)
-		PROCEDURE OnInsertViewActivated*(superEntryOid: LONGINT; request: HTTPSupport.HTTPRequest);
+		PROCEDURE OnInsertViewActivated*(superEntryOid: SIGNED32; request: HTTPSupport.HTTPRequest);
 		(* do nothing *)
 		END OnInsertViewActivated;
 
 		(** override, supplemental tasks if the edit view of object with oid 'entryOid' is activated *)
-		PROCEDURE OnEditViewActivated*(entryOid: LONGINT; request: HTTPSupport.HTTPRequest);
+		PROCEDURE OnEditViewActivated*(entryOid: SIGNED32; request: HTTPSupport.HTTPRequest);
 		(* do nothing *)
 		END OnEditViewActivated;
 
@@ -1215,7 +1215,7 @@ TYPE
 		END OnSetOverview;
 
 		(** override, supplemental tasks if the detail view of object with oid 'entryOid' is activated *)
-		PROCEDURE OnDetailViewActivated*(entryOid: LONGINT; request: HTTPSupport.HTTPRequest);
+		PROCEDURE OnDetailViewActivated*(entryOid: SIGNED32; request: HTTPSupport.HTTPRequest);
 		(* do nothing *)
 		END OnDetailViewActivated;
 
@@ -1246,8 +1246,8 @@ TYPE
 		END GetTableHeader;
 
 		(** override, returns the indent for subentries of depth 'depth' in the recusrive table view *)
-		PROCEDURE GetIndent*(depth: LONGINT; request: HTTPSupport.HTTPRequest) : XML.Content;
-		VAR container: XML.Container; ch: ARRAY 5 OF CHAR; nbsp: XML.EntityRef; i: LONGINT;
+		PROCEDURE GetIndent*(depth: SIGNED32; request: HTTPSupport.HTTPRequest) : XML.Content;
+		VAR container: XML.Container; ch: ARRAY 5 OF CHAR; nbsp: XML.EntityRef; i: SIGNED32;
 		BEGIN
 			IF (depth > 0) THEN
 				NEW(container);
@@ -1311,7 +1311,7 @@ TYPE
 	(** usefull standard procedures for webforums *)
 
 	(** create a table cell for string 'str' and 'modus'. 'str' could be NIL *)
-	PROCEDURE GetTableCell*(str: Strings.String; modus: LONGINT) : TableCell;
+	PROCEDURE GetTableCell*(str: Strings.String; modus: SIGNED32) : TableCell;
 	VAR cell: TableCell; xmlText: XML.Container;
 	BEGIN
 		IF (str # NIL) THEN
@@ -1324,7 +1324,7 @@ TYPE
 	END GetTableCell;
 
 	(** create a table cell activated for email to 'str' and having 'modus' as mode. 'str' could be NIL *)
-	PROCEDURE GetEmailTableCell*(str: Strings.String; modus: LONGINT) : TableCell;
+	PROCEDURE GetEmailTableCell*(str: Strings.String; modus: SIGNED32) : TableCell;
 	VAR cell: TableCell; xmlText: XML.Container;
 	BEGIN
 		IF (str # NIL) THEN
@@ -1337,7 +1337,7 @@ TYPE
 	END GetEmailTableCell;
 
 	(** create a table cell for 'text' and 'modus' *)
-	PROCEDURE GetTableCellForText*(text: ARRAY OF CHAR; modus: LONGINT) : TableCell;
+	PROCEDURE GetTableCellForText*(text: ARRAY OF CHAR; modus: SIGNED32) : TableCell;
 	VAR cell: TableCell; xmlText: XML.Container;
 	BEGIN
 		xmlText := WebStd.CreateXMLText(text);

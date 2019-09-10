@@ -13,13 +13,13 @@ VAR
 	endAdr*: ADDRESS;
 
 	dlsym-	: PROCEDURE {C} ( handle: ADDRESS; name: ADDRESS ): ADDRESS;
-	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: WORD ): ADDRESS;
+	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: INTEGER ): ADDRESS;
 	dlclose-	: PROCEDURE {C} ( handle: ADDRESS );
 	cout		: PROCEDURE {C} ( ch: CHAR );	(* console output *)
 
 	stackBottom-	: ADDRESS;	(* of main thread *)
 
-	argc-: WORD;
+	argc-: INTEGER;
 	argv-: ADDRESS;
 	environ-: ADDRESS;
 

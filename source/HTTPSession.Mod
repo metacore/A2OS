@@ -26,7 +26,7 @@ TYPE
 		VAR
 			sessionId*: SessionId;
 			sessionVariables*: TFClasses.List; (** List of SessionVariable *)
-			leaseTime*: REAL;
+			leaseTime*: FLOAT32;
 
 		PROCEDURE &Init*(sessionId: SessionId);
 		BEGIN
@@ -170,7 +170,7 @@ VAR
 	expirationHandlers: TFClasses.List; (* List of ExpirationHandlerPtr *)
 	leaseManager: LeaseManager;
 	randomSequence: Random.Sequence;
-	date, time: LONGINT;
+	date, time: SIGNED32;
 
 	PROCEDURE GetSessionId*(request: HTTPSupport.HTTPRequest; VAR sessionId: SessionId);
 	VAR s: Session;
@@ -239,7 +239,7 @@ VAR
 		buffer1,buffer2: POINTER TO ARRAY OF CHAR;
 		context: MD5.Context;
 		digest: MD5.Digest;
-		date,time: LONGINT;
+		date,time: SIGNED32;
 	BEGIN
 		NEW(buffer1,16384);
 		NEW(buffer2,16384);

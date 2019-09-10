@@ -33,8 +33,8 @@ TYPE
 	tSamplingScheme = POINTER TO tSamplingSchemeDesc;
 	tSamplingSchemeDesc = RECORD (vyBase.ObjDesc)
 		c: antsMC.Chain;
-		nrsamples: LONGINT;
-		maxnrsamples: LONGINT;
+		nrsamples: SIGNED32;
+		maxnrsamples: SIGNED32;
 		coalescence: BOOLEAN
 	END;
 
@@ -44,7 +44,7 @@ TYPE
 	END Store0;
 
 	PROCEDURE Load0( o: tSamplingScheme;  VAR M: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( M.R, version );  Gadgets.ReadRef( M.R, o.lib, objsub );
 		IF objsub # NIL THEN o.c := objsub( antsMC.Chain ) END;
@@ -132,7 +132,7 @@ TYPE
 	END Handler;
 
 	PROCEDURE Compare( A1, A2: antsArrayObjects.tINTEGERObject ): BOOLEAN;
-	VAR y, x: LONGINT;
+	VAR y, x: SIGNED32;
 	BEGIN
 		FOR y := 0 TO A1.h - 1 DO
 			FOR x := 0 TO A1.w - 1 DO
@@ -142,8 +142,8 @@ TYPE
 		RETURN TRUE
 	END Compare;
 
-	PROCEDURE Power2( l: LONGINT ): LONGINT;
-	VAR t: LONGINT;  p: LONGINT;
+	PROCEDURE Power2( l: SIGNED32 ): SIGNED32;
+	VAR t: SIGNED32;  p: SIGNED32;
 	BEGIN
 		p := 1;
 		FOR t := 1 TO l DO p := p * 2 END;
@@ -151,7 +151,7 @@ TYPE
 	END Power2;
 
 	PROCEDURE DoRunScheme( S: tSamplingScheme );
-	VAR a1, a2: antsArrayObjects.tINTEGERObject;  s1, s2: antsKernel.Kernel;  i: LONGINT;  c: antsMC.Chain;  o1, o2: vyBase.Object;
+	VAR a1, a2: antsArrayObjects.tINTEGERObject;  s1, s2: antsKernel.Kernel;  i: SIGNED32;  c: antsMC.Chain;  o1, o2: vyBase.Object;
 	BEGIN
 		vyHostTexts.Note( vyHostTexts.cNotify, "Running a backward sampling exponential scheme" );  c := S.c( antsMC.Chain );  o1 := c.getKernel( 0 );  o2 := c.getKernel( 1 );
 		s1 := o1( antsKernel.Kernel );  s2 := o2( antsKernel.Kernel );  a1 := s1.A( antsArrayObjects.tINTEGERObject );
@@ -203,7 +203,7 @@ END antsPerfectS.
 (*
 PROCEDURE RunSchemeFM*;
 VAR l: antsCommands.tScanList;   p: antsCommands.tParameter;   name: vyName.tNameArray;   obj, model: vyBase.Object;
-S: tSamplingScheme;   t: LONGINT;
+S: tSamplingScheme;   t: SIGNED32;
 BEGIN
 l := antsCommands.ScanFromPar();
 IF antsCommands.ExpectObjectFromKeyword(l, "name", 1, obj) &

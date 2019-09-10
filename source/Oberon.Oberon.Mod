@@ -24,7 +24,7 @@ scheduling of tasks, cursor handling and command execution.
 
   TYPE
 
-    Painter* = PROCEDURE (x, y: INTEGER);
+    Painter* = PROCEDURE (x, y: SIGNED16);
 	Marker* = RECORD
 		Fade*, Draw*: Painter	(** Remove and draw marker. *)
 	END;
@@ -32,7 +32,7 @@ scheduling of tasks, cursor handling and command execution.
 	Cursor* = RECORD
 	    marker*: Marker;	(** Cursor marker. *)
 	    on*: BOOLEAN;	(** Is cursor shown? *)
-	    X*, Y*: INTEGER	(** Absolute cursor position. *)
+	    X*, Y*: SIGNED16	(** Absolute cursor position. *)
 	END;
 
     ParList* = POINTER TO ParRec;
@@ -42,41 +42,41 @@ scheduling of tasks, cursor handling and command execution.
       frame*: Display.Frame;	(** Frame of vwr from where command is executed. *)
       obj*: Objects.Object;	(** Object in vwr executing command. *)
       text*: Texts.Text;	(** Text parameter to be passed to command. *)
-      pos*: LONGINT	(** Starting position in text of parameter. *)
+      pos*: SIGNED32	(** Starting position in text of parameter. *)
     END;
 
     ControlMsg* = RECORD (Display.FrameMsg)
-      id*: INTEGER;	(** defocus, neutralize, mark *)
-      X*, Y*: INTEGER	(** Absolute mark position. *)
+      id*: SIGNED16;	(** defocus, neutralize, mark *)
+      X*, Y*: SIGNED16	(** Absolute mark position. *)
     END;
 
     InputMsg* = RECORD (Display.FrameMsg)
-      id*: INTEGER;	(** consume, track *)
+      id*: SIGNED16;	(** consume, track *)
       keys*: SET;	(** Mouse buttons. *)
-      X*, Y*: INTEGER;	(** Mouse position. *)
+      X*, Y*: SIGNED16;	(** Mouse position. *)
       ch*: CHAR;	(** Character typed. *)
       fnt*: Fonts.Font;	(** Font of typed character. *)
-      col*, voff*: SHORTINT	(** Color and vertical offset of typed character. *)
+      col*, voff*: SIGNED8	(** Color and vertical offset of typed character. *)
     END;
 
     CaretMsg* = RECORD (Display.FrameMsg)	(** Text caret handling. *)
-      id*: INTEGER;	(** get, set, reset *)
+      id*: SIGNED16;	(** get, set, reset *)
       car*: Display.Frame;	(** Destination frame, returned frame. *)
       text*: Texts.Text;	(** Text represented by car. *)
-      pos*: LONGINT	(** Caret position. *)
+      pos*: SIGNED32	(** Caret position. *)
     END;
 
     SelectMsg* = RECORD (Display.FrameMsg)	(** Text selection handling. *)
-      id*: INTEGER;	(** get, set, reset *)
-      time*: LONGINT;	(** Time of the selection. *)
+      id*: SIGNED16;	(** get, set, reset *)
+      time*: SIGNED32;	(** Time of the selection. *)
       sel*: Display.Frame;	(** Destination frame, returned frame. *)
       text*: Texts.Text;	(** Text represented by sel. *)
-      beg*, end*: LONGINT	(** Text stretch of the selection. *)
+      beg*, end*: SIGNED32	(** Text stretch of the selection. *)
     END;
 
     ConsumeMsg* = RECORD (Display.FrameMsg)	(** Drag and drop control of text. *)
       text*: Texts.Text;	(** Text to be inserted. *)
-      beg*, end*: LONGINT	(** Text stretch to be inserted. *)
+      beg*, end*: SIGNED32	(** Text stretch to be inserted. *)
     END;
 
     RecallMsg* = RECORD (Display.FrameMsg)
@@ -88,7 +88,7 @@ scheduling of tasks, cursor handling and command execution.
 
     TaskDesc* = RECORD
       next*: Task;	(** for internal use. *)
-      time*: LONGINT;	(** Earliest time to schedule task. *)
+      time*: SIGNED32;	(** Earliest time to schedule task. *)
       safe*: BOOLEAN;	(** Don't remove from task queue when a trap occurs. *)
       handle*: Handler	(** Task handler. *)
     END;
@@ -101,25 +101,25 @@ scheduling of tasks, cursor handling and command execution.
     Par*: ParList;	(** Actual parameters of executed command. *)
 
     CurFnt*: Fonts.Font;	(** Current input font when typing. *)
-    CurCol*, CurOff*: SHORTINT;	(** Current color and offset when typing. *)
+    CurCol*, CurOff*: SIGNED8;	(** Current color and offset when typing. *)
 
 	OptionChar*: CHAR;	(** Option character "/" or "\" *)
-	OpenText*: PROCEDURE (title: ARRAY OF CHAR; T: Texts.Text; W, H: INTEGER);
+	OpenText*: PROCEDURE (title: ARRAY OF CHAR; T: Texts.Text; W, H: SIGNED16);
 
     CurTask: Task;
 	NextTask*: Task;	(** non-portable, for internal use. *)
 
 	New*: BOOLEAN;	(** enable new style mouse handling suitable for two-button mice *)
 
-    DW, DH, CL, W0, H0, H1, H2, H3: INTEGER;
+    DW, DH, CL, W0, H0, H1, H2, H3: SIGNED16;
 
     GCTask: Task; (* garbage collection task *)
 
     ScreenOn: BOOLEAN;
-	FillerColor: SHORTINT;
+	FillerColor: SIGNED8;
 
 	conftext: Texts.Text;
-	conftime, confdate: LONGINT;
+	conftime, confdate: SIGNED32;
 
 	fido: Fido.Watchdog;
 
@@ -129,24 +129,24 @@ scheduling of tasks, cursor handling and command execution.
 
 (** Get time (t) and date (d).  day = d MOD 32, month = d DIV 32 MOD 16, year = 1900+d DIV 512,
 	hour = t DIV 4096 MOD 32, minute = t DIV 64 MOD 64, second = t MOD 64 *)
-     PROCEDURE GetClock* (VAR t, d: LONGINT);
+     PROCEDURE GetClock* (VAR t, d: SIGNED32);
      BEGIN Kernel.GetClock(t, d)
      END GetClock;
 
  (** Set time (t) and date (d). *)
-    PROCEDURE SetClock* (t, d: LONGINT);
+    PROCEDURE SetClock* (t, d: SIGNED32);
      BEGIN Kernel.SetClock(t, d)
      END SetClock;
 
  (** Return the number of timer ticks since Oberon startup. (See module Input for frequency) *)
-    PROCEDURE Time* (): LONGINT;
+    PROCEDURE Time* (): SIGNED32;
      BEGIN RETURN Input.Time()
      END Time;
 
   (*cursor handling*)
 
-	  PROCEDURE FlipArrow (X, Y: INTEGER);
-	  VAR cx,cy,cw,ch: INTEGER;
+	  PROCEDURE FlipArrow (X, Y: SIGNED16);
+	  VAR cx,cy,cw,ch: SIGNED16;
   	BEGIN
 		Display.GetClip(cx, cy, cw, ch);
 		Display.SetClip(0, 0, Display.Width, Display.Height);
@@ -154,7 +154,7 @@ scheduling of tasks, cursor handling and command execution.
 		Display.SetClip(cx, cy, cw, ch)
   	END FlipArrow;
 
-  	PROCEDURE FlipStar (X, Y: INTEGER);
+  	PROCEDURE FlipStar (X, Y: SIGNED16);
   	BEGIN
 		  IF X < CL THEN
 		  	IF X < 7 THEN X := 7 ELSIF X > DW - 8 THEN X := DW - 8 END
@@ -176,7 +176,7 @@ scheduling of tasks, cursor handling and command execution.
   	END FadeCursor;
 
  (** Draw cursor c using marker m at position X, Y. *)
-	PROCEDURE DrawCursor* (VAR c: Cursor; VAR m: Marker; X, Y: INTEGER);
+	PROCEDURE DrawCursor* (VAR c: Cursor; VAR m: Marker; X, Y: SIGNED16);
   	BEGIN
 	  	IF c.on & ((X # c.X) OR (Y # c.Y) OR (m.Draw # c.marker.Draw)) THEN
             c.marker.Fade(c.X, c.Y); c.on := FALSE
@@ -197,7 +197,7 @@ Afterwards, no visual object should own either a caret for inserting text or obj
 
 (** Fade the mouse and pointer cursors if located inside the screen area X, Y, W, H.
 This is required before drawing inside the area X, Y, W, H. *)
-    PROCEDURE RemoveMarks* (X, Y, W, H: INTEGER);
+    PROCEDURE RemoveMarks* (X, Y, W, H: SIGNED16);
     BEGIN
       IF (Mouse.X > X - 16) & (Mouse.X < X + W + 16) & (Mouse.Y > Y - 16) & (Mouse.Y < Y + H + 16) THEN
           FadeCursor(Mouse)
@@ -252,7 +252,7 @@ This is required before drawing inside the area X, Y, W, H. *)
 and height H. The display is appended to the display space starting at X position
 Viewers.curW. Normally this procedure is only called once to configure the
 default layout of the Oberon screen. *)
-    PROCEDURE OpenDisplay* (UW, SW, H: INTEGER);	(** non-portable *)
+    PROCEDURE OpenDisplay* (UW, SW, H: SIGNED16);	(** non-portable *)
        VAR Filler: Viewers.Viewer;
     BEGIN
        Input.SetMouseLimits(0, 0, Viewers.curW + UW + SW, H);
@@ -277,17 +277,17 @@ default layout of the Oberon screen. *)
     END UpdateDisplay;
 
 (** Returns the width in pixels of the display that contains the X coordinate. *)
-    PROCEDURE DisplayWidth* (X: INTEGER): INTEGER;
+    PROCEDURE DisplayWidth* (X: SIGNED16): SIGNED16;
     BEGIN RETURN DW
     END DisplayWidth;
 
 (** Returns the height in pixels of the display that contains the X coordinate. *)
-    PROCEDURE DisplayHeight* (X: INTEGER): INTEGER;
+    PROCEDURE DisplayHeight* (X: SIGNED16): SIGNED16;
     BEGIN RETURN DH
     END DisplayHeight;
 
 (** Open a new track of width W at X. *)
-    PROCEDURE OpenTrack* (X, W: INTEGER);
+    PROCEDURE OpenTrack* (X, W: SIGNED16);
        VAR Filler: Viewers.Viewer;
     BEGIN
        NEW(Filler); Filler.handle := HandleFiller;
@@ -295,16 +295,16 @@ default layout of the Oberon screen. *)
     END OpenTrack;
 
 (** Get left margin of user track on display X. *)
-    PROCEDURE UserTrack* (X: INTEGER): INTEGER;
+    PROCEDURE UserTrack* (X: SIGNED16): SIGNED16;
     BEGIN RETURN X DIV DW * DW
     END UserTrack;
 
 (** Get left margin of the system track on display X. *)
-    PROCEDURE SystemTrack* (X: INTEGER): INTEGER;
+    PROCEDURE SystemTrack* (X: SIGNED16): SIGNED16;
     BEGIN RETURN X DIV DW * DW + DW DIV 8 * 5
     END SystemTrack;
 
-    PROCEDURE UY (X: INTEGER): INTEGER;
+    PROCEDURE UY (X: SIGNED16): SIGNED16;
       VAR fil, bot, alt, max: Display.Frame;
     BEGIN
       Viewers.Locate(X, 0, fil, bot, alt, max);
@@ -314,14 +314,14 @@ default layout of the Oberon screen. *)
 
 (** Allocate a new user viewer within the display located at DX. (X, Y)
 returns the suggested position. *)
-    PROCEDURE AllocateUserViewer* (DX: INTEGER; VAR X, Y: INTEGER);
+    PROCEDURE AllocateUserViewer* (DX: SIGNED16; VAR X, Y: SIGNED16);
     BEGIN
       IF Pointer.on THEN X := Pointer.X; Y := Pointer.Y
         ELSE X := DX DIV DW * DW; Y := UY(X)
       END
     END AllocateUserViewer;
 
-    PROCEDURE SY (X: INTEGER): INTEGER;
+    PROCEDURE SY (X: SIGNED16): SIGNED16;
       VAR fil, bot, alt, max: Display.Frame;
     BEGIN
       Viewers.Locate(X, DH, fil, bot, alt, max);
@@ -336,7 +336,7 @@ returns the suggested position. *)
 
 (** Allocate a new system viewer within the display located at DX.
 (X, Y) returns the suggested position. *)
-    PROCEDURE AllocateSystemViewer* (DX: INTEGER; VAR X, Y: INTEGER);
+    PROCEDURE AllocateSystemViewer* (DX: SIGNED16; VAR X, Y: SIGNED16);
     BEGIN
       IF Pointer.on THEN X := Pointer.X; Y := Pointer.Y
         ELSE X := DX DIV DW * DW + DW DIV 8 * 5; Y := SY(X)
@@ -390,8 +390,8 @@ so that the command can pick up its parameters. The new flag indicates
 if the module M should be reloaded from disk (obly possible if M is a "top"
 module, i.e. it has no clients. Res indicates success (res = 0) or failure (res # 0).
 Modules.resMsg contains an explanation of what went wrong when res # 0. *)
-    PROCEDURE Call* (name: ARRAY OF CHAR; par: ParList; new: BOOLEAN; VAR res: INTEGER);
-      VAR Mod: Modules.Module; P: Modules.Command; i, j: LONGINT;
+    PROCEDURE Call* (name: ARRAY OF CHAR; par: ParList; new: BOOLEAN; VAR res: SIGNED16);
+      VAR Mod: Modules.Module; P: Modules.Command; i, j: SIGNED32;
     BEGIN res := 1;
       i := 0; j := 0;
       WHILE name[j] # 0X DO
@@ -425,7 +425,7 @@ Modules.resMsg contains an explanation of what went wrong when res # 0. *)
 
 (** Returns the selected stretch [beg, end[ of the current selected text T.
 Time indicates the time of selection; time = -1 indicates that no text is currently selected. *)
-    PROCEDURE GetSelection* (VAR text: Texts.Text; VAR beg, end, time: LONGINT);
+    PROCEDURE GetSelection* (VAR text: Texts.Text; VAR beg, end, time: SIGNED32);
       VAR M: SelectMsg;
     BEGIN
         M.F := NIL; M.id := get; M.time := -1; M.text := NIL; Display.Broadcast(M);
@@ -471,12 +471,12 @@ by calling its handler when the system has nothing else to do. *)
     END SetFont;
 
 (** Set the color of typed characters. *)
-    PROCEDURE SetColor* (col: SHORTINT);
+    PROCEDURE SetColor* (col: SIGNED8);
     BEGIN CurCol := col
     END SetColor;
 
 (** Set the vertical offset of typed characters. *)
-    PROCEDURE SetOffset* (voff: SHORTINT);
+    PROCEDURE SetOffset* (voff: SIGNED8);
     BEGIN CurOff := voff
     END SetOffset;
 
@@ -488,7 +488,7 @@ by calling its handler when the system has nothing else to do. *)
     A named group is refered to as a "section". *)
 
   PROCEDURE SkipGroup (VAR S: Texts.Scanner);
-    VAR openBraces: INTEGER;
+    VAR openBraces: SIGNED16;
   BEGIN openBraces := 1;
     REPEAT Texts.Scan(S);
       IF S.class = Texts.Char THEN
@@ -501,8 +501,8 @@ by calling its handler when the system has nothing else to do. *)
 	S.class = Texts.Inval on error. *)
 
   PROCEDURE OpenScanner* (VAR S: Texts.Scanner; name: ARRAY OF CHAR);
-    VAR i, j: INTEGER; done, eos: BOOLEAN; part: ARRAY 32 OF CHAR;
-    	f: Files.File;  t, d: LONGINT;
+    VAR i, j: SIGNED16; done, eos: BOOLEAN; part: ARRAY 32 OF CHAR;
+    	f: Files.File;  t, d: SIGNED32;
   BEGIN
     f := Files.Old(OberonText);
     IF f = NIL THEN t := 0; d := 0 ELSE Files.GetDate(f, t, d) END;
@@ -545,7 +545,7 @@ by calling its handler when the system has nothing else to do. *)
   END OpenScanner;
 
 	PROCEDURE ResetPalette;
-	VAR F: Files.File; R: Files.Rider; i, cols: INTEGER; r, g, b: CHAR;
+	VAR F: Files.File; R: Files.Rider; i, cols: SIGNED16; r, g, b: CHAR;
 	BEGIN
 		IF Display.Depth(0) >= 8 THEN cols := 256 ELSE cols := 16 END;
 		F := Files.Old("Default.Pal");
@@ -574,7 +574,7 @@ by calling its handler when the system has nothing else to do. *)
     END Reboot;
 
 	PROCEDURE SwitchToWM;
-	VAR res: WORD; s: ARRAY 256 OF CHAR;
+	VAR res: INTEGER; s: ARRAY 256 OF CHAR;
 	BEGIN
 		OpenTrack(0, Display.Width);	(* inhibit display updates *)
 		s := "";	(* remove default Oberon input device and install virtual display and input devices *)
@@ -601,8 +601,8 @@ selections and the caret. The Loop periodically activates background tasks and
 the garbage collector, if no mouse or keyboard events are arriving. *)
    PROCEDURE Loop*;
       VAR V: Viewers.Viewer; M: InputMsg; N: ControlMsg;
-       X, Y: INTEGER; keys, shift, oldshift: SET; ch: CHAR;
-       mint, cur, t: LONGINT;  task, min: Task;
+       X, Y: SIGNED16; keys, shift, oldshift: SET; ch: CHAR;
+       mint, cur, t: SIGNED32;  task, min: Task;
     BEGIN
       Kernel.LockOberon;
       IF (CurTask # NIL) & ~CurTask.safe THEN Remove(CurTask) END;
@@ -638,7 +638,7 @@ the garbage collector, if no mouse or keyboard events are arriving. *)
 			END;
              M.keys := keys; M.X := X; M.Y := Y;
             M.dlink := NIL; M.x := 0; M.y := 0;
-            M.res := MIN(INTEGER); Objects.Stamp(M);
+            M.res := MIN(SIGNED16); Objects.Stamp(M);
 
             V := Viewers.This(M.X, M.Y); V.handle(V, M);
 
@@ -657,7 +657,7 @@ the garbage collector, if no mouse or keyboard events are arriving. *)
         ELSE (*keys = {}*)
           M.F := NIL; M.id := track; M.keys := keys; M.X := X; M.Y := Y;
           M.dlink := NIL; M.x := 0; M.y := 0;
-          M.res := MIN(INTEGER); Objects.Stamp(M);
+          M.res := MIN(SIGNED16); Objects.Stamp(M);
           V := Viewers.This(X, Y); V.handle(V, M);
           Input.Mouse(keys, X, Y);
           LOOP
@@ -666,7 +666,7 @@ the garbage collector, if no mouse or keyboard events are arriving. *)
             (*Kernel.Idle(0);*)
           (* find first expired task, or task that will expire soonest *)
             cur := Input.Time();
-            task := NextTask;  min := NIL;  mint := MAX(LONGINT);
+            task := NextTask;  min := NIL;  mint := MAX(SIGNED32);
             LOOP
             	t := task.time-cur;	(* time left *)
             	IF t <= 0 THEN	(* found expired task *)

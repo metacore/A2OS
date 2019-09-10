@@ -44,7 +44,7 @@ CONST
 	TYPE
 		PersistentObject* = OBJECT
 			VAR
-				oid*: LONGINT; (** oid of the persistent object *)
+				oid*: SIGNED32; (** oid of the persistent object *)
 				inModification, takingSnapShot: BOOLEAN;
 				registeredAt*: PrevalenceSystem; (* prevalence system where this object is registered *)
 
@@ -143,7 +143,7 @@ CONST
 				prevalenceSystem: PrevalenceSystem;
 				instance: PersistentObject;
 				descriptor: PersistentObjectDescriptor;
-				savingCounter: LONGINT; (* when was the object the last time saved in the snapshot *)
+				savingCounter: SIGNED32; (* when was the object the last time saved in the snapshot *)
 				isRoot: BOOLEAN; (* true iff the object belongs to the root set of the mark phase *)
 				isMarked: BOOLEAN; (* temporary use in the mark phase, true iff not garbage *)
 
@@ -194,7 +194,7 @@ CONST
 			SystemName*: Strings.String;
 
 			persistentObjectList: TFClasses.List; (* List of PersistentObjectWrapper *)
-			oidCounter: LONGINT;
+			oidCounter: SIGNED32;
 
 			(* file access synchronization *)
 			lockSnapShotFile: BOOLEAN;
@@ -312,7 +312,7 @@ CONST
 			END
 		END RemovePersistentRootObject;
 
-		PROCEDURE GetPersistentObject*(oid: LONGINT): PersistentObject;
+		PROCEDURE GetPersistentObject*(oid: SIGNED32): PersistentObject;
 		VAR wrapper: PersistentObjectWrapper;
 		BEGIN
 			wrapper := GetRegisteredWrapperByOid(oid);
@@ -358,7 +358,7 @@ CONST
 			END
 		END FindPersistentObjects;
 
-		PROCEDURE GetNewOid() : LONGINT;
+		PROCEDURE GetNewOid() : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			INC(oidCounter); RETURN oidCounter-1
 		END GetNewOid;
@@ -419,7 +419,7 @@ CONST
 
 		PROCEDURE CompactLogFile;
 		VAR file, newfile: Files.File; doc: XML.Document; root, elem: XML.Element; enum: XMLObjects.Enumerator;
-			p: ANY; oidString, savingCounterString: Strings.String; i: SIZE; oid, savingCounter: LONGINT;
+			p: ANY; oidString, savingCounterString: Strings.String; i: SIZE; oid, savingCounter: SIGNED32;
 			wrapper: PersistentObjectWrapper; removeList: TFClasses.List; fwriter: Files.Writer; writer: Streams.Writer;
 			elemName, rootName: Strings.String;
 		BEGIN
@@ -565,9 +565,9 @@ CONST
 			i: SIZE; pObj: ANY; wrapper: PersistentObjectWrapper; instance: PersistentObject;
 			oldDocument: XML.Document; oidCounterString: ARRAY 14 OF CHAR;
 
-			PROCEDURE GetPreviousSnapShotState(oid: LONGINT) : XML.Element;
+			PROCEDURE GetPreviousSnapShotState(oid: SIGNED32) : XML.Element;
 			VAR file: Files.File; oldRoot: XML.Element; enum: XMLObjects.Enumerator; pOldElem: ANY; oldElem: XML.Element;
-				oidValue: Strings.String; oldOid: LONGINT; oldRootName, oldElemName: Strings.String;
+				oidValue: Strings.String; oldOid: SIGNED32; oldRootName, oldElemName: Strings.String;
 			BEGIN (* file # NIL *)
 				IF (oldDocument = NIL) THEN
 					file := Files.Old(SnapShotFileName^);
@@ -809,7 +809,7 @@ CONST
 		VAR snapShotFile, logFile: Files.File; snapShotDoc, logDoc: XML.Document;
 			snapShotRoot, logRoot, elem: XML.Element; enum: XMLObjects.Enumerator; p: ANY;
 			moduleName, objectName, oidString, savingCounterString, isRootString: Strings.String;
-			oid, savingCounter: LONGINT; isRoot: BOOLEAN;
+			oid, savingCounter: SIGNED32; isRoot: BOOLEAN;
 			snapShotRootName, logRootName, elemName, oidCounterString: Strings.String;
 			desc: PersistentObjectDescriptor; objWrapper: PersistentObjectWrapper;
 
@@ -1078,7 +1078,7 @@ CONST
 			UnlockPersistentObjList
 		END RestoreAllObjects;
 
-		PROCEDURE GetRegisteredWrapperByOid(oid: LONGINT) : PersistentObjectWrapper;
+		PROCEDURE GetRegisteredWrapperByOid(oid: SIGNED32) : PersistentObjectWrapper;
 		VAR i: SIZE; p: ANY; wrapper: PersistentObjectWrapper;
 		BEGIN
 			persistentObjectList.Lock;
@@ -1162,7 +1162,7 @@ CONST
 		standardPrevalenceSystem.RemovePersistentRootObject(obj)
 	END RemovePersistentRootObject;
 
-	PROCEDURE GetPersistentObject*(oid: LONGINT): PersistentObject;
+	PROCEDURE GetPersistentObject*(oid: SIGNED32): PersistentObject;
 	BEGIN
 		RETURN standardPrevalenceSystem.GetPersistentObject(oid)
 	END GetPersistentObject;
@@ -1286,7 +1286,7 @@ CONST
 	END ReadRegisteredModules;
 
 	PROCEDURE RegisterModuleByName(moduleName: Strings.String);
-	VAR module: Modules.Module; factory : PersistentObjectDescSetFactory; i: SIZE; res: WORD;
+	VAR module: Modules.Module; factory : PersistentObjectDescSetFactory; i: SIZE; res: INTEGER;
 		msg: ARRAY 1024 OF CHAR; desc: PersistentObjectDescriptor;
 		descList: PersistentObjectDescSet;
 	BEGIN
@@ -1318,7 +1318,7 @@ CONST
 	END RegisterModuleByName;
 
 	PROCEDURE Terminator;
-	VAR counter: LONGINT;
+	VAR counter: SIGNED32;
 	BEGIN
 		IF (snapShotMgr # NIL) THEN
 			snapShotMgr.alive := FALSE;

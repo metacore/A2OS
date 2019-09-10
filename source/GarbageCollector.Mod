@@ -8,10 +8,10 @@ MODULE GarbageCollector;
 IMPORT Activities, BaseTypes, Counters, CPU;
 
 (** Notifies interested parties before collecting. *)
-VAR finalize*: PROCEDURE (cycle: LONGWORD);
+VAR finalize*: PROCEDURE (cycle: LONGINTEGER);
 
 VAR tracings: Counters.AlignedCounter;
-VAR currentCycle, oldestCycle: LONGWORD;
+VAR currentCycle, oldestCycle: LONGINTEGER;
 VAR firstMarked {UNTRACED}, firstWatched {UNTRACED}: BaseTypes.Pointer;
 VAR markedSentinel {UNTRACED}, watchedSentinel {UNTRACED}: BaseTypes.Pointer;
 
@@ -130,8 +130,8 @@ END ResetDelegateArray;
 
 (* Increments a garbage collection cycle and returns its previous value. *)
 (* Collection cycles should be able to overflow and are therefore represented using a signed type. *)
-PROCEDURE Increment (VAR cycle: LONGWORD): LONGWORD;
-VAR value: LONGWORD;
+PROCEDURE Increment (VAR cycle: LONGINTEGER): LONGINTEGER;
+VAR value: LONGINTEGER;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	LOOP
 		value := CAS (cycle, 0, 0);
@@ -145,7 +145,7 @@ END Increment;
 (** Garbage can be collected concurrently if necessary. *)
 PROCEDURE Collect*;
 VAR root EXTERN "Modules.root": BaseTypes.Pointer;
-VAR cycle: LONGWORD; first {UNTRACED}: BaseTypes.Pointer;
+VAR cycle: LONGINTEGER; first {UNTRACED}: BaseTypes.Pointer;
 BEGIN {UNCHECKED}
 	(* ensure list of marked pointers is empty *)
 	TraceMarkedPointers;
@@ -182,7 +182,7 @@ END Collect;
 (** Marks the specified pointer as reachable. *)
 (** This procedure is called by the compiler while tracing outgoing pointers of marked objects. *)
 PROCEDURE Mark- (pointer {UNTRACED}: BaseTypes.Pointer);
-VAR cycle, current: LONGWORD; first {UNTRACED}: BaseTypes.Pointer;
+VAR cycle, current: LONGINTEGER; first {UNTRACED}: BaseTypes.Pointer;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	(* ignore nil pointers *)
 	IF pointer = NIL THEN RETURN END;
@@ -312,7 +312,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END InsertWatched;
 
 (** Disposes all unmarked pointers up to the specified garbage collection cycle. *)
-PROCEDURE Sweep (first {UNTRACED}: BaseTypes.Pointer; cycle: LONGWORD);
+PROCEDURE Sweep (first {UNTRACED}: BaseTypes.Pointer; cycle: LONGINTEGER);
 VAR current {UNTRACED}, previous {UNTRACED}, next {UNTRACED}: BaseTypes.Pointer;
 BEGIN {UNCHECKED}
 	(* traverse linked list and remove unmarked items *)

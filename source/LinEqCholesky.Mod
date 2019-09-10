@@ -8,12 +8,12 @@ IMPORT Nbr := NbrRe, Vec := VecRe, Mtx := MtxRe, Errors := DataErrors, Math := M
 TYPE
 	(** For solving moderate sized linear systems of equations where the matrix is symmetric positive definite. *)
 	Solver* = OBJECT (LinEq.Solver)
-	VAR dim: LONGINT;
+	VAR dim: SIGNED32;
 		mtxMag: Nbr.Real;
 		lMtx: POINTER TO ARRAY OF POINTER TO ARRAY OF Nbr.Real;
 
 		PROCEDURE Decompose( VAR a: Mtx.Matrix );
-		VAR i, j, k: LONGINT;  adjustment, sum: Nbr.Real;
+		VAR i, j, k: SIGNED32;  adjustment, sum: Nbr.Real;
 		BEGIN
 			(* Cholesky decomposition of the normalized matrix  a. *)
 			FOR k := 0 TO dim - 1 DO
@@ -32,7 +32,7 @@ TYPE
 
 	(** Requires NEW to pass matrix A as a parameter when creating a solver object. *)
 		PROCEDURE & Initialize*( VAR A: Mtx.Matrix );
-		VAR i: LONGINT;  a: Mtx.Matrix;
+		VAR i: SIGNED32;  a: Mtx.Matrix;
 		BEGIN
 			IF A # NIL THEN
 				IF A.rows = A.cols THEN
@@ -47,7 +47,7 @@ TYPE
 
 	(** Solves  Ax = b  for  x  given  b. *)
 		PROCEDURE Solve*( VAR b: Vec.Vector ): Vec.Vector;
-		VAR i, k: LONGINT;  adjustment, coef, mag, sum: Nbr.Real;  x: Vec.Vector;
+		VAR i, k: SIGNED32;  adjustment, coef, mag, sum: Nbr.Real;  x: Vec.Vector;
 		BEGIN
 			IF b # NIL THEN
 				IF dim = b.lenx THEN
@@ -78,7 +78,7 @@ TYPE
 
 	(** Computes the inverse of matrix A and returns A-1 if it exists; otherwise, it returns NIL. *)
 	PROCEDURE Invert*( VAR A: Mtx.Matrix ): Mtx.Matrix;
-	VAR i, j, k: LONGINT;  adjustment, sum: Nbr.Real;  inverse: Mtx.Matrix;
+	VAR i, j, k: SIGNED32;  adjustment, sum: Nbr.Real;  inverse: Mtx.Matrix;
 		lMtxInv: POINTER TO ARRAY OF POINTER TO ARRAY OF Nbr.Real;
 		llt: Solver;
 	BEGIN

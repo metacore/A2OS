@@ -38,32 +38,32 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 
 		RouteTable* = POINTER TO RouteTableDesc;
 		RouteTableDesc* = RECORD
-			busNr*, devNr*, slotNr*: LONGINT;
+			busNr*, devNr*, slotNr*: SIGNED32;
 			linkValIntA*, linkValIntB*, linkValIntC*, linkValIntD*: CHAR;
 			IrqBitmapA*, IrqBitmapB*, IrqBitmapC*, IrqBitmapD*: SET;
 			next*: RouteTable
 		END;
 		(*
 		RouteBuffer = RECORD
-			BufferSize, SegSelector: INTEGER;
+			BufferSize, SegSelector: SIGNED16;
 			DataBufferAdr: ADDRESS
 		END;
 		*)
 
-		Pci* = RECORD bus*, device*, function*: LONGINT END;
+		Pci* = RECORD bus*, device*, function*: SIGNED32 END;
 	VAR
 		pciEnabled: BOOLEAN;
 
 
-	PROCEDURE PCIPresent*(VAR version, lastPCIbus, hwMech: LONGINT): WORD;
-	VAR res: WORD; pci: Pci; r0: LONGINT;
+	PROCEDURE PCIPresent*(VAR version, lastPCIbus, hwMech: SIGNED32): INTEGER;
+	VAR res: INTEGER; pci: Pci; r0: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
 			StartIterate(pci);
 			lastPCIbus := 0;
 			REPEAT
 				res := PCIReadConfig32(pci.bus, pci.device, pci.function, 0, r0);
-				IF r0 # LONGINT(0FFFFFFFFH) THEN
+				IF r0 # SIGNED32(0FFFFFFFFH) THEN
 					IF lastPCIbus < pci.bus THEN lastPCIbus := pci.bus END;
 				END;
 			UNTIL ~Iterate(pci);
@@ -77,14 +77,14 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIPresent;
 
-	PROCEDURE FindPCIDevice*(devId, vendId, idx: LONGINT; VAR busNr, devNr, fktNr: LONGINT): WORD;
-	VAR pci: Pci; r0, vendorId, deviceId, index: LONGINT; res: WORD;
+	PROCEDURE FindPCIDevice*(devId, vendId, idx: SIGNED32; VAR busNr, devNr, fktNr: SIGNED32): INTEGER;
+	VAR pci: Pci; r0, vendorId, deviceId, index: SIGNED32; res: INTEGER;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
 			StartIterate(pci); index := 0;
 			REPEAT
 				res := PCIReadConfig32(pci.bus, pci.device, pci.function, 0, r0);
-				IF r0 # LONGINT(0FFFFFFFFH) THEN
+				IF r0 # SIGNED32(0FFFFFFFFH) THEN
 					vendorId := r0 MOD 10000H;
 					deviceId := r0 DIV 10000H MOD 10000H;
 					IF (devId = deviceId) & (vendId = vendorId) THEN
@@ -110,14 +110,14 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END FindPCIDevice;
 
-	PROCEDURE FindPCIClassCode*(classCode, idx: LONGINT; VAR busNr, devNr, fktNr: LONGINT): WORD;
-	VAR pci: Pci; r0, r8,  index, class: LONGINT; res: WORD;
+	PROCEDURE FindPCIClassCode*(classCode, idx: SIGNED32; VAR busNr, devNr, fktNr: SIGNED32): INTEGER;
+	VAR pci: Pci; r0, r8,  index, class: SIGNED32; res: INTEGER;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
 			StartIterate(pci);
 			REPEAT
 				res := PCIReadConfig32(pci.bus, pci.device, pci.function, 0, r0);
-				IF r0 # LONGINT(0FFFFFFFFH) THEN
+				IF r0 # SIGNED32(0FFFFFFFFH) THEN
 					res := PCIReadConfig32(pci.bus, pci.device, pci.function, 8, r8);
 					class := r8 DIV 100H MOD 1000000H;
 					IF (classCode = class) THEN
@@ -141,8 +141,8 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END FindPCIClassCode;
 
-	PROCEDURE GenerateSpecialCycle*(busNr, specCycleData: LONGINT): WORD;
-	VAR res: WORD;
+	PROCEDURE GenerateSpecialCycle*(busNr, specCycleData: SIGNED32): INTEGER;
+	VAR res: INTEGER;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
 			(*
@@ -163,10 +163,10 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END GenerateSpecialCycle;
 
-	PROCEDURE GetIrqRoutingOptions*(VAR rt: RouteTable; VAR IrqBitmap: SET): WORD;
+	PROCEDURE GetIrqRoutingOptions*(VAR rt: RouteTable; VAR IrqBitmap: SET): INTEGER;
 	CONST dbN = 16*8;
 	VAR
-		res: WORD;
+		res: INTEGER;
 		(*eflags, state: SET;
 		rb: RouteBuffer; db: ARRAY dbN OF CHAR;
 		last: RouteTable;
@@ -213,8 +213,8 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END GetIrqRoutingOptions;
 
-	PROCEDURE SetPCIIrq*(IntPin, IrqNum, busNr, devNr, fktNr: LONGINT): WORD;
-	VAR res: WORD;
+	PROCEDURE SetPCIIrq*(IntPin, IrqNum, busNr, devNr, fktNr: SIGNED32): INTEGER;
+	VAR res: INTEGER;
 	BEGIN {EXCLUSIVE}
 		IF pciEnabled THEN
 			(*
@@ -236,13 +236,13 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END SetPCIIrq;
 
 	(** Set bits included in <mask> in the PCI command register if not set already *)
-	PROCEDURE Enable*(mask : SET; busNr, devNr, fktNr : LONGINT) : WORD;
-	VAR cmdReg : LONGINT; res : WORD;
+	PROCEDURE Enable*(mask : SET; busNr, devNr, fktNr : SIGNED32) : INTEGER;
+	VAR cmdReg : SIGNED32; res : INTEGER;
 	BEGIN
 		res := ReadConfigWord(busNr, devNr, fktNr, CmdReg, cmdReg);
 		IF (res = Done) THEN
 			IF mask - SYSTEM.VAL(SET, cmdReg) # {} THEN
-				cmdReg := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, cmdReg) + mask);
+				cmdReg := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, cmdReg) + mask);
 				res := WriteConfigWord(busNr, devNr, fktNr, CmdReg, cmdReg);
 				IF (res = Done) THEN (* maybe the device does not implement all bits writable... check! *)
 					res := ReadConfigWord(busNr, devNr, fktNr, CmdReg, cmdReg);
@@ -257,35 +257,35 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res;
 	END Enable;
 
-	PROCEDURE ReadConfigByte*(busNr, devNr, fktNr, regNr: LONGINT; VAR regVal: LONGINT): WORD;
+	PROCEDURE ReadConfigByte*(busNr, devNr, fktNr, regNr: SIGNED32; VAR regVal: SIGNED32): INTEGER;
 	BEGIN
 		RETURN PCIReadConfig8(busNr, devNr, fktNr, regNr, regVal)
 	END ReadConfigByte;
 
-	PROCEDURE ReadConfigWord*(busNr, devNr, fktNr, regNr: LONGINT; VAR regVal: LONGINT): WORD;
+	PROCEDURE ReadConfigWord*(busNr, devNr, fktNr, regNr: SIGNED32; VAR regVal: SIGNED32): INTEGER;
 	BEGIN
 		ASSERT(regNr MOD 2 = 0);
 		RETURN PCIReadConfig16(busNr, devNr, fktNr, regNr, regVal)
 	END ReadConfigWord;
 
-	PROCEDURE ReadConfigDword*(busNr, devNr, fktNr, regNr: LONGINT; VAR regVal: LONGINT): WORD;
+	PROCEDURE ReadConfigDword*(busNr, devNr, fktNr, regNr: SIGNED32; VAR regVal: SIGNED32): INTEGER;
 	BEGIN
 		ASSERT(regNr MOD 4 = 0);
 		RETURN PCIReadConfig32(busNr, devNr, fktNr, regNr, regVal)
 	END ReadConfigDword;
 
-	PROCEDURE WriteConfigByte*(busNr, devNr, fktNr, regNr, regVal: LONGINT): WORD;
+	PROCEDURE WriteConfigByte*(busNr, devNr, fktNr, regNr, regVal: SIGNED32): INTEGER;
 	BEGIN
 		RETURN PCIWriteConfig8(busNr, devNr, fktNr, regNr, regVal)
 	END WriteConfigByte;
 
-	PROCEDURE WriteConfigWord*(busNr, devNr, fktNr, regNr, regVal: LONGINT): WORD;
+	PROCEDURE WriteConfigWord*(busNr, devNr, fktNr, regNr, regVal: SIGNED32): INTEGER;
 	BEGIN
 		ASSERT(regNr MOD 2 = 0);
 		RETURN PCIWriteConfig16(busNr, devNr, fktNr, regNr, regVal)
 	END WriteConfigWord;
 
-	PROCEDURE WriteConfigDword*(busNr, devNr, fktNr, regNr, regVal: LONGINT): WORD;
+	PROCEDURE WriteConfigDword*(busNr, devNr, fktNr, regNr, regVal: SIGNED32): INTEGER;
 	BEGIN
 		ASSERT(regNr MOD 4 = 0);
 		RETURN PCIWriteConfig32(busNr, devNr, fktNr, regNr, regVal)
@@ -293,7 +293,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 
 
 	PROCEDURE Show*;
-	VAR version, lastPCIBus, hwMech: LONGINT; res : WORD;
+	VAR version, lastPCIBus, hwMech: SIGNED32; res : INTEGER;
 	BEGIN
 		IF ~PCIDisabled() THEN
 			res := PCIPresent(version, lastPCIBus, hwMech);
@@ -311,20 +311,20 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END Show;
 
 
-	PROCEDURE GetAdr1(pciBus, pciDev, pciFn, reg, len: LONGINT; VAR adr, dataAdr: LONGINT);
+	PROCEDURE GetAdr1(pciBus, pciDev, pciFn, reg, len: SIGNED32; VAR adr, dataAdr: SIGNED32);
 	BEGIN
-		adr := LONGINT(80000000H) + ASH(pciBus,16) + ASH(pciDev, 11) + ASH(pciFn, 8);
-		adr := adr + SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,0FCH));
-		adr := adr + ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,0F00H)), 16);
+		adr := SIGNED32(80000000H) + ASH(pciBus,16) + ASH(pciDev, 11) + ASH(pciFn, 8);
+		adr := adr + SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,0FCH));
+		adr := adr + ASH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,0F00H)), 16);
 		CASE len OF
-			8: dataAdr := PciDataReg + SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,3));
-			|16: dataAdr := PciDataReg + SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,2));
+			8: dataAdr := PciDataReg + SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,3));
+			|16: dataAdr := PciDataReg + SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET,reg) * SYSTEM.VAL(SET,2));
 			|32: dataAdr := PciDataReg;
 		END;
 	END GetAdr1;
 
-	PROCEDURE PCIReadConfig32(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): WORD;
-	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
+	PROCEDURE PCIReadConfig32(pciBus, pciDev, pciFn, reg: SIGNED32; VAR val: SIGNED32): INTEGER;
+	VAR adr, dataAdr: SIGNED32; state: SET; res: INTEGER;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -339,8 +339,8 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIReadConfig32;
 
-	PROCEDURE PCIReadConfig16(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): WORD;
-	VAR adr, dataAdr: LONGINT; state: SET; res: WORD; int: INTEGER;
+	PROCEDURE PCIReadConfig16(pciBus, pciDev, pciFn, reg: SIGNED32; VAR val: SIGNED32): INTEGER;
+	VAR adr, dataAdr: SIGNED32; state: SET; res: INTEGER; int: SIGNED16;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -356,8 +356,8 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIReadConfig16;
 
-	PROCEDURE PCIReadConfig8(pciBus, pciDev, pciFn, reg: LONGINT; VAR val: LONGINT): WORD;
-	VAR adr, dataAdr: LONGINT; state: SET; res: WORD; chr: CHAR;
+	PROCEDURE PCIReadConfig8(pciBus, pciDev, pciFn, reg: SIGNED32; VAR val: SIGNED32): INTEGER;
+	VAR adr, dataAdr: SIGNED32; state: SET; res: INTEGER; chr: CHAR;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -373,8 +373,8 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIReadConfig8;
 
-	PROCEDURE PCIWriteConfig32(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): WORD;
-	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
+	PROCEDURE PCIWriteConfig32(pciBus, pciDev, pciFn: SIGNED32; reg: SIGNED32;  val: SIGNED32): INTEGER;
+	VAR adr, dataAdr: SIGNED32; state: SET; res: INTEGER;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -389,8 +389,8 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIWriteConfig32;
 
-	PROCEDURE PCIWriteConfig16(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): WORD;
-	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
+	PROCEDURE PCIWriteConfig16(pciBus, pciDev, pciFn: SIGNED32; reg: SIGNED32;  val: SIGNED32): INTEGER;
+	VAR adr, dataAdr: SIGNED32; state: SET; res: INTEGER;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -405,8 +405,8 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN res
 	END PCIWriteConfig16;
 
-	PROCEDURE PCIWriteConfig8(pciBus, pciDev, pciFn: LONGINT; reg: LONGINT;  val: LONGINT): WORD;
-	VAR adr, dataAdr: LONGINT; state: SET; res: WORD;
+	PROCEDURE PCIWriteConfig8(pciBus, pciDev, pciFn: SIGNED32; reg: SIGNED32;  val: SIGNED32): INTEGER;
+	VAR adr, dataAdr: SIGNED32; state: SET; res: INTEGER;
 	BEGIN
 		IF pciEnabled THEN
 			state := Machine.DisableInterrupts();
@@ -422,14 +422,14 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END PCIWriteConfig8;
 
 	PROCEDURE PCICheckType1(): BOOLEAN;
-	VAR in,temp: LONGINT; works: BOOLEAN; state: SET;
+	VAR in,temp: SIGNED32; works: BOOLEAN; state: SET;
 	BEGIN
 		state := Machine.DisableInterrupts();
 		Machine.Portout8(PciDataReg, 1X);
 		Machine.Portin32(PciAdrReg, temp);
-		Machine.Portout32(PciAdrReg, LONGINT(80000000H));
+		Machine.Portout32(PciAdrReg, SIGNED32(80000000H));
 		Machine.Portin32(PciAdrReg, in);
-		IF in = LONGINT(80000000H) THEN works := TRUE ELSE works := FALSE END;
+		IF in = SIGNED32(80000000H) THEN works := TRUE ELSE works := FALSE END;
 		Machine.Portout32(PciAdrReg, temp);
 		Machine.RestoreInterrupts(state);
 		RETURN works
@@ -456,7 +456,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END StartIterate;
 
 	PROCEDURE Iterate*(VAR pci: Pci): BOOLEAN;
-	VAR hdrType: LONGINT; multifunction: BOOLEAN; res: WORD;
+	VAR hdrType: SIGNED32; multifunction: BOOLEAN; res: INTEGER;
 	BEGIN
 		IF pci.function = 0 THEN
 			(* check if multi-function device *)
@@ -478,7 +478,7 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 		RETURN TRUE
 	END Iterate;
 
-	PROCEDURE DisplayDeviceClass(class, subclass: LONGINT);
+	PROCEDURE DisplayDeviceClass(class, subclass: SIGNED32);
 	BEGIN
 		CASE class OF
 		1:	KernelLog.String("disk controller:");
@@ -589,16 +589,16 @@ MODULE PCI;	 (** author: fof -- PCI without using PCI bios (using PCI tables des
 	END DisplayDeviceClass;
 
 	PROCEDURE TracePCIDevices;
-	VAR r0,r8,r10 : LONGINT; pci: Pci; class, subclass, api, vendorId, deviceId: LONGINT; res: WORD;
+	VAR r0,r8,r10 : SIGNED32; pci: Pci; class, subclass, api, vendorId, deviceId: SIGNED32; res: INTEGER;
 	BEGIN
 		IF pciEnabled THEN
 			KernelLog.String("PCI Devices"); KernelLog.Ln;
 			StartIterate(pci);
 			REPEAT
 				res := PCIReadConfig32(pci.bus, pci.device, pci.function, 0, r0);
-				IF r0 # LONGINT(0FFFFFFFFH) THEN
+				IF r0 # SIGNED32(0FFFFFFFFH) THEN
 					res := PCIReadConfig32(pci.bus, pci.device, pci.function, 8, r8);
-					IF r8 # LONGINT(0FFFFFFFFH) THEN
+					IF r8 # SIGNED32(0FFFFFFFFH) THEN
 						vendorId := r0 MOD 10000H;
 						deviceId := r0 DIV 10000H MOD 10000H;
 						class := r8 DIV 1000000H MOD 100H;
@@ -654,7 +654,7 @@ Notes
 PCI devices are uniquely identified by their vendor ID and device ID.  For example, a 3Com 905B Etherlink XL ethernet card has vendor ID 10B7H (3Com) and device ID 9055H.  To get access to this card, use the FindPCIDevice call.  The third parameter (idx) is used to find multiple instances of the card.  If set to 0, the first card is returned; if set to 1, the second; etc.  The last three parameters return the bus number, device number and function number of the card, respectively.  This triple can be used with the other calls (e.g., ReadConfig..., WriteConfig...) to address a specific card.
 
 Example:
-	VAR res, bus, dev, fkt: LONGINT;
+	VAR res, bus, dev, fkt: SIGNED32;
 		(* look for a 3Com 905B ethernet card *)
 	res := PCI.FindPCIDevice(9055H, 10B7H, 0, bus, dev, fkt);
 	IF res = PCI.Done THEN (* found at (bus, dev, fkt) *) END
@@ -662,7 +662,7 @@ Example:
 The PCI configuration area is a standardized set of registers provided by every PCI device.  It can be accessed using the ReadConfig... and WriteConfig... calls.  Typically, registers 10H, 14H, ..., 24H specify the base addresses of a card.  Bit 0 is 1 if the address is in the I/O space, and 0 if it is in the physical memory space.  For I/O addresses, the bottom two bits should be masked off, and for physical memory addresses, the bottom 4 bits should be masked off.
 
 Example:
-	VAR res, adr: LONGINT;
+	VAR res, adr: SIGNED32;
 		(* find the I/O base address of the ethernet controller *)
 	res := PCI.ReadConfigDword(bus, dev, fkt, 10H, adr);
 	IF res = PCI.Done THEN
@@ -676,7 +676,7 @@ To access a memory-mapped device, its address range has to be mapped into the vi
 
 Example:
 	CONST Size = 4096;	(* the device has 4KB of registers *)
-	VAR res, physAdr, virtAdr: LONGINT;
+	VAR res, physAdr, virtAdr: SIGNED32;
 		(* find the base address of a memory-mapped device *)
 	res := PCI.ReadConfigDword(bus, dev, fkt, 10H, physAdr);
 	IF res = PCI.Done THEN

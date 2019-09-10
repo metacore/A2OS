@@ -61,16 +61,16 @@ CONST
 TYPE
 	(*===== Video Class Specific Interfaces =====*)
 	VideoControlDesc * = POINTER TO RECORD
-		bcdUVC *: LONGINT;
-		wTotalLength *: LONGINT;
-		dwClockFrequency *: LONGINT;
-		bInCollection *: LONGINT;
-		baInterfaceNr *: POINTER TO ARRAY OF LONGINT;
+		bcdUVC *: SIGNED32;
+		wTotalLength *: SIGNED32;
+		dwClockFrequency *: SIGNED32;
+		bInCollection *: SIGNED32;
+		baInterfaceNr *: POINTER TO ARRAY OF SIGNED32;
 	END;
 
 	Unit * = OBJECT
 	VAR
-		bUnitID *: LONGINT;
+		bUnitID *: SIGNED32;
 
 		PROCEDURE Resolve * (CONST cache: ARRAY OF Unit);
 		BEGIN HALT(210)
@@ -79,9 +79,9 @@ TYPE
 
 	InputTerminalDesc * = OBJECT (Unit)
 	VAR
-		wTerminalType *: LONGINT;
-		bAssocTerminal *: LONGINT;
-		iTerminal *: LONGINT;
+		wTerminalType *: SIGNED32;
+		bAssocTerminal *: SIGNED32;
+		iTerminal *: SIGNED32;
 
 		assocTerminal *: OutputTerminalDesc;
 
@@ -98,19 +98,19 @@ TYPE
 
 	CameraTerminalDesc * = OBJECT (InputTerminalDesc)
 	VAR
-		wObjectiveFocalLengthMin *: LONGINT;
-		wObjectiveFocalLengthMax *: LONGINT;
-		wOcularFocalLength *: LONGINT;
-		bControlSize *: LONGINT;
+		wObjectiveFocalLengthMin *: SIGNED32;
+		wObjectiveFocalLengthMax *: SIGNED32;
+		wOcularFocalLength *: SIGNED32;
+		bControlSize *: SIGNED32;
 		bmControls *: SET;
 	END CameraTerminalDesc;
 
 	OutputTerminalDesc * = OBJECT (Unit)
 	VAR
-		wTerminalType *: LONGINT;
-		bAssocTerminal *: LONGINT;
-		bSourceID *: LONGINT;
-		iTerminal *: LONGINT;
+		wTerminalType *: SIGNED32;
+		bAssocTerminal *: SIGNED32;
+		bSourceID *: SIGNED32;
+		iTerminal *: SIGNED32;
 
 		assocTerminal *: InputTerminalDesc;
 		source *: Unit;
@@ -135,11 +135,11 @@ TYPE
 
 	ProcessingUnitDesc * = OBJECT (Unit)
 	VAR
-		bSourceID *: LONGINT;
-		wMaxMultiplier *: LONGINT;
-		bControlSize *: LONGINT;
+		bSourceID *: SIGNED32;
+		wMaxMultiplier *: SIGNED32;
+		bControlSize *: SIGNED32;
 		bmControls *: SET;
-		iProcessing *: LONGINT;
+		iProcessing *: SIGNED32;
 		bmVideoStandards *: SET;
 
 		source *: Unit;
@@ -159,18 +159,18 @@ TYPE
 	ExtensionUnitDesc * = OBJECT (Unit)
 	VAR
 		guidExtensionCode *: ARRAY 16 OF CHAR;
-		bNumControls *: LONGINT;
-		bNrInPins *: LONGINT;
-		baSourceID *: POINTER TO ARRAY OF LONGINT;
-		bControlSize *: LONGINT;
+		bNumControls *: SIGNED32;
+		bNrInPins *: SIGNED32;
+		baSourceID *: POINTER TO ARRAY OF SIGNED32;
+		bControlSize *: SIGNED32;
 		bmControls *: SET;
-		iExtension *: LONGINT;
+		iExtension *: SIGNED32;
 
 		sources *: POINTER TO ARRAY OF Unit;
 
 		PROCEDURE Resolve * (CONST cache: ARRAY OF Unit);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			NEW(sources, bNrInPins);
 			FOR i := 0 TO bNrInPins - 1 DO
@@ -182,30 +182,30 @@ TYPE
 	END ExtensionUnitDesc;
 
 	InterruptEndpointDesc * = POINTER TO RECORD
-		bEndpointAddress *: LONGINT;
+		bEndpointAddress *: SIGNED32;
 		bmAttributes *: SET;
-		wMaxPacketSize *: LONGINT;
-		bInterval *: LONGINT;
+		wMaxPacketSize *: SIGNED32;
+		bInterval *: SIGNED32;
 	END;
 
 	(* Base descriptor. Parsing those is done in a format-specific way. *)
 	VSInputHeaderDesc * = POINTER TO RECORD
-		bNumFormats *: LONGINT;
-		wTotalLength *: LONGINT;
-		bEndpointAddress *: LONGINT;
+		bNumFormats *: SIGNED32;
+		wTotalLength *: SIGNED32;
+		bEndpointAddress *: SIGNED32;
 		bmInfo *: SET;
-		bTerminalLink *: LONGINT;
-		bStillCaptureMethod *: LONGINT;
-		bTriggerSupport *: LONGINT;
-		bTriggerUsage *: LONGINT;
-		bControlSize *: LONGINT;
+		bTerminalLink *: SIGNED32;
+		bStillCaptureMethod *: SIGNED32;
+		bTriggerSupport *: SIGNED32;
+		bTriggerUsage *: SIGNED32;
+		bControlSize *: SIGNED32;
 		bmaControls *: POINTER TO ARRAY OF SET;
 	END;
 
 	VSFormatDesc * = OBJECT
 	VAR
-		bFormatIndex *: LONGINT;
-		bNumFrameDescriptors *: LONGINT;
+		bFormatIndex *: SIGNED32;
+		bNumFrameDescriptors *: SIGNED32;
 		frames *: POINTER TO ARRAY OF VSFrameDesc;
 
 		(** Abstract printing method for debug *)
@@ -217,16 +217,16 @@ TYPE
 	VSFormatUncompressedDesc * = OBJECT (VSFormatDesc)
 	VAR
 		guidFormat *: ARRAY 16 OF CHAR;
-		bBitsPerPixel *: LONGINT;
-		bDefaultFrameIndex *: LONGINT;
-		bAspectRatioX *: LONGINT;
-		bAspectRatioY *: LONGINT;
+		bBitsPerPixel *: SIGNED32;
+		bDefaultFrameIndex *: SIGNED32;
+		bAspectRatioX *: SIGNED32;
+		bAspectRatioY *: SIGNED32;
 		bmInterlaceFlags *: SET;
 		bCopyProtect *: BOOLEAN;
 
 		PROCEDURE Print *;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			KernelLog.String("= VideoStream Uncompressed Format Descriptor ="); KernelLog.Ln;
 			KernelLog.String("	format idx:			"); KernelLog.Int(bFormatIndex, 0); KernelLog.Ln;
@@ -245,9 +245,9 @@ TYPE
 	VSFormatMjpegDesc * = OBJECT (VSFormatDesc)
 	VAR
 		bmFlags *: SET;
-		bDefaultFrameIndex *: LONGINT;
-		bAspectRatioX *: LONGINT;
-		bAspectRatioY *: LONGINT;
+		bDefaultFrameIndex *: SIGNED32;
+		bAspectRatioX *: SIGNED32;
+		bAspectRatioY *: SIGNED32;
 		bmInterlaceFlags *: SET;
 		bCopyProtect *: BOOLEAN;
 
@@ -267,7 +267,7 @@ TYPE
 
 	VSFrameDesc * = OBJECT
 	VAR
-		bFrameIndex *: LONGINT;
+		bFrameIndex *: SIGNED32;
 		format *: VSFormatDesc;
 
 		PROCEDURE Print *;
@@ -278,25 +278,25 @@ TYPE
 	VSFrameUncompressedDesc * = OBJECT (VSFrameDesc)
 	VAR
 		bmCapabilities *: SET;
-		wWidth *: LONGINT;
-		wHeight *: LONGINT;
-		dwMinBitRate *: LONGINT;
-		dwMaxBitRate *: LONGINT;
-		dwMaxVideoFrameBufferSize *: LONGINT;
-		dwDefaultFrameInterval *: LONGINT;
-		bFrameIntervalType *: LONGINT;
+		wWidth *: SIGNED32;
+		wHeight *: SIGNED32;
+		dwMinBitRate *: SIGNED32;
+		dwMaxBitRate *: SIGNED32;
+		dwMaxVideoFrameBufferSize *: SIGNED32;
+		dwDefaultFrameInterval *: SIGNED32;
+		bFrameIntervalType *: SIGNED32;
 
 		(* If bFrameIntervalType = 0 *)
-		dwMinFrameInterval *: LONGINT;
-		dwMaxFrameInterval *: LONGINT;
-		dwFrameIntervalStep *: LONGINT;
+		dwMinFrameInterval *: SIGNED32;
+		dwMaxFrameInterval *: SIGNED32;
+		dwFrameIntervalStep *: SIGNED32;
 
 		(* If bFramIntervalType #0 *)
-		dwaFrameInterval *: POINTER TO ARRAY OF LONGINT;
+		dwaFrameInterval *: POINTER TO ARRAY OF SIGNED32;
 
 		PROCEDURE Print *;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			KernelLog.String("= VideoStream Uncompressed Frame Descriptor ="); KernelLog.Ln;
 			KernelLog.String("	frame index:			"); KernelLog.Int(bFrameIndex, 0); KernelLog.Ln;
@@ -333,19 +333,19 @@ TYPE
 		dwMaxBitRate *,
 		dwMaxVideoFrameBufferSize* ,
 		dwDefaultFrameInterval *,
-		bFrameIntervalType *: LONGINT;
+		bFrameIntervalType *: SIGNED32;
 
 		(* bFrameIntervalType = 0 *)
 		dwMinFrameInterval *,
 		dwMaxFrameInterval *,
-		dwFrameIntervalStep *: LONGINT;
+		dwFrameIntervalStep *: SIGNED32;
 
 		(* bFrameIntervalType # 0 *)
-		dwaFrameInterval *: POINTER TO ARRAY OF LONGINT;
+		dwaFrameInterval *: POINTER TO ARRAY OF SIGNED32;
 
 		PROCEDURE Print *;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			KernelLog.String("= VideoStream MJPEG Frame Descriptor ="); KernelLog.Ln;
 			KernelLog.String("	frame index:			"); KernelLog.Int(bFrameIndex, 0); KernelLog.Ln;
@@ -374,26 +374,26 @@ TYPE
 	END VSFrameMjpegDesc;
 
 	StillImageDesc * = POINTER TO RECORD
-		bEndpointAddress *: LONGINT;
-		bNumImageSizePattern *: LONGINT;
-		waWidth *: POINTER TO ARRAY OF LONGINT;
-		waHeight *: POINTER TO ARRAY OF LONGINT;
-		bNumCompressionPattern *: LONGINT;
-		baCompression *: POINTER TO ARRAY OF LONGINT;
+		bEndpointAddress *: SIGNED32;
+		bNumImageSizePattern *: SIGNED32;
+		waWidth *: POINTER TO ARRAY OF SIGNED32;
+		waHeight *: POINTER TO ARRAY OF SIGNED32;
+		bNumCompressionPattern *: SIGNED32;
+		baCompression *: POINTER TO ARRAY OF SIGNED32;
 	END;
 
 	ColorMatchingDesc * = POINTER TO RECORD
-		bColorPrimaries *: LONGINT;
-		bTransferCharacteristics *: LONGINT;
-		bMatrixCoefficients *: LONGINT;
+		bColorPrimaries *: SIGNED32;
+		bTransferCharacteristics *: SIGNED32;
+		bMatrixCoefficients *: SIGNED32;
 	END;
 
 VAR
 	unitCache *: ARRAY 256 OF Unit;
 
-	PROCEDURE ParseVideoControlDesc * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VideoControlDesc;
+	PROCEDURE ParseVideoControlDesc * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VideoControlDesc;
 	VAR
-		len, i, n: LONGINT;
+		len, i, n: SIGNED32;
 		vc: VideoControlDesc;
 	BEGIN
 		len := ORD(buffer[pos]); INC(pos);
@@ -422,17 +422,17 @@ VAR
 
 	PROCEDURE ClearUnitCache *;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 255 DO
 			unitCache[i] := NIL
 		END;
 	END ClearUnitCache;
 
-	PROCEDURE ParseUnit * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): Unit;
+	PROCEDURE ParseUnit * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): Unit;
 	VAR
 		unit: Unit;
-		id, type: LONGINT;
+		id, type: SIGNED32;
 	BEGIN
 		KernelLog.String("Unit length:	"); KernelLog.Int(ORD(buffer[pos]), 0); KernelLog.Ln;
 		INC(pos);
@@ -452,9 +452,9 @@ VAR
 		RETURN unit
 	END ParseUnit;
 
-	PROCEDURE ParseInputTerminalDesc * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): InputTerminalDesc;
+	PROCEDURE ParseInputTerminalDesc * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): InputTerminalDesc;
 	VAR
-		type: LONGINT;
+		type: SIGNED32;
 		it: InputTerminalDesc;
 	BEGIN
 		type := ORD(buffer[pos]) + ORD(buffer[pos + 1]) * 100H; INC(pos, 2);
@@ -469,7 +469,7 @@ VAR
 		RETURN it
 	END ParseInputTerminalDesc;
 
-	PROCEDURE ParseOutputTerminalDesc * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): OutputTerminalDesc;
+	PROCEDURE ParseOutputTerminalDesc * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): OutputTerminalDesc;
 	VAR
 		ot: OutputTerminalDesc;
 	BEGIN
@@ -481,10 +481,10 @@ VAR
 		RETURN ot
 	END ParseOutputTerminalDesc;
 
-	PROCEDURE ParseCameraTerminalDesc * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): CameraTerminalDesc;
+	PROCEDURE ParseCameraTerminalDesc * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): CameraTerminalDesc;
 	VAR
 		c: CameraTerminalDesc;
-		i, ctrls: LONGINT;
+		i, ctrls: SIGNED32;
 	BEGIN
 		NEW(c);
 		c.wObjectiveFocalLengthMin := ORD(buffer[pos]) + ORD(buffer[pos + 1]) * 100H; INC(pos, 2);
@@ -500,10 +500,10 @@ VAR
 		RETURN c
 	END ParseCameraTerminalDesc;
 
-	PROCEDURE ParseProcessingUnitDesc * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): ProcessingUnitDesc;
+	PROCEDURE ParseProcessingUnitDesc * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): ProcessingUnitDesc;
 	VAR
 		p: ProcessingUnitDesc;
-		i, ctrls: LONGINT;
+		i, ctrls: SIGNED32;
 	BEGIN
 		NEW(p);
 		TRACE(pos, LEN(buffer));
@@ -528,10 +528,10 @@ VAR
 		RETURN p
 	END ParseProcessingUnitDesc;
 
-	PROCEDURE ParseExtensionUnitDesc * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): ExtensionUnitDesc;
+	PROCEDURE ParseExtensionUnitDesc * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): ExtensionUnitDesc;
 	VAR
 		e: ExtensionUnitDesc;
-		ctrls, i: LONGINT;
+		ctrls, i: SIGNED32;
 	BEGIN
 		NEW(e);
 		FOR i := 0 TO 15 DO
@@ -556,9 +556,9 @@ VAR
 		RETURN e
 	END ParseExtensionUnitDesc;
 
-	PROCEDURE ParseEndpointDesc * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): InterruptEndpointDesc;
+	PROCEDURE ParseEndpointDesc * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): InterruptEndpointDesc;
 	VAR
-		len: LONGINT;
+		len: SIGNED32;
 		d: InterruptEndpointDesc;
 	BEGIN
 		KernelLog.Buffer(buffer, 0, LEN(buffer));
@@ -576,10 +576,10 @@ VAR
 		RETURN d
 	END ParseEndpointDesc;
 
-	PROCEDURE ParseVSInputHeader * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSInputHeaderDesc;
+	PROCEDURE ParseVSInputHeader * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSInputHeaderDesc;
 	VAR
 		hdr: VSInputHeaderDesc;
-		i, j, set: LONGINT;
+		i, j, set: SIGNED32;
 	BEGIN
 		ASSERT(ORD(buffer[pos]) >= 13); INC(pos);
 		ASSERT(ORD(buffer[pos]) = Interface); INC(pos);
@@ -608,11 +608,11 @@ VAR
 		RETURN hdr
 	END ParseVSInputHeader;
 
-	PROCEDURE ParseVSFormat * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFormatDesc;
+	PROCEDURE ParseVSFormat * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFormatDesc;
 	VAR
-		parser: PROCEDURE (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFormatDesc;
+		parser: PROCEDURE (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFormatDesc;
 		format: VSFormatDesc;
-		idx, num: LONGINT;
+		idx, num: SIGNED32;
 	BEGIN
 		INC(pos);
 		ASSERT(ORD(buffer[pos]) = Interface); INC(pos);
@@ -642,10 +642,10 @@ VAR
 		RETURN format
 	END ParseVSFormat;
 
-	PROCEDURE ParseVSFormatUncompressed (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFormatDesc;
+	PROCEDURE ParseVSFormatUncompressed (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFormatDesc;
 	VAR
 		f: VSFormatUncompressedDesc;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		NEW(f);
 		FOR i := 0 TO 15 DO
@@ -661,7 +661,7 @@ VAR
 		RETURN f
 	END ParseVSFormatUncompressed;
 
-	PROCEDURE ParseVSFormatMjpeg (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFormatDesc;
+	PROCEDURE ParseVSFormatMjpeg (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFormatDesc;
 	VAR
 		f: VSFormatMjpegDesc;
 	BEGIN
@@ -675,26 +675,26 @@ VAR
 		RETURN f;
 	END ParseVSFormatMjpeg;
 
-	PROCEDURE ParseVSFormatMpeg2ts (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFormatDesc;
+	PROCEDURE ParseVSFormatMpeg2ts (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFormatDesc;
 	BEGIN
 		(*! TODO *)
 	END ParseVSFormatMpeg2ts;
 
-	PROCEDURE ParseVSFormatH264 (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFormatDesc;
+	PROCEDURE ParseVSFormatH264 (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFormatDesc;
 	BEGIN
 		(*! TODO *)
 	END ParseVSFormatH264;
 
-	PROCEDURE ParseVSFormatVp8 (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFormatDesc;
+	PROCEDURE ParseVSFormatVp8 (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFormatDesc;
 	BEGIN
 		(*! TODO *)
 	END ParseVSFormatVp8;
 
-	PROCEDURE ParseVSFrame * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFrameDesc;
+	PROCEDURE ParseVSFrame * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFrameDesc;
 	VAR
-		parser: PROCEDURE (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFrameDesc;
+		parser: PROCEDURE (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFrameDesc;
 		frame: VSFrameDesc;
-		idx: LONGINT;
+		idx: SIGNED32;
 	BEGIN
 		INC(pos);
 		ASSERT(ORD(buffer[pos]) = Interface); INC(pos);
@@ -722,10 +722,10 @@ VAR
 		RETURN frame
 	END ParseVSFrame;
 
-	PROCEDURE ParseVSFrameUncompressed (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFrameDesc;
+	PROCEDURE ParseVSFrameUncompressed (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFrameDesc;
 	VAR
 		f: VSFrameUncompressedDesc;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		NEW(f);
 		f.bmCapabilities := SYSTEM.VAL(SET, ORD(buffer[pos])); INC(pos);
@@ -750,10 +750,10 @@ VAR
 		RETURN f
 	END ParseVSFrameUncompressed;
 	
-	PROCEDURE ParseVSFrameMjpeg (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFrameDesc;
+	PROCEDURE ParseVSFrameMjpeg (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFrameDesc;
 	VAR
 		f: VSFrameMjpegDesc;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		NEW(f);
 		f.bmCapabilities := SYSTEM.VAL(SET, ORD(buffer[pos])); INC(pos);
@@ -778,25 +778,25 @@ VAR
 		RETURN f
 	END ParseVSFrameMjpeg;
 	
-	PROCEDURE ParseVSFrameMpeg2ts (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFrameDesc;
+	PROCEDURE ParseVSFrameMpeg2ts (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFrameDesc;
 	BEGIN
 		(*! TODO *)
 	END ParseVSFrameMpeg2ts;
 	
-	PROCEDURE ParseVSFrameH264 (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFrameDesc;
+	PROCEDURE ParseVSFrameH264 (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFrameDesc;
 	BEGIN
 		(*! TODO *)
 	END ParseVSFrameH264;
 	
-	PROCEDURE ParseVSFrameVp8 (CONST buffer: ARRAY OF CHAR; pos: LONGINT): VSFrameDesc;
+	PROCEDURE ParseVSFrameVp8 (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): VSFrameDesc;
 	BEGIN
 		(*! TODO *)
 	END ParseVSFrameVp8;
 
-	PROCEDURE ParseStillImageDesc * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): StillImageDesc;
+	PROCEDURE ParseStillImageDesc * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): StillImageDesc;
 	VAR
 		s: StillImageDesc;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		TRACE(LEN(buffer), pos);
 		ASSERT(ORD(buffer[pos]) > 10); INC(pos);
@@ -822,7 +822,7 @@ VAR
 		RETURN s
 	END ParseStillImageDesc;
 
-	PROCEDURE ParseColorMatchingDesc * (CONST buffer: ARRAY OF CHAR; pos: LONGINT): ColorMatchingDesc;
+	PROCEDURE ParseColorMatchingDesc * (CONST buffer: ARRAY OF CHAR; pos: SIGNED32): ColorMatchingDesc;
 	VAR
 		c: ColorMatchingDesc;
 	BEGIN
@@ -839,7 +839,7 @@ VAR
 
 	PROCEDURE PrintVC * (vc: VideoControlDesc);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		KernelLog.String("= VideoControlDesc ="); KernelLog.Ln;
 		KernelLog.String("	version:	"); KernelLog.Int(vc.bcdUVC, 0); KernelLog.Ln;
@@ -934,7 +934,7 @@ VAR
 
 	PROCEDURE PrintExtUnit * (e: ExtensionUnitDesc);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		KernelLog.String("= ExtensionUnitDesc ="); KernelLog.Ln;
 		KernelLog.String("	id:			"); KernelLog.Int(e.bUnitID, 0); KernelLog.Ln;
@@ -964,7 +964,7 @@ VAR
 
 	PROCEDURE PrintVSInputHeader * (hdr: VSInputHeaderDesc);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		KernelLog.String("= VideoStreaming InputHeaderDesc ="); KernelLog.Ln;
 		KernelLog.String("	# formats:					"); KernelLog.Int(hdr.bNumFormats, 0); KernelLog.Ln;
@@ -983,7 +983,7 @@ VAR
 
 	PROCEDURE PrintStillImageDesc * (s: StillImageDesc);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		KernelLog.String("= VideoStreaming Still Image Descriptor ="); KernelLog.Ln;
 		KernelLog.String("	endpoint adr:			"); KernelLog.Int(s.bEndpointAddress, 0); KernelLog.Ln;

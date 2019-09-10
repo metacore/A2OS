@@ -15,7 +15,7 @@ CONST
 		tds: ARRAY Nb OF ADDRESS;
 		t: Kernel.MilliTimer;
 		alloc: UsbVarTdAlloc.Allocator;
-		i, size, time: LONGINT;
+		i, size, time: SIGNED32;
 	BEGIN
 		NEW(alloc, 4096, 32);
 		context.out.String("Page Size:	  4096");
@@ -68,7 +68,7 @@ CONST
 		tds: ARRAY Nb OF ADDRESS;
 		t: Kernel.MilliTimer;
 		alloc: UsbVarTdAlloc.Allocator;
-		i, size, time: LONGINT;
+		i, size, time: SIGNED32;
 	BEGIN
 		NEW(alloc, 4096, 32);
 		context.out.String("Page Size:	  4096");

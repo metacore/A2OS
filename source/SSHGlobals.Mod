@@ -17,7 +17,7 @@ TYPE
 
 VAR
 	buf: Buffer;
-	bp: LONGINT; (* current position in buf *)
+	bp: SIGNED32; (* current position in buf *)
 
 	debug-: SET;		(* bits: 	{0}: verbose
 
@@ -34,7 +34,7 @@ VAR
 	(*-------------- Debugging -----------------------*)
 
 	PROCEDURE SetDebug*( context: Commands.Context );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		IF context.arg.GetInteger( i, FALSE ) THEN
 			debug := SET(i )
@@ -54,7 +54,7 @@ VAR
 	END NextLine;
 
 	PROCEDURE GetConfigString( VAR str: ARRAY OF CHAR );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		WHILE(buf[bp] = HT) OR (buf[bp] = ' ') DO  INC( bp )  END;
 		i := 0;
@@ -64,7 +64,7 @@ VAR
 		str[i] := 0X
 	END GetConfigString;
 
-	PROCEDURE GetConfigInt( VAR i: LONGINT );
+	PROCEDURE GetConfigInt( VAR i: SIGNED32 );
 	BEGIN
 		WHILE(buf[bp] = HT) OR (buf[bp] = ' ') DO  INC( bp )  END;
 		i := 0;
@@ -76,7 +76,7 @@ VAR
 
 
 	PROCEDURE GetCipherList*( VAR list: ARRAY OF CHAR );
-	VAR n: INTEGER;
+	VAR n: SIGNED16;
 		x: ARRAY 64 OF CHAR;
 	BEGIN
 		IF buf = NIL THEN  buf := GetConfigBuffer()  END;
@@ -94,7 +94,7 @@ VAR
 	END GetCipherList;
 
 	PROCEDURE GetHMacList*( VAR list: ARRAY OF CHAR );
-	VAR n: INTEGER;
+	VAR n: SIGNED16;
 		x: ARRAY 64 OF CHAR;
 	BEGIN
 		IF buf = NIL THEN  buf := GetConfigBuffer()  END;
@@ -114,8 +114,8 @@ VAR
 
 	PROCEDURE GetCipherParams*(	CONST name: ARRAY OF CHAR;
 											VAR modname: ARRAY OF CHAR;
-											VAR bits: LONGINT;
-											VAR mode: SHORTINT );
+											VAR bits: SIGNED32;
+											VAR mode: SIGNED8 );
 	VAR x: ARRAY 128 OF CHAR;
 	BEGIN
 		IF buf = NIL THEN  buf := GetConfigBuffer()  END;
@@ -140,7 +140,7 @@ VAR
 
 
 	PROCEDURE GetHMacParams*(	CONST name: ARRAY OF CHAR;
-									VAR modname: ARRAY OF CHAR;  VAR bytes: LONGINT );
+									VAR modname: ARRAY OF CHAR;  VAR bytes: SIGNED32 );
 	VAR x: ARRAY 128 OF CHAR;
 	BEGIN
 		IF buf = NIL THEN  buf := GetConfigBuffer()  END;
@@ -172,7 +172,7 @@ VAR
 	PROCEDURE GetConfigBuffer(): Buffer;
 	VAR
 		text: Texts.Text; r: Texts.TextReader;
-		ch, format: WORD; len, i, j, bytesPerChar: SIZE; res: WORD;
+		ch, format: INTEGER; len, i, j, bytesPerChar: SIZE; res: INTEGER;
 		buffer: Buffer;
 	BEGIN
 		NEW( text );

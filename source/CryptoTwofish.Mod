@@ -19,16 +19,16 @@ VAR
 
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
-			VAR keybits: LONGINT;
-				sbox: ARRAY 4 OF LONGINT;
-				subkeys: ARRAY 8 + 2*N OF LONGINT;
+			VAR keybits: SIGNED32;
+				sbox: ARRAY 4 OF SIGNED32;
+				subkeys: ARRAY 8 + 2*N OF SIGNED32;
 				iv: Block;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: LONGINT );
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32 );
 				CONST step = 02020202H;  bump = 01010101H;
 				VAR
-					i, A, B, m, nsub: LONGINT;
-					k32e, k32o: ARRAY 4 OF LONGINT;   (* even/odd key dwords *)
+					i, A, B, m, nsub: SIGNED32;
+					k32e, k32o: ARRAY 4 OF SIGNED32;   (* even/odd key dwords *)
 				BEGIN
 					InitKey^( src, keybits );  SELF.keybits := keybits;
 					FOR i := 0 TO keybits DIV 32 - 1 DO
@@ -51,8 +51,8 @@ TYPE
 					END
 				END InitKey;
 
-				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SHORTINT );
-				VAR i: INTEGER;
+				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SIGNED8 );
+				VAR i: SIGNED16;
 				BEGIN
 					SetIV^( src, mode );   (* set mode *)
 					FOR i := 0 TO 3 DO  iv[i] := U.SetFromBufferLE( src, 4*i )  END;
@@ -77,7 +77,7 @@ TYPE
 				END Decrypt;
 
 				PROCEDURE EncryptBlock( VAR buf: ARRAY OF CHAR;  pos: SIZE );
-				VAR x: Block;  t0, t1, i, r: LONGINT;  s0, s1: SET32;
+				VAR x: Block;  t0, t1, i, r: SIGNED32;  s0, s1: SET32;
 				BEGIN
 					(* copy in the block, add whitening *)
 					FOR i := 0 TO 3 DO
@@ -102,7 +102,7 @@ TYPE
 				END EncryptBlock;
 
 				PROCEDURE DecryptBlock( VAR buf: ARRAY OF CHAR;  pos: SIZE );
-				VAR x0, x: Block;  t0, t1, i, r: LONGINT;  s0, s1: SET32;
+				VAR x0, x: Block;  t0, t1, i, r: SIGNED32;  s0, s1: SET32;
 				BEGIN
 					(* copy in the block, add whitening *)
 					FOR i := 0 TO 3 DO
@@ -152,12 +152,12 @@ CONST
 	S0a6 = SET32( 0A6H );
 
 
-	PROCEDURE m1( x: LONGINT ): SET32;
+	PROCEDURE m1( x: SIGNED32 ): SET32;
 	BEGIN
 		RETURN S.VAL( SET32, x )
 	END m1;
 
-	PROCEDURE mx( x: LONGINT ): SET32;
+	PROCEDURE mx( x: SIGNED32 ): SET32;
 	VAR t: SET32;
 	BEGIN
 		t := S.VAL( SET32, x DIV 4 );
@@ -166,7 +166,7 @@ CONST
 		RETURN S.VAL( SET32, x ) / t
 	END mx;
 
-	PROCEDURE my( x: LONGINT ): SET32;
+	PROCEDURE my( x: SIGNED32 ): SET32;
 	VAR t1, t2: SET32;
 	BEGIN
 		t1 := S.VAL( SET32, x DIV 2 );  t2 := S.VAL( SET32, x DIV 4 );
@@ -175,7 +175,7 @@ CONST
 		RETURN S.VAL( SET32, x ) / t1 / t2
 	END my;
 
-	PROCEDURE split( x: LONGINT;  VAR v: SKey );
+	PROCEDURE split( x: SIGNED32;  VAR v: SKey );
 	BEGIN
 		v[3] := S.VAL( SET32, x DIV 1000000H MOD 100H );
 		v[2] := S.VAL( SET32, x DIV 10000H MOD 100H );
@@ -183,14 +183,14 @@ CONST
 		v[0] := S.VAL( SET32, x MOD 100H );
 	END split;
 
-	PROCEDURE -Int( x: SET32 ): LONGINT;
+	PROCEDURE -Int( x: SET32 ): SIGNED32;
 	BEGIN
-		RETURN S.VAL( LONGINT, x )
+		RETURN S.VAL( SIGNED32, x )
 	END Int;
 
 
-	PROCEDURE F32( x: SET32;  CONST k32: ARRAY OF LONGINT;  keybits: LONGINT ): LONGINT;
-	VAR a, b, c, d, l: LONGINT;  k, k1: SKey;
+	PROCEDURE F32( x: SET32;  CONST k32: ARRAY OF SIGNED32;  keybits: SIGNED32 ): SIGNED32;
+	VAR a, b, c, d, l: SIGNED32;  k, k1: SKey;
 	BEGIN
 		(* Run each byte thru 8x8 S-boxes, xoring with key byte at each stage. *)
 		(* Note that each byte goes through a different combination of S-boxes.*)
@@ -229,14 +229,14 @@ CONST
 	END F32;
 
 	(* RS_MDS_Encode *)
-	PROCEDURE Encode( k0, k1: LONGINT ): LONGINT;
-	VAR i, j, b: LONGINT;  r, g2, g2s16, g3, g3s8, g3s24: SET32;
+	PROCEDURE Encode( k0, k1: SIGNED32 ): SIGNED32;
+	VAR i, j, b: SIGNED32;  r, g2, g2s16, g3, g3s8, g3s24: SET32;
 	BEGIN
 		r := S.VAL( SET32, k1 );
 		FOR i := 0 TO 1 DO
 			IF i # 0 THEN  r := r / S.VAL( SET32, k0 )  END;
 			FOR j := 0 TO 3 DO
-				b := S.VAL( LONGINT, LSH( r, -24 ) );
+				b := S.VAL( SIGNED32, LSH( r, -24 ) );
 
 				g2 := S.VAL( SET32, b*2 );
 				IF b > 7FH THEN  g2 := (g2 / S14d) * Byte0  END;
@@ -250,14 +250,14 @@ CONST
 				r := LSH( r, 8 ) / g3s24 / g2s16 / g3s8 / S.VAL( SET32, b )
 			END
 		END;
-		RETURN S.VAL( LONGINT, r )
+		RETURN S.VAL( SIGNED32, r )
 	END Encode;
 
 
 
 	PROCEDURE Init0;
 	VAR
-		buf: U.InitBuffer;  i: LONGINT;
+		buf: U.InitBuffer;  i: SIGNED32;
 	BEGIN
 		NEW( buf, 2048 );
 		buf.Add( "0A9 067 0B3 0E8 004 0FD 0A3 076 09A 092 080 078 0E4 0DD 0D1 038 " );

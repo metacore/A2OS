@@ -11,18 +11,18 @@ CONST middle = 1;
 TYPE
   Color* = POINTER TO ColorDesc;
   ColorDesc* = RECORD (Gadgets.ObjDesc)
-    col*: INTEGER
+    col*: SIGNED16
   END;
 
   Frame* = POINTER TO FrameDesc;
   FrameDesc* = RECORD (Gadgets.FrameDesc)
-  	col*: INTEGER;
+  	col*: SIGNED16;
   END;
 
-VAR NC, SC: INTEGER;
+VAR NC, SC: SIGNED16;
 
   PROCEDURE HandleObj* (obj: Objects.Object; VAR M: Objects.ObjMsg);
-    VAR obj1: Color; red, green, blue: INTEGER;
+    VAR obj1: Color; red, green, blue: SIGNED16;
   BEGIN
 	WITH obj: Color DO
 		IF M IS Objects.AttrMsg THEN
@@ -83,8 +83,8 @@ END NewObj;
     VAR obj: Objects.Object; M: Objects.AttrMsg;
       T: Texts.Text; S: Texts.Scanner;
       f: Files.File; R: Files.Rider;
-      beg, end, time: LONGINT;
-      col: INTEGER; red, green, blue: CHAR;
+      beg, end, time: SIGNED32;
+      col: SIGNED16; red, green, blue: CHAR;
   BEGIN
     M.id := Objects.get; M.name := "Value";
     obj := Gadgets.FindObj(Gadgets.context, "PalName");
@@ -109,8 +109,8 @@ END NewObj;
     VAR obj: Objects.Object; M: Objects.AttrMsg;
       T: Texts.Text; S: Texts.Scanner;
       f: Files.File; R: Files.Rider;
-      beg, end, time: LONGINT;
-      col: INTEGER; red, green, blue: INTEGER;
+      beg, end, time: SIGNED32;
+      col: SIGNED16; red, green, blue: SIGNED16;
   BEGIN
     M.id := Objects.get; M.name := "Value";
     obj := Gadgets.FindObj(Gadgets.context, "PalName");
@@ -164,8 +164,8 @@ BEGIN
   END
 END HandleAttributes;
 
-PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER);
-  VAR model: Color; col, i, j, xcur, ycur, wfld, hfld, wmarg, hmarg: INTEGER;
+PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16);
+  VAR model: Color; col, i, j, xcur, ycur, wfld, hfld, wmarg, hmarg: SIGNED16;
 BEGIN
   model := F.obj(Color);
   Display3.ReplConst(Q, F.col, x, y, w, h, Display.replace);
@@ -190,7 +190,7 @@ END Restore;
 PROCEDURE Print (F: Frame; VAR M: Display.DisplayMsg);
   VAR Q: Display3.Mask;
 
-  PROCEDURE P(x: INTEGER): INTEGER;
+  PROCEDURE P(x: SIGNED16): SIGNED16;
   BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
   END P;
 
@@ -203,9 +203,9 @@ PROCEDURE Copy* (VAR M: Objects.CopyMsg; from, to: Frame);
 BEGIN to.col := from.col; Gadgets.CopyFrame(M, from, to)
 END Copy;
 
-PROCEDURE SelectColor (F: Frame; VAR M: Oberon.InputMsg; Q: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE SelectColor (F: Frame; VAR M: Oberon.InputMsg; Q: Display3.Mask; x, y, w, h: SIGNED16);
   VAR model: Color; keysum: SET;
-    i, j, k, l, x0, y0, w0, h0, wfld, hfld, wmarg, hmarg, col, bak: INTEGER;
+    i, j, k, l, x0, y0, w0, h0, wfld, hfld, wmarg, hmarg, col, bak: SIGNED16;
 BEGIN
   model := F.obj(Color); bak := model.col;
   wfld := (w - (SC + 1)*2) DIV SC; wmarg := (w - SC*(wfld + 2) - 2) DIV 2;
@@ -243,7 +243,7 @@ BEGIN
 END SelectColor;
 
 PROCEDURE HandleFrame* (F: Objects.Object; VAR M: Objects.ObjMsg);
-  VAR x, y, w, h: INTEGER; F1: Frame; Q: Display3.Mask;
+  VAR x, y, w, h: SIGNED16; F1: Frame; Q: Display3.Mask;
 BEGIN
   WITH F: Frame DO
     IF M IS Display.FrameMsg THEN

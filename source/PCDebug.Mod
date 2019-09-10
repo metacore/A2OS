@@ -22,16 +22,16 @@ MODULE PCDebug; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: low-level trace fu
 
 	(* Read a compressed integer from memory *)
 
-	PROCEDURE ReadNum (VAR pos: ADDRESS; VAR i: LONGINT);
-		VAR n: LONGINT; s: SHORTINT; x: CHAR;
+	PROCEDURE ReadNum (VAR pos: ADDRESS; VAR i: SIGNED32);
+		VAR n: SIGNED32; s: SIGNED8; x: CHAR;
 	BEGIN
 		s := 0; n := 0; SYSTEM.GET(pos, x); INC(pos);
 		WHILE ORD(x) >= 128 DO INC(n, ASH(ORD(x) - 128, s)); INC(s, 7); SYSTEM.GET(pos, x); INC(pos) END;
 		i := n + ASH(ORD(x) MOD 64 - ORD(x) DIV 64 * 64, s)
 	END ReadNum;
 
-	PROCEDURE WriteString*(str: ARRAY OF CHAR; VAR name: ARRAY OF CHAR; VAR pos: LONGINT);
-	VAR i: LONGINT;
+	PROCEDURE WriteString*(str: ARRAY OF CHAR; VAR name: ARRAY OF CHAR; VAR pos: SIGNED32);
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (str[i] # 0X) & (pos < LEN(name)-1) DO
@@ -40,8 +40,8 @@ MODULE PCDebug; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: low-level trace fu
 		name[pos] := 0X
 	END WriteString;
 
-	PROCEDURE WriteHex*(val: ADDRESS; VAR name: ARRAY OF CHAR; VAR pos: LONGINT);
-	VAR i: LONGINT;
+	PROCEDURE WriteHex*(val: ADDRESS; VAR name: ARRAY OF CHAR; VAR pos: SIGNED32);
+	VAR i: SIGNED32;
 	BEGIN
 		INC(pos, 8); i := 1;
 		WHILE i <= 8 DO
@@ -53,7 +53,7 @@ MODULE PCDebug; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: low-level trace fu
 
 
 	PROCEDURE GetProcedure*(pc: ADDRESS; VAR name: ARRAY OF CHAR);
-		VAR mod: Modules.Module; refpos, limit, refstart: ADDRESS; ch, ch0: CHAR; i, procstart: LONGINT;
+		VAR mod: Modules.Module; refpos, limit, refstart: ADDRESS; ch, ch0: CHAR; i, procstart: SIGNED32;
 	BEGIN
 		i := 0;
 		mod := Modules.ThisModuleByAdr(pc);
@@ -97,7 +97,7 @@ MODULE PCDebug; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: low-level trace fu
 
 
 	PROCEDURE GetTypeName*(p: ANY; VAR name: ARRAY OF CHAR);
-	VAR ch: CHAR; i, tag: LONGINT;
+	VAR ch: CHAR; i, tag: SIGNED32;
 	BEGIN
 		IF p = NIL THEN COPY("NIL", name)
 		ELSE
@@ -116,7 +116,7 @@ MODULE PCDebug; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: low-level trace fu
 		END
 	END GetTypeName;
 
-	PROCEDURE ToDo*(class: LONGINT);
+	PROCEDURE ToDo*(class: SIGNED32);
 		VAR pc, bp: ADDRESS; p, q: List; name: ARRAY 64 OF CHAR;
 	BEGIN {EXCLUSIVE}
 		bp := SYSTEM.GetFramePointer ();
@@ -133,7 +133,7 @@ MODULE PCDebug; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: low-level trace fu
 			GetProcedure(pc, name); KernelLog.String(name);
 		END;
 		IF class = NotImplemented THEN
-			HALT(MAX(INTEGER))
+			HALT(MAX(SIGNED16))
 		END
 	END ToDo;
 

@@ -26,7 +26,7 @@ CONST
 
 TYPE
 	DiscardAgent = OBJECT (TCPServices.Agent)
-		VAR len: SIZE; res: WORD; buf: ARRAY DiscardBufSize OF CHAR;
+		VAR len: SIZE; res: INTEGER; buf: ARRAY DiscardBufSize OF CHAR;
 
 	BEGIN {ACTIVE}
 		REPEAT
@@ -40,7 +40,7 @@ TYPE
 
 TYPE
 	EchoAgent = OBJECT (TCPServices.Agent)
-		VAR len: SIZE; res: WORD; buf: ARRAY EchoBufSize OF CHAR;
+		VAR len: SIZE; res: INTEGER; buf: ARRAY EchoBufSize OF CHAR;
 
 	BEGIN {ACTIVE}
 		LOOP
@@ -57,7 +57,7 @@ TYPE
 
 TYPE
 	ChargenAgent = OBJECT (TCPServices.Agent)
-		VAR res: WORD;
+		VAR res: INTEGER;
 
 	BEGIN {ACTIVE}
 		LOOP
@@ -72,7 +72,7 @@ TYPE
 
 TYPE
 	DayTimeAgent = OBJECT (TCPServices.Agent)
-		VAR time, date: LONGINT; w: Streams.Writer;
+		VAR time, date: SIGNED32; w: Streams.Writer;
 
 	BEGIN {ACTIVE}
 		Streams.OpenWriter(w, client.Send);
@@ -88,7 +88,7 @@ VAR
 	chargenbuf: POINTER TO ARRAY CharGenBufSize OF CHAR;
 
 PROCEDURE InitChargenBuf;
-VAR i, j, k: LONGINT;
+VAR i, j, k: SIGNED32;
 BEGIN
 	k := 0; NEW(chargenbuf);
 	FOR i := 1 TO ChargenNumChars DO
@@ -101,7 +101,7 @@ BEGIN
 END InitChargenBuf;
 
 PROCEDURE Open*;
-VAR res : WORD;
+VAR res : INTEGER;
 BEGIN
 	NEW(discard, DiscardPort, NewDiscardAgent, res);
 	NEW(echo, EchoPort, NewEchoAgent, res);

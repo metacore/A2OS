@@ -10,7 +10,7 @@ CONST 	OnOmittedParseDefault=0;
 TYPE
 	SVGLoader=OBJECT
 		VAR
-			ppi: LONGREAL;	(* pixels per inch of the documents *)
+			ppi: FLOAT64;	(* pixels per inch of the documents *)
 			state: SVG.State; (* the current state *)
 			mainDocument: SVG.Document; (* the main target *)
 
@@ -18,7 +18,7 @@ TYPE
 			fePrev: SVGFilters.FilterElement; (* the previous filter element *)
 
 			sizeForced: BOOLEAN; (* should the output be forced to size widthForced * heightForced? *)
-			widthForced, heightForced: LONGINT;
+			widthForced, heightForced: SIGNED32;
 
 		PROCEDURE &New*;
 		BEGIN
@@ -26,7 +26,7 @@ TYPE
 		END New;
 
 		(* Force the output to be of size width * height *)
-		PROCEDURE ForceSize(width, height: LONGINT);
+		PROCEDURE ForceSize(width, height: SIGNED32);
 		BEGIN
 			sizeForced := TRUE;
 			widthForced := width;
@@ -202,7 +202,7 @@ TYPE
 		(* Load the <linearGradient> element e *)
 		PROCEDURE LoadLinearGradient(e: XML.Element; id: XML.String);
 		VAR gradient: SVGGradients.LinearGradient;
-			onOmitted: SHORTINT;
+			onOmitted: SIGNED8;
 		BEGIN
 			SVG.Log("<linearGradient>");
 
@@ -226,7 +226,7 @@ TYPE
 		(* Load the <radialGradient> element e *)
 		PROCEDURE LoadRadialGradient(e: XML.Element; id: XML.String);
 		VAR gradient: SVGGradients.RadialGradient;
-			onOmitted: SHORTINT;
+			onOmitted: SIGNED8;
 		BEGIN
 			SVG.Log("<radialGradient>");
 
@@ -865,7 +865,7 @@ TYPE
 		PROCEDURE LoadViewBoxAttributes(e: XML.Element; VAR transform: SVG.Transform; width0, height0: SVG.Length);
 		VAR viewBox, preserveAR: XML.String;
 			minx, miny, width, height, ratioX, ratioY: SVG.Length;
-			xAlign, yAlign: LONGINT;
+			xAlign, yAlign: SIGNED32;
 			meet: BOOLEAN;
 		BEGIN
 			viewBox := e.GetAttributeValue("viewBox");
@@ -892,7 +892,7 @@ TYPE
 
 		(* Load some numeric attribute of element e *)
 		PROCEDURE LoadAttrNumber(e: XML.Element; name: ARRAY OF CHAR; VAR number: SVG.Number;
-			percentageAllowed: BOOLEAN; percent100: SVG.Number; onOmitted: SHORTINT; default: ARRAY OF CHAR);
+			percentageAllowed: BOOLEAN; percent100: SVG.Number; onOmitted: SIGNED8; default: ARRAY OF CHAR);
 		VAR value: XML.String;
 		BEGIN
 			value := LoadAttribute(e,name);
@@ -912,7 +912,7 @@ TYPE
 
 		(* Load some attribute of element e of type length *)
 		PROCEDURE LoadAttrLength(e: XML.Element; name: ARRAY OF CHAR; VAR length: SVG.Length;
-			percent100: SVG.Number; onOmitted: SHORTINT; default: ARRAY OF CHAR);
+			percent100: SVG.Number; onOmitted: SIGNED8; default: ARRAY OF CHAR);
 		VAR value: XML.String;
 		BEGIN
 			value := LoadAttribute(e,name);
@@ -941,9 +941,9 @@ TYPE
 		END LoadAttrTransform;
 
 		(* Load some attribute of element e using a custom parse procedure*)
-		PROCEDURE LoadAttrParsed(e: XML.Element; name: ARRAY OF CHAR; VAR parsed: SHORTINT;
-			onOmitted: SHORTINT; default: ARRAY OF CHAR;
-			parser: PROCEDURE(value: XML.String; VAR parsed: SHORTINT));
+		PROCEDURE LoadAttrParsed(e: XML.Element; name: ARRAY OF CHAR; VAR parsed: SIGNED8;
+			onOmitted: SIGNED8; default: ARRAY OF CHAR;
+			parser: PROCEDURE(value: XML.String; VAR parsed: SIGNED8));
 		VAR value: XML.String;
 		BEGIN
 			value := LoadAttribute(e,name);
@@ -975,9 +975,9 @@ TYPE
 		END LoadAttribute;
 
 		(* Load some opacity attribute of element e *)
-		PROCEDURE LoadOpacity(e: XML.Element; name: ARRAY OF CHAR; VAR color: SVG.Color; onOmitted: SHORTINT; default: ARRAY OF CHAR);
+		PROCEDURE LoadOpacity(e: XML.Element; name: ARRAY OF CHAR; VAR color: SVG.Color; onOmitted: SIGNED8; default: ARRAY OF CHAR);
 		VAR opacity: SVG.Length;
-			r,g,b,a: INTEGER;
+			r,g,b,a: SIGNED16;
 		BEGIN
 			LoadAttrNumber(e,name, opacity,SVG.DisallowPercentages, 0.0,  onOmitted, default);
 			IF opacity#1 THEN
@@ -1016,7 +1016,7 @@ BEGIN
 END LoadSVGEmbedded;
 
 (* Load some svg file and force the resulting size to be width * height *)
-PROCEDURE LoadSizedSVG*(svgName: ARRAY OF CHAR; width, height: LONGINT): SVG.Document;
+PROCEDURE LoadSizedSVG*(svgName: ARRAY OF CHAR; width, height: SIGNED32): SVG.Document;
 VAR
 	xml: XML.Document;
 	root: XML.Element;

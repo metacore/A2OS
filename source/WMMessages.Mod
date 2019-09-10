@@ -42,7 +42,7 @@ TYPE
 		sender* : ANY; (** is the sender component. If the message is originated form a component *)
 		token* : AsyncToken;
 		event* : CompCommand;
-		msgType*, msgSubType* : LONGINT; (** generic message type *)
+		msgType*, msgSubType* : SIGNED32; (** generic message type *)
 		x*, y*, z*, dx*, dy*, dz* : SIZE; (** in keyboard messages : ucs value in x, keysym in y *)
 		flags* : SET; (** in pointer messages : keys in flags *)
 		ext* : ANY; (** extended message *)
@@ -328,7 +328,7 @@ TYPE
 		(* Remove a message from the queue. Block if no message is available but awake if queue is terminated by call to Stop *)
 		(* return if alive *)
 		PROCEDURE Get(VAR msg : Message; debug: BOOLEAN) : BOOLEAN;
-		VAR i: LONGINT; name: ARRAY 256 OF CHAR; pc: ADDRESS;
+		VAR i: SIGNED32; name: ARRAY 256 OF CHAR; pc: ADDRESS;
 			type: Modules.TypeDesc;
 		BEGIN
 			msg := msgQ[head];
@@ -535,9 +535,9 @@ VAR
 	 ttoken : AsyncToken;
 
 	 (* Statistics *)
-	 messagesAddedByType- : ARRAY MsgTypeMax OF LONGINT;
-	 messagesAdded- : LONGINT;
-	 messagesDiscarded- : LONGINT;
+	 messagesAddedByType- : ARRAY MsgTypeMax OF SIGNED32;
+	 messagesAdded- : SIGNED32;
+	 messagesDiscarded- : SIGNED32;
 
 
 	 debug*: ANY;

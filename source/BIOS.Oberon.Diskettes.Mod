@@ -20,24 +20,24 @@ CONST
 TYPE
 	Device* = OBJECT (Disks.Device)
 		VAR
-			drive: LONGINT;
+			drive: SIGNED32;
 			locked: BOOLEAN;	(* must be locked before access is allowed *)
-			type, media: SHORTINT;	(* drive type & current media *)
+			type, media: SIGNED8;	(* drive type & current media *)
 				(* current parameters *)
-			size, sectors, heads, tracks: LONGINT;
+			size, sectors, heads, tracks: SIGNED32;
 			gap, rate, spec1, spec2, fgap: CHAR;
 
-		PROCEDURE Transfer*(op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: SIZE;  VAR res: WORD);
+		PROCEDURE Transfer*(op, start, num: SIGNED32;  VAR buf: ARRAY OF CHAR;  ofs: SIZE;  VAR res: INTEGER);
 		BEGIN
 			Transfer1(SELF, op, start, num, buf, ofs, res)
 		END Transfer;
 
-		PROCEDURE GetSize*(VAR size: LONGINT; VAR res: WORD);
+		PROCEDURE GetSize*(VAR size: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			GetSize1(SELF, size, res)
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Disks.Message;  VAR res: WORD);
+		PROCEDURE Handle*(VAR msg: Disks.Message;  VAR res: INTEGER);
 		BEGIN
 			Handle1(SELF, msg, res)
 		END Handle;
@@ -46,21 +46,21 @@ TYPE
 
 VAR
 	device: ARRAY MaxDevices OF Device;
-	curdrive: LONGINT;
-	curtrack: LONGINT;
-	state: SHORTINT;
+	curdrive: SIGNED32;
+	curtrack: SIGNED32;
+	state: SIGNED8;
 	result: ARRAY 7 OF SET;
 	errors: ARRAY 3 OF SET;
-	dmabufvirt, dmabufphys: ADDRESS; dmabufsize: LONGINT;
+	dmabufvirt, dmabufphys: ADDRESS; dmabufsize: SIGNED32;
 	motor, interrupt, installed: BOOLEAN;
-	trace: SHORTINT;
+	trace: SIGNED8;
 
 (* Device driver *)
 
 (* Error - Report an error *)
 
 PROCEDURE Error(msg: ARRAY OF CHAR);
-VAR error, reason: ARRAY 32 OF CHAR;  i: SHORTINT;  r0, r1, r2: SET;
+VAR error, reason: ARRAY 32 OF CHAR;  i: SIGNED8;  r0, r1, r2: SET;
 BEGIN
 	COPY(msg, error);  r0 := errors[0];  r1 := errors[1];  r2 := errors[2];
 	IF (0 IN r1) OR (0 IN r2) THEN reason := "Missing address mark"
@@ -78,9 +78,9 @@ BEGIN
 	Kernel.WriteLn;  Kernel.WriteString("Diskette: ");  Kernel.WriteString(error);
 	Kernel.WriteString(". ");  Kernel.WriteString(reason);  Kernel.WriteLn;
 	IF trace > 0 THEN
-		FOR i := 0 TO 2 DO Kernel.WriteHex(SYSTEM.VAL(LONGINT, result[i]), 9) END;
+		FOR i := 0 TO 2 DO Kernel.WriteHex(SYSTEM.VAL(SIGNED32, result[i]), 9) END;
 		Kernel.WriteLn;
-		FOR i := 0 TO 2 DO Kernel.WriteHex(SYSTEM.VAL(LONGINT, errors[i]), 9) END;
+		FOR i := 0 TO 2 DO Kernel.WriteHex(SYSTEM.VAL(SIGNED32, errors[i]), 9) END;
 		Kernel.WriteLn
 	END;
 	FOR i := 0 TO 6 DO result[i] := {} END;
@@ -90,8 +90,8 @@ END Error;
 
 (* SetupDMA - Start a DMA operation *)
 
-PROCEDURE SetupDMA(read: BOOLEAN; chan, len: LONGINT);
-VAR adr: ADDRESS; page, mode: LONGINT;
+PROCEDURE SetupDMA(read: BOOLEAN; chan, len: SIGNED32);
+VAR adr: ADDRESS; page, mode: SIGNED32;
 BEGIN
 	adr := dmabufphys;
 	ASSERT(len <= dmabufsize);
@@ -140,8 +140,8 @@ END PutByte;
 
 (* GetResults - Get results from controller, returns length of result *)
 
-PROCEDURE GetResults(): INTEGER;
-VAR t: AosKernel.MilliTimer;  s: SET;  i: SHORTINT;
+PROCEDURE GetResults(): SIGNED16;
+VAR t: AosKernel.MilliTimer;  s: SET;  i: SIGNED8;
 BEGIN
 	IF state # Reset THEN
 		i := 0;  s := {};
@@ -236,9 +236,9 @@ END CycleMedia;
 
 (* Do - Perform a floppy operation *)
 
-PROCEDURE Do(dev: Device; op, sector, head, track, num: LONGINT;  VAR buf: ARRAY OF SYSTEM.BYTE): LONGINT;
+PROCEDURE Do(dev: Device; op, sector, head, track, num: SIGNED32;  VAR buf: ARRAY OF SYSTEM.BYTE): SIGNED32;
 CONST MaxLoops = 18;  MaxTries = 3;
-VAR s: SET;  i, loops, try: LONGINT;  t: AosKernel.MilliTimer;  ok: BOOLEAN;  media: SHORTINT;
+VAR s: SET;  i, loops, try: SIGNED32;  t: AosKernel.MilliTimer;  ok: BOOLEAN;  media: SIGNED8;
 BEGIN
 	FOR i := 0 TO 2 DO errors[i] := {} END;
 	IF (num < 1) OR (num > 126) THEN Error("Bad number of sectors"); RETURN 1003 END;
@@ -373,8 +373,8 @@ BEGIN
 	IF dev.media = media THEN RETURN Ok ELSE RETURN Disks.MediaChanged END
 END Do;
 
-PROCEDURE Transfer0(d: Disks.Device;  op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: SIZE;  VAR res: WORD);
-VAR dev: Device; sector, head, track, s, n, max, start0, num0: LONGINT; ofs0: SIZE;
+PROCEDURE Transfer0(d: Disks.Device;  op, start, num: SIGNED32;  VAR buf: ARRAY OF CHAR;  ofs: SIZE;  VAR res: INTEGER);
+VAR dev: Device; sector, head, track, s, n, max, start0, num0: SIGNED32; ofs0: SIZE;
 BEGIN
 	dev := d(Device);
 	IF dev.locked THEN
@@ -406,12 +406,12 @@ BEGIN
 	END
 END Transfer0;
 
-PROCEDURE Transfer1(d: Disks.Device;  op, start, num: LONGINT;  VAR buf: ARRAY OF CHAR;  ofs: SIZE;  VAR res: WORD);
+PROCEDURE Transfer1(d: Disks.Device;  op, start, num: SIGNED32;  VAR buf: ARRAY OF CHAR;  ofs: SIZE;  VAR res: INTEGER);
 BEGIN {EXCLUSIVE}
 	Transfer0(d, op, start, num, buf, ofs, res)
 END Transfer1;
 
-PROCEDURE GetSize1(d: Disks.Device;  VAR size: LONGINT; VAR res: WORD);
+PROCEDURE GetSize1(d: Disks.Device;  VAR size: SIGNED32; VAR res: INTEGER);
 VAR dev: Device;  buf: ARRAY BS OF CHAR;
 BEGIN {EXCLUSIVE}
 	dev := d(Device);
@@ -419,7 +419,7 @@ BEGIN {EXCLUSIVE}
 	IF res = Disks.Ok THEN size := dev.size ELSE size := 0 END
 END GetSize1;
 
-PROCEDURE Handle1(d: Disks.Device;  VAR msg: Disks.Message;  VAR res: WORD);
+PROCEDURE Handle1(d: Disks.Device;  VAR msg: Disks.Message;  VAR res: INTEGER);
 VAR dev: Device;  buf: ARRAY BS OF CHAR;
 BEGIN {EXCLUSIVE}
 	dev := d(Device);
@@ -450,9 +450,9 @@ END Handle1;
 
 (** FormatDisk - Low-level format a diskette.  fmt="H" for high density (1.44M), "D" for double (720k) *)
 
-PROCEDURE FormatDisk*(drive: LONGINT;  fmt: CHAR);
+PROCEDURE FormatDisk*(drive: SIGNED32;  fmt: CHAR);
 VAR
-	error: ARRAY 32 OF CHAR;  head, track, i, div: LONGINT;  phys: BOOLEAN;  buf: ARRAY 512 OF CHAR;
+	error: ARRAY 32 OF CHAR;  head, track, i, div: SIGNED32;  phys: BOOLEAN;  buf: ARRAY 512 OF CHAR;
 	dev: Device;
 BEGIN {EXCLUSIVE}
 	dev := device[drive];
@@ -496,15 +496,15 @@ END FormatDisk;
 
 (* StopMotor - Switch off diskette motor *)
 
-PROCEDURE StopMotor(drive: LONGINT);
+PROCEDURE StopMotor(drive: SIGNED32);
 BEGIN
 	device[drive].media := T0;	(* reset media type *)
 	Machine.Portout8(3F2H, 0CX);	(* all motors off *)
 	motor := FALSE
 END StopMotor;
 
-PROCEDURE StrToInt(s: ARRAY OF CHAR): LONGINT;
-VAR i: SHORTINT;  v: LONGINT;
+PROCEDURE StrToInt(s: ARRAY OF CHAR): SIGNED32;
+VAR i: SIGNED8;  v: SIGNED32;
 BEGIN
 	v := 0;  i := 0;
 	WHILE s[i] # 0X DO v := v*10+(ORD(s[i])-48); INC(i) END;
@@ -512,7 +512,7 @@ BEGIN
 END StrToInt;
 
 PROCEDURE Init;
-VAR s: ARRAY 12 OF CHAR;  b10, b14: INTEGER;
+VAR s: ARRAY 12 OF CHAR;  b10, b14: SIGNED16;
 BEGIN
 	Kernel.GetConfig("TraceDiskette", s);
 	IF s[0] # 0X THEN trace := SHORT(ORD(s[0])-ORD("0")) ELSE trace := 0 END;
@@ -523,7 +523,7 @@ BEGIN
 		b14 := ORD(Machine.GetNVByte(14H))
 	ELSE
 		b10 := SHORT(StrToInt(s) MOD 100H);
-		b14 := INTEGER(ASH(StrToInt(s), -8))
+		b14 := SIGNED16(ASH(StrToInt(s), -8))
 	END;
 	IF trace > 0 THEN
 		Kernel.WriteString("Diskette config:");  Kernel.WriteHex(b10, -3);
@@ -553,7 +553,7 @@ BEGIN
 END Init;
 
 PROCEDURE Register;
-VAR i: LONGINT; res: WORD; dev: Device; name: Plugins.Name;
+VAR i: SIGNED32; res: INTEGER; dev: Device; name: Plugins.Name;
 BEGIN
 	FOR i := 0 TO MaxDevices-1 DO
 		dev := device[i];
@@ -584,7 +584,7 @@ END DoInstall;
 
 (** Remove the diskette devices.  Automatically executed when the module is unloaded. *)
 PROCEDURE Remove*;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN {EXCLUSIVE}
 	IF installed & (Modules.shutdown = Modules.None) THEN
 		FOR i := 0 TO MaxDevices-1 DO
@@ -600,7 +600,7 @@ BEGIN {EXCLUSIVE}
 END Remove;
 
 BEGIN
-	dmabufsize := LONGINT(Machine.dmaSize);
+	dmabufsize := SIGNED32(Machine.dmaSize);
 	IF dmabufsize > 0 THEN
 		dmabufphys := Machine.lowTop;
 		Machine.MapPhysical(dmabufphys, dmabufsize, dmabufvirt)

@@ -29,8 +29,8 @@ Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
 IMPORT Math IN A2;
 CONST idversion* = ' v0r0d1';
 TYPE
-	real = REAL;  (* technical convenience, to avoid duplicate code for REAL and LONGREAL *)
-	index = LONGINT;
+	real = FLOAT32;  (* technical convenience, to avoid duplicate code for FLOAT32 and FLOAT64 *)
+	index = SIGNED32;
 
 PROCEDURE PolarToC* (len: index;  VAR (*IN*)rho, phi: ARRAY OF real;
 	VAR (*OUT*)Re, Im: ARRAY OF real;  start: index);

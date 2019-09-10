@@ -45,7 +45,7 @@ TYPE
 			counter value changes decrementally from the initial value set by LoadTimer
 
 	*)
-	PROCEDURE GetCounterValue*(CONST timer: Timer): LONGINT;
+	PROCEDURE GetCounterValue*(CONST timer: Timer): SIGNED32;
 	BEGIN
 		RETURN SYSTEM.GET32(timer.baseAddr+CounterRegOffset);
 	END GetCounterValue;
@@ -53,7 +53,7 @@ TYPE
 	(**
 		Load timer with a given 32-bit initial counter value
 	*)
-	PROCEDURE LoadTimer*(VAR timer: Timer; value: LONGINT);
+	PROCEDURE LoadTimer*(VAR timer: Timer; value: SIGNED32);
 	BEGIN
 		SYSTEM.PUT32(timer.baseAddr+LoadOffset,value);
 	END LoadTimer;
@@ -83,8 +83,8 @@ TYPE
 	(**
 		Set 8-bit timer clock prescaler value
 	*)
-	PROCEDURE SetPrescaler*(VAR timer: Timer; value: LONGINT);
-	VAR reg: LONGINT;
+	PROCEDURE SetPrescaler*(VAR timer: Timer; value: SIGNED32);
+	VAR reg: SIGNED32;
 	BEGIN
 		reg := SYSTEM.GET32(timer.baseAddr+ControlRegOffset);
 		(* clear all prescaler control bits and set the prescaler value *)
@@ -94,9 +94,9 @@ TYPE
 	(**
 		Get 8-bit timer clock prescaler value
 	*)
-	PROCEDURE GetPrescaler*(CONST timer: Timer): LONGINT;
+	PROCEDURE GetPrescaler*(CONST timer: Timer): SIGNED32;
 	BEGIN
-		RETURN LSH(SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(timer.baseAddr+ControlRegOffset)) * ControlPrescalerMask),-8);
+		RETURN LSH(SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,SYSTEM.GET32(timer.baseAddr+ControlRegOffset)) * ControlPrescalerMask),-8);
 	END GetPrescaler;
 
 	(** Enable/disable timer interrupt *)
@@ -114,7 +114,7 @@ TYPE
 		Remark:
 			returned status value indicates the timer counter register has reached zero
 	*)
-	PROCEDURE GetInterruptStatus*(CONST timer: Timer): LONGINT;
+	PROCEDURE GetInterruptStatus*(CONST timer: Timer): SIGNED32;
 	BEGIN
 		RETURN SYSTEM.GET32(timer.baseAddr+IsrRegOffset);
 	END GetInterruptStatus;

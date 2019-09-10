@@ -11,7 +11,7 @@ CONST
 	MaxHandlers = 32;
 
 TYPE
-	Time* = HUGEINT; (* Time type used in EnetTiming *)
+	Time* = SIGNED64; (* Time type used in EnetTiming *)
 	
 	(* The prototype of an interrupt handler *)
 	InterruptHandler* = PROCEDURE();
@@ -27,14 +27,14 @@ VAR
 	GetTimeCounter-: PROCEDURE(): Time;
 	InvalidateDCacheRange-: PROCEDURE(addr: ADDRESS; length: SIZE);
 	FlushDCacheRange-: PROCEDURE(addr: ADDRESS; length: SIZE);
-	handlers: ARRAY MaxHandlers OF RECORD handle: PROCEDURE; irq: LONGINT END;
+	handlers: ARRAY MaxHandlers OF RECORD handle: PROCEDURE; irq: SIGNED32 END;
 
 	(**
 		Install an interrupt handler
 	*)
-	PROCEDURE InstallInterruptHandler*(interruptHandler: InterruptHandler; interruptNumber: LONGINT);
+	PROCEDURE InstallInterruptHandler*(interruptHandler: InterruptHandler; interruptNumber: SIGNED32);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (i < MaxHandlers) & (handlers[i].handle # NIL) DO INC(i) END;
@@ -72,7 +72,7 @@ VAR
 	(** Convert time counts to microseconds *)
 	PROCEDURE ToMicro*(time: Time): Time;
 	BEGIN
-		RETURN ENTIERH((0.5D0 + time) / (LONGREAL(Board.CpuClockHz)) * 2.0D6)
+		RETURN ENTIERH((0.5D0 + time) / (FLOAT64(Board.CpuClockHz)) * 2.0D6)
 	END ToMicro;
 
 	(** Convert milliseconds to time counts *)
@@ -84,13 +84,13 @@ VAR
 	(** Convert time counts to milliseconds *)
 	PROCEDURE ToMilli*(time: Time): Time;
 	BEGIN
-		RETURN ENTIERH((0.5D0 + time) / (LONGREAL(Board.CpuClockHz)) * 2.0D3)
+		RETURN ENTIERH((0.5D0 + time) / (FLOAT64(Board.CpuClockHz)) * 2.0D3)
 	END ToMilli;
 
 	(** Delegating interrupt handler *)
-	PROCEDURE HandleInterrupt * (irq: LONGINT);
+	PROCEDURE HandleInterrupt * (irq: SIGNED32);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		handle: PROCEDURE;
 	BEGIN
 		FOR i := 0 TO MaxHandlers - 1 DO

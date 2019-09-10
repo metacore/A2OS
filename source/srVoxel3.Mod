@@ -87,7 +87,7 @@ END SetMid;
 
 PROCEDURE Fill*(v: Voxel);
 VAR
-	i, j, k: INTEGER;
+	i, j, k: SIGNED16;
 BEGIN
 	FOR i := 0 TO 2 DO FOR j := 0 TO 2 DO FOR k := 0 TO 2 DO
 		blox[i, j, k] := v
@@ -98,7 +98,7 @@ PROCEDURE tick*;
 (*
 VAR
 	v: Voxel;
-	a, b, c, d, e, f: LONGINT;
+	a, b, c, d, e, f: SIGNED32;
 BEGIN
 	a := rand.Dice(3);
 	b := rand.Dice(3);
@@ -132,7 +132,7 @@ PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	oldxyz, xyz: srBase.PT;
 	drx, dry, drz: SREAL;
-	di, dj, dk: INTEGER;
+	di, dj, dk: SIGNED16;
 	out: BOOLEAN;
 	v: Voxel;
 	ijk: srBase.IPT;
@@ -236,7 +236,7 @@ PROCEDURE probeShade*(VAR ray: Ray; VAR dx,dy,dz: SREAL);
 VAR
 	oldxyz, xyz: srBase.PT;
 	drx, dry, drz: SREAL;
-	di, dj, dk: INTEGER;
+	di, dj, dk: SIGNED16;
 	out: BOOLEAN;
 	v: Voxel;
 	ijk: srBase.IPT;
@@ -340,7 +340,7 @@ VAR
 
 PROCEDURE&init(kore, mid: Voxel);
 VAR
-	i, j, k: INTEGER;
+	i, j, k: SIGNED16;
 BEGIN
 	Fill('X');
 	SetMid('M');
@@ -363,7 +363,7 @@ END SetMid;
 
 PROCEDURE Fill*(v: Voxel);
 VAR
-	i, j, k: INTEGER;
+	i, j, k: SIGNED16;
 BEGIN
 	FOR i := 0 TO 2 DO FOR j := 0 TO 2 DO FOR k := 0 TO 2 DO
 		blox[i, j, k] := v
@@ -372,7 +372,7 @@ END Fill;
 PROCEDURE tick;
 VAR
 	v: Voxel;
-	a, b, c, d, e, f: LONGINT;
+	a, b, c, d, e, f: SIGNED32;
 BEGIN
 	a := rand.Dice(3);
 	b := rand.Dice(3);
@@ -406,10 +406,10 @@ PROCEDURE Shade(VAR ray: Ray);
 VAR
 	oldxyz, xyz: srBase.PT;
 	drx, dry, drz: SREAL;
-	iter, di, dj, dk: INTEGER;
+	iter, di, dj, dk: SIGNED16;
 	out: BOOLEAN;
 	v: Voxel;
-	ijk: ARRAY 3 OF INTEGER;
+	ijk: ARRAY 3 OF SIGNED16;
 	lx, ly, lz, distance: SREAL;
 BEGIN
 	IF (ray.recursion < srBase.rlimit) & (ray.a > 0.1)  THEN
@@ -504,7 +504,7 @@ END Shade;
 PROCEDURE probe(x,y,z: SREAL):Voxel;
 VAR
 	X,Y,Z: SREAL;
-	i,j,k: LONGINT;
+	i,j,k: SIGNED32;
 BEGIN
  RETURN(core);
 END probe;
@@ -513,10 +513,10 @@ PROCEDURE probeShade(VAR ray: Ray);
 VAR
 	oldxyz, xyz: srBase.PT;
 	drx, dry, drz: SREAL;
-	iter, di, dj, dk: INTEGER;
+	iter, di, dj, dk: SIGNED16;
 	out: BOOLEAN;
 	v: Voxel;
-	ijk: ARRAY 3 OF INTEGER;
+	ijk: ARRAY 3 OF SIGNED16;
 	lx, ly, lz, distance: SREAL;
 BEGIN
 	IF (ray.recursion < srBase.rlimit) & (ray.a > 0.1)  THEN
@@ -665,7 +665,7 @@ END init;
 END TowerBloc;
 
 TYPE SlantBloc* = OBJECT(SerpBloc);
-PROCEDURE fn(i,j,k: INTEGER): INTEGER;
+PROCEDURE fn(i,j,k: SIGNED16): SIGNED16;
 BEGIN
 	IF k= 0 THEN IF i+j <=1  THEN RETURN(1) ELSE RETURN(2) END END;
 	IF k=1 THEN IF i+j = 0 THEN RETURN(0) ELSIF i+j=2 THEN RETURN(1) ELSE RETURN(2) END END;
@@ -675,7 +675,7 @@ END fn;
 
 PROCEDURE & init*(a,b: Voxel);
 VAR
-	i, j, k, r: INTEGER;
+	i, j, k, r: SIGNED16;
 BEGIN
 	rlimit := srBase.rlimit + 3;
 	FOR i := 0 TO 2 DO FOR j := 0 TO 2 DO FOR k := 0 TO 2 DO
@@ -760,7 +760,7 @@ END SetSurface;
 
 PROCEDURE SetGround*(v: Voxel);
 VAR
-	i, j, k: INTEGER;
+	i, j, k: SIGNED16;
 BEGIN
 	FOR i := 0 TO 2 DO FOR j := 0 TO 2 DO FOR k := 0 TO 2 DO
 		blox[i, j, k] := v
@@ -776,7 +776,7 @@ VAR
 	air: Voxel;
 	ground: srVoxel.GouraudVox;
 	reeds: srVaster.reeds2;
-	i, j, k: INTEGER;
+	i, j, k: SIGNED16;
 BEGIN
 	NEW(air);
 	NEW(ground);
@@ -809,7 +809,7 @@ VAR
 	hex: srVoxel.SPHexaVox;
 	ground: srVoxel.GouraudVox;
 	surface : Pyra5core;
-	i, j, k: INTEGER;
+	i, j, k: SIGNED16;
 BEGIN
 	NEW(air);
 	NEW(ground);
@@ -853,7 +853,7 @@ END init;
 
 PROCEDURE Fill*(v: Voxel);
 VAR
-	i, j, k: INTEGER;
+	i, j, k: SIGNED16;
 BEGIN
 	FOR i := 0 TO 2 DO FOR j := 0 TO 2 DO FOR k := 0 TO 2 DO
 		blox[i, j, k] := v
@@ -887,7 +887,7 @@ END new;
 
 PROCEDURE Fill*(v: Voxel);
 VAR
-	i, j, k: INTEGER;
+	i, j, k: SIGNED16;
 BEGIN
 	FOR i := 0 TO 4 DO FOR j := 0 TO 4 DO FOR k := 0 TO 4 DO
 		blox[i, j, k] := v

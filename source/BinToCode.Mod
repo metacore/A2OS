@@ -12,9 +12,9 @@ TYPE
 VAR
 	hexdigit: ARRAY 17 OF CHAR;
 
-PROCEDURE WriteBuffer (w: Streams.Writer; CONST buffer: Buffer; offset, size: LONGINT);
+PROCEDURE WriteBuffer (w: Streams.Writer; CONST buffer: Buffer; offset, size: SIGNED32);
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	w.String ("SYSTEM.PUT"); w.Int (size * 8, 0);
 	w.Char ("("); w.String (BufferAddressName); w.String (", 0");
@@ -35,9 +35,9 @@ VAR fileName: Files.FileName;
 	reader: Files.Reader;
 	buffer: Buffer;
 	file: Files.File;
-	size: LONGINT;
-	offset: LONGINT;
-	power: LONGINT;
+	size: SIGNED32;
+	offset: SIGNED32;
+	power: SIGNED32;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String (fileName);
 	file := Files.Old (fileName);

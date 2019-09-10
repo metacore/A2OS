@@ -23,15 +23,15 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 		ansi* = 0; applic* = 1; lineFeed* = 2; insert* = 3; relative* = 4; cursorKeys* = 5; autowrap* = 6;
 
 	TYPE
-		Char* = RECORD ch*: CHAR; attr*: SHORTINT END;
+		Char* = RECORD ch*: CHAR; attr*: SIGNED8 END;
 
 		Line* = POINTER TO RECORD
-			len*: INTEGER;
+			len*: SIGNED16;
 			ch*: ARRAY MaxWidth + 1 OF Char
 		END;
 
 		Location* = RECORD
-			line*, col*: INTEGER
+			line*, col*: SIGNED16
 		END;
 
 		Terminal* = POINTER TO TerminalDesc;
@@ -40,13 +40,13 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 
 		Breaker* = PROCEDURE (T: Terminal);
 
-		Notifier* = PROCEDURE (T: Terminal; op, fromLine, fromCol, toLine, toCol: INTEGER; oldCursor: Location);
+		Notifier* = PROCEDURE (T: Terminal; op, fromLine, fromCol, toLine, toCol: SIGNED16; oldCursor: Location);
 
 		TerminalDesc* = RECORD
 		(* text *)
-			attr*: SHORTINT;
-			width*, height* : INTEGER;
-			top, bottom: INTEGER;
+			attr*: SIGNED8;
+			width*, height* : SIGNED16;
+			top, bottom: SIGNED16;
 			cursor*: Location;
 			wrapBefore: BOOLEAN;
 			notify*: Notifier;
@@ -56,24 +56,24 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 			flags*: SET;
 			send: Sender;
 			break: Breaker;
-			state, parPos, strPos: INTEGER;
+			state, parPos, strPos: SIGNED16;
 			parBuf: ARRAY 32 OF CHAR;
 			strBuf: ARRAY 256 OF CHAR;
 			tabs: ARRAY MaxWidth+1 OF BOOLEAN;
 			answerback*: ARRAY 32 OF CHAR;
-			oldAttr: SHORTINT;
+			oldAttr: SIGNED8;
 			oldCursor: Location;
 			oldRelative: BOOLEAN;
 			cache*: Texts.Writer;
 			text*: Texts.Text;
-			pin*: LONGINT;
+			pin*: SIGNED32;
 		END;
 
 
 (* text operations *)
 
-	PROCEDURE MoveLines (t: Terminal; top, bot, dH: INTEGER);
-		VAR i, j, d, s, from, to: INTEGER; line: Line; buf: ARRAY Height OF Line;
+	PROCEDURE MoveLines (t: Terminal; top, bot, dH: SIGNED16);
+		VAR i, j, d, s, from, to: SIGNED16; line: Line; buf: ARRAY Height OF Line;
 	BEGIN
 		IF (dH # 0) & (top <= bot) THEN
 			IF top < 1 THEN top := 1 END;
@@ -89,8 +89,8 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 		END
 	END MoveLines;
 
-	PROCEDURE Erase (t: Terminal; fromLine, fromCol, toLine, toCol: INTEGER); (* [from, to] *)
-		VAR line: Line; i, j, len: INTEGER; char: Char;
+	PROCEDURE Erase (t: Terminal; fromLine, fromCol, toLine, toCol: SIGNED16); (* [from, to] *)
+		VAR line: Line; i, j, len: SIGNED16; char: Char;
 	BEGIN char.ch := " "; char.attr := none; line := t.line[fromLine]; len := line.len;
 		IF fromLine = toLine THEN
 			IF fromCol <= len THEN
@@ -112,8 +112,8 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 		t.notify(t, update, fromLine, fromCol, toLine, toCol, t.cursor)
 	END Erase;
 
-	PROCEDURE DeleteChars (t: Terminal; n: INTEGER); (* including cursor character *)
-		VAR c, j, len: INTEGER; line: Line; cursor: Location;
+	PROCEDURE DeleteChars (t: Terminal; n: SIGNED16); (* including cursor character *)
+		VAR c, j, len: SIGNED16; line: Line; cursor: Location;
 	BEGIN cursor := t.cursor; c := cursor.col; line := t.line[cursor.line]; j := c + n; len := line.len;
 		IF j <= len THEN
 			REPEAT line.ch[c] := line.ch[j]; INC(c); INC(j) UNTIL j > len;
@@ -122,15 +122,15 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 		END
 	END DeleteChars;
 
-	PROCEDURE DeleteLines (t: Terminal; n: INTEGER); (* including cursor line *)
-		VAR top, bot: INTEGER;
+	PROCEDURE DeleteLines (t: Terminal; n: SIGNED16); (* including cursor line *)
+		VAR top, bot: SIGNED16;
 	BEGIN top := t.cursor.line; bot := t.bottom;
 		IF bot - top + 1 < n THEN n := bot - top + 1 END;
 		MoveLines(t, t.cursor.line, t.bottom, -n)
 	END DeleteLines;
 
-	PROCEDURE InsertChars (t: Terminal; n: INTEGER); (* move including cursor character, cursor not moved *)
-		VAR i, j, len: INTEGER; line: Line; char: Char; cursor: Location;
+	PROCEDURE InsertChars (t: Terminal; n: SIGNED16); (* move including cursor character, cursor not moved *)
+		VAR i, j, len: SIGNED16; line: Line; char: Char; cursor: Location;
 	BEGIN cursor := t.cursor; line := t.line[cursor.line]; len := line.len; j := len + n;
 		IF j >= t.width THEN j := t.width END;
 		i := j - n;
@@ -144,8 +144,8 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 		t.notify(t, update, cursor.line, cursor.col, cursor.line, line.len, cursor)
 	END InsertChars;
 
-	PROCEDURE InsertLines (t: Terminal; n: INTEGER); (* move including cursor line, cursor not moved *)
-		VAR top, bot: INTEGER;
+	PROCEDURE InsertLines (t: Terminal; n: SIGNED16); (* move including cursor line, cursor not moved *)
+		VAR top, bot: SIGNED16;
 	BEGIN top := t.cursor.line; bot := t.bottom;
 		IF bot - top + 1 < n THEN n := bot - top + 1 END;
 		MoveLines(t, top, bot, n)
@@ -156,7 +156,7 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 		IF up THEN MoveLines(t, t.top, t.bottom, -1) ELSE MoveLines(t, t.top, t.bottom, 1) END
 	END Scroll;
 
-	PROCEDURE SetCursor (t: Terminal; line, col: INTEGER; relative: BOOLEAN); (* (1, 1) means upper, left corner *)
+	PROCEDURE SetCursor (t: Terminal; line, col: SIGNED16; relative: BOOLEAN); (* (1, 1) means upper, left corner *)
 		VAR newLoc: Location;
 	BEGIN
 		IF relative THEN
@@ -170,12 +170,12 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 		t.cursor := newLoc; t.wrapBefore := FALSE
 	END SetCursor;
 
-	PROCEDURE SetMargins (t: Terminal; top, bottom: INTEGER); (* [top, bottom] *)
+	PROCEDURE SetMargins (t: Terminal; top, bottom: SIGNED16); (* [top, bottom] *)
 	BEGIN t.top := top; t.bottom := bottom
 	END SetMargins;
 
-	PROCEDURE SetWidth (t: Terminal; width: INTEGER);
-		VAR i: INTEGER;
+	PROCEDURE SetWidth (t: Terminal; width: SIGNED16);
+		VAR i: SIGNED16;
 	BEGIN t.width := width; i := 1;
 		WHILE i <= t.height DO
 			IF t.line[i].len > width THEN t.line[i].len := width END;
@@ -185,13 +185,13 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 		t.notify(t, update, 1, 1, t.height, t.width, t.cursor)
 	END SetWidth;
 
-	PROCEDURE SetAttribute (t: Terminal; attr: SHORTINT);
+	PROCEDURE SetAttribute (t: Terminal; attr: SIGNED8);
 	BEGIN
 		IF attr = none THEN t.attr := attr ELSE t.attr := t.attr + attr END
 	END SetAttribute;
 
-	PROCEDURE PutChar(t: Terminal; VAR cursor: Location; VAR wrapBefore: BOOLEAN; ch: Char; VAR dH: INTEGER);
-		VAR len: INTEGER; line: Line; char: Char;
+	PROCEDURE PutChar(t: Terminal; VAR cursor: Location; VAR wrapBefore: BOOLEAN; ch: Char; VAR dH: SIGNED16);
+		VAR len: SIGNED16; line: Line; char: Char;
 	BEGIN
 		IF wrapBefore THEN
 			IF cursor.col = t.width THEN INC(cursor.line); cursor.col := 1;
@@ -212,8 +212,8 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 		END
 	END PutChar;
 
-	PROCEDURE WriteString (t: Terminal; CONST s: ARRAY OF CHAR; n: INTEGER); (* writes n characters at curs. pos. *)
-		VAR i, dH: INTEGER; cursor, oldCur: Location; char: Char;
+	PROCEDURE WriteString (t: Terminal; CONST s: ARRAY OF CHAR; n: SIGNED16); (* writes n characters at curs. pos. *)
+		VAR i, dH: SIGNED16; cursor, oldCur: Location; char: Char;
 	BEGIN cursor := t.cursor;
 		oldCur := cursor; char.attr := t.attr; dH := 0; i := 0;
 		WHILE i < n DO char.ch := s[i]; PutChar(t, cursor, t.wrapBefore, char, dH); INC(i) END;
@@ -224,7 +224,7 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 	END WriteString;
 
 	PROCEDURE EFill (t: Terminal);
-		VAR i, j, w: INTEGER; line: Line; char: Char;
+		VAR i, j, w: SIGNED16; line: Line; char: Char;
 	BEGIN i := 1; w := t.width; char.ch := "E"; char.attr := none;
 		WHILE i <= t.height DO j := 1; line := t.line[i]; line.len := w;
 			WHILE j <= w DO line.ch[j] := char; INC(j) END;
@@ -243,7 +243,7 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 	END DelLast;
 
 	PROCEDURE Reset* (T: Terminal);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		T.flags := {ansi, autowrap}; T.state := 0; T.strPos := 0; i := 1;
 		WHILE i <= MaxWidth DO T.tabs[i] := i MOD 8 = 1; INC(i) END;
@@ -255,13 +255,13 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 	END Reset;
 
 	PROCEDURE SendStr (T: Terminal; CONST s: ARRAY OF CHAR);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN i := 0;
 		WHILE s[i] # 0X DO T.send(T, s[i]); INC(i) END
 	END SendStr;
 
-	PROCEDURE SendInt (T: Terminal; x: INTEGER);
-		VAR i: INTEGER; d: ARRAY 3 OF CHAR;
+	PROCEDURE SendInt (T: Terminal; x: SIGNED16);
+		VAR i: SIGNED16; d: ARRAY 3 OF CHAR;
 	BEGIN i := 0;
 		REPEAT d[i] := CHR(x MOD 10 + ORD("0")); x := x DIV 10;  INC(i) UNTIL x = 0;
 		WHILE i > 0 DO DEC(i); T.send(T, d[i]) END
@@ -342,17 +342,17 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 	END ESCSequence;
 
 	PROCEDURE CSISequence (T: Terminal; last: CHAR);
-		VAR ch: CHAR; pos, p1, p2: INTEGER;
+		VAR ch: CHAR; pos, p1, p2: SIGNED16;
 
 		PROCEDURE Next;
 		BEGIN ch := T.parBuf[pos]; INC(pos)
 		END Next;
 
-		PROCEDURE Par (zeroVal: INTEGER): INTEGER;
-			VAR x: INTEGER;
+		PROCEDURE Par (zeroVal: SIGNED16): SIGNED16;
+			VAR x: SIGNED16;
 		BEGIN x := 0;
 			IF ("0" <= ch) & (ch <= "9") THEN x := ORD(ch) - ORD("0"); Next;
-				WHILE ("0" <= ch) & (ch <= "9") & (x <= (MAX(INTEGER) - 9) DIV 10) DO
+				WHILE ("0" <= ch) & (ch <= "9") & (x <= (MAX(SIGNED16) - 9) DIV 10) DO
 					x := 10*x + ORD(ch) - ORD("0"); Next
 				END;
 				WHILE ("0" <= ch) & (ch <= "9") DO Next END;
@@ -480,7 +480,7 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 	END CSISequence;
 
 	PROCEDURE Receive* (T: Terminal; ch: CHAR);
-		VAR p: INTEGER;
+		VAR p: SIGNED16;
 	BEGIN
 		ch := CHR(ORD(ch) MOD 128);
 		IF ch < " " THEN (* interpret control characters immediately *)
@@ -562,19 +562,19 @@ MODULE Terminals IN Oberon;	(** portable *) (* gri/ww 5 Jun 92 *)
 	END Send;
 
 	PROCEDURE SendString* (T: Terminal; CONST s: ARRAY OF CHAR);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN i := 0;
 		WHILE s[i] # 0X DO Send(T, s[i]); INC(i) END
 	END SendString;
 
-	PROCEDURE SendText* (T: Terminal; text: Texts.Text; beg, end: LONGINT);
+	PROCEDURE SendText* (T: Terminal; text: Texts.Text; beg, end: SIGNED32);
 		VAR R: Texts.Reader; ch: CHAR;
 	BEGIN Texts.OpenReader(R, text, beg);
 		WHILE Texts.Pos(R) < end DO Texts.Read(R, ch); Send(T, ch) END
 	END SendText;
 
-	PROCEDURE Open* (T: Terminal; text: Texts.Text; send: Sender; break: Breaker; notify: Notifier; height : INTEGER);
-		VAR l: Line; i: INTEGER;
+	PROCEDURE Open* (T: Terminal; text: Texts.Text; send: Sender; break: Breaker; notify: Notifier; height : SIGNED16);
+		VAR l: Line; i: SIGNED16;
 	BEGIN T.width := 80;
 		IF height < Height THEN T.height := height ELSE T.height := Height-1 END;
 		T.top := 1; T.bottom := T.height; T.cursor.line := 1; T.cursor.col := 1;

@@ -17,8 +17,8 @@ CONST
 
 TYPE
 	ContextMenuData = OBJECT
-	VAR val: LONGINT;
-		PROCEDURE &New*(val: LONGINT);
+	VAR val: SIGNED32;
+		PROCEDURE &New*(val: SIGNED32);
 		BEGIN
 			SELF.val := val;
 		END New;
@@ -27,8 +27,8 @@ TYPE
 	RectObject* = OBJECT(DTPData.ContentObject);
 	VAR
 		lineColor, rectColor, rectColor2: WMGraphics.Color;
-		lineWidth : REAL;
-		fillMode : WORD;
+		lineWidth : FLOAT32;
+		fillMode : INTEGER;
 		gradientHorizontal: BOOLEAN;
 		properties : RectPropWindow;
 
@@ -36,7 +36,7 @@ TYPE
 		BEGIN
 			(* default values *)
 			lineColor := 0000000FFH;
-			rectColor := LONGINT(0FFFFFFFFH);
+			rectColor := SIGNED32(0FFFFFFFFH);
 			rectColor2 := 000FFFFH;
 			lineWidth := 0.0;
 			gradientHorizontal := TRUE;
@@ -45,8 +45,8 @@ TYPE
 			NEW(properties, SELF);
 		END New;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; x, y, w, h : SIZE; zoomFactor: REAL; quality, preview: BOOLEAN);
-		VAR rw, rh: REAL; linePixel: SIZE;
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; x, y, w, h : SIZE; zoomFactor: FLOAT32; quality, preview: BOOLEAN);
+		VAR rw, rh: FLOAT32; linePixel: SIZE;
 		BEGIN
 
 			rw := w/zoomFactor; rh := h/zoomFactor; linePixel := ENTIER(lineWidth * zoomFactor);
@@ -104,8 +104,8 @@ TYPE
 		VAR name : Strings.String;
 			cont: XMLObjects.Enumerator;
 			ptr: ANY;
-			tempInt : LONGINT; res: WORD;
-			tempReal : LONGREAL;
+			tempInt : SIGNED32; res: INTEGER;
+			tempReal : FLOAT64;
 		BEGIN
 			cont := elem.GetContents(); cont.Reset();
 			WHILE cont.HasMoreElements() DO
@@ -432,8 +432,8 @@ TYPE
 		PROCEDURE SetValueHandler(sender, data: ANY);
 		VAR
 			colorString, origString : ARRAY 128 OF CHAR;
-			color : LONGINT; res: WORD;
-			width: LONGREAL;
+			color : SIGNED32; res: INTEGER;
+			width: FLOAT64;
 			bool: BOOLEAN;
 
 		BEGIN

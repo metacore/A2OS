@@ -53,7 +53,7 @@ TYPE
 	tLayerDesc = RECORD (vyPort.tLayerDesc)
 		D1, D2: Real;   (* *)
 		f: tFunction;   (* *)
-		ticks: LONGINT;
+		ticks: SIGNED32;
 		parameter: tParameter;
 		sign: vyHostDisplay.tSign
 	END;
@@ -67,7 +67,7 @@ VAR
 	END Copy;
 
 	PROCEDURE Recall( linePlot: tLayer );
-	VAR nrData, i: LONGINT;  d, val: Real;
+	VAR nrData, i: SIGNED32;  d, val: Real;
 	BEGIN
 		nrData := linePlot.x.nrData;
 		IF nrData = 0 THEN RETURN END;
@@ -86,7 +86,7 @@ VAR
 	END Recall;
 
 	PROCEDURE InstallData( linePlot: tLayer );
-	VAR d, x: Real;  i: LONGINT;
+	VAR d, x: Real;  i: SIGNED32;
 	BEGIN
 		IF linePlot.f # NIL THEN
 			d := (linePlot.D2 - linePlot.D1) / linePlot.ticks;
@@ -101,7 +101,7 @@ VAR
 	END InstallData;
 
 	PROCEDURE Consume( o: tLayer;  msg: Display.ConsumeMsg );
-	VAR v: vyBase.tVector;  minX, maxX: Real;  pict: vyPort.Picture;  nans: LONGINT;
+	VAR v: vyBase.tVector;  minX, maxX: Real;  pict: vyPort.Picture;  nans: SIGNED32;
 	BEGIN
 		pict := msg.dlink( vyPort.Picture );  v := vyBase.GetVFromObj( msg.obj );
 		IF v # NIL THEN vyBase.UnSubscribe( o.x, o );
@@ -168,7 +168,7 @@ VAR
 	PROCEDURE Handler*( obj: Objects.Object;  VAR msg: Objects.ObjMsg );
 	(*vs 0.0a1	md  20.07.94 *)
 
-	VAR copy: tLayer;  minX, minY, maxY, maxX: LONGREAL;  nansY: LONGINT;
+	VAR copy: tLayer;  minX, minY, maxY, maxX: FLOAT64;  nansY: SIGNED32;
 
 	BEGIN
 		WITH obj: tLayer DO
@@ -230,7 +230,7 @@ VAR
 		END  (*WITH*)
 	END Handler;
 
-	PROCEDURE Open*( linePlot: tLayer;  data: Objects.Object;  D1, D2: Real;  f: tFunction;  p: tParameter;  ticks: LONGINT );
+	PROCEDURE Open*( linePlot: tLayer;  data: Objects.Object;  D1, D2: Real;  f: tFunction;  p: tParameter;  ticks: SIGNED32 );
 	VAR id: vyName.tNameArray;  object: vyBase.tVector;
 	BEGIN
 		id := "linePlot: ";
@@ -259,7 +259,7 @@ VAR
 
 	PROCEDURE ShowP*;
 	VAR data: Objects.Object;  linePlot: tLayer;  pict: vyPort.Picture;  c: vyDisplay2d.tCoordinate2d;  minX, maxX: Real;
-		nans: LONGINT;
+		nans: SIGNED32;
 	BEGIN
 		data := vyBase.NextParObj();
 		WHILE data # NIL DO
@@ -273,7 +273,7 @@ VAR
 	END ShowP;
 
 	PROCEDURE ShowL*( list: vyLinks.Link );
-	VAR linePlot: tLayer;  pict: vyPort.Picture;  c: vyDisplay2d.tCoordinate2d;  minX, maxX: Real;  nans: LONGINT;
+	VAR linePlot: tLayer;  pict: vyPort.Picture;  c: vyDisplay2d.tCoordinate2d;  minX, maxX: Real;  nans: SIGNED32;
 	BEGIN
 		WHILE list # NIL DO
 			Alloc;  linePlot := Objects.NewObj( tLayer );  Open( linePlot, list.obj, 0, 0, NIL , NIL , 0 );
@@ -286,7 +286,7 @@ VAR
 	END ShowL;
 
 	PROCEDURE ShowO*( obj: Objects.Object );
-	VAR linePlot: tLayer;  pict: vyPort.Picture;  c: vyDisplay2d.tCoordinate2d;  minX, maxX: Real;  nans: LONGINT;
+	VAR linePlot: tLayer;  pict: vyPort.Picture;  c: vyDisplay2d.tCoordinate2d;  minX, maxX: Real;  nans: SIGNED32;
 	BEGIN
 		Alloc;  linePlot := Objects.NewObj( tLayer );  Open( linePlot, obj, 0, 0, NIL , NIL , 0 );
 		vyTypes.VGetMinMax( linePlot.x, minX, maxX, nans );
@@ -331,7 +331,7 @@ VAR
 	END Set;
 
 	PROCEDURE Changed*( linePlot: tLayer;  p: tParameter );
-	VAR i: LONGINT;  d, x: Real;
+	VAR i: SIGNED32;  d, x: Real;
 	BEGIN
 		d := (linePlot.D2 - linePlot.D1) / linePlot.ticks;
 		FOR i := 0 TO linePlot.ticks DO

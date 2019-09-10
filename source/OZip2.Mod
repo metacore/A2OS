@@ -12,7 +12,7 @@ IMPORT Streams, Commands, Files, Strings,
 
 CONST
 	BlockSize* = 8*1024;
-	ComprTag = LONGINT(0FEFD1F18H);
+	ComprTag = SIGNED32(0FEFD1F18H);
 	Suffix = ".oz2";
 
 
@@ -41,7 +41,7 @@ CONST
 	VAR
 		huff: AH.Decoder;
 		bw: BW.Decoder;
-		tag, len, bwIndex: LONGINT;
+		tag, len, bwIndex: SIGNED32;
 		buffer: ARRAY BlockSize OF CHAR;
 	BEGIN
 		r.RawLInt( tag );
@@ -67,7 +67,7 @@ CONST
 
 	PROCEDURE NewFile( CONST name: ARRAY OF CHAR ): Files.File;
 	VAR
-		tname, name2: ARRAY 128 OF CHAR;  res: LONGINT;
+		tname, name2: ARRAY 128 OF CHAR;  res: SIGNED32;
 	BEGIN
 		tname := "./";
 		Strings.Append( tname, name );

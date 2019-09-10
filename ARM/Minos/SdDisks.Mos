@@ -21,7 +21,7 @@ TYPE
 	BlockDevice * = POINTER TO BlockDeviceDesc;
 	BlockDeviceDesc * = RECORD (Disks.BlockDeviceDesc)
 		card: Sd.Card;
-		bufferSize: LONGINT;
+		bufferSize: SIGNED32;
 		cache: POINTER TO ARRAY OF CacheEntry;
 		nextSd: BlockDevice;
 	END;
@@ -29,7 +29,7 @@ TYPE
 	(** SD cache entry. *)
 	CacheEntry = RECORD
 		buffer: POINTER TO ARRAY OF CHAR;
-		au: LONGINT;
+		au: SIGNED32;
 		active, mod: BOOLEAN;
 	END;
 
@@ -37,7 +37,7 @@ TYPE
 	PROCEDURE InitBlockDevice * (d: BlockDevice; card: Sd.Card);
 	VAR
 		name, id: ARRAY 32 OF CHAR;
-		ignore, i: LONGINT;
+		ignore, i: SIGNED32;
 	BEGIN
 		name := BaseDevName;
 		Strings.IntToStr(devId, id);
@@ -60,9 +60,9 @@ TYPE
 	END InitBlockDevice;
 
 	(** Read blocks from SD card *)
-	PROCEDURE Read (dev: Disks.BlockDevice;  block, num: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR res: LONGINT);
+	PROCEDURE Read (dev: Disks.BlockDevice;  block, num: SIGNED32; VAR data: ARRAY OF SYSTEM.BYTE; ofs: SIGNED32; VAR res: SIGNED32);
 	VAR
-		au, auOfs, idx, size, s: LONGINT;
+		au, auOfs, idx, size, s: SIGNED32;
 	BEGIN
 		WITH dev: BlockDevice DO
 			size := num * Sd.BlockSize;
@@ -81,9 +81,9 @@ TYPE
 	END Read;
 
 	(** Write blocks to SD card *)
-	PROCEDURE Write (dev: Disks.BlockDevice;  block, num: LONGINT; VAR data: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR res: LONGINT);
+	PROCEDURE Write (dev: Disks.BlockDevice;  block, num: SIGNED32; VAR data: ARRAY OF SYSTEM.BYTE; ofs: SIGNED32; VAR res: SIGNED32);
 	VAR
-		au, auOfs, idx, size, s: LONGINT;
+		au, auOfs, idx, size, s: SIGNED32;
 	BEGIN
 		WITH dev: BlockDevice DO
 			size := num * Sd.BlockSize;
@@ -105,7 +105,7 @@ TYPE
 	END Write;
 
 	(** Update cache entry to make sure it contains the data for the given au *)
-	PROCEDURE UpdateCacheEntry (dev: BlockDevice; VAR cache: CacheEntry; au: LONGINT; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE UpdateCacheEntry (dev: BlockDevice; VAR cache: CacheEntry; au: SIGNED32; VAR res: SIGNED32): BOOLEAN;
 	VAR
 		ignore: BOOLEAN;
 	BEGIN
@@ -126,15 +126,15 @@ TYPE
 	END UpdateCacheEntry;
 
 	(** Open a device: turn LED on *)
-	PROCEDURE Open (dev: Disks.BlockDevice; VAR res: LONGINT);
+	PROCEDURE Open (dev: Disks.BlockDevice; VAR res: SIGNED32);
 	BEGIN
 		Sd.SetLedState(dev(BlockDevice).card.hc, TRUE)
 	END Open;
 
 	(** Close a device: turn off LED and sync cache *)
-	PROCEDURE Close (dev: Disks.BlockDevice; VAR res: LONGINT);
+	PROCEDURE Close (dev: Disks.BlockDevice; VAR res: SIGNED32);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		WITH dev: BlockDevice DO
 			(* Sync cache *)
@@ -150,26 +150,26 @@ TYPE
 	END Close;
 
 	(** Reset SD card -- not implemented yet *)
-	PROCEDURE Reset (dev: Disks.BlockDevice; VAR res: LONGINT);
+	PROCEDURE Reset (dev: Disks.BlockDevice; VAR res: SIGNED32);
 	BEGIN
 	END Reset;
 
 	(** Get size of device *)
-	PROCEDURE GetSize (dev: Disks.BlockDevice;  VAR size, res: LONGINT);
+	PROCEDURE GetSize (dev: Disks.BlockDevice;  VAR size, res: SIGNED32);
 	BEGIN
-			size := LONGINT(dev(BlockDevice).card.csd.capacity);
-			IF size < 0 THEN size := MAX(LONGINT) END;
+			size := SIGNED32(dev(BlockDevice).card.csd.capacity);
+			IF size < 0 THEN size := MAX(SIGNED32) END;
 			res := Disks.Ok
 	END GetSize;
 
 	(** Handle messages *)
-	PROCEDURE Handle (dev: Disks.BlockDevice; msg: LONGINT; par1, par2: LONGINT; VAR res: LONGINT);
+	PROCEDURE Handle (dev: Disks.BlockDevice; msg: SIGNED32; par1, par2: SIGNED32; VAR res: SIGNED32);
 	BEGIN
 		res := Disks.Ok
 	END Handle;
 
 	(** Handle SD Controller Events: create & register a new disk on card insertion, remove disk on card removal *)
-	PROCEDURE HandleSdEvent * (card: Sd.Card; event: LONGINT; param: ANY);
+	PROCEDURE HandleSdEvent * (card: Sd.Card; event: SIGNED32; param: ANY);
 	VAR
 		dev, prev: BlockDevice;
 	BEGIN
@@ -212,6 +212,6 @@ TYPE
 	END HandleSdEvent;
 
 VAR
-	devId: LONGINT; (** Identifier number for next SD device *)
+	devId: SIGNED32; (** Identifier number for next SD device *)
 	devices: BlockDevice; (** List of SD block devices *)
 END SdDisks.

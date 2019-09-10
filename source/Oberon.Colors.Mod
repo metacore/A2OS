@@ -19,27 +19,27 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 		(** color objects **)
 		Color* = POINTER TO ColorDesc;
 		ColorDesc* = RECORD (Objects.ObjDesc)
-			r, g, b: REAL;	(* internal representation is RGB *)
+			r, g, b: FLOAT32;	(* internal representation is RGB *)
 		END;
 
 		(** inverse color lookup table **)
 		Index* = RECORD
-			bits: INTEGER;	(* number of bits per component in color cube *)
+			bits: SIGNED16;	(* number of bits per component in color cube *)
 			cube: POINTER TO ARRAY OF CHAR;	(* maps RGB triples to palette indices, size is (2^bits)^3 *)
 		END;
 
 
 	VAR
 		DisplayIndex*: Index;	(** inverse color lookup table for display palette **)
-		DisplayBits*: INTEGER;	(** number of bits used for DisplayIndex **)
-		Red*, Green*, Blue*: ARRAY 256 OF INTEGER;	(** copy of display palette (faster lookup) **)
+		DisplayBits*: SIGNED16;	(** number of bits used for DisplayIndex **)
+		Red*, Green*, Blue*: ARRAY 256 OF SIGNED16;	(** copy of display palette (faster lookup) **)
 
 
 	(**--- Inverse Color Lookup ---**)
 
 	(** return index of best match in inverse color lookup table **)
-	PROCEDURE Match* (index: Index; bits, red, green, blue: INTEGER): LONGINT;
-		VAR shift: INTEGER;
+	PROCEDURE Match* (index: Index; bits, red, green, blue: SIGNED16): SIGNED32;
+		VAR shift: SIGNED16;
 	BEGIN
 		IF bits > 6 THEN bits := 6 END;
 		shift := bits-8;
@@ -47,18 +47,18 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 	END Match;
 
 	(** initialize inverse color lookup table **)
-	PROCEDURE MakeIndex* (VAR index: Index; bits: INTEGER; colors: LONGINT; VAR red, green, blue: ARRAY OF INTEGER);
+	PROCEDURE MakeIndex* (VAR index: Index; bits: SIGNED16; colors: SIGNED32; VAR red, green, blue: ARRAY OF SIGNED16);
 		VAR
-			cur : LONGINT;
-			nbits, x, colormax, rcol, gcol, bcol: INTEGER;
-			xsqr, txsqr, rstride, gstride, size, i, rdist, gdist, bdist, cdist: LONGINT;
-			dbuf: POINTER TO ARRAY OF LONGINT;
-			rcenter, gcenter, bcenter, ghere, bhere, gmin, bmin, gmax, bmax: INTEGER;
-			incr, incg, incb, p, rp, gp: LONGINT;
-			ginc, binc: LONGINT;
+			cur : SIGNED32;
+			nbits, x, colormax, rcol, gcol, bcol: SIGNED16;
+			xsqr, txsqr, rstride, gstride, size, i, rdist, gdist, bdist, cdist: SIGNED32;
+			dbuf: POINTER TO ARRAY OF SIGNED32;
+			rcenter, gcenter, bcenter, ghere, bhere, gmin, bmin, gmax, bmax: SIGNED16;
+			incr, incg, incb, p, rp, gp: SIGNED32;
+			ginc, binc: SIGNED32;
 
 		PROCEDURE blueloop(): BOOLEAN;
-			VAR detect: BOOLEAN; blue: INTEGER; bp, bdist, bxx: LONGINT;
+			VAR detect: BOOLEAN; blue: SIGNED16; bp, bdist, bxx: SIGNED32;
 		BEGIN
 			detect := FALSE;
 			blue := bhere; bp := gp; bdist := gdist; bxx := binc;
@@ -94,7 +94,7 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 		END blueloop;
 
 		PROCEDURE greenloop(): BOOLEAN;
-			VAR detect: BOOLEAN; green: INTEGER; ggp, ggdist, gxx: LONGINT;
+			VAR detect: BOOLEAN; green: SIGNED16; ggp, ggdist, gxx: SIGNED32;
 		BEGIN
 			detect := FALSE;
 			bhere := bcenter; bmin := 0; bmax := colormax; binc := incb;	(* restart blueloop *)
@@ -134,7 +134,7 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 		END greenloop;
 
 		PROCEDURE redloop;
-			VAR detect: BOOLEAN; red: INTEGER; rxx: LONGINT;
+			VAR detect: BOOLEAN; red: SIGNED16; rxx: SIGNED32;
 		BEGIN
 			(* red up loop *)
 			detect := FALSE;
@@ -162,20 +162,20 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 		(* uses Spencer W. Thomas' algorithm from Graphics Gems II (ugly as it is) *)
 		ASSERT(colors <= 10000H, 100);
 		IF bits > 6 THEN bits := 6 END;	(* (2^6)^3 = 262144! *)
-		nbits := 8-bits; x := INTEGER(ASH(1, nbits)); xsqr := ASH(1, 2*nbits); txsqr := 2*xsqr;
-		colormax := INTEGER(ASH(1, bits)); rstride := ASH(1, 2*bits); gstride := colormax;
+		nbits := 8-bits; x := SIGNED16(ASH(1, nbits)); xsqr := ASH(1, 2*nbits); txsqr := 2*xsqr;
+		colormax := SIGNED16(ASH(1, bits)); rstride := ASH(1, 2*bits); gstride := colormax;
 
 		(* fill buffer with maximal distance *)
 		size := ASH(1, 3*bits); NEW(dbuf, size);
-		i := 0; WHILE i < size DO dbuf[i] := MAX(LONGINT); INC(i) END;
+		i := 0; WHILE i < size DO dbuf[i] := MAX(SIGNED32); INC(i) END;
 		IF (index.cube = NIL) OR (LEN(index.cube^) < size) THEN NEW(index.cube, size) END;
 		index.bits := bits;
 
 		cur := 0;
 		WHILE cur < colors DO
-			rcol := red[cur]; rcenter := INTEGER(ASH(rcol, -nbits)); rdist := rcol - (rcenter * x + x DIV 2);
-			gcol := green[cur]; gcenter := INTEGER(ASH(gcol, -nbits)); gdist := gcol - (gcenter * x + x DIV 2);
-			bcol := blue[cur]; bcenter := INTEGER(ASH(bcol, -nbits)); bdist := bcol - (bcenter * x + x DIV 2);
+			rcol := red[cur]; rcenter := SIGNED16(ASH(rcol, -nbits)); rdist := rcol - (rcenter * x + x DIV 2);
+			gcol := green[cur]; gcenter := SIGNED16(ASH(gcol, -nbits)); gdist := gcol - (gcenter * x + x DIV 2);
+			bcol := blue[cur]; bcenter := SIGNED16(ASH(bcol, -nbits)); bdist := bcol - (bcenter * x + x DIV 2);
 			cdist := rdist * rdist + gdist * gdist + bdist * bdist;
 			incr := 2*((rcenter+1) * xsqr - rcol * x); incg := 2*((gcenter+1) * xsqr - gcol * x); incb := 2*((bcenter+1) * xsqr - bcol * x);
 			p := rcenter * rstride + gcenter * gstride + bcenter;
@@ -186,7 +186,7 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 
 	(** update the inverse color lookup table for the display palette **)
 	PROCEDURE Update*;
-		VAR colors, n: INTEGER; p: Plugins.Plugin; d: Displays.Display; col: LONGINT;
+		VAR colors, n: SIGNED16; p: Plugins.Plugin; d: Displays.Display; col: SIGNED32;
 	BEGIN
 		p := Displays.registry.Await("");	(* default display *)
 		IF p # NIL THEN d := p(Displays.Display) ELSE d := NIL END;
@@ -194,13 +194,13 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 			IF d.IndexToColor(0) = d.IndexToColor(16) THEN colors := 16 ELSE colors := 256 END;
 			FOR n := 0 TO colors-1 DO
 				col := d.IndexToColor(n);
-				Red[n] := INTEGER(ASH(col, -16) MOD 100H);
-				Green[n] := INTEGER(ASH(col, -8) MOD 100H);
+				Red[n] := SIGNED16(ASH(col, -16) MOD 100H);
+				Green[n] := SIGNED16(ASH(col, -8) MOD 100H);
 				Blue[n] := SHORT(col MOD 100H)
 			END;
 			MakeIndex(DisplayIndex, DisplayBits, colors, Red, Green, Blue)
 		ELSE
-			colors := INTEGER(ASH(1, Display.Depth(Display.ColLeft)));
+			colors := SIGNED16(ASH(1, Display.Depth(Display.ColLeft)));
 			IF colors > 256 THEN colors := 256 END;
 			FOR n := 0 TO colors-1 DO
 				Display.GetColor(n, Red[n], Green[n], Blue[n])
@@ -213,8 +213,8 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 	(**--- Conversion Routines ---**)
 
 	(** Oberon display model **)
-	PROCEDURE DisplayToRGB* (dcol: Display.Color; VAR r, g, b: REAL);
-		VAR dr, dg, db: INTEGER;
+	PROCEDURE DisplayToRGB* (dcol: Display.Color; VAR r, g, b: FLOAT32);
+		VAR dr, dg, db: SIGNED16;
 	BEGIN
 		IF dcol < 0 THEN Display.GetColor(dcol, dr, dg, db)
 		ELSE dr := Red[dcol]; dg := Green[dcol]; db := Blue[dcol]
@@ -222,8 +222,8 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 		r := (1/255)*dr; g := (1/255)*dg; b := (1/255)*db
 	END DisplayToRGB;
 
-	PROCEDURE RGBToDisplay* (r, g, b: REAL; VAR dcol: Display.Color);
-		VAR dr, dg, db: LONGINT;
+	PROCEDURE RGBToDisplay* (r, g, b: FLOAT32; VAR dcol: Display.Color);
+		VAR dr, dg, db: SIGNED32;
 	BEGIN
 		dr := ENTIER(255*r); dg := ENTIER(255*g); db := ENTIER(255*b);
 		IF Display.TrueColor(Display.ColLeft) THEN
@@ -235,8 +235,8 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 
 
 	(** HSV (Hue Saturation Value) model **)
-	PROCEDURE RGBToHSV* (r, g, b: REAL; VAR h, s, v: REAL);
-		VAR min, d: REAL;
+	PROCEDURE RGBToHSV* (r, g, b: FLOAT32; VAR h, s, v: FLOAT32);
+		VAR min, d: FLOAT32;
 	BEGIN
 		(* conversion algorithm: Foley et al. fig 13.33 *)
 		IF r < g THEN
@@ -268,8 +268,8 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 		END
 	END RGBToHSV;
 
-	PROCEDURE HSVToRGB* (h, s, v: REAL; VAR r, g, b: REAL);
-		VAR i: LONGINT; f, p, q, t: REAL;
+	PROCEDURE HSVToRGB* (h, s, v: FLOAT32; VAR r, g, b: FLOAT32);
+		VAR i: SIGNED32; f, p, q, t: FLOAT32;
 	BEGIN
 		(* conversion algorithm: Foley et al. fig 13.34 *)
 		IF s = 0 THEN	(* achromatic case  *)
@@ -290,19 +290,19 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 
 
 	(** CMY (Cyan Magenta Yellow) model **)
-	PROCEDURE RGBToCMY* (r, g, b: REAL; VAR c, m, y: REAL);
+	PROCEDURE RGBToCMY* (r, g, b: FLOAT32; VAR c, m, y: FLOAT32);
 	BEGIN
 		c := 1 - r; m := 1 - g; y := 1 - b
 	END RGBToCMY;
 
-	PROCEDURE CMYToRGB* (c, m, y: REAL; VAR r, g, b: REAL);
+	PROCEDURE CMYToRGB* (c, m, y: FLOAT32; VAR r, g, b: FLOAT32);
 	BEGIN
 		r := 1 - c; g := 1 - m; b := 1 - y
 	END CMYToRGB;
 
 
 	(** CMYK (Cyan Magenta Yellow blacK) model **)
-	PROCEDURE RGBToCMYK* (r, g, b: REAL; VAR c, m, y, k: REAL);
+	PROCEDURE RGBToCMYK* (r, g, b: FLOAT32; VAR c, m, y, k: FLOAT32);
 	BEGIN
 		c := 1 - r; m := 1 - g; y := 1 - b;
 		IF r < g THEN
@@ -317,7 +317,7 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 		c := c - k; m := m - k; y := y - k
 	END RGBToCMYK;
 
-	PROCEDURE CMYKToRGB* (c, m, y, k: REAL; VAR r, g, b: REAL);
+	PROCEDURE CMYKToRGB* (c, m, y, k: FLOAT32; VAR r, g, b: FLOAT32);
 	BEGIN
 		r := 1 - (k + c); g := 1 - (k + m); b := 1 - (k + y)
 	END CMYKToRGB;
@@ -334,7 +334,7 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 
 	(** message handler **)
 	PROCEDURE Handle* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR col, copy: Color; x, y, z, w: REAL; lib: Objects.Library; ref: INTEGER; ver: LONGINT;
+		VAR col, copy: Color; x, y, z, w: FLOAT32; lib: Objects.Library; ref: SIGNED16; ver: SIGNED32;
 	BEGIN
 		col := obj(Color);
 		IF msg IS Objects.AttrMsg THEN
@@ -489,7 +489,7 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 	END New;
 
 	(** initialization **)
-	PROCEDURE InitRGB* (col: Color; r, g, b: REAL);
+	PROCEDURE InitRGB* (col: Color; r, g, b: FLOAT32);
 	BEGIN
 		col.handle := Handle; col.r := r; col.g := g; col.b := b
 	END InitRGB;
@@ -500,26 +500,26 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 		DisplayToRGB(dcol, col.r, col.g, col.b)
 	END InitDisplay;
 
-	PROCEDURE InitHSV* (col: Color; h, s, v: REAL);
+	PROCEDURE InitHSV* (col: Color; h, s, v: FLOAT32);
 	BEGIN
 		col.handle := Handle;
 		HSVToRGB(h, s, v, col.r, col.g, col.b)
 	END InitHSV;
 
-	PROCEDURE InitCMY* (col: Color; c, m, y: REAL);
+	PROCEDURE InitCMY* (col: Color; c, m, y: FLOAT32);
 	BEGIN
 		col.handle := Handle;
 		CMYToRGB(c, m, y, col.r, col.g, col.b)
 	END InitCMY;
 
-	PROCEDURE InitCMYK* (col: Color; c, m, y, k: REAL);
+	PROCEDURE InitCMYK* (col: Color; c, m, y, k: FLOAT32);
 	BEGIN
 		col.handle := Handle;
 		CMYKToRGB(c, m, y, k, col.r, col.g, col.b)
 	END InitCMYK;
 
 	(** get color values **)
-	PROCEDURE GetRGB* (col: Color; VAR r, g, b: REAL);
+	PROCEDURE GetRGB* (col: Color; VAR r, g, b: FLOAT32);
 	BEGIN
 		r := col.r; g := col.g; b := col.b
 	END GetRGB;
@@ -529,23 +529,23 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 		RGBToDisplay(col.r, col.g, col.b, dcol)
 	END GetDisplay;
 
-	PROCEDURE GetHSV* (col: Color; VAR h, s, v: REAL);
+	PROCEDURE GetHSV* (col: Color; VAR h, s, v: FLOAT32);
 	BEGIN
 		RGBToHSV(col.r, col.g, col.b, h, s, v)
 	END GetHSV;
 
-	PROCEDURE GetCMY* (col: Color; VAR c, m, y: REAL);
+	PROCEDURE GetCMY* (col: Color; VAR c, m, y: FLOAT32);
 	BEGIN
 		RGBToCMY(col.r, col.b, col.b, c, m, y)
 	END GetCMY;
 
-	PROCEDURE GetCMYK* (col: Color; VAR c, m, y, k: REAL);
+	PROCEDURE GetCMYK* (col: Color; VAR c, m, y, k: FLOAT32);
 	BEGIN
 		RGBToCMYK(col.r, col.g, col.b, c, m, y, k)
 	END GetCMYK;
 
 	(** set color values **)
-	PROCEDURE SetRGB* (col: Color; r, g, b: REAL);
+	PROCEDURE SetRGB* (col: Color; r, g, b: FLOAT32);
 	BEGIN
 		col.r := r; col.g := g; col.b := b
 	END SetRGB;
@@ -555,17 +555,17 @@ MODULE Colors IN Oberon; (** portable **)	(* eos  *)
 		DisplayToRGB(dcol, col.r, col.g, col.b)
 	END SetDisplay;
 
-	PROCEDURE SetHSV* (col: Color; h, s, v: REAL);
+	PROCEDURE SetHSV* (col: Color; h, s, v: FLOAT32);
 	BEGIN
 		HSVToRGB(h, s, v, col.r, col.g, col.b)
 	END SetHSV;
 
-	PROCEDURE SetCMY* (col: Color; c, m, y: REAL);
+	PROCEDURE SetCMY* (col: Color; c, m, y: FLOAT32);
 	BEGIN
 		CMYToRGB(c, m, y, col.r, col.b, col.b)
 	END SetCMY;
 
-	PROCEDURE SetCMYK* (col: Color; c, m, y, k: REAL);
+	PROCEDURE SetCMYK* (col: Color; c, m, y, k: FLOAT32);
 	BEGIN
 		CMYKToRGB(c, m, y, k, col.r, col.b, col.b)
 	END SetCMYK;
@@ -580,7 +580,7 @@ END Colors.
 Notes
 
 1. Color Conversions
-In order to support RGB, HSV, CMY(K) and the Oberon display color model, several procedures convert from RGB to another model or vice versa. The range of all components is usually [0..1], except for display colors which are integers ranging from 0 to 255 (palette color) or from MIN(LONGINT) to -1 (true color).
+In order to support RGB, HSV, CMY(K) and the Oberon display color model, several procedures convert from RGB to another model or vice versa. The range of all components is usually [0..1], except for display colors which are integers ranging from 0 to 255 (palette color) or from MIN(SIGNED32) to -1 (true color).
 
 2. Color Objects
 Color objects are extensions of Objects.Object and can thus be used as models for visual gadgets which deal with color. Their internal representation is kept private, but components for all color models are accessible as object attributes.

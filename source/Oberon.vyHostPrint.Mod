@@ -73,7 +73,7 @@ END printPort;
 
 
 PROCEDURE OpenPrinter (name, options: ARRAY OF CHAR);
-	VAR retries: INTEGER;
+	VAR retries: SIGNED16;
 BEGIN
 	retries := 1;
 	Printer.Open(name, options);
@@ -168,7 +168,7 @@ BEGIN
 END PrintSelectedDocViewers;
 
 PROCEDURE OpenPrinter (name, options: ARRAY OF CHAR);
-	VAR retries: INTEGER;
+	VAR retries: SIGNED16;
 BEGIN
 	retries := 1;
 	Printer.Open(name, options);
@@ -225,7 +225,7 @@ END PrintPic;
 
 
 PROCEDURE Print (suffix: ARRAY OF CHAR);
-	VAR sc: vyParser.Scanner;   name, prefix: ARRAY 32 OF CHAR;  i, res: INTEGER;  printer: Printer.Printer;
+	VAR sc: vyParser.Scanner;   name, prefix: ARRAY 32 OF CHAR;  i, res: SIGNED16;  printer: Printer.Printer;
 BEGIN
 	printer := Printer.current;
 	NEW(sc);  vyParser.OpenParScanner(sc);
@@ -263,7 +263,7 @@ BEGIN
 END EPS;
 
 PROCEDURE FocusPictToGIF*;
-	VAR sc: vyParser.Scanner;   name, prefix, suffix: ARRAY 32 OF CHAR;    i: INTEGER;     pict: vyPort.Picture;
+	VAR sc: vyParser.Scanner;   name, prefix, suffix: ARRAY 32 OF CHAR;    i: SIGNED16;     pict: vyPort.Picture;
 	F: Files.File;  R: Files.Rider;
 BEGIN
 	COPY("GIF", suffix);

@@ -24,7 +24,7 @@ VAR
 	PROCEDURE CheckSubDirectory( CONST dname: ARRAY OF CHAR ): BOOLEAN;
 	VAR
 		enum: Files.Enumerator;
-		fname, cname: ARRAY 64 OF CHAR; time, date: LONGINT; size: Files.Size; flags: SET;
+		fname, cname: ARRAY 64 OF CHAR; time, date: SIGNED32; size: Files.Size; flags: SET;
 	BEGIN
 		cname := "./";  Strings.Append( cname, dname );
 		NEW( enum );
@@ -40,7 +40,7 @@ VAR
 
 	PROCEDURE Convert*( context: Commands.Context );	(*  {filename} ~ *)
 	VAR
-		filename, dest: ARRAY 64 OF CHAR;  format: LONGINT; l: SIZE; res: WORD;
+		filename, dest: ARRAY 64 OF CHAR;  format: SIGNED32; l: SIZE; res: INTEGER;
 		f: Files.File;  text: Texts.Text;
 		highlighter: SyntaxHighlighter.Highlighter;
 	BEGIN
@@ -74,7 +74,7 @@ VAR
 
 
 	PROCEDURE LoadHighlighter;
-	VAR res: WORD; msg: ARRAY 128 OF CHAR;
+	VAR res: INTEGER; msg: ARRAY 128 OF CHAR;
 	BEGIN
 		Commands.Call( "SyntaxHighlighter.Open PrettyPrintHighlighter.XML", {}, res, msg );
 		highlighterU := SyntaxHighlighter.GetHighlighter( "PrintOberon" );

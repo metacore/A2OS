@@ -70,11 +70,11 @@ TYPE
 
 	TraceSubscriber = OBJECT
 	VAR
-		processID : LONGINT;
+		processID : SIGNED32;
 		color : WMGraphics.Color; (* Color property *)
 		date : BOOLEAN; (* Default setting whether the date is printed or not *)
 
-		PROCEDURE &New*(processID : LONGINT; color : WMGraphics.Color; date : BOOLEAN);
+		PROCEDURE &New*(processID : SIGNED32; color : WMGraphics.Color; date : BOOLEAN);
 		BEGIN
 			SELF.processID := processID;
 			SELF.color := color;
@@ -87,15 +87,15 @@ TYPE
 
 VAR
 	logwindow : LogWindow;
-	nrSubscriptions : LONGINT;
+	nrSubscriptions : SIGNED32;
 	subscriptions : SubscriberList;
 	gen : Random.Sequence;
 	defaultColor : WMGraphics.Color;
 	me : Modules.Module;
 	date : BOOLEAN;
 
-PROCEDURE AlreadySubscribed(processID : LONGINT; VAR sub : TraceSubscriber) : BOOLEAN;
-VAR i : LONGINT;
+PROCEDURE AlreadySubscribed(processID : SIGNED32; VAR sub : TraceSubscriber) : BOOLEAN;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO nrSubscriptions - 1 DO
 		IF subscriptions[i].processID = processID THEN
@@ -120,7 +120,7 @@ BEGIN {EXCLUSIVE}
 END GetDate;
 
 PROCEDURE GetNextColor() : WMGraphics.Color;
-VAR r, g, b : LONGINT;
+VAR r, g, b : SIGNED32;
 BEGIN
 	IF gen = NIL THEN
 		NEW(gen);
@@ -144,7 +144,7 @@ BEGIN
 	subscriptions := tmp;
 END Grow;
 
-PROCEDURE Subscribe(processID : LONGINT);
+PROCEDURE Subscribe(processID : SIGNED32);
 VAR sub : TraceSubscriber; color :  WMGraphics.Color;
 BEGIN
 	color := GetNextColor(); (* Get a random color *)
@@ -154,7 +154,7 @@ BEGIN
 	INC(nrSubscriptions)
 END Subscribe;
 
-PROCEDURE GetColor(processID : LONGINT) : WMGraphics.Color;
+PROCEDURE GetColor(processID : SIGNED32) : WMGraphics.Color;
 VAR i : SIZE;
 BEGIN
 	FOR i := 0 TO LEN(subscriptions) - 1 DO
@@ -165,8 +165,8 @@ BEGIN
 	RETURN defaultColor
 END GetColor;
 
-PROCEDURE GetSubscription(processID : LONGINT) : TraceSubscriber;
-VAR i : LONGINT;
+PROCEDURE GetSubscription(processID : SIGNED32) : TraceSubscriber;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO nrSubscriptions - 1 DO
 		IF subscriptions[i].processID = processID THEN
@@ -312,13 +312,13 @@ BEGIN {EXCLUSIVE}
 END Memory;
 
 (** Write a buffer in hex. *)
-PROCEDURE Buffer*(VAR buf : ARRAY OF CHAR; ofs, len : LONGINT);
+PROCEDURE Buffer*(VAR buf : ARRAY OF CHAR; ofs, len : SIGNED32);
 BEGIN
 	Memory(ADDRESSOF(buf[ofs]), len)
 END Buffer;
 
 (** Write "x" as a hexadecimal number.  "w" is the field width.  Always prints 16 digits. *)
-PROCEDURE HIntHex*(x : HUGEINT; w : LONGINT);
+PROCEDURE HIntHex*(x : SIGNED64; w : SIGNED32);
 VAR
 	out : Streams.Writer;
 BEGIN {EXCLUSIVE}
@@ -330,7 +330,7 @@ BEGIN {EXCLUSIVE}
 END HIntHex;
 
 (** Write "x" as a decimal number with a power-of-two multiplier (K, M or G), followed by "suffix". "w" is the field width, excluding "suffix". *)
-PROCEDURE IntSuffix*(x, w : LONGINT; CONST suffix : ARRAY OF CHAR);
+PROCEDURE IntSuffix*(x, w : SIGNED32; CONST suffix : ARRAY OF CHAR);
 CONST K = 1024; M = K*K; G = K*M;
 VAR mult : CHAR; out : Streams.Writer;
 BEGIN {EXCLUSIVE}
@@ -364,7 +364,7 @@ END GetWriter;
 
 (* UNSAFE *)
 (** Send the specified characters to the trace output (cf. Streams.Sender). *)
-PROCEDURE Send*(CONST buf : ARRAY OF CHAR; ofs, len : SIZE; propagate : BOOLEAN; VAR res : WORD);
+PROCEDURE Send*(CONST buf : ARRAY OF CHAR; ofs, len : SIZE; propagate : BOOLEAN; VAR res : INTEGER);
 VAR i : SIZE; str : POINTER TO ARRAY OF CHAR;
 BEGIN
 	NEW(str, len + 1);
@@ -399,7 +399,7 @@ BEGIN {EXCLUSIVE}
 	out.Update()
 END Ln;
 
-PROCEDURE Int*(x, w : LONGINT);
+PROCEDURE Int*(x, w : SIGNED32);
 VAR out : Streams.Writer;
 BEGIN {EXCLUSIVE}
 	TraceIdString();
@@ -410,7 +410,7 @@ BEGIN {EXCLUSIVE}
 END Int;
 
 (* Outputs [name] = [value] *)
-PROCEDURE TraceDebugInt*(CONST name : ARRAY OF CHAR;  value, w : LONGINT);
+PROCEDURE TraceDebugInt*(CONST name : ARRAY OF CHAR;  value, w : SIGNED32);
 VAR
 	out : Streams.Writer;
 BEGIN {EXCLUSIVE}
@@ -424,7 +424,7 @@ BEGIN {EXCLUSIVE}
 
 END TraceDebugInt;
 
-PROCEDURE Hex*(x, w : LONGINT);
+PROCEDURE Hex*(x, w : SIGNED32);
 VAR
 	out : Streams.Writer;
 BEGIN {EXCLUSIVE}
@@ -437,7 +437,7 @@ BEGIN {EXCLUSIVE}
 END Hex;
 
 (* Outputs [name] = [value] *)
-PROCEDURE TraceDebugHex*(CONST name : ARRAY OF CHAR;  value, w : LONGINT);
+PROCEDURE TraceDebugHex*(CONST name : ARRAY OF CHAR;  value, w : SIGNED32);
 VAR
 	out : Streams.Writer;
 BEGIN {EXCLUSIVE}
@@ -515,7 +515,7 @@ END TraceDebugSet;
 PROCEDURE SubscribeProcess*(color : WMGraphics.Color; date, overwrite : BOOLEAN);
 VAR
 	sub : TraceSubscriber;
-	processID : LONGINT;
+	processID : SIGNED32;
 	p : Objects.Process;
 BEGIN {EXCLUSIVE}
 	p := Objects.CurrentProcess();
@@ -546,7 +546,7 @@ END SubscribeProcess;
 
 PROCEDURE CheckColor(color : WMGraphics.Color) : BOOLEAN;
 VAR
-	r, g, b, a : LONGINT;
+	r, g, b, a : SIGNED32;
 BEGIN
 	WMGraphics.ColorToRGBA(color, r, g, b, a);
 	RETURN
@@ -561,7 +561,7 @@ END CheckColor;
 
 (* Find a procedure in the reference block.  Return index of name, or -1 if not found. *)
 PROCEDURE FindProc(refs : Modules.Bytes; modpc : ADDRESS) : SIZE;
-VAR i, m, proc : SIZE; t: LONGINT; ch : CHAR;
+VAR i, m, proc : SIZE; t: SIGNED32; ch : CHAR;
 BEGIN
 	proc := -1; i := 0; m := LEN(refs^);
 	ch := refs[i]; INC(i);
@@ -595,8 +595,8 @@ BEGIN
 END FindProc;
 
 (* Get a compressed refblk number. *)
-PROCEDURE GetNum(refs : Modules.Bytes; VAR i: SIZE; num : LONGINT);
-VAR n, s : LONGINT; x : CHAR;
+PROCEDURE GetNum(refs : Modules.Bytes; VAR i: SIZE; num : SIGNED32);
+VAR n, s : SIGNED32; x : CHAR;
 BEGIN
 	s := 0; n := 0;
 	x := refs[i]; INC(i);

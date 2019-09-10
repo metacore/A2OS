@@ -31,28 +31,28 @@ MODULE HTTPDocs IN Oberon;	(** portable *) (* ejz,  *)
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			path: ARRAY NetTools.PathStrLen OF CHAR;
 			coded: ARRAY 64 OF CHAR;
-			port: INTEGER;
+			port: SIGNED16;
 			next: Authorization
 		END;
 		Cookie = POINTER TO CookieDesc;
 		CookieDesc = RECORD
 			name, domain: ARRAY 64 OF CHAR;
 			val, path: ARRAY 256 OF CHAR;
-			d, t: LONGINT;
+			d, t: SIGNED32;
 			next: Cookie
 		END;
 
 	VAR
 		W: Texts.Writer;
 		buf: ARRAY NetTools.BufLen OF CHAR;
-		noWorkers: INTEGER;
+		noWorkers: SIGNED16;
 		encTable: ARRAY 64 OF CHAR;
 		authorizations: Authorization;
 		cookies: Cookie;
 		EMail: ARRAY NetTools.ServerStrLen OF CHAR;
 		client: ARRAY 64 OF CHAR;
 
-	PROCEDURE TCPAvailable(S: Streams.Stream): LONGINT;
+	PROCEDURE TCPAvailable(S: Streams.Stream): SIGNED32;
 	BEGIN
 		HTTPDocs0.Wait(); RETURN NetTools.TCPAvailable(S)
 	END TCPAvailable;
@@ -67,7 +67,7 @@ MODULE HTTPDocs IN Oberon;	(** portable *) (* ejz,  *)
 
 	PROCEDURE EncBase64(VAR src, dest: ARRAY OF CHAR);
 		VAR
-			s, d, i, j, c, c0, c1, c2: LONGINT;
+			s, d, i, j, c, c0, c1, c2: SIGNED32;
 			chars: ARRAY 3 OF CHAR;
 		PROCEDURE OutCode;
 		BEGIN
@@ -108,7 +108,7 @@ MODULE HTTPDocs IN Oberon;	(** portable *) (* ejz,  *)
 		dest[d] := 0X
 	END EncBase64;
 
-	PROCEDURE GetAuthorization(VAR host, path: ARRAY OF CHAR; port: INTEGER): Authorization;
+	PROCEDURE GetAuthorization(VAR host, path: ARRAY OF CHAR; port: SIGNED16): Authorization;
 		VAR aut: Authorization;
 	BEGIN
 		aut := authorizations;
@@ -132,7 +132,7 @@ MODULE HTTPDocs IN Oberon;	(** portable *) (* ejz,  *)
 	PROCEDURE AddCookie(VAR host, path, value: ARRAY OF CHAR);
 (* value = name = val ";" [ "path" = path ";" ] [ "expires" = date ";" ] [ "domain" = domain ";" ] . *)
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			name: ARRAY 64 OF CHAR;
 			C, c: Cookie;
 			p, e, d: BOOLEAN;
@@ -143,7 +143,7 @@ MODULE HTTPDocs IN Oberon;	(** portable *) (* ejz,  *)
 			END
 		END Skip;
 		PROCEDURE GetName;
-			VAR j: LONGINT;
+			VAR j: SIGNED32;
 		BEGIN
 			Skip(); j := 0;
 			WHILE (value[i] > " ") & (value[i] # "=") & (value[i] # 0X) DO
@@ -156,7 +156,7 @@ MODULE HTTPDocs IN Oberon;	(** portable *) (* ejz,  *)
 			END; Skip()
 		END GetName;
 		PROCEDURE GetValue(VAR val: ARRAY OF CHAR);
-			VAR j: LONGINT;
+			VAR j: SIGNED32;
 		BEGIN
 			Skip(); j := 0;
 			WHILE (value[i] # ";") & (value[i] # 0X) DO
@@ -234,10 +234,10 @@ BEGIN
 	Texts.Append(Oberon.Log, W.buf)
 END ListCookies;
 
-	PROCEDURE NetLen(T: Texts.Text): LONGINT;
+	PROCEDURE NetLen(T: Texts.Text): SIGNED32;
 		VAR
 			R: Texts.Reader;
-			len: LONGINT;
+			len: SIGNED32;
 			ch: CHAR;
 	BEGIN
 		len := 0;
@@ -253,17 +253,17 @@ END ListCookies;
 		RETURN len
 	END NetLen;
 
-	PROCEDURE Request*(C: NetSystem.Connection; method: ARRAY OF CHAR; VAR key: LONGINT; proxy: BOOLEAN; VAR query: Texts.Text; log: BOOLEAN);
+	PROCEDURE Request*(C: NetSystem.Connection; method: ARRAY OF CHAR; VAR key: SIGNED32; proxy: BOOLEAN; VAR query: Texts.Text; log: BOOLEAN);
 		VAR
 			str: ARRAY 12 OF CHAR;
 			R: Texts.Reader;
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			path: ARRAY NetTools.PathStrLen OF CHAR;
 			label: ARRAY 64 OF CHAR;
-			i, j: LONGINT;
+			i, j: SIGNED32;
 			aut: Authorization;
 			cookie: Cookie;
-			port: INTEGER;
+			port: SIGNED16;
 			ch: CHAR;
 	BEGIN
 		aut := NIL;
@@ -393,12 +393,12 @@ END ListCookies;
 		NetTools.SendString(C, Strings.CRLF); NetTools.SendString(C, Strings.CRLF)
 	END Request;
 
-	PROCEDURE Response*(VAR C: NetSystem.Connection; key: LONGINT; main: BOOLEAN; VAR cont: MIME.Content; VAR location: ARRAY OF CHAR; log: BOOLEAN): LONGINT;
+	PROCEDURE Response*(VAR C: NetSystem.Connection; key: SIGNED32; main: BOOLEAN; VAR cont: MIME.Content; VAR location: ARRAY OF CHAR; log: BOOLEAN): SIGNED32;
 		VAR
-			pos, len, time, status: LONGINT;
+			pos, len, time, status: SIGNED32;
 			base: HyperDocs.DefURL;
 			h: MIME.Header;
-			i: INTEGER;
+			i: SIGNED16;
 	BEGIN
 		NEW(base); HyperDocs.RetrieveLink(key, buf);
 		key := HTTPDocs0.SplitHTTPAdr(buf, base.host, base.path, base.label, base.port);
@@ -498,13 +498,13 @@ END ListCookies;
 	END Response;
 
 	PROCEDURE Connect(VAR C: NetSystem.Connection; proxy: HTTPDocs0.Proxy; main, waitR, reloc, block: BOOLEAN;
-	method: ARRAY OF CHAR; VAR key: LONGINT; VAR cont: MIME.Content; query: Texts.Text; log: BOOLEAN; VAR useProxy: BOOLEAN): LONGINT;
+	method: ARRAY OF CHAR; VAR key: SIGNED32; VAR cont: MIME.Content; query: Texts.Text; log: BOOLEAN; VAR useProxy: BOOLEAN): SIGNED32;
 		VAR
-			status, key2: LONGINT;
+			status, key2: SIGNED32;
 			location: ARRAY NetTools.MaxLine OF CHAR;
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			base: HyperDocs.DefURL;
-			port: INTEGER;
+			port: SIGNED16;
 	BEGIN
 		status := 0; HyperDocs.RetrieveLink(key, location);
 		NetTools.SplitHostPort(location, host, port);
@@ -576,10 +576,10 @@ END ListCookies;
 			label: ARRAY 64 OF CHAR;
 			cont: MIME.Content;
 			C: NetSystem.Connection;
-			status: LONGINT;
+			status: SIGNED32;
 			proxy: HTTPDocs0.Proxy;
 			T: Texts.Text;
-			port: INTEGER;
+			port: SIGNED16;
 			useProxy: BOOLEAN;
 	BEGIN
 		WITH L: HyperDocs.LinkScheme DO
@@ -633,7 +633,7 @@ END ListCookies;
 								M.res := 0;
 								Texts.WriteString(W, " downloading ");
 								Texts.Append(Oberon.Log, W.buf);
-								NetTools.ReadData(C, M.R, MAX(LONGINT));
+								NetTools.ReadData(C, M.R, MAX(SIGNED32));
 								Texts.WriteString(W, " done");
 								Texts.WriteLn(W)
 							END;
@@ -677,11 +677,11 @@ END ListCookies;
 	PROCEDURE DoWork(me: Oberon.Task);
 		VAR
 			e: HTTPDocs0.Entry;
-			len, key: LONGINT;
+			len, key: SIGNED32;
 			F: Files.File;
 			location: ARRAY 1024 OF CHAR;
 			T: Texts.Text;
-			state: INTEGER;
+			state: SIGNED16;
 	BEGIN
 		WITH me: Worker DO
 			IF me.local THEN RETURN END;
@@ -844,19 +844,19 @@ END ListCookies;
 	END Install;
 
 (* Requests the document ientified by key. *)
-	PROCEDURE requestDoc(D: Documents.Document; proxy: HTTPDocs0.Proxy; VAR key: LONGINT; method: ARRAY OF CHAR;
+	PROCEDURE requestDoc(D: Documents.Document; proxy: HTTPDocs0.Proxy; VAR key: SIGNED32; method: ARRAY OF CHAR;
 	main: BOOLEAN; E: HTTPDocs0.Entry; query: Texts.Text);
 		VAR
 			C: NetSystem.Connection;
 			cont: MIME.Content;
-			status, origKey: LONGINT;
+			status, origKey: SIGNED32;
 			T: Texts.Text;
 			D2: Documents.Document;
 			temp: ARRAY 64 OF CHAR;
 			F: Files.File;
 			R: Files.Rider;
 			S: Streams.Stream;
-			i: LONGINT;
+			i: SIGNED32;
 			P: HTMLDocs.Page;
 			M: Objects.CopyMsg;
 			useProxy, getQuery: BOOLEAN;
@@ -914,7 +914,7 @@ END ListCookies;
 							C := NIL; P := HTMLDocs.pages
 						ELSE
 							NEW(T); Texts.Open(T, "");
-							cont.len := MAX(LONGINT); MIME.ReadText(S, W, cont, FALSE);
+							cont.len := MAX(SIGNED32); MIME.ReadText(S, W, cont, FALSE);
 							Texts.Append(T, W.buf);
 							Links.SetLink(D.dsc, "Model", T);
 							HyperDocs.RetrieveLink(origKey, D.name)
@@ -928,7 +928,7 @@ END ListCookies;
 						END;
 						Texts.Append(Oberon.Log, W.buf);
 						F := Files.New(temp); Files.Set(R, F, 0);
-						NetTools.ReadData(C, R, MAX(LONGINT));
+						NetTools.ReadData(C, R, MAX(SIGNED32));
 						Files.Register(F);
 						D.name := ""; D.dsc := NIL;
 						D2 := Documents.Open(temp);
@@ -965,7 +965,7 @@ END ListCookies;
 		END
 	END requestDoc;
 
-	PROCEDURE OpenHTTPDoc(D: Documents.Document; key: LONGINT; proxy: HTTPDocs0.Proxy);
+	PROCEDURE OpenHTTPDoc(D: Documents.Document; key: SIGNED32; proxy: HTTPDocs0.Proxy);
 		VAR type: ARRAY 8 OF CHAR;
 	BEGIN
 		IF HyperDocs.context # NIL THEN
@@ -995,7 +995,7 @@ END ListCookies;
 	END OpenHTTPDoc;
 
 	PROCEDURE LoadDoc*(D: Documents.Document);
-		VAR key: LONGINT;
+		VAR key: SIGNED32;
 	BEGIN
 		key := HyperDocs.BuildKey(NIL, D.name);
 		IF key # HyperDocs.UndefKey THEN
@@ -1013,7 +1013,7 @@ END ListCookies;
 	END NewDoc;
 
 	PROCEDURE InitTables;
-		VAR i, max: INTEGER;
+		VAR i, max: SIGNED16;
 	BEGIN
 		max := ORD("Z")-ORD("A");
 		FOR i := 0 TO max DO

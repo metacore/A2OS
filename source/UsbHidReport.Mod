@@ -26,13 +26,13 @@ CONST
 
 TYPE
 
-	MainType* = LONGINT;
+	MainType* = SIGNED32;
 
 	(*for storing collections*)
 	HidCollection*= POINTER TO RECORD
-		type*:				LONGINT;
-		usagePage*:		LONGINT;
-		usage*:				LONGINT;
+		type*:				SIGNED32;
+		usagePage*:		SIGNED32;
+		usage*:				SIGNED32;
 		firstCollection:		HidCollection;
 		lastCollection:		HidCollection;
 		firstReport*:		HidReport;
@@ -41,15 +41,15 @@ TYPE
 	END;
 
 	UsageTuple* = POINTER TO RECORD
-		usageID*:			LONGINT;
-		usagePage*:		LONGINT;
-		usageValue*:		LONGINT;
+		usageID*:			SIGNED32;
+		usagePage*:		SIGNED32;
+		usageValue*:		SIGNED32;
 	END;
 
 	UsageDictElement*= RECORD
-		firstUsageID*:			LONGINT;
-		nofFollowing*:			LONGINT;
-		otherUsagePage*:		LONGINT;
+		firstUsageID*:			SIGNED32;
+		nofFollowing*:			SIGNED32;
+		otherUsagePage*:		SIGNED32;
 	END;
 
 	UsageDictionary*= POINTER TO RECORD
@@ -60,23 +60,23 @@ TYPE
 
 	HidReport* = POINTER TO RECORD
 		next*:				HidReport;
-		reportID*:			LONGINT;
+		reportID*:			SIGNED32;
 
-		usagePage*:		LONGINT;
+		usagePage*:		SIGNED32;
 		(*holding usageID and usageValue in each entry*)
 		usages*:			PtrToUsageTupleArr;
 
-		mainState*:			LONGINT;
-		(*reportOffset*:		LONGINT;		(*bit offset in the report*)
-		*)reportSize*:			LONGINT;
-		reportCount*:		LONGINT;
+		mainState*:			SIGNED32;
+		(*reportOffset*:		SIGNED32;		(*bit offset in the report*)
+		*)reportSize*:			SIGNED32;
+		reportCount*:		SIGNED32;
 		reportType*:		MainType;		(*Input/Output/Feature Item*)
-		logicalMinimum*:	LONGINT;
-		logicalMaximum*:	LONGINT;
-		physicalMinimum*:	LONGINT;
-		physicalMaximum*:	LONGINT;
-		unitExponent*:		LONGINT;
-		unit*:				LONGINT;
+		logicalMinimum*:	SIGNED32;
+		logicalMaximum*:	SIGNED32;
+		physicalMinimum*:	SIGNED32;
+		physicalMaximum*:	SIGNED32;
+		unitExponent*:		SIGNED32;
+		unit*:				SIGNED32;
 
 		(*this field is used, when the device does not send the values for each usage but sends, which usages are used -> when mainState has Array flag set*)
 		supportedUsages*:	UsageDictionary;
@@ -97,13 +97,13 @@ TYPE
 	(*used for keeping all references, where to store the reports*)
 	ReportItem*= POINTER TO RECORD
 		(*bit index in the hid report*)
-		index:						LONGINT;
+		index:						SIGNED32;
 		(*reportID*)
-		reportID*:					LONGINT;
+		reportID*:					SIGNED32;
 		(*the size of each usage*)
-		reportItemSize*:			LONGINT;
+		reportItemSize*:			SIGNED32;
 		(*the number of usages to read*)
-		reportItemCount*:			LONGINT;
+		reportItemCount*:			SIGNED32;
 		(*where to store the values*)
 		values*:						PtrToUsageTupleArr;
 		next*:						ReportItem;
@@ -112,7 +112,7 @@ TYPE
 	(*holding reportItems*)
 	ReportItemQueue* = POINTER TO RECORD
 		first*:						ReportItem;
-		bitsAlreadyUsed*:			LONGINT;
+		bitsAlreadyUsed*:			SIGNED32;
 	END;
 
 	(*stack, holding parent tree of current collection*)
@@ -163,7 +163,7 @@ TYPE
 		*			usagePage	the collection's usage page
 		*			usage		the collection's usage
 		*)
-		PROCEDURE BeginCollection*(type, usagePage, usage: LONGINT);
+		PROCEDURE BeginCollection*(type, usagePage, usage: SIGNED32);
 		VAR newCollection : HidCollection;
 		BEGIN
 			NEW(newCollection);
@@ -199,7 +199,7 @@ TYPE
 		*	return:	hidCollection	with usagePage and usage if found
 		*			NIL				ohterwise
 		*)
-		PROCEDURE GetCollection*(usagePage, usage: LONGINT): HidCollection;
+		PROCEDURE GetCollection*(usagePage, usage: SIGNED32): HidCollection;
 		VAR collIterator, result : HidCollection;
 		BEGIN
 			ASSERT(rootCollection.firstCollection#NIL);
@@ -222,7 +222,7 @@ TYPE
 		*	return:	hidCollection 	with usagePage and usage if found
 		*			NIL				otherwise
 		*)
-		PROCEDURE FindColl(hidColl: HidCollection; usagePage, usage: LONGINT): HidCollection;
+		PROCEDURE FindColl(hidColl: HidCollection; usagePage, usage: SIGNED32): HidCollection;
 		VAR rv : HidCollection;
 		BEGIN
 			IF (hidColl=NIL) THEN RETURN NIL; END;
@@ -251,7 +251,7 @@ TYPE
 		*	return:	usageTuple		the reference to the usageTuple with usage and usagePage
 		*			NIL				otherwise
 		*)
-		PROCEDURE GetUsage*(usagePage, usage: LONGINT; hidCollection: HidCollection; VAR report: HidReport): UsageTuple;
+		PROCEDURE GetUsage*(usagePage, usage: SIGNED32; hidCollection: HidCollection; VAR report: HidReport): UsageTuple;
 		VAR
 			cursor		: HidReport;
 			usageTuple	: UsageTuple;
@@ -312,10 +312,10 @@ TYPE
 		*			dict				where to search
 		*	return:	new usageTuple
 		*)
-		PROCEDURE GetDictKey*(index: LONGINT; dict: UsageDictionary):UsageTuple;
+		PROCEDURE GetDictKey*(index: SIGNED32; dict: UsageDictionary):UsageTuple;
 		VAR
 			i	: SIZE;
-			counter	: LONGINT;
+			counter	: SIGNED32;
 			rv			: UsageTuple;
 		BEGIN
 			ASSERT(dict.elements#NIL);
@@ -344,8 +344,8 @@ TYPE
 		* 	param: 	dict 			dictionary to calculate
 		*	return:	length of the dictionary
 		*)
-		PROCEDURE DictSize*(dict: UsageDictionary):LONGINT;
-		VAR sum: LONGINT; i: SIZE;
+		PROCEDURE DictSize*(dict: UsageDictionary):SIGNED32;
+		VAR sum: SIGNED32; i: SIZE;
 		BEGIN
 			ASSERT(dict.elements#NIL);
 			FOR i:=0 TO LEN(dict.elements)-1 DO
@@ -412,7 +412,7 @@ TYPE
 		PROCEDURE AddReportItem(reportItem: ReportItem);
 		VAR
 			cursor:	ReportItem;
-			i: 		LONGINT;
+			i: 		SIGNED32;
 		BEGIN
 
 			IF (reportItemQueue.first=NIL) THEN

@@ -72,12 +72,12 @@ VAR
 	SSE5Support-	: BOOLEAN;
 	AVXSupport-		: BOOLEAN;
 
-	ticks-: LONGINT;	(** timer ticks. Use Kernel.GetTicks() to read, don't write *)
+	ticks-: SIGNED32;	(** timer ticks. Use Kernel.GetTicks() to read, don't write *)
 
-	prioLow-, prioHigh-: WORD;	(* permitted thread priorities *)
+	prioLow-, prioHigh-: INTEGER;	(* permitted thread priorities *)
 
 	fcr-: SET;	(** default floating-point control register value (default rounding mode is towards -infinity, for ENTIER) *)
-	mhz-: HUGEINT;	(** clock rate of GetTimer in MHz, or 0 if not known *)
+	mhz-: SIGNED64;	(** clock rate of GetTimer in MHz, or 0 if not known *)
 
 	gcThreshold-: SIZE;
 	memBlockHead-{UNTRACED}, memBlockTail-{UNTRACED}: MemoryBlock; (* head and tail of sorted list of memory blocks *)
@@ -85,13 +85,13 @@ VAR
 	config: ARRAY 2048 OF CHAR;	(* config strings *)
 
 	logname: ARRAY 32 OF CHAR;
-	logfile: WORD;
+	logfile: INTEGER;
 	traceHeap: BOOLEAN;
 
-	timer0	: HUGEINT;
+	timer0	: SIGNED64;
 
 	(** Return current processor ID (0 to MaxNum-1). *)
-	PROCEDURE  ID* (): LONGINT;
+	PROCEDURE  ID* (): SIGNED32;
 	BEGIN
 		RETURN 0
 	END ID;
@@ -174,7 +174,7 @@ VAR
 
 
 	(* expand heap by allocating a new memory block *)
-	PROCEDURE ExpandHeap*( dummy: LONGINT; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS );
+	PROCEDURE ExpandHeap*( dummy: SIGNED32; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS );
 	VAR mBlock: MemoryBlock;  alloc: SIZE;  adr: ADDRESS;
 	BEGIN
 		ASSERT(SIZEOF(MemoryBlockDesc) <= StaticBlockSize); (* make sure MemoryBlock contents fits into one StaticBlock *)
@@ -267,7 +267,7 @@ VAR
 
 
 	(** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
-	PROCEDURE  Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	PROCEDURE  Fill32* (destAdr: ADDRESS; size: SIZE; filler: SIGNED32);
 	CODE
 	#IF I386 THEN
 		MOV EDI, [EBP+destAdr]
@@ -298,29 +298,29 @@ VAR
 	#END
 	END Fill32;
 
-PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
+PROCEDURE  Portin8*(port: SIGNED32; VAR val: CHAR);
 END Portin8;
 
-PROCEDURE  Portin16*(port: LONGINT; VAR val: INTEGER);
+PROCEDURE  Portin16*(port: SIGNED32; VAR val: SIGNED16);
 END Portin16;
 
-PROCEDURE  Portin32*(port: LONGINT; VAR val: LONGINT);
+PROCEDURE  Portin32*(port: SIGNED32; VAR val: SIGNED32);
 END Portin32;
 
-PROCEDURE  Portout8*(port: LONGINT; val: CHAR);
+PROCEDURE  Portout8*(port: SIGNED32; val: CHAR);
 END Portout8;
 
-PROCEDURE  Portout16*(port: LONGINT; val: INTEGER);
+PROCEDURE  Portout16*(port: SIGNED32; val: SIGNED16);
 END Portout16;
 
-PROCEDURE  Portout32*(port: LONGINT; val: LONGINT);
+PROCEDURE  Portout32*(port: SIGNED32; val: SIGNED32);
 END Portout32;
 
 
 (** -- Atomic operations -- *)
 
 (** Atomic INC(x). *)
-PROCEDURE -AtomicInc*(VAR x: LONGINT);
+PROCEDURE -AtomicInc*(VAR x: SIGNED32);
 CODE
 #IF I386 THEN
 	POP EAX
@@ -336,7 +336,7 @@ CODE
 END AtomicInc;
 
 (** Atomic DEC(x). *)
-PROCEDURE -AtomicDec*(VAR x: LONGINT);
+PROCEDURE -AtomicDec*(VAR x: SIGNED32);
 CODE
 #IF I386 THEN
 	POP EAX
@@ -352,7 +352,7 @@ CODE
 END AtomicDec;
 
 (** Atomic INC(x, y). *)
-PROCEDURE -AtomicAdd*(VAR x: LONGINT; y: LONGINT);
+PROCEDURE -AtomicAdd*(VAR x: SIGNED32; y: SIGNED32);
 CODE
 #IF I386 THEN
 	POP EBX
@@ -371,7 +371,7 @@ END AtomicAdd;
 
 
 (** Atomic EXCL. *)
-PROCEDURE AtomicExcl* (VAR s: SET; bit: LONGINT);
+PROCEDURE AtomicExcl* (VAR s: SET; bit: SIGNED32);
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+bit]
@@ -406,7 +406,7 @@ CODE
 END AtomicTestSet;
 
 (* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
-PROCEDURE  -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
+PROCEDURE  -AtomicCAS* (VAR x: SIGNED32; old, new: SIGNED32): SIGNED32;
 CODE
 #IF I386 THEN
 	POP EBX		; new
@@ -447,7 +447,7 @@ CODE
 #END
 END CurrentPC;
 
-PROCEDURE -GetTimer* (): HUGEINT;
+PROCEDURE -GetTimer* (): SIGNED64;
 CODE
 #IF I386 THEN
 	RDTSC	; set EDX:EAX
@@ -466,7 +466,7 @@ END GetTimer;
 
 	(** Return the value of the configuration string specified by parameter name in parameter val. Returns val = "" if the string was not found, or has an empty value. *)
 	PROCEDURE GetConfig* (CONST name: ARRAY OF CHAR; VAR val: ARRAY OF CHAR);
-	VAR i, src: LONGINT; ch: CHAR;
+	VAR i, src: SIGNED32; ch: CHAR;
 	BEGIN
 		ASSERT (name[0] # "=");	(* no longer supported, use GetInit instead *)
 
@@ -507,8 +507,8 @@ END GetTimer;
 
 
 	(** Convert a string to an integer. Parameter i specifies where in the string scanning should begin (usually 0 in the first call). Scanning stops at the first non-valid character, and i returns the updated position. Parameter s is the string to be scanned. The value is returned as result, or 0 if not valid. Syntax: number = ["-"] digit {digit} ["H" | "h"] . digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" . If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
-	PROCEDURE StrToInt* (VAR i: SIZE; CONST s: ARRAY OF CHAR): LONGINT;
-	VAR vd, vh, sgn, d: LONGINT; hex: BOOLEAN;
+	PROCEDURE StrToInt* (VAR i: SIZE; CONST s: ARRAY OF CHAR): SIGNED32;
+	VAR vd, vh, sgn, d: SIGNED32; hex: BOOLEAN;
 	BEGIN
 		vd := 0; vh := 0; hex := FALSE;
 		IF s[i] = "-" THEN sgn := -1; INC (i) ELSE sgn := 1 END;
@@ -533,13 +533,13 @@ END GetTimer;
 	END NumberOfProcessors;
 
 	(*! non portable code, for native Aos only *)
-	PROCEDURE SetNumberOfProcessors*( num: LONGINT );
+	PROCEDURE SetNumberOfProcessors*( num: SIGNED32 );
 	BEGIN
 		(* numberOfProcessors := num; *)
 	END SetNumberOfProcessors;
 
 	(* function for changing byte order *)
-	PROCEDURE ChangeByteOrder* (n: LONGINT): LONGINT;
+	PROCEDURE ChangeByteOrder* (n: SIGNED32): SIGNED32;
 	CODE
 	#IF I386 THEN
 		MOV EAX, [EBP+n]				; load n in eax
@@ -562,7 +562,7 @@ END GetTimer;
 
 	(** CPU identification *)
 
-	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: LONGINT;  VAR features1,features2: SET );
+	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: SIGNED32;  VAR features1,features2: SET );
 	CODE
 	#IF I386 THEN
 		PUSH	ECX
@@ -745,22 +745,22 @@ END GetTimer;
 
 	(* Initialize locks. *)
 	PROCEDURE InitLocks;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE i < MaxLocks DO  mtx[i] := Unix.NewMtx( );  taken[i] := NIL; INC( i )  END;
 	END InitLocks;
 
 	PROCEDURE CleanupLocks*;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE i < MaxLocks DO  Unix.MtxDestroy( mtx[i] );  INC( i ) END;
 	END CleanupLocks;
 
 	(** Acquire a spin-lock. *)
-	PROCEDURE  Acquire*( level: LONGINT );   (* non reentrant lock *)
-	VAR i: WORD;
+	PROCEDURE  Acquire*( level: SIGNED32 );   (* non reentrant lock *)
+	VAR i: INTEGER;
 	BEGIN
 		Unix.MtxLock( mtx[level] );
 		IF StrongChecks THEN
@@ -773,8 +773,8 @@ END GetTimer;
 	END Acquire;
 
 	(** Release a spin-lock. *)
-	PROCEDURE  Release*( level: LONGINT );
-	VAR i: WORD;
+	PROCEDURE  Release*( level: SIGNED32 );
+	VAR i: INTEGER;
 	BEGIN
 		IF StrongChecks THEN
 			ASSERT(taken[level] = Unix.ThrThis( ));
@@ -788,7 +788,7 @@ END GetTimer;
 
 
 	PROCEDURE Shutdown*( reboot: BOOLEAN );
-	VAR r: LONGINT;  logstat: Unix.Status;
+	VAR r: SIGNED32;  logstat: Unix.Status;
 	BEGIN
 		IF logfile > 0 THEN
 			r := Unix.fstat( logfile, logstat );
@@ -808,7 +808,7 @@ END GetTimer;
 	END SetGCParams;
 
 	PROCEDURE InitConfig;
-	VAR a: ADDRESS;  i: LONGINT;  c: CHAR;
+	VAR a: ADDRESS;  i: SIGNED32;  c: CHAR;
 	BEGIN
 		a := Unix.getenv( ADDRESSOF( "AOSCONFIG" ) );
 		IF a = 0 THEN  config := DefaultConfig
@@ -842,7 +842,7 @@ END GetTimer;
 	END InitThreads;
 
 	PROCEDURE CPUSpeed;
-	VAR t0, t1: HUGEINT;
+	VAR t0, t1: SIGNED64;
 	BEGIN
 		t0 := GetTimer();  Unix.ThrSleep( 100 );  t1 := GetTimer();
 		mhz := (t1 - t0) DIV 100000;
@@ -866,7 +866,7 @@ END GetTimer;
 
 
 	PROCEDURE InitLog;
-	VAR pid, i: LONGINT;
+	VAR pid, i: SIGNED32;
 	BEGIN
 		IF logfile > 0 THEN RETURN END;
 		logname := "AOS.xxxxx.Log";
@@ -892,7 +892,7 @@ END GetTimer;
 
 
 	PROCEDURE Append( VAR a: ARRAY OF CHAR; CONST this: ARRAY OF CHAR );
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 	BEGIN
 		i := 0;  j := 0;
 		WHILE a[i] # 0X DO  INC( i )  END;
@@ -902,7 +902,7 @@ END GetTimer;
 
 
 	PROCEDURE Init;
-	VAR vendor: Vendor; ver: LONGINT;
+	VAR vendor: Vendor; ver: SIGNED32;
 	BEGIN
 		COPY( Unix.Version, version );  Append( version, Version ); Append(version, S.Date);
 

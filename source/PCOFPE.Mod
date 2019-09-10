@@ -50,77 +50,77 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 
 		ModeDef = 0; ModeDLL = 1; ModeEXE = 2;
 
-		EUEnd = 0X; EURecord = 1X; EUProcFlag = LONGINT(080000000H);
+		EUEnd = 0X; EURecord = 1X; EUProcFlag = SIGNED32(080000000H);
 
 	TYPE
 		ImageFileHeader = RECORD
-			Machine: INTEGER;
-			NumberOfSections: INTEGER;
-			TimeDateStamp: LONGINT;
-			PointerToSymbolTable: LONGINT;
-			NumberOfSymbols: LONGINT;
-			SizeOfOptionalHeader: INTEGER;
-			Characteristics: INTEGER
+			Machine: SIGNED16;
+			NumberOfSections: SIGNED16;
+			TimeDateStamp: SIGNED32;
+			PointerToSymbolTable: SIGNED32;
+			NumberOfSymbols: SIGNED32;
+			SizeOfOptionalHeader: SIGNED16;
+			Characteristics: SIGNED16
 		END;
 
 		ImageDataDirectory = RECORD
-			VirtualAddress, Size: LONGINT
+			VirtualAddress, Size: SIGNED32
 		END;
 
 		ImageOptionalHeader = RECORD
-			Magic: INTEGER;
+			Magic: SIGNED16;
 			MajorLinkerVersion, MinorLinkerVersion: CHAR;
 			SizeOfCode, SizeOfInitializedData, SizeOfUninitializedData,
 			AddressOfEntryPoint,
 			BaseOfCode, BaseOfData, ImageBase,
-			SectionAlignment, FileAlignment: LONGINT;
+			SectionAlignment, FileAlignment: SIGNED32;
 			MajorOperatingSystemVersion, MinorOperatingSystemVersion,
 			MajorImageVersion, MinorImageVersion,
-			MajorSubsystemVersion, MinorSubsystemVersion: INTEGER;
+			MajorSubsystemVersion, MinorSubsystemVersion: SIGNED16;
 			Win32VersionValue,
 			SizeOfImage, SizeOfHeaders,
-			CheckSum: LONGINT;
+			CheckSum: SIGNED32;
 			Subsystem,
-			DllCharacteristics: INTEGER;
+			DllCharacteristics: SIGNED16;
 			SizeOfStackReserve, SizeOfStackCommit,
 			SizeOfHeapReserve, SizeOfHeapCommit,
-			LoaderFlags, NumberOfRvaAndSizes: LONGINT;
+			LoaderFlags, NumberOfRvaAndSizes: SIGNED32;
 			DataDirectory: ARRAY ImageNumberOfDirectoryEntries OF ImageDataDirectory
 		END;
 
 		ImageSectionHeader = RECORD
 			Name: ARRAY ImageSizeOfShortName OF CHAR;
-			VirtualSize: LONGINT;
-			VirtualAddress: LONGINT;
-			SizeOfRawData: LONGINT;
-			PointerToRawData: LONGINT;
-			PointerToRelocations: LONGINT;
-			PointerToLinenumbers: LONGINT;
-			NumberOfRelocations: INTEGER;
-			NumberOfLinenumbers: INTEGER;
+			VirtualSize: SIGNED32;
+			VirtualAddress: SIGNED32;
+			SizeOfRawData: SIGNED32;
+			PointerToRawData: SIGNED32;
+			PointerToRelocations: SIGNED32;
+			PointerToLinenumbers: SIGNED32;
+			NumberOfRelocations: SIGNED16;
+			NumberOfLinenumbers: SIGNED16;
 			Characteristics: SET
 		END;
 
 		ImageExportDirectory = RECORD
-			Characteristics, TimeDateStamp: LONGINT;
-			MajorVersion, MinorVersion: INTEGER;
+			Characteristics, TimeDateStamp: SIGNED32;
+			MajorVersion, MinorVersion: SIGNED16;
 			Name, Base, NumberOfFunctions, NumberOfNames,
-			AddressOfFunctions, AddressOfNames, AddressOfNameOrdinals: LONGINT
+			AddressOfFunctions, AddressOfNames, AddressOfNameOrdinals: SIGNED32
 		END;
 
 		ImageImportDescriptor = RECORD
-			Characteristics, TimeDateStamp, ForwarderChain, Name, FirstThunk: LONGINT
+			Characteristics, TimeDateStamp, ForwarderChain, Name, FirstThunk: SIGNED32
 		END;
 
 		Bytes = POINTER TO ARRAY OF CHAR;
 		Name = ARRAY 256 OF CHAR;
 
-		ExportFPList = POINTER TO ARRAY OF LONGINT;
+		ExportFPList = POINTER TO ARRAY OF SIGNED32;
 
 		SectionReader = OBJECT (Streams.Reader)
 			VAR sect: Section; org, ofs: SIZE;
 
-			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 			BEGIN
 				len := sect.used - SELF.ofs;
 				IF len > 0 THEN
@@ -146,7 +146,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 				SELF.org := SIZE(ofs); SELF.ofs := SIZE(ofs)
 			END SetPos;
 
-			PROCEDURE &Open*(sect: Section; ofs: LONGINT);
+			PROCEDURE &Open*(sect: Section; ofs: SIGNED32);
 			BEGIN
 				InitReader(SELF.Receive, 4); (* is only used for small fixups *)
 				SELF.sect := sect; SELF.org := ofs; SELF.ofs := ofs
@@ -154,14 +154,14 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 		END SectionReader;
 
 		SectionWriter = OBJECT (Streams.Writer)
-			VAR sect: Section; org, ofs: LONGINT;
+			VAR sect: Section; org, ofs: SIGNED32;
 
-			PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+			PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 			BEGIN
 				res := Streams.Ok; IF len <= 0 THEN RETURN END;
-				IF (SELF.ofs + len) > sect.len THEN sect.Resize(SELF.ofs + len(LONGINT)) END;
+				IF (SELF.ofs + len) > sect.len THEN sect.Resize(SELF.ofs + len(SIGNED32)) END;
 				SYSTEM.MOVE(ADDRESSOF(buf[ofs]), ADDRESSOF(sect.data[SELF.ofs]), len);
-				INC(SELF.ofs, len(LONGINT));
+				INC(SELF.ofs, len(SIGNED32));
 				IF SELF.ofs > sect.used THEN sect.used := SELF.ofs END
 			END Send;
 
@@ -173,10 +173,10 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 			PROCEDURE SetPos*(ofs: Streams.Position);
 			BEGIN
 				Update(); Reset();
-				SELF.org := ofs(LONGINT); SELF.ofs := ofs(LONGINT);
+				SELF.org := ofs(SIGNED32); SELF.ofs := ofs(SIGNED32);
 			END SetPos;
 
-			PROCEDURE &Open*(sect: Section; ofs: LONGINT);
+			PROCEDURE &Open*(sect: Section; ofs: SIGNED32);
 			BEGIN
 				InitWriter(SELF.Send, PageSize);
 				SELF.sect := sect; SELF.org := ofs; SELF.ofs := ofs
@@ -186,13 +186,13 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 		Section = OBJECT
 			VAR
 				head: ImageSectionHeader;
-				data: Bytes; len, used: LONGINT;
+				data: Bytes; len, used: SIGNED32;
 				imports: ImportReloc; relocs: BaseReloc;
 				W: SectionWriter; R: SectionReader;
 				next: Section;
 
-			PROCEDURE Resize(min: LONGINT);
-				VAR data: Bytes; i: LONGINT;
+			PROCEDURE Resize(min: SIGNED32);
+				VAR data: Bytes; i: SIGNED32;
 			BEGIN
 				ASSERT(min > len);
 				min := Align(min, PageSize); NEW(data, min); i := len;
@@ -203,7 +203,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 				SELF.data := data; len := min
 			END Resize;
 
-			PROCEDURE SetBase(VAR base: LONGINT);
+			PROCEDURE SetBase(VAR base: SIGNED32);
 				VAR s: SET;
 			BEGIN
 				SELF.head.VirtualAddress := base;
@@ -256,7 +256,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 
 		ImportObj = POINTER TO RECORD
 			name: Name; next: ImportObj;
-			iat: LONGINT
+			iat: SIGNED32
 		END;
 
 		ImportReloc = POINTER TO RECORD
@@ -268,7 +268,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 
 		ExportObj = POINTER TO RECORD
 			name: Name;
-			sect: Section; ofs: LONGINT;
+			sect: Section; ofs: SIGNED32;
 			next: ExportObj
 		END;
 
@@ -276,14 +276,14 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 			VAR
 				name: Files.FileName;
 				mod: PCT.Module; adr: PCBT.Module;
-				codearr: PCLIR.CodeArray; hdrCodeSize, addressFactor: LONGINT;
+				codearr: PCLIR.CodeArray; hdrCodeSize, addressFactor: SIGNED32;
 				fileHdr: ImageFileHeader; optHdr: ImageOptionalHeader;
 				sects, type, var, const, code, idata, edata, reloc: Section;
 				exports: ExportObj; imports: ImportMod;
-				explist: ExportFPList; exppos, explen, nofstr, nofImp, count: LONGINT;
+				explist: ExportFPList; exppos, explen, nofstr, nofImp, count: SIGNED32;
 				desc: RECORD
-					modules, commands, methods, pointers, exports, imports, types: LONGINT;
-					iatfix: LONGINT
+					modules, commands, methods, pointers, exports, imports, types: SIGNED32;
+					iatfix: SIGNED32
 				END;
 
 			PROCEDURE AddImportMod(name: ARRAY OF CHAR): ImportMod;
@@ -302,9 +302,9 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 				RETURN mod
 			END AddImportMod;
 
-			PROCEDURE FixupSysCall(l: PCBT.Fixup; entry: LONGINT);
+			PROCEDURE FixupSysCall(l: PCBT.Fixup; entry: SIGNED32);
 				VAR
-					rt: ImportMod; name: Name; obj: ImportObj; W: SectionWriter; p: PCT.Proc; offset: LONGINT;
+					rt: ImportMod; name: Name; obj: ImportObj; W: SectionWriter; p: PCT.Proc; offset: SIGNED32;
 					idx: StringPool.Index;
 			BEGIN
 				rt := NIL;
@@ -351,7 +351,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 			END FixupSysCall;
 
 			PROCEDURE FixupCase(l: PCBT.Fixup);
-				VAR offset: LONGINT;
+				VAR offset: SIGNED32;
 			BEGIN
 				WHILE l # NIL DO
 					offset := l.offset*addressFactor;
@@ -361,7 +361,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 			END FixupCase;
 
 			PROCEDURE FixupLinks;
-				VAR entry, i: LONGINT;
+				VAR entry, i: SIGNED32;
 			BEGIN
 				i := 0;
 				WHILE i < PCBT.NofSysCalls DO
@@ -379,7 +379,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 			END FixupLinks;
 
 			PROCEDURE TypeAlign4;
-				VAR W: SectionWriter; n: LONGINT;
+				VAR W: SectionWriter; n: SIGNED32;
 			BEGIN
 				n := type.used MOD 4;
 				IF n # 0 THEN
@@ -391,7 +391,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 			END TypeAlign4;
 
 			PROCEDURE Commands;
-				VAR W: SectionWriter; proc: PCT.Proc; name: Name; ofs: LONGINT;
+				VAR W: SectionWriter; proc: PCT.Proc; name: Name; ofs: SIGNED32;
 			BEGIN
 				TypeAlign4(); desc.commands := type.used;
 (* possible improvment: store only export ordinal, name and address from edata export table *)
@@ -427,7 +427,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 
 			PROCEDURE UseModules;
 				VAR
-					o: PCT.Symbol; p: PCBT.GlobalVariable; rec: PCT.Record; bsym: PCOM.Struct; i, j: LONGINT;
+					o: PCT.Symbol; p: PCBT.GlobalVariable; rec: PCT.Record; bsym: PCOM.Struct; i, j: SIGNED32;
 					m: PCT.Module; adr: PCBT.Module; name: Name; im: ImportMod; W: SectionWriter;
 			BEGIN
 				TypeAlign4(); desc.modules := type.used;
@@ -475,7 +475,7 @@ MODULE PCOFPE; (** AUTHOR "ejz"; PURPOSE "Parallel Compiler: PE object file plug
 			END UseModules;
 
 			PROCEDURE FixupProc(p: PCBT.Procedure);
-				VAR W: SectionWriter; l: PCBT.Fixup; offset: LONGINT;
+				VAR W: SectionWriter; l: PCBT.Fixup; offset: SIGNED32;
 			BEGIN
 				W := code.W; l := p.link;
 				WHILE l # NIL DO
@@ -489,7 +489,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			END FixupProc;
 
 			PROCEDURE FixupOwnProcs;
-				VAR W: SectionWriter; p: PCBT.Procedure; nofMethods: LONGINT;
+				VAR W: SectionWriter; p: PCBT.Procedure; nofMethods: SIGNED32;
 			BEGIN
 				TypeAlign4(); desc.methods := type.used;
 				W := type.W; W.SetPos(type.used);
@@ -510,8 +510,8 @@ ASSERT(code.data[offset-1] # 0E8X);
 				W.Update()
 			END FixupOwnProcs;
 
-			PROCEDURE PtrAdr(W: SectionWriter; offset: LONGINT; type: PCT.Struct; fixadr: BOOLEAN);
-				VAR i, n, off: LONGINT; f: PCT.Variable; scope: PCT.Scope; base: PCT.Struct; size: PCBT.Size;
+			PROCEDURE PtrAdr(W: SectionWriter; offset: SIGNED32; type: PCT.Struct; fixadr: BOOLEAN);
+				VAR i, n, off: SIGNED32; f: PCT.Variable; scope: PCT.Scope; base: PCT.Struct; size: PCBT.Size;
 			BEGIN
 				IF ~type.size(PCBT.Size).containPtrs THEN RETURN END;
 				IF PCT.IsPointer(type) THEN
@@ -572,7 +572,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			END Pointers;
 
 			PROCEDURE FixupVar(p: PCBT.GlobalVariable);
-				VAR W: SectionWriter; R: SectionReader; l: PCBT.Fixup; offset, x: LONGINT;
+				VAR W: SectionWriter; R: SectionReader; l: PCBT.Fixup; offset, x: SIGNED32;
 			BEGIN
 				W := code.W; R := code.R; l := p.link;
 				WHILE l # NIL DO
@@ -602,7 +602,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				END
 			END FixupOwnVars;
 
-			PROCEDURE AddExport(sect: Section; ofs: LONGINT; name: ARRAY OF CHAR);
+			PROCEDURE AddExport(sect: Section; ofs: SIGNED32; name: ARRAY OF CHAR);
 				VAR p, n, e: ExportObj;
 			BEGIN
 				p := NIL; n := exports;
@@ -624,7 +624,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			END AddExport;
 
 			PROCEDURE ExportType(W: SectionWriter; t: PCT.Struct);
-				VAR sym: PCOM.Struct; p: PCT.Proc; v: PCT.Variable; count: LONGINT; pos, bak: Streams.Position;
+				VAR sym: PCOM.Struct; p: PCT.Proc; v: PCT.Variable; count: SIGNED32; pos, bak: Streams.Position;
 			BEGIN
 				WHILE (t IS PCT.Pointer) OR (t IS PCT.Array) DO
 					IF t IS PCT.Pointer THEN t := t(PCT.Pointer).base ELSE t := t(PCT.Array).base END
@@ -667,8 +667,8 @@ ASSERT(code.data[offset-1] # 0E8X);
 				END
 			END ExportType;
 
-			PROCEDURE ExportSymbol(W: SectionWriter; p: PCT.Symbol; sect: Section; ofs: LONGINT);
-				VAR i, fp: LONGINT; name: Name; explist2: ExportFPList;
+			PROCEDURE ExportSymbol(W: SectionWriter; p: PCT.Symbol; sect: Section; ofs: SIGNED32);
+				VAR i, fp: SIGNED32; name: Name; explist2: ExportFPList;
 			BEGIN
 				StringPool.GetString(p.name, name);
 				fp := p.sym(PCOM.Symbol).fp;
@@ -758,7 +758,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			END CheckExport;
 
 			PROCEDURE Exports;
-				VAR W: SectionWriter; i: Streams.Position; pos: LONGINT;
+				VAR W: SectionWriter; i: Streams.Position; pos: SIGNED32;
 			BEGIN
 				TypeAlign4(); desc.exports := type.used;
 				NEW(explist, 256); exppos := 0; explen := 256;
@@ -786,7 +786,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				END
 			END Exports;
 
-			PROCEDURE UseEntry(W: SectionWriter; m: PCT.Module; p: PCT.Symbol; offset: LONGINT; imp: ImportMod): ImportObj;
+			PROCEDURE UseEntry(W: SectionWriter; m: PCT.Module; p: PCT.Symbol; offset: SIGNED32; imp: ImportMod): ImportObj;
 				VAR name: Name;
 			BEGIN
 				StringPool.GetString(p.name, name);
@@ -800,8 +800,8 @@ ASSERT(code.data[offset-1] # 0E8X);
 				RETURN NIL
 			END UseEntry;
 
-			PROCEDURE UseType(W: SectionWriter; m: PCT.Module; i: LONGINT; t: PCT.Struct);
-				VAR size: PCBT.RecSize; sym: PCOM.Struct; j: LONGINT;
+			PROCEDURE UseType(W: SectionWriter; m: PCT.Module; i: SIGNED32; t: PCT.Struct);
+				VAR size: PCBT.RecSize; sym: PCOM.Struct; j: SIGNED32;
 			BEGIN
 				LOOP
 					IF t IS PCT.Pointer THEN t := t(PCT.Pointer).base
@@ -859,10 +859,10 @@ ASSERT(code.data[offset-1] # 0E8X);
 				END
 			END ImportConsts;
 
-			PROCEDURE ImportVars(W: SectionWriter; m: PCT.Module; i: LONGINT; imp: ImportMod);
+			PROCEDURE ImportVars(W: SectionWriter; m: PCT.Module; i: SIGNED32; imp: ImportMod);
 				VAR
-					p: PCBT.GlobalVariable; v: PCT.Variable; e: LONGINT; obj: ImportObj; nofVarCons: INTEGER;
-					l: PCBT.Fixup; offset: LONGINT; F: SectionWriter;
+					p: PCBT.GlobalVariable; v: PCT.Variable; e: SIGNED32; obj: ImportObj; nofVarCons: SIGNED16;
+					l: PCBT.Fixup; offset: SIGNED32; F: SectionWriter;
 			BEGIN
 				nofVarCons := 1;
 				p := adr.ExtVars;
@@ -891,7 +891,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				END
 			END ImportVars;
 
-			PROCEDURE ImportTypes(W: SectionWriter; m: PCT.Module; i: LONGINT);
+			PROCEDURE ImportTypes(W: SectionWriter; m: PCT.Module; i: SIGNED32);
 				VAR t: PCT.Type; obj: ImportObj;
 			BEGIN
 				t := m.scope.firstType;
@@ -905,7 +905,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			END ImportTypes;
 
 			PROCEDURE ImportProcs(W: SectionWriter; m: PCT.Module; imp: ImportMod);
-				VAR p: PCT.Proc; obj: ImportObj; l: PCBT.Fixup; offset: LONGINT; F: SectionWriter;
+				VAR p: PCT.Proc; obj: ImportObj; l: PCBT.Fixup; offset: SIGNED32; F: SectionWriter;
 			BEGIN
 				p := m.scope.firstProc;
 				WHILE p # NIL DO
@@ -932,7 +932,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			END ImportProcs;
 
 			PROCEDURE Imports;
-				VAR W: SectionWriter; m: PCT.Module; name: Name; i: LONGINT; imp: ImportMod;
+				VAR W: SectionWriter; m: PCT.Module; name: Name; i: SIGNED32; imp: ImportMod;
 			BEGIN
 				TypeAlign4(); desc.imports := type.used;
 				W := type.W; W.SetPos(type.used);
@@ -957,9 +957,9 @@ ASSERT(code.data[offset-1] # 0E8X);
 
 			PROCEDURE WriteType(W: SectionWriter; rec: PCT.Record);
 				VAR
-					size: PCBT.RecSize; pos, i: Streams.Position; oldmth: LONGINT; base: PCT.Record; m: PCT.Method;
+					size: PCBT.RecSize; pos, i: Streams.Position; oldmth: SIGNED32; base: PCT.Record; m: PCT.Method;
 					adr: PCBT.Method; bsym: PCOM.Struct; name, name2: Name;
-					basenr: INTEGER; baseid, nofptrs: LONGINT;
+					basenr: SIGNED16; baseid, nofptrs: SIGNED32;
 			BEGIN
 				PCT.GetTypeName(rec, name);
 				size := rec.size(PCBT.RecSize);
@@ -1010,8 +1010,8 @@ ASSERT(code.data[offset-1] # 0E8X);
 				(* Ptrs in Record *)
 				i := W.Pos();
 				PtrAdr(W, 0, rec, FALSE);
-				nofptrs := (W.Pos() - i)(LONGINT) DIV 4;
-				IF nofptrs > MAX(INTEGER) THEN PCM.Error(221, PCM.InvalidPosition, "") END;
+				nofptrs := (W.Pos() - i)(SIGNED32) DIV 4;
+				IF nofptrs > MAX(SIGNED16) THEN PCM.Error(221, PCM.InvalidPosition, "") END;
 				IF nofptrs # 0 THEN
 					i := W.Pos(); W.SetPos(pos);
 					W.RawInt(SHORT(nofptrs));
@@ -1087,7 +1087,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				W.RawLInt(0);
 				AddOfsReloc(type, W.Pos(), edata);
 				W.RawLInt(0);
-				desc.iatfix := W.Pos()(LONGINT);
+				desc.iatfix := W.Pos()(SIGNED32);
 				sect := sects;
 				WHILE sect # NIL DO
 					r := sect.imports;
@@ -1134,7 +1134,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 									W.RawInt(0)
 								END;
 								AddOfsReloc(type, W.Pos(), code);
-								W.RawLInt(r.ofs(LONGINT));
+								W.RawLInt(r.ofs(SIGNED32));
 								AddOfsReloc(type, W.Pos(), idata);
 								W.RawLInt(r.obj.iat - idata.head.VirtualAddress)
 							ELSE
@@ -1183,14 +1183,14 @@ ASSERT(code.data[offset-1] # 0E8X);
 					END;
 					ASSERT(p # NIL);
 					W.Char(0E9X); (* JMP Main *)
-					W.RawLInt(p.adr(PCBT.Procedure).codeoffset-(W.Pos()(LONGINT)+4))
+					W.RawLInt(p.adr(PCBT.Procedure).codeoffset-(W.Pos()(SIGNED32)+4))
 				END;
 				W.Update();
 				ModDesc()
 			END GenStub;
 
-			PROCEDURE GenIData(base: LONGINT);
-				VAR W: SectionWriter; p, mod: ImportMod; obj: ImportObj; sect: Section; r: ImportReloc; i, j: LONGINT; ofs: Streams.Position;
+			PROCEDURE GenIData(base: SIGNED32);
+				VAR W: SectionWriter; p, mod: ImportMod; obj: ImportObj; sect: Section; r: ImportReloc; i, j: SIGNED32; ofs: Streams.Position;
 			BEGIN
 				IF name # Loader THEN
 					p := NIL; mod := imports;
@@ -1216,10 +1216,10 @@ ASSERT(code.data[offset-1] # 0E8X);
 				WHILE i < SIZEOF(ImageImportDescriptor) DO
 					W.Char(0X); INC(i)
 				END;
-				optHdr.DataDirectory[ImageDirectoryEntryImport].Size := W.Pos()(LONGINT);
+				optHdr.DataDirectory[ImageDirectoryEntryImport].Size := W.Pos()(SIGNED32);
 				mod := imports;
 				WHILE mod # NIL DO
-					mod.desc.Characteristics := W.Pos()(LONGINT);
+					mod.desc.Characteristics := W.Pos()(SIGNED32);
 					obj := mod.objs;
 					WHILE obj # NIL DO
 						W.RawLInt(0); obj := obj.next
@@ -1228,10 +1228,10 @@ ASSERT(code.data[offset-1] # 0E8X);
 					mod := mod.next
 				END;
 				ofs := W.Pos();
-				optHdr.DataDirectory[ImageDirectoryEntryIAT].VirtualAddress := base + ofs(LONGINT);
+				optHdr.DataDirectory[ImageDirectoryEntryIAT].VirtualAddress := base + ofs(SIGNED32);
 				mod := imports;
 				WHILE mod # NIL DO
-					mod.desc.FirstThunk := W.Pos()(LONGINT);
+					mod.desc.FirstThunk := W.Pos()(SIGNED32);
 					obj := mod.objs;
 					WHILE obj # NIL DO
 						W.RawLInt(0); obj := obj.next
@@ -1240,7 +1240,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 					mod := mod.next
 				END;
 				W.Update();
-				optHdr.DataDirectory[ImageDirectoryEntryIAT].Size := (W.Pos() - ofs)(LONGINT);
+				optHdr.DataDirectory[ImageDirectoryEntryIAT].Size := (W.Pos() - ofs)(SIGNED32);
 				mod := imports; i := 0;
 				WHILE mod # NIL DO
 					obj := mod.objs; j := 0;
@@ -1283,8 +1283,8 @@ ASSERT(code.data[offset-1] # 0E8X);
 				W.Update()
 			END GenIData;
 
-			PROCEDURE GenEData(base: LONGINT);
-				VAR W: SectionWriter; dir: ImageExportDirectory; e: ExportObj; fix: Streams.Position; i, n: LONGINT;
+			PROCEDURE GenEData(base: SIGNED32);
+				VAR W: SectionWriter; dir: ImageExportDirectory; e: ExportObj; fix: Streams.Position; i, n: SIGNED32;
 			BEGIN
 				edata.head.VirtualAddress := base;
 				optHdr.DataDirectory[ImageDirectoryEntryExport].VirtualAddress := base;
@@ -1305,23 +1305,23 @@ ASSERT(code.data[offset-1] # 0E8X);
 				dir.AddressOfNameOrdinals := 0;
 				W := edata.W; W.SetPos(0);
 				WriteImageExportDirectory(W, dir);
-				dir.AddressOfFunctions := base + W.Pos()(LONGINT);
+				dir.AddressOfFunctions := base + W.Pos()(SIGNED32);
 				e := exports;
 				WHILE e # NIL DO
 					W.RawLInt(e.sect.head.VirtualAddress + e.ofs);
 					e := e.next
 				END;
-				dir.AddressOfNames := base + W.Pos()(LONGINT);
+				dir.AddressOfNames := base + W.Pos()(SIGNED32);
 				fix := W.Pos(); i := 0;
 				WHILE i < n DO
 					W.RawLInt(0); INC(i)
 				END;
-				dir.AddressOfNameOrdinals := base + W.Pos()(LONGINT);
+				dir.AddressOfNameOrdinals := base + W.Pos()(SIGNED32);
 				i := 0;
 				WHILE i < n DO
 					W.RawInt(SHORT(i)); INC(i)
 				END;
-				dir.Name := base + W.Pos()(LONGINT);
+				dir.Name := base + W.Pos()(SIGNED32);
 				PutName(W, name);
 				e := exports;
 				WHILE e # NIL DO
@@ -1338,7 +1338,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				optHdr.DataDirectory[ImageDirectoryEntryExport].Size := edata.used
 			END GenEData;
 
-			PROCEDURE BeginBlock(W: SectionWriter; adr: LONGINT; VAR blockva, blocksize: LONGINT; VAR blockfix: Streams.Position);
+			PROCEDURE BeginBlock(W: SectionWriter; adr: SIGNED32; VAR blockva, blocksize: SIGNED32; VAR blockfix: Streams.Position);
 			BEGIN
 				blockva := adr - (adr MOD PageSize); blocksize := 8;
 				W.RawLInt(blockva);
@@ -1346,7 +1346,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 				W.RawLInt(blocksize)
 			END BeginBlock;
 
-			PROCEDURE EndBlock(W: SectionWriter; blockfix: Streams.Position; VAR blocksize: LONGINT);
+			PROCEDURE EndBlock(W: SectionWriter; blockfix: Streams.Position; VAR blocksize: SIGNED32);
 				VAR ofs: Streams.Position;
 			BEGIN
 				W.RawInt(0); INC(blocksize, 2);
@@ -1359,7 +1359,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			END EndBlock;
 
 			PROCEDURE LocalRelocs;
-				VAR W: SectionWriter; R: SectionReader; sect: Section; r: BaseReloc; x: LONGINT;
+				VAR W: SectionWriter; R: SectionReader; sect: Section; r: BaseReloc; x: SIGNED32;
 			BEGIN
 				sect := sects;
 				WHILE sect # NIL DO
@@ -1377,10 +1377,10 @@ ASSERT(code.data[offset-1] # 0E8X);
 				END
 			END LocalRelocs;
 
-			PROCEDURE GenReloc(base: LONGINT);
+			PROCEDURE GenReloc(base: SIGNED32);
 				VAR
 					W: SectionWriter; sect: Section; r: BaseReloc;
-					blockva, blocksize, bak, x: LONGINT; blockfix: Streams.Position;
+					blockva, blocksize, bak, x: SIGNED32; blockfix: Streams.Position;
 			BEGIN
 				reloc.head.VirtualAddress := base;
 				optHdr.DataDirectory[ImageDirectoryEntryBasereloc].VirtualAddress := base;
@@ -1391,14 +1391,14 @@ ASSERT(code.data[offset-1] # 0E8X);
 				WHILE sect # NIL DO
 					r := sect.relocs;
 					WHILE r # NIL DO
-						x := sect.head.VirtualAddress + r.ofs(LONGINT);
+						x := sect.head.VirtualAddress + r.ofs(SIGNED32);
 						ASSERT(x > bak);
 						IF x >= (blockva+PageSize) THEN
 							IF blockfix >= 0 THEN EndBlock(W, blockfix, blocksize) END;
 							BeginBlock(W, x, blockva, blocksize, blockfix)
 						END;
 						bak := x; DEC(x, blockva);
-						W.RawInt(SHORT(x + LSH(LONGINT(ImageRelBasedHighLow), 12)));
+						W.RawInt(SHORT(x + LSH(SIGNED32(ImageRelBasedHighLow), 12)));
 						INC(blocksize, 2);
 						r := r.next
 					END;
@@ -1410,7 +1410,7 @@ ASSERT(code.data[offset-1] # 0E8X);
 			END GenReloc;
 
 			PROCEDURE ToFile;
-				VAR file: Files.FileName; F: Files.File; W: Files.Writer; sect: Section; i, size: LONGINT; s: SET;
+				VAR file: Files.FileName; F: Files.File; W: Files.Writer; sect: Section; i, size: SIGNED32; s: SET;
 			BEGIN
 				IF PCM.prefix # "" THEN
 					COPY(PCM.prefix, file);
@@ -1430,9 +1430,9 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 				F := Files.New(file);
 				Files.OpenWriter(W, F, 0);
 				W.RawInt(ImageDosSignature);
-				i := W.Pos()(LONGINT); WHILE i < 60 DO W.Char(0X); INC(i) END;
+				i := W.Pos()(SIGNED32); WHILE i < 60 DO W.Char(0X); INC(i) END;
 				W.RawLInt(128);
-				i := W.Pos()(LONGINT); WHILE i < 128 DO W.Char(0X); INC(i) END;
+				i := W.Pos()(SIGNED32); WHILE i < 128 DO W.Char(0X); INC(i) END;
 				size := 128 + 4 + SIZEOF(ImageFileHeader) + SIZEOF(ImageOptionalHeader) + SELF.fileHdr.NumberOfSections*SIZEOF(ImageSectionHeader);
 				size := Align(size, DefaultFileAlign);
 				SELF.optHdr.SizeOfHeaders := size;
@@ -1467,7 +1467,7 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 					WriteImageSectionHeader(W, sect.head);
 					sect := sect.next
 				END;
-				i := W.Pos()(LONGINT); WHILE i < SELF.optHdr.SizeOfHeaders DO W.Char(0X); INC(i) END;
+				i := W.Pos()(SIGNED32); WHILE i < SELF.optHdr.SizeOfHeaders DO W.Char(0X); INC(i) END;
 				sect := SELF.sects;
 				WHILE sect # NIL DO
 					IF sect.head.SizeOfRawData > 0 THEN
@@ -1483,7 +1483,7 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 			END ToFile;
 
 			PROCEDURE &New*(mod: PCT.Module; adr: PCBT.Module);
-				VAR i: LONGINT; s: SET;
+				VAR i: SIGNED32; s: SET;
 			BEGIN
 				SELF.mod := mod; SELF.adr := adr;
 				SELF.fileHdr.Machine := ImageFileMachineI386;
@@ -1500,7 +1500,7 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 				ELSE
 					HALT(99)
 				END;
-				SELF.fileHdr.Characteristics := INTEGER(s);
+				SELF.fileHdr.Characteristics := SIGNED16(s);
 				SELF.optHdr.Magic := ImageOptionalMagic;
 				SELF.optHdr.MajorLinkerVersion := MajorLinkerVersion;
 				SELF.optHdr.MinorLinkerVersion := MinorLinkerVersion;
@@ -1570,8 +1570,8 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 		END PEModule;
 
 	VAR
-		mode: LONGINT; (* ModeDef, ModeDLL, ModeEXE *)
-		subsystem: LONGINT; (* ImageSubsystemWindowsCui, ImageSubsystemWindowsGui *)
+		mode: SIGNED32; (* ModeDef, ModeDLL, ModeEXE *)
+		subsystem: SIGNED32; (* ImageSubsystemWindowsCui, ImageSubsystemWindowsGui *)
 
 	PROCEDURE WriteImageFileHeader(W: Streams.Writer; VAR head: ImageFileHeader);
 	BEGIN
@@ -1585,7 +1585,7 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 	END WriteImageFileHeader;
 
 	PROCEDURE WriteImageOptionalHeader(W: Streams.Writer; VAR head: ImageOptionalHeader);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		W.RawInt(head.Magic);
 		W.Char(head.MajorLinkerVersion);
@@ -1663,9 +1663,9 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 		W.RawLInt(dir.AddressOfNameOrdinals)
 	END WriteImageExportDirectory;
 
-	PROCEDURE TimeDateStamp(): LONGINT;
+	PROCEDURE TimeDateStamp(): SIGNED32;
 		(* number of seconds since 1.1.1970 UTC *)
-		VAR now: Dates.DateTime; A: ARRAY 12 OF LONGINT; y, days: LONGINT;
+		VAR now: Dates.DateTime; A: ARRAY 12 OF SIGNED32; y, days: SIGNED32;
 	BEGIN
 		now := Dates.Now();
 		ASSERT((now.year >= 1970) & (now.year < 2100));
@@ -1727,13 +1727,13 @@ KernelLog.String("PCOFPE "); KernelLog.String(file);
 		IF p # NIL THEN p.next := n ELSE sect.imports := n END
 	END AddImportReloc;
 
-	PROCEDURE Align(value, align: LONGINT): LONGINT;
+	PROCEDURE Align(value, align: SIGNED32): SIGNED32;
 	BEGIN
 		RETURN value + ((align-(value MOD align)) MOD align)
 	END Align;
 
-	PROCEDURE Generate*(VAR R: PCM.Rider; scope: PCT.ModScope; VAR codeSize: LONGINT);
-		VAR pe: PEModule; base: LONGINT; W: SectionWriter;
+	PROCEDURE Generate*(VAR R: PCM.Rider; scope: PCT.ModScope; VAR codeSize: SIGNED32);
+		VAR pe: PEModule; base: SIGNED32; W: SectionWriter;
 	BEGIN
 		PCM.CloseObj(R); (* write symbol only object file *)
 		NEW(pe, scope.owner, scope.owner.adr(PCBT.Module)); base := BaseRVA;

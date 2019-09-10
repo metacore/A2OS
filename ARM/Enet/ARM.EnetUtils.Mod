@@ -4,9 +4,9 @@ IMPORT
 	S := SYSTEM;
 
 TYPE
-	Int8 = SHORTINT;
-	Int16 = INTEGER;
-	Int32 = LONGINT;
+	Int8 = SIGNED8;
+	Int16 = SIGNED16;
+	Int32 = SIGNED32;
 
 	UnalignedInt32* = ARRAY 4 OF Int8;
 

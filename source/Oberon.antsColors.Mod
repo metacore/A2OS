@@ -51,7 +51,7 @@ VAR
 	END Copy;
 
 	PROCEDURE Recall( layer: tLayer );
-	VAR x, y, i: INTEGER;  col: LONGINT;  w, h: INTEGER;
+	VAR x, y, i: SIGNED16;  col: SIGNED32;  w, h: SIGNED16;
 	BEGIN
 		vyGraphBase.Rect2dToRect( 0, 0, 1, 1, x, y, w, h );
 		FOR y := 0 TO 15 DO
@@ -72,23 +72,23 @@ VAR
 		vyGraphBase.PaintRect2d( x + 0.25, y + 0.25, 0.5, 0.5 );  vyGraphBase.SetDisplayMode( vyGraphBase.paint )
 	END Recall;
 
-	PROCEDURE LGetCol*( l: tLayer;  x, y: INTEGER;  VAR index: INTEGER ): BOOLEAN;
-	VAR x2d, y2d: LONGREAL;
+	PROCEDURE LGetCol*( l: tLayer;  x, y: SIGNED16;  VAR index: SIGNED16 ): BOOLEAN;
+	VAR x2d, y2d: FLOAT64;
 	BEGIN
 		vyGraphBase.PointToPoint2d( x, y, x2d, y2d );
 		IF (x2d < 0) OR (y2d < 0) OR (x2d > 16) OR (y2d > 16) THEN RETURN FALSE END;
 		x := SHORT( ENTIER( x2d ) );  y := SHORT( ENTIER( y2d ) );  index := ((15 - y) * 16 + (x));  RETURN TRUE
 	END LGetCol;
 
-	PROCEDURE rgbp( p: Palette;  first, last: INTEGER );
-	VAR r1, r2, g1, g2, b1, b2: REAL;
+	PROCEDURE rgbp( p: Palette;  first, last: SIGNED16 );
+	VAR r1, r2, g1, g2, b1, b2: FLOAT32;
 	BEGIN
 		Colors.GetRGB( p.col[first], r1, g1, b1 );  Colors.GetRGB( p.col[last], r2, g2, b2 );
 		vyColorPalettes.RGBPath( p, first, last, r1, g1, b1, r2, g2, b2 )
 	END rgbp;
 
 	PROCEDURE Prompt( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR index, index2: INTEGER;  dx, dy: INTEGER;
+	VAR index, index2: SIGNED16;  dx, dy: SIGNED16;
 	BEGIN
 		IF LGetCol( layer, event.x, event.y, index ) THEN
 			vyTracking.FramedString( event.x + 10, event.y, "Syntax10.Scn.Fnt", "smear to?", dx, dy );
@@ -101,7 +101,7 @@ VAR
 	END Prompt;
 
 	PROCEDURE Select( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR index, index2: INTEGER;  dx, dy: INTEGER;  r, g, b: REAL;  dcol: LONGINT;  r1, g1, b1: REAL;  dcol1: LONGINT;
+	VAR index, index2: SIGNED16;  dx, dy: SIGNED16;  r, g, b: FLOAT32;  dcol: SIGNED32;  r1, g1, b1: FLOAT32;  dcol1: SIGNED32;
 	BEGIN
 		IF LGetCol( layer, event.x, event.y, index ) THEN
 			vyTracking.FramedString( event.x + 10, event.y, "Syntax10.Scn.Fnt", "exchange with ?", dx, dy );
@@ -123,7 +123,7 @@ VAR
 	END Select;
 
 	PROCEDURE Responsible( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF ((event.gesture = vyEvents.EvtIdent) OR (event.gesture = vyEvents.EvtSelect)) THEN priority := vyEvents.PrioNormal END;
@@ -131,7 +131,7 @@ VAR
 	END Responsible;
 
 	PROCEDURE HandleFileMsg( obj: tLayer;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		IF msg.id = Objects.load THEN
 			Files.ReadInt( msg.R, version );  vyPort.LayerHandler( obj, msg );  Gadgets.ReadRef( msg.R, obj.lib, objsub );
@@ -162,7 +162,7 @@ VAR
 	END HandleLinks;
 
 	PROCEDURE SendColors;
-	VAR keys: SET;  x, y, dx, dy: INTEGER;  msg: vyColorPalettes.GetColMsg;
+	VAR keys: SET;  x, y, dx, dy: SIGNED16;  msg: vyColorPalettes.GetColMsg;
 	BEGIN
 		Input.Mouse( keys, x, y );
 		WHILE (keys # {}) DO Input.Mouse( keys, x, y ) END;
@@ -268,7 +268,7 @@ VAR
 	END New;
 
 	PROCEDURE Path1*;
-	VAR keys: SET;  x, y, dx, dy: INTEGER;  msg: vyColorPalettes.GetColMsg;
+	VAR keys: SET;  x, y, dx, dy: SIGNED16;  msg: vyColorPalettes.GetColMsg;
 	BEGIN
 		aM.vS( "antsColors.Path1" );  Input.Mouse( keys, x, y );
 
@@ -286,7 +286,7 @@ VAR
 	END Path1;
 
 	PROCEDURE Path2*;
-	VAR keys: SET;  x, y, dx, dy: INTEGER;  msg: vyColorPalettes.GetColMsg;
+	VAR keys: SET;  x, y, dx, dy: SIGNED16;  msg: vyColorPalettes.GetColMsg;
 	BEGIN
 		aM.vS( "antsColors.Path2" );  Input.Mouse( keys, x, y );  msg.pal := NIL;  vyTracking.HelpAt( x, y, "move mouse to destination and click" );
 		vyTracking.TrackMouseCont( keys, dx, dy, Effects.PointHand );
@@ -298,7 +298,7 @@ VAR
 	END Path2;
 
 	PROCEDURE LPath*;
-	VAR r1, g1, b1, r2, g2, b2: REAL;  keys: SET;  x, y, dx, dy: INTEGER;  from, to: LONGINT;  msg: vyColorPalettes.GetColMsg;  sc: Texts.Scanner;
+	VAR r1, g1, b1, r2, g2, b2: FLOAT32;  keys: SET;  x, y, dx, dy: SIGNED16;  from, to: SIGNED32;  msg: vyColorPalettes.GetColMsg;  sc: Texts.Scanner;
 		obj: Objects.Object;
 	BEGIN
 
@@ -328,7 +328,7 @@ VAR
 	END LPath;
 
 	PROCEDURE Path*;
-	VAR l: antsCommands.tScanList;  r1, g1, b1, r2, g2, b2: LONGREAL;  keys: SET;  x, y, dx, dy: INTEGER;  msg: vyColorPalettes.GetColMsg;
+	VAR l: antsCommands.tScanList;  r1, g1, b1, r2, g2, b2: FLOAT64;  keys: SET;  x, y, dx, dy: SIGNED16;  msg: vyColorPalettes.GetColMsg;
 	BEGIN
 		l := antsCommands.ScanFromPar( "r1=INT g1=INT b1=INT r2=INT g2=INT b2=INT" );
 		IF antsCommands.ExpectRealFromKeyword( l, "r1", r1 ) & antsCommands.ExpectRealFromKeyword( l, "g1", g1 ) &
@@ -355,7 +355,7 @@ VAR
 	END Path;
 
 	PROCEDURE InteractiveSetCol*;
-	VAR keys: SET;  x, y, dx, dy: INTEGER;  layer: vyPort.tLayer;  index: INTEGER;  s: Attributes.Scanner;  pict: vyPort.Picture;
+	VAR keys: SET;  x, y, dx, dy: SIGNED16;  layer: vyPort.tLayer;  index: SIGNED16;  s: Attributes.Scanner;  pict: vyPort.Picture;
 	BEGIN
 		aM.vS( "antsColors.InteractiveSetCol" );  Attributes.OpenScanner( s, Oberon.Par.text, Oberon.Par.pos );  Attributes.Scan( s );
 		IF s.class = Attributes.Int THEN  (* col is in s.i *)
@@ -412,7 +412,7 @@ VAR
 	END Edit;
 
 	PROCEDURE Test*;
-	VAR r, g, b: INTEGER;  p: Palette;
+	VAR r, g, b: SIGNED16;  p: Palette;
 	BEGIN
 		vyColorPalettes.InitConversion( 255, p );  r := 10;  g := 0;  b := 0;  aM.SI( "", vyColorPalettes.Convert( r, g, b ) )
 	END Test;

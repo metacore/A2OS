@@ -15,14 +15,14 @@ VAR
 	endAdr*: ADDRESS;
 
 	dlsym-	: PROCEDURE {C} ( handle: ADDRESS; name: ADDRESS): ADDRESS;
-	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: WORD ): ADDRESS;
+	dlopen-	: PROCEDURE {C} ( pathname: ADDRESS; mode: INTEGER ): ADDRESS;
 	dlclose-	: PROCEDURE {C} ( handle: ADDRESS );
-	exit-		: PROCEDURE {C} (status: WORD);
+	exit-		: PROCEDURE {C} (status: INTEGER);
 
 	stackBottom-	: ADDRESS;	(* of main thread *)
 
 
-	argc-: WORD;
+	argc-: INTEGER;
 	argv-: ADDRESS;
 	environ-: ADDRESS;
 
@@ -374,7 +374,7 @@ MODULE Test;
 IMPORT StdIO, Commands, Streams, Modules;
 
 PROCEDURE Execute(context: Commands.Context);
-VAR str, msg: ARRAY 256 OF CHAR;  res: WORD;
+VAR str, msg: ARRAY 256 OF CHAR;  res: INTEGER;
 BEGIN
 	IF ~context.arg.GetString(str) THEN RETURN END;
 	IF ~context.arg.GetString(str) THEN

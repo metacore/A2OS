@@ -19,10 +19,10 @@ TYPE
 		file : Files.File;
 
 		pooling : SET;
-		nofTimes : LONGINT;
-		state : LONGINT;
+		nofTimes : SIGNED32;
+		state : SIGNED32;
 
-		PROCEDURE &Init*(file : Files.File; nofTimes : LONGINT; pooling : SET);
+		PROCEDURE &Init*(file : Files.File; nofTimes : SIGNED32; pooling : SET);
 		BEGIN
 			ASSERT((file # NIL) & (nofTimes > 0));
 			SELF.file := file;
@@ -45,7 +45,7 @@ TYPE
 		END Terminate;
 
 		PROCEDURE Parse;
-		VAR document : XML.Document; i : LONGINT;
+		VAR document : XML.Document; i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE ~error & (i < nofTimes) & (state = Working) DO
@@ -66,7 +66,7 @@ TYPE
 VAR
 	error : BOOLEAN;
 	workers : POINTER TO ARRAY OF Worker;
-	nofActiveWorkers : LONGINT;
+	nofActiveWorkers : SIGNED32;
 
 PROCEDURE DecrementNofActiveWorkers;
 BEGIN {EXCLUSIVE}
@@ -92,10 +92,10 @@ PROCEDURE BenchParser*(context : Commands.Context); (** [Options] filename ~ *)
 VAR
 	filename : Files.FileName; options : Options.Options;
 	file : Files.File;
-	i, nofTimes, nofWorkers : LONGINT;
+	i, nofTimes, nofWorkers : SIGNED32;
 	pooling : SET;
 	start, end : Dates.DateTime;
-	nofDays, nofHours, nofMinutes, nofSeconds : LONGINT;
+	nofDays, nofHours, nofMinutes, nofSeconds : SIGNED32;
 BEGIN {EXCLUSIVE} (* protects global variable error *)
 	NEW(options);
 	options.Add("n", "nofTimes", Options.Integer);
@@ -143,7 +143,7 @@ BEGIN {EXCLUSIVE} (* protects global variable error *)
 	END;
 END BenchParser;
 
-PROCEDURE ToSeconds(nofDays, nofHours, nofMinutes, nofSeconds : LONGINT) : LONGINT;
+PROCEDURE ToSeconds(nofDays, nofHours, nofMinutes, nofSeconds : SIGNED32) : SIGNED32;
 BEGIN
 	RETURN (86400 * nofDays + 3600 * nofHours + 60 * nofMinutes + nofSeconds);
 END ToSeconds;

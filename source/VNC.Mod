@@ -39,14 +39,14 @@ TYPE
 		next: Connection;	(* link in connection pool *)
 		pcb: TCP.Connection;
 		w: Window;
-		res: WORD;
-		id: LONGINT;
+		res: INTEGER;
+		id: SIGNED32;
 		receiver: Receiver;
 		sender: Sender;
 		nb: Raster.Image;
 		fmt: Raster.Format;	(* network transfer format *)
 		mode: Raster.Mode;
-		bytesPerPixel: LONGINT;	(* network transfer format size *)
+		bytesPerPixel: SIGNED32;	(* network transfer format size *)
 		rcvbuf, imgbuf: POINTER TO ARRAY OF CHAR;
 		rcvbufpos, rcvbuflen: SIZE;
 		fip: IP.Adr
@@ -56,7 +56,7 @@ TYPE
 	EnumProc = PROCEDURE (c: Connection; out : Streams.Writer);
 
 	ConnectionPool = OBJECT
-		VAR head, tail: Connection; id: LONGINT;
+		VAR head, tail: Connection; id: SIGNED32;
 
 		PROCEDURE Empty(): BOOLEAN;
 		BEGIN	(* read head pointer atomically *)
@@ -86,7 +86,7 @@ TYPE
 			c := head; WHILE c # NIL DO p(c, out); c := c.next END
 		END Enumerate;
 
-		PROCEDURE Find(id: LONGINT): Connection;
+		PROCEDURE Find(id: SIGNED32): Connection;
 		VAR c: Connection;
 		BEGIN	(* may traverse list concurrently with Add and Remove *)
 			c := head; WHILE (c # NIL) & (c.id # id) DO c := c.next END;
@@ -171,7 +171,7 @@ TYPE
 		VAR
 			c: Connection;
 			head, middle, tail, lx, ly: SIZE;
-			res: WORD;
+			res: INTEGER;
 			lkeys : SET;
 			buf: ARRAY OutBufSize OF CHAR;
 			done, poll: BOOLEAN;
@@ -188,7 +188,7 @@ TYPE
 			buf[tail] := x; tail := (tail+1) MOD LEN(buf)
 		END Put;
 
-		PROCEDURE PutInt(x: LONGINT);
+		PROCEDURE PutInt(x: SIGNED32);
 		BEGIN
 			Put(CHR(x DIV 100H)); Put(CHR(x MOD 100H))
 		END PutInt;
@@ -200,8 +200,8 @@ TYPE
 					KernelLog.Enter; KernelLog.String("Ptr "); KernelLog.Int(x, 5); KernelLog.Int(y, 5); KernelLog.Exit
 				END;
 				Put(5X);	(* PointerEvent (sec. 5.2.6) *)
-				Put(CHR(LONGINT(keys)));
-				PutInt(x(LONGINT)); PutInt(y(LONGINT));
+				Put(CHR(SIGNED32(keys)));
+				PutInt(x(SIGNED32)); PutInt(y(SIGNED32));
 				lx := x; ly := y; lkeys := keys
 			END
 		END Pointer;
@@ -217,8 +217,8 @@ TYPE
 				keys := lkeys;
 				IF dz < 0 THEN INCL(keys, 3) END;
 				IF dz > 0 THEN INCL(keys, 4) END;
-				Put(CHR(LONGINT(keys)));
-				PutInt(lx(LONGINT)); PutInt(ly(LONGINT))
+				Put(CHR(SIGNED32(keys)));
+				PutInt(lx(SIGNED32)); PutInt(ly(SIGNED32))
 			END
 		END Wheel;
 
@@ -227,12 +227,12 @@ TYPE
 			IF Available() >= 8 THEN
 				Put(4X);	(* KeyEvent (sec. 5.2.5) *)
 				IF Inputs.Release IN flags THEN Put(0X) ELSE Put(1X) END;
-				PutInt(0); PutInt(0); PutInt(keysym(LONGINT))
+				PutInt(0); PutInt(0); PutInt(keysym(SIGNED32))
 			END
 		END Key;
 
 		PROCEDURE Paste(r: Streams.Reader);
-		VAR key: LONGINT;
+		VAR key: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			LOOP
 				key := ORD(r.Get());
@@ -253,7 +253,7 @@ TYPE
 			IF ~done & (Available() >= 10) THEN
 				Put(3X);	(* FramebufferUpdateRequest (sec. 5.2.4) *)
 				Put(1X);	(* incremental *)
-				PutInt(0); PutInt(0); PutInt(c.w.img.width(LONGINT)); PutInt(c.w.img.height(LONGINT))
+				PutInt(0); PutInt(0); PutInt(c.w.img.width(SIGNED32)); PutInt(c.w.img.height(SIGNED32))
 			END;
 			middle := tail; poll := FALSE
 		END AwaitEvent;
@@ -327,7 +327,7 @@ VAR
 	pool: ConnectionPool;
 	bell: Bell;
 
-PROCEDURE ReceiveBytes(c: Connection; VAR buf: ARRAY OF CHAR; size: SIZE; VAR len: LONGINT);
+PROCEDURE ReceiveBytes(c: Connection; VAR buf: ARRAY OF CHAR; size: SIZE; VAR len: SIGNED32);
 VAR dst, n: SIZE;
 BEGIN
 	IF c.res = Ok THEN
@@ -345,7 +345,7 @@ BEGIN
 			ASSERT(dst+n <= LEN(buf));	(* index check *)
 			SYSTEM.MOVE(ADDRESSOF(c.rcvbuf[c.rcvbufpos]), ADDRESSOF(buf[dst]), n);
 			INC(c.rcvbufpos, n); DEC(c.rcvbuflen, n);
-			INC(dst, n); DEC(size, n); INC(len, n(LONGINT))
+			INC(dst, n); DEC(size, n); INC(len, n(SIGNED32))
 		END
 	ELSE
 		buf[0] := 0X; len := 0
@@ -353,7 +353,7 @@ BEGIN
 END ReceiveBytes;
 
 PROCEDURE Receive(c: Connection; VAR ch: CHAR);
-VAR len: LONGINT; buf: ARRAY 1 OF CHAR;
+VAR len: SIGNED32; buf: ARRAY 1 OF CHAR;
 BEGIN
 	IF c.rcvbuflen > 0 THEN
 		ch := c.rcvbuf[c.rcvbufpos]; INC(c.rcvbufpos); DEC(c.rcvbuflen)
@@ -363,21 +363,21 @@ BEGIN
 	END
 END Receive;
 
-PROCEDURE ReceiveInt(c: Connection; VAR x: LONGINT);
-VAR len: LONGINT; buf: ARRAY 2 OF CHAR;
+PROCEDURE ReceiveInt(c: Connection; VAR x: SIGNED32);
+VAR len: SIGNED32; buf: ARRAY 2 OF CHAR;
 BEGIN
 	ReceiveBytes(c, buf, 2, len);
 	x := Network.GetNet2(buf, 0)
 END ReceiveInt;
 
-PROCEDURE ReceiveLInt(c: Connection; VAR x: LONGINT);
-VAR len: LONGINT; buf: ARRAY 4 OF CHAR;
+PROCEDURE ReceiveLInt(c: Connection; VAR x: SIGNED32);
+VAR len: SIGNED32; buf: ARRAY 4 OF CHAR;
 BEGIN
 	ReceiveBytes(c, buf, 4, len);
 	x := Network.GetNet4(buf, 0)
 END ReceiveLInt;
 
-PROCEDURE ReceiveIgnore(c: Connection; len: LONGINT);
+PROCEDURE ReceiveIgnore(c: Connection; len: SIGNED32);
 VAR ch: CHAR;
 BEGIN
 	WHILE (len > 0) & (c.res = Ok) DO Receive(c, ch); DEC(len) END
@@ -393,7 +393,7 @@ END Send;
 (* Get the server's version number and send our version number. *)
 
 PROCEDURE DoVersion(c: Connection): BOOLEAN;
-VAR buf: ARRAY 16 OF CHAR; len: LONGINT;
+VAR buf: ARRAY 16 OF CHAR; len: SIGNED32;
 BEGIN
 	ReceiveBytes(c, buf, 12, len);
 	IF c.res = Ok THEN
@@ -410,7 +410,7 @@ END DoVersion;
 (* Authenticate ourself with the server. *)
 
 PROCEDURE DoAuthentication(c: Connection; VAR pwd: ARRAY OF CHAR): BOOLEAN;
-VAR x, len, len0: LONGINT; buf: ARRAY 64 OF CHAR; cipher: ARRAY 16 OF CHAR; d: DES.DES;
+VAR x, len, len0: SIGNED32; buf: ARRAY 64 OF CHAR; cipher: ARRAY 16 OF CHAR; d: DES.DES;
 BEGIN
 	ReceiveLInt(c, x);
 	IF c.res = Ok THEN
@@ -453,8 +453,8 @@ END DoAuthentication;
 
 (* Set up an RFB encodings message.  "code" contains the codes in preferred order.  "len" returns the message length. *)
 
-PROCEDURE PutEncodings(VAR buf: ARRAY OF CHAR; ofs: LONGINT; code: ARRAY OF CHAR; VAR len: LONGINT);
-VAR i: LONGINT;
+PROCEDURE PutEncodings(VAR buf: ARRAY OF CHAR; ofs: SIGNED32; code: ARRAY OF CHAR; VAR len: SIGNED32);
+VAR i: SIGNED32;
 BEGIN
 	buf[ofs] := 2X;	(* SetEncodings (sec. 5.2.3) *)
 	buf[ofs+1] := 0X;	(* padding *)
@@ -470,7 +470,7 @@ END PutEncodings;
 (* Initialise the transfer format. *)
 
 PROCEDURE DoInit(c: Connection): BOOLEAN;
-VAR len, len0, w, h: LONGINT; buf: ARRAY 64 OF CHAR; pixel: Raster.Pixel; ptr: WMWindowManager.PointerInfo;
+VAR len, len0, w, h: SIGNED32; buf: ARRAY 64 OF CHAR; pixel: Raster.Pixel; ptr: WMWindowManager.PointerInfo;
 BEGIN
 	IF Shared THEN Send(c, 1X) ELSE Send(c, 0X) END;
 	IF c.res = Ok THEN
@@ -580,14 +580,14 @@ BEGIN
 	END;
 	buf[0] := 3X;	(* FramebufferUpdateRequest (sec. 5.2.4) *)
 	IF inc THEN buf[1] := 1X ELSE buf[1] := 0X END;
-	Network.PutNet2(buf, 2, x(LONGINT)); Network.PutNet2(buf, 4, y(LONGINT));
-	Network.PutNet2(buf, 6, w(LONGINT)); Network.PutNet2(buf, 8, h(LONGINT));
+	Network.PutNet2(buf, 2, x(SIGNED32)); Network.PutNet2(buf, 4, y(SIGNED32));
+	Network.PutNet2(buf, 6, w(SIGNED32)); Network.PutNet2(buf, 8, h(SIGNED32));
 	c.pcb.Send(buf, 0, 10, FALSE, c.res)
 END SendRequest;
 
 (* Update an area of the display. *)
 
-PROCEDURE UpdateDisplay(c: Connection; x, y, w, h: LONGINT);
+PROCEDURE UpdateDisplay(c: Connection; x, y, w, h: SIGNED32);
 (*VAR pixel: Raster.Pixel; mode: Raster.Mode;*)
 BEGIN
 (*
@@ -601,14 +601,14 @@ END UpdateDisplay;
 
 (* Receive a raw rectangle. *)
 
-PROCEDURE ReceiveRaw(c: Connection; x, y, w, h: LONGINT);
-VAR bh, h0, len, i: LONGINT;
+PROCEDURE ReceiveRaw(c: Connection; x, y, w, h: SIGNED32);
+VAR bh, h0, len, i: SIGNED32;
 BEGIN
 	IF Trace THEN
 		KernelLog.Enter; KernelLog.String("Raw"); KernelLog.Int(x, 5); KernelLog.Int(y, 5);
 		KernelLog.Int(w, 5); KernelLog.Int(h, 5); KernelLog.Exit
 	END;
-	bh := (LEN(c.imgbuf^) DIV (w*c.bytesPerPixel))(LONGINT);	(* number of lines that will fit in buffer *)
+	bh := (LEN(c.imgbuf^) DIV (w*c.bytesPerPixel))(SIGNED32);	(* number of lines that will fit in buffer *)
 	Raster.Init(c.nb, w, bh, c.fmt, w*c.bytesPerPixel, ADDRESSOF(c.imgbuf[0]));
 	WHILE h > 0 DO
 		IF h >= bh THEN h0 := bh ELSE h0 := h END;
@@ -625,8 +625,8 @@ END ReceiveRaw;
 
 (* Receive a copy rectangle message. *)
 
-PROCEDURE ReceiveCopyRect(c: Connection; x, y, w, h: LONGINT);
-VAR sx, sy: LONGINT;
+PROCEDURE ReceiveCopyRect(c: Connection; x, y, w, h: SIGNED32);
+VAR sx, sy: SIGNED32;
 BEGIN
 	ReceiveInt(c, sx);	(* src-x-position *)
 	IF c.res = Ok THEN
@@ -644,7 +644,7 @@ END ReceiveCopyRect;
 (* Receive a pixel. *)
 
 PROCEDURE ReceivePixel(c: Connection; VAR pixel: Raster.Pixel);
-VAR len: LONGINT; buf: ARRAY 4 OF CHAR;
+VAR len: SIGNED32; buf: ARRAY 4 OF CHAR;
 BEGIN
 	ReceiveBytes(c, buf, c.bytesPerPixel, len);
 	c.fmt.unpack(c.fmt, ADDRESSOF(buf[0]), 0, pixel);
@@ -653,8 +653,8 @@ END ReceivePixel;
 
 (* Receive an RRE rectangle message. *)
 
-PROCEDURE ReceiveRRE(c: Connection; x, y, w, h: LONGINT);
-VAR n, len, sx, sy: LONGINT; pixel: Raster.Pixel; buf: ARRAY 8 OF CHAR;
+PROCEDURE ReceiveRRE(c: Connection; x, y, w, h: SIGNED32);
+VAR n, len, sx, sy: SIGNED32; pixel: Raster.Pixel; buf: ARRAY 8 OF CHAR;
 BEGIN
 	IF Trace THEN
 		KernelLog.Enter; KernelLog.String("RRE"); KernelLog.Int(x, 5); KernelLog.Int(y, 5);
@@ -680,8 +680,8 @@ END ReceiveRRE;
 
 (* Receive a CoRRE rectangle message. *)
 
-PROCEDURE ReceiveCoRRE(c: Connection; x, y, w, h: LONGINT);
-VAR n, len, sx, sy: LONGINT; pixel: Raster.Pixel; buf: ARRAY 4 OF CHAR;
+PROCEDURE ReceiveCoRRE(c: Connection; x, y, w, h: SIGNED32);
+VAR n, len, sx, sy: SIGNED32; pixel: Raster.Pixel; buf: ARRAY 4 OF CHAR;
 BEGIN
 	IF Trace THEN
 		KernelLog.Enter; KernelLog.String("CoRRE"); KernelLog.Int(x, 5); KernelLog.Int(y, 5);
@@ -707,11 +707,11 @@ END ReceiveCoRRE;
 
 (* Receive a hextile rectangle message. *)
 
-PROCEDURE ReceiveHextile(c: Connection; x, y, w, h: LONGINT);
+PROCEDURE ReceiveHextile(c: Connection; x, y, w, h: SIGNED32);
 CONST
 	Raw = 0; BackgroundSpecified = 1; ForegroundSpecified = 2; AnySubrects = 3; SubrectsColoured = 4;
 VAR
-	row, col, i, tw, th, wmin, hmin, sx, sy, sw, sh: LONGINT;
+	row, col, i, tw, th, wmin, hmin, sx, sy, sw, sh: SIGNED32;
 	bg, fg, pixel: Raster.Pixel; sub: SET; ch: CHAR;
 BEGIN
 	IF Trace THEN
@@ -756,7 +756,7 @@ END ReceiveHextile;
 (* Receive a rectangle message. *)
 
 PROCEDURE ReceiveRectangle(c: Connection);
-VAR len, x, y, w, h: LONGINT; buf: ARRAY 12 OF CHAR;
+VAR len, x, y, w, h: SIGNED32; buf: ARRAY 12 OF CHAR;
 BEGIN
 	ReceiveBytes(c, buf, 12, len);
 	x := Network.GetNet2(buf, 0); y := Network.GetNet2(buf, 2);
@@ -774,7 +774,7 @@ END ReceiveRectangle;
 (* Receive and react on one message from the server. *)
 
 PROCEDURE AwaitResponse(c: Connection);
-VAR len: LONGINT; ch: CHAR;
+VAR len: SIGNED32; ch: CHAR;
 BEGIN
 	Receive(c, ch);
 	IF c.res = Ok THEN
@@ -802,7 +802,7 @@ END AwaitResponse;
 
 (* Open a VNC connection to the specified server and port. *)
 
-PROCEDURE OpenVNC*(c: Connection; server: IP.Adr; port: LONGINT; pwd: ARRAY OF CHAR);
+PROCEDURE OpenVNC*(c: Connection; server: IP.Adr; port: SIGNED32; pwd: ARRAY OF CHAR);
 BEGIN
 	NEW(c.pcb); c.fip := server;
 	c.pcb.Open(TCP.NilPort, server, port, c.res);
@@ -834,7 +834,7 @@ END OpenVNC;
 (* Close a VNC connection. *)
 
 PROCEDURE CloseVNC*(VAR c: Connection);
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	pool.Remove(c);
 	c.pcb.Close();
@@ -846,7 +846,7 @@ BEGIN
 END CloseVNC;
 
 PROCEDURE PrintConnection(c: Connection; out : Streams.Writer);
-VAR res: WORD; name: ARRAY 128 OF CHAR;
+VAR res: INTEGER; name: ARRAY 128 OF CHAR;
 BEGIN
 	out.Int(c.id, 1);
 	CASE c.fmt.code OF
@@ -875,7 +875,7 @@ BEGIN
 END Show;
 
 PROCEDURE ReadString(r: Streams.Reader; VAR s: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	i := 0; WHILE (r.res = 0) & (r.Peek() # " ") DO r.Char(s[i]); INC(i) END;
 	s[i] := 0X; r.SkipBytes(1)
@@ -883,7 +883,7 @@ END ReadString;
 
 PROCEDURE Open*(context : Commands.Context); (** server[pwd|?] port *)
 VAR
-	server: IP.Adr; res: WORD; port: LONGINT;
+	server: IP.Adr; res: INTEGER; port: SIGNED32;
 	c: Connection; pwd: ARRAY 32 OF CHAR; svr, title: ARRAY 128 OF CHAR;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(svr); context.arg.SkipWhitespace;
@@ -914,7 +914,7 @@ BEGIN
 END Open;
 
 PROCEDURE Paste*(context : Commands.Context);	(** connection text *)
-VAR i: LONGINT; c: Connection;
+VAR i: SIGNED32; c: Connection;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.Int(i, FALSE);
 	c := pool.Find(i);

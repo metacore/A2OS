@@ -24,24 +24,24 @@ TYPE
 		rider: Files.Rider;
 		reader: Texts.Reader;
 		text: Texts.Text;	(* needed for Set *)
-		ofs: LONGINT;	(* needed for Pos - Position, where text starts in file *)
+		ofs: SIGNED32;	(* needed for Pos - Position, where text starts in file *)
 		str,eof: BOOLEAN;	(* str is for text parsing, eof is copied from rider.eof or reader.eot *)
 		Read: PROCEDURE(VAR R: Rider; VAR c: CHAR);	(* read a byte *)
-		Pos: PROCEDURE(VAR R: Rider): LONGINT;	(* get current file position *)
-		Set: PROCEDURE(VAR R: Rider; pos: LONGINT);	(* seek to given file position *)
+		Pos: PROCEDURE(VAR R: Rider): SIGNED32;	(* get current file position *)
+		Set: PROCEDURE(VAR R: Rider; pos: SIGNED32);	(* seek to given file position *)
 	END;
 
 	(* User-defined color entry *)
 	ColorEntry = POINTER TO ColorEntryDesc;
 	ColorEntryDesc = RECORD
 		name: Objects.Name;
-		r,g,b: REAL;
+		r,g,b: FLOAT32;
 		next: ColorEntry;
 	END;
 
 VAR
 	colorEntry: ColorEntry;
-	colorMap: ARRAY 256 OF INTEGER;
+	colorMap: ARRAY 256 OF SIGNED16;
 	charMap: POINTER TO ARRAY OF CHAR;
 	xpmLogo,noColor: ARRAY 10 OF CHAR;
 	credit: BOOLEAN;
@@ -53,12 +53,12 @@ BEGIN
 	Files.Read(R.rider,c); R.eof:= R.rider.eof;
 END ReadFile;
 
-PROCEDURE PosFile(VAR R: Rider): LONGINT;
+PROCEDURE PosFile(VAR R: Rider): SIGNED32;
 BEGIN
 	RETURN(Files.Pos(R.rider));
 END PosFile;
 
-PROCEDURE SetFile(VAR R: Rider; pos: LONGINT);
+PROCEDURE SetFile(VAR R: Rider; pos: SIGNED32);
 BEGIN
 	Files.Set(R.rider,Files.Base(R.rider),pos); R.eof:= R.rider.eof;
 END SetFile;
@@ -68,12 +68,12 @@ BEGIN
 	Texts.Read(R.reader,c); R.eof:= R.reader.eot;
 END ReadText;
 
-PROCEDURE PosText(VAR R: Rider): LONGINT;
+PROCEDURE PosText(VAR R: Rider): SIGNED32;
 BEGIN
 	RETURN(R.ofs+Texts.Pos(R.reader));
 END PosText;
 
-PROCEDURE SetText(VAR R: Rider; pos: LONGINT);
+PROCEDURE SetText(VAR R: Rider; pos: SIGNED32);
 BEGIN
 	Texts.OpenReader(R.reader,R.text,pos);
 	Files.Set(R.rider,Files.Base(R.rider),pos); R.eof:= R.rider.eof;
@@ -91,7 +91,7 @@ BEGIN
 	RETURN(entry);
 END FindUserColor;
 
-PROCEDURE GetColorEntry(s: ARRAY OF CHAR; VAR r,g,b: REAL; VAR ok: BOOLEAN);
+PROCEDURE GetColorEntry(s: ARRAY OF CHAR; VAR r,g,b: FLOAT32; VAR ok: BOOLEAN);
 	(* find a color specification in the list of user-defined colors/ColorModels list *)
 VAR
 	entry: ColorEntry;
@@ -104,11 +104,11 @@ BEGIN
 	END;
 END GetColorEntry;
 
-PROCEDURE OpenRider(VAR FR: Files.Rider; VAR R: Rider; pos: LONGINT);
+PROCEDURE OpenRider(VAR FR: Files.Rider; VAR R: Rider; pos: SIGNED32);
 	(* initialize a Rider. Supported are Oberon Texts and DOS/UNIX Files *)
 VAR
 	c: CHAR;
-	len: LONGINT;
+	len: SIGNED32;
 BEGIN
 	Files.Read(FR,c);
 	IF (c = Texts.TextBlockId) THEN
@@ -126,7 +126,7 @@ PROCEDURE MagicString(VAR R: Rider): BOOLEAN;
 	(* check for the magic string *)
 VAR
 	c: CHAR;
-	i: INTEGER;
+	i: SIGNED16;
 BEGIN
 	i:= 0;
 	REPEAT R.Read(R,c); UNTIL R.eof OR ((c # CR) & (c # LF));
@@ -168,7 +168,7 @@ PROCEDURE XpmName(VAR R: Rider; VAR name: ARRAY OF CHAR);
 	(* Read the Pixmap's internal name *)
 VAR
 	c: CHAR;
-	i: INTEGER;
+	i: SIGNED16;
 BEGIN
 	i:= 0;
 	WHILE ~R.eof & (ScanChar(R) # "*") DO END;
@@ -179,14 +179,14 @@ BEGIN
 	name[i]:= 0X;
 END XpmName;
 
-PROCEDURE XpmAttr(VAR R: Rider; VAR w,h,c,p: INTEGER);
+PROCEDURE XpmAttr(VAR R: Rider; VAR w,h,c,p: SIGNED16);
 	(* Read the Pixmap's attributes: width, height, color, chars/pixel *)
 VAR
 	ch: CHAR;
 
-	PROCEDURE ReadNum(): INTEGER;
+	PROCEDURE ReadNum(): SIGNED16;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		s: ARRAY 64 OF CHAR;
 	BEGIN
 		i:= 0; ch:= ScanChar(R);
@@ -205,22 +205,22 @@ BEGIN
 	WHILE ~R.eof & (ch # ",") DO ch:= ScanChar(R); END;
 END XpmAttr;
 
-PROCEDURE XpmColor(VAR R: Rider; pict: Pictures.Picture; nrColor,pixChr,traCol: INTEGER; conversion: BOOLEAN);
+PROCEDURE XpmColor(VAR R: Rider; pict: Pictures.Picture; nrColor,pixChr,traCol: SIGNED16; conversion: BOOLEAN);
 	(* Read the Pixmap's color entries. Only the color entry (specification 'c') is supported.
 	entries starting with '#' are treated as a X color definition, % (HSV) is not supported and
 	all others are treated as symbolic colors. The color conversion part is copied from BMP.Mod *)
 VAR
-	r,g,b,i,j,k: INTEGER;
-	x0,x1,x2: REAL;
-	C: LONGINT;
+	r,g,b,i,j,k: SIGNED16;
+	x0,x1,x2: FLOAT32;
+	C: SIGNED32;
 	ok: BOOLEAN;
 	ch,key,spec: CHAR;
 	cval: ARRAY 60 OF CHAR;
 
-	PROCEDURE Value(col: ARRAY OF CHAR; pos,len: INTEGER): REAL;
+	PROCEDURE Value(col: ARRAY OF CHAR; pos,len: SIGNED16): FLOAT32;
 	VAR
-		i: INTEGER;
-		v,w: LONGINT;
+		i: SIGNED16;
+		v,w: SIGNED32;
 	BEGIN
 		v:= 0; w:= 0;
 		FOR i:= 0 TO len-1 DO
@@ -290,11 +290,11 @@ BEGIN
 	charMap[i*pixChr]:= 0X;
 END XpmColor;
 
-PROCEDURE XpmLine(VAR R: Rider; y,w,cpp: INTEGER; pict: Pictures.Picture);
+PROCEDURE XpmLine(VAR R: Rider; y,w,cpp: SIGNED16; pict: Pictures.Picture);
 	(* Read a Xpm Scan Line and set the pictures pixels according to the color map *)
 VAR
 	pat: ARRAY 16 OF CHAR;
-	i,j: INTEGER;
+	i,j: SIGNED16;
 	k: SIZE;
 	c: CHAR;
 BEGIN
@@ -310,10 +310,10 @@ BEGIN
 	REPEAT c:= ScanChar(R); UNTIL R.eof OR (c = ",") OR (c = "}");
 END XpmLine;
 
-PROCEDURE LoadXPM(VAR R: Rider; transparentCol: INTEGER; colorConversion: BOOLEAN; pict: Pictures.Picture);
+PROCEDURE LoadXPM(VAR R: Rider; transparentCol: SIGNED16; colorConversion: BOOLEAN; pict: Pictures.Picture);
 VAR
-	pos: LONGINT;
-	w,h,col,cpp,y: INTEGER;
+	pos: SIGNED32;
+	w,h,col,cpp,y: SIGNED16;
 	name: ARRAY 60 OF CHAR;
 BEGIN
 	pos:= R.Pos(R);
@@ -342,7 +342,7 @@ END LoadXPM;
 PROCEDURE Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg);
 VAR
 	R: Rider;
-	pos: LONGINT;
+	pos: SIGNED32;
 BEGIN
 	WITH obj: Pictures.Picture DO
 		IF msg IS Objects.AttrMsg THEN
@@ -384,14 +384,14 @@ END NewPicture;
 
 (** Define a new color. Use this, if a certain color name is undefined when loading a XPM picture.
 Syntax is: XPM.DefineColor color red green blue~
-color is a colorname, red, green and blue are REAL values between 0.0 and 1.0 *)
+color is a colorname, red, green and blue are FLOAT32 values between 0.0 and 1.0 *)
 PROCEDURE DefineColors*;
 VAR
 	entry: ColorEntry;
 	col: Objects.Name;
-	r,g,b: REAL;
+	r,g,b: FLOAT32;
 
-	PROCEDURE Valid(x: REAL): BOOLEAN;
+	PROCEDURE Valid(x: FLOAT32): BOOLEAN;
 	BEGIN
 		RETURN((x >= 0.0) & (x <= 1.0));
 	END Valid;
@@ -422,7 +422,7 @@ PROCEDURE CopyColors*;
 VAR
 	entry: ColorEntry;
 	col0,col1: Objects.Name;
-	r,g,b: REAL;
+	r,g,b: FLOAT32;
 	sep: CHAR;
 	ok: BOOLEAN;
 BEGIN

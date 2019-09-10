@@ -25,7 +25,7 @@ CONST CATPort = 9999;
 
 	BoxDistance = 250;
 
-VAR OSColor : ARRAY 6 OF LONGINT;
+VAR OSColor : ARRAY 6 OF SIGNED32;
 	OSImg : ARRAY 6 OF Raster.Image;
 
 TYPE
@@ -36,20 +36,20 @@ TYPE
 		host : ARRAY 64 OF CHAR;
 		os, oldos : ARRAY 32 OF CHAR;
 		load : ARRAY 32 OF CHAR;
-		running, oldrunning : LONGINT;
+		running, oldrunning : SIGNED32;
 		obj : AbstractWorld.Object;
 		timer : Kernel.Timer;
-		interval : LONGINT;
+		interval : SIGNED32;
 		world : AbstractWorld.World;
 		connection : TCP.Connection;
 
 		alive : BOOLEAN;
 
-		index : LONGINT;
+		index : SIGNED32;
 
 		render : UpdateProc;
 
-		PROCEDURE &Init*(world : AbstractWorld.World; pos : Vectors.TVector3d; host : ARRAY OF CHAR; interval : LONGINT;
+		PROCEDURE &Init*(world : AbstractWorld.World; pos : Vectors.TVector3d; host : ARRAY OF CHAR; interval : SIGNED32;
 			update: UpdateProc);
 		BEGIN
 			COPY(host, SELF.host); SELF.pos := pos; SELF.world := world; SELF.interval := interval; SELF.render := update;
@@ -57,7 +57,7 @@ TYPE
 		END Init;
 
 		PROCEDURE RefreshInfo(host: ARRAY OF CHAR; VAR osName, osLoad: ARRAY OF CHAR) : BOOLEAN;
-		VAR res: WORD;
+		VAR res: INTEGER;
 			fip: IP.Adr;
 			in : Streams.Reader;
 			out : Streams.Writer;
@@ -124,20 +124,20 @@ TYPE
 		VAR
 			alive, dead:BOOLEAN;
 			timer : Kernel.Timer;
-			interval : LONGINT;
+			interval : SIGNED32;
 
 			(* Navigation *)
 			lookat: Vectors.TVector3d;
-			radius, angle, height : LONGREAL;
+			radius, angle, height : FLOAT64;
 			mouseKeys : SET;
 			oldX, oldY : SIZE;
 
 			(* 3d World *)
 			world : World.World;
-			mx, my, mz : LONGREAL;
+			mx, my, mz : FLOAT64;
 
 			infoList : Classes.List;
-			index : LONGINT;
+			index : SIGNED32;
 
 		PROCEDURE ParseLine(line : XML.Element; pos: Vectors.TVector3d);
 		VAR cont : Objects.Enumerator; p : ANY; el : XML.Element;s : Strings.String;
@@ -205,9 +205,9 @@ TYPE
 			lookat := Vectors.Vector3d(mx / 2, my / 2, mz / 2)
 		END Load;
 
-		PROCEDURE &New*(interval: LONGINT; fileName: ARRAY OF CHAR);
-		VAR xpos, ypos : LONGINT;
-				w, h : LONGINT;
+		PROCEDURE &New*(interval: SIGNED32; fileName: ARRAY OF CHAR);
+		VAR xpos, ypos : SIGNED32;
+				w, h : SIGNED32;
 		BEGIN
 			w := 400; h := 400;
 			xpos := 20; ypos := 30;
@@ -290,7 +290,7 @@ VAR
 	mode : Raster.Mode;
 
 	PROCEDURE MatchI(VAR buf: ARRAY OF CHAR; with: ARRAY OF CHAR): BOOLEAN;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0; WHILE (with[i] # 0X) & (CAP(buf[i]) = CAP(with[i])) DO INC(i) END;
 		RETURN with[i] = 0X
@@ -299,7 +299,7 @@ VAR
 PROCEDURE Watch*(context : Commands.Context);
 VAR
 	name : ARRAY 100 OF CHAR;
-	i, interval : LONGINT;
+	i, interval : SIGNED32;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(name);
 	(* steps *)

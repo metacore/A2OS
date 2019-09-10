@@ -23,17 +23,17 @@ Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
 *)
 
 
-(* LONGREAL version, jb 26.10.00 *)
+(* FLOAT64 version, jb 26.10.00 *)
 IMPORT MathL IN A2; (* := Math , jb 26.10.00 *)
 TYPE
-	real = LONGREAL;  (* jb, 26.10.00 *)
+	real = FLOAT64;  (* jb, 26.10.00 *)
 
 	Function* = PROCEDURE (x: real): real;
 
 PROCEDURE probks* (alam: real): real;
 	(* procedure probks from numerical recipes *)
 CONST eps1 = 0.001;  eps2 = 1.D-08;
-	VAR j: LONGINT;  a2, fac, sum, term, termbf: real;
+	VAR j: SIGNED32;  a2, fac, sum, term, termbf: real;
 BEGIN
 	fac := 2;  sum := 0;  termbf := 0;
 	a2 := - 2 * alam * alam;
@@ -52,9 +52,9 @@ BEGIN
 	IF x1 > x2 THEN RETURN x1 ELSE RETURN x2 END;
 END Max;
 
-PROCEDURE KS1* (data: ARRAY OF real;  n: LONGINT;  func: Function;  VAR d, prob: real );
+PROCEDURE KS1* (data: ARRAY OF real;  n: SIGNED32;  func: Function;  VAR d, prob: real );
 	(* procedure ksone from numerical recipes *)
-	VAR j: LONGINT;
+	VAR j: SIGNED32;
 	f0, fn, ff, en, dt: real;
 BEGIN
 	f0 := 0;
@@ -71,10 +71,10 @@ BEGIN
 END KS1;
 
 (* jb 1.11.00 *)
-PROCEDURE KS1Id* (data: ARRAY OF real;  n: LONGINT;  VAR d, prob: real);
+PROCEDURE KS1Id* (data: ARRAY OF real;  n: SIGNED32;  VAR d, prob: real);
 	(*= KS1 with func = Id, to improve performance *)
 VAR
-	j: LONGINT;
+	j: SIGNED32;
 	fn, ff, en, dt: real;
 BEGIN
 	en := n;
@@ -91,9 +91,9 @@ BEGIN
 	prob := probks (MathL.sqrt (en) * d);
 END KS1Id;
 
-PROCEDURE KS2* (data1: ARRAY OF real;  n1: LONGINT;  data2: ARRAY OF real;  n2: LONGINT;  VAR d, prob: real);
+PROCEDURE KS2* (data1: ARRAY OF real;  n1: SIGNED32;  data2: ARRAY OF real;  n2: SIGNED32;  VAR d, prob: real);
 	(* procedure kstwo from numerical recipes *)
-	VAR j1, j2: LONGINT;
+	VAR j1, j2: SIGNED32;
 	en1, en2, fn1, fn2, dt, d1, d2: real;
 BEGIN
 	j1 := 1;  j2 := 1;

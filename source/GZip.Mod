@@ -38,15 +38,15 @@ TYPE
 		VAR
 			writer: Streams.Writer;
 			s : ZlibDeflate.Stream;
-			res : WORD;
-			crc32-: LONGINT; (*crc32 of uncompressed data*)
+			res : INTEGER;
+			crc32-: SIGNED32; (*crc32 of uncompressed data*)
 			out : POINTER TO ARRAY BufSize OF CHAR;
-			flush: SHORTINT;
+			flush: SIGNED8;
 			inputsize : SIZE;
 
 		PROCEDURE WriteHeader(w: Streams.Writer);
 		VAR
-			i: INTEGER;
+			i: SIGNED16;
 		BEGIN
 			w.Char(1FX);
 			w.Char(8BX);
@@ -55,7 +55,7 @@ TYPE
 		END WriteHeader;
 
 
-		PROCEDURE &Init*(writer: Streams.Writer; level, strategy, flush: SHORTINT);
+		PROCEDURE &Init*(writer: Streams.Writer; level, strategy, flush: SIGNED8);
 		BEGIN
 			IF writer = NIL THEN
 				res := Zlib.StreamError; RETURN;
@@ -77,7 +77,7 @@ TYPE
 			END;
 		END Init;
 
-		PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send* (CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR
 			done : BOOLEAN;
 		BEGIN
@@ -124,7 +124,7 @@ TYPE
 				ZlibDeflate.Close(SELF.s);
 				SELF.res := SELF.s.res;
 				writer.RawLInt(crc32);
-				writer.RawLInt(inputsize(LONGINT));
+				writer.RawLInt(inputsize(SIGNED32));
 				writer.Update();
 			END;
 		END Send;
@@ -136,9 +136,9 @@ TYPE
 	Inflator* = OBJECT	(** not sharable between multiple processes *)
 		VAR
 			reader: Streams.Reader;
-			res: WORD;
+			res: INTEGER;
 			transparent : BOOLEAN;
-			crc32-: LONGINT; (*crc32 of uncompressed data*)
+			crc32-: SIGNED32; (*crc32 of uncompressed data*)
 			in : POINTER TO ARRAY BufSize OF CHAR;
 			s: ZlibInflate.Stream;
 
@@ -160,9 +160,9 @@ TYPE
 		END Init;
 
 
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR
-			intlen : LONGINT;
+			intlen : SIGNED32;
 		BEGIN
 			ASSERT((0 <= ofs) & (0 <= len) & (ofs + size <= LEN(buf)), 100);
 			IF transparent THEN
@@ -199,7 +199,7 @@ TYPE
 		CONST
 			headCRC = 2; extraField = 4; origName = 8; comment = 10H; reserved = 20H;
 		VAR
-			ch, method, flags: CHAR; len: INTEGER;
+			ch, method, flags: CHAR; len: SIGNED16;
 		BEGIN
 			ch := reader.Get();
 			IF reader.res = Streams.EOF THEN
@@ -243,7 +243,7 @@ TYPE
 	END Inflator;
 
 
-PROCEDURE Deflate*(in,out :Files.File; level, strategy, flush: SHORTINT);
+PROCEDURE Deflate*(in,out :Files.File; level, strategy, flush: SIGNED8);
 VAR
 	d : Deflator;
 	R: Files.Reader;
@@ -295,7 +295,7 @@ BEGIN
 END Inflate;
 
 PROCEDURE GZip*(context:Commands.Context);
-VAR filename: Files.FileName; from,to: Files.File; compression, strategy: LONGINT;
+VAR filename: Files.FileName; from,to: Files.File; compression, strategy: SIGNED32;
 BEGIN
 	IF context.arg.GetString(filename) THEN
 		from:=Files.Old(filename);
@@ -308,7 +308,7 @@ BEGIN
 			ELSIF ~context.arg.GetInteger(strategy,FALSE) THEN
 				strategy:=DefaultStrategy;
 			END;
-			Deflate(from,to,SHORTINT(compression), SHORTINT(strategy), FullFlush(*?*));
+			Deflate(from,to,SIGNED8(compression), SIGNED8(strategy), FullFlush(*?*));
 			Files.Register(to);
 			context.out.String("gzipped "); context.out.String(filename);context.out.Ln; context.out.Update;
 		ELSE

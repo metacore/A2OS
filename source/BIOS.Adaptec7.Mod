@@ -299,7 +299,7 @@ CONST
 TYPE
 	Interrupt = OBJECT
 		VAR
-			root: Bus; int: LONGINT;
+			root: Bus; int: SIGNED32;
 
 		PROCEDURE HandleInterrupt;
 		VAR  int, err: SET;  d: Bus;
@@ -321,7 +321,7 @@ TYPE
 					END;
 					IF SEQINT IN int THEN
 						IF traceSmall IN trace THEN KernelLog.Char("S") END;
-						IntSeqHandle(d, LSH(SYSTEM.VAL(LONGINT, int), -4))
+						IntSeqHandle(d, LSH(SYSTEM.VAL(SIGNED32, int), -4))
 					END;
 					IF SCSIINT IN int THEN
 						IF traceSmall IN trace THEN KernelLog.Char("s") END;
@@ -338,7 +338,7 @@ TYPE
 			Objects.RemoveHandler(SELF.HandleInterrupt, int)
 		END Cleanup;
 
-		PROCEDURE & Init*(irq: LONGINT);
+		PROCEDURE & Init*(irq: SIGNED32);
 		BEGIN
 			int := Machine.IRQ0 + irq;
 			Objects.InstallHandler(SELF.HandleInterrupt, int)
@@ -348,10 +348,10 @@ TYPE
 	Watchdog = POINTER TO RECORD  (Timer)
 		VAR
 			stop: BOOLEAN;
-			dev, ms, count: LONGINT;
+			dev, ms, count: SIGNED32;
 			bus: Bus;
 
-		PROCEDURE & InitW(ms, count: LONGINT;  bus: Bus;  dev: LONGINT);
+		PROCEDURE & InitW(ms, count: SIGNED32;  bus: Bus;  dev: SIGNED32);
 		BEGIN
 			KernelLog.String("Watchdog installed"); KernelLog.Ln;
 			Init;
@@ -374,7 +374,7 @@ TYPE
 *)
 	Message = RECORD
 		buf: ARRAY 6 OF CHAR;
-		pos, len, dir: SHORTINT;
+		pos, len, dir: SIGNED8;
 	END;
 
 
@@ -382,34 +382,34 @@ TYPE
 		VAR
 				(* card configuration *)
 			flags, features:  SET;
-			chip: SHORTINT;
+			chip: SIGNED8;
 			interruptable: BOOLEAN;
-			irq: SHORTINT;	(* interrupt line *)
-			scsiId: SHORTINT;
+			irq: SIGNED8;	(* interrupt line *)
+			scsiId: SIGNED8;
 
-			sync: ARRAY 16 OF SHORTINT;	(* bus synchronization: only one cmd per device *)
+			sync: ARRAY 16 OF SIGNED8;	(* bus synchronization: only one cmd per device *)
 
 				(* card IO information *)
-			busNo, devNo, slotNo: LONGINT;	(* PCI Address *)
+			busNo, devNo, slotNo: SIGNED32;	(* PCI Address *)
 			buffers: ARRAY (QBufferSize + SCBBufferSize + BufferAlignment) OF CHAR;	(* Q and SCB buffers *)
 			scbArea: ADDRESS;	(* virtual address of the hardware scb buffer, shared with the sequencer *)
 			queueArea: ADDRESS;	(*virtual address of the queue buffers, shared with the sequencer *)
-			in, out: LONGINT;	(*pointer to next scb*)
+			in, out: SIGNED32;	(*pointer to next scb*)
 			base: ADDRESS;	(*virtual address for memory mapped IO / port address for port based IO *)
-			Put1: PROCEDURE (d: Bus; offset: LONGINT; val: CHAR);
-			Get1: PROCEDURE (d: Bus; offset: LONGINT): CHAR;
+			Put1: PROCEDURE (d: Bus; offset: SIGNED32; val: CHAR);
+			Get1: PROCEDURE (d: Bus; offset: SIGNED32): CHAR;
 
 				(* cached values *)
-			width: SHORTINT; 	(* 8 or 16, iff FeatWide *)
+			width: SIGNED8; 	(* 8 or 16, iff FeatWide *)
 			negotiateWidth: SET;	(*handle transmission width whenever possible*)
 			negotiateSync: SET;	(*handle transmission sync whenever possible*)
 			msg: Message;	(*message from/to device. Only one buffer: the message phase is not prehempted*)
 
-			result, status: ARRAY 16 OF SHORTINT;
+			result, status: ARRAY 16 OF SIGNED8;
 
 			next: Bus;	(*list of all Ada7 busses *)
 
-		PROCEDURE Synchronize(dev: LONGINT;  await, set: SHORTINT);
+		PROCEDURE Synchronize(dev: SIGNED32;  await, set: SIGNED8);
 			PROCEDURE Data;
 			BEGIN
 				KernelLog.String("Sync ["); KernelLog.Int(dev, 0); KernelLog.String("] ");
@@ -431,7 +431,7 @@ TYPE
 			Synchronize(c.target, Terminated, Free);	(* activate/allow next command *)
 		END Submit;
 
-		PROCEDURE & Init*(id, bus, dev, slot: LONGINT);
+		PROCEDURE & Init*(id, bus, dev, slot: SIGNED32);
 		BEGIN
 			flags := card[id].flags;
 			features := card[id].features;
@@ -444,16 +444,16 @@ TYPE
 	END Bus;
 
 	RateTableDesc = RECORD
-		period: SHORTINT;	(* 1/4 of nsec, same as sync negotiation message *)
+		period: SIGNED8;	(* 1/4 of nsec, same as sync negotiation message *)
 		rate: CHAR;	(* rate for normal/fast/ultra cards *)
 		u2rate: CHAR;	(* rate ultra2 cards *)
-		speed: LONGINT;	(* speed in 100 KB/s for 8-bit bus *)
+		speed: SIGNED32;	(* speed in 100 KB/s for 8-bit bus *)
 	END;
 
 	(* Description of the cards we're know about *)
 	CardTable = RECORD
-		signature: LONGINT;
-		chip: SHORTINT;
+		signature: SIGNED32;
+		chip: SIGNED8;
 		flags, features: SET;
 		name: ARRAY 32 OF CHAR;
 	END;
@@ -472,7 +472,7 @@ VAR
 	aIntScsiReset, aIntScsiSelto, aIntScsiBusFree, aIntScsiParity, aIntScsiReqInit, aIntScsiSpecial, aIntScsiUnknown,
 	aIntSeqNoMatch, aIntSeqSendReject, aIntSeqNoIdent, aIntSeqBadPhase, aIntSeqExtendedMsg,
 	aIntSeqRejectMsg, aIntSeqBadStatus, aIntSeqAwaitingMsg, aIntSeqDataOverrun,
-	aIntCount, aIntCmdCount, aIntBrkAdrCount, aIntSeqCount, aIntScsiCount: LONGINT;
+	aIntCount, aIntCmdCount, aIntBrkAdrCount, aIntSeqCount, aIntScsiCount: SIGNED32;
 
 
 (* Debug Procedures *)
@@ -499,7 +499,7 @@ BEGIN
 	KernelLog.String(str)
 END BusNameMsg;
 
-PROCEDURE Reg(d: Bus; off: LONGINT;  name: ARRAY OF CHAR);
+PROCEDURE Reg(d: Bus; off: SIGNED32;  name: ARRAY OF CHAR);
 BEGIN
 	KernelLog.String(name); KernelLog.Hex(ORD(d.Get1(d, off)), -2)
 END Reg;
@@ -515,7 +515,7 @@ BEGIN
 	KernelLog.Ln;
 END DumpCurSCB;
 
-PROCEDURE DumpBusList(d: Bus;  list: LONGINT;  name: ARRAY OF CHAR);
+PROCEDURE DumpBusList(d: Bus;  list: SIGNED32;  name: ARRAY OF CHAR);
 VAR  ch, save: CHAR;
 BEGIN
 	BusName(d); KernelLog.String(name);
@@ -538,23 +538,23 @@ END DumpAllLists;
 
 (* IO Procedures to be installed into the Bus structures to comunicate with hardware *)
 
-PROCEDURE PortPut(d: Bus; offset: LONGINT; val: CHAR);
+PROCEDURE PortPut(d: Bus; offset: SIGNED32; val: CHAR);
 BEGIN
-	Machine.Portout8(LONGINT(d.base+offset), val)
+	Machine.Portout8(SIGNED32(d.base+offset), val)
 END PortPut;
 
-PROCEDURE PortGet(d: Bus; offset: LONGINT): CHAR;
+PROCEDURE PortGet(d: Bus; offset: SIGNED32): CHAR;
 VAR ch: CHAR;
 BEGIN
-	Machine.Portin8(LONGINT(d.base+offset), ch); RETURN ch
+	Machine.Portin8(SIGNED32(d.base+offset), ch); RETURN ch
 END PortGet;
 
-PROCEDURE MemoryPut(d: Bus; offset: LONGINT; val: CHAR);
+PROCEDURE MemoryPut(d: Bus; offset: SIGNED32; val: CHAR);
 BEGIN
 	SYSTEM.PUT(d.base+offset, val)
 END MemoryPut;
 
-PROCEDURE MemoryGet(d: Bus; offset: LONGINT): CHAR;
+PROCEDURE MemoryGet(d: Bus; offset: SIGNED32): CHAR;
 VAR ch: CHAR;
 BEGIN
 	SYSTEM.GET(d.base+offset, ch);  RETURN ch
@@ -562,7 +562,7 @@ END MemoryGet;
 
 (* Common Code Patterns *)
 
-PROCEDURE MakeTarget(targ, chan, lun: LONGINT): CHAR;
+PROCEDURE MakeTarget(targ, chan, lun: SIGNED32): CHAR;
 BEGIN
 	RETURN  CHR(LSH(targ MOD 16, 4)+LSH(chan MOD 2, 3)+lun MOD 8)
 END MakeTarget;
@@ -571,7 +571,7 @@ END MakeTarget;
 
 (* GetTableIndex - Return the index to start the search in the rateTable *)
 
-PROCEDURE GetTableIndex(ultra, ultra2: BOOLEAN): LONGINT;
+PROCEDURE GetTableIndex(ultra, ultra2: BOOLEAN): SIGNED32;
 BEGIN
 	IF ultra2 THEN RETURN 0 ELSIF ultra THEN RETURN 2 ELSE RETURN 5 END
 END GetTableIndex;
@@ -585,7 +585,7 @@ BEGIN
 END GetMaxOffset;
 
 PROCEDURE SetWidth(d: Bus;  wide: BOOLEAN);
-VAR  index: LONGINT;  rate: SET;
+VAR  index: SIGNED32;  rate: SET;
 BEGIN
 	index := ORD(d.Get1(d, SCBTAG));
 	rate := SYSTEM.VAL(SET, d.Get1(d, TARGSCSIRATE + index));
@@ -597,11 +597,11 @@ BEGIN
 	d.Put1(d, TARGSCSIRATE + index, SYSTEM.VAL(CHAR, rate));
 	d.Put1(d, SCSIRATE, SYSTEM.VAL(CHAR, rate));
 	BusNameMsg(d, "Device["); KernelLog.Int(index, 0); KernelLog.String("].width=");
-	KernelLog.Int(SYSTEM.VAL(SHORTINT, wide), 0); KernelLog.Ln
+	KernelLog.Int(SYSTEM.VAL(SIGNED8, wide), 0); KernelLog.Ln
 END SetWidth;
 
-PROCEDURE SetSyncRate(d: Bus;  period, offset: LONGINT);
-VAR i, index, speed: LONGINT;  ultra2, ultra, wide: BOOLEAN;  ctrl0, rate: CHAR;  set: SET;
+PROCEDURE SetSyncRate(d: Bus;  period, offset: SIGNED32);
+VAR i, index, speed: SIGNED32;  ultra2, ultra, wide: BOOLEAN;  ctrl0, rate: CHAR;  set: SET;
 BEGIN
 	ultra2 := FeatUltra2 IN d.features;
 	ultra := FeatUltra IN d.features;
@@ -665,29 +665,29 @@ END SetSyncRate;
 	+200H	in queue
 *)
 
-PROCEDURE QUntaggedSet(d: Bus;  i: LONGINT;  ch: CHAR);
+PROCEDURE QUntaggedSet(d: Bus;  i: SIGNED32;  ch: CHAR);
 BEGIN
 	SYSTEM.PUT(d.queueArea+i, ch)
 END QUntaggedSet;
 
-PROCEDURE QOutSet(d: Bus;  i: LONGINT;  ch: CHAR);
+PROCEDURE QOutSet(d: Bus;  i: SIGNED32;  ch: CHAR);
 BEGIN
 	SYSTEM.PUT(d.queueArea+100H+i, ch)
 END QOutSet;
 
-PROCEDURE QOutGet(d: Bus;  i: LONGINT): CHAR;
+PROCEDURE QOutGet(d: Bus;  i: SIGNED32): CHAR;
 VAR ch: CHAR;
 BEGIN
 	SYSTEM.GET(d.queueArea+100H+i, ch);  RETURN ch
 END QOutGet;
 
-PROCEDURE QInSet(d: Bus;  i: LONGINT;  ch: CHAR);
+PROCEDURE QInSet(d: Bus;  i: SIGNED32;  ch: CHAR);
 BEGIN
 	SYSTEM.PUT(d.queueArea+200H+i, ch)
 END QInSet;
 
 PROCEDURE QInit(d: Bus);
-VAR paddr: ADDRESS; i: WORD;
+VAR paddr: ADDRESS; i: INTEGER;
 BEGIN
 	IF traceCalls IN trace THEN  BusNameMsg(d, "QInit"); KernelLog.Ln  END;
 (*
@@ -741,11 +741,11 @@ END QInit;
 	28	4	par
 *)
 
-PROCEDURE HSSet(d: Bus;  num, offset: LONGINT;  val: CHAR);
+PROCEDURE HSSet(d: Bus;  num, offset: SIGNED32;  val: CHAR);
 BEGIN	SYSTEM.PUT(d.scbArea + num*32 + offset, val)
 END HSSet;
 
-PROCEDURE HSSet4(d: Bus;  num, offset: LONGINT;  val: LONGINT);
+PROCEDURE HSSet4(d: Bus;  num, offset: SIGNED32;  val: SIGNED32);
 BEGIN	SYSTEM.PUT(d.scbArea + num*32 + offset, val)
 END HSSet4;
 
@@ -757,7 +757,7 @@ BEGIN
 	d.Put1(d, FREESCBH, d.Get1(d, SCBPTR))
 END HSFreeCurrent;
 
-PROCEDURE HSFreeScb(d: Bus;  index: LONGINT);
+PROCEDURE HSFreeScb(d: Bus;  index: SIGNED32);
 BEGIN
 	HSSet(d, index, HScontrol, 0X);
 	HSSet(d, index, HSstatus, 0X);
@@ -765,7 +765,7 @@ BEGIN
 END HSFreeScb;
 
 PROCEDURE HSInit(d: Bus);
-VAR  paddr: ADDRESS; i: WORD;  quit: BOOLEAN;
+VAR  paddr: ADDRESS; i: INTEGER;  quit: BOOLEAN;
 BEGIN
 	IF traceCalls IN trace THEN  BusNameMsg(d, "HSInit"); KernelLog.Ln  END;
 	(*allocate hw-scb buffer*)
@@ -843,7 +843,7 @@ BEGIN
 END SeqUnpause;
 
 PROCEDURE SeqLoad(d: Bus);
-VAR i, line: LONGINT;
+VAR i, line: SIGNED32;
 BEGIN
 	IF traceCalls IN trace THEN  BusNameMsg(d, "LoadSequencer"); KernelLog.Ln  END;
 		Script.Init(FeatUltra2 IN d.features, FeatUltra IN d.features, FeatWide IN d.features, FeatTwin IN d.features,
@@ -867,7 +867,7 @@ END SeqLoad;
 
 PROCEDURE PCIClearInt(d: Bus);
 CONST	DPR = 0;  RMA = 5;  RTA = 4;
-VAR	res: WORD; dw: LONGINT;  bus, dev, slot: LONGINT;
+VAR	res: INTEGER; dw: SIGNED32;  bus, dev, slot: SIGNED32;
 BEGIN
 	bus := d.busNo;  dev := d.devNo;  slot := d.slotNo;
 	res := PCI.ReadConfigByte(bus, dev, slot, 7H, dw);
@@ -877,8 +877,8 @@ BEGIN
 	END;
 END PCIClearInt;
 
-PROCEDURE PCIInit(d: Bus;  bus, dev, slot: LONGINT);
-VAR  res: WORD; dw: LONGINT;
+PROCEDURE PCIInit(d: Bus;  bus, dev, slot: SIGNED32);
+VAR  res: INTEGER; dw: SIGNED32;
 BEGIN
 	IF traceCalls IN trace THEN  BusNameMsg(d, "PCIInit"); KernelLog.Ln  END;
 	res:=PCI.ReadConfigByte(bus, dev, slot, PCI.IntlReg, dw);	(*irq*)
@@ -892,7 +892,7 @@ BEGIN
 		d.Get1 := PortGet;
 		KernelLog.String(" Port="); KernelLog.Int(d.base, 0)
 	ELSE
-		dw := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, dw) * {3..31});	(* clear io mode & 64 bit flags*)
+		dw := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, dw) * {3..31});	(* clear io mode & 64 bit flags*)
 		Machine.MapPhysical(dw, 100H, d.base);
 		d.Put1 := MemoryPut;
 		d.Get1 := MemoryGet;
@@ -900,12 +900,12 @@ BEGIN
 	END;
 	KernelLog.Ln;
 	res:=PCI.ReadConfigWord(bus, dev, slot, PCI.CmdReg, dw);
-	dw := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, dw) + {8, 6, 4, 2, 1, 0});	(*Serren, Perren, Mwricen, Master, MSpace, ISpace*)
+	dw := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, dw) + {8, 6, 4, 2, 1, 0});	(*Serren, Perren, Mwricen, Master, MSpace, ISpace*)
 	res:=PCI.WriteConfigWord(bus, dev, slot, PCI.CmdReg, dw);
 	res:=PCI.ReadConfigDword(bus, dev, slot, DEVCONFIG, dw);
-	dw := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, dw) + {PCIERRGENDIS} - {BERREN});
+	dw := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, dw) + {PCIERRGENDIS} - {BERREN});
 	IF d.chip = AIC7895 THEN
-		dw := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, dw) + {SCBSIZE32});
+		dw := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, dw) + {SCBSIZE32});
 	END;
 	res:=PCI.WriteConfigDword(bus, dev, slot, DEVCONFIG, dw);
 	SeqPause(d);
@@ -931,8 +931,8 @@ BEGIN
 	EXCL(d.flags, FlagHandlingReqInits);
 END MsgStop;
 
-PROCEDURE MsgCompose(d: Bus;  index: LONGINT;  VAR msg: Message);
-VAR i: LONGINT;
+PROCEDURE MsgCompose(d: Bus;  index: SIGNED32;  VAR msg: Message);
+VAR i: SIGNED32;
 BEGIN
 	IF index IN d.negotiateWidth THEN
 		EXCL(d.negotiateWidth, index);
@@ -960,7 +960,7 @@ BEGIN
 END MsgCompose;
 
 PROCEDURE MsgParse(d: Bus;  VAR msg: Message): BOOLEAN;
-VAR  reject, done, wide: BOOLEAN;  period, offset: LONGINT;  t: SET;
+VAR  reject, done, wide: BOOLEAN;  period, offset: SIGNED32;  t: SET;
 BEGIN
 	reject := FALSE;  done := FALSE;
 	IF msg.buf[0] # SCSI.MsgExtended THEN
@@ -1039,7 +1039,7 @@ BEGIN
 			ch := d.Get1(d, SCSIDATL);
 			IF ch # msg.buf[msg.pos-1] THEN  KernelLog.String("Ada7.MsgTransmit, strange"); KernelLog.Ln END;
 		ELSE
-			KernelLog.String("Ada7.MsgTransmit, phase mismatch "); KernelLog.Hex(SYSTEM.VAL(LONGINT, t), -2);
+			KernelLog.String("Ada7.MsgTransmit, phase mismatch "); KernelLog.Hex(SYSTEM.VAL(SIGNED32, t), -2);
 			KernelLog.Ln
 		END
 	END;
@@ -1050,7 +1050,7 @@ END MsgTransmit;
 
 (* Interrupt Handling *)
 
-PROCEDURE Done(d: Bus;  index: LONGINT);	(* command terminated / aborted: remove scb and finish *)
+PROCEDURE Done(d: Bus;  index: SIGNED32);	(* command terminated / aborted: remove scb and finish *)
 BEGIN
 (*
 	BusNameMsg(d, "Done = "); KernelLog.Int(index, 0); KernelLog.Ln;
@@ -1065,7 +1065,7 @@ BEGIN
 END Done;
 
 PROCEDURE IntCommand(d: Bus);
-VAR  index: LONGINT;
+VAR  index: SIGNED32;
 BEGIN
 	INC(aIntCmdCount);
 	IF traceInts IN trace THEN
@@ -1106,9 +1106,9 @@ BEGIN
 	SeqUnpause(d)
 END IntBrkAdr;
 
-PROCEDURE IntSeqHandle(d: Bus;  code: LONGINT);
+PROCEDURE IntSeqHandle(d: Bus;  code: SIGNED32);
 CONST trace = {traceInts};
-VAR  active, ch: CHAR;  index: LONGINT;
+VAR  active, ch: CHAR;  index: SIGNED32;
 BEGIN
 	IF FALSE & (traceInts IN trace) THEN
 		BusNameMsg(d, "IntSeqHandle"); KernelLog.Ln;
@@ -1180,7 +1180,7 @@ BEGIN
 END IntSeqHandle;
 
 PROCEDURE IntScsiSeltoHandle(d: Bus);
-VAR  t: SET;  index: LONGINT;
+VAR  t: SET;  index: SIGNED32;
 BEGIN
 	INC(aIntScsiSelto);
 	IF d.Get1(d, WAITINGSCBH) # d.Get1(d, SCBPTR) THEN
@@ -1224,8 +1224,8 @@ BEGIN
 END IntScsiSeltoHandle;
 
 PROCEDURE IntScsiResetHandle(d: Bus);
-	PROCEDURE TraverseList(d: Bus;  list: LONGINT;  debugMsg: ARRAY OF CHAR);
-	VAR  ptr: CHAR;  index: LONGINT;
+	PROCEDURE TraverseList(d: Bus;  list: SIGNED32;  debugMsg: ARRAY OF CHAR);
+	VAR  ptr: CHAR;  index: SIGNED32;
 	BEGIN
 		ptr := d.Get1(d, list);
 		WHILE ptr # 0FFX DO
@@ -1295,7 +1295,7 @@ BEGIN
 	ELSE
 			INC(aIntScsiUnknown);
 			ToDo("IntScsiHandle.Unknown");
-			KernelLog.String("SSTAT1 = "); KernelLog.Hex(SYSTEM.VAL(LONGINT, status), -2); KernelLog.Ln;
+			KernelLog.String("SSTAT1 = "); KernelLog.Hex(SYSTEM.VAL(SIGNED32, status), -2); KernelLog.Ln;
 			d.Put1(d, CLRINT, SYSTEM.VAL(CHAR, {CLRSCSIINT}));
 			SeqUnpause(d)
 	END
@@ -1318,7 +1318,7 @@ END IntInstall;
 
 (* ScbControl - Compote the control byte for dev-th device *)
 
-PROCEDURE ScbControl(d: Bus;  dev: LONGINT): CHAR;
+PROCEDURE ScbControl(d: Bus;  dev: SIGNED32): CHAR;
 BEGIN
 	IF dev IN d.negotiateWidth THEN
 		IF traceSmall IN trace THEN KernelLog.Char("W") END;
@@ -1335,9 +1335,9 @@ END ScbControl;
 
 PROCEDURE BusSchedule(d: Bus;  VAR c: SCSI.Command);
 CONST  MaxRange = 64;
-VAR  index, num, useRange: LONGINT; sgaddr: ADDRESS; target: CHAR;  range: ARRAY 2, MaxRange+1 OF Machine.Range;
+VAR  index, num, useRange: SIGNED32; sgaddr: ADDRESS; target: CHAR;  range: ARRAY 2, MaxRange+1 OF Machine.Range;
 	(*dog: Watchdog;*)
-	cmd: ARRAY 2, 16 OF CHAR;  cmdBlock: LONGINT;
+	cmd: ARRAY 2, 16 OF CHAR;  cmdBlock: SIGNED32;
 BEGIN
 	INC(aExecute);
 	IF (0 > c.target) OR (c.target >= d.width) OR ~(c.lun IN {0..7}) OR ~(c.chan IN {0,1}) THEN	(*Invalid Destination*)
@@ -1406,7 +1406,7 @@ BEGIN
 		HSSet(d, index, HSSGcount, CHR(num));
 		HSSet4(d, index, HSSGptr, (sgaddr+SIZEOF(Machine.Range))(Machine.Address32));	(*pass address to 2nd block*)
 		HSSet4(d, index, HSdataPtr, range[useRange, 0].adr(Machine.Address32));
-		HSSet4(d, index, HSdataCnt, LONGINT (range[useRange, 0].size));
+		HSSet4(d, index, HSdataCnt, SIGNED32 (range[useRange, 0].size));
 		IF traceCmds IN trace THEN
 			KernelLog.String("  Data = "); KernelLog.Int(c.dlen, 0);
 			KernelLog.Int(useRange, 2);
@@ -1494,7 +1494,7 @@ BEGIN
 END BusDetectWidth;
 
 PROCEDURE BusConfigureChannels(d: Bus);	(*special setups for multichannel boards*)
-VAR  chip: SHORTINT; set: SET;
+VAR  chip: SIGNED8; set: SET;
 BEGIN
 	chip := d.chip;
 	IF  FlagMultiChannel IN d.flags THEN
@@ -1520,7 +1520,7 @@ BEGIN
 END BusConfigureChannels;
 
 PROCEDURE BusConfigure(d: Bus);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	(* Init Speed/Width/Scratch RAM *)
 	d.scsiId := 7;	(* host card id = 7 *)
@@ -1598,7 +1598,7 @@ END BusInit;
 (* Bus detection *)
 
 PROCEDURE Detect;
-VAR  dummy, idx, bus, dev, slot, signature, i: LONGINT; res: WORD; host: Bus;
+VAR  dummy, idx, bus, dev, slot, signature, i: SIGNED32; res: INTEGER; host: Bus;
 BEGIN
 	IF traceCalls IN trace THEN KernelLog.String("Ada7: Detect"); KernelLog.Ln  END;
 	IF PCI.Done = PCI.PCIPresent(dummy, dummy, dummy) THEN
@@ -1636,7 +1636,7 @@ END Detect;
 (* Module Termination Functions *)
 
 PROCEDURE Cleanup;
-VAR  d: Bus;  i: LONGINT;
+VAR  d: Bus;  i: SIGNED32;
 BEGIN
 	IF Modules.shutdown # Modules.None THEN  RETURN  END;
 	FOR i := 0 TO 31 DO
@@ -1660,7 +1660,7 @@ CONST
 	ultraFlags = {FlagPageSCB, FlagNewEepromFMT, FlagBiosEnabled};
 	ultra2Features = {FeatMoreSRAM, FeatUltra2, FeatCmdChan, FeatQueueRegs, FeatSGPreload};
 
-	PROCEDURE Card(i: LONGINT; sig: HUGEINT;  chip: SHORTINT;  flags, features: SET;  name: ARRAY OF CHAR);
+	PROCEDURE Card(i: SIGNED32; sig: SIGNED64;  chip: SIGNED8;  flags, features: SET;  name: ARRAY OF CHAR);
 	BEGIN
 		card[i].signature := SHORT(sig);
 		card[i].chip := chip;
@@ -1668,7 +1668,7 @@ CONST
 		COPY(name, card[i].name)
 	END Card;
 
-	PROCEDURE Table(i: LONGINT;  period: SHORTINT;  rate, u2rate: CHAR;  speed: LONGINT);
+	PROCEDURE Table(i: SIGNED32;  period: SIGNED8;  rate, u2rate: CHAR;  speed: SIGNED32);
 	BEGIN
 		rateTable[i].period := period;
 		rateTable[i].rate := rate;
@@ -1750,7 +1750,7 @@ BEGIN
 END WriteScsiState;
 
 PROCEDURE WriteBusConfig(d: Bus);
-VAR i: LONGINT;  name: ARRAY 8 OF CHAR; Hex: ARRAY 17 OF CHAR;
+VAR i: SIGNED32;  name: ARRAY 8 OF CHAR; Hex: ARRAY 17 OF CHAR;
 BEGIN
 	Hex := "0123456789ABCDEF";
 	BusNameMsg(d, d.name); KernelLog.Ln;
@@ -1767,9 +1767,9 @@ BEGIN
 END WriteBusConfig;
 
 PROCEDURE WriteBusConfig2(d: Bus);
-VAR i: LONGINT;  name: ARRAY 8 OF CHAR; Hex: ARRAY 17 OF CHAR;
+VAR i: SIGNED32;  name: ARRAY 8 OF CHAR; Hex: ARRAY 17 OF CHAR;
 
-	PROCEDURE Bit(d: Bus;  base, bit: LONGINT;  msg: ARRAY OF CHAR);
+	PROCEDURE Bit(d: Bus;  base, bit: SIGNED32;  msg: ARRAY OF CHAR);
 	VAR  set: SET;
 	BEGIN
 		set := SYSTEM.VAL(SET, d.Get1(d, base + bit DIV 8));
@@ -1820,7 +1820,7 @@ BEGIN	WriteScsiState(firstBus)
 END ScsiState;
 
 PROCEDURE Test*;
-VAR  d: Bus;  res: WORD;
+VAR  d: Bus;  res: INTEGER;
 BEGIN
 	d := firstBus;
 	KernelLog.String("Adaptec7.Test"); KernelLog.Int(aCount, 0); KernelLog.Ln;
@@ -1830,7 +1830,7 @@ BEGIN
 END Test;
 
 PROCEDURE Scan*;
-VAR  d: Bus;  res: WORD;  i: SHORTINT;  inq: SCSI.InquiryData;
+VAR  d: Bus;  res: INTEGER;  i: SIGNED8;  inq: SCSI.InquiryData;
 BEGIN
 	d := firstBus;
 	KernelLog.String("Adaptec7.Scan"); KernelLog.Int(aCount, 0); KernelLog.Ln;
@@ -1839,7 +1839,7 @@ BEGIN
 END Scan;
 
 PROCEDURE Stress*;
-VAR  d: Bus;  i, key, code, res: LONGINT;  data: ARRAY 64*1024 OF CHAR;
+VAR  d: Bus;  i, key, code, res: SIGNED32;  data: ARRAY 64*1024 OF CHAR;
 	dev: Disks.DeviceTable;
 BEGIN
 	d := firstBus;
@@ -1866,7 +1866,7 @@ BEGIN
 END Stress;
 
 PROCEDURE Speed*;
-VAR  dev: Disks.DeviceTable;  c, i, run, elap, size, res: LONGINT;  data: ARRAY 64*1024 OF CHAR;
+VAR  dev: Disks.DeviceTable;  c, i, run, elap, size, res: SIGNED32;  data: ARRAY 64*1024 OF CHAR;
 	t: Kernel.MilliTimer;
 BEGIN
 	Disks.GetRegistered(dev);
@@ -1896,7 +1896,7 @@ BEGIN
 END Register;
 *)
 PROCEDURE KillAll*;		(*last resort when a command dies... *)
-VAR  i, j: LONGINT;  d: Bus;
+VAR  i, j: SIGNED32;  d: Bus;
 BEGIN
 	FOR i := 0 TO 31 DO
 		IF interrupt[i] # NIL THEN

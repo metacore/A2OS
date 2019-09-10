@@ -84,7 +84,7 @@ TYPE
 		BEGIN {EXCLUSIVE}
 			NEW(h); h.next := highlights; highlights := h;
 			h.this := textView.CreateHighlight();
-			h.this.SetColor(LONGINT(0FFFF0080H));
+			h.this.SetColor(SIGNED32(0FFFF0080H));
 			h.this.SetKind(WMTextView.HLOver);
 			h.this.SetFromTo(from, to);
 		END Add;
@@ -151,7 +151,7 @@ TYPE
 
 			NEW(searchLabel);
 			searchLabel.alignment.Set(WMComponents.AlignLeft);
-			searchLabel.bounds.SetWidth(40); searchLabel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			searchLabel.bounds.SetWidth(40); searchLabel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			searchLabel.alignH.Set(WMGraphics.AlignCenter);
 			searchLabel.SetCaption("Search");
 			upperPanel.AddInternalComponent(searchLabel);
@@ -161,7 +161,7 @@ TYPE
 			searchEdit.bounds.SetWidth(200); searchEdit.multiLine.Set(FALSE);
 			searchEdit.tv.borders.Set(WMRectangles.MakeRect(3, 3, 1, 1));
 			searchEdit.tv.showBorder.Set(TRUE);
-			searchEdit.fillColor.Set(LONGINT(0FFFFFFFFH));
+			searchEdit.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			searchEdit.onEnter.Add(SearchHandler);
 			searchEdit.text.onTextChanged.Add(TextChanged);
 			searchEdit.tv.SetExtFocusHandler(FocusHandler);
@@ -170,7 +170,7 @@ TYPE
 
 			NEW(replLabel);
 			replLabel.alignment.Set(WMComponents.AlignLeft);
-			replLabel.bounds.SetWidth(50); replLabel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			replLabel.bounds.SetWidth(50); replLabel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			replLabel.alignH.Set(WMGraphics.AlignCenter);
 			replLabel.SetCaption("Replace");
 			upperPanel.AddInternalComponent(replLabel);
@@ -182,7 +182,7 @@ TYPE
 			replEdit.tv.showBorder.Set(TRUE);
 			replEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
 
-			replEdit.fillColor.Set(LONGINT(0FFFFFFFFH));
+			replEdit.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			replEdit.onEnter.Add(ReplaceHandler);
 			upperPanel.AddInternalComponent(replEdit);
 

@@ -18,7 +18,7 @@ TYPE
 
 VAR
 
-	trapHandlingLevel: LONGINT;
+	trapHandlingLevel: SIGNED32;
 
 	trace: BOOLEAN;
 
@@ -37,7 +37,7 @@ VAR
 	END UnlockTrap;
 
 	PROCEDURE Append( VAR ar: ARRAY OF CHAR;  CONST this: ARRAY OF CHAR );
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 	BEGIN
 		i := 0;  j := 0;
 		WHILE ar[i] # 0X DO  INC( i )  END;
@@ -48,9 +48,9 @@ VAR
 
 	PROCEDURE TimeTag( w: Streams.Writer );
 	VAR
-		tv: Unix.Timeval;  tz: Unix.Timezone;  t: Unix.TmPtr;  ret: LONGINT;
+		tv: Unix.Timeval;  tz: Unix.Timezone;  t: Unix.TmPtr;  ret: SIGNED32;
 
-		PROCEDURE Int( i: LONGINT );
+		PROCEDURE Int( i: SIGNED32 );
 		BEGIN
 			IF i < 10 THEN  w.Char( '0' )  END;
 			w.Int( i, 0 )
@@ -133,10 +133,10 @@ VAR
 	END Registers;
 
 
-	PROCEDURE Trap( sig: LONGINT;  mc: Unix.Mcontext);
+	PROCEDURE Trap( sig: SIGNED32;  mc: Unix.Mcontext);
 	VAR
 		pc, sp, bp: ADDRESS;
-		trapno: LONGINT;
+		trapno: SIGNED32;
 		process: Objects.Process;
 		handler: ExceptionHandler;
 		w: Streams.Writer;

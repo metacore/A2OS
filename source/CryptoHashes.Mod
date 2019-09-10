@@ -4,7 +4,7 @@ TYPE
 	Hash* = OBJECT
 		VAR
 			name-: ARRAY 64 OF CHAR;
-			size-: LONGINT;
+			size-: SIGNED32;
 			initialized*: BOOLEAN;
 
 		PROCEDURE &Init*;
@@ -18,7 +18,7 @@ TYPE
 		END Initialize;
 
 		(** this method is invoked by subclasses *)
-		PROCEDURE SetNameAndSize*( CONST name: ARRAY OF CHAR; size: LONGINT );
+		PROCEDURE SetNameAndSize*( CONST name: ARRAY OF CHAR; size: SIGNED32 );
 		BEGIN
 			COPY( name, SELF.name );
 			SELF.size := size

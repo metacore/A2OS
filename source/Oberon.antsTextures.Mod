@@ -49,20 +49,20 @@ TYPE
 	tClass*= POINTER TO tClassDesc;
 	tClassDesc*= RECORD (vyBase.ObjDesc)
 	models: vyLinks.Link;
-	modelcount: INTEGER;
+	modelcount: SIGNED16;
 	END;
 	*)
 
 	tArrayChain* = POINTER TO tArrayChainDesc;
 	tArrayChainDesc* = RECORD
-		A: POINTER TO ARRAY OF ARRAY OF LONGREAL;
-		msize: INTEGER;
+		A: POINTER TO ARRAY OF ARRAY OF FLOAT64;
+		msize: SIGNED16;
 		next: tArrayChain
 	END;
 
 	(*
 	PROCEDURE Handler* (o: Objects.Object;   VAR M: Objects.ObjMsg);
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 	WITH o: tClass DO
 	WITH M: Objects.AttrMsg DO
@@ -101,7 +101,7 @@ TYPE
 
 	PROCEDURE New*;
 	VAR l: antsCommands.tScanList;     name: vyName.tNameArray;
-	isotropic: BOOLEAN;      size: LONGINT; r: tClass;
+	isotropic: BOOLEAN;      size: SIGNED32; r: tClass;
 	BEGIN
 	l := antsCommands.ScanFromPar();
 	IF antsCommands.ExpectNameFromKeyword(l, "name", 1, name) THEN
@@ -113,7 +113,7 @@ TYPE
 
 	PROCEDURE Add*;
 	VAR l: antsCommands.tScanList;     name: vyName.tNameArray;
-	isotropic: BOOLEAN;      size: LONGINT; r: tClass;  obj1,obj2: vyBase.Object; c: tClass;
+	isotropic: BOOLEAN;      size: SIGNED32; r: tClass;  obj1,obj2: vyBase.Object; c: tClass;
 	BEGIN
 	l := antsCommands.ScanFromPar();
 	IF antsCommands.ExpectObjectFromKeyword(l, "name", 1, obj1)
@@ -130,7 +130,7 @@ TYPE
 
 PROCEDURE Try*;
 	VAR A: antsArrayObjects.tINTEGERObject;   m: antsMDimDiscreteIsingS.tModel;   link: vyLinks.Link;    (* c: tClass; *)region: antsRegions.tRegion;
-	l: antsCommands.tScanList;     obj1: vyBase.Object;   i: LONGINT;   T: antsNeighbourhoods.NeighbourTable;
+	l: antsCommands.tScanList;     obj1: vyBase.Object;   i: SIGNED32;   T: antsNeighbourhoods.NeighbourTable;
 	c: antsKernel.Kernel;
 BEGIN
 	l := antsCommands.ScanFromPar("name=OBJ");
@@ -157,8 +157,8 @@ END Try;
 (*
 PROCEDURE GoThrough*;
 VAR A: antsArrayObjects.tObject; m: antsMDimDiscreteIsingS.tModel; link: vyLinks.Link;  (* c: tClass; *) region: antsRegions.tRegion;
-l: antsCommands.tScanList;   obj1,obj2: vyBase.Object; i: INTEGER; min,val: LONGREAL; mini: INTEGER;
-y,x: INTEGER;
+l: antsCommands.tScanList;   obj1,obj2: vyBase.Object; i: SIGNED16; min,val: FLOAT64; mini: SIGNED16;
+y,x: SIGNED16;
 B : antsArrayObjects.tObject;
 c: antsKernel.Kernel;
 BEGIN
@@ -177,7 +177,7 @@ FOR x := 0 TO SHORT(A.w-1) DO
 region.y := y-region.h DIV 2;
 region.x := x-region.w DIV 2;
 i := 0;
-min := MAX(LONGREAL);
+min := MAX(FLOAT64);
 link := c.models;
 WHILE link # NIL DO
 m := link.obj(antsMDimDiscreteIsingS.tModel);
@@ -200,8 +200,8 @@ END GoThrough;
 
 PROCEDURE GoThroughSel*;
 	VAR A: antsArrayObjects.tINTEGERObject;   m: antsMDimDiscreteIsingS.tModel;   link: vyLinks.Link;    (* c: tClass; *)region: antsRegions.tRegion;
-	l: antsCommands.tScanList;     obj1: vyBase.Object;   i: INTEGER;   min, val: LONGREAL;   mini: INTEGER;   size, to, curs: LONGINT;
-	y, x: INTEGER;   ty, tx: LONGINT;
+	l: antsCommands.tScanList;     obj1: vyBase.Object;   i: SIGNED16;   min, val: FLOAT64;   mini: SIGNED16;   size, to, curs: SIGNED32;
+	y, x: SIGNED16;   ty, tx: SIGNED32;
 	B : antsArrayObjects.tINTEGERObject;   tac, taccur: tArrayChain;
 	c: antsKernel.Kernel;
 BEGIN
@@ -236,7 +236,7 @@ BEGIN
 			FOR y := 0 TO SHORT(region.h - 1) DO
 				FOR x := 0 TO SHORT(region.w - 1) DO
 					i := 0;
-					min := MAX(LONGREAL);
+					min := MAX(FLOAT64);
 					taccur := tac;
 					WHILE taccur # NIL DO
 						val := 0;
@@ -277,7 +277,7 @@ END antsTextures.
 (*! keep cache of PseudoLik in all Points -> interactive features do need speed !
 cache into region ??
 array as VARPAR for Psdudolik. requires memory of size
-#models * #array * 8 (LONGREAL)
+#models * #array * 8 (FLOAT64)
 (e.g. 80 Megs for 10 Models and Array Size 1000*1000
 10 Models of size 200*200 3.2 Megs.
 *)

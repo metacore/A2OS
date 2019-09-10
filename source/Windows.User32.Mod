@@ -7,7 +7,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 
 	TYPE
 		DWORD = Kernel32.DWORD;
-		Long = LONGWORD;
+		Long = LONGINTEGER;
 	CONST
 		(** window messages *)
 		WMCreate* = 01H; WMDestroy* = 02H; WMMove* = 03H; WMSize* = 05H; WMActivate* = 06H; WMSetFocus* = 07H;
@@ -39,7 +39,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		WSMaximize* = 24; WSVisible* = 28; WSMinimize* = 29; WSChild* = 30;
 
 		(** CreateWindow default value for x, y, nWidth, nHeight *)
-		CWUseDefault* = LONGINT(080000000H);
+		CWUseDefault* = SIGNED32(080000000H);
 
 		(** WMSize wParam values *)
 		SizeRestored* = 0; SizeMinimized* = 1; SizeMaximized* = 2; SizeMaxshow* = 3; SizeMaxhide* = 4;
@@ -156,26 +156,26 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		HHook* = Kernel32.HANDLE;
 
 		(** The COLORREF value is used to specify an RGB color. *)
-		ColorRef* = LONGINT;
+		ColorRef* = SIGNED32;
 
 		(** The POINT structure defines the x- and y- coordinates of a point. *)
 		Point* = RECORD
-			x*, y*: LONGINT
+			x*, y*: SIGNED32
 		END;
 		PointL* = Point;
 		PointF* = RECORD
-			x*, y*: REAL
+			x*, y*: FLOAT32
 		END;
 
 		(** The RECT structure defines the coordinates of the upper-left and lower-right corners of a rectangle. *)
 		Rect* = RECORD
-			left*, top*, right*, bottom*: LONGINT
+			left*, top*, right*, bottom*: SIGNED32
 		END;
 		RectL* = Rect;
 
 		(** The SIZE structure specifies the width and height of a rectangle. *)
 		Size* = RECORD
-			cx*, cy*: LONGINT
+			cx*, cy*: SIGNED32
 		END;
 		SizeL* = Size;
 
@@ -188,10 +188,10 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		(** The MSG structure contains message information from a thread's message queue. *)
 		Msg* = RECORD
 			hwnd*: HWND;
-			message*: LONGINT;
+			message*: SIGNED32;
 			wParam*: WParam;
 			lParam*: LParam;
-			time*: LONGINT;
+			time*: SIGNED32;
 			point*: Point
 		END;
 
@@ -202,15 +202,15 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 			LResult* = ADDRESS;
 
 		(** A 32-bit pointer to a window procedure. *)
-		WndProc* = PROCEDURE {WINAPI} (hwnd: HWND; uMsg: LONGINT; wParam: WParam; lParam: LParam): LResult;
+		WndProc* = PROCEDURE {WINAPI} (hwnd: HWND; uMsg: SIGNED32; wParam: WParam; lParam: LParam): LResult;
 
 		(** The WNDCLASSEX structure contains window class information. It is used with the RegisterClassEx and
 			GetClassInfoEx functions. *)
 		WndClassEx* = RECORD
-			cbSize*: LONGINT;
-			style*: WORDSET;
+			cbSize*: SIGNED32;
+			style*: INTEGERSET;
 			lpfnWndProc*: WndProc;
-			cbClsExtra*, cbWndExtra*: LONGINT;
+			cbClsExtra*, cbWndExtra*: SIGNED32;
 			hInstance*: Kernel32.HINSTANCE;
 			hIcon*: HIcon;
 			hCursor*: HCursor;
@@ -224,37 +224,37 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 
 		(** The WINDOWPOS structure contains information about the size and position of a window. *)
 		WindowPos* = RECORD  			hwnd*, hwndInsertAfter*: HWND;
-			x*, y*, cx*, cy*: LONGINT;
-			flags*: WORDSET;
+			x*, y*, cx*, cy*: SIGNED32;
+			flags*: INTEGERSET;
 		END;
 
 		(** The WINDOWPLACEMENT structure contains information about the placement of a window on the screen. *)
 		WindowPlacement* = RECORD
-			length*: LONGINT;
+			length*: SIGNED32;
 			flags*: DWORD;
-			showCmd*: LONGINT;
+			showCmd*: SIGNED32;
 			ptMinPosition*, ptMaxPosition*: Point;
 			rcNormalPosition*: Rect
 		END;
 
 		(** The MENUITEMINFO structure contains information about a menu item. *)
-		MenuItemInfo* = RECORD  			cbSize*: LONGINT;
+		MenuItemInfo* = RECORD  			cbSize*: SIGNED32;
 			fMask*, fType*, fState*: DWORD;
-			wID*: LONGINT;
+			wID*: SIGNED32;
 			hSubMenu*: HMenu;
 			hbmpChecked*, hbmpUnchecked*: HBitmap;
-			dwItemData*: LONGINT;
+			dwItemData*: SIGNED32;
 			dwTypeData*: Kernel32.LPSTR;
-			cch*: LONGINT
+			cch*: SIGNED32
 		END;
 
 		(** The ACCEL structure defines an accelerator key used in an accelerator table. *)
 		Accel* = RECORD  			fVirt*: CHAR;
-			key*, cmd*: INTEGER
+			key*, cmd*: SIGNED16
 		END;
 
 		(** Proctype for SetWindowsHook(Ex) *)
-		HookProc* = PROCEDURE {WINAPI} (code: LONGINT; wParam: WParam; lParam: LParam): LResult;
+		HookProc* = PROCEDURE {WINAPI} (code: SIGNED32; wParam: WParam; lParam: LParam): LResult;
 
 		PaintStruct* = RECORD
 			hdc*: HDC;
@@ -271,15 +271,15 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		(** The BringWindowToTop function brings the specified window to the top of the Z order. *)
 		BringWindowToTop-: PROCEDURE {WINAPI} (hWnd: HWND): Kernel32.BOOL;
 		(** The CallNextHookEx function passes the hook information to the next hook procedure in the current hook chain. *)
-		CallNextHookEx-: PROCEDURE {WINAPI} (hhk: HHook; nCode: LONGINT; wParam: WParam; lParam: LParam): LResult;
+		CallNextHookEx-: PROCEDURE {WINAPI} (hhk: HHook; nCode: SIGNED32; wParam: WParam; lParam: LParam): LResult;
 		(** The CloseClipboard function closes the clipboard. *)
 		CloseClipboard-: PROCEDURE {WINAPI} (): Kernel32.BOOL;
 		(** The CreateAcceleratorTable function creates an accelerator table. *)
-		CreateAcceleratorTable-: PROCEDURE {WINAPI} (lpaccl: ADDRESS; cEntries: LONGINT): HAccel;
+		CreateAcceleratorTable-: PROCEDURE {WINAPI} (lpaccl: ADDRESS; cEntries: SIGNED32): HAccel;
 		(** The CreateMenu function creates a menu. *)
 		CreateMenu-: PROCEDURE {WINAPI} (): HMenu;
 		(** The CreateWindow function creates an overlapped, pop-up, or child window. *)
-		CreateWindowEx-: PROCEDURE {WINAPI} (dwExStyle: LONGINT; VAR lpClassName, lpWindowName: ARRAY   OF CHAR; dwStyle: WORDSET; x, y, nWidth, nHeight: LONGINT; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LParam): HWND;
+		CreateWindowEx-: PROCEDURE {WINAPI} (dwExStyle: SIGNED32; VAR lpClassName, lpWindowName: ARRAY   OF CHAR; dwStyle: INTEGERSET; x, y, nWidth, nHeight: SIGNED32; hWndParent: HWND; hMenu: HMenu; hInstance: Kernel32.HINSTANCE; lpParam: LParam): HWND;
 		(** The DefWindowProc function calls the default window procedure to provide default processing for any window
 			messages that an application does not process. *)
 		DefWindowProc-: WndProc;
@@ -294,7 +294,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		(** The DestroyWindow function destroys the specified window. *)
 		DestroyWindow-: PROCEDURE {WINAPI} (hWnd: HWND): Kernel32.BOOL;
 		(** The DispatchMessage function dispatches a message to a window procedure. *)
-		DispatchMessage-: PROCEDURE {WINAPI} (VAR lpMsg: Msg): LONGINT;
+		DispatchMessage-: PROCEDURE {WINAPI} (VAR lpMsg: Msg): SIGNED32;
 		(** The DrawMenuBar function redraws the menu bar of the specified window. *)
 		DrawMenuBar-: PROCEDURE {WINAPI} (hWnd: HWND): Kernel32.BOOL;
 		(** The EmptyClipboard function empties the clipboard and frees handles to data in the clipboard. *)
@@ -311,13 +311,13 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		EqualRect-: PROCEDURE {WINAPI} (lprc1, lprc2: Rect): Kernel32.BOOL;
 		(** The GetAsyncKeyState function determines whether a key is up or down at the time the function is called, and
 			whether the key was pressed after a previous call to GetAsyncKeyState. *)
-		GetAsyncKeyState-: PROCEDURE {WINAPI} (vKey: LONGINT): INTEGER;
+		GetAsyncKeyState-: PROCEDURE {WINAPI} (vKey: SIGNED32): SIGNED16;
 		(** The GetClientRect function retrieves the coordinates of a window's client area. *)
 		GetClientRect-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpRect: Rect): Kernel32.BOOL;
 		(** The GetClipboardData function retrieves data from the clipboard in a specified format. *)
-		GetClipboardData-: PROCEDURE {WINAPI} (uFormat: LONGINT): Kernel32.HANDLE;
+		GetClipboardData-: PROCEDURE {WINAPI} (uFormat: SIGNED32): Kernel32.HANDLE;
 		(** The GetClipboardFormatName function retrieves from the clipboard the name of the specified registered format. *)
-		GetClipboardFormatName-: PROCEDURE {WINAPI} (format: LONGINT; VAR lpszFormatName: ARRAY   OF CHAR; cchMaxCount: LONGINT): LONGINT;
+		GetClipboardFormatName-: PROCEDURE {WINAPI} (format: SIGNED32; VAR lpszFormatName: ARRAY   OF CHAR; cchMaxCount: SIGNED32): SIGNED32;
 		(** The GetCursorPos function retrieves the cursor's position, in screen coordinates. *)
 		GetCursorPos-: PROCEDURE {WINAPI} (VAR lpPoint: Point): Kernel32.BOOL;
 		(** The GetDC function retrieves a handle to a display device context (DC) for the client area of a specified window
@@ -329,49 +329,49 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		(** Retrieves a handle to the foreground window (the window with which the user is currently working). The system assigns a slightly higher priority to the thread that creates the foreground window than it does to other threads.  *)
 		GetForegroundWindow-: PROCEDURE {WINAPI} (): HWND;
 		(** The GetKeyState function retrieves the status of the specified virtual key. *)
-		GetKeyState-: PROCEDURE {WINAPI} (vKey: LONGINT): INTEGER;
+		GetKeyState-: PROCEDURE {WINAPI} (vKey: SIGNED32): SIGNED16;
 		(** The GetMenu function retrieves a handle to the menu assigned to the specified window. *)
 		GetMenu-: PROCEDURE {WINAPI} (hWnd: HWND): HMenu;
 		(** The GetMenuItemInfo function retrieves information about a menu item. *)
-		GetMenuItemInfo-: PROCEDURE {WINAPI} (hMenu: HMenu; uItem: LONGINT; fyByPosition: Kernel32.BOOL; VAR lpmii: MenuItemInfo): Kernel32.BOOL;
+		GetMenuItemInfo-: PROCEDURE {WINAPI} (hMenu: HMenu; uItem: SIGNED32; fyByPosition: Kernel32.BOOL; VAR lpmii: MenuItemInfo): Kernel32.BOOL;
 		(** The GetMenuString function copies the text string of the specified menu item into the specified buffer. *)
-		GetMenuString-: PROCEDURE {WINAPI} (hMenu: HMenu; uIDItem: LONGINT; VAR lpString: ARRAY   OF CHAR; nMaxCount: LONGINT; uFlag: DWORD): Kernel32.BOOL;
+		GetMenuString-: PROCEDURE {WINAPI} (hMenu: HMenu; uIDItem: SIGNED32; VAR lpString: ARRAY   OF CHAR; nMaxCount: SIGNED32; uFlag: DWORD): Kernel32.BOOL;
 		(** The GetMessage function retrieves a message from the calling thread's message queue and places it in the
 			specified structure. *)
-		GetMessage-: PROCEDURE {WINAPI} (VAR lpMsg: Msg; hWnd: HWND; wMsgFilterMin, wMsgFilterMax: LONGINT): LONGINT;
+		GetMessage-: PROCEDURE {WINAPI} (VAR lpMsg: Msg; hWnd: HWND; wMsgFilterMin, wMsgFilterMax: SIGNED32): SIGNED32;
 		(** The GetParent function retrieves a handle to the specified child window's parent window. *)
 		GetParent-: PROCEDURE {WINAPI} (hWnd: HWND): HWND;
 		(** The GetProp function retrieves a data handle from the property list of the given window. *)
-		GetProp-: PROCEDURE {WINAPI} (hWnd: HWND; lpString: LONGINT): LONGINT;
+		GetProp-: PROCEDURE {WINAPI} (hWnd: HWND; lpString: SIGNED32): SIGNED32;
 		(** The GetSystemMetrics function retrieves various system metrics (widths and heights of display elements) and
 			system configuration settings. *)
 		(** The GetSysColor function retrieves the current color of the specified display element. *)
-		GetSysColor-: PROCEDURE {WINAPI} (nIndex: LONGINT): ColorRef;
+		GetSysColor-: PROCEDURE {WINAPI} (nIndex: SIGNED32): ColorRef;
 		(** The GetSystemMetrics function retrieves various system metrics (widths and heights of display elements)
 			and system configuration settings. *)
-		GetSystemMetrics-: PROCEDURE {WINAPI} (nIndex: LONGINT): LONGINT;
+		GetSystemMetrics-: PROCEDURE {WINAPI} (nIndex: SIGNED32): SIGNED32;
 		(** The GetWindowLong function retrieves information about the specified window. *)
-		GetWindowLong-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex: LONGINT): LONGINT;
+		GetWindowLong-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex: SIGNED32): SIGNED32;
 		(** The GetWindowPlacement function retrieves the show state and the restored, minimized, and maximized
 			positions of the specified window. *)
-		GetWindowLongPtr-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex: LONGINT): ADDRESS;
+		GetWindowLongPtr-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex: SIGNED32): ADDRESS;
 		(** The GetWindowPlacement function retrieves the show state and the restored, minimized, and maximized
 			positions of the specified window. *)
 		GetWindowPlacement-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpwndpl: WindowPlacement): Kernel32.BOOL;
 		(** The GetWindowRect function retrieves the dimensions of the bounding rectangle of the specified window. *)
 		GetWindowRect-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpRect: Rect): Kernel32.BOOL;
 		(** The GetWindowRgn function obtains a copy of the window region of a window. *)
-		GetWindowRgn-: PROCEDURE {WINAPI} (hWnd: HWND; VAR hRgn: HRgn): LONGINT;
+		GetWindowRgn-: PROCEDURE {WINAPI} (hWnd: HWND; VAR hRgn: HRgn): SIGNED32;
 		(** The GetWindowText function copies the text of the specified window's title bar (if it has one) into a buffer. *)
-		GetWindowText-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpString: ARRAY   OF CHAR; nMaxCount: LONGINT): LONGINT;
+		GetWindowText-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpString: ARRAY   OF CHAR; nMaxCount: SIGNED32): SIGNED32;
 		(** The GetUpdateRect function retrieves the coordinates of the smallest rectangle that completely encloses the
 			update region of the specified window. *)
 		GetUpdateRect-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpRect: Rect; bErase: Kernel32.BOOL): Kernel32.BOOL;
 		(** The GetUpdateRgn function retrieves the update region of a window by copying it into the specified
 			region. *)
-		GetUpdateRgn-: PROCEDURE {WINAPI} (hWnd: HWND; VAR hRgn: HRgn; bErase: Kernel32.BOOL): LONGINT;
+		GetUpdateRgn-: PROCEDURE {WINAPI} (hWnd: HWND; VAR hRgn: HRgn; bErase: Kernel32.BOOL): SIGNED32;
 		(** The InsertMenu function inserts a new menu item into a menu, moving other items down the menu. *)
-		InsertMenu-: PROCEDURE {WINAPI} (hMenu: HMenu; uPosition: LONGINT; uFlags: DWORD; uIDNewItem: LONGINT; VAR lpNewItem: ARRAY   OF CHAR): Kernel32.BOOL;
+		InsertMenu-: PROCEDURE {WINAPI} (hMenu: HMenu; uPosition: SIGNED32; uFlags: DWORD; uIDNewItem: SIGNED32; VAR lpNewItem: ARRAY   OF CHAR): Kernel32.BOOL;
 		(** The IntersectRect function calculates the intersection of two source rectangles and places the coordinates of the
 			intersection rectangle into the destination rectangle. *)
 		IntersectRect-: PROCEDURE {WINAPI} (VAR lprcDst: Rect; lprcSrc1, lprcSrc2: Rect): Kernel32.BOOL;
@@ -388,52 +388,52 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 			application instance. *)
 		LoadIcon-: PROCEDURE {WINAPI} (hInstance: Kernel32.HINSTANCE; VAR lpIconName: ARRAY   OF CHAR): HIcon;
 		(** The MessageBeep function plays a waveform sound. *)
-		MessageBeep-: PROCEDURE {WINAPI} (uType: LONGINT): Kernel32.BOOL;
+		MessageBeep-: PROCEDURE {WINAPI} (uType: SIGNED32): Kernel32.BOOL;
 		(** The MessageBox function creates, displays, and operates a message box. *)
-		MessageBox-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpText, lpCaption: ARRAY   OF CHAR; uType: DWORD): LONGINT;
+		MessageBox-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpText, lpCaption: ARRAY   OF CHAR; uType: DWORD): SIGNED32;
 		(** The MoveWindow function changes the position and dimensions of the specified window. *)
-		MoveWindow-: PROCEDURE {WINAPI} (hWnd: HWND; X, Y, nWidth, nHeight: LONGINT; bRepaint: Kernel32.BOOL): Kernel32.BOOL;
+		MoveWindow-: PROCEDURE {WINAPI} (hWnd: HWND; X, Y, nWidth, nHeight: SIGNED32; bRepaint: Kernel32.BOOL): Kernel32.BOOL;
 		(** The OffsetRect function moves the specified rectangle by the specified offsets. *)
-		OffsetRect-: PROCEDURE {WINAPI} (VAR lprc: Rect; dx, dy: LONGINT): Kernel32.BOOL;
+		OffsetRect-: PROCEDURE {WINAPI} (VAR lprc: Rect; dx, dy: SIGNED32): Kernel32.BOOL;
 		(** The OpenClipboard function opens the clipboard for examination and prevents other applications from modifying
 			the clipboard content. *)
 		OpenClipboard-: PROCEDURE {WINAPI} (hWndNewOwner: HWND): Kernel32.BOOL;
 		(** The PtInRect function determines whether the specified point lies within the specified rectangle. *)
-		PtInRect-: PROCEDURE {WINAPI} (lprc: Rect; ptx, pty: LONGINT): Kernel32.BOOL;
+		PtInRect-: PROCEDURE {WINAPI} (lprc: Rect; ptx, pty: SIGNED32): Kernel32.BOOL;
 		(** The PostMessage function places (posts) a message in the message queue associated with the thread that created
 			the specified window and then returns without waiting for the thread to process the message. *)
-		PostMessage-: PROCEDURE {WINAPI} (hWnd: HWND; Msg: LONGINT; wParam: WParam; lParam: LParam): Kernel32.BOOL;
+		PostMessage-: PROCEDURE {WINAPI} (hWnd: HWND; Msg: SIGNED32; wParam: WParam; lParam: LParam): Kernel32.BOOL;
 		(** The PostQuitMessage function indicates to the system that a thread has made a request to terminate (quit). *)
-		PostQuitMessage-: PROCEDURE {WINAPI} (nExitCode: LONGINT);
+		PostQuitMessage-: PROCEDURE {WINAPI} (nExitCode: SIGNED32);
 		(** The RegisterClassEx function registers a window class for subsequent use in calls to the CreateWindow or
 			CreateWindowEx function. *)
 		RegisterClassEx-: PROCEDURE {WINAPI} (VAR lpwcx: WndClassEx): Kernel32.ATOM;
 		(** The RegisterClipboardFormat function registers a new clipboard format. *)
-		RegisterHotKey-: PROCEDURE{WINAPI} (hWnd: HWND; id: LONGINT; fsmodifiers,vk: LONGINT): Kernel32.BOOL;
+		RegisterHotKey-: PROCEDURE{WINAPI} (hWnd: HWND; id: SIGNED32; fsmodifiers,vk: SIGNED32): Kernel32.BOOL;
 		(*The RegisterHotKey function defines a system-wide hot key *)
-		RegisterClipboardFormat-: PROCEDURE {WINAPI} (VAR lpszFormat: ARRAY   OF CHAR): INTEGER;
+		RegisterClipboardFormat-: PROCEDURE {WINAPI} (VAR lpszFormat: ARRAY   OF CHAR): SIGNED16;
 		(** The RegisterWindowMessage function defines a new window message that is guaranteed to be
 			unique throughout the system. *)
-		RegisterWindowMessage-: PROCEDURE {WINAPI} (VAR lpString: ARRAY   OF CHAR): LONGINT;
+		RegisterWindowMessage-: PROCEDURE {WINAPI} (VAR lpString: ARRAY   OF CHAR): SIGNED32;
 		(** The ReleaseCapture function releases the mouse capture from a window in the current thread and restores normal
 			mouse input processing. *)
 		ReleaseCapture-: PROCEDURE {WINAPI} (): Kernel32.BOOL;
 		(** The ReleaseDC function releases a device context (DC), freeing it for use by other applications. *)
-		ReleaseDC-: PROCEDURE {WINAPI} (hWnd: HWND; hDC: HDC): LONGINT;
+		ReleaseDC-: PROCEDURE {WINAPI} (hWnd: HWND; hDC: HDC): SIGNED32;
 		(** The RemoveProp function removes an entry from the property list of the specified window. *)
-		RemoveProp-: PROCEDURE {WINAPI} (hWnd: HWND; lpString: LONGINT): LONGINT;
+		RemoveProp-: PROCEDURE {WINAPI} (hWnd: HWND; lpString: SIGNED32): SIGNED32;
 		(** The ScreenToClient function converts the screen coordinates of a specified point on the screen to client coordinates. *)
 		ScreenToClient-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpPoint: Point): Kernel32.BOOL;
 		(** The SendMessage function sends the specified message to a window or windows. *)
-		SendMessage-: PROCEDURE {WINAPI} (hWnd: HWND; Msg: LONGINT; wParam: WParam; lParam: LParam): LResult;
+		SendMessage-: PROCEDURE {WINAPI} (hWnd: HWND; Msg: SIGNED32; wParam: WParam; lParam: LParam): LResult;
 		(** The SetCapture function sets the mouse capture to the specified window belonging to the current thread. *)
 		SetCapture-: PROCEDURE {WINAPI} (hWnd: HWND): HWND;
 		(** The SetClipboardData function places data on the clipboard in a specified clipboard format. *)
-		SetClipboardData-: PROCEDURE {WINAPI} (uFormat: LONGINT; hMem: Kernel32.HANDLE): Kernel32.HANDLE;
+		SetClipboardData-: PROCEDURE {WINAPI} (uFormat: SIGNED32; hMem: Kernel32.HANDLE): Kernel32.HANDLE;
 		(** The SetCursor function establishes the cursor shape. *)
 		SetCursor-: PROCEDURE {WINAPI} (hCursor: HCursor): HCursor;
 		(** The SetCursorPos function moves the cursor to the specified screen coordinates. *)
-		SetCursorPos-: PROCEDURE {WINAPI} (X, Y: LONGINT): Kernel32.BOOL;
+		SetCursorPos-: PROCEDURE {WINAPI} (X, Y: SIGNED32): Kernel32.BOOL;
 		(** The SetFocus function sets the keyboard focus to the specified window. *)
 		SetFocus-: PROCEDURE {WINAPI} (hWnd: HWND): HWND;
 		(** The SetForegroundWindow function puts the thread that created the specified window into the foreground
@@ -442,32 +442,32 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 		(** The SetMenu function assigns a new menu to the specified window. *)
 		SetMenu-: PROCEDURE {WINAPI} (hWnd: HWND; hMenu: HMenu): Kernel32.BOOL;
 		(** The SetMenuItemInfo function changes information about a menu item. *)
-		SetMenuItemInfo-: PROCEDURE {WINAPI} (hMenu: HMenu; uItem: LONGINT; fyByPosition: Kernel32.BOOL; VAR lpmii: MenuItemInfo): Kernel32.BOOL;
+		SetMenuItemInfo-: PROCEDURE {WINAPI} (hMenu: HMenu; uItem: SIGNED32; fyByPosition: Kernel32.BOOL; VAR lpmii: MenuItemInfo): Kernel32.BOOL;
 		(** The SetProp function adds a new entry or changes an existing entry in the property list of the specified window. *)
-		SetProp-: PROCEDURE {WINAPI} (hWnd: HWND; lpString, hData: LONGINT): Kernel32.BOOL;
+		SetProp-: PROCEDURE {WINAPI} (hWnd: HWND; lpString, hData: SIGNED32): Kernel32.BOOL;
 		(** The SetWindowsHookEx function installs an application-defined hook procedure into a hook chain. *)
-		SetWindowsHookEx-: PROCEDURE {WINAPI} (idHook: LONGINT; lpfn: HookProc; hMod: Kernel32.HINSTANCE; dwThreadId: LONGINT): HHook;
+		SetWindowsHookEx-: PROCEDURE {WINAPI} (idHook: SIGNED32; lpfn: HookProc; hMod: Kernel32.HINSTANCE; dwThreadId: SIGNED32): HHook;
 		(** The SetWindowLong function changes an attribute of the specified window. *)
-		SetWindowLong-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex, dwNewLong: LONGINT): LONGINT;
+		SetWindowLong-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex, dwNewLong: SIGNED32): SIGNED32;
 		(** The SetWindowPos function changes the size, position, and Z order of a child, pop-up, or top-level window. *)
-		SetWindowLongPtr-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex:LONGINT; dwNewLong: ADDRESS): ADDRESS;
+		SetWindowLongPtr-: PROCEDURE {WINAPI} (hWnd: HWND; nIndex:SIGNED32; dwNewLong: ADDRESS): ADDRESS;
 		(** The SetWindowPos function changes the size, position, and Z order of a child, pop-up, or top-level window. *)
-		SetWindowPos-: PROCEDURE {WINAPI} (hWnd, hWndInsertAfter: HWND; X, Y, cx, cy: LONGINT; uFlags: DWORD): Kernel32.BOOL;
+		SetWindowPos-: PROCEDURE {WINAPI} (hWnd, hWndInsertAfter: HWND; X, Y, cx, cy: SIGNED32; uFlags: DWORD): Kernel32.BOOL;
 		(** The SetWindowRgn function sets the window region of a window. *)
-		SetWindowRgn-: PROCEDURE {WINAPI} (hWnd: HWND; hRgn: HRgn; bRedraw: Kernel32.BOOL): LONGINT;
+		SetWindowRgn-: PROCEDURE {WINAPI} (hWnd: HWND; hRgn: HRgn; bRedraw: Kernel32.BOOL): SIGNED32;
 		(** The SetWindowText function changes the text of the specified window's title bar (if it has one). *)
 		SetWindowText-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpString: ARRAY   OF CHAR): Kernel32.BOOL;
 		(** The ShowCursor function displays or hides the cursor. *)
-		ShowCursor-: PROCEDURE {WINAPI} (bShow: Kernel32.BOOL): LONGINT;
+		ShowCursor-: PROCEDURE {WINAPI} (bShow: Kernel32.BOOL): SIGNED32;
 		(** The ShowWindow function sets the specified window's show state. *)
-		ShowWindow-: PROCEDURE {WINAPI} (hWnd: HWND; nCmdShow: LONGINT): Kernel32.BOOL;
+		ShowWindow-: PROCEDURE {WINAPI} (hWnd: HWND; nCmdShow: SIGNED32): Kernel32.BOOL;
 		(** The ShowWindowAsync function sets the show state of a window created by a different thread. *)
-		ShowWindowAsync-: PROCEDURE {WINAPI} (hWnd: HWND; nCmdShow: LONGINT): Kernel32.BOOL;
+		ShowWindowAsync-: PROCEDURE {WINAPI} (hWnd: HWND; nCmdShow: SIGNED32): Kernel32.BOOL;
 		(** The TrackPopupMenu function displays a shortcut menu at the specified location and tracks the selection of
 			items on the menu. *)
-		TrackPopupMenu-: PROCEDURE {WINAPI} (hMenu: HMenu; uFlags: DWORD; x, y, nReserved: LONGINT; hWnd: HWND; VAR prcRect: Rect): Kernel32.BOOL;
+		TrackPopupMenu-: PROCEDURE {WINAPI} (hMenu: HMenu; uFlags: DWORD; x, y, nReserved: SIGNED32; hWnd: HWND; VAR prcRect: Rect): Kernel32.BOOL;
 		(** The TranslateAccelerator function processes accelerator keys for menu commands. *)
-		TranslateAccelerator-: PROCEDURE {WINAPI} (hWnd: HWND; hAccTable: HAccel; VAR lpMsg: Msg): LONGINT;
+		TranslateAccelerator-: PROCEDURE {WINAPI} (hWnd: HWND; hAccTable: HAccel; VAR lpMsg: Msg): SIGNED32;
 		(** The TranslateMessage function translates virtual-key messages into character messages. *)
 		TranslateMessage-: PROCEDURE {WINAPI} (VAR lpMsg: Msg): Kernel32.BOOL;
 		(** The UnhookWindowsHookEx function removes a hook procedure installed in a hook chain by the SetWindowsHookEx
@@ -482,7 +482,7 @@ MODULE User32; (** non-portable / source: Windows.User32.Mod *)	(* ejz  *)
 			update region of the specified window. *)
 		ValidateRect-: PROCEDURE {WINAPI} (hWnd: HWND; VAR lpRect: Rect): Kernel32.BOOL;
 
-		GetConsoleWindow-: PROCEDURE{WINAPI} (): LONGINT ;
+		GetConsoleWindow-: PROCEDURE{WINAPI} (): SIGNED32 ;
 
 
 	(** The EqualSize function determines whether the two specified sizes are equal. *)

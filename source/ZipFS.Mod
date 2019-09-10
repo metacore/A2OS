@@ -11,7 +11,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 			END Init;
 
 			PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
-				VAR E: Unzip.Entry; key: LONGINT; res: WORD; F: File; F0: Files.File; W: Files.Writer;
+				VAR E: Unzip.Entry; key: SIGNED32; res: INTEGER; F: File; F0: Files.File; W: Files.Writer;
 			BEGIN {EXCLUSIVE}
 				key := 0;
 				E := zip.GetFirst();
@@ -32,7 +32,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 			END Old0;
 
 			PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
-				VAR E: Unzip.Entry; name: Files.FileName; d, t: LONGINT;
+				VAR E: Unzip.Entry; name: Files.FileName; d, t: SIGNED32;
 			BEGIN {EXCLUSIVE}
 				E := zip.GetFirst();
 				WHILE E # NIL DO
@@ -47,8 +47,8 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 				END
 			END Enumerate0;
 
-			PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
-				VAR E: Unzip.Entry; key: LONGINT;
+			PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): SIGNED32;
+				VAR E: Unzip.Entry; key: SIGNED32;
 			BEGIN {EXCLUSIVE}
 				key := 0;
 				E := zip.GetFirst();
@@ -95,7 +95,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 				RETURN F.Length()
 			END Length;
 
-			PROCEDURE GetDate*(VAR t, d: LONGINT);
+			PROCEDURE GetDate*(VAR t, d: SIGNED32);
 			BEGIN
 				Dates.DateTimeToOberon(E.td, d, t)
 			END GetDate;
@@ -117,7 +117,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 
 	(* Match - check if pattern matches file name; copied from DiskFS.Match and MatchPrefix *)
 	PROCEDURE Match(pat, name: ARRAY OF CHAR): BOOLEAN;
-		VAR pos, i0, i1, j0, j1: LONGINT; f: BOOLEAN;
+		VAR pos, i0, i1, j0, j1: SIGNED32; f: BOOLEAN;
 	BEGIN
 		f := TRUE;
 		LOOP
@@ -162,7 +162,7 @@ MODULE ZipFS; (** AUTHOR "ejz"; PURPOSE "mount a zipped file as a file-system"; 
 	PROCEDURE NewFS*(context : Files.Parameters);
 	VAR
 		name: Files.FileName;
-		F: Files.File; zip: Unzip.ZipFile; fs: FileSystem; res: WORD;
+		F: Files.File; zip: Unzip.ZipFile; fs: FileSystem; res: INTEGER;
 	BEGIN
 		IF (Files.This(context.prefix) = NIL) THEN
 			context.arg.SkipWhitespace; context.arg.String(name);

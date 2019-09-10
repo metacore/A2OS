@@ -37,12 +37,12 @@ TYPE
 	Buffer = OBJECT
 
 		VAR
-			maxBufSize : LONGINT;
+			maxBufSize : SIGNED32;
 			fifoBuffer : POINTER TO ARRAY OF CHAR;
-			head, tail : LONGINT;
+			head, tail : SIGNED32;
 			dead : BOOLEAN;
 
-		PROCEDURE &Init*(maxBufSize : LONGINT);
+		PROCEDURE &Init*(maxBufSize : SIGNED32);
 		BEGIN
 			SELF.maxBufSize := maxBufSize;
 			NEW(fifoBuffer,maxBufSize);
@@ -55,7 +55,7 @@ TYPE
 			dead := TRUE;
 		END Close;
 
-		PROCEDURE Get(VAR ch : CHAR; VAR result : WORD);
+		PROCEDURE Get(VAR ch : CHAR; VAR result : INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF TraceBuffer THEN
 				KernelLog.String(ModuleName);
@@ -81,7 +81,7 @@ TYPE
 			END;
 		END Get;
 
-		PROCEDURE Put(ch : CHAR; VAR result : LONGINT);
+		PROCEDURE Put(ch : CHAR; VAR result : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF((tail+1) MOD MAXBUFSIZE # head) THEN
 				fifoBuffer[tail] := ch;
@@ -114,7 +114,7 @@ TYPE
 
 		PROCEDURE Dump;
 		VAR
-			h,t,elements : LONGINT;
+			h,t,elements : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			h := head MOD maxBufSize;
 			t := tail MOD maxBufSize;
@@ -145,14 +145,14 @@ TYPE
 
 		VAR
 
-			dlci : LONGINT;
-			state : LONGINT;
+			dlci : SIGNED32;
+			state : SIGNED32;
 			rfcomm : RFCOMM;
 			receiveBuffer : Buffer;
 
 		(* --------------------------------------------- *)
 
-		PROCEDURE &Init*(rfcomm : RFCOMM; dlci : LONGINT);
+		PROCEDURE &Init*(rfcomm : RFCOMM; dlci : SIGNED32);
 
 		BEGIN
 
@@ -176,7 +176,7 @@ TYPE
 
 		(* --------------------------------------------- *)
 
-		PROCEDURE SetState(state : LONGINT);
+		PROCEDURE SetState(state : SIGNED32);
 		BEGIN {EXCLUSIVE}
 
 			SELF.state := state;
@@ -185,7 +185,7 @@ TYPE
 
 		(* --------------------------------------------- *)
 
-		PROCEDURE W4State(state : LONGINT) : LONGINT;
+		PROCEDURE W4State(state : SIGNED32) : SIGNED32;
 		BEGIN {EXCLUSIVE}
 
 			AWAIT((SELF.state = state) OR (SELF.state = DISCONNECTED));
@@ -274,10 +274,10 @@ TYPE
 		(* --------------------------------------------- *)
 
 
-		PROCEDURE SendUIH(info : ARRAY OF CHAR; infoLength : LONGINT);
+		PROCEDURE SendUIH(info : ARRAY OF CHAR; infoLength : SIGNED32);
 		VAR
 			frame : ARRAY 131 OF CHAR;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 
 			ASSERT(infoLength < 128);
@@ -378,13 +378,13 @@ TYPE
 
 		(* --------------------------------------------- *)
 
-		PROCEDURE ReceiveUIH(frame : ARRAY OF CHAR; frameLength : LONGINT);
+		PROCEDURE ReceiveUIH(frame : ARRAY OF CHAR; frameLength : SIGNED32);
 
 		VAR
 
-			infoLength : LONGINT;
-			result : LONGINT;
-			i : LONGINT;
+			infoLength : SIGNED32;
+			result : SIGNED32;
+			i : SIGNED32;
 
 		BEGIN
 
@@ -428,10 +428,10 @@ TYPE
 
 		(* --------------------------------------------- *)
 
-		PROCEDURE CalculateFCS(data : ARRAY OF CHAR; length : LONGINT) : CHAR;
+		PROCEDURE CalculateFCS(data : ARRAY OF CHAR; length : SIGNED32) : CHAR;
 		VAR
 			fcs : CHAR;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			fcs := CHR(0FFH);
 			i := 0;
@@ -444,11 +444,11 @@ TYPE
 
 		(* --------------------------------------------- *)
 
-		PROCEDURE Sender(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Sender(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 
 		VAR
 			info : ARRAY 127 OF CHAR;
-			infoLength : LONGINT;
+			infoLength : SIGNED32;
 			i : SIZE;
 
 		BEGIN
@@ -480,7 +480,7 @@ TYPE
 
 		(* --------------------------------------------- *)
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 
 		BEGIN
 
@@ -517,7 +517,7 @@ TYPE
 
 		(* TO DO *)
 
-		PROCEDURE ReceiveUIH(info : ARRAY OF CHAR; length : LONGINT);
+		PROCEDURE ReceiveUIH(info : ARRAY OF CHAR; length : SIGNED32);
 		BEGIN
 
 			IF TraceControlChannel THEN
@@ -538,7 +538,7 @@ TYPE
 
 		VAR
 			l2capLayer : BluetoothL2CAP.L2CAP;
-			l2capCID : LONGINT;
+			l2capCID : SIGNED32;
 			l2capConfReqReceived : BOOLEAN;
 			l2capOpen : BOOLEAN;
 			rfcommOpen : BOOLEAN;
@@ -547,9 +547,9 @@ TYPE
 
 		PROCEDURE &Init*(l2capLayer : BluetoothL2CAP.L2CAP);
 		VAR
-			result : WORD;
+			result : INTEGER;
 			controlChannel : ControlChannel;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			NEW(controlChannel,SELF,i);
 			channelList[0] := controlChannel;
@@ -571,11 +571,11 @@ TYPE
 			RETURN l2capLayer;
 		END GetL2CAPLayer;
 
-		PROCEDURE Start*(bdAddr: Bluetooth.BDAddr; VAR result : WORD);
+		PROCEDURE Start*(bdAddr: Bluetooth.BDAddr; VAR result : INTEGER);
 		VAR
-			status : LONGINT;
-			inMTU, outFlushTO : LONGINT;
-			outFlow,linkTO : LONGINT;
+			status : SIGNED32;
+			inMTU, outFlushTO : SIGNED32;
+			outFlow,linkTO : SIGNED32;
 			ok : BOOLEAN;
 		BEGIN
 			l2capLayer.Connect(BluetoothL2CAP.psmRFCOMM,bdAddr,l2capCID,result,status);
@@ -623,8 +623,8 @@ TYPE
 			END;
 		END Start;
 
-		PROCEDURE Close*(VAR result : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE Close*(VAR result : SIGNED32);
+		VAR i : SIGNED32;
 		BEGIN
 			IF TraceRFCOMM THEN
 				KernelLog.String(ModuleName);
@@ -667,9 +667,9 @@ TYPE
 			END;
 		END Close;
 
-		PROCEDURE EstablishChannel*(serverChannel : LONGINT; VAR result : LONGINT);
+		PROCEDURE EstablishChannel*(serverChannel : SIGNED32; VAR result : SIGNED32);
 		VAR
-			state : LONGINT;
+			state : SIGNED32;
 		BEGIN
 			channelList[serverChannel * 2].SendSABM();
 			state := channelList[serverChannel * 2].W4State(CONNECTED);
@@ -680,9 +680,9 @@ TYPE
 			END;
 		END EstablishChannel;
 
-		PROCEDURE ReleaseChannel*(serverChannel : LONGINT; VAR result : LONGINT);
+		PROCEDURE ReleaseChannel*(serverChannel : SIGNED32; VAR result : SIGNED32);
 		VAR
-			state : LONGINT;
+			state : SIGNED32;
 		BEGIN
 			channelList[serverChannel*2].SendDISC();
 			state := channelList[serverChannel * 2].W4State(DISCONNECTED);
@@ -693,26 +693,26 @@ TYPE
 			END;
 		END ReleaseChannel;
 
-		PROCEDURE SendInformation*(serverChannel : LONGINT; info : ARRAY OF CHAR; infoLength : SIZE);
+		PROCEDURE SendInformation*(serverChannel : SIGNED32; info : ARRAY OF CHAR; infoLength : SIZE);
 		VAR
-			result : WORD;
+			result : INTEGER;
 		BEGIN
 			channelList[serverChannel * 2].Sender(info,0,infoLength,TRUE,result);
 		END SendInformation;
 
-		PROCEDURE ReceiveInformation*(serverChannel : LONGINT; VAR info : ARRAY OF CHAR; VAR infoLength : SIZE);
+		PROCEDURE ReceiveInformation*(serverChannel : SIGNED32; VAR info : ARRAY OF CHAR; VAR infoLength : SIZE);
 		VAR
-			result : WORD;
+			result : INTEGER;
 		BEGIN
 			channelList[serverChannel * 2].Receiver(info,0,LEN(info),1,infoLength,result);
 		END ReceiveInformation;
 
-		PROCEDURE GetSender*(serverChannel : LONGINT) : Streams.Sender;
+		PROCEDURE GetSender*(serverChannel : SIGNED32) : Streams.Sender;
 		BEGIN
 			RETURN channelList[serverChannel * 2].Sender;
 		END GetSender;
 
-		PROCEDURE GetReceiver*(serverChannel : LONGINT) : Streams.Receiver;
+		PROCEDURE GetReceiver*(serverChannel : SIGNED32) : Streams.Receiver;
 		BEGIN
 			RETURN channelList[serverChannel * 2].Receiver;
 		END GetReceiver;
@@ -761,7 +761,7 @@ TYPE
 
 		PROCEDURE L2CAPDisconnectIndication(indication: BluetoothL2CAP.Indication);
 		VAR
-			result : LONGINT;
+			result : SIGNED32;
 		BEGIN
 			KernelLog.String(ModuleName);
 			KernelLog.String("RFCOMM.L2CAPDisconnectIndication:  shutdown RFCOMM");
@@ -771,7 +771,7 @@ TYPE
 
 		PROCEDURE L2CAPConfigIndication(inParam : BluetoothL2CAP.Indication);
 		VAR
-			result : WORD;
+			result : INTEGER;
 		BEGIN
 			WITH inParam : BluetoothL2CAP.ConfigInd DO
 				IF TraceRFCOMM THEN
@@ -789,11 +789,11 @@ TYPE
 			SetL2CAPConfReqReceived(TRUE);
 		END L2CAPConfigIndication;
 
-		PROCEDURE SendFrame(frame : ARRAY OF CHAR;length : LONGINT);
+		PROCEDURE SendFrame(frame : ARRAY OF CHAR;length : SIGNED32);
 		VAR
-			size : LONGINT;
-			result : WORD;
-			i : LONGINT;
+			size : SIGNED32;
+			result : INTEGER;
+			i : SIGNED32;
 		BEGIN
 			IF TraceRFCOMM THEN
 				KernelLog.String(ModuleName);
@@ -817,10 +817,10 @@ TYPE
 		PROCEDURE ReceiveFrame;
 		VAR
 			buffer : ARRAY 512 OF CHAR;
-			i : LONGINT;
-			result,size : LONGINT;
-			frameType : LONGINT;
-			dlci : LONGINT;
+			i : SIGNED32;
+			result,size : SIGNED32;
+			frameType : SIGNED32;
+			dlci : SIGNED32;
 		BEGIN
 			REPEAT
 				l2capLayer.Read(l2capCID,LEN(buffer),buffer,result,size);
@@ -886,7 +886,7 @@ VAR
 
 PROCEDURE CreateCRCTable;
 VAR
-	i,j : LONGINT;
+	i,j : SIGNED32;
 	pol,data,sr : CHAR;
 	op1,op2,op3 : CHAR;
 BEGIN
@@ -910,18 +910,18 @@ BEGIN
 END CreateCRCTable;
 
 (* ------------------------------------------------------------------------ *)
-	PROCEDURE BITLOR(x, y: LONGINT): LONGINT;
-	BEGIN RETURN S.VAL(LONGINT, S.VAL(SET, x) + S.VAL(SET, y))
+	PROCEDURE BITLOR(x, y: SIGNED32): SIGNED32;
+	BEGIN RETURN S.VAL(SIGNED32, S.VAL(SET, x) + S.VAL(SET, y))
 	END BITLOR;
 
 	PROCEDURE BITCAND(x, y: CHAR): CHAR;
-	BEGIN RETURN CHR(S.VAL(LONGINT, S.VAL(SET, LONG(ORD(x))) * S.VAL(SET, LONG(ORD(y)))))
+	BEGIN RETURN CHR(S.VAL(SIGNED32, S.VAL(SET, LONG(ORD(x))) * S.VAL(SET, LONG(ORD(y)))))
 	END BITCAND;
 	PROCEDURE BITCXOR(x, y: CHAR): CHAR;
-	BEGIN RETURN CHR(S.VAL(LONGINT, S.VAL(SET, LONG(ORD(x))) / S.VAL(SET, LONG(ORD(y)))))
+	BEGIN RETURN CHR(S.VAL(SIGNED32, S.VAL(SET, LONG(ORD(x))) / S.VAL(SET, LONG(ORD(y)))))
 	END BITCXOR;
-	PROCEDURE BITLAND(x, y: LONGINT): LONGINT;
-	BEGIN RETURN S.VAL(LONGINT, S.VAL(SET, x) * S.VAL(SET, y))
+	PROCEDURE BITLAND(x, y: SIGNED32): SIGNED32;
+	BEGIN RETURN S.VAL(SIGNED32, S.VAL(SET, x) * S.VAL(SET, y))
 	END BITLAND;
 
 BEGIN

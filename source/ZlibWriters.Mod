@@ -28,19 +28,19 @@ CONST
 TYPE
 	(** structure for writing deflated data in a file **)
 	Writer* = RECORD
-		res-: LONGINT;	(** current stream state **)
-		flush-: SHORTINT;	(** flush strategy **)
+		res-: SIGNED32;	(** current stream state **)
+		flush-: SIGNED8;	(** flush strategy **)
 		wrapper-: BOOLEAN;	(** if set, zlib header and checksum are generated **)
 		r: Files.Rider;	(* file rider *)
-		pos: LONGINT;	(* logical position in uncompressed input stream *)
-		crc32-: LONGINT;	(** crc32 of uncompressed data **)
+		pos: SIGNED32;	(* logical position in uncompressed input stream *)
+		crc32-: SIGNED32;	(** crc32 of uncompressed data **)
 		out: POINTER TO ARRAY BufSize OF CHAR;	(* output buffer space *)
 		s: ZlibDeflate.Stream	(* compression stream *)
 	END;
 
 
 (** change deflate parameters within the writer **)
-PROCEDURE SetParams*(VAR w: Writer; level, strategy, flush: SHORTINT);
+PROCEDURE SetParams*(VAR w: Writer; level, strategy, flush: SIGNED8);
 BEGIN
 	IF flush IN {NoFlush, SyncFlush, FullFlush} THEN
 		ZlibDeflate.SetParams(w.s, level, strategy);
@@ -52,7 +52,7 @@ BEGIN
 END SetParams;
 
 (** open writer on a Files.Rider **)
-PROCEDURE Open*(VAR w: Writer; level, strategy, flush: SHORTINT; wrapper: BOOLEAN; r: Files.Rider);
+PROCEDURE Open*(VAR w: Writer; level, strategy, flush: SIGNED8; wrapper: BOOLEAN; r: Files.Rider);
 BEGIN
 	IF flush IN {NoFlush, SyncFlush, FullFlush} THEN
 		w.flush := flush;
@@ -135,7 +135,7 @@ BEGIN
 END Close;
 
 (** compress srclen bytes from src to dst with specified level and strategy. dstlen returns how many bytes have been written. **)
-PROCEDURE Compress*(VAR src, dst: Files.Rider; srclen: LONGINT; VAR dstlen: LONGINT; level, strategy: SHORTINT; VAR crc32: LONGINT; VAR res: WORD);
+PROCEDURE Compress*(VAR src, dst: Files.Rider; srclen: SIGNED32; VAR dstlen: SIGNED32; level, strategy: SIGNED8; VAR crc32: SIGNED32; VAR res: INTEGER);
 VAR
 	w: Writer; buf: ARRAY BufSize OF CHAR; totWritten, written, read: SIZE;
 BEGIN
@@ -152,7 +152,7 @@ BEGIN
 		UNTIL (w.res # Ok) OR (totWritten >= srclen);
 		Close(w);
 		crc32 := w.crc32;
-		dstlen := (w.r.file.Pos(w.r) - dst.file.Pos(dst))(LONGINT);
+		dstlen := (w.r.file.Pos(w.r) - dst.file.Pos(dst))(SIGNED32);
 	END;
 	res := w.res
 END Compress;

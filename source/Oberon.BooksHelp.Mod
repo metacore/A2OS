@@ -231,7 +231,7 @@ MODULE BooksHelp IN Oberon;	(** portable *)
 
 (* Fade and Draw for the new marker *)
 
-	PROCEDURE DrawHand (x, y: INTEGER);
+	PROCEDURE DrawHand (x, y: SIGNED16);
 	BEGIN
 		Effects.PointHand.Draw(x, y);
 		IF x < 2 THEN
@@ -248,7 +248,7 @@ MODULE BooksHelp IN Oberon;	(** portable *)
 		Display.CopyPattern(Display3.red, qmp, x-2, y-qmH+10, Display.paint)
 	END DrawHand;
 
-	PROCEDURE Fade(x, y: INTEGER);
+	PROCEDURE Fade(x, y: SIGNED16);
 	BEGIN
 		Effects.CloseMenu();
 		(* Effects.CloseCursor() *)
@@ -262,7 +262,7 @@ MODULE BooksHelp IN Oberon;	(** portable *)
 			S: Texts.Scanner;
 			cmd: ARRAY 32 OF CHAR;
 			par: Oberon.ParList;
-			res: INTEGER;
+			res: SIGNED16;
 	BEGIN
 		NEW(T); Texts.Open(T, "");
 		Texts.WriteString(W, activator);
@@ -284,7 +284,7 @@ MODULE BooksHelp IN Oberon;	(** portable *)
 
 (* definition of the help icon gadget *)
 
-	PROCEDURE RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER);
+	PROCEDURE RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: SIGNED16);
 	BEGIN
 		Display3.CopyPattern(M, Display3.black, bookp[1], x, y, Display.paint);
 		Display3.CopyPattern(M, 14, bookp[2], x, y, Display.paint);
@@ -300,7 +300,7 @@ MODULE BooksHelp IN Oberon;	(** portable *)
 	PROCEDURE Track(VAR M: Oberon.InputMsg);
 		VAR
 			keysum: SET;
-			u, v: INTEGER;
+			u, v: SIGNED16;
 			DF: Display.Frame;
 			A: Objects.AttrMsg;
 	BEGIN
@@ -330,7 +330,7 @@ MODULE BooksHelp IN Oberon;	(** portable *)
 
 	PROCEDURE FrameHandler(F: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
-			x, y, w, h, u, v: INTEGER;
+			x, y, w, h, u, v: SIGNED16;
 			F0: Frame;
 			R: Display3.Mask;
 	BEGIN

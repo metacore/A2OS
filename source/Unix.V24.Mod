@@ -22,12 +22,12 @@ CONST
 
 
 VAR
-	tcgetattr	: PROCEDURE {C} ( fd: LONGINT;  VAR tio: Unix.Termios ): LONGINT;
-	tcsetattr	: PROCEDURE {C} ( fd: LONGINT; action: LONGINT;  VAR tio: Unix.Termios ): LONGINT;
-	cfsetispeed	: PROCEDURE {C} ( VAR tio: Unix.Termios; speed: LONGINT ): LONGINT;
-	cfsetospeed	: PROCEDURE {C} ( VAR tio: Unix.Termios; speed: LONGINT ): LONGINT;
-	cfgetispeed	: PROCEDURE {C} ( VAR tio: Unix.Termios ): LONGINT;
-	cfgetospeed	: PROCEDURE {C} ( VAR tio: Unix.Termios ): LONGINT;
+	tcgetattr	: PROCEDURE {C} ( fd: SIGNED32;  VAR tio: Unix.Termios ): SIGNED32;
+	tcsetattr	: PROCEDURE {C} ( fd: SIGNED32; action: SIGNED32;  VAR tio: Unix.Termios ): SIGNED32;
+	cfsetispeed	: PROCEDURE {C} ( VAR tio: Unix.Termios; speed: SIGNED32 ): SIGNED32;
+	cfsetospeed	: PROCEDURE {C} ( VAR tio: Unix.Termios; speed: SIGNED32 ): SIGNED32;
+	cfgetispeed	: PROCEDURE {C} ( VAR tio: Unix.Termios ): SIGNED32;
+	cfgetospeed	: PROCEDURE {C} ( VAR tio: Unix.Termios ): SIGNED32;
 
 
 
@@ -35,19 +35,19 @@ VAR
 TYPE
 	Port* = OBJECT (Serials.Port)
 	VAR
-		 fd: LONGINT;
+		 fd: SIGNED32;
 		 portname: ARRAY 128 OF CHAR;
 
-		PROCEDURE & Init*( port: LONGINT; CONST name: ARRAY OF CHAR );
+		PROCEDURE & Init*( port: SIGNED32; CONST name: ARRAY OF CHAR );
 		BEGIN
 			COPY(name, portname);
 			fd := 0;
 		END Init;
 
 		(* adapted from LNO.V24.Mod *)
-		PROCEDURE Open*( bps, data, parity, stop: LONGINT;  VAR res: WORD );
+		PROCEDURE Open*( bps, data, parity, stop: SIGNED32;  VAR res: INTEGER );
 		VAR
-			err, speed: LONGINT;
+			err, speed: SIGNED32;
 			tio: Unix.Termios;
 		BEGIN {EXCLUSIVE}
 			IF fd > 0 THEN res := Serials.PortInUse; RETURN END;
@@ -116,7 +116,7 @@ TYPE
 		END Open;
 
 		PROCEDURE Close*;
-		VAR err: LONGINT;
+		VAR err: SIGNED32;
 		BEGIN
 			IF fd > 0  THEN
 				err:= Unix.close( fd );
@@ -126,16 +126,16 @@ TYPE
 
 		PROCEDURE Available*(): SIZE;
 		VAR
-			num, err: WORD;
+			num, err: INTEGER;
 		BEGIN
 		 	err := Unix.ioctl( fd, Unix.FIONREAD, ADDRESSOF(num) );
 			RETURN num;
 		END Available;
 
-		PROCEDURE ReceiveChar*( VAR ch: CHAR;  VAR res: WORD );
+		PROCEDURE ReceiveChar*( VAR ch: CHAR;  VAR res: INTEGER );
 		VAR r: SIZE;
 		BEGIN
-			r := Unix.read( fd, ADDRESSOF(ch), 1);  res := LONGINT(r);
+			r := Unix.read( fd, ADDRESSOF(ch), 1);  res := SIGNED32(r);
 			IF res = 1 THEN
 				INC( charactersReceived );
 				res := Serials.Ok;
@@ -145,10 +145,10 @@ TYPE
 		END ReceiveChar;
 
 		(** Send - Send a byte to the specified port.  Waits until buffer space is available.  res = 0 iff ok. *)
-		PROCEDURE SendChar*( ch: CHAR;  VAR res: WORD );
+		PROCEDURE SendChar*( ch: CHAR;  VAR res: INTEGER );
 		VAR r: SIZE;
 		BEGIN
-			r := Unix.write( fd, ADDRESSOF(ch), 1);  res := LONGINT(r);
+			r := Unix.write( fd, ADDRESSOF(ch), 1);  res := SIGNED32(r);
 			IF res = 1 THEN
 				INC( charactersSent );
 				res := Serials.Ok;
@@ -157,7 +157,7 @@ TYPE
 			END;
 		END SendChar;
 
-		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD );
+		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER );
 		VAR r: SIZE;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + len );   (* array bound check not implemented in Kernel32.WriteFile *)
@@ -170,7 +170,7 @@ TYPE
 			END;
 		END Send;
 
-		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
+		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER );
 		VAR i, l: SIZE;  read: SIZE;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + size );
@@ -182,7 +182,7 @@ TYPE
 				IF  l > 0 THEN
 					read := Unix.read(fd, ADDRESSOF(buf[i]), l );
 					IF  read = l  THEN
-						charactersReceived := charactersReceived + LONGINT(read);
+						charactersReceived := charactersReceived + SIGNED32(read);
 						DEC( min, l );  DEC( size, l );  INC( len, l );  INC( i, l );
 					ELSE
 						(* If we've already received <min> bytes, <res> will become Serials.Ok later *)
@@ -198,9 +198,9 @@ TYPE
 		END Receive;
 
 		(** Get the port state: state (open, closed), speed in bps, no. of data bits, parity, stop bit length. *)
-		PROCEDURE GetPortState*( VAR openstat : BOOLEAN;  VAR bps, data, parity, stop : LONGINT );
+		PROCEDURE GetPortState*( VAR openstat : BOOLEAN;  VAR bps, data, parity, stop : SIGNED32 );
 		VAR
-			err, br: LONGINT;  t: SET;  tio: Unix.Termios;
+			err, br: SIGNED32;  t: SET;  tio: Unix.Termios;
 		BEGIN
 			IF fd > 0 THEN
 				err := tcgetattr( fd, tio );
@@ -245,7 +245,7 @@ TYPE
 		(** Clear the specified modem control lines.  s may contain DTR, RTS & Break. *)
 		PROCEDURE ClearMC*( s: SET );
 		VAR
-			err : LONGINT;  stat: SET;
+			err : SIGNED32;  stat: SET;
 		BEGIN
 			err := Unix.ioctl( fd, Unix.TIOCMGET , ADDRESSOF(stat) );
 			IF Serials.DTR IN s THEN  EXCL( stat, TIOCM_DTR )  END;
@@ -256,7 +256,7 @@ TYPE
 		(** Set the specified modem control lines.  s may contain DTR, RTS & Break. *)
 		PROCEDURE SetMC*( s: SET );
 		VAR
-			err : LONGINT;  stat: SET;
+			err : SIGNED32;  stat: SET;
 		BEGIN
 			err := Unix.ioctl( fd, Unix.TIOCMGET , ADDRESSOF(stat) );
 			IF Serials.DTR IN s THEN  INCL( stat, TIOCM_DTR )  ELSE  EXCL( stat, TIOCM_DTR )  END;
@@ -268,7 +268,7 @@ TYPE
 			the current state of DSR, CTS, RI, DCD & Break Interrupt. *)
 		PROCEDURE GetMC*( VAR s: SET );
 		VAR
-			err : LONGINT;  stat: SET;
+			err : SIGNED32;  stat: SET;
 		BEGIN
 			err := Unix.ioctl( fd, Unix.TIOCMGET , ADDRESSOF(stat) );
 			IF TIOCM_DTR IN stat THEN  INCL( s, Serials.DTR )  END;
@@ -284,7 +284,7 @@ TYPE
 	END Port;
 
 	PROCEDURE Install*();
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 		port: Port;
 		name, ttyname: ARRAY 128 OF CHAR;
 	BEGIN
@@ -299,7 +299,7 @@ TYPE
 	END Install;
 
 	PROCEDURE Map*(context: Commands.Context);
-	VAR	number: LONGINT; name, ttyname: ARRAY 128 OF CHAR; port: Port;
+	VAR	number: SIGNED32; name, ttyname: ARRAY 128 OF CHAR; port: Port;
 	BEGIN
 		IF context.arg.GetInteger(number, FALSE) & context.arg.GetString(ttyname) THEN
 			name := "COM";

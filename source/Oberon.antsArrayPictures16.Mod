@@ -45,7 +45,7 @@ CONST
 	maxHistogramLen* = 1000;
 
 	PROCEDURE SetHisto( obj: tObject );
-	VAR y, x: LONGINT;  val, pos: LONGINT;  len: LONGINT;  nrNaNs: LONGINT;  min, max: LONGREAL;
+	VAR y, x: SIGNED32;  val, pos: SIGNED32;  len: SIGNED32;  nrNaNs: SIGNED32;  min, max: FLOAT64;
 	BEGIN
 		IF obj.A.depth > maxHistogramLen THEN len := maxHistogramLen ELSE len := obj.A.depth END;
 		(* len := maxHistogramLen;  *)
@@ -91,7 +91,7 @@ CONST
 	END HandleAttributes;
 
 	PROCEDURE HandleFileMsg( obj: tObject;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 		(*! store Picts as GIF for color preserving or store colors *)
 	BEGIN
 		IF msg.id = Objects.load THEN
@@ -152,7 +152,7 @@ CONST
 	END Handler;
 
 	PROCEDURE A2P*( o: Objects.Object );
-	VAR x, y: LONGINT;  obj: tObject;   (* pix: Images.Pixel; *) val: LONGINT;  valr: LONGREAL;  len: LONGINT;  r: INTEGER;
+	VAR x, y: SIGNED32;  obj: tObject;   (* pix: Images.Pixel; *) val: SIGNED32;  valr: FLOAT64;  len: SIGNED32;  r: SIGNED16;
 	BEGIN
 
 		obj := o( tObject );
@@ -201,13 +201,13 @@ CONST
 		NEW( obj );  antsArrayPictures.Init( obj );  obj.handle := Handler;  obj.trans := A2P;  Objects.NewObj := obj
 	END Gen;
 
-	PROCEDURE Min( a, b: LONGINT ): LONGINT;
+	PROCEDURE Min( a, b: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF a < b THEN RETURN a ELSE RETURN b END
 	END Min;
 
 	PROCEDURE AdjustCurve( obj: tObject );
-	VAR sum, up: LONGREAL;  i: LONGINT;  len: LONGINT;
+	VAR sum, up: FLOAT64;  i: SIGNED32;  len: SIGNED32;
 	BEGIN
 		IF obj.A.depth > maxHistogramLen THEN len := maxHistogramLen ELSE len := obj.A.depth END;
 
@@ -224,7 +224,7 @@ CONST
 	END AdjustCurve;
 
 	PROCEDURE FromArray*( obj: tObject;  A: antsArrayObjects.tINTEGERObject );
-	VAR r, g, b: INTEGER;  i: LONGINT;   (* pal: Images.Palette; fmt: Images.Format; *)
+	VAR r, g, b: SIGNED16;  i: SIGNED32;   (* pal: Images.Palette; fmt: Images.Format; *)
 	BEGIN
 		obj.A := A;  obj.w := A.w;  obj.h := A.h;  obj.depth := Min( A.depth, 256 );  NEW( obj.pict );
 		Pictures.Create( obj.pict, SHORT( obj.w ), SHORT( obj.h ), 8 );
@@ -238,7 +238,7 @@ CONST
 	END FromArray;
 
 	PROCEDURE DoShow*( A: antsArrayObjects.tINTEGERObject;  VAR obj: tObject );
-	VAR link: vyLinks.Link;  len: LONGINT;
+	VAR link: vyLinks.Link;  len: SIGNED32;
 	BEGIN
 		Gen;  obj := Objects.NewObj( tObject );
 		IF A.depth > maxHistogramLen THEN len := maxHistogramLen ELSE len := A.depth END;
@@ -247,13 +247,13 @@ CONST
 		FromArray( obj, A );  link := NIL;  vyLinks.InsertObj( link, obj );  vyBase.Show( link, 1, "antsViews" )
 	END DoShow;
 
-	PROCEDURE DoShowI*( a: antsArrayObjects.tINTEGERArray;  depth: LONGINT;  VAR obj: tObject );
+	PROCEDURE DoShowI*( a: antsArrayObjects.tINTEGERArray;  depth: SIGNED32;  VAR obj: tObject );
 	VAR A: antsArrayObjects.tINTEGERObject;
 	BEGIN
 		A := antsArrayObjects.NewINTEGERObject( LEN( a[0] ), LEN( a ), depth );  antsArrayObjects.SetInt( A, a );  DoShow( A, obj )
 	END DoShowI;
 
-	PROCEDURE DoShowR*( a: antsArrayObjects.tLONGREALArray;  depth: LONGINT;  VAR obj: tObject );
+	PROCEDURE DoShowR*( a: antsArrayObjects.tLONGREALArray;  depth: SIGNED32;  VAR obj: tObject );
 	VAR A: antsArrayObjects.tINTEGERObject;
 	BEGIN
 		A := antsArrayObjects.NewINTEGERObject( LEN( a[0] ), LEN( a ), depth );  antsArrayObjects.SetLongreal( A, a );
@@ -261,7 +261,7 @@ CONST
 	END DoShowR;
 
 	PROCEDURE New*;
-	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  from: vyBase.Object;  obj: tObject;  link: vyLinks.Link;  len: LONGINT;
+	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  from: vyBase.Object;  obj: tObject;  link: vyLinks.Link;  len: SIGNED32;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=NAME from=OBJ [>show] ~# create new ArrayPicture  with Histogram from <from>" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectObjectFromKeyword( l, "from", from ) THEN
@@ -276,7 +276,7 @@ CONST
 	END New;
 
 	PROCEDURE DoShowHistogram*( obj: tObject );
-	VAR layer: antsPointPlot.tLayer;  len: LONGINT;
+	VAR layer: antsPointPlot.tLayer;  len: SIGNED32;
 	BEGIN
 		IF obj.A.depth > maxHistogramLen THEN len := maxHistogramLen ELSE len := obj.A.depth END;
 		antsHistogramEdit.DoShow( obj.curve, 0, 0, len, 1 );  antsPointPlot.Alloc;
@@ -297,7 +297,7 @@ CONST
 	END ShowHistogram;
 
 	PROCEDURE Test*;
-	VAR A: antsArrayObjects.tINTEGERObject;  obj: tObject;  i: INTEGER;
+	VAR A: antsArrayObjects.tINTEGERObject;  obj: tObject;  i: SIGNED16;
 	BEGIN
 		A := antsArrayObjects.NewINTEGERObject( 200, 200, 65535 );
 		FOR i := 0 TO 32000 DO A.A[i MOD 200, i DIV 200] := i END;

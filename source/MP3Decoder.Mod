@@ -21,135 +21,135 @@ TYPE
 		scfsi: ARRAY 4 OF BOOLEAN;
 		gr: ARRAY 2 OF RECORD	(* each frame consists of 2 granules *)
 		part23length, bigvalues, globalgain, scalefaccompress,
-		blocktype, region0count, region1count : INTEGER;
-		tableselect, subblockgain : ARRAY 3 OF INTEGER;
+		blocktype, region0count, region1count : SIGNED16;
+		tableselect, subblockgain : ARRAY 3 OF SIGNED16;
 		windowswitchingflag, mixedblockflag,
 		preflag, scalefacscale, count1tableselect : BOOLEAN;
 		END;
 	END;
 
 	Scalefactors = RECORD
-		l: ARRAY 23 OF INTEGER;
-		s: ARRAY 3, 13 OF INTEGER;
+		l: ARRAY 23 OF SIGNED16;
+		s: ARRAY 3, 13 OF SIGNED16;
 	END;
 
 	Frame = OBJECT
 	VAR
-		stereo: INTEGER;
-		jsbound : INTEGER;
+		stereo: SIGNED16;
+		jsbound : SIGNED16;
 
-		single: INTEGER;
-		lsd: INTEGER;
-		mpeg25: INTEGER;
-		headerchange: INTEGER;
-		layer: INTEGER;
-		errorprotection: INTEGER;
-		bitrate: INTEGER;
-		samplerate: INTEGER;
+		single: SIGNED16;
+		lsd: SIGNED16;
+		mpeg25: SIGNED16;
+		headerchange: SIGNED16;
+		layer: SIGNED16;
+		errorprotection: SIGNED16;
+		bitrate: SIGNED16;
+		samplerate: SIGNED16;
 		padding: BOOLEAN;
 		extension: BOOLEAN;
-		channelmode: INTEGER;
-		modeextension: INTEGER;
+		channelmode: SIGNED16;
+		modeextension: SIGNED16;
 		copyright: BOOLEAN;
 		original: BOOLEAN;
-		emphasis: INTEGER;
-		nofSlots: INTEGER;	(* Framegroesse *)
+		emphasis: SIGNED16;
+		nofSlots: SIGNED16;	(* Framegroesse *)
 
 		crc: BOOLEAN;
-		maindatabegin : INTEGER;
+		maindatabegin : SIGNED16;
 
 		hsynth: BOOLEAN;
-		store: ARRAY 2, 32, 18 OF REAL;
+		store: ARRAY 2, 32, 18 OF FLOAT32;
 
 		ssynth: BOOLEAN;
 		ch: ARRAY 2 OF Channel;
 
 		header: ARRAY 36 OF CHAR;
-		curByte : INTEGER;
-		curBit: INTEGER;
-		tempVal: LONGINT;
+		curByte : SIGNED16;
+		curBit: SIGNED16;
+		tempVal: SIGNED32;
 
 		scalefactors : ARRAY 2 OF Scalefactors;
 	END Frame;
 
-	HuffDecoded = ARRAY 32+1,18 OF LONGINT;
-	Granule = ARRAY 32,18 OF REAL;
+	HuffDecoded = ARRAY 32+1,18 OF SIGNED32;
+	Granule = ARRAY 32,18 OF FLOAT32;
 	Stereo = ARRAY 2 OF Granule;
 
 	PcmStereo = ARRAY 2304 OF CHAR;
 
-	Raw3 = ARRAY 3 OF REAL;
-	Raw4 = ARRAY 4 OF REAL;
-	Raw5 = ARRAY 5 OF REAL;
-	Raw9 = ARRAY 9 OF REAL;
-	Raw18 = ARRAY 18 OF REAL;
-	Raw32 = ARRAY 32 OF REAL;
-	Raw36 = ARRAY 36 OF REAL;
+	Raw3 = ARRAY 3 OF FLOAT32;
+	Raw4 = ARRAY 4 OF FLOAT32;
+	Raw5 = ARRAY 5 OF FLOAT32;
+	Raw9 = ARRAY 9 OF FLOAT32;
+	Raw18 = ARRAY 18 OF FLOAT32;
+	Raw32 = ARRAY 32 OF FLOAT32;
+	Raw36 = ARRAY 36 OF FLOAT32;
 
 	MpstrPtr* = POINTER TO Mpstr;
 	Mpstr* = RECORD
 		head: SoundDevices.Buffer;
 		tail: SoundDevices.Buffer;
-		bsize: INTEGER;
-		framesize*: INTEGER;
-		fsizeold: INTEGER;
+		bsize: SIGNED16;
+		framesize*: SIGNED16;
+		fsizeold: SIGNED16;
 		fr: Frame;
 		bsspace: ARRAY 2,2304 OF CHAR;
-		hybridblock: ARRAY 2,2,576 OF REAL;
-		hybridblc: ARRAY 2 OF INTEGER;
-		header: LONGINT;
-		bsnum: INTEGER;
-		synthbuffs: ARRAY 2,2, 272OF REAL;
-		synthbo: INTEGER;
+		hybridblock: ARRAY 2,2,576 OF FLOAT32;
+		hybridblc: ARRAY 2 OF SIGNED16;
+		header: SIGNED32;
+		bsnum: SIGNED16;
+		synthbuffs: ARRAY 2,2, 272OF FLOAT32;
+		synthbo: SIGNED16;
 	END;
 
 VAR
 	(* Tables, initialized once the Module loads*)
-	JSBTABLE : ARRAY 4 OF INTEGER;
-	BITRATE : ARRAY 15 OF INTEGER;
-	FREQUENCY : ARRAY 4 OF REAL;
+	JSBTABLE : ARRAY 4 OF SIGNED16;
+	BITRATE : ARRAY 15 OF SIGNED16;
+	FREQUENCY : ARRAY 4 OF FLOAT32;
 	SFBTABLE: RECORD
-				l: ARRAY 5 OF INTEGER;
-				s: ARRAY 3 OF INTEGER;
+				l: ARRAY 5 OF SIGNED16;
+				s: ARRAY 3 OF SIGNED16;
 			END;
-	SLEN: ARRAY 2, 16 OF INTEGER;
+	SLEN: ARRAY 2, 16 OF SIGNED16;
 	SFBIDX: ARRAY 3 OF RECORD
-				l: ARRAY 23 OF INTEGER;
-				s: ARRAY 14 OF INTEGER;
+				l: ARRAY 23 OF SIGNED16;
+				s: ARRAY 14 OF SIGNED16;
 			END;
-	PRETAB: ARRAY 22 OF INTEGER;
+	PRETAB: ARRAY 22 OF SIGNED16;
 
 	H: ARRAY 34 OF RECORD
-				len, xlen, ylen: INTEGER;
-				linbits: INTEGER;
-				v: POINTER TO ARRAY OF POINTER TO ARRAY OF INTEGER;
+				len, xlen, ylen: SIGNED16;
+				linbits: SIGNED16;
+				v: POINTER TO ARRAY OF POINTER TO ARRAY OF SIGNED16;
 			END;
 
-	ISPOW: ARRAY 8207 OF REAL;
-	GGPOW : ARRAY 256 OF REAL;
-	SGPOW : ARRAY 8 OF REAL;
-	SFSPOW : ARRAY 2,16 OF REAL;
-	SFLPOW: ARRAY 2,16,2,22 OF REAL;
+	ISPOW: ARRAY 8207 OF FLOAT32;
+	GGPOW : ARRAY 256 OF FLOAT32;
+	SGPOW : ARRAY 8 OF FLOAT32;
+	SFSPOW : ARRAY 2,16 OF FLOAT32;
+	SFLPOW: ARRAY 2,16,2,22 OF FLOAT32;
 
-	STEREOTAN : ARRAY 8 OF REAL;
+	STEREOTAN : ARRAY 8 OF FLOAT32;
 
-	CI, CA, CS : ARRAY 8 OF REAL;
+	CI, CA, CS : ARRAY 8 OF FLOAT32;
 
-	IMDCTWIN : ARRAY 4, 36 OF REAL;
-	IMDCTCOS : ARRAY 5 OF REAL;
-	IMDCTSIN : ARRAY 4 OF REAL;
-	IMDCTSQRT : REAL;
+	IMDCTWIN : ARRAY 4, 36 OF FLOAT32;
+	IMDCTCOS : ARRAY 5 OF FLOAT32;
+	IMDCTSIN : ARRAY 4 OF FLOAT32;
+	IMDCTSQRT : FLOAT32;
 
-	POSTTWIDDLE6: ARRAY 3 OF REAL;
-	POSTTWIDDLE9: ARRAY 4 OF REAL;
-	POSTTWIDDLE12: ARRAY 6 OF REAL;
-	POSTTWIDDLE18: ARRAY 9 OF REAL;
-	POSTTWIDDLE36: ARRAY 18 OF REAL;
+	POSTTWIDDLE6: ARRAY 3 OF FLOAT32;
+	POSTTWIDDLE9: ARRAY 4 OF FLOAT32;
+	POSTTWIDDLE12: ARRAY 6 OF FLOAT32;
+	POSTTWIDDLE18: ARRAY 9 OF FLOAT32;
+	POSTTWIDDLE36: ARRAY 18 OF FLOAT32;
 
-	GS: ARRAY 512 OF REAL;
+	GS: ARRAY 512 OF FLOAT32;
 
-	DCTCOS: ARRAY 2,2 OF REAL;
-	DCTTWIDDLE: ARRAY 16, 33 OF REAL;
+	DCTCOS: ARRAY 2,2 OF FLOAT32;
+	DCTTWIDDLE: ARRAY 16, 33 OF FLOAT32;
 
 TYPE
 	(** The Player object can be used to play a MP3 file or to decode it into a PCM file *)
@@ -164,15 +164,15 @@ TYPE
 
 		(* Variables used for buffer control*)
 		data : ARRAY MAXBUF OF CHAR;
-		curBit, curByte, tempVal, offset : INTEGER;
-		totBits : LONGINT;
-		mainDataEnd, frameStart: INTEGER;
+		curBit, curByte, tempVal, offset : SIGNED16;
+		totBits : SIGNED32;
+		mainDataEnd, frameStart: SIGNED16;
 
-		vVec : ARRAY 2, 1024 OF REAL;
-		vectIdx0, vectIdx1 : LONGINT;
+		vVec : ARRAY 2, 1024 OF FLOAT32;
+		vectIdx0, vectIdx1 : SIGNED32;
 
 		(* Number of Frames decoded *)
-		frameNum: LONGINT;
+		frameNum: SIGNED32;
 
 		(* First Time status: for initialising some values *)
 		first: BOOLEAN;
@@ -180,19 +180,19 @@ TYPE
 
 		s: Streams.Reader;
 
-		channels: LONGINT;
-		bitsPerSample: LONGINT;
-		samplesPerSec: LONGINT;
-		bitRate: LONGINT;
+		channels: SIGNED32;
+		bitsPerSample: SIGNED32;
+		samplesPerSec: SIGNED32;
+		bitRate: SIGNED32;
 
-		totSamples : LONGINT;
+		totSamples : SIGNED32;
 
 		hasMoreBytes: BOOLEAN;
 
 		(* Variables for internal buffercontrol *)
 		out : ARRAY 2 OF PcmStereo;		(* The actual buffer *)
-		gr: INTEGER;						(* needed for changing buffer *)
-		outBufferPos: LONGINT;				(* Current Position in buffer *)
+		gr: SIGNED16;						(* needed for changing buffer *)
+		outBufferPos: SIGNED32;				(* Current Position in buffer *)
 
 
 		(*                                                                  *)
@@ -206,9 +206,9 @@ TYPE
 		(* @returns: nothing															*)
 		PROCEDURE Next*;
 		VAR c:CHAR;
-			i: LONGINT;
+			i: SIGNED32;
 			found: BOOLEAN;
-			n: LONGINT;
+			n: SIGNED32;
 		BEGIN
 			(* One method: read single Bytes and decide on them. Not sure whats better
 			REPEAT
@@ -321,7 +321,7 @@ TYPE
 		(* Get general mpeg header info of a frame *)
 		PROCEDURE GetHeaderInfo;
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 
 		BEGIN
 			encFrame.bitrate := GetBits(4);
@@ -367,7 +367,7 @@ TYPE
 
 		(* Get the layer 3 specific side infos *)
 		PROCEDURE GetSideInfo;
-		VAR i,j,k: INTEGER;
+		VAR i,j,k: SIGNED16;
 				dummy: BOOLEAN;
 		BEGIN
 			encFrame.maindatabegin := GetBits(9);
@@ -426,8 +426,8 @@ TYPE
 
 
 		(* Get the scalefactors *)
-		PROCEDURE GetScaleFactors(ch, gr: INTEGER);
-		VAR i, j, k: LONGINT;
+		PROCEDURE GetScaleFactors(ch, gr: SIGNED16);
+		VAR i, j, k: SIGNED32;
 		BEGIN
 			IF (encFrame.ch[ch].gr[gr].windowswitchingflag) & (encFrame.ch[ch].gr[gr].blocktype = 2) THEN
 				IF encFrame.ch[ch].gr[gr].mixedblockflag THEN
@@ -483,8 +483,8 @@ TYPE
 		END GetScaleFactors;
 
 		(* General Huffman decoding using table lookups *)
-		PROCEDURE HuffDec(t: INTEGER; VAR x, y, v, w: INTEGER);
-		VAR point, i : INTEGER;
+		PROCEDURE HuffDec(t: SIGNED16; VAR x, y, v, w: SIGNED16);
+		VAR point, i : SIGNED16;
 				error : BOOLEAN;
 		BEGIN
 			point := 0;
@@ -555,8 +555,8 @@ TYPE
 		END HuffDec;
 
 		(* Layer 3 specific Huffman decoding of the different regions*)
-		PROCEDURE L3HuffDec (VAR is : HuffDecoded; ch, gr: INTEGER; part2Start :LONGINT);
-		VAR i, j, x, y, v, w, r1Start, r2Start, ht : INTEGER;
+		PROCEDURE L3HuffDec (VAR is : HuffDecoded; ch, gr: SIGNED16; part2Start :SIGNED32);
+		VAR i, j, x, y, v, w, r1Start, r2Start, ht : SIGNED16;
 				bt : BOOLEAN;
 		BEGIN
 			bt :=  encFrame.ch[ch].gr[gr].windowswitchingflag & (encFrame.ch[ch].gr[gr].blocktype = 2);
@@ -613,8 +613,8 @@ TYPE
 		END L3HuffDec;
 
 		(* Dequantizes the huffman decoded samples (samples quantized to make bitrate constant) *)
-		PROCEDURE Dequantize(is: HuffDecoded; VAR xr: Granule; ch, gr : INTEGER);
-		VAR ss, sb, cb, sr, nextCbBoundary, cbBegin, cbWidth, tmp, tmp2 : LONGINT;
+		PROCEDURE Dequantize(is: HuffDecoded; VAR xr: Granule; ch, gr : SIGNED16);
+		VAR ss, sb, cb, sr, nextCbBoundary, cbBegin, cbWidth, tmp, tmp2 : SIGNED32;
 				sign : BOOLEAN;
 		BEGIN
 			cb := 0; sr := encFrame.samplerate;
@@ -686,10 +686,10 @@ TYPE
 		END Dequantize;
 
 		(* Does the joint stereo processing by decoding ms-stereo and i-stereo *)
-		PROCEDURE JointStereo(ro : Stereo; VAR lr: Stereo; gr: INTEGER);
-		VAR	 i, j, sb, ss, sfb, sfbCnt, c, maxSfb,  lines : LONGINT;
-					isPos: ARRAY 576 OF LONGINT;
-					isRatio: ARRAY 576 OF REAL;
+		PROCEDURE JointStereo(ro : Stereo; VAR lr: Stereo; gr: SIGNED16);
+		VAR	 i, j, sb, ss, sfb, sfbCnt, c, maxSfb,  lines : SIGNED32;
+					isPos: ARRAY 576 OF SIGNED32;
+					isRatio: ARRAY 576 OF FLOAT32;
 					msStereo, iStereo : BOOLEAN;
 		BEGIN
 			msStereo := ((encFrame.channelmode =  1) & ((encFrame.modeextension DIV 2) MOD 2 = 1));
@@ -894,8 +894,8 @@ TYPE
 
 
 		(* Reorders the samples (samples reordered for better compression 123 123 123 -> 111 222 333) *)
-		PROCEDURE Reorder(xr : Granule; VAR re : Granule; ch, gr : INTEGER);
-		VAR sfb, sfbStart, sfbLines, sb, ss, window, freq, srcLine, dstLine : LONGINT;
+		PROCEDURE Reorder(xr : Granule; VAR re : Granule; ch, gr : SIGNED16);
+		VAR sfb, sfbStart, sfbLines, sb, ss, window, freq, srcLine, dstLine : SIGNED32;
 		BEGIN
 			FOR sb := 0 TO 31 DO
 				FOR ss := 0 TO 17 DO
@@ -954,9 +954,9 @@ TYPE
 
 
 		(* Compensates the alias effects that wereproduced by the polyphase filterbank of the encoder *)
-		PROCEDURE Antialias(xr: Granule; VAR hybridIn: Granule; ch, gr : INTEGER);
-		VAR ss, sb, sblim : INTEGER;
-				bu, bd : REAL;
+		PROCEDURE Antialias(xr: Granule; VAR hybridIn: Granule; ch, gr : SIGNED16);
+		VAR ss, sb, sblim : SIGNED16;
+				bu, bd : FLOAT32;
 		BEGIN
 			FOR sb := 0 TO 31 DO
 				FOR ss := 0 TO 17 DO
@@ -989,9 +989,9 @@ TYPE
 
 
 		(* Do the IMDCT and the overlapping *)
-		PROCEDURE HybridSynthesis(hybridIn : Granule; VAR hybridOut: Granule; ch, gr: INTEGER);
-		VAR sb, i, j : LONGINT;
-				bt: INTEGER;
+		PROCEDURE HybridSynthesis(hybridIn : Granule; VAR hybridOut: Granule; ch, gr: SIGNED16);
+		VAR sb, i, j : SIGNED32;
+				bt: SIGNED16;
 				rawout : Raw36;
 				rawin : Raw18;
 		BEGIN
@@ -1029,12 +1029,12 @@ TYPE
 		END HybridSynthesis;
 
 		(* The optimized inverse discrete consine transform *)
-		PROCEDURE IMDCT(in: Raw18; VAR out: Raw36; bt: INTEGER);
+		PROCEDURE IMDCT(in: Raw18; VAR out: Raw36; bt: SIGNED16);
 		VAR
-			i, m : LONGINT;
-			tin, hl : ARRAY 18 OF REAL;
-			tmp : ARRAY 12 OF REAL;
-			hs : ARRAY 6 OF REAL;
+			i, m : SIGNED32;
+			tin, hl : ARRAY 18 OF FLOAT32;
+			tmp : ARRAY 12 OF FLOAT32;
+			hs : ARRAY 6 OF FLOAT32;
 			evens, odds, evenidcts, oddidcts : Raw3;
 			evenl, oddl, evenidctl, oddidctl : Raw9;
 
@@ -1167,7 +1167,7 @@ TYPE
 
 		(* 3 point inverse discrete consine transform *)
 		PROCEDURE IMDCT3pt(in: Raw3; VAR out: Raw3);
-		VAR t0, t1 : REAL;
+		VAR t0, t1 : FLOAT32;
 		BEGIN
 			t0 := in[2] / 2 + in[0];
 			t1 := in[1] * IMDCTSQRT;
@@ -1180,7 +1180,7 @@ TYPE
 
 		(* 4 point inverse discrete consine transform *)
 		PROCEDURE IMDCT4pt(in: Raw4; VAR out: Raw4);
-		VAR t0, t1 : REAL;
+		VAR t0, t1 : FLOAT32;
 		BEGIN
 			t0 := in[3] / 2 + in[0];
 			t1 := in[1] - in[2];
@@ -1194,7 +1194,7 @@ TYPE
 
 		(* 5 point inverse discrete consine transform *)
 		PROCEDURE IMDCT5pt(in: Raw5; VAR out: Raw5);
-		VAR t0, t1, t2 : REAL;
+		VAR t0, t1, t2 : FLOAT32;
 		BEGIN
 			t0 := in[3] /2 + in[0];
 			t1 := in[0] - in[3];
@@ -1211,7 +1211,7 @@ TYPE
 
 		(* 9 point inverse discrete consine transform *)
 		PROCEDURE IMDCT9pt(in: Raw9; VAR out: Raw9);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 				even, evenidct : Raw5;
 				odd, oddidct: Raw4;
 		BEGIN
@@ -1250,11 +1250,11 @@ TYPE
 		END IMDCT9pt;
 
 		(* does the conversion from the frequency domain into the time domain *)
-		PROCEDURE SubbandSynthesis(in : Granule; VAR out :  PcmStereo; ch, gr : INTEGER);
-		VAR i, j, ss, tmp1, tmp2 : LONGINT;
-			samp : LONGINT;
+		PROCEDURE SubbandSynthesis(in : Granule; VAR out :  PcmStereo; ch, gr : SIGNED16);
+		VAR i, j, ss, tmp1, tmp2 : SIGNED32;
+			samp : SIGNED32;
 			sVec, tmp : Raw32;
-			sum : REAL;
+			sum : FLOAT32;
 		BEGIN
 			(* Initialisation *)
 			IF encFrame.ssynth THEN
@@ -1370,8 +1370,8 @@ TYPE
 		END SubbandSynthesis;
 
 		(* used in the subband synthesis *)
-		PROCEDURE DCT(in : Raw32; VAR out : Raw32; n : INTEGER);
-		VAR i : LONGINT;
+		PROCEDURE DCT(in : Raw32; VAR out : Raw32; n : SIGNED16);
+		VAR i : SIGNED32;
 				evenin, evenout, oddin, oddout : Raw32;
 		BEGIN
 			IF n = 2 THEN
@@ -1404,7 +1404,7 @@ TYPE
 			END;
 		END DCT;
 
-		PROCEDURE Open*(in: Streams.Reader; VAR res: WORD);
+		PROCEDURE Open*(in: Streams.Reader; VAR res: INTEGER);
 		VAR
 			tmp: Streams.Position;
 		BEGIN
@@ -1460,18 +1460,18 @@ TYPE
 		END Open;
 
 		(* Returns the current sample position *)
-		PROCEDURE GetCurrentSample*() : LONGINT;
+		PROCEDURE GetCurrentSample*() : SIGNED32;
 		BEGIN
 			RETURN ENTIER(8 * s.Pos() / bitRate / 1000 * samplesPerSec)
 		END GetCurrentSample;
 
 		(* Returns the current time in 1/10 sec *)
-		PROCEDURE GetCurrentTime*() : LONGINT;
+		PROCEDURE GetCurrentTime*() : SIGNED32;
 		BEGIN
 			RETURN ENTIER(10 * GetCurrentSample() / samplesPerSec)
 		END GetCurrentTime;
 
-		PROCEDURE GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: LONGINT);
+		PROCEDURE GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample: SIGNED32);
 		BEGIN
 			nofChannels := channels;
 			bitsPerSample := SELF.bitsPerSample;
@@ -1479,13 +1479,13 @@ TYPE
 		END GetAudioInfo;
 
 		(* Returns the total number of Samples in this file or -1 if streaming or VBR *)
-		PROCEDURE GetTotalSamples*() : LONGINT;
+		PROCEDURE GetTotalSamples*() : SIGNED32;
 		BEGIN
 			RETURN totSamples
 		END GetTotalSamples;
 
 		(* Sets the size of the Stream in Bytes. Only works for CBR *)
-		PROCEDURE SetStreamLength*(length : LONGINT);
+		PROCEDURE SetStreamLength*(length : SIGNED32);
 		BEGIN
 			totSamples := ENTIER(8 * length / bitRate / 1000 * samplesPerSec)
 		END SetStreamLength;
@@ -1502,7 +1502,7 @@ TYPE
 		(* @params: sample: the sample to seek, goKeySample: if we have a containerformat which 	*)
 		(*		        specifies keysamples, this flag can be set, res: the result of the seekoperation		*)
 		(* @returns: nothing																		*)
-		PROCEDURE SeekSample*(sample : LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
+		PROCEDURE SeekSample*(sample : SIGNED32; goKeySample : BOOLEAN; VAR res : INTEGER);
 		BEGIN
 			IF ~CanSeek() THEN res := Codecs.ResFailed; RETURN; END;
 			COPY("0000", cHeader);
@@ -1513,7 +1513,7 @@ TYPE
 		END SeekSample;
 
 		(* Seeks the Sample at the position given in ms *)
-		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
+		PROCEDURE SeekMillisecond*(millisecond : SIGNED32; goKeySample : BOOLEAN; VAR res : INTEGER);
 		BEGIN
 			SeekSample(ENTIER(millisecond*samplesPerSec/1000), goKeySample, res);
 		END SeekMillisecond;
@@ -1522,7 +1522,7 @@ TYPE
 		(* Later versions of Codecs will probably adapt this										*)
 		(* @params: none																			*)
 		(* @returns: audioTime in milliseconds or microseconds										*)
-		PROCEDURE GetAudioTime*():HUGEINT;
+		PROCEDURE GetAudioTime*():SIGNED64;
 		BEGIN
 			KernelLog.String("AudioTime calculation must be done in Playerapplication!"); KernelLog.Ln();
 			RETURN -1;
@@ -1597,8 +1597,8 @@ TYPE
 		(* @returns: nothing																	*)
 		PROCEDURE DoLayer3;
 		VAR
-			j, ch, grt, dummy, flushMain, bytesToDiscard, sb, ss : INTEGER;
-			part2Start : LONGINT;
+			j, ch, grt, dummy, flushMain, bytesToDiscard, sb, ss : SIGNED16;
+			part2Start : SIGNED32;
 			is : HuffDecoded;
 			ro, lr : Stereo;
 			re, hybridIn, hybridOut : Granule;
@@ -1679,8 +1679,8 @@ TYPE
 		END GetBit;
 
 		(* Gets some bits of current frame header*)
-		PROCEDURE GetBits(count:INTEGER) : INTEGER;
-		VAR i,c,pot :INTEGER;
+		PROCEDURE GetBits(count:SIGNED16) : SIGNED16;
+		VAR i,c,pot :SIGNED16;
 		BEGIN
 			i := 0; pot:=1;
 
@@ -1715,8 +1715,8 @@ TYPE
 		END GetDataBit;
 
 		(* Gets some data bits  out of buffer*)
-		PROCEDURE GetDataBits(count:INTEGER) : INTEGER;
-		VAR i,c,pot :INTEGER;
+		PROCEDURE GetDataBits(count:SIGNED16) : SIGNED16;
+		VAR i,c,pot :SIGNED16;
 		BEGIN
 			i := 0; pot:=1;
 
@@ -1734,7 +1734,7 @@ TYPE
 
 
 		(* Go back n bits in the buffer *)
-		PROCEDURE GoBackNBits( n: INTEGER);
+		PROCEDURE GoBackNBits( n: SIGNED16);
 		BEGIN
 			totBits := totBits - n;
 			curBit := curBit + n;
@@ -1755,7 +1755,7 @@ PROCEDURE LoadHuffmanTables;
 VAR f: Files.File;
 		r: Files.Reader;
 		c: CHAR;
-		tableNo, i : INTEGER;
+		tableNo, i : SIGNED16;
 BEGIN
 	f := Files.Old("MP3Huffman.Bin");
 	Files.OpenReader(r, f, 0);
@@ -1787,8 +1787,8 @@ END LoadHuffmanTables;
 
 (* Initialize certain tables *)
 PROCEDURE InitTables;
-VAR i, j, k, l: INTEGER;
-		LN2, sq: REAL;
+VAR i, j, k, l: SIGNED16;
+		LN2, sq: FLOAT32;
 BEGIN
 	JSBTABLE[0] := 0; JSBTABLE[1] := 4; JSBTABLE[2] := 8;  JSBTABLE[3] := 16;
 

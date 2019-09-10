@@ -11,7 +11,7 @@ TYPE
 	TVChannel* = OBJECT
 		VAR
 			name*: ARRAY 33 OF CHAR;
-			freq*: LONGINT;
+			freq*: SIGNED32;
 			hasTeletext*: BOOLEAN;
 			cachingTime*: Dates.DateTime;
 
@@ -23,7 +23,7 @@ TYPE
 		(** Does the current channel have "recent" teletext data? (see MaxAge) *)
 		PROCEDURE HasRecentData*() : BOOLEAN;
 		VAR
-			dNow, tNow, dCache, tCache, hmNow, hmCache: LONGINT;
+			dNow, tNow, dCache, tCache, hmNow, hmCache: SIGNED32;
 		BEGIN
 			IF ~Dates.ValidDateTime(cachingTime) THEN
 				RETURN FALSE

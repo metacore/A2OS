@@ -32,10 +32,10 @@ TYPE
 		v3: vyBase.Object;
 		v2: vyBase.Object;
 		v1: vyBase.Object;
-		modeltype: INTEGER (* 0: Linie, 1: Gitter, 2: Wabe *)
+		modeltype: SIGNED16 (* 0: Linie, 1: Gitter, 2: Wabe *)
 	END;
 
-	function* = PROCEDURE ( VAR v1, v2, v3: LONGREAL );
+	function* = PROCEDURE ( VAR v1, v2, v3: FLOAT64 );
 
 CONST
 	version* = 1;  moduleName = "antsProgRandomWalk.Gen";  LinieC = 0;  GitterC = 1;  WabeC = 2;
@@ -51,7 +51,7 @@ VAR
 	END StoreM;
 
 	PROCEDURE LoadM( VAR R: Files.Rider;  o: tModel );
-	VAR version: INTEGER;  ref: Objects.Object;
+	VAR version: SIGNED16;  ref: Objects.Object;
 	BEGIN
 		Files.ReadInt( R, version );
 		(*Load*)
@@ -64,9 +64,9 @@ VAR
 		IF version > 0 THEN Files.ReadInt( R, o.modeltype ) END
 	END LoadM;
 
-	PROCEDURE Gitter( VAR val1, val2, val3: LONGREAL );
+	PROCEDURE Gitter( VAR val1, val2, val3: FLOAT64 );
 (*
-	VAR ran: LONGREAL;
+	VAR ran: FLOAT64;
 	BEGIN
 		ran := vyRandom.Uniform();
 	IF ran <1/6 THEN
@@ -86,7 +86,7 @@ VAR
 	END Gitter;
 
 (*
-PROCEDURE Gitter3d (VAR ran, val1, val2,val3: LONGREAL);
+PROCEDURE Gitter3d (VAR ran, val1, val2,val3: FLOAT64);
 BEGIN
 	IF ran <1/6 THEN
 		val1 := val1 + 0.1
@@ -103,7 +103,7 @@ BEGIN
 	END
 END Gitter3d;
 
-PROCEDURE Linie (VAR ran, val1, val2: LONGREAL);
+PROCEDURE Linie (VAR ran, val1, val2: FLOAT64);
 BEGIN
 	IF ran < 0.5 THEN
 		val1 := val1 + 1
@@ -112,7 +112,7 @@ BEGIN
 	END
 END Linie;
 
-PROCEDURE Wabe (VAR ran, val1, val2: LONGREAL;  flag: BOOLEAN);
+PROCEDURE Wabe (VAR ran, val1, val2: FLOAT64;  flag: BOOLEAN);
 BEGIN
 	IF flag THEN
 		IF ran < 1 / 3 THEN
@@ -136,7 +136,7 @@ END Wabe;
 
 
 	PROCEDURE OneSweep( s: antsKernel.Kernel );
-	VAR o: tModel;  v1, v2, v3: vyLongrealVec.tVector;  val1, val2, val3: LONGREAL;  ran: LONGREAL;
+	VAR o: tModel;  v1, v2, v3: vyLongrealVec.tVector;  val1, val2, val3: FLOAT64;  ran: FLOAT64;
 	BEGIN
 		o := s.par( tModel );
 		(* insert one sweep proc here *)

@@ -30,14 +30,14 @@ TYPE
 
 	Quote = POINTER TO RECORD
 		msg: ARRAY MaxQuoteLen OF CHAR;
-		len: LONGINT;
+		len: SIGNED32;
 		next: Quote;
 	END;
 
 VAR
 	quoteService: TCPServices.Service;
 	quotes: Quote;
-	NnofQuotes-, Nrequests-: LONGINT;
+	NnofQuotes-, Nrequests-: SIGNED32;
 
 PROCEDURE NewQuoteAgent(c: TCP.Connection; s: TCPServices.Service): TCPServices.Agent;
 VAR q: QuoteAgent;
@@ -54,7 +54,7 @@ END NextQuote;
 PROCEDURE ReadQuotesX(filename : ARRAY OF CHAR; context : Commands.Context);
 VAR
 	f: Files.File; r: Files.Reader; str: ARRAY MaxQuoteLen OF CHAR;
-	q: Quote; pos: LONGINT;
+	q: Quote; pos: SIGNED32;
 
 	PROCEDURE Skip;
 	BEGIN
@@ -62,7 +62,7 @@ VAR
 	END Skip;
 
 	PROCEDURE Append;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		WHILE (pos < MaxQuoteLen-2) & (str[i] # 0X) DO q.msg[pos] := str[i]; INC(pos); INC(i) END;
 		q.msg[pos] := CR; INC(pos);
@@ -99,7 +99,7 @@ BEGIN
 END ReadQuotesX;
 
 PROCEDURE StartService(context : Commands.Context);
-VAR res : WORD;
+VAR res : INTEGER;
 BEGIN
 	IF (NnofQuotes > 0) THEN
 		NEW(quoteService, QuotePort, NewQuoteAgent, res);

@@ -22,12 +22,12 @@ TYPE
 	VAR
 		CBWbuffer : Usbdi.BufferPtr;
 		CSWbuffer : Usbdi.BufferPtr;
-		seqNbr : LONGINT;
+		seqNbr : SIGNED32;
 
 		(* Perform reset recovery, i.e. send Bulk-Only Mass Storage Reset command via default control pipe and 	*)
 		(* then clear the EndpointHalt feature of the bulk in and bulk out endpoints of the USB device. The request 	*)
 		(* shall ready the device for the next CBW from the host. See [2], pages 7 & 16								*)
-		PROCEDURE Reset*(timeout : LONGINT) : WORD;
+		PROCEDURE Reset*(timeout : SIGNED32) : INTEGER;
 		VAR critical : BOOLEAN; status : Usbdi.Status;
 		BEGIN
 			IF Debug.Trace & Debug.traceScRequests THEN KernelLog.String("UsbStorage: Doing reset recovery ... "); END;
@@ -50,7 +50,7 @@ TYPE
 		END Reset;
 
 		(* The Get Max LUN device request is used to determine the number of logical units supported by the device *)
-		PROCEDURE GetMaxLun*(VAR maxlun : LONGINT): LONGINT;
+		PROCEDURE GetMaxLun*(VAR maxlun : SIGNED32): SIGNED32;
 		VAR buffer : Usbdi.BufferPtr;  status : Usbdi.Status;
 		BEGIN
 			IF Debug.Trace & Debug.traceScRequests THEN KernelLog.String("UsbStorage: GetMaxLUN.... "); END;
@@ -77,7 +77,7 @@ TYPE
 		(*	2. Dataphase (optional)																				*)
 		(*	3. Receive command status word (CSW) from device 													*)
 		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : SIZE; dir :  SET;
-			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : SIZE; VAR tlen : SIZE; timeout : LONGINT) : WORD;
+			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : SIZE; VAR tlen : SIZE; timeout : SIGNED32) : INTEGER;
 		VAR status : Usbdi.Status; i, residual : SIZE;
 		BEGIN (* No concurrency allowed *)
 			ASSERT((cmdlen > 0) & (cmdlen <= 16)); (* [2], page 14 *)
@@ -97,7 +97,7 @@ TYPE
 			(* set up bmCBWFlags *)
 			IF dir = Base.DataIn THEN CBWbuffer[12] := 80X; ELSE CBWbuffer[12] := 0X; END;
 			(* set bCBWLUN *)
-			CBWbuffer[13] := CHR(SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, ORD(cmd[1])) * {5..7}, -5)));
+			CBWbuffer[13] := CHR(SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, ORD(cmd[1])) * {5..7}, -5)));
 			(*set bCBWCBLength *)
 			CBWbuffer[14] := CHR(cmdlen);
 			FOR i := 15 TO 30 DO CBWbuffer[i] := 0X; END;

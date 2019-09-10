@@ -6,13 +6,13 @@ IMPORT
 	Strings, UTF8Strings, Files, Streams;
 
 VAR
-	gb2312Table : ARRAY 65536 OF LONGINT;
+	gb2312Table : ARRAY 65536 OF SIGNED32;
 
 PROCEDURE GB2312ToUTF8*(from : Strings.String) : Strings.String;
 VAR buf : Strings.Buffer;
 	w : Streams.Writer;
 	temp : ARRAY 8 OF CHAR;
-	i, len : SIZE; code: WORD;
+	i, len : SIZE; code: INTEGER;
 BEGIN
 	NEW(buf, LEN(from) * 2);
 	w := buf.GetWriter();
@@ -34,7 +34,7 @@ PROCEDURE LoadGBTable;
 VAR f : Files.File;
 	r : Files.Reader;
 	codeS, unicodeS : ARRAY 8 OF CHAR;
-	code, unicode: LONGINT; res : WORD;
+	code, unicode: SIGNED32; res : INTEGER;
 BEGIN
 	f := Files.Old("gb2312.txt");
 	Files.OpenReader(r, f, 0);

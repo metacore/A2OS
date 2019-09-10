@@ -294,7 +294,7 @@ TYPE
 	VAR
 		name-, archive-, source- : ARRAY 32 OF CHAR;
 		description- : ARRAY 256 OF CHAR;
-		installMode : LONGINT; (* Required, Yes, No *)
+		installMode : SIGNED32; (* Required, Yes, No *)
 
 		nofFiles- : SIZE;
 		nofSources- : SIZE;
@@ -656,7 +656,7 @@ TYPE
 
 		(** List all source code files included in this build to a stream *)
 		PROCEDURE ToStream*(w : Streams.Writer; charactersPerLine : SIZE);
-		VAR file : File; color : LONGINT; characterCount : SIZE; name: Files.FileName;
+		VAR file : File; color : SIGNED32; characterCount : SIZE; name: Files.FileName;
 		BEGIN
 			characterCount := 0;
 			file := files;
@@ -691,11 +691,11 @@ TYPE
 		END ToStream;
 
 		(** Generate a file that contains the list of all source code files of this build in compile order *)
-		PROCEDURE GenerateToolFile*(CONST filename : Files.FileName; VAR res : WORD);
+		PROCEDURE GenerateToolFile*(CONST filename : Files.FileName; VAR res : INTEGER);
 		VAR text : Texts.Text; tw : TextUtilities.TextWriter; dateTime : Dates.DateTime; temp : ARRAY 256 OF CHAR;
 		BEGIN
 			NEW(text); NEW(tw, text);
-			tw.SetFontColor(LONGINT(808080FFH)); (* comment grey *)
+			tw.SetFontColor(SIGNED32(808080FFH)); (* comment grey *)
 
 			tw.String("# "); tw.String(name); tw.Ln;
 
@@ -730,7 +730,7 @@ TYPE
 		END GenerateToolFile;
 
 		(* Generate a XML file describing the packages use by WMInstaller.Mod *)
-		PROCEDURE GeneratePackageFile(CONST filename : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE GeneratePackageFile(CONST filename : ARRAY OF CHAR; VAR res : INTEGER);
 		VAR
 			packageArray : PackageArray; package : Package;
 			fullname : Files.FileName; file : Files.File; w : Files.Writer;
@@ -797,10 +797,10 @@ TYPE
 			END;
 		END GeneratePackageFile;
 
-		PROCEDURE GenerateZipFiles(out, error : Streams.Writer; diagnostics : Diagnostics.Diagnostics; level, strategy: LONGINT; VAR err : BOOLEAN);
-		VAR packageArray : PackageArray; i : SIZE; res: WORD;
+		PROCEDURE GenerateZipFiles(out, error : Streams.Writer; diagnostics : Diagnostics.Diagnostics; level, strategy: SIGNED32; VAR err : BOOLEAN);
+		VAR packageArray : PackageArray; i : SIZE; res: INTEGER;
 
-			PROCEDURE AddFile(archive: Zip.Archive; CONST srcname,  dstname: ARRAY OF CHAR; VAR res: WORD);
+			PROCEDURE AddFile(archive: Zip.Archive; CONST srcname,  dstname: ARRAY OF CHAR; VAR res: INTEGER);
 			VAR f: Files.File; r: Files.Rider; pathName, fileName: Files.FileName;
 			BEGIN
 				f := Files.Old(srcname);
@@ -809,7 +809,7 @@ TYPE
 				ELSE
 					f.Set(r, 0);
 					Files.SplitPath(dstname, pathName, fileName);
-					Zip.AddEntry(archive, fileName, r, f.Length()(LONGINT), SHORTINT(level), SHORTINT(strategy), res);
+					Zip.AddEntry(archive, fileName, r, f.Length()(SIGNED32), SIGNED8(level), SIGNED8(strategy), res);
 				END;
 			END AddFile;
 
@@ -876,7 +876,7 @@ TYPE
 				COPY (mid, filename); Strings.Append(filename, "."); Strings.Append(filename, suf);
 			END StripReleasePrefix;
 
-			PROCEDURE GenerateZipFile(package : Package; sourceCode : BOOLEAN; VAR res : WORD);
+			PROCEDURE GenerateZipFile(package : Package; sourceCode : BOOLEAN; VAR res : INTEGER);
 			VAR
 				file : File; archiveName, source, dest : Files.FileName;
 				archive : Zip.Archive;
@@ -1246,7 +1246,7 @@ TYPE
 			END;
 		END MarkFiles;
 
-		PROCEDURE ShowDependentModules(CONST modulename : Modules.Name; mode : WORD;  out : Streams.Writer);
+		PROCEDURE ShowDependentModules(CONST modulename : Modules.Name; mode : INTEGER;  out : Streams.Writer);
 		CONST CharactersPerLine = 60;
 		VAR module : File; ignore, nofModules, i, characterCount: SIZE;
 		BEGIN
@@ -1475,7 +1475,7 @@ TYPE
 TYPE
 
 	Version = RECORD
-		major, minor : WORD;
+		major, minor : INTEGER;
 	END;
 
 
@@ -2329,7 +2329,7 @@ TYPE
 			Prefix = prefix {"," prefix}
 			FileList = filename {" " filename} *)
 		PROCEDURE ParsePackage(builds : Builds;  VAR token : Token) : BOOLEAN;
-		VAR currentRelease : Expression; index : SIZE; pos : LONGINT; nbr : ARRAY 8 OF CHAR; caseEqual : BOOLEAN; file : File;
+		VAR currentRelease : Expression; index : SIZE; pos : SIGNED32; nbr : ARRAY 8 OF CHAR; caseEqual : BOOLEAN; file : File;
 		BEGIN
 			LOOP
 				IF scanner.Get(token) THEN
@@ -2381,7 +2381,7 @@ TYPE
 			RETURN currentRelease = NIL;
 		END ParsePackage;
 
-		PROCEDURE ParseBuildPrefixes(builds : Builds; VAR token : Token; VAR release : Expression; VAR pos : LONGINT) : BOOLEAN;
+		PROCEDURE ParseBuildPrefixes(builds : Builds; VAR token : Token; VAR release : Expression; VAR pos : SIGNED32) : BOOLEAN;
 
 			(* Factor = Identifier | '~' Factor | '(' Prefixes ')'. *)
 			PROCEDURE Factor (VAR value: Expression): BOOLEAN;
@@ -2545,7 +2545,7 @@ PROCEDURE GetModuleInfo(
 					VAR error : BOOLEAN);
 
 	PROCEDURE SkipComments(in : Streams.Reader);
-	VAR level, oldLevel: LONGINT; oldPosition: Streams.Position; ch, nextCh : CHAR;
+	VAR level, oldLevel: SIGNED32; oldPosition: Streams.Position; ch, nextCh : CHAR;
 	BEGIN
 		ASSERT((in # NIL) & (in.CanSetPos()));
 		level := 0;
@@ -2721,7 +2721,7 @@ BEGIN
 	END;
 END GetModuleInfo;
 
-PROCEDURE VersionToString(major, minor : WORD; VAR string : ARRAY OF CHAR);
+PROCEDURE VersionToString(major, minor : INTEGER; VAR string : ARRAY OF CHAR);
 VAR temp : ARRAY 16 OF CHAR;
 BEGIN
 	Strings.IntToStr(major, string); Strings.Append(string, ".");
@@ -2794,8 +2794,8 @@ END MakeMessage;
 PROCEDURE GetReader(file : File; diagnostics : Diagnostics.Diagnostics) : Streams.Reader;
 VAR
 	reader : Streams.Reader;
-	fileReader : Files.Reader; ch1, ch2 : CHAR; offset : LONGINT;
-	text : Texts.Text; textReader : TextUtilities.TextReader; format, res: WORD;
+	fileReader : Files.Reader; ch1, ch2 : CHAR; offset : SIGNED32;
+	text : Texts.Text; textReader : TextUtilities.TextReader; format, res: INTEGER;
 	message : ARRAY 256 OF CHAR;
 BEGIN
 	ASSERT((file # NIL) & (diagnostics # NIL));
@@ -2835,7 +2835,7 @@ END GetReader;
 PROCEDURE CallCommand(CONST command, arguments : ARRAY OF CHAR; context : Commands.Context);
 VAR
 	newContext : Commands.Context; arg : Streams.StringReader;
-	msg : ARRAY 128 OF CHAR; res : WORD;
+	msg : ARRAY 128 OF CHAR; res : INTEGER;
 BEGIN
 	NEW(arg, 256); arg.Set(arguments);
 	NEW(newContext, NIL, arg, context.out, context.error, context.caller);
@@ -2871,7 +2871,7 @@ PROCEDURE ParseBuildFile*(
 	log: Streams.Writer;
 	diagnostics : Diagnostics.Diagnostics
 	) : BOOLEAN;
-VAR text : Texts.Text; format : LONGINT; res: WORD; message : ARRAY 256 OF CHAR;
+VAR text : Texts.Text; format : SIGNED32; res: INTEGER; message : ARRAY 256 OF CHAR;
 BEGIN
 	log.String("Loading package description file "); log.String(filename); log.String(" ... ");
 	log.Update;
@@ -2896,7 +2896,7 @@ END ParseBuildFile;
 PROCEDURE ParseText(
 	text : Texts.Text;
 	CONST source: ARRAY OF CHAR;
-	pos: LONGINT; (* ignore *)
+	pos: SIGNED32; (* ignore *)
 	CONST pc, opt: ARRAY OF CHAR;
 	log: Streams.Writer; diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 VAR
@@ -2926,7 +2926,7 @@ VAR
 	build : SIZE; ignore : Streams.StringWriter; error, ignoreError, checkAll : BOOLEAN;
 
 	PROCEDURE CreateRamDisk(context : Commands.Context) : BOOLEAN;
-	VAR res : WORD; msg : ARRAY 128 OF CHAR; fs : Files.FileSystem;
+	VAR res : INTEGER; msg : ARRAY 128 OF CHAR; fs : Files.FileSystem;
 	BEGIN
 		Commands.Call("FSTools.Mount CHECKBUILDS RamFS 500000 4096", {Commands.Wait}, res, msg);
 		IF (res # Commands.Ok) THEN
@@ -2937,7 +2937,7 @@ VAR
 	END CreateRamDisk;
 
 	PROCEDURE UnmountRamDisk(context : Commands.Context);
-	VAR res : WORD; msg : ARRAY 128 OF CHAR;
+	VAR res : INTEGER; msg : ARRAY 128 OF CHAR;
 	BEGIN
 		Commands.Call("FSTools.Unmount CHECKBUILDS", {Commands.Wait}, res, msg);
 		IF (res # Commands.Ok) THEN
@@ -2947,8 +2947,8 @@ VAR
 
 	PROCEDURE DeleteFiles(CONST pattern : ARRAY OF CHAR);
 	VAR
-		enum : Files.Enumerator; flags : SET; time, date : LONGINT; size : Files.Size; name : Files.FileName;
-		res : WORD;
+		enum : Files.Enumerator; flags : SET; time, date : SIGNED32; size : Files.Size; name : Files.FileName;
+		res : INTEGER;
 	BEGIN
 		NEW(enum); enum.Open(pattern, {});
 		WHILE enum.GetEntry(name, flags, time, date, size) DO
@@ -3030,7 +3030,7 @@ VAR
 	buildFile, mask, fullname, path, filename : Files.FileName;
 	enumerator : Files.Enumerator;
 	flags : SET;
-	ignore : LONGINT;
+	ignore : SIGNED32;
 	size : Files.Size;
 BEGIN
 	NEW(options);
@@ -3134,10 +3134,10 @@ END Analyze;
 PROCEDURE Check*(context : Commands.Context); (** [Options] {buildname} ~ *)
 VAR
 	filename : Files.FileName; builds : Builds; diagnostics : Diagnostics.DiagnosticsList;
-	options : Options.Options; nofWorkers : LONGINT;
+	options : Options.Options; nofWorkers : SIGNED32;
 
 	PROCEDURE MarkBuilds(context : Commands.Context; builds : Builds) : BOOLEAN;
-	VAR build : BuildObj; name : Name; nofMarked, i : LONGINT; error : BOOLEAN;
+	VAR build : BuildObj; name : Name; nofMarked, i : SIGNED32; error : BOOLEAN;
 	BEGIN
 		ASSERT((context # NIL) & (builds # NIL));
 		nofMarked := 0;
@@ -3203,7 +3203,7 @@ BEGIN
 	RETURN diagnostics.nofErrors = 0;
 END CheckDiagnostics;
 
-PROCEDURE ImportInformation(mode : LONGINT; context : Commands.Context);
+PROCEDURE ImportInformation(mode : SIGNED32; context : Commands.Context);
 VAR
 	options : Options.Options; diagnostics : Diagnostics.DiagnosticsList;
 	builds : Builds; build : BuildObj;
@@ -3276,7 +3276,7 @@ VAR
 	buildname : ARRAY 32 OF CHAR;
 	start0 : Dates.DateTime;
 	error : BOOLEAN;
-	nofWorkers : LONGINT; res: WORD;
+	nofWorkers : SIGNED32; res: INTEGER;
 BEGIN
 	NEW(options);
 	options.Add("b", "build", Options.Flag);
@@ -3394,8 +3394,8 @@ VAR
 	buildname : ARRAY 32 OF CHAR;
 	start0 : Dates.DateTime;
 	error : BOOLEAN;
-	zipMethod, zipStrategy : LONGINT;
-	nofWorkers : LONGINT; res: WORD;
+	zipMethod, zipStrategy : SIGNED32;
+	nofWorkers : SIGNED32; res: INTEGER;
 BEGIN
 	NEW(options);
 	options.Add("b", "build", Options.Flag);

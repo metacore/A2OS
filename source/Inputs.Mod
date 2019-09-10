@@ -98,23 +98,23 @@ TYPE
 	KeyboardMsg* = RECORD (Message)
 		ch*: CHAR;	(** extended ASCII key code, or 0X if not relevant *)
 		flags*: SET;	(** key flags *)
-		keysym*: LONGINT	(** X11-compatible key code *)
+		keysym*: SIGNED32	(** X11-compatible key code *)
 	END;
 
 	MouseMsg* = RECORD (Message)
 		keys*: SET;	(** mouse key state. *)
-		dx*, dy*, dz*: LONGINT	(** mouse movement vector. *)
+		dx*, dy*, dz*: SIGNED32	(** mouse movement vector. *)
 	END;
 
 	AbsMouseMsg*= RECORD(Message);
 		keys*: SET;
-		x*,y*,z*,dx*,dy*,dz*: LONGINT;
+		x*,y*,z*,dx*,dy*,dz*: SIGNED32;
 	END;
 
 	PointerMsg* = RECORD (Message)
 		keys*: SET;	(** pointer key state. *)
-		x*, y*, z*: LONGINT;	(** pointer position. *)
-		mx*, my*, mz*: LONGINT	(** pointer max values. *)
+		x*, y*, z*: SIGNED32;	(** pointer position. *)
+		mx*, my*, mz*: SIGNED32	(** pointer max values. *)
 	END;
 
 TYPE
@@ -142,7 +142,7 @@ TYPE
 	Pointer* = OBJECT (Sink)	(** convert incremental movements into absolute positions *)
 		VAR
 			cur: PointerMsg;
-			threshold, speedup: LONGINT;
+			threshold, speedup: SIGNED32;
 			fixedKeys: SET;
 
 		PROCEDURE Update;
@@ -167,7 +167,7 @@ TYPE
 		END SetKeys;
 
 		PROCEDURE Handle*(VAR m: Message);
-		VAR dx, dy: LONGINT;
+		VAR dx, dy: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF m IS MouseMsg THEN
 				WITH m: MouseMsg DO
@@ -188,13 +188,13 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE SetLimits*(mx, my, mz: LONGINT);
+		PROCEDURE SetLimits*(mx, my, mz: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			cur.mx := mx; cur.my := my; cur.mz := mz;
 			Update
 		END SetLimits;
 
-		PROCEDURE &Init*(t, s: LONGINT);
+		PROCEDURE &Init*(t, s: SIGNED32);
 		BEGIN
 			threshold := t; speedup := s;
 			cur.x := 0; cur.y := 0; cur.z := 0;
@@ -242,7 +242,7 @@ TYPE
 	OberonInput* = OBJECT (Plugins.Plugin)
 		VAR timer-: Kernel.Timer;
 
-		PROCEDURE Mouse*(VAR x, y: INTEGER; VAR keys:SET);
+		PROCEDURE Mouse*(VAR x, y: SIGNED16; VAR keys:SET);
 		BEGIN
 			HALT(99)	(* abstract *)
 		END Mouse;
@@ -252,7 +252,7 @@ TYPE
 			HALT(99)	(* abstract *)
 		END Read;
 
-		PROCEDURE Available*(VAR num: INTEGER; VAR break: BOOLEAN);
+		PROCEDURE Available*(VAR num: SIGNED16; VAR break: BOOLEAN);
 		BEGIN
 			HALT(99)	(* abstract *)
 		END Available;
@@ -307,7 +307,7 @@ BEGIN
 END NewBroadcaster;
 
 PROCEDURE Init;
-VAR s: ARRAY 16 OF CHAR; i: SIZE; threshold, speedup: LONGINT;
+VAR s: ARRAY 16 OF CHAR; i: SIZE; threshold, speedup: SIGNED32;
 BEGIN
 	Machine.GetConfig("Threshold", s);
 	i := 0; threshold := Machine.StrToInt(i, s);

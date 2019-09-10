@@ -7,7 +7,7 @@ IMPORT
 CONST
 	DefaultWidth = 320;
 	DefaultHeight = 240;
-	InvalidPosition* =MIN(LONGINT);
+	InvalidPosition* =MIN(SIGNED32);
 	FlagMoveable* = 20;
 	FlagSmoothGraphics* = 21;
 
@@ -153,7 +153,7 @@ VAR
 	ignoreMsg : ARRAY 1 OF CHAR;
 	generatorProc : XML.GeneratorProcedure;
 	c : XML.Content; component : Repositories.Component;
-	id: SIZE; res: WORD;
+	id: SIZE; res: INTEGER;
 BEGIN
 	IF Repositories.SplitName(filename, repositoryName, componentName, id) & (repositoryName # "") THEN
 		(* Retrieve component from repository *)
@@ -220,7 +220,7 @@ PROCEDURE Open*(context : Commands.Context); (** [Options] <RepositoryName:Compo
 VAR
 	options : Options.Options;
 	filename : ARRAY 128 OF CHAR;
-	x,y, width, height: LONGINT;
+	x,y, width, height: SIGNED32;
 	flags: SET;
 	c: WMComponents.Component;
 	properties: ARRAY 256 OF CHAR;
@@ -261,7 +261,7 @@ PROCEDURE Store*(context: Commands.Context);
 VAR
 	filename, name, ext, formName : ARRAY 256 OF CHAR;
 	form: WMComponents.Component;
-	id: SIZE; res: WORD;
+	id: SIZE; res: INTEGER;
 	originator: WMComponents.Component;
 	parent: XML.Element;
 BEGIN{EXCLUSIVE}

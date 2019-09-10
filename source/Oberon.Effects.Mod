@@ -26,26 +26,26 @@ CONST markW = 5; GravQ = 4; MinGrav = 2;
 			left = 2; middle = 1; right = 0;
 
 TYPE
-	Callback* = PROCEDURE (MX, MY, X, Y, W, H: INTEGER; keysum: SET);
+	Callback* = PROCEDURE (MX, MY, X, Y, W, H: SIGNED16; keysum: SET);
 
 	Area = RECORD
-		X, Y, W, H: INTEGER;
+		X, Y, W, H: SIGNED16;
 		buf: POINTER TO ARRAY OF CHAR;
-		pix: LONGINT;
+		pix: SIGNED32;
 		offscreen: BOOLEAN
 	END;
 
 	(* --- *)
 
 	Tracker = POINTER TO TrackerDesc;
-	Drawer = PROCEDURE (T : Tracker; X, Y : INTEGER);
+	Drawer = PROCEDURE (T : Tracker; X, Y : SIGNED16);
     TrackerDesc = RECORD
     	R: Display3.Mask;
     	exit: BOOLEAN;
     	keysum, keys: SET;
-    	MX, MY, X, Y, W, H: INTEGER;
+    	MX, MY, X, Y, W, H: SIGNED16;
     	Fade, Draw: Drawer;
-    	X0, Y0: INTEGER
+    	X0, Y0: SIGNED16
     END;
 
 VAR
@@ -55,33 +55,33 @@ VAR
 	MoveHand*: Oberon.Marker;		(** Marker used to indicate a moving operation. *)
 	CopyHand*: Oberon.Marker;		(** Marker used to indicate a copying operation. *)
 	Cross*: Oberon.Marker;		(** Marker used by Rembrandt. *)
-	gravity*: INTEGER;		(** Size of gravity spot used for "snapping" the cursor. *)
+	gravity*: SIGNED16;		(** Size of gravity spot used for "snapping" the cursor. *)
 
 	moveRect, cross, bar, highlight: Tracker;
 
 	flatHand, pointHand: Display.Pattern;
 	movePat, copyPat, crossPat, crossPat2: Display.Pattern;
 	block, A: Area;
-	snapX, snapY, snapW, snapH: INTEGER;
+	snapX, snapY, snapW, snapH: SIGNED16;
 
-	X0, Y0, bX, bY: INTEGER; (* global tracker variables; complete bullshit, must be deleted ! *)
+	X0, Y0, bX, bY: SIGNED16; (* global tracker variables; complete bullshit, must be deleted ! *)
 
 	arrowshape: Display.Pattern;
 
-PROCEDURE Min(x, y: INTEGER): INTEGER;
+PROCEDURE Min(x, y: SIGNED16): SIGNED16;
 BEGIN IF x < y THEN RETURN x ELSE RETURN y END END Min;
 
-PROCEDURE Max(x, y: INTEGER): INTEGER;
+PROCEDURE Max(x, y: SIGNED16): SIGNED16;
 BEGIN IF x > y THEN RETURN x ELSE RETURN y END  END Max;
 
 (** Set the snapping grid origin and width and height used for all future effects. *)
-PROCEDURE SetSnap*(sX, sY, sW, sH: INTEGER);
+PROCEDURE SetSnap*(sX, sY, sW, sH: SIGNED16);
 BEGIN snapX := sX; snapY := sY; snapW := sW; snapH := sH
 END SetSnap;
 
 (** Snap X, Y to the snapping grid. *)
-PROCEDURE Snap*(VAR X, Y: INTEGER);
-VAR sX, sY: INTEGER;
+PROCEDURE Snap*(VAR X, Y: SIGNED16);
+VAR sX, sY: SIGNED16;
 BEGIN
 	sX := snapW - snapX MOD snapW; sY := snapH- snapY MOD snapH;
 	X := (X + sX + snapW DIV 2) DIV snapW * snapW - sX;
@@ -89,15 +89,15 @@ BEGIN
 END Snap;
 
 PROCEDURE FadeMouse;
-	VAR cx,cy,cw,ch : INTEGER;
+	VAR cx,cy,cw,ch : SIGNED16;
 BEGIN
 	Display.GetClip(cx,cy,cw,ch); Display.ResetClip;
 	Oberon.FadeCursor(Oberon.Mouse);
 	Display.SetClip(cx,cy,cw,ch);
 END FadeMouse;
 
-PROCEDURE GetBlock(X, Y, W, H: INTEGER; VAR A: Area; cursor: BOOLEAN);
-VAR dX: INTEGER;  size: LONGINT;
+PROCEDURE GetBlock(X, Y, W, H: SIGNED16; VAR A: Area; cursor: BOOLEAN);
+VAR dX: SIGNED16;  size: SIGNED32;
 BEGIN
 		(* clip to full display *)
 	IF X < 0 THEN INC(W, X);  X := 0 END;
@@ -124,7 +124,7 @@ BEGIN
 END GetBlock;
 
 PROCEDURE RestoreBlock(VAR A: Area; cursor: BOOLEAN);
-VAR cx,cy,cw,ch,dX: INTEGER;
+VAR cx,cy,cw,ch,dX: SIGNED16;
 BEGIN
 	Display.GetClip(cx,cy,cw,ch);
 	Display.ResetClip;
@@ -143,8 +143,8 @@ END RestoreBlock;
 
 (** Temporarily save a part of the display in an offscreen buffer. Note that the height of the buffer might be limited from
 platform to platform. *)
-PROCEDURE OpenMenu*(X, Y, W, H: INTEGER);
-VAR cx,cy,cw,ch: INTEGER;
+PROCEDURE OpenMenu*(X, Y, W, H: SIGNED16);
+VAR cx,cy,cw,ch: SIGNED16;
 BEGIN
 	Display.GetClip(cx,cy,cw,ch);
 	Display.ResetClip;
@@ -159,8 +159,8 @@ END CloseMenu;
 
 (** Tempory save a part of the display in an offscreen buffer. This area must be small, and is thought for saving the
 areas under non-inverting cursors. *)
-PROCEDURE OpenCursor*(X, Y, W, H: INTEGER);
-VAR cx,cy,cw,ch: INTEGER;
+PROCEDURE OpenCursor*(X, Y, W, H: SIGNED16);
+VAR cx,cy,cw,ch: SIGNED16;
 BEGIN
 	Display.GetClip(cx,cy,cw,ch);
 	Display.ResetClip;
@@ -174,18 +174,18 @@ BEGIN RestoreBlock(block, TRUE)
 END CloseCursor;
 
 (** Returns TRUE if mx, my is within gravity pixels from X, Y. *)
-PROCEDURE Invicinity*(mx, my, X, Y: LONGINT): BOOLEAN;
+PROCEDURE Invicinity*(mx, my, X, Y: SIGNED32): BOOLEAN;
 BEGIN RETURN (mx - X) * (mx - X) + (my - Y) * (my - Y) < gravity * gravity
 END Invicinity;
 
 (** Returns TRUE if mx, my is inside the rectange X, Y, W, H. *)
-PROCEDURE Inside*(mx, my, X, Y, W, H: INTEGER): BOOLEAN;
+PROCEDURE Inside*(mx, my, X, Y, W, H: SIGNED16): BOOLEAN;
 BEGIN RETURN (mx >= X) & (mx < X + W) & (my >= Y) & ( my < Y + H)
 END Inside;
 
 (** Returns TRUE if mx, my is near (within gravity) one of the four corners of  X, Y, W, H. The gravity is tempory adjusted should W, H be too small. *)
-PROCEDURE InCorner*(mx, my, X, Y, W, H: INTEGER): BOOLEAN;
-VAR hg, vg: INTEGER;
+PROCEDURE InCorner*(mx, my, X, Y, W, H: SIGNED16): BOOLEAN;
+VAR hg, vg: SIGNED16;
 BEGIN
 	IF (W <= gravity*3) OR (H <= gravity*3) THEN
 		hg := Min(gravity, Max(W DIV GravQ, MinGrav)); vg := Min(gravity, Max(H DIV GravQ, MinGrav));
@@ -202,8 +202,8 @@ BEGIN
 END InCorner;
 
 (** Returns TRUE if mx, my is inside the border of X, Y, W, H (gravity is used). The gravity is tempory adjusted should W, H be too small. *)
-PROCEDURE InBorder*(mx, my, X, Y, W, H: INTEGER): BOOLEAN;
-VAR hg, vg: INTEGER;
+PROCEDURE InBorder*(mx, my, X, Y, W, H: SIGNED16): BOOLEAN;
+VAR hg, vg: SIGNED16;
 BEGIN
 	IF (W <= gravity*3) OR (H <= gravity*3) THEN
 		hg := Min(gravity, Max(W DIV GravQ, MinGrav)); vg := Min(gravity, Max(H DIV GravQ, MinGrav));
@@ -220,11 +220,11 @@ BEGIN
 END InBorder;
 
 (** Returns TRUE if mx, my is within gravity pixels of the line from X, Y to X1, Y1. *)
-PROCEDURE InLineVicinity*(mx, my, X, Y, X1, Y1: INTEGER): BOOLEAN;
-VAR  w, h, pw, ph, det,len : LONGINT;
+PROCEDURE InLineVicinity*(mx, my, X, Y, X1, Y1: SIGNED16): BOOLEAN;
+VAR  w, h, pw, ph, det,len : SIGNED32;
 
-	PROCEDURE Between(x, a, b: INTEGER): BOOLEAN;
-	VAR min, max: INTEGER;
+	PROCEDURE Between(x, a, b: SIGNED16): BOOLEAN;
+	VAR min, max: SIGNED16;
 	BEGIN
 		min := Min(a, b); max := Max(a, b);
 		RETURN (min - gravity <= x) & (x <= max + gravity);
@@ -246,20 +246,20 @@ BEGIN
 END InLineVicinity;
 
 (** Returns TRUE if the two rectangles intersect each other. *)
-PROCEDURE Intersect*(X, Y, W, H, X1, Y1, W1, H1: INTEGER): BOOLEAN;
+PROCEDURE Intersect*(X, Y, W, H, X1, Y1, W1, H1: SIGNED16): BOOLEAN;
 BEGIN
 	RETURN (X + W > X1) & (X1 + W1 > X) & (Y + H > Y1) & (Y1 + H1 > Y)
 END Intersect;
 
-PROCEDURE TrackerValues(tracker : Tracker; VAR keys, keysum : SET; VAR MX, MY, X, Y, W, H : INTEGER);
+PROCEDURE TrackerValues(tracker : Tracker; VAR keys, keysum : SET; VAR MX, MY, X, Y, W, H : SIGNED16);
 BEGIN
 	MX := tracker.MX; MY :=  tracker.MY;
 	X := tracker.X; Y := tracker.Y; W := tracker.W; H := tracker.H; keys := tracker.keys; keysum := tracker.keysum
 END TrackerValues;
 
 (** Polls the mouse, continually drawing the specified marker, until the mouse snaps to the nearest grid position. *)
-PROCEDURE TrackMouse*(VAR keys: SET; VAR X, Y: INTEGER; marker: Oberon.Marker);
-VAR k: SET; x, y, cx, cy, cw, ch: INTEGER;
+PROCEDURE TrackMouse*(VAR keys: SET; VAR X, Y: SIGNED16; marker: Oberon.Marker);
+VAR k: SET; x, y, cx, cy, cw, ch: SIGNED16;
 BEGIN
 	Display.GetClip(cx, cy, cw, ch); Display.ResetClip();
 	Snap(X,Y);
@@ -271,7 +271,7 @@ BEGIN
 END TrackMouse;
 
 PROCEDURE Track (tracker : Tracker; marker: Oberon.Marker);
-	VAR MX, MY: INTEGER; keys: SET;
+	VAR MX, MY: SIGNED16; keys: SET;
 BEGIN
 	MX := tracker.MX; MY := tracker.MY; keys :=  tracker.keys;
 	Snap(MX, MY);
@@ -289,7 +289,7 @@ BEGIN
 END Track;
 
 PROCEDURE TrackDrag (tracker : Tracker);
-	VAR MX, MY, x, y, cx, cy, cw, ch: INTEGER; k, keys: SET;
+	VAR MX, MY, x, y, cx, cy, cw, ch: SIGNED16; k, keys: SET;
 BEGIN
 	MX := tracker.MX; MY := tracker.MY; keys :=  tracker.keys;
 	Snap(MX, MY);
@@ -324,7 +324,7 @@ BEGIN
 	END
 END TrackDrag;
 
-PROCEDURE OpenTracker(tracker : Tracker;  R : Display3.Mask; draw, fade : Drawer; keys : SET; MX, MY, X, Y, W, H : INTEGER);
+PROCEDURE OpenTracker(tracker : Tracker;  R : Display3.Mask; draw, fade : Drawer; keys : SET; MX, MY, X, Y, W, H : SIGNED16);
 BEGIN
 	IF tracker.Draw = NIL  THEN tracker.Draw := draw END;
 	IF tracker.Fade = NIL THEN tracker.Fade := fade END;
@@ -335,14 +335,14 @@ BEGIN
 END OpenTracker;
 
 (* ------MoveRect---------------------------------------------------- *)
-PROCEDURE drawMoveRect(T: Tracker; X, Y : INTEGER);
+PROCEDURE drawMoveRect(T: Tracker; X, Y : SIGNED16);
 BEGIN
 	T.exit := T.keys = {};
 	T.X := X - T.X0; T.Y := Y - T.Y0;
 	Display3.Rect(T.R,Display3.invertC,Display.solid,T.X, T.Y, T.W, T.H, 1, Display.invert)
 END drawMoveRect;
 
-PROCEDURE OpenMoveRect(tracker : Tracker; R : Display3.Mask; keys : SET; MX, MY, X, Y, W, H : INTEGER);
+PROCEDURE OpenMoveRect(tracker : Tracker; R : Display3.Mask; keys : SET; MX, MY, X, Y, W, H : SIGNED16);
 BEGIN Snap(MX, MY);
 	OpenTracker(tracker,R,drawMoveRect,drawMoveRect,keys,MX, MY, X, Y, W, H);
 	tracker.X0 := MX - tracker.X; tracker.Y0 := MY - tracker.Y
@@ -350,7 +350,7 @@ END OpenMoveRect;
 
 (* ------ Cross ---------------------------------------------------- *)
 
-PROCEDURE drawCross(T : Tracker; X, Y : INTEGER);
+PROCEDURE drawCross(T : Tracker; X, Y : SIGNED16);
 BEGIN
 	(* jm fix *)
 	T.MX := Max(T.X, X); T.MX := Min(T.MX, T.X + T.W - 1);
@@ -360,21 +360,21 @@ BEGIN
 	Display.CopyPattern(Display.FG, Display.cross, T.MX - markW, T.MY - markW, Display.paint)
 END drawCross;
 
-PROCEDURE fadeCross(T : Tracker; X, Y : INTEGER);
+PROCEDURE fadeCross(T : Tracker; X, Y : SIGNED16);
 BEGIN CloseMenu()
 END fadeCross;
 
-PROCEDURE OpenTrackCross(tracker : Tracker; R : Display3.Mask; keys : SET; MX, MY, X, Y, W, H : INTEGER);
+PROCEDURE OpenTrackCross(tracker : Tracker; R : Display3.Mask; keys : SET; MX, MY, X, Y, W, H : SIGNED16);
 BEGIN
 	OpenTracker(tracker, R, drawCross,fadeCross,keys,MX, MY, X, Y, W, H)
 END OpenTrackCross;
 
 (* ------ Highlight ---------------------------------------------------- *)
 
-PROCEDURE drawHighlight(T : Tracker; X, Y : INTEGER);
-	VAR X0 : INTEGER;
+PROCEDURE drawHighlight(T : Tracker; X, Y : SIGNED16);
+	VAR X0 : SIGNED16;
 
-	PROCEDURE Draw(X0 : INTEGER);
+	PROCEDURE Draw(X0 : SIGNED16);
 	BEGIN
 		IF X0 = 1 THEN Display3.Rect(T.R,Display3.invertC,Display.solid,T.X,T.Y,T.W,T.H,1,Display.invert)
 		ELSIF X0 = 0 THEN Display3.ReplConst(T.R, Display3.invertC,T.X,T.Y,T.W,T.H,Display.invert) END;
@@ -391,7 +391,7 @@ BEGIN
 	T.Y0 := (T.Y0 +1) MOD 2
 END drawHighlight;
 
-PROCEDURE OpenHighlight(tracker : Tracker; VAR  R : Display3.Mask; keys : SET; MX, MY, X, Y, W, H : INTEGER);
+PROCEDURE OpenHighlight(tracker : Tracker; VAR  R : Display3.Mask; keys : SET; MX, MY, X, Y, W, H : SIGNED16);
 BEGIN
 	tracker.X0 := 2; tracker.Y0 := 0;
 	OpenTracker(tracker,R, drawHighlight, drawHighlight,keys,MX, MY, X, Y, W, H)
@@ -400,8 +400,8 @@ END OpenHighlight;
 (* -----bar  ------------------------------------------------ *)
 
 (** Given a bar position, calculate the relative bar position. *)
-PROCEDURE BarValue*(X, Y, W, H, B, BW: INTEGER; min, max: LONGINT): LONGINT;
-VAR  d, r, h: LONGINT;
+PROCEDURE BarValue*(X, Y, W, H, B, BW: SIGNED16; min, max: SIGNED32): SIGNED32;
+VAR  d, r, h: SIGNED32;
 BEGIN
 	d := (max - min);
 	IF H > W THEN r := (B - Y - 1 ) * d DIV (H - 2 - BW)
@@ -413,8 +413,8 @@ BEGIN
 END BarValue;
 
 (** Given the min, max, and val values, calculate the absolute bar position. *)
-PROCEDURE BarPos*(X, Y, W, H, BW: INTEGER; min, max, val: LONGINT): INTEGER;
-	VAR  b,  d  : LONGINT;
+PROCEDURE BarPos*(X, Y, W, H, BW: SIGNED16; min, max, val: SIGNED32): SIGNED16;
+	VAR  b,  d  : SIGNED32;
 BEGIN
 	d := (max - min);
 	IF min < max THEN IF val < min THEN val := min ELSIF val > max THEN val := max END
@@ -444,8 +444,8 @@ BEGIN
 	END
 END DrawSlider;
 
-PROCEDURE drawBar(T : Tracker; X, Y : INTEGER);
-	VAR col : INTEGER;
+PROCEDURE drawBar(T : Tracker; X, Y : SIGNED16);
+	VAR col : SIGNED16;
 
 BEGIN
 	T.exit := (T.keys = {}) ;
@@ -472,8 +472,8 @@ BEGIN
 	END
 END drawBar;
 
-PROCEDURE OpenBar(tracker : Tracker; R : Display3.Mask;  keys : SET; MX, MY, X, Y, W, H, B, BW : INTEGER);
-	VAR col,T : INTEGER;
+PROCEDURE OpenBar(tracker : Tracker; R : Display3.Mask;  keys : SET; MX, MY, X, Y, W, H, B, BW : SIGNED16);
+	VAR col,T : SIGNED16;
 BEGIN
 	OpenTracker(tracker, R, drawBar,drawBar,keys,MX, MY, X, Y, W, H);
 	IF tracker.W > tracker.H THEN tracker.X0 := B (*+ X*) + 1; tracker.Y0 := Min(BW,tracker.W-2)
@@ -506,13 +506,13 @@ BEGIN
 END OpenBar;
 
 (** Displays a scroll bar. B is the absolute control knob position and BW the bar width/height. Use BarPos to calculate B. *)
-PROCEDURE Bar*(R: Display3.Mask; X, Y, W, H, B, BW: INTEGER);
+PROCEDURE Bar*(R: Display3.Mask; X, Y, W, H, B, BW: SIGNED16);
 BEGIN
 	OpenBar(bar, R, {}, 0, 0,X, Y, W, H, B, BW)
 END Bar;
 
 (** Drag rectangle X, Y, W, H outline until the mouse button is released. MX, MY is the position where the mouse was released, and keys contains all the mouse buttons that were pressed. *)
-PROCEDURE MoveRect*(R: Display3.Mask; VAR keysum: SET; VAR MX, MY, X, Y, W, H: INTEGER);
+PROCEDURE MoveRect*(R: Display3.Mask; VAR keysum: SET; VAR MX, MY, X, Y, W, H: SIGNED16);
 	VAR keys : SET;
 BEGIN
 	Input.Mouse(keys, MX,MY);
@@ -522,11 +522,11 @@ BEGIN
 END MoveRect;
 
 (** Resize the rectangle X, Y, W, H using rubber-banding. The nearest resize corner is determined according to the mouse position MX, MY. During resizing the callback procedure is continually called.Keysum returns the set of mouse buttons pressed and MX, MY the position where the mouse buttons were released. *)
-PROCEDURE SizeRect*(R: Display3.Mask; VAR keysum: SET; VAR MX, MY, X, Y, W, H: INTEGER; callback: Callback);
-	VAR keys: SET; x0, y0, x1, y1: INTEGER;
+PROCEDURE SizeRect*(R: Display3.Mask; VAR keysum: SET; VAR MX, MY, X, Y, W, H: SIGNED16; callback: Callback);
+	VAR keys: SET; x0, y0, x1, y1: SIGNED16;
 
-	PROCEDURE sizeRect(x0, y0: INTEGER; VAR x1, y1: INTEGER);
-	VAR x, y: INTEGER;
+	PROCEDURE sizeRect(x0, y0: SIGNED16; VAR x1, y1: SIGNED16);
+	VAR x, y: SIGNED16;
 	BEGIN
 		Snap(x1, y1);
 		REPEAT
@@ -552,7 +552,7 @@ BEGIN
 END SizeRect;
 
 (** Track a cross mark inside the rectangle X, Y, W, H. Keysum returns all the mouse buttons pressed and MX, MY the position where the mouse buttons were released. *)
-PROCEDURE TrackCross*(R: Display3.Mask; VAR keysum: SET; VAR MX, MY, X, Y, W, H: INTEGER);
+PROCEDURE TrackCross*(R: Display3.Mask; VAR keysum: SET; VAR MX, MY, X, Y, W, H: SIGNED16);
 VAR keys: SET;
 BEGIN
 	Input.Mouse(keys, MX,MY);
@@ -564,7 +564,7 @@ BEGIN
 END TrackCross;
 
 (** Track the position knob of a scrollbar. By bars are meant scroll bars with a knob. The bar orients itself according to the width/height ratio of the bounding rectangle. The interpolation functions allow you to convert between internal measurements and screen coordinates. *)
-PROCEDURE TrackBar*(R: Display3.Mask; VAR keysum: SET; VAR MX, MY, X, Y, W, H, B, BW: INTEGER);
+PROCEDURE TrackBar*(R: Display3.Mask; VAR keysum: SET; VAR MX, MY, X, Y, W, H, B, BW: SIGNED16);
 VAR keys: SET;
 BEGIN
 	Input.Mouse(keys, MX, MY);
@@ -575,7 +575,7 @@ BEGIN
 END TrackBar;
 
 (** Track mouse in area X, Y, W, H, highlighting the border or inside of the rectangle, depending on the mouse location. Keysum returnes all the mouse buttons pressed and MX, MY the position where the mouse buttons were released. *)
-PROCEDURE TrackHighlight*(R: Display3.Mask; VAR keysum: SET; VAR MX, MY: INTEGER; X, Y, W, H: INTEGER);
+PROCEDURE TrackHighlight*(R: Display3.Mask; VAR keysum: SET; VAR MX, MY: SIGNED16; X, Y, W, H: SIGNED16);
 VAR keys: SET;
 BEGIN
 	Input.Mouse(keys, MX,MY);
@@ -586,8 +586,8 @@ END TrackHighlight;
 
 (* --- Misc --- *)
 
-PROCEDURE DrawFlatHand (x, y: INTEGER);
-VAR s: INTEGER; cx, cy, cw, ch: INTEGER;
+PROCEDURE DrawFlatHand (x, y: SIGNED16);
+VAR s: SIGNED16; cx, cy, cw, ch: SIGNED16;
 BEGIN
 	Display.GetClip(cx,cy,cw,ch);
 	Display.ResetClip;
@@ -606,8 +606,8 @@ BEGIN
 	Display.SetClip(cx,cy,cw,ch);
 END DrawFlatHand;
 
-PROCEDURE DrawPointHand (x, y: INTEGER);
-	VAR s : INTEGER; cx,cy,cw,ch : INTEGER;
+PROCEDURE DrawPointHand (x, y: SIGNED16);
+	VAR s : SIGNED16; cx,cy,cw,ch : SIGNED16;
 BEGIN
 	Display.GetClip(cx,cy,cw,ch);
 	Display.ResetClip;
@@ -626,17 +626,17 @@ BEGIN
 END DrawPointHand;
 
 (* --- NP --- If you want inverting hands
-PROCEDURE FadeFlatHand(x, y: INTEGER);
+PROCEDURE FadeFlatHand(x, y: SIGNED16);
 BEGIN DrawFlatHand(x, y);
 END FadeFlatHand;
 
-PROCEDURE FadePointHand(x, y: INTEGER);
+PROCEDURE FadePointHand(x, y: SIGNED16);
 BEGIN DrawPointHand(x, y);
 END FadePointHand;
 *)
 
-PROCEDURE DrawCopyHand (x, y: INTEGER);
-VAR s: INTEGER;
+PROCEDURE DrawCopyHand (x, y: SIGNED16);
+VAR s: SIGNED16;
 BEGIN
 	s := x DIV Display.Width * Display.Width; x := x - s;
 	IF x < 8 THEN x := 8 ELSIF (x > Display.Width - 8) & (x < Display.Width)  THEN x := Display.Width - 8 END; x := x + s;
@@ -647,8 +647,8 @@ BEGIN
 	Display.CopyPattern (9, copyPat, x, y, Display.paint)
 END DrawCopyHand;
 
-PROCEDURE DrawMoveHand (x, y: INTEGER);
-VAR s: INTEGER;
+PROCEDURE DrawMoveHand (x, y: SIGNED16);
+VAR s: SIGNED16;
 BEGIN
 	s := x DIV Display.Width * Display.Width; x := x - s;
 	IF x < 8 THEN x := 8 ELSIF (x > Display.Width - 8) & (x < Display.Width)  THEN x := Display.Width - 8 END; x := x + s;
@@ -659,7 +659,7 @@ BEGIN
 	Display.CopyPattern (9, movePat, x, y, Display.paint)
 END DrawMoveHand;
 
-PROCEDURE DrawCross (x, y: INTEGER);
+PROCEDURE DrawCross (x, y: SIGNED16);
 CONST d = 11;
 BEGIN
 	OpenCursor(x-d, y-d, 23, 23);
@@ -667,11 +667,11 @@ BEGIN
 	Display.CopyPattern(Display.BG, crossPat2, x-d,y-d, Display.paint)
 END DrawCross;
 
-PROCEDURE Fade(x, y: INTEGER);
+PROCEDURE Fade(x, y: SIGNED16);
 BEGIN  RestoreBlock(block, TRUE); END Fade;
 
-PROCEDURE DrawArrow(x, y: INTEGER);
-VAR cx,cy,cw,ch : INTEGER;
+PROCEDURE DrawArrow(x, y: SIGNED16);
+VAR cx,cy,cw,ch : SIGNED16;
 BEGIN
 	Display.GetClip(cx,cy,cw,ch);
 	Display.ResetClip;
@@ -691,7 +691,7 @@ BEGIN
 	Display.SetClip(cx,cy,cw,ch);
 END DrawArrow;
 
-PROCEDURE FadeArrow(x, y: INTEGER);
+PROCEDURE FadeArrow(x, y: SIGNED16);
 BEGIN
 	RestoreBlock(block, TRUE)
 END FadeArrow;

@@ -46,12 +46,12 @@ TYPE
 
 	Loop = OBJECT
 	VAR
-		startpos: LONGINT;
-		total: LONGINT;
-		current: LONGINT;
+		startpos: SIGNED32;
+		total: SIGNED32;
+		current: SIGNED32;
 		loop: Loop;
 
-		PROCEDURE & Init( pos: LONGINT );
+		PROCEDURE & Init( pos: SIGNED32 );
 		BEGIN
 			startpos := pos;
 		END Init;
@@ -62,22 +62,22 @@ TYPE
 	TaskDesc = RECORD (Oberon.TaskDesc)
 		executorObj: Objects.Object;
 		context: Objects.Object;
-		curnum, num: LONGINT;
+		curnum, num: SIGNED32;
 		interactive: BOOLEAN;
 		text: Texts.Text;
-		pos: LONGINT;
+		pos: SIGNED32;
 		curtext: Texts.Text;
-		curpos: LONGINT;
-		checktime: LONGINT;
+		curpos: SIGNED32;
+		checktime: SIGNED32;
 		contextFrame: Display.Frame;
 		mynext: Task
 	END;
 
 VAR
-	diag: BOOLEAN;  mintime, maxtime, minchecktime: LONGINT;  tempX: INTEGER;  lastcontext: Objects.Object;  found: BOOLEAN;  tasks: Task;
+	diag: BOOLEAN;  mintime, maxtime, minchecktime: SIGNED32;  tempX: SIGNED16;  lastcontext: Objects.Object;  found: BOOLEAN;  tasks: Task;
 	current*, stopped*, demon*: Oberon.Task;  locked*: BOOLEAN;
 
-	PROCEDURE NextLine( text: Texts.Text;  pos: LONGINT ): LONGINT;
+	PROCEDURE NextLine( text: Texts.Text;  pos: SIGNED32 ): SIGNED32;
 	VAR R: Texts.Reader;  ch: CHAR;
 	BEGIN
 		IF pos < text.len THEN
@@ -100,8 +100,8 @@ END;
 END Equal;
 *)
 
-	PROCEDURE NextCommand( VAR text: Texts.Text;  VAR pos: LONGINT;  execute: BOOLEAN;  VAR bt: LONGINT );
-	VAR S: Texts.Scanner;  res: INTEGER;  time, stop: LONGINT;
+	PROCEDURE NextCommand( VAR text: Texts.Text;  VAR pos: SIGNED32;  execute: BOOLEAN;  VAR bt: SIGNED32 );
+	VAR S: Texts.Scanner;  res: SIGNED16;  time, stop: SIGNED32;
 	BEGIN
 		IF current = stopped THEN RETURN END;
 		Oberon.Par.text := text;  Texts.OpenScanner( S, text, pos );
@@ -127,7 +127,7 @@ END Equal;
 	END NextCommand;
 
 	PROCEDURE OneTimeSlice( t: Oberon.Task ): BOOLEAN;
-	VAR start, stop: LONGINT;  task: Task;
+	VAR start, stop: SIGNED32;  task: Task;
 	BEGIN
 		IF current = stopped THEN RETURN TRUE END;
 		start := Oberon.Time();  stop := start + mintime;  task := t( Task );
@@ -210,7 +210,7 @@ END Equal;
 		chain.mynext := t;  t.time := Input.Time();  Oberon.Install( t )
 	END Install;
 
-	PROCEDURE TCopy( t: Texts.Text;  from, to: LONGINT ): Texts.Text;
+	PROCEDURE TCopy( t: Texts.Text;  from, to: SIGNED32 ): Texts.Text;
 	VAR copy: Texts.Text;  b: Texts.Buffer;
 	BEGIN
 		NEW( copy );  Texts.Open( copy, "temp" );  NEW( b );  Texts.OpenBuf( b );  Texts.Save( t, from, to, b );  Texts.Append( copy, b );
@@ -218,9 +218,9 @@ END Equal;
 	END TCopy;
 
 	PROCEDURE Do*;
-	VAR l: antsCommands.tScanList;  num: LONGINT;  pos: LONGINT;  keys: SET;  x, y: INTEGER;
+	VAR l: antsCommands.tScanList;  num: SIGNED32;  pos: SIGNED32;  keys: SET;  x, y: SIGNED16;
 		filename: ARRAY 128 OF CHAR;
-		text: Texts.Text;  task: Task;  context: Objects.Object;  timex: LONGINT;
+		text: Texts.Text;  task: Task;  context: Objects.Object;  timex: SIGNED32;
 	BEGIN
 		IF locked THEN aM.eS( "fofAutomatic is locked, execute fofAutomatic.Unlock to release" );  RETURN END;
 		NEW( task );  task.handle := DoTask;  task.safe := FALSE;  task.time := 0;  context := Gadgets.context;
@@ -239,7 +239,7 @@ END Equal;
 		END;
 		task.num := num;  task.curnum := 0;  task.interactive := antsCommands.FindKeyword( l, "interactive" );
 		IF task.interactive THEN
-			aM.dS( "fofAutomatic: Interactive task" );  task.num := MAX( LONGINT );  Input.Mouse( keys, x, y );
+			aM.dS( "fofAutomatic: Interactive task" );  task.num := MAX( SIGNED32 );  Input.Mouse( keys, x, y );
 			WHILE (keys # {}) DO Input.Mouse( keys, x, y ) END
 		END;
 		IF antsCommands.FindKeyword( l, "safe" ) THEN task.contextFrame := NIL END;
@@ -288,9 +288,9 @@ END Equal;
 
 	(*
 PROCEDURE Do*;
-VAR S: Texts.Scanner;  res: INTEGER;  lastpos: LONGINT;  lasttext: Texts.Text;  l: antsCommands.tScanList;  i,num: LONGINT;
-pos: LONGINT;  diag: BOOLEAN;  interactive: BOOLEAN;  keys: SET;  x,y: INTEGER;  filename: ARRAY 128 OF CHAR;
-text: Texts.Text;  adr: LONGINT; orig,new: User32.Rect; disp: Displays.Display; event: Displays.Event;
+VAR S: Texts.Scanner;  res: SIGNED16;  lastpos: SIGNED32;  lasttext: Texts.Text;  l: antsCommands.tScanList;  i,num: SIGNED32;
+pos: SIGNED32;  diag: BOOLEAN;  interactive: BOOLEAN;  keys: SET;  x,y: SIGNED16;  filename: ARRAY 128 OF CHAR;
+text: Texts.Text;  adr: SIGNED32; orig,new: User32.Rect; disp: Displays.Display; event: Displays.Event;
 BEGIN
 l := antsCommands.ScanFromPar();
 IF ~antsCommands.FindKeyword(l,"iter") THEN
@@ -301,7 +301,7 @@ END;
 interactive := antsCommands.FindKeyword(l,"interactive");
 IF interactive THEN antsToolbox.StartDisplayHelp("Any mouse button inside this window to stop running script."); END;
 IF interactive THEN
-num := MAX(LONGINT); Input.Mouse(keys,x,y); WHILE (keys#{}) DO Input.Mouse(keys,x,y); END;
+num := MAX(SIGNED32); Input.Mouse(keys,x,y); WHILE (keys#{}) DO Input.Mouse(keys,x,y); END;
 END;
 IF antsCommands.FindKeyword(l,"diag") THEN diag := TRUE ELSE diag := FALSE END;
 IF antsCommands.FindKeyword(l,"file") THEN
@@ -364,10 +364,10 @@ END Do;
 
 (* should be unused *)
 	PROCEDURE Schedule*;
-	VAR S: Texts.Scanner;  res: INTEGER;  lastpos: LONGINT;  lasttext: Texts.Text;  l: antsCommands.tScanList;  i, num: LONGINT;  pos: LONGINT;  diag: BOOLEAN;  keys: SET;
-		x, y: INTEGER;
+	VAR S: Texts.Scanner;  res: SIGNED16;  lastpos: SIGNED32;  lasttext: Texts.Text;  l: antsCommands.tScanList;  i, num: SIGNED32;  pos: SIGNED32;  diag: BOOLEAN;  keys: SET;
+		x, y: SIGNED16;
 		filename: ARRAY 128 OF CHAR;
-		text: Texts.Text;  etime, time: LONGINT;
+		text: Texts.Text;  etime, time: SIGNED32;
 	BEGIN
 		l := antsCommands.ScanFromPar( "[>diag] [file=STR] " );  Input.Mouse( keys, x, y );
 		WHILE (keys # {}) DO Input.Mouse( keys, x, y ) END;
@@ -419,7 +419,7 @@ END Do;
 	END Schedule;
 
 	PROCEDURE Pause*;
-	VAR l: antsCommands.tScanList;  time, etime, num: LONGREAL;  keys: SET;  x, y: INTEGER;
+	VAR l: antsCommands.tScanList;  time, etime, num: FLOAT64;  keys: SET;  x, y: SIGNED16;
 	BEGIN
 		l := antsCommands.ScanFromPar( "[time=INT]" );
 		IF antsCommands.GetRealFromKeyword( l, "time", num ) THEN

@@ -31,7 +31,7 @@ TYPE
 	Container* = POINTER TO ContainerDesc;
 	ContainerDesc* = RECORD (vyBase.ObjDesc)
 		vectors*: vyLinks.Link;
-		num*: LONGINT
+		num*: SIGNED32
 	END;
 
 	PROCEDURE HandleAttributes( o: Container;  VAR M: Objects.AttrMsg );
@@ -50,7 +50,7 @@ TYPE
 	END FrameLinks;
 
 	PROCEDURE HandleFileMsg( obj: Container;  VAR msg: Objects.FileMsg );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		IF msg.id = Objects.load THEN
 			Files.ReadInt( msg.R, version );  vyBase.objecthandle( obj, msg );  vyLinks.LoadLinks( msg.R, obj.lib, obj.vectors );
@@ -90,8 +90,8 @@ TYPE
 		END
 	END Handler;
 
-	PROCEDURE GetVector*( c: Container;  num: LONGINT ): vyBase.tVector;
-	VAR i: LONGINT;  list: vyLinks.Link;
+	PROCEDURE GetVector*( c: Container;  num: SIGNED32 ): vyBase.tVector;
+	VAR i: SIGNED32;  list: vyLinks.Link;
 	BEGIN
 		i := 0;  list := c.vectors;
 		WHILE list # NIL DO
@@ -125,7 +125,7 @@ TYPE
 	END New;
 
 	PROCEDURE Add*;
-	VAR l: antsCommands.tScanList;  obj, vect: vyBase.Object;  i: INTEGER;
+	VAR l: antsCommands.tScanList;  obj, vect: vyBase.Object;  i: SIGNED16;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=OBJ [vect={OBJ}]" );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) THEN

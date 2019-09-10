@@ -216,7 +216,7 @@ CONST
 	END CleanDCacheRange;
 
 	(** Invalidate all L1 & L2 data cache entries *)
-	PROCEDURE InvalidateDCache*( dCacheBase: LONGINT );
+	PROCEDURE InvalidateDCache*( dCacheBase: SIGNED32 );
 	CODE
 		LDR R1, [FP, #dCacheBase]	; R1 contains the virtual address of a region of cacheable memory
 		LDR R1, [R1, #0]
@@ -374,7 +374,7 @@ CONST
 			STR	R0, [FP, #dword]
 		END;
 		Trace.String("Cache Size Reg: "); Trace.Address(dword); Trace.Ln;
-		Trace.String("	Cache line size = "); Trace.Int(LSH(LONGINT(1), 2 + dword MOD 8) * 4, 0); Trace.Ln;
+		Trace.String("	Cache line size = "); Trace.Int(LSH(SIGNED32(1), 2 + dword MOD 8) * 4, 0); Trace.Ln;
 		Trace.String("	Associativity = "); Trace.Int(LSH(dword MOD 2000H, -3) + 1, 0); Trace.Ln;
 		Trace.String("	Number of sets = "); Trace.Int(LSH(dword MOD 10000000H, -13) + 1, 0); Trace.Ln;
 	END Info;

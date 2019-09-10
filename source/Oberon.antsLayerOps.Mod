@@ -5,8 +5,8 @@ IMPORT antsViews, antsPictureViews, antsImageViews, antsArrayImages, antsArrayPi
 
 (** initialize image from picture by copying picture contents **)
 	PROCEDURE PictToImage( pict: Pictures.Picture;  img: Images.Image );
-	VAR idx, max, dr, dg, db, pr, pg, pb, y, x, x0, x1: INTEGER;  default: BOOLEAN;  pal: Images.Palette;  fmt: Images.Format;  adr: LONGINT;
-		pix: Images.Pixel;  r, g, b: INTEGER;
+	VAR idx, max, dr, dg, db, pr, pg, pb, y, x, x0, x1: SIGNED16;  default: BOOLEAN;  pal: Images.Palette;  fmt: Images.Format;  adr: SIGNED32;
+		pix: Images.Pixel;  r, g, b: SIGNED16;
 	BEGIN
 		Images.Create( img, pict.width, pict.height, Images.BGRA8888 );
 

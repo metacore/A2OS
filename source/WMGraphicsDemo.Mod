@@ -25,9 +25,9 @@ TYPE
 		END New;
 
 		(* Calculate a polygon in form of a circle *)
-		PROCEDURE MakeCircle(x, y, r, nofPoints: LONGINT; VAR p : ARRAY OF WMGraphics.Point2d);
-		VAR i : LONGINT;
-			inv : REAL;
+		PROCEDURE MakeCircle(x, y, r, nofPoints: SIGNED32; VAR p : ARRAY OF WMGraphics.Point2d);
+		VAR i : SIGNED32;
+			inv : FLOAT32;
 		BEGIN
 			inv := 2 * Math.pi / nofPoints;
 			FOR i := 0 TO nofPoints - 1 DO
@@ -36,7 +36,7 @@ TYPE
 			END
 		END MakeCircle;
 
-		PROCEDURE Filler(canvas : WMGraphics.Canvas; y, x0, x1 : LONGINT);
+		PROCEDURE Filler(canvas : WMGraphics.Canvas; y, x0, x1 : SIGNED32);
 		BEGIN
 			canvas.ScaleImage(bild, WMRectangles.MakeRect(x0, y, x1 + 1, y + 1),
 				WMRectangles.MakeRect(x0, y, x1 + 1, y + 1), WMGraphics.ModeCopy, WMGraphics.ScaleBox);
@@ -49,7 +49,7 @@ TYPE
 
 		PROCEDURE FillDemo;
 		VAR circle : ARRAY  64 OF WMGraphics.Point2d;
-			x , y, r, i : LONGINT;
+			x , y, r, i : SIGNED32;
 		BEGIN
 			x := bild.width DIV 2;
 			y := bild.height DIV 2;
@@ -122,7 +122,7 @@ TYPE
 		PROCEDURE TheEnd;
 		BEGIN
 			canvas.DrawImage(0, 0, bild, WMGraphics.ModeCopy);
-			canvas.Fill(WMRectangles.MakeRect(100, bild.height DIV 2 - 20, bild.width - 100, bild.height DIV 2 + 20), LONGINT(0FFFFFF80H), WMGraphics.ModeSrcOverDst);
+			canvas.Fill(WMRectangles.MakeRect(100, bild.height DIV 2 - 20, bild.width - 100, bild.height DIV 2 + 20), SIGNED32(0FFFFFF80H), WMGraphics.ModeSrcOverDst);
 			canvas.SetFont(WMGraphics.GetFont("Oberon", 20, {WMGraphics.FontBold}));
 			canvas.DrawString(bild.width DIV 2 - 40, bild.height DIV 2 + 5 ,  "The End");
 			Swap;
@@ -139,7 +139,7 @@ VAR s : TestWindow;
 
 (*Gfx offers advanced drawing features, see GfxOverview.html and GfxHowTo.html*)
 PROCEDURE TestGfx*;
-VAR w:WMWindowManager.BufferWindow; c: WMGraphicsGfx.Canvas; t,x0,y0,x,y:LONGINT;
+VAR w:WMWindowManager.BufferWindow; c: WMGraphicsGfx.Canvas; t,x0,y0,x,y:SIGNED32;
 BEGIN
 	NEW(w, 500,500, FALSE);
 	w.SetCanvasGenerator(WMGraphicsGfx.GenCanvas);

@@ -28,16 +28,16 @@ TYPE
 		desc*, file* : Strings.String;
 		author*, purpose* : Strings.String;
 		imports* : Import;
-		linesOfCode : LONGINT;
+		linesOfCode : SIGNED32;
 		ok* : BOOLEAN;
-		maxdepth : LONGINT;
-		level* : LONGINT;
-		nofTotalImports* : LONGINT; (* how often the module is imported *)
-		nofDirectImports* : LONGINT; (* how often the module is imported directly*)
+		maxdepth : SIGNED32;
+		level* : SIGNED32;
+		nofTotalImports* : SIGNED32; (* how often the module is imported *)
+		nofDirectImports* : SIGNED32; (* how often the module is imported directly*)
 		icMod : ModuleInfo;
 		icDecision : BOOLEAN;
 		reference* : ANY;
-		group*, subgroup* : LONGINT;
+		group*, subgroup* : SIGNED32;
 		subsystems* : SET;
 
 		PROCEDURE Dump(details : BOOLEAN);
@@ -88,7 +88,7 @@ TYPE
 	ModuleList* = OBJECT
 	VAR
 		modules* : ModuleArray;
-		nofModules* : LONGINT;
+		nofModules* : SIGNED32;
 		errors : BOOLEAN;
 		s : Scanner.Scanner;
 
@@ -105,7 +105,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Grow;
-		VAR n : ModuleArray; i : LONGINT;
+		VAR n : ModuleArray; i : SIGNED32;
 		BEGIN
 			NEW(n, LEN(modules) * 2);
 			FOR i := 0 TO nofModules - 1 DO n[i] := modules[i] END;
@@ -113,7 +113,7 @@ TYPE
 		END Grow;
 
 		PROCEDURE CalcNofDirectImports;
-		VAR import : Import; i : LONGINT;
+		VAR import : Import; i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO nofModules - 1 DO
 				import := modules[i].imports;
@@ -125,7 +125,7 @@ TYPE
 		END CalcNofDirectImports;
 
 		PROCEDURE CalcTotalImports*;
-		VAR import : Import; i : LONGINT;
+		VAR import : Import; i : SIGNED32;
 		BEGIN
 			CalcNofDirectImports;
 			FOR i := 0 TO nofModules - 1 DO
@@ -137,8 +137,8 @@ TYPE
 			END
 		END CalcTotalImports;
 
-		PROCEDURE CalcLevels*(maxLevel : LONGINT);
-		VAR imp : Import; i, j, l, pass : LONGINT; changed : BOOLEAN;
+		PROCEDURE CalcLevels*(maxLevel : SIGNED32);
+		VAR imp : Import; i, j, l, pass : SIGNED32; changed : BOOLEAN;
 		BEGIN
 			FOR i := 0 TO nofModules - 1 DO
 				IF modules[i].nofTotalImports = 0 THEN modules[i].level := maxLevel;
@@ -153,7 +153,7 @@ TYPE
 				KernelLog.String("Improving level structure, pass "); KernelLog.Int(pass, 0); KernelLog.Ln;
 				FOR i := 0 TO nofModules - 1 DO
 					IF modules[i].nofTotalImports # 0 THEN
-						l := MAX(LONGINT);
+						l := MAX(SIGNED32);
 						FOR j := 0 TO nofModules - 1 DO
 							imp := modules[j].imports;
 							WHILE imp # NIL DO
@@ -172,8 +172,8 @@ TYPE
 			END
 		END CalcLevels;
 
-		PROCEDURE GetDepth*(m : ModuleInfo) : LONGINT;
-		VAR imp : Import; d, max : LONGINT;
+		PROCEDURE GetDepth*(m : ModuleInfo) : SIGNED32;
+		VAR imp : Import; d, max : SIGNED32;
 		BEGIN
 			IF m.maxdepth # -1 THEN RETURN m.maxdepth END;
 			max := -1;
@@ -205,7 +205,7 @@ TYPE
 		END Imports;
 
 		PROCEDURE Dump*(details : BOOLEAN);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO nofModules - 1 DO
 				modules[i].Dump(details);
@@ -213,7 +213,7 @@ TYPE
 		END Dump;
 
 		PROCEDURE GetModule*(CONST name, context : ARRAY OF CHAR) : ModuleInfo;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0; WHILE (i < nofModules) & ((modules[i].name # name) OR (modules[i].context # context)) DO INC(i) END;
 			IF i < nofModules THEN
@@ -242,7 +242,7 @@ TYPE
 			errors := TRUE;
 		END Error;
 
-		PROCEDURE Eat(sym : LONGINT);
+		PROCEDURE Eat(sym : SIGNED32);
 		BEGIN
 			IF s.sym = sym THEN Next;
 			ELSE
@@ -353,7 +353,7 @@ TYPE
 		END ParseModule;
 
 		PROCEDURE ScanModule(CONST filename : ARRAY OF CHAR);
-		VAR text : Texts.Text; format : LONGINT; res: WORD; s : Scanner.Scanner;
+		VAR text : Texts.Text; format : SIGNED32; res: INTEGER; s : Scanner.Scanner;
 		BEGIN
 			COPY(filename, currentFile);
 			NEW(text);
@@ -373,7 +373,7 @@ TYPE
 		END ScanModule;
 
 		PROCEDURE ScanForModules(CONST filemask : ARRAY OF CHAR; out : Streams.Writer);
-		VAR enum : Files.Enumerator; name : ARRAY 256 OF CHAR; flags : SET; time, date: LONGINT; size : Files.Size; nofFiles : SIZE;
+		VAR enum : Files.Enumerator; name : ARRAY 256 OF CHAR; flags : SET; time, date: SIGNED32; size : Files.Size; nofFiles : SIZE;
 		BEGIN
 			IF (out # NIL) THEN out.String("Scanning modules "); out.String(filemask); out.String(" ... "); out.Update; END;
 			nofModules := 0;
@@ -395,8 +395,8 @@ TYPE
 	KillerMsg = OBJECT
 	END KillerMsg;
 
-	RealRect* = RECORD l*, t*, r*, b* : LONGREAL; END;
-	Point = RECORD x, y : LONGREAL END;
+	RealRect* = RECORD l*, t*, r*, b* : FLOAT64; END;
+	Point = RECORD x, y : FLOAT64 END;
 	PointArray = POINTER TO ARRAY OF Point;
 
 	Object = OBJECT
@@ -404,7 +404,7 @@ TYPE
 		aabb: RealRect;
 		parent : Object;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : LONGREAL);
+		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : FLOAT64);
 		BEGIN
 		END Draw;
 
@@ -435,7 +435,7 @@ TYPE
 			INC(nofObj)
 		END Add;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : LONGREAL);
+		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : FLOAT64);
 		VAR i : SIZE;
 		BEGIN
 			FOR i := 0 TO nofObj - 1 DO
@@ -447,7 +447,7 @@ TYPE
 
 	Rectangle = OBJECT(Object)
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : LONGREAL);
+		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : FLOAT64);
 		BEGIN
 			WMGraphicUtilities.DrawRect(canvas,
 				WMRectangles.MakeRect(ENTIER(dx + fx * aabb.l), ENTIER(dy + fy * aabb.t),
@@ -459,7 +459,7 @@ TYPE
 
 	Line = OBJECT(Object)
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : LONGREAL);
+		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : FLOAT64);
 		BEGIN
 			canvas.Line(ENTIER(dx + fx * aabb.l), ENTIER(dy + fy * aabb.t), ENTIER(dx + fx * aabb.r), ENTIER(dy + fy * aabb.b),
 				0FFH, WMGraphics.ModeCopy);
@@ -470,7 +470,7 @@ TYPE
 	Title  = OBJECT(Object)
 	VAR title : ARRAY 100 OF CHAR;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : LONGREAL);
+		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : FLOAT64);
 		BEGIN
 			canvas.SetFont(WMGraphics.GetFont("Vera", ENTIER(75 * fy + 0.5),  {}));
 			IF canvas IS PDF.PDFCanvas THEN canvas(PDF.PDFCanvas).PDFSetFont("Courier", ENTIER(75 * SHORT(fy)), {}) END;
@@ -485,7 +485,7 @@ TYPE
 	VAR
 		from, to : Object;
 		way : PointArray;
-		nofPoints : LONGINT;
+		nofPoints : SIGNED32;
 		a, b : Point;
 
 		PROCEDURE &Init;
@@ -500,8 +500,8 @@ TYPE
 			CalcPath
 		END SetFromTo;
 
-		PROCEDURE CalcDirs(p, d : Point; VAR alternate : LONGINT; VAR d0, d1 : LONGREAL) : LONGINT;
-		VAR l, t : BOOLEAN; dir : LONGINT;
+		PROCEDURE CalcDirs(p, d : Point; VAR alternate : SIGNED32; VAR d0, d1 : FLOAT64) : SIGNED32;
+		VAR l, t : BOOLEAN; dir : SIGNED32;
 		BEGIN
 			l := p.x > d.x; t := p.y > d.y;
 			IF ABS(p.x - d.x) > ABS(p.y - d.y) THEN
@@ -519,10 +519,10 @@ TYPE
 			RETURN dir
 		END CalcDirs;
 
-		PROCEDURE HasIntersection(p : Point; d : LONGINT; VAR mdist : LONGREAL; VAR colBox : RealRect) : BOOLEAN;
+		PROCEDURE HasIntersection(p : Point; d : SIGNED32; VAR mdist : FLOAT64; VAR colBox : RealRect) : BOOLEAN;
 		VAR g : Graphic;
 			o : Object;
-			dist : LONGREAL;
+			dist : FLOAT64;
 			inter, first : BOOLEAN;
 			i : SIZE;
 		BEGIN
@@ -554,7 +554,7 @@ TYPE
 			RETURN ~first
 		END HasIntersection;
 
-		PROCEDURE Go(VAR p : Point; d : LONGINT; dist : LONGREAL);
+		PROCEDURE Go(VAR p : Point; d : SIGNED32; dist : FLOAT64);
 		BEGIN
 			IF TraceSC THEN KernelLog.String("Going "); END;
 			CASE d OF
@@ -568,11 +568,11 @@ TYPE
 
 		PROCEDURE CalcPath;
 		VAR  p : Point;
-			d, altd, lc, lastDir : LONGINT;
-			d0, d1, dist : LONGREAL;
+			d, altd, lc, lastDir : SIGNED32;
+			d0, d1, dist : FLOAT64;
 			colBox : RealRect;
 			ta, tb : Point;
-			rla, rlb : LONGREAL;
+			rla, rlb : FLOAT64;
 		BEGIN
 			a.x := (from.aabb.l + from.aabb.r) / 2; a.y := (from.aabb.t + from.aabb.b) / 2;
 			b.x := (to.aabb.l + to.aabb.r) / 2; b.y := (to.aabb.t + to.aabb.b) / 2;
@@ -624,8 +624,8 @@ TYPE
 			way[nofPoints] := b; INC(nofPoints);
 		END CalcPath;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : LONGREAL);
-		VAR i : LONGINT;
+		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : FLOAT64);
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 1 TO nofPoints - 1 DO
 				canvas.Line(ENTIER(dx + fx * way[i - 1].x), ENTIER(dy + fy * way[i - 1].y),
@@ -637,16 +637,16 @@ TYPE
 	ModuleBox = OBJECT(Rectangle)
 	VAR
 		name, info : ARRAY 64 OF CHAR;
-		color : LONGINT;
+		color : SIGNED32;
 		m : ModuleInfo;
-		rellayerpos : LONGREAL;
+		rellayerpos : FLOAT64;
 
-		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : LONGREAL);
+		PROCEDURE Draw(canvas : WMGraphics.Canvas; dx, dy, fx, fy : FLOAT64);
 		VAR
 			r, rect : WMRectangles.Rectangle;
-			ty : LONGREAL;
+			ty : FLOAT64;
 			sec : ARRAY 30 OF CHAR;
-			i, l : LONGINT;
+			i, l : SIGNED32;
 		BEGIN
 			r := WMRectangles.MakeRect(ENTIER(dx + fx * aabb.l), ENTIER(dy + fy * aabb.t),
 										ENTIER(dx + fx * aabb.r), ENTIER(dy + fy * aabb.b));
@@ -689,7 +689,7 @@ TYPE
 	DrawSpace = OBJECT(WMComponents.VisualComponent)
 	VAR
 		g : Graphic;
-		dx, dy : LONGREAL;
+		dx, dy : FLOAT64;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -697,7 +697,7 @@ TYPE
 			NEW(g);
 		END Init;
 
-		PROCEDURE XSetPos(dx, dy : LONGREAL);
+		PROCEDURE XSetPos(dx, dy : FLOAT64);
 		BEGIN
 			SELF.dx := dx; SELF.dy := dy;
 			Invalidate;
@@ -713,19 +713,19 @@ TYPE
 	SubSystemInfo = RECORD
 		mn : ARRAY 64 OF CHAR;
 		m : ModuleInfo;
-		color : LONGINT;
-		nr, group : LONGINT;
+		color : SIGNED32;
+		nr, group : SIGNED32;
 		propagate : BOOLEAN; (* modules that import modules from this subsystem are part of the subsystem? *)
 	END;
 
 	SubSystems = OBJECT
 	VAR
 		s : ARRAY 1024 OF SubSystemInfo;
-		scount, colorTable : ARRAY 64 OF LONGINT;
-		nofSubSystemInfo : LONGINT;
+		scount, colorTable : ARRAY 64 OF SIGNED32;
+		nofSubSystemInfo : SIGNED32;
 		ml : ModuleList;
 
-		PROCEDURE AddSubSystem(nr : LONGINT; CONST baseModule, context : ARRAY OF CHAR; color, group : LONGINT; propagate : BOOLEAN);
+		PROCEDURE AddSubSystem(nr : SIGNED32; CONST baseModule, context : ARRAY OF CHAR; color, group : SIGNED32; propagate : BOOLEAN);
 		BEGIN
 			COPY(baseModule, s[nr].mn);
 			s[nofSubSystemInfo].m := ml.GetModule(baseModule, context);
@@ -737,10 +737,10 @@ TYPE
 			INC(nofSubSystemInfo)
 		END AddSubSystem;
 
-		PROCEDURE GetColor(snr : LONGINT) : LONGINT;
-		VAR i, res : LONGINT;
+		PROCEDURE GetColor(snr : SIGNED32) : SIGNED32;
+		VAR i, res : SIGNED32;
 		BEGIN
-			res := LONGINT(0FF0000FFH);
+			res := SIGNED32(0FF0000FFH);
 			FOR i := 0 TO nofSubSystemInfo - 1 DO
 				IF s[i].nr = snr THEN res := s[i].color END
 			END;
@@ -749,31 +749,31 @@ TYPE
 
 		PROCEDURE &Init(ml : ModuleList);
 		CONST
-			ColorRuntime = LONGINT(0A0A0FFFFH);
-			ColorUsb = LONGINT(0A0A0A0FFH);
+			ColorRuntime = SIGNED32(0A0A0FFFFH);
+			ColorUsb = SIGNED32(0A0A0A0FFH);
 		VAR
-			i, j : LONGINT;
+			i, j : SIGNED32;
 		BEGIN
 			ASSERT(ml # NIL);
 			SELF.ml := ml;
 			i := 32; j := 32;
 			DEC(j); DEC(j);
-				AddSubSystem(i, "Trace", "A2", LONGINT(ColorRuntime), j, FALSE);
-				AddSubSystem(i, "Machine", "A2", LONGINT(ColorRuntime), j, FALSE);
-				AddSubSystem(i, "Heaps", "A2", LONGINT(ColorRuntime), j, FALSE);
-				AddSubSystem(i, "Modules", "A2", LONGINT(ColorRuntime), j, FALSE);
-				AddSubSystem(i, "Objects", "A2", LONGINT(ColorRuntime), j, FALSE);
-				AddSubSystem(i, "Kernel", "A2", LONGINT(ColorRuntime), j, FALSE);
+				AddSubSystem(i, "Trace", "A2", SIGNED32(ColorRuntime), j, FALSE);
+				AddSubSystem(i, "Machine", "A2", SIGNED32(ColorRuntime), j, FALSE);
+				AddSubSystem(i, "Heaps", "A2", SIGNED32(ColorRuntime), j, FALSE);
+				AddSubSystem(i, "Modules", "A2", SIGNED32(ColorRuntime), j, FALSE);
+				AddSubSystem(i, "Objects", "A2", SIGNED32(ColorRuntime), j, FALSE);
+				AddSubSystem(i, "Kernel", "A2", SIGNED32(ColorRuntime), j, FALSE);
 			DEC(j); DEC(i);
 				AddSubSystem(i, "Sound", "A2", 0008080FFH, j, TRUE);
 			DEC(j); DEC(i);
-				AddSubSystem(i, "WMPerfMonPlugins", "A2", LONGINT(0FF0000FFH), j, TRUE);
+				AddSubSystem(i, "WMPerfMonPlugins", "A2", SIGNED32(0FF0000FFH), j, TRUE);
 			DEC(j); DEC(i);
-				AddSubSystem(i, "UsbDebug", "A2", LONGINT(ColorUsb), j, TRUE);
-				AddSubSystem(i, "UsbDriverLoader", "A2", LONGINT(ColorUsb), j, TRUE);
-				AddSubSystem(i, "Usbdi", "A2", LONGINT(ColorUsb), j, TRUE);
-				AddSubSystem(i, "UsbHcdi", "A2", LONGINT(ColorUsb), j, TRUE);
-				AddSubSystem(i, "UsbHidUP", "A2", LONGINT(ColorUsb), j, TRUE);
+				AddSubSystem(i, "UsbDebug", "A2", SIGNED32(ColorUsb), j, TRUE);
+				AddSubSystem(i, "UsbDriverLoader", "A2", SIGNED32(ColorUsb), j, TRUE);
+				AddSubSystem(i, "Usbdi", "A2", SIGNED32(ColorUsb), j, TRUE);
+				AddSubSystem(i, "UsbHcdi", "A2", SIGNED32(ColorUsb), j, TRUE);
+				AddSubSystem(i, "UsbHidUP", "A2", SIGNED32(ColorUsb), j, TRUE);
 			DEC(j); DEC(i);
 				AddSubSystem(i, "Bluetooth", "A2", 0000080FFH, j, TRUE);
 			DEC(j); DEC(i);
@@ -786,21 +786,21 @@ TYPE
 				AddSubSystem(i, "StringPool", "A2", 0008000FFH, j, TRUE);
 				AddSubSystem(i, "PCDebug", "A2", 0008000FFH, j, TRUE);
 			DEC(j);	DEC(i);
-				AddSubSystem(i, "Network", "A2", LONGINT(0800080FFH), j, TRUE);
+				AddSubSystem(i, "Network", "A2", SIGNED32(0800080FFH), j, TRUE);
 					DEC(i);
-				AddSubSystem(i, "WebHTTPServer", "A2", LONGINT(08000C0FFH), j, TRUE);
+				AddSubSystem(i, "WebHTTPServer", "A2", SIGNED32(08000C0FFH), j, TRUE);
 			DEC(j);	DEC(i);
-				AddSubSystem(i, "WindowManager", "A2", LONGINT(0FFFF80FFH), j, TRUE);
-				AddSubSystem(i, "WMWindowManager", "A2", LONGINT(0FFFF80FFH), j, TRUE);
+				AddSubSystem(i, "WindowManager", "A2", SIGNED32(0FFFF80FFH), j, TRUE);
+				AddSubSystem(i, "WMWindowManager", "A2", SIGNED32(0FFFF80FFH), j, TRUE);
 					DEC(i);
-				AddSubSystem(i, "WMComponents", "A2", LONGINT(0FF8080FFH), j, TRUE);
+				AddSubSystem(i, "WMComponents", "A2", SIGNED32(0FF8080FFH), j, TRUE);
 					DEC(i);
-				AddSubSystem(i, "XMLScanner", "A2", LONGINT(0800080FFH), 0, TRUE);
-				AddSubSystem(i, "XMLObjects", "A2", LONGINT(0800080FFH), 0, TRUE);
+				AddSubSystem(i, "XMLScanner", "A2", SIGNED32(0800080FFH), 0, TRUE);
+				AddSubSystem(i, "XMLObjects", "A2", SIGNED32(0800080FFH), 0, TRUE);
 		END Init;
 
 		PROCEDURE CheckModule(m : ModuleInfo);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			ASSERT((m # NIL) & (m.group = 0) & (m.subgroup = 0));
 			FOR i := 0 TO nofSubSystemInfo - 1 DO
@@ -819,14 +819,14 @@ TYPE
 	ModuleInfoList = POINTER TO ARRAY OF ModuleInfo;
 
 	Level = RECORD
-		n : LONGINT;
+		n : SIGNED32;
 		m : ModuleInfoList;
-		groupLength, groupStart : ARRAY 32 OF LONGINT;
+		groupLength, groupStart : ARRAY 32 OF SIGNED32;
 		(* starting from 0 *)
-		nofGroups : LONGINT;
-		groupCounts : ARRAY 32 OF LONGINT;
-		groupSlots : ARRAY 32 OF LONGINT;
-		yAdvance : LONGINT;
+		nofGroups : SIGNED32;
+		groupCounts : ARRAY 32 OF SIGNED32;
+		groupSlots : ARRAY 32 OF SIGNED32;
+		yAdvance : SIGNED32;
 	END;
 
 	Window* = OBJECT (WMComponents.FormWindow)
@@ -892,7 +892,7 @@ TYPE
 		END ScrollbarsChanged;
 
 		PROCEDURE WritePDF(sender, data : ANY);
-		VAR pdfPage : WMGraphics.Canvas; pdfCreator : PDF.PDFCreator; minf : REAL;
+		VAR pdfPage : WMGraphics.Canvas; pdfCreator : PDF.PDFCreator; minf : FLOAT32;
 		BEGIN
 			NEW(pdfCreator);
 			pdfPage := pdfCreator.NewPage(PDF.PageA0, TRUE, PDF.Unitmm100);
@@ -915,16 +915,16 @@ TYPE
 			levels : POINTER TO ARRAY OF Level;
 			s : ARRAY 10 OF CHAR;
 			m: ModuleInfo;
-			maxDepth : LONGINT;
-			ssStartPos, ms : ARRAY 32 OF LONGINT;
-			sp : LONGINT;
+			maxDepth : SIGNED32;
+			ssStartPos, ms : ARRAY 32 OF SIGNED32;
+			sp : SIGNED32;
 			r : Line;
 			t : Title;
-			maxW, lastG, g, gc, y : LONGINT;
-			maxProb, totSlots : LONGINT;
+			maxW, lastG, g, gc, y : SIGNED32;
+			maxProb, totSlots : SIGNED32;
 
 			PROCEDURE Compare(m0, m1 : ModuleInfo) : BOOLEAN;
-			VAR a, b, c : LONGINT;
+			VAR a, b, c : SIGNED32;
 			BEGIN
 				IF m0.group> m1.group THEN RETURN TRUE
 				ELSIF m0.group < m1.group THEN RETURN FALSE
@@ -944,8 +944,8 @@ TYPE
 				RETURN m0.nofDirectImports < m1.nofDirectImports
 			END Compare;
 
-			PROCEDURE QuickSort(data : ModuleInfoList ; lo, hi: LONGINT);
-			VAR i, j : LONGINT;
+			PROCEDURE QuickSort(data : ModuleInfoList ; lo, hi: SIGNED32);
+			VAR i, j : SIGNED32;
 				t, x : ModuleInfo;
 			BEGIN
 				i := lo; j := hi; x := data[(lo+hi) DIV 2];
@@ -1169,10 +1169,10 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
-PROCEDURE CountLines(text : Texts.Text) : LONGINT;
-VAR reader : Texts.TextReader; char32 : Texts.Char32; nofLines : LONGINT;
+PROCEDURE CountLines(text : Texts.Text) : SIGNED32;
+VAR reader : Texts.TextReader; char32 : Texts.Char32; nofLines : SIGNED32;
 BEGIN
 	ASSERT(text # NIL);
 	NEW(reader, text);

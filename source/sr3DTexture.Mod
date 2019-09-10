@@ -12,7 +12,7 @@ VAR
 	copy : Raster.Mode;
 	p: Raster.Pixel;
 	W,H, bpr,adr, i, j: SIZE;
-	r,g,b: REAL;
+	r,g,b: FLOAT32;
 	pixel,normal: PT;
 	color: COLOR;
 	green: srVoxel.GoutlineVox;
@@ -46,7 +46,7 @@ VAR
 	copy : Raster.Mode;
 	p,q: Raster.Pixel;
 	W,H, bpr,adr, i, j: SIZE;
-	nr,ng,nb,mr,mg,mb: REAL;
+	nr,ng,nb,mr,mg,mb: FLOAT32;
 	pixel,normal: PT;
 	color: COLOR;
 PROCEDURE & new*(n,m: Name);

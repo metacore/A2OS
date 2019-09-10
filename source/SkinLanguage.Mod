@@ -12,7 +12,7 @@ CONST
 TYPE
 	String = Strings.String;
 
-	ReportError* = PROCEDURE {DELEGATE} (pos, line, col : LONGINT; msg : String);
+	ReportError* = PROCEDURE {DELEGATE} (pos, line, col : SIGNED32; msg : String);
 	StringReportError = PROCEDURE {DELEGATE} (msg : String);
 
 	Property = OBJECT
@@ -127,7 +127,7 @@ TYPE
 
 	Scanner* = OBJECT
 	VAR r: Streams.Reader;
-		pos-, oldpos-, line-, col-, oldcol- : LONGINT;
+		pos-, oldpos-, line-, col-, oldcol- : SIGNED32;
 
 			(** initialize with stream to scan *)
 		PROCEDURE & Init*(r : Streams.Reader);
@@ -160,7 +160,7 @@ TYPE
 		PROCEDURE GetString() : String;
 		VAR ch : CHAR;
 			buf : ARRAY Buffersize OF CHAR;
-			i : LONGINT;
+			i : SIGNED32;
 			s : String;
 		BEGIN
 			buf[0] := NextCh(); (* must be '"' *)
@@ -186,7 +186,7 @@ TYPE
 		(* return a string delimited by {, }, :, ;, SP, TAB, EOF, CR or LF *)
 		PROCEDURE GetToken() : String;
 		VAR ch : CHAR; a : ARRAY Buffersize OF CHAR;
-			i : LONGINT; s : String;
+			i : SIGNED32; s : String;
 		BEGIN
 			i := 0;
 			ch := r.Peek();
@@ -231,11 +231,11 @@ TYPE
 		components : ComponentList;
 		warnings : BOOLEAN;
 		prefix : ARRAY 128 OF CHAR; (* name of skinfile || "://" *)
-		prefixLength : LONGINT;
+		prefixLength : SIGNED32;
 
 			(** initialize with bsl-scanner *)
 		PROCEDURE & Init*(CONST filename : ARRAY OF CHAR; s : Scanner);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			scanner := s;
 			reportError := DefaultReportError;
@@ -661,7 +661,7 @@ TYPE
 
 		(* return TRUE if s is not a valid number *)
 		PROCEDURE NoNumber(s : String) : BOOLEAN;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := ORD(s^[0]);
 			IF (i >= ORD('0')) & (i <= ORD('9')) THEN
@@ -724,7 +724,7 @@ TYPE
 
 	END Parser;
 
-PROCEDURE DefaultReportError(pos, line, col: LONGINT; msg: String);
+PROCEDURE DefaultReportError(pos, line, col: SIGNED32; msg: String);
 BEGIN
 	KernelLog.String("ERROR : "); KernelLog.Ln;
 	KernelLog.String("  position : "); KernelLog.Int(pos, 0); KernelLog.Ln;

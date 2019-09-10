@@ -33,34 +33,34 @@ TYPE
 
     PieceDesc = RECORD
       f: Files.File;
-      off: LONGINT;
-      len: LONGINT;
+      off: SIGNED32;
+      len: SIGNED32;
       obj: Objects.Object;
       lib: Objects.Library;
-      ref: INTEGER; (* ref no in obs lib *)
-      col: SHORTINT;
-      voff: SHORTINT;
+      ref: SIGNED16; (* ref no in obs lib *)
+      col: SIGNED8;
+      voff: SIGNED8;
       prev, next: Piece
     END;
 
     Text* = POINTER TO TextDesc;
 
     TextDesc* = RECORD (Objects.ObjDesc)
-      len*: LONGINT;	(** Text consists of characters 0 to T.len - 1. *)
+      len*: SIGNED32;	(** Text consists of characters 0 to T.len - 1. *)
       obs: Objects.Library;	(* Library containing objects located in text. *)
       trailer: Piece;
-      org: LONGINT; (*cache*)
+      org: SIGNED32; (*cache*)
       pce: Piece
     END;
 
     UpdateMsg* = RECORD (Display.FrameMsg)	(** Message broadcast to indicate that part of a text changed. *)
       text*: Text;	(** The text that changed. *)
-      beg*, end*, len*: LONGINT	(** Change location. *)
+      beg*, end*, len*: SIGNED32	(** Change location. *)
     END;
 
     Finder* = RECORD	(** Finder of (non-character) objects located in text. *)
       eot*: BOOLEAN;	(** End-of-text reached during search. *)
-      pos*: LONGINT;	(** Offset of Finder in text. *)
+      pos*: SIGNED32;	(** Offset of Finder in text. *)
       T: Text;
       ref: Piece
     END;
@@ -68,27 +68,27 @@ TYPE
     Reader* = RECORD	(** Character-wise reader of a text stream. *)
       ref: Piece;
       T: Text;
-      org: LONGINT;
-      off: LONGINT;
+      org: SIGNED32;
+      off: SIGNED32;
       R: Files.Rider;
-      stamp: LONGINT;
+      stamp: SIGNED32;
       buf: ARRAY BufSize OF CHAR;
-      bufpos, buflen: LONGINT;
+      bufpos, buflen: SIGNED32;
       lib*: Objects.Library;	(** Library of last character/object read. *)
-      col*: SHORTINT;	(** Color index of last character read. *)
-      voff*: SHORTINT;	(** vertical offset of last character read. *)
+      col*: SIGNED8;	(** Color index of last character read. *)
+      voff*: SIGNED8;	(** vertical offset of last character read. *)
       eot*: BOOLEAN	(** Reader has reached end of the text stream. *)
     END;
 
     Scanner* = RECORD (Reader)	(** Scanner for symbol streams. *)
       nextCh*: CHAR;	(** Character immediately following the last symbol scanned. *)
-      line*: INTEGER;	(** # carriage returns scanned so far. *)
-      class*: INTEGER;	(** Scan result: Int, Real, String etc. *)
-      i*: LONGINT;
-      x*: REAL;
-      y*: LONGREAL;
+      line*: SIGNED16;	(** # carriage returns scanned so far. *)
+      class*: SIGNED16;	(** Scan result: Int, Real, String etc. *)
+      i*: SIGNED32;
+      x*: FLOAT32;
+      y*: FLOAT64;
       c*: CHAR;
-      len*: SHORTINT;	(** Length of name or string scanned. *)
+      len*: SIGNED8;	(** Length of name or string scanned. *)
       s*: ARRAY 256 OF CHAR;
       obj*: Objects.Object
     END;
@@ -96,7 +96,7 @@ TYPE
     Buffer* = POINTER TO BufDesc;	(** Temporary container of text stretches. *)
 
     BufDesc* = RECORD
-      len*: LONGINT;	(** # characters in buffer. *)
+      len*: SIGNED32;	(** # characters in buffer. *)
       header, last: Piece
     END;
 
@@ -104,8 +104,8 @@ TYPE
       R: Files.Rider;
       buf*: Buffer;	(** Associated buffer. *)
       lib*: Objects.Library;	(** Current font/library of characters written. *)
-      col*: SHORTINT;	(** Current color of text being written. *)
-      voff*: SHORTINT	(** Current vertical offset of text being written. *)
+      col*: SIGNED8;	(** Current color of text being written. *)
+      voff*: SIGNED8	(** Current vertical offset of text being written. *)
     END;
 
   VAR TextBlockId* (** First character of a text block. *), DocBlockId, NoSpex, NoSpex2, TextSpex: CHAR;
@@ -115,11 +115,11 @@ TYPE
 
 (** Load text block from ASCII file f to text T. *)
   PROCEDURE LoadAscii* (T: Text; f: Files.File);
-    VAR Q, q: Piece; len: LONGINT;
+    VAR Q, q: Piece; len: SIGNED32;
   BEGIN len := Files.Length(f);
-    NEW(Q); Q.f := Wfile; Q.off := 0; Q.len := 1; Q.ref := MIN(INTEGER);
+    NEW(Q); Q.f := Wfile; Q.off := 0; Q.len := 1; Q.ref := MIN(SIGNED16);
     Q.lib := NIL; Q.col := 127; Q.voff := 0;
-    NEW(q); q.f := f; q.off := 0; q.len := len; q.ref := MIN(INTEGER);
+    NEW(q); q.f := f; q.off := 0; q.len := len; q.ref := MIN(SIGNED16);
     q.lib := Fonts.Default; q.col := 15; q.voff := 0;
     Q.next := q; q.prev := Q; q.next := Q; Q.prev := q;
     T.handle := H; T.obs := NIL;
@@ -128,7 +128,7 @@ TYPE
   END LoadAscii;
 
   PROCEDURE ReadDocHeader(VAR R: Files.Rider; VAR ch: CHAR);
-    VAR len: LONGINT; x, y, w, h: INTEGER; name: ARRAY 256 OF CHAR;
+    VAR len: SIGNED32; x, y, w, h: SIGNED16; name: ARRAY 256 OF CHAR;
   BEGIN Files.Read(R, ch);
     Files.ReadString(R, name);
     Files.ReadInt(R, x); Files.ReadInt(R, y);
@@ -143,18 +143,18 @@ TYPE
   END ReadDocHeader;
 
 (** Load text block from file f at position pos to text T (assumes that the text id has been read already). len returns length. *)
-  PROCEDURE Load* (T: Text; f: Files.File; pos: LONGINT; VAR len: LONGINT);
+  PROCEDURE Load* (T: Text; f: Files.File; pos: SIGNED32; VAR len: SIGNED32);
     VAR
       R, S: Files.Rider;
       Q, q, p: Piece;
-      hlen, tlen, flen, off: LONGINT;
-      N, lib: SHORTINT;
+      hlen, tlen, flen, off: SIGNED32;
+      N, lib: SIGNED8;
       type, ref, tag: CHAR;
       LName: ARRAY 256 OF CHAR;
       Dict: ARRAY 64 OF Objects.Library;
-      i: INTEGER;
+      i: SIGNED16;
   BEGIN
-      NEW(Q); Q.f := Wfile; Q.off := 0; Q.len := 1; Q.ref := MIN(INTEGER);
+      NEW(Q); Q.f := Wfile; Q.off := 0; Q.len := 1; Q.ref := MIN(SIGNED16);
       Q.lib := NIL; Q.col := 127; Q.voff := 0;
       p := Q;
       Files.Set(R, f, pos);
@@ -184,7 +184,7 @@ TYPE
         IF ~(q.lib IS Fonts.Font) THEN
           Files.Set(S, f, off); Files.Read(S, ref); (*q.lib.GetObj(q.lib, ORD(ref), q.obj)*) q.ref := ORD(ref)
         ELSE
-          q.ref := MIN(INTEGER)
+          q.ref := MIN(SIGNED16)
         END;
         Files.Read(R, q.col);
         Files.Read(R, q.voff);
@@ -238,7 +238,7 @@ TYPE
 	END SyncPiece;
 
 (** Store text T on disk file f at position pos. Writes the first id character too. len is the number of bytes written. *)
-  PROCEDURE Store* (T: Text; f: Files.File; pos: LONGINT; VAR len: LONGINT);
+  PROCEDURE Store* (T: Text; f: Files.File; pos: SIGNED32; VAR len: SIGNED32);
 	TYPE
 		ObjsBlock = POINTER TO ObjsBlockDesc;
 		ObjsBlockDesc = RECORD
@@ -248,9 +248,9 @@ TYPE
     VAR
       p, q: Piece;
       R, W: Files.Rider;
-      hlen, flen, rlen, m: LONGINT;
-      id, i: INTEGER;
-      N, n: SHORTINT;
+      hlen, flen, rlen, m: SIGNED32;
+      id, i: SIGNED16;
+      N, n: SIGNED8;
       type, ch: CHAR;
       obj: Objects.Object;
       M: Objects.BindMsg;
@@ -361,7 +361,7 @@ TYPE
   PROCEDURE GenNew (T: Text);
     VAR Q: Piece;
   BEGIN
-    NEW(Q); Q.f := Wfile; Q.off := 0; Q.len := 1; Q.ref := MIN(INTEGER);
+    NEW(Q); Q.f := Wfile; Q.off := 0; Q.len := 1; Q.ref := MIN(SIGNED16);
     Q.lib := NIL; Q.col := 127; Q.voff := 0;
     Q.next := Q; Q.prev := Q;
     T.handle := H; T.obs := NIL;
@@ -371,7 +371,7 @@ TYPE
 
 (** Open text T from file specified by name. A new text is opened when name = "". *)
   PROCEDURE Open* (T: Text; CONST name: ARRAY OF CHAR);
-    VAR f: Files.File; R: Files.Rider; len: LONGINT; ch: CHAR;
+    VAR f: Files.File; R: Files.Rider; len: SIGNED32; ch: CHAR;
   BEGIN
     obs := NIL;
     f := Files.Old(name);
@@ -391,8 +391,8 @@ TYPE
   BEGIN NEW(T); T.handle := H; GenNew (T); Objects.NewObj := T
   END New;
 
-  PROCEDURE FindPiece (T: Text; pos: LONGINT; VAR org: LONGINT; VAR p: Piece);
-	VAR n: LONGINT;
+  PROCEDURE FindPiece (T: Text; pos: SIGNED32; VAR org: SIGNED32; VAR p: Piece);
+	VAR n: SIGNED32;
   BEGIN
     IF pos < T.org THEN T.org := -1; T.pce := T.trailer END;
     org := T.org; p := T.pce; (*from cache*)
@@ -401,10 +401,10 @@ TYPE
     IF n > 50 THEN T.org := org; T.pce := p END
   END FindPiece;
 
-  PROCEDURE SplitPiece (p: Piece; off: LONGINT; VAR pr: Piece);
+  PROCEDURE SplitPiece (p: Piece; off: SIGNED32; VAR pr: Piece);
     VAR q: Piece;
   BEGIN
-    IF off > 0 THEN NEW(q); q.ref := MIN(INTEGER);
+    IF off > 0 THEN NEW(q); q.ref := MIN(SIGNED16);
       q.lib := p.lib; q.col := p.col; q.voff := p.voff;
       q.len := p.len - off;
       q.f := p.f; q.off := p.off + off;
@@ -417,8 +417,8 @@ TYPE
   END SplitPiece;
 
 (** Insert buffer B in text T position pos. B is emptied. *)
-  PROCEDURE Insert* (T: Text; pos: LONGINT; B: Buffer);
-    VAR pl, pr, p, qb, qe: Piece; org: LONGINT; M: UpdateMsg;
+  PROCEDURE Insert* (T: Text; pos: SIGNED32; B: Buffer);
+    VAR pl, pr, p, qb, qe: Piece; org: SIGNED32; M: UpdateMsg;
   BEGIN
     FindPiece(T, pos, org, p); SplitPiece(p, pos - org, pr);
     IF T.org >= org THEN (*adjust cache*)
@@ -444,8 +444,8 @@ TYPE
   END Append;
 
 (** Delete text stretch [beg, end[. *)
-  PROCEDURE Delete* (T: Text; beg, end: LONGINT);
-    VAR pb, pe, pbr, per: Piece; orgb, orge: LONGINT; M: UpdateMsg;
+  PROCEDURE Delete* (T: Text; beg, end: SIGNED32);
+    VAR pb, pe, pbr, per: Piece; orgb, orge: SIGNED32; M: UpdateMsg;
   BEGIN
     IF beg < end THEN
       FindPiece(T, beg, orgb, pb); SplitPiece(pb, beg - orgb, pbr);
@@ -463,8 +463,8 @@ TYPE
   END Delete;
 
 (** Replace [beg, end[ of T with contents of buffer B. B is emptied. *)
-  PROCEDURE Replace* (T: Text; beg, end: LONGINT; B: Buffer);
-    VAR M: UpdateMsg; pb, pe, pbr, per, pl, qb, qe: Piece; orgb, orge: LONGINT;
+  PROCEDURE Replace* (T: Text; beg, end: SIGNED32; B: Buffer);
+    VAR M: UpdateMsg; pb, pe, pbr, per, pl, qb, qe: Piece; orgb, orge: SIGNED32;
   BEGIN
     IF beg < end THEN
       FindPiece(T, beg, orgb, pb); SplitPiece(pb, beg - orgb, pbr);
@@ -491,8 +491,8 @@ TYPE
   END Replace;
 
 (** Change character attributes within stretch [beg, end[ of text T. sel selects the attributes to be changed: 0, 1, 2 IN sel = fnt, col, voff selected. *)
-  PROCEDURE ChangeLooks* (T: Text; beg, end: LONGINT; sel: SET; lib: Objects.Library; col, voff: SHORTINT);
-    VAR pb, pe, p: Piece; org: LONGINT; M: UpdateMsg; A: Objects.AttrMsg;
+  PROCEDURE ChangeLooks* (T: Text; beg, end: SIGNED32; sel: SET; lib: Objects.Library; col, voff: SIGNED8);
+    VAR pb, pe, p: Piece; org: SIGNED32; M: UpdateMsg; A: Objects.AttrMsg;
   BEGIN
     IF beg < end THEN
       FindPiece(T, beg, org, p); SplitPiece(p, beg - org, pb);
@@ -534,23 +534,23 @@ TYPE
 
 (** Open a new text buffer B. *)
   PROCEDURE OpenBuf* (B: Buffer);
-  BEGIN NEW(B.header); (*null piece*) B.header.ref := MIN(INTEGER);
+  BEGIN NEW(B.header); (*null piece*) B.header.ref := MIN(SIGNED16);
     B.last := B.header; B.len := 0
   END OpenBuf;
 
 (** Save stretch [beg, end[ of T in buffer B. *)
-  PROCEDURE Save* (T: Text; beg, end: LONGINT; B: Buffer);
-    VAR p, q, qb, qe: Piece; org: LONGINT;
+  PROCEDURE Save* (T: Text; beg, end: SIGNED32; B: Buffer);
+    VAR p, q, qb, qe: Piece; org: SIGNED32;
   BEGIN
     IF beg < end THEN
       FindPiece(T, beg, org, p); SyncPiece(T, p);
-      NEW(qb); qb^ := p^; qb.ref := MIN(INTEGER);
+      NEW(qb); qb^ := p^; qb.ref := MIN(SIGNED16);
       qb.len := qb.len - (beg - org);
       qb.off := qb.off + (beg - org);
       qe := qb;
       WHILE end > org + p.len DO
         org := org + p.len; p := p.next; SyncPiece(T, p);
-        NEW(q); q^ := p^; q.ref := MIN(INTEGER);
+        NEW(q); q^ := p^; q.ref := MIN(SIGNED16);
        qe.next := q; q.prev := qe; qe := q
       END;
       qe.next := NIL; qe.len := qe.len - (org + p.len - end);
@@ -565,7 +565,7 @@ TYPE
   BEGIN
     p := SB.header; Q := DB.last;
     WHILE p # SB.last DO p := p.next;
-      NEW(q); q.ref := MIN(INTEGER); q^ := p^; Q.next := q; q.prev := Q; Q := q
+      NEW(q); q.ref := MIN(SIGNED16); q^ := p^; Q.next := q; q.prev := Q; Q := q
     END;
     DB.last := Q; DB.len := DB.len + SB.len
   END Copy;
@@ -577,7 +577,7 @@ TYPE
 
 (** Default handler for text objects. This handler understands Objects.AttrMsg(for Gen attribute), Objects.CopyMsg, Objects.BindMsg, and Objects.FileMsg only. *)
   PROCEDURE Handle* (obj: Objects.Object; VAR M: Objects.ObjMsg);
-    VAR T: Text; B: Buffer; len: LONGINT; id: INTEGER; ch: CHAR;
+    VAR T: Text; B: Buffer; len: SIGNED32; id: SIGNED16; ch: CHAR;
   BEGIN
     WITH obj: Text DO
       IF M IS Objects.AttrMsg THEN
@@ -613,8 +613,8 @@ TYPE
   END Handle;
 
 (** Open Finder at position pos in T. The finder is automatically advanced to the next object in text. *)
-  PROCEDURE OpenFinder* (VAR F: Finder; T: Text; pos: LONGINT);
-    VAR p: Piece; org: LONGINT;
+  PROCEDURE OpenFinder* (VAR F: Finder; T: Text; pos: SIGNED32);
+    VAR p: Piece; org: SIGNED32;
   BEGIN
     FindPiece(T, pos, org, p); F.T := T;
     WHILE (p.f # Wfile) & (p.lib IS Fonts.Font) DO
@@ -625,7 +625,7 @@ TYPE
 
   (** Advance Finder to next object in text and return current object. *)
   PROCEDURE FindObj* (VAR F: Finder; VAR obj: Objects.Object);
-    VAR p: Piece; org: LONGINT;
+    VAR p: Piece; org: SIGNED32;
   BEGIN
     obj := F.ref.obj;
     IF obj = NIL THEN (* load object *)
@@ -639,8 +639,8 @@ TYPE
   END FindObj;
 
 (** Open text reader R and set it up at position pos in text T. *)
-  PROCEDURE OpenReader* (VAR R: Reader; T: Text; pos: LONGINT);
-    VAR p: Piece; org: LONGINT;
+  PROCEDURE OpenReader* (VAR R: Reader; T: Text; pos: SIGNED32);
+    VAR p: Piece; org: SIGNED32;
   BEGIN
     FindPiece(T, pos, org, p); R.T := T; R.lib := NIL;
 	R.stamp := T.stamp; R.bufpos := 0; R.buflen := 0;
@@ -676,12 +676,12 @@ information about the last character read. *)
   END Read;
 
 (** Return reader's position within the text. *)
-  PROCEDURE Pos* (VAR R: Reader): LONGINT;
+  PROCEDURE Pos* (VAR R: Reader): SIGNED32;
   BEGIN RETURN R.org + R.off
   END Pos;
 
 (** Open text scanner S and set it up at position pos in text T. *)
-  PROCEDURE OpenScanner* (VAR S: Scanner; T: Text; pos: LONGINT);
+  PROCEDURE OpenScanner* (VAR S: Scanner; T: Text; pos: SIGNED32);
   BEGIN OpenReader(S, T, pos); S.line := 0; S.class := Inval; Read(S, S.nextCh)
   END OpenScanner;
 
@@ -690,16 +690,16 @@ information about the last character read. *)
   (*IEEE floating-point formats  (BM 1992.1.1): (-1)^s * 1.m * 2^(e-e0), where
 
                               s                 e                 e0              m
-      REAL             1-bit     8-bit biased      127    1+23-bit explicit
-      LONGREAL   1-bit   11-bit biased     1023   1+52-bit explicit*)
+      FLOAT32             1-bit     8-bit biased      127    1+23-bit explicit
+      FLOAT64   1-bit   11-bit biased     1023   1+52-bit explicit*)
 
 (** Read the next symbol. Whitespace is ignored. CR increments the line counter. *)
   PROCEDURE Scan* (VAR S: Scanner);
     CONST maxD = 256; (* fixed size: maxD <= LEN(S.s)! *)
     VAR ch, E: CHAR;
       neg, negE, hex, sign: BOOLEAN;
-      i, j, h, e, k, k1, k2, k3: LONGINT;
-      y: LONGREAL;
+      i, j, h, e, k, k1, k2, k3: SIGNED32;
+      y: FLOAT64;
       d: ARRAY maxD OF CHAR;
 
   BEGIN ch := S.nextCh; i := 0;
@@ -788,17 +788,17 @@ information about the last character read. *)
           y := k3*Reals.Ten(-32) + k2*Reals.Ten(-24); y := y + k1*Reals.Ten(-16);
           IF ABS(e+h) < 308 THEN y := (y + k*Reals.Ten(-8)) / Reals.Ten(-e-h)
           ELSE y := (y + k*Reals.Ten(-8)) * Reals.Ten(h);
-            IF (e <= 308-32) OR (e <= 308) & (y < MAX(LONGREAL) / Reals.Ten(e)) THEN y := y * Reals.Ten(e)
-              ELSE y := MAX(LONGREAL)
+            IF (e <= 308-32) OR (e <= 308) & (y < MAX(FLOAT64) / Reals.Ten(e)) THEN y := y * Reals.Ten(e)
+              ELSE y := MAX(FLOAT64)
             END
           END;
           IF E = "D" THEN
-            IF y = MAX(LONGREAL) THEN S.class := Inval (* NaN *)
+            IF y = MAX(FLOAT64) THEN S.class := Inval (* NaN *)
             ELSE S.class := LongReal;
               IF neg THEN S.y := - y ELSE S.y := y END;
               IF Reals.ExpoL(S.y) = 0 THEN S.y := 0 END
             END
-          ELSIF MAX(REAL) < y THEN S.class:= Inval (* NaN *)
+          ELSIF MAX(FLOAT32) < y THEN S.class:= Inval (* NaN *)
           ELSE S.class := Real;
             IF neg THEN S.x := SHORT(- y) ELSE S.x := SHORT(y) END;
             IF Reals.Expo(S.x) = 0 THEN S.x := 0 END
@@ -807,8 +807,8 @@ information about the last character read. *)
           IF hex THEN S.class := Inval END
         ELSE (*decimal integer*)
           S.class := Int; k := 0;
-          WHILE (j # i) & ((k < MAX(LONGINT) DIV 10) OR
-            (k = MAX(LONGINT) DIV 10) & ((ORD(d[j]) - 30H) <= MAX(LONGINT) MOD 10)) DO (*JG*)
+          WHILE (j # i) & ((k < MAX(SIGNED32) DIV 10) OR
+            (k = MAX(SIGNED32) DIV 10) & ((ORD(d[j]) - 30H) <= MAX(SIGNED32) MOD 10)) DO (*JG*)
             k := k*10 + (ORD(d[j]) - 30H); INC(j)
           END;
           IF j # i THEN S.class := Inval
@@ -839,12 +839,12 @@ information about the last character read. *)
   END SetFont;
 
 (** Set writer W to color col. *)
-  PROCEDURE SetColor* (VAR W: Writer; col: SHORTINT);
+  PROCEDURE SetColor* (VAR W: Writer; col: SIGNED8);
   BEGIN W.col := col
   END SetColor;
 
 (** Set writer W to vertical offset voff. Vertical offset controls the writing of super- and sub-scripts. *)
-  PROCEDURE SetOffset* (VAR W: Writer; voff: SHORTINT);
+  PROCEDURE SetOffset* (VAR W: Writer; voff: SIGNED8);
   BEGIN W.voff := voff
   END SetOffset;
 
@@ -853,7 +853,7 @@ information about the last character read. *)
     VAR p, q: Piece;
   BEGIN p := W.buf.last;
     IF ~(W.lib IS Fonts.Font) OR (W.lib # p.lib) OR (W.col # p.col) OR (W.voff # p.voff) OR (Files.Base(W.R) # p.f) THEN
-      NEW(q); q.ref := MIN(INTEGER);
+      NEW(q); q.ref := MIN(SIGNED16);
       IF ~(W.lib IS Fonts.Font) THEN W.lib.GetObj(W.lib, ORD(ch), q.obj) END;
       q.f := Files.Base(W.R); q.off := Files.Pos(W.R); q.len := 0;
       q.lib := W.lib; q.col := W.col; q.voff:= W.voff;
@@ -871,18 +871,18 @@ information about the last character read. *)
 
 (** Write string s to W's buffer. *)
   PROCEDURE WriteString* (VAR W: Writer; CONST s: ARRAY OF CHAR);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
   BEGIN i := 0;
     WHILE s[i] # 0X DO Write(W, s[i]); INC(i) END
   END WriteString;
 
 (** Write integer x to W's buffer. Spaces are padded to the left until the number field is at least n characters long. *)
-PROCEDURE WriteInt* (VAR W: Writer; x, n: LONGINT);
-    VAR i, x0: LONGINT;
+PROCEDURE WriteInt* (VAR W: Writer; x, n: SIGNED32);
+    VAR i, x0: SIGNED32;
       a: ARRAY 10 OF CHAR;
   BEGIN i := 0;
     IF x < 0 THEN
-      IF x = MIN(LONGINT) THEN WriteString(W, " -2147483648"); RETURN
+      IF x = MIN(SIGNED32) THEN WriteString(W, " -2147483648"); RETURN
       ELSE DEC(n); x0 := -x
       END
     ELSE x0 := x
@@ -896,8 +896,8 @@ PROCEDURE WriteInt* (VAR W: Writer; x, n: LONGINT);
   END WriteInt;
 
 (** Write a hexadecimal representation of x to W's buffer. *)
-PROCEDURE WriteHex* (VAR W: Writer; x: LONGINT);
-    VAR i, y: LONGINT;
+PROCEDURE WriteHex* (VAR W: Writer; x: SIGNED32);
+    VAR i, y: SIGNED32;
       a: ARRAY 10 OF CHAR;
   BEGIN i := 0; Write(W, " ");
     REPEAT y := x MOD 10H;
@@ -908,20 +908,20 @@ PROCEDURE WriteHex* (VAR W: Writer; x: LONGINT);
   END WriteHex;
 
 (** Write the hexadecimal representation of x to W's buffer. *)
-PROCEDURE WriteRealHex* (VAR W: Writer; x: REAL);
+PROCEDURE WriteRealHex* (VAR W: Writer; x: FLOAT32);
 BEGIN (* BM 1991.12.25 *) WriteHex(W, Reals.Int(x))
 END WriteRealHex;
 
 (** Write the hexadecimal representation of x to W's buffer. *)
-PROCEDURE WriteLongRealHex* (VAR W: Writer; x: LONGREAL);
-	VAR h, l: LONGINT; (* BM 1991.12.25 *)
+PROCEDURE WriteLongRealHex* (VAR W: Writer; x: FLOAT64);
+	VAR h, l: SIGNED32; (* BM 1991.12.25 *)
 BEGIN Reals.IntL(x, h, l); WriteHex(W, h); WriteHex(W, l)
 END WriteLongRealHex;
 
 (** Write real x to W's buffer using n character positions. *)
-PROCEDURE WriteReal* (VAR W: Writer; x: REAL; n: LONGINT);
+PROCEDURE WriteReal* (VAR W: Writer; x: FLOAT32; n: SIGNED32);
   (* BM 1993.4.22. Do not simplify rounding! *)
-  VAR e, h, i: LONGINT; y: LONGREAL; z: REAL; d: ARRAY 8 OF CHAR;
+  VAR e, h, i: SIGNED32; y: FLOAT64; z: FLOAT32; d: ARRAY 8 OF CHAR;
 BEGIN
   e:= Reals.Expo(x);
   IF e = 255 THEN
@@ -958,9 +958,9 @@ END WriteReal;
 (** Write real x in a fixed point notation. n is the overall minimal length for the output field,
 f the number of fraction digits following the decimal point, E the fixed exponent (printed only
 when E # 0). *)
-PROCEDURE WriteRealFix* (VAR W: Writer; x: REAL; n, f, E: LONGINT);
+PROCEDURE WriteRealFix* (VAR W: Writer; x: FLOAT32; n, f, E: SIGNED32);
   (* BM 1993.4.22. Do not simplify rounding ! / JG formatting adjusted *)
-  VAR e, h, i: LONGINT; r, y: LONGREAL; z: REAL; s: CHAR; d: ARRAY 8 OF CHAR;
+  VAR e, h, i: SIGNED32; r, y: FLOAT64; z: FLOAT32; s: CHAR; d: ARRAY 8 OF CHAR;
 BEGIN
   e := Reals.Expo(x);
   IF (e = 255) OR (ABS(E) > 38) THEN
@@ -1016,10 +1016,10 @@ BEGIN
   END
 END WriteRealFix;
 
-(** Write LONGREAL x to W's buffer using n character positions. *)
-PROCEDURE WriteLongReal* (VAR W: Writer; x: LONGREAL; n: LONGINT);
+(** Write FLOAT64 x to W's buffer using n character positions. *)
+PROCEDURE WriteLongReal* (VAR W: Writer; x: FLOAT64; n: SIGNED32);
   (* BM 1993.4.22. Do not simplify rounding! *)
-  VAR e, h, l, i: LONGINT; z: LONGREAL; d: ARRAY 16 OF CHAR;
+  VAR e, h, l, i: SIGNED32; z: FLOAT64; d: ARRAY 16 OF CHAR;
 BEGIN
   e:= Reals.ExpoL(x);
   IF e = 2047 THEN
@@ -1052,10 +1052,10 @@ BEGIN
   END
 END WriteLongReal;
 
-(** Write LONGREAL x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
-PROCEDURE WriteLongRealFix* (VAR W: Writer; x: LONGREAL; n, f, D: LONGINT);
+(** Write FLOAT64 x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
+PROCEDURE WriteLongRealFix* (VAR W: Writer; x: FLOAT64; n, f, D: SIGNED32);
   (* BM 1993.4.22. Do not simplify rounding! / JG formatting adjusted *)
-  VAR e, h, l, i: LONGINT; r, z: LONGREAL; d: ARRAY 16 OF CHAR; s: CHAR;
+  VAR e, h, l, i: SIGNED32; r, z: FLOAT64; d: ARRAY 16 OF CHAR; s: CHAR;
 BEGIN
   e := Reals.ExpoL(x);
   IF (e = 2047) OR (ABS(D) > 308) THEN
@@ -1114,9 +1114,9 @@ BEGIN
 END WriteLongRealFix;
 
 (** Write the time and date to W's buffer. *)
-  PROCEDURE WriteDate* (VAR W: Writer; t, d: LONGINT);
+  PROCEDURE WriteDate* (VAR W: Writer; t, d: SIGNED32);
 
-  PROCEDURE WritePair(ch: CHAR; x: LONGINT);
+  PROCEDURE WritePair(ch: CHAR; x: SIGNED32);
   BEGIN Write(W, ch);
     Write(W, CHR(x DIV 10 + 30H)); Write(W, CHR(x MOD 10 + 30H))
   END WritePair;
@@ -1131,10 +1131,10 @@ END WriteLongRealFix;
 
 PROCEDURE WriteSet*(VAR W: Writer; s: SET);
 	VAR
-		i, last: LONGINT;
+		i, last: SIGNED32;
 		dots: BOOLEAN;
 BEGIN
-	Write(W, "{"); last := MIN(LONGINT);
+	Write(W, "{"); last := MIN(SIGNED32);
 	FOR i := MIN(SET) TO MAX(SET) DO
 		IF i IN s THEN
 			IF last = (i-1) THEN
@@ -1179,7 +1179,7 @@ END WriteSet;
 	END WriteObj;
 
 	PROCEDURE InitScan;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 255 DO nameChars[i] := FALSE END;
 		FOR i := 80H TO 96H DO nameChars[i] := TRUE END;  (* german characters *)
@@ -1247,8 +1247,8 @@ the following token types:
 	String	Any character sequence surrounded by double quotes, i.e. "string".
 		The quotes are not returned in the s field of the scanner descriptor.
 	Int	Any valid integer number.
-	Real	Any valid REAL number, including exponent E.
-	LongReal	Any valid LONGREAL number, including exponent D.
+	Real	Any valid FLOAT32 number, including exponent E.
+	LongReal	Any valid FLOAT64 number, including exponent D.
 	Char	A character (single) not classified as one of the above.
 
 5. The end of line character is carriage return (CR or 0DX), tabulators are 9X.

@@ -15,10 +15,10 @@ TYPE
 		VAR
 			rpcConn: TCP.Connection;
 			host: ARRAY MaxNameLen OF CHAR;
-			port: INTEGER;
+			port: SIGNED16;
 
-		PROCEDURE &Init*(host: ARRAY OF CHAR; port: INTEGER);
-			VAR len: LONGINT;
+		PROCEDURE &Init*(host: ARRAY OF CHAR; port: SIGNED16);
+			VAR len: SIGNED32;
 		BEGIN
 			len := Len(host);
 			CopyBuffer(host, len + 1, SELF.host, 0);
@@ -28,7 +28,7 @@ TYPE
 	END Init;
 
 		(** res = 0 if Connection opened *)
-		PROCEDURE Open*(VAR res: WORD);
+		PROCEDURE Open*(VAR res: INTEGER);
 			VAR ip: IP.Adr;
 		BEGIN
 			IF rpcConn.state = TCP.Unused THEN
@@ -66,7 +66,7 @@ TYPE
 		END Close;
 
 		(** If Connection down, Receive tries to connect again **)
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; off, len: SIZE; VAR received: SIZE; VAR res: WORD);
+		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; off, len: SIZE; VAR received: SIZE; VAR res: INTEGER);
 		BEGIN{EXCLUSIVE}
 			received := 0;
 			res := TCP.NotConnected;
@@ -87,7 +87,7 @@ TYPE
 		END Receive;
 
 		(** if the connection is down Send tries to connect again **)
-		PROCEDURE Send*(VAR buf: ARRAY OF CHAR; off, len: SIZE; VAR res: WORD);
+		PROCEDURE Send*(VAR buf: ARRAY OF CHAR; off, len: SIZE; VAR res: INTEGER);
 		BEGIN{EXCLUSIVE}
 			res := TCP.NotConnected;
 			IF off < 0 THEN
@@ -106,7 +106,7 @@ TYPE
 			rpcConn.Send(buf, off, len, FALSE, res);
 		END Send;
 
-		PROCEDURE AwaitState*(good, bad: SET; ms: LONGINT; VAR res: WORD);
+		PROCEDURE AwaitState*(good, bad: SET; ms: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			rpcConn.AwaitState(good, bad, ms, res);
 		END AwaitState;
@@ -120,8 +120,8 @@ TYPE
 	END Connection;
 
 
-PROCEDURE Len(VAR x: ARRAY OF CHAR): LONGINT;
-	VAR j: LONGINT;
+PROCEDURE Len(VAR x: ARRAY OF CHAR): SIGNED32;
+	VAR j: SIGNED32;
 BEGIN
 	j := 0;
 	WHILE x[j] # 0X DO
@@ -131,7 +131,7 @@ BEGIN
 END Len;
 
 (*copy buf1 of Size len into offset of buf2 *)
-PROCEDURE CopyBuffer(VAR buf1: ARRAY OF CHAR; len: LONGINT; VAR buf2: ARRAY OF CHAR; off: LONGINT);
+PROCEDURE CopyBuffer(VAR buf1: ARRAY OF CHAR; len: SIGNED32; VAR buf2: ARRAY OF CHAR; off: SIGNED32);
 BEGIN
 	SYSTEM.MOVE(ADDRESSOF(buf1[0]), ADDRESSOF(buf2[off]), len);
 END CopyBuffer;

@@ -8,7 +8,7 @@ IMPORT LayLaS, Layouts, Objects, Texts, Gadgets, Oberon, Panels, Documents, Desk
 CONST param = 1;
 			outermost = 2;
 
-VAR sym : INTEGER;
+VAR sym : SIGNED16;
 		curtext : Texts.Text;
 		W : Texts.Writer;
 
@@ -19,10 +19,10 @@ BEGIN
 END String;
 
 PROCEDURE Size (outermost : BOOLEAN) : Layouts.Node;
-VAR min, factor : INTEGER;
+VAR min, factor : SIGNED16;
 BEGIN
 	IF sym = LayLaS.Int THEN min := SHORT (LayLaS.int); LayLaS.Get (sym)
-	ELSIF sym = LayLaS.Default THEN min := MIN (INTEGER); LayLaS.Get (sym)
+	ELSIF sym = LayLaS.Default THEN min := MIN (SIGNED16); LayLaS.Get (sym)
 	ELSIF sym # LayLaS.lbrak THEN min := 0; LayLaS.Mark (LayLaS.Pos (), "Integer expected")
 	END;
 	IF sym = LayLaS.lbrak THEN	LayLaS.Get (sym);
@@ -58,7 +58,7 @@ BEGIN	LayLaS.Get (sym);
 	RETURN node;
 END Set;
 
-PROCEDURE SetList (op : INTEGER; omit : BOOLEAN) : Layouts.Node;
+PROCEDURE SetList (op : SIGNED16; omit : BOOLEAN) : Layouts.Node;
 VAR list, node : Layouts.Node;
 BEGIN	IF ~omit THEN LayLaS.Get (sym) END;
 	list := Layouts.NewNode (op);
@@ -96,7 +96,7 @@ END SetParams;
 
 PROCEDURE Include () : Layouts.Node;
 VAR node : Layouts.Node;
-		oldpos : LONGINT;
+		oldpos : SIGNED32;
 		oldtext : Texts.Text;
 BEGIN	LayLaS.Get (sym);
 	IF (sym # LayLaS.Qualident) & (sym # LayLaS.Ident) THEN
@@ -172,7 +172,7 @@ END Break;
 
 PROCEDURE Span () : Layouts.Node;
 VAR span, node : Layouts.Node;
-		rows, cols : INTEGER;
+		rows, cols : SIGNED16;
 BEGIN	LayLaS.Get (sym);
 	IF sym = LayLaS.Int THEN rows := SHORT (LayLaS.int)
 	ELSE LayLaS.Mark (LayLaS.Pos (), "Integer expected"); rows := 0 END;
@@ -205,7 +205,7 @@ BEGIN
 	RETURN config
 END Config;
 
-PROCEDURE Eval (flag : INTEGER) : Layouts.Node;
+PROCEDURE Eval (flag : SIGNED16) : Layouts.Node;
 VAR node : Layouts.Node;
 		Ident : ARRAY 64 OF CHAR;
 BEGIN	node := NIL;
@@ -258,7 +258,7 @@ BEGIN	node := NIL;
 	RETURN node;
 END Eval;
 
-PROCEDURE ParseText* (text : Texts.Text; pos : LONGINT) : Objects.Object;
+PROCEDURE ParseText* (text : Texts.Text; pos : SIGNED32) : Objects.Object;
 VAR node : Layouts.Node;
 BEGIN
 	curtext := text;
@@ -267,16 +267,16 @@ BEGIN
 	IF ~LayLaS.error THEN RETURN Layouts.Realize (node) ELSE RETURN NIL END
 END ParseText;
 
-PROCEDURE ParseString* (str : ARRAY OF CHAR; pos : LONGINT) : Objects.Object;
+PROCEDURE ParseString* (str : ARRAY OF CHAR; pos : SIGNED32) : Objects.Object;
 BEGIN
 	Texts.WriteString (W, str);
 	NEW (curtext); Texts.Open (curtext, ""); Texts.Append (curtext, W.buf);
 	RETURN ParseText (curtext, pos)
 END ParseString;
 
-PROCEDURE GetText (VAR T : Texts.Text; VAR beg : LONGINT);
+PROCEDURE GetText (VAR T : Texts.Text; VAR beg : SIGNED32);
 VAR s : Texts.Scanner;
-		end, time : LONGINT;
+		end, time : SIGNED32;
 		Name : ARRAY 64 OF CHAR;
 BEGIN
 	Texts.OpenScanner (s, Oberon.Par.text, Oberon.Par.pos);
@@ -294,7 +294,7 @@ BEGIN
 END GetText;
 
 PROCEDURE SplitName(name: ARRAY OF CHAR; VAR libname, objname: ARRAY OF CHAR);
-	VAR i, j, k: INTEGER;
+	VAR i, j, k: SIGNED16;
 BEGIN
 	i := 0; j := 0;
 	WHILE (name[i] # ".") & (name[i] # 0X) DO libname[j] := name[i]; INC(j); INC(i); END;
@@ -315,7 +315,7 @@ PROCEDURE Insert*;
 		 Insert (NEW object)
 *)
 VAR T : Texts.Text;
-		pos : LONGINT;
+		pos : SIGNED32;
 		obj : Objects.Object;
 BEGIN
 	GetText (T, pos);
@@ -334,11 +334,11 @@ PROCEDURE OpenAsDoc*;
 		 OpenAsDoc (NEW object)
 *)
 VAR T : Texts.Text;
-		pos : LONGINT;
+		pos : SIGNED32;
 		obj : Objects.Object;
 		D: Documents.Document;
 		P: Panels.Panel;
-		x, y, w, h, cnt: INTEGER;
+		x, y, w, h, cnt: SIGNED16;
 BEGIN
 	GetText (T, pos);
 	obj := ParseText (T, pos);
@@ -373,11 +373,11 @@ PROCEDURE AddToLibrary*;
 		 AddToLibrary L.O (NEW object)
 *)
 VAR T : Texts.Text;
-		pos : LONGINT;
+		pos : SIGNED32;
 		old, obj : Objects.Object;
 		lib: Objects.Library;
 		libname, objname: ARRAY 64 OF CHAR;
-		ref: INTEGER;
+		ref: SIGNED16;
 		S: Texts.Scanner;
 		B: Objects.BindMsg;
 BEGIN

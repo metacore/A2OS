@@ -21,7 +21,7 @@ TYPE
 
 	(** Normalizes vector v so that  |v[i]| # 1 R i  with the normalizing factor being returned as  mag > 0. *)
 	PROCEDURE NormalizeVector*( VAR v: Vec.Vector;  VAR mag: Nbr.Real );
-	VAR i: LONGINT;  abs, zero: Nbr.Real;
+	VAR i: SIGNED32;  abs, zero: Nbr.Real;
 	BEGIN
 		IF v # NIL THEN
 			zero := 0;  mag := zero;
@@ -46,7 +46,7 @@ TYPE
 
 (** Normalizes matrix m so that  |m[i, j]| # 1 R i, j  with the normalizing factor being returned as  mag > 0. *)
 	PROCEDURE NormalizeMatrix*( VAR m: Mtx.Matrix;  VAR mag: Nbr.Real );
-	VAR i, j: LONGINT;  abs, zero: Nbr.Real;
+	VAR i, j: SIGNED32;  abs, zero: Nbr.Real;
 	BEGIN
 		IF m # NIL THEN
 			zero := 0;  mag := zero;

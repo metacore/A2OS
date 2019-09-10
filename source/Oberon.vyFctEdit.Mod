@@ -49,7 +49,7 @@ TYPE
 		ox: vyBase.Object;
 		xr, yr, wr, hr: Real;   (* the region, the vector lifes in *)
 		dx: Real;
-		ticks: LONGINT;
+		ticks: SIGNED32;
 		hot: BOOLEAN;
 		vScale, hScale: BOOLEAN
 	END;
@@ -103,7 +103,7 @@ VAR
 	PROCEDURE Edit( editor: tLayer;  event: vyEvents.EventMsg ): BOOLEAN;
 	(*vs 0.0a1   md  14.02.95 *)
 	CONST erase = TRUE;  draw = FALSE;
-	VAR x2d, y2d, oldy2d: Real;  i, oldi: LONGINT;  changed: BOOLEAN;
+	VAR x2d, y2d, oldy2d: Real;  i, oldi: SIGNED32;  changed: BOOLEAN;
 
 		PROCEDURE Get2dLocation( x, y: Coordinate;  VAR X, Y: Real );
 		BEGIN
@@ -116,7 +116,7 @@ VAR
 			END
 		END Get2dLocation;
 
-		PROCEDURE Line( j: LONGINT;  action: BOOLEAN );
+		PROCEDURE Line( j: SIGNED32;  action: BOOLEAN );
 		VAR col, bkCol: Color;
 		BEGIN
 			IF action = erase THEN
@@ -131,13 +131,13 @@ VAR
 			END
 		END Line;
 
-		PROCEDURE GetIndex( ): LONGINT;
+		PROCEDURE GetIndex( ): SIGNED32;
 		BEGIN
 			RETURN ENTIER( (x2d - editor.xr) / editor.dx + 0.5 )
 		END GetIndex;
 
 		PROCEDURE Update;
-		VAR from, to, tick: LONGINT;  yFrom, yTo: Real;
+		VAR from, to, tick: SIGNED32;  yFrom, yTo: Real;
 
 			PROCEDURE UpdateEntry( v: Real );
 			VAR g: vyBase.tVector;
@@ -181,7 +181,7 @@ VAR
 	END Edit;
 
 	PROCEDURE Responsible( editor: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioHigh;
 
@@ -189,8 +189,8 @@ VAR
 		END
 	END Responsible;
 
-	PROCEDURE ChangeNumberData*( editor: tLayer;  num: LONGINT );
-	VAR X: vyBase.tVector;  i: LONGINT;
+	PROCEDURE ChangeNumberData*( editor: tLayer;  num: SIGNED32 );
+	VAR X: vyBase.tVector;  i: SIGNED32;
 	BEGIN
 		editor.ticks := num - 1;  X := editor.x;  vyLongrealVec.SetLen( X, num );  editor.dx := editor.wr / (num - 1);
 		FOR i := 0 TO num - 1 DO
@@ -311,9 +311,9 @@ VAR
 		END
 	END Handler;
 
-	PROCEDURE Embed*( editor: tLayer;  obj: vyBase.tVector;  x, y, w, h: REAL;  vScale, hScale, hot: BOOLEAN ): vyPort.Picture;
+	PROCEDURE Embed*( editor: tLayer;  obj: vyBase.tVector;  x, y, w, h: FLOAT32;  vScale, hScale, hot: BOOLEAN ): vyPort.Picture;
 	(*vs 0.0a1   md  23.06.95 *)
-	VAR N, i: LONGINT;  X: vyBase.tVector;  pict: vyPort.Picture;  id: vyName.tNameArray;
+	VAR N, i: SIGNED32;  X: vyBase.tVector;  pict: vyPort.Picture;  id: vyName.tNameArray;
 	BEGIN
 		N := obj.nrData;  editor.ox := obj;  editor.xr := x;  editor.yr := y;  editor.wr := w;  editor.hr := h;  editor.ticks := N - 1;
 		editor.dx := w / (N - 1);  editor.hot := hot;  X := vyLongrealVec.New( N );

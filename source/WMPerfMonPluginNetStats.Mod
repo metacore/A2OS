@@ -233,7 +233,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(TCP.NTCPError)-1 DO
 				dataset[i] := TCP.NTCPError[i];

@@ -16,32 +16,32 @@ TYPE
 		height,	(* Height, in pixels, of the image *)
 		colorCount: CHAR;	(* Number of colors in image, 0 if >= 8bpp *)
 		planes,	(* Color Planes *)
-		bitCount: INTEGER;	(* Bits per Pixel *)
+		bitCount: SIGNED16;	(* Bits per Pixel *)
 		bytesInRes,	(* how many bytes in this resource *)
-		imageOffset: LONGINT;	(* where in the file is this image? *)
+		imageOffset: SIGNED32;	(* where in the file is this image? *)
 	END;
 
 	BitmapInfoHeader = RECORD
 		size,	(* Size of BitmapInfoHeader *)
 		width,	(* width of the bitmap in Pixels *)
-		height: LONGINT;	(* height of the bitmap in Pixels *)
+		height: SIGNED32;	(* height of the bitmap in Pixels *)
 		planes,	(* # of planes for the target device, must be 1 *)
-		bitCount: INTEGER;	(* Bits per Pixels, should be 1,4 or 8 *)
+		bitCount: SIGNED16;	(* Bits per Pixels, should be 1,4 or 8 *)
 		compression,	(* not used*)
-		sizeImage: LONGINT;	(* Imagesize in bytes *)
+		sizeImage: SIGNED32;	(* Imagesize in bytes *)
 		xPelsPerMeter,	(* not used *)
-		yPelsPerMeter: LONGINT;	(* not used *)
+		yPelsPerMeter: SIGNED32;	(* not used *)
 		clrUsed,	(* not used *)
-		clrImportant: LONGINT;	(* not used *)
+		clrImportant: SIGNED32;	(* not used *)
 	END;
 VAR
-	colorMap: ARRAY 256 OF INTEGER;
-	iconIndex: INTEGER;
+	colorMap: ARRAY 256 OF SIGNED16;
+	iconIndex: SIGNED16;
 
-PROCEDURE ReadDir(VAR R: Files.Rider): INTEGER;
+PROCEDURE ReadDir(VAR R: Files.Rider): SIGNED16;
 	(* Read the File's Directory *)
 VAR
-	val: INTEGER;
+	val: SIGNED16;
 BEGIN
 	Files.ReadInt(R,val);	(* Reserved, must be 0 *)
 	IF (val # 0) THEN RETURN(-1); END;
@@ -69,7 +69,7 @@ PROCEDURE ReadBitmapInfoHeader*(VAR R: Files.Rider; VAR bmih: BitmapInfoHeader):
 BEGIN
 	Files.ReadLInt(R,bmih.size);
 	IF (bmih.size # BMIHSIZE) THEN
-		Files.Set(R,Files.Base(R),Files.Pos(R)-SIZEOF(LONGINT)); RETURN(FALSE);
+		Files.Set(R,Files.Base(R),Files.Pos(R)-SIZEOF(SIGNED32)); RETURN(FALSE);
 	ELSE
 		Files.ReadLInt(R,bmih.width); Files.ReadLInt(R,bmih.height);
 		Files.ReadInt(R,bmih.planes); Files.ReadInt(R,bmih.bitCount);
@@ -82,9 +82,9 @@ BEGIN
 	END;
 END ReadBitmapInfoHeader;
 
-PROCEDURE ScanCol (VAR R: Files.Rider; pict: Pictures.Picture; nrColor: LONGINT; conversion: BOOLEAN);
+PROCEDURE ScanCol (VAR R: Files.Rider; pict: Pictures.Picture; nrColor: SIGNED32; conversion: BOOLEAN);
 	(* copied from BMP.Mod *)
-VAR Red, Green, Blue, c: CHAR; C, min, d, x, y, z: LONGINT; i, j, minj: INTEGER; r, g, b: ARRAY 256 OF INTEGER;
+VAR Red, Green, Blue, c: CHAR; C, min, d, x, y, z: SIGNED32; i, j, minj: SIGNED16; r, g, b: ARRAY 256 OF SIGNED16;
 BEGIN
 	C := ASH(1, Display.Depth(0)) - 1;
 	IF nrColor > C THEN nrColor := C ELSE DEC(nrColor) END;
@@ -92,7 +92,7 @@ BEGIN
 		FOR i := 0 TO SHORT(C) DO Display.GetColor(i, r[i], g[i], b[i]) END;
 		FOR i := 0 TO SHORT(nrColor) DO
 			Files.Read(R, Blue); Files.Read(R, Green); Files.Read(R, Red); Files.Read(R, c);
-			min := MAX(LONGINT);
+			min := MAX(SIGNED32);
 			FOR j := 0 TO SHORT(C) DO
 				x := ABS(ORD(Red) - r[j]); y := ABS(ORD(Green) - g[j]); z := ABS(ORD(Blue) - b[j]);
 				d := x;
@@ -113,20 +113,20 @@ BEGIN
 	END
 END ScanCol;
 
-PROCEDURE LoadIcon(VAR R: Files.Rider; ndx,transparentCol: INTEGER; colorConversion: BOOLEAN; pict: Pictures.Picture);
+PROCEDURE LoadIcon(VAR R: Files.Rider; ndx,transparentCol: SIGNED16; colorConversion: BOOLEAN; pict: Pictures.Picture);
 VAR
 	dir: IconDirEntry;
 	bmih: BitmapInfoHeader;
 	c: CHAR;
-	k: SHORTINT;
-	i,length: LONGINT;
+	k: SIGNED8;
+	i,length: SIGNED32;
 
-	PROCEDURE PosX(ndx: LONGINT): INTEGER;
+	PROCEDURE PosX(ndx: SIGNED32): SIGNED16;
 	BEGIN
 		RETURN(SHORT(ndx MOD bmih.width));
 	END PosX;
 
-	PROCEDURE PosY(ndx: LONGINT): INTEGER;
+	PROCEDURE PosY(ndx: SIGNED32): SIGNED16;
 	BEGIN
 		RETURN(SHORT(ndx DIV bmih.width));
 	END PosY;
@@ -182,8 +182,8 @@ END LoadIcon;
 
 PROCEDURE Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg);
 VAR
-	pos: LONGINT;
-	icons,this: INTEGER;
+	pos: SIGNED32;
+	icons,this: SIGNED16;
 BEGIN
 	WITH obj: Pictures.Picture DO
 		IF msg IS Objects.AttrMsg THEN

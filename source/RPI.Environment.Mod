@@ -9,9 +9,9 @@ CONST Running* = 0; ShuttingDown* = 1; Rebooting* = 2;
 
 VAR memory: SIZE;
 VAR heap: HeapManager.Heap;
-VAR clock := 0: LONGINT;
+VAR clock := 0: SIGNED32;
 VAR frequency: Timer.Counter;
-VAR status* := Running: WORD;
+VAR status* := Running: INTEGER;
 VAR uartInterruptInstalled := 0: SIZE;
 VAR timerInterruptInstalled := 0: SIZE;
 VAR uartInterrupt: Interrupts.Interrupt;
@@ -68,11 +68,11 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	result[0] := 0X
 END GetString;
 
-PROCEDURE Clock- (): LONGINT;
+PROCEDURE Clock- (): SIGNED32;
 BEGIN RETURN Timer.GetCounter () DIV frequency;
 END Clock;
 
-PROCEDURE Sleep- (milliseconds: LONGINT);
+PROCEDURE Sleep- (milliseconds: SIGNED32);
 VAR interrupt: Interrupts.Interrupt;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (milliseconds >= 0);
@@ -95,7 +95,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END;
 END HandleTimer;
 
-PROCEDURE LED- (led: LONGINT; status: BOOLEAN);
+PROCEDURE LED- (led: SIGNED32; status: BOOLEAN);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF led = 0 THEN
 	CPU.MaskIn (CPU.GPFSEL4, {21..23}, {21});
@@ -125,7 +125,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (CAS (status, ShuttingDown, Rebooting) = ShuttingDown);
 END Reboot;
 
-PROCEDURE {NORETURN} Exit- (status: WORD);
+PROCEDURE {NORETURN} Exit- (status: INTEGER);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Trace.String ("system: ");
 	IF status = Rebooting THEN Trace.StringLn ("rebooting..."); CPU.Reset END;
@@ -159,8 +159,8 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	memory := memTag.start + memTag.size - ADDRESS OF KernelEnd;
 END InitMemory;
 
-PROCEDURE Blink-(num, speed: LONGINT);
-VAR i,j: LONGINT;
+PROCEDURE Blink-(num, speed: SIGNED32);
+VAR i,j: SIGNED32;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	FOR  j:= 1 TO num DO
 		LED (0, TRUE); LED(1, FALSE);
@@ -179,7 +179,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END RestoreActivity;
 
 PROCEDURE Initialize-;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	SYSTEM.SetActivity (NIL);
 	CPU.Initialize; InitTrace; InitMemory;

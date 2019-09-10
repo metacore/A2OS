@@ -8,7 +8,7 @@ CONST
 TYPE
 	Generator* = OBJECT
 	VAR
-		x, a: HUGEINT; c: LONGINT;
+		x, a: SIGNED64; c: SIGNED32;
 
 		PROCEDURE & Init*;
 		BEGIN
@@ -16,47 +16,47 @@ TYPE
 		END Init;
 
 
-		PROCEDURE Drand48*(): LONGREAL;		(* [0.0 .. 1.0] *)
+		PROCEDURE Drand48*(): FLOAT64;		(* [0.0 .. 1.0] *)
 		CONST twom = 1.0D0 / m;
 		BEGIN
 			x := (x*a + c) MOD m;
 			RETURN twom*x
 		END Drand48;
 
-		PROCEDURE Lrand48*(): LONGINT;		(* [0 .. 2^31-1] *)
+		PROCEDURE Lrand48*(): SIGNED32;		(* [0 .. 2^31-1] *)
 		BEGIN
 			x := (x*a + c) MOD m;
 			RETURN SHORT( x DIV 20000H )
 		END Lrand48;
 
-		PROCEDURE Mrand48*(): LONGINT;		(* [0 .. 2^32-1] *)
+		PROCEDURE Mrand48*(): SIGNED32;		(* [0 .. 2^32-1] *)
 		BEGIN
 			x := (x*a + c) MOD m;
 			RETURN SHORT( x DIV 10000H )
 		END Mrand48;
 
-		PROCEDURE Xrand48*(): HUGEINT;		(* [0 .. 2^48-1] *)
+		PROCEDURE Xrand48*(): SIGNED64;		(* [0 .. 2^48-1] *)
 		BEGIN
 			x := (x*a + c) MOD m;
 			RETURN x
 		END Xrand48;
 
-		PROCEDURE Srand48*( seed: LONGINT );
+		PROCEDURE Srand48*( seed: SIGNED32 );
 		BEGIN
 			x := LONG(seed)*10000H + X MOD 10000H;  a := A
 		END Srand48;
 
 
 
-		PROCEDURE Seed48*( seed: HUGEINT ): HUGEINT;
-		VAR lastx: HUGEINT;
+		PROCEDURE Seed48*( seed: SIGNED64 ): SIGNED64;
+		VAR lastx: SIGNED64;
 		BEGIN
 			lastx := x;
 			x := seed MOD m;  a := A;
 			RETURN lastx
 		END Seed48;
 
-		PROCEDURE Lcong48*( par: ARRAY OF HUGEINT );
+		PROCEDURE Lcong48*( par: ARRAY OF SIGNED64 );
 		BEGIN
 			x := par[0] MOD m;
 			a := par[1] MOD m;
@@ -74,14 +74,14 @@ CONST
 	A0 = 0E66DH;  A1 = 0DEECH;  A2 = 05H;
 
 TYPE
-	Pair = RECORD h, l: LONGINT END;	(* unsigned 16-bit values *)
+	Pair = RECORD h, l: SIGNED32 END;	(* unsigned 16-bit values *)
 
-	Triple* = ARRAY 3 OF LONGINT;		(* unsigned 16-bit values *)
+	Triple* = ARRAY 3 OF SIGNED32;		(* unsigned 16-bit values *)
 	Seed16v* = POINTER TO Triple;
 
 	Generator* = OBJECT
 	VAR
-		x, a: Triple; c: LONGINT;
+		x, a: Triple; c: SIGNED32;
 
 		PROCEDURE & Init*;
 		BEGIN
@@ -91,34 +91,34 @@ TYPE
 		END Init;
 
 
-		PROCEDURE Drand48*(): LONGREAL;
+		PROCEDURE Drand48*(): FLOAT64;
 		CONST two16m = 1.0D0 / B;
 		BEGIN
 			Next;  RETURN two16m*(two16m*(two16m*x[0] + x[1]) + x[2])
 		END Drand48;
 
-		PROCEDURE Lrand48*(): LONGINT;		(* [0 .. 2^31-1] *)
+		PROCEDURE Lrand48*(): SIGNED32;		(* [0 .. 2^31-1] *)
 		BEGIN
 			Next;  RETURN x[2]*8000H + x[1] DIV 2 MOD 8000H
 		END Lrand48;
 
-		PROCEDURE Mrand48*(): LONGINT;		(* [0 .. 2^32-1] *)
+		PROCEDURE Mrand48*(): SIGNED32;		(* [0 .. 2^32-1] *)
 		BEGIN
 			Next;  RETURN x[2]*B + x[1]
 		END Mrand48;
 
-		PROCEDURE Xrand48*(): HUGEINT;		(* [0 .. 2^48-1] *)
+		PROCEDURE Xrand48*(): SIGNED64;		(* [0 .. 2^48-1] *)
 		BEGIN
 			Next;  RETURN ASH( LONG( x[2] ), 32 ) + x[1]*B + x[0]
 		END Xrand48;
 
 
-		PROCEDURE Srand48*( seedval: LONGINT );
+		PROCEDURE Srand48*( seedval: SIGNED32 );
 		BEGIN
 			Seed( X0, seedval MOD B, seedval DIV B  MOD B )
 		END Srand48;
 
-		PROCEDURE Seed48*( CONST seed16v: ARRAY OF LONGINT ): Seed16v;
+		PROCEDURE Seed48*( CONST seed16v: ARRAY OF SIGNED32 ): Seed16v;
 		VAR lastx: Seed16v;
 		BEGIN
 			NEW( lastx );  lastx^ := x;
@@ -126,7 +126,7 @@ TYPE
 			RETURN lastx
 		END Seed48;
 
-		PROCEDURE Lcong48*( CONST param: ARRAY OF LONGINT );
+		PROCEDURE Lcong48*( CONST param: ARRAY OF SIGNED32 );
 		BEGIN
 			x[0] := param[0] MOD B;  x[1] := param[1] MOD B;  x[2] := param[2] MOD B;
 			a[0] := param[3] MOD B;  a[1] := param[4] MOD B;  a[2] := param[5] MOD B;
@@ -137,7 +137,7 @@ TYPE
 
 
 
-		PROCEDURE Seed( x0, x1, x2: LONGINT );
+		PROCEDURE Seed( x0, x1, x2: SIGNED32 );
 		BEGIN
 			x[0] := x0;  x[1] := x1;  x[2] := x2;
 			a[0] := A0;  a[1] := A1;  a[2] := A2
@@ -145,7 +145,7 @@ TYPE
 
 
 		PROCEDURE Next;
-		VAR p, q, r: Pair;  carry: LONGINT;
+		VAR p, q, r: Pair;  carry: SIGNED32;
 		BEGIN
 			p := Mul( a[0], x[0] );
 			carry := Addequ( p.h, Addequ( p.l, c ) );
@@ -163,15 +163,15 @@ TYPE
 
 
 
-	PROCEDURE Mul( x, y: LONGINT ): Pair;
-	VAR z: Pair;  t: LONGINT;
+	PROCEDURE Mul( x, y: SIGNED32 ): Pair;
+	VAR z: Pair;  t: SIGNED32;
 	BEGIN
 		t := x*y;
 		z.l := t MOD B;  z.h := t DIV B MOD B;
 		RETURN z
 	END Mul;
 
-	PROCEDURE Addequ( VAR x: LONGINT;  y: LONGINT ): LONGINT;
+	PROCEDURE Addequ( VAR x: SIGNED32;  y: SIGNED32 ): SIGNED32;
 	BEGIN
 		x := x + y;
 		IF x < B THEN  RETURN 0  END;

@@ -579,7 +579,7 @@ TYPE
 		PROCEDURE PrintCache;
 		VAR
 			thisElement : LineElement;
-			i : INTEGER;
+			i : SIGNED16;
 		BEGIN
 			thisElement := first;
 			i := 0;
@@ -724,7 +724,7 @@ TYPE
 		PROCEDURE PrintCache;
 		VAR
 			thisElement : LineElement;
-			i : INTEGER;
+			i : SIGNED16;
 		BEGIN
 			thisElement := first;
 			i := 0;
@@ -1058,9 +1058,9 @@ TYPE
 			nextLevel : SIZE;
 			i : SIZE;
 			lineLength : SIZE;
-			surplusLevels : LONGINT;
+			surplusLevels : SIGNED32;
 			hlCharacterType  : Strings.String;
-			hlEmbeddingLevel : LONGINT;
+			hlEmbeddingLevel : SIGNED32;
 		BEGIN
 			char := 0H;
 			nextLevel := 0;
@@ -1198,14 +1198,14 @@ TYPE
 		PROCEDURE ResolveWeakTypes(VAR cacheElement : LineElement);
 		VAR
 			i, nextI, pos : SIZE;
-			state, ENstate : LONGINT;
+			state, ENstate : SIGNED32;
 			passedBNs : IntegerStack;
 			charType : Strings.String;
 			lastCharType : Strings.String;
-			lastStrongType : LONGINT;
+			lastStrongType : SIGNED32;
 			newLevel : BOOLEAN;
 			dummyBool : BOOLEAN;
-			dummyInt : LONGINT;
+			dummyInt : SIGNED32;
 		BEGIN
 			lastStrongType := NeutralType;
 			newLevel := FALSE;
@@ -1506,7 +1506,7 @@ TYPE
 		VAR
 			i : SIZE;
 			directionalType, hlCharacterType : Strings.String;
-			dummyInt : LONGINT;
+			dummyInt : SIGNED32;
 		BEGIN
 
 			amm.NewString(directionalType);
@@ -2165,9 +2165,9 @@ TYPE
 		END GetBorderOfRunCharacterType;
 
 		(* Checks if the next non-separator/non-terminator is a European Number *)
-		PROCEDURE IsEuropeanNumberAdjacent(pos : SIZE; terminators : BOOLEAN; VAR cacheElement : LineElement; VAR max : SIZE; VAR state : LONGINT; VAR ENstate : LONGINT) : BOOLEAN;
+		PROCEDURE IsEuropeanNumberAdjacent(pos : SIZE; terminators : BOOLEAN; VAR cacheElement : LineElement; VAR max : SIZE; VAR state : SIGNED32; VAR ENstate : SIGNED32) : BOOLEAN;
 		VAR
-			ENstateBefore : LONGINT;
+			ENstateBefore : SIGNED32;
 			hlThisCharacterType : Strings.String;
 		BEGIN
 			amm.NewString(hlThisCharacterType);
@@ -2248,7 +2248,7 @@ TYPE
 		END IsEuropeanNumberAdjacent;
 
 		(* Checks if the next non-separator is an Arabic Number *)
-		PROCEDURE IsArabicNumberAdjacent(pos : SIZE; VAR cacheElement : LineElement; VAR max : SIZE; VAR state : LONGINT; VAR ENstate : LONGINT) : BOOLEAN;
+		PROCEDURE IsArabicNumberAdjacent(pos : SIZE; VAR cacheElement : LineElement; VAR max : SIZE; VAR state : SIGNED32; VAR ENstate : SIGNED32) : BOOLEAN;
 		VAR
 			hlThisCharacterType : Strings.String;
 		BEGIN
@@ -2371,7 +2371,7 @@ TYPE
 		PROCEDURE HasSameDirectionalType(charType : Strings.String; thisPos : SIZE; cacheElement : LineElement) : BOOLEAN;
 		VAR
 			hlThisCharacterType : Strings.String;
-			dummyInt : LONGINT;
+			dummyInt : SIGNED32;
 			dummyCharType : Strings.String;
 			result : BOOLEAN;
 		BEGIN
@@ -2604,12 +2604,12 @@ TYPE
 	(* HL1. Override P3, and set the paragraph level explicitly.
 		The function has reading access to the whole text and gets the start and end position of the clause of interest. It returns
 		the paragraph embedding level for this clause. *)
-	HigherLevelProtocol1* = PROCEDURE(textReader : Texts.TextReader; start, end : SIZE) : LONGINT;
+	HigherLevelProtocol1* = PROCEDURE(textReader : Texts.TextReader; start, end : SIZE) : SIGNED32;
 
 	(* HL2. Override W2, and set EN or AN explicitly.
 		The function gets access to the whole cache line, the current position and the last strong type. It computes the character
 		type for the character at the given position. *)
-	HigherLevelProtocol2* = PROCEDURE(cacheLine : LineElement; pos: SIZE; lastStrongType : LONGINT) : Strings.String;
+	HigherLevelProtocol2* = PROCEDURE(cacheLine : LineElement; pos: SIZE; lastStrongType : SIGNED32) : Strings.String;
 
 	(* HL3. Emulate directional overrides or embedding codes.
 		The function gets access to the characters, previously computed embedding levels, original and newly computed character
@@ -2617,14 +2617,14 @@ TYPE
 		level, which will be assigned to the cache afterwards. If it returns false, the algorithm is performed normally for this character. *)
 	HigherLevelProtocol3* = PROCEDURE(characters : CharArray; embeddingLevels : IntegerArray; originalTypes, types : Strings.StringArray;
 							char : Texts.Char32; charType : Strings.String; VAR hlCharacterType : Strings.String;
-							VAR hlEmbeddingLevel : LONGINT) : BOOLEAN;
+							VAR hlEmbeddingLevel : SIGNED32) : BOOLEAN;
 
 	(* HL5. Provide artificial context.
 		The function gets access to the whole cache line, the current position, the character type of the current character and
 		the position in the algorithm where the function is called. It defines the current state and ENstate on which the algorithm
 		will operate further on. If it returns false, the algorithm is performed normally for this character. *)
 	HigherLevelProtocol5* = PROCEDURE(cacheElement : LineElement; pos : SIZE; VAR thisCharacterType : Strings.String;
-							VAR state, ENstate : LONGINT; placeOfVenue : LONGINT) : BOOLEAN;
+							VAR state, ENstate : SIGNED32; placeOfVenue : SIGNED32) : BOOLEAN;
 
 	(* HL6. Additional mirroring.
 		The function gets the character that needs to be mirrored and returns the target, mirrored character. *)
@@ -2677,7 +2677,7 @@ VAR
 	file : Files.File;
 	decoder : Codecs.TextDecoder;
 	in : Streams.Reader;
-	decoderRes : WORD;
+	decoderRes : INTEGER;
 	text : Texts.Text;
 	error : BOOLEAN;
 	bidiFormatter : BidiFormatter;

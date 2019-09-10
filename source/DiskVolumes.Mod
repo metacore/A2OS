@@ -23,7 +23,7 @@ CONST
 
 VAR
 	cache: Caches.Cache;	(* shared cache for all volumes *)
-	cacheSize, cacheHash: LONGINT;
+	cacheSize, cacheHash: SIGNED32;
 	writeback: BOOLEAN;
 	cdid: ARRAY 32 OF CHAR;
 
@@ -32,12 +32,12 @@ TYPE
 		VAR
 			dev-: Disks.Device;
 			cache: Caches.Cache;	(* cache associated with volume, if any *)
-			blocks: LONGINT;	(* device blocks per volume block *)
-			startfs-: LONGINT;	(* device block offset of file system start *)
+			blocks: SIGNED32;	(* device blocks per volume block *)
+			startfs-: SIGNED32;	(* device block offset of file system start *)
 
 		(** Get block from adr [1..size] of volume vol *)
-		PROCEDURE GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
-		VAR res: WORD; block: LONGINT; buf: Caches.Buffer; valid: BOOLEAN;
+		PROCEDURE GetBlock*(adr: SIGNED32; VAR blk: ARRAY OF CHAR);
+		VAR res: INTEGER; block: SIGNED32; buf: Caches.Buffer; valid: BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			IF (adr < 1) OR (adr > size) THEN SYSTEM.HALT(15) END;
 			ASSERT(startfs > 0);	(* startfs initialized *)
@@ -58,8 +58,8 @@ TYPE
 		END GetBlock;
 
 		(** Put block to adr [1..size] of volume vol *)
-		PROCEDURE PutBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
-		VAR res: WORD; block: LONGINT; buf: Caches.Buffer; valid: BOOLEAN;
+		PROCEDURE PutBlock*(adr: SIGNED32; VAR blk: ARRAY OF CHAR);
+		VAR res: INTEGER; block: SIGNED32; buf: Caches.Buffer; valid: BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			IF (adr < 1) OR (adr > size) THEN SYSTEM.HALT(15) END;
 			ASSERT(startfs > 0);	(* startfs initialized *)
@@ -84,7 +84,7 @@ TYPE
 
 		(** Finalize a volume and close its device. *)
 		PROCEDURE Finalize*;
-		VAR res: WORD; i, j: LONGINT; ptable: Disks.PartitionTable;
+		VAR res: INTEGER; i, j: SIGNED32; ptable: Disks.PartitionTable;
 		BEGIN {EXCLUSIVE}
 			IF cache # NIL THEN cache.Synchronize; cache := NIL END;
 			i := 0; j := -1; ptable := dev.table;	(* todo: fix race! *)
@@ -105,15 +105,15 @@ TYPE
 
 	END Volume;
 
-PROCEDURE Get4(VAR b: ARRAY OF CHAR; i: LONGINT): LONGINT;
+PROCEDURE Get4(VAR b: ARRAY OF CHAR; i: SIGNED32): SIGNED32;
 BEGIN
 	RETURN ORD(b[i]) + ASH(ORD(b[i+1]), 8) + ASH(ORD(b[i+2]), 16) + ASH(ORD(b[i+3]), 24)
 END Get4;
 
 (* Get the file system parameters by reading the boot block. The pstart and psize parameters are the partition start and size in device blocks (size 512 or 2048).  The startfs parameter returns the offset of the file system from the start of the disk in device blocks.  The size parameter returns the size of the file system in volume blocks.  The vbs parameter returns the volume block size of the file system (4096 for AosFS, 2048 for NatFS). *)
-PROCEDURE GetOberonFS(dev: Disks.Device; pstart, psize: LONGINT; VAR startfs, size, vbs: LONGINT; VAR res: WORD);
+PROCEDURE GetOberonFS(dev: Disks.Device; pstart, psize: SIGNED32; VAR startfs, size, vbs: SIGNED32; VAR res: INTEGER);
 CONST FSID = 21534F41H; FSVer = 2; AosSS = 4096; NSS = 2048;
-VAR i, x, bc, fsofs: LONGINT; b: ARRAY CDBS OF CHAR;
+VAR i, x, bc, fsofs: SIGNED32; b: ARRAY CDBS OF CHAR;
 BEGIN
 	startfs := 0; size := 0; vbs := 0; fsofs := 0;	(* fsofs is the file system offset from the partition start in 512-byte blocks *)
 	IF (dev.blockSize = BS) & (psize > 0) THEN	(* "normal" device with 512-byte blocks *)
@@ -206,7 +206,7 @@ BEGIN
 END InitCache;
 
 (* Initialize a volume.  The startfs parameter is the start offset of the file system in device blocks.  The size parameter is the volume size in volume blocks.  The vbs parameter is the size of a volume block.  The part parameter is the partition index in the ptable.  The readonly parameter specifies if the volume should be mounted read only.  If the device is read only, the volume is always mounted read only. *)
-PROCEDURE InitVol(vol: Volume; startfs, size, vbs, part: LONGINT; ptable: Disks.PartitionTable; readonly: BOOLEAN);
+PROCEDURE InitVol(vol: Volume; startfs, size, vbs, part: SIGNED32; ptable: Disks.PartitionTable; readonly: BOOLEAN);
 VAR vflags: SET;
 BEGIN
 	vflags := {};
@@ -226,8 +226,8 @@ END InitVol;
 
 (* Try to open the specified volume.  Sets p.vol # NIL on success. *)
 
-PROCEDURE TryOpen(context: Files.Parameters; dev: Disks.Device; part, dbs: LONGINT; readonly: BOOLEAN);
-VAR vol: Volume; startfs, size, vbs: LONGINT; res: WORD; ptable: Disks.PartitionTable;
+PROCEDURE TryOpen(context: Files.Parameters; dev: Disks.Device; part, dbs: SIGNED32; readonly: BOOLEAN);
+VAR vol: Volume; startfs, size, vbs: SIGNED32; res: INTEGER; ptable: Disks.PartitionTable;
 BEGIN
 	context.out.String(Header); context.out.String(dev.name);
 	context.out.Char("#"); context.out.Int(part, 1); context.out.Char(" ");
@@ -275,7 +275,7 @@ END TryOpen;
 (** Generate a new disk volume object. Files.Par: [device] ["#" part] [",R"] *)
 PROCEDURE New*(context : Files.Parameters);
 VAR
-	name: Plugins.Name; part, i: LONGINT;
+	name: Plugins.Name; part, i: SIGNED32;
 	options : ARRAY 8 OF CHAR; ch : CHAR;
 	table: Plugins.Table; readonly, retry: BOOLEAN;
 BEGIN

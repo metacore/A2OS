@@ -13,12 +13,12 @@ CONST
 VAR
 	(* memory allocation *)
 	allocations : ARRAY maxAllocations OF Allocation;
-	numAllocations : LONGINT;
+	numAllocations : SIGNED32;
 
 	(* argument parsing *)
 	args : PtrToLongString;
-	argLen : LONGINT;
-	argPos : LONGINT;
+	argLen : SIGNED32;
+	argPos : SIGNED32;
 
 (* allocate memory pages. If addr = -1 (=FFFFFFFFFH) then a page at an arbitrary position will be allocated. *)
 PROCEDURE AllocateMemory*(VAR addr : EFI.PhysicalAddress; numPages : EFI.Int) : EFI.Status;
@@ -50,7 +50,7 @@ END AllocateMemory;
 PROCEDURE FreeMemory*;
 VAR
 	status : EFI.Status;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN
 	FOR i := 0 TO numAllocations - 1 DO
 		status := EFI.table.BS.FreePages(allocations[i].baseAddress, allocations[i].numPages);
@@ -67,8 +67,8 @@ VAR
 	MemMap : ARRAY approxMemMapSize OF EFI.MemoryDescriptor;
 	MemMapElement : EFI.MemoryDescriptorPointer;
 	i, numEntries : EFI.Int;
-	hi, numcritEntries : HUGEINT;
-	memsize : HUGEINT;
+	hi, numcritEntries : SIGNED64;
+	memsize : SIGNED64;
 	tmp : EFI.PhysicalAddress;
 BEGIN
 	MemMapSize := LEN(MemMap)*SIZEOF(EFI.MemoryDescriptor);
@@ -247,7 +247,7 @@ BEGIN
 END ExitBootServices;
 
 (* Get the arguments given to the image *)
-PROCEDURE GetArgs*(VAR loadOptionsSize : LONGINT; VAR loadOptions : EFILoadedImage.PtrToArrayOfByte) : EFI.Status;
+PROCEDURE GetArgs*(VAR loadOptionsSize : SIGNED32; VAR loadOptions : EFILoadedImage.PtrToArrayOfByte) : EFI.Status;
 VAR
 	prot : EFI.Protocol; loadedImage : EFILoadedImage.Protocol;
 	status : EFI.Status;
@@ -267,7 +267,7 @@ PROCEDURE InitArgs*() : EFI.Status;
 VAR
 	prot : EFI.Protocol; loadedImage : EFILoadedImage.Protocol;
 	status : EFI.Status;
-	loadOptionsSize : LONGINT;
+	loadOptionsSize : SIGNED32;
 	loadOptions : EFILoadedImage.PtrToArrayOfByte;
 BEGIN
 	status := EFI.table.BS.HandleProtocol(EFI.imageHandle, EFILoadedImage.GUID, prot); (* not using GetArgs since we want access to other fields of the loadedImage-protocol *)
@@ -306,7 +306,7 @@ Treats ' ' (blank) as seperator between arguments. (text between '"' is NOT merg
 PROCEDURE GetNextArg*(VAR arg : ARRAY OF EFI.Char16) : BOOLEAN;
 VAR
 	status : EFI.Status;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN
 	IF args = NIL THEN
 		status := InitArgs();
@@ -332,7 +332,7 @@ PROCEDURE ReadString*(VAR buf : ARRAY OF EFI.Char16);
 CONST ScanCodeNull = 0; (* if ScanCode = 0 then UnicodeChar is valid. Else a special key was hit (e.g ESC, Fx,..) *)
 	CharLF = 0AH;
 	CharCR = 0DH;
-VAR key : EFI.InputKey; i : LONGINT;
+VAR key : EFI.InputKey; i : SIGNED32;
 	status : EFI.Status;
 	ConIn : POINTER TO EFI.SimpleInputInterface;
 	ConOut : POINTER TO EFI.SimpleTextOutputInterface;
@@ -370,10 +370,10 @@ BEGIN
 END ReadString;
 
 (* convert signed integer to a string *)
-PROCEDURE IntToString* (CONST x : LONGINT; VAR s : ARRAY OF CHAR);
-VAR i, slen, start : SIZE; x0 : LONGINT;
+PROCEDURE IntToString* (CONST x : SIGNED32; VAR s : ARRAY OF CHAR);
+VAR i, slen, start : SIZE; x0 : SIGNED32;
 BEGIN
-	IF x = MIN (LONGINT) THEN
+	IF x = MIN (SIGNED32) THEN
 		s := "-2147483648";
 		RETURN;
 	END;
@@ -399,8 +399,8 @@ END IntToString;
 
 (* Copied from BIOS.I386.Machine.Mod - StrToInt *)
 (** Convert a string to an integer. Parameter i specifies where in the string scanning should begin (usually 0 in the first call). Scanning stops at the first non-valid character, and i returns the updated position. Parameter s is the string to be scanned. The value is returned as result, or 0 if not valid. Syntax: number = ["-"] digit {digit} ["H" | "h"] . digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" . If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
-PROCEDURE StringToInt* (VAR i: SIZE; CONST s: ARRAY OF CHAR): LONGINT;
-VAR vd, vh, sgn, d: LONGINT; hex: BOOLEAN;
+PROCEDURE StringToInt* (VAR i: SIZE; CONST s: ARRAY OF CHAR): SIGNED32;
+VAR vd, vh, sgn, d: SIGNED32; hex: BOOLEAN;
 BEGIN
 	vd := 0; vh := 0; hex := FALSE;
 	IF s[i] = "-" THEN sgn := -1; INC (i) ELSE sgn := 1 END;
@@ -479,7 +479,7 @@ VAR
 	handleBufSize : EFI.Int;
 	file : EFIFileProtocol.Protocol;
 	done : BOOLEAN;
-	iter : LONGINT;
+	iter : SIGNED32;
 BEGIN
 	(* get all devices (or device drivers, handlers or what ever) that support the EFISimpleFS *)
 	handleBufSize := LEN(handleBuf) * SIZEOF(EFI.Handle);
@@ -574,7 +574,7 @@ BEGIN
 		| EFI.ErrInvalidLanguage : Trace.String("Error : Invalid Language");
 	END;
 	*)
-	Trace.String("Error Code: "); Trace.Int(LONGINT(status - EFI.Error), 0);
+	Trace.String("Error Code: "); Trace.Int(SIGNED32(status - EFI.Error), 0);
 	Trace.Ln;
 END ReportError;
 

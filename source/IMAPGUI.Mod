@@ -14,7 +14,7 @@ CONST
 	REFRESHTIME = 1000 * 2; 		(* ms *)
 
 VAR
-	nofWindows: LONGINT;
+	nofWindows: SIGNED32;
 
 TYPE
 	String = Strings.String;
@@ -49,7 +49,7 @@ TYPE
 			label : WMStandardComponents.Label;
 
 		BEGIN
-			NEW(ret); ret.bounds.SetExtents(400, 200); ret.fillColor.Set(LONGINT(0CCCCCCFFH));
+			NEW(ret); ret.bounds.SetExtents(400, 200); ret.fillColor.Set(SIGNED32(0CCCCCCFFH));
 
 			NEW(label); label.bounds.SetHeight(25); label.alignment.Set(WMComponents.AlignTop);
 			label.caption.SetAOC("Please give the path of the file that contains the account data: ");
@@ -57,7 +57,7 @@ TYPE
 			ret.AddContent(label);
 
 			NEW(filename); filename.bounds.SetHeight(25); filename.alignment.Set(WMComponents.AlignTop);
-			filename.multiLine.Set(FALSE); filename.fillColor.Set(LONGINT(0FFFFFFFFH)); filename.tv.showBorder.Set(TRUE);
+			filename.multiLine.Set(FALSE); filename.fillColor.Set(SIGNED32(0FFFFFFFFH)); filename.tv.showBorder.Set(TRUE);
 			filename.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			filename.bearing.Set(WMRectangles.MakeRect(10,10,10,10));
 			ret.AddContent(filename);
@@ -109,7 +109,7 @@ TYPE
 
 		PROCEDURE GetAnswer(VAR file: String; VAR b: BOOLEAN);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			BEGIN {EXCLUSIVE}
 				AWAIT(ready);
@@ -158,7 +158,7 @@ TYPE
 			ret, panel : WMStandardComponents.Panel;
 			label : WMStandardComponents.Label;
 		BEGIN
-			NEW(ret); ret.bounds.SetExtents(400, 200); ret.fillColor.Set(LONGINT(0CCCCCCFFH));
+			NEW(ret); ret.bounds.SetExtents(400, 200); ret.fillColor.Set(SIGNED32(0CCCCCCFFH));
 
 			NEW(label); label.bounds.SetHeight(25); label.alignment.Set(WMComponents.AlignTop);
 			label.caption.SetAOC("Please give the name of the file that should be saved: ");
@@ -166,7 +166,7 @@ TYPE
 			ret.AddContent(label);
 
 			NEW(filename); filename.bounds.SetHeight(25); filename.alignment.Set(WMComponents.AlignTop);
-			filename.multiLine.Set(FALSE); filename.fillColor.Set(LONGINT(0FFFFFFFFH)); filename.tv.showBorder.Set(TRUE);
+			filename.multiLine.Set(FALSE); filename.fillColor.Set(SIGNED32(0FFFFFFFFH)); filename.tv.showBorder.Set(TRUE);
 			filename.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			filename.bearing.Set(WMRectangles.MakeRect(10,10,10,10));
 			ret.AddContent(filename);
@@ -264,7 +264,7 @@ TYPE
 			p: WMStandardComponents.Panel;
 			label : WMStandardComponents.Label;
 		BEGIN
-			NEW(panel); panel.bounds.SetExtents(800, 600); panel.fillColor.Set(LONGINT(0CCCCCCFFH));
+			NEW(panel); panel.bounds.SetExtents(800, 600); panel.fillColor.Set(SIGNED32(0CCCCCCFFH));
 			(* --- Toolbar --- *)
 			NEW(topToolbar); topToolbar.bounds.SetHeight(40); topToolbar.alignment.Set(WMComponents.AlignTop);
 			panel.AddContent(topToolbar);
@@ -305,7 +305,7 @@ TYPE
 			(* --- headerPanel --- *)
 			NEW(headerPanel); headerPanel.alignment.Set(WMComponents.AlignTop);
 			headerPanel.bounds.SetHeight(150);
-			headerPanel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			headerPanel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			panel.AddContent(headerPanel);
 
 			(* --- fromPanel --- *)
@@ -411,7 +411,7 @@ TYPE
 			messageField.tv.showBorder.Set(TRUE);
 			messageField.SetAsString("");
 			messagePanel.AddContent(messageField);
-			messagePanel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			messagePanel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			messageField.hScrollbar.visible.Set(FALSE);
 
 			panel.AddContent(messagePanel);
@@ -452,7 +452,7 @@ TYPE
 			string: Strings.String;
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
-			r: LONGINT;
+			r: SIGNED32;
 			header: IMAPClient.HeaderElement;
 		BEGIN
 			header := message.header;
@@ -508,7 +508,7 @@ TYPE
 		VAR
 			server, thisHost: ARRAY 1000 OF CHAR;
 			preferences: IMAPClient.AccountPreferences;
-			r: LONGINT;
+			r: SIGNED32;
 			msg, caption: String;
 			buttons: SET;
 			header: IMAPClient.HeaderElement;
@@ -562,7 +562,7 @@ TYPE
 		PROCEDURE SaveDraft;
 		VAR
 			path: String;
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN
 			path := window.client.preferences.DraftFolder;
 			IF path^ = "" THEN
@@ -768,7 +768,7 @@ TYPE
 			label: WMStandardComponents.Label;
 			p: WMStandardComponents.Panel;
 		BEGIN
-			NEW(panel); panel.bounds.SetExtents(600, 400); panel.fillColor.Set(LONGINT(0CCCCCCFFH));
+			NEW(panel); panel.bounds.SetExtents(600, 400); panel.fillColor.Set(SIGNED32(0CCCCCCFFH));
 
 			(* --- flags --- *)
 			NEW(p);
@@ -889,7 +889,7 @@ TYPE
 			label.caption.SetAOC("Subject: ");
 			p.AddContent(label);
 			NEW(subject); subject.bounds.SetWidth(300); subject.alignment.Set(WMComponents.AlignClient);
-			subject.multiLine.Set(FALSE); subject.fillColor.Set(LONGINT(0FFFFFFFFH)); subject.tv.showBorder.Set(TRUE);
+			subject.multiLine.Set(FALSE); subject.fillColor.Set(SIGNED32(0FFFFFFFFH)); subject.tv.showBorder.Set(TRUE);
 			subject.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			p.AddContent(subject);
 
@@ -902,7 +902,7 @@ TYPE
 			label.caption.SetAOC("From: ");
 			p.AddContent(label);
 			NEW(from); from.bounds.SetWidth(300); from.alignment.Set(WMComponents.AlignClient);
-			from.multiLine.Set(FALSE); from.fillColor.Set(LONGINT(0FFFFFFFFH)); from.tv.showBorder.Set(TRUE);
+			from.multiLine.Set(FALSE); from.fillColor.Set(SIGNED32(0FFFFFFFFH)); from.tv.showBorder.Set(TRUE);
 			from.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			p.AddContent(from);
 
@@ -915,7 +915,7 @@ TYPE
 			label.caption.SetAOC("Body-Text: ");
 			p.AddContent(label);
 			NEW(text); text.bounds.SetWidth(300); text.alignment.Set(WMComponents.AlignClient);
-			text.multiLine.Set(FALSE); text.fillColor.Set(LONGINT(0FFFFFFFFH)); text.tv.showBorder.Set(TRUE);
+			text.multiLine.Set(FALSE); text.fillColor.Set(SIGNED32(0FFFFFFFFH)); text.tv.showBorder.Set(TRUE);
 			text.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			p.AddContent(text);
 
@@ -928,7 +928,7 @@ TYPE
 			label.caption.SetAOC("Min Size: ");
 			p.AddContent(label);
 			NEW(minSize); minSize.bounds.SetWidth(100); minSize.alignment.Set(WMComponents.AlignLeft);
-			minSize.multiLine.Set(FALSE); minSize.fillColor.Set(LONGINT(0FFFFFFFFH)); minSize.tv.showBorder.Set(TRUE);
+			minSize.multiLine.Set(FALSE); minSize.fillColor.Set(SIGNED32(0FFFFFFFFH)); minSize.tv.showBorder.Set(TRUE);
 			minSize.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			p.AddContent(minSize);
 
@@ -940,7 +940,7 @@ TYPE
 			label.caption.SetAOC("Max Size: ");
 			p.AddContent(label);
 			NEW(maxSize); maxSize.bounds.SetWidth(100); maxSize.alignment.Set(WMComponents.AlignLeft);
-			maxSize.multiLine.Set(FALSE); maxSize.fillColor.Set(LONGINT(0FFFFFFFFH)); maxSize.tv.showBorder.Set(TRUE);
+			maxSize.multiLine.Set(FALSE); maxSize.fillColor.Set(SIGNED32(0FFFFFFFFH)); maxSize.tv.showBorder.Set(TRUE);
 			maxSize.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			p.AddContent(maxSize);
 
@@ -979,21 +979,21 @@ TYPE
 			label.caption.SetAOC("Day: ");
 			p.AddContent(label);
 			NEW(day); day.bounds.SetWidth(50); day.alignment.Set(WMComponents.AlignLeft);
-			day.multiLine.Set(FALSE); day.fillColor.Set(LONGINT(0FFFFFFFFH)); day.tv.showBorder.Set(TRUE);
+			day.multiLine.Set(FALSE); day.fillColor.Set(SIGNED32(0FFFFFFFFH)); day.tv.showBorder.Set(TRUE);
 			day.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			p.AddContent(day);
 			NEW(label); label.bounds.SetWidth(50); label.alignment.Set(WMComponents.AlignLeft);
 			label.caption.SetAOC("Month: ");
 			p.AddContent(label);
 			NEW(month); month.bounds.SetWidth(50); month.alignment.Set(WMComponents.AlignLeft);
-			month.multiLine.Set(FALSE); month.fillColor.Set(LONGINT(0FFFFFFFFH)); month.tv.showBorder.Set(TRUE);
+			month.multiLine.Set(FALSE); month.fillColor.Set(SIGNED32(0FFFFFFFFH)); month.tv.showBorder.Set(TRUE);
 			month.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			p.AddContent(month);
 			NEW(label); label.bounds.SetWidth(50); label.alignment.Set(WMComponents.AlignLeft);
 			label.caption.SetAOC("Year: ");
 			p.AddContent(label);
 			NEW(year); year.bounds.SetWidth(50); year.alignment.Set(WMComponents.AlignLeft);
-			year.multiLine.Set(FALSE); year.fillColor.Set(LONGINT(0FFFFFFFFH)); year.tv.showBorder.Set(TRUE);
+			year.multiLine.Set(FALSE); year.fillColor.Set(SIGNED32(0FFFFFFFFH)); year.tv.showBorder.Set(TRUE);
 			year.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			p.AddContent(year);
 
@@ -1062,7 +1062,7 @@ TYPE
 			buffer, dateBuffer: Strings.Buffer;
 			string, dateString: String;
 			writer, dateWriter: Streams.Writer;
-			i, dateCount: LONGINT;
+			i, dateCount: SIGNED32;
 			r: SIZE;
 			monthString: ARRAY 37 OF CHAR;
 			valid: BOOLEAN;
@@ -1287,7 +1287,7 @@ TYPE
 			p: WMStandardComponents.Panel;
 			rect: WMRectangles.Rectangle;
 		BEGIN
-			NEW(panel); panel.bounds.SetExtents(500, 400); panel.fillColor.Set(LONGINT(0CCCCCCFFH));
+			NEW(panel); panel.bounds.SetExtents(500, 400); panel.fillColor.Set(SIGNED32(0CCCCCCFFH));
 			rect := WMRectangles.MakeRect(5, 2, 5, 2);
 
 			NEW(p); p.bounds.SetHeight(25); p.alignment.Set(WMComponents.AlignTop);
@@ -1316,7 +1316,7 @@ TYPE
 			label.caption.SetAOC("SMTP server name: ");
 			p.AddContent(label);
 			NEW(SMTPServer); SMTPServer.alignment.Set(WMComponents.AlignClient);
-			SMTPServer.multiLine.Set(FALSE); SMTPServer.fillColor.Set(LONGINT(0FFFFFFFFH)); SMTPServer.tv.showBorder.Set(TRUE);
+			SMTPServer.multiLine.Set(FALSE); SMTPServer.fillColor.Set(SIGNED32(0FFFFFFFFH)); SMTPServer.tv.showBorder.Set(TRUE);
 			SMTPServer.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			SMTPServer.SetAsString(oldPreferences.SMTPServer^);
 			p.AddContent(SMTPServer);
@@ -1328,7 +1328,7 @@ TYPE
 			label.caption.SetAOC("Name of this host(for SMTP): ");
 			p.AddContent(label);
 			NEW(SMTPThisHost); SMTPThisHost.alignment.Set(WMComponents.AlignClient);
-			SMTPThisHost.multiLine.Set(FALSE); SMTPThisHost.fillColor.Set(LONGINT(0FFFFFFFFH)); SMTPThisHost.tv.showBorder.Set(TRUE);
+			SMTPThisHost.multiLine.Set(FALSE); SMTPThisHost.fillColor.Set(SIGNED32(0FFFFFFFFH)); SMTPThisHost.tv.showBorder.Set(TRUE);
 			SMTPThisHost.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			SMTPThisHost.SetAsString(oldPreferences.SMTPThisHost^);
 			p.AddContent(SMTPThisHost);
@@ -1340,7 +1340,7 @@ TYPE
 			label.caption.SetAOC("Sent Folder: ");
 			p.AddContent(label);
 			NEW(SentFolder); SentFolder.alignment.Set(WMComponents.AlignClient);
-			SentFolder.multiLine.Set(FALSE); SentFolder.fillColor.Set(LONGINT(0FFFFFFFFH)); SentFolder.tv.showBorder.Set(TRUE);
+			SentFolder.multiLine.Set(FALSE); SentFolder.fillColor.Set(SIGNED32(0FFFFFFFFH)); SentFolder.tv.showBorder.Set(TRUE);
 			SentFolder.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			SentFolder.SetAsString(oldPreferences.SentFolder^);
 			p.AddContent(SentFolder);
@@ -1352,7 +1352,7 @@ TYPE
 			label.caption.SetAOC("Draft Folder: ");
 			p.AddContent(label);
 			NEW(DraftFolder); DraftFolder.alignment.Set(WMComponents.AlignClient);
-			DraftFolder.multiLine.Set(FALSE); DraftFolder.fillColor.Set(LONGINT(0FFFFFFFFH)); DraftFolder.tv.showBorder.Set(TRUE);
+			DraftFolder.multiLine.Set(FALSE); DraftFolder.fillColor.Set(SIGNED32(0FFFFFFFFH)); DraftFolder.tv.showBorder.Set(TRUE);
 			DraftFolder.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			DraftFolder.SetAsString(oldPreferences.DraftFolder^);
 			p.AddContent(DraftFolder);
@@ -1378,7 +1378,7 @@ TYPE
 			label.caption.SetAOC("Trash Bin: ");
 			p.AddContent(label);
 			NEW(TrashBin); TrashBin.alignment.Set(WMComponents.AlignClient);
-			TrashBin.multiLine.Set(FALSE); TrashBin.fillColor.Set(LONGINT(0FFFFFFFFH)); TrashBin.tv.showBorder.Set(TRUE);
+			TrashBin.multiLine.Set(FALSE); TrashBin.fillColor.Set(SIGNED32(0FFFFFFFFH)); TrashBin.tv.showBorder.Set(TRUE);
 			TrashBin.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			TrashBin.SetAsString(oldPreferences.TrashBin^);
 			p.AddContent(TrashBin);
@@ -1390,7 +1390,7 @@ TYPE
 			label.caption.SetAOC("From Field: ");
 			p.AddContent(label);
 			NEW(From); From.alignment.Set(WMComponents.AlignClient);
-			From.multiLine.Set(FALSE); From.fillColor.Set(LONGINT(0FFFFFFFFH)); From.tv.showBorder.Set(TRUE);
+			From.multiLine.Set(FALSE); From.fillColor.Set(SIGNED32(0FFFFFFFFH)); From.tv.showBorder.Set(TRUE);
 			From.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			From.SetAsString(oldPreferences.From^);
 			p.AddContent(From);
@@ -1482,7 +1482,7 @@ TYPE
 
 		PROCEDURE OKHandler(sender, data: ANY);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			string: String;
 			preferences: IMAPClient.AccountPreferences;
 		BEGIN
@@ -1605,7 +1605,7 @@ TYPE
 
 			(* --- Toolbar --- *)
 			NEW(topToolbar); topToolbar.bounds.SetHeight(78); topToolbar.alignment.Set(WMComponents.AlignTop);
-			topToolbar.fillColor.Set(LONGINT(0CCCCCCFFH));
+			topToolbar.fillColor.Set(SIGNED32(0CCCCCCFFH));
 			panel.AddContent(topToolbar);
 
 			NEW(p); p.bounds.SetHeight(26); p.alignment.Set(WMComponents.AlignTop);
@@ -1615,7 +1615,7 @@ TYPE
 			label.caption.SetAOC("Host: "); label.textColor.Set(0000000FFH); label.bearing.Set(rect); p.AddContent(label);
 
 			NEW(address); address.bounds.SetWidth(160); address.alignment.Set(WMComponents.AlignLeft);
-			address.multiLine.Set(FALSE); address.fillColor.Set(LONGINT(0FFFFFFFFH)); address.bearing.Set(rect); address.tv.showBorder.Set(TRUE);
+			address.multiLine.Set(FALSE); address.fillColor.Set(SIGNED32(0FFFFFFFFH)); address.bearing.Set(rect); address.tv.showBorder.Set(TRUE);
 			address.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			address.tv.borders.Set(WMRectangles.MakeRect(3,3,1,1));
 			address.onEnter.Add(ButtonHandler);
@@ -1674,7 +1674,7 @@ TYPE
 			NEW(currentMessagesLabel);
 			currentMessagesLabel.bounds.SetWidth(200);
 			currentMessagesLabel.alignment.Set(WMComponents.AlignLeft);
-			currentMessagesLabel.fillColor.Set(LONGINT(0CCCCCCFFH));
+			currentMessagesLabel.fillColor.Set(SIGNED32(0CCCCCCFFH));
 			currentMessagesLabel.caption.SetAOC("Current Messages: 0 ");
 			currentMessagesLabel.bearing.Set(rect);
 			p.AddContent(currentMessagesLabel);
@@ -1682,7 +1682,7 @@ TYPE
 			(* --- currentFolderLabel --- *)
 			NEW(currentFolderLabel);
 			currentFolderLabel.alignment.Set(WMComponents.AlignClient);
-			currentFolderLabel.fillColor.Set(LONGINT(0CCCCCCFFH));
+			currentFolderLabel.fillColor.Set(SIGNED32(0CCCCCCFFH));
 			currentFolderLabel.caption.SetAOC("Current Folder: ");
 			currentFolderLabel.bearing.Set(rect);
 			p.AddContent(currentFolderLabel);
@@ -1691,7 +1691,7 @@ TYPE
 			(* --- statusbar --- *)
 			NEW(p);
 			p.bounds.SetHeight(20); p.alignment.Set(WMComponents.AlignBottom);
-			p.fillColor.Set(LONGINT(0CCCCCCFFH));
+			p.fillColor.Set(SIGNED32(0CCCCCCFFH));
 			panel.AddContent(p);
 			NEW(statusLabel);
 			statusLabel.bounds.SetHeight(20);
@@ -1722,7 +1722,7 @@ TYPE
 			NEW(messagePanel);
 			messagePanel.alignment.Set(WMComponents.AlignClient);
 			messagePanel.bounds.SetWidth(824);
-			messagePanel.fillColor.Set(LONGINT(0CCCCCCFFH));
+			messagePanel.fillColor.Set(SIGNED32(0CCCCCCFFH));
 			panel.AddContent(messagePanel);
 
 			NEW(messageGrid);
@@ -1742,7 +1742,7 @@ TYPE
 			messageGrid.model.SetNofCols(1);
 			messageGrid.model.SetNofRows(1);
 			messageGrid.fixedRows.Set(1);
-			messageGrid.clFixed.Set(LONGINT(0C0C0C0FFH));
+			messageGrid.clFixed.Set(SIGNED32(0C0C0C0FFH));
 			messageGrid.model.SetCellText(0, 0, Strings.NewString(""));
 			messageGrid.SetSelectionMode(WMGrids.GridSelectRows);
 			messageGrid.showScrollX.Set(FALSE);
@@ -1793,7 +1793,7 @@ TYPE
 		VAR
 			message: IMAPClient.Message;
 			mw: MessageWindow;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			IF (data # NIL) & (data IS IMAPClient.Message) THEN
 				message := data(IMAPClient.Message);
@@ -1816,7 +1816,7 @@ TYPE
 			folder: IMAPClient.Folder;
 			treeNode: WMTrees.TreeNode;
 			p: ANY;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			IF (data # NIL) & (data IS WMTrees.TreeNode) THEN
 				treeNode := data(WMTrees.TreeNode);
@@ -1870,7 +1870,7 @@ TYPE
 		VAR
 			name : ARRAY 128 OF CHAR;
 			folder: IMAPClient.Folder;
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN
 			IF (data # NIL) & (data IS IMAPClient.Folder) THEN
 				folder := data(IMAPClient.Folder);
@@ -1889,7 +1889,7 @@ TYPE
 		VAR
 			folder: IMAPClient.Folder;
 			name : ARRAY 128 OF CHAR;
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN
 			IF (data # NIL) & (data IS IMAPClient.Folder) THEN
 				folder := data(IMAPClient.Folder);
@@ -1909,7 +1909,7 @@ TYPE
 		PROCEDURE DeleteDir(sender, data: ANY);
 		VAR
 			folder: IMAPClient.Folder;
-			r: LONGINT;
+			r: SIGNED32;
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
 			string: String;
@@ -1997,7 +1997,7 @@ TYPE
 			p: ANY;
 			folder: IMAPClient.Folder;
 			list: Classes.List;
-			i, r: LONGINT;
+			i, r: SIGNED32;
 			message: IMAPClient.Message;
 			successful: BOOLEAN;
 			path: String;
@@ -2049,7 +2049,7 @@ TYPE
 			list: Classes.List;
 			img : WMGraphics.Image;
 			c : WMGraphics.BufferCanvas;
-			top: LONGINT;
+			top: SIGNED32;
 			i: SIZE;
 			p: ANY;
 			message: IMAPClient.Message;
@@ -2059,7 +2059,7 @@ TYPE
 			(* render to bitmap *)
 			NEW(img);	Raster.Create(img, 100, 200, Raster.BGRA8888);
 			NEW(c, img);
-			c.SetColor(LONGINT(0FFFF00FFH));
+			c.SetColor(SIGNED32(0FFFF00FFH));
 			top := 0;
 			FOR i := 0 TO list.GetCount() - 1 DO
 				c.Fill(WMRectangles.MakeRect(0, top, 100, top + 25), 0FF80H, WMGraphics.ModeCopy);
@@ -2135,7 +2135,7 @@ TYPE
 		PROCEDURE CopyMessages(sender, data: ANY);
 		VAR
 			list: Classes.List;
-			i, r: LONGINT;
+			i, r: SIGNED32;
 			p: ANY;
 			message: IMAPClient.Message;
 			path: String;
@@ -2161,7 +2161,7 @@ TYPE
 		PROCEDURE DeleteMessages(sender, data: ANY);
 		VAR
 			list: Classes.List;
-			i, r: LONGINT;
+			i, r: SIGNED32;
 			p: ANY;
 			message: IMAPClient.Message;
 		BEGIN
@@ -2188,7 +2188,7 @@ TYPE
 		PROCEDURE RestoreMessages(sender, data: ANY);
 		VAR
 			list: Classes.List;
-			i, r: LONGINT;
+			i, r: SIGNED32;
 			p: ANY;
 			message: IMAPClient.Message;
 		BEGIN
@@ -2211,7 +2211,7 @@ TYPE
 		PROCEDURE Connect;
 		VAR user, pass: ARRAY 1000 OF CHAR;
 			host: String;
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN
 			IMAPUtilities.TextToStr(address.text, host);
 			IF (host^ = "") THEN
@@ -2270,7 +2270,7 @@ TYPE
 			doc: XML.Document;
 			file: Files.File;
 			fw: Files.Writer;
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN
 			IF (client.status # IMAPClient.ONLINE) & (client.status # IMAPClient.OFFLINE) THEN
 				OutputError("Save is not applicable because you are disconnected");
@@ -2306,7 +2306,7 @@ TYPE
 
 		PROCEDURE Expunge;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 		BEGIN
 			IF client.status = IMAPClient.ONLINE THEN
 				r := WMDialogs.Confirmation("Confirm Expunge", "Do you really want to expunge the deleted Messages?");
@@ -2351,7 +2351,7 @@ TYPE
 			file: Files.File;
 			fr: Files.Reader;
 			string: String;
-			r: LONGINT;
+			r: SIGNED32;
 			scanner: XMLScanner.Scanner;
 			parser: XMLParser.Parser;
 			document: XML.Document;
@@ -2444,7 +2444,7 @@ TYPE
 		(* updates all the labels (statusLabel, currentFolderLabel, currentMessagesLabel) *)
 		PROCEDURE UpdateStatusLabels;
 		VAR
-			status, currentWork: LONGINT;
+			status, currentWork: SIGNED32;
 			nofMessages: SIZE;
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
@@ -2532,7 +2532,7 @@ TYPE
 		PROCEDURE UpdateFolders;
 		VAR
 			root: WMTrees.TreeNode;
-			i: LONGINT;
+			i: SIGNED32;
 			p: ANY;
 			folder: IMAPClient.Folder;
 			state: SET;
@@ -2540,7 +2540,7 @@ TYPE
 			PROCEDURE UpdateSub(parent: WMTrees.TreeNode; folder:IMAPClient.Folder);
 			VAR
 				node, child: WMTrees.TreeNode;
-				i: LONGINT;
+				i: SIGNED32;
 				sub: ANY;
 				subFolder: IMAPClient.Folder;
 				childData: ANY;
@@ -2591,7 +2591,7 @@ TYPE
 				folder: IMAPClient.Folder;
 				subFolders: Classes.List;
 				subFolder: IMAPClient.Folder;
-				i: LONGINT;
+				i: SIGNED32;
 				found: BOOLEAN;
 			BEGIN
 				p := tree.GetNodeData(node);
@@ -2639,7 +2639,7 @@ TYPE
 
 		PROCEDURE UpdateMessages;
 		VAR
-			i: SIZE; count: LONGINT;
+			i: SIZE; count: SIGNED32;
 			message: IMAPClient.Message;
 			messageP: ANY;
 			header: IMAPClient.HeaderElement;
@@ -2652,7 +2652,7 @@ TYPE
 			bResizeGrid: BOOLEAN;
 			sortedList: Classes.SortedList;
 
-			PROCEDURE Display(row: LONGINT; message: IMAPClient.Message);
+			PROCEDURE Display(row: SIGNED32; message: IMAPClient.Message);
 			BEGIN
 				IF message.header # NIL THEN
 					list := message.header.from;

@@ -114,7 +114,7 @@ TYPE
 		END Set;
 
 		PROCEDURE Get() : PartitionTable.Partition;
-		VAR partition : PartitionTable.Partition ;nbr : ARRAY 16 OF CHAR; value : LONGINT;
+		VAR partition : PartitionTable.Partition ;nbr : ARRAY 16 OF CHAR; value : SIGNED32;
 		BEGIN
 			typeEditor.GetAsString(nbr); Strings.StrToInt(nbr, partition.type);
 			flagEditor.GetAsString(nbr); Strings.StrToInt(nbr, value); partition.flag := CHR(value);
@@ -186,7 +186,7 @@ TYPE
 	END PartitionEditor;
 
 TYPE
-	ChangeHandler* = PROCEDURE {DELEGATE} (changeType : LONGINT; VAR partition : PartitionTable.Partition);
+	ChangeHandler* = PROCEDURE {DELEGATE} (changeType : SIGNED32; VAR partition : PartitionTable.Partition);
 
 	(** The PartitionTableEditor component can display and edit the PartitionTable.PartitionTable datastructure *)
 	PartitionTableEditor* = OBJECT (WMComponents.VisualComponent)
@@ -196,7 +196,7 @@ TYPE
 		changeHandler* : ChangeHandler;
 
 		PROCEDURE Set*(CONST partitionTable : PartitionTable.PartitionTable);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			SELF.partitionTable := partitionTable;
 			FOR i := 0 TO LEN(partitionEditors)-1 DO
@@ -205,7 +205,7 @@ TYPE
 		END Set;
 
 		PROCEDURE Get*() : PartitionTable.PartitionTable;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(partitionEditors)-1 DO
 				partitionTable[i] := partitionEditors[i].Get();
@@ -221,7 +221,7 @@ TYPE
 
 		(** Clears all editable fields of the editor *)
 		PROCEDURE Clear*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(partitionEditors)-1 DO
 				partitionEditors[i].Clear;
@@ -230,7 +230,7 @@ TYPE
 
 		(* This handler is called whenever a text of any of the editors changes *)
 		PROCEDURE HandleOnEnter(sender, data : ANY);
-		VAR changeHandler : ChangeHandler; partition, changeType : LONGINT;
+		VAR changeHandler : ChangeHandler; partition, changeType : SIGNED32;
 		BEGIN
 			changeHandler := SELF.changeHandler;
 			IF (changeHandler # NIL) THEN
@@ -263,7 +263,7 @@ TYPE
 		END HandleOnEnter;
 
 		PROCEDURE RegisterOnEnterHandlers;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 
 			PROCEDURE RegisterBlock(blockEditor : BlockEditor);
 			BEGIN
@@ -287,7 +287,7 @@ TYPE
 			label : WMStandardComponents.Label;
 			vc : WMComponents.VisualComponent;
 			caption : ARRAY 16 OF CHAR;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			Init^;
 			PartitionTable.Clear(partitionTable);
@@ -320,7 +320,7 @@ TYPE
 
 	END PartitionTableEditor;
 
-PROCEDURE CreateLabel(VAR label : WMStandardComponents.Label; CONST caption : ARRAY OF CHAR; width : LONGINT);
+PROCEDURE CreateLabel(VAR label : WMStandardComponents.Label; CONST caption : ARRAY OF CHAR; width : SIGNED32);
 BEGIN
 	NEW(label);
 	label.alignment.Set(WMComponents.AlignLeft);
@@ -328,7 +328,7 @@ BEGIN
 	label.caption.SetAOC(caption);
 END CreateLabel;
 
-PROCEDURE CreateEditor(VAR editor : WMEditors.Editor; width : LONGINT);
+PROCEDURE CreateEditor(VAR editor : WMEditors.Editor; width : SIGNED32);
 BEGIN
 	NEW(editor);
 	editor.alignment.Set(WMComponents.AlignLeft);

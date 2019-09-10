@@ -16,8 +16,8 @@ CONST
 TYPE
 	(** structure for reading from a file with deflated data **)
 	Reader* = RECORD
-		res-: LONGINT;	(** current stream state **)
-		crc32-: LONGINT;	(* crc32 of uncompressed data *)
+		res-: SIGNED32;	(** current stream state **)
+		crc32-: SIGNED32;	(* crc32 of uncompressed data *)
 		wrapper-: BOOLEAN;	(** if set, a zlib header and a checksum are present **)
 		eof: BOOLEAN;	(* set if at end of input file and input buffer empty *)
 		r: Files.Rider;
@@ -43,7 +43,7 @@ BEGIN
 END Open;
 
 (** read specified number of bytes into buffer and return number of bytes actually read **)
-PROCEDURE ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT);
+PROCEDURE ReadBytes*(VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: SIGNED32; VAR read: SIGNED32);
 BEGIN
 	ASSERT((0 <= offset) & (0 <= len) & (offset + len <= LEN(buf)), 100);
 	IF ~r.s.open THEN
@@ -69,14 +69,14 @@ BEGIN
 			END
 		END;
 		r.crc32 := Zlib.CRC32(r.crc32, buf, offset, len - r.s.out.avail);
-		read := (len - r.s.out.avail)(LONGINT);
+		read := (len - r.s.out.avail)(SIGNED32);
 	END
 END ReadBytes;
 
 (** read decompressed byte **)
 PROCEDURE Read*(VAR r: Reader; VAR ch: CHAR);
 VAR
-	buf: ARRAY 1 OF CHAR; read: LONGINT;
+	buf: ARRAY 1 OF CHAR; read: SIGNED32;
 BEGIN
 	ReadBytes(r, buf, 0, 1, read);
 	ch := buf[0]
@@ -93,9 +93,9 @@ BEGIN
 END Close;
 
 (** uncompress deflated data from scr and write them to dst **)
-PROCEDURE Uncompress*(VAR src, dst: Files.Rider; VAR crc32: LONGINT; VAR res: WORD);
+PROCEDURE Uncompress*(VAR src, dst: Files.Rider; VAR crc32: SIGNED32; VAR res: INTEGER);
 VAR
-	r: Reader; buf: ARRAY BufSize OF CHAR; read: LONGINT;
+	r: Reader; buf: ARRAY BufSize OF CHAR; read: SIGNED32;
 BEGIN
 	Open(r, FALSE, src);
 	IF r.res = Ok THEN

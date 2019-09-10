@@ -21,13 +21,13 @@ type
 	Fifo=object
 	var
 		data: pointer to array of system.byte;
-(*		inPos, outPos: longint; *)
-		length: longint;  
+(*		inPos, outPos: signed32; *)
+		length: signed32;  
 		rdPos,numEle: size;
 
 		inPort: Port; outPort: Port;
 
-		procedure &Init(outP: Port; inP: Port; length: longint);
+		procedure &Init(outP: Port; inP: Port; length: signed32);
 		begin
 			(*inPos := 0; outPos := 0; *)
 			rdPos:=0; 
@@ -41,12 +41,12 @@ type
 			inPort.SetFifo(self); outPort.SetFifo(self);
 		end Init;
 
-		procedure Put(value: longint);
+		procedure Put(value: signed32);
 		begin{EXCLUSIVE}
 			halt(100);(*broken+deprecated*)
 		end Put;
 
-		procedure Get(var value: longint);
+		procedure Get(var value: signed32);
 		begin{EXCLUSIVE}
 			halt(100); (*broken+deprecated*)
 		end Get;
@@ -168,7 +168,7 @@ type
 		
 		owner: Cell;
 
-		procedure & InitPort(inout: set; width: longint);
+		procedure & InitPort(inout: set; width: signed32);
 		begin
 			fifo := nil;
 			delegatedTo := nil;
@@ -190,7 +190,7 @@ type
 			end;
 		end SetFifo;
 
-		procedure Send(value: longint);
+		procedure Send(value: signed32);
 		begin
 			(*begin{EXCLUSIVE}
 				await((fifo # nil) or (delegatedTo # nil));
@@ -215,7 +215,7 @@ type
 			end;
 		end BulkSend;
 
-		procedure Receive(var value: longint);
+		procedure Receive(var value: signed32);
 		begin
 			(*begin{EXCLUSIVE}
 				await((fifo # nil) or (delegatedTo # nil));
@@ -228,7 +228,7 @@ type
 			end;
 		end Receive;
 		
-		procedure ReceiveNonBlocking(var value: longint): boolean;
+		procedure ReceiveNonBlocking(var value: signed32): boolean;
 		begin
 			if delegatedTo # nil then
 				return delegatedTo.ReceiveNonBlocking(value)
@@ -264,7 +264,7 @@ type
 			(*if scope # nil then cel.scope := scope(Cell); end;*)
 		end Allocate;
 
-		procedure AddPort*(c: any; var p: any; const name: array of char; inout: set; width: longint);
+		procedure AddPort*(c: any; var p: any; const name: array of char; inout: set; width: signed32);
 		var por: Port;
 		begin
 			if res # 0 then return; end; (*! do not do anything in case of an error *)
@@ -273,7 +273,7 @@ type
 			p := por;
 		end AddPort;
 
-		procedure AddPortArray*(c: any; var ports: any; const name: array of char; inout: set; width: longint; const lens: array of longint);
+		procedure AddPortArray*(c: any; var ports: any; const name: array of char; inout: set; width: signed32; const lens: array of signed32);
 		type
 			Ports1d = array of any;
 			Ports2d = array of Ports1d;
@@ -282,7 +282,7 @@ type
 			p1d: pointer to Ports1d;
 			p2d: pointer to Ports2d;
 			p3d: pointer to Ports3d;
-			i0, i1, i2: longint;
+			i0, i1, i2: signed32;
 		begin
 			if res # 0 then return; end; (*! do not do anything in case of an error *)
 			if EnableTrace then trace(name, inout, width, len(lens)); end;
@@ -322,7 +322,7 @@ type
 			end;
 		end AddPortArray;
 
-		procedure AddStaticPortArray*(c: any; var ports: array of any; const name: array of char; inout: set; width: longint);
+		procedure AddStaticPortArray*(c: any; var ports: array of any; const name: array of char; inout: set; width: signed32);
 		var i: size;
 		begin
 			if res # 0 then return; end; (*! do not do anything in case of an error *)
@@ -332,7 +332,7 @@ type
 			end;
 		end AddStaticPortArray;
 
-		procedure Connect*(outPort, inPort: any; depth: longint);
+		procedure Connect*(outPort, inPort: any; depth: signed32);
 		var fifo: Fifo;
 		begin
 			if res # 0 then return; end; (*! do not do anything in case of an error *)
@@ -368,7 +368,7 @@ type
 			end;
 		end Start;
 
-		procedure Send*(p: any; value: longint);
+		procedure Send*(p: any; value: signed32);
 		begin
 			if EnableTrace then trace(p, value); end;
 			p(Port).Send(value);
@@ -380,13 +380,13 @@ type
 			p(Port).BulkSend(value);
 		end BulkSend;
 
-		procedure Receive*(p: any; var value: longint);
+		procedure Receive*(p: any; var value: signed32);
 		begin
 			if EnableTrace then trace(p, value); end;
 			p(Port).Receive(value);
 		end Receive;
 		
-		procedure ReceiveNonBlocking*(p: any; var value: longint): boolean;
+		procedure ReceiveNonBlocking*(p: any; var value: signed32): boolean;
 		begin
 			if EnableTrace then trace(p, value); end;
 			return p(Port).ReceiveNonBlocking(value);

@@ -230,7 +230,7 @@ TYPE
 
 	(** FIFO list for packets *)
 	PacketFIFO*= OBJECT
-	VAR q,usedQ: FIFO; list,usedList: FIFOList; bufSize: LONGINT;
+	VAR q,usedQ: FIFO; list,usedList: FIFOList; bufSize: SIGNED32;
 
 		PROCEDURE GetPacket*():OHCIPacket;
 		VAR n:FIFONode; packet: OHCIPacket;
@@ -253,8 +253,8 @@ TYPE
 			list.Enqueue(q,n);
 		END ReleasePacket;
 
-		PROCEDURE &Init*(numOfPacket :LONGINT);
-		VAR n: FIFONode;i: LONGINT; packet: OHCIPacket;
+		PROCEDURE &Init*(numOfPacket :SIGNED32);
+		VAR n: FIFONode;i: SIGNED32; packet: OHCIPacket;
 		BEGIN {EXCLUSIVE}
 			bufSize:= GetMaxPcktSize();
 			NEW(list);NEW(usedList);
@@ -272,16 +272,16 @@ TYPE
 
 	(** Used to hold addresses that must be checked before being accessed *)
 	AddressChecker*= OBJECT
-	VAR index: LONGINT; addrs: ARRAY 100 OF LONGINT;
+	VAR index: SIGNED32; addrs: ARRAY 100 OF SIGNED32;
 
-		PROCEDURE Add*(adr: LONGINT);
+		PROCEDURE Add*(adr: SIGNED32);
 		BEGIN
 			addrs[index]:= adr;
 			index:= index MOD 100;
 		END Add;
 
-		PROCEDURE Find*(adr: LONGINT): BOOLEAN;
-		VAR i: LONGINT; found: BOOLEAN;
+		PROCEDURE Find*(adr: SIGNED32): BOOLEAN;
+		VAR i: SIGNED32; found: BOOLEAN;
 		BEGIN
 			found:= FALSE;
 			WHILE ~found & (i # 100) DO
@@ -306,30 +306,30 @@ TYPE
 		addrHigh*: SET;
 		addrLow*: SET;
 
-		vendorID*: LONGINT;
-		vendorNameSize*: LONGINT;
+		vendorID*: SIGNED32;
+		vendorNameSize*: SIGNED32;
 
-		modelID*: LONGINT;
-		modelNameSize*: LONGINT;
+		modelID*: SIGNED32;
+		modelNameSize*: SIGNED32;
 
-		specifierID*: LONGINT;
-		version*: LONGINT;
+		specifierID*: SIGNED32;
+		version*: SIGNED32;
 
-		ID*: LONGINT;
+		ID*: SIGNED32;
 
-		length: LONGINT;
+		length: SIGNED32;
 		udEntries*: POINTER TO ARRAY OF SET;
 
 		hasLogicalUnitDir*: BOOLEAN;
 		luns*: ARRAY 10 OF UnitDirectory;
 
-		PROCEDURE GetLength*():LONGINT;
+		PROCEDURE GetLength*():SIGNED32;
 		BEGIN
 			RETURN length
 		END GetLength;
 
-		PROCEDURE &Init*(length: LONGINT);
-		VAR i: LONGINT;
+		PROCEDURE &Init*(length: SIGNED32);
+		VAR i: SIGNED32;
 		BEGIN
 			hasLogicalUnitDir:= FALSE;
 			SELF.length:= length;
@@ -354,10 +354,10 @@ TYPE
 		isc*: BOOLEAN;
 		bmc*: BOOLEAN;
 		pmc*: BOOLEAN;
-		cycClkAcc*: LONGINT;
-		maxRec*: LONGINT;
-		generation*: LONGINT;
-		linkSpd*: LONGINT;
+		cycClkAcc*: SIGNED32;
+		maxRec*: SIGNED32;
+		generation*: SIGNED32;
+		linkSpd*: SIGNED32;
 	END;
 
 	(** 1394 Node *)
@@ -372,13 +372,13 @@ TYPE
 		pwrClass: SET;
 		portStatus: ARRAY 16 OF SET;
 		guid*: GUID;
-		vendorID*: LONGINT;
-		generation*: LONGINT;
+		vendorID*: SIGNED32;
+		generation*: SIGNED32;
 		probe*: BOOLEAN;
 		busOptions*: BusOpt;
 		uds*: ARRAY 10 OF UnitDirectory; (* should be enough *)
 
-	PROCEDURE Update*(busOptions: SET; physicalID: SET; generation: LONGINT);
+	PROCEDURE Update*(busOptions: SET; physicalID: SET; generation: SIGNED32);
 	BEGIN
 		IF physicalID # phyID THEN
 			KernelLog.String("The physicalID has changed "); KernelLog.Ln();
@@ -401,17 +401,17 @@ TYPE
 		IF 29 IN busOpt THEN busOptions.isc:= TRUE ELSE busOptions.isc:= FALSE END;
 		IF 28 IN busOpt THEN busOptions.bmc:= TRUE ELSE busOptions.bmc:= FALSE END;
 		IF 27 IN busOpt THEN busOptions.pmc:= TRUE ELSE busOptions.pmc:= FALSE END;
-		busOptions.cycClkAcc:= SYSTEM.VAL(LONGINT,LSH(busOpt,-16)*{0..7});
-		busOptions.maxRec:= LSH(SYSTEM.VAL(LONGINT,LSH(busOpt,-12)*{0..3})+1,1);
-		busOptions.generation:= SYSTEM.VAL(LONGINT,LSH(busOpt,-4)*{0..3});
-		busOptions.linkSpd:= SYSTEM.VAL(LONGINT,busOpt*{0..2});
+		busOptions.cycClkAcc:= SYSTEM.VAL(SIGNED32,LSH(busOpt,-16)*{0..7});
+		busOptions.maxRec:= LSH(SYSTEM.VAL(SIGNED32,LSH(busOpt,-12)*{0..3})+1,1);
+		busOptions.generation:= SYSTEM.VAL(SIGNED32,LSH(busOpt,-4)*{0..3});
+		busOptions.linkSpd:= SYSTEM.VAL(SIGNED32,busOpt*{0..2});
 	END UpdateBusOpt;
 
-	PROCEDURE &Init*(guid: GUID; busOptions: SET; physicalID: SET; generation: LONGINT);
-	VAR i: LONGINT;
+	PROCEDURE &Init*(guid: GUID; busOptions: SET; physicalID: SET; generation: SIGNED32);
+	VAR i: SIGNED32;
 	BEGIN
 		SELF.guid:= guid; phyID:= physicalID; SELF.generation:= generation;
-		vendorID:= SYSTEM.VAL(LONGINT,LSH(guid.high,-8)); probe:= TRUE; UpdateBusOpt(busOptions);
+		vendorID:= SYSTEM.VAL(SIGNED32,LSH(guid.high,-8)); probe:= TRUE; UpdateBusOpt(busOptions);
 		FOR i:= 0 TO 9 DO
 			uds[i]:= NIL;
 		END;
@@ -421,11 +421,11 @@ TYPE
 
 	(** Is used to distribute the transaction labels *)
 	LabelPool*= OBJECT
-		VAR freeLabel: LONGINT;
+		VAR freeLabel: SIGNED32;
 			freeLabelField: ARRAY 64 OF BOOLEAN;
 
 		PROCEDURE GetTransLabel*():SET;
-		VAR i: LONGINT; found: BOOLEAN;
+		VAR i: SIGNED32; found: BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			IF freeLabel = 0 THEN KernelLog.String("Awating free label!"); KernelLog.Ln();
 				AWAIT(freeLabel > 0);
@@ -444,14 +444,14 @@ TYPE
 		END GetTransLabel;
 
 		PROCEDURE FreeTransLabel*(lab: SET);
-		VAR label: LONGINT;
-		BEGIN {EXCLUSIVE} label:= SYSTEM.VAL(LONGINT,lab);
+		VAR label: SIGNED32;
+		BEGIN {EXCLUSIVE} label:= SYSTEM.VAL(SIGNED32,lab);
 			freeLabelField[label]:= TRUE; (* KernelLog.String("Freeing transaction label"); KernelLog.Ln(); *)
 			INC(freeLabel)
 		END FreeTransLabel;
 
-		PROCEDURE &Init*(freeLabel: LONGINT);
-		VAR i: LONGINT;
+		PROCEDURE &Init*(freeLabel: SIGNED32);
+		VAR i: SIGNED32;
 		BEGIN SELF.freeLabel:= freeLabel;
 		FOR i:= 0 TO freeLabel-1 DO
 			freeLabelField[i]:=TRUE;
@@ -505,8 +505,8 @@ TYPE
 			RETURN error
 		END DelPacket;
 
-		PROCEDURE &Init*(numOfPacket: LONGINT);
-		VAR n: FIFONode; i: LONGINT;
+		PROCEDURE &Init*(numOfPacket: SIGNED32);
+		VAR n: FIFONode; i: SIGNED32;
 		BEGIN
 			NEW(head); head.next:= NIL; last:= head; NEW(usedList); NEW(list);
 			IF numOfPacket > 0 THEN
@@ -591,16 +591,16 @@ TYPE
 
 	(** Holds OHCI informatin and status *)
 	OHCIDesc*= RECORD
-		SelfIDErrors*: LONGINT;
+		SelfIDErrors*: SIGNED32;
 		SelfIDBufferAdr*: SET;
 		ptrToSelfIDBuf*: CharBuffer;
 		ConfigRomBufferAdr*: SET;
 		ptrToConfigRomBuf*: CharBuffer;
-		MaxPacketSize*: LONGINT;
-		ARDescNum*: LONGINT;
-		ATDescNum*: LONGINT;
-		IRDescNum*: LONGINT;
-		ITDescNum*: LONGINT;
+		MaxPacketSize*: SIGNED32;
+		ARDescNum*: SIGNED32;
+		ATDescNum*: SIGNED32;
+		IRDescNum*: SIGNED32;
+		ITDescNum*: SIGNED32;
 		IMDesc*: InputMoreDesc;
 		inBusReset*: BOOLEAN;
 		ARController*: ADMAController;
@@ -612,10 +612,10 @@ TYPE
 		ExstRegMap*: BOOLEAN;
 		IsIRM*: BOOLEAN;
 		IsBM*: BOOLEAN;
-		nodeID*: LONGINT;
+		nodeID*: SIGNED32;
 		TopologyMap*: ARRAY 256 OF SelfID;
-		SpeedMap*: ARRAY 64,64 OF LONGINT;
-		numOfNodes*: LONGINT;
+		SpeedMap*: ARRAY 64,64 OF SIGNED32;
+		numOfNodes*: SIGNED32;
 		labeler*: LabelPool;
 		selfIDComplete*: BOOLEAN;
 		adrCheck*: AddressChecker;
@@ -631,23 +631,23 @@ TYPE
 		type*: SET;
 		header*: POINTER TO ARRAY OF SET; (* data from the response packet *)
 		data*: POINTER TO ARRAY OF SET; (* holds data from the response packet if it's a read,from the request packet if it's a write/lock packet *)
-		headerSize*: LONGINT;
-		dataSize*: LONGINT;
+		headerSize*: SIGNED32;
+		dataSize*: SIGNED32;
 		tCode*: SET;
 		speed*: SET;
 		ack*: SET;
 		pending*: BOOLEAN;
 		respExpected*: BOOLEAN;
 		tLabel*: SET;
-		generation*: LONGINT;
-		state*: LONGINT;
+		generation*: SIGNED32;
+		state*: SIGNED32;
 		block*: Block; (* only needed when sending *)
-		size*: LONGINT;
+		size*: SIGNED32;
 		name*: ARRAY 5 OF CHAR;
 		blockBufferAddr*: ADDRESS;
 		ptrToBlckBufAddr*: CharBuffer;
 
-		PROCEDURE &Init*(hSize,dSize: LONGINT);
+		PROCEDURE &Init*(hSize,dSize: SIGNED32);
 		BEGIN
 			blockBufferAddr:= AllocATReqBuf(ptrToBlckBufAddr);
 			headerSize:= hSize; dataSize:= dSize; size:= 0;
@@ -661,15 +661,15 @@ TYPE
 
 	(** Represents a descriptor block *)
 	Block* = RECORD
-		descNum*: LONGINT;
+		descNum*: SIGNED32;
 		start*: ADDRESS;
 		end*: ADDRESS; (* Points to first quadlet of last descriptor *)
 	END;
 
 	(** Represents a context program *)
 	Program* = OBJECT
-		VAR blockBuffer*: BlockBuffer; bufferAddr*: ADDRESS; j,blockNum: LONGINT; hasNext,result: BOOLEAN;
-			branchAddressPtr, branchAddress: ADDRESS; nextAddr*: ADDRESS; packetOffset*: LONGINT; curDesc*: SET;
+		VAR blockBuffer*: BlockBuffer; bufferAddr*: ADDRESS; j,blockNum: SIGNED32; hasNext,result: BOOLEAN;
+			branchAddressPtr, branchAddress: ADDRESS; nextAddr*: ADDRESS; packetOffset*: SIGNED32; curDesc*: SET;
 			ptrToBuf*: CharBuffer; oldPtrToBlck,ptrToBlck: CharBuffer;
 
 		PROCEDURE SetBranchAddress*(address,ptr: ADDRESS;newPtrToBlck: CharBuffer);
@@ -716,12 +716,12 @@ TYPE
 	(** Represents a DMA context *)
 	Contest* = OBJECT
 	VAR
-		type*: LONGINT;
+		type*: SIGNED32;
 		prgr*: Program;
 		procBuffer*: PacketBuffer; (* received packets *)
-		cmdPtr*: LONGINT;
-		ctrlSet*: LONGINT;
-		ctrlClear*: LONGINT;
+		cmdPtr*: SIGNED32;
+		ctrlSet*: SIGNED32;
+		ctrlClear*: SIGNED32;
 		name*: ARRAY 20 OF CHAR;
 		listAwaiting*: List; (* packets awaiting an ack or a response after being sent from list inserted*)
 		listPending*: List; (* packets to send *)
@@ -730,7 +730,7 @@ TYPE
 		ptrToTmpBuf*: ARRAY 1 OF CharBuffer;
 		buffers*: BufferBuffer;
 
-		PROCEDURE &Init*(pcktNum,bufferNum: LONGINT);
+		PROCEDURE &Init*(pcktNum,bufferNum: SIGNED32);
 		BEGIN
 			NEW(listPending,100); NEW(listInserted,100); NEW(listAwaiting,100);
 			NEW(procBuffer,pcktNum);
@@ -741,12 +741,12 @@ TYPE
 
 	(** The isochronous receive context *)
 	IRContest* =OBJECT(Contest)
-	VAR match*: LONGINT;
+	VAR match*: SIGNED32;
 	END IRContest;
 
 	(** The isochronous transmit controller*)
 	ITDMAController*= OBJECT
-		VAR contests: POINTER TO ARRAY OF Contest; contest: Contest; i,j,avITCont: LONGINT; hasNext*:BOOLEAN;
+		VAR contests: POINTER TO ARRAY OF Contest; contest: Contest; i,j,avITCont: SIGNED32; hasNext*:BOOLEAN;
 
 		PROCEDURE GetNextContest*():Contest;
 		BEGIN
@@ -761,7 +761,7 @@ TYPE
 			IF avITCont > 0 THEN hasNext:= TRUE END
 		END ResetIterator;
 
-		PROCEDURE &Init*(contNum,pcktNum,bufferNum: LONGINT);
+		PROCEDURE &Init*(contNum,pcktNum,bufferNum: SIGNED32);
 		BEGIN
 			NEW(contests,contNum);
 			FOR i:= 0 TO contNum-1 DO NEW(contest,pcktNum,contNum*bufferNum);
@@ -785,7 +785,7 @@ TYPE
 			RETURN contests[RESP];
 		END GetResContest;
 
-		PROCEDURE &Init*(pcktNum, bufferNum :LONGINT);
+		PROCEDURE &Init*(pcktNum, bufferNum :SIGNED32);
 		BEGIN
 			NEW(contests,2);
 			NEW(contest,pcktNum,bufferNum);
@@ -797,7 +797,7 @@ TYPE
 
 	(** The isochronous controller *)
 	IRDMAController*= OBJECT
-		VAR contests: POINTER TO ARRAY OF IRContest; contest: IRContest; i,j,avIRCont*: LONGINT; hasNext*:BOOLEAN;
+		VAR contests: POINTER TO ARRAY OF IRContest; contest: IRContest; i,j,avIRCont*: SIGNED32; hasNext*:BOOLEAN;
 
 		PROCEDURE GetNextContest*():IRContest;
 		BEGIN
@@ -807,7 +807,7 @@ TYPE
 			RETURN contest;
 		END GetNextContest;
 
-		PROCEDURE GetContest*(n: LONGINT):IRContest;
+		PROCEDURE GetContest*(n: SIGNED32):IRContest;
 		BEGIN
 			RETURN contests[n]
 		END GetContest;
@@ -817,7 +817,7 @@ TYPE
 			IF avIRCont > 0 THEN hasNext:= TRUE END
 		END ResetIterator;
 
-		PROCEDURE &Init*(contNum,pcktNum,bufferNum :LONGINT);
+		PROCEDURE &Init*(contNum,pcktNum,bufferNum :SIGNED32);
 		BEGIN
 			NEW(contests,contNum);
 			FOR i:=0 TO contNum-1 DO NEW(contest,pcktNum,contNum*bufferNum);
@@ -1064,7 +1064,7 @@ TYPE
 		secondBuffer*: SET;
 	END;
 
-VAR avIRCont, avITCont: LONGINT; base: LONGINT;
+VAR avIRCont, avITCont: SIGNED32; base: SIGNED32;
 
 (** Returns the bus id *)
 PROCEDURE GetBusID*():SET;
@@ -1073,24 +1073,24 @@ BEGIN
 END GetBusID;
 
 (** Returns the generation counter *)
-PROCEDURE GetGeneration*():LONGINT;
+PROCEDURE GetGeneration*():SIGNED32;
 VAR reg: SET;
 BEGIN
 	reg:= ReadReg(SelfIDCount);
 	reg:= LSH(reg,-16)*{0..7};
-	RETURN SYSTEM.VAL(LONGINT,reg);
+	RETURN SYSTEM.VAL(SIGNED32,reg);
 END GetGeneration;
 
 (** Computes the packet length *)
-PROCEDURE PacketLength*(context: Contest):LONGINT;
-VAR bufferAddr: SET; bufSize, resCount, packetSize, packetOffset: LONGINT; nextBlock, curBlock: LONGINT;
+PROCEDURE PacketLength*(context: Contest):SIGNED32;
+VAR bufferAddr: SET; bufSize, resCount, packetSize, packetOffset: SIGNED32; nextBlock, curBlock: SIGNED32;
 BEGIN
 	(* KernelLog.String("Entering PacketLength"); KernelLog.Ln(); *)
-	curBlock:= SYSTEM.VAL(LONGINT,context.prgr.curDesc);
+	curBlock:= SYSTEM.VAL(SIGNED32,context.prgr.curDesc);
 	packetOffset:= context.prgr.packetOffset;
 	bufferAddr:= SYSTEM.VAL(SET,SYSTEM.GET32(curBlock + 4));
-	bufSize:= SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(curBlock))*{0..15});
-	resCount:= SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(curBlock + 12))*{0..15});
+	bufSize:= SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,SYSTEM.GET32(curBlock))*{0..15});
+	resCount:= SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,SYSTEM.GET32(curBlock + 12))*{0..15});
 	(* remember that packet cannot cross more than one buffer boundary *)
 	IF resCount > 0 THEN (* Packet is not split *)
 		(* KernelLog.String("Packet is not split::PacketLength"); KernelLog.Ln(); *)
@@ -1098,9 +1098,9 @@ BEGIN
 	ELSE (* packet is split or exactly filled the buffer *)
 		(* KernelLog.String("Packet is split or exactly fills the buffer!::PacketLength"); KernelLog.Ln(); *)
 		packetSize:= bufSize - packetOffset;
-		nextBlock:= SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(curBlock+8))*{4..31});
-		bufSize:= SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(nextBlock))*{0..15});
-		resCount:= SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(nextBlock + 12))*{0..15});
+		nextBlock:= SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,SYSTEM.GET32(curBlock+8))*{4..31});
+		bufSize:= SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,SYSTEM.GET32(nextBlock))*{0..15});
+		resCount:= SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,SYSTEM.GET32(nextBlock + 12))*{0..15});
 		ASSERT(resCount > 0); (* This should never happen *)
 		packetSize:= packetSize+ bufSize - resCount;
 	END;
@@ -1111,8 +1111,8 @@ BEGIN
 END PacketLength;
 
 (** This function maps tCodes to packetSizes in bytes *)
-PROCEDURE TCodeToSize*(tCode: SET):LONGINT;
-VAR tCodeSize: ARRAY 16 OF LONGINT;
+PROCEDURE TCodeToSize*(tCode: SET):SIGNED32;
+VAR tCodeSize: ARRAY 16 OF SIGNED32;
 BEGIN
 	tCodeSize[0]:= 20;
 	tCodeSize[1]:= 0;
@@ -1130,17 +1130,17 @@ BEGIN
 	tCodeSize[13]:= -1;
 	tCodeSize[14]:= 16;
 	tCodeSize[15]:= -1;
-	RETURN tCodeSize[SYSTEM.VAL(LONGINT,tCode)];
+	RETURN tCodeSize[SYSTEM.VAL(SIGNED32,tCode)];
 END TCodeToSize;
 
 (** Writes to register *)
-PROCEDURE WriteReg*(reg: LONGINT; val: SET);
+PROCEDURE WriteReg*(reg: SIGNED32; val: SET);
 BEGIN
 	SYSTEM.PUT32(base + reg, val);
 END WriteReg;
 
 (** Reads from a register *)
-PROCEDURE ReadReg*(reg: LONGINT):SET;
+PROCEDURE ReadReg*(reg: SIGNED32):SET;
 BEGIN
 	RETURN SYSTEM.VAL(SET, SYSTEM.GET32(base + reg));
 END ReadReg;
@@ -1169,7 +1169,7 @@ END StartContest;
 
 (** Checks how much isochronous transmit contexts are availble *)
 PROCEDURE  CheckAvailableIT*;
-VAR reg: SET; i,av: LONGINT;
+VAR reg: SET; i,av: SIGNED32;
 BEGIN
 	reg:= {0..31};
 	SYSTEM.PUT32(base + isoXmitIntMaskSet,reg);
@@ -1185,7 +1185,7 @@ END CheckAvailableIT;
 
 (** Checks how much isochronous receive contexts are availble *)
 PROCEDURE  CheckAvailableIR*;
-VAR reg: SET; i,av: LONGINT;
+VAR reg: SET; i,av: SIGNED32;
 BEGIN
 	reg:= {0..31};
 	SYSTEM.PUT32(base + isoRecvIntMaskSet,reg);
@@ -1200,13 +1200,13 @@ BEGIN
 END CheckAvailableIR;
 
 (** Returns the availble number of isochronous receive contexts *)
-PROCEDURE GetAvailableIRCont*():LONGINT;
+PROCEDURE GetAvailableIRCont*():SIGNED32;
 BEGIN
 	RETURN avIRCont;
 END GetAvailableIRCont;
 
 (** Returns the availble number of isochronous transmit contexts *)
-PROCEDURE GetAvailableITCont*():LONGINT;
+PROCEDURE GetAvailableITCont*():SIGNED32;
 BEGIN
 	RETURN avITCont;
 END GetAvailableITCont;
@@ -1249,7 +1249,7 @@ BEGIN
 END AllocATResBuf;
 
 (** Allocates a buffer for the isochronous transmit context *)
-PROCEDURE AllocITBuf*(VAR ptrToBfr: CharBuffer;descNum: LONGINT):ADDRESS;
+PROCEDURE AllocITBuf*(VAR ptrToBfr: CharBuffer;descNum: SIGNED32):ADDRESS;
 VAR buffer: CharBuffer; adr: ADDRESS;
 BEGIN
 	(* Allocating buffer for the isochronous context *)
@@ -1263,7 +1263,7 @@ BEGIN
 END AllocITBuf;
 
 (** Allocates a buffer for the isochronous receive context *)
-PROCEDURE AllocIRBuf*(VAR ptrToBfr: CharBuffer;descNum: LONGINT):ADDRESS;
+PROCEDURE AllocIRBuf*(VAR ptrToBfr: CharBuffer;descNum: SIGNED32):ADDRESS;
 VAR buffer: CharBuffer; adr: ADDRESS;
 BEGIN
 	 (* Allocating buffer for the isochronous context *)
@@ -1306,7 +1306,7 @@ END AllocARResBuf;
 
 (** Sets the isochronous receive command pointer *)
 PROCEDURE SetIRComPtr*(VAR ptrToBuf: CharBuffer);
-VAR buffer: CharBuffer; adr: ADDRESS; s: SET; i: LONGINT;
+VAR buffer: CharBuffer; adr: ADDRESS; s: SET; i: SIGNED32;
 BEGIN
 	FOR i:= 0 TO avIRCont-1 DO
 		(* Allocating a 80 byte address *)
@@ -1324,7 +1324,7 @@ END SetIRComPtr;
 
 (** Sets the isochronous transmit command pointer *)
 PROCEDURE SetITComPtr*(VAR ptrToBuf: CharBuffer);
-VAR buffer: CharBuffer; adr: ADDRESS; s: SET; i: LONGINT;
+VAR buffer: CharBuffer; adr: ADDRESS; s: SET; i: SIGNED32;
 BEGIN
 	FOR i:= 0 TO avITCont-1 DO
 		(* Allocating a 80 byte address *)
@@ -1344,7 +1344,7 @@ END SetITComPtr;
 
 (** Clears the interrupt mask *)
 PROCEDURE ClearIntMaskAll*;
-VAR s,s2:SET; i: LONGINT;
+VAR s,s2:SET; i: SIGNED32;
 BEGIN
 	(* KernelLog.String("Entering ClearIntMaskAll");
 	KernelLog.Ln(); *)
@@ -1396,7 +1396,7 @@ END SoftInterrupt;
 
 (**  Clears all occured interrupt event *)
 PROCEDURE ClearIntEventAll*;
-VAR s,s2:SET; i: LONGINT;
+VAR s,s2:SET; i: SIGNED32;
 BEGIN
 	(* KernelLog.String("Entering ClearIntEventAll");
 	KernelLog.Ln(); *)
@@ -1439,7 +1439,7 @@ END CheckIntEvent;
 (* Context Control *)
 
 (** Stops a context *)
-PROCEDURE StopContext*(reg: LONGINT);
+PROCEDURE StopContext*(reg: SIGNED32);
 CONST run= {15}; active= 10;
 VAR s: SET;
 BEGIN
@@ -1457,7 +1457,7 @@ END StopContext;
 (** Sets the physical control register to write data to regAddr *)
 PROCEDURE SetPhyControl*(regAddr:SET; data: SET);
 CONST rdReg = 15; rdData = {16..23}; IBR = 6; wrReg = 14; rdDone = 31;
-VAR phyReg: SET; done: BOOLEAN; dataRead: SET; offset: LONGINT; i: LONGINT;
+VAR phyReg: SET; done: BOOLEAN; dataRead: SET; offset: SIGNED32; i: SIGNED32;
 BEGIN
 	(* KernelLog.String("Setting the phy control register"); KernelLog.Ln(); *)
 	phyReg:= ReadReg(PhyControl);
@@ -1517,8 +1517,8 @@ BEGIN
 END ConvertToSet;
 
 (** Does the same as LSH but only for sets, better use LSH *)
-PROCEDURE DelOffset*(reg:SET;offset:LONGINT):SET;
-VAR i: LONGINT;
+PROCEDURE DelOffset*(reg:SET;offset:SIGNED32):SET;
+VAR i: SIGNED32;
 BEGIN
 	i := 0;
 	WHILE i<32 DO
@@ -1538,7 +1538,7 @@ BEGIN
 	address:= SYSTEM.VAL(SET,adr);
 	j:= 0; i:= 0;
 	WHILE i< (dataSize-1) DO
-		SYSTEM.PUT32(SYSTEM.VAL(LONGINT,address)+i,dataAddr[j]);
+		SYSTEM.PUT32(SYSTEM.VAL(SIGNED32,address)+i,dataAddr[j]);
 		INC(i,4);  INC(j);
 	END;
 	RETURN address
@@ -1562,16 +1562,16 @@ BEGIN
 END AllocPcktBuf;
 
 (** Returns the maximally allowed size for an asynchronous OHCI packet *)
-PROCEDURE GetMaxPcktSize*():LONGINT;
+PROCEDURE GetMaxPcktSize*():SIGNED32;
 CONST mask = {12..15};
-VAR reg:SET; val,i: LONGINT; size: LONGINT;
+VAR reg:SET; val,i: SIGNED32; size: SIGNED32;
 BEGIN
 	size:= 1;
 	reg:= SYSTEM.VAL(SET,SYSTEM.GET32(base + BusOptions));
 	reg:= reg*mask;
 	reg:= DelOffset(reg,12);
 	(* convert to integer *)
-	val:= SYSTEM.VAL(LONGINT,reg);
+	val:= SYSTEM.VAL(SIGNED32,reg);
 	(* increment by one, because smallest value should be two *)
 	INC(val);
 	FOR i:= 0 TO val-1 DO size:= size*2 END;
@@ -1658,7 +1658,7 @@ BEGIN
 END SoftReset;
 
 (** Sets the base address of the OHCI register set *)
-PROCEDURE SetBase*(b: LONGINT);
+PROCEDURE SetBase*(b: SIGNED32);
 BEGIN
 	base := b;
 	(* KernelLog.String("base is: ");
@@ -1785,7 +1785,7 @@ END PrintNodeInfo;
 
 (** Is used to print out a set *)
 PROCEDURE PrintSet*(set:SET);
-VAR x:LONGINT;
+VAR x:SIGNED32;
 BEGIN
 	x := 0;
 	WHILE x < 32 DO
@@ -1796,7 +1796,7 @@ BEGIN
 END PrintSet;
 
 (** Builds the header of a response packet *)
-PROCEDURE BuildHeaderResp*(tc: LONGINT; VAR packet: OHCIPacket; rCode: LONGINT);
+PROCEDURE BuildHeaderResp*(tc: SIGNED32; VAR packet: OHCIPacket; rCode: SIGNED32);
 VAR busNumber: SET;
 BEGIN
 	busNumber:= LSH(ReadReg(NodeID)*{6..15},16);
@@ -1808,7 +1808,7 @@ BEGIN
 END BuildHeaderResp;
 
 (** Fill an asynchronous write response packet *)
-PROCEDURE FillAsyncWriteResp*(VAR packet: OHCIPacket; rCode: LONGINT);
+PROCEDURE FillAsyncWriteResp*(VAR packet: OHCIPacket; rCode: SIGNED32);
 BEGIN
 	BuildHeaderResp(NoDataWARRes,packet,rCode);
 	packet.header[2]:= {};
@@ -1818,7 +1818,7 @@ BEGIN
 END FillAsyncWriteResp;
 
 (** Fills an asynchronous read quadlet response packet *)
-PROCEDURE FillAsyncReadQuadResp*(VAR packet: OHCIPacket; rCode,bufferAddr: LONGINT);
+PROCEDURE FillAsyncReadQuadResp*(VAR packet: OHCIPacket; rCode,bufferAddr: SIGNED32);
 BEGIN
 	BuildHeaderResp(QReadARRes,packet,rCode);
 	packet.header[3]:= SYSTEM.VAL(SET,SYSTEM.GET32(bufferAddr));
@@ -1828,8 +1828,8 @@ BEGIN
 END FillAsyncReadQuadResp;
 
 (** Fills an asynchronous read block response packet *)
-PROCEDURE FillAsyncReadBlockResp*(VAR packet: OHCIPacket; rCode,length: LONGINT);
-VAR padding: LONGINT;
+PROCEDURE FillAsyncReadBlockResp*(VAR packet: OHCIPacket; rCode,length: SIGNED32);
+VAR padding: SIGNED32;
 BEGIN
 	IF rCode # respComplete THEN length:= 0 END;
 	BuildHeaderResp(BReadARRes,packet,rCode);
@@ -1841,7 +1841,7 @@ BEGIN
 END FillAsyncReadBlockResp;
 
 (** Builds the header of a packet *)
-PROCEDURE BuildHeader(tc: LONGINT; VAR packet: OHCIPacket; addrLow,addrHigh: SET);
+PROCEDURE BuildHeader(tc: SIGNED32; VAR packet: OHCIPacket; addrLow,addrHigh: SET);
 VAR busNumber: SET;
 BEGIN
 	busNumber:= LSH(ReadReg(NodeID)*{6..15},16);
@@ -1859,7 +1859,7 @@ END BuildHeader;
 
 (* Procedure needed to build packets from here on *)
 (** Fills a lock packet *)
-PROCEDURE FillLockPacket(packet: OHCIPacket; addrLow,addrHigh: SET; extCode: LONGINT; length: LONGINT);
+PROCEDURE FillLockPacket(packet: OHCIPacket; addrLow,addrHigh: SET; extCode: SIGNED32; length: SIGNED32);
 BEGIN
 	(* KernelLog.String("Building header::FillLockPacket!"); KernelLog.Ln(); *)
 	BuildHeader(LockATReq, packet, addrLow, addrHigh);
@@ -1881,8 +1881,8 @@ BEGIN
 END FillAsyncWriteQuadlet;
 
 (** Fills an asynchronous write block packet *)
-PROCEDURE FillAsyncWriteBlock*(packet: OHCIPacket; addrLow, addrHigh: SET; length: LONGINT);
-VAR padding: LONGINT;
+PROCEDURE FillAsyncWriteBlock*(packet: OHCIPacket; addrLow, addrHigh: SET; length: SIGNED32);
+VAR padding: SIGNED32;
 BEGIN
 	(* KernelLog.String("Building header::FillAsyncWriteBlock!"); KernelLog.Ln(); *)
 	BuildHeader(BWriteATReq, packet,addrLow, addrHigh);
@@ -1907,7 +1907,7 @@ BEGIN
 END FillAsyncReadQuadlet;
 
 (** Fills an asynchronous read block packet *)
-PROCEDURE FillAsyncReadBlock*(VAR packet: OHCIPacket; addrLow,addrHigh: SET; length: LONGINT);
+PROCEDURE FillAsyncReadBlock*(VAR packet: OHCIPacket; addrLow,addrHigh: SET; length: SIGNED32);
 BEGIN
 	BuildHeader(BReadATReq,packet,addrLow,addrHigh);
 	packet.header[3]:= ConvertToSet(LSH(length,16));
@@ -1918,14 +1918,14 @@ END FillAsyncReadBlock;
 
 (** Test if a packet and eventually its response were successfully sent and received *)
 PROCEDURE TestIfSuccess*(packet:OHCIPacket):BOOLEAN;
-VAR tCode: LONGINT;
+VAR tCode: SIGNED32;
 BEGIN
 
-	tCode:= SYSTEM.VAL(LONGINT,packet.tCode);
-	CASE SYSTEM.VAL(LONGINT,packet.ack) OF
+	tCode:= SYSTEM.VAL(SIGNED32,packet.tCode);
+	CASE SYSTEM.VAL(SIGNED32,packet.ack) OF
 	AckPending:
 		(* KernelLog.String("The packet received an ackPending::testIFSuccess"); KernelLog.Ln(); *)
-		CASE SYSTEM.VAL(LONGINT,LSH(packet.header[1],-12) * {0..3}) OF
+		CASE SYSTEM.VAL(SIGNED32,LSH(packet.header[1],-12) * {0..3}) OF
 		respComplete: RETURN TRUE;
 		|respConflictError: KernelLog.String("The packet had a conflict error!"); KernelLog.Ln();
 			RETURN FALSE;
@@ -1966,9 +1966,9 @@ BEGIN
 END TestIfSuccess;
 
 (** Instantiates a lock packet *)
-PROCEDURE MakeLockPacket*(ohci: OHCIDesc; nodeID: SET; addrLow, addrHigh:SET; extcode: LONGINT;
+PROCEDURE MakeLockPacket*(ohci: OHCIDesc; nodeID: SET; addrLow, addrHigh:SET; extcode: SIGNED32;
 	data,arg: SET):OHCIPacket;
-VAR p: OHCIPacket; length: LONGINT;
+VAR p: OHCIPacket; length: SIGNED32;
 BEGIN
 
 	p:= ohci.packetFIFO.GetPacket();
@@ -2003,8 +2003,8 @@ BEGIN
 END MakeLockPacket;
 
 (** Instantiates a write packet *)
-PROCEDURE MakeWritePacket*(ohci:OHCIDesc; nodeID, addrLow, addrHigh, buffer: SET; length: LONGINT ): OHCIPacket;
-VAR packet: OHCIPacket; i,padding: LONGINT;
+PROCEDURE MakeWritePacket*(ohci:OHCIDesc; nodeID, addrLow, addrHigh, buffer: SET; length: SIGNED32 ): OHCIPacket;
+VAR packet: OHCIPacket; i,padding: SIGNED32;
 BEGIN
 	IF length = 0 THEN RETURN NIL END;
 
@@ -2028,9 +2028,9 @@ BEGIN
 	ELSE
 		(* KernelLog.String("Filling asynchronous write+ block packet!"); KernelLog.Ln(); *)
 		FillAsyncWriteBlock(packet,addrLow,addrHigh,length);
-		IF buffer # {} THEN (* SYSTEM.MOVE(SYSTEM.VAL(LONGINT,buffer),ADDRESSOF(packet.data),length) *)
+		IF buffer # {} THEN (* SYSTEM.MOVE(SYSTEM.VAL(SIGNED32,buffer),ADDRESSOF(packet.data),length) *)
 			WHILE i # (length DIV 4) DO
-				packet.data[i]:= SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,buffer)+i*4));
+				packet.data[i]:= SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,buffer)+i*4));
 				INC(i);
 			END
 		END;
@@ -2046,8 +2046,8 @@ BEGIN
 END MakeWritePacket;
 
 (** Instantiates a read packet *)
-PROCEDURE MakeReadPacket*(ohci: OHCIDesc; nodeID: SET; addrLow,addrHigh: SET; length: LONGINT): OHCIPacket;
-VAR packet: OHCIPacket; padding: LONGINT;
+PROCEDURE MakeReadPacket*(ohci: OHCIDesc; nodeID: SET; addrLow,addrHigh: SET; length: SIGNED32): OHCIPacket;
+VAR packet: OHCIPacket; padding: SIGNED32;
 BEGIN
 	IF length = 0 THEN RETURN NIL END;
 

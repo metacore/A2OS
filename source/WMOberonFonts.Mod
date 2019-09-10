@@ -9,7 +9,7 @@ TYPE
 	Glyph = RECORD
 		img : WMGraphics.Image;
 		available : BOOLEAN;
-		dx, x, y, w, h : LONGINT;
+		dx, x, y, w, h : SIGNED32;
 	END;
 
 	Font* = OBJECT(WMGraphics.Font)
@@ -17,12 +17,12 @@ TYPE
 		placeholderimg : WMGraphics.Image;
 
 		idch, typech, famch, varch : CHAR;
-		height, minX, maxX, minY, maxY, nofRuns : INTEGER;
+		height, minX, maxX, minY, maxY, nofRuns : SIGNED16;
 
-		runs : ARRAY 32 OF RECORD beg, end : LONGINT END;
+		runs : ARRAY 32 OF RECORD beg, end : SIGNED32 END;
 
 		(* map unicode to oberon *)
-		PROCEDURE MapChars(VAR ch : LONGINT);
+		PROCEDURE MapChars(VAR ch : SIGNED32);
 		BEGIN
 
 			CASE ch OF
@@ -70,7 +70,7 @@ TYPE
 			Raster.Fill(placeholderimg, 0, 0, 15, 15, pix, mode)
 		END Init;
 
-		PROCEDURE GetGlyphMap*(code : LONGINT; VAR map : WMGraphics.Image);
+		PROCEDURE GetGlyphMap*(code : SIGNED32; VAR map : WMGraphics.Image);
 		BEGIN
 			MapChars(code);
 			IF (code >= 0) & (code < 256) & (glyphs[code].available) & (glyphs[code].img # NIL) THEN
@@ -79,13 +79,13 @@ TYPE
 			END
 		END GetGlyphMap;
 
-		PROCEDURE HasChar*(code : LONGINT) : BOOLEAN;
+		PROCEDURE HasChar*(code : SIGNED32) : BOOLEAN;
 		BEGIN
 			MapChars(code);
 			RETURN (code >= 0) & (code < 256) & (glyphs[code].available)
 		END HasChar;
 
-		PROCEDURE GetGlyphSpacings*(code : LONGINT; VAR glyphSpacings : WMGraphics.GlyphSpacings);
+		PROCEDURE GetGlyphSpacings*(code : SIGNED32; VAR glyphSpacings : WMGraphics.GlyphSpacings);
 		BEGIN
 			MapChars(code);
 			IF (code >= 0) & (code < 256) & (glyphs[code].available) (* & (glyphs[code].img # NIL) *) THEN
@@ -119,13 +119,13 @@ PROCEDURE StreamLoad(r : Streams.Reader) : Font;
 VAR
 	font : Font;
 	ch : CHAR;
-	minY, maxY, t, rbeg, rend : INTEGER;
-	nofGlyphs, i, j, run, bits, b, pos, xw : LONGINT;
+	minY, maxY, t, rbeg, rend : SIGNED16;
+	nofGlyphs, i, j, run, bits, b, pos, xw : SIGNED32;
 	p1 : Raster.Pixel;
 	mode : Raster.Mode;
 	mem: POINTER TO ARRAY OF CHAR;
 	img: WMGraphics.Image;
-	w,h: LONGINT;
+	w,h: SIGNED32;
 	adr: ADDRESS;
 CONST
 	MemoryOptimization = TRUE;
@@ -236,7 +236,7 @@ END StoreFont;
 
 PROCEDURE StreamStore(w : Streams.Writer; font : Font);
 VAR
-	nofGlyphs, i, j, run, bits, b, pos, xw : LONGINT;
+	nofGlyphs, i, j, run, bits, b, pos, xw : SIGNED32;
 	p1 : Raster.Pixel;
 	mode : Raster.Mode;
 
@@ -250,8 +250,8 @@ BEGIN
 	w.RawInt(font.height);
 	w.RawInt(font.minX);
 	w.RawInt(font.maxX);
-	w.RawInt(-INTEGER(font.descent));
-	w.RawInt(INTEGER(font.ascent));
+	w.RawInt(-SIGNED16(font.descent));
+	w.RawInt(SIGNED16(font.ascent));
 	w.RawInt(font.nofRuns);
 
 	nofGlyphs := 0; i := 0;
@@ -297,7 +297,7 @@ BEGIN
 END StreamStore;
 
 PROCEDURE InitBitTable;
-VAR b, i: LONGINT;
+VAR b, i: SIGNED32;
 BEGIN
 	FOR b := 0 TO 0FFH DO
 		FOR i := 0 TO 7 DO

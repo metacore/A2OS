@@ -118,10 +118,10 @@ TYPE
 	(** << fof  *)
 
 	StringBuf = ARRAY 256 OF CHAR;
-	Operator = LONGINT;
+	Operator = SIGNED32;
 
 	SProcInfo = POINTER TO RECORD	(* built-in procedure, additional info for PCT.Symbol.info *)
-		nr: LONGINT
+		nr: SIGNED32
 	END;
 
 (** ---------- Expressions -------------- *)
@@ -135,13 +135,13 @@ TYPE
 		(** << fof  *)
 
 		PROCEDURE Emit*(code: PCC.Code; VAR i: PCC.Item);
-		VAR  pos: LONGINT;
+		VAR  pos: SIGNED32;
 		BEGIN
 			pos := SELF.pos;
 			HALT(99);	(*abstract*)
 		END Emit;
 
-		PROCEDURE & Init*(pos: LONGINT; type: PCT.Struct);
+		PROCEDURE & Init*(pos: SIGNED32; type: PCT.Struct);
 		BEGIN  SELF.type := type;  SELF.pos:=pos
 		END Init;
 	END Expression;
@@ -151,7 +151,7 @@ TYPE
 		cd: ConstDesignator;   (* fof  *)
 
 		PROCEDURE Emit*(code: PCC.Code; VAR i: PCC.Item);
-		VAR  pos: LONGINT;
+		VAR  pos: SIGNED32;
 		BEGIN
 			pos := SELF.pos;
 			IF TraceEmit THEN DebugEnter(aConst) END;
@@ -168,7 +168,7 @@ TYPE
 			IF TraceEmit THEN DebugLeave(aConst) END
 		END Emit;
 
-		PROCEDURE & InitC*(pos: LONGINT; con: PCT.Const);
+		PROCEDURE & InitC*(pos: SIGNED32; con: PCT.Const);
 		BEGIN
 			ASSERT(con # NIL);
 			IF con.type IS PCT.EnhArray THEN NEW( cd, pos, con );  END;   (** fof  *)
@@ -179,20 +179,20 @@ TYPE
 	ArrayQ* = POINTER TO RECORD
 				next*: ArrayQ;
 				e*:Expression;
-				pos*: LONGINT;
+				pos*: SIGNED32;
 	END;
 
 	ArrayExpression*=OBJECT(Expression);
 	VAR
 		array-: ArrayQ;
 		d*: Designator;
-		length-: LONGINT;
-		dim-: LONGINT;
-		aindex: POINTER TO ARRAY OF LONGINT;
+		length-: SIGNED32;
+		dim-: SIGNED32;
+		aindex: POINTER TO ARRAY OF SIGNED32;
 		isConst*: BOOLEAN;
 
-		PROCEDURE AssignIndices(code: PCC.Code; ae: ArrayExpression; dim: LONGINT);
-		VAR a: ArrayQ; index: EnhIndex; i: LONGINT; j: SIZE;
+		PROCEDURE AssignIndices(code: PCC.Code; ae: ArrayExpression; dim: SIGNED32);
+		VAR a: ArrayQ; index: EnhIndex; i: SIGNED32; j: SIZE;
 		BEGIN
 			a := ae.array;
 			i := 0;
@@ -257,7 +257,7 @@ TYPE
 		VAR	op: Operator;  lopd, ropd: Expression;
 
 		PROCEDURE Emit*(code: PCC.Code; VAR l: PCC.Item);
-		VAR	r: PCC.Item;  pos, op: LONGINT;  t1, t2: StringBuf;
+		VAR	r: PCC.Item;  pos, op: SIGNED32;  t1, t2: StringBuf;
 		BEGIN
 			pos := SELF.pos;  op := SELF.op;
 			IF TraceEmit THEN DebugEnter(aDOp) END;
@@ -299,7 +299,7 @@ TYPE
 			IF TraceEmit THEN DebugLeave(aDOp) END
 		END Emit;
 
-		PROCEDURE& InitD*(pos: LONGINT; op: Operator; restype: PCT.Struct; lopd, ropd: Expression);
+		PROCEDURE& InitD*(pos: SIGNED32; op: Operator; restype: PCT.Struct; lopd, ropd: Expression);
 		BEGIN
 			SELF.op := op;  SELF.lopd := lopd;  SELF.ropd := ropd;
 			Init(pos, restype);
@@ -310,7 +310,7 @@ TYPE
 		VAR	op: Operator;  opd: Expression;
 
 		PROCEDURE Emit*(code: PCC.Code; VAR i: PCC.Item);
-		VAR tmp: Operator;  pos: LONGINT;  t: PCT.Struct;
+		VAR tmp: Operator;  pos: SIGNED32;  t: PCT.Struct;
 		BEGIN
 			pos := SELF.pos;
 			IF TraceEmit THEN DebugEnter(aMOp) END;
@@ -340,7 +340,7 @@ TYPE
 			IF TraceEmit THEN DebugLeave(aMOp) END
 		END Emit;
 
-		PROCEDURE& InitM*(pos: LONGINT (* fof *) ; op: Operator;  restype: PCT.Struct; opd: Expression);
+		PROCEDURE& InitM*(pos: SIGNED32 (* fof *) ; op: Operator;  restype: PCT.Struct; opd: Expression);
 		BEGIN  Init(pos, restype);
 			SELF.op := op;  SELF.opd := opd;
 		END InitM;
@@ -350,7 +350,7 @@ TYPE
 		VAR	exp: Expression;
 
 		PROCEDURE Emit*(code: PCC.Code; VAR i: PCC.Item);
-		VAR  pos: LONGINT;
+		VAR  pos: SIGNED32;
 		BEGIN
 			pos := SELF.pos;
 			IF TraceEmit THEN DebugEnter(aConversion) END;
@@ -358,7 +358,7 @@ TYPE
 			IF TraceEmit THEN DebugLeave(aConversion) END
 		END Emit;
 
-		PROCEDURE & InitC*(pos: LONGINT; exp: Expression; type: PCT.Struct);
+		PROCEDURE & InitC*(pos: SIGNED32; exp: Expression; type: PCT.Struct);
 		BEGIN  Init(pos, type);  SELF.exp := exp;
 		END InitC;
 
@@ -380,7 +380,7 @@ TYPE
 			exp.Emit(code, i);  PCC.Convert(code, i, type, TRUE)
 		END Emit;
 
-		PROCEDURE & InitP*(pos: LONGINT; exp: Expression; type: PCT.Struct);
+		PROCEDURE & InitP*(pos: SIGNED32; exp: Expression; type: PCT.Struct);
 		BEGIN  Init(pos, type);  SELF.exp := exp;
 		END InitP;
 
@@ -399,7 +399,7 @@ TYPE
 			first*, last: Expression;
 			params*, hidden: PCT.Parameter;
 			suppress: BOOLEAN;
-			parCount, openAryReturns, retDescSize*: LONGINT;
+			parCount, openAryReturns, retDescSize*: SIGNED32;
 			rType: PCT.Struct;
 
 		PROCEDURE ClearStack*(code: PCC.Code);
@@ -609,7 +609,7 @@ TYPE
 		END DoOpenAryParams;
 
 		PROCEDURE Emit*(code: PCC.Code);
-		VAR p, p0: Expression; i: PCC.Item; pos, cnt, ofs, parSize, parNbr: LONGINT;  o: PCT.Parameter; vstat: Var;
+		VAR p, p0: Expression; i: PCC.Item; pos, cnt, ofs, parSize, parNbr: SIGNED32;  o: PCT.Parameter; vstat: Var;
 (*			str: ARRAY 32 OF CHAR; *)
 		BEGIN
 			IF trEA THEN dbgReport() END;  (* fof *)
@@ -956,8 +956,8 @@ g) Static array as return type of a function
 			last := stat;
 		END Append;
 
-		PROCEDURE GetParList(VAR count: LONGINT;  VAR list: ARRAY OF PCT.Struct);
-			VAR p: Expression; i: LONGINT;
+		PROCEDURE GetParList(VAR count: SIGNED32;  VAR list: ARRAY OF PCT.Struct);
+			VAR p: Expression; i: SIGNED32;
 		BEGIN
 			i := 0;
 			p := first;
@@ -974,7 +974,7 @@ g) Static array as return type of a function
 			RETURN (hidden = NIL)
 		END NothingLeft;
 *)
-		PROCEDURE & InitEL*(pos: LONGINT; rType: PCT.Struct);
+		PROCEDURE & InitEL*(pos: SIGNED32; rType: PCT.Struct);
 		BEGIN  first := NIL; last := NIL; SELF.pos:=pos; SELF.rType := rType;
 		END InitEL;
 
@@ -983,8 +983,8 @@ g) Static array as return type of a function
 	BuiltInEl* = OBJECT (ExprList)		(*not exported, for internal use only*)
 		(*for built-in absfn, capfn, chrfn, entierfn, entierhfn, longfn, oddfn, ordfn,shortfn*)
 		VAR
-			fnr: LONGINT;	(*functions number*)
-			pnr: LONGINT;	(*nof parameters parsed / parameter currently under check*)
+			fnr: SIGNED32;	(*functions number*)
+			pnr: SIGNED32;	(*nof parameters parsed / parameter currently under check*)
 			array: PCT.Array;
 			usearray: BOOLEAN;
 		(** fof >> *)
@@ -993,7 +993,7 @@ g) Static array as return type of a function
 		(** << fof  *)
 
 		PROCEDURE Append*(stat: Expression);		(*only check the parameters, call created in NewFuncCall, NewProcCall*)
-			VAR i: LONGINT; p: PCT.Proc; ff, pp: LONGINT;  t: PCT.Struct; ptr: PCT.Pointer; rec: PCT.Record;  tmparr: PCT.Array;
+			VAR i: SIGNED32; p: PCT.Proc; ff, pp: SIGNED32;  t: PCT.Struct; ptr: PCT.Pointer; rec: PCT.Record;  tmparr: PCT.Array;
 (** fof >> *)
 			tmpearr: PCT.EnhArray;
 			btype: PCT.Struct;   (** fof *)
@@ -1082,7 +1082,7 @@ g) Static array as return type of a function
 								first :=
 									NewConversion( stat.pos, stat,
 															PCT.NumericType[i + 1] );
-							ELSIF i = LEN( PCT.NumericType ) - 1 THEN  (*skip: LONG(LONGREAL) = LONGREAL*)
+							ELSIF i = LEN( PCT.NumericType ) - 1 THEN  (*skip: LONG(FLOAT64) = FLOAT64*)
 							ELSE PCM.Error( 115, stat.pos, "" )
 							END
 						ELSE
@@ -1102,7 +1102,7 @@ g) Static array as return type of a function
 						ELSE
 							i:=0;  WHILE (i<LEN(PCT.NumericType))&(stat.type#PCT.NumericType[i]) DO  INC(i)  END;
 							IF i<LEN(PCT.NumericType)-1 THEN first:=NewConversion(stat.pos, stat, PCT.NumericType[i+1])
-							ELSIF i = LEN(PCT.NumericType)-1 THEN	(*skip: LONG(LONGREAL) = LONGREAL*)
+							ELSIF i = LEN(PCT.NumericType)-1 THEN	(*skip: LONG(FLOAT64) = FLOAT64*)
 							ELSIF stat.type = PCT.Char8 THEN  first := NewConversion(stat.pos, stat, PCT.Int32)
 							ELSE  PCM.Error(115, stat.pos, "")  END
 						END
@@ -1483,17 +1483,17 @@ g) Static array as return type of a function
 				(fnr=newfn) & (~usearray OR (array = NIL))
 		END NothingLeft;
 
-		PROCEDURE & Init*(pos: LONGINT; rType: PCT.Struct; fnr: LONGINT);
+		PROCEDURE & Init*(pos: SIGNED32; rType: PCT.Struct; fnr: SIGNED32);
 		BEGIN  InitEL(pos, rType);  SELF.fnr:=fnr; pnr:=0; usearray := TRUE
 		END Init;
 	END BuiltInEl;
 
 	FunCall* = OBJECT (Expression)
-		VAR	proc*: Designator;  params*: ExprList;  curLevel: SHORTINT;
+		VAR	proc*: Designator;  params*: ExprList;  curLevel: SIGNED8;
 
 		PROCEDURE Emit*(code: PCC.Code; VAR i: PCC.Item);
-		VAR  lev: SHORTINT;  pos: LONGINT;  p: AnyProc;  scope: PCT.Scope;
-		cparams: PCT.Parameter; cpsize, gap: LONGINT;	(* fld *)
+		VAR  lev: SIGNED8;  pos: SIGNED32;  p: AnyProc;  scope: PCT.Scope;
+		cparams: PCT.Parameter; cpsize, gap: SIGNED32;	(* fld *)
 		BEGIN
 			pos := SELF.pos;
 			IF TraceEmit THEN DebugEnter(aFunCall) END;
@@ -1524,7 +1524,7 @@ g) Static array as return type of a function
 			IF TraceEmit THEN DebugLeave(aFunCall) END
 		END Emit;
 
-		PROCEDURE & InitF*(pos: LONGINT; proc: Designator;  params: ExprList;  curLevel: SHORTINT);
+		PROCEDURE & InitF*(pos: SIGNED32; proc: Designator;  params: ExprList;  curLevel: SIGNED8);
 		VAR p: PCT.Parameter;  ret: PCT.Struct;
 		BEGIN
 			IF GetProcedureInfo(proc, p, ret) THEN
@@ -1542,7 +1542,7 @@ g) Static array as return type of a function
 		VAR  readonly-: BOOLEAN;
 
 		PROCEDURE Emit*(code: PCC.Code; VAR i: PCC.Item);
-		VAR  pos: LONGINT;
+		VAR  pos: SIGNED32;
 		BEGIN
 			pos := SELF.pos;
 			IF TraceEmit THEN DebugEnter(aDesignator) END;
@@ -1570,7 +1570,7 @@ g) Static array as return type of a function
 			PCC.MakeReturnItem( code, i, proc )
 		END Emit;
 
-		PROCEDURE & InitR*( pos: LONGINT;  proc: PCT.Proc );
+		PROCEDURE & InitR*( pos: SIGNED32;  proc: PCT.Proc );
 		BEGIN
 			Init( pos, proc.type );  SELF.proc := proc;
 		END InitR;
@@ -1578,14 +1578,14 @@ g) Static array as return type of a function
 	END ReturnItem;
 
 	StackItem = OBJECT (Designator)
-	VAR offset: LONGINT;
+	VAR offset: SIGNED32;
 
 		PROCEDURE Emit*( code: PCC.Code;  VAR i: PCC.Item );
 		BEGIN
 			PCC.MakeStackItem( i, type );
 		END Emit;
 
-		PROCEDURE & InitS*( type: PCT.Struct;  offset: LONGINT );
+		PROCEDURE & InitS*( type: PCT.Struct;  offset: SIGNED32 );
 		BEGIN
 			Init( 0, type );  SELF.offset := offset;
 		END InitS;
@@ -1622,7 +1622,7 @@ g) Static array as return type of a function
 	VAR const: PCT.Const;
 
 		PROCEDURE Emit*( code: PCC.Code;  VAR i: PCC.Item );
-		VAR pos: LONGINT;
+		VAR pos: SIGNED32;
 		BEGIN
 			pos := SELF.pos;
 			IF const = NIL THEN HALT( 100 )
@@ -1631,7 +1631,7 @@ g) Static array as return type of a function
 			(* IF type # val.type THEN PCC.Convert( code, i, type, TRUE ) END;   (* for WITH *)*)
 		END Emit;
 
-		PROCEDURE & InitC*( pos: LONGINT;  const: PCT.Const );
+		PROCEDURE & InitC*( pos: SIGNED32;  const: PCT.Const );
 		BEGIN
 
 			SELF.const := const;  SELF.readonly := TRUE;
@@ -1642,13 +1642,13 @@ g) Static array as return type of a function
 (** << fof  *)
 
 	SProc* = OBJECT (Designator)
-		VAR nr-: LONGINT;
+		VAR nr-: SIGNED32;
 
 		PROCEDURE IsCallable*(): BOOLEAN;
 		BEGIN	RETURN TRUE
 		END IsCallable;
 
-		PROCEDURE & SInit*(pos, nr: LONGINT);
+		PROCEDURE & SInit*(pos, nr: SIGNED32);
 		BEGIN
 			SELF.nr := nr;  Init(pos, PCT.NoType)
 		END SInit;
@@ -1658,7 +1658,7 @@ g) Static array as return type of a function
 
 	(**basic designators*)
 	Var* = OBJECT (Designator)
-		VAR obj*: PCT.Variable;  deltaLevel: SHORTINT;
+		VAR obj*: PCT.Variable;  deltaLevel: SIGNED8;
 
 		(** fof 070731  >> *)
 		PROCEDURE Written;
@@ -1668,7 +1668,7 @@ g) Static array as return type of a function
 	(** << fof  *)
 
 		PROCEDURE Emit*(code: PCC.Code; VAR i: PCC.Item);
-		VAR  pos: LONGINT;
+		VAR  pos: SIGNED32;
 		BEGIN
 			pos := SELF.pos;
 			IF TraceEmit THEN DebugEnter(aVar) END;
@@ -1681,7 +1681,7 @@ g) Static array as return type of a function
 			IF TraceEmit THEN DebugLeave(aVar) END
 		END Emit;
 
-		PROCEDURE & InitD*(pos: LONGINT; obj: PCT.Variable;  curLevel: SHORTINT;  readonly: BOOLEAN);
+		PROCEDURE & InitD*(pos: SIGNED32; obj: PCT.Variable;  curLevel: SIGNED8;  readonly: BOOLEAN);
 		BEGIN
 			SELF.obj := obj; SELF.readonly := readonly;
 			Init(pos, obj.type);
@@ -1718,7 +1718,7 @@ g) Static array as return type of a function
 		END IsCallable;
 
 		PROCEDURE Resolve(el: ExprList;  list: PCT.Parameter);
-			VAR count: LONGINT;  parlist: ARRAY 32 OF PCT.Struct; res, selfo: PCT.Symbol;
+			VAR count: SIGNED32;  parlist: ARRAY 32 OF PCT.Struct; res, selfo: PCT.Symbol;
 		BEGIN
 			IF ~(PCT.Overloading IN scope.module.scope.flags) & ~(PCT.Operator IN o.flags) OR (PCT.Indexer IN o.flags)  THEN
 				res := o
@@ -1768,7 +1768,7 @@ g) Static array as return type of a function
 			resolved := TRUE
 		END Resolve;
 
-		PROCEDURE & InitP*(pos: LONGINT;  scope: PCT.Scope;  o: PCT.Symbol;  self: Designator);
+		PROCEDURE & InitP*(pos: SIGNED32;  scope: PCT.Scope;  o: PCT.Symbol;  self: Designator);
 		BEGIN
 				(* original version *)
 			(* Init(pos, PCT.NoType); *)
@@ -1794,7 +1794,7 @@ g) Static array as return type of a function
 		VAR obj: PCT.Type;
 
 		PROCEDURE Emit*(code: PCC.Code; VAR i: PCC.Item);
-		VAR  pos: LONGINT;
+		VAR  pos: SIGNED32;
 		BEGIN
 			pos := SELF.pos;
 			IF TraceEmit THEN DebugEnter(aType) END;
@@ -1802,7 +1802,7 @@ g) Static array as return type of a function
 			IF TraceEmit THEN DebugLeave(aType) END
 		END Emit;
 
-		PROCEDURE & InitD*(pos: LONGINT; obj: PCT.Type);
+		PROCEDURE & InitD*(pos: SIGNED32; obj: PCT.Type);
 		BEGIN  SELF.obj := obj;
 			Init(pos, obj.type)
 		END InitD;
@@ -1813,7 +1813,7 @@ g) Static array as return type of a function
 		VAR ptr*: Designator;
 
 		PROCEDURE Emit*(code: PCC.Code; VAR i: PCC.Item);
-		VAR  pos: LONGINT;
+		VAR  pos: SIGNED32;
 		BEGIN
 			pos := SELF.pos;
 			IF TraceEmit THEN DebugEnter(aDeref) END;
@@ -1822,7 +1822,7 @@ g) Static array as return type of a function
 			IF TraceEmit THEN DebugLeave(aDeref) END
 		END Emit;
 
-		PROCEDURE & InitD*(pos: LONGINT; ptr: Designator; type: PCT.Struct);
+		PROCEDURE & InitD*(pos: SIGNED32; ptr: Designator; type: PCT.Struct);
 		BEGIN
 			Init(pos, type); SELF.ptr := ptr
 		END InitD;
@@ -1841,7 +1841,7 @@ g) Static array as return type of a function
 		VAR	rec*: Designator;  field*: PCT.Field;
 
 		PROCEDURE Emit*(code: PCC.Code; VAR i: PCC.Item);
-		VAR  pos: LONGINT;
+		VAR  pos: SIGNED32;
 			name1, name2, name3: ARRAY 64 OF CHAR;
 		BEGIN
 			IF TraceEmit THEN DebugEnter(aField) END;
@@ -1859,7 +1859,7 @@ g) Static array as return type of a function
 			IF TraceEmit THEN DebugLeave(aField) END
 		END Emit;
 
-		PROCEDURE & InitF*(pos: LONGINT; rec: Designator; field: PCT.Field; readonly: BOOLEAN);
+		PROCEDURE & InitF*(pos: SIGNED32; rec: Designator; field: PCT.Field; readonly: BOOLEAN);
 		BEGIN
 			Init(pos, field.type);
 			SELF.readonly := readonly;  SELF.field := field;  SELF.rec := rec
@@ -1878,7 +1878,7 @@ g) Static array as return type of a function
 		VAR	array*: Designator; index*: Expression; check*: BOOLEAN;
 
 		PROCEDURE Emit*(code: PCC.Code; VAR a: PCC.Item);
-		VAR  i: PCC.Item;  pos: LONGINT;
+		VAR  i: PCC.Item;  pos: SIGNED32;
 		BEGIN
 			pos := SELF.pos;
 			IF TraceEmit THEN DebugEnter(aIndex) END;
@@ -1888,7 +1888,7 @@ g) Static array as return type of a function
 			IF TraceEmit THEN DebugLeave(aIndex) END
 		END Emit;
 
-		PROCEDURE & InitI*(pos: LONGINT; array: Designator; index: Expression; check: BOOLEAN);
+		PROCEDURE & InitI*(pos: SIGNED32; array: Designator; index: Expression; check: BOOLEAN);
 		BEGIN
 			readonly := array.readonly;
 			Init(pos, array.type(PCT.Array).base);  SELF.array := array;  SELF.index := index;  SELF.check:=check
@@ -1905,7 +1905,7 @@ g) Static array as return type of a function
 		VAR des: Designator;  to: PCT.Struct;  equal: BOOLEAN;
 
 		PROCEDURE Emit*(code: PCC.Code; VAR i: PCC.Item);
-		VAR  pos: LONGINT;
+		VAR  pos: SIGNED32;
 		BEGIN
 			pos := SELF.pos;
 			IF TraceEmit THEN DebugEnter(aGuard) END;
@@ -1915,7 +1915,7 @@ g) Static array as return type of a function
 			IF TraceEmit THEN DebugLeave(aGuard) END
 		END Emit;
 
-		PROCEDURE & InitG*(pos: LONGINT; des: Designator;  type: PCT.Struct; equal: BOOLEAN);
+		PROCEDURE & InitG*(pos: SIGNED32; des: Designator;  type: PCT.Struct; equal: BOOLEAN);
 		BEGIN  Init(pos, type);
 			SELF.des := des;  to := type;  SELF.equal := equal;
 			readonly := des.readonly;
@@ -1948,9 +1948,9 @@ g) Static array as return type of a function
 	VAR isRange*: BOOLEAN;
 		first, last*: Entry;
 		array: Designator;   (* array *)
-		dim: LONGINT;   (* dimension of range *)
+		dim: SIGNED32;   (* dimension of range *)
 
-		PROCEDURE EmitEntry( entry: Entry;  dim: LONGINT;
+		PROCEDURE EmitEntry( entry: Entry;  dim: SIGNED32;
 											  code: PCC.Code;
 											  VAR a, descr: PCC.Item );
 		VAR i, j, k: PCC.Item;
@@ -2007,7 +2007,7 @@ g) Static array as return type of a function
 			END;
 		END AppendEntry;
 
-		PROCEDURE AppendIndex*( pos: LONGINT;
+		PROCEDURE AppendIndex*( pos: SIGNED32;
 													  index: Expression );
 		VAR e: IndexEntry;  tt: PCT.EnhArray;
 			ArrayCheck: BOOLEAN;   (* still unused *)
@@ -2032,7 +2032,7 @@ g) Static array as return type of a function
 			type := type( PCT.EnhArray ).base;
 		END AppendIndex;
 
-		PROCEDURE AppendRange*( pos: LONGINT;
+		PROCEDURE AppendRange*( pos: SIGNED32;
 													   from, to, by: Expression );
 		VAR e: RangeEntry;  tt: PCT.EnhArray;  c: Const;
 			ArrayCheck: BOOLEAN;   (* still unused *)
@@ -2060,7 +2060,7 @@ g) Static array as return type of a function
 					to := c;
 				ELSE
 					NEW( c, pos,
-							  PCT.NewIntConst( MAX( LONGINT ), PCT.Int32 ) );
+							  PCT.NewIntConst( MAX( SIGNED32 ), PCT.Int32 ) );
 					to := c;  ArrayCheck := TRUE;
 				END;
 			ELSIF PCT.IsCardinalType( to.type ) THEN
@@ -2096,7 +2096,7 @@ g) Static array as return type of a function
 		END AppendRange;
 
 		PROCEDURE Finish*;
-		VAR e: Entry;  a: PCT.EnhArray;  res: WORD;
+		VAR e: Entry;  a: PCT.EnhArray;  res: INTEGER;
 		BEGIN
 			WHILE (type IS PCT.EnhArray) DO  (* append remaining indexes as range "..", i.e. A[1] -> A[1,..,..] for VAR A: ARRAY [..,..,..] OF Type  *)
 				AppendRange( -1, NIL , NIL , NIL );
@@ -2111,7 +2111,7 @@ g) Static array as return type of a function
 														   {PCT.open, PCT.static}, res );
 						ASSERT( res = 0 );
 						IF (e.to IS Const) &
-							(e.to( Const ).con.int # MAX( LONGINT )) &
+							(e.to( Const ).con.int # MAX( SIGNED32 )) &
 							(e.from IS Const) & (e.by IS Const) THEN
 							PCT.SetEnhArrayLen( a,
 															 (e.to( Const ).con.int -
@@ -2125,7 +2125,7 @@ g) Static array as return type of a function
 			END;
 		END Finish;
 
-		PROCEDURE & InitI*( pos: LONGINT;  array: Designator );
+		PROCEDURE & InitI*( pos: SIGNED32;  array: Designator );
 		BEGIN
 			dim := 0;  readonly := array.readonly;  isRange := FALSE;
 			SELF.array := array;  Init( pos, array.type );
@@ -2143,18 +2143,18 @@ g) Static array as return type of a function
 	VAR isRange*: BOOLEAN;
 		first, last*: Entry;
 		array: Designator;   (* array *)
-		dim (* dimension, if known *) , ndims (* overal number of entries *) : LONGINT;   (* dimension of range *)
+		dim (* dimension, if known *) , ndims (* overal number of entries *) : SIGNED32;   (* dimension of range *)
 
-		nRange, nIndex: LONGINT;
+		nRange, nIndex: SIGNED32;
 
 		one: PCC.Item;
 
-		PROCEDURE EmitEntry( entry: Entry;   (* dim: LONGINT; *)
+		PROCEDURE EmitEntry( entry: Entry;   (* dim: SIGNED32; *)
 											  code: PCC.Code;
 											  VAR descr, a: PCC.Item;
-											  VAR dim: LONGINT );
+											  VAR dim: SIGNED32 );
 		VAR i, j, k: PCC.Item;  one: PCC.Item;
-			before, after: LONGINT;  e: Entry;
+			before, after: SIGNED32;  e: Entry;
 		BEGIN
 			PCC.MakeSizeConst( one, 1 );
 			IF entry IS IndexEntry THEN
@@ -2184,7 +2184,7 @@ g) Static array as return type of a function
 		END EmitEntry;
 
 		PROCEDURE Emit*( code: PCC.Code;  VAR a: PCC.Item );
-		VAR descr: PCC.Item;  entry: Entry;  dim: LONGINT;
+		VAR descr: PCC.Item;  entry: Entry;  dim: SIGNED32;
 			nIndices: PCC.Item;  dimI: PCC.Item;
 		BEGIN
 			(* andere Idee mit Dimensionen: Zähle positiv für die unteren und negativ für die oberen,
@@ -2233,7 +2233,7 @@ g) Static array as return type of a function
 			END;
 		END AppendEntry;
 
-		PROCEDURE AppendIndex*( pos: LONGINT;
+		PROCEDURE AppendIndex*( pos: SIGNED32;
 													  index: Expression );
 		VAR e: IndexEntry;
 		BEGIN
@@ -2248,11 +2248,11 @@ g) Static array as return type of a function
 			INC( nIndex );
 		END AppendIndex;
 
-		PROCEDURE AppendRange*( pos: LONGINT;
+		PROCEDURE AppendRange*( pos: SIGNED32;
 													   from, to, by: Expression );
 		VAR e: RangeEntry;  c: Const;  ArrayCheck: BOOLEAN;   (* still unused *)
 		BEGIN
-			IF dim < MAX( LONGINT ) THEN INC( dim ) END;
+			IF dim < MAX( SIGNED32 ) THEN INC( dim ) END;
 			IF from = NIL THEN
 				NEW( c, pos, PCT.NewIntConst( 0, PCT.Int32 ) );
 				from := c;
@@ -2264,7 +2264,7 @@ g) Static array as return type of a function
 			END;
 			IF to = NIL THEN
 				NEW( c, pos,
-						  PCT.NewIntConst( MAX( LONGINT ), PCT.Int32 ) );
+						  PCT.NewIntConst( MAX( SIGNED32 ), PCT.Int32 ) );
 				to := c;  ArrayCheck := TRUE;
 			ELSIF PCT.IsCardinalType( to.type ) THEN
 				IF to.type # PCT.Int32 THEN
@@ -2289,15 +2289,15 @@ g) Static array as return type of a function
 			isRange := TRUE;  AppendEntry( e );  INC( nRange );
 		END AppendRange;
 
-		PROCEDURE AppendFiller*( pos: LONGINT );
+		PROCEDURE AppendFiller*( pos: SIGNED32 );
 		VAR e: FillerEntry;
 		BEGIN
 			NEW( e );  isRange := TRUE;  AppendEntry( e );
-			dim := MAX( LONGINT );
+			dim := MAX( SIGNED32 );
 		END AppendFiller;
 
 		PROCEDURE Finish*;
-		VAR e: Entry;  a: PCT.EnhArray;  res: WORD;
+		VAR e: Entry;  a: PCT.EnhArray;  res: INTEGER;
 		BEGIN
 			ASSERT( type # NIL );
 			IF isRange THEN
@@ -2312,7 +2312,7 @@ g) Static array as return type of a function
 																   res );
 								ASSERT( res = 0 );
 								IF (e.to IS Const) &
-									(e.to( Const ).con.int # MAX( LONGINT )) &
+									(e.to( Const ).con.int # MAX( SIGNED32 )) &
 									(e.from IS Const) & (e.by IS Const) THEN
 									PCT.SetEnhArrayLen( a,
 																	 (e.to( Const ).con.int -
@@ -2330,7 +2330,7 @@ g) Static array as return type of a function
 			END;
 		END Finish;
 
-		PROCEDURE & InitA*( pos: LONGINT;  array: Designator );
+		PROCEDURE & InitA*( pos: SIGNED32;  array: Designator );
 		BEGIN
 			dim := 0;  ndims := 0;  readonly := array.readonly;
 			isRange := FALSE;  SELF.array := array;
@@ -2350,7 +2350,7 @@ g) Static array as return type of a function
 	ArrayOperator* = OBJECT (FunCall)
 	(* pseudo function call: pushes array desriptor and calls procedures of the form P(VAR dest: ARRAY .... , l: ..., r:....)  *)
 	VAR proc: PCT.Proc;
-		op: LONGINT;
+		op: SIGNED32;
 
 		PROCEDURE Emit*( code: PCC.Code;  VAR i: PCC.Item );
 		BEGIN
@@ -2364,7 +2364,7 @@ g) Static array as return type of a function
 			PCC.RestoreRegisters( code );
 		END Emit;
 
-		PROCEDURE & InitD*( pos: LONGINT;  d, lopd, ropd: Expression;   restype: PCT.Struct;  proc: PCT.Proc;  p: PCT.Parameter;  op: LONGINT );
+		PROCEDURE & InitD*( pos: SIGNED32;  d, lopd, ropd: Expression;   restype: PCT.Struct;  proc: PCT.Proc;  p: PCT.Parameter;  op: SIGNED32 );
 		VAR dopd: StackItem;
 		BEGIN
 			Init( pos, restype );  SELF.proc := proc;
@@ -2595,7 +2595,7 @@ g) Static array as return type of a function
 	END;
 
 	CaseRange = POINTER TO RECORD
-		min, max: LONGINT;
+		min, max: SIGNED32;
 		next: CaseRange
 	END;
 
@@ -2616,17 +2616,17 @@ g) Static array as return type of a function
 	unknownObj-: PCT.Symbol;
 
 	aConst, aDOp, aMOp, aConversion, aFunCall, aSFunCall, aExprList, aDesignator, aVar, aType,
-	aDeref, aMethod, aField, aIndex, aGuard, aStatement: LONGINT;
+	aDeref, aMethod, aField, aIndex, aGuard, aStatement: SIGNED32;
 
 
 (** ---------- Helper Procedures -------------- *)
 
-PROCEDURE DebugEnter(VAR x: LONGINT);
+PROCEDURE DebugEnter(VAR x: SIGNED32);
 BEGIN {EXCLUSIVE}
 	INC(x)
 END DebugEnter;
 
-PROCEDURE DebugLeave(VAR x: LONGINT);
+PROCEDURE DebugLeave(VAR x: SIGNED32);
 BEGIN {EXCLUSIVE}
 	DEC(x)
 END DebugLeave;
@@ -2705,7 +2705,7 @@ BEGIN
 	END
 END IsProcReturningPointer;
 
-PROCEDURE IsRealtimeProc*(d: Designator; pos: LONGINT): BOOLEAN;
+PROCEDURE IsRealtimeProc*(d: Designator; pos: SIGNED32): BOOLEAN;
 BEGIN
 	IF d IS AnyProc THEN
 		RETURN (PCT.RealtimeProc IN d(AnyProc).o.flags)
@@ -2719,7 +2719,7 @@ BEGIN
 	END
 END IsRealtimeProc;
 
-PROCEDURE ConstExpression*(pos: LONGINT; e: Expression): Const;
+PROCEDURE ConstExpression*(pos: SIGNED32; e: Expression): Const;
 	VAR c: Const;
 BEGIN
 	IF e IS Const THEN
@@ -2731,7 +2731,7 @@ BEGIN
 	RETURN c
 END ConstExpression;
 
-PROCEDURE NewDynSizedArray*(len: Expression; base: PCT.Struct; VAR res: WORD): PCT.Array;
+PROCEDURE NewDynSizedArray*(len: Expression; base: PCT.Struct; VAR res: INTEGER): PCT.Array;
 	VAR a: DynSizedArray;
 BEGIN
 	NEW(a);
@@ -2778,7 +2778,7 @@ BEGIN
 	END
 END ArrayCompatible;
 (** fof >> *)
-	PROCEDURE TensorCompatible( pos: LONGINT;  ref: BOOLEAN; Ta, Tf: PCT.Struct ): BOOLEAN;
+	PROCEDURE TensorCompatible( pos: SIGNED32;  ref: BOOLEAN; Ta, Tf: PCT.Struct ): BOOLEAN;
 
 		PROCEDURE TC( Ta, Tf: PCT.Struct ): BOOLEAN;
 		VAR e: Expression;
@@ -2832,7 +2832,7 @@ END ArrayCompatible;
 		END;
 	END TensorCompatible;
 
-	PROCEDURE EnhArrayAssignmentC( pos: LONGINT;   Ta, Tf: PCT.Struct;    weak: BOOLEAN ): BOOLEAN;
+	PROCEDURE EnhArrayAssignmentC( pos: SIGNED32;   Ta, Tf: PCT.Struct;    weak: BOOLEAN ): BOOLEAN;
 	VAR e: Expression;  v: Designator;
 	BEGIN
 		IF ~(Tf IS PCT.EnhArray) OR ~(Ta IS PCT.EnhArray) THEN
@@ -3040,37 +3040,37 @@ BEGIN
 END RealtimeCompatible;
 
 	(** Const utilities: Constructors *)
-	PROCEDURE NewValue*(pos: LONGINT; obj: PCT.Symbol): Expression;		(*expr, obj can be a fix*)
+	PROCEDURE NewValue*(pos: SIGNED32; obj: PCT.Symbol): Expression;		(*expr, obj can be a fix*)
 		VAR con: Const;
 	BEGIN
 		ASSERT(obj IS PCT.Value);
 		NEW(con, pos, obj(PCT.Value).const); RETURN con
 	END NewValue;
 
-	PROCEDURE NewIntValue*(pos: LONGINT; i: LONGINT; type: PCT.Struct): Const;
+	PROCEDURE NewIntValue*(pos: SIGNED32; i: SIGNED32; type: PCT.Struct): Const;
 		VAR  con: Const;
 	BEGIN
 		 NEW(con, pos, PCT.NewIntConst(i, type));  RETURN con
 	END NewIntValue;
 
-	PROCEDURE NewLongIntValue*(pos: LONGINT; i: HUGEINT): Const;
+	PROCEDURE NewLongIntValue*(pos: SIGNED32; i: SIGNED64): Const;
 		VAR  con: Const;
 	BEGIN
 		 NEW(con, pos, PCT.NewInt64Const(i));  RETURN con
 	END NewLongIntValue;
 
-	PROCEDURE NewFloatValue*(pos: LONGINT; r: LONGREAL; type: PCT.Struct): Const;
+	PROCEDURE NewFloatValue*(pos: SIGNED32; r: FLOAT64; type: PCT.Struct): Const;
 		VAR con: Const;
 	BEGIN  NEW(con, pos, PCT.NewFloatConst(r, type));  RETURN con
 	END NewFloatValue;
 
-	PROCEDURE NewStrValue*(pos: LONGINT; str: PCS.String): Const;
+	PROCEDURE NewStrValue*(pos: SIGNED32; str: PCS.String): Const;
 		VAR con: Const;
 	BEGIN  NEW(con, pos, PCT.NewStringConst(str));  RETURN con
 	END NewStrValue;
 
 (** fof >> *)
-	PROCEDURE NewArrayValue*( pos: LONGINT;  VAR a: ARRAY OF SYSTEM.BYTE;  VAR len: ARRAY OF LONGINT;   dim: LONGINT;   base: PCT.Struct ): Const;
+	PROCEDURE NewArrayValue*( pos: SIGNED32;  VAR a: ARRAY OF SYSTEM.BYTE;  VAR len: ARRAY OF SIGNED32;   dim: SIGNED32;   base: PCT.Struct ): Const;
 	VAR con: Const;
 	BEGIN
 		NEW( con, pos, PCT.NewArrayConst( a, len, dim, base, base.size( PCBT.Size ).size ) );
@@ -3078,26 +3078,26 @@ END RealtimeCompatible;
 	END NewArrayValue;
 (** << fof  *)
 
-	PROCEDURE NewBoolValue*(pos: LONGINT; b: BOOLEAN): Const;
+	PROCEDURE NewBoolValue*(pos: SIGNED32; b: BOOLEAN): Const;
 		VAR con: Const;
 	BEGIN
 		IF  b  THEN  NEW(con, pos, PCT.True)  ELSE  NEW(con, pos, PCT.False)  END;
 		RETURN con
 	END NewBoolValue;
 
-	PROCEDURE NewSetValue*(pos: LONGINT; s: SET): Const;
+	PROCEDURE NewSetValue*(pos: SIGNED32; s: SET): Const;
 		VAR con: Const;
 	BEGIN  NEW(con, pos, PCT.NewSetConst(s)); RETURN con
 	END NewSetValue;
 
-	PROCEDURE NewNILValue*(pos: LONGINT): Const;
+	PROCEDURE NewNILValue*(pos: SIGNED32): Const;
 		VAR con: Const;
 	BEGIN  con:=NewIntValue(pos, PCM.nilval, PCT.Address);  con.type:= PCT.NilType;  RETURN con
 	END NewNILValue;
 
 
-	PROCEDURE NewConversion*(pos: LONGINT; exp: Expression; type: PCT.Struct): Expression;	(*not exported, parser should not check types*)
-		VAR  conv: Conversion;  str: PCS.String;  con: PCT.Const; l: LONGINT; ch: CHAR; r: REAL;  lr: LONGREAL;
+	PROCEDURE NewConversion*(pos: SIGNED32; exp: Expression; type: PCT.Struct): Expression;	(*not exported, parser should not check types*)
+		VAR  conv: Conversion;  str: PCS.String;  con: PCT.Const; l: SIGNED32; ch: CHAR; r: FLOAT32;  lr: FLOAT64;
 	BEGIN
 		IF IsInvalid(exp) THEN  exp := InvalidExpr
 		ELSIF type IS PCT.Delegate THEN
@@ -3171,8 +3171,8 @@ END RealtimeCompatible;
 		RETURN exp
 	END NewConversion;
 
-	PROCEDURE Project(pos: LONGINT; exp: Expression; type: PCT.Struct): Expression;	(*not exported, parser should not check types*)
-	VAR  buf: LONGINT;  proj: Projection;  con: PCT.Const; ptr: BOOLEAN;
+	PROCEDURE Project(pos: SIGNED32; exp: Expression; type: PCT.Struct): Expression;	(*not exported, parser should not check types*)
+	VAR  buf: SIGNED32;  proj: Projection;  con: PCT.Const; ptr: BOOLEAN;
 	BEGIN
 		IF IsInvalid(exp) THEN  RETURN InvalidExpr END;
 		ptr := PCT.IsPointer(type);
@@ -3181,20 +3181,20 @@ END RealtimeCompatible;
 			con := exp(Const).con;
 			IF PCT.IsCardinalType(exp.type) THEN  buf := con.int
 			ELSIF exp.type = PCT.Char8  THEN  buf := con.int
-			ELSIF exp.type = PCT.Float32  THEN  buf := SYSTEM.VAL(LONGINT, SHORT(con.real))
-			ELSIF exp.type = PCT.Set  THEN  buf := LONGINT(con.set)
+			ELSIF exp.type = PCT.Float32  THEN  buf := SYSTEM.VAL(SIGNED32, SHORT(con.real))
+			ELSIF exp.type = PCT.Set  THEN  buf := SIGNED32(con.set)
 			ELSIF exp.type = PCT.NilType  THEN  buf := PCM.nilval
 			ELSE   PCM.Error(1502, pos, "");  exp := InvalidExpr
 			END;
 
 			(* create *)
-			IF type = PCT.Int8 THEN	exp := NewIntValue(pos, SHORTINT(buf), type)
-			ELSIF type = PCT.Int16  THEN	 exp := NewIntValue(pos, INTEGER( buf), type)
+			IF type = PCT.Int8 THEN	exp := NewIntValue(pos, SIGNED8(buf), type)
+			ELSIF type = PCT.Int16  THEN	 exp := NewIntValue(pos, SIGNED16( buf), type)
 			ELSIF type = PCT.Int32  THEN	exp := NewIntValue(pos, buf, type)
 			ELSIF type = PCT.Int64  THEN	exp := NewIntValue(pos, buf, type)
-			ELSIF type = PCT.Char8  THEN	exp := NewIntValue(pos, SHORTINT(buf), PCT.Char8)
-			ELSIF type = PCT.Float32  THEN	exp := NewFloatValue(pos, SYSTEM.VAL(REAL, LONGINT(buf)), PCT.Float32)
-			ELSIF type = PCT.Float64  THEN	exp := NewFloatValue(pos, SYSTEM.VAL(LONGREAL, HUGEINT(buf)), PCT.Float64)
+			ELSIF type = PCT.Char8  THEN	exp := NewIntValue(pos, SIGNED8(buf), PCT.Char8)
+			ELSIF type = PCT.Float32  THEN	exp := NewFloatValue(pos, SYSTEM.VAL(FLOAT32, SIGNED32(buf)), PCT.Float32)
+			ELSIF type = PCT.Float64  THEN	exp := NewFloatValue(pos, SYSTEM.VAL(FLOAT64, SIGNED64(buf)), PCT.Float64)
 			ELSIF type = PCT.Set  THEN	exp := NewSetValue(pos, SET(buf))
 			ELSIF ptr THEN  exp := NewIntValue(pos, buf, type)
 			ELSE   PCM.Error(1503, pos, "");  exp := InvalidExpr
@@ -3218,8 +3218,8 @@ END RealtimeCompatible;
 		END
 	END RevertExprList;
 
-	PROCEDURE NewFuncCall*(pos: LONGINT; proc: Designator;  params: ExprList;  curlevel: SHORTINT): Expression;
-		VAR fc: FunCall; type: PCT.Struct; fnr: LONGINT; first,r (* fof *): Expression;
+	PROCEDURE NewFuncCall*(pos: SIGNED32; proc: Designator;  params: ExprList;  curlevel: SIGNED8): Expression;
+		VAR fc: FunCall; type: PCT.Struct; fnr: SIGNED32; first,r (* fof *): Expression;
 	BEGIN
 		IF IsInvalid(proc) OR IsInvalid(params) THEN RETURN InvalidExpr END;
 		IF (proc IS SProc) THEN
@@ -3235,15 +3235,15 @@ END RealtimeCompatible;
 				IF params( BuiltInEl ).pnr = 1 THEN  (* fof *)
 						IF type=PCT.Char8 THEN RETURN NewIntValue(pos, ORD(MAX(CHAR)), PCT.Char8)
 						ELSIF type=PCT.Char16 THEN RETURN NewIntValue(pos, 0FFFFH, PCT.Char16)
-						ELSIF type=PCT.Char32 THEN RETURN NewIntValue(pos, LONGINT(0FFFFFFFFH), PCT.Char32)
-						ELSIF type=PCT.Int8 THEN RETURN NewIntValue(pos, MAX(SHORTINT), type)
-						ELSIF type=PCT.Int16 THEN RETURN NewIntValue(pos, MAX(INTEGER), type)
-						ELSIF type=PCT.Int32 THEN RETURN NewIntValue(pos, MAX(LONGINT), type)
+						ELSIF type=PCT.Char32 THEN RETURN NewIntValue(pos, SIGNED32(0FFFFFFFFH), PCT.Char32)
+						ELSIF type=PCT.Int8 THEN RETURN NewIntValue(pos, MAX(SIGNED8), type)
+						ELSIF type=PCT.Int16 THEN RETURN NewIntValue(pos, MAX(SIGNED16), type)
+						ELSIF type=PCT.Int32 THEN RETURN NewIntValue(pos, MAX(SIGNED32), type)
 (* > bootstrap 1 *)
 						ELSIF type=PCT.Int64 THEN RETURN NewLongIntValue(pos, 7FFFFFFFFFFFFFFFH)
 (* < bootstrap 1 *)
-						ELSIF type=PCT.Float32 THEN RETURN NewFloatValue(pos, MAX(REAL), PCT.Float32)
-						ELSIF type=PCT.Float64 THEN RETURN NewFloatValue(pos, MAX(LONGREAL), PCT.Float64)
+						ELSIF type=PCT.Float32 THEN RETURN NewFloatValue(pos, MAX(FLOAT32), PCT.Float32)
+						ELSIF type=PCT.Float64 THEN RETURN NewFloatValue(pos, MAX(FLOAT64), PCT.Float64)
 						ELSIF type=PCT.Set THEN RETURN NewIntValue(pos, PCT.SetSize * 8 - 1, PCT.Int8)
 						ELSIF type IS PCT.EnhArray THEN RETURN NewArrayOperator( pos, fnr, NIL ,  params.first, NIL ,  FALSE ) (* fof *)
 						ELSE  PCM.Error(64, first.pos, "");  RETURN InvalidExpr  END
@@ -3257,14 +3257,14 @@ END RealtimeCompatible;
 						IF type=PCT.Char8 THEN RETURN NewIntValue(pos, ORD(MIN(CHAR)), PCT.Char8)
 						ELSIF type=PCT.Char16 THEN RETURN NewIntValue(pos, 0H, PCT.Char16)
 						ELSIF type=PCT.Char32 THEN RETURN NewIntValue(pos, 0H, PCT.Char32)
-						ELSIF type=PCT.Int8 THEN RETURN NewIntValue(pos, MIN(SHORTINT), type)
-						ELSIF type=PCT.Int16 THEN RETURN NewIntValue(pos, MIN(INTEGER), type)
-						ELSIF type=PCT.Int32 THEN RETURN NewIntValue(pos, MIN(LONGINT), type)
+						ELSIF type=PCT.Int8 THEN RETURN NewIntValue(pos, MIN(SIGNED8), type)
+						ELSIF type=PCT.Int16 THEN RETURN NewIntValue(pos, MIN(SIGNED16), type)
+						ELSIF type=PCT.Int32 THEN RETURN NewIntValue(pos, MIN(SIGNED32), type)
 (* > bootstrap 1 *)
 						ELSIF type=PCT.Int64 THEN RETURN NewLongIntValue(pos, 8000000000000000H)
 (* < bootstrap 1 *)
-						ELSIF type=PCT.Float32 THEN RETURN NewFloatValue(pos, MIN(REAL), PCT.Float32)
-						ELSIF type=PCT.Float64 THEN RETURN NewFloatValue(pos, MIN(LONGREAL), PCT.Float64)
+						ELSIF type=PCT.Float32 THEN RETURN NewFloatValue(pos, MIN(FLOAT32), PCT.Float32)
+						ELSIF type=PCT.Float64 THEN RETURN NewFloatValue(pos, MIN(FLOAT64), PCT.Float64)
 						ELSIF type=PCT.Set THEN RETURN NewIntValue(pos, 0, PCT.Int8)
 						ELSIF type IS PCT.EnhArray THEN RETURN NewArrayOperator( pos, fnr, NIL , params.first, NIL , FALSE ) (* fof *)
 						ELSE  PCM.Error(64, first.pos, "");  RETURN InvalidExpr  END
@@ -3333,8 +3333,8 @@ END RealtimeCompatible;
 	END NewFuncCall;
 
 
-	PROCEDURE NewExprList*(pos: LONGINT; d: Designator): ExprList;
-		VAR el: ExprList; bel: BuiltInEl; fnr: LONGINT;
+	PROCEDURE NewExprList*(pos: SIGNED32; d: Designator): ExprList;
+		VAR el: ExprList; bel: BuiltInEl; fnr: SIGNED32;
 	BEGIN
 		IF d IS SProc THEN
 			fnr:=d(SProc).nr; NEW(bel, pos, PCT.NoType, fnr);
@@ -3353,9 +3353,9 @@ END RealtimeCompatible;
 		RETURN el
 	END NewExprList;
 
-	PROCEDURE NewMOp*(pos: LONGINT; scope: PCT.Scope; op: Operator; opd: Expression): Expression;
+	PROCEDURE NewMOp*(pos: SIGNED32; scope: PCT.Scope; op: Operator; opd: Expression): Expression;
 		VAR mop: MOp;
-			i: LONGINT; lr: LONGREAL; restyp: PCT.Struct; const: BOOLEAN;  type: PCT.Struct; c: PCT.Const;
+			i: SIGNED32; lr: FLOAT64; restyp: PCT.Struct; const: BOOLEAN;  type: PCT.Struct; c: PCT.Const;
 	BEGIN
 		IF IsInvalid(opd) THEN  RETURN InvalidExpr  END;
 		type := opd.type;
@@ -3460,8 +3460,8 @@ END RealtimeCompatible;
 		NEW(mop, pos, op, restyp, opd);  RETURN mop
 	END NewMOp;
 
-	PROCEDURE FoldConstASH(pos: LONGINT;  l, r: PCT.Const): Expression;
-	VAR  shift: LONGINT;  exp: Expression;
+	PROCEDURE FoldConstASH(pos: SIGNED32;  l, r: PCT.Const): Expression;
+	VAR  shift: SIGNED32;  exp: Expression;
 	BEGIN
 		shift := r.int;
 		IF PCT.IsCardinalType(l.type) THEN
@@ -3473,8 +3473,8 @@ END RealtimeCompatible;
 		RETURN exp
 	END FoldConstASH;
 
-	PROCEDURE FoldConstROT(pos: LONGINT;  l, r: PCT.Const): Expression;
-	VAR  shift: LONGINT; type: PCT.Struct;
+	PROCEDURE FoldConstROT(pos: SIGNED32;  l, r: PCT.Const): Expression;
+	VAR  shift: SIGNED32; type: PCT.Struct;
 	BEGIN
 		shift := r.int; type := l.type;
 		IF (type = PCT.Int8) OR (type = PCT.Char8) THEN
@@ -3490,8 +3490,8 @@ END RealtimeCompatible;
 		END
 	END FoldConstROT;
 
-	PROCEDURE FoldConstLSH(pos: LONGINT;  l, r: PCT.Const): Expression;
-	VAR  shift: LONGINT; type: PCT.Struct;
+	PROCEDURE FoldConstLSH(pos: SIGNED32;  l, r: PCT.Const): Expression;
+	VAR  shift: SIGNED32; type: PCT.Struct;
 	BEGIN
 		shift := r.int; type := l.type;
 		IF (type = PCT.Int8) OR (type = PCT.Char8) THEN
@@ -3508,18 +3508,18 @@ END RealtimeCompatible;
 	END FoldConstLSH;
 
 	PROCEDURE ConvertOperands(VAR lo, ro: Expression);
-	VAR	lt, rt: PCT.Struct;  ll, rl: LONGINT;
+	VAR	lt, rt: PCT.Struct;  ll, rl: SIGNED32;
 
-		PROCEDURE FindLevel(t: PCT.Struct): LONGINT;
-		VAR	i: LONGINT;
+		PROCEDURE FindLevel(t: PCT.Struct): SIGNED32;
+		VAR	i: SIGNED32;
 		BEGIN
 			i := 5;
 			WHILE (i >= 0) & (PCT.NumericType[i] # t) DO DEC(i) END;
 			RETURN i
 		END FindLevel;
 
-		PROCEDURE FindCharLevel(t: PCT.Struct): LONGINT;
-		VAR	i: LONGINT;
+		PROCEDURE FindCharLevel(t: PCT.Struct): SIGNED32;
+		VAR	i: SIGNED32;
 		BEGIN
 			i := LEN(PCT.CharType)-1;
 			WHILE (i >= 0) & (PCT.CharType[i] # t) DO DEC(i) END;
@@ -3561,10 +3561,10 @@ END RealtimeCompatible;
 		END;
 	END ConvertOperands;
 
-	PROCEDURE NewDOp*(pos: LONGINT;  op: Operator; lopd, ropd: Expression): Expression;
+	PROCEDURE NewDOp*(pos: SIGNED32;  op: Operator; lopd, ropd: Expression): Expression;
 		VAR	dop: DOp;  const: BOOLEAN;  typ, restyp: PCT.Struct;
 			lc, rc: PCT.Const;
-			i1, i2: LONGINT; l1, l2: LONGREAL; b1, b2: BOOLEAN; s1, s2: SET;
+			i1, i2: SIGNED32; l1, l2: FLOAT64; b1, b2: BOOLEAN; s1, s2: SET;
 			str: PCS.String; res: Expression;
 	BEGIN
 		IF IsInvalid(lopd) OR IsInvalid(ropd) THEN  RETURN InvalidExpr  END;
@@ -3875,8 +3875,8 @@ END RealtimeCompatible;
 				IF const THEN
 					i1 := lc.int;  i2 := rc.int;
 					IF (i1 < 0) OR (i2 < 0) THEN
-						DEC(i1, LONGINT(80000000H));
-						DEC(i2, LONGINT(80000000H))
+						DEC(i1, SIGNED32(80000000H));
+						DEC(i2, SIGNED32(80000000H))
 					END;
 					CASE op OF
 					|	PCS.comma:	lopd.link := ropd;  RETURN lopd			(*only for constants*)
@@ -3983,7 +3983,7 @@ END RealtimeCompatible;
 		END
 	END MakeTemp;
 
-	PROCEDURE Finally*(pos: LONGINT; code: PCC.Code; obj: PCT.Symbol);
+	PROCEDURE Finally*(pos: SIGNED32; code: PCC.Code; obj: PCT.Symbol);
 	BEGIN
 		IF (obj IS PCT.Proc) OR (obj IS PCT.Module) THEN
 			PCC.DefFinallyLabel(code, obj);
@@ -3992,8 +3992,8 @@ END RealtimeCompatible;
 	END Finally;
 
 
-	PROCEDURE MakeNode*(pos: LONGINT; scope: PCT.Scope; obj: PCT.Symbol): Designator;
-	VAR	v: Var; s: SProc; t: Type; self: Designator; selfo: PCT.Symbol;  level: SHORTINT; d: Designator; ss: PCT.Scope;
+	PROCEDURE MakeNode*(pos: SIGNED32; scope: PCT.Scope; obj: PCT.Symbol): Designator;
+	VAR	v: Var; s: SProc; t: Type; self: Designator; selfo: PCT.Symbol;  level: SIGNED8; d: Designator; ss: PCT.Scope;
 		ap: AnyProc;
 		c: ConstDesignator;   (** fof  *)
 	BEGIN
@@ -4045,7 +4045,7 @@ END RealtimeCompatible;
 		RETURN d
 	END MakeNode;
 
-	PROCEDURE NewDeref*(pos: LONGINT; ptr: Designator): Designator;
+	PROCEDURE NewDeref*(pos: SIGNED32; ptr: Designator): Designator;
 		VAR deref: Deref; (*mth: Method;*)
 	BEGIN
 		IF IsInvalid(ptr) THEN RETURN InvalidDesig END;
@@ -4085,7 +4085,7 @@ END RealtimeCompatible;
 		RETURN InvalidDesig
 	END NewDeref;
 
-	PROCEDURE NewField0(scope: PCT.Scope; rec: Designator; fld: PCT.Symbol; pos: LONGINT): Designator;
+	PROCEDURE NewField0(scope: PCT.Scope; rec: Designator; fld: PCT.Symbol; pos: SIGNED32): Designator;
 		VAR	field: Field;  rectyp: PCT.Struct;  res: Designator; ro: BOOLEAN;
 	BEGIN
 		IF IsInvalid(rec) THEN RETURN InvalidDesig END;
@@ -4109,7 +4109,7 @@ END RealtimeCompatible;
 		RETURN res
 	END NewField0;
 
-	PROCEDURE NewField*(current: PCT.Scope; rec: Designator; name: PCS.Name; pos: LONGINT): Designator;
+	PROCEDURE NewField*(current: PCT.Scope; rec: Designator; name: PCS.Name; pos: SIGNED32): Designator;
 		VAR	fld: PCT.Symbol;  field: Field;  method: AnyProc;  rectyp: PCT.Struct;  res: Designator;
 			n: StringBuf; scope: PCT.RecScope; ro: BOOLEAN;
 	BEGIN
@@ -4152,7 +4152,7 @@ END RealtimeCompatible;
 		RETURN e
 	END MakeSelf;
 
-	PROCEDURE NewIndex*(pos: LONGINT; array: Designator; index: Expression): Designator;
+	PROCEDURE NewIndex*(pos: SIGNED32; array: Designator; index: Expression): Designator;
 		VAR idx: Index; type: PCT.Array; ArrayCheck: BOOLEAN; res: Designator;
 	BEGIN
 		res := InvalidDesig;
@@ -4179,7 +4179,7 @@ END RealtimeCompatible;
 	END NewIndex;
 
 (** fof >> *)
-	PROCEDURE NewEnhIndex*( pos: LONGINT;  array: Designator ): EnhIndex;
+	PROCEDURE NewEnhIndex*( pos: SIGNED32;  array: Designator ): EnhIndex;
 	VAR idx: EnhIndex;
 	BEGIN
 		IF (array IS EnhIndex) OR (array IS AnyIndex) THEN
@@ -4190,7 +4190,7 @@ END RealtimeCompatible;
 	END NewEnhIndex;
 (** << fof  *)
 
-	PROCEDURE NewGuard*(pos: LONGINT; des: Designator; type: PCT.Symbol; equal: BOOLEAN): Designator;
+	PROCEDURE NewGuard*(pos: SIGNED32; des: Designator; type: PCT.Symbol; equal: BOOLEAN): Designator;
 		VAR guard: Guard;
 	BEGIN
 		IF des=InvalidDesig THEN  RETURN des
@@ -4222,7 +4222,7 @@ END RealtimeCompatible;
 	PROCEDURE Assign*(code: PCC.Code;  suppress: BOOLEAN;  lexpr: Designator;  rexpr: Expression;arraycreation: BOOLEAN);
 	VAR  src, dst: PCC.Item;
 		(** fof >> *)
-		t: PCT.Struct;  w: Wrapper;  op: LONGINT;  offs: LONGINT;
+		t: PCT.Struct;  w: Wrapper;  op: SIGNED32;  offs: SIGNED32;
 		(** << fof  *)
 	BEGIN
 		lexpr.Written();  (* fof 070731 *)
@@ -4336,10 +4336,10 @@ END RealtimeCompatible;
 		END
 	END Assign;
 
-	PROCEDURE CallSProc(code: PCC.Code;  suppress: BOOLEAN;  pos, fnr: LONGINT;  params: BuiltInEl);
+	PROCEDURE CallSProc(code: PCC.Code;  suppress: BOOLEAN;  pos, fnr: SIGNED32;  params: BuiltInEl);
 		VAR tmp: Const;
-			i, j, k: PCC.Item; l: PCC.Label; type: PCT.Struct;  c, size, openDims: LONGINT;  par0, par1: Expression;
-			rec: PCT.Record;  init: PCT.Method; reg: SHORTINT;
+			i, j, k: PCC.Item; l: PCC.Label; type: PCT.Struct;  c, size, openDims: SIGNED32;  par0, par1: Expression;
+			rec: PCT.Record;  init: PCT.Method; reg: SIGNED8;
 (** fof >> *)
 			left, right, dest: Expression;  lbase, rbase, dbase: PCT.Struct; t: PCT.Struct;  temp1: Expression;
 (** << fof  *)
@@ -4683,8 +4683,8 @@ END RealtimeCompatible;
 	END CallSProc;
 
 	(* fof for Linux/Solaris/Darwin *)
-	PROCEDURE CheckForCParams( e: Expression; VAR cparams: PCT.Parameter; VAR size: LONGINT );	(* fld *)
-	VAR param: PCT.Parameter;  parSize: LONGINT;
+	PROCEDURE CheckForCParams( e: Expression; VAR cparams: PCT.Parameter; VAR size: SIGNED32 );	(* fld *)
+	VAR param: PCT.Parameter;  parSize: SIGNED32;
 	BEGIN
 		IF e IS AnyProc THEN
 			WITH e: AnyProc DO
@@ -4714,8 +4714,8 @@ END RealtimeCompatible;
 	END CheckForCParams;
 
 
-	PROCEDURE MakeCall(code: PCC.Code;  proc: Designator;  p: PCT.Proc;  pars: ExprList;  curlevel: SHORTINT; extC: BOOLEAN);	(* fld *)
-		VAR scope: PCT.ProcScope;  i: PCC.Item;cparams: PCT.Parameter; cpsize, gap: LONGINT;	(* fld *)
+	PROCEDURE MakeCall(code: PCC.Code;  proc: Designator;  p: PCT.Proc;  pars: ExprList;  curlevel: SIGNED8; extC: BOOLEAN);	(* fld *)
+		VAR scope: PCT.ProcScope;  i: PCC.Item;cparams: PCT.Parameter; cpsize, gap: SIGNED32;	(* fld *)
 	BEGIN
 		CheckForCParams( proc, cparams, cpsize );	(* fld *)
 		IF extC  & (PCM.AlignedStack IN PCM.codeOptions)THEN
@@ -4743,7 +4743,7 @@ END RealtimeCompatible;
 		PCC.RestoreRegisters(code);
 	END MakeCall;
 
-	PROCEDURE CallProc*(code: PCC.Code;  suppress: BOOLEAN;  proc: Designator;  params: ExprList;  curlevel: SHORTINT);
+	PROCEDURE CallProc*(code: PCC.Code;  suppress: BOOLEAN;  proc: Designator;  params: ExprList;  curlevel: SIGNED8);
 	VAR p: PCT.Proc;  ret: PCT.Struct; winapi: BOOLEAN;
 	BEGIN
 		IF IsInvalid(proc) OR  IsInvalid(params.first) THEN RETURN END;
@@ -4792,7 +4792,7 @@ END RealtimeCompatible;
 		END dbgType;
 
 	(** convert an array  to type base *)
-	PROCEDURE NewArrayConversion( pos: LONGINT; x: Expression; base: PCT.Struct ): Expression;
+	PROCEDURE NewArrayConversion( pos: SIGNED32; x: Expression; base: PCT.Struct ): Expression;
 	VAR type: PCT.Struct;  aconv: ArrayOperator;
 		restype: PCT.Struct;  idx: StringPool.Index;  proc: PCT.Proc;
 	BEGIN
@@ -4815,13 +4815,13 @@ END RealtimeCompatible;
 		END;
 	END NewArrayConversion;
 
-	PROCEDURE  NewArrayOperator( pos: LONGINT;   op: Operator;   (* restype: PCT.Struct;*)
+	PROCEDURE  NewArrayOperator( pos: SIGNED32;   op: Operator;   (* restype: PCT.Struct;*)
 	d, l, r: Expression;  conversion: BOOLEAN ): Expression;
 	VAR dop: ArrayOperator;
 		restype, rtype, ltype: PCT.Struct;   (* must be determined by inspection of lopd and ropd -> table *)
 		lbase, rbase, largest: PCT.Struct;  idx: StringPool.Index;
 		proc: PCT.Proc;  p: PCT.Parameter;
-		myscope: PCT.ProcScope;  res: WORD;  t: PCT.Tensor;
+		myscope: PCT.ProcScope;  res: INTEGER;  t: PCT.Tensor;
 	BEGIN
 		IF l # NIL THEN ltype := l.type ELSE ltype := NIL END;
 		IF r # NIL THEN rtype := r.type ELSE rtype := NIL END;
@@ -4949,7 +4949,7 @@ END RealtimeCompatible;
 	(**--------- Control Structures -----------------*)
 
 
-	PROCEDURE Trap*(code: PCC.Code;  suppress: BOOLEAN;  nr: LONGINT);
+	PROCEDURE Trap*(code: PCC.Code;  suppress: BOOLEAN;  nr: SIGNED32);
 	BEGIN
 		IF ~suppress THEN  PCC.GenTrap(code, nr)  END
 	END Trap;
@@ -5053,8 +5053,8 @@ END RealtimeCompatible;
 		END
 	END Repeat;
 
-	PROCEDURE BeginFor*(code: PCC.Code;  suppress: BOOLEAN;  pos: LONGINT; var: Designator; from, to, by: Expression;  VAR info: LoopInfo);
-	VAR  step: LONGINT;
+	PROCEDURE BeginFor*(code: PCC.Code;  suppress: BOOLEAN;  pos: SIGNED32; var: Designator; from, to, by: Expression;  VAR info: LoopInfo);
+	VAR  step: SIGNED32;
 	BEGIN
 		info.out := PCC.none;
 		IF ~(IsInvalid(var) OR IsInvalid(by) OR IsInvalid(from) OR IsInvalid(to)) THEN
@@ -5077,7 +5077,7 @@ END RealtimeCompatible;
 		END
 	END BeginFor;
 
-	PROCEDURE EndFor*(code: PCC.Code;  suppress: BOOLEAN;  pos: LONGINT; var: Designator;  step: Expression;  VAR info: LoopInfo);
+	PROCEDURE EndFor*(code: PCC.Code;  suppress: BOOLEAN;  pos: SIGNED32; var: Designator;  step: Expression;  VAR info: LoopInfo);
 	BEGIN
 		IF IsInvalid(var) OR IsInvalid(step) THEN RETURN END;
 		Assign(code, suppress, var, NewDOp(pos, plus, var, step), FALSE  (* fof *));
@@ -5101,7 +5101,7 @@ END RealtimeCompatible;
 		END
 	END EndLoop;
 
-	PROCEDURE Exit*(code: PCC.Code;  suppress: BOOLEAN;  VAR info: LoopInfo; forlevel: LONGINT);
+	PROCEDURE Exit*(code: PCC.Code;  suppress: BOOLEAN;  VAR info: LoopInfo; forlevel: SIGNED32);
 	BEGIN
 		IF ~suppress THEN
 			WHILE forlevel > 0 DO  PCC.FreeStack(code, PCT.Int32); DEC(forlevel)  END;
@@ -5109,14 +5109,14 @@ END RealtimeCompatible;
 		END
 	END Exit;
 
-	PROCEDURE Return*(code: PCC.Code;  suppress: BOOLEAN;  scope: PCT.Scope; pos: LONGINT; expr: Expression;
-		unlock: BOOLEAN; forlevel: LONGINT);
+	PROCEDURE Return*(code: PCC.Code;  suppress: BOOLEAN;  scope: PCT.Scope; pos: SIGNED32; expr: Expression;
+		unlock: BOOLEAN; forlevel: SIGNED32);
 	VAR rtype: PCT.Struct;  i: PCC.Item; proc: PCT.Proc;  var: Var;
-		rtypeAddr: LONGINT; par: PCT.Parameter;
+		rtypeAddr: SIGNED32; par: PCT.Parameter;
 (** fof >> *)
-		offset: LONGINT;
+		offset: SIGNED32;
 		t: PCT.Struct;   (* fof *)
-		op: LONGINT;  rd: ReturnItem;  ignore: BOOLEAN;
+		op: SIGNED32;  rd: ReturnItem;  ignore: BOOLEAN;
 (** << fof  *)
 	BEGIN
 		IF scope IS PCT.ProcScope THEN  proc := scope(PCT.ProcScope).ownerO  END;
@@ -5262,7 +5262,7 @@ END RealtimeCompatible;
 		END
 	END Return;
 
-	PROCEDURE Await*(code: PCC.Code;  suppress: BOOLEAN;  scope: PCT.Scope;  pos: LONGINT;  name: StringPool.Index);
+	PROCEDURE Await*(code: PCC.Code;  suppress: BOOLEAN;  scope: PCT.Scope;  pos: SIGNED32;  name: StringPool.Index);
 	VAR i: PCC.Item;  selfo, proc: PCT.Symbol;  self: Designator;
 	BEGIN
 		IF ~suppress THEN
@@ -5296,9 +5296,9 @@ END RealtimeCompatible;
 
 	PROCEDURE CaseLine*(code: PCC.Code;  suppress: BOOLEAN;  VAR info: CaseInfo;  mine, maxe: Expression;  firstline: BOOLEAN);
 	(* Invariant:  p.max < p.next.min *)
-	VAR  p, q, r: CaseRange;  min, max: LONGINT;
+	VAR  p, q, r: CaseRange;  min, max: SIGNED32;
 
-		PROCEDURE Extract(x: Expression;  VAR val: LONGINT): BOOLEAN;
+		PROCEDURE Extract(x: Expression;  VAR val: SIGNED32): BOOLEAN;
 		VAR  con: PCT.Const;
 		BEGIN
 			IF ~(x IS Const) THEN  PCM.Error(50, x.pos, "");  RETURN FALSE  END;
@@ -5369,7 +5369,7 @@ END RealtimeCompatible;
 
 	(** Lock - lock/unlock the given object *)
 
-	PROCEDURE Lock*(code: PCC.Code;  scope: PCT.Scope;  pos: LONGINT;  lock: BOOLEAN);
+	PROCEDURE Lock*(code: PCC.Code;  scope: PCT.Scope;  pos: SIGNED32;  lock: BOOLEAN);
 	VAR selfo: PCT.Symbol;  self: Designator;  i: PCC.Item;
 	BEGIN
 		selfo := PCT.Find(scope, scope, PCT.SelfName, PCT.procdeclared, TRUE);
@@ -5506,7 +5506,7 @@ END RealtimeCompatible;
 		RETURN code
 	END Enter;
 
-	PROCEDURE DumpCode(code: PCC.Code;  name: ARRAY OF CHAR;  phase: LONGINT);
+	PROCEDURE DumpCode(code: PCC.Code;  name: ARRAY OF CHAR;  phase: SIGNED32);
 	BEGIN {EXCLUSIVE}
 		PCM.LogW(01X);
 		PCM.LogWStr("PROCEDURE ");  PCM.LogWStr(name);  PCM.LogWLn;
@@ -5547,8 +5547,8 @@ END RealtimeCompatible;
 
 	PROCEDURE Init;
 
-		PROCEDURE NewSProc(m: PCT.Module;  name: ARRAY OF CHAR;  nr: LONGINT);
-		VAR s: SProcInfo;  n: PCS.Name; res: WORD;
+		PROCEDURE NewSProc(m: PCT.Module;  name: ARRAY OF CHAR;  nr: SIGNED32);
+		VAR s: SProcInfo;  n: PCS.Name; res: INTEGER;
 		BEGIN
 			StringPool.GetIndex(name, n);
 			m.scope.CreateSymbol(n, PCT.Public, PCT.NoType, res); ASSERT(res = PCT.Ok);
@@ -5556,16 +5556,16 @@ END RealtimeCompatible;
 			m.scope.last.info := s
 		END NewSProc;
 
-		PROCEDURE NewConst(m: PCT.Module;  name: ARRAY OF CHAR;  val: LONGINT);
-			VAR n: StringPool.Index; res: WORD; c: PCT.Const;
+		PROCEDURE NewConst(m: PCT.Module;  name: ARRAY OF CHAR;  val: SIGNED32);
+			VAR n: StringPool.Index; res: INTEGER; c: PCT.Const;
 		BEGIN
 			StringPool.GetIndex(name, n);
 			c := PCT.NewIntConst(val, PCT.GetIntType(val));
 			m.scope.CreateValue(n, PCT.Public, c, 0, res); ASSERT(res = PCT.Ok)
 		END NewConst;
 
-		PROCEDURE MakeInline(name: ARRAY OF CHAR; fnr: LONGINT);
-		VAR  inline: PCLIR.AsmInline;  code: PCLIR.AsmBlock;  ps: PCT.ProcScope; idx: StringPool.Index; res: WORD;
+		PROCEDURE MakeInline(name: ARRAY OF CHAR; fnr: SIGNED32);
+		VAR  inline: PCLIR.AsmInline;  code: PCLIR.AsmBlock;  ps: PCT.ProcScope; idx: StringPool.Index; res: INTEGER;
 		BEGIN
 			NEW(inline); NEW(code); inline.code := code;
 			NEW(ps); PCT.InitScope(ps, PCT.System.scope, {}, FALSE);  ps.code := inline; PCT.SetOwner(ps);
@@ -5726,10 +5726,10 @@ END PCB.
 
 	Impossible errors:
 
-	1500	Conversion: const LONGREAL to other than REAL
-	1501	Conversion of const which is not Cardinal, CHAR, REAL, LONGREAL
-	1502	Projection of const which is not Cardinal, CHAR, REAL, SET, NIL
-	1503	Projection to const which is not Cardinal, CHAR, REAL, LONGREAL, SET
+	1500	Conversion: const FLOAT64 to other than FLOAT32
+	1501	Conversion of const which is not Cardinal, CHAR, FLOAT32, FLOAT64
+	1502	Projection of const which is not Cardinal, CHAR, FLOAT32, SET, NIL
+	1503	Projection to const which is not Cardinal, CHAR, FLOAT32, FLOAT64, SET
 	1504	MakeNode: field/method cannot be referenced through SELF (SELF not found)
 
 *)

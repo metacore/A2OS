@@ -11,7 +11,7 @@ VAR
 	serverName : ARRAY 32 OF CHAR;
 	line : ARRAY 513 OF CHAR;
 	serverIP: IP.Adr;
-	res : WORD;
+	res : INTEGER;
 	reader : Streams.Reader;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(serverName);

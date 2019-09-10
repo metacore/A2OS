@@ -26,7 +26,7 @@ TYPE
 
 		(* lru: last recently used font - circular buffer. This buffer is for fast access and provides a protection for a limited number of loaded fonts from being garbage collected.  *)
 		lru: ARRAY 64 OF WMGraphics.Font;
-		lruPosition: LONGINT;
+		lruPosition: SIGNED32;
 
 		defaultFont : WMGraphics.Font;
 		font : WMGraphics.Font; (* set by the enumerator *)
@@ -38,7 +38,7 @@ TYPE
 
 		(* default font settings specified in Configuration.XML, read by procedure GetConfig *)
 		defaultFontName : ARRAY 256 OF CHAR;
-		defaultFontSize : LONGINT;
+		defaultFontSize : SIGNED32;
 		defaultFontStyle : SET;
 
 		PROCEDURE &Init*;
@@ -99,7 +99,7 @@ TYPE
 		VAR
 			section, e : XML.Element;
 			p : ANY; enum: XMLObjects.Enumerator;
-			string : ARRAY 16 OF CHAR; res : WORD;
+			string : ARRAY 16 OF CHAR; res : INTEGER;
 
 			PROCEDURE Error;
 			BEGIN KernelLog.String("WindowManager.FontManager subsection missing in Configuration. Running on defaults"); KernelLog.Ln
@@ -129,7 +129,7 @@ TYPE
 		VAR
 			factory : FontFactory; font : WMGraphics.Font;
 			moduleName, procedureName : Modules.Name;
-			msg : ARRAY 32 OF CHAR; res : WORD;
+			msg : ARRAY 32 OF CHAR; res : INTEGER;
 		BEGIN
 			IF (ln = NIL) THEN RETURN NIL END;
 			font := NIL;
@@ -144,7 +144,7 @@ TYPE
 		END Load;
 
 		PROCEDURE GetFont*(CONST name : ARRAY OF CHAR; size : SIZE; style : SET) : WMGraphics.Font;
-		VAR tf,f : WMGraphics.Font; l : LoaderInfo; fi : FontInfo; i: LONGINT;
+		VAR tf,f : WMGraphics.Font; l : LoaderInfo; fi : FontInfo; i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			font := defaultFont;
 			found := FALSE;

@@ -9,7 +9,7 @@ TYPE
 	FileName = Files.FileName;
 	Node = POINTER TO RECORD
 		name, full: FileName;
-		time, date, size: LONGINT;
+		time, date, size: SIGNED32;
 		found: BOOLEAN;
 		next: Node
 	END;
@@ -21,8 +21,8 @@ VAR
 	root: Node;
 	w: Texts.Writer;
 
-PROCEDURE Insert(VAR name: FileName; time, date, size: LONGINT; t: Texts.Text);
-VAR prefix: FileName;  n, p: Node;  col: SHORTINT;
+PROCEDURE Insert(VAR name: FileName; time, date, size: SIGNED32; t: Texts.Text);
+VAR prefix: FileName;  n, p: Node;  col: SIGNED8;
 BEGIN
 	NEW(n);
 	COPY(name, n.full);
@@ -52,14 +52,14 @@ BEGIN
 END Insert;
 
 PROCEDURE FindDuplicates*;
-VAR enum: Files.Enumerator; time, date: LONGINT; size: Files.Size; continue: BOOLEAN; name: FileName; t: Texts.Text; flags: SET;
+VAR enum: Files.Enumerator; time, date: SIGNED32; size: Files.Size; continue: BOOLEAN; name: FileName; t: Texts.Text; flags: SET;
 BEGIN
 	root.next := NIL;
 	NEW(enum);
 	enum.Open("", {Files.EnumSize, Files.EnumTime});
 	continue := TRUE;
 	WHILE enum.GetEntry(name, flags, time, date, size) DO
-		Insert(name, time, date, size(LONGINT), t)
+		Insert(name, time, date, size(SIGNED32), t)
 	END;
 	enum.Close;
 	NEW(t); Texts.Open(t, "");

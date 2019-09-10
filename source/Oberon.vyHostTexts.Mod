@@ -118,7 +118,7 @@ VAR
 	(* Parameter input: from PIO In.Mod *)
 	T* : 	Texts.Text;
 	S* : 	Texts.Scanner;
-	beg: LONGINT;
+	beg: SIGNED32;
 	w* : 	Texts.Writer;   	(*= a general writer. Output goes to Log *)
 	werr* : 	Texts.Writer;   (* =a writer for exception messages. Output goes to Log *)
 	Log* : Texts.Text;   (*= a persistent text. May be mapped to Oberon.Log *)
@@ -134,14 +134,14 @@ VAR
 	newF-: TextGadgets.Frame;
 	(*** Procedures *)
 
-PROCEDURE InRealRange (x: LONGREAL): BOOLEAN;
+PROCEDURE InRealRange (x: FLOAT64): BOOLEAN;
 BEGIN
-	RETURN (x >= MIN(REAL)) & (x <= MAX(REAL))
+	RETURN (x >= MIN(FLOAT32)) & (x <= MAX(FLOAT32))
 END InRealRange;
 
-PROCEDURE WReal* (VAR w: Texts.Writer;   x: LONGREAL;   prec: INTEGER);
+PROCEDURE WReal* (VAR w: Texts.Writer;   x: FLOAT64;   prec: SIGNED16);
 BEGIN
-	IF (x >= MIN(REAL)) & (x <= MAX(REAL)) THEN	Texts.WriteReal(w, SHORT(x), prec) ELSE Texts.WriteLongReal(w, x, prec) END
+	IF (x >= MIN(FLOAT32)) & (x <= MAX(FLOAT32)) THEN	Texts.WriteReal(w, SHORT(x), prec) ELSE Texts.WriteLongReal(w, x, prec) END
 END WReal;
 
 PROCEDURE DebugNote (s: ARRAY OF CHAR);
@@ -150,25 +150,25 @@ BEGIN Texts.WriteString(w, idversion);   Texts.WriteString(w, ' DebugNote:');   
 END DebugNote;
 
 (** Interface to unify System3/4/F *)
-PROCEDURE WriteRealFix* (VAR W: Texts.Writer;   x: LONGREAL;   n, f, E: LONGINT);
+PROCEDURE WriteRealFix* (VAR W: Texts.Writer;   x: FLOAT64;   n, f, E: SIGNED32);
 BEGIN
 	(*(* V4 *)
 	Texts.WriteRealFix(W,x, n, f);
 	*)
 	(*S3 *)
-	IF (x >= MIN(REAL)) & (x <= MAX(REAL)) THEN
+	IF (x >= MIN(FLOAT32)) & (x <= MAX(FLOAT32)) THEN
 		Texts.WriteRealFix(W, SHORT(x), n, f, E)
 	ELSE Texts.WriteLongRealFix(W, SHORT(x), n, f, E)
 	END
 END WriteRealFix;
 
-PROCEDURE InsertErrW* (level: INTEGER;   TB: Texts.Writer);   	(*vs 0.1d1 fof *)
+PROCEDURE InsertErrW* (level: SIGNED16;   TB: Texts.Writer);   	(*vs 0.1d1 fof *)
 	(* Append buffer text to error log *)
 	(*! should become fail-safe *)
 	(*! force level attributes. So far, level is not supported. *)
 BEGIN	Texts.Append(Log, TB.buf) END InsertErrW;
 
-PROCEDURE InsertErr* (level: INTEGER;   buf: Texts.Buffer);   	(*vs 0.1d1 fof *)
+PROCEDURE InsertErr* (level: SIGNED16;   buf: Texts.Buffer);   	(*vs 0.1d1 fof *)
 	(* Append buffer text to error log *)
 	(*! should become fail-safe *)
 	(*! force level attributes. So far, level is not supported. *)
@@ -180,7 +180,7 @@ VAR
 Out: Viewers.Viewer;
 OutTF : TextFrames.Frame;
 OutText: Text;
-OutPos,ParcPos: LONGINT;
+OutPos,ParcPos: SIGNED32;
 caret: BOOLEAN;
 Parc: TextFrames.Parc;
 BEGIN
@@ -194,7 +194,7 @@ END;
 END ParcBeforeInsertion; *)(* s3 *)
 (*____________________________________________________*)
 
-PROCEDURE NoteAttrib (VAR  tw: Texts.Writer;   level: INTEGER);
+PROCEDURE NoteAttrib (VAR  tw: Texts.Writer;   level: SIGNED16);
 
 	(*! use font styles as well  for visually impaired *)
 	(*! copy alerts and warnings to log *)
@@ -229,19 +229,19 @@ END Show;
 
 (** Diagnostic messages *)
 
-PROCEDURE Note* (level: INTEGER;   s: ARRAY OF CHAR);   	(*vs 0.1d0 gs *)
+PROCEDURE Note* (level: SIGNED16;   s: ARRAY OF CHAR);   	(*vs 0.1d0 gs *)
 BEGIN NoteAttrib(werr, level);
 	Texts.WriteString(werr, s);   Texts.WriteLn(werr);   AppendToText(Log, werr);
 NoteAttrib(werr, 0) END Note;
 
-PROCEDURE NoteSS* (level: INTEGER;   s1, s2: ARRAY OF CHAR);   	(*vs 0.1d0 gs *)
+PROCEDURE NoteSS* (level: SIGNED16;   s1, s2: ARRAY OF CHAR);   	(*vs 0.1d0 gs *)
 BEGIN NoteAttrib(werr, level);
 	Texts.WriteString(werr, s1);   Texts.Write(werr, msgsep);
 	Texts.WriteString(werr, s2);
 	Texts.WriteLn(werr);   AppendToText(Log, werr);
 NoteAttrib(werr, 0) END NoteSS;
 
-PROCEDURE NoteSSS* (level: INTEGER;   s1, s2, s3: ARRAY OF CHAR);   	(*vs 0.1d0 gs *)
+PROCEDURE NoteSSS* (level: SIGNED16;   s1, s2, s3: ARRAY OF CHAR);   	(*vs 0.1d0 gs *)
 BEGIN NoteAttrib(werr, level);
 	Texts.WriteString(werr, s1);   Texts.Write(werr, msgsep);
 	Texts.WriteString(werr, s2);   Texts.Write(werr, msgsep);
@@ -249,14 +249,14 @@ BEGIN NoteAttrib(werr, level);
 	Texts.WriteLn(werr);   AppendToText(Log, werr);
 NoteAttrib(werr, 0) END NoteSSS;
 
-PROCEDURE NoteSI* (level: INTEGER;   s: ARRAY OF CHAR;   i: LONGINT);   	(*vs 0.1d0 gs *)
+PROCEDURE NoteSI* (level: SIGNED16;   s: ARRAY OF CHAR;   i: SIGNED32);   	(*vs 0.1d0 gs *)
 	(* string integer string integer *)
 BEGIN NoteAttrib(werr, level);
 	Texts.WriteString(werr, s);   Texts.WriteInt(werr, i, 0);   Texts.Write(werr, ' ');
 	Texts.WriteLn(werr);   AppendToText(Log, werr);
 NoteAttrib(werr, 0) END NoteSI;
 
-PROCEDURE NoteSIS* (level: INTEGER;   s: ARRAY OF CHAR;   i: LONGINT;   s1: ARRAY OF CHAR);   	(*vs 0.1d0 gs *)
+PROCEDURE NoteSIS* (level: SIGNED16;   s: ARRAY OF CHAR;   i: SIGNED32;   s1: ARRAY OF CHAR);   	(*vs 0.1d0 gs *)
 	(* string integer string integer *)
 BEGIN NoteAttrib(werr, level);
 	Texts.WriteString(werr, s);   Texts.WriteInt(werr, i, 0);   Texts.Write(werr, ' ');
@@ -264,7 +264,7 @@ BEGIN NoteAttrib(werr, level);
 	Texts.WriteLn(werr);   AppendToText(Log, werr);
 NoteAttrib(werr, 0) END NoteSIS;
 
-PROCEDURE NoteSISI* (level: INTEGER;   s: ARRAY OF CHAR;   i: LONGINT;   s1: ARRAY OF CHAR;   i1: LONGINT);   	(*vs 0.1d0 gs *)
+PROCEDURE NoteSISI* (level: SIGNED16;   s: ARRAY OF CHAR;   i: SIGNED32;   s1: ARRAY OF CHAR;   i1: SIGNED32);   	(*vs 0.1d0 gs *)
 	(* string integer string integer *)
 BEGIN NoteAttrib(werr, level);
 	Texts.WriteString(werr, s);   Texts.Write(werr, msgsep);
@@ -276,7 +276,7 @@ NoteAttrib(werr, 0) END NoteSISI;
 
 (** Initialization *)
 PROCEDURE CheckTime;
-	VAR t, now, day, mon, yr: LONGINT;
+	VAR t, now, day, mon, yr: SIGNED32;
 BEGIN Oberon.GetClock(t, now);
 	day := now MOD 32;  mon := now DIV 32 MOD 16;  yr := now DIV 512 MOD 128;
 	(*	vyHostTexts.MsgSI('Day ',day);vyHostTexts.MsgSI(' Mon ',mon); vyHostTexts.MsgSI(' Yr ',yr); *)
@@ -292,7 +292,7 @@ PROCEDURE OpenScanner* (VAR s: Texts.Scanner): BOOLEAN;   	(*vs 0.1d1 gs *)
 	*)
 	(*! support full set of command conventions as in PO p.40 *)
 VAR
-	end, time: LONGINT;
+	end, time: SIGNED32;
 	V: Viewers.Viewer;
 	ScannerDone: BOOLEAN;
 BEGIN
@@ -371,7 +371,7 @@ PROCEDURE WriteTableStyle* (VAR W: Texts.Writer);
 CONST ctabdist = 60;
 	VAR prevfont: FontItem;
 	obj: Objects.Object;      BM: Objects.BindMsg;      oldfnt: Objects.Library;       OL: Objects.Library;
-	i: INTEGER;
+	i: SIGNED16;
 
 BEGIN
 	(*! insert style parc or gadget *)
@@ -397,17 +397,17 @@ BEGIN
 	Texts.SetFont(W, PrevFont.Font); PrevFont := PrevFont.prev
 END WritePrevStyle;
 
-PROCEDURE WriteInt* (VAR W: Texts.Writer;   i: LONGINT);
+PROCEDURE WriteInt* (VAR W: Texts.Writer;   i: SIGNED32);
 	(*! replace by smatrt choice *)
 BEGIN
-	IF (i >= MIN(INTEGER)) & (i <= MAX(INTEGER)) THEN
+	IF (i >= MIN(SIGNED16)) & (i <= MAX(SIGNED16)) THEN
 		Texts.WriteInt(W, i, 6)
 	ELSE
 		Texts.WriteInt(W, i, 12)
 	END
 END WriteInt;
 
-PROCEDURE WriteLongIntTab* (VAR W: Texts.Writer;   len: LONGINT;   x: ARRAY OF LONGINT;   start: LONGINT;   n: LONGINT);
+PROCEDURE WriteLongIntTab* (VAR W: Texts.Writer;   len: SIGNED32;   x: ARRAY OF SIGNED32;   start: SIGNED32;   n: SIGNED32);
 BEGIN
 	IF len <= 0 THEN RETURN END;
 	Texts.WriteInt(W, x[start], n);
@@ -416,7 +416,7 @@ BEGIN
 END WriteLongIntTab;
 
 
-PROCEDURE WriteIntTab* (VAR W: Texts.Writer;   len: LONGINT;   x: ARRAY OF INTEGER;   start: LONGINT;   n: LONGINT);
+PROCEDURE WriteIntTab* (VAR W: Texts.Writer;   len: SIGNED32;   x: ARRAY OF SIGNED16;   start: SIGNED32;   n: SIGNED32);
 BEGIN
 	IF len <= 0 THEN RETURN END;
 	Texts.WriteInt(W, x[start], n);
@@ -424,7 +424,7 @@ BEGIN
 	WHILE start < len DO Texts.Write(W, cTab);   Texts.WriteInt(W, x[start], n);   INC(start) END
 END WriteIntTab;
 
-PROCEDURE WriteLongRealTab* (VAR W: Texts.Writer;   len: LONGINT;   x: ARRAY OF LONGREAL;   start: LONGINT;   n: LONGINT);
+PROCEDURE WriteLongRealTab* (VAR W: Texts.Writer;   len: SIGNED32;   x: ARRAY OF FLOAT64;   start: SIGNED32;   n: SIGNED32);
 BEGIN
 	IF len <= 0 THEN RETURN END;
 	Texts.WriteLongReal(W, x[start], n);
@@ -432,7 +432,7 @@ BEGIN
 	WHILE start < len DO Texts.Write(W, cTab);   Texts.WriteLongReal(W, x[start], n);   INC(start) END
 END WriteLongRealTab;
 
-PROCEDURE WriteLongRealFixTab* (VAR W: Texts.Writer;   len: LONGINT;   x: ARRAY OF LONGREAL;   start: LONGINT;   n, f, E: LONGINT);
+PROCEDURE WriteLongRealFixTab* (VAR W: Texts.Writer;   len: SIGNED32;   x: ARRAY OF FLOAT64;   start: SIGNED32;   n, f, E: SIGNED32);
 BEGIN
 	IF len <= 0 THEN RETURN END;
 	Texts.WriteLongRealFix(W, x[start], n, f, E);
@@ -440,7 +440,7 @@ BEGIN
 	WHILE start < len DO Texts.Write(W, cTab);   Texts.WriteLongRealFix(W, x[start], n, f, E);   INC(start) END
 END WriteLongRealFixTab;
 
-PROCEDURE WriteRealTab* (VAR W: Texts.Writer;   len: LONGINT;   x: ARRAY OF REAL;   start: LONGINT;   n: LONGINT);
+PROCEDURE WriteRealTab* (VAR W: Texts.Writer;   len: SIGNED32;   x: ARRAY OF FLOAT32;   start: SIGNED32;   n: SIGNED32);
 BEGIN
 	IF len <= 0 THEN RETURN END;
 	Texts.WriteReal(W, x[start], n);
@@ -448,7 +448,7 @@ BEGIN
 	WHILE start < len DO Texts.Write(W, cTab);   Texts.WriteReal(W, x[start], n);   INC(start) END
 END WriteRealTab;
 
-PROCEDURE WriteRealFixTab* (VAR W: Texts.Writer;   len: LONGINT;   x: ARRAY OF REAL;   start: LONGINT;   n, f, E: LONGINT);
+PROCEDURE WriteRealFixTab* (VAR W: Texts.Writer;   len: SIGNED32;   x: ARRAY OF FLOAT32;   start: SIGNED32;   n, f, E: SIGNED32);
 BEGIN
 	IF len <= 0 THEN RETURN END;
 	Texts.WriteRealFix(W, x[start], n, f, E);
@@ -457,17 +457,17 @@ BEGIN
 END WriteRealFixTab;
 (* IO *)
 
-PROCEDURE WriteReal* (VAR W: Texts.Writer;   x: LONGREAL);
+PROCEDURE WriteReal* (VAR W: Texts.Writer;   x: FLOAT64);
 	(*! replace by smatrt choice *)
 BEGIN
-	IF (x >= MIN(REAL)) & (x <= MAX(REAL)) THEN
+	IF (x >= MIN(FLOAT32)) & (x <= MAX(FLOAT32)) THEN
 		Texts.WriteRealFix(W, SHORT(x), 12, 3, 3)
 	ELSE
 		Texts.WriteLongRealFix(W, SHORT(x), 12, 3, 3)
 	END
 END WriteReal;
 
-PROCEDURE WriteBoolTab* (VAR w: Texts.Writer;   count: LONGINT;   VAR a: ARRAY OF BOOLEAN;   offset, step: LONGINT);
+PROCEDURE WriteBoolTab* (VAR w: Texts.Writer;   count: SIGNED32;   VAR a: ARRAY OF BOOLEAN;   offset, step: SIGNED32);
 BEGIN  ASSERT(offset >= 0);
 	IF count > 0 THEN
 		count := offset + count * step;
@@ -491,7 +491,7 @@ BEGIN
 	IF (F IS TextFrames.Frame) OR  (F IS TextGadgets.Frame) THEN StdOut := F END
 END SetStdOutput;
 
-PROCEDURE GetInsertionPoint (VAR OFR: Display.Frame;   VAR OT: Texts.Text;   VAR OPos: LONGINT;   VAR caretconst: BOOLEAN);
+PROCEDURE GetInsertionPoint (VAR OFR: Display.Frame;   VAR OT: Texts.Text;   VAR OPos: SIGNED32;   VAR caretconst: BOOLEAN);
 	VAR caret: BOOLEAN;
 
 PROCEDURE Caret (): BOOLEAN;
@@ -546,8 +546,8 @@ BEGIN
 	END
 END GetInsertionPoint;
 
-PROCEDURE InsertBufferAndScroll (B: Texts.Buffer;   VAR OutFrame: Display.Frame;   OutText: Texts.Text;   OutPos: LONGINT;
-VAR newPos: LONGINT);
+PROCEDURE InsertBufferAndScroll (B: Texts.Buffer;   VAR OutFrame: Display.Frame;   OutText: Texts.Text;   OutPos: SIGNED32;
+VAR newPos: SIGNED32);
 	VAR Cmsg: Oberon.CaretMsg;
 BEGIN
 	IF OutFrame # NIL THEN
@@ -572,8 +572,8 @@ BEGIN
 END TempHandle;
 
 (*fof,  to integrate Gadget if no position mark is set: *)
-PROCEDURE InsertGadgetAndScroll (O: Objects.Object;   VAR OutFrame: Display.Frame;   OutText: Texts.Text;   OutPos: LONGINT;
-VAR newPos: LONGINT);
+PROCEDURE InsertGadgetAndScroll (O: Objects.Object;   VAR OutFrame: Display.Frame;   OutText: Texts.Text;   OutPos: SIGNED32;
+VAR newPos: SIGNED32);
 	VAR Cmsg: Oberon.CaretMsg;   Dmsg: Display.ConsumeMsg;   Disp: Display.DisplayMsg;  orighandle: Objects.Handler;
 	msg: Display.DisplayMsg;  d: Documents.Document;
 BEGIN
@@ -616,8 +616,8 @@ BEGIN
 END InsertGadgetAndScroll;
 
 (*
-PROCEDURE InsertGadgetAndScroll (O: Objects.Object;  VAR OutFrame: Display.Frame;  OutText: Texts.Text;  OutPos: LONGINT;
-VAR newPos: LONGINT);
+PROCEDURE InsertGadgetAndScroll (O: Objects.Object;  VAR OutFrame: Display.Frame;  OutText: Texts.Text;  OutPos: SIGNED32;
+VAR newPos: SIGNED32);
 VAR Cmsg: Oberon.CaretMsg;  Dmsg: Display.ConsumeMsg;  Disp: Display.DisplayMsg;
 BEGIN
 IF OutFrame = NIL THEN Gadgets.Integrate(O);  RETURN END;
@@ -638,7 +638,7 @@ END InsertGadgetAndScroll;
 PROCEDURE InsertLog* (B: Texts.Buffer);
 	(* Insert buffer text at caret position - if any *)
 	(*! should become central fail-safe output procedure *)
-	VAR OutTF: Display.Frame;   OutText: Texts.Text;   OutPos, newPos : LONGINT;   CaretConst: BOOLEAN;   Cmsg: Oberon.CaretMsg;
+	VAR OutTF: Display.Frame;   OutText: Texts.Text;   OutPos, newPos : SIGNED32;   CaretConst: BOOLEAN;   Cmsg: Oberon.CaretMsg;
 BEGIN
 	ASSERT(B # NIL);
 	GetInsertionPoint(OutTF, OutText, OutPos, CaretConst);
@@ -654,7 +654,7 @@ BEGIN
 END InsertLog;
 
 PROCEDURE InsertGadget* (G: Objects.Object);
-	VAR OutTF: Display.Frame;   OutText: Texts.Text;   OutPos, newPos : LONGINT;   CaretConst: BOOLEAN;   Cmsg: Oberon.CaretMsg;
+	VAR OutTF: Display.Frame;   OutText: Texts.Text;   OutPos, newPos : SIGNED32;   CaretConst: BOOLEAN;   Cmsg: Oberon.CaretMsg;
 BEGIN
 	ASSERT(G # NIL);
 	GetInsertionPoint(OutTF, OutText, OutPos, CaretConst);
@@ -670,8 +670,8 @@ BEGIN
 	(*ASSERT(G.lib#NIL); *)
 END InsertGadget;
 
-PROCEDURE GetCurWidth* (): INTEGER;
-	VAR OutTF: Display.Frame;   OutText: Texts.Text;   OutPos : LONGINT;   b: BOOLEAN;   s: TextGadgets.Style;
+PROCEDURE GetCurWidth* (): SIGNED16;
+	VAR OutTF: Display.Frame;   OutText: Texts.Text;   OutPos : SIGNED32;   b: BOOLEAN;   s: TextGadgets.Style;
 BEGIN
 	GetInsertionPoint(OutTF, OutText, OutPos, b);
 	IF OutTF = NIL THEN  RETURN Viewers.curW DIV 2 END;
@@ -689,7 +689,7 @@ VAR
 Out: Viewers.Viewer;
 OutTF : TextFrames.Frame;
 OutText: Texts.Text;
-OutPos,ParcPos: LONGINT;
+OutPos,ParcPos: SIGNED32;
 caret: BOOLEAN;
 Parc: TextFrames.Parc;
 BEGIN
@@ -713,39 +713,39 @@ PROCEDURE MsgSS* ( s1, s2: ARRAY OF CHAR);   	(*vs 0.1d0 gs *)
 	(* String  String>*)
 BEGIN Texts.WriteString(w, s1);   Texts.Write(w, msgsep);   Msg(s2) END MsgSS;
 
-PROCEDURE MsgI* ( i: LONGINT);   	(*vs 0.1d0 gs *)
+PROCEDURE MsgI* ( i: SIGNED32);   	(*vs 0.1d0 gs *)
 BEGIN Texts.WriteInt(w, i, 0);   Texts.WriteLn(w);   InsertLog(w.buf) END MsgI;
 
-PROCEDURE MsgSHex* ( s1: ARRAY OF CHAR; i: LONGINT);
-	VAR s2: ARRAY 32 OF CHAR; j: INTEGER;
+PROCEDURE MsgSHex* ( s1: ARRAY OF CHAR; i: SIGNED32);
+	VAR s2: ARRAY 32 OF CHAR; j: SIGNED16;
 BEGIN s2 := '0000000000H';
 	FOR j := 9 TO 1 BY - 1 DO
 	s2[j] := hexchars[(i MOD 16) ];  i := i DIV 16  END;
 	MsgSS(s1, s2)
 END MsgSHex;
 
-PROCEDURE MsgSI* ( s1: ARRAY OF CHAR;   i: LONGINT);   	(*vs 0.1d0 gs  String Integer>*)
+PROCEDURE MsgSI* ( s1: ARRAY OF CHAR;   i: SIGNED32);   	(*vs 0.1d0 gs  String Integer>*)
 BEGIN Texts.WriteString(w, s1);   Texts.Write(w, msgsep);   MsgI(i) END MsgSI;
 
-PROCEDURE MsgSISI* ( s1: ARRAY OF CHAR;   i: LONGINT;   s2: ARRAY OF CHAR;   j: LONGINT);   	(*vs 0.1d0 gs  String space Integer>*)
+PROCEDURE MsgSISI* ( s1: ARRAY OF CHAR;   i: SIGNED32;   s2: ARRAY OF CHAR;   j: SIGNED32);   	(*vs 0.1d0 gs  String space Integer>*)
 BEGIN Texts.WriteString(w, s1);   Texts.Write(w, msgsep);
 	Texts.WriteInt(w, i, 0);   Texts.Write(w, msgsep);
 MsgSI(s2, j) END MsgSISI;
 
-PROCEDURE MsgSR* ( s1: ARRAY OF CHAR;   x: LONGREAL);   	(*vs 0.1d1 gs *)
+PROCEDURE MsgSR* ( s1: ARRAY OF CHAR;   x: FLOAT64);   	(*vs 0.1d1 gs *)
 	(*! find proper default format for this and other real output*)
 BEGIN Texts.WriteString(w, s1);   Texts.Write(w, msgsep);
 	WReal(w, x, 10);   Texts.WriteLn(w);   InsertLog(w.buf)
 END MsgSR;
 
-PROCEDURE MsgSRR* ( s1: ARRAY OF CHAR;   x, y: LONGREAL);   	(*vs 0.1d0 gs *)
+PROCEDURE MsgSRR* ( s1: ARRAY OF CHAR;   x, y: FLOAT64);   	(*vs 0.1d0 gs *)
 BEGIN Texts.WriteString(w, s1);   Texts.Write(w, msgsep);
 	WReal(w, x, 10);   Texts.Write(w, msgsep);
 	WReal(w, y, 10);   Texts.Write(w, msgsep);
 	Texts.WriteLn(w);   InsertLog(w.buf)
 END MsgSRR;
 
-PROCEDURE MsgSRSR* ( s1: ARRAY OF CHAR;   x: LONGREAL;   s2: ARRAY OF CHAR;   y: LONGREAL);   	(*vs 0.1d0 gs *)
+PROCEDURE MsgSRSR* ( s1: ARRAY OF CHAR;   x: FLOAT64;   s2: ARRAY OF CHAR;   y: FLOAT64);   	(*vs 0.1d0 gs *)
 BEGIN Texts.WriteString(w, s1);   Texts.Write(w, msgsep);
 	WReal(w, x, 10);   Texts.Write(w, msgsep);
 	Texts.WriteString(w, s2);   Texts.Write(w, msgsep);
@@ -777,7 +777,7 @@ BEGIN
 	Texts.WriteLn(w); WritePrevStyle(w)
 END DumpBool;
 
-PROCEDURE DumpReal* (VAR w: Texts.Writer;    VAR a: ARRAY OF REAL;   prec: INTEGER);
+PROCEDURE DumpReal* (VAR w: Texts.Writer;    VAR a: ARRAY OF FLOAT32;   prec: SIGNED16);
 	VAR i, count: SIZE;
 BEGIN   WriteTableStyle(w);
 	count := LEN(a); i := 0;
@@ -787,7 +787,7 @@ BEGIN   WriteTableStyle(w);
 	Texts.WriteLn(w); WritePrevStyle(w)
 END DumpReal;
 
-PROCEDURE DumpLongreal* (VAR w: Texts.Writer;     VAR a: ARRAY OF LONGREAL;   prec: INTEGER);
+PROCEDURE DumpLongreal* (VAR w: Texts.Writer;     VAR a: ARRAY OF FLOAT64;   prec: SIGNED16);
 	VAR i, count: SIZE;
 BEGIN   WriteTableStyle(w);
 	count := LEN(a); i := 0;
@@ -797,7 +797,7 @@ BEGIN   WriteTableStyle(w);
 	Texts.WriteLn(w); WritePrevStyle(w)
 END DumpLongreal;
 
-PROCEDURE DumpInteger* (VAR w: Texts.Writer;     VAR a: ARRAY OF INTEGER;   prec: INTEGER);
+PROCEDURE DumpInteger* (VAR w: Texts.Writer;     VAR a: ARRAY OF SIGNED16;   prec: SIGNED16);
 	VAR i, count: SIZE;
 BEGIN WriteTableStyle(w);
 	count := LEN(a);   i := 0;
@@ -807,7 +807,7 @@ BEGIN WriteTableStyle(w);
 	Texts.WriteLn(w); WritePrevStyle(w)
 END DumpInteger;
 
-PROCEDURE DumpLongint* (VAR w: Texts.Writer;    VAR a: ARRAY OF LONGINT;   prec: INTEGER);
+PROCEDURE DumpLongint* (VAR w: Texts.Writer;    VAR a: ARRAY OF SIGNED32;   prec: SIGNED16);
 	VAR i, count: SIZE;
 BEGIN   WriteTableStyle(w);
 	count := LEN(a); i := 0;
@@ -819,8 +819,8 @@ END DumpLongint;
 
 (** Summaries *)
 (*! These routines may be improved *)
-PROCEDURE SummaryBool* (VAR w: Texts.Writer;   count: LONGINT;   VAR a: ARRAY OF BOOLEAN);
-	VAR i: LONGINT;
+PROCEDURE SummaryBool* (VAR w: Texts.Writer;   count: SIGNED32;   VAR a: ARRAY OF BOOLEAN);
+	VAR i: SIGNED32;
 BEGIN Texts.WriteString(w, "Summary for boolean array");   Texts.WriteLn(w);   i := 0;
 	WHILE i < count DO
 		IF a[i] THEN Texts.Write(w, "T") ELSE Texts.Write(w, "F") END;
@@ -829,8 +829,8 @@ BEGIN Texts.WriteString(w, "Summary for boolean array");   Texts.WriteLn(w);   i
 	Texts.WriteLn(w)
 END SummaryBool;
 
-PROCEDURE SummaryReal* (VAR w: Texts.Writer;   count: LONGINT;   VAR a: ARRAY OF REAL;   prec: INTEGER);
-	VAR i: LONGINT;
+PROCEDURE SummaryReal* (VAR w: Texts.Writer;   count: SIGNED32;   VAR a: ARRAY OF FLOAT32;   prec: SIGNED16);
+	VAR i: SIGNED32;
 BEGIN Texts.WriteString(w, "Summary for real array ");
 	Texts.WriteString(w, " count=");   Texts.WriteInt(w, count, 0);
 	Texts.WriteLn(w);   i := 0;
@@ -840,8 +840,8 @@ BEGIN Texts.WriteString(w, "Summary for real array ");
 	Texts.WriteLn(w)
 END SummaryReal;
 
-PROCEDURE SummaryLongreal* (VAR w: Texts.Writer;   count: LONGINT;   VAR a: ARRAY OF LONGREAL;   prec: INTEGER);
-	VAR i: LONGINT;
+PROCEDURE SummaryLongreal* (VAR w: Texts.Writer;   count: SIGNED32;   VAR a: ARRAY OF FLOAT64;   prec: SIGNED16);
+	VAR i: SIGNED32;
 BEGIN Texts.WriteString(w, "Summary for longreal array ");
 	Texts.WriteString(w, " count=");   Texts.WriteInt(w, count, 0);
 	Texts.WriteLn(w);   i := 0;
@@ -851,8 +851,8 @@ BEGIN Texts.WriteString(w, "Summary for longreal array ");
 	Texts.WriteLn(w)
 END SummaryLongreal;
 
-PROCEDURE SummaryInteger* (VAR w: Texts.Writer;   count: LONGINT;   VAR a: ARRAY OF INTEGER;   prec: INTEGER);
-	VAR i: LONGINT;
+PROCEDURE SummaryInteger* (VAR w: Texts.Writer;   count: SIGNED32;   VAR a: ARRAY OF SIGNED16;   prec: SIGNED16);
+	VAR i: SIGNED32;
 BEGIN Texts.WriteString(w, "Summary for integer array ");
 	Texts.WriteString(w, " count=");   Texts.WriteInt(w, count, 0);
 	Texts.WriteLn(w);   i := 0;
@@ -862,8 +862,8 @@ BEGIN Texts.WriteString(w, "Summary for integer array ");
 	Texts.WriteLn(w)
 END SummaryInteger;
 
-PROCEDURE SummaryLongint* (VAR w: Texts.Writer;   count: LONGINT;   VAR a: ARRAY OF LONGINT;   prec: INTEGER);
-	VAR i: LONGINT;
+PROCEDURE SummaryLongint* (VAR w: Texts.Writer;   count: SIGNED32;   VAR a: ARRAY OF SIGNED32;   prec: SIGNED16);
+	VAR i: SIGNED32;
 BEGIN Texts.WriteString(w, "Summary for longinteger array ");
 	Texts.WriteString(w, " count=");   Texts.WriteInt(w, count, 0);
 	Texts.WriteLn(w);   i := 0;

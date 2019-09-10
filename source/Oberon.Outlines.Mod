@@ -19,16 +19,16 @@ CONST
 TYPE
 	Outline* = POINTER TO OutlineDesc;
 	OutlineDesc* = RECORD (Gadgets.FrameDesc)
-		fstate* : INTEGER;
-		len*: LONGINT;
+		fstate* : SIGNED16;
+		len*: SIGNED32;
 		buf* : Texts.Buffer;
 	END;
 
 	FindInfo = RECORD
 		sPat: ARRAY MaxPatLen OF CHAR;	(* search pattern [read only] *)
-		sDv: ARRAY MaxPatLen + 1 OF INTEGER;	(* displacement vector for search pattern *)
-		sLen: INTEGER;	(* number of valid characters in sPat [read only] *)
-		time: LONGINT;	(* most recent time for sPat and/or rBuf *)
+		sDv: ARRAY MaxPatLen + 1 OF SIGNED16;	(* displacement vector for search pattern *)
+		sLen: SIGNED16;	(* number of valid characters in sPat [read only] *)
+		time: SIGNED32;	(* most recent time for sPat and/or rBuf *)
 		rBuf: Texts.Buffer;	(* replace buffer [read only] *)
 	END;
 
@@ -39,7 +39,7 @@ VAR
 	insertT: Texts.Text;
 	saveB: Texts.Buffer;
 
-PROCEDURE MakeOutline*(state: INTEGER) : Outline;
+PROCEDURE MakeOutline*(state: SIGNED16) : Outline;
 VAR F: Outline;
 BEGIN
 	NEW(F); F.state := {Gadgets.lockedsize}; F.W := FW; F.H := FH; F.handle := handle; F.fstate := state; F.len:= 1;
@@ -90,8 +90,8 @@ BEGIN
 	END
 END GetText;
 
-PROCEDURE FindBefore(T: Texts.Text; obj: Objects.Object; VAR before: Objects.Object; VAR pos: LONGINT);
-VAR F: Texts.Finder; p: LONGINT; o: Objects.Object;
+PROCEDURE FindBefore(T: Texts.Text; obj: Objects.Object; VAR before: Objects.Object; VAR pos: SIGNED32);
+VAR F: Texts.Finder; p: SIGNED32; o: Objects.Object;
 BEGIN
 	before := NIL; pos := 0; o := NIL; p := 0;
 	Texts.OpenFinder(F, T, 0);
@@ -108,8 +108,8 @@ BEGIN
 	END;
 END FindBefore;
 
-PROCEDURE CloseForward(F: Outline; T: Texts.Text; pos: LONGINT);
-VAR f: Texts.Finder; o: Objects.Object; pos0: LONGINT; cnt : INTEGER;
+PROCEDURE CloseForward(F: Outline; T: Texts.Text; pos: SIGNED32);
+VAR f: Texts.Finder; o: Objects.Object; pos0: SIGNED32; cnt : SIGNED16;
 BEGIN
 	F.len:= 0;
 	Texts.OpenFinder(f, T, pos+1);
@@ -137,8 +137,8 @@ BEGIN
 	END;
 END CloseForward;
 
-PROCEDURE CloseBackward(F: Outline; T: Texts.Text; pos: LONGINT);
-VAR obj: Objects.Object; pos0: LONGINT; cnt : INTEGER;
+PROCEDURE CloseBackward(F: Outline; T: Texts.Text; pos: SIGNED32);
+VAR obj: Objects.Object; pos0: SIGNED32; cnt : SIGNED16;
 BEGIN
 	obj := F; cnt := 1;
 	LOOP
@@ -165,7 +165,7 @@ BEGIN
 	END;
 END CloseBackward;
 
-PROCEDURE Ins(T: Texts.Text; pos: LONGINT; obj : Objects.Object);
+PROCEDURE Ins(T: Texts.Text; pos: SIGNED32; obj : Objects.Object);
 VAR W: Texts.Writer;
 BEGIN
 	Texts.OpenWriter(W);
@@ -173,7 +173,7 @@ BEGIN
 	Texts.Insert(T, pos, W.buf)
 END Ins;
 
-PROCEDURE Open(F: Outline; T: Texts.Text; pos: LONGINT);
+PROCEDURE Open(F: Outline; T: Texts.Text; pos: SIGNED32);
 BEGIN
 	IF F.buf # NIL THEN F.len:= F.buf.len; Texts.Insert(T, pos+1, F.buf); F.buf:= NIL
 	ELSE Ins(T, pos+1, MakeOutline(close))
@@ -181,8 +181,8 @@ BEGIN
 	F.fstate := open; Gadgets.Update(F)
 END Open;
 
-PROCEDURE Fold(F: Outline; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg; R: Display3.Mask);
-VAR f: Texts.Finder; o: Objects.Object; T: Texts.Text; pos: LONGINT; found: BOOLEAN;
+PROCEDURE Fold(F: Outline; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg; R: Display3.Mask);
+VAR f: Texts.Finder; o: Objects.Object; T: Texts.Text; pos: SIGNED32; found: BOOLEAN;
 	FF: Display.Frame;
 BEGIN
 	Effects.TrackHighlight(R, M.keys, M.X, M.Y, x, y, w, h);
@@ -219,8 +219,8 @@ BEGIN
 	Gadgets.ExecuteAttr(F, "Cmd", M.dlink, NIL, NIL)
 END Fold;
 
-PROCEDURE ExpandAll*(T: Texts.Text; from: LONGINT; temporal: BOOLEAN);
-VAR F: Texts.Finder; o: Objects.Object; pos: LONGINT;
+PROCEDURE ExpandAll*(T: Texts.Text; from: SIGNED32; temporal: BOOLEAN);
+VAR F: Texts.Finder; o: Objects.Object; pos: SIGNED32;
 BEGIN
 	Texts.OpenFinder(F, T, from); pos:= F.pos;
 	LOOP
@@ -236,8 +236,8 @@ BEGIN
 END ExpandAll;
 
 (** Collapse from the position of the next Outline to its matching one. *)
-PROCEDURE CollapseFromTo*(T: Texts.Text; beg, end: LONGINT; modes: SET);
-VAR F: Texts.Finder; o: Objects.Object; pos: LONGINT;
+PROCEDURE CollapseFromTo*(T: Texts.Text; beg, end: SIGNED32; modes: SET);
+VAR F: Texts.Finder; o: Objects.Object; pos: SIGNED32;
 BEGIN
 	Texts.OpenFinder(F, T, beg); pos := F.pos;
 	LOOP
@@ -260,8 +260,8 @@ END CollapseAll;
 
 (*	----------------------------	Gadgets Stuff	----------------------------	*)
 
-PROCEDURE DTriangle (R: Display3.Mask; x, y, dim: INTEGER; open: BOOLEAN);
-VAR h, max: INTEGER;
+PROCEDURE DTriangle (R: Display3.Mask; x, y, dim: SIGNED16; open: BOOLEAN);
+VAR h, max: SIGNED16;
 BEGIN
 	max := 1 + 2*(dim DIV 2);
 	IF open THEN
@@ -281,8 +281,8 @@ BEGIN
 	END
 END DTriangle;
 
-PROCEDURE RestoreOutline(F: Outline; R: Display3.Mask; x, y, w, h: INTEGER);
-VAR cx, cy, cw, ch: INTEGER;
+PROCEDURE RestoreOutline(F: Outline; R: Display3.Mask; x, y, w, h: SIGNED16);
+VAR cx, cy, cw, ch: SIGNED16;
 BEGIN
 	Display3.ReplConst(R, Display3.groupC, x, y, w, h, Display.replace);
 	cx := x + w DIV 4; cy := y + h DIV 4; cw := w DIV 2; ch := h DIV 2;
@@ -295,12 +295,12 @@ BEGIN
 	IF Gadgets.selected IN F.state THEN Display3.FillPattern(R, 15, Display3.selectpat, x, y, x, y, w, h, Display.paint) END
 END RestoreOutline;
 
-PROCEDURE P(x: INTEGER): INTEGER;
+PROCEDURE P(x: SIGNED16): SIGNED16;
 BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 END P;
 
-PROCEDURE PTriangle (R: Display3.Mask; x, y, dim: INTEGER; open: BOOLEAN);
-VAR h, max: INTEGER;
+PROCEDURE PTriangle (R: Display3.Mask; x, y, dim: SIGNED16; open: BOOLEAN);
+VAR h, max: SIGNED16;
 BEGIN
 	max := 1 + 2*(dim DIV 2);
 	IF open THEN
@@ -321,7 +321,7 @@ BEGIN
 END PTriangle;
 
 PROCEDURE PrintOutline(F: Outline; M: Display.DisplayMsg);
-VAR R: Display3.Mask; x, y, w, h: INTEGER;
+VAR R: Display3.Mask; x, y, w, h: SIGNED16;
 
 BEGIN
 	Gadgets.MakePrinterMask(F, M.x, M.y, M.dlink, R);
@@ -366,7 +366,7 @@ BEGIN
 END Attr;
 
 PROCEDURE OutlineHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR file: Files.File; text: Texts.Text; pos, len: LONGINT; x, y, w, h, version: INTEGER; F0: Outline;
+VAR file: Files.File; text: Texts.Text; pos, len: SIGNED32; x, y, w, h, version: SIGNED16; F0: Outline;
 		R: Display3.Mask; ch: CHAR;
 BEGIN
 	WITH F: Outline DO
@@ -479,8 +479,8 @@ END New;
 
 (*	----------------------------	HD extensions	----------------------------	*)
 
-PROCEDURE InsertText*(T: Texts.Text; beg, end: LONGINT); (*gs*)
-	VAR o: Outline; F: Texts.Finder; obj: Objects.Object; p, n: LONGINT;
+PROCEDURE InsertText*(T: Texts.Text; beg, end: SIGNED32); (*gs*)
+	VAR o: Outline; F: Texts.Finder; obj: Objects.Object; p, n: SIGNED32;
 BEGIN
 	n := 0; Texts.OpenFinder(F, T, beg);
 	p := F.pos; Texts.FindObj(F, obj);
@@ -502,7 +502,7 @@ BEGIN
 END InsertText;
 
 PROCEDURE RemoveAll*(T: Texts.Text); (*gs*)
-	VAR F: Texts.Finder; o: Objects.Object; pos: LONGINT;
+	VAR F: Texts.Finder; o: Objects.Object; pos: SIGNED32;
 BEGIN
 	ExpandAll(T, 0, FALSE);
 	Texts.OpenFinder(F, T, 0);
@@ -544,7 +544,7 @@ END Insert;
 PROCEDURE NoBroadcast (VAR M: Display.FrameMsg);
 END NoBroadcast;
 
-PROCEDURE MarkPatPos (F: Display.Frame; T: Texts.Text; pos: LONGINT);
+PROCEDURE MarkPatPos (F: Display.Frame; T: Texts.Text; pos: SIGNED32);
 VAR C: Oberon.CaretMsg; S: Oberon.SelectMsg;
 BEGIN
 	Oberon.Defocus;
@@ -554,8 +554,8 @@ BEGIN
 	S.id := Oberon.set; S.F := F; S.time := -1; Display.Broadcast(C); inf.time :=S.time
 END MarkPatPos;
 
-PROCEDURE CalcDispVec (time: LONGINT);
-VAR i, j, d: INTEGER;
+PROCEDURE CalcDispVec (time: SIGNED32);
+VAR i, j, d: SIGNED16;
 BEGIN
 	inf.time := time;
 	i := 1; d := 1; (* calculate displacement vector *)
@@ -566,8 +566,8 @@ BEGIN
 	END
 END CalcDispVec;
 
-PROCEDURE SPatFound (text: Texts.Text; VAR pos: LONGINT): BOOLEAN;
-VAR root, obj: Objects.Object; bpos, fpos, l: LONGINT; i: INTEGER; f: Texts.Finder; R: Texts.Reader; ch: CHAR;
+PROCEDURE SPatFound (text: Texts.Text; VAR pos: SIGNED32): BOOLEAN;
+VAR root, obj: Objects.Object; bpos, fpos, l: SIGNED32; i: SIGNED16; f: Texts.Finder; R: Texts.Reader; ch: CHAR;
 
 	PROCEDURE Append (o: Objects.Object);
 	VAR cur: Objects.Object;
@@ -652,7 +652,7 @@ BEGIN
 END SPatFound;
 
 PROCEDURE Search*;
-VAR F: Display.Frame; T: Texts.Text; pos: LONGINT; i: INTEGER; R: Texts.Reader;
+VAR F: Display.Frame; T: Texts.Text; pos: SIGNED32; i: SIGNED16; R: Texts.Reader;
 		aS: Attributes.Scanner; C: Oberon.CaretMsg; S: Oberon.SelectMsg;
 BEGIN
 	F:= GetFrame();
@@ -683,7 +683,7 @@ BEGIN
 END Search;
 
 PROCEDURE replace (): BOOLEAN;
-VAR F: Display.Frame; R: Texts.Reader; tBuf: Texts.Buffer; i, pos, p, len: LONGINT;
+VAR F: Display.Frame; R: Texts.Reader; tBuf: Texts.Buffer; i, pos, p, len: SIGNED32;
 		ch: CHAR; T: Texts.Text; S: Oberon.SelectMsg; C: Oberon.CaretMsg;
 BEGIN
 	F := GetFrame(); T := GetText(F);

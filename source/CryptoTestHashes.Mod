@@ -26,7 +26,7 @@ IMPORT
 
 	PROCEDURE MeasureTime( CONST modname: ARRAY OF CHAR );
 	VAR
-		c, i : LONGINT;
+		c, i : SIGNED32;
 		milliTimer : Kernel.MilliTimer;
 		buf: ARRAY 1024 OF CHAR;
 		hash: ARRAY 1024 OF CHAR;

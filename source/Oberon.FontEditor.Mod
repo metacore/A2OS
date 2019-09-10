@@ -32,94 +32,94 @@ CONST
 	idmetricdx = 2;
 
 TYPE
-	RunRec = RECORD beg, end: INTEGER END;
-	BoxRec = RECORD dx, x, y, w, h: INTEGER END;
+	RunRec = RECORD beg, end: SIGNED16 END;
+	BoxRec = RECORD dx, x, y, w, h: SIGNED16 END;
 
 	Font = POINTER TO FontDesc;						(* Fontdarstellung *)
 	FontDesc = RECORD
 		type, family, variant: CHAR;
-		height, minX, maxX, minY, maxY, nofRuns: INTEGER;
-		pos: LONGINT;
+		height, minX, maxX, minY, maxY, nofRuns: SIGNED16;
+		pos: SIGNED32;
 		run: ARRAY 256 OF RunRec;
 		box: ARRAY 256 OF BoxRec;
-		p: ARRAY 256 OF LONGINT;
+		p: ARRAY 256 OF SIGNED32;
 		raster: POINTER TO ARRAY OF CHAR
 	END;
 
 	Fonttable = POINTER TO FonttableDesc;			(* Tabelle für Charakterauswahl *)
 	FonttableDesc= RECORD (Gadgets.FrameDesc)
 									f: Font;
-								 col: INTEGER 	(* für Version 1.6 *)
+								 col: SIGNED16 	(* für Version 1.6 *)
 								END;
 
 	Character = POINTER TO CharDesc;					(* Vergrösserte Darstellung eines Characters zum editieren *)
 	CharDesc = RECORD (Rembrandt.FrameDesc)	(* Erweiterung von Rembrandt.Frame *)
 								f: Font;										(* zugehöriger Font *)
-								char: INTEGER;							(* dargestellter Character *)
-								x, y, dx: INTEGER;						(* aktuelle Positionen der Metriken *)
-								x0, y0: INTEGER;						(* Abstand des Ursprungs von der unteren linken Ecke des Pictures *)
+								char: SIGNED16;							(* dargestellter Character *)
+								x, y, dx: SIGNED16;						(* aktuelle Positionen der Metriken *)
+								x0, y0: SIGNED16;						(* Abstand des Ursprungs von der unteren linken Ecke des Pictures *)
 						END;
 
 	Preview = POINTER TO PreviewDesc;				(* Vorschau des vergrösserten zur Zeit in Bearbeitung stehenden Characters *)
 	PreviewDesc = RECORD (Rembrandt.FrameDesc)
 								f: Font;
-								char: INTEGER
+								char: SIGNED16
 						END;
 
-	ChangeMsg = RECORD (Display.FrameMsg) id: INTEGER; d: INTEGER; pict: Pictures.Picture END;
-	StoreMsg = RECORD (Display.FrameMsg) obj: Character; pos: INTEGER END;
+	ChangeMsg = RECORD (Display.FrameMsg) id: SIGNED16; d: SIGNED16; pict: Pictures.Picture END;
+	StoreMsg = RECORD (Display.FrameMsg) obj: Character; pos: SIGNED16 END;
 	SelectMsg = RECORD (Display.SelectMsg) END;
 
 VAR
-	fonttrackMM: PROCEDURE (F: Character; VAR M: Oberon.InputMsg; x, y: INTEGER);
+	fonttrackMM: PROCEDURE (F: Character; VAR M: Oberon.InputMsg; x, y: SIGNED16);
 
 	df: Font;	(* Defaultfont *)
 
 	F: Files.File; R: Files.Rider;
 
-PROCEDURE Min(a, b: INTEGER): INTEGER; BEGIN IF a<b THEN RETURN a ELSE RETURN b END END Min;
+PROCEDURE Min(a, b: SIGNED16): SIGNED16; BEGIN IF a<b THEN RETURN a ELSE RETURN b END END Min;
 
-PROCEDURE Max(a, b: INTEGER): INTEGER; BEGIN IF a>b THEN RETURN a ELSE RETURN b END END Max;
+PROCEDURE Max(a, b: SIGNED16): SIGNED16; BEGIN IF a>b THEN RETURN a ELSE RETURN b END END Max;
 
-PROCEDURE Get(F: Font; beg, w, x, y: LONGINT): BOOLEAN;
+PROCEDURE Get(F: Font; beg, w, x, y: SIGNED32): BOOLEAN;
 (* Gibt zurück, ob Punkt im Fontraster gesetzt ist *)
-VAR ch: INTEGER; s: SET;
+VAR ch: SIGNED16; s: SET;
 BEGIN
 	ch := ORD(F.raster[beg + w * y + x DIV 8]);
 	s := SET(ch);
 	RETURN x MOD 8 IN s
 END Get;
 
-PROCEDURE Put(F: Font; beg, w, x, y: LONGINT; b: BOOLEAN);
+PROCEDURE Put(F: Font; beg, w, x, y: SIGNED32; b: BOOLEAN);
 (* Setzt/löscht einen Punkt im Fontraster *)
-VAR ch: INTEGER; s: SET;
+VAR ch: SIGNED16; s: SET;
 BEGIN
 	ch := ORD(F.raster[beg+w * y + x DIV 8]);
 	s := SET(ch);
 	IF b THEN s := s + {x MOD 8}
 	ELSE s := s - {x MOD 8}
 	END;
-	F.raster[beg+w * y + x DIV 8] := CHR(LONGINT(s));
+	F.raster[beg+w * y + x DIV 8] := CHR(SIGNED32(s));
 END Put;
 
-PROCEDURE CharOrg(F: Font; VAR x0, y0: INTEGER);
+PROCEDURE CharOrg(F: Font; VAR x0, y0: SIGNED16);
 (* Gibt den Abstand des Ursprungs eines Character im Pictures von der linken unteren Ecke *)
 (* Heuristik: kann irgendwie gewählt werden *)
 BEGIN
 	x0:= F.height DIV 4; y0:= F.height DIV 3
 END CharOrg;
 
-PROCEDURE CharDim(F: Font; sel: INTEGER; VAR dx, dy, w, h: INTEGER);
+PROCEDURE CharDim(F: Font; sel: SIGNED16; VAR dx, dy, w, h: SIGNED16);
 (* Liefert die Metrik eins Characters *)
 CONST dh= 4;
-VAR x0, y0: INTEGER;
+VAR x0, y0: SIGNED16;
 BEGIN
 	CharOrg(F, x0, y0);
 	dx:= x0+F.box[sel].x; dy:= y0+F.box[sel].y;
 	w:= -dx+F.maxX+Max(F.box[sel].dx, F.box[sel].w); h:= -F.minY+F.box[sel].h+dy+dh;
 END CharDim;
 
-PROCEDURE PostoString(pos: INTEGER; VAR s: ARRAY OF CHAR);
+PROCEDURE PostoString(pos: SIGNED16; VAR s: ARRAY OF CHAR);
 (* Wandelt eine Zahl in einen String um *)
 VAR hex: ARRAY 17 OF CHAR;
 BEGIN
@@ -129,7 +129,7 @@ BEGIN
 	s[2]:= 0X
 END PostoString;
 
-PROCEDURE ConvertPostoString(pos: INTEGER; VAR s: ARRAY OF CHAR);
+PROCEDURE ConvertPostoString(pos: SIGNED16; VAR s: ARRAY OF CHAR);
 (* Wandelt einen ASCII-Code in einen String um; wird als Documentname verwendet *)
 BEGIN
 	IF (pos>=dbeg) & (pos<dend) THEN
@@ -140,9 +140,9 @@ BEGIN
 	END
 END ConvertPostoString;
 
-PROCEDURE ConvertStringtoPos(s: ARRAY OF CHAR; VAR pos: INTEGER);
+PROCEDURE ConvertStringtoPos(s: ARRAY OF CHAR; VAR pos: SIGNED16);
 (* Wandelt einen String in einen entsprechenden ASCII-Code um *)
-VAR i: INTEGER; hex: ARRAY 17 OF CHAR;
+VAR i: SIGNED16; hex: ARRAY 17 OF CHAR;
 BEGIN
 	COPY("0123456789ABCDEF", hex);
 	i := 0; WHILE s[i] # 0X DO INC(i) END;
@@ -161,7 +161,7 @@ END ConvertStringtoPos;
 (** Zoomfaktor des Pictures wird erhöht *)
 PROCEDURE Inc*;
 CONST dz=3; maxzoom=16;
-VAR doc: Documents.Document; F: Rembrandt.Frame; zoom: INTEGER;
+VAR doc: Documents.Document; F: Rembrandt.Frame; zoom: SIGNED16;
 BEGIN
 	doc := Desktops.CurDoc(Gadgets.context);
 	IF (doc # NIL) & (doc.dsc IS Rembrandt.Frame) THEN
@@ -176,7 +176,7 @@ END Inc;
 (** Zoomfaktor des Pictures wird erniedrigt *)
 PROCEDURE Dec*;
 CONST dz=3;
-VAR doc: Documents.Document; F: Rembrandt.Frame; zoom: INTEGER;
+VAR doc: Documents.Document; F: Rembrandt.Frame; zoom: SIGNED16;
 BEGIN
 	doc := Desktops.CurDoc(Gadgets.context);
 	IF (doc # NIL) & (doc.dsc IS Rembrandt.Frame) THEN
@@ -190,7 +190,7 @@ END Dec;
 
 PROCEDURE LoadDoc(D: Documents.Document);
 VAR obj: Character; P: Pictures.Picture;
-	x, y, w, h: INTEGER;
+	x, y, w, h: SIGNED16;
 BEGIN
 	x := 0; y := 0; w := 250; h := 200;
 	NEW(P); Pictures.Create(P, w, h, 8);
@@ -201,7 +201,7 @@ BEGIN
 END LoadDoc;
 
 PROCEDURE StoreDoc(D: Documents.Document);
-(* VAR obj: Character; sM: StoreMsg; pos: INTEGER; *)
+(* VAR obj: Character; sM: StoreMsg; pos: SIGNED16; *)
 (*
 	BEGIN
 	obj := D.dsc(Character);
@@ -214,7 +214,7 @@ END StoreDoc;
 (** Speichert das markierte Zeichen im zugehörigen Font ab *)
 PROCEDURE StoreCharacter*;
 VAR D: Documents.Document;
-		obj: Character; sM: StoreMsg; pos: INTEGER;
+		obj: Character; sM: StoreMsg; pos: SIGNED16;
 BEGIN
 	D:= Documents.MarkedDoc();
 	IF D.dsc IS Character THEN
@@ -230,7 +230,7 @@ END StoreCharacter;
 PROCEDURE DocHandler(D: Objects.Object; VAR M: Objects.ObjMsg);
 VAR P: Pictures.Picture; R: D3.Mask;
 
-	PROCEDURE PP(x: INTEGER): INTEGER;
+	PROCEDURE PP(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END PP;
 
@@ -271,9 +271,9 @@ BEGIN
 	END
 END DocHandler;
 
-PROCEDURE OpenDoc(P: Pictures.Picture; f: Font; pos: INTEGER; name: ARRAY OF CHAR);
+PROCEDURE OpenDoc(P: Pictures.Picture; f: Font; pos: SIGNED16; name: ARRAY OF CHAR);
 (* Ein Document mit dem Charactercode "pos" und Documentname "name", dargestellt im Picture, wird geöffnet *)
-VAR doc: Documents.Document; zoom: INTEGER;
+VAR doc: Documents.Document; zoom: SIGNED16;
 		obj: Character;
 BEGIN
 	IF f.height<=20 THEN zoom:= 16 ELSE zoom:= 7 END;	(* Vergrösserte Darstellung je nach Fontgrösse *)
@@ -298,10 +298,10 @@ BEGIN
 	D.W := 250; D.H := 200; Objects.NewObj := D
 END NewDoc;
 
-PROCEDURE DisplayChar(Q: D3.Mask; x, y: INTEGER; F: Font; pos: INTEGER);
+PROCEDURE DisplayChar(Q: D3.Mask; x, y: SIGNED16; F: Font; pos: SIGNED16);
 (* Stellt einen Fonttable-Eintrag auf dem Bildschirm dar *)
 CONST dt= 1;
-VAR beg: LONGINT; i, j, h, w, dx, dy, wb: INTEGER; s: ARRAY 3 OF CHAR;
+VAR beg: SIGNED32; i, j, h, w, dx, dy, wb: SIGNED16; s: ARRAY 3 OF CHAR;
 BEGIN
 	IF (pos>=dbeg) & (pos<dend) & (F.p[pos]#undef) THEN	(* Sichtbares Zeichen ausgeben *)
 		w:= F.box[pos].w; h:= F.box[pos].h; beg:= F.p[pos];
@@ -322,16 +322,16 @@ BEGIN
 	END
 END DisplayChar;
 
-PROCEDURE BoxesinTable(F: Font; w, h: INTEGER; VAR cw, ch: INTEGER);
+PROCEDURE BoxesinTable(F: Font; w, h: SIGNED16; VAR cw, ch: SIGNED16);
 (* Gibt die Anzahl Einträge der Fonttable in Höhe und Breite zurück *)
 BEGIN
 	cw:= (w-2*border) DIV dwidth;
 	ch:= (h-2*border) DIV dheight;
 END BoxesinTable;
 
-PROCEDURE DisplayBoxBorder(F: Font; Q: D3.Mask; x, y, w, h, pos, col0, col1: INTEGER);
+PROCEDURE DisplayBoxBorder(F: Font; Q: D3.Mask; x, y, w, h, pos, col0, col1: SIGNED16);
 (* Stellt die Box des Codes pos in der Fonttable dar mit den Farben col0, col1 als 3D-Effekt *)
-VAR bw, bh, cx, cy: INTEGER;
+VAR bw, bh, cx, cy: SIGNED16;
 BEGIN
 	BoxesinTable(F, w, h, bw, bh);
 	cy:= y+h-border-dheight-F.minY+tabled-(pos DIV bw)*dheight;
@@ -339,8 +339,8 @@ BEGIN
 	D3.Rect3D(Q, col0, col1, cx+F.minX-tabled, cy+F.minY-tabled, dwidth, dheight, 1, Display.replace);
 END DisplayBoxBorder;
 
-PROCEDURE CreateCharPict(F: Font; pos: INTEGER): Pictures.Picture;
-VAR beg: LONGINT; i, j, dx, dy, pw, ph, h, w, wb: INTEGER; P: Pictures.Picture;
+PROCEDURE CreateCharPict(F: Font; pos: SIGNED16): Pictures.Picture;
+VAR beg: SIGNED32; i, j, dx, dy, pw, ph, h, w, wb: SIGNED16; P: Pictures.Picture;
 BEGIN
 	NEW(P);
 	IF F.p[pos]#undef THEN
@@ -363,7 +363,7 @@ BEGIN
 	RETURN P
 END CreateCharPict;
 
-PROCEDURE PreviewChar(F: Font; pos: INTEGER);
+PROCEDURE PreviewChar(F: Font; pos: SIGNED16);
 (* Stellt ein Character in Originalgrösse im Preview-Gadget dar *)
 VAR P: Pictures.Picture;
 BEGIN
@@ -371,8 +371,8 @@ BEGIN
 	Pictures.Update(P, 0, 0, P.width, P.height);
 END PreviewChar;
 
-PROCEDURE RestoreTable(F: Fonttable; Q: D3.Mask; x, y, w, h: INTEGER);
-VAR pos, sx, sy, xb, yb, maxx, maxy: INTEGER;
+PROCEDURE RestoreTable(F: Fonttable; Q: D3.Mask; x, y, w, h: SIGNED16);
+VAR pos, sx, sy, xb, yb, maxx, maxy: SIGNED16;
 BEGIN
 	D3.FilledRect3D(Q, D3.bottomC, D3.topC, F.col, x, y, w, h, border, Display.replace);
 (*	IF F.f#NIL THEN *)
@@ -390,9 +390,9 @@ BEGIN
   END
 END RestoreTable;
 
-PROCEDURE Selected(F: Font; x, y, w, h, mx, my: INTEGER): INTEGER;
+PROCEDURE Selected(F: Font; x, y, w, h, mx, my: SIGNED16): SIGNED16;
 (* Gibt selektierte Character-Code zurück anhand Ausmass der Fonttable *)
-VAR bw, bh, cx, cy: INTEGER;
+VAR bw, bh, cx, cy: SIGNED16;
 BEGIN
 	BoxesinTable(F, w, h, bw, bh);
 	cy:= (y+h-my) DIV dheight; IF cy>bh-1 THEN cy:=bh-1 ELSIF cy<0 THEN RETURN undef END;
@@ -400,7 +400,7 @@ BEGIN
 	IF (cx+cy*bw)>255 THEN RETURN undef ELSE RETURN (cx+cy*bw) END;
 END Selected;
 
-PROCEDURE OpenCharDoc(F: Fonttable; sel: INTEGER);
+PROCEDURE OpenCharDoc(F: Fonttable; sel: SIGNED16);
 VAR P: Pictures.Picture;
 		string: ARRAY 32 OF CHAR;
 BEGIN
@@ -409,8 +409,8 @@ BEGIN
 	OpenDoc(P, F.f, sel, string);
 END OpenCharDoc;
 
-PROCEDURE SelectChar(F: Fonttable; Q: D3.Mask; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg);
-VAR pos, oldpos: INTEGER; keysum: SET;
+PROCEDURE SelectChar(F: Fonttable; Q: D3.Mask; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg);
+VAR pos, oldpos: SIGNED16; keysum: SET;
 BEGIN
 	pos:=Selected(df, x, y, w, h, M.X, M.Y); oldpos:= pos;
 	Oberon.FadeCursor(Oberon.Mouse);
@@ -452,12 +452,12 @@ BEGIN
 	to.f^:= from.f^; to.col := from.col
 END CopyTable;
 
-PROCEDURE StoreChar(F: Fonttable; M: StoreMsg; fx, fy, fw, fh: INTEGER);
-VAR i, j: LONGINT; x, y, x0, x1, y0, y1, w, h, d, nob, actnob, sel, nminx, nminy, nmaxx, nmaxy: INTEGER;
+PROCEDURE StoreChar(F: Fonttable; M: StoreMsg; fx, fy, fw, fh: SIGNED16);
+VAR i, j: SIGNED32; x, y, x0, x1, y0, y1, w, h, d, nob, actnob, sel, nminx, nminy, nmaxx, nmaxy: SIGNED16;
 		P: Pictures.Picture; f: Font;
 BEGIN
 	f:= F.f;
-	P:= M.obj.pict; x0:=MAX(INTEGER); x1:=0; y0:= MAX(INTEGER); y1:=0;
+	P:= M.obj.pict; x0:=MAX(SIGNED16); x1:=0; y0:= MAX(SIGNED16); y1:=0;
 	FOR y:=0 TO P.height-1 DO
 		FOR x:=0 TO P.width-1 DO
 			IF Pictures.Get(P, x, y)# 0 THEN
@@ -467,7 +467,7 @@ BEGIN
 		END
 	END;
 	sel:= M.pos;
-	IF x0=MAX(INTEGER) THEN	(* Character gelöscht *)
+	IF x0=MAX(SIGNED16) THEN	(* Character gelöscht *)
 		f.box[sel].dx:= M.obj.dx; f.box[sel].x:= 0; f.box[sel].y:= 0;
 		f.box[sel].w:= 0; f.box[sel].h:= 0;
 	ELSE
@@ -507,7 +507,7 @@ BEGIN
 			INC(y); INC(j);
 		END;
 	END;
-	nminy:= MAX(INTEGER); nmaxy:= 0; nminx:= MAX(INTEGER); nmaxx:= 0;
+	nminy:= MAX(SIGNED16); nmaxy:= 0; nminx:= MAX(SIGNED16); nmaxx:= 0;
 	FOR i:= 0 TO 255 DO
 		IF f.p[i]#undef THEN
 			nminy:= Min(nminy, f.box[i].y); nmaxy:= Max(nmaxy, f.box[i].y+f.box[i].h);
@@ -541,7 +541,7 @@ BEGIN
 END FtAttributes;
 
 PROCEDURE HandleFonttable(F: Objects.Object; VAR M: Objects.ObjMsg);
-  VAR x, y, w, h: INTEGER; F1: Fonttable; Q: D3.Mask;
+  VAR x, y, w, h: SIGNED16; F1: Fonttable; Q: D3.Mask;
 BEGIN
 	WITH F: Fonttable DO
 		IF M IS Display.FrameMsg THEN
@@ -628,7 +628,7 @@ BEGIN
 	END
 END MarkedChar;
 
-PROCEDURE GetSelectedChar(VAR f:Character; VAR x, y, w, h: INTEGER);
+PROCEDURE GetSelectedChar(VAR f:Character; VAR x, y, w, h: SIGNED16);
 VAR M: SelectMsg;
 BEGIN
 	M.id:= Display.get; M.time:=-1; M.F:= NIL; M.obj:= NIL;
@@ -640,8 +640,8 @@ BEGIN
 	END
 END GetSelectedChar;
 
-PROCEDURE HandlePixel(F: Character; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR keysum: SET; px, py, opx, opy: INTEGER; set: BOOLEAN;
+PROCEDURE HandlePixel(F: Character; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR keysum: SET; px, py, opx, opy: SIGNED16; set: BOOLEAN;
 BEGIN
 	keysum := M.keys;
 	Rembrandt.ScreentoPict(F, x, y, M.X, M.Y, px, py);
@@ -668,8 +668,8 @@ BEGIN
 	M.keys:= keysum
 END HandlePixel;
 
-PROCEDURE DrawMetricLines(F: Character; Q: D3.Mask; x, y: INTEGER);
-VAR sx, sy,  zoom, d: INTEGER;
+PROCEDURE DrawMetricLines(F: Character; Q: D3.Mask; x, y: SIGNED16);
+VAR sx, sy,  zoom, d: SIGNED16;
 BEGIN
 	Rembrandt.GetZoom(F, zoom);
 	IF zoom#1 THEN
@@ -683,8 +683,8 @@ BEGIN
 	END
 END DrawMetricLines;
 
-PROCEDURE HandleMetric(F: Character; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR px, py: INTEGER; keysum: SET; opx, opy, old: INTEGER;  cM: ChangeMsg; zoom: INTEGER; Q: D3.Mask;
+PROCEDURE HandleMetric(F: Character; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR px, py: SIGNED16; keysum: SET; opx, opy, old: SIGNED16;  cM: ChangeMsg; zoom: SIGNED16; Q: D3.Mask;
 BEGIN
 	Rembrandt.GetZoom(F, zoom);
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
@@ -777,7 +777,7 @@ BEGIN
 END HandleMetric;
 
 PROCEDURE HandleCharacter(F: Objects.Object; VAR M: Objects.ObjMsg);
-  VAR x, y, w, h: INTEGER; F1: Character; Q: D3.Mask;
+  VAR x, y, w, h: SIGNED16; F1: Character; Q: D3.Mask;
 BEGIN
 	WITH F: Character DO
 	IF M IS Display.FrameMsg THEN
@@ -919,9 +919,9 @@ END HandlePreview;
 (* Teststring *)
 
 PROCEDURE ShowTeststring*;
-VAR obj: Objects.Object; len: INTEGER; f: Font; teststring: ARRAY 64 OF CHAR;
-		beg: LONGINT;
-		pw, ph, i, j, k, sel, w, h, dx, dy, wb, x, y: INTEGER;
+VAR obj: Objects.Object; len: SIGNED16; f: Font; teststring: ARRAY 64 OF CHAR;
+		beg: SIGNED32;
+		pw, ph, i, j, k, sel, w, h, dx, dy, wb, x, y: SIGNED16;
 		P: Pictures.Picture;
 		doc: Documents.Document;
 		F: Rembrandt.Frame;
@@ -970,7 +970,7 @@ END ShowTeststring;
 
 (** Flip horizontal/verticaL *)
 PROCEDURE FlipH*;
-VAR x, sx, sy, sw, sh: INTEGER; f: Character; P: Pictures.Picture; s: ARRAY 32 OF CHAR;
+VAR x, sx, sy, sw, sh: SIGNED16; f: Character; P: Pictures.Picture; s: ARRAY 32 OF CHAR;
 		obj: Objects.Object; M: Objects.AttrMsg;
 BEGIN
 	obj:= Gadgets.FindObj(Gadgets.context, "newviewer");
@@ -999,7 +999,7 @@ BEGIN
 END FlipH;
 
 PROCEDURE FlipV*;
-VAR y, sx, sy, sw, sh: INTEGER; f: Character; P: Pictures.Picture; s: ARRAY 32 OF CHAR;
+VAR y, sx, sy, sw, sh: SIGNED16; f: Character; P: Pictures.Picture; s: ARRAY 32 OF CHAR;
 		obj: Objects.Object; M: Objects.AttrMsg;
 BEGIN
 	obj:= Gadgets.FindObj(Gadgets.context, "newviewer");
@@ -1029,7 +1029,7 @@ END FlipV;
 
 (** Turn 90 Degrees *)
 PROCEDURE Turn*;
-VAR P, S, D: Pictures.Picture; f: Character; x, y, col, u, sx, sy, sw, sh: INTEGER; s: ARRAY 32 OF CHAR;
+VAR P, S, D: Pictures.Picture; f: Character; x, y, col, u, sx, sy, sw, sh: SIGNED16; s: ARRAY 32 OF CHAR;
 		obj: Objects.Object; M: Objects.AttrMsg;
 BEGIN
 	obj:= Gadgets.FindObj(Gadgets.context, "newviewer");
@@ -1072,7 +1072,7 @@ BEGIN
 	Objects.NewObj := F
 END NewFonttable;
 
-PROCEDURE NewCharacter(pict: Pictures.Picture; f: Font; pos: INTEGER): Character;
+PROCEDURE NewCharacter(pict: Pictures.Picture; f: Font; pos: SIGNED16): Character;
 VAR F: Character;
 BEGIN
 	NEW(F); Rembrandt.NewP(F, pict);
@@ -1092,7 +1092,7 @@ END NewPreview;
 (* Load/Store Font *)
 
 PROCEDURE LoadFont(VAR F: Font; VAR R: Files.Rider);
-VAR bitW, bitH: LONGINT; k, l, i: INTEGER; type: CHAR;
+VAR bitW, bitH: SIGNED32; k, l, i: SIGNED16; type: CHAR;
 BEGIN F := NIL;
 	Files.Read(R, type);
 	IF type = 0DBX THEN NEW(F);
@@ -1181,7 +1181,7 @@ BEGIN
 END Load;
 
 PROCEDURE StoreFont(VAR F: Font; VAR R: Files.Rider);
-VAR pos: LONGINT; nofRuns, k, l, i: INTEGER;
+VAR pos: SIGNED32; nofRuns, k, l, i: SIGNED16;
 BEGIN
 	Files.Write(R, 0DBX);
 	Files.Write(R, F.type);

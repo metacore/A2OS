@@ -37,15 +37,15 @@ TYPE
 		buffer : Usbdi.BufferPtr;
 		pipe : Usbdi.Pipe;
 
-		lastDx, lastDy : LONGINT;
-		accelX, accelY : REAL;
+		lastDx, lastDy : SIGNED32;
+		accelX, accelY : FLOAT32;
 
 		PROCEDURE HandleEvent(status : Usbdi.Status; actLen : SIZE);
-		VAR mm : Inputs.MouseMsg; dx, dy : LONGINT;
+		VAR mm : Inputs.MouseMsg; dx, dy : SIGNED32;
 		BEGIN
 			IF (status = Usbdi.Ok) OR ((status = Usbdi.ShortPacket) & (actLen >= 3))  THEN
-				dx := SYSTEM.VAL(SHORTINT, buffer[1]);
-				dy := SYSTEM.VAL(SHORTINT, buffer[2]);
+				dx := SYSTEM.VAL(SIGNED8, buffer[1]);
+				dy := SYSTEM.VAL(SIGNED8, buffer[2]);
 
 				accelX := 1.0 + ABS(dx - lastDx) / 128 * MouseAcceleration;
 				accelY := 1.0 + ABS(dy - lastDy) / 128 * MouseAcceleration;
@@ -76,7 +76,7 @@ TYPE
 		END HandleEvent;
 
 		PROCEDURE Connect() : BOOLEAN;
-		VAR endpoint, i : LONGINT; status : Usbdi.Status;
+		VAR endpoint, i : SIGNED32; status : Usbdi.Status;
 		BEGIN
 			(* Set the HID boot protocol *)
 			IF SetProtocol(UsbHid.BootProtocol) = FALSE THEN

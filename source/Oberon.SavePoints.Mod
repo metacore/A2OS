@@ -35,54 +35,54 @@ CONST
 	nomorph = 0;
 
 TYPE
-	IntPoint = RECORD x, y, z: INTEGER END;
-	Point = RECORD x, y, z: REAL END;
+	IntPoint = RECORD x, y, z: SIGNED16 END;
+	Point = RECORD x, y, z: FLOAT32 END;
 	Figure = POINTER TO ARRAY OF Point;
 	Control = ARRAY 3 OF Point;
-	Rotor = RECORD from, to, curr, peak: REAL END;
-	Colour = RECORD r, g, b: INTEGER END;
+	Rotor = RECORD from, to, curr, peak: FLOAT32 END;
+	Colour = RECORD r, g, b: SIGNED16 END;
 
 VAR
 	(* info about figures: *)
-	numfig: INTEGER;	(* number of figures *)
-	numpoint: INTEGER;	(* number of points *)
+	numfig: SIGNED16;	(* number of figures *)
+	numpoint: SIGNED16;	(* number of points *)
 	figure: POINTER TO ARRAY OF ARRAY OF IntPoint;	(* figures known to the system *)
-	move: POINTER TO ARRAY OF ARRAY OF INTEGER;	(* movement between figures *)
-	timefactor: POINTER TO ARRAY OF REAL;	(* fraction of time each figure uses *)
+	move: POINTER TO ARRAY OF ARRAY OF SIGNED16;	(* movement between figures *)
+	timefactor: POINTER TO ARRAY OF FLOAT32;	(* fraction of time each figure uses *)
 	attributes: POINTER TO ARRAY OF SET;	(* figure attributes *)
-	maxint, minint, max, min, factor: REAL;	(* details about figure data file needed for figure conversion *)
+	maxint, minint, max, min, factor: FLOAT32;	(* details about figure data file needed for figure conversion *)
 
 	(* active info: *)
-	curfig: INTEGER;	(* nr of current figure *)
+	curfig: SIGNED16;	(* nr of current figure *)
 	actv, curr, next: Figure;	(* active/current/next set of points *)
 	control: Control;	(* control points *)
 	rx, ry, rz: Rotor;	(* rotation controls *)
 	morphoff: BOOLEAN;	(* do we morph from the current figure to the next *)
-	timefac: REAL;	(* time factor for current figure *)
-	time: REAL;	(* phase timer *)
-	step: REAL;	(* phase timer increment *)
+	timefac: FLOAT32;	(* time factor for current figure *)
+	time: FLOAT32;	(* phase timer *)
+	step: FLOAT32;	(* phase timer increment *)
 
 	(* active colour info: *)
-	coltime: INTEGER;	(* colour timer *)
-	curcol: INTEGER;	(* current colour of figure *)
+	coltime: SIGNED16;	(* colour timer *)
+	curcol: SIGNED16;	(* current colour of figure *)
 
 	(* configurable parameters: *)
-	thick: INTEGER;	(* how thick are the dots *)
-	dura: INTEGER;	(* how long is a phase (in seconds) *)
-	morph: INTEGER;	(* at what point in the phase do we morph (in %) *)
-	frames: INTEGER;	(* how many frames per second do we display *)
+	thick: SIGNED16;	(* how thick are the dots *)
+	dura: SIGNED16;	(* how long is a phase (in seconds) *)
+	morph: SIGNED16;	(* at what point in the phase do we morph (in %) *)
+	frames: SIGNED16;	(* how many frames per second do we display *)
 
-	W, H: INTEGER;	(* dimensions of display area *)
+	W, H: SIGNED16;	(* dimensions of display area *)
 	mypal, yourpal: ARRAY 256 OF Colour;	(* RGB index of colours *)
 	avoid: ARRAY 8 OF SET;	(* which colours to avoid using *)
-	numcol: INTEGER;	(* number of colours available *)
-	BG: INTEGER;	(* colour used to undraw points *)
+	numcol: SIGNED16;	(* number of colours available *)
+	BG: SIGNED16;	(* colour used to undraw points *)
 	mask: Display3.Mask;
 	w: Texts.Writer;
 
 (* convert an IntFigure to a Figure *)
-PROCEDURE Int2Fig(i: INTEGER; VAR f: Figure);
-VAR p: INTEGER;
+PROCEDURE Int2Fig(i: SIGNED16; VAR f: Figure);
+VAR p: SIGNED16;
 BEGIN
 	FOR p := 0 TO numpoint - 1 DO
 		f[p].x := min + factor * (figure[i, p].x - minint);
@@ -93,7 +93,7 @@ END Int2Fig;
 
 (* read data from file.  see MakePoints.Mod *)
 PROCEDURE ReadData;
-VAR F: Files.File; R: Files.Rider; tag, version, f, p: INTEGER;
+VAR F: Files.File; R: Files.Rider; tag, version, f, p: SIGNED16;
 BEGIN
 	Out.String("reading "); Out.String(Filename);
 	F := Files.Old(Filename);
@@ -110,7 +110,7 @@ BEGIN
 			Files.ReadInt(R, numfig);
 			Files.ReadReal(R, max);
 			Files.ReadReal(R, min);
-			maxint := MAX(INTEGER) - 2; minint := -maxint;
+			maxint := MAX(SIGNED16) - 2; minint := -maxint;
 			factor := (max - min) / (maxint - minint);
 			NEW(figure, numfig, numpoint);
 			NEW(move, numfig, numpoint);
@@ -137,21 +137,21 @@ BEGIN
 END ReadData;
 
 (* initialise a rotor *)
-PROCEDURE InitRotor(VAR r: Rotor; f, t, p: REAL);
+PROCEDURE InitRotor(VAR r: Rotor; f, t, p: FLOAT32);
 BEGIN
 	r.from := f; r.to := t; r.curr := r.from; r.peak := p
 END InitRotor;
 
 (* get a palette from the system *)
 PROCEDURE GetPal(VAR pal: ARRAY OF Colour);
-VAR k: INTEGER;
+VAR k: SIGNED16;
 BEGIN
 	FOR k := 0 TO 255 DO Display.GetColor(k, pal[k].r, pal[k].g, pal[k].b) END
 END GetPal;
 
 (* set the system palette *)
 PROCEDURE SetPal(VAR pal: ARRAY OF Colour);
-VAR k: INTEGER;
+VAR k: SIGNED16;
 BEGIN
 	IF numcol < 256 THEN RETURN END;
 	FOR k := 0 TO 255 DO
@@ -163,14 +163,14 @@ END SetPal;
 
 (* clear the bitset that indicates which colours to avoid *)
 PROCEDURE ClearAvoid;
-VAR k: INTEGER;
+VAR k: SIGNED16;
 BEGIN
 	FOR k := 0 TO 7 DO avoid[k] := {} END
 END ClearAvoid;
 
 (* convert from HSV to RGB.  0 < H < 360, 0 < S,V < 1, 0 < R, G, B < 256  *)
-PROCEDURE HSV2RGB(H, S, V: REAL; VAR R, G, B: INTEGER);
-VAR f, p, q, t, r, g, b: REAL; i: LONGINT;
+PROCEDURE HSV2RGB(H, S, V: FLOAT32; VAR R, G, B: SIGNED16);
+VAR f, p, q, t, r, g, b: FLOAT32; i: SIGNED32;
 BEGIN
 	IF S = 0 THEN r := V; g := V; b := V
 	ELSE
@@ -194,9 +194,9 @@ END HSV2RGB;
 
 (* setup the palette *)
 PROCEDURE InitColour;
-VAR k, n, count: INTEGER;
+VAR k, n, count: SIGNED16;
 BEGIN
-	numcol := INTEGER(ASH(1, Display.Depth(0)));
+	numcol := SIGNED16(ASH(1, Display.Depth(0)));
 	IF (numcol = 2) OR (numcol = 16) THEN
 		ClearAvoid;
 		BG := Display.FG
@@ -243,8 +243,8 @@ BEGIN
 END InitVars;
 
 (* rotate the two coordinates x, y with the given factors c, s *)
-PROCEDURE Rotate(c, s: REAL; VAR x, y: REAL);
-VAR t: REAL;
+PROCEDURE Rotate(c, s: FLOAT32; VAR x, y: FLOAT32);
+VAR t: FLOAT32;
 BEGIN
 	t := x * s + y * c;
 	x := x * c - y * s;
@@ -252,8 +252,8 @@ BEGIN
 END Rotate;
 
 (* draw the point in the given colour *)
-PROCEDURE Draw(VAR p: Point; c: INTEGER);
-VAR d: REAL; x0, y0, x1, y1: INTEGER;
+PROCEDURE Draw(VAR p: Point; c: SIGNED16);
+VAR d: FLOAT32; x0, y0, x1, y1: SIGNED16;
 BEGIN
 	d := Dist / (p.z + Dist);
 	x0 := SHORT(ENTIER(W + ScaleX * W * d * p.x));
@@ -269,7 +269,7 @@ END Draw;
 	in short, there are three control points that rotate with the figure.  this procedure uses those
 	points to figure out the current orientation and rotates the figure accordingly. *)
 PROCEDURE Position(VAR F: Figure);
-VAR lortnoc: Control; cos, sin: REAL; k, p: INTEGER; a: ARRAY 4 OF REAL;
+VAR lortnoc: Control; cos, sin: FLOAT32; k, p: SIGNED16; a: ARRAY 4 OF FLOAT32;
 	todo: ARRAY 7 OF BOOLEAN;
 BEGIN
 	(* assume we have to do nothing *)
@@ -341,8 +341,8 @@ BEGIN
 END Start;
 
 (* update the rotation controller r *)
-PROCEDURE UpdateRotor(VAR r: Rotor; VAR a: REAL);
-VAR v, w, maxpeak: REAL;
+PROCEDURE UpdateRotor(VAR r: Rotor; VAR a: FLOAT32);
+VAR v, w, maxpeak: FLOAT32;
 BEGIN
 	IF ((r.from > r.to) & (r.curr < r.to)) OR (r.curr > r.to) THEN
 		r.from := r.to;
@@ -362,7 +362,7 @@ END UpdateRotor;
 
 (* rotate the figure, draw the points *)
 PROCEDURE Step;
-VAR pro, orp, a, cx, sx, cy, sy, cz, sz: REAL; p, q, g: INTEGER; ticks: LONGINT;
+VAR pro, orp, a, cx, sx, cy, sy, cz, sz: FLOAT32; p, q, g: SIGNED16; ticks: SIGNED32;
 BEGIN
 	IF Time THEN ticks := Oberon.Time() END;
 	(* update the rotation *)
@@ -440,7 +440,7 @@ END Stop;
 
 (* install the screensaver *)
 PROCEDURE Install*;
-VAR name: ARRAY 32 OF CHAR; n: INTEGER;
+VAR name: ARRAY 32 OF CHAR; n: SIGNED16;
 BEGIN In.Open;
 	LOOP
 		In.Name(name); IF ~In.Done THEN EXIT END;

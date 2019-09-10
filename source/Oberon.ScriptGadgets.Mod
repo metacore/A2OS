@@ -82,11 +82,11 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		Box = POINTER TO BoxDesc;
 		Line = POINTER TO LineDesc;
 		LineDesc = RECORD
-			len, W: LONGINT;
-			w, h: INTEGER;
-			asr, dsr: INTEGER;
-			off, w0: INTEGER;
-			nSpc: INTEGER;
+			len, W: SIGNED32;
+			w, h: SIGNED16;
+			asr, dsr: SIGNED16;
+			off, w0: SIGNED16;
+			nSpc: SIGNED16;
 			style: Styles.Style;
 			brk, eot, tabs: BOOLEAN;
 			next: Line;
@@ -94,70 +94,70 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END;
 
 		Location* = RECORD
-			org*, pos*: LONGINT;
-			dx*, x*, y*: INTEGER;
+			org*, pos*: SIGNED32;
+			dx*, x*, y*: SIGNED16;
 			lin: Line
 		END;
 
 		Frame* = POINTER TO FrameDesc;
 		FrameDesc* = RECORD (Gadgets.ViewDesc)
-			background*: PROCEDURE (F:Frame; x, y: INTEGER; R: Display3.Mask); (* region is in absolute coords *)
-			edit* : PROCEDURE(F : Frame; id : INTEGER; beg, end : LONGINT; text : Texts.Text);
+			background*: PROCEDURE (F:Frame; x, y: SIGNED16; R: Display3.Mask); (* region is in absolute coords *)
+			edit* : PROCEDURE(F : Frame; id : SIGNED16; beg, end : SIGNED32; text : Texts.Text);
 			text*: Texts.Text;
-			org*: LONGINT;
-			left*, right*, top*, bot*: INTEGER;
-			markH*, mark*: INTEGER;
-			time*: LONGINT;
+			org*: SIGNED32;
+			left*, right*, top*, bot*: SIGNED16;
+			markH*, mark*: SIGNED16;
+			time*: SIGNED32;
 			car*, sel*, hide*, hidetext*: BOOLEAN;
 			carLoc*: Location;
 			selBeg*, selEnd*: Location;
 			trailer: Line;
 			hook* : Display.Pattern;
 			cmd*  : ARRAY 64 OF CHAR;
-			pointPos* : LONGINT;
+			pointPos* : SIGNED32;
 			point*, select* : POINTER TO ARRAY 64 OF CHAR;
-			profile* : INTEGER;
+			profile* : SIGNED16;
 			msk: Display3.Mask;
 			defStyle* : Styles.Style;
 			save: Line;
-			sorg : LONGINT;
+			sorg : SIGNED32;
 			deleting : BOOLEAN;
 			state0* : SET;
-			col*: INTEGER
+			col*: SIGNED16
 		END;
 
 	(*mark < 0: arrow mark
 		mark = 0: no mark*)
 
 		Formatter = RECORD(Texts.Reader)
-			len, W: LONGINT;
-			w, asr, dsr, nSpc: INTEGER;
+			len, W: SIGNED32;
+			w, asr, dsr, nSpc: SIGNED16;
 			hide, narrow: BOOLEAN;
 			fnt, mfnt: Fonts.Font;
-			unit: LONGINT
+			unit: SIGNED32
 		END;
 
 		MarkMsg = RECORD(Display.FrameMsg)
-			id: INTEGER;
-			absX, absY : INTEGER;
+			id: SIGNED16;
+			absX, absY : SIGNED16;
 		END;
 		DisplayMsg = RECORD(Display.FrameMsg)
-			pos: LONGINT;
+			pos: SIGNED32;
 		END;
 		FocusMsg = RECORD(Display.FrameMsg)
 			foc: Frame
 		END;
 
 		CaretMsg* = RECORD(Display.FrameMsg)
-			id* : INTEGER;
-			frame* : Frame; pos* : LONGINT;
+			id* : SIGNED16;
+			frame* : Frame; pos* : SIGNED32;
 		END;
 
 		BoxDesc = RECORD
 			next: Box;
 			F: Display.Frame;
-			off: LONGINT;
-			X, dY: INTEGER
+			off: SIGNED32;
+			X, dY: SIGNED16
 		END;
 
 		RecursiveMsg = RECORD (Display.FrameMsg)
@@ -166,15 +166,15 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END;
 
 	VAR
-		barW*, left*, right*, top*, bot*: INTEGER; (*standard sizes*)
-		Asr, Dsr, markW, eolW: INTEGER;
+		barW*, left*, right*, top*, bot*: SIGNED16; (*standard sizes*)
+		Asr, Dsr, markW, eolW: SIGNED16;
 
 		R1: Texts.Reader;	(* displayer *)
-		fnt, mfnt: Fonts.Font; unit: LONGINT;	(*cache*)
+		fnt, mfnt: Fonts.Font; unit: SIGNED32;	(*cache*)
 		R: Formatter;
 		ch: CHAR;
-		dx, a, d: INTEGER;
-		dX: LONGINT;
+		dx, a, d: SIGNED16;
+		dX: SIGNED32;
 		style: Styles.Style;
 
 		W, KW, XW: Texts.Writer; (*keyboard writer*)
@@ -184,15 +184,15 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		hookS : ARRAY 12 OF SET;
 		visible : BOOLEAN;
 		showCaret : BOOLEAN;
-		show: PROCEDURE(F: Frame; pos: LONGINT);
-		repeatTime, waitTime : LONGINT;
+		show: PROCEDURE(F: Frame; pos: SIGNED32);
+		repeatTime, waitTime : SIGNED32;
 		block : BOOLEAN;
 
-	PROCEDURE Min (i, j: LONGINT): LONGINT;
+	PROCEDURE Min (i, j: SIGNED32): SIGNED32;
 	BEGIN IF i >= j THEN RETURN j ELSE RETURN i END
 	END Min;
 
-	PROCEDURE Max (i, j: INTEGER): INTEGER;
+	PROCEDURE Max (i, j: SIGNED16): SIGNED16;
 	BEGIN IF j >= i THEN RETURN j ELSE RETURN i END
 	END Max;
 
@@ -222,7 +222,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		RETURN view
 	END View;
 	*)
-	PROCEDURE InvC(col : INTEGER) : INTEGER;
+	PROCEDURE InvC(col : SIGNED16) : SIGNED16;
 	BEGIN
 		IF col = Display3.textbackC THEN RETURN 1
 		ELSIF (col = Display.BG) OR (col = Display3.white) THEN RETURN Display3.FG
@@ -231,31 +231,31 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END  InvC;
 
-	PROCEDURE Marks(F: Frame; id: INTEGER);
+	PROCEDURE Marks(F: Frame; id: SIGNED16);
 		VAR M: MarkMsg;
-	BEGIN M.absX := MIN(INTEGER); M.id := id; M.F := F; Display.Broadcast(M)
+	BEGIN M.absX := MIN(SIGNED16); M.id := id; M.F := F; Display.Broadcast(M)
 	END Marks;
 
-	PROCEDURE Mark*(F: Frame; mark : INTEGER);
+	PROCEDURE Mark*(F: Frame; mark : SIGNED16);
 	BEGIN Marks(F, arrow)
 	END Mark;
 
-	PROCEDURE Caret(F : Frame; pos : LONGINT; id : INTEGER);
+	PROCEDURE Caret(F : Frame; pos : SIGNED32; id : SIGNED16);
 		VAR M : CaretMsg;
 	BEGIN
 		M.frame := F; M.pos := pos; M.id := id; M.F := NIL;
 		Display.Broadcast(M);
 	END Caret;
 
-	PROCEDURE DrawCursor(X, Y: INTEGER);
+	PROCEDURE DrawCursor(X, Y: SIGNED16);
 	BEGIN Oberon.DrawCursor(Oberon.Mouse, Effects.Arrow, X, Y)
 	END DrawCursor;
 
-	PROCEDURE TrackMouse(VAR X, Y: INTEGER; VAR Keys, keysum: SET);
+	PROCEDURE TrackMouse(VAR X, Y: SIGNED16; VAR Keys, keysum: SET);
 	BEGIN Input.Mouse(Keys, X, Y); DrawCursor(X, Y); keysum := keysum + Keys
 	END TrackMouse;
 
-	PROCEDURE InvertRect(F: Frame; x, y, X, Y, W, H: INTEGER);
+	PROCEDURE InvertRect(F: Frame; x, y, X, Y, W, H: SIGNED16);
 	BEGIN INC(X, x+F.X); INC(Y, y+F.Y); Oberon.RemoveMarks(X, Y, W, H);
 		IF X + W <= x+F.X + F.W THEN Display3.ReplConst(F.msk,InvC(F.col), X, Y, W, H, Display3.invert)
 		ELSIF X < x+F.X + F.W THEN Display3.ReplConst(F.msk,InvC(F.col), X, Y, x+F.X + F.W - X-1, H, Display3.invert)
@@ -267,15 +267,15 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		IF ~ nomarks THEN Oberon.RemoveMarks(F.absX,F.absY,F.W,F.H) END;
 	END RemoveMark;
 
-	PROCEDURE ReplConst(msk : Display3.Mask; col, x, y, w, h: INTEGER);
+	PROCEDURE ReplConst(msk : Display3.Mask; col, x, y, w, h: SIGNED16);
 	BEGIN
 		IF ~ nomarks THEN Oberon.RemoveMarks(x, y, w, h) END;
 		Display3.ReplConst(msk, col, x, y, w, h, Display.replace)
 	END ReplConst;
 
 
-	PROCEDURE Background(F : Frame; x, y, X, Y, W, H : INTEGER);
-		VAR mX,mY,mW,mH : INTEGER;
+	PROCEDURE Background(F : Frame; x, y, X, Y, W, H : SIGNED16);
+		VAR mX,mY,mW,mH : SIGNED16;
 	BEGIN
 		IF F.background = NIL THEN
 			ReplConst(F.msk,F.col, X, Y, W, H);
@@ -288,20 +288,20 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END Background;
 
-	PROCEDURE Erase(F: Frame; x, y, X, Y, H, R: INTEGER);	(* erase content *)
+	PROCEDURE Erase(F: Frame; x, y, X, Y, H, R: SIGNED16);	(* erase content *)
 	BEGIN
 		Background(F,x, y, x+F.X + F.left + X, y+F.Y+Y, F.W - F.left-1 -X-R, H);
 	END Erase;
 
-	PROCEDURE RemTick(F: Frame; x, y: INTEGER);
+	PROCEDURE RemTick(F: Frame; x, y: SIGNED16);
 	BEGIN
 		IF F.left >= barW THEN
 			Background(F, x, y, x+F.X+1,y+F.Y + 1,markW, F.H - 2);
 		END
 	END RemTick;
 
-	PROCEDURE ShowTick(F: Frame; x, y: INTEGER);	(*update*)
-		VAR t, b: INTEGER;
+	PROCEDURE ShowTick(F: Frame; x, y: SIGNED16);	(*update*)
+		VAR t, b: SIGNED16;
 	BEGIN
 		IF F.left >= barW THEN
 			IF (F.profile = flat) OR (F.profile = border) THEN
@@ -318,8 +318,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END ShowTick;
 
-	PROCEDURE Bar(F: Frame; x, y, Y, H: INTEGER);
-		VAR h,v , b, t, d, p: INTEGER;
+	PROCEDURE Bar(F: Frame; x, y, Y, H: SIGNED16);
+		VAR h,v , b, t, d, p: SIGNED16;
 	BEGIN
 		h := F.H; F.H := H; v := F.Y; F.Y := F.Y + Y;
 		(*
@@ -363,7 +363,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		nomarks  := FALSE;
 	END Bar;
 
-	PROCEDURE FrameDsr(F: Display.Frame): INTEGER;
+	PROCEDURE FrameDsr(F: Display.Frame): SIGNED16;
 		VAR B: Objects.AttrMsg;
 	BEGIN B.dlink := NIL;
 	(*		IF narrow & ~(F IS StyleGadgets.Frame) THEN B.i := 3 ELSE B.i := 0 END; *)
@@ -375,17 +375,17 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	(*
 
-	PROCEDURE StyleReplConst(col, X, Y, W, H, mode: INTEGER);
+	PROCEDURE StyleReplConst(col, X, Y, W, H, mode: SIGNED16);
 	BEGIN
 		Display3.ReplConst(styleMask,col, X, Y, W, H, mode);
 	END StyleReplConst;
 
-	PROCEDURE StyleReplPattern(col: INTEGER; pat: LONGINT; X, Y, W, H, mode: INTEGER);
+	PROCEDURE StyleReplPattern(col: SIGNED16; pat: SIGNED32; X, Y, W, H, mode: SIGNED16);
 	BEGIN
 		Display3.FillPattern(styleMask, col, pat, 0,0, X, Y, W, H, mode);
 	END StyleReplPattern;
 
-	PROCEDURE StyleCopyPattern(col: INTEGER; pat: LONGINT; X, Y, mode: INTEGER);
+	PROCEDURE StyleCopyPattern(col: SIGNED16; pat: SIGNED32; X, Y, mode: SIGNED16);
 	BEGIN
 		Display3.CopyPattern(styleMask,col, pat,X, Y, mode);
 	END StyleCopyPattern;
@@ -404,8 +404,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	*)
 
 
-	PROCEDURE DrawFrame(F: Frame; G: Display.Frame; x, y, X, Y: INTEGER);
-	VAR M: Display.DisplayMsg; N: Display.ControlMsg; col : INTEGER;  A : Objects.AttrMsg;
+	PROCEDURE DrawFrame(F: Frame; G: Display.Frame; x, y, X, Y: SIGNED16);
+	VAR M: Display.DisplayMsg; N: Display.ControlMsg; col : SIGNED16;  A : Objects.AttrMsg;
 	BEGIN
 		A.id := Objects.get; A.name := "Gen";G.handle(G,A);
 		IF A.s = "Illustrate.NewCanvas" THEN
@@ -431,14 +431,14 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END;
 	END DrawFrame;
 
-	PROCEDURE Move(F: Frame; x, y, Y, H, dY: INTEGER);	(* move content including frames *)
-	VAR w: INTEGER;
+	PROCEDURE Move(F: Frame; x, y, Y, H, dY: SIGNED16);	(* move content including frames *)
+	VAR w: SIGNED16;
 	BEGIN INC(x, F.X+F.left); INC(y, F.Y+Y); w := F.W - F.left;
 		Oberon.RemoveMarks(x, SHORT(Min(y, y+dY)), w, Max(H+dY, H-dY));
 		Display.CopyBlock (x, y, w, H, x, y + dY, 0);
 	END Move;
 
-	PROCEDURE FlipCaret (F: Frame; x, y: INTEGER);
+	PROCEDURE FlipCaret (F: Frame; x, y: SIGNED16);
 	BEGIN
 		 IF  (F.carLoc.y >=  4) &  (F.carLoc.x + 6 < F.W) THEN
 			INC(x,F.X + F.carLoc.x) ; INC(y ,F.Y + F.carLoc.y - 10);
@@ -448,16 +448,16 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END FlipCaret;
 
 	(*---frames---*)
-	PROCEDURE Insert(L: Line; X, voff: INTEGER; off: LONGINT; G: Display.Frame; VAR dY: INTEGER);
+	PROCEDURE Insert(L: Line; X, voff: SIGNED16; off: SIGNED32; G: Display.Frame; VAR dY: SIGNED16);
 	VAR b, p: Box;
 	BEGIN NEW(b); b.X := X; b.F := G; dY := FrameDsr(G)-voff; b.dY := dY; b.off := off;
 		p := L.box;
-		IF p = NIL THEN NEW(p); p.next := p; p.X := MAX(INTEGER); L.box := p END;
+		IF p = NIL THEN NEW(p); p.next := p; p.X := MAX(SIGNED16); L.box := p END;
 		WHILE p.next.X < X DO p := p.next END;
 		b.next := p.next; p.next := b
 	END Insert;
 
-	PROCEDURE Append(L: Line; X: INTEGER; b: Box);	(*append everything up to X*)
+	PROCEDURE Append(L: Line; X: SIGNED16; b: Box);	(*append everything up to X*)
 	VAR p: Box;
 	BEGIN
 		IF b # NIL THEN p := b;
@@ -471,9 +471,9 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END Append;
 
 	PROCEDURE Broadcast(F: Frame; VAR M: Display.FrameMsg);
-	VAR x, y, Y: INTEGER; L: Line; msk: Display.Frame;
+	VAR x, y, Y: SIGNED16; L: Line; msk: Display.Frame;
 
-		PROCEDURE Broadcast0(box: Box; y: INTEGER; VAR M: Display.FrameMsg);
+		PROCEDURE Broadcast0(box: Box; y: SIGNED16; VAR M: Display.FrameMsg);
 		VAR b: Box; G: Display.Frame;
 		BEGIN b := box.next;
 			WHILE b # box DO G := b.F;
@@ -494,8 +494,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	(*---select---*)
 
-	PROCEDURE InvertArea(F: Frame; L: Line; x, y, X, Y, W: INTEGER);
-	VAR X0, H0, H1: INTEGER; b: Box; G: Display.Frame;
+	PROCEDURE InvertArea(F: Frame; L: Line; x, y, X, Y, W: SIGNED16);
+	VAR X0, H0, H1: SIGNED16; b: Box; G: Display.Frame;
 	BEGIN
 		IF L.box # NIL THEN b := L.box.next;
 			WHILE b.X < X DO b := b.next END;
@@ -511,8 +511,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		InvertRect(F, x, y, X, Y, W, L.h)
 	END InvertArea;
 
-	PROCEDURE FlipSelection (F: Frame; x, y: INTEGER; VAR beg, end: Location);
-	VAR L: Line; Y : INTEGER;
+	PROCEDURE FlipSelection (F: Frame; x, y: SIGNED16; VAR beg, end: Location);
+	VAR L: Line; Y : SIGNED16;
 	BEGIN
 		L := beg.lin; Y := beg.y - L.dsr;	(* Y = bottom of line *)
 		(*
@@ -542,15 +542,15 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	(*---lines---*)
 
-	PROCEDURE Lim(F: Frame): LONGINT;
-	VAR pos: LONGINT; L: Line;
+	PROCEDURE Lim(F: Frame): SIGNED32;
+	VAR pos: SIGNED32; L: Line;
 	BEGIN
 		pos := F.org; L := F.trailer.next;
 		WHILE L # F.trailer DO INC(pos, L.len); L := L.next END;
 		RETURN pos
 	END Lim;
 
-	PROCEDURE CollectLines(F: Frame; VAR L: Line; VAR Y: INTEGER; VAR org: LONGINT);
+	PROCEDURE CollectLines(F: Frame; VAR L: Line; VAR Y: SIGNED16; VAR org: SIGNED32);
 	BEGIN
 		WHILE (L.next # F.trailer) & (Y >= F.bot + L.next.h) DO
 			L := L.next; INC(org, L.len); DEC(Y, L.h)
@@ -563,13 +563,13 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	BEGIN IF (T.obs = NIL) OR (T.obs.maxref >= 256) THEN NEW(T.obs); Objects.OpenLibrary(T.obs) END; RETURN T.obs
 	END Objs;*)
 
-	PROCEDURE Clone(obj: Objects.Object; id: INTEGER; VAR new: Objects.Object);
+	PROCEDURE Clone(obj: Objects.Object; id: SIGNED16; VAR new: Objects.Object);
 	VAR M: Objects.CopyMsg;
 	BEGIN M.id := id; Objects.Stamp(M); obj.handle(obj, M); new := M.obj;	(* copy *)
 	(*	IF lib # NIL THEN N.lib := lib; Objects.Stamp(N); new.handle(new, N) END	(* bind *)*)
 	END Clone;
 
-	PROCEDURE SaveAndCopy(F: Frame; text : Texts.Text; beg, end: LONGINT; VAR W: Texts.Writer);
+	PROCEDURE SaveAndCopy(F: Frame; text : Texts.Text; beg, end: SIGNED32; VAR W: Texts.Writer);
 	VAR
 		R: Texts.Finder;
 		obj, new: Objects.Object;
@@ -592,7 +592,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		IF beg < end THEN Texts.Save(text, beg, end, W.buf) END
 	END SaveAndCopy;
 
-	PROCEDURE StyleAt(F: Frame; pos: LONGINT): Styles.Style;
+	PROCEDURE StyleAt(F: Frame; pos: SIGNED32): Styles.Style;
 	VAR R: Texts.Finder;
 		obj: Objects.Object; style: Styles.Style;
 	BEGIN Texts.OpenFinder(R, F.text, 0);
@@ -605,7 +605,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		RETURN style
 	END StyleAt;
 
-	PROCEDURE StyleFrame(F: Frame; st: Styles.Style; X: INTEGER): Objects.Object;
+	PROCEDURE StyleFrame(F: Frame; st: Styles.Style; X: SIGNED16): Objects.Object;
 	VAR G: Display.Frame;
 	BEGIN G := StyleGadgets.NewFrame(st); G.W := SHORT(st.paraW DIV Display.Unit);
 		IF G.W > F.W-F.right - X THEN G.W := F.W-F.right - X END;
@@ -615,9 +615,9 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	(*---display---*)
 
-	PROCEDURE Offsets(L: Line; VAR spc, rest: INTEGER);
+	PROCEDURE Offsets(L: Line; VAR spc, rest: SIGNED16);
 	VAR
-		width, diff: INTEGER;
+		width, diff: SIGNED16;
 		s: Styles.Style;
 		mode: SET;
 	BEGIN
@@ -638,11 +638,11 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END Offsets;
 
-	PROCEDURE IncPos(spc: INTEGER; VAR rest, X: INTEGER);
+	PROCEDURE IncPos(spc: SIGNED16; VAR rest, X: SIGNED16);
 	BEGIN INC(X, spc); IF rest > 0 THEN INC(X); DEC(rest) END
 	END IncPos;
 
-	PROCEDURE GetWidth(lib: Objects.Library; ch: CHAR; VAR obj: Objects.Object; VAR dx: INTEGER; VAR dX: LONGINT);
+	PROCEDURE GetWidth(lib: Objects.Library; ch: CHAR; VAR obj: Objects.Object; VAR dx: SIGNED16; VAR dX: SIGNED32);
 	BEGIN
 		IF lib IS Fonts.Font THEN
 			IF lib # fnt THEN fnt := lib(Fonts.Font); Styles.MetricFnt(fnt, unit, mfnt) END;	(*cache!!*)
@@ -656,11 +656,11 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END GetWidth;
 
-	PROCEDURE Width(F: Frame; L: Line; beg, end: LONGINT; VAR x: INTEGER; VAR X: LONGINT);
+	PROCEDURE Width(F: Frame; L: Line; beg, end: SIGNED32; VAR x: SIGNED16; VAR X: SIGNED32);
 		VAR R: Texts.Reader; obj: Objects.Object;
-		pos: LONGINT; dx: INTEGER; ch: CHAR;
-		spc, rest: INTEGER;
-		DX: LONGINT;
+		pos: SIGNED32; dx: SIGNED16; ch: CHAR;
+		spc, rest: SIGNED16;
+		DX: SIGNED32;
 	BEGIN Offsets(L, spc, rest);
 		Texts.OpenReader(R, F.text, beg); Texts.Read(R, ch);
 		pos := beg; x := 0; X := 0;
@@ -677,21 +677,21 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END Width;
 
-	PROCEDURE Height(fnt: Fonts.Font; narrow : BOOLEAN; VAR a, d: INTEGER);	(*rule line height = 1.2*font height*)
+	PROCEDURE Height(fnt: Fonts.Font; narrow : BOOLEAN; VAR a, d: SIGNED16);	(*rule line height = 1.2*font height*)
 	BEGIN
 		IF narrow THEN a := fnt.maxY; d := fnt.height  -a; INC(a);
 		ELSE a := 6*fnt.maxY DIV 5; d := (6*fnt.height DIV 5) - a END
 	END Height;
 
-	PROCEDURE DisplayLine (F: Frame; pos, dXX: LONGINT; x, y, dX, Y: INTEGER; L: Line);	(*dX = offset into lineblock*)
+	PROCEDURE DisplayLine (F: Frame; pos, dXX: SIGNED32; x, y, dX, Y: SIGNED16; L: Line);	(*dX = offset into lineblock*)
 	VAR
-		X0, Y0, XT, x0, y0, dx, v, off, dY, bY, a, d: INTEGER;
-		X, DX: LONGINT;
-		spc, rest: INTEGER;
+		X0, Y0, XT, x0, y0, dx, v, off, dY, bY, a, d: SIGNED16;
+		X, DX: SIGNED32;
+		spc, rest: SIGNED16;
 		obj: Objects.Object; G: Display.Frame;
 		ch: CHAR;
 
-		PROCEDURE GetObj(lib: Objects.Library; ch: CHAR; VAR obj: Objects.Object; VAR dx: INTEGER; VAR DX: LONGINT);
+		PROCEDURE GetObj(lib: Objects.Library; ch: CHAR; VAR obj: Objects.Object; VAR dx: SIGNED16; VAR DX: SIGNED32);
 		BEGIN GetWidth(lib, ch, obj, dx, DX);
 			IF lib IS Fonts.Font THEN
 				IF ch > " " THEN RETURN
@@ -729,8 +729,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		(*Display.ReplConst(F.col, X0, y0-L.dsr, XT-X0, L.h, 0)*)
 	END DisplayLine;
 
-	PROCEDURE DisplaySec (F: Frame; x, y, Y0: INTEGER; org0: LONGINT; L0, L1: Line);
-		VAR L: Line; Y, y0, h0: INTEGER;
+	PROCEDURE DisplaySec (F: Frame; x, y, Y0: SIGNED16; org0: SIGNED32; L0, L1: Line);
+		VAR L: Line; Y, y0, h0: SIGNED16;
 	BEGIN L := L0; Y := Y0; Texts.OpenReader(R1, F.text, org0);
 		WHILE L # L1 DO
 			y0 := Y - L.h; h0 := L.h;
@@ -740,8 +740,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END DisplaySec;
 
-	PROCEDURE DisplaySec0 (F: Frame; x, y: INTEGER; org0, off: LONGINT; Y0: INTEGER; oldL0, L0, L1: Line);
-	VAR pos: LONGINT; u, v, dx, xx: INTEGER; dXX: LONGINT;
+	PROCEDURE DisplaySec0 (F: Frame; x, y: SIGNED16; org0, off: SIGNED32; Y0: SIGNED16; oldL0, L0, L1: Line);
+	VAR pos: SIGNED32; u, v, dx, xx: SIGNED16; dXX: SIGNED32;
 	BEGIN
 		IF (L0.asr = oldL0.asr) & (L0.dsr = oldL0.dsr) &
 			((L0.style.opts * AdjMode = {Styles.left}) OR (L0.brk & oldL0.brk & (L0.style.opts * AdjMode = AdjMode))) THEN
@@ -756,10 +756,10 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		DisplaySec(F, x, y, Y0, org0, L0, L1)
 	END DisplaySec0;
 
-	PROCEDURE ScrollBack(F: Frame; x, y: INTEGER; oldL: Line; VAR L: Line; VAR Y: INTEGER; VAR org: LONGINT);
+	PROCEDURE ScrollBack(F: Frame; x, y: SIGNED16; oldL: Line; VAR L: Line; VAR Y: SIGNED16; VAR org: SIGNED32);
 	VAR
 		L0: Line;
-		dY, Y1: INTEGER;
+		dY, Y1: SIGNED16;
 	BEGIN d := 0; L.next := oldL; Y1 := Y; CollectLines(F, L, Y, org);
 		IF L.next = oldL THEN L0 := L.next ELSE L0 := oldL END;	(* last line to draw *)
 		dY := F.H - F.top - Y1; Move(F, x, y, Y + dY, Y1 - Y, -dY);
@@ -772,7 +772,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	VAR
 		obj: Objects.Object; G: Display.Frame;
 		s: Styles.Style;
-		v: INTEGER;
+		v: SIGNED16;
 	BEGIN
 		Texts.Read(R, ch);
 		IF ~R.eot THEN R.lib.GetObj(R.lib, ORD(ch), obj);
@@ -798,7 +798,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END Read;
 
-	PROCEDURE InitFormatter(F: Frame; org: LONGINT);
+	PROCEDURE InitFormatter(F: Frame; org: SIGNED32);
 	BEGIN
 		Texts.OpenReader(R, F.text, org); R.fnt := NIL; R.hide := F.hide; Read;
 		R.w := 0; R.len := 0; R.W := 0; R.nSpc := 0; R.asr := a; R.dsr := d;
@@ -807,9 +807,9 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	PROCEDURE FormatLine(VAR L: Line);
 	VAR
-		len, len0: LONGINT;
-		w, spc, w0, nspc, dsr0, asr0, asr, dsr, width, lsp: INTEGER;
-		W, Spc, W0, Width: LONGINT;
+		len, len0: SIGNED32;
+		w, spc, w0, nspc, dsr0, asr0, asr, dsr, width, lsp: SIGNED16;
+		W, Spc, W0, Width: SIGNED32;
 		brk, tab: BOOLEAN;
 		s: Styles.Style;
 	BEGIN
@@ -864,7 +864,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		L.asr := L.h-L.dsr
 	END FormatLine;
 
-	PROCEDURE NewLines(F: Frame; limit: LONGINT; VAR L: Line; VAR Y: INTEGER; VAR org: LONGINT);
+	PROCEDURE NewLines(F: Frame; limit: SIGNED32; VAR L: Line; VAR Y: SIGNED16; VAR org: SIGNED32);
 	VAR L1: Line;
 	BEGIN InitFormatter(F, org); FormatLine(L1);
 		WHILE ~L.eot & (Y >= F.bot + L1.h) & (org # limit) DO
@@ -873,8 +873,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		L.next := L1	(*!*)
 	END NewLines;
 
-	PROCEDURE BottomLine(F: Frame; x, y, Y: INTEGER; VAR L: Line; org: LONGINT);
-	VAR R: Texts.Finder; pos: LONGINT; obj: Objects.Object;
+	PROCEDURE BottomLine(F: Frame; x, y, Y: SIGNED16; VAR L: Line; org: SIGNED32);
+	VAR R: Texts.Finder; pos: SIGNED32; obj: Objects.Object;
 	BEGIN
 		IF org < F.text.len THEN Texts.OpenFinder(R, F.text, org); pos := R.pos; Texts.FindObj(R, obj);
 			IF (pos - org < L.next.len) & (obj # NIL) & (obj IS Display.Frame) THEN
@@ -889,20 +889,20 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END BottomLine;
 
-	PROCEDURE AppendLines(F: Frame; x, y: INTEGER; org: LONGINT; L: Line; VAR Y: INTEGER);
+	PROCEDURE AppendLines(F: Frame; x, y: SIGNED16; org: SIGNED32; L: Line; VAR Y: SIGNED16);
 	VAR
-		L0: Line; Y0: INTEGER; org0: LONGINT;
-		botY: INTEGER;
+		L0: Line; Y0: SIGNED16; org0: SIGNED32;
+		botY: SIGNED16;
 	BEGIN botY := F.bot; L0 := L; org0 := org; Y0 := Y;
 		(* Erase(F, x, y, 0, botY, Y0 - botY,0); *) (**)NewLines(F, F.text.len+1, L, Y, org);
 		DisplaySec(F, x, y, Y0, org0, L0.next, L.next); BottomLine(F, x, y, Y, L, org);
 		L.next := F.trailer
 	END AppendLines;
 
-	PROCEDURE ShowText (F: Frame; x, y: INTEGER; pos: LONGINT; restore : BOOLEAN);
+	PROCEDURE ShowText (F: Frame; x, y: SIGNED16; pos: SIGNED32; restore : BOOLEAN);
 	VAR
-		org, oldOrg, org0: LONGINT;
-		curY, Y0, dY, botY: INTEGER;
+		org, oldOrg, org0: SIGNED32;
+		curY, Y0, dY, botY: SIGNED16;
 		L, L1, oldL: Line;
 	BEGIN	(* pos valid *)
 
@@ -962,7 +962,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		ShowTick(F,x,y);
 	END ShowText;
 
-	PROCEDURE Resize* (F: Frame; x, y, newY: INTEGER);
+	PROCEDURE Resize* (F: Frame; x, y, newY: SIGNED16);
 	BEGIN (*F.mark = 0*)
 		IF newY < F.Y THEN Bar(F, x, y, newY-F.Y, F.Y - newY) END;	(* extend *)
 		F.H := F.H + F.Y - newY; F.Y := newY;
@@ -971,8 +971,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	(*---locators---*)
 
-	PROCEDURE LocateOrg(F: Frame; org, pos: LONGINT; VAR loc: Location);
-		VAR L: Line; cury: INTEGER;
+	PROCEDURE LocateOrg(F: Frame; org, pos: SIGNED32; VAR loc: Location);
+		VAR L: Line; cury: SIGNED16;
 	BEGIN
 		cury := F.H - F.top; L := F.trailer.next;
 		IF pos < org THEN pos := org END;
@@ -983,8 +983,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		loc.x := F.left; loc.y := cury - L.asr
 	END LocateOrg;
 
-	PROCEDURE LocateLine (F: Frame; y: INTEGER; VAR loc: Location);
-		VAR L: Line;  cury: INTEGER;
+	PROCEDURE LocateLine (F: Frame; y: SIGNED16; VAR loc: Location);
+		VAR L: Line;  cury: SIGNED16;
 	BEGIN loc.org := F.org; cury := F.H - F.top; L := F.trailer.next;
 		WHILE (L.next # F.trailer) & (cury - L.h > y) & (cury - L.h - L.next.h >= F.bot)  DO
 			INC(loc.org, L.len); DEC(cury, L.h); L := L.next
@@ -992,10 +992,10 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		loc.y := cury - L.asr; loc.lin := L
 	END LocateLine;
 
-	PROCEDURE LocateObj (F: Frame; x, y: INTEGER; VAR loc: Location; VAR obj: Objects.Object);
-		VAR R: Texts.Reader; pos, lim: LONGINT; ox, dx: INTEGER; ch: CHAR;
-			spc, rest: INTEGER; L: Line;
-			X, DX: LONGINT;
+	PROCEDURE LocateObj (F: Frame; x, y: SIGNED16; VAR loc: Location; VAR obj: Objects.Object);
+		VAR R: Texts.Reader; pos, lim: SIGNED32; ox, dx: SIGNED16; ch: CHAR;
+			spc, rest: SIGNED16; L: Line;
+			X, DX: SIGNED32;
 	BEGIN LocateLine(F, y, loc); L := loc.lin; Offsets(L, spc, rest);
 		pos := loc.org; lim := loc.org+L.len- 1; ox := F.left + L.off; X := 0; obj := NIL;
 		IF pos <= lim THEN
@@ -1021,16 +1021,16 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		loc.pos := pos; loc.dx := dx; loc.x := ox
 	END LocateObj;
 
-	PROCEDURE LocatePos (F: Frame; pos: LONGINT; VAR loc: Location);
-		VAR dX: LONGINT;  dx: INTEGER;
+	PROCEDURE LocatePos (F: Frame; pos: SIGNED32; VAR loc: Location);
+		VAR dX: SIGNED32;  dx: SIGNED16;
 	BEGIN LocateOrg(F, F.org, pos, loc);
 		IF pos >= loc.org + loc.lin.len THEN pos := loc.org + loc.lin.len - 1 ELSIF pos < F.org THEN pos := F.org END;
 		Width(F, loc.lin, loc.org, pos, dx, dX); loc.pos := pos; INC(loc.x, dx+loc.lin.off);
 	END LocatePos;
 
-	PROCEDURE LocateString (F: Frame; x, y: INTEGER; VAR loc: Location);
+	PROCEDURE LocateString (F: Frame; x, y: SIGNED16; VAR loc: Location);
 	VAR
-		pos, end, X, lim: LONGINT;
+		pos, end, X, lim: SIGNED32;
 		ch: CHAR;
 		R: Texts.Reader;
 		obj: Objects.Object;
@@ -1054,7 +1054,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END LocateString;
 
 	PROCEDURE FindFrame(F: Frame; G: Display.Frame; VAR loc: Location);
-	VAR Y: INTEGER; L: Line; b: Box;
+	VAR Y: SIGNED16; L: Line; b: Box;
 	BEGIN Y := F.H-F.top; L := F.trailer.next; loc.org := F.org; loc.pos := -1;
 		WHILE L # F.trailer DO DEC(Y, L.h);
 			IF L.box # NIL THEN b := L.box.next;
@@ -1071,7 +1071,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 
 	PROCEDURE TouchFrame(F: Frame; VAR M: Oberon.InputMsg): BOOLEAN;
-	VAR X, Y: INTEGER; b: Box; loc: Location; G: Display.Frame;
+	VAR X, Y: SIGNED16; b: Box; loc: Location; G: Display.Frame;
 	BEGIN
 		IF F.trailer.next # F.trailer THEN
 			X := M.X-F.X-M.x; Y := M.Y-F.Y-M.y; LocateLine(F, Y, loc);
@@ -1091,12 +1091,12 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		RETURN FALSE
 	END TouchFrame;
 
-	PROCEDURE Pos* (F: Frame; X, Y: INTEGER): LONGINT;	(* local coords *)
+	PROCEDURE Pos* (F: Frame; X, Y: SIGNED16): SIGNED32;	(* local coords *)
 	VAR loc: Location; obj: Objects.Object;
 	BEGIN LocateObj(F, X, Y, loc, obj); RETURN loc.pos
 	END Pos;
 
-	PROCEDURE ParaBeg(F : Frame; T: Texts.Text; pos: LONGINT; VAR org: LONGINT);
+	PROCEDURE ParaBeg(F : Frame; T: Texts.Text; pos: SIGNED32; VAR org: SIGNED32);
 	VAR R: Texts.Reader; ch: CHAR; obj: Objects.Object;
 	BEGIN org := pos;
 		WHILE org > 0 DO
@@ -1107,8 +1107,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END ParaBeg;
 
-	PROCEDURE Validate (F: Frame; VAR pos: LONGINT);	(* find org of line *)
-		VAR org: LONGINT; L: Line; loc: Location;
+	PROCEDURE Validate (F: Frame; VAR pos: SIGNED32);	(* find org of line *)
+		VAR org: SIGNED32; L: Line; loc: Location;
 	BEGIN
 		IF F.trailer.next # F.trailer THEN
 			IF pos >= F.org THEN LocateOrg(F, F.org, pos, loc);	(* find start of line within line list *)
@@ -1124,7 +1124,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END Validate;
 
-	PROCEDURE SetAttributes(F: Frame; pos: LONGINT);
+	PROCEDURE SetAttributes(F: Frame; pos: SIGNED32);
 		VAR R: Texts.Reader; x: CHAR;
 	BEGIN
 		IF (* (F.text.len > 0) & (pos = F.text.len) *)  pos > 0 THEN DEC(pos) END;
@@ -1138,7 +1138,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	(*---caret & select---*)
 
-	PROCEDURE SetCaret* (F: Frame; pos: LONGINT);
+	PROCEDURE SetCaret* (F: Frame; pos: SIGNED32);
 	BEGIN
 		IF ~F.car OR (F.carLoc.pos # pos) THEN
 			IF F.car THEN Marks(F, car); F.car := FALSE END;
@@ -1156,7 +1156,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		Marks(F, car) END; F.car := FALSE
 	END RemoveCaret;
 
-	PROCEDURE SetSelection* (F: Frame; beg, end: LONGINT);
+	PROCEDURE SetSelection* (F: Frame; beg, end: SIGNED32);
 	BEGIN
 		IF F.sel THEN Marks(F, sel) END;
 		IF (beg < F.org) OR (beg >= Lim(F)) THEN show(F, beg) END;
@@ -1174,7 +1174,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	BEGIN RemoveCaret(F); RemoveSelection(F)
 	END RemoveMarks;
 
-	PROCEDURE FlipMarks (F: Frame; x, y : INTEGER);
+	PROCEDURE FlipMarks (F: Frame; x, y : SIGNED16);
 	BEGIN
 		IF F.car  THEN FlipCaret(F,  x, y) END;
 		IF F.sel  THEN FlipSelection(F, x, y, F.selBeg, F.selEnd) END;
@@ -1186,11 +1186,11 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	(*---update---*)
 
-	PROCEDURE UpdateVisible(F: Frame; x, y: INTEGER; beg, end, corr: LONGINT);
+	PROCEDURE UpdateVisible(F: Frame; x, y: SIGNED16; beg, end, corr: SIGNED32);
 	VAR
 		oldL, oldL0, L, L0: Line;
-		oldorg, org, org0: LONGINT;
-		oldY, dY, Y, Y0, Y1, botY: INTEGER;
+		oldorg, org, org0: SIGNED32;
+		oldY, dY, Y, Y0, Y1, botY: SIGNED16;
 		visible : BOOLEAN;
 	BEGIN
 		org := F.org; Y := F.H - F.top; L := F.trailer; botY := F.bot;
@@ -1242,10 +1242,10 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END UpdateVisible;
 
-	PROCEDURE UpdateSection (F: Frame; x, y: INTEGER; beg, end, corr: LONGINT);
+	PROCEDURE UpdateSection (F: Frame; x, y: SIGNED16; beg, end, corr: SIGNED32);
 	VAR
 		L, L0: Line;
-		org: LONGINT;
+		org: SIGNED32;
 	BEGIN L := F.trailer.next;
 		IF (F.org > 0) & (beg < F.org + L.len) THEN
 			IF beg < F.org THEN INC(F.org, corr); corr := 0; beg := F.org END;
@@ -1278,8 +1278,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END UpdateSection;
 
 	(*
-	PROCEDURE DisplaySecBrk (F: Frame; x, y, Y0: INTEGER; org0: LONGINT; L0, L1: Line);
-		VAR L: Line; Y: INTEGER;
+	PROCEDURE DisplaySecBrk (F: Frame; x, y, Y0: SIGNED16; org0: SIGNED32; L0, L1: Line);
+		VAR L: Line; Y: SIGNED16;
 	BEGIN L := L0; Y := Y0; Texts.OpenReader(R1, F.text, org0);
 		WHILE L # L1 DO
 			IF ~L.brk THEN Erase(F, x, y, 0, Y - L.h, L.h,0); DisplayLine(F, 0, 0, x, y, 0, Y, L)
@@ -1293,10 +1293,10 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	PROCEDURE UpdateStyle(F: Frame; VAR M: Styles.UpdateMsg);
 	VAR
 		L0, L1: Line;
-		org0, org1, pos, len: LONGINT;
-		Y0, Y1, Y: INTEGER;
+		org0, org1, pos, len: SIGNED32;
+		Y0, Y1, Y: SIGNED16;
 		style: Styles.Style;
-		L: Line; org: LONGINT;
+		L: Line; org: SIGNED32;
 		tabs: BOOLEAN;
 	BEGIN
 		(*	InitStyle(F); *)
@@ -1340,7 +1340,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	(*---user interface---*)
 
-	PROCEDURE TrackCaret* (F: Frame; x, y, X, Y: INTEGER; VAR keysum: SET);
+	PROCEDURE TrackCaret* (F: Frame; x, y, X, Y: SIGNED16; VAR keysum: SET);
 		VAR keys: SET;
 	BEGIN
 		IF F.trailer.next # F.trailer THEN keysum := {};
@@ -1366,8 +1366,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		waitTime := 0;
 	END ResetRepeat;
 
-	PROCEDURE Scroll*(F : Frame; x, y : INTEGER; back : BOOLEAN);
-		VAR pos : LONGINT; L : Line;
+	PROCEDURE Scroll*(F : Frame; x, y : SIGNED16; back : BOOLEAN);
+		VAR pos : SIGNED32; L : Line;
 	BEGIN
 		Neutralize(F);
 		pos := F.org-1;
@@ -1389,12 +1389,12 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END Scroll;
 
 	(*
-	PROCEDURE TrackFullLine*(F: Frame; x, y, X, Y: INTEGER; sel :BOOLEAN; VAR keysum: SET);
-		VAR old, new: Location; keys: SET;  oh,ow, nw, nh, oy, ny, yo, ye   : INTEGER;
-			 org : LONGINT; obj : Objects.Object;
+	PROCEDURE TrackFullLine*(F: Frame; x, y, X, Y: SIGNED16; sel :BOOLEAN; VAR keysum: SET);
+		VAR old, new: Location; keys: SET;  oh,ow, nw, nh, oy, ny, yo, ye   : SIGNED16;
+			 org : SIGNED32; obj : Objects.Object;
 
-		PROCEDURE Inv(Y,H : INTEGER); BEGIN
-			IF Y # MIN(INTEGER) THEN InvertRect(F, x, y, F.left + new.lin.off, Y, nw, H) END; END Inv;
+		PROCEDURE Inv(Y,H : SIGNED16); BEGIN
+			IF Y # MIN(SIGNED16) THEN InvertRect(F, x, y, F.left + new.lin.off, Y, nw, H) END; END Inv;
 
 	BEGIN
 		org := -1;
@@ -1408,7 +1408,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 				TrackMouse(X, Y, keys, keysum);
 				LocateLine(F, Y - F.Y - y, new); DEC(new.y, new.lin.dsr);
 				IF ~sel & ((Y > y + F.Y + F.H) OR (Y < y + F.Y)) THEN
-					IF ~ sel THEN Inv(oy,oh) END; oy := MIN(INTEGER); ny := MIN(INTEGER);
+					IF ~ sel THEN Inv(oy,oh) END; oy := MIN(SIGNED16); ny := MIN(SIGNED16);
 					IF KeyPressed() THEN
 						Scroll(F,x,y,Y > y + F.Y + F.H);
 					END;
@@ -1438,8 +1438,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END TrackFullLine;
 	*)
 
-	PROCEDURE TrackSelection* (F: Frame; x, y, X, Y: INTEGER; VAR keysum: SET);
-		VAR loc: Location; obj: Objects.Object; keys: SET; Y0 : INTEGER;
+	PROCEDURE TrackSelection* (F: Frame; x, y, X, Y: SIGNED16; VAR keysum: SET);
+		VAR loc: Location; obj: Objects.Object; keys: SET; Y0 : SIGNED16;
 	BEGIN
 		IF F.trailer.next # F.trailer THEN
 			IF F.sel THEN RemoveSelection(F); F.sel := TRUE; (* FlipSelection(F, x, y, F.selBeg, F.selEnd) *) END;
@@ -1470,10 +1470,10 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END TrackSelection;
 
 
-	PROCEDURE TrackLine* (F: Frame; x, y, X, Y: INTEGER; VAR org: LONGINT; VAR keysum: SET);
+	PROCEDURE TrackLine* (F: Frame; x, y, X, Y: SIGNED16; VAR org: SIGNED32; VAR keysum: SET);
 		VAR old, new: Location; keys: SET;
 
-		PROCEDURE H(l : Location) : INTEGER;
+		PROCEDURE H(l : Location) : SIGNED16;
 		BEGIN IF block  THEN RETURN l.lin.h ELSE RETURN 2 END;END H;
 
 	BEGIN org := -1;
@@ -1484,29 +1484,29 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 			REPEAT
 				TrackMouse(X, Y, keys, keysum);
 				IF  (autoScroll IN F.defStyle.opts) & ((Y > y + F.Y + F.H) OR (Y < y + F.Y)) THEN
-					IF old.y # MIN(INTEGER) THEN InvertRect(F, x, y, F.left + old.lin.off, old.y, old.lin.w0, H(old));
-						old.y := MIN(INTEGER); new.y := MIN(INTEGER)
+					IF old.y # MIN(SIGNED16) THEN InvertRect(F, x, y, F.left + old.lin.off, old.y, old.lin.w0, H(old));
+						old.y := MIN(SIGNED16); new.y := MIN(SIGNED16)
 					END;
 					IF KeyPressed() THEN Scroll(F,x,y,Y > y + F.Y + F.H) END;
 				ELSE
 					ResetRepeat;
 					LocateLine(F, Y - F.Y - y, new); DEC(new.y, new.lin.dsr);
 					IF new.org # old.org THEN
-						IF old.y # MIN(INTEGER) THEN InvertRect(F, x, y, F.left + old.lin.off, old.y, old.lin.w0, H(old)) END;
+						IF old.y # MIN(SIGNED16) THEN InvertRect(F, x, y, F.left + old.lin.off, old.y, old.lin.w0, H(old)) END;
 						InvertRect(F, x, y, F.left + new.lin.off, new.y, new.lin.w0, H(new));
 						old := new
 					END
 				END
 			UNTIL keys = {};
-			IF new.y # MIN(INTEGER) THEN InvertRect(F, x, y, F.left + new.lin.off, new.y, new.lin.w0, H(new)) END;
+			IF new.y # MIN(SIGNED16) THEN InvertRect(F, x, y, F.left + new.lin.off, new.y, new.lin.w0, H(new)) END;
 			org := new.org
 		END;
 	END TrackLine;
 
-	PROCEDURE TrackWord* (F: Frame; x, y, X, Y: INTEGER; VAR pos: LONGINT; VAR keysum: SET);
+	PROCEDURE TrackWord* (F: Frame; x, y, X, Y: SIGNED16; VAR pos: SIGNED32; VAR keysum: SET);
 		VAR old, new: Location; keys: SET;
 
-		PROCEDURE H(l : Location) : INTEGER;
+		PROCEDURE H(l : Location) : SIGNED16;
 		BEGIN IF underlineOff IN F.defStyle.opts THEN RETURN l.lin.h ELSE RETURN 2 END;END H;
 
 	BEGIN pos := -1;
@@ -1522,25 +1522,25 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 			REPEAT
 				TrackMouse(X, Y, keys, keysum);
 				IF  (autoScroll IN F.defStyle.opts) & ((Y > y + F.Y + F.H) OR (Y < y + F.Y)) THEN
-					IF old.y # MIN(INTEGER) THEN InvertRect(F, x, y, old.x, old.y, old.dx, H(old));
-						old.y := MIN(INTEGER); new.y := MIN(INTEGER)
+					IF old.y # MIN(SIGNED16) THEN InvertRect(F, x, y, old.x, old.y, old.dx, H(old));
+						old.y := MIN(SIGNED16); new.y := MIN(SIGNED16)
 					END;
 					IF KeyPressed() THEN Scroll(F,x,y,Y > y + F.Y + F.H) END;
 				ELSE
 					ResetRepeat;
 					LocateString(F, X - F.X - x, Y - F.Y - y, new); DEC(new.y, new.lin.dsr);
 					IF new.pos # old.pos THEN
-						IF old.y # MIN(INTEGER) THEN InvertRect(F, x, y, old.x, old.y, old.dx, H(old)) END;
+						IF old.y # MIN(SIGNED16) THEN InvertRect(F, x, y, old.x, old.y, old.dx, H(old)) END;
 						InvertRect(F, x, y, new.x, new.y, new.dx, H(old)); old := new
 					END
 				END
 			UNTIL keys = {};
-			IF new.y # MIN(INTEGER) THEN InvertRect(F, x, y, new.x, new.y, new.dx, H(new)); ELSE keysum := {ML,MM,MR} END;
+			IF new.y # MIN(SIGNED16) THEN InvertRect(F, x, y, new.x, new.y, new.dx, H(new)); ELSE keysum := {ML,MM,MR} END;
 			pos := new.pos
 		END
 	END TrackWord;
 
-	PROCEDURE Show* (F: Frame; pos: LONGINT);
+	PROCEDURE Show* (F: Frame; pos: SIGNED32);
 	VAR M: DisplayMsg;
 	BEGIN
 		RemoveMarks(F);
@@ -1550,8 +1550,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END Show;
 
-	PROCEDURE Call* (F: Frame; pos: LONGINT; new: BOOLEAN; dlink : Objects.Object);
-		VAR S: Texts.Scanner; res, i: INTEGER; par: Oberon.ParList; R : Texts.Reader; dl : Objects.Object;
+	PROCEDURE Call* (F: Frame; pos: SIGNED32; new: BOOLEAN; dlink : Objects.Object);
+		VAR S: Texts.Scanner; res, i: SIGNED16; par: Oberon.ParList; R : Texts.Reader; dl : Objects.Object;
 	BEGIN
 		F.pointPos := pos;
 		Texts.OpenReader(R, F.text, pos); i := 0;
@@ -1580,9 +1580,9 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	(*---message handling---*)
 
-	PROCEDURE Write* (F: Frame; ch: CHAR; lib: Objects.Library; col, voff: SHORTINT);
+	PROCEDURE Write* (F: Frame; ch: CHAR; lib: Objects.Library; col, voff: SIGNED8);
 	VAR
-		pos, i: LONGINT;
+		pos, i: SIGNED32;
 		s: ARRAY 64 OF CHAR;
 
 		PROCEDURE char(ch: CHAR): BOOLEAN;
@@ -1590,7 +1590,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END char;
 
 		PROCEDURE ReadAll(ch: CHAR; VAR s: ARRAY OF CHAR);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 		BEGIN s[0] := ch; i := 1;
 			WHILE Input.Available() > 0 DO Input.Read(s[i]); INC(i) END;
 			s[i] := 0X
@@ -1632,8 +1632,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		SetCaret(F, pos);
 	END Write;
 
-	PROCEDURE Open* (F: Frame; H: Objects.Handler; T: Texts.Text; org: LONGINT;
-				col, left, right, top, bot: INTEGER);
+	PROCEDURE Open* (F: Frame; H: Objects.Handler; T: Texts.Text; org: SIGNED32;
+				col, left, right, top, bot: SIGNED16);
 		VAR L: Line;
 	BEGIN NEW(L);
 		L.len := 0; L.w := 0; L.eot := FALSE; L.next := L;
@@ -1648,7 +1648,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		F.defStyle.paraW := LONG(Display.Width)*Display.Unit;
 	END Open;
 
-	PROCEDURE CopyOver* (F: Frame; text: Texts.Text; beg, end: LONGINT);
+	PROCEDURE CopyOver* (F: Frame; text: Texts.Text; beg, end: SIGNED32);
 		VAR buf: Texts.Buffer;
 	BEGIN
 		IF F.car THEN
@@ -1680,7 +1680,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 
 	PROCEDURE Recall (F: Frame);
-		VAR buf: Texts.Buffer; pos: LONGINT;
+		VAR buf: Texts.Buffer; pos: SIGNED32;
 	BEGIN	(*F.car*)
 		NEW(buf); Texts.OpenBuf(buf); Texts.Recall(buf); pos := F.carLoc.pos + buf.len;
 		IF F.edit # NIL THEN
@@ -1691,9 +1691,9 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END Recall;
 
 (*--back scroll--*)
-	PROCEDURE FormatBack(F: Frame; pos: LONGINT; H: INTEGER; VAR org: LONGINT; VAR L: Line; VAR h: INTEGER);
+	PROCEDURE FormatBack(F: Frame; pos: SIGNED32; H: SIGNED16; VAR org: SIGNED32; VAR L: Line; VAR h: SIGNED16);
 	VAR
-		org0, org1: LONGINT;
+		org0, org1: SIGNED32;
 		L0, L1: Line;
 	BEGIN
 		org := pos; h := 0;
@@ -1707,11 +1707,11 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		WHILE h > H DO DEC(h, L.h); INC(org, L.len); L := L.next END	(*remove overhead*)
 	END FormatBack;
 
-	PROCEDURE ScrollBackTo(F: Frame; x, y: INTEGER; pos: LONGINT);
+	PROCEDURE ScrollBackTo(F: Frame; x, y: SIGNED16; pos: SIGNED32);
 	VAR
 		L,  L1: Line;
-		org, org0: LONGINT;
-		h0, Y: INTEGER;
+		org, org0: SIGNED32;
+		h0, Y: SIGNED16;
 	BEGIN
 		org := F.org; Y := F.H - F.top; L := F.trailer.next;
 		WHILE org # pos DO INC(org, L.len); DEC(Y, L.h); L := L.next END;
@@ -1733,8 +1733,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END ScrollBackTo;
 
-	PROCEDURE ScrollToEnd(F: Frame; x, y: INTEGER);
-	VAR L: Line; org: LONGINT; h: INTEGER;
+	PROCEDURE ScrollToEnd(F: Frame; x, y: SIGNED16);
+	VAR L: Line; org: SIGNED32; h: SIGNED16;
 	BEGIN L := F.trailer;
 		IF F.text.len # 0 THEN
 			FormatBack(F, F.text.len, F.H-F.top-F.bot, org, L, h);
@@ -1743,7 +1743,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END ScrollToEnd;
 
 	PROCEDURE Update* (F: Frame; VAR M: Texts.UpdateMsg);
-		VAR end: LONGINT;
+		VAR end: SIGNED32;
 	BEGIN (*F.text = M.text*)
 		RemoveMarks(F);
 		end := M.beg + M.len; IF M.end > end THEN end := M.end END;
@@ -1757,16 +1757,16 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END;
 	END Update;
 
-	PROCEDURE Edit* (F: Frame; x, y, X, Y: INTEGER; Keys: SET; dlink : Objects.Object; VAR res : INTEGER);
+	PROCEDURE Edit* (F: Frame; x, y, X, Y: SIGNED16; Keys: SET; dlink : Objects.Object; VAR res : SIGNED16);
 		VAR
 			M: Oberon.ConsumeMsg;
 			R: Texts.Reader;
 			text: Texts.Text;
-			time, pos, beg, end: LONGINT;
+			time, pos, beg, end: SIGNED32;
 			keysum: SET;
 			ch: CHAR;
 			m : MarkMsg;
-			i : INTEGER;
+			i : SIGNED16;
 			C : Oberon.CaretMsg;
 			car : BOOLEAN;
 
@@ -1859,8 +1859,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END;
 	END Edit;
 
-	PROCEDURE Integrate(F: Frame; pos: LONGINT; obj: Objects.Object; new: BOOLEAN; VAR res : INTEGER);
-		VAR N: Display.ControlMsg; len: LONGINT;
+	PROCEDURE Integrate(F: Frame; pos: SIGNED32; obj: Objects.Object; new: BOOLEAN; VAR res : SIGNED16);
+		VAR N: Display.ControlMsg; len: SIGNED32;
 	BEGIN	(*clear XW.buf*)
 		IF ~((obj IS Frame) & ((obj(Frame).text = F.text) OR (Recursive(F,obj)))) THEN
 			WHILE obj # NIL DO
@@ -1890,7 +1890,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END Integrate;
 
 	PROCEDURE Control(F: Frame; VAR M: Display.ControlMsg);
-	VAR R: Texts.Finder; obj: Objects.Object; pos: LONGINT;
+	VAR R: Texts.Finder; obj: Objects.Object; pos: SIGNED32;
 	BEGIN
 		IF M.id = Display.remove THEN
 			Texts.OpenFinder(R, F.text, 0); pos := R.pos; Texts.FindObj(R, obj);
@@ -1906,8 +1906,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END Control;
 
-	PROCEDURE DisplayArea (F: Frame; x, y, X, Y, W, H: INTEGER);
-		VAR Y1: INTEGER; loc0, loc1: Location;
+	PROCEDURE DisplayArea (F: Frame; x, y, X, Y, W, H: SIGNED16);
+		VAR Y1: SIGNED16; loc0, loc1: Location;
 	BEGIN
 		Bar(F, x, y, 0, F.H); LocateLine(F, Y+H, loc0); LocateLine(F, Y, loc1);
 		IF loc1.lin.next # F.trailer THEN loc1.lin := loc1.lin.next END;
@@ -1918,13 +1918,13 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		ShowTick(F, x, y)
 	END DisplayArea;
 
-	PROCEDURE Enum(X,Y,W,H : INTEGER);
+	PROCEDURE Enum(X,Y,W,H : SIGNED16);
 	BEGIN
 		visible := TRUE;
 	END Enum;
 
-	PROCEDURE Restore(F: Frame; x, y: INTEGER; VAR M: Display.FrameMsg);
-		VAR Y: INTEGER;
+	PROCEDURE Restore(F: Frame; x, y: SIGNED16; VAR M: Display.FrameMsg);
+		VAR Y: SIGNED16;
 	BEGIN
 		F.dlink := M.dlink;
 		IF M IS DisplayMsg THEN
@@ -1951,8 +1951,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END Restore;
 
 (*
-	PROCEDURE Restore(F: Frame; x, y: INTEGER;  VAR  M: Display.FrameMsg);
-		VAR Y: INTEGER;
+	PROCEDURE Restore(F: Frame; x, y: SIGNED16;  VAR  M: Display.FrameMsg);
+		VAR Y: SIGNED16;
 	BEGIN
 		IF M IS DisplayMsg THEN
 			FlipMarks(F,x,y); ShowText(F, x, y, M(DisplayMsg).pos,TRUE);
@@ -1968,11 +1968,11 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END Restore;
 *)
 
-	PROCEDURE ModifyDsc(F: Frame; x, y: INTEGER; M: Display.ModifyMsg);
+	PROCEDURE ModifyDsc(F: Frame; x, y: SIGNED16; M: Display.ModifyMsg);
 	VAR R: Texts.Finder; obj: Objects.Object; G, msk: Display.Frame;
 		loc: Location;
-		pos, org, lim, lim0: LONGINT;
-		dw, mode: INTEGER;
+		pos, org, lim, lim0: SIGNED32;
+		dw, mode: SIGNED16;
 		dlink : Objects.Object;
 		found : BOOLEAN;
 	BEGIN
@@ -2035,7 +2035,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END InvalidateMasks;
 
 	PROCEDURE Modify(F: Frame; VAR M: Display.ModifyMsg);
-		VAR x, y: INTEGER;  T : Texts.UpdateMsg;
+		VAR x, y: SIGNED16;  T : Texts.UpdateMsg;
 	BEGIN x := M.x; y := M.y;
 		InvalidateMasks(F);
 		IF F.car THEN Caret(F,F.carLoc.pos,Display.remove) END;
@@ -2067,7 +2067,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END Modify;
 
 	PROCEDURE FrameAttr(F: Frame; VAR M: Objects.AttrMsg);
-		VAR s : INTEGER;
+		VAR s : SIGNED16;
 
 	BEGIN
 		s := -1;
@@ -2188,18 +2188,18 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		new.next  := save;
 	END CopyLineDesc;
 
-	PROCEDURE P(d: INTEGER): INTEGER;
+	PROCEDURE P(d: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(LONG(d)*Display.Unit DIV PrtUnit)
 	END P;
 
-	PROCEDURE PrintLine(F : Frame; L: Line; msk: Display3.Mask; X, Y, XT: INTEGER);	(*X, Y: baseline*)
+	PROCEDURE PrintLine(F : Frame; L: Line; msk: Display3.Mask; X, Y, XT: SIGNED16);	(*X, Y: baseline*)
 	VAR
 		buf: ARRAY 256 OF CHAR;
-		pos, ddX: LONGINT;
+		pos, ddX: SIGNED32;
 		obj: Objects.Object; G: Display.Frame;
 		lib: Objects.Library;
-		k, x, dx, dY, dX, X0, voff, offX, col, sx, rx, dW: INTEGER;
-		r, g, b: INTEGER;
+		k, x, dx, dY, dX, X0, voff, offX, col, sx, rx, dW: SIGNED16;
+		r, g, b: SIGNED16;
 		ch: CHAR;
 		s: Styles.Style;
 
@@ -2207,7 +2207,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		BEGIN IF k > 0 THEN buf[k] := 0X; Printer3.String(msk, col, X0, Y + dY, lib(Fonts.Font), buf, Display.paint) END; k := 0
 		END Out;
 
-		PROCEDURE PrintFrame(G: Display.Frame; X, Y: INTEGER);
+		PROCEDURE PrintFrame(G: Display.Frame; X, Y: SIGNED16);
 			VAR M: Display.DisplayMsg;
 		BEGIN
 			M.res := -1; M.device := Display.printer; M.id := Display.full; M.dlink := F;
@@ -2256,8 +2256,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		Out
 	END PrintLine;
 
-	PROCEDURE PrintView(F: Frame; x, y: INTEGER);
-		VAR L: Line; y0, xt: INTEGER; b, t: INTEGER;
+	PROCEDURE PrintView(F: Frame; x, y: SIGNED16);
+		VAR L: Line; y0, xt: SIGNED16; b, t: SIGNED16;
 	BEGIN
 (*
 		Printer3.ReplConst(F.msk,F.col, x, y, P(F.W), P(F.H), Display.replace);
@@ -2277,7 +2277,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	PROCEDURE Handle* (F: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR F0: Frame; bcast: BOOLEAN;
-			x, y, i : INTEGER; dlink: Objects.Object; absX,absY : INTEGER;
+			x, y, i : SIGNED16; dlink: Objects.Object; absX,absY : SIGNED16;
 			mskD : Display3.MaskDesc; msk  : Display3.Mask;
 			r1  : Texts.Reader; f : Texts.Finder; obj : Objects.Object;
 
@@ -2516,7 +2516,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 
 	(* --- creation --- *)
 
-	PROCEDURE NewText* (text: Texts.Text; pos: LONGINT): Frame;
+	PROCEDURE NewText* (text: Texts.Text; pos: SIGNED32): Frame;
 		VAR F: Frame;
 	BEGIN NEW(F);
 		Open(F, Handle, text, pos, Display.BG, left, right, top, bot);
@@ -2524,8 +2524,8 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		RETURN F
 	END NewText;
 
-	PROCEDURE CalcSize*(F: Frame; VAR w, h : INTEGER);
-		VAR L: Line;  r, s: INTEGER;
+	PROCEDURE CalcSize*(F: Frame; VAR w, h : SIGNED16);
+		VAR L: Line;  r, s: SIGNED16;
 	BEGIN InitFormatter(F, 0); w := 0; h := 0;
 		IF adaptStyle IN F.defStyle.opts THEN w := SHORT(F.defStyle.paraW DIV Display.Unit) END;
 		REPEAT
@@ -2546,7 +2546,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 	END CalcSize;
 
 	(*
-	PROCEDURE LineExtend(L: Line; VAR w, asr, dsr: INTEGER; VAR brk: BOOLEAN);
+	PROCEDURE LineExtend(L: Line; VAR w, asr, dsr: SIGNED16; VAR brk: BOOLEAN);
 	BEGIN w := SHORT(L.W DIV PrtUnit);
 		IF (L.len = 1) & (pL.style # L.style) THEN asr := SHORT(L.style.gap DIV PrtUnit); dsr := 0;
 			brk := TRUE	(*for printing: styles always break the line*)
@@ -2555,26 +2555,26 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		END
 	END LineExtend;
 
-	PROCEDURE FirstLine*(T: Texts.Text; VAR w, asr, dsr, nSpc: INTEGER; VAR len: LONGINT; VAR brk, eot: BOOLEAN);
+	PROCEDURE FirstLine*(T: Texts.Text; VAR w, asr, dsr, nSpc: SIGNED16; VAR len: SIGNED32; VAR brk, eot: BOOLEAN);
 	VAR F: Frame; L: Line;
 	BEGIN NEW(F); F.text := T; NEW(pL); pL.style := Styles.defStyle; InitFormatter(F, 0); FormatLine(L);
 		len := L.len; eot := L.eot; nSpc := L.nSpc; LineExtend(L, w, asr, dsr, brk); pL := L
 	END FirstLine;
 
-	PROCEDURE NextLine*(VAR w, asr, dsr, nSpc: INTEGER; VAR len: LONGINT; VAR brk, eot: BOOLEAN);
+	PROCEDURE NextLine*(VAR w, asr, dsr, nSpc: SIGNED16; VAR len: SIGNED32; VAR brk, eot: BOOLEAN);
 	VAR L: Line;
 	BEGIN FormatLine(L); len := L.len; eot := L.eot; nSpc := L.nSpc; LineExtend(L, w, asr, dsr, brk); pL := L
 	END NextLine;
 	*)
 
 	(*
-	PROCEDURE Enum(X,Y,W,H : INTEGER);
+	PROCEDURE Enum(X,Y,W,H : SIGNED16);
 	BEGIN
 		Pictures.DisplayBlock(enum.pict,X + enum.dX, Y + enum.dY, W, H, X, Y, Display.replace);
 	END Enum;
 
-	PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-	VAR r, t, r1, t1: INTEGER;
+	PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+	VAR r, t, r1, t1: SIGNED16;
 	BEGIN
 		r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 		IF x < x1 THEN x := x1 END;
@@ -2584,7 +2584,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		w := r - x + 1; h := t - y + 1;
 	END ClipAgainst;
 
-	PROCEDURE DisplayBlock(VAR M : Display3.Mask; P : Pictures.Picture; X, Y, W, H, DX, DY : INTEGER);
+	PROCEDURE DisplayBlock(VAR M : Display3.Mask; P : Pictures.Picture; X, Y, W, H, DX, DY : SIGNED16);
 	BEGIN
 		enum.dX := X-DX; enum.dY :=Y-DY;
 		ClipAgainst(DX, DY, W, H, M.X, M.Y, M.W, M.H);
@@ -2592,7 +2592,7 @@ MODULE ScriptGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 / KR, Mon
 		Display3.EnumRect(M, DX, DY, W, H, Enum);
 	END DisplayBlock;
 
-	PROCEDURE Back(F:Frame; x, y: INTEGER; R: Display3.Mask);
+	PROCEDURE Back(F:Frame; x, y: SIGNED16; R: Display3.Mask);
 	BEGIN
 		DisplayBlock(R, pict, 0,0,pict.width, pict.height, F.X + x, F.Y + y);
 		(*

@@ -40,7 +40,7 @@ TYPE
 	BufferPool* = OBJECT
 		VAR head, num: SIZE; buffer: POINTER TO ARRAY OF Buffer;
 
-		PROCEDURE &Init*(n: LONGINT);
+		PROCEDURE &Init*(n: SIGNED32);
 		BEGIN
 			head := 0; num := 0; NEW(buffer, n)
 		END Init;
@@ -87,13 +87,13 @@ TYPE
 
 		(** Set the volume of the channel *)
 		(** 0 is silent, 255 is max *)
-		PROCEDURE SetVolume*(volume : WORD);
+		PROCEDURE SetVolume*(volume : INTEGER);
 		BEGIN HALT(99) (* abstract *)
 		END SetVolume;
 
 		(** Get the volume of the channel *)
 		(** 0 is silent, 255 is max *)
-		PROCEDURE GetVolume*() : WORD;
+		PROCEDURE GetVolume*() : INTEGER;
 		BEGIN HALT(99) (* abstract *)
 		END GetVolume;
 
@@ -114,22 +114,22 @@ TYPE
 	(** Generic channel *)
 	Channel* = OBJECT
 		(** Return if the channel is ChannelPlay or ChannelRecord *)
-		PROCEDURE GetChannelKind*() : LONGINT;
+		PROCEDURE GetChannelKind*() : SIGNED32;
 		END GetChannelKind;
 
 		(** Set the current volume of the channel *)
 		(** Volume is a 8.8 bit fix-point value, 0 is silent *)
-		PROCEDURE SetVolume*(volume : LONGINT);
+		PROCEDURE SetVolume*(volume : SIGNED32);
 		BEGIN HALT(99) (* abstract *)
 		END SetVolume;
 
 		(** Get the current volume of the channel *)
-		PROCEDURE GetVolume*() : LONGINT;
+		PROCEDURE GetVolume*() : SIGNED32;
 		BEGIN HALT(99) (* abstract *)
 		END GetVolume;
 
-		(** GetPosition return the current position in samples. MAY CHANGE TO HUGEINT*)
-		PROCEDURE GetPosition*() : LONGINT;
+		(** GetPosition return the current position in samples. MAY CHANGE TO SIGNED64*)
+		PROCEDURE GetPosition*() : SIGNED32;
 		BEGIN HALT(99) (* abstract *)
 		END GetPosition;
 
@@ -183,30 +183,30 @@ TYPE
 		END Disable;
 
 (** Capabilities *)
-		PROCEDURE NofNativeFrequencies*():LONGINT;
+		PROCEDURE NofNativeFrequencies*():SIGNED32;
 		BEGIN HALT(99) (* abstract *)
 		END NofNativeFrequencies;
 
-		PROCEDURE GetNativeFrequency*(nr : LONGINT):LONGINT;
+		PROCEDURE GetNativeFrequency*(nr : SIGNED32):SIGNED32;
 		BEGIN HALT(99) (* abstract *)
 		END GetNativeFrequency;
 
-		PROCEDURE NofSamplingResolutions*():LONGINT;
+		PROCEDURE NofSamplingResolutions*():SIGNED32;
 		BEGIN HALT(99) (* abstract *)
 		END NofSamplingResolutions;
 
-		PROCEDURE GetSamplingResolution*(nr : LONGINT):LONGINT;
+		PROCEDURE GetSamplingResolution*(nr : SIGNED32):SIGNED32;
 		BEGIN HALT(99) (* abstract *)
 		END GetSamplingResolution;
 
 		(** How many different sub channel settings are possible. Default implementation returns 2 for mono and stereo *)
-		PROCEDURE NofSubChannelSettings*():LONGINT;
+		PROCEDURE NofSubChannelSettings*():SIGNED32;
 		BEGIN
 			RETURN 2
 		END NofSubChannelSettings;
 
 		(** Get sub channel setting nr. Default implementation returns mono and stereo *)
-		PROCEDURE GetSubChannelSetting*(nr : LONGINT):LONGINT;
+		PROCEDURE GetSubChannelSetting*(nr : SIGNED32):SIGNED32;
 		BEGIN
 			IF nr = 0 THEN RETURN 1
 			ELSIF nr = 1 THEN RETURN 2
@@ -215,13 +215,13 @@ TYPE
 		END GetSubChannelSetting;
 
 		(** How many different wave formats are possible. Default implementation returns 1 *)
-		PROCEDURE NofWaveFormats*():LONGINT;
+		PROCEDURE NofWaveFormats*():SIGNED32;
 		BEGIN
 			RETURN 1
 		END NofWaveFormats;
 
 		(** Get wave format nr. Default implementation returns FormatPCM *)
-		PROCEDURE GetWaveFormat*(nr : LONGINT):LONGINT;
+		PROCEDURE GetWaveFormat*(nr : SIGNED32):SIGNED32;
 		BEGIN
 			RETURN FormatPCM
 		END GetWaveFormat;
@@ -241,7 +241,7 @@ TYPE
 			nofSubChannes = 1 for Mono, 2 for Stereo, 4 for Quadro etc.
 			format is the wave format
 		*)
-		PROCEDURE OpenPlayChannel*(VAR channel : Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : WORD);
+		PROCEDURE OpenPlayChannel*(VAR channel : Channel; samplingRate, samplingResolution, nofSubChannels, format : SIGNED32; VAR res : INTEGER);
 		END OpenPlayChannel;
 
 (** Recording *)
@@ -256,7 +256,7 @@ TYPE
 			nofSubChannes = 1 for Mono, 2 for Stereo, 4 for Quadro etc.
 			format is the wave format
 		*)
-		PROCEDURE OpenRecordChannel*(VAR channel : Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : WORD);
+		PROCEDURE OpenRecordChannel*(VAR channel : Channel; samplingRate, samplingResolution, nofSubChannels, format : SIGNED32; VAR res : INTEGER);
 		END OpenRecordChannel;
 
 (** Mixer *)
@@ -276,7 +276,7 @@ TYPE
 				Drivers may ignore channel 0 or 1 but need to return a generic "Channel" object for these channel numbers
 			GetMixerChannel returns NIL if the channelNr is invalid
 		*)
-		PROCEDURE GetMixerChannel*(channelNr : LONGINT; VAR channel : MixerChannel);
+		PROCEDURE GetMixerChannel*(channelNr : SIGNED32; VAR channel : MixerChannel);
 		BEGIN
 			IF channelNr = 0 THEN channel := masterOut
 			ELSIF channelNr = 1 THEN channel := masterIn
@@ -285,7 +285,7 @@ TYPE
 		END GetMixerChannel;
 
 		(** Returns the number of mixer channels available, at least 2 *)
-		PROCEDURE GetNofMixerChannels*() : LONGINT;
+		PROCEDURE GetNofMixerChannels*() : SIGNED32;
 		BEGIN
 			RETURN 2
 		END GetNofMixerChannels;

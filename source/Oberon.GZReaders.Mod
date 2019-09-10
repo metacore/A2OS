@@ -24,9 +24,9 @@ MODULE GZReaders IN Oberon;	(** Stefan Walthert  **)
 		(** structure for reading from a .gz file **)
 		Reader* = RECORD
 			file-: Files.File;	(** underlying Oberon file **)
-			res-: LONGINT;	(** current stream state **)
+			res-: SIGNED32;	(** current stream state **)
 			transparent: BOOLEAN;	(* set if not a .gz file *)
-			pos: LONGINT;	(* logical position in decompressed output stream *)
+			pos: SIGNED32;	(* logical position in decompressed output stream *)
 			zr: ZlibReaders.Reader;
 		END;
 
@@ -36,7 +36,7 @@ MODULE GZReaders IN Oberon;	(** Stefan Walthert  **)
 		CONST
 			headCRC = 2; extraField = 4; origName = 8; comment = 10H; reserved = 20H;
 		VAR
-			ch, method, flags: CHAR; len: INTEGER;
+			ch, method, flags: CHAR; len: SIGNED16;
 	BEGIN
 		Files.Read(fr, ch);
 		IF fr.eof THEN
@@ -97,7 +97,7 @@ MODULE GZReaders IN Oberon;	(** Stefan Walthert  **)
 	PROCEDURE Close* (VAR r: Reader);
 	VAR
 		fr: Files.Rider;
-		crc32: LONGINT;
+		crc32: SIGNED32;
 	BEGIN
 		IF r.transparent THEN
 			r.res := Ok
@@ -118,8 +118,8 @@ MODULE GZReaders IN Oberon;	(** Stefan Walthert  **)
 	END Close;
 
 	(** read specified number of bytes into buffer and return number of bytes actually read **)
-	PROCEDURE ReadBytes* (VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR read: LONGINT);
-		VAR i: LONGINT; fr: Files.Rider; bufp: POINTER TO ARRAY OF CHAR;
+	PROCEDURE ReadBytes* (VAR r: Reader; VAR buf: ARRAY OF CHAR; offset, len: SIGNED32; VAR read: SIGNED32);
+		VAR i: SIGNED32; fr: Files.Rider; bufp: POINTER TO ARRAY OF CHAR;
 	BEGIN
 		IF r.file = NIL THEN
 			r.res := StreamError; read := 0
@@ -152,8 +152,8 @@ MODULE GZReaders IN Oberon;	(** Stefan Walthert  **)
 	END Read;
 
 	(** get position of reader within uncompressed output stream **)
-	PROCEDURE Pos* (VAR r: Reader): LONGINT;
-		VAR pos: LONGINT;
+	PROCEDURE Pos* (VAR r: Reader): SIGNED32;
+		VAR pos: SIGNED32;
 	BEGIN
 		IF r.file = NIL THEN
 			r.res := StreamError; pos := 0

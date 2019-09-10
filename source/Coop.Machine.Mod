@@ -44,7 +44,7 @@ CONST
 
 TYPE
 	Vendor* = ARRAY 13 OF CHAR;
-	IDMap* = ARRAY 16 OF SHORTINT;
+	IDMap* = ARRAY 16 OF SIGNED8;
 
 	Range* = RECORD
 		adr*: ADDRESS; size*: SIZE;
@@ -65,7 +65,7 @@ TYPE
 		high*: ADDRESS;	(* next virtual address after stack *)	(* exported for Objects only *)
 	END;
 
-	Address32* = LONGINT;
+	Address32* = SIGNED32;
 
 VAR
 
@@ -84,8 +84,8 @@ VAR
 	version*: ARRAY 64 OF CHAR;   (** Aos version *)
 	features*,features2*: SET;   (** processor features *)
 	fcr*: SET;   (** default floating-point control register value (default rounding mode is towards -infinity, for ENTIER) *)
-	mhz*: HUGEINT;   (** clock rate of GetTimer() in MHz, or 0 if not known *)
-	boottime-: HUGEINT; (** in timer units *)
+	mhz*: SIGNED64;   (** clock rate of GetTimer() in MHz, or 0 if not known *)
+	boottime-: SIGNED64; (** in timer units *)
 
 VAR
 	lock-: ARRAY MaxLocks OF CHAR;  (* not implemented as SET because of shared access *)
@@ -96,8 +96,8 @@ VAR
 
 	(** Convert a string to an integer.  Parameter i specifies where in the string scanning should begin (usually 0 in the first call).  Scanning stops at the first non-valid character, and i returns the updated position.  Parameter s is the string to be scanned.  The value is returned as result, or 0 if not valid.  Syntax: number = ["-"] digit {digit} ["H" | "h"] .  digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" .  If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
 
-	PROCEDURE StrToInt*( VAR i: SIZE;  CONST s: ARRAY OF CHAR ): LONGINT;
-	VAR vd, vh, sgn, d: LONGINT;  hex: BOOLEAN;
+	PROCEDURE StrToInt*( VAR i: SIZE;  CONST s: ARRAY OF CHAR ): SIGNED32;
+	VAR vd, vh, sgn, d: SIGNED32;  hex: BOOLEAN;
 	BEGIN
 		vd := 0;  vh := 0;  hex := FALSE;
 		IF s[i] = "-" THEN sgn := -1;  INC( i ) ELSE sgn := 1 END;
@@ -149,7 +149,7 @@ PROCEDURE UnmapPhysical*(virtAdr: ADDRESS; size: SIZE);
 END UnmapPhysical;
 
 (** Translate a virtual address range to num ranges of physical address. num returns 0 on error. *)
-PROCEDURE TranslateVirtual*(virtAdr: ADDRESS; size: SIZE;  VAR num: LONGINT; VAR physAdr: ARRAY OF Range);
+PROCEDURE TranslateVirtual*(virtAdr: ADDRESS; size: SIZE;  VAR num: SIGNED32; VAR physAdr: ARRAY OF Range);
 CONST PS = 4096;
 VAR ofs, phys1: ADDRESS; size1: SIZE;
 BEGIN
@@ -169,13 +169,13 @@ BEGIN
 END TranslateVirtual;
 
 (** Get parameter values from Init string. If n = 0, return val = ASH(bx, 16) + ax, and if n = 1, return val = ASH(dx, 16) + cx, where ax, bx, cx, dx are the register values after the OBL boot loader or noboot.exe have executed the 16-bit x86 code in the Init string. *)
-PROCEDURE GetInit* (n: LONGINT; VAR val: LONGINT);
+PROCEDURE GetInit* (n: SIGNED32; VAR val: SIGNED32);
 BEGIN Environment.GetInit (n, val);
 END GetInit;
 
 (** Fill "size" bytes at "destAdr" with "filler".  "size" must be multiple of 4. *)
 
-	PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: SIGNED32);
 	CODE
 	#IF I386 THEN
 		#IF COOP THEN
@@ -255,7 +255,7 @@ END GetInit;
 
 (** CPU identification. *)
 
-	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: LONGINT;  VAR features1,features2: SET );
+	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: SIGNED32;  VAR features1,features2: SET );
 	CODE
 	#IF I386 THEN
 		#IF COOP THEN
@@ -350,7 +350,7 @@ BEGIN HALT (1234);
 END Sti;
 
 (* Dan: from new Machine *)
-PROCEDURE -GetTimer*(): HUGEINT;
+PROCEDURE -GetTimer*(): SIGNED64;
 CODE
 #IF I386 THEN
 	RDTSC	; set EDX:EAX
@@ -428,7 +428,7 @@ CONST
 	SSE42Flag =20;
 	SSE5Flag = 11;
 	AVXFlag = 28;
-VAR vendor: Vendor; ver: LONGINT;
+VAR vendor: Vendor; ver: SIGNED32;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	CPUID(vendor, ver, features,features2);
 	MMXSupport := MMXFlag IN features;
@@ -453,13 +453,13 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END InitApplicationProcessor;
 
 (** Acquire a spin-lock. *)
-	PROCEDURE Acquire*( level: LONGINT );   (* non reentrant lock  (non reentrance "ensured" by ASSERT statement ), CriticalSections are reentrant *)
+	PROCEDURE Acquire*( level: SIGNED32 );   (* non reentrant lock  (non reentrance "ensured" by ASSERT statement ), CriticalSections are reentrant *)
 	BEGIN
 		Mutexes.Acquire (mutex[level]);
 	END Acquire;
 
 (** Release a spin-lock. *)
-	PROCEDURE Release*( level: LONGINT );   (* release lock *)
+	PROCEDURE Release*( level: SIGNED32 );   (* release lock *)
 	BEGIN
 		Mutexes.Release (mutex[level]);
 	END Release;
@@ -483,7 +483,7 @@ END PhysicalAdr;
 
 (** Atomic INC(x). *)
 
-	PROCEDURE -AtomicInc*( VAR x: LONGINT );
+	PROCEDURE -AtomicInc*( VAR x: SIGNED32 );
 	CODE
 	#IF I386 THEN
 		POP	EAX
@@ -500,7 +500,7 @@ END PhysicalAdr;
 
 (** Atomic DEC(x). *)
 
-	PROCEDURE -AtomicDec*( VAR x: LONGINT );
+	PROCEDURE -AtomicDec*( VAR x: SIGNED32 );
 	CODE
 	#IF I386 THEN
 		POP	EAX
@@ -517,7 +517,7 @@ END PhysicalAdr;
 
 (** Atomic INC(x, y). *)
 
-	PROCEDURE -AtomicAdd*( VAR x: LONGINT;  y: LONGINT );
+	PROCEDURE -AtomicAdd*( VAR x: SIGNED32;  y: SIGNED32 );
 	CODE
 	#IF I386 THEN
 		POP	EBX
@@ -553,7 +553,7 @@ END PhysicalAdr;
 
 (* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
 
-	PROCEDURE -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
+	PROCEDURE -AtomicCAS* (VAR x: SIGNED32; old, new: SIGNED32): SIGNED32;
 	CODE
 	#IF I386 THEN
 		POP EBX		; new
@@ -577,7 +577,7 @@ BEGIN
 END NumberOfProcessors;
 
 (* function for changing byte order *)
-PROCEDURE ChangeByteOrder* (n: LONGINT): LONGINT;
+PROCEDURE ChangeByteOrder* (n: SIGNED32): SIGNED32;
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+n]				; load n in eax
@@ -592,39 +592,39 @@ END ChangeByteOrder;
 
 #IF I386 THEN
 
-	PROCEDURE -GetEAX*(): LONGINT;
+	PROCEDURE -GetEAX*(): SIGNED32;
 	CODE
 	END GetEAX;
 
-	PROCEDURE -GetECX*(): LONGINT;
+	PROCEDURE -GetECX*(): SIGNED32;
 	CODE MOV EAX,ECX
 	END GetECX;
 
-	PROCEDURE -SetEAX*(n: LONGINT);
+	PROCEDURE -SetEAX*(n: SIGNED32);
 	CODE POP EAX
 	END SetEAX;
 
-	PROCEDURE -SetEBX*(n: LONGINT);
+	PROCEDURE -SetEBX*(n: SIGNED32);
 	CODE POP EBX
 	END SetEBX;
 
-	PROCEDURE -SetECX*(n: LONGINT);
+	PROCEDURE -SetECX*(n: SIGNED32);
 	CODE POP ECX
 	END SetECX;
 
-	PROCEDURE -SetEDX*(n: LONGINT);
+	PROCEDURE -SetEDX*(n: SIGNED32);
 	CODE POP EDX
 	END SetEDX;
 
-	PROCEDURE -SetESI*(n: LONGINT);
+	PROCEDURE -SetESI*(n: SIGNED32);
 	CODE POP ESI
 	END SetESI;
 
-	PROCEDURE -SetEDI*(n: LONGINT);
+	PROCEDURE -SetEDI*(n: SIGNED32);
 	CODE POP EDI
 	END SetEDI;
 
-	PROCEDURE Portin8*(port: LONGINT; VAR val: CHAR);
+	PROCEDURE Portin8*(port: SIGNED32; VAR val: CHAR);
 	CODE
 		MOV EDX, [EBP+port]
 		IN AL, DX
@@ -632,7 +632,7 @@ END ChangeByteOrder;
 		MOV [EBX], AL
 	END Portin8;
 
-	PROCEDURE Portin16*(port: LONGINT; VAR val: INTEGER);
+	PROCEDURE Portin16*(port: SIGNED32; VAR val: SIGNED16);
 	CODE
 		MOV EDX, [EBP+port]
 		IN AX, DX
@@ -640,7 +640,7 @@ END ChangeByteOrder;
 		MOV [EBX], AX
 	END Portin16;
 
-	PROCEDURE Portin32*(port: LONGINT; VAR val: LONGINT);
+	PROCEDURE Portin32*(port: SIGNED32; VAR val: SIGNED32);
 	CODE
 		MOV EDX, [EBP+port]
 		IN EAX, DX
@@ -648,21 +648,21 @@ END ChangeByteOrder;
 		MOV [EBX], EAX
 	END Portin32;
 
-	PROCEDURE Portout8*(port: LONGINT; val: CHAR);
+	PROCEDURE Portout8*(port: SIGNED32; val: CHAR);
 	CODE
 		MOV AL, [EBP+val]
 		MOV EDX, [EBP+port]
 		OUT DX, AL
 	END Portout8;
 
-	PROCEDURE Portout16*(port: LONGINT; val: INTEGER);
+	PROCEDURE Portout16*(port: SIGNED32; val: SIGNED16);
 	CODE
 		MOV AX, [EBP+val]
 		MOV EDX, [EBP+port]
 		OUT DX, AX
 	END Portout16;
 
-	PROCEDURE Portout32*(port: LONGINT; val: LONGINT);
+	PROCEDURE Portout32*(port: SIGNED32; val: SIGNED32);
 	CODE
 		MOV EAX, [EBP+val]
 		MOV EDX, [EBP+port]
@@ -671,39 +671,39 @@ END ChangeByteOrder;
 
 #ELSIF AMD64 THEN
 
-	PROCEDURE -GetRAX*(): HUGEINT;
+	PROCEDURE -GetRAX*(): SIGNED64;
 	CODE
 	END GetRAX;
 
-	PROCEDURE -GetRCX*(): HUGEINT;
+	PROCEDURE -GetRCX*(): SIGNED64;
 	CODE MOV RAX, RCX
 	END GetRCX;
 
-	PROCEDURE -SetRAX*(n: HUGEINT);
+	PROCEDURE -SetRAX*(n: SIGNED64);
 	CODE POP RAX
 	END SetRAX;
 
-	PROCEDURE -SetRBX*(n: HUGEINT);
+	PROCEDURE -SetRBX*(n: SIGNED64);
 	CODE POP RBX
 	END SetRBX;
 
-	PROCEDURE -SetRCX*(n: HUGEINT);
+	PROCEDURE -SetRCX*(n: SIGNED64);
 	CODE POP RCX
 	END SetRCX;
 
-	PROCEDURE -SetRDX*(n: HUGEINT);
+	PROCEDURE -SetRDX*(n: SIGNED64);
 	CODE POP RDX
 	END SetRDX;
 
-	PROCEDURE -SetRSI*(n: HUGEINT);
+	PROCEDURE -SetRSI*(n: SIGNED64);
 	CODE POP RSI
 	END SetRSI;
 
-	PROCEDURE -SetRDI*(n: HUGEINT);
+	PROCEDURE -SetRDI*(n: SIGNED64);
 	CODE POP RDI
 	END SetRDI;
 
-	PROCEDURE Portin8*(port: LONGINT; VAR val: CHAR);
+	PROCEDURE Portin8*(port: SIGNED32; VAR val: CHAR);
 	CODE
 		MOV EDX, [RBP+port]
 		IN AL, DX
@@ -711,7 +711,7 @@ END ChangeByteOrder;
 		MOV [RCX], AL
 	END Portin8;
 
-	PROCEDURE Portin16*(port: LONGINT; VAR val: INTEGER);
+	PROCEDURE Portin16*(port: SIGNED32; VAR val: SIGNED16);
 	CODE
 		MOV EDX, [RBP+port]
 		IN AX, DX
@@ -719,7 +719,7 @@ END ChangeByteOrder;
 		MOV [RCX], AX
 	END Portin16;
 
-	PROCEDURE Portin32*(port: LONGINT; VAR val: LONGINT);
+	PROCEDURE Portin32*(port: SIGNED32; VAR val: SIGNED32);
 	CODE
 		MOV EDX, [RBP+port]
 		IN EAX, DX
@@ -727,21 +727,21 @@ END ChangeByteOrder;
 		MOV [RCX], EAX
 	END Portin32;
 
-	PROCEDURE Portout8*(port: LONGINT; val: CHAR);
+	PROCEDURE Portout8*(port: SIGNED32; val: CHAR);
 	CODE
 		MOV AL, [RBP+val]
 		MOV EDX, [RBP+port]
 		OUT DX, AL
 	END Portout8;
 
-	PROCEDURE Portout16*(port: LONGINT; val: INTEGER);
+	PROCEDURE Portout16*(port: SIGNED32; val: SIGNED16);
 	CODE
 		MOV AX, [RBP+val]
 		MOV EDX, [RBP+port]
 		OUT DX, AX
 	END Portout16;
 
-	PROCEDURE Portout32*(port: LONGINT; val: LONGINT);
+	PROCEDURE Portout32*(port: SIGNED32; val: SIGNED32);
 	CODE
 		MOV EAX, [RBP+val]
 		MOV EDX, [RBP+port]
@@ -767,7 +767,7 @@ CODE
 END Wait;
 
 (** Read a byte from the non-volatile setup memory. *)
-PROCEDURE GetNVByte* (ofs: LONGINT): CHAR;
+PROCEDURE GetNVByte* (ofs: SIGNED32): CHAR;
 VAR c: CHAR;
 BEGIN
 	Portout8 (70H, CHR(ofs)); Wait; Portin8(71H, c);
@@ -775,7 +775,7 @@ BEGIN
 END GetNVByte;
 
 (** Write a byte to the non-volatile setup memory. *)
-PROCEDURE PutNVByte* (ofs: LONGINT; val: CHAR);
+PROCEDURE PutNVByte* (ofs: SIGNED32; val: CHAR);
 BEGIN
 	Portout8 (70H, CHR(ofs)); Wait; Portout8 (71H, val)
 END PutNVByte;

@@ -30,7 +30,7 @@ IMPORT antsCommands, aM := antsMessages, vyRandom, vyName, vyBase, Objects, vyGr
 
 TYPE
 
-	Map* = POINTER TO ARRAY OF LONGINT;
+	Map* = POINTER TO ARRAY OF SIGNED32;
 	Usage* = POINTER TO ARRAY OF BOOLEAN;
 
 	MapQueue* = POINTER TO MapQueueDesc;
@@ -41,35 +41,35 @@ TYPE
 		coal: BOOLEAN
 	END;
 
-	Mapper* = PROCEDURE ( VAR A: ARRAY OF LONGINT );
-	Matrix* = POINTER TO ARRAY OF ARRAY OF LONGREAL;
-	Vector* = POINTER TO ARRAY OF LONGREAL;
+	Mapper* = PROCEDURE ( VAR A: ARRAY OF SIGNED32 );
+	Matrix* = POINTER TO ARRAY OF ARRAY OF FLOAT64;
+	Vector* = POINTER TO ARRAY OF FLOAT64;
 
 	Chain = POINTER TO ChainDesc;
 	ChainDesc = RECORD (vyBase.ObjDesc)
 		backwards: BOOLEAN;
 		q: MapQueue;
-		qlen: LONGINT;
+		qlen: SIGNED32;
 		m: Mapper;
 		A, cA: Matrix;
-		dim: LONGINT;
+		dim: SIGNED32;
 		ran: Vector
 	END;
 
 	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
 		c: Chain;
-		type: INTEGER
+		type: SIGNED16
 	END;
 
 CONST
 	mappertype = 1;  matrixtype = 2;
 
 VAR
-	cur: vyBase.Object;  templ: tLayer;  globalCount: LONGINT;
+	cur: vyBase.Object;  templ: tLayer;  globalCount: SIGNED32;
 
 	PROCEDURE StoreVector( VAR R: Files.Rider;  VAR V: Vector );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		IF V = NIL THEN Files.WriteLInt( R, 0 );  RETURN END;
 		Files.WriteLInt( R, LEN( V ) );
@@ -77,7 +77,7 @@ VAR
 	END StoreVector;
 
 	PROCEDURE LoadVector( VAR R: Files.Rider;  VAR V: Vector );
-	VAR i, w: LONGINT;
+	VAR i, w: SIGNED32;
 	BEGIN
 		Files.ReadLInt( R, w );
 		IF w = 0 THEN V := NIL;  RETURN END;
@@ -86,7 +86,7 @@ VAR
 	END LoadVector;
 
 	PROCEDURE StoreMatrix( VAR R: Files.Rider;  VAR M: Matrix );
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 	BEGIN
 		IF M = NIL THEN Files.WriteLInt( R, 0 );  Files.WriteLInt( R, 0 )
 		ELSE
@@ -98,7 +98,7 @@ VAR
 	END StoreMatrix;
 
 	PROCEDURE LoadMatrix( VAR R: Files.Rider;  VAR M: Matrix );
-	VAR w, h, i, j: LONGINT;
+	VAR w, h, i, j: SIGNED32;
 	BEGIN
 		Files.ReadLInt( R, h );  Files.ReadLInt( R, w );
 		IF (h = 0) OR (w = 0) THEN M := NIL;  RETURN END;
@@ -109,7 +109,7 @@ VAR
 	END LoadMatrix;
 
 	PROCEDURE StoreMap( VAR R: Files.Rider;  m: Map );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		IF m = NIL THEN Files.WriteLInt( R, 0 )
 		ELSE
@@ -119,7 +119,7 @@ VAR
 	END StoreMap;
 
 	PROCEDURE LoadMap( VAR R: Files.Rider;  VAR m: Map );
-	VAR len, i: LONGINT;
+	VAR len, i: SIGNED32;
 	BEGIN
 		Files.ReadLInt( R, len );
 		IF len = 0 THEN m := NIL
@@ -130,7 +130,7 @@ VAR
 	END LoadMap;
 
 	PROCEDURE StoreUsage( VAR R: Files.Rider;  m: Usage );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		IF m = NIL THEN Files.WriteLInt( R, 0 )
 		ELSE
@@ -140,7 +140,7 @@ VAR
 	END StoreUsage;
 
 	PROCEDURE LoadUsage( VAR R: Files.Rider;  VAR m: Usage );
-	VAR len, i: LONGINT;
+	VAR len, i: SIGNED32;
 	BEGIN
 		Files.ReadLInt( R, len );
 		IF len = 0 THEN m := NIL
@@ -160,7 +160,7 @@ VAR
 	END StoreMapQueue;
 
 	PROCEDURE LoadMapQueue( VAR R: Files.Rider;  VAR q: MapQueue );
-	VAR ver, ident: INTEGER;  m: MapQueue;
+	VAR ver, ident: SIGNED16;  m: MapQueue;
 	BEGIN
 		Files.ReadInt( R, ver );  Files.ReadInt( R, ident );
 		WHILE (ident # 0) DO
@@ -182,7 +182,7 @@ VAR
 	END StoreMapper;
 
 	PROCEDURE LoadMapper( VAR R: Files.Rider;  VAR m: Mapper );
-	VAR type: INTEGER;
+	VAR type: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, type );
 		IF type = 1 THEN m := DefaultMapper
@@ -198,14 +198,14 @@ VAR
 	END StoreChain;
 
 	PROCEDURE LoadChain( VAR R: Files.Rider;  VAR c: Chain );
-	VAR ver: INTEGER;
+	VAR ver: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, ver );  LoadMapQueue( R, c.q );  Files.ReadLInt( R, c.qlen );  LoadMapper( R, c.m );
 		LoadMatrix( R, c.A );  LoadMatrix( R, c.cA );  Files.ReadLInt( R, c.dim );  LoadVector( R, c.ran )
 	END LoadChain;
 
-	PROCEDURE DefaultMapper( VAR m: ARRAY OF LONGINT );
-	VAR c: Chain;  ran: LONGREAL;  A, cA: Matrix;  i, j: LONGINT;  dim: LONGINT;
+	PROCEDURE DefaultMapper( VAR m: ARRAY OF SIGNED32 );
+	VAR c: Chain;  ran: FLOAT64;  A, cA: Matrix;  i, j: SIGNED32;  dim: SIGNED32;
 	BEGIN
 		c := cur( Chain );  A := c.A;  cA := c.cA;  dim := c.dim;
 
@@ -217,8 +217,8 @@ VAR
 		INC( globalCount )
 	END DefaultMapper;
 
-	PROCEDURE OneRMapper( VAR m: ARRAY OF LONGINT );
-	VAR c: Chain;  ran: LONGREAL;  A, cA: Matrix;  i, j: LONGINT;  dim: LONGINT;
+	PROCEDURE OneRMapper( VAR m: ARRAY OF SIGNED32 );
+	VAR c: Chain;  ran: FLOAT64;  A, cA: Matrix;  i, j: SIGNED32;  dim: SIGNED32;
 	BEGIN
 		c := cur( Chain );  A := c.A;  cA := c.cA;  dim := c.dim;  ran := vyRandom.Uniform();
 		FOR i := 0 TO dim - 1 DO
@@ -231,9 +231,9 @@ VAR
 		INC( globalCount )
 	END OneRMapper;
 
-	PROCEDURE Count( VAR m: ARRAY OF LONGINT;  dim: LONGINT ): LONGINT;
+	PROCEDURE Count( VAR m: ARRAY OF SIGNED32;  dim: SIGNED32 ): SIGNED32;
 	VAR used: ARRAY 1024 OF BOOLEAN;
-		count, i: LONGINT;
+		count, i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO dim - 1 DO used[i] := FALSE END;
 		FOR i := 0 TO dim - 1 DO used[m[i]] := TRUE END;
@@ -243,14 +243,14 @@ VAR
 		RETURN count
 	END Count;
 
-	PROCEDURE Copy( VAR from, to: ARRAY OF LONGINT;  dim: LONGINT );
-	VAR i: LONGINT;
+	PROCEDURE Copy( VAR from, to: ARRAY OF SIGNED32;  dim: SIGNED32 );
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO dim - 1 DO to[i] := from[i] END
 	END Copy;
 
-	PROCEDURE ItApply( VAR m, n: ARRAY OF LONGINT;  dim: LONGINT;  count: LONGINT );
-	VAR icount, i: LONGINT;
+	PROCEDURE ItApply( VAR m, n: ARRAY OF SIGNED32;  dim: SIGNED32;  count: SIGNED32 );
+	VAR icount, i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO dim - 1 DO n[i] := m[n[i]] END;
 		icount := Count( n, dim );  aM.dSI( "Count is", icount );
@@ -258,9 +258,9 @@ VAR
 		INC( globalCount )
 	END ItApply;
 
-	PROCEDURE MapperIt( VAR m: ARRAY OF LONGINT );
-	VAR c: Chain;  ran: LONGREAL;  A, cA: Matrix;  i, j: LONGINT;  dim: LONGINT;
-		n: POINTER TO ARRAY OF LONGINT;
+	PROCEDURE MapperIt( VAR m: ARRAY OF SIGNED32 );
+	VAR c: Chain;  ran: FLOAT64;  A, cA: Matrix;  i, j: SIGNED32;  dim: SIGNED32;
+		n: POINTER TO ARRAY OF SIGNED32;
 	BEGIN
 		c := cur( Chain );  A := c.A;  cA := c.cA;  dim := c.dim;
 		FOR i := 0 TO dim - 1 DO
@@ -271,8 +271,8 @@ VAR
 		NEW( n, dim );  Copy( m, n^, dim );  ItApply( m, n^, dim, Count( m, dim ) );  Copy( n^, m, dim )
 	END MapperIt;
 
-	PROCEDURE PaintPoint( dim: LONGINT;  at: LONGINT;  q: MapQueue );
-	VAR i: LONGINT;  x, y: INTEGER;
+	PROCEDURE PaintPoint( dim: SIGNED32;  at: SIGNED32;  q: MapQueue );
+	VAR i: SIGNED32;  x, y: SIGNED16;
 	BEGIN
 		vyGraphBase.SetForeColor( templ.style.fcol );
 		FOR i := 0 TO dim - 1 DO
@@ -284,8 +284,8 @@ VAR
 		END
 	END PaintPoint;
 
-	PROCEDURE PaintPoint2( dim: LONGINT;  at: LONGINT;  q: MapQueue );
-	VAR i: LONGINT;  x, y: INTEGER;
+	PROCEDURE PaintPoint2( dim: SIGNED32;  at: SIGNED32;  q: MapQueue );
+	VAR i: SIGNED32;  x, y: SIGNED16;
 	BEGIN
 		vyGraphBase.SetForeColor( templ.style.fcol );
 		FOR i := 0 TO dim - 1 DO
@@ -297,8 +297,8 @@ VAR
 		END
 	END PaintPoint2;
 
-	PROCEDURE PaintMap( q: MapQueue;  at: LONGINT );
-	VAR i: LONGINT;
+	PROCEDURE PaintMap( q: MapQueue;  at: SIGNED32 );
+	VAR i: SIGNED32;
 	BEGIN
 		vyGraphBase.SetForeColor( templ.style.fillcol );
 		FOR i := 0 TO LEN( q.m ) - 1 DO
@@ -311,7 +311,7 @@ VAR
 	END PaintMap;
 
 	PROCEDURE PaintChain( c: Chain );
-	VAR at: LONGINT;  q: MapQueue;
+	VAR at: SIGNED32;  q: MapQueue;
 	BEGIN
 		IF c.backwards THEN at := -c.qlen;  ELSE at := 0 END;
 		q := c.q;
@@ -320,7 +320,7 @@ VAR
 	END PaintChain;
 
 	PROCEDURE PaintMatrix( c: Chain );
-	VAR x, y: INTEGER;  i, j: INTEGER;  q: MapQueue;
+	VAR x, y: SIGNED16;  i, j: SIGNED16;  q: MapQueue;
 	BEGIN
 		IF c.backwards THEN q := c.q
 		ELSE
@@ -375,7 +375,7 @@ VAR
 	END Recall;
 
 	PROCEDURE HandleFileMsg( obj: tLayer;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 
 	BEGIN
 		IF msg.id = Objects.load THEN
@@ -533,8 +533,8 @@ VAR
 		END
 	END SetMapper;
 
-	PROCEDURE NewQueue( dim: LONGINT ): MapQueue;
-	VAR q: MapQueue;  i: LONGINT;
+	PROCEDURE NewQueue( dim: SIGNED32 ): MapQueue;
+	VAR q: MapQueue;  i: SIGNED32;
 	BEGIN
 		NEW( q );  NEW( q.m, dim );  NEW( q.u, dim );
 		FOR i := 0 TO dim - 1 DO q.u[i] := TRUE END;
@@ -542,7 +542,7 @@ VAR
 	END NewQueue;
 
 	PROCEDURE Init*;
-	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  dim: LONGINT;  A, cA: Matrix;  c: Chain;  i, j: LONGINT;  sum: LONGREAL;
+	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  dim: SIGNED32;  A, cA: Matrix;  c: Chain;  i, j: SIGNED32;  sum: FLOAT64;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=OBJ [dim=INT]" );
 		IF ~antsCommands.ExpectObjectFromKeyword( l, "name", obj ) THEN RETURN END;
@@ -591,7 +591,7 @@ VAR
 	END Init;
 
 	PROCEDURE Check*;
-	VAR l: antsCommands.tScanList;  c: Chain;  obj: vyBase.Object;  i, j: LONGINT;
+	VAR l: antsCommands.tScanList;  c: Chain;  obj: vyBase.Object;  i, j: SIGNED32;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=OBJ" );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) THEN
@@ -606,7 +606,7 @@ VAR
 	END Check;
 
 	PROCEDURE SetQUsage( first: MapQueue );
-	VAR q: MapQueue;  next: MapQueue;  dim: LONGINT;  i: LONGINT;  count: LONGINT;
+	VAR q: MapQueue;  next: MapQueue;  dim: SIGNED32;  i: SIGNED32;  count: SIGNED32;
 	BEGIN
 		ASSERT ( first # NIL );
 		q := first;  dim := LEN( q.m );  next := q.next;
@@ -665,15 +665,15 @@ VAR
 		END
 	END ApplyMapperForw;
 
-	PROCEDURE TimeSlice( time: LONGREAL );
-	VAR etime: LONGREAL;
+	PROCEDURE TimeSlice( time: FLOAT64 );
+	VAR etime: FLOAT64;
 	BEGIN
 		etime := time;  time := Oberon.Time();  etime := time + etime * Input.TimeUnit;
 		WHILE (time < etime) DO time := Oberon.Time() END
 	END TimeSlice;
 
 	PROCEDURE ApplyMapperR*;
-	VAR l: antsCommands.tScanList;  c: Chain;  obj: vyBase.Object;  time: LONGREAL;
+	VAR l: antsCommands.tScanList;  c: Chain;  obj: vyBase.Object;  time: FLOAT64;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=OBJ [>update|update=INT]" );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) THEN

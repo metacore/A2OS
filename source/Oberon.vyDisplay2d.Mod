@@ -67,7 +67,7 @@ TYPE
 	Real = vyBase.Real;  Coordinate = vyGraphBase.Coordinate;
 	Selection* = POINTER TO SelDesc;
 	SelDesc* = RECORD (Objects.ObjDesc)
-		x*, y*, w*, h*: LONGREAL
+		x*, y*, w*, h*: FLOAT64
 	END;
 
 	tCoordinate2d* = POINTER TO tCoordinate2dDesc;
@@ -80,18 +80,18 @@ TYPE
 
 	CoordRgnMessage* = RECORD  (* tell the coordinate its actual screen region *)
 	(CoordinateMessage)
-		X*, Y*, W*, H*: INTEGER
+		X*, Y*, W*, H*: SIGNED16
 	END;
 
 	CoordSetMessage* = RECORD (CoordinateMessage) END;   (* tell the coordinate to be the current *)
 
 	CoordZoomMessage* = RECORD (CoordinateMessage)
 		in*: BOOLEAN;
-		x*, y*, w*, h*: INTEGER
+		x*, y*, w*, h*: SIGNED16
 	END;
 	AdjustCoordMsg* = RECORD (CoordinateMessage) END;
 	ttt = RECORD
-		x, y, dx, dy: INTEGER;
+		x, y, dx, dy: SIGNED16;
 		c: tCoordinate2d
 	END;
 VAR
@@ -153,9 +153,9 @@ VAR
 		Gadgets.Update( c )
 	END ShiftCoordinate;
 
-	PROCEDURE GrowRectangleRL*( x, y, w, h: INTEGER;  VAR dx, dy: INTEGER );
+	PROCEDURE GrowRectangleRL*( x, y, w, h: SIGNED16;  VAR dx, dy: SIGNED16 );
 	(*vs 0.0a1  md  29.05.95 *)
-	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld: INTEGER;  oldm: INTEGER;
+	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld: SIGNED16;  oldm: SIGNED16;
 	BEGIN
 		(* antsToolbox.StartDisplayHelp("Hold buttons and zoom rect"); *)
 		vyGraphBase.GetDisplayMode( oldm );  vyGraphBase.SetDisplayMode( vyGraphBase.invert );
@@ -171,7 +171,7 @@ VAR
 		vyGraphBase.FrameRect( x, y, w, h );  dx := x1 - x0;  dy := y1 - y0;  vyGraphBase.SetDisplayMode( oldm )
 	END GrowRectangleRL;
 
-	PROCEDURE AdjustRect( VAR x, y, w, h: INTEGER );
+	PROCEDURE AdjustRect( VAR x, y, w, h: SIGNED16 );
 	BEGIN
 		IF w < 0 THEN x := x + w;  w := -w END;
 		IF h < 0 THEN y := y + h;  h := -h END
@@ -188,7 +188,7 @@ VAR
 		vyGraphBase.SetCoordinate( command.c.c2d );  vyGraphBase.ZoomOut();  vyBase.Update( command.c )
 	END zoomout;
 
-	PROCEDURE AdjustRectR( VAR x, y, w, h: LONGREAL );
+	PROCEDURE AdjustRectR( VAR x, y, w, h: FLOAT64 );
 	BEGIN
 		IF w < 0 THEN x := x + w;  w := -w END;
 		IF h < 0 THEN y := y + h;  h := -h END
@@ -210,7 +210,7 @@ VAR
 		passevent := TRUE
 	END selectlayer;
 
-	PROCEDURE MakeSel*( c: tCoordinate2d;  sel: Selection;  x, y, w, h: INTEGER );
+	PROCEDURE MakeSel*( c: tCoordinate2d;  sel: Selection;  x, y, w, h: SIGNED16 );
 	BEGIN
 		(* vyGraphBase.Global2Local(x,y); *)
 		vyGraphBase.SetCoordinate( c.c2d );  vyGraphBase.RectToRect2d( x, y, w, h, sel.x, sel.y, sel.w, sel.h );
@@ -218,7 +218,7 @@ VAR
 	END MakeSel;
 
 	PROCEDURE Select( c: tCoordinate2d;  VAR event: vyEvents.EventMsg );
-	VAR x0, y0, dx, dy: INTEGER;  l: antsCommandList.List;
+	VAR x0, y0, dx, dy: SIGNED16;  l: antsCommandList.List;
 
 	BEGIN
 		currentsel := c.sel;  passevent := FALSE;  l := antsCommandList.current;  x0 := event.x;  y0 := event.y;

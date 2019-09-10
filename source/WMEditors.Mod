@@ -27,15 +27,15 @@ CONST
 
 TYPE
 
-	SetStringProcedure = PROCEDURE {DELEGATE} (CONST string : ARRAY OF CHAR; position : LONGINT; VAR res : WORD);
+	SetStringProcedure = PROCEDURE {DELEGATE} (CONST string : ARRAY OF CHAR; position : SIGNED32; VAR res : INTEGER);
 
 	DropTarget = OBJECT(WMDropTarget.DropTarget)
 	VAR
 		originator : ANY;
 		setString : SetStringProcedure;
-		position : LONGINT;
+		position : SIGNED32;
 
-		PROCEDURE &Init(originator : ANY; setString : SetStringProcedure; position : LONGINT);
+		PROCEDURE &Init(originator : ANY; setString : SetStringProcedure; position : SIGNED32);
 		BEGIN
 			ASSERT(setString # NIL);
 			SELF.originator := originator;
@@ -43,7 +43,7 @@ TYPE
 			SELF.position := position;
 		END Init;
 
-		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : SIGNED32) : WMDropTarget.DropInterface;
 		VAR sdi : DropString;
 		BEGIN
 			IF (type = WMDropTarget.TypeString) THEN
@@ -59,9 +59,9 @@ TYPE
 	VAR
 		originator : ANY;
 		setString : SetStringProcedure;
-		position : LONGINT;
+		position : SIGNED32;
 
-		PROCEDURE &Init(originator : ANY; setString : SetStringProcedure; position : LONGINT);
+		PROCEDURE &Init(originator : ANY; setString : SetStringProcedure; position : SIGNED32);
 		BEGIN
 			ASSERT(setString # NIL);
 			SELF.originator := originator;
@@ -69,7 +69,7 @@ TYPE
 			SELF.position := position;
 		END Init;
 
-		PROCEDURE Set*(CONST string : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE Set*(CONST string : ARRAY OF CHAR; VAR res : INTEGER);
 		BEGIN
 			setString(string, position, res);
 		END Set;
@@ -100,7 +100,7 @@ TYPE
 	TextField* = OBJECT(WMStandardComponents.Panel)
 	VAR
 		type- : WMProperties.Int32Property;
-		typeI : LONGINT;
+		typeI : SIGNED32;
 
 		readOnly- : WMProperties.BooleanProperty;
 		readOnlyI : BOOLEAN;
@@ -126,7 +126,7 @@ TYPE
 		cursorIsVisible : BOOLEAN;
 		selecting, doubleClicking : BOOLEAN;
 		selectingCursorPos : SIZE;
-		interclick : LONGINT;
+		interclick : SIGNED32;
 
 		(* drag'n'drop *)
 		dragPossible : BOOLEAN;
@@ -303,7 +303,7 @@ TYPE
 		END SetAsString;
 
 		PROCEDURE LinkChanged*(sender, object : ANY);
-		VAR string : Types.String256; res : WORD; real: Types.Longreal; m: Models.Model;
+		VAR string : Types.String256; res : INTEGER; real: Types.Longreal; m: Models.Model;
 		BEGIN
 			IF (sender = model) & WMProperties.GetModel(model,m) THEN
 				m.GetGeneric(string, res);
@@ -315,7 +315,7 @@ TYPE
 		END LinkChanged;
 
 		PROCEDURE UpdateModel;
-		VAR string : Types.String256; res : WORD; str: Strings.String; m: Models.Model;
+		VAR string : Types.String256; res : INTEGER; str: Strings.String; m: Models.Model;
 		BEGIN
 			GetAsString(string.value);
 			IF WMProperties.GetModel(model,m) THEN
@@ -332,12 +332,12 @@ TYPE
 		END Changed;
 
 		(* Determine the cursor character position given coordinate x in the component coordinate system *)
-		PROCEDURE GetCursorPosition(x: SIZE) : LONGINT;
+		PROCEDURE GetCursorPosition(x: SIZE) : SIGNED32;
 		VAR
-			cursorPosition, code, i : LONGINT;
-			found : BOOLEAN; lastDistance : REAL;
+			cursorPosition, code, i : SIGNED32;
+			found : BOOLEAN; lastDistance : FLOAT32;
 			font : WMGraphics.Font;
-			g : WMGraphics.GlyphSpacings; gx : REAL;
+			g : WMGraphics.GlyphSpacings; gx : FLOAT32;
 		BEGIN
 			font := GetFont();
 			cursorPosition := 0;
@@ -364,8 +364,8 @@ TYPE
 		END GetCursorPosition;
 
 		(* Determine the cursor's x-coordinate of the current cursor position relative to the first characer *)
-		PROCEDURE GetCursorCoordinateX() : LONGINT;
-		VAR font : WMGraphics.Font; g : WMGraphics.GlyphSpacings; x : REAL; i, code : LONGINT;
+		PROCEDURE GetCursorCoordinateX() : SIGNED32;
+		VAR font : WMGraphics.Font; g : WMGraphics.GlyphSpacings; x : FLOAT32; i, code : SIGNED32;
 		BEGIN
 			font := GetFont();
 			x := 0.0;
@@ -387,14 +387,14 @@ TYPE
 		CONST CursorWidth = 2; BorderWidth = 1;
 		VAR
 			font : WMGraphics.Font; g : WMGraphics.GlyphSpacings;
-			x, y : SIZE; cursorX, selectionX0, selectionX1, tw, th: SIZE; code: LONGINT; width, height : SIZE;
+			x, y : SIZE; cursorX, selectionX0, selectionX1, tw, th: SIZE; code: SIGNED32; width, height : SIZE;
 			i: SIZE;
 			selectionIsValid : BOOLEAN;
-			halign: LONGINT;
-			TextBorder: LONGINT;
+			halign: SIGNED32;
+			TextBorder: SIGNED32;
 
 			PROCEDURE StringSize(VAR w,h: SIZE);
-			VAR code: LONGINT; i: SIZE;
+			VAR code: SIGNED32; i: SIZE;
 			BEGIN
 				w := 0; h := 0;
 				FOR i := 0 TO curLen-1 DO
@@ -413,7 +413,7 @@ TYPE
 			Draw^(canvas);
 			IF ~visible.Get() OR ~show THEN RETURN END;
 			IF ~readOnlyI THEN
-				WMGraphicUtilities.DrawBevel(canvas, GetClientRect(), BorderWidth, TRUE, LONGINT(0808080FFH), WMGraphics.ModeCopy)
+				WMGraphicUtilities.DrawBevel(canvas, GetClientRect(), BorderWidth, TRUE, SIGNED32(0808080FFH), WMGraphics.ModeCopy)
 			END;
 			font := GetFont();
 			canvas.SetColor(textColorI);
@@ -474,19 +474,19 @@ TYPE
 			IF selectionIsValid THEN
 				canvas.Fill(WMRectangles.MakeRect(selectionX0,  y - font.GetAscent() , selectionX1, y + font.GetDescent() ), 0FF66H, WMGraphics.ModeSrcOverDst);
 				(* for fontsize debugging purposes:
-				canvas.Fill(WMRectangles.MakeRect(selectionX0,  y , selectionX1, y+1), LONGINT(0FFFF00AAH), WMGraphics.ModeSrcOverDst);
-				canvas.Fill(WMRectangles.MakeRect(selectionX0,  y+th , selectionX1, y+th+1), LONGINT(0FFFF00AAH), WMGraphics.ModeSrcOverDst);
-				canvas.Fill(WMRectangles.MakeRect(selectionX0,  y+font.GetDescent() , selectionX1, y+font.GetDescent()+1), LONGINT(0FFFF00AAH), WMGraphics.ModeSrcOverDst);
-				canvas.Fill(WMRectangles.MakeRect(selectionX0,  y-font.GetAscent() , selectionX1, y-font.GetAscent()+1), LONGINT(0FFFF00AAH), WMGraphics.ModeSrcOverDst);
-				canvas.Fill(WMRectangles.MakeRect(selectionX0,  height-1-TextBorder , selectionX1, height-TextBorder), LONGINT(0FF0000AAH), WMGraphics.ModeSrcOverDst);
-				canvas.Fill(WMRectangles.MakeRect(selectionX0,  TextBorder , selectionX1, TextBorder+1), LONGINT(0FF0000AAH), WMGraphics.ModeSrcOverDst);
+				canvas.Fill(WMRectangles.MakeRect(selectionX0,  y , selectionX1, y+1), SIGNED32(0FFFF00AAH), WMGraphics.ModeSrcOverDst);
+				canvas.Fill(WMRectangles.MakeRect(selectionX0,  y+th , selectionX1, y+th+1), SIGNED32(0FFFF00AAH), WMGraphics.ModeSrcOverDst);
+				canvas.Fill(WMRectangles.MakeRect(selectionX0,  y+font.GetDescent() , selectionX1, y+font.GetDescent()+1), SIGNED32(0FFFF00AAH), WMGraphics.ModeSrcOverDst);
+				canvas.Fill(WMRectangles.MakeRect(selectionX0,  y-font.GetAscent() , selectionX1, y-font.GetAscent()+1), SIGNED32(0FFFF00AAH), WMGraphics.ModeSrcOverDst);
+				canvas.Fill(WMRectangles.MakeRect(selectionX0,  height-1-TextBorder , selectionX1, height-TextBorder), SIGNED32(0FF0000AAH), WMGraphics.ModeSrcOverDst);
+				canvas.Fill(WMRectangles.MakeRect(selectionX0,  TextBorder , selectionX1, TextBorder+1), SIGNED32(0FF0000AAH), WMGraphics.ModeSrcOverDst);
 				*)
 			END;
 			IF cursorIsVisible & ~readOnlyI THEN
-				canvas.Fill(WMRectangles.MakeRect(cursorX, y - th , cursorX + CursorWidth, y + font.GetDescent() ), LONGINT(0FF0000CCH), WMGraphics.ModeSrcOverDst);
+				canvas.Fill(WMRectangles.MakeRect(cursorX, y - th , cursorX + CursorWidth, y + font.GetDescent() ), SIGNED32(0FF0000CCH), WMGraphics.ModeSrcOverDst);
 			END;
 			IF changeDue THEN
-				canvas.Fill(WMRectangles.MakeRect(renderOffsetX,  y - font.GetAscent() , x, y + font.GetDescent() ), LONGINT(0FF000066H), WMGraphics.ModeSrcOverDst);
+				canvas.Fill(WMRectangles.MakeRect(renderOffsetX,  y - font.GetAscent() , x, y + font.GetDescent() ), SIGNED32(0FF000066H), WMGraphics.ModeSrcOverDst);
 			END;
 		END Draw;
 
@@ -524,14 +524,14 @@ TYPE
 		END IsAllowedString;
 
 		PROCEDURE IsValidUCS32String(CONST string : Texts.UCS32String) : BOOLEAN;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < LEN(string)) & (string[i] # 0) & (IsAllowedCharacter(string[i])) DO INC(i); END;
 			RETURN (i < LEN(string)) & (string[i] = 0);
 		END IsValidUCS32String;
 
-		PROCEDURE InsertChar(ch : LONGINT);
+		PROCEDURE InsertChar(ch : SIGNED32);
 		VAR i : SIZE;
 		BEGIN
 			IF IsAllowedCharacter(ch) THEN
@@ -554,7 +554,7 @@ TYPE
 		END InsertChar;
 
 		(** Notes: Does not call DeleteSelection, x should already be checked for validity *)
-		PROCEDURE InsertStringAt(CONST x : ARRAY OF CHAR; position : SIZE; VAR res : WORD);
+		PROCEDURE InsertStringAt(CONST x : ARRAY OF CHAR; position : SIZE; VAR res : INTEGER);
 		VAR length, i, j, idx : SIZE; changed, valid : BOOLEAN;
 		BEGIN
 			ASSERT(UTF8Strings.Valid(x));
@@ -832,7 +832,7 @@ TYPE
 		END SelectAll;
 
 		PROCEDURE Paste;
-		VAR text : ARRAY MaxStringSize OF CHAR; valid : BOOLEAN; ignore : WORD;
+		VAR text : ARRAY MaxStringSize OF CHAR; valid : BOOLEAN; ignore : INTEGER;
 		BEGIN
 			Texts.clipboard.AcquireRead;
 			IF (0 < Texts.clipboard.GetLength()) & (Texts.clipboard.GetLength() < MaxStringSize) THEN
@@ -901,14 +901,14 @@ TYPE
 					SetIMEInterface(ime);
 					ime.KeyEvent(ucs, flags, keySym)
 				ELSIF (0 <= ucs) & (ucs <= 255) THEN
-					InsertChar(ucs(LONGINT));
+					InsertChar(ucs(SIGNED32));
 				END;
 			END;
 			WMTextView.cursorBlinker.Show(SELF);
 		END KeyEvent;
 
 		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
-		VAR newCursorPosition: SIZE; oldInterclick : LONGINT;
+		VAR newCursorPosition: SIZE; oldInterclick : SIGNED32;
 		BEGIN
 			PointerDown^(x, y, keys);
 
@@ -969,7 +969,7 @@ TYPE
 		END PointerUp;
 
 		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
-		VAR posX : LONGINT; valid : BOOLEAN; start, end : SIZE;
+		VAR posX : SIGNED32; valid : BOOLEAN; start, end : SIZE;
 		BEGIN
 			IF dragPossible THEN
 				IF (ABS(x - lastX) > DragMinDistance) OR (ABS(y - lastY) > DragMinDistance) THEN dragPossible := FALSE; AutoStartDrag; END;
@@ -1030,7 +1030,7 @@ TYPE
 			ds : DropString;
 			itf : WMDropTarget.DropInterface;
 			targetText, temp : Texts.Text;
-			pos: SIZE; value : LONGINT; res : WORD;
+			pos: SIZE; value : SIGNED32; res : INTEGER;
 		BEGIN
 			IF (dragString = NIL) THEN RETURN; END;
 
@@ -1081,7 +1081,7 @@ TYPE
 		END DragWasAccepted;
 
 		PROCEDURE DragOver*(x, y : SIZE; dragInfo : WMWindowManager.DragInfo);
-		VAR pos : LONGINT; doInvalidate : BOOLEAN;
+		VAR pos : SIGNED32; doInvalidate : BOOLEAN;
 		BEGIN
 			IF takesFocus.Get() THEN
 				doInvalidate := FALSE;
@@ -1100,7 +1100,7 @@ TYPE
 		END DragOver;
 
 		PROCEDURE DragDropped*(x, y : SIZE; dragInfo : WMWindowManager.DragInfo);
-		VAR dt : DropTarget; pos : LONGINT;
+		VAR dt : DropTarget; pos : SIGNED32;
 		BEGIN
 			IF takesFocus.Get() THEN
 				pos := GetCursorPosition(x);
@@ -1113,7 +1113,7 @@ TYPE
 			END;
 		END DragDropped;
 
-		PROCEDURE SetDroppedString( CONST string : ARRAY OF CHAR; position : LONGINT; VAR res : WORD);
+		PROCEDURE SetDroppedString( CONST string : ARRAY OF CHAR; position : SIGNED32; VAR res : INTEGER);
 		BEGIN
 			Acquire;
 			ResetSelection;
@@ -1190,8 +1190,8 @@ TYPE
 			NEW(unitModel, PrototypeUnit, NIL, NIL); properties.Add(unitModel)
 		END Init;
 
-		PROCEDURE GetUnit(VAR u: LONGREAL): BOOLEAN;
-		VAR res: WORD; real: Types.Longreal; m: Models.Model;
+		PROCEDURE GetUnit(VAR u: FLOAT64): BOOLEAN;
+		VAR res: INTEGER; real: Types.Longreal; m: Models.Model;
 		BEGIN
 			IF WMProperties.GetModel(unitModel, m) THEN
 				m.GetGeneric(real, res);
@@ -1210,7 +1210,7 @@ TYPE
 		END RecacheProperties;
 
 		PROCEDURE LinkChanged*(sender, data : ANY);
-		VAR string : Types.String256; res : WORD; real: Types.Longreal; unit: LONGREAL; m: Models.Model;
+		VAR string : Types.String256; res : INTEGER; real: Types.Longreal; unit: FLOAT64; m: Models.Model;
 		BEGIN
 			IF (sender = model) OR (sender = unitModel) THEN
 				res := -1;
@@ -1235,7 +1235,7 @@ TYPE
 		END LinkChanged;
 
 		PROCEDURE UpdateModel;
-		VAR string : Types.String256; res : WORD; str: Strings.String; real: Types.Longreal; u: LONGREAL; m: Models.Model;
+		VAR string : Types.String256; res : INTEGER; str: Strings.String; real: Types.Longreal; u: FLOAT64; m: Models.Model;
 		BEGIN
 			GetAsString(string.value);
 			IF WMProperties.GetModel(model, m) & ~(m IS Models.String) THEN
@@ -1399,7 +1399,7 @@ TYPE
 		END PropertyChanged;
 
 		PROCEDURE LinkChanged*(sender, data : ANY);
-		VAR string : Types.String256; res : WORD; real: Types.Longreal; unit: LONGREAL; m: Models.Model;
+		VAR string : Types.String256; res : INTEGER; real: Types.Longreal; unit: FLOAT64; m: Models.Model;
 		BEGIN
 			LinkChanged^(sender, data);
 		END LinkChanged;
@@ -1518,7 +1518,7 @@ TYPE
 		END DeleteSelection;
 
 		PROCEDURE PasteToHostClipboard*;
-		VAR clipboard: Texts.UnicodeText; res : WORD;
+		VAR clipboard: Texts.UnicodeText; res : INTEGER;
 		BEGIN
 			text.AcquireWrite;
 			NEW(clipboard);

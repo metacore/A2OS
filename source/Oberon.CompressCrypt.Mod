@@ -4,7 +4,7 @@ Refer to the "General ETH Oberon System Source License" contract available at: h
 MODULE CompressCrypt IN Oberon; (** portable *)	(* ejz  *)
 	IMPORT Files, Strings, Compress;
 
-	PROCEDURE Decrypt(VAR Rin: Files.Rider; nIn: LONGINT; VAR Rout: Files.Rider; key: ARRAY OF CHAR; VAR res: INTEGER);
+	PROCEDURE Decrypt(VAR Rin: Files.Rider; nIn: SIGNED32; VAR Rout: Files.Rider; key: ARRAY OF CHAR; VAR res: SIGNED16);
 		VAR
 			i, n: SIZE;
 			ch: CHAR;
@@ -18,7 +18,7 @@ MODULE CompressCrypt IN Oberon; (** portable *)	(* ejz  *)
 		res := Compress.Done
 	END Decrypt;
 
-	PROCEDURE Encrypt(VAR Rin: Files.Rider; nIn: LONGINT; VAR Rout: Files.Rider; key: ARRAY OF CHAR; VAR res: INTEGER);
+	PROCEDURE Encrypt(VAR Rin: Files.Rider; nIn: SIGNED32; VAR Rout: Files.Rider; key: ARRAY OF CHAR; VAR res: SIGNED16);
 		VAR
 			i, n: SIZE;
 			ch: CHAR;

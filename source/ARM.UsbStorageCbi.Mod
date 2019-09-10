@@ -37,15 +37,15 @@ TYPE
 		 * @param timeout in milliseconds
 		 * @return transport status of command block
 		 *)
-		PROCEDURE  AcceptCommand(cmd : Usbdi.Buffer; cmdlen, timeout : LONGINT) : Usbdi.Status;
+		PROCEDURE  AcceptCommand(cmd : Usbdi.Buffer; cmdlen, timeout : SIGNED32) : Usbdi.Status;
 		BEGIN
 			ASSERT(LEN(cmd) >= cmdlen);
 			defaultPipe.SetTimeout(timeout);
 			RETURN device.Request(Usbdi.ToDevice + Usbdi.Class + Usbdi.Interface, 0, 0, interface.bInterfaceNumber, cmdlen, cmd);
 		END AcceptCommand;
 
-		PROCEDURE Reset*(timeout : LONGINT) : LONGINT;
-		VAR buffer, interruptData : Usbdi.BufferPtr; status : Usbdi.Status; i : LONGINT;
+		PROCEDURE Reset*(timeout : SIGNED32) : SIGNED32;
+		VAR buffer, interruptData : Usbdi.BufferPtr; status : Usbdi.Status; i : SIGNED32;
 		BEGIN
 			IF Debug.Trace & Debug.traceScRequests THEN KernelLog.String("UsbStorageCbi: Sending CB/I reset ControlTransfer"); KernelLog.Ln; END;
 			NEW(buffer, 12);
@@ -88,10 +88,10 @@ TYPE
 			RETURN Base.ResOk;
 		END Reset;
 
-		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : LONGINT; dir : SET;
-			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : LONGINT;
-		VAR status : Usbdi.Status;	 interruptData : Usbdi.BufferPtr; blockStatus : LONGINT;
-			b, c: Usbdi.BufferPtr; i: LONGINT;
+		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : SIGNED32; dir : SET;
+			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : SIGNED32; VAR tlen : SIGNED32; timeout : SIGNED32) : SIGNED32;
+		VAR status : Usbdi.Status;	 interruptData : Usbdi.BufferPtr; blockStatus : SIGNED32;
+			b, c: Usbdi.BufferPtr; i: SIGNED32;
 		BEGIN
 			IF Debug.Trace & Debug.traceScTransfers THEN KernelLog.String("UsbStorageCbi: Sending TransportCB/I Control"); KernelLog.Ln; END;
 			NEW(c, cmdlen);

@@ -367,8 +367,8 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 	END CAPSearch;
 
 (** Convert a string into an integer. Leading white space characters are ignored. *)
-	PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR; VAR val: LONGINT);
-		VAR i: SIZE; d: LONGINT; ch: CHAR; neg: BOOLEAN;
+	PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR; VAR val: SIGNED32);
+		VAR i: SIZE; d: SIGNED32; ch: CHAR; neg: BOOLEAN;
 	BEGIN
 		i := 0; ch := str[0];
 		WHILE (ch # 0X) & (ch <= " ") DO
@@ -383,10 +383,10 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 		WHILE (ch >= "0") & (ch <= "9") DO
 			d := ORD(ch)-ORD("0");
 			INC(i); ch := str[i];
-			IF val <= ((MAX(LONGINT)-d) DIV 10) THEN
+			IF val <= ((MAX(SIGNED32)-d) DIV 10) THEN
 				val := 10*val+d
 			ELSIF neg & (val = 214748364) & (d = 8) & ((ch < "0") OR (ch > "9")) THEN
-				val := MIN(LONGINT); neg := FALSE
+				val := MIN(SIGNED32); neg := FALSE
 			ELSE
 				HALT(99)
 			END
@@ -396,7 +396,7 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Convert the substring beginning at position i in str into an integer. Any leading whitespace characters are ignored.
 	After the conversion i pointes to the first character after the integer. *)
-	PROCEDURE StrToIntPos*(CONST str: ARRAY OF CHAR; VAR val: LONGINT; VAR i: INTEGER);
+	PROCEDURE StrToIntPos*(CONST str: ARRAY OF CHAR; VAR val: SIGNED32; VAR i: SIGNED16);
 		VAR noStr: ARRAY 16 OF CHAR;
 	BEGIN
 		WHILE (str[i] # 0X) & (str[i] <= " ") DO
@@ -417,12 +417,12 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 	END StrToIntPos;
 
 (** Convert an integer into a string. *)
-	PROCEDURE IntToStr*(val: LONGINT; VAR str: ARRAY OF CHAR);
+	PROCEDURE IntToStr*(val: SIGNED32; VAR str: ARRAY OF CHAR);
 		VAR
 			i, j: SIZE;
-			digits: ARRAY 16 OF LONGINT;
+			digits: ARRAY 16 OF SIGNED32;
 	BEGIN
-		IF val = MIN(LONGINT) THEN
+		IF val = MIN(SIGNED32) THEN
 			COPY("-2147483648", str);
 			RETURN
 		END;
@@ -443,8 +443,8 @@ MODULE Strings IN Oberon;	(** portable *) (* ejz,  *)
 	END IntToStr;
 
 (** Converts a real to a string. *)
-PROCEDURE RealToStr*(x: LONGREAL; VAR s: ARRAY OF CHAR);
-VAR i, j, pos, len: SIZE; e, h, l, n: LONGINT; z: LONGREAL; d: ARRAY 16 OF CHAR;
+PROCEDURE RealToStr*(x: FLOAT64; VAR s: ARRAY OF CHAR);
+VAR i, j, pos, len: SIZE; e, h, l, n: SIGNED32; z: FLOAT64; d: ARRAY 16 OF CHAR;
 
 	PROCEDURE Wr(ch: CHAR);
 	BEGIN
@@ -498,8 +498,8 @@ BEGIN
 	s[pos] := 0X
 END RealToStr;
 
-PROCEDURE RealToFixStr*(x: LONGREAL; VAR str: ARRAY OF CHAR; n, f, D: LONGINT);
-	VAR pos, len: SIZE; e, i, h, l: LONGINT; r, z: LONGREAL; d: ARRAY 16 OF CHAR; s: CHAR;
+PROCEDURE RealToFixStr*(x: FLOAT64; VAR str: ARRAY OF CHAR; n, f, D: SIGNED32);
+	VAR pos, len: SIZE; e, i, h, l: SIGNED32; r, z: FLOAT64; d: ARRAY 16 OF CHAR; s: CHAR;
 	PROCEDURE Wr(ch: CHAR);
 	BEGIN
 		IF ch = 0X THEN HALT(42) END;
@@ -566,8 +566,8 @@ BEGIN
 END RealToFixStr;
 
 (** Convert a string into a real. Precondition: s has a well defined real syntax. Scientific notation with D and E to indicate exponents is allowed. *)
-PROCEDURE StrToReal*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL);
-VAR p: SIZE; e: INTEGER; y, g: LONGREAL; neg, negE: BOOLEAN;
+PROCEDURE StrToReal*(CONST s: ARRAY OF CHAR; VAR r: FLOAT64);
+VAR p: SIZE; e: SIGNED16; y, g: FLOAT64; neg, negE: BOOLEAN;
 BEGIN
 	p := 0;
 	WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
@@ -630,7 +630,7 @@ END StrToReal;
 
 (** Convert a string to a set *)
     PROCEDURE StrToSet*(CONST str: ARRAY OF CHAR; VAR set: SET);
-      VAR i: SIZE; d, d1: LONGINT; ch: CHAR; dot: BOOLEAN;
+      VAR i: SIZE; d, d1: SIGNED32; ch: CHAR; dot: BOOLEAN;
     BEGIN
       set := {}; dot := FALSE;
       i := 0; ch := str[i];
@@ -651,7 +651,7 @@ END StrToReal;
 
 (** Convert a set to a string *)
 	PROCEDURE SetToStr* (set: SET; VAR str: ARRAY OF CHAR);
-	VAR i, j, k: INTEGER; noFirst: BOOLEAN;
+	VAR i, j, k: SIGNED16; noFirst: BOOLEAN;
 	BEGIN
 		str[0] := "{"; i := 0; k := 1; noFirst := FALSE;
 		WHILE i <= MAX(SET) DO
@@ -674,8 +674,8 @@ END StrToReal;
 	END SetToStr;
 
 (** Convert date (Oberon.GetClock) into specified format. *)
-	PROCEDURE DateToStr*(date: LONGINT; VAR str: ARRAY OF CHAR);
-		VAR i, j, k: SIZE; x: LONGINT; form, name: ARRAY 32 OF CHAR;
+	PROCEDURE DateToStr*(date: SIGNED32; VAR str: ARRAY OF CHAR);
+		VAR i, j, k: SIZE; x: SIGNED32; form, name: ARRAY 32 OF CHAR;
 	BEGIN
 		COPY(dateform, form);
 		IF form = "" THEN form := "DD.MM.YY" END;
@@ -737,21 +737,21 @@ END StrToReal;
 	END DateToStr;
 
 (** Returns a month's name (set short to get the abbreviation) *)
-	PROCEDURE MonthToStr* (month: INTEGER; VAR str: ARRAY OF CHAR; short: BOOLEAN);
+	PROCEDURE MonthToStr* (month: SIGNED16; VAR str: ARRAY OF CHAR; short: BOOLEAN);
 	BEGIN
 		month := (month - 1) MOD 12;
 		IF short THEN COPY(sMonthName[month], str) ELSE COPY(lMonthName[month], str) END
 	END MonthToStr;
 
 (** Returns a day's name (set short to get the abbreviation) *)
-	PROCEDURE DayToStr* (day: INTEGER; VAR str: ARRAY OF CHAR; short: BOOLEAN);
+	PROCEDURE DayToStr* (day: SIGNED16; VAR str: ARRAY OF CHAR; short: BOOLEAN);
 	BEGIN
 		IF short THEN COPY(sDayName[day MOD 7], str) ELSE COPY(lDayName[day MOD 7], str) END
 	END DayToStr;
 
 (** Convert time (Oberon.GetClock) into specified format. *)
-	PROCEDURE TimeToStr*(time: LONGINT; VAR str: ARRAY OF CHAR);
-		VAR i, j, hPos: SIZE; x, h: LONGINT; form: ARRAY 32 OF CHAR; shortH, leadingH: BOOLEAN;
+	PROCEDURE TimeToStr*(time: SIGNED32; VAR str: ARRAY OF CHAR);
+		VAR i, j, hPos: SIZE; x, h: SIGNED32; form: ARRAY 32 OF CHAR; shortH, leadingH: BOOLEAN;
 	BEGIN
 		COPY(timeform, form);
 		IF form = "" THEN form := "HH:MM:SS" END;
@@ -796,10 +796,10 @@ END StrToReal;
 	END TimeToStr;
 
 (** Convert a string into an time value. Leading white space characters are ignored. *)
-	PROCEDURE StrToTime*(CONST str: ARRAY OF CHAR; VAR time: LONGINT);
+	PROCEDURE StrToTime*(CONST str: ARRAY OF CHAR; VAR time: SIGNED32);
 		VAR
-			h, m, s: LONGINT;
-			i: INTEGER;
+			h, m, s: SIGNED32;
+			i: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE (str[i] # 0X) & ((str[i] < "0") OR (str[i] > "9")) DO INC(i) END;
@@ -812,10 +812,10 @@ END StrToReal;
 	END StrToTime;
 
 (** Convert a string into an date value. Leading white space characters are ignored. *)
-	PROCEDURE StrToDate*(CONST str: ARRAY OF CHAR; VAR date: LONGINT);
+	PROCEDURE StrToDate*(CONST str: ARRAY OF CHAR; VAR date: SIGNED32);
 		VAR
-			d, m, y: LONGINT;
-			i: INTEGER;
+			d, m, y: SIGNED32;
+			i: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE (str[i] # 0X) & ((str[i] < "0") OR (str[i] > "9")) DO INC(i) END;
@@ -828,7 +828,7 @@ END StrToReal;
 	END StrToDate;
 
 	PROCEDURE Init;
-		VAR i: LONGINT;  s: Texts.Scanner;
+		VAR i: SIGNED32;  s: Texts.Scanner;
 	BEGIN
 		Oberon.OpenScanner(s, "System.DateFormat");
 		IF s.class = Texts.String THEN COPY(s.s, dateform) ELSE dateform := "" END;

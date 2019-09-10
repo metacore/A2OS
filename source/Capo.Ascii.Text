@@ -30,30 +30,30 @@ Numeric computations deal with numbers. These numbers belong to one of four basi
 	If you need to change from 32- to 64-bit reals, then the following modules will require some minor changes to be made to them (e.g., algorithmic constants): NbrRe.Mod, NbrStrings.Mod, MathCbrt.Mod, MathErf.Mod, MathGamma.Mod, MathExpInt and CalcGauss. Code fragments that will need to be changed are highlighted in red.
 
 1.1 NbrInt8.Mod
-This module exports a low-level integer type with 8-bit length, i.e., a SHORTINT.   
+This module exports a low-level integer type with 8-bit length, i.e., a SIGNED8.   
 
 1.2 NbrInt16.Mod
-This module exports a low-level integer type with 16-bit length, i.e., an INTEGER.  It has the same structure as that of NbrInt8.
+This module exports a low-level integer type with 16-bit length, i.e., an SIGNED16.  It has the same structure as that of NbrInt8.
 
 1.3 NbrInt32.Mod
-This module exports a low-level integer type with 32-bit length, i.e., a LONGINT.  
+This module exports a low-level integer type with 32-bit length, i.e., a SIGNED32.  
 
 1.4 NbrInt64.Mod
-This module exports a low-level integer type with 64-bit length, i.e., a HUGEINT. It is largely MathH.Mod, originally written by Patrik Reali, with some procedures added, some altered, and others removed. 
-	The PACO compiler has a built-in type HUGEINT, but in its current state, PACO does not have predefined operators or an arithmetic that goes along with it. For this reason, we ignore the built-in compiler type HUGEINT and instead, define our own (viz., NbrInt64.Integer) along with the necessary procedures needed to handle arithmetic, comparison operations, etc.   
+This module exports a low-level integer type with 64-bit length, i.e., a SIGNED64. It is largely MathH.Mod, originally written by Patrik Reali, with some procedures added, some altered, and others removed. 
+	The PACO compiler has a built-in type SIGNED64, but in its current state, PACO does not have predefined operators or an arithmetic that goes along with it. For this reason, we ignore the built-in compiler type SIGNED64 and instead, define our own (viz., NbrInt64.Integer) along with the necessary procedures needed to handle arithmetic, comparison operations, etc.   
 
 1.5 NbrRe32.Mod
-This module exports a low-level real type with 32-bit length, i.e., a REAL. 
+This module exports a low-level real type with 32-bit length, i.e., a FLOAT32. 
 
 1.6 NbrRe64.Mod
-This module exports a low-level real type with 64-bit length, i.e., a LONGREAL.  Notice the similarity in its structure to that of NbrRe32. 
+This module exports a low-level real type with 64-bit length, i.e., a FLOAT64.  Notice the similarity in its structure to that of NbrRe32. 
 
 	This concludes the low-level modules that establish the core numeric types of the system. What follows are higher-level modules that define the base types used by CAPO to do numeric computations; these include: NbrInt, NbrRat, NbrRe, NbrCplx, and NbrStrings.
 
 1.7 NbrInt.Mod
 This module defines the base-type: Integer. Other than the definition of type, the interface is devoid of type size. There is just one kind of integer used in CAPO; it is: NbrInt.Integer. 
 	Here NbrInt32.Integer is implemented as the default integer type. This could be changed easily to an integer of different size by an appropriate reassignment of NbrInt.Integer to a different type, say NbrInt64.Integer, and by also changing the internal constructs of the procedures within NbrInt.Mod, NbrRat.Mod, NbrRe.Mod and NbrCplx.Mod, as appropriate.
-	Instances of type LONGINT do appear here and there in our interfaces. When they do it is because they reflect system-specific needs, like memory addresses, array indices, etc. which are LONGINT's by Aos implementation.
+	Instances of type SIGNED32 do appear here and there in our interfaces. When they do it is because they reflect system-specific needs, like memory addresses, array indices, etc. which are SIGNED32's by Aos implementation.
 
 1.8 NbrRat.Mod
 This module defines a base type for fixed-point Rationals.

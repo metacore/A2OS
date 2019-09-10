@@ -12,8 +12,8 @@ CONST Running* = 0; ShuttingDown* = 1; Rebooting* = 2;
 CONST DefaultConfigFile = "aos.ini";
 CONST UserConfigFile = "myaos.ini";
 
-VAR activity: WORD;
-VAR status* := 0: WORD;
+VAR activity: INTEGER;
+VAR status* := 0: INTEGER;
 VAR heap: Kernel32.HANDLE;
 VAR sleepingQueue: Queues.Queue;
 VAR stdin, stdout: Kernel32.HANDLE;
@@ -27,7 +27,7 @@ END Abort;
 
 PROCEDURE Shutdown*;
 VAR mod: Kernel32.HANDLE;
-VAR SendMessage: PROCEDURE {WINAPI} (hWnd: ADDRESS; Msg: LONGINT; wParam: ADDRESS; lParam: ADDRESS): LONGINT;
+VAR SendMessage: PROCEDURE {WINAPI} (hWnd: ADDRESS; Msg: SIGNED32; wParam: ADDRESS; lParam: ADDRESS): SIGNED32;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF CAS (status, Running, ShuttingDown) # Running THEN RETURN END;
 	Trace.StringLn ("system: shutting down...");
@@ -42,19 +42,19 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (CAS (status, ShuttingDown, Rebooting) = ShuttingDown);
 END Reboot;
 
-PROCEDURE {NORETURN} Exit- (status: WORD);
+PROCEDURE {NORETURN} Exit- (status: INTEGER);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Trace.String ("system: exiting to windows");
 	RemoveTraceFile;
 	Kernel32.ExitProcess (status);
 END Exit;
 
-PROCEDURE Clock- (): LONGINT;
+PROCEDURE Clock- (): SIGNED32;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	RETURN Kernel32.GetTickCount ();
 END Clock;
 
-PROCEDURE Sleep- (milliseconds: LONGINT);
+PROCEDURE Sleep- (milliseconds: SIGNED32);
 VAR nextActivity: Activities.Activity;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	INC (milliseconds, Kernel32.GetTickCount ());
@@ -74,7 +74,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Queues.Enqueue (previous, sleepingQueue);
 END Enqueue;
 
-PROCEDURE {WINAPI} TimerThread (lpParameter {UNTRACED}: ANY): LONGINT;
+PROCEDURE {WINAPI} TimerThread (lpParameter {UNTRACED}: ANY): SIGNED32;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Kernel32.InstallExceptionHandler;
 	Activities.CallVirtual (TickLoop, NIL, Activities.CreateVirtualProcessor ());
@@ -112,12 +112,12 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END GetString;
 
 PROCEDURE WriteChar (char: CHAR);
-VAR written: LONGINT;
+VAR written: SIGNED32;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (Kernel32.WriteFile (stdout, char ,1, written, NIL) # 0);
 END WriteChar;
 
-PROCEDURE SetConsoleColor (color: SHORTINT);
+PROCEDURE SetConsoleColor (color: SIGNED8);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (Kernel32.SetConsoleTextAttribute (stdout, color) # 0);
 END SetConsoleColor;
@@ -131,12 +131,12 @@ END OutputChar;
 PROCEDURE SetupTraceName(VAR traceName: ARRAY OF CHAR);
 VAR
 	ext: ARRAY 256 OF CHAR;
-	extPos,i,j: LONGINT;
+	extPos,i,j: SIGNED32;
 	systemTime: Kernel32.SystemTime;
 	ch: CHAR;
 
-	PROCEDURE AppendDecimals(int: LONGINT; from, to: LONGINT);
-	VAR ten: LONGINT;
+	PROCEDURE AppendDecimals(int: SIGNED32; from, to: SIGNED32);
+	VAR ten: SIGNED32;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		WHILE to >= from DO
 			traceName[i] := CHR(ORD("0")+ int DIV to MOD 10); INC(i);
@@ -179,7 +179,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END SetupTraceName;
 
 PROCEDURE RemoveTraceFile;
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF traceName[0] # 0X THEN
 		Trace.String("removing "); Trace.String(traceName); Trace.Ln;
@@ -199,7 +199,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END RemoveTraceFile;
 
 PROCEDURE ToExecutablePath(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR);
-VAR i, j: LONGINT;
+VAR i, j: SIGNED32;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IGNORE Kernel32.GetModuleFileName (Kernel32.hInstance, fullName, LEN (fullName));
 	j := -1; i := 0;
@@ -214,7 +214,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	fullName[j] := 0X;
 END ToExecutablePath;
 
-PROCEDURE GetInit- (n: SIZE; VAR val: LONGINT);
+PROCEDURE GetInit- (n: SIZE; VAR val: SIGNED32);
 BEGIN val := 0;
 END GetInit;
 

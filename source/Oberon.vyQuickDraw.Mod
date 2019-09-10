@@ -44,7 +44,7 @@ CONST
 
 	PROCEDURE Median*;
 	(** vs 0.0d0 *)	(* md  03.07.95 11:15:35 *)
-	VAR count: LONGINT; med: REAL; x, y: INTEGER;
+	VAR count: SIGNED32; med: FLOAT32; x, y: SIGNED16;
 		BEGIN
 		count := vyStd2dLayer.x.nrData;
 		vyTypes.Sort (vyStd2dLayer.x);

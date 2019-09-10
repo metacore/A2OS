@@ -38,9 +38,9 @@ VAR
 	datafromtext*: tConvProc;
 
 	PROCEDURE TableFromText( t: Texts.Text ): vyLinks.Link;
-	VAR obj: vyLinks.Link;  C, temp: vyReadMatrix.ListItem;  i: LONGINT;
+	VAR obj: vyLinks.Link;  C, temp: vyReadMatrix.ListItem;  i: SIGNED32;
 	BEGIN
-		vyReadMatrix.ReadMatrix( C, FALSE , FALSE , t, 0, MAX( LONGINT ) );
+		vyReadMatrix.ReadMatrix( C, FALSE , FALSE , t, 0, MAX( SIGNED32 ) );
 		IF C = NIL THEN RETURN NIL END;
 		i := 0;  temp := C;
 		WHILE i < C.col DO

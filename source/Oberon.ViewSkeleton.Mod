@@ -10,7 +10,7 @@ MODULE ViewSkeleton IN Oberon;	(* jt, 13.12.94 *)
 			(* view is adjusted to model size, no border *)
 		END;
 
-	PROCEDURE ToModel (F: Frame; x, y: INTEGER; VAR M: Display.FrameMsg);
+	PROCEDURE ToModel (F: Frame; x, y: SIGNED16; VAR M: Display.FrameMsg);
 		VAR obj: Display.Frame;
 	BEGIN
 		IF (F.obj # NIL) & (F.obj IS Display.Frame) THEN
@@ -20,7 +20,7 @@ MODULE ViewSkeleton IN Oberon;	(* jt, 13.12.94 *)
 		END
 	END ToModel;
 
-	PROCEDURE Restore (F: Frame; x, y: INTEGER; dlink: Objects.Object);
+	PROCEDURE Restore (F: Frame; x, y: SIGNED16; dlink: Objects.Object);
 		VAR R: Display3.Mask; M: Display.DisplayMsg;
 	BEGIN
 		Gadgets.MakeMask(F, x, y, dlink, R);	(* simplified *)
@@ -38,7 +38,7 @@ MODULE ViewSkeleton IN Oberon;	(* jt, 13.12.94 *)
 		END
 	END Restore;
 
-	PROCEDURE Adjust (F: Frame; X, Y, W, H: INTEGER);
+	PROCEDURE Adjust (F: Frame; X, Y, W, H: SIGNED16);
 		VAR MM: Display.ModifyMsg;
 	BEGIN
 		MM.F := F; MM.mode := Display.display;
@@ -47,7 +47,7 @@ MODULE ViewSkeleton IN Oberon;	(* jt, 13.12.94 *)
 		Display.Broadcast(MM)
 	END Adjust;
 
-	PROCEDURE Consume (F: Frame; x, y: INTEGER; VAR M: Display.ConsumeMsg);
+	PROCEDURE Consume (F: Frame; x, y: SIGNED16; VAR M: Display.ConsumeMsg);
 		VAR f: Objects.Object; CM: Display.ControlMsg;
 	BEGIN f := M.obj;
 		IF (M.id = Display.drop) & (M.F = F) & (F.obj = NIL) & (f IS Gadgets.Frame) THEN
@@ -62,7 +62,7 @@ MODULE ViewSkeleton IN Oberon;	(* jt, 13.12.94 *)
 		END;
 	END Consume;
 
-	PROCEDURE UpdateMask (F: Frame; x, y: INTEGER; VAR M: Display3.UpdateMaskMsg);
+	PROCEDURE UpdateMask (F: Frame; x, y: SIGNED16; VAR M: Display3.UpdateMaskMsg);
 		VAR R: Display3.Mask; O: Display3.OverlapMsg;
 	BEGIN
 		IF M.F = F.obj THEN
@@ -80,7 +80,7 @@ MODULE ViewSkeleton IN Oberon;	(* jt, 13.12.94 *)
 	END UpdateMask;
 
 	PROCEDURE FrameHandler* (F: Objects.Object; VAR M: Objects.ObjMsg);
-		VAR x, y, u, v: INTEGER; F0: Frame;
+		VAR x, y, u, v: SIGNED16; F0: Frame;
 	BEGIN
 		WITH F: Frame DO
 			IF M IS Objects.AttrMsg THEN

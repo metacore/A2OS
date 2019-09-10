@@ -108,7 +108,7 @@ TYPE
 			END;
 		END ExtKeyPressed;
 
-		PROCEDURE Wait(ms : LONGINT);
+		PROCEDURE Wait(ms : SIGNED32);
 		BEGIN
 			timer.Sleep(ms);
 		END Wait;
@@ -221,7 +221,7 @@ TYPE
 	VAR
 		shell : ShellComponent;
 
-		PROCEDURE HandleUpcall(command : LONGINT);
+		PROCEDURE HandleUpcall(command : SIGNED32);
 		BEGIN
 			IF command = Shell.Clear THEN
 				shell.Clear;
@@ -275,7 +275,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 	StrShellComponent : Strings.String;
 

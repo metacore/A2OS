@@ -10,7 +10,7 @@ CONST
 	ShowErrorCode = TRUE;
 	MaxErrorTextLength = 512;
 
-PROCEDURE Show*(errorCode : WORD);
+PROCEDURE Show*(errorCode : INTEGER);
 VAR
 	errorMessage : Errors.ErrorMessage;
 	text : ARRAY MaxErrorTextLength OF CHAR;
@@ -38,7 +38,7 @@ BEGIN
 END ShowMessage;
 
 PROCEDURE Test*(context : Commands.Context);
-VAR errorCode : LONGINT;
+VAR errorCode : SIGNED32;
 BEGIN
 	IF context.arg.GetInteger(errorCode, FALSE) THEN
 		Show(errorCode);

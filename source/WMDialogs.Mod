@@ -60,7 +60,7 @@ TYPE
 
 	Dialog* = OBJECT(WMComponents.FormWindow)
 	VAR
-		result*: WORD;
+		result*: INTEGER;
 		x*, y* : SIZE;
 		errors* : BOOLEAN;
 
@@ -76,7 +76,7 @@ TYPE
 			manager.Remove(SELF);
 		END Show;
 
-		PROCEDURE SetType*(type : WORD);
+		PROCEDURE SetType*(type : INTEGER);
 		VAR name : ARRAY 128 OF CHAR;
 		BEGIN
 			CASE type OF
@@ -598,7 +598,7 @@ TYPE
 	MiniStringInput*  = OBJECT (WMComponents.FormWindow)
 	VAR
 		edit : WMEditors.Editor;
-		result : WORD;
+		result : INTEGER;
 
 		PROCEDURE CreateForm(): WMComponents.VisualComponent;
 		VAR
@@ -628,7 +628,7 @@ TYPE
 			sr.AddContent(gr);
 
 			(* edit panel *)
-			NEW(ep); ep.alignment.Set(WMComponents.AlignClient); ep.fillColor.Set(LONGINT(0DDDD00EEH));
+			NEW(ep); ep.alignment.Set(WMComponents.AlignClient); ep.fillColor.Set(SIGNED32(0DDDD00EEH));
 			panel.AddContent(ep);
 
 			NEW(edit); edit.alignment.Set(WMComponents.AlignClient); edit.tv.showBorder.Set(TRUE);
@@ -661,7 +661,7 @@ TYPE
 			result := ResAbort
 		END Abort;
 
-		PROCEDURE Show*(x, y : SIZE; VAR text : ARRAY OF CHAR) : WORD;
+		PROCEDURE Show*(x, y : SIZE; VAR text : ARRAY OF CHAR) : INTEGER;
 		BEGIN
 			result := -1;
 			edit.SetAsString(text);
@@ -701,7 +701,7 @@ TYPE
 
 		(**	Create an instance of the CustomDialog window. 'dialog' is a string reference to a component stored in a repository.
 			'width' and 'height' are taken from the component that is loaded. Only use this instance when res = ResOk *)
-		PROCEDURE &New*(CONST dialog : ARRAY OF CHAR; VAR width, height: SIZE; VAR res : WORD);
+		PROCEDURE &New*(CONST dialog : ARRAY OF CHAR; VAR width, height: SIZE; VAR res : INTEGER);
 		VAR
 			content : WMComponents.VisualComponent;
 			c : Repositories.Component; rect : WMRectangles.Rectangle;
@@ -776,7 +776,7 @@ TYPE
 
 (** Helper procedures *)
 
-PROCEDURE NewPanel(fillColor: WMGraphics.Color; alignment: WORD; width, height : SIZE) : WMStandardComponents.Panel;
+PROCEDURE NewPanel(fillColor: WMGraphics.Color; alignment: INTEGER; width, height : SIZE) : WMStandardComponents.Panel;
 VAR panel : WMStandardComponents.Panel;
 BEGIN
 	NEW(panel); panel.alignment.Set(alignment); panel.bounds.SetExtents(width, height);
@@ -784,7 +784,7 @@ BEGIN
 	RETURN panel;
 END NewPanel;
 
-PROCEDURE NewLabel*(CONST caption : ARRAY OF CHAR; alignment: WORD; width, height : SIZE) : WMStandardComponents.Label;
+PROCEDURE NewLabel*(CONST caption : ARRAY OF CHAR; alignment: INTEGER; width, height : SIZE) : WMStandardComponents.Label;
 VAR label : WMStandardComponents.Label;
 BEGIN
 	NEW(label); label.alignment.Set(alignment); label.bounds.SetExtents(width, height);
@@ -792,7 +792,7 @@ BEGIN
 	RETURN label;
 END NewLabel;
 
-PROCEDURE NewEditor*(CONST uid : ARRAY OF CHAR; textColor, textBgColor: WMGraphics.Color; alignment: WORD; width, height : SIZE) : WMEditors.Editor;
+PROCEDURE NewEditor*(CONST uid : ARRAY OF CHAR; textColor, textBgColor: WMGraphics.Color; alignment: INTEGER; width, height : SIZE) : WMEditors.Editor;
 VAR editor : WMEditors.Editor;
 BEGIN
 	NEW(editor); editor.uid.SetAOC(uid);
@@ -847,7 +847,7 @@ END DefaultPos;
 (** Open a string query dialog at position x, y with title caption and default value string.
 	Return ResOk or ResAbort. If res is ResOk string contains the utf8 string. String is not changed if
 	res is ResAbort *)
-PROCEDURE QueryStringXY*(x, y : SIZE; CONST caption : ARRAY OF CHAR; VAR string : ARRAY OF CHAR) : WORD;
+PROCEDURE QueryStringXY*(x, y : SIZE; CONST caption : ARRAY OF CHAR; VAR string : ARRAY OF CHAR) : INTEGER;
 VAR qsd : QueryStringDlg;
 BEGIN
 	NEW(qsd);
@@ -864,7 +864,7 @@ END QueryStringXY;
 (** Open a string query at default position with title caption and default value string.
 	Return ResOk or ResAbort. If res is ResOk string contains the utf8 string. String is not changed if
 	res is ResAbort *)
-PROCEDURE QueryString*(CONST caption : ARRAY OF CHAR; VAR string : ARRAY OF CHAR) : WORD;
+PROCEDURE QueryString*(CONST caption : ARRAY OF CHAR; VAR string : ARRAY OF CHAR) : INTEGER;
 VAR x, y : SIZE;
 BEGIN
 	DefaultPos(x, y, QueryStringWidth, QueryStringHeight);
@@ -875,7 +875,7 @@ END QueryString;
 (** Open a string query dialog at position x, y with title caption and default value string.
 	Return ResOk or ResAbort. If res is ResOk string contains the utf8 string. String is not changed if
 	res is ResAbort *)
-PROCEDURE QueryPasswordXY*(x, y : SIZE; CONST caption : ARRAY OF CHAR;  VAR string : ARRAY OF CHAR) : WORD;
+PROCEDURE QueryPasswordXY*(x, y : SIZE; CONST caption : ARRAY OF CHAR;  VAR string : ARRAY OF CHAR) : INTEGER;
 VAR qsd : QueryStringDlg;
 BEGIN
 	NEW(qsd);
@@ -892,7 +892,7 @@ END QueryPasswordXY;
 (** Open a string query at default position with title caption and default value string.
 	Return ResOk or ResAbort. If res is ResOk string contains the utf8 string. String is not changed if
 	res is ResAbort *)
-PROCEDURE QueryPassword*(CONST caption : ARRAY OF CHAR; VAR string : ARRAY OF CHAR) : WORD;
+PROCEDURE QueryPassword*(CONST caption : ARRAY OF CHAR; VAR string : ARRAY OF CHAR) : INTEGER;
 VAR x, y : SIZE;
 BEGIN
 	DefaultPos(x, y, QueryStringWidth, QueryStringHeight);
@@ -901,7 +901,7 @@ END QueryPassword;
 
 
 (** Open a message dialog at position x, y*)
-PROCEDURE MessageXY*(type : WORD; x, y : SIZE; CONST caption, string : ARRAY OF CHAR; buttons : SET) : WORD;
+PROCEDURE MessageXY*(type : INTEGER; x, y : SIZE; CONST caption, string : ARRAY OF CHAR; buttons : SET) : INTEGER;
 VAR qsd : MessageDlg;
 BEGIN
 	NEW(qsd, buttons);
@@ -917,7 +917,7 @@ END MessageXY;
 (** Open a string query at default position with title caption and default value string.
 	Return ResOk or ResAbort. If res is ResOk string contains the utf8 string. String is not changed if
 	res is ResAbort *)
-PROCEDURE Message*(type : WORD; CONST caption, string : ARRAY OF CHAR; buttons : SET) : WORD;
+PROCEDURE Message*(type : INTEGER; CONST caption, string : ARRAY OF CHAR; buttons : SET) : INTEGER;
 VAR x, y : SIZE;
 BEGIN
 	DefaultPos(x, y, MessageWidth, MessageHeight);
@@ -939,7 +939,7 @@ BEGIN
 	IGNORE Message(TError, caption, string, {ResOk});
 END Error;
 
-PROCEDURE Confirmation*(CONST caption, string : ARRAY OF CHAR) : WORD;
+PROCEDURE Confirmation*(CONST caption, string : ARRAY OF CHAR) : INTEGER;
 BEGIN
 	RETURN Message(TConfirmation, caption, string, {ResYes, ResNo});
 END Confirmation;
@@ -947,7 +947,7 @@ END Confirmation;
 (** Open a string query dialog at position x, y with title caption and default value string.
 	Return ResOk or ResAbort. If res is ResOk string contains the utf8 string. String is not changed if
 	res is ResAbort *)
-PROCEDURE TextMessageXY*(type: WORD; x, y : SIZE; CONST caption: ARRAY OF CHAR; text : Texts.Text; buttons : SET) : WORD;
+PROCEDURE TextMessageXY*(type: INTEGER; x, y : SIZE; CONST caption: ARRAY OF CHAR; text : Texts.Text; buttons : SET) : INTEGER;
 VAR qsd : MessageDlg;
 BEGIN
 	NEW(qsd, buttons);
@@ -963,14 +963,14 @@ END TextMessageXY;
 (** Open a string query at default position with title caption and default value string.
 	Return ResOk or ResAbort. If res is ResOk string contains the utf8 string. String is not changed if
 	res is ResAbort *)
-PROCEDURE TextMessage*(type : WORD; CONST caption : ARRAY OF CHAR; text : Texts.Text; buttons : SET) : WORD;
+PROCEDURE TextMessage*(type : INTEGER; CONST caption : ARRAY OF CHAR; text : Texts.Text; buttons : SET) : INTEGER;
 VAR x, y : SIZE;
 BEGIN
 	DefaultPos(x, y, MessageWidth, MessageHeight);
 	RETURN TextMessageXY(type, x, y, caption, text, buttons)
 END TextMessage;
 
-PROCEDURE QueryLoginXY*(x, y : SIZE; CONST caption : ARRAY OF CHAR; VAR login, password : ARRAY OF CHAR) : WORD;
+PROCEDURE QueryLoginXY*(x, y : SIZE; CONST caption : ARRAY OF CHAR; VAR login, password : ARRAY OF CHAR) : INTEGER;
 VAR ld : LoginDlg;
 BEGIN
 	NEW(ld);
@@ -988,7 +988,7 @@ BEGIN
 	END;
 END QueryLoginXY;
 
-PROCEDURE QueryLogin*(CONST caption: ARRAY OF CHAR; VAR login, password: ARRAY OF CHAR) : WORD;
+PROCEDURE QueryLogin*(CONST caption: ARRAY OF CHAR; VAR login, password: ARRAY OF CHAR) : INTEGER;
 VAR x, y : SIZE;
 BEGIN
 	DefaultPos(x, y, LoginWidth, LoginHeight);
@@ -1000,7 +1000,7 @@ END QueryLogin;
 	Return ResOk or ResAbort. If res is ResOk string contains the utf8 string. String is not changed if
 	res is ResAbort *)
 PROCEDURE QueryUserInfoXY*(x, y : SIZE;
-	CONST caption: ARRAY OF CHAR; VAR shortName, fullName, eMail, password, passwordConfirm: ARRAY OF CHAR) : WORD;
+	CONST caption: ARRAY OF CHAR; VAR shortName, fullName, eMail, password, passwordConfirm: ARRAY OF CHAR) : INTEGER;
 VAR
 	uid: UserInfoDlg;
 BEGIN
@@ -1021,7 +1021,7 @@ BEGIN
 	END
 END QueryUserInfoXY;
 
-PROCEDURE QueryUserInfo*(CONST caption : ARRAY OF CHAR; VAR shortName, fullName, eMail, password, passwordConfirm : ARRAY OF CHAR) : WORD;
+PROCEDURE QueryUserInfo*(CONST caption : ARRAY OF CHAR; VAR shortName, fullName, eMail, password, passwordConfirm : ARRAY OF CHAR) : INTEGER;
 VAR x, y : SIZE;
 BEGIN
 	DefaultPos(x, y, UserInfoWidth, UserInfoHeight);
@@ -1029,7 +1029,7 @@ BEGIN
 END QueryUserInfo;
 
 PROCEDURE CustomDialogXY*(x, y : SIZE; flags : SET; CONST dialog : ARRAY OF CHAR; VAR answer : ARRAY OF CHAR);
-VAR cd : CustomDialog; ignore: SIZE; res: WORD;
+VAR cd : CustomDialog; ignore: SIZE; res: INTEGER;
 BEGIN
 	answer := "";
 	NEW(cd, dialog, ignore, ignore, res);
@@ -1057,7 +1057,7 @@ BEGIN
 END TestMsg;
 
 PROCEDURE TestLogin*;
-VAR user, password : ARRAY 128 OF CHAR; res : WORD;
+VAR user, password : ARRAY 128 OF CHAR; res : INTEGER;
 BEGIN
 	user := "TestUser";
 	res := QueryLogin("Test login dialog", user, password);
@@ -1071,7 +1071,7 @@ BEGIN
 END TestLogin;
 
 PROCEDURE TestUserInfo*;
-VAR shortName, fullName, eMail, password, passwordConfirm : ARRAY 128 OF CHAR; res : WORD;
+VAR shortName, fullName, eMail, password, passwordConfirm : ARRAY 128 OF CHAR; res : INTEGER;
 BEGIN
 	res := QueryUserInfo("Test user info dialog", shortName, fullName, eMail, password, passwordConfirm);
 	IF res = ResOk THEN
@@ -1088,7 +1088,7 @@ BEGIN
 END TestUserInfo;
 
 PROCEDURE TestCustomDialog*(context : Commands.Context); (** dialog x y ~ *)
-VAR cd : CustomDialog; dialog, answer : ARRAY 256 OF CHAR; x, y, width, height: SIZE; res: WORD;
+VAR cd : CustomDialog; dialog, answer : ARRAY 256 OF CHAR; x, y, width, height: SIZE; res: INTEGER;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(dialog);
 	context.arg.SkipWhitespace; context.arg.Size(x, FALSE);

@@ -6,8 +6,8 @@ IMPORT
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
 	VAR
-		s: ARRAY 256 OF LONGINT; (* state array *)
-		i, j: LONGINT;
+		s: ARRAY 256 OF SIGNED32; (* state array *)
+		i, j: SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -16,11 +16,11 @@ TYPE
 		END Init;
 
 		(** initialize arc4 key. keybits = [8..2048], MUST be multiple of 8. *)
-		PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: LONGINT);
+		PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32);
 		VAR
-			keydata: ARRAY 256 OF LONGINT;
-			keybytes: LONGINT;
-			temp: LONGINT;
+			keydata: ARRAY 256 OF SIGNED32;
+			keybytes: SIGNED32;
+			temp: SIGNED32;
 		BEGIN
 			ASSERT( keybits MOD 8 = 0 );  ASSERT( keybits >  7 );  ASSERT( keybits < 2049 );
 			InitKey^( src, keybits );
@@ -41,7 +41,7 @@ TYPE
 		PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR; ofs, len: SIZE );
 		VAR
 			k: SIZE;
-			temp: LONGINT;
+			temp: SIGNED32;
 			ch: CHAR;
 		BEGIN
 			ASSERT( isKeyInitialized );

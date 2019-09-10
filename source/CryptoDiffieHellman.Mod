@@ -9,7 +9,7 @@ TYPE
 				priv: B.BigNumber;
 				initstate: SET32;
 
-				PROCEDURE & Init*( prkeybits: INTEGER;  CONST pname: ARRAY OF CHAR );
+				PROCEDURE & Init*( prkeybits: SIGNED16;  CONST pname: ARRAY OF CHAR );
 				BEGIN
 					ASSERT( (prkeybits > 0) OR (pname # "") );
 					IF pname # "" THEN
@@ -52,7 +52,7 @@ TYPE
 	PROCEDURE GetDHPrime( CONST name: ARRAY OF CHAR;  VAR p, g: B.BigNumber );
 	VAR
 		buf: ARRAY 1048 OF CHAR;
-		pos: LONGINT;
+		pos: SIGNED32;
 
 		PROCEDURE Append( CONST val: ARRAY OF CHAR );
 		VAR i: SIZE;  c: CHAR;

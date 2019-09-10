@@ -14,42 +14,42 @@ CONST
 
 	NewRefSection = TRUE;
 
-	Sentinel = LONGINT(0FFFFFFFFH);
+	Sentinel = SIGNED32(0FFFFFFFFH);
 
-	EUEnd = 0X; EURecord = 1X; EUProcFlag = LONGINT(080000000H);
+	EUEnd = 0X; EURecord = 1X; EUProcFlag = SIGNED32(080000000H);
 
 
 TYPE
 	StringBuf = ARRAY 256 OF CHAR;
 
 	OffsetList = POINTER TO RECORD
-		offset : LONGINT;
+		offset : SIGNED32;
 		nextOffset : OffsetList
 	END;
 
 	ExTableEntry = POINTER TO RECORD
-		pcFrom, pcTo, pcHandler: LONGINT;
+		pcFrom, pcTo, pcHandler: SIGNED32;
 		next: ExTableEntry;
 	END;
 
 
 VAR
-	refSize: LONGINT;
-	nofCmds, nofImp, nofVarCons, nofLinks: INTEGER;
-	dsize: LONGINT;
+	refSize: SIGNED32;
+	nofCmds, nofImp, nofVarCons, nofLinks: SIGNED16;
+	dsize: SIGNED32;
 
 	globR: PCM.Rider;	(* used for OutReference *)
 
 		(* stat counters *)
-	Nreschedule0, Nreschedule1, Nreschedule2: LONGINT;
+	Nreschedule0, Nreschedule1, Nreschedule2: SIGNED32;
 
 	exTable: ExTableEntry;
-	exTableLen: LONGINT;
+	exTableLen: SIGNED32;
 
 (* ---------- Helper Procedures -------------- *)
 
 PROCEDURE OutRefType(t: PCT.Struct; procHeader: BOOLEAN);
-VAR val, off, dim, td: LONGINT; u: PCT.Struct; tdptr: PCBT.GlobalVariable;
+VAR val, off, dim, td: SIGNED32; u: PCT.Struct; tdptr: PCBT.GlobalVariable;
 BEGIN
 	td := 0; off := 0; dim := 0;
 	IF ~procHeader (*& (t IS PCT.Array) *) THEN
@@ -140,7 +140,7 @@ BEGIN
 END OutRefType;
 
 PROCEDURE OutRefVar(p: PCT.Variable; isRef: BOOLEAN);
-VAR arr: PCT.Array; dim, off: LONGINT; type: PCT.Struct; name: StringBuf;earr: PCT.EnhArray;   (*fof*)
+VAR arr: PCT.Array; dim, off: SIGNED32; type: PCT.Struct; name: StringBuf;earr: PCT.EnhArray;   (*fof*)
 BEGIN
 	StringPool.GetString(p.name, name);
 	IF NewRefSection THEN
@@ -200,7 +200,7 @@ END OutRefVar;
 
 (* fof 070731 moved warnings to PCP : removed CheckAll, CheckModules here *)
 PROCEDURE OutReference(scope: PCT.Scope);
-VAR  owner: PCT.Proc; i: LONGINT; var: PCT.Variable; par: PCT.Parameter; name: StringBuf; entry: ExTableEntry; mod: PCT.Module;
+VAR  owner: PCT.Proc; i: SIGNED32; var: PCT.Variable; par: PCT.Parameter; name: StringBuf; entry: ExTableEntry; mod: PCT.Module;
 BEGIN
 (*
 	IF (scope.code = NIL) THEN RETURN  END;
@@ -283,13 +283,13 @@ BEGIN
 	END
 END OutReference;
 
-PROCEDURE Generate*(VAR R: PCM.Rider; scope: PCT.ModScope;  VAR codeSize: LONGINT);
+PROCEDURE Generate*(VAR R: PCM.Rider; scope: PCT.ModScope;  VAR codeSize: SIGNED32);
 VAR commands: ARRAY 128 OF PCT.Proc;
-	i, nofptrs, nofProcs, maxPtrs: LONGINT;
+	i, nofptrs, nofProcs, maxPtrs: SIGNED32;
 	EntriesPos, PtrPos, nofProcsPos, maxPtrsPos, LinksPos, VarConsPos: Files.Position;
-	typeDescsSize: LONGINT; typeDescsSizePos: Files.Position; (* ug: temporary *)
+	typeDescsSize: SIGNED32; typeDescsSizePos: Files.Position; (* ug: temporary *)
 	adr: PCBT.Module; mod: PCT.Module;  sym: PCOM.Module; emptyR: PCM.Rider;
-	code: PCLIR.CodeArray; str: StringBuf; hdrCodeSize, addressFactor: LONGINT;
+	code: PCLIR.CodeArray; str: StringBuf; hdrCodeSize, addressFactor: SIGNED32;
 
 	PROCEDURE UseModule(m: PCBT.Module);
 	BEGIN
@@ -345,7 +345,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 					IF bsym.mod # scope.owner THEN UseModule(bsym.mod.adr(PCBT.Module)) END
 				END;
 				rec := rec.link;
-				ASSERT(rec # scope.records, MAX(INTEGER));
+				ASSERT(rec # scope.records, MAX(SIGNED16));
 					(* Fix bug, sometimes this assertion fails. *)
 					(* fof 070920: done, cf. PCC.MakeTD *)
 			END
@@ -358,9 +358,9 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 *)
 	END CollectInfo;
 
-	PROCEDURE OutPtrs(offset: LONGINT;  type: PCT.Struct; debug : BOOLEAN);
-	VAR  i, n, off: LONGINT;  f: PCT.Variable; scope: PCT.Scope;  base: PCT.Struct; size: PCBT.Size;
-		name: StringBuf; state: LONGINT;
+	PROCEDURE OutPtrs(offset: SIGNED32;  type: PCT.Struct; debug : BOOLEAN);
+	VAR  i, n, off: SIGNED32;  f: PCT.Variable; scope: PCT.Scope;  base: PCT.Struct; size: PCBT.Size;
+		name: StringBuf; state: SIGNED32;
 	BEGIN
 		IF type.size(PCBT.Size).containPtrs THEN
 			IF PCT.IsPointer(type) THEN
@@ -436,9 +436,9 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 		END
 	END OutPtrs;
 
-	PROCEDURE FixupList(l: PCBT.Fixup;  addressFactor: LONGINT; base: ADDRESS; sentinel: LONGINT; prev: PCBT.Fixup; VAR tail: PCBT.Fixup);
+	PROCEDURE FixupList(l: PCBT.Fixup;  addressFactor: SIGNED32; base: ADDRESS; sentinel: SIGNED32; prev: PCBT.Fixup; VAR tail: PCBT.Fixup);
 	(* Insert fixup list into code *)
-		VAR offset: LONGINT;
+		VAR offset: SIGNED32;
 	BEGIN
 		tail := NIL;
 		IF l # NIL THEN
@@ -458,8 +458,8 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 		END;
 	END FixupList;
 
-	PROCEDURE InsertFixupLists(addressFactor: LONGINT);
-		VAR p: PCBT.Procedure; i: LONGINT; codebase: ADDRESS; dummy : PCBT.Fixup;
+	PROCEDURE InsertFixupLists(addressFactor: SIGNED32);
+		VAR p: PCBT.Procedure; i: SIGNED32; codebase: ADDRESS; dummy : PCBT.Fixup;
 	BEGIN
 		codebase := ADDRESSOF(code[0]);
 		FOR i := 0 TO PCBT.NofSysCalls-1 DO
@@ -475,8 +475,8 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 		END;
 	END InsertFixupLists;
 
-	PROCEDURE EntryBlock(addressFactor: LONGINT);
-	VAR nofEntries, firstOffset: LONGINT; codebase: ADDRESS;
+	PROCEDURE EntryBlock(addressFactor: SIGNED32);
+	VAR nofEntries, firstOffset: SIGNED32; codebase: ADDRESS;
 
 		PROCEDURE Traverse(p: PCBT.Procedure);
 		VAR prev, tail : PCBT.Fixup;
@@ -513,10 +513,10 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 	END EntryBlock;
 
 	PROCEDURE CommandBlock;
-	VAR i: LONGINT; str: StringBuf;
+	VAR i: SIGNED32; str: StringBuf;
 
 		PROCEDURE WriteType(type : PCT.Struct);
-		VAR size : PCBT.RecSize; num : LONGINT;
+		VAR size : PCBT.RecSize; num : SIGNED32;
 		BEGIN
 			ASSERT((type # NIL) & ((type = PCT.NoType) OR (type IS PCT.Record) OR ((type IS PCT.Pointer) & (type(PCT.Pointer).baseR # NIL))));
 			num := 0;
@@ -583,7 +583,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 			END;
 			p := p.nextVar
 		END;
-		IF nofptrs > MAX(INTEGER) THEN PCM.Error(222, 0, "") END;
+		IF nofptrs > MAX(SIGNED16) THEN PCM.Error(222, 0, "") END;
 		IF nofptrs # 0 THEN PCM.ObjWLIntAt(R, PtrPos, nofptrs) END;
 	END PointerBlock;
 
@@ -598,7 +598,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 				m := mod.imports[i];
 				adr := m.adr(PCBT.Module);
 				IF adr.nr = -1 THEN
-					INC(j); adr.nr := j(INTEGER);
+					INC(j); adr.nr := j(SIGNED16);
 					StringPool.GetString(m.name, str); PCM.ObjWName(R, str);
 				END;
 				INC(i)
@@ -608,7 +608,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 	END ImportBlock;
 (*
 	PROCEDURE ImportBlock;
-	VAR  i, j, k, len: LONGINT;  m: PCT.Module;  str: StringBuf; adr: PCBT.Module;
+	VAR  i, j, k, len: SIGNED32;  m: PCT.Module;  str: StringBuf; adr: PCBT.Module;
 	BEGIN
 		PCM.ObjW(R, 85X);
 		IF mod.imports # NIL THEN
@@ -630,7 +630,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 	END ImportBlock;
 *)
 	PROCEDURE VarConsBlock;
-	VAR p: PCBT.GlobalVariable;  pos: Files.Position; count: LONGINT;
+	VAR p: PCBT.GlobalVariable;  pos: Files.Position; count: SIGNED32;
 
 		PROCEDURE FixList(p: PCBT.Fixup);
 		BEGIN
@@ -668,10 +668,10 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 	END VarConsBlock;
 
 	PROCEDURE LinkBlock;
-		VAR nofLinks: LONGINT; p: PCBT.Procedure; count : LONGINT;
+		VAR nofLinks: SIGNED32; p: PCBT.Procedure; count : SIGNED32;
 
 		(* ug *)
-		PROCEDURE CountFixups(p: PCBT.Procedure; VAR count: LONGINT);
+		PROCEDURE CountFixups(p: PCBT.Procedure; VAR count: SIGNED32);
 		VAR f : PCBT.Fixup;
 		BEGIN
 			count := 0;
@@ -705,10 +705,10 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 
 	PROCEDURE UseBlock;
 	VAR  m: PCT.Module;
-		e, i: LONGINT; modname, name: StringBuf;
+		e, i: SIGNED32; modname, name: StringBuf;
 		v: PCT.Variable; p: PCT.Proc; t: PCT.Type; c: PCT.Value;
 
-		PROCEDURE UseEntry(m: PCT.Module; p: PCT.Symbol; offset: LONGINT);
+		PROCEDURE UseEntry(m: PCT.Module; p: PCT.Symbol; offset: SIGNED32);
 		BEGIN
 			StringPool.GetString(p.name, name);
 			PCOM.FPrintObj(p, m);
@@ -718,7 +718,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 		END UseEntry;
 
 		PROCEDURE UseType(t: PCT.Struct);
-			VAR size: PCBT.RecSize; sym: PCOM.Struct; j: LONGINT;
+			VAR size: PCBT.RecSize; sym: PCOM.Struct; j: SIGNED32;
 		BEGIN
 			LOOP
 				IF t IS PCT.Pointer THEN	t := t(PCT.Pointer).base
@@ -839,13 +839,13 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 		Other: link = 0
 	*)
 	PROCEDURE ExportBlock;
-	TYPE ExpList = POINTER TO ARRAY OF LONGINT;
-	VAR count, nofstr: INTEGER;  pos: Files.Position;
-		explist: ExpList; exppos, explen: LONGINT;
+	TYPE ExpList = POINTER TO ARRAY OF SIGNED32;
+	VAR count, nofstr: SIGNED16;  pos: Files.Position;
+		explist: ExpList; exppos, explen: SIGNED32;
 		v: PCT.Variable; p: PCT.Proc; t: PCT.Type; c: PCT.Value;
 
 		PROCEDURE ExportType(t: PCT.Struct);
-		VAR count: INTEGER;  pos: Files.Position;  sym: PCOM.Struct;  p: PCT.Proc; v: PCT.Variable;
+		VAR count: SIGNED16;  pos: Files.Position;  sym: PCOM.Struct;  p: PCT.Proc; v: PCT.Variable;
 		BEGIN
 			WHILE (t IS PCT.Pointer) OR (t IS PCT.Array) DO
 				IF t IS PCT.Pointer THEN  t := t(PCT.Pointer).base  ELSE  t := t(PCT.Array).base  END
@@ -888,8 +888,8 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 			END;
 		END ExportType;
 
-		PROCEDURE ExportSymbol(p: PCT.Symbol; offset: LONGINT; s: PCT.Symbol);
-			VAR i, fp: LONGINT; name,prefix: ARRAY 256 OF CHAR; explist2: ExpList;
+		PROCEDURE ExportSymbol(p: PCT.Symbol; offset: SIGNED32; s: PCT.Symbol);
+			VAR i, fp: SIGNED32; name,prefix: ARRAY 256 OF CHAR; explist2: ExpList;
 		BEGIN
 			StringPool.GetString(p.name, name);
 			fp := p.sym(PCOM.Symbol).fp;
@@ -985,20 +985,20 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 		PCM.ObjW(R, EUEnd)
 	END ExportBlock;
 
-	PROCEDURE RawBlock(tag: CHAR;  size: LONGINT;  VAR block: ARRAY OF CHAR);
-	VAR i: LONGINT;
+	PROCEDURE RawBlock(tag: CHAR;  size: SIGNED32;  VAR block: ARRAY OF CHAR);
+	VAR i: SIGNED32;
 	BEGIN
 		PCM.ObjW(R, tag);
 		i := 0;
 		WHILE i < size DO PCM.ObjW(R, block[i]); INC(i)  END
 	END RawBlock;
 
-	PROCEDURE WriteType(rec: PCT.Record; VAR tdSize: LONGINT (* ug *));
+	PROCEDURE WriteType(rec: PCT.Record; VAR tdSize: SIGNED32 (* ug *));
 	CONST MaxTags = 16; (* ug: temporary solution, Modules.MaxTags *)
-	VAR  size: PCBT.RecSize;  nofptrsPos, tdSizePos: Files.Position; oldmth: LONGINT;  base: PCT.Record;  m: PCT.Method;
+	VAR  size: PCBT.RecSize;  nofptrsPos, tdSizePos: Files.Position; oldmth: SIGNED32;  base: PCT.Record;  m: PCT.Method;
 		adr: PCBT.Method;  bsym: PCOM.Struct;  name, name2: StringBuf;
-		basenr: INTEGER; baseid: LONGINT;
-		upperPartTdSize, lowerPartTdSize: LONGINT;
+		basenr: SIGNED16; baseid: SIGNED32;
+		upperPartTdSize, lowerPartTdSize: SIGNED32;
 	BEGIN
 		PCT.GetTypeName(rec, name);
 		size := rec.size(PCBT.RecSize);
@@ -1057,7 +1057,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 		(* Ptrs in Record *)
 		nofptrs := 0;
 		OutPtrs(0, rec, FALSE);  (* debug = FALSE *)
-		IF nofptrs > MAX(INTEGER) THEN PCM.Error(221, 0, "") END;
+		IF nofptrs > MAX(SIGNED16) THEN PCM.Error(221, 0, "") END;
 		IF nofptrs # 0 THEN PCM.ObjWLIntAt(R, nofptrsPos, nofptrs) END;
 
 (* ug *)	upperPartTdSize := AddressSize * (MaxTags + size.nofMethods + 1 + 1); (* tags, methods, methods end marker (sentinel), address of TypeInfo *)
@@ -1086,7 +1086,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 	END WriteInterface;
 
 	PROCEDURE TypeBlock;
-	VAR  rec: PCT.Record; tdSize: LONGINT; (* ug *)
+	VAR  rec: PCT.Record; tdSize: SIGNED32; (* ug *)
 	BEGIN  PCM.ObjW(R, 8BX);
 		typeDescsSize := 0; (* ug *)
 		rec := scope.records;
@@ -1132,7 +1132,7 @@ VAR commands: ARRAY 128 OF PCT.Proc;
 	(* ug *)
 	PROCEDURE PointerInProcBlock;
 
-		PROCEDURE PointerOffsets(s : PCT.Scope; codeoffset, beginOffset, endOffset: LONGINT);
+		PROCEDURE PointerOffsets(s : PCT.Scope; codeoffset, beginOffset, endOffset: SIGNED32);
 		VAR v: PCT.Variable; p: PCT.Proc; t: PCT.Type; par: PCT.Parameter;
 			rs: PCT.RecScope; adr: PCBT.Procedure;
 			nofPtrPos : Files.Position;
@@ -1291,10 +1291,10 @@ END PCOF.
 	06.06.01	prk	use string pool for object names
 	29.05.01    be	syscall structures moved to backend (PCLIR & code generators)
 	28.05.01	prk	don't insert invisible symbols in the "use" section
-	28.05.01	prk	issue error 221/222 when more than MAX(INTEGER) pointers in global data / record
+	28.05.01	prk	issue error 221/222 when more than MAX(SIGNED16) pointers in global data / record
 	03.05.01	be	Installable code generators
 	26.03.01	prk	New Reference Section format
-	25.03.01	prk	limited HUGEINT implementation (as abstract type)
+	25.03.01	prk	limited SIGNED64 implementation (as abstract type)
 	14.03.01	prk	OutRefs, don't list ARRAYs of user defined types
 	14.03.01	prk	OutRefs, don't list inlined procedures
 *)

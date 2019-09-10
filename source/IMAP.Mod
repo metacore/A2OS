@@ -31,9 +31,9 @@ TYPE
 	Entry* = POINTER TO RECORD
 		data-: String;
 		list-: Classes.List;
-		type-: LONGINT;
+		type-: SIGNED32;
 		command-: ARRAY 40 OF CHAR;
-		number-: LONGINT
+		number-: SIGNED32
 	END;
 
 		(* An IMAP Response consists of one or more lines. Each line of an answer is represented with an Entry-Object with
@@ -49,8 +49,8 @@ TYPE
 		VAR
 			in: Streams.Reader;
 			out: Streams.Writer;
-			tag: LONGINT;
-			state: LONGINT;
+			tag: SIGNED32;
+			state: SIGNED32;
 			tagString: ARRAY 80 OF CHAR;
 			buffer: ARRAY 80 OF CHAR;
 			connection : TCP.Connection;
@@ -60,10 +60,10 @@ TYPE
 			logout: BOOLEAN;
 
 		(** connect to server, works in any state, changes to NOAUTH *)
-		PROCEDURE &Init* (VAR host: ARRAY OF CHAR; port: LONGINT; VAR result: LONGINT);
+		PROCEDURE &Init* (VAR host: ARRAY OF CHAR; port: SIGNED32; VAR result: SIGNED32);
 		VAR
 			ip: IP.Adr;
-			res: WORD;
+			res: INTEGER;
 			ret: Classes.List;
 		BEGIN
 			logout := FALSE;
@@ -143,7 +143,7 @@ TYPE
 		END MakeTwoArgumentCommand;
 
 		(** login into server, works in NOAUTH, changes to AUTH *)
-		PROCEDURE Login*(username: ARRAY OF CHAR; password: ARRAY OF CHAR):LONGINT;
+		PROCEDURE Login*(username: ARRAY OF CHAR; password: ARRAY OF CHAR):SIGNED32;
 		VAR
 			string: Strings.String;
 		BEGIN {EXCLUSIVE}
@@ -153,10 +153,10 @@ TYPE
 		END Login;
 
 		(** Logout of remote system, changes state to DEAD *)
-		PROCEDURE Logout*():LONGINT;
+		PROCEDURE Logout*():SIGNED32;
 		VAR
 			string: Strings.String;
-			value: LONGINT;
+			value: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			logout := TRUE;
 			string := Strings.NewString("LOGOUT");
@@ -169,19 +169,19 @@ TYPE
 		END Logout;
 
 		(** get current state *)
-		PROCEDURE GetCurrentState*():LONGINT;
+		PROCEDURE GetCurrentState*():SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN state
 		END GetCurrentState;
 
 		(** remove deleted mails, state stays in SELECT *)
-		PROCEDURE Expunge*(VAR ret: Classes.List): LONGINT;
+		PROCEDURE Expunge*(VAR ret: Classes.List): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN SendToIMAPServer("EXPUNGE",ret,SELECT,SELECT)
 		END Expunge;
 
 		(** create mailbox, works in AUTH and SELECT, state not changed *)
-		PROCEDURE Create*(mailbox: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT;
+		PROCEDURE Create*(mailbox: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32;
 		VAR
 			string: Strings.String;
 		BEGIN {EXCLUSIVE}
@@ -191,7 +191,7 @@ TYPE
 		END Create;
 
 		(** delete mailbox, works in AUTH and SELECT, state not changed *)
-		PROCEDURE Delete*(mailbox: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT;
+		PROCEDURE Delete*(mailbox: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32;
 		VAR
 			string: Strings.String;
 		BEGIN {EXCLUSIVE}
@@ -201,7 +201,7 @@ TYPE
 		END Delete;
 
 		(** change name of mailbox, works in AUTH and SELECT, state not changed *)
-		PROCEDURE Rename*(from, to: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT;
+		PROCEDURE Rename*(from, to: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32;
 		VAR
 			string: Strings.String;
 		BEGIN {EXCLUSIVE}
@@ -211,7 +211,7 @@ TYPE
 		END Rename;
 
 		(* send select command to server, changes to given mailbox *)
-		PROCEDURE Select*(mailbox:ARRAY OF CHAR; VAR ret: Classes.List):LONGINT;
+		PROCEDURE Select*(mailbox:ARRAY OF CHAR; VAR ret: Classes.List):SIGNED32;
 		VAR
 			string: Strings.String;
 		BEGIN
@@ -221,7 +221,7 @@ TYPE
 		END Select;
 
 		(** examine mailbox, works in AUTH and SELECT, state not changed *)
-		PROCEDURE Examine*(mailbox: ARRAY OF CHAR): LONGINT;
+		PROCEDURE Examine*(mailbox: ARRAY OF CHAR): SIGNED32;
 		VAR
 			string: Strings.String;
 		BEGIN {EXCLUSIVE}
@@ -231,7 +231,7 @@ TYPE
 		END Examine;
 
 		(** list the mailboxes, works in in AUTH and SELECT, state not changed *)
-		PROCEDURE List*(refName, mailbox: ARRAY OF CHAR; VAR ret: Classes.List):LONGINT;
+		PROCEDURE List*(refName, mailbox: ARRAY OF CHAR; VAR ret: Classes.List):SIGNED32;
 		VAR
 			string: Strings.String;
 		BEGIN {EXCLUSIVE}
@@ -241,7 +241,7 @@ TYPE
 		END List;
 
 		(** subscribe for mailbox, works in AUTH and SELECT, state not changed *)
-		PROCEDURE Subscribe*(mailbox: ARRAY OF CHAR): LONGINT;
+		PROCEDURE Subscribe*(mailbox: ARRAY OF CHAR): SIGNED32;
 		VAR
 			string: Strings.String;
 		BEGIN {EXCLUSIVE}
@@ -251,7 +251,7 @@ TYPE
 		END Subscribe;
 
 		(** unsubscribe for mailbox, works in AUTH and SELECT, state not changed *)
-		PROCEDURE Unsubscribe*(mailbox: ARRAY OF CHAR): LONGINT;
+		PROCEDURE Unsubscribe*(mailbox: ARRAY OF CHAR): SIGNED32;
 		VAR
 			string: Strings.String;
 		BEGIN {EXCLUSIVE}
@@ -261,7 +261,7 @@ TYPE
 		END Unsubscribe;
 
 		(** appends a message to a mailbox. Works in AUTH and SELECT state *)
-		PROCEDURE Append*(VAR mailbox, message: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT;
+		PROCEDURE Append*(VAR mailbox, message: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32;
 		VAR
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
@@ -284,7 +284,7 @@ TYPE
 		END Append;
 
 		(** copy specified in "what" to mailbox "to", works in SELECT, state not changed *)
-		PROCEDURE UIDCopy*(what, to: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT;
+		PROCEDURE UIDCopy*(what, to: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32;
 		VAR
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
@@ -304,7 +304,7 @@ TYPE
 		END UIDCopy;
 
 		(** close current mailbox *)
-		PROCEDURE Close*():LONGINT;
+		PROCEDURE Close*():SIGNED32;
 		BEGIN {EXCLUSIVE}
 			COPY("CLOSE",buffer);
 			RETURN SendToIMAPServer("CLOSE",ret,AUTH,state)
@@ -312,13 +312,13 @@ TYPE
 
 		(** noop operation, allow the server to send us status updates *)
 		(** IMAP sends these from itself every few minutes, works in any state *)
-		PROCEDURE Noop*(VAR ret: Classes.List):LONGINT;
+		PROCEDURE Noop*(VAR ret: Classes.List):SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN SendToIMAPServer("NOOP",ret,state,state)
 		END Noop;
 
 		(* send status command to server *)
-		PROCEDURE Status*(VAR mailbox, items: ARRAY OF CHAR; VAR ret: Classes.List):LONGINT;
+		PROCEDURE Status*(VAR mailbox, items: ARRAY OF CHAR; VAR ret: Classes.List):SIGNED32;
 		VAR
 			string: Strings.String;
 			buffer: Strings.Buffer;
@@ -336,7 +336,7 @@ TYPE
 		END Status;
 
 		(* Search after criteria, see RFC 2060 *)
-		PROCEDURE Search*(CONST criteria: ARRAY OF CHAR; VAR ret: Classes.List): LONGINT;
+		PROCEDURE Search*(CONST criteria: ARRAY OF CHAR; VAR ret: Classes.List): SIGNED32;
 		VAR
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
@@ -352,7 +352,7 @@ TYPE
 		END Search;
 
 		(* get information about a message from server. information is specified by "items". *)
-		PROCEDURE Fetch*(set: ARRAY OF CHAR; items: ARRAY OF CHAR;  VAR ret: Classes.List):LONGINT;
+		PROCEDURE Fetch*(set: ARRAY OF CHAR; items: ARRAY OF CHAR;  VAR ret: Classes.List):SIGNED32;
 		VAR
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
@@ -369,7 +369,7 @@ TYPE
 			RETURN SendToIMAPServer(string^,ret,SELECT,SELECT)
 		END Fetch;
 
-		PROCEDURE UIDFetch*(set: ARRAY OF CHAR; items: ARRAY OF CHAR; VAR ret:Classes.List): LONGINT;
+		PROCEDURE UIDFetch*(set: ARRAY OF CHAR; items: ARRAY OF CHAR; VAR ret:Classes.List): SIGNED32;
 		VAR
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
@@ -387,7 +387,7 @@ TYPE
 		END UIDFetch;
 
 		(* store a specified flag on the server *)
-		PROCEDURE UIDStore*(set: ARRAY OF CHAR; flags: ARRAY OF CHAR; plus: BOOLEAN; VAR ret: Classes.List):LONGINT;
+		PROCEDURE UIDStore*(set: ARRAY OF CHAR; flags: ARRAY OF CHAR; plus: BOOLEAN; VAR ret: Classes.List):SIGNED32;
 		VAR
 			buffer: Strings.Buffer;
 			w: Streams.Writer;
@@ -437,7 +437,7 @@ TYPE
 			RETURN ent.command = "OK";
 		END CheckResultCode;
 
-		PROCEDURE SendContinuedCommand(VAR command, continuation: ARRAY OF CHAR; VAR ret: Classes.List; newstate, failstate: LONGINT): LONGINT;
+		PROCEDURE SendContinuedCommand(VAR command, continuation: ARRAY OF CHAR; VAR ret: Classes.List; newstate, failstate: SIGNED32): SIGNED32;
 		BEGIN
 			IF state = DEAD THEN RETURN BAD END;
 			IF ~SendIMAPCommand(command) THEN
@@ -470,7 +470,7 @@ TYPE
 
 		(* internal send command, send command to server and syntactivally parse the return value of the server, generate
 		the parsed Entry-List (see at the top). *)
-		PROCEDURE SendToIMAPServer(command: ARRAY OF CHAR; VAR ret: Classes.List; newstate,failstate: LONGINT):LONGINT;
+		PROCEDURE SendToIMAPServer(command: ARRAY OF CHAR; VAR ret: Classes.List; newstate,failstate: SIGNED32):SIGNED32;
 		BEGIN
 			IF state = DEAD THEN RETURN BAD END; (* nothing to do without connection *)
 			IF SendIMAPCommand(command) THEN (* send command to server *)
@@ -502,7 +502,7 @@ TYPE
 		PROCEDURE ReadResponse(VAR ret: Classes.List): BOOLEAN;
 		VAR
 			buffer, tag: String;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			(* Syntax of answer is tag-or-star SP [ number ]  status [SP "["response code"]"] SP text *)
 			IF state = DEAD THEN RETURN FALSE END; (* perhaps, the server killed the connection... *)
@@ -548,13 +548,13 @@ TYPE
 			RETURN TRUE;
 		END ReadResponse;
 
-		PROCEDURE Parse(command: ARRAY OF CHAR; num:LONGINT; numflag:BOOLEAN;
+		PROCEDURE Parse(command: ARRAY OF CHAR; num:SIGNED32; numflag:BOOLEAN;
 		VAR ret:Classes.List):BOOLEAN;
 		(* result of command is given back by ret, all unsoliticed messages received while parsing answers to
 		command are handled as SIDE EFFECT *)
 		VAR
 				dummy: BOOLEAN;
-				i: LONGINT;
+				i: SIGNED32;
 				list: Classes.List;
 				header, ent: Entry;
 				content: Classes.List;
@@ -700,7 +700,7 @@ TYPE
 		PROCEDURE ReadResponseCode():BOOLEAN;
 		VAR
 			command,argument: String;
-			argi: LONGINT;
+			argi: SIGNED32;
 			list,ret: Classes.List;
 			ent: Entry;
 		BEGIN
@@ -827,7 +827,7 @@ TYPE
 		PROCEDURE ReadNumberEnumeration(VAR list: Classes.List):BOOLEAN;
 		VAR
 			ent: Entry;
-			size: LONGINT;
+			size: SIGNED32;
 		BEGIN
 			NEW(ent);
 			size := 0;
@@ -901,7 +901,7 @@ TYPE
 		PROCEDURE ReadLiteral(VAR buffer:String): BOOLEAN;
 		VAR
 			data: ARRAY 80 OF CHAR;
-			i,size: LONGINT; len: SIZE;
+			i,size: SIGNED32; len: SIZE;
 		BEGIN
 			i := 0;
 			ASSERT(in.Peek() = "{",1013);
@@ -980,7 +980,7 @@ TYPE
 		VAR
 			b: Strings.Buffer;
 			w: Streams.Writer;
-			i: LONGINT;
+			i: SIGNED32;
 			end: BOOLEAN;
 		BEGIN
 			NEW(b, 16);
@@ -1007,7 +1007,7 @@ TYPE
 			b: Strings.Buffer;
 			w: Streams.Writer;
 			c: CHAR;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			NEW(b,16);
 			w := b.GetWriter();
@@ -1128,7 +1128,7 @@ TYPE
 
 	(* To make IMAP Mail-Compatible, one has to implement following procedure
 
-	PROCEDURE GetMailMessage(message: LONGINT):Mail.Message;
+	PROCEDURE GetMailMessage(message: SIGNED32):Mail.Message;
 
 	one could implement this for full RFC2060 conformance:
 

@@ -184,7 +184,7 @@ TYPE
 
 TYPE
 	Sender* = OBJECT
-		PROCEDURE Send*(m : Message; VAR result : WORD);
+		PROCEDURE Send*(m : Message; VAR result : INTEGER);
 		END Send;
 	END Sender;
 

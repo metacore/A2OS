@@ -22,20 +22,20 @@ CONST
 	CR = 0DX;  LF = 0AX;  TAB = 9X;  SP = 20X;
 
 TYPE
-	Position* = HUGEINT; (* position in the stream *)
+	Position* = SIGNED64; (* position in the stream *)
 
 	(** Any stream output procedure or method. *)
-	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
+	Sender* = PROCEDURE {DELEGATE} ( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: INTEGER );
 
 	(** Any stream input procedure or method. *)
-	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
+	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER );
 
 	Connection* = OBJECT
 
-		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
+		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: INTEGER );
 		END Send;
 
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER );
 		END Receive;
 
 		PROCEDURE Close*;
@@ -49,7 +49,7 @@ TYPE
 	VAR
 		tail: SIZE;
 		buf: POINTER TO ARRAY OF CHAR;
-		res*: WORD; (** result of last output operation. *)
+		res*: INTEGER; (** result of last output operation. *)
 		send: Sender;
 		sent*: Position;  (** count of sent bytes *)
 		(* buf[0..tail-1] contains data to write. *)
@@ -128,52 +128,52 @@ TYPE
 			END
 		END Bytes;
 
-	(** Write a SHORTINT. *)
-		PROCEDURE RawSInt*( x: SHORTINT );
+	(** Write a SIGNED8. *)
+		PROCEDURE RawSInt*( x: SIGNED8 );
 		BEGIN
 			Char( SYSTEM.VAL( CHAR, x ) )
 		END RawSInt;
 
-	(** Write an INTEGER. *)
-		PROCEDURE RawInt*( x: INTEGER );
+	(** Write an SIGNED16. *)
+		PROCEDURE RawInt*( x: SIGNED16 );
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes2, x ), 0, 2 )
 		END RawInt;
 
-	(** Write a LONGINT. *)
-		PROCEDURE RawLInt*( x: LONGINT );
+	(** Write a SIGNED32. *)
+		PROCEDURE RawLInt*( x: SIGNED32 );
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4 )
 		END RawLInt;
 
-	(** Write a HUGEINT. *)
-		PROCEDURE RawHInt*( x: HUGEINT );
+	(** Write a SIGNED64. *)
+		PROCEDURE RawHInt*( x: SIGNED64 );
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8 )
 		END RawHInt;
 
 	(** Write a 64 bit value in network byte order (most significant byte first) *)
-		PROCEDURE Net64*( x: HUGEINT );
+		PROCEDURE Net64*( x: SIGNED64 );
 		BEGIN
-			Net32(LONGINT( x DIV 100000000H MOD 100000000H ));
-			Net32(LONGINT( x MOD 100000000H ));
+			Net32(SIGNED32( x DIV 100000000H MOD 100000000H ));
+			Net32(SIGNED32( x MOD 100000000H ));
 		END Net64;
 
 	(** Write a 32 bit value in network byte order (most significant byte first) *)
-		PROCEDURE Net32*( x: LONGINT );
+		PROCEDURE Net32*( x: SIGNED32 );
 		BEGIN
 			Char( CHR( x DIV 1000000H MOD 100H ) );  Char( CHR( x DIV 10000H MOD 100H ) );  Char( CHR( x DIV 100H MOD 100H ) );
 			Char( CHR( x MOD 100H ) )
 		END Net32;
 
 	(** Write a 16 bit value in network byte order (most significant byte first) *)
-		PROCEDURE Net16*( x: LONGINT );
+		PROCEDURE Net16*( x: SIGNED32 );
 		BEGIN
 			Char( CHR( x DIV 100H MOD 100H ) );  Char( CHR( x MOD 100H ) )
 		END Net16;
 
 	(** write unsigned byte *)
-		PROCEDURE Net8*( x: LONGINT );
+		PROCEDURE Net8*( x: SIGNED32 );
 		BEGIN
 			Char( CHR( x MOD 100H ) )
 		END Net8;
@@ -200,14 +200,14 @@ TYPE
 			IF x THEN Char( 1X ) ELSE Char( 0X ) END
 		END RawBool;
 
-	(** Write a REAL. *)
-		PROCEDURE RawReal*( x: REAL );
+	(** Write a FLOAT32. *)
+		PROCEDURE RawReal*( x: FLOAT32 );
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4 )
 		END RawReal;
 
-	(** Write a LONGREAL. *)
-		PROCEDURE RawLReal*( x: LONGREAL );
+	(** Write a FLOAT64. *)
+		PROCEDURE RawLReal*( x: FLOAT64 );
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8 )
 		END RawLReal;
@@ -222,7 +222,7 @@ TYPE
 		END RawString;
 
 	(** Write a number in a compressed format. *)
-		PROCEDURE RawNum*( x: HUGEINT );
+		PROCEDURE RawNum*( x: SIGNED64 );
 		BEGIN
 			WHILE (x < -64) OR (x > 63) DO Char( CHR( x MOD 128 + 128 ) );  x := x DIV 128 END;
 			Char( CHR( x MOD 128 ) )
@@ -245,12 +245,12 @@ TYPE
 		END String;
 
 	(** Write an integer in decimal right-justified in a field of at least w characters. *)
-		PROCEDURE Int*( x: HUGEINT; w: SIZE );
-		VAR i: SIZE; x0: HUGEINT;
+		PROCEDURE Int*( x: SIGNED64; w: SIZE );
+		VAR i: SIZE; x0: SIGNED64;
 			a: ARRAY 21 OF CHAR;
 		BEGIN
 			IF x < 0 THEN
-				IF x = MIN( HUGEINT ) THEN
+				IF x = MIN( SIGNED64 ) THEN
 					DEC( w, 20 );
 					WHILE w > 0 DO Char( " " );  DEC( w ) END;
 					String( "-9223372036854775808" );  RETURN
@@ -267,9 +267,9 @@ TYPE
 
 	(** Write a SET in Oberon notation. *)
 		PROCEDURE Set*( s: SET );   (* from P. Saladin *)
-		VAR i, last: WORD;  dots: BOOLEAN;
+		VAR i, last: INTEGER;  dots: BOOLEAN;
 		BEGIN
-			Char( "{" );  last := MAX( WORD );  dots := FALSE;
+			Char( "{" );  last := MAX( INTEGER );  dots := FALSE;
 			FOR i := MAX( SET ) TO 0 BY -1 DO
 				IF i IN s THEN
 					IF last = (i + 1) THEN
@@ -289,8 +289,8 @@ TYPE
 			Write an integer in hexadecimal right-justified in a field of at least ABS(w) characters.
 			If w < 0 THEN w least significant hex digits of x are written (potentially including leading zeros)
 		*)
-		PROCEDURE Hex*(x: HUGEINT; w: SIZE);
-		VAR filler: CHAR; i,maxw: SIZE; a: ARRAY 20 OF CHAR; y: HUGEINT;
+		PROCEDURE Hex*(x: SIGNED64; w: SIZE);
+		VAR filler: CHAR; i,maxw: SIZE; a: ARRAY 20 OF CHAR; y: SIGNED64;
 		BEGIN
 			IF w < 0 THEN filler := '0'; w := -w; maxw := w ELSE filler := ' '; maxw := 16 END;
 			i := 0;
@@ -316,7 +316,7 @@ TYPE
 			Int(x, 0);
 		END Size;
 
-		PROCEDURE Pair( ch: CHAR;  x: LONGINT );
+		PROCEDURE Pair( ch: CHAR;  x: SIGNED32 );
 		BEGIN
 			IF ch # 0X THEN Char( ch ) END;
 			Char( CHR( ORD( "0" ) + x DIV 10 MOD 10 ) );  Char( CHR( ORD( "0" ) + x MOD 10 ) )
@@ -325,7 +325,7 @@ TYPE
 	(** Write the date and time in ISO format (yyyy-mm-dd hh:mm:ss).  The t and d parameters are in Oberon time and date format.
 			If all parameters are within range, the output string is exactly 19 characters wide.  The t or d parameter can be -1, in which
 			case the time or date respectively are left out. *)
-		PROCEDURE Date*( t, d: LONGINT );
+		PROCEDURE Date*( t, d: SIGNED32 );
 		VAR ch: CHAR;
 		BEGIN
 			IF d # -1 THEN
@@ -347,8 +347,8 @@ TYPE
 			The t and d parameters are in Oberon time and date format.  The tz parameter specifies the time zone offset in minutes
 			(from -720 to 720 in steps of 30).  If all parameters are within range, the output string is exactly 26 characters wide.
 			The t, d or tz parameter can be -1, in which case the time, date or timezone respectively are left out. *)
-		PROCEDURE Date822*( t, d, tz: LONGINT );
-		VAR i, m: LONGINT;  ch: CHAR;
+		PROCEDURE Date822*( t, d, tz: SIGNED32 );
+		VAR i, m: SIGNED32;  ch: CHAR;
 		BEGIN
 			IF d # -1 THEN
 				Int( d MOD 32, 2 );   (* day *)
@@ -375,8 +375,8 @@ TYPE
 		END Date822;
 
 
-	(** Write LONGREAL x  using n character positions. *)
-		PROCEDURE Float*( x: LONGREAL;  n: WORD );
+	(** Write FLOAT64 x  using n character positions. *)
+		PROCEDURE Float*( x: FLOAT64;  n: INTEGER );
 		VAR
 			buf: ARRAY 32 OF CHAR;
 		BEGIN
@@ -384,8 +384,8 @@ TYPE
 			String( buf )
 		END Float;
 
-	(** Write LONGREAL x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
-		PROCEDURE FloatFix*( x: LONGREAL;  n, f, D: WORD );
+	(** Write FLOAT64 x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, D the fixed exponent (printed only when D # 0). *)
+		PROCEDURE FloatFix*( x: FLOAT64;  n, f, D: INTEGER );
 		VAR
 			buf: ARRAY 512 OF CHAR;
 		BEGIN
@@ -402,7 +402,7 @@ TYPE
 			InitWriter( Send, size )
 		END InitStringWriter;
 
-		PROCEDURE Send( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
+		PROCEDURE Send( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: INTEGER );
 		BEGIN
 			res := StringFull
 		END Send;
@@ -449,7 +449,7 @@ TYPE
 	VAR
 		head, tail: SIZE;
 		buf: POINTER TO ARRAY OF CHAR;
-		res*: WORD;   (** result of last input operation. *)
+		res*: INTEGER;   (** result of last input operation. *)
 		receive: Receiver;
 		received*: Position;   (** count of received bytes *)
 		(* buf[buf.head..buf.tail-1] contains data to read. *)
@@ -564,54 +564,54 @@ TYPE
 			WHILE n > 0 DO ch := Get();  DEC( n ) END
 		END SkipBytes;
 
-	(** Read a SHORTINT. *)
-		PROCEDURE RawSInt*( VAR x: SHORTINT );
+	(** Read a SIGNED8. *)
+		PROCEDURE RawSInt*( VAR x: SIGNED8 );
 		BEGIN
-			x := SYSTEM.VAL( SHORTINT, Get() )
+			x := SYSTEM.VAL( SIGNED8, Get() )
 		END RawSInt;
 
-	(** Read an INTEGER. *)
-		PROCEDURE RawInt*( VAR x: INTEGER );
+	(** Read an SIGNED16. *)
+		PROCEDURE RawInt*( VAR x: SIGNED16 );
 		VAR x0, x1: CHAR;
 		BEGIN
 			x0 := Get();  x1 := Get();   (* defined order *)
 			x := ORD( x1 ) * 100H + ORD( x0 )
 		END RawInt;
 
-	(** Read a LONGINT. *)
-		PROCEDURE RawLInt*( VAR x: LONGINT );
+	(** Read a SIGNED32. *)
+		PROCEDURE RawLInt*( VAR x: SIGNED32 );
 		VAR ignore: SIZE;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawLInt;
 
-	(** Read a HUGEINT. *)
-		PROCEDURE RawHInt*( VAR x: HUGEINT );
+	(** Read a SIGNED64. *)
+		PROCEDURE RawHInt*( VAR x: SIGNED64 );
 		VAR ignore: SIZE;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
 		END RawHInt;
 
 		(** Read a 64 bit value in network byte order (most significant byte first) *)
-		PROCEDURE Net64*( ): HUGEINT;
+		PROCEDURE Net64*( ): SIGNED64;
 		BEGIN
 			RETURN Net32() * 100000000H + Net32()
 		END Net64;
 
 	(** Read a 32 bit value in network byte order (most significant byte first) *)
-		PROCEDURE Net32*( ): LONGINT;
+		PROCEDURE Net32*( ): SIGNED32;
 		BEGIN
 			RETURN LONG( ORD( Get() ) ) * 1000000H + LONG( ORD( Get() ) ) * 10000H + LONG( ORD( Get() ) ) * 100H + LONG( ORD( Get() ) )
 		END Net32;
 
 	(** Read an unsigned 16bit value in network byte order (most significant byte first) *)
-		PROCEDURE Net16*( ): LONGINT;
+		PROCEDURE Net16*( ): SIGNED32;
 		BEGIN
 			RETURN LONG( ORD( Get() ) ) * 100H + LONG( ORD( Get() ) )
 		END Net16;
 
 	(** Read an unsigned byte *)
-		PROCEDURE Net8*( ): LONGINT;
+		PROCEDURE Net8*( ): SIGNED32;
 		BEGIN
 			RETURN LONG( ORD( Get() ) )
 		END Net8;
@@ -641,15 +641,15 @@ TYPE
 			x := (Get() # 0X)
 		END RawBool;
 
-	(** Read a REAL. *)
-		PROCEDURE RawReal*( VAR x: REAL );
+	(** Read a FLOAT32. *)
+		PROCEDURE RawReal*( VAR x: FLOAT32 );
 		VAR ignore: SIZE;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 		END RawReal;
 
-	(** Read a LONGREAL. *)
-		PROCEDURE RawLReal*( VAR x: LONGREAL );
+	(** Read a FLOAT64. *)
+		PROCEDURE RawLReal*( VAR x: FLOAT64 );
 		VAR ignore: SIZE;
 		BEGIN
 			Bytes( SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
@@ -669,21 +669,21 @@ TYPE
 		END RawString;
 
 	(** Read a number in a compressed format. *)
-		PROCEDURE RawNum*( VAR x: LONGINT );
-		VAR ch: CHAR;  n, y: LONGINT;
+		PROCEDURE RawNum*( VAR x: SIGNED32 );
+		VAR ch: CHAR;  n, y: SIGNED32;
 		BEGIN
 			n := 0;  y := 0;  ch := Get();
-			WHILE ch >= 80X DO INC( y, LSH( LONGINT( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
-			x := ASH( LSH( LONGINT( ORD( ch ) ), 25 ), n - 25 ) + y
+			WHILE ch >= 80X DO INC( y, LSH( SIGNED32( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
+			x := ASH( LSH( SIGNED32( ORD( ch ) ), 25 ), n - 25 ) + y
 		END RawNum;
 
 	(** Read a huge number in a compressed format. *)
-		PROCEDURE RawHNum*( VAR x: HUGEINT );
-		VAR ch: CHAR;  n, y: HUGEINT;
+		PROCEDURE RawHNum*( VAR x: SIGNED64 );
+		VAR ch: CHAR;  n, y: SIGNED64;
 		BEGIN
 			n := 0;  y := 0;  ch := Get();
-			WHILE ch >= 80X DO INC( y, LSH( HUGEINT( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
-			x := ASH( LSH( HUGEINT( ORD( ch ) ), 57 ), n - 57 ) + y
+			WHILE ch >= 80X DO INC( y, LSH( SIGNED64( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get() END;
+			x := ASH( LSH( SIGNED64( ORD( ch ) ), 57 ), n - 57 ) + y
 		END RawHNum;
 
 	(** Read a size in a compressed format. *)
@@ -699,8 +699,8 @@ TYPE
 
 	 (** Read an integer value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
 
-		PROCEDURE Int*( VAR x: LONGINT;  hex: BOOLEAN );
-		VAR vd, vh: LONGINT; sgn, d: WORD;  ch: CHAR;  ok: BOOLEAN;
+		PROCEDURE Int*( VAR x: SIGNED32;  hex: BOOLEAN );
+		VAR vd, vh: SIGNED32; sgn, d: INTEGER;  ch: CHAR;  ok: BOOLEAN;
 		BEGIN
 			vd := 0;  vh := 0;  sgn := 1;  ok := FALSE;
 			IF Peek() = "-" THEN sgn := -1;  ch := Get() END;
@@ -723,8 +723,8 @@ TYPE
 
 	 (** Read a huge integer value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
 
-		PROCEDURE HInt*( VAR x: HUGEINT;  hex: BOOLEAN );
-		VAR vd, vh: HUGEINT; sgn, d: WORD;  ch: CHAR;  ok: BOOLEAN;
+		PROCEDURE HInt*( VAR x: SIGNED64;  hex: BOOLEAN );
+		VAR vd, vh: SIGNED64; sgn, d: INTEGER;  ch: CHAR;  ok: BOOLEAN;
 		BEGIN
 			vd := 0;  vh := 0;  sgn := 1;  ok := FALSE;
 			IF Peek() = "-" THEN sgn := -1;  ch := Get() END;
@@ -748,7 +748,7 @@ TYPE
 	 (** Read a size value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
 
 		PROCEDURE Size*( VAR x: SIZE;  hex: BOOLEAN );
-		VAR vd, vh: SIZE; d: WORD;  ch: CHAR;  ok: BOOLEAN;
+		VAR vd, vh: SIZE; d: INTEGER;  ch: CHAR;  ok: BOOLEAN;
 		BEGIN
 			vd := 0;  vh := 0; ok := FALSE;
 			LOOP
@@ -886,7 +886,7 @@ TYPE
 		END GetString;
 
 		(** First skip whitespace, then read integer *)
-		PROCEDURE GetInteger*(VAR integer : LONGINT; isHexadecimal : BOOLEAN): BOOLEAN;
+		PROCEDURE GetInteger*(VAR integer : SIGNED32; isHexadecimal : BOOLEAN): BOOLEAN;
 		BEGIN
 			SkipWhitespace;
 			Int(integer, isHexadecimal);
@@ -902,7 +902,7 @@ TYPE
 		END GetSize;
 
 		(** First skip whitespace, then read a real *)
-		PROCEDURE GetReal*(VAR real: LONGREAL): BOOLEAN;
+		PROCEDURE GetReal*(VAR real: FLOAT64): BOOLEAN;
 		BEGIN
 			SkipWhitespace;
 			real := RC.ScanReal(Get);
@@ -940,7 +940,7 @@ TYPE
 			tail := LEN( buf );  received := LEN( buf );  res := Ok;
 		END SetPos;
 
-		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
+		PROCEDURE Receive( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER );
 		BEGIN
 			IF min = 0 THEN res := Ok ELSE res := EOF END;
 			len := 0;

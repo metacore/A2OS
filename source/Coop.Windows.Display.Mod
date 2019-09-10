@@ -80,22 +80,22 @@ CONST
 TYPE
 
 	DEV_BROADCAST_HDR  = RECORD
-		dbch_size: LONGINT;
-		dbch_devicetype: LONGINT ;
-		dbch_reserved: LONGINT;
+		dbch_size: SIGNED32;
+		dbch_devicetype: SIGNED32 ;
+		dbch_reserved: SIGNED32;
 	END;
 	DEV_BROADCAST_HDRP  = POINTER  TO DEV_BROADCAST_HDR;
 
 	DEV_BROADCAST_VOLUME = RECORD   (DEV_BROADCAST_HDR)
 		dbcv_unitmask: SET;
-		dbcv_flags: INTEGER;
-		padding: INTEGER;
+		dbcv_flags: SIGNED16;
+		padding: SIGNED16;
 	END;
 	DEV_BROADCAST_VOLUMEP= POINTER TO DEV_BROADCAST_VOLUME;
 
 	Inputs = RECORD
 		keys: SET;
-		X, Y, Z, dx, dy: LONGINT;
+		X, Y, Z, dx, dy: SIGNED32;
 		flags: SET;
 	END;
 	(** The BITMAPINFO structure defines the dimensions and color information for a Win32 DIB. *)
@@ -103,7 +103,7 @@ TYPE
 
 	BitmapInfo* = RECORD
 		bmiHeader*: GDI32.BitmapInfoHeader;
-		colors: ARRAY 3 OF LONGINT;
+		colors: ARRAY 3 OF SIGNED32;
 		(* old: colors: ANY;  *)
 	END;
 
@@ -112,7 +112,7 @@ TYPE
 		hWndParent: User32.HWND;   (** handle of the parent window, = hWnd for document windows *)
 		hDC: User32.HDC;
 
-		width, height: LONGINT;   (** current size *)
+		width, height: SIGNED32;   (** current size *)
 
 		defWindowProc: User32.WndProc;   (** default window procedure for all messages not handled here *)
 		windowRect: User32.Rect;
@@ -120,12 +120,12 @@ TYPE
 		link: Window;
 
 		bmp: GDI32.HBitmap;
-		bmadr: LONGINT;
+		bmadr: SIGNED32;
 
 		bmphdc: User32.HDC;
 		track: Inputs;
 		pal: POINTER TO ARRAY OF GDI32.PaletteEntry;
-		dx, dy: LONGINT;
+		dx, dy: SIGNED32;
 		hBrush: GDI32.HBrush;
 		frame: BOOLEAN;
 
@@ -133,23 +133,23 @@ TYPE
 	END;
 
 	DisplayProc* = PROCEDURE ( disp: Window );
-	PaintProc* = PROCEDURE ( disp: Window;  x, y, w, h: LONGINT );
+	PaintProc* = PROCEDURE ( disp: Window;  x, y, w, h: SIGNED32 );
 
 	CreateStruct = POINTER TO RECORD
 		win: Window;
 		finished: BOOLEAN;
 		className: ARRAY 32 OF CHAR;
 		style: SET;
-		x, y, w, h: LONGINT;
+		x, y, w, h: SIGNED32;
 		hMenu: User32.HMenu
 	END;
 
 	(** handler called for registered window messages *)
-	WindowHandlerProc* = PROCEDURE {WINAPI} ( win: Window;  uMsg: LONGINT;  wParam: User32.WParam;
+	WindowHandlerProc* = PROCEDURE {WINAPI} ( win: Window;  uMsg: SIGNED32;  wParam: User32.WParam;
 																					  lParam: User32.LParam ): User32.LResult;
 	Display = OBJECT (Displays.Display) (* only one instance of this object allowed ! *)
 
-		PROCEDURE Transfer*( VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h: SIZE; op: LONGINT );
+		PROCEDURE Transfer*( VAR buf: ARRAY OF CHAR;  ofs, stride, x, y, w, h: SIZE; op: SIGNED32 );
 		BEGIN
 
 			IF letWindowsHandleTheBuffer THEN
@@ -174,7 +174,7 @@ TYPE
 VAR
 	dummyClass, windowClass: User32.WndClassEx;
 	dummyClassName, windowClassName, controlClassName, windowTitle : ARRAY 32 OF CHAR;
-	nWindows: LONGINT;  aControlWinClass: LONGINT;  fixedFrameX, fixedFrameY, frameX, frameY, captionY, menuY: LONGINT;
+	nWindows: SIGNED32;  aControlWinClass: SIGNED32;  fixedFrameX, fixedFrameY, frameX, frameY, captionY, menuY: SIGNED32;
 	hCurrentCursor, hAlternativeCursor: User32.HCursor;  capture, hook, mouse: Window;  kioskmode*: BOOLEAN;
 	dummyWin*: Window;
 	ISOToOberon: ARRAY 256 OF CHAR;
@@ -184,13 +184,13 @@ VAR
 		pal: ARRAY 256 OF GDI32.ColorRef
 	END;
 	disp: Display;
-	format* : SHORTINT;
+	format* : SIGNED8;
 
 	KeyHandled: BOOLEAN;
 
 	fullscreen: BOOLEAN;   (*ALEX 2005.11.30*)
 
-	closeRequests: LONGINT;
+	closeRequests: SIGNED32;
 
 	PROCEDURE CreateHWND( create: CreateStruct );
 	VAR str: ARRAY 32 OF CHAR;
@@ -211,8 +211,8 @@ VAR
 	(* wParam contains the virtual key code
 	 	lParam: {0..15}: Key repeat count, {16..23}: Scan code, {24}: Extended-key flag, {25..28}: Reserved,
 	 	{29}: Context code (1 if ALT was down, 0 otherwise), {30}: Previous key-state flag, {31}: Transition-state flag *)
-	PROCEDURE DecomposeKeyEvent( wParam, lParam: LONGINT;  VAR ch: CHAR;  VAR key: LONGINT;  char: BOOLEAN );
-	VAR scancode: LONGINT;  previous: LONGINT;  repeat: LONGINT;  extended: BOOLEAN;
+	PROCEDURE DecomposeKeyEvent( wParam, lParam: SIGNED32;  VAR ch: CHAR;  VAR key: SIGNED32;  char: BOOLEAN );
+	VAR scancode: SIGNED32;  previous: SIGNED32;  repeat: SIGNED32;  extended: BOOLEAN;
 	BEGIN
 		repeat := lParam MOD ASH( 1, 16 );  scancode := ASH( lParam, -16 ) MOD ASH( 1, 8 );  extended := ODD( ASH( lParam, -24 ) );
 		previous := ASH( lParam, -30 ) MOD 2;
@@ -291,19 +291,19 @@ VAR
 		END;
 	END DecomposeKeyEvent;
 
-	PROCEDURE GetChar( wParam, lParam: LONGINT;  VAR ch: CHAR;  VAR key: LONGINT );
+	PROCEDURE GetChar( wParam, lParam: SIGNED32;  VAR ch: CHAR;  VAR key: SIGNED32 );
 	BEGIN
 		ch := ISOToOberon[wParam]; key := ORD( ch );
 	END GetChar;
 
-	PROCEDURE GetKeyState( key: LONGINT;  what: INTEGER ): BOOLEAN;
-	VAR state: INTEGER;
+	PROCEDURE GetKeyState( key: SIGNED32;  what: SIGNED16 ): BOOLEAN;
+	VAR state: SIGNED16;
 	BEGIN
 		state := User32.GetKeyState( key );  RETURN what IN SYSTEM.VAL( SET, state );
 	END GetKeyState;
 
 (* Common base handler for all variants of windows provided by this module. *)
-	PROCEDURE DummyHandler( win: Window;  uMsg: LONGINT;  wParam: User32.WParam;  lParam: User32.LParam ): User32.LResult;
+	PROCEDURE DummyHandler( win: Window;  uMsg: SIGNED32;  wParam: User32.WParam;  lParam: User32.LParam ): User32.LResult;
 	VAR res: User32.LResult; proc: User32.WndProc; hhWnd: ADDRESS;  ret: Kernel32.BOOL;
 	BEGIN
 		IF (uMsg = User32.WMDestroy) & ~(external IN win.state) THEN
@@ -333,7 +333,7 @@ VAR
 		RETURN 0
 	END DummyHandler;
 
-	PROCEDURE HandleFocus( win: Window;  uMsg: LONGINT;  wParam: User32.WParam );
+	PROCEDURE HandleFocus( win: Window;  uMsg: SIGNED32;  wParam: User32.WParam );
 	BEGIN
 		IF (uMsg = User32.WMSetFocus) & (hook # win) THEN
 			Kernel32.Sleep( 0 );   (* ????????????????????? *)
@@ -359,7 +359,7 @@ VAR
 		IF User32.GetFocus() = win.hWnd THEN HandleFocus( win, User32.WMSetFocus, 0 ) END;
 	END SetupWin;
 
-	PROCEDURE {WINAPI} DummyProc( hwnd: User32.HWND;  uMsg: LONGINT;  wParam: User32.WParam;
+	PROCEDURE {WINAPI} DummyProc( hwnd: User32.HWND;  uMsg: SIGNED32;  wParam: User32.WParam;
 															  lParam: User32.LParam ): User32.LResult;
 	VAR win: Window;  create: CreateStruct;  ret: Kernel32.BOOL;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -401,13 +401,13 @@ VAR
 		IF hCurrentCursor # hCursor THEN hCurrentCursor := hCursor;  ChangeCursor() END
 	END SetCursor;
 
-	PROCEDURE HandleMouse( win: Window;  uMsg: LONGINT;  wParam: User32.WParam;  lParam: User32.LParam );
-	VAR m: AosInputs.AbsMouseMsg;  oldx, oldy: LONGINT;  keys: SET; ret: Kernel32.BOOL;
+	PROCEDURE HandleMouse( win: Window;  uMsg: SIGNED32;  wParam: User32.WParam;  lParam: User32.LParam );
+	VAR m: AosInputs.AbsMouseMsg;  oldx, oldy: SIGNED32;  keys: SET; ret: Kernel32.BOOL;
 	BEGIN
 		(* User32.SetCursor(hCurrentCursor);*)
 		oldx := win.track.X;  oldy := win.track.Y;
-		win.track.X := LONGINT( lParam MOD ASH( 1, 16 ) ) - win.dx;
-		win.track.Y := LONGINT( (* win.height-*) ASH( lParam, -16 ) - 1 ) - win.dy;
+		win.track.X := SIGNED32( lParam MOD ASH( 1, 16 ) ) - win.dx;
+		win.track.Y := SIGNED32( (* win.height-*) ASH( lParam, -16 ) - 1 ) - win.dy;
 		m.x := win.track.X;  m.y := win.track.Y;  m.z := win.track.Z;
 
 		m.dx := 0;  m.dy := 0;  m.dz := 0;
@@ -445,7 +445,7 @@ VAR
 		| User32.WMXButtonUp:
 				EXCL( keys, MX )
 		| User32.WMMouseWheel:
-				IF LONGINT( ASH( wParam, -16 ) ) > 0 THEN m.dz := -1 ELSE m.dz := 1 END;
+				IF SIGNED32( ASH( wParam, -16 ) ) > 0 THEN m.dz := -1 ELSE m.dz := 1 END;
 				m.x := oldx;  m.y := oldy;  win.track.X := oldx;  win.track.Y := oldy;
 				(* strange: if wheel used, then coordinates are not realtive to windows -> use coordinates of last event, fof *)
 		ELSE
@@ -475,7 +475,7 @@ VAR
 
 (* default handler for WMChar messages *)
 	PROCEDURE HandleChar( win: Window;  wParam: User32.WParam;  lParam: User32.LParam );
-	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg;  key: LONGINT;
+	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg;  key: SIGNED32;
 	BEGIN
 		GetChar( wParam, lParam, ch, key );
 		GetKeyFlags(msg.flags);
@@ -495,7 +495,7 @@ VAR
 
 (* default handler for WMKeyDown or WMKeyUp messages *)
 	PROCEDURE HandleKey( win: Window;  wParam: User32.WParam;  lParam: User32.LParam );
-	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg;  key : LONGINT; rect: User32.Rect;  ret: Kernel32.BOOL;
+	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg;  key : SIGNED32; rect: User32.Rect;  ret: Kernel32.BOOL;
 	BEGIN
 		DecomposeKeyEvent( wParam, lParam, ch, key, FALSE );
 
@@ -503,7 +503,7 @@ VAR
 			IF win.frame THEN
 				ret :=
 					User32.SetWindowLong( win.hWnd, User32.GWLStyle,
-															 SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) + SYSTEM.VAL( SET, 12582912 (* WScaption *) ) ) );
+															 SYSTEM.VAL( SIGNED32, SYSTEM.VAL( SET, User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) + SYSTEM.VAL( SET, 12582912 (* WScaption *) ) ) );
 				ret := User32.GetWindowRect( win.hWnd, rect );
 				ret :=
 					User32.SetWindowRgn( win.hWnd,
@@ -513,7 +513,7 @@ VAR
 			ELSE
 				ret :=
 					User32.SetWindowLong( win.hWnd, User32.GWLStyle,
-															 SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) - SYSTEM.VAL( SET, 12582912 (* WScaption *) ) ) );
+															 SYSTEM.VAL( SIGNED32, SYSTEM.VAL( SET, User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) - SYSTEM.VAL( SET, 12582912 (* WScaption *) ) ) );
 
 				ret := User32.GetWindowRect( win.hWnd, rect );
 				ret :=
@@ -565,7 +565,7 @@ VAR
 
 	(* default handler for WMKeyDown or WMKeyUp messages *)
 	PROCEDURE HandleKeyUp( win: Window;  wParam: User32.WParam;  lParam: User32.LParam );
-	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg; key : LONGINT;
+	VAR ch: CHAR;  msg: AosInputs.KeyboardMsg; key : SIGNED32;
 	BEGIN
 		DecomposeKeyEvent( wParam, lParam, ch, key, TRUE );
 		GetKeyFlags(msg.flags);
@@ -605,8 +605,8 @@ VAR
 		END;
 	END SetDocRect;
 
-	PROCEDURE UpdateDisplay( win: Window;  id: LONGINT;  lParam: User32.LParam;  wParam: User32.WParam );
-	VAR x, y, w, h, dx, dy, bw, bh: LONGINT;  hOldBr: GDI32.HBrush;  ret: Kernel32.BOOL;
+	PROCEDURE UpdateDisplay( win: Window;  id: SIGNED32;  lParam: User32.LParam;  wParam: User32.WParam );
+	VAR x, y, w, h, dx, dy, bw, bh: SIGNED32;  hOldBr: GDI32.HBrush;  ret: Kernel32.BOOL;
 	BEGIN
 		IF ~(minimized IN win.state) THEN
 			IF id = resize THEN win.width := lParam MOD ASH( 1, 16 );  win.height := lParam DIV ASH( 1, 16 );  SetDocRect( win, TRUE ) END;
@@ -647,11 +647,11 @@ VAR
 	VAR adr: ADDRESS;  hDC: User32.HDC;  ret: Kernel32.BOOL;
 	BEGIN
 		hDC := win.bmphdc;   (*  hDC := win.hDC; (* writes to screen*) *)
-		bmi.info.bmiHeader.biWidth := LONGINT(stride) DIV format (* w *) ;  bmi.info.bmiHeader.biHeight := -LONGINT(h);   (* top-down *)
+		bmi.info.bmiHeader.biWidth := SIGNED32(stride) DIV format (* w *) ;  bmi.info.bmiHeader.biHeight := -SIGNED32(h);   (* top-down *)
 		adr := ADDRESSOF( buf[ofs] );
 
 		ret :=
-			GDI32.SetDIBitsToDevice( hDC, LONGINT(x), LONGINT(y), LONGINT(w), LONGINT(h), 0, 0, 0, LONGINT(h), adr, SYSTEM.VAL( GDI32.BitmapInfo, bmi.info ),
+			GDI32.SetDIBitsToDevice( hDC, SIGNED32(x), SIGNED32(y), SIGNED32(w), SIGNED32(h), 0, 0, 0, SIGNED32(h), adr, SYSTEM.VAL( GDI32.BitmapInfo, bmi.info ),
 													   GDI32.DIBPalColors )
 		(*	ELSE
 			bmi.info.bmiHeader.biHeight := 1;
@@ -667,14 +667,14 @@ VAR
 		*)
 	END ToMemory;
 
-	PROCEDURE ToWindow*( win: Window;  x, y, w, h: SIZE;  dx, dy: LONGINT );
+	PROCEDURE ToWindow*( win: Window;  x, y, w, h: SIZE;  dx, dy: SIGNED32 );
 	VAR ret: Kernel32.BOOL;
 	BEGIN
 		IF traceDisplay THEN
-			ret := GDI32.BitBlt( win.hDC (* = destination *) , LONGINT(x) + dx, LONGINT(y) + dy, LONGINT(w), LONGINT(h), win.bmphdc (* source *) , LONGINT(x), LONGINT(y), GDI32.NotSrcCopy );
+			ret := GDI32.BitBlt( win.hDC (* = destination *) , SIGNED32(x) + dx, SIGNED32(y) + dy, SIGNED32(w), SIGNED32(h), win.bmphdc (* source *) , SIGNED32(x), SIGNED32(y), GDI32.NotSrcCopy );
 			Kernel32.Sleep(50);
 		END;
-		ret := GDI32.BitBlt( win.hDC (* = destination *) , LONGINT(x) + dx, LONGINT(y) + dy, LONGINT(w), LONGINT(h), win.bmphdc (* source *) , LONGINT(x), LONGINT(y), GDI32.SrcCopy );
+		ret := GDI32.BitBlt( win.hDC (* = destination *) , SIGNED32(x) + dx, SIGNED32(y) + dy, SIGNED32(w), SIGNED32(h), win.bmphdc (* source *) , SIGNED32(x), SIGNED32(y), GDI32.SrcCopy );
 	END ToWindow;
 
 	PROCEDURE GetMinMaxInfo( win: Window;  lParam: User32.LParam ): BOOLEAN;
@@ -712,7 +712,7 @@ VAR
 	END PosChanging;
 
 (** Common base handler for all visual windows (document or control) provided by this module. *)
-	PROCEDURE WindowHandler( win: Window;  uMsg: LONGINT;  wParam: User32.WParam;
+	PROCEDURE WindowHandler( win: Window;  uMsg: SIGNED32;  wParam: User32.WParam;
 													  lParam: User32.LParam ): User32.LResult;
 
 	VAR handled: BOOLEAN; ret: Kernel32.BOOL;
@@ -777,9 +777,9 @@ VAR
 		IF ~handled THEN RETURN DummyHandler( win, uMsg, wParam, lParam ) ELSE RETURN 0 END
 	END WindowHandler;
 
-	PROCEDURE {WINAPI} WindowProc( hwnd: User32.HWND;  uMsg: LONGINT;  wParam: User32.WParam;
+	PROCEDURE {WINAPI} WindowProc( hwnd: User32.HWND;  uMsg: SIGNED32;  wParam: User32.WParam;
 															    lParam: User32.LParam ): User32.LResult;
-	VAR win {UNTRACED}: Window;  dbh {UNTRACED}: DEV_BROADCAST_HDRP; dbv  {UNTRACED}: DEV_BROADCAST_VOLUMEP; i: LONGINT;
+	VAR win {UNTRACED}: Window;  dbh {UNTRACED}: DEV_BROADCAST_HDRP; dbv  {UNTRACED}: DEV_BROADCAST_VOLUMEP; i: SIGNED32;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		Environment.RestoreActivity;
 		IF uMsg = WM_DEVICECHANGE THEN
@@ -805,7 +805,7 @@ VAR
 	END WindowProc;
 (** Implementation of GetDC for all visual windows (document or control) provided by this module. *)
 	PROCEDURE GetDC( win: Window );
-	VAR oldhbm: GDI32.HBitmap;  ret: LONGINT;
+	VAR oldhbm: GDI32.HBitmap;  ret: SIGNED32;
 	BEGIN
 		IF win.hWnd # Kernel32.NULL THEN
 			win.hDC := User32.GetDC( win.hWnd );
@@ -881,7 +881,7 @@ VAR
 		ret := User32.RegisterClassEx( dummyClass );
 
 		windowClass.cbSize := SIZEOF( User32.WndClassEx );
-		windowClass.style := {7};   (* Cs_parentdc: INTEGER is 128  = 2^7 *)
+		windowClass.style := {7};   (* Cs_parentdc: SIGNED16 is 128  = 2^7 *)
 		windowClass.lpfnWndProc := WindowProc;  windowClass.cbClsExtra := 0;  windowClass.cbWndExtra := 4;
 		windowClass.hInstance := Kernel32.hInstance;  str := "Console";  windowClass.hIcon := User32.LoadIcon( Kernel32.hInstance, str );
 		str := "Console.Small";  windowClass.hIconSm := User32.LoadIcon( Kernel32.hInstance, str );  windowClass.hCursor := Kernel32.NULL;
@@ -913,7 +913,7 @@ VAR
 		RETURN w
 	END FirstWindow;
 
-	PROCEDURE {WINAPI} WindowThread (create {UNTRACED}: ANY): LONGINT;
+	PROCEDURE {WINAPI} WindowThread (create {UNTRACED}: ANY): SIGNED32;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		Kernel32.InstallExceptionHandler;
 		Activities.CallVirtual (MessageLoop, create, create(CreateStruct).win.processor);
@@ -922,7 +922,7 @@ VAR
 
 	PROCEDURE MessageLoop (c: ADDRESS);
 	VAR activity: Activities.Activity; create: CreateStruct;
-	VAR msg: User32.Msg;  i: LONGINT; mode: LONGINT;
+	VAR msg: User32.Msg;  i: SIGNED32; mode: SIGNED32;
 	BEGIN
 		create := SYSTEM.VAL (CreateStruct, c);
 		KernelLog.String( "Display: Initialize message dispatcher..." );  KernelLog.Ln;
@@ -962,7 +962,7 @@ VAR
 		END;
 	END CreateWin;
 
-	PROCEDURE {WINAPI} ControlWindowProc( hwnd: User32.HWND;  uMsg: LONGINT;  wParam: User32.WParam;
+	PROCEDURE {WINAPI} ControlWindowProc( hwnd: User32.HWND;  uMsg: SIGNED32;  wParam: User32.WParam;
 																		    lParam: User32.LParam ): User32.LResult;
 	VAR win: Window;  ret: Kernel32.BOOL;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -971,7 +971,7 @@ VAR
 		IF win # NIL THEN RETURN WindowHandler( win, uMsg, wParam, lParam )
 		ELSIF uMsg = User32.WMCreate THEN
 			SYSTEM.GET( lParam, win );  win.hWnd := hwnd;
-			ret := User32.SetWindowLong( hwnd, GWLWindow, SYSTEM.VAL( LONGINT, win ) );  InstallW( win, TRUE );  RETURN 0
+			ret := User32.SetWindowLong( hwnd, GWLWindow, SYSTEM.VAL( SIGNED32, win ) );  InstallW( win, TRUE );  RETURN 0
 		ELSE RETURN DummyProc(hwnd,uMsg,wParam,lParam);
 		END
 	END ControlWindowProc;
@@ -985,7 +985,7 @@ VAR
 	END UnregisterControlWinClass;
 
 	PROCEDURE InitMod;
-	VAR  (*  path: FileDir.FileName;*) i: LONGINT;
+	VAR  (*  path: FileDir.FileName;*) i: SIGNED32;
 		str: ARRAY 32 OF CHAR;
 	BEGIN
 		fixedFrameX := User32.GetSystemMetrics( User32.SMCXFixedFrame );
@@ -1077,10 +1077,10 @@ VAR
 		UnregisterControlWinClass()
 	END Shutdown;
 
-	PROCEDURE DoInstall( w, h, left, top: LONGINT );
+	PROCEDURE DoInstall( w, h, left, top: SIGNED32 );
 	VAR ts: ARRAY 16 OF CHAR;
-		res: WORD;  create: CreateStruct;  win: Window;  hMenu: User32.HMenu;  x, y: LONGINT;
-	VAR border: LONGINT;  rect: User32.Rect;   (*ALEX 2005.11.30*)
+		res: INTEGER;  create: CreateStruct;  win: Window;  hMenu: User32.HMenu;  x, y: SIGNED32;
+	VAR border: SIGNED32;  rect: User32.Rect;   (*ALEX 2005.11.30*)
 
 		hDC: User32.HDC;
 
@@ -1132,7 +1132,7 @@ VAR
 			IF fullscreen THEN
 				res :=
 					User32.SetWindowLong( win.hWnd, User32.GWLStyle,
-															 SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) - SYSTEM.VAL( SET, 12582912 (* WScaption *) ) ) );
+															 SYSTEM.VAL( SIGNED32, SYSTEM.VAL( SET, User32.GetWindowLong( win.hWnd, User32.GWLStyle ) ) - SYSTEM.VAL( SET, 12582912 (* WScaption *) ) ) );
 
 				res := User32.GetWindowRect( win.hWnd, rect );
 				res := User32.SetWindowRgn( win.hWnd, GDI32.CreateRectRgn( rect.left, rect.bottom, rect.right, rect.top ), 1 );
@@ -1167,7 +1167,7 @@ VAR
 	END DoInstall;
 
 	PROCEDURE Install*(context : Commands.Context); (** ["H"] [ width [height] ] ["FULLSCREEN"] [ x [y] ] *)
-	VAR x,y,w,h : LONGINT; options: Options.Options;
+	VAR x,y,w,h : SIGNED32; options: Options.Options;
 	BEGIN
 		NEW(options);
 		options.Add("b","bits16",Options.Flag);
@@ -1223,425 +1223,425 @@ revision: "$Revision: 1.3 $"
 class interface
 WEL_WM_CONSTANTS
 feature -- Access
-Wm_activate: INTEGER is 6
+Wm_activate: SIGNED16 is 6
 -- Declared in Windows as WM_ACTIVATE
-Wm_activateapp: INTEGER is 28
+Wm_activateapp: SIGNED16 is 28
 -- Declared in Windows as WM_ACTIVATEAPP
-Wm_afxfirst: INTEGER is 864
+Wm_afxfirst: SIGNED16 is 864
 -- Declared in Windows as WM_AFXFIRST
-Wm_afxlast: INTEGER is 895
+Wm_afxlast: SIGNED16 is 895
 -- Declared in Windows as WM_AFXLAST
-Wm_app: INTEGER is 32768
+Wm_app: SIGNED16 is 32768
 -- Declared in Windows as WM_APP
-Wm_appcommand: INTEGER is 793
+Wm_appcommand: SIGNED16 is 793
 -- Declared in Windows as WM_APPCOMMAND
-Wm_askcbformatname: INTEGER is 780
+Wm_askcbformatname: SIGNED16 is 780
 -- Declared in Windows as WM_ASKCBFORMATNAME
-Wm_canceljournal: INTEGER is 75
+Wm_canceljournal: SIGNED16 is 75
 -- Declared in Windows as WM_CANCELJOURNAL
-Wm_cancelmode: INTEGER is 31
+Wm_cancelmode: SIGNED16 is 31
 -- Declared in Windows as WM_CANCELMODE
-Wm_capturechanged: INTEGER is 533
+Wm_capturechanged: SIGNED16 is 533
 -- Declared in Windows as WM_CAPTURECHANGED
-Wm_changecbchain: INTEGER is 781
+Wm_changecbchain: SIGNED16 is 781
 -- Declared in Windows as WM_CHANGECBCHAIN
-Wm_changeuistate: INTEGER is 295
+Wm_changeuistate: SIGNED16 is 295
 -- Declared in Windows as WM_CHANGEUISTATE
-Wm_char: INTEGER is 258
+Wm_char: SIGNED16 is 258
 -- Declared in Windows as WM_CHAR
-Wm_chartoitem: INTEGER is 47
+Wm_chartoitem: SIGNED16 is 47
 -- Declared in Windows as WM_CHARTOITEM
-Wm_childactivate: INTEGER is 34
+Wm_childactivate: SIGNED16 is 34
 -- Declared in Windows as WM_CHILDACTIVATE
-Wm_clear: INTEGER is 771
+Wm_clear: SIGNED16 is 771
 -- Declared in Windows as WM_CLEAR
-Wm_close: INTEGER is 16
+Wm_close: SIGNED16 is 16
 -- Declared in Windows as WM_CLOSE
-Wm_command: INTEGER is 273
+Wm_command: SIGNED16 is 273
 -- Declared in Windows as WM_COMMAND
-Wm_commnotify: INTEGER is 68
+Wm_commnotify: SIGNED16 is 68
 -- Declared in Windows as WM_COMMNOTIFY
-Wm_compacting: INTEGER is 65
+Wm_compacting: SIGNED16 is 65
 -- Declared in Windows as WM_COMPACTING
-Wm_compareitem: INTEGER is 57
+Wm_compareitem: SIGNED16 is 57
 -- Declared in Windows as WM_COMPAREITEM
-Wm_contextmenu: INTEGER is 123
+Wm_contextmenu: SIGNED16 is 123
 -- Declared in Windows as WM_CONTEXTMENU
-Wm_copy: INTEGER is 769
+Wm_copy: SIGNED16 is 769
 -- Declared in Windows as WM_COPY
-Wm_copydata: INTEGER is 74
+Wm_copydata: SIGNED16 is 74
 -- Declared in Windows as WM_COPYDATA
-Wm_create: INTEGER is 1
+Wm_create: SIGNED16 is 1
 -- Declared in Windows as WM_CREATE
-Wm_cut: INTEGER is 768
+Wm_cut: SIGNED16 is 768
 -- Declared in Windows as WM_CUT
-Wm_deadchar: INTEGER is 259
+Wm_deadchar: SIGNED16 is 259
 -- Declared in Windows as WM_DEADCHAR
-Wm_deleteitem: INTEGER is 45
+Wm_deleteitem: SIGNED16 is 45
 -- Declared in Windows as WM_DELETEITEM
-Wm_destroy: INTEGER is 2
+Wm_destroy: SIGNED16 is 2
 -- Declared in Windows as WM_DESTROY
-Wm_destroyclipboard: INTEGER is 775
+Wm_destroyclipboard: SIGNED16 is 775
 -- Declared in Windows as WM_DESTROYCLIPBOARD
-Wm_devicechange: INTEGER is 537
+Wm_devicechange: SIGNED16 is 537
 -- Declared in Windows as WM_DEVICECHANGE
-Wm_devmodechange: INTEGER is 27
+Wm_devmodechange: SIGNED16 is 27
 -- Declared in Windows as WM_DEVMODECHANGE
-Wm_displaychange: INTEGER is 126
+Wm_displaychange: SIGNED16 is 126
 -- Declared in Windows as WM_DISPLAYCHANGE
-Wm_drawclipboard: INTEGER is 776
+Wm_drawclipboard: SIGNED16 is 776
 -- Declared in Windows as WM_DRAWCLIPBOARD
-Wm_drawitem: INTEGER is 43
+Wm_drawitem: SIGNED16 is 43
 -- Declared in Windows as WM_DRAWITEM
-Wm_dropfiles: INTEGER is 563
+Wm_dropfiles: SIGNED16 is 563
 -- Declared in Windows as WM_DROPFILES
-Wm_enable: INTEGER is 10
+Wm_enable: SIGNED16 is 10
 -- Declared in Windows as WM_ENABLE
-Wm_endsession: INTEGER is 22
+Wm_endsession: SIGNED16 is 22
 -- Declared in Windows as WM_ENDSESSION
-Wm_enteridle: INTEGER is 289
+Wm_enteridle: SIGNED16 is 289
 -- Declared in Windows as WM_ENTERIDLE
-Wm_entermenuloop: INTEGER is 529
+Wm_entermenuloop: SIGNED16 is 529
 -- Declared in Windows as WM_ENTERMENULOOP
-Wm_entersizemove: INTEGER is 561
+Wm_entersizemove: SIGNED16 is 561
 -- Declared in Windows as WM_ENTERSIZEOFMOVE
-Wm_erasebkgnd: INTEGER is 20
+Wm_erasebkgnd: SIGNED16 is 20
 -- Declared in Windows as WM_ERASEBKGND
-Wm_exitmenuloop: INTEGER is 530
+Wm_exitmenuloop: SIGNED16 is 530
 -- Declared in Windows as WM_EXITMENULOOP
-Wm_exitsizemove: INTEGER is 562
+Wm_exitsizemove: SIGNED16 is 562
 -- Declared in Windows as WM_EXITSIZEOFMOVE
-Wm_fontchange: INTEGER is 29
+Wm_fontchange: SIGNED16 is 29
 -- Declared in Windows as WM_FONTCHANGE
-Wm_getdlgcode: INTEGER is 135
+Wm_getdlgcode: SIGNED16 is 135
 -- Declared in Windows as WM_GETDLGCODE
-Wm_getfont: INTEGER is 49
+Wm_getfont: SIGNED16 is 49
 -- Declared in Windows as WM_GETFONT
-Wm_gethotkey: INTEGER is 51
+Wm_gethotkey: SIGNED16 is 51
 -- Declared in Windows as WM_GETHOTKEY
-Wm_geticon: INTEGER is 127
+Wm_geticon: SIGNED16 is 127
 -- Declared in Windows as WM_GETICON
-Wm_getminmaxinfo: INTEGER is 36
+Wm_getminmaxinfo: SIGNED16 is 36
 -- Declared in Windows as WM_GETMINMAXINFO
-Wm_getobject: INTEGER is 61
+Wm_getobject: SIGNED16 is 61
 -- Declared in Windows as WM_GETOBJECT
-Wm_gettext: INTEGER is 13
+Wm_gettext: SIGNED16 is 13
 -- Declared in Windows as WM_GETTEXT
-Wm_gettextlength: INTEGER is 14
+Wm_gettextlength: SIGNED16 is 14
 -- Declared in Windows as WM_GETTEXTLENGTH
-Wm_handheldfirst: INTEGER is 856
+Wm_handheldfirst: SIGNED16 is 856
 -- Declared in Windows as WM_HANDHELDFIRST
-Wm_handheldlast: INTEGER is 863
+Wm_handheldlast: SIGNED16 is 863
 -- Declared in Windows as WM_HANDHELDLAST
-Wm_help: INTEGER is 83
+Wm_help: SIGNED16 is 83
 -- Declared in Windows as WM_HELP
-Wm_hotkey: INTEGER is 786
+Wm_hotkey: SIGNED16 is 786
 -- Declared in Windows as WM_HOTKEY
-Wm_hscroll: INTEGER is 276
+Wm_hscroll: SIGNED16 is 276
 -- Declared in Windows as WM_HSCROLL
-Wm_hscrollclipboard: INTEGER is 782
+Wm_hscrollclipboard: SIGNED16 is 782
 -- Declared in Windows as WM_HSCROLLCLIPBOARD
-Wm_iconerasebkgnd: INTEGER is 39
+Wm_iconerasebkgnd: SIGNED16 is 39
 -- Declared in Windows as WM_ICONERASEBKGND
-Wm_ime_char: INTEGER is 646
+Wm_ime_char: SIGNED16 is 646
 -- Declared in Windows as WM_IME_CHAR
-Wm_ime_composition: INTEGER is 271
+Wm_ime_composition: SIGNED16 is 271
 -- Declared in Windows as WM_IME_COMPOSITION
-Wm_ime_compositionfull: INTEGER is 644
+Wm_ime_compositionfull: SIGNED16 is 644
 -- Declared in Windows as WM_IME_COMPOSITIONFULL
-Wm_ime_control: INTEGER is 643
+Wm_ime_control: SIGNED16 is 643
 -- Declared in Windows as WM_IME_CONTROL
-Wm_ime_endcomposition: INTEGER is 270
+Wm_ime_endcomposition: SIGNED16 is 270
 -- Declared in Windows as WM_IME_ENDCOMPOSITION
-Wm_ime_keydown: INTEGER is 656
+Wm_ime_keydown: SIGNED16 is 656
 -- Declared in Windows as WM_IME_KEYDOWN
-wm_ime_keylast: INTEGER
+wm_ime_keylast: SIGNED16
 -- Declared in Windows as WM_IME_KEYLAST
-Wm_ime_keyup: INTEGER is 657
+Wm_ime_keyup: SIGNED16 is 657
 -- Declared in Windows as WM_IME_KEYUP
-Wm_ime_notify: INTEGER is 642
+Wm_ime_notify: SIGNED16 is 642
 -- Declared in Windows as WM_IME_NOTIFY
-Wm_ime_request: INTEGER is 648
+Wm_ime_request: SIGNED16 is 648
 -- Declared in Windows as WM_IME_REQUEST
-Wm_ime_select: INTEGER is 645
+Wm_ime_select: SIGNED16 is 645
 -- Declared in Windows as WM_IME_SELECT
-Wm_ime_setcontext: INTEGER is 641
+Wm_ime_setcontext: SIGNED16 is 641
 -- Declared in Windows as WM_IME_SETCONTEXT
-Wm_ime_startcomposition: INTEGER is 269
+Wm_ime_startcomposition: SIGNED16 is 269
 -- Declared in Windows as WM_IME_STARTCOMPOSITION
-Wm_initdialog: INTEGER is 272
+Wm_initdialog: SIGNED16 is 272
 -- Declared in Windows as WM_INITDIALOG
-Wm_initmenu: INTEGER is 278
+Wm_initmenu: SIGNED16 is 278
 -- Declared in Windows as WM_INITMENU
-Wm_initmenupopup: INTEGER is 279
+Wm_initmenupopup: SIGNED16 is 279
 -- Declared in Windows as WM_INITMENUPOPUP
-Wm_inputlangchange: INTEGER is 81
+Wm_inputlangchange: SIGNED16 is 81
 -- Declared in Windows as WM_INPUTLANGCHANGE
-Wm_inputlangchangerequest: INTEGER is 80
+Wm_inputlangchangerequest: SIGNED16 is 80
 -- Declared in Windows as WM_INPUTLANGCHANGEREQUEST
-Wm_keydown: INTEGER is 256
+Wm_keydown: SIGNED16 is 256
 -- Declared in Windows as WM_KEYDOWN
-Wm_keyfirst: INTEGER is 256
+Wm_keyfirst: SIGNED16 is 256
 -- Declared in Windows as WM_KEYFIRST
-wm_keylast: INTEGER
+wm_keylast: SIGNED16
 -- Declared in Windows as WM_KEYLAST
-Wm_keyup: INTEGER is 257
+Wm_keyup: SIGNED16 is 257
 -- Declared in Windows as WM_KEYUP
-Wm_killfocus: INTEGER is 8
+Wm_killfocus: SIGNED16 is 8
 -- Declared in Windows as WM_KILLFOCUS
-Wm_lbuttondblclk: INTEGER is 515
+Wm_lbuttondblclk: SIGNED16 is 515
 -- Declared in Windows as WM_LBUTTONDBLCLK
-Wm_lbuttondown: INTEGER is 513
+Wm_lbuttondown: SIGNED16 is 513
 -- Declared in Windows as WM_LBUTTONDOWN
-Wm_lbuttonup: INTEGER is 514
+Wm_lbuttonup: SIGNED16 is 514
 -- Declared in Windows as WM_LBUTTONUP
-Wm_mbuttondblclk: INTEGER is 521
+Wm_mbuttondblclk: SIGNED16 is 521
 -- Declared in Windows as WM_MBUTTONDBLCLK
-Wm_mbuttondown: INTEGER is 519
+Wm_mbuttondown: SIGNED16 is 519
 -- Declared in Windows as WM_MBUTTONDOWN
-Wm_mbuttonup: INTEGER is 520
+Wm_mbuttonup: SIGNED16 is 520
 -- Declared in Windows as WM_MBUTTONUP
-Wm_mdiactivate: INTEGER is 546
+Wm_mdiactivate: SIGNED16 is 546
 -- Declared in Windows as WM_MDIACTIVATE
-Wm_mdicascade: INTEGER is 551
+Wm_mdicascade: SIGNED16 is 551
 -- Declared in Windows as WM_MDICASCADE
-Wm_mdicreate: INTEGER is 544
+Wm_mdicreate: SIGNED16 is 544
 -- Declared in Windows as WM_MDICREATE
-Wm_mdidestroy: INTEGER is 545
+Wm_mdidestroy: SIGNED16 is 545
 -- Declared in Windows as WM_MDIDESTROY
-Wm_mdigetactive: INTEGER is 553
+Wm_mdigetactive: SIGNED16 is 553
 -- Declared in Windows as WM_MDIGETACTIVE
-Wm_mdiiconarrange: INTEGER is 552
+Wm_mdiiconarrange: SIGNED16 is 552
 -- Declared in Windows as WM_MDIICONARRANGE
-Wm_mdimaximize: INTEGER is 549
+Wm_mdimaximize: SIGNED16 is 549
 -- Declared in Windows as WM_MDIMAXIMIZE
-Wm_mdinext: INTEGER is 548
+Wm_mdinext: SIGNED16 is 548
 -- Declared in Windows as WM_MDINEXT
-Wm_mdirefreshmenu: INTEGER is 564
+Wm_mdirefreshmenu: SIGNED16 is 564
 -- Declared in Windows as WM_MDIREFRESHMENU
-Wm_mdirestore: INTEGER is 547
+Wm_mdirestore: SIGNED16 is 547
 -- Declared in Windows as WM_MDIRESTORE
-Wm_mdisetmenu: INTEGER is 560
+Wm_mdisetmenu: SIGNED16 is 560
 -- Declared in Windows as WM_MDISETMENU
-Wm_mditile: INTEGER is 550
+Wm_mditile: SIGNED16 is 550
 -- Declared in Windows as WM_MDITILE
-Wm_measureitem: INTEGER is 44
+Wm_measureitem: SIGNED16 is 44
 -- Declared in Windows as WM_MEASUREITEM
-Wm_menuchar: INTEGER is 288
+Wm_menuchar: SIGNED16 is 288
 -- Declared in Windows as WM_MENUCHAR
-Wm_menucommand: INTEGER is 294
+Wm_menucommand: SIGNED16 is 294
 -- Declared in Windows as WM_MENUCOMMAND
-Wm_menudrag: INTEGER is 291
+Wm_menudrag: SIGNED16 is 291
 -- Declared in Windows as WM_MENUDRAG
-Wm_menugetobject: INTEGER is 292
+Wm_menugetobject: SIGNED16 is 292
 -- Declared in Windows as WM_MENUGETOBJECT
-Wm_menurbuttonup: INTEGER is 290
+Wm_menurbuttonup: SIGNED16 is 290
 -- Declared in Windows as WM_MENURBUTTONUP
-Wm_menuselect: INTEGER is 287
+Wm_menuselect: SIGNED16 is 287
 -- Declared in Windows as WM_MENUSELECT
-Wm_mouseactivate: INTEGER is 33
+Wm_mouseactivate: SIGNED16 is 33
 -- Declared in Windows as WM_MOUSEACTIVATE
-Wm_mousefirst: INTEGER is 512
+Wm_mousefirst: SIGNED16 is 512
 -- Declared in Windows as WM_MOUSEFIRST
-Wm_mousehover: INTEGER is 673
+Wm_mousehover: SIGNED16 is 673
 -- Require Windows98, Windows NT 4.0 or later
 -- Declared in Windows as WM_MOUSEHOVER
-wm_mouselast: INTEGER
+wm_mouselast: SIGNED16
 -- Declared in Windows as WM_MOUSELAST
-Wm_mouseleave: INTEGER is 675
+Wm_mouseleave: SIGNED16 is 675
 -- Require Windows98, Windows NT 4.0 or later
 -- Declared in Windows as WM_MOUSELEAVE
-Wm_mousemove: INTEGER is 512
+Wm_mousemove: SIGNED16 is 512
 -- Declared in Windows as WM_MOUSEMOVE
-Wm_mousewheel: INTEGER is 522
+Wm_mousewheel: SIGNED16 is 522
 -- Declared in Windows as WM_MOUSEWHEEL
-Wm_move: INTEGER is 3
+Wm_move: SIGNED16 is 3
 -- Declared in Windows as WM_MOVE
-Wm_moving: INTEGER is 534
+Wm_moving: SIGNED16 is 534
 -- Declared in Windows as WM_MOVING
-Wm_ncactivate: INTEGER is 134
+Wm_ncactivate: SIGNED16 is 134
 -- Declared in Windows as WM_NCACTIVATE
-Wm_nccalcsize: INTEGER is 131
+Wm_nccalcsize: SIGNED16 is 131
 -- Declared in Windows as WM_NCCALCSIZEOF
-Wm_nccreate: INTEGER is 129
+Wm_nccreate: SIGNED16 is 129
 -- Declared in Windows as WM_NCCREATE
-Wm_ncdestroy: INTEGER is 130
+Wm_ncdestroy: SIGNED16 is 130
 -- Declared in Windows as WM_NCDESTROY
-Wm_nchittest: INTEGER is 132
+Wm_nchittest: SIGNED16 is 132
 -- Declared in Windows as WM_NCHITTEST
-Wm_nclbuttondblclk: INTEGER is 163
+Wm_nclbuttondblclk: SIGNED16 is 163
 -- Declared in Windows as WM_NCLBUTTONDBLCLK
-Wm_nclbuttondown: INTEGER is 161
+Wm_nclbuttondown: SIGNED16 is 161
 -- Declared in Windows as WM_NCLBUTTONDOWN
-Wm_nclbuttonup: INTEGER is 162
+Wm_nclbuttonup: SIGNED16 is 162
 -- Declared in Windows as WM_NCLBUTTONUP
-Wm_ncmbuttondblclk: INTEGER is 169
+Wm_ncmbuttondblclk: SIGNED16 is 169
 -- Declared in Windows as WM_NCMBUTTONDBLCLK
-Wm_ncmbuttondown: INTEGER is 167
+Wm_ncmbuttondown: SIGNED16 is 167
 -- Declared in Windows as WM_NCMBUTTONDOWN
-Wm_ncmbuttonup: INTEGER is 168
+Wm_ncmbuttonup: SIGNED16 is 168
 -- Declared in Windows as WM_NCMBUTTONUP
-Wm_ncmousehover: INTEGER is 672
+Wm_ncmousehover: SIGNED16 is 672
 -- Require Windows98, Windows NT 5.0 or later
 -- Declared in Windows as WM_NCMOUSEHOVER
-Wm_ncmouseleave: INTEGER is 674
+Wm_ncmouseleave: SIGNED16 is 674
 -- Require Windows98, Windows NT 5.0 or later
 -- Declared in Windows as WM_NCMOUSELEAVE
-Wm_ncmousemove: INTEGER is 160
+Wm_ncmousemove: SIGNED16 is 160
 -- Declared in Windows as WM_NCMOUSEMOVE
-Wm_ncpaint: INTEGER is 133
+Wm_ncpaint: SIGNED16 is 133
 -- Declared in Windows as WM_NCPAINT
-Wm_ncrbuttondblclk: INTEGER is 166
+Wm_ncrbuttondblclk: SIGNED16 is 166
 -- Declared in Windows as WM_NCRBUTTONDBLCLK
-Wm_ncrbuttondown: INTEGER is 164
+Wm_ncrbuttondown: SIGNED16 is 164
 -- Declared in Windows as WM_NCRBUTTONDOWN
-Wm_ncrbuttonup: INTEGER is 165
+Wm_ncrbuttonup: SIGNED16 is 165
 -- Declared in Windows as WM_NCRBUTTONUP
-Wm_ncxbuttondblclk: INTEGER is 173
+Wm_ncxbuttondblclk: SIGNED16 is 173
 -- Declared in Windows as WM_NCXBUTTONDBLCLK
-Wm_ncxbuttondown: INTEGER is 171
+Wm_ncxbuttondown: SIGNED16 is 171
 -- Declared in Windows as WM_NCXBUTTONDOWN
-Wm_ncxbuttonup: INTEGER is 172
+Wm_ncxbuttonup: SIGNED16 is 172
 -- Declared in Windows as WM_NCXBUTTONUP
-Wm_nextdlgctl: INTEGER is 40
+Wm_nextdlgctl: SIGNED16 is 40
 -- Declared in Windows as WM_NEXTDLGCTL
-Wm_nextmenu: INTEGER is 531
+Wm_nextmenu: SIGNED16 is 531
 -- Declared in Windows as WM_NEXTMENU
-Wm_notify: INTEGER is 78
+Wm_notify: SIGNED16 is 78
 -- Declared in Windows as WM_NOTIFY
-Wm_notifyformat: INTEGER is 85
+Wm_notifyformat: SIGNED16 is 85
 -- Declared in Windows as WM_NOTIFYFORMAT
-Wm_null: INTEGER is 0
+Wm_null: SIGNED16 is 0
 -- Declared in Windows as WM_NULL
-Wm_paint: INTEGER is 15
+Wm_paint: SIGNED16 is 15
 -- Declared in Windows as WM_PAINT
-Wm_paintclipboard: INTEGER is 777
+Wm_paintclipboard: SIGNED16 is 777
 -- Declared in Windows as WM_PAINTCLIPBOARD
-Wm_painticon: INTEGER is 38
+Wm_painticon: SIGNED16 is 38
 -- Declared in Windows as WM_PAINTICON
-Wm_palettechanged: INTEGER is 785
+Wm_palettechanged: SIGNED16 is 785
 -- Declared in Windows as WM_PALETTECHANGED
-Wm_paletteischanging: INTEGER is 784
+Wm_paletteischanging: SIGNED16 is 784
 -- Declared in Windows as WM_PALETTEISCHANGING
-Wm_parentnotify: INTEGER is 528
+Wm_parentnotify: SIGNED16 is 528
 -- Declared in Windows as WM_PARENTNOTIFY
-Wm_paste: INTEGER is 770
+Wm_paste: SIGNED16 is 770
 -- Declared in Windows as WM_PASTE
-Wm_penwinfirst: INTEGER is 896
+Wm_penwinfirst: SIGNED16 is 896
 -- Declared in Windows as WM_PENWINFIRST
-Wm_penwinlast: INTEGER is 911
+Wm_penwinlast: SIGNED16 is 911
 -- Declared in Windows as WM_PENWINLAST
-Wm_power: INTEGER is 72
+Wm_power: SIGNED16 is 72
 -- Declared in Windows as WM_POWER
-Wm_powerbroadcast: INTEGER is 536
+Wm_powerbroadcast: SIGNED16 is 536
 -- Declared in Windows as WM_POWERBROADCAST
-Wm_print: INTEGER is 791
+Wm_print: SIGNED16 is 791
 -- Declared in Windows as WM_PRINT
-Wm_printclient: INTEGER is 792
+Wm_printclient: SIGNED16 is 792
 -- Declared in Windows as WM_PRINTCLIENT
-Wm_querydragicon: INTEGER is 55
+Wm_querydragicon: SIGNED16 is 55
 -- Declared in Windows as WM_QUERYDRAGICON
-Wm_queryendsession: INTEGER is 17
+Wm_queryendsession: SIGNED16 is 17
 -- Declared in Windows as WM_QUERYENDSESSION
-Wm_querynewpalette: INTEGER is 783
+Wm_querynewpalette: SIGNED16 is 783
 -- Declared in Windows as WM_QUERYNEWPALETTE
-Wm_queryopen: INTEGER is 19
+Wm_queryopen: SIGNED16 is 19
 -- Declared in Windows as WM_QUERYOPEN
-Wm_queryuistate: INTEGER is 297
+Wm_queryuistate: SIGNED16 is 297
 -- Declared in Windows as WM_QUERYUISTATE
-Wm_queuesync: INTEGER is 35
+Wm_queuesync: SIGNED16 is 35
 -- Declared in Windows as WM_QUEUESYNC
-Wm_quit: INTEGER is 18
+Wm_quit: SIGNED16 is 18
 -- Declared in Windows as WM_QUIT
-Wm_rbuttondblclk: INTEGER is 518
+Wm_rbuttondblclk: SIGNED16 is 518
 -- Declared in Windows as WM_RBUTTONDBLCLK
-Wm_rbuttondown: INTEGER is 516
+Wm_rbuttondown: SIGNED16 is 516
 -- Declared in Windows as WM_RBUTTONDOWN
-Wm_rbuttonup: INTEGER is 517
+Wm_rbuttonup: SIGNED16 is 517
 -- Declared in Windows as WM_RBUTTONUP
-Wm_renderallformats: INTEGER is 774
+Wm_renderallformats: SIGNED16 is 774
 -- Declared in Windows as WM_RENDERALLFORMATS
-Wm_renderformat: INTEGER is 773
+Wm_renderformat: SIGNED16 is 773
 -- Declared in Windows as WM_RENDERFORMAT
-Wm_setcursor: INTEGER is 32
+Wm_setcursor: SIGNED16 is 32
 -- Declared in Windows as WM_SETCURSOR
-Wm_setfocus: INTEGER is 7
+Wm_setfocus: SIGNED16 is 7
 -- Declared in Windows as WM_SETFOCUS
-Wm_setfont: INTEGER is 48
+Wm_setfont: SIGNED16 is 48
 -- Declared in Windows as WM_SETFONT
-Wm_sethotkey: INTEGER is 50
+Wm_sethotkey: SIGNED16 is 50
 -- Declared in Windows as WM_SETHOTKEY
-Wm_seticon: INTEGER is 128
+Wm_seticon: SIGNED16 is 128
 -- Declared in Windows as WM_SETICON
-Wm_setredraw: INTEGER is 11
+Wm_setredraw: SIGNED16 is 11
 -- Declared in Windows as WM_SETREDRAW
-Wm_settext: INTEGER is 12
+Wm_settext: SIGNED16 is 12
 -- Declared in Windows as WM_SETTEXT
-Wm_settingchange: INTEGER is 26
+Wm_settingchange: SIGNED16 is 26
 -- Declared in Windows as WM_WININICHANGE
 -- Was declared in WEL_WM_CONSTANTS as synonym of wm_wininichange.
-Wm_showwindow: INTEGER is 24
+Wm_showwindow: SIGNED16 is 24
 -- Declared in Windows as WM_SHOWWINDOW
-Wm_size: INTEGER is 5
+Wm_size: SIGNED16 is 5
 -- Declared in Windows as WM_SIZEOF
-Wm_sizeclipboard: INTEGER is 779
+Wm_sizeclipboard: SIGNED16 is 779
 -- Declared in Windows as WM_SIZEOFCLIPBOARD
-Wm_sizing: INTEGER is 532
+Wm_sizing: SIGNED16 is 532
 -- Declared in Windows as WM_SIZING
-Wm_spoolerstatus: INTEGER is 42
+Wm_spoolerstatus: SIGNED16 is 42
 -- Declared in Windows as WM_SPOOLERSTATUS
-Wm_stylechanged: INTEGER is 125
+Wm_stylechanged: SIGNED16 is 125
 -- Declared in Windows as WM_STYLECHANGED
-Wm_stylechanging: INTEGER is 124
+Wm_stylechanging: SIGNED16 is 124
 -- Declared in Windows as WM_STYLECHANGING
-Wm_syncpaint: INTEGER is 136
+Wm_syncpaint: SIGNED16 is 136
 -- Declared in Windows as WM_SYNCPAINT
-Wm_syschar: INTEGER is 262
+Wm_syschar: SIGNED16 is 262
 -- Declared in Windows as WM_SYSCHAR
-Wm_syscolorchange: INTEGER is 21
+Wm_syscolorchange: SIGNED16 is 21
 -- Declared in Windows as WM_SYSCOLORCHANGE
-Wm_syscommand: INTEGER is 274
+Wm_syscommand: SIGNED16 is 274
 -- Declared in Windows as WM_SYSCOMMAND
-Wm_sysdeadchar: INTEGER is 263
+Wm_sysdeadchar: SIGNED16 is 263
 -- Declared in Windows as WM_SYSDEADCHAR
-Wm_syskeydown: INTEGER is 260
+Wm_syskeydown: SIGNED16 is 260
 -- Declared in Windows as WM_SYSKEYDOWN
-Wm_syskeyup: INTEGER is 261
+Wm_syskeyup: SIGNED16 is 261
 -- Declared in Windows as WM_SYSKEYUP
-Wm_tcard: INTEGER is 82
+Wm_tcard: SIGNED16 is 82
 -- Declared in Windows as WM_TCARD
-Wm_timechange: INTEGER is 30
+Wm_timechange: SIGNED16 is 30
 -- Declared in Windows as WM_TIMECHANGE
-Wm_timer: INTEGER is 275
+Wm_timer: SIGNED16 is 275
 -- Declared in Windows as WM_TIMER
-Wm_undo: INTEGER is 772
+Wm_undo: SIGNED16 is 772
 -- Declared in Windows as WM_UNDO
-Wm_uninitmenupopup: INTEGER is 293
+Wm_uninitmenupopup: SIGNED16 is 293
 -- Declared in Windows as WM_UNINITMENUPOPUP
-Wm_updateuistate: INTEGER is 296
+Wm_updateuistate: SIGNED16 is 296
 -- Declared in Windows as WM_UPDATEUISTATE
-Wm_user: INTEGER is 1024
+Wm_user: SIGNED16 is 1024
 -- Declared in Windows as WM_USER
-Wm_userchanged: INTEGER is 84
+Wm_userchanged: SIGNED16 is 84
 -- Declared in Windows as WM_USERCHANGED
-Wm_vkeytoitem: INTEGER is 46
+Wm_vkeytoitem: SIGNED16 is 46
 -- Declared in Windows as WM_VKEYTOITEM
-Wm_vscroll: INTEGER is 277
+Wm_vscroll: SIGNED16 is 277
 -- Declared in Windows as WM_VSCROLL
-Wm_vscrollclipboard: INTEGER is 778
+Wm_vscrollclipboard: SIGNED16 is 778
 -- Declared in Windows as WM_VSCROLLCLIPBOARD
-Wm_windowposchanged: INTEGER is 71
+Wm_windowposchanged: SIGNED16 is 71
 -- Declared in Windows as WM_WINDOWPOSCHANGED
-Wm_windowposchanging: INTEGER is 70
+Wm_windowposchanging: SIGNED16 is 70
 -- Declared in Windows as WM_WINDOWPOSCHANGING
-Wm_wininichange: INTEGER is 26
+Wm_wininichange: SIGNED16 is 26
 -- Declared in Windows as WM_WININICHANGE
 -- Was declared in WEL_WM_CONSTANTS as synonym of wm_settingchange.
-Wm_xbuttondblclk: INTEGER is 525
+Wm_xbuttondblclk: SIGNED16 is 525
 -- Declared in Windows as WM_XBUTTONDBLCLK
-Wm_xbuttondown: INTEGER is 523
+Wm_xbuttondown: SIGNED16 is 523
 -- Declared in Windows as WM_XBUTTONDOWN
-Wm_xbuttonup: INTEGER is 524
+Wm_xbuttonup: SIGNED16 is 524
 -- Declared in Windows as WM_XBUTTONUP
 
 invariant
@@ -1706,362 +1706,362 @@ class interface
 
 feature -- Access
 
-	Vk_0: INTEGER is 48
+	Vk_0: SIGNED16 is 48
 
-	Vk_1: INTEGER is 49
+	Vk_1: SIGNED16 is 49
 
-	Vk_2: INTEGER is 50
+	Vk_2: SIGNED16 is 50
 
-	Vk_3: INTEGER is 51
+	Vk_3: SIGNED16 is 51
 
-	Vk_4: INTEGER is 52
+	Vk_4: SIGNED16 is 52
 
-	Vk_5: INTEGER is 53
+	Vk_5: SIGNED16 is 53
 
-	Vk_6: INTEGER is 54
+	Vk_6: SIGNED16 is 54
 
-	Vk_7: INTEGER is 55
+	Vk_7: SIGNED16 is 55
 
-	Vk_8: INTEGER is 56
+	Vk_8: SIGNED16 is 56
 
-	Vk_9: INTEGER is 57
+	Vk_9: SIGNED16 is 57
 			-- Vk_a thru Vk_z are the same as their ASCII equivalents: 'A' thru 'Z'.
 
-	Vk_a: INTEGER is 65
+	Vk_a: SIGNED16 is 65
 
-	Vk_add: INTEGER is 107
+	Vk_add: SIGNED16 is 107
 			-- Declared in Windows as VK_ADD
 
-	Vk_b: INTEGER is 66
+	Vk_b: SIGNED16 is 66
 
-	Vk_back: INTEGER is 8
+	Vk_back: SIGNED16 is 8
 			-- Declared in Windows as VK_BACK
 
-	Vk_c: INTEGER is 67
+	Vk_c: SIGNED16 is 67
 
-	Vk_cancel: INTEGER is 3
+	Vk_cancel: SIGNED16 is 3
 			-- Declared in Windows as VK_CANCEL
 
-	Vk_capital: INTEGER is 20
+	Vk_capital: SIGNED16 is 20
 			-- Declared in Windows as VK_CAPITAL
 
-	Vk_clear: INTEGER is 12
+	Vk_clear: SIGNED16 is 12
 			-- Declared in Windows as VK_CLEAR
 
-	Vk_control: INTEGER is 17
+	Vk_control: SIGNED16 is 17
 			-- Declared in Windows as VK_CONTROL
 
-	Vk_d: INTEGER is 68
+	Vk_d: SIGNED16 is 68
 
-	Vk_decimal: INTEGER is 110
+	Vk_decimal: SIGNED16 is 110
 			-- Declared in Windows as VK_DECIMAL
 
-	Vk_delete: INTEGER is 46
+	Vk_delete: SIGNED16 is 46
 			-- Declared in Windows as VK_DELETE
 
-	Vk_divide: INTEGER is 111
+	Vk_divide: SIGNED16 is 111
 			-- Declared in Windows as VK_DIVIDE
 
-	Vk_down: INTEGER is 40
+	Vk_down: SIGNED16 is 40
 			-- Declared in Windows as VK_DOWN
 
-	Vk_e: INTEGER is 69
+	Vk_e: SIGNED16 is 69
 
-	Vk_end: INTEGER is 35
+	Vk_end: SIGNED16 is 35
 			-- Declared in Windows as VK_END
 
-	Vk_escape: INTEGER is 27
+	Vk_escape: SIGNED16 is 27
 			-- Declared in Windows as VK_ESCAPE
 
-	Vk_execute: INTEGER is 43
+	Vk_execute: SIGNED16 is 43
 			-- Declared in Windows as VK_EXECUTE
 
-	Vk_f: INTEGER is 70
+	Vk_f: SIGNED16 is 70
 
-	Vk_f1: INTEGER is 112
+	Vk_f1: SIGNED16 is 112
 			-- Declared in Windows as VK_F1
 
-	Vk_f10: INTEGER is 121
+	Vk_f10: SIGNED16 is 121
 			-- Declared in Windows as VK_F10
 
-	Vk_f11: INTEGER is 122
+	Vk_f11: SIGNED16 is 122
 			-- Declared in Windows as VK_F11
 
-	Vk_f12: INTEGER is 123
+	Vk_f12: SIGNED16 is 123
 			-- Declared in Windows as VK_F12
 
-	Vk_f13: INTEGER is 124
+	Vk_f13: SIGNED16 is 124
 			-- Declared in Windows as VK_F13
 
-	Vk_f14: INTEGER is 125
+	Vk_f14: SIGNED16 is 125
 			-- Declared in Windows as VK_F14
 
-	Vk_f15: INTEGER is 126
+	Vk_f15: SIGNED16 is 126
 			-- Declared in Windows as VK_F15
 
-	Vk_f16: INTEGER is 127
+	Vk_f16: SIGNED16 is 127
 			-- Declared in Windows as VK_F16
 
-	Vk_f17: INTEGER is 128
+	Vk_f17: SIGNED16 is 128
 			-- Declared in Windows as VK_F17
 
-	Vk_f18: INTEGER is 129
+	Vk_f18: SIGNED16 is 129
 			-- Declared in Windows as VK_F18
 
-	Vk_f19: INTEGER is 130
+	Vk_f19: SIGNED16 is 130
 			-- Declared in Windows as VK_F19
 
-	Vk_f2: INTEGER is 113
+	Vk_f2: SIGNED16 is 113
 			-- Declared in Windows as VK_F2
 
-	Vk_f20: INTEGER is 131
+	Vk_f20: SIGNED16 is 131
 			-- Declared in Windows as VK_F20
 
-	Vk_f21: INTEGER is 132
+	Vk_f21: SIGNED16 is 132
 			-- Declared in Windows as VK_F21
 
-	Vk_f22: INTEGER is 133
+	Vk_f22: SIGNED16 is 133
 			-- Declared in Windows as VK_F22
 
-	Vk_f23: INTEGER is 134
+	Vk_f23: SIGNED16 is 134
 			-- Declared in Windows as VK_F23
 
-	Vk_f24: INTEGER is 135
+	Vk_f24: SIGNED16 is 135
 			-- Declared in Windows as VK_F24
 
-	Vk_f3: INTEGER is 114
+	Vk_f3: SIGNED16 is 114
 			-- Declared in Windows as VK_F3
 
-	Vk_f4: INTEGER is 115
+	Vk_f4: SIGNED16 is 115
 			-- Declared in Windows as VK_F4
 
-	Vk_f5: INTEGER is 116
+	Vk_f5: SIGNED16 is 116
 			-- Declared in Windows as VK_F5
 
-	Vk_f6: INTEGER is 117
+	Vk_f6: SIGNED16 is 117
 			-- Declared in Windows as VK_F6
 
-	Vk_f7: INTEGER is 118
+	Vk_f7: SIGNED16 is 118
 			-- Declared in Windows as VK_F7
 
-	Vk_f8: INTEGER is 119
+	Vk_f8: SIGNED16 is 119
 			-- Declared in Windows as VK_F8
 
-	Vk_f9: INTEGER is 120
+	Vk_f9: SIGNED16 is 120
 			-- Declared in Windows as VK_F9
 
-	Vk_g: INTEGER is 71
+	Vk_g: SIGNED16 is 71
 
-	Vk_h: INTEGER is 72
+	Vk_h: SIGNED16 is 72
 
-	Vk_help: INTEGER is 47
+	Vk_help: SIGNED16 is 47
 			-- Declared in Windows as VK_HELP
 
-	Vk_home: INTEGER is 36
+	Vk_home: SIGNED16 is 36
 			-- Declared in Windows as VK_HOME
 
-	Vk_i: INTEGER is 73
+	Vk_i: SIGNED16 is 73
 
-	Vk_insert: INTEGER is 45
+	Vk_insert: SIGNED16 is 45
 			-- Declared in Windows as VK_INSERT
 
-	Vk_j: INTEGER is 74
+	Vk_j: SIGNED16 is 74
 
-	Vk_k: INTEGER is 75
+	Vk_k: SIGNED16 is 75
 
-	Vk_l: INTEGER is 76
+	Vk_l: SIGNED16 is 76
 
-	Vk_lbutton: INTEGER is 1
+	Vk_lbutton: SIGNED16 is 1
 			-- Declared in Windows as VK_LBUTTON
 
-	Vk_lcontrol: INTEGER is 162
+	Vk_lcontrol: SIGNED16 is 162
 			-- Declared in Windows as VK_LCONTROL
 
-	Vk_left: INTEGER is 37
+	Vk_left: SIGNED16 is 37
 			-- Declared in Windows as VK_LEFT
 
-	Vk_lmenu: INTEGER is 164
+	Vk_lmenu: SIGNED16 is 164
 			-- Declared in Windows as VK_LMENU
 
-	Vk_lshift: INTEGER is 160
+	Vk_lshift: SIGNED16 is 160
 			-- Declared in Windows as VK_LSHIFT
 
-	Vk_m: INTEGER is 77
+	Vk_m: SIGNED16 is 77
 
-	Vk_mbutton: INTEGER is 4
+	Vk_mbutton: SIGNED16 is 4
 			-- Declared in Windows as VK_MBUTTON
 
-	Vk_menu: INTEGER is 18
+	Vk_menu: SIGNED16 is 18
 			-- Declared in Windows as VK_MENU
 
-	Vk_multiply: INTEGER is 106
+	Vk_multiply: SIGNED16 is 106
 			-- Declared in Windows as VK_MULTIPLY
 
-	Vk_n: INTEGER is 78
+	Vk_n: SIGNED16 is 78
 
-	Vk_next: INTEGER is 34
+	Vk_next: SIGNED16 is 34
 			-- Declared in Windows as VK_NEXT
 
-	Vk_numlock: INTEGER is 144
+	Vk_numlock: SIGNED16 is 144
 			-- Declared in Windows as VK_NUMLOCK
 
-	Vk_numpad0: INTEGER is 96
+	Vk_numpad0: SIGNED16 is 96
 			-- Declared in Windows as VK_NUMPAD0
 
-	Vk_numpad1: INTEGER is 97
+	Vk_numpad1: SIGNED16 is 97
 			-- Declared in Windows as VK_NUMPAD1
 
-	Vk_numpad2: INTEGER is 98
+	Vk_numpad2: SIGNED16 is 98
 			-- Declared in Windows as VK_NUMPAD2
 
-	Vk_numpad3: INTEGER is 99
+	Vk_numpad3: SIGNED16 is 99
 			-- Declared in Windows as VK_NUMPAD3
 
-	Vk_numpad4: INTEGER is 100
+	Vk_numpad4: SIGNED16 is 100
 			-- Declared in Windows as VK_NUMPAD4
 
-	Vk_numpad5: INTEGER is 101
+	Vk_numpad5: SIGNED16 is 101
 			-- Declared in Windows as VK_NUMPAD5
 
-	Vk_numpad6: INTEGER is 102
+	Vk_numpad6: SIGNED16 is 102
 			-- Declared in Windows as VK_NUMPAD6
 
-	Vk_numpad7: INTEGER is 103
+	Vk_numpad7: SIGNED16 is 103
 			-- Declared in Windows as VK_NUMPAD7
 
-	Vk_numpad8: INTEGER is 104
+	Vk_numpad8: SIGNED16 is 104
 			-- Declared in Windows as VK_NUMPAD8
 
-	Vk_numpad9: INTEGER is 105
+	Vk_numpad9: SIGNED16 is 105
 			-- Declared in Windows as VK_NUMPAD9
 
-	Vk_o: INTEGER is 79
+	Vk_o: SIGNED16 is 79
 
-	Vk_p: INTEGER is 80
+	Vk_p: SIGNED16 is 80
 
-	Vk_pause: INTEGER is 19
+	Vk_pause: SIGNED16 is 19
 			-- Declared in Windows as VK_PAUSE
 
-	Vk_print: INTEGER is 42
+	Vk_print: SIGNED16 is 42
 			-- Declared in Windows as VK_PRINT
 
-	Vk_prior: INTEGER is 33
+	Vk_prior: SIGNED16 is 33
 			-- Declared in Windows as VK_PRIOR
 
-	Vk_q: INTEGER is 81
+	Vk_q: SIGNED16 is 81
 
-	Vk_r: INTEGER is 82
+	Vk_r: SIGNED16 is 82
 
-	Vk_rbutton: INTEGER is 2
+	Vk_rbutton: SIGNED16 is 2
 			-- Declared in Windows as VK_RBUTTON
 
-	Vk_rcontrol: INTEGER is 163
+	Vk_rcontrol: SIGNED16 is 163
 			-- Declared in Windows as VK_RCONTROL
 
-	Vk_return: INTEGER is 13
+	Vk_return: SIGNED16 is 13
 			-- Declared in Windows as VK_RETURN
 
-	Vk_right: INTEGER is 39
+	Vk_right: SIGNED16 is 39
 			-- Declared in Windows as VK_RIGHT
 
-	Vk_rmenu: INTEGER is 165
+	Vk_rmenu: SIGNED16 is 165
 			-- Declared in Windows as VK_RMENU
 			-- Vk_0 thru Vk_9 are the same as their ASCII equivalents: '0' thru '9'.
 
-	Vk_rshift: INTEGER is 161
+	Vk_rshift: SIGNED16 is 161
 			-- Declared in Windows as VK_RSHIFT
 
-	Vk_s: INTEGER is 83
+	Vk_s: SIGNED16 is 83
 
-	Vk_scroll: INTEGER is 145
+	Vk_scroll: SIGNED16 is 145
 			-- Declared in Windows as VK_SCROLL
 
-	Vk_select: INTEGER is 41
+	Vk_select: SIGNED16 is 41
 			-- Declared in Windows as VK_SELECT
 
-	Vk_separator: INTEGER is 108
+	Vk_separator: SIGNED16 is 108
 			-- Declared in Windows as VK_SEPARATOR
 
-	Vk_shift: INTEGER is 16
+	Vk_shift: SIGNED16 is 16
 			-- Declared in Windows as VK_SHIFT
 
-	Vk_snapshot: INTEGER is 44nn
+	Vk_snapshot: SIGNED16 is 44nn
 			-- Declared in Windows as VK_SNAPSHOT
 
-	Vk_space: INTEGER is 32
+	Vk_space: SIGNED16 is 32
 			-- Declared in Windows as VK_SPACE
 
-	Vk_subtract: INTEGER is 109
+	Vk_subtract: SIGNED16 is 109
 			-- Declared in Windows as VK_SUBTRACT
 
-	Vk_t: INTEGER is 84
+	Vk_t: SIGNED16 is 84
 
-	Vk_tab: INTEGER is 9
+	Vk_tab: SIGNED16 is 9
 			-- Declared in Windows as VK_TAB
 
-	Vk_u: INTEGER is 85
+	Vk_u: SIGNED16 is 85
 
-	Vk_up: INTEGER is 38
+	Vk_up: SIGNED16 is 38
 			-- Declared in Windows as VK_UP
 
-	Vk_v: INTEGER is 86
+	Vk_v: SIGNED16 is 86
 
-	Vk_w: INTEGER is 87
+	Vk_w: SIGNED16 is 87
 
-	Vk_x: INTEGER is 88
+	Vk_x: SIGNED16 is 88
 
-	Vk_y: INTEGER is 89
+	Vk_y: SIGNED16 is 89
 
-	Vk_z: INTEGER is 90
+	Vk_z: SIGNED16 is 90
 
 invariant
 
-Sm_cmetrics: INTEGER is 76
-Sm_cxborder: INTEGER is 5
-Sm_cxcursor: INTEGER is 13
-Sm_cxdlgframe: INTEGER is 7
-Sm_cxdoubleclk: INTEGER is 36
-Sm_cxframe: INTEGER is 32
-Sm_cxfullscreen: INTEGER is 16
-Sm_cxhscroll: INTEGER is 21
-Sm_cxhthumb: INTEGER is 10
-Sm_cxicon: INTEGER is 11
-Sm_cxiconspacing: INTEGER is 38
-Sm_cxmaximized: INTEGER is 61
-Sm_cxmin: INTEGER is 28
-Sm_cxmintrack: INTEGER is 34
-Sm_cxscreen: INTEGER is 0
-Sm_cxsize: INTEGER is 30
-Sm_cxvscroll: INTEGER is 2
-Sm_cyborder: INTEGER is 6
-Sm_cycaption: INTEGER is 4
-Sm_cycursor: INTEGER is 14
-Sm_cydlgframe: INTEGER is 8
-Sm_cydoubleclk: INTEGER is 37
-Sm_cyframe: INTEGER is 33
-Sm_cyfullscreen: INTEGER is 17
-Sm_cyhscroll: INTEGER is 3
-Sm_cyicon: INTEGER is 12
-Sm_cyiconspacing: INTEGER is 39
-Sm_cykanjiwindow: INTEGER is 18
-Sm_cymaximized: INTEGER is 62
-Sm_cymenu: INTEGER is 15
-Sm_cymin: INTEGER is 29
-Sm_cymintrack: INTEGER is 35
-Sm_cyscreen: INTEGER is 1
-Sm_cysize: INTEGER is 31
-Sm_cyvscroll: INTEGER is 20
-Sm_cyvthumb: INTEGER is 9
-Sm_dbcsenabled: INTEGER is 42
-Sm_debug: INTEGER is 22
-Sm_menudropalignment: INTEGER is 40
-Sm_mousepresent: INTEGER is 19
-Sm_penwindows: INTEGER is 41
-Sm_reserved1: INTEGER is 24
-Sm_reserved2: INTEGER is 25
-Sm_reserved3: INTEGER is 26
-Sm_reserved4: INTEGER is 27
-Sm_swapbutton: INTEGER is 23
+Sm_cmetrics: SIGNED16 is 76
+Sm_cxborder: SIGNED16 is 5
+Sm_cxcursor: SIGNED16 is 13
+Sm_cxdlgframe: SIGNED16 is 7
+Sm_cxdoubleclk: SIGNED16 is 36
+Sm_cxframe: SIGNED16 is 32
+Sm_cxfullscreen: SIGNED16 is 16
+Sm_cxhscroll: SIGNED16 is 21
+Sm_cxhthumb: SIGNED16 is 10
+Sm_cxicon: SIGNED16 is 11
+Sm_cxiconspacing: SIGNED16 is 38
+Sm_cxmaximized: SIGNED16 is 61
+Sm_cxmin: SIGNED16 is 28
+Sm_cxmintrack: SIGNED16 is 34
+Sm_cxscreen: SIGNED16 is 0
+Sm_cxsize: SIGNED16 is 30
+Sm_cxvscroll: SIGNED16 is 2
+Sm_cyborder: SIGNED16 is 6
+Sm_cycaption: SIGNED16 is 4
+Sm_cycursor: SIGNED16 is 14
+Sm_cydlgframe: SIGNED16 is 8
+Sm_cydoubleclk: SIGNED16 is 37
+Sm_cyframe: SIGNED16 is 33
+Sm_cyfullscreen: SIGNED16 is 17
+Sm_cyhscroll: SIGNED16 is 3
+Sm_cyicon: SIGNED16 is 12
+Sm_cyiconspacing: SIGNED16 is 39
+Sm_cykanjiwindow: SIGNED16 is 18
+Sm_cymaximized: SIGNED16 is 62
+Sm_cymenu: SIGNED16 is 15
+Sm_cymin: SIGNED16 is 29
+Sm_cymintrack: SIGNED16 is 35
+Sm_cyscreen: SIGNED16 is 1
+Sm_cysize: SIGNED16 is 31
+Sm_cyvscroll: SIGNED16 is 20
+Sm_cyvthumb: SIGNED16 is 9
+Sm_dbcsenabled: SIGNED16 is 42
+Sm_debug: SIGNED16 is 22
+Sm_menudropalignment: SIGNED16 is 40
+Sm_mousepresent: SIGNED16 is 19
+Sm_penwindows: SIGNED16 is 41
+Sm_reserved1: SIGNED16 is 24
+Sm_reserved2: SIGNED16 is 25
+Sm_reserved3: SIGNED16 is 26
+Sm_reserved4: SIGNED16 is 27
+Sm_swapbutton: SIGNED16 is 23
 
 indexing
 description: "Window style (WS) constants."
@@ -2071,125 +2071,125 @@ revision: "$Revision: 1.3 $"
 class interface
 WEL_WS_CONSTANTS
 feature -- Miscellaneous
-Cw_usedefault: INTEGER is -2147483648
+Cw_usedefault: SIGNED16 is -2147483648
 -- Declared in Windows as CW_USEDEFAULT
 
 feature -- Basic window types
-Ws_child: INTEGER is 1073741824
+Ws_child: SIGNED16 is 1073741824
 -- Declared in Windows as WS_CHILD
-Ws_overlapped: INTEGER is 0
+Ws_overlapped: SIGNED16 is 0
 -- Declared in Windows as WS_OVERLAPPED
 -- Was declared in WEL_WS_CONSTANTS as synonym of ws_tiled.
-Ws_popup: INTEGER is -2147483648
+Ws_popup: SIGNED16 is -2147483648
 -- Declared in Windows as WS_POPUP
-Ws_tiled: INTEGER is 0
+Ws_tiled: SIGNED16 is 0
 -- Declared in Windows as WS_OVERLAPPED
 -- Was declared in WEL_WS_CONSTANTS as synonym of ws_overlapped.
 
 feature -- Clipping styles
-Ws_clipchildren: INTEGER is 33554432
+Ws_clipchildren: SIGNED16 is 33554432
 -- Declared in Windows as WS_CLIPCHILDREN
-Ws_clipsiblings: INTEGER is 67108864
+Ws_clipsiblings: SIGNED16 is 67108864
 -- Declared in Windows as WS_CLIPSIBLINGS
 
 feature -- Common window styles
-Ws_childwindow: INTEGER is 1073741824
+Ws_childwindow: SIGNED16 is 1073741824
 -- Declared in Windows as WS_CHILDWINDOW
-Ws_overlappedwindow: INTEGER is 13565952
+Ws_overlappedwindow: SIGNED16 is 13565952
 -- Declared in Windows as WS_OVERLAPPEDWINDOW
 -- Was declared in WEL_WS_CONSTANTS as synonym of ws_tiledwindow.
-Ws_popupwindow: INTEGER is -2138570752
+Ws_popupwindow: SIGNED16 is -2138570752
 -- Declared in Windows as WS_POPUPWINDOW
-Ws_tiledwindow: INTEGER is 13565952
+Ws_tiledwindow: SIGNED16 is 13565952
 -- Declared in Windows as WS_OVERLAPPEDWINDOW
 -- Was declared in WEL_WS_CONSTANTS as synonym of ws_overlappedwindow.
 
 feature -- Control window styles
-Ws_group: INTEGER is 131072
+Ws_group: SIGNED16 is 131072
 -- Declared in Windows as WS_GROUP
-Ws_tabstop: INTEGER is 65536
+Ws_tabstop: SIGNED16 is 65536
 -- Declared in Windows as WS_TABSTOP
 
 feature -- Extended window styles
-Ws_ex_acceptfiles: INTEGER is 16
+Ws_ex_acceptfiles: SIGNED16 is 16
 -- Declared in Windows as WS_EX_ACCEPTFILES
-Ws_ex_clientedge: INTEGER is 512
+Ws_ex_clientedge: SIGNED16 is 512
 -- Declared in Windows as WS_EX_CLIENTEDGE
-Ws_ex_contexthelp: INTEGER is 1024
+Ws_ex_contexthelp: SIGNED16 is 1024
 -- Declared in Windows as WS_EX_CONTEXTHELP
-Ws_ex_controlparent: INTEGER is 65536
+Ws_ex_controlparent: SIGNED16 is 65536
 -- Declared in Windows as WS_EX_CONTROLPARENT
-Ws_ex_dlgmodalframe: INTEGER is 1
+Ws_ex_dlgmodalframe: SIGNED16 is 1
 -- Declared in Windows as WS_EX_DLGMODALFRAME
-Ws_ex_left: INTEGER is 0
+Ws_ex_left: SIGNED16 is 0
 -- Declared in Windows as WS_EX_LEFT
-Ws_ex_leftscrollbar: INTEGER is 16384
+Ws_ex_leftscrollbar: SIGNED16 is 16384
 -- Declared in Windows as WS_EX_LEFTSCROLLBAR
-Ws_ex_ltrreading: INTEGER is 0
+Ws_ex_ltrreading: SIGNED16 is 0
 -- Declared in Windows as WS_EX_LTRREADING
-Ws_ex_mdichild: INTEGER is 64
+Ws_ex_mdichild: SIGNED16 is 64
 -- Declared in Windows as WS_EX_MDICHILD
-Ws_ex_noparentnotify: INTEGER is 4
+Ws_ex_noparentnotify: SIGNED16 is 4
 -- Declared in Windows as WS_EX_NOPARENTNOTIFY
-Ws_ex_overlappedwindow: INTEGER is 768
+Ws_ex_overlappedwindow: SIGNED16 is 768
 -- Declared in Windows as WS_EX_OVERLAPPEDWINDOW
-Ws_ex_palettewindow: INTEGER is 392
+Ws_ex_palettewindow: SIGNED16 is 392
 -- Declared in Windows as WS_EX_PALETTEWINDOW
-Ws_ex_right: INTEGER is 4096
+Ws_ex_right: SIGNED16 is 4096
 -- Declared in Windows as WS_EX_RIGHT
-Ws_ex_rightscrollbar: INTEGER is 0
+Ws_ex_rightscrollbar: SIGNED16 is 0
 -- Declared in Windows as WS_EX_RIGHTSCROLLBAR
-Ws_ex_rtlreading: INTEGER is 8192
+Ws_ex_rtlreading: SIGNED16 is 8192
 -- Declared in Windows as WS_EX_RTLREADING
-Ws_ex_staticedge: INTEGER is 131072
+Ws_ex_staticedge: SIGNED16 is 131072
 -- Declared in Windows as WS_EX_STATICEDGE
-Ws_ex_toolwindow: INTEGER is 128
+Ws_ex_toolwindow: SIGNED16 is 128
 -- Declared in Windows as WS_EX_TOOLWINDOW
-Ws_ex_topmost: INTEGER is 8
+Ws_ex_topmost: SIGNED16 is 8
 -- Declared in Windows as WS_EX_TOPMOST
-Ws_ex_transparent: INTEGER is 32
+Ws_ex_transparent: SIGNED16 is 32
 -- Declared in Windows as WS_EX_TRANSPARENT
-Ws_ex_windowedge: INTEGER is 256
+Ws_ex_windowedge: SIGNED16 is 256
 -- Declared in Windows as WS_EX_WINDOWEDGE
 
 feature -- Generic window states
-Ws_disabled: INTEGER is 134217728
+Ws_disabled: SIGNED16 is 134217728
 -- Declared in Windows as WS_DISABLED
-Ws_visible: INTEGER is 268435456
+Ws_visible: SIGNED16 is 268435456
 -- Declared in Windows as WS_VISIBLE
 
 feature -- Main window states
-Ws_iconic: INTEGER is 536870912
+Ws_iconic: SIGNED16 is 536870912
 -- Declared in Windows as WS_MINIMIZE
 -- Was declared in WEL_WS_CONSTANTS as synonym of ws_minimize.
-Ws_maximize: INTEGER is 16777216
+Ws_maximize: SIGNED16 is 16777216
 -- Declared in Windows as WS_MAXIMIZE
-Ws_minimize: INTEGER is 536870912
+Ws_minimize: SIGNED16 is 536870912
 -- Declared in Windows as WS_MINIMIZE
 -- Was declared in WEL_WS_CONSTANTS as synonym of ws_iconic.
 
 feature -- Main window styles
-Ws_border: INTEGER is 8388608
+Ws_border: SIGNED16 is 8388608
 -- Declared in Windows as WS_BORDER
-Ws_caption: INTEGER is 12582912
+Ws_caption: SIGNED16 is 12582912
 -- Declared in Windows as WS_CAPTION
-Ws_dlgframe: INTEGER is 4194304
+Ws_dlgframe: SIGNED16 is 4194304
 -- Declared in Windows as WS_DLGFRAME
-Ws_hscroll: INTEGER is 1048576
+Ws_hscroll: SIGNED16 is 1048576
 -- Declared in Windows as WS_HSCROLL
-Ws_maximizebox: INTEGER is 65536
+Ws_maximizebox: SIGNED16 is 65536
 -- Declared in Windows as WS_MAXIMIZEBOX
-Ws_minimizebox: INTEGER is 131072
+Ws_minimizebox: SIGNED16 is 131072
 -- Declared in Windows as WS_MINIMIZEBOX
-Ws_sizebox: INTEGER is 262144
+Ws_sizebox: SIGNED16 is 262144
 -- Declared in Windows as WS_THICKFRAME
 -- Was declared in WEL_WS_CONSTANTS as synonym of ws_thickframe.
-Ws_sysmenu: INTEGER is 524288
+Ws_sysmenu: SIGNED16 is 524288
 -- Declared in Windows as WS_SYSMENU
-Ws_thickframe: INTEGER is 262144
+Ws_thickframe: SIGNED16 is 262144
 -- Declared in Windows as WS_THICKFRAME
 -- Was declared in WEL_WS_CONSTANTS as synonym of ws_sizebox.
-Ws_vscroll: INTEGER is 2097152
+Ws_vscroll: SIGNED16 is 2097152
 -- Declared in Windows as WS_VSCROLL
 
 invariant
@@ -2206,15 +2206,15 @@ revision: "$Revision: 1.3 $"
 class interface
 WEL_SIZEOF_CONSTANTS
 feature -- Access
-Size_maxhide: INTEGER is 4
+Size_maxhide: SIGNED16 is 4
 -- Declared in Windows as SIZEOF_MAXHIDE
-Size_maximized: INTEGER is 2
+Size_maximized: SIGNED16 is 2
 -- Declared in Windows as SIZEOF_MAXIMIZED
-Size_maxshow: INTEGER is 3
+Size_maxshow: SIGNED16 is 3
 -- Declared in Windows as SIZEOF_MAXSHOW
-Size_minimized: INTEGER is 1
+Size_minimized: SIGNED16 is 1
 -- Declared in Windows as SIZEOF_MINIMIZED
-Size_restored: INTEGER is 0
+Size_restored: SIGNED16 is 0
 -- Declared in Windows as SIZEOF_RESTORED
 
 invariant

@@ -73,7 +73,7 @@ TYPE
 	tFace = POINTER TO tFaceDesc;
 
 	tVertexDesc = RECORD
-		i, j: INTEGER;      		(* vertex coordinates in matrix indices *)
+		i, j: SIGNED16;      		(* vertex coordinates in matrix indices *)
 		between: BOOLEAN;      (* center point *)
 		x, y, z: Real;      		(* vertex coordinates in VRS *)
 		nx, ny, nz: Real;      	(* vertex coordinates in NPS *)
@@ -111,22 +111,22 @@ TYPE
 		vx, vy, vz: Real		(* the actual view direction - the vector N of the coordintes*)
 	END;
 
-	ColorMap* = ARRAY 256 OF LONGINT;
+	ColorMap* = ARRAY 256 OF SIGNED32;
 
 VAR
 	theHLHSRroutine: tPlotRoutine;
-	PHIGS3DError: INTEGER;
+	PHIGS3DError: SIGNED16;
 	lightDirX, lightDirY, lightDirZ: Real;      	(* light direction: this vector have to be normed to 1 *)
-	maxFaces: LONGINT;
-	faceDepths: POINTER TO ARRAY OF LONGREAL;
-	faceIndex: POINTER TO ARRAY OF LONGINT;  (* POINTER ! *)
+	maxFaces: SIGNED32;
+	faceDepths: POINTER TO ARRAY OF FLOAT64;
+	faceIndex: POINTER TO ARRAY OF SIGNED32;  (* POINTER ! *)
 	triangulate: BOOLEAN;
 	lines: BOOLEAN;
 	colorTable*: ColorMap;
 	(**  general help routines  *)
 
 PROCEDURE StoreMap* (VAR R: Files.Rider;  lib: Objects.Library;  m: tMap);
-	VAR id: INTEGER;
+	VAR id: SIGNED16;
 BEGIN
 	IF m = NIL THEN Files.WriteInt(R, - 1) ELSE Files.WriteInt(R, 0) END;
 	GetRendering(m, id);   Files.WriteInt(R, id);
@@ -141,7 +141,7 @@ BEGIN
 END StoreMap;
 
 PROCEDURE LoadMap* (VAR R: Files.Rider;  lib: Objects.Library;  VAR m: tMap);
-	VAR objsub: Objects.Object;  ver: INTEGER;  id: INTEGER;
+	VAR objsub: Objects.Object;  ver: SIGNED16;  id: SIGNED16;
 BEGIN
 	Files.ReadInt(R, ver);
 	IF ver < 0 THEN m := NIL;  RETURN END;
@@ -159,7 +159,7 @@ BEGIN
 END LoadMap;
 
 PROCEDURE LoadObj* (VAR R: Files.Rider;  lib: Objects.Library;  VAR m: tObject);
-	VAR ver: INTEGER;  map: tMap;
+	VAR ver: SIGNED16;  map: tMap;
 BEGIN
 	Files.ReadInt(R, ver);
 	IF ver < 0 THEN m := NIL;  RETURN END;
@@ -189,7 +189,7 @@ Files.WriteLReal(R,v.nz);
 END WriteVertex0;
 
 PROCEDURE ReadVertex0 (VAR R: Files.Rider; VAR v: tVertex);
-VAR ver: INTEGER;
+VAR ver: SIGNED16;
 BEGIN
 Files.ReadInt(R,ver); IF ver < 0 THEN v := NIL; RETURN END;
 NEW(v);
@@ -224,10 +224,10 @@ END ReadVertex;
 (** ------------  display surfaces during interactions (rotation) ------------ *)
 PROCEDURE ReplOnTheFly (o3d: tObject);
 	(*vs 0.0d0   md  12.12.94 14:55:52 *)
-	VAR map: tMap;      m: vyRealVec.tMatrixChunk;      row, col, r, c, i, j: LONGINT;      dx, dy, x, y, z: Real;
-	t: LONGINT;
+	VAR map: tMap;      m: vyRealVec.tMatrixChunk;      row, col, r, c, i, j: SIGNED32;      dx, dy, x, y, z: Real;
+	t: SIGNED32;
 
-PROCEDURE ReplRow (i: LONGINT);
+PROCEDURE ReplRow (i: SIGNED32);
 	(*vs 0.0d0   md  12.04.95 16:13:45 *)
 BEGIN x := map.x0;
 	y := i * dy / (row - 1) + map.y0;
@@ -240,7 +240,7 @@ BEGIN x := map.x0;
 	END
 END ReplRow;
 
-PROCEDURE ReplCol (j: LONGINT);
+PROCEDURE ReplCol (j: SIGNED32);
 	(*vs 0.0d0   md  12.04.95 16:13:09 *)
 BEGIN x := j * dx / (col - 1) + map.x0;
 	y := map.y0;
@@ -263,7 +263,7 @@ END ReplOnTheFly;
 (** ------------  wireframe plot ------------ *)
 PROCEDURE WireFrameMapH (o3d: tObject);
 	(*vs 0.0d0   md  12.12.94 14:55:52 *)
-	VAR map: tMap;      m: vyRealVec.tMatrixChunk;      row, col, i, j: LONGINT;      dx, dy, x, y, z: Real;
+	VAR map: tMap;      m: vyRealVec.tMatrixChunk;      row, col, i, j: SIGNED32;      dx, dy, x, y, z: Real;
 BEGIN ASSERT (o3d IS tMap);      map := o3d(tMap);
 	m := map.mdata.buf;      row := m.row;      col := m.col;      dx := map.x1 - map.x0;      dy := map.y1 - map.y0;
 	FOR i := 0 TO row - 1 DO
@@ -281,7 +281,7 @@ END WireFrameMapH;
 
 PROCEDURE WireFrameMapV (o3d: tObject);
 	(*vs 0.0d0   md  12.12.94 14:55:52 *)
-	VAR map: tMap;      m: vyRealVec.tMatrixChunk;      row, col, i, j: LONGINT;      dx, dy, x, y, z: Real;
+	VAR map: tMap;      m: vyRealVec.tMatrixChunk;      row, col, i, j: SIGNED32;      dx, dy, x, y, z: Real;
 BEGIN ASSERT (o3d IS tMap);      map := o3d(tMap);
 	m := map.mdata.buf;      row := m.row;      col := m.col;      dx := map.x1 - map.x0;      dy := map.y1 - map.y0;
 	FOR j := 0 TO col - 1 DO
@@ -348,8 +348,8 @@ END PrefFaceConnection;
 (** ------------  installation of a surface as a geometrical and topological object ------------ *)
 PROCEDURE InstallHalfEdgeDesc (map: tMap;      update: BOOLEAN);
 	(* *)
-	VAR m: vyRealVec.tMatrixChunk;      row, col, i, j: INTEGER;      dx, dy: Real;
-	face, lastFace: tFace;      lastVertex: tVertex;     faces: LONGINT; n: LONGINT;
+	VAR m: vyRealVec.tMatrixChunk;      row, col, i, j: SIGNED16;      dx, dy: Real;
+	face, lastFace: tFace;      lastVertex: tVertex;     faces: SIGNED32; n: SIGNED32;
 
 PROCEDURE UpdateSurface;
 	(** vs 0.0d0 *)	(* md  28.08.95 16:29:38 *)
@@ -382,13 +382,13 @@ BEGIN m := map.mdata.buf;
 END UpdateSurface;
 
 
-PROCEDURE NewFace (i, j: INTEGER;      part: INTEGER): tFace;
+PROCEDURE NewFace (i, j: SIGNED16;      part: SIGNED16): tFace;
 	VAR face: tFace;      sx, sy, sz: Real;         (* triangulating. fof 020527 *)
 
-PROCEDURE NewHalfEdge (i, j, direction: INTEGER): tHalfEdge;
+PROCEDURE NewHalfEdge (i, j, direction: SIGNED16): tHalfEdge;
 	VAR edge: tHalfEdge;
 
-PROCEDURE NewVertex (i, j: INTEGER): tVertex;
+PROCEDURE NewVertex (i, j: SIGNED16): tVertex;
 	(*! region defintion *)
 	VAR v: tVertex;
 BEGIN
@@ -403,7 +403,7 @@ BEGIN
 	RETURN v
 END NewVertex;
 
-PROCEDURE NewCenterVertex (i, j: INTEGER): tVertex;
+PROCEDURE NewCenterVertex (i, j: SIGNED16): tVertex;
 	VAR v: tVertex;
 BEGIN
 	NEW (v);
@@ -562,13 +562,13 @@ END BackFaceIdentification;
 
 PROCEDURE SortFaces (m: tMap);
 	(*! optimieren *)
-	VAR face: tFace;     faces: LONGINT;      count, i: LONGINT;
+	VAR face: tFace;     faces: SIGNED32;      count, i: SIGNED32;
 BEGIN
 
 	face := m.firstFace.next;  count := 0;
 	WHILE(face # NIL) DO
 		(* SYSTEM.GET((face), *)
-		faceIndex[count] := SYSTEM.VAL(LONGINT, face);
+		faceIndex[count] := SYSTEM.VAL(SIGNED32, face);
 		faceDepths[count] :=  GetFaceDepth (face);
 		face := face.next;  INC(count)
 	END;
@@ -594,7 +594,7 @@ BEGIN
 	faces := 0;
 	Out.Ln;     Out.String("before SORT");
 	(* Out.Ln;    Out.LongReal(GetFaceDepth (m.firstFace),20);  *)
-	faceDepth := MIN(LONGREAL);
+	faceDepth := MIN(FLOAT64);
 	WHILE (face # NIL)  DO
 	INC(faces);
 
@@ -634,7 +634,7 @@ BEGIN
 	(*
 	faces := 0;
 	face := m.firstFace.next;
-	faceDepth := MIN(LONGREAL);
+	faceDepth := MIN(FLOAT64);
 	WHILE (face # NIL)  DO
 	INC(faces);
 	lastfaceD := faceDepth;
@@ -658,7 +658,7 @@ this: tFace;
 next: faceList;
 END;
 
-VAR prevFace, face, slideFace: tFace; faceDepth: Real; faces: LONGINT;
+VAR prevFace, face, slideFace: tFace; faceDepth: Real; faces: SIGNED32;
 faceList,current: faceList;
 BEGIN
 NEW(faceList);
@@ -821,7 +821,7 @@ END ReplHiddenLine;
 
 PROCEDURE HiddenLineMap (o3d: tObject);
 	(*vs 0.0d0   md  12.12.94 15:26:48 *)
-	VAR self: tMap;     sort: BOOLEAN;     t0, t1: LONGINT;
+	VAR self: tMap;     sort: BOOLEAN;     t0, t1: SIGNED32;
 
 BEGIN IF vyPort.onTheFly THEN WireFrameMap (o3d);     RETURN END;
 	self := o3d(tMap);     sort := FALSE;
@@ -853,7 +853,7 @@ END HiddenLineMap;
 (** ------------  the painters algorithm ------------ *)
 PROCEDURE ReplPainter (map: tMap);
 	(*vs 0.0d0   md  10.04.95 12:28:33 *)
-	VAR  face: tFace;     x, y: ARRAY 10 OF Real;     i: INTEGER;     he: tHalfEdge;
+	VAR  face: tFace;     x, y: ARRAY 10 OF Real;     i: SIGNED16;     he: tHalfEdge;
 
 BEGIN ResetDoneMarker (map);
 	face := map.lastFace;
@@ -886,7 +886,7 @@ END ReplPainter;
 
 PROCEDURE PainterMap (o3d: tObject);
 	(*vs 0.0d0   md  12.12.94 15:26:48 *)
-	VAR self: tMap;     sort: BOOLEAN;     t0, t1: LONGINT; lightingMap: tPlotRoutine;
+	VAR self: tMap;     sort: BOOLEAN;     t0, t1: SIGNED32; lightingMap: tPlotRoutine;
 
 BEGIN IF vyPort.onTheFly THEN ReplOnTheFly (o3d);     RETURN END;
 	self := o3d(tMap);     sort := FALSE;
@@ -929,7 +929,7 @@ BEGIN n := Norm (x, y, z);
 END SetLightDirection;
 
 PROCEDURE SetFaceColor (nx, ny, nz: Real);
-	VAR a: Real;     col: LONGINT;     vx, vy, vz: LONGREAL;
+	VAR a: Real;     col: SIGNED32;     vx, vy, vz: FLOAT64;
 BEGIN
 	vx :=  lightDirX;     vy := lightDirY;     vz := lightDirZ;
 	a := (nx * lightDirX + ny * lightDirY + nz * lightDirZ) / (Norm (nx, ny, nz)) + 1;
@@ -946,7 +946,7 @@ END SetFaceColor;
 
 PROCEDURE ReplLighting (map: tMap);
 	(*vs 0.0d0   md  10.04.95 12:28:33 *)
-	VAR  face: tFace;     x, y: ARRAY 10 OF Real;     i: INTEGER;     he: tHalfEdge;
+	VAR  face: tFace;     x, y: ARRAY 10 OF Real;     i: SIGNED16;     he: tHalfEdge;
 
 BEGIN
 
@@ -986,7 +986,7 @@ END ReplLighting;
 
 PROCEDURE LightingMap (o3d: tObject);
 	(*vs 0.0d0   md  12.12.94 15:26:48 *)
-	VAR self: tMap;     sort: BOOLEAN;     t0, t1: LONGINT;
+	VAR self: tMap;     sort: BOOLEAN;     t0, t1: SIGNED32;
 
 BEGIN IF vyPort.onTheFly THEN ReplOnTheFly (o3d);     RETURN END;
 	self := o3d(tMap);     sort := FALSE;
@@ -1022,7 +1022,7 @@ END LightingMap;
 (** ------------  painters smooth ligthing plot ------------ *)
 PROCEDURE ReplSmoothLighting (map: tMap);
 	(*vs 0.0d0   md  10.04.95 12:28:33 *)
-	VAR  face: tFace;     xa, ya: ARRAY 10 OF Real;     i: INTEGER;     he: tHalfEdge;
+	VAR  face: tFace;     xa, ya: ARRAY 10 OF Real;     i: SIGNED16;     he: tHalfEdge;
 
 PROCEDURE PaintFace (f: tFace);
 	(*vs 0.0d0   md  19.04.95 09:28:22 *)
@@ -1080,7 +1080,7 @@ END ReplSmoothLighting;
 
 PROCEDURE SmoothLightingMap (o3d: tObject);
 	(*vs 0.0d0   md  12.12.94 15:26:48 *)
-	VAR self: tMap;     sort: BOOLEAN;     t0, t1: LONGINT;
+	VAR self: tMap;     sort: BOOLEAN;     t0, t1: SIGNED32;
 
 BEGIN IF vyPort.onTheFly THEN ReplOnTheFly (o3d);     RETURN END;
 	self := o3d(tMap);     sort := FALSE;
@@ -1109,7 +1109,7 @@ END SmoothLightingMap;
 
 (** ------------  niveau coloring plot ------------ *)
 PROCEDURE SetFaceNiveauColor (face: tFace;     min, max: Real);
-	VAR r: Real;    col: LONGINT;
+	VAR r: Real;    col: SIGNED32;
 BEGIN r := (face.sz - min) / (max - min);
 	col := ENTIER(255 * r + 0.5);
 	(*vyHostTexts.MsgSRSR("r ",r,"col ",col); *)
@@ -1123,8 +1123,8 @@ END SetFaceNiveauColor;
 
 PROCEDURE ReplNiveauColoring (map: tMap);
 	(*vs 0.0d0   md  10.04.95 12:28:33 *)
-	VAR  face: tFace;     x, y: ARRAY 10 OF Real;     i: INTEGER;     he: tHalfEdge;
-	m: vyRealVec.tMatrixChunk;     row, col, k, l: LONGINT;     r, min, max: Real;
+	VAR  face: tFace;     x, y: ARRAY 10 OF Real;     i: SIGNED16;     he: tHalfEdge;
+	m: vyRealVec.tMatrixChunk;     row, col, k, l: SIGNED32;     r, min, max: Real;
 BEGIN ResetDoneMarker (map);
 	face := map.lastFace;
 	m := map.mdata.buf;     row := m.row;     col := m.col;
@@ -1161,7 +1161,7 @@ END ReplNiveauColoring;
 
 PROCEDURE NiveauColoringMap (o3d: tObject);
 	(*vs 0.0d0   md  12.12.94 15:26:48 *)
-	VAR self: tMap;     sort: BOOLEAN;     t0, t1: LONGINT;
+	VAR self: tMap;     sort: BOOLEAN;     t0, t1: SIGNED32;
 
 BEGIN IF vyPort.onTheFly THEN ReplOnTheFly (o3d);     RETURN END;
 	self := o3d(tMap);     sort := FALSE;
@@ -1218,7 +1218,7 @@ END ReplBackFaceColoring;
 
 PROCEDURE BackFaceColoringMap (o3d: tObject);
 	(*vs 0.0d0   md  12.12.94 15:26:48 *)
-	VAR self: tMap;     t0, t1: LONGINT;
+	VAR self: tMap;     t0, t1: SIGNED32;
 
 BEGIN IF vyPort.onTheFly THEN WireFrameMap (o3d);     RETURN END;
 	self := o3d(tMap);
@@ -1254,7 +1254,7 @@ BEGIN
 END OpenMap;
 
 (** ------------  set plot attributes ------------ *)
-PROCEDURE SetHLHSRIdentifier* (HLHSRidentifier: INTEGER);
+PROCEDURE SetHLHSRIdentifier* (HLHSRidentifier: SIGNED16);
 	(*vs 0.0d0   md  05.04.95 10:09:39 *)
 BEGIN
 	IF HLHSRidentifier = wireFrameId THEN theHLHSRroutine := WireFrameMap
@@ -1270,12 +1270,12 @@ BEGIN
 	END;
 END SetHLHSRIdentifier;
 
-PROCEDURE SetRendering* (map: tObject;     HLHSRidentifier: INTEGER);
+PROCEDURE SetRendering* (map: tObject;     HLHSRidentifier: SIGNED16);
 	VAR oldmap : tPlotRoutine;
 BEGIN oldmap := theHLHSRroutine;  SetHLHSRIdentifier (HLHSRidentifier);     map.plot := theHLHSRroutine;    theHLHSRroutine := oldmap;
 END SetRendering;
 
-PROCEDURE GetRendering (map: tObject;    VAR HLHSRidentifier: INTEGER);
+PROCEDURE GetRendering (map: tObject;    VAR HLHSRidentifier: SIGNED16);
 	VAR wireFrameMap, niveauLineMap, backFaceColoringMap, painterMap, lightingMap, smoothLightingMap, hiddenLineMap, niveauColoringMap: tPlotRoutine;
 BEGIN
 	wireFrameMap := WireFrameMap ;
@@ -1308,7 +1308,7 @@ BEGIN vyPort.onTheFly := switch END SetInteractiveMode;
 (** ------------- palette stuff ---------------- *)
 
 PROCEDURE InitColorMap;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	FOR i := 0 TO LEN(colorTable) - 1 DO
 		Display.GetColor(colorTable[i], i, i, i)
@@ -1316,8 +1316,8 @@ BEGIN
 END InitColorMap;
 
 
-PROCEDURE SetColorMap* (colors: ARRAY OF LONGINT);
-	VAR i: INTEGER;
+PROCEDURE SetColorMap* (colors: ARRAY OF SIGNED32);
+	VAR i: SIGNED16;
 BEGIN
 	ASSERT(LEN(colors) >= LEN(colorTable));
 	FOR i := 0 TO LEN(colorTable) - 1 DO

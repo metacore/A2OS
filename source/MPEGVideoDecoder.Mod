@@ -74,7 +74,7 @@ TYPE
 
 	(* Window of a very (!) simple stand-alone player *)
 	TYPE PW* =  OBJECT(WM.DoubleBufferWindow)
-		PROCEDURE & InitNew*(w, h:LONGINT; alpha:BOOLEAN);
+		PROCEDURE & InitNew*(w, h:SIGNED32; alpha:BOOLEAN);
 		BEGIN
 			Init(w, h, alpha);
 			manager := WM.GetDefaultManager();
@@ -82,7 +82,7 @@ TYPE
 		END InitNew;
 
 		(* Overwrite draw procedure because we do not want any interpolation *)
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : WORD);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : INTEGER);
 		BEGIN
 			Draw^(canvas, w, h, 0)
 		END Draw;
@@ -98,11 +98,11 @@ TYPE
 	MPEGVideoDecoder* = OBJECT(Codec.VideoDecoder)
 	VAR
 		(* Video Information *)
-		videoWidth, videoHeight: LONGINT;
-		videoWidthDiv2, videoHeightDiv2: LONGINT;
-		videoWidthDiv16, videoHeightDiv16: LONGINT;
-		aspectRatioIndex, frameRateIndex: LONGINT;
-		bitRate: LONGINT;
+		videoWidth, videoHeight: SIGNED32;
+		videoWidthDiv2, videoHeightDiv2: SIGNED32;
+		videoWidthDiv16, videoHeightDiv16: SIGNED32;
+		aspectRatioIndex, frameRateIndex: SIGNED32;
+		bitRate: SIGNED32;
 
 		stream*: Util.BitStream;						(* the stream we read from *)
 		reader: Util.StreamReader;					(* allows to read VLCs and other information from the stream *)
@@ -119,43 +119,43 @@ TYPE
 		nextFrameToRender: Util.Frame;				(* the next frame ready to be rendered *)
 
 		mvinfos: Util.MotionVectorInfos;				(* everything that is somehow connected to motion vectors *)
-		frameNr: LONGINT;							(* number of the current frame (restarts for each GOP) *)
-		realFrameNr: LONGINT;						(* number of the current frame (restarts at the beginning of the movie) *)
-		time: LONGINT;								(* current time in milliseconds *)
-		mspf: LONGINT;								(* milliseconds per frame *)
+		frameNr: SIGNED32;							(* number of the current frame (restarts for each GOP) *)
+		realFrameNr: SIGNED32;						(* number of the current frame (restarts at the beginning of the movie) *)
+		time: SIGNED32;								(* current time in milliseconds *)
+		mspf: SIGNED32;								(* milliseconds per frame *)
 
 		hasMoreFrames: BOOLEAN;					(* FALSE at the end of a video sequence *)
 
 		(* MPEG-2 stuff *)
 		MPEG2: BOOLEAN;							(* TRUE -> MPEG-2; FALSE -> MPEG-1 *)
 		MainProfile: BOOLEAN;						(* TRUE -> Main Profile; FALSE -> Simple Profile *)
-		LevelID: LONGINT;							(* 1 -> Low, 2 -> Main, 3 -> High1440, 4 -> High *)
-		ChromaFormat: LONGINT;					(* 1 -> 4:2:0, 2 -> 4:2:2, 3-> 4:4:4 *)
+		LevelID: SIGNED32;							(* 1 -> Low, 2 -> Main, 3 -> High1440, 4 -> High *)
+		ChromaFormat: SIGNED32;					(* 1 -> 4:2:0, 2 -> 4:2:2, 3-> 4:4:4 *)
 		picExt: Util.PicCodingExt;					(* some infos about the picture *)
 
 		(* less important VARs *)
 		mbSkipped: BOOLEAN;								(* TRUE if last macroblock was skipped (required for DC prediction) *)
-		dcY, dcCb, dcCr: LONGINT;							(* DC coefficient prediction for Y, Cb and Cr blocks *)
+		dcY, dcCb, dcCr: SIGNED32;							(* DC coefficient prediction for Y, Cb and Cr blocks *)
 		mbMotionForwOld, mbMotionBackOld: BOOLEAN;	(* required for skipped macroblocks of B-Frames *)
 		mbIntraOld: BOOLEAN;
 
 		(* local in picture *)
-		mbAddress: LONGINT;								(* Address of the current macroblock *)
-		mbAddressLast: LONGINT;							(* Address of the last coded macroblock *)
-		mbAddressLastIntra: LONGINT;
-		macroblockNr: INTEGER;								(* number of the macroblock currently decoded (in slice) *)
+		mbAddress: SIGNED32;								(* Address of the current macroblock *)
+		mbAddressLast: SIGNED32;							(* Address of the last coded macroblock *)
+		mbAddressLastIntra: SIGNED32;
+		macroblockNr: SIGNED16;								(* number of the macroblock currently decoded (in slice) *)
 
 		(* local in macroblock *)
-		frameMotionType: LONGINT;
+		frameMotionType: SIGNED32;
 		dctType: BOOLEAN;
 		block: Util.PointerToArrayOfLONGINT;				(* current block of a macroblock *)
 
-		frametype: LONGINT;
+		frametype: SIGNED32;
 
 		(* Constructor *)
 		PROCEDURE &Init*;
 		VAR
-			i: SHORTINT;
+			i: SIGNED8;
 
 		BEGIN
 			NEW(idct);
@@ -181,7 +181,7 @@ TYPE
 		END Init;
 
 		(* Open a video stream by reading the sequence header *)
-		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
 		VAR
 			marker: CHAR;
 
@@ -346,7 +346,7 @@ TYPE
 		(* Read an extension. It is assumed that the stream is currently at the end of an extension start code *)
 		PROCEDURE ReadExtension(): BOOLEAN;
 		VAR
-			fourbits: LONGINT;
+			fourbits: SIGNED32;
 			tmp: BOOLEAN;
 
 		BEGIN
@@ -417,7 +417,7 @@ TYPE
 		(* parse an SMTPE timecode (25 bits) *)
 		PROCEDURE ReadTimecode;
 		VAR
-			h, min, sec, frames: LONGINT;
+			h, min, sec, frames: SIGNED32;
 
 		BEGIN
 			stream.SkipBits(1);
@@ -445,7 +445,7 @@ TYPE
 
 
 		(* return some information about the video stream *)
-		PROCEDURE GetVideoInfo*(VAR width, height, millisecondsPerFrame : LONGINT);
+		PROCEDURE GetVideoInfo*(VAR width, height, millisecondsPerFrame : SIGNED32);
 		BEGIN
 			width := videoWidth;
 			height := videoHeight;
@@ -457,25 +457,25 @@ TYPE
 			RETURN TRUE
 		END CanSeek;
 
-		PROCEDURE GetCurrentFrame*() : LONGINT;
+		PROCEDURE GetCurrentFrame*() : SIGNED32;
 		BEGIN
 			RETURN realFrameNr;
 		END GetCurrentFrame;
 
-		PROCEDURE GetCurrentTime*() : LONGINT;
+		PROCEDURE GetCurrentTime*() : SIGNED32;
 		BEGIN
 			RETURN time;
 		END GetCurrentTime;
 
-		PROCEDURE SeekFrame*(frame : LONGINT; goKeyFrame : BOOLEAN; VAR res : WORD);
+		PROCEDURE SeekFrame*(frame : SIGNED32; goKeyFrame : BOOLEAN; VAR res : INTEGER);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			code: CHAR;
 			lastIntraPosOld, lastIntraPos, lastFramePos: Streams.Position;
-			lastIntraNrOld, lastIntraNr: LONGINT;
-			nrB, nrBOld: LONGINT;
+			lastIntraNrOld, lastIntraNr: SIGNED32;
+			nrB, nrBOld: SIGNED32;
 			countB: BOOLEAN;
-			type: LONGINT;
+			type: SIGNED32;
 
 		BEGIN
 			res := Codec.ResFailed;
@@ -517,7 +517,7 @@ TYPE
 
 			(* jump to the second last I-frame *)
 			stream.SetPos(lastIntraPosOld);
-			realFrameNr := lastIntraNrOld(LONGINT);
+			realFrameNr := lastIntraNrOld(SIGNED32);
 			frameNr := 10000;					(* expected frameNr > tempRef => frameNr gets adjusted *)
 
 			Next();
@@ -539,9 +539,9 @@ TYPE
 			res := Codec.ResOk;
 		END SeekFrame;
 
-		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeyFrame : BOOLEAN; VAR res : WORD);
+		PROCEDURE SeekMillisecond*(millisecond : SIGNED32; goKeyFrame : BOOLEAN; VAR res : INTEGER);
 		VAR
-			newframe: LONGINT;
+			newframe: SIGNED32;
 
 		BEGIN
 			newframe := millisecond DIV mspf;
@@ -550,12 +550,12 @@ TYPE
 		END SeekMillisecond;
 
 		(* skips one frame *)
-		PROCEDURE SkipNext(): LONGINT;
+		PROCEDURE SkipNext(): SIGNED32;
 		VAR
 			marker: CHAR;
-			picType: LONGINT;			(* 1=I-, 2=P-, 3=B-, 4=D-Picture, other values are illegal *)
-			tempRef: LONGINT;			(* temporal reference *)
-			nextCode: LONGINT;
+			picType: SIGNED32;			(* 1=I-, 2=P-, 3=B-, 4=D-Picture, other values are illegal *)
+			tempRef: SIGNED32;			(* temporal reference *)
+			nextCode: SIGNED32;
 			tmpFrame: Util.Frame;			(* required to switch two frames *)
 
 		BEGIN
@@ -714,10 +714,10 @@ TYPE
 		PROCEDURE Next*;
 		VAR
 			marker: CHAR;
-			picType: LONGINT;			(* 1=I-, 2=P-, 3=B-, 4=D-Picture, other values are illegal *)
-			tempRef: LONGINT;			(* temporal reference *)
+			picType: SIGNED32;			(* 1=I-, 2=P-, 3=B-, 4=D-Picture, other values are illegal *)
+			tempRef: SIGNED32;			(* temporal reference *)
 			res: BOOLEAN;
-			nextCode: LONGINT;
+			nextCode: SIGNED32;
 			tmpFrame: Util.Frame;			(* required to switch two frames *)
 
 		BEGIN
@@ -795,7 +795,7 @@ TYPE
 
 						mvinfos.fCode[mv1][forward] := stream.GetBits(3);
 						mvinfos.rSize[mv1][forward] := mvinfos.fCode[mv1][forward] - 1;
-						mvinfos.f[mv1][forward] := SYSTEM.VAL(LONGINT, {mvinfos.rSize[mv1][forward]});		(* 2 ^ rSize *)
+						mvinfos.f[mv1][forward] := SYSTEM.VAL(SIGNED32, {mvinfos.rSize[mv1][forward]});		(* 2 ^ rSize *)
 					END;
 
 					IF picType = 3 THEN
@@ -808,7 +808,7 @@ TYPE
 
 						mvinfos.fCode[mv1][backward] := stream.GetBits(3);
 						mvinfos.rSize[mv1][backward] := mvinfos.fCode[mv1][backward] - 1;
-						mvinfos.f[mv1][backward] := SYSTEM.VAL(LONGINT, {mvinfos.rSize[mv1][backward]});		(* 2 ^ rSize *)
+						mvinfos.f[mv1][backward] := SYSTEM.VAL(SIGNED32, {mvinfos.rSize[mv1][backward]});		(* 2 ^ rSize *)
 					END;
 
 					WHILE stream.ShowBits(1) = 1 DO
@@ -894,9 +894,9 @@ TYPE
 		END Next;
 
 		(* Decode one slice. Precondition: stream is positioned at the beginning of a slice *)
-		PROCEDURE DecodeSlice(type: LONGINT):BOOLEAN;
+		PROCEDURE DecodeSlice(type: SIGNED32):BOOLEAN;
 		VAR
-			quantScale: LONGINT;
+			quantScale: SIGNED32;
 			marker: CHAR;
 
 		BEGIN
@@ -959,17 +959,17 @@ TYPE
 		END DecodeSlice;
 
 		(* Decode one macroblock *)
-		PROCEDURE DecodeMacroBlock(type: LONGINT; VAR quantScale: LONGINT):BOOLEAN;
+		PROCEDURE DecodeMacroBlock(type: SIGNED32; VAR quantScale: SIGNED32):BOOLEAN;
 		VAR
-			tmp: LONGINT;
-			cbp: LONGINT;
-			cbpBits: LONGINT;
+			tmp: SIGNED32;
+			cbp: SIGNED32;
+			cbpBits: SIGNED32;
 			mbIntra, mbPattern, mbMotionBack, mbMotionForw, mbQuant: BOOLEAN;
-			i: LONGINT;
-			offsetX, offsetY, offsetXDiv2, offsetYDiv2: LONGINT;
+			i: SIGNED32;
+			offsetX, offsetY, offsetXDiv2, offsetYDiv2: SIGNED32;
 			first: BOOLEAN;					(* whether or not a block is the first one coded in a macroblock *)
-			fpmf, fpmb: LONGINT;		(* full pel multiplier forward & backward *)
-			yoffs, yincr: LONGINT;		(* parameters for CopyBlock - different for interlaced/non-interlaced blocks *)
+			fpmf, fpmb: SIGNED32;		(* full pel multiplier forward & backward *)
+			yoffs, yincr: SIGNED32;		(* parameters for CopyBlock - different for interlaced/non-interlaced blocks *)
 
 		BEGIN
 			INC(macroblockNr);
@@ -1440,13 +1440,13 @@ TYPE
 		END DecodeMacroBlock;
 
 
-		PROCEDURE InsertInterlacedPrediction(forw, back: BOOLEAN; address: LONGINT; VAR mvi: Util.MotionVectorInfos);
+		PROCEDURE InsertInterlacedPrediction(forw, back: BOOLEAN; address: SIGNED32; VAR mvi: Util.MotionVectorInfos);
 		VAR
-			yOffs, cbOffs, crOffs: LONGINT;				(* offsets in the Frame.buffer array *)
-			mvfx1, mvfy1, mvbx1, mvby1: LONGINT;		(* luminance motion vectors, first set *)
-			mvfx2, mvfy2, mvbx2, mvby2: LONGINT;		(* luminance motion vectors, second set *)
-			mvfx1c, mvfy1c, mvbx1c, mvby1c: LONGINT;		(* chrominance motion vectors, first set *)
-			mvfx2c, mvfy2c, mvbx2c, mvby2c: LONGINT;		(* chrominance motion vectors, second set *)
+			yOffs, cbOffs, crOffs: SIGNED32;				(* offsets in the Frame.buffer array *)
+			mvfx1, mvfy1, mvbx1, mvby1: SIGNED32;		(* luminance motion vectors, first set *)
+			mvfx2, mvfy2, mvbx2, mvby2: SIGNED32;		(* luminance motion vectors, second set *)
+			mvfx1c, mvfy1c, mvbx1c, mvby1c: SIGNED32;		(* chrominance motion vectors, first set *)
+			mvfx2c, mvfy2c, mvbx2c, mvby2c: SIGNED32;		(* chrominance motion vectors, second set *)
 
 		BEGIN
 			(* calculate position of the destination macroblock *)
@@ -1514,9 +1514,9 @@ TYPE
 
 		(* copy the prediction into a macroblock *)
 		(* param names (capitals): MotionVector, Forward, Backward *)
-		PROCEDURE InsertPrediction(forward, backward: BOOLEAN; address, mvfx, mvfy, mvbx, mvby: LONGINT);
+		PROCEDURE InsertPrediction(forward, backward: BOOLEAN; address, mvfx, mvfy, mvbx, mvby: SIGNED32);
 		VAR
-			yOffs, cbOffs, crOffs: LONGINT;				(* offsets in the Frame.buffer array *)
+			yOffs, cbOffs, crOffs: SIGNED32;				(* offsets in the Frame.buffer array *)
 
 		BEGIN
 			(* calculate position of the destination macroblock *)
@@ -1546,13 +1546,13 @@ TYPE
 			END;
 		END InsertPrediction;
 
-		PROCEDURE DecodeMotionVectors(r, s, t: LONGINT);
+		PROCEDURE DecodeMotionVectors(r, s, t: SIGNED32);
 		VAR
-			rSize: LONGINT;
-			f: LONGINT;
-			high, low, range: LONGINT;
-			delta: LONGINT;
-			prediction: LONGINT;
+			rSize: SIGNED32;
+			f: SIGNED32;
+			high, low, range: SIGNED32;
+			delta: SIGNED32;
+			prediction: SIGNED32;
 
 			DEBUG: BOOLEAN;
 
@@ -1566,7 +1566,7 @@ TYPE
 			END;
 
 			rSize := mvinfos.fCode[s][t] - 1;
-			f := SYSTEM.VAL(LONGINT, {rSize});		(* 2 ^ rSize *)
+			f := SYSTEM.VAL(SIGNED32, {rSize});		(* 2 ^ rSize *)
 			high := 16 * f - 1;
 			low := (-16) * f ;
 			range := 32 * f;
@@ -1602,11 +1602,11 @@ TYPE
 			END;
 		END DecodeMotionVectors;
 
-		PROCEDURE MotionDisplacement(fb, hv: LONGINT);
+		PROCEDURE MotionDisplacement(fb, hv: SIGNED32);
 		VAR
-			delta: LONGINT;
-			range: LONGINT;
-			motionCode, motionResidual, f, prediction: LONGINT;
+			delta: SIGNED32;
+			range: SIGNED32;
+			motionCode, motionResidual, f, prediction: SIGNED32;
 		BEGIN
 			motionCode := mvinfos.motionCode[mv1][fb][hv];
 			motionResidual := mvinfos.motionResidual[mv1][fb][hv];
@@ -1634,20 +1634,20 @@ TYPE
 
 		(* MPEG-1 only !! *)
 		PROCEDURE DecodeBlock(
-			nr: SHORTINT;
+			nr: SIGNED8;
 			coeffs: Util.PointerToArrayOfLONGINT;
 			intra: BOOLEAN;
-			VAR qScale: LONGINT;
+			VAR qScale: SIGNED32;
 			first: BOOLEAN;
-			type: LONGINT): BOOLEAN;
+			type: SIGNED32): BOOLEAN;
 		VAR
-			bits: LONGINT;
-			size: LONGINT;
-			dcDiff: LONGINT;
-			tmp: LONGINT;
-			cur: LONGINT;									(* current position in coeffs *)
+			bits: SIGNED32;
+			size: SIGNED32;
+			dcDiff: SIGNED32;
+			tmp: SIGNED32;
+			cur: SIGNED32;									(* current position in coeffs *)
 			dummy: BOOLEAN;
-			i: LONGINT;
+			i: SIGNED32;
 			intraSkipped: BOOLEAN;
 
 		BEGIN
@@ -1696,7 +1696,7 @@ TYPE
 						(* negative difference: invert all bits and make number negative *)
 						tmp := stream.GetBits(size);
 						IF tmp < 0 THEN hasMoreFrames := FALSE; RETURN FALSE END;
-						dcDiff := -(INTEGER ((-SET(tmp) * {0..(size-1)})));
+						dcDiff := -(SIGNED16 ((-SET(tmp) * {0..(size-1)})));
 					ELSE
 						(* positive difference *)
 						dcDiff := stream.GetBits(size);
@@ -1758,18 +1758,18 @@ TYPE
 		END DecodeBlock;
 
 		PROCEDURE DecodeBlock2(
-			nr: SHORTINT;
+			nr: SIGNED8;
 			coeffs:Util.PointerToArrayOfLONGINT;
 			intra: BOOLEAN;
-			VAR qScale: LONGINT;
+			VAR qScale: SIGNED32;
 			first: BOOLEAN;
-			type: LONGINT): BOOLEAN;
+			type: SIGNED32): BOOLEAN;
 		VAR
-			bits: LONGINT;					(* temp variable for reading some bits off the stream *)
-			size: LONGINT;					(* amount of bits in the stream for dcDiff *)
-			dcDiff: LONGINT;				(* DC difference decoded from stream *)
-			dcPrediction: LONGINT;			(* DC prediction *)
-			coeffsPos: LONGINT;				(* current position in the coeffs array *)
+			bits: SIGNED32;					(* temp variable for reading some bits off the stream *)
+			size: SIGNED32;					(* amount of bits in the stream for dcDiff *)
+			dcDiff: SIGNED32;				(* DC difference decoded from stream *)
+			dcPrediction: SIGNED32;			(* DC prediction *)
+			coeffsPos: SIGNED32;				(* current position in the coeffs array *)
 			dummy: BOOLEAN;				(* dummy variable *)
 
 		BEGIN
@@ -1817,7 +1817,7 @@ TYPE
 						(* negative difference: invert all bits and make number negative *)
 						bits := stream.GetBits(size);
 						IF bits < 0 THEN hasMoreFrames := FALSE; RETURN FALSE END;
-						dcDiff := -(INTEGER((-SET(bits)) * {0..(size-1)}));
+						dcDiff := -(SIGNED16((-SET(bits)) * {0..(size-1)}));
 					ELSE
 						(* positive difference *)
 						dcDiff := stream.GetBits(size);
@@ -1924,7 +1924,7 @@ TYPE
 		input: Streams.Reader;
 		bytesRead: SIZE;
 		streams: ARRAY 64 OF POINTER TO StreamType;
-		nextStreamNr: LONGINT;
+		nextStreamNr: SIGNED32;
 		singleStream: BOOLEAN;	(* TRUE if there is just one unpacked (video) stream -> no need  to demux *)
 
 		PROCEDURE &Init*;
@@ -1933,10 +1933,10 @@ TYPE
 		END Init;
 
 		(** open the demultiplexer on an input stream *)
-		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
 		VAR
 			oldPos: Streams.Position;
-			i: LONGINT;
+			i: SIGNED32;
 			startCode: CHAR;
 
 		BEGIN
@@ -1998,9 +1998,9 @@ TYPE
 			RETURN input.Get() = CHR(1);
 		END GotoNextStartCode;
 
-		PROCEDURE SkipZeros(): LONGINT;
+		PROCEDURE SkipZeros(): SIGNED32;
 		VAR
-			count: LONGINT;
+			count: SIGNED32;
 
 		BEGIN
 			WHILE (input.Peek() = CHR(0)) & ~(input.res = Streams.EOF)  DO
@@ -2018,8 +2018,8 @@ TYPE
 		(* Reads a pack header *)
 		PROCEDURE ReadPackHeader(): BOOLEAN;
 		VAR
-			peek: LONGINT;
-			stuffBytes: LONGINT;
+			peek: SIGNED32;
+			stuffBytes: SIGNED32;
 			buffer: ARRAY 8 OF CHAR;
 
 		BEGIN
@@ -2047,7 +2047,7 @@ TYPE
 		(* Reads a system header *)
 		PROCEDURE ReadSystemHeader(): BOOLEAN;
 		VAR
-			headerLength: LONGINT;
+			headerLength: SIGNED32;
 			buffer: ARRAY 8 OF CHAR;
 
 		BEGIN
@@ -2078,7 +2078,7 @@ TYPE
 
 		PROCEDURE isNewStream(id: CHAR): BOOLEAN;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 
 		BEGIN
 			FOR i := 0 TO (nextStreamNr-1) DO
@@ -2088,7 +2088,7 @@ TYPE
 		END isNewStream;
 
 
-		PROCEDURE GetNumberOfStreams*() : LONGINT;
+		PROCEDURE GetNumberOfStreams*() : SIGNED32;
 		BEGIN
 			IF singleStream THEN
 				RETURN 1;
@@ -2097,9 +2097,9 @@ TYPE
 			END;
 		END GetNumberOfStreams;
 
-		PROCEDURE GetStreamType*(streamNr : LONGINT): LONGINT;
+		PROCEDURE GetStreamType*(streamNr : SIGNED32): SIGNED32;
 		VAR
-			streamid: LONGINT;
+			streamid: SIGNED32;
 
 		BEGIN
 			IF streams[streamNr] # NIL THEN
@@ -2131,7 +2131,7 @@ TYPE
 			END;
 		END GetStreamType;
 
-		PROCEDURE GetStream*(streamNr: LONGINT): Codec.DemuxStream;
+		PROCEDURE GetStream*(streamNr: SIGNED32): Codec.DemuxStream;
 		BEGIN
 			IF streams[streamNr] # NIL THEN
 				RETURN streams[streamNr].stream;
@@ -2140,7 +2140,7 @@ TYPE
 			END;
 		END GetStream;
 
-		PROCEDURE GetStreamInfo*(streamNr : LONGINT): Codec.AVStreamInfo;
+		PROCEDURE GetStreamInfo*(streamNr : SIGNED32): Codec.AVStreamInfo;
 		VAR si : Codec.AVStreamInfo;
 		BEGIN
 			CASE GetStreamType(streamNr) OF
@@ -2153,7 +2153,7 @@ TYPE
 		END GetStreamInfo;
 
 		(* read data from streamNr, store it into buffer buf starting at offset ofs, store size bytes if possible, block if not read min bytes at least. Return number of read bytes in len and return code res *)
-		PROCEDURE GetData*(streamNr : LONGINT; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE GetData*(streamNr : SIGNED32; VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR
 			cur: POINTER TO StreamType;
 			length: SIZE;
@@ -2216,12 +2216,12 @@ TYPE
 			ELSE
 				(* copy required bytes *)
 				input.Bytes(buf, offset, size, length);
-				cur.pos := input.Pos()(LONGINT);
+				cur.pos := input.Pos()(SIGNED32);
 				DEC(cur.bytesLeftInPacket, length);
 			END;
 		END GetData;
 
-		PROCEDURE SkipData(streamNr : LONGINT; size: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE SkipData(streamNr : SIGNED32; size: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR
 			cur: POINTER TO StreamType;
 
@@ -2266,7 +2266,7 @@ TYPE
 		END SkipData;
 
 
-		PROCEDURE GetPosInMuxedStream*(streamNr: LONGINT): SIZE;
+		PROCEDURE GetPosInMuxedStream*(streamNr: SIGNED32): SIZE;
 		BEGIN
 			RETURN streams[streamNr].pos;
 		END GetPosInMuxedStream;
@@ -2277,10 +2277,10 @@ TYPE
 		PROCEDURE GotoNextPacket(VAR stream: StreamType): BOOLEAN;
 		VAR
 			nextStartCode: CHAR;
-			length: LONGINT;
+			length: SIGNED32;
 			peekByte: CHAR;
-			flags: LONGINT;
-			optionsLength: LONGINT;
+			flags: SIGNED32;
+			optionsLength: SIGNED32;
 
 		BEGIN
 			IF ~GotoNextStartCode() THEN RETURN FALSE END;
@@ -2356,7 +2356,7 @@ TYPE
 
 
 		(* seek the streamNr to position pos with seekType. itemSize contains the size of the element seeked to, if known and applicable; res = 0 if Ok, otherwise an error number *)
-		PROCEDURE SetStreamPos*(streamNr :  LONGINT; seekType : LONGINT; pos : LONGINT; VAR itemSize : LONGINT;  VAR res : WORD);
+		PROCEDURE SetStreamPos*(streamNr :  SIGNED32; seekType : SIGNED32; pos : SIGNED32; VAR itemSize : SIGNED32;  VAR res : INTEGER);
 		VAR
 			cur: POINTER TO StreamType;
 			len: SIZE;
@@ -2397,7 +2397,7 @@ TYPE
 			END;
 		END SetStreamPos;
 
-		PROCEDURE HasMoreData(streamNr: LONGINT): BOOLEAN;
+		PROCEDURE HasMoreData(streamNr: SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN ~streams[streamNr].eos;
 		END HasMoreData;
@@ -2408,7 +2408,7 @@ TYPE
 
 	PROCEDURE GotoNextMarker(VAR stream: Util.BitStream; VAR marker: CHAR): BOOLEAN;
 	VAR
-		i: INTEGER;
+		i: SIGNED16;
 		DEBUG: BOOLEAN;
 	BEGIN
 		DEBUG := FALSE;
@@ -2425,7 +2425,7 @@ TYPE
 		RETURN TRUE;
 	END GotoNextMarker;
 
-	PROCEDURE Sign(value: LONGINT): LONGINT;
+	PROCEDURE Sign(value: SIGNED32): SIGNED32;
 	BEGIN
 		IF value > 0 THEN
 			RETURN 1;
@@ -2457,21 +2457,21 @@ TYPE
 		file: Files.File;
 		fileinputstream: Codec.FileInputStream;
 		vstream: Codec.DemuxStream;
-		result: WORD;
-		i: LONGINT;
+		result: INTEGER;
+		i: SIGNED32;
 
-		w, h, ms: LONGINT;
+		w, h, ms: SIGNED32;
 
 		(* Player stuff *)
 		wnd: PW;
 		timer: Kernel.Timer;
 		milliTimer : Kernel.MilliTimer;
-		ticks: LONGINT;
+		ticks: SIGNED32;
 
 		filename:ARRAY 100 OF CHAR;
 
-		min, max, total: LONGINT;
-		minFrame, maxFrame: LONGINT;
+		min, max, total: SIGNED32;
+		minFrame, maxFrame: SIGNED32;
 
 	BEGIN
 		(* parse parameter: filename *)

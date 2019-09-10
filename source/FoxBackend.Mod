@@ -17,7 +17,7 @@ TYPE
 		checker-: SemanticChecker.Checker;
 		source-: SyntaxTree.String;
 		findSectionName-: SectionName;
-		findSectionOffset-: LONGINT;
+		findSectionOffset-: SIGNED32;
 		capabilities-: SET;
 		oberon07-: BOOLEAN;
 		instructionWidth -: SIZE;
@@ -89,7 +89,7 @@ TYPE
 			RETURN Global.DefaultSystem();
 		END GetSystem;
 
-		PROCEDURE Error*(CONST source: ARRAY OF CHAR; position: Basic.Position; errorNumber: LONGINT; CONST err: ARRAY OF CHAR);
+		PROCEDURE Error*(CONST source: ARRAY OF CHAR; position: Basic.Position; errorNumber: SIGNED32; CONST err: ARRAY OF CHAR);
 		BEGIN
 			IF (errorNumber # Basic.InvalidCode) OR (err # "") THEN
 				Basic.ErrorC(diagnostics, source, position, errorNumber, err);
@@ -110,7 +110,7 @@ TYPE
 		BEGIN RETURN FALSE
 		END Emit;
 
-		PROCEDURE FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: LONGINT);
+		PROCEDURE FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: SIGNED32);
 		BEGIN
 		END FindPC;
 

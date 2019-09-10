@@ -12,7 +12,7 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 		ServerStrLen* = HyperDocs.ServerStrLen;
 		PathStrLen* = HyperDocs.PathStrLen;
 		Esc = 01BX; BreakChar = Esc;
-		Done* = 0; Failed* = MAX(INTEGER); (** res codes *)
+		Done* = 0; Failed* = MAX(SIGNED16); (** res codes *)
 
 	TYPE
 	(** Message send to the http link scheme object, when a service (gopher, ftp) is used via a proxy host.
@@ -21,7 +21,7 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 		ProxyMsg* = RECORD (HyperDocs.LinkSchemeMsg)
 			host*: ARRAY ServerStrLen OF CHAR;
 			D*: Documents.Document;
-			port*: INTEGER
+			port*: SIGNED16
 		END;
 	(** Session with an TCP server, e.g.: FTP, POP, ... *)
 		Session* = POINTER TO SessionDesc;
@@ -29,21 +29,21 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 			C*: NetSystem.Connection; (** the connection *)
 			S*: Streams.Stream; (** a stream for the connection *)
 			reply*: ARRAY MaxLine OF CHAR; (** reply-line of the last command sent *)
-			status*: INTEGER; (** result code of the TCP-protocoll used *)
-			res*: INTEGER (** result code: 0: Done; # 0: Failed *)
+			status*: SIGNED16; (** result code of the TCP-protocoll used *)
+			res*: SIGNED16 (** result code: 0: Done; # 0: Failed *)
 		END;
 	(** a TCP Stream implementation *)
 		TCPStream* = POINTER TO TCPStreamDesc;
 		TCPStreamDesc* = RECORD (Streams.StreamDesc)
 			C*: NetSystem.Connection;
-			avail: LONGINT
+			avail: SIGNED32
 		END;
 
 	VAR
 		W: Texts.Writer;
-		curLen*: LONGINT; (** maximum length of the current blocking transfer *)
-		prevPos, curPos*: LONGINT; (** state of the current blocking transfer *)
-		TimeOut*: LONGINT; (** typical time-out for blocking transfer *)
+		curLen*: SIGNED32; (** maximum length of the current blocking transfer *)
+		prevPos, curPos*: SIGNED32; (** state of the current blocking transfer *)
+		TimeOut*: SIGNED32; (** typical time-out for blocking transfer *)
 		progM: Objects.Object;
 		buffer: ARRAY BufLen OF CHAR;
 		proxyDomain: ARRAY 64 OF CHAR;
@@ -82,10 +82,10 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Open a new connection C to host on port. Switch logging of error-messages with log on or off.
 		If the connection could be established TRUE is returned. *)
-	PROCEDURE Connect*(VAR C: NetSystem.Connection; port: INTEGER; host: ARRAY OF CHAR; log: BOOLEAN): BOOLEAN;
+	PROCEDURE Connect*(VAR C: NetSystem.Connection; port: SIGNED16; host: ARRAY OF CHAR; log: BOOLEAN): BOOLEAN;
 		VAR
 			adr: NetSystem.IPAdr;
-			res: INTEGER;
+			res: SIGNED16;
 	BEGIN
 		IF log THEN
 			Texts.WriteString(W, host); Texts.Write(W, ":"); Texts.WriteInt(W, port, 0); Texts.Append(Oberon.Log, W.buf)
@@ -112,20 +112,20 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 		IF log THEN
 			Texts.Append(Oberon.Log, W.buf)
 		END;
-		prevPos := MIN(INTEGER); curPos := 0; curLen := 0;
+		prevPos := MIN(SIGNED16); curPos := 0; curLen := 0;
 		RETURN res = NetSystem.done
 	END Connect;
 
 (** Start opening a new connection C to host on port. Switch logging of error-messages with log on or off.
 		If the connection could be established TRUE is returned. *)
-	PROCEDURE AsyncConnect*(VAR C: NetSystem.Connection; port: INTEGER; host: ARRAY OF CHAR; log: BOOLEAN): BOOLEAN;
+	PROCEDURE AsyncConnect*(VAR C: NetSystem.Connection; port: SIGNED16; host: ARRAY OF CHAR; log: BOOLEAN): BOOLEAN;
 	BEGIN
 		RETURN Connect(C, -port, host, log)
 	END AsyncConnect;
 
 (** Check if connection C is still open for incoming (mode = NetSystem.in) or outgoing (mode = NetSystem.out) data. *)
-	PROCEDURE Connected*(C: NetSystem.Connection; mode: INTEGER): BOOLEAN;
-		VAR state: INTEGER;
+	PROCEDURE Connected*(C: NetSystem.Connection; mode: SIGNED16): BOOLEAN;
+		VAR state: SIGNED16;
 	BEGIN
 		state := NetSystem.State(C);
 		RETURN state IN {mode, NetSystem.inout}
@@ -138,12 +138,12 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 			NetSystem.CloseConnection(C)
 		END;
 		C := NIL;
-		prevPos := MIN(INTEGER); curPos := 0; ProgMNotify()
+		prevPos := MIN(SIGNED16); curPos := 0; ProgMNotify()
 	END Disconnect;
 
 (** Send the string str on connection C without any termination characters. *)
 	PROCEDURE SendString*(C: NetSystem.Connection; str: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE str[i] # 0X DO
@@ -152,8 +152,8 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 		NetSystem.WriteBytes(C, 0, i, str)
 	END SendString;
 
-	PROCEDURE ReadTCPBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT);
-		VAR len, pos, time: LONGINT;
+	PROCEDURE ReadTCPBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED32);
+		VAR len, pos, time: SIGNED32;
 	BEGIN
 		WITH S: TCPStream DO
 			IF n > 0 THEN
@@ -183,7 +183,7 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END ReadTCPBytes;
 
-	PROCEDURE WriteTCPBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT);
+	PROCEDURE WriteTCPBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED32);
 	BEGIN
 		WITH S: TCPStream DO
 			NetSystem.WriteBytes(S.C, 0, n, x); S.res := 0;
@@ -194,8 +194,8 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END WriteTCPBytes;
 
-	PROCEDURE TCPAvailable*(S: Streams.Stream): LONGINT;
-		VAR state: INTEGER;
+	PROCEDURE TCPAvailable*(S: Streams.Stream): SIGNED32;
+		VAR state: SIGNED16;
 	BEGIN
 		WITH S: TCPStream DO
 			S.avail := NetSystem.Available(S.C);
@@ -210,8 +210,8 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END TCPAvailable;
 
-	PROCEDURE TCPState(S: Streams.Stream): INTEGER;
-		VAR state: INTEGER;
+	PROCEDURE TCPState(S: Streams.Stream): SIGNED16;
+		VAR state: SIGNED16;
 	BEGIN
 		WITH S: TCPStream DO
 			state := NetSystem.State(S.C);
@@ -225,7 +225,7 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 	END TCPState;
 
 	PROCEDURE TCPFlush(S: Streams.Stream);
-		VAR len: LONGINT;
+		VAR len: SIGNED32;
 	BEGIN
 		WITH S: TCPStream DO
 			len := S.Available(S)
@@ -256,8 +256,8 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Write all incoming data on connection C to R, until the connection is closed. notify is called after each
 		packet received. *)
-	PROCEDURE ReadData*(C: NetSystem.Connection; VAR R: Files.Rider; maxLen: LONGINT);
-		VAR len, rlen, try: LONGINT;
+	PROCEDURE ReadData*(C: NetSystem.Connection; VAR R: Files.Rider; maxLen: SIGNED32);
+		VAR len, rlen, try: SIGNED32;
 	BEGIN
 		curPos := 0; ProgMNotify(); try := Input.Time() + TimeOut;
 		len := NetSystem.Available(C);
@@ -317,10 +317,10 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 	END QueryString;
 
 (** Get host and port of the Registry entry key in section NetSystem. *)
-	PROCEDURE GetHostPort*(key: ARRAY OF CHAR; VAR host: ARRAY OF CHAR; VAR port: INTEGER; defPort: INTEGER);
+	PROCEDURE GetHostPort*(key: ARRAY OF CHAR; VAR host: ARRAY OF CHAR; VAR port: SIGNED16; defPort: SIGNED16);
 		VAR
-			val: LONGINT;
-			i: INTEGER;
+			val: SIGNED32;
+			i: SIGNED16;
 	BEGIN
 		IF QueryString(key, host) & (host[0] # "<") THEN
 			i := 0;
@@ -357,10 +357,10 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 	END QueryBool;
 
 (** Get host and port of an url link. *)
-	PROCEDURE SplitHostPort*(VAR url, host: ARRAY OF CHAR; VAR port: INTEGER);
+	PROCEDURE SplitHostPort*(VAR url, host: ARRAY OF CHAR; VAR port: SIGNED16);
 		VAR
-			i, j: INTEGER;
-			val: LONGINT;
+			i, j: SIGNED16;
+			val: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (url[i] # 0X) & (url[i] # "/") DO
@@ -391,7 +391,7 @@ MODULE NetTools IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Checks if a proxy should be used for host. *)
 	PROCEDURE UseProxy*(VAR host: ARRAY OF CHAR): BOOLEAN;
-		VAR i, j: LONGINT;
+		VAR i, j: SIGNED32;
 	BEGIN
 		IF proxyDomain # "" THEN
 			i := 0; j := -1;

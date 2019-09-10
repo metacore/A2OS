@@ -34,12 +34,12 @@ TYPE
 	RectBuf = POINTER TO ARRAY OF Rectangle;
 	WorkBuf = POINTER TO ARRAY OF CHAR;
 	String = Strings.String;
-	VNCMouseListener* = PROCEDURE {DELEGATE} (x, y, dz : LONGINT; keys : SET);
-	VNCKeyboardListener* = PROCEDURE {DELEGATE} (ucs : LONGINT; flags : SET; keysym : LONGINT);
+	VNCMouseListener* = PROCEDURE {DELEGATE} (x, y, dz : SIGNED32; keys : SET);
+	VNCKeyboardListener* = PROCEDURE {DELEGATE} (ucs : SIGNED32; flags : SET; keysym : SIGNED32);
 	VNCClipboardListener* = PROCEDURE {DELEGATE} (text : String);
-	VNCNofClientsActiveListener* = PROCEDURE {DELEGATE} (nofClients : LONGINT);
+	VNCNofClientsActiveListener* = PROCEDURE {DELEGATE} (nofClients : SIGNED32);
 
-	PFHextile = ARRAY 16 * 16 OF LONGINT;
+	PFHextile = ARRAY 16 * 16 OF SIGNED32;
 
 	VNCInfo* = OBJECT
 	VAR
@@ -65,14 +65,14 @@ TYPE
 	END Agent;
 
 	PixelFormat = RECORD
-		sr, sg, sb : LONGINT;
-		bpp, depth, rmax, gmax, bmax, rshift, gshift, bshift : LONGINT;
+		sr, sg, sb : SIGNED32;
+		bpp, depth, rmax, gmax, bmax, rshift, gshift, bshift : SIGNED32;
 		bigendian, truecolor, native16 : BOOLEAN;
 	END;
 
 	UpdateQ = OBJECT
 	VAR buffer : RectBuf;
-		nofRect : LONGINT;
+		nofRect : SIGNED32;
 		clip : Rectangle;
 		agent : VNCAgent;
 		alive, allowed : BOOLEAN;
@@ -106,7 +106,7 @@ TYPE
 			END
 		END Add;
 
-		PROCEDURE GetBuffer(VAR nof : LONGINT; drawBuf : RectBuf);
+		PROCEDURE GetBuffer(VAR nof : SIGNED32; drawBuf : RectBuf);
 		VAR r, e : Rectangle; i, j, a : SIZE; done : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			drawBuf[0] := buffer[0]; nof := 1;
@@ -193,7 +193,7 @@ TYPE
 		PROCEDURE Authenticate() : BOOLEAN;
 		VAR challenge, response, clear : ARRAY 16 OF CHAR;
 			des : DES.DES; seq : Random.Sequence;
-			i : LONGINT; len: SIZE; ok : BOOLEAN;
+			i : SIGNED32; len: SIZE; ok : BOOLEAN;
 		BEGIN
 			Machine.AtomicInc(NnofAuthenticate);
 			IF vncInfo.password = "" THEN
@@ -235,13 +235,13 @@ TYPE
 		END CloseAllOtherClients;
 
 		PROCEDURE Setup() : BOOLEAN;
-		VAR len : LONGINT;
+		VAR len : SIGNED32;
 		BEGIN
 			(* read the client initialization 5.1.3 *)
 			IF in.Get() # 01X THEN CloseAllOtherClients END; (* Service *)
 
 			(* send server initialization 5.1.4 *)
-			out.Net16(vncInfo.width(LONGINT)); out.Net16(vncInfo.height(LONGINT));
+			out.Net16(vncInfo.width(SIGNED32)); out.Net16(vncInfo.height(SIGNED32));
 
 			(* pixelformat *)
 			out.Char(CHR(pf.bpp)); out.Char(CHR(pf.depth));
@@ -280,7 +280,7 @@ TYPE
 		END SetPixelFormat;
 
 		PROCEDURE InitPixelFormat(VAR pf : PixelFormat);
-		VAR t : LONGINT;
+		VAR t : SIGNED32;
 		BEGIN
 			t := pf.rmax; pf.sr := 0; WHILE t > 0 DO t := t DIV 2; INC(pf.sr) END; pf.sr := 8 - pf.sr;
 			t := pf.gmax; pf.sg := 0; WHILE t > 0 DO t := t DIV 2; INC(pf.sg) END; pf.sg := 8 - pf.sg;
@@ -306,7 +306,7 @@ TYPE
 *)
 		(** is no longer specified in the 2002 revision of the protocol *)
 		PROCEDURE FixupColorMapEntries;
-		VAR nof, first  : LONGINT;
+		VAR nof, first  : SIGNED32;
 		BEGIN
 			KernelLog.String("FixupColorMapEntries no longer supported... "); KernelLog.Ln;
 			in.SkipBytes(1); first := in.Net16(); nof := in.Net16(); WHILE nof > 0 DO in.SkipBytes(6); DEC(nof) END
@@ -314,7 +314,7 @@ TYPE
 
 		(* supported encodings 5.2.3 *)
 		PROCEDURE SetEncodings;
-		VAR nof, e : LONGINT;
+		VAR nof, e : SIGNED32;
 		BEGIN
 			(* skip padding *)
 			in.SkipBytes(1);
@@ -325,7 +325,7 @@ TYPE
 
 		PROCEDURE SendRect(VAR r : Rectangle);
 		BEGIN
-			out.Net16(r.l(LONGINT)); out.Net16(r.t(LONGINT)); out.Net16((r.r - r.l)(LONGINT)); out.Net16((r.b - r.t)(LONGINT));
+			out.Net16(r.l(SIGNED32)); out.Net16(r.t(SIGNED32)); out.Net16((r.r - r.l)(SIGNED32)); out.Net16((r.b - r.t)(SIGNED32));
 			IF EncHextile IN encodings THEN
 				out.Net32(5);
 				SendHextile(out, vncInfo.img, mode, pf, workBuffer, pfHextile, r)
@@ -336,7 +336,7 @@ TYPE
 		END SendRect;
 
 		PROCEDURE DoUpdates;
-		VAR nof, i : LONGINT;
+		VAR nof, i : SIGNED32;
 		BEGIN {EXCLUSIVE} (* must be exclusive to avoid sending collisions *)
 			updateQ.GetBuffer(nof, drawRectBuffer);
 			IF BundleRectangles THEN
@@ -376,7 +376,7 @@ TYPE
 		PROCEDURE KeyEvent;
 		VAR down : BOOLEAN;
 			flags, greyKey : SET;
-			ucs, keysym : LONGINT;
+			ucs, keysym : SIGNED32;
 		BEGIN
 			down := in.Get() = 1X;
 			IF down THEN flags := {} ELSE flags := {Inputs.Release} END;
@@ -441,7 +441,7 @@ TYPE
 
 		(* 5.2.6 *)
 		PROCEDURE PointerEvent;
-		VAR buttons : LONGINT; keys : SET; x, y, dz : LONGINT;
+		VAR buttons : SIGNED32; keys : SET; x, y, dz : SIGNED32;
 		BEGIN
 			buttons := ORD(in.Get()); x := in.Net16(); y := in.Net16();
 			keys := {};
@@ -455,7 +455,7 @@ TYPE
 
 		(* 5.2.7 *)
 		PROCEDURE ClientCutText;
-		VAR i, len : LONGINT;
+		VAR i, len : SIGNED32;
 			text : String;
 			skip : CHAR;
 		BEGIN
@@ -471,11 +471,11 @@ TYPE
 
 		(** send a text as clipboard content to the client *)
 		PROCEDURE SendClipboard*(text : String);
-		VAR len : LONGINT;
+		VAR len : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			out.Char(3X); (* message type *)
 			out.Char(0X); out.Char(0X); out.Char(0X); (* padding *)
-			len := Strings.Length(text^)(LONGINT);
+			len := Strings.Length(text^)(SIGNED32);
 			out.Net32(len);
 			out.String(text^);
 		END SendClipboard;
@@ -483,12 +483,12 @@ TYPE
 
 		(** 5.4.2 CopyRect Returns FALSE, if client does not support CopyRect
 			this does not wait for fbupdatereq, does not flush *)
-		PROCEDURE CopyRect*(srcx, srcy : LONGINT; dst : Rectangle) : BOOLEAN;
+		PROCEDURE CopyRect*(srcx, srcy : SIGNED32; dst : Rectangle) : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			IF ~(EncCopyRect IN encodings) THEN RETURN FALSE END;
 			out.Char(0X); (* message type *) out.Char(0X); (* padding *)
 			out.Net16(1); (* number of rectangles *)
-			out.Net16(dst.l(LONGINT)); out.Net16(dst.t(LONGINT)); out.Net16((dst.r - dst.l)(LONGINT)); out.Net16((dst.b - dst.t)(LONGINT));
+			out.Net16(dst.l(SIGNED32)); out.Net16(dst.t(SIGNED32)); out.Net16((dst.r - dst.l)(SIGNED32)); out.Net16((dst.b - dst.t)(SIGNED32));
 			out.Net32(1);
 			out.Net16(srcx); out.Net16(srcy);
 			RETURN TRUE
@@ -528,13 +528,13 @@ TYPE
 
 	(** Wait for new TCP connections, start a VNC agent as soon as needed *)
 	Server* = OBJECT
-	VAR res: WORD; service, client: TCP.Connection; root : Agent; agent : VNCAgent;
+	VAR res: INTEGER; service, client: TCP.Connection; root : Agent; agent : VNCAgent;
 		vncInfo : VNCInfo;
-		nofAgents : LONGINT;
+		nofAgents : SIGNED32;
 		stopped : BOOLEAN;
 		init : VNCService;
 
-		PROCEDURE &Open*(port: LONGINT; vncInfo : VNCInfo; init : VNCService; VAR res: WORD);
+		PROCEDURE &Open*(port: SIGNED32; vncInfo : VNCInfo; init : VNCService; VAR res: INTEGER);
 		BEGIN
 			stopped := FALSE; SELF.vncInfo := vncInfo; SELF.init := init;
 			NEW(service); service.Open(port, IP.NilAdr, TCP.NilPort, res);
@@ -615,9 +615,9 @@ VAR
 	NnofAuthenticate-,
 	NnofAuthNone-,
 	NnofAuthVNC-, NnofAuthOk-, NnofAuthFailed-,
-	NnofEnteredServe-, NnofLeftServer- : LONGINT;
+	NnofEnteredServe-, NnofLeftServer- : SIGNED32;
 
-PROCEDURE SendPixel(out : Streams.Writer; pix : LONGINT; VAR pf : PixelFormat);
+PROCEDURE SendPixel(out : Streams.Writer; pix : SIGNED32; VAR pf : PixelFormat);
 BEGIN
 	IF pf.depth = 8 THEN out.Char(CHR(pix))
 	ELSIF pf.depth = 16 THEN
@@ -631,7 +631,7 @@ BEGIN
 END SendPixel;
 
 PROCEDURE SendRawRect(out : Streams.Writer; img : Raster.Image; VAR mode : Raster.Mode; VAR pf : PixelFormat; buf : WorkBuf; r : Rectangle);
-VAR i, j, rh, rw : SIZE; cb, cg, cr : LONGINT;
+VAR i, j, rh, rw : SIZE; cb, cg, cr : SIGNED32;
 BEGIN
 	rh := r.b - r.t; rw := r.r - r.l;
 (*	KernelLog.String("w/h"); KernelLog.Int(rw, 5); KernelLog.Int(rh, 5);
@@ -654,8 +654,8 @@ BEGIN
 	END
 END SendRawRect;
 
-PROCEDURE AnalyzeColors(VAR hextile : PFHextile; nofPixels : SIZE; VAR bg, fg : LONGINT; VAR solid, mono : BOOLEAN);
-VAR i : SIZE; n0, n1, c0, c1, c : LONGINT;
+PROCEDURE AnalyzeColors(VAR hextile : PFHextile; nofPixels : SIZE; VAR bg, fg : SIGNED32; VAR solid, mono : BOOLEAN);
+VAR i : SIZE; n0, n1, c0, c1, c : SIGNED32;
 BEGIN
 	n0 := 0; n1 := 0; solid := TRUE; mono := TRUE;
 	FOR i := 0 TO nofPixels - 1 DO
@@ -672,9 +672,9 @@ BEGIN
 	IF n0 > n1 THEN bg := c0; fg := c1 ELSE bg := c1; fg := c0 END
 END AnalyzeColors;
 
-PROCEDURE EncodeHextile(hextile : PFHextile; buf : WorkBuf; VAR pf : PixelFormat; w, h : SIZE; bg, fg : LONGINT; mono : BOOLEAN;
-	VAR nofRects : LONGINT) : SIZE;
-VAR pos, x, y, tx, ty, bypp, i, j : SIZE; c : LONGINT; eq : BOOLEAN;
+PROCEDURE EncodeHextile(hextile : PFHextile; buf : WorkBuf; VAR pf : PixelFormat; w, h : SIZE; bg, fg : SIGNED32; mono : BOOLEAN;
+	VAR nofRects : SIGNED32) : SIZE;
+VAR pos, x, y, tx, ty, bypp, i, j : SIZE; c : SIGNED32; eq : BOOLEAN;
 BEGIN
 	pos := 0; nofRects := 0;
 	IF pf.depth = 8 THEN bypp := 1
@@ -732,9 +732,9 @@ END EncodeHextile;
 
 PROCEDURE SendHextile(out : Streams.Writer; img : Raster.Image; VAR mode : Raster.Mode; VAR pf : PixelFormat;
 	buf : WorkBuf; VAR hextile : PFHextile; r : Rectangle);
-VAR x, y, w, h, ofs, i : SIZE; cb, cg, cr, bg, fg : LONGINT;
+VAR x, y, w, h, ofs, i : SIZE; cb, cg, cr, bg, fg : SIGNED32;
 			validbg, validfg, mono, solid : BOOLEAN;
-			newbg, newfg, nofRects : LONGINT;
+			newbg, newfg, nofRects : SIGNED32;
 			flags, encBytes: SIZE;
 			hextileFlags : SET;
 BEGIN
@@ -785,10 +785,10 @@ BEGIN
 	END
 END SendHextile;
 
-PROCEDURE OpenServer*(port : LONGINT; img : Raster.Image; name, password : ARRAY OF CHAR; ml : VNCMouseListener;
+PROCEDURE OpenServer*(port : SIGNED32; img : Raster.Image; name, password : ARRAY OF CHAR; ml : VNCMouseListener;
 										kl : VNCKeyboardListener; cl : VNCClipboardListener; ncal : VNCNofClientsActiveListener) : Server;
 VAR server : Server;
-	 vncInfo : VNCInfo; res : WORD;
+	 vncInfo : VNCInfo; res : INTEGER;
 BEGIN
 	NEW(vncInfo);
 	COPY(password, vncInfo.password);
@@ -802,8 +802,8 @@ BEGIN
 	RETURN server;
 END OpenServer;
 
-PROCEDURE OpenService*(port : LONGINT; init : VNCService) : Server;
-VAR server : Server; res : WORD;
+PROCEDURE OpenService*(port : SIGNED32; init : VNCService) : Server;
+VAR server : Server; res : INTEGER;
 BEGIN
 	NEW(server, port, NIL, init, res);
 	IF res # 0 THEN server := NIL END;

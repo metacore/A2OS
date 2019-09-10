@@ -24,13 +24,13 @@ TYPE
 		BEGIN
 			NEW(panel);
 			panel.bounds.SetExtents(800, 700);
-			panel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			panel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			panel.takesFocus.Set(TRUE);
 
 			NEW(menu); NEW(root);
 
 			NEW(menuPanel);
-			menuPanel.fillColor.Set(LONGINT(WMGraphics.White));
+			menuPanel.fillColor.Set(SIGNED32(WMGraphics.White));
 			menuPanel.bounds.SetHeight(20);
 			menuPanel.alignment.Set(WMComponents.AlignTop);
 			menuPanel.horizontal.Set(TRUE);
@@ -187,7 +187,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Execute;
-		VAR ignoreRes : WORD; ignoreMsg : ARRAY 1 OF CHAR;
+		VAR ignoreRes : INTEGER; ignoreMsg : ARRAY 1 OF CHAR;
 		BEGIN
 			Commands.Call(commandString, {}, ignoreRes, ignoreMsg);
 		END Execute;
@@ -195,7 +195,7 @@ TYPE
 	END Command;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 	lastMenu : WMTrees.Tree; (* not thread-safe *)
 
 PROCEDURE Open*;

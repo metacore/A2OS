@@ -30,10 +30,10 @@ BEGIN
 END Explain;
 
 (** Loads a panel from disk. VW, VH indicate the prefered size of the panel. *)
-PROCEDURE OpenPanel*(D: Documents.Document; name: ARRAY OF CHAR; VAR VW, VH: INTEGER): Gadgets.Frame;
+PROCEDURE OpenPanel*(D: Documents.Document; name: ARRAY OF CHAR; VAR VW, VH: SIGNED16): Gadgets.Frame;
 TYPE EmptyMsg = RECORD (Display.FrameMsg) END;
 VAR lib: Objects.Library; root: Objects.Object; J: EmptyMsg; fp: Files.File; R: Files.Rider; ch: CHAR;
-	len: LONGINT; i, x, y: INTEGER; s: ARRAY 64 OF CHAR; old: BOOLEAN;
+	len: SIGNED32; i, x, y: SIGNED16; s: ARRAY 64 OF CHAR; old: BOOLEAN;
 	CM: Gadgets.CmdMsg;
 BEGIN
 	VW := 266; VH := 200;
@@ -105,8 +105,8 @@ END LoadPanel;
 
 (** Document method. *)
 PROCEDURE StorePanel*(D: Documents.Document);
-VAR lib: Objects.Library; f: Files.File; len: LONGINT; P: Display.Frame;
-	new, gen: ARRAY 64 OF CHAR; i: INTEGER; B: Objects.BindMsg; R: Files.Rider;
+VAR lib: Objects.Library; f: Files.File; len: SIGNED32; P: Display.Frame;
+	new, gen: ARRAY 64 OF CHAR; i: SIGNED16; B: Objects.BindMsg; R: Files.Rider;
 BEGIN
 	Texts.WriteString(W, "Store "); Texts.Append(Oberon.Log, W.buf);
 	IF D.name # "" THEN
@@ -144,7 +144,7 @@ END StorePanel;
 
 PROCEDURE PrintPanelDoc(F: Panels.Panel; VAR M: Display.DisplayMsg);
 VAR P: Display.DisplayMsg; O: Display3.OverlapMsg;
-	PROCEDURE Dev(x: INTEGER): INTEGER;
+	PROCEDURE Dev(x: SIGNED16): SIGNED16;
 	BEGIN
 		RETURN SHORT(LONG(x) * Display.Unit DIV Printer.Unit)
 	END Dev;
@@ -211,7 +211,7 @@ BEGIN
 	END
 END DocHandle;
 
-PROCEDURE InitDoc*(D: Documents.Document; W, H: INTEGER);
+PROCEDURE InitDoc*(D: Documents.Document; W, H: SIGNED16);
 VAR main: Objects.Object; gen: ARRAY 64 OF CHAR;
 BEGIN D.Load := LoadPanel; D.Store := StorePanel; D.handle := DocHandle; D.name := "";
 	D.W := W; D.H := H;
@@ -228,7 +228,7 @@ END NewDoc;
 (** append public panel to context panel **)
 PROCEDURE AppendPanel*;
 	VAR
-		s: Texts.Scanner; obj: Objects.Object; ctxt, new: Display.Frame; locked: BOOLEAN; h: INTEGER;
+		s: Texts.Scanner; obj: Objects.Object; ctxt, new: Display.Frame; locked: BOOLEAN; h: SIGNED16;
 		cm: Display.ConsumeMsg; mm: Display.ModifyMsg; ctrl: Display.ControlMsg;
 BEGIN
 	Texts.OpenScanner(s, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(s);

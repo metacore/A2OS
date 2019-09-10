@@ -14,14 +14,14 @@ CONST MaxMemTop = 80000000H;
 
 CONST TraceV24 = 2; TraceScreen = 0;
 CONST TraceWidth = 80; TraceHeight = 25;
-CONST TraceLen = TraceWidth * SIZEOF (INTEGER);
+CONST TraceLen = TraceWidth * SIZEOF (SIGNED16);
 CONST TraceSize = TraceLen * TraceHeight;
 
 VAR memory: SIZE;
 VAR traceMode: SET;
 VAR bootFlag: ADDRESS;
-VAR clock: LONGINT;
-VAR status-: WORD;
+VAR clock: SIGNED32;
+VAR status-: INTEGER;
 VAR memTop: ADDRESS;
 VAR traceBase: ADDRESS;
 VAR heap: HeapManager.Heap;
@@ -48,7 +48,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (CAS (status, ShuttingDown, Rebooting) = ShuttingDown);
 END Reboot;
 
-PROCEDURE {NORETURN} Exit- (status: WORD);
+PROCEDURE {NORETURN} Exit- (status: INTEGER);
 VAR index: SIZE;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Trace.String ("system: ");
@@ -56,12 +56,12 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Trace.StringLn ("ready for power off or restart"); CPU.Halt;
 END Exit;
 
-PROCEDURE Clock- (): LONGINT;
+PROCEDURE Clock- (): SIGNED32;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	RETURN clock;
 END Clock;
 
-PROCEDURE Sleep- (milliseconds: LONGINT);
+PROCEDURE Sleep- (milliseconds: SIGNED32);
 VAR interrupt: Interrupts.Interrupt;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Interrupts.Install (interrupt, CPU.IRQ0); INC (milliseconds, clock);
@@ -87,8 +87,8 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	HeapManager.Deallocate (address, heap);
 END Deallocate;
 
-PROCEDURE StrToInt (VAR i: LONGINT; CONST s: ARRAY OF CHAR): LONGINT;
-VAR vd, vh, sgn, d: LONGINT; hex: BOOLEAN;
+PROCEDURE StrToInt (VAR i: SIGNED32; CONST s: ARRAY OF CHAR): SIGNED32;
+VAR vd, vh, sgn, d: SIGNED32; hex: BOOLEAN;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	vd := 0; vh := 0; hex := FALSE;
 	IF s[i] = "-" THEN sgn := -1; INC (i) ELSE sgn := 1 END;
@@ -106,7 +106,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END StrToInt;
 
 PROCEDURE GetString- (CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
-VAR i, src: LONGINT; ch: CHAR;
+VAR i, src: SIGNED32; ch: CHAR;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (name[0] # "=");	(* no longer supported, use GetInit instead *)
 	src := 0;
@@ -140,7 +140,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END GetString;
 
 PROCEDURE ReadBootTable (bt: ADDRESS);
-VAR i, p: ADDRESS; j, d, type, addr, size, heapSize: LONGINT; ch: CHAR;
+VAR i, p: ADDRESS; j, d, type, addr, size, heapSize: SIGNED32; ch: CHAR;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	heapSize := 0;
 	p := bt; d := 0;
@@ -178,7 +178,7 @@ VAR status: SIZE;
 		adr := traceBase + TraceLen;
 		SYSTEM.MOVE (adr, adr - TraceLen, TraceSize - TraceLen);
 		adr := traceBase + TraceSize - TraceLen;
-		FOR off := 0 TO TraceLen - SIZEOF(INTEGER) BY SIZEOF(INTEGER) DO SYSTEM.PUT16 (adr + off, 100H * 7H + 32) END
+		FOR off := 0 TO TraceLen - SIZEOF(SIGNED16) BY SIZEOF(SIGNED16) DO SYSTEM.PUT16 (adr + off, 100H * 7H + 32) END
 	END Scroll;
 
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -204,19 +204,19 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 				DEC (tracePos, TraceLen)
 			END;
 			SYSTEM.PUT16 (traceBase + tracePos, 100H * traceColor + ORD (c));
-			INC (tracePos, SIZEOF(INTEGER))
+			INC (tracePos, SIZEOF(SIGNED16))
 		END
 	END
 END TraceChar;
 
-PROCEDURE TraceColor (c: SHORTINT);
+PROCEDURE TraceColor (c: SIGNED8);
 BEGIN {UNCOOPERATIVE, UNCHECKED} traceColor := c;
 END TraceColor;
 
 PROCEDURE InitTrace;
 CONST MaxPorts = 8;
-VAR i, p, bps: LONGINT; off: SIZE; s, name: ARRAY 32 OF CHAR;
-	baselist: ARRAY MaxPorts OF LONGINT;
+VAR i, p, bps: SIGNED32; off: SIZE; s, name: ARRAY 32 OF CHAR;
+	baselist: ARRAY MaxPorts OF SIGNED32;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	GetString ("TraceMode", s);
 	p := 0; traceMode := SYSTEM.VAL (SET, StrToInt (p, s));
@@ -224,7 +224,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 		GetString ("TraceMem", s);
 		p := 0; traceBase := SYSTEM.VAL (ADDRESS, StrToInt (p, s));
 		IF traceBase = 0 THEN traceBase := 0B8000H END;	(* default screen buffer *)
-		FOR off := 0 TO TraceSize - SIZEOF(INTEGER) BY SIZEOF(INTEGER) DO SYSTEM.PUT16 (traceBase + off, 100H * 7H + 32) END;
+		FOR off := 0 TO TraceSize - SIZEOF(SIGNED16) BY SIZEOF(SIGNED16) DO SYSTEM.PUT16 (traceBase + off, 100H * 7H + 32) END;
 		tracePos := 0;
 		CPU.OutByte(3D4H, 0EH);
 		CPU.OutByte(3D5H, (TraceWidth*TraceHeight) DIV 100H);
@@ -278,7 +278,7 @@ END IsRAM;
 (* Check amount of memory available and update memTop. *)
 PROCEDURE CheckMemory;
 CONST M = 100000H; ExtMemAdr = M; Step = M;
-VAR s: ARRAY 16 OF CHAR; adr: ADDRESS; i: LONGINT;
+VAR s: ARRAY 16 OF CHAR; adr: ADDRESS; i: SIGNED32;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	GetString("ExtMemSize", s);	(* in MB *)
 	IF s[0] # 0X THEN	(* override detection *)
@@ -295,7 +295,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END;
 END CheckMemory;
 
-PROCEDURE SetupTimer (channel, mode: SHORTINT; frequency: LONGINT);
+PROCEDURE SetupTimer (channel, mode: SIGNED8; frequency: SIGNED32);
 CONST CommandPort = 043H; AccessLoHiByte = 030H; Binary = 000H; Channel0Port = 040H;
 CONST OscillatorFrequency = 1193180;
 VAR divisor: SIZE;
@@ -308,7 +308,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	CPU.OutChar (Channel0Port + channel, CHR (divisor DIV 100H));
 END SetupTimer;
 
-PROCEDURE GetInit- (n: SIZE; VAR val: LONGINT);
+PROCEDURE GetInit- (n: SIZE; VAR val: SIGNED32);
 BEGIN val := initRegs[n]
 END GetInit;
 

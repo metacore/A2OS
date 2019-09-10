@@ -25,7 +25,7 @@ TYPE
 
 	(** Polling timer. *)
 	MilliTimer* = RECORD
-		start, target: LONGINT
+		start, target: SIGNED32
 	END;
 
 TYPE
@@ -33,10 +33,10 @@ TYPE
 	Timer* = OBJECT
 	VAR
 		timer: Objects.Timer;
-		state-: SHORTINT;
-		nofHandleTimeout-, nofHandleTimeout2- : LONGINT;
-		nofSleeps-, nofSleepsLeft- : LONGINT;
-		nofAwaits-, nofAwaitsLeft- : LONGINT;
+		state-: SIGNED8;
+		nofHandleTimeout-, nofHandleTimeout2- : SIGNED32;
+		nofSleeps-, nofSleepsLeft- : SIGNED32;
+		nofAwaits-, nofAwaitsLeft- : SIGNED32;
 
 		PROCEDURE HandleTimeout;
 		BEGIN {EXCLUSIVE}
@@ -45,7 +45,7 @@ TYPE
 		END HandleTimeout;
 
 		(** Delay the calling process the specified number of milliseconds or until Wakeup is called. Only one process may sleep on a specific timer at a time. *)
-		PROCEDURE Sleep*(ms: LONGINT);
+		PROCEDURE Sleep*(ms: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			INC(nofSleeps);
 			ASSERT(state = TimerFree);	(* only one process may sleep on a timer *)
@@ -162,11 +162,11 @@ TYPE
 	END FinalizedCollection;
 
 VAR
-	second- : LONGINT; (** number of ticks per second (Hz) *)
+	second- : SIGNED32; (** number of ticks per second (Hz) *)
 
 	(*
 	PROCEDURE Watch;
-	VAR free, total1, total2, largest, low, high: LONGINT;
+	VAR free, total1, total2, largest, low, high: SIGNED32;
 	BEGIN
 		IF TraceFin THEN
 			Heaps.GetHeapInfo( total1, free, largest );  total1 := (total1 + 512) DIV 1024;  free := (free + 512) DIV 1024;
@@ -180,7 +180,7 @@ VAR
 
 	(** Return the number of ticks since system start. For timeouts, time measurements, etc, please use Kernel.MilliTimer instead.
 		Ticks increment rate is stored in "second" variable in Hz. *)
-	PROCEDURE GetTicks*() : LONGINT;
+	PROCEDURE GetTicks*() : SIGNED32;
 	BEGIN
 		RETURN Kernel32.GetTickCount()
 	END GetTicks;
@@ -197,10 +197,10 @@ VAR
 	(** -- Timers -- *)
 
 (** Set timer to expire in approximately "ms" milliseconds. *)
-	PROCEDURE SetTimer*( VAR t: MilliTimer;  ms: LONGINT );
+	PROCEDURE SetTimer*( VAR t: MilliTimer;  ms: SIGNED32 );
 	BEGIN
 		IF Machine.Second # 1000 THEN  (* convert to ticks *)
-			ASSERT ( (ms >= 0) & (ms <= MAX( LONGINT ) DIV Machine.Second) );
+			ASSERT ( (ms >= 0) & (ms <= MAX( SIGNED32 ) DIV Machine.Second) );
 			ms := ms * Machine.Second DIV 1000
 		END;
 		IF ms < 5 THEN INC( ms ) END;   (* Nyquist adjustment *)
@@ -214,13 +214,13 @@ VAR
 	END Expired;
 
 (** Return elapsed time on a timer in milliseconds. *)
-	PROCEDURE Elapsed*( VAR t: MilliTimer ): LONGINT;
+	PROCEDURE Elapsed*( VAR t: MilliTimer ): SIGNED32;
 	BEGIN
 		RETURN (Kernel32.GetTickCount() - t.start) * (1000 DIV Machine.Second)
 	END Elapsed;
 
 (** Return time left on a timer in milliseconds. *)
-	PROCEDURE Left*( VAR t: MilliTimer ): LONGINT;
+	PROCEDURE Left*( VAR t: MilliTimer ): SIGNED32;
 	BEGIN
 		RETURN (t.target - Kernel32.GetTickCount()) * (1000 DIV Machine.Second)
 	END Left;
@@ -254,9 +254,9 @@ o cancel finalizer when removing object
 o fix module free race: module containing finalizer is freed.  although the finalizer list is cleared, the FinalizerCaller has already taken a reference to a finalizer, but hasn't called it yet.
 o consider: a module has a FinalizedCollection, without finalizers (NIL).  when the module is freed, the objects are still in the finalization list, and will get finalized in the next garbage collection.  The FinalizedCollection will survive the first collection, as the objects all have references to it through their c field.  After all objects have been finalized, the FinalizedCollection itself is collected.  No dangling pointers occur, except the untraced module field references from the type descriptors, which are only used for tracing purposes.
 o check cyclic dependencies between finalized objects.
-o GetTime(): LONGINT - return current time in ms
-o Delay(td: LONGINT) - wait td ms
-o AwaitTime(t: LONGINT) - wait at least until time t
+o GetTime(): SIGNED32 - return current time in ms
+o Delay(td: SIGNED32) - wait td ms
+o AwaitTime(t: SIGNED32) - wait at least until time t
 o Wakeup(obj: ANY) - wake up object that is waiting
 *)
 

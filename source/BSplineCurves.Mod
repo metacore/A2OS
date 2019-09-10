@@ -20,9 +20,9 @@ CONST
 TYPE
 
 	Buffer = OBJECT
-	VAR x: ARRAY [*] OF LONGREAL;
-		PROCEDURE &Init(len: LONGINT); BEGIN NEW(x,len); END Init;
-		PROCEDURE Length(): LONGINT; BEGIN RETURN LEN(x,0); END Length;
+	VAR x: ARRAY [*] OF FLOAT64;
+		PROCEDURE &Init(len: SIGNED32); BEGIN NEW(x,len); END Init;
+		PROCEDURE Length(): SIGNED32; BEGIN RETURN LEN(x,0); END Length;
 	END Buffer;
 
 	(*
@@ -30,9 +30,9 @@ TYPE
 	*)
 	DirectTransform = OBJECT
 	VAR
-		poles: ARRAY [*] OF LONGREAL;
-		gain: LONGREAL;
-		boundary: LONGINT;
+		poles: ARRAY [*] OF FLOAT64;
+		gain: FLOAT64;
+		boundary: SIGNED32;
 		accelBuf: ARRAY [*] OF Buffer;
 
 		(*
@@ -42,10 +42,10 @@ TYPE
 			boundary - boundary handling convention
 			tolerance - tolerance for handling the boundaries
 		*)
-		PROCEDURE &Init(degree, boundary: LONGINT; tolerance: LONGREAL);
+		PROCEDURE &Init(degree, boundary: SIGNED32; tolerance: FLOAT64);
 		VAR
-			i, j, n: LONGINT;
-			p, v, w: LONGREAL;
+			i, j, n: SIGNED32;
+			p, v, w: FLOAT64;
 			buf: Buffer;
 		BEGIN
 			GetDirectFilter(degree,poles,gain);
@@ -66,11 +66,11 @@ TYPE
 			SELF.boundary := boundary;
 		END Init;
 
-		PROCEDURE InitCausal(iPole: LONGINT; CONST s: ARRAY [*] OF LONGREAL): LONGREAL;
+		PROCEDURE InitCausal(iPole: SIGNED32; CONST s: ARRAY [*] OF FLOAT64): FLOAT64;
 		VAR
 			buf: Buffer;
-			i: LONGINT;
-			ic, z, zn, z2n, iz: LONGREAL;
+			i: SIGNED32;
+			ic, z, zn, z2n, iz: FLOAT64;
 		BEGIN
 
 			CASE boundary OF
@@ -130,11 +130,11 @@ TYPE
 			RETURN ic;
 		END InitCausal;
 
-		PROCEDURE InitAnticausal(iPole: LONGINT; CONST s: ARRAY [*] OF LONGREAL): LONGREAL;
+		PROCEDURE InitAnticausal(iPole: SIGNED32; CONST s: ARRAY [*] OF FLOAT64): FLOAT64;
 		VAR
 			buf: Buffer;
-			i: LONGINT;
-			ic, z, zn: LONGREAL;
+			i: SIGNED32;
+			ic, z, zn: FLOAT64;
 		BEGIN
 
 			CASE boundary OF
@@ -175,10 +175,10 @@ TYPE
 			s - input data array [N]
 			c - output array of B-Spline coefficients [N]
 		*)
-		PROCEDURE Transform(CONST s: ARRAY [*] OF LONGREAL; VAR c: ARRAY [*] OF LONGREAL);
+		PROCEDURE Transform(CONST s: ARRAY [*] OF FLOAT64; VAR c: ARRAY [*] OF FLOAT64);
 		VAR
-			i, j: LONGINT;
-			z: LONGREAL;
+			i, j: SIGNED32;
+			z: FLOAT64;
 		BEGIN
 			IF LEN(c,0) # LEN(s,0) THEN NEW(c,LEN(s,0)); END;
 
@@ -198,14 +198,14 @@ TYPE
 	(** A parametric B-Spline curve *)
 	Curve* = OBJECT
 	VAR
-		degree-: LONGINT; (** B-Spline degree *)
+		degree-: SIGNED32; (** B-Spline degree *)
 		closed-: BOOLEAN; (** TRUE for closed curves *)
-		kx-, ky-: ARRAY [*] OF LONGREAL; (** curve knots *)
+		kx-, ky-: ARRAY [*] OF FLOAT64; (** curve knots *)
 
-		boundary: LONGINT;
+		boundary: SIGNED32;
 		direct: DirectTransform;
-		cx, cy: ARRAY [*] OF LONGREAL; (* B-Spline coefficieints for x(t) and y(t) corresponding to the knots *)
-		dt: ARRAY [*] OF LONGREAL;
+		cx, cy: ARRAY [*] OF FLOAT64; (* B-Spline coefficieints for x(t) and y(t) corresponding to the knots *)
+		dt: ARRAY [*] OF FLOAT64;
 
 		(**
 			Construct a B-Spline curve
@@ -213,7 +213,7 @@ TYPE
 			degree - B-Spline degree
 			closed - TRUE for closed curve
 		*)
-		PROCEDURE &Init*(degree: LONGINT; closed: BOOLEAN);
+		PROCEDURE &Init*(degree: SIGNED32; closed: BOOLEAN);
 		BEGIN
 			IF closed THEN boundary := Periodic; ELSE boundary := MirrorW; END;
 
@@ -230,7 +230,7 @@ TYPE
 
 			knotsX, knotsY - x and y coordinates of the knots, in relative units
 		*)
-		PROCEDURE SetKnots*(CONST knotsX, knotsY: ARRAY [*] OF LONGREAL);
+		PROCEDURE SetKnots*(CONST knotsX, knotsY: ARRAY [*] OF FLOAT64);
 		BEGIN
 			ASSERT(LEN(knotsX,0) = LEN(knotsY,0));
 
@@ -257,7 +257,7 @@ TYPE
 			t - input array of parameter values
 			x, y - output point coordinates
 		*)
-		PROCEDURE Eval*(CONST t: ARRAY [*] OF LONGREAL; VAR x, y: ARRAY [*] OF LONGREAL);
+		PROCEDURE Eval*(CONST t: ARRAY [*] OF FLOAT64; VAR x, y: ARRAY [*] OF FLOAT64);
 		BEGIN
 			IF LEN(x,0) # LEN(t,0) THEN NEW(x,LEN(t,0)); END;
 			IF LEN(y,0) # LEN(t,0) THEN NEW(y,LEN(t,0)); END;
@@ -271,10 +271,10 @@ TYPE
 			maxDist - maximal distance between the output polyline points, in relative units
 			x, y - output set of points, in the same relative units
 		*)
-		PROCEDURE GetPoly*(maxDist: LONGREAL; VAR x, y: ARRAY [*] OF LONGREAL);
+		PROCEDURE GetPoly*(maxDist: FLOAT64; VAR x, y: ARRAY [*] OF FLOAT64);
 		VAR
-			i, j, k, m, n: LONGINT;
-			d1, d2, p, t: LONGREAL;
+			i, j, k, m, n: SIGNED32;
+			d1, d2, p, t: FLOAT64;
 		BEGIN
 
 			(*
@@ -355,7 +355,7 @@ TYPE
 		(**
 			Length of the curve, in relative units
 		*)
-		PROCEDURE Length*(): LONGREAL;
+		PROCEDURE Length*(): FLOAT64;
 		BEGIN
 			RETURN 0; (* not yet implemented *)
 		END Length;
@@ -363,7 +363,7 @@ TYPE
 		(**
 			Area occupied by the closed curve, in relative units
 		*)
-		PROCEDURE Area*(): LONGREAL;
+		PROCEDURE Area*(): FLOAT64;
 		BEGIN
 			RETURN 0; (* not yet implemented *)
 		END Area;
@@ -378,9 +378,9 @@ TYPE
 		poles - array of the filter poles
 		gain - gain of the filter
 	*)
-	PROCEDURE GetDirectFilter(degree: LONGINT; VAR poles: ARRAY [*] OF LONGREAL; VAR gain: LONGREAL);
+	PROCEDURE GetDirectFilter(degree: SIGNED32; VAR poles: ARRAY [*] OF FLOAT64; VAR gain: FLOAT64);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		CASE degree OF
 
@@ -463,13 +463,13 @@ TYPE
 		x - array of sample locations where to interpolate
 		v - output array of interpolated values
 	*)
-	PROCEDURE Interpolate(degree: LONGINT; x0, dx: LONGREAL; boundary: LONGINT; CONST c: ARRAY [*] OF LONGREAL; CONST x: ARRAY [*] OF LONGREAL; VAR v: ARRAY [*] OF LONGREAL);
+	PROCEDURE Interpolate(degree: SIGNED32; x0, dx: FLOAT64; boundary: SIGNED32; CONST c: ARRAY [*] OF FLOAT64; CONST x: ARRAY [*] OF FLOAT64; VAR v: ARRAY [*] OF FLOAT64);
 	VAR
-		i, j, k, n: LONGINT;
-		s, s2, s4, t, t0, t1, idx: LONGREAL;
-		xx: LONGREAL;
-		ind0: ARRAY 10 OF LONGINT;
-		w0: ARRAY 10 OF LONGREAL;
+		i, j, k, n: SIGNED32;
+		s, s2, s4, t, t0, t1, idx: FLOAT64;
+		xx: FLOAT64;
+		ind0: ARRAY 10 OF SIGNED32;
+		w0: ARRAY 10 OF FLOAT64;
 	BEGIN
 
 		idx := 1.0D0/dx;
@@ -633,7 +633,7 @@ TYPE
 	(*
 		Integer power: y := x^p
 	*)
-	PROCEDURE IPower(x: LONGREAL; p: LONGINT): LONGREAL;
+	PROCEDURE IPower(x: FLOAT64; p: SIGNED32): FLOAT64;
 	BEGIN
 		IF x > 0 THEN
 			RETURN MathL.exp(p*MathL.ln(x));

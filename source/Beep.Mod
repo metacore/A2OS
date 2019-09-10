@@ -1,6 +1,6 @@
 MODULE Beep;
 
-	PROCEDURE Beep*( hz: WORD );
+	PROCEDURE Beep*( hz: INTEGER );
 	BEGIN
 	END Beep;
 

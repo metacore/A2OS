@@ -19,7 +19,7 @@ TYPE
 		onTimer-: EventSource;
 		eStart-, eStop- : EventListenerInfo;
 		interval-, delay- : WMProperties.Int32Property;
-		wait-: LONGINT;
+		wait-: SIGNED32;
 		alive: BOOLEAN;
 		timer: Kernel.Timer;
 		internalEnabled : BOOLEAN;
@@ -82,7 +82,7 @@ TYPE
 	VAR
 		events- : WMEvents.EventSource;
 
-		interval : LONGINT;
+		interval : SIGNED32;
 		visible-: BOOLEAN;
 
 		alive, dead : BOOLEAN;
@@ -98,13 +98,13 @@ TYPE
 			SetInterval(500);
 		END Init;
 
-		(** Set the cursor blinking interval in milliseconds. An interval of MAX(LONGINT) means don't blink *)
-		PROCEDURE SetInterval*(ms : LONGINT);
+		(** Set the cursor blinking interval in milliseconds. An interval of MAX(SIGNED32) means don't blink *)
+		PROCEDURE SetInterval*(ms : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			ASSERT(ms > 0);
 			interval := ms;
 			timer.Wakeup;
-			IF (interval = MAX(LONGINT)) THEN
+			IF (interval = MAX(SIGNED32)) THEN
 				visible := TRUE;
 				events.Call(SELF);
 			END;
@@ -120,7 +120,7 @@ TYPE
 	BEGIN {ACTIVE}
 		WHILE alive DO
 			BEGIN {EXCLUSIVE}
-				AWAIT(~alive OR ((interval # MAX(LONGINT))));
+				AWAIT(~alive OR ((interval # MAX(SIGNED32))));
 				IF alive THEN
 					events.Call(SELF);
 					visible := ~visible;
@@ -138,7 +138,7 @@ TYPE
 	InternalTimer* = OBJECT
 	VAR
 		onTimer : WMEvents.EventListener;
-		interval : LONGINT;
+		interval : SIGNED32;
 		timer: Kernel.Timer;
 		alive, dead, enabled: BOOLEAN;
 
@@ -151,7 +151,7 @@ TYPE
 			alive := TRUE; dead := FALSE; enabled := FALSE;
 		END Init;
 
-		PROCEDURE SetInterval*(ms : LONGINT);
+		PROCEDURE SetInterval*(ms : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			ASSERT(ms > 0);
 			interval := ms;
@@ -203,7 +203,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Run*(sender, par : ANY); (** Eventhandler *)
-		VAR res : WORD; execute : String; msg : ARRAY 128 OF CHAR;
+		VAR res : INTEGER; execute : String; msg : ARRAY 128 OF CHAR;
 		BEGIN
 			(* synchronize if not synchronized *)
 			IF ~IsCallFromSequencer() THEN sequencer.ScheduleEvent(SELF.Run, sender, par)
@@ -354,7 +354,7 @@ TYPE
 		END RecacheProperties;
 
 		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
-		VAR mode, mid, borderWidth : LONGINT;
+		VAR mode, mid, borderWidth : SIGNED32;
 			 tc : WMGraphics.Color; r, rect : WMGraphics.Rectangle; down : BOOLEAN;
 			 str : String; deco: Decoration;
 		BEGIN
@@ -425,7 +425,7 @@ TYPE
 		END SetCaption;
 
 		PROCEDURE LinkChanged*(sender, data : ANY);
-		VAR string : Types.String256; res : WORD; m: Models.Model;
+		VAR string : Types.String256; res : INTEGER; m: Models.Model;
 		BEGIN
 			IF (sender = model) & WMProperties.GetModel(model,m) THEN
 				m.GetGeneric(string, res);
@@ -588,7 +588,7 @@ TYPE
 		END CheckClickHandler;
 
 		PROCEDURE ExecuteClickHandler;
-		VAR s : Strings.String; res : WORD; msg : ARRAY 64 OF CHAR;
+		VAR s : Strings.String; res : INTEGER; msg : ARRAY 64 OF CHAR;
 		BEGIN
 			s := onClickHandler.Get();
 			IF s # NIL THEN
@@ -598,7 +598,7 @@ TYPE
 			END;
 		END ExecuteClickHandler;
 
-		PROCEDURE ScaleFont*(height: SIZE; percent: WORD);
+		PROCEDURE ScaleFont*(height: SIZE; percent: INTEGER);
 		VAR fh,hfh,ntw,newSize,width: SIZE; f,hf: WMGraphics.Font; str: String; tw, th: SIZE; oldFontSize: SIZE;
 		BEGIN
 			height := height - 2*textBorder.Get();
@@ -705,7 +705,7 @@ TYPE
 		END RecacheProperties;
 
 		PROCEDURE LinkChanged*(sender, data : ANY);
-		VAR boolean : Types.Boolean; res : WORD; m: Models.Model;
+		VAR boolean : Types.Boolean; res : INTEGER; m: Models.Model;
 		BEGIN
 			IF (sender = model) & WMProperties.GetModel(model,m) THEN
 				m.GetGeneric(boolean, res);
@@ -717,7 +717,7 @@ TYPE
 		END LinkChanged;
 
 		PROCEDURE ChangeModel(value : BOOLEAN);
-		VAR boolean : Types.Boolean; res : WORD; m: Models.Model;
+		VAR boolean : Types.Boolean; res : INTEGER; m: Models.Model;
 		BEGIN
 			IF WMProperties.GetModel(model, m) THEN
 				IF isInverse.Get() THEN boolean.value := ~value ELSE boolean.value := value END;
@@ -1034,7 +1034,7 @@ TYPE
 		END GetThisDecoration;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR mode, borderWidth : LONGINT; mid: WMGraphics.Color;
+		VAR mode, borderWidth : SIGNED32; mid: WMGraphics.Color;
 			 tc : WMGraphics.Color; r, rect : WMGraphics.Rectangle; down : BOOLEAN;
 			 str : String;
 		BEGIN
@@ -1062,7 +1062,7 @@ TYPE
 				IF SELF.effect3D.Get() > 0 THEN WMGraphicUtilities.RectGlassShade(canvas, rect, SELF.effect3D.Get(), down) END
 			END;
 			(* focus *)
-			IF hasFocus THEN WMGraphicUtilities.DrawRect(canvas, WMRectangles.ResizeRect(rect, -1), LONGINT(0FF000080H), mode) END;
+			IF hasFocus THEN WMGraphicUtilities.DrawRect(canvas, WMRectangles.ResizeRect(rect, -1), SIGNED32(0FF000080H), mode) END;
 			(* foreground *)
 			IF image # NIL THEN canvas.DrawImage(0, 0, image, WMGraphics.ModeSrcOverDst) END;
 			str := caption.Get();
@@ -1184,7 +1184,7 @@ TYPE
 				ELSE
 					wLeft := 0
 				END;
-				canvas.Line(wLeft, bounds.GetTop(), wLeft, bounds.GetBottom(), LONGINT(0FF0000FFH), WMGraphics.ModeSrcOverDst);
+				canvas.Line(wLeft, bounds.GetTop(), wLeft, bounds.GetBottom(), SIGNED32(0FF0000FFH), WMGraphics.ModeSrcOverDst);
 
 				(* right *)
 				IF imgRight # NIL THEN
@@ -1349,7 +1349,7 @@ TYPE
 		(* bounds and state of logical subcomponents *)
 		areas : ARRAY 5 OF Area;
 
-		down, pressed, hover : SHORTINT;
+		down, pressed, hover : SIGNED8;
 
 		timer : InternalTimer;
 
@@ -1462,7 +1462,7 @@ TYPE
 		END Resized;
 
 		PROCEDURE LinkChanged*(sender, data : ANY);
-		VAR integer : Types.Integer; res : WORD; m: Models.Model;
+		VAR integer : Types.Integer; res : INTEGER; m: Models.Model;
 		BEGIN
 			IF (sender = model) & WMProperties.GetModel(model,m) THEN
 				m.GetGeneric(integer, res);
@@ -1473,7 +1473,7 @@ TYPE
 		END LinkChanged;
 
 		PROCEDURE ChangeModel(value : SIZE);
-		VAR size : Types.Size; res : WORD; m: Models.Model;
+		VAR size : Types.Size; res : INTEGER; m: Models.Model;
 		BEGIN
 			IF WMProperties.GetModel(model, m) THEN
 				size.value := value;
@@ -1501,7 +1501,7 @@ TYPE
 			END;
 		END CheckRepeating;
 
-		PROCEDURE Down(area : SHORTINT);
+		PROCEDURE Down(area : SIGNED8);
 		BEGIN
 			IF (area = MinusButton) THEN DecPos(NIL, NIL);
 			ELSIF (area = MinusPage) THEN PageUp(NIL, NIL);
@@ -1531,7 +1531,7 @@ TYPE
 		END PointerDown;
 
 		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
-		VAR oldHover, oldPressed, area : SHORTINT;
+		VAR oldHover, oldPressed, area : SIGNED8;
 		BEGIN
 			PointerMove^(x, y, keys);
 			area := FindArea(x, y);
@@ -1557,7 +1557,7 @@ TYPE
 		END PointerMove;
 
 		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
-		VAR oldPressed : SHORTINT;
+		VAR oldPressed : SIGNED8;
 		BEGIN
 			PointerUp^(x, y, keys);
 			IF ~(0 IN keys) THEN
@@ -1572,7 +1572,7 @@ TYPE
 		END PointerUp;
 
 		PROCEDURE PointerLeave*;
-		VAR oldHover : SHORTINT;
+		VAR oldHover : SIGNED8;
 		BEGIN
 			PointerLeave^;
 			IF (hover # None) THEN
@@ -1582,8 +1582,8 @@ TYPE
 			END;
 		END PointerLeave;
 
-		PROCEDURE FindArea(x, y : SIZE) : SHORTINT;
-		VAR result : SHORTINT;
+		PROCEDURE FindArea(x, y : SIZE) : SIGNED8;
+		VAR result : SIGNED8;
 		BEGIN
 			result := 0;
 			WHILE (result < LEN(areas)) & ~WMRectangles.PointInRect(x, y, areas[result].rect) DO INC(result); END;
@@ -1592,7 +1592,7 @@ TYPE
 		END FindArea;
 
 		PROCEDURE TrackerMove(x, y : SIZE; keys : SET);
-		VAR newPosition, value, d, dy, dp, dx : SIZE; f : REAL; tmax, tmin, a, b : SIZE;
+		VAR newPosition, value, d, dy, dp, dx : SIZE; f : FLOAT32; tmax, tmin, a, b : SIZE;
 		BEGIN
 			tmin := min.Get(); tmax := max.Get();
 			IF 1 IN keys  THEN
@@ -1743,7 +1743,7 @@ TYPE
 		END PageDown;
 
 		PROCEDURE UpdateLayout;
-		VAR h, w, ps, tmin, tmax : SIZE; f : REAL; width, height : SIZE;
+		VAR h, w, ps, tmin, tmax : SIZE; f : FLOAT32; width, height : SIZE;
 		BEGIN
 			width := bounds.GetWidth(); height := bounds.GetHeight();
 			tmin := min.Get(); tmax := max.Get();
@@ -1779,7 +1779,7 @@ TYPE
 			END;
 		END UpdateLayout;
 
-		PROCEDURE GetButtonColor(area : SHORTINT) : WMGraphics.Color;
+		PROCEDURE GetButtonColor(area : SIGNED8) : WMGraphics.Color;
 		VAR color : WMGraphics.Color;
 		BEGIN
 			IF (area = pressed) THEN color := clBtnPressed.Get();
@@ -1789,7 +1789,7 @@ TYPE
 			RETURN color;
 		END GetButtonColor;
 
-		PROCEDURE GetPageColor(area : SHORTINT) : WMGraphics.Color;
+		PROCEDURE GetPageColor(area : SIGNED8) : WMGraphics.Color;
 		VAR color : WMGraphics.Color;
 		BEGIN
 			IF (area = pressed) THEN color := clPressed.Get();
@@ -1799,7 +1799,7 @@ TYPE
 			RETURN color;
 		END GetPageColor;
 
-		PROCEDURE GetMinusButtonImage(vertical : BOOLEAN; area : SHORTINT; VAR image : WMGraphics.Image);
+		PROCEDURE GetMinusButtonImage(vertical : BOOLEAN; area : SIGNED8; VAR image : WMGraphics.Image);
 		BEGIN
 			IF vertical THEN
 				IF (area = pressed) THEN image := arrowUpPressed;
@@ -1814,7 +1814,7 @@ TYPE
 			END;
 		END GetMinusButtonImage;
 
-		PROCEDURE GetPlusButtonImage(vertical : BOOLEAN; area : SHORTINT; VAR image : WMGraphics.Image);
+		PROCEDURE GetPlusButtonImage(vertical : BOOLEAN; area : SIGNED8; VAR image : WMGraphics.Image);
 		BEGIN
 			IF vertical THEN
 				IF (area = pressed) THEN image := arrowDownPressed;
@@ -1829,7 +1829,7 @@ TYPE
 			END;
 		END GetPlusButtonImage;
 
-		PROCEDURE GetTrackerImages( vertical : BOOLEAN; area : SHORTINT; VAR a, b, c : WMGraphics.Image);
+		PROCEDURE GetTrackerImages( vertical : BOOLEAN; area : SIGNED8; VAR a, b, c : WMGraphics.Image);
 		BEGIN
 			IF vertical THEN
 				IF (area = pressed) THEN a := vTrackerPressedTop; b := vTrackerPressedMiddle; c := vTrackerPressedBottom;
@@ -1844,7 +1844,7 @@ TYPE
 			END;
 		END GetTrackerImages;
 
-		PROCEDURE GetBgImage(vertical : BOOLEAN; area : SHORTINT;  VAR image : WMGraphics.Image);
+		PROCEDURE GetBgImage(vertical : BOOLEAN; area : SIGNED8;  VAR image : WMGraphics.Image);
 		BEGIN
 			IF vertical THEN
 				IF (area = pressed) THEN image := vBgPressed;
@@ -1935,7 +1935,7 @@ TYPE
 			END;
 		END DrawVerticalBackground;
 
-		PROCEDURE DrawSimpleRepresentation(canvas : WMGraphics.Canvas; area : LONGINT; rect : WMRectangles.Rectangle; color: WMGraphics.Color; effect3D : LONGINT);
+		PROCEDURE DrawSimpleRepresentation(canvas : WMGraphics.Canvas; area : SIGNED32; rect : WMRectangles.Rectangle; color: WMGraphics.Color; effect3D : SIGNED32);
 		BEGIN
 			IF (color # 0) THEN canvas.Fill(rect, color, WMGraphics.ModeSrcOverDst) END;
 			IF (effect3D > 0) THEN WMGraphicUtilities.RectGlassShade(canvas, rect, effect3D, area = pressed) END
@@ -2096,7 +2096,7 @@ TYPE
 		END Init;
 
 		PROCEDURE LinkChanged*(sender, link: ANY);
-		VAR m: Models.Model; integer: LONGINT;
+		VAR m: Models.Model; integer: SIGNED32;
 		BEGIN
 			IF sender = model THEN
 				IF WMProperties.GetModel(model,m) THEN
@@ -2148,7 +2148,7 @@ TYPE
 		END TrackerPointerUp;
 
 		PROCEDURE ChangeModel;
-		VAR m: Models.Model; real: Types.Size; res : WORD;
+		VAR m: Models.Model; real: Types.Size; res : INTEGER;
 		BEGIN
 			IF WMProperties.GetModel(model,m) THEN
 				real.value := pos.Get();
@@ -2157,7 +2157,7 @@ TYPE
 		END ChangeModel;
 
 		PROCEDURE TrackerPointerMove(x, y : SIZE; keys : SET; VAR handled : BOOLEAN);
-		VAR dx, dy, dp, d : SIZE; f : REAL; tmax, tmin : SIZE;
+		VAR dx, dy, dp, d : SIZE; f : FLOAT32; tmax, tmin : SIZE;
 		BEGIN
 			tmax := max.Get();
 			tmin := min.Get();
@@ -2353,7 +2353,7 @@ TYPE
 		END Init;
 
 		PROCEDURE RecacheProperties*;
-		VAR align: LONGINT;
+		VAR align: SIGNED32;
 		BEGIN
 			RecacheProperties^;
 			align := alignment.Get();
@@ -2474,11 +2474,11 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR rect: WMRectangles.Rectangle;
-			highlight, shadow : LONGINT; w, h : SIZE;
+			highlight, shadow : SIGNED32; w, h : SIZE;
 			tempString : Strings.String;
 		BEGIN
 			DrawBackground^(canvas);
-			highlight := LONGINT(0FFFFFF80H);
+			highlight := SIGNED32(0FFFFFF80H);
 			shadow := 000000080H;
 			rect := GetClientRect();
 			tempString := caption.Get();
@@ -2656,7 +2656,7 @@ TYPE
 		END FocusLost;
 
 		PROCEDURE PointerDown*(x, y: SIZE; keys: SET);
-		VAR value : LONGINT;
+		VAR value : SIGNED32;
 		BEGIN
 			IF enabled.Get() THEN
 				value := state.Get();
@@ -2762,12 +2762,12 @@ TYPE
 			IF mouseOver THEN
 				IF useImages.Get() THEN
 					IF scaleImages.Get() THEN
-						canvas.Fill(WMRectangles.MakeRect(0, 0, ENTIER(bounds.GetHeight()/img.height*img.width), bounds.GetHeight()), LONGINT(0FFFF0040H), WMGraphics.ModeSrcOverDst)
+						canvas.Fill(WMRectangles.MakeRect(0, 0, ENTIER(bounds.GetHeight()/img.height*img.width), bounds.GetHeight()), SIGNED32(0FFFF0040H), WMGraphics.ModeSrcOverDst)
 					ELSE
-						canvas.Fill(WMRectangles.MakeRect(0, ((rect.b-rect.t)-img.height) DIV 2, img.width, img.height), LONGINT(0FFFF0040H), WMGraphics.ModeSrcOverDst)
+						canvas.Fill(WMRectangles.MakeRect(0, ((rect.b-rect.t)-img.height) DIV 2, img.width, img.height), SIGNED32(0FFFF0040H), WMGraphics.ModeSrcOverDst)
 					END
 				ELSE
-					canvas.Fill(WMRectangles.MakeRect(0, 0, rect.r-rect.l, rect.b-rect.t), LONGINT(0FFFF0040H), WMGraphics.ModeSrcOverDst)
+					canvas.Fill(WMRectangles.MakeRect(0, 0, rect.r-rect.l, rect.b-rect.t), SIGNED32(0FFFF0040H), WMGraphics.ModeSrcOverDst)
 				END
 			END;
 			(* caption *)
@@ -3193,14 +3193,14 @@ BEGIN
 		(* background color *)
 	NEW(ColorPrototype, NIL, NewString("ClDefault"), NewString("Default background color")); ColorPrototype.Set(1010C080H);
 	NEW(PrototypeBclDefault, ColorPrototype, NIL, NIL); plButton.Add(PrototypeBclDefault);
-	NEW(ColorPrototype, NIL, NewString("ClHover"), NewString("Mouseover background color")); ColorPrototype.Set(LONGINT(0EEEE00FFH));
+	NEW(ColorPrototype, NIL, NewString("ClHover"), NewString("Mouseover background color")); ColorPrototype.Set(SIGNED32(0EEEE00FFH));
 	NEW(PrototypeBclHover, ColorPrototype, NIL, NIL); plButton.Add(PrototypeBclHover);
-	NEW(ColorPrototype, NIL, NewString("ClPressed"), NewString("Pressed background color")); ColorPrototype.Set(LONGINT(0EEEE00FFH));
+	NEW(ColorPrototype, NIL, NewString("ClPressed"), NewString("Pressed background color")); ColorPrototype.Set(SIGNED32(0EEEE00FFH));
 	NEW(PrototypeBclPressed, ColorPrototype, NIL, NIL); plButton.Add(PrototypeBclPressed);
-	NEW(ColorPrototype, NIL, NewString("ClInactive"), NewString("Inactive background color")); ColorPrototype.Set(LONGINT(80808080H));
+	NEW(ColorPrototype, NIL, NewString("ClInactive"), NewString("Inactive background color")); ColorPrototype.Set(SIGNED32(80808080H));
 	NEW(PrototypeBclInactive, ColorPrototype, NIL, NIL); plButton.Add(PrototypeBclInactive);
 		(* font color *)
-	NEW(ColorPrototype, NIL, NewString("ClTextDefault"), NewString("Default text color")); ColorPrototype.Set(LONGINT(0FFFF00FFH));
+	NEW(ColorPrototype, NIL, NewString("ClTextDefault"), NewString("Default text color")); ColorPrototype.Set(SIGNED32(0FFFF00FFH));
 	NEW(PrototypeBclTextDefault, ColorPrototype, NIL, NIL); plButton.Add(PrototypeBclTextDefault);
 	NEW(ColorPrototype, NIL, NewString("ClTextHover"), NewString("Mouseover text color")); ColorPrototype.Set(00000FFFFH);
 	NEW(PrototypeBclTextHover, ColorPrototype, NIL, NIL); plButton.Add(PrototypeBclTextHover);
@@ -3287,9 +3287,9 @@ BEGIN
 	NEW(PrototypeSClPressed, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClPressed);
 	NEW(ColorPrototype, NIL, NewString("ClBtnDefault"), NewString("Default background color")); ColorPrototype.Set(1010C080H);
 	NEW(PrototypeSClBtnDefault, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClBtnDefault);
-	NEW(ColorPrototype, NIL, NewString("ClBtnHover"), NewString("Mouseover background color")); ColorPrototype.Set(LONGINT(0EEEE00FFH));
+	NEW(ColorPrototype, NIL, NewString("ClBtnHover"), NewString("Mouseover background color")); ColorPrototype.Set(SIGNED32(0EEEE00FFH));
 	NEW(PrototypeSClBtnHover, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClBtnHover);
-	NEW(ColorPrototype, NIL, NewString("ClBtnPressed"), NewString("Pressed background color")); ColorPrototype.Set(LONGINT(0EEEE00FFH));
+	NEW(ColorPrototype, NIL, NewString("ClBtnPressed"), NewString("Pressed background color")); ColorPrototype.Set(SIGNED32(0EEEE00FFH));
 	NEW(PrototypeSClBtnPressed, ColorPrototype, NIL, NIL); plScrollbar.Add(PrototypeSClBtnPressed);
 	NEW(PrototypeSEffect3D, NIL, NewString("Effect3D"), NewString("Degree of 3d-effect. Zero for flat presentation")); PrototypeSEffect3D.Set(2);
 		(* background *)
@@ -3412,7 +3412,7 @@ BEGIN
 	NEW(PrototypeSlClPressed, NIL, NewString("ClPressed"), NewString("Pressed color of slider"));
 	PrototypeSlClPressed.Set(0);
 	NEW(PrototypeSlClBar, NIL, NewString("ClBar"), NewString("Color of slider bar"));
-	PrototypeSlClBar.Set(LONGINT(0CCCCCCCCH));
+	PrototypeSlClBar.Set(SIGNED32(0CCCCCCCCH));
 
 	NEW(PrototypeSlvertical, NIL, NewString("Vertical"),NewString("defines if the slider is vertical"));
 	PrototypeSlvertical.Set(TRUE);
@@ -3450,13 +3450,13 @@ BEGIN
 	NEW(PrototypeCBonClickHandler, NIL, NewString("onClickHandler"), NewString("onClickHandler")); plCheckbox.Add(PrototypeCBonClickHandler);
 
 			(* background color *)
-	NEW(ColorPrototype, NIL, NewString("ClBack"), NewString("Checkbox Background Color")); ColorPrototype.Set(LONGINT(0FFFFFF80H));
+	NEW(ColorPrototype, NIL, NewString("ClBack"), NewString("Checkbox Background Color")); ColorPrototype.Set(SIGNED32(0FFFFFF80H));
 	NEW(ProtCBclBack, ColorPrototype, NIL, NIL); plCheckbox.Add(ProtCBclBack);
 	NEW(ColorPrototype, NIL, NewString("ClCheck"), NewString("Checkbox Check Color")); ColorPrototype.Set(0000000FFH);
 	NEW(ProtCBclCheck, ColorPrototype, NIL, NIL); plCheckbox.Add(ProtCBclCheck);
 	NEW(ColorPrototype, NIL, NewString("ClDefault"), NewString("Checkbox 3rd state Check Color")); ColorPrototype.Set(0555555FFH);
 	NEW(ProtCBclDefault, ColorPrototype, NIL, NIL); plCheckbox.Add(ProtCBclDefault);
-	NEW(ColorPrototype, NIL, NewString("ClInactive"), NewString("Checkbox Inactive Color")); ColorPrototype.Set(LONGINT(088888880H));
+	NEW(ColorPrototype, NIL, NewString("ClInactive"), NewString("Checkbox Inactive Color")); ColorPrototype.Set(SIGNED32(088888880H));
 	NEW(ProtCBclInactive, ColorPrototype, NIL, NIL); plCheckbox.Add(ProtCBclInactive);
 		(* presentation *)
 	NEW(BooleanPrototype, NIL, NewString("UseBitmaps"), NewString("Have the Checkbox decorated by Images")); BooleanPrototype.Set(FALSE);

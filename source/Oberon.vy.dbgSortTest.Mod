@@ -27,7 +27,7 @@ Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
 IMPORT vyParser, vyRandom, vyTypes, vyHostTexts, vyBase, vyOut, vyRealVec, vyLongrealVec, vyLongintVec, vyIntVec;
 
 PROCEDURE TestReal*;
-	VAR size, i, j, count, show: LONGINT;   sc: vyParser.Scanner;   X: vyBase.tVector;
+	VAR size, i, j, count, show: SIGNED32;   sc: vyParser.Scanner;   X: vyBase.tVector;
 BEGIN
 	NEW(sc);   vyParser.OpenParScanner(sc);
 	IF vyParser.ExpectNumber(sc, size) & vyParser.ExpectNumber(sc, count) & vyParser.ExpectNumber(sc, show)THEN
@@ -54,7 +54,7 @@ BEGIN
 END TestReal;
 
 PROCEDURE TestLongReal*;
-	VAR size, i, j, count, show: LONGINT;   sc: vyParser.Scanner;   X: vyBase.tVector;
+	VAR size, i, j, count, show: SIGNED32;   sc: vyParser.Scanner;   X: vyBase.tVector;
 BEGIN
 	NEW(sc);   vyParser.OpenParScanner(sc);
 	IF vyParser.ExpectNumber(sc, size) & vyParser.ExpectNumber(sc, count) & vyParser.ExpectNumber(sc, show)THEN
@@ -81,7 +81,7 @@ BEGIN
 END TestLongReal;
 
 PROCEDURE TestInteger*;
-	VAR size, i, j, count, show: LONGINT;   sc: vyParser.Scanner;   X: vyBase.tVector;
+	VAR size, i, j, count, show: SIGNED32;   sc: vyParser.Scanner;   X: vyBase.tVector;
 BEGIN
 	NEW(sc);   vyParser.OpenParScanner(sc);
 	IF vyParser.ExpectNumber(sc, size) & vyParser.ExpectNumber(sc, count) & vyParser.ExpectNumber(sc, show) THEN
@@ -89,7 +89,7 @@ BEGIN
 			vyHostTexts.NoteSI(vyHostTexts.cNotify, "Producing random vector, length: ", size);
 			X := vyIntVec.New(0);
 			FOR i := 1 TO size DO
-				vyIntVec.Append(SHORT(ENTIER(vyRandom.Uniform() * MAX(INTEGER))), X);
+				vyIntVec.Append(SHORT(ENTIER(vyRandom.Uniform() * MAX(SIGNED16))), X);
 				IF i MOD (size DIV show) = 0 THEN vyHostTexts.NoteSI(vyHostTexts.cNotify, " = ", vyIntVec.Get(X, i - 1) )END
 			END;
 			vyHostTexts.Note(vyHostTexts.cNotify, "Sorting Vector");
@@ -108,7 +108,7 @@ BEGIN
 END TestInteger;
 
 PROCEDURE TestLongInt*;
-	VAR size, i, j, count, show: LONGINT;   sc: vyParser.Scanner;   X: vyBase.tVector;
+	VAR size, i, j, count, show: SIGNED32;   sc: vyParser.Scanner;   X: vyBase.tVector;
 BEGIN
 	NEW(sc);   vyParser.OpenParScanner(sc);
 	IF vyParser.ExpectNumber(sc, size) & vyParser.ExpectNumber(sc, count) & vyParser.ExpectNumber(sc, show)THEN
@@ -116,7 +116,7 @@ BEGIN
 			vyHostTexts.NoteSI(vyHostTexts.cNotify, "Producing random vector, length: ", size);
 			X := vyLongintVec.New(0);
 			FOR i := 1 TO size DO
-				vyLongintVec.Append(ENTIER(vyRandom.Uniform() * MAX(LONGINT)), X);
+				vyLongintVec.Append(ENTIER(vyRandom.Uniform() * MAX(SIGNED32)), X);
 				IF i MOD (size DIV show) = 0 THEN vyHostTexts.NoteSI(vyHostTexts.cNotify, " = ", vyLongintVec.Get(X, i - 1) )END
 			END;
 			vyHostTexts.Note(vyHostTexts.cNotify, "Sorting Vector");
@@ -135,8 +135,8 @@ BEGIN
 END TestLongInt;
 
 PROCEDURE TestRealWId*;
-	VAR size, i, j, count: LONGINT;   sc: vyParser.Scanner;   X, Xcopy: vyBase.tVector;   temp, tempcopy: vyBase.tVector;
-	XA: POINTER TO ARRAY OF REAL;   tempA: POINTER TO ARRAY OF LONGINT;   failed: BOOLEAN;
+	VAR size, i, j, count: SIGNED32;   sc: vyParser.Scanner;   X, Xcopy: vyBase.tVector;   temp, tempcopy: vyBase.tVector;
+	XA: POINTER TO ARRAY OF FLOAT32;   tempA: POINTER TO ARRAY OF SIGNED32;   failed: BOOLEAN;
 BEGIN
 	failed := FALSE;
 	NEW(sc);   vyParser.OpenParScanner(sc);
@@ -197,8 +197,8 @@ BEGIN
 END TestRealWId;
 
 PROCEDURE TestLongRealWId*;
-	VAR size, i, j, count: LONGINT;   sc: vyParser.Scanner;   X, Xcopy: vyBase.tVector;   temp, tempcopy: vyBase.tVector;
-	XA: POINTER TO ARRAY OF LONGREAL;   tempA: POINTER TO ARRAY OF LONGINT;   failed: BOOLEAN;
+	VAR size, i, j, count: SIGNED32;   sc: vyParser.Scanner;   X, Xcopy: vyBase.tVector;   temp, tempcopy: vyBase.tVector;
+	XA: POINTER TO ARRAY OF FLOAT64;   tempA: POINTER TO ARRAY OF SIGNED32;   failed: BOOLEAN;
 BEGIN
 	failed := FALSE;
 	NEW(sc);   vyParser.OpenParScanner(sc);
@@ -247,8 +247,8 @@ END TestLongRealWId;
 
 
 PROCEDURE TestIntegerWId*;
-	VAR size, i, j, count: LONGINT;   sc: vyParser.Scanner;   X, Xcopy: vyBase.tVector;   temp, tempcopy: vyBase.tVector;
-	XA: POINTER TO ARRAY OF INTEGER;   tempA: POINTER TO ARRAY OF LONGINT;   failed: BOOLEAN;
+	VAR size, i, j, count: SIGNED32;   sc: vyParser.Scanner;   X, Xcopy: vyBase.tVector;   temp, tempcopy: vyBase.tVector;
+	XA: POINTER TO ARRAY OF SIGNED16;   tempA: POINTER TO ARRAY OF SIGNED32;   failed: BOOLEAN;
 BEGIN
 	failed := FALSE;
 	NEW(sc);   vyParser.OpenParScanner(sc);
@@ -296,8 +296,8 @@ BEGIN
 END TestIntegerWId;
 
 PROCEDURE TestLongintWId*;
-	VAR size, i, j, count: LONGINT;   sc: vyParser.Scanner;   X, Xcopy: vyBase.tVector;   temp, tempcopy: vyBase.tVector;
-	XA: POINTER TO ARRAY OF LONGINT;   tempA: POINTER TO ARRAY OF LONGINT;   failed: BOOLEAN;
+	VAR size, i, j, count: SIGNED32;   sc: vyParser.Scanner;   X, Xcopy: vyBase.tVector;   temp, tempcopy: vyBase.tVector;
+	XA: POINTER TO ARRAY OF SIGNED32;   tempA: POINTER TO ARRAY OF SIGNED32;   failed: BOOLEAN;
 BEGIN
 	failed := FALSE;
 	NEW(sc);   vyParser.OpenParScanner(sc);
@@ -347,7 +347,7 @@ END TestLongintWId;
 
 (*
 PROCEDURE TestLongRealWId*;
-VAR size,i,j,count,show: LONGINT; sc: vyParser.Scanner; X,temp: vyBase.tVector;
+VAR size,i,j,count,show: SIGNED32; sc: vyParser.Scanner; X,temp: vyBase.tVector;
 BEGIN
 NEW(sc); vyParser.OpenParScanner(sc);
 IF vyParser.ExpectNumber(sc,size) & vyParser.ExpectNumber(sc,count) & vyParser.ExpectNumber(sc,show)THEN
@@ -376,7 +376,7 @@ END;
 END TestLongRealWId;
 
 PROCEDURE TestIntegerWId*;
-VAR size,i,j,count,show: LONGINT; sc: vyParser.Scanner; X,temp: vyBase.tVector;
+VAR size,i,j,count,show: SIGNED32; sc: vyParser.Scanner; X,temp: vyBase.tVector;
 BEGIN
 NEW(sc); vyParser.OpenParScanner(sc);
 IF vyParser.ExpectNumber(sc,size) & vyParser.ExpectNumber(sc,count) & vyParser.ExpectNumber(sc,show) THEN
@@ -385,7 +385,7 @@ vyHostTexts.NoteSI(vyHostTexts.cNotify,"Producing random vector, length: ", size
 X := vyIntVec.NewIntegerVector(0);
 temp := vyLongintVec.New(0);
 FOR i := 1 TO size DO
-vyIntVec.Append(SHORT(ENTIER(vyRandom.Uniform()*MAX(INTEGER))),X);
+vyIntVec.Append(SHORT(ENTIER(vyRandom.Uniform()*MAX(SIGNED16))),X);
 vyLongintVec.Append(i,temp);
 IF i MOD (size DIV show) = 0 THEN vyHostTexts.NoteSI(vyHostTexts.cNotify," = ",vyIntVec.Get(X,i-1) )END;
 END;
@@ -405,7 +405,7 @@ END;
 END TestIntegerWId;
 
 PROCEDURE TestLongIntWId*;
-VAR size,i,j,count,show: LONGINT; sc: vyParser.Scanner; X,temp: vyBase.tVector;
+VAR size,i,j,count,show: SIGNED32; sc: vyParser.Scanner; X,temp: vyBase.tVector;
 BEGIN
 NEW(sc); vyParser.OpenParScanner(sc);
 IF vyParser.ExpectNumber(sc,size) & vyParser.ExpectNumber(sc,count) & vyParser.ExpectNumber(sc,show)THEN
@@ -414,7 +414,7 @@ vyHostTexts.NoteSI(vyHostTexts.cNotify,"Producing random vector, length: ", size
 X := vyLongintVec.New(0);
 temp := vyLongintVec.New(0);
 FOR i := 1 TO size DO
-vyLongintVec.Append(ENTIER(vyRandom.Uniform()*MAX(LONGINT)),X);
+vyLongintVec.Append(ENTIER(vyRandom.Uniform()*MAX(SIGNED32)),X);
 vyLongintVec.Append(i,temp);
 IF i MOD (size DIV show) = 0 THEN vyHostTexts.NoteSI(vyHostTexts.cNotify," = ",vyLongintVec.Get(X,i-1) )END;
 END;

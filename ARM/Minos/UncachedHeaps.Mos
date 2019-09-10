@@ -12,7 +12,7 @@ VAR
 	PROCEDURE New * (size: SIZE): ADDRESS;
 	VAR
 		adr: ADDRESS;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		adr := last;
 		INC(last, size);

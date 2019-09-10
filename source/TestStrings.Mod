@@ -5,39 +5,39 @@ IMPORT
 	Commands, Strings, KernelLog;
 
 CONST
-	Step = MAX(LONGINT) DIV 5;
+	Step = MAX(SIGNED32) DIV 5;
 
 PROCEDURE TestIntegerConversion*(context : Commands.Context);
-VAR i, temp : LONGINT; string : ARRAY 16 OF CHAR;
+VAR i, temp : SIGNED32; string : ARRAY 16 OF CHAR;
 BEGIN
 	context.out.String("Test integer <-> string conversion... "); context.out.Update;
-	i := MIN(LONGINT);
-	WHILE (i < MAX(LONGINT)) DO
+	i := MIN(SIGNED32);
+	WHILE (i < MAX(SIGNED32)) DO
 		Strings.IntToStr(i, string);
 		Strings.StrToInt(string, temp);
 		ASSERT(i = temp);
 		INC(i);
 		IF (i MOD Step = 0) THEN
 			IF (i < 0) THEN
-				context.out.Int(ENTIER(100* ((MAX(LONGINT) + i)  / MAX(LONGINT) / 2)), 0);
+				context.out.Int(ENTIER(100* ((MAX(SIGNED32) + i)  / MAX(SIGNED32) / 2)), 0);
 			ELSE
-				context.out.Int(ENTIER(100* (i / MAX(LONGINT) / 2)) + 50, 0);
+				context.out.Int(ENTIER(100* (i / MAX(SIGNED32) / 2)) + 50, 0);
 			END;
 			context.out.String("% "); context.out.Update;
 		END;
 	END;
-	Strings.IntToStr(MAX(LONGINT), string);
+	Strings.IntToStr(MAX(SIGNED32), string);
 	Strings.StrToInt(string, temp);
-	ASSERT(temp = MAX(LONGINT));
+	ASSERT(temp = MAX(SIGNED32));
 	context.out.String("100% done."); context.out.Ln;
 END TestIntegerConversion;
 
 PROCEDURE TestHexConversion*(context : Commands.Context);
-VAR i, val : LONGINT; res: WORD; string : ARRAY 16 OF CHAR;
+VAR i, val : SIGNED32; res: INTEGER; string : ARRAY 16 OF CHAR;
 BEGIN
 	context.out.String("Test hex <-> string conversion... "); context.out.Update;
-	i := MIN(LONGINT);
-	WHILE (i < MAX(LONGINT)) DO
+	i := MIN(SIGNED32);
+	WHILE (i < MAX(SIGNED32)) DO
 		Strings.IntToHexStr(i, 8, string);
 		Strings.HexStrToInt(string, val, res);
 		IF (res # Strings.Ok) OR (i # val) THEN
@@ -47,9 +47,9 @@ BEGIN
 		INC(i);
 		IF (i MOD Step = 0) THEN
 			IF (i < 0) THEN
-				context.out.Int(ENTIER(100* ((MAX(LONGINT) + i)  / MAX(LONGINT) / 2)), 0);
+				context.out.Int(ENTIER(100* ((MAX(SIGNED32) + i)  / MAX(SIGNED32) / 2)), 0);
 			ELSE
-				context.out.Int(ENTIER(100* (i / MAX(LONGINT) / 2)) + 50, 0);
+				context.out.Int(ENTIER(100* (i / MAX(SIGNED32) / 2)) + 50, 0);
 			END;
 			context.out.String("% "); context.out.Update;
 		END;
@@ -61,10 +61,10 @@ BEGIN
 END TestHexConversion;
 
 PROCEDURE TestNegativeHexConversion*(context : Commands.Context);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 
-	PROCEDURE Test(number : HUGEINT);
-	VAR string, signedString : ARRAY 16 OF CHAR; val, idx: LONGINT; res: WORD;
+	PROCEDURE Test(number : SIGNED64);
+	VAR string, signedString : ARRAY 16 OF CHAR; val, idx: SIGNED32; res: INTEGER;
 	BEGIN
 		Strings.IntToHexStr(number, 8, string);
 		signedString[0] := "-";
@@ -78,39 +78,39 @@ VAR i : LONGINT;
 	END Test;
 
 	PROCEDURE TestMaxLongintPlus1;
-	VAR string : ARRAY 16 OF CHAR; val : LONGINT; res: WORD;
+	VAR string : ARRAY 16 OF CHAR; val : SIGNED32; res: INTEGER;
 	BEGIN
 		string := "-80000000";
 		Strings.HexStrToInt(string, val, res);
-		ASSERT((res = Strings.Ok) & (val = MIN(LONGINT)));
+		ASSERT((res = Strings.Ok) & (val = MIN(SIGNED32)));
 	END TestMaxLongintPlus1;
 
 BEGIN
 	context.out.String("Test negative hex <-> string conversion... "); context.out.Update;
 	i := 0;
-	WHILE (i < MAX(LONGINT)) DO
+	WHILE (i < MAX(SIGNED32)) DO
 		Test(i);
 		INC(i);
 		IF (i MOD Step = 0) THEN
 			IF (i < 0) THEN
-				context.out.Int(ENTIER(100* ((MAX(LONGINT) + i)  / MAX(LONGINT) / 2)), 0);
+				context.out.Int(ENTIER(100* ((MAX(SIGNED32) + i)  / MAX(SIGNED32) / 2)), 0);
 			ELSE
-				context.out.Int(ENTIER(100* (i / MAX(LONGINT) / 2)) + 50, 0);
+				context.out.Int(ENTIER(100* (i / MAX(SIGNED32) / 2)) + 50, 0);
 			END;
 			context.out.String("% "); context.out.Update;
 		END;
 	END;
-	Test(MAX(LONGINT));
+	Test(MAX(SIGNED32));
 	TestMaxLongintPlus1;
 	context.out.String("100% done."); context.out.Ln;
 END TestNegativeHexConversion;
 
 PROCEDURE TestSetConversion*(context : Commands.Context);
-VAR i : LONGINT; temp : SET; string : ARRAY 64 OF CHAR;
+VAR i : SIGNED32; temp : SET; string : ARRAY 64 OF CHAR;
 BEGIN
 	context.out.String("Test set <-> string conversion...  "); context.out.Update;
-	i := MIN(LONGINT);
-	WHILE (i < MAX(LONGINT)) DO
+	i := MIN(SIGNED32);
+	WHILE (i < MAX(SIGNED32)) DO
 		Strings.SetToStr(SET(i), string);
 		Strings.StrToSet(string, temp);
 		IF (SET(i) # temp) THEN
@@ -120,16 +120,16 @@ BEGIN
 		INC(i);
 		IF (i MOD Step = 0) THEN
 			IF (i < 0) THEN
-				context.out.Int(ENTIER(100* ((MAX(LONGINT) + i)  / MAX(LONGINT) / 2)), 0);
+				context.out.Int(ENTIER(100* ((MAX(SIGNED32) + i)  / MAX(SIGNED32) / 2)), 0);
 			ELSE
-				context.out.Int(ENTIER(100* (i / MAX(LONGINT) / 2)) + 50, 0);
+				context.out.Int(ENTIER(100* (i / MAX(SIGNED32) / 2)) + 50, 0);
 			END;
 			context.out.String("% "); context.out.Update;
 		END;
 	END;
-	Strings.SetToStr(SET(MAX(LONGINT)), string);
+	Strings.SetToStr(SET(MAX(SIGNED32)), string);
 	Strings.StrToSet(string, temp);
-	ASSERT(SET(MAX(LONGINT)) = temp);
+	ASSERT(SET(MAX(SIGNED32)) = temp);
 	context.out.String("100% done."); context.out.Ln;
 END TestSetConversion;
 

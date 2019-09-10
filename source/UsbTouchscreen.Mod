@@ -6,7 +6,7 @@ IMPORT
 
 VAR display: Displays.Display;
 
-PROCEDURE GetDisplayDimensions (VAR w,h: LONGINT);
+PROCEDURE GetDisplayDimensions (VAR w,h: SIGNED32);
 VAR o: Plugins.Plugin;
 BEGIN
 	IF display = NIL THEN

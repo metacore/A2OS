@@ -42,24 +42,24 @@ TYPE
 
 	TextStyle = RECORD
 		font : String;
-		size : LONGINT;
-		style : LONGINT;
-		color : LONGINT;
+		size : SIGNED32;
+		style : SIGNED32;
+		color : SIGNED32;
 		bgcolorPresent : BOOLEAN;
-		bgcolor : LONGINT;
+		bgcolor : SIGNED32;
 		link : String;
 		linktarget : String;
-		shift : LONGINT;
-		align : LONGINT;
-		indent : LONGINT;
-		enumtype : LONGINT;
+		shift : SIGNED32;
+		align : SIGNED32;
+		indent : SIGNED32;
+		enumtype : SIGNED32;
 		preformatted : BOOLEAN;
 		form : Form;
 	END;
 
 	OLULStackItem=POINTER TO RECORD
 		prev : OLULStackItem;
-		value : LONGINT;
+		value : SIGNED32;
 	END;
 
 	EmbeddedObject*=POINTER TO RECORD
@@ -81,22 +81,22 @@ TYPE
 		txtElem: XML.Element;
 		paragraph : XML.Element;
 		title-: String;
-		pageBgColor- : LONGINT;
+		pageBgColor- : SIGNED32;
 		bgImage- : String;
 		embeddedObjectsList- : EmbeddedObject;
-		textColor : LONGINT;
-		linkColor : LONGINT;
-		vlinkColor : LONGINT;
-		alinkColor : LONGINT;
+		textColor : SIGNED32;
+		linkColor : SIGNED32;
+		vlinkColor : SIGNED32;
+		alinkColor : SIGNED32;
 		crlfStr : String;
 		crlfDoubleStr : String;
 		charsetConv : CharsetConvProc;
-		currentText : LONGINT;
+		currentText : SIGNED32;
 		olulStackTop : OLULStackItem;
-		ulDepth : LONGINT;
+		ulDepth : SIGNED32;
 		inDL : BOOLEAN;
-		currentAlign : LONGINT;
-		currentIndent : LONGINT;
+		currentAlign : SIGNED32;
+		currentIndent : SIGNED32;
 		form : Form;
 		formButton : FormButton;
 		formCheckbox : FormCheckbox;
@@ -104,7 +104,7 @@ TYPE
 		formRadioButton : FormRadioButton;
 		formMenu : FormMenu;
 		formHiddenControl : FormHiddenControl;
-		initAlignment : LONGINT;
+		initAlignment : SIGNED32;
 		isTableContent : BOOLEAN;
 
 		PROCEDURE &Init*(doc: XML.Container; url : String; initWidth : SIZE; loadLink : WMEvents.EventListener; charset : String; frameName : String);
@@ -233,7 +233,7 @@ TYPE
 			name, s, s2, s3 : String;
 			enum: XMLObjects.Enumerator;
 			p : ANY;
-			i, j, res : LONGINT;
+			i, j, res : SIGNED32;
 			pos, k: SIZE;
 			exitLoop : BOOLEAN;
 			aoc : ARRAY 16 OF CHAR;
@@ -1091,7 +1091,7 @@ TYPE
 			END;
 		END TransformElement;
 
-		PROCEDURE SetAlignmentAndIndent(align : LONGINT; indent : LONGINT);
+		PROCEDURE SetAlignmentAndIndent(align : SIGNED32; indent : SIGNED32);
 		VAR
 			styleAttrPar : XML.Attribute;
 			s : String;
@@ -1181,8 +1181,8 @@ TYPE
 
 		PROCEDURE AddText(txt : String; style : TextStyle);
 		VAR
-			fontsize : LONGINT;
-			baselineshift : LONGINT;
+			fontsize : SIGNED32;
+			baselineshift : SIGNED32;
 			span : XML.Element;
 			s : String;
 			aoc : ARRAY 33 OF CHAR;
@@ -1253,7 +1253,7 @@ TYPE
 			currentText := cText;
 		END AddText;
 
-		PROCEDURE AddImage(src : String; x : LONGINT; y : LONGINT; style : TextStyle);
+		PROCEDURE AddImage(src : String; x : SIGNED32; y : SIGNED32; style : TextStyle);
 		VAR
 			object : XML.Element;
 			img : WebBrowserComponents.StretchImagePanel;
@@ -1313,7 +1313,7 @@ TYPE
 			embeddedObjectsList := item;
 		END ToEmbeddedObjectsList;
 
-		PROCEDURE AddHR(align : LONGINT);
+		PROCEDURE AddHR(align : SIGNED32);
 		VAR
 			object : XML.Element;
 			hr : WebBrowserComponents.HR;
@@ -1388,8 +1388,8 @@ TYPE
 	VAR
 		tableElem : XML.Element;
 		parentWidth : SIZE;
-		align- : WORD;
-		textColor, linkColor, vlinkColor, alinkColor : LONGINT;
+		align- : INTEGER;
+		textColor, linkColor, vlinkColor, alinkColor : SIGNED32;
 		url : String;
 		loadLink : WMEvents.EventListener;
 		charset : String;
@@ -1398,24 +1398,24 @@ TYPE
 		baseAddress : String;
 		baseTarget : String;
 		isSubtable : BOOLEAN;
-		width : LONGINT;
+		width : SIGNED32;
 		relativeWidth : BOOLEAN;
-		border : LONGINT;
+		border : SIGNED32;
 		rules : BOOLEAN;
-		cellspacing : LONGINT;
+		cellspacing : SIGNED32;
 		relativeCellspacing : BOOLEAN;
-		cellpadding : LONGINT;
+		cellpadding : SIGNED32;
 		relativeCellpadding : BOOLEAN;
-		bgColor : LONGINT;
+		bgColor : SIGNED32;
 		grid : TableGrid;
-		colsCnt : LONGINT;
-		rowsCnt : LONGINT;
+		colsCnt : SIGNED32;
+		rowsCnt : SIGNED32;
 		minCellWidths, maxCellWidths : CellSizes;
 		minTableWidth, maxTableWidth : SIZE;
-		x, y : LONGINT;
-		internalWidth, internalHeight : LONGINT;
+		x, y : SIGNED32;
+		internalWidth, internalHeight : SIGNED32;
 
-		PROCEDURE & New*(tableElem : XML.Element; parentWidth : SIZE; align : LONGINT; textColor, linkColor, vlinkColor, alinkColor : LONGINT; url : String; loadLink : WMEvents.EventListener; charset : String; frameName : String; form : Form; baseAddress : String; baseTarget : String; seq : WMMessages.MsgSequencer; isSubtable : BOOLEAN);
+		PROCEDURE & New*(tableElem : XML.Element; parentWidth : SIZE; align : SIGNED32; textColor, linkColor, vlinkColor, alinkColor : SIGNED32; url : String; loadLink : WMEvents.EventListener; charset : String; frameName : String; form : Form; baseAddress : String; baseTarget : String; seq : WMMessages.MsgSequencer; isSubtable : BOOLEAN);
 		VAR
 			s : String; sequencer: Messages.MsgSequencer;
 		BEGIN
@@ -1536,7 +1536,7 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		VAR
-			h, w, i: SIZE; color : LONGINT;
+			h, w, i: SIZE; color : SIGNED32;
 		BEGIN
 			DrawBackground^(canvas);
 
@@ -1544,7 +1544,7 @@ TYPE
 			IF border > 0 THEN
 				h := bounds.GetHeight();
 				w := bounds.GetWidth();
-				color := LONGINT(0808080FFH);
+				color := SIGNED32(0808080FFH);
 				FOR i := 0 TO border - 1 DO
 					canvas.Line(0, 0+i, w-1, 0+i, color, WMGraphics.ModeSrcOverDst);
 					canvas.Line(0+i, 0, 0+i, h-1, color, WMGraphics.ModeSrcOverDst);
@@ -1556,7 +1556,7 @@ TYPE
 
 		PROCEDURE BuildCellGrid;
 		VAR
-			captionCount : LONGINT;
+			captionCount : SIGNED32;
 			wantedList : StringArray;
 			stopList : StringArray;
 			wantedTDTH : StringArray;
@@ -1564,7 +1564,7 @@ TYPE
 			newRow : BOOLEAN;
 			enum, enum2 : XMLObjects.Enumerator;
 			p, p2 : ANY;
-			j : LONGINT;
+			j : SIGNED32;
 		BEGIN
 			NEW(wantedTDTH, 2); wantedTDTH[0] := Strings.NewString("TD"); wantedTDTH[1] := Strings.NewString("TH");
 			NEW(stopAtTable, 1); stopAtTable[0] := Strings.NewString("TABLE");
@@ -1637,9 +1637,9 @@ TYPE
 		PROCEDURE AddCell(elem : XML.Element; newRow : BOOLEAN);
 		VAR
 			tableCell : TableCell;
-			i, j : LONGINT;
+			i, j : SIGNED32;
 
-			PROCEDURE Add(x, y : LONGINT; tableCell : TableCell);
+			PROCEDURE Add(x, y : SIGNED32; tableCell : TableCell);
 			VAR
 				cellWrapper : CellWrapper;
 			BEGIN
@@ -1657,9 +1657,9 @@ TYPE
 				grid[x, y] := cellWrapper;
 			END Add;
 
-			PROCEDURE GrowX(newX : LONGINT);
+			PROCEDURE GrowX(newX : SIGNED32);
 			VAR
-				newInternalWidth : LONGINT;
+				newInternalWidth : SIGNED32;
 				newGrid : TableGrid;
 			BEGIN
 				IF newX > (internalWidth - 1) THEN
@@ -1679,9 +1679,9 @@ TYPE
 				colsCnt := newX + 1;
 			END GrowX;
 
-			PROCEDURE GrowY(newY : LONGINT);
+			PROCEDURE GrowY(newY : SIGNED32);
 			VAR
-				newInternalHeight : LONGINT;
+				newInternalHeight : SIGNED32;
 				newGrid : TableGrid;
 			BEGIN
 				IF newY > (internalHeight - 1) THEN
@@ -1775,7 +1775,7 @@ TYPE
 			tableWidth, tableHeight : SIZE;
 			targetWidth : SIZE;
 			cellWidths, cellHeights : CellSizes;
-			fac : REAL;
+			fac : FLOAT32;
 			leftIndent, topIndent : SIZE;
 		BEGIN
 
@@ -1941,16 +1941,16 @@ TYPE
 		tv : WMTextView.TextView;
 		text : Texts.Text;
 		minWidth, maxWidth : SIZE;
-		width, height : LONGINT;
-		colspan, rowspan : LONGINT;
+		width, height : SIGNED32;
+		colspan, rowspan : SIGNED32;
 		bgImage : WebBrowserComponents.TileImagePanel;
 		writer : Streams.Writer;
 		textWriter : TextUtilities.TextWriter;
 
-		PROCEDURE & New*(seq : WMMessages.MsgSequencer; parentTable : Table; elem : XML.Element; textColor, linkColor, vlinkColor, alinkColor : LONGINT; url : String; loadLink : WMEvents.EventListener; charset : String; frameName : String; form : Form; baseAddress : String; baseTarget : String);
+		PROCEDURE & New*(seq : WMMessages.MsgSequencer; parentTable : Table; elem : XML.Element; textColor, linkColor, vlinkColor, alinkColor : SIGNED32; url : String; loadLink : WMEvents.EventListener; charset : String; frameName : String; form : Form; baseAddress : String; baseTarget : String);
 		VAR
 			s : String;
-			align : LONGINT;
+			align : SIGNED32;
 			xmlDoc : XML.Document;
 			bbtDecoder : TextUtilities.BluebottleDecoder;
 			rec : WMRectangles.Rectangle;
@@ -2323,7 +2323,7 @@ TYPE
 		editor : WMEditors.Editor;
 		init : String;
 
-		PROCEDURE &Init*(name : String; value : String; size : LONGINT; maxlength : LONGINT; isPassword : BOOLEAN);
+		PROCEDURE &Init*(name : String; value : String; size : SIGNED32; maxlength : SIGNED32; isPassword : BOOLEAN);
 		BEGIN
 			NEW(editor);
 			editor.multiLine.Set(FALSE);
@@ -2688,7 +2688,7 @@ END GetCharsetConverter;
 PROCEDURE Iso2Utf8(VAR input : ARRAY OF CHAR) : String;
 VAR
 	dyn : DynamicStrings.DynamicString;
-	dynPos : LONGINT;
+	dynPos : SIGNED32;
 	temp : ARRAY 5 OF CHAR;
 	i, j, len : SIZE;
 BEGIN
@@ -2724,10 +2724,10 @@ BEGIN
 	RETURN WMCharCodes.GB2312ToUTF8(Strings.NewString(input));
 END Gb23122Utf8;
 
-PROCEDURE GetColor(s : String) : LONGINT;
+PROCEDURE GetColor(s : String) : SIGNED32;
 VAR
 	aoc : ARRAY 17 OF CHAR;
-	i : LONGINT; res: WORD;
+	i : SIGNED32; res: INTEGER;
 BEGIN
 	IF s#NIL THEN
 		IF (s^[0]='#') THEN
@@ -2783,7 +2783,7 @@ END StringHasNewLine;
 PROCEDURE ReplaceWhiteSpaces(VAR txt : String) : String;
 VAR
 	dyn : DynamicStrings.DynamicString;
-	dynPos : LONGINT;
+	dynPos : SIGNED32;
 	i : SIZE;
 	ch : CHAR;
 	putYet : BOOLEAN;
@@ -2934,7 +2934,7 @@ BEGIN
 	RETURN NIL;
 END GetElemAttributeValue;
 
-PROCEDURE MapFontSize(font : String; size : LONGINT) : LONGINT;
+PROCEDURE MapFontSize(font : String; size : SIGNED32) : SIGNED32;
 BEGIN
 	IF font^ = "Oberon" THEN
 		IF size=1 THEN RETURN 8;
@@ -2957,7 +2957,7 @@ BEGIN
 	END;
 END MapFontSize;
 
-PROCEDURE MapBaselineShift(size : LONGINT) : LONGINT;
+PROCEDURE MapBaselineShift(size : SIGNED32) : SIGNED32;
 BEGIN
 	IF size=1 THEN RETURN 2;
 	ELSIF size=2 THEN RETURN 3;
@@ -3032,12 +3032,12 @@ BEGIN
 	RETURN (f = font.name);
 END FontExists;
 
-PROCEDURE IntToABCString(val : LONGINT; upperCase : BOOLEAN) : String;
+PROCEDURE IntToABCString(val : SIGNED32; upperCase : BOOLEAN) : String;
 VAR
-	i, j, offset : LONGINT;
+	i, j, offset : SIGNED32;
 	aoc : ARRAY 5 OF CHAR;
 
-	PROCEDURE GetChar(i : LONGINT) : CHAR;
+	PROCEDURE GetChar(i : SIGNED32) : CHAR;
 	BEGIN
 		IF i = 0 THEN
 			RETURN '0';
@@ -3062,7 +3062,7 @@ BEGIN
 	RETURN Strings.NewString(aoc);
 END IntToABCString;
 
-PROCEDURE IntToRomanString(val : LONGINT; uppercase : BOOLEAN) : String;
+PROCEDURE IntToRomanString(val : SIGNED32; uppercase : BOOLEAN) : String;
 VAR
 	dyn : DynamicStrings.DynamicString;
 	aoc : ARRAY 3 OF CHAR;
@@ -3148,7 +3148,7 @@ PROCEDURE GetCharEnt(VAR ent : ARRAY OF CHAR) : String;
 VAR
 	temp : String;
 	aoc : ARRAY 5 OF CHAR;
-	len : SIZE; res, suc: WORD;
+	len : SIZE; res, suc: INTEGER;
 BEGIN
 	res := 0;
 	IF ent[0] = '#' THEN

@@ -13,9 +13,9 @@ CONST
 
 TYPE
 
-	ProcessTimeArray = POINTER TO ARRAY ProcessInfo.MaxNofProcesses OF HUGEINT;
+	ProcessTimeArray = POINTER TO ARRAY ProcessInfo.MaxNofProcesses OF SIGNED64;
 
-	Callback = PROCEDURE (id : LONGINT; process : Objects.Process; pc, bp, lowAdr, highAdr : ADDRESS);
+	Callback = PROCEDURE (id : SIGNED32; process : Objects.Process; pc, bp, lowAdr, highAdr : ADDRESS);
 
 	Poller = OBJECT
 	VAR
@@ -23,7 +23,7 @@ TYPE
 		nofProcesses, oldNofProcesses : SIZE;
 		times, oldTimes : ProcessTimeArray;
 		me : Objects.Process;
-		state : WORD;
+		state : INTEGER;
 		timer: Kernel.Timer;
 		NormalGC: PROCEDURE; (*gc that is currently used*)
 
@@ -49,7 +49,7 @@ TYPE
 			FOR i := 0 TO LEN(array)-1 DO array[i] := 0; END;
 		END Clear;
 
-		PROCEDURE RanMeanwhile(process : Objects.Process; currentCycles : HUGEINT) : BOOLEAN;
+		PROCEDURE RanMeanwhile(process : Objects.Process; currentCycles : SIGNED64) : BOOLEAN;
 		VAR i : SIZE;
 		BEGIN
 
@@ -105,7 +105,7 @@ TYPE
 VAR
 	poller : Poller;
 	callback : Callback;
-	state : WORD;
+	state : INTEGER;
 
 PROCEDURE Nothing; (*no-op garbage collector*)
 BEGIN
@@ -156,7 +156,7 @@ BEGIN
 					bp := context.BP;
 					sp := context.SP;
 					ASSERT(context.BP <= stackBottom);
-					callback(1, process, context.PC, context.BP, context.SP,  stackBottom(*  LONGINT(0FFFFFFFFH)*)  );
+					callback(1, process, context.PC, context.BP, context.SP,  stackBottom(*  SIGNED32(0FFFFFFFFH)*)  );
 				END;
 			END;
 			res := Kernel32.ResumeThread(handle);

@@ -7,17 +7,17 @@ IMPORT SYSTEM, Files, Fonts, Texts, Modules, Oberon, FATFiles;
 
 CONST
 	BufSize = 32768;
-	N2KDirMark = LONGINT(9B1EA38DH);
+	N2KDirMark = SIGNED32(9B1EA38DH);
 
 VAR
 	wd, wn: Texts.Writer;
-	count: LONGINT;
+	count: SIGNED32;
 	dir: ARRAY 64 OF CHAR;
 	cleanup: Oberon.Task;
 	dostable: ARRAY 32 OF CHAR;
 
 PROCEDURE OpenScanner(VAR s: Texts.Scanner);
-VAR time, beg, end: LONGINT;  text: Texts.Text;
+VAR time, beg, end: SIGNED32;  text: Texts.Text;
 BEGIN
 	Texts.OpenScanner(s, Oberon.Par.text, Oberon.Par.pos);  Texts.Scan(s);
 	IF (s.class = Texts.Char) & (s.c = "^") THEN
@@ -28,8 +28,8 @@ BEGIN
 	END
 END OpenScanner;
 
-PROCEDURE DirHandler(name: ARRAY OF CHAR; time, date, size: LONGINT; attr: SET; VAR continue: BOOLEAN);
-VAR i: LONGINT;
+PROCEDURE DirHandler(name: ARRAY OF CHAR; time, date, size: SIGNED32; attr: SET; VAR continue: BOOLEAN);
+VAR i: SIGNED32;
 BEGIN
 	Texts.WriteString(wd, name);
 	i := 0;  WHILE name[i] # 0X DO INC(i) END;
@@ -46,7 +46,7 @@ BEGIN
 	Texts.WriteLn(wd)
 END DirHandler;
 
-PROCEDURE Error(VAR w: Texts.Writer;  err: LONGINT);
+PROCEDURE Error(VAR w: Texts.Writer;  err: SIGNED32);
 BEGIN
 	IF (err = 8902) OR (err = 8903) OR (err = 8908) THEN Texts.WriteString(w, "file not found")
 	ELSIF (err = 8905) OR (err = 8906) THEN Texts.WriteString(w, "disk full")
@@ -80,7 +80,7 @@ END StartTask;
 (** DOS.Directory dir ~  Directory of DOS drive. *)
 
 PROCEDURE Directory*;
-VAR res, size, i: LONGINT;  t: Texts.Text;  s: Texts.Scanner;
+VAR res, size, i: SIGNED32;  t: Texts.Text;  s: Texts.Scanner;
 BEGIN
 	OpenScanner(s);
 	IF s.class IN {Texts.Name, Texts.String} THEN
@@ -108,7 +108,7 @@ END Directory;
 
 PROCEDURE CopyDosToOberon(from, to: ARRAY OF CHAR; VAR ok: BOOLEAN);
 VAR
-	fat: FATFiles.File;  oberon: Files.File;  res: WORD;  src: FATFiles.Rider;  dst: Files.Rider;
+	fat: FATFiles.File;  oberon: Files.File;  res: INTEGER;  src: FATFiles.Rider;  dst: Files.Rider;
 	buf: ARRAY BufSize OF CHAR;
 BEGIN
 	ok := FALSE; fat := FATFiles.Old(from, res);
@@ -131,7 +131,7 @@ END CopyDosToOberon;
 
 PROCEDURE CopyOberonToDos(from, to: ARRAY OF CHAR; VAR ok: BOOLEAN);
 VAR
-	fat: FATFiles.File;  oberon: Files.File;  res: WORD;  dst: FATFiles.Rider;  src: Files.Rider;
+	fat: FATFiles.File;  oberon: Files.File;  res: INTEGER;  dst: FATFiles.Rider;  src: Files.Rider;
 	buf: ARRAY BufSize OF CHAR;
 BEGIN
 	ok := FALSE; oberon := Files.Old(from);
@@ -160,7 +160,7 @@ BEGIN
 END CopyOberonToDos;
 
 PROCEDURE OberonName(s: ARRAY OF CHAR): BOOLEAN;
-VAR i: LONGINT;  ch: CHAR;
+VAR i: SIGNED32;  ch: CHAR;
 BEGIN
 	i := 0;
 	WHILE s[i] # 0X DO
@@ -208,7 +208,7 @@ BEGIN
 END Copy;
 
 PROCEDURE JoinName(dir, name: ARRAY OF CHAR;  VAR path: ARRAY OF CHAR);
-VAR i, j: LONGINT;
+VAR i, j: SIGNED32;
 BEGIN
 	i := 0;  WHILE dir[i] # 0X DO path[i] := dir[i];  INC(i) END;
 	IF (i # 0) & (dir[i-1] # "/") THEN path[i] := "/";  INC(i) END;
@@ -216,7 +216,7 @@ BEGIN
 	path[i] := 0X;
 END JoinName;
 
-PROCEDURE CopyHandler(name: ARRAY OF CHAR; time, date, size: LONGINT; attr: SET; VAR continue: BOOLEAN);
+PROCEDURE CopyHandler(name: ARRAY OF CHAR; time, date, size: SIGNED32; attr: SET; VAR continue: BOOLEAN);
 VAR from: ARRAY 64 OF CHAR;
 BEGIN
 	IF attr * {FATFiles.VolLabel, FATFiles.SubDir} = {} THEN
@@ -233,7 +233,7 @@ END CopyHandler;
 (** DOS.CopyFrom dir { file } ~  Copy files (wildcards allowed, e.g. "*.*") from specified DOS directory. *)
 
 PROCEDURE CopyFrom*;
-VAR s: Texts.Scanner;  i, res: LONGINT;  continue: BOOLEAN;
+VAR s: Texts.Scanner;  i, res: SIGNED32;  continue: BOOLEAN;
 BEGIN
 	continue := TRUE; OpenScanner(s);
 	IF s.class IN {Texts.Name, Texts.String} THEN
@@ -280,7 +280,7 @@ END CopyTo;
 (** DOS.Delete { file } ~  Delete files on DOS drive. *)
 
 PROCEDURE Delete*;
-VAR s: Texts.Scanner;  res: WORD;
+VAR s: Texts.Scanner;  res: INTEGER;
 BEGIN
 	OpenScanner(s);
 	WHILE s.class IN {Texts.Name, Texts.String} DO
@@ -296,7 +296,7 @@ END Delete;
 (** DOS.Rename { from => to } ~  Rename files on a DOS file system. *)
 
 PROCEDURE Rename*;	(* { from => to } ~ *)
-VAR s: Texts.Scanner;  from, to: ARRAY 64 OF CHAR;  res: WORD;
+VAR s: Texts.Scanner;  from, to: ARRAY 64 OF CHAR;  res: INTEGER;
 BEGIN
 	OpenScanner(s);
 	WHILE s.class IN {Texts.Name, Texts.String} DO
@@ -329,7 +329,7 @@ END Rename;
 
 PROCEDURE BackupDirectory*;
 VAR
-	f: FATFiles.File; r: FATFiles.Rider; s: Texts.Scanner; i, j, res: LONGINT;
+	f: FATFiles.File; r: FATFiles.Rider; s: Texts.Scanner; i, j, res: SIGNED32;
 	src, dst, dosname, oberonname: ARRAY 32 OF CHAR; t: Texts.Text;
 BEGIN
 	OpenScanner(s);
@@ -375,14 +375,14 @@ PROCEDURE Extend*;
 CONST
 	M = 1024*1024; Reserve = 64*1024;
 VAR
-	f: FATFiles.File; r: FATFiles.Rider; s: Texts.Scanner; i, j, res, newsize, oldsize: LONGINT;
+	f: FATFiles.File; r: FATFiles.Rider; s: Texts.Scanner; i, j, res, newsize, oldsize: SIGNED32;
 	src: ARRAY 64 OF CHAR; buf: ARRAY BufSize OF CHAR; new: BOOLEAN;
 BEGIN
 	OpenScanner(s);
 	IF s.class IN {Texts.Name, Texts.String} THEN
 		COPY(s.s, src);
 		Texts.Scan(s);
-		IF (s.class = Texts.Int) & (s.i <= MAX(LONGINT) DIV M) & (s.i > 0) THEN
+		IF (s.class = Texts.Int) & (s.i <= MAX(SIGNED32) DIV M) & (s.i > 0) THEN
 			newsize := s.i * M;
 			Texts.Scan(s); new := (s.class = Texts.Name) & (s.s = "new");
 			StartTask;

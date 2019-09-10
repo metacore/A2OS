@@ -38,13 +38,13 @@ CONST
 	MaxPacketsPerIRQ = 10;
 
 VAR
-	installed: LONGINT;	(* number of installed devices *)
+	installed: SIGNED32;	(* number of installed devices *)
 	logtime: Kernel.MilliTimer;
 
 TYPE
 	ChipsetSpecific = RECORD
 		name: ARRAY 32 OF CHAR;
-		version: LONGINT;
+		version: SIGNED32;
 		configSet, flags: SET;
 	END;
 
@@ -53,7 +53,7 @@ VAR
 
 	(* Interrupt statistics (only with one adapter) *)
 	nPCIError, nTimeOut, nCableLengthChg, nFifoOverflow, nPUnOrLnkChg,
-	nRxBufferOverflow, nTxError, nTxOk, nRxError, nRxOk :LONGINT;
+	nRxBufferOverflow, nTxError, nTxOk, nRxError, nRxOk :SIGNED32;
 
 	logging : BOOLEAN;
 	log :Files.Rider;
@@ -61,7 +61,7 @@ TYPE
 	LinkDevice = OBJECT (Network.LinkDevice)
 		VAR ctrl: Controller;
 
-		PROCEDURE Linked*(): LONGINT;
+		PROCEDURE Linked*(): SIGNED32;
 			BEGIN
 			IF ctrl.Linked() THEN
 				RETURN Network.LinkLinked;
@@ -70,16 +70,16 @@ TYPE
 			END;
 		END Linked;
 
-		PROCEDURE DoSend*(dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: LONGINT);
-		VAR i: LONGINT; bufAdr: ADDRESS; txState:LONGINT; txs:SET; t, totlen:LONGINT;
+		PROCEDURE DoSend*(dst: Network.LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: SIGNED32);
+		VAR i: SIGNED32; bufAdr: ADDRESS; txState:SIGNED32; txs:SET; t, totlen:SIGNED32;
 		BEGIN {EXCLUSIVE}
 			(* Disable IRQ *)
-			SYSTEM.PUT16(ctrl.base + 3CH, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(ctrl.base + 3CH)))-{0..6, 13..15}));
+			SYSTEM.PUT16(ctrl.base + 3CH, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(ctrl.base + 3CH)))-{0..6, 13..15}));
 
 			bufAdr:=ADDRESSOF(ctrl.txBuffers[ctrl.nextTxBuffer]^[0]);
 			SYSTEM.MOVE(ADDRESSOF(dst[0]), bufAdr, 6);
 			SYSTEM.MOVE(ADDRESSOF(local[0]), bufAdr+6, 6);
-			SYSTEM.PUT16(bufAdr+12, ROT(SYSTEM.VAL(INTEGER, SHORT(type)), 8));
+			SYSTEM.PUT16(bufAdr+12, ROT(SYSTEM.VAL(SIGNED16, SHORT(type)), 8));
 			i:=14;
 			IF h3len > 0 THEN SYSTEM.MOVE(ADDRESSOF(l3hdr[0]),  bufAdr+i, h3len); INC(i, h3len) END;
 			IF h4len > 0 THEN SYSTEM.MOVE(ADDRESSOF(l4hdr[0]),  bufAdr+i, h4len); INC(i, h4len) END;
@@ -123,7 +123,7 @@ TYPE
 			END
 			;
 			(* Enable IRQ *)
-			SYSTEM.PUT16(ctrl.base + 3CH, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(ctrl.base + 3CH)))+{0..6, 13..15}));
+			SYSTEM.PUT16(ctrl.base + 3CH, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(ctrl.base + 3CH)))+{0..6, 13..15}));
 			IF logging THEN
 				t := Kernel.Elapsed(logtime);
 				Files.WriteLInt(log, t DIV 1000);
@@ -145,34 +145,34 @@ TYPE
 	Controller = OBJECT
 		VAR
 			next: Controller;
-			base: ADDRESS; irq: LONGINT;
+			base: ADDRESS; irq: SIGNED32;
 			dev: LinkDevice;
-			model, chipset: LONGINT;
+			model, chipset: SIGNED32;
 			media: SET;
-			rxBufPos: LONGINT;
+			rxBufPos: SIGNED32;
 			timer: Kernel.Timer;
-			eepromAdrLen:LONGINT;
+			eepromAdrLen:SIGNED32;
 
-			devAdr:ARRAY 3 OF LONGINT;
+			devAdr:ARRAY 3 OF SIGNED32;
 
 			rxBuffer: POINTER TO ARRAY OF CHAR; (* ring buffer *)
-			rxAdr: LONGINT; (* ring buffer physical adr *)
-			nextTxBuffer: LONGINT;
+			rxAdr: SIGNED32; (* ring buffer physical adr *)
+			nextTxBuffer: SIGNED32;
 			txBuffers: ARRAY 4 OF POINTER TO ARRAY OF CHAR;
 
-			rcvAdr, rcvSize:LONGINT;
+			rcvAdr, rcvSize:SIGNED32;
 
-		PROCEDURE FlushWrite8(reg, val:LONGINT);
+		PROCEDURE FlushWrite8(reg, val:SIGNED32);
 		BEGIN
 			SYSTEM.PUT8(base + reg, val); (* force flush *) val := SYSTEM.GET8(base + reg)
 		END FlushWrite8;
 
 	PROCEDURE Reset;
-	VAR dp, dummy:LONGINT; val:SET;
+	VAR dp, dummy:SIGNED32; val:SET;
 	BEGIN	nextTxBuffer:=0;
 			KernelLog.Enter; KernelLog.String("Softreset"); KernelLog.Exit;
 			(* soft reset *)
-			SYSTEM.PUT8(base + 37H, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 37H)))) + {4})); (* command register: 4 soft reset *)
+			SYSTEM.PUT8(base + 37H, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 37H)))) + {4})); (* command register: 4 soft reset *)
 			dp:=0;
 			LOOP INC(dp); timer.Sleep(1); IF (SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 37H)))) * {4} = {})  OR (dp=100) THEN EXIT END END;
 
@@ -182,7 +182,7 @@ TYPE
 			IF val * {2} = {} THEN KernelLog.String("IO mapping is disabled."); HALT(1000) END;
 
 			(* enable Tx / Rx *)
-			FlushWrite8(37H, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 37H))))* {1, 5, 6, 7} + {2 , 3}));
+			FlushWrite8(37H, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 37H))))* {1, 5, 6, 7} + {2 , 3}));
 
 			(* initialize the rxBuffer *)
 			SYSTEM.PUT32(base + 30H, ADDRESSOF(rxBuffer[0]));
@@ -207,16 +207,16 @@ TYPE
 			SYSTEM.PUT32(base + 4, Network.Get4(dev.local, 4));dummy:=SYSTEM.GET32(base + 4);
 
 			(* enable Tx interrupt for testing *)
-		(*	SYSTEM.PUT16(base + 3CH, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(base + 3CH)))+{2, 0, 4}));*)
-			SYSTEM.PUT16(base + 3CH, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(base + 3CH)))+{0..6, 13..15}));
+		(*	SYSTEM.PUT16(base + 3CH, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(base + 3CH)))+{2, 0, 4}));*)
+			SYSTEM.PUT16(base + 3CH, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(base + 3CH)))+{0..6, 13..15}));
 
 			(* Set Max DMA Burst Size*)
 			SYSTEM.PUT32(base + 40H, SYSTEM.VAL(SET, SYSTEM.GET32(base + 40H))+{9, 10});
 
 	END Reset;
 
-		PROCEDURE &Init*(dev: LinkDevice; base: ADDRESS; irq, model: LONGINT);
-		VAR res: WORD; dp, ver, i, dummy: LONGINT; val, nval: SET;
+		PROCEDURE &Init*(dev: LinkDevice; base: ADDRESS; irq, model: SIGNED32);
+		VAR res: INTEGER; dp, ver, i, dummy: SIGNED32; val, nval: SET;
 		BEGIN
 			SELF.next:=installedControllers; installedControllers:=SELF;
 			NEW(timer);
@@ -228,25 +228,25 @@ TYPE
 
 			(* enable high power mode *)
 			IF HasPwrDn IN chipsetInfo[chipset].flags THEN
-				FlushWrite8(50H, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 50H)))) + {7, 6})); (* config write enable *)
-				SYSTEM.PUT8(base + 52H, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 52H)))) - {0, 1})); (* config 1: 0 pwrdn, 1 sleep *)
-				FlushWrite8(50H, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 50H)))) - {7, 6})); (* config write disable *)
+				FlushWrite8(50H, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 50H)))) + {7, 6})); (* config write enable *)
+				SYSTEM.PUT8(base + 52H, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 52H)))) - {0, 1})); (* config 1: 0 pwrdn, 1 sleep *)
+				FlushWrite8(50H, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 50H)))) - {7, 6})); (* config write disable *)
 			ELSE
 				val := SYSTEM.VAL(SET, SYSTEM.GET8(base + 52H)); nval := val;
 				IF (HasLWake IN chipsetInfo[chipset].flags) & (1 IN val) THEN nval:=nval - {1} END;
 				nval := nval + {0}; (* cfg1 pm enable *)
 				IF nval # val THEN
-					FlushWrite8(50H, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 50H)))) + {7, 6})); (* config write enable *)
-					SYSTEM.PUT8(base + 52H, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 52H)))) - {0, 1})); (* config 1: 0 pwrdn, 1 sleep *)
-					FlushWrite8(50H, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 50H)))) - {7, 6})) (* config write disable *)
+					FlushWrite8(50H, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 50H)))) + {7, 6})); (* config write enable *)
+					SYSTEM.PUT8(base + 52H, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 52H)))) - {0, 1})); (* config 1: 0 pwrdn, 1 sleep *)
+					FlushWrite8(50H, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 50H)))) - {7, 6})) (* config write disable *)
 				END;
 				IF (HasLWake IN chipsetInfo[chipset].flags) THEN
-					SYSTEM.PUT8(base + 5AH, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 5AH)))) - {2})) (* config 4: 2 lwptn *)
+					SYSTEM.PUT8(base + 5AH, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 5AH)))) - {2})) (* config 4: 2 lwptn *)
 				END
 			END;
 
 			(* soft reset *)
-			SYSTEM.PUT8(base + 37H, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 37H)))) + {4})); (* command register: 4 soft reset *)
+			SYSTEM.PUT8(base + 37H, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 37H)))) + {4})); (* command register: 4 soft reset *)
 			dp:=0;
 			LOOP INC(dp); timer.Sleep(1); IF (SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 37H)))) * {4} = {})  OR (dp=100) THEN EXIT END END;
 
@@ -270,7 +270,7 @@ TYPE
 			NEW(rxBuffer, RxBufSize);
 
 			(* enable Tx / Rx *)
-			FlushWrite8(37H, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 37H))))* {1, 5, 6, 7} + {2 , 3}));
+			FlushWrite8(37H, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(LONG(SYSTEM.GET8(base + 37H))))* {1, 5, 6, 7} + {2 , 3}));
 
 			(* initialize the rxBuffer *)
 			SYSTEM.PUT32(base + 30H, ADDRESSOF(rxBuffer[0]));
@@ -310,8 +310,8 @@ TYPE
 			SYSTEM.PUT32(base + 0CH, 0FFFFFFFFH);
 
 			(* enable Tx interrupt for testing *)
-		(*	SYSTEM.PUT16(base + 3CH, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(base + 3CH)))+{2, 0, 4}));*)
-			SYSTEM.PUT16(base + 3CH, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(base + 3CH)))+{1..6, 13..15}));
+		(*	SYSTEM.PUT16(base + 3CH, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(base + 3CH)))+{2, 0, 4}));*)
+			SYSTEM.PUT16(base + 3CH, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LONG(SYSTEM.GET16(base + 3CH)))+{1..6, 13..15}));
 
 			(* Set Max DMA Burst Size*)
 			SYSTEM.PUT32(base + 40H, SYSTEM.VAL(SET, SYSTEM.GET32(base + 40H))+{9, 10});
@@ -325,8 +325,8 @@ TYPE
 			END
 		END Init;
 
-		PROCEDURE ReadEEPROM(loc:LONGINT):LONGINT;
-		VAR readCMD, data:SET; dummy, i:LONGINT;
+		PROCEDURE ReadEEPROM(loc:SIGNED32):SIGNED32;
+		VAR readCMD, data:SET; dummy, i:SIGNED32;
 		BEGIN
 			readCMD := SYSTEM.VAL(SET, loc);
 			IF eepromAdrLen = 6 THEN readCMD:=readCMD+{1+6, 2+6} ELSE readCMD:=readCMD+{1+8, 2+8} END;
@@ -366,11 +366,11 @@ TYPE
 			SYSTEM.PUT8(base+50H, SYSTEM.VAL(CHAR, -{3}));
 			dummy:=SYSTEM.GET32(base+50H); (* delay *)
 
-			RETURN SYSTEM.VAL(LONGINT, data)
+			RETURN SYSTEM.VAL(SIGNED32, data)
 		END ReadEEPROM;
 
 		PROCEDURE ReadPacket;
-		VAR rxInfo, pSize, pStart, dummy, i, type: LONGINT; t: LONGINT;
+		VAR rxInfo, pSize, pStart, dummy, i, type: SIGNED32; t: SIGNED32;
 			buf : Network.Buffer;
 		BEGIN
 			i:=0;
@@ -433,7 +433,7 @@ TYPE
 		END ReadPacket;
 
 		PROCEDURE HandleInterrupt;
-		VAR status, ack:SET; dummy:LONGINT;
+		VAR status, ack:SET; dummy:SIGNED32;
 		BEGIN
 			ack:={0};
 			status:=SYSTEM.VAL(SET, LONG(SYSTEM.GET16(base + 3EH)));
@@ -492,7 +492,7 @@ TYPE
 				ReadPacket;
 				INCL(ack, 0);
 			END;
-			SYSTEM.PUT16(base + 3EH, SYSTEM.VAL(LONGINT, ack));
+			SYSTEM.PUT16(base + 3EH, SYSTEM.VAL(SIGNED32, ack));
 			dummy:=SYSTEM.GET16(base + 3EH);
 		END HandleInterrupt;
 
@@ -518,8 +518,8 @@ TYPE
 
 (* Scan the PCI bus for the specified card. *)
 
-PROCEDURE ScanPCI(vendor, device, model: LONGINT);
-VAR index, bus, dev, fct, irq, i: LONGINT; res: WORD; base: ADDRESS; d: LinkDevice; c: Controller; name: Plugins.Name;
+PROCEDURE ScanPCI(vendor, device, model: SIGNED32);
+VAR index, bus, dev, fct, irq, i: SIGNED32; res: INTEGER; base: ADDRESS; d: LinkDevice; c: Controller; name: Plugins.Name;
 BEGIN
 	index := 0;
 	WHILE (PCI.FindPCIDevice(device, vendor, index, bus, dev, fct) = PCI.Done) & (installed < 10) DO
@@ -564,7 +564,7 @@ VAR f: Files.File;
 BEGIN
 	Kernel.SetTimer(logtime, 0);
 	f := Files.New("EtherNet.Log");  f.Set(log, 0); Files.Register(f);	(* tcpdump compatible log file *)
-	Files.WriteLInt(log, LONGINT(0A1B2C3D4H));  Files.WriteInt(log, 2);
+	Files.WriteLInt(log, SIGNED32(0A1B2C3D4H));  Files.WriteInt(log, 2);
 	Files.WriteInt(log, 4);  Files.WriteLInt(log, 0);  Files.WriteLInt(log, 0);
 	Files.WriteLInt(log, 1514);  Files.WriteLInt(log, 1);
 	logging := TRUE;

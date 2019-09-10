@@ -20,7 +20,7 @@ TYPE
 
 VAR
 	roundConstants: ARRAY nrRounds OF Lane;
-	rhoOffsets: ARRAY nrLanes OF LONGINT;
+	rhoOffsets: ARRAY nrLanes OF SIGNED32;
 
 TYPE
 	Instance* = OBJECT
@@ -184,7 +184,7 @@ TYPE
 
 	PROCEDURE Round( VAR a: State; r: SIZE );
 	VAR
-		x, y, i, i1, i2: LONGINT;
+		x, y, i, i1, i2: SIGNED32;
 		c, d: ARRAY 5 OF Lane;
 		a0: State;
 	BEGIN
@@ -245,7 +245,7 @@ TYPE
 	PROCEDURE InitializeRoundConstants;
 	VAR
 		LFSRstate: SET32;
-		i, j, bit: LONGINT;
+		i, j, bit: SIGNED32;
 		lane: Lane;
 	BEGIN
 		LFSRstate := {0};
@@ -263,7 +263,7 @@ TYPE
 
 	PROCEDURE InitializeRhoOffsets;
 	VAR
-		x, y, oldY: SIZE; t: LONGINT;
+		x, y, oldY: SIZE; t: SIGNED32;
 	BEGIN
 		rhoOffsets[0] := 0;
 		x := 1;

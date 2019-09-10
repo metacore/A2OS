@@ -23,12 +23,12 @@ CONST
 
 VAR
 	Pattern*: ARRAY 9 OF Display.Pattern;		(** Display patterns that correspond to the printer patterns. *)
-	class: INTEGER;
-	ex, ey, ex1, ey1, pattern: INTEGER;
+	class: SIGNED16;
+	ex, ey, ex1, ey1, pattern: SIGNED16;
 
 	(* tmp vars for printing pictures *)
 	tmpP: Pictures.Picture;
-	tX, tY, tW, tH: INTEGER;
+	tX, tY, tW, tH: SIGNED16;
 
 (* ========= Brush related ========= *)
 
@@ -36,10 +36,10 @@ CONST BrushSize = 100; (* maximum width of the brush *)
 
 TYPE
 	Brush = RECORD
-		brul, brur: ARRAY BrushSize OF INTEGER;
-		bufl, bufr: ARRAY BrushSize OF INTEGER;
-		bufh, brushr: INTEGER;
-		x, y, mode: INTEGER;
+		brul, brur: ARRAY BrushSize OF SIGNED16;
+		bufl, bufr: ARRAY BrushSize OF SIGNED16;
+		bufh, brushr: SIGNED16;
+		x, y, mode: SIGNED16;
 		col: Display.Color;
 		M: Display3.Mask;
 		pat: Display.Pattern
@@ -51,8 +51,8 @@ VAR
 
 (* not portable
 	PROCEDURE NewPattern*(pat: Display.Pattern): Display.Pattern;
-		VAR x, y, b, l, r, t, w, h, i, W, H : INTEGER; s : SET; d : ARRAY 256, 4 OF SET; p, s0 : LONGINT; D, P : LONGINT;
-			k : SHORTINT;
+		VAR x, y, b, l, r, t, w, h, i, W, H : SIGNED16; s : SET; d : ARRAY 256, 4 OF SET; p, s0 : SIGNED32; D, P : SIGNED32;
+			k : SIGNED8;
 			ptr : POINTER TO RECORD END;
 	BEGIN
 		y := 0;
@@ -64,7 +64,7 @@ VAR
 		(* zoom pattern *)
 		D := Display.Unit; P := Unit;
 		Display.GetDim(pat, w, h);
-		p := SYSTEM.VAL(LONGINT,pat) + 2;
+		p := SYSTEM.VAL(SIGNED32,pat) + 2;
 		y := 0;
 		WHILE y < h DO x := 0;
 			SYSTEM.GET(p,s);
@@ -90,7 +90,7 @@ VAR
 		H := SHORT(h * D DIV P);
 		W := SHORT(w * D DIV P);
 		SYSTEM.NEW(ptr, (W +7) DIV 8 * 8 * H + 8);
-		p := SYSTEM.VAL(LONGINT,ptr);
+		p := SYSTEM.VAL(SIGNED32,ptr);
 		k := SHORT(W); SYSTEM.PUT(p,k); INC(p);
 		k := SHORT(H); SYSTEM.PUT(p,k); INC(p);
 		y := 0;
@@ -102,18 +102,18 @@ VAR
 			END;
 			INC(y);
 		END ;
-		RETURN SYSTEM.VAL(LONGINT,ptr);
+		RETURN SYSTEM.VAL(SIGNED32,ptr);
 	END NewPattern;
 *)
 
-	PROCEDURE Min(x, y: INTEGER): INTEGER;
+	PROCEDURE Min(x, y: SIGNED16): SIGNED16;
 	BEGIN IF x < y THEN RETURN x ELSE RETURN y; END END Min;
 
-	PROCEDURE Max(x, y: INTEGER): INTEGER;
+	PROCEDURE Max(x, y: SIGNED16): SIGNED16;
 	BEGIN IF x > y THEN RETURN x; ELSE RETURN y; END END Max;
 
-	PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-	VAR r, t, r1, t1: INTEGER;
+	PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+	VAR r, t, r1, t1: SIGNED16;
 	BEGIN
 		r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 		IF x < x1 THEN x := x1 END;
@@ -123,11 +123,11 @@ VAR
 		w := r - x + 1; h := t - y + 1
 	END ClipAgainst;
 
-	PROCEDURE IntersectLine(VAR x1, y1, x2, y2: INTEGER; X, Y, W, H: INTEGER): BOOLEAN;
+	PROCEDURE IntersectLine(VAR x1, y1, x2, y2: SIGNED16; X, Y, W, H: SIGNED16): BOOLEAN;
 		CONST left=0; right=1; bottom=2; top=3;
-		VAR c1, c2: SET; R, T, x0, y0 : INTEGER; dx,dy : LONGINT;
+		VAR c1, c2: SET; R, T, x0, y0 : SIGNED16; dx,dy : SIGNED32;
 
-		PROCEDURE Code(x, y: INTEGER): SET;
+		PROCEDURE Code(x, y: SIGNED16): SET;
 			VAR c: SET;
 		BEGIN c := {};
 			IF x<X THEN INCL(c, left) ELSIF x>R THEN INCL(c, right) END;
@@ -135,7 +135,7 @@ VAR
 			RETURN c
 		END Code;
 
-		PROCEDURE Clip(VAR x, y : INTEGER; VAR c : SET);
+		PROCEDURE Clip(VAR x, y : SIGNED16; VAR c : SET);
 		BEGIN
 			IF left IN c THEN
 				y := SHORT(y0 + dy * (X-x0) DIV dx); x := X;
@@ -160,8 +160,8 @@ VAR
 		RETURN c1*c2 = {}
 	END IntersectLine;
 
-	PROCEDURE PPat(pat: Display.Pattern): INTEGER;
-	VAR i: INTEGER;
+	PROCEDURE PPat(pat: Display.Pattern): SIGNED16;
+	VAR i: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE i < 9 DO
@@ -177,14 +177,14 @@ VAR
 	END PPat;
 
 	PROCEDURE UseCol(col: Display.Color);
-	VAR r, g, b: INTEGER;
+	VAR r, g, b: SIGNED16;
 	BEGIN
 		Display.GetColor(col, r, g, b);
 		Printer.UseColor(r, g, b)
 	END UseCol;
 
-	PROCEDURE Enum(X, Y, W, H: INTEGER);
-	VAR u, v, u1, v1: INTEGER;
+	PROCEDURE Enum(X, Y, W, H: SIGNED16);
+	VAR u, v, u1, v1: SIGNED16;
 	BEGIN
 		CASE class OF
 			 replConst: Printer.ReplConst(X, Y, W, H);
@@ -195,7 +195,7 @@ VAR
 	END Enum;
 
 	(** Block fill X, Y, W, H using color col. *)
-	PROCEDURE ReplConst*(M: Display3.Mask; col: Display.Color; X, Y, W, H, mode: INTEGER);
+	PROCEDURE ReplConst*(M: Display3.Mask; col: Display.Color; X, Y, W, H, mode: SIGNED16);
 	BEGIN
 		UseCol(col);
 		IF M = NIL THEN Printer.ReplConst(X, Y, W, H)
@@ -207,7 +207,7 @@ VAR
 	END ReplConst;
 
 	(** Print dot in color col at X, Y. *)
-	PROCEDURE Dot*(M: Display3.Mask; col: Display.Color; X, Y, mode: INTEGER);
+	PROCEDURE Dot*(M: Display3.Mask; col: Display.Color; X, Y, mode: SIGNED16);
 	BEGIN
 		UseCol(col);
 		IF M = NIL THEN Printer.ReplConst(X, Y,1,1)
@@ -217,7 +217,7 @@ VAR
 	END Dot;
 
 	(** Replicate fill pattern pat in area X, Y, W, H, using color col. pX, pY is the pattern pin-point. *)
-	PROCEDURE FillPattern*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; pX, pY, X, Y, W, H, mode: INTEGER);
+	PROCEDURE FillPattern*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; pX, pY, X, Y, W, H, mode: SIGNED16);
 	BEGIN
 		UseCol(col);
 		pattern := PPat(pat);
@@ -238,7 +238,7 @@ VAR
 	END FillPattern;
 
 	(** Print rectangle outline X, Y, W, H of width and in pattern pat. *)
-	PROCEDURE Rect*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; X, Y, W, H, width, mode: INTEGER);
+	PROCEDURE Rect*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; X, Y, W, H, width, mode: SIGNED16);
 	BEGIN
 		width := Min(width, Min(H DIV 2, W DIV 2));
 		ReplConst(M, col, X, Y, width, H, mode);
@@ -248,7 +248,7 @@ VAR
 	END Rect;
 
 (** Print a rectangle outline X, Y, W, H of width width in 3D effect using top shadow topcol and bottom shadow botcol. *)
-	PROCEDURE Rect3D*(M: Display3.Mask; topcol, botcol: Display.Color; X, Y, W, H, width, mode: INTEGER);
+	PROCEDURE Rect3D*(M: Display3.Mask; topcol, botcol: Display.Color; X, Y, W, H, width, mode: SIGNED16);
 	BEGIN
 		width := Min(width, Min(H DIV 2, W DIV 2));
 		WHILE width > 0 DO
@@ -261,7 +261,7 @@ VAR
 	END Rect3D;
 
 (** Print a filled rectangle X, Y, W, H of width width in 3D effect using top shadow topcol and bottom shadow botcol. The "inside" color is incol. *)
-	PROCEDURE FilledRect3D*(M: Display3.Mask; topcol, botcol, incol: Display.Color; X, Y, W, H, width, mode: INTEGER);
+	PROCEDURE FilledRect3D*(M: Display3.Mask; topcol, botcol, incol: Display.Color; X, Y, W, H, width, mode: SIGNED16);
 	BEGIN
 		width := Min(width, Min(H DIV 2, W DIV 2));
 		WHILE width > 0 DO
@@ -276,8 +276,8 @@ VAR
 
 (* BRUSHES *)
 
-PROCEDURE BrushJump(VAR b: Brush; x, y: INTEGER);
-VAR i: INTEGER;
+PROCEDURE BrushJump(VAR b: Brush; x, y: SIGNED16);
+VAR i: SIGNED16;
 BEGIN
 	IF (b.x # x) OR (b.y # y) THEN
 		b.x := x; b.y := y;
@@ -285,8 +285,8 @@ BEGIN
 	END
 END BrushJump;
 
-PROCEDURE BrushWalk(VAR b: Brush; x, y: INTEGER);
-VAR i, dx, dy, t: INTEGER;
+PROCEDURE BrushWalk(VAR b: Brush; x, y: SIGNED16);
+VAR i, dx, dy, t: SIGNED16;
 BEGIN
 	dx := x - b.x; dy := y - b.y; t := b.bufh - 1;
 	IF dy = 0 THEN (* horizontal move *)
@@ -314,7 +314,7 @@ BEGIN
 END BrushWalk;
 
 PROCEDURE BrushFlush(VAR b: Brush);
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN
 	FOR i := 0 TO b.bufh - 1 DO
 		FillPattern(b.M, b.col, b.pat, 0, 0,
@@ -322,10 +322,10 @@ BEGIN
 	END
 END BrushFlush;
 
-PROCEDURE InitBrush(VAR b: Brush; M: Display3.Mask; pat: Display.Pattern; col: Display.Color; w, mode: INTEGER);
-VAR r, x, y, d, dx, dy: INTEGER;
+PROCEDURE InitBrush(VAR b: Brush; M: Display3.Mask; pat: Display.Pattern; col: Display.Color; w, mode: SIGNED16);
+VAR r, x, y, d, dx, dy: SIGNED16;
 
-	PROCEDURE Set(x, y: INTEGER);
+	PROCEDURE Set(x, y: SIGNED16);
 	BEGIN
 		b.brul[y + r] := -x+1; b.brur[y + r] := x; b.brul[-y + r] := -x+1; b.brur[-y + r] := x;
 		IF y + r > b.bufh THEN b.bufh := y + r END;
@@ -335,7 +335,7 @@ BEGIN b.bufh := 0;
 	b.M := M; b.col := col; b.mode := mode; b.pat := pat;
 	IF w >= BrushSize THEN w := BrushSize - 1 END;
 
-	b.x := MIN(INTEGER); b.y := MIN(INTEGER);
+	b.x := MIN(SIGNED16); b.y := MIN(SIGNED16);
 	r := w DIV 2; (* radius *)
 	IF r < 0 THEN r := 1 END;
 	x := r; y := 0; d := 2 * r; dx := 4 * r; dy := 0;
@@ -350,8 +350,8 @@ END InitBrush;
 (* --------------------- Scan line based primitives --------------------- *)
 
 (** Print a line of width width between X, Y and X1, Y1 in color col using pattern pat. Hair-lines (of width = 1) cannot be patterned. *)
-PROCEDURE Line*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; X, Y, X1, Y1, width, mode: INTEGER);
-VAR x, y, dx, dy, inx, iny, d, dy2, dx2: INTEGER;
+PROCEDURE Line*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; X, Y, X1, Y1, width, mode: SIGNED16);
+VAR x, y, dx, dy, inx, iny, d, dy2, dx2: SIGNED16;
 BEGIN
 	IF width > 1 THEN
 		x := X; y := Y; dx := X1 - X; dy := Y1 - Y;
@@ -396,13 +396,13 @@ BEGIN
 	END
 END Line;
 
-PROCEDURE FilledPoly(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y: ARRAY OF INTEGER; n, mode: INTEGER);
+PROCEDURE FilledPoly(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y: ARRAY OF SIGNED16; n, mode: SIGNED16);
 	TYPE
 		Run = POINTER TO RunDesc0;
-		RunDesc0 = RECORD next: Run; x: INTEGER END;
+		RunDesc0 = RECORD next: Run; x: SIGNED16 END;
 	VAR
 		scan: ARRAY 2000 OF Run; free, s: Run;
-		i, miny, maxy, x0, x1: INTEGER;
+		i, miny, maxy, x0, x1: SIGNED16;
 
 	PROCEDURE New(VAR s: Run);
 	BEGIN IF free = NIL THEN NEW(s) ELSE s := free; free := free.next; s.next := NIL END
@@ -417,7 +417,7 @@ PROCEDURE FilledPoly(M: Display3.Mask; col: Display.Color; pat: Display.Pattern;
 		END
 	END Free;
 
-	PROCEDURE Insert(VAR s: Run; x: INTEGER);
+	PROCEDURE Insert(VAR s: Run; x: SIGNED16);
 	VAR t, t0: Run;
 	BEGIN
 		IF s = NIL THEN New(s); s.x := x
@@ -433,8 +433,8 @@ PROCEDURE FilledPoly(M: Display3.Mask; col: Display.Color; pat: Display.Pattern;
 		END
 	END Insert;
 
-	PROCEDURE line(x1, y1, x2, y2: INTEGER); (* standard bresenham *)
-	VAR x, y, d, dx, dy, incx, incy: INTEGER;
+	PROCEDURE line(x1, y1, x2, y2: SIGNED16); (* standard bresenham *)
+	VAR x, y, d, dx, dy, incx, incy: SIGNED16;
 	BEGIN
 		(* Seg(x1,y1); *)
 		x := x1; y := y1; dx := (x2 - x1) * 2; dy := (y2 - y1) * 2;
@@ -453,7 +453,7 @@ PROCEDURE FilledPoly(M: Display3.Mask; col: Display.Color; pat: Display.Pattern;
 	END line;
 
 BEGIN free := NIL;
-	miny := MAX(INTEGER); maxy := MIN(INTEGER);
+	miny := MAX(SIGNED16); maxy := MIN(SIGNED16);
 	i := 0; WHILE i < n DO IF Y[i] < miny THEN miny := Y[i] END; IF Y[i] > maxy THEN maxy := Y[i]; END; INC(i) END;
 	i := 0; WHILE i <= maxy - miny DO scan[i] := NIL; INC(i) END;
 	i := 1;
@@ -476,8 +476,8 @@ BEGIN free := NIL;
 END FilledPoly;
 
 (** Print a polygon of n vertices in color col and pattern pat. The vertices are passed in the arrays X and Y. Style can be {Display3.filled}. *)
-PROCEDURE Poly*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y: ARRAY OF INTEGER; n, width: INTEGER; style: SET; mode: INTEGER);
-VAR i: INTEGER;
+PROCEDURE Poly*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y: ARRAY OF SIGNED16; n, width: SIGNED16; style: SET; mode: SIGNED16);
+VAR i: SIGNED16;
 BEGIN
 	IF Display3.filled IN style THEN FilledPoly(M, col, pat, X, Y, n, mode)
 	ELSE
@@ -493,10 +493,10 @@ BEGIN
 END Poly;
 
 (** Print an ellipse of horizontal radius a and vertical radius b at position X, Y. Implementation restriction: Ellipses cannot be filled or drawn with a thick brush. *)
-PROCEDURE Ellipse*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; X, Y, a, b, width: INTEGER; style: SET; mode: INTEGER);
-VAR x1, y1: INTEGER; d, dx, dy, x2, y2, a1, a2, a8, b1, b2, b8: LONGINT;
+PROCEDURE Ellipse*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; X, Y, a, b, width: SIGNED16; style: SET; mode: SIGNED16);
+VAR x1, y1: SIGNED16; d, dx, dy, x2, y2, a1, a2, a8, b1, b2, b8: SIGNED32;
 
-	PROCEDURE Dot4(x1, x2, y1, y2: INTEGER; col: Display.Color; mode: INTEGER);
+	PROCEDURE Dot4(x1, x2, y1, y2: SIGNED16; col: Display.Color; mode: SIGNED16);
 	BEGIN
 		IF pat = Display.solid THEN
 			Dot(M, col, x1, y1,mode); Dot(M, col, x1, y2, mode);
@@ -524,8 +524,8 @@ BEGIN
 END Ellipse;
 
 (** Print a circle of radius r and width width using pattern pat and color col at X, Y. Style can be {Display3.filled}. *)
-PROCEDURE Circle*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; X, Y, r, width: INTEGER; style: SET; mode: INTEGER);
-VAR x, y, dx, dy, d, e: INTEGER;
+PROCEDURE Circle*(M: Display3.Mask; col: Display.Color; pat: Display.Pattern; X, Y, r, width: SIGNED16; style: SET; mode: SIGNED16);
+VAR x, y, dx, dy, d, e: SIGNED16;
 BEGIN
 	IF Display3.filled IN style THEN
 		x := r; y := 0; e := 0; dx := 2; dy := 2;
@@ -579,12 +579,12 @@ BEGIN
 	END
 END Circle;
 
-PROCEDURE PP(x: INTEGER): INTEGER;
+PROCEDURE PP(x: SIGNED16): SIGNED16;
 BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 END PP;
 
 (* lookup the size of a character on the printer/does not use a font cache *)
-PROCEDURE Lookup(font, metric: Fonts.Font; ch: CHAR; VAR minY, maxY, dx, y, h: INTEGER);
+PROCEDURE Lookup(font, metric: Fonts.Font; ch: CHAR; VAR minY, maxY, dx, y, h: SIGNED16);
 VAR obj: Objects.Object;
 BEGIN
 	IF metric # NIL THEN
@@ -601,8 +601,8 @@ BEGIN
 END Lookup;
 
 (** Returns the size of a string on the printer. Width is w, height is h, and the descender offset is dsr. *)
-PROCEDURE StringSize*(s: ARRAY OF CHAR; fnt: Fonts.Font; VAR w, h, dsr: INTEGER);
-VAR metric: Fonts.Font; p, dx, d: INTEGER;
+PROCEDURE StringSize*(s: ARRAY OF CHAR; fnt: Fonts.Font; VAR w, h, dsr: SIGNED16);
+VAR metric: Fonts.Font; p, dx, d: SIGNED16;
 BEGIN
 	metric := Printer.GetMetric(fnt);
 	w := 0; p := 0;
@@ -617,8 +617,8 @@ BEGIN
 	END
 END StringSize;
 
-PROCEDURE StringSize0(font, metric: Fonts.Font; s: ARRAY OF CHAR; VAR x, y, w, h: INTEGER; VAR dx: ARRAY OF INTEGER);
-VAR i, minY, maxY, cdx, d: INTEGER;
+PROCEDURE StringSize0(font, metric: Fonts.Font; s: ARRAY OF CHAR; VAR x, y, w, h: SIGNED16; VAR dx: ARRAY OF SIGNED16);
+VAR i, minY, maxY, cdx, d: SIGNED16;
 BEGIN
 	w := 0; i := 0; x := 0;
 	WHILE s[i] # 0X DO
@@ -635,8 +635,8 @@ BEGIN
 END StringSize0;
 
 (** Print string s using font fnt in color col at X, Y. *)
-	PROCEDURE String*(M: Display3.Mask; col: Display.Color; X, Y: INTEGER; fnt: Fonts.Font; s: ARRAY OF CHAR; mode: INTEGER);
-	VAR metric: Fonts.Font; W, H, x, y, i, ofs: INTEGER; dX: ARRAY 256 OF INTEGER; t: ARRAY 2 OF CHAR;
+	PROCEDURE String*(M: Display3.Mask; col: Display.Color; X, Y: SIGNED16; fnt: Fonts.Font; s: ARRAY OF CHAR; mode: SIGNED16);
+	VAR metric: Fonts.Font; W, H, x, y, i, ofs: SIGNED16; dX: ARRAY 256 OF SIGNED16; t: ARRAY 2 OF CHAR;
 	BEGIN
 		metric := Printer.GetMetric(fnt);
 		StringSize0(fnt, metric, s, x, y, W, H, dX);
@@ -673,8 +673,8 @@ Printer.ReplConst(X + x, Y + y, W, 1); Printer.ReplConst(X + x, Y + y, 1, H);
 	END String;
 
 (** Print string s centered in area X, Y, W, H using color col and font fnt. Line-breaks will be inserted if the string is too long. *)
-PROCEDURE CenterString*(M: Display3.Mask; col: Display.Color; X, Y, W, H: INTEGER; fnt: Fonts.Font; s: ARRAY OF CHAR; mode: INTEGER);
-VAR metric: Fonts.Font; len, p, h, lspc, i, y: INTEGER; s0: ARRAY 48 OF CHAR; cdx, d, fheight, fminy: INTEGER;
+PROCEDURE CenterString*(M: Display3.Mask; col: Display.Color; X, Y, W, H: SIGNED16; fnt: Fonts.Font; s: ARRAY OF CHAR; mode: SIGNED16);
+VAR metric: Fonts.Font; len, p, h, lspc, i, y: SIGNED16; s0: ARRAY 48 OF CHAR; cdx, d, fheight, fminy: SIGNED16;
 BEGIN
 	metric := Printer.GetMetric(fnt);
 	len := 0; p := 0;
@@ -727,13 +727,13 @@ BEGIN
 	END;
 END CenterString;
 
-	PROCEDURE Print(px, py, pw, ph: INTEGER; (* picture *) X, Y, W, H: INTEGER(* printer *); P: Pictures.Picture);
+	PROCEDURE Print(px, py, pw, ph: SIGNED16; (* picture *) X, Y, W, H: SIGNED16(* printer *); P: Pictures.Picture);
 	BEGIN
 		Printer.Picture(P, px, py, pw, ph, X, Y, W, H, Display.replace);
 	END Print;
 
-PROCEDURE PrintEnum(X, Y, W, H: INTEGER);
-VAR px, py, pw, ph: INTEGER;
+PROCEDURE PrintEnum(X, Y, W, H: SIGNED16);
+VAR px, py, pw, ph: SIGNED16;
 BEGIN
 	px := X - tX; py := Y - tY; pw := W; ph := H; (* in printer coordinates *)
 
@@ -746,8 +746,8 @@ BEGIN
 END PrintEnum;
 
 (** Picture is stretched/reduce to fit at X, Y, W, H on the printer. *)
-PROCEDURE Pict*(M: Display3.Mask; P: Pictures.Picture; X, Y, W, H, mode: INTEGER); (* printer coordinates *)
-VAR x, y, w, h: INTEGER;
+PROCEDURE Pict*(M: Display3.Mask; P: Pictures.Picture; X, Y, W, H, mode: SIGNED16); (* printer coordinates *)
+VAR x, y, w, h: SIGNED16;
 BEGIN
 	x := X; y := Y; w := W; h := H;
 	ClipAgainst(x, y, w, h, M.X, M.Y, M.W, M.H);
@@ -757,9 +757,9 @@ BEGIN
 END Pict;
 
 (** Replicate picture P. px, py is the picture origin, X, Y, W, H is printer coordinates of the area to be filled. *)
-PROCEDURE ReplPict*(M: Display3.Mask; P: Pictures.Picture; px, py, X, Y, W, H, mode: INTEGER);
-VAR x, y, w, h, pw, ph, w0, x0: INTEGER;
-	a, b, c, d: INTEGER;
+PROCEDURE ReplPict*(M: Display3.Mask; P: Pictures.Picture; px, py, X, Y, W, H, mode: SIGNED16);
+VAR x, y, w, h, pw, ph, w0, x0: SIGNED16;
+	a, b, c, d: SIGNED16;
 
 BEGIN
 	a := M.X; b := M.Y; c := M.W; d := M.H;
@@ -779,7 +779,7 @@ BEGIN
 END ReplPict;
 
 PROCEDURE InitPat;
-	VAR patS : ARRAY 9,8 OF SET; i : INTEGER;
+	VAR patS : ARRAY 9,8 OF SET; i : SIGNED16;
 
 BEGIN
 	patS[0,0] := {0..31};	patS[0,1] := {0..31};

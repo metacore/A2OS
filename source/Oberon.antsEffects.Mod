@@ -36,8 +36,8 @@ TYPE
 
 
 	tBuffer = RECORD
-		X, Y, W, H: INTEGER;
-		x, y: INTEGER;   (* origin *)
+		X, Y, W, H: SIGNED16;
+		x, y: SIGNED16;   (* origin *)
 		buf: Images.Image;
 		img: Images.Image;
 	END;
@@ -50,7 +50,7 @@ VAR
 	(** Snap X, Y to the snapping grid. *)
 
 
-PROCEDURE OpenBuffer (VAR buf: tBuffer;   x, y, w, h: INTEGER);
+PROCEDURE OpenBuffer (VAR buf: tBuffer;   x, y, w, h: SIGNED16);
 BEGIN
 	buf.x := x;   buf.y := y;
 	(* opens a buffer x-50,y-50,w+100,h+100 *)
@@ -65,9 +65,9 @@ BEGIN
 	Display.TransferBlock(buf.buf.mem^, 0, buf.buf.bpr, buf.X, buf.Y, buf.W, buf.H, Display.get)
 END OpenBuffer;
 
-PROCEDURE Ants* (x, y, w, h: INTEGER;  num: INTEGER;  dur: LONGINT);
-	VAR xp, yp: POINTER TO ARRAY OF INTEGER;  timee, time, i: LONGINT;  r : LONGREAL;
-	dir: POINTER TO ARRAY  OF INTEGER;
+PROCEDURE Ants* (x, y, w, h: SIGNED16;  num: SIGNED16;  dur: SIGNED32);
+	VAR xp, yp: POINTER TO ARRAY OF SIGNED16;  timee, time, i: SIGNED32;  r : FLOAT64;
+	dir: POINTER TO ARRAY  OF SIGNED16;
 BEGIN
 	vyGraphBase.SetDisplayMode(vyGraphBase.invert);
 	vyGraphBase.SetScreenCoordinate;
@@ -127,8 +127,8 @@ BEGIN
 	vyGraphBase.SetDisplayMode(vyGraphBase.replace)
 END Ants;
 
-PROCEDURE FadeImage*(fimg,timg: Images.Image; factor: REAL);
-VAR pix:  Images.Pixel; y,x: INTEGER; r,g,b,a: INTEGER;
+PROCEDURE FadeImage*(fimg,timg: Images.Image; factor: FLOAT32);
+VAR pix:  Images.Pixel; y,x: SIGNED16; r,g,b,a: SIGNED16;
 BEGIN
 	FOR y := 0 TO fimg.height-1 DO
 		FOR x := 0 TO fimg.width-1 DO
@@ -140,9 +140,9 @@ BEGIN
 	END;
 END FadeImage;
 
-PROCEDURE FadeIn*(pict: Images.Image;  time: LONGINT; x,y,w,h: INTEGER);
-VAR   t, time0: LONGINT;
-	fact: REAL;
+PROCEDURE FadeIn*(pict: Images.Image;  time: SIGNED32; x,y,w,h: SIGNED16);
+VAR   t, time0: SIGNED32;
+	fact: FLOAT32;
 	cur: antsPortability.display;
 BEGIN
 	NEW(copy);
@@ -170,9 +170,9 @@ BEGIN
 	END;
 END FadeIn;
 
-PROCEDURE Launch*(pict: Images.Image; x,y,w,h: INTEGER);
-VAR   t, time0,time: LONGINT;
-	fact: REAL;
+PROCEDURE Launch*(pict: Images.Image; x,y,w,h: SIGNED16);
+VAR   t, time0,time: SIGNED32;
+	fact: FLOAT32;
 	cur: antsPortability.display;
 
 BEGIN

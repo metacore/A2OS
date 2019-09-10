@@ -125,7 +125,7 @@ TYPE
 			tabs.Invalidate
 		END UpdatePages;
 
-		PROCEDURE TryLoad(CONST name : ARRAY OF CHAR; pos : LONGINT);
+		PROCEDURE TryLoad(CONST name : ARRAY OF CHAR; pos : SIGNED32);
 		VAR x : XML.Content;
 		BEGIN
 			IF (pos >= 0) & (pos <= 99) THEN
@@ -141,11 +141,11 @@ TYPE
 		PROCEDURE LoadPages*;
 		VAR mask : ARRAY 64 OF CHAR;
 			name : ARRAY 256 OF CHAR; flags : SET;
-			time, date : LONGINT;
+			time, date : SIGNED32;
 			size : Files.Size;
 			i: SIZE;
 			enumerator : Files.Enumerator;
-			number: LONGINT;
+			number: SIGNED32;
 
 			PROCEDURE IsNum(ch : CHAR) : BOOLEAN;
 			BEGIN

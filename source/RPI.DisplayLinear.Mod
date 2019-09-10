@@ -22,7 +22,7 @@ END;
 
 PROCEDURE Initialize;
 CONST Mailbox = 3F00B880H; Status = 18H; Write = 20H; Tags = 8;
-VAR address: ADDRESS; result: LONGINT;
+VAR address: ADDRESS; result: SIGNED32;
 BEGIN
 	buffer.size := ADDRESS OF buffer.padding - ADDRESS OF buffer.size;
 	FOR address := ADDRESS OF buffer.size TO ADDRESS OF buffer.padding BY CPU.CacheLineSize DO CPU.Clean (address) END;

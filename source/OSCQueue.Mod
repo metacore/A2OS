@@ -20,7 +20,7 @@ TYPE
 	OSCQueue* = OBJECT
 		VAR
 			q: PacketArray; (* minheap *)
-			size: LONGINT; (* the number of queued elements *)
+			size: SIGNED32; (* the number of queued elements *)
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -47,7 +47,7 @@ TYPE
 		(* queues a new bundle *)
 		PROCEDURE Queue*(p: OSC.OSCBundle);
 		VAR
-			element, parent: LONGINT;
+			element, parent: SIGNED32;
 			temp: OSC.OSCBundle;
 		BEGIN { EXCLUSIVE }
 			IF Trace THEN KernelLog.String('OSCQueue: Insert with bundle: '); KernelLog.Ln; p.dump(0); KernelLog.Ln; END;
@@ -73,7 +73,7 @@ TYPE
 		PROCEDURE Dequeue*(): OSC.OSCBundle;
 		VAR
 			min, temp: OSC.OSCBundle;
-			element, left, right: LONGINT;
+			element, left, right: SIGNED32;
 		BEGIN { EXCLUSIVE }
 			min := q[0];
 			q[0] := q[size-1]; DEC(size); (* stores the last element in the free position. the invariant is potentially violated *)
@@ -103,9 +103,9 @@ TYPE
 		END Dequeue;
 
 		(* checks the invariant of the heap. Used only in the testprocedures of this module *)
-		PROCEDURE checkheap(idx: LONGINT): BOOLEAN;
+		PROCEDURE checkheap(idx: SIGNED32): BOOLEAN;
 		VAR
-			left, right: LONGINT;
+			left, right: SIGNED32;
 			res: BOOLEAN;
 		BEGIN
 			left := idx*2+1; right := idx*2+2;
@@ -124,7 +124,7 @@ TYPE
 		b: OSC.OSCBundle;
 		q: OSCQueue;
 		tt: OSC.OSCTimeTag;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		NEW(q);
 		NEW(tt); tt.Set(10,0); NEW(b, tt, NIL, 0); q.Queue(b);

@@ -20,7 +20,7 @@ TYPE
 	PROCEDURE ProgramFpga (CONST resource: Programmer.Resource; destination: Programmer.Destination);
 	VAR
 		timer: EnetTiming.Timer;
-		res, i: LONGINT;
+		res, i: SIGNED32;
 		start, size: ADDRESS;
 	BEGIN
 		start := resource.start;
@@ -31,10 +31,10 @@ TYPE
 
 		IF size > 512 * Platform.M THEN Programmer.error := TRUE; Programmer.done := TRUE; RETURN END;
 
-		Platform.devcfg.CTRL := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, Platform.devcfg.CTRL) - {25});
+		Platform.devcfg.CTRL := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, Platform.devcfg.CTRL) - {25});
 
 		(* Clear DMA_DONE and PL_PROGRAMMED interrupts *)
-		Platform.devcfg.INT_STS := SYSTEM.VAL(LONGINT, {2, 13});
+		Platform.devcfg.INT_STS := SYSTEM.VAL(SIGNED32, {2, 13});
 		(* Start DMA *)
 		Platform.devcfg.DMA_SRC_ADDR := start + 1;
 		Platform.devcfg.DMA_DST_ADDR := Platform.DevCfgDmaPlAdr;

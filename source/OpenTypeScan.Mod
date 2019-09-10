@@ -28,7 +28,7 @@ MODULE OpenTypeScan;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"
 		Intersection = POINTER TO IntersectionDesc;
 		IntersectionDesc = RECORD
 			xy: F26D6;								(* coordinate on corresponding scanline *)
-			up: INTEGER;							(* contour direction at point *)
+			up: SIGNED16;							(* contour direction at point *)
 			param: Fixed;							(* curve parameter *)
 			next: Intersection;						(* next intersection on same scanline *)
 			link: Intersection;						(* next intersection on same contour *)
@@ -42,14 +42,14 @@ MODULE OpenTypeScan;	(** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType"
 		END;
 
 		Rasterizer* = RECORD
-			width*, height*: INTEGER;				(** dimensions of pixel matrix **)
+			width*, height*: SIGNED16;				(** dimensions of pixel matrix **)
 			xmin*, ymin*, xmax*, ymax*: F26D6;	(** bounding box **)
 			rules: SET;								(* scan conversion rules *)
 			hor, ver: Scanline;						(* horizontal and vertical scanlines *)
 		END;
 
 		EnumData* = RECORD END;
-		Enumerator* = PROCEDURE (rowcol: INTEGER; beg, end: F26D6; VAR data: EnumData);
+		Enumerator* = PROCEDURE (rowcol: SIGNED16; beg, end: F26D6; VAR data: EnumData);
 		(**
 			When enumerating rows, 'rowcol' is the row number and 'beg' and 'end' are subpixel values
 			representing a horizontal interval in that row.
@@ -131,7 +131,7 @@ VAR
 		last.yx := MAX(F26D6); last.prev := first; last.next := first; last.isect := NIL
 	END Init;
 
-	PROCEDURE Insert (VAR scan: Scanline; yx, xy: F26D6; up: INTEGER; hint: Intersection; t: Fixed);
+	PROCEDURE Insert (VAR scan: Scanline; yx, xy: F26D6; up: SIGNED16; hint: Intersection; t: Fixed);
 		VAR sl: Scanline; is, prev: Intersection;
 	BEGIN
 		(* find correct scanline *)
@@ -161,7 +161,7 @@ VAR
 	END Insert;
 
 	PROCEDURE IntersectLine (x0, y0, x1, y1: F26D6; VAR scans: Scanline; hint: Intersection; t, dt: Fixed);
-		VAR y, yend, ystep, dy, dy0, dy2, dx, xstep, q, r, x, xr: F26D6; up: LONGINT; qt, rt, tr: Fixed; times: LONGINT;
+		VAR y, yend, ystep, dy, dy0, dy2, dx, xstep, q, r, x, xr: F26D6; up: SIGNED32; qt, rt, tr: Fixed; times: SIGNED32;
 	BEGIN
 		IF y0 # y1 THEN
 			y := y0+20H; yend := y1+20H;
@@ -256,7 +256,7 @@ VAR
 	(** convert outline to scanlines **)
 	PROCEDURE Convert* (outline: OpenTypeInt.Zone; rules: SET; VAR r: Rasterizer);
 		VAR
-			hor, ver: Scanline; last, hint, is: Intersection; pt: OpenTypeInt.Points; cont, first, points, i, j, p, q: INTEGER; t: Fixed;
+			hor, ver: Scanline; last, hint, is: Intersection; pt: OpenTypeInt.Points; cont, first, points, i, j, p, q: SIGNED16; t: Fixed;
 			c0, c2, c1: OpenTypeInt.Coord;
 	BEGIN
 		DisposeRasterizer(r);
@@ -350,7 +350,7 @@ VAR
 
 	(** enumerate rows or columns of scan-converted outline **)
 	PROCEDURE EnumerateRows* (VAR r: Rasterizer; enum: Enumerator; VAR data: EnumData);
-		VAR hor: Scanline; is, is0: Intersection; x0, r0, x1, r1: F26D6; sum: INTEGER;
+		VAR hor: Scanline; is, is0: Intersection; x0, r0, x1, r1: F26D6; sum: SIGNED16;
 	BEGIN
 		IF r.width * r.height = 0 THEN RETURN END;
 		hor := r.hor.next;
@@ -400,7 +400,7 @@ VAR
 	END EnumerateRows;
 
 	PROCEDURE EnumerateColumns* (VAR r: Rasterizer; enum: Enumerator; VAR data: EnumData);
-		VAR ver: Scanline; is, is0: Intersection; y0, r0, y1, r1: F26D6; sum: INTEGER;
+		VAR ver: Scanline; is, is0: Intersection; y0, r0, y1, r1: F26D6; sum: SIGNED16;
 	BEGIN
 		IF r.width * r.height = 0 THEN RETURN END;
 		ver := r.ver.next;

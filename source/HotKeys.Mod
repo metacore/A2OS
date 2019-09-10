@@ -42,14 +42,14 @@ TYPE
 	Remapping = POINTER TO RECORD
 		ch : CHAR;
 		flags : SET;
-		keysym : LONGINT;
+		keysym : SIGNED32;
 	END;
 
 	HotKey = POINTER TO RECORD
 		ch : CHAR;
 		flags : SET;
 		keyString : XML.String;
-		keysym : LONGINT;
+		keysym : SIGNED32;
 		command : XML.String;
 		remapping : Remapping; (* Remap key if not NIL *)
 		next : HotKey;
@@ -61,7 +61,7 @@ VAR
 
 	manager : WMWindowManager.WindowManager;
 
-PROCEDURE ParseKeyString(keyString : XML.String; VAR ch : CHAR; VAR flags : SET; VAR keysym : LONGINT) : BOOLEAN;
+PROCEDURE ParseKeyString(keyString : XML.String; VAR ch : CHAR; VAR flags : SET; VAR keysym : SIGNED32) : BOOLEAN;
 VAR keys : Strings.StringArray; i : SIZE;
 BEGIN
 	ASSERT(keyString # NIL);
@@ -116,8 +116,8 @@ BEGIN
 	RETURN TRUE;
 END ParseRemapping;
 
-PROCEDURE StringToKeysym(CONST string : ARRAY OF CHAR) : LONGINT;
-VAR keysym : LONGINT;
+PROCEDURE StringToKeysym(CONST string : ARRAY OF CHAR) : SIGNED32;
+VAR keysym : SIGNED32;
 BEGIN
 	keysym := NoKeysym;
 	IF Strings.Match("BACKSPACE", string) THEN keysym := Inputs.KsBackSpace;
@@ -281,7 +281,7 @@ VAR
 	caller: OBJECT
 	VAR
 		command: XML.String;
-		msg : ARRAY 256 OF CHAR; res : WORD;
+		msg : ARRAY 256 OF CHAR; res : INTEGER;
 
 		PROCEDURE & Init(c: XML.String);
 		BEGIN
@@ -363,7 +363,7 @@ END InstallHandler;
 
 (** Show all currently loaded hot keys *)
 PROCEDURE Show*(context : Commands.Context); (** ~ *)
-VAR nbrOfHotKeys : LONGINT; hk : HotKey;
+VAR nbrOfHotKeys : SIGNED32; hk : HotKey;
 BEGIN
 	nbrOfHotKeys := 0;
 	hk := hotkeys.next;

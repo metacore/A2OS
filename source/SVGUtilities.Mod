@@ -73,7 +73,7 @@ END SkipCommaWhiteSpace;
 
 (* Convert the substring beginning at position i in str into a real value. Leading whitespace is ignored.
 	After the conversion i points to the first character after the real value. *)
-PROCEDURE StrToFloatPos*(VAR str: ARRAY OF CHAR; VAR val: LONGREAL; VAR i: SIZE);
+PROCEDURE StrToFloatPos*(VAR str: ARRAY OF CHAR; VAR val: FLOAT64; VAR i: SIZE);
 VAR noStr: ARRAY 16 OF CHAR;
 	count: SIZE;
 BEGIN

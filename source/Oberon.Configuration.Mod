@@ -15,12 +15,12 @@ CONST
 
 VAR
 	W: Texts.Writer;
-	sX, sY: INTEGER;	(* saved coordinates for newm viewer [used in Marker ] *)
+	sX, sY: SIGNED16;	(* saved coordinates for newm viewer [used in Marker ] *)
 
 PROCEDURE OpenScanner(VAR S: Texts.Scanner);
 	VAR
 		text: Texts.Text;
-		beg, end, time: LONGINT;
+		beg, end, time: SIGNED32;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -32,8 +32,8 @@ BEGIN
 END OpenScanner;
 
 (** Execute commands contained in the text. Each command must be on a separate line. *)
-PROCEDURE do*(T: Texts.Text; beg, end: LONGINT);
-VAR S: Texts.Scanner; pos: LONGINT; res: INTEGER;
+PROCEDURE do*(T: Texts.Text; beg, end: SIGNED32);
+VAR S: Texts.Scanner; pos: SIGNED32; res: SIGNED16;
 
 	PROCEDURE NextCmd;
 		VAR tR: Texts.Reader; ch: CHAR;
@@ -118,7 +118,7 @@ END do;
 PROCEDURE DoCommands*;
 	VAR
 		S: Texts.Scanner; T: Texts.Text;
-		beg, end, time: LONGINT;
+		beg, end, time: SIGNED32;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -132,13 +132,13 @@ BEGIN
 	END
 END DoCommands;
 
-PROCEDURE ValidX(X: INTEGER): BOOLEAN;
+PROCEDURE ValidX(X: SIGNED16): BOOLEAN;
 BEGIN
 	RETURN (Display.Left <= X) & (X < Display.Left + Display.Width)
 			OR (Display.ColLeft <= X) & (X < Display.ColLeft + Display.Width)
 END ValidX;
 
-PROCEDURE ValidY(Y: INTEGER): BOOLEAN;
+PROCEDURE ValidY(Y: SIGNED16): BOOLEAN;
 BEGIN
 	RETURN (Display.Bottom <= Y) & (Y < Display.Bottom + Display.Height)
 END ValidY;
@@ -211,7 +211,7 @@ PROCEDURE Init;
 	VAR
 		s: Texts.Scanner;
 		T: Texts.Text;
-		x, y: INTEGER;
+		x, y: SIGNED16;
 BEGIN
 	Oberon.OpenScanner(s, "System.Configuration");
 	IF ~(s.class IN {Texts.Name, Texts.String}) THEN

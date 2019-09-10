@@ -6,7 +6,7 @@ MODULE WTSPict IN Oberon;	(** portable *)
 	IMPORT WTS, Pictures, Objects, Files, Rembrandt;
 
 	PROCEDURE Load(P: Pictures.Picture; VAR R: Files.Rider);
-		VAR len: LONGINT; ch: CHAR;
+		VAR len: SIGNED32; ch: CHAR;
 	BEGIN Files.Read(R, ch); Files.Read(R, ch);
 		Files.Read(R, ch); Files.Read(R, ch);	(*pict id*)
 		Pictures.Load(P, Files.Base(R), Files.Pos(R), len);

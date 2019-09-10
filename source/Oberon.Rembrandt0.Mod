@@ -17,41 +17,41 @@ IMPORT
 TYPE
 	ColFrame*= POINTER TO ColFrameDesc;
 	ColFrameDesc* = RECORD (Gadgets.FrameDesc)
-		 col*: INTEGER; 	(* für Version 1.6 *)
+		 col*: SIGNED16; 	(* für Version 1.6 *)
 									END;
 
 	Color*= POINTER TO ColorDesc;
 	ColorDesc* = RECORD (Gadgets.ObjDesc)
-		col*: INTEGER
+		col*: SIGNED16
 	END;
 
 CONST
 	max= 256;
 
 VAR
-	Z: LONGINT;
+	Z: SIGNED32;
 	color*: Color;							(** Aktuelle Farbe für Rembrandt-Editor *)
-	noc*, maxnoc* : INTEGER;		(** Anzahl Farben für Backdrops / Maximale Anzahl Farben auf Bildschirm verfügbar *)
-	coltable*: ARRAY max OF RECORD r*, g*, b*: INTEGER END;	(** Farbpalette für Backdrops *)
+	noc*, maxnoc* : SIGNED16;		(** Anzahl Farben für Backdrops / Maximale Anzahl Farben auf Bildschirm verfügbar *)
+	coltable*: ARRAY max OF RECORD r*, g*, b*: SIGNED16 END;	(** Farbpalette für Backdrops *)
 
 	(* floyd *)
-	r, g, b, rpal, gpal, bpal: ARRAY 256 OF INTEGER;
+	r, g, b, rpal, gpal, bpal: ARRAY 256 OF SIGNED16;
 	floyd: POINTER TO RECORD
-		errr, errg, errb,clamp: ARRAY 1024 OF LONGINT;
+		errr, errg, errb,clamp: ARRAY 1024 OF SIGNED32;
 		hash: ARRAY 16, 16, 16 OF CHAR
 	END;
 
 (** Zufallszahl **)
-PROCEDURE Uniform*(): REAL;
+PROCEDURE Uniform*(): FLOAT32;
 CONST a = 16807; m = 2147483647; q = m DIV a; r = m MOD a;
-VAR g: LONGINT;
+VAR g: SIGNED32;
 BEGIN
 	g := a*(Z MOD q) - r*(Z DIV q);
 	IF g > 0 THEN Z := g ELSE Z := g + m END;
 	RETURN Z*(1.0/m)
 END Uniform;
 
-PROCEDURE InitSeed*(seed: LONGINT);
+PROCEDURE InitSeed*(seed: SIGNED32);
 BEGIN
 	Z := seed
 END InitSeed;
@@ -59,12 +59,12 @@ END InitSeed;
 (** Dither **)
 
 PROCEDURE InitFloyd;
-VAR i, j, k, col: INTEGER; r, g, b: LONGINT;
+VAR i, j, k, col: SIGNED16; r, g, b: SIGNED32;
 
-	PROCEDURE CApprox(r, g, b: LONGINT; VAR col: INTEGER; VAR nr, ng, nb: LONGINT);
-	VAR d, t, min: LONGINT; i: INTEGER;
+	PROCEDURE CApprox(r, g, b: SIGNED32; VAR col: SIGNED16; VAR nr, ng, nb: SIGNED32);
+	VAR d, t, min: SIGNED32; i: SIGNED16;
 	BEGIN
-		min := MAX(LONGINT);
+		min := MAX(SIGNED32);
 		i := 0;
 		WHILE i < ASH(1,Pictures.colorD) DO
 			t := (r - rpal[i]); d := t * t;
@@ -107,9 +107,9 @@ BEGIN
 END InitFloyd;
 
 PROCEDURE Floyd*(S, D: Pictures.Picture);
-VAR  i, i2,  j,  dcol, col: INTEGER;
-	rcol, gcol, bcol, restim, gestim, bestim: LONGINT;
-	err, er0, er1, er4, eg0, eg1, eg4, eb0, eb1, eb4: LONGINT;
+VAR  i, i2,  j,  dcol, col: SIGNED16;
+	rcol, gcol, bcol, restim, gestim, bestim: SIGNED32;
+	err, er0, er1, er4, eg0, eg1, eg4, eb0, eb1, eb4: SIGNED32;
 BEGIN
 
 	IF floyd = NIL THEN InitFloyd END;
@@ -164,21 +164,21 @@ BEGIN
 	END;
 END Floyd;
 
-PROCEDURE RGBtoHSV(R, G, B: REAL; VAR H, S, V: REAL);
+PROCEDURE RGBtoHSV(R, G, B: FLOAT32; VAR H, S, V: FLOAT32);
 (* Wandelt RGB-Werte in HSV-Werte um *)
 CONST	undef = 361;
 VAR
-	maxVal, minVal, diff, Rdist, Gdist, Bdist: REAL;
+	maxVal, minVal, diff, Rdist, Gdist, Bdist: FLOAT32;
 
-	PROCEDURE maxOf(R, G, B: REAL): REAL;
-	VAR	max: REAL;
+	PROCEDURE maxOf(R, G, B: FLOAT32): FLOAT32;
+	VAR	max: FLOAT32;
 	BEGIN
 		IF R > G THEN max := R ELSE max := G END;
 		IF B > max THEN RETURN B ELSE RETURN max END;
 	END maxOf;
 
-	PROCEDURE minOf(R, G, B: REAL): REAL;
-	VAR	min: REAL;
+	PROCEDURE minOf(R, G, B: FLOAT32): FLOAT32;
+	VAR	min: FLOAT32;
 	BEGIN
 		IF R < G THEN min := R ELSE min := G END;
 		IF B < min THEN RETURN B ELSE RETURN min END
@@ -204,10 +204,10 @@ BEGIN
 	END
 END RGBtoHSV;
 
-PROCEDURE HSVtoRGB(H, S, V: REAL; VAR R, G, B: REAL);
+PROCEDURE HSVtoRGB(H, S, V: FLOAT32; VAR R, G, B: FLOAT32);
 (* Wandelt HSV-Wrte in RGB-Wrte um *)
-VAR f, p, q, t: REAL;
-		i: LONGINT;
+VAR f, p, q, t: FLOAT32;
+		i: SIGNED32;
 BEGIN
 	IF S = 0 THEN R := V; G := V; B := V
 	ELSE
@@ -230,15 +230,15 @@ BEGIN
 END HSVtoRGB;
 
 (** Verändert die Farben eines Pictures mit den gegebenen Parameter *)
-PROCEDURE Reduce*(S, D: Pictures.Picture; ds, dv: REAL);
-VAR rr, gr, br, hr, sr, vr  : REAL;
-		i, r, g, b, maxc, h : INTEGER;
+PROCEDURE Reduce*(S, D: Pictures.Picture; ds, dv: FLOAT32);
+VAR rr, gr, br, hr, sr, vr  : FLOAT32;
+		i, r, g, b, maxc, h : SIGNED16;
 		P: Pictures.Picture;
 BEGIN
 	IF S#NIL THEN
 		NEW(P); Pictures.Create(P, S.width, S.height, S.depth);
 		Pictures.CopyBlock(S, P, 0, 0, S.width, S.height, 0, 0, Display.replace);
-		maxc:= INTEGER(ASH(2, S.depth-1));
+		maxc:= SIGNED16(ASH(2, S.depth-1));
 		FOR i:= 0 TO maxc-1 DO
 			Pictures.GetColor(S, i, r, g, b);
 			IF dv<1 THEN
@@ -281,7 +281,7 @@ END Reduce;
 
 (** Colorgadgets für Farbanzeige im Rembrandt-Panel **)
 PROCEDURE HandleColor* (obj: Objects.Object; VAR M: Objects.ObjMsg);
-VAR red, green, blue: INTEGER;
+VAR red, green, blue: SIGNED16;
 BEGIN
 	WITH obj: Color DO
 		IF M IS Objects.AttrMsg THEN
@@ -331,7 +331,7 @@ BEGIN
 END NewColorObj;
 
 PROCEDURE HandleColFrame*(F: Objects.Object; VAR M: Objects.ObjMsg);
-  VAR x, y: INTEGER; Q: D3.Mask; F1: ColFrame;
+  VAR x, y: SIGNED16; Q: D3.Mask; F1: ColFrame;
 BEGIN
   WITH F: ColFrame DO
 	IF M IS Display.DisplayMsg THEN
@@ -393,14 +393,14 @@ BEGIN
 END NewColFrame;
 
 (** Verschiedene Operationen auf Picture mit Clipping falls negative Koordinaten **)
-PROCEDURE CopyBlock*(S, D: Pictures.Picture; x, y: INTEGER; w, h, dx, dy, mode: INTEGER);
+PROCEDURE CopyBlock*(S, D: Pictures.Picture; x, y: SIGNED16; w, h, dx, dy, mode: SIGNED16);
 BEGIN
 	IF dx<0 THEN w:= w+dx; x:=x-dx; dx:=0 END;
 	IF dy<0 THEN h:=h+dy; y:=y-dy; dy:=0 END;
 	IF (w>0) & (h>0) THEN Pictures.CopyBlock(S, D, x, y, w, h, dx, dy, mode) END
 END CopyBlock;
 
-PROCEDURE ReplConst*(P : Pictures.Picture; col, x, y, w, h: INTEGER);
+PROCEDURE ReplConst*(P : Pictures.Picture; col, x, y, w, h: SIGNED16);
 BEGIN
 	IF x<0 THEN w:=w+x; x:=0 END;
 	IF y<0 THEN h:=h+y; y:=0 END;
@@ -408,7 +408,7 @@ BEGIN
 END ReplConst;
 
 (** Speicherblock für Picture allozieren oder Fehlermeldung ausgeben **)
-PROCEDURE AllocatePictureMem*(VAR P: Pictures.Picture; w, h, d: INTEGER);
+PROCEDURE AllocatePictureMem*(VAR P: Pictures.Picture; w, h, d: SIGNED16);
 BEGIN
 	Pictures.Create(P, w, h, d);
 	IF P.depth = 0 THEN
@@ -417,10 +417,10 @@ BEGIN
 END AllocatePictureMem;
 
 (** Best Match für gesuchten Farbwert in der aktuellen Farbpalette **)
-PROCEDURE NearestColor*(r, g, b: LONGINT): INTEGER;
-VAR d, t, min: LONGINT; col, i: INTEGER;
+PROCEDURE NearestColor*(r, g, b: SIGNED32): SIGNED16;
+VAR d, t, min: SIGNED32; col, i: SIGNED16;
 BEGIN
-	min := MAX(LONGINT);
+	min := MAX(SIGNED32);
 	i := 0;
 	WHILE i # noc DO
 		t := (r - coltable[i].r); d := t * t;
@@ -432,8 +432,8 @@ BEGIN
 	RETURN col
 END NearestColor;
 
-PROCEDURE Gamma( val: INTEGER; gamma: REAL): INTEGER;
-VAR gval: REAL;
+PROCEDURE Gamma( val: SIGNED16; gamma: FLOAT32): SIGNED16;
+VAR gval: FLOAT32;
   BEGIN
 	IF val = 0 THEN gval := 0 ELSE gval := Math.exp(Math.ln(val/256.0)*gamma) END;
 	RETURN SHORT(ENTIER(256*gval))
@@ -441,7 +441,7 @@ END Gamma;
 
 (** Farbpalette ändern **)
 PROCEDURE Darken*;
-VAR i, r, g, b: INTEGER; gamma: REAL;
+VAR i, r, g, b: SIGNED16; gamma: FLOAT32;
 BEGIN
 	gamma:= 1.25;
 	FOR i:= 0 TO maxnoc-1 DO
@@ -451,7 +451,7 @@ BEGIN
 END Darken;
 
 PROCEDURE Lighten*;
-VAR i, r, g, b: INTEGER; gamma: REAL;
+VAR i, r, g, b: SIGNED16; gamma: FLOAT32;
 BEGIN
 	gamma:= 0.8;
 	FOR i:= 0 TO maxnoc-1 DO
@@ -471,7 +471,7 @@ END SetColor;
 
 PROCEDURE ChangeColor*;
 VAR S: Texts.Scanner;
-		r, g, b: INTEGER;
+		r, g, b: SIGNED16;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -488,7 +488,7 @@ END ChangeColor;
 PROCEDURE ResetAll*;
 VAR F: Files.File;
 		R: Files.Rider;
-		r, g, b : CHAR; i: INTEGER;
+		r, g, b : CHAR; i: SIGNED16;
 BEGIN
 	F:= Files.Old("Default.Pal");
 	Files.Set(R, F, 0);
@@ -506,7 +506,7 @@ END ResetAll;
 PROCEDURE ResetOne*;
 VAR F: Files.File;
 		R: Files.Rider;
-		r, g, b : CHAR; i: INTEGER;
+		r, g, b : CHAR; i: SIGNED16;
 BEGIN
 	F:= Files.Old("Default.Pal");
 	Files.Set(R, F, 0);

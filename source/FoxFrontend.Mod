@@ -15,7 +15,7 @@ TYPE
 		END InitFrontEnd;
 
 		(* initialize frontend for usage *)
-		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; flags: SET; reader: Streams.Reader;CONST fileName, definitions: ARRAY OF CHAR; pos: LONGINT);
+		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; flags: SET; reader: Streams.Reader;CONST fileName, definitions: ARRAY OF CHAR; pos: SIGNED32);
 		BEGIN
 			SELF.flags := flags;
 		END Initialize;

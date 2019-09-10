@@ -9,11 +9,11 @@ CONST
 	BlockSize = 8*SIZEOF(ADDRESS); (* {BlockSize = Heaps.BlockSize} *)
 
 TYPE
-	SizeArray = ARRAY 27 OF LONGINT;
+	SizeArray = ARRAY 27 OF SIGNED32;
 
 	BlocksHelper = OBJECT(WMPerfMonPlugins.Helper)
 	VAR
-		blocks, recblks, sysblks, arrblks, protrecblks, freeblks, unknowns : LONGINT;
+		blocks, recblks, sysblks, arrblks, protrecblks, freeblks, unknowns : SIGNED32;
 		blockssize, recblksize, sysblksize, arrblksize, protrecblksize, freeblksize, unknownsize : SIZE;
 		heapsize : SIZE;
 		blockSizes, recblkSizes, sysblkSizes, arrblkSizes, protrecblkSizes, freeblkSizes : SizeArray;
@@ -63,7 +63,7 @@ TYPE
 		END Update;
 
 		PROCEDURE ClearSizeArrays;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO 26 DO
 				blockSizes[i] := 0;
@@ -237,7 +237,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(h.blockSizes)-1 DO
 				dataset[i] := h.blockSizes[i];
@@ -255,7 +255,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(h.sysblkSizes)-1 DO
 				dataset[i] := h.sysblkSizes[i];
@@ -273,7 +273,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(h.recblkSizes)-1 DO
 				dataset[i] := h.recblkSizes[i];
@@ -291,7 +291,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(h.protrecblkSizes)-1 DO
 				dataset[i] := h.protrecblkSizes[i];
@@ -309,7 +309,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(h.arrblkSizes)-1 DO
 				dataset[i] := h.arrblkSizes[i];
@@ -327,7 +327,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(h.freeblkSizes)-1 DO
 				dataset[i] := h.freeblkSizes[i];

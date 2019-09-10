@@ -72,7 +72,7 @@ MODULE JPEG2000Decoder;
 
 		JP2_FTBRAND = 6A703220H;	(* File Type brand ('jp2/040') *)
 
-		ENTROPY_SEG_MARKER = LONGINT( 0AH);
+		ENTROPY_SEG_MARKER = SIGNED32( 0AH);
 
 		(* --- Constants used in MQ-Decoder --- *)
 
@@ -93,55 +93,55 @@ MODULE JPEG2000Decoder;
 			 HL (horizontal left) - HR (horizontal right) - VU (vertical up) - VD (vertical down) - <Diagonals>, where the internal order of <Diagonals> is
 			 not specified in more detail
 		*)
-		ENTROPY_SIGHL = LSH(LONGINT( 1), ENTROPY_ZERO_BITS - 1);	(* HL: horizontal left neighbor *)
-		ENTROPY_SIGHR = LSH(LONGINT( 1), ENTROPY_ZERO_BITS - 2);	(* HR: horizontal right neighbor *)
-		ENTROPY_SIGVU = LSH(LONGINT( 1), ENTROPY_ZERO_BITS - 3);	(* VU: vertical upper neighbor *)
-		ENTROPY_SIGVD = LSH(LONGINT( 1), ENTROPY_ZERO_BITS - 4);	(* VD: vertical lower neighbor *)
+		ENTROPY_SIGHL = LSH(SIGNED32( 1), ENTROPY_ZERO_BITS - 1);	(* HL: horizontal left neighbor *)
+		ENTROPY_SIGHR = LSH(SIGNED32( 1), ENTROPY_ZERO_BITS - 2);	(* HR: horizontal right neighbor *)
+		ENTROPY_SIGVU = LSH(SIGNED32( 1), ENTROPY_ZERO_BITS - 3);	(* VU: vertical upper neighbor *)
+		ENTROPY_SIGVD = LSH(SIGNED32( 1), ENTROPY_ZERO_BITS - 4);	(* VD: vertical lower neighbor *)
 
 
 		(* Mask to extract the context of the sign lut (and discarding the xor bit) *)
-		SIGN_LUT_MASK = SET( LONGINT( 0FH));
+		SIGN_LUT_MASK = SET( SIGNED32( 0FH));
 
 		(* The separation (in bits) of the two state vectors stored in the same state register *)
 		STATE_SEP = 16;
 
 		(* First-row coefficient values *)
 		(* Flag for the significane a first-row coefficient (in the state register) *)
-		STATE_SIG_R1 = SET( LSH(LONGINT( 1), 14));
+		STATE_SIG_R1 = SET( LSH(SIGNED32( 1), 14));
 		(* Flag to indicate if a first-row coefficient has been visited in the decoding of the current bit-plane *)
-		STATE_VISITED_R1 = SET( LSH(LONGINT( 1), 13));
+		STATE_VISITED_R1 = SET( LSH(SIGNED32( 1), 13));
 		(* Flag to indicate if a first-row coefficient is in the magnitude refinement phase *)
-		STATE_MAGREF_R1 = SET( LSH(LONGINT( 1), 12));
+		STATE_MAGREF_R1 = SET( LSH(SIGNED32( 1), 12));
 		(* 1 if the horizontal left neighbor has a negative sign, 0 else *)
-		STATE_H_L_SIGN_R1 = SET( LSH(LONGINT( 1), 11));
+		STATE_H_L_SIGN_R1 = SET( LSH(SIGNED32( 1), 11));
 		(* 1 if the horizontal right neighbor has a negative sign, 0 else *)
-		STATE_H_R_SIGN_R1 = SET( LSH(LONGINT( 1), 10));
+		STATE_H_R_SIGN_R1 = SET( LSH(SIGNED32( 1), 10));
 		(* 1 if the vertical-up neighbor has a negative sign, 0 else *)
-		STATE_V_U_SIGN_R1 = SET( LSH(LONGINT( 1), 9));
+		STATE_V_U_SIGN_R1 = SET( LSH(SIGNED32( 1), 9));
 		(* 1 if the vertical_down neighbor has a negative sign, 0 else *)
-		STATE_V_D_SIGN_R1 = SET( LSH(LONGINT( 1), 8));
+		STATE_V_D_SIGN_R1 = SET( LSH(SIGNED32( 1), 8));
 
 		(* 1 if the horizontal left neighbor is significant already, 0 else *)
-		STATE_H_L_R1 = SET( LSH(LONGINT( 1), 7));
+		STATE_H_L_R1 = SET( LSH(SIGNED32( 1), 7));
 		(* 1 if the horizontal right neighbor is significant already, 0 else *)
-		STATE_H_R_R1 = SET( LSH(LONGINT( 1), 6));
+		STATE_H_R_R1 = SET( LSH(SIGNED32( 1), 6));
 		(* 1 if the vertical-up neighbor is significant already, 0 else *)
-		STATE_V_U_R1 = SET( LSH(LONGINT( 1), 5));
+		STATE_V_U_R1 = SET( LSH(SIGNED32( 1), 5));
 		(* 1 if the vertical_down neighbor is significant already, 0 else *)
-		STATE_V_D_R1 = SET( LSH(LONGINT( 1), 4));
+		STATE_V_D_R1 = SET( LSH(SIGNED32( 1), 4));
 
 		(* 1 if the diagonal upper left neighbor is significant already, 0 else *)
-		STATE_D_UL_R1 = SET( LSH(LONGINT( 1), 3));
+		STATE_D_UL_R1 = SET( LSH(SIGNED32( 1), 3));
 		(* 1 if the diagonal upper right neighbor is significant already, 0 else *)
-		STATE_D_UR_R1 = SET( LSH(LONGINT( 1), 2));
+		STATE_D_UR_R1 = SET( LSH(SIGNED32( 1), 2));
 		(* 1 if the diagonal lower left neighbor  is significant already, 0 else *)
-		STATE_D_DL_R1 = SET( LSH(LONGINT( 1), 1));
+		STATE_D_DL_R1 = SET( LSH(SIGNED32( 1), 1));
 		(* 1 if the diagonal lower right neighbor is significant already, 0 else *)
-		STATE_D_DR_R1 = SET( LONGINT( 1));
+		STATE_D_DR_R1 = SET( SIGNED32( 1));
 		(* Mask to extract the zero-bin context vector of a first-row coefficient *)
-		STATE_VECT_MASK_R1 = SET( LONGINT( 0FFH));
+		STATE_VECT_MASK_R1 = SET( SIGNED32( 0FFH));
 		(* Mask to extract the sign context vector of a first-row coefficient *)
-		SIGN_VECT_MASK_R1 = SET( LONGINT( 0FF0H));
+		SIGN_VECT_MASK_R1 = SET( SIGNED32( 0FF0H));
 		(*
 			How much we need to shift the state vector of a first row coefficient
 			so that the sign context vector starts at the LSB.
@@ -150,41 +150,41 @@ MODULE JPEG2000Decoder;
 
 		(* And the same stuff for the second-row coefficient *)
 		(* Flag for the significane a second-row coefficient (in the state register) *)
-		STATE_SIG_R2 = SET( LSH(LONGINT( STATE_SIG_R1), STATE_SEP));
+		STATE_SIG_R2 = SET( LSH(SIGNED32( STATE_SIG_R1), STATE_SEP));
 		(* Flag to indicate if a second-row coefficient has been visited in the decoding of the current bit-plane *)
-		STATE_VISITED_R2 = SET( LSH(LONGINT( STATE_VISITED_R1), STATE_SEP));
+		STATE_VISITED_R2 = SET( LSH(SIGNED32( STATE_VISITED_R1), STATE_SEP));
 		(* Flag to indicate if a second-row coefficient is in the magnitude refinement phase *)
-		STATE_MAGREF_R2 = SET( LSH(LONGINT( STATE_MAGREF_R1), STATE_SEP));
+		STATE_MAGREF_R2 = SET( LSH(SIGNED32( STATE_MAGREF_R1), STATE_SEP));
 		(* 1 if the horizontal left neighbor has a negative sign, 0 else *)
-		STATE_H_L_SIGN_R2 = SET( LSH(LONGINT( STATE_H_L_SIGN_R1), STATE_SEP));
+		STATE_H_L_SIGN_R2 = SET( LSH(SIGNED32( STATE_H_L_SIGN_R1), STATE_SEP));
 		(* 1 if the horizontal right neighbor has a negative sign, 0 else *)
-		STATE_H_R_SIGN_R2 = SET( LSH(LONGINT( STATE_H_R_SIGN_R1), STATE_SEP));
+		STATE_H_R_SIGN_R2 = SET( LSH(SIGNED32( STATE_H_R_SIGN_R1), STATE_SEP));
 		(* 1 if the vertical-up neighbor has a negative sign, 0 else *)
-		STATE_V_U_SIGN_R2 = SET( LSH(LONGINT( STATE_V_U_SIGN_R1), STATE_SEP));
+		STATE_V_U_SIGN_R2 = SET( LSH(SIGNED32( STATE_V_U_SIGN_R1), STATE_SEP));
 		(* 1 if the vertical_down neighbor has a negative sign, 0 else *)
-		STATE_V_D_SIGN_R2 = SET( LSH(LONGINT( STATE_V_D_SIGN_R1), STATE_SEP));
+		STATE_V_D_SIGN_R2 = SET( LSH(SIGNED32( STATE_V_D_SIGN_R1), STATE_SEP));
 
 		(* 1 if the horizontal left neighbor is significant already, 0 else *)
-		STATE_H_L_R2 = SET( LSH(LONGINT( STATE_H_L_R1), STATE_SEP));
+		STATE_H_L_R2 = SET( LSH(SIGNED32( STATE_H_L_R1), STATE_SEP));
 		(* 1 if the horizontal right neighbor is significant already, 0 else *)
-		STATE_H_R_R2 = SET( LSH(LONGINT( STATE_H_R_R1), STATE_SEP));
+		STATE_H_R_R2 = SET( LSH(SIGNED32( STATE_H_R_R1), STATE_SEP));
 		(* 1 if the vertical-up neighbor is significant already, 0 else *)
-		STATE_V_U_R2 = SET( LSH(LONGINT( STATE_V_U_R1), STATE_SEP));
+		STATE_V_U_R2 = SET( LSH(SIGNED32( STATE_V_U_R1), STATE_SEP));
 		(* 1 if the vertical_down neighbor is significant already, 0 else *)
-		STATE_V_D_R2 = SET( LSH(LONGINT( STATE_V_D_R1), STATE_SEP));
+		STATE_V_D_R2 = SET( LSH(SIGNED32( STATE_V_D_R1), STATE_SEP));
 
 		(* 1 if the diagonal upper left neighbor is significant already, 0 else *)
-		STATE_D_UL_R2 = SET( LSH(LONGINT( STATE_D_UL_R1), STATE_SEP));
+		STATE_D_UL_R2 = SET( LSH(SIGNED32( STATE_D_UL_R1), STATE_SEP));
 		(* 1 if the diagonal upper right neighbor is significant already, 0 else *)
-		STATE_D_UR_R2 = SET( LSH(LONGINT( STATE_D_UR_R1), STATE_SEP));
+		STATE_D_UR_R2 = SET( LSH(SIGNED32( STATE_D_UR_R1), STATE_SEP));
 		(* 1 if the diagonal lower left neighbor  is significant already, 0 else *)
-		STATE_D_DL_R2 = SET( LSH(LONGINT( STATE_D_DL_R1), STATE_SEP));
+		STATE_D_DL_R2 = SET( LSH(SIGNED32( STATE_D_DL_R1), STATE_SEP));
 		(* 1 if the diagonal lower right neighbor is significant already, 0 else *)
-		STATE_D_DR_R2 = SET( LSH(LONGINT( STATE_D_DR_R1), STATE_SEP));
+		STATE_D_DR_R2 = SET( LSH(SIGNED32( STATE_D_DR_R1), STATE_SEP));
 		(* Mask to extract the zero-bin context vector of a first-row coefficient *)
-		STATE_VECT_MASK_R2 = SET( LSH(LONGINT( STATE_VECT_MASK_R1), STATE_SEP));
+		STATE_VECT_MASK_R2 = SET( LSH(SIGNED32( STATE_VECT_MASK_R1), STATE_SEP));
 		(* Mask to extract the sign context vector of a first-row coefficient *)
-		SIGN_VECT_MASK_R2 = SET( LSH(LONGINT( SIGN_VECT_MASK_R1), STATE_SEP));
+		SIGN_VECT_MASK_R2 = SET( LSH(SIGNED32( SIGN_VECT_MASK_R1), STATE_SEP));
 		(*
 			How much we need to shift the state vector of a first row coefficient
 			so that the sign context vector starts at the LSB.
@@ -235,18 +235,18 @@ MODULE JPEG2000Decoder;
 		(** This is an interface identifying objects that contain a (2 dimensional) block of data *)
 		DataBlk = OBJECT
 			VAR
-				offset : LONGINT;	(* The offset in the data container at which data for this block starts *)
-				scanw : LONGINT;	(* The row scan width, i.e. the distance (in data samples) of the first
+				offset : SIGNED32;	(* The offset in the data container at which data for this block starts *)
+				scanw : SIGNED32;	(* The row scan width, i.e. the distance (in data samples) of the first
 										 data sample of row j to the first data sample of row j+1 *)
 		END DataBlk;
 
-		(** A data block containing data of type LONGINT *)
+		(** A data block containing data of type SIGNED32 *)
 		DataBlkInt = OBJECT(DataBlk)
 			VAR
 				data : J2KU.LongIntArrayPtr;
 		END DataBlkInt;
 
-		(** A data block containing data of type REAL *)
+		(** A data block containing data of type FLOAT32 *)
 		DataBlkReal = OBJECT(DataBlk)
 			VAR
 				data : J2KU.RealArrayPtr;
@@ -261,10 +261,10 @@ MODULE JPEG2000Decoder;
 		*)
 		MQDecoder = OBJECT
 			VAR
-				a : LONGINT;			(* The 'A register' containing the current interval size *)
-				c : LONGINT;			(* The 'C register' containing the current byte of compressed image data being decoded *)
-				ct : LONGINT;			(* The counter which keeps track of how many bits (of the last byte read in) are still in the lower part of c *)
-				b : LONGINT;			(* The current byte to be handled *)
+				a : SIGNED32;			(* The 'A register' containing the current interval size *)
+				c : SIGNED32;			(* The 'C register' containing the current byte of compressed image data being decoded *)
+				ct : SIGNED32;			(* The counter which keeps track of how many bits (of the last byte read in) are still in the lower part of c *)
+				b : SIGNED32;			(* The current byte to be handled *)
 				index : J2KU.LongIntArrayPtr;	(* For every context the current index is stored here *)
 				initIdx : J2KU.LongIntArrayPtr;	(* For every context the initial index is stored here *)
 				mps : J2KU.LongIntArrayPtr;		(* For every context the current MPS is stored here *)
@@ -305,7 +305,7 @@ MODULE JPEG2000Decoder;
 				offset:	Where to start reading from the data buffer
 				len:		The length of this segment of coded code-block data
 			*)
-			PROCEDURE NextSegment (data : J2KU.ByteArrayPtr; offset, len : LONGINT);
+			PROCEDURE NextSegment (data : J2KU.ByteArrayPtr; offset, len : SIGNED32);
 				BEGIN
 					br.SetArray(data, offset, len);
 					InitDec();
@@ -320,17 +320,17 @@ MODULE JPEG2000Decoder;
 			(** Resets the contexts to their initial index and mps values *)
 			PROCEDURE ResetContexts;
 				BEGIN
-					SYSTEM.MOVE(ADDRESSOF(initIdx[0]), ADDRESSOF(index[0]), LEN(initIdx)*SIZEOF(LONGINT));
-					SYSTEM.MOVE(ADDRESSOF(initMps[0]), ADDRESSOF(mps[0]), LEN(initMps)*SIZEOF(LONGINT));
+					SYSTEM.MOVE(ADDRESSOF(initIdx[0]), ADDRESSOF(index[0]), LEN(initIdx)*SIZEOF(SIGNED32));
+					SYSTEM.MOVE(ADDRESSOF(initMps[0]), ADDRESSOF(mps[0]), LEN(initMps)*SIZEOF(SIGNED32));
 			END ResetContexts;
 
 			(**
 				Returns the next bit of the original data .
 				cx:	The context to use
 			*)
-			PROCEDURE Decode (cx : LONGINT) : LONGINT;
+			PROCEDURE Decode (cx : SIGNED32) : SIGNED32;
 				VAR
-					chigh, d : LONGINT;
+					chigh, d : SIGNED32;
 				BEGIN
 					chigh := LSH(c, -16);
 
@@ -338,7 +338,7 @@ MODULE JPEG2000Decoder;
 
 					IF chigh < a THEN
 						(* The MPS case *)
-						IF (SET( a) * SET( LONGINT( 00008000H))) = {} THEN
+						IF (SET( a) * SET( SIGNED32( 00008000H))) = {} THEN
 							d := MpsExchange(cx);
 							Renormd();
 						ELSE
@@ -350,7 +350,7 @@ MODULE JPEG2000Decoder;
 
 						(* Update the original 'c register' *)
 						(* c := (c BITWISE-AND 0x0000FFFF) BITWISE-OR (chigh << 16) *)
-						c := LONGINT( (SET( c) * SET( LONGINT( 0000FFFFH))) + SET( LSH(chigh, 16)));
+						c := SIGNED32( (SET( c) * SET( SIGNED32( 0000FFFFH))) + SET( LSH(chigh, 16)));
 						d := LpsExchange(cx);
 						Renormd();
 					END;
@@ -369,16 +369,16 @@ MODULE JPEG2000Decoder;
 						a := LSH(a, 1);
 						c := LSH(c, 1);
 						DEC(ct);
-					UNTIL (SET( a) * SET( LONGINT( 00008000H))) # {};
+					UNTIL (SET( a) * SET( SIGNED32( 00008000H))) # {};
 			END Renormd;
 
 			(**
 				LPS exchange procedure as described in the standartd
 				cx: The current context
 			*)
-			PROCEDURE LpsExchange (cx : LONGINT) : LONGINT;
+			PROCEDURE LpsExchange (cx : SIGNED32) : SIGNED32;
 				VAR
-					d : LONGINT;
+					d : SIGNED32;
 				BEGIN
 
 					IF a < MQPROB[index[cx]] THEN
@@ -387,9 +387,9 @@ MODULE JPEG2000Decoder;
 						index[cx] := MQNMPS[index[cx]];
 					ELSE
 						a := MQPROB[index[cx]];
-						d := LONGINT( {0} / SET( mps[cx]));
+						d := SIGNED32( {0} / SET( mps[cx]));
 						IF MQSWITCH[index[cx]] = 1 THEN
-							mps[cx] := LONGINT( {0} / SET( mps[cx]));
+							mps[cx] := SIGNED32( {0} / SET( mps[cx]));
 						END;
 						index[cx] := MQNLPS[index[cx]];
 					END;
@@ -401,15 +401,15 @@ MODULE JPEG2000Decoder;
 				MPS exchange procedure as described in the standartd
 				cx: The current context
 			*)
-			PROCEDURE MpsExchange (cx : LONGINT) : LONGINT;
+			PROCEDURE MpsExchange (cx : SIGNED32) : SIGNED32;
 				VAR
-					d : LONGINT;
+					d : SIGNED32;
 				BEGIN
 
 					IF a < MQPROB[index[cx]] THEN
-						d := LONGINT( {0} / SET( mps[cx]));
+						d := SIGNED32( {0} / SET( mps[cx]));
 						IF MQSWITCH[index[cx]] = 1 THEN
-							mps[cx] := LONGINT( {0} / SET( mps[cx]));
+							mps[cx] := SIGNED32( {0} / SET( mps[cx]));
 						END;
 						index[cx] := MQNLPS[index[cx]];
 					ELSE
@@ -426,22 +426,22 @@ MODULE JPEG2000Decoder;
 
 					IF ~markerFound THEN
 						IF b = 255 THEN
-							b := LONGINT( SET( br.Read()) * {0..7}); (* Convert -1 to 0xFF *)
+							b := SIGNED32( SET( br.Read()) * {0..7}); (* Convert -1 to 0xFF *)
 
 							IF b > 8FH THEN
 								markerFound := TRUE;
 								ct := 8;
 							ELSE
-								c := c + LONGINT( 0FE00H) - LSH(b, 9);
+								c := c + SIGNED32( 0FE00H) - LSH(b, 9);
 								ct := 7;
 							END;
 						ELSE
-							b := LONGINT( SET( br.Read()) * {0..7}); (* Convert -1 to 0xFF *)
+							b := SIGNED32( SET( br.Read()) * {0..7}); (* Convert -1 to 0xFF *)
 							(*
 								NOTE: The Standard specifies here: c = c + 0xFE00 - (B << 8). But we use an BITWISE-XOR operation instead of the subtraction.
 								That's ok because no carry overs can occur since we subtract from 0xFF00
 							*)
-							c := LONGINT( SET( c) + ({8..15} / SET( LSH(b, 8))));
+							c := SIGNED32( SET( c) + ({8..15} / SET( LSH(b, 8))));
 
 							ct := 8;
 						END;
@@ -455,20 +455,20 @@ MODULE JPEG2000Decoder;
 				BEGIN
 					markerFound := FALSE;
 
-					b := LONGINT( SET( br.Read()) * {0..7}); (* Converts -1 to 0xFF *)
+					b := SIGNED32( SET( br.Read()) * {0..7}); (* Converts -1 to 0xFF *)
 					(* c := (b BITWISE-XOR 0xFF) << 16 *)
-					c := LSH(LONGINT( SET( b) / {0..7}), 16);
+					c := LSH(SIGNED32( SET( b) / {0..7}), 16);
 					ByteIn();
 					c := LSH(c, 7);
 					ct := ct - 7;
-					a := LONGINT( 00008000H);
+					a := SIGNED32( 00008000H);
 			END InitDec;
 
 			(** Checks the remainder of the segment (used when predictable termination coding is used) *)
 			PROCEDURE CheckPredTerm () : BOOLEAN;
 				VAR
-					k : LONGINT;	(* The number of bits that were added in the termination process *)
-					q : LONGINT;
+					k : SIGNED32;	(* The number of bits that were added in the termination process *)
+					q : SIGNED32;
 				BEGIN
 
 					(*
@@ -504,7 +504,7 @@ MODULE JPEG2000Decoder;
 					*)
 					IF ct = 0 THEN
 						IF ~markerFound THEN
-							b := LONGINT( SET( br.Read()) * {0..7});
+							b := SIGNED32( SET( br.Read()) * {0..7});
 							IF b <= 8FH THEN
 								RETURN FALSE;
 							END;
@@ -653,7 +653,7 @@ MODULE JPEG2000Decoder;
 
 				maxStartLayer and maxEndLayer are inclusive.
 			*)
-			PROCEDURE SetMaxLayerRange (maxStartLayer, maxEndLayer : LONGINT);
+			PROCEDURE SetMaxLayerRange (maxStartLayer, maxEndLayer : SIGNED32);
 				BEGIN
 					cr.SetMaxLayerRange(maxStartLayer, maxEndLayer);
 			END SetMaxLayerRange;
@@ -664,7 +664,7 @@ MODULE JPEG2000Decoder;
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE SetLayerRange (startLayer, endLayer : LONGINT);
+			PROCEDURE SetLayerRange (startLayer, endLayer : SIGNED32);
 				BEGIN
 					cr.SetLayerRange(startLayer, endLayer);
 			END SetLayerRange;
@@ -675,7 +675,7 @@ MODULE JPEG2000Decoder;
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE GetLayerRange (VAR startLayer, endLayer : LONGINT);
+			PROCEDURE GetLayerRange (VAR startLayer, endLayer : SIGNED32);
 				BEGIN
 					cr.GetLayerRange(startLayer, endLayer);
 			END GetLayerRange;
@@ -688,7 +688,7 @@ MODULE JPEG2000Decoder;
 				maxStartDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				maxEndDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetMaxDecLevelRange (maxStartDecLvl, maxEndDecLvl : LONGINT);
+			PROCEDURE SetMaxDecLevelRange (maxStartDecLvl, maxEndDecLvl : SIGNED32);
 				BEGIN
 					cr.SetMaxDecLevelRange(maxStartDecLvl, maxEndDecLvl);
 			END SetMaxDecLevelRange;
@@ -700,7 +700,7 @@ MODULE JPEG2000Decoder;
 				startDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				endDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetDecLevelRange (startDecLvl, endDecLvl : LONGINT);
+			PROCEDURE SetDecLevelRange (startDecLvl, endDecLvl : SIGNED32);
 				BEGIN
 					cr.SetDecLevelRange(startDecLvl, endDecLvl);
 			END SetDecLevelRange;
@@ -712,7 +712,7 @@ MODULE JPEG2000Decoder;
 				startDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				endDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE GetDecLevelRange (VAR startDecLvl, endDecLvl : LONGINT);
+			PROCEDURE GetDecLevelRange (VAR startDecLvl, endDecLvl : SIGNED32);
 				BEGIN
 					cr.GetDecLevelRange(startDecLvl, endDecLvl);
 			END GetDecLevelRange;
@@ -723,13 +723,13 @@ MODULE JPEG2000Decoder;
 			END SetReBuildMode;
 
 			(* Gets the entropy decoded code-blocks *)
-			PROCEDURE GetCodeBlocks (VAR cblk : ARRAY OF DataBlk; VAR cblkInfo : ARRAY OF J2KU.CblkInfo; ncblks : LONGINT) : LONGINT;
+			PROCEDURE GetCodeBlocks (VAR cblk : ARRAY OF DataBlk; VAR cblkInfo : ARRAY OF J2KU.CblkInfo; ncblks : SIGNED32) : SIGNED32;
 				VAR
-					cblkIdx, ncblksRet : LONGINT;
+					cblkIdx, ncblksRet : SIGNED32;
 					codedCblk : ARRAY CBLK_BUFSIZE OF J2KU.CodedCblk;
 					curDataBlk : DataBlkInt;
 					curCblkInfo : J2KU.CblkInfo;
-					passes, curBp, lastNonBypassBp, segIdx, tile, comp : LONGINT;
+					passes, curBp, lastNonBypassBp, segIdx, tile, comp : SIGNED32;
 					zeroLUT, data : J2KU.LongIntArrayPtr;
 					bypass, term, cleanupTerm : BOOLEAN;	(* Some entropy decoder options *)
 					ok : BOOLEAN;
@@ -765,7 +765,7 @@ MODULE JPEG2000Decoder;
 							curDataBlk.scanw := curCblkInfo.width;
 						END;
 
-						Machine.Fill32(ADDRESSOF(data[0]), LEN(data^)*SIZEOF(LONGINT), 0);
+						Machine.Fill32(ADDRESSOF(data[0]), LEN(data^)*SIZEOF(SIGNED32), 0);
 						Machine.Fill32(ADDRESSOF(state[0]), LEN(state^)*SIZEOF(SET), 0);
 
 						(* Restart MQ-Decoder *)
@@ -931,15 +931,15 @@ MODULE JPEG2000Decoder;
 
 			PROCEDURE InitTile () : BOOLEAN;
 				VAR
-					curTile, maxCblkWidth, maxCblkHeight, maxSize : LONGINT;
+					curTile, maxCblkWidth, maxCblkHeight, maxSize : SIGNED32;
 				BEGIN
 
 					IF cr.CurrentTilePart() = 0 THEN
 						(* See if we have to enlarge the state array *)
 						curTile := cr.CurrentTile();
 
-						maxCblkWidth := LSH(LONGINT( 1), decSpec.GetMaxCblkWidthExp(curTile));
-						maxCblkHeight := LSH(LONGINT( 1), decSpec.GetMaxCblkHeightExp(curTile));
+						maxCblkWidth := LSH(SIGNED32( 1), decSpec.GetMaxCblkWidthExp(curTile));
+						maxCblkHeight := LSH(SIGNED32( 1), decSpec.GetMaxCblkHeightExp(curTile));
 						maxSize := (maxCblkWidth + 2 * ENTROPY_ARRAYOFF) * (((maxCblkHeight + 1 ) DIV 2)+ 2 * ENTROPY_ARRAYOFF);
 
 						IF (state = NIL) OR (LEN(state^) < maxSize) THEN
@@ -950,24 +950,24 @@ MODULE JPEG2000Decoder;
 					RETURN TRUE;
 			END InitTile;
 
-			PROCEDURE CurrentTile () : LONGINT;
+			PROCEDURE CurrentTile () : SIGNED32;
 				BEGIN
 					RETURN cr.CurrentTile();
 			END CurrentTile;
 
-			PROCEDURE CurrentTilePart () : LONGINT;
+			PROCEDURE CurrentTilePart () : SIGNED32;
 				BEGIN
 					RETURN cr.CurrentTilePart();
 			END CurrentTilePart;
 
 
-			PROCEDURE GetSubbandInfo (tile, component, reslevel, subband : LONGINT) : J2KU.SubbandInfo;
+			PROCEDURE GetSubbandInfo (tile, component, reslevel, subband : SIGNED32) : J2KU.SubbandInfo;
 				BEGIN
 					RETURN cr.GetSubbandInfo(tile, component, reslevel, subband)
 			END GetSubbandInfo;
 
 			(* Logs a message when an error has been detected and concealing is done *)
-			PROCEDURE LogConcealMsg (cblkInfo : J2KU.CblkInfo; curBp : LONGINT);
+			PROCEDURE LogConcealMsg (cblkInfo : J2KU.CblkInfo; curBp : SIGNED32);
 				BEGIN
 					KernelLog.String("WARNING: EntropyDecoder detected error at bit-plane ");
 					KernelLog.Int(curBp, 0);
@@ -988,26 +988,26 @@ MODULE JPEG2000Decoder;
 
 
 			(* This procedure applies the significance propagation pass to the compressed image data *)
-			PROCEDURE SigPropPass (cblk : DataBlk; cblkInfo : J2KU.CblkInfo; curBp : LONGINT; zeroLUT : J2KU.LongIntArrayPtr; term : BOOLEAN) : BOOLEAN;
+			PROCEDURE SigPropPass (cblk : DataBlk; cblkInfo : J2KU.CblkInfo; curBp : SIGNED32; zeroLUT : J2KU.LongIntArrayPtr; term : BOOLEAN) : BOOLEAN;
 				VAR
-					i, j : LONGINT;
-					stripeHeight : LONGINT;
-					dataIdx, stateIdx : LONGINT;
+					i, j : SIGNED32;
+					stripeHeight : SIGNED32;
+					dataIdx, stateIdx : SIGNED32;
 					curState : SET;
-					rowStartState, rowWidthState, rowStartData : LONGINT;
-					stateStripeIncr, dataStripeIncr : LONGINT;
-					ctx : LONGINT;
-					sign : LONGINT;
+					rowStartState, rowWidthState, rowStartData : SIGNED32;
+					stateStripeIncr, dataStripeIncr : SIGNED32;
+					ctx : SIGNED32;
+					sign : SIGNED32;
 					setMask : SET;
 					ok : BOOLEAN;
 					data : J2KU.LongIntArrayPtr;
-					scanw : LONGINT;	(* The scan width of the code-block data *)
-					off_ul, off_ur, off_dl, off_dr : LONGINT;
+					scanw : SIGNED32;	(* The scan width of the code-block data *)
+					off_ul, off_ur, off_dl, off_dr : SIGNED32;
 				BEGIN
 					(* Get local reference to data *)
 					data := cblk(DataBlkInt).data;
 
-					setMask := SET( LSH(LONGINT( 3), curBp - 1));
+					setMask := SET( LSH(SIGNED32( 3), curBp - 1));
 					rowWidthState := cblkInfo.width + 2 * ENTROPY_ARRAYOFF;
 					(* Cache rowStart (of the extended arrays) *)
 					rowStartState := rowWidthState + ENTROPY_ARRAYOFF;
@@ -1043,17 +1043,17 @@ MODULE JPEG2000Decoder;
 							THEN
 
 								(* Did the coefficient just become significant? If not, move on *)
-								IF mq.Decode(zeroLUT[LONGINT( curState * STATE_VECT_MASK_R1)]) = 1 THEN
+								IF mq.Decode(zeroLUT[SIGNED32( curState * STATE_VECT_MASK_R1)]) = 1 THEN
 									(* Coefficient has become significant -> decode sign bit *)
-									ctx := ENTROPY_SIGN_LUT[LSH(LONGINT( curState*SIGN_VECT_MASK_R1), -SIGN_VECT_SHIFT_R1)];
+									ctx := ENTROPY_SIGN_LUT[LSH(SIGNED32( curState*SIGN_VECT_MASK_R1), -SIGN_VECT_SHIFT_R1)];
 
 
-									sign := LONGINT(
-												SET( mq.Decode(LONGINT( SET( ctx) * SIGN_LUT_MASK)))
+									sign := SIGNED32(
+												SET( mq.Decode(SIGNED32( SET( ctx) * SIGN_LUT_MASK)))
 												/ SET( LSH(ctx, -J2KU.LONGINT_BITS + 1))
 											);
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 									IF ~vertCausal THEN
@@ -1122,15 +1122,15 @@ MODULE JPEG2000Decoder;
 							THEN
 
 								(* Did the coefficient just become significant? If not, move on *)
-								IF mq.Decode(zeroLUT[LSH(LONGINT( curState * STATE_VECT_MASK_R2), -STATE_SEP)]) = 1 THEN
+								IF mq.Decode(zeroLUT[LSH(SIGNED32( curState * STATE_VECT_MASK_R2), -STATE_SEP)]) = 1 THEN
 									(* Coefficient has become significant -> decode sign bit *)
-									ctx := ENTROPY_SIGN_LUT[LSH(LONGINT( curState*SIGN_VECT_MASK_R2), -SIGN_VECT_SHIFT_R2)];
-									sign := LONGINT(
-												SET( mq.Decode(LONGINT( SET( ctx) * SIGN_LUT_MASK)))
+									ctx := ENTROPY_SIGN_LUT[LSH(SIGNED32( curState*SIGN_VECT_MASK_R2), -SIGN_VECT_SHIFT_R2)];
+									sign := SIGNED32(
+												SET( mq.Decode(SIGNED32( SET( ctx) * SIGN_LUT_MASK)))
 												/ SET( LSH(ctx, -J2KU.LONGINT_BITS + 1))
 											);
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 									(* Lower diagonal neighbors *)
@@ -1192,15 +1192,15 @@ MODULE JPEG2000Decoder;
 							THEN
 
 								(* Did the coefficient just become significant? If not, move on *)
-								IF mq.Decode(zeroLUT[LONGINT( curState * STATE_VECT_MASK_R1)]) = 1 THEN
+								IF mq.Decode(zeroLUT[SIGNED32( curState * STATE_VECT_MASK_R1)]) = 1 THEN
 									(* Coefficient has become significant -> decode sign bit *)
-									ctx := ENTROPY_SIGN_LUT[LSH(LONGINT( curState*SIGN_VECT_MASK_R1), -SIGN_VECT_SHIFT_R1)];
-									sign := LONGINT(
-												SET( mq.Decode(LONGINT( SET( ctx) * SIGN_LUT_MASK)))
+									ctx := ENTROPY_SIGN_LUT[LSH(SIGNED32( curState*SIGN_VECT_MASK_R1), -SIGN_VECT_SHIFT_R1)];
+									sign := SIGNED32(
+												SET( mq.Decode(SIGNED32( SET( ctx) * SIGN_LUT_MASK)))
 												/ SET( LSH(ctx, -J2KU.LONGINT_BITS + 1))
 											);
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 										(* Upper diagonal neighbors *)
@@ -1260,16 +1260,16 @@ MODULE JPEG2000Decoder;
 							THEN
 
 								(* Did the coefficient just become significant? If not, move on *)
-								IF mq.Decode(zeroLUT[LSH(LONGINT( curState * STATE_VECT_MASK_R2), -STATE_SEP)]) = 1 THEN
+								IF mq.Decode(zeroLUT[LSH(SIGNED32( curState * STATE_VECT_MASK_R2), -STATE_SEP)]) = 1 THEN
 									(* Coefficient has become significant -> decode sign bit *)
-									ctx := ENTROPY_SIGN_LUT[LSH(LONGINT( curState*SIGN_VECT_MASK_R2), -SIGN_VECT_SHIFT_R2)];
-									sign := LONGINT(
-												SET( mq.Decode(LONGINT( SET( ctx) * SIGN_LUT_MASK)))
+									ctx := ENTROPY_SIGN_LUT[LSH(SIGNED32( curState*SIGN_VECT_MASK_R2), -SIGN_VECT_SHIFT_R2)];
+									sign := SIGNED32(
+												SET( mq.Decode(SIGNED32( SET( ctx) * SIGN_LUT_MASK)))
 												/ SET( LSH(ctx, -J2KU.LONGINT_BITS + 1))
 											);
 
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 									(* Lower diagonal neighbors *)
@@ -1347,25 +1347,25 @@ MODULE JPEG2000Decoder;
 				This procedure applies the significance propagation pass to the compressed image data,
 				reading bits directly from the stream
 			*)
-			PROCEDURE RawSigPropPass (cblk : DataBlk; cblkInfo : J2KU.CblkInfo; curBp : LONGINT; term : BOOLEAN) : BOOLEAN;
+			PROCEDURE RawSigPropPass (cblk : DataBlk; cblkInfo : J2KU.CblkInfo; curBp : SIGNED32; term : BOOLEAN) : BOOLEAN;
 				VAR
-					i, j : LONGINT;
-					stripeHeight : LONGINT;
-					dataIdx, stateIdx : LONGINT;
+					i, j : SIGNED32;
+					stripeHeight : SIGNED32;
+					dataIdx, stateIdx : SIGNED32;
 					curState : SET;
-					rowStartState, rowWidthState, rowStartData : LONGINT;
-					stateStripeIncr, dataStripeIncr : LONGINT;
-					sign : LONGINT;
+					rowStartState, rowWidthState, rowStartData : SIGNED32;
+					stateStripeIncr, dataStripeIncr : SIGNED32;
+					sign : SIGNED32;
 					setMask : SET;
 					ok : BOOLEAN;
 					data : J2KU.LongIntArrayPtr;
-					scanw : LONGINT;	(* The scan width of the code-block data *)
-					off_ul, off_ur, off_dl, off_dr : LONGINT;
+					scanw : SIGNED32;	(* The scan width of the code-block data *)
+					off_ul, off_ur, off_dl, off_dr : SIGNED32;
 				BEGIN
 					(* Get local reference to data *)
 					data := cblk(DataBlkInt).data;
 
-					setMask := SET( LSH(LONGINT( 3), curBp - 1));
+					setMask := SET( LSH(SIGNED32( 3), curBp - 1));
 					rowWidthState := cblkInfo.width + 2 * ENTROPY_ARRAYOFF;
 					(* Cache rowStart (of the extended arrays) *)
 					rowStartState := rowWidthState + ENTROPY_ARRAYOFF;
@@ -1404,7 +1404,7 @@ MODULE JPEG2000Decoder;
 									(* Coefficient has become significant -> decode sign bit *)
 									sign := dbr.NextBit();
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 									IF ~vertCausal THEN
@@ -1476,7 +1476,7 @@ MODULE JPEG2000Decoder;
 									(* Coefficient has become significant -> decode sign bit *)
 									sign := dbr.NextBit();
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 									(* Lower diagonal neighbors *)
@@ -1541,7 +1541,7 @@ MODULE JPEG2000Decoder;
 									(* Coefficient has become significant -> decode sign bit *)
 									sign := dbr.NextBit();
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 									(* Upper diagonal neighbors *)
@@ -1604,7 +1604,7 @@ MODULE JPEG2000Decoder;
 									(* Coefficient has become significant -> decode sign bit *)
 									sign := dbr.NextBit();
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 									(* Lower diagonal neighbors *)
@@ -1674,27 +1674,27 @@ MODULE JPEG2000Decoder;
 			END RawSigPropPass;
 
 			(* This procedure applies the magnitude refinement pass to the compressed image data *)
-			PROCEDURE MagRefPass (cblk : DataBlk; cblkInfo : J2KU.CblkInfo; curBp : LONGINT; term : BOOLEAN) : BOOLEAN;
+			PROCEDURE MagRefPass (cblk : DataBlk; cblkInfo : J2KU.CblkInfo; curBp : SIGNED32; term : BOOLEAN) : BOOLEAN;
 				VAR
-					i, j : LONGINT;
-					stripeHeight : LONGINT;
-					dataIdx, stateIdx : LONGINT;
+					i, j : SIGNED32;
+					stripeHeight : SIGNED32;
+					dataIdx, stateIdx : SIGNED32;
 					curState : SET;
-					rowStartState, rowWidthState, rowStartData : LONGINT;
-					stateStripeIncr, dataStripeIncr : LONGINT;
-					bit : LONGINT;
+					rowStartState, rowWidthState, rowStartData : SIGNED32;
+					stateStripeIncr, dataStripeIncr : SIGNED32;
+					bit : SIGNED32;
 					tmpDataSample : SET;
 					setMask, resetMask : SET;
 					ok : BOOLEAN;
 					data : J2KU.LongIntArrayPtr;
-					scanw : LONGINT;	(* The scan width of the code-block data *)
-					off_ul, off_ur, off_dl, off_dr : LONGINT;
+					scanw : SIGNED32;	(* The scan width of the code-block data *)
+					off_ul, off_ur, off_dl, off_dr : SIGNED32;
 				BEGIN
 					(* Get local reference to data *)
 					data := cblk(DataBlkInt).data;
 
-					setMask := SET( LSH(LONGINT( 1), curBp - 1));
-					resetMask := SET( LSH(LONGINT( -1), curBp + 1));
+					setMask := SET( LSH(SIGNED32( 1), curBp - 1));
+					resetMask := SET( LSH(SIGNED32( -1), curBp + 1));
 
 					rowWidthState := cblkInfo.width + 2 * ENTROPY_ARRAYOFF;
 					(* Cache rowStart (of the extended arrays) *)
@@ -1746,7 +1746,7 @@ MODULE JPEG2000Decoder;
 								END;
 
 								tmpDataSample := SET( data[dataIdx]) * resetMask;
-								data[dataIdx] := LONGINT( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
+								data[dataIdx] := SIGNED32( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
 							END;
 
 							(* Scan 2nd row *)
@@ -1771,7 +1771,7 @@ MODULE JPEG2000Decoder;
 								END;
 
 								tmpDataSample := SET( data[dataIdx]) * resetMask;
-								data[dataIdx] := LONGINT( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
+								data[dataIdx] := SIGNED32( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
 							END;
 
 							(* Scan 3rd row *)
@@ -1799,7 +1799,7 @@ MODULE JPEG2000Decoder;
 								END;
 
 								tmpDataSample := SET( data[dataIdx]) * resetMask;
-								data[dataIdx] := LONGINT( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
+								data[dataIdx] := SIGNED32( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
 							END;
 
 							(* Scan 4th row *)
@@ -1824,7 +1824,7 @@ MODULE JPEG2000Decoder;
 								END;
 
 								tmpDataSample := SET( data[dataIdx]) * resetMask;
-								data[dataIdx] := LONGINT( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
+								data[dataIdx] := SIGNED32( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
 							END;
 
 						END;
@@ -1856,27 +1856,27 @@ MODULE JPEG2000Decoder;
 				This procedure applies the magnitude refinement pass to the compressed image data,
 				reading directly from the stream
 			*)
-			PROCEDURE RawMagRefPass (cblk : DataBlk; cblkInfo : J2KU.CblkInfo; curBp : LONGINT; term : BOOLEAN) : BOOLEAN;
+			PROCEDURE RawMagRefPass (cblk : DataBlk; cblkInfo : J2KU.CblkInfo; curBp : SIGNED32; term : BOOLEAN) : BOOLEAN;
 				VAR
-					i, j : LONGINT;
-					stripeHeight : LONGINT;
-					dataIdx, stateIdx : LONGINT;
+					i, j : SIGNED32;
+					stripeHeight : SIGNED32;
+					dataIdx, stateIdx : SIGNED32;
 					curState : SET;
-					rowStartState, rowWidthState, rowStartData : LONGINT;
-					stateStripeIncr, dataStripeIncr : LONGINT;
-					bit : LONGINT;
+					rowStartState, rowWidthState, rowStartData : SIGNED32;
+					stateStripeIncr, dataStripeIncr : SIGNED32;
+					bit : SIGNED32;
 					tmpDataSample : SET;
 					setMask, resetMask : SET;
 					ok : BOOLEAN;
 					data : J2KU.LongIntArrayPtr;
-					scanw : LONGINT;	(* The scan width of the code-block data *)
-					off_ul, off_ur, off_dl, off_dr : LONGINT;
+					scanw : SIGNED32;	(* The scan width of the code-block data *)
+					off_ul, off_ur, off_dl, off_dr : SIGNED32;
 				BEGIN
 					(* Get local reference to data *)
 					data := cblk(DataBlkInt).data;
 
-					setMask := SET( LSH(LONGINT( 1), curBp - 1));
-					resetMask := SET( LSH(LONGINT( -1), curBp + 1));
+					setMask := SET( LSH(SIGNED32( 1), curBp - 1));
+					resetMask := SET( LSH(SIGNED32( -1), curBp + 1));
 
 					rowWidthState := cblkInfo.width + 2 * ENTROPY_ARRAYOFF;
 					(* Cache rowStart (of the extended arrays) *)
@@ -1913,7 +1913,7 @@ MODULE JPEG2000Decoder;
 							THEN
 								bit := dbr.NextBit();
 								tmpDataSample := SET( data[dataIdx]) * resetMask;
-								data[dataIdx] := LONGINT( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
+								data[dataIdx] := SIGNED32( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
 								(* No need to set IN_MAG_REF since all magnitude refinement passes to follow are "raw" *)
 							END;
 
@@ -1926,7 +1926,7 @@ MODULE JPEG2000Decoder;
 							THEN
 								bit := dbr.NextBit();
 								tmpDataSample := SET( data[dataIdx]) * resetMask;
-								data[dataIdx] := LONGINT( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
+								data[dataIdx] := SIGNED32( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
 								(* No need to set IN_MAG_REF since all magnitude refinement passes to follow are "raw" *)
 							END;
 
@@ -1941,7 +1941,7 @@ MODULE JPEG2000Decoder;
 							THEN
 								bit := dbr.NextBit();
 								tmpDataSample := SET( data[dataIdx]) * resetMask;
-								data[dataIdx] := LONGINT( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
+								data[dataIdx] := SIGNED32( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
 								(* No need to set IN_MAG_REF since all magnitude refinement passes to follow are "raw" *)
 							END;
 
@@ -1954,7 +1954,7 @@ MODULE JPEG2000Decoder;
 							THEN
 								bit := dbr.NextBit();
 								tmpDataSample := SET( data[dataIdx]) * resetMask;
-								data[dataIdx] := LONGINT( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
+								data[dataIdx] := SIGNED32( tmpDataSample + SET( LSH(bit, curBp)) + setMask);
 							END;
 						END;
 
@@ -1978,27 +1978,27 @@ MODULE JPEG2000Decoder;
 
 
 			(* This procedure applies the cleanup pass to the compressed image data *)
-			PROCEDURE CleanupPass (cblk : DataBlk; cblkInfo : J2KU.CblkInfo; curBp : LONGINT; zeroLUT : J2KU.LongIntArrayPtr; term : BOOLEAN) : BOOLEAN;
+			PROCEDURE CleanupPass (cblk : DataBlk; cblkInfo : J2KU.CblkInfo; curBp : SIGNED32; zeroLUT : J2KU.LongIntArrayPtr; term : BOOLEAN) : BOOLEAN;
 				VAR
-					sign, symbol : LONGINT;	(* The symbol returned by the MQ-decoder *)
-					dataIdx, stateIdx, tmpDataIdx, tmpStateIdx : LONGINT;
-					stripeStartIdx : LONGINT;
+					sign, symbol : SIGNED32;	(* The symbol returned by the MQ-decoder *)
+					dataIdx, stateIdx, tmpDataIdx, tmpStateIdx : SIGNED32;
+					stripeStartIdx : SIGNED32;
 					curState, tmpCurState : SET;
-					rowStartState, rowWidthState, rowStartData : LONGINT;
-					stateStripeIncr, dataStripeIncr : LONGINT;
-					stripeHeight : LONGINT;
-					i, j : LONGINT;
-					ctx : LONGINT;
+					rowStartState, rowWidthState, rowStartData : SIGNED32;
+					stateStripeIncr, dataStripeIncr : SIGNED32;
+					stripeHeight : SIGNED32;
+					i, j : SIGNED32;
+					ctx : SIGNED32;
 					setMask : SET;
 					ok : BOOLEAN;
 					data : J2KU.LongIntArrayPtr;
-					scanw : LONGINT;	(* The scan width of the code-block data *)
-					off_ul, off_ur, off_dl, off_dr : LONGINT;
+					scanw : SIGNED32;	(* The scan width of the code-block data *)
+					off_ul, off_ur, off_dl, off_dr : SIGNED32;
 				BEGIN
 					(* Get local reference to data *)
 					data := cblk(DataBlkInt).data;
 
-					setMask := SET( LSH(LONGINT( 3), curBp - 1));
+					setMask := SET( LSH(SIGNED32( 3), curBp - 1));
 					rowWidthState := cblkInfo.width + 2 * ENTROPY_ARRAYOFF;
 					(* Cache row start *)
 					rowStartState := rowWidthState + ENTROPY_ARRAYOFF;
@@ -2040,7 +2040,7 @@ MODULE JPEG2000Decoder;
 									(* Not all four bits of the coefficients of this stripe are 0 *)
 									(* Determine first non-zero coefficient bit *)
 									stripeStartIdx := mq.Decode(ENTROPY_UNICTX);
-									stripeStartIdx := LONGINT( SET( LSH(stripeStartIdx, 1)) + SET( mq.Decode(ENTROPY_UNICTX)));
+									stripeStartIdx := SIGNED32( SET( LSH(stripeStartIdx, 1)) + SET( mq.Decode(ENTROPY_UNICTX)));
 
 									(* Handle the first non-zero coefficient separately *)
 									IF stripeStartIdx > 1 THEN
@@ -2055,14 +2055,14 @@ MODULE JPEG2000Decoder;
 									(* See if the first non-zero coefficient is in top or bottom part of stripe *)
 									IF ~ODD(stripeStartIdx) THEN
 										(* Coefficient has become significant -> decode sign bit *)
-										ctx := ENTROPY_SIGN_LUT[LSH(LONGINT( tmpCurState*SIGN_VECT_MASK_R1), -SIGN_VECT_SHIFT_R1)];
+										ctx := ENTROPY_SIGN_LUT[LSH(SIGNED32( tmpCurState*SIGN_VECT_MASK_R1), -SIGN_VECT_SHIFT_R1)];
 
-										sign := LONGINT(
-													SET( mq.Decode(LONGINT( SET( ctx) * SIGN_LUT_MASK)))
+										sign := SIGNED32(
+													SET( mq.Decode(SIGNED32( SET( ctx) * SIGN_LUT_MASK)))
 													/ SET( LSH(ctx, -J2KU.LONGINT_BITS + 1))
 												);
 
-										data[tmpDataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+										data[tmpDataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 										(* Update state information*)
 										IF (stripeStartIdx # 0) OR ~vertCausal THEN
@@ -2116,13 +2116,13 @@ MODULE JPEG2000Decoder;
 
 									ELSE
 										(* Coefficient has become significant -> decode sign bit *)
-										ctx := ENTROPY_SIGN_LUT[LSH(LONGINT( tmpCurState*SIGN_VECT_MASK_R2), -SIGN_VECT_SHIFT_R2)];
-										sign := LONGINT(
-													SET( mq.Decode(LONGINT( SET( ctx) * SIGN_LUT_MASK)))
+										ctx := ENTROPY_SIGN_LUT[LSH(SIGNED32( tmpCurState*SIGN_VECT_MASK_R2), -SIGN_VECT_SHIFT_R2)];
+										sign := SIGNED32(
+													SET( mq.Decode(SIGNED32( SET( ctx) * SIGN_LUT_MASK)))
 													/ SET( LSH(ctx, -J2KU.LONGINT_BITS + 1))
 												);
 
-										data[tmpDataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+										data[tmpDataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 										(* Update state information*)
 										(* Lower diagonal neighbors *)
@@ -2188,17 +2188,17 @@ MODULE JPEG2000Decoder;
 							THEN
 
 								(* Did the coefficient just become significant? If not, move on *)
-								IF mq.Decode(zeroLUT[LONGINT( curState * STATE_VECT_MASK_R1)]) = 1 THEN
+								IF mq.Decode(zeroLUT[SIGNED32( curState * STATE_VECT_MASK_R1)]) = 1 THEN
 									(* Coefficient has become significant -> decode sign bit *)
-									ctx := ENTROPY_SIGN_LUT[LSH(LONGINT( curState*SIGN_VECT_MASK_R1), -SIGN_VECT_SHIFT_R1)];
+									ctx := ENTROPY_SIGN_LUT[LSH(SIGNED32( curState*SIGN_VECT_MASK_R1), -SIGN_VECT_SHIFT_R1)];
 
 
-									sign := LONGINT(
-												SET( mq.Decode(LONGINT( SET( ctx) * SIGN_LUT_MASK)))
+									sign := SIGNED32(
+												SET( mq.Decode(SIGNED32( SET( ctx) * SIGN_LUT_MASK)))
 												/ SET( LSH(ctx, -J2KU.LONGINT_BITS + 1))
 											);
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 									IF ~vertCausal THEN
@@ -2264,15 +2264,15 @@ MODULE JPEG2000Decoder;
 							THEN
 
 								(* Did the coefficient just become significant? If not, move on *)
-								IF mq.Decode(zeroLUT[LSH(LONGINT( curState * STATE_VECT_MASK_R2), -STATE_SEP)]) = 1 THEN
+								IF mq.Decode(zeroLUT[LSH(SIGNED32( curState * STATE_VECT_MASK_R2), -STATE_SEP)]) = 1 THEN
 									(* Coefficient has become significant -> decode sign bit *)
-									ctx := ENTROPY_SIGN_LUT[LSH(LONGINT( curState*SIGN_VECT_MASK_R2), -SIGN_VECT_SHIFT_R2)];
-									sign := LONGINT(
-												SET( mq.Decode(LONGINT( SET( ctx) * SIGN_LUT_MASK)))
+									ctx := ENTROPY_SIGN_LUT[LSH(SIGNED32( curState*SIGN_VECT_MASK_R2), -SIGN_VECT_SHIFT_R2)];
+									sign := SIGNED32(
+												SET( mq.Decode(SIGNED32( SET( ctx) * SIGN_LUT_MASK)))
 												/ SET( LSH(ctx, -J2KU.LONGINT_BITS + 1))
 											);
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 									(* Lower diagonal neighbors *)
@@ -2334,15 +2334,15 @@ MODULE JPEG2000Decoder;
 							THEN
 
 								(* Did the coefficient just become significant? If not, move on *)
-								IF mq.Decode(zeroLUT[LONGINT( curState * STATE_VECT_MASK_R1)]) = 1 THEN
+								IF mq.Decode(zeroLUT[SIGNED32( curState * STATE_VECT_MASK_R1)]) = 1 THEN
 									(* Coefficient has become significant -> decode sign bit *)
-									ctx := ENTROPY_SIGN_LUT[LSH(LONGINT( curState*SIGN_VECT_MASK_R1), -SIGN_VECT_SHIFT_R1)];
-									sign := LONGINT(
-												SET( mq.Decode(LONGINT( SET( ctx) * SIGN_LUT_MASK)))
+									ctx := ENTROPY_SIGN_LUT[LSH(SIGNED32( curState*SIGN_VECT_MASK_R1), -SIGN_VECT_SHIFT_R1)];
+									sign := SIGNED32(
+												SET( mq.Decode(SIGNED32( SET( ctx) * SIGN_LUT_MASK)))
 												/ SET( LSH(ctx, -J2KU.LONGINT_BITS + 1))
 											);
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 									(* Upper diagonal neighbors *)
@@ -2398,15 +2398,15 @@ MODULE JPEG2000Decoder;
 								& (curState * STATE_VISITED_R2 = {})
 							THEN
 								(* Did the coefficient just become significant? If not, move on *)
-								IF mq.Decode(zeroLUT[LSH(LONGINT( curState * STATE_VECT_MASK_R2), -STATE_SEP)]) = 1 THEN
+								IF mq.Decode(zeroLUT[LSH(SIGNED32( curState * STATE_VECT_MASK_R2), -STATE_SEP)]) = 1 THEN
 									(* Coefficient has become significant -> decode sign bit *)
-									ctx := ENTROPY_SIGN_LUT[LSH(LONGINT( curState*SIGN_VECT_MASK_R2), -SIGN_VECT_SHIFT_R2)];
-									sign := LONGINT(
-												SET( mq.Decode(LONGINT( SET( ctx) * SIGN_LUT_MASK)))
+									ctx := ENTROPY_SIGN_LUT[LSH(SIGNED32( curState*SIGN_VECT_MASK_R2), -SIGN_VECT_SHIFT_R2)];
+									sign := SIGNED32(
+												SET( mq.Decode(SIGNED32( SET( ctx) * SIGN_LUT_MASK)))
 												/ SET( LSH(ctx, -J2KU.LONGINT_BITS + 1))
 											);
 
-									data[dataIdx] := LONGINT( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
+									data[dataIdx] := SIGNED32( SET( LSH(sign, J2KU.LONGINT_BITS - 1)) + setMask);
 
 									(* Update state information*)
 									(* Lower diagonal neighbors *)
@@ -2469,7 +2469,7 @@ MODULE JPEG2000Decoder;
 					(* Check if segmentation symbols are used *)
 					IF segUsed THEN
 						(* Assemble 4 bits *)
-						symbol := LONGINT(
+						symbol := SIGNED32(
 											SET( LSH(mq.Decode(ENTROPY_UNICTX), 3))
 											+ SET( LSH(mq.Decode(ENTROPY_UNICTX), 2))
 											+ SET( LSH(mq.Decode(ENTROPY_UNICTX), 1))
@@ -2497,11 +2497,11 @@ MODULE JPEG2000Decoder;
 			END CleanupPass;
 
 			(* Conceals a detected error *)
-			PROCEDURE Conceal (dataBlk : DataBlk; cblkInfo : J2KU.CblkInfo; bp : LONGINT);
+			PROCEDURE Conceal (dataBlk : DataBlk; cblkInfo : J2KU.CblkInfo; bp : SIGNED32);
 				VAR
-					value, setmask, resetmask, mbmask, i, j, rowStart : LONGINT;
+					value, setmask, resetmask, mbmask, i, j, rowStart : SIGNED32;
 					data : J2KU.LongIntArrayPtr;
-					scanw : LONGINT;
+					scanw : SIGNED32;
 				BEGIN
 					data := dataBlk(DataBlkInt).data;
 					scanw := dataBlk.scanw;
@@ -2509,7 +2509,7 @@ MODULE JPEG2000Decoder;
 					setmask := LSH(1, bp);
 					resetmask := LSH(-1, bp);
 					(* Mask to extract magnitude bits, without sign bit *)
-					mbmask := LONGINT( J2KU.LONGINT_SIGN_BIT / SET( resetmask));
+					mbmask := SIGNED32( J2KU.LONGINT_SIGN_BIT / SET( resetmask));
 
 					(* We need to restore the state before the bit-plane where the error happened *)
 					(* Visit each sample and apply the reset mask to it and add a 1/2 approximation if significant *)
@@ -2524,7 +2524,7 @@ MODULE JPEG2000Decoder;
 									Something was decoded in previous bit-planes -> set the approximation
 									for the previous bit-plane
 								*)
-								data[rowStart + j] := LONGINT(
+								data[rowStart + j] := SIGNED32(
 																	(SET( value)
 																	* SET( resetmask))
 																	+ SET( setmask)
@@ -2584,11 +2584,11 @@ MODULE JPEG2000Decoder;
 			(*
 				If ROI decoding is needed, the de-scaled code-blocks are returned. Otherwise nothing is done
 			*)
-			PROCEDURE GetCodeBlocks (VAR cblk : ARRAY OF DataBlk; VAR cblkInfo : ARRAY OF J2KU.CblkInfo; ncblks : LONGINT) : LONGINT;
+			PROCEDURE GetCodeBlocks (VAR cblk : ARRAY OF DataBlk; VAR cblkInfo : ARRAY OF J2KU.CblkInfo; ncblks : SIGNED32) : SIGNED32;
 				VAR
-					cblkIdx, ncblksRet : LONGINT;
+					cblkIdx, ncblksRet : SIGNED32;
 					data : J2KU.LongIntArrayPtr;
-					curTile, comp, magBits, idx, i, j : LONGINT;
+					curTile, comp, magBits, idx, i, j : SIGNED32;
 					(*
 						First mask needed to extract all magnitude bits in the range of maximum magnitude bits as defined in equation E.2 of the standard.
 						Second mask needed to extract magnitude bits beyond the range of maximum magnitude bits.
@@ -2597,8 +2597,8 @@ MODULE JPEG2000Decoder;
 					mask1, mask2, mask3 : SET;
 					approx : SET; (* Mask to set the 1/2 approximation bit, if it gets deleted during truncation *)
 					tmp : SET;
-					shift : LONGINT;
-					width, height, scanw : LONGINT;
+					shift : SIGNED32;
+					width, height, scanw : SIGNED32;
 				BEGIN
 
 					(* Get as many coded code-blocks in the stream as needed, descale them *)
@@ -2622,7 +2622,7 @@ MODULE JPEG2000Decoder;
 							mask3 := SET( LSH(J2KU.SWAP_MASK, (J2KU.LONGINT_BITS - 1)- magBits));
 							mask2 := -mask3;
 							mask1 := mask3 * SET(-J2KU.LONGINT_SIGN_BIT);
-							approx := SET( LSH(LONGINT( 1), (J2KU.LONGINT_BITS - 2) - magBits));
+							approx := SET( LSH(SIGNED32( 1), (J2KU.LONGINT_BITS - 2) - magBits));
 
 							(* For every coefficient see if it belongs to the background or a ROI *)
 							FOR i := 0 TO height - 1 DO
@@ -2632,13 +2632,13 @@ MODULE JPEG2000Decoder;
 									IF (tmp * mask1) = {} THEN
 										(* Background coefficients: All first MSBs are 0 *)
 										(* Need to shift the coefficient *)
-										data[idx] := LONGINT(
+										data[idx] := SIGNED32(
 														(tmp * J2KU.LONGINT_SIGN_BIT)	(* extract sign *)
-														+ SET( LSH(LONGINT( tmp), shift)));
+														+ SET( LSH(SIGNED32( tmp), shift)));
 
 									ELSIF (tmp * mask2) # {} THEN
 										(* The number of decoded magnitude bits is greater than the maximum number of magnitude bits -> need to truncate & set approximation bit *)
-										data[idx] := LONGINT( (tmp * mask3) + approx);
+										data[idx] := SIGNED32( (tmp * mask3) + approx);
 									END;
 									INC(idx);
 								END;
@@ -2659,7 +2659,7 @@ MODULE JPEG2000Decoder;
 
 				maxStartLayer and maxEndLayer are inclusive.
 			*)
-			PROCEDURE SetMaxLayerRange (maxStartLayer, maxEndLayer : LONGINT);
+			PROCEDURE SetMaxLayerRange (maxStartLayer, maxEndLayer : SIGNED32);
 				BEGIN
 					ed.SetMaxLayerRange(maxStartLayer, maxEndLayer);
 			END SetMaxLayerRange;
@@ -2671,7 +2671,7 @@ MODULE JPEG2000Decoder;
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE SetLayerRange (startLayer, endLayer : LONGINT);
+			PROCEDURE SetLayerRange (startLayer, endLayer : SIGNED32);
 				BEGIN
 					ed.SetLayerRange(startLayer, endLayer);
 			END SetLayerRange;
@@ -2682,7 +2682,7 @@ MODULE JPEG2000Decoder;
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE GetLayerRange (VAR startLayer, endLayer : LONGINT);
+			PROCEDURE GetLayerRange (VAR startLayer, endLayer : SIGNED32);
 				BEGIN
 					ed.GetLayerRange(startLayer, endLayer);
 			END GetLayerRange;
@@ -2695,7 +2695,7 @@ MODULE JPEG2000Decoder;
 				maxStartDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				maxEndDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetMaxDecLevelRange (maxStartDecLvl, maxEndDecLvl : LONGINT);
+			PROCEDURE SetMaxDecLevelRange (maxStartDecLvl, maxEndDecLvl : SIGNED32);
 				BEGIN
 					ed.SetMaxDecLevelRange(maxStartDecLvl, maxEndDecLvl);
 			END SetMaxDecLevelRange;
@@ -2707,7 +2707,7 @@ MODULE JPEG2000Decoder;
 				startDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				endDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetDecLevelRange (startDecLvl, endDecLvl : LONGINT);
+			PROCEDURE SetDecLevelRange (startDecLvl, endDecLvl : SIGNED32);
 				BEGIN
 					ed.SetDecLevelRange(startDecLvl, endDecLvl);
 			END SetDecLevelRange;
@@ -2719,7 +2719,7 @@ MODULE JPEG2000Decoder;
 				startDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				endDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE GetDecLevelRange (VAR startDec, endDec : LONGINT);
+			PROCEDURE GetDecLevelRange (VAR startDec, endDec : SIGNED32);
 				BEGIN
 					ed.GetDecLevelRange(startDec, endDec);
 			END GetDecLevelRange;
@@ -2729,12 +2729,12 @@ MODULE JPEG2000Decoder;
 					ed.SetReBuildMode();
 			END SetReBuildMode;
 
-			PROCEDURE CurrentTile () : LONGINT;
+			PROCEDURE CurrentTile () : SIGNED32;
 				BEGIN
 					RETURN ed.CurrentTile();
 			END CurrentTile;
 
-			PROCEDURE CurrentTilePart () : LONGINT;
+			PROCEDURE CurrentTilePart () : SIGNED32;
 				BEGIN
 					RETURN ed.CurrentTilePart();
 			END CurrentTilePart;
@@ -2749,7 +2749,7 @@ MODULE JPEG2000Decoder;
 					RETURN ed.DataAvailable();
 			END DataAvailable;
 
-			PROCEDURE GetSubbandInfo (tile, component, reslevel, subband : LONGINT) : J2KU.SubbandInfo;
+			PROCEDURE GetSubbandInfo (tile, component, reslevel, subband : SIGNED32) : J2KU.SubbandInfo;
 				BEGIN
 					RETURN ed.GetSubbandInfo(tile, component, reslevel, subband)
 			END GetSubbandInfo;
@@ -2784,7 +2784,7 @@ MODULE JPEG2000Decoder;
 		Dequantizer = OBJECT
 			VAR
 				roi : ROIDescaler;	(* This will be the source for code-blocks *)
-				dataTypes : POINTER TO ARRAY OF ARRAY OF LONGINT;
+				dataTypes : POINTER TO ARRAY OF ARRAY OF SIGNED32;
 				decSpec : J2KCS.DecoderSpecs;
 				tBitDepth : J2KU.LongIntArrayPtr;	(* The bit depths of the transformed components *)
 				(*
@@ -2801,11 +2801,11 @@ MODULE JPEG2000Decoder;
 					NOTE: We always allocate memory that won't be used, e.g. always values for 3 subbands,
 					or space for components for which no quantization is performed
 				*)
-				preStep : POINTER TO ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF ARRAY 3 OF REAL;
+				preStep : POINTER TO ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF ARRAY 3 OF FLOAT32;
 
 				cblkBuf : ARRAY CBLK_BUFSIZE OF DataBlk;
 
-				overallMinDecLvl : LONGINT;(*
+				overallMinDecLvl : SIGNED32;(*
 												The overall minimum end decomposition level, i.e. there won't be any
 												delivered code-block which belongs to a lower dec. level.
 											*)
@@ -2825,7 +2825,7 @@ MODULE JPEG2000Decoder;
 								roi : ROIDescaler;
 								decSpec : J2KCS.DecoderSpecs);
 				VAR
-					ntiles, ncomp, i, j : LONGINT;
+					ntiles, ncomp, i, j : SIGNED32;
 					imgInfo : J2KCS.ImageInfo;
 					utBitDepth : J2KU.LongIntArrayPtr;	(* The bit depths of the untransformed (i.e. original) components *)
 					cblkInt : DataBlkInt;
@@ -2840,9 +2840,9 @@ MODULE JPEG2000Decoder;
 
 					NEW(dataTypes, ntiles, ncomp);
 
-					(* Set default data type (LONGINT) *)
+					(* Set default data type (SIGNED32) *)
 					FOR j := 0 TO ntiles - 1 DO
-						Machine.Fill32(ADDRESSOF(dataTypes[j][0]), ncomp*SIZEOF(LONGINT), DATA_LONGINT);
+						Machine.Fill32(ADDRESSOF(dataTypes[j][0]), ncomp*SIZEOF(SIGNED32), DATA_LONGINT);
 					END;
 
 					NEW(utBitDepth, ncomp);
@@ -2866,7 +2866,7 @@ MODULE JPEG2000Decoder;
 			END ReInit;
 
 
-			PROCEDURE SetDataType (tile, component, type : LONGINT);
+			PROCEDURE SetDataType (tile, component, type : SIGNED32);
 				BEGIN
 					dataTypes[tile][component] := type;
 			END SetDataType;
@@ -2876,12 +2876,12 @@ MODULE JPEG2000Decoder;
 					RETURN roi.DataAvailable();
 			END DataAvailable;
 
-			PROCEDURE CurrentTile () : LONGINT;
+			PROCEDURE CurrentTile () : SIGNED32;
 				BEGIN
 					RETURN roi.CurrentTile();
 			END CurrentTile;
 
-			PROCEDURE CurrentTilePart () : LONGINT;
+			PROCEDURE CurrentTilePart () : SIGNED32;
 				BEGIN
 					RETURN roi.CurrentTilePart();
 			END CurrentTilePart;
@@ -2901,14 +2901,14 @@ MODULE JPEG2000Decoder;
 			END NextTilePart;
 
 			(* Pre-calculates the quantization steps for all components of a tile *)
-			PROCEDURE CalculateStepSizes (tile : LONGINT);
+			PROCEDURE CalculateStepSizes (tile : SIGNED32);
 				CONST
 					(* The normalization factor for the manitssa (2^11, since 11 bits are used to represent the mantissa *)
-					NORM_FACT = LSH(LONGINT( 1), 11);
+					NORM_FACT = LSH(SIGNED32( 1), 11);
 				VAR
-					ntiles, ncomp, i, ndec, r: LONGINT;
-					qStyle, exp : LONGINT;
-					mant : REAL;
+					ntiles, ncomp, i, ndec, r: SIGNED32;
+					qStyle, exp : SIGNED32;
+					mant : FLOAT32;
 					imgInfo : J2KCS.ImageInfo;
 				BEGIN
 					imgInfo := decSpec.GetImageInfo();
@@ -2950,21 +2950,21 @@ MODULE JPEG2000Decoder;
 									(* Resolution level 0 *)
 									exp := decSpec.GetQuantExponent(tile, i, 0, J2KU.SUB_LL);
 									mant := decSpec.GetQuantMantissa(tile, i, 0, J2KU.SUB_LL);
-									preStep[tile][i][0][0] := ((1 + (mant / NORM_FACT)) / LSH(LONGINT( 1), exp));
+									preStep[tile][i][0][0] := ((1 + (mant / NORM_FACT)) / LSH(SIGNED32( 1), exp));
 
 									(* Now the other resolution levels *)
 									FOR r := 1 TO ndec DO
 										exp := decSpec.GetQuantExponent(tile, i, r, J2KU.SUB_HL);
 										mant := decSpec.GetQuantMantissa(tile, i, r, J2KU.SUB_HL);
-										preStep[tile][i][r][0] := ((1 + (mant / NORM_FACT)) / LSH(LONGINT( 1), exp));
+										preStep[tile][i][r][0] := ((1 + (mant / NORM_FACT)) / LSH(SIGNED32( 1), exp));
 
 										exp := decSpec.GetQuantExponent(tile, i, r, J2KU.SUB_LH);
 										mant := decSpec.GetQuantMantissa(tile, i, r, J2KU.SUB_LH);
-										preStep[tile][i][r][1] := ((1 + (mant / NORM_FACT)) / LSH(LONGINT( 1), exp));
+										preStep[tile][i][r][1] := ((1 + (mant / NORM_FACT)) / LSH(SIGNED32( 1), exp));
 
 										exp := decSpec.GetQuantExponent(tile, i, r, J2KU.SUB_HH);
 										mant := decSpec.GetQuantMantissa(tile, i, r, J2KU.SUB_HH);
-										preStep[tile][i][r][2] := ((1 + (mant / NORM_FACT)) / LSH(LONGINT( 1), exp));
+										preStep[tile][i][r][2] := ((1 + (mant / NORM_FACT)) / LSH(SIGNED32( 1), exp));
 									END;
 							|	J2KCS.QUANT_DER:
 									(* The values for the NL-LL band are signalled only *)
@@ -2981,7 +2981,7 @@ MODULE JPEG2000Decoder;
 									exp := decSpec.GetQuantExponent(tile, i, 0, J2KU.SUB_LL);
 									mant := decSpec.GetQuantMantissa(tile, i, 0, J2KU.SUB_LL);
 
-									preStep[tile][i][0][0] := ((1 + (mant / NORM_FACT)) / LSH(LONGINT( 1), exp));
+									preStep[tile][i][0][0] := ((1 + (mant / NORM_FACT)) / LSH(SIGNED32( 1), exp));
 							ELSE
 								KernelLog.String("ERROR (Dequantizer.CalculateStepSizes) : Unknown quantization style");
 								KernelLog.Ln();
@@ -2990,7 +2990,7 @@ MODULE JPEG2000Decoder;
 			END CalculateStepSizes;
 
 
-			PROCEDURE GetSubbandInfo (tile, component, reslevel, subband : LONGINT) : J2KU.SubbandInfo;
+			PROCEDURE GetSubbandInfo (tile, component, reslevel, subband : SIGNED32) : J2KU.SubbandInfo;
 				BEGIN
 					RETURN roi.GetSubbandInfo(tile, component, reslevel, subband)
 			END GetSubbandInfo;
@@ -3014,7 +3014,7 @@ MODULE JPEG2000Decoder;
 
 				maxStartLayer and maxEndLayer are inclusive.
 			*)
-			PROCEDURE SetMaxLayerRange (maxStartLayer, maxEndLayer : LONGINT);
+			PROCEDURE SetMaxLayerRange (maxStartLayer, maxEndLayer : SIGNED32);
 				BEGIN
 					roi.SetMaxLayerRange(maxStartLayer, maxEndLayer);
 			END SetMaxLayerRange;
@@ -3025,7 +3025,7 @@ MODULE JPEG2000Decoder;
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE SetLayerRange (startLayer, endLayer : LONGINT);
+			PROCEDURE SetLayerRange (startLayer, endLayer : SIGNED32);
 				BEGIN
 					roi.SetLayerRange(startLayer, endLayer);
 			END SetLayerRange;
@@ -3036,7 +3036,7 @@ MODULE JPEG2000Decoder;
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE GetLayerRange (VAR startLayer, endLayer : LONGINT);
+			PROCEDURE GetLayerRange (VAR startLayer, endLayer : SIGNED32);
 				BEGIN
 					roi.GetLayerRange(startLayer, endLayer);
 			END GetLayerRange;
@@ -3049,7 +3049,7 @@ MODULE JPEG2000Decoder;
 				maxStartDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				maxEndDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetMaxDecLevelRange (maxStartDecLvl, maxEndDecLvl : LONGINT);
+			PROCEDURE SetMaxDecLevelRange (maxStartDecLvl, maxEndDecLvl : SIGNED32);
 				BEGIN
 					overallMinDecLvl := maxEndDecLvl;
 					roi.SetMaxDecLevelRange(maxStartDecLvl, maxEndDecLvl);
@@ -3062,7 +3062,7 @@ MODULE JPEG2000Decoder;
 				startDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				endDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetDecLevelRange (startDecLvl, endDecLvl : LONGINT);
+			PROCEDURE SetDecLevelRange (startDecLvl, endDecLvl : SIGNED32);
 				BEGIN
 					roi.SetDecLevelRange(startDecLvl, endDecLvl);
 			END SetDecLevelRange;
@@ -3074,7 +3074,7 @@ MODULE JPEG2000Decoder;
 				startDec : The decompositon level to start at (inclusive) -> upper bound
 				endDec : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE GetDecLevelRange (VAR startDec, endDec : LONGINT);
+			PROCEDURE GetDecLevelRange (VAR startDec, endDec : SIGNED32);
 				BEGIN
 					roi.GetDecLevelRange(startDec, endDec);
 			END GetDecLevelRange;
@@ -3087,17 +3087,17 @@ MODULE JPEG2000Decoder;
 			(**
 				Returns dequantized code-blocks
 			*)
-			PROCEDURE GetCodeBlocks (VAR cblk : ARRAY OF DataBlk; VAR cblkInfo : ARRAY OF J2KU.CblkInfo; ncblks : LONGINT) : LONGINT;
+			PROCEDURE GetCodeBlocks (VAR cblk : ARRAY OF DataBlk; VAR cblkInfo : ARRAY OF J2KU.CblkInfo; ncblks : SIGNED32) : SIGNED32;
 				VAR
-					cblkIdx, ncblksRet : LONGINT;
-					qStyle, cblkSize, width, height, shift, i, j, tmp, gainLog : LONGINT;
-					curTile, comp, ndec : LONGINT;
-					step : REAL;
+					cblkIdx, ncblksRet : SIGNED32;
+					qStyle, cblkSize, width, height, shift, i, j, tmp, gainLog : SIGNED32;
+					curTile, comp, ndec : SIGNED32;
+					step : FLOAT32;
 					realData : J2KU.RealArrayPtr;
 					srcData : J2KU.LongIntArrayPtr;
 					cblkReal : DataBlkReal;
 					subbInfo : J2KU.SubbandInfo;
-					dataIdxIn, scanwIn, dataIdxOut, scanwOut : LONGINT;
+					dataIdxIn, scanwIn, dataIdxOut, scanwOut : SIGNED32;
 				BEGIN
 					(*
 						This implementation relies on the condition that the component above this one
@@ -3131,7 +3131,7 @@ MODULE JPEG2000Decoder;
 
 								|	DATA_REAL :
 										(* We cannot do in-place modification *)
-										(* Allocate new code-block for REAL data *)
+										(* Allocate new code-block for FLOAT32 data *)
 										NEW(cblkReal);
 										NEW(realData, cblkSize);
 										(* Set fields *)
@@ -3151,7 +3151,7 @@ MODULE JPEG2000Decoder;
 												IF srcData[dataIdxIn] >= 0 THEN
 													srcData[dataIdxIn] := LSH(srcData[dataIdxIn], -shift);
 												ELSE
-													srcData[dataIdxIn] := -LSH(LONGINT( SET( srcData[dataIdxIn]) / J2KU.LONGINT_SIGN_BIT), -shift);
+													srcData[dataIdxIn] := -LSH(SIGNED32( SET( srcData[dataIdxIn]) / J2KU.LONGINT_SIGN_BIT), -shift);
 												END;
 
 												INC(dataIdxIn);
@@ -3169,7 +3169,7 @@ MODULE JPEG2000Decoder;
 												IF srcData[dataIdxIn] >= 0 THEN
 													realData[dataIdxOut] := LSH(srcData[dataIdxIn], -shift);
 												ELSE
-													realData[dataIdxOut] := -LSH(LONGINT( SET( srcData[dataIdxIn]) / J2KU.LONGINT_SIGN_BIT), -shift);
+													realData[dataIdxOut] := -LSH(SIGNED32( SET( srcData[dataIdxIn]) / J2KU.LONGINT_SIGN_BIT), -shift);
 												END;
 
 												INC(dataIdxIn);
@@ -3198,22 +3198,22 @@ MODULE JPEG2000Decoder;
 								(* Derived exponent *)
 								ndec := decSpec.GetNumDecLevels(curTile, comp);
 								step := preStep[curTile][comp][0][0]
-										* LSH(LONGINT( 1), tBitDepth[comp] + gainLog + ndec - subbInfo.declevel);
+										* LSH(SIGNED32( 1), tBitDepth[comp] + gainLog + ndec - subbInfo.declevel);
 							ELSE
 								(* Values are singalled for each resolution level and subband *)
 								step := preStep[curTile][comp][subbInfo.reslevel][subbInfo.index]
-										* LSH(LONGINT( 1), tBitDepth[comp] + gainLog);
+										* LSH(SIGNED32( 1), tBitDepth[comp] + gainLog);
 							END;
 
 							(* Adjust the step to the number of magnitude bits *)
-							step := step / LSH(LONGINT( 1), shift);
+							step := step / LSH(SIGNED32( 1), shift);
 
 							CASE dataTypes[curTile][comp] OF
 								|	DATA_LONGINT :
 										FOR j := 0 TO height - 1 DO
 											FOR i := 0 TO width - 1 DO
 												IF srcData[dataIdxIn] < 0 THEN
-													tmp := LONGINT( SET( srcData[dataIdxIn]) / J2KU.LONGINT_SIGN_BIT);
+													tmp := SIGNED32( SET( srcData[dataIdxIn]) / J2KU.LONGINT_SIGN_BIT);
 													srcData[dataIdxIn] := -ENTIER(tmp * step + 0.5);
 												ELSE
 													srcData[dataIdxIn] := ENTIER(srcData[dataIdxIn] * step + 0.5);
@@ -3232,7 +3232,7 @@ MODULE JPEG2000Decoder;
 										FOR j := 0 TO height - 1 DO
 											FOR i := 0 TO width - 1 DO
 												IF srcData[dataIdxIn] < 0 THEN
-													tmp := LONGINT( SET( srcData[dataIdxIn]) / J2KU.LONGINT_SIGN_BIT);
+													tmp := SIGNED32( SET( srcData[dataIdxIn]) / J2KU.LONGINT_SIGN_BIT);
 													realData[dataIdxOut] := -tmp * step;
 												ELSE
 													realData[dataIdxOut] := srcData[dataIdxIn] * step;
@@ -3259,7 +3259,7 @@ MODULE JPEG2000Decoder;
 
 			PROCEDURE FreeResources;
 				VAR
-					i : LONGINT;
+					i : SIGNED32;
 				BEGIN
 					FOR i := 0 TO CBLK_BUFSIZE - 1 DO
 						cblkBuf[i] := NIL;
@@ -3292,14 +3292,14 @@ MODULE JPEG2000Decoder;
 		*)
 		FilterSynInt = OBJECT
 
-			PROCEDURE SynthesizeLPF (	lowCoeffs : J2KU.LongIntArrayPtr; lowOffset, lowStep : LONGINT;
-										highCoeffs : J2KU.LongIntArrayPtr; highOffset, highStep : LONGINT;
-										outData : J2KU.LongIntArrayPtr; outOffset, outStep, len : LONGINT);
+			PROCEDURE SynthesizeLPF (	lowCoeffs : J2KU.LongIntArrayPtr; lowOffset, lowStep : SIGNED32;
+										highCoeffs : J2KU.LongIntArrayPtr; highOffset, highStep : SIGNED32;
+										outData : J2KU.LongIntArrayPtr; outOffset, outStep, len : SIGNED32);
 			END SynthesizeLPF;
 
-			PROCEDURE SynthesizeHPF (	lowCoeffs : J2KU.LongIntArrayPtr; lowOffset, lowStep : LONGINT;
-										highCoeffs : J2KU.LongIntArrayPtr; highOffset, highStep : LONGINT;
-										outData : J2KU.LongIntArrayPtr; outOffset, outStep, len : LONGINT);
+			PROCEDURE SynthesizeHPF (	lowCoeffs : J2KU.LongIntArrayPtr; lowOffset, lowStep : SIGNED32;
+										highCoeffs : J2KU.LongIntArrayPtr; highOffset, highStep : SIGNED32;
+										outData : J2KU.LongIntArrayPtr; outOffset, outStep, len : SIGNED32);
 			END SynthesizeHPF;
 
 		END FilterSynInt;
@@ -3307,14 +3307,14 @@ MODULE JPEG2000Decoder;
 
 		FilterSynReal = OBJECT
 
-			PROCEDURE SynthesizeLPF(	lowCoeffs : J2KU.RealArrayPtr; lowOffset, lowStep : LONGINT;
-										highCoeffs : J2KU.RealArrayPtr; highOffset, highStep : LONGINT;
-										outData : J2KU.RealArrayPtr; outOffset, outStep, len : LONGINT);
+			PROCEDURE SynthesizeLPF(	lowCoeffs : J2KU.RealArrayPtr; lowOffset, lowStep : SIGNED32;
+										highCoeffs : J2KU.RealArrayPtr; highOffset, highStep : SIGNED32;
+										outData : J2KU.RealArrayPtr; outOffset, outStep, len : SIGNED32);
 			END SynthesizeLPF;
 
-			PROCEDURE SynthesizeHPF(	lowCoeffs : J2KU.RealArrayPtr; lowOffset, lowStep : LONGINT;
-										highCoeffs : J2KU.RealArrayPtr; highOffset, highStep : LONGINT;
-										outData : J2KU.RealArrayPtr; outOffset, outStep, len : LONGINT);
+			PROCEDURE SynthesizeHPF(	lowCoeffs : J2KU.RealArrayPtr; lowOffset, lowStep : SIGNED32;
+										highCoeffs : J2KU.RealArrayPtr; highOffset, highStep : SIGNED32;
+										outData : J2KU.RealArrayPtr; outOffset, outStep, len : SIGNED32);
 			END SynthesizeHPF;
 
 		END FilterSynReal;
@@ -3322,11 +3322,11 @@ MODULE JPEG2000Decoder;
 
 		FilterSyn5x3Lifting = OBJECT(FilterSynInt)
 
-			PROCEDURE SynthesizeLPF (	lowCoeffs : J2KU.LongIntArrayPtr; lowOffset, lowStep : LONGINT;
-										highCoeffs : J2KU.LongIntArrayPtr; highOffset, highStep : LONGINT;
-										outData : J2KU.LongIntArrayPtr; outOffset, outStep, len : LONGINT);
+			PROCEDURE SynthesizeLPF (	lowCoeffs : J2KU.LongIntArrayPtr; lowOffset, lowStep : SIGNED32;
+										highCoeffs : J2KU.LongIntArrayPtr; highOffset, highStep : SIGNED32;
+										outData : J2KU.LongIntArrayPtr; outOffset, outStep, len : SIGNED32);
 				VAR
-					iOut, iHigh, iLow, jmpOut, i : LONGINT;
+					iOut, iHigh, iLow, jmpOut, i : SIGNED32;
 					oddLen : BOOLEAN;
 				BEGIN
 
@@ -3377,11 +3377,11 @@ MODULE JPEG2000Decoder;
 
 			END SynthesizeLPF;
 
-			PROCEDURE SynthesizeHPF (	lowCoeffs : J2KU.LongIntArrayPtr; lowOffset, lowStep : LONGINT;
-										highCoeffs : J2KU.LongIntArrayPtr; highOffset, highStep : LONGINT;
-										outData : J2KU.LongIntArrayPtr; outOffset, outStep, len : LONGINT);
+			PROCEDURE SynthesizeHPF (	lowCoeffs : J2KU.LongIntArrayPtr; lowOffset, lowStep : SIGNED32;
+										highCoeffs : J2KU.LongIntArrayPtr; highOffset, highStep : SIGNED32;
+										outData : J2KU.LongIntArrayPtr; outOffset, outStep, len : SIGNED32);
 				VAR
-					iOut, iHigh, iLow, jmpOut, i : LONGINT;
+					iOut, iHigh, iLow, jmpOut, i : SIGNED32;
 					oddLen : BOOLEAN;
 				BEGIN
 
@@ -3446,11 +3446,11 @@ MODULE JPEG2000Decoder;
 	TYPE
 		FilterSyn9x7Lifting = OBJECT(FilterSynReal)
 
-			PROCEDURE SynthesizeLPF(	lowCoeffs : J2KU.RealArrayPtr; lowOffset, lowStep : LONGINT;
-										highCoeffs : J2KU.RealArrayPtr; highOffset, highStep : LONGINT;
-										outData : J2KU.RealArrayPtr; outOffset, outStep, len : LONGINT);
+			PROCEDURE SynthesizeLPF(	lowCoeffs : J2KU.RealArrayPtr; lowOffset, lowStep : SIGNED32;
+										highCoeffs : J2KU.RealArrayPtr; highOffset, highStep : SIGNED32;
+										outData : J2KU.RealArrayPtr; outOffset, outStep, len : SIGNED32);
 				VAR
-					iOut, iHigh, iLow, jmpOut, i : LONGINT;
+					iOut, iHigh, iLow, jmpOut, i : SIGNED32;
 					oddLen : BOOLEAN;
 				BEGIN
 
@@ -3540,11 +3540,11 @@ MODULE JPEG2000Decoder;
 
 			END SynthesizeLPF;
 
-			PROCEDURE SynthesizeHPF(	lowCoeffs : J2KU.RealArrayPtr; lowOffset, lowStep : LONGINT;
-										highCoeffs : J2KU.RealArrayPtr; highOffset, highStep : LONGINT;
-										outData : J2KU.RealArrayPtr; outOffset, outStep, len : LONGINT);
+			PROCEDURE SynthesizeHPF(	lowCoeffs : J2KU.RealArrayPtr; lowOffset, lowStep : SIGNED32;
+										highCoeffs : J2KU.RealArrayPtr; highOffset, highStep : SIGNED32;
+										outData : J2KU.RealArrayPtr; outOffset, outStep, len : SIGNED32);
 				VAR
-					iOut, iHigh, iLow, jmpOut, i : LONGINT;
+					iOut, iHigh, iLow, jmpOut, i : SIGNED32;
 					oddLen : BOOLEAN;
 				BEGIN
 
@@ -3637,17 +3637,17 @@ MODULE JPEG2000Decoder;
 		InverseDWT = OBJECT
 			VAR
 				deq : Dequantizer;
-				curTile : LONGINT;
-				ncomp : LONGINT;
-				minDecLvl, maxDecLvl, minLayer, maxLayer : LONGINT;
+				curTile : SIGNED32;
+				ncomp : SIGNED32;
+				minDecLvl, maxDecLvl, minLayer, maxLayer : SIGNED32;
 				reconstructedComps : POINTER TO ARRAY OF ARRAY OF DataBlk;
 				reconstructedCompsInfo : POINTER TO ARRAY OF ARRAY OF J2KU.BlkInfo;
-				reconstructedRange : POINTER TO ARRAY OF ARRAY 4 OF LONGINT;
+				reconstructedRange : POINTER TO ARRAY OF ARRAY 4 OF SIGNED32;
 				filterIrrev : FilterSynReal;	(* We always use a filter operating on real values when we have irreversible transformation *)
 				filterRev : FilterSynInt;		(* We always use a filter operating on integer values when we have reversible transformation *)
 				decSpec : J2KCS.DecoderSpecs;
 				gotoReBuild : BOOLEAN;
-				overallMinDecLvl : LONGINT;
+				overallMinDecLvl : SIGNED32;
 
 			PROCEDURE &InitNew *(	invDWTOpt : J2KU.InverseDWTOptions;
 									deq : Dequantizer;
@@ -3660,7 +3660,7 @@ MODULE JPEG2000Decoder;
 								deq : Dequantizer;
 								decSpec : J2KCS.DecoderSpecs);
 				VAR
-					ntiles : LONGINT;
+					ntiles : SIGNED32;
 					imgInfo : J2KCS.ImageInfo;
 				BEGIN
 					imgInfo := decSpec.GetImageInfo();
@@ -3672,9 +3672,9 @@ MODULE JPEG2000Decoder;
 					SELF.decSpec := decSpec;
 					(* Default: Reconstruct the whole image *)
 					minDecLvl := 0;
-					maxDecLvl := MAX(LONGINT);
+					maxDecLvl := MAX(SIGNED32);
 					minLayer := 0;
-					maxLayer := MAX(LONGINT);
+					maxLayer := MAX(SIGNED32);
 					overallMinDecLvl := 0;
 
 					NEW(reconstructedComps, ntiles, ncomp);
@@ -3714,8 +3714,8 @@ MODULE JPEG2000Decoder;
 			*)
 			PROCEDURE InitReconstructedRange;
 				VAR
-					recMinDecLvl, c, ndec : LONGINT;
-					reslevel, offset, width, height, scanw, h : LONGINT;
+					recMinDecLvl, c, ndec : SIGNED32;
+					reslevel, offset, width, height, scanw, h : SIGNED32;
 					subbInfo : J2KU.SubbandInfo;
 					dataInt : J2KU.LongIntArrayPtr;
 					dataReal : J2KU.RealArrayPtr;
@@ -3752,14 +3752,14 @@ MODULE JPEG2000Decoder;
 								dataInt := reconstructedComps[curTile][c](DataBlkInt).data;
 
 								FOR h := 0 TO subbInfo.height - 1 DO
-									Machine.Fill32(ADDRESSOF(dataInt[offset]), width*SIZEOF(LONGINT), 0);
+									Machine.Fill32(ADDRESSOF(dataInt[offset]), width*SIZEOF(SIGNED32), 0);
 									INC(offset, scanw);
 								END;
 							ELSIF reconstructedComps[curTile][c] IS DataBlkReal THEN
 								dataReal := reconstructedComps[curTile][c](DataBlkReal).data;
 
 								FOR h := 0 TO subbInfo.height - 1 DO
-									Machine.Fill32(ADDRESSOF(dataReal[offset]), width*SIZEOF(REAL), 0);
+									Machine.Fill32(ADDRESSOF(dataReal[offset]), width*SIZEOF(FLOAT32), 0);
 									INC(offset, scanw);
 								END;
 							END;
@@ -3774,14 +3774,14 @@ MODULE JPEG2000Decoder;
 			*)
 			PROCEDURE GetData () : BOOLEAN;
 				VAR
-					ncblksRet, i, j, rowStartComp, rowStartCblk : LONGINT;
+					ncblksRet, i, j, rowStartComp, rowStartCblk : SIGNED32;
 					dataCblkArr : ARRAY CBLK_BUFSIZE OF DataBlk;
 					dataCblkInfoArr : ARRAY CBLK_BUFSIZE OF J2KU.CblkInfo;
 					dataCblk : DataBlk;
 					recComp : DataBlk;
 					dataInt : J2KU.LongIntArrayPtr;
 					dataReal : J2KU.RealArrayPtr;
-					comp : LONGINT;
+					comp : SIGNED32;
 				BEGIN
 					(* We let the dequantizer instantiate the concrete code-blocks *)
 					ncblksRet := deq.GetCodeBlocks(dataCblkArr, dataCblkInfoArr, CBLK_BUFSIZE);
@@ -3802,7 +3802,7 @@ MODULE JPEG2000Decoder;
 									dataInt := recComp(DataBlkInt).data;
 
 									FOR i := 0 TO dataCblkInfoArr[j].height - 1 DO
-										SYSTEM.MOVE(ADDRESSOF(dataCblk.data[rowStartCblk]), ADDRESSOF(dataInt[rowStartComp]), dataCblkInfoArr[j].width * SIZEOF(LONGINT));
+										SYSTEM.MOVE(ADDRESSOF(dataCblk.data[rowStartCblk]), ADDRESSOF(dataInt[rowStartComp]), dataCblkInfoArr[j].width * SIZEOF(SIGNED32));
 										INC(rowStartComp, recComp.scanw);
 										INC(rowStartCblk, dataCblk.scanw);
 									END;
@@ -3812,7 +3812,7 @@ MODULE JPEG2000Decoder;
 									dataReal := recComp(DataBlkReal).data;
 
 									FOR i := 0 TO dataCblkInfoArr[j].height - 1 DO
-										SYSTEM.MOVE(ADDRESSOF(dataCblk.data[rowStartCblk]), ADDRESSOF(dataReal[rowStartComp]), dataCblkInfoArr[j].width * SIZEOF(REAL));
+										SYSTEM.MOVE(ADDRESSOF(dataCblk.data[rowStartCblk]), ADDRESSOF(dataReal[rowStartComp]), dataCblkInfoArr[j].width * SIZEOF(FLOAT32));
 										INC(rowStartComp, recComp.scanw);
 										INC(rowStartCblk, dataCblk.scanw);
 									END;
@@ -3834,7 +3834,7 @@ MODULE JPEG2000Decoder;
 			(* Does 1 transformation step. This implmentation sets TransformStep = FullTransform *)
 			PROCEDURE TransformStep () : BOOLEAN;
 				VAR
-					i, origMaxDecLvl, origMinDecLvl : LONGINT;
+					i, origMaxDecLvl, origMinDecLvl : SIGNED32;
 				BEGIN
 					(* Save original decomposition level range *)
 					origMaxDecLvl := maxDecLvl;
@@ -3923,7 +3923,7 @@ MODULE JPEG2000Decoder;
 
 				maxStartLayer and maxEndLayer are inclusive.
 			*)
-			PROCEDURE SetMaxLayerRange (maxStartLayer, maxEndLayer : LONGINT);
+			PROCEDURE SetMaxLayerRange (maxStartLayer, maxEndLayer : SIGNED32);
 				BEGIN
 					deq.SetMaxLayerRange(maxStartLayer, maxEndLayer);
 			END SetMaxLayerRange;
@@ -3934,7 +3934,7 @@ MODULE JPEG2000Decoder;
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE SetLayerRange (startLayer, endLayer : LONGINT);
+			PROCEDURE SetLayerRange (startLayer, endLayer : SIGNED32);
 				BEGIN
 					SELF.minLayer := startLayer;
 					SELF.maxLayer := endLayer;
@@ -3947,7 +3947,7 @@ MODULE JPEG2000Decoder;
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE GetLayerRange (VAR startLayer, endLayer : LONGINT);
+			PROCEDURE GetLayerRange (VAR startLayer, endLayer : SIGNED32);
 				BEGIN
 					startLayer := minLayer;
 					endLayer := maxLayer;
@@ -3961,7 +3961,7 @@ MODULE JPEG2000Decoder;
 				maxStartDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				maxEndDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetMaxDecLevelRange (maxStartDecLvl, maxEndDecLvl : LONGINT);
+			PROCEDURE SetMaxDecLevelRange (maxStartDecLvl, maxEndDecLvl : SIGNED32);
 				BEGIN
 					overallMinDecLvl := maxEndDecLvl;
 					deq.SetMaxDecLevelRange(maxStartDecLvl, maxEndDecLvl);
@@ -3974,7 +3974,7 @@ MODULE JPEG2000Decoder;
 				startDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				endDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetDecLevelRange (startDecLvl, endDecLvl : LONGINT);
+			PROCEDURE SetDecLevelRange (startDecLvl, endDecLvl : SIGNED32);
 				BEGIN
 					SELF.minDecLvl := endDecLvl;
 					SELF.maxDecLvl := startDecLvl;
@@ -3988,24 +3988,24 @@ MODULE JPEG2000Decoder;
 				startDec : The decompositon level to start at (inclusive) -> upper bound
 				endDec : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE GetDecLevelRange (VAR startDec, endDec : LONGINT);
+			PROCEDURE GetDecLevelRange (VAR startDec, endDec : SIGNED32);
 				BEGIN
 					startDec := maxDecLvl;
 					endDec := minDecLvl;
 			END GetDecLevelRange;
 
-			PROCEDURE GetComponent (component : LONGINT; VAR comp : DataBlk; VAR compInfo : J2KU.BlkInfo);
+			PROCEDURE GetComponent (component : SIGNED32; VAR comp : DataBlk; VAR compInfo : J2KU.BlkInfo);
 				BEGIN
 					comp := reconstructedComps[curTile][component];
 					compInfo := reconstructedCompsInfo[curTile][component];
 			END GetComponent;
 
-			PROCEDURE CurrentTile () : LONGINT;
+			PROCEDURE CurrentTile () : SIGNED32;
 				BEGIN
 					RETURN deq.CurrentTile();
 			END CurrentTile;
 
-			PROCEDURE CurrentTilePart () : LONGINT;
+			PROCEDURE CurrentTilePart () : SIGNED32;
 				BEGIN
 					RETURN deq.CurrentTilePart();
 			END CurrentTilePart;
@@ -4042,12 +4042,12 @@ MODULE JPEG2000Decoder;
 
 			PROCEDURE InitTile () : BOOLEAN;
 				VAR
-					transType, compSize, i, ndec  : LONGINT;
+					transType, compSize, i, ndec  : SIGNED32;
 					subbInfo, subbInfoStart : J2KU.SubbandInfo;
 					compInt : DataBlkInt;
 					compReal : DataBlkReal;
 					recCompInfo : J2KU.BlkInfo;
-					minDecLvlTile : LONGINT;
+					minDecLvlTile : SIGNED32;
 				BEGIN
 					curTile := deq.CurrentTile();
 
@@ -4102,13 +4102,13 @@ MODULE JPEG2000Decoder;
 								NEW(compInt.data, compSize);
 								deq.SetDataType(curTile, i, DATA_LONGINT);
 								reconstructedComps[curTile][i] := compInt;
-								(*Machine.Fill32(ADDRESSOF(compInt.data[0]), compSize*SIZEOF(LONGINT), 0);*)
+								(*Machine.Fill32(ADDRESSOF(compInt.data[0]), compSize*SIZEOF(SIGNED32), 0);*)
 							ELSIF transType = J2KCS.TRANS_9X7_IRREV THEN
 								NEW(compReal);
 								NEW(compReal.data, compSize);
 								deq.SetDataType(curTile, i, DATA_REAL);
 								reconstructedComps[curTile][i] := compReal;
-								(*Machine.Fill32(ADDRESSOF(compReal.data[0]), compSize*SIZEOF(REAL), 0);*)
+								(*Machine.Fill32(ADDRESSOF(compReal.data[0]), compSize*SIZEOF(FLOAT32), 0);*)
 							END;
 
 							reconstructedComps[curTile][i].offset := 0;
@@ -4119,8 +4119,8 @@ MODULE JPEG2000Decoder;
 						reconstructedRange[curTile][0] := -1;
 						reconstructedRange[curTile][1] := -1;
 						(* Decomposition level range *)
-						reconstructedRange[curTile][2] := MIN(LONGINT);
-						reconstructedRange[curTile][3] := MAX(LONGINT);
+						reconstructedRange[curTile][2] := MIN(SIGNED32);
+						reconstructedRange[curTile][3] := MAX(SIGNED32);
 					END;
 
 					RETURN TRUE;
@@ -4128,16 +4128,16 @@ MODULE JPEG2000Decoder;
 
 
 			(* Performs the 2D wavelet reconstruction with 2D-separable filters *)
-			PROCEDURE Wavelet2DReconstruction (tile, component : LONGINT) : BOOLEAN;
+			PROCEDURE Wavelet2DReconstruction (tile, component : SIGNED32) : BOOLEAN;
 				VAR
 					recComp : DataBlk;
 					recCompInfo : J2KU.BlkInfo;
-					ndec, curRes, curDec, ulcx, ulcy, ulx, uly, width, height, i, k, j : LONGINT;
+					ndec, curRes, curDec, ulcx, ulcy, ulx, uly, width, height, i, k, j : SIGNED32;
 					subbInfo : J2KU.SubbandInfo;
 					bufInt, dataInt : J2KU.LongIntArrayPtr;
 					bufReal, dataReal : J2KU.RealArrayPtr;
-					dataOffset, tmpOffset : LONGINT;
-					transType : LONGINT;
+					dataOffset, tmpOffset : SIGNED32;
+					transType : SIGNED32;
 				BEGIN
 					recComp := reconstructedComps[tile][component];
 					recCompInfo := reconstructedCompsInfo[tile][component];
@@ -4207,7 +4207,7 @@ MODULE JPEG2000Decoder;
 								IF ~ODD(ulcx) THEN
 									(* The first coefficient is a low-pass coefficient *)
 									FOR i := 0 TO height - 1 DO
-										SYSTEM.MOVE(ADDRESSOF(dataInt[tmpOffset]), ADDRESSOF(bufInt[0]), width*SIZEOF(LONGINT));
+										SYSTEM.MOVE(ADDRESSOF(dataInt[tmpOffset]), ADDRESSOF(bufInt[0]), width*SIZEOF(SIGNED32));
 										(* If the width is odd then #(low-pass coefficients) = #(high-pass coefficients) + 1 *)
 										filterRev.SynthesizeLPF(bufInt, 0, 1, bufInt, (width+1) DIV 2, 1, dataInt, tmpOffset, 1, width);
 										INC(tmpOffset, recComp.scanw);
@@ -4215,7 +4215,7 @@ MODULE JPEG2000Decoder;
 								ELSE
 									(* The first coefficient is a high-pass coefficient *)
 									FOR i := 0 TO height - 1 DO
-										SYSTEM.MOVE(ADDRESSOF(dataInt[tmpOffset]), ADDRESSOF(bufInt[0]), width*SIZEOF(LONGINT));
+										SYSTEM.MOVE(ADDRESSOF(dataInt[tmpOffset]), ADDRESSOF(bufInt[0]), width*SIZEOF(SIGNED32));
 										(* If the width is odd then #(high-pass coefficients) = #(low-pass coefficients) + 1 *)
 										filterRev.SynthesizeHPF(bufInt, 0, 1, bufInt, width DIV 2, 1, dataInt, tmpOffset, 1, width);
 										INC(tmpOffset, recComp.scanw);
@@ -4264,7 +4264,7 @@ MODULE JPEG2000Decoder;
 								IF ~ODD(ulcx) THEN
 									(* The first coefficient is a low-pass coefficient *)
 									FOR i := 0 TO height - 1 DO
-										SYSTEM.MOVE(ADDRESSOF(dataReal[tmpOffset]), ADDRESSOF(bufReal[0]), width*SIZEOF(REAL));
+										SYSTEM.MOVE(ADDRESSOF(dataReal[tmpOffset]), ADDRESSOF(bufReal[0]), width*SIZEOF(FLOAT32));
 										(* If the width is odd then #(low-pass coefficients) = #(high-pass coefficients) + 1 *)
 										filterIrrev.SynthesizeLPF(bufReal, 0, 1, bufReal, (width+1) DIV 2, 1, dataReal, tmpOffset, 1, width);
 										INC(tmpOffset, recComp.scanw);
@@ -4272,7 +4272,7 @@ MODULE JPEG2000Decoder;
 								ELSE
 									(* The first coefficient is a high-pass coefficient *)
 									FOR i := 0 TO height - 1 DO
-										SYSTEM.MOVE(ADDRESSOF(dataReal[tmpOffset]), ADDRESSOF(bufReal[0]), width*SIZEOF(REAL));
+										SYSTEM.MOVE(ADDRESSOF(dataReal[tmpOffset]), ADDRESSOF(bufReal[0]), width*SIZEOF(FLOAT32));
 										(* If the width is odd then #(high-pass coefficients) = #(low-pass coefficients) + 1 *)
 										filterIrrev.SynthesizeHPF(bufReal, 0, 1, bufReal, width DIV 2, 1, dataReal, tmpOffset, 1, width);
 										INC(tmpOffset, recComp.scanw);
@@ -4349,15 +4349,15 @@ MODULE JPEG2000Decoder;
 
 		InverseMCT = OBJECT
 			VAR
-				mct : LONGINT;			(* The transformation type to be used *)
+				mct : SIGNED32;			(* The transformation type to be used *)
 				invDWT : InverseDWT;	(* A reference to the wavelet tranformation object that will deliver data for us *)
-				curTile : LONGINT;
+				curTile : SIGNED32;
 				comp012 : POINTER TO ARRAY OF ARRAY OF DataBlkInt;
 				comp012Info : POINTER TO ARRAY OF ARRAY OF J2KU.BlkInfo;
 				decSpec : J2KCS.DecoderSpecs;
 				nonRebuildBuffer : BOOLEAN;		(* Indicates wether the component data buffers shall be treated as rebuild or non-rebuild members *)
 				transformRequired : POINTER TO ARRAY OF BOOLEAN;
-				startLayer, endLayer, startDecLvl, endDecLvl : LONGINT;
+				startLayer, endLayer, startDecLvl, endDecLvl : SIGNED32;
 
 			PROCEDURE &InitNew *(invMCTOpt : J2KU.InverseMCTOptions;
 									invDWT : InverseDWT;
@@ -4370,7 +4370,7 @@ MODULE JPEG2000Decoder;
 									invDWT : InverseDWT;
 									decSpec : J2KCS.DecoderSpecs);
 				VAR
-					i, ntiles: LONGINT;
+					i, ntiles: SIGNED32;
 					imgInfo : J2KCS.ImageInfo;
 				BEGIN
 					SELF.invDWT := invDWT;
@@ -4385,8 +4385,8 @@ MODULE JPEG2000Decoder;
 
 					(* Reconstruct the whole image by default *)
 					startLayer := 0;
-					endLayer := MAX(LONGINT);
-					startDecLvl := MAX(LONGINT);
+					endLayer := MAX(SIGNED32);
+					startDecLvl := MAX(SIGNED32);
 					endDecLvl := 0;
 
 					NEW(transformRequired, ntiles);
@@ -4405,7 +4405,7 @@ MODULE JPEG2000Decoder;
 
 				maxStartLayer and maxEndLayer are inclusive.
 			*)
-			PROCEDURE SetMaxLayerRange (maxStartLayer, maxEndLayer : LONGINT);
+			PROCEDURE SetMaxLayerRange (maxStartLayer, maxEndLayer : SIGNED32);
 				BEGIN
 					invDWT.SetMaxLayerRange(maxStartLayer, maxEndLayer);
 			END SetMaxLayerRange;
@@ -4416,7 +4416,7 @@ MODULE JPEG2000Decoder;
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE SetLayerRange (startLayer, endLayer : LONGINT);
+			PROCEDURE SetLayerRange (startLayer, endLayer : SIGNED32);
 				VAR
 					i : SIZE;
 				BEGIN
@@ -4438,7 +4438,7 @@ MODULE JPEG2000Decoder;
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE GetLayerRange (VAR startLayer, endLayer : LONGINT);
+			PROCEDURE GetLayerRange (VAR startLayer, endLayer : SIGNED32);
 				BEGIN
 					invDWT.GetLayerRange(startLayer, endLayer);
 			END GetLayerRange;
@@ -4451,7 +4451,7 @@ MODULE JPEG2000Decoder;
 				maxStartDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				maxEndDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetMaxDecLevelRange (maxStartDecLvl, maxEndDecLvl : LONGINT);
+			PROCEDURE SetMaxDecLevelRange (maxStartDecLvl, maxEndDecLvl : SIGNED32);
 				BEGIN
 					invDWT.SetMaxDecLevelRange(maxStartDecLvl, maxEndDecLvl);
 			END SetMaxDecLevelRange;
@@ -4463,7 +4463,7 @@ MODULE JPEG2000Decoder;
 				startDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				endDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetDecLevelRange (startDecLvl, endDecLvl : LONGINT);
+			PROCEDURE SetDecLevelRange (startDecLvl, endDecLvl : SIGNED32);
 				VAR
 					i : SIZE;
 				BEGIN
@@ -4486,20 +4486,20 @@ MODULE JPEG2000Decoder;
 				startDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				endDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE GetDecLevelRange (VAR startDecLvl, endDecLvl : LONGINT);
+			PROCEDURE GetDecLevelRange (VAR startDecLvl, endDecLvl : SIGNED32);
 				BEGIN
 					startDecLvl := SELF.startDecLvl;
 					endDecLvl := SELF.endDecLvl;
 			END GetDecLevelRange;
 
-			(* Adapts a component when no component transformation is done (e.g. converting REAL to LONGINT) *)
-			PROCEDURE GetAdaptedComponent (component : LONGINT; VAR comp : DataBlk; VAR compInfo : J2KU.BlkInfo);
+			(* Adapts a component when no component transformation is done (e.g. converting FLOAT32 to SIGNED32) *)
+			PROCEDURE GetAdaptedComponent (component : SIGNED32; VAR comp : DataBlk; VAR compInfo : J2KU.BlkInfo);
 				VAR
 					tmpComp : DataBlk;
 					dataBlkInt : DataBlkInt;
 					dataInt : J2KU.LongIntArrayPtr;
 					dataReal : J2KU.RealArrayPtr;
-					i, j, width, height, dataIdxReal, dataIdxInt, scanwReal, scanwInt : LONGINT;
+					i, j, width, height, dataIdxReal, dataIdxInt, scanwReal, scanwInt : SIGNED32;
 				BEGIN
 					invDWT.GetComponent(component, tmpComp, compInfo);
 
@@ -4541,7 +4541,7 @@ MODULE JPEG2000Decoder;
 					END;
 			END GetAdaptedComponent;
 
-			PROCEDURE GetComponent (component : LONGINT; VAR comp : DataBlk; VAR compInfo : J2KU.BlkInfo);
+			PROCEDURE GetComponent (component : SIGNED32; VAR comp : DataBlk; VAR compInfo : J2KU.BlkInfo);
 				BEGIN
 					IF (component >= 3) OR (mct = MCT_NONE) THEN
 						GetAdaptedComponent(component, comp, compInfo);
@@ -4590,7 +4590,7 @@ MODULE JPEG2000Decoder;
 
 			PROCEDURE InitTile () : BOOLEAN;
 				VAR
-					ncomp, rev, i : LONGINT;
+					ncomp, rev, i : SIGNED32;
 					imgInfo : J2KCS.ImageInfo;
 				BEGIN
 					imgInfo := decSpec.GetImageInfo();
@@ -4637,12 +4637,12 @@ MODULE JPEG2000Decoder;
 					END;
 			END InitTile;
 
-			PROCEDURE CurrentTile () : LONGINT;
+			PROCEDURE CurrentTile () : SIGNED32;
 				BEGIN
 					RETURN invDWT.CurrentTile();
 			END CurrentTile;
 
-			PROCEDURE CurrentTilePart () : LONGINT;
+			PROCEDURE CurrentTilePart () : SIGNED32;
 				BEGIN
 					RETURN invDWT.CurrentTilePart();
 			END CurrentTilePart;
@@ -4676,8 +4676,8 @@ MODULE JPEG2000Decoder;
 				VAR
 					tmpComp : ARRAY 3 OF DataBlk;
 					data0, data1, data2, outData0, outData1, outData2 : J2KU.LongIntArrayPtr;
-					dataLen, i, j, dataIdxOut, dataIdxIn : LONGINT;
-					width, height, scanwOut, scanwIn : LONGINT;
+					dataLen, i, j, dataIdxOut, dataIdxIn : SIGNED32;
+					width, height, scanwOut, scanwIn : SIGNED32;
 				BEGIN
 					(* Get the wavelet transformed components *)
 					invDWT.GetComponent(0, tmpComp[0], comp012Info[curTile][0]);
@@ -4754,8 +4754,8 @@ MODULE JPEG2000Decoder;
 					tmpComp : ARRAY 3 OF DataBlk;
 					data0, data1, data2 : J2KU.RealArrayPtr;
 					outData0, outData1, outData2 : J2KU.LongIntArrayPtr;
-					dataLen, i, j, dataIdxOut, dataIdxIn : LONGINT;
-					width, height, scanwOut, scanwIn : LONGINT;
+					dataLen, i, j, dataIdxOut, dataIdxIn : SIGNED32;
+					width, height, scanwOut, scanwIn : SIGNED32;
 				BEGIN
 					(* Get the wavelet transformed components *)
 					invDWT.GetComponent(0, tmpComp[0], comp012Info[curTile][0]);
@@ -4837,7 +4837,7 @@ MODULE JPEG2000Decoder;
 			PROCEDURE FreeNonRebuildResources;
 				VAR
 					imgInfo : J2KCS.ImageInfo;
-					ntiles, i : LONGINT;
+					ntiles, i : SIGNED32;
 				BEGIN
 					imgInfo := decSpec.GetImageInfo();
 					ntiles := imgInfo.GetNumTiles();
@@ -4877,12 +4877,12 @@ MODULE JPEG2000Decoder;
 
 	(*
 		(* This shall be the interface for applications requesting data contained in boxes. 'data' will only contain raw data, but no subboxes *)
-		JP2BoxHandler* = PROCEDURE {DELEGATE} (boxType : LONGINT; boxData : J2K.ByteArrayPtr; boxDataLen : HUGEINT; VAR abort : BOOLEAN);
+		JP2BoxHandler* = PROCEDURE {DELEGATE} (boxType : SIGNED32; boxData : J2K.ByteArrayPtr; boxDataLen : SIGNED64; VAR abort : BOOLEAN);
 	*)
 
 		JP2Box = OBJECT
 			VAR
-				type : LONGINT;
+				type : SIGNED32;
 		END JP2Box;
 
 		(** Container for a codestream found in a JP2 file *)
@@ -4903,8 +4903,8 @@ MODULE JPEG2000Decoder;
 				isJP2 : BOOLEAN;
 				initError : BOOLEAN;
 				lastBoxFound, jp2HeaderBoxFound : BOOLEAN;
-				curBoxType : LONGINT;
-				curBoxLen, curBoxContLen : HUGEINT;	(* current box length: total & content length *)
+				curBoxType : SIGNED32;
+				curBoxLen, curBoxContLen : SIGNED64;	(* current box length: total & content length *)
 
 			PROCEDURE & InitNew *(s : Streams.Reader);
 				BEGIN
@@ -4913,7 +4913,7 @@ MODULE JPEG2000Decoder;
 
 			PROCEDURE ReInit (s : Streams.Reader);
 				VAR
-					signature : LONGINT;
+					signature : SIGNED32;
 				BEGIN
 					SELF.s := s;
 
@@ -4987,7 +4987,7 @@ MODULE JPEG2000Decoder;
 			(** Reads box type and length *)
 			PROCEDURE ReadBoxInfo;
 				VAR
-					tmp : LONGINT;
+					tmp : SIGNED32;
 				BEGIN
 					(* --- LBox --- *)
 					curBoxLen := s.Net32();
@@ -5012,8 +5012,8 @@ MODULE JPEG2000Decoder;
 
 			PROCEDURE ReadFileTypeBox () : BOOLEAN;
 				VAR
-					br, minV : LONGINT;
-					clLength : HUGEINT;	(* Length of compatibility list (i.e. the number of list entries) *)
+					br, minV : SIGNED32;
+					clLength : SIGNED64;	(* Length of compatibility list (i.e. the number of list entries) *)
 					jp2Comp : BOOLEAN;
 				BEGIN
 
@@ -5061,7 +5061,7 @@ MODULE JPEG2000Decoder;
 
 			PROCEDURE ReadJP2HeaderBox (VAR box : JP2Box) : BOOLEAN;
 				VAR
-					headerBoxLen, nColSpecBox : HUGEINT;
+					headerBoxLen, nColSpecBox : SIGNED64;
 					ok : BOOLEAN;
 				BEGIN
 					(* We just skip the header *)
@@ -5175,7 +5175,7 @@ MODULE JPEG2000Decoder;
 					RETURN ~initError & ~lastBoxFound & (s.Available() >= 8);
 			END HasNextBox;
 
-			PROCEDURE NextBox (VAR boxtype : LONGINT; VAR length : HUGEINT) : BOOLEAN;
+			PROCEDURE NextBox (VAR boxtype : SIGNED32; VAR length : SIGNED64) : BOOLEAN;
 				BEGIN
 					IF ~HasNextBox() THEN
 						KernelLog.String("ERROR (JP2FileFormatReader.NextBox): No (more) JP2 boxes available");
@@ -5249,9 +5249,9 @@ MODULE JPEG2000Decoder;
 
 			PROCEDURE SkipBox () : BOOLEAN;
 				BEGIN
-					WHILE curBoxContLen > MAX(LONGINT) DO
-						s.SkipBytes(MAX(LONGINT));
-						DEC(curBoxContLen, MAX(LONGINT));
+					WHILE curBoxContLen > MAX(SIGNED32) DO
+						s.SkipBytes(MAX(SIGNED32));
+						DEC(curBoxContLen, MAX(SIGNED32));
 					END;
 
 					s.SkipBytes(SHORT(curBoxContLen));
@@ -5275,8 +5275,8 @@ MODULE JPEG2000Decoder;
 					s : Streams.Reader;
 					noCodestream : BOOLEAN;
 					box : JP2Box;
-					boxType : LONGINT;
-					boxLen : HUGEINT;
+					boxType : SIGNED32;
+					boxLen : SIGNED64;
 				BEGIN
 					s := NIL;
 					noCodestream := TRUE;
@@ -5335,18 +5335,18 @@ MODULE JPEG2000Decoder;
 		*)
 		ImageConsumer* = OBJECT
 			(** Set specific pixels *)
-			PROCEDURE SetPixels*(pixelData : J2KU.LongIntArrayPtr; xOffset, yOffset, width, height : LONGINT);
+			PROCEDURE SetPixels*(pixelData : J2KU.LongIntArrayPtr; xOffset, yOffset, width, height : SIGNED32);
 			END SetPixels;
 
 			(** Called by image producer to inform about production status *)
-			PROCEDURE SetProductionStatus* (status : LONGINT);
+			PROCEDURE SetProductionStatus* (status : SIGNED32);
 			END SetProductionStatus;
 
 		END ImageConsumer;
 
 		ImageProducer = OBJECT
 			VAR
-				imgFmt : LONGINT;
+				imgFmt : SIGNED32;
 				src : InverseMCT;
 				producedOnce : BOOLEAN;
 				imgInfo : J2KCS.ImageInfo;
@@ -5360,9 +5360,9 @@ MODULE JPEG2000Decoder;
 			(* Initializes the image production (determines format & does some checks) *)
 			PROCEDURE InitProduction (src : InverseMCT; imgInfo : J2KCS.ImageInfo) : BOOLEAN;
 				VAR
-					ncomp : LONGINT;
-					imgWidth, imgHeight, i : LONGINT;
-					compWidth, compHeight : LONGINT;
+					ncomp : SIGNED32;
+					imgWidth, imgHeight, i : SIGNED32;
+					compWidth, compHeight : SIGNED32;
 				BEGIN
 					producedOnce := FALSE;
 
@@ -5411,24 +5411,24 @@ MODULE JPEG2000Decoder;
 			END InitProduction;
 
 			(* Delivers the image to the image consumers *)
-			PROCEDURE ProduceImage (VAR consumers : ARRAY OF ImageConsumer; offset, nconsumer : LONGINT);
+			PROCEDURE ProduceImage (VAR consumers : ARRAY OF ImageConsumer; offset, nconsumer : SIGNED32);
 				VAR
 					ok : BOOLEAN;
 					comp : ARRAY 4 OF DataBlkInt; 			(* References to the components *)
 					compInfo : ARRAY 4 OF J2KU.BlkInfo;
 					data : ARRAY 4 OF J2KU.LongIntArrayPtr;
-					maxVal0, maxVal1, maxVal2, maxVal3 : LONGINT;	(* The maximum value of each component sample *)
-					levShift0, levShift1, levShift2, levShift3 : LONGINT;		(* The value for the DC level shifting for each component *)
-					tmp, tmp0, tmp1, tmp2, tmp3 : LONGINT;
-					tileOffX, tileOffY : LONGINT;
-					width, height : LONGINT;
+					maxVal0, maxVal1, maxVal2, maxVal3 : SIGNED32;	(* The maximum value of each component sample *)
+					levShift0, levShift1, levShift2, levShift3 : SIGNED32;		(* The value for the DC level shifting for each component *)
+					tmp, tmp0, tmp1, tmp2, tmp3 : SIGNED32;
+					tileOffX, tileOffY : SIGNED32;
+					width, height : SIGNED32;
 					lineBuf : J2KU.LongIntArrayPtr;
-					ncomp : LONGINT;
-					t, c, i, w, h : LONGINT;
-					pos, scanw, rowWrap : LONGINT;
+					ncomp : SIGNED32;
+					t, c, i, w, h : SIGNED32;
+					pos, scanw, rowWrap : SIGNED32;
 					tmpBlk : DataBlk;
-					dummy, curDecLvl : LONGINT;
-					status : LONGINT;
+					dummy, curDecLvl : SIGNED32;
+					status : SIGNED32;
 				BEGIN
 
 					status := PROD_FAILED;
@@ -5438,33 +5438,33 @@ MODULE JPEG2000Decoder;
 					CASE imgFmt OF
 							Codecs.ImgFmtGrey :
 								tmp := imgInfo.GetBitDepth(0);	(* This returns the original component bit-depth, before any transformation has been done *)
-								maxVal0 := LSH(LONGINT( 1), tmp) - 1;
-								levShift0 := LSH(LONGINT( 1), tmp - 1);
+								maxVal0 := LSH(SIGNED32( 1), tmp) - 1;
+								levShift0 := LSH(SIGNED32( 1), tmp - 1);
 								ncomp := 1;
 						|	Codecs.ImgFmtRGB :
 								tmp := imgInfo.GetBitDepth(0);	(* This returns the original component bit-depth, before any transformation has been done *)
-								maxVal0 := LSH(LONGINT( 1), tmp) - 1;
-								levShift0 := LSH(LONGINT( 1), tmp - 1);
+								maxVal0 := LSH(SIGNED32( 1), tmp) - 1;
+								levShift0 := LSH(SIGNED32( 1), tmp - 1);
 								tmp := imgInfo.GetBitDepth(1);
-								maxVal1 := LSH(LONGINT( 1), tmp) - 1;
-								levShift1 := LSH(LONGINT( 1), tmp - 1);
+								maxVal1 := LSH(SIGNED32( 1), tmp) - 1;
+								levShift1 := LSH(SIGNED32( 1), tmp - 1);
 								tmp := imgInfo.GetBitDepth(2);
-								maxVal2 := LSH(LONGINT( 1), tmp) - 1;
-								levShift2 := LSH(LONGINT( 1), tmp - 1);
+								maxVal2 := LSH(SIGNED32( 1), tmp) - 1;
+								levShift2 := LSH(SIGNED32( 1), tmp - 1);
 								ncomp := 3;
 						|	Codecs.ImgFmtRGBA :
 								tmp := imgInfo.GetBitDepth(0);	(* This returns the original component bit-depth, before any transformation has been done *)
-								maxVal0 := LSH(LONGINT( 1), tmp) - 1;
-								levShift0 := LSH(LONGINT( 1), tmp - 1);
+								maxVal0 := LSH(SIGNED32( 1), tmp) - 1;
+								levShift0 := LSH(SIGNED32( 1), tmp - 1);
 								tmp := imgInfo.GetBitDepth(1);
-								maxVal1 := LSH(LONGINT( 1), tmp) - 1;
-								levShift1 := LSH(LONGINT( 1), tmp - 1);
+								maxVal1 := LSH(SIGNED32( 1), tmp) - 1;
+								levShift1 := LSH(SIGNED32( 1), tmp - 1);
 								tmp := imgInfo.GetBitDepth(2);
-								maxVal2 := LSH(LONGINT( 1), tmp) - 1;
-								levShift2 := LSH(LONGINT( 1), tmp - 1);
+								maxVal2 := LSH(SIGNED32( 1), tmp) - 1;
+								levShift2 := LSH(SIGNED32( 1), tmp - 1);
 								tmp := imgInfo.GetBitDepth(3);
-								maxVal3 := LSH(LONGINT( 1), tmp) - 1;
-								levShift3 := LSH(LONGINT( 1), tmp - 1);
+								maxVal3 := LSH(SIGNED32( 1), tmp) - 1;
+								levShift3 := LSH(SIGNED32( 1), tmp - 1);
 								ncomp := 4;
 						ELSE
 							KernelLog.String("ERROR (ImageProducer.ProduceImage) : Invalid image format encounterd");
@@ -5535,8 +5535,8 @@ MODULE JPEG2000Decoder;
 												ELSIF tmp0 < 0 THEN
 													tmp0 := 0;
 												END;
-												lineBuf[w] := LONGINT(
-																			SET( LSH(LONGINT( 000000FFH), 24))
+												lineBuf[w] := SIGNED32(
+																			SET( LSH(SIGNED32( 000000FFH), 24))
 																			+ SET( LSH(tmp0, 16))
 																			+ SET( LSH(tmp0, 8))
 																			+ SET( tmp0));
@@ -5568,8 +5568,8 @@ MODULE JPEG2000Decoder;
 												ELSIF tmp2 < 0 THEN
 													tmp2 := 0;
 												END;
-												lineBuf[w] := LONGINT(
-																			SET( LSH(LONGINT( 000000FFH), 24))
+												lineBuf[w] := SIGNED32(
+																			SET( LSH(SIGNED32( 000000FFH), 24))
 																			+ SET( LSH(tmp0, 16))
 																			+ SET( LSH(tmp1, 8))
 																			+ SET( tmp2));
@@ -5609,7 +5609,7 @@ MODULE JPEG2000Decoder;
 												ELSIF tmp3 < 0 THEN
 													tmp3 := 0;
 												END;
-												lineBuf[w] := LONGINT(
+												lineBuf[w] := SIGNED32(
 																			SET( LSH(tmp0, 24))
 																			+ SET( LSH(tmp1, 16))
 																			+ SET( LSH(tmp2, 8))
@@ -5645,7 +5645,7 @@ MODULE JPEG2000Decoder;
 					END;
 			END ProduceImage;
 
-			PROCEDURE GetImgFormat () : LONGINT;
+			PROCEDURE GetImgFormat () : SIGNED32;
 				BEGIN
 					RETURN imgFmt;
 			END GetImgFormat;
@@ -5653,13 +5653,13 @@ MODULE JPEG2000Decoder;
 		END ImageProducer;
 
 
-		InternalToRaster = PROCEDURE {DELEGATE} (pixelBuf : J2KU.LongIntArrayPtr; xOffset, yOffset, length : LONGINT);
+		InternalToRaster = PROCEDURE {DELEGATE} (pixelBuf : J2KU.LongIntArrayPtr; xOffset, yOffset, length : SIGNED32);
 
 		(* An adapter for Raster.Image *)
 		RasterImageAdapter* = OBJECT(ImageConsumer)
 			VAR
 				img : Raster.Image;
-				imgFmt : LONGINT;
+				imgFmt : SIGNED32;
 				transform : InternalToRaster;
 
 			PROCEDURE &InitNew* (img : Raster.Image);
@@ -5683,14 +5683,14 @@ MODULE JPEG2000Decoder;
 			END InitNew;
 
 
-			PROCEDURE SetFormat* (fmt : LONGINT);
+			PROCEDURE SetFormat* (fmt : SIGNED32);
 				BEGIN
 					imgFmt := fmt;
 			END SetFormat;
 
-			PROCEDURE SetPixels*(pixelData : J2KU.LongIntArrayPtr; xOffset, yOffset, width, height : LONGINT);
+			PROCEDURE SetPixels*(pixelData : J2KU.LongIntArrayPtr; xOffset, yOffset, width, height : SIGNED32);
 				VAR
-					len : LONGINT;
+					len : SIGNED32;
 				BEGIN
 
 					len := width * height;
@@ -5699,18 +5699,18 @@ MODULE JPEG2000Decoder;
 			END SetPixels;
 
 
-			PROCEDURE SetPixelsRGB565 (pixelBuf : J2KU.LongIntArrayPtr; xOffset, yOffset, length : LONGINT);
+			PROCEDURE SetPixelsRGB565 (pixelBuf : J2KU.LongIntArrayPtr; xOffset, yOffset, length : SIGNED32);
 				VAR
-					adr: ADDRESS; int, i : LONGINT;
-					r, g, b : LONGINT;
+					adr: ADDRESS; int, i : SIGNED32;
+					r, g, b : SIGNED32;
 				BEGIN
 					adr := img.adr + (img.width*yOffset + xOffset)*2;
 
 					FOR i := 0 TO length - 1 DO
-						IF (SET( LSH(pixelBuf[i], -24)) * SET( LONGINT( 000000FFH) ))# {} THEN	(* model alpha as brightness *)
-							r := LONGINT( SET(LSH(pixelBuf[i], -16)) * SET( LONGINT( 000000FFH)));
-							g := LONGINT( SET(LSH(pixelBuf[i], -8)) * SET( LONGINT( 000000FFH)));
-							b := LONGINT( SET( pixelBuf[i]) * SET( LONGINT( 000000FFH)));
+						IF (SET( LSH(pixelBuf[i], -24)) * SET( SIGNED32( 000000FFH) ))# {} THEN	(* model alpha as brightness *)
+							r := SIGNED32( SET(LSH(pixelBuf[i], -16)) * SET( SIGNED32( 000000FFH)));
+							g := SIGNED32( SET(LSH(pixelBuf[i], -8)) * SET( SIGNED32( 000000FFH)));
+							b := SIGNED32( SET( pixelBuf[i]) * SET( SIGNED32( 000000FFH)));
 							int := LSH(b, -3) + LSH(LSH(g, -2), 5) + LSH(LSH(r, -3), 11);
 							SYSTEM.PUT(adr, CHR(int)); SYSTEM.PUT(adr+1, CHR(LSH(int, -8)));
 						END;
@@ -5719,9 +5719,9 @@ MODULE JPEG2000Decoder;
 
 			END SetPixelsRGB565;
 
-			PROCEDURE SetPixelsRGB888 (pixelBuf : J2KU.LongIntArrayPtr; xOffset, yOffset, length : LONGINT);
+			PROCEDURE SetPixelsRGB888 (pixelBuf : J2KU.LongIntArrayPtr; xOffset, yOffset, length : SIGNED32);
 				VAR
-					adr: ADDRESS; i : LONGINT;
+					adr: ADDRESS; i : SIGNED32;
 				BEGIN
 					adr := img.adr + (img.width*yOffset + xOffset)*3;
 
@@ -5736,9 +5736,9 @@ MODULE JPEG2000Decoder;
 
 			END SetPixelsRGB888;
 
-			PROCEDURE SetPixelsRGBA8888 (pixelBuf : J2KU.LongIntArrayPtr; xOffset, yOffset, length : LONGINT);
+			PROCEDURE SetPixelsRGBA8888 (pixelBuf : J2KU.LongIntArrayPtr; xOffset, yOffset, length : SIGNED32);
 				VAR
-					adr: ADDRESS; i : LONGINT;
+					adr: ADDRESS; i : SIGNED32;
 				BEGIN
 					adr := img.adr + (img.width*yOffset + xOffset)*4;
 
@@ -5753,7 +5753,7 @@ MODULE JPEG2000Decoder;
 
 
 			(** NIL handler *)
-			PROCEDURE SetPixelsNIL (pixelBuf : J2KU.LongIntArrayPtr; xOffset, yOffset, length : LONGINT);
+			PROCEDURE SetPixelsNIL (pixelBuf : J2KU.LongIntArrayPtr; xOffset, yOffset, length : SIGNED32);
 					(* Don't do anything *)
 			END SetPixelsNIL;
 
@@ -5780,7 +5780,7 @@ MODULE JPEG2000Decoder;
 
 				ready : BOOLEAN;
 				deliveredOnce : BOOLEAN;	(* Indicates if the current (open) image stream has been reconstructed (delivered) at least once *)
-				minResDec, minLayDec : LONGINT;
+				minResDec, minLayDec : SIGNED32;
 
 			PROCEDURE &InitNew* (decOpt : J2KU.DecoderOptions);
 				BEGIN
@@ -5791,7 +5791,7 @@ MODULE JPEG2000Decoder;
 			(* --- Codecs.ImageDecoder methods --- *)
 
 			(* open the decoder on a file *)
-			PROCEDURE Open*(s : Streams.Reader; VAR res : WORD);
+			PROCEDURE Open*(s : Streams.Reader; VAR res : INTEGER);
 				VAR
 					imgInfo : J2KCS.ImageInfo;
 					buffCr : J2KCS.BufferedCodestreamReader;
@@ -5869,7 +5869,7 @@ MODULE JPEG2000Decoder;
 					END;
 			END Open;
 
-			PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : LONGINT);
+			PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : SIGNED32);
 				VAR
 					imgInfo : J2KCS.ImageInfo;
 				BEGIN
@@ -5891,9 +5891,9 @@ MODULE JPEG2000Decoder;
 				SetProgressionLevel, the level is assumed to be maxProgressionLevel of the image,
 				which corresponds to best image quality.
 			 *)
-			PROCEDURE SetProgressionLevel*(progressionLevel: LONGINT);
+			PROCEDURE SetProgressionLevel*(progressionLevel: SIGNED32);
 				VAR
-					dec : LONGINT;
+					dec : SIGNED32;
 				BEGIN
 					IF ready THEN
 						(* Set image quality in terms of layers *)
@@ -5925,7 +5925,7 @@ MODULE JPEG2000Decoder;
 
 			(* --- END Codecs.ImageDecoder methods --- *)
 
-			PROCEDURE DeliverImage* (VAR consumers : ARRAY OF ImageConsumer; offset, nconsumer : LONGINT);
+			PROCEDURE DeliverImage* (VAR consumers : ARRAY OF ImageConsumer; offset, nconsumer : SIGNED32);
 				BEGIN
 					IF ready THEN
 						imgProd.ProduceImage(consumers, offset, nconsumer);
@@ -5971,7 +5971,7 @@ MODULE JPEG2000Decoder;
 				in a tile-header read later the minimum decomposition level over the
 				tile's components is lower than the minimum known that far.
 			*)
-			PROCEDURE GetNumResolutionLevels* () : LONGINT;
+			PROCEDURE GetNumResolutionLevels* () : SIGNED32;
 				BEGIN
 					IF ready THEN
 						RETURN decSpec.GetImgMinDecLevels() + 1;
@@ -5992,9 +5992,9 @@ MODULE JPEG2000Decoder;
 
 				This procedure can be used to save some memory.
 			*)
-			PROCEDURE MinDecreaseResolutionLevel* (minResDec : LONGINT);
+			PROCEDURE MinDecreaseResolutionLevel* (minResDec : SIGNED32);
 				VAR
-					ndec, curStartLvl, curEndLvl : LONGINT;
+					ndec, curStartLvl, curEndLvl : SIGNED32;
 				BEGIN
 					IF ready THEN
 						IF ~deliveredOnce THEN
@@ -6015,7 +6015,7 @@ MODULE JPEG2000Decoder;
 								SELF.minResDec := ndec;
 							END;
 
-							invMCT.SetMaxDecLevelRange(MAX(LONGINT), SELF.minResDec);
+							invMCT.SetMaxDecLevelRange(MAX(SIGNED32), SELF.minResDec);
 
 							(*
 								If the new maximum end decomposition level is higher than the current
@@ -6046,9 +6046,9 @@ MODULE JPEG2000Decoder;
 				next higher possible resolution level, if that resolution level does not violate
 				the minimum decrease in resolution levels (see MinDecreaseResolutionLevel).
 			*)
-			PROCEDURE DecreaseResolutionLevel* (resDec : LONGINT);
+			PROCEDURE DecreaseResolutionLevel* (resDec : SIGNED32);
 				VAR
-					ndec, dec : LONGINT;
+					ndec, dec : SIGNED32;
 				BEGIN
 					IF ready THEN
 						ndec := decSpec.GetImgMinDecLevels();
@@ -6076,7 +6076,7 @@ MODULE JPEG2000Decoder;
 						END;
 
 						(* We always start building from the lowest possible decomposition level *)
-						invMCT.SetDecLevelRange(MAX(LONGINT), dec);
+						invMCT.SetDecLevelRange(MAX(SIGNED32), dec);
 					END;
 			END DecreaseResolutionLevel;
 
@@ -6088,9 +6088,9 @@ MODULE JPEG2000Decoder;
 				that a rebuild had to be performed, e.g. when the image, that is a tile
 				of the image, did not have the requested decomposition level)
 			*)
-			PROCEDURE GetCurrentDecompositionLevel* () : LONGINT;
+			PROCEDURE GetCurrentDecompositionLevel* () : SIGNED32;
 				VAR
-					decLvl, minNumDecLvls, dummy : LONGINT;
+					decLvl, minNumDecLvls, dummy : SIGNED32;
 				BEGIN
 					IF ready THEN
 						invMCT.GetDecLevelRange(dummy, decLvl);
@@ -6121,7 +6121,7 @@ MODULE JPEG2000Decoder;
 				in a tile-header read later the number of layers for that tile is lower than
 				the minimum known that far.
 			*)
-			PROCEDURE GetNumLayers* () : LONGINT;
+			PROCEDURE GetNumLayers* () : SIGNED32;
 				BEGIN
 					IF ready THEN
 						RETURN decSpec.GetMinNumLayers();
@@ -6139,9 +6139,9 @@ MODULE JPEG2000Decoder;
 
 				This procedure can be used to save some memory.
 			*)
-			PROCEDURE MinDecreaseNumLayers* (minLayers : LONGINT);
+			PROCEDURE MinDecreaseNumLayers* (minLayers : SIGNED32);
 				VAR
-					maxlayer, maxEndLayer, curStartLayer, curEndLayer : LONGINT;
+					maxlayer, maxEndLayer, curStartLayer, curEndLayer : SIGNED32;
 				BEGIN
 					IF ready THEN
 						IF ~deliveredOnce THEN
@@ -6189,9 +6189,9 @@ MODULE JPEG2000Decoder;
 				that this procedure uses the current state of knowledge, meaning that a subsequent
 				tile could have too few layers. In that case all layers for that tile will be decoded.
 			*)
-			PROCEDURE DecreaseNumLayers* (layers : LONGINT);
+			PROCEDURE DecreaseNumLayers* (layers : SIGNED32);
 				VAR
-					maxlayer, dec : LONGINT;
+					maxlayer, dec : SIGNED32;
 				BEGIN
 					IF ready THEN
 						maxlayer := decSpec.GetMinNumLayers() - 1;
@@ -6227,9 +6227,9 @@ MODULE JPEG2000Decoder;
 				to render the image (NOTE: The return value gives the maximum
 				number of layers used; it's possible that some tiles have fewer layers).
 			*)
-			PROCEDURE GetCurrentNumLayers* () : LONGINT;
+			PROCEDURE GetCurrentNumLayers* () : SIGNED32;
 				VAR
-					minNumLayers, curNumLayers, maxLayer, dummy : LONGINT;
+					minNumLayers, curNumLayers, maxLayer, dummy : SIGNED32;
 				BEGIN
 					IF ready THEN
 						invMCT.GetLayerRange(dummy, maxLayer);
@@ -6247,7 +6247,7 @@ MODULE JPEG2000Decoder;
 			END GetCurrentNumLayers;
 
 
-			PROCEDURE GetNumTiles* () : LONGINT;
+			PROCEDURE GetNumTiles* () : SIGNED32;
 				VAR
 					imgInfo : J2KCS.ImageInfo;
 				BEGIN
@@ -6259,7 +6259,7 @@ MODULE JPEG2000Decoder;
 					END;
 			END GetNumTiles;
 
-			PROCEDURE GetNumComponents* () : LONGINT;
+			PROCEDURE GetNumComponents* () : SIGNED32;
 				VAR
 					imgInfo : J2KCS.ImageInfo;
 				BEGIN
@@ -6275,10 +6275,10 @@ MODULE JPEG2000Decoder;
 				Gets image width & height at a given decomposition level.
 				-1 for width & height, if there decoder is not ready yet or an error occured
 			*)
-			PROCEDURE GetImageSize* (declevel : LONGINT; VAR width, height : LONGINT);
+			PROCEDURE GetImageSize* (declevel : SIGNED32; VAR width, height : SIGNED32);
 				VAR
 					imgInfo : J2KCS.ImageInfo;
-					minDec : LONGINT;
+					minDec : SIGNED32;
 				BEGIN
 					IF ready THEN
 						imgInfo := decSpec.GetImageInfo();
@@ -6299,7 +6299,7 @@ MODULE JPEG2000Decoder;
 				Gets the image format (-> see Codecs).
 				-1 if there decoder is not ready yet or an error occured
 			*)
-			PROCEDURE GetImageFormat* () : LONGINT;
+			PROCEDURE GetImageFormat* () : SIGNED32;
 				BEGIN
 					IF ready THEN
 						RETURN imgProd.GetImgFormat();
@@ -6312,7 +6312,7 @@ MODULE JPEG2000Decoder;
 				Gets tile horizontal/vertical offset, tile width & height at a given tile and decomposition level.
 				-1 for toffx, toffy, width, height, if there decoder is not ready yet or an error occured
 			*)
-			PROCEDURE GetTileSize* (tile, declevel : LONGINT; VAR toffx, toffy, twidth, theight : LONGINT);
+			PROCEDURE GetTileSize* (tile, declevel : SIGNED32; VAR toffx, toffy, twidth, theight : SIGNED32);
 				VAR
 					imgInfo : J2KCS.ImageInfo;
 				BEGIN
@@ -6348,7 +6348,7 @@ MODULE JPEG2000Decoder;
 		(* Tables used to determine the proper context depending on the neighbor states *)
 		ENTROPY_ZEROLL_LUT, ENTROPY_ZEROHL_LUT, ENTROPY_ZEROHH_LUT : J2KU.LongIntArrayPtr;
 		(* Table used in sign decoding process *)
-		ENTROPY_SIGN_LUT : ARRAY LSH(LONGINT( 1), ENTROPY_SIGN_BITS) OF LONGINT;
+		ENTROPY_SIGN_LUT : ARRAY LSH(SIGNED32( 1), ENTROPY_SIGN_BITS) OF SIGNED32;
 
 		(* --- END Variables used by entropy decoder --- *)
 
@@ -6358,7 +6358,7 @@ MODULE JPEG2000Decoder;
 		(* --- Variables used by MQ-Decoder --- *)
 
 		(* "Table" used by the MQ coder to look up probability estimations (2nd dim. index 0), nmps (2nd dim. index 1), nlps (2nd dim. index 2) and switch values (2nd dim. index 3) *)
-		MQPROB, MQNMPS, MQNLPS, MQSWITCH : ARRAY MQTABSIZ OF LONGINT;
+		MQPROB, MQNMPS, MQNLPS, MQSWITCH : ARRAY MQTABSIZ OF SIGNED32;
 
 		(* --- END Variables used by MQ-Decoder --- *)
 
@@ -6366,13 +6366,13 @@ MODULE JPEG2000Decoder;
 	(* Initializes the lookup tables used in the MQ and Entropy Coder units *)
 	PROCEDURE InitEntropyTables;
 		VAR
-			i, j : LONGINT;
-			twoAtLeast : ARRAY 11 OF LONGINT;	(* All 4 bit values with at least 2 bits = 1 *)
-			threeAtLeast : ARRAY 5 OF LONGINT;	(* All 4 bit values with at least 3 bits = 1 *)
-			twoBits : ARRAY 6 OF LONGINT;			(* All 4 bit values with 2 bits = 1 *)
-			oneBit : ARRAY 4 OF LONGINT;			(* All 4 bit values with 1 bit = 1 *)
-			h, v, hl, hr, vu, vd, hlsig, hrsig, vusig, vdsig : LONGINT;
-			tmpSignLut : ARRAY 16 OF LONGINT;
+			i, j : SIGNED32;
+			twoAtLeast : ARRAY 11 OF SIGNED32;	(* All 4 bit values with at least 2 bits = 1 *)
+			threeAtLeast : ARRAY 5 OF SIGNED32;	(* All 4 bit values with at least 3 bits = 1 *)
+			twoBits : ARRAY 6 OF SIGNED32;			(* All 4 bit values with 2 bits = 1 *)
+			oneBit : ARRAY 4 OF SIGNED32;			(* All 4 bit values with 1 bit = 1 *)
+			h, v, hl, hr, vu, vd, hlsig, hrsig, vusig, vdsig : SIGNED32;
+			tmpSignLut : ARRAY 16 OF SIGNED32;
 		BEGIN
 
 		(* Fill up the lookup table needed for significance propagation and cleanup pass for code-blocks in the LL/LH subband *)
@@ -6411,28 +6411,28 @@ MODULE JPEG2000Decoder;
 		(* The context vector contains the significance of each neighbor of a coefficient in the follwing order: *)
 		(* HL - HR - VU - VD - DUL - DUR - DDL - DDR *)
 
-		NEW(ENTROPY_ZEROLL_LUT, LSH(LONGINT( 1), ENTROPY_ZERO_BITS));
-		NEW(ENTROPY_ZEROHL_LUT, LSH(LONGINT( 1), ENTROPY_ZERO_BITS));
-		NEW(ENTROPY_ZEROHH_LUT, LSH(LONGINT( 1), ENTROPY_ZERO_BITS));
+		NEW(ENTROPY_ZEROLL_LUT, LSH(SIGNED32( 1), ENTROPY_ZERO_BITS));
+		NEW(ENTROPY_ZEROHL_LUT, LSH(SIGNED32( 1), ENTROPY_ZERO_BITS));
+		NEW(ENTROPY_ZEROHH_LUT, LSH(SIGNED32( 1), ENTROPY_ZERO_BITS));
 
 		(* LL / LH subband *)
 		(* 2 horizontal significant *)
 		FOR i := 0 TO 63 DO
-			ENTROPY_ZEROLL_LUT[LONGINT( (SET( ENTROPY_SIGHL) +  SET( ENTROPY_SIGHR)) + SET( i))] := 8;
+			ENTROPY_ZEROLL_LUT[SIGNED32( (SET( ENTROPY_SIGHL) +  SET( ENTROPY_SIGHR)) + SET( i))] := 8;
 		END;
 
 		(* 1 horizontal significant, at least 1 vertical significant *)
 		FOR i := 1 TO 3 DO
 			FOR j := 0 TO 15 DO
-				ENTROPY_ZEROLL_LUT[LONGINT( (SET( ENTROPY_SIGHL) + SET( LSH(i, 4))) + SET( j))] := 7;
-				ENTROPY_ZEROLL_LUT[LONGINT( (SET( ENTROPY_SIGHR) + SET( LSH(i, 4))) + SET( j))] := 7
+				ENTROPY_ZEROLL_LUT[SIGNED32( (SET( ENTROPY_SIGHL) + SET( LSH(i, 4))) + SET( j))] := 7;
+				ENTROPY_ZEROLL_LUT[SIGNED32( (SET( ENTROPY_SIGHR) + SET( LSH(i, 4))) + SET( j))] := 7
 			END;
 		END;
 
 		(* 1 horizontal significant, 0 vertical significant, at least 1 diagonal significant *)
 		FOR i := 1 TO 15 DO
-			ENTROPY_ZEROLL_LUT[LONGINT( SET( ENTROPY_SIGHL) + SET( i))] := 6;
-			ENTROPY_ZEROLL_LUT[LONGINT( SET( ENTROPY_SIGHR) + SET( i))] := 6;
+			ENTROPY_ZEROLL_LUT[SIGNED32( SET( ENTROPY_SIGHL) + SET( i))] := 6;
+			ENTROPY_ZEROLL_LUT[SIGNED32( SET( ENTROPY_SIGHR) + SET( i))] := 6;
 		END;
 
 		(* 1 horizontal significant, 0 vertical significant, 0 diagonal significant *)
@@ -6441,13 +6441,13 @@ MODULE JPEG2000Decoder;
 
 		(* 0 horizontal significant, 2 vertical significant *)
 		FOR i := 0 TO 15 DO
-			ENTROPY_ZEROLL_LUT[LONGINT( (SET( ENTROPY_SIGVU) + SET( ENTROPY_SIGVD)) + SET( i))] := 4;
+			ENTROPY_ZEROLL_LUT[SIGNED32( (SET( ENTROPY_SIGVU) + SET( ENTROPY_SIGVD)) + SET( i))] := 4;
 		END;
 
 		(* 0 horizontal significant, 1 vertical significant *)
 		FOR i := 0 TO 15 DO
-			ENTROPY_ZEROLL_LUT[LONGINT( SET( ENTROPY_SIGVU) + SET( i))] := 3;
-			ENTROPY_ZEROLL_LUT[LONGINT( SET( ENTROPY_SIGVD) + SET( i))] := 3;
+			ENTROPY_ZEROLL_LUT[SIGNED32( SET( ENTROPY_SIGVU) + SET( i))] := 3;
+			ENTROPY_ZEROLL_LUT[SIGNED32( SET( ENTROPY_SIGVD) + SET( i))] := 3;
 		END;
 
 		(* 0 horizontal significant, 0 vertical significant, at least 2 diagonal significant *)
@@ -6469,22 +6469,22 @@ MODULE JPEG2000Decoder;
 		(* 2 vertical significant *)
 		FOR i := 0 TO 3 DO
 			FOR j := 0 TO 15 DO
-				ENTROPY_ZEROHL_LUT[LONGINT( (SET( ENTROPY_SIGVU) +  SET( ENTROPY_SIGVD)) + SET( LSH(i, 6) ) + SET( j))] := 8;
+				ENTROPY_ZEROHL_LUT[SIGNED32( (SET( ENTROPY_SIGVU) +  SET( ENTROPY_SIGVD)) + SET( LSH(i, 6) ) + SET( j))] := 8;
 			END;
 		END;
 
 		(* 1 vertical significant, at least 1 horizontal significant *)
 		FOR i := 1 TO 3 DO
 			FOR j := 0 TO 15 DO
-				ENTROPY_ZEROHL_LUT[LONGINT( (SET( ENTROPY_SIGVU) + SET( LSH(i, 6))) + SET( j))] := 7;
-				ENTROPY_ZEROHL_LUT[LONGINT( (SET( ENTROPY_SIGVD) + SET( LSH(i, 6))) + SET( j))] := 7
+				ENTROPY_ZEROHL_LUT[SIGNED32( (SET( ENTROPY_SIGVU) + SET( LSH(i, 6))) + SET( j))] := 7;
+				ENTROPY_ZEROHL_LUT[SIGNED32( (SET( ENTROPY_SIGVD) + SET( LSH(i, 6))) + SET( j))] := 7
 			END;
 		END;
 
 		(* 1 vertical significant, 0 horizontal significant, at least 1 diagonal significant *)
 		FOR i := 1 TO 15 DO
-			ENTROPY_ZEROHL_LUT[LONGINT( SET( ENTROPY_SIGVU) + SET( i))] := 6;
-			ENTROPY_ZEROHL_LUT[LONGINT( SET( ENTROPY_SIGVD) + SET( i))] := 6;
+			ENTROPY_ZEROHL_LUT[SIGNED32( SET( ENTROPY_SIGVU) + SET( i))] := 6;
+			ENTROPY_ZEROHL_LUT[SIGNED32( SET( ENTROPY_SIGVD) + SET( i))] := 6;
 		END;
 
 		(* 1 vertical significant, 0 horizontal significant, 0 diagonal significant *)
@@ -6493,13 +6493,13 @@ MODULE JPEG2000Decoder;
 
 		(* 0 vertical significant, 2 horizontal significant *)
 		FOR i := 0 TO 15 DO
-			ENTROPY_ZEROHL_LUT[LONGINT( (SET( ENTROPY_SIGHL) + SET( ENTROPY_SIGHR)) + SET( i))] := 4;
+			ENTROPY_ZEROHL_LUT[SIGNED32( (SET( ENTROPY_SIGHL) + SET( ENTROPY_SIGHR)) + SET( i))] := 4;
 		END;
 
 		(* 0 vertical significant, 1 horizontal significant *)
 		FOR i := 0 TO 15 DO
-			ENTROPY_ZEROHL_LUT[LONGINT( SET( ENTROPY_SIGHL) + SET( i))] := 3;
-			ENTROPY_ZEROHL_LUT[LONGINT( SET( ENTROPY_SIGHR) + SET( i))] := 3;
+			ENTROPY_ZEROHL_LUT[SIGNED32( SET( ENTROPY_SIGHL) + SET( i))] := 3;
+			ENTROPY_ZEROHL_LUT[SIGNED32( SET( ENTROPY_SIGHR) + SET( i))] := 3;
 		END;
 
 		(* 0 horizontal significant, 0 vertical significant, at least 2 diagonal significant *)
@@ -6521,14 +6521,14 @@ MODULE JPEG2000Decoder;
 		(* At least 3 diagonal significant *)
 		FOR i := 0 TO 15 DO
 			FOR j := 0 TO LEN(threeAtLeast) - 1 DO
-				ENTROPY_ZEROHH_LUT[LONGINT( SET( LSH(i, 4)) + SET( threeAtLeast[j]))] := 8;
+				ENTROPY_ZEROHH_LUT[SIGNED32( SET( LSH(i, 4)) + SET( threeAtLeast[j]))] := 8;
 			END;
 		END;
 
 		(* 2 diagonal significant, at least 1 horizontal or vertical significant *)
 		FOR i := 1 TO 15 DO
 			FOR j := 0 TO LEN(twoBits) - 1 DO
-				ENTROPY_ZEROHH_LUT[LONGINT( SET( LSH(i, 4)) + SET( twoBits[j]))] := 7;
+				ENTROPY_ZEROHH_LUT[SIGNED32( SET( LSH(i, 4)) + SET( twoBits[j]))] := 7;
 			END;
 		END;
 
@@ -6540,14 +6540,14 @@ MODULE JPEG2000Decoder;
 		(* 1 diagonal significant, at least 2 horizontal or vertical significant *)
 		FOR i := 0 TO LEN(twoAtLeast) - 1 DO
 			FOR j := 0 TO LEN(oneBit) - 1 DO
-				ENTROPY_ZEROHH_LUT[LONGINT( SET( LSH(twoAtLeast[i], 4)) + SET( oneBit[j]))] := 5;
+				ENTROPY_ZEROHH_LUT[SIGNED32( SET( LSH(twoAtLeast[i], 4)) + SET( oneBit[j]))] := 5;
 			END;
 		END;
 
 		(* 1 diagonal significant, 1 horizontal or vertical significant *)
 		FOR i := 0 TO LEN(oneBit) - 1 DO
 			FOR j := 0 TO LEN(oneBit) - 1 DO
-				ENTROPY_ZEROHH_LUT[LONGINT( SET( LSH(oneBit[i], 4)) + SET( oneBit[j]))] := 4;
+				ENTROPY_ZEROHH_LUT[SIGNED32( SET( LSH(oneBit[i], 4)) + SET( oneBit[j]))] := 4;
 			END;
 		END;
 
@@ -6581,33 +6581,33 @@ MODULE JPEG2000Decoder;
 		*)
 
 		(* Horizontal contrib. 1, vertical contrib. 1 *)
-		tmpSignLut[LONGINT( SET( LSH(2, 2)) + SET( 2))] := 13;
+		tmpSignLut[SIGNED32( SET( LSH(2, 2)) + SET( 2))] := 13;
 		(* Horizontal contrib. 1, vertical contrib. 0 *)
-		tmpSignLut[LONGINT( SET( LSH(2, 2)) + SET( 1))] := 12;
+		tmpSignLut[SIGNED32( SET( LSH(2, 2)) + SET( 1))] := 12;
 		(* Horizontal contrib. 1, vertical contrib. -1 *)
-		tmpSignLut[LONGINT( SET( LSH(2, 2)) + SET( 0))] := 11;
+		tmpSignLut[SIGNED32( SET( LSH(2, 2)) + SET( 0))] := 11;
 		(* Horizontal contrib. 0, vertical contrib. 1 *)
-		tmpSignLut[LONGINT( SET( LSH(1, 2)) + SET( 2))] := 10;
+		tmpSignLut[SIGNED32( SET( LSH(1, 2)) + SET( 2))] := 10;
 		(* Horizontal contrib. 0, vertical contrib. 0 *)
-		tmpSignLut[LONGINT( SET( LSH(1, 2)) + SET( 1))] := 9;
+		tmpSignLut[SIGNED32( SET( LSH(1, 2)) + SET( 1))] := 9;
 		(* Horizontal contrib. 0, vertical contrib. -1 *)
-		tmpSignLut[LONGINT( SET( LSH(1, 2)) + SET( 0))] := LONGINT( SET( LONGINT( 10)) + J2KU.LONGINT_SIGN_BIT);
+		tmpSignLut[SIGNED32( SET( LSH(1, 2)) + SET( 0))] := SIGNED32( SET( SIGNED32( 10)) + J2KU.LONGINT_SIGN_BIT);
 		(* Horizontal contrib. -1, vertical contrib. 1 *)
-		tmpSignLut[LONGINT( SET( LSH(0, 2)) + SET( 2))] := LONGINT( SET( LONGINT( 11)) + J2KU.LONGINT_SIGN_BIT);
+		tmpSignLut[SIGNED32( SET( LSH(0, 2)) + SET( 2))] := SIGNED32( SET( SIGNED32( 11)) + J2KU.LONGINT_SIGN_BIT);
 		(* Horizontal contrib. -1, vertical contrib. 0 *)
-		tmpSignLut[LONGINT( SET( LSH(0, 2)) + SET( 1))] := LONGINT( SET( LONGINT( 12)) + J2KU.LONGINT_SIGN_BIT);
+		tmpSignLut[SIGNED32( SET( LSH(0, 2)) + SET( 1))] := SIGNED32( SET( SIGNED32( 12)) + J2KU.LONGINT_SIGN_BIT);
 		(* Horizontal contrib. -1, vertical contrib. -1 *)
-		tmpSignLut[LONGINT( SET( LSH(0, 2)) + SET( 0))] := LONGINT( SET( LONGINT( 13)) + J2KU.LONGINT_SIGN_BIT);
+		tmpSignLut[SIGNED32( SET( LSH(0, 2)) + SET( 0))] := SIGNED32( SET( SIGNED32( 13)) + J2KU.LONGINT_SIGN_BIT);
 
-		FOR i := 0 TO LSH(LONGINT( 1), ENTROPY_SIGN_BITS) - 1 DO
-			hlsig := LONGINT( SET( LSH(i, -7)) * SET( LONGINT( 1)));
-			hrsig := LONGINT( SET( LSH(i, -6)) * SET( LONGINT( 1)));
-			vusig := LONGINT( SET( LSH(i, -5)) * SET( LONGINT( 1)));
-			vdsig := LONGINT( SET( LSH(i, -4)) * SET( LONGINT( 1)));
-			hl := LONGINT( SET( LSH(i, -3)) * SET( LONGINT( 1)));
-			hr := LONGINT( SET( LSH(i, -2)) * SET( LONGINT( 1)));
-			vu := LONGINT( SET( LSH(i, -1)) * SET( LONGINT( 1)));
-			vd := LONGINT( SET( i) * SET( LONGINT( 1)));
+		FOR i := 0 TO LSH(SIGNED32( 1), ENTROPY_SIGN_BITS) - 1 DO
+			hlsig := SIGNED32( SET( LSH(i, -7)) * SET( SIGNED32( 1)));
+			hrsig := SIGNED32( SET( LSH(i, -6)) * SET( SIGNED32( 1)));
+			vusig := SIGNED32( SET( LSH(i, -5)) * SET( SIGNED32( 1)));
+			vdsig := SIGNED32( SET( LSH(i, -4)) * SET( SIGNED32( 1)));
+			hl := SIGNED32( SET( LSH(i, -3)) * SET( SIGNED32( 1)));
+			hr := SIGNED32( SET( LSH(i, -2)) * SET( SIGNED32( 1)));
+			vu := SIGNED32( SET( LSH(i, -1)) * SET( SIGNED32( 1)));
+			vd := SIGNED32( SET( i) * SET( SIGNED32( 1)));
 
 			h := hl * (1 - 2 * hlsig) + hr * (1 - 2 * hrsig);
 			v := vu * (1 - 2 * vusig) + vd * (1 - 2 * vdsig);
@@ -6617,7 +6617,7 @@ MODULE JPEG2000Decoder;
 			IF v > 1 THEN v := 1; END;
 			IF v < -1 THEN v := -1 END;
 
-			ENTROPY_SIGN_LUT[i] := tmpSignLut[LONGINT( SET( LSH(h+1, 2)) + SET( v+1))]
+			ENTROPY_SIGN_LUT[i] := tmpSignLut[SIGNED32( SET( LSH(h+1, 2)) + SET( v+1))]
 		END;
 
 		(* Initialize the initial states and MPS symbols for each context. These arrays will be passed on to the MQ-Decoder *)
@@ -6708,9 +6708,9 @@ MODULE JPEG2000Decoder;
 	(**
 		Computes the bit-depth of each component before inverse MCT is performed
 	*)
-	PROCEDURE ComputeUntransformedBitDepths (VAR utdepth, tdepth : ARRAY OF LONGINT; ttype : LONGINT ) : BOOLEAN;
+	PROCEDURE ComputeUntransformedBitDepths (VAR utdepth, tdepth : ARRAY OF SIGNED32; ttype : SIGNED32 ) : BOOLEAN;
 		VAR
-			pow2ut0, pow2ut1, pow2ut2 : LONGINT;
+			pow2ut0, pow2ut1, pow2ut2 : SIGNED32;
 		BEGIN
 			ASSERT(LEN(utdepth) >= LEN(tdepth));
 			(*
@@ -6729,7 +6729,7 @@ MODULE JPEG2000Decoder;
 			CASE ttype OF
 					MCT_NONE :
 						(* The bit depths of the transformed and un-transformed components are equal *)
-						SYSTEM.MOVE(ADDRESSOF(utdepth[0]), ADDRESSOF(tdepth[0]), LEN(utdepth)*SIZEOF(LONGINT));
+						SYSTEM.MOVE(ADDRESSOF(utdepth[0]), ADDRESSOF(tdepth[0]), LEN(utdepth)*SIZEOF(SIGNED32));
 				|	MCT_RCT :
 						(*
 							The formulas are:
@@ -6741,18 +6741,18 @@ MODULE JPEG2000Decoder;
 							which calculates ceil(log2(x)), for any x >= 1, x integer
 						*)
 						(* Precalculate the 2^utdepth[x] *)
-						pow2ut0 := LSH(LONGINT( 1), utdepth[0]);
-						pow2ut1 := LSH(LONGINT( 1), utdepth[1]);
-						pow2ut2 := LSH(LONGINT( 1), utdepth[2]);
+						pow2ut0 := LSH(SIGNED32( 1), utdepth[0]);
+						pow2ut1 := LSH(SIGNED32( 1), utdepth[1]);
+						pow2ut2 := LSH(SIGNED32( 1), utdepth[2]);
 
 						tdepth[0] := J2KU.Log2Floor(pow2ut0 + 2*pow2ut1 + pow2ut2 - 1) - 1;
 						tdepth[1] := J2KU.Log2Floor(pow2ut2 + pow2ut1 - 1) + 1;
 						tdepth[2] := J2KU.Log2Floor(pow2ut0 + pow2ut1 - 1) + 1;
 				|	MCT_ICT :
 						(* Precalculate the 2^utdepth[x] *)
-						pow2ut0 := LSH(LONGINT( 1), utdepth[0]);
-						pow2ut1 := LSH(LONGINT( 1), utdepth[1]);
-						pow2ut2 := LSH(LONGINT( 1), utdepth[2]);
+						pow2ut0 := LSH(SIGNED32( 1), utdepth[0]);
+						pow2ut1 := LSH(SIGNED32( 1), utdepth[1]);
+						pow2ut2 := LSH(SIGNED32( 1), utdepth[2]);
 
 						tdepth[0] := J2KU.Log2Floor(ENTIER(pow2ut0*0.299072
 														+ pow2ut1*0.586914
@@ -6911,25 +6911,25 @@ MODULE JPEG2000Decoder;
 			decOpt : J2KU.DecoderOptions;
 			decoder : Decoder;
 			imgConsumerArr : ARRAY 2 OF ImageConsumer;
-			nconsumer : LONGINT;
+			nconsumer : SIGNED32;
 			rasterImgAdapt : RasterImageAdapter;
-			imgWidth, imgHeight, maxProg, format : LONGINT;
+			imgWidth, imgHeight, maxProg, format : SIGNED32;
 			(* --- Variables used in option parsing --- *)
 			view : BOOLEAN;
 			decResStr : ARRAY 3 OF CHAR;
 			decLayStr : ARRAY 6 OF CHAR;
-			decRes : LONGINT;
-			decLay : LONGINT;
+			decRes : SIGNED32;
+			decLay : SIGNED32;
 			bmpFormatStr : ARRAY 3 OF CHAR;
 			bmpFileName : ARRAY 128 OF CHAR;
-			bmpFormat : LONGINT;
+			bmpFormat : SIGNED32;
 			bmpRasterFormat : Raster.Format;
 			bmpOut : BOOLEAN;
 			bmpImg : Raster.Image;
 			bmpTransPar : Raster.PictureTransferParameters;
 			bmpStoreRet : ANY;
 			opt : ARRAY 255 OF CHAR;
-			res : WORD;
+			res : INTEGER;
 			(* --- END Variables used in option parsing --- *)
 		BEGIN
 			noFile := TRUE;

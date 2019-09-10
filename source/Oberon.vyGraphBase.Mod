@@ -44,7 +44,7 @@ CONST
 	xcorrection* = 1;     ycorrection* = 1;      (* for correction of orientation ,  fof 980427 for consistency with O/F , ycoor = -1 O/F *)
 	maxNumPoints = 100;
 
-	NAN = MAX(INTEGER);
+	NAN = MAX(SIGNED16);
 
 TYPE
 	doubleBuffer *= vyGraphBase0.doubleBuffer;
@@ -54,25 +54,25 @@ TYPE
 
 	tPalette* = POINTER TO tPaletteDesc;
 	tPaletteDesc = RECORD
-		red, green, blue: ARRAY 256 OF INTEGER
+		red, green, blue: ARRAY 256 OF SIGNED16
 	END;
 
 	Style* = RECORD
 		fcol*, bcol*: Display.Color   ;   (*! fof: fcol read only ?*)
-		mode*: INTEGER;     (** Display paint mode **)(*! fof: mode read only  ?*)
+		mode*: SIGNED16;     (** Display paint mode **)(*! fof: mode read only  ?*)
 		style*: SET;     (** Display styles **)(*! fof:  read only ? *)
-		pattern*: LONGINT;     (** Display Patterns **)(*! fof:  read only ? *)
-		pensize* : INTEGER;   (*! fof:  read only *)
+		pattern*: SIGNED32;     (** Display Patterns **)(*! fof:  read only ? *)
+		pensize* : SIGNED16;   (*! fof:  read only *)
 		fnt*: ARRAY 64 OF CHAR;
 		fillcol*, selectcol*: Display.Color;
-		fillpat*, selectpat*: LONGINT;
-		alpha*: INTEGER
+		fillpat*, selectpat*: SIGNED32;
+		alpha*: SIGNED16
 	END;
 
 	CursorMarker* = Oberon.Marker;
 
 	Real* = vyBase.Real;
-	Coordinate* = INTEGER;    	(*= type used for output coordinates *)
+	Coordinate* = SIGNED16;    	(*= type used for output coordinates *)
 	Color* = Display.Color;
 
 	(** 2d: Declarations for real valued 2d graphics *)
@@ -85,17 +85,17 @@ TYPE
 
 	tCoordinate2d* = POINTER TO tCoordinate2dDesc;
 	tCoordinate2dDesc  = RECORD
-		x0 , y0    : INTEGER;  			(* internal coordinate shift due to double buffering effects, do not remove *)
-		x  , y  , w  , h  : INTEGER;    			(* screen region *)(*? duplicated in Gadget??*)(*x=x0,y=y0 if no double buffer active or Displays.Display used as double buffer*)
+		x0 , y0    : SIGNED16;  			(* internal coordinate shift due to double buffering effects, do not remove *)
+		x  , y  , w  , h  : SIGNED16;    			(* screen region *)(*? duplicated in Gadget??*)(*x=x0,y=y0 if no double buffer active or Displays.Display used as double buffer*)
 		x2d  , y2d  , w2d  , h2d : Real;    	(* real world region *)
 		xFact  , yFact  : Real;
-		(* x02d  , y02d  : INTEGER; *)
+		(* x02d  , y02d  : SIGNED16; *)
 		zoomCache  : tRegion2d
 	END;
 	tPolygon = ARRAY maxNumPoints OF Coordinate;
 
 VAR
-	DisplayHeight*, DisplayWidth*: INTEGER;
+	DisplayHeight*, DisplayWidth*: SIGNED16;
 	UseDoubleBuffering*: BOOLEAN;
 	theCoordinate, screenCoordinate  : tCoordinate2d;
 
@@ -110,29 +110,29 @@ VAR
 	white-, dgrey-, mgrey-, lgrey-, black-, green-, red-, blue-, yellow-: Display.Color;
 	cyan-, 	dkred-, 	dkgreen-, 	dkblue-, 	orange-, 	skyblue-, 	dkcyan-: Display.Color;
 
-	bottomC*: INTEGER;     	(** Bottom shadow color. *)
+	bottomC*: SIGNED16;     	(** Bottom shadow color. *)
 
-	textC*: INTEGER;     	(** Default text color. *)
-	textbackC*: INTEGER;     	(** Default text background. *)
+	textC*: SIGNED16;     	(** Default text color. *)
+	textbackC*: SIGNED16;     	(** Default text background. *)
 
 	(* tmp variables for picture enumerator *)
 
 	S-: Style;   (* current style *)
 	defaultStyle*: Style;
 
-	pen : RECORD x, y : INTEGER END;     	(* pen position in the coordinate *)
+	pen : RECORD x, y : SIGNED16 END;     	(* pen position in the coordinate *)
 	clipping- : BOOLEAN;
-	status : INTEGER;
+	status : SIGNED16;
 	(* the print origin (given from TextPrinter.PrintMsg) of the PortElem *)
 	stdFnt: ARRAY 32 OF CHAR;
 	(* string justification *)
-	vStringJustification-, hStringJustification-: INTEGER;
-	vPatJustification-, hPatJustification-: INTEGER;
+	vStringJustification-, hStringJustification-: SIGNED16;
+	vPatJustification-, hPatJustification-: SIGNED16;
 	theCursor: CursorMarker;
 	Crosshair*, Wheel*, DefPoint*: CursorMarker;
 	wheel, defPoint: Display.Pattern;
-	Display2Local*, Local2Display*: PROCEDURE (VAR x, y: INTEGER);
-	dbx, dby: INTEGER;
+	Display2Local*, Local2Display*: PROCEDURE (VAR x, y: SIGNED16);
+	dbx, dby: SIGNED16;
 
 	(* use Display2Local, Local2Display when drawing to screen *)
 	(* use Global2Local, Local2Global when getting Mouse coordinates etc.  *)
@@ -171,7 +171,7 @@ BEGIN
 END SetNonClippingRoutines;
 
 (*** printing *)
-PROCEDURE OpenPrinter* (x, y, px, py: INTEGER);
+PROCEDURE OpenPrinter* (x, y, px, py: SIGNED16);
 BEGIN
 	Local2Global0(x, y);
 	vyGraphBase0.OpenPrinter(x, y, px, py);
@@ -196,15 +196,15 @@ BEGIN vyGraphBase0.clipMask := mask   END UseClipMask;
 PROCEDURE GetMask* (): Display3.Mask;
 BEGIN RETURN vyGraphBase0.clipMask END GetMask;
 
-PROCEDURE GetClipRect* (VAR x, y, w, h: INTEGER);
+PROCEDURE GetClipRect* (VAR x, y, w, h: SIGNED16);
 BEGIN
 	x := vyGraphBase0.clipMask.X;     y := vyGraphBase0.clipMask.Y;     w := vyGraphBase0.clipMask.W;     h := vyGraphBase0.clipMask.H;
 	Global2Local0(x, y)
 END GetClipRect;
 
-PROCEDURE EmptyIntersection* (x, y, w, h, X, Y, W, H: INTEGER): BOOLEAN;
+PROCEDURE EmptyIntersection* (x, y, w, h, X, Y, W, H: SIGNED16): BOOLEAN;
 
-PROCEDURE GiveRegularRect (VAR x, y, w, h: INTEGER);
+PROCEDURE GiveRegularRect (VAR x, y, w, h: SIGNED16);
 BEGIN IF w < 0 THEN x := x + w;     w := - w END;
 	IF h < 0 THEN y := y + h;     h := - h END
 END GiveRegularRect;
@@ -213,7 +213,7 @@ BEGIN GiveRegularRect (x, y, w, h);     GiveRegularRect (X, Y, W, H);
 	RETURN (x > X + W) OR (X > x + w) OR (y > Y + H) OR (Y > y + h)
 END EmptyIntersection;
 
-PROCEDURE ClipCheck* (x, y, w, h: INTEGER): BOOLEAN;
+PROCEDURE ClipCheck* (x, y, w, h: SIGNED16): BOOLEAN;
 	VAR clipCheck : BOOLEAN;
 BEGIN
 	clipCheck := TRUE;
@@ -300,7 +300,7 @@ BEGIN
 END HandleStyleAttributes;
 
 PROCEDURE WriteStyle* (VAR R: Files.Rider;    VAR (* IN *)s: Style);
-PROCEDURE PatToId (pat: LONGINT): INTEGER;
+PROCEDURE PatToId (pat: SIGNED32): SIGNED16;
 BEGIN
 	IF pat = Display.solid THEN RETURN(1)
 	ELSIF pat = Display.grey0 THEN RETURN(2)
@@ -328,8 +328,8 @@ BEGIN
 	Files.WriteInt(R, s.alpha)
 END WriteStyle;
 PROCEDURE ReadStyle* (VAR R: Files.Rider;    VAR (* OUT *)s: Style);
-	VAR i: INTEGER;
-PROCEDURE IdToPat (id: INTEGER): Display.Pattern;
+	VAR i: SIGNED16;
+PROCEDURE IdToPat (id: SIGNED16): Display.Pattern;
 BEGIN
 	CASE id OF
 		0: RETURN Display.solid
@@ -372,47 +372,47 @@ PROCEDURE GetBackColor* (VAR col: Display.Color);
 BEGIN	col := InvertCorrectCol(S.bcol)   	END GetBackColor;
 PROCEDURE SetForeColor* (col: Display.Color);
 BEGIN	  S.fcol := CorrectCol(col);  vyGraphBase0.SetForeColor(col)   END SetForeColor;
-PROCEDURE SetFColRGBA* (r, g, b, a: INTEGER);
+PROCEDURE SetFColRGBA* (r, g, b, a: SIGNED16);
 BEGIN vyGraphBase0.SetFColRGBA(r, g, b, a);  S.fcol := vyGraphBase0.contextfcol  END SetFColRGBA;
-PROCEDURE SetBColRGBA* (r, g, b, a: INTEGER);
+PROCEDURE SetBColRGBA* (r, g, b, a: SIGNED16);
 BEGIN vyGraphBase0.SetBColRGBA(r, g, b, a);  S.fcol := vyGraphBase0.contextbcol  END SetBColRGBA;
-PROCEDURE GetFColRGBA* (VAR r, g, b, a: INTEGER);
+PROCEDURE GetFColRGBA* (VAR r, g, b, a: SIGNED16);
 BEGIN Images.GetRGBA(vyGraphBase0.contextfpix, r, g, b, a) END GetFColRGBA;
-PROCEDURE GetBColRGBA* (VAR r, g, b, a: INTEGER);
+PROCEDURE GetBColRGBA* (VAR r, g, b, a: SIGNED16);
 BEGIN Images.GetRGBA(vyGraphBase0.contextbpix, r, g, b, a) END GetBColRGBA;
 PROCEDURE GetForeColor* (VAR col: Display.Color);
 BEGIN	col := InvertCorrectCol(S.fcol) END GetForeColor;
-PROCEDURE SetPenSize* (size : INTEGER);     (*! remove penSize !! *)
+PROCEDURE SetPenSize* (size : SIGNED16);     (*! remove penSize !! *)
 BEGIN	S.pensize := size  ;  vyGraphBase0.SetPenSize(size)	END SetPenSize;
-PROCEDURE GetPenSize* (VAR size : INTEGER);
+PROCEDURE GetPenSize* (VAR size : SIGNED16);
 BEGIN	size := S.pensize  	END GetPenSize;
-PROCEDURE SetDisplayMode* (m: INTEGER);
+PROCEDURE SetDisplayMode* (m: SIGNED16);
 BEGIN	S.mode := m  ;  vyGraphBase0.SetDisplayMode(m)	END SetDisplayMode;
-PROCEDURE GetDisplayMode* (VAR m: INTEGER);
+PROCEDURE GetDisplayMode* (VAR m: SIGNED16);
 BEGIN	m := S.mode  	END GetDisplayMode;
 PROCEDURE SetDisplayStyle* (s: SET);
 BEGIN	S.style := s   ;  vyGraphBase0.SetDisplayStyle(s) 	END SetDisplayStyle;
 PROCEDURE GetDisplayStyle* (VAR s: SET);
 BEGIN	s := S.style  	END GetDisplayStyle;
-PROCEDURE SetDisplayPattern* (p: LONGINT);
+PROCEDURE SetDisplayPattern* (p: SIGNED32);
 BEGIN	S.pattern := p  ;  vyGraphBase0.SetDisplayPattern(p)	END SetDisplayPattern;
-PROCEDURE GetDisplayPattern* (VAR p: LONGINT);
+PROCEDURE GetDisplayPattern* (VAR p: SIGNED32);
 BEGIN	p := S.pattern  	END GetDisplayPattern;
 PROCEDURE SetFont* (fnt: ARRAY OF CHAR);
 BEGIN	COPY(fnt, S.fnt)  ;  vyGraphBase0.SetFont(fnt)	END SetFont;
-PROCEDURE SetAlpha* (a: INTEGER);
+PROCEDURE SetAlpha* (a: SIGNED16);
 BEGIN	vyGraphBase0.SetAlpha(a)	END SetAlpha;
 
 
 (*
-PROCEDURE FillPattern* ( col:  Display.Color;    pat: Display.Pattern;    pX, pY, X, Y, W, H, mode: INTEGER);
+PROCEDURE FillPattern* ( col:  Display.Color;    pat: Display.Pattern;    pX, pY, X, Y, W, H, mode: SIGNED16);
 BEGIN Display3.FillPattern(vyGraphBase0.clipMask, col, pat, pX, pY, X, Y, W, H, mode)
 END FillPattern;
 (*! fof 010123: FillPattern never used in Voyager and ants, removed *)
 (* das führt zu Missverständnissen: FillPattern arbeitet nur auf Display3, so nicht einsetzbar ! *)
 *)
 
-PROCEDURE MoveTo* (x, y: INTEGER);
+PROCEDURE MoveTo* (x, y: SIGNED16);
 BEGIN pen.x := x;     pen.y := y END MoveTo;
 
 PROCEDURE MoveTo2d* (x2d, y2d: Real);
@@ -421,7 +421,7 @@ BEGIN
 	Point2dToPoint (x2d, y2d, x, y);    MoveTo (x, y)
 END MoveTo2d;
 
-PROCEDURE Line* (x0, y0, x1, y1: INTEGER);
+PROCEDURE Line* (x0, y0, x1, y1: SIGNED16);
 BEGIN
 	pen.x := x1;     pen.y := y1;   Local2Global0(x0, y0);   Local2Global0(x1, y1);
 	(* if line is straight, replace by ReplConst, much faster *)
@@ -436,7 +436,7 @@ BEGIN
 	Line (x0, y0, x1, y1)
 END Line2d;
 
-PROCEDURE LineTo* (x, y: INTEGER);
+PROCEDURE LineTo* (x, y: SIGNED16);
 BEGIN Line (pen.x, pen.y, x, y);     pen.x := x;     pen.y := y END LineTo;
 
 PROCEDURE LineTo2d* (x2d, y2d: Real);
@@ -445,13 +445,13 @@ BEGIN
 	Point2dToPoint (x2d, y2d, x, y);    LineTo (x, y)
 END LineTo2d;
 
-PROCEDURE GiveRegularRect (VAR x, y, w, h: INTEGER);
+PROCEDURE GiveRegularRect (VAR x, y, w, h: SIGNED16);
 BEGIN
 	IF w <= 0 THEN x := x + w;     w := - w END;
 	IF h <= 0 THEN y := y + h;     h := - h END
 END GiveRegularRect;
 
-PROCEDURE FrameRect* (x, y, w, h: INTEGER);
+PROCEDURE FrameRect* (x, y, w, h: SIGNED16);
 BEGIN Local2Global0(x, y);
 	GiveRegularRect(x, y, w, h);       vyGraphBase0.rect( x, y, w, h)
 END FrameRect;
@@ -462,12 +462,12 @@ BEGIN
 	Rect2dToRect (x2d, y2d, w2d, h2d, x, y, w, h);    FrameRect (x, y, w, h)
 END FrameRect2d;
 
-PROCEDURE ShadowRect* (x, y, w, h: INTEGER);
+PROCEDURE ShadowRect* (x, y, w, h: SIGNED16);
 BEGIN Local2Global0(x, y);
 	GiveRegularRect(x, y, w, h);      	vyGraphBase0.rect3d(x, y, w, h)
 END ShadowRect;
 
-PROCEDURE PaintRect* (x, y, w, h: INTEGER);
+PROCEDURE PaintRect* (x, y, w, h: SIGNED16);
 BEGIN  Local2Global0(x, y);
 	GiveRegularRect(x, y, w, h);       vyGraphBase0.paintrect( x, y, w, h)
 END PaintRect;
@@ -478,7 +478,7 @@ BEGIN
 	Rect2dToRect (x2d, y2d, w2d, h2d, x, y, w, h);    PaintRect (x, y, w, h)
 END PaintRect2d;
 
-PROCEDURE EraseRect* (x, y, w, h: INTEGER);
+PROCEDURE EraseRect* (x, y, w, h: SIGNED16);
 BEGIN
 	IF status = display THEN
 		Local2Global0(x, y);
@@ -495,7 +495,7 @@ BEGIN
 	Rect2dToRect (x2d, y2d, w2d, h2d, x, y, w, h);    EraseRect (x, y, w, h)
 END EraseRect2d;
 
-PROCEDURE InvertRect* (x, y, w, h: INTEGER);
+PROCEDURE InvertRect* (x, y, w, h: SIGNED16);
 BEGIN
 	IF status = display THEN  Local2Global0(x, y);
 		vyGraphBase0.SetDisplayMode(Display.invert);
@@ -512,7 +512,7 @@ BEGIN
 	Rect2dToRect (x2d, y2d, w2d, h2d, x, y, w, h);    InvertRect (x, y, w, h)
 END InvertRect2d;
 
-PROCEDURE FillRect* (x, y, w, h: INTEGER);
+PROCEDURE FillRect* (x, y, w, h: SIGNED16);
 BEGIN  Local2Global0(x, y);
 	GiveRegularRect(x, y, w, h);      	vyGraphBase0.paintrect(x, y, w, h)
 END FillRect;
@@ -523,33 +523,33 @@ BEGIN
 	Rect2dToRect (x2d, y2d, w2d, h2d, x, y, w, h);    FillRect (x, y, w, h)
 END FillRect2d;
 
-PROCEDURE ReplPict* (pict: Pictures.Picture;     px, py, x, y, w, h: INTEGER);
+PROCEDURE ReplPict* (pict: Pictures.Picture;     px, py, x, y, w, h: SIGNED16);
 BEGIN   Local2Global0(x, y);
 	vyGraphBase0.replPict(pict, px, py, x, y, w, h)
 END ReplPict;
 
-PROCEDURE Pict* (picture: Pictures.Picture;     x, y, w, h, dx, dy: INTEGER);
+PROCEDURE Pict* (picture: Pictures.Picture;     x, y, w, h, dx, dy: SIGNED16);
 BEGIN  Local2Global0(dx, dy);
 	vyGraphBase0.pict(picture, x, y, w, h, dx, dy)
 END Pict;
 
-PROCEDURE StretchedPict* (picture: Pictures.Picture;  x, y, w, h, dx, dy, dw, dh: INTEGER);
+PROCEDURE StretchedPict* (picture: Pictures.Picture;  x, y, w, h, dx, dy, dw, dh: SIGNED16);
 BEGIN
 	Local2Global0(dx, dy);
 	vyGraphBase0.stretchedpict(picture, x, y, w, h, dx, dy, dw, dh)
 END StretchedPict;
 
-PROCEDURE Pict2d* (picture: Pictures.Picture;     x, y, w, h: INTEGER;  dx, dy: Real);
+PROCEDURE Pict2d* (picture: Pictures.Picture;     x, y, w, h: SIGNED16;  dx, dy: Real);
 	VAR dxi, dyi: Coordinate;
 BEGIN   Point2dToPoint (dx, dy, dxi, dyi);
 	Pict(picture, x, y, w, h, dxi, dyi)
 END Pict2d;
 
-PROCEDURE StretchedPict2d* (picture: Pictures.Picture;     x, y, w, h: INTEGER;  dx, dy, dw, dh: Real);
+PROCEDURE StretchedPict2d* (picture: Pictures.Picture;     x, y, w, h: SIGNED16;  dx, dy, dw, dh: Real);
 	VAR dxi, dyi, dwi, dhi: Coordinate;
-	factx,facty,factw,facth: LONGREAL;
-	nx,ny,nw,nh: INTEGER;
-	ndx,ndy,ndw,ndh: LONGREAL;
+	factx,facty,factw,facth: FLOAT64;
+	nx,ny,nw,nh: SIGNED16;
+	ndx,ndy,ndw,ndh: FLOAT64;
 BEGIN
 	factx := (theCoordinate.x2d-dx) / dw;
 	facty := (theCoordinate.y2d-dy) / dh;
@@ -596,23 +596,23 @@ BEGIN
 
 END StretchedPict2d;
 
-PROCEDURE Image* (image: Images.Image;     x, y, w, h, dx, dy: INTEGER);
+PROCEDURE Image* (image: Images.Image;     x, y, w, h, dx, dy: SIGNED16);
 BEGIN  Local2Global0(dx, dy);
 	vyGraphBase0.image(image, x, y, w, h, dx, dy)
 END Image;
 
-PROCEDURE StretchedImage* (image: Images.Image;     x, y, w, h, dx, dy, dw, dh: INTEGER);
+PROCEDURE StretchedImage* (image: Images.Image;     x, y, w, h, dx, dy, dw, dh: SIGNED16);
 BEGIN Local2Global0(dx, dy);  vyGraphBase0.stretchedimage(image, x, y, w, h, dx, dy, dw, dh)
 END StretchedImage;
 
-PROCEDURE StretchedImage2d* (image: Images.Image;     x, y, w, h: INTEGER;  dx, dy, dw, dh: Real);
+PROCEDURE StretchedImage2d* (image: Images.Image;     x, y, w, h: SIGNED16;  dx, dy, dw, dh: Real);
 	VAR dxi, dyi, dwi, dhi: Coordinate;
 BEGIN   Rect2dToRect (dx, dy, dw, dh , dxi, dyi, dwi, dhi);
 	StretchedImage(image, x, y, w, h, dxi, dyi, dwi, dhi)
 END StretchedImage2d;
 
 
-PROCEDURE ReplConst* (x, y, w, h: INTEGER);
+PROCEDURE ReplConst* (x, y, w, h: SIGNED16);
 BEGIN
 	Local2Global0(x, y);
 	GiveRegularRect(x, y, w, h);
@@ -625,14 +625,14 @@ BEGIN
 	Rect2dToRect (x2d, y2d, w2d, h2d, x, y, w, h);  ReplConst(x, y, w, h)
 END ReplConst2d;
 
-PROCEDURE FitFillArea (VAR x, y: ARRAY OF INTEGER;     numPoints: INTEGER);
-	VAR  i: INTEGER;
+PROCEDURE FitFillArea (VAR x, y: ARRAY OF SIGNED16;     numPoints: SIGNED16);
+	VAR  i: SIGNED16;
 BEGIN
 	FOR i := 0 TO numPoints - 1 DO Local2Global0(x[i], y[i])
 	END
 END FitFillArea;
 
-PROCEDURE FrameFillArea* (x, y: ARRAY OF INTEGER;     numPoints: vyHost.Index);
+PROCEDURE FrameFillArea* (x, y: ARRAY OF SIGNED16;     numPoints: vyHost.Index);
 BEGIN 	FitFillArea(x, y, SHORT(numPoints));     vyGraphBase0.poly(x, y, SHORT(numPoints)) END FrameFillArea;
 
 PROCEDURE FrameFillArea2d* (x, y: ARRAY OF Real;    numPoints: vyBase.Index);
@@ -643,7 +643,7 @@ BEGIN end := Min (numPoints, maxNumPoints);
 	FrameFillArea (X, Y, numPoints)
 END FrameFillArea2d;
 
-PROCEDURE PaintFillArea* (x, y: ARRAY OF INTEGER;     numPoints: vyHost.Index);
+PROCEDURE PaintFillArea* (x, y: ARRAY OF SIGNED16;     numPoints: vyHost.Index);
 BEGIN FitFillArea(x, y, SHORT(numPoints));
 	vyGraphBase0.SetDisplayStyle({Display3.filled});
 	vyGraphBase0.poly(x, y, SHORT(numPoints)) ;
@@ -659,8 +659,8 @@ BEGIN end := Min (numPoints, maxNumPoints);
 	PaintFillArea (X, Y, numPoints)
 END PaintFillArea2d;
 
-PROCEDURE EraseFillArea* (x, y: ARRAY OF INTEGER;     numPoints: vyHost.Index);
-	VAR col:  Display.Color;     pat: LONGINT;
+PROCEDURE EraseFillArea* (x, y: ARRAY OF SIGNED16;     numPoints: vyHost.Index);
+	VAR col:  Display.Color;     pat: SIGNED32;
 BEGIN
 	IF status = display THEN
 		pat := S.pattern;     S.pattern := Display.solid;
@@ -678,8 +678,8 @@ BEGIN end := Min (numPoints, maxNumPoints);
 	EraseFillArea (X, Y, numPoints)
 END EraseFillArea2d;
 
-PROCEDURE InvertFillArea* (x, y: ARRAY OF INTEGER;     numPoints: vyHost.Index);
-	VAR m: INTEGER;
+PROCEDURE InvertFillArea* (x, y: ARRAY OF SIGNED16;     numPoints: vyHost.Index);
+	VAR m: SIGNED16;
 BEGIN
 	IF status = display THEN
 		m := S.mode;     S.mode := Display.invert;
@@ -695,18 +695,18 @@ BEGIN end := Min (numPoints, maxNumPoints);
 	InvertFillArea (X, Y, numPoints)
 END InvertFillArea2d;
 
-PROCEDURE FrameCircle* (x, y, r: INTEGER);
+PROCEDURE FrameCircle* (x, y, r: SIGNED16);
 BEGIN  Local2Global0(x, y);     	vyGraphBase0.circle ( x, y, r)
 END FrameCircle;
 
-PROCEDURE FrameEllipse* (x, y, a, b: INTEGER);
+PROCEDURE FrameEllipse* (x, y, a, b: SIGNED16);
 BEGIN Local2Global0(x, y);     vyGraphBase0.ellipse (x, y, a, b) END FrameEllipse;
 
-PROCEDURE SetStringJustification* (hJust, vJust: INTEGER);
+PROCEDURE SetStringJustification* (hJust, vJust: SIGNED16);
 BEGIN hStringJustification := hJust;     vStringJustification := vJust
 END SetStringJustification;
 
-PROCEDURE GetStringSize* (f, s: ARRAY OF CHAR;      VAR w, h, dsr: INTEGER);
+PROCEDURE GetStringSize* (f, s: ARRAY OF CHAR;      VAR w, h, dsr: SIGNED16);
 	VAR	fnt: Fonts.Font;
 BEGIN
 	fnt := Fonts.This (f);
@@ -714,8 +714,8 @@ BEGIN
 	Display3.StringSize(s, fnt, w, h, dsr)
 END GetStringSize;
 
-PROCEDURE GetStringLocation (VAR x, y: INTEGER;     f, s: ARRAY OF CHAR);
-	VAR w, h, dsr: INTEGER;
+PROCEDURE GetStringLocation (VAR x, y: SIGNED16;     f, s: ARRAY OF CHAR);
+	VAR w, h, dsr: SIGNED16;
 BEGIN
 	GetStringSize (f, s, w, h, dsr);
 	IF hStringJustification = center THEN x := x - (w DIV 2)
@@ -726,7 +726,7 @@ BEGIN
 	END
 END GetStringLocation;
 
-PROCEDURE GetStringFrame* (X, Y: INTEGER;     f, s: ARRAY OF CHAR;     VAR x, y, w, h, dsr: INTEGER);
+PROCEDURE GetStringFrame* (X, Y: SIGNED16;     f, s: ARRAY OF CHAR;     VAR x, y, w, h, dsr: SIGNED16);
 BEGIN x := X;     y := Y;
 	GetStringLocation (x, y, f, s);     GetStringSize (f, s, w, h, dsr)
 END GetStringFrame;
@@ -736,7 +736,7 @@ PROCEDURE GetStringFrame2d* (x2d, y2d: Real;    f, s: ARRAY OF CHAR;    VAR x, y
 BEGIN Point2dToPoint (x2d, y2d, X, Y);    GetStringFrame (X, Y, f, s, x, y, w, h, dsr)
 END GetStringFrame2d;
 
-PROCEDURE String* (x, y: INTEGER;     f, s: ARRAY OF CHAR);
+PROCEDURE String* (x, y: SIGNED16;     f, s: ARRAY OF CHAR);
 BEGIN   Local2Global0(x, y);
 	vyGraphBase0.SetDisplayMode(paint);
 	IF (f # "") THEN GetStringLocation (x, y, f, s);     vyGraphBase0.replString (x, y,  f, s)
@@ -749,7 +749,7 @@ PROCEDURE String2d* (x2d, y2d: Real;    f, s: ARRAY OF CHAR);
 BEGIN	Point2dToPoint (x2d, y2d, x, y);    String (x, y, f, s)
 END String2d;
 
-PROCEDURE EraseString* (x, y: INTEGER;     f, s: ARRAY OF CHAR);
+PROCEDURE EraseString* (x, y: SIGNED16;     f, s: ARRAY OF CHAR);
 BEGIN   Local2Global0(x, y);
 	vyGraphBase0.SetForeColor(S.bcol);
 	IF (f # "") THEN GetStringLocation (x, y, f, s);     vyGraphBase0.replString ( x, y, f, s)
@@ -762,7 +762,7 @@ PROCEDURE EraseString2d* (x2d, y2d: Real;    f, s: ARRAY OF CHAR);
 BEGIN	Point2dToPoint (x2d, y2d, x, y);    EraseString (x, y, f, s)
 END EraseString2d;
 
-PROCEDURE InvertString* (x, y: INTEGER;     f, s: ARRAY OF CHAR);
+PROCEDURE InvertString* (x, y: SIGNED16;     f, s: ARRAY OF CHAR);
 BEGIN  Local2Global0(x, y);
 	vyGraphBase0.SetDisplayMode(Display.invert);
 	vyGraphBase0.SetForeColor(white);
@@ -777,7 +777,7 @@ PROCEDURE InvertString2d* (x2d, y2d: Real;    f, s: ARRAY OF CHAR);
 BEGIN	Point2dToPoint (x2d, y2d, x, y);    InvertString (x, y, f, s)
 END InvertString2d;
 
-PROCEDURE Justify (VAR x, y: INTEGER;     sgn: tSign);
+PROCEDURE Justify (VAR x, y: SIGNED16;     sgn: tSign);
 BEGIN
 	IF hPatJustification = center THEN x := x - sgn.wDIV2
 	ELSIF hPatJustification = right THEN x := x - sgn.w
@@ -787,7 +787,7 @@ BEGIN
 	END
 END Justify;
 
-PROCEDURE PaintPat* (x, y: INTEGER;     sgn: tSign);
+PROCEDURE PaintPat* (x, y: SIGNED16;     sgn: tSign);
 BEGIN  Local2Global0(x, y);   	Justify (x, y, sgn);     vyGraphBase0.copyPattern (sgn, x, y)
 END PaintPat;
 
@@ -797,7 +797,7 @@ BEGIN	Point2dToPoint (x2d, y2d, x, y);
 PaintPat (x, y, sgn)  END PaintPat2d;
 
 (*
-PROCEDURE PaintColPat* (x, y:INTEGER;   col:  Display.Color;    sgn: tSign);
+PROCEDURE PaintColPat* (x, y:SIGNED16;   col:  Display.Color;    sgn: tSign);
 BEGIN  Local2Global0(x,y);
 Justify (x, y, sgn);    vyGraphBase0.copyPattern (col, sgn, x, y, S.mode)
 END PaintColPat;
@@ -809,7 +809,7 @@ PaintColPat (x, y, col, sgn)
 END PaintColPat2d;
 *)(*! fof 010122: unused in Voyager, removed *)
 
-PROCEDURE ErasePat* (x, y: INTEGER;     sgn: tSign);
+PROCEDURE ErasePat* (x, y: SIGNED16;     sgn: tSign);
 BEGIN
 	IF status = display THEN
 		Local2Global0(x, y);
@@ -827,7 +827,7 @@ BEGIN	Point2dToPoint (x2d, y2d, x, y);
 END ErasePat2d;
 
 
-PROCEDURE SetPatternJustification* (hJust, vJust: INTEGER);
+PROCEDURE SetPatternJustification* (hJust, vJust: SIGNED16);
 BEGIN
 	hPatJustification := hJust;
 	vPatJustification := vJust
@@ -842,20 +842,20 @@ PROCEDURE LoadPattern* (VAR R: Files.Rider): tSign;
 BEGIN RETURN vyGraphBase0.LoadPattern(R)
 END LoadPattern;
 
-PROCEDURE NewPattern* (image: ARRAY OF SET;     w, h: INTEGER;     prn: tPatPrinter): tSign;
+PROCEDURE NewPattern* (image: ARRAY OF SET;     w, h: SIGNED16;     prn: tPatPrinter): tSign;
 BEGIN
 	RETURN vyGraphBase0.NewPattern(image, w, h, prn)
 END NewPattern;
 
 (*
-PROCEDURE SetDB* (bmp: Bitmaps.Bitmap;    X, Y: INTEGER);
+PROCEDURE SetDB* (bmp: Bitmaps.Bitmap;    X, Y: SIGNED16);
 BEGIN
 vyGraphBase0.SetBuffer(bmp,X,Y);
 ShiftCoordinate(-X, -Y);
 END SetDB;
 *)
 
-PROCEDURE openDB* (VAR db: vyGraphBase0.doubleBuffer; x, y,w,h: INTEGER; translucent: BOOLEAN);
+PROCEDURE openDB* (VAR db: vyGraphBase0.doubleBuffer; x, y,w,h: SIGNED16; translucent: BOOLEAN);
 BEGIN
 	IF (vyGraphBase0.db # NIL) THEN  RETURN END;
 	vyGraphBase0.OpenBuffer(db,x,y,w,h,translucent); dbx := x;  dby := y;ShiftCoordinate( - x, - y);
@@ -890,7 +890,7 @@ BEGIN
 END openDB;
 
 PROCEDURE closeDB*;
-	VAR X, Y: INTEGER;
+	VAR X, Y: SIGNED16;
 BEGIN
 	IF vyGraphBase0.db = NIL THEN RETURN END;
 	IF vyGraphBase0.db.active THEN
@@ -914,14 +914,14 @@ BEGIN theCursor := shape  END SetCursor;
 PROCEDURE GetCursor* (VAR shape: CursorMarker);
 BEGIN shape := theCursor  END GetCursor;
 
-PROCEDURE DrawCursor* (x, y: INTEGER);
+PROCEDURE DrawCursor* (x, y: SIGNED16);
 BEGIN Oberon.DrawCursor(Oberon.Mouse, theCursor, x, y)  END DrawCursor;
 
 PROCEDURE FadeCursor*;
 BEGIN Oberon.FadeCursor(Oberon.Mouse)  END FadeCursor;
 (*  GENRAL ROUTINES   *)
 
-PROCEDURE DrawCrosshair (x, y: INTEGER);
+PROCEDURE DrawCrosshair (x, y: SIGNED16);
 (*= draw the port cursor *)
 BEGIN
 	IF x < Display.ColLeft THEN
@@ -935,10 +935,10 @@ BEGIN
 	Display.CopyPattern(white, Display.cross, x - 5, y - 5, 2)
 END DrawCrosshair;
 
-PROCEDURE DrawWheel (x, y: INTEGER);
+PROCEDURE DrawWheel (x, y: SIGNED16);
 BEGIN Display.CopyPattern (white, wheel, x - 3, y - 3, 2)  END DrawWheel;
 
-PROCEDURE DrawDefPoint (x, y: INTEGER);
+PROCEDURE DrawDefPoint (x, y: SIGNED16);
 BEGIN Display.CopyPattern (white, defPoint, x - 3, y - 3, 2)  END DrawDefPoint;
 PROCEDURE CursorInit;
 	VAR img: ARRAY 10 OF SET;
@@ -962,8 +962,8 @@ BEGIN
 	defPoint := Display.NewPattern( 7, 7, img)
 END CursorInit;
 
-PROCEDURE PalettePath* (r1, g1, b1, r2, g2, b2, start, end: INTEGER;     palette: tPalette);
-	VAR i: INTEGER;
+PROCEDURE PalettePath* (r1, g1, b1, r2, g2, b2, start, end: SIGNED16;     palette: tPalette);
+	VAR i: SIGNED16;
 BEGIN
 	FOR i := start TO end DO
 		palette.red[i] := SHORT (ENTIER (r1 + (r2 - r1) / (end - start) * (i - start)));
@@ -973,7 +973,7 @@ BEGIN
 END PalettePath;
 
 PROCEDURE InstallPalettes;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 
 BEGIN
 	NEW (stdPalette);
@@ -1011,7 +1011,7 @@ BEGIN
 END WriteRegion;
 
 PROCEDURE ReadRegion* (VAR R: Files.Rider;    VAR reg: tRegion2d);
-	VAR flag: INTEGER;    tempreg: tRegion2d;
+	VAR flag: SIGNED16;    tempreg: tRegion2d;
 BEGIN
 	Files.ReadInt(R, flag);    IF flag = 0 THEN reg := NIL
 	ELSE IF reg = NIL THEN NEW(reg)  END;
@@ -1032,7 +1032,7 @@ BEGIN
 END WriteCoordinate;
 
 PROCEDURE ReadCoordinate* (VAR R: Files.Rider;    VAR (*OUT*)c: tCoordinate2d);
-	VAR flag: INTEGER;
+	VAR flag: SIGNED16;
 BEGIN
 	Files.ReadInt(R, flag);
 	IF flag = 0 THEN  c := NIL ELSE
@@ -1056,7 +1056,7 @@ BEGIN
 END WriteCoordinate2d;
 
 PROCEDURE ReadCoordinate2d* (VAR R: Files.Rider;    VAR (*IN*)c: tCoordinate2d);
-	VAR flag: INTEGER;
+	VAR flag: SIGNED16;
 BEGIN
 	Files.ReadInt(R, flag);    IF flag = 0 THEN c := NIL
 	ELSE
@@ -1119,10 +1119,10 @@ END CopyCoordinate2d;
 
 PROCEDURE RealToCoord* (r: Real): Coordinate;
 BEGIN
-	IF (r < MAX(INTEGER)) & (r > MIN(INTEGER)) THEN RETURN SHORT(ENTIER(r)) ELSE (* Out.String("Coordinate problem !"); Out.Ln; *)RETURN NAN END
+	IF (r < MAX(SIGNED16)) & (r > MIN(SIGNED16)) THEN RETURN SHORT(ENTIER(r)) ELSE (* Out.String("Coordinate problem !"); Out.Ln; *)RETURN NAN END
 END RealToCoord;
 
-PROCEDURE ShiftCoordinate* (x, y: INTEGER);
+PROCEDURE ShiftCoordinate* (x, y: SIGNED16);
 BEGIN
 	INC(theCoordinate.x0, x);    INC(theCoordinate.y0, y)
 	(* INC(theCoordinate.x, x);   INC(theCoordinate.y, y);*)
@@ -1137,7 +1137,7 @@ BEGIN
 		theCoordinate.x02d := (RealToCoord(theCoordinate.x - theCoordinate.x2d * theCoordinate.xFact));
 
 		theCoordinate.y02d := (RealToCoord(theCoordinate.y - theCoordinate.y2d * theCoordinate.yFact))
-		*)(* wrong !! Do not store RealCoord origin in INTEGER coords -> Overflow, fof *)
+		*)(* wrong !! Do not store RealCoord origin in SIGNED16 coords -> Overflow, fof *)
 		(* theCoordinate.x02d := theCoordinate.x;
 		theCoordinate.y02d := theCoordinate.y; *)
 		(*
@@ -1180,26 +1180,26 @@ BEGIN WITH theCoordinate: tCoordinate2d DO
 	w2d := theCoordinate.w2d;    h2d := theCoordinate.h2d   END
 END GetRealWorldRgn;
 
-PROCEDURE Global2Local0 (VAR x, y: INTEGER);
+PROCEDURE Global2Local0 (VAR x, y: SIGNED16);
 BEGIN x := x - theCoordinate.x0;    y := y - theCoordinate.y0 END Global2Local0;
 
-PROCEDURE Local2Global0 (VAR x, y: INTEGER);
+PROCEDURE Local2Global0 (VAR x, y: SIGNED16);
 BEGIN x := x + theCoordinate.x0;    y := y + theCoordinate.y0 END Local2Global0;
 
-PROCEDURE Global2Local1 (VAR x, y: INTEGER);
+PROCEDURE Global2Local1 (VAR x, y: SIGNED16);
 BEGIN x := x - theCoordinate.x0 - dbx;    y := y - theCoordinate.y0 - dby END Global2Local1;
 
-PROCEDURE Local2Global1 (VAR x, y: INTEGER);
+PROCEDURE Local2Global1 (VAR x, y: SIGNED16);
 BEGIN x := x + theCoordinate.x0 + dbx;    y := y + theCoordinate.y0 + dby END Local2Global1;
 
 (* fof : 010214:  use conversion routines (0) when  painting (e.g. layer), includes cache Display coordinate system  variables   *)
 (* use conversionroutines when identifying mouse etc., only visible coordinate system : *)
 
-PROCEDURE Global2Local* (VAR x, y: INTEGER);
+PROCEDURE Global2Local* (VAR x, y: SIGNED16);
 BEGIN 	x := x - theCoordinate.x;    y := y - theCoordinate.y
 END Global2Local;
 
-PROCEDURE Local2Global* (VAR x, y: INTEGER);
+PROCEDURE Local2Global* (VAR x, y: SIGNED16);
 BEGIN x := x + theCoordinate.x;    y := y + theCoordinate.y END Local2Global;
 
 
@@ -1215,10 +1215,10 @@ BEGIN  	theCoordinate := screenCoordinate END SetScreenCoordinate;
 PROCEDURE GetCoordinate* (): tCoordinate2d;
 BEGIN RETURN theCoordinate END GetCoordinate;
 
-PROCEDURE OpenCoordinate* (c: tCoordinate2d;    x, y: INTEGER);
+PROCEDURE OpenCoordinate* (c: tCoordinate2d;    x, y: SIGNED16);
 BEGIN c.x0 := x;    c.y0 := y;    SetCoordinate (c) END OpenCoordinate;
 
-PROCEDURE OpenCoordinate1* (c: tCoordinate2d;    x, y, w, h: INTEGER);
+PROCEDURE OpenCoordinate1* (c: tCoordinate2d;    x, y, w, h: SIGNED16);
 BEGIN OpenCoordinate (c, x, y);   c.zoomCache := NIL;   c.w := w;   c.h := h   END OpenCoordinate1;
 
 PROCEDURE OpenCoordinate2d* (c: tCoordinate2d;    x, y, w, h: Real);
@@ -1291,7 +1291,7 @@ BEGIN WITH theCoordinate: tCoordinate2d DO
 END Rect2dToRect;
 
 PROCEDURE ZoomIn* (x, y, w, h: Coordinate);
-	VAR x0, y0, x1, y1: Real;    cache: tRegion2d; a,b: INTEGER;
+	VAR x0, y0, x1, y1: Real;    cache: tRegion2d; a,b: SIGNED16;
 CONST fact=0.77;
 BEGIN WITH theCoordinate: tCoordinate2d DO
 		IF w = 0 THEN

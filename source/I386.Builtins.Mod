@@ -3,7 +3,7 @@ IMPORT SYSTEM;
 
 VAR
 	kernelModule-: ARRAY 32 OF ADDRESS;
-	modules-: LONGINT;
+	modules-: SIGNED32;
 
 PROCEDURE InsertModule*(a: ADDRESS): BOOLEAN;
 BEGIN {UNCOOPERATIVE}
@@ -13,7 +13,7 @@ BEGIN {UNCOOPERATIVE}
 END InsertModule;
 
 
-PROCEDURE DivHA(l,r: HUGEINT): HUGEINT;
+PROCEDURE DivHA(l,r: SIGNED64): SIGNED64;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
@@ -97,8 +97,8 @@ CODE{SYSTEM.i386}
 	POP	ECX
 END DivHA;
 
-PROCEDURE DivH*(l,r: HUGEINT): HUGEINT;
-VAR result: HUGEINT;
+PROCEDURE DivH*(l,r: SIGNED64): SIGNED64;
+VAR result: SIGNED64;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF l > 0 THEN RETURN DivHA(l,r)
 	ELSIF l< 0 THEN
@@ -109,7 +109,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END;
 END DivH;
 
-PROCEDURE MulH*(l,r: HUGEINT): HUGEINT;
+PROCEDURE MulH*(l,r: SIGNED64): SIGNED64;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
@@ -138,7 +138,7 @@ CODE{SYSTEM.i386}
 	POP	ECX
 END MulH;
 
-PROCEDURE ModHA(l,r: HUGEINT): HUGEINT;
+PROCEDURE ModHA(l,r: SIGNED64): SIGNED64;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
@@ -208,8 +208,8 @@ CODE{SYSTEM.i386}
 	DIV EBX 					; COMPUTE QUOTIENT.
 	MOV EBX, [ESP] 			; DIVIDEND_LO
 	MOV ECX, EAX 				; SAVE QUOTIENT.
-	IMUL EDI, EAX 				; QUOTIENT * DIVISOR HIGH WORD (LOW ONLY)
-	MUL DWORD [ESP+4] 		; QUOTIENT * DIVISOR LOW WORD
+	IMUL EDI, EAX 				; QUOTIENT * DIVISOR HIGH INTEGER (LOW ONLY)
+	MUL DWORD [ESP+4] 		; QUOTIENT * DIVISOR LOW INTEGER
 	ADD EDX, EDI 				; EDX:EAX = QUOTIENT * DIVISOR
 	SUB EBX, EAX 				; DIVIDEND_LO - (QUOT.*DIVISOR)_LO
 	MOV ECX, [ESP+8] 			; DIVIDEND_HI
@@ -230,25 +230,25 @@ CODE{SYSTEM.i386}
 	POP	ECX
 END ModHA;
 
-PROCEDURE ModH*(l,r: HUGEINT): HUGEINT;
-VAR res: HUGEINT;
+PROCEDURE ModH*(l,r: SIGNED64): SIGNED64;
+VAR res: SIGNED64;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	res := ModHA(l,r);
 	IF res < 0 THEN INC(res,r) END;
 	RETURN res
 END ModH;
 
-PROCEDURE AbsH*(l: HUGEINT): HUGEINT;
+PROCEDURE AbsH*(l: SIGNED64): SIGNED64;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF l< 0 THEN RETURN -l ELSE RETURN l END;
 END AbsH;
 
-PROCEDURE AslH*(l: HUGEINT; r: LONGINT): HUGEINT; (*! coincides with Logic Shift, remove ? *)
+PROCEDURE AslH*(l: SIGNED64; r: SIGNED32): SIGNED64; (*! coincides with Logic Shift, remove ? *)
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	RETURN LslH(l,r)
 END AslH;
 
-PROCEDURE LslH*(l: HUGEINT; r: LONGINT): HUGEINT;
+PROCEDURE LslH*(l: SIGNED64; r: SIGNED32): SIGNED64;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
@@ -267,7 +267,7 @@ CODE{SYSTEM.i386}
 	POP	ECX
 END LslH;
 
-PROCEDURE AsrH*(l: HUGEINT; r: LONGINT): HUGEINT;
+PROCEDURE AsrH*(l: SIGNED64; r: SIGNED32): SIGNED64;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
@@ -286,7 +286,7 @@ CODE{SYSTEM.i386}
 	POP	ECX
 END AsrH;
 
-PROCEDURE LsrH*(l: HUGEINT; r: LONGINT): HUGEINT;
+PROCEDURE LsrH*(l: SIGNED64; r: SIGNED32): SIGNED64;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
@@ -305,7 +305,7 @@ CODE{SYSTEM.i386}
 	POP	ECX
 END LsrH;
 
-PROCEDURE RorH*(l: HUGEINT; r: LONGINT): HUGEINT;
+PROCEDURE RorH*(l: SIGNED64; r: SIGNED32): SIGNED64;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
@@ -325,7 +325,7 @@ rest:
 	POP	ECX
 END RorH;
 
-PROCEDURE RolH*(l: HUGEINT; r: LONGINT): HUGEINT;
+PROCEDURE RolH*(l: SIGNED64; r: SIGNED32): SIGNED64;
 CODE{SYSTEM.i386}
 	PUSH	ECX
 	; taken from "Software Optimization Guide for AMD64 Processors"
@@ -345,7 +345,7 @@ rest:
 	POP	ECX
 END RolH;
 
-PROCEDURE CasH*(VAR value: HUGEINT; old, new: HUGEINT): HUGEINT;
+PROCEDURE CasH*(VAR value: SIGNED64; old, new: SIGNED64): SIGNED64;
 CODE{SYSTEM.Pentium}
 	PUSH	ECX
 	MOV	EAX, [EBP + old + 0]
@@ -357,7 +357,7 @@ CODE{SYSTEM.Pentium}
 	POP	ECX
 END CasH;
 
-PROCEDURE EntierXH*(x: LONGREAL): HUGEINT;
+PROCEDURE EntierXH*(x: FLOAT64): SIGNED64;
 CODE
 	FLD	QWORD [EBP+x]
 	SUB	ESP, 12
@@ -376,7 +376,7 @@ CODE
 	POP	EDX
 END EntierXH;
 
-PROCEDURE EntierRH*(x: REAL): HUGEINT;
+PROCEDURE EntierRH*(x: FLOAT32): SIGNED64;
 CODE
 	FLD DWORD [EBP+x]
 	SUB	ESP, 12
@@ -401,8 +401,8 @@ END EntierRH;
 	returns -1 if left is lexicographics smaller than right
 	traps if src or destination is not 0X terminated and comparison is not finished
 *)
-PROCEDURE CompareString*(CONST left,right: ARRAY OF CHAR): SHORTINT;
-VAR i: SIZE; res: SHORTINT; l, r: CHAR;
+PROCEDURE CompareString*(CONST left,right: ARRAY OF CHAR): SIGNED8;
+VAR i: SIZE; res: SIGNED8; l, r: CHAR;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	i := 0; res := 0;
 	LOOP

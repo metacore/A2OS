@@ -103,7 +103,7 @@ VAR
 	r, g, b, mf, a: SREAL;
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
-	nx, ny, nz: INTEGER;
+	nx, ny, nz: SIGNED16;
 	dot: SREAL;
 	inside: BOOLEAN;
 BEGIN
@@ -199,7 +199,7 @@ END AlphaVox;
 PROCEDURE Shade (VAR ray: Ray);
 VAR
 	l, x, y, z: SREAL;
-	ecount: INTEGER;
+	ecount: SIGNED16;
 BEGIN
 	ray.r := ray.r + r * ray.a;
 	ray.g := ray.g + g * ray.a;
@@ -353,7 +353,7 @@ BEGIN
 END SetOutline;
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
-	ecount: INTEGER;
+	ecount: SIGNED16;
 BEGIN
 	IF (ray.lxyz.x< 0.01) OR (ray.lxyz.x > 0.99) THEN INC(ecount) END;
 	IF (ray.lxyz.y <0.01) OR (ray.lxyz.y > 0.99) THEN INC(ecount) END;
@@ -384,7 +384,7 @@ VAR
 	or, og, ob: SREAL; 	(* outline color *)
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
-	ecount: INTEGER;
+	ecount: SIGNED16;
 	l, le, xe, ye, ze: SREAL;
 BEGIN
 	ecount := 0;
@@ -418,7 +418,7 @@ END GoutlineVox;
 TYPE GouraudVox* = OBJECT(ColoredVox);
 
 VAR
-	brightness: INTEGER;
+	brightness: SIGNED16;
 
 PROCEDURE & init*;
 BEGIN
@@ -497,7 +497,7 @@ TYPE DiffuseVox* = OBJECT(ColoredVox);
 
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
-	nx, ny, nz: INTEGER;
+	nx, ny, nz: SIGNED16;
 	dot: SREAL;
 	inside: BOOLEAN;
 BEGIN
@@ -528,7 +528,7 @@ TYPE DiffuseNouraudVox* = OBJECT(ColoredVox);
 
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
-	nx, ny, nz: INTEGER;
+	nx, ny, nz: SIGNED16;
 	dot: SREAL;
 	inside: BOOLEAN;
 	l: SREAL;
@@ -584,7 +584,7 @@ END SetGrid;
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	lx, ly, x, y: SREAL;
-	i, j: LONGINT;
+	i, j: SIGNED32;
 BEGIN
 	CASE ray.face OF
 		 1: lx := ray.lxyz.y; ly := ray.lxyz.z;
@@ -780,7 +780,7 @@ END SPHexaVox;
 
 TYPE PolkaVox* = OBJECT(Voxel);
 VAR
-	brightness: INTEGER;
+	brightness: SIGNED16;
 	r, g, b, rr, gg, bb: SREAL;
 
 PROCEDURE & init*;
@@ -810,7 +810,7 @@ END tick;
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	l, x, y, z: SREAL;
-	nx, ny, nz: INTEGER;
+	nx, ny, nz: SIGNED16;
 		dot: SREAL;
 	inside: BOOLEAN;
 BEGIN
@@ -842,7 +842,7 @@ END PolkaVox;
 TYPE GeckoVox* = OBJECT(Voxel);
 VAR
 	r, g, b, a: SREAL;
-	ecount: INTEGER;
+	ecount: SIGNED16;
 PROCEDURE SetColor* (red, green, blue, alpha: SREAL);
 BEGIN
 	r := red * alpha;
@@ -888,8 +888,8 @@ END SetColor2;
 
 PROCEDURE Shade (VAR ray: Ray);
 VAR
-	i, j, k: LONGINT;
-	sc, d: INTEGER;
+	i, j, k: SIGNED32;
+	sc, d: SIGNED16;
 BEGIN
 	ray.splitme := TRUE;
 	sc := 0;
@@ -985,7 +985,7 @@ PROCEDURE Shade (VAR ray: Ray);
 VAR
 	r2: SREAL;
 	x,y,z,ax, ay, az, bx, by, bz : SREAL;
-	i: INTEGER;
+	i: SIGNED16;
 BEGIN
 	r2 := (cx-ray.lx)*(cx-ray.lx) + (cy-ray.ly)*(cy-ray.ly) + (cz-ray.lz)*(cz-ray.lz);
 	IF r2 < R2 THEN (* ray is within sphere *)

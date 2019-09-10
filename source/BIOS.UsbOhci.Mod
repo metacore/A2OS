@@ -284,16 +284,16 @@ TYPE
 		hcca : UsbHcdi.AlignedMemSpace;
 
 		(* host controller revision (HcRevision Register 0..7), BCD coded  *)
-		revision : LONGINT;
+		revision : SIGNED32;
 		legacySupport : BOOLEAN;
 
 		(* queue heads *)
-		controlED : LONGINT;
-		bulkED : LONGINT;
-		isochronousED : LONGINT;
-		interruptED : POINTER TO ARRAY 6 OF LONGINT;
+		controlED : SIGNED32;
+		bulkED : SIGNED32;
+		isochronousED : SIGNED32;
+		interruptED : POINTER TO ARRAY 6 OF SIGNED32;
 
-		nullTD : LONGINT;
+		nullTD : SIGNED32;
 
 		(* this array will provide the 16byte aligned TD's for controlTD, bulkTD, isochronousTD and interruptTD[] *)
 		tdlist : UsbHcdi.AlignedMemSpace;
@@ -301,7 +301,7 @@ TYPE
 		globalPowerSwitching : BOOLEAN;
 
 		(** Enable power for the specified port *)
-		PROCEDURE EnablePortPower*(port : LONGINT);
+		PROCEDURE EnablePortPower*(port : SIGNED32);
 		BEGIN
 			IF ~globalPowerSwitching THEN
 				SYSTEM.PUT32(ports[port], HcPsSetPortPower);
@@ -312,7 +312,7 @@ TYPE
 		END EnablePortPower;
 
 		(** Disable power for the specified port *)
-		PROCEDURE DisablePortPower*(port : LONGINT);
+		PROCEDURE DisablePortPower*(port : SIGNED32);
 		BEGIN
 			IF ~globalPowerSwitching THEN
 				SYSTEM.PUT32(ports[port], HcPsClearPortPower);
@@ -324,7 +324,7 @@ TYPE
 		END DisablePortPower;
 
 		(** Reset and enable specified port *)
-		PROCEDURE ResetAndEnablePort*(port : LONGINT) : BOOLEAN;
+		PROCEDURE ResetAndEnablePort*(port : SIGNED32) : BOOLEAN;
 		VAR status : SET; mtimer : Kernel.MilliTimer;
 		BEGIN
 			SYSTEM.PUT32(ports[port], HcPsSetPortReset); FlushPCI;
@@ -337,14 +337,14 @@ TYPE
 		END ResetAndEnablePort;
 
 		(** Disables port number <port> on this root hub *)
-		PROCEDURE DisablePort*(port : LONGINT);
+		PROCEDURE DisablePort*(port : SIGNED32);
 		BEGIN
 			SYSTEM.PUT32(ports[port], HcPsClearPortEnable); FlushPCI;
 			SYSTEM.PUT32(ports[port], HcPsChangeMask); FlushPCI;
 		END DisablePort;
 
 		(** Get the status of the port <port> of this root hub. Registers which indicate changes are reset by GetPortStatus *)
-		PROCEDURE GetPortStatus*(port : LONGINT; ack : BOOLEAN):SET;
+		PROCEDURE GetPortStatus*(port : SIGNED32; ack : BOOLEAN):SET;
 		VAR status, s : SET;
 		BEGIN
 			s := SYSTEM.VAL(SET, SYSTEM.GET32(ports[port]));
@@ -371,14 +371,14 @@ TYPE
 		END GetPortStatus;
 
 		(* Returns the current frame number; the frame number is incremented by the Host Controller at the end of each frame time *)
-		PROCEDURE GetFrameNumber*() : INTEGER;
+		PROCEDURE GetFrameNumber*() : SIGNED16;
 		BEGIN
-			RETURN SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, hcca.data[hcca.base + HccaFrameNumber]) * {0..15});
+			RETURN SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, hcca.data[hcca.base + HccaFrameNumber]) * {0..15});
 		END GetFrameNumber;
 
 		(* Build and then insert the endpoint descriptor of the pipe into the host controller schedule *)
 		PROCEDURE InsertQH*(pipe : UsbHcdi.Pipe) : BOOLEAN;
-		VAR nextED : LONGINT; dword : SET;
+		VAR nextED : SIGNED32; dword : SET;
 		BEGIN (* only call from exclusive regions *)
 			ASSERT((pipe#NIL) & (pipe.qh#0) & (SYSTEM.VAL(SET, pipe.qh) * {0..3} = {})); (* 16byte alignment *)
 			ASSERT((pipe.maxPacketSize > 0));
@@ -440,7 +440,7 @@ TYPE
 
 		(* Delete the queue head <qh> in the queue <queue> *)
 		PROCEDURE RemoveQH*(pipe : UsbHcdi.Pipe);
-		VAR prev, temp : LONGINT; dword : SET;
+		VAR prev, temp : SIGNED32; dword : SET;
 		BEGIN (* caller must hold obj lock *)
 			(* REMEMBER: The Host Controller is concurrently accessing dword1-3 of the ED's *)
 			(* set EdSkip flag (HC shall not process the ED) *)
@@ -506,7 +506,7 @@ TYPE
 		END LinkTDsAllowed;
 
 		(* Insert the TD list <td> into the queue (ED) <queue> *)
-		PROCEDURE LinkTDs*(pipe : UsbHcdi.Pipe;  td : LONGINT);
+		PROCEDURE LinkTDs*(pipe : UsbHcdi.Pipe;  td : SIGNED32);
 		VAR dword : SET;
 		BEGIN {EXCLUSIVE}
 			(* endpoint should not be processed by the HC ... *)
@@ -559,8 +559,8 @@ TYPE
 			END;
 		END ClearHalt;
 
-		PROCEDURE ScheduleControl*(pipe : UsbHcdi.Pipe; direction : LONGINT; msg : UsbHcdi.ControlMessage;  bufferLen : SIZE; VAR buffer : Usbdi.Buffer);
-		VAR ranges : ARRAY ScatterGatherListSize OF Machine.Range; 	td, numRanges : LONGINT; dword : SET;
+		PROCEDURE ScheduleControl*(pipe : UsbHcdi.Pipe; direction : SIGNED32; msg : UsbHcdi.ControlMessage;  bufferLen : SIZE; VAR buffer : Usbdi.Buffer);
+		VAR ranges : ARRAY ScatterGatherListSize OF Machine.Range; 	td, numRanges : SIGNED32; dword : SET;
 		BEGIN
 			(* control transfers use a three stage protocol:
 			 *	stage1: control setup transaction
@@ -645,11 +645,11 @@ TYPE
 			END;
 		END Schedule;
 
-		PROCEDURE CreateTDList(pipe : UsbHcdi.Pipe; direction, len, ofs : SIZE; VAR buffer : Usbdi.Buffer; firstTD : LONGINT; VAR lastTD : LONGINT; tdToggle : BOOLEAN) : BOOLEAN;
+		PROCEDURE CreateTDList(pipe : UsbHcdi.Pipe; direction, len, ofs : SIZE; VAR buffer : Usbdi.Buffer; firstTD : SIGNED32; VAR lastTD : SIGNED32; tdToggle : BOOLEAN) : BOOLEAN;
 		VAR
-			restlen, curlen : LONGINT;
-			numRanges, idx, offset : LONGINT;
-			td, temp : LONGINT;
+			restlen, curlen : SIGNED32;
+			numRanges, idx, offset : SIGNED32;
+			td, temp : SIGNED32;
 			dword : SET;
 		BEGIN
 			Machine.TranslateVirtual(ADDRESSOF(buffer[ofs]), len, numRanges, pipe.sgList^);
@@ -659,7 +659,7 @@ TYPE
 			END;
 
 			td := firstTD - 16;
-			restlen := len(LONGINT); idx := 0; offset := 0;
+			restlen := len(SIGNED32); idx := 0; offset := 0;
 
 			WHILE restlen > 0 DO (* build TD chain *)
 
@@ -677,7 +677,7 @@ TYPE
 				(* dword1: current buffer pointer *)
 				SYSTEM.PUT32(td + TdCurrentBufferP, pipe.sgList[idx].adr + offset); (* Adding offset is okay since adr is page aligned or offset is zero *)
 
-				curlen := PageSize - LONGINT ((pipe.sgList[idx].adr + offset) MOD PageSize);
+				curlen := PageSize - SIGNED32 ((pipe.sgList[idx].adr + offset) MOD PageSize);
 				IF curlen >= restlen THEN (* no page crossing, last TD in chain *)
 					curlen := restlen; restlen := 0;
 					SYSTEM.PUT32(td + TdBufferEndP, pipe.sgList[idx].adr + offset + curlen - 1);
@@ -761,12 +761,12 @@ TYPE
 			MaxLoops = 10000;
 		VAR
 			tailP, headP : SET;
-			td : LONGINT;
-			currentBufferP, bufferEndP : LONGINT;
+			td : SIGNED32;
+			currentBufferP, bufferEndP : SIGNED32;
 			dword, errors : SET;
-			cc : LONGINT;
-			actLen, len : LONGINT;
-			loop : LONGINT;
+			cc : SIGNED32;
+			actLen, len : SIGNED32;
+			loop : SIGNED32;
 		BEGIN
 			IF SYSTEM.VAL(SET, SYSTEM.GET32(pipe.qh + EdControlStatus)) * EdSkip # {} THEN RETURN; END;
 			tailP := SYSTEM.VAL(SET, SYSTEM.GET32(pipe.qh + EdTailP));
@@ -779,7 +779,7 @@ TYPE
 					ASSERT(SYSTEM.VAL(SET, td) * {0..3} = {});
 					(* evaluate condition codes (CC)*)
 					dword := SYSTEM.VAL(SET, SYSTEM.GET32(td + TdCommand));
-					cc := LSH(SYSTEM.VAL(LONGINT, dword * TdConditionCode), -28);
+					cc := LSH(SYSTEM.VAL(SIGNED32, dword * TdConditionCode), -28);
 					CASE cc OF
 						| TdNoError : (* only Usbdi.ResOK if all TD's do not have errors *)
 						| TdCrc : errors := errors + UsbHcdi.Crc;
@@ -801,7 +801,7 @@ TYPE
 					IF pipe.transferLen > 0 THEN (* data had to be transfered... *)
 
 						(* len bytes should have been transfered for this TD *)
-						len := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, SYSTEM.GET32(td + TdCommand)) * TdTransferSize);
+						len := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, SYSTEM.GET32(td + TdCommand)) * TdTransferSize);
 
 						currentBufferP := SYSTEM.GET32(td + TdCurrentBufferP);
 
@@ -875,7 +875,7 @@ TYPE
 
 		(* initialization of the data structures of the Host Controller Communication Area; Only useb by Init(...) *)
 		PROCEDURE InitHcca(): BOOLEAN;
-		VAR i, k, j : LONGINT;
+		VAR i, k, j : SIGNED32;
 		BEGIN
 			(* HCCA needs to be 256-byte aligned *)
 			hcca := UsbHcdi.GetAlignedMemSpace(256, 4096);  (* May not cross page boundary *)
@@ -894,7 +894,7 @@ TYPE
 
 			(* set the Skip Flags, HeadP and TailP fields of all 66 ED's (63 interrupt + bulk + control + iso) *)
 			FOR i := 0 TO 8 DO
-				tdlist.data[tdlist.base + i*4 + (EdControlStatus DIV 4)] := SYSTEM.VAL(LONGINT, EdSkip);
+				tdlist.data[tdlist.base + i*4 + (EdControlStatus DIV 4)] := SYSTEM.VAL(SIGNED32, EdSkip);
 				tdlist.data[tdlist.base + i*4 + (EdTailP DIV 4)] := nullTD;
 				tdlist.data[tdlist.base + i*4 + (EdHeadP DIV 4)] := nullTD;
 				tdlist.data[tdlist.base + i*4 + (EdNextEdP DIV 4)] := 0;
@@ -932,13 +932,13 @@ TYPE
 		END InitHcca;
 
 		(* Initializes the host controller and builds up the  data structures of the HCCA *)
-		PROCEDURE Init(virtualbase,  IRQ :  LONGINT) : BOOLEAN;
+		PROCEDURE Init(virtualbase,  IRQ :  SIGNED32) : BOOLEAN;
 		CONST MaxOwnershipChangeRequests = 100;
 		VAR
 			dword, hcRhDescriptorA, hcRhDescriptorB, Reg_HcFmInterval : SET;
 			timer : Kernel.Timer;
-			periodicStart : LONGINT;
-			hcControl, temp, i : LONGINT;
+			periodicStart : SIGNED32;
+			hcControl, temp, i : SIGNED32;
 			ignore : BOOLEAN;
 		BEGIN
 			IF Debug.Trace & Debug.traceInit THEN KernelLog.String("UsbOhci: Starting host controller initialization..."); KernelLog.Ln; END;
@@ -947,7 +947,7 @@ TYPE
 
 			(* get revision of the open host controller : Bit 0..7 of the HcRevision register *)
 			temp := SYSTEM.GET32(iobase + HcRevision);
-			revision:= SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp) * HcRevRevision);
+			revision:= SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp) * HcRevRevision);
 			IF revision #10H THEN
 				KernelLog.String("UsbOhci: Revision of OHCI Programming Interface not supported."); KernelLog.Ln;
 				RETURN FALSE;
@@ -1037,7 +1037,7 @@ TYPE
 			(* determine the number of ports the root hub provides *)
 			hcRhDescriptorA := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcRhDescriptorA));
 
-			portCount := SYSTEM.VAL(LONGINT, hcRhDescriptorA * HcRhaNumberDownstreamPorts);
+			portCount := SYSTEM.VAL(SIGNED32, hcRhDescriptorA * HcRhaNumberDownstreamPorts);
 			IF (portCount < 1) OR (portCount > 15) THEN
 				IF Debug.Level >= Debug.Errors THEN KernelLog.String("UsbOhci: Host Controller Initialization failed (port count error)."); KernelLog.Ln; END;
 				RETURN FALSE;
@@ -1071,9 +1071,9 @@ TYPE
 			ELSE (* Global overcurrent protection *)
 				(* do nothing *)
 			END;
-			hubDescriptor[3] := CHR(SYSTEM.VAL(LONGINT, dword));
+			hubDescriptor[3] := CHR(SYSTEM.VAL(SIGNED32, dword));
 			hubDescriptor[4] := CHR(0); (* Reserved *)
-			hubDescriptor[5] := CHR(SYSTEM.VAL(LONGINT, LSH(hcRhDescriptorA * HcRhaPowerOnToPowerGoodTime, -24)));
+			hubDescriptor[5] := CHR(SYSTEM.VAL(SIGNED32, LSH(hcRhDescriptorA * HcRhaPowerOnToPowerGoodTime, -24)));
 			hubDescriptor[6] := CHR(0); (* Root hubs don't draw current from the USB *)
 
 			(* HC now in UsbSuspend state... if we do not change the HC functional state to UsbOperational within 2ms, we need to go into UsbResume... *)
@@ -1094,7 +1094,7 @@ TYPE
 			END;
 
 			(* Set HcPeriodicStart to a value that is 90% of the value in FrameInterval field of the HcFmInterval register *)
-			periodicStart := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, Reg_HcFmInterval) * HcFmiFrameInterval);
+			periodicStart := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, Reg_HcFmInterval) * HcFmiFrameInterval);
 			periodicStart := (periodicStart * 9) DIV 10;
 
 			dword := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcPeriodicStart)); (* we need to preserve reserved bits... *)
@@ -1137,7 +1137,7 @@ TYPE
 
 		(* PCI writes may be posted. A read forces posted writes to be flushed before the read transaction is proceeded. *)
 		PROCEDURE FlushPCI;
-		VAR ignore : LONGINT;
+		VAR ignore : SIGNED32;
 		BEGIN
 			ignore := SYSTEM.GET32(iobase + HcControl)
 		END FlushPCI;
@@ -1174,15 +1174,15 @@ TYPE
 
 		(* for debugging: display diagnostics of this host controller to KernelLog *)
 		PROCEDURE Diag*;
-		VAR s : SET; temp : LONGINT;
+		VAR s : SET; temp : SIGNED32;
 		BEGIN
 			IF Debug.Trace THEN
 			Diag^;
 			(* display information of the HcRevision register *)
 			temp := SYSTEM.GET32(iobase+HcRevision);
 			KernelLog.String("   HcRevision: ");
-			KernelLog.Hex(SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, temp) * {4..7}, -4)), -2); KernelLog.String(".");
-			KernelLog.Hex(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp) * {0..3}), -2);
+			KernelLog.Hex(SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, temp) * {4..7}, -4)), -2); KernelLog.String(".");
+			KernelLog.Hex(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp) * {0..3}), -2);
 			KernelLog.String("   Legacy support: ");
 			IF HcRevLegacySupport * SYSTEM.VAL(SET, temp) # {}  THEN
 				KernelLog.String("Yes");
@@ -1198,16 +1198,16 @@ TYPE
 			KernelLog.String("   HcControl: State: ");
 			temp := SYSTEM.GET32(iobase + HcControl);
 			s := SYSTEM.VAL(SET, temp);
-			CASE SYSTEM.VAL(LONGINT, LSH(s*HcConHcFunctionalState, -6)) OF
+			CASE SYSTEM.VAL(SIGNED32, LSH(s*HcConHcFunctionalState, -6)) OF
 				UsbReset : KernelLog.String("UsbReset");
 				| UsbResume : KernelLog.String("UsbResume");
 				| UsbOperational : KernelLog.String("UsbOperational");
 				| UsbSuspend : KernelLog.String("UsbSuspend");
 			ELSE
-				KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(s*HcConHcFunctionalState,-6)),0);
+				KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(s*HcConHcFunctionalState,-6)),0);
 			END;
 			KernelLog.String(" C/B-Ratio: ");
-			temp := SYSTEM.VAL(LONGINT, s * HcConControlBulkServiceRatio);
+			temp := SYSTEM.VAL(SIGNED32, s * HcConControlBulkServiceRatio);
 			KernelLog.Int(temp, 0); KernelLog.String(": 1,");
 			KernelLog.String(" Flags: ");
 			IF s * HcConPeriodicListEnable # {} THEN KernelLog.String(" [PeriodicListEnabled]"); END;
@@ -1220,7 +1220,7 @@ TYPE
 			KernelLog.Ln;
 			(* display information from HcCommandStatus register *)
 			KernelLog.String("   HcCommandStatus: SchedulingOverrungCount: ");
-			 KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(s * HcCmdSchedulingOverrunCount,16)), 0);
+			 KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(s * HcCmdSchedulingOverrunCount,16)), 0);
 			KernelLog.String(", Flags: ");
 			temp := SYSTEM.GET32(iobase + HcCommandStatus);
 			s := SYSTEM.VAL(SET, temp);
@@ -1264,8 +1264,8 @@ TYPE
 			temp := SYSTEM.GET32(iobase + HcFmNumber);
 			KernelLog.String("   Frame: Nbr: "); KernelLog.Hex(temp, 8);
 			s := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcFmInterval));
-			KernelLog.String("  FmInterval: "); KernelLog.Int(SYSTEM.VAL(LONGINT, s * HcFmiFrameInterval), 0);
-			KernelLog.String("  FSMaxPacketSize: "); KernelLog.Int(LSH(SYSTEM.VAL(LONGINT, s * HcFmiFsLargestDataPacket),-16), 0); KernelLog.String(" Bits, ");
+			KernelLog.String("  FmInterval: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, s * HcFmiFrameInterval), 0);
+			KernelLog.String("  FSMaxPacketSize: "); KernelLog.Int(LSH(SYSTEM.VAL(SIGNED32, s * HcFmiFsLargestDataPacket),-16), 0); KernelLog.String(" Bits, ");
 			KernelLog.String("  FmiToggle: ");
 			IF s * HcFmiFrameIntervalToggle # {} THEN KernelLog.String("Set"); ELSE KernelLog.String("Not Set"); END;
 			temp := SYSTEM.GET32(iobase + HcPeriodicStart); KernelLog.String(" PeriodicStart: "); KernelLog.Hex(temp, 8);
@@ -1283,7 +1283,7 @@ TYPE
 	END OpenHostController;
 
 VAR
-	qhCounter : LONGINT; (* used by HumanQH; only for debug puposes *)
+	qhCounter : SIGNED32; (* used by HumanQH; only for debug puposes *)
 
 (* debug: displays the information in the queue head qh and all TD's in that queue
  * ed : virtual address if first ED in EDList  *)
@@ -1298,15 +1298,15 @@ BEGIN
 	END;
 END HumanSchedule;
 
-PROCEDURE Indent(spaces : LONGINT);
-VAR i : LONGINT;
+PROCEDURE Indent(spaces : SIGNED32);
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 1 TO spaces DO KernelLog.Char(" "); END;
 END Indent;
 
 (* Displays endpoint descriptor information to the kernel log; addr : Physical Address!! *)
-PROCEDURE HumanED(ed : LONGINT; controller : OpenHostController; spaces : LONGINT; showTds, showEds : BOOLEAN);
-VAR dword : SET; adr, ep : LONGINT; pipe : UsbHcdi.Pipe;
+PROCEDURE HumanED(ed : SIGNED32; controller : OpenHostController; spaces : SIGNED32; showTds, showEds : BOOLEAN);
+VAR dword : SET; adr, ep : SIGNED32; pipe : UsbHcdi.Pipe;
 BEGIN
 	IF Debug.Trace THEN
 	(* to avoid endless loops because of (wrong) circular data structures *)
@@ -1316,10 +1316,10 @@ BEGIN
 	ELSE
 		INC(qhCounter);
 	END;
-	ed := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ed) * {4..31});
+	ed := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ed) * {4..31});
 	dword :=SYSTEM.VAL(SET, SYSTEM.GET32(ed + EdControlStatus));
-	adr := SYSTEM.VAL(LONGINT, dword * EdFunctionAddress);
-	ep := SYSTEM.VAL(LONGINT, LSH(dword * EdEndpointNumber, -7));
+	adr := SYSTEM.VAL(SIGNED32, dword * EdFunctionAddress);
+	ep := SYSTEM.VAL(SIGNED32, LSH(dword * EdEndpointNumber, -7));
 
 	Indent(spaces); KernelLog.String("ED at address: "); KernelLog.Hex(ed, 8); KernelLog.String("H ");
 	IF ed = controller.controlED THEN KernelLog.String("(ControlList Head)");
@@ -1351,13 +1351,13 @@ BEGIN
 		END;
 	END;
 	KernelLog.String(" Dir: ");
-	CASE SYSTEM.VAL(LONGINT, LSH(dword * EdDirection ,-11)) OF
+	CASE SYSTEM.VAL(SIGNED32, LSH(dword * EdDirection ,-11)) OF
 		  PidIn : KernelLog.String("In");
 		| PidOut : KernelLog.String("Out");
 	ELSE
 		KernelLog.String("Specified in TD");
 	END;
-	KernelLog.String(" MaxPacketSize: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * EdMaximumPacketSize, -16)), 0); KernelLog.String(" Bytes");
+	KernelLog.String(" MaxPacketSize: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * EdMaximumPacketSize, -16)), 0); KernelLog.String(" Bytes");
 	IF pipe # NIL THEN
 		KernelLog.String(", LastStatus: "); UsbHcdi.ShowStatus(pipe.status);
 	END;
@@ -1373,24 +1373,24 @@ BEGIN
 
 	Indent(spaces+4); KernelLog.String("HeadP: ");
 	dword := SYSTEM.VAL(SET, SYSTEM.GET32(ed + EdHeadP)) * {4..31};
-	IF SYSTEM.VAL(LONGINT, dword) = controller.nullTD THEN
+	IF SYSTEM.VAL(SIGNED32, dword) = controller.nullTD THEN
 		KernelLog.String("NullTD");
 	ELSE
-		KernelLog.Hex(SYSTEM.VAL(LONGINT, dword * {4..31}), 8); KernelLog.String("H");
+		KernelLog.Hex(SYSTEM.VAL(SIGNED32, dword * {4..31}), 8); KernelLog.String("H");
 	END;
 	KernelLog.String(", TailP: ");
 	dword := SYSTEM.VAL(SET, SYSTEM.GET32(ed + EdTailP));
-	IF SYSTEM.VAL(LONGINT, dword) = controller.nullTD THEN
+	IF SYSTEM.VAL(SIGNED32, dword) = controller.nullTD THEN
 		KernelLog.String("NullTD");
 	ELSE
-		KernelLog.Hex(SYSTEM.VAL(LONGINT, dword * {4..31}), 8); KernelLog.String("H");
+		KernelLog.Hex(SYSTEM.VAL(SIGNED32, dword * {4..31}), 8); KernelLog.String("H");
 	END;
 	dword := SYSTEM.VAL(SET, SYSTEM.GET32(ed + EdNextEdP));
 	KernelLog.String(", NextED: ");
 	IF dword = {} THEN
 		KernelLog.String("None");
 	ELSE
-		KernelLog.Hex(SYSTEM.VAL(LONGINT, dword * {4..31}), 8); KernelLog.String("H");
+		KernelLog.Hex(SYSTEM.VAL(SIGNED32, dword * {4..31}), 8); KernelLog.String("H");
 	END;
 	KernelLog.Ln;
 	(* Show TD list of this endpoint descriptor *)
@@ -1399,16 +1399,16 @@ BEGIN
 	IF SYSTEM.VAL(SET, SYSTEM.GET32(ed + EdTailP)) * {4..31} = dword THEN (* HeadP == TailP *)
 		KernelLog.String("Empty");  KernelLog.Ln;
 	ELSE (* There are TD's in the list ... show TD list. *)
-		KernelLog.String("Non_Empty - First TD at "); KernelLog.Hex(SYSTEM.VAL(LONGINT, dword * {4..31}), 8); KernelLog.Char("H"); KernelLog.Ln; KernelLog.Ln;
+		KernelLog.String("Non_Empty - First TD at "); KernelLog.Hex(SYSTEM.VAL(SIGNED32, dword * {4..31}), 8); KernelLog.Char("H"); KernelLog.Ln; KernelLog.Ln;
 		IF showTds THEN
-			KernelLog.Ln; HumanTD(SYSTEM.VAL(LONGINT, dword * {4..31}), 0, controller.nullTD, spaces + 4); KernelLog.Ln;
+			KernelLog.Ln; HumanTD(SYSTEM.VAL(SIGNED32, dword * {4..31}), 0, controller.nullTD, spaces + 4); KernelLog.Ln;
 		END;
 	END;
 	(* Show next endpoint descriptor in list *)
 	IF showEds THEN
 		dword := SYSTEM.VAL(SET, SYSTEM.GET32(ed + EdNextEdP)) * {4..31}; (* get NextED field *)
 		IF dword # {} THEN
-			HumanED(SYSTEM.VAL(LONGINT, dword), controller, 4, showTds, showEds);
+			HumanED(SYSTEM.VAL(SIGNED32, dword), controller, 4, showTds, showEds);
 		END;
 	END;
 	END;
@@ -1416,9 +1416,9 @@ END HumanED;
 
 (* debug: displays the information of the  Transfer Descriptor nexttd and all linked TD's and displays it *)
 (* nextd : Physical Address !!! *)
-PROCEDURE HumanTD(nexttd, lasttd, nulltd: LONGINT; spaces : LONGINT);
+PROCEDURE HumanTD(nexttd, lasttd, nulltd: SIGNED32; spaces : SIGNED32);
 CONST MaxTDListLength = 200;
-VAR val, val2 : LONGINT; dword : SET; iteration : LONGINT;
+VAR val, val2 : SIGNED32; dword : SET; iteration : SIGNED32;
 BEGIN
 	IF Debug.Trace THEN
 	iteration := 1;
@@ -1439,7 +1439,7 @@ BEGIN
 			(* TD Completion Codes *)
 			Indent(spaces+4); KernelLog.String("Condition Codes:");
 			dword := SYSTEM.VAL(SET, SYSTEM.GET32(nexttd + TdCommand));
-			CASE SYSTEM.VAL(LONGINT, LSH(dword,-28)) OF
+			CASE SYSTEM.VAL(SIGNED32, LSH(dword,-28)) OF
 				| TdNoError : KernelLog.String("[NoError]");
 				| TdCrc : KernelLog.String("[CRC]");
 				| TdBitStuffing : KernelLog.String("[BitStuffError]");
@@ -1459,7 +1459,7 @@ BEGIN
 			KernelLog.Ln;
 
 			Indent(spaces+4); KernelLog.String("Pid: ");
-			CASE SYSTEM.VAL(LONGINT, LSH(dword * TdDirectionPid, -19)) OF
+			CASE SYSTEM.VAL(SIGNED32, LSH(dword * TdDirectionPid, -19)) OF
 				PidSetup : KernelLog.String("PidSetup");
 				| PidIn : KernelLog.String("PidIn");
 				| PidOut : KernelLog.String("PidOut");
@@ -1472,10 +1472,10 @@ BEGIN
 			IF dword * TdBufferRounding # {} THEN KernelLog.String("[BufferRounding]"); END;
 			IF 25 IN dword THEN KernelLog.String("[ToggleFromTD]"); ELSE KernelLog.String("[ToggleFromEd]"); END;
 			IF 24 IN dword THEN KernelLog.String("[Toggle=DATA1]"); ELSE KernelLog.String("[Toggle=DATA0]"); END;
-			IF SYSTEM.VAL(LONGINT, LSH(dword * TdDelayInterrupt, -21)) # 7 THEN (* IOC enabled *)
-				KernelLog.String("[IOC, MaxDelay: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * TdDelayInterrupt, -21)), 0); KernelLog.Char("]");
+			IF SYSTEM.VAL(SIGNED32, LSH(dword * TdDelayInterrupt, -21)) # 7 THEN (* IOC enabled *)
+				KernelLog.String("[IOC, MaxDelay: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * TdDelayInterrupt, -21)), 0); KernelLog.Char("]");
 			END;
-			KernelLog.String(", Errors: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * TdErrorCount, -26)), 0);
+			KernelLog.String(", Errors: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * TdErrorCount, -26)), 0);
 			KernelLog.Ln;
 
 			(* CurrentBufferPointer, BufferEndPointer & NextTD *)
@@ -1519,12 +1519,12 @@ CONST
 	PCIStatusErrorMask = {24,27,28,29,30,31};
 VAR
 	hostController : OpenHostController;
-	bus, device, function : LONGINT;
-	iobasePhys, irq : LONGINT;
+	bus, device, function : SIGNED32;
+	iobasePhys, irq : SIGNED32;
 	iobaseVirt: ADDRESS;
-	pciCmdReg : LONGINT;
-	index : LONGINT;
-	res: WORD;
+	pciCmdReg : SIGNED32;
+	index : SIGNED32;
+	res: INTEGER;
 BEGIN
 	index := 0;
 	IF Debug.Trace & Debug.traceInit THEN KernelLog.String("UsbOhci: Looking for PCI Open Host Controllers..."); KernelLog.Ln; END;
@@ -1546,7 +1546,7 @@ BEGIN
 				KernelLog.String("UsbOhci: Error: Please enable interrupts for USB Host Controller."); KernelLog.Ln;
 			ELSE
 				(* OHCI Spec: iobase address are the higher 20 bits *)
-				iobasePhys := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, iobasePhys) * {12..31});
+				iobasePhys := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, iobasePhys) * {12..31});
 				Machine.MapPhysical(iobasePhys, 4096, iobaseVirt);
 				NEW(hostController, bus, device, function);
 				IF hostController.Init(iobaseVirt(Machine.Address32), irq) THEN (* host controller has been initialized and started successfully *)

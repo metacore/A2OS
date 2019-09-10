@@ -95,13 +95,13 @@ TYPE
 
 	(** Message broadcast in the display space to indicate that the destination frame F wants to change its overlapping 	priority. *)
 	PriorityMsg* = RECORD (Display.FrameMsg)
-		id*: INTEGER;	(** Top, bottom, visible. *)
+		id*: SIGNED16;	(** Top, bottom, visible. *)
 		passon*: BOOLEAN;	(** Indication if a whole tree of containers should be changed in priority. *)
 	END;
 
 	CmdMsg* = RECORD (Objects.ObjMsg)
 		cmd*: ARRAY 128 OF CHAR; (* Information to be passed, command to be executed; result returned. *)
-		res*: INTEGER; (* result code *)
+		res*: SIGNED16; (* result code *)
 	END;
 
 	(** Base type of the Model gadgets *)
@@ -124,21 +124,21 @@ TYPE
 	(** Base type of the camera-view gadgets. *)
 	View* = POINTER TO ViewDesc;
 	ViewDesc* = RECORD (FrameDesc)
-		absX*, absY*: INTEGER;	(** Absolute screen position at last message forward to descendants. *)
-		border*: INTEGER;	(** Border width for clipping. *)
+		absX*, absY*: SIGNED16;	(** Absolute screen position at last message forward to descendants. *)
+		border*: SIGNED16;	(** Border width for clipping. *)
 
 		(** Install own clipping to display/printer mask here if view has an irregular outline. Otherwise set to NIL. *)
 		ClipMask*: PROCEDURE (v: View; M: Display3.Mask; ondisplay: BOOLEAN);
 	END;
 
 	(** Calculate a mask for gadget G positioned at X, Y in the context dlink. *)
-	MakeMaskHandler* = PROCEDURE (G: Frame; X, Y: INTEGER; dlink: Objects.Object; VAR M: Display3.Mask);
+	MakeMaskHandler* = PROCEDURE (G: Frame; X, Y: SIGNED16; dlink: Objects.Object; VAR M: Display3.Mask);
 
 	RecursiveMsg = RECORD (Display.FrameMsg) END;
 
 	Stack = RECORD
 		Mdlink, Fdlink: Objects.Object;
-		absX, absY: INTEGER;
+		absX, absY: SIGNED16;
 	END;
 
 CONST
@@ -169,7 +169,7 @@ VAR
 	emptyText: Texts.Text;
 	W, WW, mW: Texts.Writer;
 	recurse, uparrowdone, verbose, enableMove: BOOLEAN;
-	pMask: Display3.Mask; tmpX, tmpY: INTEGER;
+	pMask: Display3.Mask; tmpX, tmpY: SIGNED16;
 
 (* Misc *)
 
@@ -207,7 +207,7 @@ END IsLocked;
 
 (** Is the mouse located inside the work area of a gadget (i.e. excluding the control areas)? *)
 PROCEDURE InActiveArea*(F: Frame; VAR M: Oberon.InputMsg): BOOLEAN;
-VAR x, y, w, h: INTEGER;
+VAR x, y, w, h: SIGNED16;
 BEGIN
 	x := M.x + F.X; y := M.y + F.Y; w := F.W; h := F.H;
 	IF Effects.Inside(M.X, M.Y, x, y, w, h) & ~(selected IN F.state) THEN
@@ -233,7 +233,7 @@ END NameObj;
 
 (** Search for the object "O" in the public library "L.Lib" wherename is specified as "L.O". *)
 PROCEDURE FindPublicObj*(name: ARRAY OF CHAR): Objects.Object; (* Lib.obj format, assumes .Lib extension *)
-VAR obj: Objects.Object; libname, objname: ARRAY 64 OF CHAR; i, j, k, ref: INTEGER; lib: Objects.Library;
+VAR obj: Objects.Object; libname, objname: ARRAY 64 OF CHAR; i, j, k, ref: SIGNED16; lib: Objects.Library;
 BEGIN
 	obj := NIL; i := 0; j := 0;
 	WHILE (name[i] # ".") & (name[i] # 0X) DO libname[j] := name[i]; INC(j); INC(i); END;
@@ -245,7 +245,7 @@ BEGIN
 	lib := Objects.ThisLibrary(libname);
 	IF lib # NIL THEN
 		Objects.GetRef(lib.dict, objname, ref);
-		IF ref # MIN(INTEGER) THEN lib.GetObj(lib, ref, obj); END
+		IF ref # MIN(SIGNED16) THEN lib.GetObj(lib, ref, obj); END
 	END;
 	RETURN obj;
 END FindPublicObj;
@@ -263,7 +263,7 @@ BEGIN
 END FindObj;
 
 (** Sets new W and H to (offscreen) frame F. *)
-PROCEDURE ModifySize* (F: Display.Frame; W, H: INTEGER);
+PROCEDURE ModifySize* (F: Display.Frame; W, H: SIGNED16);
 VAR M: Display.ModifyMsg;
 BEGIN
 	IF (F # NIL) & ((F.W # W) OR (F.H # H)) THEN
@@ -276,7 +276,7 @@ BEGIN
 END ModifySize;
 
 (** Inserts the frame f into container F at (u, v). (u, v) is relative to upper left corner of F. *)
-PROCEDURE Consume* (F, f: Frame; u, v: INTEGER);
+PROCEDURE Consume* (F, f: Frame; u, v: SIGNED16);
 VAR C: Display.ConsumeMsg;
 BEGIN
 	IF (F # NIL) & (f # NIL) THEN
@@ -381,14 +381,14 @@ BEGIN
 END Adjust;
 
 (** Returns the frame that is located at X, Y on the display. U, v return the relative coordinates of X, Y inside F. Behind the scenes a Display.LocateMsg is broadcast. *)
-PROCEDURE ThisFrame*(X, Y: INTEGER; VAR F: Display.Frame; VAR u, v: INTEGER);
+PROCEDURE ThisFrame*(X, Y: SIGNED16; VAR F: Display.Frame; VAR u, v: SIGNED16);
 VAR M: Display.LocateMsg;
 BEGIN M.X := X; M.Y := Y; M.F := NIL; M.loc := NIL; Display.Broadcast(M); F := M.loc; u := M.u; v := M.v
 END ThisFrame;
 
 (** Implements standard resize handling for frames. Rubber-bands the gadget size and broadcasts a Display.ModifyMsg. *)
 PROCEDURE SizeFrame*(F: Display.Frame; VAR M: Oberon.InputMsg);
-VAR x, y, w, h, X, Y: INTEGER; keys: SET; A: Display.ModifyMsg;
+VAR x, y, w, h, X, Y: SIGNED16; keys: SET; A: Display.ModifyMsg;
 BEGIN
 	x := M.x + F.X; y := M.y + F.Y; w := F.W; h := F.H;
 	Input.Mouse(keys, X, Y);
@@ -404,7 +404,7 @@ END SizeFrame;
 
 (**  Implements standard move behaviour for frames. Tracks the gadget outline, broadcasts a ConsumeMsg on a copy-over or consume interclick, or broadcast a Display.ModifyMsg for a simple move operation.   *)
 PROCEDURE MoveFrame*(F: Display.Frame; VAR M: Oberon.InputMsg);
-VAR x, y, w, h, X, Y, u0, v0: INTEGER; keys: SET; A: Display.ModifyMsg; f: Display.Frame;
+VAR x, y, w, h, X, Y, u0, v0: SIGNED16; keys: SET; A: Display.ModifyMsg; f: Display.Frame;
 	C: Display.ConsumeMsg; old: Objects.Handler; CM: Objects.CopyMsg;
 BEGIN
 	x := M.x + F.X; y := M.y + F.Y; w := F.W; h := F.H;
@@ -448,8 +448,8 @@ BEGIN
 	END;
 END Integrate;
 
-PROCEDURE Atom(lib: Objects.Library; name: ARRAY OF CHAR): INTEGER;
-VAR ref: INTEGER;
+PROCEDURE Atom(lib: Objects.Library; name: ARRAY OF CHAR): SIGNED16;
+VAR ref: SIGNED16;
 BEGIN
 	Objects.GetKey(lib.dict, name, ref);
 	RETURN ref;
@@ -503,7 +503,7 @@ END WriteRef;
 
 (** Read an object POINTER from a file. Lib is the library of the object that contains the pointer. Obj might be of type Objects.Dummy if a loading failure occured. *)
 PROCEDURE ReadRef*(VAR r: Files.Rider; lib: Objects.Library; VAR obj: Objects.Object);
-VAR i, l: INTEGER; F: Objects.Library; name: ARRAY 32 OF CHAR;
+VAR i, l: SIGNED16; F: Objects.Library; name: ARRAY 32 OF CHAR;
 BEGIN
 	Files.ReadInt(r, i);
 	IF i = -1 THEN
@@ -553,8 +553,8 @@ BEGIN
 	END
 END MakeMaskFor;
 
-PROCEDURE MakeMask0(G: Frame; X, Y: INTEGER; dlink: Objects.Object; VAR M: Display3.Mask);
-VAR ox, oy, x, y, w, h, b, b2: INTEGER; R: Display3.Mask; v: Objects.Object;
+PROCEDURE MakeMask0(G: Frame; X, Y: SIGNED16; dlink: Objects.Object; VAR M: Display3.Mask);
+VAR ox, oy, x, y, w, h, b, b2: SIGNED16; R: Display3.Mask; v: Objects.Object;
 BEGIN
 	IF G.mask = NIL THEN (* mask has been invalidated *)
 		MakeMaskFor(G)
@@ -607,18 +607,18 @@ BEGIN
 	END
 END MakeMask0;
 
-PROCEDURE P(x : INTEGER) : INTEGER;
+PROCEDURE P(x : SIGNED16) : SIGNED16;
 BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit) END P;
 
-PROCEDURE EnumMakePrinterMask(X,Y,W,H: INTEGER);
-VAR R, T, L, B: INTEGER;
+PROCEDURE EnumMakePrinterMask(X,Y,W,H: SIGNED16);
+VAR R, T, L, B: SIGNED16;
 BEGIN
 	L := P(X-tmpX) + tmpX; B := P(Y - tmpY) + tmpY;
 	R := P(X-tmpX + W) + tmpX; T := P(Y - tmpY +H) + tmpY;
 	Display3.Add(pMask, L, B, R-L, T-B);
 END EnumMakePrinterMask;
 
-PROCEDURE MakePMask0(G: Frame; X, Y: INTEGER; VAR M: Display3.Mask);
+PROCEDURE MakePMask0(G: Frame; X, Y: SIGNED16; VAR M: Display3.Mask);
 VAR MM: Display3.UpdateMaskMsg;
 BEGIN
 	IF G.mask = NIL THEN (* mask has been invalidated *)
@@ -639,7 +639,7 @@ BEGIN
 	M.X := X; M.Y := Y; M.W := G.W; M.H := G.H;
 END MakePMask0;
 
-PROCEDURE ScaleMask(px, py: INTEGER; in: Display3.Mask; VAR out: Display3.Mask);
+PROCEDURE ScaleMask(px, py: SIGNED16; in: Display3.Mask; VAR out: Display3.Mask);
 BEGIN
 	NEW(pMask); Display3.Open(pMask);
 	tmpX := px; tmpY := py;
@@ -648,8 +648,8 @@ BEGIN
 	out := pMask;
 END ScaleMask;
 
-PROCEDURE MakePrinterMask0(G: Frame; X, Y: INTEGER; dlink: Objects.Object; VAR M: Display3.Mask);
-VAR ox, oy, x, y, w, h, b, b2: INTEGER; R, R0: Display3.Mask; v: Objects.Object;
+PROCEDURE MakePrinterMask0(G: Frame; X, Y: SIGNED16; dlink: Objects.Object; VAR M: Display3.Mask);
+VAR ox, oy, x, y, w, h, b, b2: SIGNED16; R, R0: Display3.Mask; v: Objects.Object;
 BEGIN
 	(* make the basic mask *)
 	MakePMask0(G, X, Y, M);
@@ -688,7 +688,7 @@ END MakePrinterMask0;
 
 (** Execute a string as an Oberon command. The parameters executor, dlink, sender, receiver are copied to the global variables executorObj, context, senderObj, receiverObj respectively. Dlink must be the parent of executor. If a '%' is leading the command, no Oberon.Par is set up. *)
 PROCEDURE Execute*(cmd: ARRAY OF CHAR; executor, dlink, sender, receiver: Objects.Object);
-VAR T: Texts.Text; S: Attributes.Scanner; ch: CHAR; res, cx, cy, cw, chl, i, j: INTEGER;
+VAR T: Texts.Text; S: Attributes.Scanner; ch: CHAR; res, cx, cy, cw, chl, i, j: SIGNED16;
 	oldcontext, obj: Objects.Object; str: BOOLEAN;
 BEGIN
 	IF cmd[0] = 0X THEN RETURN END;
@@ -778,7 +778,7 @@ END Execute;
 (* Macros *)
 
 PROCEDURE ReadName(VAR T: Attributes.Reader; VAR name: ARRAY OF CHAR);
-VAR ch: CHAR; i: INTEGER; old: BOOLEAN;
+VAR ch: CHAR; i: SIGNED16; old: BOOLEAN;
 
 	PROCEDURE Ok(ch: CHAR): BOOLEAN;
 	BEGIN
@@ -798,7 +798,7 @@ END ReadName;
 
 (* special code for the & macro. && for next higher context etc. *)
 PROCEDURE Lookup0(VAR T: Attributes.Reader; VAR name: ARRAY OF CHAR; VAR context: Objects.Object);
-VAR ch: CHAR; i: INTEGER; old: BOOLEAN;
+VAR ch: CHAR; i: SIGNED16; old: BOOLEAN;
 
 	PROCEDURE Ok(ch: CHAR): BOOLEAN;
 	BEGIN
@@ -823,7 +823,7 @@ BEGIN
 END Lookup0;
 
 PROCEDURE ObjAttr(name: ARRAY OF CHAR; context: Objects.Object; VAR W: Texts.Writer);
-VAR i, j: INTEGER; attr: ARRAY 32 OF CHAR; obj: Objects.Object;
+VAR i, j: SIGNED16; attr: ARRAY 32 OF CHAR; obj: Objects.Object;
 BEGIN
 	IF name # "" THEN
 		i := 0; WHILE name[i] # 0X DO INC(i); END;
@@ -843,7 +843,7 @@ BEGIN
 	END
 END ObjAttr;
 
-PROCEDURE StandardMacros(ch: CHAR; VAR T: Attributes.Reader; VAR res: Texts.Text; VAR beg: LONGINT);
+PROCEDURE StandardMacros(ch: CHAR; VAR T: Attributes.Reader; VAR res: Texts.Text; VAR beg: SIGNED32);
 VAR name: ARRAY 64 OF CHAR; f, context0: Objects.Object;
 BEGIN
 	IF ch # 0X THEN
@@ -874,9 +874,9 @@ BEGIN
 	END
 END StandardMacros;
 
-PROCEDURE UpArrowMacro(ch: CHAR; VAR T: Attributes.Reader; VAR res: Texts.Text; VAR beg: LONGINT);
-VAR text, text0: Texts.Text; bg, end, ttime: LONGINT; obj: Objects.Object; S: Display.SelectMsg;
-	i: INTEGER; name: ARRAY 32 OF CHAR; R: Attributes.Reader; ch0: CHAR; old: Objects.Library;
+PROCEDURE UpArrowMacro(ch: CHAR; VAR T: Attributes.Reader; VAR res: Texts.Text; VAR beg: SIGNED32);
+VAR text, text0: Texts.Text; bg, end, ttime: SIGNED32; obj: Objects.Object; S: Display.SelectMsg;
+	i: SIGNED16; name: ARRAY 32 OF CHAR; R: Attributes.Reader; ch0: CHAR; old: Objects.Library;
 	string: BOOLEAN;
 BEGIN
 	IF ch = 0X THEN (* Reset *)
@@ -937,7 +937,7 @@ BEGIN
 END UpArrowMacro;
 
 (** Forwards a message from a camera-view to its contents, inserting the camera-view in the message thread. X, Y is the absolute screen coordinates of the bottom-left corner of the camera-view. This is important for calculating the correct display mask for the contents of the view. *)
-PROCEDURE Send*(from: View; X, Y: INTEGER; to: Display.Frame; VAR M: Display.FrameMsg);
+PROCEDURE Send*(from: View; X, Y: SIGNED16; to: Display.Frame; VAR M: Display.FrameMsg);
 VAR S: Stack;
 BEGIN
 	Push(S, from, M); from.absX := X; from.absY := Y; to.handle(to, M); Pop(S, from, M);
@@ -1044,7 +1044,7 @@ BEGIN
 			(*
 			IF (obj.lib # NIL) & (obj.lib.name # "") THEN (* << only insert names in public libraries *)
 				Objects.GetRef(obj.lib.dict, M.s, ref);
-				IF (ref # MIN(INTEGER)) & (ref # obj.ref) THEN
+				IF (ref # MIN(SIGNED16)) & (ref # obj.ref) THEN
 					Texts.WriteString(W, " overwriting name "); Texts.WriteString(W, M.s); Texts.WriteLn(W); Log
 				END;
 				Objects.PutName(obj.lib.dict, obj.ref, M.s)
@@ -1096,7 +1096,7 @@ END HandleObjectAttributes;
 
 (** Bind an object to a library. Nothing happens if obj is already bound to a public library, or is already bound to lib. This is the default behavior when an object received the Objects.BindMsg. *)
 PROCEDURE BindObj*(obj: Objects.Object; lib: Objects.Library);
-VAR ref: INTEGER;
+VAR ref: SIGNED16;
 BEGIN
 	IF lib # NIL THEN
 		IF (obj.lib = NIL) OR (obj.lib.name[0] = 0X) & (obj.lib # lib) THEN
@@ -1198,7 +1198,7 @@ END EnableMove;
 
 (** Standard mouse tracking behavior of visual gadgets. Calls ExecuteAttr for the "Cmd" attribute, calls MoveFrame and SizeFrame.*)
 PROCEDURE TrackFrame*(F: Display.Frame; VAR M: Oberon.InputMsg);
-VAR keys: SET; x, y, w, h: INTEGER; R: Display3.Mask;
+VAR keys: SET; x, y, w, h: SIGNED16; R: Display3.Mask;
 BEGIN
 	WITH F: Frame DO
 		IF ~(selected IN F.state) & ((middle IN M.keys) OR (Oberon.New & (left IN M.keys))) THEN (* only when not selected and middle key *)
@@ -1222,7 +1222,7 @@ BEGIN
 END TrackFrame;
 
 PROCEDURE FrameHandler(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR F0: Frame; x, y, w, h, u, v: INTEGER; D: Display.DisplayMsg; R: Display3.Mask; obj: Objects.Object;
+VAR F0: Frame; x, y, w, h, u, v: SIGNED16; D: Display.DisplayMsg; R: Display3.Mask; obj: Objects.Object;
 	name: ARRAY 64 OF CHAR;
 BEGIN
 	WITH F: Frame DO
@@ -1389,7 +1389,7 @@ END GetAlias;
 
 (** Create an object from the generator procedure or alias objname. *)
 PROCEDURE CreateObject*(objname: ARRAY OF CHAR): Objects.Object;
-VAR genproc: ARRAY 64 OF CHAR; res: INTEGER;
+VAR genproc: ARRAY 64 OF CHAR; res: SIGNED16;
 BEGIN
 	Objects.NewObj := NIL;
 	GetAlias(objname, genproc);	(* ps 20.5.96 *)
@@ -1485,7 +1485,7 @@ BEGIN
 END Insert;
 
 (** Returns the latest object selection. Time < 0 indicates no selection. *)
-PROCEDURE GetSelection*(VAR objs: Objects.Object; VAR time: LONGINT);
+PROCEDURE GetSelection*(VAR objs: Objects.Object; VAR time: SIGNED32);
 VAR SM: Display.SelectMsg;
 BEGIN time := -1; objs := NIL;
 	SM.id := Display.get; SM.F := NIL; SM.sel := NIL; SM.obj := NIL; SM.time := -1; Display.Broadcast(SM);
@@ -1621,7 +1621,7 @@ END ChangeAttr;
 	Gadgets.Set O.A <AttributeValue> ~		for attribute A of named object O in the current context
 *)
 PROCEDURE Set*; (* O.A value *)
-VAR S: Attributes.Scanner; name: ARRAY 64 OF CHAR; i, j: INTEGER; attr: ARRAY 32 OF CHAR; obj: Objects.Object;
+VAR S: Attributes.Scanner; name: ARRAY 64 OF CHAR; i, j: SIGNED16; attr: ARRAY 32 OF CHAR; obj: Objects.Object;
 	A: Objects.AttrMsg; B: Objects.AttrMsg;   (*fof*)
 
 	PROCEDURE Convert(VAR A,to: Objects.AttrMsg); (*fof*)

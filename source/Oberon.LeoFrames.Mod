@@ -25,17 +25,17 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 		(** figure frame **)
 		Frame* = POINTER TO FrameDesc;
 		FrameDesc* = RECORD (Gadgets.FrameDesc)
-			ox*, oy*: INTEGER;	(** vector from upper left corner of frame to figure origin in screen space **)
-			scale*: REAL;	(** viewport scale factor **)
+			ox*, oy*: SIGNED16;	(** vector from upper left corner of frame to figure origin in screen space **)
+			scale*: FLOAT32;	(** viewport scale factor **)
 			col*: Display.Color;	(** background color (unless transparent) **)
 			framed*: BOOLEAN;	(** if true then a pseudo-3D border is drawn around the frame **)
 		END;
 
 		RegData = RECORD (GfxRegions.EnumData)
 			reg: GfxRegions.Region;
-			scale: REAL;
-			border: INTEGER;
-			dx, dy: INTEGER;
+			scale: FLOAT32;
+			border: SIGNED16;
+			dx, dy: SIGNED16;
 		END;
 
 		MaskData = RECORD (GfxRegions.EnumData)
@@ -51,7 +51,7 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 
 	(**--- Rendering Support ---**)
 
-	PROCEDURE AddRegionRect (x, y, w, h: INTEGER);
+	PROCEDURE AddRegionRect (x, y, w, h: SIGNED16);
 	BEGIN
 		GfxRegions.AddRect(MaskReg, x, y, x + w, y + h)
 	END AddRegionRect;
@@ -64,7 +64,7 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 		RETURN MaskReg
 	END RegionFromMask;
 
-	PROCEDURE AddScaledRect (llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData);
+	PROCEDURE AddScaledRect (llx, lly, urx, ury: SIGNED16; VAR data: GfxRegions.EnumData);
 	BEGIN
 		WITH data: RegData DO
 			llx := SHORT(ENTIER(llx * data.scale)) - data.border;
@@ -76,7 +76,7 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 	END AddScaledRect;
 
 	(** convert region from figure space to frame space and clip to frame **)
-	PROCEDURE ScaledRegion* (src: GfxRegions.Region; scale, border: REAL; dx, dy: INTEGER): GfxRegions.Region;
+	PROCEDURE ScaledRegion* (src: GfxRegions.Region; scale, border: FLOAT32; dx, dy: SIGNED16): GfxRegions.Region;
 		VAR rdata: RegData;
 	BEGIN
 		rdata.border := -SHORT(ENTIER(-scale * border));
@@ -87,7 +87,7 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 		RETURN ScaleReg
 	END ScaledRegion;
 
-	PROCEDURE AddMaskRect (llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData);
+	PROCEDURE AddMaskRect (llx, lly, urx, ury: SIGNED16; VAR data: GfxRegions.EnumData);
 	BEGIN
 		Display3.Add(data(MaskData).mask, llx, lly, urx - llx, ury - lly)
 	END AddMaskRect;
@@ -102,7 +102,7 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 	END MaskFromRegion;
 
 	(** initialize and return display context for rendering into frame rectangle **)
-	PROCEDURE DisplayContext* (frame: Frame; llx, lly, urx, ury: INTEGER; clip: GfxRegions.Region): Gfx.Context;
+	PROCEDURE DisplayContext* (frame: Frame; llx, lly, urx, ury: SIGNED16; clip: GfxRegions.Region): Gfx.Context;
 		VAR col: Gfx.Color;
 	BEGIN
 		GfxDisplay.SetCoordinates(DC, llx + frame.ox, ury + frame.oy, 1);
@@ -119,8 +119,8 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 	END DisplayContext;
 
 	(** initialize and return printer context **)
-	PROCEDURE PrinterContext* (frame: Frame; llx, lly, urx, ury: INTEGER; clip: GfxRegions.Region): Gfx.Context;
-		VAR pix: INTEGER;
+	PROCEDURE PrinterContext* (frame: Frame; llx, lly, urx, ury: SIGNED16; clip: GfxRegions.Region): Gfx.Context;
+		VAR pix: SIGNED16;
 	BEGIN
 		GfxPrinter.Init(PC);
 		GfxPrinter.SetCoordinates(PC, llx + PC.scale * frame.ox, ury + PC.scale * frame.oy, PC.scale);
@@ -137,7 +137,7 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 
 	(** return color value suitable for rendering on the display **)
 	PROCEDURE Color* (frame: Frame): Display.Color;
-		VAR r, g, b: INTEGER;
+		VAR r, g, b: SIGNED16;
 	BEGIN
 		IF (0 <= frame.col) & (frame.col < 256) OR (frame.col < 0) & Display.TrueColor(Display.ColLeft) THEN
 			RETURN frame.col
@@ -149,7 +149,7 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 
 	(*--- Rendering ---*)
 
-	PROCEDURE Restore (frame: Frame; x, y, w, h, fx, fy: INTEGER; mask: Display3.Mask);
+	PROCEDURE Restore (frame: Frame; x, y, w, h, fx, fy: SIGNED16; mask: Display3.Mask);
 		VAR ctxt: Gfx.Context;
 	BEGIN
 		Oberon.RemoveMarks(fx + x, fy + y, w, h);
@@ -167,9 +167,9 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 	END Restore;
 
 	PROCEDURE Print (frame: Frame; VAR msg: Display.DisplayMsg);
-		VAR mask: Display3.Mask; w, h: INTEGER; ctxt: Gfx.Context;
+		VAR mask: Display3.Mask; w, h: SIGNED16; ctxt: Gfx.Context;
 
-		PROCEDURE pc (x: LONGINT): INTEGER;
+		PROCEDURE pc (x: SIGNED32): SIGNED16;
 		BEGIN
 			RETURN SHORT((x * Display.Unit + Printer.Unit DIV 2) DIV Printer.Unit)
 		END pc;
@@ -195,7 +195,7 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 
 	PROCEDURE Update (frame: Frame; VAR msg: Leonardo.UpdateMsg);
 		VAR
-			bw, llx, lly, urx, ury, x, y, w, h: INTEGER; dm: Display.DisplayMsg; clip: GfxRegions.Region; ctxt: Gfx.Context;
+			bw, llx, lly, urx, ury, x, y, w, h: SIGNED16; dm: Display.DisplayMsg; clip: GfxRegions.Region; ctxt: Gfx.Context;
 			mask: Display3.Mask;
 	BEGIN
 		IF msg.fig = frame.obj THEN	(* redisplay frame *)
@@ -309,7 +309,7 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 
 	(** frame handler **)
 	PROCEDURE Handle* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR frame, copy: Frame; fx, fy: INTEGER; mask: Display3.Mask; ver: LONGINT;
+		VAR frame, copy: Frame; fx, fy: SIGNED16; mask: Display3.Mask; ver: SIGNED32;
 	BEGIN
 		frame := obj(Frame);
 		IF msg IS Display.FrameMsg THEN
@@ -406,7 +406,7 @@ MODULE LeoFrames IN Oberon; (** portable **)	(* eos  *)
 	END NewFrame;
 
 	PROCEDURE ReadContainer (VAR r: Files.Rider; cont: Leonardo.Container);
-		VAR ver: LONGINT; i: INTEGER; real: REAL; obj: Objects.Object; cm: Objects.CopyMsg; s: Leonardo.Shape; bool: BOOLEAN;
+		VAR ver: SIGNED32; i: SIGNED16; real: FLOAT32; obj: Objects.Object; cm: Objects.CopyMsg; s: Leonardo.Shape; bool: BOOLEAN;
 	BEGIN
 		(* shape part *)
 		Files.ReadNum(r, ver);

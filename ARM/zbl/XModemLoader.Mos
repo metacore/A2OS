@@ -4,7 +4,7 @@ IMPORT SYSTEM,
 	XModem, Bootloader, Loader;
 
 	PROCEDURE Load * (CONST name, host: ARRAY OF CHAR);
-	VAR res: LONGINT; msg: ARRAY 128 OF CHAR; char: CHAR;
+	VAR res: SIGNED32; msg: ARRAY 128 OF CHAR; char: CHAR;
 	BEGIN
 		res := XModem.Receive(Bootloader.input^, Bootloader.output^, Loader.CopyToRam);
 		(*IF res # 0 THEN
@@ -23,7 +23,7 @@ IMPORT SYSTEM,
 		Loader.NotifyDone(res)
 	END Load;
 
-	(*PROCEDURE CopyToRam * (CONST buffer: ARRAY OF CHAR; ofs, len: LONGINT);
+	(*PROCEDURE CopyToRam * (CONST buffer: ARRAY OF CHAR; ofs, len: SIGNED32);
 	BEGIN
 		WHILE buffer[ofs + len - 1] = 1AX DO DEC(len) END;
 		Loader.CopyToRam(buffer, ofs, len)

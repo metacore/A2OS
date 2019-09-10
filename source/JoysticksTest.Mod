@@ -41,7 +41,7 @@ TYPE
 		random : Random.Generator;
 		timer : Kernel.Timer;
 		alive, dead : BOOLEAN;
-		i, minValue, maxValue : LONGINT;
+		i, minValue, maxValue : SIGNED32;
 
 		PROCEDURE Stop;
 		BEGIN {EXCLUSIVE}
@@ -49,7 +49,7 @@ TYPE
 			AWAIT(dead);
 		END Stop;
 
-		PROCEDURE &Init*(nbrOfButtons  : LONGINT);
+		PROCEDURE &Init*(nbrOfButtons  : SIGNED32);
 		BEGIN
 			Init^(nbrOfButtons);
 			alive := TRUE; dead := FALSE;
@@ -91,10 +91,10 @@ TYPE
 
 VAR
 	joysticks : ARRAY MaxSimulatedJoysticks OF SimulatedJoystick;
-	nbrOfJoysticks : LONGINT;
+	nbrOfJoysticks : SIGNED32;
 
 PROCEDURE CreateJoystick*(context : Commands.Context); (* [nbrOfButtons] ~ *)
-VAR joystick : SimulatedJoystick; nbrOfButtons, nbrOfAxis: LONGINT; res : WORD;
+VAR joystick : SimulatedJoystick; nbrOfButtons, nbrOfAxis: SIGNED32; res : INTEGER;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.Int(nbrOfButtons, FALSE);
 	context.arg.SkipWhitespace; context.arg.Int(nbrOfAxis, FALSE);
@@ -121,7 +121,7 @@ BEGIN
 END CreateJoystick;
 
 PROCEDURE Cleanup;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO MaxSimulatedJoysticks - 1 DO
 		IF joysticks[i] # NIL THEN

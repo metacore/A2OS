@@ -13,20 +13,20 @@ CONST
 	halfrange = 20000000H;
 	step      = 7;
 
-	allbitsInv = 1 / REAL(allbits);
+	allbitsInv = 1 / FLOAT32(allbits);
 
 TYPE
 		(** A pseudo-random number generator.  This object is not reentrant. *)
 	Generator* = OBJECT
 		VAR
 			buffer: ARRAY 250 OF SET32;
-			index: LONGINT;
-			Z: LONGINT;	(* seed for Rand() *)
+			index: SIGNED32;
+			Z: SIGNED32;	(* seed for Rand() *)
 
-		PROCEDURE Rand(): LONGINT;
+		PROCEDURE Rand(): SIGNED32;
 			(* for Init. Same as used by RandomNumbers *)
 			CONST a = 16807; q = 127773; r = 2836;
-			VAR t: LONGINT;
+			VAR t: SIGNED32;
 		BEGIN
 			t := a * (Z MOD q) - r * (Z DIV q);
 			IF t > 0 THEN Z := t ELSE Z := t + max END;
@@ -35,10 +35,10 @@ TYPE
 
 		(** Set the seed. *)
 
-		PROCEDURE InitSeed*(seed: LONGINT);
+		PROCEDURE InitSeed*(seed: SIGNED32);
 			VAR
-				k, i: LONGINT;
-				mask, msb: LONGINT;
+				k, i: SIGNED32;
+				mask, msb: SIGNED32;
 		BEGIN
 			Z := seed; index := 0;
 			FOR i := 0 TO 249 DO
@@ -67,40 +67,40 @@ TYPE
 
 		(** Return a pseudo-random 32-bit integer. *)
 
-		PROCEDURE Integer*(): LONGINT;
-			VAR newRand, j: LONGINT;
+		PROCEDURE Integer*(): SIGNED32;
+			VAR newRand, j: SIGNED32;
 		BEGIN
 			IF index >= 147 THEN j := index - 147 ELSE j := index + 103 END;
 			buffer[index] := buffer[index] / buffer[j];
-			newRand := SYSTEM.VAL(LONGINT, buffer[index]);
+			newRand := SYSTEM.VAL(SIGNED32, buffer[index]);
 			IF index >= 249 THEN index := 0 ELSE INC(index) END;
 			RETURN newRand
 		END Integer;
 
 		(** Return a pseudo-random number from 0..sides-1. *)
 
-		PROCEDURE Dice*(sides: LONGINT): LONGINT;
+		PROCEDURE Dice*(sides: SIGNED32): SIGNED32;
 		BEGIN
 			RETURN Integer() MOD sides;
 		END Dice;
 
 		(** Return a pseudo-random real number, uniformly distributed. *)
 
-		PROCEDURE Uniform*(): REAL;
+		PROCEDURE Uniform*(): FLOAT32;
 		BEGIN
 			RETURN Integer() * allbitsInv;
 		END Uniform;
 
 		(** Return a pseudo-random real number, exponentially distributed. *)
 
-		PROCEDURE Exp*(mu: REAL): REAL;
+		PROCEDURE Exp*(mu: FLOAT32): FLOAT32;
 		BEGIN
 			RETURN -Math.ln(Uniform())/mu
 		END Exp;
 
-		PROCEDURE Gaussian*(): REAL; (*generates a normal distribution with mean 0, variance 1 using the Box-Muller Transform*)
+		PROCEDURE Gaussian*(): FLOAT32; (*generates a normal distribution with mean 0, variance 1 using the Box-Muller Transform*)
 		VAR
-			x1,x2,w,y1: REAL;
+			x1,x2,w,y1: FLOAT32;
 		BEGIN
 			REPEAT
 				x1:=2.0*Uniform()-1;
@@ -120,7 +120,7 @@ TYPE
 	Sequence* = OBJECT
 		VAR r: Generator;
 
-		PROCEDURE InitSeed*(seed: LONGINT);
+		PROCEDURE InitSeed*(seed: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			r.InitSeed(seed)
 		END InitSeed;
@@ -130,27 +130,27 @@ TYPE
 			NEW(r)
 		END Init;
 
-		PROCEDURE Integer*(): LONGINT;
+		PROCEDURE Integer*(): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN r.Integer()
 		END Integer;
 
-		PROCEDURE Dice*(sides: LONGINT): LONGINT;
+		PROCEDURE Dice*(sides: SIGNED32): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN r.Dice(sides)
 		END Dice;
 
-		PROCEDURE Uniform*(): REAL;
+		PROCEDURE Uniform*(): FLOAT32;
 		BEGIN {EXCLUSIVE}
 			RETURN r.Uniform()
 		END Uniform;
 
-		PROCEDURE Exp*(mu: REAL): REAL;
+		PROCEDURE Exp*(mu: FLOAT32): FLOAT32;
 		BEGIN {EXCLUSIVE}
 			RETURN r.Exp(mu)
 		END Exp;
 
-		PROCEDURE Gaussian*(): REAL; (*generates a normal distribution with mean 0, variance 1 using the Box-Muller Transform*)
+		PROCEDURE Gaussian*(): FLOAT32; (*generates a normal distribution with mean 0, variance 1 using the Box-Muller Transform*)
 		BEGIN{EXCLUSIVE}
 			RETURN r.Gaussian();
 		END Gaussian;

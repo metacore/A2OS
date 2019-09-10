@@ -9,50 +9,50 @@ positive: math array types of basic types
 
 	MODULE Test; 
 	TYPE
-		TASS1= ARRAY [2] OF SHORTINT;
-		TASO1= ARRAY [*] OF SHORTINT;
-		TASS2= ARRAY [2,3] OF SHORTINT;
-		TASO2= ARRAY [*,*] OF SHORTINT;
-		TASS3= ARRAY [2,3,4] OF SHORTINT;
-		TASO3= ARRAY [*,*,*] OF SHORTINT;
-		TASOS= ARRAY [*,*,2,3] OF SHORTINT;
-		TAST= ARRAY [?] OF SHORTINT;
+		TASS1= ARRAY [2] OF SIGNED8;
+		TASO1= ARRAY [*] OF SIGNED8;
+		TASS2= ARRAY [2,3] OF SIGNED8;
+		TASO2= ARRAY [*,*] OF SIGNED8;
+		TASS3= ARRAY [2,3,4] OF SIGNED8;
+		TASO3= ARRAY [*,*,*] OF SIGNED8;
+		TASOS= ARRAY [*,*,2,3] OF SIGNED8;
+		TAST= ARRAY [?] OF SIGNED8;
 
-		TAIS1= ARRAY [2] OF INTEGER;
-		TAIO1= ARRAY [*] OF INTEGER;
-		TAIS2= ARRAY [2,3] OF INTEGER;
-		TAIO2= ARRAY [*,*] OF INTEGER;
-		TAIS3= ARRAY [2,3,4] OF INTEGER;
-		TAIO3= ARRAY [*,*,*] OF INTEGER;
-		TAIOS= ARRAY [*,*,2,3] OF INTEGER;
-		TAIT= ARRAY [?] OF INTEGER;
+		TAIS1= ARRAY [2] OF SIGNED16;
+		TAIO1= ARRAY [*] OF SIGNED16;
+		TAIS2= ARRAY [2,3] OF SIGNED16;
+		TAIO2= ARRAY [*,*] OF SIGNED16;
+		TAIS3= ARRAY [2,3,4] OF SIGNED16;
+		TAIO3= ARRAY [*,*,*] OF SIGNED16;
+		TAIOS= ARRAY [*,*,2,3] OF SIGNED16;
+		TAIT= ARRAY [?] OF SIGNED16;
 
-		TALS1= ARRAY [2] OF LONGINT;
-		TALO1= ARRAY [*] OF LONGINT;
-		TALS2= ARRAY [2,3] OF LONGINT;
-		TALO2= ARRAY [*,*] OF LONGINT;
-		TALS3= ARRAY [2,3,4] OF LONGINT;
-		TALO3= ARRAY [*,*,*] OF LONGINT;
-		TALOS= ARRAY [*,*,2,3] OF LONGINT;
-		TALT= ARRAY [?] OF LONGINT;
+		TALS1= ARRAY [2] OF SIGNED32;
+		TALO1= ARRAY [*] OF SIGNED32;
+		TALS2= ARRAY [2,3] OF SIGNED32;
+		TALO2= ARRAY [*,*] OF SIGNED32;
+		TALS3= ARRAY [2,3,4] OF SIGNED32;
+		TALO3= ARRAY [*,*,*] OF SIGNED32;
+		TALOS= ARRAY [*,*,2,3] OF SIGNED32;
+		TALT= ARRAY [?] OF SIGNED32;
 
-		TARS1= ARRAY [2] OF REAL;
-		TARO1= ARRAY [*] OF REAL;
-		TARS2= ARRAY [2,3] OF REAL;
-		TARO2= ARRAY [*,*] OF REAL;
-		TARS3= ARRAY [2,3,4] OF REAL;
-		TARO3= ARRAY [*,*,*] OF REAL;
-		TAROS= ARRAY [*,*,2,3] OF REAL;
-		TART= ARRAY [?] OF REAL;
+		TARS1= ARRAY [2] OF FLOAT32;
+		TARO1= ARRAY [*] OF FLOAT32;
+		TARS2= ARRAY [2,3] OF FLOAT32;
+		TARO2= ARRAY [*,*] OF FLOAT32;
+		TARS3= ARRAY [2,3,4] OF FLOAT32;
+		TARO3= ARRAY [*,*,*] OF FLOAT32;
+		TAROS= ARRAY [*,*,2,3] OF FLOAT32;
+		TART= ARRAY [?] OF FLOAT32;
 
-		TAXS1= ARRAY [2] OF LONGREAL;
-		TAXO1= ARRAY [*] OF LONGREAL;
-		TAXS2= ARRAY [2,3] OF LONGREAL;
-		TAXO2= ARRAY [*,*] OF LONGREAL;
-		TAXS3= ARRAY [2,3,4] OF LONGREAL;
-		TAXO3= ARRAY [*,*,*] OF LONGREAL;
-		TAXOS= ARRAY [*,*,2,3] OF LONGREAL;
-		TAXT= ARRAY [?] OF LONGREAL;
+		TAXS1= ARRAY [2] OF FLOAT64;
+		TAXO1= ARRAY [*] OF FLOAT64;
+		TAXS2= ARRAY [2,3] OF FLOAT64;
+		TAXO2= ARRAY [*,*] OF FLOAT64;
+		TAXS3= ARRAY [2,3,4] OF FLOAT64;
+		TAXO3= ARRAY [*,*,*] OF FLOAT64;
+		TAXOS= ARRAY [*,*,2,3] OF FLOAT64;
+		TAXT= ARRAY [?] OF FLOAT64;
 
 		TASetS1= ARRAY [2] OF SET;
 		TASetO1= ARRAY [*] OF SET;
@@ -78,133 +78,133 @@ negative: forbidden array mixture (math static - static)
 
 	MODULE Test; 
 	TYPE
-		TA= ARRAY [2] OF ARRAY 2 OF REAL;
+		TA= ARRAY [2] OF ARRAY 2 OF FLOAT32;
 	END Test.
 
 negative: forbidden array mixture (math static - open)
 
 	MODULE Test; 
 	TYPE
-		TA= ARRAY [2] OF ARRAY OF REAL;
+		TA= ARRAY [2] OF ARRAY OF FLOAT32;
 	END Test.
 
 negative: forbidden array mixture (math open - static)
 
 	MODULE Test; 
 	TYPE
-		TA= ARRAY [*] OF ARRAY 3 OF REAL;
+		TA= ARRAY [*] OF ARRAY 3 OF FLOAT32;
 	END Test.
 
 negative: forbidden array mixture (math open - open)
 
 	MODULE Test; 
 	TYPE
-		TA= ARRAY [*] OF ARRAY OF REAL;
+		TA= ARRAY [*] OF ARRAY OF FLOAT32;
 	END Test.
 
 negative: forbidden array mixture (math tensor - static)
 
 	MODULE Test; 
 	TYPE
-		TA= ARRAY [?] OF ARRAY 3 OF REAL;
+		TA= ARRAY [?] OF ARRAY 3 OF FLOAT32;
 	END Test.
 
 negative: forbidden array mixture (math tensor - open)
 
 	MODULE Test; 
 	TYPE
-		TA= ARRAY [?] OF ARRAY OF REAL;
+		TA= ARRAY [?] OF ARRAY OF FLOAT32;
 	END Test.
 	
 negative: forbidden array mixture (math tensor - math static)
 
 	MODULE Test; 
 	TYPE
-		TA= ARRAY [?] OF ARRAY  [3] OF REAL;
+		TA= ARRAY [?] OF ARRAY  [3] OF FLOAT32;
 	END Test.
 
 negative: forbidden array mixture (math tensor - math open)
 
 	MODULE Test; 
 	TYPE
-		TA= ARRAY [?] OF ARRAY  [*] OF REAL;
+		TA= ARRAY [?] OF ARRAY  [*] OF FLOAT32;
 	END Test.
 	
 negative: forbidden array mixture (math tensor - math tensor)
 
 	MODULE Test; 
 	TYPE
-		TA= ARRAY [?] OF ARRAY  [?] OF REAL;
+		TA= ARRAY [?] OF ARRAY  [?] OF FLOAT32;
 	END Test.
 	
 positive: variables and parameters of math array type
 
 	MODULE Test; 
 	VAR 
-		GAS1: ARRAY [2] OF REAL;
-		GAO1: ARRAY [*] OF REAL;
-		GAS2: ARRAY [2,3] OF REAL;
-		GAO2: ARRAY [*,*] OF REAL;
-		GAS3: ARRAY [2,3,4] OF REAL;
-		GAO3: ARRAY [*,*,*] OF REAL;
-		GAOS: ARRAY [*,*,2,3] OF REAL;
-		GAT: ARRAY [?] OF REAL;
+		GAS1: ARRAY [2] OF FLOAT32;
+		GAO1: ARRAY [*] OF FLOAT32;
+		GAS2: ARRAY [2,3] OF FLOAT32;
+		GAO2: ARRAY [*,*] OF FLOAT32;
+		GAS3: ARRAY [2,3,4] OF FLOAT32;
+		GAO3: ARRAY [*,*,*] OF FLOAT32;
+		GAOS: ARRAY [*,*,2,3] OF FLOAT32;
+		GAT: ARRAY [?] OF FLOAT32;
 		
 		PROCEDURE P;
 		VAR
-			LAS1: ARRAY [2] OF REAL;
-			LAO1: ARRAY [*] OF REAL;
-			LAS2: ARRAY [2,3] OF REAL;
-			LAO2: ARRAY [*,*] OF REAL;
-			LAS3: ARRAY [2,3,4] OF REAL;
-			LAO3: ARRAY [*,*,*] OF REAL;
-			LAOS: ARRAY [*,*,2,3] OF REAL;
-			LAT: ARRAY [?] OF REAL;
+			LAS1: ARRAY [2] OF FLOAT32;
+			LAO1: ARRAY [*] OF FLOAT32;
+			LAS2: ARRAY [2,3] OF FLOAT32;
+			LAO2: ARRAY [*,*] OF FLOAT32;
+			LAS3: ARRAY [2,3,4] OF FLOAT32;
+			LAO3: ARRAY [*,*,*] OF FLOAT32;
+			LAOS: ARRAY [*,*,2,3] OF FLOAT32;
+			LAT: ARRAY [?] OF FLOAT32;
 		BEGIN
 		END P;
 
-		PROCEDURE ProcValS1(parameter: ARRAY [2] OF REAL); END ProcValS1;
-		PROCEDURE ProcValO1(parameter: ARRAY [*] OF REAL); END ProcValO1;
-		PROCEDURE ProcValS2(parameter: ARRAY [2,3] OF REAL); END ProcValS2;
-		PROCEDURE ProcValO2(parameter: ARRAY [*,*] OF REAL); END ProcValO2;
-		PROCEDURE ProcValS3(parameter: ARRAY [2,3,4] OF REAL); END ProcValS3;
-		PROCEDURE ProcValO3(parameter: ARRAY [*,*,*] OF REAL); END ProcValO3;
-		PROCEDURE ProcValOS(parameter: ARRAY [*,*,2,3] OF REAL); END ProcValOS;
-		PROCEDURE ProcValT(parameter: ARRAY [?] OF REAL); END ProcValT;
+		PROCEDURE ProcValS1(parameter: ARRAY [2] OF FLOAT32); END ProcValS1;
+		PROCEDURE ProcValO1(parameter: ARRAY [*] OF FLOAT32); END ProcValO1;
+		PROCEDURE ProcValS2(parameter: ARRAY [2,3] OF FLOAT32); END ProcValS2;
+		PROCEDURE ProcValO2(parameter: ARRAY [*,*] OF FLOAT32); END ProcValO2;
+		PROCEDURE ProcValS3(parameter: ARRAY [2,3,4] OF FLOAT32); END ProcValS3;
+		PROCEDURE ProcValO3(parameter: ARRAY [*,*,*] OF FLOAT32); END ProcValO3;
+		PROCEDURE ProcValOS(parameter: ARRAY [*,*,2,3] OF FLOAT32); END ProcValOS;
+		PROCEDURE ProcValT(parameter: ARRAY [?] OF FLOAT32); END ProcValT;
 
-		PROCEDURE ProcConstS1(CONST parameter: ARRAY [2] OF REAL); END ProcConstS1;
-		PROCEDURE ProcConstO1(CONST parameter: ARRAY [*] OF REAL); END ProcConstO1;
-		PROCEDURE ProcConstS2(CONST parameter: ARRAY [2,3] OF REAL); END ProcConstS2;
-		PROCEDURE ProcConstO2(CONST parameter: ARRAY [*,*] OF REAL); END ProcConstO2;
-		PROCEDURE ProcConstS3(CONST parameter: ARRAY [2,3,4] OF REAL); END ProcConstS3;
-		PROCEDURE ProcConstO3(CONST parameter: ARRAY [*,*,*] OF REAL); END ProcConstO3;
-		PROCEDURE ProcConstOS(CONST parameter: ARRAY [*,*,2,3] OF REAL); END ProcConstOS;
-		PROCEDURE ProcConstT(CONST parameter: ARRAY [?] OF REAL); END ProcConstT;
+		PROCEDURE ProcConstS1(CONST parameter: ARRAY [2] OF FLOAT32); END ProcConstS1;
+		PROCEDURE ProcConstO1(CONST parameter: ARRAY [*] OF FLOAT32); END ProcConstO1;
+		PROCEDURE ProcConstS2(CONST parameter: ARRAY [2,3] OF FLOAT32); END ProcConstS2;
+		PROCEDURE ProcConstO2(CONST parameter: ARRAY [*,*] OF FLOAT32); END ProcConstO2;
+		PROCEDURE ProcConstS3(CONST parameter: ARRAY [2,3,4] OF FLOAT32); END ProcConstS3;
+		PROCEDURE ProcConstO3(CONST parameter: ARRAY [*,*,*] OF FLOAT32); END ProcConstO3;
+		PROCEDURE ProcConstOS(CONST parameter: ARRAY [*,*,2,3] OF FLOAT32); END ProcConstOS;
+		PROCEDURE ProcConstT(CONST parameter: ARRAY [?] OF FLOAT32); END ProcConstT;
 		
-		PROCEDURE ProcVarS1(VAR parameter: ARRAY [2] OF REAL); END ProcVarS1;
-		PROCEDURE ProcVarO1(VAR parameter: ARRAY [*] OF REAL); END ProcVarO1;
-		PROCEDURE ProcVarS2(VAR parameter: ARRAY [2,3] OF REAL); END ProcVarS2;
-		PROCEDURE ProcVarO2(VAR parameter: ARRAY [*,*] OF REAL); END ProcVarO2;
-		PROCEDURE ProcVarS3(VAR parameter: ARRAY [2,3,4] OF REAL); END ProcVarS3;
-		PROCEDURE ProcVarO3(VAR parameter: ARRAY [*,*,*] OF REAL); END ProcVarO3;
-		PROCEDURE ProcVarOS(VAR parameter: ARRAY [*,*,2,3] OF REAL); END ProcVarOS;
-		PROCEDURE ProcVarT(VAR parameter: ARRAY [?] OF REAL); END ProcVarT;
+		PROCEDURE ProcVarS1(VAR parameter: ARRAY [2] OF FLOAT32); END ProcVarS1;
+		PROCEDURE ProcVarO1(VAR parameter: ARRAY [*] OF FLOAT32); END ProcVarO1;
+		PROCEDURE ProcVarS2(VAR parameter: ARRAY [2,3] OF FLOAT32); END ProcVarS2;
+		PROCEDURE ProcVarO2(VAR parameter: ARRAY [*,*] OF FLOAT32); END ProcVarO2;
+		PROCEDURE ProcVarS3(VAR parameter: ARRAY [2,3,4] OF FLOAT32); END ProcVarS3;
+		PROCEDURE ProcVarO3(VAR parameter: ARRAY [*,*,*] OF FLOAT32); END ProcVarO3;
+		PROCEDURE ProcVarOS(VAR parameter: ARRAY [*,*,2,3] OF FLOAT32); END ProcVarOS;
+		PROCEDURE ProcVarT(VAR parameter: ARRAY [?] OF FLOAT32); END ProcVarT;
 
-		PROCEDURE ProcRetS1(): ARRAY [2] OF REAL; END ProcRetS1;
-		PROCEDURE ProcRetO1(): ARRAY [*] OF REAL; END ProcRetO1;
-		PROCEDURE ProcRetS2(): ARRAY [2,3] OF REAL; END ProcRetS2;
-		PROCEDURE ProcRetO2(): ARRAY [*,*] OF REAL; END ProcRetO2;
-		PROCEDURE ProcRetS3(): ARRAY [2,3,4] OF REAL; END ProcRetS3;
-		PROCEDURE ProcRetO3(): ARRAY [*,*,*] OF REAL; END ProcRetO3;
-		PROCEDURE ProcRetOS(): ARRAY [*,*,2,3] OF REAL; END ProcRetOS;
-		PROCEDURE ProcRetT(): ARRAY [?] OF REAL; END ProcRetT;
+		PROCEDURE ProcRetS1(): ARRAY [2] OF FLOAT32; END ProcRetS1;
+		PROCEDURE ProcRetO1(): ARRAY [*] OF FLOAT32; END ProcRetO1;
+		PROCEDURE ProcRetS2(): ARRAY [2,3] OF FLOAT32; END ProcRetS2;
+		PROCEDURE ProcRetO2(): ARRAY [*,*] OF FLOAT32; END ProcRetO2;
+		PROCEDURE ProcRetS3(): ARRAY [2,3,4] OF FLOAT32; END ProcRetS3;
+		PROCEDURE ProcRetO3(): ARRAY [*,*,*] OF FLOAT32; END ProcRetO3;
+		PROCEDURE ProcRetOS(): ARRAY [*,*,2,3] OF FLOAT32; END ProcRetOS;
+		PROCEDURE ProcRetT(): ARRAY [?] OF FLOAT32; END ProcRetT;
 	END Test.
 
 
 negative: comparison of incompatible array types
 
 	MODULE Test;
-	VAR a: ARRAY [*] OF LONGINT;	b: ARRAY [*,*] OF LONGINT;
+	VAR a: ARRAY [*] OF SIGNED32;	b: ARRAY [*,*] OF SIGNED32;
 
 	BEGIN 
 		ASSERT(a=b);
@@ -214,8 +214,8 @@ negative: incompatible actual parameter type for static formal type
 
 	MODULE Test;
 	
-	PROCEDURE P(a: ARRAY [3,3] OF REAL);
-	VAR b: ARRAY [*,*] OF REAL;
+	PROCEDURE P(a: ARRAY [3,3] OF FLOAT32);
+	VAR b: ARRAY [*,*] OF FLOAT32;
 	BEGIN
 		P(b);
 	END P;
@@ -224,19 +224,19 @@ negative: incompatible actual parameter type for static formal type
 
 
 
-positive: use of COMPLEX and LONGCOMPLEX
+positive: use of COMPLEX32 and COMPLEX64
 
 MODULE Test;
 
- PROCEDURE Exp*( z: COMPLEX): COMPLEX;
-    VAR coef, re, real, im, imag: REAL;  exp: COMPLEX;
+ PROCEDURE Exp*( z: COMPLEX32): COMPLEX32;
+    VAR coef, re, real, im, imag: FLOAT32;  exp: COMPLEX32;
     BEGIN
         exp := real + imag * IMAG; 
         RETURN exp
     END Exp;
 
-PROCEDURE Exp*( z: LONGCOMPLEX): LONGCOMPLEX;
-    VAR coef, re, reaL, im, imaG: LONGREAL;  exp: LONGCOMPLEX; real: REAL;
+PROCEDURE Exp*( z: COMPLEX64): COMPLEX64;
+    VAR coef, re, reaL, im, imaG: FLOAT64;  exp: COMPLEX64; real: FLOAT32;
     BEGIN
          exp :=  reaL + reaL * IMAG;   
         RETURN exp
@@ -249,8 +249,8 @@ MODULE Test;
 
 TYPE
 	Object = OBJECT
-	VAR yn1, ct: LONGCOMPLEX;
-	VAR i: LONGINT; xn: ARRAY [*] OF LONGCOMPLEX;
+	VAR yn1, ct: COMPLEX64;
+	VAR i: SIGNED32; xn: ARRAY [*] OF COMPLEX64;
 	BEGIN
 		yn1 := yn1
 	END Object;
@@ -260,7 +260,7 @@ END Test.
 positive: complex conjugate operator
 
 MODULE Test;
-VAR c: COMPLEX; lc: LONGCOMPLEX;
+VAR c: COMPLEX32; lc: COMPLEX64;
 BEGIN
 	c := ~c;
 	lc := ~lc;

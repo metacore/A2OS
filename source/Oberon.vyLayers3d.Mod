@@ -65,7 +65,7 @@ VAR
 	END Open;
 
 	PROCEDURE OpenViewWindow( c: tCoordinate3d;  event: vyEvents.EventMsg );
-	VAR time: LONGINT;
+	VAR time: SIGNED32;
 	BEGIN
 		vyPort.onTheFly := TRUE;  time := Oberon.Time();
 		WHILE event.gesture = vyEvents.EvtCopyAttr DO
@@ -77,7 +77,7 @@ VAR
 	END OpenViewWindow;
 
 	PROCEDURE OpenViewWindow2( c: tCoordinate3d;  event: vyEvents.EventMsg );
-	VAR time: LONGINT;
+	VAR time: SIGNED32;
 	BEGIN
 		vyPort.onTheFly := TRUE;  time := Oberon.Time();
 		WHILE event.gesture = vyEvents.EvtPointCmd DO
@@ -135,7 +135,7 @@ VAR
 	END selectlayer;
 
 	PROCEDURE Select( c: tCoordinate3d;  VAR event: vyEvents.EventMsg );
-	VAR x0, y0: INTEGER;  l: antsCommandList.List;
+	VAR x0, y0: SIGNED16;  l: antsCommandList.List;
 	BEGIN
 		passevent := FALSE;  l := antsCommandList.current;  x0 := event.x;  y0 := event.y;
 		antsCommandList.currentmode := antsCommandList.click;  antsCommandList.Add( l, selectlayer, "mouse event to layers" );
@@ -202,7 +202,7 @@ VAR
 	END C3dHandler;
 
 	PROCEDURE OpenC3d*( c: tCoordinate3d );
-	VAR coord: vyPHIGS3D.tCoordinate3d;  c2d: vyGraphBase.tCoordinate2d;  err: INTEGER;
+	VAR coord: vyPHIGS3D.tCoordinate3d;  c2d: vyGraphBase.tCoordinate2d;  err: SIGNED16;
 	BEGIN
 		NEW( coord );  vyPHIGS3D.OpenCoordinate( coord, err );  NEW( c2d );  vyGraphBase.OpenCoordinate2d( c2d, 0, 0, 1, 1 );
 		c.c3d := coord;  c.c2d := c2d;  c.handle := C3dHandler

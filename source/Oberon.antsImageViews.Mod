@@ -37,7 +37,7 @@ TYPE
 	END;
 
 VAR
-	newlayer-: tLayer;  maxw, maxh: INTEGER;  texture: BOOLEAN;
+	newlayer-: tLayer;  maxw, maxh: SIGNED16;  texture: BOOLEAN;
 
 	PROCEDURE Copy( source, dest: tLayer );
 	BEGIN
@@ -45,7 +45,7 @@ VAR
 	END Copy;
 
 	PROCEDURE Recall( layer: tLayer );
-	VAR pw, ph, vx, vy, vpx, vpy, vpw, vph: INTEGER;  c: antsPictCoordinate.tCoordinate;  img: Images.Image;  i: INTEGER;
+	VAR pw, ph, vx, vy, vpx, vpy, vpw, vph: SIGNED16;  c: antsPictCoordinate.tCoordinate;  img: Images.Image;  i: SIGNED16;
 	BEGIN
 		IF ~layer.E.synced THEN antsArrayImages.Sync( layer.E ) END;
 		layer.refArray := layer.E.A;
@@ -87,7 +87,7 @@ VAR
 	END Recall;
 
 	PROCEDURE Responsible( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF ((event.gesture = vyEvents.EvtIdent)) THEN priority := vyEvents.PrioNormal END;
@@ -102,7 +102,7 @@ VAR
 	END Center;
 
 	PROCEDURE HandleFileMsg( obj: tLayer;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		IF msg.id = Objects.load THEN
 			Files.ReadInt( msg.R, version );  antsViews.Handler( obj, msg );  Gadgets.ReadRef( msg.R, obj.lib, objsub );
@@ -224,7 +224,7 @@ VAR
 	END New;
 
 	PROCEDURE DoShow*( E: antsArrayImages.tObject;  add: BOOLEAN;  VAR c: antsPictCoordinate.tCoordinate ): tLayer;
-	VAR port: vyPort.Frame;  picture: vyPort.Picture;  layer: tLayer;  w, h: INTEGER;
+	VAR port: vyPort.Frame;  picture: vyPort.Picture;  layer: tLayer;  w, h: SIGNED16;
 	BEGIN
 		NEW( layer );  Open( layer, E );
 		IF c = NIL THEN NEW( c );  antsPictCoordinate.OpenC( c, 1, 1 ) END;

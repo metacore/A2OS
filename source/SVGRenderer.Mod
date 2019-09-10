@@ -93,7 +93,7 @@ TYPE
 		PROCEDURE RenderEnd(state: SVG.State; recordPathMode: BOOLEAN);
 		VAR pattern: Gfx.Pattern;
 			worldBBox, objectBBox: SVG.Box;
-			minx, miny, maxx, maxy: LONGINT;
+			minx, miny, maxx, maxy: SIGNED32;
 			strokeWidth: SVG.Length;
 		BEGIN
 			IF recordPathMode THEN
@@ -500,8 +500,8 @@ END GetColor;
 (* Calculate the bounding box of a path in worldspace and in object space. Also transform the path to worldspace *)
 PROCEDURE GetBBoxes(path: GfxPaths.Path; objectToWorldSpace: SVG.Transform; VAR worldBBox, objectBBox: SVG.Box);
 VAR
-	x1World, y1World, x2World, y2World: REAL;
-	x1Object, y1Object, x2Object, y2Object: REAL;
+	x1World, y1World, x2World, y2World: FLOAT32;
+	x1Object, y1Object, x2Object, y2Object: FLOAT32;
 	mat: GfxMatrix.Matrix;
 BEGIN
 	GfxMatrix.Init(mat, SHORT(objectToWorldSpace.a), SHORT(objectToWorldSpace.b),

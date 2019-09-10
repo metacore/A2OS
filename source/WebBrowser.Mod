@@ -31,7 +31,7 @@ TYPE
 		topToolbar : WMStandardComponents.Panel;
 		urlEdit : WMEditors.Editor;
 		back, forward, reload, home, bookm, addBM, go : WMStandardComponents.Button;
-		loadID : LONGINT;
+		loadID : SIGNED32;
 		actualURL : URLNode;
 
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
@@ -149,7 +149,7 @@ TYPE
 			END;
 			webPanel.url.Set(actualURL.url);
 			webPanel.Load(loadID);
-			loadID := (loadID + 1) MOD (MAX(LONGINT));
+			loadID := (loadID + 1) MOD (MAX(SIGNED32));
 		END Load;
 
 		PROCEDURE Go(sender, data : ANY);
@@ -316,7 +316,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE AddBookmarkToFile(CONST link : ARRAY OF CHAR; title : ARRAY OF CHAR);
 VAR

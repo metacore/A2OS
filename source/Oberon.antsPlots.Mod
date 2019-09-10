@@ -45,7 +45,7 @@ BEGIN
 END Add;
 
 PROCEDURE DoShow* (obj: vyBase.Object);
-	VAR  link: vyLinks.Link;  l, res: vyTracking.List;  keys: SET;  x, y: INTEGER;
+	VAR  link: vyLinks.Link;  l, res: vyTracking.List;  keys: SET;  x, y: SIGNED16;
 BEGIN
 	Add(l, "antsObjectView");   Add(l, "antsDependency");    Add(l, "antsLinkView");
 	IF obj IS ants1dArrayVectors.tObject THEN

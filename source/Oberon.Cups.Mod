@@ -15,10 +15,10 @@ IMPORT Files, Display, Display3, Objects, Gadgets;
 TYPE
 	Cup* = POINTER TO CupDesc;
 	CupDesc* = RECORD (Gadgets.FrameDesc)
-		coffee*: INTEGER;
+		coffee*: SIGNED16;
 	END;
 
-PROCEDURE Size(F: Cup): INTEGER;
+PROCEDURE Size(F: Cup): SIGNED16;
 BEGIN RETURN (F.W - 6) * (F.H - 6)
 END Size;
 
@@ -43,7 +43,7 @@ BEGIN
 	END
 END CupAttr;
 
-PROCEDURE RestoreCup(F: Cup; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE RestoreCup(F: Cup; M: Display3.Mask; x, y, w, h: SIGNED16);
 BEGIN
 	Display3.ReplConst(M, Display.BG, x, y, w, h, Display.replace);
 	Display3.ReplConst(M, Display3.blue, x, y, 2, h, Display.replace);
@@ -62,7 +62,7 @@ BEGIN to.coffee := from.coffee;
 END CopyCup;
 
 PROCEDURE CupHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: Cup; R: Display3.Mask; f: Cup; space, take: INTEGER;
+VAR x, y, w, h: SIGNED16; F0: Cup; R: Display3.Mask; f: Cup; space, take: SIGNED16;
 BEGIN
 	WITH F: Cup DO
 		IF M IS Display.FrameMsg THEN

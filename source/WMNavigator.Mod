@@ -21,7 +21,7 @@ TYPE
 		canvas : WMGraphics.BufferCanvas;
 		state : WMGraphics.CanvasState;
 		internnavig, navig : BOOLEAN;
-		fx, fy, inffx, inffy, factor, intfactor : REAL;
+		fx, fy, inffx, inffy, factor, intfactor : FLOAT32;
 		lock : Locks.Lock;
 		onDrawn : OnDrawnProc;
 
@@ -75,8 +75,8 @@ TYPE
 			SetZoomLevel(currentZoomLevel + dz, xg, yg);
 		END ChangeZoom;
 
-		PROCEDURE ReInit(width, height : SIZE; format : WORD; onDrawn : OnDrawnProc);
-		VAR tf : REAL;
+		PROCEDURE ReInit(width, height : SIZE; format : INTEGER; onDrawn : OnDrawnProc);
+		VAR tf : FLOAT32;
 		BEGIN
 			SELF.onDrawn := onDrawn;
 			IF (width # SELF.width) OR (height # SELF.height) THEN
@@ -130,14 +130,14 @@ TYPE
 		END GetKeyState;
 
 		(** Set the observed range. *)
-		PROCEDURE SetRange*(x, y, w, h : REAL; showTransition : BOOLEAN);
+		PROCEDURE SetRange*(x, y, w, h : FLOAT32; showTransition : BOOLEAN);
 		VAR
-			sx, sy, sx2, sy2, dx, dy, dx2, dy2, x2, y2  : REAL;
-			i, steps : LONGINT;
+			sx, sy, sx2, sy2, dx, dy, dx2, dy2, x2, y2  : FLOAT32;
+			i, steps : SIGNED32;
 		CONST Steps = 16;
 
-			PROCEDURE Set(x, y, w, h : REAL);
-			VAR tf : REAL;
+			PROCEDURE Set(x, y, w, h : FLOAT32);
+			VAR tf : FLOAT32;
 			BEGIN
 				range.l := x;
 				range.t := y;
@@ -206,7 +206,7 @@ TYPE
 			wr, nr : WMRectangles.Rectangle;
 
 			PROCEDURE InternalDraw(r : WMRectangles.Rectangle; cur : WMWindowManager.Window);
-			VAR nr, cb, dsr : WMRectangles.Rectangle; width, height : LONGINT;
+			VAR nr, cb, dsr : WMRectangles.Rectangle; width, height : SIGNED32;
 			BEGIN
 				ASSERT(cur.isVisible);
 				IF cur.useAlpha & (cur.prev # NIL)  THEN Draw(r, cur.prev)
@@ -401,7 +401,7 @@ TYPE
 			IF (r0.b < r1.b) THEN res.b := r0.b; ELSE res.b := r1.b; END;
 
 			rect := WMRectangles.MakeRect(ENTIER(viewPort.fx * (res.l - r1.l)), ENTIER(viewPort.fy * (res.t - r1.t)), ENTIER(viewPort.fx * (res.r - r1.l)), ENTIER(viewPort.fy * (res.b - r1.t)));
-			WMGraphicUtilities.DrawRect(canvas, rect, LONGINT(0FF0000FFH), WMGraphics.ModeCopy);
+			WMGraphicUtilities.DrawRect(canvas, rect, SIGNED32(0FF0000FFH), WMGraphics.ModeCopy);
 		END Draw;
 
 	BEGIN {ACTIVE}

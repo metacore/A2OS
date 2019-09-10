@@ -59,27 +59,27 @@ TYPE
 	Buffer* = (*ARRAY OF CHAR;*) UsbBuffers.Buffer;
 	BufferPtr* = (*POINTER TO Buffer;*) UsbBuffers.BufferPtr;
 
-	Status* = LONGINT;
+	Status* = SIGNED32;
 
 TYPE
 
 	(** Consider all fields of all descriptors as read-only! *)
 
 	DeviceDescriptor* = POINTER TO RECORD
-		bcdUSB* : LONGINT;
-		bDeviceClass* : LONGINT;
-		bDeviceSubClass* : LONGINT;
-		bDeviceProtocol* : LONGINT;
-		idVendor* : LONGINT;
-		idProduct* : LONGINT;
-		bcdDevice* : LONGINT;
-		bNumConfigurations* : LONGINT;
+		bcdUSB* : SIGNED32;
+		bDeviceClass* : SIGNED32;
+		bDeviceSubClass* : SIGNED32;
+		bDeviceProtocol* : SIGNED32;
+		idVendor* : SIGNED32;
+		idProduct* : SIGNED32;
+		bcdDevice* : SIGNED32;
+		bNumConfigurations* : SIGNED32;
 	END;
 
 	(** 	A configuration is a set of interfaces. *)
 	ConfigurationDescriptor* = POINTER TO RECORD
-		bNumInterfaces* : LONGINT;
-		bConfigurationValue* : LONGINT;
+		bNumInterfaces* : SIGNED32;
+		bConfigurationValue* : SIGNED32;
 		interfaces* : POINTER TO ARRAY OF InterfaceDescriptor;
 		iads* : Iads; (* Optional Interface Association Descriptors *)
 		unknown* : UnknownDescriptor; (* Optional Class-specific descriptors *)
@@ -87,13 +87,13 @@ TYPE
 
 	(**	An interface is a set of endpoints. Device driver are typically bound to interfaces *)
 	InterfaceDescriptor* = POINTER TO RECORD
-		bInterfaceNumber* : LONGINT;
-		bAlternateSetting* : LONGINT;
-		bNumEndpoints* : LONGINT;
-		bInterfaceClass* : LONGINT;
-		bInterfaceSubClass* : LONGINT;
-		bInterfaceProtocol* : LONGINT;
-		numAlternateInterfaces* : LONGINT;
+		bInterfaceNumber* : SIGNED32;
+		bAlternateSetting* : SIGNED32;
+		bNumEndpoints* : SIGNED32;
+		bInterfaceClass* : SIGNED32;
+		bInterfaceSubClass* : SIGNED32;
+		bInterfaceProtocol* : SIGNED32;
+		numAlternateInterfaces* : SIGNED32;
 		alternateInterfaces*: POINTER TO ARRAY OF InterfaceDescriptor;
 		endpoints* : POINTER TO ARRAY OF EndpointDescriptor;
 		unknown* : UnknownDescriptor;
@@ -102,9 +102,9 @@ TYPE
 	(**	Descriptor of a logical communication endpoint. USB pipe can be allocated for all endpoints using the endpoint
 		address field *)
 	EndpointDescriptor* = POINTER TO RECORD
-		type* : LONGINT; (* Control, BulkIn, BulkOut, InterruptIn, InterruptOut, IsochronousIn or IsochronousOut *)
-		bEndpointAddress* : LONGINT;
-		wMaxPacketSize* : LONGINT;
+		type* : SIGNED32; (* Control, BulkIn, BulkOut, InterruptIn, InterruptOut, IsochronousIn or IsochronousOut *)
+		bEndpointAddress* : SIGNED32;
+		wMaxPacketSize* : SIGNED32;
 		bmAttributes* : SET;
 		unknown* : UnknownDescriptor;
 	END;
@@ -112,19 +112,19 @@ TYPE
 	(**	An optional Interface Association Descriptor describes a set of associated interfaces which should be handled by
 		a single device driver. *)
 	InterfaceAssociationDescriptor* = POINTER TO RECORD;
-		bFirstInterface* : LONGINT;
-		bInterfaceCount* : LONGINT;
-		bFunctionClass* : LONGINT;
-		bFunctionSubClass* : LONGINT;
-		bFunctionProtocol* : LONGINT;
+		bFirstInterface* : SIGNED32;
+		bInterfaceCount* : SIGNED32;
+		bFunctionClass* : SIGNED32;
+		bFunctionSubClass* : SIGNED32;
+		bFunctionProtocol* : SIGNED32;
 	END;
 
 	(** Optional non-USB-Standard descriptors.
 		Linked list of optional descriptors contained in the configuration descriptor but not specified in the USB specification.
 		UnknownDescriptors can be located at configuration, interface or endpoint level *)
 	UnknownDescriptor* = POINTER TO RECORD;
-		bLength* : LONGINT;
-		bDescriptorType* : LONGINT;
+		bLength* : SIGNED32;
+		bDescriptorType* : SIGNED32;
 		descriptor* : BufferPtr; (* contains bLength and bDescriptorType *)
 		next* : UnknownDescriptor;
 	END;
@@ -176,16 +176,16 @@ TYPE
 		actConfiguration* : ConfigurationDescriptor;
 
 		(** Device state *)
-		state* : LONGINT;
+		state* : SIGNED32;
 
 		(** Direct access to the Default Control Pipe (endpoint zero). Concurrent access is allowed here. *)
 
-		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : LONGINT; VAR buffer : Buffer) : Status;
+		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : SIGNED32; VAR buffer : Buffer) : Status;
 		BEGIN HALT(301); RETURN Error; END Request; (* abstract *)
 
 		(** Allocate a pipe for the specified USB device endpoint *)
 
-		PROCEDURE GetPipe*(endpoint : LONGINT) : Pipe;
+		PROCEDURE GetPipe*(endpoint : SIGNED32) : Pipe;
 		BEGIN HALT(301); RETURN NIL; END GetPipe; (* abstract *)
 
 		(**	Deallocate the ressources associtated with the specified pipe.
@@ -199,7 +199,7 @@ TYPE
 TYPE
 
 	(** Handler that can be installed for a pipe and will be called when the USB transfer has been processed. *)
-	CompletionHandler* = PROCEDURE {DELEGATE} (status : Status; actLen : LONGINT);
+	CompletionHandler* = PROCEDURE {DELEGATE} (status : Status; actLen : SIGNED32);
 
 	(**	USB Communication Pipe
 	 	USB communication happens between buffers provided by client software and USB device endpoints. The association between
@@ -208,21 +208,21 @@ TYPE
 	VAR
 	 	(**	How many tries should the host controllers retry the USB transaction if it fails. Note that this field is actually depended
 	 		on the host controller used. Typically, the allowed range of this value is [0,3], zero meaning infinite number of retries *)
-		maxRetries* : LONGINT;
+		maxRetries* : SIGNED32;
 
 		(** Maximum packet size supported by endpoint. This field is set by the USB driver and should be considered read-only. *)
-		maxPacketSize* : LONGINT;
+		maxPacketSize* : SIGNED32;
 
-		mode* : LONGINT;
+		mode* : SIGNED32;
 
 		(** Transfer 'bufferLen' bytes from/to the specified buffer, starting at 'offset' *)
 
-		PROCEDURE Transfer*(bufferLen, offset : LONGINT; VAR buffer : Buffer) : Status;
+		PROCEDURE Transfer*(bufferLen, offset : SIGNED32; VAR buffer : Buffer) : Status;
 		BEGIN HALT(301); RETURN Error; END Transfer; (* abstract *)
 
 		(** For control transfers (only for Control Pipes) *)
 
-		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : LONGINT; VAR buffer : Buffer) : Status;
+		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : SIGNED32; VAR buffer : Buffer) : Status;
 		BEGIN HALT(301); RETURN Error; END Request; (* abstract *)
 
 		(** Is the halt feature of the endpoint associated with this pipe set? *)
@@ -237,7 +237,7 @@ TYPE
 
 		(** Set timeout for transfers for this pipe;  0 = NonBlocking, n = n milliseconds *)
 
-		PROCEDURE SetTimeout*(timeout : LONGINT);
+		PROCEDURE SetTimeout*(timeout : SIGNED32);
 		BEGIN HALT(301); END SetTimeout; (* abstract *)
 
 		(** Specifiy the completion handler that is called when the USB transfer is processed. *)
@@ -249,12 +249,12 @@ TYPE
 		 	@param actLen: Number of bytes that have been sent/receive (only valid if status * ResInProgress = {})
 		 	@return: Status of the USB transfer *)
 
-		PROCEDURE GetStatus*(VAR actLen : LONGINT) : Status;
+		PROCEDURE GetStatus*(VAR actLen : SIGNED32) : Status;
 		BEGIN HALT(301); RETURN Error; END GetStatus; (* abstract *)
 
 		(** Return the actual number of bytes transfered. *)
 
-		PROCEDURE GetActLen*() : LONGINT;
+		PROCEDURE GetActLen*() : SIGNED32;
 		BEGIN HALT(301); RETURN 0; END GetActLen; (* abstract *)
 
 		(**
@@ -262,7 +262,7 @@ TYPE
 		 * Fails if the transfer is completed, in progress or under some HCD-specific constraints.
 		 * Available only if the pipe is non-blocking.
 		 *)
-		PROCEDURE CancelTransaction * (id: LONGINT): BOOLEAN;
+		PROCEDURE CancelTransaction * (id: SIGNED32): BOOLEAN;
 		BEGIN HALT(301); RETURN FALSE
 		END CancelTransaction;
 
@@ -274,7 +274,7 @@ TYPE
 		 * This procedure returns FALSE if there is not enough bandwidth to accomodate
 		 * the specified policy and TRUE otherwise.
 		 *)
-		PROCEDURE SetPolicy * (interval, size: LONGINT): BOOLEAN;
+		PROCEDURE SetPolicy * (interval, size: SIGNED32): BOOLEAN;
 		BEGIN HALT(301); RETURN FALSE
 		END SetPolicy;
 
@@ -297,7 +297,7 @@ TYPE
 
 		(** Add a USB device driver to the internal registry. Driver names have to be unique and no longer than 30 characters (incl. Null-String) *)
 
-		PROCEDURE Add*(probe : ProbeProc; CONST name: Plugins.Name; CONST desc: Plugins.Description; priority : LONGINT);
+		PROCEDURE Add*(probe : ProbeProc; CONST name: Plugins.Name; CONST desc: Plugins.Description; priority : SIGNED32);
 		BEGIN HALT(301); END Add; (* abstract *)
 
 		(** Calls Disconnect of all instances of the driver. All instances are removed from the usbDrivers registry

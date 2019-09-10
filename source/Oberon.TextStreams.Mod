@@ -9,7 +9,7 @@ MODULE TextStreams IN Oberon;	(** portable *)
 		ReaderStreamDesc = RECORD (Streams.StreamDesc)
 			R: Texts.Reader;
 			T: Texts.Text;
-			pos: LONGINT;
+			pos: SIGNED32;
 			ch: CHAR
 		END;
 		WriterStream = POINTER TO WriterStreamDesc;
@@ -29,7 +29,7 @@ MODULE TextStreams IN Oberon;	(** portable *)
 (** Reads a line of text, terminated by [CR] LF (mode = Streams.iso8859) or CR (mode # Streams.iso8859). *)
 	PROCEDURE ReadString*(S: Streams.Stream; VAR s: ARRAY OF CHAR);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			ch, ch0: CHAR;
 	BEGIN
 		i := -1; ch := 0X;
@@ -65,8 +65,8 @@ MODULE TextStreams IN Oberon;	(** portable *)
 
 (** Routines for formatted output, similar to module Texts. *)
 
-	PROCEDURE WriteDate*(S: Streams.Stream; t, d: LONGINT);
-		PROCEDURE WritePair(ch: CHAR; x: LONGINT);
+	PROCEDURE WriteDate*(S: Streams.Stream; t, d: SIGNED32);
+		PROCEDURE WritePair(ch: CHAR; x: SIGNED32);
 		BEGIN
 			S.WriteBytes(S, ch, 1); Streams.Write(S, CHR(x DIV 10 + 30H)); Streams.Write(S, CHR(x MOD 10 + 30H))
 		END WritePair;
@@ -75,9 +75,9 @@ MODULE TextStreams IN Oberon;	(** portable *)
 		WritePair(" ", t DIV 4096 MOD 32); WritePair(":", t DIV 64 MOD 64); WritePair(":", t MOD 64)
 	END WriteDate;
 
-	PROCEDURE WriteHex*(S: Streams.Stream; x: LONGINT);
+	PROCEDURE WriteHex*(S: Streams.Stream; x: SIGNED32);
 		VAR
-			i, y: LONGINT;
+			i, y: SIGNED32;
 			a: ARRAY 12 OF CHAR;
 	BEGIN
 		i := 0; Streams.Write(S, " ");
@@ -91,7 +91,7 @@ MODULE TextStreams IN Oberon;	(** portable *)
 	END WriteHex;
 
 	PROCEDURE WriteString*(S: Streams.Stream; s: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		IF S.mode = Streams.iso8859 THEN
@@ -105,14 +105,14 @@ MODULE TextStreams IN Oberon;	(** portable *)
 		END
 	END WriteString;
 
-	PROCEDURE WriteInt*(S: Streams.Stream; x, n: LONGINT);
+	PROCEDURE WriteInt*(S: Streams.Stream; x, n: SIGNED32);
 		VAR
-			i, x0: LONGINT;
+			i, x0: SIGNED32;
 			a: ARRAY 12 OF CHAR;
 	BEGIN
 		i := 0;
 		IF x < 0 THEN
-			IF x = MIN(LONGINT) THEN
+			IF x = MIN(SIGNED32) THEN
 				WriteString(S, " -2147483648"); RETURN
 			ELSE
 				DEC(n); x0 := -x
@@ -141,11 +141,11 @@ MODULE TextStreams IN Oberon;	(** portable *)
 		END
 	END WriteLn;
 
-	PROCEDURE WriteLongReal*(S: Streams.Stream; x: LONGREAL; n: LONGINT);
+	PROCEDURE WriteLongReal*(S: Streams.Stream; x: FLOAT64; n: SIGNED32);
 	(* BM 1993.4.22. Do not simplify rounding! *)
 		VAR
-			e, h, l, i: LONGINT;
-			z: LONGREAL;
+			e, h, l, i: SIGNED32;
+			z: FLOAT64;
 			d: ARRAY 16 OF CHAR;
 	BEGIN
 		e := Reals.ExpoL(x);
@@ -182,11 +182,11 @@ MODULE TextStreams IN Oberon;	(** portable *)
 		END
 	END WriteLongReal;
 
-	PROCEDURE WriteLongRealFix*(S: Streams.Stream; x: LONGREAL; n, f, D: LONGINT);
+	PROCEDURE WriteLongRealFix*(S: Streams.Stream; x: FLOAT64; n, f, D: SIGNED32);
 	(* BM 1993.4.22. Do not simplify rounding! / JG formatting adjusted *)
 		VAR
-			e, h, l, i: LONGINT;
-			r, z: LONGREAL;
+			e, h, l, i: SIGNED32;
+			r, z: FLOAT64;
 			d: ARRAY 16 OF CHAR;
 			s: CHAR;
 	BEGIN
@@ -244,18 +244,18 @@ MODULE TextStreams IN Oberon;	(** portable *)
 		END
 	END WriteLongRealFix;
 
-	PROCEDURE WriteLongRealHex*(S: Streams.Stream; x: LONGREAL);
-		VAR h, l: LONGINT; (* BM 1991.12.25 *)
+	PROCEDURE WriteLongRealHex*(S: Streams.Stream; x: FLOAT64);
+		VAR h, l: SIGNED32; (* BM 1991.12.25 *)
 	BEGIN
 		Reals.IntL(x, h, l); WriteHex(S, h); WriteHex(S, l)
 	END WriteLongRealHex;
 
-	PROCEDURE WriteReal*(S: Streams.Stream; x: REAL; n: LONGINT);
+	PROCEDURE WriteReal*(S: Streams.Stream; x: FLOAT32; n: SIGNED32);
 	(* BM 1993.4.22. Do not simplify rounding! *)
 		VAR
-			e, h, i: LONGINT;
-			y: LONGREAL;
-			z: REAL;
+			e, h, i: SIGNED32;
+			y: FLOAT64;
+			z: FLOAT32;
 			d: ARRAY 8 OF CHAR;
 	BEGIN
 		e:= Reals.Expo(x);
@@ -295,9 +295,9 @@ MODULE TextStreams IN Oberon;	(** portable *)
 		END
 	END WriteReal;
 
-	PROCEDURE WriteRealFix*(S: Streams.Stream; x: REAL; n, f, E: LONGINT);
+	PROCEDURE WriteRealFix*(S: Streams.Stream; x: FLOAT32; n, f, E: SIGNED32);
 	(* BM 1993.4.22. Do not simplify rounding ! / JG formatting adjusted *)
-		VAR e, h, i: LONGINT; r, y: LONGREAL; z: REAL; s: CHAR; d: ARRAY 8 OF CHAR;
+		VAR e, h, i: SIGNED32; r, y: FLOAT64; z: FLOAT32; s: CHAR; d: ARRAY 8 OF CHAR;
 	BEGIN
 		e := Reals.Expo(x);
 		IF (e = 255) OR (ABS(E) > 38) THEN
@@ -357,13 +357,13 @@ MODULE TextStreams IN Oberon;	(** portable *)
 		END
 	END WriteRealFix;
 
-	PROCEDURE WriteRealHex*(S: Streams.Stream; x: REAL);
+	PROCEDURE WriteRealHex*(S: Streams.Stream; x: FLOAT32);
 	BEGIN (* BM 1991.12.25 *)
 		WriteHex(S, Reals.Int(x))
 	END WriteRealHex;
 
-	PROCEDURE ReadTextBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT);
-		VAR i: LONGINT;
+	PROCEDURE ReadTextBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED32);
+		VAR i: SIGNED32;
 	BEGIN
 		WITH S: ReaderStream DO
 			i := 0;
@@ -374,14 +374,14 @@ MODULE TextStreams IN Oberon;	(** portable *)
 		END
 	END ReadTextBytes;
 
-	PROCEDURE ReaderAvailable(S: Streams.Stream): LONGINT;
+	PROCEDURE ReaderAvailable(S: Streams.Stream): SIGNED32;
 	BEGIN
 		WITH S: ReaderStream DO
 			RETURN S.T.len-S.pos
 		END
 	END ReaderAvailable;
 
-	PROCEDURE ReaderState(S: Streams.Stream): INTEGER;
+	PROCEDURE ReaderState(S: Streams.Stream): SIGNED16;
 	BEGIN
 		WITH S: ReaderStream DO
 			IF S.T # NIL THEN
@@ -395,12 +395,12 @@ MODULE TextStreams IN Oberon;	(** portable *)
 	PROCEDURE CloseReader(S: Streams.Stream);
 	BEGIN
 		WITH S: ReaderStream DO
-			S.T := NIL; S.eos := TRUE; S.pos := MAX(LONGINT)
+			S.T := NIL; S.eos := TRUE; S.pos := MAX(SIGNED32)
 		END
 	END CloseReader;
 
 (** Opens a read-only stream on text T starting at position pos. *)
-	PROCEDURE OpenReader*(T: Texts.Text; pos: LONGINT): Streams.Stream;
+	PROCEDURE OpenReader*(T: Texts.Text; pos: SIGNED32): Streams.Stream;
 		VAR S: ReaderStream;
 	BEGIN
 		NEW(S); S.mode := Streams.oberon; S.T := T; S.pos := pos; S.buffer := FALSE;
@@ -414,8 +414,8 @@ MODULE TextStreams IN Oberon;	(** portable *)
 		RETURN S
 	END OpenReader;
 
-	PROCEDURE WriteTextBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT);
-		VAR i: LONGINT;
+	PROCEDURE WriteTextBytes(S: Streams.Stream; VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED32);
+		VAR i: SIGNED32;
 	BEGIN
 		WITH S: WriterStream DO
 			FOR i := 0 TO n-1 DO
@@ -425,7 +425,7 @@ MODULE TextStreams IN Oberon;	(** portable *)
 		END
 	END WriteTextBytes;
 
-	PROCEDURE WriterState(S: Streams.Stream): INTEGER;
+	PROCEDURE WriterState(S: Streams.Stream): SIGNED16;
 	BEGIN
 		WITH S: WriterStream DO
 			IF S.T # NIL THEN

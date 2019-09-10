@@ -42,14 +42,14 @@ CONST
 	Debug = {DebugFind, DebugInit, DebugTxRing, DebugCleanup};
 
 VAR
-	installed: LONGINT; (* number of installed devices *)
+	installed: SIGNED32; (* number of installed devices *)
 
 TYPE
 	(* base Rx/Tx descriptor, as described in RTL8169 specs *)
 	RxTxDescriptor = RECORD
 		flags: SET;
-		vLanTag: LONGINT;
-		bufAdrLo, bufAdrHi: LONGINT;
+		vLanTag: SIGNED32;
+		bufAdrLo, bufAdrHi: SIGNED32;
 	END;
 
 	(* buffer for transmission *)
@@ -68,14 +68,14 @@ TYPE
 	LinkDevice = OBJECT (Network.LinkDevice)
 		VAR
 			ctrl: Controller;
-			hw: LONGINT;
+			hw: SIGNED32;
 
-		PROCEDURE Linked*(): LONGINT;
+		PROCEDURE Linked*(): SIGNED32;
 		BEGIN
 			RETURN ctrl.linkStatus;
 		END Linked;
 
-		PROCEDURE DoSend*(dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE DoSend*(dst: Network.LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: SIGNED32);
 		BEGIN
 			ctrl.SendFrame(dst, type, l3hdr, l4hdr, data, h3len, h4len, dofs, dlen);
 		END DoSend;
@@ -91,30 +91,30 @@ TYPE
 	Controller = OBJECT
 		VAR
 			next: Controller; (* next controller in list *)
-			base: ADDRESS; irq: LONGINT;
+			base: ADDRESS; irq: SIGNED32;
 			dev: LinkDevice;
 			rds: ARRAY RxRingSize OF RxTxDescriptor;
 			tds: ARRAY TxRingSize OF RxTxDescriptor;
-			curRD, curTD: LONGINT;
-			firstRD, firstTD: LONGINT;
-			lastRD, lastTD: LONGINT;
+			curRD, curTD: SIGNED32;
+			firstRD, firstTD: SIGNED32;
+			lastRD, lastTD: SIGNED32;
 			(*rxBuffer, rxLast: TxBuffer;*)
 			rxBuffer, rxLast: RxBuffer;
 			txBuffer, txLast: TxBuffer;
 
-			nofFreeTx: LONGINT; (* number of free tx descriptors *)
+			nofFreeTx: SIGNED32; (* number of free tx descriptors *)
 
-			nRxOverflow: HUGEINT;
-			nTxOverflow: HUGEINT;
-			nRxFrames, nTxFrames: LONGINT;
-			nRxErrorFrames: LONGINT;
-			nTxErrorFrames: LONGINT;
+			nRxOverflow: SIGNED64;
+			nTxOverflow: SIGNED64;
+			nRxFrames, nTxFrames: SIGNED32;
+			nRxErrorFrames: SIGNED32;
+			nTxErrorFrames: SIGNED32;
 
-			linkStatus: LONGINT;
+			linkStatus: SIGNED32;
 
-		PROCEDURE &Init*(dev: LinkDevice; base: ADDRESS; irq: LONGINT);
+		PROCEDURE &Init*(dev: LinkDevice; base: ADDRESS; irq: SIGNED32);
 		VAR
-			res: WORD; i: LONGINT;
+			res: INTEGER; i: SIGNED32;
 			s: SET;
 		BEGIN
 			(* update list of installed controllers, insert at head *)
@@ -183,14 +183,14 @@ TYPE
 			let the nic compute CRCs of frames in Tx *)
 			s := SYSTEM.VAL(SET, Read32(40H));
 			s := (s  - {17..18, 19}) + {8..10, 25};
-			Write32(40H, SYSTEM.VAL(LONGINT, s));
+			Write32(40H, SYSTEM.VAL(SIGNED32, s));
 
 			(* config c+ command register:
 			PCI multiple read/write enable;
 			Receive Checksum Offload enable *)
 			s := SYSTEM.VAL(SET, Read16(0E0H));
 			s := s + {3, 5};
-			Write16(0E0H, SYSTEM.VAL(LONGINT, s));
+			Write16(0E0H, SYSTEM.VAL(SIGNED32, s));
 
 			(* setup Tx (normal priority) ring *)
 			res := SetupTxRing();
@@ -216,7 +216,7 @@ TYPE
 			END;
 
 			(* enable interrupts *)
-			Write16(3CH, SYSTEM.VAL(LONGINT, InterruptMask));
+			Write16(3CH, SYSTEM.VAL(SIGNED32, InterruptMask));
 
 			UpdateLinkStatus;
 
@@ -230,9 +230,9 @@ TYPE
 			END;
 		END Init;
 
-		PROCEDURE SendFrame(dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE SendFrame(dst: Network.LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: SIGNED32);
 		VAR
-			txLen, offset, type4: LONGINT;
+			txLen, offset, type4: SIGNED32;
 			bufBase: ADDRESS;
 			chksums: SET;
 		BEGIN {EXCLUSIVE}
@@ -251,7 +251,7 @@ TYPE
 			(* set source mac address (6 bytes @ offset 6 of eth frame) *)
 			SYSTEM.MOVE(ADDRESSOF(dev.local[0]), bufBase + 6, 6);
 			(* set upper layer type, bring type from host to network byte order *)
-			SYSTEM.PUT16(bufBase + 12, ROT(SYSTEM.VAL(INTEGER, SHORT(type)), 8));
+			SYSTEM.PUT16(bufBase + 12, ROT(SYSTEM.VAL(SIGNED16, SHORT(type)), 8));
 
 			offset := 14; (* eth header has 14 bytes *)
 			(* move layer 3 and layer 4 headers, data *)
@@ -287,7 +287,7 @@ TYPE
 			chksums := {};
 			IF type = 0800H THEN
 				INCL(chksums, 18); (* offload IP checksum *)
-				type4 := SYSTEM.VAL(SHORTINT, l3hdr[9]); (* get type if IP data *)
+				type4 := SYSTEM.VAL(SIGNED8, l3hdr[9]); (* get type if IP data *)
 				IF type4 = 6 THEN (* TCP/IP *)
 					INCL(chksums, 16); (* offload TCP checksum *)
 				ELSIF type4 = 17 THEN
@@ -312,7 +312,7 @@ TYPE
 			DEC(nofFreeTx);
 
 			(* tell the nic that there's some eth frame waiting to be transmitted (set NPQ=1) *)
-			Write8(38H, SYSTEM.VAL(LONGINT, {6}));
+			Write8(38H, SYSTEM.VAL(SIGNED32, {6}));
 		END SendFrame;
 
 		PROCEDURE ConfigRx;
@@ -327,14 +327,14 @@ TYPE
 			IF Promisc THEN
 				INCL(s, 0);
 			END;
-			Write32(44H, SYSTEM.VAL(LONGINT, s));
+			Write32(44H, SYSTEM.VAL(SIGNED32, s));
 
 			(* set multicast filter: receive everything *)
-			Write32(08H, LONGINT(0FFFFFFFFH));
-			Write32(08H + 4, LONGINT(0FFFFFFFFH));
+			Write32(08H, SIGNED32(0FFFFFFFFH));
+			Write32(08H + 4, SIGNED32(0FFFFFFFFH));
 		END ConfigRx;
 
-		PROCEDURE SetTimer(val: LONGINT);
+		PROCEDURE SetTimer(val: SIGNED32);
 		BEGIN
 			Write32(58H, val);
 		END SetTimer;
@@ -372,7 +372,7 @@ TYPE
 		PROCEDURE ResetNIC;
 		VAR s: SET;
 		BEGIN
-			Write8(37H, SYSTEM.VAL(LONGINT, {4}));
+			Write8(37H, SYSTEM.VAL(SIGNED32, {4}));
 
 			(* wait until reset has finished *)
 			REPEAT
@@ -392,13 +392,13 @@ TYPE
 			IF rx THEN
 				INCL(s, 3);
 			END;
-			Write8(37H, SYSTEM.VAL(LONGINT, s));
+			Write8(37H, SYSTEM.VAL(SIGNED32, s));
 		END EnableTxRx;
 
 		PROCEDURE ReadMACAddress;
 		VAR
-			i: INTEGER;
-			res: WORD;
+			i: SIGNED16;
+			res: INTEGER;
 		BEGIN
 			(* MAC address is in registers 00H - 05H *)
 			IF DebugMAC IN Debug THEN
@@ -420,32 +420,32 @@ TYPE
 			dev.adrSize := 6;
 		END ReadMACAddress;
 
-		PROCEDURE Read8(reg: LONGINT): SHORTINT;
+		PROCEDURE Read8(reg: SIGNED32): SIGNED8;
 		BEGIN
 			RETURN SYSTEM.GET8(base + reg);
 		END Read8;
 
-		PROCEDURE Write8(reg: LONGINT; val: LONGINT);
+		PROCEDURE Write8(reg: SIGNED32; val: SIGNED32);
 		BEGIN
 			SYSTEM.PUT8(base + reg, SHORT(SHORT(val)));
 		END Write8;
 
-		PROCEDURE Read16(reg: LONGINT): INTEGER;
+		PROCEDURE Read16(reg: SIGNED32): SIGNED16;
 		BEGIN
 			RETURN SYSTEM.GET16(base + reg);
 		END Read16;
 
-		PROCEDURE Write16(reg: LONGINT; val: LONGINT);
+		PROCEDURE Write16(reg: SIGNED32; val: SIGNED32);
 		BEGIN
 			SYSTEM.PUT16(base + reg, SHORT(val));
 		END Write16;
 
-		PROCEDURE Read32(reg: LONGINT): LONGINT;
+		PROCEDURE Read32(reg: SIGNED32): SIGNED32;
 		BEGIN
 			RETURN SYSTEM.GET32(base + reg);
 		END Read32;
 
-		PROCEDURE Write32(reg: LONGINT; val: LONGINT);
+		PROCEDURE Write32(reg: SIGNED32; val: SIGNED32);
 		BEGIN
 			SYSTEM.PUT32(base + reg, val);
 		END Write32;
@@ -453,7 +453,7 @@ TYPE
 		PROCEDURE EnableTBI;
 		VAR
 			s: SET;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			IF 7 IN SYSTEM.VAL(SET, Read8(6CH)) THEN RETURN END;
 
@@ -482,7 +482,7 @@ TYPE
 		PROCEDURE HwReset;
 		VAR
 			s: SET;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			s := PHYRead(00H) + {15};
 			PHYWrite(00H, s);
@@ -495,15 +495,15 @@ TYPE
 			END;
 		END HwReset;
 
-		PROCEDURE PHYWrite(regAdr: LONGINT; data: SET);
+		PROCEDURE PHYWrite(regAdr: SIGNED32; data: SET);
 		VAR
 			s: SET;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			s := {31};
 			s := s + (SYSTEM.VAL(SET, regAdr * 010000H) * {16..20});
 			s := s + (data * {0..15});
-			Write32(60H, SYSTEM.VAL(LONGINT, s));
+			Write32(60H, SYSTEM.VAL(SIGNED32, s));
 			Delay(100);
 
 			(* wait until write has been completet *)
@@ -515,13 +515,13 @@ TYPE
 			END;
 		END PHYWrite;
 
-		PROCEDURE PHYRead(regAdr: LONGINT): SET;
+		PROCEDURE PHYRead(regAdr: SIGNED32): SET;
 		VAR
 			s: SET;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			s := SYSTEM.VAL(SET, regAdr * 010000H) * {16..20};
-			Write32(60H, SYSTEM.VAL(LONGINT, s));
+			Write32(60H, SYSTEM.VAL(SIGNED32, s));
 			Delay(100);
 
 			(* wait until read has been completed *)
@@ -542,7 +542,7 @@ TYPE
 
 		PROCEDURE SetupRxRing(): Machine.Address32;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			adr, physAdr: ADDRESS;
 			buf, prev: RxBuffer;
 		BEGIN
@@ -552,7 +552,7 @@ TYPE
 			IF adr MOD 256 = 0 THEN
 				firstRD := 0;
 			ELSE
-				firstRD := 16 - (LONGINT (adr MOD 256) DIV 16);
+				firstRD := 16 - (SIGNED32 (adr MOD 256) DIV 16);
 			END;
 
 			IF DebugRxRing IN Debug THEN
@@ -601,7 +601,7 @@ TYPE
 
 		PROCEDURE SetupTxRing(): Machine.Address32;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			adr, physAdr: ADDRESS;
 			buf, prev: TxBuffer;
 		BEGIN
@@ -611,7 +611,7 @@ TYPE
 			IF adr MOD 256 = 0 THEN
 				firstTD := 0;
 			ELSE
-				firstTD := 16 - (LONGINT (adr MOD 256) DIV 16);
+				firstTD := 16 - (SIGNED32 (adr MOD 256) DIV 16);
 			END;
 			lastTD := firstTD;
 			nofFreeTx := TxRingSize - firstTD;
@@ -663,7 +663,7 @@ TYPE
 
 		PROCEDURE ReadFrames;
 		VAR
-			adr: ADDRESS; type, size: LONGINT;
+			adr: ADDRESS; type, size: SIGNED32;
 			dstAdr: Network.LinkAdr;
 			buf: Network.Buffer;
 			s: SET;
@@ -675,7 +675,7 @@ TYPE
 					INC(nRxErrorFrames);
 				ELSIF CheckChecksumErrors(rds[curRD]) THEN
 					(* find out how many bytes have been received, including CRC *)
-					size := SYSTEM.VAL(LONGINT, rds[curRD].flags * {0..13});
+					size := SYSTEM.VAL(SIGNED32, rds[curRD].flags * {0..13});
 
 					IF DebugReceive IN Debug THEN
 						KernelLog.String("Received a frame of length ");
@@ -867,10 +867,10 @@ TYPE
 
 			ack := status;
 			(* reset interrupt status *)
-			Write16(3EH, SYSTEM.VAL(LONGINT, ack));
+			Write16(3EH, SYSTEM.VAL(SIGNED32, ack));
 
 			(* re-enable interrupts *)
-			Write16(3CH, SYSTEM.VAL(LONGINT, InterruptMask));
+			Write16(3CH, SYSTEM.VAL(SIGNED32, InterruptMask));
 		END HandleInterrupt;
 
 		PROCEDURE UpdateLinkStatus;
@@ -883,7 +883,7 @@ TYPE
 		END UpdateLinkStatus;
 
 		PROCEDURE UpdateTxRing;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN { EXCLUSIVE }
 			i := lastTD;
 			WHILE (i # curTD) DO
@@ -910,10 +910,10 @@ TYPE
 
 			(* disable Tx and Rx *)
 			s := SYSTEM.VAL(SET, Read8(37H));
-			Write8(37H, SYSTEM.VAL(SHORTINT, s - {2, 3}));
+			Write8(37H, SYSTEM.VAL(SIGNED8, s - {2, 3}));
 
 			(* soft reset *)
-			Write8(37H, SYSTEM.VAL(SHORTINT, {4}));
+			Write8(37H, SYSTEM.VAL(SIGNED8, {4}));
 
 			(* disable all interrupts *)
 			Write16(3CH, 0);
@@ -934,7 +934,7 @@ TYPE
 		PROCEDURE DebugConfig;
 		VAR
 			s: SET;
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			KernelLog.String("*** BEGIN OF NIC CONFIGURATION ***"); KernelLog.Ln;
 
@@ -1063,8 +1063,8 @@ TYPE
 	installedControllers: Controller;
 
 (* Scan the PCI bus for the specified card. *)
-PROCEDURE ScanPCI(vendor, device: LONGINT);
-VAR index, bus, dev, fct, irq, i: LONGINT; res: WORD; base: ADDRESS; d: LinkDevice; c: Controller; name: Plugins.Name;
+PROCEDURE ScanPCI(vendor, device: SIGNED32);
+VAR index, bus, dev, fct, irq, i: SIGNED32; res: INTEGER; base: ADDRESS; d: LinkDevice; c: Controller; name: Plugins.Name;
 BEGIN
 	index := 0;
 	WHILE (PCI.FindPCIDevice(device, vendor, index, bus, dev, fct) = PCI.Done) & (installed < 16) DO
@@ -1138,10 +1138,10 @@ END TestDevices;
 
 PROCEDURE TestDevice(ctrl: Controller);
 VAR
-	i, diff, bytes, times: LONGINT;
+	i, diff, bytes, times: SIGNED32;
 	milliTimer : Kernel.MilliTimer;
 	data: ARRAY 1024 OF CHAR;
-	bw: REAL;
+	bw: FLOAT32;
 	dst: Network.LinkAdr;
 BEGIN
 	dst[0] := 000X;
@@ -1204,7 +1204,7 @@ BEGIN
 	installedControllers := NIL;
 END Cleanup;
 
-PROCEDURE Delay(ms: LONGINT);
+PROCEDURE Delay(ms: SIGNED32);
 VAR
 	t: Kernel.MilliTimer;
 BEGIN

@@ -13,8 +13,8 @@ CONST
 	WindowSize = N*ElemSize;
 
 TYPE
-	ElementType = LONGINT;
-	Index = INTEGER;
+	ElementType = SIGNED32;
+	Index = SIGNED16;
 	SortValues = ARRAY N OF ElementType;
 
 	SortArray =  OBJECT (WM.BufferWindow)
@@ -25,11 +25,11 @@ TYPE
 		mode: Raster.Mode;
 
 		sortname: ARRAY 32 OF CHAR;
-		delay: LONGINT;
+		delay: SIGNED32;
 		ha, hb: Index;  (* highlighted elements *)
-		concurrent: BOOLEAN;  concSorters: LONGINT;
-		nofcomps, nofswaps, nofmoves: LONGINT;
-		compareWeight, swapWeight: LONGREAL; (* in relation to element move *)
+		concurrent: BOOLEAN;  concSorters: SIGNED32;
+		nofcomps, nofswaps, nofmoves: SIGNED32;
+		compareWeight, swapWeight: FLOAT64; (* in relation to element move *)
 		timer: Kernel.Timer;
 
 		data, backup: SortValues;
@@ -121,7 +121,7 @@ TYPE
 
 		PROCEDURE DrawElement( n: Index );
 		VAR
-			x, y, len: LONGINT;
+			x, y, len: SIGNED32;
 		BEGIN
 			len := data[n];
 			x := ElemSize*n;  y := WindowSize - 1 - ElemSize*len;
@@ -139,7 +139,7 @@ TYPE
 
 		PROCEDURE UnHighlight( n: Index );
 		VAR
-			x, y, len: LONGINT;
+			x, y, len: SIGNED32;
 		BEGIN
 			IF highlighted[n] THEN
 				len := data[n];
@@ -154,7 +154,7 @@ TYPE
 
 		PROCEDURE Highlight( n: Index );
 		VAR
-			x, y, len: LONGINT;
+			x, y, len: SIGNED32;
 		BEGIN
 			IF ~highlighted[n] THEN
 				len := data[n];
@@ -179,10 +179,10 @@ TYPE
 		END Highlight2;
 
 
-		PROCEDURE Randomize( n: INTEGER );
+		PROCEDURE Randomize( n: SIGNED16 );
 		VAR i, j, k: Index;
 			random: Random.Generator;
-			t, d: LONGINT;
+			t, d: SIGNED32;
 		BEGIN
 			NEW( random );  Clock.Get( t, d );  random.InitSeed( t );
 			FOR i := 1 TO n DO
@@ -236,7 +236,7 @@ TYPE
 
 
 		PROCEDURE Swap( i, j: Index );
-		VAR tmp: LONGINT;
+		VAR tmp: SIGNED32;
 		BEGIN
 			IF i # j THEN
 				tmp := data[i];  data[i] := data[j];  data[j] := tmp;
@@ -258,7 +258,7 @@ TYPE
 
 
 		PROCEDURE BubbleSort( lo, hi: Index );
-		VAR i: Index;  swaps: LONGINT;
+		VAR i: Index;  swaps: SIGNED32;
 		BEGIN
 			REPEAT
 				swaps := 0;
@@ -270,7 +270,7 @@ TYPE
 
 
 		PROCEDURE BubbleSortOptim( lo, hi: Index );
-		VAR i, first, last: Index;  swaps: LONGINT;
+		VAR i, first, last: Index;  swaps: SIGNED32;
 		BEGIN
 			first := lo;  last := hi - 1;
 			LOOP
@@ -366,7 +366,7 @@ TYPE
 
 
 		PROCEDURE QuickSortOptim( lo, hi: Index );
-		VAR i, j, m: Index;  n: LONGINT;
+		VAR i, j, m: Index;  n: SIGNED32;
 		BEGIN
 			IF lo < hi THEN
 				n := hi - lo + 1;
@@ -674,13 +674,13 @@ TYPE
 				NEW( panel );
 					panel.bounds.SetWidth( 560 );
 					panel.bounds.SetHeight( 80 );
-					panel.fillColor.Set( LONGINT( 0FFFFFFFFH ) );
+					panel.fillColor.Set( SIGNED32( 0FFFFFFFFH ) );
 
 
 				NEW( toolbar );
 					toolbar.bounds.SetHeight( 20 );
 					toolbar.alignment.Set( WMComponents.AlignTop );
-					toolbar.fillColor.Set( LONGINT( 0CCCCCCFFH ) );
+					toolbar.fillColor.Set( SIGNED32( 0CCCCCCFFH ) );
 
 				NEW( label );
 					label.bounds.SetWidth( 70 );
@@ -744,7 +744,7 @@ TYPE
 				NEW( toolbar );
 					toolbar.bounds.SetHeight( 20 );
 					toolbar.alignment.Set( WMComponents.AlignTop );
-					toolbar.fillColor.Set( LONGINT( 0CCCCCCFFH ) );
+					toolbar.fillColor.Set( SIGNED32( 0CCCCCCFFH ) );
 
 				NEW( label );
 					label.bounds.SetWidth( 70 );
@@ -802,7 +802,7 @@ TYPE
 				NEW( toolbar );
 					toolbar.bounds.SetHeight( 20 );
 					toolbar.alignment.Set( WMComponents.AlignTop );
-					toolbar.fillColor.Set( LONGINT( 0CCCCCCFFH ) );
+					toolbar.fillColor.Set( SIGNED32( 0CCCCCCFFH ) );
 
 				NEW( label );
 					label.bounds.SetWidth( 70 );
@@ -853,7 +853,7 @@ TYPE
 				NEW( toolbar );
 					toolbar.bounds.SetHeight( 20 );
 					toolbar.alignment.Set( WMComponents.AlignTop );
-					toolbar.fillColor.Set( LONGINT( 0CCCCCCFFH ) );
+					toolbar.fillColor.Set( SIGNED32( 0CCCCCCFFH ) );
 
 				NEW( label );
 					label.bounds.SetWidth( 70 );

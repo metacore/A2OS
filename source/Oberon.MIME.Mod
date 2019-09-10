@@ -47,14 +47,14 @@ MODULE MIME IN Oberon; (** portable *)
 		Content* = POINTER TO ContentDesc;
 		ContentDesc* = RECORD
 			h: Header;
-			pos, len*: LONGINT;
+			pos, len*: SIGNED32;
 			typ*: ContentType;
-			encoding*: LONGINT (* 0: binary; 1: 8 bit; 2: 7 bit; 3: 7 bit, quoted; 4: Base64; 5: AsciiCoder; 6: AsciiCoder % *)
+			encoding*: SIGNED32 (* 0: binary; 1: 8 bit; 2: 7 bit; 3: 7 bit, quoted; 4: Base64; 5: AsciiCoder; 6: AsciiCoder % *)
 		END;
 		Part = POINTER TO PartDesc;
 		PartDesc = RECORD
 			name: ARRAY 64 OF CHAR;
-			no: LONGINT;
+			no: SIGNED32;
 			next: Part
 		END;
 
@@ -62,10 +62,10 @@ MODULE MIME IN Oberon; (** portable *)
 		contTypes*: ContentType; (** Root of the content-typ list. *)
 		textCont*: Content;
 
-	PROCEDURE ReadHeader*(S, echo: Streams.Stream; VAR h: Header; VAR len: LONGINT);
+	PROCEDURE ReadHeader*(S, echo: Streams.Stream; VAR h: Header; VAR len: SIGNED32);
 		VAR
 			buf: OpenString;
-			bufLen, bufPos, begPos, begLen: LONGINT;
+			bufLen, bufPos, begPos, begLen: SIGNED32;
 			ch, eolc: CHAR;
 			end, eol, field, anyField, white: BOOLEAN;
 		PROCEDURE Read;
@@ -136,7 +136,7 @@ MODULE MIME IN Oberon; (** portable *)
 		END
 	END ReadHeader;
 
-	PROCEDURE FindFieldPos*(h: Header; field: ARRAY OF CHAR; VAR pos: LONGINT);
+	PROCEDURE FindFieldPos*(h: Header; field: ARRAY OF CHAR; VAR pos: SIGNED32);
 		VAR len, i: SIZE;
 	BEGIN
 		len := LEN(h.fields^);
@@ -166,14 +166,14 @@ MODULE MIME IN Oberon; (** portable *)
 		pos := -1
 	END FindFieldPos;
 
-	PROCEDURE FindField*(h: Header; field: ARRAY OF CHAR): LONGINT;
-		VAR pos: LONGINT;
+	PROCEDURE FindField*(h: Header; field: ARRAY OF CHAR): SIGNED32;
+		VAR pos: SIGNED32;
 	BEGIN
 		pos := 0; FindFieldPos(h, field, pos);
 		RETURN pos
 	END FindField;
 
-	PROCEDURE NextValue*(h: Header; VAR pos: LONGINT);
+	PROCEDURE NextValue*(h: Header; VAR pos: SIGNED32);
 		VAR len: SIZE;
 	BEGIN
 		len := LEN(h.fields^);
@@ -191,7 +191,7 @@ MODULE MIME IN Oberon; (** portable *)
 		END
 	END NextValue;
 
-	PROCEDURE HexVal(ch: CHAR): LONGINT;
+	PROCEDURE HexVal(ch: CHAR): SIGNED32;
 	BEGIN
 		IF (ch >= "0") & (ch <= "9") THEN
 			RETURN ORD(ch)-ORD("0")
@@ -232,7 +232,7 @@ MODULE MIME IN Oberon; (** portable *)
 		value[j] := 0X
 	END DecodeValue;
 
-	PROCEDURE ExtractValue*(h: Header; pos: LONGINT; VAR val: ARRAY OF CHAR);
+	PROCEDURE ExtractValue*(h: Header; pos: SIGNED32; VAR val: ARRAY OF CHAR);
 		VAR len, i, vlen: SIZE;
 	BEGIN
 		COPY("", val);
@@ -254,7 +254,7 @@ MODULE MIME IN Oberon; (** portable *)
 		DecodeValue(val)
 	END ExtractValue;
 
-	PROCEDURE FindParam*(h: Header; pos: LONGINT; param: ARRAY OF CHAR; VAR val: ARRAY OF CHAR);
+	PROCEDURE FindParam*(h: Header; pos: SIGNED32; param: ARRAY OF CHAR; VAR val: ARRAY OF CHAR);
 		VAR len, i, vlen: SIZE;
 	BEGIN
 		COPY("", val);
@@ -298,7 +298,7 @@ MODULE MIME IN Oberon; (** portable *)
 		END
 	END FindParam;
 
-	PROCEDURE ExtractEMail*(h: Header; pos: LONGINT; VAR email: ARRAY OF CHAR);
+	PROCEDURE ExtractEMail*(h: Header; pos: SIGNED32; VAR email: ARRAY OF CHAR);
 		VAR
 			len, i, len2: SIZE;
 			end: CHAR;
@@ -331,7 +331,7 @@ MODULE MIME IN Oberon; (** portable *)
 		END
 	END ExtractEMail;
 
-	PROCEDURE StrToMonth(VAR str: ARRAY OF CHAR): LONGINT;
+	PROCEDURE StrToMonth(VAR str: ARRAY OF CHAR): SIGNED32;
 	BEGIN
 		CASE CAP(str[0]) OF
 			"A": IF (CAP(str[1]) = "P") OR (CAP(str[1]) = "V") THEN (* April, Aprile, Avril *)
@@ -369,8 +369,8 @@ MODULE MIME IN Oberon; (** portable *)
 		RETURN 0
 	END StrToMonth;
 
-	PROCEDURE GMTTime(h, m, s: LONGINT; zone: ARRAY OF CHAR; VAR time, date: LONGINT): BOOLEAN;
-		VAR dH, dM, i: LONGINT;
+	PROCEDURE GMTTime(h, m, s: SIGNED32; zone: ARRAY OF CHAR; VAR time, date: SIGNED32): BOOLEAN;
+		VAR dH, dM, i: SIGNED32;
 	BEGIN
 		IF (zone[0] = "+") OR (zone[0] = "-") THEN
 			IF Strings.Length(zone) > 5 THEN
@@ -429,17 +429,17 @@ MODULE MIME IN Oberon; (** portable *)
 		RETURN TRUE
 	END GMTTime;
 
-	PROCEDURE GetClock*(VAR time, date: LONGINT);
+	PROCEDURE GetClock*(VAR time, date: SIGNED32);
 	BEGIN
 		Oberon.GetClock(time, date);
 		Dates.AddTime(time, date, -Dates.TimeDiff * 60)	(* convert to GMT *)
 	END GetClock;
 
-	PROCEDURE ExtractGMTDate*(h: Header; pos: LONGINT; VAR time, date: LONGINT);
+	PROCEDURE ExtractGMTDate*(h: Header; pos: SIGNED32; VAR time, date: SIGNED32);
 		VAR
-			len: SIZE; i, day, year, month, hour, min, sec: LONGINT;
+			len: SIZE; i, day, year, month, hour, min, sec: SIGNED32;
 			mo, zone: ARRAY 16 OF CHAR;
-			j: INTEGER;
+			j: SIGNED16;
 	BEGIN
 		time := 0; date := 0;
 		len := LEN(h.fields^);
@@ -508,7 +508,7 @@ MODULE MIME IN Oberon; (** portable *)
 	PROCEDURE EnumMIME(key, value: ARRAY OF CHAR);
 		VAR
 			contType: ContentType;
-			i, j: LONGINT;
+			i, j: SIGNED32;
 	BEGIN
 		NEW(contType); contType.next := contTypes; contTypes := contType; contType.support := TRUE;
 		i := 0;
@@ -549,7 +549,7 @@ MODULE MIME IN Oberon; (** portable *)
 			contType: ContentType;
 			typ: ARRAY 32 OF CHAR;
 			subTyp: ARRAY 64 OF CHAR;
-			i, j: LONGINT;
+			i, j: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (fullTyp[i] # 0X) & (fullTyp[i] # "/") DO
@@ -601,7 +601,7 @@ MODULE MIME IN Oberon; (** portable *)
 			END
 		END;
 		NEW(textCont); textCont.typ := GetContentType("text/plain"); textCont.encoding := Enc8Bit;
-		textCont.h := NIL; textCont.pos := 0; textCont.len := MAX(LONGINT)-BufLen-1
+		textCont.h := NIL; textCont.pos := 0; textCont.len := MAX(SIGNED32)-BufLen-1
 	END LoadTypes;
 
 (** Create a temporary file name for contType. *)
@@ -612,7 +612,7 @@ MODULE MIME IN Oberon; (** portable *)
 		Strings.Append(tempName, contType.suffix)
 	END MakeTempName;
 
-	PROCEDURE ExtractContentType*(h: Header; pos: LONGINT; VAR cont: Content);
+	PROCEDURE ExtractContentType*(h: Header; pos: SIGNED32; VAR cont: Content);
 		VAR
 			len, i: SIZE;
 			fullTyp: ARRAY 32+64 OF CHAR;
@@ -631,13 +631,13 @@ MODULE MIME IN Oberon; (** portable *)
 			fullTyp[i] := h.fields[pos]; INC(i); INC(pos)
 		END;
 		fullTyp[i] := 0X; cont.typ := GetContentType(fullTyp);
-		cont.pos := pos; cont.len := MAX(LONGINT)
+		cont.pos := pos; cont.len := MAX(SIGNED32)
 	END ExtractContentType;
 
 	PROCEDURE ReadText*(in: Streams.Stream; VAR W: Texts.Writer; cont: Content; mail: BOOLEAN);
 		VAR
 			buffer: ARRAY BufLen OF CHAR;
-			len, rlen, i, offs, maxLen: LONGINT;
+			len, rlen, i, offs, maxLen: SIGNED32;
 			ch, ch1: CHAR;
 			iso, quoted, cr: BOOLEAN;
 	BEGIN
@@ -718,17 +718,17 @@ MODULE MIME IN Oberon; (** portable *)
 		END
 	END ReadText;
 
-	PROCEDURE SearchBoundary(F: Files.File; VAR boundary: ARRAY OF CHAR; VAR pos: LONGINT): BOOLEAN;
+	PROCEDURE SearchBoundary(F: Files.File; VAR boundary: ARRAY OF CHAR; VAR pos: SIGNED32): BOOLEAN;
 		CONST
 			MaxPatLen = 128;
 		VAR
 			sPat: ARRAY MaxPatLen OF CHAR;
-			sDv: ARRAY MaxPatLen + 1 OF LONGINT;
+			sDv: ARRAY MaxPatLen + 1 OF SIGNED32;
 			i, l, sPatLen: SIZE;
 			R: Files.Rider;
 			prev, ch: CHAR;
 		PROCEDURE CalcDispVec;
-			VAR i, j, d: LONGINT;
+			VAR i, j, d: SIGNED32;
 		BEGIN
 			i := 1; d := 1;
 			WHILE i <= sPatLen DO
@@ -771,7 +771,7 @@ MODULE MIME IN Oberon; (** portable *)
 		RETURN i = sPatLen
 	END SearchBoundary;
 
-	PROCEDURE TextEncoding*(h: Header; pos: LONGINT; cont: Content);
+	PROCEDURE TextEncoding*(h: Header; pos: SIGNED32; cont: Content);
 		VAR
 			val: ARRAY 64 OF CHAR;
 			i: SIZE;
@@ -788,7 +788,7 @@ MODULE MIME IN Oberon; (** portable *)
 				cont.encoding := Enc8Bit
 			END
 		END;
-		cont.len := MAX(LONGINT)
+		cont.len := MAX(SIGNED32)
 	END TextEncoding;
 
 	PROCEDURE HorzRule(VAR W: Texts.Writer; name: ARRAY OF CHAR);
@@ -799,13 +799,13 @@ MODULE MIME IN Oberon; (** portable *)
 		Texts.WriteObj(W, f); Texts.WriteLn(W)
 	END HorzRule;
 
-	PROCEDURE DecodePart(F: Files.File; beg, end: LONGINT; T: Texts.Text; VAR W: Texts.Writer; VAR parts: Part; mail: BOOLEAN);
+	PROCEDURE DecodePart(F: Files.File; beg, end: SIGNED32; T: Texts.Text; VAR W: Texts.Writer; VAR parts: Part; mail: BOOLEAN);
 		VAR
 			R: Files.Rider;
 			S, wS: Streams.Stream;
 			h: Header;
 			cont: Content;
-			pos, begPart, n, oldBeg: LONGINT;
+			pos, begPart, n, oldBeg: SIGNED32;
 			val: ARRAY 64 OF CHAR;
 			part: Part;
 			ch: CHAR;
@@ -889,16 +889,16 @@ MODULE MIME IN Oberon; (** portable *)
 			last, next, parts: Part;
 			obj: Objects.Object;
 			cmd: ARRAY 64 OF CHAR;
-			pos, beg, end, len: LONGINT;
+			pos, beg, end, len: SIGNED32;
 	BEGIN
 		NEW(T); Texts.Open(T, ""); Texts.OpenWriter(W);
 		pos := 0; end := 0; len := Files.Length(F); parts := NIL;
 		IF SearchBoundary(F, boundary, pos) THEN
-			DecodePart(F, 0, pos-Strings.Length(boundary)(LONGINT)-2, T, W, parts, mail);
+			DecodePart(F, 0, pos-Strings.Length(boundary)(SIGNED32)-2, T, W, parts, mail);
 			WHILE end < len DO
 				beg := pos;
 				IF SearchBoundary(F, boundary, pos) THEN
-					end := pos-Strings.Length(boundary)(LONGINT)-2
+					end := pos-Strings.Length(boundary)(SIGNED32)-2
 				ELSE
 					end := len+1
 				END;
@@ -938,7 +938,7 @@ MODULE MIME IN Oberon; (** portable *)
 			R: Files.Rider;
 			buffer: ARRAY BufLen OF CHAR;
 			boundary: ARRAY 128 OF CHAR;
-			len, rlen, i, state, maxLen: LONGINT;
+			len, rlen, i, state, maxLen: SIGNED32;
 	BEGIN
 		maxLen := cont.len; state := 1; h := cont.h;
 		F := Files.New(""); Files.Set(R, F, 0);
@@ -980,7 +980,7 @@ MODULE MIME IN Oberon; (** portable *)
 		DecodeMultipartFile(F, T, boundary, mail)
 	END ReadMultipartText;
 
-	PROCEDURE HexDigit(i: LONGINT): CHAR;
+	PROCEDURE HexDigit(i: SIGNED32): CHAR;
 	BEGIN
 		IF i < 10 THEN
 			RETURN CHR(i+ORD("0"))
@@ -989,11 +989,11 @@ MODULE MIME IN Oberon; (** portable *)
 		END
 	END HexDigit;
 
-	PROCEDURE WriteText*(T: Texts.Text; beg, end: LONGINT; out: Streams.Stream; cont: Content; mail, crlf: BOOLEAN);
+	PROCEDURE WriteText*(T: Texts.Text; beg, end: SIGNED32; out: Streams.Stream; cont: Content; mail, crlf: BOOLEAN);
 		VAR
 			buffer: ARRAY BufLen OF CHAR;
 			R: Texts.Reader;
-			i, j, offs: LONGINT;
+			i, j, offs: SIGNED32;
 			ch: CHAR;
 			iso, quoted: BOOLEAN;
 	BEGIN
@@ -1081,7 +1081,7 @@ MODULE MIME IN Oberon; (** portable *)
 			TextStreams.WriteString(S, ContEnc8Bit)
 		END;
 		TextStreams.WriteLn(S);
-		IF (cont.len > 0) & (cont.len < MAX(LONGINT)) THEN
+		IF (cont.len > 0) & (cont.len < MAX(SIGNED32)) THEN
 			TextStreams.WriteString(S, "Content-Length: "); TextStreams.WriteInt(S, cont.len, 0); TextStreams.WriteLn(S)
 		END
 	END WriteISOMime;

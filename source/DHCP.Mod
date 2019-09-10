@@ -42,9 +42,9 @@ CONST
 (* Parse the BootP vendor extensions in buf[i..m-1]. *)
 
 PROCEDURE ParseOptions(VAR buf: ARRAY OF CHAR; i, m: SIZE; VAR maskAdr, gatewayAdr: IP.Adr;
-		VAR dns: ARRAY OF IP.Adr; VAR domain: ARRAY OF CHAR; VAR serverIP: IP.Adr; VAR xid:LONGINT;
+		VAR dns: ARRAY OF IP.Adr; VAR domain: ARRAY OF CHAR; VAR serverIP: IP.Adr; VAR xid:SIGNED32;
 		VAR msgType:CHAR);
-VAR j, len: LONGINT;
+VAR j, len: SIGNED32;
 BEGIN
 	IF (LEN(buf) >= 8) THEN xid := Network.Get4(buf, 4) ELSE xid := 0 END;
 
@@ -101,11 +101,11 @@ BEGIN
 		END
 	ELSE
 		KernelLog.Enter; KernelLog.String("DHCP: Unknown BootP cookie");
-		KernelLog.Hex(SYSTEM.VAL(LONGINT, buf[i]), 9); KernelLog.Exit
+		KernelLog.Hex(SYSTEM.VAL(SIGNED32, buf[i]), 9); KernelLog.Exit
 	END
 END ParseOptions;
 
-PROCEDURE CreateDHCPDiscoverMsg(hwAdr: Network.LinkAdr; xid,secondsElapsed:LONGINT; VAR buf:ARRAY OF CHAR): LONGINT;
+PROCEDURE CreateDHCPDiscoverMsg(hwAdr: Network.LinkAdr; xid,secondsElapsed:SIGNED32; VAR buf:ARRAY OF CHAR): SIGNED32;
 VAR i:SIZE;
 BEGIN
 	FOR i := 0 TO LEN(buf)-1 DO buf[i] := 0X END; (* Clear buffer contents *)
@@ -130,7 +130,7 @@ BEGIN
 	RETURN ((243 + 1 + 15) DIV 16) * 16	(* align to 16-byte boundary *)
 END CreateDHCPDiscoverMsg;
 
-PROCEDURE CreateDHCPRequestMsg(hwAdr: Network.LinkAdr; xid, secondsElapsed:LONGINT; VAR buf:ARRAY OF CHAR; serverIP:IP.Adr; myNewIP :IP.Adr): LONGINT;
+PROCEDURE CreateDHCPRequestMsg(hwAdr: Network.LinkAdr; xid, secondsElapsed:SIGNED32; VAR buf:ARRAY OF CHAR; serverIP:IP.Adr; myNewIP :IP.Adr): SIGNED32;
 VAR i:SIZE;
 BEGIN
 	FOR i := 0 TO LEN(buf)-1 DO buf[i] := 0X END; (* Clear buffer contents *)
@@ -168,19 +168,19 @@ END CreateDHCPRequestMsg;
 (* Initiate the boot protocol. When successful, return res = 0 and set the parameters. *)
 
 PROCEDURE InitDHCP(int: IP.Interface; VAR localAdr, maskAdr, gatewayAdr: IP.Adr;
-		VAR dns: ARRAY OF IP.Adr; VAR domain: ARRAY OF CHAR; VAR res: WORD);
+		VAR dns: ARRAY OF IP.Adr; VAR domain: ARRAY OF CHAR; VAR res: INTEGER);
 VAR
 	p: UDP.Socket;
-	fport, time, start, offerDelay, requestDelay: LONGINT;
+	fport, time, start, offerDelay, requestDelay: SIGNED32;
 	i, len: SIZE;
 	fip, serverIP: IP.Adr;
 	msgType: CHAR;
-	xid, rxid, offerTries, requestTries: LONGINT;
+	xid, rxid, offerTries, requestTries: SIGNED32;
 	buf: ARRAY MaxDHCPMsgSize OF CHAR;
-	msgLen: LONGINT; exit: BOOLEAN;
+	msgLen: SIGNED32; exit: BOOLEAN;
 	(* used to avoid busy waits *)
 	t: Kernel.Timer;
-	sleep: LONGINT;
+	sleep: SIGNED32;
 BEGIN
 	NEW(t);
 	localAdr := IP.NilAdr;
@@ -311,12 +311,12 @@ END InitDHCP;
 
 (** Run DHCP on specified interface and try to configure it directly. *)
 
-PROCEDURE RunDHCP*(int: IP.Interface; VAR res: WORD);
+PROCEDURE RunDHCP*(int: IP.Interface; VAR res: INTEGER);
 VAR
 	localAdr, maskAdr, gatewayAdr: IP.Adr;
 	dns: ARRAY IP.MaxNofDNS OF IP.Adr;
 	domain: IP.Name;
-	i: LONGINT;
+	i: SIGNED32;
 	intv4: IPv4.Interface;
 
 BEGIN {EXCLUSIVE}

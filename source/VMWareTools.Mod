@@ -11,7 +11,7 @@ TYPE
 	VAR
 		timer : Kernel.Timer;
 		alive : BOOLEAN;
-		t : LONGINT;
+		t : SIGNED32;
 	BEGIN {ACTIVE}
 		NEW(timer);
 		alive := TRUE;
@@ -25,12 +25,12 @@ VAR
 	manager : WMWindowManager.WindowManager;
 	viewPort : WMWindowManager.ViewPort;
 	w, h : SIZE;
-	hw : LONGINT;
+	hw : SIGNED32;
 	oldGUIBits : SET;
 	mouseGrabber : MouseGrabber;
 	textbuffer : Strings.String;
 
-PROCEDURE -ReadMouse() : LONGINT;
+PROCEDURE -ReadMouse() : SIGNED32;
 CODE
 #IF I386 THEN
 	MOV EAX, 564D5868H
@@ -53,7 +53,7 @@ CODE
 #END
 END ReadMouse;
 
-PROCEDURE -WriteMouse(pos : LONGINT);
+PROCEDURE -WriteMouse(pos : SIGNED32);
 CODE
 #IF I386 THEN
 	MOV EAX, 564D5868H
@@ -115,7 +115,7 @@ CODE
 #END
 END SendLength;
 
-PROCEDURE -Send4Chars(chars : LONGINT);
+PROCEDURE -Send4Chars(chars : SIGNED32);
 CODE
 #IF I386 THEN
 	MOV EAX, 564D5868H
@@ -146,7 +146,7 @@ CODE
 #END
 END Send4Chars;
 
-PROCEDURE -ReceiveLength() : LONGINT;
+PROCEDURE -ReceiveLength() : SIGNED32;
 CODE
 #IF I386 THEN
 	MOV EAX, 564D5868H
@@ -169,7 +169,7 @@ CODE
 #END
 END ReceiveLength;
 
-PROCEDURE -Receive4Chars() : LONGINT;
+PROCEDURE -Receive4Chars() : SIGNED32;
 CODE
 #IF I386 THEN
 	MOV EAX, 564D5868H
@@ -192,7 +192,7 @@ CODE
 #END
 END Receive4Chars;
 
-PROCEDURE -GetVirtualHWVersion() : LONGINT;
+PROCEDURE -GetVirtualHWVersion() : SIGNED32;
 CODE
 #IF I386 THEN
 	MOV EAX, 564D5868H
@@ -215,7 +215,7 @@ CODE
 #END
 END GetVirtualHWVersion;
 
-PROCEDURE -GetVMWareVersion() : LONGINT;
+PROCEDURE -GetVMWareVersion() : SIGNED32;
 CODE
 #IF I386 THEN
 	MOV EAX, 564D5868H
@@ -241,7 +241,7 @@ CODE
 END GetVMWareVersion;
 
 (*
-PROCEDURE -GetDeviceInformation(nrnr : LONGINT) : LONGINT;
+PROCEDURE -GetDeviceInformation(nrnr : SIGNED32) : SIGNED32;
 CODE
 #IF I386 THEN
 	MOV EAX, 564D5868H
@@ -329,8 +329,8 @@ CODE
 #END
 END GetGUIOptions;
 
-PROCEDURE SetMousePos(x, y : LONGINT);
-VAR t : LONGINT;
+PROCEDURE SetMousePos(x, y : SIGNED32);
+VAR t : SIGNED32;
 BEGIN
 	WriteMouse(x * 10000H + y);
 	t := ReadMouse(); (* readback seems to trigger the mouse exit routine *)
@@ -338,7 +338,7 @@ END SetMousePos;
 
 (*
 PROCEDURE DevId; (* print one device ID...  only works for 1 device like this*)
-VAR i, t : LONGINT; text : ARRAY 50 OF CHAR;
+VAR i, t : SIGNED32; text : ARRAY 50 OF CHAR;
 BEGIN
 	FOR i := 0 TO 9 DO
 		t := GetDeviceInformation(i * 4);
@@ -349,7 +349,7 @@ END DevId;
 *)
 
 PROCEDURE SetTextToClipBoard(CONST text : ARRAY OF CHAR);
-VAR l, i: SIZE; t: LONGINT;
+VAR l, i: SIZE; t: SIGNED32;
 BEGIN
 	l := Strings.Length(text);
 	SendLength(l);
@@ -361,7 +361,7 @@ BEGIN
 END SetTextToClipBoard;
 
 PROCEDURE GetTextFromClipBoard(VAR s : Strings.String);
-VAR l, i: SIZE; t: LONGINT; f : ADDRESS;
+VAR l, i: SIZE; t: SIGNED32; f : ADDRESS;
 BEGIN
 	l := ReceiveLength();
 	IF (l > 0) & (l < 10000H) THEN

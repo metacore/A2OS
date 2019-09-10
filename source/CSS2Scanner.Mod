@@ -49,12 +49,12 @@ CONST
 TYPE
 		Scanner* = OBJECT
 		VAR
-			sym-: LONGINT;
-			numberType-: SHORTINT;
-			intVal-: LONGINT;
-			realVal-: LONGREAL;
-			line-, row-, pos: LONGINT;
-			reportError*: PROCEDURE (pos, line, row: LONGINT; msg: ARRAY OF CHAR);
+			sym-: SIGNED32;
+			numberType-: SIGNED8;
+			intVal-: SIGNED32;
+			realVal-: FLOAT64;
+			line-, row-, pos: SIGNED32;
+			reportError*: PROCEDURE (pos, line, row: SIGNED32; msg: ARRAY OF CHAR);
 			nextCh: CHAR;
 			dynstr: DynamicStrings.DynamicString;
 			f: Files.File;
@@ -117,8 +117,8 @@ TYPE
 			END
 		END ScanComment;
 
-		PROCEDURE ScanEscape(isString: BOOLEAN; VAR i: LONGINT);
-		VAR val: LONGINT; n: SHORTINT; hexstr: ARRAY 7 OF CHAR; newline: BOOLEAN;
+		PROCEDURE ScanEscape(isString: BOOLEAN; VAR i: SIGNED32);
+		VAR val: SIGNED32; n: SIGNED8; hexstr: ARRAY 7 OF CHAR; newline: BOOLEAN;
 		BEGIN
 			newline := FALSE;
 			NextCh();
@@ -143,7 +143,7 @@ TYPE
 		END ScanEscape;
 
 		PROCEDURE ScanIdent;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			IF IsNmChar(nextCh) THEN
 				i := 0;
@@ -168,7 +168,7 @@ TYPE
 		END ScanIdent;
 
 		PROCEDURE ScanName;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE IsNmChar(nextCh) DO
@@ -183,7 +183,7 @@ TYPE
 		END ScanName;
 
 		PROCEDURE ScanString;
-		VAR i: LONGINT; ch, allowedQuote: CHAR;
+		VAR i: SIGNED32; ch, allowedQuote: CHAR;
 		BEGIN
 			ch := nextCh;
 			IF ch = '"' THEN allowedQuote := "'"
@@ -207,7 +207,7 @@ TYPE
 		END ScanString;
 
 		PROCEDURE ScanURL;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE ((nextCh = '!') OR (('#' <= nextCh) & (nextCh <= '&')) OR (('*' <= nextCh) & (nextCh <= '~'))
@@ -223,7 +223,7 @@ TYPE
 		END ScanURL;
 
 		PROCEDURE ScanNumber;
-		VAR a, b, div: LONGINT;
+		VAR a, b, div: SIGNED32;
 		BEGIN
 			a := 0;
 			WHILE IsDigit(nextCh) & (sym # Eof) DO
@@ -367,7 +367,7 @@ TYPE
 			RETURN dynstr.ToArrOfChar();
 		END GetStr;
 
-		PROCEDURE GetPos*(): LONGINT;
+		PROCEDURE GetPos*(): SIGNED32;
 		BEGIN
 			RETURN pos
 		END GetPos;
@@ -405,8 +405,8 @@ TYPE
 		RETURN ('0' <= ch) & (ch <= '9')
 	END IsDigit;
 
-	PROCEDURE HexStrToInt(VAR str: ARRAY OF CHAR; VAR val: LONGINT);
-	VAR i, d: LONGINT; ch: CHAR;
+	PROCEDURE HexStrToInt(VAR str: ARRAY OF CHAR; VAR val: SIGNED32);
+	VAR i, d: SIGNED32; ch: CHAR;
 	BEGIN
 		i := 0; ch := str[0];
 		WHILE (ch # 0X) & (ch <= " ") DO
@@ -418,7 +418,7 @@ TYPE
 			ELSE d := ORD(ch) - ORD("A") + 10
 			END;
 			INC(i); ch := str[i];
-			IF val <= ((MAX(LONGINT)-d) DIV 10H) THEN
+			IF val <= ((MAX(SIGNED32)-d) DIV 10H) THEN
 				val := 10H*val+d
 			ELSE
 				HALT(99)
@@ -426,7 +426,7 @@ TYPE
 		END
 	END HexStrToInt;
 
-	PROCEDURE DefaultReportError(pos, line, row: LONGINT; msg: ARRAY OF CHAR);
+	PROCEDURE DefaultReportError(pos, line, row: SIGNED32; msg: ARRAY OF CHAR);
 	BEGIN
 		KernelLog.Enter; KernelLog.Char(CHR(9H)); KernelLog.Char(CHR(9H)); KernelLog.String("pos "); KernelLog.Int(pos, 6);
 		KernelLog.String(", line "); KernelLog.Int(line, 0); KernelLog.String(", row "); KernelLog.Int(row, 0);

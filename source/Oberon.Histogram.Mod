@@ -12,35 +12,35 @@ CONST
 TYPE
 	Histogram* = POINTER TO HistogramDesc;
 	HistogramDesc* = RECORD (Gadgets.FrameDesc)
-		count: ARRAY Bins OF LONGINT; (* Counting bins *)
-		nrBins: INTEGER; (* Visible bins *)
-		offs,width,top: LONGREAL;
-		toosmall,toolarge,nans: LONGINT; (* special counters *)
-		nrobs,maxcount: LONGINT;
-		prevmax: LONGREAL;
+		count: ARRAY Bins OF SIGNED32; (* Counting bins *)
+		nrBins: SIGNED16; (* Visible bins *)
+		offs,width,top: FLOAT64;
+		toosmall,toolarge,nans: SIGNED32; (* special counters *)
+		nrobs,maxcount: SIGNED32;
+		prevmax: FLOAT64;
 		adapting: BOOLEAN;		(* adapt number of bins and limits *)
 		moving: BOOLEAN;		(* show mem data only *)
 		suspended: BOOLEAN;	(* ignore data updates *)
 		logtransform: BOOLEAN; (* use log data *)
 		diff: BOOLEAN;				(* use data diferences *)
-		lastentry: LONGREAL;
-		mem: ARRAY Mems OF LONGREAL;
+		lastentry: FLOAT64;
+		mem: ARRAY Mems OF FLOAT64;
 		upd: BOOLEAN
 	END;
 
-PROCEDURE IsNaN (x:LONGREAL): BOOLEAN; (*! replace by portable version *)
+PROCEDURE IsNaN (x:FLOAT64): BOOLEAN; (*! replace by portable version *)
 BEGIN RETURN (Reals.ExpoL(x) = 2047)
 END IsNaN;
 
-PROCEDURE NaN (code:INTEGER): LONGREAL;
-VAR x: LONGREAL;
+PROCEDURE NaN (code:SIGNED16): FLOAT64;
+VAR x: FLOAT64;
 BEGIN
 	(*! code not yet supported *)
 	Reals.SetExpoL(2047,x);
 	RETURN x
 END NaN;
 
-PROCEDURE LongReal (VAR M: Objects.AttrMsg; VAR x: LONGREAL): BOOLEAN;
+PROCEDURE LongReal (VAR M: Objects.AttrMsg; VAR x: FLOAT64): BOOLEAN;
 BEGIN
 	IF M.class=Objects.LongReal THEN x := M.y
 	ELSIF M.class=Objects.Real THEN x := M.x
@@ -51,7 +51,7 @@ BEGIN
 	RETURN TRUE
 END LongReal;
 
-PROCEDURE LongInt (VAR M: Objects.AttrMsg; VAR x: LONGINT): BOOLEAN;
+PROCEDURE LongInt (VAR M: Objects.AttrMsg; VAR x: SIGNED32): BOOLEAN;
 BEGIN
 	IF M.class=Objects.Int THEN x:=M.i
 	ELSIF M.class=Objects.String THEN Strings.StrToInt(M.s,x)
@@ -67,7 +67,7 @@ BEGIN U.obj := H; U.F := NIL; H.upd := FALSE; Display.Broadcast(U)
 END Update;
 
 PROCEDURE ClearHistCounts (H: Histogram);
-VAR i : INTEGER;
+VAR i : SIGNED16;
 BEGIN
 	H.toosmall := 0; H.toolarge := 0; H.nans := 0; H.maxcount := 0;
 	FOR i := 0 TO Bins-1 DO H.count[i] := 0 END;
@@ -81,12 +81,12 @@ END ResetCounts;
 PROCEDURE Reset* (H: Histogram);
 BEGIN
 	ClearHistCounts(H); H.nrobs := 0; H.lastentry := NaN(0);
-	H.adapting := TRUE; H.offs := MAX(LONGREAL); H.top := MIN(LONGREAL); H.width := 0;
+	H.adapting := TRUE; H.offs := MAX(FLOAT64); H.top := MIN(FLOAT64); H.width := 0;
 	H.nrBins := 0; H.suspended := TRUE; H.moving := FALSE; H.upd := TRUE
 END Reset;
 
-PROCEDURE AddHistCounts (H: Histogram; x: LONGREAL);
-VAR bin: INTEGER;
+PROCEDURE AddHistCounts (H: Histogram; x: FLOAT64);
+VAR bin: SIGNED16;
 BEGIN
 	ASSERT(H.width >= 0, 100);
 	IF IsNaN(x) THEN INC(H.nans)
@@ -94,7 +94,7 @@ BEGIN
 	ELSIF x >= H.top THEN INC(H.toolarge)
 	ELSIF H.width = 0 THEN INC(H.count[0])
 	ELSE
-		ASSERT(((x - H.offs) / H.width) < MAX(INTEGER), 101);
+		ASSERT(((x - H.offs) / H.width) < MAX(SIGNED16), 101);
 		bin := SHORT(ENTIER((x - H.offs) / H.width));
 		INC(H.count[bin]);
 		IF H.count[bin] > H.maxcount THEN H.maxcount := H.count[bin] END;
@@ -102,8 +102,8 @@ BEGIN
 	H.upd:=TRUE
 END AddHistCounts;
 
-PROCEDURE GetHistCounts (H: Histogram; VAR nrcounted: LONGINT);
-VAR i: LONGINT;
+PROCEDURE GetHistCounts (H: Histogram; VAR nrcounted: SIGNED32);
+VAR i: SIGNED32;
 BEGIN
 	ClearHistCounts(H); nrcounted := 0;
 	IF H.nrobs > Mems THEN
@@ -115,8 +115,8 @@ BEGIN
 	END
 END GetHistCounts;
 
-PROCEDURE AddPoint* (H: Histogram; x: LONGREAL);
-VAR bin,i,nr: LONGINT; xorig,w,min,max: LONGREAL; tempbins: INTEGER;
+PROCEDURE AddPoint* (H: Histogram; x: FLOAT64);
+VAR bin,i,nr: SIGNED32; xorig,w,min,max: FLOAT64; tempbins: SIGNED16;
 BEGIN
 	IF H.logtransform THEN x := MathL.ln(x) END;
 	IF H.diff THEN
@@ -132,7 +132,7 @@ BEGIN
 		IF H.moving & (H.nrobs >= Mems) THEN GetHistCounts(H, nr); H.nrobs := nr END;
 		IF H.adapting & ((x < H.offs) OR (x >= H.top)) THEN
 			IF H.nrobs<Mems THEN (* exact solution *)
-		 		min := MAX(LONGREAL); max := MIN(LONGREAL);
+		 		min := MAX(FLOAT64); max := MIN(FLOAT64);
 			     FOR i := 0 TO H.nrobs - 1 DO
 			     	IF ~IsNaN(H.mem[i]) THEN
 			     		IF H.mem[i] < min THEN min := H.mem[i] END;
@@ -163,9 +163,9 @@ BEGIN
 	END (* ~H.suspended *)
  END AddPoint;
 
-PROCEDURE RestoreFrame (H: Histogram; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE RestoreFrame (H: Histogram; M: Display3.Mask; x, y, w, h: SIGNED16);
 CONST specialwidth = 2;
-VAR count: LONGINT; yfact,xfact,curmax: LONGREAL; s: ARRAY 16 OF CHAR; i, width, p, xpos, col, freew: INTEGER;
+VAR count: SIGNED32; yfact,xfact,curmax: FLOAT64; s: ARRAY 16 OF CHAR; i, width, p, xpos, col, freew: SIGNED16;
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
 	freew := w - 2 - 4*specialwidth;
@@ -223,14 +223,14 @@ BEGIN
 	END
 END RestoreFrame;
 
-PROCEDURE Dev (x: INTEGER): INTEGER;
+PROCEDURE Dev (x: SIGNED16): SIGNED16;
 BEGIN RETURN SHORT(LONG(x) * Display.Unit DIV Printer.Unit)
 END Dev;
 
 PROCEDURE PrintFrame (H: Histogram; VAR Msg: Display.DisplayMsg);
 CONST specialwidth=2;
-VAR i, mode,width,p,xpos: INTEGER; s: ARRAY 16 OF CHAR; freew:INTEGER;M: Display3.Mask; x, y, w, h: INTEGER;
-	count:LONGINT;yfact,xfact,curmax:LONGREAL;col:INTEGER;
+VAR i, mode,width,p,xpos: SIGNED16; s: ARRAY 16 OF CHAR; freew:SIGNED16;M: Display3.Mask; x, y, w, h: SIGNED16;
+	count:SIGNED32;yfact,xfact,curmax:FLOAT64;col:SIGNED16;
 BEGIN
 	x := Msg.x; y := Msg.y; w := Dev(H.W); h := Dev(H.H);
 	Gadgets.MakePrinterMask(H, x, y, Msg.dlink, M);
@@ -285,7 +285,7 @@ BEGIN
 END PrintFrame;
 
 PROCEDURE FrameAttr (F: Histogram; VAR M: Objects.AttrMsg);
-VAR nr, ilong: LONGINT; x: LONGREAL;
+VAR nr, ilong: SIGNED32; x: FLOAT64;
 BEGIN
 	IF M.id = Objects.get THEN
 	(* settable attributes first *)
@@ -369,7 +369,7 @@ END FrameAttr;
 
 PROCEDURE File (F: Histogram; VAR M: Objects.FileMsg);
 CONST Version = 2;
-VAR i, version: LONGINT;
+VAR i, version: SIGNED32;
 BEGIN
 	IF M.id=Objects.load THEN
 		Files.ReadLInt(M.R, version);
@@ -412,7 +412,7 @@ BEGIN
 END CopyFrame;
 
 PROCEDURE FrameHandler* (F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR F1: Histogram; x, y, w, h: INTEGER; R : Display3.Mask;
+VAR F1: Histogram; x, y, w, h: SIGNED16; R : Display3.Mask;
 BEGIN
 	WITH F: Histogram DO
 		IF M IS Display.FrameMsg THEN

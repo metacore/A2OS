@@ -9,7 +9,7 @@ CONST Menu = "Desktops.StoreDoc[Store] DocumentSkeleton.Cycle[Cycle]";
 VAR W: Texts.Writer;
 
 PROCEDURE Cycle*;
-	VAR doc: Documents.Document; F: Gadgets.Frame; col: LONGINT;
+	VAR doc: Documents.Document; F: Gadgets.Frame; col: SIGNED32;
 BEGIN
 	doc := Desktops.CurDoc(Gadgets.context);
 	IF (doc # NIL) & (doc.dsc IS Gadgets.Frame) THEN
@@ -20,7 +20,7 @@ BEGIN
 	END
 END Cycle;
 
-PROCEDURE NextColor (doc: Documents.Document; col: INTEGER);
+PROCEDURE NextColor (doc: Documents.Document; col: SIGNED16);
 	VAR F: Gadgets.Frame;
 BEGIN
 	F := doc.dsc(Gadgets.Frame);
@@ -31,7 +31,7 @@ END NextColor;
 PROCEDURE Load (D: Documents.Document);
 	VAR
 	obj: Objects.Object;
-	tag, x, y, w, h, col: INTEGER;
+	tag, x, y, w, h, col: SIGNED16;
 	name: ARRAY 64 OF CHAR; F: Files.File; R: Files.Rider; ch: CHAR;
 	CM: Gadgets.CmdMsg;
 BEGIN
@@ -68,7 +68,7 @@ BEGIN
 END Load;
 
 PROCEDURE Store (D: Documents.Document);
-	VAR obj: Gadgets.Frame; F: Files.File; R: Files.Rider; col: LONGINT;
+	VAR obj: Gadgets.Frame; F: Files.File; R: Files.Rider; col: SIGNED32;
 BEGIN
 	obj := D.dsc(Gadgets.Frame);
 	Texts.WriteString(W, "Store "); Texts.Append(Oberon.Log, W.buf);

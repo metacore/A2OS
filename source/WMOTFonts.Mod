@@ -12,13 +12,13 @@ TYPE
 
 	Glyph*  = RECORD
 		img- : WMGraphics.Image;
-		code- : LONGINT; 										(* import only *)
-		dx, x, y, w, h : LONGINT;
+		code- : SIGNED32; 										(* import only *)
+		dx, x, y, w, h : SIGNED32;
 	END;
 	GlyphArray* = POINTER TO ARRAY OF Glyph;
 
 	GlyphRange* = RECORD
-		firstCode-, lastCode- : LONGINT;							 (* inclusive *)
+		firstCode-, lastCode- : SIGNED32;							 (* inclusive *)
 		glyphs- : GlyphArray;
 		loaded- : BOOLEAN;
 	END;
@@ -30,8 +30,8 @@ TYPE
 		cache-: POINTER TO ARRAY OF ARRAY OF CHAR;
 	END;
 
-	PROCEDURE FillRect*(llx, lly, urx, ury, opacity: INTEGER; VAR data: OpenType.RasterData0);
-	VAR x,y: LONGINT;
+	PROCEDURE FillRect*(llx, lly, urx, ury, opacity: SIGNED16; VAR data: OpenType.RasterData0);
+	VAR x,y: SIGNED32;
 	BEGIN
 		WITH data: RasterData DO
 			FOR y := lly TO ury-1 DO
@@ -48,8 +48,8 @@ TYPE
 
 TYPE
 	Font*  = OBJECT(WMGraphics.Font)
-	VAR nofGlyphs- : LONGINT;
-		nofGlyphRanges- : LONGINT;
+	VAR nofGlyphs- : SIGNED32;
+		nofGlyphRanges- : SIGNED32;
 		glyphRanges : GlyphRangeArray;
 		placeholderimg : WMGraphics.Image;
 		fontFile : Files.File;
@@ -77,12 +77,12 @@ TYPE
 		END Init;
 
 		(* support the oberon encoding scheme *)
-		PROCEDURE MapCode(VAR code : LONGINT);
+		PROCEDURE MapCode(VAR code : SIGNED32);
 		BEGIN
 			IF (code >= 126) & (code <= 155) THEN code := OpenType.CharToUnicode[code] END;
 		END MapCode;
 
-		PROCEDURE GetGlyphMap*(code : LONGINT; VAR map : WMGraphics.Image);
+		PROCEDURE GetGlyphMap*(code : SIGNED32; VAR map : WMGraphics.Image);
 		VAR g : Glyph; range : SIZE;
 		BEGIN
 			IF FindGlyphRange(code, range) THEN
@@ -94,13 +94,13 @@ TYPE
 			END
 		END GetGlyphMap;
 
-		PROCEDURE HasChar*(code : LONGINT) : BOOLEAN;
+		PROCEDURE HasChar*(code : SIGNED32) : BOOLEAN;
 		VAR dummy : SIZE;
 		BEGIN
 			RETURN FindGlyphRange(code, dummy)
 		END HasChar;
 
-		PROCEDURE GetGlyphSpacings*(code : LONGINT; VAR glyphSpacings : WMGraphics.GlyphSpacings);
+		PROCEDURE GetGlyphSpacings*(code : SIGNED32; VAR glyphSpacings : WMGraphics.GlyphSpacings);
 		VAR g : Glyph; range : SIZE;
 		BEGIN
 			IF FindGlyphRange(code, range) THEN
@@ -122,7 +122,7 @@ TYPE
 
 
 		PROCEDURE LoadGlyphRange(gri : SIZE);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			IF glyphRanges[gri].glyphs = NIL THEN
 				NEW(glyphRanges[gri].glyphs, glyphRanges[gri].lastCode - glyphRanges[gri].firstCode + 1);
@@ -142,7 +142,7 @@ TYPE
 				glyphRanges[gri].loaded := TRUE;
 		END LoadGlyphRange;
 
-		PROCEDURE FindGlyphRange(code : LONGINT; VAR gri : SIZE) : BOOLEAN;
+		PROCEDURE FindGlyphRange(code : SIGNED32; VAR gri : SIZE) : BOOLEAN;
 		VAR a, b, m : SIZE;
 		BEGIN
 			gri := 0;
@@ -159,7 +159,7 @@ TYPE
 			END
 		END FindGlyphRange;
 
-		PROCEDURE FindGlyph(code : LONGINT; VAR glyph : Glyph) : BOOLEAN;
+		PROCEDURE FindGlyph(code : SIGNED32; VAR glyph : Glyph) : BOOLEAN;
 		VAR gri : SIZE;
 		BEGIN
 			IF FindGlyphRange(code, gri) THEN
@@ -172,8 +172,8 @@ TYPE
 			END
 		END FindGlyph;
 
-		PROCEDURE CountGlyphes():LONGINT;
-		VAR i, c : LONGINT;
+		PROCEDURE CountGlyphes():SIGNED32;
+		VAR i, c : SIGNED32;
 		BEGIN
 			FOR i := 0 TO nofGlyphRanges - 1 DO
 				c := c + glyphRanges[i].lastCode - glyphRanges[i].firstCode + 1;
@@ -181,8 +181,8 @@ TYPE
 			RETURN c
 		END CountGlyphes;
 
-		PROCEDURE ReadGlyph(code : LONGINT; VAR g : Glyph);
-		VAR no, dw, dh, y, x: LONGINT; mode: Raster.Mode; data: RasterData;
+		PROCEDURE ReadGlyph(code : SIGNED32; VAR g : Glyph);
+		VAR no, dw, dh, y, x: SIGNED32; mode: Raster.Mode; data: RasterData;
 		BEGIN{EXCLUSIVE}
 			Raster.InitMode(mode, Raster.srcCopy);
 
@@ -225,8 +225,8 @@ TYPE
 		END ReadGlyph;
 
 		PROCEDURE Load(filename : ARRAY OF CHAR; size : SIZE) : BOOLEAN;
-		VAR i, j, k, ngri, splitCount : LONGINT; res : INTEGER;
-			ascent, descent : LONGINT;
+		VAR i, j, k, ngri, splitCount : SIGNED32; res : SIGNED16;
+			ascent, descent : SIGNED32;
 		BEGIN
 
 			fontFile := Files.Old(filename);															(* open file *)
@@ -289,7 +289,7 @@ TYPE
 VAR bit: ARRAY 100H, 8 OF BOOLEAN;					(* Bit[b, i] means bit i in byte b is set *)
 
 PROCEDURE InitBitTable;
-VAR b, i: LONGINT;
+VAR b, i: SIGNED32;
 BEGIN
 	FOR b := 0 TO 0FFH DO
 		FOR i := 0 TO 7 DO
@@ -307,7 +307,7 @@ BEGIN
 END LoadFont;
 
 PROCEDURE LoadExactFont*(fi : WMFontManager.FontInfo) : WMGraphics.Font;
-VAR exactName : ARRAY 256 OF CHAR; f : WMGraphics.Font; try: LONGINT;
+VAR exactName : ARRAY 256 OF CHAR; f : WMGraphics.Font; try: SIGNED32;
 BEGIN
 	try := 0;
 	LOOP
@@ -388,7 +388,7 @@ BEGIN
 END LoadApproximateFont;
 
 PROCEDURE MultiTest*;
-VAR name : ARRAY 256 OF CHAR; flags : SET; time, date : LONGINT;
+VAR name : ARRAY 256 OF CHAR; flags : SET; time, date : SIGNED32;
 	size: Files.Size;
 	enumerator : Files.Enumerator;
 	f : WMGraphics.Font;

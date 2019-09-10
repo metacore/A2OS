@@ -41,7 +41,7 @@ VAR
 	alive,dead: srVoxel.ColoredVox;
 PROCEDURE & init*;
 VAR
-	i, j, k: INTEGER;
+	i, j, k: SIGNED16;
 BEGIN
 	NEW(alive);
 	NEW(dead);
@@ -212,7 +212,7 @@ END tick;
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	A,B,C: PT;
-	i:INTEGER;
+	i:SIGNED16;
 BEGIN
 	A:=ray.lxyz;
 	B:=srBase.Exit(ray);
@@ -268,7 +268,7 @@ PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	x,y,z, d,r,g,blue: SREAL;
 	a,b,n: srBase.PT;
-	i: INTEGER;
+	i: SIGNED16;
 	dott: SREAL;
 BEGIN
 	a.x := ray.lxyz.x; a.y := ray.lxyz.y; a.z := ray.lxyz.z;
@@ -364,7 +364,7 @@ PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	x,y,z, d,r,g,blue: SREAL;
 	a,b,n: srBase.PT;
-	i: INTEGER;
+	i: SIGNED16;
 	dott:SREAL;
 BEGIN
 	a.x := ray.lxyz.x; a.y := ray.lxyz.y; a.z := ray.lxyz.z;
@@ -437,7 +437,7 @@ PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	x,y,z, d: SREAL;
 	a,b,n: srBase.PT;
-	i: INTEGER;
+	i: SIGNED16;
 BEGIN
 	a := ray.lxyz;
 	b:= srBase.Exit(ray);
@@ -502,7 +502,7 @@ PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	x,y,z: SREAL;
 	ax, ay, az, bx, by, bz : SREAL;
-	i: LONGINT;
+	i: SIGNED32;
 	nx,ny,nz: SREAL;
 BEGIN
 	ax := ray.lxyz.x; ay := ray.lxyz.y; az := ray.lxyz.z;
@@ -545,7 +545,7 @@ VAR
 
 PROCEDURE&init*;
 VAR
-	i,j,k: INTEGER;
+	i,j,k: SIGNED16;
 BEGIN
 	FOR i := 0 TO 19 DO FOR j:= 0 TO 19 DO FOR k:= 0 TO 19 DO
 		IF (ABS(10-i)+ABS(10-j)+ABS(10-k) < 25 )THEN
@@ -562,7 +562,7 @@ BEGIN
 	END END END
 END init;
 
-PROCEDURE bounds* (i, j, k: INTEGER; VAR out: BOOLEAN);
+PROCEDURE bounds* (i, j, k: SIGNED16; VAR out: BOOLEAN);
 BEGIN
 	IF (i < 0) OR (i > 19) OR (j < 0) OR (j > 19) OR (k < 0) OR (k > 19) THEN
 		out := TRUE
@@ -574,7 +574,7 @@ END bounds;
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	x, y, z, dx, dy, dz: SREAL;
-	i, j, k: INTEGER;
+	i, j, k: SIGNED16;
 	c: cube;
 	out: BOOLEAN;
 BEGIN
@@ -598,7 +598,7 @@ END ArVox;
 TYPE checkboard* = OBJECT(srVoxel2.Bloc10);
 PROCEDURE & init*;
 VAR
-	i, j, k: INTEGER;
+	i, j, k: SIGNED16;
 	black, white: srVoxel.ColoredVox;
 	marble: MirrorSphereInVox;
 

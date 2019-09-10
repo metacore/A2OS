@@ -6,13 +6,13 @@ IMPORT
 VAR
 	startTime : Dates.DateTime;
 
-PROCEDURE Get*(VAR days, hours, minutes, seconds : LONGINT);
+PROCEDURE Get*(VAR days, hours, minutes, seconds : SIGNED32);
 BEGIN
 	Dates.TimeDifference(startTime, Dates.Now(), days, hours, minutes, seconds);
 END Get;
 
 PROCEDURE ToStream*(stream : Streams.Writer);
-VAR days, hours, minutes, seconds : LONGINT;
+VAR days, hours, minutes, seconds : SIGNED32;
 BEGIN
 	ASSERT(stream # NIL);
 	Get(days, hours, minutes, seconds);

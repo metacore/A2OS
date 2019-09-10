@@ -39,7 +39,7 @@ TYPE
 		status : Usbdi.Status;
 
 		PROCEDURE Connect*():BOOLEAN;
-		VAR interruptInAdr, bulkInAdr, bulkOutAdr : LONGINT;
+		VAR interruptInAdr, bulkInAdr, bulkOutAdr : SIGNED32;
 		BEGIN
 			(* get the USB pipes *)
 			defaultpipe := device.GetPipe(0);
@@ -83,11 +83,11 @@ TYPE
 			KernelLog.String("USB Blueetooth dongle "); KernelLog.String(name); KernelLog.String(" disconnected."); KernelLog.Ln;
 		END Disconnect;
 
-		PROCEDURE SendACL*(VAR buf: ARRAY OF CHAR; ofs, len: LONGINT; VAR res : WORD);
+		PROCEDURE SendACL*(VAR buf: ARRAY OF CHAR; ofs, len: SIGNED32; VAR res : INTEGER);
 		VAR
 			buffer : Usbdi.BufferPtr;
 			status : Usbdi.Status;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			NEW(buffer, len); FOR i:=0 TO len-1 DO	buffer[i] := buf[i]; END;
 			status := aclOut.Transfer(len, ofs, buffer^);
@@ -103,11 +103,11 @@ TYPE
 			END;
 		END ReadACL;
 
-		PROCEDURE SendCommand*(buf: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
+		PROCEDURE SendCommand*(buf: ARRAY OF CHAR; ofs, len: SIGNED32; VAR res: INTEGER);
 		VAR
 			buffer : Usbdi.BufferPtr;
 			status : Usbdi.Status;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			NEW(buffer, len); FOR i:=0 TO len-1 DO buffer[i] := buf[i]; END;
 			status :=defaultpipe.Request(Usbdi.ToDevice  + Usbdi.Class + Usbdi.Endpoint, 0, 0, 0, len, buffer^);
@@ -142,8 +142,8 @@ TYPE
 
 	END BluetoothDriver;
 
-PROCEDURE GetEndpointAddresses(VAR interruptIn, bulkIn, bulkOut : LONGINT; CONST endpoints : ARRAY OF Usbdi.EndpointDescriptor) : BOOLEAN;
-VAR i : LONGINT;
+PROCEDURE GetEndpointAddresses(VAR interruptIn, bulkIn, bulkOut : SIGNED32; CONST endpoints : ARRAY OF Usbdi.EndpointDescriptor) : BOOLEAN;
+VAR i : SIGNED32;
 BEGIN
 	interruptIn := 0; bulkIn := 0; bulkOut := 0;
 	IF (LEN(endpoints) # 3) THEN RETURN FALSE; END;
@@ -157,7 +157,7 @@ BEGIN
 END GetEndpointAddresses;
 
 PROCEDURE Probe(dev : Usbdi.UsbDevice; id : Usbdi.InterfaceDescriptor) : Usbdi.Driver;
-VAR driver : BluetoothDriver; ignore : LONGINT;
+VAR driver : BluetoothDriver; ignore : SIGNED32;
 BEGIN
 	(* check whether the probed device is a supported USB bluetooth dongle *)
 	IF id.bInterfaceClass # 224 THEN RETURN NIL END; (* Wireless Controller *)

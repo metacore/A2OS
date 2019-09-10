@@ -32,12 +32,12 @@ TYPE
 
 
 	tModel* = POINTER TO tModelDesc;   (*= input parameters for the gibbs sampler, may be extended in your module *)
-	PotentialFunction* = PROCEDURE ( M: tModel;  A: vyBase.Object ): LONGREAL;
+	PotentialFunction* = PROCEDURE ( M: tModel;  A: vyBase.Object ): FLOAT64;
 	tModelDesc* = RECORD (vyBase.ObjDesc)
-		coolingTemp-: LONGREAL;
+		coolingTemp-: FLOAT64;
 		synced*: BOOLEAN;
 		MCache*: antsCaches.FullCache;
-		maxCacheSize-: LONGINT;
+		maxCacheSize-: SIGNED32;
 		region*: antsRegions.tRegion;
 		par*: Parameters;   (* for automatic handling of attribute messages etc. , use that in higher modules *)
 		parNames*: ParameterNames;   (* for automatic handling of attribute messages etc., names of par *)
@@ -45,7 +45,7 @@ TYPE
 	END;
 
 	PROCEDURE StoreParameters( VAR R: Files.Rider;  p: Parameters;  pn: ParameterNames );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		IF p = NIL THEN Files.WriteLInt( R, 0 )
 		ELSE
@@ -60,7 +60,7 @@ TYPE
 	END StoreParameters;
 
 	PROCEDURE ReadParameters( VAR R: Files.Rider;  VAR p: Parameters;  VAR pn: ParameterNames );
-	VAR len, i: LONGINT;
+	VAR len, i: SIGNED32;
 	BEGIN
 		Files.ReadLInt( R, len );
 		IF len = 0 THEN p := NIL
@@ -84,7 +84,7 @@ TYPE
 	END Store;
 
 	PROCEDURE Load( VAR R: Files.Rider;  s: tModel );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );   (* version control *)
 		Files.ReadLReal( R, s.coolingTemp );  Files.ReadBool( R, s.synced );
@@ -181,13 +181,13 @@ TYPE
 		par.coolingTemp := 1;  par.synced := FALSE;  par.maxCacheSize := 10000000
 	END Open;
 
-	PROCEDURE SetTemperature*( par: tModel;  temp: LONGREAL );
+	PROCEDURE SetTemperature*( par: tModel;  temp: FLOAT64 );
 	BEGIN
 		IF par.coolingTemp = temp THEN RETURN END;
 		par.coolingTemp := temp;  par.synced := FALSE
 	END SetTemperature;
 
-	PROCEDURE SetMaxCache*( par: tModel;  maxCacheSize: LONGINT );
+	PROCEDURE SetMaxCache*( par: tModel;  maxCacheSize: SIGNED32 );
 	BEGIN
 		IF par.maxCacheSize = maxCacheSize THEN RETURN END;
 		par.maxCacheSize := maxCacheSize;  par.synced := FALSE

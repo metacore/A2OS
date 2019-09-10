@@ -79,11 +79,11 @@ TYPE
 		END queueTimeout;
 
 		(* updates the timer with the timeout of the first message. This is also used to refresh the timer, when
-			an timeout cannot be expressed in a LONGINT. (~ 24days) *)
+			an timeout cannot be expressed in a SIGNED32. (~ 24days) *)
 		PROCEDURE updateTimer;
 		VAR
 			b: OSC.OSCBundle;
-			bundletimeout: LONGINT;
+			bundletimeout: SIGNED32;
 		BEGIN
 			b := q.Peek();
 			bundletimeout := b.GetTimeout();

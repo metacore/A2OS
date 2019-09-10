@@ -65,15 +65,15 @@ TYPE
 		dropped : BOOLEAN;
 		field : ARRAY Width OF ARRAY Height OF CHAR;
 		rotBlock, block, nextBlock : Block;
-		posX, posY : LONGINT;
+		posX, posY : SIGNED32;
 		mode : Raster.Mode;
 		random : Random.Generator;
-		lines, blocks, delay, delayDec, level, points : LONGINT;
+		lines, blocks, delay, delayDec, level, points : SIGNED32;
 
 		generateNewBlock : BOOLEAN;
 
 		timer : Kernel.Timer;
-		state : LONGINT;
+		state : SIGNED32;
 
 		backgroundImage : WMGraphics.Image;
 
@@ -97,13 +97,13 @@ TYPE
 			Raster.Fill(img, FieldOffsetX, FieldOffsetY, FieldOffsetX + Width*BoxSize, FieldOffsetY + Height*BoxSize, colors[0], mode);
 			WMGraphicUtilities.DrawBevel(canvas, WMRectangles.MakeRect(
 				FieldOffsetX - BevelBorder, FieldOffsetY - BevelBorder, FieldOffsetX + Width*BoxSize + BevelBorder, FieldOffsetY + Height*BoxSize + BevelBorder),
-				2, TRUE, LONGINT(0FFFFFFFFH), WMGraphics.ModeCopy);
+				2, TRUE, SIGNED32(0FFFFFFFFH), WMGraphics.ModeCopy);
 
 			(* Preview panel *)
 			Raster.Fill(img, Border, Border, FieldOffsetX - Border, Border + BlockSize*BoxSize, colors[0], mode);
 			WMGraphicUtilities.DrawBevel(canvas, WMRectangles.MakeRect(
 				Border - BevelBorder, Border - BevelBorder, FieldOffsetX - Border + BevelBorder, Border + BlockSize*BoxSize + BevelBorder),
-				2, TRUE, LONGINT(0FFFFFFFFH), WMGraphics.ModeCopy);
+				2, TRUE, SIGNED32(0FFFFFFFFH), WMGraphics.ModeCopy);
 			Reset;
 			pointerThreshold := 10;
 			WM.DefaultAddWindow(SELF);
@@ -112,14 +112,14 @@ TYPE
 			state := Initialized;
 		END New;
 
-		PROCEDURE SetState(state : LONGINT);
+		PROCEDURE SetState(state : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF (SELF.state < Terminating) OR (state = Terminated) THEN
 				SELF.state := state;
 			END;
 		END SetState;
 
-		PROCEDURE AwaitState(state : LONGINT);
+		PROCEDURE AwaitState(state : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			AWAIT(SELF.state = state);
 		END AwaitState;
@@ -127,7 +127,7 @@ TYPE
 		PROCEDURE DrawInfo;
 		VAR string : ARRAY 128 OF CHAR; nbr : ARRAY 16 OF CHAR;
 
-			PROCEDURE DrawLine(line : LONGINT; CONST string : ARRAY OF CHAR);
+			PROCEDURE DrawLine(line : SIGNED32; CONST string : ARRAY OF CHAR);
 			BEGIN
 				ASSERT(line >= 1);
 				WMGraphics.DrawStringInRect(canvas,
@@ -138,10 +138,10 @@ TYPE
 			END DrawLine;
 
 		BEGIN
-			canvas.Fill(WMRectangles.MakeRect(InfoOffsetX, InfoOffsetY, FieldOffsetX - Border, InfoOffsetY + InfoHeight), LONGINT(0FFFFFFA0H), WMGraphics.ModeCopy);
+			canvas.Fill(WMRectangles.MakeRect(InfoOffsetX, InfoOffsetY, FieldOffsetX - Border, InfoOffsetY + InfoHeight), SIGNED32(0FFFFFFA0H), WMGraphics.ModeCopy);
 			WMGraphicUtilities.DrawBevel(canvas, WMRectangles.MakeRect(
 				InfoOffsetX - BevelBorder, InfoOffsetY - BevelBorder, FieldOffsetX - Border + BevelBorder, InfoOffsetY + InfoHeight + BevelBorder),
-				2, TRUE, LONGINT(0FFFFFFFFH), WMGraphics.ModeCopy);
+				2, TRUE, SIGNED32(0FFFFFFFFH), WMGraphics.ModeCopy);
 			canvas.SetColor(WMGraphics.Black);
 			IF (state = Running) OR (state = Finished) THEN
 				IF (state = Finished) THEN
@@ -177,13 +177,13 @@ TYPE
 		END StyleChanged;
 
 		PROCEDURE RotateBlock(CONST block : Block) : Block;
-		VAR i, j : INTEGER; temp : Block;
+		VAR i, j : SIGNED16; temp : Block;
 		BEGIN
 			FOR i := 0 TO BlockSize - 1 DO FOR j := 0 TO BlockSize - 1 DO temp[j, i] := block[(BlockSize - 1) - i, j] END END;
 			RETURN temp
 		END RotateBlock;
 
-		PROCEDURE DrawBox(x, y : LONGINT; color : CHAR);
+		PROCEDURE DrawBox(x, y : SIGNED32; color : CHAR);
 		VAR pix : Raster.Pixel;
 		BEGIN
 			pix := colors [ORD(color)];
@@ -200,9 +200,9 @@ TYPE
 
 		PROCEDURE DrawPreview(CONST block : Block);
 		VAR
-			i, j : LONGINT;
+			i, j : SIGNED32;
 
-			PROCEDURE DrawBox(x, y : LONGINT; color : CHAR);
+			PROCEDURE DrawBox(x, y : SIGNED32; color : CHAR);
 			VAR pix : Raster.Pixel;
 			BEGIN
 				pix := colors [ORD(color)];
@@ -224,8 +224,8 @@ TYPE
 			Invalidate(WMRectangles.MakeRect(Border, Border, Border + BlockSize*BoxSize, Border + BlockSize*BoxSize));
 		END DrawPreview;
 
-		PROCEDURE SetBlock(x, y : LONGINT; clear : BOOLEAN);
-		VAR i, j : LONGINT;
+		PROCEDURE SetBlock(x, y : SIGNED32; clear : BOOLEAN);
+		VAR i, j : SIGNED32;
 		BEGIN
 			FOR i := 0 TO BlockSize - 1 DO FOR j := 0 TO BlockSize - 1 DO
 				IF block[i, j] # 0X THEN
@@ -241,8 +241,8 @@ TYPE
 			END END
 		END SetBlock;
 
-		PROCEDURE HasDownCollision(x, y : LONGINT) : BOOLEAN;
-		VAR i, j : LONGINT;
+		PROCEDURE HasDownCollision(x, y : SIGNED32) : BOOLEAN;
+		VAR i, j : SIGNED32;
 		BEGIN
 			FOR i := 0 TO BlockSize - 1 DO FOR j := 0 TO BlockSize - 1 DO
 				IF block[i, j] # 0X THEN
@@ -258,8 +258,8 @@ TYPE
 			RETURN FALSE
 		END HasDownCollision;
 
-		PROCEDURE HasCollision(CONST bl : Block; x, y : LONGINT) : BOOLEAN;
-		VAR i, j : LONGINT;
+		PROCEDURE HasCollision(CONST bl : Block; x, y : SIGNED32) : BOOLEAN;
+		VAR i, j : SIGNED32;
 		BEGIN
 			FOR i := 0 TO BlockSize - 1 DO FOR j := 0 TO BlockSize - 1 DO
 				IF bl[i, j] # 0X THEN
@@ -269,8 +269,8 @@ TYPE
 			RETURN FALSE
 		END HasCollision;
 
-		PROCEDURE Move(dir : LONGINT) : BOOLEAN;
-		VAR newX, newY : LONGINT; result : BOOLEAN;
+		PROCEDURE Move(dir : SIGNED32) : BOOLEAN;
+		VAR newX, newY : SIGNED32; result : BOOLEAN;
 		BEGIN
 			newX := posX; newY := posY;
 			IF dir = 0 THEN INC(newX)
@@ -324,10 +324,10 @@ TYPE
 		PROCEDURE NewBlock() : Block;
 		VAR
 			newBlock : Block;
-			i, j : LONGINT; kind : LONGINT;
+			i, j : SIGNED32; kind : SIGNED32;
 			color : CHAR;
 
-			PROCEDURE Set(x, y : LONGINT);
+			PROCEDURE Set(x, y : SIGNED32);
 			BEGIN
 				newBlock[x, y] := color
 			END Set;
@@ -355,8 +355,8 @@ TYPE
 			RETURN newBlock;
 		END NewBlock;
 
-		PROCEDURE RemoveLine(y : LONGINT);
-		VAR i, j : LONGINT; oldLevel : LONGINT;
+		PROCEDURE RemoveLine(y : SIGNED32);
+		VAR i, j : SIGNED32; oldLevel : SIGNED32;
 		BEGIN
 			FOR i := 0 TO Width - 1 DO
 				FOR j := y TO 1 BY - 1 DO
@@ -379,7 +379,7 @@ TYPE
 		END RemoveLine;
 
 		PROCEDURE ClearLines;
-		VAR y, x, c : LONGINT; linesRemoved : LONGINT; color : CHAR; sameColor : BOOLEAN;
+		VAR y, x, c : SIGNED32; linesRemoved : SIGNED32; color : CHAR; sameColor : BOOLEAN;
 		BEGIN
 			linesRemoved := 0;
 			y := Height - 1;
@@ -435,7 +435,7 @@ TYPE
 		END DropStep;
 
 		PROCEDURE Reset;
-		VAR x,y : LONGINT;
+		VAR x,y : SIGNED32;
 		BEGIN
 			FOR x := 0 TO Width-1 DO
 				FOR y := 0 TO Height-1 DO
@@ -501,7 +501,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*;
 VAR winstance : Window;

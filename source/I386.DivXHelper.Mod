@@ -20,7 +20,7 @@ IMPORT
 		Escape = 7167;
 
 	TYPE Event = RECORD
-		last, run, level: LONGINT;
+		last, run, level: SIGNED32;
 	END;
 
 	(* Texture Decoding of a Block *)
@@ -28,11 +28,11 @@ IMPORT
 	VAR
 		block*: DT.PointerToArrayOfLONGINT;
 		mp4State: DT.MP4State;
-		dcScaler: LONGINT;
-		saiAcLeftIndex: ARRAY 8 OF LONGINT;
+		dcScaler: SIGNED32;
+		saiAcLeftIndex: ARRAY 8 OF SIGNED32;
 		vld: VLD;
 		log: Streams.Writer;
-		srcBlock, dstBlock*: POINTER TO ARRAY 68 OF INTEGER;
+		srcBlock, dstBlock*: POINTER TO ARRAY 68 OF SIGNED16;
 
 	PROCEDURE & init*( state: DT.MP4State; logWriter: Streams.Writer );
 	BEGIN
@@ -63,17 +63,17 @@ IMPORT
 	(* Reset block to 0 *)
 	PROCEDURE ClearBlockGeneric;
 	VAR
-		i: LONGINT;
-		adr: LONGINT;
+		i: SIGNED32;
+		adr: SIGNED32;
 	BEGIN
 		adr := ADDRESSOF( block[0] );
 		FOR i := 0 TO 63 DO
 			SYSTEM.PUT32( adr, 0 );
-			adr := adr + SIZEOF( LONGINT )
+			adr := adr + SIZEOF( SIGNED32 )
 		END;
 	END ClearBlockGeneric;
 
-	PROCEDURE ClearBlockMMX( dst: LONGINT );
+	PROCEDURE ClearBlockMMX( dst: SIGNED32 );
 	CODE{ SYSTEM.MMX, SYSTEM.PentiumPro }
 		MOV		EDX, -32				; clear loop counter
 		MOV		ESI, [EBP+dst]			; capture block address
@@ -88,9 +88,9 @@ IMPORT
 	END ClearBlockMMX;
 
 	(* Decode an intracoded macroblock *)
-	PROCEDURE BlockIntra*( blockNum: LONGINT; coded:BOOLEAN; VAR r: DT.VideoBuffer ): LONGINT;
+	PROCEDURE BlockIntra*( blockNum: SIGNED32; coded:BOOLEAN; VAR r: DT.VideoBuffer ): SIGNED32;
 	VAR
-		i, dctDcSize, dctDcDiff, temp: LONGINT;
+		i, dctDcSize, dctDcDiff, temp: SIGNED32;
 		event: Event;
 		zigzag: DT.PointerToArrayOfLONGINT;
 	BEGIN
@@ -180,11 +180,11 @@ IMPORT
 	END BlockIntra;
 
 	(* Decode an intercoded macroblock *)
-	PROCEDURE BlockInter*( blockNum: LONGINT; coded: BOOLEAN; VAR r: DT.VideoBuffer ): LONGINT;
+	PROCEDURE BlockInter*( blockNum: SIGNED32; coded: BOOLEAN; VAR r: DT.VideoBuffer ): SIGNED32;
 	VAR
 		event: Event;
 		zigzag: DT.PointerToArrayOfLONGINT;
-		k, m, i, qScale, q2Scale, qAdd: LONGINT;
+		k, m, i, qScale, q2Scale, qAdd: SIGNED32;
 
 	BEGIN
 		(* Clear Block *)
@@ -232,7 +232,7 @@ IMPORT
 				block[zigzag[i]] := ( ( 2 * event.level + k ) * mp4State.hdr.quantizer *
 					mp4State.mp4Tables.nonIntraQuantMatrix[zigzag[i]] ) DIV 16;
 
-				m := SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, m ) / SYSTEM.VAL( SET, block[zigzag[i]] ) );
+				m := SYSTEM.VAL( SIGNED32, SYSTEM.VAL( SET, m ) / SYSTEM.VAL( SET, block[zigzag[i]] ) );
 
 				IF DT.Debug THEN
 					log.String( "Vld Inter Event: Run Level Last " ); log.Int( event.run, 0 ); log.Char( ' ' ); log.Int( event.level, 0 );
@@ -244,7 +244,7 @@ IMPORT
 
 			(* if (!(m%2)) ld->block[63] ^= 1; *)
 			IF ( m MOD 2 ) = 0 THEN
-				block[63] := LONGINT(SET(block[63] ) / SET(1))
+				block[63] := SIGNED32(SET(block[63] ) / SET(1))
 			END;
 		END;
 
@@ -257,7 +257,7 @@ IMPORT
 	(* Dump macroblock into logfile *)
 	PROCEDURE DumpMacroBlock;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		log.String( "Macroblock: " );
 		FOR i := 0 TO 63 DO
@@ -267,9 +267,9 @@ IMPORT
 	END DumpMacroBlock;
 
 	(* Get size of the vld code used to derive the luminance DC coefficients *)
-	PROCEDURE GetDCSizeLum(VAR r: DT.VideoBuffer): LONGINT;
+	PROCEDURE GetDCSizeLum(VAR r: DT.VideoBuffer): SIGNED32;
 	VAR
-		code: LONGINT;
+		code: SIGNED32;
 	BEGIN
 		IF AVI.ShowBits(11, r.data^, r.index ) = 1 THEN
 			AVI.SkipBits(11, r.index );
@@ -329,7 +329,7 @@ IMPORT
 	END GetDCSizeLum;
 
 	(* Get ize of the vld code used to derive the chrominance DC coefficients *)
-	PROCEDURE GetDCSizeChr(VAR r: DT.VideoBuffer):LONGINT;
+	PROCEDURE GetDCSizeChr(VAR r: DT.VideoBuffer):SIGNED32;
 	BEGIN
 		IF AVI.ShowBits(12, r.data^, r.index ) = 1 THEN
 			AVI.SkipBits(12, r.index);
@@ -376,15 +376,15 @@ IMPORT
 	END GetDCSizeChr;
 
 	(* Used to derive the value of the differential DC coefficients in intra macroblocks *)
-	PROCEDURE GetDCDiff( dctDCSize: LONGINT; VAR r: DT.VideoBuffer ): LONGINT;
+	PROCEDURE GetDCDiff( dctDCSize: SIGNED32; VAR r: DT.VideoBuffer ): SIGNED32;
 	VAR
-		code, msb: LONGINT;
+		code, msb: SIGNED32;
 	BEGIN
 		code := AVI.GetBits(dctDCSize, r.data^, r.index );
 		msb := LSH( code, -(dctDCSize - 1) );
 
 		IF msb = 0 THEN
-			RETURN  -SYSTEM.VAL( LONGINT, ( SYSTEM.VAL( SET, code ) /
+			RETURN  -SYSTEM.VAL( SIGNED32, ( SYSTEM.VAL( SET, code ) /
 				SYSTEM.VAL( SET , Pow( 2, dctDCSize ) - 1 ) ) )
 		ELSE
 			RETURN code
@@ -392,9 +392,9 @@ IMPORT
 	END GetDCDiff;
 
 	(* Helper Function *)
-	PROCEDURE Pow( x, y: LONGINT ): LONGINT;
+	PROCEDURE Pow( x, y: SIGNED32 ): SIGNED32;
 	VAR
-		res, count: LONGINT;
+		res, count: SIGNED32;
 	BEGIN
 		IF y = 0 THEN
 			RETURN 1;
@@ -408,9 +408,9 @@ IMPORT
 	END Pow;
 
 	(* Used to scale the DC coefficients *)
-	PROCEDURE SetDCScaler( blockNum: LONGINT );
+	PROCEDURE SetDCScaler( blockNum: SIGNED32 );
 	VAR
-		quant: LONGINT;
+		quant: SIGNED32;
 	BEGIN
 		quant := mp4State.hdr.quantizer;
 
@@ -443,12 +443,12 @@ IMPORT
 
 *)
 	(* Reconstruct the DC coefficients *)
-	PROCEDURE DCRecon( blockNum: LONGINT; dcValue: DT.PointerToArrayOfLONGINT );
+	PROCEDURE DCRecon( blockNum: SIGNED32; dcValue: DT.PointerToArrayOfLONGINT );
 	VAR
-		bXPos, bYPos, dcPred, chrNum: LONGINT;
+		bXPos, bYPos, dcPred, chrNum: SIGNED32;
 		dcStoreLum: DT.DCStoreLumArray;
 		dcStoreChr: DT.DCStoreChrArray;
-		temp1, temp2: LONGINT; (* Due to compiler limitation *)
+		temp1, temp2: SIGNED32; (* Due to compiler limitation *)
 	BEGIN
 		IF mp4State.hdr.predictionType = DT.PVOP THEN
 			RescuePredict()
@@ -506,7 +506,7 @@ IMPORT
 	END DCRecon;
 
 	(* Helper function *)
-	PROCEDURE DivDiv( a, b: LONGINT ): LONGINT;
+	PROCEDURE DivDiv( a, b: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF a > 0 THEN
 			RETURN ( a + ( b DIV 2 ) ) DIV b
@@ -516,10 +516,10 @@ IMPORT
 	END DivDiv;
 
 	(* Reconstruct AC Prediction *)
-	PROCEDURE ACRecon(blockNum: LONGINT;  psBlock: DT.PointerToArrayOfLONGINT );
+	PROCEDURE ACRecon(blockNum: SIGNED32;  psBlock: DT.PointerToArrayOfLONGINT );
 	VAR
-		i, bXPos, bYPos, chrNum: LONGINT;
-		temp, temp2: LONGINT; (* Due to compiler limitations *)
+		i, bXPos, bYPos, chrNum: SIGNED32;
+		temp, temp2: SIGNED32; (* Due to compiler limitations *)
 	BEGIN
 		IF blockNum < 4 THEN
 			bXPos := (mp4State.hdr.mbXPos * 2 ) + ( blockNum MOD 2 );
@@ -564,10 +564,10 @@ IMPORT
 	END ACRecon;
 
 	(* Store AC Prediction for later use *)
-	PROCEDURE ACStore( blockNum: LONGINT; psBlock: DT.PointerToArrayOfLONGINT );
+	PROCEDURE ACStore( blockNum: SIGNED32; psBlock: DT.PointerToArrayOfLONGINT );
 	VAR
-		bXPos, bYPos, i, chrNum: LONGINT;
-		temp1, temp2, temp3, temp4: LONGINT; (* Due to compiler limits *)
+		bXPos, bYPos, i, chrNum: SIGNED32;
+		temp1, temp2, temp3, temp4: SIGNED32; (* Due to compiler limits *)
 	BEGIN
 			IF blockNum < 4 THEN
 			bXPos := ( mp4State.hdr.mbXPos * 2 ) + ( blockNum MOD 2 );
@@ -599,7 +599,7 @@ IMPORT
 		END;
 	END ACStore;
 
-	PROCEDURE Rescale( predictQuant, currentQuant, coeff: LONGINT ): LONGINT;
+	PROCEDURE Rescale( predictQuant, currentQuant, coeff: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF coeff # 0 THEN
 			RETURN DivDiv( coeff* predictQuant, currentQuant )
@@ -609,10 +609,10 @@ IMPORT
 	END Rescale;
 
 	(* AC Rescaling *)
-	PROCEDURE ACRescaling( blockNum: LONGINT; psBlock: DT.PointerToArrayOfLONGINT ): LONGINT;
+	PROCEDURE ACRescaling( blockNum: SIGNED32; psBlock: DT.PointerToArrayOfLONGINT ): SIGNED32;
 	VAR
-		mbXPos, mbYPos, currentQuant, predictQuant, bXPos, bYPos, i: LONGINT;
-		temp1, temp2: LONGINT;
+		mbXPos, mbYPos, currentQuant, predictQuant, bXPos, bYPos, i: SIGNED32;
+		temp1, temp2: SIGNED32;
 	BEGIN
 		mbXPos := mp4State.hdr.mbXPos;
 		mbYPos := mp4State.hdr.mbYPos;
@@ -707,7 +707,7 @@ IMPORT
 	END ACRescaling;
 
 	(* Check if block is an intra block *)
-	PROCEDURE IsIntra( mbY, mbX: LONGINT ): BOOLEAN;
+	PROCEDURE IsIntra( mbY, mbX: SIGNED32 ): BOOLEAN;
 	BEGIN
 		RETURN ( mp4State.modeMap[mbY + 1][mbX + 1] = DT.Intra ) OR
 			( mp4State.modeMap[mbY + 1][mbX + 1] = DT.IntraQ )
@@ -716,7 +716,7 @@ IMPORT
 	(* Rescue Prediction *)
 	PROCEDURE RescuePredict;
 	VAR
-		mbXPos, mbYPos, i: LONGINT;
+		mbXPos, mbYPos, i: SIGNED32;
 	BEGIN
 		mbXPos := mp4State.hdr.mbXPos;
 		mbYPos := mp4State.hdr.mbYPos;
@@ -760,7 +760,7 @@ IMPORT
 		END
 	END RescuePredict;
 
-	PROCEDURE FastCopy(from, sizefrom, offsetfrom, to, sizeto, offsetto: LONGINT);
+	PROCEDURE FastCopy(from, sizefrom, offsetfrom, to, sizeto, offsetto: SIGNED32);
 
 	END FastCopy;
 
@@ -929,38 +929,38 @@ IMPORT
 
   		where: c[0]    = 128 c[1..7] = 128*sqrt(2)
 	*)
-	PROCEDURE IDCTRow( blk: DT.PointerToArrayOfLONGINT; baseIndex: LONGINT);
+	PROCEDURE IDCTRow( blk: DT.PointerToArrayOfLONGINT; baseIndex: SIGNED32);
 	VAR
-		x0, x1, x2, x3, x4, x5, x6, x7, x8: LONGINT;
-		adr, tempAdr: LONGINT;
+		x0, x1, x2, x3, x4, x5, x6, x7, x8: SIGNED32;
+		adr, tempAdr: SIGNED32;
 	BEGIN
 		adr := ADDRESSOF( blk[baseIndex] );
 
 		(* shortcut *)
-		x1 := SYSTEM.GET32( adr + 4*SIZEOF(LONGINT) ) * 2048;
-		x2 := SYSTEM.GET32( adr + 6*SIZEOF(LONGINT) );
-		x3 := SYSTEM.GET32( adr + 2*SIZEOF(LONGINT) );
-		x4 := SYSTEM.GET32( adr + SIZEOF(LONGINT) );
-		x5 := SYSTEM.GET32( adr + 7*SIZEOF(LONGINT) );
-		x6 := SYSTEM.GET32( adr + 5*SIZEOF(LONGINT) );
-		x7 := SYSTEM.GET32( adr + 3*SIZEOF(LONGINT) );
+		x1 := SYSTEM.GET32( adr + 4*SIZEOF(SIGNED32) ) * 2048;
+		x2 := SYSTEM.GET32( adr + 6*SIZEOF(SIGNED32) );
+		x3 := SYSTEM.GET32( adr + 2*SIZEOF(SIGNED32) );
+		x4 := SYSTEM.GET32( adr + SIZEOF(SIGNED32) );
+		x5 := SYSTEM.GET32( adr + 7*SIZEOF(SIGNED32) );
+		x6 := SYSTEM.GET32( adr + 5*SIZEOF(SIGNED32) );
+		x7 := SYSTEM.GET32( adr + 3*SIZEOF(SIGNED32) );
 
 		IF ( x1 = 0 ) & ( x2 = 0 ) & ( x3 = 0 ) & ( x4 = 0 ) & ( x5 = 0 ) & ( x6 = 0 ) & ( x7 = 0 )  THEN
 			x0 := SYSTEM.GET32( adr ) * 8;
 			SYSTEM.PUT32( adr , x0 );
-			tempAdr := adr + SIZEOF( LONGINT );
+			tempAdr := adr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
 			RETURN
 		END;
@@ -995,19 +995,19 @@ IMPORT
 
 		(* fourth stage *)
 		SYSTEM.PUT32( adr, ( x7 + x1 ) DIV 256 );
-		tempAdr := adr + SIZEOF( LONGINT );
+		tempAdr := adr + SIZEOF( SIGNED32 );
 		SYSTEM.PUT32( tempAdr, ( x3 + x2 ) DIV 256 );
-		tempAdr := tempAdr + SIZEOF( LONGINT );
+		tempAdr := tempAdr + SIZEOF( SIGNED32 );
 		SYSTEM.PUT32( tempAdr, ( x0 + x4 ) DIV 256 );
-		tempAdr := tempAdr + SIZEOF( LONGINT );
+		tempAdr := tempAdr + SIZEOF( SIGNED32 );
 		SYSTEM.PUT32( tempAdr, ( x8 + x6 ) DIV 256 );
-		tempAdr := tempAdr + SIZEOF( LONGINT );
+		tempAdr := tempAdr + SIZEOF( SIGNED32 );
 		SYSTEM.PUT32( tempAdr, ( x8 - x6 ) DIV 256 );
-		tempAdr := tempAdr + SIZEOF( LONGINT );
+		tempAdr := tempAdr + SIZEOF( SIGNED32 );
 		SYSTEM.PUT32( tempAdr, ( x0 - x4 ) DIV 256 );
-		tempAdr := tempAdr + SIZEOF( LONGINT );
+		tempAdr := tempAdr + SIZEOF( SIGNED32 );
 		SYSTEM.PUT32( tempAdr, ( x3 - x2 ) DIV 256 );
-		tempAdr := tempAdr + SIZEOF( LONGINT );
+		tempAdr := tempAdr + SIZEOF( SIGNED32 );
 		SYSTEM.PUT32( tempAdr, ( x7 - x1 ) DIV 256 )
 	END IDCTRow;
 
@@ -1018,38 +1018,38 @@ IMPORT
 
 	 where: c[0]    = 1/1024 c[1..7] = (1/1024)*sqrt(2)
 	*)
-	PROCEDURE IDCTCol( blk: DT.PointerToArrayOfLONGINT; baseIndex: LONGINT );
+	PROCEDURE IDCTCol( blk: DT.PointerToArrayOfLONGINT; baseIndex: SIGNED32 );
 	VAR
-		x0, x1, x2, x3, x4, x5, x6, x7, x8: LONGINT;
-		adr, tempAdr, sourceAdr: LONGINT;
+		x0, x1, x2, x3, x4, x5, x6, x7, x8: SIGNED32;
+		adr, tempAdr, sourceAdr: SIGNED32;
 	BEGIN
 		adr := ADDRESSOF( blk[baseIndex] );
 
 		(* shortcut *)
-		x1 := SYSTEM.GET32( adr + 32*SIZEOF(LONGINT) ) * 256;
-		x2 := SYSTEM.GET32( adr + 48*SIZEOF(LONGINT) );
-		x3 := SYSTEM.GET32( adr + 16*SIZEOF(LONGINT) );
-		x4 := SYSTEM.GET32( adr + 8*SIZEOF(LONGINT) );
-		x5 := SYSTEM.GET32( adr + 56*SIZEOF(LONGINT) );
-		x6 := SYSTEM.GET32( adr + 40*SIZEOF(LONGINT) );
-		x7 := SYSTEM.GET32( adr + 24*SIZEOF(LONGINT) );
+		x1 := SYSTEM.GET32( adr + 32*SIZEOF(SIGNED32) ) * 256;
+		x2 := SYSTEM.GET32( adr + 48*SIZEOF(SIGNED32) );
+		x3 := SYSTEM.GET32( adr + 16*SIZEOF(SIGNED32) );
+		x4 := SYSTEM.GET32( adr + 8*SIZEOF(SIGNED32) );
+		x5 := SYSTEM.GET32( adr + 56*SIZEOF(SIGNED32) );
+		x6 := SYSTEM.GET32( adr + 40*SIZEOF(SIGNED32) );
+		x7 := SYSTEM.GET32( adr + 24*SIZEOF(SIGNED32) );
 
 		IF ( x1 = 0 ) & ( x2 = 0 ) & ( x3 = 0 ) & ( x4 = 0 ) & ( x5 = 0 ) & ( x6 = 0 ) & ( x7 = 0 )  THEN
 			x0 := mp4State.clp[( ( SYSTEM.GET32( adr ) + 32 ) DIV 64 ) + 512]; (* +512 is base Offset in Array *)
 			SYSTEM.PUT32( adr , x0 );
-			tempAdr := adr + 8*SIZEOF( LONGINT );
+			tempAdr := adr + 8*SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, x0 );
 			RETURN
 		END;
@@ -1086,28 +1086,28 @@ IMPORT
 		(* fourth stage *)
 		tempAdr := adr;
 		sourceAdr := ADDRESSOF( mp4State.clp[512] );
-		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x7 + x1 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-		tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x3 + x2 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-		tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x0 + x4 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-		tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x8 + x6 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-		tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x8 - x6 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-		tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x0 - x4 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-		tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x3 - x2 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-		tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x7 - x1 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) )
+		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x7 + x1 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x3 + x2 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x0 + x4 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x8 + x6 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x8 - x6 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x0 - x4 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x3 - x2 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+		tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+		SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x7 - x1 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) )
 	END IDCTCol;
 
 	(* iquant type h.263, not optimized *)
 	PROCEDURE IQuant( psBlock: DT.PointerToArrayOfLONGINT; intraFlag: BOOLEAN );
 	VAR
-		i, qScale, q2Scale, qAdd: LONGINT;
-		start, coeff: LONGINT;
+		i, qScale, q2Scale, qAdd: SIGNED32;
+		start, coeff: SIGNED32;
 	BEGIN
 		qScale := mp4State.hdr.quantizer;
 		q2Scale := qScale * 2;
@@ -1136,7 +1136,7 @@ IMPORT
 	(* iquant type h.263, not optimized,2.nd type *)
 	PROCEDURE IQuantTypeFirst( psblock: DT.PointerToArrayOfLONGINT );
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 1 TO 63 DO
 			IF psblock[i] # 0 THEN
@@ -1162,7 +1162,7 @@ IMPORT
 
 	PROCEDURE &init*(logWriter:Streams.Writer );
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		log := logWriter;
 
@@ -1497,8 +1497,8 @@ IMPORT
 	PROCEDURE VldIntraDCT( VAR event: Event; VAR r: DT.VideoBuffer  );
 	VAR
 		tab: DT.TabType;
-		lMax, rMax: LONGINT;
-		temp: LONGINT;
+		lMax, rMax: SIGNED32;
+		temp: SIGNED32;
 	BEGIN
 		event.run := -1;
 		event.level := -1;
@@ -1562,7 +1562,7 @@ IMPORT
 					(* sign extend level... *)
 					(* event.level = (event.level & 0x800) ? (event.level | (-1 ^ 0xfff)) : event.level; *)
 					IF 11 IN SYSTEM.VAL( SET, event.level )  THEN
-						 event.level := LONGINT(
+						 event.level := SIGNED32(
 						 	SET(event.level ) + SET(-4096  ) )
 					END;
 					temp := AVI.GetBits( 1, r.data^, r.index ); (* marker bit *)
@@ -1576,7 +1576,7 @@ IMPORT
 	PROCEDURE VldInterDCT( VAR event: Event; VAR r: DT.VideoBuffer );
 	VAR
 		tab :DT.TabType;
-		lMax, rMax,  temp: LONGINT;
+		lMax, rMax,  temp: SIGNED32;
 	BEGIN
 		event.run := -1;
 		event.level := -1;
@@ -1639,7 +1639,7 @@ IMPORT
 					(* sign extend level... *)
 					(* event.level = (event.level & 0x800) ? (event.level | (-1 ^ 0xfff)) : event.level; *)
 					IF 11 IN SYSTEM.VAL( SET, event.level ) THEN
-						 event.level := LONGINT(
+						 event.level := SIGNED32(
 						 	SET(event.level ) + ( SET(-4096 ) ) )
 					END;
 					temp := AVI.GetBits( 1, r.data^, r.index ); (* marker bit *)
@@ -1659,7 +1659,7 @@ IMPORT
 	END VldEvent;
 
 	(* Table B-19 -- ESCL(a), LMAX values of intra macroblocks *)
-	PROCEDURE VldTableB19( last, run: LONGINT ): LONGINT;
+	PROCEDURE VldTableB19( last, run: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF last = 0 THEN
 			CASE run OF
@@ -1686,7 +1686,7 @@ IMPORT
 	END VldTableB19;
 
 	(* Table B-20 -- ESCL(b), LMAX values of inter macroblocks *)
-	PROCEDURE VldTableB20( last, run: LONGINT ): LONGINT;
+	PROCEDURE VldTableB20( last, run: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF last = 0 THEN
 			CASE run OF
@@ -1711,7 +1711,7 @@ IMPORT
 	END VldTableB20;
 
 	(* Table B-21 -- ESCR(a), RMAX values of intra macroblocks *)
-	PROCEDURE VldTableB21( last, level: LONGINT ): LONGINT;
+	PROCEDURE VldTableB21( last, level: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF last = 0 THEN
 			CASE level OF
@@ -1738,7 +1738,7 @@ IMPORT
 	END VldTableB21;
 
 	(* Table B-22 -- ESCR(b), RMAX values of inter macroblocks *)
-	PROCEDURE VldTableB22(  last, level: LONGINT ): LONGINT;
+	PROCEDURE VldTableB22(  last, level: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF last = 0 THEN
 			CASE level OF
@@ -1763,7 +1763,7 @@ IMPORT
 	END VldTableB22;
 
 
-	PROCEDURE VldTableB16(code: LONGINT; VAR r: DT.VideoBuffer): DT.TabType;
+	PROCEDURE VldTableB16(code: SIGNED32; VAR r: DT.VideoBuffer): DT.TabType;
 	VAR
 		tab: DT.TabType;
 	BEGIN
@@ -1782,7 +1782,7 @@ IMPORT
 		RETURN tab;
 	END VldTableB16;
 
-	PROCEDURE VldTableB17( code: LONGINT; VAR r: DT.VideoBuffer ): DT.TabType;
+	PROCEDURE VldTableB17( code: SIGNED32; VAR r: DT.VideoBuffer ): DT.TabType;
 	VAR
 		tab: DT.TabType;
 	BEGIN

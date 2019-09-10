@@ -12,20 +12,20 @@ TYPE
 
 
   ALbyte    * =  CHAR;  (* 1-byte signed *)
-  ALshort   * =  INTEGER;  (* 2-byte signed *)
-  ALint     * =  LONGINT;  (* 4-byte signed *)
+  ALshort   * =  SIGNED16;  (* 2-byte signed *)
+  ALint     * =  SIGNED32;  (* 4-byte signed *)
 
-  ALfloat   * =  REAL;
-  ALdouble  * =  LONGREAL;
+  ALfloat   * =  FLOAT32;
+  ALdouble  * =  FLOAT64;
   ALboolean * =  BOOLEAN;
 
   ALubyte   * =  CHAR;     (* 1-byte unsigned *)
-  ALushort  * =  INTEGER;     (* 2-byte unsigned *)
-  ALuint    * =  LONGINT;    (* 4-byte signed *)
+  ALushort  * =  SIGNED16;     (* 2-byte unsigned *)
+  ALuint    * =  SIGNED32;    (* 4-byte signed *)
 
-  ALsizei   * =  LONGINT;  (* 4-byte signed *)
+  ALsizei   * =  SIGNED32;  (* 4-byte signed *)
 
-  ALenum    * =  LONGINT;
+  ALenum    * =  SIGNED32;
 
   PALboolean * =  ADDRESS; (*   TO ALboolean;*)
   PALfloat   * =  ADDRESS; (*   TO ALfloat;*)
@@ -265,20 +265,20 @@ CONST
 
 TYPE
   ALCbyte    * =  CHAR; (* 1-byte signed *)
-  ALCshort   * =  INTEGER;  (* 2-byte signed *)
-  ALCint     * =  LONGINT;  (* 4-byte signed *)
+  ALCshort   * =  SIGNED16;  (* 2-byte signed *)
+  ALCint     * =  SIGNED32;  (* 4-byte signed *)
 
-  ALCfloat   * =  REAL;
-  ALCdouble  * =  LONGREAL;
+  ALCfloat   * =  FLOAT32;
+  ALCdouble  * =  FLOAT64;
   ALCboolean * =  BOOLEAN;
 
   ALCubyte   * =  CHAR;     (* 1-byte unsigned *)
-  ALCushort  * =  INTEGER;     (* 2-byte unsigned *)
-  ALCuint    * =  LONGINT;    (* 4-byte signed *)
+  ALCushort  * =  SIGNED16;     (* 2-byte unsigned *)
+  ALCuint    * =  SIGNED32;    (* 4-byte signed *)
 
-  ALCsizei   * =  LONGINT;  (* 4-byte signed *)
+  ALCsizei   * =  SIGNED32;  (* 4-byte signed *)
 
-  ALCenum    * =  LONGINT;
+  ALCenum    * =  SIGNED32;
 
   ALCcontext * =  ADDRESS;
   ALCdevice  * =  ADDRESS;
@@ -817,7 +817,7 @@ END alcGetProcAddress;
 (* Get string from address *)
 PROCEDURE GetStringFromAddr(adr: ADDRESS): Strings.String;
 VAR  sadr, sadr1: ADDRESS;
-		i, cnt: LONGINT;
+		i, cnt: SIGNED32;
 		ch: CHAR;
 		s: Strings.String;
 BEGIN
@@ -865,7 +865,7 @@ END ALCGetString;
 
 PROCEDURE GetDevStringFromAddr(adr: ADDRESS): Strings.String;
 VAR  sadr, sadr1: ADDRESS;
-		i, cnt: LONGINT;
+		i, cnt: SIGNED32;
 		ch: CHAR;
 		s: Strings.String;
 BEGIN

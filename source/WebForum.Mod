@@ -37,7 +37,7 @@ CONST
 			titleText: Strings.String;
 			detailText: Strings.String;
 			modifiedDate: WebStd.PtrDateTime;
-			priority: LONGINT; (* priority number *)
+			priority: SIGNED32; (* priority number *)
 			type: Strings.String; (* type information like "Bug", "Feature", "Question" *)
 			status: Strings.String; (* status information like "unconfirmed", "confirmed" *)
 
@@ -192,7 +192,7 @@ CONST
 
 		PROCEDURE EditView*(forum: WebComplex.WebForum; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR table, tr, td, select, option: XML.Element;
-			tracker: FeatureTracker; i: LONGINT; iStr: ARRAY 14 OF CHAR;
+			tracker: FeatureTracker; i: SIGNED32; iStr: ARRAY 14 OF CHAR;
 		BEGIN
 			NEW(table); table.SetName("table");
 			WebComplex.AddTextFieldInputRow(table, AuthorLabel, "author", author);
@@ -276,7 +276,7 @@ CONST
 			searchText: Strings.String;
 			thisContainerName: Strings.String;
 			lastLoginTime: WebStd.PtrDateTime; (* # NIL if the forum has only to display new entries since lastLoginDate *)
-			maxPrio: LONGINT;
+			maxPrio: SIGNED32;
 			types: StringList; (* the list of different message types specified by subelement 'MessageTypes' *)
 			status: StringList; (* the list of different message status codes specified by subelement 'Status' *)
 
@@ -326,7 +326,7 @@ CONST
 		END Transform;
 
 		PROCEDURE GetStringListFromXML(elem: XML.Element; subElemName: ARRAY OF CHAR) : StringList;
-		VAR subElem: XML.Element; enum: XMLObjects.Enumerator; counter: LONGINT; list: StringList;
+		VAR subElem: XML.Element; enum: XMLObjects.Enumerator; counter: SIGNED32; list: StringList;
 			elemName: Strings.String; p: ANY;
 		BEGIN
 			enum := elem.GetContents(); counter := 0;
@@ -554,7 +554,7 @@ CONST
 		 * superEntry is the parent web forum entry in a hierachical web forum, superEntry is NIL iff it is a root entry *)
 		PROCEDURE GetInsertView*(superEntry: WebComplex.WebForumEntry; request: HTTPSupport.HTTPRequest): XML.Content;
 		VAR table, tr, td, select, option: XML.Element; session: HTTPSession.Session;
-			webAccount: WebAccounts.WebAccount; str: Strings.String; i: LONGINT; iStr: ARRAY 14 OF CHAR;
+			webAccount: WebAccounts.WebAccount; str: Strings.String; i: SIGNED32; iStr: ARRAY 14 OF CHAR;
 		BEGIN
 			NEW(table); table.SetName("table");
 

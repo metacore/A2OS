@@ -47,13 +47,13 @@ VAR
 	END Copy;
 
 	PROCEDURE Recall( scatter: tLayer );
-	VAR xx, yy: INTEGER;  temp: INTEGER;  xr, yr: REAL;
+	VAR xx, yy: SIGNED16;  temp: SIGNED16;  xr, yr: FLOAT32;
 	BEGIN
 		IF scatter.xr # NIL THEN xr := vyTypes.GetValueR( scatter.xr );  vyGraphBase.Point2dToPoint( xr, 0, xx, temp )
-		ELSE xx := MIN( INTEGER )
+		ELSE xx := MIN( SIGNED16 )
 		END;
-		IF scatter.yr # NIL THEN yr := vyTypes.GetValueR( scatter.yr );  vyGraphBase.Point2dToPoint( 0, yr, temp, yy ) ELSE yy := MAX( INTEGER ) END;
-		vyGraphBase.Line( xx, MIN( INTEGER ) DIV 10, xx, MAX( INTEGER ) DIV 10 );  vyGraphBase.Line( MIN( INTEGER ) DIV 10, yy, MAX( INTEGER ) DIV 10, yy )
+		IF scatter.yr # NIL THEN yr := vyTypes.GetValueR( scatter.yr );  vyGraphBase.Point2dToPoint( 0, yr, temp, yy ) ELSE yy := MAX( SIGNED16 ) END;
+		vyGraphBase.Line( xx, MIN( SIGNED16 ) DIV 10, xx, MAX( SIGNED16 ) DIV 10 );  vyGraphBase.Line( MIN( SIGNED16 ) DIV 10, yy, MAX( SIGNED16 ) DIV 10, yy )
 	END Recall;
 (* selection methods for the use of the Interactive.tSelector *)
 
@@ -75,7 +75,7 @@ VAR
 
 	PROCEDURE Load0( obj: tLayer;  VAR M: Objects.FileMsg );
 
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 
 	BEGIN
 		Files.ReadInt( M.R, version );  dlink := M.dlink;  Gadgets.ReadRef( M.R, obj.lib, objsub );

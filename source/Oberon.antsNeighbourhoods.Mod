@@ -31,13 +31,13 @@ TYPE
 	NeighbourTable* = antsArrayObjects.tLONGINTArray;
 
 	pars* = antsGlobals.Parameters;
-	NumOFN* = POINTER TO ARRAY OF INTEGER;
+	NumOFN* = POINTER TO ARRAY OF SIGNED16;
 	Index* = NumOFN;
-	NeighbArray* = POINTER TO ARRAY OF ARRAY 8 OF INTEGER;
+	NeighbArray* = POINTER TO ARRAY OF ARRAY 8 OF SIGNED16;
 
 	Neighbours* = POINTER TO NeighboursDesc;
 	NeighboursDesc* = RECORD (vyBase.ObjDesc)
-		dim-: INTEGER;   (* number of neighbourhoods to be parametrized*)
+		dim-: SIGNED16;   (* number of neighbourhoods to be parametrized*)
 		count-: NumOFN;   (* number of neighbours per neighbourhood (max 8)*)
 		x-, y-: NeighbArray;   (* neighbours in x, y direction *)
 		isotropic-: BOOLEAN;
@@ -45,11 +45,11 @@ TYPE
 		parnames: antsGlobals.ParameterNames;
 		cx-, cy-: Index;   (* cache for fast access in Sampling methods, one to one correspondence of masked pixels to pars *)
 		cpar-: pars;
-		clen-: INTEGER
+		clen-: SIGNED16
 	END;
 
 	PROCEDURE FillParCache*( n: Neighbours );
-	VAR len, i, j: INTEGER;
+	VAR len, i, j: SIGNED16;
 	BEGIN
 		len := 0;
 		FOR i := 0 TO n.dim - 1 DO
@@ -58,7 +58,7 @@ TYPE
 	END FillParCache;
 
 	PROCEDURE FillCache*( n: Neighbours );
-	VAR len, i, j: INTEGER;
+	VAR len, i, j: SIGNED16;
 	BEGIN
 		len := 0;
 		FOR i := 0 TO n.dim - 1 DO len := len + n.count[i] END;
@@ -71,21 +71,21 @@ TYPE
 	END FillCache;
 
 	PROCEDURE WritePars( VAR R: Files.Rider;  par: pars );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		Files.WriteInt( R, 0 );  Files.WriteLInt( R, LEN( par^ ) );
 		FOR i := 0 TO LEN( par^ ) - 1 DO Files.WriteLReal( R, par[i] ) END
 	END WritePars;
 
 	PROCEDURE ReadPars( VAR R: Files.Rider;  VAR par: pars );
-	VAR len, i: LONGINT;  version: INTEGER;
+	VAR len, i: SIGNED32;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Files.ReadLInt( R, len );  NEW( par, len );
 		FOR i := 0 TO len - 1 DO Files.ReadLReal( R, par[i] ) END
 	END ReadPars;
 
 	PROCEDURE WriteNeighbours( VAR R: Files.Rider;  n: Neighbours );
-	VAR i, j: INTEGER;
+	VAR i, j: SIGNED16;
 	BEGIN
 		Files.WriteInt( R, 0 );  Files.WriteInt( R, n.dim );
 		FOR i := 0 TO n.dim - 1 DO
@@ -96,7 +96,7 @@ TYPE
 	END WriteNeighbours;
 
 	PROCEDURE ReadNeighbours( VAR R: Files.Rider;  VAR n: Neighbours );
-	VAR dim, i, j: INTEGER;  version: INTEGER;
+	VAR dim, i, j: SIGNED16;  version: SIGNED16;
 
 	BEGIN
 		Files.ReadInt( R, version );  Files.ReadInt( R, dim );  n.dim := dim;  NEW( n.count, dim );  NEW( n.x, dim );  NEW( n.y, dim );
@@ -152,14 +152,14 @@ TYPE
 		END  (* tVector*)
 	END Handler;
 
-	PROCEDURE swap( VAR x, y: INTEGER );
-	VAR temp: INTEGER;
+	PROCEDURE swap( VAR x, y: SIGNED16 );
+	VAR temp: SIGNED16;
 	BEGIN
 		temp := x;  x := y;  y := temp
 	END swap;
 
-	PROCEDURE OpenL2*( n: Neighbours;  dim: LONGINT;  isotropic: BOOLEAN );
-	VAR x, y: INTEGER;  pos: LONGINT;  dist: LONGINT;  len: INTEGER;  par: pars;  i: LONGINT;
+	PROCEDURE OpenL2*( n: Neighbours;  dim: SIGNED32;  isotropic: BOOLEAN );
+	VAR x, y: SIGNED16;  pos: SIGNED32;  dist: SIGNED32;  len: SIGNED16;  par: pars;  i: SIGNED32;
 	BEGIN
 		NEW( n.x, dim );  NEW( n.y, dim );  NEW( n.count, dim );  n.dim := SHORT( dim );  n.isotropic := isotropic;  pos := 0;  x := 0;  y := 0;  dist := 0;
 		NEW( par, n.dim );
@@ -231,19 +231,19 @@ TYPE
 		aM.cmd;  NEW( m );  m.handle := Handler;  Objects.NewObj := m;  antsObjects.Register( m )
 	END Gen;
 
-	PROCEDURE NewL2*( dim: LONGINT;  isotropic: BOOLEAN ): Neighbours;
+	PROCEDURE NewL2*( dim: SIGNED32;  isotropic: BOOLEAN ): Neighbours;
 	VAR n: Neighbours;
 	BEGIN
 		Gen;  n := Objects.NewObj( Neighbours );  n.handle := Handler;  OpenL2( n, dim, isotropic );  RETURN n
 	END NewL2;
 
-	PROCEDURE Min( x, y: LONGINT ): LONGINT;
+	PROCEDURE Min( x, y: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF x < y THEN RETURN x ELSE RETURN y END
 	END Min;
 
-	PROCEDURE ChangeDim*( n: Neighbours;  newdim: INTEGER );
-	VAR i: LONGINT;  par: pars;
+	PROCEDURE ChangeDim*( n: Neighbours;  newdim: SIGNED16 );
+	VAR i: SIGNED32;  par: pars;
 	BEGIN
 		IF newdim > 55 THEN newdim := 55 END;
 		IF newdim < 1 THEN newdim := 1 END;
@@ -253,10 +253,10 @@ TYPE
 	END ChangeDim;
 
 	PROCEDURE ReadNew*;
-	VAR l: antsCommands.tScanList;  dim: LONGINT;  thisp, p: antsCommands.tParameter;  name: vyName.tNameArray;  par: pars;
+	VAR l: antsCommands.tScanList;  dim: SIGNED32;  thisp, p: antsCommands.tParameter;  name: vyName.tNameArray;  par: pars;
 	VAR isotropic: BOOLEAN;  n: Neighbours;
 	BEGIN
-		l := antsCommands.ScanFromPar( "name=NAME >par {REAL} [>nonisotropic] " );
+		l := antsCommands.ScanFromPar( "name=NAME >par {FLOAT32} [>nonisotropic] " );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) THEN
 			p := antsCommands.ParsFromKeyword( l, "par" );  thisp := p;  dim := 0;
 			WHILE thisp # NIL DO INC( dim );  thisp := thisp.next END;
@@ -277,7 +277,7 @@ TYPE
 	END ReadNew;
 
 	PROCEDURE New*;
-	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  isotropic: BOOLEAN;  n: Neighbours;  size: LONGINT;
+	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  isotropic: BOOLEAN;  n: Neighbours;  size: SIGNED32;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=NAME size=INT [>isotropic]" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectNumberFromKeyword( l, "size", size ) THEN
@@ -286,7 +286,7 @@ TYPE
 	END New;
 
 	PROCEDURE DoWrite*( n: Neighbours );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		antsMessages.S( " >par " );
 		FOR i := 0 TO n.dim - 1 DO antsMessages.SR( " ", n.par[i] ) END;
@@ -303,8 +303,8 @@ TYPE
 	PROCEDURE SortTable*;
 	END SortTable;
 
-	PROCEDURE st( VAR A, B: ARRAY OF LONGINT;  VAR equal: BOOLEAN ): BOOLEAN;
-	VAR i, len: LONGINT;
+	PROCEDURE st( VAR A, B: ARRAY OF SIGNED32;  VAR equal: BOOLEAN ): BOOLEAN;
+	VAR i, len: SIGNED32;
 	BEGIN
 		i := 0;  len := LEN( A );
 		WHILE (i < len) & (A[i] = B[i]) DO INC( i ) END;
@@ -315,8 +315,8 @@ TYPE
 		END
 	END st;
 
-	PROCEDURE Insert( VAR A: ARRAY OF LONGINT;  VAR to: ARRAY OF ARRAY OF LONGINT;  VAR len: LONGINT );
-	VAR i, j, pos: LONGINT;  equal: BOOLEAN;
+	PROCEDURE Insert( VAR A: ARRAY OF SIGNED32;  VAR to: ARRAY OF ARRAY OF SIGNED32;  VAR len: SIGNED32 );
+	VAR i, j, pos: SIGNED32;  equal: BOOLEAN;
 	BEGIN
 		(* LEN of A is one less then LEN of to[i] ! *)
 		i := 0;
@@ -335,11 +335,11 @@ TYPE
 		to[i, LEN( A )] := 1
 	END Insert;
 
-	PROCEDURE MakeNeighbourTable*( o: antsArrayObjects.tINTEGERObject;  x0, y0, w0, h0: LONGINT;
+	PROCEDURE MakeNeighbourTable*( o: antsArrayObjects.tINTEGERObject;  x0, y0, w0, h0: SIGNED32;
 															    n: Neighbours ): NeighbourTable;
 	VAR table: NeighbourTable;
-		val: POINTER TO ARRAY OF LONGINT;
-		x, y, i: LONGINT;  tlen: LONGINT;  exceeded: BOOLEAN;
+		val: POINTER TO ARRAY OF SIGNED32;
+		x, y, i: SIGNED32;  tlen: SIGNED32;  exceeded: BOOLEAN;
 	BEGIN
 		antsMessages.SISI( "W0", w0, "h0", h0 );  NEW( table, w0 * h0 + 1, n.clen + 1 );  antsMessages.SI( "Making a table, max len: ", LEN( table ) - 1 );
 

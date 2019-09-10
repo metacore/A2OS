@@ -9,9 +9,9 @@ CONST
 (** Send a file to hostname:port. This can be used to send a PS file to a PS capable network printer (use port 9100) *)
 PROCEDURE SendFile*(context : Commands.Context); (** hostname port filename ~ *)
 VAR
-	hostname, adrStr : ARRAY 256 OF CHAR; ipAdr : IP.Adr; port: LONGINT; res: WORD;
+	hostname, adrStr : ARRAY 256 OF CHAR; ipAdr : IP.Adr; port: SIGNED32; res: INTEGER;
 	filename : Files.FileName; file : Files.File; reader : Files.Reader;
-	offset: LONGINT; len : SIZE;
+	offset: SIGNED32; len : SIZE;
 	buffer : POINTER TO ARRAY OF CHAR;
 	connection : TCP.Connection;
 	writer : Streams.Writer;

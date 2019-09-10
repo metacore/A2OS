@@ -110,32 +110,32 @@ TYPE
 
 	Character = RECORD
 		ch : CHAR;
-		color : SHORTINT;
+		color : SIGNED8;
 	END;
 
 	Line = ARRAY LineWidth OF Character;
 
 	TextBuffer = OBJECT
 	VAR
-		defaultColor : SHORTINT;
-		currentColor : SHORTINT;
+		defaultColor : SIGNED8;
+		currentColor : SIGNED8;
 
 		(* ring buffer of lines *)
 		lines : ARRAY BufferHeight OF Line;
 
 		(* index of first line in ring buffer *)
-		firstLine, lastLine : LONGINT;
+		firstLine, lastLine : SIGNED32;
 
 		(* index of line currently shown on top of the display *)
-		firstLineShown : LONGINT;
+		firstLineShown : SIGNED32;
 
 		(* start and end of currently edited text *)
-		editStartPosition, editEndPosition : LONGINT;
+		editStartPosition, editEndPosition : SIGNED32;
 
 		(* character position of cursor *)
-		cursorPosition : LONGINT;
+		cursorPosition : SIGNED32;
 
-		mode : LONGINT;
+		mode : SIGNED32;
 
 		lock : Locks.RecursiveLock;
 
@@ -149,7 +149,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Clear;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			ASSERT(lock.HasLock());
 			firstLine := 0; lastLine := 0;
@@ -164,7 +164,7 @@ TYPE
 			Invalidate(SELF);
 		END Clear;
 
-		PROCEDURE SetColor(foreground, background : SHORTINT);
+		PROCEDURE SetColor(foreground, background : SIGNED8);
 		BEGIN
 			currentColor := foreground + 10H * background;
 		END SetColor;
@@ -175,7 +175,7 @@ TYPE
 			editEndPosition := cursorPosition;
 		END SetEditStart;
 
-		PROCEDURE Send( CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send( CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR i : SIZE;
 		BEGIN
 			lock.Acquire;
@@ -189,7 +189,7 @@ TYPE
 		END Send;
 
 		PROCEDURE String(CONST string : ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			lock.Acquire;
 			i := 0;
@@ -234,7 +234,7 @@ TYPE
 		END NextLine;
 
 		PROCEDURE MoveCharactersToRight;
-		VAR current, previous : LONGINT;
+		VAR current, previous : SIGNED32;
 		BEGIN
 			ASSERT(editStartPosition # editEndPosition);
 			IF (editEndPosition = LineWidth-1) THEN (* reserve new line in advance *)
@@ -250,7 +250,7 @@ TYPE
 		END MoveCharactersToRight;
 
 		PROCEDURE MoveCharactersToLeft;
-		VAR current, next : LONGINT;
+		VAR current, next : SIGNED32;
 		BEGIN
 			ASSERT(editStartPosition # editEndPosition);
 			IF (editEndPosition = 0) THEN (* line will be removed *)
@@ -266,7 +266,7 @@ TYPE
 		END MoveCharactersToLeft;
 
 		PROCEDURE CharInternal(ch : CHAR);
-		VAR index : LONGINT;
+		VAR index : SIGNED32;
 		BEGIN
 			ASSERT(lock.HasLock());
 			IF (ch = CR) THEN (* ignore *)
@@ -298,7 +298,7 @@ TYPE
 		END CharInternal;
 
 		PROCEDURE DeleteCurrentLine;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			lock.Acquire;
 			i := editStartPosition;
@@ -314,7 +314,7 @@ TYPE
 		END DeleteCurrentLine;
 
 		PROCEDURE GetCurrentLine() : Strings.String;
-		VAR string : Strings.String; i, length : LONGINT;
+		VAR string : Strings.String; i, length : SIGNED32;
 		BEGIN
 			lock.Acquire;
 			length := Difference(editEndPosition, editStartPosition, BufferSize);
@@ -370,8 +370,8 @@ TYPE
 			lock.Release;
 		END Delete;
 
-		PROCEDURE ScrollUp(nofLines : LONGINT);
-		VAR d : LONGINT;
+		PROCEDURE ScrollUp(nofLines : SIGNED32);
+		VAR d : SIGNED32;
 		BEGIN
 			lock.Acquire;
 			d := Difference(firstLineShown, firstLine, LEN(lines));
@@ -383,8 +383,8 @@ TYPE
 			lock.Release;
 		END ScrollUp;
 
-		PROCEDURE ScrollDown(nofLines : LONGINT);
-		VAR d : LONGINT;
+		PROCEDURE ScrollDown(nofLines : SIGNED32);
+		VAR d : SIGNED32;
 		BEGIN
 			lock.Acquire;
 			d := Difference(lastLine, firstLineShown, LEN(lines));
@@ -397,7 +397,7 @@ TYPE
 		END ScrollDown;
 
 		PROCEDURE CursorLeft;
-		VAR oldCursorPosition : LONGINT;
+		VAR oldCursorPosition : SIGNED32;
 		BEGIN
 			lock.Acquire;
 			IF (cursorPosition # editStartPosition) THEN
@@ -409,7 +409,7 @@ TYPE
 		END CursorLeft;
 
 		PROCEDURE CursorRight;
-		VAR oldCursorPosition : LONGINT;
+		VAR oldCursorPosition : SIGNED32;
 		BEGIN
 			lock.Acquire;
 			IF (cursorPosition # editEndPosition) THEN
@@ -421,7 +421,7 @@ TYPE
 		END CursorRight;
 
 		PROCEDURE Dump(out : Streams.Writer);
-		VAR i, j : LONGINT;
+		VAR i, j : SIGNED32;
 		BEGIN
 			ASSERT(out # NIL);
 			lock.Acquire;
@@ -536,7 +536,7 @@ TYPE
 			commandLine : Strings.String;
 			nbr : ARRAY 8 OF CHAR;
 			msg, command : ARRAY 128 OF CHAR;
-			i, length : SIZE; res : WORD;
+			i, length : SIZE; res : INTEGER;
 		BEGIN
 			commandLine := textBuffer.GetCurrentLine();
 			Strings.TrimWS(commandLine^);
@@ -605,8 +605,8 @@ TYPE
 VAR
 	shell : Shell;
 
-PROCEDURE Subtract(position, value, bufferSize : LONGINT) : LONGINT;
-VAR result : LONGINT;
+PROCEDURE Subtract(position, value, bufferSize : SIGNED32) : SIGNED32;
+VAR result : SIGNED32;
 BEGIN
 	ASSERT((0 <= position) & (position < bufferSize));
 	value := value MOD bufferSize;
@@ -617,8 +617,8 @@ BEGIN
 	RETURN result;
 END Subtract;
 
-PROCEDURE Add(position, value, bufferSize : LONGINT) : LONGINT;
-VAR result : LONGINT;
+PROCEDURE Add(position, value, bufferSize : SIGNED32) : SIGNED32;
+VAR result : SIGNED32;
 BEGIN
 	ASSERT((0 <= position) & (position < bufferSize));
 	result := (position + value) MOD bufferSize;
@@ -626,8 +626,8 @@ BEGIN
 	RETURN result;
 END Add;
 
-PROCEDURE Difference(end, start, bufferSize : LONGINT) : LONGINT;
-VAR result : LONGINT;
+PROCEDURE Difference(end, start, bufferSize : SIGNED32) : SIGNED32;
+VAR result : SIGNED32;
 BEGIN
 	IF (end >= start) THEN
 		result := end - start + 1;
@@ -637,8 +637,8 @@ BEGIN
 	RETURN result;
 END Difference;
 
-PROCEDURE ClearLine(VAR line : Line; from, to : LONGINT; color : SHORTINT);
-VAR i : LONGINT;
+PROCEDURE ClearLine(VAR line : Line; from, to : SIGNED32; color : SIGNED8);
+VAR i : SIGNED32;
 BEGIN
 	ASSERT((0 <= from) & (from < LineWidth));
 	ASSERT((0 <= to) & (to < LineWidth));
@@ -654,7 +654,7 @@ BEGIN
 END IsWhitespace;
 
 PROCEDURE Invalidate(textBuffer : TextBuffer);
-VAR offset, index, i, nofLines : LONGINT; line : Line; character : Character; ch : CHAR;
+VAR offset, index, i, nofLines : SIGNED32; line : Line; character : Character; ch : CHAR;
 BEGIN
 	ASSERT(textBuffer # NIL);
 	ASSERT(textBuffer.lock.HasLock());
@@ -709,7 +709,7 @@ BEGIN {EXCLUSIVE}
 END Dump;
 
 PROCEDURE UpdateCursor(textBuffer : TextBuffer);
-VAR cursorLocation : LONGINT;
+VAR cursorLocation : SIGNED32;
 BEGIN
 	ASSERT(textBuffer # NIL);
 	ASSERT(textBuffer.lock.HasLock());

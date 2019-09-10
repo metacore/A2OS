@@ -49,9 +49,9 @@ TYPE
 
 	Scanner* = OBJECT
 		VAR
-			sym-: SHORTINT;	(** current token *)
-			line-, col-, oldpos, pos: LONGINT;
-			reportError*: PROCEDURE {DELEGATE} (pos, line, row: LONGINT; msg: ARRAY OF CHAR);
+			sym-: SIGNED8;	(** current token *)
+			line-, col-, oldpos, pos: SIGNED32;
+			reportError*: PROCEDURE {DELEGATE} (pos, line, row: SIGNED32; msg: ARRAY OF CHAR);
 			nextCh: CHAR;	(* look-ahead *)
 			dynstr: DynamicStrings.DynamicString;	(* buffer for CharData, Literal, Name, CharRef, EntityRef and ParamEntityRef *)
 			r : Streams.Reader;
@@ -90,7 +90,7 @@ TYPE
 		END NextCh;
 
 		PROCEDURE ReadTillChar(ch: CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (nextCh # ch) & (sym # Eof) DO
@@ -112,7 +112,7 @@ TYPE
 				Nmtoken
 				Invalid	*)
 		PROCEDURE ScanNm;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			SkipWhiteSpaces();
 			IF (('0' <= nextCh) & (nextCh <= '9')) OR (nextCh = '.') OR (nextCh = '-') THEN
@@ -138,7 +138,7 @@ TYPE
 				Invalid
 				Comment	*)
 		PROCEDURE ScanComment;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			NEW(dynstr);
@@ -172,7 +172,7 @@ TYPE
 
 		PROCEDURE ScanSCRIPT*;
 		VAR
-			i, j : LONGINT;
+			i, j : SIGNED32;
 			t : DynamicStrings.DynamicString;
 			s : String;
 		BEGIN
@@ -226,7 +226,7 @@ TYPE
 
 		PROCEDURE ScanSTYLE*;
 		VAR
-			i, j : LONGINT;
+			i, j : SIGNED32;
 			t : DynamicStrings.DynamicString;
 			s : String;
 		BEGIN
@@ -280,7 +280,7 @@ TYPE
 			TagPIClose
 			CharData	*)
 		PROCEDURE ScanPInstruction*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			IF sym = Eof THEN
 				sym := Invalid;
@@ -367,7 +367,7 @@ TYPE
 		END ScanMarkup;
 
 		PROCEDURE ScanContent*;
-		VAR s: String; i: LONGINT;
+		VAR s: String; i: SIGNED32;
 		BEGIN
 			i := 0;
 			oldpos := GetPos();
@@ -418,7 +418,7 @@ TYPE
 		END ScanContent;
 
 		PROCEDURE ScanAttributeValue*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			SkipWhiteSpaces();
 			i := 0;
@@ -448,12 +448,12 @@ TYPE
 			RETURN dynstr.ToArrOfChar();
 		END GetStr;
 
-		PROCEDURE GetPos*(): LONGINT;
+		PROCEDURE GetPos*(): SIGNED32;
 		BEGIN
 			RETURN pos - 1
 		END GetPos;
 
-		PROCEDURE GetOldPos*(): LONGINT;
+		PROCEDURE GetOldPos*(): SIGNED32;
 		BEGIN
 			RETURN oldpos
 		END GetOldPos;
@@ -465,7 +465,7 @@ TYPE
 		RETURN (ch = 020X) OR (ch = 9X) OR (ch = 0DX) OR (ch = 0AX)
 	END IsWhiteSpace;
 
-	PROCEDURE DefaultReportError(pos, line, col: LONGINT; msg: ARRAY OF CHAR);
+	PROCEDURE DefaultReportError(pos, line, col: SIGNED32; msg: ARRAY OF CHAR);
 	BEGIN
 		KernelLog.Enter; KernelLog.Char(CHR(9H)); KernelLog.Char(CHR(9H)); KernelLog.String("pos "); KernelLog.Int(pos, 6);
 		KernelLog.String(", line "); KernelLog.Int(line, 0); KernelLog.String(", col "); KernelLog.Int(col, 0);

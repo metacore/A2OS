@@ -18,15 +18,15 @@ CONST
 	(** The version number used when reading/writing a matrix to file. *)
 	VERSION* = 1;
 TYPE
-	Value* = ArrayXd.Value;  Index* = LONGINT;  IntValue = ArrayXd.IntValue;  RatValue = NbrRat.Rational;
+	Value* = ArrayXd.Value;  Index* = SIGNED32;  IntValue = ArrayXd.IntValue;  RatValue = NbrRat.Rational;
 	ReValue = NbrRe.Real;  Array* = ArrayXd.Array2;  Map* = ArrayXd.Map;
 
 	(** Class Matrix has been DataIO registered. *)
 
 	Matrix* = OBJECT (ArrayXd.Array)
-	VAR lenx-, leny-: LONGINT;
-		rows-, cols-: LONGINT;   (* lenx = nr.Rows, leny = nr.Columns *)
-	VAR ox-, oy-: LONGINT;
+	VAR lenx-, leny-: SIGNED32;
+		rows-, cols-: SIGNED32;   (* lenx = nr.Rows, leny = nr.Columns *)
+	VAR ox-, oy-: SIGNED32;
 		Get-: PROCEDURE {DELEGATE} ( x, y: Index ): Value;
 
 		(* override *)
@@ -49,7 +49,7 @@ TYPE
 			lenx := len[0];  leny := len[1];  ox := origin[0];  oy := origin[1];  rows := lenx;  cols := leny;
 		END ValidateCache;
 
-		PROCEDURE SetBoundaryCondition*( c: SHORTINT );   (* called by new, load and directly *)
+		PROCEDURE SetBoundaryCondition*( c: SIGNED8 );   (* called by new, load and directly *)
 		BEGIN
 			SetBoundaryCondition^( c );
 			CASE c OF
@@ -71,7 +71,7 @@ TYPE
 		END SetBoundaryCondition;
 
 	(** new*)
-		PROCEDURE & New*( ox, rowsORw, oy, colsORh: LONGINT );
+		PROCEDURE & New*( ox, rowsORw, oy, colsORh: SIGNED32 );
 		BEGIN
 			NewXdB( ArrayXdBytes.Array2( ox, oy ), ArrayXdBytes.Array2( rowsORw, colsORh ) );
 		END New;
@@ -82,7 +82,7 @@ TYPE
 			copy := AlikeX();  RETURN copy( Matrix );
 		END Alike;
 
-		PROCEDURE NewRange*( ox, rowsORw, oy, colsORh: LONGINT;  copydata: BOOLEAN );
+		PROCEDURE NewRange*( ox, rowsORw, oy, colsORh: SIGNED32;  copydata: BOOLEAN );
 		BEGIN
 			IF (rowsORw # len[0]) OR (colsORh # len[1]) OR (ox # origin[0]) OR (oy # origin[1]) THEN
 				NewRangeX^( ArrayXdBytes.Array2( ox, oy ), ArrayXdBytes.Array2( rowsORw, colsORh ), copydata )
@@ -218,7 +218,7 @@ TYPE
 								   ArrayXdBytes.Index4( destx, desty, destz, destt ), slen );
 		END CopyToHCube;
 
-		PROCEDURE CopyTo1dArray*( VAR dest: ARRAY OF Value;  sx, sy, slenx, sleny: Index;  dpos, dlen: LONGINT );
+		PROCEDURE CopyTo1dArray*( VAR dest: ARRAY OF Value;  sx, sy, slenx, sleny: Index;  dpos, dlen: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -228,7 +228,7 @@ TYPE
 																  ArrayXdBytes.Index1( dpos ), ArrayXdBytes.Index1( dlen ) );
 		END CopyTo1dArray;
 
-		PROCEDURE CopyTo2dArray*( VAR dest: ARRAY OF ARRAY OF Value;  sx, sy, slenx, sleny: Index;  dposx, dposy, dlenx, dleny: LONGINT );
+		PROCEDURE CopyTo2dArray*( VAR dest: ARRAY OF ARRAY OF Value;  sx, sy, slenx, sleny: Index;  dposx, dposy, dlenx, dleny: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -239,7 +239,7 @@ TYPE
 		END CopyTo2dArray;
 
 		PROCEDURE CopyTo3dArray*( VAR dest: ARRAY OF ARRAY OF ARRAY OF Value;  sx, sy, slenx, sleny: Index;
-													   dposx, dposy, dposz, dlenx, dleny, dlenz: LONGINT );
+													   dposx, dposy, dposz, dlenx, dleny, dlenz: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -252,7 +252,7 @@ TYPE
 		END CopyTo3dArray;
 
 		PROCEDURE CopyTo4dArray*( VAR dest: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value;  sx, sy, slenx, sleny: Index;
-													   dposx, dposy, dposz, dpost, dlenx, dleny, dlenz, dlent: LONGINT );
+													   dposx, dposy, dposz, dpost, dlenx, dleny, dlenz, dlent: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -343,7 +343,7 @@ TYPE
 	END ":=";
 
 	OPERATOR ":="*( VAR l: Matrix;  r: MtxInt.Matrix );
-	VAR i, last: LONGINT;
+	VAR i, last: SIGNED32;
 	BEGIN
 		IF r = NIL THEN l := NIL ELSE
 			IF l = NIL THEN NEW( l, r.origin[0], r.len[0], r.origin[1], r.len[1] );  END;
@@ -353,7 +353,7 @@ TYPE
 	END ":=";
 
 	OPERATOR ":="*( VAR l: Matrix;  r: MtxRat.Matrix );
-	VAR i, last: LONGINT;
+	VAR i, last: SIGNED32;
 	BEGIN
 		IF r = NIL THEN l := NIL ELSE
 			IF l = NIL THEN NEW( l, r.origin[0], r.len[0], r.origin[1], r.len[1] );  END;
@@ -363,7 +363,7 @@ TYPE
 	END ":=";
 
 	OPERATOR ":="*( VAR l: Matrix;  r: MtxRe.Matrix );
-	VAR i, last: LONGINT;
+	VAR i, last: SIGNED32;
 	BEGIN
 		IF r = NIL THEN l := NIL ELSE
 			IF l = NIL THEN NEW( l, r.origin[0], r.len[0], r.origin[1], r.len[1] );  END;
@@ -612,7 +612,7 @@ TYPE
 *)
 
 	OPERATOR "*"*( l: Vec.Vector;  r: Matrix ): Vec.Vector;
-	VAR res: Vec.Vector;  rc, rr, lc, i, j: LONGINT;  sum: Value;
+	VAR res: Vec.Vector;  rc, rr, lc, i, j: SIGNED32;  sum: Value;
 	BEGIN
 		rc := r.cols;  rr := r.rows;  lc := l.lenx;
 
@@ -629,7 +629,7 @@ TYPE
 	END "*";
 
 	OPERATOR "*"*( l: Matrix;  r: Vec.Vector ): Vec.Vector;
-	VAR res: Vec.Vector;  lr, lc, rr, i, j: LONGINT;  sum: Value;
+	VAR res: Vec.Vector;  lr, lc, rr, i, j: SIGNED32;  sum: Value;
 	BEGIN
 		lr := l.rows;  lc := l.cols;  rr := r.lenx;
 		IF lc # rr THEN DataErrors.Error( "The supplied matrix / vector were incompatible." );  HALT( 100 );
@@ -645,7 +645,7 @@ TYPE
 	END "*";
 
 	OPERATOR "*"*( l, r: Matrix ): Matrix;
-	VAR res: Matrix;  rr, rc, lr, lc, i, j, k: LONGINT;  sum: Value;
+	VAR res: Matrix;  rr, rc, lr, lc, i, j, k: SIGNED32;  sum: Value;
 		(**! far from opimal: use internal routines of ArrayXdBytes *)
 	BEGIN
 		rc := r.cols;   (* columns of right matrix *)
@@ -668,7 +668,7 @@ TYPE
 
 (* The procedures needed to register type Matrix so that its instances can be made persistent. *)
 	PROCEDURE LoadMatrix( R: DataIO.Reader;  VAR obj: OBJECT );
-	VAR a: Matrix;  version: SHORTINT;  ver: NbrInt.Integer;
+	VAR a: Matrix;  version: SIGNED8;  ver: NbrInt.Integer;
 	BEGIN
 		R.RawSInt( version );
 		IF version = -1 THEN

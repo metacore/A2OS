@@ -7,7 +7,7 @@ IMPORT Unix;
 
 CONST Clock = Unix.CLOCK_MONOTONIC;
 
-TYPE Counter* = LONGWORD;
+TYPE Counter* = LONGINTEGER;
 
 PROCEDURE GetCounter- (): Counter;
 VAR timespec: Unix.Timespec; result: Counter;

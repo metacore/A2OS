@@ -40,11 +40,11 @@ TYPE
 		END Poll;
 
 VAR
-	poll: Poll; keySymbol: ARRAY 256 OF LONGINT;
+	poll: Poll; keySymbol: ARRAY 256 OF SIGNED32;
 
 	PROCEDURE TerminateA2;
 	VAR
-		res: WORD;
+		res: INTEGER;
 		s: ARRAY 256 OF CHAR;
 	BEGIN
 		Commands.Call( "WMTerminator.Shutdown", {}, res, s );
@@ -57,7 +57,7 @@ VAR
 	END CheckAlternateKeys;
 
 
-	PROCEDURE SendMouseMsg( x, y, dz: LONGINT; xbuttons: SET32 );
+	PROCEDURE SendMouseMsg( x, y, dz: SIGNED32; xbuttons: SET32 );
 	VAR mm: Inputs.AbsMouseMsg;
 	BEGIN
 		Machine.Release( Machine.X11 );
@@ -80,7 +80,7 @@ VAR
 
 	PROCEDURE PollXQueue;
 	CONST bufsize = 20;
-	VAR keycount, xr, yr, x, y, dz, i: LONGINT;
+	VAR keycount, xr, yr, x, y, dz, i: SIGNED32;
 		rw, cw: X11.Window;
 		keysym: X11.KeySym;  xd: X11.DisplayPtr;
 		newxbuttons, bdiff: SET32;
@@ -90,7 +90,7 @@ VAR
 		em: X11.ExposeEvent;
 		cm : X11.ClientMessageEvent;
 		cn: X11.ConfigureEvent;
-		events: LONGINT;
+		events: SIGNED32;
 		buffer: ARRAY bufsize OF CHAR;
 	BEGIN
 		xd := disp.xdisp;
@@ -122,14 +122,14 @@ VAR
 						ELSIF keysym = 0FE20H THEN  (* handle Shift-Tab key *)
 							km.keysym := Inputs.KsTab; km.ch :=09X
 						ELSE
-							km.keysym := LONGINT(keysym);
+							km.keysym := SIGNED32(keysym);
 						END;
 						km.flags := KeyState( );
 						SendKeyboardMsg( km )
 					ELSE
 						IF (X11.ControlMask IN kp.state) & (keysym = 32) THEN (* check Ctrl-space *)
 							km.ch := CHR( keysym );  km.flags := KeyState( );
-							km.keysym := LONGINT(keysym);
+							km.keysym := SIGNED32(keysym);
 							SendKeyboardMsg( km ); (* IME keys *)
 						ELSE
 							xbuttons := newxbuttons;  i := 0;
@@ -259,11 +259,11 @@ VAR
 
 	PROCEDURE Init*;
 	VAR FK: ARRAY 8 OF CHAR;
-		n, i, k: LONGINT;  modifiers: X11.Modifiers;
+		n, i, k: SIGNED32;  modifiers: X11.Modifiers;
 		shift, control, meta, alt, capslock, numlock: X11.KeySym;
 
 
-		PROCEDURE Rebind( CONST keystr: ARRAY OF CHAR;  nofmod: LONGINT;  key: CHAR );
+		PROCEDURE Rebind( CONST keystr: ARRAY OF CHAR;  nofmod: SIGNED32;  key: CHAR );
 		VAR newkeystr: ARRAY 8 OF CHAR;
 			oldkeysym: X11.KeySym;
 		BEGIN
@@ -274,7 +274,7 @@ VAR
 			Machine.Release( Machine.X11 )
 		END Rebind;
 
-		PROCEDURE Rebind4( CONST keyString: ARRAY OF CHAR;  n: LONGINT;  key: CHAR );
+		PROCEDURE Rebind4( CONST keyString: ARRAY OF CHAR;  n: SIGNED32;  key: CHAR );
 		BEGIN
 			Rebind( keyString, n, key );
 			modifiers[n] := shift;  Rebind( keyString, n + 1, key );
@@ -374,7 +374,7 @@ VAR
 	END Init;
 
 	PROCEDURE InitKeysym;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 255 DO keySymbol[i] := i END;
 		keySymbol[07FH] := Inputs.KsBackSpace;
@@ -407,7 +407,7 @@ VAR
 	END GetXDisplay;
 
 BEGIN
-	ASSERT( LONGINT({0} ) = 1 );
+	ASSERT( SIGNED32({0} ) = 1 );
 	GetXDisplay;
 END KbdMouse.
 

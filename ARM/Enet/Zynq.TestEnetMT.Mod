@@ -58,7 +58,7 @@ VAR
 
 	PROCEDURE SendPackets1*(context: Commands.Context);
 	VAR
-		i, n: LONGINT;
+		i, n: SIGNED32;
 		ipAddr: EnetBase.IpAddr;
 		res: Int;
 		t: EnetTiming.Time;
@@ -87,7 +87,7 @@ VAR
 
 	PROCEDURE SendPackets2*(context: Commands.Context);
 	VAR
-		i, n: LONGINT;
+		i, n: SIGNED32;
 		ipAddr: EnetBase.IpAddr;
 		res: Int;
 		t: EnetTiming.Time;
@@ -116,7 +116,7 @@ VAR
 
 	PROCEDURE SendPackets3*(context: Commands.Context);
 	VAR
-		i, n: LONGINT;
+		i, n: SIGNED32;
 		ipAddr: EnetBase.IpAddr;
 		res: Int;
 		t: EnetTiming.Time;
@@ -301,7 +301,7 @@ VAR
 
 	PROCEDURE InitMod;
 	VAR
-		res: LONGINT;
+		res: SIGNED32;
 		dev: EnetBase.LinkDevice;
 		macAddr: EnetBase.MacAddr;
 		ipAddr, gateway, subnetMask: EnetBase.IpAddr;

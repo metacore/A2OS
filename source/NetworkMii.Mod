@@ -145,16 +145,16 @@ CONST
 TYPE
 
 	Identifier* = RECORD
-		oui- : LONGINT; (* Organizationally Unique Identifier *)
-		model- : LONGINT;
-		revision- : LONGINT;
+		oui- : SIGNED32; (* Organizationally Unique Identifier *)
+		model- : SIGNED32;
+		revision- : SIGNED32;
 	END;
 
 TYPE
 
 	MII* = OBJECT
 	VAR
-		phyId- : LONGINT;
+		phyId- : SIGNED32;
 
 		lockedBy : ANY;
 		timer : Kernel.Timer;
@@ -173,11 +173,11 @@ TYPE
 		BEGIN HALT(301); END HasPhyOwnership;
 
 		(** Read a MII/GMII register *)
-		PROCEDURE ReadRegister16*(register: LONGINT; VAR value : SET; VAR res : WORD); (* abstract *)
+		PROCEDURE ReadRegister16*(register: SIGNED32; VAR value : SET; VAR res : INTEGER); (* abstract *)
 		BEGIN HALT(301); END ReadRegister16;
 
 		(** Write a MII/GMII register *)
-		PROCEDURE WriteRegister16*(register : LONGINT; value : SET; VAR res : WORD); (* abstract *)
+		PROCEDURE WriteRegister16*(register : SIGNED32; value : SET; VAR res : INTEGER); (* abstract *)
 		BEGIN HALT(301); END WriteRegister16;
 
 		(** MII Management Interface *)
@@ -204,7 +204,7 @@ TYPE
 		END Release;
 
 		(** Enable/disable auto-negotiation *)
-		PROCEDURE EnableAutoNegotiation*(enable : BOOLEAN; VAR res : WORD);
+		PROCEDURE EnableAutoNegotiation*(enable : BOOLEAN; VAR res : INTEGER);
 		VAR anar, bmcr, bmsr : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
@@ -255,8 +255,8 @@ TYPE
 		END EnableAutoNegotiation;
 
 		(** Get link configuration negotiated by auto-negotiation *)
-		PROCEDURE GetAutoNegotiationResult*(VAR linkspeed : LONGINT; VAR fullDuplex : BOOLEAN; VAR res : WORD);
-		VAR bmsr, anar, aner, anlpar, supported : SET; timeout : LONGINT; string : ARRAY 64 OF CHAR;
+		PROCEDURE GetAutoNegotiationResult*(VAR linkspeed : SIGNED32; VAR fullDuplex : BOOLEAN; VAR res : INTEGER);
+		VAR bmsr, anar, aner, anlpar, supported : SET; timeout : SIGNED32; string : ARRAY 64 OF CHAR;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
 			ReadRegister16(BMSR, bmsr, res);
@@ -303,7 +303,7 @@ TYPE
 			ReadRegister16(ANLPAR, anlpar, res);
 			IF res # Ok THEN RETURN; END;
 
-			IF SYSTEM.VAL(LONGINT, anlpar * ANAR_Selector) # Selector_IEEE_STD802_3 THEN
+			IF SYSTEM.VAL(SIGNED32, anlpar * ANAR_Selector) # Selector_IEEE_STD802_3 THEN
 				Show("Link partner doesn't use IEEE 802.3 Auto-Negotiation _ Other types not supported."); KernelLog.Ln;
 				res := Unsupported;
 				RETURN;
@@ -329,7 +329,7 @@ TYPE
 		END GetAutoNegotiationResult;
 
 		(** Get the current link status *)
-		PROCEDURE GetLinkStatus*(VAR linkStatus: LONGINT; VAR res : WORD);
+		PROCEDURE GetLinkStatus*(VAR linkStatus: SIGNED32; VAR res : INTEGER);
 		VAR value : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
@@ -342,7 +342,7 @@ TYPE
 		END GetLinkStatus;
 
 		(** Manually set the link speed and operating mode. This disables auto-negotiation as side-effect. *)
-		PROCEDURE ConfigureLink*(speed : LONGINT; fullDuplex : BOOLEAN; VAR res : WORD);
+		PROCEDURE ConfigureLink*(speed : SIGNED32; fullDuplex : BOOLEAN; VAR res : INTEGER);
 		VAR value : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
@@ -387,7 +387,7 @@ TYPE
 			WriteRegister16(BMCR, value, res);
 		END ConfigureLink;
 
-		PROCEDURE EnableLoopback*(enable : BOOLEAN; VAR res : WORD);
+		PROCEDURE EnableLoopback*(enable : BOOLEAN; VAR res : INTEGER);
 		VAR value : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
@@ -401,8 +401,8 @@ TYPE
 		END EnableLoopback;
 
 		(** Reset the PHY. Sets the Control and the Status registers to their default values. *)
-		PROCEDURE Reset*(VAR res : WORD);
-		VAR timeout, interval : LONGINT; value : SET;
+		PROCEDURE Reset*(VAR res : INTEGER);
+		VAR timeout, interval : SIGNED32; value : SET;
 		BEGIN (*  {EXCLUSIVE} *)
 			ASSERT(lockedBy = Objects.ActiveObject());
 			IF Trace * TraceCommands # {} THEN Show("Reset PHY... "); END;
@@ -420,7 +420,7 @@ TYPE
 			IF Trace * TraceCommands # {} THEN KernelLog.String("done."); KernelLog.Ln; END;
 		END Reset;
 
-		PROCEDURE GetIdentifier*(VAR identifier : Identifier; VAR res : WORD);
+		PROCEDURE GetIdentifier*(VAR identifier : Identifier; VAR res : INTEGER);
 		VAR phyIdr1, phyIdr2 : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
@@ -434,13 +434,13 @@ TYPE
 				IF Debug THEN Show("Could not read PHYIDR2 register."); KernelLog.Ln; END;
 				RETURN;
 			END;
-			identifier.oui := SYSTEM.VAL(LONGINT, LSH(phyIdr1 * PHYIDR1_OuiMSB, 3) + LSH(phyIdr2 * PHYIDR2_OuiLSB, 9));
-			identifier.model := SYSTEM.VAL(LONGINT, LSH(phyIdr2 * PHYIDR2_VendorModel, -4));
-			identifier.revision := SYSTEM.VAL(LONGINT, phyIdr2 * PHYIDR2_ModelRevision);
+			identifier.oui := SYSTEM.VAL(SIGNED32, LSH(phyIdr1 * PHYIDR1_OuiMSB, 3) + LSH(phyIdr2 * PHYIDR2_OuiLSB, 9));
+			identifier.model := SYSTEM.VAL(SIGNED32, LSH(phyIdr2 * PHYIDR2_VendorModel, -4));
+			identifier.revision := SYSTEM.VAL(SIGNED32, phyIdr2 * PHYIDR2_ModelRevision);
 		END GetIdentifier;
 
 		PROCEDURE Diag*;
-		VAR identifier : Identifier; res : WORD; bmsr, anar, anlpar, register : SET;
+		VAR identifier : Identifier; res : INTEGER; bmsr, anar, anlpar, register : SET;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject());
 			KernelLog.String("MII information:"); KernelLog.Ln;
@@ -490,7 +490,7 @@ TYPE
 			END;
 		END Diag;
 
-		PROCEDURE &Init*(phyId : LONGINT);
+		PROCEDURE &Init*(phyId : SIGNED32);
 		BEGIN
 			SELF.phyId := phyId;
 			NEW(timer);
@@ -568,8 +568,8 @@ BEGIN
 	ShowBit("   100BaseTX Half Duplex support: ", ANAR_100BaseTXHalfDuplex);
 	ShowBit("   10BaseT Full Duplex support: ", ANAR_10BaseTFullDuplex);
 	ShowBit("   10BaseT Half Duplex support: ", ANAR_10BaseTHalfDuplex);
-	KernelLog.String("   Selector: "); KernelLog.Int(SYSTEM.VAL(LONGINT, anar * ANAR_Selector), 0);
-	KernelLog.String(", Link partner: "); KernelLog.Int(SYSTEM.VAL(LONGINT, anlpar * ANAR_Selector), 0);
+	KernelLog.String("   Selector: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, anar * ANAR_Selector), 0);
+	KernelLog.String(", Link partner: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, anlpar * ANAR_Selector), 0);
 	KernelLog.Ln;
 END ShowAdvertisementRegisters;
 

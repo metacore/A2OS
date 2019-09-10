@@ -19,7 +19,7 @@ MODULE PartitionsLib; (** AUTHOR "staubesv"; PURPOSE "Partitioning and formattin
  *	12.12.2005	Operation object uses exception handling to release ressources -> more stable, adapted operations (staubesv)
  *	12.12.2005	Implemented Reader/Writer locks (staubesv)
  *	15.12.2005	DiskModel.Update now also calls DiskModel.OnChanged (staubesv)
- *	16.12.2005	Operation.state.min/cur/max type change to HUGEINT to prevent overflows (staubesv)
+ *	16.12.2005	Operation.state.min/cur/max type change to SIGNED64 to prevent overflows (staubesv)
  *	19.12.2005	Fixed DeletePartition/CreatePartition (staubesv)
  *	06.01.2006	Fixed nn fsRes handling (staubesv)
  *	17.01.2006	Made output more appropriate for Partitions front-end, fixed Configuration.ParseConfig (staubesv)
@@ -133,7 +133,7 @@ CONST
 
 	N2KSS = 2048;
 	N2KBPS = N2KSS DIV BS;
-	N2KDirMark = LONGINT(9B1EA38DH);
+	N2KDirMark = SIGNED32(9B1EA38DH);
 
 	AosSSLog2 = 12;
 	AosSS = ASH(1, AosSSLog2); (* Sector Size *)
@@ -142,7 +142,7 @@ CONST
 	AosSTS = 128;
 	AosXS = AosSS DIV 4;
 	AosHS = 568;
-	AosDirMark = LONGINT(9B1EA38DH);
+	AosDirMark = SIGNED32(9B1EA38DH);
 
 	AosType = 76;
 	NativeType1 = 79;
@@ -184,9 +184,9 @@ TYPE
 	Disk* = RECORD
 		device* : AosDisks.Device;
 		table* : AosDisks.PartitionTable; (* extended copy of device.table *)
-		size*: LONGINT; res*: WORD; (* device.GetSize(size, res); Size is valid only when res = AosDisks.Ok *)
+		size*: SIGNED32; res*: INTEGER; (* device.GetSize(size, res); Size is valid only when res = AosDisks.Ok *)
 		geo* : AosDisks.GetGeometryMsg; (* device.Handle(geo, res); geo is valid only when res = AosDisks.Ok *)
-		gres* : WORD;
+		gres* : INTEGER;
 		fs* : POINTER TO ARRAY OF Files.FileSystem;
 		isDiskette* : BOOLEAN; (* is this a floppy drive diskette? *)
 	END;
@@ -195,7 +195,7 @@ TYPE
 
 	Selection* = RECORD
 		disk* : Disk;
-		partition* : LONGINT;
+		partition* : SIGNED32;
 	END;
 
 TYPE
@@ -203,8 +203,8 @@ TYPE
 	RegionLock = POINTER TO RECORD
 		device : AosDisks.Device;
 		partition : AosDisks.Partition; 	(* we consider only partition.start & partition.size *)
-		type : LONGINT; 				(* lock type: WriterLock | ReaderLock *)
-		nbrOfReaders : LONGINT; 		(* ReaderLock only: How many readers hold the lock? *)
+		type : SIGNED32; 				(* lock type: WriterLock | ReaderLock *)
+		nbrOfReaders : SIGNED32; 		(* ReaderLock only: How many readers hold the lock? *)
 		next : RegionLock;
 	END;
 
@@ -213,7 +213,7 @@ TYPE
 	DisksModel* = OBJECT
 	VAR
 		lockedBy : ANY;
-		lockLevel : LONGINT;
+		lockLevel : SIGNED32;
 		onChanged* : WMEvents.EventSource; (** does not hold the lock, if called *)
 		devTable : Plugins.Table;
 
@@ -222,7 +222,7 @@ TYPE
 
 		(* IF check = TRUE, only partitions with the AosDisks.Valid flags set are returned *)
 		PROCEDURE GetDisk*(CONST devpart : ARRAY OF CHAR; VAR selection : Selection; check : BOOLEAN) : BOOLEAN;
-		VAR devname, partStr : ARRAY 32 OF CHAR; i, j : LONGINT;
+		VAR devname, partStr : ARRAY 32 OF CHAR; i, j : SIGNED32;
 		BEGIN
 			IF disks # NIL THEN
 				i := 0;
@@ -265,7 +265,7 @@ TYPE
 		END GetDisk;
 
 		(* Lock a partition. Returns TRUE if locked succeded, FALSE otherwise *)
-		PROCEDURE AcquirePartition*(disk : Disk; partition : LONGINT; locktype : LONGINT) : BOOLEAN;
+		PROCEDURE AcquirePartition*(disk : Disk; partition : SIGNED32; locktype : SIGNED32) : BOOLEAN;
 		VAR table : AosDisks.PartitionTable; lock, temp : RegionLock; getReaderLock : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			ASSERT(disk.device # NIL);
@@ -308,7 +308,7 @@ TYPE
 		END AcquirePartition;
 
 		(* Release a partition. *)
-		PROCEDURE ReleasePartition*(disk : Disk; partition : LONGINT);
+		PROCEDURE ReleasePartition*(disk : Disk; partition : SIGNED32);
 		VAR temp : RegionLock;
 		BEGIN {EXCLUSIVE}
 			ASSERT(disk.device # NIL);
@@ -363,7 +363,7 @@ TYPE
 		END ShowLocks;
 
 		PROCEDURE &Init*;
-		VAR res : WORD;
+		VAR res : INTEGER;
 		BEGIN
 			NEW(usedDisks);
 			AosDisks.registry.GetAll(devTable);
@@ -386,7 +386,7 @@ TYPE
 			doClose : BOOLEAN;
 			errorWriter : Streams.StringWriter;
 			errorString : ARRAY 1024 OF CHAR;
-			i, j : SIZE; res: WORD;
+			i, j : SIZE; res: INTEGER;
 		BEGIN (* caller must hold lock *)
 			Acquire;
 			IF devTable # NIL THEN
@@ -436,7 +436,7 @@ TYPE
 		END UpdateAllDisks;
 
 		PROCEDURE UpdateDisk*(disk : Disk);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			IF disks # NIL THEN
 				Acquire;
@@ -454,7 +454,7 @@ TYPE
 		END UpdateDisk;
 
 		PROCEDURE UpdateDiskInternal(i : SIZE);
-		VAR dev : AosDisks.Device; errorWriter : Streams.StringWriter; errorString : ARRAY 1024 OF CHAR; doClose : BOOLEAN; j : SIZE; res: WORD;
+		VAR dev : AosDisks.Device; errorWriter : Streams.StringWriter; errorString : ARRAY 1024 OF CHAR; doClose : BOOLEAN; j : SIZE; res: INTEGER;
 		BEGIN
 			dev := disks[i].device;
 			IF dev # NIL THEN
@@ -517,7 +517,7 @@ TYPE
 			IF lockLevel = 0 THEN lockedBy := NIL; END
 		END Release;
 
-		PROCEDURE DiskEventHandler(event : WORD; plugin : Plugins.Plugin);
+		PROCEDURE DiskEventHandler(event : INTEGER; plugin : Plugins.Plugin);
 		VAR tempTable : Plugins.Table; dev : AosDisks.Device; i, j : SIZE;
 		BEGIN
 			ASSERT(plugin#NIL);
@@ -557,8 +557,8 @@ TYPE
 		END DiskEventHandler;
 
 		(* Get geometry from partition table, if possible. *)
-		PROCEDURE GetTableGeometry(dev: AosDisks.Device; VAR hds, spt: LONGINT): BOOLEAN;
-		VAR buf: ARRAY BS OF CHAR; res: WORD; p, hd, sec, i: LONGINT; ok: BOOLEAN;
+		PROCEDURE GetTableGeometry(dev: AosDisks.Device; VAR hds, spt: SIGNED32): BOOLEAN;
+		VAR buf: ARRAY BS OF CHAR; res: INTEGER; p, hd, sec, i: SIGNED32; ok: BOOLEAN;
 		BEGIN
 			ok := FALSE;
 			IF dev.blockSize # BS THEN RETURN FALSE; END;
@@ -588,8 +588,8 @@ TYPE
 		END GetTableGeometry;
 
 		(* Get drive geometry and adjust it. *)
-		PROCEDURE GetGeometry(disk: Disk; VAR geo: AosDisks.GetGeometryMsg; VAR res: WORD);
-		VAR dev : AosDisks.Device; thds, tspt, dsize: LONGINT; org: AosDisks.GetGeometryMsg;
+		PROCEDURE GetGeometry(disk: Disk; VAR geo: AosDisks.GetGeometryMsg; VAR res: INTEGER);
+		VAR dev : AosDisks.Device; thds, tspt, dsize: SIGNED32; org: AosDisks.GetGeometryMsg;
 		BEGIN
 			dev := disk.device;
 			dev.Handle(geo, res);
@@ -631,8 +631,8 @@ TYPE
 		END GetGeometry;
 
 		(* Add a free partition entry at the end (to keep partition numbers the same) *)
-		PROCEDURE NewFree(type: LONGINT; VAR table: AosDisks.PartitionTable; start, size, ptblock: LONGINT; flags: SET);
-		VAR j: LONGINT; p: AosDisks.Partition; new: AosDisks.PartitionTable;
+		PROCEDURE NewFree(type: SIGNED32; VAR table: AosDisks.PartitionTable; start, size, ptblock: SIGNED32; flags: SET);
+		VAR j: SIGNED32; p: AosDisks.Partition; new: AosDisks.PartitionTable;
 		BEGIN
 			p.type := type; p.start := start; p.size := size; p.flags := flags;
 			p.ptblock := ptblock; p.ptoffset := 0; (* find free ptoffset later *)
@@ -641,8 +641,8 @@ TYPE
 			new[j] := p; table := new
 		END NewFree;
 
-		PROCEDURE FindFreePrimary(VAR table: AosDisks.PartitionTable; spt, hds: LONGINT);
-		VAR i: SIZE; g, t, max, start, end, prevstart, nextstart: LONGINT;
+		PROCEDURE FindFreePrimary(VAR table: AosDisks.PartitionTable; spt, hds: SIGNED32);
+		VAR i: SIZE; g, t, max, start, end, prevstart, nextstart: SIGNED32;
 		BEGIN
 			start := spt; g := hds * spt; (* skip first track *)
 			max := table[0].size - g;	(* reserve one cylinder at end of disk *)
@@ -652,7 +652,7 @@ TYPE
 				END
 			END;
 			LOOP
-				prevstart := start; end := MAX(LONGINT);
+				prevstart := start; end := MAX(SIGNED32);
 				FOR i := 1 TO LEN(table)-1 DO (* find first partition start after or on start *)
 					IF (AosDisks.Primary IN table[i].flags) & (table[i].start >= start) & (table[i].start < end) THEN
 						end := table[i].start (* free space ends at this start position *)
@@ -664,14 +664,14 @@ TYPE
 				DEC(end, end MOD g); (* end on cylinder boundary *)
 					(* {start..end-1 is free and aligned} *)
 				IF end-start > 0 THEN NewFree(FreeSpace, table, start, end-start, 0, {AosDisks.Primary}) END;
-				nextstart := MAX(LONGINT);
+				nextstart := MAX(SIGNED32);
 				FOR i := 1 TO LEN(table)-1 DO (* find first partition end after prevstart *)
 					IF AosDisks.Primary IN table[i].flags THEN
 						t := table[i].start+table[i].size-1;
 						IF (t > prevstart) & (t < nextstart) THEN nextstart := t END
 					END
 				END;
-				IF nextstart = MAX(LONGINT) THEN
+				IF nextstart = MAX(SIGNED32) THEN
 					EXIT (* no more partitions end after prevstart *)
 				ELSE
 					start := nextstart+1
@@ -679,8 +679,8 @@ TYPE
 			END
 		END FindFreePrimary;
 
-		PROCEDURE FindFreeExtended(VAR table: AosDisks.PartitionTable; spt, hds: LONGINT);
-		VAR i, g, t, max, start, end, prevstart, nextstart: LONGINT; j: SIZE;
+		PROCEDURE FindFreeExtended(VAR table: AosDisks.PartitionTable; spt, hds: SIGNED32);
+		VAR i, g, t, max, start, end, prevstart, nextstart: SIGNED32; j: SIZE;
 		BEGIN
 			t := -1; i := 1;
 			WHILE i < LEN(table) DO
@@ -692,7 +692,7 @@ TYPE
 			IF t # -1 THEN
 				start := table[t].start; g := hds * spt; max := start + table[t].size;
 				LOOP
-					prevstart := start; end := MAX(LONGINT);
+					prevstart := start; end := MAX(SIGNED32);
 					FOR j := 1 TO LEN(table)-1 DO (* find first partition start after or on start *)
 						IF ~(AosDisks.Primary IN table[j].flags) & (table[j].start >= start) & (table[j].start < end) THEN
 							end := table[j].start
@@ -706,14 +706,14 @@ TYPE
 					DEC(end, end MOD g); (* end on cylinder boundary *)
 						(* {start..end-1 is free and aligned} *)
 					IF end-start > 0 THEN NewFree(FreeSpace, table, start, end-start, start-spt, {}) END;
-					nextstart := MAX(LONGINT);
+					nextstart := MAX(SIGNED32);
 					FOR j := 1 TO LEN(table)-1 DO (* find first partition end after prevstart *)
 						IF ~(AosDisks.Primary IN table[j].flags) THEN
 							t := table[j].start+table[j].size-1;
 							IF (t > prevstart) & (t < nextstart) THEN nextstart := t END
 						END
 					END;
-					IF nextstart = MAX(LONGINT) THEN
+					IF nextstart = MAX(SIGNED32) THEN
 						EXIT (* no more partitions end after prevstart *)
 					ELSE
 						start := nextstart+1
@@ -723,12 +723,12 @@ TYPE
 		END FindFreeExtended;
 
 		PROCEDURE FindReserved(VAR table: AosDisks.PartitionTable);
-		VAR i: SIZE; t, max, start, end, prevstart, nextstart: LONGINT;
+		VAR i: SIZE; t, max, start, end, prevstart, nextstart: SIGNED32;
 		BEGIN
 			 IF ShowReserved THEN
 				start := 0; max := table[0].size;
 				LOOP
-					prevstart := start; end := MAX(LONGINT);
+					prevstart := start; end := MAX(SIGNED32);
 					FOR i := 1 TO LEN(table)-1 DO (* find first partition start after or on start *)
 						IF (table[i].start >= start) & (table[i].start < end) THEN
 							end := table[i].start	(* free space ends at this start position *)
@@ -737,12 +737,12 @@ TYPE
 					IF end > max THEN end := max END;	(* clip to end of disk *)
 						(* {start..end-1 is free} *)
 					IF end-start > 0 THEN NewFree(ReservedSpace, table, start, end-start, 0, {AosDisks.Primary}) END;
-					nextstart := MAX(LONGINT);
+					nextstart := MAX(SIGNED32);
 					FOR i := 1 TO LEN(table)-1 DO (* find first partition end after prevstart *)
 						t := table[i].start+table[i].size-1;
 						IF (t > prevstart) & (t < nextstart) THEN nextstart := t END
 					END;
-					IF nextstart = MAX(LONGINT) THEN
+					IF nextstart = MAX(SIGNED32) THEN
 						EXIT (* no more partitions end after prevstart *)
 					ELSE
 						start := nextstart+1
@@ -799,7 +799,7 @@ TYPE
 		END CheckTable;
 
 		(* Find free space on the disk and insert placeholder partitions (table is reallocated). *)
-		PROCEDURE FindFreeSpace(w : Streams.Writer; dev: AosDisks.Device; VAR table: AosDisks.PartitionTable; spt, hds: LONGINT) : BOOLEAN;
+		PROCEDURE FindFreeSpace(w : Streams.Writer; dev: AosDisks.Device; VAR table: AosDisks.PartitionTable; spt, hds: SIGNED32) : BOOLEAN;
 		BEGIN
 			ASSERT(w # NIL);
 			ASSERT((hds > 0) & (spt > 0) & (table[0].start = 0));
@@ -824,7 +824,7 @@ TYPE
 			volISO : ISO9660Volumes.Volume;
 			dev : AosDisks.Device;
 			found : BOOLEAN;
-			partition , fsStart: LONGINT; i : SIZE;
+			partition , fsStart: SIGNED32; i : SIZE;
 		BEGIN
 			ASSERT(disk < LEN(disks));
 			Files.GetList(ft);
@@ -874,7 +874,7 @@ TYPE
 		END AssignFileSystems;
 
 		(* Returns TRUE iff partition i contains sector x. *)
-		PROCEDURE Contains(table: AosDisks.PartitionTable; i: SIZE; x: LONGINT): BOOLEAN;
+		PROCEDURE Contains(table: AosDisks.PartitionTable; i: SIZE; x: SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN (table[i].start <= x) & (x < table[i].start + table[i].size)
 		END Contains;
@@ -887,7 +887,7 @@ TYPE
 		END PartitionsOverlap;
 
 		PROCEDURE Finalize;
-		VAR res : WORD;
+		VAR res : INTEGER;
 		BEGIN
 			AosDisks.registry.RemoveEventHandler(DiskEventHandler, res);
 		END Finalize;
@@ -904,11 +904,11 @@ TYPE
 		statusString- : String;
 
 		(** error information *)
-		errorCount- : LONGINT;
+		errorCount- : SIGNED32;
 
 		(** progress *)
 		progressValid- : BOOLEAN; (* IF progressValid= TRUE the variables min, cur & max contain meaningful values *)
-		min-, cur-, max- : HUGEINT;
+		min-, cur-, max- : SIGNED64;
 	END;
 
 TYPE
@@ -938,8 +938,8 @@ TYPE
 
 		(* set at object instantiation *)
 		name*, desc* : String;
-		uid- : LONGINT;
-		disk- : Disk; partition- : LONGINT;
+		uid- : SIGNED32;
+		disk- : Disk; partition- : SIGNED32;
 		diskpartString- : String; (* dev#part; Set at &Init *)
 		starttime-, endtime- : Dates.DateTime; (* endtime only valid if StatusFinished IN state.status *)
 
@@ -951,14 +951,14 @@ TYPE
 		trapped : BOOLEAN;
 		parent : Operation; (* See procedure SetParent *)
 
-		locktype* : LONGINT; (* WriterLock or ReaderLock *)
+		locktype* : SIGNED32; (* WriterLock or ReaderLock *)
 		locked : BOOLEAN;
 
 		out- : Streams.Writer;
 
 		temp: Strings.String;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		VAR temp : ARRAY 10 OF CHAR;
 		BEGIN
 			ASSERT((disk.device # NIL) & (disk.table#NIL) & (partition >= 0) & (partition <LEN(disk.table)));
@@ -985,13 +985,13 @@ TYPE
 			RETURN state;
 		END GetState;
 
-		PROCEDURE SetStatus*(status : SET; CONST statusString : String; min, cur, max : HUGEINT; valid : BOOLEAN);
+		PROCEDURE SetStatus*(status : SET; CONST statusString : String; min, cur, max : SIGNED64; valid : BOOLEAN);
 		BEGIN {EXCLUSIVE}
 			state.status := status; state.statusString := statusString;
 			state.min := min; state.cur := cur; state.max := max; state.progressValid := valid;
 		END SetStatus;
 
-		PROCEDURE SetCurrentProgress*(cur :HUGEINT);
+		PROCEDURE SetCurrentProgress*(cur :SIGNED64);
 		BEGIN {EXCLUSIVE}
 			state.cur := cur;
 		END SetCurrentProgress;
@@ -1215,7 +1215,7 @@ TYPE
 
 		(* Returns TRUE if operation trapped *)
 		PROCEDURE SafelyDoOperation() : BOOLEAN;
-		VAR trap, opened : BOOLEAN; res : WORD; temp: ARRAY 256 OF CHAR;
+		VAR trap, opened : BOOLEAN; res : INTEGER; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			trap := FALSE; opened := FALSE;
 			IF (disk.device # NIL) THEN
@@ -1311,7 +1311,7 @@ TYPE
 	VAR
 		onChanged- : WMEvents.EventSource; (* notify when operations added/removed *)
 		operations : Operation;
-		uid : LONGINT;
+		uid : SIGNED32;
 
 		(** Add the specified operation *)
 		PROCEDURE Add(operation : Operation);
@@ -1357,7 +1357,7 @@ TYPE
 		END Remove;
 
 		(** Get a operation object by its UID. Returns NIL if not found *)
-		PROCEDURE GetByUid*(uid : LONGINT) : Operation;
+		PROCEDURE GetByUid*(uid : SIGNED32) : Operation;
 		VAR temp : Operation;
 		BEGIN {EXCLUSIVE}
 			temp := operations;
@@ -1371,7 +1371,7 @@ TYPE
 		END GetAll;
 
 		PROCEDURE GetAllInternal*() : AllOperations;
-		VAR  temp : Operation; result : AllOperations; i, num : LONGINT;
+		VAR  temp : Operation; result : AllOperations; i, num : SIGNED32;
 		BEGIN (* caller holds lock on operation manager *)
 			temp := operations;
 			IF temp # NIL THEN
@@ -1385,7 +1385,7 @@ TYPE
 		END GetAllInternal;
 
 		(** Remove the specified operation. Returns FALSE if the operation has not been found *)
-		PROCEDURE RemoveByUid*(uid : LONGINT) : BOOLEAN;
+		PROCEDURE RemoveByUid*(uid : SIGNED32) : BOOLEAN;
 		VAR temp : Operation; found : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			temp := operations; found := FALSE;
@@ -1412,8 +1412,8 @@ TYPE
 		END RemoveByUid;
 
 		(** Remove all (finished) operations. Returns the number of removed operations *)
-		PROCEDURE RemoveAll*(finishedOnly : BOOLEAN) : LONGINT;
-		VAR temp : Operation; counter : LONGINT;
+		PROCEDURE RemoveAll*(finishedOnly : BOOLEAN) : SIGNED32;
+		VAR temp : Operation; counter : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			temp := operations; counter := 0;
 			IF finishedOnly THEN
@@ -1472,14 +1472,14 @@ TYPE
 			END;
 		END Show;
 
-		PROCEDURE GetUid() : LONGINT;
+		PROCEDURE GetUid() : SIGNED32;
 		BEGIN (* caller must hold lock on operation manager *)
-			INC(uid); ASSERT(uid >= 0); (* LONGINT overflow *)
+			INC(uid); ASSERT(uid >= 0); (* SIGNED32 overflow *)
 			RETURN uid;
 		END GetUid;
 
 		PROCEDURE Finalize;
-		VAR ignore : LONGINT;
+		VAR ignore : SIGNED32;
 		BEGIN
 			ignore := RemoveAll(FALSE);
 		END Finalize;
@@ -1567,18 +1567,18 @@ TYPE
 	(* Base class of PartitionToFile & FileToPartition operations *)
 	Image* = OBJECT(Operation);
 	VAR
-		block, numblocks, blocksize : LONGINT;
+		block, numblocks, blocksize : SIGNED32;
 		filename : Files.FileName;
 		buffer : POINTER TO ARRAY OF CHAR;
 
 		(* Parameters: dev#part name [block numblocks] *)
-		PROCEDURE SetParameters*(CONST name : ARRAY OF CHAR; block, numblocks: LONGINT);
+		PROCEDURE SetParameters*(CONST name : ARRAY OF CHAR; block, numblocks: SIGNED32);
 		BEGIN
 			filename := ""; Strings.Append(filename, name); SELF.block := block; SELF.numblocks := numblocks;
 		END SetParameters;
 
 		PROCEDURE ValidParameters*() : BOOLEAN;
-		VAR res : WORD; temp: ARRAY 256 OF CHAR;
+		VAR res : INTEGER; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			IF (block = -1) & (numblocks = -1) THEN (* optional parameters block & numblocks not set; whole partition *)
 				block := 0;
@@ -1605,7 +1605,7 @@ TYPE
 	PartitionToFile* = OBJECT(Image);
 
 		PROCEDURE DoOperation*;
-		VAR f : Files.File; w: Files.Writer; error : String; pos, i, num : LONGINT; res : WORD; temp: ARRAY 256 OF CHAR;
+		VAR f : Files.File; w: Files.Writer; error : String; pos, i, num : SIGNED32; res : INTEGER; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			f := Files.New(filename);
 			IF f # NIL THEN
@@ -1637,7 +1637,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "PartitionToFile"; desc := "Write a partition to a file"; locktype := ReaderLock;
@@ -1650,11 +1650,11 @@ TYPE
 	FileToPartition* = OBJECT(Image);
 
 		PROCEDURE DoOperation*; (** dev#part filename [block numblocks] ~ *)
-		VAR f: Files.File; r: Files.Reader; error : String; len: SIZE; pos, num, i : LONGINT; res: WORD;
+		VAR f: Files.File; r: Files.Reader; error : String; len: SIZE; pos, num, i : SIGNED32; res: INTEGER;
 		BEGIN
 			f := Files.Old(filename);
 			IF f # NIL THEN
-				num := (f.Length()(LONGINT) + blocksize - 1) DIV blocksize;
+				num := (f.Length()(SIGNED32) + blocksize - 1) DIV blocksize;
 				IF numblocks > num THEN
 					numblocks := num;
 					info.String("Warning: Specified number of blocks is bigger than image file size. Set numblocks to "); info.Int(numblocks, 0); info.Ln;
@@ -1686,7 +1686,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "FileToPartition"; desc := "Write file to partition"; locktype := WriterLock;
@@ -1724,7 +1724,7 @@ TYPE
 			context : Commands.Context;
 			arg : Streams.StringReader; errors : Streams.StringWriter;
 			msg: ARRAY 64 OF CHAR;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			par := "";
 			Strings.Append(par, prefix); Strings.Append(par, " ");
@@ -1749,7 +1749,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "Mount"; desc := "Mount partition"; locktype := WriterLock;
@@ -1772,10 +1772,10 @@ TYPE
 		PROCEDURE DoOperation*;
 		CONST Size = 16*512; Max = 50;
 		VAR
-			maxblocks : LONGINT;
+			maxblocks : SIGNED32;
 			buf : ARRAY Size OF CHAR;
-			start, size : LONGINT;
-			seed, len, i, ticks: LONGINT; res: WORD;
+			start, size : SIGNED32;
+			seed, len, i, ticks: SIGNED32; res: INTEGER;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
 			start := disk.table[partition].start; size := disk.table[partition].size;
@@ -1793,7 +1793,7 @@ TYPE
 
 			IF alive & (res = AosDisks.Ok) THEN
 				SetStatus(state.status, "Seq Read check", state.min, state.cur, state.max, TRUE);
-				Kernel.SetTimer(timer, MAX(LONGINT)); (* performance monitoring *)
+				Kernel.SetTimer(timer, MAX(SIGNED32)); (* performance monitoring *)
 				i := 0;
 				LOOP
 					len := maxblocks;
@@ -1819,14 +1819,14 @@ TYPE
 		END DoOperation;
 
 		(* Pseudo-random number. *)
-		PROCEDURE Random (VAR seed: LONGINT; N :LONGINT): LONGINT;
+		PROCEDURE Random (VAR seed: SIGNED32; N :SIGNED32): SIGNED32;
 		BEGIN
 			(* this is not a good one, but ok for this purpose *)
 			seed := (seed + 773) * 13 MOD 9999991;
 			RETURN seed MOD N
 		END Random;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "CheckPartition"; desc := "Sequentially read all blocks on partition"; locktype := ReaderLock;
@@ -1840,9 +1840,9 @@ TYPE
 	FormatPartition* = OBJECT(Operation);
 	VAR
 		(* parameters: *)
-		fsRes : LONGINT;
+		fsRes : SIGNED32;
 		fsName, bootName : ARRAY 256 OF CHAR;
-		flag : LONGINT;
+		flag : SIGNED32;
 
 		dev : AosDisks.Device; (* set to disk.device in &Init *)
 
@@ -1850,7 +1850,7 @@ TYPE
 		(* bootname : Name of the bootloader;  if bootname="" -> Use Bootname constant *)
 		(* fsRes : file system reserved space; fsRes = -1 -> Bootfile size;  fsRes = -2 -> Use FSRes constant *)
 		(* fl : flag *)
-		PROCEDURE SetParameters*(CONST fsname, bootname : ARRAY OF CHAR;  fsRes : LONGINT; fl : LONGINT );
+		PROCEDURE SetParameters*(CONST fsname, bootname : ARRAY OF CHAR;  fsRes : SIGNED32; fl : SIGNED32 );
 		BEGIN
 			fsName := ""; Strings.Append(fsName, fsname); SELF.fsRes := fsRes;
 			IF fl = 0 THEN flag := 1FH; (* default *) ELSE flag := fl; END;
@@ -1878,7 +1878,7 @@ TYPE
 		VAR
 			f : Files.File;
 			error : String;
-			fs, type, size : LONGINT; res : WORD;
+			fs, type, size : SIGNED32; res : INTEGER;
 		BEGIN
 			IF (fsName = "NatFS") OR (fsName = "NatFS1") THEN type := NativeType1
 			ELSIF fsName = "NatFS2" THEN type := NativeType2
@@ -1891,7 +1891,7 @@ TYPE
 				IF res = AosDisks.Ok THEN
 					f := Files.Old(bootName);
 					IF (f # NIL) OR (fsRes # -1) THEN
-						IF fsRes = -1 THEN fsRes := (f.Length()(LONGINT)+BS-1) DIV BS;
+						IF fsRes = -1 THEN fsRes := (f.Length()(SIGNED32)+BS-1) DIV BS;
 						ELSIF fsRes = -2 THEN fsRes := FSRes;
 						ELSE fsRes := fsRes * 1024 DIV BS;
 						END;
@@ -1928,8 +1928,8 @@ TYPE
 		END DoOperation;
 
 		(* Initialize the Aos file system in a partition. See AosFiles.Volume.Init *)
-		PROCEDURE InitAosFS(fsres, flag: LONGINT; VAR res: WORD);
-		VAR fssize, i, j, ofs, size, x, fsofs: LONGINT; b: ARRAY BS OF CHAR; temp: ARRAY 256 OF CHAR;
+		PROCEDURE InitAosFS(fsres, flag: SIGNED32; VAR res: INTEGER);
+		VAR fssize, i, j, ofs, size, x, fsofs: SIGNED32; b: ARRAY BS OF CHAR; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			ofs := dev.table[partition].start; size := dev.table[partition].size;
 			ASSERT(dev.blockSize = BS);
@@ -1973,8 +1973,8 @@ TYPE
 		END InitAosFS;
 
 		(* Initialize the Native file system in a partition. *)
-		PROCEDURE InitNativeFS(fsres, flag: LONGINT; VAR res: WORD);
-		VAR ofs, size, fssize, fsofs, startfs, i: LONGINT; b: ARRAY N2KSS*2 OF CHAR; temp: ARRAY 256 OF CHAR;
+		PROCEDURE InitNativeFS(fsres, flag: SIGNED32; VAR res: INTEGER);
+		VAR ofs, size, fssize, fsofs, startfs, i: SIGNED32; b: ARRAY N2KSS*2 OF CHAR; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			ofs := dev.table[partition].start; size := dev.table[partition].size;
 			ASSERT(dev.blockSize = BS);
@@ -2013,9 +2013,9 @@ TYPE
 		END InitNativeFS;
 
 		(* Write the OBL boot loader and an empty config table to disk. *)
-		PROCEDURE InitOBL(flag: LONGINT; VAR res: WORD);
+		PROCEDURE InitOBL(flag: SIGNED32; VAR res: INTEGER);
 		VAR
-			buf: ARRAY 10*BS OF CHAR; i, tsize, rsize, lsize : LONGINT; len: SIZE;
+			buf: ARRAY 10*BS OF CHAR; i, tsize, rsize, lsize : SIGNED32; len: SIZE;
 			f: Files.File; r: Files.Reader;
 		BEGIN
 			ASSERT(dev.blockSize = BS);
@@ -2029,7 +2029,7 @@ TYPE
 				(* get parameters from boot loader *)
 				rsize := Get2(buf, 0EH); tsize := ORD(buf[10H]);
 				ASSERT((rsize-tsize)*BS = f.Length()); (* check boot loader size *)
-				lsize := f.Length()(LONGINT) DIV BS;
+				lsize := f.Length()(SIGNED32) DIV BS;
 				ASSERT(lsize = BootLoaderSize);
 				(* set parameters in boot loader *)
 				IF (disk.size > DisketteLimit) THEN (* Windows 2000 workaround *)
@@ -2064,7 +2064,7 @@ TYPE
 			END
 		END InitOBL;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "Format"; desc := "Format partition"; dev := disk.device; locktype := WriterLock;
@@ -2081,11 +2081,11 @@ TYPE
 	ShowBlocks* = OBJECT(Operation);
 	VAR
 		(* parameters : dev#part block [numblocks] *)
-		block, numblocks : LONGINT;
+		block, numblocks : SIGNED32;
 		callback : ShowBlockCallback;
 
 		(* Parameters: dev#part block [numblocks] *)
-		PROCEDURE SetParameters*(block, numblocks: LONGINT);
+		PROCEDURE SetParameters*(block, numblocks: SIGNED32);
 		BEGIN
 			SELF.block := block; SELF.numblocks := numblocks;
 		END SetParameters;
@@ -2112,7 +2112,7 @@ TYPE
 		PROCEDURE DoOperation*; (** dev#part block [numblocks] ~ *)
 		VAR
 			text : Texts.Text; tw : TextUtilities.TextWriter;
-			pos, num : LONGINT; res : WORD;
+			pos, num : SIGNED32; res : INTEGER;
 			buf: POINTER TO ARRAY OF CHAR;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
@@ -2136,8 +2136,8 @@ TYPE
 			IF alive THEN result.String("succeeded"); END;
 		END DoOperation;
 
-		PROCEDURE WriteHexDump(w: Streams.Writer; CONST buf: ARRAY OF CHAR; ofs, size, base: LONGINT);
-		VAR i: LONGINT; ch: CHAR;
+		PROCEDURE WriteHexDump(w: Streams.Writer; CONST buf: ARRAY OF CHAR; ofs, size, base: SIGNED32);
+		VAR i: SIGNED32; ch: CHAR;
 		BEGIN
 			WHILE ofs < size DO
 				w.Hex(base + ofs, -8); w.String(": ");
@@ -2161,7 +2161,7 @@ TYPE
 			END
 		END WriteHexDump;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "ShowBlocks"; desc := "Show block(s) of partition"; locktype := ReaderLock;
@@ -2199,7 +2199,7 @@ TYPE
 		END SetParameters;
 
 		PROCEDURE DoOperation*;
-		VAR  res: WORD; fs : LONGINT; string: ARRAY 256 OF CHAR; f : Files.File;
+		VAR  res: INTEGER; fs : SIGNED32; string: ARRAY 256 OF CHAR; f : Files.File;
 		BEGIN
 			fs := DetectFS(disk.device, partition);
 			IF (fs = AosFS32) OR (fs = AosFS128) THEN
@@ -2223,10 +2223,10 @@ TYPE
 		END DoOperation;
 
 		(* Overwrite the existing boot loader with the new one, leaving critical data untouched. *)
-		PROCEDURE UpdateOBL(f: Files.File; VAR res: WORD);
+		PROCEDURE UpdateOBL(f: Files.File; VAR res: INTEGER);
 		CONST MaxSize = MaxBootLoaderSize*BS;
 		VAR
-			b, bnew: ARRAY MaxSize OF CHAR; i, tsize, rsize, lsize: LONGINT; len: SIZE;
+			b, bnew: ARRAY MaxSize OF CHAR; i, tsize, rsize, lsize: SIGNED32; len: SIZE;
 			r: Files.Reader;
 		BEGIN
 			ASSERT(disk.device.blockSize = BS);
@@ -2235,13 +2235,13 @@ TYPE
 				ASSERT((f # NIL) & (f.Length() <= BootLoaderSize*BS)); (* assume boot file is present and small enough *)
 				r.Bytes(bnew, 0, f.Length()(SIZE), len);
 				ASSERT(r.res = 0);
-				lsize := f.Length()(LONGINT) DIV BS;
+				lsize := f.Length()(SIGNED32) DIV BS;
 				disk.device.Transfer(AosDisks.Read, disk.device.table[partition].start, lsize, b, 0, res);
 				ASSERT(Get4(b, 1F8H) = FSID); (* OBL.Bin signature 'AOS!' *)
 				(* get parameters from boot loader *)
 				rsize := Get2(b, 0EH); tsize := ORD(b[10H]);
 				ASSERT((rsize-tsize)*BS = f.Length()); (* check boot loader size *)
-				lsize := f.Length()(LONGINT) DIV BS;
+				lsize := f.Length()(SIGNED32) DIV BS;
 				ASSERT(lsize = BootLoaderSize);
 				(* set parameters in boot loader *)
 				FOR i := 0H TO 2H DO b[i] := bnew[i] END;
@@ -2258,7 +2258,7 @@ TYPE
 			END
 		END UpdateOBL;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "UpdateLoader"; desc := "Update Boot Loader on partition"; locktype := WriterLock;
@@ -2294,7 +2294,7 @@ TYPE
 
 		(* Update the boot file in an existing Oberon partition. *)
 		PROCEDURE DoOperation*; (** dev#part [ BootFile ] ~ *)
-		VAR  f : Files.File; res: WORD; fs : LONGINT; temp: ARRAY 256 OF CHAR;
+		VAR  f : Files.File; res: INTEGER; fs : SIGNED32; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			fs := DetectFS(disk.device, partition);
 			IF (fs # UnknownFS) THEN
@@ -2313,7 +2313,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "UpdateBootFile"; desc := "Updates boot file on partition "; locktype := WriterLock;
@@ -2356,7 +2356,7 @@ TYPE
 		VAR
 			f: Files.File; r: Files.Reader; buf1, buf2: ARRAY BS OF CHAR;
 			string : ARRAY 256 OF CHAR;
-			res: WORD; len: SIZE; i: LONGINT;
+			res: INTEGER; len: SIZE; i: SIGNED32;
 		BEGIN
 			f := Files.Old(filename);
 			IF f # NIL THEN
@@ -2397,7 +2397,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "WriteMBR"; desc := "Write MBR to disk"; locktype := WriterLock;
@@ -2424,7 +2424,7 @@ TYPE
 		END GetTable;
 
 		PROCEDURE DoOperation*;
-		VAR config : Configuration; fs : LONGINT; res : WORD; temp: ARRAY 256 OF CHAR;
+		VAR config : Configuration; fs : SIGNED32; res : INTEGER; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			fs := DetectFS(disk.device, partition);
 			IF (fs = AosFS32) OR (fs = AosFS128) THEN
@@ -2439,7 +2439,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "GetConfig"; desc := "Read config string to partition"; locktype := ReaderLock;
@@ -2453,7 +2453,7 @@ TYPE
 	VAR
 		(* parameters *)
 		configString : Strings.String;
-		pos : LONGINT;
+		pos : SIGNED32;
 
 		PROCEDURE ValidParameters*() : BOOLEAN;
 		BEGIN
@@ -2466,13 +2466,13 @@ TYPE
 
 		(** dev#part configString ~ *)
 		(** config string format: {key = "value"} *)
-		PROCEDURE SetParameters*(configString : Strings.String; pos : LONGINT);
+		PROCEDURE SetParameters*(configString : Strings.String; pos : SIGNED32);
 		BEGIN
 			SELF.configString := configString; SELF.pos := pos;
 		END SetParameters;
 
 		PROCEDURE DoOperation*;
-		VAR config : Configuration; fs, i  : LONGINT; res : WORD; temp: ARRAY 256 OF CHAR;
+		VAR config : Configuration; fs, i  : SIGNED32; res : INTEGER; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			fs := DetectFS(disk.device, partition);
 			IF (fs = AosFS32) OR (fs = AosFS128) THEN
@@ -2498,7 +2498,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "SetConfig"; desc := "Write config string to partition"; locktype := WriterLock;
@@ -2581,7 +2581,7 @@ TYPE
 			RETURN Strings.NewString(string);
 		END GetAsStringInternal;
 
-		PROCEDURE LoadFromStream*(r : Streams.Reader; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE LoadFromStream*(r : Streams.Reader; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 		BEGIN {EXCLUSIVE}
 			ASSERT(r # NIL);
 			entries := NIL; res := Ok; msg := "";
@@ -2592,7 +2592,7 @@ TYPE
 		END LoadFromStream;
 
 		(** Load configuration data from file *)
-		PROCEDURE LoadFromFile*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE LoadFromFile*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 		VAR file : Files.File; r: Files.Reader;
 		BEGIN {EXCLUSIVE}
 			res := Ok; entries := NIL;
@@ -2613,7 +2613,7 @@ TYPE
 		END LoadFromFile;
 
 		(** Store configuration data to file *)
-		PROCEDURE StoreToFile*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE StoreToFile*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 		VAR f : Files.File; w : Files.Writer; string : Strings.String;
 		BEGIN {EXCLUSIVE}
 			res := Ok;
@@ -2640,7 +2640,7 @@ TYPE
 			entry : ConfigEntry;
 			key, value : ARRAY MaxStringLength OF CHAR;
 			ch : CHAR;
-			i, j, pos : LONGINT;
+			i, j, pos : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			entries := NIL;
 			IF config.table # NIL THEN
@@ -2683,7 +2683,7 @@ TYPE
 			temp : ARRAY 1024 OF CHAR; ch : CHAR;
 			entry : ConfigEntry;
 			error : BOOLEAN;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			ASSERT(r # NIL);
 			entries := NIL;
@@ -2734,7 +2734,7 @@ TYPE
 		END AddEntry;
 
 		PROCEDURE AddEntryInternal(pos : SIZE; entry : ConfigEntry);
-		VAR newTable : Table; i, j : LONGINT;
+		VAR newTable : Table; i, j : SIGNED32;
 		BEGIN
 			ASSERT(pos >=0);
 			IF entries = NIL THEN
@@ -2812,8 +2812,8 @@ TYPE
 		hex : ARRAY 32 OF CHAR;
 
 		(* Read the config table from the specified partition. *)
-		PROCEDURE GetTable*(dev: AosDisks.Device; part: LONGINT; VAR res: WORD);
-		VAR tsize, reserved, fsOfs: LONGINT;
+		PROCEDURE GetTable*(dev: AosDisks.Device; part: SIGNED32; VAR res: INTEGER);
+		VAR tsize, reserved, fsOfs: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			table := NIL; GetVars(dev, part, tsize, reserved, fsOfs, res);
 			BootLoaderSize := reserved-tsize;
@@ -2825,8 +2825,8 @@ TYPE
 		END GetTable;
 
 		(* Overwrite the config table on the specified partition. *)
-		PROCEDURE PutTable*(dev: AosDisks.Device; part: LONGINT; VAR res: WORD);
-		VAR tsize, reserved, fsOfs: LONGINT;
+		PROCEDURE PutTable*(dev: AosDisks.Device; part: SIGNED32; VAR res: INTEGER);
+		VAR tsize, reserved, fsOfs: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			GetVars(dev, part, tsize, reserved, fsOfs, res);
 			BootLoaderSize := reserved-tsize;
@@ -2838,9 +2838,9 @@ TYPE
 		END PutTable;
 
 		(* Parse the configuration strings on the command line and add them to the config table. *)
-		PROCEDURE ParseConfig*(CONST table : ARRAY OF CHAR; pos : LONGINT): BOOLEAN;
+		PROCEDURE ParseConfig*(CONST table : ARRAY OF CHAR; pos : SIGNED32): BOOLEAN;
 		CONST CR = 0DX; LF = 0AX;
-		VAR  config: ARRAY MaxConfig OF CHAR; result : BOOLEAN; i, j: LONGINT;
+		VAR  config: ARRAY MaxConfig OF CHAR; result : BOOLEAN; i, j: SIGNED32;
 		BEGIN
 			ASSERT((pos >= 0) & (pos < LEN(table)));
 			i := 0; j := pos;
@@ -2895,7 +2895,7 @@ TYPE
 		(* Parse the table and return it as string *)
 		PROCEDURE GetTableAsString*() :  Streams.StringWriter;
 		CONST MaxSize = 2048;
-		VAR w : Streams.StringWriter; i: LONGINT; ch: CHAR;
+		VAR w : Streams.StringWriter; i: SIGNED32; ch: CHAR;
 		BEGIN
 			NEW(w, MaxSize);
 			IF table # NIL THEN
@@ -2928,8 +2928,8 @@ TYPE
 		END GetTableAsString;
 
 		(* Find the next occurance of the specified entry type in the config table. *)
-		PROCEDURE FindEntry*(i, type: LONGINT): LONGINT;
-		VAR t: LONGINT;
+		PROCEDURE FindEntry*(i, type: SIGNED32): SIGNED32;
+		VAR t: SIGNED32;
 		BEGIN (* caller must hold lock on object *)
 			ASSERT(table#NIL);
 			LOOP
@@ -2943,8 +2943,8 @@ TYPE
 		END FindEntry;
 
 		(* Add an entry to the end of the table. *)
-		PROCEDURE AddEntry*(type, dsize: LONGINT; CONST data: ARRAY OF CHAR);
-		VAR i, j, size: LONGINT;
+		PROCEDURE AddEntry*(type, dsize: SIGNED32; CONST data: ARRAY OF CHAR);
+		VAR i, j, size: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			ASSERT(dsize >= 0);
 			i := FindEntry(0, -1); (* find end of table *)
@@ -2956,16 +2956,16 @@ TYPE
 		END AddEntry;
 
 		(* Delete the specified entry. *)
-		PROCEDURE DeleteEntry*(i: LONGINT);
-		VAR j: SIZE; s: LONGINT;
+		PROCEDURE DeleteEntry*(i: SIGNED32);
+		VAR j: SIZE; s: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			ASSERT(Get4(table^, i) # -1); (* can not delete end marker *)
 			s := Get4(table^, i+4);
 			FOR j := i TO LEN(table^)-s-1 DO table[j] := table[j+s] END
 		END DeleteEntry;
 
-		PROCEDURE UnQuote(VAR config: ARRAY OF CHAR; VAR len: LONGINT);
-		VAR i, j: LONGINT;
+		PROCEDURE UnQuote(VAR config: ARRAY OF CHAR; VAR len: SIGNED32);
+		VAR i, j: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE i < len DO
@@ -2980,7 +2980,7 @@ TYPE
 			END
 		END UnQuote;
 
-		PROCEDURE HexVal(ch: CHAR): LONGINT;
+		PROCEDURE HexVal(ch: CHAR): SIGNED32;
 		BEGIN
 			CASE ch OF
 				"0".."9": RETURN ORD(ch)-ORD("0")
@@ -3007,10 +3007,10 @@ TYPE
 	ChangePartType* = OBJECT(Operation)
 	VAR
 		(* parameters *)
-		oldtype, newtype : LONGINT;
+		oldtype, newtype : SIGNED32;
 
 		(* dev#name oldtype newtime *)
-		PROCEDURE SetParameters*(oldtype, newtype : LONGINT);
+		PROCEDURE SetParameters*(oldtype, newtype : SIGNED32);
 		BEGIN
 			SELF.oldtype := oldtype; SELF.newtype := newtype;
 		END SetParameters;
@@ -3034,7 +3034,7 @@ TYPE
 		(* Change type of partition from oldtype to newtype *)
 		PROCEDURE DoOperation*;
 		VAR
-			b: ARRAY BS OF CHAR; e: LONGINT; res : WORD; temp: ARRAY 256 OF CHAR;
+			b: ARRAY BS OF CHAR; e: SIGNED32; res : INTEGER; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			ASSERT(disk.table[partition].type = oldtype);
 			ASSERT(disk.device.blockSize = BS);
@@ -3057,7 +3057,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "ChangeType"; desc := "Change type of partition"; locktype := WriterLock;
@@ -3071,11 +3071,11 @@ TYPE
 	CreatePartition* = OBJECT(Operation);
 	VAR
 		(* parameters *)
-		size, type : LONGINT;
+		size, type : SIGNED32;
 		override : BOOLEAN;
 
 		(** dev#part sizeMB ~ *)
-		PROCEDURE SetParameters*(size, type : LONGINT; override : BOOLEAN);
+		PROCEDURE SetParameters*(size, type : SIGNED32; override : BOOLEAN);
 		BEGIN
 			SELF.size := size; SELF.type := type; SELF.override := override;
 		END SetParameters;
@@ -3108,10 +3108,10 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE CreatePrimary(size, type: LONGINT) : BOOLEAN;
+		PROCEDURE CreatePrimary(size, type: SIGNED32) : BOOLEAN;
 		VAR
 			mbr, epbr : Block;
-			i: SIZE; e : LONGINT; res: WORD;
+			i: SIZE; e : SIGNED32; res: INTEGER;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
 			ASSERT((disk.device.blockSize = BS) & (disk.table[partition].type = FreeSpace));
@@ -3130,8 +3130,8 @@ TYPE
 					(* find first free slot *)
 					e := -1;
 					FOR i := 0 TO 3 DO
-						IF (e = -1) & (Get4(mbr, Slot1 + 16*i(LONGINT) + 12) = 0) THEN (* size is 0 (empty slot) *)
-							e := Slot1 + 16*i(LONGINT)
+						IF (e = -1) & (Get4(mbr, Slot1 + 16*i(SIGNED32) + 12) = 0) THEN (* size is 0 (empty slot) *)
+							e := Slot1 + 16*i(SIGNED32)
 						END
 					END;
 					IF e # -1 THEN (* found free slot *)
@@ -3163,13 +3163,13 @@ TYPE
 			RETURN FALSE;
 		END CreatePrimary;
 
-		PROCEDURE CreateLogical(size, type: LONGINT) : BOOLEAN;
+		PROCEDURE CreateLogical(size, type: SIGNED32) : BOOLEAN;
 		CONST
 			TypeExt = 5;
 		VAR
 			epbr, new : Block;
 			slot1, slot2 : ARRAY 16 OF CHAR;
-			extStart: LONGINT; i, extPart, lastLogical: SIZE; res: WORD;
+			extStart: SIGNED32; i, extPart, lastLogical: SIZE; res: INTEGER;
 		BEGIN
 			ASSERT((disk.device.blockSize = BS) & (disk.table[partition].type = FreeSpace));
 			IF IsExtendedPartition(type) THEN
@@ -3249,8 +3249,8 @@ TYPE
 			RETURN TRUE;
 		END CreateLogical;
 
-		PROCEDURE GetEPBR(VAR epbr : Block; ptblock : LONGINT) : BOOLEAN;
-		VAR res : WORD; result : BOOLEAN; temp: ARRAY 256 OF CHAR;
+		PROCEDURE GetEPBR(VAR epbr : Block; ptblock : SIGNED32) : BOOLEAN;
+		VAR res : INTEGER; result : BOOLEAN; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			result := FALSE;
 			disk.device.Transfer(AosDisks.Read, ptblock, 1, epbr, 0, res);
@@ -3264,7 +3264,7 @@ TYPE
 			RETURN result;
 		END GetEPBR;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "Create"; desc := "Create partition"; locktype := WriterLock;
@@ -3278,9 +3278,9 @@ TYPE
 	DeletePartition* = OBJECT(Operation);
 	VAR
 		(* parameter: type of partition to delete *)
-		type : LONGINT;
+		type : SIGNED32;
 
-		PROCEDURE SetParameters*(type : LONGINT);
+		PROCEDURE SetParameters*(type : SIGNED32);
 		BEGIN
 			SELF.type := type;
 		END SetParameters;
@@ -3326,10 +3326,10 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE DeletePrimary(type: LONGINT) : BOOLEAN;
+		PROCEDURE DeletePrimary(type: SIGNED32) : BOOLEAN;
 		VAR
 			mbr, epbr: Block;
-			e, i: LONGINT; res: WORD;
+			e, i: SIGNED32; res: INTEGER;
 			result : BOOLEAN;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
@@ -3369,13 +3369,13 @@ TYPE
 			RETURN result;
 		END DeletePrimary;
 
-		PROCEDURE DeleteLogical(type: LONGINT) : BOOLEAN;
+		PROCEDURE DeleteLogical(type: SIGNED32) : BOOLEAN;
 		VAR
 			epbr, temp : Block;
-			nextLogical, start : LONGINT; i : SIZE; res: WORD;
+			nextLogical, start : SIGNED32; i : SIZE; res: INTEGER;
 			slot2 : ARRAY 16 OF CHAR;
-			extStart : LONGINT; (* adr of EPBR of extended partition *)
-			writebackAdr : LONGINT;
+			extStart : SIGNED32; (* adr of EPBR of extended partition *)
+			writebackAdr : SIGNED32;
 		BEGIN
 			ASSERT((disk.table[partition].type = type) & (disk.device.blockSize = BS) & (disk.table[partition].ptblock #  0)); (* logical partition entry not in MBR *)
 			(* Extended partitions work the following way:
@@ -3450,8 +3450,8 @@ TYPE
 			RETURN TRUE;
 		END DeleteLogical;
 
-		PROCEDURE GetEPBR(VAR epbr : Block; ptblock : LONGINT) : BOOLEAN;
-		VAR res : WORD; result : BOOLEAN; temp: ARRAY 256 OF CHAR;
+		PROCEDURE GetEPBR(VAR epbr : Block; ptblock : SIGNED32) : BOOLEAN;
+		VAR res : INTEGER; result : BOOLEAN; temp: ARRAY 256 OF CHAR;
 		BEGIN
 			result := FALSE;
 			disk.device.Transfer(AosDisks.Read, ptblock, 1, epbr, 0, res);
@@ -3465,7 +3465,7 @@ TYPE
 			RETURN result;
 		END GetEPBR;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "Delete"; desc := "Delete partition"; locktype := WriterLock;
@@ -3503,7 +3503,7 @@ TYPE
 		(* Set active bit of dev#part to <on> *)
 		PROCEDURE DoOperation*;
 		VAR
-			res: WORD; e: LONGINT; b: ARRAY BS OF CHAR; mod: BOOLEAN;
+			res: INTEGER; e: SIGNED32; b: ARRAY BS OF CHAR; mod: BOOLEAN;
 			string : ARRAY 256 OF CHAR;
 		BEGIN
 			disk.device.Transfer(AosDisks.Read, disk.device.table[partition].ptblock, 1, b, 0, res);
@@ -3540,7 +3540,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "(In)Activate"; desc := "Set/clear active bit of partition"; locktype := WriterLock;
@@ -3577,7 +3577,7 @@ TYPE
 		PROCEDURE DoOperation*;
 		VAR
 			writeMBR : WriteMBR; fileToPartition : FileToPartition;
-			nofSectors : LONGINT;
+			nofSectors : SIGNED32;
 			string : ARRAY 1024 OF CHAR;
 			f : Files.File;
 		BEGIN
@@ -3594,7 +3594,7 @@ TYPE
 				RETURN;
 			END;
 
-			nofSectors := f.Length()(LONGINT) DIV BS;
+			nofSectors := f.Length()(SIGNED32) DIV BS;
 			IF (nofSectors > 20) THEN
 				ReportError("Boot manager file is too large. Wrong file?");
 				RETURN;
@@ -3622,7 +3622,7 @@ TYPE
 
 		END DoOperation;
 
-		PROCEDURE & Init*(disk : Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE & Init*(disk : Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "InstallBootManager"; desc := "Install Boot Manager on partition"; locktype := WriterLock;
@@ -3636,7 +3636,7 @@ VAR
 	operations- : OperationManager;
 	infobus- : CompletionNotification;
 	BootLoaderName: ARRAY 64 OF CHAR;
-	BootLoaderSize: LONGINT;
+	BootLoaderSize: SIGNED32;
 
 PROCEDURE WritePart*(w: Streams.Writer; dev: AosDisks.Device; part: SIZE);
 BEGIN
@@ -3647,8 +3647,8 @@ END WritePart;
 (* Check if an Oberon file system is present on a partition. Returns 0 if no Oberon file system found,
  1 for a Native file system, 2 for an old Aos file system and 3 for a new Aos file system, 4 for unknown but
  valid boot signature  *)
-PROCEDURE DetectFS*(dev: AosDisks.Device; part: LONGINT): LONGINT;
-VAR b: ARRAY BS OF CHAR; res: WORD; fs: LONGINT; doClose : BOOLEAN;
+PROCEDURE DetectFS*(dev: AosDisks.Device; part: SIGNED32): SIGNED32;
+VAR b: ARRAY BS OF CHAR; res: INTEGER; fs: SIGNED32; doClose : BOOLEAN;
 BEGIN
 	IF dev.blockSize # BS THEN RETURN 0; END;
 	(* special handling for diskettes *)
@@ -3686,7 +3686,7 @@ END DetectFS;
 
 (** Performs a read on the specified device to see whether a medium is present *)
 PROCEDURE DisketteInserted*(dev : AosDisks.Device) : BOOLEAN;
-VAR res : WORD; b : ARRAY BS OF CHAR;
+VAR res : INTEGER; b : ARRAY BS OF CHAR;
 BEGIN
 	IF (dev = NIL) OR (dev.blockSize # BS) THEN RETURN FALSE END;
 	dev.Transfer(AosDisks.Read, 0, 1, b, 0, res);
@@ -3694,7 +3694,7 @@ BEGIN
 END DisketteInserted;
 
 (* Read OBL variables from the specified partition. *)
-PROCEDURE GetVars(dev: AosDisks.Device; part: LONGINT; VAR tsize, reserved, fsOfs: LONGINT; VAR res: WORD);
+PROCEDURE GetVars(dev: AosDisks.Device; part: SIGNED32; VAR tsize, reserved, fsOfs: SIGNED32; VAR res: INTEGER);
 VAR b: ARRAY BS OF CHAR;
 BEGIN
 	ASSERT(dev.blockSize = BS);
@@ -3709,16 +3709,16 @@ BEGIN
 END GetVars;
 
 (* Write the specified file to the device, starting at block pos. *)
-PROCEDURE WriteFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; VAR sum: LONGINT; VAR res: WORD);
+PROCEDURE WriteFile(f: Files.File; dev: AosDisks.Device; pos: SIGNED32; VAR sum: SIGNED32; VAR res: INTEGER);
 CONST Size = 32;
-VAR buf: ARRAY Size*BS OF CHAR; r: Files.Rider; n: LONGINT; num: SIZE;
+VAR buf: ARRAY Size*BS OF CHAR; r: Files.Rider; n: SIGNED32; num: SIZE;
 BEGIN
 	ASSERT(dev.blockSize = BS);
 	f.Set(r, 0); num := (f.Length()(SIZE)+BS-1) DIV BS; sum := 0;
 	LOOP
 		IF num <= 0 THEN EXIT END;
 		f.ReadBytes(r, buf, 0, Size*BS);
-		n := Size*BS - r.res(LONGINT);
+		n := Size*BS - r.res(SIGNED32);
 		WHILE n MOD BS # 0 DO buf[n] := 0X; INC(n) END;
 		ASSERT((n > 0) & (n <= num*BS));
 		dev.Transfer(AosDisks.Write, pos, n DIV BS, buf, 0, res);
@@ -3729,16 +3729,16 @@ BEGIN
 	sum := (-sum) MOD 100H
 END WriteFile;
 
-PROCEDURE CheckFile(f: Files.File; dev: AosDisks.Device; pos: LONGINT; sum: LONGINT; VAR res: WORD);
+PROCEDURE CheckFile(f: Files.File; dev: AosDisks.Device; pos: SIGNED32; sum: SIGNED32; VAR res: INTEGER);
 CONST Size = 32;
-VAR buf1, buf2: ARRAY Size*BS OF CHAR; r: Files.Rider; n: LONGINT; num, i: SIZE;
+VAR buf1, buf2: ARRAY Size*BS OF CHAR; r: Files.Rider; n: SIGNED32; num, i: SIZE;
 BEGIN
 	ASSERT(dev.blockSize = BS);
 	f.Set(r, 0); num := (f.Length()(SIZE)+BS-1) DIV BS;
 	LOOP
 		IF num <= 0 THEN EXIT END;
 		f.ReadBytes(r, buf1, 0, Size*BS);
-		n := Size*BS - r.res(LONGINT);
+		n := Size*BS - r.res(SIGNED32);
 		WHILE n MOD BS # 0 DO buf1[n] := 0X; INC(n) END;
 		ASSERT((n > 0) & (n <= num*BS));
 		dev.Transfer(AosDisks.Read, pos, n DIV BS, buf2, 0, res);
@@ -3755,9 +3755,9 @@ BEGIN
 END CheckFile;
 
 (* Write a boot file on the specified partition. *)
-PROCEDURE InitBootFile(dev: AosDisks.Device; part: LONGINT; f: Files.File; VAR res: WORD);
+PROCEDURE InitBootFile(dev: AosDisks.Device; part: SIGNED32; f: Files.File; VAR res: INTEGER);
 CONST Frag = 7; LoadAdr = 1000H; StartAdr = 1000H; Frags = 1;
-VAR config: Configuration; i, tsize, reserved, fsOfs, sum, start: LONGINT; data: ARRAY 12+8*Frags OF CHAR;
+VAR config: Configuration; i, tsize, reserved, fsOfs, sum, start: SIGNED32; data: ARRAY 12+8*Frags OF CHAR;
 BEGIN
 	NEW(config);
 	config.GetTable(dev, part, res);
@@ -3776,7 +3776,7 @@ BEGIN
 				IF res = AosDisks.Ok THEN
 					Put4(data, 0, LoadAdr); Put4(data, 4, Frags + ASH(sum, 16));
 					Put4(data, 8, StartAdr); Put4(data, 12, 0); (* pos relative to start *)
-					Put4(data, 16, (f.Length()(LONGINT)+BS-1) DIV BS);
+					Put4(data, 16, (f.Length()(SIGNED32)+BS-1) DIV BS);
 					config.AddEntry(Frag, LEN(data), data);
 					config.PutTable(dev, part, res)
 				END
@@ -3788,7 +3788,7 @@ BEGIN
 END InitBootFile;
 
 PROCEDURE Eject*(dev : AosDisks.Device; VAR result: ARRAY OF CHAR);
-VAR msg: AosDisks.EjectMsg; res : WORD; temp: ARRAY 256 OF CHAR;
+VAR msg: AosDisks.EjectMsg; res : INTEGER; temp: ARRAY 256 OF CHAR;
 BEGIN
 	ASSERT(dev#NIL);
 	COPY (dev.name, result);
@@ -3801,7 +3801,7 @@ BEGIN
 END Eject;
 
 PROCEDURE Sync*(dev: AosDisks.Device; VAR result: ARRAY OF CHAR);
-VAR msg: AosDisks.SyncMsg; res: WORD; temp: ARRAY 256 OF CHAR;
+VAR msg: AosDisks.SyncMsg; res: INTEGER; temp: ARRAY 256 OF CHAR;
 BEGIN
 	ASSERT(dev # NIL);
 	COPY(dev.name, result);
@@ -3818,13 +3818,13 @@ CONST Unit = 1024*1024*1024;
 VAR string : ARRAY 32 OF CHAR;
 BEGIN
 	KernelLog.String("* Aos file system limits with "); KernelLog.Int(AosSS, 0); KernelLog.String(" byte sectors:"); KernelLog.Ln;
-	Strings.FloatToStr( 1.0D0*MAX(LONGINT)/Unit, 1, 2, 0, string);
+	Strings.FloatToStr( 1.0D0*MAX(SIGNED32)/Unit, 1, 2, 0, string);
 	KernelLog.String(" "); KernelLog.String(string); KernelLog.String(" Gb positioning limit in file because of 31 bit Set & Pos parameters"); KernelLog.Ln;
 	Strings.FloatToStr(((1.0D0*AosXS*AosXS+AosSTS)*AosSS-AosHS)/Unit, 1, 2, 0, string);
 	KernelLog.String(" "); KernelLog.String(string); KernelLog.String(" Gb file size limit because of triple index structure"); KernelLog.Ln;
-	Strings.FloatToStr(1.0D0*MAX(LONGINT)/AosSF*AosSS/Unit, 1, 2, 0, string);
+	Strings.FloatToStr(1.0D0*MAX(SIGNED32)/AosSF*AosSS/Unit, 1, 2, 0, string);
 	KernelLog.String(" "); KernelLog.String(string); KernelLog.String(" Gb volume size limit because of sector factor"); KernelLog.Ln;
-	Strings.FloatToStr((1.0D0*MAX(LONGINT)+1)*AosSS/Unit, 1, 2, 0, string);
+	Strings.FloatToStr((1.0D0*MAX(SIGNED32)+1)*AosSS/Unit, 1, 2, 0, string);
 	KernelLog.String(" "); KernelLog.String(string); KernelLog.String(" Gb file size limit because of 31 bit apos field"); KernelLog.Ln;
 END ShowAosFSLimits;
 
@@ -3836,7 +3836,7 @@ BEGIN
 END IsMBR;
 
 PROCEDURE IsEPBR(CONST epbr : Block) : BOOLEAN;
-VAR i : LONGINT; result : BOOLEAN;
+VAR i : SIGNED32; result : BOOLEAN;
 BEGIN
 	result := ((epbr[510] = 055X) & (epbr[511] = 0AAX)); (* EPBR signature *)
 	FOR i := 1DEH TO 1DEH+31 DO (* last two slots should be zero *)
@@ -3846,7 +3846,7 @@ BEGIN
 END IsEPBR;
 
 PROCEDURE SlotEmpty(CONST slot : ARRAY OF CHAR) : BOOLEAN;
-VAR result : BOOLEAN; i : LONGINT;
+VAR result : BOOLEAN; i : SIGNED32;
 BEGIN
 	result := TRUE;
 	IF LEN(slot)#16 THEN RETURN FALSE END;
@@ -3856,8 +3856,8 @@ BEGIN
 	RETURN result;
 END SlotEmpty;
 
-PROCEDURE FillinSlot(disk : Disk; partition : LONGINT; VAR bootrecord : Block; slot, type, start, size : LONGINT) : BOOLEAN;
-VAR spt, hds, end, t : LONGINT;
+PROCEDURE FillinSlot(disk : Disk; partition : SIGNED32; VAR bootrecord : Block; slot, type, start, size : SIGNED32) : BOOLEAN;
+VAR spt, hds, end, t : SIGNED32;
 BEGIN
 	ASSERT((slot = Slot1) OR (slot = Slot2) OR (slot = Slot3) OR (slot = Slot4)); ASSERT(disk.gres=AosDisks.Ok);
 	spt := disk.geo.spt; hds := disk.geo.hds;
@@ -3886,17 +3886,17 @@ BEGIN
 END FillinSlot;
 
 (* Returns TRUE if partition type is extended partition type *)
-PROCEDURE IsExtendedPartition(type: LONGINT): BOOLEAN;
+PROCEDURE IsExtendedPartition(type: SIGNED32): BOOLEAN;
 BEGIN
 	RETURN (type = 5) OR (type = 15);
 END IsExtendedPartition;
 
-PROCEDURE IsNativeType*(type: LONGINT) : BOOLEAN;
+PROCEDURE IsNativeType*(type: SIGNED32) : BOOLEAN;
 BEGIN
 	RETURN (type = NativeType1) OR (type = NativeType2) OR (type = AosType)
 END IsNativeType;
 
-PROCEDURE IsFatType*(type : LONGINT) : BOOLEAN;
+PROCEDURE IsFatType*(type : SIGNED32) : BOOLEAN;
 BEGIN
 	RETURN (type = 4) OR (type = 6) OR (type = 0EH) OR (type = 1) OR (type = 0BH) OR (type = 0CH);
 END IsFatType;
@@ -3916,14 +3916,14 @@ BEGIN
 	RETURN d
 END GetDriveNum;
 
-PROCEDURE Put2*(VAR b: ARRAY OF CHAR; i, val: LONGINT);
+PROCEDURE Put2*(VAR b: ARRAY OF CHAR; i, val: SIGNED32);
 BEGIN
 	ASSERT((val >= 0) & (val < 10000H));
 	b[i] := CHR(val MOD 100H);
 	b[i+1] := CHR(ASH(val, -8) MOD 100H);
 END Put2;
 
-PROCEDURE Put4*(VAR b: ARRAY OF CHAR; i, val: LONGINT);
+PROCEDURE Put4*(VAR b: ARRAY OF CHAR; i, val: SIGNED32);
 BEGIN
 	b[i] := CHR(val MOD 100H);
 	b[i+1] := CHR(ASH(val, -8) MOD 100H);
@@ -3931,18 +3931,18 @@ BEGIN
 	b[i+3] := CHR(ASH(val, -24) MOD 100H);
 END Put4;
 
-PROCEDURE Get2*(CONST b: ARRAY OF CHAR; i: LONGINT): LONGINT;
+PROCEDURE Get2*(CONST b: ARRAY OF CHAR; i: SIGNED32): SIGNED32;
 BEGIN
 	RETURN ORD(b[i]) + ASH(ORD(b[i+1]), 8);
 END Get2;
 
-PROCEDURE Get4*(CONST b: ARRAY OF CHAR; i: LONGINT): LONGINT;
+PROCEDURE Get4*(CONST b: ARRAY OF CHAR; i: SIGNED32): SIGNED32;
 BEGIN
 	RETURN ORD(b[i]) + ASH(ORD(b[i+1]), 8) + ASH(ORD(b[i+2]), 16) + ASH(ORD(b[i+3]), 24);
 END Get4;
 
 (* Write partition type *)
-PROCEDURE WriteType*(type: LONGINT; VAR s : ARRAY OF CHAR; VAR color : WMGraphics.Color);
+PROCEDURE WriteType*(type: SIGNED32; VAR s : ARRAY OF CHAR; VAR color : WMGraphics.Color);
 CONST
 	ColorFAT12 = WMGraphics.Red;
 	ColorFAT16 = WMGraphics.Red;
@@ -4080,7 +4080,7 @@ BEGIN
 	END;
 END WriteType;
 
-PROCEDURE GetErrorMsg*(CONST msg: ARRAY OF CHAR; res: WORD; VAR string: ARRAY OF CHAR);
+PROCEDURE GetErrorMsg*(CONST msg: ARRAY OF CHAR; res: INTEGER; VAR string: ARRAY OF CHAR);
 VAR temp : ARRAY 32 OF CHAR;
 BEGIN
 	IF res = AosDisks.MediaChanged THEN string := " (res: media changed)";
@@ -4094,7 +4094,7 @@ BEGIN
 	END;
 END GetErrorMsg;
 
-PROCEDURE GetTransferError*(dev: AosDisks.Device; op, start: LONGINT; res: WORD; VAR result: ARRAY OF CHAR);
+PROCEDURE GetTransferError*(dev: AosDisks.Device; op, start: SIGNED32; res: INTEGER; VAR result: ARRAY OF CHAR);
 VAR w : Streams.StringWriter;
 BEGIN
 	NEW(w, 1024);
@@ -4110,7 +4110,7 @@ BEGIN
 	w.Get(result);
 END GetTransferError;
 
-PROCEDURE WriteK*(w: Streams.Writer; k: LONGINT);
+PROCEDURE WriteK*(w: Streams.Writer; k: SIGNED32);
 VAR suffix: CHAR;
 BEGIN
 	IF k < 10*1024 THEN suffix := "K"
@@ -4126,7 +4126,7 @@ BEGIN
 	IF context.arg.GetString(fileName) THEN
 		file := Files.Old(fileName);
 		IF file # NIL THEN
-			BootLoaderSize := (file.Length()(LONGINT)-1) DIV BS + 1;
+			BootLoaderSize := (file.Length()(SIGNED32)-1) DIV BS + 1;
 			COPY(fileName, BootLoaderName);
 			context.out.String("PartitionsLib.BootLoaderName = "); context.out.String(BootLoaderName); context.out.Ln;
 			context.out.String("PartitionsLib.BootLoaderSize ="); context.out.Int(BootLoaderSize,1);context.out.Ln;

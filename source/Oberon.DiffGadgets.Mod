@@ -16,12 +16,12 @@ MODULE DiffGadgets IN Oberon;	(** portable *) (** PS  *)
 		Line = POINTER TO LineDesc;
 		LineDesc = RECORD
 			prev, next: Line;
-			p1, p2, nr: LONGINT
+			p1, p2, nr: SIGNED32
 		END;
 
 		Slider = POINTER TO SliderDesc;
 		SliderDesc = RECORD (Gadgets.FrameDesc)
-			lines, curL: INTEGER
+			lines, curL: SIGNED16
 		END;
 
 		Frame* = POINTER TO FrameDesc;
@@ -50,8 +50,8 @@ BEGIN
 	END
 END AttributesSlider;
 
-PROCEDURE RestoreSlider (F: Slider; M: Display3.Mask; x, y, w, h: INTEGER);
-	VAR pos: INTEGER;
+PROCEDURE RestoreSlider (F: Slider; M: Display3.Mask; x, y, w, h: SIGNED16);
+	VAR pos: SIGNED16;
 BEGIN
 	Display3.FilledRect3D(M, Display3.topC, Display3.bottomC, Display3.textbackC, x-1, y, w+1, h, 1, Display.replace);
 	pos := y + h - 1 - SHORT(F.curL * LONG(h - 2) DIV F.lines);
@@ -66,8 +66,8 @@ PROCEDURE CopySlider (VAR M: Objects.CopyMsg; from, to: Slider);
 BEGIN to.lines := from.lines; to.curL:= from.curL; Gadgets.CopyFrame(M, from, to)
 END CopySlider;
 
-PROCEDURE TrackLine(F: Frame; R: Display3.Mask; VAR keysum: SET; x, y: INTEGER; VAR L: Line);
-	VAR f1, f2: TextGadgets0.Frame; keys: SET; fx1, fx2, X, Y, W1, W2, t1, t2: INTEGER; loc: TextGadgets0.Loc;
+PROCEDURE TrackLine(F: Frame; R: Display3.Mask; VAR keysum: SET; x, y: SIGNED16; VAR L: Line);
+	VAR f1, f2: TextGadgets0.Frame; keys: SET; fx1, fx2, X, Y, W1, W2, t1, t2: SIGNED16; loc: TextGadgets0.Loc;
 		oL1, oL2, nL: TextGadgets0.Line;
 BEGIN
 	f1:= F.T1; fx1:= x + f1.X; t1:= y + f1.Y + f1.H - 1;
@@ -107,7 +107,7 @@ BEGIN
 END ScrollTo;
 
 PROCEDURE ScrollUp(F: Frame; L: Line);
-	VAR tF: TextGadgets0.Frame; l: TextGadgets0.Line; L1: Line; hUsed: INTEGER;
+	VAR tF: TextGadgets0.Frame; l: TextGadgets0.Line; L1: Line; hUsed: SIGNED16;
 BEGIN
 	L1:= L; tF:= F.T1;
 	NEW(l); tF.do.Format(tF, L1.p1, l); hUsed:= l.h + tF.top + tF.bottom;
@@ -131,8 +131,8 @@ BEGIN
 END ScrollUp;
 
 
-PROCEDURE Edit(F: Frame; R: Display3.Mask; VAR M: Oberon.InputMsg; x, y, w, h: INTEGER);
-VAR sF: Slider; L: Line; keysum, keys: SET; line, X, Y: INTEGER;
+PROCEDURE Edit(F: Frame; R: Display3.Mask; VAR M: Oberon.InputMsg; x, y, w, h: SIGNED16);
+VAR sF: Slider; L: Line; keysum, keys: SET; line, X, Y: SIGNED16;
 BEGIN sF:= F.slider;
 	IF M.keys # {} THEN
 		IF M.keys = {2} THEN	(* scroll up *)
@@ -167,7 +167,7 @@ BEGIN sF:= F.slider;
 END Edit;
 
 PROCEDURE HandleSlider(F: Objects.Object; VAR M: Objects.ObjMsg);
-	VAR x, y, w, h: INTEGER; F1: Slider; Q: Display3.Mask; main: Frame;
+	VAR x, y, w, h: SIGNED16; F1: Slider; Q: Display3.Mask; main: Frame;
 BEGIN
 	WITH F: Slider DO
 		IF M IS Display.FrameMsg THEN
@@ -224,7 +224,7 @@ BEGIN
 	END
 END HandleSlider;
 
-PROCEDURE InitSlider(F: Slider; lines: INTEGER);
+PROCEDURE InitSlider(F: Slider; lines: SIGNED16);
 BEGIN
 	F.handle := HandleSlider; F.W:= 20; F.H:= 100;
 	F.lines:= lines; F.curL:= 0
@@ -257,8 +257,8 @@ BEGIN
 	END
 END SetContentMask;
 
-PROCEDURE ToContent (F: Frame; to: Display.Frame; x, y: INTEGER; VAR M: Display.FrameMsg);
-	VAR Mdlink, Fdlink: Objects.Object; tx, ty: INTEGER;
+PROCEDURE ToContent (F: Frame; to: Display.Frame; x, y: SIGNED16; VAR M: Display.FrameMsg);
+	VAR Mdlink, Fdlink: Objects.Object; tx, ty: SIGNED16;
 BEGIN
 	tx := M.x; ty := M.y;
 	M.x := x; M.y := y + F.H - 1;
@@ -276,9 +276,9 @@ BEGIN
 END ToKids;
 
 PROCEDURE Modify (F: Frame; VAR M: Display.ModifyMsg);
-	VAR midX: INTEGER; N: Display.ModifyMsg;
+	VAR midX: SIGNED16; N: Display.ModifyMsg;
 
-	PROCEDURE ModifySub(subF: Display.Frame; x, w: INTEGER);
+	PROCEDURE ModifySub(subF: Display.Frame; x, w: SIGNED16);
 	BEGIN
 		N.X := x; N.Y := -M.H + 1; N.W := w; N.H := M.H-TitleH;
 		N.dX := N.X - subF.X; N.dY := N.Y - subF.Y; N.dW := N.W - subF.W; N.dH := N.H - subF.H;
@@ -298,11 +298,11 @@ BEGIN
 	Gadgets.framehandle(F, M)
 END Modify;
 
-PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg);
-	VAR N: Display.DisplayMsg; mX, tY: INTEGER;
+PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg);
+	VAR N: Display.DisplayMsg; mX, tY: SIGNED16;
 
-	PROCEDURE ClipAgainst (VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-		VAR r, t, r1, t1: INTEGER;
+	PROCEDURE ClipAgainst (VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+		VAR r, t, r1, t1: SIGNED16;
 	BEGIN
 		r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 		IF x < x1 THEN x := x1 END; IF y < y1 THEN y := y1 END;
@@ -360,13 +360,13 @@ BEGIN
 	END
 END Attributes;
 
-PROCEDURE InChild(F: Display.Frame; x, y, MX, MY: INTEGER): BOOLEAN;
+PROCEDURE InChild(F: Display.Frame; x, y, MX, MY: SIGNED16): BOOLEAN;
 BEGIN
 	RETURN Effects.Inside(MX, MY, x+F.X, y+F.Y, F.W, F.H) & ~Effects.InBorder(MX, MY, x+F.X, y+F.Y, F.W, F.H)
 END InChild;
 
 PROCEDURE Handle* (F: Objects.Object; VAR M: Objects.ObjMsg);
-	VAR x, y, w, h: INTEGER; F1: Frame; Q: Display3.Mask;
+	VAR x, y, w, h: SIGNED16; F1: Frame; Q: Display3.Mask;
 BEGIN
 	WITH F: Frame DO
 		IF M IS Display.FrameMsg THEN
@@ -455,7 +455,7 @@ BEGIN
 	END
 END Handle;
 
-PROCEDURE MakeLines(t1, t2: Texts.Text; VAR first: Line; VAR lines: INTEGER);
+PROCEDURE MakeLines(t1, t2: Texts.Text; VAR first: Line; VAR lines: SIGNED16);
 	VAR new: Line; R1, R2: Texts.Reader; ch: CHAR;
 
 	PROCEDURE Insert(first, l: Line);
@@ -484,7 +484,7 @@ BEGIN
 END MakeLines;
 
 PROCEDURE Init* (F: Frame; t1, t2: Texts.Text; n1, n2: ARRAY OF CHAR);
-	VAR lines: INTEGER; M: Display.ModifyMsg; A: Objects.AttrMsg;
+	VAR lines: SIGNED16; M: Display.ModifyMsg; A: Objects.AttrMsg;
 BEGIN
 	F.handle := Handle;
 	IF t1.len = 0 THEN

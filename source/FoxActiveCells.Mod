@@ -19,7 +19,7 @@ CONST
 	TRMSCapability*=Global.TRMSCapability;
 
 	TraceError=FALSE;
-	BasePortAddress=LONGINT(0FFFFFFE0H);
+	BasePortAddress=SIGNED32(0FFFFFFE0H);
 	TraceSame= FALSE;
 
 	(* comparison flags *)
@@ -121,9 +121,9 @@ TYPE
 	*)
 	Port*= OBJECT (Symbol)
 	VAR
-		direction-: LONGINT;
-		adr-: LONGINT;
-		width-: LONGINT;
+		direction-: SIGNED32;
+		adr-: SIGNED32;
+		width-: SIGNED32;
 		delegate-: PortInstance;
 		index-: SIZE;
 
@@ -137,7 +137,7 @@ TYPE
 			RETURN Same^(as, flags)
 		END Same;
 
-		PROCEDURE &InitPort*(CONST name: ARRAY OF CHAR; scope: Scope; direction: LONGINT; adr: LONGINT);
+		PROCEDURE &InitPort*(CONST name: ARRAY OF CHAR; scope: Scope; direction: SIGNED32; adr: SIGNED32);
 		BEGIN
 			InitSymbol(name,scope);
 			SELF.direction := direction;
@@ -147,7 +147,7 @@ TYPE
 			index := -1;
 		END InitPort;
 
-		PROCEDURE SetWidth*(widthInBits: LONGINT);
+		PROCEDURE SetWidth*(widthInBits: SIGNED32);
 		BEGIN width := widthInBits
 		END SetWidth;
 
@@ -156,7 +156,7 @@ TYPE
 			delegate.instance := instance; delegate.port := port
 		END Delegate;
 
-		PROCEDURE Write*(w: Streams.Writer; indent: LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; indent: SIGNED32);
 		BEGIN
 			Indent(w,indent);
 			w.Int(index,1);
@@ -179,7 +179,7 @@ TYPE
 		END Write;
 
 		PROCEDURE Read*(r: Streams.Reader): BOOLEAN;
-		VAR s: Name; index: LONGINT;
+		VAR s: Name; index: SIGNED32;
 		BEGIN
 			IF ~r.GetInteger(index,FALSE) OR (index # SELF.index) OR ~CheckItem(r,"name") OR ~GetString(r,name)
 			OR ~CheckItem(r,"direction") OR ~GetString(r,s)
@@ -246,7 +246,7 @@ TYPE
 	*)
 	Device*= OBJECT (Symbol)
 	VAR
-		adr-: LONGINT;
+		adr-: SIGNED32;
 		index-: SIZE;
 
 		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
@@ -259,14 +259,14 @@ TYPE
 			RETURN Same^(as, flags)
 		END Same;
 
-		PROCEDURE &InitDevice*(CONST name: ARRAY OF CHAR; scope: Scope; adr: LONGINT);
+		PROCEDURE &InitDevice*(CONST name: ARRAY OF CHAR; scope: Scope; adr: SIGNED32);
 		BEGIN
 			InitSymbol(name,scope);
 			SELF.adr := adr;
 			index := -1;
 		END InitDevice;
 
-		PROCEDURE Write*(w:Streams.Writer; indent: LONGINT);
+		PROCEDURE Write*(w:Streams.Writer; indent: SIGNED32);
 		BEGIN
 			Indent(w,indent);
 			w.Int(index,1);
@@ -275,7 +275,7 @@ TYPE
 		END Write;
 
 		PROCEDURE Read*(r: Streams.Reader): BOOLEAN;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			RETURN r.GetInteger(i,FALSE) & (i=index) &
 			CheckItem(r,"name") & GetString(r,name) &
@@ -350,7 +350,7 @@ TYPE
 			index := -1;
 		END InitModule;
 
-		PROCEDURE Write*(w:Streams.Writer; indent: LONGINT);
+		PROCEDURE Write*(w:Streams.Writer; indent: SIGNED32);
 		BEGIN
 			Indent(w,indent);
 			w.Int(index,1);
@@ -361,7 +361,7 @@ TYPE
 		END Write;
 
 		PROCEDURE Read*(r: Streams.Reader): BOOLEAN;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			RETURN r.GetInteger(i,FALSE) & (i=index) & CheckItem(r,"name") & GetString(r,name)
 				&CheckItem(r,"filename") & GetString(r,fileName);
@@ -413,8 +413,8 @@ TYPE
 		Boolean=0;Integer=1;String=2;
 	VAR
 		index-: SIZE;
-		parameterType-: SHORTINT; (* Integer or Boolean, for the time being *)
-		integer-: LONGINT;
+		parameterType-: SIGNED8; (* Integer or Boolean, for the time being *)
+		integer-: SIGNED32;
 		boolean-: BOOLEAN;
 		string-: Strings.String;
 
@@ -442,7 +442,7 @@ TYPE
 			parameterType := Boolean; boolean := b
 		END SetBoolean;
 
-		PROCEDURE SetInteger*(i: LONGINT);
+		PROCEDURE SetInteger*(i: SIGNED32);
 		BEGIN
 			parameterType := Integer; integer := i
 		END SetInteger;
@@ -452,14 +452,14 @@ TYPE
 			parameterType := String; string := Strings.NewString(s);
 		END SetString;
 
-		PROCEDURE Write(w: Streams.Writer; indent: LONGINT);
+		PROCEDURE Write(w: Streams.Writer; indent: SIGNED32);
 		VAR typeName: SyntaxTree.String;
 		BEGIN
 			Indent(w,indent);
 			w.Int(index,1);
 			w.String(" name="); w.String(name);
 			w.String(" type=");
-			IF parameterType = Integer THEN w.String("INTEGER")
+			IF parameterType = Integer THEN w.String("SIGNED16")
 			ELSIF parameterType=Boolean THEN w.String("BOOLEAN")
 			ELSIF parameterType=String THEN w.String("STRING");
 			END;
@@ -474,11 +474,11 @@ TYPE
 		END Write;
 
 		PROCEDURE Read(r: Streams.Reader): BOOLEAN;
-		VAR index: LONGINT; s: Name;
+		VAR index: SIGNED32; s: Name;
 		BEGIN
 			IF r.GetInteger(index,FALSE) & CheckItem(r,"name") & GetString(r,name)
 				&CheckItem(r,"type") & GetString(r,s) & CheckItem(r,"value") THEN
-					IF s= "INTEGER" THEN parameterType := Integer
+					IF s= "SIGNED16" THEN parameterType := Integer
 					ELSIF s = "BOOLEAN" THEN parameterType := Boolean
 					ELSIF s = "STRING" THEN parameterType := String
 					ELSE RETURN FALSE
@@ -545,7 +545,7 @@ TYPE
 		capabilityParameters-: ParameterList;
 		index-: SIZE;
 		(* caches: *)
-		instructionMemorySize-, dataMemorySize-: LONGINT;
+		instructionMemorySize-, dataMemorySize-: SIGNED32;
 		capabilities-: SET;
 
 		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
@@ -586,11 +586,11 @@ TYPE
 			END;
 		END SetType;
 
-		PROCEDURE SetInstructionMemorySize*(value: LONGINT);
+		PROCEDURE SetInstructionMemorySize*(value: SIGNED32);
 		BEGIN instructionMemorySize := value
 		END SetInstructionMemorySize;
 
-		PROCEDURE SetDataMemorySize*(value: LONGINT);
+		PROCEDURE SetDataMemorySize*(value: SIGNED32);
 		BEGIN dataMemorySize := value
 		END SetDataMemorySize;
 
@@ -608,7 +608,7 @@ TYPE
 			RETURN parameter
 		END AddCapabilityParameter;
 
-		PROCEDURE Write(w: Streams.Writer; indent: LONGINT);
+		PROCEDURE Write(w: Streams.Writer; indent: SIGNED32);
 		VAR typeName: Name; parameter: Parameter; i: SIZE;
 		BEGIN
 			Indent(w,indent); INC(indent);
@@ -639,7 +639,7 @@ TYPE
 		END Write;
 
 		PROCEDURE Read(r: Streams.Reader): BOOLEAN;
-		VAR index: LONGINT; s: Name; symbol: Symbol; i,number: LONGINT; parameter: Parameter;
+		VAR index: SIGNED32; s: Name; symbol: Symbol; i,number: SIGNED32; parameter: Parameter;
 		BEGIN
 			IF r.GetInteger(index,FALSE) & CheckItem(r,"name") & GetString(r,name) &
 			CheckItem(r,"type") & GetString(r,s) &
@@ -782,7 +782,7 @@ TYPE
 		END NewChannel;
 
 		(* generate a new port, may be overwritten by implementations if a non-default port object has to be installed *)
-		PROCEDURE NewPort*(CONST name: ARRAY OF CHAR; direction: LONGINT; adr: LONGINT): Port;
+		PROCEDURE NewPort*(CONST name: ARRAY OF CHAR; direction: SIGNED32; adr: SIGNED32): Port;
 		VAR port: Port;
 		BEGIN
 			NEW(port, name,SELF, direction,adr);
@@ -829,7 +829,7 @@ TYPE
 		END ForEachTypeDo;
 
 		(*
-		PROCEDURE Link*(diagnostics: Diagnostics.Diagnostics; codeUnit, dataUnit: LONGINT): BOOLEAN;
+		PROCEDURE Link*(diagnostics: Diagnostics.Diagnostics; codeUnit, dataUnit: SIGNED32): BOOLEAN;
 		VAR type: Type; i: SIZE;
 		BEGIN
 			FOR i := 0 TO types.Length()-1 DO
@@ -856,7 +856,7 @@ TYPE
 	VAR
 		devices-: DeviceList;
 		modules-: ModuleList; (* for linking / compiling *)
-		instructionMemorySize-, dataMemorySize-: LONGINT; (* sizes in units *)
+		instructionMemorySize-, dataMemorySize-: SIGNED32; (* sizes in units *)
 		capabilities-: SET;
 
 		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
@@ -885,21 +885,21 @@ TYPE
 			capabilities := {};
 		END InitType;
 
-		PROCEDURE AddCapability*(capability: LONGINT);
+		PROCEDURE AddCapability*(capability: SIGNED32);
 		BEGIN
 			INCL(capabilities, capability);
 		END AddCapability;
 
-		PROCEDURE SetInstructionMemorySize*(value: LONGINT);
+		PROCEDURE SetInstructionMemorySize*(value: SIGNED32);
 		BEGIN instructionMemorySize := value
 		END SetInstructionMemorySize;
 
-		PROCEDURE SetDataMemorySize*(value: LONGINT);
+		PROCEDURE SetDataMemorySize*(value: SIGNED32);
 		BEGIN dataMemorySize := value
 		END SetDataMemorySize;
 
 		(* generate a new device, may be overwritten by implementations if a non-default device object has to be installed *)
-		PROCEDURE NewDevice*(CONST name: ARRAY OF CHAR; adr: LONGINT): Device;
+		PROCEDURE NewDevice*(CONST name: ARRAY OF CHAR; adr: SIGNED32): Device;
 		VAR device: Device;
 		BEGIN
 			NEW(device,name,SELF, adr);
@@ -919,7 +919,7 @@ TYPE
 
 		(*
 		PROCEDURE ThisPort(CONST name: ARRAY OF CHAR): Port;
-		VAR type: Type; port:Port; i: LONGINT;
+		VAR type: Type; port:Port; i: SIGNED32;
 		BEGIN
 			(*! suboptimal, replace by two-staged version *)
 			FOR i := 0 TO subTypes.Length()-1 DO
@@ -931,13 +931,13 @@ TYPE
 		END ThisPort;
 		*)
 		(* moved to compiler driver
-		PROCEDURE LinkType*(diagnostics: Diagnostics.Diagnostics; codeUnit, dataUnit: LONGINT): BOOLEAN;
+		PROCEDURE LinkType*(diagnostics: Diagnostics.Diagnostics; codeUnit, dataUnit: SIGNED32): BOOLEAN;
 		VAR
 			fileName, codeFileName, dataFileName: Files.FileName;
 			code, data: Linker.Arrangement; linker: GenericLinker.Linker;
 			module: Module;
 			linkRoot,msg: SyntaxTree.String;
-			i: LONGINT;
+			i: SIGNED32;
 			logFile: Files.File; linkerLog: Files.Writer;
 		BEGIN
 			NEW (code, 0);
@@ -985,7 +985,7 @@ TYPE
 		*)
 
 		PROCEDURE Read(r: Streams.Reader): BOOLEAN;
-		VAR port: Port; module: Module; device: Device; i,number: LONGINT;
+		VAR port: Port; module: Module; device: Device; i,number: SIGNED32;
 			channel: Channel; instance: Instance; type: Type;
 		BEGIN
 			IF ~r.GetInteger(i,FALSE) OR (index # i) OR
@@ -1028,7 +1028,7 @@ TYPE
 			RETURN TRUE
 		END Read;
 
-		PROCEDURE Write*(w: Streams.Writer; indent: LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; indent: SIGNED32);
 		VAR port: Port; device: Device; module: Module; instance: Instance; channel: Channel; type: Type; i: SIZE;
 		BEGIN
 			Indent(w,indent); INC(indent);
@@ -1123,8 +1123,8 @@ TYPE
 	Channel*=OBJECT (Symbol)
 	VAR
 		in-, out-: PortInstance;
-		fifoSize-: LONGINT;
-		widthInBits-: LONGINT;
+		fifoSize-: SIGNED32;
+		widthInBits-: SIGNED32;
 		index-: SIZE; (* useful for implementations that emulate channels (simulator) *)
 
 		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
@@ -1160,16 +1160,16 @@ TYPE
 		BEGIN out.port := port; out.instance := instance;
 		END ConnectOut;
 
-		PROCEDURE SetFifoSize*(size: LONGINT);
+		PROCEDURE SetFifoSize*(size: SIGNED32);
 		BEGIN fifoSize := size
 		END SetFifoSize;
 
-		PROCEDURE SetWidth*(width: LONGINT);
+		PROCEDURE SetWidth*(width: SIGNED32);
 		BEGIN widthInBits := width
 		END SetWidth;
 
 		PROCEDURE Read(r: Streams.Reader): BOOLEAN;
-		VAR s: Name; i: LONGINT;
+		VAR s: Name; i: SIGNED32;
 		BEGIN
 			IF ~r.GetInteger(i,FALSE) OR (i#index) OR
 			~CheckItem(r,"name") OR ~GetString(r,name) OR
@@ -1188,7 +1188,7 @@ TYPE
 			RETURN TRUE
 		END Read;
 
-		PROCEDURE Write*(w: Streams.Writer; indent: LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; indent: SIGNED32);
 		BEGIN
 			Indent(w,indent);
 			w.Int(index,1);
@@ -1263,16 +1263,16 @@ TYPE
 		log-: Streams.Writer;
 		supportedDevices-: DeviceList;
 		imports-: SymbolList;
-		frequencyDivider-: LONGINT;
+		frequencyDivider-: SIGNED32;
 
-		PROCEDURE AddDevice*(CONST name: ARRAY OF CHAR; adr: HUGEINT);
+		PROCEDURE AddDevice*(CONST name: ARRAY OF CHAR; adr: SIGNED64);
 		VAR device: Device;
 		BEGIN
-			NEW(device, name, SELF, LONGINT(adr)); supportedDevices.AddDevice(device);
+			NEW(device, name, SELF, SIGNED32(adr)); supportedDevices.AddDevice(device);
 		END AddDevice;
 
 		PROCEDURE Same*(as: Symbol; flags: SET): BOOLEAN;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			IF TraceSame THEN TRACE("SameSpecification", name) END;
 			IF (as = NIL) OR ~(as IS Specification) THEN RETURN FALSE END;
@@ -1327,7 +1327,7 @@ TYPE
 		END Init;
 
 		(*! this is a bit quick and dirty, think about general concepts of such parameters *)
-		PROCEDURE SetFrequencyDivider*(divider: LONGINT);
+		PROCEDURE SetFrequencyDivider*(divider: SIGNED32);
 		BEGIN frequencyDivider := divider
 		END SetFrequencyDivider;
 
@@ -1345,7 +1345,7 @@ TYPE
 			COPY(instructionSet,SELF.instructionSet);
 		END SetInstructionSet;
 
-		PROCEDURE Write*(w: Streams.Writer; indent: LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; indent: SIGNED32);
 		VAR type: Type; channel: Channel; i: SIZE; instance: Instance;port: Port; import: Symbol;
 		BEGIN
 			Indent(w,indent);w.String("name="); w.String(name); w.Ln;
@@ -1382,7 +1382,7 @@ TYPE
 		END Write;
 
 		PROCEDURE Read*(r: Streams.Reader): BOOLEAN;
-		VAR i, number: LONGINT; type: Type;
+		VAR i, number: SIGNED32; type: Type;
 			instance: Instance; port: Port; channel: Channel; importName: Name;
 		BEGIN
 			IF ~CheckItem(r,"name") OR ~GetString(r,name) OR
@@ -1416,7 +1416,7 @@ TYPE
 			RETURN TRUE
 		END Read;
 
-		PROCEDURE GetPortAddress*(number: LONGINT): LONGINT;
+		PROCEDURE GetPortAddress*(number: SIGNED32): SIGNED32;
 		BEGIN
 			RETURN BasePortAddress+2*number;
 		END GetPortAddress;
@@ -1445,8 +1445,8 @@ TYPE
 	END Specification;
 
 	(*
-	PROCEDURE ReadHugeint(r: Streams.Reader; VAR x: HUGEINT): BOOLEAN;
-	VAR low, high: LONGINT;
+	PROCEDURE ReadHugeint(r: Streams.Reader; VAR x: SIGNED64): BOOLEAN;
+	VAR low, high: SIGNED32;
 	BEGIN
 		IF r.GetInteger(high, FALSE) & r.GetInteger(low, FALSE) THEN
 			x := high * 100000000H + low;
@@ -1456,15 +1456,15 @@ TYPE
 		END
 	END ReadHugeint;
 
-	PROCEDURE WriteHugeint(r: Streams.Writer; x: HUGEINT);
-	VAR low, high: LONGINT;
+	PROCEDURE WriteHugeint(r: Streams.Writer; x: SIGNED64);
+	VAR low, high: SIGNED32;
 	BEGIN
 		low := SHORT(x); high := SHORT(x DIV 100000000H);
 		r.Int(high,1); r.String(" "); r.Int(low,1);
 	END WriteHugeint;
 	*)
 
-	PROCEDURE Indent(w: Streams.Writer; indent: LONGINT);
+	PROCEDURE Indent(w: Streams.Writer; indent: SIGNED32);
 	BEGIN
 		WHILE indent > 0 DO
 			w.String("  ");
@@ -1473,7 +1473,7 @@ TYPE
 	END Indent;
 
 	PROCEDURE CheckItem(VAR r: Streams.Reader; CONST name: ARRAY OF CHAR): BOOLEAN;
-	VAR i: LONGINT; ch: CHAR; b: BOOLEAN;
+	VAR i: SIGNED32; ch: CHAR; b: BOOLEAN;
 	BEGIN
 		i := 0;
 		b := r.GetChar(ch);
@@ -1495,15 +1495,15 @@ TYPE
 	END GetString;
 
 	PROCEDURE GetSet(VAR r: Streams.Reader; VAR set: SET): BOOLEAN;
-	VAR int: LONGINT;
+	VAR int: SIGNED32;
 	BEGIN
 		IF r.GetInteger(int, FALSE) THEN set := SET(int); RETURN TRUE ELSE RETURN FALSE END;
 	END GetSet;
 
 	PROCEDURE WriteSet(VAR r: Streams.Writer; set: SET);
-	VAR int: LONGINT;
+	VAR int: SIGNED32;
 	BEGIN
-		int := LONGINT(set);
+		int := SIGNED32(set);
 		r.Int(int,1);
 	END WriteSet;
 
@@ -1570,7 +1570,7 @@ TYPE
 		platform: PlatformDesc;
 		fileName: Files.FileName;
 		mod: Modules.Module;
-		res: WORD;
+		res: INTEGER;
 		msg: ARRAY 8 OF CHAR;
 	BEGIN
 
@@ -1590,7 +1590,7 @@ TYPE
 
 	(** Register an ActiveCells hardware platform *)
 	PROCEDURE RegisterPlatform*(platformDesc: PlatformDesc);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		ASSERT(platformDesc # NIL);
 		ASSERT(platformDesc.platformId # NIL);
@@ -1610,7 +1610,7 @@ TYPE
 
 	(** Get an ActiveCells hardware platform descriptor given the platform ID string *)
 	PROCEDURE GetPlatform*(CONST platformId: ARRAY OF CHAR): PlatformDesc;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (i < platforms.Length()) & (platforms.Get(i)(PlatformDesc).platformId^ # platformId) DO
@@ -1638,7 +1638,7 @@ TYPE
 	*)
 
 	PROCEDURE GetSymbol*(scope: Scope; CONST name: ARRAY OF CHAR): Symbol;
-	VAR scopeName: Name; i,j: LONGINT; symbol: Symbol; first: BOOLEAN;
+	VAR scopeName: Name; i,j: SIGNED32; symbol: Symbol; first: BOOLEAN;
 	BEGIN
 		i := 0; first := TRUE;
 		WHILE (scope # NIL) & (name[i] # 0X) DO
@@ -1766,7 +1766,7 @@ TYPE
 	END FlattenNetwork;
 
 	PROCEDURE NormalizeName*(CONST src: ARRAY OF CHAR; VAR dest: ARRAY OF CHAR);
-	VAR i: LONGINT; ch: CHAR;
+	VAR i: SIGNED32; ch: CHAR;
 	BEGIN
 		i := 0;
 		REPEAT

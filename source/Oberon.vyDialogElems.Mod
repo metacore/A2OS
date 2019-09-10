@@ -42,19 +42,19 @@ CONST
 TYPE
 	tButton* = POINTER TO tButtonDesc;
 	tButtonDesc* = RECORD
-		x, y, w, h, dsr: INTEGER;
+		x, y, w, h, dsr: SIGNED16;
 		text: ARRAY 32 OF CHAR;
 		sign: vyHostDisplay.tSign;
 		pressed: BOOLEAN;
-		recall*: PROCEDURE (b: tButton;  x0, y0: INTEGER);
-		track*: PROCEDURE (b: tButton;  x0, y0: INTEGER);
-		press*: PROCEDURE (b: tButton;  x0, y0: INTEGER): BOOLEAN;
-		switch*: PROCEDURE (b: tButton;  x0, y0: INTEGER): BOOLEAN;
-		pointInButton*: PROCEDURE (x, y: INTEGER;  b: tButton;  x0, y0: INTEGER): BOOLEAN
+		recall*: PROCEDURE (b: tButton;  x0, y0: SIGNED16);
+		track*: PROCEDURE (b: tButton;  x0, y0: SIGNED16);
+		press*: PROCEDURE (b: tButton;  x0, y0: SIGNED16): BOOLEAN;
+		switch*: PROCEDURE (b: tButton;  x0, y0: SIGNED16): BOOLEAN;
+		pointInButton*: PROCEDURE (x, y: SIGNED16;  b: tButton;  x0, y0: SIGNED16): BOOLEAN
 	END;
 
 
-PROCEDURE RecallButton (b: tButton;  x0, y0: INTEGER);
+PROCEDURE RecallButton (b: tButton;  x0, y0: SIGNED16);
 	(*vs 0.0d0 *)	(* md  04.05.95 10:15:04 *)
 	VAR col: Display.Color;
 BEGIN
@@ -103,16 +103,16 @@ BEGIN
 
 	vyHostDisplay.SetForeColor (col)
 END RecallButton;
-PROCEDURE EraseButton (b: tButton;  x0, y0: INTEGER);
+PROCEDURE EraseButton (b: tButton;  x0, y0: SIGNED16);
 	(*vs 0.0d0 *)	(* md  04.05.95 11:33:42 *)
 BEGIN vyHostDisplay.EraseRect (b.x + x0 - 1, b.y + y0 - 1, b.w + 3, b.h + 3)
 END EraseButton;
 
-PROCEDURE TrackButton (b: tButton;  x0, y0: INTEGER);
+PROCEDURE TrackButton (b: tButton;  x0, y0: SIGNED16);
 	(*! ensure, that after using Trackbuttom the context in vyPort are handled correctly, i.e. use
 	WHILE event.gesture#vyEvents.EvtEmpty DO vyEvents.GetEvent (event) END;*)
 	(*vs 0.0d0 *)	(* md  04.05.95 10:30:35 *)
-	VAR dx, dy: INTEGER;
+	VAR dx, dy: SIGNED16;
 BEGIN
 	vyTracking.Rectangle (b.x + x0, b.y + y0, b.w, b.h, dx, dy);
 	IF (dx # 0)OR(dy # 0) THEN
@@ -122,12 +122,12 @@ BEGIN
 	END
 END TrackButton;
 
-PROCEDURE PointInButton (x, y: INTEGER;  b: tButton;  x0, y0: INTEGER): BOOLEAN;
+PROCEDURE PointInButton (x, y: SIGNED16;  b: tButton;  x0, y0: SIGNED16): BOOLEAN;
 	(*vs 0.0d0 *)	(* md  04.05.95 10:31:23 *)
 BEGIN RETURN vyRectangles.PointInRect (x, y, b.x + x0, b.y + y0, b.w, b.h)
 END PointInButton;
 
-PROCEDURE PressButton (b: tButton;  x0, y0: INTEGER): BOOLEAN;
+PROCEDURE PressButton (b: tButton;  x0, y0: SIGNED16): BOOLEAN;
 	(*vs 0.0d0 *)	(* md  04.05.95 12:12:45 *)
 	VAR event: vyEvents.EventMsg;
 BEGIN
@@ -140,7 +140,7 @@ BEGIN
 	RETURN b.pointInButton (event.x, event.y, b, x0, y0)
 END PressButton;
 
-PROCEDURE SwitchButton (b: tButton;  x0, y0: INTEGER): BOOLEAN;
+PROCEDURE SwitchButton (b: tButton;  x0, y0: SIGNED16): BOOLEAN;
 	(*vs 0.0d0 *)	(* md  04.05.95 15:14:34 *)
 	VAR event: vyEvents.EventMsg;
 BEGIN
@@ -152,7 +152,7 @@ END SwitchButton;
 
 
 
-PROCEDURE OpenButton* (b: tButton;  x, y, w, h, dsr: INTEGER;  text: ARRAY OF CHAR;  sign: vyHostDisplay.tSign);
+PROCEDURE OpenButton* (b: tButton;  x, y, w, h, dsr: SIGNED16;  text: ARRAY OF CHAR;  sign: vyHostDisplay.tSign);
 	(*vs 0.0d0 *)	(* md  04.05.95 09:21:23 *)
 BEGIN
 	b.x := x;  b.y := y;  b.w := w;  b.h := h; b.dsr := dsr;

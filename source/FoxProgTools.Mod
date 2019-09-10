@@ -62,7 +62,7 @@ TYPE
 	(** string comparator function that is used to sort strings alphabetically **)
 	PROCEDURE NameComparator(left, right: ANY): BOOLEAN;
 	VAR
-		result: SHORTINT;
+		result: SIGNED8;
 		i: SIZE;
 		leftChar, rightChar: CHAR;
 	BEGIN
@@ -88,7 +88,7 @@ TYPE
 		END;
 	VAR
 		isThumb, comma: BOOLEAN;
-		i, pos, numBits, numOps: LONGINT;
+		i, pos, numBits, numOps: SIGNED32;
 		char: CHAR;
 		ones, mask: SET;
 		filename, mnemonic, token, flagString, encodingName, pattern, type: ARRAY 256 OF CHAR;
@@ -100,7 +100,7 @@ TYPE
 
 		PROCEDURE AppendMaskName(VAR string: ARRAY OF CHAR; mask: SET);
 		VAR
-			j, start: LONGINT;
+			j, start: SIGNED32;
 			inside, first: BOOLEAN;
 			numString: ARRAY 32 OF CHAR;
 		BEGIN
@@ -319,7 +319,7 @@ TYPE
 	*)
 	PROCEDURE InstructionBits*(context: Commands.Context);
 	VAR
-		i, length, bitPos: LONGINT;
+		i, length, bitPos: SIGNED32;
 		shouldBeOnes, mask: SET;
 		pattern: ARRAY 33 OF CHAR;
 		w: Streams.Writer;
@@ -351,13 +351,13 @@ TYPE
 	END InstructionBits;
 
 	PROCEDURE Enum*(context: Commands.Context);
-	VAR w: Streams.Writer; nr: LONGINT; options: Options.Options; export,incremental,hex: BOOLEAN; start: LONGINT;
-		name,oldname,prefix: ARRAY 256 OF CHAR; lf: LONGINT;
+	VAR w: Streams.Writer; nr: SIGNED32; options: Options.Options; export,incremental,hex: BOOLEAN; start: SIGNED32;
+		name,oldname,prefix: ARRAY 256 OF CHAR; lf: SIGNED32;
 
 		(** get next symbol **)
 		PROCEDURE GetNextSymbol(VAR s: ARRAY OF CHAR ): BOOLEAN;
 		CONST EOT=0X;
-		VAR ch: CHAR; i: LONGINT;
+		VAR ch: CHAR; i: SIGNED32;
 
 			PROCEDURE SkipBlanks;
 			BEGIN
@@ -369,7 +369,7 @@ TYPE
 			END SkipBlanks;
 
 			PROCEDURE Comment;
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 			BEGIN
 				i := 0;
 				LOOP
@@ -431,7 +431,7 @@ TYPE
 			incremental := options.GetFlag("i");
 			hex := options.GetFlag("h");
 			IF ~options.GetString("p", prefix) THEN prefix := "" END;
-			IF ~options.GetInteger("l",lf) THEN lf := MAX(LONGINT) END;
+			IF ~options.GetInteger("l",lf) THEN lf := MAX(SIGNED32) END;
 			nr := start;
 			WHILE GetNextSymbol(name) DO
 				w.String(prefix);
@@ -516,14 +516,14 @@ TYPE
 		cpuoptionReplacer: Replacer;
 		bitwidthReplacer: Replacer;
 
-		numberMnemonics: LONGINT;
-		numberInstructions : LONGINT;
-		maxMnemonicNameLength: LONGINT;
-		maxOpcodeLength: LONGINT;
+		numberMnemonics: SIGNED32;
+		numberInstructions : SIGNED32;
+		maxMnemonicNameLength: SIGNED32;
+		maxOpcodeLength: SIGNED32;
 
-		PROCEDURE Priority(i: Instruction): WORD;
+		PROCEDURE Priority(i: Instruction): INTEGER;
 
-			PROCEDURE OP(CONST o: ARRAY OF CHAR): WORD;
+			PROCEDURE OP(CONST o: ARRAY OF CHAR): INTEGER;
 			BEGIN
 				IF o = "" THEN
 					RETURN 10
@@ -573,7 +573,7 @@ TYPE
 		END GetCh;
 
 		PROCEDURE GetLine(VAR line: ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE(ch # CR) & (ch # LF) & (ch # 0X) DO
@@ -587,7 +587,7 @@ TYPE
 		END GetLine;
 
 			(*PROCEDURE Operand(CONST op: ARRAY OF CHAR);
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 			BEGIN
 				IF op[0] = 0X THEN w.String("none")
 				ELSIF op = "1" THEN w.String("one")
@@ -604,7 +604,7 @@ TYPE
 			END Operand;*)
 
 			PROCEDURE AppendCh(VAR s: ARRAY OF CHAR; c: CHAR);
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 			BEGIN
 				i := 0;
 				WHILE(s[i] # 0X) DO
@@ -618,8 +618,8 @@ TYPE
 				Strings.Append(s,a)
 			END Append;
 
-			PROCEDURE Follows(CONST s: ARRAY OF CHAR; VAR i: LONGINT; CONST this: ARRAY OF CHAR): BOOLEAN;
-			VAR j,k: LONGINT;
+			PROCEDURE Follows(CONST s: ARRAY OF CHAR; VAR i: SIGNED32; CONST this: ARRAY OF CHAR): BOOLEAN;
+			VAR j,k: SIGNED32;
 			BEGIN
 				j := i; k := 0;
 				WHILE(s[j] # 0X)  & (this[k] # 0X) & (s[j] = this[k]) DO
@@ -634,19 +634,19 @@ TYPE
 			END Follows;
 
 			PROCEDURE OpCode(CONST code: ARRAY OF CHAR);
-			VAR ch: CHAR; i: LONGINT;
+			VAR ch: CHAR; i: SIGNED32;
 				op: ARRAY 3 OF CHAR;
-				nOp: LONGINT;
+				nOp: SIGNED32;
 				ModRM:ARRAY 256 OF CHAR; error: BOOLEAN;
-				opCodeExtension: LONGINT;
-				length: LONGINT;
+				opCodeExtension: SIGNED32;
+				length: SIGNED32;
 
 				PROCEDURE NextOption(VAR s: ARRAY OF CHAR);
 				BEGIN
 					IF s[0] # 0X THEN Append(s,",") END;
 				END NextOption;
 
-				PROCEDURE Hex(ch: CHAR): LONGINT;
+				PROCEDURE Hex(ch: CHAR): SIGNED32;
 				BEGIN
 					IF ("0" <= ch) & (ch <= "9") THEN
 						RETURN ORD(ch)-ORD("0");
@@ -777,7 +777,7 @@ TYPE
 			END OpCode;
 
 			PROCEDURE Options(CONST prefix,options: ARRAY OF CHAR);
-			VAR i: LONGINT; first: BOOLEAN;
+			VAR i: SIGNED32; first: BOOLEAN;
 
 			PROCEDURE NextOptions;
 			BEGIN
@@ -803,10 +803,10 @@ TYPE
 			END Options;
 
 		PROCEDURE ParseLine(CONST  line: ARRAY OF CHAR);
-		VAR ch: CHAR; i : LONGINT;
+		VAR ch: CHAR; i : SIGNED32;
 
 			PROCEDURE NextSym(VAR sym: ARRAY OF CHAR);
-			VAR len: LONGINT;
+			VAR len: SIGNED32;
 			BEGIN
 				len := 0;
 				ch:= line[i]; INC(i);

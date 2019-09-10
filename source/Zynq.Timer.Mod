@@ -5,7 +5,7 @@ MODULE Timer;
 
 IMPORT CPU;
 
-TYPE Counter* = LONGINT;
+TYPE Counter* = SIGNED32;
 
 PROCEDURE GetCounter- (): Counter;
 BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN CPU.ReadWord (CPU.Global_Timer_Counter_Register0);

@@ -28,7 +28,7 @@ TYPE
 			NEW(data, initialSize); length := 0;
 		END Init;
 
-		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR newSize, i : SIZE; n : String;
 		BEGIN
 			IF length + len + 1 >= LEN(data) THEN
@@ -106,7 +106,7 @@ TYPE
 		RETURN str
 	END "+";
 
-	OPERATOR "+"*( a: String; b: HUGEINT ): String;
+	OPERATOR "+"*( a: String; b: SIGNED64 ): String;
 	VAR
 		digits: ARRAY 32 OF CHAR;
 		str: String;
@@ -117,7 +117,7 @@ TYPE
 		RETURN str
 	END "+";
 
-	OPERATOR "+"*( a: String; b: LONGREAL ): String;
+	OPERATOR "+"*( a: String; b: FLOAT64 ): String;
 	VAR
 		digits: ARRAY 32 OF CHAR;
 		str: String;
@@ -167,9 +167,9 @@ END Truncate;
  *)
 PROCEDURE Pos*(CONST pattern, string: ARRAY OF CHAR): SIZE;
 CONST
-	q = 8204957;	(* prime number, {(d+1) * q <= MAX(LONGINT)} *)
+	q = 8204957;	(* prime number, {(d+1) * q <= MAX(SIGNED32)} *)
 	d = 256;			(* number of different characters *)
-VAR h1, h2, dM: LONGINT; i, j, m, n: SIZE; found : BOOLEAN;
+VAR h1, h2, dM: SIGNED32; i, j, m, n: SIZE; found : BOOLEAN;
 BEGIN
 	m := Length(pattern); n := Length(string);
 	IF (m > n) THEN RETURN -1 END;
@@ -213,9 +213,9 @@ END Pos;
  * Returns the position of the first character of the first occurence of 'pattern' in 'text'  in search direction or -1 if pattern not found *)
 PROCEDURE GenericPos*(CONST pattern: ARRAY OF CHAR; from : SIZE; CONST string: ARRAY OF CHAR; ignoreCase, backwards : BOOLEAN): SIZE;
 CONST
-	q = 8204957;	(* prime number, {(d+1) * q <= MAX(LONGINT)} *)
+	q = 8204957;	(* prime number, {(d+1) * q <= MAX(SIGNED32)} *)
 	d = 256;			(* number of different characters *)
-VAR ch, chp : CHAR; h1, h2, dM: LONGINT; i, j, patternLength, stringLength: SIZE; found : BOOLEAN;
+VAR ch, chp : CHAR; h1, h2, dM: SIGNED32; i, j, patternLength, stringLength: SIZE; found : BOOLEAN;
 BEGIN
 	patternLength := Length(pattern); stringLength := Length(string);
 
@@ -394,7 +394,7 @@ BEGIN ConcatX (s, appendix, s)
 END AppendX;
 
 (** appends an integer number to a string *)
-PROCEDURE AppendInt*(VAR s: ARRAY OF CHAR; num: HUGEINT);
+PROCEDURE AppendInt*(VAR s: ARRAY OF CHAR; num: SIGNED64);
 VAR number: ARRAY 21 OF CHAR;
 BEGIN
 	IntToStr(num,number); Append(s,number);
@@ -569,11 +569,11 @@ BEGIN b := CAP(s[0]) = "T"
 END StrToBool;
 
 (** converts an integer value to a string *)
-PROCEDURE IntToStr*(x: HUGEINT; VAR s: ARRAY OF CHAR);
-VAR i, j: SIZE; x0: HUGEINT; digits: ARRAY 21 OF CHAR;
+PROCEDURE IntToStr*(x: SIGNED64; VAR s: ARRAY OF CHAR);
+VAR i, j: SIZE; x0: SIGNED64; digits: ARRAY 21 OF CHAR;
 BEGIN
 	IF x < 0 THEN
-		IF x = MIN( HUGEINT ) THEN
+		IF x = MIN( SIGNED64 ) THEN
 			COPY("-9223372036854775808", s) ;
 			RETURN;
 		ELSE
@@ -590,8 +590,8 @@ BEGIN
 END IntToStr;
 
 (** converts a string to an integer. Leading whitespace is ignored *)
-PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR; VAR val: LONGINT);
-VAR i: SIZE; d: LONGINT; neg: BOOLEAN;
+PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR; VAR val: SIGNED32);
+VAR i: SIZE; d: SIGNED32; neg: BOOLEAN;
 BEGIN
 	i := 0; WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END;
 	neg := FALSE;
@@ -602,10 +602,10 @@ BEGIN
 	val := 0;
 	WHILE (str[i] >= "0") & (str[i] <= "9") DO
 		d := ORD(str[i])-ORD("0");
-		IF (val <= ((MAX(LONGINT)-d) DIV 10)) THEN val := 10*val+d
+		IF (val <= ((MAX(SIGNED32)-d) DIV 10)) THEN val := 10*val+d
 		ELSIF neg & (val = 214748364) & (d = 8) & ((str[i+1] < "0") OR (str[i+1] > "9")) THEN
-			(* LONGINT range: -2147483648 ... 2147483647 _> need special handling for -2147483648 here *)
-			val := MIN(LONGINT); neg := FALSE
+			(* SIGNED32 range: -2147483648 ... 2147483647 _> need special handling for -2147483648 here *)
+			val := MIN(SIGNED32); neg := FALSE
 		ELSE
 			HALT(99)
 		END;
@@ -615,8 +615,8 @@ BEGIN
 END StrToInt;
 
 (** converts a string to a huge integer. Leading whitespace is ignored *)
-PROCEDURE StrToHInt*(CONST str: ARRAY OF CHAR; VAR val: HUGEINT);
-VAR i: SIZE; d: HUGEINT; neg: BOOLEAN;
+PROCEDURE StrToHInt*(CONST str: ARRAY OF CHAR; VAR val: SIGNED64);
+VAR i: SIZE; d: SIGNED64; neg: BOOLEAN;
 BEGIN
 	i := 0; WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END;
 	neg := FALSE;
@@ -627,10 +627,10 @@ BEGIN
 	val := 0;
 	WHILE (str[i] >= "0") & (str[i] <= "9") DO
 		d := ORD(str[i])-ORD("0");
-		IF (val <= ((MAX(HUGEINT)-d) DIV 10)) THEN val := 10*val+d
+		IF (val <= ((MAX(SIGNED64)-d) DIV 10)) THEN val := 10*val+d
 		ELSIF neg & (val = 922337203685477580) & (d = 8) & ((str[i+1] < "0") OR (str[i+1] > "9")) THEN
-			(* HUGEINT range: -9223372036854775808 ... 9223372036854775807 _> need special handling for -9223372036854775808 here *)
-			val := MIN(HUGEINT); neg := FALSE
+			(* SIGNED64 range: -9223372036854775808 ... 9223372036854775807 _> need special handling for -9223372036854775808 here *)
+			val := MIN(SIGNED64); neg := FALSE
 		ELSE
 			HALT(99)
 		END;
@@ -666,7 +666,7 @@ END StrToSize;
 
 (** Convert the substring beginning at position i in str into an integer. Leading whitespace is ignored.
 	After the conversion i points to the first character after the integer. *)
-PROCEDURE StrToIntPos*(CONST str: ARRAY OF CHAR; VAR val: LONGINT; VAR i: SIZE);
+PROCEDURE StrToIntPos*(CONST str: ARRAY OF CHAR; VAR val: SIGNED32; VAR i: SIZE);
 VAR noStr: ARRAY 16 OF CHAR;
 BEGIN
 	WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END;
@@ -682,7 +682,7 @@ END StrToIntPos;
 
 (** Convert the substring beginning at position i in str into a huge integer. Leading whitespace is ignored.
 	After the conversion i points to the first character after the integer. *)
-PROCEDURE StrToHIntPos*(CONST str: ARRAY OF CHAR; VAR val: HUGEINT; VAR i: SIZE);
+PROCEDURE StrToHIntPos*(CONST str: ARRAY OF CHAR; VAR val: SIGNED64; VAR i: SIZE);
 VAR noStr: ARRAY 32 OF CHAR;
 BEGIN
 	WHILE (str[i] # 0X) & (str[i] <= " ") DO INC(i) END;
@@ -713,7 +713,7 @@ BEGIN
 END StrToSizePos;
 
 (** converts an integer value to a hex string *)
-PROCEDURE IntToHexStr*(h : HUGEINT; width: WORD; VAR s: ARRAY OF CHAR);
+PROCEDURE IntToHexStr*(h : SIGNED64; width: INTEGER; VAR s: ARRAY OF CHAR);
 VAR c: CHAR;
 BEGIN
 	IF (width <= 0) THEN width := 8 END;
@@ -728,7 +728,7 @@ BEGIN
 END IntToHexStr;
 
 (** converts a hex string to an integer. Leading whitespace is ignored. res=Ok indicates success, val=0 on failure. *)
-PROCEDURE HexStrToInt*(CONST string: ARRAY OF CHAR; VAR val: LONGINT; VAR res: WORD);
+PROCEDURE HexStrToInt*(CONST string: ARRAY OF CHAR; VAR val: SIGNED32; VAR res: INTEGER);
 VAR length, i : SIZE; ch: CHAR; negative : BOOLEAN;
 BEGIN
 	length := LEN(string); val := 0; res := -1;
@@ -758,7 +758,7 @@ BEGIN
 END HexStrToInt;
 
 (** converts a hex string to a size. Leading whitespace is ignored. res=Ok indicates success, val=0 on failure. *)
-PROCEDURE HexStrToSize*(CONST string: ARRAY OF CHAR; VAR val: SIZE; VAR res: WORD);
+PROCEDURE HexStrToSize*(CONST string: ARRAY OF CHAR; VAR val: SIZE; VAR res: INTEGER);
 VAR length, i : SIZE; ch: CHAR;
 BEGIN
 	length := LEN(string); val := 0; res := -1;
@@ -782,7 +782,7 @@ BEGIN
 END HexStrToSize;
 
 (** converts a real value to a string *)
-PROCEDURE FloatToStr*(x: LONGREAL; n, f, D: LONGINT; VAR str: ARRAY OF CHAR);
+PROCEDURE FloatToStr*(x: FLOAT64; n, f, D: SIGNED32; VAR str: ARRAY OF CHAR);
 BEGIN
 	RC.RealToStringFix( x, n, f, D, str )
 END FloatToStr;
@@ -793,14 +793,14 @@ BEGIN
 END AddressToStr;
 
 (** converts a string to a real value *)
-PROCEDURE StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL);
+PROCEDURE StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: FLOAT64);
 BEGIN
 	RC.StringToReal(s,r);
 END StrToFloat;
 
 (** converts a set to a string *)
 PROCEDURE SetToStr*(set: SET; VAR s: ARRAY OF CHAR);
-VAR i, j, k: INTEGER; noFirst: BOOLEAN;
+VAR i, j, k: SIGNED16; noFirst: BOOLEAN;
 BEGIN
 	s[0] := "{"; i := 0; k := 1; noFirst := FALSE;
 	WHILE i <= MAX(SET) DO
@@ -824,7 +824,7 @@ END SetToStr;
 
 (** converts a string to a set *)
 PROCEDURE StrToSet*(CONST str: ARRAY OF CHAR; VAR set: SET);
-VAR i, d, d1: INTEGER; dot: BOOLEAN;
+VAR i, d, d1: SIGNED16; dot: BOOLEAN;
 BEGIN
 	set := {}; dot := FALSE;
 	i := 0;
@@ -907,9 +907,9 @@ END StrToDate;
 	"wwww, mmmm d, yyyy"			-> "Tuesday, September 11, 2001"
 *)
 PROCEDURE FormatDateTime*(CONST format: ARRAY OF CHAR; dt: Dates.DateTime; VAR result: ARRAY OF CHAR);
-VAR i,k,l,len,n: SIZE; m,y,w,dw: LONGINT;
+VAR i,k,l,len,n: SIZE; m,y,w,dw: SIGNED32;
 
-	PROCEDURE IntToStr(v: LONGINT; len: SIZE; VAR s: ARRAY OF CHAR; VAR pos: SIZE);
+	PROCEDURE IntToStr(v: SIGNED32; len: SIZE; VAR s: ARRAY OF CHAR; VAR pos: SIZE);
 	VAR i: SIZE;
 	BEGIN
 		FOR i := 1 TO len DO s[pos+len-i] := CHR(ORD("0") + v MOD 10); v := v DIV 10 END;
@@ -953,7 +953,7 @@ BEGIN
 END FormatDateTime;
 
 PROCEDURE ShowTimeDifference*(t1, t2 : Dates.DateTime; out : Streams.Writer);
-VAR days, hours, minutes, seconds : LONGINT; show : BOOLEAN;
+VAR days, hours, minutes, seconds : SIGNED32; show : BOOLEAN;
 BEGIN
 	Dates.TimeDifference(t1, t2, days, hours, minutes, seconds);
 	show := FALSE;

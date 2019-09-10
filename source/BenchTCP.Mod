@@ -17,7 +17,7 @@ TYPE
 TYPE
 	Sender = OBJECT
 		VAR
-			res: WORD;
+			res: INTEGER;
 			c: TCP.Connection; num, num0: SIZE; buf: Bytes; done: BOOLEAN;
 
 		PROCEDURE &Init*(c: TCP.Connection; buf: Bytes; num: SIZE);
@@ -27,7 +27,7 @@ TYPE
 			done := FALSE
 		END Init;
 
-		PROCEDURE Join(): WORD;
+		PROCEDURE Join(): INTEGER;
 		BEGIN {EXCLUSIVE}
 			AWAIT(done);
 			RETURN res
@@ -47,12 +47,12 @@ TYPE
 TYPE
 	Tester = OBJECT
 		VAR
-			res: WORD;
-			c: TCP.Connection; num, num0: SIZE; port: LONGINT; fip: IP.Adr;
+			res: INTEGER;
+			c: TCP.Connection; num, num0: SIZE; port: SIGNED32; fip: IP.Adr;
 			timer: Kernel.MilliTimer; sender: Sender; server: ARRAY 64 OF CHAR;
-			total, len: SIZE; time: HUGEINT;
+			total, len: SIZE; time: SIGNED64;
 
-		PROCEDURE &Init*(CONST server: ARRAY OF CHAR; num, port: LONGINT);
+		PROCEDURE &Init*(CONST server: ARRAY OF CHAR; num, port: SIGNED32);
 		BEGIN
 			COPY(server, SELF.server); SELF.num := num; SELF.port := port;
 			DNS.HostByName(server, fip, res);
@@ -68,7 +68,7 @@ TYPE
 				IF port=TimePort THEN
 					c.Receive(buf^, 0, 4, 4, len, res);
 					total:=len;
-					time:=((HUGEINT(ORD(buf[0]))*256+ORD(buf[1]))*256 + ORD(buf[2]))*256 + ORD(buf[3]);
+					time:=((SIGNED64(ORD(buf[0]))*256+ORD(buf[1]))*256 + ORD(buf[2]))*256 + ORD(buf[3]);
 					KernelLog.String("ClientTime: "); KernelLog.Int(time,6); KernelLog.String(" : ");
 					KernelLog.Int(time MOD 60,6); time:=time DIV 60; KernelLog.String("sec");
 					KernelLog.Int(time MOD 60,6); time:=time DIV 60; KernelLog.String("min");
@@ -103,7 +103,7 @@ VAR
 	buf: Bytes;
 
 
-PROCEDURE Message(CONST msg1, msg2: ARRAY OF CHAR; res: WORD);
+PROCEDURE Message(CONST msg1, msg2: ARRAY OF CHAR; res: INTEGER);
 BEGIN
 	KernelLog.String(Header); KernelLog.String(msg1); KernelLog.String(msg2);
 	IF res # 0 THEN
@@ -113,7 +113,7 @@ BEGIN
 END Message;
 
 
-PROCEDURE Report(ms, port: LONGINT; total: SIZE; CONST msg: ARRAY OF CHAR);
+PROCEDURE Report(ms, port: SIGNED32; total: SIZE; CONST msg: ARRAY OF CHAR);
 VAR
 	realStr: ARRAY 128 OF CHAR;
 
@@ -140,7 +140,7 @@ END Report;
 
 (** server KB *)
 PROCEDURE Discard*(context : Commands.Context);
-VAR t: Tester; num: LONGINT; server: ARRAY 64 OF CHAR;
+VAR t: Tester; num: SIGNED32; server: ARRAY 64 OF CHAR;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(server);
 	context.arg.SkipWhitespace; context.arg.Int(num, FALSE);
@@ -150,7 +150,7 @@ END Discard;
 
 (** server KB *)
 PROCEDURE Echo*(context : Commands.Context);
-VAR t: Tester; num: LONGINT; server: ARRAY 64 OF CHAR;
+VAR t: Tester; num: SIGNED32; server: ARRAY 64 OF CHAR;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(server);
 	context.arg.SkipWhitespace; context.arg.Int(num, FALSE);
@@ -159,7 +159,7 @@ END Echo;
 
 (** server KB *)
 PROCEDURE Time*(context : Commands.Context);
-VAR t: Tester; num: LONGINT; server: ARRAY 64 OF CHAR;
+VAR t: Tester; num: SIGNED32; server: ARRAY 64 OF CHAR;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(server);
 	NEW(t, server, 0, TimePort);

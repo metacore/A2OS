@@ -9,7 +9,7 @@ CONST
 	(* Open Modes. Allowed combinations are Read, Read/Write, Create/Read/Write *)
 	ModeRead* = 1H;
 	ModeWrite* = 2H;
-	ModeCreate* = MIN(HUGEINT);
+	ModeCreate* = MIN(SIGNED64);
 
 	(* File Attributes *)
 	ReadOnly* = 1H;

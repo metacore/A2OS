@@ -12,7 +12,7 @@ CONST
 	MaxValue = 0x7BFF; (* maximal SHORTREAL value *)
 
 TYPE
-	Real = REAL;
+	Real = FLOAT32;
 
 	Vector4* = ARRAY [4] OF SHORTREAL;
 	Matrix4* = ARRAY [4,4] OF SHORTREAL;
@@ -23,12 +23,12 @@ TYPE
 		y.value := RealToShortreal(x); RETURN y;
 	END "SHORT";
 
-	OPERATOR "LONG"*(x: SHORTREAL): REAL;
+	OPERATOR "LONG"*(x: SHORTREAL): FLOAT32;
 	BEGIN
 		RETURN ShortrealToReal(x.value);
 	END "LONG";
 
-	OPERATOR ":="*(VAR y: REAL; x: SHORTREAL);
+	OPERATOR ":="*(VAR y: FLOAT32; x: SHORTREAL);
 	BEGIN
 		y := ShortrealToReal(x.value);
 	END ":=";
@@ -219,8 +219,8 @@ TYPE
 		RETURN RESULT;
 	END "/";
 
-	OPERATOR "+*"*(CONST x, y: ARRAY [?] OF SHORTREAL): REAL;
-	VAR acc: REAL;
+	OPERATOR "+*"*(CONST x, y: ARRAY [?] OF SHORTREAL): FLOAT32;
+	VAR acc: FLOAT32;
 	BEGIN
 		acc := 0;
 		FoxArrayBase.ApplyBinaryAASOp(ADDRESSOF(acc),x,y,InnerProdLoop);
@@ -428,7 +428,7 @@ TYPE
 		RETURN RESULT;
 	END "./";
 
-	OPERATOR "+*"*(CONST x, y: Vector4): REAL;
+	OPERATOR "+*"*(CONST x, y: Vector4): FLOAT32;
 	CODE
 		MOV RAX, [RBP+x]
 		MOV RBX, [RBP+y]
@@ -441,7 +441,7 @@ TYPE
 		HADDPS XMM0, XMM0
 	END "+*";
 
-	OPERATOR "SUM"*(CONST x: Vector4): REAL;
+	OPERATOR "SUM"*(CONST x: Vector4): FLOAT32;
 	CODE
 		MOV RAX, [RBP+x]
 		MOVQ XMM0, [RAX]
@@ -512,8 +512,8 @@ TYPE
 		MOV [RBX], RAX
 	END "-";
 
-	OPERATOR "SUM"*(CONST x: ARRAY [?] OF SHORTREAL): REAL;
-	VAR acc: REAL;
+	OPERATOR "SUM"*(CONST x: ARRAY [?] OF SHORTREAL): FLOAT32;
+	VAR acc: FLOAT32;
 	BEGIN
 		acc := 0;
 		FoxArrayBase.ApplyUnaryASOp(ADDRESSOF(acc),x,SumLoop);
@@ -561,9 +561,9 @@ TYPE
 		RETURN RESULT;
 	END "SHORT";
 *)
-	OPERATOR "LONG"*(CONST x: ARRAY [?] OF SHORTREAL): ARRAY {UNSAFE} [?] OF REAL;
+	OPERATOR "LONG"*(CONST x: ARRAY [?] OF SHORTREAL): ARRAY {UNSAFE} [?] OF FLOAT32;
 	BEGIN
-		FoxArrayBase.ApplyUnaryAAOp(RESULT,x,SIZEOF(REAL),LongLoop);
+		FoxArrayBase.ApplyUnaryAAOp(RESULT,x,SIZEOF(FLOAT32),LongLoop);
 		RETURN RESULT;
 	END "LONG";
 
@@ -615,7 +615,7 @@ TYPE
 
 	PROCEDURE Sin0(x: UNSIGNED16): UNSIGNED16;
 	CODE
-		SUB RSP, 4 ; create a local variable of type REAL
+		SUB RSP, 4 ; create a local variable of type FLOAT32
 		MOV AX, [RBP+x] ; load U16
 		MOVD XMM0, EAX
 		VCVTPH2PS XMM0, XMM0
@@ -631,7 +631,7 @@ TYPE
 
 	PROCEDURE Cos0(x: UNSIGNED16): UNSIGNED16;
 	CODE
-		SUB RSP, 4 ; create a local variable of type REAL
+		SUB RSP, 4 ; create a local variable of type FLOAT32
 		MOV AX, [RBP+x] ; load U16
 		MOVD XMM0, EAX
 		VCVTPH2PS XMM0, XMM0
@@ -647,7 +647,7 @@ TYPE
 
 	PROCEDURE Arctan0(x: UNSIGNED16): UNSIGNED16;
 	CODE
-		SUB RSP, 4 ; create a local variable of type REAL
+		SUB RSP, 4 ; create a local variable of type FLOAT32
 		MOV AX, [RBP+x] ; load U16
 		MOVD XMM0, EAX
 		VCVTPH2PS XMM0, XMM0
@@ -664,7 +664,7 @@ TYPE
 
 	PROCEDURE Ln0(x: UNSIGNED16): UNSIGNED16;
 	CODE
-		SUB RSP, 4 ; create a local variable of type REAL
+		SUB RSP, 4 ; create a local variable of type FLOAT32
 		MOV AX, [RBP+x] ; load U16
 		MOVD XMM0, EAX
 		VCVTPH2PS XMM0, XMM0
@@ -683,7 +683,7 @@ TYPE
 
 	PROCEDURE Exp0(x: UNSIGNED16): UNSIGNED16;
 	CODE
-		SUB RSP, 4 ; create a local variable of type REAL
+		SUB RSP, 4 ; create a local variable of type FLOAT32
 		MOV AX, [RBP+x] ; load U16
 		MOVD XMM0, EAX
 		VCVTPH2PS XMM0, XMM0
@@ -2098,7 +2098,7 @@ TYPE
 	END InnerProdLoop;
 
 	PROCEDURE MatMulLoop(laddr, raddr, daddr: ADDRESS; linc, rinc, len: SIZE);
-	VAR y: REAL;
+	VAR y: FLOAT32;
 	BEGIN
 		InnerProdLoop(laddr,raddr,ADDRESS OF y,linc,rinc,len);
 		SYSTEM.PUT16(daddr,RealToShortreal(y));
@@ -2439,7 +2439,7 @@ TYPE
 		MOV RAX, [RBP+laddr]
 		MOV RCX, [RBP+daddr]
 		MOV RDX, [RBP+len]
-		SUB RSP, 4 ; create a local variable of type REAL
+		SUB RSP, 4 ; create a local variable of type FLOAT32
 	Loop:
 		CMP RDX, 0
 		JLE Exit
@@ -2467,7 +2467,7 @@ TYPE
 		MOV RAX, [RBP+laddr]
 		MOV RCX, [RBP+daddr]
 		MOV RDX, [RBP+len]
-		SUB RSP, 4 ; create a local variable of type REAL
+		SUB RSP, 4 ; create a local variable of type FLOAT32
 	Loop:
 		CMP RDX, 0
 		JLE Exit
@@ -2495,7 +2495,7 @@ TYPE
 		MOV RAX, [RBP+laddr]
 		MOV RCX, [RBP+daddr]
 		MOV RDX, [RBP+len]
-		SUB RSP, 4 ; create a local variable of type REAL
+		SUB RSP, 4 ; create a local variable of type FLOAT32
 	Loop:
 		CMP RDX, 0
 		JLE Exit
@@ -2524,7 +2524,7 @@ TYPE
 		MOV RAX, [RBP+laddr]
 		MOV RCX, [RBP+daddr]
 		MOV RDX, [RBP+len]
-		SUB RSP, 4 ; create a local variable of type REAL
+		SUB RSP, 4 ; create a local variable of type FLOAT32
 	Loop:
 		CMP RDX, 0
 		JLE Exit
@@ -2555,7 +2555,7 @@ TYPE
 		MOV RAX, [RBP+laddr]
 		MOV RCX, [RBP+daddr]
 		MOV RDX, [RBP+len]
-		SUB RSP, 4 ; create a local variable of type REAL
+		SUB RSP, 4 ; create a local variable of type FLOAT32
 	Loop:
 		CMP RDX, 0
 		JLE Exit
@@ -2588,14 +2588,14 @@ TYPE
 		ADD RSP, 4 ; remove local variable
 	END ExpLoop;
 
-	PROCEDURE ShortrealToReal(x: UNSIGNED16): REAL;
+	PROCEDURE ShortrealToReal(x: UNSIGNED16): FLOAT32;
 	CODE
 		MOV AX, [RBP+x] ; load U16
 		MOVD XMM0, EAX
 		VCVTPH2PS XMM0, XMM0 ; result is returned in XMM0
 	END ShortrealToReal;
 
-	PROCEDURE RealToShortreal(x: REAL): UNSIGNED16;
+	PROCEDURE RealToShortreal(x: FLOAT32): UNSIGNED16;
 	CODE
 		MOVD XMM0, [RBP+x]
 		VCVTPS2PH XMM0, XMM0, 0

@@ -86,7 +86,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		BEGIN
 			file.ReadBytes(r, buf, ofs, size);
 			len := size - r.res;
@@ -124,7 +124,7 @@ TYPE
 		file : File;
 		r: Rider;
 
-		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		BEGIN
 			r.file.WriteBytes(r, buf, ofs, len);
 			IF propagate THEN r.file.Update END;
@@ -161,7 +161,7 @@ TYPE
 
 	Prefix* = ARRAY PrefixLength OF CHAR;
 
-	Address* = LONGINT;	(** Volume block address [1..size] *)
+	Address* = SIGNED32;	(** Volume block address [1..size] *)
 
 	Hint* = POINTER TO RECORD END;	(** for use by file system implementors. *)
 
@@ -174,14 +174,14 @@ TYPE
 
 	Volume* = OBJECT	(** shareable *)
 		VAR
-			size*: LONGINT;	(** size in blocks *)
-			blockSize*: LONGINT;	(** block size in bytes *)
+			size*: SIGNED32;	(** size in blocks *)
+			blockSize*: SIGNED32;	(** block size in bytes *)
 			flags*: SET;	(** ReadOnly, Removable, Boot *)
 			name*: ARRAY 32 OF CHAR;	(** descriptive name - e.g. for matching with Partitions.Show *)
 
 			map: POINTER TO ARRAY OF SET;	(* Block allocation table *)
-			used: LONGINT;	(* used blocks *)
-			reserved: LONGINT;	(* blocks reserved for system *)
+			used: SIGNED32;	(* used blocks *)
+			reserved: SIGNED32;	(* blocks reserved for system *)
 
 		PROCEDURE AllocBlock*(hint: Address; VAR adr: Address);
 		BEGIN {EXCLUSIVE}
@@ -259,15 +259,15 @@ TYPE
 			RETURN (adr MOD SetSize) IN map[adr DIV SetSize]
 		END Marked;
 
-		PROCEDURE Available*(): LONGINT;
+		PROCEDURE Available*(): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN size-used
 		END Available;
 
-		PROCEDURE GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
+		PROCEDURE GetBlock*(adr: SIGNED32; VAR blk: ARRAY OF CHAR);
 		BEGIN HALT(301) END GetBlock;	(* abstract *)
 
-		PROCEDURE PutBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
+		PROCEDURE PutBlock*(adr: SIGNED32; VAR blk: ARRAY OF CHAR);
 		BEGIN HALT(301) END PutBlock;	(* abstract *)
 
 		(* FIX: This procedure can not be declared exclusive, because it will be overridden by an exclusive procedure in the actual implementation, from where it will be supercalled.  This could be a good example for allowing recursive locks, or an example of where an alternative for overriding methods is needed. In this case the procedure is only called from the exclusive overridden procedure, so it is not a real problem (although it is ugly). *)
@@ -278,8 +278,8 @@ TYPE
 
 		(** Init procedure for private data of above methods only.  If the above methods are not required, this procedure should not be called, and the volume fields should be initialized directly.  The flags parameter defines the volume flags, the size parameter its size, and the reserved parameter says how many blocks are reserved for the system (out of disk space trap occurs when less than this amount of blocks are present). *)
 
-		PROCEDURE Init*(flags: SET; size, reserved: LONGINT);
-		VAR maplen: LONGINT;
+		PROCEDURE Init*(flags: SET; size, reserved: SIGNED32);
+		VAR maplen: SIGNED32;
 		BEGIN
 			SELF.flags := flags; SELF.size := size; SELF.reserved := reserved;
 			IF ~(ReadOnly IN flags) THEN
@@ -316,12 +316,12 @@ TYPE
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
 
-		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER);
 		BEGIN HALT(301) END Delete0;	(* abstract *)
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
 
-		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: File; VAR res: WORD);
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: File; VAR res: INTEGER);
 		BEGIN HALT(301) END Rename0;	(* abstract *)
 
 		(** Enumerate canonical file names. mask may contain * wildcards.  For internal use only.  End users use Enumerator instead. *)
@@ -331,20 +331,20 @@ TYPE
 
 		(** Return the unique non-zero key of the named file, if it exists. *)
 
-		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): SIGNED32;
 		BEGIN HALT(301) END FileKey;	(* abstract *)
 
 		(** Create a new directory structure. May not be supported by the actual implementation.
 			End users use Files.CreateDirectory instead.*)
 
-		PROCEDURE CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: WORD);
+		PROCEDURE CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: INTEGER);
 		BEGIN res := -1	(* not supported *)
 		END CreateDirectory0;
 
 		(** Remove a directory. If force=TRUE, any subdirectories and files should be automatically deleted.
 			End users use Files.RemoveDirectory instead. *)
 
-		PROCEDURE RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: SIGNED32; VAR res: INTEGER);
 		BEGIN res := -1	(* not supported *)
 		END RemoveDirectory0;
 
@@ -357,7 +357,7 @@ TYPE
 
 		(* default implementation using an enumerator *)
 		PROCEDURE Has*(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR; VAR flags: SET): BOOLEAN;
-		VAR enum: Enumerator; time, date: LONGINT; size: Size;
+		VAR enum: Enumerator; time, date: SIGNED32; size: Size;
 		BEGIN
 			NEW(enum);
 			enum.Open(name,{});
@@ -382,7 +382,7 @@ TYPE
 		VAR
 				(** private fields for implementors *)
 			flags*: SET;			(** (read-only!) file-specific flags, i.e. Directory. *)
-			key*: LONGINT;	(* unique id for registered file, never 0 *)
+			key*: SIGNED32;	(* unique id for registered file, never 0 *)
 			fs*: FileSystem;	(* file system containing file *)
 
 		(** Position a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
@@ -422,12 +422,12 @@ TYPE
 
 		(** Return the time (t) and date (d) when a file was last modified. *)
 
-		PROCEDURE GetDate*(VAR t, d: LONGINT);
+		PROCEDURE GetDate*(VAR t, d: SIGNED32);
 		BEGIN HALT(301) END GetDate;	(* abstract *)
 
 		(** Set the modification time (t) and date (d) of a file. *)
 
-		PROCEDURE SetDate*(t, d: LONGINT);
+		PROCEDURE SetDate*(t, d: SIGNED32);
 		BEGIN HALT(301) END SetDate;	(* abstract *)
 
 		(** Get file attributes. *)
@@ -443,7 +443,7 @@ TYPE
 		BEGIN HALT(301) END GetName;	(* abstract *)
 
 		(** Register a file created with New in the directory, replacing the previous file in the directory with the same name. The file is automatically updated.  End users use Files.Register instead. *)
-		PROCEDURE Register0*(VAR res: WORD);
+		PROCEDURE Register0*(VAR res: INTEGER);
 		BEGIN HALT(301) END Register0;	(* abstract *)
 
 		(** Flush the changes made to a file from its buffers. Register0 will automatically update a file. *)
@@ -500,8 +500,8 @@ TYPE
 
 		(** Get one entry from the enumerator. *)
 
-		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: LONGINT; VAR size: Size): BOOLEAN;
-		VAR len: LONGINT;
+		PROCEDURE GetEntry*(VAR name: ARRAY OF CHAR; VAR flags: SET; VAR time, date: SIGNED32; VAR size: Size): BOOLEAN;
+		VAR len: SIGNED32;
 		BEGIN
 			ReadNum(r, len);
 			IF ~r.eof THEN
@@ -523,8 +523,8 @@ TYPE
 
 		(** For internal use only. *)
 
-		PROCEDURE PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date: LONGINT; size: Size);
-		VAR len: LONGINT;
+		PROCEDURE PutEntry*(CONST name: ARRAY OF CHAR; flags: SET; time, date: SIGNED32; size: Size);
+		VAR len: SIGNED32;
 		BEGIN
 			ASSERT(adding);
 			INC(SELF.size);
@@ -538,7 +538,7 @@ TYPE
 TYPE
 	(* FinalizedCollection enumerator searching for a file by (fs,key). *)
 	FileSearcher = OBJECT
-		VAR fs: FileSystem; key: LONGINT; found: File;
+		VAR fs: FileSystem; key: SIGNED32; found: File;
 
 		PROCEDURE EnumFile(f: ANY; VAR cont: BOOLEAN);
 		BEGIN
@@ -844,7 +844,7 @@ END Collect;
 (* Find file in open file list, or open and add it. *)
 
 PROCEDURE OpenOld(enum: FileSearcher; fs: FileSystem; CONST fname: ARRAY OF CHAR): File;
-VAR f: File; key: LONGINT;
+VAR f: File; key: SIGNED32;
 BEGIN
 	f := NIL;
 	IF (fs # NIL) & (fname # "") THEN
@@ -917,8 +917,8 @@ END New;
 
 (** Delete a file. res = 0 indicates success. *)
 
-PROCEDURE Delete*(CONST name: ARRAY OF CHAR; VAR res: WORD);
-VAR fs: FileSystem; f: File; key: LONGINT; prefix: Prefix; fname: FileName;
+PROCEDURE Delete*(CONST name: ARRAY OF CHAR; VAR res: INTEGER);
+VAR fs: FileSystem; f: File; key: SIGNED32; prefix: Prefix; fname: FileName;
 BEGIN {EXCLUSIVE}
 	SplitName(name, prefix, fname);
 	IF prefix = "" THEN fs := fsroot ELSE fs := FindFS(prefix) END;
@@ -942,7 +942,7 @@ BEGIN {EXCLUSIVE}
 END Delete;
 
 (* copies the file with the given name to the fileClipboard *)
-PROCEDURE Copy*(CONST name: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE Copy*(CONST name: ARRAY OF CHAR; VAR res: INTEGER);
 VAR file: File;
 BEGIN
 	res := -1;
@@ -953,7 +953,7 @@ BEGIN
 END Copy;
 
 (* pastes the fileClipboard into the file with the given name if it doesn't exist already *)
-PROCEDURE Paste*(CONST name: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE Paste*(CONST name: ARRAY OF CHAR; VAR res: INTEGER);
 VAR writer : Writer;
 	reader : Reader;
 	file : File;
@@ -984,7 +984,7 @@ END Paste;
  * @param overwrite: @in: Overwrite existing files? @out: Has an existing file been overwritten?
  * @param res: @out: Result code
  *)
-PROCEDURE CopyFile*(CONST source, destination : ARRAY OF CHAR; VAR overwrite : BOOLEAN; VAR res : WORD);
+PROCEDURE CopyFile*(CONST source, destination : ARRAY OF CHAR; VAR overwrite : BOOLEAN; VAR res : INTEGER);
 VAR
 	sprefix, dprefix : Prefix;
 	sname, dname, dpath, dfilename: FileName;
@@ -1048,9 +1048,9 @@ END CopyFile;
 
 (** Rename a file. res = 0 indicates success. *)
 
-PROCEDURE Rename*(CONST old, new: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE Rename*(CONST old, new: ARRAY OF CHAR; VAR res: INTEGER);
 VAR
-	key: LONGINT; ofs, nfs: FileSystem; f: File; pold, pnew: Prefix;
+	key: SIGNED32; ofs, nfs: FileSystem; f: File; pold, pnew: Prefix;
 	fold, fnew: FileName;
 BEGIN {EXCLUSIVE}
 	SplitName(old, pold, fold);
@@ -1073,7 +1073,7 @@ END Rename;
 (** Register a file created with New in the directory, replacing the previous file in the directory with the same name. The file is automatically closed. *)
 
 PROCEDURE Register*(f: File);
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN {EXCLUSIVE}
 	IF f # NIL THEN
 		f.Register0(res);
@@ -1086,7 +1086,7 @@ END Register;
 
 (** Create a directory structure. Directories are automatically registered. res=0 indicates success.
 	Use Files.RemoveDirectory to delete a directory *)
-PROCEDURE CreateDirectory*(CONST path: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE CreateDirectory*(CONST path: ARRAY OF CHAR; VAR res: INTEGER);
 VAR prefix: Prefix; fs: FileSystem; fpath: FileName;
 BEGIN {EXCLUSIVE}
 	SplitName(path, prefix, fpath);
@@ -1099,8 +1099,8 @@ BEGIN {EXCLUSIVE}
 END CreateDirectory;
 
 (** Remove a directory. res=0 indicates success. If force=TRUE, any files and subdirectories are automatically deleted. *)
-PROCEDURE RemoveDirectory*(CONST path: ARRAY OF CHAR; force: BOOLEAN; VAR res: WORD);
-VAR prefix: Prefix; fs: FileSystem; f: File; key: LONGINT; fpath: FileName;
+PROCEDURE RemoveDirectory*(CONST path: ARRAY OF CHAR; force: BOOLEAN; VAR res: INTEGER);
+VAR prefix: Prefix; fs: FileSystem; f: File; key: SIGNED32; fpath: FileName;
 BEGIN {EXCLUSIVE}
 	SplitName(path, prefix, fpath);
 	IF prefix = "" THEN fs := fsroot ELSE fs := FindFS(prefix) END;
@@ -1170,7 +1170,7 @@ END Exists;
 
 (* add a search path to the system *)
 PROCEDURE AddSearchPath*(context: Commands.Context);
-VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: WORD;
+VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: INTEGER;
 BEGIN
 	(* preliminary implementation until we know how to solve this generically *)
 	IF Modules.ModuleByName("WinFS") # NIL THEN
@@ -1186,7 +1186,7 @@ END AddSearchPath;
 
 (* add a search path to the system *)
 PROCEDURE SetWorkPath*(context: Commands.Context);
-VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: WORD;
+VAR cmd: ARRAY 32 OF CHAR; msg: ARRAY 256 OF CHAR;  res: INTEGER;
 BEGIN
 	(* preliminary implementation until we know how to solve this generically *)
 	IF Modules.ModuleByName("WinFS") # NIL THEN
@@ -1202,7 +1202,7 @@ END SetWorkPath;
 
 (* Find an open file. *)
 
-PROCEDURE FindOpenFile(enum: FileSearcher; fs: FileSystem; key: LONGINT): File;
+PROCEDURE FindOpenFile(enum: FileSearcher; fs: FileSystem; key: SIGNED32): File;
 BEGIN	(* not exported, because of possible race condition *)
 	enum.fs := fs; enum.key := key; enum.found := NIL;
 	files.Enumerate(enum.EnumFile);
@@ -1211,22 +1211,22 @@ END FindOpenFile;
 
 (** Portable routines to read the standard Oberon types.  DEPRECATED, use Streams instead. *)
 
-PROCEDURE ReadSInt*(VAR r: Rider; VAR x: SHORTINT);
+PROCEDURE ReadSInt*(VAR r: Rider; VAR x: SIGNED8);
 BEGIN
 	r.file.Read(r, SYSTEM.VAL(CHAR, x))
 END ReadSInt;
 
-PROCEDURE ReadInt*(VAR r: Rider; VAR x: INTEGER);
+PROCEDURE ReadInt*(VAR r: Rider; VAR x: SIGNED16);
 BEGIN
 	r.file.ReadBytes(r, SYSTEM.VAL(Bytes2, x), 0, 2)
 END ReadInt;
 
-PROCEDURE ReadLInt*(VAR r: Rider; VAR x: LONGINT);
+PROCEDURE ReadLInt*(VAR r: Rider; VAR x: SIGNED32);
 BEGIN
 	r.file.ReadBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
 END ReadLInt;
 
-PROCEDURE ReadHInt*(VAR r: Rider; VAR x: HUGEINT);
+PROCEDURE ReadHInt*(VAR r: Rider; VAR x: SIGNED64);
 BEGIN
 	r.file.ReadBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
 END ReadHInt;
@@ -1244,12 +1244,12 @@ BEGIN
 	r.file.Read(r, ch); x := ch # 0X
 END ReadBool;
 
-PROCEDURE ReadReal*(VAR r: Rider; VAR x: REAL);
+PROCEDURE ReadReal*(VAR r: Rider; VAR x: FLOAT32);
 BEGIN
 	r.file.ReadBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
 END ReadReal;
 
-PROCEDURE ReadLReal*(VAR r: Rider; VAR x: LONGREAL);
+PROCEDURE ReadLReal*(VAR r: Rider; VAR x: FLOAT64);
 BEGIN
 	r.file.ReadBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
 END ReadLReal;
@@ -1271,13 +1271,13 @@ END ReadString;
 
 (* Reads a number in compressed format. *)
 
-PROCEDURE ReadNum*(VAR r: Rider; VAR x: LONGINT);
-VAR ch: CHAR; n, y: LONGINT; f: File;
+PROCEDURE ReadNum*(VAR r: Rider; VAR x: SIGNED32);
+VAR ch: CHAR; n, y: SIGNED32; f: File;
 BEGIN
 	n := 0; y := 0; f := r.file;
 	f.Read(r, ch);
 	WHILE ch >= 80X DO
-		INC(y, LSH(LONGINT(ORD(ch)) - 128, n)); INC(n, 7);
+		INC(y, LSH(SIGNED32(ORD(ch)) - 128, n)); INC(n, 7);
 		f.Read(r, ch)
 	END;
 	x := ASH(LSH(LONG(ORD(ch)), 25), n-25) + y
@@ -1297,22 +1297,22 @@ END ReadSize;
 
 (** Portable routines to write the standard Oberon types. DEPRECATED, used Streams instead. *)
 
-PROCEDURE WriteSInt*(VAR r: Rider; x: SHORTINT);
+PROCEDURE WriteSInt*(VAR r: Rider; x: SIGNED8);
 BEGIN
 	r.file.Write(r, SYSTEM.VAL(CHAR, x))
 END WriteSInt;
 
-PROCEDURE WriteInt*(VAR r: Rider; x: INTEGER);
+PROCEDURE WriteInt*(VAR r: Rider; x: SIGNED16);
 BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes2, x), 0, 2)
 END WriteInt;
 
-PROCEDURE WriteLInt*(VAR r: Rider; x: LONGINT);
+PROCEDURE WriteLInt*(VAR r: Rider; x: SIGNED32);
 BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
 END WriteLInt;
 
-PROCEDURE WriteHInt*(VAR r: Rider; x: HUGEINT);
+PROCEDURE WriteHInt*(VAR r: Rider; x: SIGNED64);
 BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
 END WriteHInt;
@@ -1329,12 +1329,12 @@ BEGIN
 	IF x THEN r.file.Write(r, 1X) ELSE r.file.Write(r, 0X) END
 END WriteBool;
 
-PROCEDURE WriteReal*(VAR r: Rider; x: REAL);
+PROCEDURE WriteReal*(VAR r: Rider; x: FLOAT32);
 BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes4, x), 0, 4)
 END WriteReal;
 
-PROCEDURE WriteLReal*(VAR r: Rider; x: LONGREAL);
+PROCEDURE WriteLReal*(VAR r: Rider; x: FLOAT64);
 BEGIN
 	r.file.WriteBytes(r, SYSTEM.VAL(Bytes8, x), 0, 8)
 END WriteLReal;
@@ -1348,7 +1348,7 @@ END WriteString;
 
 (* Writes a number in a compressed format. *)
 
-PROCEDURE WriteNum*(VAR r: Rider; x: HUGEINT);
+PROCEDURE WriteNum*(VAR r: Rider; x: SIGNED64);
 VAR f: File;
 BEGIN
 	f := r.file;
@@ -1373,8 +1373,8 @@ END AppendStr;
 
 (** Append unsigned integer to string in ASCII format. *)
 
-PROCEDURE AppendInt*(x: LONGINT; VAR to: ARRAY OF CHAR);
-VAR i: SIZE; m: LONGINT;
+PROCEDURE AppendInt*(x: SIGNED32; VAR to: ARRAY OF CHAR);
+VAR i: SIZE; m: SIGNED32;
 BEGIN
 	ASSERT(x >= 0);
 	i := 0; WHILE to[i] # 0X DO INC(i) END;
@@ -1392,7 +1392,7 @@ BEGIN
 END AppendInt;
 
 (** Get the dev#part string from the stream *)
-PROCEDURE GetDevPart*(arg : Streams.Reader; VAR deviceName : ARRAY OF CHAR; VAR partition : LONGINT);
+PROCEDURE GetDevPart*(arg : Streams.Reader; VAR deviceName : ARRAY OF CHAR; VAR partition : SIGNED32);
 VAR i : SIZE; ch : CHAR;
 BEGIN
 	arg.SkipWhitespace;

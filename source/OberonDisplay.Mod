@@ -31,7 +31,7 @@ TYPE
 		curKeys : SET;
 		curX, curY : SIZE;	(* Coordinates of the mouse pointer while moving or when released. *)
 
-		keyhead, keytail : LONGINT;
+		keyhead, keytail : SIGNED32;
 		keybuf : ARRAY KeyBufSize OF CHAR;
 
 		keys : SET;
@@ -43,7 +43,7 @@ TYPE
 		BEGIN RETURN TRUE;
 		END IsHit;
 
-		PROCEDURE Mouse(VAR x, y : INTEGER; VAR keys : SET);
+		PROCEDURE Mouse(VAR x, y : SIGNED16; VAR keys : SET);
 		BEGIN {EXCLUSIVE}
 			keys := {};
 			IF 0 IN curKeys THEN INCL(keys, 2) END;
@@ -51,8 +51,8 @@ TYPE
 			IF 2 IN curKeys THEN INCL(keys, 0) END;
 			IF 30 IN curKeys THEN IF curKeys={30} THEN INCL(keys, 30); END; curKeys := curKeys - {30} END; (*fof*)
 			IF 31 IN curKeys THEN IF curKeys={31} THEN INCL(keys, 31); END; curKeys := curKeys - {31}  END;
-			x := INTEGER(curX);
-			y := INTEGER(curY)
+			x := SIGNED16(curX);
+			y := SIGNED16(curY)
 		END Mouse;
 
 		PROCEDURE PointerMove*(x, y : SIZE; keys :SET);
@@ -79,7 +79,7 @@ TYPE
 		END PointerUp;
 
 			(* Keyboard handling *)
-		PROCEDURE InsertKey(ch : CHAR; keysym : LONGINT; flags : SET);
+		PROCEDURE InsertKey(ch : CHAR; keysym : SIGNED32; flags : SET);
 		BEGIN
 			keys := {};
 			IF flags * Inputs.Shift # {} THEN INCL(keys, Inputs.SHIFT) END;
@@ -110,7 +110,7 @@ TYPE
 				IF lastCtrl THEN INCL(curKeys, 1) ELSE EXCL(curKeys, 1) END;
 				IF input # NIL THEN input.timer.Wakeup END
 			ELSE
-				InsertKey(CHR(ucs), keysym(LONGINT), flags);
+				InsertKey(CHR(ucs), keysym(SIGNED32), flags);
 				IF input # NIL THEN input.timer.Wakeup END
 			END;
 		END KeyEvent;
@@ -122,7 +122,7 @@ TYPE
 			b := break; break := FALSE
 		END Read;
 
-		PROCEDURE Available(VAR num : INTEGER; VAR b : BOOLEAN);
+		PROCEDURE Available(VAR num : SIGNED16; VAR b : BOOLEAN);
 		BEGIN {EXCLUSIVE}
 			num := SHORT((keytail-keyhead) MOD KeyBufSize);
 			b := break; break := FALSE
@@ -139,7 +139,7 @@ TYPE
 	OberonInput = OBJECT (Inputs.OberonInput)
 		VAR window : OberonWindow;
 
-		PROCEDURE Mouse*(VAR x, y : INTEGER; VAR keys : SET);
+		PROCEDURE Mouse*(VAR x, y : SIGNED16; VAR keys : SET);
 		BEGIN
 			window.Mouse(x, y, keys)
 		END Mouse;
@@ -149,7 +149,7 @@ TYPE
 			window.Read(ch, b)
 		END Read;
 
-		PROCEDURE Available*(VAR num : INTEGER; VAR b : BOOLEAN);
+		PROCEDURE Available*(VAR num : SIGNED16; VAR b : BOOLEAN);
 		BEGIN
 			window.Available(num, b)
 		END Available;
@@ -189,13 +189,13 @@ TYPE
 
 		PROCEDURE Update*;
 		BEGIN
-			IF Cache & (ml # MAX(LONGINT)) THEN
+			IF Cache & (ml # MAX(SIGNED32)) THEN
 				disp.Invalidate(WMRectangles.MakeRect(ml, mt, mr, mb));	(* updated dirty rectangle *)
-				ml := MAX(LONGINT); mt := MAX(LONGINT); mr := MIN(LONGINT); mb := MIN(LONGINT)
+				ml := MAX(SIGNED32); mt := MAX(SIGNED32); mr := MIN(SIGNED32); mb := MIN(SIGNED32)
 			END
 		END Update;
 
-		PROCEDURE Transfer*(VAR buf : ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op : WORD);
+		PROCEDURE Transfer*(VAR buf : ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op : INTEGER);
 		BEGIN
 			Raster.InitMode(mode, Raster.srcCopy);
 			IF Flip THEN
@@ -219,7 +219,7 @@ TYPE
 			END
 		END Transfer;
 
-		PROCEDURE Fill*(col, x, y, w, h : LONGINT);
+		PROCEDURE Fill*(col, x, y, w, h : SIGNED32);
 		VAR pixel: Raster.Pixel;
 		BEGIN
 			IF Flip THEN
@@ -238,7 +238,7 @@ TYPE
 			END
 		END Fill;
 
-		PROCEDURE Dot*(col, x, y : LONGINT);
+		PROCEDURE Dot*(col, x, y : SIGNED32);
 		VAR pixel: Raster.Pixel;
 		BEGIN
 			IF Flip THEN
@@ -256,14 +256,14 @@ TYPE
 			END
 		END Dot;
 
-		PROCEDURE Mask*(VAR buf : ARRAY OF CHAR; bitofs, stride, fg, bg, x, y, w, h : LONGINT);
-		VAR p: ADDRESS; i, y0, h0 : LONGINT; s : SET; pixel, fgp, bgp : Raster.Pixel;
+		PROCEDURE Mask*(VAR buf : ARRAY OF CHAR; bitofs, stride, fg, bg, x, y, w, h : SIGNED32);
+		VAR p: ADDRESS; i, y0, h0 : SIGNED32; s : SET; pixel, fgp, bgp : Raster.Pixel;
 		BEGIN
 			IF Flip THEN
 				Mask^(buf, bitofs, stride, fg, bg, x, y, w, h)	(* supermethod not exclusive *)
 			ELSE
 				IF (w > 0) & (h > 0) THEN
-					i := LONGINT(ADDRESSOF(buf[0])) MOD 4;
+					i := SIGNED32(ADDRESSOF(buf[0])) MOD 4;
 					INC(bitofs, i * 8);
 					p := ADDRESSOF(buf[0])-i + bitofs DIV 32 * 4;	(* p always aligned to 32-bit boundary *)
 					bitofs := bitofs MOD 32; stride := stride*8;
@@ -304,7 +304,7 @@ TYPE
 			END
 		END Mask;
 
-		PROCEDURE Copy*(sx, sy, w, h, dx, dy : LONGINT);
+		PROCEDURE Copy*(sx, sy, w, h, dx, dy : SIGNED32);
 		BEGIN
 			IF Flip THEN
 				Copy^(sx, sy, w, h, dx, dy)	(* supermethod not exclusive *)
@@ -315,11 +315,11 @@ TYPE
 			END
 		END Copy;
 
-		PROCEDURE &Init*(name : ARRAY OF CHAR; w, h, x, y : LONGINT);
-		VAR res : WORD; ptr : WM.PointerInfo; pixel : Raster.Pixel; mode : Raster.Mode;
+		PROCEDURE &Init*(name : ARRAY OF CHAR; w, h, x, y : SIGNED32);
+		VAR res : INTEGER; ptr : WM.PointerInfo; pixel : Raster.Pixel; mode : Raster.Mode;
 			s : ARRAY 16 OF CHAR;
 		BEGIN
-			ml := MAX(LONGINT); mt := MAX(LONGINT); mr := MIN(LONGINT); mb := MIN(LONGINT);
+			ml := MAX(SIGNED32); mt := MAX(SIGNED32); mr := MIN(SIGNED32); mb := MIN(SIGNED32);
 			width := w; height := h; offscreen := 0; unit := 10000;
 			NEW(bufimg);
 			NEW(disp, w, h, FALSE);
@@ -383,9 +383,9 @@ VAR
 		character: single character e.g. blank or "x"	*)
 PROCEDURE Install*(context : Commands.Context);
 VAR
-	w, h : LONGINT; name : ARRAY 32 OF CHAR;
-	dw, dh : LONGINT; disp : Plugins.Plugin;
-	x, y : LONGINT;
+	w, h : SIGNED32; name : ARRAY 32 OF CHAR;
+	dw, dh : SIGNED32; disp : Plugins.Plugin;
+	x, y : SIGNED32;
 BEGIN
 	IF win = NIL THEN
 		w := 0; h := 0; name := "";

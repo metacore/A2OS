@@ -14,16 +14,16 @@ TYPE
 		chunkRIFF: Chunk; 									(* must be "RIFF" *)
 		chunkWAVE: Chunk; 									(* must be "WAVE" *)
 		chunkfmt: Chunk; 									(* must be "fmt " *)
-		waveFormatSize: LONGINT; 							(* must be 16 for PCM wave *)
-		formatTag: INTEGER; 								(* must be 1 for PCM wave *)
-		nofCh: INTEGER; 									(* number of channels *)
-		sRate: LONGINT; 									(* sampling rate *)
-		bRate: LONGINT; 									(* byte rate *)
-		blockAlign: INTEGER; 								(* bytes per sample *)
-		bitsPerSample: INTEGER; 							(* sampling resolution = bits per sample for 1 channel *)
+		waveFormatSize: SIGNED32; 							(* must be 16 for PCM wave *)
+		formatTag: SIGNED16; 								(* must be 1 for PCM wave *)
+		nofCh: SIGNED16; 									(* number of channels *)
+		sRate: SIGNED32; 									(* sampling rate *)
+		bRate: SIGNED32; 									(* byte rate *)
+		blockAlign: SIGNED16; 								(* bytes per sample *)
+		bitsPerSample: SIGNED16; 							(* sampling resolution = bits per sample for 1 channel *)
 		chunkdata: Chunk; 									(* must be "data" *)
-		fileSize: LONGINT;									(* size of the whole file minus 8 byte *)
-		dataSize: LONGINT; 									(* size of PCM data in byte = file size minus header size *)
+		fileSize: SIGNED32;									(* size of the whole file minus 8 byte *)
+		dataSize: SIGNED32; 									(* size of PCM data in byte = file size minus header size *)
 	END;
 
 	(* Audio Wave PCM Encoder *)
@@ -32,7 +32,7 @@ TYPE
 		out: Streams.Writer;
 		h: WaveHeader;
 
-		PROCEDURE Open*(out: Streams.Writer; sRate, sRes, nofCh: LONGINT; VAR res : WORD);
+		PROCEDURE Open*(out: Streams.Writer; sRate, sRes, nofCh: SIGNED32; VAR res : INTEGER);
 		BEGIN
 			res := -1;
 			IF out = NIL THEN
@@ -84,7 +84,7 @@ TYPE
 			res := 0
 		END Open;
 
-		PROCEDURE Write*(buffer : SoundDevices.Buffer; VAR res : WORD);
+		PROCEDURE Write*(buffer : SoundDevices.Buffer; VAR res : INTEGER);
 		BEGIN
 			out.Bytes(buffer.data^, 0, buffer.len);
 			out.Update
@@ -98,8 +98,8 @@ TYPE
 		h: WaveHeader;
 		hasMoreBytes : BOOLEAN;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
-		VAR len: LONGINT; inLen: SIZE; c: CHAR;
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
+		VAR len: SIGNED32; inLen: SIZE; c: CHAR;
 		BEGIN
 			res := -1; inLen := 0;
 			IF in = NIL THEN
@@ -178,7 +178,7 @@ TYPE
 			RETURN hasMoreBytes
 		END HasMoreData;
 
-		PROCEDURE GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample : LONGINT);
+		PROCEDURE GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample : SIGNED32);
 		BEGIN
 			nofChannels := h.nofCh;
 			bitsPerSample := h.bitsPerSample;
@@ -204,37 +204,37 @@ TYPE
 			RETURN FALSE;
 		END CanSeek;
 
-		PROCEDURE GetCurrentSample*() : LONGINT;
+		PROCEDURE GetCurrentSample*() : SIGNED32;
 		BEGIN
 			RETURN ENTIER((in.Pos() - (h.fileSize - h.dataSize)) / h.bRate * h.sRate)
 		END GetCurrentSample;
 
-		PROCEDURE GetTotalSamples*() : LONGINT;
+		PROCEDURE GetTotalSamples*() : SIGNED32;
 		BEGIN
 			RETURN ENTIER(h.dataSize / h.bRate * h.sRate)
 		END GetTotalSamples;
 
 		(* Returns the current time in 1/10 sec *)
-		PROCEDURE GetCurrentTime*() : LONGINT;
+		PROCEDURE GetCurrentTime*() : SIGNED32;
 		BEGIN
 			RETURN ENTIER((in.Pos() - (h.fileSize - h.dataSize)) / h.bRate * 10)
 		END GetCurrentTime;
 
-		PROCEDURE SetStreamLength*(length : LONGINT);
+		PROCEDURE SetStreamLength*(length : SIGNED32);
 		BEGIN
 			h.fileSize := length-8;
 			h.dataSize := length-SIZEOF(WaveHeader);
 		END SetStreamLength;
 
-		PROCEDURE SeekSample*(sample: LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
-		VAR seekType: LONGINT;
+		PROCEDURE SeekSample*(sample: SIGNED32; goKeySample : BOOLEAN; VAR res : INTEGER);
+		VAR seekType: SIGNED32;
 		BEGIN
 			seekType := Codecs.SeekByte;
 			(* in.Seek(seekType, h.fileSize - h.dataSize + ENTIER(sample / h.sRate * h.bRate), itemSize, res); *)
 			in.SetPos(h.fileSize - h.dataSize + ENTIER(sample / h.sRate * h.bRate))
 		END SeekSample;
 
-		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
+		PROCEDURE SeekMillisecond*(millisecond : SIGNED32; goKeySample : BOOLEAN; VAR res : INTEGER);
 		BEGIN
 			SeekSample(ENTIER(millisecond / 1000 * h.sRate), goKeySample, res)
 		END SeekMillisecond;
@@ -260,7 +260,7 @@ TYPE
 		h : WaveHeader;
 		hasMoreBytes : BOOLEAN;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
 		BEGIN
 			res := -1;
 			IF in = NIL THEN
@@ -278,14 +278,14 @@ TYPE
 			RETURN hasMoreBytes
 		END HasMoreData;
 
-		PROCEDURE GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample : LONGINT);
+		PROCEDURE GetAudioInfo*(VAR nofChannels, samplesPerSecond, bitsPerSample : SIGNED32);
 		BEGIN
 			nofChannels := h.nofCh;
 			bitsPerSample := h.bitsPerSample;
 			samplesPerSecond := h.sRate
 		END GetAudioInfo;
 
-		PROCEDURE SetAudioInfo*(nofChannels, samplesPerSecond, bitsPerSample : LONGINT);
+		PROCEDURE SetAudioInfo*(nofChannels, samplesPerSecond, bitsPerSample : SIGNED32);
 		BEGIN
 			h.nofCh := SHORT(nofChannels);
 			h.bitsPerSample := SHORT(bitsPerSample);
@@ -301,33 +301,33 @@ TYPE
 			RETURN FALSE;
 		END CanSeek;
 
-		PROCEDURE GetCurrentSample*() : LONGINT;
+		PROCEDURE GetCurrentSample*() : SIGNED32;
 		BEGIN
 			KernelLog.String("pi= ");
 			RETURN ENTIER(8 * in.Pos() / h.bitsPerSample / h.nofCh)
 		END GetCurrentSample;
 
-		PROCEDURE GetTotalSamples*() : LONGINT;
+		PROCEDURE GetTotalSamples*() : SIGNED32;
 		BEGIN
 			KernelLog.String("pa= ");
 			RETURN ENTIER(8 * h.dataSize / h.bitsPerSample / h.nofCh)
 		END GetTotalSamples;
 
 		(* Returns the current time in 1/10 sec *)
-		PROCEDURE GetCurrentTime*() : LONGINT;
+		PROCEDURE GetCurrentTime*() : SIGNED32;
 		BEGIN
 			KernelLog.String("po= ");
 			RETURN ENTIER(8 * in.Pos() / h.bitsPerSample / h.nofCh / h.sRate * 10)
 		END GetCurrentTime;
 
-		PROCEDURE SetStreamLength*(length : LONGINT);
+		PROCEDURE SetStreamLength*(length : SIGNED32);
 		BEGIN
 			h.fileSize := length+SIZEOF(WaveHeader)-8;
 			h.dataSize := length
 		END SetStreamLength;
 
-		PROCEDURE SeekSample*(sample: LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
-		VAR seekType: LONGINT;
+		PROCEDURE SeekSample*(sample: SIGNED32; goKeySample : BOOLEAN; VAR res : INTEGER);
+		VAR seekType: SIGNED32;
 		BEGIN
 			KernelLog.String("pu= "); KernelLog.Int(sample, 0);
 			KernelLog.String("bi= "); KernelLog.Int(h.bitsPerSample, 0);
@@ -336,7 +336,7 @@ TYPE
 			in.SetPos(ENTIER(sample * h.bitsPerSample / 8 * h.nofCh))
 		END SeekSample;
 
-		PROCEDURE SeekMillisecond*(millisecond : LONGINT; goKeySample : BOOLEAN; VAR res : WORD);
+		PROCEDURE SeekMillisecond*(millisecond : SIGNED32; goKeySample : BOOLEAN; VAR res : INTEGER);
 		BEGIN
 			SeekSample(ENTIER(millisecond / 1000 * h.sRate), goKeySample, res)
 		END SeekMillisecond;
@@ -356,24 +356,24 @@ TYPE
 	END PCMDecoder;
 
 (* Routines for reading and writing numbers in Intel's big endian format *)
-PROCEDURE ReadRawBEInteger(VAR r: Streams.Reader; VAR value: INTEGER);
+PROCEDURE ReadRawBEInteger(VAR r: Streams.Reader; VAR value: SIGNED16);
 BEGIN
 	value := ORD(r.Get()) + 100H *ORD(r.Get());
 END ReadRawBEInteger;
 
-PROCEDURE ReadRawBELongInt(VAR r: Streams.Reader; VAR value: LONGINT);
+PROCEDURE ReadRawBELongInt(VAR r: Streams.Reader; VAR value: SIGNED32);
 BEGIN
 	value := LONG(ORD(r.Get())) + 100H * LONG(ORD(r.Get()))
 		+ 10000H * LONG(ORD(r.Get())) + 1000000H * LONG(ORD(r.Get()));
 END ReadRawBELongInt;
 
-PROCEDURE WriteRawBEInteger(VAR w: Streams.Writer; value: INTEGER);
+PROCEDURE WriteRawBEInteger(VAR w: Streams.Writer; value: SIGNED16);
 BEGIN
 	w.Char(CHR(value MOD 100H));
 	w.Char(CHR(value DIV 100H));
 END WriteRawBEInteger;
 
-PROCEDURE WriteRawBELongInt(VAR w: Streams.Writer; value: LONGINT);
+PROCEDURE WriteRawBELongInt(VAR w: Streams.Writer; value: SIGNED32);
 BEGIN
 	w.Char(CHR(value MOD 100H));
 	value := value DIV 100H;

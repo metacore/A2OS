@@ -30,7 +30,7 @@ TYPE
 	Unit* = SIZE;
 	Bits* = SIZE;
 
-	Fingerprint* = HUGEINT;
+	Fingerprint* = SIGNED64;
 
 	SegmentedName*= ARRAY 8 OF StringPool.Index;
 	SectionName* = ARRAY 128 OF CHAR;
@@ -59,7 +59,7 @@ TYPE
 	END;
 
 	Pattern*= POINTER TO RECORD (* this is the same for many fixups *)
-		mode-: WORD;
+		mode-: INTEGER;
 		scale-: Bits;
 		patterns-: SIZE;
 		pattern-: FixupPatterns
@@ -88,7 +88,7 @@ TYPE
 	Aliases*= POINTER TO ARRAY OF Alias;
 
 	Section* = RECORD
-		type*: WORD;
+		type*: INTEGER;
 		identifier*: Identifier;
 		unit*: Bits;
 		fixed*: BOOLEAN;
@@ -108,7 +108,7 @@ TYPE
 		table: Table;
 		size: SIZE;
 		used: SIZE;
-		maxLoadFactor: REAL;
+		maxLoadFactor: FLOAT32;
 		writer: Streams.Writer;
 		(* Interface *)
 
@@ -256,7 +256,7 @@ VAR
 
 	statSections, statSectionsTotalSize: SIZE;
 
-	PROCEDURE IsCode* (type: WORD): BOOLEAN;
+	PROCEDURE IsCode* (type: INTEGER): BOOLEAN;
 	BEGIN RETURN (type IN {EntryCode .. Code})
 	END IsCode;
 
@@ -347,7 +347,7 @@ VAR
 		dest.bits := NIL;
 	END InitSection;
 
-	PROCEDURE NibbleToCharacter* (value: WORD): CHAR;
+	PROCEDURE NibbleToCharacter* (value: INTEGER): CHAR;
 	BEGIN
 		IF value >= 10 THEN
 			RETURN CHR ((ORD ('A') - 10) + value);
@@ -356,7 +356,7 @@ VAR
 		END;
 	END NibbleToCharacter;
 
-	PROCEDURE CharacterToNibble* (char: CHAR): WORD;
+	PROCEDURE CharacterToNibble* (char: CHAR): INTEGER;
 	BEGIN
 		IF ORD (char) >= ORD ('A') THEN
 			RETURN ORD (char) - (ORD ('A') - 10);
@@ -369,7 +369,7 @@ VAR
 	CONST Separator = ' '; Tab = 09X;
 	VAR i: SIZE; offset,start, len, size: Bits;
 
-		PROCEDURE WriteValueIdentifier (value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
+		PROCEDURE WriteValueIdentifier (value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		BEGIN
 			writer.String (identifiers[value]);
 		END WriteValueIdentifier;
@@ -465,7 +465,7 @@ VAR
 		END GetSegment;
 
 		PROCEDURE WriteSegment(offset, len: Bits);
-		VAR value: WORD;
+		VAR value: INTEGER;
 		BEGIN
 			ASSERT(len MOD 4 = 0); ASSERT(offset MOD 4 = 0);
 			len := len DIV 4;
@@ -515,9 +515,9 @@ VAR
 	END WriteSectionTextual;
 
 	PROCEDURE ReadSectionTextual (reader: Streams.Reader; VAR section: Section);
-	VAR i: SIZE; size: SIZE; char: CHAR; relocatibility: WORD;
+	VAR i: SIZE; size: SIZE; char: CHAR; relocatibility: INTEGER;
 
-		PROCEDURE ReadValueIdentifier (VAR value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
+		PROCEDURE ReadValueIdentifier (VAR value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		VAR identifier: ARRAY 10 OF CHAR;
 		BEGIN
 			value := 0;
@@ -709,7 +709,7 @@ VAR
 	VAR i: SIZE; pos: Streams.Position; offset, start, len, size: Bits;
 	CONST ByteSize=8;
 
-		PROCEDURE WriteValueIdentifier (value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
+		PROCEDURE WriteValueIdentifier (value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		BEGIN
 			writer.RawNum(value);
 		END WriteValueIdentifier;
@@ -801,7 +801,7 @@ VAR
 		END GetSegment;
 
 		PROCEDURE WriteSegment(offset, len: Bits);
-		VAR value: WORD; pos: Streams.Position;
+		VAR value: INTEGER; pos: Streams.Position;
 		BEGIN
 			pos := writer.Pos();
 			ASSERT(len > 0);
@@ -870,10 +870,10 @@ VAR
 	END WriteSectionBinary;
 
 	PROCEDURE ReadSectionBinary (reader: Streams.Reader; VAR section: Section; poolMap: PoolMap);
-	VAR i, size: SIZE; relocatibility: WORD; ch: CHAR;;
+	VAR i, size: SIZE; relocatibility: INTEGER; ch: CHAR;;
 	CONST ByteSize=8;
 
-		PROCEDURE ReadValueIdentifier (VAR value: WORD; CONST identifiers: ARRAY OF ARRAY OF CHAR);
+		PROCEDURE ReadValueIdentifier (VAR value: INTEGER; CONST identifiers: ARRAY OF ARRAY OF CHAR);
 		BEGIN
 			reader.RawNum(value);
 		END ReadValueIdentifier;
@@ -1070,12 +1070,12 @@ VAR
 		RETURN TRUE
 	END SameFixupPattern;
 
-	PROCEDURE HasPattern(pat: Pattern; mode: WORD; scale: Bits; patterns: SIZE; pattern: FixupPatterns): BOOLEAN;
+	PROCEDURE HasPattern(pat: Pattern; mode: INTEGER; scale: Bits; patterns: SIZE; pattern: FixupPatterns): BOOLEAN;
 	BEGIN
 		RETURN (pat.mode = mode) & (pat.scale = scale) & (pat.patterns = patterns) & SameFixupPattern(patterns, pat.pattern, pattern);
 	END HasPattern;
 
-	PROCEDURE AddFixup*(VAR fixups: SIZE; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: WORD; scale: Bits; patterns: SIZE; pattern: FixupPatterns): SIZE;
+	PROCEDURE AddFixup*(VAR fixups: SIZE; VAR fixup: Fixups; CONST name: SegmentedName; fingerprint: Fingerprint; mode: INTEGER; scale: Bits; patterns: SIZE; pattern: FixupPatterns): SIZE;
 	VAR i, newFixups, index: SIZE; newFixup: Fixups;
 	BEGIN
 		FOR i := 0 TO fixups-1 DO
@@ -1166,7 +1166,7 @@ VAR
 	END SegmentedNameToString;
 
 	(* result = 0 : equal strings, result < 0: s1 before s2, result > 0 : s1 after s2 (alphanumerically) *)
-	PROCEDURE CompareSegmentedNames*(CONST s1, s2: SegmentedName): WORD;
+	PROCEDURE CompareSegmentedNames*(CONST s1, s2: SegmentedName): INTEGER;
 	VAR n1, n2: SectionName; index: SIZE; ch1, ch2: CHAR;
 	BEGIN
 		SegmentedNameToString(s1,n1);

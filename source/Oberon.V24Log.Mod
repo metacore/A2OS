@@ -12,13 +12,13 @@ MODULE V24Log IN Oberon;	(** portable *) (* ejz,  *)
 	VAR
 		W: Texts.Writer;
 		T: Oberon.Task;
-		res: WORD;
+		res: INTEGER;
 		last: CHAR;
-		Port: LONGINT;
+		Port: SIGNED32;
 
 	PROCEDURE Poller(me: Oberon.Task);
 		VAR
-			avail: SIZE; unit : LONGINT;
+			avail: SIZE; unit : SIGNED32;
 			ch: CHAR;
 	BEGIN
 		avail := V24.Available(Port);
@@ -50,7 +50,7 @@ MODULE V24Log IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END Poller;
 
-	PROCEDURE GetPar(VAR port, bps, data, parity, stop: LONGINT);
+	PROCEDURE GetPar(VAR port, bps, data, parity, stop: SIGNED32);
 	VAR S: Texts.Scanner;
 	BEGIN
 		port := V24.COM2;  bps := 57600;
@@ -81,7 +81,7 @@ MODULE V24Log IN Oberon;	(** portable *) (* ejz,  *)
 
 	PROCEDURE Start*;	(* port bps databits none|even|odd stopbits *)
 		VAR errMsg: ARRAY 32 OF CHAR;
-			Baud, Data, Parity, StopB: LONGINT;
+			Baud, Data, Parity, StopB: SIGNED32;
 	BEGIN
 		Texts.WriteString(W, "V24Log.Start ");
 		IF T = NIL THEN

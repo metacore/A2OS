@@ -42,11 +42,11 @@ Institut für Computersysteme, ETH Zürich,
     十六进制数：数字| “A” | “B” | “C” | “D” | “E” | “F”
     数字： “0” | “1” | “2” | “3” | “4” | “5” | “6” | “7” | “8” | “9”
 例如:
-	1991	INTEGER	1991
-	0DH 	SHORTINT	13
-	12.3	REAL	12.3
-	4.567E8 	REAL	456700000
-	0.57712566D-6 	LONGREAL		0.00000057712566
+	1991	SIGNED16	1991
+	0DH 	SIGNED8	13
+	12.3	FLOAT32	12.3
+	4.567E8 	FLOAT32	456700000
+	0.57712566D-6 	FLOAT64		0.00000057712566
     3)字符常量用带有“X”的十六进制序数字符表示。
 字符 ： 数字{十六进制数}“X”
     4）字符串是一列用单引号（‘）或双引号（“）括起来的字符。开放的引用必须与封闭的引用一样，并且不能出现在字符串里。字符的多少称为字符串的长度。长度是1的字符串可以用在任何允许使用字符常量的地方。
@@ -83,19 +83,19 @@ Institut für Computersysteme, ETH Zürich,
 
     ABS	(10.3)			LEN(10.3)
     ASH	(10.3)			LONG (10.3)
-    BOOLEAN (6.1)		LONGINT (6.1)
-    CAP	(10.3)			LONGREAL(6.1)
+    BOOLEAN (6.1)		SIGNED32 (6.1)
+    CAP	(10.3)			FLOAT64(6.1)
     CHAR (6.1)			MAX (10.3)
     CHR	(10.3)			MIN (10.3)
     COPY (10.3)			 NEW(10.3)
     DEC	(10.3)			ODD (10.3)
     ENTIER (10.3)		ORD(10.3)
-    EXCL (10.3)			REAL (6.1)
+    EXCL (10.3)			FLOAT32 (6.1)
     FALSE (6.1)			SET (6.1)
     HALT (10.3)			SHORT	(10.3)
-    INC	(10.3)			SHORTINT (6.1)
+    INC	(10.3)			SIGNED8 (6.1)
     INCL (10.3)			SIZE (10.3)
-    INTEGER (6.1)		TRUE (6.1)
+    SIGNED16 (6.1)		TRUE (6.1)
     
 ５常量声明
     常量声明给标识符赋予一个常量。
@@ -112,39 +112,39 @@ Institut für Computersysteme, ETH Zürich,
     类型声明：公开成员 “＝”类型。
     类型：限制标识符|数组类型|记录类型|指针类型|过程类型。
     例如：
-    Table = ARRAY N OF REAL
+    Table = ARRAY N OF FLOAT32
 	Tree = POINTER TO Node
 	Node =  RECORD
-		key : INTEGER;
+		key : SIGNED16;
 		left, right: Tree
 	END
 	
 	CenterTree = POINTER TO CenterNode
 	CenterNode = RECORD (Node)
-		width: INTEGER;
+		width: SIGNED16;
 		subnode: Tree
     END
 	
-	Function = PROCEDURE(x: INTEGER): INTEGER
+	Function = PROCEDURE(x: SIGNED16): SIGNED16
     6.1 基本类型
     基本类型由预声明标识符表示。相应的算子在8.2中定义，预声明函数过程见10.3。基本类型值的范围如下：
 1. 布尔型（BOOLEAN）：逻辑值TURE和FALSE
 2. 字符型（CHAR）：扩展ASCII码字符（OX至OFFX）
-3. 短整型（SHORTINT）：在最小短整型数和最大短整型数之间的整数
-4. 整型（INTEGER）：在最小整型数和最大整型数之间的整数
-5. 长整型（LONGINT）：在最小长整型数和最大长整型数之间的整数
-6. 实型（REAL）：在最小实型数和最大实型数之间的实数
-7. 长实型（LONGREAL）：在最小长实型数和最大长实型数之间的实数
+3. 短整型（SIGNED8）：在最小短整型数和最大短整型数之间的整数
+4. 整型（SIGNED16）：在最小整型数和最大整型数之间的整数
+5. 长整型（SIGNED32）：在最小长整型数和最大长整型数之间的整数
+6. 实型（FLOAT32）：在最小实型数和最大实型数之间的实数
+7. 长实型（FLOAT64）：在最小长实型数和最大长实型数之间的实数
 8. 集合型（SET）：在0和最大集合型数之间的整数集合
 9. PTR型（PTR）：任意结构指针类型的基础类型
     类型3到5都是整数型，类型6和7都是实型，他们合起来称为数字型。他们构成了一个层次关系；大类型（值）的范围包含小类型（值）的范围：
-	LONGREAL  >=  REAL  >=  LONGINT  >=  INTEGER  >=  SHORTINT
+	FLOAT64  >=  FLOAT32  >=  SIGNED32  >=  SIGNED16  >=  SIGNED8
     6.2 数组类型
     数组是一列类型（称为元素类型）相同的元素构成的结构。元素的个数称为数组的长度。数组元素由下标指定，下标从0到长度－1。
     数组类型：数组[长度｛“，”长度｝]OF 类型。
     长度：常量表达式。
     例如：
-        ARRAY 10, N OF INTEGER
+        ARRAY 10, N OF SIGNED16
     	ARRAY OF CHAR
 形为
 	ARRAY L0, L1, ..., Ln OF T
@@ -161,17 +161,17 @@ Institut für Computersysteme, ETH Zürich,
     成员列表：[标识符列表“：”类型]。
     例如：
     RECORD
-		day, month, year: INTEGER
+		day, month, year: SIGNED16
 	END
 
 	RECORD
 		name, firstname: ARRAY 32 OF CHAR;
-		age: INTEGER;
-		salary: REAL
+		age: SIGNED16;
+		salary: FLOAT32
 	END
     记录类型是可扩展的，如记录类型可以声明为其他记录类型的扩展。例如
-	T0 = RECORD x: INTEGER END
-    	T1 = RECORD (T0) y: REAL END
+	T0 = RECORD x: SIGNED16 END
+    	T1 = RECORD (T0) y: FLOAT32 END
     T1是T0的（直接）扩展，T0是T1的（直接）基础类型（见附录.A）.扩展类型T1包含基础类型的成员和在T1中声明的成员（见6章）。所有在扩展记录中声明的标识符必须与基础记录类型中声明的标识符不同。
     6.4指针类型
     假设指针类型变量P指向一些T类型变量。T称为P的指针基础类型并且T必须是记录或数组类型。指针类型继承了其指针基础类型的扩展关系：假如类型T1是T 的扩展，P1是POINT TO T1类型，则P1也是P的扩展。
@@ -186,15 +186,15 @@ Institut für Computersysteme, ETH Zürich,
    变量声明给变量赋以标识符和数据类型。
     变量声明：标识符表“：”类型。
     例如：
-    i, j, k: INTEGER
-	x, y: REAL
+    i, j, k: SIGNED16
+	x, y: FLOAT32
 	p, q: BOOLEAN
 	s: SET
 	F: Function
-	a: ARRAY 100 OF REAL
+	a: ARRAY 100 OF FLOAT32
 	w: ARRAY 16 OF RECORD
 		name: ARRAY 32 OF CHAR;
-		count: INTEGER
+		count: SIGNED16
 	END
 	t, c: Tree
     记录和指针变量既有静态类型（声明类型－简称类型）又有动态类型（在运行时所采用的类型）。记录类型的指针和变量参数的动态类型可能是其静态类型的扩展。静态类型决定哪些记录成员可到达。动态类型用来调用类型绑定过程（见10.2）。
@@ -206,8 +206,8 @@ Institut für Computersysteme, ETH Zürich,
     指定器：限制标识符｛“.”标识符|“[”表达式表“]”|“^”|“（”限制标识符“）”｝；
     表达式列表：表达式｛“，”表达式｝
     例如：
-    i	(INTEGER)
-	a[i]	(REAL)
+    i	(SIGNED16)
+	a[i]	(FLOAT32)
 	w[3].name[i]	(CHAR)
 	t.left.right	(Tree)
     t(CenterTree).subnode	(Tree)
@@ -268,13 +268,13 @@ x = (x DIV y) * y + (x MOD y)
 1) v 是记录类型的变量参数或v 是指针，和如果
 2) T 是v的静态类型的扩展。
     表达式的例子（7章提及）
-    1991	             INTEGER
-	i DIV 3	             INTEGER
+    1991	             SIGNED16
+	i DIV 3	             SIGNED16
 	~p OR q	             BOOLEAN
-	(i+j) * (i-j)	     INTEGER
+	(i+j) * (i-j)	     SIGNED16
 	s - {8, 9, 13}	     SET
-	i + x	             REAL
-	a[i+j] * a[i-j]	     REAL
+	i + x	             FLOAT32
+	a[i+j] * a[i-j]	     FLOAT32
 	(0<=i) & (i<100)	 BOOLEAN
 	t.key = 0	         BOOLEAN
 	k IN {i..j-1}	     BOOLEAN
@@ -405,8 +405,8 @@ With语句：WITH 条件语句 DO 语句列｛“|”条件语句DO语句列｝[
     形参：“（”[形参组｛“；”形参组｝]“）”[“：” 限制标识符]。
     形参组：[VAR]标识符｛“；”标识符｝“：”类型。
     例如：
-PROCEDURE ReadInt(VAR x: INTEGER);
-		VAR i: INTEGER; ch: CHAR;
+PROCEDURE ReadInt(VAR x: SIGNED16);
+		VAR i: SIGNED16; ch: CHAR;
 	BEGIN i := 0; Read(ch);
 		WHILE ("0" <= ch) & (ch <= "9") DO
 			i := 10*i + (ORD(ch)-ORD("0")); Read(ch)
@@ -414,21 +414,21 @@ PROCEDURE ReadInt(VAR x: INTEGER);
 		x := i
 	END ReadInt
 
-	PROCEDURE WriteInt(x: INTEGER); (*0 <= x <100000*)
-		VAR i: INTEGER; buf: ARRAY 5 OF INTEGER;
+	PROCEDURE WriteInt(x: SIGNED16); (*0 <= x <100000*)
+		VAR i: SIGNED16; buf: ARRAY 5 OF SIGNED16;
 	BEGIN i := 0;
 		REPEAT buf[i] := x MOD 10; x := x DIV 10; INC(i) UNTIL x = 0;
 		REPEAT DEC(i); Write(CHR(buf[i] + ORD("0"))) UNTIL i = 0
 	END WriteInt
 
 	PROCEDURE WriteString(s: ARRAY OF CHAR);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN i := 0;
 		WHILE (i < LEN(s)) & (s[i] # 0X) DO Write(s[i]); INC(i) END
 	END WriteString;
 
-	PROCEDURE log2(x: INTEGER): INTEGER;
-		VAR y: INTEGER; (*assume x>0*)
+	PROCEDURE log2(x: SIGNED16): SIGNED16;
+		VAR y: SIGNED16; (*assume x>0*)
 	BEGIN
 		y := 0; WHILE x > 1 DO x := x DIV 2; INC(y) END;
 		RETURN y
@@ -473,9 +473,9 @@ CHR(x)			整型					字符型			整型x变为字符型
 ENTIER(x)		实型					长整型			不大于x的最大整数
 LEN(v, n)		v:数组; n: 整常量	长整型			v的第 n 维长度(第一维 = 0)
 LEN(v)			v: 数组					长整型			与 LEN(v, 0)相同
-LONG(x)		SHORTINT					整型				扩展
-				INTEGER					长整型
-				REAL						长实型
+LONG(x)		SIGNED8					整型				扩展
+				SIGNED16					长整型
+				FLOAT32						长实型
 				
 MAX(T)		T =基本类型			T						T类型最大值
 
@@ -564,8 +564,8 @@ END Trees.
     当模块加载到系统中后执行符号BEGIN后的语句列，这些将调用模块加载后完成。循环调用模块是非法的。特殊（无参数并被调用）过程能被系统激活，这种过程当作命令使用（见附录 D1）。
     
     附录 A：术语解说
-    整数型   SHORTINT, INTEGER, LONGINT
-    实型   REAL, LONGREAL
+    整数型   SIGNED8, SIGNED16, SIGNED32
+    实型   FLOAT32, FLOAT64
     数字型   整数型，实型
 相同类型
     两个Ta和Tb型的变量a和b类型相同如果
@@ -579,7 +579,7 @@ END Trees.
  3) Ta和Tb是形参列表一致的过程类型。
     类型包含
     数字型的层次如下：
-    LONGREAL >= REAL >= LONGINT >= INTEGER >= SHORTINT
+    FLOAT64 >= FLOAT32 >= SIGNED32 >= SIGNED16 >= SIGNED8
 类型扩展
     若类型声明Tb＝RECORD（Ta）...END，Tb是Ta的直接扩展，Ta是Tb的直接基础类型。类型Tb是Ta的扩展（Ta是Tb的基础类型）如果
 1) Ta与Tb是相同的类型，或
@@ -711,7 +711,7 @@ MODULE Counter;
 	IMPORT Texts, Oberon;
 
 	VAR
-		counter: LONGINT;
+		counter: SIGNED32;
 		w: Texts.Writer;
 
 	PROCEDURE Add*;   (* takes a numeric argument from the command line *)

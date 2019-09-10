@@ -9,7 +9,7 @@ CONST
 TYPE
 	Writer = OBJECT
 	VAR
-		c: LONGINT;
+		c: SIGNED32;
 	BEGIN {ACTIVE}
 		FOR c := 1 TO Count DO
 			Increment
@@ -27,9 +27,9 @@ TYPE
 
 	Printer = OBJECT
 	VAR
-		id, count: LONGINT;
+		id, count: SIGNED32;
 
-		PROCEDURE & Init(i: LONGINT);
+		PROCEDURE & Init(i: SIGNED32);
 		BEGIN
 			id := i
 		END Init;
@@ -50,11 +50,11 @@ TYPE
 
 	IndependentWriter = OBJECT
 	VAR
-		i, c, id: LONGINT;
+		i, c, id: SIGNED32;
 		lock: BOOLEAN;
 		padding: ARRAY 30 OF CHAR;
 
-		PROCEDURE & Init(id: LONGINT);
+		PROCEDURE & Init(id: SIGNED32);
 		BEGIN
 			SELF.id := id
 		END Init;
@@ -78,11 +78,11 @@ TYPE
 
 	IndependentWriter2 = OBJECT
 	VAR
-		i, c, id, d: LONGINT;
+		i, c, id, d: SIGNED32;
 		lock: BOOLEAN;
 		padding: ARRAY 30 OF CHAR;
 
-		PROCEDURE & Init(id: LONGINT);
+		PROCEDURE & Init(id: SIGNED32);
 		BEGIN
 			SELF.id := id
 		END Init;
@@ -106,7 +106,7 @@ TYPE
 	Buffer = ARRAY 1024 * 1024 OF CHAR;
 
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 	lock: RECORD
 		padding: ARRAY 31 OF CHAR;
 		lock: BOOLEAN;
@@ -149,7 +149,7 @@ VAR
 	END Bad;
 
 	PROCEDURE Increment;
-	VAR j: LONGINT;
+	VAR j: SIGNED32;
 	BEGIN
 		Lock;
 		INC(i);

@@ -53,16 +53,16 @@ CONST
 
 TYPE
 	ErrorItem = POINTER TO RECORD
-		itemPosition	:		LONGINT;
-		errorTag* 		: 		LONGINT;
-		errorSubcode*	:		LONGINT;
+		itemPosition	:		SIGNED32;
+		errorTag* 		: 		SIGNED32;
+		errorSubcode*	:		SIGNED32;
 		next*			:		ErrorItem;
 	END;
 
 	ErrorManager* = OBJECT
 
 	(* Print errors as described in HID Parser Error Codes, Version 1.0, 30.01.1998 *)
-	PROCEDURE PrintError*(errorTag, errorSubcode:LONGINT);
+	PROCEDURE PrintError*(errorTag, errorSubcode:SIGNED32);
 	BEGIN
 		CASE errorTag OF
 			UnknownItem:
@@ -294,7 +294,7 @@ TYPE
 		hidErrorManager 			: ErrorManager;
 
 		(* add error at the end of the linked list*)
-		PROCEDURE Add*(position, errorTag, errorSubcode : LONGINT);
+		PROCEDURE Add*(position, errorTag, errorSubcode : SIGNED32);
 		BEGIN
 			(*detect empty list*)
 			IF(firstErrorItem=NIL) THEN

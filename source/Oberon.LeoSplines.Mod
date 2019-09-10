@@ -19,13 +19,13 @@ MODULE LeoSplines IN Oberon; (** portable **)	(* eos  *)
 	TYPE
 		Spline* = POINTER TO SplineDesc;
 		SplineDesc* = RECORD (LeoPaths.SegmentDesc)
-			dx0*, dy0*: REAL;
+			dx0*, dy0*: FLOAT32;
 		END;
 
 		BoxData = RECORD (GfxPaths.EnumData)
-			llx, lly, urx, ury: REAL;	(* bounding box *)
-			dx0, dy0: REAL;	(* direction of last element *)
-			cx, cy: REAL;	(* start point of current path element *)
+			llx, lly, urx, ury: FLOAT32;	(* bounding box *)
+			dx0, dy0: FLOAT32;	(* direction of last element *)
+			cx, cy: FLOAT32;	(* start point of current path element *)
 		END;
 
 		DrawData = RECORD (GfxPaths.EnumData)
@@ -34,14 +34,14 @@ MODULE LeoSplines IN Oberon; (** portable **)	(* eos  *)
 		END;
 
 		ProjectData = RECORD (GfxPaths.EnumData)
-			llx, lly, urx, ury: REAL;	(* query rectangle *)
-			qx, qy, px, py: REAL;	(* query point and projected point *)
-			cx, cy: REAL;	(* start point of current path element *)
+			llx, lly, urx, ury: FLOAT32;	(* query rectangle *)
+			qx, qy, px, py: FLOAT32;	(* query point and projected point *)
+			cx, cy: FLOAT32;	(* start point of current path element *)
 			hit: BOOLEAN;
 		END;
 
 
-	PROCEDURE GetCoords (s: Spline; VAR xc, yc: ARRAY OF REAL; VAR n: INTEGER);
+	PROCEDURE GetCoords (s: Spline; VAR xc, yc: ARRAY OF FLOAT32; VAR n: SIGNED16);
 		VAR p: Leonardo.Shape;
 	BEGIN
 		p := s.bottom; n := 0;
@@ -56,9 +56,9 @@ MODULE LeoSplines IN Oberon; (** portable **)	(* eos  *)
 	END GetCoords;
 
 	PROCEDURE IncludeElem (VAR data: GfxPaths.EnumData);
-		VAR rx, ry, r: REAL;
+		VAR rx, ry, r: FLOAT32;
 
-		PROCEDURE incl (VAR data: BoxData; x, y: REAL);
+		PROCEDURE incl (VAR data: BoxData; x, y: FLOAT32);
 		BEGIN
 			IF x < data.llx THEN data.llx := x
 			ELSIF x > data.urx THEN data.urx := x
@@ -86,7 +86,7 @@ MODULE LeoSplines IN Oberon; (** portable **)	(* eos  *)
 	END IncludeElem;
 
 	PROCEDURE CalcBox (s: Spline; VAR mat: GfxMatrix.Matrix);
-		VAR xc, yc: ARRAY GfxPaths.MaxSplinePoints OF REAL; n: INTEGER; data: BoxData; bw: REAL;
+		VAR xc, yc: ARRAY GfxPaths.MaxSplinePoints OF FLOAT32; n: SIGNED16; data: BoxData; bw: FLOAT32;
 	BEGIN
 		Leonardo.GetComponentsBox(s.bottom, s.llx, s.lly, s.urx, s.ury, s.bw);
 		GetCoords(s, xc, yc, n);
@@ -148,7 +148,7 @@ MODULE LeoSplines IN Oberon; (** portable **)	(* eos  *)
 	END DrawElem;
 
 	PROCEDURE Draw (s: Spline; pen: LeoPens.Pen);
-		VAR xc, yc: ARRAY GfxPaths.MaxSplinePoints OF REAL; n: INTEGER; data: DrawData; dx, dy: REAL;
+		VAR xc, yc: ARRAY GfxPaths.MaxSplinePoints OF FLOAT32; n: SIGNED16; data: DrawData; dx, dy: FLOAT32;
 	BEGIN
 		IF (s.bottom # NIL) & (s.bottom # s.top) THEN
 			GetCoords(s, xc, yc, n);
@@ -175,7 +175,7 @@ MODULE LeoSplines IN Oberon; (** portable **)	(* eos  *)
 	END DragElem;
 
 	PROCEDURE Drag (s: Spline; ctxt: Gfx.Context);
-		VAR p: Leonardo.Shape; xc, yc: ARRAY GfxPaths.MaxSplinePoints OF REAL; n: INTEGER; data: DrawData;
+		VAR p: Leonardo.Shape; xc, yc: ARRAY GfxPaths.MaxSplinePoints OF FLOAT32; n: SIGNED16; data: DrawData;
 	BEGIN
 		IF (s.bottom # NIL) & (s.bottom # s.top) THEN
 			p := s.bottom;
@@ -211,7 +211,7 @@ MODULE LeoSplines IN Oberon; (** portable **)	(* eos  *)
 	END Render;
 
 	PROCEDURE ProjectElem (VAR data: GfxPaths.EnumData);
-		VAR project: GfxPaths.Enumerator; x, y: REAL;
+		VAR project: GfxPaths.Enumerator; x, y: FLOAT32;
 	BEGIN
 		project := ProjectElem;	(* WITH workaround *)
 		WITH data: ProjectData DO
@@ -233,8 +233,8 @@ MODULE LeoSplines IN Oberon; (** portable **)	(* eos  *)
 		END
 	END ProjectElem;
 
-	PROCEDURE Project (s: Spline; x, y, llx, lly, urx, ury: REAL; VAR px, py: REAL): BOOLEAN;
-		VAR xc, yc: ARRAY GfxPaths.MaxSplinePoints OF REAL; n: INTEGER; data: ProjectData;
+	PROCEDURE Project (s: Spline; x, y, llx, lly, urx, ury: FLOAT32; VAR px, py: FLOAT32): BOOLEAN;
+		VAR xc, yc: ARRAY GfxPaths.MaxSplinePoints OF FLOAT32; n: SIGNED16; data: ProjectData;
 	BEGIN
 		IF (s.bottom # NIL) & (s.bottom # s.top) THEN
 			GetCoords(s, xc, yc, n);
@@ -251,7 +251,7 @@ MODULE LeoSplines IN Oberon; (** portable **)	(* eos  *)
 	END Project;
 
 	PROCEDURE Locate (s: Spline; VAR msg: Leonardo.LocateMsg);
-		VAR res: Leonardo.Shape; glm: GfxMatrix.Matrix; llx, lly, urx, ury, px, py: REAL;
+		VAR res: Leonardo.Shape; glm: GfxMatrix.Matrix; llx, lly, urx, ury, px, py: FLOAT32;
 	BEGIN
 		IF (msg.llx <= s.urx) & (s.llx <= msg.urx) & (msg.lly <= s.ury) & (s.lly <= msg.ury) THEN
 			IF msg.id = Leonardo.inside THEN
@@ -362,7 +362,7 @@ MODULE LeoSplines IN Oberon; (** portable **)	(* eos  *)
 
 	PROCEDURE HandleSpline (obj: Objects.Object; VAR msg: Objects.ObjMsg);
 		VAR
-			c: Spline; ver: LONGINT; i: INTEGER; real, x0, y0, x1, y1, bw: REAL; cm: Objects.CopyMsg;
+			c: Spline; ver: SIGNED32; i: SIGNED16; real, x0, y0, x1, y1, bw: FLOAT32; cm: Objects.CopyMsg;
 			s: Leonardo.Shape; bool: BOOLEAN;
 	BEGIN
 		IF msg IS Objects.FileMsg THEN

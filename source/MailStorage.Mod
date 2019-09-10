@@ -15,7 +15,7 @@ TYPE Storage* = OBJECT
 		storageFile : Files.File;
 		indexFile : Files.File;
 		hFrom, hTo, hSubject, hDate : ARRAY 64 OF CHAR;
-		nofItems : LONGINT;
+		nofItems : SIGNED32;
 		index : Index;
 		persistentIndex : BOOLEAN;
 
@@ -39,8 +39,8 @@ TYPE Storage* = OBJECT
 			END
 		END Open;
 
-		PROCEDURE Match(VAR buf: ARRAY OF CHAR; with: ARRAY OF CHAR; VAR i : LONGINT): BOOLEAN;
-		VAR j : LONGINT;
+		PROCEDURE Match(VAR buf: ARRAY OF CHAR; with: ARRAY OF CHAR; VAR i : SIGNED32): BOOLEAN;
+		VAR j : SIGNED32;
 			PROCEDURE MYCAP(c : CHAR) : CHAR;
 			BEGIN
 				IF ('a' <= c) & (c <= 'z') THEN c := CAP(c) END;
@@ -54,7 +54,7 @@ TYPE Storage* = OBJECT
 		END Match;
 
 		PROCEDURE ScanMessage(r : Streams.Reader; VAR from, to : Streams.Position);
-		VAR line : ARRAY 1001 OF CHAR; i : LONGINT;
+		VAR line : ARRAY 1001 OF CHAR; i : SIGNED32;
 		BEGIN
 			hFrom := ""; hTo := ""; hSubject := ""; hDate := "";
 			from := r.Pos();
@@ -85,7 +85,7 @@ TYPE Storage* = OBJECT
 		END ScanStorage;
 
 		PROCEDURE GrowIndex;
-		VAR new : Index; i : LONGINT;
+		VAR new : Index; i : SIGNED32;
 		BEGIN
 			NEW(new, LEN(index) * 2);
 			FOR i := 0 TO nofItems - 1 DO new[i] := index[i] END;
@@ -104,12 +104,12 @@ TYPE Storage* = OBJECT
 			INC(nofItems)
 		END AddIndex;
 
-		PROCEDURE GetCount*(): LONGINT;
+		PROCEDURE GetCount*(): SIGNED32;
 		BEGIN
 			RETURN nofItems
 		END GetCount;
 
-		PROCEDURE GetHeader*(nr : LONGINT; VAR hFrom, hTo, hSubject, hDate : ARRAY OF CHAR);
+		PROCEDURE GetHeader*(nr : SIGNED32; VAR hFrom, hTo, hSubject, hDate : ARRAY OF CHAR);
 		BEGIN
 			IF (nr >= 0) & (nr < nofItems) THEN
 				COPY(index[nr].hFrom, hFrom);
@@ -155,7 +155,7 @@ TYPE Storage* = OBJECT
 	END Storage;
 
 PROCEDURE Test*;
-VAR storage : Storage; i : LONGINT;
+VAR storage : Storage; i : SIGNED32;
 BEGIN
 	NEW(storage);
 	storage.Open("MailMessages", "");

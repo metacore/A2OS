@@ -29,9 +29,9 @@ TYPE
 		dt: Dates.DateTime;
 		running, terminated: BOOLEAN;
 		ip: IP.Adr;
-		branch, command, seqNum, messageType: INTEGER;
-		uin, receiverUin, port, receiveBufOffset: LONGINT;
-		len: SIZE; res: WORD;
+		branch, command, seqNum, messageType: SIGNED16;
+		uin, receiverUin, port, receiveBufOffset: SIGNED32;
+		len: SIZE; res: INTEGER;
 		user: Base.User;
 		users: Base.Users;
 		clients: Base.List;
@@ -57,7 +57,7 @@ TYPE
 
 	PROCEDURE FinalizeClients(clients: Base.List);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		p: ANY;
 		client: Base.Client;
 	BEGIN
@@ -71,10 +71,10 @@ TYPE
 	END FinalizeClients;
 
 	PROCEDURE FindClient (clients: Base.List;
-		uin: LONGINT;
+		uin: SIGNED32;
 		VAR client: Base.Client): BOOLEAN;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		p: ANY;
 	BEGIN
 		i := 0;
@@ -91,7 +91,7 @@ TYPE
 
 	PROCEDURE CheckKeepAlive (clients: Base.List);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		p: ANY;
 	BEGIN
 		i := 0;
@@ -108,10 +108,10 @@ TYPE
 	END CheckKeepAlive;
 
 
-	PROCEDURE Server_NewUserReply (ip: IP.Adr; port: LONGINT; uin: LONGINT;
-		seqNum: INTEGER; sendBuf: Base.Buffer; s: UDP.Socket);
+	PROCEDURE Server_NewUserReply (ip: IP.Adr; port: SIGNED32; uin: SIGNED32;
+		seqNum: SIGNED16; sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
-		res: WORD;
+		res: INTEGER;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (Base.NEW_USER_REPLY, seqNum, sendBuf);
@@ -125,7 +125,7 @@ TYPE
 	PROCEDURE Server_LoginReply (client: Base.Client;
 		sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
-		res: WORD;
+		res: INTEGER;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (Base.LOGIN_REPLY, client.inSeqNum, sendBuf);
@@ -140,13 +140,13 @@ TYPE
 		user: Base.User; sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
 		string: String;
-		res: WORD; len: LONGINT;
+		res: INTEGER; len: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (Base.INFO_REPLY, client.inSeqNum, sendBuf);
 
 		sendBuf.AddInt (user.uin, 4);
 
-		len := (Strings.Length (user.shortName) + 1)(LONGINT);
+		len := (Strings.Length (user.shortName) + 1)(SIGNED32);
 		sendBuf.AddInt (len, 2);
 		sendBuf.Add (user.shortName, 0, len, TRUE, res);
 
@@ -157,7 +157,7 @@ TYPE
 	PROCEDURE Server_ACK (client: Base.Client;
 		sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
-		res: WORD;
+		res: INTEGER;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (Base.ACK, client.inSeqNum, sendBuf);
@@ -167,9 +167,9 @@ TYPE
 	END Server_ACK;
 
 	PROCEDURE Server_UserStatus (client, receiver: Base.Client;
-		status: INTEGER; sendBuf: Base.Buffer; s: UDP.Socket);
+		status: SIGNED16; sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
-		res: WORD;
+		res: INTEGER;
 		string: String;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (status, receiver.outSeqNum, sendBuf);
@@ -187,10 +187,10 @@ TYPE
 	END Server_UserStatus;
 
 	PROCEDURE Server_ReceiveMessage (client, receiver: Base.Client; dt: Dates.DateTime;
-		messageType: INTEGER; message: String; sendBuf: Base.Buffer; s: UDP.Socket);
+		messageType: SIGNED16; message: String; sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
 		string: String;
-		res: WORD; len: SIZE;
+		res: INTEGER; len: SIZE;
 	BEGIN {EXCLUSIVE}
 		Base.ServerPacketInit (Base.RECEIVE_MESSAGE, receiver.outSeqNum, sendBuf);
 
@@ -223,9 +223,9 @@ TYPE
 
 	PROCEDURE MulticastStatus (clients: Base.List;
 		client: Base.Client;
-		status: INTEGER; sendBuf: Base.Buffer; s: UDP.Socket);
+		status: SIGNED16; sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		p: ANY;
 		receiver: Base.Client;
 	BEGIN
@@ -244,10 +244,10 @@ TYPE
 	END MulticastStatus;
 
 	PROCEDURE MulticastMessage (clients: Base.List;
-		client: Base.Client; dt: Dates.DateTime; messageType: INTEGER; message: String;
+		client: Base.Client; dt: Dates.DateTime; messageType: SIGNED16; message: String;
 		sendBuf: Base.Buffer; s: UDP.Socket);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		p: ANY;
 		receiver: Base.Client;
 	BEGIN
@@ -515,7 +515,7 @@ TYPE
 VAR
 	instance: Instance;
 
-PROCEDURE Log (type, code : SHORTINT; msg: ARRAY OF CHAR; showOnKernelLog : BOOLEAN);
+PROCEDURE Log (type, code : SIGNED8; msg: ARRAY OF CHAR; showOnKernelLog : BOOLEAN);
 VAR message : Events.Message;
 BEGIN
 	COPY(msg, message);
@@ -525,7 +525,7 @@ END Log;
 PROCEDURE Start* ;
 VAR
 	s: UDP.Socket;
-	res: WORD;
+	res: INTEGER;
 	str: ARRAY 256 OF CHAR;
 BEGIN
 	IF instance = NIL THEN

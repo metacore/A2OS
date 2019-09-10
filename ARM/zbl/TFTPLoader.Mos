@@ -11,7 +11,7 @@ VAR
 	PROCEDURE Load (CONST name, host: ARRAY OF CHAR);
 	VAR
 		src: EnetBase.IpAddr;
-		ignore: LONGINT;
+		ignore: SIGNED32;
 	BEGIN
 		IF ~EnetBase.StrToIpAddr(host, src) THEN Loader.NotifyDone(Loader.InvalidHost); RETURN END;
 		IF ~EnetTftp.ReadFile(tx, name, "octet", src, TftpReceiver, NIL, ignore) THEN Loader.NotifyDone(Loader.ImageTransferError) END

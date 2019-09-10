@@ -4,7 +4,7 @@ IMPORT
 	Clock, KernelLog, Modules, Network, IP, TCP;
 
 TYPE
-	TimeDate = RECORD h, m, s, day,month,year: LONGINT END;
+	TimeDate = RECORD h, m, s, day,month,year: SIGNED32 END;
 
 PROCEDURE GetTime(VAR dt: TimeDate);
 BEGIN
@@ -17,15 +17,15 @@ BEGIN
 	INC(dt.year, 1900)
 END GetTime;
 
-PROCEDURE IntToStr(v, len: LONGINT; VAR s: ARRAY OF CHAR; VAR pos: LONGINT);
-VAR i: LONGINT;
+PROCEDURE IntToStr(v, len: SIGNED32; VAR s: ARRAY OF CHAR; VAR pos: SIGNED32);
+VAR i: SIGNED32;
 BEGIN
 	FOR i := 1 TO len DO s[pos+len-i] := CHR(ORD("0")+v MOD 10); v := v DIV 10 END;
 	INC(pos, len)
 END IntToStr;
 
 PROCEDURE TimeDateToStr(dt: TimeDate; VAR s: ARRAY OF CHAR);
-VAR p: LONGINT;
+VAR p: SIGNED32;
 BEGIN
 	IntToStr(dt.day, 2, s, p); s[p] := "."; INC(p);
 	IntToStr(dt.month, 2, s, p); s[p] := "."; INC(p);
@@ -36,7 +36,7 @@ BEGIN
 END TimeDateToStr;
 
 PROCEDURE DumpListener(fip: IP.Adr; buffer: Network.Buffer);
-VAR fport, lport, flags: LONGINT; time: TimeDate; adrStr, timeStr: ARRAY 32 OF CHAR;
+VAR fport, lport, flags: SIGNED32; time: TimeDate; adrStr, timeStr: ARRAY 32 OF CHAR;
 BEGIN
 	GetTime(time); TimeDateToStr(time, timeStr);
 	fport := Network.GetNet2(buffer.data, buffer.ofs);

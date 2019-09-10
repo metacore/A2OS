@@ -811,8 +811,8 @@ ps7_debug_1_0 = [
 		as would be required if everything was done with procedure calls. This is even more true on ARM platform, where the large immediates would be stored
 		in (instruction) memory anyway.
 	*)
-	PROCEDURE InitSubset(CONST data: ARRAY [*] OF LONGINT);
-	VAR val, valo, mask: SET; i, j: LONGINT; opcode, adr: LONGINT;
+	PROCEDURE InitSubset(CONST data: ARRAY [*] OF SIGNED32);
+	VAR val, valo, mask: SET; i, j: SIGNED32; opcode, adr: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE i < LEN(data,0) DO

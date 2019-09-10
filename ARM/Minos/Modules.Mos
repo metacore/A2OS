@@ -18,39 +18,39 @@ TYPE Name = ARRAY 32 OF CHAR;
 	Command* = POINTER TO CommandDesc;
 	CommandDesc = RECORD
 		next*: Command;
-		offset: LONGINT;
+		offset: SIGNED32;
 		name*: Name
 	END;
 	
 	EntryTable = POINTER TO EntryTableDesc;
 	EntryTableDesc = RECORD
-		entry: ARRAY 256 OF LONGINT
+		entry: ARRAY 256 OF SIGNED32
 	END;
 
 	Module* = POINTER TO ModuleDesc;
 	ModuleDesc = RECORD 
 		next*: Module;
-		key: LONGINT;				(* Unique key of Module *)
-		dbase, pbase*: LONGINT;		(* dbase : Base address of Module Variables, pbase: Base address of code *)
-		size*, refcnt*: LONGINT;		(* size: code size in bytes, rofcnt: reference counter *)
+		key: SIGNED32;				(* Unique key of Module *)
+		dbase, pbase*: SIGNED32;		(* dbase : Base address of Module Variables, pbase: Base address of code *)
+		size*, refcnt*: SIGNED32;		(* size: code size in bytes, rofcnt: reference counter *)
 		command*: Command;		(* First command *)
 		entrytable: EntryTable;		(* Array containing the offset rel to pbase for each exported function *)
 		name*: Name				(* Name of module *)
 	END;
 
 VAR root*: Module;
-	res: LONGINT; 
+	res: SIGNED32; 
 	errstring*: ARRAY 32 OF CHAR;
 	
 	
-PROCEDURE GetRes*(VAR err: ARRAY OF CHAR): LONGINT;
+PROCEDURE GetRes*(VAR err: ARRAY OF CHAR): SIGNED32;
 BEGIN
 	Strings.Copy(errstring, err);
 	RETURN res
 END GetRes;
 
 PROCEDURE JoinExtension (CONST name, extension: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR);
-VAR i, j: LONGINT;
+VAR i, j: SIGNED32;
 BEGIN
 	i := 0; WHILE name[i] # 0X DO fullname[i] := name[i]; INC(i) END;
 	j := 0; WHILE extension[j] # 0X DO fullname[i] := extension[j]; INC(i); INC(j) END;
@@ -62,34 +62,34 @@ BEGIN JoinExtension (name, ".arm", fullname)
 END MakeName;
 
 PROCEDURE ReadString (VAR r: OFS.Rider; VAR string: ARRAY OF CHAR);
-VAR ch: CHAR; i: LONGINT;
+VAR ch: CHAR; i: SIGNED32;
 BEGIN i := 0;
 	REPEAT OFS.Read (r, ch); string[i] := ch; INC (i) UNTIL ch = 0X;
 END ReadString;
 
-PROCEDURE Fixup(pbase, fixloc, offset, base: LONGINT; CONST entry: ARRAY OF LONGINT);
-	VAR instr, next, pno, vno, reg, disp: LONGINT;
+PROCEDURE Fixup(pbase, fixloc, offset, base: SIGNED32; CONST entry: ARRAY OF SIGNED32);
+	VAR instr, next, pno, vno, reg, disp: SIGNED32;
 BEGIN
 (*
 	Trace.Ln;
 	Trace.String("Fixup : pbase : "); Trace.Hex( pbase, -8 ); Trace.String(", fixloc : "); Trace.Hex( fixloc, -8 ); Trace.String(", offset : "); Trace.Hex( offset, -8 ); Trace.String(", base : "); Trace.Hex( base, -8 ); Trace.Ln;
 *)
 	WHILE fixloc # 0 DO
-		SYSTEM.GET (pbase + fixloc*4, instr); next := instr MOD LONGINT( 10000H );
+		SYSTEM.GET (pbase + fixloc*4, instr); next := instr MOD SIGNED32( 10000H );
 (*		Trace.String("GET("); Trace.Hex( pbase+fixloc*4, -8 ); Trace.String("), Inst : "); Trace.Hex( instr, -8 ); Trace.String(", next "); Trace.Hex( next, -8 ); Trace.Ln; *)
-		pno := instr DIV LONGINT( 10000H ) MOD LONGINT( 100H );
-		IF instr DIV LONGINT( 1000000H ) MOD LONGINT( 100H ) = LONGINT( 0EBH ) THEN  (* case  BL *)
-			instr := instr DIV LONGINT( 1000000H ) * LONGINT( 1000000H ) + LONGINT(entry[pno] + offset - fixloc - 2) MOD LONGINT( 1000000H );
+		pno := instr DIV SIGNED32( 10000H ) MOD SIGNED32( 100H );
+		IF instr DIV SIGNED32( 1000000H ) MOD SIGNED32( 100H ) = SIGNED32( 0EBH ) THEN  (* case  BL *)
+			instr := instr DIV SIGNED32( 1000000H ) * SIGNED32( 1000000H ) + SIGNED32(entry[pno] + offset - fixloc - 2) MOD SIGNED32( 1000000H );
 		(*ELSIF instr DIV 1000000H = 0 THEN (*indir. variable address*) instr := entry[pno] + base*)
-		ELSE (*indir. proc. address*) instr := LONGINT( entry[pno]*4 ) + base
+		ELSE (*indir. proc. address*) instr := SIGNED32( entry[pno]*4 ) + base
 		END ;
 (*		Trace.String("PUT : "); Trace.Hex( instr, -8 ); Trace.String(", next : "); Trace.Hex( next*4+pbase, -8 ); Trace.Ln; *)
 		SYSTEM.PUT (pbase + fixloc*4, instr); fixloc := next
 	END
 END Fixup;
 
-PROCEDURE FixSelf (pbase, fixloc, base: LONGINT);
-	VAR instr, next: LONGINT;
+PROCEDURE FixSelf (pbase, fixloc, base: SIGNED32);
+	VAR instr, next: SIGNED32;
 BEGIN
 (*
 	Trace.Ln;
@@ -109,7 +109,7 @@ BEGIN m := root;
 	WHILE (m # NIL) & ~Strings.EqualIgnoreCase(m.name, name) DO m := m.next END;
 END FindModule;
 
-PROCEDURE Call (m: Module; entry: LONGINT);
+PROCEDURE Call (m: Module; entry: SIGNED32);
 VAR 
 	p: PROCEDURE;
 BEGIN 
@@ -127,7 +127,7 @@ END CallP;
 PROCEDURE PrintModuleInfo*( m: Module );
 VAR	
 	c : Command;
-	i : LONGINT;
+	i : SIGNED32;
 	doLoop : BOOLEAN;
 BEGIN
 	IF m # NIL THEN
@@ -179,12 +179,12 @@ END RemoveMod;
 
 PROCEDURE ThisMod* (CONST modname: ARRAY OF CHAR; VAR mod: Module);
 VAR imp: Module; cmd: Command;
-	nofimp, nofentries, codelen, fix, fixself, i, j, base: LONGINT;
+	nofimp, nofentries, codelen, fix, fixself, i, j, base: SIGNED32;
 	f: OFS.File; r: OFS.Rider; err: BOOLEAN;
 	name: ARRAY 32 OF CHAR;
-	key, offset, datasize: LONGINT;
+	key, offset, datasize: SIGNED32;
 	import: ARRAY MAXIMPS OF Module;
-	fixroot: ARRAY MAXIMPS OF LONGINT;
+	fixroot: ARRAY MAXIMPS OF SIGNED32;
 	tempMod: Module;
 BEGIN 
 	mod := root; res := OK;

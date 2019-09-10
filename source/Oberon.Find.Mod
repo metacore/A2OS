@@ -28,7 +28,7 @@ MODULE Find IN Oberon;	(** portable *)	(* tk 12.12.95 / pr 12.12.95 *)
 		W: Texts.Writer;
 
 	PROCEDURE ScanPar (VAR s: Texts.Scanner);
-		VAR t: Texts.Text; beg, end, time: LONGINT;
+		VAR t: Texts.Text; beg, end, time: SIGNED32;
 	BEGIN
 		Texts.OpenScanner(s, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(s);
 		IF (s.class = Texts.Char) & (s.c = "^") THEN
@@ -44,8 +44,8 @@ MODULE Find IN Oberon;	(** portable *)	(* tk 12.12.95 / pr 12.12.95 *)
 
 	PROCEDURE BrowseFile(filename: ARRAY OF CHAR);
 		CONST bufSize = 31744; (*2**15 - 1024*)
-		VAR	F: Files.File; R: Files.Rider; n, pos: LONGINT; m, i, j, i0, b, e: INTEGER;
-				ch, patj: CHAR; found: BOOLEAN; tab: ARRAY 265 OF SHORTINT; buffer: ARRAY bufSize OF CHAR;
+		VAR	F: Files.File; R: Files.Rider; n, pos: SIGNED32; m, i, j, i0, b, e: SIGNED16;
+				ch, patj: CHAR; found: BOOLEAN; tab: ARRAY 265 OF SIGNED8; buffer: ARRAY bufSize OF CHAR;
 	BEGIN
 		Oberon.Collect;
 		F:=Files.Old(filename);
@@ -95,7 +95,7 @@ MODULE Find IN Oberon;	(** portable *)	(* tk 12.12.95 / pr 12.12.95 *)
 		 END;
 	END BrowseFile;
 
-	PROCEDURE ListFiles(name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN);
+	PROCEDURE ListFiles(name: ARRAY OF CHAR; time, date, size: SIGNED32; VAR continue: BOOLEAN);
 		VAR A: Objects.AttrMsg;
 	BEGIN
 		IF progress # NIL THEN
@@ -173,7 +173,7 @@ MODULE Find IN Oberon;	(** portable *)	(* tk 12.12.95 / pr 12.12.95 *)
 	VAR f: File; s: Texts.Scanner;
 
 	PROCEDURE ReadPattern (VAR pat: ARRAY OF CHAR);
-		VAR t: Texts.Text; r: Texts.Reader; m, beg, end, time: LONGINT; ch: CHAR;
+		VAR t: Texts.Text; r: Texts.Reader; m, beg, end, time: SIGNED32; ch: CHAR;
 	BEGIN
 		Oberon.GetSelection(t, beg, end, time);
 		IF time > 0 THEN

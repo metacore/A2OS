@@ -14,7 +14,7 @@ TYPE
 			keyboard: KeyboardObj;
 			mouse: MouseObj;
 
-		PROCEDURE Mouse*(VAR x, y: INTEGER; VAR keys:SET);
+		PROCEDURE Mouse*(VAR x, y: SIGNED16; VAR keys:SET);
 		BEGIN
 			mouse.Mouse(x, y, keys)
 		END Mouse;
@@ -24,7 +24,7 @@ TYPE
 			keyboard.Read(ch, break)
 		END Read;
 
-		PROCEDURE Available*(VAR num: INTEGER; VAR break: BOOLEAN);
+		PROCEDURE Available*(VAR num: SIGNED16; VAR break: BOOLEAN);
 		BEGIN
 			keyboard.Available(num, break)
 		END Available;
@@ -41,7 +41,7 @@ TYPE
 		VAR
 			input: Inputs.OberonInput;
 
-			head, tail: LONGINT;
+			head, tail: SIGNED32;
 			keys: SET;
 			break: BOOLEAN;
 			buf: ARRAY BufSize OF CHAR;
@@ -75,7 +75,7 @@ TYPE
 			b := break; break := FALSE
 		END Read;
 
-		PROCEDURE Available(VAR num: INTEGER; VAR b: BOOLEAN);
+		PROCEDURE Available(VAR num: SIGNED16; VAR b: BOOLEAN);
 		BEGIN {EXCLUSIVE}
 			num := SHORT((tail-head) MOD BufSize);
 			b := break; break := FALSE
@@ -99,7 +99,7 @@ TYPE
 		VAR
 			input: Inputs.OberonInput;
 			curKeys: SET;
-			curX, curY: INTEGER;
+			curX, curY: SIGNED16;
 
 		PROCEDURE Handle*(VAR msg: Inputs.Message);
 		BEGIN {EXCLUSIVE}
@@ -113,7 +113,7 @@ TYPE
 			IF input # NIL THEN input.timer.Wakeup END
 		END Handle;
 
-		PROCEDURE Mouse(VAR x, y: INTEGER; VAR keys: SET);
+		PROCEDURE Mouse(VAR x, y: SIGNED16; VAR keys: SET);
 		BEGIN {EXCLUSIVE}
 			keys := curKeys; x := curX; y := curY
 		END Mouse;
@@ -129,7 +129,7 @@ VAR
 	default: DefaultInput;
 
 PROCEDURE Install*;
-VAR res: WORD; p: Plugins.Plugin; d: Displays.Display;
+VAR res: INTEGER; p: Plugins.Plugin; d: Displays.Display;
 BEGIN
 	IF default = NIL THEN
 		p := Displays.registry.Get("");	(* get first display *)

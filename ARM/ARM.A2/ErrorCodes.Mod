@@ -23,12 +23,12 @@ CONST
 TYPE
 	Module = POINTER TO RECORD
 		name: Modules.Name;
-		errorBase: LONGINT;
+		errorBase: SIGNED32;
 	END;
 
 VAR
 	modules: ARRAY MaxNumModules OF Module;
-	numModules: LONGINT;
+	numModules: SIGNED32;
 	ln: ARRAY 3 OF CHAR;
 
 	acquire*, release*: PROCEDURE{DELEGATE}(); (** plugable locks for thread-safety if required *)
@@ -36,7 +36,7 @@ VAR
 	(**
 		Register a module by name and get its corresponding error base
 	*)
-	PROCEDURE RegisterModule*(CONST modName: ARRAY OF CHAR; VAR errorBase: LONGINT);
+	PROCEDURE RegisterModule*(CONST modName: ARRAY OF CHAR; VAR errorBase: SIGNED32);
 	VAR mod: Module;
 	BEGIN
 		IF acquire # NIL THEN acquire; END;
@@ -59,7 +59,7 @@ VAR
 		Unregister a module by its name
 	*)
 	PROCEDURE UnregisterModule*(CONST modName: ARRAY OF CHAR);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		IF acquire # NIL THEN acquire; END;
 
@@ -76,7 +76,7 @@ VAR
 	(**
 		Get error code for the module at the specified level
 	*)
-	PROCEDURE Get*(error: LONGINT; level: LONGINT; VAR modName: ARRAY OF CHAR; VAR modError: LONGINT);
+	PROCEDURE Get*(error: SIGNED32; level: SIGNED32; VAR modName: ARRAY OF CHAR; VAR modError: SIGNED32);
 	BEGIN
 		modError := (error DIV (level*ErrorCodeRangeSize))  MOD ErrorCodeRangeSize;
 		COPY(modules[level].name,modName);
@@ -87,8 +87,8 @@ VAR
 
 		Returns -1 in case if the module was not found in the list of registered modules
 	*)
-	PROCEDURE GetErrorBase*(CONST modName: ARRAY OF CHAR): LONGINT;
-	VAR i, errorBase: LONGINT;
+	PROCEDURE GetErrorBase*(CONST modName: ARRAY OF CHAR): SIGNED32;
+	VAR i, errorBase: SIGNED32;
 	BEGIN
 		IF acquire # NIL THEN acquire; END;
 
@@ -107,13 +107,13 @@ VAR
 	(*
 		Get a string representation of an integer (in decimal format)
 	*)
-	PROCEDURE IntToStr(x: HUGEINT; VAR str: ARRAY OF CHAR);
+	PROCEDURE IntToStr(x: SIGNED64; VAR str: ARRAY OF CHAR);
 	VAR
-		i, j: LONGINT;
+		i, j: SIGNED32;
 		ch: CHAR;
 	BEGIN
 		IF x < 0 THEN
-			IF x = MIN(HUGEINT) THEN
+			IF x = MIN(SIGNED64) THEN
 				str := "-9223372036854775808";
 				RETURN;
 			ELSE
@@ -141,9 +141,9 @@ VAR
 
 		errorOnly: TRUE for printing only errors
 	*)
-	PROCEDURE TraceBack*(error: LONGINT; errorOnly: BOOLEAN; tracer: PROCEDURE{DELEGATE}(CONST str: ARRAY OF CHAR));
+	PROCEDURE TraceBack*(error: SIGNED32; errorOnly: BOOLEAN; tracer: PROCEDURE{DELEGATE}(CONST str: ARRAY OF CHAR));
 	VAR
-		level, modError: LONGINT;
+		level, modError: SIGNED32;
 		str: ARRAY 32 OF CHAR;
 	BEGIN
 		IF acquire # NIL THEN acquire; END;

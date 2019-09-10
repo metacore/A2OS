@@ -40,18 +40,18 @@ TYPE
 
 VAR
 	sPat: ARRAY MaxPatLen OF CHAR;	(* search pattern [read only] *)
-	sDv: ARRAY MaxPatLen + 1 OF INTEGER;	(* displacement vector for search pattern *)
-	sPatLen: INTEGER;	(* number of valid characters in sPat [read only] *)
-	lTime: LONGINT;	(* most recent time for sPat and/or rBuf *)
+	sDv: ARRAY MaxPatLen + 1 OF SIGNED16;	(* displacement vector for search pattern *)
+	sPatLen: SIGNED16;	(* number of valid characters in sPat [read only] *)
+	lTime: SIGNED32;	(* most recent time for sPat and/or rBuf *)
 	rBuf: Texts.Buffer;	(* replace buffer [read only] *)
-	InitW, InitH, InitLogW, InitLogH: INTEGER;
-	sCol: INTEGER;
+	InitW, InitH, InitLogW, InitLogH: SIGNED16;
+	sCol: SIGNED16;
 	W: Texts.Writer;
 	FixedDocs: BOOLEAN;
 
-PROCEDURE open(D: Documents.Document; T: Texts.Text; name: ARRAY OF CHAR; VAR w, h: INTEGER);
-VAR F: Files.File; R: Files.Rider; tag: INTEGER; ch: CHAR; s: ARRAY 64 OF CHAR; len: LONGINT;
-	x, y: INTEGER; CM: Gadgets.CmdMsg;
+PROCEDURE open(D: Documents.Document; T: Texts.Text; name: ARRAY OF CHAR; VAR w, h: SIGNED16);
+VAR F: Files.File; R: Files.Rider; tag: SIGNED16; ch: CHAR; s: ARRAY 64 OF CHAR; len: SIGNED32;
+	x, y: SIGNED16; CM: Gadgets.CmdMsg;
 BEGIN
 	w := InitW; h := InitH;
 	F := Files.Old(name);
@@ -111,7 +111,7 @@ BEGIN
 END LoadAttrs;
 
 PROCEDURE LoadTextDocument(D: Documents.Document);
-	VAR w, h: INTEGER; T: Texts.Text; main: TextGadgets.Frame;
+	VAR w, h: SIGNED16; T: Texts.Text; main: TextGadgets.Frame;
 BEGIN
 	NEW(T); open(D, T, D.name, w, h);
 	NEW(main); TextGadgets.Init(main, T, FALSE);
@@ -131,7 +131,7 @@ BEGIN
 END StoreAttrs;
 
 PROCEDURE StoreTextDocument(D: Documents.Document);
-	VAR new: ARRAY 128 OF CHAR; i: INTEGER; f: Files.File; len: LONGINT; F: Display.Frame; R: Files.Rider;
+	VAR new: ARRAY 128 OF CHAR; i: SIGNED16; f: Files.File; len: SIGNED32; F: Display.Frame; R: Files.Rider;
 		M: StoreMsg;
 BEGIN
 	F := D.dsc;
@@ -322,7 +322,7 @@ BEGIN
 END LogHandler;
 
 PROCEDURE LoadLog(D: Documents.Document);
-VAR f: Files.File; R: Files.Rider; name: ARRAY 64 OF CHAR; x, y, w, h, id: INTEGER; main: TextGadgets.Frame;
+VAR f: Files.File; R: Files.Rider; name: ARRAY 64 OF CHAR; x, y, w, h, id: SIGNED16; main: TextGadgets.Frame;
 	CM: Gadgets.CmdMsg; ch: CHAR;
 BEGIN
 	w := InitLogW; h := InitLogH;
@@ -400,7 +400,7 @@ BEGIN
 END GetText;
 
 (** Set the caret at the indicated position in the indicated frame. The text has to correspond. *)
-PROCEDURE SetCaret*(F: Display.Frame; T: Texts.Text; pos: LONGINT);
+PROCEDURE SetCaret*(F: Display.Frame; T: Texts.Text; pos: SIGNED32);
 VAR M: Oberon.CaretMsg;
 BEGIN
 	M.id := Oberon.set; M.F := F; M.car := F; M.text := T; M.pos := pos; Display.Broadcast(M)
@@ -408,7 +408,7 @@ END SetCaret;
 
 (** Same function as Edit.Locate *)
 PROCEDURE Locate*;
-VAR T, text: Texts.Text; S: Texts.Scanner; beg, end, time: LONGINT; F: Display.Frame; D: Documents.Document;
+VAR T, text: Texts.Text; S: Texts.Scanner; beg, end, time: SIGNED32; F: Display.Frame; D: Documents.Document;
 BEGIN
 	text := GetText(F);
 	IF text # NIL THEN
@@ -480,15 +480,15 @@ END Controls;
 
 (* -- search engine by uh *)
 
-	PROCEDURE MarkPatPos(tF: TextGadgets0.Frame; pos: LONGINT);
+	PROCEDURE MarkPatPos(tF: TextGadgets0.Frame; pos: SIGNED32);
 	BEGIN
 		Oberon.Defocus;
 		TextGadgets0.Locate(tF, pos);
 		TextGadgets0.SetSelection(tF, pos - sPatLen, pos); lTime := tF.time;
 	END MarkPatPos;
 
-	PROCEDURE CalcDispVec(time: LONGINT);
-		VAR i, j, d: INTEGER;
+	PROCEDURE CalcDispVec(time: SIGNED32);
+		VAR i, j, d: SIGNED16;
 	BEGIN
 		lTime := time;
 		i := 1; d := 1;	(* calculate displacement vector *)
@@ -499,10 +499,10 @@ END Controls;
 		END
 	END CalcDispVec;
 
-	PROCEDURE SPatFound(text: Texts.Text; VAR pos:LONGINT): BOOLEAN;
+	PROCEDURE SPatFound(text: Texts.Text; VAR pos:SIGNED32): BOOLEAN;
 	(* searches the next position for the search pattern sPat begining at position pos *)
 	(* in the text text; resturns result accordingly *)
-		VAR R: Texts.Reader;	l: LONGINT;	i: INTEGER;	ch: CHAR;
+		VAR R: Texts.Reader;	l: SIGNED32;	i: SIGNED16;	ch: CHAR;
 	BEGIN
 		IF sPatLen > 0 THEN
 			Texts.OpenReader(R, text, pos); Texts.Read(R, ch); INC(pos);
@@ -520,7 +520,7 @@ END Controls;
 	END SPatFound;
 
 	PROCEDURE search(VAR S: Attributes.Scanner; tF: TextGadgets.Frame);
-		VAR R: Texts.Reader; text: Texts.Text; pos, beg, end, time: LONGINT; i: INTEGER;
+		VAR R: Texts.Reader; text: Texts.Text; pos, beg, end, time: SIGNED32; i: SIGNED16;
 	BEGIN
 		IF S.class IN {Attributes.Name, Attributes.String} THEN
 			COPY(S.s, sPat); sPatLen := S.len; CalcDispVec(Oberon.Time())	(* calculate displacement vector *)
@@ -560,7 +560,7 @@ END Controls;
 
 	PROCEDURE replace(all: BOOLEAN);
 	VAR tF: TextGadgets.Frame; R: Texts.Reader; tBuf: Texts.Buffer; T, text: Texts.Text;
-		pos, beg, end, time, p, len: LONGINT; i: INTEGER; ch: CHAR; M: Oberon.CaretMsg;
+		pos, beg, end, time, p, len: SIGNED32; i: SIGNED16; ch: CHAR; M: Oberon.CaretMsg;
 		S: Attributes.Scanner; doc: Documents.Document;
 	BEGIN
 		tF := NIL;
@@ -646,7 +646,7 @@ END Controls;
 (** Used in the form: TextDocs.Show M.P
 	Shows the module M at the position where P occurs for the first time *)
 PROCEDURE Show*;
-VAR S: Attributes.Scanner; name: ARRAY 86 OF CHAR; i, j, k, M: INTEGER; pos: LONGINT; D: Documents.Document;
+VAR S: Attributes.Scanner; name: ARRAY 86 OF CHAR; i, j, k, M: SIGNED16; pos: SIGNED32; D: Documents.Document;
 	F: TextGadgets0.Frame;
 BEGIN
 	Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
@@ -686,7 +686,7 @@ END Show;
 (** Used in the form: TextDocs.ChangeFont <fontname>
 	Changes the font of the selection. *)
 PROCEDURE ChangeFont*;
-VAR par: Oberon.ParList; S: Attributes.Scanner; T: Texts.Text; beg, end, time: LONGINT;
+VAR par: Oberon.ParList; S: Attributes.Scanner; T: Texts.Text; beg, end, time: SIGNED32;
 	F: Fonts.Font;
 BEGIN
 	Oberon.GetSelection(T, beg, end, time);
@@ -707,7 +707,7 @@ END ChangeFont;
 	Changes the color of the selection. *)
 PROCEDURE ChangeColor*;
 VAR par: Oberon.ParList; S: Attributes.Scanner; T: Texts.Text;
-	col: SHORTINT; beg, end, time: LONGINT;
+	col: SIGNED8; beg, end, time: SIGNED32;
 BEGIN par := Oberon.Par;
 	Attributes.OpenScanner(S, par.text, par.pos); Attributes.Scan(S);
 	IF S.class # Texts.Int THEN col := Display.FG ELSE col := SHORT(SHORT(S.i)) END;
@@ -719,7 +719,7 @@ END ChangeColor;
 	Changes the offset of the selection. Offset is measured in pixels, and may be negative. *)
 PROCEDURE ChangeOffset*;
 VAR par: Oberon.ParList; S: Attributes.Scanner; T: Texts.Text;
-	off: SHORTINT; beg, end, time: LONGINT;
+	off: SIGNED8; beg, end, time: SIGNED32;
 BEGIN par := Oberon.Par;
 	Attributes.OpenScanner(S, par.text, par.pos); Attributes.Scan(S);
 	IF S.class # Texts.Int THEN off := 0 ELSE off := SHORT(SHORT(S.i)) END;
@@ -732,11 +732,11 @@ END ChangeOffset;
 				TextDocs.SearchDiff \w [text1 text2]		compare ignoring 'white space'
 *)
 PROCEDURE SearchDiff*;
-VAR F1, F2: Display.Frame; T1, T2: Texts.Text; S: Texts.Scanner; pos1, pos2: LONGINT;
+VAR F1, F2: Display.Frame; T1, T2: Texts.Text; S: Texts.Scanner; pos1, pos2: SIGNED32;
 	R1, R2: Texts.Reader; ch1, ch2: CHAR; gen1, gen2: ARRAY 64 OF CHAR; obj: Objects.Object;
 	whiteSp: BOOLEAN;
 
-	PROCEDURE GetSelFrame(VAR F: Display.Frame; VAR T: Texts.Text; VAR pos: LONGINT);
+	PROCEDURE GetSelFrame(VAR F: Display.Frame; VAR T: Texts.Text; VAR pos: SIGNED32);
 	VAR M: Oberon.SelectMsg;
 	BEGIN
 		M.id := Oberon.get; M.F := NIL; M.time := -1; M.text := NIL; M.sel := NIL; Display.Broadcast(M);
@@ -751,13 +751,13 @@ VAR F1, F2: Display.Frame; T1, T2: Texts.Text; S: Texts.Scanner; pos1, pos2: LON
 	BEGIN M.F := F; M.id := Oberon.reset; M.sel := F; M.text := T; Display.Broadcast(M)
 	END RemoveMarks;
 
-	PROCEDURE SetSelection(F: Display.Frame; T: Texts.Text; beg, end: LONGINT);
+	PROCEDURE SetSelection(F: Display.Frame; T: Texts.Text; beg, end: SIGNED32);
 	VAR M: Oberon.SelectMsg;
 	BEGIN
 		M.id := Oberon.set; M.F := F; M.sel := F; M.text := T; M.beg := beg; M.end := end; Display.Broadcast(M)
 	END SetSelection;
 
-	PROCEDURE ReadNonWhiteSp(VAR R: Texts.Reader; VAR ch: CHAR; VAR pos: LONGINT);
+	PROCEDURE ReadNonWhiteSp(VAR R: Texts.Reader; VAR ch: CHAR; VAR pos: SIGNED32);
 	BEGIN
 		REPEAT Texts.Read(R, ch); INC(pos); UNTIL R.eot OR ((ch > " ") & (R.lib IS Fonts.Font))
 	END ReadNonWhiteSp;
@@ -835,7 +835,7 @@ END SearchDiff;
 implicitely passed by the text color of the selected text. *)
 PROCEDURE SearchColor*;
 	VAR tF: TextGadgets.Frame; R: Texts.Reader; text: Texts.Text;
-		pos, beg, end, time: LONGINT; ch: CHAR; C: Oberon.CaretMsg;
+		pos, beg, end, time: SIGNED32; ch: CHAR; C: Oberon.CaretMsg;
 BEGIN
 	C.F := NIL; C.id := Oberon.get; C.car := NIL; Display.Broadcast(C);
 	IF (C.res = 0) & (C.car # NIL) & (C.car IS TextGadgets.Frame) THEN
@@ -861,7 +861,7 @@ END SearchColor;
 (** fof >> *)
 PROCEDURE ReplaceColor*;
 	VAR R: Texts.Reader;S: Attributes.Scanner;  text: Texts.Text;
-		beg, end,time: LONGINT; ch: CHAR; srccol,destcol: SHORTINT;
+		beg, end,time: SIGNED32; ch: CHAR; srccol,destcol: SIGNED8;
  par: Oberon.ParList; f: Display.Frame; F: TextGadgets.Frame; doc: Documents.Document;
 
 BEGIN
@@ -897,7 +897,7 @@ END ReplaceColor;
 (** Set all styles to paper width *)
 PROCEDURE AdjustStyles*;
 	VAR D: Documents.Document; F: TextGadgets.Frame; obj: Objects.Object;
-			f: Texts.Finder; W: INTEGER; A: Display.ModifyMsg;
+			f: Texts.Finder; W: SIGNED16; A: Display.ModifyMsg;
 BEGIN
 	D := Documents.MarkedDoc();
 	IF (D # NIL) & (D.dsc # NIL) & (D.dsc IS TextGadgets.Frame) THEN
@@ -965,8 +965,8 @@ BEGIN
 END PrintSetup;
 
 (** Open a text in a TextDoc. W, H is used to determine the original size of the document. *)
-PROCEDURE ShowText*(title: ARRAY OF CHAR; T: Texts.Text; W, H: INTEGER);
-VAR D: Documents.Document; menu: ARRAY 128 OF CHAR; mf: Display.Frame; f: TextGadgets.Frame; i, j: LONGINT; log: BOOLEAN;
+PROCEDURE ShowText*(title: ARRAY OF CHAR; T: Texts.Text; W, H: SIGNED16);
+VAR D: Documents.Document; menu: ARRAY 128 OF CHAR; mf: Display.Frame; f: TextGadgets.Frame; i, j: SIGNED32; log: BOOLEAN;
 BEGIN
 	i := 0; WHILE (title[i] # 0X) & (title[i] # "|") DO INC(i) END;
 	IF title[i] = "|" THEN j := i+1 ELSE j := i END; title[i] := 0X;

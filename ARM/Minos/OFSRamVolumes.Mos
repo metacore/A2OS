@@ -14,17 +14,17 @@ IMPORT SYSTEM, Kernel, OFS, Platform, Strings, Log, Trace;
 TYPE 
 	Volume* = POINTER TO RAMVolumeDesc;  
 	RAMVolumeDesc = RECORD (OFS.VolumeDesc)
-		baseAdr: LONGINT
+		baseAdr: SIGNED32
 	END;  
 
 VAR 
 	(* Counter to generate unique names *)
-	count: LONGINT;  
+	count: SIGNED32;  
 
 (* Copy a memory block of size "len" from address "src" to address "dst". len MOD 4 must be 0! *)
 	PROCEDURE CopyBlock( src, dst, len: ADDRESS);  
 	VAR
-		data: LONGINT;
+		data: SIGNED32;
 		bound, lowRAMAddress, highRAMAddress: ADDRESS;
 	BEGIN
 		(*ASSERT ( (len MOD 4) = 0 );  		*)
@@ -46,8 +46,8 @@ VAR
 	END CopyBlock;  
 
 (* set a given memory block to 0 *)
-	PROCEDURE ClearMem( adr, len: LONGINT );  
-	VAR bound: LONGINT;  
+	PROCEDURE ClearMem( adr, len: SIGNED32 );  
+	VAR bound: SIGNED32;  
 	BEGIN 
 		(*
 		ASSERT ( (len MOD 4) = 0 );  
@@ -59,8 +59,8 @@ VAR
 	END ClearMem;  
 
 (* Get block from adr [1..size] of volume vol *)
-	PROCEDURE GetBlock*( volume: OFS.Volume;  adr: LONGINT;  
-											  VAR blk: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR res: LONGINT );  
+	PROCEDURE GetBlock*( volume: OFS.Volume;  adr: SIGNED32;  
+											  VAR blk: ARRAY OF SYSTEM.BYTE; ofs: SIGNED32; VAR res: SIGNED32 );  
 	VAR vol: Volume;  
 		tmp : ADDRESS;
 	BEGIN
@@ -80,8 +80,8 @@ VAR
 	END GetBlock;  
 
 (* Put block to adr [1..size] of volume vol *)
-	PROCEDURE PutBlock*( volume: OFS.Volume;  adr: LONGINT;  
-											  VAR blk: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR res: LONGINT);  
+	PROCEDURE PutBlock*( volume: OFS.Volume;  adr: SIGNED32;  
+											  VAR blk: ARRAY OF SYSTEM.BYTE; ofs: SIGNED32; VAR res: SIGNED32);  
 	VAR vol: Volume;  
 	BEGIN 
 		vol := volume( Volume );  
@@ -104,8 +104,8 @@ VAR
 	END Finalize;  
 
 (** Generate a new ramdisk at adress "adr" in memory of size "size" in bytes and blocksize "blocksize"  *)
-	PROCEDURE New*( adr, size, blocksize: LONGINT;  init: BOOLEAN; VAR vol: Volume );  
-	VAR vbs: LONGINT;  
+	PROCEDURE New*( adr, size, blocksize: SIGNED32;  init: BOOLEAN; VAR vol: Volume );  
+	VAR vbs: SIGNED32;  
 	BEGIN
 		vol := NIL;
 		IF (size > 0) & (blocksize > 0) THEN
@@ -149,7 +149,7 @@ END Cleanup;
 	PROCEDURE MountRamDisk;
 	VAR
 		prefix: OFS.Prefix;
-		size: LONGINT;
+		size: SIGNED32;
 		vol: Volume;
 	BEGIN
 		

@@ -9,8 +9,8 @@ TYPE
 	Explorer = OBJECT (WM.BufferWindow)
 	VAR
 		lookat: Vectors.TVector3d;
-		radius, angle, height : LONGREAL;
-		quality : LONGINT;
+		radius, angle, height : FLOAT64;
+		quality : SIGNED32;
 
 		mouseKeys : SET;
 
@@ -76,7 +76,7 @@ TYPE
 			quality := 0;
 			NEW(message); Raster.Create(message, 300, 50, Raster.BGRA8888);
 			NEW(mc, message); mc.Fill(WMRectangles.MakeRect(0, 0, 300, 50), 0FF80H, WMGraphics.ModeCopy);
-			mc.SetColor(LONGINT(0FFFFFFFFH));
+			mc.SetColor(SIGNED32(0FFFFFFFFH));
 			WMGraphics.DrawStringInRect(mc, WMRectangles.MakeRect(0, 0, 300, 50), FALSE,
 				WMGraphics.AlignCenter, WMGraphics.AlignTop,
 			"Press left mouse button and move mouse to rotate");
@@ -87,7 +87,7 @@ TYPE
 		END Init;
 
 		PROCEDURE SpeedCheck;
-		VAR i, t1 : LONGINT; t: Kernel.MilliTimer;
+		VAR i, t1 : SIGNED32; t: Kernel.MilliTimer;
 				pos, dir, up : Vectors.TVector3d;
 		BEGIN
 			KernelLog.String("please wait ... ");

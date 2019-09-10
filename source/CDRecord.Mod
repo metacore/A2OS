@@ -74,55 +74,55 @@ TYPE
 	Buffer = POINTER TO ARRAY OF CHAR;
 
 	Capabilities* = RECORD
-		writeSpeeds* : POINTER TO ARRAY OF LONGINT;
+		writeSpeeds* : POINTER TO ARRAY OF SIGNED32;
 		mediaFunc* : SET;
 	END;
 
 	WriteParams = RECORD
-		writeType, multisession, trackMode, DBType: LONGINT;
+		writeType, multisession, trackMode, DBType: SIGNED32;
 		testWrite, bufe: BOOLEAN;
 	END;
 
 	RecordingStatus* = OBJECT(Utils.Status)
 	VAR
-		currentSpeed*: LONGINT; (* raw speed *)
-		freeBuffer*, bufferSize*, operation*, secsTransferred*, secsVerified*: LONGINT;
-		empty*: LONGINT; (* number of times sw buffer was empty *)
+		currentSpeed*: SIGNED32; (* raw speed *)
+		freeBuffer*, bufferSize*, operation*, secsTransferred*, secsVerified*: SIGNED32;
+		empty*: SIGNED32; (* number of times sw buffer was empty *)
 	END RecordingStatus;
 
 	BurnSettings* = RECORD
-		writeType*: LONGINT;
+		writeType*: SIGNED32;
 		verify*, bufe*, multisession*, append*: BOOLEAN;
-		speed*: LONGINT;
+		speed*: SIGNED32;
 	END;
 
 	Disc* = OBJECT
 		VAR
 			erasable*: BOOLEAN;
-			status*, statusLastSession*, nofSessions*: LONGINT;
-			usedBlocks*, freeBlocks*: LONGINT;
-			type*: LONGINT;
+			status*, statusLastSession*, nofSessions*: SIGNED32;
+			usedBlocks*, freeBlocks*: SIGNED32;
+			type*: SIGNED32;
 			latestLeadOut*: MSF;
 	END Disc;
 
 	(* extended disc information for CDR/CDRW media*)
 	DiscEx* = OBJECT(Disc)
 		VAR
-			refSpeed*: LONGINT; (* valid only for CDRW *)
-			minSpeed*, maxSpeed*: LONGINT;
-			subtype*: LONGINT;
+			refSpeed*: SIGNED32; (* valid only for CDRW *)
+			minSpeed*, maxSpeed*: SIGNED32;
+			subtype*: SIGNED32;
 	END DiscEx;
 
 	Track = OBJECT
 		VAR
-			tno, padding, nofsecs, startSec, secsize, type: LONGINT;
-			bytespt: LONGINT; (* bytes per transfer *)
-			secspt: LONGINT; (* secs per transfer *)
-			pregap: LONGINT; (* pregap in sectors *)
-			size: LONGINT; (* size of track in bytes *)
+			tno, padding, nofsecs, startSec, secsize, type: SIGNED32;
+			bytespt: SIGNED32; (* bytes per transfer *)
+			secspt: SIGNED32; (* secs per transfer *)
+			pregap: SIGNED32; (* pregap in sectors *)
+			size: SIGNED32; (* size of track in bytes *)
 			permission: BOOLEAN;
 
-		PROCEDURE &New*(tno, trackType: LONGINT; permitCopy: BOOLEAN);
+		PROCEDURE &New*(tno, trackType: SIGNED32; permitCopy: BOOLEAN);
 		BEGIN
 			SELF.tno := tno;
 			SELF.permission := permitCopy;
@@ -141,7 +141,7 @@ TYPE
 		VAR
 			file-: Files.File;
 
-		PROCEDURE &NewInfTrack*(tno, trackType: LONGINT; permitCopy: BOOLEAN; file: Files.File);
+		PROCEDURE &NewInfTrack*(tno, trackType: SIGNED32; permitCopy: BOOLEAN; file: Files.File);
 		BEGIN
 			New(tno, trackType, permitCopy);
 			SELF.file := file;
@@ -152,10 +152,10 @@ TYPE
 		PROCEDURE InitTrack;
 		BEGIN
 			padding := 0;
-			nofsecs := file.Length()(LONGINT) DIV secsize;
+			nofsecs := file.Length()(SIGNED32) DIV secsize;
 			IF file.Length() MOD secsize # 0 THEN
 				INC(nofsecs);
-				padding := secsize - (file.Length()(LONGINT) MOD secsize);
+				padding := secsize - (file.Length()(SIGNED32) MOD secsize);
 			END;
 			IF nofsecs < MinTrackSize THEN
 				INC(padding, (MinTrackSize - nofsecs) * secsize);
@@ -166,7 +166,7 @@ TYPE
 	END InformationTrack;
 
 	MSF = RECORD
-		min, sec, frame: LONGINT;
+		min, sec, frame: SIGNED32;
 	END;
 
 	CueSheetEntry = RECORD
@@ -176,7 +176,7 @@ TYPE
 
 	CueSheet = OBJECT
 		VAR
-			nofEntries, cur: LONGINT;
+			nofEntries, cur: SIGNED32;
 			adr: ADDRESS;
 			buf: POINTER TO ARRAY OF CueSheetEntry;
 
@@ -188,9 +188,9 @@ TYPE
 			GenerateSheet(compilation.tracks, compilation.nofTracks);
 		END New;
 
-		PROCEDURE GenerateSheet(CONST tracks: ARRAY OF Track; nofTracks: LONGINT);
+		PROCEDURE GenerateSheet(CONST tracks: ARRAY OF Track; nofTracks: SIGNED32);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			df: CHAR;
 		BEGIN
 			FOR i := 0 TO nofTracks - 1 DO
@@ -213,10 +213,10 @@ TYPE
 			END;
 		END GenerateSheet;
 
-		PROCEDURE AddEntry(track: Track; index: LONGINT; df: CHAR);
+		PROCEDURE AddEntry(track: Track; index: SIGNED32; df: CHAR);
 		VAR
 			ctladr: CHAR;
-			startSec: LONGINT;
+			startSec: SIGNED32;
 			msf: MSF;
 			entry: CueSheetEntry;
 			nibble: SET; (* q channel nibble *)
@@ -229,7 +229,7 @@ TYPE
 			nibble := {};
 			IF track.type = DataTrack THEN INCL(nibble, Lib.QCDataTrack) END;
 			IF track.permission THEN INCL(nibble, Lib.QCCopyPermitted) END;
-			Lib.SetField(ctladr, Lib.CTLMask, Lib.CTLOfs, SYSTEM.VAL(LONGINT, nibble));
+			Lib.SetField(ctladr, Lib.CTLMask, Lib.CTLOfs, SYSTEM.VAL(SIGNED32, nibble));
 			Lib.SetField(ctladr, Lib.ADRMask, Lib.ADROfs, Lib.ADRTno);
 
 			SectorToMsf(startSec, msf);
@@ -249,7 +249,7 @@ TYPE
 
 		PROCEDURE Print;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			entry: CueSheetEntry;
 		BEGIN
 			KernelLog.Ln;
@@ -270,7 +270,7 @@ TYPE
 
 	Compilation* = OBJECT
 	VAR
-		nofTracks-, totalSize-: LONGINT;
+		nofTracks-, totalSize-: SIGNED32;
 		tracks-: ARRAY TrackLimit OF Track;
 
 		PROCEDURE &New*;
@@ -281,7 +281,7 @@ TYPE
 
 		PROCEDURE Finish*;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			ASSERT(nofTracks >= 1);
 
@@ -303,9 +303,9 @@ TYPE
 		END Finish;
 
 		(* Returns the number of total sectors *)
-		PROCEDURE GetSize*(raw, secs: BOOLEAN): LONGINT;
+		PROCEDURE GetSize*(raw, secs: BOOLEAN): SIGNED32;
 		VAR
-			i, size: LONGINT;
+			i, size: SIGNED32;
 		BEGIN
 			size := 0;
 			IF raw THEN (* incl lead in  ... *)
@@ -328,9 +328,9 @@ TYPE
 			RETURN size;
 		END GetSize;
 
-		PROCEDURE AddTrack*(filename: Strings.String; trackType : LONGINT; permitCopy: BOOLEAN) : WORD;
+		PROCEDURE AddTrack*(filename: Strings.String; trackType : SIGNED32; permitCopy: BOOLEAN) : INTEGER;
 		VAR
-			res: WORD;
+			res: INTEGER;
 			track: InformationTrack;
 			file: Files.File;
 		BEGIN
@@ -382,15 +382,15 @@ TYPE
 
 		PROCEDURE UpdateCapacity*;
 		VAR
-			size: LONGINT; res: WORD;
+			size: SIGNED32; res: INTEGER;
 		BEGIN
 			dev.GetSize(size, res);
 		END UpdateCapacity;
 
-		PROCEDURE GetBufferCapacity(VAR totalCapacity, unusedCapacity: LONGINT): WORD;
+		PROCEDURE GetBufferCapacity(VAR totalCapacity, unusedCapacity: SIGNED32): INTEGER;
 		VAR
 			capacity: Lib.BufferCapacity;
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			res := Lib.ReadBufferCapacity(dev, FALSE, ADDRESSOF(capacity), SIZEOF(Lib.BufferCapacity));
 			IF res = ResOk THEN
@@ -400,10 +400,10 @@ TYPE
 			RETURN res;
 		END GetBufferCapacity;
 
-		PROCEDURE Record*(VAR compilation: Compilation; settings: BurnSettings; onRecordStatusChanged: Utils.StatusProc): WORD;
+		PROCEDURE Record*(VAR compilation: Compilation; settings: BurnSettings; onRecordStatusChanged: Utils.StatusProc): INTEGER;
 		VAR
 			disc: Disc;
-			res: WORD; i, op, nwa, secs: LONGINT;
+			res: INTEGER; i, op, nwa, secs: SIGNED32;
 			nibble: SET; (* the control nibble of the q channel *)
 			params: WriteParams;
 			cuesheet: CueSheet;
@@ -495,7 +495,7 @@ TYPE
 						params.DBType := Lib.DBRaw;
 					END;
 					IF track.permission THEN INCL(nibble, Lib.QCCopyPermitted) END;
-					params.trackMode := SYSTEM.VAL(LONGINT, nibble);
+					params.trackMode := SYSTEM.VAL(SIGNED32, nibble);
 					IF (SetWriteParams(params, FALSE) # ResOk) OR (Lib.GetNextAddress(dev, track.startSec) # ResOk) THEN Abort(); RETURN ResErr END;
 					IF Debug THEN res := PrintWriteParams() END;
 				ELSE
@@ -551,9 +551,9 @@ TYPE
 		END InitWriteParams;
 
 		(* only data tracks are verified. reading DA is not accurate enough since there is no sync pattern. *)
-		PROCEDURE VerifyCompilation(compilation: Compilation): WORD;
+		PROCEDURE VerifyCompilation(compilation: Compilation): INTEGER;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			track: InformationTrack;
 		BEGIN
 			(* reloading not possible for notebook drives but LMT is the same in the capability page *)
@@ -575,10 +575,10 @@ TYPE
 			RETURN ResOk;
 		END VerifyCompilation;
 
-		PROCEDURE VerifyTrack(track: InformationTrack): WORD;
+		PROCEDURE VerifyTrack(track: InformationTrack): INTEGER;
 		VAR
-			lba, secs, nofBlocks, timestamp, ofs: LONGINT;
-			discBuf: POINTER TO ARRAY OF LONGINT;
+			lba, secs, nofBlocks, timestamp, ofs: SIGNED32;
+			discBuf: POINTER TO ARRAY OF SIGNED32;
 			fileBuf: POINTER TO ARRAY OF CHAR;
 			count: SIZE;
 			r: Files.Reader;
@@ -596,7 +596,7 @@ TYPE
 			timestamp := Kernel.GetTicks ();
 			NEW(discBuf, track.bytespt DIV 4);
 			NEW(fileBuf, track.bytespt + 4);
-			ofs := SYSTEM.VAL (LONGINT, 4 - ADDRESSOF(fileBuf^) MOD 4);
+			ofs := SYSTEM.VAL (SIGNED32, 4 - ADDRESSOF(fileBuf^) MOD 4);
 
 			Files.OpenReader(r, track.file, 0);
 			secs := track.nofsecs; lba := track.startSec;
@@ -621,9 +621,9 @@ TYPE
 			RETURN ResOk;
 		END VerifyTrack;
 
-		PROCEDURE CompareData(adr1, adr2: ADDRESS; len: LONGINT): BOOLEAN;
+		PROCEDURE CompareData(adr1, adr2: ADDRESS; len: SIGNED32): BOOLEAN;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			FOR i:= 0 TO (len DIV 4) - 1 DO
 				IF SYSTEM.GET32(adr1) # SYSTEM.GET32(adr2) THEN KernelLog.String("ERROR"); RETURN FALSE END;
@@ -634,7 +634,7 @@ TYPE
 
 		PROCEDURE Abort;
 		VAR
-			size: LONGINT; res: WORD;
+			size: SIGNED32; res: INTEGER;
 		BEGIN
 			Unlock();
 			(* restore previous blockSize *)
@@ -646,9 +646,9 @@ TYPE
 			reader := NIL;
 		END Abort;
 
-		PROCEDURE Write(op, startSec, nofBlocks: LONGINT; adr: ADDRESS): WORD;
+		PROCEDURE Write(op, startSec, nofBlocks: SIGNED32; adr: ADDRESS): INTEGER;
 		VAR
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			LOOP
 				res := dev.TransferEx(op, startSec, nofBlocks, adr, dma & UseDma);
@@ -661,10 +661,10 @@ TYPE
 			RETURN res;
 		END Write;
 
-		PROCEDURE PadTrack(op: LONGINT; track: InformationTrack) : WORD;
+		PROCEDURE PadTrack(op: SIGNED32; track: InformationTrack) : INTEGER;
 		VAR
-			res: WORD;
-			startSec, secsToPad, nofBlocks: LONGINT;
+			res: INTEGER;
+			startSec, secsToPad, nofBlocks: SIGNED32;
 			buf: POINTER TO ARRAY OF CHAR;
 		BEGIN
 			recStatus.operation := Writing;
@@ -694,10 +694,10 @@ TYPE
 			RETURN res;
 		END PadTrack;
 
-		PROCEDURE WriteTrack(op: LONGINT; VAR track: InformationTrack) : WORD;
+		PROCEDURE WriteTrack(op: SIGNED32; VAR track: InformationTrack) : INTEGER;
 		VAR
-			res: WORD; startSec, bytesRead, count, nofBlocks: LONGINT;
-			timestamp, lastSecs: LONGINT;
+			res: INTEGER; startSec, bytesRead, count, nofBlocks: SIGNED32;
+			timestamp, lastSecs: SIGNED32;
 			buf: Buffer;
 		BEGIN
 			lastSecs := recStatus.secsTransferred;
@@ -707,7 +707,7 @@ TYPE
 			timestamp := Kernel.GetTicks ();
 
 			REPEAT
-				count := reader.GetBuffer(buf)(LONGINT);
+				count := reader.GetBuffer(buf)(SIGNED32);
 				nofBlocks := count DIV track.secsize;
 
 				res := Write(op, startSec, nofBlocks, ADDRESSOF(buf^));
@@ -731,7 +731,7 @@ TYPE
 			RETURN ResOk;
 		END WriteTrack;
 
-		PROCEDURE SetWriteSpeed(speed: LONGINT): WORD;
+		PROCEDURE SetWriteSpeed(speed: SIGNED32): INTEGER;
 		BEGIN
 			RETURN Lib.SetCDSpeed(dev, BestSpeed, speed*SingleSpeed, 0H);
 		END SetWriteSpeed;
@@ -741,10 +741,10 @@ TYPE
 			RETURN dev.TestUnitReady() = ResOk;
 		END IsReady;
 
-		PROCEDURE GetDiscInfo*(disc: Disc): LONGINT;
+		PROCEDURE GetDiscInfo*(disc: Disc): SIGNED32;
 		VAR
 			info: Lib.DiscInfo;
-			res: WORD; secsize,secs, nwa: LONGINT;
+			res: INTEGER; secsize,secs, nwa: SIGNED32;
 		BEGIN
 			IF dev.TestUnitReady() # ResOk THEN
 				res := dev.RequestSense();
@@ -780,10 +780,10 @@ TYPE
 			RETURN ResOk;
 		END GetDiscInfo;
 
-		PROCEDURE GetDiscInfoEx*(disc: DiscEx): WORD;
+		PROCEDURE GetDiscInfoEx*(disc: DiscEx): INTEGER;
 		VAR
 			adr: ADDRESS;
-			res, clvLow, clvHigh: LONGINT;
+			res, clvLow, clvHigh: SIGNED32;
 			descr: Lib.ATIPDescriptorPtr;
 			buf: POINTER TO ARRAY OF CHAR;
 		BEGIN
@@ -793,7 +793,7 @@ TYPE
 			NEW(buf, SIZEOF(Lib.ATIPHeader) + SIZEOF(Lib.ATIPDescriptor));
 
 			adr := ADDRESSOF(buf[0]);
-			IF Lib.ReadToc(dev, FALSE, Lib.TCFormatATIP, 0, adr, LEN(buf^)(LONGINT)) # ResOk THEN RETURN ResErr END;
+			IF Lib.ReadToc(dev, FALSE, Lib.TCFormatATIP, 0, adr, LEN(buf^)(SIGNED32)) # ResOk THEN RETURN ResErr END;
 
 			descr := SYSTEM.VAL(Lib.ATIPDescriptorPtr, adr + SIZEOF(Lib.ATIPHeader));
 			ASSERT(ADDRESSOF(descr^) = SYSTEM.VAL(ADDRESS, descr));
@@ -822,9 +822,9 @@ TYPE
 			RETURN ResOk;
 		END GetDiscInfoEx;
 
-		PROCEDURE GetWriteParams(VAR  params: WriteParams): WORD;
+		PROCEDURE GetWriteParams(VAR  params: WriteParams): INTEGER;
 		VAR
-			res: WORD;
+			res: INTEGER;
 			page: Lib.WriteParameterPage;
 		BEGIN
 			res := Lib.ModeSense(dev, Lib.MPCurrent, Lib.MPWriteParameters, ADDRESSOF(page), SIZEOF(Lib.WriteParameterPage));
@@ -839,10 +839,10 @@ TYPE
 			RETURN res;
 		END GetWriteParams;
 
-		PROCEDURE SetWriteParams(VAR params: WriteParams; save: BOOLEAN): WORD;
+		PROCEDURE SetWriteParams(VAR params: WriteParams; save: BOOLEAN): INTEGER;
 		VAR
 			page: Lib.WriteParameterPage;
-			tmp: WORD;
+			tmp: INTEGER;
 
 		BEGIN
 			IF Lib.ModeSense(dev, Lib.MPCurrent, Lib.MPWriteParameters, ADDRESSOF(page), SIZEOF(Lib.WriteParameterPage)) # ResOk THEN
@@ -875,10 +875,10 @@ TYPE
 			RETURN ResOk;
 		END SetWriteParams;
 
-		PROCEDURE PrintWriteParams(): WORD;
+		PROCEDURE PrintWriteParams(): INTEGER;
 		VAR
 			page: Lib.WriteParameterPage;
-			tmp: WORD;
+			tmp: INTEGER;
 		BEGIN
 			IF Lib.ModeSense(dev, Lib.MPCurrent, Lib.MPWriteParameters, ADDRESSOF(page), SIZEOF(Lib.WriteParameterPage)) # ResOk THEN
 				tmp := dev.RequestSense(); RETURN ResErr;
@@ -920,7 +920,7 @@ TYPE
 		PROCEDURE CheckIncompatibleMedium(): BOOLEAN;
 		VAR
 			msg: ATADisks.GetSenseMsg;
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			dev.Handle(msg, res);
 			RETURN (msg.sense = 5) & (msg.asc = 30);
@@ -930,7 +930,7 @@ TYPE
 		PROCEDURE WaitUntilFinished*;
 		VAR
 			msg: ATADisks.GetSenseMsg;
-			res, tmp: WORD;
+			res, tmp: INTEGER;
 			timer: Kernel.Timer;
 		BEGIN
 			NEW(timer);
@@ -946,7 +946,7 @@ TYPE
 		PROCEDURE CheckNoMediumPresent*(): BOOLEAN;
 		VAR
 			msg: ATADisks.GetSenseMsg;
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			dev.Handle(msg, res);
 			RETURN (msg.sense = 2) & (msg.asc = 3AH) & ((msg.ascq = 0) OR (msg.ascq = 1) OR (msg.ascq = 2));
@@ -956,7 +956,7 @@ TYPE
 		PROCEDURE IsInProgress*(): BOOLEAN;
 		VAR
 			msg: ATADisks.GetSenseMsg;
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			dev.Handle(msg, res);
 			RETURN (msg.sense = 2) & (msg.asc = 4) & ((msg.ascq = 4) OR (msg.ascq = 7) OR (msg.ascq = 8));
@@ -981,7 +981,7 @@ TYPE
 		VAR
 			r: Files.Reader;
 			buffer: Buffer;
-			trackno: LONGINT;
+			trackno: SIGNED32;
 			bytesRead: SIZE;
 			track: InformationTrack;
 
@@ -1048,16 +1048,16 @@ TYPE
 
 	BufferedReader = OBJECT(Reader)
 		VAR
-			nBuffers: LONGINT;
+			nBuffers: SIGNED32;
 			fifo: Fifo;
-			pIndex, cIndex: LONGINT;
+			pIndex, cIndex: SIGNED32;
 			finished: BOOLEAN;
-			empty*: LONGINT; (* number of times buffer was empty, should be zero *)
+			empty*: SIGNED32; (* number of times buffer was empty, should be zero *)
 			aborted: BOOLEAN;
 
-		PROCEDURE &New*(compilation: Compilation; bufSize: LONGINT);
+		PROCEDURE &New*(compilation: Compilation; bufSize: SIGNED32);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			finished := FALSE; empty := 0;
 			SELF.compilation := compilation;
@@ -1086,7 +1086,7 @@ TYPE
 
 		PROCEDURE Read;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			track: InformationTrack;
 		BEGIN
 			FOR i := 1 TO compilation.nofTracks-2 DO
@@ -1166,13 +1166,13 @@ TYPE
 	END BufferedReader;
 
 
-PROCEDURE IdentifyRecorders*(VAR recorders: ARRAY OF CDRecorder): WORD;
+PROCEDURE IdentifyRecorders*(VAR recorders: ARRAY OF CDRecorder): INTEGER;
 VAR
 	devTable: Plugins.Table;
 	device : ATADisks.DeviceATAPI;
 	i, cur: SIZE;
 	cap: Capabilities;
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	res := ResErr;
 	FOR i := 0 TO MaxRecorders-1 DO
@@ -1196,10 +1196,10 @@ BEGIN
 	RETURN ResOk;
 END IdentifyRecorders;
 
-PROCEDURE GetCapabilities(VAR dev: ATADisks.DeviceATAPI; VAR cap: Capabilities) : WORD;
+PROCEDURE GetCapabilities(VAR dev: ATADisks.DeviceATAPI; VAR cap: Capabilities) : INTEGER;
 VAR
 	buf : POINTER TO ARRAY OF CHAR;
-	ofs, size, numSpeeds, i, curSpeed, maxSpeed, speed, tmp: LONGINT;
+	ofs, size, numSpeeds, i, curSpeed, maxSpeed, speed, tmp: SIGNED32;
 	adr: ADDRESS;
 	header: Lib.ModeHeader;
 	page: Lib.CapabilityPagePtr;
@@ -1301,9 +1301,9 @@ BEGIN
 	RETURN ResOk;
 END GetCapabilities;
 
-PROCEDURE InsertionSort(VAR arr: ARRAY OF LONGINT; size: SIZE);
+PROCEDURE InsertionSort(VAR arr: ARRAY OF SIGNED32; size: SIZE);
 VAR
-	i, j: SIZE; index: LONGINT;
+	i, j: SIZE; index: SIGNED32;
 BEGIN
 	FOR i := 1 TO size - 1 DO
 		index := arr[i]; j := i;
@@ -1317,7 +1317,7 @@ END InsertionSort;
 PROCEDURE GetSense*(dev: ATADisks.DeviceATAPI);
 VAR
 	msg: ATADisks.GetSenseMsg;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	res := dev.RequestSense();
 	dev.Handle(msg, res);
@@ -1353,9 +1353,9 @@ BEGIN
 	RETURN FALSE;
 END IsWavFile;
 
-PROCEDURE SectorToMsf(sector: LONGINT; VAR msf: MSF);
+PROCEDURE SectorToMsf(sector: SIGNED32; VAR msf: MSF);
 VAR
-	rem: LONGINT;
+	rem: SIGNED32;
 BEGIN
 	rem := sector + InitialPregap; (* see Mt. Fuji Table 621 LBA to MSF Translation *)
 	msf.min := ENTIER(rem / (60*75));
@@ -1365,14 +1365,14 @@ BEGIN
 	msf.frame := rem;
 END SectorToMsf;
 
-PROCEDURE MsfToSector(VAR msf: MSF; VAR sector: LONGINT);
+PROCEDURE MsfToSector(VAR msf: MSF; VAR sector: SIGNED32);
 BEGIN
 	sector := 75*(60*msf.min + msf.sec) + msf.frame - InitialPregap;
 END MsfToSector;
 
 PROCEDURE Test*;
 VAR
-	res: WORD;
+	res: INTEGER;
 	settings: BurnSettings;
 	compilation: Compilation;
 	recorders: ARRAY MaxRecorders OF CDRecorder;

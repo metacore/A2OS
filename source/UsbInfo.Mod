@@ -85,8 +85,8 @@ BEGIN
 END ShowDeviceName;
 
 (* Shows device descriptor / qualifier information and all configurations including its interfaces and endpoints. *)
-PROCEDURE ShowDevice(dev : Usb.UsbDevice; indent : LONGINT; details : BOOLEAN; out : Streams.Writer);
-VAR a, c, e, i : LONGINT;
+PROCEDURE ShowDevice(dev : Usb.UsbDevice; indent : SIGNED32; details : BOOLEAN; out : Streams.Writer);
+VAR a, c, e, i : SIGNED32;
 BEGIN
 	IF dev.hubFlag THEN
 		IF dev.parent = dev THEN out.String("Root "); END;
@@ -183,7 +183,7 @@ BEGIN
 END ShowDevice;
 
 (* Display textual respresenation of device descriptor or device qualifier *)
-PROCEDURE ShowDescriptor(d : Usb.DeviceDescriptor;  indent : LONGINT; out : Streams.Writer);
+PROCEDURE ShowDescriptor(d : Usb.DeviceDescriptor;  indent : SIGNED32; out : Streams.Writer);
 BEGIN
 	Indent(indent, out);
 	out.String("USB Version: "); PrintHex(LSH(d.bcdUSB, -8), out); out.Char("."); PrintHex(d.bcdUSB MOD 100H, out);
@@ -201,7 +201,7 @@ BEGIN
 END ShowDescriptor;
 
 (* Display textual respresentation of a USB device configuration *)
-PROCEDURE ShowConfiguration(c : Usb.ConfigurationDescriptor; indent : LONGINT; out : Streams.Writer);
+PROCEDURE ShowConfiguration(c : Usb.ConfigurationDescriptor; indent : SIGNED32; out : Streams.Writer);
 BEGIN
 	Indent(indent, out); out.String("ConfigurationValue: "); out.Int(c.bConfigurationValue, 0); out.Ln;
 	Indent(indent, out); out.String ("MaxPower: "); out.Int(c.bMaxPower, 0); out.String(" mA  "); out.Ln;
@@ -213,7 +213,7 @@ BEGIN
 END ShowConfiguration;
 
 (* Display textual representation of a USB device interface *)
-PROCEDURE ShowInterface(i : Usb.InterfaceDescriptor; indent : LONGINT; out : Streams.Writer);
+PROCEDURE ShowInterface(i : Usb.InterfaceDescriptor; indent : SIGNED32; out : Streams.Writer);
 VAR drv : Usbdi.Driver;
 BEGIN
 	Indent(indent, out);
@@ -234,13 +234,13 @@ BEGIN
 END ShowInterface;
 
 (* Display textual representation of a USB device endpoint *)
-PROCEDURE ShowEndpoint(e : Usb.EndpointDescriptor; indent : LONGINT; out : Streams.Writer);
-VAR attr : LONGINT;
+PROCEDURE ShowEndpoint(e : Usb.EndpointDescriptor; indent : SIGNED32; out : Streams.Writer);
+VAR attr : SIGNED32;
 BEGIN
 	Indent(indent, out);
 	out.String("Endpoint "); 	out.Int(e.bEndpointAddress MOD 16, 0);
 	out.String(":"); out.String(" [Type: ");
-	attr := SYSTEM.VAL(LONGINT, e.bmAttributes);
+	attr := SYSTEM.VAL(SIGNED32, e.bmAttributes);
 	CASE attr OF
 		0 : out.String("Control");
 		|1 : out.String("Isochronous");
@@ -257,14 +257,14 @@ BEGIN
 	END;
 	IF attr = 1 THEN
 		out.String(", Synchronization: ");
-		CASE SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, attr) * {2..3}, -2)) OF
+		CASE SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, attr) * {2..3}, -2)) OF
 			0 : out.String("None");
 			|1: out.String("Asynchronous");
 			|2: out.String("Adaptive");
 			|3: out.String("Synchronous");
 		END;
 		out.String(", Usage: ");
-		CASE SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, attr) * {2..3}, -2)) OF
+		CASE SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, attr) * {2..3}, -2)) OF
 			0 : out.String("Data");
 			|1: out.String("Feedback");
 			|2: out.String("Implicit Feedback");
@@ -277,8 +277,8 @@ BEGIN
 END ShowEndpoint;
 
 (* Display textual representation of the specified device and its descendants *)
-PROCEDURE ShowDeviceChain(dev : Usb.UsbDevice; indent : LONGINT; details : BOOLEAN; out : Streams.Writer);
-VAR i, j : LONGINT;
+PROCEDURE ShowDeviceChain(dev : Usb.UsbDevice; indent : SIGNED32; details : BOOLEAN; out : Streams.Writer);
+VAR i, j : SIGNED32;
 BEGIN
 	IF dev = NIL THEN out.String("No device attached");
 	ELSIF dev.hubFlag THEN
@@ -399,8 +399,8 @@ BEGIN
 END ShowHc;
 
 (* Helper: Displays the number <was> in hex to the kernel log *)
-PROCEDURE PrintHex(was: LONGINT; out : Streams.Writer);
-VAR z,d,h,i:LONGINT;
+PROCEDURE PrintHex(was: SIGNED32; out : Streams.Writer);
+VAR z,d,h,i:SIGNED32;
 BEGIN
 	z := 0;
 	d := 16*16*16*16*16*16*16; (* what a quick hack *)
@@ -415,8 +415,8 @@ BEGIN
 END PrintHex;
 
 (* Helper *)
-PROCEDURE Indent(indent : LONGINT; out : Streams.Writer);
-VAR i : LONGINT;
+PROCEDURE Indent(indent : SIGNED32; out : Streams.Writer);
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO indent-1 DO out.Char(" "); END;
 END Indent;

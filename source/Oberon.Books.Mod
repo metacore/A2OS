@@ -39,7 +39,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 		(* extended TextGadgets.Frame: lastPos: for searching; panel: easy find the owning panel *)
 		TGFrameDesc* = RECORD (TextGadgets.FrameDesc)
 			focus: BOOLEAN;
-			lastPos*: LONGINT;
+			lastPos*: SIGNED32;
 			panel*: Panel
 		END;
 
@@ -53,13 +53,13 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 			imps*: Books0.ImpList;
 			options*: SET;
 			curC: Books0.ContElem;
-			noteH*: INTEGER
+			noteH*: SIGNED16
 		END;
 
 		(* stack of changes to a tutorial *)
 		ChainDesc = RECORD
 			old: Books0.TextList;
-			pos: LONGINT;
+			pos: SIGNED32;
 			next: Chain
 		END;
 
@@ -70,7 +70,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 		(* new methods for TGFrame *)
 		m: TextGadgets0.Methods;
 		(* set to open a tutorial at any position *)
-		newPos*, newInd*: LONGINT;
+		newPos*, newInd*: SIGNED32;
 
 (* retrieve Text/Note-Gadgets from a panel *)
 
@@ -99,7 +99,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 	END GetNote;
 
 (* resize all TextGadgets.Style to w in a tutorial (P) *)
-	PROCEDURE ResizeControls*(P: Panel; T: TGFrame; w: INTEGER);
+	PROCEDURE ResizeControls*(P: Panel; T: TGFrame; w: SIGNED16);
 		VAR
 			Fi: Texts.Finder;
 			t: Books0.TextList;
@@ -131,7 +131,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 
 (* redisplay a tutorial panel *)
 
-	PROCEDURE MoveBar(P: Panel; M: Display.ModifyMsg; name: ARRAY OF CHAR; Y, mode: INTEGER; broadcast: BOOLEAN);
+	PROCEDURE MoveBar(P: Panel; M: Display.ModifyMsg; name: ARRAY OF CHAR; Y, mode: SIGNED16; broadcast: BOOLEAN);
 		VAR
 			obj: Objects.Object;
 			msg: Display.ModifyMsg;
@@ -158,9 +158,9 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 		END
 	END MoveBar;
 
-	PROCEDURE ReDisplay*(VAR M: Display.ModifyMsg; mode: INTEGER; broadcast: BOOLEAN);
+	PROCEDURE ReDisplay*(VAR M: Display.ModifyMsg; mode: SIGNED16; broadcast: BOOLEAN);
 		VAR
-			butH: INTEGER;
+			butH: SIGNED16;
 			T, Tn: TGFrame;
 			P: Panel;
 			msg: Display.ModifyMsg;
@@ -213,7 +213,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 			B: Texts.Buffer;
 			F: Texts.Finder;
 			obj, obj2: Objects.Object;
-			beg, pos: LONGINT;
+			beg, pos: SIGNED32;
 			C: Objects.CopyMsg;
 	BEGIN
 		IF to = NIL THEN
@@ -254,10 +254,10 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 			obj: Objects.Object;
 			P, F0: Panel;
 			T, T0, Tn: TGFrame;
-			butH, x, y, h: INTEGER;
+			butH, x, y, h: SIGNED16;
 			R: Display3.Mask;
 			tl, tl2: Books0.TextList;
-			PROCEDURE MoveButton(name: ARRAY OF CHAR; dX, dY, nH: INTEGER);
+			PROCEDURE MoveButton(name: ARRAY OF CHAR; dX, dY, nH: SIGNED16);
 				VAR msg: Display.ModifyMsg;
 			BEGIN
 				obj := Gadgets.FindObj(P, name);
@@ -486,7 +486,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 			F0: TGFrame;
 			name: ARRAY 64 OF CHAR;
 			obj: Objects.Object;
-			x, y: INTEGER;
+			x, y: SIGNED16;
 	BEGIN
 		WITH F: TGFrame DO
 			IF M IS Objects.CopyMsg THEN
@@ -641,13 +641,13 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 	END GetPanel;
 
 (* show this tutorial (P) on page t at position pos *)
-	PROCEDURE ShowText*(P: Panel; t: Books0.TextList; pos: LONGINT);
+	PROCEDURE ShowText*(P: Panel; t: Books0.TextList; pos: SIGNED32);
 		VAR
 			T: TGFrame;
 			Fi: Texts.Finder;
 			obj: Objects.Object;
 			lCont: Books0.ContElem;
-			fPos, cPos: LONGINT;
+			fPos, cPos: SIGNED32;
 			C: Oberon.ControlMsg;
 
 			THETEXT: Texts.Text;
@@ -722,11 +722,11 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 	END ShowText;
 
 (* get position of obj in t *)
-	PROCEDURE GetPos(t: Texts.Text; obj: Objects.Object): LONGINT;
+	PROCEDURE GetPos(t: Texts.Text; obj: Objects.Object): SIGNED32;
 		VAR
 			Fi: Texts.Finder;
 			obj2: Objects.Object;
-			pos: LONGINT;
+			pos: SIGNED32;
 	BEGIN
 		Texts.OpenFinder(Fi, t, 0);
 		pos := Fi.pos;
@@ -747,7 +747,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 		VAR
 			c: Chain;
 			T: TGFrame;
-		PROCEDURE OnTop(pos: LONGINT): BOOLEAN;
+		PROCEDURE OnTop(pos: SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN (P.useStack # NIL) & (P.useStack.old = P.cur) & (P.useStack.pos = pos)
 		END OnTop;
@@ -776,10 +776,10 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 	END Push;
 
 (* retrieve page-number of cur in P *)
-	PROCEDURE GetInd*(P: Panel; cur: Books0.TextList): LONGINT;
+	PROCEDURE GetInd*(P: Panel; cur: Books0.TextList): SIGNED32;
 		VAR
 			t: Books0.TextList;
-			ind: LONGINT;
+			ind: SIGNED32;
 	BEGIN
 		ind := 0;
 		t := P.texts;
@@ -798,14 +798,14 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 			T: TGFrame;
 			Fi: Texts.Finder;
 			obj: Objects.Object;
-			pos, Ind, Pos: LONGINT;
+			pos, Ind, Pos: SIGNED32;
 	BEGIN
 		GetPanel(P);
 		GetText(P, T);
 		IF T # NIL THEN
 			Ind := GetInd(P, P.cur);
 			Pos := T.org;
-			pos := MAX(LONGINT);
+			pos := MAX(SIGNED32);
 			Texts.OpenFinder(Fi, P.texts.text, 0);
 			Texts.FindObj(Fi, obj);
 			WHILE ~Fi.eot DO
@@ -818,7 +818,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 				END;
 				Texts.FindObj(Fi, obj)
 			END;
-			IF pos < MAX(LONGINT) THEN
+			IF pos < MAX(SIGNED32) THEN
 				Push(P);
 				ShowText(P, P.cur, pos)
 			ELSIF P.cur.next # NIL THEN
@@ -834,7 +834,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 			T: TGFrame;
 			Fi: Texts.Finder;
 			obj: Objects.Object;
-			pos, Ind, Pos: LONGINT;
+			pos, Ind, Pos: SIGNED32;
 	BEGIN
 		GetPanel(P);
 		GetText(P, T);
@@ -873,7 +873,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 			ch: CHAR;
 			locF: Books0.LocFrame;
 			obj: Objects.Object;
-			pos, Pos, Ind: LONGINT;
+			pos, Pos, Ind: SIGNED32;
 	BEGIN
 		cl := P.useStack;
 		WHILE cl # NIL DO
@@ -934,9 +934,9 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 	END OpenCont;
 
 (* get the position of the line-end of the line containing pos *)
-	PROCEDURE EndOfLine(T: TGFrame; pos: LONGINT): LONGINT;
+	PROCEDURE EndOfLine(T: TGFrame; pos: SIGNED32): SIGNED32;
 		VAR
-			beg: LONGINT;
+			beg: SIGNED32;
 			line: TextGadgets0.Line;
 	BEGIN
 		IF T.trailer = NIL THEN
@@ -956,10 +956,10 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 	END EndOfLine;
 
 (* show this tutorial (P) on page ind at position pos *)
-	PROCEDURE GotoText*(P: Panel; ind, pos: LONGINT; sel: BOOLEAN);
+	PROCEDURE GotoText*(P: Panel; ind, pos: SIGNED32; sel: BOOLEAN);
 		VAR
 			t: Books0.TextList;
-			i: INTEGER;
+			i: SIGNED16;
 			T: TGFrame;
 	BEGIN
 		i := 0;
@@ -998,7 +998,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 	END ShowBook;
 
 (* show local footnote of P *)
-	PROCEDURE ShowFootNote*(P: Panel; pos1, pos2: LONGINT);
+	PROCEDURE ShowFootNote*(P: Panel; pos1, pos2: SIGNED32);
 		VAR
 			T: TGFrame;
 			style: TextGadgets.Style;
@@ -1052,7 +1052,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 	END ShowCallErr;
 
 (* overridden Call-"method" for TGFrame, handels: links, notes & calls *)
-	PROCEDURE Call(F: TextGadgets0.Frame; pos: LONGINT; keysum: SET; dlink: Objects.Object);
+	PROCEDURE Call(F: TextGadgets0.Frame; pos: SIGNED32; keysum: SET; dlink: Objects.Object);
 		VAR
 			R: Texts.Reader;
 			ch: CHAR;
@@ -1061,8 +1061,8 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 			P: Panel;
 			S: Texts.Scanner;
 			par: Oberon.ParList;
-			res: INTEGER;
-			beg, pos2: LONGINT;
+			res: SIGNED16;
+			beg, pos2: SIGNED32;
 			T: TGFrame;
 			style: TextGadgets.Style;
 	BEGIN
@@ -1138,7 +1138,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 	END Call;
 
 (* overridden LocateString-"method" for TGFrame, handels underlining of strings *)
-	PROCEDURE LocateString(F: TextGadgets0.Frame; x, y, X, Y: INTEGER; VAR loc: TextGadgets0.Loc);
+	PROCEDURE LocateString(F: TextGadgets0.Frame; x, y, X, Y: SIGNED16; VAR loc: TextGadgets0.Loc);
 		VAR
 			R: Texts.Reader;
 			ch: CHAR;
@@ -1146,7 +1146,7 @@ MODULE Books IN Oberon; (** portable *)	(* ejz  *)
 			obj: Objects.Object;
 			loc1, loc2: TextGadgets0.Loc;
 			line: TextGadgets0.Line;
-			pos, beg, end: LONGINT;
+			pos, beg, end: SIGNED32;
 	BEGIN
 		TextGadgets.methods.LocateChar(F, x, y, X, Y, loc);
 		Texts.OpenReader(R, F.text, loc.pos);

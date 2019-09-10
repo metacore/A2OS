@@ -7,23 +7,23 @@ TYPE
 
 	Writer  = OBJECT
 	VAR
-		id: LONGINT;
+		id: SIGNED32;
 		file: Files.File;
 		fw: Files.Writer;
-		fileSize: HUGEINT;
-		byteCount: HUGEINT;
+		fileSize: SIGNED64;
+		byteCount: SIGNED64;
 		rndData, rndUpdate: Random.Generator;
 
 		tStart: Kernel.MilliTimer;
-		startByteCount: HUGEINT;
+		startByteCount: SIGNED64;
 
 		fileName0: Files.FileName;
-		partNum: LONGINT;
-		partByteCount: LONGINT;
+		partNum: SIGNED32;
+		partByteCount: SIGNED32;
 
 		run := FALSE, exited := FALSE: BOOLEAN;
 
-		PROCEDURE &InitWriter(id: LONGINT; CONST fileName: ARRAY OF CHAR; fileSize: HUGEINT);
+		PROCEDURE &InitWriter(id: SIGNED32; CONST fileName: ARRAY OF CHAR; fileSize: SIGNED64);
 		BEGIN
 			ASSERT(~exited);
 
@@ -79,16 +79,16 @@ TYPE
 
 		PROCEDURE Loop;
 		VAR
-			v: LONGINT;
+			v: SIGNED32;
 			strNum: ARRAY 16 OF CHAR;
 			str: Files.FileName;
-			t: LONGINT;
+			t: SIGNED32;
 		BEGIN
 			WHILE run & ((fileSize <= 0) OR (byteCount < fileSize)) & (fw.res = 0) DO
 				v := rndData.Integer();
 				fw.RawLInt(v);
-				INC(byteCount,SIZEOF(LONGINT));
-				INC(partByteCount,SIZEOF(LONGINT));
+				INC(byteCount,SIZEOF(SIGNED32));
+				INC(partByteCount,SIZEOF(SIGNED32));
 
 				IF partByteCount MOD 0x1000000 = 0 THEN
 					Kernel.SetTimer(tStart,0);
@@ -154,21 +154,21 @@ TYPE
 	(* High-level reader activity *)
 	Reader = OBJECT
 	VAR
-		id: LONGINT;
+		id: SIGNED32;
 		file: Files.File;
 		fr: Files.Reader;
 		rndData: Random.Generator;
-		byteCount: HUGEINT;
+		byteCount: SIGNED64;
 		run, exited: BOOLEAN;
 
 		tStart: Kernel.MilliTimer;
-		startByteCount: HUGEINT;
+		startByteCount: SIGNED64;
 
 		fileName0: Files.FileName;
-		partNum: LONGINT;
-		partByteCount: LONGINT;
+		partNum: SIGNED32;
+		partByteCount: SIGNED32;
 
-		PROCEDURE & InitReader(id: LONGINT; CONST fileName: ARRAY OF CHAR);
+		PROCEDURE & InitReader(id: SIGNED32; CONST fileName: ARRAY OF CHAR);
 		BEGIN
 			SELF.id := id;
 			file := Files.Old(fileName);
@@ -214,14 +214,14 @@ TYPE
 
 		PROCEDURE Loop;
 		VAR
-			v: LONGINT;
+			v: SIGNED32;
 			strNum: ARRAY 16 OF CHAR;
 			str: Files.FileName;
 		BEGIN
 			WHILE run & (fr.res = 0) DO
 				fr.RawLInt(v);
-				INC(partByteCount, SIZEOF(LONGINT));
-				INC(byteCount, SIZEOF(LONGINT));
+				INC(partByteCount, SIZEOF(SIGNED32));
+				INC(byteCount, SIZEOF(SIGNED32));
 				ASSERT(v = rndData.Integer());
 
 				IF partByteCount MOD 0x1000000 = 0 THEN
@@ -266,11 +266,11 @@ VAR
 	*)
 	PROCEDURE StartWriter*(ctx: Commands.Context);
 	VAR
-		id: LONGINT;
+		id: SIGNED32;
 		fileName: Files.FileName;
-		fileSize: LONGINT;
+		fileSize: SIGNED32;
 		w: Writer;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN{EXCLUSIVE}
 		IF ~ctx.arg.GetInteger(id,FALSE) THEN ctx.result := 1; RETURN; END;
 		IF ~ctx.arg.GetString(fileName) THEN ctx.result := 1; RETURN;END;
@@ -299,8 +299,8 @@ VAR
 	(* ID *)
 	PROCEDURE StopWriter*(ctx: Commands.Context);
 	VAR
-		id: LONGINT;
-		i: LONGINT;
+		id: SIGNED32;
+		i: SIGNED32;
 	BEGIN{EXCLUSIVE}
 		IF ~ctx.arg.GetInteger(id,FALSE) THEN ctx.result := 1; RETURN; END;
 
@@ -320,11 +320,11 @@ VAR
 		END;
 	END StopWriter;
 
-	PROCEDURE DoReportWriter(id: LONGINT; ctx: Commands.Context);
+	PROCEDURE DoReportWriter(id: SIGNED32; ctx: Commands.Context);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		w: Writer;
-		speed: REAL;
+		speed: FLOAT32;
 	BEGIN
 		i := 0;
 		WHILE (i < writers.Length()) & (writers.Get(i)(Writer).id # id) DO
@@ -333,7 +333,7 @@ VAR
 
 		IF i < writers.Length() THEN
 			w := writers.Get(i)(Writer);
-			speed := 1000.0 * REAL(w.byteCount-w.startByteCount) / Kernel.Elapsed(w.tStart);
+			speed := 1000.0 * FLOAT32(w.byteCount-w.startByteCount) / Kernel.Elapsed(w.tStart);
 			ctx.out.String("byte count="); ctx.out.Int(w.byteCount,0); ctx.out.Ln;
 			ctx.out.String("speed="); ctx.out.FloatFix(speed,0,5,0); ctx.out.String(" bytes/s"); ctx.out.Ln;
 			ctx.out.String("status: ");
@@ -356,7 +356,7 @@ VAR
 	*)
 	PROCEDURE ReportWriter*(ctx: Commands.Context);
 	VAR
-		id: LONGINT;
+		id: SIGNED32;
 	BEGIN{EXCLUSIVE}
 		IF ~ctx.arg.GetInteger(id,FALSE) THEN
 			ctx.result := Commands.CommandError;
@@ -371,8 +371,8 @@ VAR
 	VAR
 		fileName: Files.FileName;
 		r: Reader;
-		id: LONGINT;
-		i: LONGINT;
+		id: SIGNED32;
+		i: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF ~ctx.arg.GetInteger(id,FALSE) THEN ctx.result := 1; RETURN; END;
 		IF ~ctx.arg.GetString(fileName) THEN ctx.result := 1; RETURN;END;
@@ -400,8 +400,8 @@ VAR
 	PROCEDURE StopReader*(ctx: Commands.Context);
 	VAR
 		r: Reader;
-		id: LONGINT;
-		i: LONGINT;
+		id: SIGNED32;
+		i: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF ~ctx.arg.GetInteger(id, FALSE) THEN ctx.result := 1; RETURN; END;
 
@@ -425,11 +425,11 @@ VAR
 		ctx.out.Ln;
 	END StopReader;
 
-	PROCEDURE DoReportReader(id: LONGINT; ctx: Commands.Context);
+	PROCEDURE DoReportReader(id: SIGNED32; ctx: Commands.Context);
 	VAR
 		r: Reader;
-		i: LONGINT;
-		speed: LONGREAL;
+		i: SIGNED32;
+		speed: FLOAT64;
 	BEGIN
 		WHILE (i < readers.Length()) & (readers.Get(i)(Reader).id # id) DO INC(i); END;
 		IF i < readers.Length() THEN
@@ -456,7 +456,7 @@ VAR
 
 	PROCEDURE ReportReader*(ctx: Commands.Context);
 	VAR
-		id: LONGINT;
+		id: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF ~ctx.arg.GetInteger(id,FALSE) THEN
 			ctx.result := Commands.CommandError;
@@ -471,7 +471,7 @@ VAR
 	VAR
 		w: Writer;
 		r: Reader;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN{EXCLUSIVE}
 		IF writers.Length() # 0 THEN
 			FOR i := 0 TO writers.Length()-1 DO

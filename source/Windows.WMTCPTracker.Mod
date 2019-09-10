@@ -40,11 +40,11 @@ TYPE
 
 	Window = OBJECT (WMComponents.FormWindow)
 	VAR grid : WMStringGrids.StringGrid;
-		delay : LONGINT;
+		delay : SIGNED32;
 		timer : Kernel.Timer;
-		state : LONGINT;
+		state : SIGNED32;
 
-		currentIndex, nofConnections : LONGINT;
+		currentIndex, nofConnections : SIGNED32;
 		currentList : ConnectionArray;
 		colWidth : WMGrids.Spacings;
 
@@ -70,14 +70,14 @@ TYPE
 			cBtn.bounds.SetWidth(panel.bounds.GetWidth() DIV 2);
 			cBtn.alignment.Set(WMComponents.AlignLeft);
 			toolbar.AddContent(cBtn);
-			cBtn.clDefault.Set(LONGINT(0FF0000FFH));
+			cBtn.clDefault.Set(SIGNED32(0FF0000FFH));
 			SELF.closeBtn := cBtn;
 
 			NEW(dBtn); dBtn.caption.SetAOC("Discard selected connection (think 2x !)");
 			dBtn.bounds.SetWidth(panel.bounds.GetWidth() DIV 2);
 			dBtn.alignment.Set(WMComponents.AlignLeft);
 			toolbar.AddContent(dBtn);
-			dBtn.clDefault.Set(LONGINT(0FF0000FFH));
+			dBtn.clDefault.Set(SIGNED32(0FF0000FFH));
 			SELF.discardBtn := dBtn;
 
 			NEW(grid); grid.alignment.Set(WMComponents.AlignClient);
@@ -86,9 +86,9 @@ TYPE
 			RETURN panel
 		END CreateForm;
 
-		PROCEDURE &New*(delay : LONGINT;  c : WMRestorable.Context);
+		PROCEDURE &New*(delay : SIGNED32;  c : WMRestorable.Context);
 		VAR str : ARRAY 256 OF CHAR;
-			i : WORD; dx, dy, minWidth : SIZE;
+			i : INTEGER; dx, dy, minWidth : SIZE;
 			 vc : WMComponents.VisualComponent;
 			f  : WMGraphics.Font;
 		BEGIN
@@ -139,7 +139,7 @@ TYPE
 			state := Running
 		END New;
 
-		PROCEDURE GetTitleStr(col: LONGINT; VAR x : ARRAY OF CHAR);
+		PROCEDURE GetTitleStr(col: SIGNED32; VAR x : ARRAY OF CHAR);
 		BEGIN
 			CASE col OF
 				|0 : COPY("Remote", x)
@@ -212,7 +212,7 @@ TYPE
 			END
 		END DiscardConnection;
 
-		PROCEDURE GetAlign(col : LONGINT) : LONGINT;
+		PROCEDURE GetAlign(col : SIGNED32) : SIGNED32;
 		BEGIN
 			CASE col OF
 				0..3 : RETURN WMGraphics.AlignCenter;
@@ -220,7 +220,7 @@ TYPE
 			END
 		END GetAlign;
 
-		PROCEDURE StateToString(state : LONGINT; VAR str : ARRAY OF CHAR);
+		PROCEDURE StateToString(state : SIGNED32; VAR str : ARRAY OF CHAR);
 		BEGIN
 			CASE state OF
 				TCP.Closed: COPY("Closed", str)
@@ -238,7 +238,7 @@ TYPE
 			END
 		END StateToString;
 
-		PROCEDURE GetConnectionStr(x, col: LONGINT; VAR str : ARRAY OF CHAR); (*ALEX 2005.12.12 commented out inexistent properties*)
+		PROCEDURE GetConnectionStr(x, col: SIGNED32; VAR str : ARRAY OF CHAR); (*ALEX 2005.12.12 commented out inexistent properties*)
 		VAR c : TCP.Connection;
 				t : ConnectionArray;
 				s : ARRAY 64 OF CHAR;
@@ -290,7 +290,7 @@ TYPE
 
 		PROCEDURE AddConnection(obj: ANY;  VAR cont: BOOLEAN); (*ALEX 2005.12.12 modified signature*)
 		(*PROCEDURE AddConnection(c : TCP.Connection);*)
-		VAR t : ConnectionArray; i : LONGINT;
+		VAR t : ConnectionArray; i : SIGNED32;
 		BEGIN
 			IF currentIndex >= LEN(currentList) THEN (* grow the list *)
 				NEW(t, LEN(currentList) * 2); FOR i := 0 TO currentIndex - 1 DO t[i] := currentList[i] END;
@@ -308,7 +308,7 @@ TYPE
 		END ScanConnections;
 
 		PROCEDURE Update;
-		VAR i, j : LONGINT; s : Strings.String;
+		VAR i, j : SIGNED32; s : Strings.String;
 		BEGIN
 			ScanConnections;
 			grid.model.Acquire;
@@ -367,7 +367,7 @@ BEGIN {EXCLUSIVE}
 END FreeWindow;
 
 PROCEDURE Open*(context : Commands.Context);	(** [ms] *)
-VAR delay: LONGINT;
+VAR delay: SIGNED32;
 BEGIN
 	IF TCP.pool # NIL THEN
 		IF ~context.arg.GetInteger(delay, FALSE) OR (delay < 1) THEN delay := 250 END;	(* default delay *)

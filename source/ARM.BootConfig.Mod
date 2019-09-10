@@ -12,11 +12,11 @@ CONST
 
 VAR
 	config: POINTER {UNSAFE,UNTRACED} TO ARRAY ConfigSize OF CHAR;
-	size: LONGINT;
+	size: SIGNED32;
 
 	PROCEDURE GetValue * (CONST key: ARRAY OF CHAR; VAR value: ARRAY OF CHAR);
 	VAR
-		i, len: LONGINT;
+		i, len: SIGNED32;
 	BEGIN
 		i := 0;
 		len := 0;
@@ -39,7 +39,7 @@ VAR
 		value[len] := 0X;
 	END GetValue;
 
-	PROCEDURE GetIntValue * (CONST key: ARRAY OF CHAR): LONGINT;
+	PROCEDURE GetIntValue * (CONST key: ARRAY OF CHAR): SIGNED32;
 	VAR
 		str: ARRAY 128 OF CHAR;
 	BEGIN
@@ -65,9 +65,9 @@ VAR
 		config[size] := CR;
 	END Init;
 
-	PROCEDURE StrToInt (CONST str: ARRAY OF CHAR): LONGINT;
+	PROCEDURE StrToInt (CONST str: ARRAY OF CHAR): SIGNED32;
 	VAR
-		i, value: LONGINT;
+		i, value: SIGNED32;
 	BEGIN
 		i := 0;
 		value := 0;
@@ -87,9 +87,9 @@ VAR
 	END StrToBool;
 
 	(** return TRUE if str1 from ofs1 until the first '=' (excluded) matches str2 *)
-	PROCEDURE MatchKey (CONST str1: ARRAY OF CHAR; ofs1: LONGINT; CONST str2: ARRAY OF CHAR): BOOLEAN;
+	PROCEDURE MatchKey (CONST str1: ARRAY OF CHAR; ofs1: SIGNED32; CONST str2: ARRAY OF CHAR): BOOLEAN;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (str1[ofs1 + i] # '=') & (str2[i] # 0X) & (str1[ofs1 + i] = str2[i]) DO INC(i) END;
@@ -129,7 +129,7 @@ VAR
 
 	PROCEDURE Print * (context: Commands.Context);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO size - 1 DO
 			context.out.Char(config[i])

@@ -22,19 +22,19 @@ TYPE
 	FileObj* = POINTER TO FileObjDesc;
 	FileObjDesc* = RECORD (Gadgets.ObjDesc)
 		F*: Files.File;	(** carrier file *)
-		beg*, len*: LONGINT;	(** file offset and length *)
+		beg*, len*: SIGNED32;	(** file offset and length *)
 	END;
 
 	Suitcase* = POINTER TO SuitcaseDesc;
 	SuitcaseDesc* = RECORD (Gadgets.FrameDesc)
-		col*: INTEGER;
+		col*: SIGNED16;
 		label*: ARRAY 64 OF CHAR;	(** caption *)
 	END;
 
 (*  --- FileObj --- *)
 
 PROCEDURE FileObjHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg);
-VAR obj0: FileObj; len: LONGINT; R: Files.Rider; ch: CHAR;
+VAR obj0: FileObj; len: SIGNED32; R: Files.Rider; ch: CHAR;
 BEGIN
 	WITH obj: FileObj DO
 		IF M IS Objects.AttrMsg THEN
@@ -103,7 +103,7 @@ END NewFileObj;
 
 (** unpack a file object into the named file *)
 PROCEDURE UnpackFileObj*(obj: FileObj; CONST filename: ARRAY OF CHAR);
-VAR F: Files.File; R, r: Files.Rider; ch: CHAR; len: LONGINT;
+VAR F: Files.File; R, r: Files.Rider; ch: CHAR; len: SIGNED32;
 BEGIN
 	F := Files.New(filename); Files.Set(r, F, 0);
 	len := obj.len;
@@ -138,8 +138,8 @@ BEGIN
 	END
 END SuitcaseAttr;
 
-PROCEDURE RestoreSuitcase(F: Suitcase; M: Display3.Mask; x, y, w, h: INTEGER);
-VAR j: INTEGER;
+PROCEDURE RestoreSuitcase(F: Suitcase; M: Display3.Mask; x, y, w, h: SIGNED16);
+VAR j: SIGNED16;
 BEGIN
 	j := w DIV 2 - 10;
 	Display3.Rect3D(M, Display3.topC, Display3.bottomC, x + j, y + h - 12, 20, 10, 1, Display.replace);
@@ -154,7 +154,7 @@ END RestoreSuitcase;
 PROCEDURE Print(F: Suitcase; VAR M: Display.DisplayMsg);
 VAR R: Display3.Mask;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -170,7 +170,7 @@ BEGIN
 END CopySuitcase;
 
 PROCEDURE OpenSuitcase(F: Suitcase; obj: Objects.Object);
-VAR D: Documents.Document; f: TextGadgets.Frame; res: INTEGER;
+VAR D: Documents.Document; f: TextGadgets.Frame; res: SIGNED16;
 BEGIN
 	IF obj # NIL THEN
 		IF obj IS Texts.Text THEN
@@ -200,7 +200,7 @@ BEGIN
 END OpenSuitcase;
 
 PROCEDURE SuitcaseHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: Suitcase; R: Display3.Mask;
+VAR x, y, w, h: SIGNED16; F0: Suitcase; R: Display3.Mask;
 BEGIN
 	WITH F: Suitcase DO
 		IF M IS Display.FrameMsg THEN
@@ -286,7 +286,7 @@ PROCEDURE GetLabel(T: Texts.Text; VAR label: ARRAY OF CHAR);
 VAR R: Texts.Reader; ch: CHAR; keyw: ARRAY 6 OF CHAR;
 
 	PROCEDURE ReadLine;
-	VAR i, j: INTEGER;
+	VAR i, j: SIGNED16;
 	BEGIN
 		Texts.Read(R, ch); i := 0; j := 0;
 		WHILE ~R.eot & (ch # 0DX) DO
@@ -312,7 +312,7 @@ END GetLabel;
 
 (** Make a suitcase out of a text *)
 PROCEDURE MakeTextSuitcase*(F: Suitcase; label: ARRAY OF CHAR; T: Texts.Text);
-VAR buf: Texts.Buffer; text: Texts.Text; d: INTEGER; maillabel: ARRAY 128 OF CHAR;
+VAR buf: Texts.Buffer; text: Texts.Text; d: SIGNED16; maillabel: ARRAY 128 OF CHAR;
 BEGIN
 	NEW(buf); Texts.OpenBuf(buf);
 	Texts.Save(T, 0, T.len, buf);
@@ -330,7 +330,7 @@ END MakeTextSuitcase;
 
 (** Make a suitcase out of a file *)
 PROCEDURE MakeFileSuitcase*(F: Suitcase; CONST filename: ARRAY OF CHAR);
-VAR d: INTEGER; f: FileObj;
+VAR d: SIGNED16; f: FileObj;
 BEGIN
 	InitSuitcase(F); COPY(filename, F.label);
 

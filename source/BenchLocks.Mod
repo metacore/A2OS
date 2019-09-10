@@ -11,10 +11,10 @@ TYPE
 
 	Thread = OBJECT
 	VAR
-		nofLoops, holdTime : LONGINT;
-		i, j : LONGINT;
+		nofLoops, holdTime : SIGNED32;
+		i, j : SIGNED32;
 
-		PROCEDURE &Init*(nofLoops, holdTime : LONGINT);
+		PROCEDURE &Init*(nofLoops, holdTime : SIGNED32);
 		BEGIN
 			ASSERT((nofLoops > 0) & (holdTime >= 0));
 			SELF.nofLoops := nofLoops;
@@ -37,7 +37,7 @@ TYPE
 	END Thread;
 
 VAR
-	nofThreadsRunning : LONGINT;
+	nofThreadsRunning : SIGNED32;
 
 PROCEDURE DecNofThreadsRunning;
 BEGIN {EXCLUSIVE}
@@ -45,7 +45,7 @@ BEGIN {EXCLUSIVE}
 END DecNofThreadsRunning;
 
 PROCEDURE Bench*(context : Commands.Context); (** nofThreads nofLoops [holdTime] ~*)
-VAR start, nofThreads, nofLoops, holdTime : LONGINT; i : SIZE; threads : POINTER TO ARRAY OF Thread;
+VAR start, nofThreads, nofLoops, holdTime : SIGNED32; i : SIZE; threads : POINTER TO ARRAY OF Thread;
 BEGIN {EXCLUSIVE}
 	context.arg.SkipWhitespace; context.arg.Int(nofThreads, FALSE);
 	context.arg.SkipWhitespace; context.arg.Int(nofLoops, FALSE);
@@ -71,7 +71,7 @@ BEGIN {EXCLUSIVE}
 END Bench;
 
 PROCEDURE TestAcquire*(context : Commands.Context);	(* num *)
-VAR i, n, t: LONGINT;
+VAR i, n, t: SIGNED32;
 BEGIN
 	IF context.arg.GetInteger(n, FALSE) & (n > 0) THEN
 		i := Kernel.GetTicks();

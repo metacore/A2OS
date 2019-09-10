@@ -57,8 +57,8 @@ VAR
 		vyRealVec.SetLen( dense, cLength );  vyRealVec.Fill( dense, 0.5, 0, cLength )
 	END DefaultDense;
 
-	PROCEDURE Integral( d: vyBase.tVector ): REAL;
-	VAR sum, dx: REAL;  i: LONGINT;
+	PROCEDURE Integral( d: vyBase.tVector ): FLOAT32;
+	VAR sum, dx: FLOAT32;  i: SIGNED32;
 	BEGIN
 		sum := 0;
 		dx := 1 / (d.nrData - 1);   (*interval width*)
@@ -91,9 +91,9 @@ VAR
 		END
 	END Handler;
 
-	PROCEDURE Random*( ): LONGREAL;
+	PROCEDURE Random*( ): FLOAT64;
 	(*vs 0.0a1 *)  (* md  14.02.95 *)
-	VAR x, y, x1, x2, y1, y2, dx, dindx, offset: REAL;  i: INTEGER;  ok: BOOLEAN;
+	VAR x, y, x1, x2, y1, y2, dx, dindx, offset: FLOAT32;  i: SIGNED16;  ok: BOOLEAN;
 	BEGIN
 		ok := FALSE;
 
@@ -124,9 +124,9 @@ VAR
 		RETURN x
 	END Random;
 
-	PROCEDURE RandomVector*( v: vyBase.tVector;  nrData: LONGINT );
+	PROCEDURE RandomVector*( v: vyBase.tVector;  nrData: SIGNED32 );
 	(*vs 0.0a1 *)  (* md  05.07.95 *)
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		vector := TRUE;
 		IF (v # NIL ) & (nrData > 0) THEN
@@ -138,7 +138,7 @@ VAR
 	END RandomVector;
 
 	PROCEDURE Recall( denseEditor: vyFctEdit.tLayer );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		vyGraphBase.SetPatternJustification( vyGraphBase.center, vyGraphBase.center );
 		vyGraphBase.SetDisplayMode( vyGraphBase.replace );  vyGraphBase.SetForeColor( vyGraphBase.black );

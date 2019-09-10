@@ -39,14 +39,14 @@ VAR
 	*)
 
 	(*
-	PROCEDURE GetSeed* (VAR nr: LONGINT);
+	PROCEDURE GetSeed* (VAR nr: SIGNED32);
 	VAR seed: vyRanBase.tSeed;
 	BEGIN
 	vyRanBase.RandomGenerator.GetSeed(vyRanBase.RandomGenerator, seed);
 	nr := seed(vyRanBase.tLongintSeed).val
 	END GetSeed;
 
-	PROCEDURE SetSeed* (nr: LONGINT);
+	PROCEDURE SetSeed* (nr: SIGNED32);
 	VAR seed: vyRanBase.tSeed;
 	BEGIN
 	vyRanBase.RandomGenerator.GetSeed(vyRanBase.RandomGenerator, seed);
@@ -56,7 +56,7 @@ VAR
 	*)
 
 
-PROCEDURE max* (): LONGINT;
+PROCEDURE max* (): SIGNED32;
 BEGIN
 	RETURN vyRanBase.RandomGenerator.Max(vyRanBase.RandomGenerator)
 END max;
@@ -68,7 +68,7 @@ BEGIN
 END SetGen;
 
 (*
-PROCEDURE GetL* (): LONGINT;
+PROCEDURE GetL* (): SIGNED32;
 BEGIN
 RETURN vyRanBase.RandomBits();
 (*
@@ -76,15 +76,15 @@ RETURN gen.GetRandom(vyRanBase.RandomGenerator)
 *)
 END GetL;
 
-PROCEDURE GetU* (): LONGREAL;
+PROCEDURE GetU* (): FLOAT64;
 BEGIN
 RETURN vyRanBase.RandomU();
 END GetU;
 *)
 
 (* returns random number with Laplace density 1 / (2 lambda) * exp (- (x-m) / lambda) *)
-PROCEDURE Laplace* (mu, lambda: LONGREAL): LONGREAL;
-	VAR ran: LONGREAL;
+PROCEDURE Laplace* (mu, lambda: FLOAT64): FLOAT64;
+	VAR ran: FLOAT64;
 BEGIN
 	ran := vyRandom.Exp(1 / lambda);
 	IF vyRanBase.RandomU() < 0.5 THEN ran := mu - ran ELSE ran := mu + ran END;
@@ -175,8 +175,8 @@ BEGIN
 END SetMarsaglia;
 
 
-PROCEDURE DoApplyRNG (obj: vyBase.Object;  VAR u: LONGREAL);
-	VAR seed, a, b, c, es:antsPortability.Hugeint;  seedr, ar, br, cr: LONGREAL;
+PROCEDURE DoApplyRNG (obj: vyBase.Object;  VAR u: FLOAT64);
+	VAR seed, a, b, c, es:antsPortability.Hugeint;  seedr, ar, br, cr: FLOAT64;
 BEGIN
 	Attributes.GetLongReal(obj, "a", ar);
 	Attributes.GetLongReal(obj, "b", br);
@@ -226,7 +226,7 @@ END DoApplyRNG;
 
 
 PROCEDURE ApplyRNG*;
-	VAR u: LONGREAL;  obj, addv: vyBase.Object;  i, iter: LONGINT;  v: vyLongrealVec.tVector;
+	VAR u: FLOAT64;  obj, addv: vyBase.Object;  i, iter: SIGNED32;  v: vyLongrealVec.tVector;
 BEGIN
 	antsCommands.InitScan("name=OBJ [addto=OBJ iter=INT]");
 	IF antsCommands.ExpectObject("name", obj) THEN
@@ -245,8 +245,8 @@ BEGIN
 	END;
 END ApplyRNG;
 
-PROCEDURE DoBoxMuller (obj: vyBase.Object;  VAR n1, n2: LONGREAL);
-VAR u1, u2: LONGREAL;  BEGIN
+PROCEDURE DoBoxMuller (obj: vyBase.Object;  VAR n1, n2: FLOAT64);
+VAR u1, u2: FLOAT64;  BEGIN
 	DoApplyRNG(obj, u1); Attributes.SetLongReal(obj,"lastu",u1);
 	DoApplyRNG(obj, u2);
 	n1 := Math.sqrt( - 2 * Math.ln(u1)) * Math.cos(2 * Math.pi * u2);
@@ -257,7 +257,7 @@ END DoBoxMuller;
 
 
 PROCEDURE ApplyBoxMuller*;
-	VAR n1, n2: LONGREAL;  obj: vyBase.Object;   addv: vyBase.Object;  i, iter: LONGINT;  v: vyLongrealVec.tVector;
+	VAR n1, n2: FLOAT64;  obj: vyBase.Object;   addv: vyBase.Object;  i, iter: SIGNED32;  v: vyLongrealVec.tVector;
 BEGIN
 	antsCommands.InitScan("name=OBJ [addto=OBJ iter=INT]");
 	IF antsCommands.ExpectObject("name", obj) THEN
@@ -278,8 +278,8 @@ BEGIN
 	END;
 END ApplyBoxMuller;
 
-PROCEDURE DoPolarMethod (obj: vyBase.Object;  VAR n1, n2: LONGREAL);
-	VAR u1, u2, v1, v2, w, d: LONGREAL;
+PROCEDURE DoPolarMethod (obj: vyBase.Object;  VAR n1, n2: FLOAT64);
+	VAR u1, u2, v1, v2, w, d: FLOAT64;
 BEGIN
 	REPEAT
 		DoApplyRNG(obj, u1);Attributes.SetLongReal(obj,"lastu",u1);
@@ -297,7 +297,7 @@ END DoPolarMethod;
 
 
 PROCEDURE ApplyPolarMethod*;
-	VAR n1, n2: LONGREAL;  obj: vyBase.Object;  addv: vyBase.Object;  i, iter: LONGINT;  v: vyLongrealVec.tVector;
+	VAR n1, n2: FLOAT64;  obj: vyBase.Object;  addv: vyBase.Object;  i, iter: SIGNED32;  v: vyLongrealVec.tVector;
 BEGIN
 	antsCommands.InitScan("name=OBJ [addto=OBJ iter=INT]");
 	IF antsCommands.ExpectObject("name", obj) THEN
@@ -317,7 +317,7 @@ BEGIN
 END ApplyPolarMethod;
 
 
-PROCEDURE PowerH (this, power: LONGINT): antsPortability.Hugeint;
+PROCEDURE PowerH (this, power: SIGNED32): antsPortability.Hugeint;
 	VAR h: antsPortability.Hugeint;
 BEGIN
 	h := antsPortability.ONE;
@@ -361,14 +361,14 @@ BEGIN
 	Attributes.SetLongReal(obj, "u", 0);
 END NewDynamicRNG;
 
-PROCEDURE Max(i1,i2: LONGINT): LONGINT;
+PROCEDURE Max(i1,i2: SIGNED32): SIGNED32;
 BEGIN
 	IF i1>i2 THEN RETURN i1 ELSE RETURN i2 END;
 END Max;
 
 
 PROCEDURE MakeShifted*;
-	VAR o, o1, o2, o3: vyBase.Object;  v, v1, v2, v3: vyLongrealVec.tVector;  i: LONGINT;
+	VAR o, o1, o2, o3: vyBase.Object;  v, v1, v2, v3: vyLongrealVec.tVector;  i: SIGNED32;
 BEGIN
 	antsCommands.InitScan("vec=OBJ vec1=OBJ vec2=OBJ [vec3=OBJ]");
 	IF antsCommands.ExpectObject("vec", o) &  antsCommands.ExpectObject("vec1", o1) & antsCommands.ExpectObject("vec2", o2) THEN
@@ -403,7 +403,7 @@ BEGIN
 END MakeShifted;
 
 PROCEDURE MakePaired*;
-	VAR o, o1, o2,o3: vyBase.Object;  v, v1, v2,v3: vyLongrealVec.tVector;  i: LONGINT;
+	VAR o, o1, o2,o3: vyBase.Object;  v, v1, v2,v3: vyLongrealVec.tVector;  i: SIGNED32;
 BEGIN
 	antsCommands.InitScan("vec=OBJ vec1=OBJ vec2=OBJ");
 	IF antsCommands.ExpectObject("vec", o) &  antsCommands.ExpectObject("vec1", o1) & antsCommands.ExpectObject("vec2", o2) THEN

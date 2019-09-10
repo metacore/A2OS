@@ -21,7 +21,7 @@ MODULE Compiler IN Oberon;	(** portable, except where noted *)
 	END SignOn;
 
 	PROCEDURE GetOptions(VAR S: Texts.Scanner; VAR opts: ARRAY OF CHAR);
-		VAR i: LONGINT; ch: CHAR;
+		VAR i: SIGNED32; ch: CHAR;
 	BEGIN
 		WHILE (S.class = Texts.Char) & (S.c = Oberon.OptionChar) DO
 			i := 0;
@@ -36,7 +36,7 @@ MODULE Compiler IN Oberon;	(** portable, except where noted *)
 	END GetOptions;
 
 	PROCEDURE InOptions(VAR opt: ARRAY OF CHAR; ch: CHAR): BOOLEAN;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (opt[i] # 0X) & (opt[i] # ch) DO
@@ -47,7 +47,7 @@ MODULE Compiler IN Oberon;	(** portable, except where noted *)
 		RETURN opt[i] = ch
 	END InOptions;
 
-	PROCEDURE Locate(F: Display.Frame;  T: Texts.Text;  pos: LONGINT);
+	PROCEDURE Locate(F: Display.Frame;  T: Texts.Text;  pos: SIGNED32);
 	VAR M: Oberon.CaretMsg;  N: Oberon.ControlMsg;
 	BEGIN
 		IF pos < 0 THEN pos := 0
@@ -58,8 +58,8 @@ MODULE Compiler IN Oberon;	(** portable, except where noted *)
 		M.id := Oberon.set; M.F := F; M.car := F; M.text := T; M.pos := pos; Display.Broadcast(M)
 	END Locate;
 
-	PROCEDURE GetBreakPC(): LONGINT;
-		VAR S: Texts.Scanner; t: Texts.Text;  beg, end, time: LONGINT;
+	PROCEDURE GetBreakPC(): SIGNED32;
+		VAR S: Texts.Scanner; t: Texts.Text;  beg, end, time: SIGNED32;
 	BEGIN
 		Oberon.GetSelection(t, beg, end, time);
 		IF time >= 0 THEN
@@ -77,7 +77,7 @@ MODULE Compiler IN Oberon;	(** portable, except where noted *)
 	END GetBreakPC;
 
 	PROCEDURE ParseOptions(VAR name, options, path, pref, extension: ARRAY OF CHAR;  VAR codeOpt, parserOpt: SET);
-	VAR i, j, k: LONGINT;  ch: CHAR;
+	VAR i, j, k: SIGNED32;  ch: CHAR;
 	BEGIN
 		codeOpt := OPM.DefaultCodeOpt; parserOpt := OPM.DefaultParserOpt;
 		i := 0; path[0] := 0X; pref[0] := 0X;
@@ -136,7 +136,7 @@ MODULE Compiler IN Oberon;	(** portable, except where noted *)
 	END ParseOptions;
 
 	PROCEDURE WriteMsg(source: Texts.Reader;  log: Texts.Text);
-	VAR sym: SHORTINT;
+	VAR sym: SIGNED8;
 	BEGIN
 		Texts.WriteString(W, " compiling ");
 		OPM.Init({}, {}, source, log); OPS.Get(sym);
@@ -165,7 +165,7 @@ MODULE Compiler IN Oberon;	(** portable, except where noted *)
 		Texts.Append(log, W.buf)
 	END WriteMsg;
 
-	PROCEDURE Module*(source: Texts.Reader; name, options: ARRAY OF CHAR; breakpc: LONGINT;
+	PROCEDURE Module*(source: Texts.Reader; name, options: ARRAY OF CHAR; breakpc: SIGNED32;
 			log: Texts.Text; VAR error: BOOLEAN);
 		VAR codeOpt, parserOpt: SET; extSF, newSF: BOOLEAN; p: OPT.Node; modName: OPS.Name;
 	BEGIN
@@ -204,8 +204,8 @@ MODULE Compiler IN Oberon;	(** portable, except where noted *)
 		OPM.outputPath := "!"; OPM.outputPrefix := "!"	(* invalid filename *)
 	END Module;
 
-	PROCEDURE CompileText(t: Texts.Text; pos: LONGINT; frame: Display.Frame; opt: ARRAY OF CHAR; VAR error: BOOLEAN);
-		VAR f: BOOLEAN; pc: LONGINT; r: Texts.Reader;
+	PROCEDURE CompileText(t: Texts.Text; pos: SIGNED32; frame: Display.Frame; opt: ARRAY OF CHAR; VAR error: BOOLEAN);
+		VAR f: BOOLEAN; pc: SIGNED32; r: Texts.Reader;
 	BEGIN
 		IF t # NIL THEN
 			Texts.OpenReader(r, t, pos);
@@ -226,7 +226,7 @@ MODULE Compiler IN Oberon;	(** portable, except where noted *)
 	END CompileText;
 
 	PROCEDURE CompileFile*(name, opt: ARRAY OF CHAR; VAR error: BOOLEAN);
-		VAR t: Texts.Text; r: Texts.Reader; pc: LONGINT;
+		VAR t: Texts.Text; r: Texts.Reader; pc: SIGNED32;
 	BEGIN
 		NEW(t); Texts.Open(t, name);
 		IF t.len # 0 THEN
@@ -247,7 +247,7 @@ MODULE Compiler IN Oberon;	(** portable, except where noted *)
 
 	PROCEDURE Compile*;
 		VAR S: Texts.Scanner;  globalOpt, localOpt: ARRAY 32 OF CHAR;
-			t: Texts.Text; pos, end, time: LONGINT;  frame: Display.Frame;
+			t: Texts.Text; pos, end, time: SIGNED32;  frame: Display.Frame;
 			name: ARRAY 64 OF CHAR; error: BOOLEAN;
 	BEGIN
 		error := FALSE;
@@ -268,7 +268,7 @@ MODULE Compiler IN Oberon;	(** portable, except where noted *)
 				Oberon.GetSelection(t, pos, end, time);
 				Texts.OpenScanner(S, t, pos); Texts.Scan(S)
 			ELSE
-				end := MAX(LONGINT)
+				end := MAX(SIGNED32)
 			END;
 			WHILE (S.class = Texts.Name) & (Texts.Pos(S) - S.len <= end) & ~error DO
 				COPY(S.s, name);  COPY(globalOpt, localOpt);

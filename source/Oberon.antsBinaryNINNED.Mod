@@ -26,10 +26,10 @@ Report any problems as soon as possible to ants@AntsInFields.de
 
 IMPORT vyBase, antsArrayObjects, antsEmpiricD, Objects, aM := antsMessages ;
 TYPE
-	Index = LONGINT;
+	Index = SIGNED32;
 
-	NINNED* = ARRAY 2 OF ARRAY 16 OF LONGINT;   (*= non isotropic nearest neighbour empirical distribution *)
-	NINSSProb* = ARRAY 16 OF LONGREAL;  (*= probability vector for non isotropic nearest neighbour structures *)
+	NINNED* = ARRAY 2 OF ARRAY 16 OF SIGNED32;   (*= non isotropic nearest neighbour empirical distribution *)
+	NINSSProb* = ARRAY 16 OF FLOAT64;  (*= probability vector for non isotropic nearest neighbour structures *)
 
 	EmpiricalDistribution* = POINTER TO EDDesc;   (* empirical Distribution of a binary state space model *)
 	EDDesc = RECORD (antsEmpiricD.EDDesc)
@@ -46,10 +46,10 @@ TYPE
 		gen: PROCEDURE (g: tEDGenerator);
 	END;
 
-	VAR   lastprob*: NINSSProb;  black*: LONGREAL;
+	VAR   lastprob*: NINSSProb;  black*: FLOAT64;
 
-PROCEDURE Prob* (E: EmpiricalDistribution;  conf: LONGINT): LONGREAL;
-	VAR s: LONGINT;
+PROCEDURE Prob* (E: EmpiricalDistribution;  conf: SIGNED32): FLOAT64;
+	VAR s: SIGNED32;
 BEGIN
 	s := E.val[0, conf] + E.val[1, conf];
 	IF s = 0 THEN RETURN - 1 ELSE
@@ -58,7 +58,7 @@ BEGIN
 END Prob;
 
 PROCEDURE ProbA* (E: EmpiricalDistribution;  VAR a: NINSSProb);
-	VAR i: LONGINT;  b, w: LONGINT;
+	VAR i: SIGNED32;  b, w: SIGNED32;
 BEGIN b := 0;  w := 0;
 	FOR i := 0 TO 15 DO
 		a[i] := Prob(E, i);
@@ -69,7 +69,7 @@ END ProbA;
 
 
 PROCEDURE InitED (E: EmpiricalDistribution);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 BEGIN
 	FOR i := 0 TO 15 DO
 		E.val[0, i] := 0;
@@ -78,8 +78,8 @@ BEGIN
 END InitED;
 
 
-PROCEDURE EmpiricalDistribute (VAR E: EmpiricalDistribution;   A: antsArrayObjects.tINTEGERArray;   Sx, Sy, Sw, Sh: LONGINT);
-	VAR x, y: LONGINT ;   xt: Index;    conf: LONGINT;
+PROCEDURE EmpiricalDistribute (VAR E: EmpiricalDistribution;   A: antsArrayObjects.tINTEGERArray;   Sx, Sy, Sw, Sh: SIGNED32);
+	VAR x, y: SIGNED32 ;   xt: Index;    conf: SIGNED32;
 BEGIN
 	IF E = NIL THEN NEW(E) END;
 	InitED(E);
@@ -96,8 +96,8 @@ BEGIN
 	END
 END EmpiricalDistribute;
 
-(* PROCEDURE EmpiricalDistributeC (Eo,Ee: EmpiricalDistribution;  A: antsArrayObjects.tINTEGERArray;  Sx,Sy,Sw,Sh: LONGINT);
-VAR x,y: LONGINT ;  xt,vt: Index;
+(* PROCEDURE EmpiricalDistributeC (Eo,Ee: EmpiricalDistribution;  A: antsArrayObjects.tINTEGERArray;  Sx,Sy,Sw,Sh: SIGNED32);
+VAR x,y: SIGNED32 ;  xt,vt: Index;
 BEGIN
 IF Eo= NIL THEN NEW(Eo) END;
 IF Ee=NIL THEN NEW(Ee) END;
@@ -129,7 +129,7 @@ BEGIN
 END GenerateED;
 
 (*PROCEDURE GenerateED2 (g: tEDGenerator);
-VAR par: tParameter; msg: antsTypes.tNewValMsg ; w: LONGINT;
+VAR par: tParameter; msg: antsTypes.tNewValMsg ; w: SIGNED32;
 BEGIN
 par := g.par;
 FOR w := 1 TO par.A.w-2 DO

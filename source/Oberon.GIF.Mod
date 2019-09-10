@@ -9,7 +9,7 @@ MODULE GIF IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.11.96 *)
 
 	TYPE
 		CodePages = RECORD
-			code, ref: INTEGER
+			code, ref: SIGNED16
 		END;
 		CodeBook = ARRAY 4096 OF CodePages;
 
@@ -17,25 +17,25 @@ MODULE GIF IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.11.96 *)
 			r, g, b: CHAR
 		END;
 		ColorTable = RECORD
-			colTrans, IcolTrans: ARRAY 256 OF INTEGER;
+			colTrans, IcolTrans: ARRAY 256 OF SIGNED16;
 			rgb: ARRAY 256 OF RGBType
 		END;
 
 		LogicalScrDesc = RECORD
-			width, height: INTEGER;
-			GCTSize: INTEGER;
+			width, height: SIGNED16;
+			GCTSize: SIGNED16;
 			GCTFlag: BOOLEAN
 		END;
 
 		ImageDesc = RECORD
-			left, top, width, height: INTEGER;
+			left, top, width, height: SIGNED16;
 			sequential, LCTFlag: BOOLEAN;
-			LCTSize: INTEGER;
+			LCTSize: SIGNED16;
 			LCT: ColorTable
 		END;
 
 		ExtBlock = RECORD
-			transparencyIndex: INTEGER;
+			transparencyIndex: SIGNED16;
 			transparency: BOOLEAN
 		END;
 
@@ -52,9 +52,9 @@ MODULE GIF IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.11.96 *)
 
 	PROCEDURE ComputeColors(VAR CT: ColorTable; colorConversion: BOOLEAN);
 		VAR
-			x, y, z, min, d, red, green, blue: LONGINT;
-			r, g, b: ARRAY 256 OF INTEGER;
-			i, j, minj, size: INTEGER;
+			x, y, z, min, d, red, green, blue: SIGNED32;
+			r, g, b: ARRAY 256 OF SIGNED16;
+			i, j, minj, size: SIGNED16;
 	BEGIN
 		size := 256;
 		FOR i := 0 TO size-1 DO
@@ -63,7 +63,7 @@ MODULE GIF IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.11.96 *)
 		IF colorConversion THEN
 			FOR i := 0 TO size-1 DO
 				red := ORD(CT.rgb[i].r); green := ORD(CT.rgb[i].g); blue := ORD(CT.rgb[i].b);
-				j := 0; minj := 0; min := MAX(LONGINT);
+				j := 0; minj := 0; min := MAX(SIGNED32);
 				WHILE (j < size) & (min > 0) DO
 					x := ABS(red-r[j]); y := ABS(green-g[j]); z := ABS(blue-b[j]);
 					d := x; IF y > d THEN d := y END; IF z > d THEN d := z END;
@@ -80,21 +80,21 @@ MODULE GIF IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.11.96 *)
 
 	PROCEDURE GetLogicalScrDesc(VAR R: Files.Rider; VAR LSD: LogicalScrDesc);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			ch: CHAR;
 	BEGIN
 		Files.ReadInt(R, LSD.width); Files.ReadInt(R, LSD.height);
 		Files.Read(R, ch); i := ORD(ch);
 		Files.Read(R, ch); (* Background Color Index into Global Color Table*)
 		Files.Read(R, ch);
-		LSD.GCTSize := INTEGER(ASH(1, (i MOD 8)+1)); i := i DIV 8;
+		LSD.GCTSize := SIGNED16(ASH(1, (i MOD 8)+1)); i := i DIV 8;
 		i := i DIV 2;
 		i := i DIV 8;
 		LSD.GCTFlag := i > 0
 	END GetLogicalScrDesc;
 
-	PROCEDURE GetCMap(VAR R: Files.Rider; VAR map: ColorTable; size: LONGINT);
-		VAR i: LONGINT;
+	PROCEDURE GetCMap(VAR R: Files.Rider; VAR map: ColorTable; size: SIGNED32);
+		VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO size-1 DO
 			Files.ReadBytes(R, map.rgb[i], 3)
@@ -104,7 +104,7 @@ MODULE GIF IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.11.96 *)
 	PROCEDURE GetExtBlock(VAR R: Files.Rider; VAR Ext: ExtBlock);
 		VAR
 			buffer: ARRAY 256 OF CHAR;
-			time: INTEGER;
+			time: SIGNED16;
 			ch: CHAR;
 	BEGIN
 		Files.Read(R, ch);
@@ -126,20 +126,20 @@ MODULE GIF IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.11.96 *)
 
 	PROCEDURE GetImageDesc(VAR R: Files.Rider; VAR IDesc: ImageDesc);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			ch: CHAR;
 	BEGIN
 		Files.ReadInt(R, IDesc.left); Files.ReadInt(R, IDesc.top);
 		Files.ReadInt(R, IDesc.width); Files.ReadInt(R, IDesc.height);
 		Files.Read(R, ch); i := ORD(ch);
-		IDesc.LCTSize := INTEGER(ASH(1, (i MOD 8)+1)); i := i DIV 32;
+		IDesc.LCTSize := SIGNED16(ASH(1, (i MOD 8)+1)); i := i DIV 32;
 		i := i DIV 2;
 		IDesc.sequential := ~ODD(i); i := i DIV 2;
 		IDesc.LCTFlag := i > 0
 	END GetImageDesc;
 
-	PROCEDURE InitCodeBook(codeLen: LONGINT);
-		VAR i, to: LONGINT;
+	PROCEDURE InitCodeBook(codeLen: SIGNED32);
+		VAR i, to: SIGNED32;
 	BEGIN
 		to := ASH(1, codeLen)-1;
 		FOR i := 0 TO to DO
@@ -151,16 +151,16 @@ MODULE GIF IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.11.96 *)
 
 PROCEDURE GetData(VAR r: Files.Rider; VAR Image: Gif; P: Pictures.Picture);
 	CONST byteLen=8;
-	VAR bufferSize, bufpos, buf, bitsleft: LONGINT;
-		code, codept, maxCode, clearCode, endCode, oldcode, codeLen, startSize, stackpt: LONGINT;
+	VAR bufferSize, bufpos, buf, bitsleft: SIGNED32;
+		code, codept, maxCode, clearCode, endCode, oldcode, codeLen, startSize, stackpt: SIGNED32;
 		page: CodePages;
-		dots: POINTER TO ARRAY OF INTEGER;
+		dots: POINTER TO ARRAY OF SIGNED16;
 		buffer: ARRAY 256 OF CHAR;
-		stack: ARRAY 1024 OF INTEGER;
-		x, y, w, n: INTEGER;
+		stack: ARRAY 1024 OF SIGNED16;
+		x, y, w, n: SIGNED16;
 		ch: CHAR;
 
-	PROCEDURE Dot(col: LONGINT);
+	PROCEDURE Dot(col: SIGNED32);
 	BEGIN
 		dots[x]:=Image.IDesc.LCT.colTrans[col]; INC(x);
 		IF x=w THEN x:=0;
@@ -173,8 +173,8 @@ PROCEDURE GetData(VAR r: Files.Rider; VAR Image: Gif; P: Pictures.Picture);
 		END
 	END Dot;
 
-	PROCEDURE ReadCode(VAR code: LONGINT);
-		VAR bitsneed, b, val: LONGINT;
+	PROCEDURE ReadCode(VAR code: SIGNED32);
+		VAR bitsneed, b, val: SIGNED32;
 	BEGIN
 		IF bitsleft<codeLen THEN
 			bitsneed:=codeLen-bitsleft; b:=0;
@@ -257,8 +257,8 @@ BEGIN
 	RETURN (sig="GIF87a") OR (sig="GIF89a")
 END CheckFile;
 
-PROCEDURE Load*(VAR R: Files.Rider; transparentCol: INTEGER; colorConversion: BOOLEAN; pict: Pictures.Picture);
-	VAR i, idx, r, g, b: INTEGER; ch: CHAR;
+PROCEDURE Load*(VAR R: Files.Rider; transparentCol: SIGNED16; colorConversion: BOOLEAN; pict: Pictures.Picture);
+	VAR i, idx, r, g, b: SIGNED16; ch: CHAR;
 BEGIN
 	IF ~CheckFile(Files.Base(R)) THEN RETURN END;
 	Files.Set(R, Files.Base(R), Files.Pos(R)+6);

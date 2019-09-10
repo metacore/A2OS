@@ -5,10 +5,10 @@ IMPORT S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
 
 
 TYPE
-	LI = LONGINT;
+	LI = SIGNED32;
 	Key =	RECORD
-				val: LONGINT;
-				rot: SHORTINT
+				val: SIGNED32;
+				rot: SIGNED8
 			END;
 	Keys =	RECORD
 				short: BOOLEAN;
@@ -18,7 +18,7 @@ TYPE
 	Block = ARRAY 2 OF SET32;
 
 VAR
-	T0, T1, T2, T3: ARRAY 256 OF LONGINT;
+	T0, T1, T2, T3: ARRAY 256 OF SIGNED32;
 	T4, T5, T6, T7: ARRAY 256 OF SET32;
 
 TYPE
@@ -26,14 +26,14 @@ TYPE
 			VAR keys: Keys;
 				iv: Block;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR;  keybits: LONGINT );
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR;  keybits: SIGNED32 );
 				BEGIN
 					ASSERT( keybits MOD 8 = 0 );
 					InitKey^( src, keybits );
 					InitKeys( keys, src, keybits DIV 8 )
 				END InitKey;
 
-				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR;  mode: SHORTINT );
+				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR;  mode: SIGNED8 );
 				BEGIN
 					SetIV^( src, mode );   (* set mode *)
 					iv[0] := U.SetFromBufferBE( src, 0 );  iv[1] := U.SetFromBufferBE( src, 4 );
@@ -94,27 +94,27 @@ TYPE
 (*-------------------------------------------------------------------------------*)
 
 
-	PROCEDURE InitKeys( VAR keys: Keys;  CONST src: ARRAY OF CHAR;  len: LONGINT );
+	PROCEDURE InitKeys( VAR keys: Keys;  CONST src: ARRAY OF CHAR;  len: SIGNED32 );
 	VAR buf: ARRAY 16 OF CHAR;
 		X, Z: ARRAY 4 OF SET32;
-		x, z: ARRAY 16 OF INTEGER;
+		x, z: ARRAY 16 OF SIGNED16;
 		k: ARRAY 32 OF SET32;
-		i, j: LONGINT;
+		i, j: SIGNED32;
 
-		PROCEDURE Zz( i: INTEGER;  s: SET32 );
-		VAR l: LONGINT;
+		PROCEDURE Zz( i: SIGNED16;  s: SET32 );
+		VAR l: SIGNED32;
 		BEGIN
-			Z[i DIV 4] := s;  l := S.VAL( LONGINT, s );
+			Z[i DIV 4] := s;  l := S.VAL( SIGNED32, s );
 			z[i + 3] := SHORT( l MOD 256 );  l := l DIV 256;
 			z[i + 2] := SHORT( l MOD 256 );  l := l DIV 256;
 			z[i + 1] := SHORT( l MOD 256 );  l := l DIV 256;
 			z[i + 0] := SHORT( l MOD 256 );
 		END Zz;
 
-		PROCEDURE Xx( i: INTEGER;  s: SET32 );
-		VAR l: LONGINT;
+		PROCEDURE Xx( i: SIGNED16;  s: SET32 );
+		VAR l: SIGNED32;
 		BEGIN
-			X[i DIV 4] := s;  l := S.VAL( LONGINT, s );
+			X[i DIV 4] := s;  l := S.VAL( SIGNED32, s );
 			x[i + 3] := SHORT( l MOD 256 );  l := l DIV 256;
 			x[i + 2] := SHORT( l MOD 256 );  l := l DIV 256;
 			x[i + 1] := SHORT( l MOD 256 );  l := l DIV 256;
@@ -172,13 +172,13 @@ TYPE
 			k[j + 15] := T4[x[14]] / T5[x[15]] / T6[x[1]] / T7[x[0]] / T7[x[13]];
 		END;
 		FOR i := 0 TO 15 DO
-			keys.data[i].val := S.VAL( LONGINT, k[i] );
-			keys.data[i].rot := SHORT( SHORT( (S.VAL( LONGINT, k[i + 16] ) + 16) MOD 32 ) );
+			keys.data[i].val := S.VAL( SIGNED32, k[i] );
+			keys.data[i].rot := SHORT( SHORT( (S.VAL( SIGNED32, k[i + 16] ) + 16) MOD 32 ) );
 		END
 	END InitKeys;
 
 	PROCEDURE CAST1( VAR k: Key;  VAR L, R: SET32 );   (* +, xor, - *)
-	VAR a, b, axb, t, c, d: LONGINT;
+	VAR a, b, axb, t, c, d: SIGNED32;
 	BEGIN
 		t := ROT( k.val + S.VAL( LI, R ), k.rot );
 		b := T1[t MOD 256];  t := t DIV 256;
@@ -190,7 +190,7 @@ TYPE
 	END CAST1;
 
 	PROCEDURE CAST2( VAR k: Key;  VAR L, R: SET32 );   (* xor, -, + *)
-	VAR t, a, b, c, d: LONGINT;
+	VAR t, a, b, c, d: SIGNED32;
 	BEGIN
 		t := ROT( S.VAL( LI, S.VAL( SET32, k.val )/R ), k.rot );
 		b := T1[t MOD 256];  t := t DIV 256;
@@ -201,7 +201,7 @@ TYPE
 	END CAST2;
 
 	PROCEDURE CAST3( VAR k: Key;  VAR L, R: SET32 );   (* -, +, xor *)
-	VAR t, a, b, c, d: LONGINT;
+	VAR t, a, b, c, d: SIGNED32;
 	BEGIN
 		t := ROT( k.val - S.VAL( LI, R ), k.rot );
 		b := T1[t MOD 256];  t := t DIV 256;
@@ -246,7 +246,7 @@ TYPE
 
 
 	PROCEDURE Init;
-	VAR  buf: U.InitBuffer;  i: LONGINT;
+	VAR  buf: U.InitBuffer;  i: SIGNED32;
 	BEGIN
 		NEW( buf, 4096 );
 		buf.Add( "30FB40D4  9FA0FF0B  6BECCD2F  3F258C7A  1E213F2F  9C004DD3  6003E540  CF9FC949" );
@@ -532,6 +532,6 @@ TYPE
 
 
 BEGIN
-	ASSERT( LONGINT({0} ) = 1 );  Init
+	ASSERT( SIGNED32({0} ) = 1 );  Init
 END CryptoCAST.
 

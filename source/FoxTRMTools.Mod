@@ -2,7 +2,7 @@ MODULE FoxTRMTools;
 IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,ObjectFile,Streams;
 
 	(*! check spartan 6 code emission *)
-	PROCEDURE PatchSpartan6(CONST this: ARRAY OF CHAR; VAR result: ARRAY OF CHAR; line: LONGINT);
+	PROCEDURE PatchSpartan6(CONST this: ARRAY OF CHAR; VAR result: ARRAY OF CHAR; line: SIGNED32);
 
 	(*
 		decode 36 bits 2 instruction big endian format
@@ -15,9 +15,9 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 
 	*)
 
-	VAR inpos, outpos, i, bits, i1, i2, val: LONGINT;
+	VAR inpos, outpos, i, bits, i1, i2, val: SIGNED32;
 
-		PROCEDURE ReadInt(): LONGINT;
+		PROCEDURE ReadInt(): SIGNED32;
 		VAR c: CHAR;
 		BEGIN
 			c := this[inpos]; INC(inpos);
@@ -29,7 +29,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 			END;
 		END ReadInt;
 
-		PROCEDURE WriteInt(i: LONGINT);
+		PROCEDURE WriteInt(i: SIGNED32);
 		VAR c: CHAR;
 		BEGIN
 			IF i < 0AH THEN c := CHR(i + ORD('0'))
@@ -88,9 +88,9 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 	(*trm code file is split into columns. baseDiv words per line, line distributed onto numBase words.
 		target --> target_base_<i>, horizontally running index <i>
 	*)
-	PROCEDURE SplitColumns* (CONST source,target: ARRAY OF CHAR; instructionWidth, numBase, baseDiv: LONGINT;diagnostics: Diagnostics.Diagnostics): BOOLEAN;
+	PROCEDURE SplitColumns* (CONST source,target: ARRAY OF CHAR; instructionWidth, numBase, baseDiv: SIGNED32;diagnostics: Diagnostics.Diagnostics): BOOLEAN;
 	VAR
-		i,j,k,numReadNibbles,nibble,payloadInLeadingNibble,unCutWordLength:LONGINT;
+		i,j,k,numReadNibbles,nibble,payloadInLeadingNibble,unCutWordLength:SIGNED32;
 		files: ARRAY 5 OF Files.File;
 		writers: ARRAY 5 OF Files.Writer;
 		currFileName: Files.FileName;
@@ -170,8 +170,8 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 		RETURN TRUE
 	END SplitColumns;
 
-	PROCEDURE DoSplitFiles*(CONST source, dest, extension: ARRAY OF CHAR; blocks, blockSize: LONGINT; verbose,strided,patchSpartan6: BOOLEAN; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
-	VAR line: LONGINT; fileName: Files.FileName; oldFile: Files.File;
+	PROCEDURE DoSplitFiles*(CONST source, dest, extension: ARRAY OF CHAR; blocks, blockSize: SIGNED32; verbose,strided,patchSpartan6: BOOLEAN; diagnostics: Diagnostics.Diagnostics): BOOLEAN;
+	VAR line: SIGNED32; fileName: Files.FileName; oldFile: Files.File;
 		newFiles: POINTER TO ARRAY OF Files.File;
 		reader: Files.Reader;
 		writers: POINTER TO ARRAY OF Files.Writer;
@@ -245,8 +245,8 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 	PROCEDURE SplitFiles* (context: Commands.Context);
 	VAR options: Options.Options;
 		sourceName, name, extension: Files.FileName;
-		blocks: LONGINT;
-		blockSize: LONGINT;
+		blocks: SIGNED32;
+		blockSize: SIGNED32;
 		strided: BOOLEAN;
 		diagnostics: Diagnostics.StreamDiagnostics;
 		done: BOOLEAN;
@@ -274,7 +274,7 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 	PROCEDURE SplitColumnsCmd* (context: Commands.Context);  (*todo: rename as splitColumns, fix all call sites*)
 	VAR options: Options.Options;
 		name: Files.FileName;
-		insW,numB,baseD: LONGINT;
+		insW,numB,baseD: SIGNED32;
 		diagnostics: Diagnostics.StreamDiagnostics;
 		done: BOOLEAN;
 		targetName: ARRAY 128 OF CHAR;
@@ -302,10 +302,10 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 	END SplitColumnsCmd;
 
 	PROCEDURE CompareFiles*(context: Commands.Context);
-	VAR f1,f2,f3: Files.File; name1, name2, matrixname: Files.FileName; r1, r2: Files.Reader;  x,y: ARRAY 32 OF CHAR; i: LONGINT; line1: LONGINT;
-		matrix: ARRAY 16 OF ARRAY 16 OF LONGINT; j: LONGINT; p1, p2: LONGINT; writer: Files.Writer;
+	VAR f1,f2,f3: Files.File; name1, name2, matrixname: Files.FileName; r1, r2: Files.Reader;  x,y: ARRAY 32 OF CHAR; i: SIGNED32; line1: SIGNED32;
+		matrix: ARRAY 16 OF ARRAY 16 OF SIGNED32; j: SIGNED32; p1, p2: SIGNED32; writer: Files.Writer;
 
-		PROCEDURE Value(c: CHAR): LONGINT;
+		PROCEDURE Value(c: CHAR): SIGNED32;
 		BEGIN
 			CASE c OF
 				'0' .. '9': RETURN  ORD(c)- ORD('0')
@@ -425,11 +425,11 @@ IMPORT Files,Commands,Options,Strings,Basic := FoxBasic, Diagnostics, BitSets,Ob
 	END SameFiles;
 	*)
 	(*
-	PROCEDURE DeleteFiles(CONST fileSelectionMask: ARRAY OF CHAR; context: Commands.Context; VAR res: WORD);
+	PROCEDURE DeleteFiles(CONST fileSelectionMask: ARRAY OF CHAR; context: Commands.Context; VAR res: INTEGER);
 	VAR
 		enum: Files.Enumerator;
 		flags: SET;
-		time, date, size: LONGINT;
+		time, date, size: SIGNED32;
 		name: Files.FileName;
 	BEGIN
 		NEW(enum);

@@ -57,19 +57,19 @@ MODULE Gfx; (** portable *)	(* eos  *)
 
 		(** color type **)
 		Color* = RECORD
-			r*, g*, b*, a*: INTEGER;
+			r*, g*, b*, a*: SIGNED16;
 		END;
 
 		(** fill patterns **)
 		Pattern* = POINTER TO PatternDesc;
 		PatternDesc* = RECORD
 			img*: GfxImages.Image;	(** replicated image map **)
-			px*, py*: REAL;	(** pinpoint coordinates **)
+			px*, py*: FLOAT32;	(** pinpoint coordinates **)
 		END;
 
 		(** line join and cap styles **)
-		JoinStyle* = SHORTINT;
-		CapStyle* = SHORTINT;
+		JoinStyle* = SIGNED8;
+		CapStyle* = SIGNED8;
 
 		(** abstract clip areas **)
 		ClipArea* = POINTER TO ClipAreaDesc;
@@ -84,14 +84,14 @@ MODULE Gfx; (** portable *)	(* eos  *)
 			(** current transformation matrix **)
 			resetCTM*: PROCEDURE (ctxt: Context);
 			setCTM*: PROCEDURE (ctxt: Context; VAR mat: GfxMatrix.Matrix);
-			translate*: PROCEDURE (ctxt: Context; dx, dy: REAL);
-			scale*: PROCEDURE (ctxt: Context; sx, sy: REAL);
-			rotate*: PROCEDURE (ctxt: Context; sin, cos: REAL);
+			translate*: PROCEDURE (ctxt: Context; dx, dy: FLOAT32);
+			scale*: PROCEDURE (ctxt: Context; sx, sy: FLOAT32);
+			rotate*: PROCEDURE (ctxt: Context; sin, cos: FLOAT32);
 			concat*: PROCEDURE (ctxt: Context; VAR mat: GfxMatrix.Matrix);
 
 			(** clipping **)
 			resetClip*: PROCEDURE (ctxt: Context);
-			getClipRect*: PROCEDURE (ctxt: Context; VAR llx, lly, urx, ury: REAL);
+			getClipRect*: PROCEDURE (ctxt: Context; VAR llx, lly, urx, ury: FLOAT32);
 			getClip*: PROCEDURE (ctxt: Context): ClipArea;
 			setClip*: PROCEDURE (ctxt: Context; clip: ClipArea);
 
@@ -100,36 +100,36 @@ MODULE Gfx; (** portable *)	(* eos  *)
 			setStrokePattern*: PROCEDURE (ctxt: Context; pat: Pattern);
 			setFillColor*: PROCEDURE (ctxt: Context; color: Color);
 			setFillPattern*: PROCEDURE (ctxt: Context; pat: Pattern);
-			setLineWidth*: PROCEDURE (ctxt: Context; width: REAL);
-			setDashPattern*: PROCEDURE (ctxt: Context; VAR on, off: ARRAY OF REAL; len: LONGINT; phase: REAL);
+			setLineWidth*: PROCEDURE (ctxt: Context; width: FLOAT32);
+			setDashPattern*: PROCEDURE (ctxt: Context; VAR on, off: ARRAY OF FLOAT32; len: SIGNED32; phase: FLOAT32);
 			setCapStyle*: PROCEDURE (ctxt: Context; style: CapStyle);
 			setJoinStyle*: PROCEDURE (ctxt: Context; style: JoinStyle);
-			setStyleLimit*: PROCEDURE (ctxt: Context; limit: REAL);
-			setFlatness*: PROCEDURE (ctxt: Context; flatness: REAL);
+			setStyleLimit*: PROCEDURE (ctxt: Context; limit: FLOAT32);
+			setFlatness*: PROCEDURE (ctxt: Context; flatness: FLOAT32);
 			setFont*: PROCEDURE (ctxt: Context; font: GfxFonts.Font);
-			getWidth*: PROCEDURE (ctxt: Context; VAR str: ARRAY OF CHAR; VAR dx, dy: REAL);
+			getWidth*: PROCEDURE (ctxt: Context; VAR str: ARRAY OF CHAR; VAR dx, dy: FLOAT32);
 
 			(** current path **)
 			begin*: PROCEDURE (ctxt: Context; mode: SET);
 			end*: PROCEDURE (ctxt: Context);
-			enter*: PROCEDURE (ctxt: Context; x, y, dx, dy: REAL);
-			exit*: PROCEDURE (ctxt: Context; dx, dy: REAL);
+			enter*: PROCEDURE (ctxt: Context; x, y, dx, dy: FLOAT32);
+			exit*: PROCEDURE (ctxt: Context; dx, dy: FLOAT32);
 			close*: PROCEDURE (ctxt: Context);
-			line*: PROCEDURE (ctxt: Context; x, y: REAL);
-			arc*: PROCEDURE (ctxt: Context; x, y, x0, y0, x1, y1, x2, y2: REAL);
-			bezier*: PROCEDURE (ctxt: Context; x, y, x1, y1, x2, y2: REAL);
-			show*: PROCEDURE (ctxt: Context; x, y: REAL; VAR str: ARRAY OF CHAR);
+			line*: PROCEDURE (ctxt: Context; x, y: FLOAT32);
+			arc*: PROCEDURE (ctxt: Context; x, y, x0, y0, x1, y1, x2, y2: FLOAT32);
+			bezier*: PROCEDURE (ctxt: Context; x, y, x1, y1, x2, y2: FLOAT32);
+			show*: PROCEDURE (ctxt: Context; x, y: FLOAT32; VAR str: ARRAY OF CHAR);
 			flatten*: PROCEDURE (ctxt: Context);
 			outline*: PROCEDURE (ctxt: Context);
 			render*: PROCEDURE (ctxt: Context; mode: SET);
 
 			(** painting operators (potential for optimization) **)
-			rect*: PROCEDURE (ctxt: Context; x0, y0, x1, y1: REAL);
-			ellipse*: PROCEDURE (ctxt: Context; x, y, rx, ry: REAL);
+			rect*: PROCEDURE (ctxt: Context; x0, y0, x1, y1: FLOAT32);
+			ellipse*: PROCEDURE (ctxt: Context; x, y, rx, ry: FLOAT32);
 
 			(** images and patterns **)
-			image*: PROCEDURE (ctxt: Context; x, y: REAL; img: GfxImages.Image; VAR filter: GfxImages.Filter);
-			newPattern*: PROCEDURE (ctxt: Context; img: GfxImages.Image; px, py: REAL): Pattern;
+			image*: PROCEDURE (ctxt: Context; x, y: FLOAT32; img: GfxImages.Image; VAR filter: GfxImages.Filter);
+			newPattern*: PROCEDURE (ctxt: Context; img: GfxImages.Image; px, py: FLOAT32): Pattern;
 		END;
 
 		(** graphics context (continued) **)
@@ -137,20 +137,20 @@ MODULE Gfx; (** portable *)	(* eos  *)
 			do*: Methods;	(** methods associated with context **)
 			mode*: SET;	(** current drawing mode **)
 			path*: GfxPaths.Path;	(** current path in device coordinates (updated only if mode contains the 'Record' flag) **)
-			cpx*, cpy*: REAL;	(** current point in user coordinates **)
+			cpx*, cpy*: FLOAT32;	(** current point in user coordinates **)
 			ctm*: GfxMatrix.Matrix;	(** current transformation matrix **)
 			cam*: GfxMatrix.Matrix;	(** current attribute matrix (frozen ctm while inside path) **)
 			strokeCol*, fillCol*: Color;	(** current stroke and fill color **)
 			strokePat*, fillPat*: Pattern;	(** current stroke and fill pattern **)
-			lineWidth*: REAL;	(** current line width **)
-			dashPatOn*, dashPatOff*: ARRAY MaxDashPatSize OF REAL;	(** line dash array **)
-			dashPatLen*: LONGINT;	(** number of valid elements in dash arrays **)
-			dashPhase*: REAL;	(** offset for first dash **)
-			dashPeriod*: REAL;	(** sum of dash element lengths **)
+			lineWidth*: FLOAT32;	(** current line width **)
+			dashPatOn*, dashPatOff*: ARRAY MaxDashPatSize OF FLOAT32;	(** line dash array **)
+			dashPatLen*: SIGNED32;	(** number of valid elements in dash arrays **)
+			dashPhase*: FLOAT32;	(** offset for first dash **)
+			dashPeriod*: FLOAT32;	(** sum of dash element lengths **)
 			capStyle*: CapStyle;	(** line cap style **)
 			joinStyle*: JoinStyle;	(** line join style **)
-			styleLimit*: REAL;	(** determines area that may be rendered to by styles **)
-			flatness*: REAL;	(** current flatness tolerance (in device coordinates) **)
+			styleLimit*: FLOAT32;	(** determines area that may be rendered to by styles **)
+			flatness*: FLOAT32;	(** current flatness tolerance (in device coordinates) **)
 			font*: GfxFonts.Font;	(** current font **)
 			dashPath: GfxPaths.Path;	(* path for temporarily storing dashes *)
 			tmpPath: GfxPaths.Path;
@@ -160,11 +160,11 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		State* = RECORD
 			saved: SET;
 			strokeCol, fillCol: Color; strokePat, fillPat: Pattern;
-			lineWidth: REAL;
-			dashPatOn, dashPatOff: ARRAY MaxDashPatSize OF REAL;
-			dashPatLen: LONGINT; dashPhase: REAL;
-			capStyle: CapStyle; joinStyle: JoinStyle; styleLimit: REAL;
-			flatness: REAL;
+			lineWidth: FLOAT32;
+			dashPatOn, dashPatOff: ARRAY MaxDashPatSize OF FLOAT32;
+			dashPatLen: SIGNED32; dashPhase: FLOAT32;
+			capStyle: CapStyle; joinStyle: JoinStyle; styleLimit: FLOAT32;
+			flatness: FLOAT32;
 			font: GfxFonts.Font;
 			ctm: GfxMatrix.Matrix;
 			clip: ClipArea;
@@ -215,7 +215,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 
 	(** save and restore graphics state **)
 	PROCEDURE Save* (ctxt: Context; elems: SET; VAR state: State);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		state.saved := elems;
 		state.strokeCol := ctxt.strokeCol; state.strokePat := ctxt.strokePat;
@@ -297,19 +297,19 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END SetCTM;
 
 	(** translate coordinate system **)
-	PROCEDURE Translate* (ctxt: Context; dx, dy: REAL);
+	PROCEDURE Translate* (ctxt: Context; dx, dy: FLOAT32);
 	BEGIN
 		ctxt.do.translate(ctxt, dx, dy)
 	END Translate;
 
 	(** scale coordinate system at origin **)
-	PROCEDURE Scale* (ctxt: Context; sx, sy: REAL);
+	PROCEDURE Scale* (ctxt: Context; sx, sy: FLOAT32);
 	BEGIN
 		ctxt.do.scale(ctxt, sx, sy)
 	END Scale;
 
 	(** scale coordinate system at specified point **)
-	PROCEDURE ScaleAt* (ctxt: Context; sx, sy, x, y: REAL);
+	PROCEDURE ScaleAt* (ctxt: Context; sx, sy, x, y: FLOAT32);
 	BEGIN
 		ctxt.do.translate(ctxt, x, y);
 		ctxt.do.scale(ctxt, sx, sy);
@@ -317,13 +317,13 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END ScaleAt;
 
 	(** rotate coordinate system at origin **)
-	PROCEDURE Rotate* (ctxt: Context; sin, cos: REAL);
+	PROCEDURE Rotate* (ctxt: Context; sin, cos: FLOAT32);
 	BEGIN
 		ctxt.do.rotate(ctxt, sin, cos)
 	END Rotate;
 
 	(** rotate coordinate system at specified point **)
-	PROCEDURE RotateAt* (ctxt: Context; sin, cos, x, y: REAL);
+	PROCEDURE RotateAt* (ctxt: Context; sin, cos, x, y: FLOAT32);
 	BEGIN
 		ctxt.do.translate(ctxt, x, y);
 		ctxt.do.rotate(ctxt, sin, cos);
@@ -346,7 +346,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END ResetClip;
 
 	(** get bounding box of clipping path in user coordinates **)
-	PROCEDURE GetClipRect* (ctxt: Context; VAR llx, lly, urx, ury: REAL);
+	PROCEDURE GetClipRect* (ctxt: Context; VAR llx, lly, urx, ury: FLOAT32);
 	BEGIN
 		ctxt.do.getClipRect(ctxt, llx, lly, urx, ury)
 	END GetClipRect;
@@ -395,7 +395,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END SetFillPattern;
 
 	(** set line width **)
-	PROCEDURE SetLineWidth* (ctxt: Context; width: REAL);
+	PROCEDURE SetLineWidth* (ctxt: Context; width: FLOAT32);
 	BEGIN
 		ASSERT(~(InPath IN ctxt.mode), 100);
 		ASSERT(width >= 0.0, 101);
@@ -403,7 +403,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END SetLineWidth;
 
 	(** set dash pattern **)
-	PROCEDURE SetDashPattern* (ctxt: Context; VAR on, off: ARRAY OF REAL; len: LONGINT; phase: REAL);
+	PROCEDURE SetDashPattern* (ctxt: Context; VAR on, off: ARRAY OF FLOAT32; len: SIGNED32; phase: FLOAT32);
 	BEGIN
 		ASSERT(~(InPath IN ctxt.mode), 100);
 		ASSERT((len <= LEN(on)) & (len <= LEN(off)), 101);
@@ -411,7 +411,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END SetDashPattern;
 
 	(** copy values from parameter, and calculate dash period **)
-	PROCEDURE SetDashArray* (ctxt: Context; VAR on, off: ARRAY OF REAL; len: LONGINT);
+	PROCEDURE SetDashArray* (ctxt: Context; VAR on, off: ARRAY OF FLOAT32; len: SIGNED32);
 	BEGIN
 		ctxt.dashPatLen := len;
 		ctxt.dashPeriod := 0;
@@ -442,14 +442,14 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END SetJoinStyle;
 
 	(** set style border factor **)
-	PROCEDURE SetStyleLimit* (ctxt: Context; limit: REAL);
+	PROCEDURE SetStyleLimit* (ctxt: Context; limit: FLOAT32);
 	BEGIN
 		ASSERT(~(InPath IN ctxt.mode), 100);
 		ctxt.do.setStyleLimit(ctxt, limit)
 	END SetStyleLimit;
 
 	(** set flatness parameter **)
-	PROCEDURE SetFlatness* (ctxt: Context; flatness: REAL);
+	PROCEDURE SetFlatness* (ctxt: Context; flatness: FLOAT32);
 	BEGIN
 		ctxt.do.setFlatness(ctxt, flatness)
 	END SetFlatness;
@@ -462,7 +462,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END SetFont;
 
 	(** set current font using name and size **)
-	PROCEDURE SetFontName* (ctxt: Context; fontname: ARRAY OF CHAR; size: INTEGER);
+	PROCEDURE SetFontName* (ctxt: Context; fontname: ARRAY OF CHAR; size: SIGNED16);
 		VAR font: GfxFonts.Font;
 	BEGIN
 		font := GfxFonts.OpenSize(fontname, size);
@@ -471,7 +471,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END SetFontName;
 
 	(** calculate distance that current point would move if given string were rendered **)
-	PROCEDURE GetStringWidth* (ctxt: Context; str: ARRAY OF CHAR; VAR dx, dy: REAL);
+	PROCEDURE GetStringWidth* (ctxt: Context; str: ARRAY OF CHAR; VAR dx, dy: FLOAT32);
 	BEGIN
 		ctxt.do.getWidth(ctxt, str, dx, dy)
 	END GetStringWidth;
@@ -497,7 +497,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END End;
 
 	(** end current subpath (if open) and begin new subpath **)
-	PROCEDURE MoveTo* (ctxt: Context; x, y: REAL);
+	PROCEDURE MoveTo* (ctxt: Context; x, y: FLOAT32);
 	BEGIN
 		ASSERT(InPath IN ctxt.mode, 100);
 		IF InSubpath IN ctxt.mode THEN ctxt.do.exit(ctxt, 0, 0) END;
@@ -506,7 +506,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END MoveTo;
 
 	(** start subpath at inner point **)
-	PROCEDURE Enter* (ctxt: Context; x, y, dx, dy: REAL);
+	PROCEDURE Enter* (ctxt: Context; x, y, dx, dy: FLOAT32);
 	BEGIN
 		ASSERT(InPath IN ctxt.mode, 100);
 		IF InSubpath IN ctxt.mode THEN ctxt.do.exit(ctxt, 0, 0) END;
@@ -515,7 +515,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END Enter;
 
 	(** end subpath at inner point **)
-	PROCEDURE Exit* (ctxt: Context; dx, dy: REAL);
+	PROCEDURE Exit* (ctxt: Context; dx, dy: FLOAT32);
 	BEGIN
 		ASSERT(InSubpath IN ctxt.mode, 100);
 		ctxt.do.exit(ctxt, dx, dy);
@@ -531,28 +531,28 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END Close;
 
 	(** append line to current path **)
-	PROCEDURE LineTo* (ctxt: Context; x, y: REAL);
+	PROCEDURE LineTo* (ctxt: Context; x, y: FLOAT32);
 	BEGIN
 		ASSERT(InSubpath IN ctxt.mode, 100);
 		ctxt.do.line(ctxt, x, y)
 	END LineTo;
 
 	(** append arc to current path **)
-	PROCEDURE ArcTo* (ctxt: Context; x, y, x0, y0, x1, y1, x2, y2: REAL);
+	PROCEDURE ArcTo* (ctxt: Context; x, y, x0, y0, x1, y1, x2, y2: FLOAT32);
 	BEGIN
 		ASSERT(InSubpath IN ctxt.mode, 100);
 		ctxt.do.arc(ctxt, x, y, x0, y0, x1, y1, x2, y2)
 	END ArcTo;
 
 	(** append cubic bezier to current path **)
-	PROCEDURE BezierTo* (ctxt: Context; x, y, x1, y1, x2, y2: REAL);
+	PROCEDURE BezierTo* (ctxt: Context; x, y, x1, y1, x2, y2: FLOAT32);
 	BEGIN
 		ASSERT(InSubpath IN ctxt.mode, 100);
 		ctxt.do.bezier(ctxt, x, y, x1, y1, x2, y2)
 	END BezierTo;
 
 	(** append character outlines to current path at given point; advance current point to position after last character **)
-	PROCEDURE ShowAt* (ctxt: Context; x, y: REAL; str: ARRAY OF CHAR);
+	PROCEDURE ShowAt* (ctxt: Context; x, y: FLOAT32; str: ARRAY OF CHAR);
 	BEGIN
 		ASSERT(InPath IN ctxt.mode, 100);
 		IF InSubpath IN ctxt.mode THEN ctxt.do.exit(ctxt, 0, 0) END;
@@ -601,7 +601,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 
 	(**--- Cap Styles ---**)
 
-	PROCEDURE EnterCapStyle* (ctxt: Context; x, y, dx, dy: REAL; path: GfxPaths.Path);
+	PROCEDURE EnterCapStyle* (ctxt: Context; x, y, dx, dy: FLOAT32; path: GfxPaths.Path);
 	BEGIN
 		IF ctxt.capStyle = ButtCap THEN
 			GfxPaths.AddEnter(path, x, y, dy, -dx);
@@ -618,7 +618,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		END
 	END EnterCapStyle;
 
-	PROCEDURE AddCapStyle* (ctxt: Context; x, y, dx, dy: REAL; path: GfxPaths.Path);
+	PROCEDURE AddCapStyle* (ctxt: Context; x, y, dx, dy: FLOAT32; path: GfxPaths.Path);
 	BEGIN
 		IF ctxt.capStyle = ButtCap THEN
 			GfxPaths.AddLine(path, x + dy, y - dx)
@@ -634,7 +634,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		END
 	END AddCapStyle;
 
-	PROCEDURE ExitCapStyle* (ctxt: Context; x, y, dx, dy: REAL; path: GfxPaths.Path);
+	PROCEDURE ExitCapStyle* (ctxt: Context; x, y, dx, dy: FLOAT32; path: GfxPaths.Path);
 	BEGIN
 		IF ctxt.capStyle = ButtCap THEN
 			GfxPaths.AddLine(path, x, y);
@@ -655,15 +655,15 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	(**--- Join Styles ---**)
 
 	(** return if half axis vector (in device coordinates) exceeds style limit **)
-	PROCEDURE ExceedsLimit* (ctxt: Context; hx, hy: REAL): BOOLEAN;
-		VAR limit: REAL;
+	PROCEDURE ExceedsLimit* (ctxt: Context; hx, hy: FLOAT32): BOOLEAN;
+		VAR limit: FLOAT32;
 	BEGIN
 		GfxMatrix.ApplyToDist(ctxt.cam, 0.5*ctxt.lineWidth * ctxt.styleLimit, limit);
 		RETURN hx * hx + hy * hy > limit * limit
 	END ExceedsLimit;
 
-	PROCEDURE EnterJoinStyle* (ctxt: Context; x, y, idx, idy, hx, hy, odx, ody: REAL; path: GfxPaths.Path);
-		VAR ix, iy, t: REAL;
+	PROCEDURE EnterJoinStyle* (ctxt: Context; x, y, idx, idy, hx, hy, odx, ody: FLOAT32; path: GfxPaths.Path);
+		VAR ix, iy, t: FLOAT32;
 	BEGIN
 		IF (ctxt.joinStyle = BevelJoin) OR (ctxt.joinStyle = MiterJoin) & ExceedsLimit(ctxt, hx, hy) THEN
 			GfxPaths.IntersectLines(x, y, hx, hy, x + ody, y - odx, -hy, hx, ix, iy);
@@ -681,7 +681,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		END
 	END EnterJoinStyle;
 
-	PROCEDURE AddJoinStyle* (ctxt: Context; x, y, idx, idy, hx, hy, odx, ody: REAL; path: GfxPaths.Path);
+	PROCEDURE AddJoinStyle* (ctxt: Context; x, y, idx, idy, hx, hy, odx, ody: FLOAT32; path: GfxPaths.Path);
 	BEGIN
 		IF (ctxt.joinStyle = BevelJoin) OR (ctxt.joinStyle = MiterJoin) & ExceedsLimit(ctxt, hx, hy) THEN
 			GfxPaths.AddLine(path, x + ody, y - odx)
@@ -696,8 +696,8 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		END
 	END AddJoinStyle;
 
-	PROCEDURE ExitJoinStyle* (ctxt: Context; x, y, idx, idy, hx, hy, odx, ody: REAL; path: GfxPaths.Path);
-		VAR ix, iy, t: REAL;
+	PROCEDURE ExitJoinStyle* (ctxt: Context; x, y, idx, idy, hx, hy, odx, ody: FLOAT32; path: GfxPaths.Path);
+		VAR ix, iy, t: FLOAT32;
 	BEGIN
 		IF (ctxt.joinStyle = BevelJoin) OR (ctxt.joinStyle = MiterJoin) & ExceedsLimit(ctxt, hx, hy) THEN
 			GfxPaths.IntersectLines(x, y, hx, hy, x + idy, y - idx, -hy, hx, ix, iy);
@@ -726,16 +726,16 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END Outline;
 
 	(** return vector scaled to given length **)
-	PROCEDURE GetNormVector* (x, y, len: REAL; VAR nx, ny: REAL);
-		VAR t: REAL;
+	PROCEDURE GetNormVector* (x, y, len: FLOAT32; VAR nx, ny: FLOAT32);
+		VAR t: FLOAT32;
 	BEGIN
 		t := len/Math.sqrt(x * x + y * y);
 		nx := t * x; ny := t * y
 	END GetNormVector;
 
 	(** return vector to outer corner of two joining vectors whose lengths correspond to line width **)
-	PROCEDURE GetHalfAxisVector* (idx, idy, odx, ody: REAL; VAR hx, hy: REAL);
-		VAR cprod, t: REAL;
+	PROCEDURE GetHalfAxisVector* (idx, idy, odx, ody: FLOAT32; VAR hx, hy: FLOAT32);
+		VAR cprod, t: FLOAT32;
 	BEGIN
 		cprod := idx * ody - idy * odx;
 		IF ABS(cprod) < 1.0E-3 THEN
@@ -750,8 +750,8 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		END
 	END GetHalfAxisVector;
 
-	PROCEDURE AddEnterJoinStyle (ctxt: Context; x, y, hx, hy, odx, ody: REAL; path: GfxPaths.Path);
-		VAR ix, iy, t: REAL;
+	PROCEDURE AddEnterJoinStyle (ctxt: Context; x, y, hx, hy, odx, ody: FLOAT32; path: GfxPaths.Path);
+		VAR ix, iy, t: FLOAT32;
 	BEGIN
 		IF (ctxt.joinStyle = BevelJoin) OR (ctxt.joinStyle = MiterJoin) & ExceedsLimit(ctxt, hx, hy) THEN
 			GfxPaths.IntersectLines(x, y, hx, hy, x + ody, y - odx, -hy, hx, ix, iy);
@@ -767,8 +767,8 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		END
 	END AddEnterJoinStyle;
 
-	PROCEDURE AddExitJoinStyle (ctxt: Context; x, y, idx, idy, hx, hy: REAL; path: GfxPaths.Path);
-		VAR ix, iy, t: REAL;
+	PROCEDURE AddExitJoinStyle (ctxt: Context; x, y, idx, idy, hx, hy: FLOAT32; path: GfxPaths.Path);
+		VAR ix, iy, t: FLOAT32;
 	BEGIN
 		IF (ctxt.joinStyle = BevelJoin) OR (ctxt.joinStyle = MiterJoin) & ExceedsLimit(ctxt, hx, hy) THEN
 			GfxPaths.IntersectLines(x, y, hx, hy, x + idy, y - idx, -hy, hx, ix, iy);
@@ -782,8 +782,8 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		GfxPaths.AddLine(path, x - hx, y - hy)
 	END AddExitJoinStyle;
 
-	PROCEDURE GetPolyOutline (ctxt: Context; VAR x, y: ARRAY OF REAL; n: LONGINT; dxi, dyi, dxo, dyo: REAL; dst: GfxPaths.Path);
-		VAR closed: BOOLEAN; width, odx, ody, idx, idy, hx, hy: REAL; i, j: LONGINT;
+	PROCEDURE GetPolyOutline (ctxt: Context; VAR x, y: ARRAY OF FLOAT32; n: SIGNED32; dxi, dyi, dxo, dyo: FLOAT32; dst: GfxPaths.Path);
+		VAR closed: BOOLEAN; width, odx, ody, idx, idy, hx, hy: FLOAT32; i, j: SIGNED32;
 	BEGIN
 		closed := (x[n] = x[0]) & (y[n] = y[0]);
 		GfxMatrix.ApplyToDist(ctxt.cam, 0.5*ctxt.lineWidth, width);
@@ -917,7 +917,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 
 	PROCEDURE GetStrokeOutline (ctxt: Context; VAR scan: GfxPaths.Scanner; dst: GfxPaths.Path);
 		CONST last = 127;
-		VAR x, y: ARRAY last+1 OF REAL; dxi, dyi, dxo, dyo: REAL; n: LONGINT;
+		VAR x, y: ARRAY last+1 OF FLOAT32; dxi, dyi, dxo, dyo: FLOAT32; n: SIGNED32;
 	BEGIN
 		ASSERT(scan.elem = GfxPaths.Enter);
 		x[0] := scan.x; y[0] := scan.y; dxi := scan.dx; dyi := scan.dy;
@@ -942,8 +942,8 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END GetStrokeOutline;
 
 	(** get offset values and pattern index of visible and invisible dash part at start of subpath (in device space) **)
-	PROCEDURE GetDashOffsets* (ctxt: Context; offset: REAL; VAR beg, end, next: REAL; VAR idx: LONGINT);
-		VAR phase, period, len: REAL;
+	PROCEDURE GetDashOffsets* (ctxt: Context; offset: FLOAT32; VAR beg, end, next: FLOAT32; VAR idx: SIGNED32);
+		VAR phase, period, len: FLOAT32;
 	BEGIN
 		idx := 0;
 		GfxMatrix.ApplyToDist(ctxt.cam, ctxt.dashPhase, phase);
@@ -962,8 +962,8 @@ MODULE Gfx; (** portable *)	(* eos  *)
 
 	PROCEDURE GetDashOutline (ctxt: Context; VAR scan: GfxPaths.Scanner; dst: GfxPaths.Path);
 		VAR
-			width, cx, cy, dx, dy, beg, end, next, offset, len, cos, sin, wdx, wdy, endOff, dash, nx, ny: REAL;
-			index: LONGINT; dscan: GfxPaths.Scanner;
+			width, cx, cy, dx, dy, beg, end, next, offset, len, cos, sin, wdx, wdy, endOff, dash, nx, ny: FLOAT32;
+			index: SIGNED32; dscan: GfxPaths.Scanner;
 	BEGIN
 		GfxMatrix.ApplyToDist(ctxt.cam, 0.5*ctxt.lineWidth, width);
 		ASSERT(scan.elem = GfxPaths.Enter);
@@ -1112,7 +1112,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END DrawPath;
 
 	(** draw line in requested mode **)
-	PROCEDURE DrawLine* (ctxt: Context; x0, y0, x1, y1: REAL; mode: SET);
+	PROCEDURE DrawLine* (ctxt: Context; x0, y0, x1, y1: FLOAT32; mode: SET);
 	BEGIN
 		IF (x0=x1)&(y0=y1) THEN RETURN END; (*optimization PH 2012*)
 		ASSERT(~(InPath IN ctxt.mode), 100);
@@ -1125,8 +1125,8 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END DrawLine;
 
 	(** draw arc in requested mode (start and end angle in radians; negative radius for clockwise arc) **)
-	PROCEDURE DrawArc* (ctxt: Context; x, y, r, start, end: REAL; mode: SET);
-		VAR x1, y1, x2, y2: REAL;
+	PROCEDURE DrawArc* (ctxt: Context; x, y, r, start, end: FLOAT32; mode: SET);
+		VAR x1, y1, x2, y2: FLOAT32;
 	BEGIN
 		ASSERT(~(InPath IN ctxt.mode), 100);
 		ASSERT(mode * {Fill, Clip, EvenOdd} = {}, 101);
@@ -1141,7 +1141,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END DrawArc;
 
 	(** draw rectangle in requested mode **)
-	PROCEDURE DrawRect* (ctxt: Context; x0, y0, x1, y1: REAL; mode: SET);
+	PROCEDURE DrawRect* (ctxt: Context; x0, y0, x1, y1: FLOAT32; mode: SET);
 	BEGIN
 		ASSERT(~(InPath IN ctxt.mode), 100);
 		ctxt.do.begin(ctxt, mode);
@@ -1150,7 +1150,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END DrawRect;
 
 	(** draw circle in requested mode (clockwise if r > 0, counterclockwise if r < 0) **)
-	PROCEDURE DrawCircle* (ctxt: Context; x, y, r: REAL; mode: SET);
+	PROCEDURE DrawCircle* (ctxt: Context; x, y, r: FLOAT32; mode: SET);
 	BEGIN
 		ASSERT(~(InPath IN ctxt.mode), 100);
 		ctxt.do.begin(ctxt, mode);
@@ -1159,7 +1159,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END DrawCircle;
 
 	(** draw ellipse in requested mode (clockwise if rx*ry > 0, counterclockwise if rx*ry < 0) **)
-	PROCEDURE DrawEllipse* (ctxt: Context; x, y, rx, ry: REAL; mode: SET);
+	PROCEDURE DrawEllipse* (ctxt: Context; x, y, rx, ry: FLOAT32; mode: SET);
 	BEGIN
 		ASSERT(~(InPath IN ctxt.mode), 100);
 		ctxt.do.begin(ctxt, mode);
@@ -1168,7 +1168,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	END DrawEllipse;
 
 	(** draw string at given coordinates and move current point to string end **)
-	PROCEDURE DrawStringAt* (ctxt: Context; x, y: REAL; str: ARRAY OF CHAR);
+	PROCEDURE DrawStringAt* (ctxt: Context; x, y: FLOAT32; str: ARRAY OF CHAR);
 	BEGIN
 		ASSERT(~(InPath IN ctxt.mode), 100);
 		ctxt.do.begin(ctxt, {Fill});
@@ -1189,13 +1189,13 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	(**--- Images and Patterns ---**)
 
 	(** draw image at given point **)
-	PROCEDURE DrawImageAt* (ctxt: Context; x, y: REAL; img: GfxImages.Image; VAR filter: GfxImages.Filter);
+	PROCEDURE DrawImageAt* (ctxt: Context; x, y: FLOAT32; img: GfxImages.Image; VAR filter: GfxImages.Filter);
 	BEGIN
 		ctxt.do.image(ctxt, x, y, img, filter)
 	END DrawImageAt;
 
 	(** return new pattern **)
-	PROCEDURE NewPattern* (ctxt: Context; img: GfxImages.Image; px, py: REAL): Pattern;
+	PROCEDURE NewPattern* (ctxt: Context; img: GfxImages.Image; px, py: FLOAT32): Pattern;
 	BEGIN
 		RETURN ctxt.do.newPattern(ctxt, img, px, py)
 	END NewPattern;
@@ -1215,17 +1215,17 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		ctxt.ctm := mat
 	END DefSetCTM;
 
-	PROCEDURE DefTranslate* (ctxt: Context; dx, dy: REAL);
+	PROCEDURE DefTranslate* (ctxt: Context; dx, dy: FLOAT32);
 	BEGIN
 		GfxMatrix.Translate(ctxt.ctm, dx, dy, ctxt.ctm)
 	END DefTranslate;
 
-	PROCEDURE DefScale* (ctxt: Context; sx, sy: REAL);
+	PROCEDURE DefScale* (ctxt: Context; sx, sy: FLOAT32);
 	BEGIN
 		GfxMatrix.Scale(ctxt.ctm, sx, sy, ctxt.ctm)
 	END DefScale;
 
-	PROCEDURE DefRotate* (ctxt: Context; sin, cos: REAL);
+	PROCEDURE DefRotate* (ctxt: Context; sin, cos: FLOAT32);
 	BEGIN
 		GfxMatrix.Rotate(ctxt.ctm, sin, cos, ctxt.ctm)
 	END DefRotate;
@@ -1255,12 +1255,12 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		ctxt.fillPat := pat
 	END DefSetFillPattern;
 
-	PROCEDURE DefSetLineWidth* (ctxt: Context; width: REAL);
+	PROCEDURE DefSetLineWidth* (ctxt: Context; width: FLOAT32);
 	BEGIN
 		ctxt.lineWidth := width
 	END DefSetLineWidth;
 
-	PROCEDURE DefSetDashPattern* (ctxt: Context; VAR on, off: ARRAY OF REAL; len: LONGINT; phase: REAL);
+	PROCEDURE DefSetDashPattern* (ctxt: Context; VAR on, off: ARRAY OF FLOAT32; len: SIGNED32; phase: FLOAT32);
 	BEGIN
 		SetDashArray(ctxt, on, off, len);
 		ctxt.dashPhase := phase
@@ -1276,12 +1276,12 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		ctxt.joinStyle := style
 	END DefSetJoinStyle;
 
-	PROCEDURE DefSetStyleLimit* (ctxt: Context; limit: REAL);
+	PROCEDURE DefSetStyleLimit* (ctxt: Context; limit: FLOAT32);
 	BEGIN
 		ctxt.styleLimit := limit
 	END DefSetStyleLimit;
 
-	PROCEDURE DefSetFlatness* (ctxt: Context; flatness: REAL);
+	PROCEDURE DefSetFlatness* (ctxt: Context; flatness: FLOAT32);
 	BEGIN
 		ctxt.flatness := flatness
 	END DefSetFlatness;
@@ -1291,7 +1291,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		ctxt.font := font
 	END DefSetFont;
 
-	PROCEDURE DefGetStringWidth* (ctxt: Context; VAR str: ARRAY OF CHAR; VAR dx, dy: REAL);
+	PROCEDURE DefGetStringWidth* (ctxt: Context; VAR str: ARRAY OF CHAR; VAR dx, dy: FLOAT32);
 	BEGIN
 		GfxFonts.GetStringWidth(ctxt.font, str, dx, dy)
 	END DefGetStringWidth;
@@ -1310,15 +1310,15 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		GfxPaths.Clear(ctxt.tmpPath)
 	END DefOutline;
 
-	PROCEDURE DefRect* (ctxt: Context; x0, y0, x1, y1: REAL);
+	PROCEDURE DefRect* (ctxt: Context; x0, y0, x1, y1: FLOAT32);
 	BEGIN
 		ctxt.do.enter(ctxt, x0, y0, 0, y0 - y1);
 		ctxt.do.line(ctxt, x1, y0); ctxt.do.line(ctxt, x1, y1); ctxt.do.line(ctxt, x0, y1); ctxt.do.line(ctxt, x0, y0);
 		ctxt.do.exit(ctxt, x1 - x0, 0)
 	END DefRect;
 
-	PROCEDURE DefEllipse* (ctxt: Context; x, y, rx, ry: REAL);
-		VAR xr: REAL;
+	PROCEDURE DefEllipse* (ctxt: Context; x, y, rx, ry: FLOAT32);
+		VAR xr: FLOAT32;
 	BEGIN
 		xr := x + rx;
 		IF xr # x THEN
@@ -1328,7 +1328,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 		END
 	END DefEllipse;
 
-	PROCEDURE DefNewPattern* (ctxt: Context; img: GfxImages.Image; px, py: REAL): Pattern;
+	PROCEDURE DefNewPattern* (ctxt: Context; img: GfxImages.Image; px, py: FLOAT32): Pattern;
 		VAR pat: Pattern;
 	BEGIN
 		NEW(pat); pat.img := img; pat.px := px; pat.py := py;
@@ -1339,7 +1339,7 @@ MODULE Gfx; (** portable *)	(* eos  *)
 	(*--- Initialization of Standard Colors ---*)
 
 	PROCEDURE InitColors;
-		PROCEDURE init (VAR col: Color; r, g, b: INTEGER);
+		PROCEDURE init (VAR col: Color; r, g, b: SIGNED16);
 		BEGIN
 			col.r := r; col.g := g; col.b := b; col.a := 255
 		END init;

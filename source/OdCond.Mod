@@ -33,7 +33,7 @@ TYPE
 TYPE
 	OdCond* = OBJECT
 	VAR
-		status * : LONGINT;
+		status * : SIGNED32;
 		short * : ARRAY MaxCond+1 OF ShortMsg;
 
 		PROCEDURE &Init*;
@@ -60,7 +60,7 @@ TYPE
 			short[VccMustBeCheckedOut]                  := "version-controlled-configuration-must-be-checked-out";
 		END Init;
 
-		PROCEDURE SetError * (statusCode: LONGINT; CONST source: ARRAY OF CHAR; rc: LONGINT);
+		PROCEDURE SetError * (statusCode: SIGNED32; CONST source: ARRAY OF CHAR; rc: SIGNED32);
 		VAR intStr: ARRAY 8 OF CHAR;
 		BEGIN
 			status := statusCode;

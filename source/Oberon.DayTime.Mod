@@ -16,7 +16,7 @@ VAR
 	w: Texts.Writer;
 
 PROCEDURE GetTime(server: ARRAY OF CHAR; VAR time: ARRAY OF CHAR);
-VAR s: NetSystem.Socket; res, remport: INTEGER; adr, remadr: NetSystem.IPAdr; len, target, try: LONGINT;
+VAR s: NetSystem.Socket; res, remport: SIGNED16; adr, remadr: NetSystem.IPAdr; len, target, try: SIGNED32;
 BEGIN
 	time[0] := 0X;
 	NetSystem.OpenSocket(s, NetSystem.anyport, res);
@@ -54,7 +54,7 @@ BEGIN
 END GetTime;
 
 PROCEDURE WriteTime(VAR w: Texts.Writer; time: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	i := 0; WHILE (time[i] # 0X) & (time[i] # 0DX) & (time[i] # 0AX) DO INC(i) END;
 	time[i] := 0X;
@@ -72,7 +72,7 @@ BEGIN
 	END
 END Show;
 
-PROCEDURE StrToMonth(VAR str: ARRAY OF CHAR): LONGINT;
+PROCEDURE StrToMonth(VAR str: ARRAY OF CHAR): SIGNED32;
 BEGIN
 	CASE CAP(str[0]) OF
 		"J": IF CAP(str[1]) = "A" THEN
@@ -103,7 +103,7 @@ BEGIN
 END StrToMonth;
 
 PROCEDURE SetClock*;	(** server *)
-VAR pos, day, month, year, hour, minute, second, t, d: LONGINT; s: Texts.Scanner;
+VAR pos, day, month, year, hour, minute, second, t, d: SIGNED32; s: Texts.Scanner;
 BEGIN
 	pos := Oberon.Log.len;
 	Show;

@@ -12,7 +12,7 @@ IMPORT SYSTEM, Machine, Modules, Objects, Kernel, Inputs;
 TYPE
 	Aux = OBJECT
 		VAR
-			p, numb: LONGINT;
+			p, numb: SIGNED32;
 			buf: ARRAY 4 OF SET;
 			active: BOOLEAN;
 			timer: Objects.Timer;
@@ -34,11 +34,11 @@ TYPE
 						IF 2 IN buf[0] THEN INCL(m.keys, 1) END;
 						IF 1 IN buf[0] THEN INCL(m.keys, 2) END;
 						IF 0 IN buf[0] THEN INCL(m.keys, 0) END;
-						m.dx := SYSTEM.VAL(LONGINT, buf[1]);
+						m.dx := SYSTEM.VAL(SIGNED32, buf[1]);
 						IF 4 IN buf[0] THEN DEC(m.dx, 256) END;
-						m.dy := SYSTEM.VAL(LONGINT, buf[2]);
+						m.dy := SYSTEM.VAL(SIGNED32, buf[2]);
 						IF 5 IN buf[0] THEN DEC(m.dy, 256) END;
-						m.dz := SYSTEM.VAL(SHORTINT, buf[3]);
+						m.dz := SYSTEM.VAL(SIGNED8, buf[3]);
 						IF 6 IN buf[0] THEN DEC(m.dz, 256) END;
 						p := 0; m.dy := -m.dy;
 						Inputs.mouse.Handle(m)
@@ -54,9 +54,9 @@ TYPE
 			active := TRUE
 		END HandleTimeout;
 
-		PROCEDURE &Init*(rate: LONGINT);
+		PROCEDURE &Init*(rate: SIGNED32);
 
-			PROCEDURE SetRate(r: LONGINT);
+			PROCEDURE SetRate(r: SIGNED32);
 			BEGIN WriteAck(0F3X);  WriteAck(CHR(r))
 			END SetRate;
 
@@ -87,11 +87,11 @@ TYPE
 	END Aux;
 
 VAR
-	errors*, ignored*: LONGINT;	(* diagnostic counters *)
+	errors*, ignored*: SIGNED32;	(* diagnostic counters *)
 	aux: Aux;
 
 PROCEDURE PollAux;
-VAR s: SET; i: LONGINT; t: Kernel.MilliTimer;
+VAR s: SET; i: SIGNED32; t: Kernel.MilliTimer;
 BEGIN
 	i := 10;	(* up to 0.2s! *)
 	LOOP
@@ -106,7 +106,7 @@ BEGIN
 END PollAux;
 
 PROCEDURE InAux(): CHAR;
-VAR s: SET; t: Kernel.MilliTimer;ch: CHAR; i: SHORTINT;
+VAR s: SET; t: Kernel.MilliTimer;ch: CHAR; i: SIGNED8;
 BEGIN
 	i := 10;	(* up to 0.2s! *)
 	REPEAT
@@ -128,7 +128,7 @@ BEGIN
 END WriteDev;
 
 PROCEDURE WriteAck(b: CHAR);
-VAR s: SET; i: LONGINT; t: Kernel.MilliTimer;
+VAR s: SET; i: SIGNED32; t: Kernel.MilliTimer;
 BEGIN
 	WriteDev(b); i := 10;	(* up to 0.2s! *)
 	LOOP
@@ -148,7 +148,7 @@ BEGIN
 END WriteCmd;
 
 PROCEDURE ConfigMouse;
-VAR i: SIZE; rate: LONGINT; s: ARRAY 16 OF CHAR;
+VAR i: SIZE; rate: SIGNED32; s: ARRAY 16 OF CHAR;
 BEGIN
 	errors := 0; ignored := 0;
 	Machine.GetConfig("MouseRate", s);

@@ -25,7 +25,7 @@ CONST
 	DuplicateEntry* = 2;
 
 	(** Entry has no key *)
-	NoKey* = MIN(LONGINT);
+	NoKey* = MIN(SIGNED32);
 
 	InitialEntryArraySize = 4;
 	ShadowWidth = 5;
@@ -46,7 +46,7 @@ TYPE
 			view: WMWindowManager.ViewPort;
 			rWnd, rView: WMRectangles.Rectangle;
 			views: Plugins.Table;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			ASSERT((width > 0) & (height > 0) & (grid # NIL) & (dropDownList # NIL));
 			SELF.grid := grid;
@@ -103,7 +103,7 @@ TYPE
 			CSChanged;
 		END New;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : LONGINT); (** override *)
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : SIGNED32); (** override *)
 		BEGIN
 			canvas.Fill(shadowRect, 04FH, WMGraphics.ModeSrcOverDst);
 			Draw^(canvas, w, h, q);
@@ -190,13 +190,13 @@ TYPE
 TYPE
 
 	Entry* = POINTER TO RECORD
-		key- : LONGINT;
+		key- : SIGNED32;
 		name- : Strings.String;
 	END;
 
 	EntryArray = POINTER TO ARRAY OF Entry;
 
-	EnumeratorProcedure* = PROCEDURE {DELEGATE} (entry : Entry; index : LONGINT);
+	EnumeratorProcedure* = PROCEDURE {DELEGATE} (entry : Entry; index : SIGNED32);
 
 TYPE
 
@@ -206,9 +206,9 @@ TYPE
 
 		(* all fields below are private! *)
 		entries : EntryArray;
-		nofEntries : LONGINT;
+		nofEntries : SIGNED32;
 
-		lockLevel : LONGINT;
+		lockLevel : SIGNED32;
 		lockedBy : ANY;
 		viewChanged : BOOLEAN;
 
@@ -249,13 +249,13 @@ TYPE
 			IF hasChanged THEN onChanged.Call(NIL) END
 		END Release;
 
-		PROCEDURE GetNofEntries*() : LONGINT;
+		PROCEDURE GetNofEntries*() : SIGNED32;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject(), 3000);
 			RETURN nofEntries;
 		END GetNofEntries;
 
-		PROCEDURE Add*(key : LONGINT; CONST name : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE Add*(key : SIGNED32; CONST name : ARRAY OF CHAR; VAR res : INTEGER);
 		BEGIN
 			Acquire;
 			IF (FindDuplicate(key, name) = NIL) THEN
@@ -272,8 +272,8 @@ TYPE
 			Release;
 		END Add;
 
-		PROCEDURE Remove*(CONST name : ARRAY OF CHAR; VAR res : WORD);
-		VAR i : LONGINT;
+		PROCEDURE Remove*(CONST name : ARRAY OF CHAR; VAR res : INTEGER);
+		VAR i : SIGNED32;
 		BEGIN
 			Acquire;
 			IF (nofEntries > 0) THEN
@@ -295,7 +295,7 @@ TYPE
 		END Remove;
 
 		PROCEDURE Enumerate*(CONST mask : ARRAY OF CHAR; proc : EnumeratorProcedure);
-		VAR index, i : LONGINT;
+		VAR index, i : SIGNED32;
 		BEGIN
 			ASSERT(proc # NIL);
 			ASSERT(lockedBy = Objects.ActiveObject(), 3000);
@@ -305,8 +305,8 @@ TYPE
 			END;
 		END Enumerate;
 
-		PROCEDURE GetNofMatches*(CONST mask : ARRAY OF CHAR) : LONGINT;
-		VAR nofMatches, i : LONGINT;
+		PROCEDURE GetNofMatches*(CONST mask : ARRAY OF CHAR) : SIGNED32;
+		VAR nofMatches, i : SIGNED32;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject(), 3000);
 			nofMatches := 0;
@@ -317,8 +317,8 @@ TYPE
 		END GetNofMatches;
 
 		(** Returns the first entry with the specified key and/or name. *)
-		PROCEDURE FindDuplicate*(key : LONGINT; CONST name : ARRAY OF CHAR) : Entry;
-		VAR entry : Entry; i : LONGINT;
+		PROCEDURE FindDuplicate*(key : SIGNED32; CONST name : ARRAY OF CHAR) : Entry;
+		VAR entry : Entry; i : SIGNED32;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject(), 3000);
 			entry := NIL;
@@ -329,7 +329,7 @@ TYPE
 		END FindDuplicate;
 
 		PROCEDURE FindByName*(CONST name : ARRAY OF CHAR) : Entry;
-		VAR entry : Entry; i : LONGINT;
+		VAR entry : Entry; i : SIGNED32;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject(), 3000);
 			entry := NIL;
@@ -339,8 +339,8 @@ TYPE
 			RETURN entry;
 		END FindByName;
 
-		PROCEDURE FindByKey*(key : LONGINT) : Entry;
-		VAR entry : Entry; i : LONGINT;
+		PROCEDURE FindByKey*(key : SIGNED32) : Entry;
+		VAR entry : Entry; i : SIGNED32;
 		BEGIN
 			ASSERT(lockedBy = Objects.ActiveObject(), 3000);
 			entry := NIL;
@@ -383,7 +383,7 @@ TYPE
 		captionI : Strings.String;
 
 		currentMask : ARRAY 128 OF CHAR; (* protected by model.Acquire/Release *)
-		nofMatches : LONGINT;
+		nofMatches : SIGNED32;
 
 		PROCEDURE &Init*;  (* override *)
 		BEGIN
@@ -458,7 +458,7 @@ TYPE
 			END;
 		END SetSelection;
 
-		PROCEDURE SelectKey*(key : LONGINT);
+		PROCEDURE SelectKey*(key : SIGNED32);
 		VAR e : Entry;
 		BEGIN
 			model.Acquire;
@@ -559,14 +559,14 @@ TYPE
 			grid.SetSelectionMode(WMGrids.GridSelectSingleRow);
 		END InitGrid;
 
-		PROCEDURE AddRow(entry : Entry; index : LONGINT);
+		PROCEDURE AddRow(entry : Entry; index : SIGNED32);
 		BEGIN (* has grid.model locked *)
 			grid.model.SetCellText(0, index, entry.name);
 			grid.model.SetCellData(0, index, entry);
 		END AddRow;
 
 		PROCEDURE UpdateGrid;
-		VAR nofMatches : LONGINT;
+		VAR nofMatches : SIGNED32;
 		BEGIN
 			grid.Acquire;
 			grid.model.Acquire;
@@ -602,7 +602,7 @@ TYPE
 			END;
 		END PropertyChanged;
 
-		PROCEDURE SetMode(mode : LONGINT);
+		PROCEDURE SetMode(mode : SIGNED32);
 		BEGIN
 			ASSERT((mode = Mode_SelectOnly) OR (mode = Mode_Editable) OR (mode = Mode_Eager));
 			CASE mode OF

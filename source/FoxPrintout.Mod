@@ -13,16 +13,16 @@ TYPE
 
 	Printer*= OBJECT (SyntaxTree.Visitor)
 	VAR
-		w-: Basic.Writer; mode: LONGINT; singleStatement: BOOLEAN;
+		w-: Basic.Writer; mode: SIGNED32; singleStatement: BOOLEAN;
 		currentScope: SyntaxTree.Scope; ws: Streams.StringWriter;
-		info: BOOLEAN; case: LONGINT;
+		info: BOOLEAN; case: SIGNED32;
 		useCase: BOOLEAN; (* TRUE to enable case conversion in "Identifier" *)
 
-		alertCount, commentCount: LONGINT;
+		alertCount, commentCount: SIGNED32;
 		fingerprinter:Fingerprinter.Fingerprinter;
 
 		PROCEDURE Small(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
-		VAR ch: CHAR; i: LONGINT;
+		VAR ch: CHAR; i: SIGNED32;
 		BEGIN
 			i := 0;
 			REPEAT
@@ -35,7 +35,7 @@ TYPE
 		END Small;
 
 		PROCEDURE Big(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
-		VAR ch: CHAR; i: LONGINT;
+		VAR ch: CHAR; i: SIGNED32;
 		BEGIN
 			i := 0;
 			REPEAT
@@ -154,7 +154,7 @@ TYPE
 				AlertString("(*unresolved*)");
 			END;
 			IF x.qualifiedIdentifier # NIL THEN
-				(* Problem: how to distinguish betwteen type aliases, e.g. Status = LONGINT and actual use of LONGINT?
+				(* Problem: how to distinguish betwteen type aliases, e.g. Status = SIGNED32 and actual use of SIGNED32?
 					This tries to use scope level: if the type is declared in the global scope, it should be a basic type use. *)
 				IF x.resolved # NIL THEN
 					useCase := (x.resolved IS SyntaxTree.BasicType) & (x.scope.Level() = 0);
@@ -404,7 +404,7 @@ TYPE
 			IF ~first THEN w.String("} ") END;
 		END FlagEnd;
 
-		PROCEDURE Value(identifier: SyntaxTree.Identifier; value: HUGEINT; VAR first: BOOLEAN);
+		PROCEDURE Value(identifier: SyntaxTree.Identifier; value: SIGNED64; VAR first: BOOLEAN);
 		BEGIN
 			Flag(identifier,first);
 			w.String("("); w.Int(value,1); w.String(")");
@@ -776,8 +776,8 @@ TYPE
 			END
 		END VisitBooleanValue;
 
-		PROCEDURE Hex(x: HUGEINT);
-		VAR i: LONGINT; a: ARRAY 20 OF CHAR; y: HUGEINT;
+		PROCEDURE Hex(x: SIGNED64);
+		VAR i: SIGNED32; a: ARRAY 20 OF CHAR; y: SIGNED64;
 		BEGIN
 			i := 0;
 			REPEAT
@@ -803,7 +803,7 @@ TYPE
 		END VisitCharacterValue;
 
 		PROCEDURE VisitSetValue*(x: SyntaxTree.SetValue);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			w.String("{");
 			i := 0;
@@ -826,8 +826,8 @@ TYPE
 			VisitMathArrayExpression(x.array);
 		END VisitMathArrayValue;
 
-		PROCEDURE FormatedFloat(value: LONGREAL; subtype: LONGINT);
-		VAR string: ARRAY 128 OF CHAR; i: LONGINT;
+		PROCEDURE FormatedFloat(value: FLOAT64; subtype: SIGNED32);
+		VAR string: ARRAY 128 OF CHAR; i: SIGNED32;
 		BEGIN
 			IF subtype = Scanner.Real THEN
 				ws.SetPos(0); ws.Float(value,11(*mantissa X.XXXXXXX *)+5(*exponent E+XXX *)); ws.Get(string);
@@ -869,7 +869,7 @@ TYPE
 		END VisitComplexValue;
 
 		PROCEDURE VisitStringValue*(x: SyntaxTree.StringValue);
-		VAR i: LONGINT; ch: CHAR;
+		VAR i: SIGNED32; ch: CHAR;
 		BEGIN
 			i := 0;
 			w.Char('\');
@@ -1431,7 +1431,7 @@ TYPE
 		END EndComment;
 
 		PROCEDURE Comment(x: SyntaxTree.Comment);
-		VAR i: LONGINT; ch: CHAR;
+		VAR i: SIGNED32; ch: CHAR;
 		BEGIN
 			BeginComment;
 			WHILE (i<LEN(x.source^)) & (x.source[i] #  0X) DO
@@ -1778,7 +1778,7 @@ TYPE
 		END VisitStatementBlock;
 
 		PROCEDURE Code(x: SyntaxTree.Code);
-		VAR  i: LONGINT; ch: CHAR; cr: BOOLEAN; procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
+		VAR  i: SIGNED32; ch: CHAR; cr: BOOLEAN; procedure: SyntaxTree.Procedure; procedureType: SyntaxTree.ProcedureType;
 		CONST CR=0DX;
 		BEGIN
 			IF (currentScope # NIL) & (currentScope IS SyntaxTree.ProcedureScope) THEN
@@ -1931,7 +1931,7 @@ TYPE
 		BEGIN singleStatement := b
 		END SingleStatement;
 
-		PROCEDURE &Init*(w: Streams.Writer; mode: LONGINT; info: BOOLEAN);
+		PROCEDURE &Init*(w: Streams.Writer; mode: SIGNED32; info: BOOLEAN);
 		BEGIN
 			SELF.w := Basic.GetWriter(w);
 			SELF.mode := mode; NEW(ws,128); SELF.info := info; case := Scanner.Uppercase;
@@ -1944,7 +1944,7 @@ TYPE
 VAR
 	debug: Printer;
 
-	PROCEDURE NewPrinter*(w: Streams.Writer; mode: LONGINT; info: BOOLEAN): Printer;
+	PROCEDURE NewPrinter*(w: Streams.Writer; mode: SIGNED32; info: BOOLEAN): Printer;
 	VAR p: Printer;
 	BEGIN
 		NEW(p,w,mode,info); RETURN p

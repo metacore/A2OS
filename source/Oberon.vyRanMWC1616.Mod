@@ -51,8 +51,8 @@ TYPE
 	tSeed = OBJECT  (* POINTER TO tSeedDesc;
 	tSeedDesc = RECORD (vyRanBase.tSeedDesc) *)
 	(vyRanBase.tSeed)
-	VAR a, b: LONGINT;
-		x, y: LONGINT;
+	VAR a, b: SIGNED32;
+		x, y: SIGNED32;
 		checkPeriod: BOOLEAN;
 
 		PROCEDURE  (*VAR seed: tSeedDesc*) Store*( VAR r: Files.Rider );
@@ -60,7 +60,7 @@ TYPE
 			Files.WriteLInt( r, SELF.x );  Files.WriteLInt( r, SELF.y );  Files.WriteLInt( r, SELF.a );  Files.WriteLInt( r, SELF.b )
 		END Store;
 
-		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: INTEGER );
+		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: SIGNED16 );
 		BEGIN
 			IF seedVersion # cSeedVersion THEN HALT( 100 ) END;
 			Files.ReadLInt( r, SELF.x );  Files.ReadLInt( r, SELF.y );  Files.ReadLInt( r, SELF.a );  Files.ReadLInt( r, SELF.b )
@@ -71,7 +71,7 @@ TYPE
 	Bits = vyRanBase.Bits;
 
 VAR
-	useParam, seedCheckPeriod: BOOLEAN;  seedA, seedB: LONGINT;
+	useParam, seedCheckPeriod: BOOLEAN;  seedA, seedB: SIGNED32;
 
 	(* added - jb 29.11.00 *)
 	PROCEDURE AllocSeed*( ): vyRanBase.tSeed;
@@ -114,9 +114,9 @@ VAR
 		END
 	END Get;
 
-	PROCEDURE GetUniform( r: tRandom ): LONGREAL;
-	CONST posScalefact = 0.5 / MAX( LONGINT );  negScalefact = 0.5 / MIN( LONGINT );
-	VAR seed: vyRanBase.tSeed;  n: LONGINT;
+	PROCEDURE GetUniform( r: tRandom ): FLOAT64;
+	CONST posScalefact = 0.5 / MAX( SIGNED32 );  negScalefact = 0.5 / MIN( SIGNED32 );
+	VAR seed: vyRanBase.tSeed;  n: SIGNED32;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
@@ -131,8 +131,8 @@ VAR
 		END
 	END GetUniform;
 
-	PROCEDURE GetL( r: tRandom;  top: LONGINT ): LONGINT;
-	VAR seed: vyRanBase.tSeed;  n: LONGINT;
+	PROCEDURE GetL( r: tRandom;  top: SIGNED32 ): SIGNED32;
+	VAR seed: vyRanBase.tSeed;  n: SIGNED32;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
@@ -143,13 +143,13 @@ VAR
 				seed.b * S.VAL( Bits, S.VAL( SET, seed.y ) * SET( sysMaskSecondHalf ) ) +
 				LSH( seed.y, sysBitsTypeSize DIV 2 * sysSHR );
 			n := seed.x * sysHalfBitsType + LSH( seed.y, sysBitsTypeSize DIV 2 * sysSHR );
-			IF n < 0 THEN DEC( n, MIN( LONGINT ) ) END;
+			IF n < 0 THEN DEC( n, MIN( SIGNED32 ) ) END;
 			IF top <= 0 THEN RETURN n ELSE RETURN n MOD top END
 		END
 	END GetL;
 
 	PROCEDURE Reset( r: tRandom );
-	VAR seed: vyRanBase.tSeed;  x, y: LONGINT;
+	VAR seed: vyRanBase.tSeed;  x, y: SIGNED32;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
@@ -264,13 +264,13 @@ VAR
 		vyRanBase.Install( GetNew() )
 	END Install;
 
-	PROCEDURE SetParam*( a, b: LONGINT;  checkPeriod: BOOLEAN );
+	PROCEDURE SetParam*( a, b: SIGNED32;  checkPeriod: BOOLEAN );
 	BEGIN
 		seedA := a;  seedB := b;  seedCheckPeriod := checkPeriod;  useParam := TRUE
 	END SetParam;
 
 BEGIN
-	ASSERT ( SIZEOF( LONGINT ) = sysBitsTypeSize, 100 );
+	ASSERT ( SIZEOF( SIGNED32 ) = sysBitsTypeSize, 100 );
 	useParam := FALSE
 END vyRanMWC1616.
 

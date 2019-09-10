@@ -19,7 +19,7 @@ MODULE HTMLForms IN Oberon; (** portable *)	(* ejz  *)
 			attr, method: ARRAY 64 OF CHAR;
 			obj: Objects.Object;
 			curForm: HTMLDocs.Form;
-			key: LONGINT;
+			key: SIGNED32;
 			s: HyperDocs.LinkScheme;
 	BEGIN
 		P := S.page; HTMLDocs.CloseA(P);
@@ -65,7 +65,7 @@ MODULE HTMLForms IN Oberon; (** portable *)	(* ejz  *)
 	PROCEDURE GetButCap(attrs: HTMLDocs.TagAttr; obj: Objects.Object; cap: ARRAY OF CHAR);
 		VAR
 			attr: HTMLDocs.TagAttr;
-			dsr, w, h: INTEGER;
+			dsr, w, h: SIGNED16;
 	BEGIN
 		attr := HTMLDocs.FindAttr(attrs, "ALT");
 		IF attr # NIL THEN
@@ -88,9 +88,9 @@ MODULE HTMLForms IN Oberon; (** portable *)	(* ejz  *)
 			value: ARRAY 512 OF CHAR;
 			obj, obj2: Objects.Object;
 			curForm: HTMLDocs.Form;
-			val: LONGINT;
-			rval, min, max: LONGREAL;
-			y: LONGREAL;
+			val: SIGNED32;
+			rval, min, max: FLOAT64;
+			y: FLOAT64;
 	BEGIN
 		IF on THEN
 			P := S.page; Links.GetLink(S.page, "CurForm", obj);
@@ -278,7 +278,7 @@ END;
 			P: HTMLDocs.Page;
 			obj: Objects.Object;
 			attrs, attr: HTMLDocs.TagAttr;
-			val, i: LONGINT;
+			val, i: SIGNED32;
 			list: Lists.List;
 			item: Lists.Item;
 			litem: HTMLDocs.Item;
@@ -409,7 +409,7 @@ END;
 			obj: Objects.Object;
 			attrs, attr: HTMLDocs.TagAttr;
 			curForm: HTMLDocs.Form;
-			val: LONGINT;
+			val: SIGNED32;
 			pre: BOOLEAN;
 	BEGIN
 		P := S.page; Links.GetLink(S.page, "CurForm", obj);

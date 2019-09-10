@@ -8,13 +8,13 @@ MODULE PSDImages IN Oberon; (** portable *)	(* ejz  *)
 
 	TYPE
 		Header = RECORD
-			width, height: LONGINT;
-			channels, depth, mode: INTEGER;
-			data: LONGINT;
+			width, height: SIGNED32;
+			channels, depth, mode: SIGNED16;
+			data: SIGNED32;
 			pal: Images.Palette
 		END;
 
-	PROCEDURE ReadLInt(VAR R: Files.Rider; VAR i: LONGINT);
+	PROCEDURE ReadLInt(VAR R: Files.Rider; VAR i: SIGNED32);
 		VAR ch: CHAR;
 	BEGIN
 		Files.Read(R, ch); i := ORD(ch);
@@ -23,7 +23,7 @@ MODULE PSDImages IN Oberon; (** portable *)	(* ejz  *)
 		Files.Read(R, ch); i := ORD(ch)+LSH(i, 8)
 	END ReadLInt;
 
-	PROCEDURE ReadInt(VAR R: Files.Rider; VAR i: INTEGER);
+	PROCEDURE ReadInt(VAR R: Files.Rider; VAR i: SIGNED16);
 		VAR ch: CHAR;
 	BEGIN
 		Files.Read(R, ch); i := ORD(ch);
@@ -31,7 +31,7 @@ MODULE PSDImages IN Oberon; (** portable *)	(* ejz  *)
 	END ReadInt;
 
 	PROCEDURE CheckFormat(VAR R: Files.Rider): BOOLEAN;
-		VAR sig: LONGINT; ver: INTEGER;
+		VAR sig: SIGNED32; ver: SIGNED16;
 	BEGIN
 		ReadLInt(R, sig);
 		IF sig # 038425053H THEN RETURN FALSE END;
@@ -52,7 +52,7 @@ MODULE PSDImages IN Oberon; (** portable *)	(* ejz  *)
 	END ReadHeader;
 
 	PROCEDURE ReadColors(VAR R: Files.Rider; VAR h: Header);
-		VAR pos, len, i: LONGINT;
+		VAR pos, len, i: SIGNED32;
 	BEGIN
 		h.pal := NIL;
 		ReadLInt(R, len); pos := Files.Pos(R);
@@ -77,14 +77,14 @@ MODULE PSDImages IN Oberon; (** portable *)	(* ejz  *)
 	END ReadColors;
 
 	PROCEDURE SkipSection(VAR R: Files.Rider);
-		VAR len: LONGINT;
+		VAR len: SIGNED32;
 	BEGIN
 		ReadLInt(R, len);
 		Files.Set(R, Files.Base(R), Files.Pos(R)+len)
 	END SkipSection;
 
 	PROCEDURE LoadRLEInd8(VAR R: Files.Rider; VAR h: Header; img: Images.Image);
-		VAR F: Files.File; pos, pix: LONGINT; i, n, nb, x, y: INTEGER; rle: SHORTINT; ch: CHAR;
+		VAR F: Files.File; pos, pix: SIGNED32; i, n, nb, x, y: SIGNED16; rle: SIGNED8; ch: CHAR;
 	BEGIN
 		F := Files.Base(R);
 		pos := h.data + h.channels*h.height*2;
@@ -120,7 +120,7 @@ MODULE PSDImages IN Oberon; (** portable *)	(* ejz  *)
 	END LoadRLEInd8;
 
 	PROCEDURE LoadRLERGB888(VAR R: Files.Rider; VAR h: Header; img: Images.Image);
-		VAR F: Files.File; pos, pix, c: LONGINT; i, n, nb, x, y: INTEGER; rle: SHORTINT; ch: CHAR;
+		VAR F: Files.File; pos, pix, c: SIGNED32; i, n, nb, x, y: SIGNED16; rle: SIGNED8; ch: CHAR;
 	BEGIN
 		F := Files.Base(R);
 		pos := h.data + h.channels*h.height*2;
@@ -160,7 +160,7 @@ MODULE PSDImages IN Oberon; (** portable *)	(* ejz  *)
 	END LoadRLERGB888;
 
 	PROCEDURE Load(img: Images.Image; VAR fname: ARRAY OF CHAR; VAR done: BOOLEAN);
-		VAR F: Files.File; R: Files.Rider; h: Header; comp: INTEGER; fmt: Images.Format;
+		VAR F: Files.File; R: Files.Rider; h: Header; comp: SIGNED16; fmt: Images.Format;
 	BEGIN
 		done := FALSE;
 		F := Files.Old(fname); Files.Set(R, F, 0);

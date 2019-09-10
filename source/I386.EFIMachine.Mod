@@ -7,7 +7,7 @@ IMPORT SYSTEM, EFI;
 	esi	: ?
 	edi	: address of frame buffer
 *)
-PROCEDURE JumpTo*(adr : ADDRESS; eax,esi,edi, ecx, edx: LONGINT);
+PROCEDURE JumpTo*(adr : ADDRESS; eax,esi,edi, ecx, edx: SIGNED32);
 CODE {SYSTEM.i386}
 	XOR ECX,ECX
 	XOR EDX,EDX
@@ -22,7 +22,7 @@ CODE {SYSTEM.i386}
 	CALL EBX
 END JumpTo;
 
-PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
+PROCEDURE  Portin8*(port: SIGNED32; VAR val: CHAR);
 CODE{SYSTEM.i386}
 	MOV EDX,[EBP+port]
 	IN AL, DX
@@ -30,7 +30,7 @@ CODE{SYSTEM.i386}
 	MOV [ECX], AL
 END Portin8;
 
-PROCEDURE  Portin16*(port: LONGINT; VAR val: INTEGER);
+PROCEDURE  Portin16*(port: SIGNED32; VAR val: SIGNED16);
 CODE{SYSTEM.i386}
 	MOV EDX,[EBP+port]
 	IN AX, DX
@@ -38,7 +38,7 @@ CODE{SYSTEM.i386}
 	MOV [ECX], AX
 END Portin16;
 
-PROCEDURE  Portin32*(port: LONGINT; VAR val: LONGINT);
+PROCEDURE  Portin32*(port: SIGNED32; VAR val: SIGNED32);
 CODE{SYSTEM.i386}
 	MOV EDX,[EBP+port]
 	IN EAX, DX
@@ -46,28 +46,28 @@ CODE{SYSTEM.i386}
 	MOV [ECX], EAX
 END Portin32;
 
-PROCEDURE  Portout8*(port: LONGINT; val: CHAR);
+PROCEDURE  Portout8*(port: SIGNED32; val: CHAR);
 CODE{SYSTEM.i386}
 	MOV AL,[EBP+val]
 	MOV EDX,[EBP+port]
 	OUT DX,AL
 END Portout8;
 
-PROCEDURE  Portout16*(port: LONGINT; val: INTEGER);
+PROCEDURE  Portout16*(port: SIGNED32; val: SIGNED16);
 CODE{SYSTEM.i386}
 	MOV AX,[EBP+val]
 	MOV EDX,[EBP+port]
 	OUT DX,AX
 END Portout16;
 
-PROCEDURE  Portout32*(port: LONGINT; val: LONGINT);
+PROCEDURE  Portout32*(port: SIGNED32; val: SIGNED32);
 CODE{SYSTEM.i386}
 	MOV EAX,[EBP+val]
 	MOV EDX,[EBP+port]
 	OUT DX,EAX
 END Portout32;
 
-PROCEDURE -GetParameter (offset: LONGINT): LONGINT;
+PROCEDURE -GetParameter (offset: SIGNED32): SIGNED32;
 CODE {SYSTEM.i386}
 	POP EAX
 	MOV EAX, [EBP+EAX]

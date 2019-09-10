@@ -29,8 +29,8 @@ IMPORT Pictures, Images, Files, Objects, Oberon, vyHostTexts, vyDisplay2d, PictC
 
 TYPE
 	tBuffer* = RECORD
-		X, Y, W, H: INTEGER;
-		x, y: INTEGER;   (* origin *)
+		X, Y, W, H: SIGNED16;
+		x, y: SIGNED16;   (* origin *)
 		buf: Images.Image;
 		img: Images.Image
 	END;
@@ -43,22 +43,22 @@ TYPE
 	END;
 
 	GetCoordMsg* = RECORD (Objects.ObjMsg)
-		x*, y*: INTEGER;
-		xr*, yr*: LONGREAL;
-		w*, h*: LONGINT;
+		x*, y*: SIGNED16;
+		xr*, yr*: FLOAT64;
+		w*, h*: SIGNED32;
 		layer*: vyPort.tLayer;
 		update*: BOOLEAN;
 		a*: vyBase.Object
 	END;
 	FileFinalize* = PROCEDURE ( VAR f: Files.File;  name: ARRAY OF CHAR );
-	ObjProc* = PROCEDURE ( x, y: LONGINT;  a: Objects.Object;  link: Objects.Object );
+	ObjProc* = PROCEDURE ( x, y: SIGNED32;  a: Objects.Object;  link: Objects.Object );
 
 VAR
 	finalize: FileFinalize;
 	suffix: ARRAY 32 OF CHAR;
 	imgconversions: POINTER TO ARRAY OF ARRAY 64 OF CHAR;
 	pictconversions: POINTER TO ARRAY OF ARRAY 64 OF CHAR;
-	tempX, tempY: INTEGER;  lastframe: Display.Frame;  oldhh: PROCEDURE ( VAR D: Documents.Document );
+	tempX, tempY: SIGNED16;  lastframe: Display.Frame;  oldhh: PROCEDURE ( VAR D: Documents.Document );
 	dhist: hist;
 	history: hist;   (* for ReplaceDoc *)
 	(*! if you intend to write or read pictures or images within a context in your application
@@ -87,9 +87,9 @@ VAR
 
 (** initialize picture from map **)
 	PROCEDURE ImageToPict*( img: Images.Image;  pict: Pictures.Picture );
-	VAR i, y, r, g, b, a, x, w: INTEGER;  pal: Images.Palette;  fmt: Images.Format;
+	VAR i, y, r, g, b, a, x, w: SIGNED16;  pal: Images.Palette;  fmt: Images.Format;
 		byte: ARRAY 256 OF CHAR;
-		int: ARRAY 256 OF INTEGER;
+		int: ARRAY 256 OF SIGNED16;
 	BEGIN
 		Pictures.Create( pict, img.width, img.height, 8 );   (* uses display palette *)
 		IF img.fmt.pal # NIL THEN  (* modify picture palette *)
@@ -117,8 +117,8 @@ VAR
 (** initialize picture from map **)
 PROCEDURE ImageToPict* (img: Images.Image;    pict: Pictures.Picture);
 VAR
-	i, y, r, g, b, a, x, w: INTEGER;    pal: Images.Palette;    fmt: Images.Format;    byte: ARRAY 256 OF CHAR;
-	int: ARRAY 256 OF INTEGER; pix: Images.Pixel;
+	i, y, r, g, b, a, x, w: SIGNED16;    pal: Images.Palette;    fmt: Images.Format;    byte: ARRAY 256 OF CHAR;
+	int: ARRAY 256 OF SIGNED16; pix: Images.Pixel;
 BEGIN
 	Pictures.Create(pict, img.width, img.height, 8);   	(* uses display palette *)
 	IF img.fmt.pal # NIL THEN	(* modify picture palette *)
@@ -174,7 +174,7 @@ END ImageToPict;
 
 (** initialize image from picture by copying picture contents **)
 	PROCEDURE PictToImage*( pict: Pictures.Picture;  img: Images.Image );
-	VAR idx, max, dr, dg, db, pr, pg, pb, y, x0, x1: INTEGER;  default: BOOLEAN;  pal: Images.Palette;  fmt: Images.Format;  adr: LONGINT;
+	VAR idx, max, dr, dg, db, pr, pg, pb, y, x0, x1: SIGNED16;  default: BOOLEAN;  pal: Images.Palette;  fmt: Images.Format;  adr: SIGNED32;
 	BEGIN
 		(* check if palette matches fixed palette *)
 		idx := 0;  max := SHORT( ASH( 1, pict.depth ) );  default := TRUE;
@@ -220,14 +220,14 @@ END ImageToPict;
 	END Install;
 
 	PROCEDURE InstallConverter( name: ARRAY OF CHAR ): BOOLEAN;
-	VAR res: INTEGER;
+	VAR res: SIGNED16;
 	BEGIN
 		res := -1;  Oberon.Call( name, Oberon.Par, FALSE , res );
 		IF res = 0 THEN RETURN TRUE ELSE aM.eSS( "antsToolbox:Could not execute: ", name );  RETURN FALSE END
 	END InstallConverter;
 
 	PROCEDURE LoadPicture0( VAR pict: Pictures.Picture;  R: Files.Rider;  VAR done: BOOLEAN );
-	VAR msg: Objects.FileMsg;  i: LONGINT;  id: INTEGER;  pos: LONGINT;
+	VAR msg: Objects.FileMsg;  i: SIGNED32;  id: SIGNED16;  pos: SIGNED32;
 	BEGIN
 		IF pict = NIL THEN Pictures.NewPicture;  pict := Objects.NewObj( Pictures.Picture ) ELSE Objects.NewObj := pict END;
 		msg.R := R;  msg.id := Objects.load;  msg.len := 0;  done := FALSE;  i := 0;  pos := Files.Pos( msg.R );
@@ -264,7 +264,7 @@ END ImageToPict;
 	END LoadPicture;
 
 	PROCEDURE LoadImage*( VAR image: Images.Image;  fname: ARRAY OF CHAR;  VAR done: BOOLEAN );
-	VAR file: Files.File;  i: LONGINT;  pict: Pictures.Picture;
+	VAR file: Files.File;  i: SIGNED32;  pict: Pictures.Picture;
 	BEGIN
 		done := FALSE;  file := Files.Old( fname );
 		IF file = NIL THEN aM.eSS( "antsToolbox: File does not exist: ", fname );  done := FALSE;  RETURN END;
@@ -351,7 +351,7 @@ END LoadPictureDialoged;
 	END InitConversions;
 
 	PROCEDURE SplitName*( VAR name, MName, PName: ARRAY OF CHAR );
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE name[i] # "." DO MName[i] := name[i];  INC( i ) END;
@@ -360,10 +360,10 @@ END LoadPictureDialoged;
 		PName[j] := 0X
 	END SplitName;
 
-	PROCEDURE GetLayerXY*( x, y: INTEGER;  VAR pict: vyPort.Picture ): vyLinks.Link;
+	PROCEDURE GetLayerXY*( x, y: SIGNED16;  VAR pict: vyPort.Picture ): vyLinks.Link;
 	(** get Layer on pos x,y and set coordinate system *)
-	VAR llist: vyLinks.Link;  frame: Display.Frame;  u, v: INTEGER;  cRgnMsg: vyDisplay2d.CoordRgnMessage;
-		cSetMsg: vyDisplay2d.CoordSetMessage;  X, Y, W, H: INTEGER;
+	VAR llist: vyLinks.Link;  frame: Display.Frame;  u, v: SIGNED16;  cRgnMsg: vyDisplay2d.CoordRgnMessage;
+		cSetMsg: vyDisplay2d.CoordSetMessage;  X, Y, W, H: SIGNED16;
 
 	BEGIN
 		Gadgets.ThisFrame( x, y, frame, u, v );
@@ -383,7 +383,7 @@ END LoadPictureDialoged;
 		RETURN llist
 	END GetLayerXY;
 
-	PROCEDURE FrontLayerXY*( x, y: INTEGER;  VAR pict: vyPort.Picture ): vyPort.tLayer;
+	PROCEDURE FrontLayerXY*( x, y: SIGNED16;  VAR pict: vyPort.Picture ): vyPort.tLayer;
 	VAR llist: vyLinks.Link;
 	BEGIN
 		llist := GetLayerXY( x, y, pict );
@@ -392,7 +392,7 @@ END LoadPictureDialoged;
 		IF (llist.obj # NIL ) & (llist.obj IS vyPort.tLayer) THEN RETURN llist.obj( vyPort.tLayer ) ELSE aM.SISI( "There is no layer at x=", x, ", y=", y );  RETURN NIL END
 	END FrontLayerXY;
 
-	PROCEDURE MsgToXY*( x, y: INTEGER;  VAR msg: Objects.ObjMsg );
+	PROCEDURE MsgToXY*( x, y: SIGNED16;  VAR msg: Objects.ObjMsg );
 	VAR layer: vyPort.tLayer;  port: vyPort.Picture;
 	BEGIN
 		layer := FrontLayerXY( x, y, port );
@@ -406,7 +406,7 @@ END LoadPictureDialoged;
 	END MsgToXY;
 
 	PROCEDURE SplitNameM( str: ARRAY OF CHAR;  VAR mod: Modules.Module;  VAR name: ARRAY OF CHAR );
-	VAR i, j: LONGINT;  done: BOOLEAN;
+	VAR i, j: SIGNED32;  done: BOOLEAN;
 	BEGIN
 		done := FALSE;  i := 0;  j := 0;
 		WHILE str[i] # 0X DO
@@ -431,7 +431,7 @@ END LoadPictureDialoged;
 	END GetType;
 
 	PROCEDURE IsType*( obj: ANY;  t: antsPortability.Type ): BOOLEAN;
-	VAR levelt, levelo: INTEGER;  to: antsPortability.Type;
+	VAR levelt, levelo: SIGNED16;  to: antsPortability.Type;
 	BEGIN
 		to := antsPortability.TypesTypeOf( obj );
 		IF to = t THEN RETURN TRUE END;
@@ -454,14 +454,14 @@ END LoadPictureDialoged;
 		RETURN obj
 	END TypedLayer;
 
-	PROCEDURE TypedLayerXY*( x, y: INTEGER;  type: ARRAY OF CHAR;  VAR pict: vyPort.Picture ): vyPort.tLayer;
+	PROCEDURE TypedLayerXY*( x, y: SIGNED16;  type: ARRAY OF CHAR;  VAR pict: vyPort.Picture ): vyPort.tLayer;
 	VAR obj: Objects.Object;
 	BEGIN
 		obj := TypedLayer( GetLayerXY( x, y, pict ), type );
 		IF obj = NIL THEN RETURN NIL ELSE RETURN obj( vyPort.tLayer ) END
 	END TypedLayerXY;
 
-	PROCEDURE MsgToTypedXY*( x, y: INTEGER;  VAR msg: Objects.ObjMsg;  type: ARRAY OF CHAR );
+	PROCEDURE MsgToTypedXY*( x, y: SIGNED16;  VAR msg: Objects.ObjMsg;  type: ARRAY OF CHAR );
 	VAR obj: Objects.Object;  pict: vyPort.Picture;
 	BEGIN
 		obj := TypedLayerXY( x, y, type, pict );
@@ -469,8 +469,8 @@ END LoadPictureDialoged;
 	END MsgToTypedXY;
 
 	PROCEDURE SelectFrame*( ): Display.Frame;
-	VAR keys: SET;  x, y, dx, dy: INTEGER;  frame: Display.Frame;
-	VAR u, v: INTEGER;  M: Display.LocateMsg;
+	VAR keys: SET;  x, y, dx, dy: SIGNED16;  frame: Display.Frame;
+	VAR u, v: SIGNED16;  M: Display.LocateMsg;
 	BEGIN
 		aM.vS( "antsToolbox.SelectFrame: move mouse to destination frame and click" );  Input.Mouse( keys, x, y );  vyTracking.HelpAt( x, y, "move mouse to destination and click" );
 		vyTracking.TrackMouseCont( keys, dx, dy, Effects.PointHand );  vyTracking.HelpEnd;
@@ -480,7 +480,7 @@ END LoadPictureDialoged;
 	END SelectFrame;
 
 	PROCEDURE SetSize*;
-	VAR S: Attributes.Scanner;  M: Display.SelectMsg;  obj: Objects.Object;  A: Objects.AttrMsg;  W, H: LONGINT;
+	VAR S: Attributes.Scanner;  M: Display.SelectMsg;  obj: Objects.Object;  A: Objects.AttrMsg;  W, H: SIGNED32;
 	BEGIN
 		antsCommands.InitScan( "W=NUMBER H=NUMBER" );
 		IF antsCommands.ExpectNumber( "W", W ) & antsCommands.ExpectNumber( "H", H ) THEN
@@ -499,7 +499,7 @@ END LoadPictureDialoged;
 	END SetSize;
 
 	PROCEDURE CopyCoordinates*;
-	VAR frame1, frame2: Display.Frame;  obj1, obj2: Objects.Object;  x, y, w, h: LONGREAL;  keys: SET;  X, Y: INTEGER;  type: Types.Type;
+	VAR frame1, frame2: Display.Frame;  obj1, obj2: Objects.Object;  x, y, w, h: FLOAT64;  keys: SET;  X, Y: SIGNED16;  type: Types.Type;
 	BEGIN
 		antsCommands.InitScan( "[>X] [>Y]" );  aM.S( "Select source" );  frame1 := SelectFrame();  obj1 := dlink;
 		REPEAT Input.Mouse( keys, X, Y );  UNTIL keys = {};
@@ -524,7 +524,7 @@ END LoadPictureDialoged;
 		END;
 	END CopyCoordinates;
 
-	PROCEDURE GetDisplay( X, Y, W, H: INTEGER ): Images.Image;
+	PROCEDURE GetDisplay( X, Y, W, H: SIGNED16 ): Images.Image;
 	VAR img: Images.Image;
 	BEGIN
 		NEW( img );  Images.Create( img, W, H, Images.DisplayFormat );
@@ -541,8 +541,8 @@ END LoadPictureDialoged;
 	END TempHandle;
 
 	PROCEDURE DoFrameToGIF*( f: Display.Frame;  name: ARRAY OF CHAR );
-	VAR F: Files.File;  R: Files.Rider;  X, Y, W, H: INTEGER;  img: Images.Image;  picture: Pictures.Picture;  msg: Display.DisplayMsg;
-		orighandle: Objects.Handler;  atmsg: Objects.AttrMsg;  w: LONGINT;  b: BOOLEAN;  done: BOOLEAN;
+	VAR F: Files.File;  R: Files.Rider;  X, Y, W, H: SIGNED16;  img: Images.Image;  picture: Pictures.Picture;  msg: Display.DisplayMsg;
+		orighandle: Objects.Handler;  atmsg: Objects.AttrMsg;  w: SIGNED32;  b: BOOLEAN;  done: BOOLEAN;
 	BEGIN
 		orighandle := f.handle;  f.handle := TempHandle;  msg.F := f;  msg.device := Display.screen;  msg.id := Display.full;
 		msg.res := -1;  Display.Broadcast( msg );  f.handle := orighandle;  X := f.X + tempX;  Y := f.Y + tempY;  W := f.W;
@@ -575,7 +575,7 @@ END LoadPictureDialoged;
 	END DoFrameToGIF;
 
 	PROCEDURE MakefileName*( prefix, suffix: ARRAY OF CHAR;  VAR name: ARRAY OF CHAR );
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN
 		COPY( prefix, name );  vyHostStrings.Append( name, "." );  vyHostStrings.Append( name, suffix );
 		IF Files.Old( name ) # NIL THEN
@@ -591,13 +591,13 @@ END LoadPictureDialoged;
 		END
 	END MakefileName;
 
-	PROCEDURE Adjust( VAR x, y, w, h: INTEGER );
+	PROCEDURE Adjust( VAR x, y, w, h: SIGNED16 );
 	BEGIN
 		IF w < 0 THEN x := x + w;  w := -w END;
 		IF h < 0 THEN y := y + h;  h := -h END
 	END Adjust;
 
-	PROCEDURE OpenBigBuffer( VAR buf: tBuffer;  x, y, w, h: INTEGER );
+	PROCEDURE OpenBigBuffer( VAR buf: tBuffer;  x, y, w, h: SIGNED16 );
 	BEGIN
 		buf.x := x;  buf.y := y;  Adjust( x, y, w, h );
 		(* opens a buffer x-50,y-50,w+100,h+100 *)
@@ -621,12 +621,12 @@ END LoadPictureDialoged;
 		Display.TransferBlock( buf.img.mem^, 0, buf.img.bpr, buf.X, buf.Y, buf.W, buf.H, Display.set )
 	END WriteBufferImg;
 
-	PROCEDURE GetBufRect( buf: tBuffer;  x, y, w, h: INTEGER;  VAR X, Y, W, H: INTEGER );
+	PROCEDURE GetBufRect( buf: tBuffer;  x, y, w, h: SIGNED16;  VAR X, Y, W, H: SIGNED16 );
 	BEGIN
 		Adjust( x, y, w, h );  X := x - buf.X;  Y := y - buf.Y;  W := w;  H := h
 	END GetBufRect;
 
-	PROCEDURE CheckBuffer( VAR buf: tBuffer;  x, y, w, h: INTEGER );
+	PROCEDURE CheckBuffer( VAR buf: tBuffer;  x, y, w, h: SIGNED16 );
 	BEGIN
 		IF ~vyRectangles.RectInRect( x, y, w, h, buf.X, buf.Y, buf.W, buf.H ) THEN
 			CloseBuffer( buf );  OpenBigBuffer( buf, x, y, w, h )
@@ -634,8 +634,8 @@ END LoadPictureDialoged;
 		buf.x := x;  buf.y := y;  Images.Copy( buf.buf, buf.img, 0, 0, buf.W, buf.H, 0, 0, Images.SrcCopy )
 	END CheckBuffer;
 
-	PROCEDURE ZoomRect*( r, g, b: INTEGER;  x, y, w, h: INTEGER;  VAR dx, dy: INTEGER );
-	VAR pix: Images.Pixel;  X, Y, W, H, cw, ch: INTEGER;  keys, keys0: SET;  x0, y0, x1, y1, xOld, yOld: INTEGER;  buf: tBuffer;  up: BOOLEAN;  alpha: INTEGER;
+	PROCEDURE ZoomRect*( r, g, b: SIGNED16;  x, y, w, h: SIGNED16;  VAR dx, dy: SIGNED16 );
+	VAR pix: Images.Pixel;  X, Y, W, H, cw, ch: SIGNED16;  keys, keys0: SET;  x0, y0, x1, y1, xOld, yOld: SIGNED16;  buf: tBuffer;  up: BOOLEAN;  alpha: SIGNED16;
 		cur: antsPortability.display;
 	BEGIN
 		cur := antsPortability.GetCurrentDisplay();  up := TRUE;  OpenBigBuffer( buf, x, y, w, h );
@@ -675,7 +675,7 @@ END LoadPictureDialoged;
 	END HistoryHook;
 
 	PROCEDURE LoadAlpha*( VAR img: Images.Image;  name: ARRAY OF CHAR;  VAR done: BOOLEAN );
-	VAR alpha: Pictures.Picture;  y, x: INTEGER;  nimg: Images.Image;  pix: Images.Pixel;  r, g, b, a, a1: INTEGER;
+	VAR alpha: Pictures.Picture;  y, x: SIGNED16;  nimg: Images.Image;  pix: Images.Pixel;  r, g, b, a, a1: SIGNED16;
 	BEGIN
 		LoadGIF( alpha, name, done );
 		IF ~done THEN aM.SS( "couldn not find Alpha-Channel:", name );  RETURN END;
@@ -695,7 +695,7 @@ END LoadPictureDialoged;
 	END LoadAlpha;
 
 	PROCEDURE Launch*;
-	VAR pict: Images.Image;  done: BOOLEAN;  x, y: INTEGER;  w, h: LONGINT;
+	VAR pict: Images.Image;  done: BOOLEAN;  x, y: SIGNED16;  w, h: SIGNED32;
 	BEGIN
 		RETURN;
 		aM.eS( "" );  aM.eS( " -----------------------------------------------" );  aM.eS( "  Launching AntsInFields" );  aM.eS( "  Simulation and Inference on Gibbs Fields" );  aM.eS( "  Version a1.03" );  aM.eS( "  (c) 1997-2002, Felix Friedrich, see antsCopyright.Text" );  aM.eS( "  www.AntsInFields.de  ---  ants@AntsInFields.de" );  aM.eS( " -----------------------------------------------" );  aM.eS( "" );
@@ -741,8 +741,8 @@ END LoadPictureDialoged;
 		END;
 	END FrameToGIF2;
 
-	PROCEDURE InteractiveGetCoordinates*( VAR xr, yr: LONGREAL;  VAR wr, hr: LONGREAL );
-	VAR keys: SET;  x, y, dx, dy: INTEGER;  msg: GetCoordMsg;
+	PROCEDURE InteractiveGetCoordinates*( VAR xr, yr: FLOAT64;  VAR wr, hr: FLOAT64 );
+	VAR keys: SET;  x, y, dx, dy: SIGNED16;  msg: GetCoordMsg;
 	BEGIN
 		Input.Mouse( keys, x, y );
 
@@ -754,7 +754,7 @@ END LoadPictureDialoged;
 	END InteractiveGetCoordinates;
 
 	PROCEDURE InteractiveMsg*( VAR msg: Objects.ObjMsg );
-	VAR keys: SET;  x, y, dx, dy: INTEGER;
+	VAR keys: SET;  x, y, dx, dy: SIGNED16;
 	BEGIN
 		Input.Mouse( keys, x, y );  dx := x;  dy := y;
 		vyTracking.HelpAt( x, y, "move mouse to destination and click" );   (* only if not in help *)
@@ -765,7 +765,7 @@ END LoadPictureDialoged;
 	END InteractiveMsg;
 
 	PROCEDURE Test*;
-	VAR xr, yr, wr, hr: LONGREAL;
+	VAR xr, yr, wr, hr: FLOAT64;
 	BEGIN
 		InteractiveGetCoordinates( xr, yr, wr, hr );  aM.SRSR( "Returned: ", xr, " ", yr );  aM.SI( "Position is : ", ENTIER( ENTIER( yr ) * hr + ENTIER( xr ) ) )
 	END Test;
@@ -782,8 +782,8 @@ END LoadPictureDialoged;
 		END
 	END ShowFrame;
 
-	PROCEDURE CountMultipleObj*( name: ARRAY OF CHAR ): LONGINT;
-	VAR link: vyLinks.Link;  count: LONGINT;
+	PROCEDURE CountMultipleObj*( name: ARRAY OF CHAR ): SIGNED32;
+	VAR link: vyLinks.Link;  count: SIGNED32;
 	BEGIN
 		link := vyName.FindMultObj( name );  count := 0;
 		WHILE (link # NIL ) DO INC( count );  link := link.link END;
@@ -822,7 +822,7 @@ END LoadPictureDialoged;
 	END EndDisplayHelp;
 
 	PROCEDURE CheckSuffix( VAR name: ARRAY OF CHAR;  suffix: ARRAY OF CHAR );   (* checks if suffix in name, if no suffix, stdsuffix will be appended *)
-	VAR i, start: LONGINT;
+	VAR i, start: SIGNED32;
 	BEGIN
 		i := 0;  start := 0;
 		WHILE (name[i] # 0X) DO
@@ -909,7 +909,7 @@ END LoadPictureDialoged;
 	END Test2;
 
 	PROCEDURE SetCoords*;
-	VAR x, y, w, h: LONGREAL;  frame: Display.Frame;  context: Objects.Object;  o: Objects.Object;
+	VAR x, y, w, h: FLOAT64;  frame: Display.Frame;  context: Objects.Object;  o: Objects.Object;
 	BEGIN
 		context := Gadgets.executorObj;  Links.GetLink( context, "x", o );  Attributes.GetLongReal( o, "Value", (x) );
 		Links.GetLink( context, "y", o );  Attributes.GetLongReal( o, "Value", (y) );  Links.GetLink( context, "w", o );
@@ -926,7 +926,7 @@ END LoadPictureDialoged;
 	END SetCoords;
 
 	PROCEDURE GetCoords*;
-	VAR x, y, w, h: LONGREAL;  frame: Display.Frame;
+	VAR x, y, w, h: FLOAT64;  frame: Display.Frame;
 	VAR o: Objects.Object;  context: Objects.Object;
 	BEGIN
 		aM.vS( "antsToolbox.GetCoords" );  context := Gadgets.executorObj;  frame := SelectFrame();
@@ -945,7 +945,7 @@ END LoadPictureDialoged;
 	END GetCoords;
 
 	PROCEDURE InteractiveGetArray*( ): vyBase.Object;
-	VAR msg: GetCoordMsg;  o: vyBase.Object;  keys: SET;  xm, ym: INTEGER;
+	VAR msg: GetCoordMsg;  o: vyBase.Object;  keys: SET;  xm, ym: SIGNED16;
 	BEGIN
 		msg.layer := NIL;  msg.update := FALSE;  Input.Mouse( keys, xm, ym );  vyTracking.HelpAt( xm, ym, "Click on array to take" );
 		InteractiveMsg( msg );  Input.Mouse( keys, xm, ym );  msg.layer := NIL;  MsgToTypedXY( xm, ym, msg, "antsViews.tLayerDesc" );
@@ -954,7 +954,7 @@ END LoadPictureDialoged;
 	END InteractiveGetArray;
 
 	PROCEDURE InteractiveGetVector*( ): vyBase.Object;
-	VAR la: vyPort.tLayer;  msg: GetCoordMsg;  keys: SET;  xm, ym: INTEGER;  pict: vyPort.Picture;
+	VAR la: vyPort.tLayer;  msg: GetCoordMsg;  keys: SET;  xm, ym: SIGNED16;  pict: vyPort.Picture;
 	BEGIN
 		msg.layer := NIL;  msg.update := FALSE;  InteractiveMsg( msg );  Input.Mouse( keys, xm, ym );
 		la := TypedLayerXY( xm, ym, "vyScatter1.tLayerDesc", pict );
@@ -972,7 +972,7 @@ END LoadPictureDialoged;
 
 	PROCEDURE ReplaceTextPart*;
 	VAR name, filename: ARRAY 128 OF CHAR;
-		C, T: Texts.Text;  B: Texts.Buffer;  F: Files.File;  len: LONGINT;  pos0: LONGINT;
+		C, T: Texts.Text;  B: Texts.Buffer;  F: Files.File;  len: SIGNED32;  pos0: SIGNED32;
 		begpat, endpat: ARRAY 32 OF CHAR;
 		W: Texts.Writer;
 
@@ -1000,11 +1000,11 @@ END LoadPictureDialoged;
 	END ReplaceTextPart;
 (* Interaktive Routine zum Anzeigen der Zeilen und Spalten eines 2d-Bildes *)
 	PROCEDURE InteractiveDo*( objects: Objects.Object;  objproc: ObjProc );
-	VAR msg: GetCoordMsg;  x, y: LONGINT;  o: Objects.Object;  xm, ym: INTEGER;  keys: SET;  layer: Objects.Object;
+	VAR msg: GetCoordMsg;  x, y: SIGNED32;  o: Objects.Object;  xm, ym: SIGNED16;  keys: SET;  layer: Objects.Object;
 		coords: ARRAY 64 OF CHAR;
 	BEGIN
-		x := MAX( LONGINT );  y := MAX( LONGINT );  msg.layer := NIL;  msg.update := TRUE;  InteractiveMsg( msg );  layer := msg.layer;
-		Input.Mouse( keys, xm, ym );  msg.x := MAX( INTEGER );  msg.y := MAX( INTEGER );
+		x := MAX( SIGNED32 );  y := MAX( SIGNED32 );  msg.layer := NIL;  msg.update := TRUE;  InteractiveMsg( msg );  layer := msg.layer;
+		Input.Mouse( keys, xm, ym );  msg.x := MAX( SIGNED16 );  msg.y := MAX( SIGNED16 );
 		WHILE (keys # {}) DO
 			IF (msg.x # xm) OR (msg.y # ym) THEN
 				msg.x := xm;  msg.y := ym;  msg.update := FALSE;  msg.layer := NIL;  MsgToTypedXY( xm, ym, msg, "antsViews.tLayerDesc" );
@@ -1023,7 +1023,7 @@ END LoadPictureDialoged;
 			Input.Mouse( keys, xm, ym )
 		END;
 		vyTracking.HelpEnd();
-		IF y # MAX( LONGINT ) THEN aM.SISI( "Row = ", y, "Col = ", x ) ELSE aM.S( "Hmm? Nothing selected." ) END
+		IF y # MAX( SIGNED32 ) THEN aM.SISI( "Row = ", y, "Col = ", x ) ELSE aM.S( "Hmm? Nothing selected." ) END
 	END InteractiveDo;
 
 	PROCEDURE ThisToHistory( this: Documents.Document;  VAR history: hist );
@@ -1051,7 +1051,7 @@ END LoadPictureDialoged;
 	END FindDoc;
 
 	PROCEDURE ReplaceDoc*;
-	VAR text: Texts.Text;  pos: LONGINT;  obj: Objects.Object;
+	VAR text: Texts.Text;  pos: SIGNED32;  obj: Objects.Object;
 		name: ARRAY 256 OF CHAR;
 		d: Documents.Document;  S: Attributes.Scanner;
 	BEGIN
@@ -1109,7 +1109,7 @@ ants / src / antsToolbox.Mod
 PROCEDURE OpenDocOnce (win: BOOLEAN);
 	VAR name: ARRAY 128 OF CHAR;   h: hist;   	S: Attributes.Scanner;   f: Display.Frame;   msg: Display.DisplayMsg;
 	orighandle: Objects.Handler;   t: Texts.Text;   m, o, c: Objects.Object;   caption, cmd: ARRAY 256 OF CHAR;
-	sc: Texts.Scanner;   lib: Objects.Library;   ref : INTEGER;    B: Objects.BindMsg;
+	sc: Texts.Scanner;   lib: Objects.Library;   ref : SIGNED16;    B: Objects.BindMsg;
 
 BEGIN
 	name[0] := 0X;

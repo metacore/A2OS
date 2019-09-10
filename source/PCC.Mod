@@ -40,7 +40,7 @@ TYPE
 
     Reg    Register       regNo  -       -
                           regNo (procAddr)               self   type = procedure
-                          lowVal                         HiVal  type = HUGEINT
+                          lowVal                         HiVal  type = SIGNED64
 
     RegRel Reg Relative   regNo  -       offset
 
@@ -68,18 +68,18 @@ Procedure/Delegates handling:
 
 *)
 	Item* = RECORD
-		mode, level: SHORTINT;
+		mode, level: SIGNED8;
 		deref: BOOLEAN;	(* has been dereferenced. For getting the actual type descriptor *)
-		adr, offs, value: LONGINT;
-		breg, boffs: LONGINT;	(* pointer to the array bound. Valid only if mode = {RegRel} *)
+		adr, offs, value: SIGNED32;
+		breg, boffs: SIGNED32;	(* pointer to the array bound. Valid only if mode = {RegRel} *)
 												(* pointer to self. Valid only if method and self is pointer *)
-		tlist, flist: LONGINT;	(* jump list, for CC only *)
+		tlist, flist: SIGNED32;	(* jump list, for CC only *)
 		proc: PCBT.Procedure;
 		var: PCBT.GlobalVariable;
 		type-: PCT.Struct;	(** for testing only! *)
 	END;
 
-	Label* = LONGINT;
+	Label* = SIGNED32;
 
 CONST
 	(* Item Modes ProgTools.Enum 1 Abs Var Ref Const Reg RegRel CC Proc~ *)
@@ -134,13 +134,13 @@ VAR
 	topscope*: PCT.ModScope;
 
 	CCTab, InvCCTab, SetCCTab: ARRAY 15 OF PCLIR.Opcode;
-	InvCC: ARRAY 15 OF SHORTINT;
+	InvCC: ARRAY 15 OF SIGNED8;
 
 	MethodType: PCT.Delegate;
 
-	AParArray, AParBasic, AParProc, AParRec: LONGINT;	(* Parameter Kind Count *)
-	AAssBasic, AAssRec, AAssArray, AAssProc: LONGINT;	(* Assignment Kind Count *)
-	ARetBasic, ARetRec, ARetStaticArray, ARetOpenArray, ARetElse: LONGINT;
+	AParArray, AParBasic, AParProc, AParRec: SIGNED32;	(* Parameter Kind Count *)
+	AAssBasic, AAssRec, AAssArray, AAssProc: SIGNED32;	(* Assignment Kind Count *)
+	ARetBasic, ARetRec, ARetStaticArray, ARetOpenArray, ARetElse: SIGNED32;
 
 (* ---------- Helper Procedures -------------- *)
 
@@ -176,7 +176,7 @@ END IsString;
 
 (* GetActivationFrame - return a pointer to the procedure activation frame *)
 
-PROCEDURE GetActivationFrame(code: Code;  level: SHORTINT;  VAR reg: LONGINT);
+PROCEDURE GetActivationFrame(code: Code;  level: SIGNED8;  VAR reg: SIGNED32);
 BEGIN
 	ASSERT(level >= 0);
 	reg := PCLIR.FP;
@@ -187,7 +187,7 @@ BEGIN
 END GetActivationFrame;
 
 PROCEDURE Load*(code: Code;  VAR x: Item);
-VAR	tmpReg, frame: LONGINT;  y: Item;  tmpType: PCT.Struct;  size: PCBT.Size; name: ARRAY 32 OF CHAR;
+VAR	tmpReg, frame: SIGNED32;  y: Item;  tmpType: PCT.Struct;  size: PCBT.Size; name: ARRAY 32 OF CHAR;
 BEGIN
 	ASSERT( ~(x.type IS PCT.Record), 210);
 	ASSERT(~(x.type IS PCT.Array), 212);
@@ -245,7 +245,7 @@ BEGIN
 END Load;
 
 PROCEDURE LoadAdr(code: Code; VAR x: Item);
-VAR openarr: BOOLEAN;  temp, frame: LONGINT;
+VAR openarr: BOOLEAN;  temp, frame: SIGNED32;
 BEGIN
 	openarr := (x.type IS PCT.Array) & (x.type(PCT.Array).mode # PCT.static) ;
 	IF x.mode = Proc THEN
@@ -277,7 +277,7 @@ BEGIN
 		PCLIR.EmitLoadAddr( code, x.adr, x.offs, x.var );
 	(** << fof  *)
 	ELSE
-		HALT(MAX(INTEGER));
+		HALT(MAX(SIGNED16));
 		PCM.LogWLn; PCM.LogWStr("LoadAdr, unimplemented mode: "); PCM.LogWNum(x.mode);
 		PCDebug.ToDo(PCDebug.NotImplemented);
 	END;
@@ -346,7 +346,7 @@ END LoadAdr;
 	END DerefTensor;
 (** << fof  *)
 
-PROCEDURE GetDelegateSelfReg(code: Code;  x: Item;  modeBeforeLoad: LONGINT): PCLIR.Register;
+PROCEDURE GetDelegateSelfReg(code: Code;  x: Item;  modeBeforeLoad: SIGNED32): PCLIR.Register;
 VAR  reg: PCLIR.Register;
 BEGIN
 	IF modeBeforeLoad = Const THEN
@@ -373,7 +373,7 @@ END NilCheck;
 
 (**-----------Item Creation----------------*)
 
-PROCEDURE MakeItem*(VAR x: Item; o: PCT.Symbol;  deltaLevel:  SHORTINT);
+PROCEDURE MakeItem*(VAR x: Item; o: PCT.Symbol;  deltaLevel:  SIGNED8);
 BEGIN
 	ASSERT(deltaLevel >= 0, 200);
 	x.level := deltaLevel;
@@ -413,7 +413,7 @@ BEGIN
 END MakeStackItem;
 
 PROCEDURE MakeConst*(VAR x: Item;  o: PCT.Const;  type: PCT.Struct);
-VAR	t: PCT.Struct;  adr: PCBT.GlobalVariable; r: REAL;  lr: LONGREAL; h: HUGEINT;
+VAR	t: PCT.Struct;  adr: PCBT.GlobalVariable; r: FLOAT32;  lr: FLOAT64; h: SIGNED64;
 BEGIN
 	x.mode := Const; t := o.type;
 	IF (t = PCT.Int8) OR (t = PCT.Int16) OR (t = PCT.Int32)  THEN
@@ -425,7 +425,7 @@ BEGIN
 	ELSIF PCT.IsCharType(t) OR (t = PCT.Byte) THEN
 		x.value := o.int
 	ELSIF t = PCT.Set THEN
-		x.value := LONGINT(o.set)
+		x.value := SIGNED32(o.set)
 	ELSIF t = PCT.NilType THEN
 		x.value := Nil;
 	ELSIF PCT.IsFloatType(t) OR (t = PCT.String) OR (t = PCT.Int64) THEN	(*stored in the const section*)
@@ -467,13 +467,13 @@ BEGIN
 	x.type := type
 END MakeConst;
 
-PROCEDURE MakeIntConst*(VAR x: Item; val: LONGINT; type: PCT.Struct);
+PROCEDURE MakeIntConst*(VAR x: Item; val: SIGNED32; type: PCT.Struct);
 BEGIN
 	x.mode := Const; x.value := val; x.type := type
 END MakeIntConst;
 
 (** fof >> *)
-PROCEDURE MakeSizeConst*(VAR x: Item; val: LONGINT);
+PROCEDURE MakeSizeConst*(VAR x: Item; val: SIGNED32);
 BEGIN
 	MakeIntConst(x,val,PCT.Size);
 END MakeSizeConst;
@@ -503,12 +503,12 @@ END MakeTD;
 
 (** -----------Type Handling----------------*)
 
-PROCEDURE GetStaticSize*(t: PCT.Struct): LONGINT;
+PROCEDURE GetStaticSize*(t: PCT.Struct): SIGNED32;
 BEGIN  RETURN  t.size(PCBT.Size).size
 END GetStaticSize;
 
 PROCEDURE GetArrayBaseSize(code: Code; VAR size: Item; arr: Item);
-VAR t: PCT.Struct; len: Item; mode: SHORTINT;  name: ARRAY 32 OF CHAR;
+VAR t: PCT.Struct; len: Item; mode: SIGNED8;  name: ARRAY 32 OF CHAR;
 BEGIN
 	ASSERT(arr.type IS PCT.Array);
 	(** fof >> *)
@@ -530,7 +530,7 @@ BEGIN
 		ELSIF mode = PCT.static THEN
 			MakeIntConst(size, GetStaticSize(t), PCT.Int32)
 		ELSE
-			PCDebug.GetTypeName(t, name); HALT(MAX(INTEGER));
+			PCDebug.GetTypeName(t, name); HALT(MAX(SIGNED16));
 			PCDebug.ToDo(PCDebug.NotImplemented);
 			MakeIntConst(size, 4, PCT.Int32)
 		END
@@ -545,13 +545,13 @@ BEGIN
 			MakeSizeConst( size, GetStaticSize( t ))
 			(*fof*)
 		ELSE
-			PCDebug.GetTypeName( t, name );  HALT( MAX( INTEGER ) );
+			PCDebug.GetTypeName( t, name );  HALT( MAX( SIGNED16 ) );
 			PCDebug.ToDo( PCDebug.NotImplemented );
 			MakeSizeConst( size, PCT.AddressSize )
 		END
 		(** << fof  *)
 	ELSE
-		PCDebug.GetTypeName(t, name); HALT(MAX(INTEGER));
+		PCDebug.GetTypeName(t, name); HALT(MAX(SIGNED16));
 		PCDebug.ToDo(PCDebug.NotImplemented);
 		MakeIntConst(size, 4, PCT.Int32)
 	END
@@ -559,8 +559,8 @@ END GetArrayBaseSize;
 
 (* Get dim-th dimension. t # NIL is type of this dimension if already known *)
 
-PROCEDURE ArrayDim(code: Code;  VAR res,  arr: Item;  dim: LONGINT);
-VAR c: LONGINT;  t: PCT.Array;
+PROCEDURE ArrayDim(code: Code;  VAR res,  arr: Item;  dim: SIGNED32);
+VAR c: SIGNED32;  t: PCT.Array;
 BEGIN
 	IF arr.type = PCT.String THEN
 		ASSERT(arr.value # 0	);
@@ -578,8 +578,8 @@ BEGIN
 	END
 END ArrayDim;
 (** fof >> *)
-	PROCEDURE EnhArrayLen( code: Code;  VAR res, arr: Item;  dim: LONGINT );
-	VAR c: LONGINT;  t: PCT.EnhArray;
+	PROCEDURE EnhArrayLen( code: Code;  VAR res, arr: Item;  dim: SIGNED32 );
+	VAR c: SIGNED32;  t: PCT.EnhArray;
 	BEGIN
 		t := arr.type( PCT.EnhArray );  c := dim;
 		WHILE c > 0 DO t := t.base( PCT.EnhArray );  DEC( c ) END;
@@ -592,8 +592,8 @@ END ArrayDim;
 		END
 	END EnhArrayLen;
 
-	PROCEDURE EnhArrayInc( code: Code;  VAR res, arr: Item;  dim: LONGINT );
-	VAR c: LONGINT;  t: PCT.EnhArray;
+	PROCEDURE EnhArrayInc( code: Code;  VAR res, arr: Item;  dim: SIGNED32 );
+	VAR c: SIGNED32;  t: PCT.EnhArray;
 	BEGIN
 		t := arr.type( PCT.EnhArray );  c := dim;
 		WHILE c > 0 DO t := t.base( PCT.EnhArray );  DEC( c ) END;
@@ -610,7 +610,7 @@ END ArrayDim;
 
 
 PROCEDURE GetTD(code: Code;  r: Item;  VAR td: Item;  superclass: BOOLEAN);
-VAR  rec: PCT.Record; level: LONGINT;
+VAR  rec: PCT.Record; level: SIGNED32;
 BEGIN
 	ASSERT((r.type IS PCT.Record) OR (r.type IS PCT.Pointer) OR (r.type = PCT.Ptr), 110);
 	IF (r.type IS PCT.Pointer) THEN
@@ -647,7 +647,7 @@ BEGIN
 END GetTD;
 
 PROCEDURE TypeCheck*(code: Code;  VAR r: Item;  str: PCT.Struct;  trap, equal: BOOLEAN);
-VAR  td, ref: Item;  trapNo: LONGINT;  rec: PCT.Record;
+VAR  td, ref: Item;  trapNo: SIGNED32;  rec: PCT.Record;
 BEGIN
 	ASSERT((r.type IS PCT.Record) & (str IS PCT.Record) OR PCT.IsPointer(r.type) & (str IS PCT.Pointer), 200);
 	IF str IS PCT.Record THEN
@@ -740,15 +740,15 @@ END GenConv;
 
 (** Enter - create a procedure activation frame, allocate size bytes local variables *)
 
-PROCEDURE Enter*(code: Code; callconv: LONGINT; adr: PCM.Attribute); (* ejz *)
+PROCEDURE Enter*(code: Code; callconv: SIGNED32; adr: PCM.Attribute); (* ejz *)
 BEGIN
 	PCLIR.EmitEnter(code, callconv, adr) (* ejz *)
 END Enter;
 
 (** Leave - remove a procedure activation frame, remove size bytes of parameters *)
 
-PROCEDURE Leave*(code: Code; callconv: LONGINT; proc: PCT.Proc; adr: PCM.Attribute (* ug *)); (* ejz *)
-VAR size: LONGINT; padr: PCBT.Procedure (* ug *);
+PROCEDURE Leave*(code: Code; callconv: SIGNED32; proc: PCT.Proc; adr: PCM.Attribute (* ug *)); (* ejz *)
+VAR size: SIGNED32; padr: PCBT.Procedure (* ug *);
 BEGIN
 	size := 0;
 	IF proc # NIL THEN
@@ -778,7 +778,7 @@ END Leave;
 
 (* StackAllocate - allocate size bytes on the stack, return new top of stack *)
 
-PROCEDURE StackAllocate(code: Code; size: LONGINT; VAR tos: Item);
+PROCEDURE StackAllocate(code: Code; size: SIGNED32; VAR tos: Item);
 VAR reg: PCLIR.Register;
 BEGIN
 	INC(size, (-size) MOD PCLIR.CG.ParamAlign);	(*align up *)
@@ -789,7 +789,7 @@ BEGIN
 END StackAllocate;
 
 PROCEDURE FreeStack*(code: Code;  type: PCT.Struct);
-VAR  size: LONGINT;  reg: PCLIR.Register;
+VAR  size: SIGNED32;  reg: PCLIR.Register;
 BEGIN
 	size := GetStaticSize(type);
 	INC(size, (-size) MOD PCLIR.CG.ParamAlign);	(*align*)
@@ -798,10 +798,10 @@ BEGIN
 	PCLIR.Emit01(code, PCLIR.loadsp, reg);
 END FreeStack;
 
-PROCEDURE RemoveArys*(code: Code; aryNbr: LONGINT);
+PROCEDURE RemoveArys*(code: Code; aryNbr: SIGNED32);
 VAR
 	reg: PCLIR.Register;
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	ASSERT(aryNbr > 0);
 	PCLIR.EmitLoadRelative(code, PCLIR.Address, FALSE, reg, 0, PCLIR.SP);
@@ -819,7 +819,7 @@ PROCEDURE ReturnProc(code: Code; x: Item; proc: PCT.Proc);
 VAR
 	size, dim, len: Item;
 	aligned: BOOLEAN;
-	parSize, offs, staticSize: LONGINT;
+	parSize, offs, staticSize: SIGNED32;
 	reg, reg2, reg3, src, base, const, mask: PCLIR.Register;
 	type, itemType: PCT.Struct;
 BEGIN
@@ -865,7 +865,7 @@ BEGIN
 		(*allocate*)
 	PCLIR.Emit12(code, PCLIR.sub, reg, reg2, size.adr);
 	IF ~aligned THEN
-		PCLIR.EmitLoadConst(code, mask, PCLIR.Address, FALSE, LONGINT(0FFFFFFFCH));
+		PCLIR.EmitLoadConst(code, mask, PCLIR.Address, FALSE, SIGNED32(0FFFFFFFCH));
 		PCLIR.Emit12(code, PCLIR.and, reg, reg, mask);
 	END;
 
@@ -931,7 +931,7 @@ END ReturnProc;
 PROCEDURE ReturnArray(code: Code; x: Item; proc: PCT.Proc);
 VAR
 	size, dim: Item;
-	parSize, offs: LONGINT;
+	parSize, offs: SIGNED32;
 	mask, reg, reg2, reg3, base, const: PCLIR.Register;
 	begin, end, skipSPSet: Label;
 	aligned, skip, smallerStack: BOOLEAN;
@@ -966,7 +966,7 @@ BEGIN
 	(* PCLIR.Emit12(code, PCLIR.sub, reg, PCLIR.SP, size.adr); *)
 	PCLIR.Emit12(code, PCLIR.sub, reg, reg2, size.adr);
 	IF ~aligned THEN
-		PCLIR.EmitLoadConst(code, mask, PCLIR.Address, FALSE, LONGINT(0FFFFFFFCH));
+		PCLIR.EmitLoadConst(code, mask, PCLIR.Address, FALSE, SIGNED32(0FFFFFFFCH));
 		PCLIR.Emit12(code, PCLIR.and, reg, reg, mask);
 	END;
 
@@ -1050,7 +1050,7 @@ END ReturnArray;
 (*	procedure returns open enh array *)
 
 	PROCEDURE CopyEnhArray( code: Code;  src, dest: Item;  copy: PCT.Proc );   (* precondition: designators of src and dest are available via src.adr, dest.adr *)
-	VAR i: Item;  btype: PCT.Struct;  elementsize: LONGINT;  size: PCLIR.Register;
+	VAR i: Item;  btype: PCT.Struct;  elementsize: SIGNED32;  size: PCLIR.Register;
 	BEGIN
 		IF dest.mode # Reg THEN LoadAdr( code, dest ) END;
 		PCLIR.Emit01( code, PCLIR.push, dest.adr );
@@ -1064,7 +1064,7 @@ END ReturnArray;
 	END CopyEnhArray;
 
 	PROCEDURE MakeReturnItem*( code: Code;  VAR dst: Item;  proc: PCT.Proc );
-	VAR parSize: LONGINT;
+	VAR parSize: SIGNED32;
 	BEGIN
 		parSize := proc.adr( PCBT.Procedure ).parsize;  dst.mode := Var;
 		dst.offs := parSize;  dst.level := 0;
@@ -1074,8 +1074,8 @@ END ReturnArray;
 	END MakeReturnItem;
 (** << fof  *)
 
-PROCEDURE GetDims*(t: PCT.Struct): LONGINT;
-VAR dims: LONGINT;
+PROCEDURE GetDims*(t: PCT.Struct): SIGNED32;
+VAR dims: SIGNED32;
 BEGIN
 	IF (t # NIL ) & (t IS PCT.Array) THEN (* fof *)
 	WHILE (t # NIL) & (t IS PCT.Array) & (t(PCT.Array).mode = PCT.open) DO
@@ -1095,7 +1095,7 @@ END GetDims;
 (** LocalArray - create a local copy of an array passed as a reference *)
 
 PROCEDURE LocalArray*(code: Code;  par: PCT.Parameter);
-VAR  x, size, dim: Item;  reg, mask: PCLIR.Register;  aligned: BOOLEAN;  offs: LONGINT;
+VAR  x, size, dim: Item;  reg, mask: PCLIR.Register;  aligned: BOOLEAN;  offs: SIGNED32;
 	reg2, const: PCLIR.Register; begin, end: Label; skip: BOOLEAN;
 BEGIN
 	ASSERT(~par.ref);
@@ -1115,7 +1115,7 @@ BEGIN
 		(*allocate*)
 	PCLIR.Emit12(code, PCLIR.sub, reg, PCLIR.SP, size.adr);
 	IF ~aligned THEN
-		PCLIR.EmitLoadConst(code, mask, PCLIR.Address, FALSE, LONGINT(0FFFFFFFCH));
+		PCLIR.EmitLoadConst(code, mask, PCLIR.Address, FALSE, SIGNED32(0FFFFFFFCH));
 		PCLIR.Emit12(code, PCLIR.and, reg, reg, mask);
 	END;
 
@@ -1147,12 +1147,12 @@ END LocalArray;
 
 (** fof >> *)
 	PROCEDURE LocalEnhArray*( code: Code;  par: PCT.Parameter;    copy: PCT.Proc );
-	VAR x, y, size, dim, k: Item;  reg, mask: PCLIR.Register;  aligned: BOOLEAN;  offs: LONGINT;
-		reg2, const: PCLIR.Register;  begin, end: Label;  skip: BOOLEAN;  spoffset: LONGINT;  d, c: LONGINT;
+	VAR x, y, size, dim, k: Item;  reg, mask: PCLIR.Register;  aligned: BOOLEAN;  offs: SIGNED32;
+		reg2, const: PCLIR.Register;  begin, end: Label;  skip: BOOLEAN;  spoffset: SIGNED32;  d, c: SIGNED32;
 		btype: PCT.Struct;
 
-		PROCEDURE CreateLocalArray( VAR spoffset: LONGINT );
-		VAR dim: Item;  doffs: LONGINT;  reg, inc: PCLIR.Register;
+		PROCEDURE CreateLocalArray( VAR spoffset: SIGNED32 );
+		VAR dim: Item;  doffs: SIGNED32;  reg, inc: PCLIR.Register;
 		BEGIN
 			d := x.type( PCT.EnhArray ).dim;  c := d;
 
@@ -1204,7 +1204,7 @@ END LocalArray;
 		(*allocate*)
 		PCLIR.Emit12( code, PCLIR.sub, reg, PCLIR.SP, size.adr );
 		IF ~aligned THEN
-			PCLIR.EmitLoadConst( code, mask, PCLIR.Address, FALSE , LONGINT(0FFFFFFFCH) );
+			PCLIR.EmitLoadConst( code, mask, PCLIR.Address, FALSE , SIGNED32(0FFFFFFFCH) );
 			PCLIR.Emit12( code, PCLIR.and, reg, reg, mask );
 		END;
 		PCLIR.Emit01( code, PCLIR.loadsp, reg );
@@ -1255,7 +1255,7 @@ END LocalArray;
 	END LocalEnhArray;
 
 	PROCEDURE PushStaticArray*( code: Code;  t: PCT.EnhArray);
-	VAR size: LONGINT;  reg, reg2: PCLIR.Register;
+	VAR size: SIGNED32;  reg, reg2: PCLIR.Register;
 	BEGIN
 		ASSERT ( t.mode = PCT.static );
 
@@ -1270,7 +1270,7 @@ END LocalArray;
 (** AllocateLocalArray - create a local dynamic array *)
 
 PROCEDURE AllocateLocalArray*(code: Code;  p: PCT.LocalVar;  size: Item);
-VAR x, bsize: Item;  reg, mask: PCLIR.Register;  aligned: BOOLEAN;  offs: LONGINT;
+VAR x, bsize: Item;  reg, mask: PCLIR.Register;  aligned: BOOLEAN;  offs: SIGNED32;
 BEGIN
 	MakeItem(x, p, 0);  LoadAdr(code, x);  offs := x.offs;
 		(*compute size*)
@@ -1284,7 +1284,7 @@ BEGIN
 	Convert (code, size, PCT.Address, TRUE);
 	PCLIR.Emit12(code, PCLIR.sub, reg, PCLIR.SP, size.adr);
 	IF ~aligned THEN
-		PCLIR.EmitLoadConst(code, mask, PCLIR.Address, FALSE, LONGINT(0FFFFFFFCH));
+		PCLIR.EmitLoadConst(code, mask, PCLIR.Address, FALSE, SIGNED32(0FFFFFFFCH));
 		PCLIR.Emit12(code, PCLIR.and, reg, reg, mask)
 	END;
 	PCLIR.Emit01(code, PCLIR.loadsp, reg);
@@ -1294,7 +1294,7 @@ END AllocateLocalArray;
 (** PushRetDesc - Push the return descriptor for items with non-primive types *)
 
 PROCEDURE PushRetDesc*(code: Code;  i: Item);
-VAR size: LONGINT;  reg: PCLIR.Register;  type: PCT.Struct;
+VAR size: SIGNED32;  reg: PCLIR.Register;  type: PCT.Struct;
 BEGIN
 	type := i.type;
 	size := GetStaticSize(type);
@@ -1312,7 +1312,7 @@ END PushRetDesc;
 (** PushRetDesc1 - Allocate temporary and push the return descriptor for items with non-primitive types *)
 
 PROCEDURE PushRetDesc1*(code: Code;  fp: PCT.Symbol);
-VAR size: LONGINT;  reg, reg2, temp: PCLIR.Register;
+VAR size: SIGNED32;  reg, reg2, temp: PCLIR.Register;
 BEGIN
 	ASSERT((fp IS PCT.Parameter) & ~fp(PCT.Parameter).ref, 500);
 	ASSERT((fp.type IS PCT.Record) OR (fp.type IS PCT.Array)OR (fp.type IS PCT.EnhArray) (* fof *), 501);
@@ -1337,7 +1337,7 @@ END PushRetDesc1;
 (** PushRetDesc2 - Push the current procedure's return descriptor *)
 
 PROCEDURE PushRetDesc2*(code: Code; proc: PCT.Proc);
-	VAR parSize: LONGINT; size, dst: Item;
+	VAR parSize: SIGNED32; size, dst: Item;
 BEGIN
 	parSize := proc.adr(PCBT.Procedure).parsize;
 	IF proc.type IS PCT.Record THEN
@@ -1361,7 +1361,7 @@ END PushRetDesc2;
 PROCEDURE PushOpenAryRetDesc*(code: Code; t: PCT.Struct);
 VAR
 	reg, reg2: PCLIR.Register;
-	dims: LONGINT;
+	dims: SIGNED32;
 BEGIN
 	dims := GetDims(t);
 	(*
@@ -1383,7 +1383,7 @@ END PushOpenAryRetDesc;
 
 PROCEDURE PushStatAryRetDesc*(code: Code; ary: PCT.Struct);
 VAR
-	size: LONGINT;
+	size: SIGNED32;
 	reg, reg2: PCLIR.Register;
 BEGIN
 	ASSERT(ary IS PCT.Array);
@@ -1395,9 +1395,9 @@ BEGIN
 	PCLIR.Emit01(code, PCLIR.push, PCLIR.SP);
 END PushStatAryRetDesc;
 
-PROCEDURE PushOpenAryParams*(code: Code; formal, actual: PCT.Struct; VAR ofs: LONGINT; parNbr: LONGINT);
+PROCEDURE PushOpenAryParams*(code: Code; formal, actual: PCT.Struct; VAR ofs: SIGNED32; parNbr: SIGNED32);
 VAR
-	dims: LONGINT;
+	dims: SIGNED32;
 	base, const, reg, len: PCLIR.Register;
 BEGIN
 	PCLIR.EmitLoadConst(code, const, PCLIR.Address, FALSE, ofs);
@@ -1428,7 +1428,7 @@ END PushOpenAryParams;
 
 (** fof >> *)
 	PROCEDURE PushResultTensor*( code: Code;  proc: PCT.Proc );
-	VAR parSize, size: LONGINT;  src: Item;
+	VAR parSize, size: SIGNED32;  src: Item;
 	BEGIN
 		parSize := proc.adr( PCBT.Procedure ).parsize;  src.mode := Var;
 		src.offs := parSize;  src.level := 0;
@@ -1439,7 +1439,7 @@ END PushOpenAryParams;
 	END PushResultTensor;
 
 	PROCEDURE WriteBackResultTensor*( code: Code;  proc: PCT.Proc );
-	VAR parSize, size: LONGINT;  src, dst: Item;
+	VAR parSize, size: SIGNED32;  src, dst: Item;
 	BEGIN
 		parSize := proc.adr( PCBT.Procedure ).parsize;  dst.mode := Var;
 		dst.offs := parSize;  dst.level := 0;
@@ -1456,8 +1456,8 @@ END PushOpenAryParams;
 		END;
 	END WriteBackResultTensor;
 
-	PROCEDURE WriteBackResult*( code: Code;  proc: PCT.Proc;  VAR spoffset: LONGINT );
-	VAR parSize, offset: LONGINT;  dst: Item;  val: PCLIR.Register;
+	PROCEDURE WriteBackResult*( code: Code;  proc: PCT.Proc;  VAR spoffset: SIGNED32 );
+	VAR parSize, offset: SIGNED32;  dst: Item;  val: PCLIR.Register;
 	BEGIN
 		parSize := proc.adr( PCBT.Procedure ).parsize;  dst.mode := Var;
 		dst.offs := parSize;  dst.level := 0;
@@ -1478,8 +1478,8 @@ END PushOpenAryParams;
 	END PrepStackTensor;
 
 	PROCEDURE PrepStackEnhArray*( code: Code;  formal, actual: PCT.Struct );
-	VAR size, dims: LONGINT;  top, topStatic, base, const: PCLIR.Register;
-		form, act,t: PCT.Struct;  i: LONGINT;
+	VAR size, dims: SIGNED32;  top, topStatic, base, const: PCLIR.Register;
+		form, act,t: PCT.Struct;  i: SIGNED32;
 	BEGIN
 		act := actual;  form := formal;  dims := 0;
 		WHILE (form # NIL ) & (form IS PCT.EnhArray) &
@@ -1505,7 +1505,7 @@ END PushOpenAryParams;
 			PCLIR.EmitLoadConst( code, const, PCLIR.Int32, FALSE , dims );
 			PCLIR.Emit01( code, PCLIR.push, const );   (* dimension *)
 			PCLIR.EmitLoadConst( code, const, PCLIR.Int32, FALSE ,
-												LONGINT( {StackFlag} ) );
+												SIGNED32( {StackFlag} ) );
 			PCLIR.Emit01( code, PCLIR.push, const );   (* flag *)
 			PCLIR.EmitLoadConst( code, const, PCLIR.Int32, FALSE , 0 );
 			PCLIR.Emit01( code, PCLIR.push, const );   (* nil address *)
@@ -1529,7 +1529,7 @@ END PushOpenAryParams;
 
 PROCEDURE PrepStack*(code: Code; formal, actual: PCT.Struct);
 VAR
-	size, dims: LONGINT;
+	size, dims: SIGNED32;
 	top, topStatic, base, const: PCLIR.Register;
 	form, act: PCT.Struct;
 BEGIN
@@ -1565,7 +1565,7 @@ BEGIN
 	END;
 END PrepStack;
 
-PROCEDURE FixRetDesc*(code: Code; type: PCT.Struct; openAryParams: LONGINT; VAR ofs: LONGINT);
+PROCEDURE FixRetDesc*(code: Code; type: PCT.Struct; openAryParams: SIGNED32; VAR ofs: SIGNED32);
 VAR base, reg: PCLIR.Register;
 BEGIN
 	IF (openAryParams > 0) & ((type IS PCT.Record) OR (type IS PCT.Array)) THEN
@@ -1591,7 +1591,7 @@ END FixRetDesc;
 
 (**-----------Memory Handling------------------*)
 
-PROCEDURE CopyBlock(code: Code;  VAR dst, src: Item;  size: LONGINT);
+PROCEDURE CopyBlock(code: Code;  VAR dst, src: Item;  size: SIGNED32);
 VAR reg: PCLIR.Register;
 BEGIN
 	LoadAdr(code, dst);
@@ -1770,13 +1770,13 @@ BEGIN
 *)
 END MoveString;
 
-PROCEDURE GetHWReg*(code: Code;  VAR x: Item;  reg: SHORTINT);
+PROCEDURE GetHWReg*(code: Code;  VAR x: Item;  reg: SIGNED8);
 BEGIN
 	LoadAdr(code,x);
 	PCLIR.EmitStoreRelative(code, 0, x.adr, PCLIR.HwReg-reg);
 END GetHWReg;
 
-PROCEDURE SetHWReg*(code: Code;  VAR x: Item;  reg: SHORTINT);
+PROCEDURE SetHWReg*(code: Code;  VAR x: Item;  reg: SIGNED8);
 BEGIN
 	Load(code, x);
 	PCLIR.EmitStoreReg(code, PCLIR.HwReg-reg, x.adr);
@@ -1811,7 +1811,7 @@ END ReadHWPort;
 
 (* InitCC - Create condition code item *)
 
-PROCEDURE InitCC(VAR a: Item; cc: LONGINT; r1, r2: PCLIR.Register);
+PROCEDURE InitCC(VAR a: Item; cc: SIGNED32; r1, r2: PCLIR.Register);
 BEGIN
 	a.mode := CC;  a.adr := cc;
 	a.value := r1; a.breg := r2;
@@ -1822,7 +1822,7 @@ END InitCC;
 (* LoadCC - load condition into a register *)
 
 PROCEDURE LoadCC(code: Code; VAR a: Item);
-VAR	t, f, end: LONGINT;
+VAR	t, f, end: SIGNED32;
 BEGIN
 	ASSERT(a.mode = CC, 110);
 	IF (a.tlist = none) & (a.flist = none) THEN	(*no jump links*)
@@ -1849,7 +1849,7 @@ END LoadCC;
 (** CondOr - Prepare conditional OR *)
 
 PROCEDURE CondOr*(code: Code; VAR a: Item);
-VAR t: LONGINT; jcc: PCLIR.Opcode;
+VAR t: SIGNED32; jcc: PCLIR.Opcode;
 BEGIN
 	IF a.mode = CC THEN
 		jcc := CCTab[a.adr]
@@ -1869,7 +1869,7 @@ END CondOr;
 (** CondOr - Conditional OR *)
 
 PROCEDURE Or*(code: Code; VAR a, b: Item);
-VAR t, tlist: LONGINT;
+VAR t, tlist: SIGNED32;
 BEGIN
 	ASSERT(a.mode = CC);
 	ASSERT(a.flist = none, 200);
@@ -1887,7 +1887,7 @@ END Or;
 (** CondAnd - Prepare Conditional AND *)
 
 PROCEDURE CondAnd*(code: Code; VAR a: Item);
-VAR t: LONGINT; jcc: PCLIR.Opcode;
+VAR t: SIGNED32; jcc: PCLIR.Opcode;
 BEGIN
 	IF a.mode = CC THEN
 		jcc := InvCCTab[a.adr]
@@ -1907,7 +1907,7 @@ END CondAnd;
 (** And - Conditional AND *)
 
 PROCEDURE And*(code: Code; VAR a, b: Item);
-VAR t, flist: LONGINT;
+VAR t, flist: SIGNED32;
 BEGIN
 	ASSERT(a.mode = CC);
 	ASSERT(a.tlist = none, 200);
@@ -1925,7 +1925,7 @@ END And;
 (**-----------Numeric Expressions----------------*)
 
 
-PROCEDURE MOp*(code: Code;  f: LONGINT;  VAR a: Item);
+PROCEDURE MOp*(code: Code;  f: SIGNED32;  VAR a: Item);
 VAR  reg: PCLIR.Register;  label: Label;  size: PCBT.Size;
 BEGIN
 	ASSERT(a.mode # Const, 1000);
@@ -1976,8 +1976,8 @@ BEGIN
 END MOp;
 (** fof >> *)
 (*
-	PROCEDURE MinMax*( code: Code;  f: LONGINT;  VAR a, b: Item );
-	VAR fc: SHORTINT;  temp: PCLIR.Register;  label: LONGINT;  size: PCBT.Size;  cc: Item;
+	PROCEDURE MinMax*( code: Code;  f: SIGNED32;  VAR a, b: Item );
+	VAR fc: SIGNED8;  temp: PCLIR.Register;  label: SIGNED32;  size: PCBT.Size;  cc: Item;
 	BEGIN
 		IF f = PCS.lss THEN fc := PCLIR.jlt
 		ELSIF f = PCS.gtr THEN fc := PCLIR.jgt
@@ -1998,14 +1998,14 @@ END MOp;
 	END MinMax;
 *)
 
-	PROCEDURE MinMax*( code: Code;  fcc: LONGINT;  VAR a, b: Item );
-	VAR fc: SHORTINT; label,end: LONGINT; size: PCBT.Size;reg: LONGINT;
+	PROCEDURE MinMax*( code: Code;  fcc: SIGNED32;  VAR a, b: Item );
+	VAR fc: SIGNED8; label,end: SIGNED32; size: PCBT.Size;reg: SIGNED32;
 	BEGIN
 		IF fcc = PCS.lss THEN fc := PCLIR.jlt
 		ELSIF fcc = PCS.gtr THEN fc := PCLIR.jgt
 		ELSE HALT( 100 );
 		END;
-		(* this ugly and complicated thing is needed for compatibility with types such as LONGREAL *)
+		(* this ugly and complicated thing is needed for compatibility with types such as FLOAT64 *)
 		(* if done more directly the comparison changes the value of a.adr or does not work at all - has to do with stack-machine nature of the FPU *)
 		Load( code, a );  Load( code, b );
 		PCLIR.Emit01(code, PCLIR.push, a.adr);
@@ -2059,10 +2059,10 @@ END MOp;
 	END Swap;
 (** << fof  *)
 
-PROCEDURE DOp*(code: Code;  f: LONGINT;  VAR a, b: Item);
-VAR reg: PCLIR.Register;  op: PCLIR.Opcode;  exp: LONGINT;
+PROCEDURE DOp*(code: Code;  f: SIGNED32;  VAR a, b: Item);
+VAR reg: PCLIR.Register;  op: PCLIR.Opcode;  exp: SIGNED32;
 
-	PROCEDURE PowerOf2(val: LONGINT;  VAR exp: LONGINT): BOOLEAN;
+	PROCEDURE PowerOf2(val: SIGNED32;  VAR exp: SIGNED32): BOOLEAN;
 	BEGIN
 		IF val <= 0 THEN  RETURN FALSE END;
 		exp := 0;
@@ -2176,8 +2176,8 @@ BEGIN
 	PCLIR.Emit12(code, op, a.adr, a.adr, b.adr)
 END DOp;
 
-PROCEDURE StringCmp(code: Code; cc: SHORTINT;  VAR cond: Item;  a, b: Item);
-VAR  aval, bval, abase, bbase, abase2, bbase2, zero, one, loop, pc: LONGINT;  cctrue, ccfalse: SHORTINT;
+PROCEDURE StringCmp(code: Code; cc: SIGNED8;  VAR cond: Item;  a, b: Item);
+VAR  aval, bval, abase, bbase, abase2, bbase2, zero, one, loop, pc: SIGNED32;  cctrue, ccfalse: SIGNED8;
 BEGIN
 	ASSERT(a.mode # Reg, 200);
 	ASSERT(b.mode # Reg, 201);
@@ -2234,8 +2234,8 @@ BEGIN
 	PCLIR.Emit0C(code, PCLIR.jmp, loop);
 END StringCmp;
 
-PROCEDURE RelOp*(code: Code; operand: LONGINT; VAR a, b: Item);
-VAR  cc: SHORTINT;  string: BOOLEAN;  list: Label;
+PROCEDURE RelOp*(code: Code; operand: SIGNED32; VAR a, b: Item);
+VAR  cc: SIGNED8;  string: BOOLEAN;  list: Label;
 BEGIN
 	IF operand = bitfn THEN
 		Convert(code, a, PCT.Int32, FALSE);
@@ -2385,11 +2385,11 @@ BEGIN
 END Deref;
 
 (** fof >> *)
-	PROCEDURE Range*( code: Code;  rangeover: PCT.EnhArray;   VAR descr, x, from, to, by: Item;  dim: LONGINT );   (* called by PCB.Range.Emit *)
-	VAR type: PCT.EnhArray;  mode: SHORTINT;  one, inc: Item;  oldby: Item;
+	PROCEDURE Range*( code: Code;  rangeover: PCT.EnhArray;   VAR descr, x, from, to, by: Item;  dim: SIGNED32 );   (* called by PCB.Range.Emit *)
+	VAR type: PCT.EnhArray;  mode: SIGNED8;  one, inc: Item;  oldby: Item;
 
 		PROCEDURE CheckUpper( code: Code;  VAR x, index: Item );
-		VAR bound: Item;  type: PCT.EnhArray;  mode: SHORTINT;  label: Label;
+		VAR bound: Item;  type: PCT.EnhArray;  mode: SIGNED8;  label: Label;
 		BEGIN
 			type := x.type( PCT.EnhArray );  mode := type.mode;
 
@@ -2445,7 +2445,7 @@ END Deref;
 			IF x.mode # Reg THEN LoadAdr( code, x );
 			END;
 			MakeSizeConst( one, 1 );
-			IF (to.mode = Const) & (to.value = MAX( LONGINT )) THEN
+			IF (to.mode = Const) & (to.value = MAX( SIGNED32 )) THEN
 				EnhArrayLen( code, to, descr, dim );  Load( code, to );
 			ELSE
 				IF (to.mode # Reg) & (to.mode # Const) THEN Load( code, to ) END;
@@ -2506,12 +2506,12 @@ END Deref;
 		ASSERT ( x.mode = RegRel, 220 );
 	END Range;
 
-	PROCEDURE EIndex*( code: Code;  VAR descr, x, index: Item;  dim: LONGINT (*useInc: BOOLEAN*) );   (* called by PCB.Index.Emit *)
+	PROCEDURE EIndex*( code: Code;  VAR descr, x, index: Item;  dim: SIGNED32 (*useInc: BOOLEAN*) );   (* called by PCB.Index.Emit *)
 	(* here an additional switch (useInc) can help to optimize w.r.t. fixed increments *)
-	VAR type: PCT.EnhArray;  mode: SHORTINT;  inc: Item;
+	VAR type: PCT.EnhArray;  mode: SIGNED8;  inc: Item;
 
 		PROCEDURE IndexCheck( code: Code; VAR index: Item );
-		VAR bound: Item;  type: PCT.EnhArray;  mode: SHORTINT;
+		VAR bound: Item;  type: PCT.EnhArray;  mode: SIGNED8;
 		BEGIN
 			type := x.type( PCT.EnhArray );  mode := type.mode;
 
@@ -2552,7 +2552,7 @@ END Deref;
 		x.deref := FALSE;
 	END EIndex;
 
-	PROCEDURE TensorIndex*( code: Code;  VAR descr, x, index: Item; d: LONGINT);   (* called by PCB.Index.Emit *)
+	PROCEDURE TensorIndex*( code: Code;  VAR descr, x, index: Item; d: SIGNED32);   (* called by PCB.Index.Emit *)
 	VAR inc,dim,temp: Item;
 
 		PROCEDURE IndexCheck( code: Code;  VAR index: Item );
@@ -2589,7 +2589,7 @@ END Deref;
 		x.mode := RegRel;  x.offs := 0;  x.deref := FALSE;
 	END TensorIndex;
 
-	PROCEDURE TensorFiller*(code: Code; VAR descr,x: Item; before,after: LONGINT);
+	PROCEDURE TensorFiller*(code: Code; VAR descr,x: Item; before,after: SIGNED32);
 	VAR one,dim,inc,len: Item; loop,exit: Label; beforeI,afterI: Item;
 	BEGIN
 		TensorGetDim(code,dim,descr);
@@ -2619,7 +2619,7 @@ END Deref;
 			PCLIR.Emit0C(code, PCLIR.label, 0);
 	END TensorFiller;
 
-	PROCEDURE TensorRange*( code: Code;  VAR descr, x, from, to, by: Item; d: LONGINT);
+	PROCEDURE TensorRange*( code: Code;  VAR descr, x, from, to, by: Item; d: SIGNED32);
 	(*! todo: range check for ranges ! *)
 	VAR one, inc,dim,temp: Item;  oldby: Item;
 	BEGIN
@@ -2631,7 +2631,7 @@ END Deref;
 		END;
 		IF x.mode # Reg THEN LoadAdr( code, x );  END;
 		MakeSizeConst( one, 1 );
-		IF (to.mode = Const) & (to.value = MAX( LONGINT )) THEN
+		IF (to.mode = Const) & (to.value = MAX( SIGNED32 )) THEN
 			TensorGetLen(code,to,descr,dim,FALSE);
 		ELSE
 			IF (to.mode # Reg) & (to.mode # Const) THEN Load( code, to ) END;
@@ -2674,7 +2674,7 @@ END Deref;
 
 
 PROCEDURE Index*(code: Code; VAR x, index: Item);
-VAR size: Item; type: PCT.Array; mode: SHORTINT;
+VAR size: Item; type: PCT.Array; mode: SIGNED8;
 
 	PROCEDURE IndexCheck(code: Code; VAR x, index: Item);
 	VAR bound: Item;
@@ -2739,7 +2739,7 @@ BEGIN
 END Method;
 *)
 PROCEDURE Method*(code: Code; VAR x: Item; self: Item; mth: PCT.Method; supercall: BOOLEAN);
-VAR  mthAdr: PCBT.Method; t: PCLIR.Register; off: LONGINT;
+VAR  mthAdr: PCBT.Method; t: PCLIR.Register; off: SIGNED32;
 BEGIN
 	mthAdr := mth.adr(PCBT.Method);
 	IF PCT.IsPointer(self.type) THEN
@@ -2824,7 +2824,7 @@ END SysNewBlock;
 		(* now check if allocation is allowed *)
 		PCLIR.EmitLoadRelative( code, PCLIR.Address, FALSE , reg, Descr_FlagsOffs*PCT.AddressSize,  ptr.adr );
 		PCLIR.EmitLoadConst( code, bit, PCLIR.Address, FALSE ,
-											LONGINT({RangeFlag} ) );
+											SIGNED32({RangeFlag} ) );
 		PCLIR.Emit12( code, PCLIR.and, reg, bit, reg );
 		PCLIR.EmitLoadConst( code, bit, PCLIR.Address, FALSE , 0 );
 		PCLIR.Emit02C( code, PCLIR.tne, reg, bit, PCM.ArrayFormTrap );
@@ -2881,8 +2881,8 @@ END SysNewBlock;
 		END;
 	END SysNewEnhArray;
 
-	PROCEDURE SysNewDescriptor*( code: Code;  VAR x: Item;  dim: LONGINT );   (* NewRec (VAR p: PTR; td: PTR) *)
-	VAR td, const: Item;  dimR, adr, bit, reg: PCLIR.Register;  label, label2: LONGINT;
+	PROCEDURE SysNewDescriptor*( code: Code;  VAR x: Item;  dim: SIGNED32 );   (* NewRec (VAR p: PTR; td: PTR) *)
+	VAR td, const: Item;  dimR, adr, bit, reg: PCLIR.Register;  label, label2: SIGNED32;
 	BEGIN
 		(*
 			IF pointer = NIL THEN  allocation
@@ -2903,10 +2903,10 @@ END SysNewBlock;
 		label2 := code.pc;
 		PCLIR.Emit02C( code, PCLIR.je, reg, dimR, none );   (* dimension fits -> don't reallocate (this is not only an optimization, but a rule! ) *)
 		(* dimension does not fit *)
-		PCLIR.EmitLoadConst( code, dimR, PCLIR.Address, FALSE , LONGINT( {TensorFlag} ) );
+		PCLIR.EmitLoadConst( code, dimR, PCLIR.Address, FALSE , SIGNED32( {TensorFlag} ) );
 		PCLIR.EmitLoadRelative( code, PCLIR.Address, FALSE , reg, Descr_FlagsOffs*PCT.AddressSize,  adr );   (* load flags *)
 		PCLIR.Emit12( code, PCLIR.and, adr, dimR, reg );
-		PCLIR.EmitLoadConst( code, bit, PCLIR.Address, FALSE , LONGINT({TensorFlag} ) );
+		PCLIR.EmitLoadConst( code, bit, PCLIR.Address, FALSE , SIGNED32({TensorFlag} ) );
 		PCLIR.Emit02C( code, PCLIR.tne, adr, bit, PCM.ArrayFormTrap );   (* tensor flag not in descriptor *)
 		FixJmp( code, label );
 		PCLIR.Emit01( code, PCLIR.push, x.adr );   (*1st par: VAR p: PRT *)
@@ -2921,7 +2921,7 @@ END SysNewBlock;
 		PCLIR.EmitLoadRelative( code, PCLIR.Address, FALSE , x.adr, 0, x.adr );   (* deref *)
 	END SysNewDescriptor;
 
-	PROCEDURE TensorSysNew*( code: Code;  VAR descr: Item;  btyp: PCT.Struct;  nofElem: Item;  nofDims: LONGINT );
+	PROCEDURE TensorSysNew*( code: Code;  VAR descr: Item;  btyp: PCT.Struct;  nofElem: Item;  nofDims: SIGNED32 );
 	VAR size: Item;  reg: PCLIR.Register;  label: Label;   adr: Item;
 	BEGIN
 		Convert( code, nofElem, PCT.Int32, FALSE );  Load( code, nofElem );
@@ -2944,7 +2944,7 @@ END SysNewBlock;
 (** << fof  *)
 
 
-PROCEDURE SysNewArray*(code: Code;  VAR ptr: Item;  btyp: PCT.Struct;  nofElem: Item;  nofDims: LONGINT);
+PROCEDURE SysNewArray*(code: Code;  VAR ptr: Item;  btyp: PCT.Struct;  nofElem: Item;  nofDims: SIGNED32);
 VAR size, offset, td, const: Item;  reg: PCLIR.Register; label: Label;
 BEGIN
 	Convert(code, nofElem, PCT.Size, FALSE);
@@ -2989,8 +2989,8 @@ BEGIN
 END SysNewArray;
 
 (** fof >> *)
-	PROCEDURE SetEnhArrayLen*( code: Code;  VAR ptr, inc: Item;  nofDims, dim: LONGINT );
-	VAR offs: LONGINT;  size: PCLIR.Register;
+	PROCEDURE SetEnhArrayLen*( code: Code;  VAR ptr, inc: Item;  nofDims, dim: SIGNED32 );
+	VAR offs: SIGNED32;  size: PCLIR.Register;
 	BEGIN
 		IF ptr.mode # Reg THEN LoadAdr( code, ptr );  END;   (* is already address ?*)
 		Load( code, inc );  offs := Descr_LenOffs*PCT.AddressSize + dim * 8;   (* EnhArrayLenOffset + 8 * (nofDims - 1 - dim);  *)
@@ -3000,7 +3000,7 @@ END SysNewArray;
 		PCLIR.Emit12( code, PCLIR.mul, inc.adr, inc.adr, size );
 	END SetEnhArrayLen;
 
-	PROCEDURE SetEnhArrayDim*( code: Code;  VAR ptr: Item;  dim: LONGINT );
+	PROCEDURE SetEnhArrayDim*( code: Code;  VAR ptr: Item;  dim: SIGNED32 );
 	VAR size: PCLIR.Register;
 	BEGIN
 		IF ptr.mode # Reg THEN LoadAdr( code, ptr );  END;   (* is already address ?*)
@@ -3009,17 +3009,17 @@ END SysNewArray;
 	END SetEnhArrayDim;
 
 	PROCEDURE SetEnhArrayFlags*( code: Code;  VAR ptr: Item;  flags: SET );
-	VAR offs: LONGINT;  size: PCLIR.Register;
+	VAR offs: SIGNED32;  size: PCLIR.Register;
 	BEGIN
 		IF ptr.mode # Reg THEN LoadAdr( code, ptr ) END;
 		offs := Descr_FlagsOffs*PCT.AddressSize;
-		PCLIR.EmitLoadConst( code, size, PCLIR.Address, FALSE , LONGINT(flags ) );
+		PCLIR.EmitLoadConst( code, size, PCLIR.Address, FALSE , SIGNED32(flags ) );
 		PCLIR.EmitStoreRelative( code, offs, ptr.adr, size )
 	END SetEnhArrayFlags;
 
 	(* Setting flags used for optimizations of operations on small matrices (Alexey Morozov) *)
 	PROCEDURE SetSmallMatrixFlags*(code: Code;  VAR ptr: Item);
-	VAR flags_offs, len_offs: LONGINT;  n, len, len1, flags: PCLIR.Register; exit, exit1: Label;
+	VAR flags_offs, len_offs: SIGNED32;  n, len, len1, flags: PCLIR.Register; exit, exit1: Label;
 	BEGIN
 		IF ptr.mode # Reg THEN LoadAdr( code, ptr ) END;
 		len_offs := Descr_LenOffs*PCT.AddressSize;
@@ -3040,7 +3040,7 @@ END SysNewArray;
 			set flags
 		*)
 		PCLIR.EmitLoadRelative(code,PCLIR.Address,TRUE,flags,flags_offs,ptr.adr); (* load current flags from the descriptor *)
-		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,LONGINT({SmallMatrixFlag}));
+		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,SIGNED32({SmallMatrixFlag}));
 		PCLIR.Emit12(code,PCLIR.or,flags,flags,n); (* flags := flags + {SmallMatrixFlag} *)
 
 		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,2);
@@ -3061,7 +3061,7 @@ END SysNewArray;
 
 	(* Setting flags used for optimizations of operations on small vectors (Alexey Morozov) *)
 	PROCEDURE SetSmallVectorFlags*(code: Code;  VAR ptr: Item);
-	VAR flags_offs, len_offs: LONGINT;  n, len, flags: PCLIR.Register; exit: Label;
+	VAR flags_offs, len_offs: SIGNED32;  n, len, flags: PCLIR.Register; exit: Label;
 	BEGIN
 		IF ptr.mode # Reg THEN LoadAdr( code, ptr ) END;
 		len_offs := Descr_LenOffs*PCT.AddressSize;
@@ -3077,7 +3077,7 @@ END SysNewArray;
 			set flags
 		*)
 		PCLIR.EmitLoadRelative(code,PCLIR.Address,TRUE,flags,flags_offs,ptr.adr); (* load current flags from the descriptor *)
-		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,LONGINT({SmallMatrixFlag}));
+		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,SIGNED32({SmallMatrixFlag}));
 		PCLIR.Emit12(code,PCLIR.or,flags,flags,n); (* flags := flags + {SmallMatrixFlag} *)
 
 		PCLIR.EmitLoadConst(code,n,PCLIR.Address,FALSE,2);
@@ -3095,7 +3095,7 @@ END SysNewArray;
 		FixJmp(code,exit);
 	END SetSmallVectorFlags;
 
-	PROCEDURE SetEnhArraySize*( code: Code;  VAR ptr: Item;  elementsize: LONGINT );
+	PROCEDURE SetEnhArraySize*( code: Code;  VAR ptr: Item;  elementsize: SIGNED32 );
 	VAR size: PCLIR.Register;
 	BEGIN
 		IF ptr.mode # Reg THEN LoadAdr( code, ptr );  END;   (* is already address ?*)
@@ -3104,7 +3104,7 @@ END SysNewArray;
 	END SetEnhArraySize;
 
 	PROCEDURE TensorSetAdr*( code: Code;  VAR ptr: Item;  hasPointers: BOOLEAN );
-	VAR adr, tmp: LONGINT;
+	VAR adr, tmp: SIGNED32;
 	BEGIN
 		IF ptr.mode # Reg THEN DerefTensor( code, ptr );  LoadAdr( code, ptr ) END;
 		PCLIR.EmitLoadRelative( code, PCLIR.Address, FALSE , adr, 0, ptr.adr );
@@ -3115,8 +3115,8 @@ END SysNewArray;
 		PCLIR.EmitStoreRelative( code, Descr_AdrOffs*PCT.AddressSize, ptr.adr, adr );
 	END TensorSetAdr;
 
-	PROCEDURE TensorSetDim*( code: Code;  VAR ptr: Item;  nofDims: LONGINT );
-	VAR offs: LONGINT;  size: PCLIR.Register;
+	PROCEDURE TensorSetDim*( code: Code;  VAR ptr: Item;  nofDims: SIGNED32 );
+	VAR offs: SIGNED32;  size: PCLIR.Register;
 	BEGIN
 		IF ptr.mode # Reg THEN DerefTensor( code, ptr );  LoadAdr( code, ptr ) END;
 		offs :=   Descr_DimOffs*PCT.AddressSize;
@@ -3124,8 +3124,8 @@ END SysNewArray;
 		PCLIR.EmitStoreRelative( code, offs, ptr.adr, size )
 	END TensorSetDim;
 
-	PROCEDURE TensorSetSize*( code: Code;  VAR ptr: Item;  elementsize: LONGINT );
-	VAR offs: LONGINT;  size: PCLIR.Register;
+	PROCEDURE TensorSetSize*( code: Code;  VAR ptr: Item;  elementsize: SIGNED32 );
+	VAR offs: SIGNED32;  size: PCLIR.Register;
 	BEGIN
 		IF ptr.mode # Reg THEN DerefTensor( code, ptr );  LoadAdr( code, ptr ) END;
 		offs :=  Descr_SizeOffs*PCT.AddressSize;
@@ -3134,11 +3134,11 @@ END SysNewArray;
 	END TensorSetSize;
 
 	PROCEDURE TensorSetFlags*( code: Code;  VAR ptr: Item;  flags: SET );
-	VAR offs: LONGINT;  size: PCLIR.Register;
+	VAR offs: SIGNED32;  size: PCLIR.Register;
 	BEGIN
 		IF ptr.mode # Reg THEN DerefTensor( code, ptr );  LoadAdr( code, ptr ) END;
 		offs :=   Descr_FlagsOffs*PCT.AddressSize;
-		PCLIR.EmitLoadConst( code, size, PCLIR.Address, FALSE , LONGINT( flags ) );
+		PCLIR.EmitLoadConst( code, size, PCLIR.Address, FALSE , SIGNED32( flags ) );
 		PCLIR.EmitStoreRelative( code, offs, ptr.adr, size )
 	END TensorSetFlags;
 
@@ -3147,8 +3147,8 @@ END SysNewArray;
 		PCLIR.Emit10( code, PCLIR.pop, len.adr, PCLIR.Int32,FALSE );  len.mode := Reg;
 	END PopLen;
 
-	PROCEDURE DescriptorSetLen*( code: Code;  VAR ptr, len: Item;  dim: LONGINT );
-	VAR offs: LONGINT;
+	PROCEDURE DescriptorSetLen*( code: Code;  VAR ptr, len: Item;  dim: SIGNED32 );
+	VAR offs: SIGNED32;
 	BEGIN
 		IF ptr.mode # Reg THEN  (* DerefTensor( code, ptr ); *) LoadAdr( code, ptr ) END;
 		offs :=  Descr_LenOffs*PCT.AddressSize + 8 * dim;
@@ -3156,8 +3156,8 @@ END SysNewArray;
 		PCLIR.EmitStoreRelative( code, offs, ptr.adr, len.adr )
 	END DescriptorSetLen;
 
-	PROCEDURE DescriptorSetInc*( code: Code;  VAR ptr, inc: Item;  dim: LONGINT );
-	VAR offs: LONGINT;
+	PROCEDURE DescriptorSetInc*( code: Code;  VAR ptr, inc: Item;  dim: SIGNED32 );
+	VAR offs: SIGNED32;
 	BEGIN
 		IF ptr.mode # Reg THEN  (* DerefTensor( code, ptr ); *) LoadAdr( code, ptr ) END;
 		offs :=  Descr_IncOffs*PCT.AddressSize + 8 * dim;
@@ -3165,8 +3165,8 @@ END SysNewArray;
 		PCLIR.EmitStoreRelative( code, offs, ptr.adr, inc.adr )
 	END DescriptorSetInc;
 
-	PROCEDURE TensorGetDesc( code: Code;  VAR res, arr, dim: Item;  offs: LONGINT );
-	VAR exit, label: LONGINT;  checkptr: BOOLEAN;  a, b: LONGINT;  dynoffs: LONGINT;
+	PROCEDURE TensorGetDesc( code: Code;  VAR res, arr, dim: Item;  offs: SIGNED32 );
+	VAR exit, label: SIGNED32;  checkptr: BOOLEAN;  a, b: SIGNED32;  dynoffs: SIGNED32;
 	BEGIN
 		checkptr := arr.mode # Reg;
 		IF checkptr THEN
@@ -3220,8 +3220,8 @@ END SysNewArray;
 		PCLIR.Emit02C( code, PCLIR.tae, dim.adr, res.adr, PCM.IndexCheckTrap );
 	END TensorCheckDim;
 
-	PROCEDURE TensorCheckDims*( code: Code;  VAR x: Item;  dims: LONGINT );
-	VAR label: LONGINT;  reg, reg2: PCLIR.Register;  offs: LONGINT;
+	PROCEDURE TensorCheckDims*( code: Code;  VAR x: Item;  dims: SIGNED32 );
+	VAR label: SIGNED32;  reg, reg2: PCLIR.Register;  offs: SIGNED32;
 	BEGIN
 		IF x.mode # Reg THEN LoadAdr( code, x );  END;
 		offs := Descr_DimOffs*PCT.AddressSize;
@@ -3249,7 +3249,7 @@ END SysNewArray;
 	END TensorGetInc;
 
 	PROCEDURE StaticPrepStack*( code: Code;  a: Item; tensor: BOOLEAN );
-	VAR const, base: LONGINT;   offset: LONGINT;
+	VAR const, base: SIGNED32;   offset: SIGNED32;
 	BEGIN
 		offset := GetStaticSize( a.type);
 		IF tensor THEN
@@ -3265,7 +3265,7 @@ END SysNewArray;
 	END StaticPrepStack;
 
 	PROCEDURE TensorPrepStack*( code: Code;  a: Item;   ref: BOOLEAN );
-	VAR (* const, base: LONGINT;  dim: LONGINT;  offset: LONGINT; *)  offset,const: Item; base: LONGINT;
+	VAR (* const, base: SIGNED32;  dim: SIGNED32;  offset: SIGNED32; *)  offset,const: Item; base: SIGNED32;
 	BEGIN
 		IF a.type IS PCT.Tensor THEN
 			LoadAdr(code,a);
@@ -3290,14 +3290,14 @@ END SysNewArray;
 	END TensorPrepStack;
 
 	PROCEDURE EnhArrayPointerToStack*( code: Code;  a: Item );
-	VAR const, base: LONGINT;
+	VAR const, base: SIGNED32;
 	BEGIN
 		PCLIR.EmitLoadConst( code, const, PCLIR.Int32, FALSE , 4 );
 		PCLIR.Emit12( code, PCLIR.add, base, PCLIR.SP, const );
 		PCLIR.Emit01( code, PCLIR.push, base );
 	END EnhArrayPointerToStack;
 
-	PROCEDURE TensorUseStack*( code: Code;  ofs: LONGINT;  parNbr: LONGINT );
+	PROCEDURE TensorUseStack*( code: Code;  ofs: SIGNED32;  parNbr: SIGNED32 );
 	VAR base, const: PCLIR.Register;
 	BEGIN
 		PCLIR.EmitLoadConst( code, const, PCLIR.Int32, FALSE , ofs );
@@ -3311,7 +3311,7 @@ END SysNewArray;
 		PCLIR.Emit01( code, PCLIR.push, base );
 	END TensorUseStack;
 
-	PROCEDURE TensorUseStackItem*(code: Code; ofs: LONGINT; parNbr: LONGINT;VAR i: Item;  type: PCT.Struct);
+	PROCEDURE TensorUseStackItem*(code: Code; ofs: SIGNED32; parNbr: SIGNED32;VAR i: Item;  type: PCT.Struct);
 	VAR base, const: PCLIR.Register;
 	BEGIN
 		PCLIR.EmitLoadConst( code, const, PCLIR.Int32, FALSE , ofs );
@@ -3328,8 +3328,8 @@ END SysNewArray;
 	END TensorUseStackItem;
 
 (* check dimension of the tensor and push descriptor to stack *)
-	PROCEDURE TensorDescriptorToStack*( code: Code;  VAR arr: Item;  dim: LONGINT );
-	VAR dest, sizeItem: Item;  size: LONGINT;  type: PCT.Struct;
+	PROCEDURE TensorDescriptorToStack*( code: Code;  VAR arr: Item;  dim: SIGNED32 );
+	VAR dest, sizeItem: Item;  size: SIGNED32;  type: PCT.Struct;
 	BEGIN
 		TensorCheckDims( code, arr, dim );   (* invokes trap if arr=NIL or dimension#dim *)
 		size := dim * 8 + Descr_LenOffs*PCT.AddressSize;  StackAllocate( code, size, dest );
@@ -3345,8 +3345,8 @@ END SysNewArray;
 (** << fof  *)
 
 
-PROCEDURE SetArrayDim*(code: Code;  VAR ptr: Item;  nofDims, dim: LONGINT);
-VAR  offs: LONGINT;  size: PCLIR.Register;
+PROCEDURE SetArrayDim*(code: Code;  VAR ptr: Item;  nofDims, dim: SIGNED32);
+VAR  offs: SIGNED32;  size: PCLIR.Register;
 BEGIN
 	IF ptr.mode # Reg THEN  Load(code, ptr)  END;
 	offs := ArrayDimTable * PCT.AddressSize +PCT.AddressSize*(nofDims-1-dim);
@@ -3374,7 +3374,7 @@ BEGIN
 END SysLock;
 
 PROCEDURE SysStart*(code: Code;  body: PCT.Method;  self: Item);
-VAR  mth: Item; rec: PCT.Record;  flags: LONGINT;  reg : PCLIR.Register;
+VAR  mth: Item; rec: PCT.Record;  flags: SIGNED32;  reg : PCLIR.Register;
 BEGIN
 	rec := body.boundTo;
 	MakeTD(mth, rec);  Load(code, mth);
@@ -3383,7 +3383,7 @@ BEGIN
 	mth.offs := MethodTable * PCT.AddressSize - PCT.AddressSize * body.adr(PCBT.Method).mthNo;
 	Load(code, mth);
 	IF PCT.active IN rec.mode THEN
-		(* Call to Objects.CreateProcess(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject); *)
+		(* Call to Objects.CreateProcess(body: Body; priority: SIGNED32; flags: SET; obj: ProtectedObject); *)
 		PCLIR.Emit01(code, PCLIR.push, mth.adr);
 		PCLIR.EmitLoadConst(code, reg, PCLIR.Int32, TRUE, rec.prio);
 		PCLIR.Emit01(code, PCLIR.push, reg);
@@ -3446,7 +3446,7 @@ PROCEDURE SysGetProcedure*(code : Code; moduleName, procedureName, entryAdr : It
 	END PushTD;
 
 	(* Push integer constant on the stack *)
-	PROCEDURE PushConstant(code : Code; value : LONGINT);
+	PROCEDURE PushConstant(code : Code; value : SIGNED32);
 	VAR item : Item;
 	BEGIN
 		MakeIntConst(item, value, PCT.Address);
@@ -3503,13 +3503,13 @@ END SysGetProcedure;
 
 (**-----------Statements----------------*)
 
-PROCEDURE NewInstr*(code: Code; pos: LONGINT);
+PROCEDURE NewInstr*(code: Code; pos: SIGNED32);
 BEGIN
 	PCLIR.Emit0C(code, PCLIR.label, pos)
 END NewInstr;
 
 PROCEDURE Assign*(code: Code; VAR dest, source: Item);
-VAR  mode, size: LONGINT;
+VAR  mode, size: SIGNED32;
 BEGIN
 	IF (dest.type IS PCT.Basic) OR PCT.IsPointer(dest.type) THEN
 		IF Statistics THEN INC(AAssBasic) END;
@@ -3570,14 +3570,14 @@ BEGIN
 	END
 END Assign;
 
-PROCEDURE GenTrap*(code: Code; nr: LONGINT);
+PROCEDURE GenTrap*(code: Code; nr: SIGNED32);
 BEGIN
 	PCLIR.Emit0C(code, PCLIR.trap, nr);
 	(* TrapCollector.Say(scope, nr);	*)
 END GenTrap;
 
-PROCEDURE Return*(code: Code;  x: Item;  proc: PCT.Proc; rtypeAddr: LONGINT (* ug *));
-VAR  parSize, mode: LONGINT;  size, dst, hdst: Item;  type: PCT.Struct;	(* ug: hdst stands for hiddendst *)
+PROCEDURE Return*(code: Code;  x: Item;  proc: PCT.Proc; rtypeAddr: SIGNED32 (* ug *));
+VAR  parSize, mode: SIGNED32;  size, dst, hdst: Item;  type: PCT.Struct;	(* ug: hdst stands for hiddendst *)
 BEGIN
 	type := proc.type;
 	IF PCT.ContainsPointer(type) THEN
@@ -3710,7 +3710,7 @@ END Inline;
 AWAIT (cond);
 	....
 	jmp afterAwait
-passivate(StaticLink: LONGINT):
+passivate(StaticLink: SIGNED32):
 	enter (passivate calling convention: set SL to EBP, avoid scope switch)
 	compute cond
 	return cond
@@ -3772,8 +3772,8 @@ END Await;
 
 (** PushSL - push the static link (SL), for local procedures only *)
 
-PROCEDURE PushSL*(code: Code;  deltaLevel: SHORTINT);
-VAR  reg: LONGINT;
+PROCEDURE PushSL*(code: Code;  deltaLevel: SIGNED8);
+VAR  reg: SIGNED32;
 BEGIN
 	ASSERT(deltaLevel >= -1);
 	GetActivationFrame(code, deltaLevel+1, reg);
@@ -3793,7 +3793,7 @@ BEGIN  PCLIR.Emit00(code, PCLIR.loadregs);
 END RestoreRegisters;
 
 PROCEDURE ParamArray(code: Code;  VAR ap: Item;  formaltype: PCT.Struct;  reference, notag: BOOLEAN); (* ejz  *)
-VAR  aptype: PCT.Struct;  res, res2: Item;  dim: LONGINT;  fptype: PCT.Array;
+VAR  aptype: PCT.Struct;  res, res2: Item;  dim: SIGNED32;  fptype: PCT.Array;
 BEGIN
 	fptype := formaltype(PCT.Array);  aptype := ap.type;
 	dim := 0;
@@ -3840,7 +3840,7 @@ END ParamArray;
 
 (** fof >> *)
 	PROCEDURE AdrToStack*( code: Code;  VAR ptr: Item );
-	VAR size: LONGINT; t: PCT.Struct;
+	VAR size: SIGNED32; t: PCT.Struct;
 	BEGIN
 		IF ptr.mode # Reg THEN LoadAdr( code, ptr ) END;
 		IF (ptr.type IS PCT.EnhArray) & (ptr.type(PCT.EnhArray).mode = PCT.open) THEN  (* ensure right dimension in array descriptor *)
@@ -3853,7 +3853,7 @@ END ParamArray;
 	END AdrToStack;
 
 	PROCEDURE PushStaticEnhArray*(code: Code; VAR ap: Item;  formaltype: PCT.Struct; reference: BOOLEAN);
-	VAR aptype: PCT.Struct;  res: Item;  dim: LONGINT; fptype: PCT.EnhArray;
+	VAR aptype: PCT.Struct;  res: Item;  dim: SIGNED32; fptype: PCT.EnhArray;
 	BEGIN
 		IF ap.mode # Reg THEN LoadAdr(code,ap) END;
 		fptype := formaltype( PCT.EnhArray );  aptype := ap.type;
@@ -3867,7 +3867,7 @@ END ParamArray;
 	END PushStaticEnhArray;
 	PROCEDURE ParamTensor( code: Code;  VAR ap: Item;  formaltype: PCT.Struct;
 												  reference: BOOLEAN );
-		VAR size: LONGINT; t: PCT.Struct;
+		VAR size: SIGNED32; t: PCT.Struct;
 BEGIN
 		IF reference THEN
 		(* caution! var parameter not handled as pointer to pointer to array *)
@@ -3908,7 +3908,7 @@ BEGIN
 		Load(code,dim);
 		PCLIR.Emit01(code,PCLIR.push,dim.adr);
 		PCLIR.EmitLoadConst( code, adr, PCLIR.Address, FALSE ,
-											LONGINT({RangeFlag} ) );   (* flags, no reallocation *)
+											SIGNED32({RangeFlag} ) );   (* flags, no reallocation *)
 		PCLIR.Emit01( code, PCLIR.push, adr );
 		PCLIR.Emit01( code, PCLIR.push, ap.adr );   (* push array reference  *)
 
@@ -3921,8 +3921,8 @@ BEGIN
 	END RangeDescriptorHead;
 
 	PROCEDURE ArrayDescriptorToStack*( code: Code;  VAR arr: Item );
-	VAR type: PCT.EnhArray;  dest, sizeItem, res: Item;  size: LONGINT;  adr: PCLIR.Register;
-		dim: LONGINT;  t: PCT.Struct; const: PCLIR.Register;
+	VAR type: PCT.EnhArray;  dest, sizeItem, res: Item;  size: SIGNED32;  adr: PCLIR.Register;
+		dim: SIGNED32;  t: PCT.Struct; const: PCLIR.Register;
 	BEGIN
 		type := arr.type( PCT.EnhArray );  size := type.dim * 8 + Descr_LenOffs*PCT.AddressSize;
 		IF type.mode = PCT.open THEN
@@ -3951,7 +3951,7 @@ BEGIN
 
 			PCLIR.EmitLoadConst( code, adr, PCLIR.Address, FALSE , type.dim );
 			PCLIR.Emit01( code, PCLIR.push, adr );
-			PCLIR.EmitLoadConst( code, adr, PCLIR.Address, FALSE , LONGINT({RangeFlag} ) );   (* to protect size *)
+			PCLIR.EmitLoadConst( code, adr, PCLIR.Address, FALSE , SIGNED32({RangeFlag} ) );   (* to protect size *)
 			PCLIR.Emit01( code, PCLIR.push, adr );
 			IF arr.mode # Reg THEN LoadAdr( code, arr );  END;
 			PCLIR.Emit01( code, PCLIR.push, arr.adr );
@@ -3959,8 +3959,8 @@ BEGIN
 		END;
 	END ArrayDescriptorToStack;
 
-	PROCEDURE ParamEnhArray*( code: Code;  VAR ap: Item; formaltype: PCT.Struct;  reference: BOOLEAN;  VAR spoffset: LONGINT );   (*fof*)
-	VAR aptype: PCT.Struct;  res, res2: Item;  dim: LONGINT;  fptype: PCT.EnhArray;
+	PROCEDURE ParamEnhArray*( code: Code;  VAR ap: Item; formaltype: PCT.Struct;  reference: BOOLEAN;  VAR spoffset: SIGNED32 );   (*fof*)
+	VAR aptype: PCT.Struct;  res, res2: Item;  dim: SIGNED32;  fptype: PCT.EnhArray;
 		adr,const: PCLIR.Register;  t: PCT.Struct;
 	BEGIN
 
@@ -4005,7 +4005,7 @@ BEGIN
 		END;
 	END ParamEnhArray;
 
-	PROCEDURE PushStackRelAddress*( code: Code;  offset: LONGINT );
+	PROCEDURE PushStackRelAddress*( code: Code;  offset: SIGNED32 );
 	VAR sp: PCLIR.Register;
 	BEGIN
 		PCLIR.EmitLoadConst( code, sp, PCLIR.Address, FALSE , offset );
@@ -4016,7 +4016,7 @@ BEGIN
 	PROCEDURE MakeStackEnhArrayItem*( code: Code;  VAR i: Item;   type: PCT.Struct );   (*fof*)
 	VAR a: PCT.Struct;  zero: PCLIR.Register;
 		PROCEDURE MakeOpenArray( type: PCT.Struct );
-		VAR res: WORD;  ea: PCT.EnhArray;
+		VAR res: INTEGER;  ea: PCT.EnhArray;
 		BEGIN
 			IF type IS PCT.EnhArray THEN
 				MakeOpenArray( type( PCT.EnhArray ).base );  NEW( ea );
@@ -4038,7 +4038,7 @@ BEGIN
 (** << fof  *)
 
 	(* fof for linux *)
-	PROCEDURE RevertStack*( code: Code;  offset: LONGINT );
+	PROCEDURE RevertStack*( code: Code;  offset: SIGNED32 );
 	VAR sp: PCLIR.Register;
 	BEGIN
 		PCLIR.EmitLoadConst( code, sp, PCLIR.Address, FALSE , offset );
@@ -4049,7 +4049,7 @@ BEGIN
 (** Param -  Push actual parameter on the stack *)
 
 PROCEDURE Param*(code: Code; VAR ap: Item;  formaltype: PCT.Struct;  reference, notag: BOOLEAN); (* ejz *)
-VAR res: Item;  mode, size: LONGINT;  name: ARRAY 32 OF CHAR;
+VAR res: Item;  mode, size: SIGNED32;  name: ARRAY 32 OF CHAR;
 BEGIN
 	IF (formaltype IS PCT.Basic) OR (formaltype IS PCT.Pointer) THEN
 		IF Statistics THEN INC(AParBasic) END;
@@ -4169,7 +4169,7 @@ END Jmp;
 (** Conditional Jump to label *)
 
 PROCEDURE Jcc*(code: Code; VAR pc: Label; VAR cond: Item);
-VAR	reg, t: LONGINT;
+VAR	reg, t: SIGNED32;
 BEGIN
 	ASSERT(cond.type = PCT.Bool);
 	IF cond.mode # CC  THEN
@@ -4208,8 +4208,8 @@ BEGIN
 	PCLIR.EmitCase(code, case.adr, x.adr);
 END CaseStat;
 
-PROCEDURE CaseLine*(code: Code;  case: Item;  low, high: LONGINT);
-	VAR  i: LONGINT;
+PROCEDURE CaseLine*(code: Code;  case: Item;  low, high: SIGNED32);
+	VAR  i: SIGNED32;
 BEGIN
 	ASSERT(case.mode = Case);
 	FOR i := low TO high DO
@@ -4262,7 +4262,7 @@ END Init;
 (** Cleanup - call after each compilation to unlink global structures for garbage collection *)
 
 PROCEDURE Cleanup*;
-VAR i: LONGINT; (* fof *)
+VAR i: SIGNED32; (* fof *)
 BEGIN
 	delegate := NIL;
 	hdptr := NIL;
@@ -4347,7 +4347,7 @@ END PCC.
 	25.04.01	prk	array allocation: if length < 0 then trap PCM.ArraySizeTrap
 	20.04.01	prk	CAP fixed, HOTBuiltinCAP1.Mod HOTBuiltinCAP2.Mod passed now
 	11.04.01	prk	Allow SYSTEM.VAL(static array, int const), used in Raster.Mod
-	25.03.01	prk	limited HUGEINT implementation (as abstract type)
+	25.03.01	prk	limited SIGNED64 implementation (as abstract type)
 	25.03.01	prk	NewSysBlock, NewArray: force sizes to be LInt
 	15.03.01	prk	delegates: return
 	14.03.01	prk	improved delegates implementation

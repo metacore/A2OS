@@ -11,13 +11,13 @@ CONST
 	VERSION* = 1;
 
 TYPE
-	Value* = ArrayXd.Value;  Index* = LONGINT;  IntValue = ArrayXd.IntValue;  RatValue = NbrRat.Rational;
+	Value* = ArrayXd.Value;  Index* = SIGNED32;  IntValue = ArrayXd.IntValue;  RatValue = NbrRat.Rational;
 	ReValue = NbrRe.Real;  Array* = ArrayXd.Array1;  Map* = ArrayXd.Map;
 
 	(** Class Vector has been DataIO registered. *)
 	Vector* = OBJECT (ArrayXd.Array)
-	VAR lenx-: LONGINT;
-		ox-: LONGINT;
+	VAR lenx-: SIGNED32;
+		ox-: SIGNED32;
 		Get-: PROCEDURE {DELEGATE} ( x: Index ): Value;
 
 		(** overrride *)
@@ -40,7 +40,7 @@ TYPE
 			lenx := len[0];  ox := origin[0];
 		END ValidateCache;
 
-		PROCEDURE SetBoundaryCondition*( c: SHORTINT );   (* called by new, load and directly *)
+		PROCEDURE SetBoundaryCondition*( c: SIGNED8 );   (* called by new, load and directly *)
 		BEGIN
 			SetBoundaryCondition^( c );
 			CASE c OF
@@ -62,12 +62,12 @@ TYPE
 		END SetBoundaryCondition;
 
 	(** new *)
-		PROCEDURE & New*( ox, w: LONGINT );   (** ox is the offset and w is the width (or length) of the array. *)
+		PROCEDURE & New*( ox, w: SIGNED32 );   (** ox is the offset and w is the width (or length) of the array. *)
 		BEGIN
 			NewXdB( ArrayXdBytes.Array1( ox ), ArrayXdBytes.Array1( w ) );
 		END New;
 
-		PROCEDURE NewRange*( ox, w: LONGINT;  copydata: BOOLEAN );
+		PROCEDURE NewRange*( ox, w: SIGNED32;  copydata: BOOLEAN );
 		BEGIN
 			IF (w # len[0]) OR (ox # origin[0]) THEN
 				NewRangeX^( ArrayXdBytes.Array1( ox ), ArrayXdBytes.Array1( w ), copydata );
@@ -155,7 +155,7 @@ TYPE
 								   ArrayXdBytes.Index4( destx, desty, destz, destt ), slen );
 		END CopyToHCube;
 
-		PROCEDURE CopyTo1dArray*( VAR dest: ARRAY OF Value;  srcpos, srclen: Index;  dpos, dlen: LONGINT );
+		PROCEDURE CopyTo1dArray*( VAR dest: ARRAY OF Value;  srcpos, srclen: Index;  dpos, dlen: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -165,7 +165,7 @@ TYPE
 																  ArrayXdBytes.Index1( dpos ), ArrayXdBytes.Index1( dlen ) );
 		END CopyTo1dArray;
 
-		PROCEDURE CopyTo2dArray*( VAR dest: ARRAY OF ARRAY OF Value;  srcpos, srclen: Index;  dposx, dposy, dlenx, dleny: LONGINT );
+		PROCEDURE CopyTo2dArray*( VAR dest: ARRAY OF ARRAY OF Value;  srcpos, srclen: Index;  dposx, dposy, dlenx, dleny: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -176,7 +176,7 @@ TYPE
 		END CopyTo2dArray;
 
 		PROCEDURE CopyTo3dArray*( VAR dest: ARRAY OF ARRAY OF ARRAY OF Value;  srcpos, srclen: Index;
-													   dposx, dposy, dposz, dlenx, dleny, dlenz: LONGINT );
+													   dposx, dposy, dposz, dlenx, dleny, dlenz: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -189,7 +189,7 @@ TYPE
 		END CopyTo3dArray;
 
 		PROCEDURE CopyTo4dArray*( VAR dest: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value;  srcpos, srclen: Index;
-													   dposx, dposy, dposz, dpost, dlenx, dleny, dlenz, dlent: LONGINT );
+													   dposx, dposy, dposz, dpost, dlenx, dleny, dlenz, dlent: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -500,7 +500,7 @@ TYPE
 
 	OPERATOR "*"*( l, r: Vector ): Value;   (* scalar product *)
 	(*! replace by operation on memory *)
-	VAR res: Value;  i: LONGINT;
+	VAR res: Value;  i: SIGNED32;
 	BEGIN
 		ArrayXdBytes.CheckEqDimensions( l, r );  res := 0;
 		FOR i := l.ox TO l.ox + l.lenx - 1 DO res := res + l.Get( i ) * r.Get( i );  END;
@@ -509,7 +509,7 @@ TYPE
 
 	PROCEDURE L1Norm*( l: Vector ): ReValue;
 	(*! todo: replace by operation on memory *)
-	VAR norm: ReValue;  i: LONGINT;
+	VAR norm: ReValue;  i: SIGNED32;
 	BEGIN
 		norm := 0;
 		FOR i := l.ox TO l.ox + l.lenx - 1 DO norm := norm + NbrCplx.Abs( l.Get( i ) );  END;
@@ -518,7 +518,7 @@ TYPE
 
 	PROCEDURE L2Norm*( l: Vector ): ReValue;
 	(*! todo: replace by operation on memory *)
-	VAR norm: ReValue; cur: Value;  i: LONGINT;
+	VAR norm: ReValue; cur: Value;  i: SIGNED32;
 	BEGIN
 		norm := 0;
 		FOR i := l.ox TO l.ox + l.lenx - 1 DO cur := l.Get( i ); norm := norm + NbrCplx.Re(cur*(~cur));  END;
@@ -528,7 +528,7 @@ TYPE
 
 	PROCEDURE LInftyNorm*( l: Vector ): ReValue;
 	(*! todo: replace by operation on memory *)
-	VAR norm, abs: ReValue;  i: LONGINT;
+	VAR norm, abs: ReValue;  i: SIGNED32;
 	BEGIN
 		norm := NbrCplx.Abs( l.Get( l.ox ) );
 		FOR i := l.ox + 1 TO l.ox + l.lenx - 1 DO
@@ -540,7 +540,7 @@ TYPE
 
 (* The procedures needed to register type Vector so that its instances can be made persistent. *)
 	PROCEDURE LoadVector( R: DataIO.Reader;  VAR obj: OBJECT );
-	VAR a: Vector;  version: SHORTINT;  ver: NbrInt.Integer;
+	VAR a: Vector;  version: SIGNED8;  ver: NbrInt.Integer;
 	BEGIN
 		R.RawSInt( version );
 		IF version = -1 THEN

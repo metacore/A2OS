@@ -61,7 +61,7 @@ VAR
 	END Command;
 
 	PROCEDURE Call*;
-	VAR sc: Texts.Scanner; res: INTEGER;
+	VAR sc: Texts.Scanner; res: SIGNED16;
 	BEGIN
 	Texts.OpenScanner(sc, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(sc);
@@ -83,9 +83,9 @@ VAR
 
 	PROCEDURE Stop*; END Stop;
 
-	PROCEDURE OpenScript* (t: Texts.Text; pos, num: LONGINT; executorObj, context: Objects.Object): BOOLEAN; BEGIN RETURN FALSE END OpenScript;
+	PROCEDURE OpenScript* (t: Texts.Text; pos, num: SIGNED32; executorObj, context: Objects.Object): BOOLEAN; BEGIN RETURN FALSE END OpenScript;
 
-	PROCEDURE SetProgress* (i: INTEGER); END SetProgress; (* for interactive visualization of progress *)
+	PROCEDURE SetProgress* (i: SIGNED16); END SetProgress; (* for interactive visualization of progress *)
 
 	PROCEDURE Init*; END Init;
 
@@ -178,7 +178,7 @@ System.Time
 
 (*
 PROCEDURE Test*;
-VAR ok,keys: SET; x,y: INTEGER; res: INTEGER;
+VAR ok,keys: SET; x,y: SIGNED16; res: SIGNED16;
 BEGIN
 Input.Mouse(ok,x,y); keys := ok;
 WHILE(ok=keys) DO
@@ -193,7 +193,7 @@ SYSTEM.GET(ADDRESSOF(Exceptions.displayTrap),oldtrapper); trapName := "Cause: Sy
 END Test2;
 
 PROCEDURE Test3*;
-VAR ok,keys: SET; x,y: INTEGER;time : LONGINT;
+VAR ok,keys: SET; x,y: SIGNED16;time : SIGNED32;
 BEGIN
 HALT(99);
 END Test3;
@@ -232,14 +232,14 @@ HALT(100);
 END TestTrap;
 
 PROCEDURE Time*;
-VAR time: LONGINT; i: LONGREAL;
+VAR time: SIGNED32; i: FLOAT64;
 BEGIN
 time := Oberon.Time()+Input.TimeUnit;
 WHILE Oberon.Time() < time DO
 i := i+1;
 END;
 Out.LongReal(i,30);
-Out.Int(MAX(LONGINT) DIV 2 DIV 1000,20);
+Out.Int(MAX(SIGNED32) DIV 2 DIV 1000,20);
 END Time;
 
 PROCEDURE Test*;
@@ -257,13 +257,13 @@ BEGIN
 IF executor = NIL THEN RETURN END;
 END Test3;
 
-PROCEDURE TestBM (A: ARRAY OF LONGREAL);
+PROCEDURE TestBM (A: ARRAY OF FLOAT64);
 BEGIN
 A[0] := 0;
 END TestBM;
 
 PROCEDURE TestBigMatrix*;
-VAR A: POINTER TO ARRAY OF LONGREAL;
+VAR A: POINTER TO ARRAY OF FLOAT64;
 BEGIN
 Out.Ln; Out.String("Calling testbigmatrix..");
 NEW(A,100000);
@@ -271,7 +271,7 @@ TestBM(A^);
 END TestBigMatrix;
 
 PROCEDURE ShowPar*;
-VAR sc: Texts.Reader; ch: CHAR; i: INTEGER;
+VAR sc: Texts.Reader; ch: CHAR; i: SIGNED16;
 BEGIN
 Texts.OpenReader(sc,Oberon.Par.text,Oberon.Par.pos);
 i := 0; Texts.Read(sc,ch);

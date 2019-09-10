@@ -36,7 +36,7 @@ CONST
 
 	(** SQL data types **)
 	SqlBitType* = -7;	(** single bit binary data **)
-	SqlTinyIntType* = -6;	(** SHORTINT **)
+	SqlTinyIntType* = -6;	(** SIGNED8 **)
 	SqlBigIntType* = -5;	(** 64 bit integer data **)
 	SqlLongVarBinaryType* = -4;	(** variable length binary data, maximum length is data source dependant **)
 	SqlVarBinaryType* = -3;	(** variable length binary data of maximum length n (1 <= n <= 255) **)
@@ -45,11 +45,11 @@ CONST
 	SqlCharType* = 1;	(** character string of fixed length n (1 <= n <= 254) **)
 	SqlNumericType* = 2;	(** signed exact numeric value with a precision p and scale s (1<=p<=15, 0<=s<=p) **)
 	SqlDecimalType* = 3;	(** signed exact numeric value with a precision p and scale s (1<=p<=15, 0<=s<=p) **)
-	SqlLongIntType* = 4;	(** LONGINT **)
-	SqlIntType* = 5;	(** INTEGER **)
-	SqlFloatType* = 6;	(** LONGREAL **)
-	SqlRealType* = 7;	(** REAL **)
-	SqlLongRealType* = 8;	(** LONGREAL **)
+	SqlLongIntType* = 4;	(** SIGNED32 **)
+	SqlIntType* = 5;	(** SIGNED16 **)
+	SqlFloatType* = 6;	(** FLOAT64 **)
+	SqlRealType* = 7;	(** FLOAT32 **)
+	SqlLongRealType* = 8;	(** FLOAT64 **)
 	SqlDateType* = 9;	(** date data (yyyy-mm-dd) **)
 	SqlTimeType* = 10;	(** time data (hh:mm:ss) **)
 	SqlTimeStampType* = 11;	(** date/time data (yyyy-mm-dd hh:mm:ss[f..]) **)
@@ -93,7 +93,7 @@ TYPE
 	SourcesHandler* = PROCEDURE(name, desc: ARRAY OF CHAR);
 
 	(** enumerate procedure used for EnumErrors **)
-	ErrorProc* = PROCEDURE(state, msg: ARRAY OF CHAR; errorcode: LONGINT);
+	ErrorProc* = PROCEDURE(state, msg: ARRAY OF CHAR; errorcode: SIGNED32);
 
 	(** database connection handle **)
 	Connection* = POINTER TO ConnectionDesc;
@@ -120,7 +120,7 @@ TYPE
 			hdbc: ODBC.HDBC;
 			closed: BOOLEAN;
 			stmt: Statement;
-			res*: INTEGER;
+			res*: SIGNED16;
 		END;
 
 	StatementDesc = RECORD
@@ -130,13 +130,13 @@ TYPE
 			results, params: Row;
 			firstExec, errBuffered: BOOLEAN;
 			error: ErrBuff;
-			res*: INTEGER;
+			res*: SIGNED16;
 		END;
 
 	ErrBuffDesc = RECORD
 			state: ARRAY 6 OF CHAR;
 			msg: ARRAY 512 OF CHAR;
-			native: LONGINT;
+			native: SIGNED32;
 			next: ErrBuff
 		END;
 
@@ -144,11 +144,11 @@ TYPE
 	Field* = POINTER TO FieldDesc;
 	FieldDesc* = RECORD
 			next, prev: Field;
-			dir: INTEGER;	(* in/out/inout *)
+			dir: SIGNED16;	(* in/out/inout *)
 			name*: ARRAY 32 OF CHAR;	(** name of column **)
-			len*: LONGINT;	(** maximum number of characters needed to represent data, only valid for Fields in a result set
+			len*: SIGNED32;	(** maximum number of characters needed to represent data, only valid for Fields in a result set
 												(ie. not for parameters), and only between a call to PrepareStatement and Execute **)
-			sqlType*: INTEGER;	(** SQL type of column (needed because different SQL types are mapped into same
+			sqlType*: SIGNED16;	(** SQL type of column (needed because different SQL types are mapped into same
 													field type) **)
 			isNull*: BOOLEAN;	(** get/set if field is NULL **)
 			nullable*: BOOLEAN	(** determine if field is nullable **)
@@ -157,7 +157,7 @@ TYPE
 	(** field extension to hold integer data **)
 	IntField* = POINTER TO IntFieldDesc;
 	IntFieldDesc* = RECORD(FieldDesc)
-			i*: LONGINT
+			i*: SIGNED32
 		END;
 
 	(*ALEX 2005.10.20*)
@@ -177,26 +177,26 @@ TYPE
 	(** field extension to hold floating point data (SQLFloatType, SQLRealType and SQLLongRealType) **)
 	RealField* = POINTER TO RealFieldDesc;
 	RealFieldDesc* = RECORD(FieldDesc)
-			r*: LONGREAL
+			r*: FLOAT64
 		END;
 
 	(** field extension to hold date (SQLDateType) **)
 	DateField* = POINTER TO DateFieldDesc;
 	DateFieldDesc* = RECORD(FieldDesc)
-			year*, month*, day*: INTEGER
+			year*, month*, day*: SIGNED16
 		END;
 
 	(** field extension to hold time (SQLTimeType) **)
 	TimeField* = POINTER TO TimeFieldDesc;
 	TimeFieldDesc* = RECORD(FieldDesc)
-			hour*, minute*, second*: INTEGER
+			hour*, minute*, second*: SIGNED16
 		END;
 
 	(** field extension to hold time stamp (SQLTimeStampType) **)
 	TimeStampField* = POINTER TO TimeStampFieldDesc;
 	TimeStampFieldDesc* = RECORD(FieldDesc)
-			year*, month*, day*, hour*, minute*, second*: INTEGER;
-			fraction*: LONGINT
+			year*, month*, day*, hour*, minute*, second*: SIGNED16;
+			fraction*: SIGNED32
 		END;
 
 	(** field extension to hold long data like SQLLongVarCharType or SQLLongBinaryType **)
@@ -224,18 +224,18 @@ TYPE
 	(** handle for SQL statement results and parameters **)
 	RowDesc* = RECORD
 			dsc: Field;
-			cols*: INTEGER
+			cols*: SIGNED16
 		END;
 
 	(** parameter description record **)
 	ParamType* = RECORD
-			oberonType*, sqlType*, inOut*: INTEGER;
+			oberonType*, sqlType*, inOut*: SIGNED16;
 			name*: ARRAY 32 OF CHAR;
 		END;
 
 VAR
 	(** result code of last operation **)
-	(*res*: INTEGER;*)
+	(*res*: SIGNED16;*)
 
 (* ----------------------- Row handling ----------------------- *)
 
@@ -283,15 +283,15 @@ END FindField;
 
 (* -------------------------------------------------------------------------- *)
 
-PROCEDURE PrintError(state, msg: ARRAY OF CHAR; errorCode: LONGINT);
+PROCEDURE PrintError(state, msg: ARRAY OF CHAR; errorCode: SIGNED32);
 BEGIN
 	KernelLog.String(state); KernelLog.String(msg); KernelLog.Ln
 END PrintError;
 
-PROCEDURE DummyEnum(state, msg: ARRAY OF CHAR; code: LONGINT);
+PROCEDURE DummyEnum(state, msg: ARRAY OF CHAR; code: SIGNED32);
 END DummyEnum;
 
-PROCEDURE InsertError(stmt: Statement; state, msg: ARRAY OF CHAR; nativeCode: LONGINT);
+PROCEDURE InsertError(stmt: Statement; state, msg: ARRAY OF CHAR; nativeCode: SIGNED32);
 	VAR err: ErrBuff;
 BEGIN
 	NEW(err); stmt.errBuffered:= TRUE; err.next:= stmt.error; stmt.error:= err;
@@ -302,7 +302,7 @@ END InsertError;
 	connection c are enumerated. If both s and c are NIL then all errors belonging to SQL and ODBC themselves
 	are enumerated **)
 PROCEDURE EnumErrors*(c: Connection; s: Statement; enum: ErrorProc);
-	VAR localErr: ErrBuff; errorState: ARRAY 6 OF CHAR; errorMsg: ARRAY 512 OF CHAR; nativeError: LONGINT;
+	VAR localErr: ErrBuff; errorState: ARRAY 6 OF CHAR; errorMsg: ARRAY 512 OF CHAR; nativeError: SIGNED32;
 BEGIN
 	IF s # NIL THEN
 		IF s.errBuffered THEN
@@ -396,9 +396,9 @@ END Close;
 		types[i].name can be used to name the parameter, ie you can find the corresponding Field in paramRow with
 			the procedure FindField
 	A row containing a Field for each parameter is returned in paramRow **)
-PROCEDURE BindParameters*(s: Statement; types: ARRAY OF ParamType; numParams: INTEGER; VAR paramRow: Row);
+PROCEDURE BindParameters*(s: Statement; types: ARRAY OF ParamType; numParams: SIGNED16; VAR paramRow: Row);
 	TYPE arr6 = ARRAY 6 OF CHAR; arr16 = ARRAY 16 OF CHAR;
-	VAR i, parType: INTEGER; if: IntField; sf: StringField; rf: RealField; df: DateField; tf: TimeField; tsf: TimeStampField;
+	VAR i, parType: SIGNED16; if: IntField; sf: StringField; rf: RealField; df: DateField; tf: TimeField; tsf: TimeStampField;
 		ff: FileField; bf: BinaryField; boolf: BooleanField; buffer: ARRAY BlockSize OF CHAR;
 BEGIN
 	AllocRow(s.params); s.params.cols:= numParams;
@@ -477,8 +477,8 @@ END BindParameters;
 	this data you must check it between the calls to PrepareStatement and to Execute. **)
 PROCEDURE PrepareStatement*(c: Connection; sqlStatement: ARRAY OF CHAR; VAR resultRow: Row): Statement;
 	TYPE arr6 = ARRAY 6 OF CHAR; arr16 = ARRAY 16 OF CHAR;
-	VAR stmt: Statement; cols, i, type, scale, oldres: INTEGER; name: ARRAY 256 OF CHAR; nullable: BOOLEAN;
-		prec, nativeBuf: LONGINT; stateBuf: ARRAY 6 OF CHAR; msgBuf: ARRAY 512 OF CHAR;
+	VAR stmt: Statement; cols, i, type, scale, oldres: SIGNED16; name: ARRAY 256 OF CHAR; nullable: BOOLEAN;
+		prec, nativeBuf: SIGNED32; stateBuf: ARRAY 6 OF CHAR; msgBuf: ARRAY 512 OF CHAR;
 		if: IntField; sf: StringField; rf: RealField; df: DateField; tf: TimeField; tsf: TimeStampField; cur: Field;
 		bf: BinaryField; ff: FileField; boolf: BooleanField;
 		nf: NumericField;
@@ -590,7 +590,7 @@ END PrepareStatement;
 	IMPORTANT: a statement which does not need parameters and does not return any data (for example
 	"DROP TABLE MyTable") will take effect even if you don't call Execute for this statement handle **)
 PROCEDURE Execute*(s: Statement);
-	VAR parDesc, cur: Field; buffer: ARRAY BlockSize OF CHAR; r: Files.Rider; cnt: LONGINT;
+	VAR parDesc, cur: Field; buffer: ARRAY BlockSize OF CHAR; r: Files.Rider; cnt: SIGNED32;
 BEGIN
 	IF s.firstExec THEN
 		(* Out.String("discarding Execute"); Out.Ln; *)
@@ -641,7 +641,7 @@ END Execute;
 	delievered by a SELECT Statement but rather the number of rows affected by an UPDATE or DELETE statement.
 	If you want the number of rows in the result set of a SELECT statement use "SELECT COUNT( * ) .." or increment
 	a counter variable after each call to Fetch **)
-PROCEDURE RowCount*(s: Statement; VAR rows: LONGINT);
+PROCEDURE RowCount*(s: Statement; VAR rows: SIGNED32);
 BEGIN
 	ODBC.RowCount(s.hstmt, rows, s.res);
 END RowCount;
@@ -649,7 +649,7 @@ END RowCount;
 (** fetch the next result row for statement s (of course statement s must have been executed before you can call
 	the procedure Fetch) **)
 PROCEDURE Fetch*(s: Statement);
-	VAR cur: Field; col: INTEGER; resSize, actSize: LONGINT; buffer: ARRAY BlockSize OF CHAR; r: Files.Rider;
+	VAR cur: Field; col: SIGNED16; resSize, actSize: SIGNED32; buffer: ARRAY BlockSize OF CHAR; r: Files.Rider;
 BEGIN
 	ODBC.Fetch(s.hstmt, s.res);
 	IF (s.res < 0) OR (s.res = 100) THEN RETURN END;
@@ -683,12 +683,12 @@ END Fetch;
 
 (** JSS: fetch the result row for statement s (s must have been executed before you can call
 	the procedure ExtendedFetch), based on fetchType and rowToFetch  **)
-PROCEDURE FetchExtended*(s: Statement; fetchType: INTEGER; rowToFetch: LONGINT; VAR numFetchedRows: LONGINT; VAR rowStatus: INTEGER );
+PROCEDURE FetchExtended*(s: Statement; fetchType: SIGNED16; rowToFetch: SIGNED32; VAR numFetchedRows: SIGNED32; VAR rowStatus: SIGNED16 );
 	VAR
 		cur: Field;
-		col: INTEGER;
+		col: SIGNED16;
 		resSize,
-			actSize: LONGINT;
+			actSize: SIGNED32;
 		(*buffer: ARRAY BlockSize OF SYSTEM.BYTE; *)
 		buffer: ARRAY BlockSize OF CHAR;
 		r: Files.Rider;
@@ -737,7 +737,7 @@ BEGIN
 END Rollback;
 
 (** enumerates all data sources **)
-PROCEDURE EnumDataSources*(enum: SourcesHandler; VAR res: INTEGER);
+PROCEDURE EnumDataSources*(enum: SourcesHandler; VAR res: SIGNED16);
 	VAR name, desc: ARRAY 256 OF CHAR;
 BEGIN
 	ODBC.DataSources(2, name, desc, res);
@@ -751,7 +751,7 @@ BEGIN
 END EnumDataSources;
 
 (** enumerates all installed ODBC database drivers **)
-PROCEDURE EnumDrivers*(enum: SourcesHandler; VAR res: INTEGER);
+PROCEDURE EnumDrivers*(enum: SourcesHandler; VAR res: SIGNED16);
 	VAR name, desc: ARRAY 256 OF CHAR;
 BEGIN
 	ODBC.Drivers(2, name, desc, res);
@@ -773,8 +773,8 @@ END EnumDrivers;
 		REMARKS	StringField
 **)
 PROCEDURE Tables*(c: Connection; VAR row: Row): Statement;
-	VAR stmt: Statement; i, cols, type, scale: INTEGER; if: IntField; sf: StringField; rf: RealField; cur: Field;
-		name: ARRAY 256 OF CHAR; prec: LONGINT; nullable: BOOLEAN;
+	VAR stmt: Statement; i, cols, type, scale: SIGNED16; if: IntField; sf: StringField; rf: RealField; cur: Field;
+		name: ARRAY 256 OF CHAR; prec: SIGNED32; nullable: BOOLEAN;
 BEGIN
 	NEW(stmt); NEW(stmt.hstmt); ODBC.AllocStmt(c.hdbc, stmt.hstmt, stmt.res); stmt.c:= c; row:= NIL; stmt.firstExec:= TRUE;
 	ODBC.Tables(stmt.hstmt, ODBC.nullString, ODBC.nullString, ODBC.nullString, ODBC.nullString, stmt.res);
@@ -801,8 +801,8 @@ END Tables;
 
 (** retrieve the name of a SQL data type as it is used in the data source connected to by Connection c.
 	For example some DBs call a 4 byte integer "LONG", and others call it "INT4". **)
-PROCEDURE GetTypeName*(c: Connection; sqlType: INTEGER; VAR typeName: ARRAY OF CHAR; VAR res: INTEGER);
-	VAR stmt: Statement; len: LONGINT;
+PROCEDURE GetTypeName*(c: Connection; sqlType: SIGNED16; VAR typeName: ARRAY OF CHAR; VAR res: SIGNED16);
+	VAR stmt: Statement; len: SIGNED32;
 BEGIN
 	NEW(stmt); NEW(stmt.hstmt); ODBC.AllocStmt(c.hdbc, stmt.hstmt, stmt.res);
 	typeName[0]:= 0X;

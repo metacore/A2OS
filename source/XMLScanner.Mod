@@ -65,8 +65,8 @@ TYPE
 
 	Scanner* = OBJECT
 		VAR
-			sym-: SHORTINT;	(** current token *)
-			line-, col-, oldpos, pos: LONGINT;
+			sym-: SIGNED8;	(** current token *)
+			line-, col-, oldpos, pos: SIGNED32;
 			reportError*: PROCEDURE {DELEGATE} (pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
 			nextCh: CHAR;	(* look-ahead *)
 			dynstr: DynamicStrings.DynamicString;	(* buffer for CharData, Literal, Name, CharRef, EntityRef and ParamEntityRef *)
@@ -206,7 +206,7 @@ TYPE
 				TagCDataSectClose
 				Invalid	*)
 		PROCEDURE ScanCDataSect;
-		VAR bc: LONGINT; escape : BOOLEAN;
+		VAR bc: SIGNED32; escape : BOOLEAN;
 		BEGIN
 			IF sym = Eof THEN
 				sym := Invalid;
@@ -425,7 +425,7 @@ TYPE
 			EntityRef
 			Eof *)
 		PROCEDURE ScanContent*;
-		VAR op : LONGINT;
+		VAR op : SIGNED32;
 		BEGIN
 			op := GetPos();
 			SkipWhiteSpaces(); oldpos := GetPos();
@@ -489,7 +489,7 @@ TYPE
 			END
 		END ScanContent;
 
-		PROCEDURE GetString*(type : LONGINT): String;
+		PROCEDURE GetString*(type : SIGNED32): String;
 		VAR string : String;
 		BEGIN
 			IF (type IN stringPooling) THEN
@@ -500,12 +500,12 @@ TYPE
 			RETURN string;
 		END GetString;
 
-		PROCEDURE GetPos*(): LONGINT;
+		PROCEDURE GetPos*(): SIGNED32;
 		BEGIN
 			RETURN pos - 1
 		END GetPos;
 
-		PROCEDURE GetOldPos*(): LONGINT;
+		PROCEDURE GetOldPos*(): SIGNED32;
 		BEGIN
 			RETURN oldpos
 		END GetOldPos;

@@ -8,7 +8,7 @@ IMPORT
 	Platform, BootConfig, Machine, Objects, KernelLog;
 
 TYPE
-	Time* = HUGEINT; (* Time type used in EnetTiming *)
+	Time* = SIGNED64; (* Time type used in EnetTiming *)
 
 	(* The prototype of an interrupt handler *)
 	InterruptHandler* = PROCEDURE();
@@ -26,12 +26,12 @@ VAR
 	GetTimeCounter-: PROCEDURE(): Time;
 	InvalidateDCacheRange-: PROCEDURE(addr: ADDRESS; length: SIZE);
 	FlushDCacheRange-: PROCEDURE(addr: ADDRESS; length: SIZE);
-	cpuClockHz: LONGINT;
+	cpuClockHz: SIGNED32;
 
 	(**
 		Install an interrupt handler
 	*)
-	PROCEDURE InstallInterruptHandler*(interruptHandler: InterruptHandler; interruptNumber: LONGINT);
+	PROCEDURE InstallInterruptHandler*(interruptHandler: InterruptHandler; interruptNumber: SIGNED32);
 	BEGIN
 		Objects.InstallHandler(interruptHandler,interruptNumber);
 	END InstallInterruptHandler;
@@ -69,13 +69,13 @@ VAR
 	(** Convert microseconds to time counts *)
 	PROCEDURE FromMicro*(us: Time): Time;
 	BEGIN
-		RETURN us * ENTIERH(0.5D0+LONGREAL(cpuClockHz)/2.0D6);
+		RETURN us * ENTIERH(0.5D0+FLOAT64(cpuClockHz)/2.0D6);
 	END FromMicro;
 
 	(** Convert milliseconds to time counts *)
 	PROCEDURE FromMilli*(ms: Time): Time;
 	BEGIN
-		RETURN ms * ENTIERH(0.5D0+LONGREAL(cpuClockHz)/2.0D3);
+		RETURN ms * ENTIERH(0.5D0+FLOAT64(cpuClockHz)/2.0D3);
 	END FromMilli;
 
 BEGIN

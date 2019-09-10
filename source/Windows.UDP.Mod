@@ -22,11 +22,11 @@ TYPE
 		(* Initialize the Socket (only use once per instance).
 	Opens a socket which is dedicated to datagram services. lport is registered to receive datagrams
 	from any port and any host. *)
-		PROCEDURE & Open*( lport: LONGINT;  VAR res: WORD );
+		PROCEDURE & Open*( lport: SIGNED32;  VAR res: INTEGER );
 		VAR
 			sadr: WSock32.sockaddrIn;
-			err: LONGINT; winRes: LONGINT;
-			bufSize, len: LONGINT;
+			err: SIGNED32; winRes: SIGNED32;
+			bufSize, len: SIGNED32;
 		BEGIN
 			(* IF ~AosWinsock.ready THEN RETURN END;  *)
 			sock := WSock32.socket( WSock32.PFINet, WSock32.SockDGram, WSock32.IPProtoUDP );
@@ -41,13 +41,13 @@ TYPE
 			ELSE res := unknown;
 			END;
 
-			bufSize := SendBufSize; len := SIZEOF(LONGINT);
+			bufSize := SendBufSize; len := SIZEOF(SIGNED32);
 			err := WSock32.setsockopt(sock,WSock32.SOLSocket,WSock32.SOSndBuf,bufSize,len);
 			IF (err # 0) & trace THEN
 				KernelLog.String( "UDP.Open : failed to set send buffer size, WSock32 error code " ); KernelLog.Int(err,0); KernelLog.Ln;
 			END;
 			bufSize := RecvBufSize;
-			err := WSock32.setsockopt(sock,WSock32.SOLSocket,WSock32.SORcvBuf,bufSize,SIZEOF(LONGINT));
+			err := WSock32.setsockopt(sock,WSock32.SOLSocket,WSock32.SORcvBuf,bufSize,SIZEOF(SIGNED32));
 			IF (err # 0) & trace THEN
 				KernelLog.String( "UDP.Open : failed to set receive buffer size, WSock32 error code " ); KernelLog.Int(err,0); KernelLog.Ln;
 			END;
@@ -62,14 +62,14 @@ TYPE
 					 In case of concurrent sends the datagrams are serialized.
 	Sends len bytes of data (beginning at pos in buf) to the host specified by remIP and remPort. *)
 
-		PROCEDURE Send*( fip: IP.Adr;  fport: LONGINT;  CONST data: ARRAY OF CHAR;  ofs, len: SIZE; VAR res: WORD );
-		VAR sadr: WSock32.sockaddrIn;  err: LONGINT; winRes: LONGINT;
+		PROCEDURE Send*( fip: IP.Adr;  fport: SIGNED32;  CONST data: ARRAY OF CHAR;  ofs, len: SIZE; VAR res: INTEGER );
+		VAR sadr: WSock32.sockaddrIn;  err: SIGNED32; winRes: SIGNED32;
 		BEGIN
 			ASSERT ( LEN( data ) >= (ofs + len) );
 			IF (fip.usedProtocol = IP.IPv4) THEN
 				SYSTEM.MOVE( ADDRESSOF( fip ), ADDRESSOF( sadr.sinAddr ), IPAdrLen );
 				sadr.sinFamily := WSock32.PFINet;  sadr.sinPort := WSock32.htons( SHORT( fport ) );
-				winRes := WSock32.sendto( sock, data[ofs], len(WORD), {}, sadr, SIZEOF( WSock32.sockaddrIn ) );
+				winRes := WSock32.sendto( sock, data[ofs], len(INTEGER), {}, sadr, SIZEOF( WSock32.sockaddrIn ) );
 				(* account that sendto returns number of bytes sent to the socket (Alexey) *)
 				IF winRes = len THEN res := Ok; ELSE err := WSock32.WSAGetLastError(); res := unknown;  END;
 			ELSE res := unknown;
@@ -93,10 +93,10 @@ TYPE
 					if another thread is already blocked on this Socket.
 	Stores an entire datagram in buf beginning at pos. On success (S.res = done), remIP and remPort indicate the sender, len indicate the length of valid data. *)
 
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size: SIZE; ms: LONGINT;  VAR fip: IP.Adr;
-										   VAR fport: LONGINT; VAR len: SIZE; VAR res: WORD );
-		VAR sadr: WSock32.sockaddrIn;  err: LONGINT;  l: LONGINT; winRes: LONGINT;
-		ret: LONGINT;  fdset: WSock32.FDSet; avail: BOOLEAN; time: WSock32.TimeVal;
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size: SIZE; ms: SIGNED32;  VAR fip: IP.Adr;
+										   VAR fport: SIGNED32; VAR len: SIZE; VAR res: INTEGER );
+		VAR sadr: WSock32.sockaddrIn;  err: SIGNED32;  l: SIGNED32; winRes: SIGNED32;
+		ret: SIGNED32;  fdset: WSock32.FDSet; avail: BOOLEAN; time: WSock32.TimeVal;
 		BEGIN
 			ASSERT ( ofs+size <= LEN( data ) );
 			l := SIZEOF( WSock32.sockaddrIn );
@@ -127,7 +127,7 @@ TYPE
 			END;
 
 			IF avail THEN
-				len := WSock32.recvfrom( sock, data[ofs], size(WORD), {}, sadr, l );
+				len := WSock32.recvfrom( sock, data[ofs], size(INTEGER), {}, sadr, l );
 				IF len < 0 THEN err := WSock32.WSAGetLastError(); (*  AosWinsock.DispError( err ); *)  res := unknown;
 				ELSE res := Ok;
 				END;
@@ -158,8 +158,8 @@ TYPE
 		END Close;
 	(*
 		(** Returns the size of the first available datagram on the socket, otherwise <= 0. *)
-	PROCEDURE Available*(  ): LONGINT;
-	VAR avail: LONGINT;
+	PROCEDURE Available*(  ): SIGNED32;
+	VAR avail: SIGNED32;
 	BEGIN
 		WSock32.ioctlsocket( sock, WSock32.FIONRead, avail );  RETURN avail
 	END Available;
@@ -171,7 +171,7 @@ VAR
 	trace: BOOLEAN;
 
 	PROCEDURE SockFinalizer( S: ANY );
-	VAR ret: LONGINT;																			(* Dan 10.11.05 *)	BEGIN
+	VAR ret: SIGNED32;																			(* Dan 10.11.05 *)	BEGIN
 		WITH S: Socket DO
 			IF S.sock # WSock32.InvalidSocket THEN  ret:= WSock32.closesocket( S.sock );  S.sock := WSock32.InvalidSocket END
 		END

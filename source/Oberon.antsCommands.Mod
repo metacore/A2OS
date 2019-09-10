@@ -60,12 +60,12 @@ TYPE
 
 	tReal* = POINTER TO tRealDesc;   (* caution: a real number MAY be an integer number, check the type *)
 	tRealDesc* = RECORD (tParameterDesc)
-		real-: LONGREAL
+		real-: FLOAT64
 	END;
 
 	tNumber* = POINTER TO tNumberDesc;   (* be aware of the fact that a number IS a real number*)
 	tNumberDesc* = RECORD (tRealDesc)
-		number-: LONGINT
+		number-: SIGNED32
 	END;
 
 	tObject* = POINTER TO tObjectDesc;   (* since an Object is identified by a name, in this case an object is treated as name *)
@@ -83,10 +83,10 @@ TYPE
 		keyname: vyName.tNameArray;
 		pars: tParameter;
 		text: Texts.Text;
-		pos: LONGINT;
-		end: LONGINT;
+		pos: SIGNED32;
+		end: SIGNED32;
 		next: tScanList;
-		spos*: LONGINT
+		spos*: SIGNED32
 	END;
 
 VAR
@@ -103,8 +103,8 @@ VAR
 	usage  keywords
 
 	OBJ = vyBase.Object
-	REAL = LONGREAL
-	INT = LONGINT
+	FLOAT32 = FLOAT64
+	INT = SIGNED32
 	STR = ARRAY OF CHAR
 	NAME = Voyager.Name (ARRAY OF CHAR with restrictions)
 	[] optional
@@ -113,10 +113,10 @@ VAR
 	() embracement
 *)
 
-	PROCEDURE NewItem( VAR item: tScanList;  keyname: ARRAY OF CHAR;  text: Texts.Text;  start, pos: LONGINT );
+	PROCEDURE NewItem( VAR item: tScanList;  keyname: ARRAY OF CHAR;  text: Texts.Text;  start, pos: SIGNED32 );
 	BEGIN
 		IF item = NIL THEN NEW( item ) ELSE item.end := start;  NEW( item.next );  item := item.next END;
-		COPY( keyname, item.keyname );  item.text := text;  item.pos := pos;  item.end := MAX( LONGINT )
+		COPY( keyname, item.keyname );  item.text := text;  item.pos := pos;  item.end := MAX( SIGNED32 )
 	END NewItem;
 
 	PROCEDURE AppendParameter( item: tScanList;  par: tParameter );
@@ -138,8 +138,8 @@ VAR
 		Texts.OpenReader( r, sc.text, sc.curTokPos );  Texts.Read( r, ch );  RETURN ch
 	END GetSymbol;
 
-	PROCEDURE ReadUntilChar( text: Texts.Text;  VAR pos: LONGINT;  start: CHAR;  VAR s: ARRAY OF CHAR;  VAR eot: BOOLEAN );
-	VAR re: Texts.Reader;  t: LONGINT;  ch: CHAR;
+	PROCEDURE ReadUntilChar( text: Texts.Text;  VAR pos: SIGNED32;  start: CHAR;  VAR s: ARRAY OF CHAR;  VAR eot: BOOLEAN );
+	VAR re: Texts.Reader;  t: SIGNED32;  ch: CHAR;
 	BEGIN
 		Texts.OpenReader( re, text, pos );  t := 0;  eot := FALSE;
 		REPEAT
@@ -150,7 +150,7 @@ VAR
 		s[t - 1] := 0X;  pos := Texts.Pos( re );
 	END ReadUntilChar;
 
-	PROCEDURE ReadString( text: Texts.Text;  VAR pos: LONGINT;  VAR s: ARRAY OF CHAR );
+	PROCEDURE ReadString( text: Texts.Text;  VAR pos: SIGNED32;  VAR s: ARRAY OF CHAR );
 	VAR sc: Texts.Scanner;
 	BEGIN
 		Texts.OpenScanner( sc, text, pos );  Texts.Scan( sc );
@@ -158,8 +158,8 @@ VAR
 		pos := Texts.Pos( sc ) - 1;
 	END ReadString;
 
-	PROCEDURE Qualifier( VAR scanner: vyScanners.Scanner;  VAR start, pos: LONGINT ): BOOLEAN;
-	VAR sc: vyScanners.Scanner;  tok: INTEGER;
+	PROCEDURE Qualifier( VAR scanner: vyScanners.Scanner;  VAR start, pos: SIGNED32 ): BOOLEAN;
+	VAR sc: vyScanners.Scanner;  tok: SIGNED16;
 	BEGIN
 		NEW( sc );  sc^ := scanner^;  start := sc.curTokPos;  tok := sc.GetNext( sc );
 		IF (sc.class = vyScanners.ctSym) & (GetSymbol( sc ) = "=") THEN
@@ -168,8 +168,8 @@ VAR
 		END
 	END Qualifier;
 
-	PROCEDURE Qualifier2( VAR scanner: vyScanners.Scanner;  VAR start, pos: LONGINT;  VAR name: ARRAY OF CHAR ): BOOLEAN;
-	VAR sc: vyScanners.Scanner;  tok: INTEGER;
+	PROCEDURE Qualifier2( VAR scanner: vyScanners.Scanner;  VAR start, pos: SIGNED32;  VAR name: ARRAY OF CHAR ): BOOLEAN;
+	VAR sc: vyScanners.Scanner;  tok: SIGNED16;
 	BEGIN
 		NEW( sc );  sc^ := scanner^;  start := sc.curTokPos;  tok := sc.GetNext( sc );
 		IF (sc.class = vyScanners.ctId) THEN
@@ -179,21 +179,21 @@ VAR
 	END Qualifier2;
 
 	PROCEDURE WaitForEndOfComment( VAR sc: vyScanners.Scanner;  VAR eot: BOOLEAN );
-	VAR pos: LONGINT;  re: Texts.Reader;  ch: CHAR;  done: BOOLEAN;
+	VAR pos: SIGNED32;  re: Texts.Reader;  ch: CHAR;  done: BOOLEAN;
 	BEGIN
 		pos := sc.curTokPos + 1;  Texts.OpenReader( re, sc.text, pos );  aM.dSI( "antsCommands: Start comment", pos );  ch := 0X;
 		REPEAT done := (ch = "*");  Texts.Read( re, ch );  done := (done & (ch = ")"));  eot := eot OR re.eot UNTIL (done) OR (eot);
-		pos := Texts.Pos( re );  aM.dSI( "antsCommands: End comment", pos - 2 );  vyScanners.OpenScanner( sc, sc.text, pos, MAX( LONGINT ) );
+		pos := Texts.Pos( re );  aM.dSI( "antsCommands: End comment", pos - 2 );  vyScanners.OpenScanner( sc, sc.text, pos, MAX( SIGNED32 ) );
 	END WaitForEndOfComment;
 
 	PROCEDURE Scan*( VAR sc: vyScanners.Scanner ): tScanList;
 	VAR anchor, this: tScanList;  Real: tReal;  Number: tNumber;  Name: tName;  sstring: tString;  Symbol: tSymbol;
-		name: vyName.tNameArray;  pos, num: LONGINT;  real: REAL;  object: vyBase.Object;  Object: tObject;  negative: BOOLEAN;  count: LONGINT;  start: LONGINT;
-		eot: BOOLEAN;  strpos: LONGINT;  tok: INTEGER;  s: CHAR;
+		name: vyName.tNameArray;  pos, num: SIGNED32;  real: FLOAT32;  object: vyBase.Object;  Object: tObject;  negative: BOOLEAN;  count: SIGNED32;  start: SIGNED32;
+		eot: BOOLEAN;  strpos: SIGNED32;  tok: SIGNED16;  s: CHAR;
 		string: ARRAY 1024 OF CHAR;
-		temppos: LONGINT;  text: Texts.Text;  noscanonce: BOOLEAN;  objsc: Texts.Scanner;  objpos: LONGINT;  s3obj, vyobj: Objects.Object;
+		temppos: SIGNED32;  text: Texts.Text;  noscanonce: BOOLEAN;  objsc: Texts.Scanner;  objpos: SIGNED32;  s3obj, vyobj: Objects.Object;
 
-		PROCEDURE check( VAR num: LONGINT );
+		PROCEDURE check( VAR num: SIGNED32 );
 		BEGIN
 			INC( num );
 			IF num > 10000 THEN HALT( 100 ) END
@@ -206,7 +206,7 @@ VAR
 
 			Texts.OpenScanner( objsc, sc.text, sc.chpos );  Texts.Scan( objsc );
 			IF objsc.class = Texts.Object THEN
-				s3obj := objsc.obj;  vyScanners.OpenScanner( sc, sc.text, Texts.Pos( objsc ) - 1, MAX( LONGINT ) );  vyobj := NIL;
+				s3obj := objsc.obj;  vyScanners.OpenScanner( sc, sc.text, Texts.Pos( objsc ) - 1, MAX( SIGNED32 ) );  vyobj := NIL;
 				Links.GetLink( s3obj, "Model", vyobj );
 				IF (vyobj = NIL ) OR (~(vyobj IS vyBase.Object)) THEN Links.GetLink( s3obj, "Value", vyobj ) END;
 				IF (vyobj # NIL ) & (vyobj IS vyBase.Object) THEN
@@ -234,7 +234,7 @@ VAR
 				noscanonce:= TRUE;
 				*)
 
-						vyScanners.OpenScanner( sc, sc.text, pos, MAX( LONGINT ) );  negative := FALSE
+						vyScanners.OpenScanner( sc, sc.text, pos, MAX( SIGNED32 ) );  negative := FALSE
 					ELSIF s = "~" THEN eot := TRUE
 					ELSIF s = "(" THEN
 						tok := sc.GetNext( sc );
@@ -269,7 +269,7 @@ VAR
 								END;
 								noscanonce := TRUE
 								(*
-						vyScanners.OpenScanner(sc, sc.text, strpos, MAX(LONGINT));
+						vyScanners.OpenScanner(sc, sc.text, strpos, MAX(SIGNED32));
 						*)
 							END
 						END;
@@ -293,7 +293,7 @@ VAR
 	END Scan;
 
 	PROCEDURE ScanFromPar*( usage: ARRAY OF CHAR ): tScanList;
-	VAR sc: vyScanners.Scanner;  m: Modules.Module;  pc: LONGINT;
+	VAR sc: vyScanners.Scanner;  m: Modules.Module;  pc: SIGNED32;
 	BEGIN
 		IF ~haveCaller THEN antsPortability.IdentifyCaller( m, pc );  antsPortability.IdentifyCommand( m, pc, callerS ) END;
 		COPY( usage, usageS );  aM.vS( callerS );  vyScanners.NewSScanner( sc );  vyScanners.OpenParScanner( sc );
@@ -301,7 +301,7 @@ VAR
 	END ScanFromPar;
 
 	PROCEDURE InitScan*( usage: ARRAY OF CHAR );
-	VAR m: Modules.Module;  pc: LONGINT;
+	VAR m: Modules.Module;  pc: SIGNED32;
 	BEGIN
 		antsPortability.IdentifyCaller( m, pc );  antsPortability.IdentifyCommand( m, pc, callerS );  haveCaller := TRUE;
 		lastScanned := ScanFromPar( usage );
@@ -329,7 +329,7 @@ VAR
 	END ParsFromKeyword;
 
 	PROCEDURE SetPosition( list: tScanList;  to: tScanList );
-	VAR pars: tParameter;  tpos, pos: LONGINT;
+	VAR pars: tParameter;  tpos, pos: SIGNED32;
 	BEGIN
 		pos := 1;
 		(* aM.dSI("antsCommands.GetFromPosition: ",pos); *)
@@ -347,7 +347,7 @@ VAR
 	END SetPosition;
 
 	PROCEDURE GetFromPosition*( list: tScanList ): tParameter;
-	VAR pars: tParameter;  tpos, pos: LONGINT;
+	VAR pars: tParameter;  tpos, pos: SIGNED32;
 	BEGIN
 		pos := list.spos;
 		(* aM.dSI("antsCommands.GetFromPosition: ",pos); *)
@@ -367,7 +367,7 @@ VAR
 		RETURN pars
 	END GetFromPosition;
 
-	PROCEDURE GetRealFromKeyword*( list: tScanList;  key: ARRAY OF CHAR;  VAR r: LONGREAL ): BOOLEAN;
+	PROCEDURE GetRealFromKeyword*( list: tScanList;  key: ARRAY OF CHAR;  VAR r: FLOAT64 ): BOOLEAN;
 	VAR p: tParameter;
 	BEGIN
 		p := ParsFromKeyword( list, key );
@@ -393,12 +393,12 @@ VAR
 		RETURN FALSE
 	END GetRealFromKeyword;
 
-	PROCEDURE GetReal*( key: ARRAY OF CHAR;  VAR r: LONGREAL ): BOOLEAN;
+	PROCEDURE GetReal*( key: ARRAY OF CHAR;  VAR r: FLOAT64 ): BOOLEAN;
 	BEGIN
 		RETURN GetRealFromKeyword( lastScanned, key, r )
 	END GetReal;
 
-	PROCEDURE GetNumberFromKeyword*( list: tScanList;  key: ARRAY OF CHAR;  VAR l: LONGINT ): BOOLEAN;
+	PROCEDURE GetNumberFromKeyword*( list: tScanList;  key: ARRAY OF CHAR;  VAR l: SIGNED32 ): BOOLEAN;
 	VAR p: tParameter;
 	BEGIN
 		p := ParsFromKeyword( list, key );
@@ -422,7 +422,7 @@ VAR
 		RETURN FALSE
 	END GetNumberFromKeyword;
 
-	PROCEDURE GetNumber*( key: ARRAY OF CHAR;  VAR l: LONGINT ): BOOLEAN;
+	PROCEDURE GetNumber*( key: ARRAY OF CHAR;  VAR l: SIGNED32 ): BOOLEAN;
 	BEGIN
 		RETURN GetNumberFromKeyword( lastScanned, key, l )
 	END GetNumber;
@@ -509,7 +509,7 @@ VAR
 		RETURN GetObjectFromKeyword( lastScanned, key, obj )
 	END GetObject;
 
-	PROCEDURE ExpectRealFromKeyword*( list: tScanList;  key: ARRAY OF CHAR;  VAR r: LONGREAL ): BOOLEAN;
+	PROCEDURE ExpectRealFromKeyword*( list: tScanList;  key: ARRAY OF CHAR;  VAR r: FLOAT64 ): BOOLEAN;
 	BEGIN
 		IF ~GetRealFromKeyword( list, key, r ) THEN
 			aM.eSS( "antsCommands: Real expected, key:", key );  aM.eSI( "or expected at Position", list.spos );  aM.usage( callerS, usageS );
@@ -519,12 +519,12 @@ VAR
 		END
 	END ExpectRealFromKeyword;
 
-	PROCEDURE ExpectReal*( key: ARRAY OF CHAR;  VAR r: LONGREAL ): BOOLEAN;
+	PROCEDURE ExpectReal*( key: ARRAY OF CHAR;  VAR r: FLOAT64 ): BOOLEAN;
 	BEGIN
 		RETURN ExpectRealFromKeyword( lastScanned, key, r )
 	END ExpectReal;
 
-	PROCEDURE ExpectNumberFromKeyword*( list: tScanList;  key: ARRAY OF CHAR;  VAR l: LONGINT ): BOOLEAN;
+	PROCEDURE ExpectNumberFromKeyword*( list: tScanList;  key: ARRAY OF CHAR;  VAR l: SIGNED32 ): BOOLEAN;
 	BEGIN
 		IF ~GetNumberFromKeyword( list, key, l ) THEN
 			aM.eSS( "antsCommands: Number expected, key:", key );  aM.eSI( "or expected at Position", list.spos );  aM.usage( callerS, usageS );  RETURN FALSE
@@ -532,7 +532,7 @@ VAR
 		END
 	END ExpectNumberFromKeyword;
 
-	PROCEDURE ExpectNumber*( key: ARRAY OF CHAR;  VAR l: LONGINT ): BOOLEAN;
+	PROCEDURE ExpectNumber*( key: ARRAY OF CHAR;  VAR l: SIGNED32 ): BOOLEAN;
 	BEGIN
 		RETURN ExpectNumberFromKeyword( lastScanned, key, l )
 	END ExpectNumber;
@@ -692,7 +692,7 @@ VAR
 	END Expect;
 
 	PROCEDURE Test*;
-	VAR sc: vyScanners.Scanner;  m: tScanList;  p: tParameter;  name: vyName.tNameArray;  real: LONGREAL;  number: LONGINT;
+	VAR sc: vyScanners.Scanner;  m: tScanList;  p: tParameter;  name: vyName.tNameArray;  real: FLOAT64;  number: SIGNED32;
 	BEGIN
 		vyScanners.NewSScanner( sc );  vyScanners.OpenParScanner( sc );  m := Scan( sc );  DumpScanList( m );  aM.S( "------------------" );
 		aM.SS( "Looking for Keyword:", "ww" );

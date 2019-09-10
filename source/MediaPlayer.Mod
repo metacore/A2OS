@@ -141,7 +141,7 @@ TYPE
 
 		(* Pointer invisible functionality related *)
 		timer : Kernel.Timer;
-		lastTimestamp, timestamp : LONGINT; (* Timemark when mouse pointer was moved last time *)
+		lastTimestamp, timestamp : SIGNED32; (* Timemark when mouse pointer was moved last time *)
 
 		(* External handlers for key/pointer events. CURRENTLY ACCESS IS NOT SYNCHRONIZED! *)
 		extPointerDownHandler* : PointerDownHandler;
@@ -150,7 +150,7 @@ TYPE
 		(* Active object control *)
 		alive, dead : BOOLEAN;
 
-		PROCEDURE &New*(w, h : LONGINT; alpha : BOOLEAN; player : Player; autoHideCursor : BOOLEAN);
+		PROCEDURE &New*(w, h : SIGNED32; alpha : BOOLEAN; player : Player; autoHideCursor : BOOLEAN);
 		BEGIN
 			SELF.player := player; videoWidth := w; videoHeight := h; posX := 100; posY := 100;
 			rect := WMRectangles.MakeRect(0, 0, w, h);
@@ -201,7 +201,7 @@ TYPE
 		END ToggleFullscreen;
 
 		(* Overwrite draw procedure because we do not want any interpolation *)
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : LONGINT);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : SIGNED32);
 		BEGIN
 			Draw^(canvas, w, h, 0);
 		END Draw;
@@ -231,7 +231,7 @@ TYPE
 		END ShowBlack;
 
 		PROCEDURE ShowFrame*(frame : WMGraphics.Image);
-		VAR s, d : WMRectangles.Rectangle; h, w : LONGINT;
+		VAR s, d : WMRectangles.Rectangle; h, w : SIGNED32;
 		BEGIN
 			BEGIN {EXCLUSIVE} (* Don't execute the same time as SELF.ReInit does *)
 				lastFrame := frame;
@@ -304,19 +304,19 @@ TYPE
 		readyBufferPool : VideoBufferPool;
 		vBuffer : VideoBuffer;
 		blackBuffer : VideoBuffer;
-		drop : LONGINT;
+		drop : SIGNED32;
 		frame : VideoBuffer;
 
 		alive, positionChanged : BOOLEAN;
 
 		(* Performance statistics *)
-		framesDecoded : LONGINT;
-		min, max, tot : LONGINT;
-		perf : LONGINT;
-		dropped : LONGINT;
+		framesDecoded : SIGNED32;
+		min, max, tot : SIGNED32;
+		perf : SIGNED32;
+		dropped : SIGNED32;
 
 		PROCEDURE &New*(videoWidth, videoHeight : SIZE; videoDecoder : Codecs.VideoDecoder);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			(* empty buffers *)
 			NEW(vBufferPool, VBUFFERS);
@@ -334,7 +334,7 @@ TYPE
 			SELF.videoDecoder := videoDecoder;
 			alive := TRUE; positionChanged := FALSE;
 			IF PerformanceStats THEN
-				min := MAX(LONGINT);
+				min := MAX(SIGNED32);
 			END;
 		END New;
 
@@ -357,17 +357,17 @@ TYPE
 			END
 		END ReturnBuffer;
 
-		PROCEDURE DropFrames(n : LONGINT);
+		PROCEDURE DropFrames(n : SIGNED32);
 		BEGIN
 			drop := n
 		END DropFrames;
 
-		PROCEDURE GetPos(): LONGINT;
+		PROCEDURE GetPos(): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			 RETURN videoDecoder.GetCurrentFrame()
 		END GetPos;
 
-		PROCEDURE SeekAndGetFrame(pos: LONGINT; VAR f : WMGraphics.Image; VAR res : LONGINT);
+		PROCEDURE SeekAndGetFrame(pos: SIGNED32; VAR f : WMGraphics.Image; VAR res : SIGNED32);
 		BEGIN  {EXCLUSIVE}
 			ASSERT(frame # NIL);
 			WHILE readyBufferPool.NofBuffers() > 0 DO (* flush Buffer *)
@@ -382,7 +382,7 @@ TYPE
 			IF videoDecoder.HasMoreData() THEN positionChanged := TRUE; END;
 		END SeekAndGetFrame;
 
-		PROCEDURE SeekFrame(pos : LONGINT; isKeyFrame : BOOLEAN; VAR res : LONGINT);
+		PROCEDURE SeekFrame(pos : SIGNED32; isKeyFrame : BOOLEAN; VAR res : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			WHILE readyBufferPool.NofBuffers() > 0 DO (* flush Buffer *)
 				vBufferPool.Add(readyBufferPool.Remove())
@@ -459,15 +459,15 @@ TYPE
 		hasAudio-, hasVideo- : BOOLEAN;	(* Does the opened ressource contain audio and video? *)
 		canSeek- : BOOLEAN;				(* Is seeking supported? *)
 
-		maxTime- : LONGINT;				(* Duration of Video/Audio in 1/10 sec *)
+		maxTime- : SIGNED32;				(* Duration of Video/Audio in 1/10 sec *)
 
 		(* If hasVideo *)
-		width-, height- : LONGINT;			(* width and height of video frames if applicable *)
-		mspf- : LONGINT;					(* milliseconds per frame *)
-		maxFrames- : LONGINT;
+		width-, height- : SIGNED32;			(* width and height of video frames if applicable *)
+		mspf- : SIGNED32;					(* milliseconds per frame *)
+		maxFrames- : SIGNED32;
 
 		(* If hasAudio *)
-		channels-, bits-, rate-: LONGINT; 	(* Number of audio channels, resolution and rate *)
+		channels-, bits-, rate-: SIGNED32; 	(* Number of audio channels, resolution and rate *)
 	END;
 
 	(* The context record stores all information needed to play the associated ressource *)
@@ -476,28 +476,28 @@ TYPE
 		hasVideo, hasAudio : BOOLEAN;	 			(* Does the ressource contain video and/or audio? *)
 		canSeek : BOOLEAN;						(* Do the video and the audio stream support seeking? *)
 
-		pos, oldPos : LONGINT;						(* Current/last position in stream *)
+		pos, oldPos : SIGNED32;						(* Current/last position in stream *)
 
 		(* Only accessible if hasVideo = TRUE *)
 		video : Codecs.VideoDecoder;
-		maxFrames, maxTime : LONGINT;
-		width, height, mspf : LONGINT;				(* width, heigth & milliseconds per frame of video *)
+		maxFrames, maxTime : SIGNED32;
+		width, height, mspf : SIGNED32;				(* width, heigth & milliseconds per frame of video *)
 		filler : Filler;									(* Video Filler Thread *)
 		vBuffer : VideoBuffer;						(* Video Buffer Object *)
 
 		(* Only accessible if hasAudio = TRUE *)
 		audio : Codecs.AudioDecoder;
-		channels, bits, rate : LONGINT;				(* Number of audio channels, their resolution (bits) and sampling rate (rate) (reported by GetAudioInfo() *)
-		posRate : LONGINT;							(* StreamInfo reports other rate than GetAudioInfo(). Use this value for calculating audio positions  *)
+		channels, bits, rate : SIGNED32;				(* Number of audio channels, their resolution (bits) and sampling rate (rate) (reported by GetAudioInfo() *)
+		posRate : SIGNED32;							(* StreamInfo reports other rate than GetAudioInfo(). Use this value for calculating audio positions  *)
 		aBuffer : SoundDevices.Buffer;
 		channel : SoundDevices.Channel;
 		bufferpool : SoundDevices.BufferPool;
-		delay : LONGINT;							(* Delay in milliseconds induced by using audio buffers *)
+		delay : SIGNED32;							(* Delay in milliseconds induced by using audio buffers *)
 
 		(* Transition related *)
 		transition : WMTransitions.TransitionFade;	(* Transition Object*)
-		transitionFrame : LONGINT;					(* Current frame in Transition *)
-		transitionDuration : LONGINT;				(* Number of frames the transition endures *)
+		transitionFrame : SIGNED32;					(* Current frame in Transition *)
+		transitionDuration : SIGNED32;				(* Number of frames the transition endures *)
 		transitionImg : VideoBuffer;					(* Transition target video buffer *)
 		black : VideoBuffer; 							(* Black frame *)
 	END;
@@ -551,11 +551,11 @@ TYPE
 	Player*= OBJECT
 	VAR
 		(* Access the fields 'state', 'current' and 'next' only from within exclusive regions! *)
-		state : LONGINT;												(* Current state of player *)
+		state : SIGNED32;												(* Current state of player *)
 		current, next : Context;
 
 		(* State change request fields. Access via RequestState and GetRequestedState. *)
-		nextState : LONGINT;
+		nextState : SIGNED32;
 		nextContext : Context;
 		requestProcessed : BOOLEAN;
 
@@ -573,23 +573,23 @@ TYPE
 
 		(* Timing *)
 		timer : Kernel.Timer;
-		tickStart : LONGINT;												(* TimeMark Start of Playing *)
-		tickDelay : LONGINT;											(* Number of milliseconds the decoding was too slow *)
-		lastUpdate : LONGINT;											(* Last time the update procedure was called *)
-		videoFramesPlayed : LONGINT;									(* Video Frames played since TimeMarkStart *)
+		tickStart : SIGNED32;												(* TimeMark Start of Playing *)
+		tickDelay : SIGNED32;											(* Number of milliseconds the decoding was too slow *)
+		lastUpdate : SIGNED32;											(* Last time the update procedure was called *)
+		videoFramesPlayed : SIGNED32;									(* Video Frames played since TimeMarkStart *)
 		(* Milliseconds per frame; used for time synchronisation. TODO: Currently, the mspf value of the 'current' context is used.
 		what if 'next' context has another mspf value and is concurrently played (transition)? *)
-		mspf : LONGINT;
+		mspf : SIGNED32;
 
 		(* Delegates *)
 		setup* : PROCEDURE {DELEGATE} (data : Setup);											(* init for GUI *)
-		update* : PROCEDURE {DELEGATE} (state, pos, maxpos, displayTime: LONGINT);			(* update for GUI *)
+		update* : PROCEDURE {DELEGATE} (state, pos, maxpos, displayTime: SIGNED32);			(* update for GUI *)
 		eof : EofHandler;																		(* fired on End of File *)
 
 		(** -- Player Controls ----------------------------------------------- *)
 
 		(* Open the given uri *)
-		PROCEDURE Open*(CONST uri : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE Open*(CONST uri : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 		VAR  context : Context;
 		BEGIN
 			context := GetContext(uri, msg, res);
@@ -611,8 +611,8 @@ TYPE
 		END Play;
 
 		(* pos & duration set in number of video frames *)
-		PROCEDURE DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration : LONGINT; VAR msg : ARRAY OF CHAR; VAR res : WORD);
-		VAR context : Context; audioPos : LONGINT;
+		PROCEDURE DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration : SIGNED32; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
+		VAR context : Context; audioPos : SIGNED32;
 		BEGIN
 			IF Trace * TraceTransitions # {} THEN
 				KernelLog.String("MediaPlayer: Doing a Transition to "); KernelLog.String(uri); KernelLog.String(" (Duration: ");
@@ -681,8 +681,8 @@ TYPE
 		END Pause;
 
 		(* Get in  1/10 sec. Returns -1 if information is not available. *)
-		PROCEDURE GetPos*(): LONGINT;
-		VAR context : Context; res : WORD;
+		PROCEDURE GetPos*(): SIGNED32;
+		VAR context : Context; res : INTEGER;
 		BEGIN {EXCLUSIVE}
 			res := -1;
 			context := current;
@@ -695,8 +695,8 @@ TYPE
 		END GetPos;
 
 		(* Set position *)
-		PROCEDURE SetPos*(pos: LONGINT);
-		VAR current : Context;  audioPos, res : LONGINT; img : WMGraphics.Image;
+		PROCEDURE SetPos*(pos: SIGNED32);
+		VAR current : Context;  audioPos, res : SIGNED32; img : WMGraphics.Image;
 		BEGIN {EXCLUSIVE}
 			IF pos < 0 THEN
 				IF Debug THEN KernelLog.String("MediaPlayer: Warning: Setpos to "); KernelLog.Int(pos, 0); KernelLog.String("!?!"); KernelLog.Ln; END;
@@ -741,7 +741,7 @@ TYPE
 
 		(* Creates a new Player Instance *)
 		PROCEDURE &New*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			NEW(timer);
 			IF (SoundDevices.devices.Get("") # NIL) THEN
@@ -772,7 +772,7 @@ TYPE
 		END Release;
 
 		(* Request to media player to go into the specified state *)
-		PROCEDURE RequestState(state : LONGINT; context : Context);
+		PROCEDURE RequestState(state : SIGNED32; context : Context);
 		BEGIN
 			Acquire;
 			BEGIN {EXCLUSIVE}
@@ -791,20 +791,20 @@ TYPE
 			Release;
 		END RequestState;
 
-		PROCEDURE GetRequestedState(VAR state : LONGINT; VAR context : Context);
+		PROCEDURE GetRequestedState(VAR state : SIGNED32; VAR context : Context);
 		BEGIN {EXCLUSIVE}
 			state := nextState; nextState := NoRequest;
 			context := nextContext; nextContext := NIL;
 			requestProcessed := TRUE;
 		END GetRequestedState;
 
-		PROCEDURE SetState(state : LONGINT);
+		PROCEDURE SetState(state : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF Trace * TraceStates # {} THEN KernelLog.String("MediaPlayer: Set state to "); KernelLog.Int(state, 0); KernelLog.Ln; END;
 			SELF.state := state;
 		END SetState;
 
-		PROCEDURE GetState() : LONGINT;
+		PROCEDURE GetState() : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN state;
 		END GetState;
@@ -839,20 +839,20 @@ TYPE
 		END InitTime;
 
 		(* Allocate ressources required for playing the audio/video stream *)
-		PROCEDURE GetContext(CONST uri : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD) : Context;
+		PROCEDURE GetContext(CONST uri : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : INTEGER) : Context;
 		VAR
 			in, audioStream, videoStream : Streams.Reader;
 			demux : Codecs.AVDemultiplexer;
 			audioDecoder : Codecs.AudioDecoder; videoDecoder : Codecs.VideoDecoder;
 			streamInfo : Codecs.AVStreamInfo;
-			nofStreams, type, maxFrames, maxTime, width, height, mspf : LONGINT;
-			channels, rate, bits: LONGINT;
+			nofStreams, type, maxFrames, maxTime, width, height, mspf : SIGNED32;
+			channels, rate, bits: SIGNED32;
 			buffer : SoundDevices.Buffer;
 			hasAudio, hasVideo : BOOLEAN;
 			audioCanSeek, videoCanSeek : BOOLEAN;
 			name, ext : ARRAY 256 OF CHAR;
 			context : Context;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			IF Trace * TraceOpen # {} THEN KernelLog.String("MediaPlayer: Get decoders for: "); KernelLog.String(uri); KernelLog.Ln; END;
 			in := Codecs.OpenInputStream(uri);
@@ -881,7 +881,7 @@ TYPE
 					hasAudio := TRUE;
 					audioCanSeek := audioDecoder.CanSeek();
 					IF in IS Codecs.FileInputStream THEN (* Set the Stream Length in Bytes, needed for some Functions in some Decoders *)
-						audioDecoder.SetStreamLength(in(Codecs.FileInputStream).f.Length()(LONGINT));
+						audioDecoder.SetStreamLength(in(Codecs.FileInputStream).f.Length()(SIGNED32));
 					END;
 				ELSE
 					videoDecoder := Codecs.GetVideoDecoder(ext);
@@ -1109,8 +1109,8 @@ TYPE
 		(* Render video and/or audio *)
 		PROCEDURE Render(c1, c2 : Context);
 		VAR
-			tickIs: LONGINT;
-			tickShould : LONGINT;
+			tickIs: SIGNED32;
+			tickShould : SIGNED32;
 		BEGIN
 			IF c1 # NIL THEN
 				IF GetState() = InTransition THEN (* Render transition from c2 to c1 *)
@@ -1169,7 +1169,7 @@ TYPE
 		END Close;
 
 		PROCEDURE StopIntern;
-		VAR img : WMGraphics.Image; res : WORD;
+		VAR img : WMGraphics.Image; res : INTEGER;
 		BEGIN
 			FreeContext(next); next := NIL;
 			IF current # NIL THEN
@@ -1183,7 +1183,7 @@ TYPE
 		END StopIntern;
 
 		PROCEDURE StartPlayIntern;
-		VAR res : WORD;
+		VAR res : INTEGER;
 		BEGIN
 			IF current # NIL THEN
 				IF state = Finished THEN
@@ -1205,11 +1205,11 @@ TYPE
 
 		(* Resume playing the curent and next context that are paused *)
 		PROCEDURE ResumeIntern;
-		VAR audioPos, res : LONGINT;
+		VAR audioPos, res : SIGNED32;
 		BEGIN
 			IF (current # NIL) THEN
 				IF current.hasVideo THEN
-					res := (current.video.GetCurrentFrame()-current.filler.NofFullBuffers()(LONGINT));
+					res := (current.video.GetCurrentFrame()-current.filler.NofFullBuffers()(SIGNED32));
 					IF current.hasAudio THEN
 						audioPos := ENTIER(current.maxTime/10*current.posRate*(res/current.maxFrames) -
 							ENTIER(current.maxTime/10*current.posRate*(res/current.maxFrames)) MOD 12);
@@ -1221,7 +1221,7 @@ TYPE
 			END;
 			IF (next # NIL) THEN
 				IF next.hasVideo THEN
-					res := (next.video.GetCurrentFrame()-next.filler.NofFullBuffers()(LONGINT));
+					res := (next.video.GetCurrentFrame()-next.filler.NofFullBuffers()(SIGNED32));
 					IF next.hasAudio THEN
 						audioPos := ENTIER(next.maxTime/10*next.posRate*(res/next.maxFrames) -
 							ENTIER(next.maxTime/10*next.posRate*(res/next.maxFrames)) MOD 12);
@@ -1237,7 +1237,7 @@ TYPE
 		END ResumeIntern;
 
 		PROCEDURE OpenIntern(nextContext : Context);
-		VAR img : WMGraphics.Image; data : Setup; res : WORD;
+		VAR img : WMGraphics.Image; data : Setup; res : INTEGER;
 		BEGIN
 			FreeContext(next); next := NIL;
 			FreeContext(current); current := nextContext;
@@ -1268,7 +1268,7 @@ TYPE
 			END;
 		END OpenIntern;
 
-		PROCEDURE IsValidStateTransition(from, to : LONGINT) : BOOLEAN;
+		PROCEDURE IsValidStateTransition(from, to : SIGNED32) : BOOLEAN;
 		VAR res : BOOLEAN;
 		BEGIN
 			res := FALSE;
@@ -1292,11 +1292,11 @@ TYPE
 		(* Pre-Condition: (state = Playing) OR (state = InTransition) OR (nextState # NoRequest) *)
 		PROCEDURE EvaluateState;
 		VAR
-			oldState : LONGINT;
-			isValid : BOOLEAN; nextState : LONGINT; nextContext : Context;
+			oldState : SIGNED32;
+			isValid : BOOLEAN; nextState : SIGNED32; nextContext : Context;
 			audioFinished, videoFinished : BOOLEAN;
-			currentTime : LONGINT; callUpdate : BOOLEAN;
-			temp : LONGINT;
+			currentTime : SIGNED32; callUpdate : BOOLEAN;
+			temp : SIGNED32;
 		BEGIN
 			GetRequestedState(nextState, nextContext); oldState := state;
 			IF (nextState # NoRequest) THEN
@@ -1416,7 +1416,7 @@ VAR mplayer : Player;
 
 (** Play the specified video/audio file *)
 PROCEDURE Open*(context : Commands.Context); (** <filename> ~ *)
-VAR filename, msg : ARRAY 256 OF CHAR; res : WORD;
+VAR filename, msg : ARRAY 256 OF CHAR; res : INTEGER;
 BEGIN {EXCLUSIVE}
 	context.arg.String(filename);
 	IF mplayer = NIL THEN NEW(mplayer); END;
@@ -1432,7 +1432,7 @@ END Open;
 
 (** Do a transition to the specified video/audio file (of the specified duration) *)
 PROCEDURE TransitionTo*(context : Commands.Context); (** <filename> [transitionDuration] ~ *)
-VAR filename, msg : ARRAY 256 OF CHAR; duration : LONGINT; res : WORD;
+VAR filename, msg : ARRAY 256 OF CHAR; duration : SIGNED32; res : INTEGER;
 BEGIN {EXCLUSIVE}
 	context.arg.SkipWhitespace; context.arg.String(filename);
 	context.arg.SkipWhitespace; context.arg.Int(duration, FALSE);

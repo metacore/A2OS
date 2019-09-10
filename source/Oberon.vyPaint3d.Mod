@@ -54,14 +54,14 @@ PROCEDURE SetCoordinate* (c: vyPHIGS3D.tCoordinate3d);
 BEGIN	vyPHIGS3D.SetCoordinate (c)
 END SetCoordinate;
 
-PROCEDURE DisplayPointToPoint* (x, y: INTEGER;  err: INTEGER;  VAR x3d, y3d, z3d: Real);
+PROCEDURE DisplayPointToPoint* (x, y: SIGNED16;  err: SIGNED16;  VAR x3d, y3d, z3d: Real);
 BEGIN vyPHIGS3D.DisplayPointToPoint (x, y, err, x3d, y3d, z3d) END DisplayPointToPoint;
 
 PROCEDURE MoveTo* (x3d, y3d, z3d: Real);
 BEGIN pen[0] := x3d;  pen[1] := y3d;  pen[2] := z3d END MoveTo;
 
 PROCEDURE Line* (x3d0, y3d0, z3d0, x3d1, y3d1, z3d1: Real);
-	VAR x0, y0, x1, y1: Coordinate;   error: INTEGER;
+	VAR x0, y0, x1, y1: Coordinate;   error: SIGNED16;
 BEGIN
 	vyPHIGS3D.PointToDisplayPoint (x3d0, y3d0, z3d0, error, x0, y0);
 	vyPHIGS3D.PointToDisplayPoint (x3d1, y3d1, z3d1, error, x1, y1);
@@ -83,37 +83,37 @@ END FrameRect;
 
 PROCEDURE String* (x3d, y3d, z3d: Real;  f, s: ARRAY OF CHAR);
 	(** vs 0.0d0 *)	(* md  28.11.94 10:35:08 *)
-	VAR x, y: Coordinate;   error: INTEGER;
+	VAR x, y: Coordinate;   error: SIGNED16;
 BEGIN	vyPHIGS3D.PointToDisplayPoint (x3d, y3d, z3d, error, x, y);
 	vyHostDisplay.String (x, y, f, s)
 END String;
 
 PROCEDURE EraseString* (x3d, y3d, z3d: Real;  f, s: ARRAY OF CHAR);
-	VAR x, y: Coordinate;   error: INTEGER;
+	VAR x, y: Coordinate;   error: SIGNED16;
 BEGIN	vyPHIGS3D.PointToDisplayPoint (x3d, y3d, z3d, error, x, y);
 	vyHostDisplay.EraseString (x, y, f, s)
 END EraseString;
 
 PROCEDURE InvertString* (x3d, y3d, z3d: Real;  f, s: ARRAY OF CHAR);
-	VAR x, y: Coordinate;   error: INTEGER;
+	VAR x, y: Coordinate;   error: SIGNED16;
 BEGIN	vyPHIGS3D.PointToDisplayPoint (x3d, y3d, z3d, error, x, y);
 	vyHostDisplay.InvertString (x, y, f, s)
 END InvertString;
 
 PROCEDURE PaintPat* (x3d, y3d, z3d: Real;  sgn: vyHostDisplay.tSign);
-	VAR x, y: Coordinate;   error: INTEGER;
+	VAR x, y: Coordinate;   error: SIGNED16;
 BEGIN	vyPHIGS3D.PointToDisplayPoint (x3d, y3d, z3d, error, x, y);
 	vyHostDisplay.PaintPat (x, y, sgn)
 END PaintPat;
 
 (* (* fof 010123: use PaintPat instead ! *)	PROCEDURE PaintColPat* (x3d, y3d, z3d: Real; col: Color; sgn: vyHostDisplay.tSign);
-VAR x, y: Coordinate; error: INTEGER;
+VAR x, y: Coordinate; error: SIGNED16;
 BEGIN	vyPHIGS3D.PointToDisplayPoint (x3d, y3d, z3d, error, x, y);
 vyHostDisplay.PaintColPat (x, y, col, sgn);
 END PaintColPat;
 *)
 PROCEDURE ErasePat* (x3d, y3d, z3d: Real;  sgn: vyHostDisplay.tSign);
-	VAR x, y: Coordinate;  error: INTEGER;
+	VAR x, y: Coordinate;  error: SIGNED16;
 BEGIN	vyPHIGS3D.PointToDisplayPoint (x3d, y3d, z3d, error, x, y);
 	vyHostDisplay.ErasePat (x, y, sgn)
 END ErasePat;

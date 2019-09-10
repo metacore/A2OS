@@ -11,7 +11,7 @@ CONST
 	leftMode = {colLeft, expLeft};
 
 PROCEDURE New*;
-VAR k, mode: SHORTINT;  len: LONGINT; F: Outlines.Outline; t: Texts.Text; ch: CHAR;
+VAR k, mode: SIGNED8;  len: SIGNED32; F: Outlines.Outline; t: Texts.Text; ch: CHAR;
 BEGIN
 	Objects.NewObj := NIL; F:= Outlines.MakeOutline(-1);
 	Files.Read(WTS.R, k); mode := k MOD 4;

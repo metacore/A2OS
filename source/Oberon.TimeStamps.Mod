@@ -9,16 +9,16 @@ MODULE TimeStamps IN Oberon;	(** portable *) (* ejz *)
 		FrameDesc* = RECORD (Gadgets.FrameDesc)
 			font: Fonts.Font;
 			cap: ARRAY 64 OF CHAR;
-			col: INTEGER;
-			w: INTEGER (* width of gadgets based on display metrics *)
+			col: SIGNED16;
+			w: SIGNED16 (* width of gadgets based on display metrics *)
 		END;
 		RevFrame* = POINTER TO RevFrameDesc;
 		RevFrameDesc* = RECORD (FrameDesc)
-			revision: LONGINT
+			revision: SIGNED32
 		END;
 
-	PROCEDURE Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER);
-	VAR dx: INTEGER;
+	PROCEDURE Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16);
+	VAR dx: SIGNED16;
 	BEGIN
 		dx := (w - F.w) DIV 2;
 		Display3.String(Q, F.col, x + dx, y-F.font.minY, F.font, F.cap, Display.paint);
@@ -28,16 +28,16 @@ MODULE TimeStamps IN Oberon;	(** portable *) (* ejz *)
 		END
 	END Restore;
 
-	PROCEDURE P(x: LONGINT): INTEGER;
+	PROCEDURE P(x: SIGNED32): SIGNED16;
 	BEGIN RETURN SHORT((x * Display.Unit + (Printer.Unit-1)) DIV Printer.Unit)
 	END P;
 
-	PROCEDURE DR(x: LONGINT): REAL;
+	PROCEDURE DR(x: SIGNED32): FLOAT32;
 	BEGIN RETURN (x * Printer.Unit) / Display.Unit
 	END DR;
 
-	PROCEDURE Print(F: Frame; Q: Display3.Mask; x, y: INTEGER);
-		VAR w, h, dsr: INTEGER;
+	PROCEDURE Print(F: Frame; Q: Display3.Mask; x, y: SIGNED16);
+		VAR w, h, dsr: SIGNED16;
 	BEGIN
 		Printer3.StringSize(F.cap, F.font, w, h, dsr); (* get dsr in printer metrics / ps - 30.5.96 *)
 		Printer3.String(Q, F.col, x+(P(F.W)-P(F.w)) DIV 2, y + dsr, F.font, F.cap, Display.paint);
@@ -51,12 +51,12 @@ MODULE TimeStamps IN Oberon;	(** portable *) (* ejz *)
 		Gadgets.CopyFrame(M, from, to)
 	END Copy;
 
-	PROCEDURE Caption(F: Frame; VAR w, h: INTEGER; newtime: BOOLEAN);
+	PROCEDURE Caption(F: Frame; VAR w, h: SIGNED16; newtime: BOOLEAN);
 		VAR
-			date, time: LONGINT;
-			wr, hr: REAL;
+			date, time: SIGNED32;
+			wr, hr: FLOAT32;
 			tmp: ARRAY 64 OF CHAR;
-			pw, ph, dsr: INTEGER;
+			pw, ph, dsr: SIGNED16;
 	BEGIN
 		IF newtime THEN
 			IF F IS RevFrame THEN
@@ -80,7 +80,7 @@ MODULE TimeStamps IN Oberon;	(** portable *) (* ejz *)
 		IF h < hr THEN h := SHORT(-ENTIER(-hr)) END
 	END Caption;
 
-	PROCEDURE Modify(F: Frame; w, h: INTEGER);
+	PROCEDURE Modify(F: Frame; w, h: SIGNED16);
 		VAR M: Display.ModifyMsg;
 	BEGIN
 		M.F := F; M.res := -1;
@@ -92,7 +92,7 @@ MODULE TimeStamps IN Oberon;	(** portable *) (* ejz *)
 	END Modify;
 
 	PROCEDURE Attributes(F: Frame; VAR M: Objects.AttrMsg);
-		VAR w, h: INTEGER;
+		VAR w, h: SIGNED16;
 	BEGIN
 		IF M.id = Objects.get THEN
 			IF M.name = "Gen" THEN
@@ -126,7 +126,7 @@ MODULE TimeStamps IN Oberon;	(** portable *) (* ejz *)
 		VAR
 			F1: Frame;
 			Q: Display3.Mask;
-			x, y, w, h: INTEGER;
+			x, y, w, h: SIGNED16;
 	BEGIN
 		WITH F: Frame DO
 			IF M IS Display.FrameMsg THEN

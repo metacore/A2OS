@@ -12,9 +12,9 @@ TYPE
 	Log* = OBJECT
 	VAR
 		appName : ARRAY 64 OF CHAR;
-		logPos : LONGINT;
+		logPos : SIGNED32;
 		logLine : ARRAY 1024 OF CHAR;
-		kind : LONGINT;
+		kind : SIGNED32;
 		locked : BOOLEAN;
 		disableLogToOut : BOOLEAN;
 		f : Files.File;
@@ -41,7 +41,7 @@ TYPE
 			disableLogToOut := ~enabled
 		END SetLogToOut;
 
-		PROCEDURE SetKind(kind : LONGINT);
+		PROCEDURE SetKind(kind : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			SELF.kind := kind
 		END SetKind;
@@ -90,7 +90,7 @@ TYPE
 		END Char;
 
 		PROCEDURE InternalString*(VAR x: ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			WHILE (i < LEN(x)) & (x[i] # 0X) DO InternalChar(x[i]); INC(i) END
 		END InternalString;
@@ -100,8 +100,8 @@ TYPE
 			InternalString(x)
 		END String;
 
-		PROCEDURE Hex*(x, w: LONGINT);
-		VAR i, j: LONGINT; buf: ARRAY 10 OF CHAR;
+		PROCEDURE Hex*(x, w: SIGNED32);
+		VAR i, j: SIGNED32; buf: ARRAY 10 OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF w >= 0 THEN j := 8 ELSE j := 2; w := -w END;
 			FOR i := j+1 TO w DO InternalChar(" ") END;
@@ -116,11 +116,11 @@ TYPE
 			InternalString(buf)
 		END Hex;
 
-		PROCEDURE Int*(x: HUGEINT; w: LONGINT);
-		VAR i: LONGINT; x0: HUGEINT; a: ARRAY 21 OF CHAR;
+		PROCEDURE Int*(x: SIGNED64; w: SIGNED32);
+		VAR i: SIGNED32; x0: SIGNED64; a: ARRAY 21 OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF x < 0 THEN
-				IF x = MIN( HUGEINT ) THEN
+				IF x = MIN( SIGNED64 ) THEN
 					DEC(w, 20);
 					WHILE w > 0 DO Char(" "); DEC(w) END;
 					 a := "-9223372036854775808"; InternalString(a);
@@ -141,12 +141,12 @@ TYPE
 		END Int;
 
 		PROCEDURE TimeStamp*;
-		TYPE TimeDate = RECORD h, m, s, day,month,year: LONGINT END;
+		TYPE TimeDate = RECORD h, m, s, day,month,year: SIGNED32 END;
 			VAR s : ARRAY 32 OF CHAR;
 				now : TimeDate;
 
-			PROCEDURE LZ(v, len: LONGINT; VAR s: ARRAY OF CHAR; VAR pos: LONGINT);
-			VAR i: LONGINT;
+			PROCEDURE LZ(v, len: SIGNED32; VAR s: ARRAY OF CHAR; VAR pos: SIGNED32);
+			VAR i: SIGNED32;
 			BEGIN
 				FOR i := 1 TO len DO s[pos+len-i] := CHR(ORD("0")+v MOD 10); v := v DIV 10 END;
 				INC(pos, len)
@@ -164,7 +164,7 @@ TYPE
 			END GetTime;
 
 			PROCEDURE TimeDateToStr(dt: TimeDate; VAR s: ARRAY OF CHAR);
-			VAR p: LONGINT;
+			VAR p: SIGNED32;
 			BEGIN
 				LZ(dt.day, 2, s, p); s[p] := "."; INC(p);
 				LZ(dt.month, 2, s, p); s[p] := "."; INC(p);

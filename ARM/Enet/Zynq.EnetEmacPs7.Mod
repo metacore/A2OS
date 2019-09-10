@@ -1215,7 +1215,7 @@ VAR
 	(**
 		Initialize DMA engine of a given GEM device
 	*)
-	PROCEDURE InitDma(dev: LinkDevice; rxBdRingLen, txBdRingLen: Int; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE InitDma(dev: LinkDevice; rxBdRingLen, txBdRingLen: Int; VAR res: SIGNED32): BOOLEAN;
 	CONST
 		MB = 1024*1024; (* one Mega byte *)
 	VAR
@@ -1291,7 +1291,7 @@ VAR
 	(*
 		Configure DMA engine of a GEM device used just before starting
 	*)
-	PROCEDURE ConfigureDma(dev: LinkDevice; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE ConfigureDma(dev: LinkDevice; VAR res: SIGNED32): BOOLEAN;
 	VAR
 		packet: EnetBase.Packet;
 		bd: BufDesc;
@@ -1605,7 +1605,7 @@ VAR
 	(**
 		Setup packet payload
 	*)
-	PROCEDURE SetPacketPayload*(dev: EnetBase.LinkDevice; packet: EnetBase.Packet; CONST data: ARRAY OF CHAR; offset: Int; flags: SET; VAR res: LONGINT): BOOLEAN;
+	PROCEDURE SetPacketPayload*(dev: EnetBase.LinkDevice; packet: EnetBase.Packet; CONST data: ARRAY OF CHAR; offset: Int; flags: SET; VAR res: SIGNED32): BOOLEAN;
 	VAR payloadLen: Int;
 	BEGIN
 		payloadLen := packet.dataLen-packet.payloadOffs;

@@ -29,41 +29,41 @@ CONST
 TYPE
 	Name* = ARRAY 32 OF CHAR;  (*symbol name*)
 	Position*   = RECORD     (*position of stretch of source text*)
-		beg*: LONGINT;  (*start relative to beginning of file*)
-		len*: LONGINT;  (*length*)
-		col*: INTEGER;  (*column number of start position*)
+		beg*: SIGNED32;  (*start relative to beginning of file*)
+		len*: SIGNED32;  (*length*)
+		col*: SIGNED16;  (*column number of start position*)
 	END ;
 
 	SymbolNode* = RECORD
-		typ*: INTEGER;				(*nt, t, pr, unknown*)
+		typ*: SIGNED16;				(*nt, t, pr, unknown*)
 		name*: Name;  				(*symbol name*)
-		struct*: INTEGER;			(*typ = nt: index of 1st node of syntax graph*)
+		struct*: SIGNED16;			(*typ = nt: index of 1st node of syntax graph*)
 												(*typ = t: token kind: literal, class, ...*)
 		deletable*: BOOLEAN;  (*typ = nt: TRUE, if nonterminal is deletable*)
 		attrPos*: Position;		 (*position of attributes in source text*)
 		semPos*: Position;		(*typ = pr: pos of sem action in source text*)
 												(*typ = nt: pos of local decls in source text *)
-		line*: INTEGER;			 (*source text line number of item in this node*)
+		line*: SIGNED16;			 (*source text line number of item in this node*)
 	END ;
 
 	Set* = ARRAY maxTerminals DIV Sets.size OF SET;
 
 	GraphNode* = RECORD
-		typ* : INTEGER;		(* nt,sts,wts,char,class,any,eps,sem,sync,alt,iter,opt*)
-		next*: INTEGER;		(* index of successor node                        *)
+		typ* : SIGNED16;		(* nt,sts,wts,char,class,any,eps,sem,sync,alt,iter,opt*)
+		next*: SIGNED16;		(* index of successor node                        *)
 										(* next < 0: to successor in enclosing structure  *)
-		p1*: INTEGER;		 (* typ IN {nt, t, wt}: index to symbol list       *)
+		p1*: SIGNED16;		 (* typ IN {nt, t, wt}: index to symbol list       *)
 										(* typ = any: index to anyset                     *)
 										(* typ = sync: index to syncset                   *)
 										(* typ = alt: index of 1st node of 1st alternative*)
 										(* typ IN {iter, opt}: 1st node in subexpression  *)
 										(* typ = char: ordinal character value            *)
 										(* typ = class: index of character class          *)
-		p2*: INTEGER;			(* typ = alt: index of 1st node of 2nd alternative*)
+		p2*: SIGNED16;			(* typ = alt: index of 1st node of 2nd alternative*)
 										(* typ IN {char, class}: transition code          *)
 		pos*: Position;		(* typ IN {nt, t, wt}: pos of actual attribs      *)
 										(* typ = sem: pos of sem action in source text.   *)
-		line*: INTEGER;      (* source text line number of item in this node   *)
+		line*: SIGNED16;      (* source text line number of item in this node   *)
 	END ;
 
 	MarkList* = ARRAY maxNodes DIV Sets.size OF SET;
@@ -78,26 +78,26 @@ TYPE
 	END ;
 	CharClass = RECORD
 		name: Name; (*class name*)
-		set:  INTEGER (* ptr to set representing the class*)
+		set:  SIGNED16 (* ptr to set representing the class*)
 	END ;
 	SymbolTable = ARRAY maxSymbols OF SymbolNode;
 	ClassTable = ARRAY maxClasses OF CharClass;
 	GraphList = ARRAY maxNodes OF GraphNode;
 
 VAR
-	maxSet*:  INTEGER; (* index of last set                                  *)
-	maxT*:    INTEGER; (* terminals stored from 0 .. maxT                    *)
-	maxP*:    INTEGER; (* pragmas stored from maxT+1 .. maxP                 *)
-	firstNt*: INTEGER; (* index of first nt: available after CompSymbolSets  *)
-	lastNt*:  INTEGER; (* index of last nt: available after CompSymbolSets   *)
-	maxC*:    INTEGER; (* index of last character class                      *)
+	maxSet*:  SIGNED16; (* index of last set                                  *)
+	maxT*:    SIGNED16; (* terminals stored from 0 .. maxT                    *)
+	maxP*:    SIGNED16; (* pragmas stored from maxT+1 .. maxP                 *)
+	firstNt*: SIGNED16; (* index of first nt: available after CompSymbolSets  *)
+	lastNt*:  SIGNED16; (* index of last nt: available after CompSymbolSets   *)
+	maxC*:    SIGNED16; (* index of last character class                      *)
 	semDeclPos*:  Position;  (*position of global semantic declarations*)
 	importPos*: Position; (*position of imported identifiers*)
 	ignored*: Set;       (* characters ignored by the scanner            *)
 	ignoreCase*:  BOOLEAN;   (* TRUE: scanner treats lower case as upper case*)
 	ddt*: ARRAY 10 OF BOOLEAN; (* debug and test switches    *)
-	nNodes*: INTEGER;   (* index of last graph node          *)
-	root*: INTEGER;   (* index of root node, filled by ATG *)
+	nNodes*: SIGNED16;   (* index of last graph node          *)
+	root*: SIGNED16;   (* index of root node, filled by ATG *)
 
 	w: Texts.Writer;
 	st: SymbolTable;
@@ -106,7 +106,7 @@ VAR
 	follow: FollowSets; (*follow[i] = followers of st[i+firstNt]*)
 	chClass: ClassTable; (*character classes*)
 	set: ARRAY 128 OF Set;	(*set[0] reserved for union of all synchronisation sets*)
-	dummyName: INTEGER; (*for unnamed character classes*)
+	dummyName: SIGNED16; (*for unnamed character classes*)
 
 PROCEDURE Str(s: ARRAY OF CHAR);
 BEGIN Texts.WriteString(w, s)
@@ -116,35 +116,35 @@ PROCEDURE NL;
 BEGIN Texts.WriteLn(w)
 END NL;
 
-PROCEDURE Length(s: ARRAY OF CHAR): INTEGER;
-	VAR i: INTEGER;
+PROCEDURE Length(s: ARRAY OF CHAR): SIGNED16;
+	VAR i: SIGNED16;
 BEGIN
 	i:=0; WHILE (i < LEN(s)) & (s[i] # 0X) DO INC(i) END ;
 	RETURN i
 END Length;
 
-PROCEDURE Restriction(n: INTEGER);
+PROCEDURE Restriction(n: SIGNED16);
 BEGIN
 	NL; Str("Restriction "); Texts.WriteInt(w, n, 0); NL; Texts.Append(Oberon.Log, w.buf);
 	HALT(99)
 END Restriction;
 
 PROCEDURE ClearMarkList(VAR m: MarkList);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	i := 0; WHILE i < maxNodes DIV Sets.size DO m[i] := {}; INC(i) END ;
 END ClearMarkList;
 
-PROCEDURE GetNode*(gp: INTEGER; VAR n: GraphNode);
+PROCEDURE GetNode*(gp: SIGNED16; VAR n: GraphNode);
 BEGIN
 	n := gn[gp]
 END GetNode;
 
-PROCEDURE PutNode*(gp: INTEGER; n: GraphNode);
+PROCEDURE PutNode*(gp: SIGNED16; n: GraphNode);
 BEGIN gn[gp] := n
 END PutNode;
 
-PROCEDURE DelGraph*(gp: INTEGER): BOOLEAN;
+PROCEDURE DelGraph*(gp: SIGNED16): BOOLEAN;
 	VAR gn: GraphNode;
 BEGIN
 	IF gp = 0 THEN RETURN TRUE END ; (*end of graph found*)
@@ -152,8 +152,8 @@ BEGIN
 	RETURN DelNode(gn) & DelGraph(ABS(gn.next));
 END DelGraph;
 
-PROCEDURE NewSym*(typ: INTEGER; name: Name; line: INTEGER): INTEGER;
-	VAR i: INTEGER;
+PROCEDURE NewSym*(typ: SIGNED16; name: Name; line: SIGNED16): SIGNED16;
+	VAR i: SIGNED16;
 BEGIN
 	IF maxT + 1 = firstNt THEN Restriction(6)
 	ELSE
@@ -172,16 +172,16 @@ BEGIN
 	RETURN i
 END NewSym;
 
-PROCEDURE GetSym*(sp: INTEGER; VAR sn: SymbolNode);
+PROCEDURE GetSym*(sp: SIGNED16; VAR sn: SymbolNode);
 BEGIN sn := st[sp]
 END GetSym;
 
-PROCEDURE PutSym*(sp: INTEGER; sn: SymbolNode);
+PROCEDURE PutSym*(sp: SIGNED16; sn: SymbolNode);
 BEGIN st[sp] := sn
 END PutSym;
 
-PROCEDURE FindSym*(name: Name): INTEGER;
-	VAR i: INTEGER;
+PROCEDURE FindSym*(name: Name): SIGNED16;
+	VAR i: SIGNED16;
 BEGIN
 	i := 0;  (*search in terminal list*)
 	WHILE (i <= maxT) & (st[i].name # name) DO INC(i) END ;
@@ -191,16 +191,16 @@ BEGIN
 	IF i < maxSymbols THEN RETURN i ELSE RETURN noSym END
 END FindSym;
 
-PROCEDURE NewSet*(s: Set): INTEGER;
+PROCEDURE NewSet*(s: Set): SIGNED16;
 BEGIN
 	INC(maxSet); IF maxSet > maxSetNr THEN Restriction(4) END ;
 	set[maxSet] := s;
 	RETURN maxSet
 END NewSet;
 
-PROCEDURE PrintSet(s: ARRAY OF SET; indent: INTEGER);
+PROCEDURE PrintSet(s: ARRAY OF SET; indent: SIGNED16);
 	CONST maxLineLen = 80;
-	VAR	 col, i, len: INTEGER; empty: BOOLEAN; sn: SymbolNode;
+	VAR	 col, i, len: SIGNED16; empty: BOOLEAN; sn: SymbolNode;
 BEGIN
 	i := 0; col := indent; empty := TRUE;
 	WHILE i <= maxT DO
@@ -219,10 +219,10 @@ BEGIN
 	NL; Texts.Append(Oberon.Log, w.buf)
 END PrintSet;
 
-PROCEDURE CompFirstSet*(gp: INTEGER; VAR fs: Set);
+PROCEDURE CompFirstSet*(gp: SIGNED16; VAR fs: Set);
 	VAR visited: MarkList;
 
-	PROCEDURE CompFirst(gp: INTEGER; VAR fs: Set);
+	PROCEDURE CompFirst(gp: SIGNED16; VAR fs: Set);
 		VAR s: Set; gn: GraphNode; sn: SymbolNode;
 	BEGIN
 		Sets.Clear(fs);
@@ -257,7 +257,7 @@ BEGIN (* ComputeFirstSet *)
 END CompFirstSet;
 
 PROCEDURE CompFirstSets;
-	VAR i: INTEGER; sn: SymbolNode;
+	VAR i: SIGNED16; sn: SymbolNode;
 BEGIN
 	i := firstNt; WHILE i <= lastNt DO first[i-firstNt].ready := FALSE; INC(i) END ;
 	i := firstNt;
@@ -268,16 +268,16 @@ BEGIN
 	END ;
 END CompFirstSets;
 
-PROCEDURE CompExpected*(gp, sp: INTEGER; VAR exp: Set);
+PROCEDURE CompExpected*(gp, sp: SIGNED16; VAR exp: Set);
 BEGIN
 	CompFirstSet(gp, exp);
 	IF DelGraph(gp) THEN Sets.Unite(exp, follow[sp - firstNt].ts) END
 END CompExpected;
 
 PROCEDURE CompFollowSets;
-	VAR sn: SymbolNode; curSy, i, size: INTEGER; visited: MarkList;
+	VAR sn: SymbolNode; curSy, i, size: SIGNED16; visited: MarkList;
 
-	PROCEDURE CompFol(gp: INTEGER);
+	PROCEDURE CompFol(gp: SIGNED16);
 		VAR s: Set; gn: GraphNode;
 	BEGIN
 		WHILE (gp > 0) & ~ Sets.In(visited, gp) DO
@@ -294,8 +294,8 @@ PROCEDURE CompFollowSets;
 		END
 	END CompFol;
 
-	PROCEDURE Complete(i: INTEGER);
-		VAR j: INTEGER;
+	PROCEDURE Complete(i: SIGNED16);
+		VAR j: SIGNED16;
 	BEGIN
 		IF Sets.In(visited, i) THEN RETURN END ;
 		Sets.Incl(visited, i);
@@ -333,9 +333,9 @@ END CompFollowSets;
 
 
 PROCEDURE CompAnySets;
-	VAR curSy: INTEGER; sn: SymbolNode;
+	VAR curSy: SIGNED16; sn: SymbolNode;
 
-	PROCEDURE LeadingAny(gp: INTEGER; VAR a: GraphNode): BOOLEAN;
+	PROCEDURE LeadingAny(gp: SIGNED16; VAR a: GraphNode): BOOLEAN;
 		VAR gn: GraphNode;
 	BEGIN
 		IF gp <= 0 THEN RETURN FALSE END ;
@@ -347,8 +347,8 @@ PROCEDURE CompAnySets;
 		END
 	END LeadingAny;
 
-	PROCEDURE FindAS(gp: INTEGER);
-		VAR gn, gn2, a: GraphNode; s1, s2: Set; p: INTEGER;
+	PROCEDURE FindAS(gp: SIGNED16);
+		VAR gn, gn2, a: GraphNode; s1, s2: Set; p: SIGNED16;
 	BEGIN
 		WHILE gp > 0 DO
 			GetNode(gp, gn);
@@ -383,9 +383,9 @@ END CompAnySets;
 
 
 PROCEDURE CompSyncSets;
-	VAR curSy: INTEGER; sn: SymbolNode; visited: MarkList;
+	VAR curSy: SIGNED16; sn: SymbolNode; visited: MarkList;
 
-	PROCEDURE CompSync(gp: INTEGER);
+	PROCEDURE CompSync(gp: SIGNED16);
 		VAR s: Set; gn: GraphNode;
 	BEGIN
 		WHILE (gp > 0) & ~ Sets.In(visited, gp) DO
@@ -411,7 +411,7 @@ END CompSyncSets;
 
 
 PROCEDURE CompDeletableSymbols*;
-	VAR changed, del: BOOLEAN; i: INTEGER; sn: SymbolNode;
+	VAR changed, del: BOOLEAN; i: SIGNED16; sn: SymbolNode;
 BEGIN
 	del := FALSE;
 	REPEAT
@@ -437,7 +437,7 @@ END CompDeletableSymbols;
 
 
 PROCEDURE CompSymbolSets*;
-	VAR i: INTEGER; sn: SymbolNode;
+	VAR i: SIGNED16; sn: SymbolNode;
 BEGIN
 	i := NewSym(t, "???", 0); (*unknown symbols get code maxT*)
 	MovePragmas;
@@ -467,12 +467,12 @@ BEGIN
 END CompSymbolSets;
 
 
-PROCEDURE GetSet*(nr: INTEGER; VAR s: Set);
+PROCEDURE GetSet*(nr: SIGNED16; VAR s: Set);
 BEGIN s := set[nr]
 END GetSet;
 
 PROCEDURE MovePragmas;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	IF maxP > firstNt THEN
 		i := maxSymbols - 1; maxP := maxT;
@@ -484,9 +484,9 @@ BEGIN
 END MovePragmas;
 
 PROCEDURE PrintSymbolTable*;
-	VAR i, j: INTEGER;
+	VAR i, j: SIGNED16;
 
-	PROCEDURE WriteTyp(typ: INTEGER);
+	PROCEDURE WriteTyp(typ: SIGNED16);
 	BEGIN
 		CASE typ OF
 		| t		: Str(" t      ");
@@ -514,7 +514,7 @@ BEGIN (* PrintSymbolTable *)
 	NL; NL; Texts.Append(Oberon.Log, w.buf)
 END PrintSymbolTable;
 
-PROCEDURE NewClass*(name: Name; set: Set): INTEGER;
+PROCEDURE NewClass*(name: Name; set: Set): SIGNED16;
 BEGIN
 	INC(maxC); IF maxC >= maxClasses THEN Restriction(7) END ;
 	IF name[0] = "#" THEN name[1] := CHR(ORD("A") + dummyName); INC(dummyName) END ;
@@ -522,26 +522,26 @@ BEGIN
 	RETURN maxC
 END NewClass;
 
-PROCEDURE ClassWithName*(name: Name): INTEGER;
-	VAR i: INTEGER;
+PROCEDURE ClassWithName*(name: Name): SIGNED16;
+	VAR i: SIGNED16;
 BEGIN
 	i := maxC; WHILE (i >= 0) & (chClass[i].name # name) DO DEC(i) END ;
 	RETURN i
 END ClassWithName;
 
-PROCEDURE ClassWithSet*(s: Set): INTEGER;
-	VAR i: INTEGER;
+PROCEDURE ClassWithSet*(s: Set): SIGNED16;
+	VAR i: SIGNED16;
 BEGIN
 	i := maxC; WHILE (i >= 0) & ~ Sets.Equal(set[chClass[i].set], s) DO DEC(i) END ;
 	RETURN i
 END ClassWithSet;
 
-PROCEDURE GetClass*(n: INTEGER; VAR s: Set);
+PROCEDURE GetClass*(n: SIGNED16; VAR s: Set);
 BEGIN
 	GetSet(chClass[n].set, s)
 END GetClass;
 
-PROCEDURE GetClassName*(n: INTEGER; VAR name: Name);
+PROCEDURE GetClassName*(n: SIGNED16; VAR name: Name);
 BEGIN
 	name := chClass[n].name
 END GetClassName;
@@ -551,13 +551,13 @@ PROCEDURE XRef*;
 	TYPE	ListPtr	= POINTER TO ListNode;
 				ListNode = RECORD
 					next: ListPtr;
-					line: INTEGER;
+					line: SIGNED16;
 				END ;
 				ListHdr	= RECORD
 					name: Name;
 					lptr: ListPtr;
 				END ;
-	VAR	 gn: GraphNode; col, i, j: INTEGER; l, p, q: ListPtr;
+	VAR	 gn: GraphNode; col, i, j: SIGNED16; l, p, q: ListPtr;
 				sn: SymbolNode;
 				xList: ARRAY maxSymbols OF ListHdr;
 
@@ -616,7 +616,7 @@ BEGIN (* XRef *)
 END XRef;
 
 
-PROCEDURE NewNode*(typ, p1, line: INTEGER): INTEGER;
+PROCEDURE NewNode*(typ, p1, line: SIGNED16): SIGNED16;
 BEGIN
 	INC(nNodes); IF nNodes > maxNodes THEN Restriction(3) END ;
 	gn[nNodes].typ := typ; gn[nNodes].next := 0;
@@ -625,24 +625,24 @@ BEGIN
 	RETURN nNodes;
 END NewNode;
 
-PROCEDURE CompleteGraph*(gp: INTEGER);
-	VAR p: INTEGER;
+PROCEDURE CompleteGraph*(gp: SIGNED16);
+	VAR p: SIGNED16;
 BEGIN
 	WHILE gp # 0 DO
 		p := gn[gp].next; gn[gp].next := 0; gp := p
 	END
 END CompleteGraph;
 
-PROCEDURE ConcatAlt*(VAR gL1, gR1: INTEGER; gL2, gR2: INTEGER);
-	VAR p: INTEGER;
+PROCEDURE ConcatAlt*(VAR gL1, gR1: SIGNED16; gL2, gR2: SIGNED16);
+	VAR p: SIGNED16;
 BEGIN
 	gL2 := NewNode(alt, gL2, 0);
 	p := gL1; WHILE gn[p].p2 # 0 DO p := gn[p].p2 END ; gn[p].p2 := gL2;
 	p := gR1; WHILE gn[p].next # 0 DO p := gn[p].next END ; gn[p].next := gR2
 END ConcatAlt;
 
-PROCEDURE ConcatSeq*(VAR gL1, gR1: INTEGER; gL2, gR2: INTEGER);
-	VAR p, q: INTEGER;
+PROCEDURE ConcatSeq*(VAR gL1, gR1: SIGNED16; gL2, gR2: SIGNED16);
+	VAR p, q: SIGNED16;
 BEGIN
 	p := gn[gR1].next; gn[gR1].next := gL2; (*head node*)
 	WHILE p # 0 DO (*substructure*)
@@ -651,13 +651,13 @@ BEGIN
 	gR1 := gR2
 END ConcatSeq;
 
-PROCEDURE MakeFirstAlt*(VAR gL, gR: INTEGER);
+PROCEDURE MakeFirstAlt*(VAR gL, gR: SIGNED16);
 BEGIN
 	gL := NewNode(alt, gL, 0); gn[gL].next := gR; gR := gL
 END MakeFirstAlt;
 
-PROCEDURE MakeIteration*(VAR gL, gR: INTEGER);
-	VAR p, q: INTEGER;
+PROCEDURE MakeIteration*(VAR gL, gR: SIGNED16);
+	VAR p, q: SIGNED16;
 BEGIN
 	gL := NewNode(iter, gL, 0); p := gR; gR := gL;
 	WHILE p # 0 DO
@@ -665,13 +665,13 @@ BEGIN
 	END
 END MakeIteration;
 
-PROCEDURE MakeOption*(VAR gL, gR: INTEGER);
+PROCEDURE MakeOption*(VAR gL, gR: SIGNED16);
 BEGIN
 	gL := NewNode(opt, gL, 0); gn[gL].next := gR; gR := gL
 END MakeOption;
 
-PROCEDURE StrToGraph*(str: ARRAY OF CHAR; VAR gL, gR: INTEGER);
-	VAR len, i: INTEGER;
+PROCEDURE StrToGraph*(str: ARRAY OF CHAR; VAR gL, gR: SIGNED16);
+	VAR len, i: SIGNED16;
 BEGIN
 	gR := 0; i := 1; len := Length(str) - 1;
 	WHILE i < len DO
@@ -684,7 +684,7 @@ END StrToGraph;
 PROCEDURE DelNode*(gn: GraphNode): BOOLEAN;
 	VAR sn: SymbolNode;
 
-	PROCEDURE DelAlt(gp: INTEGER): BOOLEAN;
+	PROCEDURE DelAlt(gp: SIGNED16): BOOLEAN;
 		VAR gn: GraphNode;
 	BEGIN
 		IF gp <= 0 THEN RETURN TRUE END ; (*end of graph found*)
@@ -700,9 +700,9 @@ BEGIN
 END DelNode;
 
 PROCEDURE PrintGraph*;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 
-	PROCEDURE WriteTyp(typ: INTEGER);
+	PROCEDURE WriteTyp(typ: SIGNED16);
 	BEGIN
 		CASE typ OF
 		| nt	: Str("nt  ")
@@ -739,16 +739,16 @@ END PrintGraph;
 PROCEDURE FindCircularProductions* (VAR ok: BOOLEAN);
 	CONST maxList = 150;
 	TYPE  ListEntry = RECORD
-					left   : INTEGER;
-					right  : INTEGER;
+					left   : SIGNED16;
+					right  : SIGNED16;
 					deleted: BOOLEAN;
 				END ;
-	VAR   changed, onLeftSide, onRightSide: BOOLEAN; i, j, listLength: INTEGER;
+	VAR   changed, onLeftSide, onRightSide: BOOLEAN; i, j, listLength: SIGNED16;
 				list: ARRAY maxList OF ListEntry;
 				singles: MarkList;
 				sn: SymbolNode;
 
-	PROCEDURE GetSingles (gp: INTEGER; VAR singles: MarkList);
+	PROCEDURE GetSingles (gp: SIGNED16; VAR singles: MarkList);
 		VAR gn: GraphNode;
 	BEGIN
 		IF gp <= 0 THEN RETURN END ; (* end of graph found *)
@@ -815,9 +815,9 @@ END FindCircularProductions;
 
 
 PROCEDURE LL1Test* (VAR ll1: BOOLEAN);
-	VAR sn: SymbolNode; curSy: INTEGER;
+	VAR sn: SymbolNode; curSy: SIGNED16;
 
-	PROCEDURE LL1Error (cond, ts: INTEGER);
+	PROCEDURE LL1Error (cond, ts: SIGNED16);
 		VAR sn: SymbolNode;
 	BEGIN
 		ll1 := FALSE;
@@ -831,8 +831,8 @@ PROCEDURE LL1Test* (VAR ll1: BOOLEAN);
 		NL; Texts.Append(Oberon.Log, w.buf)
 	END LL1Error;
 
-	PROCEDURE Check (cond: INTEGER; VAR s1, s2: Set);
-		VAR i: INTEGER;
+	PROCEDURE Check (cond: SIGNED16; VAR s1, s2: Set);
+		VAR i: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE i <= maxT DO
@@ -841,8 +841,8 @@ PROCEDURE LL1Test* (VAR ll1: BOOLEAN);
 		END
 	END Check;
 
-	PROCEDURE CheckAlternatives (gp: INTEGER);
-		VAR gn, gn1: GraphNode; s1, s2: Set; p: INTEGER;
+	PROCEDURE CheckAlternatives (gp: SIGNED16);
+		VAR gn, gn1: GraphNode; s1, s2: Set; p: SIGNED16;
 	BEGIN
 		WHILE gp > 0 DO
 			GetNode(gp, gn);
@@ -877,7 +877,7 @@ END LL1Test;
 
 
 PROCEDURE TestCompleteness* (VAR ok: BOOLEAN);
-	VAR sp: INTEGER; sn: SymbolNode;
+	VAR sp: SIGNED16; sn: SymbolNode;
 BEGIN
 	sp := firstNt; ok := TRUE;
 	WHILE sp <= lastNt DO  (*for all nonterminals*)
@@ -891,9 +891,9 @@ END TestCompleteness;
 
 
 PROCEDURE TestIfAllNtReached* (VAR ok: BOOLEAN);
-	VAR gn: GraphNode; sp: INTEGER; reached: MarkList; sn: SymbolNode;
+	VAR gn: GraphNode; sp: SIGNED16; reached: MarkList; sn: SymbolNode;
 
-	PROCEDURE MarkReachedNts (gp: INTEGER);
+	PROCEDURE MarkReachedNts (gp: SIGNED16);
 		VAR gn: GraphNode; sn: SymbolNode;
 	BEGIN
 		WHILE gp > 0 DO
@@ -928,11 +928,11 @@ END TestIfAllNtReached;
 
 
 PROCEDURE TestIfNtToTerm* (VAR ok: BOOLEAN);
-	VAR changed: BOOLEAN; sp: INTEGER;
+	VAR changed: BOOLEAN; sp: SIGNED16;
 			sn: SymbolNode;
 			termList: MarkList;
 
-	PROCEDURE IsTerm (gp: INTEGER): BOOLEAN;
+	PROCEDURE IsTerm (gp: SIGNED16): BOOLEAN;
 		VAR gn: GraphNode;
 	BEGIN
 		WHILE gp > 0 DO

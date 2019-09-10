@@ -60,9 +60,9 @@ TYPE ObjectArray = POINTER TO ARRAY OF ANY;   (* Data Container for List Object 
 TYPE Slide* = OBJECT
 	VAR
 		img, trans	: String;
-		dur			: LONGINT;
+		dur			: SIGNED32;
 		desc		: String;
-	PROCEDURE &New*(img : String;   trans : String; dur : LONGINT;   desc : String);
+	PROCEDURE &New*(img : String;   trans : String; dur : SIGNED32;   desc : String);
 	BEGIN
 		SELF.img := img; SELF.trans := trans; SELF.dur := dur; SELF.desc := desc;
 	END New;
@@ -81,10 +81,10 @@ END Slide;
 TYPE List* = OBJECT
 	VAR
 		list : ObjectArray;
-		count : LONGINT;
-		readLock : LONGINT;
+		count : SIGNED32;
+		readLock : SIGNED32;
 
-	PROCEDURE &New*(size: LONGINT);
+	PROCEDURE &New*(size: SIGNED32);
 	BEGIN
 		NEW(list, size); readLock := 0
 	END New;
@@ -96,14 +96,14 @@ TYPE List* = OBJECT
 	 * should call Lock before GetCount and Unlock after the last use of an index based on GetCount
 	 *
 	 *** *)
-	PROCEDURE GetCount*():LONGINT;
+	PROCEDURE GetCount*():SIGNED32;
 	BEGIN
 		RETURN count
 	END GetCount;
 
 	PROCEDURE Grow;
 	VAR
-		old: ObjectArray; i : LONGINT;
+		old: ObjectArray; i : SIGNED32;
 	BEGIN
 		old := list;  NEW(list, LEN(list)*2);
 		FOR i := 0 TO count-1 DO list[i] := old[i] END;
@@ -127,7 +127,7 @@ TYPE List* = OBJECT
 	 *** *)
 	PROCEDURE Replace*(x, y : ANY);
 	VAR
-		i : LONGINT;
+		i : SIGNED32;
 	BEGIN {EXCLUSIVE}
 		AWAIT(readLock = 0);
 		i := IndexOf(x);  IF (i >= 0) THEN list[i] := y END;
@@ -141,9 +141,9 @@ TYPE List* = OBJECT
 	 * If the object is not found, -1 is returned
 	 *
 	 *** *)
-	PROCEDURE IndexOf *(x:ANY) : LONGINT;
+	PROCEDURE IndexOf *(x:ANY) : SIGNED32;
 	VAR
-		i : LONGINT;
+		i : SIGNED32;
 	BEGIN
 		i := 0 ;
 		WHILE (i < count) DO   IF (list[i] = x) THEN RETURN i END;   INC(i); END;
@@ -157,7 +157,7 @@ TYPE List* = OBJECT
 	 *
 	 *** *)
 	PROCEDURE Remove*(x : ANY);
-	VAR i : LONGINT;
+	VAR i : SIGNED32;
 	BEGIN {EXCLUSIVE}
 		AWAIT(readLock = 0);
 		i:=0;
@@ -168,8 +168,8 @@ TYPE List* = OBJECT
 		END
 	END Remove;
 
-	PROCEDURE RemoveByIndex*(index : LONGINT);
-	VAR i : LONGINT;
+	PROCEDURE RemoveByIndex*(index : SIGNED32);
+	VAR i : SIGNED32;
 	BEGIN {EXCLUSIVE}
 		AWAIT(readLock = 0);
 		i := index;
@@ -186,7 +186,7 @@ TYPE List* = OBJECT
 	 *
 	 *** *)
 	PROCEDURE Clear*;
-	VAR i : LONGINT;
+	VAR i : SIGNED32;
 	BEGIN {EXCLUSIVE}
 		AWAIT(readLock = 0);
 		FOR i := 0 TO count - 1 DO  list[i] := NIL;  END;
@@ -199,7 +199,7 @@ TYPE List* = OBJECT
 	 * region Lock / Unlock
 	 *
 	 *** *)
-	PROCEDURE GetItem*(i:LONGINT) : ANY;
+	PROCEDURE GetItem*(i:SIGNED32) : ANY;
 	BEGIN
 		ASSERT((i >= 0) & (i < count), 101);
 		RETURN list[i];
@@ -243,7 +243,7 @@ TYPE SlideshowApp= OBJECT
 		data : SlideshowData;
 		win : SlideshowWindow;
 		nav : SlideshowNavigation;
-		slideNr : LONGINT;
+		slideNr : SIGNED32;
 		fullscreen : BOOLEAN;
 	(*****
 	 *
@@ -350,7 +350,7 @@ TYPE SlideshowApp= OBJECT
 		dummy : ARRAY 2048 OF CHAR;
 		nl : ARRAY 2 OF CHAR;
 		slide : Slide;
-		i : LONGINT;
+		i : SIGNED32;
 	BEGIN
 		nl[0] := 0DX; nl[1] := 0X;
 		dummy[0] := 0X;
@@ -435,7 +435,7 @@ TYPE  SlideshowNavigation = OBJECT(WMComponents.FormWindow);
 	VAR
 		data : SlideshowData;
 		imageP : WMStandardComponents.ImagePanel;
-		prevLen : LONGINT;
+		prevLen : SIGNED32;
 
 	PROCEDURE &New*(data : SlideshowData);
 	VAR
@@ -462,7 +462,7 @@ TYPE  SlideshowNavigation = OBJECT(WMComponents.FormWindow);
 
 		NEW(nav);
 		nav.bounds.SetExtents(prevLen, 20);
-		nav.fillColor.Set(LONGINT(0AAAAAAAAH));
+		nav.fillColor.Set(SIGNED32(0AAAAAAAAH));
 		nav.takesFocus.Set(TRUE);
 		nav.alignment.Set(WMComponents.AlignTop);
 
@@ -508,9 +508,9 @@ TYPE  SlideshowNavigation = OBJECT(WMComponents.FormWindow);
 	PROCEDURE UpdatePreview;
 	VAR
 		nextSlide : Slide;
-		nextIndex : LONGINT;
+		nextIndex : SIGNED32;
 		image : Image;
-		fact : REAL;
+		fact : FLOAT32;
 		c : WMGraphics.BufferCanvas;
 		w, h : SIZE;
 	BEGIN
@@ -638,7 +638,7 @@ END SlideshowNavigation;
  *
  ****)
 TYPE URLDropTarget* = OBJECT(WMDropTarget.DropTarget);
-	PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
+	PROCEDURE GetInterface*(type : SIGNED32) : WMDropTarget.DropInterface;
 	VAR di : DropURL;
 	BEGIN
 		IF (type = WMDropTarget.TypeURL) THEN
@@ -651,7 +651,7 @@ TYPE URLDropTarget* = OBJECT(WMDropTarget.DropTarget);
 END URLDropTarget;
 
 TYPE DropURL* = OBJECT(WMDropTarget.DropURLs)
-	PROCEDURE URL*(CONST url : ARRAY OF CHAR; VAR res : WORD);
+	PROCEDURE URL*(CONST url : ARRAY OF CHAR; VAR res : INTEGER);
 	BEGIN
 		(* handle dropped files -> build up SlideshowData on-the-fly (not via XML file) *)
 		KernelLog.String("Dropped new URL: "); KernelLog.String(url); KernelLog.Ln;
@@ -680,7 +680,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 	VAR
 		data: SlideshowData;
 
-	PROCEDURE &New*( width, height : LONGINT; alpha : BOOLEAN; data : SlideshowData);
+	PROCEDURE &New*( width, height : SIGNED32; alpha : BOOLEAN; data : SlideshowData);
 	BEGIN
 		Init(width, height, alpha);
 		SetTitle( Strings.NewString("Bluebottle Slideshow (ETHZ, 2005)") );
@@ -742,9 +742,9 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 	END KeyEvent;
 
 	(*
-	PROCEDURE Jump(slideNr : LONGINT);
+	PROCEDURE Jump(slideNr : SIGNED32);
 	VAR s : Slide;
-		w, h : LONGINT;
+		w, h : SIGNED32;
 	BEGIN
 		(*  Load image *)
 		s := data.GetSlide(slideNr);
@@ -757,7 +757,7 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 	END Jump;
 	*)
 
-	PROCEDURE Show(nextSlideNr : LONGINT );
+	PROCEDURE Show(nextSlideNr : SIGNED32 );
 	VAR
 		current, next : Slide;
 		src, dest : Image;
@@ -798,10 +798,10 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 		END;
 	END Show;
 
-	PROCEDURE ShowMask(current, next : Image; CONST mask: ARRAY OF CHAR; len : LONGINT);
+	PROCEDURE ShowMask(current, next : Image; CONST mask: ARRAY OF CHAR; len : SIGNED32);
 	VAR
 		tm : TransitionMask;
-		i, step: LONGINT;
+		i, step: SIGNED32;
 		w, h : SIZE;
 	BEGIN
 		IF (DEBUG) THEN KernelLog.String("Mask transition: "); KernelLog.String(mask); KernelLog.Ln; END;
@@ -823,10 +823,10 @@ TYPE  SlideshowWindow = OBJECT(WMWindowManager.DoubleBufferWindow);
 	END ShowMask;
 
 
-	PROCEDURE ShowFade(current, next : Image; len : LONGINT);
+	PROCEDURE ShowFade(current, next : Image; len : SIGNED32);
 	VAR
 		tf : TransitionFade;
-		i,step : LONGINT;
+		i,step : SIGNED32;
 		w, h : SIZE;
 	BEGIN
 		IF (DEBUG) THEN KernelLog.String("Fade transition"); KernelLog.Ln; END;
@@ -904,7 +904,7 @@ END SlideshowWindow;
 		IF (DEBUG) THEN KernelLog.String("All slides have been loaded!"); KernelLog.Ln; END;
 	END New;
 
-	PROCEDURE GetSlide(i : LONGINT) : Slide;
+	PROCEDURE GetSlide(i : SIGNED32) : Slide;
 	VAR
 		p : ANY; 	s : Slide;
 	BEGIN
@@ -916,7 +916,7 @@ END SlideshowWindow;
 		 s := p(Slide); RETURN s;
 	END GetSlide;
 
-	PROCEDURE CountSlides() : LONGINT;
+	PROCEDURE CountSlides() : SIGNED32;
 	BEGIN
 		RETURN slides.GetCount();
 	END CountSlides;
@@ -960,7 +960,7 @@ END SlideshowWindow;
 		e, root: XML.Element;
 		p: ANY;
 		s, imgStr, transStr, durStr, descStr : String;
-		dur : LONGINT;
+		dur : SIGNED32;
 		slide : Slide;
 	BEGIN
 		IF (doc = NIL) THEN
@@ -1088,7 +1088,7 @@ END SlideshowWindow;
 	 *  Remove a slide on the fly (if it has been detected as invalid image format)
 	 *
 	 *****)
-	PROCEDURE RemoveSlide(i : LONGINT);
+	PROCEDURE RemoveSlide(i : SIGNED32);
 	BEGIN
 		slides.RemoveByIndex(i);
 	END RemoveSlide;
@@ -1145,7 +1145,7 @@ END Cleanup;
  ****)
 PROCEDURE LoadImage(CONST name : ARRAY OF CHAR; fmt : Raster.Format): Image;
 VAR img : Image;
-	res, x: WORD; w, h : SIZE;
+	res, x: INTEGER; w, h : SIZE;
 	decoder : Codecs.ImageDecoder;
 	in : Streams.Reader;
 	ext : ARRAY 16 OF CHAR;
@@ -1179,7 +1179,7 @@ END LoadImage;
  *****)
 PROCEDURE GetExtension (CONST name: ARRAY OF CHAR; VAR ext: ARRAY OF CHAR);
 VAR
-	i, j: LONGINT;
+	i, j: SIGNED32;
 	ch: CHAR;
 BEGIN
 	i := 0; j := 0;

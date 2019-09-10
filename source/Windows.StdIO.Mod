@@ -16,7 +16,7 @@ VAR
 
 
 PROCEDURE Args(): String;
-VAR size, pos: SIZE; i,j: LONGINT; str: String;
+VAR size, pos: SIZE; i,j: SIGNED32; str: String;
 	cmdLine {UNTRACED}: POINTER {UNSAFE} TO ARRAY OF CHAR;
 BEGIN
 	cmdLine := Kernel32.GetCommandLine();

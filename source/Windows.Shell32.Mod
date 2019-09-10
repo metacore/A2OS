@@ -26,7 +26,7 @@ MODULE Shell32; (** non-portable / source: Windows.Shell32.Mod *)
     	LPCSTR* = ADDRESS;
     	HWND* = Kernel32.HANDLE;
 		HINSTANCE* = Kernel32.HINSTANCE;
-		INT* =  LONGINT;
+		INT* =  SIGNED32;
 	VAR
 	shell32: Kernel32.HMODULE;
 

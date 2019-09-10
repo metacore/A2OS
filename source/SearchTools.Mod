@@ -47,7 +47,7 @@ TYPE
 
 
 PROCEDURE FindString(CONST filename : Files.FileName; param : Parameters; stats : Statistics; context : Commands.Context);
-VAR text : Texts.Text; pos: SIZE; format, res : WORD; searchString : SearchStringUCS; idx, nbrOfHits : SIZE;
+VAR text : Texts.Text; pos: SIZE; format, res : INTEGER; searchString : SearchStringUCS; idx, nbrOfHits : SIZE;
 BEGIN
 	ASSERT(param IS PatternParameters);
 	nbrOfHits := 0;
@@ -81,7 +81,7 @@ END FindString;
 
 PROCEDURE ReplaceString(CONST filename : Files.FileName; param : Parameters; stats : Statistics; context : Commands.Context);
 VAR
-	text : Texts.Text; pos: SIZE; format, res: WORD;
+	text : Texts.Text; pos: SIZE; format, res: INTEGER;
 	searchString, replaceString : SearchStringUCS; idx : SIZE;
 	searchStringLen, replaceStringLen : SIZE;
 	replaceCount : SIZE;
@@ -219,7 +219,7 @@ VAR
 	enum : Files.Enumerator;
 	filename : Files.FileName;
 	fileflags : SET;
-	time, date : LONGINT; nofMatches : SIZE;
+	time, date : SIGNED32; nofMatches : SIZE;
 	size : Files.Size;
 BEGIN
 	ASSERT(proc # NIL);

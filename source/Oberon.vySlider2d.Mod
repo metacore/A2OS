@@ -50,7 +50,7 @@ TYPE
 
 	tLayerDesc = RECORD (vyCharts.tLayerDesc)
 		locked: BOOLEAN;
-		pos: LONGINT;
+		pos: SIGNED32;
 		slider: tCtlSlider
 	END;
 
@@ -59,9 +59,9 @@ TYPE
 VAR
 	ball, canal: vyHostDisplay.tSign;
 
-	PROCEDURE Line( x, y, X, Y: INTEGER );
+	PROCEDURE Line( x, y, X, Y: SIGNED16 );
 	(* from Curves.Mod with simple modifications 	md 08.02.94 *)
-	VAR x1, y1, u, d, w, h: INTEGER;
+	VAR x1, y1, u, d, w, h: SIGNED16;
 	BEGIN
 		w := X - x;  h := Y - y;
 		IF w < 0 THEN x := x + w;  y := y + h;  w := -w;  h := -h END;
@@ -84,8 +84,8 @@ VAR
 		END
 	END Line;
 
-	PROCEDURE MoveBallTo( slider2d: tLayer;  pos: LONGINT );
-	VAR x, y: INTEGER;  lastPos: LONGINT;
+	PROCEDURE MoveBallTo( slider2d: tLayer;  pos: SIGNED32 );
+	VAR x, y: SIGNED16;  lastPos: SIGNED32;
 	BEGIN
 		vyHostDisplay.SetPatternJustification( vyHostDisplay.center, vyHostDisplay.center );  lastPos := slider2d.pos;
 		vyGraphBase.Point2dToPoint( vyTypes.VGetR( slider2d.x, lastPos ), vyTypes.VGetR( slider2d.y, lastPos ), x, y );
@@ -95,10 +95,10 @@ VAR
 	END MoveBallTo;
 
 	PROCEDURE Recall( slider2d: tLayer;  VAR msg: Display.DisplayMsg );
-	VAR xOld, yOld, x, y, w, h: INTEGER;  i: LONGINT;
+	VAR xOld, yOld, x, y, w, h: SIGNED16;  i: SIGNED32;
 
 		PROCEDURE RecallBall( slider2d: tLayer );
-		VAR X, Y: INTEGER;  p: LONGINT;
+		VAR X, Y: SIGNED16;  p: SIGNED32;
 		BEGIN
 			vyHostDisplay.SetDisplayMode( vyHostDisplay.invert );  p := slider2d.pos;
 			vyGraphBase.Point2dToPoint( vyTypes.VGetR( slider2d.x, p ), vyTypes.VGetR( slider2d.y, p ), X, Y );
@@ -127,7 +127,7 @@ VAR
 	END Copy;
 
 	PROCEDURE DefinePath( slider2d: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR x, y: INTEGER;
+	VAR x, y: SIGNED16;
 
 		PROCEDURE WriteData;
 		VAR x2d, y2d: Real;
@@ -138,7 +138,7 @@ VAR
 		END WriteData;
 
 		PROCEDURE Lock;
-		VAR res: INTEGER;
+		VAR res: SIGNED16;
 		BEGIN
 			slider2d.locked := TRUE;  NEW( slider2d.slider );
 			vySlider.Open( slider2d.slider, event.dlink( vyPort.Picture ), 0, slider2d.x.nrData - 1, 0, SHORT( slider2d.x.nrData ) );
@@ -166,7 +166,7 @@ VAR
 	END DefinePath;
 
 	PROCEDURE Responsible( slider: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF (event.gesture = vyEvents.EvtIdent) & ~(slider.locked) THEN priority := vyEvents.PrioNormal
@@ -179,7 +179,7 @@ VAR
 
 	PROCEDURE Handler*( o: Objects.Object;  VAR msg: Objects.ObjMsg );
 	(*s 0.0a1	md  20.07.94 *)
-	VAR slider, copy: tLayer;  done: BOOLEAN;  i: LONGINT;
+	VAR slider, copy: tLayer;  done: BOOLEAN;  i: SIGNED32;
 	BEGIN
 		slider := o( tLayer );  done := FALSE;
 

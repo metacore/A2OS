@@ -61,7 +61,7 @@ TYPE
 	END;
 
 	CountFiles = POINTER TO RECORD(Parameter)
-		count: LONGINT;
+		count: SIGNED32;
 	END;
 
 	SearchByName = OBJECT
@@ -96,9 +96,9 @@ TYPE
 	END SearchByCluster;
 
 	FilePurger = OBJECT
-		VAR count: LONGINT;
+		VAR count: SIGNED32;
 		PROCEDURE EnumFile(f: ANY; VAR cont: BOOLEAN);
-		VAR res: WORD;
+		VAR res: INTEGER;
 		BEGIN ASSERT(~f(File).registered);
 			KernelLog.Enter;
 			KernelLog.String(moduleName); KernelLog.String("purging anonymous file '"); KernelLog.String(f(File).long); KernelLog.String("'...");
@@ -116,7 +116,7 @@ TYPE
 
 	FileEnumerator = OBJECT
 		VAR
-			count: LONGINT;
+			count: SIGNED32;
 			directory: Address;
 
 		PROCEDURE &Init*(dir: Address);
@@ -132,7 +132,7 @@ TYPE
 		VAR
 			rootDir-: Directory;
 			openFiles, anonymousFiles: Kernel.FinalizedCollection;	(* contains open files with length 0 *)
-			fileKey: LONGINT;
+			fileKey: SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN fileKey := -1; NEW(openFiles); NEW(anonymousFiles)
@@ -163,7 +163,7 @@ TYPE
 			(* do not release exclusive lock ! *)
 		END Finalize;
 
-		PROCEDURE GetNextFileKey(): LONGINT;
+		PROCEDURE GetNextFileKey(): SIGNED32;
 		BEGIN
 			DEC(fileKey);
 			RETURN fileKey
@@ -262,11 +262,11 @@ TYPE
 		END OldX;
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
-		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE} Delete0X(name, key, res)
 		END Delete0;
 
-		PROCEDURE Delete0X(name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0X(name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER);
 		VAR path, filename: Filename; dir: Directory; f: File; s: SearchByName; dcc: BOOLEAN;
 		BEGIN
 			res := ErrInvalidFilename; key := 0;
@@ -310,7 +310,7 @@ TYPE
 		END Delete0X;
 
 		(* Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
-		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER);
 		VAR oldpath, oldname, newpath, newname: Filename; r: File; dir: Directory; s: SearchByName;
 		BEGIN {EXCLUSIVE}
 			res := ErrInvalidFilename;
@@ -386,8 +386,8 @@ TYPE
 		END Enumerate0;
 
 		(* Return the unique non-zero key of the named file, if it exists. *)
-		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
-		VAR s: SearchByName; path, filename: Filename; dir: Directory; f: File; key: LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): SIGNED32;
+		VAR s: SearchByName; path, filename: Filename; dir: Directory; f: File; key: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF UTF8Strings.Valid(name) THEN
 				UTF8Strings.UpperCase(name, filename);
@@ -412,8 +412,8 @@ TYPE
 			RETURN key
 		END FileKey;
 
-		PROCEDURE CreateDirectory0*(CONST path: ARRAY OF CHAR; VAR res: WORD);
-		VAR f: File; d: Directory; i,j: LONGINT; name: Filename; lookup: BOOLEAN; s: SearchByName;
+		PROCEDURE CreateDirectory0*(CONST path: ARRAY OF CHAR; VAR res: INTEGER);
+		VAR f: File; d: Directory; i,j: SIGNED32; name: Filename; lookup: BOOLEAN; s: SearchByName;
 		BEGIN {EXCLUSIVE}
 			IF (Files.ReadOnly IN vol.flags) THEN res := ErrReadOnly; RETURN END;
 			res := ErrFileExists;
@@ -461,7 +461,7 @@ TYPE
 		BEGIN INC(par(CountFiles).count); RETURN TRUE
 		END RmDirCallback;
 
-		PROCEDURE RemoveDirectory0*(CONST path: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE RemoveDirectory0*(CONST path: ARRAY OF CHAR; force: BOOLEAN; VAR key: SIGNED32; VAR res: INTEGER);
 		VAR f: File; par: CountFiles; s: SearchByName; parent: Directory;
 		BEGIN {EXCLUSIVE}
 			IF (Files.ReadOnly IN vol.flags) THEN res := ErrReadOnly; RETURN END;
@@ -497,8 +497,8 @@ TYPE
 			END
 		END RemoveDirectory0;
 
-		PROCEDURE QuickFormat*(volLabel: ARRAY OF CHAR; VAR res: WORD);
-		VAR f: File; label: ARRAY 11 OF CHAR; i: LONGINT;
+		PROCEDURE QuickFormat*(volLabel: ARRAY OF CHAR; VAR res: INTEGER);
+		VAR f: File; label: ARRAY 11 OF CHAR; i: SIGNED32;
 			clean: FileEnumerator; c: CHAR; dummy: BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			IF (Files.ReadOnly IN vol.flags) THEN res := ErrReadOnly; RETURN END;
@@ -543,7 +543,7 @@ TYPE
 
 		PROCEDURE FindDirectory(path: ARRAY OF CHAR): Directory;
 		VAR dir: Directory; f: File; s: SearchByName;
-			pos, k: LONGINT; p: Filename;
+			pos, k: SIGNED32; p: Filename;
 		BEGIN
 			dir := rootDir; pos := 0;
 			IF (path[0] = PathDelimiter) THEN INC(pos) END;
@@ -602,11 +602,11 @@ TYPE
 
 TYPE
 	DirEntry = RECORD
-		ofs, len: LONGINT;
+		ofs, len: SIGNED32;
 	END;
 
 	Buffer = POINTER TO RECORD
-		pos: LONGINT; eoc: BOOLEAN;
+		pos: SIGNED32; eoc: BOOLEAN;
 		cluster: Address;
 		data: POINTER TO ARRAY OF CHAR;
 	END;
@@ -622,14 +622,14 @@ TYPE
 			attr: SET;
 			NTres: CHAR;
 			cluster, parent: Address;	(* 'parent': cluster of directory containing file *)
-			size: LONGINT;
-			time, date, writeTime-, writeDate-, accessDate-: LONGINT;
+			size: SIGNED32;
+			time, date, writeTime-, writeDate-, accessDate-: SIGNED32;
 			modH, modName: BOOLEAN; (* TRUE if the directory entry needs to be written back to disk, modName is TRUE if the name has changed *)
 			writeEOC: BOOLEAN;
-			eocCluster: LONGINT;
+			eocCluster: SIGNED32;
 			entry: DirEntry; (* offset & length of directory entry *)
 			registered-: BOOLEAN; (* TRUE if the file is registered in a directory. Possible race ! *)
-			clusterSize: LONGINT;
+			clusterSize: SIGNED32;
 			buffer: Buffer;
 
 		PROCEDURE &Init*(fs: Files.FileSystem);
@@ -649,8 +649,8 @@ TYPE
 			IF (pos < 0) THEN pos := 0
 			ELSIF (pos > size) THEN pos := size
 			END;
-			r.apos := LONGINT(pos) DIV clusterSize;
-			r.bpos := LONGINT(pos) MOD clusterSize;
+			r.apos := SIGNED32(pos) DIV clusterSize;
+			r.bpos := SIGNED32(pos) MOD clusterSize;
 			IF (buffer = NIL) THEN
 				NEW(buffer); NEW(buffer.data, clusterSize);
 				buffer.pos := NotAssigned;
@@ -668,11 +668,11 @@ TYPE
 			buf.cluster contains the physical cluster # (>= 2), -(the physical cluster # of the last cluster of the file),
 			or EOC if the file has no clusters assigned yet.
 		*)
-		PROCEDURE ReadBuffer(buffer: Buffer; pos: LONGINT);
+		PROCEDURE ReadBuffer(buffer: Buffer; pos: SIGNED32);
 		VAR
 			last: Address;
-			i: LONGINT; res: WORD;
-			bp, bc, ctrlflow, stopc: LONGINT;
+			i: SIGNED32; res: INTEGER;
+			bp, bc, ctrlflow, stopc: SIGNED32;
 		BEGIN
 			ASSERT(buffer.pos # pos);
 			bp := buffer.pos; bc := buffer.cluster;
@@ -739,7 +739,7 @@ TYPE
 
 		(* Write logical cluster. Depending on buf.cluster, a new physical cluster may be allocated. cf. ReadBuffer *)
 		PROCEDURE WriteBuffer(buffer: Buffer);
-		VAR link: Address; res: WORD;
+		VAR link: Address; res: INTEGER;
 		BEGIN
 			IF (buffer.cluster < 2) THEN	(* allocate new cluster *)
 				IF (buffer.cluster = -EOC) THEN link := FATVolumes.FREE
@@ -771,7 +771,7 @@ TYPE
 		PROCEDURE ReadX(VAR r: Files.Rider; VAR x: CHAR);
 		BEGIN
 			IF (r.apos*clusterSize + r.bpos < size) THEN
-				IF (buffer.pos # LONGINT(r.apos)) THEN ReadBuffer(buffer, LONGINT(r.apos)) END;
+				IF (buffer.pos # SIGNED32(r.apos)) THEN ReadBuffer(buffer, SIGNED32(r.apos)) END;
 				x := buffer.data[r.bpos];
 				INC(r.bpos);
 				IF (r.bpos = clusterSize) THEN INC(r.apos); r.bpos := 0 END
@@ -792,9 +792,9 @@ TYPE
 			IF LEN(x)-ofs < len THEN SYSTEM.HALT(19) END;
 			IF len > 0 THEN
 				WHILE (len > 0) & (Pos(r) < size) DO
-					IF (buffer.pos # LONGINT(r.apos)) THEN ReadBuffer(buffer, LONGINT(r.apos)) END;
+					IF (buffer.pos # SIGNED32(r.apos)) THEN ReadBuffer(buffer, SIGNED32(r.apos)) END;
 					src := ADDRESSOF(buffer.data[r.bpos]);
-					m := MIN(MIN(size - LONGINT(Pos(r)), clusterSize - r.bpos), len);
+					m := MIN(MIN(size - SIGNED32(Pos(r)), clusterSize - r.bpos), len);
 					SYSTEM.MOVE(src, ADDRESSOF(x[ofs]), m);
 					INC(ofs, m); DEC(len, m);
 					INC(r.bpos, m); ASSERT(r.bpos <= clusterSize);
@@ -814,12 +814,12 @@ TYPE
 		PROCEDURE WriteX(VAR r: Files.Rider; x: CHAR);
 		BEGIN
 			IF (attr * WriteProtected # {}) THEN HALT(ErrFileReadOnly) END;
-			IF (buffer.pos # LONGINT(r.apos)) THEN ReadBuffer(buffer, LONGINT(r.apos)) END;
+			IF (buffer.pos # SIGNED32(r.apos)) THEN ReadBuffer(buffer, SIGNED32(r.apos)) END;
 			buffer.data[r.bpos] := x;
 			INC(r.bpos);
 			IF (r.bpos = clusterSize) THEN INC(r.apos); r.bpos := 0 END;
 			IF (Pos(r) > size) THEN
-				ASSERT(LONGINT(Pos(r)) = size+1); size := LONGINT(Pos(r));
+				ASSERT(SIGNED32(Pos(r)) = size+1); size := SIGNED32(Pos(r));
 				IF ~(SELF IS Directory) THEN modH := TRUE END
 			END;
 			WriteBuffer(buffer)
@@ -837,7 +837,7 @@ TYPE
 			IF LEN(x)-ofs < len THEN SYSTEM.HALT(19) END;
 			IF len > 0 THEN
 				WHILE (len > 0) DO
-					IF (buffer.pos # LONGINT(r.apos)) THEN ReadBuffer(buffer, LONGINT(r.apos)) END;
+					IF (buffer.pos # SIGNED32(r.apos)) THEN ReadBuffer(buffer, SIGNED32(r.apos)) END;
 					dst := ADDRESSOF(buffer.data[r.bpos]);
 					m := MIN(clusterSize-r.bpos, len);
 					SYSTEM.MOVE(ADDRESSOF(x[ofs]), dst, m);
@@ -846,8 +846,8 @@ TYPE
 					INC(r.bpos, m); ASSERT(r.bpos <= clusterSize);
 					IF (r.bpos = clusterSize) THEN INC(r.apos); r.bpos := 0 END;
 				END;
-				IF (LONGINT(Pos(r)) > size) THEN
-					size := LONGINT(Pos(r));
+				IF (SIGNED32(Pos(r)) > size) THEN
+					size := SIGNED32(Pos(r));
 					IF ~(SELF IS Directory) THEN modH := TRUE END
 				END
 			END
@@ -862,13 +862,13 @@ TYPE
 		END Length;
 
 		(* Return the time (t) and date (d) when a file was last modified. *)
-		PROCEDURE GetDate*(VAR t, d: LONGINT);
+		PROCEDURE GetDate*(VAR t, d: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			t := writeTime; d := writeDate;
 		END GetDate;
 
 		(* Set the modification time (t) and date (d) of a file. *)
-		PROCEDURE SetDate*(t, d: LONGINT);
+		PROCEDURE SetDate*(t, d: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			writeTime := t; writeDate := d; modH := TRUE;
 		END SetDate;
@@ -888,7 +888,7 @@ TYPE
 		END SetAttributes;
 
 		(** Adds 'Attr' to the file's attributes *)
-		PROCEDURE InclAttribute*(Attr: LONGINT);
+		PROCEDURE InclAttribute*(Attr: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF (Attr IN faValidMask) & ~(Attr IN attr) THEN
 				INCL(attr, Attr);
@@ -897,7 +897,7 @@ TYPE
 		END InclAttribute;
 
 		(** Removes 'Attr' from the file's attributes *)
-		PROCEDURE ExclAttribute*(Attr: LONGINT);
+		PROCEDURE ExclAttribute*(Attr: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF (Attr IN faValidMask) & (Attr IN attr) THEN
 				EXCL(attr, Attr);
@@ -913,7 +913,7 @@ TYPE
 
 		(* Register a file created with New in the directory, replacing the previous file in the directory with the same name.
 			The file is automatically updated.  End users use Files.Register instead. *)
-		PROCEDURE Register0*(VAR res: WORD);
+		PROCEDURE Register0*(VAR res: INTEGER);
 		VAR dir: Directory; old: File; s: SearchByName;
 		BEGIN {EXCLUSIVE}
 			IF ~registered THEN
@@ -963,7 +963,7 @@ TYPE
 			END
 		END UpdateX;
 
-		PROCEDURE DeleteClusterChain(VAR res: WORD);
+		PROCEDURE DeleteClusterChain(VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			UpdateX;
 			fs.vol(FATVolumes.Volume).FreeClusterChain(cluster, res);
@@ -971,10 +971,10 @@ TYPE
 		END DeleteClusterChain;
 
 		PROCEDURE GetFullName*(VAR name: ARRAY OF CHAR; WithPrefix: BOOLEAN);
-		VAR pos, i: LONGINT;
+		VAR pos, i: SIGNED32;
 
 			PROCEDURE Get(directory: Address);
-			VAR dir: Directory; k: LONGINT;
+			VAR dir: Directory; k: SIGNED32;
 			BEGIN
 				dir := fs(FileSystem).GetDirectoryX(directory);
 				IF ~(dir = fs(FileSystem).rootDir) THEN
@@ -1028,7 +1028,7 @@ TYPE
 	END;
 
 	ResultParam = POINTER TO RECORD(Parameter)
-		res: WORD
+		res: INTEGER
 	END;
 
 	TailGenParam = POINTER TO RECORD(Parameter)
@@ -1041,7 +1041,7 @@ TYPE
 
 	Directory* = OBJECT(File)
 		VAR
-			firstFreePos: LONGINT;	(* position of first known free entry in directory, 'NotAssigned' if unknown *)
+			firstFreePos: SIGNED32;	(* position of first known free entry in directory, 'NotAssigned' if unknown *)
 			extendable: BOOLEAN; (* TRUE if the directory can grow *)
 
 		PROCEDURE &Init*(fs: Files.FileSystem);
@@ -1049,7 +1049,7 @@ TYPE
 			Init^(fs);
 			attr :=  {faDirectory, faReadOnly};
 			parent := NotAssigned;
-			firstFreePos := MAX(LONGINT);
+			firstFreePos := MAX(SIGNED32);
 			extendable := TRUE
 		END Init;
 
@@ -1082,7 +1082,7 @@ TYPE
 		PROCEDURE InitSize;
 		VAR c: Address; vol: FATVolumes.Volume;
 			(* TRAP info *)
-			tiFilename: Filename; tiFirstCluster, tiThisCluster, tiSize: LONGINT;
+			tiFilename: Filename; tiFirstCluster, tiThisCluster, tiSize: SIGNED32;
 		BEGIN
 			vol := fs.vol(FATVolumes.Volume);
 			c := cluster; size := 0;
@@ -1123,21 +1123,21 @@ TYPE
 
 		PROCEDURE EnumerateX(enum: EnumCallback; parseLong: BOOLEAN; par: Parameter);
 		VAR data: ARRAY 32 OF CHAR; cont: BOOLEAN;
-			type, i, k, chksumI, chksumII: LONGINT;
+			type, i, k, chksumI, chksumII: SIGNED32;
 			file, f: File; dir: Directory; r: Files.Rider; entry: DirEntry;
-			attr: SET32; unicode: ARRAY 261 OF LONGINT; longname: Filename;
+			attr: SET32; unicode: ARRAY 261 OF SIGNED32; longname: Filename;
 		BEGIN
 			NEW(file, fs); NEW(dir, fs);
 			SetX(r, 0);
-			cont := TRUE; firstFreePos := MAX(LONGINT);
+			cont := TRUE; firstFreePos := MAX(SIGNED32);
 			REPEAT
 				ReadBytesX(r, data, 0, 32);
 				IF (data[0] = deFree) THEN (* free entry *)
-					IF (Pos(r) < firstFreePos) THEN firstFreePos := LONGINT(Pos(r))-32 END
+					IF (Pos(r) < firstFreePos) THEN firstFreePos := SIGNED32(Pos(r))-32 END
 				ELSIF (data[0] # deLast) THEN (* long/short directory entry *)
 					type := FATVolumes.AND(3FH, ORD(data[11]));
 					longname := "";
-					entry.ofs := LONGINT(Pos(r)) - 32; entry.len := 1;
+					entry.ofs := SIGNED32(Pos(r)) - 32; entry.len := 1;
 					IF (type = faLongName) THEN
 						k := -1;
 						IF parseLong & (FATVolumes.AND(40H, ORD(data[0])) = 40H) THEN
@@ -1201,7 +1201,7 @@ TYPE
 
 								IF (longname # "") & (chksumI # chksumII) THEN (* chksum mismatch, ignore long name *)
 									IF (entry.ofs < firstFreePos) THEN firstFreePos := entry.ofs END;
-									longname := ""; f.entry.ofs := LONGINT(Pos(r)) - 32; f.entry.len := 1
+									longname := ""; f.entry.ofs := SIGNED32(Pos(r)) - 32; f.entry.len := 1
 								ELSE f.long := longname; f.entry := entry
 								END;
 								IF (f.long = "") THEN
@@ -1225,14 +1225,14 @@ TYPE
 					END
 				END
 			UNTIL (data[0] = deLast) OR r.eof OR ~cont;
-			IF (firstFreePos = MAX(LONGINT)) THEN firstFreePos := MAX(LONGINT(Pos(r))-32, 0) END;
+			IF (firstFreePos = MAX(SIGNED32)) THEN firstFreePos := MAX(SIGNED32(Pos(r))-32, 0) END;
 			ASSERT(firstFreePos MOD 32 = 0)
 		END EnumerateX;
 
 		(* TailGeneration - generates a short name that does not collide with an existing long or short name *)
 		PROCEDURE TailGenHandler(f: File; p: Parameter): BOOLEAN;
-		VAR i,k: INTEGER;
-			tail: LONGINT;
+		VAR i,k: SIGNED16;
+			tail: SIGNED32;
 		BEGIN
 			WITH p: TailGenParam DO
 				(* compare names *)
@@ -1264,7 +1264,7 @@ TYPE
 		END TailGenHandler;
 
 		PROCEDURE TailFinder(p: TailGenParam; VAR tail: SIZE): BOOLEAN;
-		VAR delta,max: LONGINT; i, l: SIZE;
+		VAR delta,max: SIGNED32; i, l: SIZE;
 		BEGIN
 			(* calculate size of bit-array and initialize it *)
 			max := 0; delta := 10;
@@ -1298,7 +1298,7 @@ TYPE
 		END TailFinder;
 
 		PROCEDURE TailGeneration(VAR shortname: Shortname; TailNeeded: BOOLEAN);
-		VAR tp: TailGenParam; len, max, pos: LONGINT; tail: SIZE; dummy: BOOLEAN;
+		VAR tp: TailGenParam; len, max, pos: SIGNED32; tail: SIZE; dummy: BOOLEAN;
 		BEGIN
 			NEW(tp);
 			tp.short := shortname;
@@ -1334,7 +1334,7 @@ TYPE
 		END TailGeneration;
 
 		PROCEDURE GetShortName(VAR name: Filename; VAR shortname: Shortname; VAR checksum: CHAR);
-		VAR extPos, i, k: LONGINT; ascii: ARRAY 256 OF CHAR; lossy, l, sameName: BOOLEAN;
+		VAR extPos, i, k: SIGNED32; ascii: ARRAY 256 OF CHAR; lossy, l, sameName: BOOLEAN;
 		BEGIN
 			(* step 1-4: convert name to upper case OEM (ASCII), set 'lossy conversion'-flag, strip leading and embedded spaces, strip leading periods.
 				also remember, if the long name has an extension and the position of its first character *)
@@ -1372,7 +1372,7 @@ TYPE
 		END RemoveFileHeader;
 
 		PROCEDURE RemoveFileHeaderX(f: File);
-		VAR ofs, i: LONGINT; r: Files.Rider; ro: BOOLEAN;
+		VAR ofs, i: SIGNED32; r: Files.Rider; ro: BOOLEAN;
 		BEGIN
 			IF (faReadOnly IN attr) THEN EXCL(attr, faReadOnly); ro := TRUE END;
 			IF (f.entry.len > 0) THEN
@@ -1393,11 +1393,11 @@ TYPE
 		END RemoveFileHeaderX;
 
 		PROCEDURE GetShortEntry(VAR entry: ARRAY OF CHAR; name: ARRAY OF CHAR; attr: SET; NTres: CHAR;
-														cluster, size, time, date, wTime, wDate, aDate: LONGINT);
-		VAR i, j: LONGINT;
+														cluster, size, time, date, wTime, wDate, aDate: SIGNED32);
+		VAR i, j: SIGNED32;
 		BEGIN
 			FOR i := 0 TO 10 DO entry[i] := name[i] END;
-			entry[11] := CHR(LONGINT(attr));
+			entry[11] := CHR(SIGNED32(attr));
 			entry[12] := NTres;
 			IF (cluster = NotAssigned) THEN cluster := 0 END;
 			FATVolumes.PutUnsignedInteger(entry, 20, cluster DIV 10000H);
@@ -1418,12 +1418,12 @@ TYPE
 
 		PROCEDURE WriteFileHeaderX(f: File);
 		VAR data: ARRAY 32 OF CHAR; b, ro, writeLast: BOOLEAN;
-			ofs, i, k, len, numFree, s, ucs: LONGINT; unicode: ARRAY 256 OF INTEGER;
+			ofs, i, k, len, numFree, s, ucs: SIGNED32; unicode: ARRAY 256 OF SIGNED16;
 			r: Files.Rider; c, chksum: CHAR; p: SIZE;
 		BEGIN
 			IF (faReadOnly IN attr) THEN EXCL(attr, faReadOnly); ro := TRUE END;
 			IF f.modName THEN
-				len := NameLength(f.long)(LONGINT);
+				len := NameLength(f.long)(SIGNED32);
 
 				(* delete old name *)
 				IF (len > f.entry.len) THEN ofs := NotAssigned	(* new name is longer, find new position *)
@@ -1436,7 +1436,7 @@ TYPE
 
 				IF (f.entry.ofs = NotAssigned) THEN (* find 'len' subsequent free entries *)
 					ofs := firstFreePos;
-					IF (firstFreePos = MAX(LONGINT)) THEN ofs := 0 END;
+					IF (firstFreePos = MAX(SIGNED32)) THEN ofs := 0 END;
 					ASSERT(ofs MOD 32 = 0);
 
 					numFree := 0;
@@ -1476,7 +1476,7 @@ TYPE
 					p := 0; i := 0;
 					REPEAT
 						b := UTF8Strings.DecodeChar(f.long, p, ucs);
-						IF ~b OR (ucs < 0) OR (ucs > MAX(INTEGER)) THEN HALT(ErrInvalidFilename) END;
+						IF ~b OR (ucs < 0) OR (ucs > MAX(SIGNED16)) THEN HALT(ErrInvalidFilename) END;
 						unicode[i] := SHORT(ucs); INC(i)
 					UNTIL (ucs = 0);
 
@@ -1501,7 +1501,7 @@ TYPE
 			END;
 
 			(* create short entry *)
-			IF (faDirectory IN f.attr) THEN s := 0 ELSE s := f.Length()(LONGINT) END;
+			IF (faDirectory IN f.attr) THEN s := 0 ELSE s := f.Length()(SIGNED32) END;
 			GetShortEntry(data, f.short, f.attr, f.NTres, f.cluster, s, f.time, f.date, f.writeTime, f.writeDate, f.accessDate);
 
 			(* wp: Pos(r) = position of short entry *)
@@ -1516,8 +1516,8 @@ TYPE
 			IF ro THEN INCL(attr, faReadOnly) END
 		END WriteFileHeaderX;
 
-		PROCEDURE NewSubdirectory(name: ARRAY OF CHAR; VAR res: WORD): Directory;
-		VAR upName: Filename; dir: Directory; f: File; i, t, d, p: LONGINT; r: Files.Rider; entry: ARRAY 32 OF CHAR;
+		PROCEDURE NewSubdirectory(name: ARRAY OF CHAR; VAR res: INTEGER): Directory;
+		VAR upName: Filename; dir: Directory; f: File; i, t, d, p: SIGNED32; r: Files.Rider; entry: ARRAY 32 OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF UTF8Strings.Valid(name) & ValidateName(name) THEN
 				UTF8Strings.UpperCase(name, upName);
@@ -1552,7 +1552,7 @@ TYPE
 						FOR i := 2 TO (dir.clusterSize DIV 32)-1 DO dir.WriteBytes(r, entry, 0, 32) END;
 
 						dir.Update;
-						res := r.res(WORD);
+						res := r.res(INTEGER);
 					ELSE dir := NIL	(* res is already set *)
 					END
 				ELSE
@@ -1579,7 +1579,7 @@ TYPE
 			END
 		END DeleteCallback;
 
-		PROCEDURE DeleteContents(VAR res: WORD);
+		PROCEDURE DeleteContents(VAR res: INTEGER);
 		VAR par: ResultParam; enum: FileEnumerator;
 		BEGIN {EXCLUSIVE}
 			NEW(enum, cluster);
@@ -1642,7 +1642,7 @@ TYPE
 
 	RootDirectory = OBJECT(Directory)
 		PROCEDURE GetFullName*(VAR name: ARRAY OF CHAR; WithPrefix: BOOLEAN);
-		VAR pos, i: LONGINT;
+		VAR pos, i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			pos := 0; i := 0;
 			IF WithPrefix THEN
@@ -1672,8 +1672,8 @@ TYPE
 			size := fs.vol(FATVolumes.FAT1216Volume).numRootSectors*FATVolumes.BS
 		END InitSize;
 
-		PROCEDURE ReadBuffer(buffer: Buffer; pos: LONGINT);
-		VAR vol: FATVolumes.FAT1216Volume; res: WORD;
+		PROCEDURE ReadBuffer(buffer: Buffer; pos: SIGNED32);
+		VAR vol: FATVolumes.FAT1216Volume; res: INTEGER;
 		BEGIN
 			vol := fs.vol(FATVolumes.FAT1216Volume);
 			IF (pos < 0) OR (pos >= vol.numRootSectors) THEN HALT(ErrInvalidParams) END;
@@ -1683,7 +1683,7 @@ TYPE
 		END ReadBuffer;
 
 		PROCEDURE WriteBuffer(buffer: Buffer);
-		VAR vol: FATVolumes.FAT1216Volume; res: WORD;
+		VAR vol: FATVolumes.FAT1216Volume; res: INTEGER;
 		BEGIN
 			vol := fs.vol(FATVolumes.FAT1216Volume);
 			IF (buffer.cluster < 0) OR (buffer.cluster >= vol.numRootSectors) THEN HALT(ErrInvalidParams) END;
@@ -1723,7 +1723,7 @@ BEGIN
 END NewFS;
 
 PROCEDURE PurgeFile(f: ANY);
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	WITH f: File DO
 		IF ~f.registered & (f.cluster # NotAssigned) THEN
@@ -1782,7 +1782,7 @@ BEGIN
 END IsShortName;
 
 PROCEDURE CheckSum*(short: Shortname): CHAR;
-VAR chksum: WORD; i: SIZE;
+VAR chksum: INTEGER; i: SIZE;
 BEGIN
 	chksum := 0;
 	FOR i := 0 TO 10 DO
@@ -1794,7 +1794,7 @@ END CheckSum;
 
 (* NameLength - returns the number of directory entries needed to store a file with filename 'fn' *)
 PROCEDURE NameLength(CONST fn: Filename): SIZE;
-VAR pos, i: SIZE; ucs: LONGINT;
+VAR pos, i: SIZE; ucs: SIGNED32;
 BEGIN
 	IF IsShortName(fn) THEN RETURN 1
 	ELSE
@@ -1858,19 +1858,19 @@ END UpperCh;
 					8-5: month of year
 					4-0: day of month
 *)
-PROCEDURE DateFAT2Oberon*(d: LONGINT): LONGINT;
+PROCEDURE DateFAT2Oberon*(d: SIGNED32): SIGNED32;
 BEGIN RETURN (d DIV 512 MOD 128 + 80) * 512 + d MOD 512
 END DateFAT2Oberon;
 
-PROCEDURE DateOberon2FAT*(d: LONGINT): LONGINT;
+PROCEDURE DateOberon2FAT*(d: SIGNED32): SIGNED32;
 BEGIN RETURN (d DIV 512 - 80) MOD 128 * 512 + d MOD 512
 END DateOberon2FAT;
 
-PROCEDURE TimeFAT2Oberon*(time, tenth: LONGINT): LONGINT;
+PROCEDURE TimeFAT2Oberon*(time, tenth: SIGNED32): SIGNED32;
 BEGIN RETURN time DIV 2048 MOD 32 * 4096 + time DIV 32 MOD 64 * 64 + time MOD 32 * 2 + tenth DIV 100
 END TimeFAT2Oberon;
 
-PROCEDURE TimeOberon2FAT*(t: LONGINT; VAR time, tenth: LONGINT);
+PROCEDURE TimeOberon2FAT*(t: SIGNED32; VAR time, tenth: SIGNED32);
 BEGIN
 	time := t DIV 4096 MOD 32 * 2048 + t DIV 64 MOD 64 * 32 + t MOD 64 DIV 2;
 	tenth := 100 * SHORT(FATVolumes.AND(t, 1) MOD 200)

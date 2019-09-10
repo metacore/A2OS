@@ -105,34 +105,34 @@ Statements
 		ExtProcOff 	= 8; 	(* parameter offset of external procedures *)
 
 	TYPE
-		ParamAdrProc = PROCEDURE (VAR firstPar: OPT.Object; VAR psize, dsize: LONGINT; TProc, Inline, allocDesc: BOOLEAN);
+		ParamAdrProc = PROCEDURE (VAR firstPar: OPT.Object; VAR psize, dsize: SIGNED32; TProc, Inline, allocDesc: BOOLEAN);
 
 	VAR
 		dumpCode*: BOOLEAN; (* set by OP2 *)
 		ProcName*: OPS.Name; (* accessed by OPI (read only) *)
-		EntryNr*: INTEGER; (* accessed by OPI (read only) *)
+		EntryNr*: SIGNED16; (* accessed by OPI (read only) *)
 		ExitChain: OPC.Label;
 		UnlockOnExit: BOOLEAN;
 		allocTd: BOOLEAN; 	(* allocTd used only by OM *)
 		dummy: OPC.Item;
 		ParamAdr: ARRAY 6 OF  ParamAdrProc;
 
-	PROCEDURE Init* (bpc: LONGINT);
-		VAR res: INTEGER;
+	PROCEDURE Init* (bpc: SIGNED32);
+		VAR res: SIGNED16;
 	BEGIN
 		allocTd := TRUE;			(* allocTd used only by OM *)
-		IF (OPM.findpc IN OPM.parserOptions) THEN OPM.breakpc := bpc ELSE OPM.breakpc := MAX(LONGINT) END;
+		IF (OPM.findpc IN OPM.parserOptions) THEN OPM.breakpc := bpc ELSE OPM.breakpc := MAX(SIGNED32) END;
 		IF dumpCode THEN Oberon.Call (InitOPI, Oberon.Par, FALSE, res) END
 	END Init;
 
-	PROCEDURE IncAdr(VAR adr: LONGINT; s: LONGINT);
+	PROCEDURE IncAdr(VAR adr: SIGNED32; s: SIGNED32);
 	BEGIN
 		IF (s >= 0) & (adr <= MaxAdr - s) OR (s < 0) & (adr >= MinAdr - s) THEN INC(adr, s)
 		ELSE OPM.err(242)
 		END
 	END IncAdr;
 
-	PROCEDURE AlignFld(VAR offset: LONGINT; elemsize: LONGINT);
+	PROCEDURE AlignFld(VAR offset: SIGNED32; elemsize: SIGNED32);
 	(* offset is initialized to base type size, 0 if none *)
 	BEGIN
 		IF elemsize >= 4 THEN IncAdr(offset, (-offset) MOD 4)
@@ -140,44 +140,44 @@ Statements
 		END
 	END AlignFld;
 
-	PROCEDURE AllocFld(VAR offset, this: LONGINT; elemsize: LONGINT);
+	PROCEDURE AllocFld(VAR offset, this: SIGNED32; elemsize: SIGNED32);
 	BEGIN
 		this := offset; IncAdr(offset, elemsize)
 	END AllocFld;
 
-	PROCEDURE AlignRec(VAR size: LONGINT);
+	PROCEDURE AlignRec(VAR size: SIGNED32);
 	BEGIN
 		IncAdr(size, (-size) MOD 4)
 	END AlignRec;
 
-	PROCEDURE AlignPar(VAR elemsize: LONGINT);
+	PROCEDURE AlignPar(VAR elemsize: SIGNED32);
 	BEGIN
 		IncAdr(elemsize, (-elemsize) MOD 4)
 	END AlignPar;
 
-	PROCEDURE AllocPar (VAR adr, this: LONGINT; elemsize: LONGINT);
+	PROCEDURE AllocPar (VAR adr, this: SIGNED32; elemsize: SIGNED32);
 	BEGIN
 		IncAdr(adr, elemsize); this := adr
 	END AllocPar;
 
-	PROCEDURE AlignVar(VAR adr: LONGINT; elemsize: LONGINT);
+	PROCEDURE AlignVar(VAR adr: SIGNED32; elemsize: SIGNED32);
 	BEGIN
 		IF elemsize >= 4 THEN IncAdr(adr, - (adr MOD 4))
 		ELSIF elemsize = 2 THEN IncAdr(adr, - (adr MOD 2))
 		END
 	END AlignVar;
 
-	PROCEDURE AllocVar(VAR adr, this: LONGINT; elemsize: LONGINT);
+	PROCEDURE AllocVar(VAR adr, this: SIGNED32; elemsize: SIGNED32);
 	BEGIN
 		IncAdr(adr, -elemsize); this := adr
 	END AllocVar;
 
-	PROCEDURE AlignBlock(adr: LONGINT; VAR dsize: LONGINT);
+	PROCEDURE AlignBlock(adr: SIGNED32; VAR dsize: SIGNED32);
 	BEGIN
 		IncAdr(adr, - (adr MOD 4)); dsize := -adr
 	END AlignBlock;
 
-	PROCEDURE RecursionTest (typ: OPT.Struct; mode: LONGINT): BOOLEAN;
+	PROCEDURE RecursionTest (typ: OPT.Struct; mode: SIGNED32): BOOLEAN;
 		VAR p: OPT.Object;
 	BEGIN
 		IF typ # NIL THEN
@@ -202,7 +202,7 @@ Statements
 	END RecursionTest;
 
 	PROCEDURE TypSize* (typ: OPT.Struct; allocDesc: BOOLEAN);
-		VAR f, c: INTEGER; offset, size, dummy: LONGINT;
+		VAR f, c: SIGNED16; offset, size, dummy: SIGNED32;
 			fld: OPT.Object; btyp, ftyp: OPT.Struct; sizeUndef, doAlloc: BOOLEAN;		(* ftyp, OM only *)
 			BEGIN
 		IF typ = OPT.undftyp THEN OPM.err(58)		(* MH 26.1.94; bug fix RC 17.6.93 *)
@@ -267,8 +267,8 @@ Statements
 		END
 	END TypSize;
 
-	PROCEDURE ParamAdrLR(VAR firstPar: OPT.Object; VAR psize, dsize: LONGINT; TProc, Inline, allocDesc: BOOLEAN);
-		VAR par: OPT.Object; typ: OPT.Struct; adr, s: LONGINT;
+	PROCEDURE ParamAdrLR(VAR firstPar: OPT.Object; VAR psize, dsize: SIGNED32; TProc, Inline, allocDesc: BOOLEAN);
+		VAR par: OPT.Object; typ: OPT.Struct; adr, s: SIGNED32;
 	BEGIN
 		adr := 0;
 		IF TProc THEN par := firstPar.link ELSE par := firstPar END;		(* guarantee that self is always the last parameter *)
@@ -303,8 +303,8 @@ Statements
 		END
 	END ParamAdrLR;
 
-	PROCEDURE ParamAdrRL(VAR firstPar: OPT.Object; VAR psize, dsize: LONGINT; TProc, Inline, allocDesc: BOOLEAN);
-		VAR par, parOld: OPT.Object; typ: OPT.Struct; adr, s: LONGINT; stop: BOOLEAN;
+	PROCEDURE ParamAdrRL(VAR firstPar: OPT.Object; VAR psize, dsize: SIGNED32; TProc, Inline, allocDesc: BOOLEAN);
+		VAR par, parOld: OPT.Object; typ: OPT.Struct; adr, s: SIGNED32; stop: BOOLEAN;
 	BEGIN
 		ASSERT(~Inline);
 		adr := 0;
@@ -353,8 +353,8 @@ Statements
 		END
 	END ParamAdrRL;
 
-	PROCEDURE VarAdr(var: OPT.Object; VAR dsize: LONGINT);
-		VAR adr, s: LONGINT; list: OPT.Object;	(* used by the inline feature *)
+	PROCEDURE VarAdr(var: OPT.Object; VAR dsize: SIGNED32);
+		VAR adr, s: SIGNED32; list: OPT.Object;	(* used by the inline feature *)
 	BEGIN
 		adr := -dsize; list := var;
 		WHILE var # NIL DO
@@ -375,9 +375,9 @@ Statements
 		END
 	END VarAdr;
 
-	PROCEDURE ArgSize (par: OPT.Object): LONGINT;
+	PROCEDURE ArgSize (par: OPT.Object): SIGNED32;
 		VAR
-			size: LONGINT; comp: SHORTINT; typ: OPT.Struct;
+			size: SIGNED32; comp: SIGNED8; typ: OPT.Struct;
 	BEGIN
 		size:= 0;
 		WHILE par # NIL DO
@@ -398,7 +398,7 @@ Statements
 	END ArgSize;
 
 	PROCEDURE ProcSize0(obj: OPT.Object; firstpass: BOOLEAN);
-		VAR psize, oldPos, entryNr: LONGINT;
+		VAR psize, oldPos, entryNr: SIGNED32;
 	BEGIN
 		ASSERT (obj.prio # 127);
 		oldPos := OPM.errpos;
@@ -437,7 +437,7 @@ Statements
 		END
 	END ProcSize;
 
-	PROCEDURE FindMth(curmod: LONGINT; VAR name: OPS.Name; typ: OPT.Struct; VAR res: OPT.Object);	(*has a semantic different from OPT.FindField: the viewpoint is not (always) the current module*)
+	PROCEDURE FindMth(curmod: SIGNED32; VAR name: OPS.Name; typ: OPT.Struct; VAR res: OPT.Object);	(*has a semantic different from OPT.FindField: the viewpoint is not (always) the current module*)
 		VAR obj: OPT.Object;
 	BEGIN res:=NIL;
 		WHILE ((typ # NIL) & (typ # OPT.ToBeFixed) & (typ # OPT.undftyp)) & (res=NIL) DO obj := typ^.link;
@@ -495,7 +495,7 @@ Statements
 		VAR typ: OPT.Struct;
 
 		PROCEDURE AssignBody(body: OPT.Object);
-			VAR entryNr: LONGINT;
+			VAR entryNr: SIGNED32;
 		BEGIN
 			IF (body # NIL) & (body.conval # NIL) & (hasBody IN body^.conval^.setval) & (body.adr MOD 10000H = 0) THEN
 				body^.conval^.intval2 := 0; body^.conval^.intval := LProcOff;
@@ -506,7 +506,7 @@ Statements
 		END AssignBody;
 
 		PROCEDURE EnumTprocs(fld: OPT.Object);
-			VAR entryNr: LONGINT;
+			VAR entryNr: SIGNED32;
 		BEGIN
 			IF fld # NIL THEN
 				EnumTprocs(fld.left);
@@ -551,7 +551,7 @@ Statements
 	END AssignTent;
 
 	PROCEDURE AssignEntries*(obj: OPT.Object; browse: BOOLEAN);	(*assign entry numbers of imported objects*)
-		VAR adr, nofEntries, nofRecs: LONGINT; typ: OPT.Struct;
+		VAR adr, nofEntries, nofRecs: SIGNED32; typ: OPT.Struct;
 	BEGIN
 		allocTd := FALSE;
 		adr := 0; nofEntries := 1;  nofRecs := -4;
@@ -580,7 +580,7 @@ Statements
 	END AssignEntries;
 
 	PROCEDURE AssignOwnEntries(obj: OPT.Object);
-	VAR size: LONGINT;
+	VAR size: SIGNED32;
 	BEGIN
 		allocTd := FALSE;
 		WHILE obj # NIL DO
@@ -618,7 +618,7 @@ Statements
 	END AllocAddEntries;
 
 	PROCEDURE AdrAndSize* (topScope: OPT.Object);
-	VAR i: INTEGER; dsize: LONGINT;
+	VAR i: SIGNED16; dsize: SIGNED32;
 	BEGIN
 		OPM.errpos := topScope^.adr;	(* text position of scope used if error *)
 		OPO.dsize := 0;
@@ -642,7 +642,7 @@ Statements
 		VAR
 			obj: OPT.Object;
 			y: OPC.Item;
-			index: LONGINT;
+			index: SIGNED32;
 			varRec: BOOLEAN;
 	BEGIN
 		CASE n.class OF
@@ -720,9 +720,9 @@ Statements
 	END Designator;
 
 	PROCEDURE CallLR(proc: OPT.Node; VAR res: OPC.Item; assignment: BOOLEAN);
-	VAR	 firstap, ap: OPT.Node; firstfp, fp: OPT.Object; x, dynptr, tos: OPC.Item; s, dynblocks, staticsize: LONGINT; tproc: BOOLEAN;
+	VAR	 firstap, ap: OPT.Node; firstfp, fp: OPT.Object; x, dynptr, tos: OPC.Item; s, dynblocks, staticsize: SIGNED32; tproc: BOOLEAN;
 
-		PROCEDURE AllocTempSpace(VAR dynblocks, staticsize: LONGINT; ap: OPT.Node; fp: OPT.Object);	(*traverse in reverse order!*)
+		PROCEDURE AllocTempSpace(VAR dynblocks, staticsize: SIGNED32; ap: OPT.Node; fp: OPT.Object);	(*traverse in reverse order!*)
 		VAR tos: OPC.Item;
 		BEGIN
 			IF ap # NIL THEN
@@ -852,7 +852,7 @@ Statements
 	END CallRL;
 
 	PROCEDURE Call(proc: OPT.Node; VAR res: OPC.Item; assignment: BOOLEAN);
-	VAR  obj: OPT.Object; n: OPT.Node; i: LONGINT;
+	VAR  obj: OPT.Object; n: OPT.Node; i: SIGNED32;
 	BEGIN
 		n := proc.left;
 		IF (n.class = Nproc) OR (n.class = Nassembler) THEN	(*procedure*)
@@ -874,9 +874,9 @@ Statements
 	END Call;
 
 	PROCEDURE Expression (n: OPT.Node; VAR z: OPC.Item; selfForUnlock: OPT.Node);
-		VAR x, y: OPC.Item; f: INTEGER; real: REAL; con: OPT.Const; typ: OPT.Struct;
+		VAR x, y: OPC.Item; f: SIGNED16; real: FLOAT32; con: OPT.Const; typ: OPT.Struct;
 
-		PROCEDURE AllocConst (VAR bytes: ARRAY OF SYSTEM.BYTE; len, align: LONGINT);
+		PROCEDURE AllocConst (VAR bytes: ARRAY OF SYSTEM.BYTE; len, align: SIGNED32);
 			VAR con1, con2: OPT.Const;
 		BEGIN
 			con1 := con;
@@ -898,7 +898,7 @@ Statements
 					Byte..LInt, NilTyp, Pointer:
 						z.mode := Con; z.adr := con.intval
 				  | Set:
-						z.mode := Con; z.adr := LONGINT(con.setval)
+						z.mode := Con; z.adr := SIGNED32(con.setval)
 				  | String:
 						AllocConst (con.ext^, con.intval2, 4);
 						z.mode := Abs; z.adr := con.intval; z.offs := con.intval2 (* length *); z.inx := OPL.none
@@ -1009,7 +1009,7 @@ Statements
 			case, interval: OPT.Node;
 			x: OPC.Item;
 			L, elseLabel, dummy: OPC.Label;
-			low, high, tab: LONGINT;
+			low, high, tab: SIGNED32;
 	BEGIN
 		Expression (n.left, x, selfForUnlock); low := n.right.conval.intval; high := n.right.conval.intval2;
 		L := OPC.Nil;
@@ -1033,7 +1033,7 @@ Statements
 		OPC.FixLink (L)
 	END CaseStat;
 
-	PROCEDURE Dim (VAR z, nofelem: OPC.Item; n: OPT.Node; typ: OPT.Struct; nofdim: LONGINT);
+	PROCEDURE Dim (VAR z, nofelem: OPC.Item; n: OPT.Node; typ: OPT.Struct; nofdim: SIGNED32);
 		VAR
 			len: OPC.Item;
 	BEGIN
@@ -1060,8 +1060,8 @@ Statements
 			L, Lc, prevExitChain: OPC.Label;
 			proc, par: OPT.Object;
 			name: ARRAY 64 OF CHAR;
-			i, j: LONGINT;
-			res: INTEGER;
+			i, j: SIGNED32;
+			res: SIGNED16;
 			prevUnlockOnExit: BOOLEAN;
 	BEGIN
 		WHILE ~OPO.CodeErr & (n # NIL) DO

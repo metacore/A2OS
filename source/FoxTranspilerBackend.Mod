@@ -25,8 +25,8 @@ CONST
 	StailaStyle = 1;
 
 TYPE
-	TYPE Style = WORD;
-	TYPE Indent = WORD;
+	TYPE Style = INTEGER;
+	TYPE Indent = INTEGER;
 	Identifier = ARRAY Scanner.MaxIdentifierLength OF CHAR;
 
 	TYPE Transpiler* = OBJECT (SyntaxTree.Visitor)
@@ -1238,7 +1238,7 @@ TYPE
 		END VisitCharacterValue;
 
 		PROCEDURE VisitSetValue* (expression: SyntaxTree.SetValue);
-		VAR i: INTEGER; mask, value: HUGEINT;
+		VAR i: SIGNED16; mask, value: SIGNED64;
 		BEGIN
 			mask := 1; value := 0;
 			FOR i := MIN (SET) TO MAX (SET) DO IF i IN expression.value THEN INC (value, mask); END; INC (mask, mask); END;
@@ -1395,7 +1395,7 @@ TYPE
 	TYPE TranspilerBackend*= OBJECT (Backend.Backend)
 	VAR
 		defineMain, declarations, initLocalData: BOOLEAN;
-		addressSize: LONGINT; style: Style;
+		addressSize: SIGNED32; style: Style;
 		traceModule: Identifier;
 
 		PROCEDURE &InitTranspilerBackend;
@@ -1656,7 +1656,7 @@ TextCompiler.CompileSelection -b=Transpiler  ~
 TextCompiler.CompileSelection -b=Transpiler --defineMain  ~
 
 	MODULE Test;
-	VAR a: INTEGER;
+	VAR a: SIGNED16;
 	END Test.
 
 FoxTest.Compile --options="-PC -G=Transpiler" --command="WinApplications.Run --hide cl /c Test.c" Oberon.Temp.Test Oberon.Temp.TranspilerTestDiff ~

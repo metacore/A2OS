@@ -80,7 +80,7 @@ AddressSize*3	first entry
 4092			last entry
 *)
 
-	(* virtual memory layout. no area will cross the 2G boundary, to avoid LONGINT sign problems. *)
+	(* virtual memory layout. no area will cross the 2G boundary, to avoid SIGNED32 sign problems. *)
 	MapAreaAdr = (80000000H);	(* dynamic mappings: bottom part of 2G..4G *)
 	MapAreaSize = 64*M;
 	IntelAreaAdr = (0FEE00000H);	(* reserved by Intel for APIC: 4G-18M..4G-18M+4K *)
@@ -180,13 +180,13 @@ CONST
 	(* low level tracing *)
 	TraceV24 = 2; TraceScreen = 0;
 	TraceWidth = 80; TraceHeight = 25;
-	TraceLen = TraceWidth * SIZEOF (INTEGER);
+	TraceLen = TraceWidth * SIZEOF (SIGNED16);
 	TraceSize = TraceLen * TraceHeight;
 
 TYPE
 	Vendor* = ARRAY 13 OF CHAR;
 
-	IDMap* = ARRAY 16 OF SHORTINT;
+	IDMap* = ARRAY 16 OF SIGNED8;
 
 TYPE
 	Stack* = RECORD	(** values are read-only *)
@@ -197,21 +197,21 @@ TYPE
 
 	(* task state segment *)
 	TSSDesc = RECORD	(* 1, p. 485 and p. 612 for required fields *)
-		Link: LONGINT;	(* lower 16 bits significant *)
-		ESP0: LONGINT;
-		ESS0: LONGINT;	(* lower 16 bits significant *)
-		ESP1: LONGINT;
-		ESS1: LONGINT;	(* lower 16 bits significant *)
-		ESP2: LONGINT;
-		ESS2: LONGINT;	(* lower 16 bits significant *)
-		CR3: LONGINT;
-		EIP: LONGINT;
+		Link: SIGNED32;	(* lower 16 bits significant *)
+		ESP0: SIGNED32;
+		ESS0: SIGNED32;	(* lower 16 bits significant *)
+		ESP1: SIGNED32;
+		ESS1: SIGNED32;	(* lower 16 bits significant *)
+		ESP2: SIGNED32;
+		ESS2: SIGNED32;	(* lower 16 bits significant *)
+		CR3: SIGNED32;
+		EIP: SIGNED32;
 		EFLAGS: SET;
-		EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI: LONGINT;
-		ES, CS, SS, DS, FS, GS: LONGINT;	(* lower 16 bits significant *)
-		LDT: LONGINT;	(* lower 16 bits significant *)
-		TaskAttributes: INTEGER;
-		IOBitmapOffset: INTEGER
+		EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI: SIGNED32;
+		ES, CS, SS, DS, FS, GS: SIGNED32;	(* lower 16 bits significant *)
+		LDT: SIGNED32;	(* lower 16 bits significant *)
+		TaskAttributes: SIGNED16;
+		IOBitmapOffset: SIGNED16
 	(* Implicit: IOBitmap: ARRAY 8192 DIV 4 OF SET *)
 	END;
 
@@ -219,7 +219,7 @@ TYPE
 
 	(* global descriptor table *)
 	SegDesc = RECORD
-		low, high: LONGINT
+		low, high: SIGNED32
 	END;
 	GDT = ARRAY GDTSize OF SegDesc;
 
@@ -230,11 +230,11 @@ TYPE
 TYPE
 	(** processor state, ordering of record fields is predefined! *)
 	State* = RECORD					(* offsets used in FieldInterrupt, FieldIRQ and Objects.RestoreState *)
-		EDI*, ESI*, ERR*, ESP0*, EBX*, EDX*, ECX*, EAX*: LONGINT;	(** ESP0 = ADR(s.INT) *)
-		INT*, BP*, PC*, CS*: LONGINT;	(* BP and ERR are exchanged by glue code, for procedure link *)
+		EDI*, ESI*, ERR*, ESP0*, EBX*, EDX*, ECX*, EAX*: SIGNED32;	(** ESP0 = ADR(s.INT) *)
+		INT*, BP*, PC*, CS*: SIGNED32;	(* BP and ERR are exchanged by glue code, for procedure link *)
 		FLAGS*: SET;
-		SP*, SS*: LONGINT;			(** only valid if (VMBit IN s.EFLAGS) OR (CS MOD 4 < s.CS MOD 4) *)
-		ES*, DS*, FS*, GS*: LONGINT;	(** only valid if (VMBit IN s.FLAGS) *)
+		SP*, SS*: SIGNED32;			(** only valid if (VMBit IN s.EFLAGS) OR (CS MOD 4 < s.CS MOD 4) *)
+		ES*, DS*, FS*, GS*: SIGNED32;	(** only valid if (VMBit IN s.FLAGS) *)
 	END;
 
 	(** exception state, ordering of record fields is predefined! *)
@@ -243,9 +243,9 @@ TYPE
 		pf*: ADDRESS;		(** page fault address *)
 		locks*: SET;					(** active locks *)
 		SP*: ADDRESS;	(** actual ESP value at time of interrupt *)
-		SS*, ES*, DS*, FS*, GS*: LONGINT;	(** segment registers *)
-		CR*: ARRAY 5 OF LONGINT;	(** control registers *)
-		DR*: ARRAY 8 OF LONGINT;	(** debug registers *)
+		SS*, ES*, DS*, FS*, GS*: SIGNED32;	(** segment registers *)
+		CR*: ARRAY 5 OF SIGNED32;	(** control registers *)
+		DR*: ARRAY 8 OF SIGNED32;	(** debug registers *)
 		FPU*: ARRAY 7 OF SET		(** floating-point state *)
 	END;
 
@@ -257,10 +257,10 @@ TYPE
 	END;
 
 	GateDescriptor = RECORD
-		offsetBits0to15: INTEGER;
-		selector: INTEGER;
-		gateType: INTEGER;
-		offsetBits16to31: INTEGER
+		offsetBits0to15: SIGNED16;
+		selector: SIGNED16;
+		gateType: SIGNED16;
+		offsetBits16to31: SIGNED16
 	END;
 	IDT = ARRAY IDTSize OF GateDescriptor;
 
@@ -276,14 +276,14 @@ TYPE
 	END;
 
 TYPE
-	EventHandler = PROCEDURE (id: LONGINT; CONST state: State);
+	EventHandler = PROCEDURE (id: SIGNED32; CONST state: State);
 
 	Message* = POINTER TO RECORD END;	(** Broadcast message. *)
-	BroadcastHandler = PROCEDURE (id: LONGINT; CONST state: State; msg: Message);
+	BroadcastHandler = PROCEDURE (id: SIGNED32; CONST state: State; msg: Message);
 
-	TimeArray = ARRAY MaxCPU OF HUGEINT;
+	TimeArray = ARRAY MaxCPU OF SIGNED64;
 
-	Address32* = LONGINT;
+	Address32* = SIGNED32;
 
 VAR
 	lowTop*: ADDRESS;	(** top of low memory *)
@@ -307,21 +307,21 @@ VAR
 
 	features-, features2-: SET;	(** processor features *)
 	fcr*: SET;	(** default floating-point control register value (default rounding mode is towards -infinity, for ENTIER) *)
-	mhz*: HUGEINT;	(** clock rate of GetTimer in MHz, or 0 if not known *)
+	mhz*: SIGNED64;	(** clock rate of GetTimer in MHz, or 0 if not known *)
 
-	chs: ARRAY MaxDisks OF RECORD cyls, hds, spt: LONGINT END;
-	initRegs0, initRegs1: LONGINT;
-	initRegs: ARRAY 2 OF LONGINT;	(* kernel parameters *)
+	chs: ARRAY MaxDisks OF RECORD cyls, hds, spt: SIGNED32 END;
+	initRegs0, initRegs1: SIGNED32;
+	initRegs: ARRAY 2 OF SIGNED32;	(* kernel parameters *)
 	config: ARRAY 2048 OF CHAR;	(* config strings *)
 	bootFlag: ADDRESS;
 
 	idAdr: ADDRESS;	(* address of processor ID register *)
 	map: IDMap;
-	bootID: LONGINT;	(* ID of boot processor (0) *)
+	bootID: SIGNED32;	(* ID of boot processor (0) *)
 
-	numberOfProcessors: LONGINT; (* number of processors installed during start up *)
-	coresPerProcessor : LONGINT; (* number of cores per physical package *)
-	threadsPerCore : LONGINT; (* number of threads per core *)
+	numberOfProcessors: SIGNED32; (* number of processors installed during start up *)
+	coresPerProcessor : SIGNED32; (* number of cores per physical package *)
+	threadsPerCore : SIGNED32; (* number of threads per core *)
 
 CONST
 	CacheLineSize = 128;
@@ -342,7 +342,7 @@ Every element in the proc array belongs to one processor. It is therefore suffic
 	proc-, trapState-: ARRAY MaxCPU OF RECORD
 		locksHeld-: SET;	(** locks held by a processor *)
 		state-: SET;	(** processor flags (interrupt state) at entry to its first lock *)
-		preemptCount-: LONGINT;	(** if 0, preemption is allowed *)
+		preemptCount-: SIGNED32;	(** if 0, preemption is allowed *)
 		padding : ARRAY CacheLineSize - 12 OF CHAR;
 	END;
 
@@ -350,7 +350,7 @@ Every element in the proc array belongs to one processor. It is therefore suffic
 	padding : ARRAY 92 OF CHAR;
 
 	trapLocksBusy-: SET;
-	maxTime: LONGINT;
+	maxTime: SIGNED32;
 
 VAR
 	gdt: GDT;					(* global descriptor table *)
@@ -362,22 +362,22 @@ VAR
 	kernelPD: ADDRESS;	(* physical address of page directory *)
 
 	freeLowPage: ADDRESS;	(* free low page stack pointer (link at offset 0 in page). All addresses physical. NIL = -1 *)
-	freeLowPages, freeHighPages, totalPages: LONGINT;	(* number of free pages and total number of pages *)
+	freeLowPages, freeHighPages, totalPages: SIGNED32;	(* number of free pages and total number of pages *)
 
 	mapTop: ADDRESS;	(* virtual address of end of memory mapping area *)
 	heapEndAdr: ADDRESS;	(* virtual address of end of heap (page aligned) *)
 
-	topPageNum: LONGINT;		(* page containing byte memTop-1 *)
+	topPageNum: SIGNED32;		(* page containing byte memTop-1 *)
 	pageHeapAdr: ADDRESS;	(* address (physical and virtual) of bottom of page heap area *)
 	pageStackAdr: ADDRESS;	(* virtual address of top page of free page stack *)
 
 	freeStack: ARRAY (MaxUserStacks+SetSize-1) DIV SetSize OF SET;	(* free stack bitmap *)
-	freeStackIndex: LONGINT;	(* current position in bitmap (rotates) *)
+	freeStackIndex: SIGNED32;	(* current position in bitmap (rotates) *)
 
-	Nbigskips-: LONGINT;	(* number of times a stack was extended leaving a hole *)
-	Nfilled-: LONGINT;	(* number of times a "hole" in a stack was filled *)
+	Nbigskips-: SIGNED32;	(* number of times a stack was extended leaving a hole *)
+	Nfilled-: SIGNED32;	(* number of times a "hole" in a stack was filled *)
 	NnewStacks-, NnewStackLoops-, NnewStackInnerLoops-, NdisposeStacks-,
-	NlostPages-, NreservePagesUsed-, NmaxUserStacks-: LONGINT;
+	NlostPages-, NreservePagesUsed-, NmaxUserStacks-: SIGNED32;
 
 VAR
 	idt: IDT;	(* interrupt descriptor table *)
@@ -385,26 +385,26 @@ VAR
 	intHandler: ARRAY IDTSize, MaxNumHandlers OF HandlerRec; (* array of handlers for interrupts, the table is only filled up to MaxNumHandlers - 1, the last element in each row acts as a sentinel *)
 	stateTag: ADDRESS;
 	default: HandlerRec;
-	i, j, ticks*: LONGINT;	(** timer ticks. Use Kernel.GetTicks() to read, don't write *)
+	i, j, ticks*: SIGNED32;	(** timer ticks. Use Kernel.GetTicks() to read, don't write *)
 
 VAR
 	ipcBusy, ipcFlags, ipcFrontBarrier, ipcBackBarrier: SET;
 	ipcHandler: BroadcastHandler;
 	ipcMessage: Message;
-	numProcessors-: LONGINT;	(* number of processors we attempted to boot (some may have failed) *)
-	maxProcessors: LONGINT;	(* max number of processors we are allowed to boot (-1 for uni) *)
+	numProcessors-: SIGNED32;	(* number of processors we attempted to boot (some may have failed) *)
+	maxProcessors: SIGNED32;	(* max number of processors we are allowed to boot (-1 for uni) *)
 	allProcessors-: SET;	(* IDs of all successfully booted processors *)
 	localAPIC: ADDRESS;	(* address of local APIC, 0 if not present *)
-	apicVer: ARRAY MaxCPU OF LONGINT;	(* APIC version *)
+	apicVer: ARRAY MaxCPU OF SIGNED32;	(* APIC version *)
 	started: ARRAY MaxCPU OF BOOLEAN;	(* CPU started successfully / CPU halted *)
-	busHz0, busHz1: ARRAY MaxCPU OF LONGINT;	(* unrounded and rounded bus speed in Hz *)
+	busHz0, busHz1: ARRAY MaxCPU OF SIGNED32;	(* unrounded and rounded bus speed in Hz *)
 	timer: EventHandler;
-	timerRate: LONGINT;	(* Hz - rate at which CPU timers run - for timeslicing and profiling *)
+	timerRate: SIGNED32;	(* Hz - rate at which CPU timers run - for timeslicing and profiling *)
 	stopped: BOOLEAN;	(* StopAll was called *)
 	idMap: IDMap;
-	revIDmap: ARRAY MaxCPU OF SHORTINT;
+	revIDmap: ARRAY MaxCPU OF SIGNED8;
 	time: TimeArray;
-	eventCount, eventMax: LONGINT;
+	eventCount, eventMax: SIGNED32;
 	event: Handler;
 	expandMin, heapMinKB, heapMaxKB : SIZE;
 
@@ -423,13 +423,13 @@ VAR
 	traceMode: SET;	(* tracing mode: Screen or V24 *)
 	traceBase: ADDRESS;	(* screen buffer base address *)
 	tracePos: SIZE;	(* current screen cursor *)
-	tracePort: LONGINT;	(* serial base port *)
-	traceColor: SHORTINT;	(* current screen tracing color *)
+	tracePort: SIGNED32;	(* serial base port *)
+	traceColor: SIGNED8;	(* current screen tracing color *)
 
 (** -- Processor identification -- *)
 
 (** Return current processor ID (0 to MaxNum-1). *)
-PROCEDURE ID* (): LONGINT;
+PROCEDURE ID* (): SIGNED32;
 CODE {SYSTEM.i386}
 	MOV EAX, [idAdr]
 	MOV EBX, map
@@ -486,7 +486,7 @@ END Fill32;
 (** Return timer value of the current processor, or 0 if not available. *)
 
 (* e.g. ARM does not have a fine-grained timer *)
-PROCEDURE -GetTimer* (): HUGEINT;
+PROCEDURE -GetTimer* (): SIGNED64;
 CODE {SYSTEM.Pentium}
 	RDTSC	; set EDX:EAX
 END GetTimer;
@@ -708,15 +708,15 @@ PROCEDURE InitBoot;
 VAR
 	largestFunction, i: SIZE;
 	eax, ebx, ecx, edx : SET;
-	logicalProcessorCount : LONGINT;
+	logicalProcessorCount : SIGNED32;
 	u: ARRAY 8 OF CHAR; vendor : Vendor;
 
-	PROCEDURE GetString(VAR string : ARRAY OF CHAR; offset : LONGINT; register : SET);
+	PROCEDURE GetString(VAR string : ARRAY OF CHAR; offset : SIGNED32; register : SET);
 	BEGIN
-		string[offset] :=CHR(SYSTEM.VAL(LONGINT, register * {0..7}));
-		string[offset+1] := CHR(SYSTEM.VAL(LONGINT, LSH(register * {8..15}, -8)));
-		string[offset+2] := CHR(SYSTEM.VAL(LONGINT, LSH(register * {16..23}, -16)));
-		string[offset+3] := CHR(SYSTEM.VAL(LONGINT, LSH(register * {24..31}, -24)));
+		string[offset] :=CHR(SYSTEM.VAL(SIGNED32, register * {0..7}));
+		string[offset+1] := CHR(SYSTEM.VAL(SIGNED32, LSH(register * {8..15}, -8)));
+		string[offset+2] := CHR(SYSTEM.VAL(SIGNED32, LSH(register * {16..23}, -16)));
+		string[offset+3] := CHR(SYSTEM.VAL(SIGNED32, LSH(register * {24..31}, -24)));
 	END GetString;
 
 BEGIN
@@ -727,7 +727,7 @@ BEGIN
 
 		(* CPUID standard function 0 returns:  eax: largest CPUID standard function supported, ebx, edx, ecx: vendor string *)
 		CPUID(0, eax, ebx, ecx, edx);
-		largestFunction := SYSTEM.VAL(LONGINT, eax);
+		largestFunction := SYSTEM.VAL(SIGNED32, eax);
 		ASSERT(LEN(vendor) >= 13);
 		GetString(vendor, 0, ebx); GetString(vendor, 4, edx); GetString(vendor, 8, ecx); vendor[12] := 0X;
 
@@ -744,13 +744,13 @@ BEGIN
 
 			IF (HTT IN features) THEN (* multithreading supported by CPU *)
 				(* logical processor count = number of cores * number of threads per core = total number of threads supported *)
-				logicalProcessorCount := SYSTEM.VAL(LONGINT, LSH(ebx * {16..23}, -16));
+				logicalProcessorCount := SYSTEM.VAL(SIGNED32, LSH(ebx * {16..23}, -16));
 				IF (vendor = "GenuineIntel") THEN
 					IF (largestFunction >= 4) THEN
 						(* CPUID standard function 4 returns: number of processor cores -1 on this die eax[26.31] *)
 						ecx := SYSTEM.VAL(SET, 0); (* input parameter - must be set to 0 *)
 						CPUID(4, eax, ebx, ecx, edx);
-						coresPerProcessor := SYSTEM.VAL(LONGINT, LSH(eax * {26..31}, -26)) + 1;
+						coresPerProcessor := SYSTEM.VAL(SIGNED32, LSH(eax * {26..31}, -26)) + 1;
 						threadsPerCore := logicalProcessorCount DIV coresPerProcessor;
 					ELSE
 						threadsPerCore := logicalProcessorCount;
@@ -758,11 +758,11 @@ BEGIN
 				ELSIF (vendor = "AuthenticAMD") THEN
 					(* CPUID extended function 1 returns: largest extended function *)
 					CPUID(80000000H, eax, ebx, ecx, edx);
-					largestFunction := SYSTEM.VAL(LONGINT, eax - {31}); (* remove sign *)
+					largestFunction := SYSTEM.VAL(SIGNED32, eax - {31}); (* remove sign *)
 					IF (largestFunction >= 8) THEN
 						(* CPUID extended function 8 returns: *)
 						CPUID(80000008H, eax, ebx, ecx, edx);
-						coresPerProcessor := SYSTEM.VAL(LONGINT, ecx * {0..7}) + 1;
+						coresPerProcessor := SYSTEM.VAL(SIGNED32, ecx * {0..7}) + 1;
 						threadsPerCore := logicalProcessorCount DIV coresPerProcessor;
 					ELSIF (largestFunction >= 1) THEN
 						(* CPUID extended function 1 returns CmpLegacy bit in ecx *)
@@ -797,7 +797,7 @@ END InitBoot;
 
 (** Return the value of the configuration string specified by parameter name in parameter val. Returns val = "" if the string was not found, or has an empty value. *)
 PROCEDURE GetConfig* (CONST name: ARRAY OF CHAR; VAR val: ARRAY OF CHAR);
-VAR i, src: LONGINT; ch: CHAR;
+VAR i, src: SIGNED32; ch: CHAR;
 BEGIN
 	ASSERT (name[0] # "=");	(* no longer supported, use GetInit instead *)
 	src := 0;
@@ -831,20 +831,20 @@ BEGIN
 END GetConfig;
 
 (** Get CHS parameters of first two BIOS-supported hard disks. *)
-PROCEDURE GetDiskCHS* (d: LONGINT; VAR cyls, hds, spt: LONGINT);
+PROCEDURE GetDiskCHS* (d: SIGNED32; VAR cyls, hds, spt: SIGNED32);
 BEGIN
 	cyls := chs[d].cyls; hds := chs[d].hds; spt := chs[d].spt
 END GetDiskCHS;
 
 (** Get parameter values from Init string. If n = 0, return val = ASH(bx, 16) + ax, and if n = 1, return val = ASH(dx, 16) + cx, where ax, bx, cx, dx are the register values after the OBL boot loader or noboot.exe have executed the 16-bit x86 code in the Init string. *)
-PROCEDURE GetInit* (n: LONGINT; VAR val: LONGINT);
+PROCEDURE GetInit* (n: SIGNED32; VAR val: SIGNED32);
 BEGIN
 	val := initRegs[n]
 END GetInit;
 
 (** Convert a string to an integer. Parameter i specifies where in the string scanning should begin (usually 0 in the first call). Scanning stops at the first non-valid character, and i returns the updated position. Parameter s is the string to be scanned. The value is returned as result, or 0 if not valid. Syntax: number = ["-"] digit {digit} ["H" | "h"] . digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" . If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
-PROCEDURE StrToInt* (VAR i: SIZE; CONST s: ARRAY OF CHAR): LONGINT;
-VAR vd, vh, sgn, d: LONGINT; hex: BOOLEAN;
+PROCEDURE StrToInt* (VAR i: SIZE; CONST s: ARRAY OF CHAR): SIGNED32;
+VAR vd, vh, sgn, d: SIGNED32; hex: BOOLEAN;
 BEGIN
 	vd := 0; vh := 0; hex := FALSE;
 	IF s[i] = "-" THEN sgn := -1; INC (i) ELSE sgn := 1 END;
@@ -891,7 +891,7 @@ END Sti;
 
 (** Shut down the system. If parameter reboot is set, attempt to reboot the system. *)
 PROCEDURE Shutdown* (reboot: BOOLEAN);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	Cli;
 	IF reboot THEN	(* attempt reboot *)
@@ -906,7 +906,7 @@ BEGIN
 END Shutdown;
 
 (* Get hard disk parameters. *)
-PROCEDURE GetPar (p: ADDRESS; ofs: LONGINT): LONGINT;
+PROCEDURE GetPar (p: ADDRESS; ofs: SIGNED32): SIGNED32;
 VAR ch: CHAR;
 BEGIN
 	SYSTEM.GET (p + 12 + ofs, ch);
@@ -915,7 +915,7 @@ END GetPar;
 
 (* Read boot table. *)
 PROCEDURE ReadBootTable (bt: ADDRESS);
-VAR i, p: ADDRESS; j, d, type, addr, size, heapSize: LONGINT; ch: CHAR;
+VAR i, p: ADDRESS; j, d, type, addr, size, heapSize: SIGNED32; ch: CHAR;
 BEGIN
 	heapSize := 0; lowTop := 0;
 	p := bt; d := 0;
@@ -951,7 +951,7 @@ BEGIN
 END ReadBootTable;
 
 (** Read a byte from the non-volatile setup memory. *)
-PROCEDURE GetNVByte* (ofs: LONGINT): CHAR;
+PROCEDURE GetNVByte* (ofs: SIGNED32): CHAR;
 VAR c: CHAR;
 BEGIN
 	Portout8 (70H, CHR(ofs)); Wait; Portin8(71H, c);
@@ -959,14 +959,14 @@ BEGIN
 END GetNVByte;
 
 (** Write a byte to the non-volatile setup memory. *)
-PROCEDURE PutNVByte* (ofs: LONGINT; val: CHAR);
+PROCEDURE PutNVByte* (ofs: SIGNED32; val: CHAR);
 BEGIN
 	Portout8 (70H, CHR(ofs)); Wait; Portout8 (71H, val)
 END PutNVByte;
 
 (** Compute a checksum for the Intel SMP spec floating pointer structure. *)
-PROCEDURE ChecksumMP* (adr: ADDRESS; size: SIZE): LONGINT;
-VAR sum: LONGINT; x: ADDRESS; ch: CHAR;
+PROCEDURE ChecksumMP* (adr: ADDRESS; size: SIZE): SIGNED32;
+VAR sum: SIGNED32; x: ADDRESS; ch: CHAR;
 BEGIN
 	sum := 0;
 	FOR x := adr TO adr + size-1 DO
@@ -978,7 +978,7 @@ END ChecksumMP;
 
 (* Search for MP floating pointer structure. *)
 PROCEDURE SearchMem (adr: ADDRESS; size: SIZE): ADDRESS;
-VAR x, len: LONGINT; ch: CHAR;
+VAR x, len: SIGNED32; ch: CHAR;
 BEGIN
 	WHILE size > 0 DO
 		SYSTEM.GET (adr, x);
@@ -1003,7 +1003,7 @@ PROCEDURE SearchMP;
 VAR adr: ADDRESS;
 BEGIN
 	adr := 0;
-	SYSTEM.GET (040EH, SYSTEM.VAL (INTEGER, adr));	(* EBDA address *)
+	SYSTEM.GET (040EH, SYSTEM.VAL (SIGNED16, adr));	(* EBDA address *)
 	adr := adr*16;
 	IF adr < 100000H THEN adr := SearchMem(adr, 1024)	(* 1. look in EBDA *)
 	ELSE adr := NilAdr
@@ -1043,8 +1043,8 @@ END AllocateDMA;
 
 (* Check if the specified address is RAM. *)
 PROCEDURE IsRAM(adr: ADDRESS): BOOLEAN;
-CONST Pattern1 = LONGINT (0BEEFC0DEH); Pattern2 = LONGINT (0AA55FF00H);
-VAR save, x: LONGINT; ok: BOOLEAN;
+CONST Pattern1 = SIGNED32 (0BEEFC0DEH); Pattern2 = SIGNED32 (0AA55FF00H);
+VAR save, x: SIGNED32; ok: BOOLEAN;
 BEGIN
 	ok := FALSE;
 	SYSTEM.GET (adr, save);
@@ -1091,8 +1091,8 @@ BEGIN
 	IF TimeCount # 0 THEN
 		GetConfig("LockTimeout", s);
 		i := 0; maxTime := StrToInt(i, s);
-		IF maxTime > MAX(LONGINT) DIV 1000000 THEN
-			maxTime := MAX(LONGINT)
+		IF maxTime > MAX(SIGNED32) DIV 1000000 THEN
+			maxTime := MAX(SIGNED32)
 		ELSE
 			maxTime := maxTime * 1000000
 		END
@@ -1129,8 +1129,8 @@ CODE {SYSTEM.i386}
 END PopFlags;
 
 (** Disable preemption on the current processor (increment the preemption counter). Returns the current processor ID as side effect. *)
-PROCEDURE AcquirePreemption* (): LONGINT;
-VAR id: LONGINT;
+PROCEDURE AcquirePreemption* (): SIGNED32;
+VAR id: SIGNED32;
 BEGIN
 	PushFlags; Cli;
 	id := ID ();
@@ -1141,7 +1141,7 @@ END AcquirePreemption;
 
 (** Enable preemption on the current processor (decrement the preemption counter). *)
 PROCEDURE ReleasePreemption*;
-VAR id: LONGINT;
+VAR id: SIGNED32;
 BEGIN
 	PushFlags; Cli;
 	id := ID ();
@@ -1153,7 +1153,7 @@ BEGIN
 END ReleasePreemption;
 
 (** Return the preemption counter of the current processor (specified in parameter). *)
-PROCEDURE PreemptCount* (id: LONGINT): LONGINT;
+PROCEDURE PreemptCount* (id: SIGNED32): SIGNED32;
 BEGIN
 	IF StrongChecks THEN
 		(*ASSERT(~(9 IN GetFlags ()));*)	(* interrupts off *)	(* commented out because check is too strong *)
@@ -1163,7 +1163,7 @@ BEGIN
 END PreemptCount;
 
 (* Spin waiting for a lock. Return AL = 1X iff timed out. *)
-PROCEDURE AcquireSpinTimeout(VAR locked: BOOLEAN; count: LONGINT; flags: SET): CHAR;
+PROCEDURE AcquireSpinTimeout(VAR locked: BOOLEAN; count: SIGNED32; flags: SET): CHAR;
 CODE {SYSTEM.i386}
 	MOV ESI, [EBP+flags]		; ESI := flags
 	MOV EDI, [EBP+count]	; EDI := count
@@ -1200,8 +1200,8 @@ exit:
 END AcquireSpinTimeout;
 
 (** Acquire a spin-lock and disable interrupts. *)
-PROCEDURE  Acquire* (level: LONGINT);
-VAR id, i: LONGINT; flags: SET; start: HUGEINT;
+PROCEDURE  Acquire* (level: SIGNED32);
+VAR id, i: SIGNED32; flags: SET; start: SIGNED64;
 BEGIN
 	id := AcquirePreemption ();
 	flags := GetFlags ();	(* store state of interrupt flag *)
@@ -1234,8 +1234,8 @@ BEGIN
 END Acquire;
 
 (** Release a spin-lock. Switch on interrupts when last lock released. *)
-PROCEDURE Release* (level: LONGINT);
-VAR id: LONGINT; flags: SET;
+PROCEDURE Release* (level: SIGNED32);
+VAR id: SIGNED32; flags: SET;
 BEGIN	(* {interrupts off} *)
 	id := ID ();
 	IF StrongChecks THEN
@@ -1254,21 +1254,21 @@ END Release;
 
 (** Acquire all locks. Only for exceptional cases. *)
 PROCEDURE AcquireAll*;
-VAR lock: LONGINT;
+VAR lock: SIGNED32;
 BEGIN
 	FOR lock := HighestLock TO LowestLock BY -1 DO Acquire(lock) END
 END AcquireAll;
 
 (** Release all locks. Reverse of AcquireAll. *)
 PROCEDURE ReleaseAll*;
-VAR lock: LONGINT;
+VAR lock: SIGNED32;
 BEGIN
 	FOR lock := LowestLock TO HighestLock DO Release(lock) END
 END ReleaseAll;
 
 (** Break all locks held by current processor (for exception handling). Returns levels released. *)
 PROCEDURE BreakAll* (): SET;
-VAR id, level: LONGINT; released: SET;
+VAR id, level: SIGNED32; released: SET;
 BEGIN
 	id := AcquirePreemption ();
 	PushFlags; Cli;
@@ -1323,7 +1323,7 @@ CODE {SYSTEM.i386, SYSTEM.Privileged}
 END LoadGDT;
 
 (* Load segment registers *)
-PROCEDURE LoadSegRegs(data: LONGINT);
+PROCEDURE LoadSegRegs(data: SIGNED32);
 CODE {SYSTEM.i386}
 	MOV EAX, [EBP+data]
 	MOV DS, AX
@@ -1334,7 +1334,7 @@ CODE {SYSTEM.i386}
 END LoadSegRegs;
 
 (* Return CS. *)
-PROCEDURE -CS* (): LONGINT;
+PROCEDURE -CS* (): SIGNED32;
 CODE {SYSTEM.i386}
 	XOR EAX, EAX
 	MOV AX, CS
@@ -1499,7 +1499,7 @@ BEGIN
 END MapDirect;
 
 (* Policy decision for heap expansion. NewBlock for the same block has failed try times. *)
-PROCEDURE ExpandNow(try: LONGINT): BOOLEAN;
+PROCEDURE ExpandNow(try: SIGNED32): BOOLEAN;
 VAR size: SIZE;
 BEGIN
 	size := LSH(memBlockTail.endBlockAdr - memBlockHead.beginBlockAdr, -10);	(* heap size in KB *)
@@ -1507,7 +1507,7 @@ BEGIN
 END ExpandNow;
 
 (* Try to expand the heap by at least "size" bytes *)
-PROCEDURE ExpandHeap*(try: LONGINT; size: SIZE; VAR memBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS);
+PROCEDURE ExpandHeap*(try: SIGNED32; size: SIZE; VAR memBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS);
 BEGIN
 	IF ExpandNow(try) THEN
 		IF size < expandMin THEN size := expandMin END;
@@ -1633,7 +1633,7 @@ BEGIN
 END PhysicalAdr;
 
 (** Translate a virtual address range to num ranges of physical address. num returns 0 on error. *)
-PROCEDURE TranslateVirtual*(virtAdr: ADDRESS; size: SIZE;  VAR num: LONGINT; VAR physAdr: ARRAY OF Range);
+PROCEDURE TranslateVirtual*(virtAdr: ADDRESS; size: SIZE;  VAR num: SIGNED32; VAR physAdr: ARRAY OF Range);
 VAR ofs, phys1: ADDRESS; size1: SIZE;
 BEGIN
 	Acquire(Memory);
@@ -1700,7 +1700,7 @@ END ExtendStack;
 
 (** Allocate a stack. Parameter initSP returns initial stack pointer value. *)
 PROCEDURE NewStack*(VAR s: Stack; process: ANY; VAR initSP: ADDRESS);
-VAR adr, phys: ADDRESS; old: LONGINT; free: SET;
+VAR adr, phys: ADDRESS; old: SIGNED32; free: SET;
 BEGIN
 	ASSERT(InitUserStackSize = PS);	(* for now *)
 	Acquire(Memory);
@@ -1742,7 +1742,7 @@ END GetProcessPtr;
 
 (** True iff current process works on a kernel stack *)
 PROCEDURE WorkingOnKernelStack* (): BOOLEAN;
-VAR id: LONGINT; sp: ADDRESS;
+VAR id: SIGNED32; sp: ADDRESS;
 BEGIN
 	ASSERT(KernelStackSize # MaxUserStackSize - UserStackGuardSize); (* detection does only work with this assumption *)
 	sp := SYSTEM.GetStackPointer ();
@@ -1785,7 +1785,7 @@ END ValidStack;
 
 (** Update the stack snapshot of the current processor. (for Processors) *)
 PROCEDURE UpdateState*;
-VAR id: LONGINT;
+VAR id: SIGNED32;
 BEGIN
 	ASSERT(CS () MOD 4 = 0);	(* to get kernel stack pointer *)
 	id := ID ();
@@ -1795,7 +1795,7 @@ END UpdateState;
 
 (** Get kernel stack regions for garbage collection. (for Heaps) *)
 PROCEDURE GetKernelStacks*(VAR stack: ARRAY OF Stack);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN	(* {UpdateState has been called by each processor} *)
 	FOR i := 0 TO MaxCPU-1 DO
 		stack[i].adr := procm[i].sp;
@@ -1879,7 +1879,7 @@ type
 7	code, conforming, execute-read
 *)
 
-PROCEDURE GenMemSegDesc(type, base, limit, dpl: LONGINT; page: BOOLEAN; VAR sd: SegDesc);
+PROCEDURE GenMemSegDesc(type, base, limit, dpl: SIGNED32; page: BOOLEAN; VAR sd: SegDesc);
 VAR s: SET;
 BEGIN
 	sd.low := ASH(base MOD 10000H, 16) + limit MOD 10000H;
@@ -1887,23 +1887,23 @@ BEGIN
 		ASH(dpl, 13) + ASH(type, 9) + ASH(base, -16) MOD 100H);
 	s := s + {12, 15, 22};	(* code/data=1, present=1, 32-bit=1, A=0, AVL=0 *)
 	IF page THEN INCL(s, 23) END;	(* page granularity *)
-	sd.high := SYSTEM.VAL (LONGINT, s)
+	sd.high := SYSTEM.VAL (SIGNED32, s)
 END GenMemSegDesc;
 
 (* Generate a TSS descriptor. *)
-PROCEDURE GenTSSDesc(base: ADDRESS; limit, dpl: LONGINT; VAR sd: SegDesc);
+PROCEDURE GenTSSDesc(base: ADDRESS; limit, dpl: SIGNED32; VAR sd: SegDesc);
 VAR s: SET;
 BEGIN
 	sd.low := ASH(base MOD 10000H, 16) + limit MOD 10000H;
 	s := SYSTEM.VAL (SET, ASH(ASH(base, -24), 24) + ASH(ASH(limit, -16), 16) +
 		ASH(dpl, 13) + ASH(base, -16) MOD 100H);
 	s := s + {8, 11, 15};	(* type=non-busy TSS, present=1, AVL=0, 32-bit=0 *)
-	sd.high := SYSTEM.VAL (LONGINT, s)
+	sd.high := SYSTEM.VAL (SIGNED32, s)
 END GenTSSDesc;
 
 (* Initialize segmentation. *)
 PROCEDURE InitSegments;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	(* GDT 0: Null segment *)
 	gdt[0].low := 0; gdt[0].high := 0;
@@ -2003,7 +2003,7 @@ END EnableMM;
 *)
 
 PROCEDURE InitMemory*;
-VAR id: LONGINT;
+VAR id: SIGNED32;
 BEGIN
 	EnableSegments;
 	(* allocate stack *)
@@ -2041,7 +2041,7 @@ BEGIN
 	SYSTEM.PUT32(a, 033660000H); INC(a, 4); SYSTEM.PUT32(a, 0FF2E66C0H); INC(a, 4);
 	SYSTEM.PUT32(a, 09008022EH); INC(a, 4);
 	(* these offsets are from the last two dwords in SMP.Asm *)
-	SYSTEM.PUT32(adr+2, SYSTEM.VAL (LONGINT, start));	(* not a method *)
+	SYSTEM.PUT32(adr+2, SYSTEM.VAL (SIGNED32, start));	(* not a method *)
 	SYSTEM.PUT32(adr+16, ADDRESSOF(gdt[0]));
 	(* jump at start *)
 	SYSTEM.PUT8(physAdr, 0EAX);	(* jmp far *)
@@ -2063,9 +2063,9 @@ BEGIN
 	heapMinKB := size * HeapMin DIV 100;
 	heapMaxKB := size * HeapMax DIV 100;
 	expandMin := size * ExpandRate DIV 100 * 1024;
-	IF expandMin < 0 THEN expandMin := MAX(LONGINT) END;
+	IF expandMin < 0 THEN expandMin := MAX(SIGNED32) END;
 	gcThreshold := size * Threshold DIV 100 * 1024;
-	IF gcThreshold < 0 THEN gcThreshold := MAX(LONGINT) END
+	IF gcThreshold < 0 THEN gcThreshold := MAX(SIGNED32) END
 END SetGCParams;
 
 (** Get first memory block and first free address, heap area in first memory block is automatically expanded to account for the first
@@ -2136,7 +2136,7 @@ END SetRA;
 
 (* Unexpected - Default interrupt handler *)
 PROCEDURE Unexpected(VAR state: State);
-VAR int: LONGINT; isr, irr: CHAR;
+VAR int: SIGNED32; isr, irr: CHAR;
 BEGIN
 	int := state.INT;
 	IF HandleSpurious & ((int >= IRQ0) & (int <= MaxIRQ) OR (int = MPSPU)) THEN	(* unexpected IRQ, get more info *)
@@ -2171,7 +2171,7 @@ BEGIN
 END Unexpected;
 
 (* InEnableIRQ - Enable a hardware interrupt (caller must hold module lock). *)
-PROCEDURE -InEnableIRQ (int: LONGINT);
+PROCEDURE -InEnableIRQ (int: SIGNED32);
 CODE {SYSTEM.i386}
 	POP EBX
 	CMP EBX, IRQ7
@@ -2190,7 +2190,7 @@ end:
 END InEnableIRQ;
 
 (* InDisableIRQ - Disable a hardware interrupt (caller must hold module lock). *)
-PROCEDURE  -InDisableIRQ (int: LONGINT);
+PROCEDURE  -InDisableIRQ (int: SIGNED32);
 CODE {SYSTEM.i386}
 	POP EBX
 	CMP EBX, IRQ7
@@ -2209,7 +2209,7 @@ end:
 END InDisableIRQ;
 
 (** EnableIRQ - Enable a hardware interrupt (also done automatically by InstallHandler). *)
-PROCEDURE EnableIRQ* (int: LONGINT);
+PROCEDURE EnableIRQ* (int: SIGNED32);
 BEGIN
 	ASSERT((int >= IRQ0) & (int <= IRQ15) & (int # IRQ2));
 	Acquire(Interrupts);	(* protect interrupt mask register *)
@@ -2218,7 +2218,7 @@ BEGIN
 END EnableIRQ;
 
 (** DisableIRQ - Disable a hardware interrupt. *)
-PROCEDURE DisableIRQ* (int: LONGINT);
+PROCEDURE DisableIRQ* (int: SIGNED32);
 BEGIN
 	ASSERT((int >= IRQ0) & (int <= IRQ15) & (int # IRQ2));
 	Acquire(Interrupts);	(* protect interrupt mask register *)
@@ -2230,8 +2230,8 @@ END DisableIRQ;
 	On entry to h interrupts are disabled and may be enabled with Sti. After handling the interrupt
 	the state of interrupts are restored. The acknowledgement of a hardware interrupt is done automatically.
 	IRQs are mapped from IRQ0 to MaxIRQ. *)
-PROCEDURE InstallHandler* (h: Handler; int: LONGINT);
-VAR (* n: HandlerList; *) i: LONGINT; unexpected: Handler;
+PROCEDURE InstallHandler* (h: Handler; int: SIGNED32);
+VAR (* n: HandlerList; *) i: SIGNED32; unexpected: Handler;
 BEGIN
 	ASSERT(default.valid);	(* initialized *)
 	ASSERT(int # IRQ2);	(* IRQ2 is used for cascading and remapped to IRQ9 *)
@@ -2260,8 +2260,8 @@ BEGIN
 END InstallHandler;
 
 (** RemoveHandler - Uninstall interrupt handler & disable IRQ if necessary *)
-PROCEDURE RemoveHandler* (h: Handler; int: LONGINT);
-VAR (* p, c: HandlerList; *) i, j, foundIndex: LONGINT;
+PROCEDURE RemoveHandler* (h: Handler; int: SIGNED32);
+VAR (* p, c: HandlerList; *) i, j, foundIndex: SIGNED32;
 BEGIN
 	ASSERT(default.valid);	(* initialized *)
 	Acquire(Interrupts);
@@ -2288,7 +2288,7 @@ END RemoveHandler;
 
 (*
 PROCEDURE ListIntHandlers*;
-VAR i, j, highest: LONGINT; handler: Handler;
+VAR i, j, highest: SIGNED32; handler: Handler;
 BEGIN
 	highest := 0;
 	FOR i := 0 TO IDTSize - 1 DO
@@ -2309,7 +2309,7 @@ END ListIntHandlers;
 *)
 
 (* Get control registers. *)
-PROCEDURE GetCR0to4(VAR cr: ARRAY OF LONGINT);
+PROCEDURE GetCR0to4(VAR cr: ARRAY OF SIGNED32);
 CODE {SYSTEM.Pentium, SYSTEM.Privileged}
 	MOV EDI, [EBP+cr]
 	MOV EAX, CR0
@@ -2325,7 +2325,7 @@ CODE {SYSTEM.Pentium, SYSTEM.Privileged}
 END GetCR0to4;
 
 (* GetDR0to7 - Get debug registers. *)
-PROCEDURE GetDR0to7(VAR dr: ARRAY OF LONGINT);
+PROCEDURE GetDR0to7(VAR dr: ARRAY OF SIGNED32);
 CODE {SYSTEM.i386, SYSTEM.Privileged}
 	MOV EDI, [EBP+dr]
 	MOV EAX, DR0
@@ -2347,7 +2347,7 @@ CODE {SYSTEM.i386, SYSTEM.Privileged}
 END GetDR0to7;
 
 (* GetSegments - Get segment registers. *)
-PROCEDURE GetSegments(VAR ss, es, ds, fs, gs: LONGINT);
+PROCEDURE GetSegments(VAR ss, es, ds, fs, gs: SIGNED32);
 CODE {SYSTEM.i386}
 	XOR EAX, EAX
 	MOV EBX, [EBP+ss]
@@ -2389,7 +2389,7 @@ END CR2;
 
 (** GetExceptionState - Get exception state from interrupt state (and switch on interrupts). *)
 PROCEDURE GetExceptionState* (VAR int: State; VAR exc: ExceptionState);
-VAR id: LONGINT; level0: BOOLEAN;
+VAR id: SIGNED32; level0: BOOLEAN;
 BEGIN
 	(* save all state information while interrupts are still disabled *)
 	exc.halt := -int.INT; id := ID ();
@@ -2418,12 +2418,12 @@ BEGIN
 	IF int.INT = BP THEN	(* breakpoint (HALT) *)
 		IF level0 THEN
 			exc.halt := int.SP	(* get halt code *)
-			(* if HALT(MAX(INTEGER)), leave halt code on stack when returning, but not serious problem.*)
+			(* if HALT(MAX(SIGNED16)), leave halt code on stack when returning, but not serious problem.*)
 		ELSE
 			SYSTEM.GET (int.SP, exc.halt);	(* get halt code from outer stack *)
-			IF exc.halt >= MAX(INTEGER) THEN INC (int.SP, AddressSize) END	(* pop halt code from outer stack *)
+			IF exc.halt >= MAX(SIGNED16) THEN INC (int.SP, AddressSize) END	(* pop halt code from outer stack *)
 		END;
-		IF exc.halt < MAX(INTEGER) THEN DEC (int.PC) END;	(* point to the INT 3 instruction (assume 0CCX, not 0CDX 3X) *)
+		IF exc.halt < MAX(SIGNED16) THEN DEC (int.PC) END;	(* point to the INT 3 instruction (assume 0CCX, not 0CDX 3X) *)
 	ELSIF int.INT = OVF THEN	(* overflow *)
 		DEC (int.PC)	(* point to the INTO instruction (assume 0CEX, not 0CDX 4X) *)
 	ELSIF int.INT = PF THEN	(* page fault *)
@@ -2594,7 +2594,7 @@ END LoadIDT;
 *)
 
 PROCEDURE InitInterrupts*;
-VAR a: ADDRESS; o, i: LONGINT; p: PROCEDURE; mask: SET;
+VAR a: ADDRESS; o, i: SIGNED32; p: PROCEDURE; mask: SET;
 BEGIN
 	stateTag := SYSTEM.TYPECODE(State);
 	(* initialise 8259 interrupt controller chips *)
@@ -2631,17 +2631,17 @@ BEGIN
 		IF (i > 31) OR ~(i IN {8, 10..14, 17}) THEN a := ADDRESSOF(glue[i][0])	(* include PUSH 0 *)
 		ELSE a := ADDRESSOF(glue[i][2])	(* skip PUSH 0, processor supplies error code *)
 		END;
-		idt[i].offsetBits0to15 := INTEGER(a MOD 10000H);
+		idt[i].offsetBits0to15 := SIGNED16(a MOD 10000H);
 		(* IRQ0 must be at level 0 because time slicing in Objects needs to set interrupted process' ESP *)
 		(* all irq's are handled at level 0, because of priority experiment in Objects.FieldIRQ *)
 		IF TRUE (* (i < IRQ0) OR (i > IRQ15) OR (i = IRQ0) OR (i = IRQ0 + 1)*) THEN
 			idt[i].selector := KernelCodeSel;	(* gdt[1] -> non-conformant segment => level 0 *)
-			idt[i].gateType := SYSTEM.VAL (INTEGER, 0EE00H)	(* present, DPL 3, system, 386 interrupt *)
+			idt[i].gateType := SYSTEM.VAL (SIGNED16, 0EE00H)	(* present, DPL 3, system, 386 interrupt *)
 		ELSE	(* {IRQ0..IRQ15} - {IRQ0 + 1} *)
 			idt[i].selector := UserCodeSel;	(* gdt[3] -> conformant segment => level 0 or 3 *)
-			idt[i].gateType := SYSTEM.VAL (INTEGER, 08E00H)	(* present, DPL 0, system, 386 interrupt *)
+			idt[i].gateType := SYSTEM.VAL (SIGNED16, 08E00H)	(* present, DPL 0, system, 386 interrupt *)
 		END;
-		idt[i].offsetBits16to31 := INTEGER(a DIV 10000H)
+		idt[i].offsetBits16to31 := SIGNED16(a DIV 10000H)
 	END
 END InitInterrupts;
 
@@ -2754,7 +2754,7 @@ CODE {SYSTEM.i386, SYSTEM.Privileged}
 	HLT
 END HLT;
 
-PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
+PROCEDURE  Portin8*(port: SIGNED32; VAR val: CHAR);
 CODE{SYSTEM.i386}
 	MOV EDX,[EBP+port]
 	IN AL, DX
@@ -2762,7 +2762,7 @@ CODE{SYSTEM.i386}
 	MOV [ECX], AL
 END Portin8;
 
-PROCEDURE  Portin16*(port: LONGINT; VAR val: INTEGER);
+PROCEDURE  Portin16*(port: SIGNED32; VAR val: SIGNED16);
 CODE{SYSTEM.i386}
 	MOV EDX,[EBP+port]
 	IN AX, DX
@@ -2770,7 +2770,7 @@ CODE{SYSTEM.i386}
 	MOV [ECX], AX
 END Portin16;
 
-PROCEDURE  Portin32*(port: LONGINT; VAR val: LONGINT);
+PROCEDURE  Portin32*(port: SIGNED32; VAR val: SIGNED32);
 CODE{SYSTEM.i386}
 	MOV EDX,[EBP+port]
 	IN EAX, DX
@@ -2778,21 +2778,21 @@ CODE{SYSTEM.i386}
 	MOV [ECX], EAX
 END Portin32;
 
-PROCEDURE  Portout8*(port: LONGINT; val: CHAR);
+PROCEDURE  Portout8*(port: SIGNED32; val: CHAR);
 CODE{SYSTEM.i386}
 	MOV AL,[EBP+val]
 	MOV EDX,[EBP+port]
 	OUT DX,AL
 END Portout8;
 
-PROCEDURE  Portout16*(port: LONGINT; val: INTEGER);
+PROCEDURE  Portout16*(port: SIGNED32; val: SIGNED16);
 CODE{SYSTEM.i386}
 	MOV AX,[EBP+val]
 	MOV EDX,[EBP+port]
 	OUT DX,AX
 END Portout16;
 
-PROCEDURE  Portout32*(port: LONGINT; val: LONGINT);
+PROCEDURE  Portout32*(port: SIGNED32; val: SIGNED32);
 CODE{SYSTEM.i386}
 	MOV EAX,[EBP+val]
 	MOV EDX,[EBP+port]
@@ -2807,7 +2807,7 @@ CODE {SYSTEM.i386}
 END KernelCallHLT;
 
 (* Parse processor entry in MP config table. *)
-PROCEDURE CPUID1*(): LONGINT;
+PROCEDURE CPUID1*(): SIGNED32;
 CODE {SYSTEM.i386, SYSTEM.Pentium}
 	MOV EAX, 1
 	CPUID
@@ -2817,7 +2817,7 @@ END CPUID1;
 (** -- Atomic operations -- *)
 
 (** Atomic INC(x). *)
-PROCEDURE -AtomicInc*(VAR x: LONGINT);
+PROCEDURE -AtomicInc*(VAR x: SIGNED32);
 CODE {SYSTEM.i386}
 	POP EAX
 	LOCK
@@ -2825,7 +2825,7 @@ CODE {SYSTEM.i386}
 END AtomicInc;
 
 (** Atomic DEC(x). *)
-PROCEDURE -AtomicDec*(VAR x: LONGINT);
+PROCEDURE -AtomicDec*(VAR x: SIGNED32);
 CODE {SYSTEM.i386}
 	POP EAX
 	LOCK
@@ -2833,7 +2833,7 @@ CODE {SYSTEM.i386}
 END AtomicDec;
 
 (** Atomic EXCL. *)
-PROCEDURE  AtomicExcl* (VAR s: SET; bit: LONGINT);
+PROCEDURE  AtomicExcl* (VAR s: SET; bit: SIGNED32);
 CODE {SYSTEM.i386}
 	MOV EAX, [EBP+bit]
 	MOV EBX, [EBP+s]
@@ -2842,7 +2842,7 @@ CODE {SYSTEM.i386}
 END AtomicExcl;
 
 (** Atomic INC(x, y). *)
-PROCEDURE -AtomicAdd*(VAR x: LONGINT; y: LONGINT);
+PROCEDURE -AtomicAdd*(VAR x: SIGNED32; y: SIGNED32);
 CODE {SYSTEM.i386}
 	POP EBX
 	POP EAX
@@ -2859,7 +2859,7 @@ CODE {SYSTEM.i386}
 END AtomicTestSet;
 
 (* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
-PROCEDURE -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
+PROCEDURE -AtomicCAS* (VAR x: SIGNED32; old, new: SIGNED32): SIGNED32;
 CODE {SYSTEM.i386}
 	POP EBX		; new
 	POP EAX		; old
@@ -2879,19 +2879,19 @@ END CopyState;
 
 
 (* function returning the number of processors that are available to Aos *)
-PROCEDURE NumberOfProcessors*( ): LONGINT;
+PROCEDURE NumberOfProcessors*( ): SIGNED32;
 BEGIN
 	RETURN numberOfProcessors
 END NumberOfProcessors;
 
 (*! non portable code, for native Aos only *)
-PROCEDURE SetNumberOfProcessors*(num: LONGINT);
+PROCEDURE SetNumberOfProcessors*(num: SIGNED32);
 BEGIN
 	numberOfProcessors := num;
 END SetNumberOfProcessors;
 
 (* function for changing byte order *)
-PROCEDURE ChangeByteOrder* (n: LONGINT): LONGINT;
+PROCEDURE ChangeByteOrder* (n: SIGNED32): SIGNED32;
 CODE { SYSTEM.Pentium }
 	MOV EAX, [EBP+n]				; load n in eax
 	BSWAP EAX						; swap byte order
@@ -2902,21 +2902,21 @@ PROCEDURE  ApicPut(ofs: SIZE; val: SET);
 BEGIN
 	IF TraceApic THEN
 		Acquire(TraceOutput);
-		Trace.Hex(ofs, SIZEOF(SIZE)*2); Trace.String(" := "); Trace.Hex(SYSTEM.VAL (LONGINT, val), 9); Trace.Ln;
+		Trace.Hex(ofs, SIZEOF(SIZE)*2); Trace.String(" := "); Trace.Hex(SYSTEM.VAL (SIGNED32, val), 9); Trace.Ln;
 		Release(TraceOutput);
 	END;
-	SYSTEM.PUT(localAPIC+ofs, SYSTEM.VAL (LONGINT, val))
+	SYSTEM.PUT(localAPIC+ofs, SYSTEM.VAL (SIGNED32, val))
 END ApicPut;
 
 (* Read a value from the APIC. *)
 PROCEDURE ApicGet(ofs: SIZE): SET;
 VAR val: SET;
 BEGIN
-	SYSTEM.GET(localAPIC+ofs, SYSTEM.VAL (LONGINT, val));
+	SYSTEM.GET(localAPIC+ofs, SYSTEM.VAL (SIGNED32, val));
 	IF TraceApic THEN
 		Acquire(TraceOutput);
 		Trace.String(" ("); Trace.Hex(ofs, SIZEOF(SIZE)*2); Trace.String(" = ");
-		Trace.Hex(SYSTEM.VAL(LONGINT, val), 9); Trace.StringLn (")");
+		Trace.Hex(SYSTEM.VAL(SIGNED32, val), 9); Trace.StringLn (")");
 		Release(TraceOutput);
 	END;
 	RETURN val
@@ -2924,7 +2924,7 @@ END ApicGet;
 
 (* Handle interprocessor interrupt. During upcall interrupts are off and processor is at kernel level. *)
 PROCEDURE HandleIPC(VAR state: State);
-VAR id: LONGINT;
+VAR id: SIGNED32;
 BEGIN
 	id := ID();
 	IF ~TraceProcessor OR (id IN allProcessors) THEN
@@ -2946,7 +2946,7 @@ END HandleIPC;
 
 (* Handle MP error interrupt. *)
 PROCEDURE HandleError(VAR state: State);
-VAR esr: SET; (* int: LONGINT; *)
+VAR esr: SET; (* int: SIGNED32; *)
 BEGIN
 	(* int := state.INT; *) esr := ApicGet(280H);
 	ApicPut(0B0H, {});	(* EOI *)
@@ -2989,7 +2989,7 @@ BEGIN
 	Release(Processors)
 END StartAll;
 
-PROCEDURE HandleFlushTLB(id: LONGINT; CONST state: State; msg: Message);
+PROCEDURE HandleFlushTLB(id: SIGNED32; CONST state: State; msg: Message);
 CODE {SYSTEM.i386, SYSTEM.Privileged}
 	MOV EAX, CR3
 	MOV CR3, EAX
@@ -3003,7 +3003,7 @@ BEGIN
 	Release(Processors)
 END GlobalFlushTLB;
 
-PROCEDURE HandleFlushCache(id: LONGINT; CONST state: State; msg: Message);
+PROCEDURE HandleFlushCache(id: SIGNED32; CONST state: State; msg: Message);
 CODE {SYSTEM.Pentium, SYSTEM.Privileged}
 	WBINVD	; write back and invalidate internal cache and initiate write back and invalidation of external caches
 END HandleFlushCache;
@@ -3041,14 +3041,14 @@ BEGIN
 END GlobalGC;
 *)
 
-PROCEDURE HandleGetTimestamp(id: LONGINT; CONST state: State; msg: Message);
+PROCEDURE HandleGetTimestamp(id: SIGNED32; CONST state: State; msg: Message);
 BEGIN
 	time[id] := GetTimer()
 END HandleGetTimestamp;
 
 (** Get timestamp on all processors (for testing). *)
 PROCEDURE GlobalGetTimestamp;
-VAR t: TimeArray; i: LONGINT; mean, var, n: HUGEINT;
+VAR t: TimeArray; i: SIGNED32; mean, var, n: SIGNED64;
 BEGIN
 	Acquire(Processors);
 	LocalBroadcast(HandleGetTimestamp, NIL, {Self, FrontBarrier});
@@ -3082,11 +3082,11 @@ BEGIN
 END GlobalGetTimestamp;
 
 PROCEDURE ParseProcessor(adr: ADDRESS);
-VAR id, idx, signature, family, feat, ver, log: LONGINT; flags: SET; string : ARRAY 8 OF CHAR;
+VAR id, idx, signature, family, feat, ver, log: SIGNED32; flags: SET; string : ARRAY 8 OF CHAR;
 BEGIN
-	SYSTEM.GET(adr, SYSTEM.VAL (LONGINT, flags));
-	id := ASH(SYSTEM.VAL (LONGINT, flags * {8..15}), -8);
-	ver := ASH(SYSTEM.VAL (LONGINT, flags * {16..23}), -16);
+	SYSTEM.GET(adr, SYSTEM.VAL (SIGNED32, flags));
+	id := ASH(SYSTEM.VAL (SIGNED32, flags * {8..15}), -8);
+	ver := ASH(SYSTEM.VAL (SIGNED32, flags * {16..23}), -16);
 	SYSTEM.GET (adr+4, signature);
 	family := ASH(signature, -8) MOD 10H;
 	SYSTEM.GET (adr+8, feat);
@@ -3126,7 +3126,7 @@ END ParseProcessor;
 
 (* Parse MP configuration table. *)
 PROCEDURE ParseMPConfig;
-VAR adr, x: ADDRESS; i: SIZE; entries: INTEGER; ch: CHAR; s: SET; str: ARRAY 8 OF CHAR;
+VAR adr, x: ADDRESS; i: SIZE; entries: SIGNED16; ch: CHAR; s: SET; str: ARRAY 8 OF CHAR;
 BEGIN
 	localAPIC := 0; numProcessors := 1; allProcessors := {0};
 	FOR i := 0 TO LEN(idMap)-1 DO idMap[i] := -1 END;	(* all unassigned *)
@@ -3163,7 +3163,7 @@ BEGIN
 				END;
 				Trace.Ln
 			END;
-			localAPIC := 0; SYSTEM.GET(adr+36, SYSTEM.VAL (LONGINT, localAPIC));
+			localAPIC := 0; SYSTEM.GET(adr+36, SYSTEM.VAL (SIGNED32, localAPIC));
 			IF TraceVerbose THEN Trace.String("  Local APIC:"); Trace.Address (localAPIC); Trace.Ln END;
 			SYSTEM.GET (adr+34, entries);
 			INC(adr, 44);	(* skip header *)
@@ -3185,7 +3185,7 @@ BEGIN
 						IF TraceVerbose THEN
 							SYSTEM.GET (adr+1, ch); Trace.String(" IO APIC ID:"); Trace.Hex(ORD(ch), -3);
 							SYSTEM.GET (adr+2, ch); Trace.String(", version "); Trace.Int(ORD(ch), 1);
-							SYSTEM.GET(adr, SYSTEM.VAL (LONGINT, s)); IF ~(24 IN s) THEN Trace.String(" (disabled)") END;
+							SYSTEM.GET(adr, SYSTEM.VAL (SIGNED32, s)); IF ~(24 IN s) THEN Trace.String(" (disabled)") END;
 							Trace.Ln
 						END;
 						INC(adr, 8)
@@ -3208,7 +3208,7 @@ BEGIN
 		x := idMap[i];
 		IF x # -1 THEN
 			ASSERT(revIDmap[x] = -1);	(* no duplicate APIC ids *)
-			revIDmap[x] := SHORTINT(i)
+			revIDmap[x] := SIGNED8(i)
 		END
 	END;
 	(* timer configuration *)
@@ -3222,16 +3222,16 @@ BEGIN
 END ParseMPConfig;
 
 (* Return the current average measured bus clock speed in Hz. *)
-PROCEDURE GetBusClockRate(): LONGINT;
-VAR timer: LONGINT; t: LONGINT;
+PROCEDURE GetBusClockRate(): SIGNED32;
+VAR timer: SIGNED32; t: SIGNED32;
 BEGIN
 	t := ticks;
 	REPEAT UNTIL ticks # t;	(* wait for edge *)
 	timer := ticks + ClockRateDelay;
-	ApicPut(380H, SYSTEM.VAL (SET, MAX(LONGINT)));	(* initial count *)
+	ApicPut(380H, SYSTEM.VAL (SET, MAX(SIGNED32)));	(* initial count *)
 	REPEAT UNTIL timer - ticks <= 0;
-	t := MAX(LONGINT) - SYSTEM.VAL (LONGINT, ApicGet(390H));	(* current count *)
-	IF t <= MAX(LONGINT) DIV 1000 THEN
+	t := MAX(SIGNED32) - SYSTEM.VAL (SIGNED32, ApicGet(390H));	(* current count *)
+	IF t <= MAX(SIGNED32) DIV 1000 THEN
 		RETURN 1000 * t DIV ClockRateDelay
 	ELSE
 		RETURN t DIV ClockRateDelay * 1000
@@ -3240,7 +3240,7 @@ END GetBusClockRate;
 
 (* Initialize APIC timer for timeslicing. *)
 PROCEDURE InitMPTimer;
-VAR rate: LONGINT;
+VAR rate: SIGNED32;
 BEGIN
 	IF timerRate > 0 THEN
 		ApicPut(3E0H, {0,1,3});	(* divide by 1 *)
@@ -3271,7 +3271,7 @@ BEGIN	(* {interrupts off} *)
 	Timeslice(state)
 END HandleUPTimer;
 
-PROCEDURE DummyEvent(id: LONGINT; CONST state: State);
+PROCEDURE DummyEvent(id: SIGNED32; CONST state: State);
 END DummyEvent;
 
 (** Install a processor timer event handler. *)
@@ -3293,7 +3293,7 @@ END InitAPIC;
 
 (* Start processor activity. *)
 PROCEDURE StartMP;
-VAR id: LONGINT; state: State;
+VAR id: SIGNED32; state: State;
 BEGIN	(* running at kernel level with interrupts on *)
 	InitAPIC;
 	id := ID();	(* timeslicing is disabled, as we are running at kernel level *)
@@ -3338,8 +3338,8 @@ BEGIN	(* running at kernel level with interrupts off *)
 END EnterMP;
 
 (* Start another processor. *)
-PROCEDURE StartProcessor(phys: ADDRESS; apicid: LONGINT; startup: BOOLEAN);
-VAR j, k: LONGINT; s: SET; timer: LONGINT;
+PROCEDURE StartProcessor(phys: ADDRESS; apicid: SIGNED32; startup: BOOLEAN);
+VAR j, k: SIGNED32; s: SET; timer: SIGNED32;
 BEGIN
 	(* clear APIC errors *)
 	ApicPut(280H, {}); s := ApicGet(280H);
@@ -3372,7 +3372,7 @@ END StartProcessor;
 
 (* Boot other processors, one at a time. *)
 PROCEDURE BootMP;
-VAR phys, page0Adr: ADDRESS; i: LONGINT; timer: LONGINT;
+VAR phys, page0Adr: ADDRESS; i: SIGNED32; timer: SIGNED32;
 BEGIN
 	stopped := TRUE; ipcBusy := {};	(* other processors can be woken with StartAll *)
 	InitBootPage(EnterMP, phys);
@@ -3398,7 +3398,7 @@ BEGIN
 		Trace.Ln;
 		Release(TraceOutput);
 	END;
-	SYSTEM.PUT (page0Adr + 467H, SYSTEM.VAL (LONGINT, 0));
+	SYSTEM.PUT (page0Adr + 467H, SYSTEM.VAL (SIGNED32, 0));
 	UnmapPhysical(page0Adr, 4096);
 	PutNVByte(15, 0X)	(* restore shutdown status *)
 END BootMP;
@@ -3429,7 +3429,7 @@ BEGIN
 END InitTicks;
 
 (* Set timer upcall. The handler procedure will be called at a rate of Second/divisor Hz. *)
-PROCEDURE InstallTickHandler(handler: Handler; divisor: LONGINT);
+PROCEDURE InstallTickHandler(handler: Handler; divisor: SIGNED32);
 BEGIN
 	eventMax := divisor; event := handler;
 	eventCount := eventMax
@@ -3461,15 +3461,15 @@ BEGIN
 	InstallHandler(HandleKernelCall, MPKC);
 END InitProcessors;
 
-VAR scrollLines: LONGINT;
+VAR scrollLines: SIGNED32;
 
 (* Send and print character *)
 PROCEDURE TraceChar (c: CHAR);
-VAR status: SHORTINT;
+VAR status: SIGNED8;
 
 	(* Scroll the screen by one line. *)
 	PROCEDURE Scroll;
-	VAR adr: ADDRESS; off: SIZE; i,j: LONGINT;
+	VAR adr: ADDRESS; off: SIZE; i,j: SIGNED32;
 	BEGIN
 		IF (traceDelay > 0) & (scrollLines MOD TraceHeight = 0) THEN
 			FOR i := 0 TO traceDelay-1 DO
@@ -3480,7 +3480,7 @@ VAR status: SHORTINT;
 		adr := traceBase + TraceLen;
 		SYSTEM.MOVE (adr, adr - TraceLen, TraceSize - TraceLen);
 		adr := traceBase + TraceSize - TraceLen;
-		FOR off := 0 TO TraceLen - SIZEOF(INTEGER) BY SIZEOF(INTEGER) DO SYSTEM.PUT16 (adr + off, 100H * 7H + 32) END
+		FOR off := 0 TO TraceLen - SIZEOF(SIGNED16) BY SIZEOF(SIGNED16) DO SYSTEM.PUT16 (adr + off, 100H * 7H + 32) END
 	END Scroll;
 
 BEGIN
@@ -3506,22 +3506,22 @@ BEGIN
 				DEC (tracePos, TraceLen)
 			END;
 			SYSTEM.PUT16 (traceBase + tracePos, 100H * traceColor + ORD (c));
-			INC (tracePos, SIZEOF(INTEGER))
+			INC (tracePos, SIZEOF(SIGNED16))
 		END
 	END
 END TraceChar;
 
 (* Change color *)
-PROCEDURE TraceColor (c: SHORTINT);
+PROCEDURE TraceColor (c: SIGNED8);
 BEGIN traceColor := c;
 END TraceColor;
 
-VAR traceDelay: LONGINT;
+VAR traceDelay: SIGNED32;
 (* Initialise tracing. *)
 PROCEDURE InitTrace;
 CONST MaxPorts = 8;
-VAR i, p: SIZE; bps: LONGINT; off: SIZE; s, name: ARRAY 32 OF CHAR;
-	baselist: ARRAY MaxPorts OF LONGINT;
+VAR i, p: SIZE; bps: SIGNED32; off: SIZE; s, name: ARRAY 32 OF CHAR;
+	baselist: ARRAY MaxPorts OF SIGNED32;
 BEGIN
 	GetConfig ("TraceMode", s);
 	p := 0; traceMode := SYSTEM.VAL (SET, StrToInt (p, s));
@@ -3529,7 +3529,7 @@ BEGIN
 		GetConfig ("TraceMem", s);
 		p := 0; traceBase := SYSTEM.VAL (ADDRESS, StrToInt (p, s));
 		IF traceBase = 0 THEN traceBase := 0B8000H END;	(* default screen buffer *)
-		FOR off := 0 TO TraceSize - SIZEOF(INTEGER) BY SIZEOF(INTEGER) DO SYSTEM.PUT16 (traceBase + off, 100H * 7H + 32) END;
+		FOR off := 0 TO TraceSize - SIZEOF(SIGNED16) BY SIZEOF(SIGNED16) DO SYSTEM.PUT16 (traceBase + off, 100H * 7H + 32) END;
 		tracePos := 0;
 		Portout8(3D4H, 0EX);
 		Portout8(3D5H, CHR((TraceWidth*TraceHeight) DIV 100H));

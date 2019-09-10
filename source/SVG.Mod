@@ -32,7 +32,7 @@ TYPE
 	Transform*=SVGMatrix.Matrix;
 
 	Paint*=RECORD
-		type*: SHORTINT;
+		type*: SIGNED8;
 		color*: Color;
 		uri*: String;
 	END;
@@ -108,10 +108,10 @@ BEGIN
 END ParseNumber;
 
 (* Parse an attribute of type length at the specified position in the string *)
-PROCEDURE ParseLength2(value:String; ppi: LONGREAL;  percent100: Length; VAR length: Length; VAR i: SIZE);
+PROCEDURE ParseLength2(value:String; ppi: FLOAT64;  percent100: Length; VAR length: Length; VAR i: SIZE);
 VAR
 	term: CSS2.Term;
-	unit: SHORTINT;
+	unit: SIGNED8;
 	unitStr: String;
 BEGIN
 	ParseNumber2(value, length, AllowPercentages, percent100, i, unitStr);
@@ -126,7 +126,7 @@ BEGIN
 END ParseLength2;
 
 (* Parse an attribute of type length *)
-PROCEDURE ParseLength*(value:String; ppi: LONGREAL;  percent100: Length; VAR length: Length);
+PROCEDURE ParseLength*(value:String; ppi: FLOAT64;  percent100: Length; VAR length: Length);
 VAR
 	i: SIZE;
 BEGIN
@@ -135,7 +135,7 @@ BEGIN
 END ParseLength;
 
 (* Parse one or optionally two attributes of type length *)
-PROCEDURE ParseLengthOptional2*(value:String; ppi: LONGREAL;  percent100: Length; VAR length, length2: Length);
+PROCEDURE ParseLengthOptional2*(value:String; ppi: FLOAT64;  percent100: Length; VAR length, length2: Length);
 VAR
 	i: SIZE;
 BEGIN
@@ -207,7 +207,7 @@ BEGIN
 END ParseURI;
 
 (* Parse the contents of the gradientUnits attribute *)
-PROCEDURE ParseUnits*(value: String; VAR units: SHORTINT);
+PROCEDURE ParseUnits*(value: String; VAR units: SIGNED8);
 BEGIN
 	IF value^ = "userSpaceOnUse" THEN units := UnitsUserSpaceOnUse
 	ELSIF value^ = "objectBoundingBox" THEN units := UnitsObjectBoundingBox
@@ -331,7 +331,7 @@ BEGIN
 END ParseViewBox;
 
 (* Parse the contents of the preserveAspectRatio attribute *)
-PROCEDURE ParsePreserveAspect*(value: String; VAR xAlign, yAlign: LONGINT; VAR meet: BOOLEAN);
+PROCEDURE ParsePreserveAspect*(value: String; VAR xAlign, yAlign: SIGNED32; VAR meet: BOOLEAN);
 VAR i: SIZE;
 BEGIN
 	i := 0;
@@ -393,8 +393,8 @@ BEGIN
 END Error;
 
 (* The following procedures are defined in, but not exported from the Modules CSS2Properties and CSS2Parser *)
-PROCEDURE GetPixels(term: CSS2.Term; ppi: LONGREAL; font: GfxFonts.Font): LONGREAL;
-VAR fact, pixels: LONGREAL; x, y, dx, dy: REAL; map: Raster.Image;
+PROCEDURE GetPixels(term: CSS2.Term; ppi: FLOAT64; font: GfxFonts.Font): FLOAT64;
+VAR fact, pixels: FLOAT64; x, y, dx, dy: FLOAT32; map: Raster.Image;
 BEGIN
 	IF (term # NIL) & term.IsLength() THEN
 		CASE term.GetUnit() OF
@@ -419,13 +419,13 @@ BEGIN
 	RETURN pixels
 END GetPixels;
 
-PROCEDURE ChangeToPixel(pixelVal: LONGREAL): CSS2.Term;
+PROCEDURE ChangeToPixel(pixelVal: FLOAT64): CSS2.Term;
 VAR term: CSS2.Term;
 BEGIN
 	NEW(term); term.SetType(CSS2.RealDimension); term.SetRealVal(pixelVal); term.SetUnit(CSS2.px); RETURN term
 END ChangeToPixel;
 
-PROCEDURE GetTermUnit(CONST unitStr: ARRAY OF CHAR): SHORTINT;
+PROCEDURE GetTermUnit(CONST unitStr: ARRAY OF CHAR): SIGNED8;
 BEGIN
 	IF unitStr = 'em' THEN RETURN CSS2.em
 	ELSIF unitStr = 'ex' THEN RETURN CSS2.ex

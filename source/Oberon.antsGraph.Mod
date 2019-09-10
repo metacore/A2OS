@@ -63,14 +63,14 @@ TYPE
 	tNodeDesc* = RECORD (Gadgets.ObjDesc)
 		x, y: Real;   (* location *)
 		name*: vyName.tNameArray;   (* output string *)
-		mode: INTEGER;   (* specialNode* = 0 / normalNode* = 1 *)
+		mode: SIGNED16;   (* specialNode* = 0 / normalNode* = 1 *)
 		mark: BOOLEAN;   (* for algorithmical use *)
 		selected: BOOLEAN;   (* *)
-		shape, col, bkCol: INTEGER;   (*display attributes *)
+		shape, col, bkCol: SIGNED16;   (*display attributes *)
 		next, nextSelected*: tNode;   (**)
 		firstOutEdge-: tEdge;   (**)
 		firstInEdge-: tEdge;   (**)
-		inDegree, outDegree: INTEGER;
+		inDegree, outDegree: SIGNED16;
 		vis: BOOLEAN;   (*visible flag*)
 	END;
 
@@ -120,7 +120,7 @@ END BindIt;
 	END StoreNode;
 
 	PROCEDURE LoadNode( VAR R: Files.Rider;  n: tNode );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Files.ReadLReal( R, n.x );  Files.ReadLReal( R, n.y );  Files.ReadString( R, n.name );
 		Files.ReadInt( R, n.mode );  Files.ReadBool( R, n.mark );  Files.ReadBool( R, n.selected );  Files.ReadInt( R, n.shape );
@@ -142,7 +142,7 @@ END BindIt;
 	END StoreEdge;
 
 	PROCEDURE LoadEdge( VAR R: Files.Rider;  n: tEdge );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Files.ReadBool( R, n.vis );  Gadgets.ReadRef( R, n.lib, objsub );
 		IF (objsub # NIL ) & (objsub IS tNode) THEN n.from := objsub( tNode ) END;
@@ -159,7 +159,7 @@ END BindIt;
 	END StoreGraph;
 
 	PROCEDURE LoadGraph( VAR R: Files.Rider;  n: tGraph );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Files.ReadString( R, n.fnt );  Gadgets.ReadRef( R, n.lib, objsub );
 		IF (objsub # NIL ) THEN n.firstNode := objsub( tNode ) END;
@@ -280,7 +280,7 @@ END BindIt;
 
 
 (** help routines *)
-	PROCEDURE Max*( a, b: INTEGER ): INTEGER;
+	PROCEDURE Max*( a, b: SIGNED16 ): SIGNED16;
 	BEGIN
 		IF a > b THEN RETURN a ELSE RETURN b END
 	END Max;
@@ -319,7 +319,7 @@ END BindIt;
 		IF h = 0 THEN h := 1 END
 	END GetGraphFrame;
 
-	PROCEDURE GetGraphSize*( graph: tGraph;  VAR nrVertices, nrEdges: INTEGER );
+	PROCEDURE GetGraphSize*( graph: tGraph;  VAR nrVertices, nrEdges: SIGNED16 );
 	(*= returns the number of vertices (=m) and edges (=n) of the complete graph *)
 	VAR vertex: tNode;  edge: tEdge;
 	BEGIN
@@ -360,14 +360,14 @@ END BindIt;
 		RETURN vertex.selected
 	END Selected;
 
-	PROCEDURE GetNodeRect*( graph: tGraph;  v: tNode;  VAR x, y, w, h, dsr: INTEGER );
+	PROCEDURE GetNodeRect*( graph: tGraph;  v: tNode;  VAR x, y, w, h, dsr: SIGNED16 );
 	BEGIN
 		vyGraphBase.SetStringJustification( vyGraphBase.center, vyGraphBase.center );
 		vyGraphBase.GetStringFrame2d( v.x, v.y, graph.fnt, v.name, x, y, w, h, dsr );  x := x - 2;  w := w + 2
 	END GetNodeRect;
 
 	PROCEDURE ThisNode*( graph: tGraph;  x, y: Real ): tNode;
-	VAR dist, thisDist: Real;  v, this: tNode;  px, py, X, Y, W, H, dsr: INTEGER;
+	VAR dist, thisDist: Real;  v, this: tNode;  px, py, X, Y, W, H, dsr: SIGNED16;
 
 		PROCEDURE Distance( ): Real;
 		BEGIN
@@ -392,7 +392,7 @@ END BindIt;
 
 (** drawing routines *)
 	PROCEDURE RecallNode( graph: tGraph;  v: tNode );
-	VAR x, y, w, h, dsr: INTEGER;  oldCol, oldBkCol: LONGINT;  dsrr, temp: Real;
+	VAR x, y, w, h, dsr: SIGNED16;  oldCol, oldBkCol: SIGNED32;  dsrr, temp: Real;
 		name: ARRAY 32 OF CHAR;
 
 		PROCEDURE DrawNode( v: tNode );
@@ -433,7 +433,7 @@ END BindIt;
 	END RecallNode;
 
 	PROCEDURE RecallEdge( g: tGraph;  e: tEdge );
-	VAR  (*x, y, w, h, X, Y, W, H: INTEGER;*) x, y: INTEGER;  oldCol, oldBkCol: LONGINT;
+	VAR  (*x, y, w, h, X, Y, W, H: SIGNED16;*) x, y: SIGNED16;  oldCol, oldBkCol: SIGNED32;
 	BEGIN
 		(*GetNodeRect (g, e.from, x, y, w, h); GetNodeRect (g, e.to, X, Y, W, H);
 	vyGraphBase.Line (x+w DIV 2, y+h, X+W DIV 2, Y)*)
@@ -467,7 +467,7 @@ END BindIt;
 
 
 (** selection support *)
-	PROCEDURE SelectionActor*( graph: tGraph;  x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real;  mode: INTEGER );
+	PROCEDURE SelectionActor*( graph: tGraph;  x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real;  mode: SIGNED16 );
 	(*vs 0.0a1	md  16.08.94 *)
 	(* mode meaning:
 	add=2;
@@ -475,7 +475,7 @@ END BindIt;
 	invert=1;
 	remove=3;
 	*)
-	VAR v: tNode;  i: LONGINT;  inNew, inOld, chg: BOOLEAN;
+	VAR v: tNode;  i: SIGNED32;  inNew, inOld, chg: BOOLEAN;
 
 		PROCEDURE PointInRect( px, py, x0, y0, x1, y1: Real ): BOOLEAN;
 		BEGIN
@@ -534,7 +534,7 @@ END BindIt;
 	END ClearSelection;
 
 (** construction support: Add/Hide/Remove of edges, vertices and selections *)
-	PROCEDURE AddNode*( graph: tGraph;  v: tNode;  x, y: Real;  name: vyName.tNameArray;  mode, shape, col, bkCol: INTEGER );
+	PROCEDURE AddNode*( graph: tGraph;  v: tNode;  x, y: Real;  name: vyName.tNameArray;  mode, shape, col, bkCol: SIGNED16 );
 	VAR eo, ei: tEdge;
 	BEGIN
 		IF v.handle = NIL THEN v.handle := NHandler END;
@@ -689,13 +689,13 @@ END BindIt;
 	END Expand;
 
 (** placing support *)
-	PROCEDURE MoveNode*( graph: tGraph;  v: tNode;  dx, dy: INTEGER );
+	PROCEDURE MoveNode*( graph: tGraph;  v: tNode;  dx, dy: SIGNED16 );
 	VAR dx2d, dy2d: Real;
 	BEGIN
 		vyGraphBase.VectorToVector2d( dx, dy, dx2d, dy2d );  v.x := v.x + dx2d;  v.y := v.y + dy2d
 	END MoveNode;
 
-	PROCEDURE MoveSelection*( graph: tGraph;  dx, dy: INTEGER );
+	PROCEDURE MoveSelection*( graph: tGraph;  dx, dy: SIGNED16 );
 	VAR dx2d, dy2d: Real;  v: tNode;
 	BEGIN
 		vyGraphBase.VectorToVector2d( dx, dy, dx2d, dy2d );  v := graph.firstNode.next;
@@ -716,7 +716,7 @@ END BindIt;
 	END GetNodePlace;
 
 	PROCEDURE ClusterNode*( v: tNode );
-	VAR e: tEdge;  nr: INTEGER;  i, dx: Real;
+	VAR e: tEdge;  nr: SIGNED16;  i, dx: Real;
 	BEGIN
 		e := v.firstOutEdge.next;  nr := 0;
 		WHILE (e # NIL ) DO INC( nr );  e := e.next END;
@@ -729,7 +729,7 @@ END BindIt;
 	END ClusterNode;
 
 	PROCEDURE AlignSelection*( graph: tGraph;  horizontal: BOOLEAN );
-	VAR min, max, d, pos, c: Real;  count, done: INTEGER;  v, next: tNode;
+	VAR min, max, d, pos, c: Real;  count, done: SIGNED16;  v, next: tNode;
 	BEGIN
 		count := 0;  c := 0;  v := graph.firstNode.next;
 		WHILE (v # NIL ) DO
@@ -896,7 +896,7 @@ END SortVerticesByOutDegree;
 	END AddRoot;
 
 	PROCEDURE DFSSortRec( graph: tGraph;  root: tNode );
-	VAR nr, i: INTEGER;  e: tEdge;  dx: Real;
+	VAR nr, i: SIGNED16;  e: tEdge;  dx: Real;
 	BEGIN
 		root.mark := TRUE;  e := root.firstOutEdge.next;
 		IF e = NIL THEN RETURN END;

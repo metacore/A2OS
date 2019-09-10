@@ -6,13 +6,13 @@ TYPE
 	ReadProc* = PROCEDURE {DELEGATE} ( ): CHAR;
 
 VAR
-	H, L: INTEGER;
+	H, L: SIGNED16;
 
 	(**	Scan a floating-point number.
 		EBNF: Real = Digit {Digit} '.' Digit {Digit} ['e'|'E' ['+'|'-'] Digit {Digit}]. *)
-	PROCEDURE ScanReal*( next: ReadProc ): LONGREAL;
+	PROCEDURE ScanReal*( next: ReadProc ): FLOAT64;
 	VAR
-		e: INTEGER; y, g: LONGREAL; neg, negE: BOOLEAN; ch: CHAR;
+		e: SIGNED16; y, g: FLOAT64; neg, negE: BOOLEAN; ch: CHAR;
 	BEGIN
 		ch := next();
 		WHILE (ch = "0") DO  ch := next()  END;
@@ -52,8 +52,8 @@ VAR
 
 	(**	Convert a string to a floating-point number.
 		EBNF: Real = Digit {Digit} '.' Digit {Digit} ['e'|'E' ['+'|'-'] Digit {Digit}]. *)
-	PROCEDURE StringToReal*(CONST s: ARRAY OF CHAR; VAR r: LONGREAL);
-	VAR p, e: INTEGER; y, g: LONGREAL; neg, negE: BOOLEAN;
+	PROCEDURE StringToReal*(CONST s: ARRAY OF CHAR; VAR r: FLOAT64);
+	VAR p, e: SIGNED16; y, g: FLOAT64; neg, negE: BOOLEAN;
 	BEGIN
 		p := 0;
 		WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
@@ -90,11 +90,11 @@ VAR
 		r := y
 	END StringToReal;
 
-	(**	Convert LONGREAL x  to string using n character positions. *)
-	PROCEDURE RealToString*( x: LONGREAL;  n: WORD;  VAR buf: ARRAY OF CHAR );
+	(**	Convert FLOAT64 x  to string using n character positions. *)
+	PROCEDURE RealToString*( x: FLOAT64;  n: INTEGER;  VAR buf: ARRAY OF CHAR );
 	(* BM 1993.4.22. Do not simplify rounding! *)
 	VAR
-		e, h, l, i, pos: LONGINT;  z: LONGREAL;  d: ARRAY 16 OF CHAR;
+		e, h, l, i, pos: SIGNED32;  z: FLOAT64;  d: ARRAY 16 OF CHAR;
 
 		PROCEDURE Char( c: CHAR );
 		BEGIN
@@ -102,7 +102,7 @@ VAR
 		END Char;
 
 		PROCEDURE String( CONST s: ARRAY OF CHAR );
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE s[i] # 0X DO  Char( s[i] );  INC( i )  END
@@ -148,13 +148,13 @@ VAR
 	END RealToString;
 
 
-	(**	Convert LONGREAL x to string in a fixed point notation.
+	(**	Convert FLOAT64 x to string in a fixed point notation.
 		n is the overall minimal length for the output field, f the number of fraction digits following the decimal point,
 		D the fixed exponent (printed only when D # 0). *)
-	PROCEDURE RealToStringFix*( x: LONGREAL;  n, f, D: WORD; VAR buf: ARRAY OF CHAR );
+	PROCEDURE RealToStringFix*( x: FLOAT64;  n, f, D: INTEGER; VAR buf: ARRAY OF CHAR );
 	(* BM 1993.4.22. Do not simplify rounding! / JG formatting adjusted *)
 	VAR
-		e, h, l, i, pos: LONGINT;  r, z: LONGREAL;
+		e, h, l, i, pos: SIGNED32;  r, z: FLOAT64;
 		d: ARRAY 16 OF CHAR;
 		s: CHAR;  dot: BOOLEAN;
 
@@ -164,7 +164,7 @@ VAR
 		END Char;
 
 		PROCEDURE String( CONST s: ARRAY OF CHAR );
-		VAR i: LONGINT; ch: CHAR;
+		VAR i: SIGNED32; ch: CHAR;
 		BEGIN
 			ch := s[0]; i := 1;
 			WHILE ch # 0X DO  Char( ch );  ch := s[i];  INC( i )  END
@@ -239,8 +239,8 @@ VAR
 
 	(*** the following procedures stem from Reals.Mod *)
 
-	(** Returns the NaN code (0 <= h < 1048576, MIN(LONGINT) <= l <= MAX(LONGINT)) or (-1,-1) if not NaN/Infinite. *)
-	PROCEDURE NaNCodeL( x: LONGREAL;  VAR h, l: LONGINT );
+	(** Returns the NaN code (0 <= h < 1048576, MIN(SIGNED32) <= l <= MAX(SIGNED32)) or (-1,-1) if not NaN/Infinite. *)
+	PROCEDURE NaNCodeL( x: FLOAT64;  VAR h, l: SIGNED32 );
 	BEGIN
 		SYSTEM.GET( ADDRESSOF( x ) + H, h );  SYSTEM.GET( ADDRESSOF( x ) + L, l );
 		IF ASH( h, -20 ) MOD 2048 = 2047 THEN  (* Infinite or NaN *)
@@ -251,23 +251,23 @@ VAR
 
 
 	(** Returns the shifted binary exponent (0 <= e < 2048). *)
-	PROCEDURE ExpoL( x: LONGREAL ): LONGINT;
-	VAR i: LONGINT;
+	PROCEDURE ExpoL( x: FLOAT64 ): SIGNED32;
+	VAR i: SIGNED32;
 	BEGIN
 		SYSTEM.GET( ADDRESSOF( x ) + H, i );  RETURN ASH( i, -20 ) MOD 2048
 	END ExpoL;
 
-	(** Convert hexadecimal to LONGREAL. h and l are the high and low parts.*)
-	PROCEDURE RealL( h, l: LONGINT ): LONGREAL;
-	VAR x: LONGREAL;
+	(** Convert hexadecimal to FLOAT64. h and l are the high and low parts.*)
+	PROCEDURE RealL( h, l: SIGNED32 ): FLOAT64;
+	VAR x: FLOAT64;
 	BEGIN
 		SYSTEM.PUT( ADDRESSOF( x ) + H, h );  SYSTEM.PUT( ADDRESSOF( x ) + L, l );  RETURN x
 	END RealL;
 
 
 	(** Returns 10^e (e <= 308, 308 < e delivers IEEE-code +INF). *)
-	PROCEDURE Ten( e: LONGINT ): LONGREAL;   (* naiive version *)
-	VAR r: LONGREAL;
+	PROCEDURE Ten( e: SIGNED32 ): FLOAT64;   (* naiive version *)
+	VAR r: FLOAT64;
 	BEGIN
 		IF e < -307 THEN RETURN 0
 		ELSIF 308 < e THEN RETURN RealL( 2146435072, 0 )
@@ -279,7 +279,7 @@ VAR
 	END Ten;
 
 	PROCEDURE InitHL;
-	VAR i: ADDRESS;  dmy: INTEGER;  littleEndian: BOOLEAN;
+	VAR i: ADDRESS;  dmy: SIGNED16;  littleEndian: BOOLEAN;
 	BEGIN
 		dmy := 1;  i := ADDRESSOF( dmy );
 		SYSTEM.GET( i, littleEndian );   (* indirection via i avoids warning on SUN cc -O *)

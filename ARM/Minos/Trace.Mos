@@ -8,10 +8,10 @@ TYPE
 	CharProc*= PROCEDURE (c:CHAR);
 VAR
 	Char*: CharProc;
-	Color*: PROCEDURE (c: SHORTINT);
+	Color*: PROCEDURE (c: SIGNED8);
 
 (** Send the specified characters to the trace output (cf. Streams.Sender). *)
-PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIGNED32; propagate: BOOLEAN; VAR res: SIGNED32);
 BEGIN INC (len, ofs); WHILE ofs # len DO Char (buf[ofs]); INC (ofs); END; res := 0;
 END Send;
 
@@ -22,7 +22,7 @@ END Ln;
 
 (** Write a string to the trace output. *)
 PROCEDURE String* (CONST s: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN i := 0; WHILE (i< LEN(s)) & (s[i] # 0X) DO Char (s[i]); INC (i) END;
 END String;
 
@@ -31,10 +31,10 @@ BEGIN
 	Char( c );
 END C;
 
-PROCEDURE StringA*( CONST s: ARRAY OF CHAR; CONST len : LONGINT; CONST addColon : BOOLEAN );
+PROCEDURE StringA*( CONST s: ARRAY OF CHAR; CONST len : SIGNED32; CONST addColon : BOOLEAN );
 VAR
-	i : LONGINT;
-	rest : LONGINT;
+	i : SIGNED32;
+	rest : SIGNED32;
 BEGIN
 	IF ( LEN( s ) < len ) THEN
 		rest := len - LEN( s );
@@ -50,11 +50,11 @@ BEGIN
 	END;
 END StringA;
 
-PROCEDURE Real*(x: LONGREAL; dec, len: LONGINT);
+PROCEDURE Real*(x: FLOAT64; dec, len: SIGNED32);
 VAR 
-	res, i, n, x0: LONGINT; 
+	res, i, n, x0: SIGNED32; 
 	a: ARRAY MAXBUFLEN OF CHAR; 
-	z: LONGREAL;
+	z: FLOAT64;
 BEGIN
 	n := 0;
 	z := 1.0;
@@ -90,11 +90,11 @@ BEGIN String (s); Ln;
 END StringLn;
 
 (** Write a character. *)
-PROCEDURE Int* (x,w: LONGINT);
-VAR i: SIZE; x0: LONGINT; a: ARRAY 21 OF CHAR;
+PROCEDURE Int* (x,w: SIGNED32);
+VAR i: SIZE; x0: SIGNED32; a: ARRAY 21 OF CHAR;
 BEGIN
 	IF x < 0 THEN
-		IF x = MIN (LONGINT) THEN
+		IF x = MIN (SIGNED32) THEN
 			DEC (w, 20);
 			WHILE w > 0 DO Char (' '); DEC (w) END;
 			String ("-9223372036854775808");
@@ -114,11 +114,11 @@ BEGIN
 	REPEAT DEC (i); Char (a[i]) UNTIL i = 0
 END Int;
 
-PROCEDURE HInt*( x : HUGEINT; w: LONGINT );
-VAR i: SIZE; x0: HUGEINT; a: ARRAY 32 OF CHAR;
+PROCEDURE HInt*( x : SIGNED64; w: SIGNED32 );
+VAR i: SIZE; x0: SIGNED64; a: ARRAY 32 OF CHAR;
 BEGIN
 	IF x < 0 THEN
-		IF x = MIN (HUGEINT) THEN
+		IF x = MIN (SIGNED64) THEN
 			DEC (w, 20);
 			WHILE w > 0 DO Char (' '); DEC (w) END;
 			String ("-tm");
@@ -143,7 +143,7 @@ BEGIN IF x THEN String ("TRUE") ELSE String ("FALSE") END
 END Boolean;
 
 (** Write "x" as a decimal number with a power-of-two multiplier (K, M or G), followed by "suffix". "w" is the field width, excluding "suffix". *)
-PROCEDURE IntSuffix* (x, w: LONGINT; CONST suffix: ARRAY OF CHAR);
+PROCEDURE IntSuffix* (x, w: SIGNED32; CONST suffix: ARRAY OF CHAR);
 CONST K = 1024; M = K*K; G = K*M;
 VAR mult: CHAR;
 BEGIN
@@ -163,11 +163,11 @@ END IntSuffix;
 	Write an integer in hexadecimal right-justified in a field of at least ABS(w) characters.
 	If w < 0 THEN w least significant hex digits of x are written (possibly including leading zeros)
 *)
-PROCEDURE Hex*(x: LONGINT; w: LONGINT );
-VAR i: LONGINT;
-	buf: ARRAY 2*SIZEOF(LONGINT)+2 OF CHAR;
+PROCEDURE Hex*(x: SIGNED32; w: SIGNED32 );
+VAR i: SIGNED32;
+	buf: ARRAY 2*SIZEOF(SIGNED32)+2 OF CHAR;
 	neg: BOOLEAN;
-	c: LONGINT;
+	c: SIGNED32;
 BEGIN
 	IF w >= 0 THEN
 		i:= 0;
@@ -178,14 +178,14 @@ BEGIN
 			IF c < 10 THEN buf[i] := CHR(c+ORD("0")) ELSE buf[i] := CHR(c-10+ORD("A")) END;
 			x := x DIV 10H;
 			INC(i);
-		UNTIL (i = 2 * SIZEOF(LONGINT)) OR (x=0);
+		UNTIL (i = 2 * SIZEOF(SIGNED32)) OR (x=0);
 		IF c > 9 THEN buf[i] := "0"; INC(i) END;
 		IF neg THEN buf[i] := "-"; INC(i) END;
 		WHILE(w > i) DO Char(" "); DEC(w); END;
 		REPEAT DEC(i); Char(buf[i]); UNTIL i=0;
 	ELSE
 		w := -w;
-		WHILE(w>2*SIZEOF(LONGINT)) DO
+		WHILE(w>2*SIZEOF(SIGNED32)) DO
 			Char(" "); DEC(w);
 		END;
 		buf[w] := 0X;
@@ -207,13 +207,13 @@ BEGIN
 END Address;
 
 (** Write "x" as a hexadecimal number. "w" is the field width. Always prints 16 digits. *)
-PROCEDURE HIntHex* (x: LONGINT; w: LONGINT);
+PROCEDURE HIntHex* (x: SIGNED32; w: SIGNED32);
 BEGIN Hex (x, w);
 END HIntHex;
 
 (** Write "x" as a set. *)
 PROCEDURE Set*(x: SET);
-VAR first: BOOLEAN; i: LONGINT;
+VAR first: BOOLEAN; i: SIGNED32;
 BEGIN
 	first := TRUE;
 	Char("{");
@@ -255,12 +255,12 @@ BEGIN
 END Memory;
 
 (** Write a buffer in hex. *)
-PROCEDURE Buffer* (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT);
+PROCEDURE Buffer* (CONST buf: ARRAY OF CHAR; ofs, len: SIGNED32);
 BEGIN Memory (ADDRESSOF (buf[ofs]), len)
 END Buffer;
 
 (** Write bits (ofs..ofs+n-1) of x in binary. *)
-PROCEDURE Bits* (x: SET; ofs, n: LONGINT);
+PROCEDURE Bits* (x: SET; ofs, n: SIGNED32);
 BEGIN
 	REPEAT
 		DEC (n);
@@ -294,7 +294,7 @@ PROCEDURE NullChar(c: CHAR);
 BEGIN
 END NullChar;
 
-PROCEDURE NullColor(c: SHORTINT);
+PROCEDURE NullColor(c: SIGNED8);
 BEGIN
 END NullColor;
 

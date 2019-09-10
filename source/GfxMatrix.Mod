@@ -44,7 +44,7 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 				[ 0   0 ]
 		**)
 
-		Matrix* = ARRAY 3, 2 OF REAL;
+		Matrix* = ARRAY 3, 2 OF FLOAT32;
 
 
 	VAR
@@ -54,7 +54,7 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	(**--- Matrix Computation ---**)
 
 	(** initialize matrix with given values **)
-	PROCEDURE Init* (VAR m: Matrix; m00, m01, m10, m11, m20, m21: REAL);
+	PROCEDURE Init* (VAR m: Matrix; m00, m01, m10, m11, m20, m21: FLOAT32);
 	BEGIN
 		m[0, 0] := m00; m[0, 1] := m01;
 		m[1, 0] := m10; m[1, 1] := m11;
@@ -67,8 +67,8 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	**)
 
 	(** calculate matrix that maps p0 to p1, q0 to q1, and r0 to r1 **)
-	PROCEDURE Get3PointTransform* (px0, py0, px1, py1, qx0, qy0, qx1, qy1, rx0, ry0, rx1, ry1: REAL; VAR res: Matrix);
-		VAR m: ARRAY 6, 7 OF REAL; i, j, k: LONGINT; max, t: REAL; v: ARRAY 6 OF REAL;
+	PROCEDURE Get3PointTransform* (px0, py0, px1, py1, qx0, qy0, qx1, qy1, rx0, ry0, rx1, ry1: FLOAT32; VAR res: Matrix);
+		VAR m: ARRAY 6, 7 OF FLOAT32; i, j, k: SIGNED32; max, t: FLOAT32; v: ARRAY 6 OF FLOAT32;
 	BEGIN
 		(* initialize set of linear equations for matrix coefficients *)
 		m[0, 0] := px0; m[0, 1] := py0; m[0, 2] := 1.0; m[0, 3] := 0.0; m[0, 4] := 0.0; m[0, 5] := 0.0; m[0, 6] := px1;
@@ -116,8 +116,8 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	END Get3PointTransform;
 
 	(** calculate matrix that maps p0 to p1 and q0 to q1 **)
-	PROCEDURE Get2PointTransform* (px0, py0, px1, py1, qx0, qy0, qx1, qy1: REAL; VAR res: Matrix);
-		VAR rx0, ry0, rx1, ry1: REAL;
+	PROCEDURE Get2PointTransform* (px0, py0, px1, py1, qx0, qy0, qx1, qy1: FLOAT32; VAR res: Matrix);
+		VAR rx0, ry0, rx1, ry1: FLOAT32;
 	BEGIN
 		rx0 := px0 + py0 - qy0; ry0 := py0 + qx0 - px0;
 		rx1 := px1 + py1 - qy1; ry1 := py1 + qx1 - px1;
@@ -126,7 +126,7 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 
 	(** calculate inverse of matrix **)
 	PROCEDURE Invert* (m: Matrix; VAR res: Matrix);
-		VAR det, inv: REAL;
+		VAR det, inv: FLOAT32;
 	BEGIN
 		det := m[0, 0] * m[1, 1] - m[0, 1] * m[1, 0];
 		IF ABS(det) >= Eps THEN	(* matrix can be inverted; use Cramer's rule *)
@@ -146,7 +146,7 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	(**--- Detection of Special Cases ---**)
 
 	(** return determinant of matrix **)
-	PROCEDURE Det* (VAR m: Matrix): REAL;
+	PROCEDURE Det* (VAR m: Matrix): FLOAT32;
 	BEGIN
 		RETURN m[0, 0] * m[1, 1] - m[0, 1] * m[1, 0]
 	END Det;
@@ -190,7 +190,7 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	**)
 
 	(** translation by (dx, dy) **)
-	PROCEDURE Translate* (m: Matrix; dx, dy: REAL; VAR res: Matrix);
+	PROCEDURE Translate* (m: Matrix; dx, dy: FLOAT32; VAR res: Matrix);
 	BEGIN
 		res[0, 0] := m[0, 0]; res[0, 1] := m[0, 1];
 		res[1, 0] := m[1, 0]; res[1, 1] := m[1, 1];
@@ -199,7 +199,7 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	END Translate;
 
 	(** scale by (sx, sy) **)
-	PROCEDURE Scale* (m: Matrix; sx, sy: REAL; VAR res: Matrix);
+	PROCEDURE Scale* (m: Matrix; sx, sy: FLOAT32; VAR res: Matrix);
 	BEGIN
 		res[0, 0] := sx * m[0, 0]; res[0, 1] := sx * m[0, 1];
 		res[1, 0] := sy * m[1, 0]; res[1, 1] := sy * m[1, 1];
@@ -207,8 +207,8 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	END Scale;
 
 	(** scale at (ox, oy) by (sx, sy) **)
-	PROCEDURE ScaleAt* (m: Matrix; ox, oy, sx, sy: REAL; VAR res: Matrix);
-		VAR tx, ty: REAL;
+	PROCEDURE ScaleAt* (m: Matrix; ox, oy, sx, sy: FLOAT32; VAR res: Matrix);
+		VAR tx, ty: FLOAT32;
 	BEGIN
 		res[0, 0] := sx * m[0, 0]; res[0, 1] := sx * m[0, 1];
 		res[1, 0] := sy * m[1, 0]; res[1, 1] := sy * m[1, 1];
@@ -218,7 +218,7 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	END ScaleAt;
 
 	(** rotate counter-clockwise by angle specified by its sine and cosine **)
-	PROCEDURE Rotate* (m: Matrix; sin, cos: REAL; VAR res: Matrix);
+	PROCEDURE Rotate* (m: Matrix; sin, cos: FLOAT32; VAR res: Matrix);
 	BEGIN
 		res[0, 0] := cos * m[0, 0] + sin * m[1, 0]; res[0, 1] := cos * m[0, 1] + sin * m[1, 1];
 		res[1, 0] := -sin * m[0, 0] + cos * m[1, 0]; res[1, 1] := -sin * m[0, 1] + cos * m[1, 1];
@@ -226,8 +226,8 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	END Rotate;
 
 	(** rotate counter-clockwise around (ox, oy) by angle specified by its sine and cosine **)
-	PROCEDURE RotateAt* (m: Matrix; ox, oy, sin, cos: REAL; VAR res: Matrix);
-		VAR tx, ty: REAL;
+	PROCEDURE RotateAt* (m: Matrix; ox, oy, sin, cos: FLOAT32; VAR res: Matrix);
+		VAR tx, ty: FLOAT32;
 	BEGIN
 		res[0, 0] := cos * m[0, 0] + sin * m[1, 0]; res[0, 1] := cos * m[0, 1] + sin * m[1, 1];
 		res[1, 0] := -sin * m[0, 0] + cos * m[1, 0]; res[1, 1] := -sin * m[0, 1] + cos * m[1, 1];
@@ -250,10 +250,10 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 
 	(**--- Arctan of Vector ---**)
 
-	PROCEDURE Atan2* (x, y: REAL): REAL;
-		VAR phi: REAL;
+	PROCEDURE Atan2* (x, y: FLOAT32): FLOAT32;
+		VAR phi: FLOAT32;
 	BEGIN
-		IF (ABS(x) < 1.0) & (ABS(y) >= ABS(x * MAX(REAL))) THEN	(* y/x would overflow *)
+		IF (ABS(x) < 1.0) & (ABS(y) >= ABS(x * MAX(FLOAT32))) THEN	(* y/x would overflow *)
 			IF y >= 0.0 THEN phi := Math.pi/2
 			ELSE phi := -Math.pi/2
 			END
@@ -269,22 +269,22 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	(**--- Matrix Application ---**)
 
 	(** apply transformation matrix to point **)
-	PROCEDURE Apply* (VAR m: Matrix; xin, yin: REAL; VAR xout, yout: REAL);
+	PROCEDURE Apply* (VAR m: Matrix; xin, yin: FLOAT32; VAR xout, yout: FLOAT32);
 	BEGIN
 		xout := xin * m[0, 0] + yin * m[1, 0] + m[2, 0];
 		yout := xin * m[0, 1] + yin * m[1, 1] + m[2, 1]
 	END Apply;
 
 	(** apply transformation matrix to vector (ignoring translation) **)
-	PROCEDURE ApplyToVector* (VAR m: Matrix; xin, yin: REAL; VAR xout, yout: REAL);
+	PROCEDURE ApplyToVector* (VAR m: Matrix; xin, yin: FLOAT32; VAR xout, yout: FLOAT32);
 	BEGIN
 		xout := xin * m[0, 0] + yin * m[1, 0];
 		yout := xin * m[0, 1] + yin * m[1, 1]
 	END ApplyToVector;
 
 	(** apply transformation matrix to distance **)
-	PROCEDURE ApplyToDist* (VAR m: Matrix; din: REAL; VAR dout: REAL);
-		VAR x, y: REAL;
+	PROCEDURE ApplyToDist* (VAR m: Matrix; din: FLOAT32; VAR dout: FLOAT32);
+		VAR x, y: FLOAT32;
 	BEGIN
 		x := din * m[0, 0]; y := din * m[0, 1];
 		IF ABS(y) < 1.0E-3 THEN dout := x
@@ -293,8 +293,8 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	END ApplyToDist;
 
 	(** apply transformation matrix to axis-aligned rectangle; result is enclosing axis-aligned rectangle **)
-	PROCEDURE ApplyToRect* (VAR m: Matrix; ilx, ily, irx, iuy: REAL; VAR olx, oly, orx, ouy: REAL);
-		VAR l, h: REAL;
+	PROCEDURE ApplyToRect* (VAR m: Matrix; ilx, ily, irx, iuy: FLOAT32; VAR olx, oly, orx, ouy: FLOAT32);
+		VAR l, h: FLOAT32;
 	BEGIN
 		olx := m[2, 0]; orx := m[2, 0];
 		l := ilx * m[0, 0]; h := irx * m[0, 0];
@@ -309,8 +309,8 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	END ApplyToRect;
 
 	(** apply inverse of matrix to point **)
-	PROCEDURE Solve* (VAR m: Matrix; u, v: REAL; VAR x, y: REAL);
-		VAR det: REAL;
+	PROCEDURE Solve* (VAR m: Matrix; u, v: FLOAT32; VAR x, y: FLOAT32);
+		VAR det: FLOAT32;
 	BEGIN
 		det := m[0, 0] * m[1, 1] - m[0, 1] * m[1, 0];
 		IF ABS(det) >= Eps THEN	(* matrix can be inverted *)
@@ -324,7 +324,7 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	(**--- Matrix I/O ---**)
 
 	PROCEDURE Write* (VAR w: Streams.Writer; VAR m: Matrix);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 2 DO
 			w.RawReal(m[i, 0]); w.RawReal(m[i, 1])
@@ -332,7 +332,7 @@ MODULE GfxMatrix; (** portable *)	(* eos  *)
 	END Write;
 
 	PROCEDURE Read* (VAR r: Streams.Reader; VAR m: Matrix);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 2 DO
 			r.RawReal(m[i, 0]); r.RawReal(m[i, 1])

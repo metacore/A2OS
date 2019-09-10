@@ -4,20 +4,20 @@ IMPORT IntermediateCode := FoxIntermediateCode, FoxAssembler, D := Debugging, Sc
 
 CONST Trace=FoxAssembler.Trace;
 TYPE
-	Register* = LONGINT; (* index for InstructionSet.registers *)
+	Register* = SIGNED32; (* index for InstructionSet.registers *)
 	Operand* = IntermediateCode.Operand;
 
 	TYPE
 	Assembler*= OBJECT (FoxAssembler.Assembler)
 
 		PROCEDURE Instruction*(CONST mnemonic: ARRAY OF CHAR);
-		VAR i,numberOperands,mnem: LONGINT; pos: Basic.Position; VAR operands: ARRAY 3 OF Operand; instruction: IntermediateCode.Instruction;
+		VAR i,numberOperands,mnem: SIGNED32; pos: Basic.Position; VAR operands: ARRAY 3 OF Operand; instruction: IntermediateCode.Instruction;
 
 			PROCEDURE ParseOperand;
 			(* stub, must be overwritten by implementation *)
 			VAR operand: IntermediateCode.Operand;
 				result: FoxAssembler.Result;
-				register1,register2:LONGINT;
+				register1,register2:SIGNED32;
 				class1, class2: IntermediateCode.RegisterClass;
 				stop,memory: BOOLEAN;
 			BEGIN
@@ -84,7 +84,7 @@ TYPE
 				END;
 
 				IF ~error THEN
-					IntermediateCode.InitInstruction(instruction, pos, SHORTINT(mnem), operands[0], operands[1], operands[2]);
+					IntermediateCode.InitInstruction(instruction, pos, SIGNED8(mnem), operands[0], operands[1], operands[2]);
 					section.Emit(instruction);
 					(*
 

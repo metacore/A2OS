@@ -61,8 +61,8 @@ VAR
 		END
 	END Write;
 
-	PROCEDURE RanV*( len: LONGINT ): vyBase.Object;
-	VAR i: LONGINT;
+	PROCEDURE RanV*( len: SIGNED32 ): vyBase.Object;
+	VAR i: SIGNED32;
 	VAR v: vyLongrealVec.tVector;
 	BEGIN
 		v := vyLongrealVec.New( len );
@@ -70,27 +70,27 @@ VAR
 		RETURN v
 	END RanV;
 
-	PROCEDURE Ran*( ): LONGREAL;
+	PROCEDURE Ran*( ): FLOAT64;
 	BEGIN
 		RETURN vyRandom.Uniform()
 	END Ran;
 
-	PROCEDURE Vec*( len: LONGINT ): vyBase.Object;
+	PROCEDURE Vec*( len: SIGNED32 ): vyBase.Object;
 	BEGIN
 		RETURN vyLongrealVec.New( len )
 	END Vec;
 
-	PROCEDURE VecR*( len: LONGINT ): vyBase.Object;
+	PROCEDURE VecR*( len: SIGNED32 ): vyBase.Object;
 	BEGIN
 		RETURN vyRealVec.New( len )
 	END VecR;
 
-	PROCEDURE VecL*( len: LONGINT ): vyBase.Object;
+	PROCEDURE VecL*( len: SIGNED32 ): vyBase.Object;
 	BEGIN
 		RETURN vyLongintVec.New( len )
 	END VecL;
 
-	PROCEDURE Len*( ob: ANY ): LONGINT;
+	PROCEDURE Len*( ob: ANY ): SIGNED32;
 	BEGIN
 		IF ob IS vyBase.tVector THEN
 			WITH ob: vyBase.tVector DO RETURN ob.nrData
@@ -106,13 +106,13 @@ VAR
 		WHILE (buf # NIL ) DO Out.Ln;  Out.String( "BUF: " );  Out.Int( buf.len, 10 );  Out.Int( buf.usedentries, 10 );  buf := buf.next END
 	END ChunkSummary;
 
-	PROCEDURE Ptr*( i: LONGINT ): ANY;
+	PROCEDURE Ptr*( i: SIGNED32 ): ANY;
 	BEGIN
 		RETURN SYSTEM.VAL( ANY, i )
 	END Ptr;
 
 	PROCEDURE Selection*( ): ANY;
-	VAR obj: Objects.Object;  t2: LONGINT;
+	VAR obj: Objects.Object;  t2: SIGNED32;
 	BEGIN
 		Gadgets.GetSelection( obj, t2 );
 		IF t2 >= 0 THEN RETURN obj ELSE RETURN NIL END

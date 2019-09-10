@@ -27,6 +27,6 @@ Report any problems as soon as possible to ants@AntsInFields.de
 IMPORT antsEmpiricD;
 
 TYPE
-	DistFunction* = PROCEDURE (E: antsEmpiricD.EmpiricalDistribution;  beta, h: LONGREAL): LONGREAL;
+	DistFunction* = PROCEDURE (E: antsEmpiricD.EmpiricalDistribution;  beta, h: FLOAT64): FLOAT64;
 	VAR thisDist*: DistFunction;
 END antsIsingE.

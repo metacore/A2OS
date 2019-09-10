@@ -30,7 +30,7 @@ TYPE
 	Attributes* = OBJECT
 	VAR
 		attributes : AttributeArray;
-		nofAttributes : LONGINT;
+		nofAttributes : SIGNED32;
 
 		PROCEDURE &Init*; (* private *)
 		BEGIN
@@ -39,7 +39,7 @@ TYPE
 		END Init;
 
 		PROCEDURE ResizeArrayIfNecessary; (* private *)
-		VAR newAttributes : AttributeArray; i : LONGINT;
+		VAR newAttributes : AttributeArray; i : SIGNED32;
 		BEGIN
 			IF (attributes = NIL) THEN
 				ASSERT(nofAttributes = 0);
@@ -64,8 +64,8 @@ TYPE
 
 		(*	Remove <object> from array. If hint is not <Invalid>, hint is the index of the object.
 			<object> must be contained in array! *)
-		PROCEDURE RemoveObject(object : ANY; hint : LONGINT); (* private *)
-		VAR index, i : LONGINT;
+		PROCEDURE RemoveObject(object : ANY; hint : SIGNED32); (* private *)
+		VAR index, i : SIGNED32;
 		BEGIN
 			ASSERT((object # NIL) & ((hint = Invalid) OR (attributes[hint].object = object)));
 			index := hint;
@@ -85,8 +85,8 @@ TYPE
 		END RemoveObject;
 
 		(* Return index of node, <Invalid> if not found *)
-		PROCEDURE GetIndexOf(object : ANY) : LONGINT; (* private *)
-		VAR index : LONGINT;
+		PROCEDURE GetIndexOf(object : ANY) : SIGNED32; (* private *)
+		VAR index : SIGNED32;
 		BEGIN
 			ASSERT(object # NIL);
 			index := 0;
@@ -98,7 +98,7 @@ TYPE
 
 		(** Get flags and data associated to object <object> *)
 		PROCEDURE Get*(object : ANY) : Attribute;
-		VAR attribute : Attribute; index : LONGINT;
+		VAR attribute : Attribute; index : SIGNED32;
 		BEGIN
 			ASSERT(object # NIL);
 			index := GetIndexOf(object);
@@ -113,7 +113,7 @@ TYPE
 
 		(** Set flags and data associated to object <object> *)
 		PROCEDURE Set*(object : ANY; flags : SET; data : ANY);
-		VAR index : LONGINT;
+		VAR index : SIGNED32;
 		BEGIN
 			ASSERT(object # NIL);
 			index := GetIndexOf(object);
@@ -131,7 +131,7 @@ TYPE
 
 		(** Get flags associated to object <object> *)
 		PROCEDURE GetFlags*(object : ANY) : SET;
-		VAR flags : SET; index : LONGINT;
+		VAR flags : SET; index : SIGNED32;
 		BEGIN
 			ASSERT(object # NIL);
 			flags := {};
@@ -142,7 +142,7 @@ TYPE
 
 		(** Set flags associated to object <object> *)
 		PROCEDURE SetFlags*(object : ANY; flags : SET);
-		VAR index : LONGINT;
+		VAR index : SIGNED32;
 		BEGIN
 			ASSERT(object # NIL);
 			index := GetIndexOf(object);
@@ -158,8 +158,8 @@ TYPE
 		END SetFlags;
 
 		(** Include a flag associated to object <object> *)
-		PROCEDURE Include*(object : ANY; flag : LONGINT);
-		VAR index : LONGINT;
+		PROCEDURE Include*(object : ANY; flag : SIGNED32);
+		VAR index : SIGNED32;
 		BEGIN
 			ASSERT((object # NIL) & (0 <= flag) & (flag <= MAX(SET)));
 			index := GetIndexOf(object);
@@ -171,8 +171,8 @@ TYPE
 		END Include;
 
 		(** Exclude a flag associated to <object> *)
-		PROCEDURE Exclude*(object : ANY; flag : LONGINT);
-		VAR index : LONGINT;
+		PROCEDURE Exclude*(object : ANY; flag : SIGNED32);
+		VAR index : SIGNED32;
 		BEGIN
 			ASSERT((object # NIL) & (0 <= flag) & (flag <= MAX(SET)));
 			index := GetIndexOf(object);
@@ -184,7 +184,7 @@ TYPE
 
 		(** Get data associated to object <object> *)
 		PROCEDURE GetData*(object : ANY) : ANY;
-		VAR data : ANY; index : LONGINT;
+		VAR data : ANY; index : SIGNED32;
 		BEGIN
 			ASSERT(object # NIL);
 			data := NIL;
@@ -195,7 +195,7 @@ TYPE
 
 		(** Set data associated to object <object> *)
 		PROCEDURE SetData*(object, data : ANY);
-		VAR index : LONGINT;
+		VAR index : SIGNED32;
 		BEGIN
 			ASSERT(object # NIL);
 			index := GetIndexOf(object);

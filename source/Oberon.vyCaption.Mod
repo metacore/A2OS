@@ -66,7 +66,7 @@ VAR
 	END Recall;
 
 	PROCEDURE Respond( caption: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR x, y, dx, dy: INTEGER;
+	VAR x, y, dx, dy: SIGNED16;
 	BEGIN
 		vyHostDisplay.SetStringJustification( vyHostDisplay.center, vyHostDisplay.center );
 		vyGraphBase.Point2dToPoint( caption.xr, caption.yr, x, y );
@@ -79,10 +79,10 @@ VAR
 	END Respond;
 
 	PROCEDURE Responsible( caption: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 
 		PROCEDURE PointInCaption( ): BOOLEAN;
-		VAR x, y, X, Y, W, H, dsr: INTEGER;
+		VAR x, y, X, Y, W, H, dsr: SIGNED16;
 		BEGIN
 			vyGraphBase.Point2dToPoint( caption.xr, caption.yr, x, y );
 			vyHostDisplay.SetStringJustification( vyHostDisplay.center, vyHostDisplay.center );

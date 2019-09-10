@@ -69,7 +69,7 @@ TYPE
 	BinaryCode*= BitSets.BitSet;
 	String*= Scanner.StringType;
 	IdentifierString*= Scanner.IdentifierString;
-	CallingConvention*= LONGINT;
+	CallingConvention*= SIGNED32;
 	SubType* = Scanner.SubType;
 
 	(** visitor pattern implementation *)
@@ -574,7 +574,7 @@ TYPE
 		BEGIN SELF.alignmentInBits := alignmentInBits
 		END SetAlignmentInBits;
 
-		PROCEDURE End*( position: LONGINT );
+		PROCEDURE End*( position: SIGNED32 );
 		BEGIN SELF.position.end := position;
 		END End;
 
@@ -583,7 +583,7 @@ TYPE
 			SELF.fingerprint := fp
 		END SetFingerprint;
 
-		PROCEDURE SetState*(state: LONGINT);
+		PROCEDURE SetState*(state: SIGNED32);
 		BEGIN	INCL(SELF.state,state);
 		END SetState;
 
@@ -592,7 +592,7 @@ TYPE
 			hasPointers := has
 		END SetHasPointers;
 
-		PROCEDURE RemoveState*(state: LONGINT);
+		PROCEDURE RemoveState*(state: SIGNED32);
 		BEGIN EXCL(SELF.state,state)
 		END RemoveState;
 
@@ -900,7 +900,7 @@ TYPE
 
 	END NumberType;
 
-	(** <<SHORTINT, INTEGER, LONGINT, HUGEINT>>
+	(** <<SIGNED8, SIGNED16, SIGNED32, SIGNED64>>
 		integer types
 	**)
 	IntegerType*= OBJECT (NumberType)
@@ -927,8 +927,8 @@ TYPE
 
 	END IntegerType;
 
-	(** <<REAL,LONGREAL>>
-		real types: REAL, LONGREAL
+	(** <<FLOAT32,FLOAT64>>
+		real types: FLOAT32, FLOAT64
 	**)
 	FloatType*= OBJECT (NumberType)
 
@@ -949,11 +949,11 @@ TYPE
 
 	END FloatType;
 
-	(** <<COMPLEX,LONGCOMPLEX>>
-		complex types: COMPLEX, LONGCOMPLEX
+	(** <<COMPLEX32,COMPLEX64>>
+		complex types: COMPLEX32, COMPLEX64
 	**)
 	ComplexType*= OBJECT (NumberType)
-		VAR componentType-: Type; (* REAL or LONGREAL*)
+		VAR componentType-: Type; (* FLOAT32 or FLOAT64*)
 
 		PROCEDURE & InitComplexType(componentType: Type);
 		BEGIN
@@ -1109,10 +1109,10 @@ TYPE
 		VAR
 			arrayBase-: Type;
 			length-: Expression;
-			staticLength-: LONGINT;
-			form-: LONGINT; (* redundant: (form = Open) = (staticLength = 0) else (form = Static) *)
+			staticLength-: SIGNED32;
+			form-: SIGNED32; (* redundant: (form = Open) = (staticLength = 0) else (form = Static) *)
 
-		PROCEDURE & InitArrayType(position: Position; scope: Scope;  form: LONGINT);
+		PROCEDURE & InitArrayType(position: Position; scope: Scope;  form: SIGNED32);
 		BEGIN
 			length := NIL; arrayBase := NIL; InitType(position); staticLength := 0; SELF.form := form; SELF.scope := scope;
 		END InitArrayType;
@@ -1122,7 +1122,7 @@ TYPE
 			arrayBase := type; IF (arrayBase # NIL) & (arrayBase.hasPointers) THEN SetHasPointers(TRUE) END;
 		END SetArrayBase;
 
-		PROCEDURE SetForm*(f: LONGINT);
+		PROCEDURE SetForm*(f: SIGNED32);
 		BEGIN
 			form := f;
 		END SetForm;
@@ -1131,11 +1131,11 @@ TYPE
 		BEGIN
 			SELF.length := length;
 			IF (length.resolved # NIL) & (length.resolved IS IntegerValue) THEN
-				staticLength := LONGINT (length.resolved(IntegerValue).value) (* TODO: staticLength should be of type Basic.Integer too *)
+				staticLength := SIGNED32 (length.resolved(IntegerValue).value) (* TODO: staticLength should be of type Basic.Integer too *)
 			END;
 		END SetLength;
 
-		PROCEDURE Child*(nr: LONGINT):Type;
+		PROCEDURE Child*(nr: SIGNED32):Type;
 		BEGIN
 			IF nr = 0 THEN RETURN SELF;
 			ELSIF nr = 1 THEN RETURN arrayBase.resolved;
@@ -1186,12 +1186,12 @@ TYPE
 			modifiers-: Modifier; (* set by the parser *)
 			arrayBase-: Type;
 			length-: Expression;
-			staticLength-: LONGINT;
+			staticLength-: SIGNED32;
 			staticIncrementInBits-: SIZE;
-			form-: LONGINT;
+			form-: SIGNED32;
 			isUnsafe-: BOOLEAN;
 
-		PROCEDURE & InitMathArrayType(position: Position;scope: Scope; form: LONGINT);
+		PROCEDURE & InitMathArrayType(position: Position;scope: Scope; form: SIGNED32);
 		BEGIN
 			length := NIL; arrayBase := NIL; InitType(position); staticLength := 0; staticIncrementInBits := 0; SetForm(form); SELF.scope := scope; isUnsafe := FALSE; modifiers := NIL;
 		END InitMathArrayType;
@@ -1206,7 +1206,7 @@ TYPE
 			isUnsafe := unsafe;
 		END SetUnsafe;
 
-		PROCEDURE SetForm*(form: LONGINT);
+		PROCEDURE SetForm*(form: SIGNED32);
 		BEGIN
 			SELF.form := form; IF form # Static THEN SetHasPointers(TRUE) END;
 		END SetForm;
@@ -1220,7 +1220,7 @@ TYPE
 		BEGIN
 			SELF.length := length;
 			IF (length # NIL) & (length.resolved # NIL) & (length.resolved IS IntegerValue) THEN
-				staticLength := LONGINT (length.resolved(IntegerValue).value); (* TODO: staticLength should be of type Basic.Integer too *)
+				staticLength := SIGNED32 (length.resolved(IntegerValue).value); (* TODO: staticLength should be of type Basic.Integer too *)
 
 				(* optimization: unless the base type is a dynamic array, make this array static *)
 				IF ~((arrayBase # NIL) & (arrayBase IS MathArrayType) & (arrayBase(MathArrayType).form # Static)) THEN
@@ -1279,10 +1279,10 @@ TYPE
 		END ElementType;
 
 		(** get the number of dimensions of a math array; 0 in case of tensors **)
-		PROCEDURE Dimensionality*(): LONGINT;
+		PROCEDURE Dimensionality*(): SIGNED32;
 		VAR
 			type: Type;
-			dim: LONGINT;
+			dim: SIGNED32;
 		BEGIN
 			IF form = Tensor THEN
 				dim := 0
@@ -1427,12 +1427,12 @@ TYPE
 	(** << PORT (IN | OUT) [(size)] >>**)
 	PortType* = OBJECT (Type)
 		VAR
-			direction-: LONGINT;
+			direction-: SIGNED32;
 			sizeExpression-: Expression; (* generated by parser *)
 			sizeInBits-: SIZE; (* computed by checker *)
 			cellsAreObjects-: BOOLEAN;
 
-		PROCEDURE & InitPortType(position: Position; direction: LONGINT; sizeExpression: Expression; scope: Scope);
+		PROCEDURE & InitPortType(position: Position; direction: SIGNED32; sizeExpression: Expression; scope: Scope);
 		BEGIN
 			InitType(position);
 			SELF.sizeExpression := sizeExpression;
@@ -1541,8 +1541,8 @@ TYPE
 		BEGIN SELF.isProtected := protected
 		END SetProtected;
 
-		PROCEDURE Level*(): LONGINT;
-		VAR type: RecordType; res: LONGINT;
+		PROCEDURE Level*(): SIGNED32;
+		VAR type: RecordType; res: SIGNED32;
 		BEGIN
 			type := SELF;
 			res := 0;
@@ -1732,7 +1732,7 @@ TYPE
 			returnType-: Type;
 			returnTypeModifiers-: Modifier;
 			hasUntracedReturn-: BOOLEAN;
-			firstParameter-,lastParameter-: Parameter; numberParameters-: LONGINT;  (* parameters *)
+			firstParameter-,lastParameter-: Parameter; numberParameters-: SIGNED32;  (* parameters *)
 			returnParameter-: Parameter; (* not really necessary in syntax tree but very handy for backends *)
 			selfParameter-: Parameter;
 
@@ -1797,7 +1797,7 @@ TYPE
 			stackAlignment := alignment;
 		END SetStackAlignment;
 
-		PROCEDURE SetParametersOffset*(ofs: LONGINT);
+		PROCEDURE SetParametersOffset*(ofs: SIGNED32);
 		BEGIN parametersOffset := ofs
 		END SetParametersOffset;
 
@@ -1823,7 +1823,7 @@ TYPE
 		END AddParameter;
 
 		PROCEDURE RevertParameters*;
-		VAR this,next: Parameter; pnum: LONGINT;
+		VAR this,next: Parameter; pnum: SIGNED32;
 		BEGIN
 			pnum := numberParameters;
 			IF lastParameter # NIL THEN
@@ -1921,7 +1921,7 @@ TYPE
 		BEGIN SELF.end := position;
 		END End;
 
-		PROCEDURE SetState*(state: LONGINT);
+		PROCEDURE SetState*(state: SIGNED32);
 		BEGIN	INCL(SELF.state,state);
 		END SetState;
 
@@ -2058,9 +2058,9 @@ TYPE
 	UnaryExpression* = OBJECT (Expression)
 		VAR
 			left-: Expression;
-			operator-: LONGINT;  (* one of Scanner.Minus ... Scanner.Not *)
+			operator-: SIGNED32;  (* one of Scanner.Minus ... Scanner.Not *)
 
-		PROCEDURE & InitUnaryExpression( position: Position;  operand: Expression;  operator: LONGINT );
+		PROCEDURE & InitUnaryExpression( position: Position;  operand: Expression;  operator: SIGNED32 );
 		BEGIN
 			InitExpression( position );  SELF.left := operand;  SELF.operator := operator;
 		END InitUnaryExpression;
@@ -2074,9 +2074,9 @@ TYPE
 	BinaryExpression* = OBJECT (Expression)
 		VAR
 			left-, right-: Expression;
-			operator-: LONGINT;  (* one of Scanner.Equal ... Scanner.Minus *)
+			operator-: SIGNED32;  (* one of Scanner.Equal ... Scanner.Minus *)
 
-		PROCEDURE & InitBinaryExpression( position: Position;  left, right: Expression;  operator: LONGINT );
+		PROCEDURE & InitBinaryExpression( position: Position;  left, right: Expression;  operator: SIGNED32 );
 		BEGIN
 			InitExpression( position );  SELF.left := left;  SELF.right := right;  SELF.operator := operator;
 		END InitBinaryExpression;
@@ -2097,7 +2097,7 @@ TYPE
 	VAR
 		first-, last-, step-: Expression;
 		missingFirst-, missingLast-, missingStep-: BOOLEAN; (* only for printout*)
-		context-: SHORTINT; (* one of ArrayIndex, SetElement or CaseGuard *)
+		context-: SIGNED8; (* one of ArrayIndex, SetElement or CaseGuard *)
 
 		PROCEDURE &InitRangeExpression(position: Position; first, last, step: Expression);
 		BEGIN
@@ -2124,7 +2124,7 @@ TYPE
 		BEGIN SELF.step := step
 		END SetStep;
 
-		PROCEDURE SetContext*(context: SHORTINT);
+		PROCEDURE SetContext*(context: SIGNED8);
 		BEGIN
 			SELF.context := context
 		END SetContext;
@@ -2350,12 +2350,12 @@ TYPE
 		builtin procedure call **)
 	BuiltinCallDesignator*= OBJECT (Designator) (*! should this be an extension of a procedure call designator ? *)
 		VAR
-			id-: LONGINT;
+			id-: SIGNED32;
 			parameters-: ExpressionList;
 			builtin-: Builtin;
 			returnType-: Type;
 
-		PROCEDURE & InitBuiltinCallDesignator(position: Position; orig: Expression; id: LONGINT; left: Expression; parameters: ExpressionList);
+		PROCEDURE & InitBuiltinCallDesignator(position: Position; orig: Expression; id: SIGNED32; left: Expression; parameters: ExpressionList);
 		BEGIN
 			InitDesignator(position);
 			SELF.parameters := parameters; SELF.id := id; SELF.left := left; returnType := NIL; original := orig;
@@ -2546,15 +2546,15 @@ TYPE
 	(** <<value = 1.2345E01>> **)
 	RealValue* = OBJECT (Value)
 		VAR
-			value-: LONGREAL;
-			subtype-: SubType; (* accuracy information: REAL vs. LONGREAL *)
+			value-: FLOAT64;
+			subtype-: SubType; (* accuracy information: FLOAT32 vs. FLOAT64 *)
 
-		PROCEDURE & InitRealValue(position: Position; value: LONGREAL; subType: SubType);
+		PROCEDURE & InitRealValue(position: Position; value: FLOAT64; subType: SubType);
 		BEGIN
 			InitValue(position);  SELF.value := value; SELF.subtype := subType;
 		END InitRealValue;
 
-		PROCEDURE SetValue*(value: LONGREAL);
+		PROCEDURE SetValue*(value: FLOAT64);
 		BEGIN	SELF.value := value
 		END SetValue;
 
@@ -2569,15 +2569,15 @@ TYPE
 
 	ComplexValue* = OBJECT (Value)
 		VAR
-			realValue-, imagValue-: LONGREAL;
-			subtype-: SubType; (* accuracy information of components: REAL vs. LONGREAL *)
+			realValue-, imagValue-: FLOAT64;
+			subtype-: SubType; (* accuracy information of components: FLOAT32 vs. FLOAT64 *)
 
-		PROCEDURE & InitComplexValue(position: Position; realValue, imagValue: LONGREAL; subType: SubType);
+		PROCEDURE & InitComplexValue(position: Position; realValue, imagValue: FLOAT64; subType: SubType);
 		BEGIN
 			InitValue(position); SELF.realValue := realValue; SELF.imagValue := imagValue; SELF.subtype := subType;
 		END InitComplexValue;
 
-		PROCEDURE SetValue*(realValue, imagValue: LONGREAL);
+		PROCEDURE SetValue*(realValue, imagValue: FLOAT64);
 		BEGIN	SELF.realValue := realValue; SELF.imagValue := imagValue;
 		END SetValue;
 
@@ -2744,7 +2744,7 @@ TYPE
 			SELF.fingerprint := fp
 		END SetFingerprint;
 
-		PROCEDURE SetState*(state: LONGINT);
+		PROCEDURE SetState*(state: SIGNED32);
 		BEGIN	INCL(SELF.state,state);
 		END SetState;
 
@@ -2934,7 +2934,7 @@ TYPE
 		initializer-: Expression;
 
 		usedAsReference-: BOOLEAN;
-		kind-: LONGINT;   (* ValueParameter, ConstParameter, VarParameter *)
+		kind-: SIGNED32;   (* ValueParameter, ConstParameter, VarParameter *)
 
 		PROCEDURE & InitVariable*( position: Position;  name: Identifier);
 		BEGIN
@@ -2951,7 +2951,7 @@ TYPE
 			fictive := FALSE;
 		END InitVariable;
 
-		PROCEDURE SetKind*(kind: LONGINT);
+		PROCEDURE SetKind*(kind: SIGNED32);
 		BEGIN
 			SELF.kind := kind;
 		END SetKind;
@@ -3023,7 +3023,7 @@ TYPE
 		modifiers-: Modifier;
 		defaultValue-: Expression;
 
-		kind-: LONGINT;   (* ValueParameter, ConstParameter, VarParameter *)
+		kind-: SIGNED32;   (* ValueParameter, ConstParameter, VarParameter *)
 		ownerType-: Type;
 		untraced-: BOOLEAN;
 		movable-: BOOLEAN;
@@ -3033,7 +3033,7 @@ TYPE
 		inRegister-: BOOLEAN;
 		preferRegister-: BOOLEAN;
 
-		PROCEDURE & InitParameter( position: Position;  ownerType: Type ; name: Identifier; kind: LONGINT);
+		PROCEDURE & InitParameter( position: Position;  ownerType: Type ; name: Identifier; kind: SIGNED32);
 		BEGIN
 			InitSymbol( position, name );
 			SELF.kind := kind;
@@ -3086,7 +3086,7 @@ TYPE
 		BEGIN defaultValue := e
 		END SetDefaultValue;
 
-		PROCEDURE SetKind*(kind: LONGINT);
+		PROCEDURE SetKind*(kind: SIGNED32);
 		BEGIN SELF.kind := kind; END SetKind;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
@@ -3139,10 +3139,10 @@ TYPE
 			nextProcedure-: Procedure;
 			procedureScope- : ProcedureScope;
 			super-: Procedure;
-			level-: LONGINT;
+			level-: SIGNED32;
 			methodNumber-: SIZE;
 			isBodyProcedure-, isConstructor-,isFinalizer-,isInline-,isOberonInline-, isEntry-, isExit-,isFinal-,isAbstract-,isOverwritten-: BOOLEAN;
-			resolving-: LONGINT; (* for recursion detection during inlining *)
+			resolving-: SIGNED32; (* for recursion detection during inlining *)
 
 		PROCEDURE & InitProcedure( position: Position;  name: Identifier; scope: ProcedureScope);
 		BEGIN
@@ -3221,7 +3221,7 @@ TYPE
 		BEGIN SELF.isAbstract := abstract
 		END SetAbstract;
 
-		PROCEDURE SetLevel*(level: LONGINT);
+		PROCEDURE SetLevel*(level: SIGNED32);
 		BEGIN SELF.level := level
 		END SetLevel;
 
@@ -3240,9 +3240,9 @@ TYPE
 	Builtin* = OBJECT (Symbol)
 	VAR
 		nextBuiltin-: Builtin;
-		id-: LONGINT;
+		id-: SIGNED32;
 
-		PROCEDURE & InitBuiltin(position: Position; name:Identifier; id: LONGINT);
+		PROCEDURE & InitBuiltin(position: Position; name:Identifier; id: SIGNED32);
 		BEGIN
 			InitSymbol(position,name); SELF.id := id;
 		END InitBuiltin;
@@ -3253,7 +3253,7 @@ TYPE
 	VAR
 		subType-: SubType;
 
-		PROCEDURE & InitCustomBuiltin(position: Position; name: Identifier; id: LONGINT; subType: SubType);
+		PROCEDURE & InitCustomBuiltin(position: Position; name: Identifier; id: SIGNED32; subType: SubType);
 		BEGIN
 			InitBuiltin(position,name,id);
 			SELF.subType := subType;
@@ -3488,9 +3488,9 @@ TYPE
 	(** << left ('!' | '?' | '<<' | '>>') right >> **)
 	CommunicationStatement* = OBJECT (Statement)
 	VAR
-		left-: Designator; right-: Expression; op-: LONGINT;
+		left-: Designator; right-: Expression; op-: SIGNED32;
 
-		PROCEDURE & InitAssignment*( position: Position; op: LONGINT; left: Designator;  right: Expression; outer: Statement );
+		PROCEDURE & InitAssignment*( position: Position; op: SIGNED32; left: Designator;  right: Expression; outer: Statement );
 		BEGIN
 			InitStatement( position,outer );  SELF.op := op; SELF.left := left;  SELF.right := right;
 		END InitAssignment;
@@ -4235,8 +4235,8 @@ TYPE
 		firstTypeDeclaration-,lastTypeDeclaration-: TypeDeclaration; numberTypeDeclarations-: SIZE; (* type declarations *)
 		firstVariable-,lastVariable-: Variable; numberVariables-: SIZE;  (* variables *)
 		firstProcedure-,lastProcedure-: Procedure; numberProcedures-: SIZE;  (* procedures *)
-		firstAlias-, lastAlias-: Alias; numberAliases-: LONGINT; (* aliases *)
-		firstScope-,lastScope-: Scope; numberScopes-: LONGINT; (* scopes *)
+		firstAlias-, lastAlias-: Alias; numberAliases-: SIGNED32; (* aliases *)
+		firstScope-,lastScope-: Scope; numberScopes-: SIGNED32; (* scopes *)
 
 		procedures-: ProcedureList;
 
@@ -4432,8 +4432,8 @@ TYPE
 			RETURN p;
 		END FindMethod;
 
-		PROCEDURE Level*(): LONGINT;
-		VAR scope: Scope; level: LONGINT;
+		PROCEDURE Level*(): SIGNED32;
+		VAR scope: Scope; level: SIGNED32;
 		BEGIN
 			level := 0;
 			scope := SELF;
@@ -4746,7 +4746,7 @@ TYPE
 			RETURN p;
 		END FindImport;
 
-		PROCEDURE GetImport*( index: LONGINT ): Import;
+		PROCEDURE GetImport*( index: SIGNED32 ): Import;
 		VAR import: Import;
 		BEGIN
 			import := firstImport;
@@ -4864,7 +4864,7 @@ TYPE
 			RETURN p;
 		END FindImport;
 
-		PROCEDURE GetImport*( index: LONGINT ): Import;
+		PROCEDURE GetImport*( index: SIGNED32 ): Import;
 		VAR import: Import;
 		BEGIN
 			import := firstImport;
@@ -4982,13 +4982,13 @@ TYPE
 			sourceName-: Basic.FileName;
 			moduleScope-: ModuleScope;
 			context-:Identifier; (* modules context *)
-			case-: LONGINT; (* module notation in lower or upper case, important for printout and operators *)
+			case-: SIGNED32; (* module notation in lower or upper case, important for printout and operators *)
 			isCellNet-: BOOLEAN;
 			closingComment-: Comment;
 			modifiers-: Modifier;
 			parameters-: TemplateParameters;
 
-		PROCEDURE & InitModule( CONST sourceName: ARRAY OF CHAR; position: Position; name: Identifier; scope: ModuleScope; case: LONGINT);
+		PROCEDURE & InitModule( CONST sourceName: ARRAY OF CHAR; position: Position; name: Identifier; scope: ModuleScope; case: SIGNED32);
 		BEGIN
 			InitSymbol(position,name);
 			COPY (sourceName, SELF.sourceName);
@@ -5004,7 +5004,7 @@ TYPE
 			parameters := NIL;
 		END InitModule;
 
-		PROCEDURE SetCase*(case: LONGINT);
+		PROCEDURE SetCase*(case: SIGNED32);
 		BEGIN
 			SELF.case := case
 		END SetCase;
@@ -5185,7 +5185,7 @@ VAR
 	END CloneExpression;
 
 
-	PROCEDURE NewModule*( CONST sourceName: ARRAY OF CHAR; position: Position;  name: Identifier;scope: ModuleScope; case: LONGINT ): Module;
+	PROCEDURE NewModule*( CONST sourceName: ARRAY OF CHAR; position: Position;  name: Identifier;scope: ModuleScope; case: SIGNED32 ): Module;
 	VAR module: Module;
 	BEGIN
 		NEW( module, sourceName, position, name, scope, case);  RETURN module;
@@ -5221,13 +5221,13 @@ VAR
 		NEW( alias, position, name, expression);  RETURN alias
 	END NewAlias;
 
-	PROCEDURE NewBuiltin*(position: Position; name: Identifier; id: LONGINT): Builtin;
+	PROCEDURE NewBuiltin*(position: Position; name: Identifier; id: SIGNED32): Builtin;
 	VAR builtin: Builtin;
 	BEGIN
 		NEW(builtin,position,name,id); RETURN builtin
 	END NewBuiltin;
 
-	PROCEDURE NewCustomBuiltin*(position: Position; name: Identifier; id: LONGINT; subType: SHORTINT): CustomBuiltin;
+	PROCEDURE NewCustomBuiltin*(position: Position; name: Identifier; id: SIGNED32; subType: SIGNED8): CustomBuiltin;
 	VAR builtin:CustomBuiltin;
 	BEGIN
 		NEW(builtin,position,name,id,subType); RETURN builtin
@@ -5313,7 +5313,7 @@ VAR
 		NEW(basicType, base); RETURN basicType;
 	END NewComplexType;
 
-	PROCEDURE NewIntegerType*(size: LONGINT; signed: BOOLEAN): IntegerType;
+	PROCEDURE NewIntegerType*(size: SIGNED32; signed: BOOLEAN): IntegerType;
 	VAR basicType: IntegerType;
 	BEGIN
 		NEW(basicType, size, signed); RETURN basicType;
@@ -5344,13 +5344,13 @@ VAR
 		NEW( enumerationType, position, scope, enumerationScope);  RETURN enumerationType;
 	END NewEnumerationType;
 
-	PROCEDURE NewArrayType*( position: Position; scope: Scope; form: LONGINT): ArrayType;
+	PROCEDURE NewArrayType*( position: Position; scope: Scope; form: SIGNED32): ArrayType;
 	VAR arrayType: ArrayType;
 	BEGIN
 		NEW( arrayType, position,scope, form);  RETURN arrayType;
 	END NewArrayType;
 
-	PROCEDURE NewMathArrayType*( position: Position; scope: Scope; form: LONGINT): MathArrayType;
+	PROCEDURE NewMathArrayType*( position: Position; scope: Scope; form: SIGNED32): MathArrayType;
 	VAR mathArrayType: MathArrayType;
 	BEGIN
 		NEW( mathArrayType,  position,scope,form);  RETURN mathArrayType;
@@ -5362,7 +5362,7 @@ VAR
 		NEW( pointerType, position,scope);  RETURN pointerType;
 	END NewPointerType;
 
-	PROCEDURE NewPortType*( position: Position; direction: LONGINT; sizeExpression: Expression; scope: Scope): PortType;
+	PROCEDURE NewPortType*( position: Position; direction: SIGNED32; sizeExpression: Expression; scope: Scope): PortType;
 	VAR portType: PortType;
 	BEGIN
 		NEW( portType, position, direction, sizeExpression, scope);  RETURN portType;
@@ -5415,7 +5415,7 @@ VAR
 		RETURN Basic.MakeString(name);
 	END NewIdentifier;
 
-	PROCEDURE NewParameter*( position: Position; ownerType:Type ;  name: Identifier; passAs: LONGINT): Parameter;
+	PROCEDURE NewParameter*( position: Position; ownerType:Type ;  name: Identifier; passAs: SIGNED32): Parameter;
 	VAR parameter: Parameter;
 	BEGIN
 		NEW( parameter, position, ownerType, name, passAs);  RETURN parameter;
@@ -5507,7 +5507,7 @@ VAR
 		NEW(inlineCall, position, o, block); RETURN inlineCall;
 	END NewInlineCallDesignator;
 
-	PROCEDURE NewBuiltinCallDesignator*(position: Position; original: Expression;  id: LONGINT;left: Expression; parameters: ExpressionList): BuiltinCallDesignator;
+	PROCEDURE NewBuiltinCallDesignator*(position: Position; original: Expression;  id: SIGNED32;left: Expression; parameters: ExpressionList): BuiltinCallDesignator;
 	VAR builtinCallDesignator: BuiltinCallDesignator;
 	BEGIN
 		NEW(builtinCallDesignator, position, original, id, left,parameters); RETURN builtinCallDesignator
@@ -5589,7 +5589,7 @@ VAR
 	BEGIN NEW( mathArrayExpression, position, elements );  RETURN mathArrayExpression
 	END NewMathArrayExpression;
 
-	PROCEDURE NewBinaryExpression*( position: Position;  left, right: Expression;  operator: LONGINT ): BinaryExpression;
+	PROCEDURE NewBinaryExpression*( position: Position;  left, right: Expression;  operator: SIGNED32 ): BinaryExpression;
 	VAR binaryExpression: BinaryExpression;
 	BEGIN
 		NEW( binaryExpression, position, left, right, operator );  RETURN binaryExpression;
@@ -5607,7 +5607,7 @@ VAR
 		NEW(tensorRangeExpression,position); RETURN tensorRangeExpression
 	END NewTensorRangeExpression;
 
-	PROCEDURE NewUnaryExpression*( position: Position;  operand: Expression;  operator: LONGINT ): UnaryExpression;
+	PROCEDURE NewUnaryExpression*( position: Position;  operand: Expression;  operator: SIGNED32 ): UnaryExpression;
 	VAR unaryExpression: UnaryExpression;
 	BEGIN
 		NEW( unaryExpression, position, operand, operator );  RETURN unaryExpression;
@@ -5649,13 +5649,13 @@ VAR
 	BEGIN NEW( mathArrayValue, position,arr );  RETURN mathArrayValue
 	END NewMathArrayValue;
 
-	PROCEDURE NewRealValue*( position: Position;  value: LONGREAL; subType: SubType): RealValue;
+	PROCEDURE NewRealValue*( position: Position;  value: FLOAT64; subType: SubType): RealValue;
 	VAR realValue: RealValue;
 	BEGIN
 		NEW( realValue, position, value, subType);  RETURN realValue
 	END NewRealValue;
 
-	PROCEDURE NewComplexValue*( position: Position;  realValue, imagValue: LONGREAL; subType: SubType): ComplexValue;
+	PROCEDURE NewComplexValue*( position: Position;  realValue, imagValue: FLOAT64; subType: SubType): ComplexValue;
 	VAR complexValue: ComplexValue;
 	BEGIN
 		NEW( complexValue, position, realValue, imagValue, subType);  RETURN complexValue
@@ -5750,7 +5750,7 @@ VAR
 		NEW( assignment, position, left, right,outer );  RETURN assignment
 	END NewAssignment;
 
-	PROCEDURE NewCommunicationStatement*( position: Position;  op: LONGINT; left: Designator; right: Expression; outer: Statement): CommunicationStatement;
+	PROCEDURE NewCommunicationStatement*( position: Position;  op: SIGNED32; left: Designator; right: Expression; outer: Statement): CommunicationStatement;
 	VAR communication: CommunicationStatement;
 	BEGIN
 		NEW( communication, position, op, left, right,outer );  RETURN communication

@@ -208,7 +208,7 @@ TYPE
 		PROCEDURE Resized(width, height: SIZE);
 		VAR
 			oldWidth: SIZE;
-			factor: REAL;
+			factor: FLOAT32;
 		BEGIN
 			oldWidth := leftPanel.bounds.GetWidth() + filePanel.bounds.GetWidth();
 			factor := width / oldWidth;
@@ -216,10 +216,10 @@ TYPE
 			Resized^(width, height);
 		END Resized;
 
-		PROCEDURE UpdateSize(size, overhead: LONGINT);
+		PROCEDURE UpdateSize(size, overhead: SIGNED32);
 		VAR
 			text, tmp: ARRAY 16 OF CHAR;
-			total: LONGINT;
+			total: SIGNED32;
 		BEGIN
 			total := (size + 1024 - 1) DIV 1024;
 			Strings.IntToStr(total, text);
@@ -234,11 +234,11 @@ TYPE
 			sizeLabel.caption.SetAOC(text);
 		END UpdateSize;
 
-		PROCEDURE IdentifyRecorders(): WORD;
+		PROCEDURE IdentifyRecorders(): INTEGER;
 		VAR
-			res: WORD;
+			res: INTEGER;
 			dlg: WaitDialog;
-			ticks : LONGINT;
+			ticks : SIGNED32;
 		BEGIN
 			NEW(dlg, Strings.NewString("Waiting"), bounds, 200, 100, TRUE);
 			dlg.SetText("Identifying recorders");
@@ -307,7 +307,7 @@ TYPE
 			recorder: CDRecord.CDRecorder;
 			disc: CDRecord.Disc;
 			compilation: CDRecord.Compilation;
-			res, tmp: WORD; startsec, size, freeSpace: LONGINT;
+			res, tmp: INTEGER; startsec, size, freeSpace: SIGNED32;
 			toc: Lib.TocDescriptor;
 			dest: String;
 			pvd: MakeIsoImages.PSVolumeDescriptor;
@@ -411,7 +411,7 @@ TYPE
 			typeDlg: BlankTypeDialog;
 			disc: CDRecord.Disc;
 			recorder: CDRecord.CDRecorder;
-			res: WORD;
+			res: INTEGER;
 			waitDlg: WaitDialog;
 		BEGIN
 			IF IdentifyRecorders() # ResOk THEN RETURN END;
@@ -454,7 +454,7 @@ TYPE
 			info: MakeIsoImages.ISOInfo;
 			compilation: CDRecord.Compilation;
 			image: String;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IdentifyRecorders() = ResErr THEN RETURN END;
 			NEW(imageDlg, Strings.NewString("Burn"), bounds, 300, 400);
@@ -497,7 +497,7 @@ TYPE
 			dataPanel: DataPanel;
 			sessDlg: SessionDialog;
 			bootDlg: BootDialog;
-			res: WORD;
+			res: INTEGER;
 			audioProject: AudioProject;
 			dataProject: DataProject;
 		BEGIN
@@ -545,9 +545,9 @@ TYPE
 			leftPanel.Resized();
 		END ProjectHandler;
 
-		PROCEDURE ReadSessionData(project: DataProject): LONGINT;
+		PROCEDURE ReadSessionData(project: DataProject): SIGNED32;
 		VAR
-			adr, startSec: LONGINT;
+			adr, startSec: SIGNED32;
 			recDlg: RecorderDialog;
 			recorder: CDRecord.CDRecorder;
 			info:Lib.SessionInfo;
@@ -588,9 +588,9 @@ TYPE
 			RETURN ResOk;
 		END ReadSessionData;
 
-		PROCEDURE WaitOnDisc(recorder: CDRecord.CDRecorder): LONGINT;
+		PROCEDURE WaitOnDisc(recorder: CDRecord.CDRecorder): SIGNED32;
 		VAR
-			res: WORD;
+			res: INTEGER;
 			waitDlg: WaitDialog;
 		BEGIN
 			NEW(waitDlg, Strings.NewString("Waiting"), bounds, 200, 100, TRUE);
@@ -645,7 +645,7 @@ TYPE
 		VAR
 			audioDlg: AudioDialog;
 			waitDlg: WaitDialog;
-			tmp, res: WORD; freeSpace, wavSpace: LONGINT;
+			tmp, res: INTEGER; freeSpace, wavSpace: SIGNED32;
 			dest:String;
 			cur: Node;
 			project: AudioProject;
@@ -716,10 +716,10 @@ TYPE
 		END BurnAudioHandler;
 
 		(* returns the number of bytes needed for conversion of wav files *)
-		PROCEDURE GetWavSpace(project: AudioProject): LONGINT;
+		PROCEDURE GetWavSpace(project: AudioProject): SIGNED32;
 		VAR
 			node: Node;
-			size: LONGINT;
+			size: SIGNED32;
 		BEGIN
 			node := project.root(Node);
 			WHILE node # NIL DO
@@ -729,9 +729,9 @@ TYPE
 			RETURN size;
 		END GetWavSpace;
 
-		PROCEDURE Convert(project: AudioProject; dest: String): LONGINT;
+		PROCEDURE Convert(project: AudioProject; dest: String): SIGNED32;
 		VAR
-			no: LONGINT; res: WORD;
+			no: SIGNED32; res: INTEGER;
 			cur: Node;
 			filename, path, tmp: ARRAY MaxLen OF CHAR;
 		BEGIN
@@ -780,7 +780,7 @@ TYPE
 		VAR
 			filename, path: ARRAY MaxLen OF CHAR;
 			tmp: ARRAY MaxLen OF CHAR;
-			percent: LONGINT;
+			percent: SIGNED32;
 			recStatus: CDRecord.RecordingStatus;
 			writeStatus: MakeIsoImages.WritingStatus;
 			convStatus: Utils.ConvertingStatus;
@@ -841,7 +841,7 @@ TYPE
 		PROCEDURE BurnDataHandler(sender, data: ANY);
 		VAR
 			dataDlg: DataDialog;
-			res, tmp: WORD;
+			res, tmp: INTEGER;
 			root: ANY;
 			dest: String;
 			compilation: CDRecord.Compilation;
@@ -932,9 +932,9 @@ TYPE
 			END;
 		END BurnDataHandler;
 
-		PROCEDURE Record(compilation: CDRecord.Compilation; recorder: CDRecord.CDRecorder; settings: CDRecord.BurnSettings): WORD;
+		PROCEDURE Record(compilation: CDRecord.Compilation; recorder: CDRecord.CDRecorder; settings: CDRecord.BurnSettings): INTEGER;
 		VAR
-			res, tmp : WORD;
+			res, tmp : INTEGER;
 			msg, str : ARRAY MaxLen OF CHAR;
 			waitDlg: WaitDialog;
 			timer: Timer;
@@ -1055,7 +1055,7 @@ TYPE
 
 	SessionDialog = OBJECT(Utils.StandardDialog);
 		VAR
-			session: LONGINT;
+			session: SIGNED32;
 			sessionList: Utils.ListBox;
 
 		PROCEDURE CreateDialog;
@@ -1089,7 +1089,7 @@ TYPE
 
 	ToolDialog = OBJECT(Utils.StandardDialog);
 		VAR
-			tool: LONGINT;
+			tool: SIGNED32;
 			toolList: Utils.ListBox;
 
 		PROCEDURE CreateDialog;
@@ -1208,7 +1208,7 @@ TYPE
 			Show^();
 		END Show;
 
-		PROCEDURE &Create*(title: String; bounds: WMRectangles.Rectangle; width, height: LONGINT; disc: CDRecord.Disc);
+		PROCEDURE &Create*(title: String; bounds: WMRectangles.Rectangle; width, height: SIGNED32; disc: CDRecord.Disc);
 		BEGIN
 			SELF.disc := disc;
 			New(title, bounds, width, height);
@@ -1217,7 +1217,7 @@ TYPE
 
 	BlankTypeDialog = OBJECT(Utils.StandardDialog);
 		VAR
-			type: LONGINT;
+			type: SIGNED32;
 			typeList: Utils.ListBox;
 
 		PROCEDURE CreateDialog;
@@ -1252,7 +1252,7 @@ TYPE
 		VAR
 			bearing: WMRectangles.Rectangle;
 			label:  WMStandardComponents.Label;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			CreateDialog^;
 			bearing := WMRectangles.MakeRect(3, 3, 3, 3);
@@ -1292,7 +1292,7 @@ TYPE
 			content.AddContent(label);
 		END CreateDialog;
 
-		PROCEDURE &Create*(title: String; bounds: WMRectangles.Rectangle; width, height: LONGINT; abortable: BOOLEAN);
+		PROCEDURE &Create*(title: String; bounds: WMRectangles.Rectangle; width, height: SIGNED32; abortable: BOOLEAN);
 		BEGIN
 			New(title, bounds, width, height);
 			IF ~abortable THEN content.RemoveContent(abort) END;
@@ -1322,7 +1322,7 @@ TYPE
 		bearing: WMRectangles.Rectangle;
 		endBtn: WMStandardComponents.Button;
 		progress0, progress1: Utils.ProgressBar;
-		result: LONGINT;
+		result: SIGNED32;
 		prepareLabel, titleLabel0, titleLabel1, opLabel, bufLabel, speedLabel, timeLabel: WMStandardComponents.Label;
 
 		PROCEDURE &Init*;
@@ -1622,7 +1622,7 @@ TYPE
 		bootCatalog: MakeIsoImages.BootCatalog;
 		locationEdit, idEdit: WMEditors.Editor;
 		platformList, emulList: Utils.ListBox;
-		imageSize: LONGINT;
+		imageSize: SIGNED32;
 
 		PROCEDURE CreateDialog;
 		VAR
@@ -1781,7 +1781,7 @@ TYPE
 		VAR
 			label: WMStandardComponents.Label;
 			bearing: WMRectangles.Rectangle;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			Init^();
 			NEW(location, NIL, NIL, NIL); NEW(remove, NIL, NIL, NIL);
@@ -1912,7 +1912,7 @@ TYPE
 		PROCEDURE &Init*;
 		VAR
 			bearing: WMRectangles.Rectangle;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			Init^();
 			bearing := WMRectangles.MakeRect(3, 3, 3, 3);
@@ -1962,10 +1962,10 @@ TYPE
 			i: SIZE;
 			recorder: CDRecord.CDRecorder;
 			tmp, entry: ARRAY MaxLen OF CHAR;
-			speed, max : LONGINT;
+			speed, max : SIGNED32;
 			disc: CDRecord.DiscEx;
 		BEGIN
-			max := MAX(LONGINT);
+			max := MAX(SIGNED32);
 			recorder := recorders[recList.selected.Get()];
 			speedList.Clear();
 			IF  recorder # NIL THEN
@@ -2106,7 +2106,7 @@ TYPE
 			SELF.node := node;
 		END New;
 
-		PROCEDURE GetInterface*(type: LONGINT): WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type: SIGNED32): WMDropTarget.DropInterface;
 		VAR
 			di: DropURL;
 
@@ -2131,7 +2131,7 @@ TYPE
 			SELF.node := node;
 		END New;
 
-		PROCEDURE URL*(CONST url: ARRAY OF CHAR; VAR res: WORD);
+		PROCEDURE URL*(CONST url: ARRAY OF CHAR; VAR res: INTEGER);
 		BEGIN
 			IF panel.enabled.Get() THEN
 				panel.AddFile(url, node);
@@ -2145,16 +2145,16 @@ TYPE
 	VAR
 		fullpath, convName: String;
 		next: Node;
-		size: LONGINT;
+		size: SIGNED32;
 		mp3: BOOLEAN;
 	END Node;
 
 	AudioFile = OBJECT(Node)
 	VAR
 		title: String;
-		duration: LONGINT;
+		duration: SIGNED32;
 
-	PROCEDURE &New*(fullpath, title: String; duration: LONGINT; mp3: BOOLEAN);
+	PROCEDURE &New*(fullpath, title: String; duration: SIGNED32; mp3: BOOLEAN);
 	BEGIN
 		SELF.fullpath := fullpath;
 		SELF.title := title;
@@ -2172,7 +2172,7 @@ TYPE
 
 	Project = OBJECT
 	VAR
-		totalSize: LONGINT;
+		totalSize: SIGNED32;
 		root: ANY;
 
 	END Project;
@@ -2182,10 +2182,10 @@ TYPE
 
 	DataProject = OBJECT(Project);
 		VAR
-			session: LONGINT;
-			isoOfs: LONGINT; (* in case of multisession, this is the offset of the new session lead in*)
-			oldSize: LONGINT; (* total size of previous sessions *)
-			overhead: LONGINT; (* overhead for session leadins *)
+			session: SIGNED32;
+			isoOfs: SIGNED32; (* in case of multisession, this is the offset of the new session lead in*)
+			oldSize: SIGNED32; (* total size of previous sessions *)
+			overhead: SIGNED32; (* overhead for session leadins *)
 			bootCatalog: MakeIsoImages.BootCatalog;
 	END DataProject;
 
@@ -2203,7 +2203,7 @@ TYPE
 	VAR
 		grid: WMStringGrids.StringGrid;
 		colWidths: WMGrids.Spacings;
-		nofEntries: LONGINT;
+		nofEntries: SIGNED32;
 		popup: WMPopups.Popup;
 		root: Node;
 
@@ -2269,7 +2269,7 @@ TYPE
 		PROCEDURE DeleteFiles(sender, data: ANY);
 		VAR
 			cur, prev: Node;
-			i: LONGINT;
+			i: SIGNED32;
 			selection: Selection;
 		BEGIN
 			IF popup # NIL THEN popup.Close; popup := NIL END;
@@ -2362,7 +2362,7 @@ TYPE
 		PROCEDURE Refresh;
 		VAR
 			cur: Node;
-			row: LONGINT;
+			row: SIGNED32;
 			tmp: ARRAY MaxLen OF CHAR;
 			time: Time;
 		BEGIN
@@ -2765,7 +2765,7 @@ TYPE
 		PROCEDURE Refresh;
 		VAR
 			node: MakeIsoImages.Node;
-			row: LONGINT;
+			row: SIGNED32;
 		BEGIN
 			IF curDir # NIL THEN
 				grid.model.Acquire;
@@ -2787,10 +2787,10 @@ TYPE
 			END;
 		END Refresh;
 
-		PROCEDURE GetNofNodes(dir: Directory): LONGINT;
+		PROCEDURE GetNofNodes(dir: Directory): SIGNED32;
 		VAR
 			cur: MakeIsoImages.Node;
-			nofNodes: LONGINT;
+			nofNodes: SIGNED32;
 		BEGIN
 			cur := dir.content;
 			WHILE cur # NIL DO
@@ -2899,7 +2899,7 @@ TYPE
 		VAR
 			cur, prev: MakeIsoImages.Node;
 			curDir, prevDir, dir: Directory;
-			i: LONGINT;
+			i: SIGNED32;
 			selection: Selection;
 		BEGIN
 			i := 0;
@@ -2997,7 +2997,7 @@ TYPE
 					Insert(parent, newDir);
 					list.Refresh();
 				ELSE
-					NEW(newFile, Strings.NewString(filename), Strings.NewString(name), file.Length()(LONGINT));
+					NEW(newFile, Strings.NewString(filename), Strings.NewString(name), file.Length()(SIGNED32));
 					INC(project.totalSize, newFile.size);
 					owner.UpdateSize(project.totalSize, project(DataProject).overhead);
 					Insert(parent, newFile);
@@ -3056,7 +3056,7 @@ TYPE
 		VAR
 			enumerator: Files.Enumerator;
 			name, filename, path, mask: ARRAY MaxLen OF CHAR;
-			time, date: LONGINT;
+			time, date: SIGNED32;
 			size: Files.Size;
 			flags: SET;
 			newDir, curDir : Directory;
@@ -3082,8 +3082,8 @@ TYPE
 						curDir := newDir;
 						tmp := newDir;
 					ELSE
-						NEW(newFile, Strings.NewString(filename), Strings.NewString(name), size(LONGINT));
-						INC(project.totalSize, size(LONGINT));
+						NEW(newFile, Strings.NewString(filename), Strings.NewString(name), size(SIGNED32));
+						INC(project.totalSize, size(SIGNED32));
 						owner.UpdateSize(project.totalSize, project(DataProject).overhead);
 						tmp := newFile;
 					END;
@@ -3100,11 +3100,11 @@ TYPE
 
 	Time = OBJECT
 		VAR
-			sec, min, hour: LONGINT;
+			sec, min, hour: SIGNED32;
 
-		PROCEDURE SetTime(seconds: LONGINT);
+		PROCEDURE SetTime(seconds: SIGNED32);
 		VAR
-			rem: LONGINT;
+			rem: SIGNED32;
 		BEGIN
 			rem := seconds;
 			sec := rem MOD 60; rem := rem DIV 60;
@@ -3145,7 +3145,7 @@ TYPE
 
 	Timer = OBJECT(WMStandardComponents.Timer);
 		VAR
-			start: LONGINT;
+			start: SIGNED32;
 			onUpdate*: WMEvents.EventSource;
 			time: Time;
 
@@ -3159,7 +3159,7 @@ TYPE
 
 		PROCEDURE UpdateHandler(sender, date: ANY);
 		VAR
-			diff: LONGINT;
+			diff: SIGNED32;
 		BEGIN
 			diff := (Kernel.GetTicks () - start) DIV 1000;
 			time.SetTime(diff);
@@ -3174,13 +3174,13 @@ TYPE
 	END Timer;
 
 VAR
-	nofWindows: LONGINT;
+	nofWindows: SIGNED32;
 	recorders: ARRAY CDRecord.MaxRecorders OF  CDRecord.CDRecorder;
 
 (* returns true if the hd on which a source file is located is on the same controller as the recorder *)
 PROCEDURE CheckController(compilation: CDRecord.Compilation; recorder: CDRecord.CDRecorder; VAR name: ARRAY OF CHAR): BOOLEAN;
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 	track: CDRecord.InformationTrack;
 	device: Disks.Device;
 BEGIN
@@ -3201,12 +3201,12 @@ BEGIN
 	RETURN Files.Old(filename) # NIL;
 END FileExists;
 
-PROCEDURE GetFileSize(CONST filename: ARRAY OF CHAR): LONGINT;
+PROCEDURE GetFileSize(CONST filename: ARRAY OF CHAR): SIGNED32;
 VAR
 	file: Files.File;
 BEGIN
 	file := Files.Old(filename);
-	RETURN file.Length()(LONGINT);
+	RETURN file.Length()(SIGNED32);
 END GetFileSize;
 
 PROCEDURE RemoveSpecialChars(VAR str: ARRAY OF CHAR);

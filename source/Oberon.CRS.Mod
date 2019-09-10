@@ -13,24 +13,24 @@ CONST
   noSym = 38;
 
 TYPE
-	ErrorProc* = PROCEDURE (n: INTEGER; pos: LONGINT);
-	StartTable = ARRAY 128 OF INTEGER;
+	ErrorProc* = PROCEDURE (n: SIGNED16; pos: SIGNED32);
+	StartTable = ARRAY 128 OF SIGNED16;
 
 VAR
 	src*: Texts.Text;  (*source text. To be set by the main pgm*)
-	pos*: LONGINT;  (*position of current symbol*)
-	line*, col*, len*: INTEGER;  (*line, column, length of current symbol*)
-	nextPos*: LONGINT;  (*position of lookahead symbol*)
-	nextLine*, nextCol*, nextLen*: INTEGER;  (*line, column, length of lookahead symbol*)
-	errors*: INTEGER;  (*number of errors detected*)
+	pos*: SIGNED32;  (*position of current symbol*)
+	line*, col*, len*: SIGNED16;  (*line, column, length of current symbol*)
+	nextPos*: SIGNED32;  (*position of lookahead symbol*)
+	nextLine*, nextCol*, nextLen*: SIGNED16;  (*line, column, length of lookahead symbol*)
+	errors*: SIGNED16;  (*number of errors detected*)
 	Error*: ErrorProc;
 
 	ch: CHAR;        (*current input character*)
 	r: Texts.Reader;	(*global reader*)
-	chPos: LONGINT;	(*position of current character*)
-	chLine: INTEGER;  (*current line number*)
-	lineStart: LONGINT;  (*start position of current line*)
-	oldEols: INTEGER;     (*nr. of EOLs in a comment*)
+	chPos: SIGNED32;	(*position of current character*)
+	chLine: SIGNED16;  (*current line number*)
+	lineStart: SIGNED32;  (*start position of current line*)
+	oldEols: SIGNED16;     (*nr. of EOLs in a comment*)
 
 	start: StartTable;  (*start state for every character*)
 
@@ -46,7 +46,7 @@ END NextCh;
 
 
 PROCEDURE Comment(): BOOLEAN;
-	VAR level, startLine: INTEGER; oldLineStart: LONGINT;
+	VAR level, startLine: SIGNED16; oldLineStart: SIGNED32;
 BEGIN (*Comment*)
 	level := 1; startLine := chLine; oldLineStart := lineStart;
   IF (ch ="(") THEN
@@ -77,8 +77,8 @@ BEGIN (*Comment*)
 END Comment;
 
 
-PROCEDURE Get*(VAR sym: INTEGER);
-VAR state: INTEGER; lexeme: ARRAY maxLexLen+1 OF CHAR;
+PROCEDURE Get*(VAR sym: SIGNED16);
+VAR state: SIGNED16; lexeme: ARRAY maxLexLen+1 OF CHAR;
 
 	PROCEDURE CheckLiteral;
 	BEGIN
@@ -179,19 +179,19 @@ BEGIN
 END Get;
 
 
-PROCEDURE GetName*(pos: LONGINT; len: INTEGER; VAR s: ARRAY OF CHAR);
-	VAR i: INTEGER; r: Texts.Reader;
+PROCEDURE GetName*(pos: SIGNED32; len: SIGNED16; VAR s: ARRAY OF CHAR);
+	VAR i: SIGNED16; r: Texts.Reader;
 BEGIN
 	Texts.OpenReader(r, src, pos);
-	IF len >= LEN(s) THEN len := INTEGER(LEN(s)) - 1 END;
+	IF len >= LEN(s) THEN len := SIGNED16(LEN(s)) - 1 END;
 	i := 0; WHILE i < len DO Texts.Read(r, s[i]); INC(i) END;
 	s[i] := 0X
 END GetName;
 
-PROCEDURE StdErrorProc* (n: INTEGER; pos: LONGINT);
+PROCEDURE StdErrorProc* (n: SIGNED16; pos: SIGNED32);
 BEGIN INC(errors) END StdErrorProc;
 
-PROCEDURE Reset* (t: Texts.Text; pos: LONGINT; errProc: ErrorProc);
+PROCEDURE Reset* (t: Texts.Text; pos: SIGNED32; errProc: ErrorProc);
 BEGIN
 	src := t; Error := errProc;
 	Texts.OpenReader(r, src, pos);

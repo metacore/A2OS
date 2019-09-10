@@ -35,20 +35,20 @@ TYPE
 		gen*: vyRanBase.tRandom;
 		error*: BOOLEAN;
 		errormsg*: ARRAY 256 OF CHAR;
-		pos*: LONGINT;
-		temp*: LONGREAL
+		pos*: SIGNED32;
+		temp*: FLOAT64
 	END;
 
 	InitMsg* = RECORD (Msg) END;
 	StepMsg* = RECORD (Msg)
-		steps-: LONGINT
+		steps-: SIGNED32
 	END;
 
 	Seed* = POINTER TO SeedDesc;
 	SeedDesc* = RECORD
-		pos-: LONGINT;
+		pos-: SIGNED32;
 		seed: vyRanBase.tSeed;
-		seedval-: LONGINT;   (* replace by generic seed from vyRanBase *)
+		seedval-: SIGNED32;   (* replace by generic seed from vyRanBase *)
 		next-: Seed;
 		prev-: Seed (* seed is a list, not a tree. prev stored for variable start point of list. *)
 	END;
@@ -56,8 +56,8 @@ TYPE
 	Chain* = OBJECT (*  POINTER TO ChainDesc;
 	ChainDesc* = RECORD (vyBase.ObjDesc) *) (vyBase.Object)
 		VAR
-		pos-: LONGINT;
-		first, prev, next, last: LONGINT;   (* to be held consistently:  first,pos,next *)
+		pos-: SIGNED32;
+		first, prev, next, last: SIGNED32;   (* to be held consistently:  first,pos,next *)
 
 		seed-: Seed;
 		gen-: vyRanBase.tRandom;
@@ -67,8 +67,8 @@ TYPE
 		initseed: vyRanBase.tSeed;
 
 		error: BOOLEAN;
-			PROCEDURE (*c: Chain*)forward*( n: LONGINT );
-	VAR n1, n2: LONGINT;
+			PROCEDURE (*c: Chain*)forward*( n: SIGNED32 );
+	VAR n1, n2: SIGNED32;
 	BEGIN
 		SELF.error := FALSE;
 		ASSERT ( n >= 0, 101 );
@@ -97,14 +97,14 @@ TYPE
 		IF SELF.pos > SELF.last THEN SELF.last := SELF.pos END
 	END forward;
 
-	PROCEDURE (*c: Chain*)moveTo*( pos: LONGINT );
+	PROCEDURE (*c: Chain*)moveTo*( pos: SIGNED32 );
 	BEGIN
 		IF pos > SELF.pos THEN SELF.forward( pos - SELF.pos ) END
 	END moveTo;
 
 	PROCEDURE (*c: Chain*)toNext*( ): BOOLEAN;
 	BEGIN
-		IF SELF.next < MAX( LONGINT ) THEN
+		IF SELF.next < MAX( SIGNED32 ) THEN
 			SELF.forward( SELF.next - SELF.pos );
 			IF SELF.error THEN RETURN FALSE ELSE RETURN TRUE END
 		ELSE RETURN FALSE
@@ -116,7 +116,7 @@ TYPE
 		WHILE (SELF.toNext()) DO END
 	END toLast;
 
-	PROCEDURE (*c: Chain*)jumpTo*( to: LONGINT );
+	PROCEDURE (*c: Chain*)jumpTo*( to: SIGNED32 );
 	(* if to is in range and seed memorized then seed is set otherwise new seed is memorized at pos to *)
 	BEGIN
 		SELF.error := FALSE;  SELF.pos := to;
@@ -134,7 +134,7 @@ TYPE
 	END toFirst;
 
 	PROCEDURE (*c: Chain*)repeat*;
-	VAR pos: LONGINT;
+	VAR pos: SIGNED32;
 	BEGIN
 		GetMinPos( SELF.seed, pos );  SELF.jumpTo( pos );  SELF.toLast
 	END repeat;
@@ -177,7 +177,7 @@ TYPE
 		END
 	END Remove;
 
-	PROCEDURE (*c: Chain*)getKernel*( num: LONGINT ): vyBase.Object;
+	PROCEDURE (*c: Chain*)getKernel*( num: SIGNED32 ): vyBase.Object;
 	VAR l1: vyLinks.Link;
 	BEGIN
 		l1 := SELF.Kernels;
@@ -186,7 +186,7 @@ TYPE
 	END getKernel;
 
 	END Chain;
-		Transition* = PROCEDURE ( c: Chain;  n: LONGINT );
+		Transition* = PROCEDURE ( c: Chain;  n: SIGNED32 );
 
 VAR
 	stop*: BOOLEAN;
@@ -207,14 +207,14 @@ VAR
 
 
 (*
-PROCEDURE RGetSeed (gen: vyRanBase.tRandom): LONGINT;
+PROCEDURE RGetSeed (gen: vyRanBase.tRandom): SIGNED32;
 VAR tempseed: vyRanBase.tSeed;
 BEGIN
 gen.GetSeed(gen, tempseed);
 RETURN tempseed(vyRanBase.tLongintSeed).val
 END RGetSeed;
 
-PROCEDURE RSetSeed (gen: vyRanBase.tRandom; nr: LONGINT);
+PROCEDURE RSetSeed (gen: vyRanBase.tRandom; nr: SIGNED32);
 VAR tempseed: vyRanBase.tSeed;
 BEGIN
 gen.GetSeed(gen, tempseed);
@@ -312,16 +312,16 @@ END RSetSeed;
 		SetSeedCopy( c.gen, insert.seed )
 	END SyncSeed;
 
-	PROCEDURE GetMinPos(s: Seed;  VAR pos: LONGINT );
+	PROCEDURE GetMinPos(s: Seed;  VAR pos: SIGNED32 );
 	(* get first position of chain *)
 	BEGIN
-		IF s = NIL THEN pos := MIN( LONGINT );  RETURN END;
+		IF s = NIL THEN pos := MIN( SIGNED32 );  RETURN END;
 		WHILE s.prev # NIL DO s := s.prev END;
 		pos := s.pos
 	END GetMinPos;
 
 	PROCEDURE StoreSeed( VAR R: Files.Rider;  s: Seed );
-	VAR pos: LONGINT;
+	VAR pos: SIGNED32;
 	BEGIN
 		Files.WriteInt( R, 1 );
 		(* old
@@ -329,20 +329,20 @@ END RSetSeed;
 	WHILE s # NIL DO
 	Files.WriteLInt(R, s.pos);    Files.WriteLInt(R, s.seedval);    s := s.next
 	END;
-	Files.WriteLInt(R, MIN(LONGINT));    Files.WriteLInt(R, MIN(LONGINT))
+	Files.WriteLInt(R, MIN(SIGNED32));    Files.WriteLInt(R, MIN(SIGNED32))
 	*)
 		GetMinPos( s, pos );
 		WHILE s # NIL DO Files.WriteLInt( R, s.pos );  s.seed.Store( R );  s := s.next END;
-		Files.WriteLInt( R, MIN( LONGINT ) )
+		Files.WriteLInt( R, MIN( SIGNED32 ) )
 	END StoreSeed;
 
 	PROCEDURE LoadSeed( VAR R: Files.Rider;  VAR s: Seed;  allocs: vyRanBase.tRandom );
-	VAR pos, val: LONGINT;  insert: Seed;  version: INTEGER;
+	VAR pos, val: SIGNED32;  insert: Seed;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );
 		IF version < 1 THEN
 			Files.ReadLInt( R, pos );  Files.ReadLInt( R, val );
-			WHILE (pos # MIN( LONGINT )) DO
+			WHILE (pos # MIN( SIGNED32 )) DO
 				NEW( insert );  insert.pos := pos;  insert.seedval := val;  Insert( s, insert );  Files.ReadLInt( R, pos );
 				Files.ReadLInt( R, val );  insert.seed := allocs.AllocSeed()
 			END;
@@ -350,7 +350,7 @@ END RSetSeed;
 		END;
 
 		Files.ReadLInt( R, pos );
-		WHILE (pos # MIN( LONGINT )) DO
+		WHILE (pos # MIN( SIGNED32 )) DO
 			NEW( insert );  insert.pos := pos;  insert.seed := allocs.AllocSeed();  insert.seed.Load( R, allocs.seedVersion );
 			Insert( s, insert );  Files.ReadLInt( R, pos )
 		END
@@ -358,7 +358,7 @@ END RSetSeed;
 	END LoadSeed;
 
 	PROCEDURE Load( VAR R: Files.Rider;  s: Chain );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		IF stop THEN HALT( 100 ) END;
 		Files.ReadInt( R, version );  Gadgets.ReadRef( R, s.lib, objsub );
@@ -421,7 +421,7 @@ END RSetSeed;
 						ELSIF M.name = "last" THEN M.i := o.last;  M.class := Objects.Int;  M.res := 0
 
 						ELSIF M.name = "seedval" THEN
-							IF o.seed # NIL THEN M.i := o.seed.seedval ELSE M.i := MAX( LONGINT ) END;
+							IF o.seed # NIL THEN M.i := o.seed.seedval ELSE M.i := MAX( SIGNED32 ) END;
 							M.class := Objects.Int;  M.res := 0
 						ELSE vyBase.objecthandle( o, M )
 						END
@@ -438,7 +438,7 @@ END RSetSeed;
 		END
 	END Handler;
 
-	PROCEDURE GetNextTo( VAR s: Seed;  VAR pos: LONGINT );
+	PROCEDURE GetNextTo( VAR s: Seed;  VAR pos: SIGNED32 );
 	BEGIN
 		IF pos = s.pos THEN RETURN
 		ELSIF pos < s.pos THEN
@@ -447,7 +447,7 @@ END RSetSeed;
 			ELSE s := s.prev
 			END
 		ELSIF pos > s.pos THEN
-			IF (s.next = NIL ) THEN pos := MAX( LONGINT );  RETURN
+			IF (s.next = NIL ) THEN pos := MAX( SIGNED32 );  RETURN
 			ELSIF (pos < s.next.pos) THEN s := s.next;  pos := s.pos;  RETURN
 			ELSE s := s.next
 			END
@@ -455,7 +455,7 @@ END RSetSeed;
 		GetNextTo( s, pos )
 	END GetNextTo;
 
-	PROCEDURE GetNextSeedPos( c: Chain;  VAR pos: LONGINT );
+	PROCEDURE GetNextSeedPos( c: Chain;  VAR pos: SIGNED32 );
 	BEGIN
 		GetNextTo( c.seed, pos )
 	END GetNextSeedPos;
@@ -487,7 +487,7 @@ END RSetSeed;
 	END DoApplyInit;
 
 	PROCEDURE ApplyConstInit*;
-	VAR const, max: LONGINT;  obj, kernel: vyBase.Object;  gen: vyRanBase.tRandom;  l: antsCommands.tScanList;
+	VAR const, max: SIGNED32;  obj, kernel: vyBase.Object;  gen: vyRanBase.tRandom;  l: antsCommands.tScanList;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=OBJ Kernel=OBJ [const=INT max=INT] # use Constant as InitRanGen for Kernel in chain" );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) & antsCommands.ExpectObjectFromKeyword( l, "Kernel", kernel ) THEN
@@ -538,7 +538,7 @@ END RSetSeed;
 	END Remove;
 
 	PROCEDURE Forward*;
-	VAR l: antsCommands.tScanList;  c: vyBase.Object;  num, rep, i: LONGINT;
+	VAR l: antsCommands.tScanList;  c: vyBase.Object;  num, rep, i: SIGNED32;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=OBJ num=INT [repeat=INT] # move chain <name> forward <num> [repeated]" );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", c ) & antsCommands.ExpectNumberFromKeyword( l, "num", num ) THEN
@@ -550,7 +550,7 @@ END RSetSeed;
 	END Forward;
 
 	PROCEDURE Jump*;
-	VAR l: antsCommands.tScanList;  c: vyBase.Object;  num: LONGINT;
+	VAR l: antsCommands.tScanList;  c: vyBase.Object;  num: SIGNED32;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=OBJ num=INT# jump to pos <num> of <chain> without apllying kernels" );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", c ) & antsCommands.ExpectNumberFromKeyword( l, "to", num ) THEN
@@ -560,7 +560,7 @@ END RSetSeed;
 	END Jump;
 
 	PROCEDURE MoveTo*;
-	VAR l: antsCommands.tScanList;  c: vyBase.Object;  num: LONGINT;
+	VAR l: antsCommands.tScanList;  c: vyBase.Object;  num: SIGNED32;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=OBJ num=INT# forward (if possible) to pos <num> of <chain> " );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", c ) & antsCommands.ExpectNumberFromKeyword( l, "to", num ) THEN
@@ -581,7 +581,7 @@ END RSetSeed;
 	END Init;
 
 	PROCEDURE Repeat*;
-	VAR l: antsCommands.tScanList;  c: vyBase.Object;  rep, i: LONGINT;
+	VAR l: antsCommands.tScanList;  c: vyBase.Object;  rep, i: SIGNED32;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=OBJ [repeat=INT] # Repeat execution of chain from start to end [repeatedly]" );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", c ) THEN

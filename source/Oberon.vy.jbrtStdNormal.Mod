@@ -34,7 +34,7 @@ VAR
 PROCEDURE Phi* (x: Real): Real;
 VAR
 	cPhi, absx, z, h, a, b, pwr, sum: Real;
-	i, j: LONGINT;
+	i, j: SIGNED32;
 BEGIN
 	IF x < - 7 THEN RETURN 0 ELSIF x > 7 THEN RETURN 1 END;
 	absx := ABS (x);

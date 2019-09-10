@@ -88,7 +88,7 @@ TYPE
 	(*the types here must be the same as in OPA*)
 		InstrDesc = RECORD
 					name: Mnemo;
-					start, end: INTEGER;	 (* index in the opcode-tab *)
+					start, end: SIGNED16;	 (* index in the opcode-tab *)
 					target: SET;
 				END;
 
@@ -98,23 +98,23 @@ TYPE
 				if opc # -1 => modr/m . opc = opc. ( extension of the opcode )
 		*)
 		OpCode = RECORD
-				op: ARRAY 3 OF INTEGER;		(* mode of the dst/src operands, if needed *)
-				op0, op1, op2: INTEGER;	   (* opcode *)
-				opc: INTEGER;			(* value stored in reg/opcode of modr/m. -1 = none *)
-				reg: INTEGER;			(* where is the register stored: none / rm /op *)
+				op: ARRAY 3 OF SIGNED16;		(* mode of the dst/src operands, if needed *)
+				op0, op1, op2: SIGNED16;	   (* opcode *)
+				opc: SIGNED16;			(* value stored in reg/opcode of modr/m. -1 = none *)
+				reg: SIGNED16;			(* where is the register stored: none / rm /op *)
 			END;
 
 VAR
 		(*tables*)
 		OpTab: POINTER TO ARRAY OF OpCode;	(* Table with the opcodes *)
-		OpTabN: INTEGER;		(* nof opcodes in the table *)
+		OpTabN: SIGNED16;		(* nof opcodes in the table *)
 		InstrTab: POINTER TO ARRAY OF InstrDesc;	(* Table with the instructions !!Hash *)
-		OpTabLen, InstrTabLen: INTEGER;
+		OpTabLen, InstrTabLen: SIGNED16;
 
-		Clash: ARRAY 32 OF LONGINT;
+		Clash: ARRAY 32 OF SIGNED32;
 
 		(*statistic informations*)
-		InstrCount, Average: LONGINT;		(* debug: access average *)
+		InstrCount, Average: SIGNED32;		(* debug: access average *)
 
 		(*docu mode*)
 		Docu: BOOLEAN;
@@ -126,7 +126,7 @@ VAR
 	END Message;
 
 	(** converts an integer value to a hex string (taken from Strings.Mod) *)
-	PROCEDURE IntToHexStr(h, width: LONGINT; VAR s: ARRAY OF CHAR);
+	PROCEDURE IntToHexStr(h, width: SIGNED32; VAR s: ARRAY OF CHAR);
 	VAR c: CHAR;
 	BEGIN
 		IF (width <= 0) THEN width := 8 END;
@@ -139,7 +139,7 @@ VAR
 		END
 	END IntToHexStr;
 
-	PROCEDURE DumpMode(VAR W: Texts.Writer; mode: INTEGER);
+	PROCEDURE DumpMode(VAR W: Texts.Writer; mode: SIGNED16);
 	BEGIN
 		CASE mode OF
 		  Reg8: Texts.WriteString(W, "r8 ")
@@ -199,8 +199,8 @@ VAR
 
 (* Table Insertion Procedures *)
 	(* Generates the hash index k for the n-th try. n>=0 *)
-	PROCEDURE HashFn(CONST name: ARRAY OF CHAR; VAR k, n: INTEGER);
-		VAR i: INTEGER;
+	PROCEDURE HashFn(CONST name: ARRAY OF CHAR; VAR k, n: SIGNED16);
+		VAR i: SIGNED16;
 	BEGIN
 		IF n = 0 THEN
 			i := 0; k := 0;
@@ -213,8 +213,8 @@ VAR
 		END
 	END HashFn;
 
-	PROCEDURE FindInstruction(CONST name: ARRAY OF CHAR; VAR inx: INTEGER);
-		VAR n: INTEGER;
+	PROCEDURE FindInstruction(CONST name: ARRAY OF CHAR; VAR inx: SIGNED16);
+		VAR n: SIGNED16;
 	BEGIN
 		n := 0;
 		REPEAT
@@ -225,8 +225,8 @@ VAR
 		END;
 	END FindInstruction;
 
-	PROCEDURE InsertMnemo(CONST name: ARRAY OF CHAR; VAR k: INTEGER; target: SET);
-		VAR n: INTEGER;
+	PROCEDURE InsertMnemo(CONST name: ARRAY OF CHAR; VAR k: SIGNED16; target: SET);
+		VAR n: SIGNED16;
 	BEGIN
 		n := 0;
 		REPEAT HashFn(name, k, n)
@@ -244,7 +244,7 @@ VAR
 	END InsertMnemo;
 
 	PROCEDURE InsertAlias(CONST name, alias: ARRAY OF CHAR);
-		VAR n,a: INTEGER;
+		VAR n,a: SIGNED16;
 	BEGIN
 		FindInstruction(name, n);
 		IF n = -1 THEN
@@ -254,8 +254,8 @@ VAR
 		InstrTab[a].start := InstrTab[n].start; InstrTab[a].end := InstrTab[n].end;
 	END InsertAlias;
 
-	PROCEDURE InsertOp3Ext(idx, dest, src, o3, op0, op1, op3, opc, om: INTEGER);
-		VAR pos: INTEGER;
+	PROCEDURE InsertOp3Ext(idx, dest, src, o3, op0, op1, op3, opc, om: SIGNED16);
+		VAR pos: SIGNED16;
 	BEGIN
 		pos := InstrTab[idx].end;
 		IF OpTab[pos].op0 # -1 THEN Message("Op Table, overwriting") END;
@@ -267,8 +267,8 @@ VAR
 		END
 	END InsertOp3Ext;
 
-	PROCEDURE InsertOp3(idx, dest, src, o3, op0, op1, opc, om: INTEGER);
-		VAR pos: INTEGER;
+	PROCEDURE InsertOp3(idx, dest, src, o3, op0, op1, opc, om: SIGNED16);
+		VAR pos: SIGNED16;
 	BEGIN
 		pos := InstrTab[idx].end;
 		IF OpTab[pos].op0 # -1 THEN Message("Op Table, overwriting") END;
@@ -280,8 +280,8 @@ VAR
 		END
 	END InsertOp3;
 
-	PROCEDURE InsertOpExt(idx, dest, src, op0, op1, op2, opc, om: INTEGER);
-	VAR pos: INTEGER;
+	PROCEDURE InsertOpExt(idx, dest, src, op0, op1, op2, opc, om: SIGNED16);
+	VAR pos: SIGNED16;
 	BEGIN
 		pos := InstrTab[idx].end;
 		IF OpTab[pos].op0 # -1 THEN Message("Op Table, overwriting") END;
@@ -293,8 +293,8 @@ VAR
 		END
 	END InsertOpExt;
 
-	PROCEDURE InsertOp(idx, dest, src, op0, op1, opc, om: INTEGER);
-		VAR pos: INTEGER;
+	PROCEDURE InsertOp(idx, dest, src, op0, op1, opc, om: SIGNED16);
+		VAR pos: SIGNED16;
 	BEGIN
 		pos := InstrTab[idx].end;
 		IF OpTab[pos].op0 # -1 THEN Message("Op Table, overwriting") END;
@@ -308,7 +308,7 @@ VAR
 
 (* OPA Data *)
 	PROCEDURE InsertFloatInstr1;
-		VAR k: INTEGER;
+		VAR k: SIGNED16;
 	BEGIN
 
 		InsertMnemo("F2XM1", k, {FPU});
@@ -511,7 +511,7 @@ VAR
 	END InsertFloatInstr1;
 
 	PROCEDURE InsertFloatInstr2;
-		VAR k: INTEGER;
+		VAR k: SIGNED16;
 	BEGIN
 		InsertMnemo("FST", k, {FPU});
 		InsertOp(k, M32, none, 0D9H, none, 2, none);
@@ -606,7 +606,7 @@ VAR
 
 
 	PROCEDURE InsertInstr1;
-		VAR i,k: INTEGER;
+		VAR i,k: SIGNED16;
 	BEGIN
 		InsertMnemo("AAA", k, {i386});
 		InsertOp(k, none, none, 37H, none, none, none);
@@ -818,7 +818,7 @@ VAR
 	END InsertInstr1;
 
 	PROCEDURE InsertInstr2;
-		VAR i,k: INTEGER;
+		VAR i,k: SIGNED16;
 	BEGIN
 		InsertMnemo("IN", k, {i386});
 		InsertOp(k, RegAL, Imm8, 0E4H, none, none, none);
@@ -984,7 +984,7 @@ VAR
 	END InsertInstr2;
 
 	PROCEDURE InsertInstr3;
-		VAR k: INTEGER;
+		VAR k: SIGNED16;
 	BEGIN
 		InsertMnemo("MOV", k, {i386});
 		InsertOp(k, RM8, Reg8, 88H, none, none, OmReg);
@@ -1096,7 +1096,7 @@ VAR
 	END InsertInstr3;
 
 	PROCEDURE InsertInstr4;
-		VAR i,k: INTEGER;
+		VAR i,k: SIGNED16;
 	BEGIN
 		InsertMnemo("PUSHAD", k, {i386});
 		InsertOp(k, none, none, 060H, none, none, none);
@@ -1278,7 +1278,7 @@ VAR
 	END InsertInstr4;
 
 	PROCEDURE InsertMMX;
-		VAR k: INTEGER;
+		VAR k: SIGNED16;
 	BEGIN
 		InsertMnemo("EMMS", k, {MMX});
 		InsertOp(k, none, none, 0FH, 77H, none, none);
@@ -1489,7 +1489,7 @@ VAR
 	END InsertMMX;
 
 	PROCEDURE InsertSSE;
-	VAR k: INTEGER;
+	VAR k: SIGNED16;
 	BEGIN
 		(* SSE Data Movement Instructions *)
 		InsertMnemo("MOVAPS", k, {SSE});
@@ -1726,7 +1726,7 @@ VAR
 
 
 	PROCEDURE InsertSSE2;
-	VAR k: INTEGER;
+	VAR k: SIGNED16;
 	BEGIN
 			(* Data Movement Instructions *)
 		InsertMnemo("MOVAPD", k, {SSE2});
@@ -1951,7 +1951,7 @@ VAR
 	END InsertSSE2;
 
 	PROCEDURE InsertSSE3;
-	VAR k: INTEGER;
+	VAR k: SIGNED16;
 		BEGIN
 		(*
 		InsertMnemo("FISTTP",k,{SSE3});
@@ -1998,7 +1998,7 @@ VAR
 
 
 	PROCEDURE InsertSSE4;
-	VAR k: INTEGER;
+	VAR k: SIGNED16;
 	BEGIN
 		(*
 		InsertMnemo("BLENDPD",k,{SSE4});
@@ -2058,8 +2058,8 @@ VAR
 		*)
 	END InsertSSE4;
 
-PROCEDURE Insert(nofInstr, nofOps: INTEGER);
-VAR k: LONGINT;
+PROCEDURE Insert(nofInstr, nofOps: SIGNED16);
+VAR k: SIGNED32;
 BEGIN
 	InstrTabLen := nofInstr;  OpTabLen := nofOps;
 	OpTabN := 0; Average := 0; InstrCount := 0;
@@ -2080,14 +2080,14 @@ END Insert;
 (* Commands *)
 
 PROCEDURE FindSize*;		(** min-size max-size OpTableSize *)
-VAR j, min, max: INTEGER; S: Texts.Scanner; bestV, best: LONGINT;
+VAR j, min, max: SIGNED16; S: Texts.Scanner; bestV, best: SIGNED32;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S); min := SHORT(S.i);
 	Texts.Scan(S); max := SHORT(S.i);
 	Texts.Scan(S); OpTabLen := SHORT(S.i);
 
-	bestV := MAX(LONGINT);
+	bestV := MAX(SIGNED32);
 	Texts.WriteString(W, "Table Size (KB)   Avg Search Len"); Texts.WriteLn(W);
 	FOR j := min TO max DO
 		Insert(j, OpTabLen);
@@ -2104,7 +2104,7 @@ BEGIN
 END FindSize;
 
 PROCEDURE FillTable*;		(** InstrTableSize OpTableSize *)
-VAR k, j: LONGINT; S: Texts.Scanner; lr: LONGREAL;
+VAR k, j: SIGNED32; S: Texts.Scanner; lr: FLOAT64;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S); k := SHORT(S.i);
@@ -2134,7 +2134,7 @@ BEGIN
 END FillTable;
 
 PROCEDURE ExportTables*;
-VAR f: Files.File; r: Files.Rider; i: LONGINT; name: ARRAY 64 OF CHAR;
+VAR f: Files.File; r: Files.Rider; i: SIGNED32; name: ARRAY 64 OF CHAR;
 BEGIN
 	Texts.WriteString(W, "Creating ");
 	f := Files.Old(FileName);
@@ -2170,7 +2170,7 @@ BEGIN
 END ExportTables;
 	PROCEDURE DumpInstructions*;
 	VAR f: Files.File; r: Files.Rider; t: Texts.Text;
-		low, best: Mnemo; size, i, j, bestIdx, count: LONGINT;
+		low, best: Mnemo; size, i, j, bestIdx, count: SIGNED32;
 		cur: CHAR; Pad: Texts.Writer; target: SET;
 		s: ARRAY 32 OF CHAR;
 BEGIN

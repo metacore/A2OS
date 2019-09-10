@@ -130,8 +130,8 @@ TYPE
 
 	(* data structure to track progress *)
 	Node = POINTER TO RECORD
-		cluster, offset : LONGINT;
-		parent, first : LONGINT; (* parent: first cluster of parent folder; first: first cluster of clusterchain containing this cluster *)
+		cluster, offset : SIGNED32;
+		parent, first : SIGNED32; (* parent: first cluster of parent folder; first: first cluster of clusterchain containing this cluster *)
 		next : Node;
 	END;
 
@@ -218,7 +218,7 @@ TYPE
 
 		(* This entry is located at cluster number <cluster> at <offset>*32Bytes *)
 		cluster : Files.Address;
-		offset : LONGINT;
+		offset : SIGNED32;
 
 		PROCEDURE ParseRawEntry;
 		BEGIN
@@ -239,16 +239,16 @@ TYPE
 		attr : SET;
 		(* NTRes : CHAR; ignored *)
 		(* CrtTimeTenth : CHAR; ignored *)
-		crtTime, crtDate : LONGINT;
-		lstAccDate : LONGINT;
-		firstCluster : LONGINT;
-		wrtTime, wrtDate : LONGINT;
-		fileSize : LONGINT;
+		crtTime, crtDate : SIGNED32;
+		lstAccDate : SIGNED32;
+		firstCluster : SIGNED32;
+		wrtTime, wrtDate : SIGNED32;
+		fileSize : SIGNED32;
 
 		directory : BOOLEAN; (* is this ShortEntry a folder? *)
 
 		PROCEDURE ParseRawEntry;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 
 			(* get shortname *)
@@ -287,9 +287,9 @@ TYPE
 		END ParseRawEntry;
 
 		(* calculates a checksum for the shortName field which must match the checksum-field of long directory entries *)
-		PROCEDURE GetChecksum(): LONGINT;
+		PROCEDURE GetChecksum(): SIGNED32;
 		VAR
-			checksum, i : LONGINT;
+			checksum, i : SIGNED32;
 		BEGIN
 			checksum:=0;
 			FOR i:=0 TO 10 DO
@@ -319,18 +319,18 @@ TYPE
 	LongEntry = OBJECT(Entry)
 	VAR
 		(* FAT Long Directory Entry Structure *)
-		order : INTEGER;   (* in cluster chain *)
-		name: ARRAY 13 OF LONGINT;  (* unicode *)
-		type : INTEGER;
-		chksum : LONGINT;
-		FstClusLO : LONGINT;
+		order : SIGNED16;   (* in cluster chain *)
+		name: ARRAY 13 OF SIGNED32;  (* unicode *)
+		type : SIGNED16;
+		chksum : SIGNED32;
+		FstClusLO : SIGNED32;
 
 		next : LongEntry;  (* link to next longentry; used by LongEntryList *)
 		last : BOOLEAN; (* last cluster in longname cluster chain *)
 
 		PROCEDURE ParseRawEntry;
 		VAR
-			i,j : INTEGER;
+			i,j : SIGNED16;
 		BEGIN
 			(* last cluster in the chain ? *)
 			IF FATVolumes.AND(40H, ORD(rawEntry[0])) = 40H THEN
@@ -376,14 +376,14 @@ TYPE
 
 	ClusterBitmap = OBJECT
 	VAR
-		maxClusters : LONGINT;
+		maxClusters : SIGNED32;
 
 		bitmaps : POINTER TO ARRAY OF Bitmap;
-		bitmapsPos, bmPos, bmOffset: LONGINT;
+		bitmapsPos, bmPos, bmOffset: SIGNED32;
 
-		PROCEDURE &Init*(MaxClusters : LONGINT);
+		PROCEDURE &Init*(MaxClusters : SIGNED32);
 		VAR
-			size : LONGINT;
+			size : SIGNED32;
 		BEGIN
 			maxClusters:=MaxClusters;
 			size:=maxClusters DIV BitmapSize*MAX(SET);
@@ -392,9 +392,9 @@ TYPE
 			ASSERT(bitmaps#NIL);
 		END Init;
 
-		PROCEDURE CalcAddress(pos: LONGINT);
+		PROCEDURE CalcAddress(pos: SIGNED32);
 		VAR
-			bitmapSize : LONGINT;
+			bitmapSize : SIGNED32;
 		BEGIN
 			ASSERT((pos<=maxClusters+1) & (pos>1));
 		 	bitmapSize:=BitmapSize*(MAX(SET)+1);
@@ -404,7 +404,7 @@ TYPE
 			ASSERT((bmOffset <= MAX(SET)) & (bmPos<BitmapSize));
 		END CalcAddress;
 
-		PROCEDURE SetBit(pos : LONGINT; VAR collision: BOOLEAN);
+		PROCEDURE SetBit(pos : SIGNED32; VAR collision: BOOLEAN);
 		VAR
 			bitmap : Bitmap;
 		BEGIN
@@ -428,7 +428,7 @@ TYPE
 		END SetBit;
 
 		(* returns true if the bit at position <pos> is set, false otherwise *)
-		PROCEDURE IsSet(pos : LONGINT):BOOLEAN;
+		PROCEDURE IsSet(pos : SIGNED32):BOOLEAN;
 		BEGIN
 			CalcAddress(pos);
 			RETURN bmOffset IN bitmaps[bitmapsPos][bmPos];
@@ -437,28 +437,28 @@ TYPE
 
 	Cluster = OBJECT
 	VAR
-		cluster : LONGINT; (* FAT32: address of the cluster; FAT1216: if rootDir t-...... *)
-		parent, first : LONGINT; (* parent: first cluster of parent folder; first: first cluster of this foldes *)
-		clusterSize : LONGINT;
-		currentEntry, maxEntries: LONGINT;
+		cluster : SIGNED32; (* FAT32: address of the cluster; FAT1216: if rootDir t-...... *)
+		parent, first : SIGNED32; (* parent: first cluster of parent folder; first: first cluster of this foldes *)
+		clusterSize : SIGNED32;
+		currentEntry, maxEntries: SIGNED32;
 		data : POINTER TO ARRAY OF CHAR;
 
-		next : LONGINT; (* cluster number of next cluster of this foldes, 0: none*)
+		next : SIGNED32; (* cluster number of next cluster of this foldes, 0: none*)
 
-		PROCEDURE &Init*(csize :LONGINT);
+		PROCEDURE &Init*(csize :SIGNED32);
 		BEGIN
 			clusterSize:=csize; maxEntries:=clusterSize DIV 32;
 			NEW(data, clusterSize);
 			next:=0;
 		END Init;
 
-		PROCEDURE SetPos(pos: LONGINT);
+		PROCEDURE SetPos(pos: SIGNED32);
 		BEGIN
 			ASSERT((pos<=maxEntries) & (pos >= 0)); (* position can be one greater than allowed. will be checked *)
 			currentEntry:=pos;
 		END SetPos;
 
-		PROCEDURE GetPos(): LONGINT;
+		PROCEDURE GetPos(): SIGNED32;
 		BEGIN
 			ASSERT(currentEntry<=maxEntries); (* can be bigger than maxEntries-1 *)
 			RETURN currentEntry;
@@ -469,8 +469,8 @@ TYPE
 			result : Entry;
 			shortEntry : ShortEntry;
 			longEntry : LongEntry;
-			i ,j : LONGINT;
-			type: LONGINT;
+			i ,j : SIGNED32;
+			type: SIGNED32;
 		BEGIN
 			ASSERT(currentEntry<=maxEntries-1);
 			type:=FATVolumes.AND(3FH, ORD(data[currentEntry*32+11])); (*loads lower 6 bits from attr field *)
@@ -523,7 +523,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Append(CONST dirname : ARRAY OF CHAR);
-		VAR temp, new : PathName; i : INTEGER;
+		VAR temp, new : PathName; i : SIGNED16;
 		BEGIN
 			NEW(new); NEW(new.name,LEN(dirname));
 			i:=0;
@@ -576,7 +576,7 @@ TYPE
 	END Path;
 
 	LostCluster = POINTER TO RECORD
-		cluster, link : LONGINT;
+		cluster, link : SIGNED32;
 		next : LostCluster;
 		chain : LostCluster;
 		terminated, crosslink : BOOLEAN;
@@ -585,7 +585,7 @@ TYPE
 	ClusterList = OBJECT
 	VAR
 		head, tail, previous, current : LostCluster;
-		size : LONGINT;
+		size : SIGNED32;
 		currentDeleted : BOOLEAN;
 
 		(* can be used to reset list *)
@@ -678,15 +678,15 @@ TYPE
 		doSurfaceScan, doCompareFATs, doLostClusters, doWrite : BOOLEAN;
 
 		(* scavenger information *)
-		filesScanned-, directoriesScanned- : LONGINT;
-		longEntriesScanned-, shortEntriesScanned-, emptyEntriesScanned- : LONGINT;
-		freeClusters-, badClusters-, lostClusters-, lostClusterChains- : LONGINT;
+		filesScanned-, directoriesScanned- : SIGNED32;
+		longEntriesScanned-, shortEntriesScanned-, emptyEntriesScanned- : SIGNED32;
+		freeClusters-, badClusters-, lostClusters-, lostClusterChains- : SIGNED32;
 		(* fragmentation infos *)
-		nbrFreeFragments : LONGINT;
-		errorsFound: LONGINT;
+		nbrFreeFragments : SIGNED32;
+		errorsFound: SIGNED32;
 		ioError : BOOLEAN;
 
-		curOp, maxOp : LONGINT;
+		curOp, maxOp : SIGNED32;
 
 		vol : FATVolumes.Volume; dev : Disks.Device;
 		path : Path;
@@ -696,18 +696,18 @@ TYPE
 		longList : LongEntryList;
 		lostList, lostErrorList, fileList, xlinkedList : ClusterList;
 
-		fsType : LONGINT;
+		fsType : SIGNED32;
 		FAT1216rootDir : Cluster;
 
 		clusterBitmap : ClusterBitmap;
 
 		(* fields of fsinfo block *)
 		fsinfo : ARRAY FATVolumes.BS OF CHAR;
-		fsinfoAddress : LONGINT;
+		fsinfoAddress : SIGNED32;
 		fsInfoLoaded : BOOLEAN;
 
 		(* external updated fields *)
-		deleted : LONGINT;
+		deleted : SIGNED32;
 
 		PROCEDURE SetParameters*(doSurfaceScan, doCompareFATs, doLostClusters, doWrite : BOOLEAN);
 		BEGIN
@@ -735,7 +735,7 @@ TYPE
 			collision : BOOLEAN;
 			vdf, clnShutdown, ioError : SET; (* Volume dirty flags (FAT16/32) *)
 			bpb : Block;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF Trace THEN KernelLog.String("FATScavenger started on "); END;
 			SetStatus(state.status, "Scavenger starting...", 0, 0, 0, FALSE);
@@ -800,7 +800,7 @@ TYPE
 					IF vdf * (clnShutdown + ioError) # (clnShutdown + ioError) THEN
 						vdf := vdf + clnShutdown + ioError;
 						vol.unsafe := TRUE;
-						vol.WriteFATEntry(1, LONGINT(vdf), res);
+						vol.WriteFATEntry(1, SIGNED32(vdf), res);
 						vol.unsafe := FALSE;
 						IF res # Disks.Ok THEN
 							PartitionsLib.GetErrorMsg("Could not write back volume dirty flags ", res, string); ReportError (string);
@@ -892,7 +892,7 @@ TYPE
 			IF Trace THEN IF ~alive THEN KernelLog.String("Scanner aborted."); ELSE KernelLog.String("Scanner finished."); KernelLog.Ln; END; END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk : PartitionsLib.Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : PartitionsLib.Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "FATScavenger"; desc := "Check FAT file system on partition"; locktype := PartitionsLib.WriterLock;
@@ -915,10 +915,10 @@ TYPE
 			END;
 		END BuildInfo;
 
-		PROCEDURE GetFSInfo(VAR freeCount, nextFree : LONGINT) : BOOLEAN;
+		PROCEDURE GetFSInfo(VAR freeCount, nextFree : SIGNED32) : BOOLEAN;
 		VAR
 			bootsector : ARRAY FATVolumes.BS OF CHAR;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			(* load the boot sector to get address of FSinfo block *)
 			dev.Transfer(Disks.Read, vol.start, 1, bootsector, 0, res);
@@ -957,8 +957,8 @@ TYPE
 			RETURN TRUE;
 		END GetFSInfo;
 
-		PROCEDURE SetFSInfo(freeCount, nextFree : LONGINT);
-		VAR res : WORD;
+		PROCEDURE SetFSInfo(freeCount, nextFree : SIGNED32);
+		VAR res : INTEGER;
 		BEGIN
 			IF fsInfoLoaded THEN
 				FATVolumes.PutLongint(fsinfo, 488, freeCount); (* - deleted + created *)
@@ -978,9 +978,9 @@ TYPE
 		CONST UpdateRate = 3;
 		VAR
 			buffer : POINTER TO ARRAY OF CHAR;
-			buffersize, reads : LONGINT;
+			buffersize, reads : SIGNED32;
 			operation : String;
-			i, j, k : LONGINT; res : WORD;
+			i, j, k : SIGNED32; res : INTEGER;
 		BEGIN
 			IF Trace THEN KernelLog.String("Comparing FATs... "); END;
 			INC(curOp); operation := GetString(curOp, maxOp, "", "Comparing FAT structures");
@@ -1037,7 +1037,7 @@ TYPE
 		VAR
 			collision, lastFree : BOOLEAN;
 			lost : LostCluster;
-			cluster, link, firstFree : LONGINT;
+			cluster, link, firstFree : SIGNED32;
 			operation, string : String;
 		BEGIN
 			IF Trace THEN KernelLog.String("Building up cluster bitmap... "); END;
@@ -1120,10 +1120,10 @@ TYPE
 			UpdateRate = 99;
 		VAR
 			data : POINTER TO ARRAY OF CHAR;
-			newBadClusters, cluster, link : LONGINT;
+			newBadClusters, cluster, link : SIGNED32;
 			operation, string, temp : String;
 			address : Files.Address;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			NEW(data,vol.clusterSize);
 			IF Trace THEN KernelLog.String("Surface scan started..."); END;
@@ -1174,7 +1174,7 @@ TYPE
 		VAR
 			temp, temp2 : LostCluster;
 			string, error : String;
-			counter : LONGINT; res : WORD;
+			counter : SIGNED32; res : INTEGER;
 		BEGIN
 			IF Trace THEN KernelLog.String("Deleting lost clusters... "); END;
 			ASSERT((lostErrorList#NIL) & (fileList#NIL));
@@ -1224,7 +1224,7 @@ TYPE
 		PROCEDURE CheckLostClusters;
 		VAR
 			tempList : ClusterList;
-			tempCluster, tempLink : LONGINT; (* address of the first cluster in list; link of the last cluster in list; *)
+			tempCluster, tempLink : SIGNED32; (* address of the first cluster in list; link of the last cluster in list; *)
 			lost, temp : LostCluster;
 			found : BOOLEAN;
 			xlink, collision, terminated: BOOLEAN;
@@ -1306,14 +1306,14 @@ TYPE
 		(* check the long entries which are associated with this shortentry; FIX: delete incorrect entries *)
 		PROCEDURE CheckLongEntries(shortEntry : ShortEntry);
 		VAR
-			chksum : LONGINT;
+			chksum : SIGNED32;
 			temp : LongEntry;
-			order : INTEGER;
+			order : SIGNED16;
 			longName : ARRAY 256 OF CHAR;  (*  maximum length of a long file name: 255 characters + NUL *)
-			unicode : ARRAY 256 OF LONGINT;
+			unicode : ARRAY 256 OF SIGNED32;
 			lastFound : BOOLEAN;
-			padding : BOOLEAN; firstPadding : INTEGER;
-			i : INTEGER;
+			padding : BOOLEAN; firstPadding : SIGNED16;
+			i : SIGNED16;
 		BEGIN
 			IF Details THEN KernelLog.String("CheckLongEntries of "); KernelLog.String(shortEntry.shortName); KernelLog.String("..."); END;
 			chksum := shortEntry.GetChecksum(); order := 0; lastFound := FALSE;
@@ -1376,7 +1376,7 @@ TYPE
 
 		PROCEDURE CheckDotDot(shortEntry : ShortEntry);
 		VAR
-			rootDir : LONGINT;
+			rootDir : SIGNED32;
 		BEGIN
 			(* possible input shortEntrys are all which satisfy shortEntry.shortName[0]="." *)
 			ASSERT(shortEntry.shortName[0]=".");
@@ -1412,10 +1412,10 @@ TYPE
 
 		PROCEDURE ProcessShortEntry(shortEntry: ShortEntry);
 		VAR
-			counter : SHORTINT;
-			clusterCount : LONGINT;
-			link, oldlink : LONGINT;
-			fragments : LONGINT;
+			counter : SIGNED8;
+			clusterCount : SIGNED32;
+			link, oldlink : SIGNED32;
+			fragments : SIGNED32;
 			collision : BOOLEAN;
 			xlinked : LostCluster;
 		BEGIN
@@ -1467,9 +1467,9 @@ TYPE
 			temp: Node;
 			operation, string, tempStr : String;
 			entry : Entry; shortEntry : ShortEntry;
-			dirFragments, dirClusters : LONGINT;
+			dirFragments, dirClusters : SIGNED32;
 			collision : BOOLEAN;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF Trace THEN KernelLog.String("Scanning FAT directory structure... "); END;
 			INC(curOp); operation := GetString(curOp, maxOp, "", "Scanning FAT directory: ");
@@ -1600,7 +1600,7 @@ TYPE
 			temp2 : Entry;
 			test : BOOLEAN;
 			address : Files.Address;
-			offset : LONGINT; res : WORD;
+			offset : SIGNED32; res : INTEGER;
 		BEGIN
 			ASSERT((entry # NIL) & (vol # NIL) & (dev # NIL));
 			test:=TRUE;
@@ -1639,7 +1639,7 @@ TYPE
 		(* helper procedures *)
 
 		(* string := [unit " "] cur "of" max [": " status] *)
-		PROCEDURE GetString(cur, max : LONGINT; CONST unit, status : ARRAY OF CHAR) :  String;
+		PROCEDURE GetString(cur, max : SIGNED32; CONST unit, status : ARRAY OF CHAR) :  String;
 		VAR string : String; temp : ARRAY 16 OF CHAR;
 		BEGIN
 			string := "";
@@ -1650,7 +1650,7 @@ TYPE
 			RETURN string;
 		END GetString;
 
-		PROCEDURE ReportTransferError(name : ARRAY OF CHAR; op, adr: LONGINT; res: WORD);
+		PROCEDURE ReportTransferError(name : ARRAY OF CHAR; op, adr: SIGNED32; res: INTEGER);
 		VAR temp: ARRAY 256 OF CHAR;
 		BEGIN
 			Strings.Append(name, " (");
@@ -1672,7 +1672,7 @@ TYPE
 
 		(* compares the two arrays op1 and op2; returns TRUE if op1=op2 *)
 		PROCEDURE Equals(CONST op1, op2 : ARRAY OF CHAR): BOOLEAN;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			ASSERT( (LEN(op1)#0) & (LEN(op2)#0) );
 			IF LEN(op1)#LEN(op2) THEN
@@ -1696,17 +1696,17 @@ TYPE
 		(* parameters: *)
 		quickFormat : BOOLEAN; volumeName : Strings.String;
 
-		fs  : LONGINT;
+		fs  : SIGNED32;
 		(* internal values; Initialized to default values in Init *)
 		oemName  : ARRAY 9 OF CHAR;
-		rsvdSecCnt1216, rsvdSecCnt32 : LONGINT; (* Reserved sector count *)
-		numFATs : LONGINT;
-		rootEntCnt : LONGINT; (* FAT1216: count of 32-byte directory entries in root directory *)
-		fatsize : LONGINT; (* 16bit count of sectors occupied by one FAT *)
+		rsvdSecCnt1216, rsvdSecCnt32 : SIGNED32; (* Reserved sector count *)
+		numFATs : SIGNED32;
+		rootEntCnt : SIGNED32; (* FAT1216: count of 32-byte directory entries in root directory *)
+		fatsize : SIGNED32; (* 16bit count of sectors occupied by one FAT *)
 		volLab : ARRAY 12 OF CHAR; (* volume label *)
-		rootCluster32 : LONGINT; (* FAT32 only: Cluster number of first cluster in root directory *)
-		fsinfo : LONGINT; (* FAT32 only: Sector number of FSINFO structure in the reserved area *)
-		backupBoot : LONGINT; (* FAT32 only: Sector number of copy of the boot record in reserved area *)
+		rootCluster32 : SIGNED32; (* FAT32 only: Cluster number of first cluster in root directory *)
+		fsinfo : SIGNED32; (* FAT32 only: Sector number of FSINFO structure in the reserved area *)
+		backupBoot : SIGNED32; (* FAT32 only: Sector number of copy of the boot record in reserved area *)
 
 		(* quickFormat: IF TRUE, only FATs & root directory will be cleared *)
 		PROCEDURE SetParameters*(volumeName : Strings.String; quickFormat : BOOLEAN);
@@ -1728,10 +1728,10 @@ TYPE
 			vol : FATVolumes.Volume;
 			block : Block;
 			null : POINTER TO ARRAY OF CHAR;
-			rootDirSectors, firstDataSector : LONGINT;
-			freeCount, firstFree, media: LONGINT;
-			spc, type : LONGINT; (* sectors per cluster *)
-			i : SIZE; res : WORD;
+			rootDirSectors, firstDataSector : SIGNED32;
+			freeCount, firstFree, media: SIGNED32;
+			spc, type : SIGNED32; (* sectors per cluster *)
+			i : SIZE; res : INTEGER;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
 			type := disk.table[partition].type;
@@ -1789,7 +1789,7 @@ TYPE
 
 						(* set FAT[1] EOC mark *)
 						vol.unsafe := TRUE;
-						vol.WriteFATEntry(1, LONGINT(0FFFFFFFFH), res);
+						vol.WriteFATEntry(1, SIGNED32(0FFFFFFFFH), res);
 						IF res # Disks.Ok THEN PartitionsLib.GetErrorMsg("Could not set EOC mark", res, temp); ReportError(temp); END;
 						vol.unsafe := FALSE;
 
@@ -1849,12 +1849,12 @@ TYPE
 
 		(* write zeros to area *)
 		(* start, end : sector addresses relative to first sector of partition *)
-		PROCEDURE ClearSectors(from, to : LONGINT);
+		PROCEDURE ClearSectors(from, to : SIGNED32);
 		CONST BufSize = 1024;
 		VAR
 			buf : POINTER TO ARRAY OF CHAR;
-			ofs, num : LONGINT;
-			res : WORD;
+			ofs, num : SIGNED32;
+			res : INTEGER;
 			temp: ARRAY 256 OF CHAR;
 		BEGIN
 			ASSERT(from < to);
@@ -1886,11 +1886,11 @@ TYPE
 			END;
 		END ClearSectors;
 
-		PROCEDURE BuildBPB(secPerClus : LONGINT) : Block;
+		PROCEDURE BuildBPB(secPerClus : SIGNED32) : Block;
 		VAR
 			b : Block;
 			temp : ARRAY 9 OF CHAR;
-			i, t, d: LONGINT;
+			i, t, d: SIGNED32;
 		BEGIN
 			ASSERT(disk.device.blockSize = BS);
 			(* Jump instruction to boot code *)
@@ -1956,8 +1956,8 @@ TYPE
 			RETURN b;
 		END BuildBPB;
 
-		PROCEDURE BuildFSInfo(freecount, nextfree : LONGINT) : Block;
-		VAR b : Block; i : LONGINT;
+		PROCEDURE BuildFSInfo(freecount, nextfree : SIGNED32) : Block;
+		VAR b : Block; i : SIGNED32;
 		BEGIN
 			PartitionsLib.Put4(b, FsiLeadSig, 41615252H); (* Lead signature *)
 			FOR i := 0 TO 479 DO b[FsiReserved1] := 0X; END; (* Reserved *)
@@ -1965,15 +1965,15 @@ TYPE
 			PartitionsLib.Put4(b, FsiFreeCount, freecount); (* last known free cluster count on volume *)
 			PartitionsLib.Put4(b, FsiNxtFree, nextfree); (* Hint: "next" free cluster known *)
 			FOR i := 0 TO 11 DO b[FsiReserved2] := 0X; END; (* Reserved *)
-			PartitionsLib.Put4(b, FsiTrailSig, LONGINT(0AA550000H)); (* Trail signature *)
+			PartitionsLib.Put4(b, FsiTrailSig, SIGNED32(0AA550000H)); (* Trail signature *)
 			RETURN b;
 		END BuildFSInfo;
 
 		(* Calculates the size of one FAT See [1], p. 21 *)
-		PROCEDURE GetFatSize(sectorPerCluster : LONGINT) : LONGINT;
+		PROCEDURE GetFatSize(sectorPerCluster : SIGNED32) : SIGNED32;
 		VAR
-			rootDirSectors, rootEntCnt, bytsPerSec, rsvdSecCnt : LONGINT;
-			tmpVal1, tmpVal2 : LONGINT;
+			rootDirSectors, rootEntCnt, bytsPerSec, rsvdSecCnt : SIGNED32;
+			tmpVal1, tmpVal2 : SIGNED32;
 		BEGIN
 			IF disk.isDiskette THEN
 				RETURN 9;
@@ -1991,8 +1991,8 @@ TYPE
 		END GetFatSize;
 
 		(* Uses table from [1]; Return -1 in error case *)
-		PROCEDURE GetSectorPerCluster(disksize : LONGINT) : LONGINT;
-		VAR spc : LONGINT;
+		PROCEDURE GetSectorPerCluster(disksize : SIGNED32) : SIGNED32;
+		VAR spc : SIGNED32;
 		BEGIN
 			ASSERT((disk.device.blockSize = 512) & (rsvdSecCnt1216 = 1) & (numFATs = 2));
 			ASSERT((fs = FAT12) OR (rootEntCnt = 512)); (* so that table works *)
@@ -2023,13 +2023,13 @@ TYPE
 			RETURN spc;
 		END GetSectorPerCluster;
 
-		PROCEDURE ValidClusterSize(clusterSize : LONGINT):BOOLEAN;
+		PROCEDURE ValidClusterSize(clusterSize : SIGNED32):BOOLEAN;
 		BEGIN
 			RETURN ((clusterSize=512) OR (clusterSize=1024) OR (clusterSize=2048) OR (clusterSize=4096) OR
 					(clusterSize=8192) OR (clusterSize=16384) OR (clusterSize=32768));
 		END ValidClusterSize;
 
-		PROCEDURE &Init*(disk : PartitionsLib.Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk : PartitionsLib.Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "FormatFAT"; desc := "Format partition"; locktype := PartitionsLib.WriterLock;
@@ -2047,13 +2047,13 @@ TYPE
 	END FormatPartition;
 
 VAR
-	fsType2 : LONGINT;
+	fsType2 : SIGNED32;
 
-PROCEDURE GetVolume(dev : Disks.Device; partIdx : LONGINT; bpb : Block) : FATVolumes.Volume;
+PROCEDURE GetVolume(dev : Disks.Device; partIdx : SIGNED32; bpb : Block) : FATVolumes.Volume;
 CONST CacheSize = 65563; (* in sectors *)
 VAR
 	vol : FATVolumes.Volume; vol12: FATVolumes.FAT12Volume; vol16: FATVolumes.FAT16Volume; vol32: FATVolumes.FAT32Volume;
-	fatSize, numSectors, numClusters, reserved, numFATs, rootEntryCount, sectPC, fat : LONGINT;
+	fatSize, numSectors, numClusters, reserved, numFATs, rootEntryCount, sectPC, fat : SIGNED32;
 BEGIN
 	IF (LEN(bpb) = 512) & (bpb[510] = 055X) & (bpb[511] = 0AAX) THEN (* boot sector signature ok *)
 		(* determine FAT type *)

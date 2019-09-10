@@ -18,17 +18,17 @@ IMPORT
 		(* Structure that contains the main informations of the .avi file *)
 		MainAVIHeaderDesc* = OBJECT
 		VAR
-			microSecsPerFrame*: LONGINT;
-			maxBytesPerSec*: LONGINT;
-			reserved1*: LONGINT;
-			flags*: LONGINT;
-			totalFrames*: LONGINT;
-			initialFrames*: LONGINT;
-			streams*: LONGINT;
-			suggestedBufferSize*: LONGINT;
-			width*: LONGINT;
-			height*: LONGINT;
-			reserved*: ARRAY 4 OF LONGINT;
+			microSecsPerFrame*: SIGNED32;
+			maxBytesPerSec*: SIGNED32;
+			reserved1*: SIGNED32;
+			flags*: SIGNED32;
+			totalFrames*: SIGNED32;
+			initialFrames*: SIGNED32;
+			streams*: SIGNED32;
+			suggestedBufferSize*: SIGNED32;
+			width*: SIGNED32;
+			height*: SIGNED32;
+			reserved*: ARRAY 4 OF SIGNED32;
 		END MainAVIHeaderDesc;
 
 		(* Structure that contains the main Info of a stream in a .avi file *)
@@ -36,20 +36,20 @@ IMPORT
 		VAR
 			fccType*: ARRAY 4 OF CHAR;
 			fccHandler*: ARRAY 4 OF CHAR;
-			flags*: LONGINT;
-			priority*: LONGINT;
-			initialFrames*: LONGINT;
-			scale*: LONGINT;
-			rate*: LONGINT;
-			start*: LONGINT;
-			length*: LONGINT;
-			suggestedBufferSize*: LONGINT;
-			quality*: LONGINT;
-			sampleSize*: LONGINT;
-			left*: LONGINT;
-			top*: LONGINT;
-			right*: LONGINT;
-			bottom*: LONGINT;
+			flags*: SIGNED32;
+			priority*: SIGNED32;
+			initialFrames*: SIGNED32;
+			scale*: SIGNED32;
+			rate*: SIGNED32;
+			start*: SIGNED32;
+			length*: SIGNED32;
+			suggestedBufferSize*: SIGNED32;
+			quality*: SIGNED32;
+			sampleSize*: SIGNED32;
+			left*: SIGNED32;
+			top*: SIGNED32;
+			right*: SIGNED32;
+			bottom*: SIGNED32;
 			streamIdentifier*: ARRAY 4 OF CHAR;
 			bitMapInfo*: BitMapInfo;
 			waveFormatEx*: WAVEFormatEx;
@@ -58,38 +58,38 @@ IMPORT
 		(* video stream specific infos *)
 		BitMapInfo = OBJECT
 		VAR
-			size*: LONGINT;
-			width*: LONGINT;
-			height*: LONGINT;
-			planes*: LONGINT;
-			bitCount*: LONGINT;
-			compression*: LONGINT;
-			sizeImage*: LONGINT;
-			xPelsPerMeter*: LONGINT;
-			yPelsPerMeter*: LONGINT;
-			clrUsed*: LONGINT;
-			clrImportant*: LONGINT;
+			size*: SIGNED32;
+			width*: SIGNED32;
+			height*: SIGNED32;
+			planes*: SIGNED32;
+			bitCount*: SIGNED32;
+			compression*: SIGNED32;
+			sizeImage*: SIGNED32;
+			xPelsPerMeter*: SIGNED32;
+			yPelsPerMeter*: SIGNED32;
+			clrUsed*: SIGNED32;
+			clrImportant*: SIGNED32;
 		END BitMapInfo;
 
 		(* audio stream specific infos *)
 		WAVEFormatEx* = OBJECT
 		VAR
-			formatTag*: LONGINT;
-			channels*: LONGINT;
-			samplesPerSec*: LONGINT;
-			avgBytesPerSec*: LONGINT;
-			blockAlign*: LONGINT;
-			bitsPerSample*: LONGINT;
-			cbSize*: LONGINT;
+			formatTag*: SIGNED32;
+			channels*: SIGNED32;
+			samplesPerSec*: SIGNED32;
+			avgBytesPerSec*: SIGNED32;
+			blockAlign*: SIGNED32;
+			bitsPerSample*: SIGNED32;
+			cbSize*: SIGNED32;
 		END WAVEFormatEx;
 
 		(* IndexChunk infos *)
 		AVIIndexEntry* = RECORD
-			ckid*: LONGINT;
-			flags*: LONGINT;
-			offset*: LONGINT;
-			length*: LONGINT;
-			tot*: LONGINT;
+			ckid*: SIGNED32;
+			flags*: SIGNED32;
+			offset*: SIGNED32;
+			length*: SIGNED32;
+			tot*: SIGNED32;
 		END;
 
 	TYPE IndexArrayPointer* = POINTER TO ARRAY OF AVIIndexEntry;
@@ -101,7 +101,7 @@ IMPORT
 			r : Streams.Reader;
 			chunkSize*: SIZE;	(* Bytes in actual AVI Chunk *)
 			streamHeader: AVIStreamHeader;
-			stuffByte*: LONGINT;
+			stuffByte*: SIGNED32;
 			eof*: BOOLEAN;	(* End of File *)
 
 		(* Constructor *)
@@ -123,9 +123,9 @@ IMPORT
 		END CanSetPos;
 
 		(* Compare two array up to len bytes *)
-		PROCEDURE CompareCharArrays(ar1,ar2 : ARRAY OF CHAR; len: LONGINT ): BOOLEAN;
+		PROCEDURE CompareCharArrays(ar1,ar2 : ARRAY OF CHAR; len: SIGNED32 ): BOOLEAN;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			IF ( len > LEN( ar1 ) ) OR ( len > LEN( ar2 ) ) THEN
 				RETURN FALSE
@@ -144,7 +144,7 @@ IMPORT
 		VAR
 			tempBuf: ARRAY 4 OF CHAR;
 			length: SIZE;
-			len: LONGINT;
+			len: SIGNED32;
 			done: BOOLEAN;
 		BEGIN
 			IF Debug THEN KernelLog.String("Read next Chunk"); KernelLog.Ln; END;
@@ -210,18 +210,18 @@ IMPORT
 		END Pos;
 
 		(* Set the Position of the AVIReader. If frame flag is set, position is interpreted as a framenumber *)
-		PROCEDURE SetAVIPos*(pos: LONGINT;  VAR retPos: LONGINT);
+		PROCEDURE SetAVIPos*(pos: SIGNED32;  VAR retPos: SIGNED32);
 		BEGIN
 			IF Debug THEN KernelLog.String("DemuxStream.SetAVIPos"); KernelLog.Ln; END;
 			r.SetPos(pos);
 			stuffByte := 0;
-			retPos := r.Pos()(LONGINT);
+			retPos := r.Pos()(SIGNED32);
 			Reset;
 		END SetAVIPos;
 
 		PROCEDURE Bytes*(VAR x: ARRAY OF CHAR; ofs, size: SIZE; VAR len: SIZE);
 		VAR
-			min: LONGINT; res: WORD;
+			min: SIGNED32; res: INTEGER;
 		BEGIN
 			IF Debug THEN KernelLog.String("Bytes"); KernelLog.Ln; END;
 			demultiplexer.GetData(streamNr, x, ofs, size, min, len, res);
@@ -229,11 +229,11 @@ IMPORT
 
 		(* Set Byte Position *)
 		PROCEDURE SetPos*(pos : Streams.Position);
-		VAR seekType, itemSize: LONGINT; res : WORD;
+		VAR seekType, itemSize: SIGNED32; res : INTEGER;
 		BEGIN
 			IF Debug THEN KernelLog.String("DemuxStream.SetPos"); KernelLog.Ln; END;
 			seekType := Codecs.SeekByte;
-			demultiplexer.SetStreamPos(streamNr, seekType, pos(LONGINT), itemSize, res);
+			demultiplexer.SetStreamPos(streamNr, seekType, pos(SIGNED32), itemSize, res);
 			Reset;
 		END SetPos;
 
@@ -249,26 +249,26 @@ IMPORT
 		aviHeader: MainAVIHeaderDesc;
 		audioStreamHeader: AVIStreamHeader;
 		videoStreamHeader: AVIStreamHeader;
-		riffLength: LONGINT;
+		riffLength: SIGNED32;
 
 		movieBeginPos: Streams.Position;
 		indexStart: Streams.Position;
-		videoFrames: LONGINT;
-		audioChunks: LONGINT;
+		videoFrames: SIGNED32;
+		audioChunks: SIGNED32;
 		videoIndex: IndexArrayPointer;
 		audioIndex: IndexArrayPointer;
-		audioBytes: LONGINT;
+		audioBytes: SIGNED32;
 
-		videoBufferIndex: LONGINT;
+		videoBufferIndex: SIGNED32;
 
-		audioChunkSize: LONGINT;
+		audioChunkSize: SIGNED32;
 
 		audioStream: AVIStream;
 		videoStream: AVIStream;
-		videoFramePos: LONGINT;
-		audioFramePos: LONGINT;
+		videoFramePos: SIGNED32;
+		audioFramePos: SIGNED32;
 
-		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
 		BEGIN
 			r := in;
 			res := Codecs.ResFailed;
@@ -286,9 +286,9 @@ IMPORT
 		END  GetAVIHeader;
 
 		(* Compare two arrays up to len bytes *)
-		PROCEDURE CompareCharArrays( ar1,ar2 : ARRAY OF CHAR; len: LONGINT ): BOOLEAN;
+		PROCEDURE CompareCharArrays( ar1,ar2 : ARRAY OF CHAR; len: SIGNED32 ): BOOLEAN;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			IF ( len > LEN( ar1 ) ) OR ( len > LEN( ar2 ) ) THEN
 				RETURN FALSE
@@ -308,11 +308,11 @@ IMPORT
 			buf : ARRAY 8 OF CHAR;
 			len: SIZE;
 			done: BOOLEAN;
-			headerLength: LONGINT;
+			headerLength: SIGNED32;
 			headerBeginPos: Streams.Position;
 
 			tempHeader: AVIStreamHeader;
-			streamNumber: SHORTINT;
+			streamNumber: SIGNED8;
 
 		BEGIN
 			done := FALSE;
@@ -461,18 +461,18 @@ IMPORT
 		VAR
 			buf : ARRAY 8 OF CHAR;
 			buf2 : ARRAY 8 OF CHAR;
-			indexLength: LONGINT;
-			nidx: LONGINT;
-			idxType: INTEGER;
-			i: LONGINT;
-			pos: LONGINT;
-			length: LONGINT;
+			indexLength: SIGNED32;
+			nidx: SIGNED32;
+			idxType: SIGNED16;
+			i: SIGNED32;
+			pos: SIGNED32;
+			length: SIGNED32;
 			len: SIZE;
-			temp: LONGINT;
-			nai: LONGINT;
-			nvi: LONGINT;
-			tot: LONGINT;
-			ioff: LONGINT;
+			temp: SIGNED32;
+			nai: SIGNED32;
+			nvi: SIGNED32;
+			tot: SIGNED32;
+			ioff: SIGNED32;
 
 		BEGIN
 			r.RawLInt(indexLength);
@@ -570,7 +570,7 @@ IMPORT
 				IF (idxType = 1) THEN
 					ioff := 8;
 				ELSE
-					ioff := movieBeginPos(LONGINT);
+					ioff := movieBeginPos(SIGNED32);
 				END;
 
 				i := 0;
@@ -602,7 +602,7 @@ IMPORT
 		(* Skip chunk *)
 		PROCEDURE SkipHeader*;
 		VAR
-			length: LONGINT;
+			length: SIGNED32;
 		BEGIN
 			r.RawLInt(length);
 			r.SkipBytes( length + length MOD 2)
@@ -612,7 +612,7 @@ IMPORT
 		PROCEDURE ReadMainAVIHeader(): MainAVIHeaderDesc;
 		VAR
 			aviHeader: MainAVIHeaderDesc;
-			headerLength: LONGINT;
+			headerLength: SIGNED32;
 			startPos: Streams.Position;
 		BEGIN
 			NEW( aviHeader );
@@ -647,10 +647,10 @@ IMPORT
 		PROCEDURE ReadAVIStreamHeader(): AVIStreamHeader;
 		VAR
 			header: AVIStreamHeader;
-			headerLength: LONGINT;
+			headerLength: SIGNED32;
 			startPos: Streams.Position;
 			len: SIZE;
-			temp: INTEGER;
+			temp: SIGNED16;
 		BEGIN
 			NEW(header);
 
@@ -686,9 +686,9 @@ IMPORT
 		PROCEDURE ReadBitMapInfo(): BitMapInfo;
 		VAR
 			header: BitMapInfo;
-			headerLength: LONGINT;
+			headerLength: SIGNED32;
 			startPos: Streams.Position;
-			temp: INTEGER;
+			temp: SIGNED16;
 		BEGIN
 			NEW(header);
 
@@ -718,9 +718,9 @@ IMPORT
 		PROCEDURE ReadWaveFormatEx(): WAVEFormatEx;
 		VAR
 			header: WAVEFormatEx;
-			headerLength: LONGINT;
+			headerLength: SIGNED32;
 			startPos: Streams.Position;
-			temp: INTEGER;
+			temp: SIGNED16;
 		BEGIN
 			NEW(header);
 
@@ -849,7 +849,7 @@ IMPORT
 
 		(* Write AVI video index to Kernel Log *)
 		PROCEDURE DumpVideoIndex*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			KernelLog.String("AviDemux: Dump of Video-Index: "); KernelLog.Ln();
 			IF videoIndex = NIL THEN KernelLog.String("no index in AVI"); KernelLog.Ln; RETURN END;
@@ -869,7 +869,7 @@ IMPORT
 
 		(* Write AVI audio index to Kernel Log *)
 		PROCEDURE DumpAudioIndex*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			KernelLog.String("AviDemux: Dump of Audio-Index: "); KernelLog.Ln();
 			IF audioIndex = NIL THEN KernelLog.String("no index in AVI"); KernelLog.Ln; RETURN END;
@@ -900,12 +900,12 @@ IMPORT
 		END GetVideoStreamHeader;
 
 		(* Muss noch generischer werden *)
-		PROCEDURE GetStream*(streamNr: LONGINT): Codecs.DemuxStream;
+		PROCEDURE GetStream*(streamNr: SIGNED32): Codecs.DemuxStream;
 		VAR
 			(* reader : AVIReader; *)
 			(* reader: Codecs.FileInputStream; *)
 			reader : Streams.Reader;
-			i: LONGINT;
+			i: SIGNED32;
 
 			streamInfo : Codecs.AVStreamInfo;
 			tag : ARRAY 4 OF CHAR;
@@ -953,22 +953,22 @@ IMPORT
 			END;
 		END GetStream;
 
-		PROCEDURE GetMilliSecondsPerFrame*(): LONGINT;
+		PROCEDURE GetMilliSecondsPerFrame*(): SIGNED32;
 		BEGIN
 			RETURN aviHeader.microSecsPerFrame DIV 1000;
 		END GetMilliSecondsPerFrame;
 
-		PROCEDURE GetNofChannels*(): LONGINT;
+		PROCEDURE GetNofChannels*(): SIGNED32;
 		BEGIN
 			RETURN audioStreamHeader.waveFormatEx.channels;
 		END GetNofChannels;
 
-		PROCEDURE GetSamplesPerSecond*(): LONGINT;
+		PROCEDURE GetSamplesPerSecond*(): SIGNED32;
 		BEGIN
 			RETURN audioStreamHeader.waveFormatEx.samplesPerSec;
 		END GetSamplesPerSecond;
 
-		PROCEDURE GetBitsPerSample*(): LONGINT;
+		PROCEDURE GetBitsPerSample*(): SIGNED32;
 		BEGIN
 			RETURN audioStreamHeader.waveFormatEx.bitsPerSample;
 		END GetBitsPerSample;
@@ -983,30 +983,30 @@ IMPORT
 			RETURN audioIndex;
 		END GetAudioIndex;
 
-		PROCEDURE GetAudioChunks*(): LONGINT;
+		PROCEDURE GetAudioChunks*(): SIGNED32;
 		BEGIN
 			RETURN audioChunks;
 		END GetAudioChunks;
 
-		PROCEDURE GetAudioBytes*(): LONGINT;
+		PROCEDURE GetAudioBytes*(): SIGNED32;
 		BEGIN
 			RETURN audioBytes;
 		END GetAudioBytes;
 
-		PROCEDURE GetVideoFrames*(): LONGINT;
+		PROCEDURE GetVideoFrames*(): SIGNED32;
 		BEGIN
 			RETURN videoFrames;
 		END GetVideoFrames;
 
-		PROCEDURE GetNumberOfStreams*(): LONGINT;
+		PROCEDURE GetNumberOfStreams*(): SIGNED32;
 		BEGIN
 			RETURN aviHeader.streams;
 		END GetNumberOfStreams;
 
 		(* Could be optimized, as we assume videostream beeing at index 0 and that there is only one *)
-		PROCEDURE GetStreamInfo*(streamNr: LONGINT): Codecs.AVStreamInfo;
+		PROCEDURE GetStreamInfo*(streamNr: SIGNED32): Codecs.AVStreamInfo;
 		VAR streamInfo : Codecs.AVStreamInfo;
-			i: INTEGER;
+			i: SIGNED16;
 			tag : ARRAY 4 OF CHAR;
 		BEGIN
 
@@ -1051,8 +1051,8 @@ IMPORT
 			RETURN streamInfo
 		END GetStreamInfo;
 
-		PROCEDURE GetStreamType*(streamNr : LONGINT): LONGINT;
-		VAR type : LONGINT;
+		PROCEDURE GetStreamType*(streamNr : SIGNED32): SIGNED32;
+		VAR type : SIGNED32;
 		BEGIN
 			IF streamNr = 0 THEN type :=  Codecs.STVideo;
 			ELSIF streamNr = 1 THEN type := Codecs.STAudio;
@@ -1062,7 +1062,7 @@ IMPORT
 		END GetStreamType;
 
 		(* Returns Information, which can be read out from file and which is useful/needed *)
-		PROCEDURE GetInfo*(VAR vl, vf, vr, mspf, al, af, ar : LONGINT);
+		PROCEDURE GetInfo*(VAR vl, vf, vr, mspf, al, af, ar : SIGNED32);
 		BEGIN
 			vl := videoFrames;
 			vf := videoFrames;
@@ -1076,7 +1076,7 @@ IMPORT
 
 		END GetInfo;
 
-		PROCEDURE GetData*(streamNr: LONGINT;  VAR buf:  ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE GetData*(streamNr: SIGNED32;  VAR buf:  ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR
 			rres: BOOLEAN;
 		BEGIN
@@ -1133,11 +1133,11 @@ IMPORT
 			END;
 		END GetData;
 
-		PROCEDURE SetStreamPos*(streamNr: LONGINT; seekType: LONGINT; pos: LONGINT; VAR itemSize: LONGINT; VAR res: WORD);
-		(* PROCEDURE SetStreamPos*(streamNr, pos : LONGINT; VAR res: WORD); *)
+		PROCEDURE SetStreamPos*(streamNr: SIGNED32; seekType: SIGNED32; pos: SIGNED32; VAR itemSize: SIGNED32; VAR res: INTEGER);
+		(* PROCEDURE SetStreamPos*(streamNr, pos : SIGNED32; VAR res: INTEGER); *)
 		VAR
-			n0, n1, n, spos: LONGINT;
-			(* seekType, itemSize : LONGINT; *)
+			n0, n1, n, spos: SIGNED32;
+			(* seekType, itemSize : SIGNED32; *)
 		BEGIN
 			IF Debug THEN KernelLog.String("AVIDemux.SetStreamPos: "); KernelLog.Int(pos, 0); KernelLog.Ln; END;
 			IF streamNr = 0 THEN
@@ -1229,17 +1229,17 @@ IMPORT
 			END;
 		END SetStreamPos;
 
-		PROCEDURE GetVideoWidth*(): LONGINT;
+		PROCEDURE GetVideoWidth*(): SIGNED32;
 		BEGIN
 			RETURN videoStreamHeader.bitMapInfo.width;
 		END GetVideoWidth;
 
-		PROCEDURE GetVideoHeight*(): LONGINT;
+		PROCEDURE GetVideoHeight*(): SIGNED32;
 		BEGIN
 			RETURN videoStreamHeader.bitMapInfo.height;
 		END GetVideoHeight;
 
-		PROCEDURE GetNextFrameSize*(streamNr: LONGINT): LONGINT;
+		PROCEDURE GetNextFrameSize*(streamNr: SIGNED32): SIGNED32;
 		BEGIN
 			IF streamNr = 0 THEN
 				IF videoFramePos < videoFrames THEN
@@ -1256,9 +1256,9 @@ IMPORT
 			END;
 		END GetNextFrameSize;
 
-		PROCEDURE GetSampleSize*(): LONGINT;
+		PROCEDURE GetSampleSize*(): SIGNED32;
 		VAR
-			s: LONGINT;
+			s: SIGNED32;
 		BEGIN
 			s := ((audioStreamHeader.waveFormatEx.bitsPerSample+7) DIV 8)*audioStreamHeader.waveFormatEx.channels;
 			IF s = 0 THEN
@@ -1272,7 +1272,7 @@ IMPORT
 	(* -- Helper Procedures -- *)
 
 (* Align stream to next Byte *)
-PROCEDURE Align*(VAR  index: LONGINT);
+PROCEDURE Align*(VAR  index: SIGNED32);
 BEGIN
 	IF ( index MOD 8 ) # 0 THEN
 		index :=  index - ( index MOD 8 ) + 8
@@ -1280,7 +1280,7 @@ BEGIN
 END Align;
 
 (* True if actual position is on byte boundary *)
-PROCEDURE IsAligned*(index: LONGINT): BOOLEAN;
+PROCEDURE IsAligned*(index: SIGNED32): BOOLEAN;
 BEGIN
 	IF ( index MOD 8 ) = 0 THEN
 		RETURN TRUE;
@@ -1291,10 +1291,10 @@ END IsAligned;
 
 (* Read next n Bits (max 32), without advancing in stream. Max 32 Bits are allowed *)
 (* Very slow but portable *)
-PROCEDURE ShowBitsSlow*( n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT;
+PROCEDURE ShowBitsSlow*( n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32;
 VAR
-	ret: LONGINT;
-	count: LONGINT;
+	ret: SIGNED32;
+	count: SIGNED32;
 BEGIN
 	ret := 0;
 	count := 0;
@@ -1315,11 +1315,11 @@ END ShowBitsSlow;
 
 (* Read next n Bits (max 32), without advancing in stream. Max 32 Bits are allowed *)
 (* Fast, but im not sure if it's portable *)
-PROCEDURE ShowBits*( n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT;
+PROCEDURE ShowBits*( n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32;
 VAR
-	nbit: LONGINT;
-	posInLONGINT: LONGINT;
-	bufa, bufb: LONGINT;
+	nbit: SIGNED32;
+	posInLONGINT: SIGNED32;
+	bufa, bufb: SIGNED32;
 	temp: ADDRESS;
 	bufAdr: ADDRESS;
 BEGIN
@@ -1334,7 +1334,7 @@ BEGIN
 		bufb := Machine.ChangeByteOrder( SYSTEM.GET32( temp + 4 ) );
 
 		temp := LSH( LSH( bufa, posInLONGINT ),  nbit - posInLONGINT );
-		RETURN SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, LSH( bufb, nbit - 32 ) ) + SYSTEM.VAL( SET, temp ) )
+		RETURN SYSTEM.VAL( SIGNED32, SYSTEM.VAL( SET, LSH( bufb, nbit - 32 ) ) + SYSTEM.VAL( SET, temp ) )
 	ELSE
 		(* Reading one 32 value is sufficient *)
 		bufa := Machine.ChangeByteOrder( SYSTEM.GET32( LSH( index - posInLONGINT, -3 ) + bufAdr ) );
@@ -1344,10 +1344,10 @@ BEGIN
 END ShowBits;
 
 (* Show n bits, byte aligned without advancing in bit stream *)
-PROCEDURE ShowBitsByteAligned*(n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT;
+PROCEDURE ShowBitsByteAligned*(n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32;
 VAR
-	count: LONGINT;
-	ret: LONGINT;
+	count: SIGNED32;
+	ret: SIGNED32;
 BEGIN
 	count := 8 - ( index MOD 8 );
 
@@ -1366,9 +1366,9 @@ BEGIN
 END ShowBitsByteAligned;
 
 (* Read next n Bits and advance in Bit Stream. Max 32 Bits are allowed *)
-PROCEDURE GetBits*( n: LONGINT; VAR buf: ARRAY OF CHAR; VAR index: LONGINT): LONGINT;
+PROCEDURE GetBits*( n: SIGNED32; VAR buf: ARRAY OF CHAR; VAR index: SIGNED32): SIGNED32;
 VAR
-	ret: LONGINT;
+	ret: SIGNED32;
 BEGIN
 	ret := ShowBits(n, buf, index);
 	SkipBits(n, index);
@@ -1376,7 +1376,7 @@ BEGIN
 END GetBits;
 
 (* Skip Next n Bits *)
-PROCEDURE SkipBits*(n: LONGINT; VAR index: LONGINT );
+PROCEDURE SkipBits*(n: SIGNED32; VAR index: SIGNED32 );
 BEGIN
 	index := index + n
 END SkipBits;

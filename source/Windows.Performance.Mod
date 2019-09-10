@@ -1,8 +1,8 @@
 MODULE Performance;
 
 	VAR
-		load*: ARRAY 3 OF REAL;	(* load estimates *)
-		idle*: ARRAY 1 OF LONGINT;	(* idle percentage estimates *)
+		load*: ARRAY 3 OF FLOAT32;	(* load estimates *)
+		idle*: ARRAY 1 OF SIGNED32;	(* idle percentage estimates *)
 BEGIN
 	idle[0] := -1;
 END Performance.

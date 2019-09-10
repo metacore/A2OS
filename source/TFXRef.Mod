@@ -12,14 +12,14 @@ CONST
 	KindUse = 3;
 TYPE
 	Range = RECORD
-		a, b : LONGINT;
-		kind : LONGINT;
+		a, b : SIGNED32;
+		kind : SIGNED32;
 		no : TS.NamedObject;
 	END;
 
 	NamedObjectArray = POINTER TO ARRAY OF TS.NamedObject;
 	LocalExternalUsesSet = OBJECT
-	VAR nof : LONGINT;
+	VAR nof : SIGNED32;
 		items : NamedObjectArray;
 		PROCEDURE &Init;
 		BEGIN
@@ -28,7 +28,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Add(x : TS.NamedObject);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < nof) & (items[i] # x) DO INC(i) END;
@@ -55,7 +55,7 @@ TYPE
 	GlobalUse = OBJECT
 	VAR
 		items : StringList;
-		nofItems : LONGINT;
+		nofItems : SIGNED32;
 
 		PROCEDURE &Init;
 		BEGIN
@@ -93,7 +93,7 @@ VAR
 	currentAuthor : ARRAY 128 OF CHAR;
 	currentPurpose : ARRAY 4096 OF CHAR;
 
-PROCEDURE MakeRange(from, to, kind : LONGINT; no : TS.NamedObject);
+PROCEDURE MakeRange(from, to, kind : SIGNED32; no : TS.NamedObject);
 BEGIN
 	ranges[from].kind := kind;
 	ranges[from].a := from;
@@ -130,7 +130,7 @@ BEGIN
 END DumpProcedure;
 
 PROCEDURE CheckExpressionList(e : TS.ExpressionList; sig : TS.ProcedureSignature; scope : TS.Scope);
-(*VAR i, a, b : LONGINT;(* nr, f : Reference;*)*)
+(*VAR i, a, b : SIGNED32;(* nr, f : Reference;*)*)
 BEGIN
 (*	i := 0;
 	f := NIL;*)
@@ -194,7 +194,7 @@ VAR no: TS.NamedObject;
 	s : ARRAY 64 OF CHAR;
 	m : TS.Module;
 	te : TS.ExpressionList;
-	lastpos : LONGINT;
+	lastpos : SIGNED32;
 
 	PROCEDURE Check(id : TS.Ident; no : TS.NamedObject);
 	BEGIN
@@ -476,7 +476,7 @@ BEGIN
 END DumpStatementSequence;
 
 PROCEDURE CheckSignature(sig : TS.ProcedureSignature; scope : TS.Scope);
-VAR i : LONGINT; cur : TS.NamedObject; t : TS.Type;
+VAR i : SIGNED32; cur : TS.NamedObject; t : TS.Type;
 BEGIN
 	IF sig = NIL THEN RETURN END;
 	IF sig.return # NIL THEN DumpType(sig.return, scope) END;
@@ -494,7 +494,7 @@ END CheckSignature;
 
 PROCEDURE DumpProcDecl(p : TS.ProcDecl);
 VAR s : TS.Statement;
-	cur : TS.NamedObject; i : LONGINT;
+	cur : TS.NamedObject; i : SIGNED32;
 BEGIN
 	CheckSignature(p.signature, p.scope.parent);
 	(*IF (p.signature # NIL) & (p.signature.params # NIL) THEN
@@ -513,7 +513,7 @@ BEGIN
 END DumpProcDecl;
 
 PROCEDURE DumpDeclarations(d : TS.Scope);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 	last, cur : TS.NamedObject;
 BEGIN
 	IF d = NIL THEN RETURN END;
@@ -589,7 +589,7 @@ BEGIN
 END DumpM;
 
 PROCEDURE DumpLocalUses;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 	filename, scopePath, name, path : ARRAY 1024 OF CHAR;
 	a : ANY;
 	u : GlobalUse;
@@ -611,7 +611,7 @@ END DumpLocalUses;
 PROCEDURE GenerateModule(module : TS.Module; r : Streams.Reader; out : Streams.Writer);
 VAR ch : CHAR;
 	w : Streams.Writer;
-	currentRange, pos, nextEnd : LONGINT;
+	currentRange, pos, nextEnd : SIGNED32;
 	inRange, inComment, lastInRange : BOOLEAN;
 	token : ARRAY 1024 OF CHAR;
 	filename, scopePath, name, path : ARRAY 1024 OF CHAR;
@@ -756,9 +756,9 @@ BEGIN
 	DumpLocalUses;
 END GenerateModule;
 
-PROCEDURE InitWithText(t: Texts.Text; pos: LONGINT): Strings.String;
-	VAR buffer: Strings.String; len, i, j: SIZE; ch: LONGINT; r: Texts.TextReader;
-	bytesPerChar: LONGINT;
+PROCEDURE InitWithText(t: Texts.Text; pos: SIGNED32): Strings.String;
+	VAR buffer: Strings.String; len, i, j: SIZE; ch: SIGNED32; r: Texts.TextReader;
+	bytesPerChar: SIGNED32;
 
 	PROCEDURE ExpandBuf(VAR oldBuf: Strings.String; newSize: SIZE);
 	VAR newBuf: Strings.String; i: SIZE;
@@ -793,7 +793,7 @@ END InitWithText;
 PROCEDURE ProcessFile(CONST filename, targetPath : ARRAY OF CHAR; indexFile : Streams.Writer);
 VAR
 	module : TS.Module;
-	t : Texts.Text; res : WORD; format: LONGINT;
+	t : Texts.Text; res : INTEGER; format: SIGNED32;
 	r : Streams.StringReader;
 	str : Strings.String;
 	name, path, targetFile : ARRAY 1024 OF CHAR;
@@ -839,9 +839,9 @@ PROCEDURE Generate*(par : Commands.Context) ;
 VAR
 	filename :ARRAY 256 OF CHAR;
 	sr : Streams.Reader;
-	t0, t1 : LONGINT;
+	t0, t1 : SIGNED32;
 	module : TS.Module;
-	t : Texts.Text; res : WORD; format: LONGINT;
+	t : Texts.Text; res : INTEGER; format: SIGNED32;
 	textReader : TextUtilities.TextReader;
 BEGIN
 	NEW(globalUses);
@@ -867,7 +867,7 @@ END Generate;
 (** Make sure to have built all the TFPET Symbol files first *)
 PROCEDURE MakeXRef*(par : Commands.Context) ;
 VAR e : Files.Enumerator;
-	path, name, exclude : ARRAY 256 OF CHAR; flags : SET; time, date : LONGINT;
+	path, name, exclude : ARRAY 256 OF CHAR; flags : SET; time, date : SIGNED32;
 	size : Files.Size;
 	sr : Streams.Reader;
 	indexFileWriter : Files.Writer;
@@ -915,7 +915,7 @@ BEGIN
 END PageTime;
 
 PROCEDURE IsKeyWord(CONST str : ARRAY OF CHAR) : BOOLEAN;
-VAR s : LONGINT;
+VAR s : SIGNED32;
 BEGIN
 	s := 0;
 	IF str = "ARRAY" THEN s := S.array

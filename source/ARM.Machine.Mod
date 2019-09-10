@@ -147,23 +147,23 @@ TYPE
 
 	(** NEON Coprocessor state *)
 	NEONState* = RECORD
-		D*: ARRAY 32 OF HUGEINT; (* 32 64-bits registers *)
+		D*: ARRAY 32 OF SIGNED64; (* 32 64-bits registers *)
 		FPSCR*: ADDRESS;
 		FPEXC*: ADDRESS;
 	END;
 
 	(** exception state *)
 	ExceptionState* = RECORD
-		halt*: LONGINT;	 	(** halt code *)
-		instn*: LONGINT;		(** undefined instruction *)
+		halt*: SIGNED32;	 	(** halt code *)
+		instn*: SIGNED32;		(** undefined instruction *)
 		pf*: ADDRESS;		(** page fault address *)
-		status*: LONGINT;	(** page fault status *)
+		status*: SIGNED32;	(** page fault status *)
 		locks*: SET;			(** active locks *)
 	END;
 
 	(** Interrupt Hanlder *)
 	Handler* = PROCEDURE {DELEGATE} (VAR state: State);
-	EventHandler = PROCEDURE (id: LONGINT; CONST state: State);
+	EventHandler = PROCEDURE (id: SIGNED32; CONST state: State);
 
 	(** Spinlock *)
 	Lock = RECORD
@@ -175,8 +175,8 @@ TYPE
 	(** Processor status *)
 	Proc* = RECORD
 		locksHeld*: SET;
-		preemptCount*: LONGINT;
-		(*nestCount-: LONGINT;	(** total locks held by a processor *)*)
+		preemptCount*: SIGNED32;
+		(*nestCount-: SIGNED32;	(** total locks held by a processor *)*)
 		intStatus*, mmu*: BOOLEAN; (* muu: if the MMU is enabled for this processor *)
 	END;
 
@@ -208,7 +208,7 @@ TYPE
 		adr*: ADDRESS; size*: SIZE;
 	END;
 
-	CacheRefs = POINTER {UNSAFE,UNTRACED} TO ARRAY MaxCacheRefSize OF SHORTINT;
+	CacheRefs = POINTER {UNSAFE,UNTRACED} TO ARRAY MaxCacheRefSize OF SIGNED8;
 VAR
 	version -: ARRAY 64 OF CHAR;
 
@@ -222,7 +222,7 @@ VAR
 	(* Exception handlers. Called by *Glue. *)
 	undefHandler, swiHandler, prefetchHandler, dataHandler, fiqHandler: Handler;
 
-	stateTag: LONGINT;
+	stateTag: SIGNED32;
 	dummyIRQHandler: ARRAY MaxIRQ+1 OF RECORD h: Handler; END;
 
 	(** Low level locks *)
@@ -265,13 +265,13 @@ VAR
 	timer: EventHandler;
 
 	(** timer ticks. Written to by GetTicks. Read-only *)
-	ticks*: LONGINT;
-	eventCount, eventMax: LONGINT;
+	ticks*: SIGNED32;
+	eventCount, eventMax: SIGNED32;
 	event: Handler;
 
 	(** Number of processor used. *)
-	numProcessors*: LONGINT;
-	numberOfProcessors: LONGINT;
+	numProcessors*: SIGNED32;
+	numberOfProcessors: SIGNED32;
 
 	(** Scheduling start procedure for non-booting processors. *)
 	start*: PROCEDURE;
@@ -349,13 +349,13 @@ VAR
 
 	(* Process stack system *)
 	maxUserStackSize: SIZE;
-	maxUserStacks: LONGINT;
+	maxUserStacks: SIGNED32;
 
 	(* TRUE iff caching should be globally enabled *)
 	enableCaching: BOOLEAN;
 
 	(* UART used for kernel output *)
-	kernelOutputUart -: LONGINT;
+	kernelOutputUart -: SIGNED32;
 
 	(** Interrupt tracing option *)
 	traceInterrupts: BOOLEAN;
@@ -369,11 +369,11 @@ VAR
 	cacheRefs -: CacheRefs;
 
 	(** Reason for last reboot *)
-	lastReboot -: LONGINT;
+	lastReboot -: SIGNED32;
 
 	(* ===== Processor Management ===== *)
 	(* Current processor's ID, between 0 and MaxProc - 1 *)
-	PROCEDURE - ID*(): LONGINT;
+	PROCEDURE - ID*(): SIGNED32;
 	CODE
 		MRC p15, 0, R0, C0, C0, 5
 		AND R0, R0, #3H; Get the last 2 bits of R0
@@ -570,7 +570,7 @@ VAR
 
 	(** Shut system down. If reboot is TRUE, attempts to restart system. *)
 	PROCEDURE Shutdown*(reboot: BOOLEAN);
-	VAR i: LONGINT; procs: SET;
+	VAR i: SIGNED32; procs: SET;
 	BEGIN
 		IF enableWatchdog THEN PrivateWatchdog.Stop END;
 		StopTicks;
@@ -723,7 +723,7 @@ VAR
 		END;
 	END FlushDCacheRange;
 
-	PROCEDURE FlushDCachePhysRange * (adr: ADDRESS; len: LONGINT; CONST ranges: ARRAY OF Range; numRanges: LONGINT);
+	PROCEDURE FlushDCachePhysRange * (adr: ADDRESS; len: SIGNED32; CONST ranges: ARRAY OF Range; numRanges: SIGNED32);
 	CONST
 		cacheline = 32;
 		L2CCBBase				= 0F8F02000H; (*XPS_L2CC_BASEADDR*)
@@ -732,7 +732,7 @@ VAR
 		L2CCOffset				= L2CCBBase + L2CCCacheInvClnPAOfs;
 	VAR
 		cur, end: ADDRESS;
-		r: LONGINT;
+		r: SIGNED32;
 	BEGIN
 		IF ~enableCaching & (len # 0) THEN
 			IF len MOD cacheline # 0 THEN INC(len, cacheline - len MOD cacheline) END;
@@ -835,7 +835,7 @@ VAR
 	VAR
 		range: ARRAY 1 OF Range;
 		end: ADDRESS;
-		ofs, entry: LONGINT;
+		ofs, entry: SIGNED32;
 	BEGIN
 		(* Changing cache status allowed for heap and stack only. *)
 		ASSERT(((memHeapStart <= adr) & (adr + len <= memHeapStop)) OR ((memStackStart <= adr) & (adr + len <= memStackStop)));
@@ -912,7 +912,7 @@ VAR
 	PROCEDURE EnableDCacheRange * (adr: ADDRESS; len: SIZE);
 	VAR
 		end: ADDRESS;
-		ofs, entry: LONGINT;
+		ofs, entry: SIGNED32;
 	BEGIN
 		(* Changing cache status allowed for heap and stack only. *)
 		ASSERT(((memHeapStart <= adr) & (adr < memHeapStop)) OR ((memStackStart <= adr) & (adr < memStackStop)));
@@ -1002,7 +1002,7 @@ VAR
 	END InvalidateTLB;
 
 	(* InvalidateTLBEntry - invalidates the TLB for a given virtual address. Works only in a priviledged mode *)
-	PROCEDURE - InvalidateTLBEntry(address: LONGINT);
+	PROCEDURE - InvalidateTLBEntry(address: SIGNED32);
 	CODE
 		LDR R0, [SP, #address]
 		ADD SP, SP, #4
@@ -1063,21 +1063,21 @@ VAR
 		MOV R0, PC
 	END CurrentPC;
 
-	PROCEDURE GetTimer*(): HUGEINT;
-	VAR t: ARRAY 2 OF LONGINT;
+	PROCEDURE GetTimer*(): SIGNED64;
+	VAR t: ARRAY 2 OF SIGNED32;
 	BEGIN
 		REPEAT
 			t[1] := SYSTEM.GET32(Platform.GlobalTimerCounterRegister1);
 			t[0] := SYSTEM.GET32(Platform.GlobalTimerCounterRegister0);
 		UNTIL t[1] = SYSTEM.GET32(Platform.GlobalTimerCounterRegister1);
-		RETURN SYSTEM.VAL(HUGEINT,t);
+		RETURN SYSTEM.VAL(SIGNED64,t);
 	END GetTimer;
 
 	(* ===== Multiprocessor booting ===== *)
 	(** Initializes non-booting processors *)
 	PROCEDURE InitProcessors*;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		val: ARRAY 8 OF CHAR;
 	BEGIN
 		GetConfig("TraceCpu", val);
@@ -1104,9 +1104,9 @@ VAR
 	END Sev;
 
 	(** Start core id on procedure p. *)
-	PROCEDURE StartProcessor(id: LONGINT; p: PROCEDURE);
+	PROCEDURE StartProcessor(id: SIGNED32; p: PROCEDURE);
 	VAR
-		time, ticks0: LONGINT;
+		time, ticks0: SIGNED32;
 		started: BOOLEAN;
 		sevCount: SIZE;
 	BEGIN
@@ -1166,7 +1166,7 @@ VAR
 	*)
 	PROCEDURE InitMPMemory;
 	VAR
-		tbFlags: LONGINT;
+		tbFlags: SIGNED32;
 	BEGIN
 		IF enableCaching THEN
 			tbFlags := 7BH
@@ -1232,13 +1232,13 @@ VAR
 	END KernelCallHLT;
 
 	(* function returning the number of processors that are available to Aos *)
-	PROCEDURE NumberOfProcessors*( ): LONGINT;
+	PROCEDURE NumberOfProcessors*( ): SIGNED32;
 	BEGIN
 		RETURN numberOfProcessors
 	END NumberOfProcessors;
 
 	(*! non portable code, for native Aos only *)
-	PROCEDURE SetNumberOfProcessors*(num: LONGINT);
+	PROCEDURE SetNumberOfProcessors*(num: SIGNED32);
 	BEGIN
 		numberOfProcessors := num;
 	END SetNumberOfProcessors;
@@ -1513,20 +1513,20 @@ VAR
 	(* ===== Interrupts ===== *)
 	(* Taken from Minos/Kernel.Mos *)
 	PROCEDURE EnableInterrupts*;
-	VAR cpsr: LONGINT;
+	VAR cpsr: SIGNED32;
 	BEGIN
 		SYSTEM.STPSR(0, cpsr);
-		cpsr := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, cpsr) - {7(*, 8*)});
+		cpsr := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, cpsr) - {7(*, 8*)});
 		SYSTEM.LDPSR(0, cpsr);
 		(*SYSTEM.PUT32(Platform.ICDDCR, {EnableSecure, EnableNonSecure});*)
 	END EnableInterrupts;
 
 	(* Taken from Minos/Kernel.Mos *)
 	PROCEDURE DisableInterrupts*;
-	VAR cpsr: LONGINT;
+	VAR cpsr: SIGNED32;
 	BEGIN
 		SYSTEM.STPSR(0, cpsr);
-		cpsr := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, cpsr) + {7(*, 8*)});
+		cpsr := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, cpsr) + {7(*, 8*)});
 		SYSTEM.LDPSR( 0, cpsr);
 		(*SYSTEM.PUT32(Platform.ICDDCR, {});*)
 	END DisableInterrupts;
@@ -1543,16 +1543,16 @@ VAR
 	(* InstallDefaultInterrupts - installs default interrupt handlers *)
 	PROCEDURE InstallDefaultInterrupts;
 		VAR p: PROCEDURE; base: ADDRESS;
-		i, int: LONGINT;
+		i, int: SIGNED32;
 	BEGIN
 		base := 0;
 		(* Install all *Glue procedures. *)
-		p := undefGlue; SYSTEM.PUT32(base + Undef, SYSTEM.VAL(LONGINT, p));
-		p := SWIGlue; SYSTEM.PUT32(base + Swi, SYSTEM.VAL(LONGINT, p));
-		p := prefetchGlue; SYSTEM.PUT32(base + Prefetch, SYSTEM.VAL(LONGINT, p));
-		p := dataGlue; SYSTEM.PUT32(base + Data, SYSTEM.VAL(LONGINT, p));
-		p := DefaultIRQ; SYSTEM.PUT32(base + Irq, SYSTEM.VAL(LONGINT, p));
-		p := fiqGlue; SYSTEM.PUT32(base + Fiq, SYSTEM.VAL(LONGINT, p));
+		p := undefGlue; SYSTEM.PUT32(base + Undef, SYSTEM.VAL(SIGNED32, p));
+		p := SWIGlue; SYSTEM.PUT32(base + Swi, SYSTEM.VAL(SIGNED32, p));
+		p := prefetchGlue; SYSTEM.PUT32(base + Prefetch, SYSTEM.VAL(SIGNED32, p));
+		p := dataGlue; SYSTEM.PUT32(base + Data, SYSTEM.VAL(SIGNED32, p));
+		p := DefaultIRQ; SYSTEM.PUT32(base + Irq, SYSTEM.VAL(SIGNED32, p));
+		p := fiqGlue; SYSTEM.PUT32(base + Fiq, SYSTEM.VAL(SIGNED32, p));
 
 		(* Install default exception handlers *)
 		InstallExceptionHandler(DefaultUndefined, Undef);
@@ -1571,7 +1571,7 @@ VAR
 	(* DefaultUndef - default handler for undefined instruction exceptions *)
 	PROCEDURE DefaultUndefined (VAR state: State);
 	VAR
-		instn: LONGINT;
+		instn: SIGNED32;
 	BEGIN
 		instn := SYSTEM.GET32(state.PC);
 
@@ -1625,7 +1625,7 @@ VAR
 	PROCEDURE DefaultDataAbort (VAR state: State);
 	VAR
 		faultAdr: ADDRESS;
-		faultStatus: LONGINT;
+		faultStatus: SIGNED32;
 		stack: Stack;
 	BEGIN
 		GetPageFault(faultAdr, faultStatus);
@@ -1682,7 +1682,7 @@ VAR
 	END DefaultFIQ;
 
 	PROCEDURE DummyISR(VAR state: State);
-	VAR i: LONGINT; icip : SET;
+	VAR i: SIGNED32; icip : SET;
 	BEGIN
 		icip := SYSTEM.VAL(SET, SYSTEM.GET32((*IC +*) Platform.ICIP));
 		FOR i:=MinIRQ TO MaxIRQ DO
@@ -1694,14 +1694,14 @@ VAR
 	END DummyISR;
 
 	(** EnableIRQ - enables a hardware interrupt (also done automatically by InstallHandler) *)
-	PROCEDURE InEnableIRQ(num: LONGINT);
+	PROCEDURE InEnableIRQ(num: SIGNED32);
 	BEGIN
 		ASSERT((MinIRQ <= num) & (num<= MaxIRQ));
 		(*IF TRUE OR (num = 53) THEN Trace.StringLn("Enable USB IRQ") END;*)
 		SYSTEM.PUT32(Platform.ICDISER + 4 * (num DIV 32) , {num MOD 32});
 	END InEnableIRQ;
 
-	PROCEDURE EnableIRQ*(int: LONGINT);
+	PROCEDURE EnableIRQ*(int: SIGNED32);
 	BEGIN
 		Acquire(Interrupts);
 		InEnableIRQ(int);
@@ -1709,21 +1709,21 @@ VAR
 	END EnableIRQ;
 
 	(** DisableIRQ - disables a hardware interrupt (also done automatically by RemoveHandler) *)
-	PROCEDURE InDisableIRQ(num: LONGINT);
+	PROCEDURE InDisableIRQ(num: SIGNED32);
 	BEGIN
 		ASSERT((MinIRQ <= num) & (num <= MaxIRQ));
 		(*IF TRUE OR (num = 53) THEN Trace.StringLn("Disable USB IRQ") END;*)
 		SYSTEM.PUT32(Platform.ICDICER + 4 * (num DIV 32) , {num MOD 32});
 	END InDisableIRQ;
 
-	PROCEDURE DisableIRQ*(int: LONGINT);
+	PROCEDURE DisableIRQ*(int: SIGNED32);
 	BEGIN
 		Acquire(Interrupts);
 		InDisableIRQ(int);
 		Release(Interrupts)
 	END DisableIRQ;
 
-	PROCEDURE IsIRQEnabled(int: LONGINT): BOOLEAN;
+	PROCEDURE IsIRQEnabled(int: SIGNED32): BOOLEAN;
 	VAR
 		enabled: BOOLEAN;
 		reg: SET;
@@ -1739,9 +1739,9 @@ VAR
 		On entry to h interrupts are disabled and may be enabled with XXXXX.  After handling the interrupt
 		the state of interrupts are restored.  The acknowledgement of a hardware interrupt is done automatically.
 		IRQs are mapped from MinIRQ to MaxIRQ. *)
-	PROCEDURE InstallHandler*(h: Handler; int: LONGINT);
+	PROCEDURE InstallHandler*(h: Handler; int: SIGNED32);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		(*NEW(n);*)	(* outside locked region, to allow gc *)
 		i := 0;
@@ -1764,18 +1764,18 @@ VAR
 
 		IF traceInterrupts THEN
 			Acquire(TraceOutput);
-			Trace.String("[Machine]InstallHandler: h = 0x"); Trace.Address(SYSTEM.VAL(LONGINT, h));
+			Trace.String("[Machine]InstallHandler: h = 0x"); Trace.Address(SYSTEM.VAL(SIGNED32, h));
 			Trace.String("; int = "); Trace.Address(int);
-			Trace.String("; IRQMask = 0x"); Trace.Address(SYSTEM.VAL(LONGINT, IRQMask));
+			Trace.String("; IRQMask = 0x"); Trace.Address(SYSTEM.VAL(SIGNED32, IRQMask));
 			Trace.Ln;
 			Release(TraceOutput)
 		END
 	END InstallHandler;
 
-	PROCEDURE RemoveHandler * (h: Handler; int: LONGINT);
+	PROCEDURE RemoveHandler * (h: Handler; int: SIGNED32);
 	END RemoveHandler;
 
-	PROCEDURE InstallExceptionHandler * (h: Handler; e: LONGINT);
+	PROCEDURE InstallExceptionHandler * (h: Handler; e: SIGNED32);
 	BEGIN
 		CASE e OF
 			 Undef: undefHandler := h
@@ -1846,7 +1846,7 @@ VAR
 		Is called by IRQGlue.
 	*)
 	PROCEDURE IRQCaller(VAR state: State);
-	VAR i, reg, irq, ack, count: LONGINT;  handler: Handler;  icip: SET;
+	VAR i, reg, irq, ack, count: SIGNED32;  handler: Handler;  icip: SET;
 	BEGIN
 		ack := SYSTEM.GET32(Platform.ICCIAR);
 		(* service this irq *)
@@ -2142,12 +2142,12 @@ VAR
 		EnableSecure=0;
 		EnableNonSecure=1;
 		NumberIRQs = 96;
-	VAR p: PROCEDURE; i: LONGINT;
+	VAR p: PROCEDURE; i: SIGNED32;
 	BEGIN
 		Acquire(Interrupts);
 		IRQMask := {};
 		p := IRQGlue;
-		SYSTEM.PUT32(InterruptVector + Irq, SYSTEM.VAL(LONGINT, p));	(* install new IRQ handler *)
+		SYSTEM.PUT32(InterruptVector + Irq, SYSTEM.VAL(SIGNED32, p));	(* install new IRQ handler *)
 		SYSTEM.PUT32(Platform.ICDDCR, 0);
 
 
@@ -2156,7 +2156,7 @@ VAR
 		END;
 
 		FOR i := 0  TO (NumberIRQs-1) DIV 4 (* 8 bits per IRQ *) DO
-			SYSTEM.PUT32(Platform.ICDIPR+i*4, LONGINT(0A0A0A0A0H)); (* set priority of each interrupt to 160 *)
+			SYSTEM.PUT32(Platform.ICDIPR+i*4, SIGNED32(0A0A0A0A0H)); (* set priority of each interrupt to 160 *)
 		END;
 
 		FOR i := (32 DIV 4) TO (NumberIRQs-1) DIV 4 (* 8 bits per IRQ *) DO
@@ -2165,7 +2165,7 @@ VAR
 
 		(* disable all interrupt forwardings *)
 		FOR i := 0 TO (NumberIRQs-1) DIV 32 (* 1 bit per IRQ *) DO
-			SYSTEM.PUT32(Platform.ICDICER+i*4, LONGINT(0FFFFFFFFH));
+			SYSTEM.PUT32(Platform.ICDICER+i*4, SIGNED32(0FFFFFFFFH));
 		END;
 
 		SYSTEM.PUT32(Platform.ICCPMR, 0F0H);
@@ -2216,7 +2216,7 @@ VAR
 		END
 	END GetExceptionState;
 
-	PROCEDURE GetPageFault * (VAR adr: ADDRESS; VAR status: LONGINT);
+	PROCEDURE GetPageFault * (VAR adr: ADDRESS; VAR status: SIGNED32);
 	CODE
 		MRC	p15, 0, R0, C5, C0	; load fault status register (FSR)
 		AND	R0, R0, #0FFH			; only bits 7:0 are valid
@@ -2229,7 +2229,7 @@ VAR
 	END GetPageFault;
 
 	(* FAR - returns the Fault Address Register. *)
-	PROCEDURE -FAR*(): LONGINT;
+	PROCEDURE -FAR*(): SIGNED32;
 	CODE
 		MRC	p15, 0, R0, C6, C0	; FAR is co-processor 15 register 6
 	END FAR;
@@ -2256,9 +2256,9 @@ VAR
 		IRQEnable=2;
 	VAR
 		(* time slot in private timer counts; take into account that private timer clock frequency is equal to half of the CPU clock frequency *)
-		delay: LONGINT;
+		delay: SIGNED32;
 	BEGIN
-		delay := ENTIER( ( LONGREAL(TimerPeriod) * 0.5D0 * LONGREAL(BootConfig.GetIntValue("CpuClockHz")) ) / 1.0D6 + 0.5D0 );
+		delay := ENTIER( ( FLOAT64(TimerPeriod) * 0.5D0 * FLOAT64(BootConfig.GetIntValue("CpuClockHz")) ) / 1.0D6 + 0.5D0 );
 		(* disable first *)
 		SYSTEM.PUT32(Platform.PrivateTimerControlRegister, {});
 
@@ -2300,7 +2300,7 @@ VAR
 		IF h # NIL THEN timer := h ELSE timer := DummyEvent END
 	END InstallEventHandler;
 
-	PROCEDURE DummyEvent*(id: LONGINT; CONST state: State);
+	PROCEDURE DummyEvent*(id: SIGNED32; CONST state: State);
 	BEGIN
 	END DummyEvent;
 
@@ -2335,7 +2335,7 @@ VAR
 	END TimerInterruptHandler;
 
 	(* Set timer upcall. The handler procedure will be called at a rate of Second/divisor Hz. *)
-	PROCEDURE InstallTickHandler(handler: Handler; divisor: LONGINT);
+	PROCEDURE InstallTickHandler(handler: Handler; divisor: SIGNED32);
 	BEGIN
 		eventMax := divisor; event := handler;
 		eventCount := eventMax
@@ -2345,16 +2345,16 @@ VAR
 	(* Initializes spinlocks. This is not exported in Intel version. *)
 	PROCEDURE InitLocks;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO MaxLock - 1 DO
 			lock[i].locked := FALSE
 		END;
 	END InitLocks;
 
-	PROCEDURE AcquirePreemption*(): LONGINT;
+	PROCEDURE AcquirePreemption*(): SIGNED32;
 	VAR
-		id: LONGINT;
+		id: SIGNED32;
 	BEGIN
 		id := ID();
 		INC(proc[id].preemptCount);
@@ -2363,7 +2363,7 @@ VAR
 
 	PROCEDURE ReleasePreemption*;
 	VAR
-		id: LONGINT;
+		id: SIGNED32;
 	BEGIN
 		id := ID();
 
@@ -2374,7 +2374,7 @@ VAR
 		DEC(proc[id].preemptCount);
 	END ReleasePreemption;
 
-	PROCEDURE PreemptCount*(id: LONGINT): LONGINT;
+	PROCEDURE PreemptCount*(id: SIGNED32): SIGNED32;
 	BEGIN
 		IF StrongChecks THEN
 			ASSERT(id = ID());
@@ -2383,9 +2383,9 @@ VAR
 	END PreemptCount;
 
 	(* Acquire lock. Disables interrupts. *)
-	PROCEDURE Acquire*(level: LONGINT);
+	PROCEDURE Acquire*(level: SIGNED32);
 	VAR
-		id: LONGINT;
+		id: SIGNED32;
 		enabled: BOOLEAN;
 	BEGIN
 		enabled := AreInterruptsEnabled();
@@ -2411,9 +2411,9 @@ VAR
 	END Acquire;
 
 	(* Release lock. Enables interrupts if last lock held. *)
-	PROCEDURE Release*(level: LONGINT);
+	PROCEDURE Release*(level: SIGNED32);
 	VAR
-		id: LONGINT;
+		id: SIGNED32;
 	BEGIN
 		id := ID();
 
@@ -2434,7 +2434,7 @@ VAR
 
 	PROCEDURE AcquireAll*;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := MaxLock - 1 TO 0 BY -1 DO
 			Acquire(i)
@@ -2443,7 +2443,7 @@ VAR
 
 	PROCEDURE ReleaseAll*;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO MaxLock - 1 DO
 			Release(i)
@@ -2488,7 +2488,7 @@ VAR
 
 	(** Break all locks held by current processor (for exception handling).  Returns levels released. *)
 	PROCEDURE BreakAll*(): SET;
-	VAR id, level: LONGINT; released: SET;
+	VAR id, level: SIGNED32; released: SET;
 	BEGIN
 		id := AcquirePreemption();
 		released := {};
@@ -2512,7 +2512,7 @@ VAR
 
 	(* ===== Atomic Operations ===== *)
 	(* Atomic INC(x) *)
-	PROCEDURE -AtomicInc*(VAR x: LONGINT);
+	PROCEDURE -AtomicInc*(VAR x: SIGNED32);
 	CODE
 	;loop:
 	;	ADD R0, SP, #x	; R0 := ADR(x)
@@ -2533,7 +2533,7 @@ VAR
 	END AtomicInc;
 
 	(* Atomic INC(x) *)
-	PROCEDURE -AtomicDec*(VAR x: LONGINT);
+	PROCEDURE -AtomicDec*(VAR x: SIGNED32);
 	CODE
 		LDR	R0, [SP], #4
 	loop:
@@ -2544,7 +2544,7 @@ VAR
 		BNE	loop
 	END AtomicDec;
 
-	PROCEDURE -AtomicAdd * (VAR x: LONGINT; y: LONGINT);
+	PROCEDURE -AtomicAdd * (VAR x: SIGNED32; y: SIGNED32);
 	CODE
 		LDR R3, [SP, #y]	; R3 := y
 		LDR R0, [SP, #x]	; R0 := ADR(x)
@@ -2577,7 +2577,7 @@ VAR
 	END AtomicTestSet;
 
 	(* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
-	PROCEDURE -AtomicCAS * (VAR x: LONGINT; old, new: LONGINT): LONGINT;
+	PROCEDURE -AtomicCAS * (VAR x: SIGNED32; old, new: SIGNED32): SIGNED32;
 	CODE
 		LDR	R3, [SP, #x]			; R3 := ADDRESSOF(x)
 		LDR	R1, [SP, #old]			; R1 := old
@@ -2654,7 +2654,7 @@ VAR
 
 	(* Unmap a virtual page and deallocate the corresponding physical page *)
 	PROCEDURE DeallocatePage(virtualAdr: ADDRESS);
-	VAR memoryAdr: LONGINT;
+	VAR memoryAdr: SIGNED32;
 	BEGIN
 		(* unmap the page *)
 		memoryAdr := GetSecondLevelEntry(virtualAdr);
@@ -2696,8 +2696,8 @@ VAR
 	(** PhysicalAdr - returns the (real) physical address of the specified range of memory, or NilAdr if the range is not contiguous.
 		It is the caller's responsiblilty to assure the range remains allocated during the time it is in use.
 	*)
-	PROCEDURE PhysicalAdr*(adr, size: LONGINT): LONGINT;
-	VAR physAdr: ARRAY 400H OF Range; num, i, end: LONGINT;
+	PROCEDURE PhysicalAdr*(adr, size: SIGNED32): SIGNED32;
+	VAR physAdr: ARRAY 400H OF Range; num, i, end: SIGNED32;
 	BEGIN
 		TranslateVirtual(adr, size, num, physAdr);
 		IF (num > 0) THEN
@@ -2713,8 +2713,8 @@ VAR
 	END PhysicalAdr;
 
 	(** TranslateVirtual - translates a virtual address range to num ranges of (real) physical addresses.  num returns 0 on error.*)
-	PROCEDURE TranslateVirtual*(virtAdr: ADDRESS; size: LONGINT; VAR num: LONGINT; VAR physAdr: ARRAY OF Range);
-	VAR entry, base, ofs, len: LONGINT; endAdr: ADDRESS; abort: BOOLEAN;
+	PROCEDURE TranslateVirtual*(virtAdr: ADDRESS; size: SIGNED32; VAR num: SIGNED32; VAR physAdr: ARRAY OF Range);
+	VAR entry, base, ofs, len: SIGNED32; endAdr: ADDRESS; abort: BOOLEAN;
 	BEGIN
 		Acquire(Memory);
 
@@ -2763,9 +2763,9 @@ VAR
 		Release(Memory)
 	END TranslateVirtual;
 
-	PROCEDURE SetFirstLevelEntry (virtual, physical: ADDRESS; permissions, flags, type: LONGINT);
+	PROCEDURE SetFirstLevelEntry (virtual, physical: ADDRESS; permissions, flags, type: SIGNED32);
 	VAR
-		index, entry: LONGINT;
+		index, entry: SIGNED32;
 	BEGIN
 		index := opSHR(virtual, LogM) * 4;
 		ASSERT(index >= 0);
@@ -2775,9 +2775,9 @@ VAR
 		SYSTEM.PUT32(sysFirstLvlPtStart + index, entry)
 	END SetFirstLevelEntry;
 
-	PROCEDURE GetFirstLevelEntry (virtual: ADDRESS): LONGINT;
+	PROCEDURE GetFirstLevelEntry (virtual: ADDRESS): SIGNED32;
 	VAR
-		index: LONGINT;
+		index: SIGNED32;
 	BEGIN
 		index := LSH(virtual, -(LogM)) * 4;
 		ASSERT(index >= 0);
@@ -2786,8 +2786,8 @@ VAR
 	END GetFirstLevelEntry;
 
 	(* AllocateHeap - allocates and maps [physicalAddress...physicalAddress+size] to [virtualAddress...virtualAddress+size] *)
-	PROCEDURE AllocateHeap(virtualAddress, physicalAddress, size: ADDRESS; accessPermissions, flags: LONGINT);
-	VAR i, entry: LONGINT;
+	PROCEDURE AllocateHeap(virtualAddress, physicalAddress, size: ADDRESS; accessPermissions, flags: SIGNED32);
+	VAR i, entry: SIGNED32;
 	BEGIN
 		ASSERT(size MOD M = 0);
 		FOR i := 0 TO (size DIV M) - 1 DO
@@ -2845,9 +2845,9 @@ VAR
 	PROCEDURE InitMemory;
 	VAR
 		cr1: SET;
-		i: LONGINT;
+		i: SIGNED32;
 		base: ADDRESS;
-		coarseFlags, fineFlags, tbFlags: LONGINT;
+		coarseFlags, fineFlags, tbFlags: SIGNED32;
 		trace: BOOLEAN;
 		val: ARRAY 8 OF CHAR;
 	BEGIN
@@ -2940,7 +2940,7 @@ VAR
 		END;
 
 		(* Map page for high part of OCM *)
-		AllocateHeap(memSysHighStart, memSysHighStart, MAX(M, LONGINT(memSysHighStop - memSysHighStart)), SrwUrw, coarseFlags);
+		AllocateHeap(memSysHighStart, memSysHighStart, MAX(M, SIGNED32(memSysHighStop - memSysHighStart)), SrwUrw, coarseFlags);
 
 		(* Map heap area *)
 		AllocateHeap(memHeapStart, memHeapStart, memHeapStop - memHeapStart, SrwUrw, coarseFlags);
@@ -2993,7 +2993,7 @@ VAR
 		FOR i := 0 TO (maxUserStacks) DIV 32 - 1 DO
 			freeStack[i] := {0..31};
 		END;
-		freeStack[(maxUserStacks) DIV 32] := {0 .. (LONGINT(maxUserStacks) MOD 32) - 1};
+		freeStack[(maxUserStacks) DIV 32] := {0 .. (SIGNED32(maxUserStacks) MOD 32) - 1};
 		freeStackIndex := 0;
 
 		(* Init cache ref counts *)
@@ -3032,7 +3032,7 @@ VAR
 	PROCEDURE ExtendStack*(VAR s: Stack; virtAdr: ADDRESS): BOOLEAN;
 	VAR
 		ok, doLock: BOOLEAN;
-		access, psr, flags: LONGINT;
+		access, psr, flags: SIGNED32;
 	BEGIN
 		IF enableCaching THEN
 			flags := CB
@@ -3082,7 +3082,7 @@ VAR
 	(** Create a new stack s, for process with the initial stack pointer initSP. *)
 	PROCEDURE NewStack*(VAR s: Stack; process: ANY; VAR initSP: ADDRESS);
 	VAR
-		old, flags: LONGINT;
+		old, flags: SIGNED32;
 		adr: ADDRESS;
 		free: SET;
 		b: BOOLEAN;
@@ -3180,7 +3180,7 @@ VAR
 	END SetMemoryBlockEndAddress;
 
 	(* Policy decision for heap expansion. NewBlock for the same block has failed try times. *)
-	(*PROCEDURE ExpandNow(try: LONGINT): BOOLEAN;
+	(*PROCEDURE ExpandNow(try: SIGNED32): BOOLEAN;
 	VAR size: SIZE;
 	BEGIN
 		size := LSH(memBlockTail.endBlockAdr - memBlockHead.beginBlockAdr, -10);	(* heap size in KB *)
@@ -3204,7 +3204,7 @@ VAR
 	END SetHeapEndAdr;*)
 
 	(* Try to expand the heap by at least "size" bytes *)
-	PROCEDURE ExpandHeap*(try: LONGINT; size: SIZE; VAR memBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS);
+	PROCEDURE ExpandHeap*(try: SIGNED32; size: SIZE; VAR memBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS);
 	BEGIN
 		(*IF ExpandNow(try) THEN
 			IF size < expandMin THEN size := expandMin END;
@@ -3231,7 +3231,7 @@ VAR
 
 	(* ===== Caches, TLB & other ===== *)
 	(** SHR - logical shift right *)
-	PROCEDURE opSHR(value, shift: ADDRESS): LONGINT;
+	PROCEDURE opSHR(value, shift: ADDRESS): SIGNED32;
 	CODE
 		LDR R0, [FP, #value]
 		LDR R1, [FP, #shift]
@@ -3240,7 +3240,7 @@ VAR
 	END opSHR;
 
 	(** SHRL - shift right and left. Mask out 'shift' lowest bits *)
-	PROCEDURE SHRL(value, shift: LONGINT): LONGINT;
+	PROCEDURE SHRL(value, shift: SIGNED32): SIGNED32;
 	(*CODE
 		LDR R0, [FP, #value]
 		LDR R1, [FP, #shift]
@@ -3254,7 +3254,7 @@ VAR
 	END SHRL;
 
 	(** Fills 'size' bytes with 'filler', from 'destAdr' on. size must be multiple of 4 *)
-	PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: SIGNED32);
 	CODE
 		LDR	R0, [FP, #filler]
 		LDR	R1, [FP, #size]
@@ -3282,7 +3282,7 @@ VAR
 	END Fill32;
 
 	(* GetPageTableBase - returns the memory address of the first level page table *)
-	PROCEDURE -GetPageTableBase(): LONGINT;
+	PROCEDURE -GetPageTableBase(): SIGNED32;
 	CODE
 		MRC p15, 0, R0, c2, c0, 0
 		MOV R0, R0, LSR #14	; clear bits 13..0
@@ -3297,9 +3297,9 @@ VAR
 		heapMinKB := size * HeapMin DIV 100;
 		heapMaxKB := size * HeapMax DIV 100;
 		expandMin := size * ExpandRate DIV 100 * 1024;
-		IF expandMin < 0 THEN expandMin := MAX(LONGINT) END;
+		IF expandMin < 0 THEN expandMin := MAX(SIGNED32) END;
 		gcThreshold := size * Threshold DIV 100 * 1024;
-		IF gcThreshold < 0 THEN gcThreshold := MAX(LONGINT) END
+		IF gcThreshold < 0 THEN gcThreshold := MAX(SIGNED32) END
 	END SetGCParams;
 
 	(** Called when spinning, just does a NOP *)
@@ -3309,8 +3309,8 @@ VAR
 	END SpinHint;
 
 	(** Convert a string to an integer. Parameter i specifies where in the string scanning should begin (usually 0 in the first call). Scanning stops at the first non-valid character, and i returns the updated position. Parameter s is the string to be scanned. The value is returned as result, or 0 if not valid. Syntax: number = ["-"] digit {digit} ["H" | "h"] . digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" . If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
-	PROCEDURE StrToInt* (VAR i: SIZE; CONST s: ARRAY OF CHAR): LONGINT;
-	VAR vd, vh, sgn, d: LONGINT; hex: BOOLEAN;
+	PROCEDURE StrToInt* (VAR i: SIZE; CONST s: ARRAY OF CHAR): SIGNED32;
+	VAR vd, vh, sgn, d: SIGNED32; hex: BOOLEAN;
 	BEGIN
 		vd := 0; vh := 0; hex := FALSE;
 		IF s[i] = "-" THEN sgn := -1; INC (i) ELSE sgn := 1 END;
@@ -3328,13 +3328,13 @@ VAR
 	END StrToInt;
 
 	(** Read Non Volatile memory. Not implemented. Required by clock. *)
-	PROCEDURE GetNVByte* (ofs: LONGINT): CHAR;
+	PROCEDURE GetNVByte* (ofs: SIGNED32): CHAR;
 	BEGIN
 		RETURN 10X
 	END GetNVByte;
 
 	(** Write Non Volatile memory. Not implemented. Required by clock. *)
-	PROCEDURE PutNVByte* (ofs: LONGINT; val: CHAR);
+	PROCEDURE PutNVByte* (ofs: SIGNED32; val: CHAR);
 	END PutNVByte;
 
 	(* empty section allocated at end of bootfile *)
@@ -3347,21 +3347,21 @@ VAR
 		BootConfig.GetValue(name, res)
 	END GetConfig;
 
-	PROCEDURE MulH * (x, y: HUGEINT): HUGEINT;
+	PROCEDURE MulH * (x, y: SIGNED64): SIGNED64;
 	BEGIN
-		RETURN LONGINT(x) * LONGINT(y)
+		RETURN SIGNED32(x) * SIGNED32(y)
 	END MulH;
 
-	PROCEDURE DivH * (x, y: HUGEINT): HUGEINT;
+	PROCEDURE DivH * (x, y: SIGNED64): SIGNED64;
 	BEGIN
 		RETURN x DIV y
 	END DivH;
 
 	(** Not implemented yet *)
-	PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
+	PROCEDURE  Portin8*(port: SIGNED32; VAR val: CHAR);
 	END Portin8;
 
-	PROCEDURE  Portout8*(port: LONGINT; val: CHAR);
+	PROCEDURE  Portout8*(port: SIGNED32; val: CHAR);
 	END Portout8;
 
 	PROCEDURE TraceState * (CONST state: State);
@@ -3489,11 +3489,11 @@ VAR
 		SLCR_REBOOT_STATUS = ADDRESS(0F8000258H);
 		SLCR_LOCK = ADDRESS(0F8000004H);
 		SLCR_UNLOCK = ADDRESS(0F8000008H);
-		Lock = LONGINT(767BH);
-		Unlock = LONGINT(0DF0DH);
+		Lock = SIGNED32(767BH);
+		Unlock = SIGNED32(0DF0DH);
 	VAR
 		val: SET;
-		error: LONGINT;
+		error: SIGNED32;
 	BEGIN
 		SYSTEM.GET(SLCR_REBOOT_STATUS, val);
 		IF 16 IN val THEN
@@ -3524,12 +3524,12 @@ VAR
 			lastReboot := RebootPowerOn;
 			Trace.StringLn("Starting after power on")
 		END;
-		error := SYSTEM.VAL(INTEGER, val);
+		error := SYSTEM.VAL(SIGNED16, val);
 		IF error # 0 THEN
 			Trace.String("BootROM error code: "); Trace.Int(error, 0); Trace.Ln
 		END;
 		SYSTEM.PUT(SLCR_UNLOCK, Unlock);
-		SYSTEM.PUT(SLCR_REBOOT_STATUS, LONGINT(0));
+		SYSTEM.PUT(SLCR_REBOOT_STATUS, SIGNED32(0));
 		SYSTEM.PUT(SLCR_LOCK, Lock)
 	END ResetAnalysis;
 

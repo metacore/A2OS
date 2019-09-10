@@ -24,7 +24,7 @@ TYPE
 		arabicButton, russianButton, ukrainianButton, armenianButton, hebrewButton, pinyinButton, unicodeButton,
 		noIMEButton, switchIMEButton, utfModeButton : WMStandardComponents.Button;
 		currentIME : ARRAY 32 OF CHAR;
-		currentUtfState : LONGINT;
+		currentUtfState : SIGNED32;
 
 		PROCEDURE CreateForm(): WMComponents.VisualComponent;
 		VAR
@@ -141,7 +141,7 @@ TYPE
 			The new IME's name is taken to identify its installer. Some colors are changed and finally the installer is called. *)
 		PROCEDURE ChangeIME(sender, data : ANY);
 		VAR
-			res : WORD;
+			res : INTEGER;
 			install : WMInputMethods.IMEInstaller;
 		BEGIN
 			res := -1;
@@ -373,7 +373,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 	currentWindow : Window;
 
 (* used as a callback procedure of WMInputMethods *)

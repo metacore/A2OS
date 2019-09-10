@@ -13,13 +13,13 @@ TYPE SNAP = RECORD
 	lookphi, looktheta : SREAL;
 	aperture: Aperture;
 	x,y,z,cdroll: SREAL;
-	detail: INTEGER;
+	detail: SIGNED16;
 END;
 
 TYPE VoxWindow = OBJECT(WMWindowManager.DoubleBufferWindow)
 VAR
 	alive, alpha: BOOLEAN;
-	i: LONGINT;
+	i: SIGNED32;
 	random: Random.Generator;
 	camera: Camera;
 	speed: SREAL;
@@ -27,14 +27,14 @@ VAR
 	pi: WMWindowManager.PointerInfo;
 	px, pdx, py, pdy: SIZE;
 	pkeys: SET;
-	t1, t2, dt: LONGINT;
+	t1, t2, dt: SIGNED32;
 	big, focus, voxconnect: BOOLEAN;
 	connectvox: Voxel;
 	Key: CHAR;
 	movemode: CHAR;
-	raysperframe: LONGINT;
+	raysperframe: SIGNED32;
 
-PROCEDURE & New*(W,H, i,j: INTEGER; large: BOOLEAN);
+PROCEDURE & New*(W,H, i,j: SIGNED16; large: BOOLEAN);
 BEGIN
 	Init(W, H, TRUE);
 	raysperframe:=W*H;
@@ -47,7 +47,7 @@ BEGIN
 	movemode := 'f';
 END New;
 
-(*PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : LONGINT);
+(*PROCEDURE Draw*(canvas : Graphics.Canvas; w, h, q : SIGNED32);
 BEGIN
 	IF filter THEN Draw^(canvas, w, h, q) ELSE Draw^(canvas, w, h, 0) END
 END Draw; *)
@@ -192,16 +192,16 @@ VAR
 	window: VoxWindow;
 	random: Random.Generator;
 	filter,rayschanged, ang1: BOOLEAN;
-	fovealeft, fovearight, foveabottom, foveatop: LONGINT;
+	fovealeft, fovearight, foveabottom, foveatop: SIGNED32;
 	fovea: BOOLEAN;
 	cam: srBase.PT;
 	mode : Raster.Mode;
 	pixel: Raster.Pixel;
-	W,H: INTEGER;
-	XLOOK,YLOOK: LONGINT;
+	W,H: SIGNED16;
+	XLOOK,YLOOK: SIGNED32;
 	large: BOOLEAN;
 
-PROCEDURE & init *(w: VoxWindow; width, height: INTEGER; l: BOOLEAN);
+PROCEDURE & init *(w: VoxWindow; width, height: SIGNED16; l: BOOLEAN);
 BEGIN
 	window := w;
 	large:=l;
@@ -334,7 +334,7 @@ BEGIN
 	END
 END deathray;
 
-PROCEDURE mutateray (x, y: LONGINT);
+PROCEDURE mutateray (x, y: SIGNED32);
 BEGIN
 	IF (x < W) & (y < H) THEN
 		block.mutateray(srBase.rays[x ,y]);
@@ -418,7 +418,7 @@ END jitter;
 
 (* PROCEDURE initrays;
 VAR
-	i, j: LONGINT;
+	i, j: SIGNED32;
 	theta, phi, dtheta, dphi: SREAL;
 BEGIN
 	dtheta := aperture.width / W;
@@ -441,7 +441,7 @@ END initrays; *)
 
 PROCEDURE initrays;
 VAR
-	i, j: LONGINT;
+	i, j: SIGNED32;
 	theta, phi, dtheta, dphi: SREAL;
 	down: srBase.PT;
 	look: srBase.Ray;
@@ -489,7 +489,7 @@ BEGIN
 	END
 END initrays;
 
-PROCEDURE foveate(x,y: LONGINT);
+PROCEDURE foveate(x,y: SIGNED32);
 BEGIN
 	fovealeft := (x-foveasize) MOD W;
 	fovearight := (x+foveasize) MOD W;
@@ -499,7 +499,7 @@ END foveate;
 
 PROCEDURE tracetiled;
 VAR
-	i, j: LONGINT;
+	i, j: SIGNED32;
 	pixel : Raster.Pixel;
 BEGIN
 	block.tick;
@@ -582,9 +582,9 @@ END Camera;
 
 TYPE MainLoop=OBJECT
 VAR
-	t1, t2, dt,f: LONGINT;
+	t1, t2, dt,f: SIGNED32;
 	fr: SREAL;
-	framerate, lastframerate: LONGINT;
+	framerate, lastframerate: SIGNED32;
 
 BEGIN {ACTIVE, PRIORITY(Objects.Normal)}
 	win:=window;
@@ -616,17 +616,17 @@ VAR
 	cdroll: SREAL;
 	lookray: Ray;
 	rand: Random.Generator;
-	wcount: INTEGER;
-	frame, tickframe: LONGINT;
+	wcount: SIGNED16;
+	frame, tickframe: SIGNED32;
 	frames: ARRAY 10000 OF SNAP;
 	movierecording, movieplaying: BOOLEAN;
 	foveate: BOOLEAN;
-	foveasize, foveadown, foveaup: LONGINT;
+	foveasize, foveadown, foveaup: SIGNED32;
 	block: Voxel;
 	DEATH, LOOK, TRAILS: BOOLEAN;
 	tracetiled: BOOLEAN;
 	aperture: Aperture;
-	framecount: LONGINT;
+	framecount: SIGNED32;
 
 PROCEDURE angletoray(VAR ray: srBase.Ray);
 (* VAR d: SREAL; *)
@@ -693,7 +693,7 @@ BEGIN
 END clampspeed;
 
 PROCEDURE Demo*;
-VAR res : WORD; msg : ARRAY 128 OF CHAR;
+VAR res : INTEGER; msg : ARRAY 128 OF CHAR;
 BEGIN
 	Commands.Call("Notepad.Open srReadMe.Text", {Commands.Wait}, res, msg); (* ignore res *)
 	Open;

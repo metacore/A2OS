@@ -4,8 +4,8 @@ Refer to the "General ETH Oberon System Source License" contract available at: h
 MODULE Reals;	(** portable, except where noted *)
 (** AUTHOR "bmoesli"; PURPOSE "Real number manipulation"; *)
 
-(** Implementation of the non-portable components of IEEE REAL and
-LONGREAL manipulation. The routines here are required to do conversion
+(** Implementation of the non-portable components of IEEE FLOAT32 and
+FLOAT64 manipulation. The routines here are required to do conversion
 of reals to strings and back.
 Implemented by Bernd Moesli, Seminar for Applied Mathematics,
 Swiss Federal Institute of Technology Zürich.
@@ -40,33 +40,33 @@ IMPORT SYSTEM, Machine;
 
 VAR
 	DefaultFCR*: SET;
-	tene: ARRAY 23 OF LONGREAL; (* e = 0..22: exact values of 10^e *)
-	ten: ARRAY 27 OF LONGREAL;
+	tene: ARRAY 23 OF FLOAT64; (* e = 0..22: exact values of 10^e *)
+	ten: ARRAY 27 OF FLOAT64;
 	eq, gr: ARRAY 20 OF SET;
-	H, L: INTEGER;
+	H, L: SIGNED16;
 
 (** Returns the shifted binary exponent (0 <= e < 256). *)
-PROCEDURE Expo* (x: REAL): LONGINT;
+PROCEDURE Expo* (x: FLOAT32): SIGNED32;
 BEGIN
-	RETURN ASH(SYSTEM.VAL(LONGINT, x), -23) MOD 256
+	RETURN ASH(SYSTEM.VAL(SIGNED32, x), -23) MOD 256
 END Expo;
 
 (** Returns the shifted binary exponent (0 <= e < 2048). *)
-PROCEDURE ExpoL* (x: LONGREAL): LONGINT;
-	VAR i: LONGINT;
+PROCEDURE ExpoL* (x: FLOAT64): SIGNED32;
+	VAR i: SIGNED32;
 BEGIN
 	SYSTEM.GET(ADDRESSOF(x) + H, i); RETURN ASH(i, -20) MOD 2048
 END ExpoL;
 
 (** Returns the mantissa *)
-PROCEDURE Mantissa* (x: REAL): LONGINT;
+PROCEDURE Mantissa* (x: FLOAT32): SIGNED32;
 BEGIN
-	RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, x) * {0 .. 22})
+	RETURN SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, x) * {0 .. 22})
 END Mantissa;
 
 (** Sets the shifted binary exponent. *)
-PROCEDURE SetExpo* (e: LONGINT; VAR x: REAL);
-	VAR i: LONGINT;
+PROCEDURE SetExpo* (e: SIGNED32; VAR x: FLOAT32);
+	VAR i: SIGNED32;
 BEGIN
 	SYSTEM.GET(ADDRESSOF(x), i);
 	i:= ASH(ASH(ASH(i, -31), 8) + e MOD 256, 23) + i MOD ASH(1, 23);
@@ -74,40 +74,40 @@ BEGIN
 END SetExpo;
 
 (** Sets the shifted binary exponent. *)
-PROCEDURE SetExpoL* (e: LONGINT; VAR x: LONGREAL);
-	VAR i: LONGINT;
+PROCEDURE SetExpoL* (e: SIGNED32; VAR x: FLOAT64);
+	VAR i: SIGNED32;
 BEGIN
 	SYSTEM.GET(ADDRESSOF(x) + H, i);
 	i:= ASH(ASH(ASH(i, -31), 11) + e MOD 2048, 20) + i MOD ASH(1, 20);
 	SYSTEM.PUT(ADDRESSOF(x) + H, i)
 END SetExpoL;
 
-(** Convert hexadecimal to REAL. *)
-PROCEDURE Real* (h: LONGINT): REAL;
-	VAR x: REAL;
+(** Convert hexadecimal to FLOAT32. *)
+PROCEDURE Real* (h: SIGNED32): FLOAT32;
+	VAR x: FLOAT32;
 BEGIN SYSTEM.PUT(ADDRESSOF(x), h); RETURN x
 END Real;
 
-(** Convert hexadecimal to LONGREAL. h and l are the high and low parts.*)
-PROCEDURE RealL* (h, l: LONGINT): LONGREAL;
-	VAR x: LONGREAL;
+(** Convert hexadecimal to FLOAT64. h and l are the high and low parts.*)
+PROCEDURE RealL* (h, l: SIGNED32): FLOAT64;
+	VAR x: FLOAT64;
 BEGIN SYSTEM.PUT(ADDRESSOF(x) + H, h); SYSTEM.PUT(ADDRESSOF(x) + L, l); RETURN x
 END RealL;
 
-(** Convert REAL to hexadecimal. *)
-PROCEDURE Int* (x: REAL): LONGINT;
-	VAR i: LONGINT;
+(** Convert FLOAT32 to hexadecimal. *)
+PROCEDURE Int* (x: FLOAT32): SIGNED32;
+	VAR i: SIGNED32;
 BEGIN SYSTEM.PUT(ADDRESSOF(i), x); RETURN i
 END Int;
 
-(** Convert LONGREAL to hexadecimal. h and l are the high and low parts. *)
-PROCEDURE IntL* (x: LONGREAL; VAR h, l: LONGINT);
+(** Convert FLOAT64 to hexadecimal. h and l are the high and low parts. *)
+PROCEDURE IntL* (x: FLOAT64; VAR h, l: SIGNED32);
 BEGIN SYSTEM.GET(ADDRESSOF(x) + H, h); SYSTEM.GET(ADDRESSOF(x) + L, l)
 END IntL;
 
 (** Returns 10^e (e <= 308, 308 < e delivers IEEE-code +INF). *)
-PROCEDURE Ten* (e: LONGINT): LONGREAL;
-	VAR E: LONGINT; r: LONGREAL;
+PROCEDURE Ten* (e: SIGNED32): FLOAT64;
+	VAR E: SIGNED32; r: FLOAT64;
 BEGIN
 	IF e < -307 THEN RETURN 0 ELSIF 308 < e THEN RETURN RealL(2146435072, 0) END;
 	INC(e, 307); r:= ten[e DIV 23] * tene[e MOD 23];
@@ -120,17 +120,17 @@ BEGIN
 END Ten;
 
 (** Returns the NaN code (0 <= c < 8399608) or -1 if not NaN/Infinite. *)
-PROCEDURE NaNCode* (x: REAL): LONGINT;
+PROCEDURE NaNCode* (x: FLOAT32): SIGNED32;
 BEGIN
-	IF ASH(SYSTEM.VAL(LONGINT, x), -23) MOD 256 = 255 THEN	(* Infinite or NaN *)
-		RETURN SYSTEM.VAL(LONGINT, x) MOD 800000H	(* lowest 23 bits *)
+	IF ASH(SYSTEM.VAL(SIGNED32, x), -23) MOD 256 = 255 THEN	(* Infinite or NaN *)
+		RETURN SYSTEM.VAL(SIGNED32, x) MOD 800000H	(* lowest 23 bits *)
 	ELSE
 		RETURN -1
 	END
 END NaNCode;
 
-(** Returns the NaN code (0 <= h < 1048576, MIN(LONGINT) <= l <= MAX(LONGINT)) or (-1,-1) if not NaN/Infinite. *)
-PROCEDURE NaNCodeL* (x: LONGREAL;  VAR h, l: LONGINT);
+(** Returns the NaN code (0 <= h < 1048576, MIN(SIGNED32) <= l <= MAX(SIGNED32)) or (-1,-1) if not NaN/Infinite. *)
+PROCEDURE NaNCodeL* (x: FLOAT64;  VAR h, l: SIGNED32);
 BEGIN
 	SYSTEM.GET(ADDRESSOF(x) + H, h); SYSTEM.GET(ADDRESSOF(x) + L, l);
 	IF ASH(h, -20) MOD 2048 = 2047 THEN	(* Infinite or NaN *)
@@ -141,30 +141,30 @@ BEGIN
 END NaNCodeL;
 
 (** Returns TRUE iff x is NaN/Infinite. *)
-PROCEDURE IsNaN* (x: REAL): BOOLEAN;
+PROCEDURE IsNaN* (x: FLOAT32): BOOLEAN;
 BEGIN
-	RETURN ASH(SYSTEM.VAL(LONGINT, x), -23) MOD 256 = 255
+	RETURN ASH(SYSTEM.VAL(SIGNED32, x), -23) MOD 256 = 255
 END IsNaN;
 
 (** Returns TRUE iff x is NaN/Infinite. *)
-PROCEDURE IsNaNL* (x: LONGREAL): BOOLEAN;
-VAR h: LONGINT;
+PROCEDURE IsNaNL* (x: FLOAT64): BOOLEAN;
+VAR h: SIGNED32;
 BEGIN
 	SYSTEM.GET(ADDRESSOF(x) + H, h);
 	RETURN ASH(h, -20) MOD 2048 = 2047
 END IsNaNL;
 
 (** Returns NaN with specified code (0 <= l < 8399608). *)
-PROCEDURE NaN* (l: LONGINT): REAL;
-VAR x: REAL;
+PROCEDURE NaN* (l: SIGNED32): FLOAT32;
+VAR x: FLOAT32;
 BEGIN
 	SYSTEM.PUT(ADDRESSOF(x), (l MOD 800000H) + 7F800000H);
 	RETURN x
 END NaN;
 
-(** Returns NaN with specified code (0 <= h < 1048576, MIN(LONGINT) <= l <= MAX(LONGINT)). *)
-PROCEDURE NaNL* (h, l: LONGINT): LONGREAL;
-VAR x: LONGREAL;
+(** Returns NaN with specified code (0 <= h < 1048576, MIN(SIGNED32) <= l <= MAX(SIGNED32)). *)
+PROCEDURE NaNL* (h, l: SIGNED32): FLOAT64;
+VAR x: FLOAT64;
 BEGIN
 	h := (h MOD 100000H) + 7FF00000H;
 	SYSTEM.PUT(ADDRESSOF(x) + H, h);
@@ -193,23 +193,23 @@ END SetFCR;
 
 (** Round x to an integer using the current rounding mode. *)
 
-PROCEDURE Round*(x: REAL): LONGINT;	(** non-portable *)
+PROCEDURE Round*(x: FLOAT32): SIGNED32;	(** non-portable *)
 END Round;
 
 (** Round x to an integer using the current rounding mode. *)
 
-PROCEDURE RoundL*(x: LONGREAL): LONGINT;	(** non-portable *)
+PROCEDURE RoundL*(x: FLOAT64): SIGNED32;	(** non-portable *)
 END RoundL;
 
-PROCEDURE RealX (hh, hl: HUGEINT; adr: ADDRESS);
-VAR h,l: LONGINT;
+PROCEDURE RealX (hh, hl: SIGNED64; adr: ADDRESS);
+VAR h,l: SIGNED32;
 BEGIN
 	h := SHORT(hh); l := SHORT(hl);
 	SYSTEM.PUT(adr + H, h); SYSTEM.PUT(adr + L, l);
 END RealX;
 
 PROCEDURE InitHL;
-	VAR i: ADDRESS; dmy: INTEGER; littleEndian: BOOLEAN;
+	VAR i: ADDRESS; dmy: SIGNED16; littleEndian: BOOLEAN;
 BEGIN
 	DefaultFCR := Machine.fcr;
 

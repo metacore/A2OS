@@ -28,7 +28,7 @@ CONST
 		Regs = RegI + RegFP;
 
 	(* Register allocation mode *)
-		Free = 0;  Splitted = MAX(LONGINT);  Blocked = Splitted-1;
+		Free = 0;  Splitted = MAX(SIGNED32);  Blocked = Splitted-1;
 
 	(* Address.mode *)
 		register = 1;  relative = 2;  indexed = 3;  scaled = 4;  absolute = 5;  immediate = 6;
@@ -54,7 +54,7 @@ CONST
 	intMode = 0;  floatMode = 1;	(*index for JccTable*)
 
 TYPE
-	Register = SHORTINT;		(* i386 Register*)
+	Register = SIGNED8;		(* i386 Register*)
 
 	(*
 		Address describes the value used by the instruction in terms of a complex addressing mode.
@@ -105,13 +105,13 @@ TYPE
 	*)
 	Address = OBJECT (PCLIR.InstructionAttribute)
 	VAR
-		mode, scale: SHORTINT;
+		mode, scale: SIGNED8;
 		base, index: PCLIR.Register;
-		imm, imm2, disp: LONGINT;
+		imm, imm2, disp: SIGNED32;
 		addr: PCM.Attribute;
 		alias: PCLIR.Register;	(* the current register is an alias of this one *)
 
-		count: LONGINT;	(* emission only - use count; when it reaches 0, it can be deallocated *)
+		count: SIGNED32;	(* emission only - use count; when it reaches 0, it can be deallocated *)
 		i386: Register;
 		i3862: Register;	(*Huge, second register for 64bit values*)
 (*
@@ -122,10 +122,10 @@ TYPE
 	(* RealAddress - Similar to address, used to represent a real addressing mode during code emission *)
 
 	RealAddress = RECORD
-		mode: SHORTINT;		(* PCO.Regs / Mem / Imme / MemA *)
+		mode: SIGNED8;		(* PCO.Regs / Mem / Imme / MemA *)
 		base, index: Register;
-		scale: SHORTINT;
-		imm, imm2, disp: LONGINT;
+		scale: SIGNED8;
+		imm, imm2, disp: SIGNED32;
 		addr: PCM.Attribute;
 		size: PCLIR.Size;
 		base2: Register;	(*Huge, second register for 64bit values*)
@@ -133,32 +133,32 @@ TYPE
 
 VAR
 	SavedRegisters: SavedRegistersType; (* ARRAY 800 OF SavedRegistersDesc; *)
-	SaveLevel: LONGINT;
+	SaveLevel: SIGNED32;
 
-	CCTableSwitch: SHORTINT;	(*0=Int/1=Float; remind last cmp operation, used for jcc/jncc/setcc because flags are different*)
+	CCTableSwitch: SIGNED8;	(*0=Int/1=Float; remind last cmp operation, used for jcc/jncc/setcc because flags are different*)
 
 	(* Conversion Tables *)
-	FPSize: ARRAY 7 OF SHORTINT;
-	TccOpcode: ARRAY 2 OF SHORTINT;	(*maps Tcc to a Jcc jump that skips the trap*)
-	JccOpcode: ARRAY 16, 2 OF SHORTINT;	(* maps PCLIR.jcc to i386 jcc *)
-	Jcc2Opcode: ARRAY 16, 3 OF SHORTINT;	(* maps PCLIR.jcc to i386 jcc for HUGEINTS comparisons*)
-	Typ1Opcode: ARRAY 5 OF SHORTINT;
-	Typ1Opcode2: ARRAY 5 OF SHORTINT;	(*opcodes for the msb of Typ1Operations (Huge) *)
-	Group3Opcode: ARRAY 2 OF SHORTINT;	(*maps to neg/not*)
-	BitOpcode: ARRAY 2 OF SHORTINT;		(*maps to bts/btc*)
-	ShiftOpcode: ARRAY 6, 2 OF SHORTINT;	(*maps to ash/bsh/rot*)
+	FPSize: ARRAY 7 OF SIGNED8;
+	TccOpcode: ARRAY 2 OF SIGNED8;	(*maps Tcc to a Jcc jump that skips the trap*)
+	JccOpcode: ARRAY 16, 2 OF SIGNED8;	(* maps PCLIR.jcc to i386 jcc *)
+	Jcc2Opcode: ARRAY 16, 3 OF SIGNED8;	(* maps PCLIR.jcc to i386 jcc for HUGEINTS comparisons*)
+	Typ1Opcode: ARRAY 5 OF SIGNED8;
+	Typ1Opcode2: ARRAY 5 OF SIGNED8;	(*opcodes for the msb of Typ1Operations (Huge) *)
+	Group3Opcode: ARRAY 2 OF SIGNED8;	(*maps to neg/not*)
+	BitOpcode: ARRAY 2 OF SIGNED8;		(*maps to bts/btc*)
+	ShiftOpcode: ARRAY 6, 2 OF SIGNED8;	(*maps to ash/bsh/rot*)
 
 	(* Debug *)
 	RegName: ARRAY 8 OF CHAR;
 	IReg: ARRAY 24, 4 OF CHAR;
 
 TYPE
-	RegSet = ARRAY 8 OF LONGINT;
+	RegSet = ARRAY 8 OF SIGNED32;
 
 		VAR
 			reg32, reg8: RegSet;
 			regFP: RegSet;
-			FSP: SHORTINT;	(*F-Stack Top Pointer *)
+			FSP: SIGNED8;	(*F-Stack Top Pointer *)
 			(*
 				reg8:
 					Free: register not used
@@ -175,7 +175,7 @@ TYPE
 					> 0: allocated for a PCLIR.Register
 			*)
 
-		PROCEDURE Assert(cond: BOOLEAN; reason: LONGINT);
+		PROCEDURE Assert(cond: BOOLEAN; reason: SIGNED32);
 		VAR  r32, r8, rFP: RegSet;
 		BEGIN
 			IF ~cond THEN
@@ -188,7 +188,7 @@ TYPE
 
 (*
 		PROCEDURE CheckAllFree;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO 7 DO
 				Assert(reg32[i] = Free, 1000);
@@ -200,7 +200,7 @@ TYPE
 		(* FreeAll - Free all the registers *)
 
 		PROCEDURE FreeAll;
-		VAR  i: LONGINT;
+		VAR  i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO 7 DO
 				reg32[i] := Free;  reg8[i] := Free;  regFP[i] := Free;  FSP := -1
@@ -209,7 +209,7 @@ TYPE
 
 		(* GetThisReg - allocate given register (Int only) *)
 
-		PROCEDURE GetThisReg(reg: Register; pc: LONGINT);
+		PROCEDURE GetThisReg(reg: Register; pc: SIGNED32);
 		VAR  off8, off32: Register;
 		BEGIN
 			Assert(reg IN RegI, 1002);
@@ -235,7 +235,7 @@ TYPE
 
 		(* GetReg - Reserve a reg of given size for use by virtual register pc *)
 
-		PROCEDURE GetReg(VAR reg: Register;  size: SHORTINT;  pc: LONGINT;  mask: SET);
+		PROCEDURE GetReg(VAR reg: Register;  size: SIGNED8;  pc: SIGNED32;  mask: SET);
 
 			PROCEDURE GetReg8;
 			VAR  p: Register;
@@ -293,7 +293,7 @@ TYPE
 			IF reg >= 0 THEN INC(reg, AL) END;
 		END GetTempReg8;
 
-		PROCEDURE GetFPReg(VAR reg: Register;  pc: LONGINT);
+		PROCEDURE GetFPReg(VAR reg: Register;  pc: SIGNED32);
 		BEGIN
 			INC(FSP);
 			Assert(FSP < 8, 1015);
@@ -304,7 +304,7 @@ TYPE
 		(* FreeReg - Free a register *)
 
 		PROCEDURE FreeReg(reg: Register);
-		VAR off8, off32: SHORTINT;
+		VAR off8, off32: SIGNED8;
 		BEGIN
 			Assert(reg IN Regs, 1017);
 			IF  reg IN {ESP, EBP} THEN	(*skip, never allocated*)
@@ -339,7 +339,7 @@ TYPE
 
 		(* Owner -  return virtual reg owning reg or free *)
 
-		PROCEDURE Owner(reg: Register): LONGINT;
+		PROCEDURE Owner(reg: Register): SIGNED32;
 		BEGIN
 			Assert(reg IN RegI, 1023);
 			IF reg IN Reg32+Reg16 THEN
@@ -365,7 +365,7 @@ BEGIN
 	RETURN reg1 = reg2
 END RegisterOverlaps;
 
-PROCEDURE RegisterSize(reg: Register): SHORTINT;
+PROCEDURE RegisterSize(reg: Register): SIGNED8;
 BEGIN
 	IF reg IN Reg32 THEN  RETURN 4
 	ELSIF reg IN Reg16 THEN  RETURN 2
@@ -409,11 +409,11 @@ BEGIN
 	END
 END RegisterD;
 
-PROCEDURE ConstSize(c: LONGINT; allow16: BOOLEAN): SHORTINT;
+PROCEDURE ConstSize(c: SIGNED32; allow16: BOOLEAN): SIGNED8;
 BEGIN
-	IF (c >= MIN(SHORTINT)) & (c <= MAX(SHORTINT)) THEN
+	IF (c >= MIN(SIGNED8)) & (c <= MAX(SIGNED8)) THEN
 		RETURN 1
-	ELSIF allow16 & (c >= MIN(INTEGER)) & (c <= MAX(INTEGER)) THEN
+	ELSIF allow16 & (c >= MIN(SIGNED16)) & (c <= MAX(SIGNED16)) THEN
 		RETURN 2
 	ELSE
 		RETURN 4
@@ -445,8 +445,8 @@ END InstructionInit;
 
 (* FSM (Finite State Machine) - Try to remove the current instruction by using a complex addressing mode *)
 
-PROCEDURE FSM(code: PCLIR.Code;  pc: LONGINT;  VAR instr: PCLIR.Instruction;  addr: Address);
-VAR  p: PCLIR.Piece;  op: PCLIR.Opcode;  thisreg, nextreg: PCLIR.Register;  i: LONGINT;  info: Address;
+PROCEDURE FSM(code: PCLIR.Code;  pc: SIGNED32;  VAR instr: PCLIR.Instruction;  addr: Address);
+VAR  p: PCLIR.Piece;  op: PCLIR.Opcode;  thisreg, nextreg: PCLIR.Register;  i: SIGNED32;  info: Address;
 BEGIN
 	IF thisreg < 0 THEN RETURN END;	(* FP/SP/HwReg terminate search*)
 	thisreg := pc;
@@ -586,18 +586,18 @@ BEGIN
 END FSM;
 
 PROCEDURE AliveSetInit(VAR set: AliveSet);
-VAR  i: LONGINT;
+VAR  i: SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(set)-1 DO
 		set[i].reg := none
 	END
 END AliveSetInit;
 
-PROCEDURE AliveAdd(VAR set: AliveSet;  reg: LONGINT;  size: PCLIR.Size);
-VAR i, j: LONGINT; mask: SET;
+PROCEDURE AliveAdd(VAR set: AliveSet;  reg: SIGNED32;  size: PCLIR.Size);
+VAR i, j: SIGNED32; mask: SET;
 BEGIN
 	IF reg <= 0 THEN RETURN END;
-	IF (reg = 0) THEN HALT(MAX(INTEGER)) END;
+	IF (reg = 0) THEN HALT(MAX(SIGNED16)) END;
 (*PCM.LogWLn; PCM.LogWStr("Add "); PCM.LogWNum(reg);*)
 	i := 0; j := -1;
 	WHILE (i < LEN(set)) & (set[i].reg # reg) DO
@@ -620,8 +620,8 @@ BEGIN
 	END;*)
 END AliveAdd;
 
-PROCEDURE AliveAddComplex(VAR set: AliveSet;  code: PCLIR.Code;  reg: LONGINT);
-VAR pos: LONGINT; p: PCLIR.Piece; info: Address;
+PROCEDURE AliveAddComplex(VAR set: AliveSet;  code: PCLIR.Code;  reg: SIGNED32);
+VAR pos: SIGNED32; p: PCLIR.Piece; info: Address;
 BEGIN
 	IF reg <= 0 THEN RETURN END;
 	pos := reg; code.GetPiece(pos, p);
@@ -641,8 +641,8 @@ BEGIN
 	END
 END AliveAddComplex;
 
-PROCEDURE AliveRemove(VAR set: AliveSet;  reg: LONGINT);
-VAR i: LONGINT;
+PROCEDURE AliveRemove(VAR set: AliveSet;  reg: SIGNED32);
+VAR i: SIGNED32;
 BEGIN
 (*PCM.LogWLn; PCM.LogWStr("Rem "); PCM.LogWNum(reg);*)
 	i := 0;
@@ -653,7 +653,7 @@ END AliveRemove;
 
 (* SetRegisterHint - vreg should be implemented by ireg *)
 
-PROCEDURE SetRegisterHint(code: PCLIR.Code;  barrier: LONGINT; vreg: PCLIR.Register;  ireg: Register);
+PROCEDURE SetRegisterHint(code: PCLIR.Code;  barrier: SIGNED32; vreg: PCLIR.Register;  ireg: Register);
 VAR p: PCLIR.Piece; op: PCLIR.Opcode;  info: Address;  size: PCLIR.Size;
 BEGIN
 	IF (vreg >= 0) & (vreg >= barrier) THEN
@@ -679,7 +679,7 @@ BEGIN
 	END
 END SetRegisterHint;
 
-PROCEDURE SetRegisterHint2(code: PCLIR.Code;  barrier: LONGINT; vreg: PCLIR.Register;  ireg, ireg2: Register);
+PROCEDURE SetRegisterHint2(code: PCLIR.Code;  barrier: SIGNED32; vreg: PCLIR.Register;  ireg, ireg2: Register);
 VAR p: PCLIR.Piece; op: PCLIR.Opcode;  info: Address;  size: PCLIR.Size;
 BEGIN
 	IF (vreg >= 0) & (vreg >= barrier) THEN
@@ -704,14 +704,14 @@ END SetRegisterHint2;
 
 
 (** Optimize - Perform some code optimizations; must be a reverse traversal *)
-PROCEDURE Optimize(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT;  context: ANY);
+PROCEDURE Optimize(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32;  context: ANY);
 CONST	Full = 1;  Const = 2;  NoConst = 3;	(*Optimization Mode*)
-VAR	p: PCLIR.Piece;  copy, pos: LONGINT; op: PCLIR.Opcode; debSrc1, debSrc2: PCLIR.Register; mode: SHORTINT;
-	info: Address;  format: LONGINT; size1: PCLIR.Size;
+VAR	p: PCLIR.Piece;  copy, pos: SIGNED32; op: PCLIR.Opcode; debSrc1, debSrc2: PCLIR.Register; mode: SIGNED8;
+	info: Address;  format: SIGNED32; size1: PCLIR.Size;
 	alive: AliveSetPtr; hint1, hint2: Register;
 
-	PROCEDURE Compact(reg: PCLIR.Register;  mode:  SHORTINT): SHORTINT;
-	VAR  p: PCLIR.Piece; pos: LONGINT;  info: Address;  op: PCLIR.Opcode;  mode0: SHORTINT;
+	PROCEDURE Compact(reg: PCLIR.Register;  mode:  SIGNED8): SIGNED8;
+	VAR  p: PCLIR.Piece; pos: SIGNED32;  info: Address;  op: PCLIR.Opcode;  mode0: SIGNED8;
 	BEGIN
 		IF reg >= instr.barrier THEN
 			pos := reg; code.GetPiece(pos, p);
@@ -730,7 +730,7 @@ VAR	p: PCLIR.Piece;  copy, pos: LONGINT; op: PCLIR.Opcode; debSrc1, debSrc2: PCL
 	END Compact;
 
 	PROCEDURE Unuse(reg: PCLIR.Register);
-	VAR  p: PCLIR.Piece; pos: LONGINT;
+	VAR  p: PCLIR.Piece; pos: SIGNED32;
 	BEGIN
 		IF reg >= 0 THEN
 			pos := reg; code.GetPiece(pos, p);
@@ -1000,7 +1000,7 @@ END UseRegister2;
 
 PROCEDURE UseComplexI(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  VAR addr: RealAddress);
 VAR  info: Address;  adr: PCBT.Procedure;
-	PROCEDURE IntelScale(scale: LONGINT): SHORTINT;
+	PROCEDURE IntelScale(scale: SIGNED32): SIGNED8;
 	BEGIN
 		CASE scale OF
 		| 1:  RETURN PCO.Scale1  | 2:  RETURN PCO.Scale2  | 4:  RETURN PCO.Scale4  | 8:  RETURN PCO.Scale8
@@ -1078,8 +1078,8 @@ END UseComplex;
 
 (* AllocateRegI - allocate a real register *)
 
-PROCEDURE AllocateRegI(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT): Register;
-VAR  pos: LONGINT;  p: PCLIR.Piece;  info, info1: Address;
+PROCEDURE AllocateRegI(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32): Register;
+VAR  pos: SIGNED32;  p: PCLIR.Piece;  info, info1: Address;
 BEGIN
 	info := SYSTEM.VAL(Address, instr.info);
 	IF (info.alias # none) THEN	(*this register is aliased*)
@@ -1110,14 +1110,14 @@ BEGIN
 END AllocateRegI;
 
 PROCEDURE AllocateReg(code: PCLIR.Code;  vreg: PCLIR.Register): Register;
-VAR  pc: LONGINT;  p: PCLIR.Piece;
+VAR  pc: SIGNED32;  p: PCLIR.Piece;
 BEGIN
 	pc := vreg;  code.GetPiece(pc, p);
 	RETURN AllocateRegI(code, p.instr[pc], vreg);
 END AllocateReg;
 
-PROCEDURE AllocateRegI2(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT;  VAR reg, reg2: Register);
-VAR  pos: LONGINT;  p: PCLIR.Piece;  info, info1: Address;
+PROCEDURE AllocateRegI2(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32;  VAR reg, reg2: Register);
+VAR  pos: SIGNED32;  p: PCLIR.Piece;  info, info1: Address;
 BEGIN
 	ASSERT(instr.dstSize = PCLIR.Int64);
 	info := SYSTEM.VAL(Address, instr.info);
@@ -1147,7 +1147,7 @@ END AllocateRegI2;
 
 (* AllocateThisReg - allocate ireg *)
 
-PROCEDURE AllocateThisRegI(VAR instr: PCLIR.Instruction;  pc: LONGINT;  ireg: Register);
+PROCEDURE AllocateThisRegI(VAR instr: PCLIR.Instruction;  pc: SIGNED32;  ireg: Register);
 VAR  info: Address;
 BEGIN
 	ASSERT(PCLIR.NofBytes(instr.dstSize) = RegisterSize(ireg));
@@ -1156,7 +1156,7 @@ BEGIN
 END AllocateThisRegI;
 
 PROCEDURE AllocateThisReg(code: PCLIR.Code;  vreg: PCLIR.Register;  ireg: Register);
-VAR  pc: LONGINT;  p: PCLIR.Piece;
+VAR  pc: SIGNED32;  p: PCLIR.Piece;
 BEGIN
 	IF vreg >= 0 THEN
 		pc := vreg;  code.GetPiece(pc, p);
@@ -1169,7 +1169,7 @@ BEGIN
 	END
 END AllocateThisReg;
 
-PROCEDURE AllocateThisRegI2(VAR instr: PCLIR.Instruction;  pc: LONGINT;  ireg, ireg2: Register);
+PROCEDURE AllocateThisRegI2(VAR instr: PCLIR.Instruction;  pc: SIGNED32;  ireg, ireg2: Register);
 VAR  info: Address;
 BEGIN
 	ASSERT(instr.dstSize = PCLIR.Int64);
@@ -1182,7 +1182,7 @@ END AllocateThisRegI2;
 
 (*
 PROCEDURE AllocateThisReg2(code: PCLIR.Code;  vreg: PCLIR.Register;  ireg, ireg2: Register);
-VAR  pc: LONGINT;  p: PCLIR.Piece;
+VAR  pc: SIGNED32;  p: PCLIR.Piece;
 BEGIN
 	IF vreg >= 0 THEN
 		pc := vreg;  code.GetPiece(pc, p);
@@ -1236,7 +1236,7 @@ BEGIN
 	END
 END ForceRegister;
 
-PROCEDURE FixAbsolute(adr: PCM.Attribute;  offset: LONGINT);
+PROCEDURE FixAbsolute(adr: PCM.Attribute;  offset: SIGNED32);
 	(* adr info prepared by UseComplexI *)
 BEGIN
 	IF adr = NIL THEN
@@ -1253,11 +1253,11 @@ END FixAbsolute;
 
 (* GenEnter - Create Procedure activation frame of given size and clear the stack *)
 
-PROCEDURE GenEnter(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  size, L, i: LONGINT;  padr: PCBT.Procedure (* ug *); adr: PCBT.Attribute (* ug *);
+PROCEDURE GenEnter(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  size, L, i: SIGNED32;  padr: PCBT.Procedure (* ug *); adr: PCBT.Attribute (* ug *);
 
 	PROCEDURE SetAddress(proc: PCBT.Procedure);
-	VAR pos, dw: LONGINT;
+	VAR pos, dw: SIGNED32;
 	BEGIN
 		WITH proc: PCBT.Procedure DO
 			IF proc.fixlist # PCBT.FixupSentinel THEN	(*patch the fixlist*)
@@ -1325,8 +1325,8 @@ END GenEnter;
 
 (* GenExit - Remove procedure activation frame, remove the give size of parameters and return to the caller *)
 
-PROCEDURE GenExit(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  size: LONGINT;
+PROCEDURE GenExit(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  size: SIGNED32;
 BEGIN
 	IF instr.adr # NIL  THEN (* ug *)
 		instr.adr(PCBT.Attribute).SetEndOffset(PCO.pc)
@@ -1357,7 +1357,7 @@ END GenExit;
 
 (* GenTrap - Implementation for trap, tcc *)
 
-PROCEDURE GenTrap(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenTrap(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR  op: PCLIR.Opcode; src1, src2: RealAddress;
 BEGIN
 	op := instr.op;
@@ -1371,8 +1371,8 @@ BEGIN
 	PCO.PutByte(0CCH);		(* INT 3 *)
 END GenTrap;
 
-PROCEDURE GetRegSaveSize(): LONGINT;		(* fld *)
-VAR s: LONGINT; i: Register;  t: PCLIR.Register;
+PROCEDURE GetRegSaveSize(): SIGNED32;		(* fld *)
+VAR s: SIGNED32; i: Register;  t: PCLIR.Register;
 BEGIN
 	s := 0;
 	IF FSP >= 0 THEN  s := (FSP+1)*8 END;
@@ -1385,8 +1385,8 @@ BEGIN
 	RETURN s
 END GetRegSaveSize;
 
-PROCEDURE GenSaveRegistersAligned(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);	(* fld *)
-VAR rss, gap: LONGINT;
+PROCEDURE GenSaveRegistersAligned(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);	(* fld *)
+VAR rss, gap: SIGNED32;
 BEGIN
 	PCO.GenTyp1( PCO.AND, PCO.ImmReg, ESP, noBase, noInx, noScale, noDisp, -16 );	(* align stack to 16 byte boundary *)
 	rss := GetRegSaveSize();
@@ -1409,7 +1409,7 @@ END GenSaveRegistersAligned;
 *)
 
 
-PROCEDURE GenSaveRegisters(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenSaveRegisters(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR pos, i: Register;  t: PCLIR.Register;
 BEGIN
 	ASSERT((instr.op = PCLIR.saveregs)OR (instr.op = PCLIR.saveregsaligned) );	(* fld *)
@@ -1461,8 +1461,8 @@ BEGIN
 	IncSaveLevel;
 END GenSaveRegisters;
 
-PROCEDURE GenRestoreRegisters(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR vreg0, vreg1, saved: PCLIR.Register;  reg, dummy: Register;  size, pos: LONGINT;
+PROCEDURE GenRestoreRegisters(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR vreg0, vreg1, saved: PCLIR.Register;  reg, dummy: Register;  size, pos: SIGNED32;
 BEGIN
 	ASSERT(instr.op = PCLIR.loadregs);
 	DEC(SaveLevel);
@@ -1517,7 +1517,7 @@ BEGIN
 	END
 END GenRestoreRegisters;
 
-PROCEDURE GenPop(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenPop(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR reg: Register;
 BEGIN
 	ASSERT(instr.dstSize IN PCLIR.IntSize);
@@ -1527,7 +1527,7 @@ END GenPop;
 
 (* GenResult - Allocate the registers for functions results (after a call) *)
 
-PROCEDURE GenResult(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenResult(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR  size: PCLIR.Size;  reg: Register;
 BEGIN
 	size := instr.dstSize;
@@ -1546,8 +1546,8 @@ END GenResult;
 
 (* GenReturn - Pass a value to the caller *)
 
-PROCEDURE GenReturn(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  reg: Register;  info: Address;  p: PCLIR.Piece;  pos: LONGINT;  size: PCLIR.Size; src: RealAddress;
+PROCEDURE GenReturn(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  reg: Register;  info: Address;  p: PCLIR.Piece;  pos: SIGNED32;  size: PCLIR.Size; src: RealAddress;
 BEGIN
 	pos := instr.src1;  code.GetPiece(pos, p);  info := SYSTEM.VAL(Address, p.instr[pos].info);
 	size := p.instr[pos].dstSize;
@@ -1611,7 +1611,7 @@ END LoadRegHi;
 
 (* GenLoad - Load / Lea implementation *)
 
-PROCEDURE GenLoad(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenLoad(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR  addr: RealAddress;  op: PCLIR.Opcode;  reg, reg2: Register;  info: Address;
 BEGIN
 	op := instr.op;
@@ -1630,7 +1630,7 @@ BEGIN
 	info.mode := 0;	(*Register=pc*)
 END GenLoad;
 
-PROCEDURE GenLoadSP(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenLoadSP(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR src: RealAddress;
 BEGIN
 	UseComplex(code, instr.src1, src);
@@ -1639,7 +1639,7 @@ BEGIN
 	END
 END GenLoadSP;
 
-PROCEDURE GenLoadFP(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenLoadFP(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR src: RealAddress;
 BEGIN
 	UseComplex(code, instr.src1, src);
@@ -1648,7 +1648,7 @@ BEGIN
 	END
 END GenLoadFP;
 
-PROCEDURE GenStore(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenStore(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR  src, dst: RealAddress;
 BEGIN
 	ASSERT(instr.op = PCLIR.store, 100);
@@ -1688,7 +1688,7 @@ BEGIN
 	END;
 END GenStore;
 
-PROCEDURE GenOut(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenOut(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 	(* src1 = portnr, src2 = value *)
 VAR  src: RealAddress;  value, port: Register;
 BEGIN
@@ -1701,7 +1701,7 @@ BEGIN
 	PCO.GenOUT(value)
 END GenOut;
 
-PROCEDURE GenIn(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenIn(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 	(* src1 = portnr *)
 VAR  value, port: Register;
 BEGIN
@@ -1713,12 +1713,12 @@ BEGIN
 	AllocateThisRegI(instr, pc, value);
 END GenIn;
 
-PROCEDURE GenNop(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenNop(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN  PCO.PutByte(90H)
 END GenNop;
 
-PROCEDURE GenLabel(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  info: Address;  next: LONGINT;
+PROCEDURE GenLabel(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  info: Address;  next: SIGNED32;
 BEGIN
 	info := SYSTEM.VAL(Address, instr.info);
 	info.imm := PCO.pc;
@@ -1741,7 +1741,7 @@ BEGIN
 
 END GenLabel;
 
-PROCEDURE EmitJcc(op: SHORTINT;  dest: LONGINT;  VAR chain: LONGINT);
+PROCEDURE EmitJcc(op: SIGNED8;  dest: SIGNED32;  VAR chain: SIGNED32);
 BEGIN
 	IF dest = 0 THEN	(*fwd jmp*)
 		PCO.GenJcc(op, chain+10000H);
@@ -1753,8 +1753,8 @@ BEGIN
 	END
 END EmitJcc;
 
-PROCEDURE GenJcc(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  info: Address;  pos, fix: LONGINT;  p: PCLIR.Piece;  jcc: SHORTINT; src1, src2: RealAddress;
+PROCEDURE GenJcc(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  info: Address;  pos, fix: SIGNED32;  p: PCLIR.Piece;  jcc: SIGNED8; src1, src2: RealAddress;
 BEGIN
 	UseComplex(code, instr.src1, src1);  UseComplex(code, instr.src2, src2);
 	pos := instr.val; code.GetPiece(pos, p);
@@ -1784,8 +1784,8 @@ BEGIN
 	END;
 END GenJcc;
 
-PROCEDURE GenJmp(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  info: Address;  pos: LONGINT;  p: PCLIR.Piece;
+PROCEDURE GenJmp(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  info: Address;  pos: SIGNED32;  p: PCLIR.Piece;
 BEGIN
 	pos := instr.val; code.GetPiece(pos, p);
 	info := SYSTEM.VAL(Address, p.instr[pos].info);
@@ -1799,7 +1799,7 @@ BEGIN
 	END
 END GenJmp;
 
-PROCEDURE GenCall(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenCall(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR  adr: PCBT.Procedure;
 BEGIN
 	adr := instr.adr(PCBT.Procedure);
@@ -1819,8 +1819,8 @@ BEGIN
 	END
 END GenCall;
 
-PROCEDURE GenCallReg(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  src: RealAddress;  mode: SHORTINT;
+PROCEDURE GenCallReg(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  src: RealAddress;  mode: SIGNED8;
 BEGIN
 	UseComplex(code, instr.src1, src);
 	mode := src.mode;
@@ -1829,14 +1829,14 @@ BEGIN
 	FixAbsolute(src.addr, -4)
 END GenCallReg;
 
-PROCEDURE GenSysCall(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenSysCall(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	PCO.GenCALL(PCO.ImmeA, 0, noBase, noInx, noScale, 0);
 	PCBT.context.UseSyscall(instr.val, PCO.pc-4)
 END GenSysCall;
 
-PROCEDURE GenSetcc(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  reg: Register;  jcc, op: SHORTINT; src1, src2: RealAddress; true1, true2, false: LONGINT;
+PROCEDURE GenSetcc(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  reg: Register;  jcc, op: SIGNED8; src1, src2: RealAddress; true1, true2, false: SIGNED32;
 BEGIN
 	UseComplex(code, instr.src1, src1);  UseComplex(code, instr.src2, src2);
 	IF src1.size = PCLIR.Int64 THEN
@@ -1877,8 +1877,8 @@ BEGIN
 	END;
 END GenSetcc;
 
-PROCEDURE GenKill(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  pos: LONGINT;  p: PCLIR.Piece;  reg: Register;  info: Address;
+PROCEDURE GenKill(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  pos: SIGNED32;  p: PCLIR.Piece;  reg: Register;  info: Address;
 BEGIN
 	(*kill a register, used in conjunction with phi*)
 	pos := instr.src1;  code.GetPiece(pos, p);
@@ -1899,14 +1899,14 @@ BEGIN
 *)
 END GenKill;
 
-PROCEDURE GenPhi(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenPhi(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR  reg: Register;
 BEGIN
 	reg := AllocateRegI(code, instr, pc)
 END GenPhi;
 
-PROCEDURE GenPush(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  dst: RealAddress;  reg: Register;  size: LONGINT;
+PROCEDURE GenPush(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  dst: RealAddress;  reg: Register;  size: SIGNED32;
 BEGIN
 	UseComplex(code, instr.src1, dst);
 	size := PCLIR.NofBytes(dst.size);
@@ -1941,7 +1941,7 @@ BEGIN
 END GenPush;
 
 PROCEDURE IntExpansion(op: PCLIR.Opcode;  src: RealAddress;  dst: Register);
-VAR t: SHORTINT;  size: LONGINT;
+VAR t: SIGNED8;  size: SIGNED32;
 BEGIN
 	size := PCLIR.NofBytes(src.size);
 	IF size = 1 THEN  t := 0  ELSE  t := 1  END;
@@ -1967,7 +1967,7 @@ BEGIN
 END IntExpansion;
 
 PROCEDURE Entier(dst, dst2: Register; dest64: BOOLEAN);
-VAR  reg: Register; size: LONGINT;
+VAR  reg: Register; size: SIGNED32;
 BEGIN
 	GetTempReg32(reg);
 	IF dest64 THEN size := 12 ELSE size := 8 END;
@@ -1991,8 +1991,8 @@ BEGIN
 	IF dest64 THEN PCO.GenPOP(PCO.Regs, dst2, noBase, noInx, noScale, noDisp) END;
 END Entier;
 
-PROCEDURE GenConv(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  op: PCLIR.Opcode;  size, bs, bd: LONGINT; reg, reg2, tmp: Register;  src: RealAddress;
+PROCEDURE GenConv(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  op: PCLIR.Opcode;  size, bs, bd: SIGNED32; reg, reg2, tmp: Register;  src: RealAddress;
 BEGIN
 	op := instr.op;
 	ASSERT((op = PCLIR.convs) OR (op = PCLIR.convu) OR (op = PCLIR.copy));
@@ -2085,7 +2085,7 @@ BEGIN
 	END
 END GenConv;
 
-PROCEDURE GenNegNot(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenNegNot(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR reg, reg2: Register;
 BEGIN
 	IF instr.dstSize IN PCLIR.FloatSize THEN
@@ -2108,8 +2108,8 @@ BEGIN
 	END
 END GenNegNot;
 
-PROCEDURE GenAbs(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  reg, tmp: Register;  size: LONGINT;
+PROCEDURE GenAbs(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  reg, tmp: Register;  size: SIGNED32;
 BEGIN
 	size := PCLIR.NofBytes(instr.dstSize);
 	UseRegister(code, instr.src1, reg);
@@ -2136,8 +2136,8 @@ BEGIN
 	END
 END GenAbs;
 
-PROCEDURE GenBitOp(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  reg: Register;  src2: RealAddress;  op: SHORTINT;
+PROCEDURE GenBitOp(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  reg: Register;  src2: RealAddress;  op: SIGNED8;
 BEGIN
 	UseRegister(code, instr.src1, reg);  AllocateThisRegI(instr, pc, reg);
 	UseComplex(code, instr.src2, src2);
@@ -2226,8 +2226,8 @@ BEGIN
 	ELSE HALT(99) END;
 END GenCmp2;
 
-PROCEDURE GenFtyp1(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR src1, src2: RealAddress;  reverse: BOOLEAN;  op: SHORTINT;  reg: Register;
+PROCEDURE GenFtyp1(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR src1, src2: RealAddress;  reverse: BOOLEAN;  op: SIGNED8;  reg: Register;
 BEGIN
 	ASSERT(instr.dstSize IN PCLIR.FloatSize);
 	UseComplex(code, instr.src2, src2);  ASSERT(src2.mode IN {PCO.Regs, PCO.Mem, PCO.MemA});		(* higher on FP Stack, first used *)
@@ -2266,7 +2266,7 @@ BEGIN
 END GenFtyp1;
 
 PROCEDURE GenMul64(src1, src2: RealAddress; dst1, dst2: Register);
-	VAR clean: LONGINT;
+	VAR clean: SIGNED32;
 BEGIN
 	ASSERT(dst1 = EAX);
 	ASSERT(dst2 = EDX);
@@ -2315,8 +2315,8 @@ BEGIN
 	END
 END GenMul64;
 
-PROCEDURE GenMul(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR size: LONGINT;  reg: Register;  src1, src2: RealAddress;  short, spilled: BOOLEAN;
+PROCEDURE GenMul(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR size: SIGNED32;  reg: Register;  src1, src2: RealAddress;  short, spilled: BOOLEAN;
 BEGIN
 	spilled := FALSE;
 	IF instr.dstSize IN PCLIR.FloatSize THEN
@@ -2391,12 +2391,12 @@ BEGIN
 	END
 END GenMul;
 
-PROCEDURE GenDivMod(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  size: PCLIR.Size;  remainder, dividend, result, temp: Register;  src2: RealAddress;  offs, bytes: LONGINT; dest: SET;
+PROCEDURE GenDivMod(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  size: PCLIR.Size;  remainder, dividend, result, temp: Register;  src2: RealAddress;  offs, bytes: SIGNED32; dest: SET;
 BEGIN
 	ASSERT((instr.op = PCLIR.div) OR (instr.op = PCLIR.mod));
 	IF instr.dstSize = PCLIR.Int64 THEN
-		PCM.Error(200, PCO.errpos, "HUGEINT DIV/MOD");
+		PCM.Error(200, PCO.errpos, "SIGNED64 DIV/MOD");
 	ELSIF instr.dstSize IN PCLIR.FloatSize THEN
 		GenFtyp1(code, instr, pc)
 	ELSE
@@ -2449,7 +2449,7 @@ BEGIN
 	END
 END GenDivMod;
 
-PROCEDURE GenTyp1(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenTyp1(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR src1, src2: RealAddress; t: Register; lea: BOOLEAN;  info: Address;
 BEGIN
 	ASSERT(instr.src1 # 0);
@@ -2496,8 +2496,8 @@ BEGIN
 	END
 END GenTyp1;
 
-PROCEDURE GenShift(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  op: PCLIR.Opcode;  src, src2, tmp: Register; count: RealAddress;  pos1, pos2: LONGINT; size64: BOOLEAN;
+PROCEDURE GenShift(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  op: PCLIR.Opcode;  src, src2, tmp: Register; count: RealAddress;  pos1, pos2: SIGNED32; size64: BOOLEAN;
 (*
 	Note: UseRegister must be done after ForceRegister, otherwise if the source is in ECX a conflict may occour.
 *)
@@ -2591,8 +2591,8 @@ BEGIN
 	END;
 END GenShift;
 
-PROCEDURE GenMoveDown(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  src, dst: Register;  size: RealAddress;  step: INTEGER;
+PROCEDURE GenMoveDown(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  src, dst: Register;  size: RealAddress;  step: SIGNED16;
 BEGIN
 	UseRegister(code, instr.src1, src); ForceRegister(code, src, ESI, MakeMask(EDI)+MakeMask(ECX));
 	UseRegister(code, instr.src2, dst); ForceRegister(code, dst, EDI, MakeMask(ESI)+MakeMask(ECX));
@@ -2623,8 +2623,8 @@ BEGIN
 	END
 END GenMoveDown;
 
-PROCEDURE GenMove(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  src, dst, tmp: Register;  size: RealAddress;  step: INTEGER;
+PROCEDURE GenMove(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  src, dst, tmp: Register;  size: RealAddress;  step: SIGNED16;
 BEGIN
 	UseRegister(code, instr.src1, src); ForceRegister(code, src, ESI, MakeMask(EDI)+MakeMask(ECX));
 	UseRegister(code, instr.src2, dst); ForceRegister(code, dst, EDI, MakeMask(ESI)+MakeMask(ECX));
@@ -2663,10 +2663,10 @@ BEGIN
 	END
 END GenMove;
 
-PROCEDURE GenInline(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  newpc, oldpc, i: LONGINT;  inline: PCLIR.AsmInline;  block: PCLIR.AsmBlock;  fix: PCLIR.AsmFixup;
+PROCEDURE GenInline(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  newpc, oldpc, i: SIGNED32;  inline: PCLIR.AsmInline;  block: PCLIR.AsmBlock;  fix: PCLIR.AsmFixup;
 (*
-	c: LONGINT;
+	c: SIGNED32;
 *)
 BEGIN
 (*
@@ -2704,13 +2704,13 @@ END GenInline;
 (* CaseTable Format
 	location: at offset "table" in the const section
 	CaseTable = ARRAY table size OF RECORD
-		pc-offset: INTEGER;	(*address(rel to code base) to jump to*)
-		next: INTEGER		(*next entry offset (used by the linker to patch addresses)*)
+		pc-offset: SIGNED16;	(*address(rel to code base) to jump to*)
+		next: SIGNED16		(*next entry offset (used by the linker to patch addresses)*)
 	END;
 *)
 
-PROCEDURE GenCase(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  min, max, range, table: LONGINT;  reg: Register;  adr: PCBT.GlobalVariable;  info: Address;
+PROCEDURE GenCase(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  min, max, range, table: SIGNED32;  reg: Register;  adr: PCBT.GlobalVariable;  info: Address;
 	const: PCBT.ConstArray;
 BEGIN
 	min := instr.src2;
@@ -2750,8 +2750,8 @@ BEGIN
 	PCBT.context.UseVariable(adr, PCO.pc-4)
 END GenCase;
 
-PROCEDURE GenCaseLine(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  info: Address;  table, pos, offset: LONGINT;  p: PCLIR.Piece;
+PROCEDURE GenCaseLine(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  info: Address;  table, pos, offset: SIGNED32;  p: PCLIR.Piece;
 BEGIN
 	pos := instr.src1; code.GetPiece(pos, p);
 	info := SYSTEM.VAL(Address, p.instr[pos].info);
@@ -2763,8 +2763,8 @@ BEGIN
 	PCBT.context.const[table+3] := CHR(PCO.pc DIV 1000000H)  	(* ug *)
 END GenCaseLine;
 
-PROCEDURE GenCaseElse(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR  pos, min, max, size, i: LONGINT;  p: PCLIR.Piece;  info: Address;
+PROCEDURE GenCaseElse(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR  pos, min, max, size, i: SIGNED32;  p: PCLIR.Piece;  info: Address;
 BEGIN
 	pos := instr.src1; code.GetPiece(pos, p);
 	info := SYSTEM.VAL(Address, p.instr[pos].info);
@@ -2785,13 +2785,13 @@ BEGIN
 END GenCaseElse;
 
 (* Debug Procedures *)
-PROCEDURE DumpCode(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT;  context: ANY);
-	VAR op: PCLIR.Opcode;   format: SHORTINT;  info: Address;
+PROCEDURE DumpCode(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32;  context: ANY);
+	VAR op: PCLIR.Opcode;   format: SIGNED8;  info: Address;
 
 	PROCEDURE Reg(r: PCLIR.Register;  expand: BOOLEAN);
-	VAR p: PCLIR.Piece; reg: LONGINT;
+	VAR p: PCLIR.Piece; reg: SIGNED32;
 
-		PROCEDURE WriteDisp(disp: LONGINT;  abs: BOOLEAN);
+		PROCEDURE WriteDisp(disp: SIGNED32;  abs: BOOLEAN);
 		BEGIN
 			IF abs THEN
 				PCM.LogWStr("@sb");
@@ -2800,8 +2800,8 @@ PROCEDURE DumpCode(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT
 			PCM.LogWNum(disp)
 		END WriteDisp;
 
-		PROCEDURE ComplexAddress(VAR instr: PCLIR.Instruction; reg: LONGINT);
-		VAR  info: Address;  form: LONGINT;
+		PROCEDURE ComplexAddress(VAR instr: PCLIR.Instruction; reg: SIGNED32);
+		VAR  info: Address;  form: SIGNED32;
 		BEGIN
 			info := SYSTEM.VAL(Address, instr.info);
 			form := PCLIR.InstructionSet[instr.op].format;
@@ -2967,14 +2967,14 @@ END Init;
 
 (* Done - Code generator results - Installed in PCBT.CG *)
 
-PROCEDURE Done(VAR result: WORD);
+PROCEDURE Done(VAR result: INTEGER);
 BEGIN
 	IF PCO.CodeErr THEN result := -1
 	ELSE result := 0
 	END
 END Done;
 
-	PROCEDURE GetCode(VAR codeArr: PCLIR.CodeArray; VAR length, hdrlength, addressFactor: LONGINT);
+	PROCEDURE GetCode(VAR codeArr: PCLIR.CodeArray; VAR length, hdrlength, addressFactor: SIGNED32);
 	BEGIN
 		codeArr := PCO.code; length := PCO.pc; hdrlength := PCO.pc; addressFactor := 1
 	END GetCode;
@@ -3069,7 +3069,7 @@ END Done;
 	END Install;
 
 	PROCEDURE Configure;
-	VAR i: SHORTINT;
+	VAR i: SIGNED8;
 	BEGIN
 		TccOpcode[PCLIR.tae-PCLIR.tae] := PCO.JNAE;
 		TccOpcode[PCLIR.tne-PCLIR.tae] := PCO.JE;

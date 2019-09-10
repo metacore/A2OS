@@ -59,8 +59,8 @@ TYPE
 
 	Key* = RECORD
 		ch* : CHAR;
-		keysym* : LONGINT;
-		counter* : LONGINT;
+		keysym* : SIGNED32;
+		counter* : SIGNED32;
 		repeat* : BOOLEAN;
 		updated* : BOOLEAN;
 	END;
@@ -72,9 +72,9 @@ TYPE
 		msg*, lastMsg : Inputs.KeyboardMsg;
 		lastFlags : SET;
 
-		numKeyVal : LONGINT;
-		deadKey* : LONGINT;
-		dkHack* : LONGINT;  (* deadKey value should persist Release events ... *)
+		numKeyVal : SIGNED32;
+		deadKey* : SIGNED32;
+		dkHack* : SIGNED32;  (* deadKey value should persist Release events ... *)
 
 		(* Status of NumLock,ScrollLock,CapsLock,Compose & Kana *)
 		leds*, lastLeds* : SET;
@@ -83,11 +83,11 @@ TYPE
 		keyboardFileTable : POINTER TO ARRAY OF CHAR;
 		keytable* : ADDRESS; (* used as pointer to keyboardFileTable[0] *)
 
-		keyDeadTime*, keyDeadTimeRepeat* : LONGINT;
+		keyDeadTime*, keyDeadTimeRepeat* : SIGNED32;
 
 
 		PROCEDURE HandleKey*(c : CHAR);
-		VAR k : LONGINT;
+		VAR k : SIGNED32;
 		BEGIN
 			(* map USB Usage ID to keysym: Only non-alphanumeric keys are mapped by Keysym()  *)
 			msg.keysym := KeySym(c, leds);
@@ -118,7 +118,7 @@ TYPE
 		END HandleKey;
 
 		PROCEDURE HandleModifiers*(flags : SET);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			IF flags # lastFlags THEN
 				msg.flags := {}; msg.ch := 0X; msg.keysym := Inputs.KsNil;
@@ -189,9 +189,9 @@ TYPE
 			NEW(base);
 		END Init;
 
-		PROCEDURE EventHandler(status : Usbdi.Status; actLen : LONGINT);
+		PROCEDURE EventHandler(status : Usbdi.Status; actLen : SIGNED32);
 		VAR
-			i, j : LONGINT;
+			i, j : SIGNED32;
 			c : CHAR;
 			modifiers, flags : SET;
 			res : BOOLEAN;
@@ -291,7 +291,7 @@ TYPE
 		END EventHandler;
 
 		PROCEDURE Connect*(): BOOLEAN;
-		VAR status : Usbdi.Status; endpoint: LONGINT; i: ADDRESS; k : ARRAY 32 OF CHAR;
+		VAR status : Usbdi.Status; endpoint: SIGNED32; i: ADDRESS; k : ARRAY 32 OF CHAR;
 		BEGIN
 			IF ~SetProtocol(0) THEN
 				IF Debug THEN KernelLog.String("UsbKeyboard: Error: Cannot set keyboard into boot protocol mode."); KernelLog.Ln; END;
@@ -303,7 +303,7 @@ TYPE
 				RETURN FALSE
 			END;
 
-			endpoint := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, interface.endpoints[0].bEndpointAddress) * {0,1,2,3,7});
+			endpoint := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, interface.endpoints[0].bEndpointAddress) * {0,1,2,3,7});
 
 			pipe := device.GetPipe(endpoint);
 			IF pipe = NIL THEN
@@ -478,8 +478,8 @@ Base:
 END UsbScanTab;
 
 (* Maps USB key code to X11 keysym (/usr/include/X11/keysymdef.h). *)
-PROCEDURE KeySym*(VAR ch : CHAR; VAR leds : SET): LONGINT;
-VAR res: LONGINT;
+PROCEDURE KeySym*(VAR ch : CHAR; VAR leds : SET): SIGNED32;
+VAR res: SIGNED32;
 BEGIN
 	CASE ch OF
 		028X: res := Inputs.KsReturn (* Return *)
@@ -549,8 +549,8 @@ BEGIN
 	RETURN res
 END KeySym;
 
-PROCEDURE GetModifierKeysym(modifier : LONGINT) : LONGINT;
-VAR res : LONGINT;
+PROCEDURE GetModifierKeysym(modifier : SIGNED32) : SIGNED32;
+VAR res : SIGNED32;
 BEGIN
 	CASE modifier OF
 		|Inputs.LeftCtrl: res := Inputs.KsControlL;
@@ -568,7 +568,7 @@ BEGIN
 END GetModifierKeysym;
 
 (* Translate - Translate scan code "c" to key. *)
-PROCEDURE Translate(flags, leds: SET;  c: CHAR; keyboardTable : ADDRESS; VAR keyboardDeadKey, keyboardKeyVal : LONGINT): LONGINT;
+PROCEDURE Translate(flags, leds: SET;  c: CHAR; keyboardTable : ADDRESS; VAR keyboardDeadKey, keyboardKeyVal : SIGNED32): SIGNED32;
 CONST
 	(* The flags stored in the keytable are not the same as the ones defined in Inputs.
 		The parameter flags and leds use the Inputs constants.
@@ -593,8 +593,8 @@ VAR
 	a: ADDRESS;
 	s1: CHAR;
 	s : SET;
-	k: INTEGER;
-	dkn: SHORTINT;
+	k: SIGNED16;
+	dkn: SIGNED8;
 BEGIN
 	IF (c = 46X) & (flags * Inputs.Ctrl # {}) THEN RETURN -2 END;  (* Ctrl-Break - break *)
 	IF (c = 44X) & (flags * Inputs.Ctrl # {}) THEN RETURN 0FFH END;	(* Ctrl-F10 - exit *)
@@ -616,7 +616,7 @@ BEGIN
 			k := 0;
 
 			SYSTEM.GET(a+3, SYSTEM.VAL(CHAR, s)); (* flags from table *)
-			dkn := SHORT(SHORT(SYSTEM.VAL(LONGINT, LSH(s * {5..7}, -5))));
+			dkn := SHORT(SHORT(SYSTEM.VAL(SIGNED32, LSH(s * {5..7}, -5))));
 
 			s := s * {DeadKey, ONumLock, OCapsLock, LAlt, RAlt, LCtrl, RCtrl};
 
@@ -647,7 +647,7 @@ BEGIN
 				ELSE	(* mapped key *)
 					IF flags * Inputs.Ctrl # {} THEN
 						IF ((k >= 64) & (k <= 95)) OR ((k >= 97) & (k <= 122)) THEN
-							k := SHORT(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ADDRESS(k)) * {0..4}))	(* control *)
+							k := SHORT(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ADDRESS(k)) * {0..4}))	(* control *)
 						ELSIF k = 13 THEN	(* Ctrl-Enter *)
 							k := 10
 						END

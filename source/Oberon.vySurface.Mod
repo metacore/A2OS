@@ -50,9 +50,9 @@ TYPE
 		m: vyRealVec.tChunkedMatrix;
 		pal: antsColors.Palette;
 		sp: vyPolyWorld.tObject;
-		axisx0, axisx1, axisxstep: REAL;
-		axisy0, axisy1, axisystep: REAL;
-		axisz0, axisz1, axiszstep: REAL;
+		axisx0, axisx1, axisxstep: FLOAT32;
+		axisy0, axisy1, axisystep: FLOAT32;
+		axisz0, axisz1, axiszstep: FLOAT32;
 		commands*: antsCommandList.List;
 		lines: BOOLEAN;
 	END;
@@ -65,12 +65,12 @@ VAR
 	END Copy;
 
 	PROCEDURE Recall( surface: tLayer );
-	(*VAR err, x0, y0, xx, yx, xy, yy, xz, yz: INTEGER;*)
+	(*VAR err, x0, y0, xx, yx, xy, yy, xz, yz: SIGNED16;*)
 	VAR lines: BOOLEAN;
 
 		PROCEDURE Scale;
 		(** vs 0.0d0 *)  (* md  24.08.95 14:06:04 *)
-		VAR err, x0, y0, xx, yx, xy, yy, xz, yz: INTEGER;
+		VAR err, x0, y0, xx, yx, xy, yy, xz, yz: SIGNED16;
 		BEGIN
 			vyAxis.SetColors( surface.style.fillcol, surface.style.fillcol, surface.style.fillcol );
 			vyPHIGS3D.PointToDisplayPoint( 0, 0, 0, err, x0, y0 );  vyPHIGS3D.PointToDisplayPoint( 1, 0, 0, err, xx, yx );
@@ -89,7 +89,7 @@ VAR
 	END Recall;
 
 	PROCEDURE Responsible( surface: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF (event.gesture = vyEvents.EvtIdent) THEN priority := vyEvents.PrioNormal END;
@@ -105,7 +105,7 @@ VAR
 	END Prompt;
 
 	PROCEDURE HandleFileMsg( obj: tLayer;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		IF msg.id = Objects.load THEN
 			Files.ReadInt( msg.R, version );  vyPort.LayerHandler( obj, msg );  Gadgets.ReadRef( msg.R, obj.lib, objsub );
@@ -129,7 +129,7 @@ VAR
 	END HandleFileMsg;
 
 	PROCEDURE ColorView;
-	VAR res: INTEGER;
+	VAR res: SIGNED16;
 	BEGIN
 		antsColors.current := tempLayer.pal;  vyHost.CallWString( "antsColors.ShowCurrent", "", FALSE , res )
 	END ColorView;
@@ -303,7 +303,7 @@ VAR
 
 	END Alloc;
 
-	PROCEDURE DoSetRendering*( surface: tLayer;  renderId: INTEGER );
+	PROCEDURE DoSetRendering*( surface: tLayer;  renderId: SIGNED16 );
 	BEGIN
 		vyPolyWorld.SetRendering( surface.sp, renderId );
 		(*vyPort.PictureUpdate (vyPort.HostPicture (surface))*)  (*? use broadcast??*)
@@ -312,7 +312,7 @@ VAR
 	PROCEDURE SetRendering*;
 	VAR layer: Objects.Object;  sc: vyParser.Scanner;
 		id: ARRAY 32 OF CHAR;
-		HLHSRidentifier: INTEGER;
+		HLHSRidentifier: SIGNED16;
 	BEGIN
 		(*layer := vyPort.GetFrontMostLayer (vyPort.GetFocusPicture1 ());*)
 		layer := vyLinks.GetLastObj( vyPort.focusPicture.vylinks );

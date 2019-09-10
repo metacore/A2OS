@@ -21,7 +21,7 @@ TYPE
 		treeView : WMTrees.TreeView;
 
 		lastSelectedNode : HierarchicalProfiler.Node;
-		lastState : LONGINT;
+		lastState : SIGNED32;
 
 		statusLabel : WMStandardComponents.Label;
 
@@ -92,7 +92,7 @@ TYPE
 
 		PROCEDURE UpdateStatusBar(forceUpdate : BOOLEAN);
 		VAR
-			state: WORD; currentNofSamples, maxNofSamples : SIZE;
+			state: INTEGER; currentNofSamples, maxNofSamples : SIZE;
 			caption : ARRAY 256 OF CHAR; number : ARRAY 16 OF CHAR;
 		BEGIN
 			state := HierarchicalProfiler.GetState(currentNofSamples, maxNofSamples);
@@ -159,7 +159,7 @@ TYPE
 			END;
 		END HandleNodeSelected;
 
-		PROCEDURE GetTypeAndInfo(VAR type, info : LONGINT);
+		PROCEDURE GetTypeAndInfo(VAR type, info : SIGNED32);
 		VAR string : ARRAY 16 OF CHAR;
 		BEGIN
 			type := HierarchicalProfiler.Hierarchical;
@@ -171,7 +171,7 @@ TYPE
 			Strings.StrToInt(string, info);
 		END GetTypeAndInfo;
 
-		PROCEDURE GetFilterMask(VAR mask : ARRAY OF CHAR; VAR minPercent : LONGINT);
+		PROCEDURE GetFilterMask(VAR mask : ARRAY OF CHAR; VAR minPercent : SIGNED32);
 		VAR number : ARRAY 16 OF CHAR;
 		BEGIN
 			filterMaskEdit.GetAsString(mask);
@@ -183,8 +183,8 @@ TYPE
 		VAR
 			tempProfile : HierarchicalProfiler.Profile;
 			mask : ARRAY 128 OF CHAR; timeStr : ARRAY 16 OF CHAR;
-			minPercent : LONGINT;
-			time, type, info: LONGINT; res: WORD;
+			minPercent : SIGNED32;
+			time, type, info: SIGNED32; res: INTEGER;
 			root : WMTrees.TreeNode;
 		BEGIN
 			IF (sender = startBtn) THEN
@@ -420,7 +420,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*;
 VAR window : Window;

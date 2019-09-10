@@ -96,11 +96,11 @@ VAR
 	config : ARRAY 8 OF CHAR;
 	enabled- : BOOLEAN; 			(* Are clients allowed to query the driver database? *)
 	cmdHistory : CommandHistory; 	(* List of commands that have been executed *)
-	cmdIndex : LONGINT; 			(* Next free index of cmdHistory *)
+	cmdIndex : SIGNED32; 			(* Next free index of cmdHistory *)
 
 (* Compare the specified XML attritbute value to the specified integer value *)
-PROCEDURE Matches(driver : XML.Element; CONST attribute : ARRAY OF CHAR; value : LONGINT) : BOOLEAN;
-VAR string : XML.String; number : LONGINT; res : WORD;
+PROCEDURE Matches(driver : XML.Element; CONST attribute : ARRAY OF CHAR; value : SIGNED32) : BOOLEAN;
+VAR string : XML.String; number : SIGNED32; res : INTEGER;
 BEGIN
 	ASSERT(driver # NIL);
 	string := driver.GetAttributeValue(attribute);
@@ -118,7 +118,7 @@ BEGIN
 END Matches;
 
 PROCEDURE GetFlags(driver : XML.Element) : SET;
-VAR flags : SET; string : XML.String; i : LONGINT;
+VAR flags : SET; string : XML.String; i : SIGNED32;
 BEGIN
 	ASSERT(driver # NIL);
 	string := driver.GetAttributeValue(XmlFlags);
@@ -163,7 +163,7 @@ BEGIN
 	RETURN string;
 END GetName;
 
-PROCEDURE GetSection(type : LONGINT) : XML.Element;
+PROCEDURE GetSection(type : SIGNED32) : XML.Element;
 BEGIN
 	IF database # NIL THEN
 		IF type = PCI THEN RETURN GetSubSection(database, XmlPciSection, "", 0);
@@ -176,7 +176,7 @@ END GetSection;
 
 (** Find a XML element with the name <elemName> that has <parent> as parent. If attrName # "", the XML element must
 	have the attribute <attrName> and its value must match <attrValue> (number). *)
-PROCEDURE GetSubSection(parent : XML.Element; CONST elemName, attrName : ARRAY OF CHAR; attrValue : LONGINT) : XML.Element;
+PROCEDURE GetSubSection(parent : XML.Element; CONST elemName, attrName : ARRAY OF CHAR; attrValue : SIGNED32) : XML.Element;
 VAR element : XML.Element; enumerator : XMLObjects.Enumerator; string : XML.String; p : ANY;
 BEGIN
 	IF parent # NIL THEN
@@ -197,7 +197,7 @@ BEGIN
 END GetSubSection;
 
 PROCEDURE ResizeCmdHistory;
-VAR temp : CommandHistory; i : LONGINT;
+VAR temp : CommandHistory; i : SIGNED32;
 BEGIN (* Must hold module lock *)
 	NEW(temp, 2*LEN(cmdHistory));
 	FOR i := 0 TO cmdIndex-1 DO
@@ -207,7 +207,7 @@ BEGIN (* Must hold module lock *)
 END ResizeCmdHistory;
 
 PROCEDURE HasBeenExecuted(cmd : XML.String) : BOOLEAN;
-VAR i : LONGINT; result : BOOLEAN;
+VAR i : SIGNED32; result : BOOLEAN;
 BEGIN (* Must hold module lock *)
 	IF cmdIndex > 0 THEN
 		LOOP
@@ -225,8 +225,8 @@ END HasBeenExecuted;
 PROCEDURE LoadDriver(driver : Driver) : BOOLEAN;
 VAR
 	commands : Strings.StringArray;
-	flags : SET; msg : ARRAY 256 OF CHAR; res : WORD;
-	i : LONGINT;
+	flags : SET; msg : ARRAY 256 OF CHAR; res : INTEGER;
+	i : SIGNED32;
 BEGIN {EXCLUSIVE}
 	res := -1;
 	IF (driver # NIL) & (driver.commands # NIL) THEN
@@ -257,7 +257,7 @@ BEGIN {EXCLUSIVE}
 	RETURN res = 0;
 END LoadDriver;
 
-PROCEDURE GetDeviceSpecific*(type, vendorId, deviceId, revision : LONGINT) : DeviceDriver;
+PROCEDURE GetDeviceSpecific*(type, vendorId, deviceId, revision : SIGNED32) : DeviceDriver;
 VAR section, deviceSpecific, vendor, device : XML.Element; dd : DeviceDriver;
 BEGIN
 	section := GetSection(type);
@@ -280,7 +280,7 @@ BEGIN
 	RETURN dd;
 END GetDeviceSpecific;
 
-PROCEDURE GetClassSpecific*(type, classNbr, subclassNbr, protocolNbr, revision : LONGINT) : ClassDriver;
+PROCEDURE GetClassSpecific*(type, classNbr, subclassNbr, protocolNbr, revision : SIGNED32) : ClassDriver;
 VAR section, classSpecific, class, subclass, protocol : XML.Element; cd : ClassDriver;
 BEGIN
 	section := GetSection(type);
@@ -307,7 +307,7 @@ BEGIN
 END GetClassSpecific;
 
 (** Look for a device driver of the specified type. If found, install it. *)
-PROCEDURE InstallDeviceDriver*(type, vendorID, deviceID, revision : LONGINT) : BOOLEAN;
+PROCEDURE InstallDeviceDriver*(type, vendorID, deviceID, revision : SIGNED32) : BOOLEAN;
 VAR dd : DeviceDriver;
 BEGIN
 	IF ~enabled THEN RETURN FALSE; END;
@@ -335,7 +335,7 @@ BEGIN
 END InstallDeviceDriver;
 
 (** Look for a class driver of the specified type. If found, install it. *)
-PROCEDURE InstallClassDriver*(type, class, subclass, protocol, revision : LONGINT) : BOOLEAN;
+PROCEDURE InstallClassDriver*(type, class, subclass, protocol, revision : SIGNED32) : BOOLEAN;
 VAR cd : ClassDriver;
 BEGIN
 	IF ~enabled THEN RETURN FALSE; END;
@@ -412,7 +412,7 @@ END Disable;
 
 (** Show list of all executed commands in order of their execution *)
 PROCEDURE ShowCommandHistory*(context : Commands.Context);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN {EXCLUSIVE}
 	context.out.String("Driver Database command execution history:"); context.out.Ln;
 	IF (cmdHistory # NIL) & (cmdIndex > 0)  THEN

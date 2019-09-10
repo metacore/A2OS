@@ -75,15 +75,15 @@ CONST
 	idversion* = 'Voyager v0.1a3';  cDefaultPlotName = 'vyScatter';
 
 TYPE
-	tGeneratorProc = PROCEDURE ( ): LONGREAL;
+	tGeneratorProc = PROCEDURE ( ): FLOAT64;
 
 VAR
-	gnrObjects: INTEGER;  gplotname: vyName.tNameArray;  gobjects: Objects.Object;  gGenerator: tGeneratorProc;
+	gnrObjects: SIGNED16;  gplotname: vyName.tNameArray;  gobjects: Objects.Object;  gGenerator: tGeneratorProc;
 
 	PROCEDURE ReadData*;   (*vs 0.1d3 gs *)
 	(*= Syntax: ReadData <Name> <data>. Line breaks are ignored *)
 	(*! support mixed type input *)
-	VAR x: REAL;  name: vyName.tNameArray;  o: vyBase.tVector;  sc: vyParser.Scanner;
+	VAR x: FLOAT32;  name: vyName.tNameArray;  o: vyBase.tVector;  sc: vyParser.Scanner;
 	BEGIN
 		o := vyRealVec.New( 0 );  vyParser.OpenParScanner( sc );
 		IF ~vyParser.Name( sc, name ) THEN name := "no name" END;
@@ -99,7 +99,7 @@ VAR
 	PROCEDURE ReadTable*;   (*vs 0.1d1 gs *)
 	(*= Syntax: ReadData <Name> <data>. Cases are separated by line breaks. Vars must be same as nuber of names. *)
 	(*! support mixed type input *)
-	VAR x: REAL;  name: vyName.tNameArray;  o: vyBase.tVector;  first, q: vyLinks.Link;  sc: vyParser.Scanner;
+	VAR x: FLOAT32;  name: vyName.tNameArray;  o: vyBase.tVector;  first, q: vyLinks.Link;  sc: vyParser.Scanner;
 	BEGIN
 		NEW( first );  first.link := NIL;  q := first;  vyParser.OpenParScanner( sc );
 		WHILE vyParser.Name( sc, name ) DO
@@ -202,7 +202,7 @@ VAR
 	END Regress;
 
 	PROCEDURE capsarg( VAR arg: vyName.tNameArray );
-	VAR j: INTEGER;
+	VAR j: SIGNED16;
 	BEGIN
 		COPY( vyHostTexts.S.s, arg );  j := 0;
 		WHILE arg[j] # 0X DO
@@ -212,8 +212,8 @@ VAR
 		arg[j] := 0X
 	END capsarg;
 (* jb 20.8.01 *)
-	PROCEDURE NextDot( VAR str: ARRAY OF CHAR;  VAR i: INTEGER;  VAR part: ARRAY OF CHAR ): BOOLEAN;
-	VAR c: CHAR;  partlen: LONGINT;  j: LONGINT;
+	PROCEDURE NextDot( VAR str: ARRAY OF CHAR;  VAR i: SIGNED16;  VAR part: ARRAY OF CHAR ): BOOLEAN;
+	VAR c: CHAR;  partlen: SIGNED32;  j: SIGNED32;
 	BEGIN
 		partlen := LEN( part );
 		IF i >= LEN( str ) THEN COPY( "", part );  RETURN FALSE END;
@@ -229,7 +229,7 @@ VAR
 	(* jb 20.8.01 *)
 (*? use vyParser instead??? *)
 	PROCEDURE Locate( VAR procname: ARRAY OF CHAR;  VAR name: ARRAY OF CHAR;  context: Objects.Object ): Objects.Object;
-	VAR curpos: INTEGER;  part: vyName.tNameArray;  obj, objlink: Objects.Object;  dotfound, searchInContext: BOOLEAN;
+	VAR curpos: SIGNED16;  part: vyName.tNameArray;  obj, objlink: Objects.Object;  dotfound, searchInContext: BOOLEAN;
 	BEGIN
 		curpos := 0;
 		IF name[0] = ":" THEN searchInContext := TRUE;  INC( curpos ) ELSE searchInContext := FALSE END;
@@ -248,7 +248,7 @@ VAR
 
 	PROCEDURE Show*;   (*vs 0.1d1 gs *)
 	(*! uses extended syntax: name name as: plot-type  *)
-	VAR ob: vyBase.Object;  parsdone: BOOLEAN;  cmd, plotname, secname: vyName.tNameArray;  nrObjects: INTEGER;
+	VAR ob: vyBase.Object;  parsdone: BOOLEAN;  cmd, plotname, secname: vyName.tNameArray;  nrObjects: SIGNED16;
 		tempref, objects: vyLinks.Link;  sc: vyParser.Scanner;
 
 		tmp: ARRAY 64 OF CHAR;   (* jb, 5.11.01 *)
@@ -345,7 +345,7 @@ PROCEDURE Show*; (*vs 0.1d1 gs *)
 (*! uses extended syntax: name name as: plot-type  *)
 VAR name: vyName.tNameArray; ob: vyBase.Object; parsdone: BOOLEAN;
 cmd, plotname, secname: vyName.tNameArray;newobj:Objects.Object;
-nrObjects: INTEGER;
+nrObjects: SIGNED16;
 tempref, objects: vyLinks.Link;
 sc: vyParser.Scanner;
 tmp: ARRAY 64 OF CHAR;	(* jb, 5.11.01 *)
@@ -431,19 +431,19 @@ END Show;
 		(*	vyHostTexts.MsgStS("End of",name);*)
 	END Sort;
 
-	PROCEDURE StdGauss( ): LONGREAL;
+	PROCEDURE StdGauss( ): FLOAT64;
 	BEGIN
 		RETURN vyRandom.Gauss( 0, 1 )
 	END StdGauss;
 
-	PROCEDURE TrappedMouse( ): LONGREAL;
+	PROCEDURE TrappedMouse( ): FLOAT64;
 	BEGIN
 		RETURN vyMouseData.Random()
 	END TrappedMouse;
 
 	PROCEDURE Random*;
 	(*! uses extended syntax: n: count samples: nrsamples from: generator pars *)
-	VAR i, j, samples, res: INTEGER;  cmd, generator, name: vyName.tNameArray;  o: vyBase.tVector;  parsdone: BOOLEAN;  skipped: BOOLEAN;
+	VAR i, j, samples, res: SIGNED16;  cmd, generator, name: vyName.tNameArray;  o: vyBase.tVector;  parsdone: BOOLEAN;  skipped: BOOLEAN;
 		pre: ARRAY 2 OF CHAR;
 	BEGIN
 		IF vyHostTexts.OpenScanner( vyHostTexts.S ) THEN
@@ -516,7 +516,7 @@ END Show;
 	END Random;
 
 	PROCEDURE NewSampleMd*;
-	VAR tempobj: vyBase.Object;  i: LONGINT;  msg: vyBase.UpdateMessage;
+	VAR tempobj: vyBase.Object;  i: SIGNED32;  msg: vyBase.UpdateMessage;
 	BEGIN
 		tempobj := gobjects( vyBase.Object );
 		IF gobjects IS vyBase.tVector THEN
@@ -534,7 +534,7 @@ END Show;
 	END NewSampleMd;
 
 	PROCEDURE NewSample*;
-	VAR tempobj: vyBase.Object;  i: LONGINT;
+	VAR tempobj: vyBase.Object;  i: SIGNED32;
 	BEGIN
 		tempobj := gobjects( vyBase.Object );
 		IF gobjects IS vyBase.tVector THEN
@@ -618,7 +618,7 @@ BEGIN vyHost.Open END Prep;
 
 	PROCEDURE Launch*;
 	(* Start Voyager, initialize to a well defined state. If a parameter is given, assume it is a filed session and resume *)
-	VAR res: INTEGER;
+	VAR res: SIGNED16;
 	BEGIN
 		vyBase.CallWString( idversion, "vyHostTexts.OpenLog", "Voyager.Log", FALSE , res );  status;  vyHostTexts.MsgSS( "VoyagerBase", vyBase.idversion );
 		vyHostTexts.MsgSS( "Name", vyName.idversion )

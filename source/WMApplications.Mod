@@ -47,7 +47,7 @@ TYPE
 	WindowInfo = RECORD
 		title : Strings.String;
 		icon : Strings.String;
-		width, height : LONGINT;
+		width, height : SIGNED32;
 		alpha : BOOLEAN;
 		flags : SET;
 		alternativeMoveResize : BOOLEAN;
@@ -135,7 +135,7 @@ TYPE
 	GadgetWindow = OBJECT(Window);
 	VAR
 		lastX, lastY : SIZE;
-		mode : WORD;
+		mode : INTEGER;
 		resized : BOOLEAN;
 		viewport : WMWindowManager.ViewPort;
 
@@ -148,8 +148,8 @@ TYPE
 			ASSERT(viewport # NIL);
 		END New;
 
-		PROCEDURE GetMode(x, y : SIZE) : WORD;
-		VAR mode: WORD; width, height : SIZE;
+		PROCEDURE GetMode(x, y : SIZE) : INTEGER;
+		VAR mode: INTEGER; width, height : SIZE;
 		BEGIN
 			width := bounds.r - bounds.l; height := bounds.b - bounds.t;
 			IF (x <= ResizeAreaSize) THEN
@@ -181,7 +181,7 @@ TYPE
 			RETURN mode;
 		END GetMode;
 
-		PROCEDURE UpdatePointerInfo(mode : LONGINT);
+		PROCEDURE UpdatePointerInfo(mode : SIGNED32);
 		VAR info : WMWindowManager.PointerInfo;
 		BEGIN
 			CASE mode OF
@@ -218,7 +218,7 @@ TYPE
 		END PointerDown;
 
 		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
-		VAR dx, dy, width, height, newWidth, newHeight, moveX, moveY: SIZE; tempMode : WORD;
+		VAR dx, dy, width, height, newWidth, newHeight, moveX, moveY: SIZE; tempMode : INTEGER;
 		BEGIN
 			PointerMove^(x, y, keys);
 			IF MoveOrResize() & (mode = Mode_Standard) THEN
@@ -307,12 +307,12 @@ TYPE
 	END GadgetWindow;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*(context : Commands.Context);
 VAR
 	fullName, repositoryName, applicationName : ARRAY 128 OF CHAR;
-	refNum: SIZE; res: WORD;
+	refNum: SIZE; res: INTEGER;
 	info : ApplicationInfo;
 	window : Window;
 	gadgetWindow : GadgetWindow;
@@ -350,7 +350,7 @@ VAR
 	window : Window;
 	info : ApplicationInfo;
 	writer : Streams.Writer;
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	ASSERT((context # NIL) & (context.appData # NIL));
 	string := context.appData.GetAttributeValue("repository");
@@ -374,7 +374,7 @@ BEGIN
 	END;
 END Restore;
 
-PROCEDURE ShowRes(res : WORD; CONST repositoryName, applicationName : ARRAY OF CHAR; out : Streams.Writer);
+PROCEDURE ShowRes(res : INTEGER; CONST repositoryName, applicationName : ARRAY OF CHAR; out : Streams.Writer);
 BEGIN
 	ASSERT(out # NIL);
 	CASE res OF
@@ -393,8 +393,8 @@ BEGIN
 	out.Update;
 END ShowRes;
 
-PROCEDURE GetApplicationInfo(CONST repositoryName, applicationName : ARRAY OF CHAR; VAR info : ApplicationInfo) : WORD;
-VAR repository : Repositories.Repository; application : XML.Element; res : WORD;
+PROCEDURE GetApplicationInfo(CONST repositoryName, applicationName : ARRAY OF CHAR; VAR info : ApplicationInfo) : INTEGER;
+VAR repository : Repositories.Repository; application : XML.Element; res : INTEGER;
 BEGIN
 	repository := Repositories.ThisRepository(repositoryName);
 	IF (repository # NIL) THEN
@@ -411,7 +411,7 @@ BEGIN
 END GetApplicationInfo;
 
 PROCEDURE ParseApplication(CONST applicationName : ARRAY OF CHAR; CONST application : XML.Element; VAR info : ApplicationInfo) : BOOLEAN;
-VAR enumerator : XMLObjects.Enumerator; ptr : ANY; string : Strings.String; component : Repositories.Component; res : WORD;
+VAR enumerator : XMLObjects.Enumerator; ptr : ANY; string : Strings.String; component : Repositories.Component; res : INTEGER;
 
 	PROCEDURE GetFlags(element : XML.Element) : SET;
 	VAR flags : SET; value : BOOLEAN;
@@ -516,7 +516,7 @@ BEGIN
 	RETURN result;
 END GetApplication;
 
-PROCEDURE GetInteger(element : XML.Element; CONST attributeName : ARRAY OF CHAR; VAR value : LONGINT) : BOOLEAN;
+PROCEDURE GetInteger(element : XML.Element; CONST attributeName : ARRAY OF CHAR; VAR value : SIGNED32) : BOOLEAN;
 VAR string : Strings.String;
 BEGIN
 	ASSERT(element # NIL);

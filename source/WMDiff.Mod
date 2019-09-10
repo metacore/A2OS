@@ -19,14 +19,14 @@ CONST
 	OverviewWidth = 10;
 
 	DarkGreen = 000C000FFH;
-	DarkRed = LONGINT(0C00000FFH);
+	DarkRed = SIGNED32(0C00000FFH);
 
-	DiffColorLeft = LONGINT(0FF000030H);
+	DiffColorLeft = SIGNED32(0FF000030H);
 	DiffColorRight = 00000FF30H;
 	EmptyLineColor = WMGraphics.White;
 
-	LineNbrBgColor = LONGINT(0E0E0FFFFH);
-	BgColor = LONGINT(0CCCCCCFFH);
+	LineNbrBgColor = SIGNED32(0E0E0FFFFH);
+	BgColor = SIGNED32(0CCCCCCFFH);
 
 	MouseWheelMultiplier = 3;
 
@@ -52,7 +52,7 @@ TYPE
 	END NoWheelGrid;
 
 	DiffState= OBJECT
-	VAR state:LONGINT;
+	VAR state:SIGNED32;
 	END DiffState;
 
 	DiffView = OBJECT (WMComponents.VisualComponent)
@@ -60,9 +60,9 @@ TYPE
 		filenameEdit: WMEditors.Editor;
 		lineNbr, grid: NoWheelGrid;
 		colWidths : WMGrids.Spacings;
-		commonLines, diffLines: LONGINT;
-		diffColor: LONGINT; maxLineWidth, minLineWidth: SIZE;
-		curLine: LONGINT;
+		commonLines, diffLines: SIGNED32;
+		diffColor: SIGNED32; maxLineWidth, minLineWidth: SIZE;
+		curLine: SIGNED32;
 		font : WMGraphics.Font;
 		onPropertyChange, onResized: WMEvents.EventSource;
 
@@ -82,7 +82,7 @@ TYPE
 			filenameEdit.alignment.Set(WMComponents.AlignClient);
 			filenameEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			filenameEdit.multiLine.Set(FALSE);
-			filenameEdit.fillColor.Set(LONGINT(0FFFFFFFFH));
+			filenameEdit.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			filenameEdit.tv.borders.Set(WMRectangles.MakeRect(3,3,1,1));
 			filenameEdit.tv.showBorder.Set(TRUE);
 			filenameEdit.tv.SetExtDragOverHandler(FileNameEditDragOver);
@@ -159,8 +159,8 @@ TYPE
 		BEGIN
 			lineNbr.model.Acquire;
 			grid.model.Acquire;
-			lineNbr.model.SetNofRows(nofLines(LONGINT));
-			grid.model.SetNofRows(nofLines(LONGINT));
+			lineNbr.model.SetNofRows(nofLines(SIGNED32));
+			grid.model.SetNofRows(nofLines(SIGNED32));
 			grid.model.Release;
 			lineNbr.model.Release;
 		END SetNofLines;
@@ -320,7 +320,7 @@ TYPE
 		img: WMGraphics.Image;
 		nofRows, pageStart, pageSize: SIZE;
 		showPage: BOOLEAN;
-		diffColor : LONGINT;
+		diffColor : SIGNED32;
 
 		PROCEDURE &New*(view: DiffView);
 		BEGIN
@@ -361,13 +361,13 @@ TYPE
 			IF img # NIL THEN
 				NEW(c,img);
 				rect := WMRectangles.MakeRect(0,0,img.width, img.height);
-				c.Fill(rect, LONGINT(0808080FFH), WMGraphics.ModeCopy);
+				c.Fill(rect, SIGNED32(0808080FFH), WMGraphics.ModeCopy);
 				Invalidate;
 			END;
 		END Setup;
 
 		PROCEDURE Update;
-		VAR pos: LONGINT; fact: REAL; c: WMGraphics.BufferCanvas;
+		VAR pos: SIGNED32; fact: FLOAT32; c: WMGraphics.BufferCanvas;
 			rect : WMRectangles.Rectangle;
 			i: SIZE;
 			data:ANY;
@@ -379,7 +379,7 @@ TYPE
 			END;
 			NEW(c,img);
 			rect := WMRectangles.MakeRect(0, 0,img.width, img.height);
-			c.Fill(rect, LONGINT(0808080FFH), WMGraphics.ModeCopy);
+			c.Fill(rect, SIGNED32(0808080FFH), WMGraphics.ModeCopy);
 			view.grid.model.Acquire;
 			nofRows:= view.grid.model.GetNofRows();
 			IF nofRows > 0 THEN
@@ -413,10 +413,10 @@ TYPE
 
 		(** Is called before any sub-components are drawn *)
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR rect: WMRectangles.Rectangle; (* x0, x1: LONGINT; *)
+		VAR rect: WMRectangles.Rectangle; (* x0, x1: SIGNED32; *)
 		BEGIN
 			rect := GetClientRect();
-			canvas.Fill(rect, LONGINT(0CCCCCCFFH), WMGraphics.ModeCopy);
+			canvas.Fill(rect, SIGNED32(0CCCCCCFFH), WMGraphics.ModeCopy);
 			IF img # NIL THEN
 				canvas.DrawImage(0,ScrollbarWidth,img, WMGraphics.ModeCopy);
 				IF showPage THEN
@@ -508,7 +508,7 @@ TYPE
 
 			NEW(middlePanel);
 			middlePanel.bounds.SetWidth (2*OverviewWidth + ScrollbarWidth); middlePanel.alignment.Set(WMComponents.AlignLeft);
-			middlePanel.fillColor.Set (LONGINT(0FFFFFFFFH));
+			middlePanel.fillColor.Set (SIGNED32(0FFFFFFFFH));
 
 			NEW(diffBtn); diffBtn.caption.SetAOC("Diff"); diffBtn.alignment.Set(WMComponents.AlignTop);
 			diffBtn.onClick.Add(DiffHandler);
@@ -516,7 +516,7 @@ TYPE
 			middlePanel.AddContent(diffBtn);
 
 			NEW(scrollPanel); scrollPanel.alignment.Set(WMComponents.AlignClient);
-			scrollPanel.fillColor.Set (LONGINT(0FFFFFFFFH));
+			scrollPanel.fillColor.Set (SIGNED32(0FFFFFFFFH));
 
 			NEW(leftOverview, leftView);
 			leftOverview.bounds.SetWidth(OverviewWidth); leftOverview.alignment.Set(WMComponents.AlignLeft);
@@ -700,7 +700,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 	StrDiffView, StrOverview, StrNoWheelGrid : Strings.String;
 

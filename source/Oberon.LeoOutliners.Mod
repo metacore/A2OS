@@ -20,27 +20,27 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		Outliner* = POINTER TO OutlinerDesc;
 		OutlinerDesc* = RECORD (LeoPens.WidePenDesc)
 			base*: LeoPens.Pen;	(** pen for rendering outline **)
-			mode*: SHORTINT;	(** outline mode **)
+			mode*: SIGNED8;	(** outline mode **)
 		END;
 
 		Arrow* = POINTER TO ArrowDesc;
 		ArrowDesc* = RECORD (OutlinerDesc)
-			dir*: SHORTINT;	(** arrow direction **)
-			len*: REAL;	(** arrow length **)
-			coff*, cdist*: REAL;	(** corner offset and distance **)
+			dir*: SIGNED8;	(** arrow direction **)
+			len*: FLOAT32;	(** arrow length **)
+			coff*, cdist*: FLOAT32;	(** corner offset and distance **)
 			bdist, edist, length: LeoPens.DistArray;
-			n: LONGINT;
+			n: SIGNED32;
 		END;
 
 
 	VAR
 		OutlinerMethods, ArrowMethods: LeoPens.Methods;
-		Split: ARRAY 3 OF REAL;
+		Split: ARRAY 3 OF FLOAT32;
 
 
 	(*--- Auxiliaries ---*)
 
-	PROCEDURE GetHalfAxisVector (dxi, dyi, dxo, dyo: REAL; VAR hx, hy: REAL);
+	PROCEDURE GetHalfAxisVector (dxi, dyi, dxo, dyo: FLOAT32; VAR hx, hy: FLOAT32);
 	BEGIN
 		Gfx.GetHalfAxisVector(dxi, dyi, dxo, dyo, hx, hy);
 		IF (hx = 0) & (hy = 0) THEN hx := dyo; hy := -dxo	(* collinear vectors *)
@@ -48,9 +48,9 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		END
 	END GetHalfAxisVector;
 
-	PROCEDURE Enter (pen: Outliner; w, x, y, dxi, dyi, dxo, dyo, tan: REAL);
+	PROCEDURE Enter (pen: Outliner; w, x, y, dxi, dyi, dxo, dyo, tan: FLOAT32);
 		CONST eps = 1.0E-3;
-		VAR base: LeoPens.Pen; aw, hx, hy, ix, iy, t, dx, dy: REAL;
+		VAR base: LeoPens.Pen; aw, hx, hy, ix, iy, t, dx, dy: FLOAT32;
 	BEGIN
 		base := pen.base;
 		aw := ABS(w);
@@ -102,9 +102,9 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		END
 	END Enter;
 
-	PROCEDURE Join (pen: Outliner; w, x, y, dxi, dyi, dxo, dyo, tani, tano: REAL);
+	PROCEDURE Join (pen: Outliner; w, x, y, dxi, dyi, dxo, dyo, tani, tano: FLOAT32);
 		CONST eps = 1.0E-3;
-		VAR base: LeoPens.Pen; t, dx, dy, hx, hy, aw: REAL;
+		VAR base: LeoPens.Pen; t, dx, dy, hx, hy, aw: FLOAT32;
 	BEGIN
 		base := pen.base;
 		IF w < 0 THEN tani := -tani; tano := -tano END;
@@ -133,9 +133,9 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		END
 	END Join;
 
-	PROCEDURE Exit (pen: Outliner; w, x, y, dxi, dyi, dxo, dyo, tan: REAL);
+	PROCEDURE Exit (pen: Outliner; w, x, y, dxi, dyi, dxo, dyo, tan: FLOAT32);
 		CONST eps = 1.0E-3;
-		VAR base: LeoPens.Pen; aw, hx, hy, ix, iy, t, dx, dy: REAL;
+		VAR base: LeoPens.Pen; aw, hx, hy, ix, iy, t, dx, dy: FLOAT32;
 	BEGIN
 		base := pen.base;
 		aw := ABS(w);
@@ -209,7 +209,7 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 	END CopyOutliner;
 
 	PROCEDURE HandleOutliner* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR pen, copy: Outliner; ver: LONGINT;
+		VAR pen, copy: Outliner; ver: SIGNED32;
 	BEGIN
 		pen := obj(Outliner);
 		IF msg IS LeoPens.UpdateMsg THEN
@@ -284,7 +284,7 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		END
 	END HandleOutliner;
 
-	PROCEDURE InitOutliner* (pen: Outliner; base: LeoPens.Pen; width: REAL; mode: SHORTINT);
+	PROCEDURE InitOutliner* (pen: Outliner; base: LeoPens.Pen; width: FLOAT32; mode: SIGNED8);
 	BEGIN
 		ASSERT(base # NIL, 100);
 		ASSERT((outlined <= mode) & (mode <= right), 101);
@@ -301,8 +301,8 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		Objects.NewObj := pen
 	END NewOutliner;
 
-	PROCEDURE DrawOutline (pen: Outliner; w: REAL; path: GfxPaths.Path);
-		VAR base: LeoPens.Pen; s: GfxPaths.Scanner; sx, sy, dx0, dy0, dx1, dy1: REAL;
+	PROCEDURE DrawOutline (pen: Outliner; w: FLOAT32; path: GfxPaths.Path);
+		VAR base: LeoPens.Pen; s: GfxPaths.Scanner; sx, sy, dx0, dy0, dx1, dy1: FLOAT32;
 	BEGIN
 		base := pen.base;
 		GfxPaths.Open(s, path, 0);
@@ -375,7 +375,7 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		OutlinePath(pen(Outliner), pen.ctxt)
 	END EndOutliner;
 
-	PROCEDURE RenderOutliner (pen: LeoPens.Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT);
+	PROCEDURE RenderOutliner (pen: LeoPens.Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32);
 	BEGIN
 		OutlinePath(pen(Outliner), ctxt)
 	END RenderOutliner;
@@ -399,7 +399,7 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 	END CopyArrow;
 
 	PROCEDURE HandleArrow* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR pen, copy: Arrow; ver: LONGINT;
+		VAR pen, copy: Arrow; ver: SIGNED32;
 	BEGIN
 		pen := obj(Arrow);
 		IF msg IS LeoPens.UpdateMsg THEN
@@ -466,7 +466,7 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		END
 	END HandleArrow;
 
-	PROCEDURE InitArrow* (pen: Arrow; base: LeoPens.Pen; dir, mode: SHORTINT; len, coff, cdist, w: REAL);
+	PROCEDURE InitArrow* (pen: Arrow; base: LeoPens.Pen; dir, mode: SIGNED8; len, coff, cdist, w: FLOAT32);
 	BEGIN
 		ASSERT(base # NIL, 100);
 		InitOutliner(pen, base, w, mode);
@@ -482,10 +482,10 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		Objects.NewObj := pen
 	END NewArrow;
 
-	PROCEDURE DrawArrowSide (pen: Arrow; sign, split: REAL; path: GfxPaths.Path);
+	PROCEDURE DrawArrowSide (pen: Arrow; sign, split: FLOAT32; path: GfxPaths.Path);
 		VAR
-			base: LeoPens.Pen; clen, x0, y0, dx0, dy0, dx, dy, d, len, off0, tan, w, x1, y1, dx1, dy1, d1, off1, x, y: REAL;
-			s: GfxPaths.Scanner; n: LONGINT;
+			base: LeoPens.Pen; clen, x0, y0, dx0, dy0, dx, dy, d, len, off0, tan, w, x1, y1, dx1, dy1, d1, off1, x, y: FLOAT32;
+			s: GfxPaths.Scanner; n: SIGNED32;
 	BEGIN
 		base := pen.base;
 		IF pen.len < pen.coff THEN clen := pen.len ELSE clen := pen.coff END;
@@ -611,7 +611,7 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 	END DrawArrowSide;
 
 	PROCEDURE DrawArrow (pen: Arrow; ctxt: Gfx.Context);
-		VAR path, tmp: GfxPaths.Path; inv: GfxMatrix.Matrix; s: GfxPaths.Scanner; i, j: LONGINT; x, y, len, dx, dy, t: REAL;
+		VAR path, tmp: GfxPaths.Path; inv: GfxMatrix.Matrix; s: GfxPaths.Scanner; i, j: SIGNED32; x, y, len, dx, dy, t: FLOAT32;
 	BEGIN
 		Gfx.Flatten(ctxt);
 		IF pen.base.destructive THEN LeoPens.GetTempPath(path); GfxPaths.Copy(ctxt.path, path)
@@ -675,7 +675,7 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		LeoPens.End(pen)
 	END EndArrow;
 
-	PROCEDURE EnterArrow (pen: LeoPens.Pen; x, y, dx, dy, blen: REAL);
+	PROCEDURE EnterArrow (pen: LeoPens.Pen; x, y, dx, dy, blen: FLOAT32);
 		VAR p: Arrow;
 	BEGIN
 		p := pen(Arrow);
@@ -683,7 +683,7 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		LeoPens.Append(p.bdist, p.n, blen)
 	END EnterArrow;
 
-	PROCEDURE ExitArrow (pen: LeoPens.Pen; dx, dy, elen: REAL);
+	PROCEDURE ExitArrow (pen: LeoPens.Pen; dx, dy, elen: FLOAT32);
 		VAR p: Arrow;
 	BEGIN
 		p := pen(Arrow);
@@ -692,7 +692,7 @@ MODULE LeoOutliners IN Oberon; (** portable **)	(* eos  *)
 		INC(p.n)
 	END ExitArrow;
 
-	PROCEDURE RenderArrow (pen: LeoPens.Pen; ctxt: Gfx.Context; VAR blen, elen: ARRAY OF REAL; n: LONGINT);
+	PROCEDURE RenderArrow (pen: LeoPens.Pen; ctxt: Gfx.Context; VAR blen, elen: ARRAY OF FLOAT32; n: SIGNED32);
 		VAR p: Arrow;
 	BEGIN
 		p := pen(Arrow);

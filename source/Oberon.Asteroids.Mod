@@ -100,26 +100,26 @@ TYPE
 		paused: BOOLEAN;
 	END;
 
-	Vertices = POINTER TO ARRAY OF INTEGER;
+	Vertices = POINTER TO ARRAY OF SIGNED16;
 
 	(* the asteroid field *)
 	Starfield = POINTER TO StarfieldDesc;
 	StarfieldDesc = RECORD(Panels.PanelDesc)
-		scaleX,scaleY: REAL;
-		fdx: INTEGER;
+		scaleX,scaleY: FLOAT32;
+		fdx: SIGNED16;
 	END;
 
 	(* vertices of game figures *)
 	Shape = POINTER TO ShapeDesc;
 	ShapeDesc = RECORD
-		n: INTEGER;
+		n: SIGNED16;
 		px,py: Vertices;
 	END;
 
 	(* object in the starfield space *)
 	SpaceObj = POINTER TO SpaceObjDesc;
 	SpaceObjDesc = RECORD
-		x,y,x0,y0: REAL;
+		x,y,x0,y0: FLOAT32;
 		alive: BOOLEAN;
 		next: SpaceObj;
 	END;
@@ -127,29 +127,29 @@ TYPE
 	(* Detonation - a continuous expanding circle *)
 	Detonation = POINTER TO DetonationDesc;
 	DetonationDesc = RECORD(SpaceObjDesc)
-		r0,r: INTEGER;
+		r0,r: SIGNED16;
 	END;
 
 	(* hitable object in the starfield space *)
 	Mass = POINTER TO MassDesc;
 	MassDesc = RECORD(SpaceObjDesc)
-		mass: LONGREAL;
-		rot,xvel,yvel,rotvel: REAL;
+		mass: FLOAT64;
+		rot,xvel,yvel,rotvel: FLOAT32;
 		shape: Shape;
-		n0,u,v,w,h: INTEGER;
+		n0,u,v,w,h: SIGNED16;
 		px0,py0,px1,py1: Vertices;
 	END;
 
 	(* controlled moving object *)
 	FlyingObj = POINTER TO FlyingObjDesc;
 	FlyingObjDesc = RECORD(MassDesc)
-		bullets: INTEGER;
+		bullets: SIGNED16;
 	END;
 
 	(* fired bullet *)
 	Bullet = POINTER TO BulletDesc;
 	BulletDesc = RECORD(MassDesc)
-		time,rpos: INTEGER;
+		time,rpos: SIGNED16;
 		ship: FlyingObj;
 	END;
 
@@ -157,8 +157,8 @@ TYPE
 	Ship = POINTER TO ShipDesc;
 	ShipDesc = RECORD(FlyingObjDesc)
 		thrust0,thrust: BOOLEAN;
-		shield0,shield: SHORTINT;
-		shieldval,warpval: INTEGER;
+		shield0,shield: SIGNED8;
+		shieldval,warpval: SIGNED16;
 		shape0: Shape;
 		px2,py2: Vertices;
 	END;
@@ -188,8 +188,8 @@ TYPE
 	FieldDesc = RECORD(Gadgets.ObjDesc)
 		ship: Ship;
 		started,changed,paused: BOOLEAN;
-		ships,ufos,frames: INTEGER;
-		score,high0,high: LONGINT;
+		ships,ufos,frames: SIGNED16;
+		score,high0,high: SIGNED32;
 		line0,line: ARRAY 80 OF CHAR;
 		objects: SpaceObj;
 	END;
@@ -204,30 +204,30 @@ VAR
 	shAsteroid1,shAsteroid2,shAsteroid3,	(* standard shapes *)
 	shEnemy,shEBullet,
 	shShip,shThrShip,shSBullet: Shape;
-	hitscore: ARRAY 4 OF INTEGER;	(* score increments per figure *)
+	hitscore: ARRAY 4 OF SIGNED16;	(* score increments per figure *)
 	fnt: ARRAY 7 OF Fonts.Font;	(* score line resize *)
-	fw,fh: ARRAY 7 OF INTEGER;
-	b,w: INTEGER;	(* drawing colors *)
+	fw,fh: ARRAY 7 OF SIGNED16;
+	b,w: SIGNED16;	(* drawing colors *)
 	timer: Timer;	(* active kickers *)
 
-PROCEDURE FontGeometry(dim: ARRAY OF CHAR; fdx: INTEGER);
+PROCEDURE FontGeometry(dim: ARRAY OF CHAR; fdx: SIGNED16);
 	(* query font's parameters for zooming *)
 VAR
 	fn: Objects.Name;
-	fd: INTEGER;
+	fd: SIGNED16;
 BEGIN
 	COPY("Oberon",fn);
 	Strings.Append(fn,dim); Strings.Append(fn,".Scn.Fnt");
 	fnt[fdx]:= Fonts.This(fn); Display3.StringSize("X",fnt[fdx],fw[fdx],fh[fdx],fd);
 END FontGeometry;
 
-PROCEDURE Intersect(x11,y11,x12,y12,x21,y21,x22,y22: INTEGER; VAR x3,y3: INTEGER): BOOLEAN;
+PROCEDURE Intersect(x11,y11,x12,y12,x21,y21,x22,y22: SIGNED16; VAR x3,y3: SIGNED16): BOOLEAN;
 	(* calculate intersection between two lines, point is in (x3,y3) *)
 VAR
-	k1,k2,d1,d2: REAL;
+	k1,k2,d1,d2: FLOAT32;
 	h1,h2: BOOLEAN;
 
-	PROCEDURE Within(c,a,b: INTEGER): BOOLEAN;
+	PROCEDURE Within(c,a,b: SIGNED16): BOOLEAN;
 		(* interval calculation *)
 	BEGIN
 		IF (a < b) THEN RETURN((c>a)&(c<b)); ELSE RETURN((c>=b)&(c<=a)); END;
@@ -256,19 +256,19 @@ BEGIN
 				   Within(y3,y11,y12) & Within(y3,y21,y22));
 END Intersect;
 
-PROCEDURE Sign(v: REAL): INTEGER;
+PROCEDURE Sign(v: FLOAT32): SIGNED16;
 	(* get the sign of a real (+1|-1) *)
 BEGIN
 	IF (v < 0.0) THEN RETURN(-1); ELSE RETURN(1); END;
 END Sign;
 
-PROCEDURE TransX(x,y: INTEGER; p,v: REAL): REAL;
+PROCEDURE TransX(x,y: SIGNED16; p,v: FLOAT32): FLOAT32;
 	(* Transform x-coord - shift and rotate *)
 BEGIN
 	RETURN((x*Math.cos(p)+y*Math.sin(p))+v);
 END TransX;
 
-PROCEDURE TransY(x,y: INTEGER; p,v: REAL): REAL;
+PROCEDURE TransY(x,y: SIGNED16; p,v: FLOAT32): FLOAT32;
 	(* Transform y-coord - shift and rotate *)
 BEGIN
 	RETURN((-x*Math.sin(p)+y*Math.cos(p))+v);
@@ -283,14 +283,14 @@ BEGIN
 	WITH model: Field DO RETURN(model); END;
 END Model;
 
-PROCEDURE Score(F: Field; score: INTEGER);
+PROCEDURE Score(F: Field; score: SIGNED16);
 	(* calculate player's current score *)
 BEGIN
 	F.score:= F.score + score; F.changed:= TRUE;
 	IF (F.score > F.high0) THEN F.high:= F.score; ELSE F.high:= F.high0; END;
 END Score;
 
-PROCEDURE Pair(sh: Shape; n,x,y: INTEGER);
+PROCEDURE Pair(sh: Shape; n,x,y: SIGNED16);
 	(* shape initialization *)
 BEGIN
 	sh.px[n]:= x; sh.py[n]:= y;
@@ -425,12 +425,12 @@ BEGIN
 	InitMass(obj,shape); obj.bullets:= 0;
 END InitFlyingObj;
 
-PROCEDURE InitBullet(obj: Bullet; shape: Shape; ship: FlyingObj; grant: INTEGER);
+PROCEDURE InitBullet(obj: Bullet; shape: Shape; ship: FlyingObj; grant: SIGNED16);
 BEGIN
 	InitMass(obj,shape); obj.ship:= ship; obj.time:= grant; obj.rpos:= -1;
 END InitBullet;
 
-PROCEDURE InitShip(obj: Ship; x,y: REAL);
+PROCEDURE InitShip(obj: Ship; x,y: FLOAT32);
 BEGIN
 	InitFlyingObj(obj,shThrShip); obj.shape:= shShip; obj.shape0:= shThrShip;
 	IF (obj.px2 = NIL) THEN NEW(obj.px2,shThrShip.n); END;
@@ -462,7 +462,7 @@ END InitEnemy;
 
 PROCEDURE InitEBullet(obj: EBullet; ufo: Enemy; ship: Ship);
 VAR
-	dw,dx,dy,dz: REAL;
+	dw,dx,dy,dz: FLOAT32;
 BEGIN
 	InitBullet(obj,shEBullet,ufo,EBulletGrant);
 	obj.x:= ufo.px1[0]; obj.y:= ufo.py1[0];
@@ -473,7 +473,7 @@ BEGIN
 	obj.rotvel:= 0.0;
 END InitEBullet;
 
-PROCEDURE InitAsteroid(obj,father: Asteroid; shape: Shape; hx,hy: INTEGER);
+PROCEDURE InitAsteroid(obj,father: Asteroid; shape: Shape; hx,hy: SIGNED16);
 BEGIN
 	InitMass(obj,shape);
 	IF (father # NIL) THEN
@@ -549,7 +549,7 @@ END LoadShapeRef;
 
 (*** Game Object loading/storing ***)
 
-PROCEDURE FileSpaceObj(VAR R: Files.Rider; id: INTEGER; obj,root: SpaceObj);
+PROCEDURE FileSpaceObj(VAR R: Files.Rider; id: SIGNED16; obj,root: SpaceObj);
 BEGIN
 	IF (id = Objects.store) THEN
 		Files.WriteReal(R,obj.x); Files.WriteReal(R,obj.y);
@@ -562,7 +562,7 @@ BEGIN
 	END;
 END FileSpaceObj;
 
-PROCEDURE FileDetonation(VAR R: Files.Rider; id: INTEGER; obj: Detonation; root: SpaceObj);
+PROCEDURE FileDetonation(VAR R: Files.Rider; id: SIGNED16; obj: Detonation; root: SpaceObj);
 BEGIN
 	FileSpaceObj(R,id,obj,root);
 	IF (id = Objects.store) THEN
@@ -572,9 +572,9 @@ BEGIN
 	END;
 END FileDetonation;
 
-PROCEDURE FileMass(VAR R: Files.Rider; id: INTEGER; obj: Mass; root: SpaceObj);
+PROCEDURE FileMass(VAR R: Files.Rider; id: SIGNED16; obj: Mass; root: SpaceObj);
 VAR
-	i,j: LONGINT;
+	i,j: SIGNED32;
 BEGIN
 	FileSpaceObj(R,id,obj,root);
 	IF (id = Objects.store) THEN
@@ -584,7 +584,7 @@ BEGIN
 		Files.WriteReal(R,obj.rotvel); Files.WriteInt(R,obj.n0);
 		Files.WriteInt(R,obj.u); Files.WriteInt(R,obj.v);
 		Files.WriteInt(R,obj.w); Files.WriteInt(R,obj.h);
-		j:= LEN(obj.px0^)(LONGINT); Files.WriteLInt(R,j);
+		j:= LEN(obj.px0^)(SIGNED32); Files.WriteLInt(R,j);
 		FOR i:= 0 TO j-1 DO
 			Files.WriteInt(R,obj.px0[i]); Files.WriteInt(R,obj.py0[i]);
 			Files.WriteInt(R,obj.px1[i]); Files.WriteInt(R,obj.py1[i]);
@@ -606,7 +606,7 @@ BEGIN
 	END;
 END FileMass;
 
-PROCEDURE FileFlyingObj(VAR R: Files.Rider; id: INTEGER; obj: FlyingObj; root: SpaceObj);
+PROCEDURE FileFlyingObj(VAR R: Files.Rider; id: SIGNED16; obj: FlyingObj; root: SpaceObj);
 BEGIN
 	FileMass(R,id,obj,root);
 	IF (id = Objects.store) THEN
@@ -616,9 +616,9 @@ BEGIN
 	END;
 END FileFlyingObj;
 
-PROCEDURE FileBullet(VAR R: Files.Rider; id: INTEGER; obj: Bullet; root: SpaceObj);
+PROCEDURE FileBullet(VAR R: Files.Rider; id: SIGNED16; obj: Bullet; root: SpaceObj);
 VAR
-	rpos: INTEGER;
+	rpos: SIGNED16;
 BEGIN
 	FileMass(R,id,obj,root);
 	IF (id = Objects.store) THEN
@@ -629,9 +629,9 @@ BEGIN
 	END;
 END FileBullet;
 
-PROCEDURE FileShip(VAR R: Files.Rider; id: INTEGER; obj: Ship; root: SpaceObj);
+PROCEDURE FileShip(VAR R: Files.Rider; id: SIGNED16; obj: Ship; root: SpaceObj);
 VAR
-	i: INTEGER;
+	i: SIGNED16;
 BEGIN
 	FileFlyingObj(R,id,obj,root);
 	IF (id = Objects.store) THEN
@@ -654,29 +654,29 @@ BEGIN
 	END;
 END FileShip;
 
-PROCEDURE FileEnemy(VAR R: Files.Rider; id: INTEGER; obj: Enemy; root: SpaceObj);
+PROCEDURE FileEnemy(VAR R: Files.Rider; id: SIGNED16; obj: Enemy; root: SpaceObj);
 BEGIN
 	FileFlyingObj(R,id,obj,root);
 END FileEnemy;
 
-PROCEDURE FileSBullet(VAR R: Files.Rider; id: INTEGER; obj: SBullet; root: SpaceObj);
+PROCEDURE FileSBullet(VAR R: Files.Rider; id: SIGNED16; obj: SBullet; root: SpaceObj);
 BEGIN
 	FileBullet(R,id,obj,root);
 END FileSBullet;
 
-PROCEDURE FileEBullet(VAR R: Files.Rider; id: INTEGER; obj: EBullet; root: SpaceObj);
+PROCEDURE FileEBullet(VAR R: Files.Rider; id: SIGNED16; obj: EBullet; root: SpaceObj);
 BEGIN
 	FileBullet(R,id,obj,root);
 END FileEBullet;
 
-PROCEDURE FileAsteroid(VAR R: Files.Rider; id: INTEGER; obj: Asteroid; root: SpaceObj);
+PROCEDURE FileAsteroid(VAR R: Files.Rider; id: SIGNED16; obj: Asteroid; root: SpaceObj);
 BEGIN
 	FileMass(R,id,obj,root);
 END FileAsteroid;
 
 (*** end of loading/storing ***)
 
-PROCEDURE ModifyStatus(F: Starfield; obj: Field; mx,my: INTEGER);
+PROCEDURE ModifyStatus(F: Starfield; obj: Field; mx,my: SIGNED16);
 	(* create a new status line and display it *)
 BEGIN
 	ShowStatus(obj,obj.line);
@@ -685,7 +685,7 @@ BEGIN
 	Display3.String(F.mask,w,mx+F.X+5,my+F.Y+5,fnt[F.fdx],obj.line,Display3.paint);
 END ModifyStatus;
 
-PROCEDURE RestoreStatus(F: Starfield; obj: Field; mx,my: INTEGER);
+PROCEDURE RestoreStatus(F: Starfield; obj: Field; mx,my: SIGNED16);
 	(* display the current status line *)
 BEGIN
 	Oberon.RemoveMarks(F.mask.X,F.mask.Y+5,F.mask.W,fh[F.fdx]);
@@ -698,9 +698,9 @@ END RestoreStatus;
 
 (* Game Object drawing *)
 
-PROCEDURE DrawDetonation(F: Starfield; obj: Detonation; mx,my: INTEGER): INTEGER;
+PROCEDURE DrawDetonation(F: Starfield; obj: Detonation; mx,my: SIGNED16): SIGNED16;
 VAR
-	sx,sy,sr: INTEGER;
+	sx,sy,sr: SIGNED16;
 BEGIN
 	sx:= SHORT(ENTIER(obj.x*F.scaleX)); sy:= SHORT(ENTIER(obj.y*F.scaleY));
 	sr:= SHORT(ENTIER(obj.r0*((F.scaleX+F.scaleY)/2)));
@@ -714,14 +714,14 @@ BEGIN
 	RETURN(sy-sr);
 END DrawDetonation;
 
-PROCEDURE DrawMass(F: Starfield; obj: Mass; mx,my: INTEGER): INTEGER;
+PROCEDURE DrawMass(F: Starfield; obj: Mass; mx,my: SIGNED16): SIGNED16;
 VAR
-	su,sv,sw,sh: INTEGER;
+	su,sv,sw,sh: SIGNED16;
 
-	PROCEDURE Poly(x,y: ARRAY OF INTEGER; n,dx,dy,c: INTEGER);
+	PROCEDURE Poly(x,y: ARRAY OF SIGNED16; n,dx,dy,c: SIGNED16);
 		(* add offset to every point in array and draw *)
 	VAR
-		i: INTEGER;
+		i: SIGNED16;
 	BEGIN
 		FOR i:= 0 TO n-1 DO
 			x[i]:= SHORT(ENTIER(x[i]*F.scaleX))+dx;
@@ -741,9 +741,9 @@ BEGIN
 	RETURN(sv);
 END DrawMass;
 
-PROCEDURE DrawShip(F: Starfield; obj: Ship; mx,my: INTEGER): INTEGER;
+PROCEDURE DrawShip(F: Starfield; obj: Ship; mx,my: SIGNED16): SIGNED16;
 VAR
-	sx,sy,sr,sv: INTEGER;
+	sx,sy,sr,sv: SIGNED16;
 BEGIN
 	sr:= SHORT(ENTIER(34*((F.scaleX+F.scaleY)/2)));
 	IF (obj.shield0 > 0) THEN
@@ -766,7 +766,7 @@ END DrawShip;
 PROCEDURE MoveMass(obj: Mass);
 	(* calculate new position of shape vertices using velocities for x, y and rot *)
 VAR
-	i,w1,h1,w2,h2: INTEGER;
+	i,w1,h1,w2,h2: SIGNED16;
 	shp: Shape;
 BEGIN
 	w1:= 0; h1:= 0; w2:= 0; h2:= 0; shp:= obj.shape;
@@ -797,8 +797,8 @@ BEGIN
 		FOR i:= 0 TO obj.shape.n-1 DO DEC(obj.py1[i],Display.Height); END;
 	END;
 	(* calculate the objects hull (x,y,u,v) for easier intersection and redraw *)
-	w1:= MAX(INTEGER); h1:= MAX(INTEGER);
-	w2:= MIN(INTEGER); h2:= MIN(INTEGER);
+	w1:= MAX(SIGNED16); h1:= MAX(SIGNED16);
+	w2:= MIN(SIGNED16); h2:= MIN(SIGNED16);
 	FOR i:= 0 TO shp.n-1 DO
 		IF (obj.px1[i] < w1) THEN w1:= obj.px1[i]; END;
 		IF (obj.py1[i] < h1) THEN h1:= obj.py1[i]; END;
@@ -808,12 +808,12 @@ BEGIN
 	obj.u:= w1; obj.v:= h1; obj.w:= w2 - w1; obj.h:= h2 - h1;
 END MoveMass;
 
-PROCEDURE IntersectMass(obj1,obj2: Mass; VAR x,y: INTEGER): BOOLEAN;
+PROCEDURE IntersectMass(obj1,obj2: Mass; VAR x,y: SIGNED16): BOOLEAN;
 	(* calculate intersection of two objects *)
 VAR
-	i,j: INTEGER;
+	i,j: SIGNED16;
 
-	PROCEDURE In(v,min,max: INTEGER): BOOLEAN;
+	PROCEDURE In(v,min,max: SIGNED16): BOOLEAN;
 	BEGIN
 		RETURN((v >= min) & (v <= max));
 	END In;
@@ -886,7 +886,7 @@ BEGIN
 	END;
 END EFire;
 
-PROCEDURE Hit(F: Field; x,y: REAL);
+PROCEDURE Hit(F: Field; x,y: FLOAT32);
 	(* produce a nice detonation *)
 VAR
 	det: Detonation;
@@ -904,12 +904,12 @@ BEGIN
 	END;
 END HitShip;
 
-PROCEDURE SplitAsteroid(F: Field; obj: Asteroid; x,y: INTEGER): INTEGER;
+PROCEDURE SplitAsteroid(F: Field; obj: Asteroid; x,y: SIGNED16): SIGNED16;
 	(* split asteroid into pieces (ast1->ast2*SplitAsts->ast3*SplitAsts->none *)
 VAR
 	ast: Asteroid;
 	shp: Shape;
-	size,i: INTEGER;
+	size,i: SIGNED16;
 BEGIN
 	IF (obj.shape = shAsteroid1) THEN	(* Big Asteroid *)
 		size:= 1; shp:= shAsteroid2;
@@ -927,7 +927,7 @@ BEGIN
 	RETURN(size);
 END SplitAsteroid;
 
-PROCEDURE NewShip(F: Field; x,y: REAL);
+PROCEDURE NewShip(F: Field; x,y: FLOAT32);
 	(* initialize a new ship and place it somewhere into the field *)
 BEGIN
 	IF (F.ships > 0) THEN
@@ -948,11 +948,11 @@ BEGIN
 	obj.next:= F.objects; F.objects:= obj;
 END NewEnemy;
 
-PROCEDURE NewRound(F: Field; amt: INTEGER);
+PROCEDURE NewRound(F: Field; amt: SIGNED16);
 	(* produce new, big asteroids and place them, amount depends on level *)
 VAR
 	ast: Asteroid;
-	i: INTEGER;
+	i: SIGNED16;
 BEGIN
 	FOR i:= 1 TO amt DO
 		NEW(ast); InitAsteroid(ast,NIL,shAsteroid1,1,1);
@@ -965,7 +965,7 @@ PROCEDURE MoveShip(F: Field; obj: Ship);
 VAR
 	tgt: SpaceObj;
 	hit: BOOLEAN;
-	x,y: INTEGER;
+	x,y: SIGNED16;
 	swpV: Vertices;
 	swpS: Shape;
 BEGIN
@@ -1009,7 +1009,7 @@ PROCEDURE MoveEnemy(F: Field; obj: Enemy);
 VAR
 	tgt: SpaceObj;
 	hit: BOOLEAN;
-	x,y: INTEGER;
+	x,y: SIGNED16;
 BEGIN
 	MoveMass(obj);
 	tgt:= F.objects; hit:= FALSE;
@@ -1037,7 +1037,7 @@ PROCEDURE MoveSBullet(F: Field; obj: SBullet);
 VAR
 	tgt: SpaceObj;
 	hit: BOOLEAN;
-	x,y: INTEGER;
+	x,y: SIGNED16;
 BEGIN
 	MoveMass(obj);
 	tgt:= F.objects; hit:= FALSE;
@@ -1069,7 +1069,7 @@ PROCEDURE MoveEBullet(F: Field; obj: EBullet);
 VAR
 	tgt: SpaceObj;
 	hit: BOOLEAN;
-	x,y: INTEGER;
+	x,y: SIGNED16;
 BEGIN
 	MoveMass(obj);
 	tgt:= F.objects; hit:= FALSE;
@@ -1161,10 +1161,10 @@ END Step2;
 PROCEDURE TimerHandler(me: Oberon.Task);
 	(* tick task handler *)
 VAR
-	time: LONGINT;
+	time: SIGNED32;
 	model: Field;
-	amt: INTEGER;
-	r1: REAL;
+	amt: SIGNED16;
+	r1: FLOAT32;
 	obj0,obj: SpaceObj;
 BEGIN
 	WITH me: Timer DO
@@ -1216,7 +1216,7 @@ END FieldAttr;
 PROCEDURE FieldFile(F: Field; VAR M: FileMsg);
 VAR
 	obj0,obj: SpaceObj;
-	rpos: INTEGER;
+	rpos: SIGNED16;
 	id: Objects.Name;
 	as: Asteroid;
 	eb: EBullet;
@@ -1344,7 +1344,7 @@ PROCEDURE StarfieldDisplay(F: Starfield; VAR M: DisplayMsg);
 VAR
 	model: Field;
 	obj: SpaceObj;
-	mx,my,v: INTEGER;
+	mx,my,v: SIGNED16;
 	mask: Display3.Mask;	(* needed for MakeMask *)
 BEGIN
 	Panels.PanelHandler(F,M);
@@ -1429,7 +1429,7 @@ PROCEDURE StarfieldUpdate(F: Starfield; VAR M: UpdateMsg);
 VAR
 	model: Field;
 	obj: SpaceObj;
-	sv: INTEGER;
+	sv: SIGNED16;
 	ovlap: BOOLEAN;
 	mask: Display3.Mask;	(* needed for MakeMask *)
 BEGIN
@@ -1556,8 +1556,8 @@ PROCEDURE OldDocument(F: Files.File; D: Document; VAR f: Gadgets.Frame);
 	(* Restore an old Asteroids document from file *)
 VAR
 	obj: Objects.Object;
-	tag: INTEGER;
-	len: LONGINT;
+	tag: SIGNED16;
+	len: SIGNED32;
 	id: CHAR;
 	str: Objects.Name;
 	lib: Objects.Library;
@@ -1629,7 +1629,7 @@ VAR
 	R: Files.Rider;
 	B: Objects.BindMsg;
 	str: Objects.Name;
-	len: LONGINT;
+	len: SIGNED32;
 BEGIN
 	IF (D.name # "") & (D.dsc # NIL) THEN
 		Out.String("Store ");

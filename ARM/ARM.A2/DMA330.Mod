@@ -44,8 +44,8 @@ CONST
 TYPE
 	Program * = RECORD
 		code: ARRAY 128 OF CHAR;
-		offset *: LONGINT;
-		label0Offset, label1Offset: LONGINT; (* offset of loop 0 and loop1. Negative value indicates unused *)
+		offset *: SIGNED32;
+		label0Offset, label1Offset: SIGNED32; (* offset of loop 0 and loop1. Negative value indicates unused *)
 		label0LPFE, label1LPFE: BOOLEAN;
 	END;
 
@@ -53,10 +53,10 @@ VAR
 	(*program: Program;
 	srcBuf, dstBuf: POINTER TO ARRAY 3 * 1024 + 8 OF CHAR;
 	srcAdr, dstAdr,*) BaseAddress: ADDRESS;
-	doneHandler: PROCEDURE (channel: LONGINT);
-	faultHandler: PROCEDURE (channel, fault: LONGINT);
+	doneHandler: PROCEDURE (channel: SIGNED32);
+	faultHandler: PROCEDURE (channel, fault: SIGNED32);
 
-	PROCEDURE DHex(CONST s: ARRAY OF CHAR; val: LONGINT);
+	PROCEDURE DHex(CONST s: ARRAY OF CHAR; val: SIGNED32);
 	BEGIN
 		Trace.String(s); Trace.String(" "); Trace.Hex(val,-8); Trace.StringLn("H");
 	END DHex;
@@ -71,7 +71,7 @@ VAR
 		fault: BOOLEAN;
 		faultChannels: SET;
 		program: Program;
-		status, i, busy: LONGINT;
+		status, i, busy: SIGNED32;
 	BEGIN
 		(*Trace.StringLn("DMA: FaultHandler called");*)
 		fault := SYSTEM.GET32(BaseAddress + FSRD_Offset) MOD 2 = 1;
@@ -113,7 +113,7 @@ VAR
 	PROCEDURE DoneHandler * (*VAR state: Machine.State*);
 	VAR
 		reason: SET;
-		channel: LONGINT;
+		channel: SIGNED32;
 	BEGIN
 		(* Get reason, i.e. active events *)
 		SYSTEM.GET(BaseAddress+INT_EVENT_RIS_Offset, reason);
@@ -140,13 +140,13 @@ VAR
 		program.code[program.offset] := ch; INC(program.offset);
 	END C8;
 
-	PROCEDURE D8(VAR program: Program; val: LONGINT);
+	PROCEDURE D8(VAR program: Program; val: SIGNED32);
 	BEGIN
 		C8(program, CHR(val MOD 100H));
 	END D8;
 
-	PROCEDURE D16(VAR program: Program; val: LONGINT);
-	VAR i: LONGINT;
+	PROCEDURE D16(VAR program: Program; val: SIGNED32);
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 1 DO
 			D8(program, val MOD 100H);
@@ -154,8 +154,8 @@ VAR
 		END;
 	END D16;
 
-	PROCEDURE D32(VAR program: Program; val: LONGINT);
-	VAR i: LONGINT;
+	PROCEDURE D32(VAR program: Program; val: SIGNED32);
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 3 DO
 			D8(program, val MOD 100H);
@@ -166,7 +166,7 @@ VAR
 CONST
 	SAR * = 0; CCR * = 1; DAR * = 2; (* do not change values, are used in encoding *)
 
-	PROCEDURE DMAADDH * (VAR program: Program; register: LONGINT;  imm: LONGINT);
+	PROCEDURE DMAADDH * (VAR program: Program; register: SIGNED32;  imm: SIGNED32);
 	BEGIN
 		ASSERT(register IN {SAR, DAR});
 		IF TracePrograms THEN
@@ -185,7 +185,7 @@ CONST
 		D16(program,imm);
 	END DMAADDH;
 
-	PROCEDURE DMAADNH * (VAR program: Program; register: LONGINT; imm: LONGINT);
+	PROCEDURE DMAADNH * (VAR program: Program; register: SIGNED32; imm: SIGNED32);
 	BEGIN
 		ASSERT(register IN {SAR, DAR});
 		IF TracePrograms THEN
@@ -215,13 +215,13 @@ CONST
 		C8(program, 0X);
 	END DMAEND;
 
-	PROCEDURE DMAFLUSHP * (VAR program: Program; peripheral: LONGINT);
+	PROCEDURE DMAFLUSHP * (VAR program: Program; peripheral: SIGNED32);
 	BEGIN
 		C8(program, 35X);
 		D8(program, ASH(peripheral,3));
 	END DMAFLUSHP;
 
-	PROCEDURE DMAGO * (VAR program: Program; nonSecure: BOOLEAN; channel: LONGINT; adr: ADDRESS);
+	PROCEDURE DMAGO * (VAR program: Program; nonSecure: BOOLEAN; channel: SIGNED32; adr: ADDRESS);
 	BEGIN
 		IF nonSecure THEN
 			C8(program, 0A2X);
@@ -253,7 +253,7 @@ CONST
 		END;
 	END DMALD;
 
-	PROCEDURE DMALDP * (VAR program: Program; S, B: BOOLEAN; peripheral: LONGINT);
+	PROCEDURE DMALDP * (VAR program: Program; S, B: BOOLEAN; peripheral: SIGNED32);
 	BEGIN
 		ASSERT(~S OR ~B);
 		IF TracePrograms THEN
@@ -269,7 +269,7 @@ CONST
 		D8(program,ASH(peripheral, 3));
 	END DMALDP;
 
-	PROCEDURE DMALP * (VAR program: Program; count: LONGINT);
+	PROCEDURE DMALP * (VAR program: Program; count: SIGNED32);
 	BEGIN
 		ASSERT((0<=count) & (count < 100H));
 		IF TracePrograms THEN
@@ -294,7 +294,7 @@ CONST
 	END DMALP;
 
 	PROCEDURE DMALPEND * (VAR program: Program; S,B: BOOLEAN);
-	VAR v: LONGINT; loopReg1: BOOLEAN; backward: LONGINT; lpfe: BOOLEAN;
+	VAR v: SIGNED32; loopReg1: BOOLEAN; backward: SIGNED32; lpfe: BOOLEAN;
 	BEGIN
 		ASSERT(program.label0Offset >= 0);
 		IF TracePrograms THEN
@@ -337,7 +337,7 @@ CONST
 		END;
 	END DMALPFE;
 
-	PROCEDURE DMAMOV * (VAR program: Program; register: LONGINT; imm32: LONGINT);
+	PROCEDURE DMAMOV * (VAR program: Program; register: SIGNED32; imm32: SIGNED32);
 	BEGIN
 		ASSERT(register IN {SAR, DAR, CCR});
 		IF TracePrograms THEN
@@ -380,7 +380,7 @@ CONST
 		C8(program, 12X);
 	END DMARMB;
 
-	PROCEDURE DMASEV * (VAR program: Program; eventNum: LONGINT);
+	PROCEDURE DMASEV * (VAR program: Program; eventNum: SIGNED32);
 	BEGIN
 		IF TracePrograms THEN
 			Trace.Address(ADDRESSOF(program.code[program.offset]));
@@ -413,7 +413,7 @@ CONST
 		C8(program, 0CX)
 	END DMASTZ;
 
-	PROCEDURE DMAWFE * (VAR program: Program; eventNum: LONGINT; invalid: BOOLEAN);
+	PROCEDURE DMAWFE * (VAR program: Program; eventNum: SIGNED32; invalid: BOOLEAN);
 	BEGIN
 		C8(program, 36X);
 		IF invalid THEN D8(program, 2 + ASH(eventNum, 3))
@@ -424,7 +424,7 @@ CONST
 CONST
 	Single * = 0; Peripheral * = 1; Burst * = 2; (* do not change values, used in encoding *)
 
-	PROCEDURE DMAWFP * (VAR program: Program; peripheral: LONGINT; mode: LONGINT);
+	PROCEDURE DMAWFP * (VAR program: Program; peripheral: SIGNED32; mode: SIGNED32);
 	BEGIN
 		ASSERT(mode IN {Single,Burst,Peripheral});
 		IF TracePrograms THEN
@@ -455,8 +455,8 @@ CONST
 		C8(program, 13X);
 	END DMAWMB;
 
-	PROCEDURE StartDMAThread * (CONST transferProg: Program; channel: LONGINT);
-	VAR dbg: LONGINT; program: Program; programAdr: ADDRESS;
+	PROCEDURE StartDMAThread * (CONST transferProg: Program; channel: SIGNED32);
+	VAR dbg: SIGNED32; program: Program; programAdr: ADDRESS;
 	BEGIN
 		programAdr := ADDRESSOF(transferProg.code[0]);
 		Machine.FlushDCacheRange(programAdr, 128);
@@ -475,8 +475,8 @@ CONST
 		SYSTEM.PUT32(BaseAddress+DBGCMD_Offset, 0);
 	END StartDMAThread;
 
-	PROCEDURE Log2(size: LONGINT): LONGINT;
-	VAR val: LONGINT;
+	PROCEDURE Log2(size: SIGNED32): SIGNED32;
+	VAR val: SIGNED32;
 	BEGIN
 		val := 0;
 		WHILE size > 1 DO size := size DIV 2; INC(val) END;
@@ -485,49 +485,49 @@ CONST
 
 	CONST SI * = 1; DI * = 4000H;
 
-	PROCEDURE SS * (size: LONGINT): LONGINT;
+	PROCEDURE SS * (size: SIGNED32): SIGNED32;
 	BEGIN
 		RETURN Log2(size DIV 8) * 02H (* bits 1..3 *)
 	END SS;
 
-	PROCEDURE SB * (size: LONGINT): LONGINT;
+	PROCEDURE SB * (size: SIGNED32): SIGNED32;
 	BEGIN
 		ASSERT((1<=size) & (size <=16));
 		RETURN (size-1) * 10H (* bits 4..7 *)
 	END SB;
 
-	PROCEDURE SP * (prot: LONGINT): LONGINT;
+	PROCEDURE SP * (prot: SIGNED32): SIGNED32;
 	BEGIN
 		RETURN prot * 100H (* bits 8..10 *)
 	END SP;
 
-	PROCEDURE SC * (cache: LONGINT): LONGINT;
+	PROCEDURE SC * (cache: SIGNED32): SIGNED32;
 	BEGIN
 		RETURN cache * 800H; (* bits 11..13 *)
 	END SC;
 
-	PROCEDURE DS * (size: LONGINT): LONGINT;
+	PROCEDURE DS * (size: SIGNED32): SIGNED32;
 	BEGIN
 		RETURN Log2(size DIV 8) * 8000H (* bits 15.. 17 *)
 	END DS;
 
-	PROCEDURE DB * (size: LONGINT): LONGINT;
+	PROCEDURE DB * (size: SIGNED32): SIGNED32;
 	BEGIN
 		ASSERT((1<=size) & (size <=16));
 		RETURN (size-1) * 40000H (* bits 18..21 *)
 	END DB;
 
-	PROCEDURE DP * (prot: LONGINT): LONGINT;
+	PROCEDURE DP * (prot: SIGNED32): SIGNED32;
 	BEGIN
 		RETURN prot * 400000H (* bits 22..24 *)
 	END DP;
 
-	PROCEDURE DC * (cache: LONGINT): LONGINT;
+	PROCEDURE DC * (cache: SIGNED32): SIGNED32;
 	BEGIN
 		RETURN cache * 2000000H; (* bits 25..27 *)
 	END DC;
 
-	PROCEDURE ES * (size: LONGINT): LONGINT;
+	PROCEDURE ES * (size: SIGNED32): SIGNED32;
 	BEGIN
 		RETURN Log2(size DIV 8) * 10000000H; (* bits 28..30 *)
 	END ES;
@@ -535,7 +535,7 @@ CONST
 	(*PROCEDURE SimpleTest*;
 	VAR
 		(*program: Program;*)
-		i, srcPhys, dstPhys: LONGINT;
+		i, srcPhys, dstPhys: SIGNED32;
 	BEGIN
 		Trace.StringLn("SimpleTest Starting");
 		NEW(srcBuf); NEW(dstBuf);
@@ -583,18 +583,18 @@ CONST
 		Trace.Memory(dstAdr, 1024);*)
 	END SimpleTest;*)
 
-	PROCEDURE InstallFaultHandler * (handler: PROCEDURE (channel, fault: LONGINT));
+	PROCEDURE InstallFaultHandler * (handler: PROCEDURE (channel, fault: SIGNED32));
 	BEGIN
 		faultHandler := handler
 	END InstallFaultHandler;
 
-	PROCEDURE InstallDoneHandler * (handler: PROCEDURE (channel: LONGINT));
+	PROCEDURE InstallDoneHandler * (handler: PROCEDURE (channel: SIGNED32));
 	BEGIN
 		doneHandler := handler
 	END InstallDoneHandler;
 
 	PROCEDURE StartupController;
-	VAR value, cacheLength: LONGINT; clocks, set: SET; i: LONGINT;
+	VAR value, cacheLength: SIGNED32; clocks, set: SET; i: SIGNED32;
 		dword: SET;
 	BEGIN
 		(* configure clocks *)

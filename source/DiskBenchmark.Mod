@@ -27,21 +27,21 @@ TYPE
 		doSequential : BOOLEAN; 	(* Perform sequential block benchmark? *)
 		doRead : BOOLEAN; 		(* Perform read benchmarks ? *)
 		doWrite : BOOLEAN; 		(* Perform write benchmarks? *)
-		nbrOfBlocks : LONGINT;		(* Number of blocks used in random block benchmark *)
+		nbrOfBlocks : SIGNED32;		(* Number of blocks used in random block benchmark *)
 		blocksizes : SET;				(* Which block sizes should be benchmarked? *)
 
 		(* progress status *)
-		cur : HUGEINT; 				(* how many sectors have been processed *)
-		max : HUGEINT;				(* how many sectors must be processed in total *)
+		cur : SIGNED64; 				(* how many sectors have been processed *)
+		max : SIGNED64;				(* how many sectors must be processed in total *)
 
 		(* AosDiskdevice information *)
-		start : LONGINT;			 	(* First sector in partition *)
-		size : LONGINT;				(* partition size in sectors *)
+		start : SIGNED32;			 	(* First sector in partition *)
+		size : SIGNED32;				(* partition size in sectors *)
 
 		buffer : POINTER TO ARRAY OF CHAR;
 		random : Random.Generator;
 
-		PROCEDURE SetParameters*(doRandom, doSequential, doRead, doWrite : BOOLEAN; nbrOfBlocks : LONGINT; blocksizes : SET);
+		PROCEDURE SetParameters*(doRandom, doSequential, doRead, doWrite : BOOLEAN; nbrOfBlocks : SIGNED32; blocksizes : SET);
 		BEGIN
 			SELF.doRandom := doRandom; SELF.doSequential := doSequential; SELF.doRead := doRead;
 			IF ~AllowWrite THEN doWrite := FALSE; ELSE SELF.doWrite := doWrite; END;
@@ -57,8 +57,8 @@ TYPE
 			RETURN TRUE;
 		END ValidParameters;
 
-		PROCEDURE GetNbrOfSectors(blocksize : LONGINT) : LONGINT;
-		VAR result : LONGINT;
+		PROCEDURE GetNbrOfSectors(blocksize : SIGNED32) : SIGNED32;
+		VAR result : SIGNED32;
 		BEGIN
 			result := -1;
 			IF blocksize MOD disk.device.blockSize = 0 THEN result := blocksize DIV disk.device.blockSize; END;
@@ -66,7 +66,7 @@ TYPE
 		END GetNbrOfSectors;
 
 		PROCEDURE DoOperation*;
-		VAR sectors, blocksize, maxBlocksize, i : LONGINT;
+		VAR sectors, blocksize, maxBlocksize, i : SIGNED32;
 		BEGIN
 			(* General information *)
 			info.String("Benchmark settings: "); info.Ln;
@@ -141,15 +141,15 @@ TYPE
 		END DoOperation;
 
 		(* 	Read/Write 'nbrOfBlocks' of the specified 'blocksize' *)
-		PROCEDURE PerformRandomBench(mode, nbrOfBlocks, blocksize : LONGINT);
+		PROCEDURE PerformRandomBench(mode, nbrOfBlocks, blocksize : SIGNED32);
 		VAR
 			string :Lib.String;
-			block, sectors : LONGINT;
-			nbrOfBytes : HUGEINT;
-			avgDuration : REAL;
+			block, sectors : SIGNED32;
+			nbrOfBytes : SIGNED64;
+			avgDuration : FLOAT32;
 			milliTimer : Kernel.MilliTimer;
-			time : LONGINT;
-			i : LONGINT; res : WORD;
+			time : SIGNED32;
+			i : SIGNED32; res : INTEGER;
 			temp : ARRAY 256 OF CHAR;
 		BEGIN
 			ASSERT((mode = Disks.Read) OR (mode = Disks.Write));
@@ -191,14 +191,14 @@ TYPE
 		END PerformRandomBench;
 
 		(* Sequentially Read/Write all blocks of the block device using 'blocksize' blocks *)
-		PROCEDURE PerformSequentialBench(mode, blocksize : LONGINT);
+		PROCEDURE PerformSequentialBench(mode, blocksize : SIGNED32);
 		VAR
 			string : Lib.String;
-			block, sectors : LONGINT;
-			nbrOfBytes : HUGEINT;
+			block, sectors : SIGNED32;
+			nbrOfBytes : SIGNED64;
 			milliTimer : Kernel.MilliTimer;
-			time : LONGINT;
-			i : LONGINT; res : WORD;
+			time : SIGNED32;
+			i : SIGNED32; res : INTEGER;
 			temp : ARRAY 256 OF CHAR;
 		BEGIN
 			ASSERT((mode = Disks.Read) OR (mode = Disks.Write));
@@ -235,7 +235,7 @@ TYPE
 			END;
 		END PerformSequentialBench;
 
-		PROCEDURE WriteB*(k: LONGINT; VAR string: ARRAY OF CHAR);
+		PROCEDURE WriteB*(k: SIGNED32; VAR string: ARRAY OF CHAR);
 		VAR suffix: ARRAY 3 OF CHAR;
 		BEGIN
 			IF k < 1024 THEN suffix := "B";
@@ -244,7 +244,7 @@ TYPE
 			Strings.IntToStr(SHORT(k), string); Strings.Append(string, suffix);
 		END WriteB;
 
-		PROCEDURE WriteK*(k: LONGINT; VAR string: ARRAY OF CHAR);
+		PROCEDURE WriteK*(k: SIGNED32; VAR string: ARRAY OF CHAR);
 		VAR suffix: ARRAY 3 OF CHAR;
 		BEGIN
 			IF k < 100* 1024 THEN suffix := "KB";
@@ -253,7 +253,7 @@ TYPE
 			Strings.IntToStr(k, string); Strings.Append(string, suffix);
 		END WriteK;
 
-		PROCEDURE &Init*(disk :Lib.Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk :Lib.Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "DiskBenchmark"; desc := "Perform disk benchmark on partition"; locktype := Lib.WriterLock;

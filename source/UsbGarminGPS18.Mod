@@ -119,14 +119,14 @@ TYPE
 
 	ProtocolDataType = RECORD
 		tag : CHAR;
-		data : LONGINT;
+		data : SIGNED32;
 	END;
 
 	SatelliteData = RECORD;
-		svid : LONGINT; 		(* space vehicle identification (1-32 and 33-64 for WAAS); (uint8) *)
-		snr : LONGINT; 		(* signal-to-noise ratio (uint16) 						*)
-		elev : LONGINT; 	(* satellite elevation in degrees (uint8) 				*)
-		azmuth : LONGINT; 	(* satellite azmuth in degrees (uint16) 				*)
+		svid : SIGNED32; 		(* space vehicle identification (1-32 and 33-64 for WAAS); (uint8) *)
+		snr : SIGNED32; 		(* signal-to-noise ratio (uint16) 						*)
+		elev : SIGNED32; 	(* satellite elevation in degrees (uint8) 				*)
+		azmuth : SIGNED32; 	(* satellite azmuth in degrees (uint16) 				*)
 		(* status bit field:														*)
 		(* Bit 1: The unit has ephemeris data for the specified satellite			*)
 		(* Bit 2: The unit has a differential correction for the specified satellite		*)
@@ -140,7 +140,7 @@ TYPE
 		valid : BOOLEAN; (* did we already receive the information ?? *)
 
 		PROCEDURE Parse(data : ARRAY OF CHAR);
-		VAR temp, i : LONGINT;
+		VAR temp, i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF LEN(data) # 84 THEN RETURN; END;
 			FOR i := 0 TO 11 DO
@@ -156,7 +156,7 @@ TYPE
 
 		PROCEDURE Show(details : BOOLEAN);
 		CONST SnrThreshold = 100;
-		VAR nbrOfSatellites, i : LONGINT;
+		VAR nbrOfSatellites, i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			KernelLog.String("Satellite Data: "); KernelLog.Ln;
 			IF valid THEN
@@ -193,20 +193,20 @@ TYPE
 TYPE
 
 	RadianType* = RECORD
-		lat-, long- : LONGREAL;
+		lat-, long- : FLOAT64;
 	END;
 
 	D800PVT* = RECORD;
-		alt- : REAL; 				(* altitude above WGS 84 ellipsoid (meters) *)
-		epe- : REAL; 				(* estimated position error, 2 sigma (meters) *)
-		eph-, epv- : REAL; 		(* epe, but horizontal rsp. vertical only (meters) *)
-		fix- : INTEGER; 			(* type of position fix: 0 = no fix; 1 = no fix; 2 = 2D; 3 = 3D; 4 = 2D differential, 5 = 3D differential *)
-		tow- : LONGREAL; 		(* time of week (seconds) *)
+		alt- : FLOAT32; 				(* altitude above WGS 84 ellipsoid (meters) *)
+		epe- : FLOAT32; 				(* estimated position error, 2 sigma (meters) *)
+		eph-, epv- : FLOAT32; 		(* epe, but horizontal rsp. vertical only (meters) *)
+		fix- : SIGNED16; 			(* type of position fix: 0 = no fix; 1 = no fix; 2 = 2D; 3 = 3D; 4 = 2D differential, 5 = 3D differential *)
+		tow- : FLOAT64; 		(* time of week (seconds) *)
 		posn- : RadianType;  		(* latitude and longitude (radians) *)
-		east-, north-, up- : REAL; 	(* velocity east, north & up (meters per second) *)
-		mslHeight- : REAL; 		(* height of WGS 84 ellipsoid above MSL (meters) *)
-		leapSeconds- : INTEGER; 	(* difference between GPS and UTC *)
-		wnDays- : LONGINT; 		(* week number days *)
+		east-, north-, up- : FLOAT32; 	(* velocity east, north & up (meters per second) *)
+		mslHeight- : FLOAT32; 		(* height of WGS 84 ellipsoid above MSL (meters) *)
+		leapSeconds- : SIGNED16; 	(* difference between GPS and UTC *)
+		wnDays- : SIGNED32; 		(* week number days *)
 	END;
 
 	(* Note: Consider the D800PVT.fix field for information about which fields are valid *)
@@ -241,7 +241,7 @@ TYPE
 		END GetPVTdata;
 
 		PROCEDURE Show(details : BOOLEAN);
-		VAR string : ARRAY 32 OF CHAR; temp : REAL;
+		VAR string : ARRAY 32 OF CHAR; temp : FLOAT32;
 		BEGIN {EXCLUSIVE}
 			KernelLog.String("GPS18: Position Info: "); KernelLog.Ln;
 			IF valid THEN
@@ -275,7 +275,7 @@ TYPE
 			KernelLog.Ln;
 		END Show;
 
-		PROCEDURE ShowFix(fix : LONGINT);
+		PROCEDURE ShowFix(fix : SIGNED32);
 		BEGIN
 			CASE fix OF
 				FixUnusable: KernelLog.String("unusable");
@@ -305,13 +305,13 @@ TYPE
 		interruptIn, bulkIn, bulkOut : Usbdi.Pipe;
 		interruptInBuffer : Usbdi.BufferPtr;
 		started, received : BOOLEAN;
-		epMaxSize : LONGINT;
+		epMaxSize : SIGNED32;
 		byteCounter : SIZE;	(* how many bytes have been received *)
 
 		(* information about the GPS device and its capabilities *)
-		unitID : LONGINT;
+		unitID : SIGNED32;
 		productString : Strings.String;
-		productId, softwareVersion : LONGINT;
+		productId, softwareVersion : SIGNED32;
 		protocolDataType : POINTER TO ARRAY OF ProtocolDataType;
 
 		(* packets *)
@@ -320,7 +320,7 @@ TYPE
 		(* used by Handleevent *)
 		data : POINTER TO ARRAY OF CHAR;
 		fragLen, fragOfs: SIZE;
-		fragType, fragId : LONGINT;
+		fragType, fragId : SIGNED32;
 
 		(** Start gathering PVT data *)
 		PROCEDURE StartPvtData*() : BOOLEAN;
@@ -344,7 +344,7 @@ TYPE
 			RETURN pvt.GetPVTdata();
 		END GetPvtData;
 
-		PROCEDURE HandlePacket(type, id : LONGINT; data : ARRAY OF CHAR);
+		PROCEDURE HandlePacket(type, id : SIGNED32; data : ARRAY OF CHAR);
 		VAR i : SIZE;
 		BEGIN
 			IF Trace * TracePackets # {} THEN KernelLog.String("GPS18: packet received: "); ShowPacket(type, id); KernelLog.Ln; END;
@@ -405,7 +405,7 @@ TYPE
 		(* re-assembles fragmented packets and sends them to HandlePacket *)
 		PROCEDURE HandleEvent(status : Usbdi.Status; actLen : SIZE);
 		VAR
-			packetType, packetId : LONGINT;
+			packetType, packetId : SIGNED32;
 			dataLen, len, i : SIZE;
 			error : BOOLEAN;
 		BEGIN
@@ -487,7 +487,7 @@ TYPE
 			RETURN status = Usbdi.Ok;
 		END SendPacket;
 
-		PROCEDURE BuildPacket(type, id : LONGINT; data : Usbdi.BufferPtr) : Usbdi.BufferPtr;
+		PROCEDURE BuildPacket(type, id : SIGNED32; data : Usbdi.BufferPtr) : Usbdi.BufferPtr;
 		VAR packet : Usbdi.BufferPtr; i : SIZE;
 		BEGIN
 			IF data=NIL THEN
@@ -497,7 +497,7 @@ TYPE
 				FOR i := 0 TO LEN(data)-1 DO packet[i + 12] := data[i]; END;
 			END;
 			FOR i := 0 TO 11 DO packet[i] := CHR(0); END;
-			IF data # NIL THEN Put4(packet, 8, LEN(data)(LONGINT)); END;
+			IF data # NIL THEN Put4(packet, 8, LEN(data)(SIGNED32)); END;
 			packet[0] := CHR(type);
 			packet[4] := CHR(id);
 			RETURN packet;
@@ -507,11 +507,11 @@ TYPE
 		CONST
 			MaxWaits = 5000; (* maximum time we wait for the TlSessionStarted packet [ms] *)
 		VAR
-			epInterruptIn, epBulkOut, epBulkIn, epFound : LONGINT;
+			epInterruptIn, epBulkOut, epBulkIn, epFound : SIGNED32;
 			status : Usbdi.Status;
 			timer : Kernel.Timer;
-			waits : LONGINT;
-			i : LONGINT;
+			waits : SIGNED32;
+			i : SIGNED32;
 		BEGIN
 			(* Expected endpoints: 1 InterruptIn, 1 BulkIn, 1 Bulkout*)
 			LOOP
@@ -616,27 +616,27 @@ TYPE
 
 	END GarminGPS18;
 
-PROCEDURE RadianToDegree(radian : LONGREAL) : LONGREAL;
+PROCEDURE RadianToDegree(radian : FLOAT64) : FLOAT64;
 BEGIN
 	RETURN radian * (180 / pi);
 END RadianToDegree;
 
-PROCEDURE Get4(CONST buf : ARRAY OF CHAR; ofs : LONGINT): LONGINT;
+PROCEDURE Get4(CONST buf : ARRAY OF CHAR; ofs : SIGNED32): SIGNED32;
 BEGIN
 	ASSERT(ofs + 3 < LEN(buf));
 	RETURN ORD(buf[ofs]) + LSH(ORD(buf[ofs+1]), 8) + LSH(ORD(buf[ofs+2]), 16) + LSH(ORD(buf[ofs+3]), 24);
 END Get4;
 
-PROCEDURE Put4(buf : Usbdi.BufferPtr; ofs, value : LONGINT);
+PROCEDURE Put4(buf : Usbdi.BufferPtr; ofs, value : SIGNED32);
 BEGIN
 	ASSERT(ofs + 3 < LEN(buf));
-	buf[ofs] := CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, value) * {0..7}));
-	buf[ofs+1] := CHR(SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, value) * {8..15}, -8)));
-	buf[ofs+2] := CHR(SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, value) * {16..23}, -16)));
-	buf[ofs+3] := CHR(SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, value) * {24..31}, -24)));
+	buf[ofs] := CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, value) * {0..7}));
+	buf[ofs+1] := CHR(SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, value) * {8..15}, -8)));
+	buf[ofs+2] := CHR(SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, value) * {16..23}, -16)));
+	buf[ofs+3] := CHR(SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, value) * {24..31}, -24)));
 END Put4;
 
-PROCEDURE ShowPacket(type, id : LONGINT);
+PROCEDURE ShowPacket(type, id : SIGNED32);
 BEGIN
 	KernelLog.String("Type: ");
 	IF type = PacketTransport THEN KernelLog.String("Transport");

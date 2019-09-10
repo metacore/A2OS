@@ -14,18 +14,18 @@ CONST
 TYPE
 	UseList = OBJECT
 		VAR
-			pc: LONGINT;	(* where the element is used *)
+			pc: SIGNED32;	(* where the element is used *)
 			next: UseList;
 
-		PROCEDURE &Init*(pc: LONGINT);
+		PROCEDURE &Init*(pc: SIGNED32);
 		BEGIN SELF.pc := pc
 		END Init;
 	END UseList;
 
 	Element = OBJECT
 		VAR
-			pc: LONGINT;	(* where this element is located in the code, -1 if unknown *)
-			firstUse:LONGINT;	(* where this element's first use is located in the code. *)
+			pc: SIGNED32;	(* where this element is located in the code, -1 if unknown *)
+			firstUse:SIGNED32;	(* where this element's first use is located in the code. *)
 			next: Element;
 			uses: UseList;
 
@@ -36,9 +36,9 @@ TYPE
 
 	Constant = OBJECT(Element)
 		VAR
-			value: LONGINT;
+			value: SIGNED32;
 
-		PROCEDURE &Init*(value: LONGINT);
+		PROCEDURE &Init*(value: SIGNED32);
 		BEGIN InitElement; SELF.value := value
 		END Init;
 	END Constant;
@@ -54,7 +54,7 @@ TYPE
 
 	ConstantPool* = OBJECT
 		VAR items: Element;
-			limitPC: LONGINT;	(* constant pool must be flushed the latest at this pc *)
+			limitPC: SIGNED32;	(* constant pool must be flushed the latest at this pc *)
 
 		(* Init - constructor *)
 		PROCEDURE &Init*;
@@ -74,7 +74,7 @@ TYPE
 			END
 		END Insert;
 
-		PROCEDURE AddConstant*(pc, c: LONGINT): LONGINT;
+		PROCEDURE AddConstant*(pc, c: SIGNED32): SIGNED32;
 		VAR i, p: Element; cnst: Constant; use: UseList;
 		BEGIN { EXCLUSIVE }
 			IF Trace THEN
@@ -114,7 +114,7 @@ TYPE
 			RETURN 0
 		END AddConstant;
 
-		PROCEDURE AddAddress*(pc: LONGINT; adr: PCM.Attribute): LONGINT;
+		PROCEDURE AddAddress*(pc: SIGNED32; adr: PCM.Attribute): SIGNED32;
 		VAR i, p: Element; address: Address; use: UseList;
 		BEGIN { EXCLUSIVE }
 			IF Trace THEN
@@ -174,15 +174,15 @@ TYPE
 			RETURN 0
 		END AddAddress;
 
-		PROCEDURE Flush*(pc: LONGINT);
-		VAR i: Element; u: UseList; adr: PCM.Attribute; cnt: LONGINT;
+		PROCEDURE Flush*(pc: SIGNED32);
+		VAR i: Element; u: UseList; adr: PCM.Attribute; cnt: SIGNED32;
 		BEGIN
 			IF Trace THEN
 				KernelLog.Enter; KernelLog.String("Flushing Constant Pool..."); KernelLog.Ln
 			END;
 			i := items;
 			WHILE (i # NIL) DO
-				i.firstUse := MAX(LONGINT); (* reset firstUse field *)
+				i.firstUse := MAX(SIGNED32); (* reset firstUse field *)
 				IF (i.uses # NIL) & (i.pc = -1) THEN
 					INC(cnt);
 					IF Trace THEN
@@ -244,7 +244,7 @@ TYPE
 		END Flush;
 
 		(* FlushCallback - callback handler called by PCOARM *)
-		PROCEDURE FlushCallback(pc: LONGINT);
+		PROCEDURE FlushCallback(pc: SIGNED32);
 		BEGIN
 			IF Trace THEN
 				KernelLog.Enter; KernelLog.Hex(pc, 8); KernelLog.String(": Constant Pool: Flush callback called"); KernelLog.Exit
@@ -254,7 +254,7 @@ TYPE
 			PCO.FixJump(pc, (PCO.GetCodePos() - (pc + 8)) DIV 4)
 		END FlushCallback;
 
-		PROCEDURE Error(pc: LONGINT; CONST msg: ARRAY OF CHAR);
+		PROCEDURE Error(pc: SIGNED32; CONST msg: ARRAY OF CHAR);
 		BEGIN
 			KernelLog.Enter;
 			KernelLog.String("ConstantPool Error @ pc = "); KernelLog.Hex(pc, 8); KernelLog.String("h: ");

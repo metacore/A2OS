@@ -23,11 +23,11 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 		Filename = ARRAY 256 OF CHAR;
 
 		VolDesc = POINTER TO RECORD
-			root, rootDirSize: LONGINT (* sector number of root directory and root directory size *)
+			root, rootDirSize: SIGNED32 (* sector number of root directory and root directory size *)
 		END;
 
 		Buffer = POINTER TO RECORD (Files.Hint)
-			pos, lim: LONGINT;
+			pos, lim: SIGNED32;
 			next: Buffer;
 			data: POINTER TO ARRAY OF CHAR
 		END;
@@ -35,11 +35,11 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 		FileSystem = OBJECT(Files.FileSystem)
 			VAR
 				pri, sup, cur: VolDesc;
-				jolietLevel: LONGINT;
+				jolietLevel: SIGNED32;
 
 			(** Open an existing file. The same file descriptor is returned if a file is opened multiple times.  End users use Files.Old instead. *)
 			PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
-			VAR f: File; namebuf: Filename; dircl, dirpos, time, date, filecl, len: LONGINT; attr: SET; res: INTEGER;
+			VAR f: File; namebuf: Filename; dircl, dirpos, time, date, filecl, len: SIGNED32; attr: SET; res: SIGNED16;
 			BEGIN {EXCLUSIVE}
 				res := 0; f := NIL;
 				Check(name, namebuf, res);
@@ -62,7 +62,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 				fname, name, mmask, pname, fullname: Filename;
 				f: Files.File; R: Files.Rider;
 				attr: SET; bAddToEnum: BOOLEAN;
-				pos, time, date, len, cl: LONGINT; res: INTEGER;
+				pos, time, date, len, cl: SIGNED32; res: SIGNED16;
 			BEGIN {EXCLUSIVE}
 				Check(mask, name, res);
 				IF (res = 0) OR (res = eNameIsWild) THEN
@@ -100,8 +100,8 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 			END Enumerate0;
 
 			(** Return the unique non-zero key of the named file, if it exists. *)
-			PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
-			VAR res: INTEGER; namebuf: Filename; t, key, filecl: LONGINT; attr: SET;
+			PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): SIGNED32;
+			VAR res: SIGNED16; namebuf: Filename; t, key, filecl: SIGNED32; attr: SET;
 			BEGIN {EXCLUSIVE}
 				IF nameDebug THEN LogString("OFSFATFiles.FileKey: "); LogString(name); LogLn END;
 				key := 0;
@@ -125,13 +125,13 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 		VAR
 			len,
 			time, date,
-			filecl: LONGINT;	(* first cluster *)
+			filecl: SIGNED32;	(* first cluster *)
 			attr: SET ;	(* ISO file attributes *)
 			(* directory info *)
 			name: Filename;
 			dircl,	(* start cluster of dir. that contains entry for file *)
-			dirpos: LONGINT;		(* position in cluster of dir. in which entry lies *)
-			nofbufs: INTEGER;
+			dirpos: SIGNED32;		(* position in cluster of dir. in which entry lies *)
+			nofbufs: SIGNED16;
 			firstbuf: Buffer;
 
 			PROCEDURE Set*(VAR r: Files.Rider; pos: Files.Position);
@@ -149,7 +149,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 				RETURN r.apos
 			END Pos;
 
-			PROCEDURE FindBuf(pos: LONGINT; hint: Buffer): Buffer;
+			PROCEDURE FindBuf(pos: SIGNED32; hint: Buffer): Buffer;
 			VAR buf: Buffer;
 			BEGIN
 				buf := hint;
@@ -161,7 +161,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 				RETURN buf
 			END FindBuf;
 
-			PROCEDURE ReadBuf(buf: Buffer; pos: LONGINT);
+			PROCEDURE ReadBuf(buf: Buffer; pos: SIGNED32);
 			BEGIN
 				ASSERT(pos <= len, 100);
 				buf.pos := pos - pos MOD fs.vol.blockSize;
@@ -173,7 +173,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 				fs.vol.GetBlock(filecl+pos, buf.data^)
 			END ReadBuf;
 
-			PROCEDURE GetBuf(pos: LONGINT; hint: Buffer): Buffer;
+			PROCEDURE GetBuf(pos: SIGNED32; hint: Buffer): Buffer;
 			VAR buf: Buffer;
 			BEGIN
 				buf := FindBuf(pos, hint);
@@ -195,8 +195,8 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 			BEGIN {EXCLUSIVE}
 				r.res := 0;
 				IF (r.apos < len) THEN
-					buf := GetBuf(LONGINT(r.apos), r.hint(Buffer));
-					x := buf.data[LONGINT(r.apos)-buf.pos];
+					buf := GetBuf(SIGNED32(r.apos), r.hint(Buffer));
+					x := buf.data[SIGNED32(r.apos)-buf.pos];
 					INC(r.apos)
 				ELSE
 					x := 0X; r.eof := TRUE
@@ -204,16 +204,16 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 			END Read;
 
 			PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE);
-			VAR m: SIZE; pos: LONGINT; src: ADDRESS; buf: Buffer;
+			VAR m: SIZE; pos: SIGNED32; src: ADDRESS; buf: Buffer;
 			BEGIN {EXCLUSIVE}
 				IF LEN(x) < len THEN SYSTEM.HALT(19) END;
 				IF len <= 0 THEN RETURN END;
 				buf := r.hint(Buffer);
-				m := SELF.len - LONGINT(r.apos);
+				m := SELF.len - SIGNED32(r.apos);
 				IF len <= m THEN r.res := 0 ELSE r.eof := TRUE; r.res := len-m; len := m END;
 				WHILE len > 0 DO
-					buf := GetBuf(LONGINT(r.apos), buf);
-					pos := LONGINT(r.apos) - buf.pos;
+					buf := GetBuf(SIGNED32(r.apos), buf);
+					pos := SIGNED32(r.apos) - buf.pos;
 					src := ADDRESSOF(buf.data[pos]);  m := buf.lim-pos;
 					IF m > len THEN m := len END;
 					SYSTEM.MOVE(src, ADDRESSOF(x[ofs]), m);
@@ -226,7 +226,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 			BEGIN RETURN len
 			END Length;
 
-			PROCEDURE GetDate*(VAR t, d: LONGINT);
+			PROCEDURE GetDate*(VAR t, d: SIGNED32);
 			BEGIN t := time; d := date
 			END GetDate;
 
@@ -248,7 +248,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 		KernelLog.String(s)
 	END LogString;
 
-	PROCEDURE LogInt(i: LONGINT);
+	PROCEDURE LogInt(i: SIGNED32);
 	BEGIN
 		KernelLog.Int(i, 0)
 	END LogInt;
@@ -261,7 +261,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 	(* help procedures *)
 
 	(* Get733 - 32 bit, both byte orders *)
-	PROCEDURE Get733(VAR s: ARRAY OF CHAR; first: LONGINT; VAR d: LONGINT);
+	PROCEDURE Get733(VAR s: ARRAY OF CHAR; first: SIGNED32; VAR d: SIGNED32);
 	BEGIN
 		d := LONG(ORD(s[first]));
 		d := d + LONG(ORD(s[first+1]))*100H;
@@ -270,8 +270,8 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 	END Get733;
 
 	(* Check - check filename.  Return correct name, or empty name if incorrect. *)
-	PROCEDURE Check(s: ARRAY OF CHAR;  VAR name: Filename; VAR res: INTEGER);
-	VAR i, j: LONGINT;  ch: CHAR;
+	PROCEDURE Check(s: ARRAY OF CHAR;  VAR name: Filename; VAR res: SIGNED16);
+	VAR i, j: SIGNED32;  ch: CHAR;
 	BEGIN
 		IF nameDebug THEN LogString("Check: "); LogString(s) END;
 		res := 0; i := 0;
@@ -289,8 +289,8 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 		IF nameDebug THEN LogString(" => "); LogString(name); LogLn END;
 	END Check;
 
-	PROCEDURE GetVolumeDescriptors(fs: FileSystem; res: INTEGER);
-	VAR b: ARRAY SS OF CHAR; i: LONGINT; vol: Files.Volume;
+	PROCEDURE GetVolumeDescriptors(fs: FileSystem; res: SIGNED16);
+	VAR b: ARRAY SS OF CHAR; i: SIGNED32; vol: Files.Volume;
 	BEGIN
 		vol := fs.vol;
 		i := 16; fs.pri := NIL; fs.sup := NIL; fs.cur := NIL; fs.jolietLevel := 0;
@@ -325,8 +325,8 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 	END GetVolumeDescriptors;
 
 	(* GetDir - Get information from a directory entry *)
-	PROCEDURE GetDir(VAR dir, fname: ARRAY OF CHAR; VAR time, date, cl, len: LONGINT; VAR attr: SET);
-	VAR t: LONGINT;
+	PROCEDURE GetDir(VAR dir, fname: ARRAY OF CHAR; VAR time, date, cl, len: SIGNED32; VAR attr: SET);
+	VAR t: SIGNED32;
 	BEGIN
 		ExtractName(dir, fname);
 		t (*attr*) := ORD(dir[24]); attr := SET(t);
@@ -337,7 +337,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 	END GetDir;
 
 	PROCEDURE SplitName(str: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR);
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 	BEGIN
 		IF nameDebug THEN LogString("SplitName: "); LogString(str) END;
 		i := -1; j := -1;
@@ -352,7 +352,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 
 	(* SeparateName - separate str into a prefix and a name. *)
 	PROCEDURE SeparateName(str: ARRAY OF CHAR; VAR prefix: ARRAY OF CHAR; VAR name: Filename);
-	VAR i, j : LONGINT;
+	VAR i, j : SIGNED32;
 	BEGIN
 	(* Pre: str is result of a Check operation; all "\"s have been changed to "/" *)
 		i := 0;  j := -1;
@@ -369,7 +369,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 	END SeparateName;
 
 	PROCEDURE ExtractShortName(VAR dir, name: ARRAY OF CHAR);
-	VAR i, j, len: LONGINT;
+	VAR i, j, len: SIGNED32;
 	BEGIN
 		len := ORD(dir[31]);
 		i := 0;  j := 32;
@@ -378,7 +378,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 	END ExtractShortName;
 
 	PROCEDURE ExtractLongName(VAR dir, name: ARRAY OF CHAR);
-	VAR i, j, end: LONGINT;
+	VAR i, j, end: SIGNED32;
 	BEGIN
 		end := 33+ORD(dir[31]);
 		i := 0;  j := 33;
@@ -387,7 +387,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 	END ExtractLongName;
 
 	PROCEDURE ExtractName(VAR dir, name: ARRAY OF CHAR);
-	VAR len: LONGINT;
+	VAR len: SIGNED32;
 	BEGIN
 		len := ORD(dir[31]);
 		IF len = 1 THEN
@@ -399,14 +399,14 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 	END ExtractName;
 
 	PROCEDURE MatchFile(VAR R: Files.Rider; name: ARRAY OF CHAR; VAR fname: ARRAY OF CHAR;
-		VAR pos, cl, time, date, len: LONGINT; VAR attr: SET; VAR res: INTEGER);
+		VAR pos, cl, time, date, len: SIGNED32; VAR attr: SET; VAR res: SIGNED16);
 	VAR
-		found: BOOLEAN; f: File; fs: FileSystem; buf: ARRAY 256 OF CHAR; entryLen, padding: LONGINT;
+		found: BOOLEAN; f: File; fs: FileSystem; buf: ARRAY 256 OF CHAR; entryLen, padding: SIGNED32;
 	BEGIN
 		f := R.file(File); fs := R.fs(FileSystem);
 		found := FALSE;
 		LOOP
-			pos := LONGINT(R.file.Pos(R));
+			pos := SIGNED32(R.file.Pos(R));
 			IF debug THEN LogString("MatchFile; pos: "); LogInt(pos); LogLn END;
 			R.file.Read(R, buf[0]); entryLen := ORD(buf[0]);
 			IF debug THEN LogString("MatchFile; entryLen: "); LogInt(entryLen); LogLn END;
@@ -419,7 +419,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 				GetDir(buf, fname, time, date, cl, len, attr);
 				found := Strings.Match(name, fname);
 			ELSE (* Directory entries may not cross sectors. Skip padding bytes *)
-				padding := SS - (LONGINT(R.file.Pos(R)) MOD SS);
+				padding := SS - (SIGNED32(R.file.Pos(R)) MOD SS);
 				IF (padding > 0) & (padding <= 256) THEN
 					IF debug THEN LogString("MatchFile; skip padding: "); LogInt(padding); LogLn; END;
 					R.file.ReadBytes(R, buf, 0, padding); (* Skip padding *)
@@ -433,8 +433,8 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 		IF found THEN res := 0 ELSE res := eInvalidFileName END;
 	END MatchFile;
 
-	PROCEDURE FindFile(fs: FileSystem; name: ARRAY OF CHAR; dircl, dirlen: LONGINT;
-		VAR dirpos, time, date, filecl, len: LONGINT; VAR attr: SET; VAR res: INTEGER);
+	PROCEDURE FindFile(fs: FileSystem; name: ARRAY OF CHAR; dircl, dirlen: SIGNED32;
+		VAR dirpos, time, date, filecl, len: SIGNED32; VAR attr: SET; VAR res: SIGNED16);
 	VAR f: File; R: Files.Rider; fname: Filename;
 	BEGIN
 		ASSERT(name # "", 100);
@@ -444,8 +444,8 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 	END FindFile;
 
 	PROCEDURE LocateFile(name: ARRAY OF CHAR; fs: FileSystem;
-		VAR dircl, dirpos, time, date, filecl, len: LONGINT; VAR attr: SET; VAR res: INTEGER);
-	VAR cur: Filename; dirlen: LONGINT;
+		VAR dircl, dirpos, time, date, filecl, len: SIGNED32; VAR attr: SET; VAR res: SIGNED16);
+	VAR cur: Filename; dirlen: SIGNED32;
 	BEGIN
 		res := 0;
 		dircl := fs.cur.root; dirlen := fs.cur.rootDirSize;	(* start in root directory *)
@@ -463,7 +463,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 		END
 	END LocateFile;
 
-	PROCEDURE OpenFile(name: ARRAY OF CHAR; fs: FileSystem; dircl, dirpos, time, date, filecl, len: LONGINT; attr: SET): File;
+	PROCEDURE OpenFile(name: ARRAY OF CHAR; fs: FileSystem; dircl, dirpos, time, date, filecl, len: SIGNED32; attr: SET): File;
 	VAR f: File; buf: Buffer;
 	BEGIN
 		NEW(f); COPY(name, f.name); f.fs := fs; f.key := filecl;
@@ -479,7 +479,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 	END OpenFile;
 
 	PROCEDURE OldDir(fs: Files.FileSystem; name: ARRAY OF CHAR): Files.File;
-	VAR f: File; dircl, dirpos, time, date, filecl, len: LONGINT; attr: SET; res: INTEGER;
+	VAR f: File; dircl, dirpos, time, date, filecl, len: SIGNED32; attr: SET; res: SIGNED16;
 	BEGIN
 		res := 0; f := NIL;
 		LocateFile(name, fs(FileSystem), dircl, dirpos, time, date, filecl, len, attr, res);
@@ -494,7 +494,7 @@ MODULE ISO9660Files;	(** AUTHOR "?/be"; PURPOSE "ISO 9660 File System (ported fr
 
 (** Generate a new file system object.  OFS.NewVol has volume parameter, OFS.Par has mount prefix. *)
 PROCEDURE NewFS*(context : Files.Parameters);
-VAR fs: FileSystem; res: INTEGER;
+VAR fs: FileSystem; res: SIGNED16;
 BEGIN
 	IF Files.This(context.prefix) = NIL THEN
 		NEW(fs);  fs.vol := context.vol;

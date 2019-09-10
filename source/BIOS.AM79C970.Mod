@@ -30,17 +30,17 @@ CONST
 
 
 VAR
-	installed: LONGINT; (* number of installed devices *)
+	installed: SIGNED32; (* number of installed devices *)
 	installFinished: BOOLEAN;
-	outPackets, inPackets, missedFrames: LONGINT;
+	outPackets, inPackets, missedFrames: SIGNED32;
 
 TYPE
 
 	(* 32bit Initializationblock, p. 989*)
 	InitializationBlock = RECORD
 		modeTlenRlen : SET;
-		padr : ARRAY 3 OF INTEGER;
-		reserved : INTEGER;
+		padr : ARRAY 3 OF SIGNED16;
+		reserved : SIGNED16;
 		ladr : ARRAY 2 OF SET;
 		rdra : Machine.Address32;
 		tdra : Machine.Address32;
@@ -55,9 +55,9 @@ TYPE
 	LinkDevice = OBJECT (Network.LinkDevice)
 		VAR
 			ctrl: Controller;
-			hw: LONGINT;
+			hw: SIGNED32;
 
-		PROCEDURE Linked*(): LONGINT;
+		PROCEDURE Linked*(): SIGNED32;
 		BEGIN
 			IF ctrl.Linked() THEN
 				RETURN Network.LinkLinked;
@@ -67,9 +67,9 @@ TYPE
 		END Linked;
 
 
-		PROCEDURE DoSend*(dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE DoSend*(dst: Network.LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: SIGNED32);
 		VAR
-			i, pos: LONGINT;
+			i, pos: SIGNED32;
 			tBuf: TxBuffer;
 			flags1: SET;
 
@@ -137,7 +137,7 @@ TYPE
 	Controller = OBJECT
 		VAR
 			next: Controller; (* next controller in list *)
-			base, irq: LONGINT;
+			base, irq: SIGNED32;
 			dev: LinkDevice;
 			initBlock: InitializationBlock;
 
@@ -150,15 +150,15 @@ TYPE
 			txBufRing: ARRAY TxRingSize OF TxBuffer;
 			rxBufRing: ARRAY RxRingSize OF Network.Buffer;
 			(* index to point to current descriptor entry/ current buffer *)
-			rxIndex, txIndex : LONGINT;
+			rxIndex, txIndex : SIGNED32;
 
 
 
-		PROCEDURE &Init*(dev: LinkDevice; base, irq: LONGINT);
+		PROCEDURE &Init*(dev: LinkDevice; base, irq: SIGNED32);
 		VAR
-			res: WORD;
+			res: INTEGER;
 			s: SET;
-			i,x: INTEGER;
+			i,x: SIGNED16;
 
 		BEGIN
 			outPackets:=0;
@@ -243,12 +243,12 @@ TYPE
 
 			(*write CSR1 (InitBlock Lower Address) *)
 			s := SYSTEM.VAL(SET, ADDRESSOF(initBlock));
-			x := SYSTEM.VAL(INTEGER, ADDRESSOF(initBlock) MOD 10000H);
+			x := SYSTEM.VAL(SIGNED16, ADDRESSOF(initBlock) MOD 10000H);
 			WriteCSR(1, x);
 
 
 			(*write CSR2 (InitBlock Upper Address) *)
-			x:= SYSTEM.VAL(INTEGER, ADDRESSOF(initBlock) DIV 10000H);
+			x:= SYSTEM.VAL(SIGNED16, ADDRESSOF(initBlock) DIV 10000H);
 			WriteCSR(2, x);
 
 
@@ -275,36 +275,36 @@ TYPE
 		END Init;
 
 
-		PROCEDURE ReadCSR(nr:INTEGER) : INTEGER;
-		VAR x: INTEGER;
+		PROCEDURE ReadCSR(nr:SIGNED16) : SIGNED16;
+		VAR x: SIGNED16;
 		BEGIN
 			Machine.Portout16(base + RAP, nr); (* write address *)
 			Machine.Portin16(base + RDP, x); (* read value *)
 			RETURN x;
 		END ReadCSR;
 
-		PROCEDURE WriteCSR(nr, val : INTEGER);
+		PROCEDURE WriteCSR(nr, val : SIGNED16);
 		BEGIN
 			Machine.Portout16(base + RAP, nr);  	(* write address *)
 			Machine.Portout16(base + RDP, val); 	(* read value *)
 		END WriteCSR;
 
-		PROCEDURE ReadBCR(nr: INTEGER) : INTEGER;
-		VAR x : INTEGER;
+		PROCEDURE ReadBCR(nr: SIGNED16) : SIGNED16;
+		VAR x : SIGNED16;
 		BEGIN
 			Machine.Portout16(base + RAP, nr);
 			Machine.Portin16(base + BDP, x);
 			RETURN x;
 		END ReadBCR;
 
-		PROCEDURE WriteBCR(nr, val : INTEGER);
+		PROCEDURE WriteBCR(nr, val : SIGNED16);
 		BEGIN
 			Machine.Portout16(base + RAP, nr);
 			Machine.Portout16(base + BDP, val);
 		END WriteBCR;
 
 		PROCEDURE DeviceOk() : BOOLEAN;
-		VAR x : INTEGER;
+		VAR x : SIGNED16;
 		BEGIN
 			x := 88;
 			Machine.Portout16(base + RAP, x);
@@ -315,7 +315,7 @@ TYPE
 
 		PROCEDURE SetupRxTxRings;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			adr: ADDRESS;
 			t: SET;
 			rBuf: Network.Buffer;
@@ -361,7 +361,7 @@ TYPE
 
 		PROCEDURE UpdateTxRing;
 		VAR
-			i:LONGINT;
+			i:SIGNED32;
 			flags1, flags2: SET;
 		BEGIN
 
@@ -387,7 +387,7 @@ TYPE
 		(* read all frames that are marked with OWN = 0*)
 		PROCEDURE ReceivePacket;
 		VAR
-			type, size: LONGINT;
+			type, size: SIGNED32;
 			rBuf, buf: Network.Buffer;
 			flags1, flags2:SET;
 		BEGIN
@@ -404,7 +404,7 @@ TYPE
 
 					rBuf:=rxBufRing[rxIndex];
 
-					size:= SYSTEM.VAL(INTEGER,flags2);
+					size:= SYSTEM.VAL(SIGNED16,flags2);
 					type := Network.GetNet2(rBuf.data, 6 + 6);
 					rBuf.ofs:= 14;
 					rBuf.len:= size;
@@ -442,30 +442,30 @@ TYPE
 
 		PROCEDURE HWStart;
 		BEGIN
-			WriteCSR(15, SYSTEM.VAL(INTEGER, {ModePROM}));
-			WriteCSR(CSR0, SYSTEM.VAL(INTEGER, {1, 6}))
+			WriteCSR(15, SYSTEM.VAL(SIGNED16, {ModePROM}));
+			WriteCSR(CSR0, SYSTEM.VAL(SIGNED16, {1, 6}))
 		END HWStart;
 
 		PROCEDURE DisableInterrupts;
 		VAR
-			x: INTEGER;
+			x: SIGNED16;
 		BEGIN
 			x:=ReadCSR(0);
-			WriteCSR(0, SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, x)-{6}-{14}-{13}-{12}-{11}-{10}-{9})); (* do not clear the interrupt bits *)
+			WriteCSR(0, SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, x)-{6}-{14}-{13}-{12}-{11}-{10}-{9})); (* do not clear the interrupt bits *)
 		END DisableInterrupts;
 
 		PROCEDURE EnableInterrupts;
 		VAR
-			x: INTEGER;
+			x: SIGNED16;
 		BEGIN
 			x:=ReadCSR(0);
-			WriteCSR(0, SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, x)+{6}-{14}-{13}-{12}-{11}-{10}-{9}));
+			WriteCSR(0, SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, x)+{6}-{14}-{13}-{12}-{11}-{10}-{9}));
 		END EnableInterrupts;
 
 
 		PROCEDURE HandleInterrupt;
 		VAR
-			status : INTEGER;
+			status : SIGNED16;
 
 		BEGIN
 
@@ -515,9 +515,9 @@ TYPE
 	installedControllers: Controller;
 
 (* Scan the PCI bus for the specified card. *)
-PROCEDURE ScanPCI(vendor, device: LONGINT);
+PROCEDURE ScanPCI(vendor, device: SIGNED32);
 VAR
-	index, bus, dev, fct, base, irq, i: LONGINT; res: WORD;
+	index, bus, dev, fct, base, irq, i: SIGNED32; res: INTEGER;
 	d: LinkDevice;
 	c: Controller;
 	name: Plugins.Name;

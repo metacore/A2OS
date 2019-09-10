@@ -11,7 +11,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 		MaxLine = 1024; BufLen = MaxLine;
 		Tab = 9X; Esc = 01BX; BreakChar = Esc;
 		Done = 0; NotReady = 1; NotConnected = 2; WrongUser = 3; WrongPassword = 4; TimedOut = 5; LocFileNotFound = 6;
-		Interrupted = 7; Disconnected = 8; Failed = MAX(INTEGER);
+		Interrupted = 7; Disconnected = 8; Failed = MAX(SIGNED16);
 		MinDataPort = 1100; MaxDataPort = 1500;
 		Unknown = -1; UNIX = 0; VMS = 1;
 		DefConPort = 21;
@@ -27,7 +27,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 			reply: ARRAY MaxLine OF CHAR;
 			usr, passw, host, portIPAddress: ARRAY 64 OF CHAR;
 			dataIP: NetSystem.IPAdr;
-			dataPort, status, system, res: INTEGER;
+			dataPort, status, system, res: SIGNED16;
 			ack: BOOLEAN
 		END;
 		EnumProc = PROCEDURE (entry: ARRAY OF CHAR);
@@ -38,11 +38,11 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 		log: Texts.Text;
 		line: ARRAY MaxLine OF CHAR;
 		buffer: ARRAY BufLen OF CHAR;
-		timeOut: LONGINT;
-		dataPort, col: INTEGER;
+		timeOut: SIGNED32;
+		dataPort, col: SIGNED16;
 
-	PROCEDURE Connected(C: NetSystem.Connection; mode: INTEGER): BOOLEAN;
-		VAR state: INTEGER;
+	PROCEDURE Connected(C: NetSystem.Connection; mode: SIGNED16): BOOLEAN;
+		VAR state: SIGNED16;
 	BEGIN
 		state := NetSystem.State(C);
 		RETURN state IN {mode, NetSystem.inout}
@@ -56,10 +56,10 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 		C := NIL
 	END Disconnect;
 
-	PROCEDURE Connect(VAR C: NetSystem.Connection; port: INTEGER; host: ARRAY OF CHAR): BOOLEAN;
+	PROCEDURE Connect(VAR C: NetSystem.Connection; port: SIGNED16; host: ARRAY OF CHAR): BOOLEAN;
 		VAR
 			adr: NetSystem.IPAdr;
-			res: INTEGER;
+			res: SIGNED16;
 	BEGIN
 		NetSystem.GetIP(host, adr);
 		IF IP.AdrsEqual(adr, NetSystem.anyIP) THEN
@@ -89,7 +89,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 
 	PROCEDURE ReadResponse(S: Session; VAR sline: ARRAY OF CHAR);
 		VAR
-			time, i, j, cpos: LONGINT;
+			time, i, j, cpos: SIGNED32;
 			code: ARRAY 8 OF CHAR;
 			line: ARRAY MaxLine OF CHAR;
 	BEGIN
@@ -147,7 +147,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 	END ReadResponse;
 
 	PROCEDURE SendString(C: NetSystem.Connection; str: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE str[i] # 0X DO
@@ -228,7 +228,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END GetLogin;
 
-	PROCEDURE OpenS(server, user, passwd: ARRAY OF CHAR; port: INTEGER; VAR S: Session);
+	PROCEDURE OpenS(server, user, passwd: ARRAY OF CHAR; port: SIGNED16; VAR S: Session);
 	BEGIN
 		NEW(S); S.dataC := NIL;
 		COPY(server, S.host); S.dataPort := -1;
@@ -304,7 +304,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 	END ChangeDirS;
 
 	PROCEDURE SetDataPort(S: Session);
-		VAR str: ARRAY 4 OF CHAR; p0, p1: LONGINT; i, j, k: INTEGER; done: BOOLEAN;
+		VAR str: ARRAY 4 OF CHAR; p0, p1: SIGNED32; i, j, k: SIGNED16; done: BOOLEAN;
 	BEGIN
 		SendCmd(S, "PASV"); ReadResponse(S, line);
 		IF (S.status >= 200) & (S.status < 300) THEN
@@ -366,7 +366,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 	END SetDataPort;
 
 	PROCEDURE WaitDataCon(S: Session): NetSystem.Connection;
-		VAR C1: NetSystem.Connection; time: LONGINT;
+		VAR C1: NetSystem.Connection; time: SIGNED32;
 	BEGIN
 		IF IP.AdrsEqual(S.dataIP, NetSystem.anyIP) THEN
 			time := Input.Time();
@@ -396,7 +396,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 	PROCEDURE EnumDir(S: Session; enum: EnumProc);
 		VAR
 			C: NetSystem.Connection;
-			len: LONGINT;
+			len: SIGNED32;
 	BEGIN
 		S.reply := ""; SetDataPort(S); C := NIL;
 		IF S.res = Interrupted THEN RETURN END;
@@ -437,7 +437,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 	END EnumDir;
 
 	PROCEDURE GetCurDir(S: Session; VAR curdir: ARRAY OF CHAR);
-		VAR i, j: INTEGER;
+		VAR i, j: SIGNED16;
 	BEGIN
 		SendCmd(S, "PWD");
 		ReadResponse(S, S.reply);
@@ -503,7 +503,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 	END DeleteFile;
 
 	PROCEDURE ReadData(S: Session; C: NetSystem.Connection; VAR R: Files.Rider);
-		VAR len, rlen: LONGINT;
+		VAR len, rlen: SIGNED32;
 	BEGIN
 		len := NetSystem.Available(C);
 		WHILE (len > 0) OR Connected(C, NetSystem.in) DO
@@ -636,7 +636,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 
 	PROCEDURE ReadText(C: NetSystem.Connection; VAR W: Texts.Writer);
 		VAR
-			len, rlen, i: LONGINT;
+			len, rlen, i: SIGNED32;
 			ch: CHAR; exit: BOOLEAN;
 	BEGIN
 		len := NetSystem.Available(C); exit := FALSE;
@@ -773,7 +773,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 
 	PROCEDURE OpenScanner(VAR S: Texts.Scanner);
 		VAR
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 			text: Texts.Text;
 	BEGIN
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
@@ -789,7 +789,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END OpenScanner;
 
-	PROCEDURE SplitFTPAdr(VAR url, host, path, user, passwd: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER): BOOLEAN;
+	PROCEDURE SplitFTPAdr(VAR url, host, path, user, passwd: ARRAY OF CHAR; VAR type: CHAR; VAR port: SIGNED16): BOOLEAN;
 		VAR i, j, l: SIZE; service: ARRAY 8 OF CHAR;
 		PROCEDURE Blanks;
 		BEGIN
@@ -906,7 +906,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 		VAR
 			Sc: Texts.Scanner;
 			host, path, user, passwd: ARRAY 64 OF CHAR;
-			port: INTEGER;
+			port: SIGNED16;
 			type: CHAR;
 	BEGIN
 		IF S = NIL THEN
@@ -984,7 +984,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 	END Dir;
 
 	PROCEDURE ShowCompactEntry(entry: ARRAY OF CHAR);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE entry[i] # 0X DO
@@ -1073,7 +1073,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 	PROCEDURE DeleteFiles*;
 		VAR
 			Sc: Texts.Scanner;
-			beg, end, time, pos: LONGINT;
+			beg, end, time, pos: SIGNED32;
 			text: Texts.Text;
 	BEGIN
 		IF Con() THEN
@@ -1170,7 +1170,7 @@ MODULE FTP IN Oberon; (** portable *)	(* ejz,  *)
 			loc, rem: ARRAY LEN(Sc.s) OF CHAR;
 			T: Texts.Text;
 			F: Files.File;
-			len: LONGINT;
+			len: SIGNED32;
 			Wr: Texts.Writer;
 	BEGIN
 		IF Con() THEN

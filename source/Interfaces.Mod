@@ -27,8 +27,8 @@ VAR
 	table-: ARRAY TableSize OF ANY;
 
 	(*statistic counters*)
-	Nentries, Nlookups, NlookupsRep: LONGINT;
-	Ncollisions: ARRAY 10 OF LONGINT;
+	Nentries, Nlookups, NlookupsRep: SIGNED32;
+	Ncollisions: ARRAY 10 OF SIGNED32;
 
 PROCEDURE GetClass(p: ANY): ADDRESS;
 VAR class: ADDRESS;
@@ -60,7 +60,7 @@ BEGIN
 END HashB;
 
 PROCEDURE Register(vt: ANY);
-	VAR class, intf, hash, step: ADDRESS; count: LONGINT; q: ANY;
+	VAR class, intf, hash, step: ADDRESS; count: SIGNED32; q: ANY;
 BEGIN {EXCLUSIVE}
 	ASSERT(Nentries < TableSize, 1000);
 	class := GetClass(vt);
@@ -105,7 +105,7 @@ BEGIN
 END Cleanup;
 
 PROCEDURE Init;
-VAR i: LONGINT; lookup: PROCEDURE(class, intf: ADDRESS): ANY; register: PROCEDURE(vt: ANY);
+VAR i: SIGNED32; lookup: PROCEDURE(class, intf: ADDRESS): ANY; register: PROCEDURE(vt: ANY);
 BEGIN
 	FOR i := 0 TO TableSize-1 DO  table[i] := NIL  END;
 	register := Register; lookup := Lookup;

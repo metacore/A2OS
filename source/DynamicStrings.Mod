@@ -391,12 +391,12 @@ BEGIN
 	RETURN ch
 END LowerCh;
 
-PROCEDURE IntToStr*(val: LONGINT; VAR str: ARRAY OF CHAR);
+PROCEDURE IntToStr*(val: SIGNED32; VAR str: ARRAY OF CHAR);
 	VAR
 		i, j: SIZE;
 		digits: ARRAY 16 OF CHAR;
 BEGIN
-	IF val = MIN(LONGINT) THEN
+	IF val = MIN(SIGNED32) THEN
 		COPY("-2147483648", str);
 		RETURN
 	END;
@@ -416,8 +416,8 @@ BEGIN
 	str[j] := 0X
 END IntToStr;
 
-PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR): LONGINT;
-	VAR val, d: LONGINT; i: SIZE; ch: CHAR; neg: BOOLEAN;
+PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR): SIGNED32;
+	VAR val, d: SIGNED32; i: SIZE; ch: CHAR; neg: BOOLEAN;
 BEGIN
 	val := 0; i := 0; ch := str[0];
 	WHILE (ch # 0X) & (ch <= " ") DO
@@ -432,10 +432,10 @@ BEGIN
 	WHILE (ch >= "0") & (ch <= "9") DO
 		d := ORD(ch)-ORD("0");
 		INC(i); ch := str[i];
-		IF val <= ((MAX(LONGINT)-d) DIV 10) THEN
+		IF val <= ((MAX(SIGNED32)-d) DIV 10) THEN
 			val := 10*val+d
 		ELSIF neg & (val = 214748364) & (d = 8) & ((ch < "0") OR (ch > "9")) THEN
-			val := MIN(LONGINT); neg := FALSE
+			val := MIN(SIGNED32); neg := FALSE
 		ELSE
 			HALT(99)
 		END
@@ -444,8 +444,8 @@ BEGIN
 	RETURN val
 END StrToInt;
 
-PROCEDURE HexStrToInt*(CONST str: ARRAY OF CHAR): LONGINT;
-VAR val, d: LONGINT; i: SIZE; ch: CHAR;
+PROCEDURE HexStrToInt*(CONST str: ARRAY OF CHAR): SIGNED32;
+VAR val, d: SIGNED32; i: SIZE; ch: CHAR;
 BEGIN
 	i := 0; ch := str[0];
 	WHILE (ch # 0X) & (ch <= " ") DO
@@ -457,7 +457,7 @@ BEGIN
 		ELSE d := ORD(ch) - ORD("A") + 10
 		END;
 		INC(i); ch := str[i];
-		IF val <= ((MAX(LONGINT)-d) DIV 10H) THEN
+		IF val <= ((MAX(SIGNED32)-d) DIV 10H) THEN
 			val := 10H*val+d
 		ELSE
 			HALT(99)

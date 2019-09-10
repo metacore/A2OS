@@ -34,32 +34,32 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			F: Files.File;
 			pop: ServerName;
 			user: UserName;
-			nouidls: LONGINT;
+			nouidls: SIGNED32;
 			uidls: UIDLList;
 			next: UIDLSet
 		END;
 
 		MsgHead = RECORD
-			pos, len (* - From head *), state, stamp: LONGINT;
+			pos, len (* - From head *), state, stamp: SIGNED32;
 			flags, topics: SET;
-			date, time: LONGINT;
-			replyTo, subject: LONGINT
+			date, time: SIGNED32;
+			replyTo, subject: SIGNED32
 		END;
 		MsgHeadList = POINTER TO ARRAY OF MsgHead;
 
 		Topic = POINTER TO TopicDesc;
 		TopicDesc = RECORD
-			no, state, stamp: LONGINT;
+			no, state, stamp: SIGNED32;
 			topic: ListRiders.String;
 			next: Topic
 		END;
 
-		SortList = POINTER TO ARRAY OF LONGINT;
+		SortList = POINTER TO ARRAY OF SIGNED32;
 
 		Rider = POINTER TO RiderDesc;
 		RiderDesc = RECORD (ListRiders.RiderDesc)
-			noMsgs: LONGINT;
-			key, pos, sortPos: LONGINT;
+			noMsgs: SIGNED32;
+			key, pos, sortPos: SIGNED32;
 			ascending: BOOLEAN;
 			sort: SortList
 		END;
@@ -69,7 +69,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 
 		ConnectMsg = RECORD (ListRiders.ConnectMsg)
 			query: QueryString;
-			sortBy: INTEGER; (* SortByDateTime, SortByReplyTo, SortBySubject *)
+			sortBy: SIGNED16; (* SortByDateTime, SortByReplyTo, SortBySubject *)
 			ascending: BOOLEAN
 		END;
 
@@ -90,8 +90,8 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		Cond = POINTER TO CondDesc;
 		CondDesc = RECORD
 			val: ValueString;
-			date, time: LONGINT;
-			op, field: LONGINT;
+			date, time: SIGNED32;
+			op, field: SIGNED32;
 			value, eval: BOOLEAN;
 			next: Cond
 		END;
@@ -113,15 +113,15 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END;
 
 		Buffer = POINTER TO ARRAY OF CHAR;
-		Index = POINTER TO ARRAY OF LONGINT;
+		Index = POINTER TO ARRAY OF SIGNED32;
 		Heap = RECORD
-				buffer: Buffer; bufLen: LONGINT;
-				index: Index; idxLen: LONGINT
+				buffer: Buffer; bufLen: SIGNED32;
+				index: Index; idxLen: SIGNED32
 			END;
 
 	VAR
 		msgs: MsgHeadList;
-		noMsgs, delMsgs: LONGINT;
+		noMsgs, delMsgs: SIGNED32;
 		msgsF: Files.File;
 		msgList: Model;
 		heap: Heap;
@@ -130,7 +130,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		topics: Topic;
 
 		uidls: UIDLSet;
-		lastUIDL: LONGINT;
+		lastUIDL: SIGNED32;
 
 		W: Texts.Writer;
 		mMethod, tmMethod: ListRiders.Method;
@@ -149,14 +149,14 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		NEW(heap.index, 64); heap.idxLen := 0
 	END Open;
 
-	PROCEDURE Append(VAR heap: Heap; idx: LONGINT; VAR str: ARRAY OF CHAR);
-		VAR buffer: Buffer; index: Index; len, i, j: LONGINT;
+	PROCEDURE Append(VAR heap: Heap; idx: SIGNED32; VAR str: ARRAY OF CHAR);
+		VAR buffer: Buffer; index: Index; len, i, j: SIGNED32;
 	BEGIN
 		len := heap.idxLen; INC(heap.idxLen);
 		IF heap.idxLen >= LEN(heap.index^) THEN
 			NEW(index, 2*heap.idxLen);
 			IF len > 0 THEN
-				SYSTEM.MOVE(ADDRESSOF(heap.index[0]), ADDRESSOF(index[0]), len*SIZEOF(LONGINT))
+				SYSTEM.MOVE(ADDRESSOF(heap.index[0]), ADDRESSOF(index[0]), len*SIZEOF(SIGNED32))
 			END;
 			heap.index := index
 		END;
@@ -177,8 +177,8 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		heap.buffer[j] := 0X; heap.bufLen := j+1
 	END Append;
 
-	PROCEDURE Compare(VAR heap: Heap; ofs: LONGINT; VAR str: ARRAY OF CHAR): LONGINT;
-		VAR i: LONGINT; cb, cs: CHAR;
+	PROCEDURE Compare(VAR heap: Heap; ofs: SIGNED32; VAR str: ARRAY OF CHAR): SIGNED32;
+		VAR i: SIGNED32; cb, cs: CHAR;
 	BEGIN
 		cb := heap.buffer[ofs];
 		i := 0; cs := str[0];
@@ -189,8 +189,8 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		RETURN ORD(cb)-ORD(cs)
 	END Compare;
 
-	PROCEDURE Insert(VAR heap: Heap; str: ARRAY OF CHAR; VAR ofs: LONGINT);
-		VAR l, r, m, c, idx: LONGINT;
+	PROCEDURE Insert(VAR heap: Heap; str: ARRAY OF CHAR; VAR ofs: SIGNED32);
+		VAR l, r, m, c, idx: SIGNED32;
 	BEGIN
 		l := 0; r := heap.idxLen-1; c := 1; idx := 0;
 		WHILE (l <= r) & (c # 0) DO
@@ -209,7 +209,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		ofs := heap.index[idx]
 	END Insert;
 
-	PROCEDURE Copy(VAR heap: Heap; ofs: LONGINT; VAR str: ARRAY OF CHAR);
+	PROCEDURE Copy(VAR heap: Heap; ofs: SIGNED32; VAR str: ARRAY OF CHAR);
 		VAR i, l: SIZE;
 	BEGIN
 		i := 0; l := LEN(str)-1;
@@ -220,7 +220,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	END Copy;
 
 	PROCEDURE Store(VAR R: Files.Rider; VAR heap: Heap);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		Files.WriteLInt(R, heap.bufLen);
 		Files.WriteBytes(R, heap.buffer^, heap.bufLen);
@@ -232,7 +232,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	END Store;
 
 	PROCEDURE Load(VAR R: Files.Rider; VAR heap: Heap);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		Files.ReadLInt(R, heap.bufLen);
 		NEW(heap.buffer, heap.bufLen);
@@ -245,7 +245,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END Load;
 
-	PROCEDURE NrToArg(nr: LONGINT; VAR arg: ARRAY OF CHAR);
+	PROCEDURE NrToArg(nr: SIGNED32; VAR arg: ARRAY OF CHAR);
 	BEGIN
 		IF nr > 9 THEN
 			Strings.IntToStr(nr, arg)
@@ -302,7 +302,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			cont: MD5.Context;
 			digest: MD5.Digest;
 			stamp, login: ARRAY 128 OF CHAR;
-			i, j: LONGINT;
+			i, j: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (S.reply[i] # 0X) & (S.reply[i] # "<") DO
@@ -322,7 +322,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		SendCmd(S, "APOP", login)
 	END APOP;
 
-	PROCEDURE OpenPOP(VAR S: NetTools.Session; host, user, passwd: ARRAY OF CHAR; port: INTEGER; apop: BOOLEAN);
+	PROCEDURE OpenPOP(VAR S: NetTools.Session; host, user, passwd: ARRAY OF CHAR; port: SIGNED16; apop: BOOLEAN);
 		VAR hostIP: NetSystem.IPAdr; login: BOOLEAN;
 	BEGIN
 		IF trace THEN
@@ -379,8 +379,8 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	PROCEDURE ReadText(S: NetTools.Session; VAR R: Files.Rider);
 		VAR
 			buffer: ARRAY BufLen OF CHAR;
-			len, rlen, i, offs: LONGINT;
-			state: INTEGER;
+			len, rlen, i, offs: SIGNED32;
+			state: SIGNED16;
 			ch, old: CHAR;
 	BEGIN
 		old := 0X; offs := 1;
@@ -419,7 +419,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END ReadText;
 
-	PROCEDURE DeleteMail(S: NetTools.Session; no: LONGINT);
+	PROCEDURE DeleteMail(S: NetTools.Session; no: SIGNED32);
 		VAR arg: ARRAY 12 OF CHAR;
 	BEGIN
 		NrToArg(no, arg); SendCmd(S, "DELE", arg);
@@ -427,7 +427,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END DeleteMail;
 
-	PROCEDURE ReceiveMail(S: NetTools.Session; no: LONGINT; VAR R: Files.Rider);
+	PROCEDURE ReceiveMail(S: NetTools.Session; no: SIGNED32; VAR R: Files.Rider);
 		VAR arg: ARRAY 12 OF CHAR;
 	BEGIN
 		NrToArg(no, arg); SendCmd(S, "RETR", arg);
@@ -436,11 +436,11 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END ReceiveMail;
 
-	PROCEDURE MessageSize(S: NetTools.Session; no: LONGINT): LONGINT;
+	PROCEDURE MessageSize(S: NetTools.Session; no: SIGNED32): SIGNED32;
 		VAR
 			arg: ARRAY 12 OF CHAR;
-			size: LONGINT;
-			i: INTEGER;
+			size: SIGNED32;
+			i: SIGNED16;
 	BEGIN
 		NrToArg(no, arg); SendCmd(S, "LIST", arg);
 		IF ReadState(S) THEN
@@ -495,7 +495,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			set: UIDLSet;
 			uidll: UIDLList;
 			R: Files.Rider;
-			i, j, l: LONGINT;
+			i, j, l: SIGNED32;
 	BEGIN
 		set := uidls;
 		WHILE (set # NIL) & ~((set.pop = pop) & (set.user = user)) DO
@@ -561,9 +561,9 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		INC(set.nouidls)
 	END AddUIDL;
 
-	PROCEDURE ExistsUIDL(set: UIDLSet; VAR uidl: UIDL): LONGINT;
+	PROCEDURE ExistsUIDL(set: UIDLSet; VAR uidl: UIDL): SIGNED32;
 		VAR
-			nouidls, i: LONGINT;
+			nouidls, i: SIGNED32;
 			uidls: UIDLList;
 	BEGIN
 		nouidls := set.nouidls; uidls := set.uidls;
@@ -595,7 +595,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	END FlushUIDL;
 
 	PROCEDURE ParseContent*(h: MIME.Header; VAR cont: MIME.Content);
-		VAR val: ValueString; pos: LONGINT;
+		VAR val: ValueString; pos: SIGNED32;
 	BEGIN
 		cont := NIL;
 		pos := MIME.FindField(h, "X-Content-Type");
@@ -634,22 +634,22 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 				END
 			END
 		END;
-		cont.len := MAX(LONGINT)
+		cont.len := MAX(SIGNED32)
 	END ParseContent;
 
-	PROCEDURE AddMsgHead(pos: LONGINT);
+	PROCEDURE AddMsgHead(pos: SIGNED32);
 		VAR
 			S: Streams.Stream;
 			h: MIME.Header;
 			cont: MIME.Content;
 			nmsgs: MsgHeadList;
-			len, i, v: LONGINT;
+			len, i, v: SIGNED32;
 			str: ARRAY BufLen OF CHAR;
 	BEGIN
 		S := Streams.OpenFileReader(msgsF, pos);
 		MIME.ReadHeader(S, NIL, h, len);
 		ParseContent(h, cont);
-		len := LEN(msgs^)(LONGINT);
+		len := LEN(msgs^)(SIGNED32);
 		IF noMsgs >= len THEN
 			NEW(nmsgs, 2*len);
 			FOR i := 0 TO noMsgs-1 DO
@@ -749,7 +749,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	END ShowStatus;
 
 	PROCEDURE WriteString(VAR R: Files.Rider; str: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE str[i] # 0X DO
@@ -781,7 +781,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			uT: Texts.Text;
 			Sc: Texts.Scanner;
 			R: Texts.Reader;
-			pos, i, k, new, maxSize: LONGINT;
+			pos, i, k, new, maxSize: SIGNED32;
 			onServer: BOOLEAN;
 			obj: Objects.Object;
 			ch: CHAR;
@@ -890,7 +890,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			uT: Texts.Text;
 			Sc: Texts.Scanner;
 			R: Texts.Reader;
-			i, k: LONGINT;
+			i, k: SIGNED32;
 			apop: BOOLEAN;
 			ch: CHAR;
 	BEGIN
@@ -952,19 +952,19 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		s[i] := 0X
 	END ReadString;
 
-	PROCEDURE ScanHeader(no: LONGINT; VAR h: MIME.Header);
+	PROCEDURE ScanHeader(no: SIGNED32; VAR h: MIME.Header);
 		VAR
 			S: Streams.Stream;
-			len: LONGINT;
+			len: SIGNED32;
 	BEGIN
 		S := Streams.OpenFileReader(msgsF, msgs[no].pos); S.mode := Streams.binary;
 		MIME.ReadHeader(S, NIL, h, len)
 	END ScanHeader;
 
-	PROCEDURE WriteStatus(h: MIME.Header; no: LONGINT);
+	PROCEDURE WriteStatus(h: MIME.Header; no: SIGNED32);
 		VAR
 			R: Files.Rider;
-			pos, i, v: LONGINT;
+			pos, i, v: SIGNED32;
 			ch: CHAR;
 	BEGIN
 		pos := MIME.FindField(h, "X-Oberon-Status");
@@ -1002,7 +1002,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	PROCEDURE WriteField(VAR h: MIME.Header; field: ARRAY OF CHAR; empty, long: BOOLEAN);
 		VAR
 			caption: ARRAY 64 OF CHAR; value: ARRAY 128 OF CHAR;
-			pos: LONGINT; first: BOOLEAN;
+			pos: SIGNED32; first: BOOLEAN;
 	BEGIN
 		COPY(field, caption);
 		pos := MIME.FindField(h, field);
@@ -1032,14 +1032,14 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END WriteField;
 
-	PROCEDURE DecodeMessage*(VAR T: Texts.Text; h: MIME.Header; cont: MIME.Content; no: LONGINT);
+	PROCEDURE DecodeMessage*(VAR T: Texts.Text; h: MIME.Header; cont: MIME.Content; no: SIGNED32);
 		VAR
 			F, Fc: Files.File;
 			R: Texts.Reader;
 			str: ValueString;
 			style: TextGadgets.Style;
 			topic: Topic;
-			pos, len: LONGINT;
+			pos, len: SIGNED32;
 			first, ok, oberon: BOOLEAN;
 	BEGIN
 		oberon := (cont.typ.typ = "application") & (cont.encoding IN {MIME.EncAsciiCoder, MIME.EncAsciiCoderC, MIME.EncAsciiCoderCPlain});
@@ -1117,13 +1117,13 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		Texts.SetFont(W, Fonts.Default)
 	END DecodeMessage;
 
-	PROCEDURE decodeMessage(no: LONGINT; VAR T: Texts.Text; plain: BOOLEAN);
+	PROCEDURE decodeMessage(no: SIGNED32; VAR T: Texts.Text; plain: BOOLEAN);
 		VAR
 			S: Streams.Stream;
 			mT: Texts.Text;
 			h: MIME.Header;
 			cont: MIME.Content;
-			len: LONGINT;
+			len: SIGNED32;
 	BEGIN
 		S := Streams.OpenFileReader(msgsF, msgs[no].pos); S.mode := Streams.binary;
 		IF plain THEN
@@ -1215,7 +1215,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			D: Documents.Document;
 			obj: Objects.Object;
 			F: Texts.Finder;
-			no: LONGINT;
+			no: SIGNED32;
 			plain: BOOLEAN;
 			line: ListGadgets.Line;
 	BEGIN
@@ -1266,8 +1266,8 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			F: Files.File;
 			R: Files.Rider;
 			msg, bak: FileDir.FileName;
-			beg, end, offs, i: LONGINT;
-			res: INTEGER;
+			beg, end, offs, i: SIGNED32;
+			res: SIGNED16;
 			ch, old: CHAR;
 		PROCEDURE Copy;
 			VAR
@@ -1292,7 +1292,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		Files.Rename(msg, bak, res); ASSERT(res = 0);
 		F := Files.New(msg); i := 0;
 		msgsF := Files.Old(bak); Files.Set(R, msgsF, 0);
-		old := Strings.LF; beg := MAX(LONGINT);
+		old := Strings.LF; beg := MAX(SIGNED32);
 		Files.Read(R, ch);
 		WHILE ~R.eof DO
 			end := Files.Pos(R)-1;
@@ -1330,7 +1330,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	END Shrink;
 
 	PROCEDURE collect;
-		VAR i, j, no: LONGINT;
+		VAR i, j, no: SIGNED32;
 	BEGIN
 		i := 0; j := 0; no := noMsgs;
 		WHILE i < no DO
@@ -1352,7 +1352,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		Gadgets.Update(msgList)
 	END Collect;
 
-	PROCEDURE DeleteMessage(no: LONGINT);
+	PROCEDURE DeleteMessage(no: SIGNED32);
 		VAR h: MIME.Header;
 	BEGIN
 		INCL(msgs[no].flags, Deleted);
@@ -1363,8 +1363,8 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 
 	PROCEDURE Re*(VAR W: Texts.Writer; VAR t: ARRAY OF CHAR);
 		VAR
-			i, j, re, oldre: LONGINT;
-			p: INTEGER;
+			i, j, re, oldre: SIGNED32;
+			p: SIGNED16;
 			end: BOOLEAN;
 		PROCEDURE Blanks;
 		BEGIN
@@ -1418,7 +1418,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			R: Texts.Reader;
 			h: MIME.Header;
 			t: ARRAY BufLen OF CHAR;
-			pos, len: LONGINT;
+			pos, len: SIGNED32;
 			ch: CHAR;
 	BEGIN
 		pos := 0; Texts.OpenReader(R, T, pos);
@@ -1441,11 +1441,11 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		Texts.WriteLn(W)
 	END ReplyText;
 
-	PROCEDURE CiteText*(VAR W: Texts.Writer; T: Texts.Text; beg, end: LONGINT);
+	PROCEDURE CiteText*(VAR W: Texts.Writer; T: Texts.Text; beg, end: SIGNED32);
 		VAR
 			R: Texts.Reader;
 			lib: Objects.Library;
-			col, voff: SHORTINT;
+			col, voff: SIGNED8;
 			ch: CHAR;
 	BEGIN
 		lib := W.lib; col := W.col; voff := W.voff;
@@ -1469,7 +1469,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			T, text: Texts.Text;
 			D: Documents.Document;
 			obj: Objects.Object;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 			fnt: Objects.Library;
 			str: AdrString;
 	BEGIN
@@ -1514,7 +1514,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			R: ListRiders.Rider;
 			mLine: ListGadgets.Line;
 			h: MIME.Header;
-			no: LONGINT;
+			no: SIGNED32;
 	BEGIN
 		Attributes.OpenScanner(S, Oberon.Par.text,Oberon.Par.pos);
 		Attributes.Scan(S);
@@ -1572,12 +1572,12 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			R: ListRiders.Rider;
 			mLine: ListGadgets.Line;
 			h: MIME.Header;
-			currentNo, no: LONGINT;
+			currentNo, no: SIGNED32;
 			queryObj: Objects.Object;
 			queryStr: ARRAY 128 OF CHAR;
 
-		PROCEDURE GetTopicNo(queryStr: ARRAY OF CHAR): LONGINT;
-		VAR topic: Topic; name: ARRAY 128 OF CHAR; i, j: LONGINT; ch: CHAR;
+		PROCEDURE GetTopicNo(queryStr: ARRAY OF CHAR): SIGNED32;
+		VAR topic: Topic; name: ARRAY 128 OF CHAR; i, j: SIGNED32; ch: CHAR;
 		BEGIN
 			(* drop 'topic="' and '"' from query string *)
 			IF queryStr[6] = 22X THEN ch := 22X; j := 7 ELSE ch := " "; j := 6 END;
@@ -1671,7 +1671,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	END QueryTopic;
 
 	PROCEDURE SaveIndexFile;
-		VAR f: Files.File; r: Files.Rider; i, t, d, len: LONGINT; new: BOOLEAN;
+		VAR f: Files.File; r: Files.Rider; i, t, d, len: SIGNED32; new: BOOLEAN;
 	BEGIN
 		ASSERT(msgsF # NIL);
 		f := Files.Old(IndexFile); new := FALSE;
@@ -1682,7 +1682,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			Files.WriteLInt(r, IndexFileKey);
 			Files.WriteNum(r, t); Files.WriteNum(r, d); Files.WriteNum(r, len);
 			Files.WriteNum(r, noMsgs); Files.WriteNum(r, delMsgs);
-			Files.WriteNum(r, LEN(msgs^)(LONGINT));	(* size of msgs array *)
+			Files.WriteNum(r, LEN(msgs^)(SIGNED32));	(* size of msgs array *)
 			Files.WriteNum(r, noMsgs);
 			FOR i := 0 TO noMsgs - 1 DO
 				Files.WriteNum(r, i);
@@ -1696,7 +1696,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 				Files.WriteNum(r, msgs[i].time);
 				Files.WriteLInt(r, msgs[i].replyTo);
 				Files.WriteLInt(r, msgs[i].subject);
-				Files.WriteLInt(r, LONGINT(0FFFFFFFFH))
+				Files.WriteLInt(r, SIGNED32(0FFFFFFFFH))
 			END;
 			Store(r, heap);
 			IF new THEN Files.Register(f) ELSE Files.Close(f) END
@@ -1706,9 +1706,9 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	PROCEDURE TryLoadIndexFile(): BOOLEAN;
 		VAR
 			f: Files.File; r: Files.Rider;
-			t0, d0, len0, key, i, t, d, len: LONGINT;
+			t0, d0, len0, key, i, t, d, len: SIGNED32;
 
-		PROCEDURE err(n: INTEGER);
+		PROCEDURE err(n: SIGNED16);
 		BEGIN
 			Texts.WriteString(W, "Reparsing Mail: ");
 			CASE n OF
@@ -1767,11 +1767,11 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			R: Files.Rider;
 			buf: ARRAY BufLen+4 OF CHAR;
 			pat: ARRAY 8 OF CHAR;
-			div: ARRAY 8 OF LONGINT;
-			pos: LONGINT;
-		PROCEDURE Search(VAR pos: LONGINT);
+			div: ARRAY 8 OF SIGNED32;
+			pos: SIGNED32;
+		PROCEDURE Search(VAR pos: SIGNED32);
 			VAR
-				i: LONGINT;
+				i: SIGNED32;
 				ch: CHAR;
 		BEGIN
 			ch := buf[pos]; i := 0;
@@ -1792,7 +1792,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			END
 		END Search;
 		PROCEDURE AddMsgs;
-			VAR i, j: LONGINT;
+			VAR i, j: SIGNED32;
 		BEGIN
 			i := 0; Search(i);
 			WHILE i >= 0 DO
@@ -1830,7 +1830,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			Files.Set(R, msgsF, pos)
 		END AddMsgs;
 		PROCEDURE CalcDispVec;
-			VAR i, j, d: LONGINT;
+			VAR i, j, d: SIGNED32;
 		BEGIN
 			i := 1; d := 1;
 			WHILE i <= 6 DO
@@ -1878,7 +1878,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		VAR
 			key, value: ValueString;
 			topic: Topic;
-			i: LONGINT;
+			i: SIGNED32;
 	BEGIN
 		topics := NIL; i := 0;
 		LOOP
@@ -1896,12 +1896,12 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END LoadTopics;
 
-	PROCEDURE Key(R: ListRiders.Rider): LONGINT;
+	PROCEDURE Key(R: ListRiders.Rider): SIGNED32;
 	BEGIN
 		RETURN R(Rider).key
 	END Key;
 
-	PROCEDURE Seek(R: ListRiders.Rider; key: LONGINT);
+	PROCEDURE Seek(R: ListRiders.Rider; key: SIGNED32);
 	BEGIN
 		WITH R: Rider DO
 			R.key := key; R.pos := 0; R.sortPos := 0;
@@ -1921,8 +1921,8 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END Seek;
 
-	PROCEDURE Pos(R: ListRiders.Rider): LONGINT;
-		VAR pos: LONGINT;
+	PROCEDURE Pos(R: ListRiders.Rider): SIGNED32;
+		VAR pos: SIGNED32;
 	BEGIN
 		WITH R: Rider DO
 			IF R.sort # NIL THEN
@@ -1937,7 +1937,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END Pos;
 
-	PROCEDURE Set(R: ListRiders.Rider; pos: LONGINT);
+	PROCEDURE Set(R: ListRiders.Rider; pos: SIGNED32);
 	BEGIN
 		WITH R: Rider DO
 			IF (pos >= 0) & (pos < R.noMsgs) THEN
@@ -1957,22 +1957,22 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END Set;
 
-	PROCEDURE GetState(R: ListRiders.Rider): LONGINT;
+	PROCEDURE GetState(R: ListRiders.Rider): SIGNED32;
 	BEGIN
 		RETURN msgs[R(Rider).pos].state
 	END GetState;
 
-	PROCEDURE SetState(R: ListRiders.Rider; state: LONGINT);
+	PROCEDURE SetState(R: ListRiders.Rider; state: SIGNED32);
 	BEGIN
 		msgs[R(Rider).pos].state := state
 	END SetState;
 
-	PROCEDURE GetStamp(R: ListRiders.Rider): LONGINT;
+	PROCEDURE GetStamp(R: ListRiders.Rider): SIGNED32;
 	BEGIN
 		RETURN msgs[R(Rider).pos].stamp
 	END GetStamp;
 
-	PROCEDURE SetStamp(R: ListRiders.Rider; stamp: LONGINT);
+	PROCEDURE SetStamp(R: ListRiders.Rider; stamp: SIGNED32);
 	BEGIN
 		msgs[R(Rider).pos].stamp := stamp
 	END SetStamp;
@@ -1984,7 +1984,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	END WriteLink;
 
 	PROCEDURE DeleteLink(R, linkR: ListRiders.Rider);
-		VAR no: LONGINT;
+		VAR no: SIGNED32;
 	BEGIN
 		R := linkR;
 		WITH R: Rider DO
@@ -2000,7 +2000,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	PROCEDURE Desc(R, old: ListRiders.Rider): ListRiders.Rider;
 	END Desc;
 
-	PROCEDURE Less(VAR i, j: MsgHead; sortBy: INTEGER): BOOLEAN;
+	PROCEDURE Less(VAR i, j: MsgHead; sortBy: SIGNED16): BOOLEAN;
 	BEGIN
 		CASE sortBy OF
 			SortByDateTime: IF i.date < j.date THEN
@@ -2028,11 +2028,11 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		RETURN i.pos < j.pos
 	END Less;
 
-	PROCEDURE QuickSort(sort: SortList; noMsgs: LONGINT; sortBy: INTEGER);
-		PROCEDURE Sort(lo, hi: LONGINT);
+	PROCEDURE QuickSort(sort: SortList; noMsgs: SIGNED32; sortBy: SIGNED16);
+		PROCEDURE Sort(lo, hi: SIGNED32);
 			VAR
-				i, j: LONGINT;
-				m, t: LONGINT;
+				i, j: SIGNED32;
+				m, t: SIGNED32;
 		BEGIN
 			IF lo < hi THEN
 				i := lo; j := hi;
@@ -2053,7 +2053,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	END QuickSort;
 
 	PROCEDURE ToISO(VAR value: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE value[i] # 0X DO
@@ -2068,10 +2068,10 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			read = 16; unread = 17;
 		VAR
 			str, keyw: ValueString;
-			pos, num, d, m, y, h, s, sym: LONGINT;
+			pos, num, d, m, y, h, s, sym: SIGNED32;
 			ch: CHAR;
 		PROCEDURE GetName;
-			VAR j: LONGINT;
+			VAR j: SIGNED32;
 		BEGIN
 			j := 0;
 			WHILE (ch # 0X) & (Strings.IsAlpha(ch) OR (ch = ".") OR (ch = "@") OR Strings.IsDigit(ch)) DO
@@ -2080,7 +2080,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			str[j] := 0X
 		END GetName;
 		PROCEDURE GetString;
-			VAR j: LONGINT;
+			VAR j: SIGNED32;
 		BEGIN
 			j := 0;
 			WHILE (ch # 0X) & (ch # 022X) DO
@@ -2153,7 +2153,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 				sym := eof
 			END
 		END Next;
-		PROCEDURE Check(sy: LONGINT);
+		PROCEDURE Check(sy: SIGNED32);
 		BEGIN
 			IF sy = sym THEN
 				Next()
@@ -2267,7 +2267,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		BEGIN
 			factor := Factor();
 			WHILE (sym = and) & ~Q.error DO
-				NEW(term); term.field := MAX(INTEGER); term.op := and;
+				NEW(term); term.field := MAX(SIGNED16); term.op := and;
 				term.next := Q.conds; Q.conds := term; term.left := factor;
 				Next(); term.right := Factor(); factor := term
 			END;
@@ -2280,7 +2280,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		BEGIN
 			term := Term();
 			WHILE (sym = or) & ~Q.error DO
-				NEW(expr); expr.field := MAX(INTEGER); expr.op := or;
+				NEW(expr); expr.field := MAX(SIGNED16); expr.op := or;
 				expr.next := Q.conds; Q.conds := expr; expr.left := term;
 				Next(); expr.right := Expr(); term := expr
 			END;
@@ -2296,18 +2296,18 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END CompileQuery;
 
-	PROCEDURE TextSearch(cond: Cond; no: LONGINT): BOOLEAN;
+	PROCEDURE TextSearch(cond: Cond; no: SIGNED32): BOOLEAN;
 		CONST
 			MaxPatLen = 128;
 		VAR
 			i, sPatLen: SIZE;
-			pos, end: LONGINT;
+			pos, end: SIGNED32;
 			R: Files.Rider;
 			sPat: ARRAY MaxPatLen OF CHAR;
-			sDv: ARRAY MaxPatLen + 1 OF LONGINT;
+			sDv: ARRAY MaxPatLen + 1 OF SIGNED32;
 			ch: CHAR;
 		PROCEDURE CalcDispVec;
-			VAR i, j: SIZE; d: LONGINT;
+			VAR i, j: SIZE; d: SIGNED32;
 		BEGIN
 			i := 1; d := 1;
 			WHILE i <= sPatLen DO
@@ -2348,7 +2348,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		RETURN i = sPatLen
 	END TextSearch;
 
-	PROCEDURE MatchQuery(VAR Q: Query; no: LONGINT; VAR msg: MsgHead): BOOLEAN;
+	PROCEDURE MatchQuery(VAR Q: Query; no: SIGNED32; VAR msg: MsgHead): BOOLEAN;
 		VAR
 			cond: Cond;
 			pos, i: SIZE;
@@ -2438,7 +2438,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		VAR
 			R: Rider;
 			int: ListRiders.Int;
-			i: LONGINT;
+			i: SIGNED32;
 			Q: Query;
 	BEGIN
 		NEW(R); R.do := mMethod; R.sort := NIL;
@@ -2507,7 +2507,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	PROCEDURE GetRider(F: ListGadgets.Frame; new: BOOLEAN): ListRiders.Rider;
 		VAR
 			M: ConnectMsg;
-			i: LONGINT;
+			i: SIGNED32;
 	BEGIN
 		IF ((F.R = NIL) OR new) & (F.obj # NIL) THEN
 			IF F IS Frame THEN
@@ -2541,11 +2541,11 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		L.w := F.W; L.h := F.fnt.height; L.dsr := -F.fnt.minY; L.dx := 0
 	END FormatLine;
 
-	PROCEDURE DisplayLine(F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: INTEGER; R: ListRiders.Rider; L: ListGadgets.Line);
+	PROCEDURE DisplayLine(F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; R: ListRiders.Rider; L: ListGadgets.Line);
 		VAR
 			Q2: Display3.Mask;
 			str: ValueString;
-			textC: INTEGER;
+			textC: SIGNED16;
 	BEGIN
 		Display3.ReplConst(Q, F.backC, x, y, w-50, h, Display.replace);
 		WITH R: Rider DO
@@ -2585,7 +2585,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		VAR
 			F1: Frame;
 			obj: Objects.Object;
-			ver: INTEGER;
+			ver: SIGNED16;
 	BEGIN
 		WITH F: Frame DO
 			IF M IS Display.FrameMsg THEN
@@ -2700,7 +2700,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		Objects.NewObj := F
 	END NewFrame;
 
-	PROCEDURE TopicKey(R: ListRiders.Rider): LONGINT;
+	PROCEDURE TopicKey(R: ListRiders.Rider): SIGNED32;
 	BEGIN
 		WITH R: TopicRider DO
 			IF R.topic # NIL THEN
@@ -2711,7 +2711,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END TopicKey;
 
-	PROCEDURE TopicSeek(R: ListRiders.Rider; key: LONGINT);
+	PROCEDURE TopicSeek(R: ListRiders.Rider; key: SIGNED32);
 	BEGIN
 		WITH R: TopicRider DO
 			R.topic := topics;
@@ -2725,32 +2725,32 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END TopicSeek;
 
-	PROCEDURE TopicPos(R: ListRiders.Rider): LONGINT;
+	PROCEDURE TopicPos(R: ListRiders.Rider): SIGNED32;
 	BEGIN
 		RETURN R.do.Key(R)
 	END TopicPos;
 
-	PROCEDURE TopicSet(R: ListRiders.Rider; pos: LONGINT);
+	PROCEDURE TopicSet(R: ListRiders.Rider; pos: SIGNED32);
 	BEGIN
 		R.do.Seek(R, pos)
 	END TopicSet;
 
-	PROCEDURE TopicGetState(R: ListRiders.Rider): LONGINT;
+	PROCEDURE TopicGetState(R: ListRiders.Rider): SIGNED32;
 	BEGIN
 		RETURN R(TopicRider).topic.state
 	END TopicGetState;
 
-	PROCEDURE TopicSetState(R: ListRiders.Rider; state: LONGINT);
+	PROCEDURE TopicSetState(R: ListRiders.Rider; state: SIGNED32);
 	BEGIN
 		R(TopicRider).topic.state := state
 	END TopicSetState;
 
-	PROCEDURE TopicGetStamp(R: ListRiders.Rider): LONGINT;
+	PROCEDURE TopicGetStamp(R: ListRiders.Rider): SIGNED32;
 	BEGIN
 		RETURN R(TopicRider).topic.stamp
 	END TopicGetStamp;
 
-	PROCEDURE TopicSetStamp(R: ListRiders.Rider; stamp: LONGINT);
+	PROCEDURE TopicSetStamp(R: ListRiders.Rider; stamp: SIGNED32);
 	BEGIN
 		R(TopicRider).topic.stamp := stamp
 	END TopicSetStamp;
@@ -2793,9 +2793,9 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		Objects.NewObj := topicList
 	END NewTopicModel;
 
-	PROCEDURE Recipient(VAR i: LONGINT; VAR s, rcpt: ARRAY OF CHAR);
+	PROCEDURE Recipient(VAR i: SIGNED32; VAR s, rcpt: ARRAY OF CHAR);
 		VAR
-			j, k, end, dom: LONGINT;
+			j, k, end, dom: SIGNED32;
 			candidate: AdrString;
 			special: BOOLEAN;
 			ch, old, close: CHAR;
@@ -2898,7 +2898,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END Recipient;
 
-	PROCEDURE QueryContType*(T: Texts.Text; beg: LONGINT; cont: MIME.Content);
+	PROCEDURE QueryContType*(T: Texts.Text; beg: SIGNED32; cont: MIME.Content);
 		VAR R: Texts.Reader; ch: CHAR;
 	BEGIN
 		cont.typ := MIME.GetContentType("text/plain"); cont.encoding := MIME.EncBin;
@@ -2920,7 +2920,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	PROCEDURE ReadResponse(S: SMTPSession);
 		VAR
 			reply: ARRAY BufLen OF CHAR;
-			l: LONGINT;
+			l: SIGNED32;
 	BEGIN
 		NetSystem.ReadString(S.C, S.reply);
 		IF trace THEN
@@ -2950,7 +2950,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END CloseSMTP;
 
-	PROCEDURE OpenSMTP*(VAR S: SMTPSession; host, from: ARRAY OF CHAR; port: INTEGER);
+	PROCEDURE OpenSMTP*(VAR S: SMTPSession; host, from: ARRAY OF CHAR; port: SIGNED16);
 	BEGIN
 		IF trace THEN
 			Texts.WriteString(W, "--- SMTP");
@@ -2997,11 +2997,11 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		END
 	END SendReplyLine;
 
-	PROCEDURE MakeAscii*(body: Texts.Text; beg, end: LONGINT; compress: BOOLEAN; VAR ascii: Texts.Text);
+	PROCEDURE MakeAscii*(body: Texts.Text; beg, end: SIGNED32; compress: BOOLEAN; VAR ascii: Texts.Text);
 		VAR
 			F, Fc: Files.File;
 			buf: Texts.Buffer;
-			len: LONGINT;
+			len: SIGNED32;
 	BEGIN
 		NEW(buf); Texts.OpenBuf(buf);
 		Texts.Save(body, beg, end, buf);
@@ -3018,12 +3018,12 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		AsciiCoder.Code(F, ascii)
 	END MakeAscii;
 
-	PROCEDURE SendText*(S: SMTPSession; head, body: Texts.Text; beg, end: LONGINT; cont: MIME.Content);
+	PROCEDURE SendText*(S: SMTPSession; head, body: Texts.Text; beg, end: SIGNED32; cont: MIME.Content);
 		VAR
-			enc: LONGINT;
+			enc: SIGNED32;
 			ascii: Texts.Text;
 	BEGIN
-		enc := cont.encoding; cont.len := MAX(LONGINT);
+		enc := cont.encoding; cont.len := MAX(SIGNED32);
 		SendCmd(S,"From: ", S.from);
 		SendCmd(S, "X-Mailer:", mailer);
 		IF enc IN {MIME.EncAsciiCoder, MIME.EncAsciiCoderC, MIME.EncAsciiCoderCPlain} THEN
@@ -3056,14 +3056,14 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 		VAR
 			R: Texts.Reader;
 			t: ARRAY BufLen OF CHAR;
-			pos: LONGINT;
+			pos: SIGNED32;
 			head: Texts.Text;
 			ch, old: CHAR;
-		PROCEDURE Recipients(VAR pos: LONGINT): BOOLEAN;
+		PROCEDURE Recipients(VAR pos: SIGNED32): BOOLEAN;
 			VAR
 				R: Texts.Reader;
 				t: ARRAY BufLen OF CHAR;
-				i: LONGINT;
+				i: SIGNED32;
 				rcpt: AdrString;
 				first: BOOLEAN;
 		BEGIN
@@ -3151,7 +3151,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			T, sig: Texts.Text;
 			F: Texts.Finder;
 			obj: Objects.Object;
-			beg, end, time, i: LONGINT;
+			beg, end, time, i: SIGNED32;
 			autoCc: BOOLEAN;
 		PROCEDURE SendIt;
 		BEGIN
@@ -3246,7 +3246,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	PROCEDURE Cite*;
 		VAR
 			text: Texts.Text;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 			C: Oberon.CaretMsg;
 	BEGIN
 		text := NIL; time := -1;
@@ -3280,7 +3280,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			S: Attributes.Scanner;
 			T: Texts.Text;
 			R: Texts.Reader;
-			pos, crpos, n, l: LONGINT;
+			pos, crpos, n, l: SIGNED32;
 			ch: CHAR;
 	BEGIN
 		T := Oberon.MarkedText();
@@ -3320,9 +3320,9 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	END CutLines;
 
 (** Parsing of a mailto url. *)
-	PROCEDURE SplitMailTo*(VAR url, mailadr: ARRAY OF CHAR): LONGINT;
+	PROCEDURE SplitMailTo*(VAR url, mailadr: ARRAY OF CHAR): SIGNED32;
 		VAR
-			key: LONGINT;
+			key: SIGNED32;
 			i, j, l: SIZE;
 			buffer: ARRAY BufLen OF CHAR;
 			iskey: BOOLEAN;
@@ -3411,9 +3411,9 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 	END NewMailToLinkScheme;
 
 (** Parsing of a mailserver url. *)
-	PROCEDURE SplitMailServer*(VAR url, mailadr, subject, body: ARRAY OF CHAR): LONGINT;
+	PROCEDURE SplitMailServer*(VAR url, mailadr, subject, body: ARRAY OF CHAR): SIGNED32;
 		VAR
-			key: LONGINT;
+			key: SIGNED32;
 			i, j, l: SIZE;
 			buffer: ARRAY BufLen OF CHAR;
 			iskey: BOOLEAN;
@@ -3536,7 +3536,7 @@ MODULE Mail IN Oberon; (** portable *)	(* ejz,  *)
 			objb: Objects.Object;
 			mailadr, subject, body: ARRAY NetTools.PathStrLen OF CHAR;
 			buffer: ARRAY BufLen OF CHAR;
-			key, beg, end, time, i: LONGINT;
+			key, beg, end, time, i: SIGNED32;
 			node: HyperDocs.Node;
 	BEGIN
 		IF Strings.CAPPrefix("mailto", D.name) THEN

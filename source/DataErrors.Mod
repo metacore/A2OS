@@ -23,17 +23,17 @@ VAR
 	(***! BEGIN part from Traps, todo: simplify and adjust to needs *)
 TYPE
 	Variable = RECORD
-		adr, type, size, n, tdadr: LONGINT
+		adr, type, size, n, tdadr: SIGNED32
 	END;   (* variable descriptor *)
 CONST
 	MaxString = 64;  MaxArray = 8;  MaxCols = 70;  Sep = "  ";  SepLen = 2;
 
 	(* Write the specified procedure name and returns parameters for use with NextVar and Variables. *)
 	(* Find a procedure in the reference block.  Return index of name, or -1 if not found. *)
-	PROCEDURE FindProc( refs: Modules.Bytes;  modpc: LONGINT ): LONGINT;
-	VAR i, m, t, proc: LONGINT;  ch: CHAR;
+	PROCEDURE FindProc( refs: Modules.Bytes;  modpc: SIGNED32 ): SIGNED32;
+	VAR i, m, t, proc: SIGNED32;  ch: CHAR;
 	BEGIN
-		proc := -1;  i := 0;  m := LEN( refs^ )(LONGINT);  ch := refs[i];  INC( i );
+		proc := -1;  i := 0;  m := LEN( refs^ )(SIGNED32);  ch := refs[i];  INC( i );
 		WHILE (i < m) & ((ch = 0F8X) OR (ch = 0F9X)) DO  (* proc *)
 			GetNum( refs, i, t );   (* pofs *)
 			IF t > modpc THEN  (* previous procedure was the one *)
@@ -63,7 +63,7 @@ CONST
 		RETURN proc
 	END FindProc;
 
-	PROCEDURE WriteProc0( mod: Modules.Module;  pc, fp: LONGINT;  VAR refs: Modules.Bytes;  VAR refpos, base: LONGINT );
+	PROCEDURE WriteProc0( mod: Modules.Module;  pc, fp: SIGNED32;  VAR refs: Modules.Bytes;  VAR refpos, base: SIGNED32 );
 	VAR ch: CHAR;
 	BEGIN
 		refpos := -1;
@@ -71,12 +71,12 @@ CONST
 			IF pc = 0 THEN W.String( "NIL" ) ELSE W.String( "Unknown PC=" );  W.Hex( pc, 8 );  W.Char( "H" ) END;
 			IF fp # -1 THEN W.String( " FP=" );  W.Hex( fp, 8 );  W.Char( "H" ) END
 		ELSE
-			W.String( mod.name );  DEC( pc, LONGINT(ADDRESSOF( mod.code[0] )) );  refs := mod.refs;
+			W.String( mod.name );  DEC( pc, SIGNED32(ADDRESSOF( mod.code[0] )) );  refs := mod.refs;
 			IF (refs # NIL ) & (LEN( refs ) # 0) THEN
 				refpos := FindProc( refs, pc );
 				IF refpos # -1 THEN
 					W.Char( "." );  ch := refs[refpos];  INC( refpos );
-					IF ch = "$" THEN base := LONGINT(mod.sb) ELSE base := fp END;   (* for variables *)
+					IF ch = "$" THEN base := SIGNED32(mod.sb) ELSE base := fp END;   (* for variables *)
 					WHILE ch # 0X DO W.Char( ch );  ch := refs[refpos];  INC( refpos ) END
 				END
 			END;
@@ -85,15 +85,15 @@ CONST
 	END WriteProc0;
 
 (* Find procedure name and write it. *)
-	PROCEDURE WriteProc( pc: LONGINT );
-	VAR refs: Modules.Bytes;  refpos, base: LONGINT;
+	PROCEDURE WriteProc( pc: SIGNED32 );
+	VAR refs: Modules.Bytes;  refpos, base: SIGNED32;
 	BEGIN
 		WriteProc0( Modules.ThisModuleByAdr( pc ), pc, -1, refs, refpos, base )
 	END WriteProc;
 (* Write a simple variable value. *)
 
-	PROCEDURE WriteSimpleVar( adr, type, tdadr: LONGINT;  VAR col: LONGINT );
-	VAR ch: CHAR;  sval: SHORTINT;  ival: INTEGER;  lval: LONGINT;
+	PROCEDURE WriteSimpleVar( adr, type, tdadr: SIGNED32;  VAR col: SIGNED32 );
+	VAR ch: CHAR;  sval: SIGNED8;  ival: SIGNED16;  lval: SIGNED32;
 	BEGIN
 		CASE type OF
 		1, 3:  (* BYTE, CHAR *)
@@ -106,19 +106,19 @@ CONST
 				ELSE W.Int( ORD( ch ), 1 )
 				END;
 				INC( col, 5 )
-		| 4:    (* SHORTINT *)
+		| 4:    (* SIGNED8 *)
 				SYSTEM.GET( adr, sval );
 				W.Int( sval, 1 );  INC( col, 4 )
 				(*Streams.WriteString(w, " ("); Streams.WriteHex(w, sval, -3); Streams.WriteString(w, "H)")*)
-		| 5:    (* INTEGER *)
+		| 5:    (* SIGNED16 *)
 				SYSTEM.GET( adr, ival );
 				W.Int( ival, 1 );  INC( col, 5 )
 				(*Streams.WriteString(w, " ("); Streams.WriteHex(w, ival, 8); Streams.WriteString(w, "H)")*)
-		| 6:    (* LONGINT *)
+		| 6:    (* SIGNED32 *)
 				SYSTEM.GET( adr, lval );
 				W.Int( lval, 1 );  INC( col, 5 );
 				IF ABS( lval ) >= 10000H THEN W.String( " (" );  W.Hex( lval, 8 );  W.String( "H)" );  INC( col, 12 ) END
-		| 7, 8, 13, 16, 29:  (* REAL, LONGREAL, POINTER *)
+		| 7, 8, 13, 16, 29:  (* FLOAT32, FLOAT64, POINTER *)
 				INC( col, 9 );
 				IF (type = 8) OR (type = 16) THEN SYSTEM.GET( adr + 4, lval );  W.Hex( lval, 8 );  INC( col, 8 ) END;
 				SYSTEM.GET( adr, lval );  W.Hex( lval, 8 );  W.Char( "H" )
@@ -135,7 +135,7 @@ CONST
 (* Write a variable value.  The v parameter is a variable descriptor obtained with NextVar.  Parameter col is incremented with
 
 		the (approximate) number of characters written. *)
-	PROCEDURE WriteVar( v: Variable;  VAR col: LONGINT );
+	PROCEDURE WriteVar( v: Variable;  VAR col: SIGNED32 );
 	VAR ch: CHAR;
 	BEGIN
 		IF v.type = 15 THEN
@@ -158,8 +158,8 @@ CONST
 
 (* Get a compressed refblk number. *)
 
-	PROCEDURE GetNum( refs: Modules.Bytes;  VAR i, num: LONGINT );
-	VAR n, s: LONGINT;  x: CHAR;
+	PROCEDURE GetNum( refs: Modules.Bytes;  VAR i, num: SIGNED32 );
+	VAR n, s: SIGNED32;  x: CHAR;
 	BEGIN
 		s := 0;  n := 0;  x := refs[i];  INC( i );
 		WHILE ORD( x ) >= 128 DO INC( n, ASH( ORD( x ) - 128, s ) );  INC( s, 7 );  x := refs[i];  INC( i ) END;
@@ -169,8 +169,8 @@ CONST
 (* Step to the next variable in the refs block.  The name parameter returns empty if no more variables are found.  The attributes
 
 		are returned in v.  Parameter refpos is modified.  *)
-	PROCEDURE NextVar( refs: Modules.Bytes;  VAR refpos: LONGINT;  base: LONGINT;  VAR name: ARRAY OF CHAR;  VAR v: Variable );
-	VAR x: Variable;  j: LONGINT;  ch, mode: CHAR;
+	PROCEDURE NextVar( refs: Modules.Bytes;  VAR refpos: SIGNED32;  base: SIGNED32;  VAR name: ARRAY OF CHAR;  VAR v: Variable );
+	VAR x: Variable;  j: SIGNED32;  ch, mode: CHAR;
 	BEGIN
 		name[0] := 0X;   (* empty name signals end or error *)
 		IF refpos < LEN( refs^ ) - 1 THEN
@@ -218,8 +218,8 @@ CONST
 	END NextVar;
 
 (* Find the specified global variable and return its descriptor.  Returns TRUE iff the variable is found. *)
-	PROCEDURE Variables( refs: Modules.Bytes;  refpos, base: LONGINT );
-	VAR v: Variable;  j, col: LONGINT;
+	PROCEDURE Variables( refs: Modules.Bytes;  refpos, base: SIGNED32 );
+	VAR v: Variable;  j, col: SIGNED32;
 		name: ARRAY 64 OF CHAR;
 		etc: BOOLEAN;
 	BEGIN
@@ -251,12 +251,12 @@ CONST
 		IF col # 0 THEN W.Ln() END
 	END Variables;
 
-	PROCEDURE InitVar( mod: Modules.Module;  VAR refs: Modules.Bytes;  VAR refpos, base: LONGINT );
+	PROCEDURE InitVar( mod: Modules.Module;  VAR refs: Modules.Bytes;  VAR refpos, base: SIGNED32 );
 	VAR ch: CHAR;
 	BEGIN
 		refpos := -1;
 		IF mod # NIL THEN
-			refs := mod.refs;  base := LONGINT(mod.sb);
+			refs := mod.refs;  base := SIGNED32(mod.sb);
 			IF (refs # NIL ) & (LEN( refs ) # 0) THEN
 				refpos := FindProc( refs, 0 );
 				IF refpos # -1 THEN
@@ -268,7 +268,7 @@ CONST
 	END InitVar;
 
 	PROCEDURE ModuleState( mod: Modules.Module );
-	VAR refpos, base: LONGINT;  refs: Modules.Bytes;
+	VAR refpos, base: SIGNED32;  refs: Modules.Bytes;
 	BEGIN
 		InitVar( mod, refs, refpos, base );
 		IF refpos # -1 THEN W.String( "State " );  W.String( mod.name );  W.Char( ":" );  W.Ln();  Variables( refs, refpos, base ) END
@@ -276,8 +276,8 @@ CONST
 
 (* Display call trackback. *)
 
-	PROCEDURE StackTraceBack( eip, ebp: LONGINT;  long: BOOLEAN );
-	VAR count, refpos, base: LONGINT;  m: Modules.Module;  refs: Modules.Bytes;
+	PROCEDURE StackTraceBack( eip, ebp: SIGNED32;  long: BOOLEAN );
+	VAR count, refpos, base: SIGNED32;  m: Modules.Module;  refs: Modules.Bytes;
 	CONST MaxFrames = 16;
 	BEGIN
 		count := 0;   (* frame count *)
@@ -303,11 +303,11 @@ CONST
 	PROCEDURE ErrorCaller( VAR m: Modules.Module;  VAR pc, ebp, eip: NbrInt.Integer );
 	VAR i, reg: NbrInt.Integer;  timer: Kernel.Timer;
 	BEGIN
-		reg := LONGINT(SYSTEM.GetFramePointer ());
+		reg := SIGNED32(SYSTEM.GetFramePointer ());
 		SYSTEM.GET( reg, ebp );   (* stack frame of caller *)
 		SYSTEM.GET( ebp + 4, eip );   (* return address from caller *)
 		m := Modules.ThisModuleByAdr( eip );
-		IF m # NIL THEN pc := LONGINT(eip - ADDRESSOF( m.code[0] )) ELSE pc := MAX( LONGINT ) END;
+		IF m # NIL THEN pc := SIGNED32(eip - ADDRESSOF( m.code[0] )) ELSE pc := MAX( SIGNED32 ) END;
 		IF ~beepedError THEN
 			beepedError := TRUE;  NEW( timer );
 			FOR i := 1 TO 3 DO Beep.Beep( 125 );  timer.Sleep( 100 );  Beep.Beep( 0 );  timer.Sleep( 100 ) END;
@@ -319,11 +319,11 @@ CONST
 	PROCEDURE WarningCaller( VAR m: Modules.Module;  VAR pc, ebp, eip: NbrInt.Integer );
 	VAR reg: NbrInt.Integer;  timer: Kernel.Timer;
 	BEGIN
-		reg := LONGINT(SYSTEM.GetFramePointer ());
+		reg := SIGNED32(SYSTEM.GetFramePointer ());
 		SYSTEM.GET( reg, ebp );   (* stack frame of caller *)
 		SYSTEM.GET( ebp + 4, eip );   (* return address from caller *)
 		m := Modules.ThisModuleByAdr( eip );
-		IF m # NIL THEN pc := LONGINT(eip - ADDRESSOF( m.code[0] )) ELSE pc := MAX( LONGINT ) END;
+		IF m # NIL THEN pc := SIGNED32(eip - ADDRESSOF( m.code[0] )) ELSE pc := MAX( SIGNED32 ) END;
 		IF ~beepedWarning THEN
 			beepedWarning := TRUE;  NEW( timer );  Beep.Beep( 125 );  timer.Sleep( 100 );  Beep.Beep( 0 );
 			timer.Sleep( 100 );  Beep.Beep( 100 );  timer.Sleep( 100 );  Beep.Beep( 0 );  timer.Sleep( 100 );
@@ -332,7 +332,7 @@ CONST
 	END WarningCaller;
 
 	PROCEDURE IdentifyProcedure( VAR m: Modules.Module;  pc: NbrInt.Integer;  VAR module, type, proc: ARRAY OF CHAR );
-	VAR i: NbrInt.Integer;  ch: CHAR;  refs: Modules.Bytes;  refpos: LONGINT;
+	VAR i: NbrInt.Integer;  ch: CHAR;  refs: Modules.Bytes;  refpos: SIGNED32;
 	BEGIN
 		module[0] := 0X;  type[0] := 0X;  proc[0] := 0X;
 		IF m = NIL THEN
@@ -362,13 +362,13 @@ CONST
 		END
 	END Location;
 
-	PROCEDURE DetailedErrorReport( VAR m: Modules.Module;  pc: LONGINT;  eip, ebp: LONGINT );
-VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
+	PROCEDURE DetailedErrorReport( VAR m: Modules.Module;  pc: SIGNED32;  eip, ebp: SIGNED32 );
+VAR refs: Modules.Bytes; refpos: SIGNED32; adr: SIGNED32;
 		BEGIN
 		IF m # NIL THEN
 	 refs := m.refs;  refpos := FindProc( refs, pc );
 					GetNum( refs, refpos, adr );
-				INC( adr, LONGINT(m.sb));   (* convert to absolute address *)
+				INC( adr, SIGNED32(m.sb));   (* convert to absolute address *)
 	W.Hex(adr,8);W.Ln;
 		W.String( "Detailed Error Report" );  W.Ln;
 		IF m# NIL THEN W.String( "Module State:" );  W.Ln;  ModuleState( m );  END;
@@ -382,7 +382,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 	PROCEDURE Error*( message: ARRAY OF CHAR );
 	VAR m: Modules.Module;  pc: NbrInt.Integer;
 		module, type, proc: ARRAY 64 OF CHAR;
-		ebp, eip: LONGINT;
+		ebp, eip: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF W # NIL THEN
 			ErrorCaller( m, pc, ebp, eip );  IdentifyProcedure( m, pc, module, type, proc );  W.String( "An error of:" );  W.Ln;  W.String( "   " );
@@ -396,7 +396,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 	PROCEDURE IntError*( int: NbrInt.Integer;  message: ARRAY OF CHAR );
 	VAR m: Modules.Module;  pc: NbrInt.Integer;
 		module, type, proc, string: ARRAY 64 OF CHAR;
-		ebp, eip: LONGINT;
+		ebp, eip: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF W # NIL THEN
 			ErrorCaller( m, pc, ebp, eip );  IdentifyProcedure( m, pc, module, type, proc );  W.String( "An ERROR occurred in:" );  W.Ln;
@@ -411,7 +411,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 	PROCEDURE RatError*( rat: NbrRat.Rational;  message: ARRAY OF CHAR );
 	VAR m: Modules.Module;  pc: NbrInt.Integer;
 		module, type, proc, string: ARRAY 64 OF CHAR;
-		ebp, eip: LONGINT;
+		ebp, eip: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF W # NIL THEN
 			ErrorCaller( m, pc, ebp, eip );  IdentifyProcedure( m, pc, module, type, proc );  W.String( "An ERROR occurred in:" );  W.Ln;
@@ -426,7 +426,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 	PROCEDURE ReError*( re: NbrRe.Real;  message: ARRAY OF CHAR );
 	VAR m: Modules.Module;  pc: NbrInt.Integer;
 		module, type, proc, string: ARRAY 64 OF CHAR;
-		ebp, eip: LONGINT;
+		ebp, eip: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF W # NIL THEN
 			ErrorCaller( m, pc, ebp, eip );  IdentifyProcedure( m, pc, module, type, proc );  W.String( "An ERROR occurred in:" );  W.Ln;
@@ -441,7 +441,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 	PROCEDURE CplxError*( cplx: NbrCplx.Complex;  message: ARRAY OF CHAR );
 	VAR m: Modules.Module;  pc: NbrInt.Integer;
 		module, type, proc, string: ARRAY 64 OF CHAR;
-		ebp, eip: LONGINT;
+		ebp, eip: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF W # NIL THEN
 			ErrorCaller( m, pc, ebp, eip );  IdentifyProcedure( m, pc, module, type, proc );  W.String( "An ERROR occurred in:" );  W.Ln;
@@ -455,7 +455,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 	PROCEDURE Warning*( message: ARRAY OF CHAR );
 	VAR m: Modules.Module;  pc: NbrInt.Integer;
 		module, type, proc: ARRAY 64 OF CHAR;
-		ebp, eip: LONGINT;
+		ebp, eip: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF W # NIL THEN
 			WarningCaller( m, pc, ebp, eip );  IdentifyProcedure( m, pc, module, type, proc );  W.String( "A WARNING of:" );  W.Ln;  W.String( "   " );
@@ -467,7 +467,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 	PROCEDURE IntWarning*( int: NbrInt.Integer;  message: ARRAY OF CHAR );
 	VAR m: Modules.Module;  pc: NbrInt.Integer;
 		module, type, proc, string: ARRAY 64 OF CHAR;
-		ebp, eip: LONGINT;
+		ebp, eip: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF W # NIL THEN
 			WarningCaller( m, pc, ebp, eip );  IdentifyProcedure( m, pc, module, type, proc );  W.String( "A WARNING occurred in:" );  W.Ln;
@@ -480,7 +480,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 	PROCEDURE RatWarning*( rat: NbrRat.Rational;  message: ARRAY OF CHAR );
 	VAR m: Modules.Module;  pc: NbrInt.Integer;
 		module, type, proc, string: ARRAY 64 OF CHAR;
-		ebp, eip: LONGINT;
+		ebp, eip: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF W # NIL THEN
 			WarningCaller( m, pc, ebp, eip );  IdentifyProcedure( m, pc, module, type, proc );  W.String( "A WARNING occurred in:" );  W.Ln;
@@ -493,7 +493,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 	PROCEDURE ReWarning*( re: NbrRe.Real;  message: ARRAY OF CHAR );
 	VAR m: Modules.Module;  pc: NbrInt.Integer;
 		module, type, proc, string: ARRAY 64 OF CHAR;
-		ebp, eip: LONGINT;
+		ebp, eip: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF W # NIL THEN
 			WarningCaller( m, pc, ebp, eip );  IdentifyProcedure( m, pc, module, type, proc );  W.String( "A WARNING occurred in:" );  W.Ln;
@@ -506,7 +506,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 	PROCEDURE CplxWarning*( cplx: NbrCplx.Complex;  message: ARRAY OF CHAR );
 	VAR m: Modules.Module;  pc: NbrInt.Integer;
 		module, type, proc, string: ARRAY 64 OF CHAR;
-		ebp, eip: LONGINT;
+		ebp, eip: SIGNED32;
 	BEGIN {EXCLUSIVE}
 		IF W # NIL THEN
 			WarningCaller( m, pc, ebp, eip );  IdentifyProcedure( m, pc, module, type, proc );  W.String( "A WARNING occurred in:" );  W.Ln;
@@ -519,7 +519,7 @@ VAR refs: Modules.Bytes; refpos: LONGINT; adr: LONGINT;
 		Error.Log is automatically opened whenever this module is loaded into memory,
 		and it only needs to be reopened manually if you had previously closed it manually. *)
 	PROCEDURE Open*;
-	VAR ignor: WORD;  backup, current: Files.FileName;
+	VAR ignor: INTEGER;  backup, current: Files.FileName;
 	BEGIN
 		beepedError := FALSE;  beepedWarning := FALSE;  COPY( "Error.Log", current );  COPY( "Error.Log.Bak", backup );  Files.Delete( backup, ignor );
 		Files.Rename( current, backup, ignor );  F := Files.New( current );  Files.OpenWriter( W, F, 0 )

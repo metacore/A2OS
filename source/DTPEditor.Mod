@@ -59,9 +59,9 @@ TYPE
 
 		(* Plugin Buttons *)
 		pbuttons : pluginButtons;
-		numberOfPlugs : LONGINT;
+		numberOfPlugs : SIGNED32;
 
-		fileFormat : LONGINT;
+		fileFormat : SIGNED32;
 		modified : BOOLEAN;
 		fullScreen-: BOOLEAN;
 		currentWidth, currentHeight: SIZE;
@@ -82,7 +82,7 @@ TYPE
 		VAR plugName : ARRAY 16 OF CHAR;
 			plugList : PluginList;
 			plugListEntry : PluginListEntry;
-			i : LONGINT;
+			i : SIGNED32;
 			(* button: WMStandardComponents.Button;	*)
 		BEGIN
 			plugList := plugRegistry.GetPluginList();
@@ -115,7 +115,7 @@ TYPE
 		PROCEDURE AddPlugins(): WMStandardComponents.Panel;
 		VAR panel : WMStandardComponents.Panel;
 			button: WMStandardComponents.Button;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			NEW(panel); panel.alignment.Set(WMComponents.AlignTop); panel.bounds.SetHeight(30*numberOfPlugs);
 			FOR i := 0 TO numberOfPlugs-1 DO
@@ -391,7 +391,7 @@ TYPE
 		END GetDocument;
 *)
 		PROCEDURE SelectHandler(sender, data : ANY);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			drawPanel.selectionON := TRUE;
 			(* cbutton.clDefault.Set(01010C080H); *) (* restore old Color *)
@@ -409,8 +409,8 @@ TYPE
 		PROCEDURE SetPluginHandler(sender, data : ANY);
 		VAR name, msg: ARRAY 32 OF CHAR;
 			string: Strings.String;
-			i : LONGINT;
-			(* res : WORD;	*)
+			i : SIGNED32;
+			(* res : INTEGER;	*)
 		BEGIN
 			drawPanel.selectionON := FALSE;
 			msg := "";
@@ -483,7 +483,7 @@ TYPE
 
 		PROCEDURE TestHandler(sender, data : ANY);
 		VAR str : ARRAY 16 OF CHAR;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			IF currentDocument = NIL THEN
 				KernelLog.String("##DEBUG: No Document present");
@@ -782,7 +782,7 @@ TYPE
 			Texts.AddParagraphStyle(style);
 		END LoadParagraphStyle;
 
-		PROCEDURE Load(CONST filename : ARRAY OF CHAR; format : LONGINT);
+		PROCEDURE Load(CONST filename : ARRAY OF CHAR; format : SIGNED32);
 		VAR tempString : ARRAY 256 OF CHAR;
 			parser : XMLParser.Parser;
 			scanner : XMLScanner.Scanner;
@@ -836,8 +836,8 @@ TYPE
 			content : DTPData.ContentObject;
 			page : DTPData.PageObject; mpage: DTPData.MasterPageObject;
 			frame : DTPData.FrameObject;
-			tempReal: LONGREAL; tempInt: LONGINT; res: WORD; tempBool: BOOLEAN;
-			mt, mb, ml, mr: REAL;
+			tempReal: FLOAT64; tempInt: SIGNED32; res: INTEGER; tempBool: BOOLEAN;
+			mt, mb, ml, mr: FLOAT32;
 		BEGIN
 			NEW(built, 0, 0, 0, 0, 0, 0, FALSE);
 			(* build styleArray *)
@@ -1074,7 +1074,7 @@ TYPE
 			popup.Close;
 		END StoreHandler;
 
-		PROCEDURE Store(CONST filename : ARRAY OF CHAR; format : LONGINT);
+		PROCEDURE Store(CONST filename : ARRAY OF CHAR; format : SIGNED32);
 		VAR tempString : ARRAY 256 OF CHAR;
 			string : Strings.String;
 			w : Files.Writer; f : Files.File;
@@ -1085,7 +1085,7 @@ TYPE
 			mpage: DTPData.MasterPageObject;
 			frame : DTPData.FrameObject;
 			guide : DTPData.GuideObject;
-			i : LONGINT; style : SET;
+			i : SIGNED32; style : SET;
 		BEGIN
 			filenameEdit.SetAsString(filename);
 
@@ -1270,15 +1270,15 @@ TYPE
 
 		PROCEDURE ExportHandler(sender, data: ANY);
 		VAR expFileName: ARRAY 256 OF CHAR;
-			pixelPerMM : REAL;
+			pixelPerMM : FLOAT32;
 			renderCanvas: WMGraphics.BufferCanvas;
 			renderImg: Raster.Image;
-			res: WORD;
-			oldDocOriginX, oldDocOriginY : LONGINT;
-			oldZoomFactor: REAL;
-			oldZoomMode: LONGINT;
+			res: INTEGER;
+			oldDocOriginX, oldDocOriginY : SIGNED32;
+			oldZoomFactor: FLOAT32;
+			oldZoomMode: SIGNED32;
 			tempString: ARRAY 256 OF CHAR;
-			tempReal: LONGREAL;
+			tempReal: FLOAT64;
 			wait: PleaseWaitWindow;
 		BEGIN
 			popup.Close;
@@ -1289,7 +1289,7 @@ TYPE
 					Strings.FloatToStr(pixelPerMM, 0,4,0, tempString);
 					IF WMDialogs.QueryString("Export Image Resolution [pixel/mm]:", tempString) = WMDialogs.ResOk THEN
 						Strings.StrToFloat(tempString, tempReal); pixelPerMM := SHORT(tempReal);
-						NEW(wait); wait.SetColor(LONGINT(09999FFFFH)); wait.SetMessage("Rendering Image - please wait!");
+						NEW(wait); wait.SetColor(SIGNED32(09999FFFFH)); wait.SetMessage("Rendering Image - please wait!");
 						wait.Show;
 						drawPanel.Render(TRUE);
 						IF ~previewON THEN									(* change to preview *)
@@ -1344,7 +1344,7 @@ TYPE
 			END;
 		END CreateNew;
 
-		PROCEDURE CreateDoc(w, h, mt, mb, ml, mr : REAL; fp : BOOLEAN);
+		PROCEDURE CreateDoc(w, h, mt, mb, ml, mr : FLOAT32; fp : BOOLEAN);
 		VAR document : DTPData.Document;
 		BEGIN
 
@@ -1730,7 +1730,7 @@ TYPE
 
 		PROCEDURE GoToPageHandler(sender, data: ANY);
 		VAR gotoPage: ARRAY 8 OF CHAR;
-			gPage, i: LONGINT;
+			gPage, i: SIGNED32;
 		BEGIN
 			IF currentDocument # NIL THEN
 				pageNumber.GetAsString(gotoPage);
@@ -1879,10 +1879,10 @@ TYPE
 
 	NewDialog* = OBJECT(WMComponents.FormWindow)
 	VAR content : WMComponents.VisualComponent;
-		result : LONGINT;
+		result : SIGNED32;
 		dhe, dwe, dmte, dmbe, dmle, dmre, dfpe : WMEditors.Editor;
 		dhs, dws, dmts, dmbs, dmls, dmrs, dfps : ARRAY 256 OF CHAR;
-		dhr, dwr, dmtr, dmbr, dmlr, dmrr, dfpr : LONGREAL;
+		dhr, dwr, dmtr, dmbr, dmlr, dmrr, dfpr : FLOAT64;
 		fpCheck: DTPUtilities.Checkbox;
 		facep : BOOLEAN;
 		theCaller : Window;
@@ -2107,12 +2107,12 @@ TYPE
 		panel : WMStandardComponents.Panel;
 		container: WMStandardComponents.Panel;
 		button*: WMStandardComponents.Button;
-		mode: LONGINT;						(* 0 = Text/Status only *)
+		mode: SIGNED32;						(* 0 = Text/Status only *)
 												(* 1 = Animated Bar *)
 												(* 2 = Status Bar *)
 		shown : BOOLEAN;
 		x, y : SIZE;
-		progress : LONGINT;
+		progress : SIGNED32;
 		(* abortProc: PROCEDURE {DELEGATE} ;	*)
 
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
@@ -2185,7 +2185,7 @@ TYPE
 			panel.Invalidate;
 		END SetStatus;
 
-		PROCEDURE SetProgress(progress: LONGINT);
+		PROCEDURE SetProgress(progress: SIGNED32);
 		BEGIN
 			SELF.progress := progress;
 		END SetProgress;
@@ -2196,7 +2196,7 @@ TYPE
 		END AbortHandler;
 *)
 
-		PROCEDURE SetColor(color: LONGINT);
+		PROCEDURE SetColor(color: SIGNED32);
 		BEGIN
 			panel.fillColor.Set(color);
 			label.fillColor.Set(color);
@@ -2337,7 +2337,7 @@ TYPE
 		PROCEDURE InstantiatePlugin*(CONST name: ARRAY OF CHAR): DTPData.ContentObject;
 		VAR
 			contentObject : DTPData.ContentObject; gen: DTPData.ContentFactory;
-			moduleName, procedureName : Modules.Name; msg : ARRAY 16 OF CHAR; res : WORD;
+			moduleName, procedureName : Modules.Name; msg : ARRAY 16 OF CHAR; res : INTEGER;
 			pp : ANY;
 		BEGIN
 			contentObject := NIL;
@@ -2358,7 +2358,7 @@ TYPE
 			RETURN contentObject;
 		END InstantiatePlugin;
 
-		PROCEDURE GetNumberOfPlugins*(): LONGINT;
+		PROCEDURE GetNumberOfPlugins*(): SIGNED32;
 		BEGIN
 			RETURN generators.GetNumberOfElements();
 		END GetNumberOfPlugins;
@@ -2383,7 +2383,7 @@ TYPE
 *)
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 	plugRegistry*: PluginRegistry;
 	Unassigned: DTPData.ContentFactory;
 
@@ -2425,9 +2425,9 @@ END OpenEmptyA5landscape;
 
 PROCEDURE OpenEmpty*(context : Commands.Context);
 VAR instance : Window;
-	w, h, mt, mb, ml, mr : REAL; f : LONGINT; fp : BOOLEAN;
+	w, h, mt, mb, ml, mr : FLOAT32; f : SIGNED32; fp : BOOLEAN;
 	dstring : ARRAY 16 OF CHAR;
-	lreal : LONGREAL;
+	lreal : FLOAT64;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.Token(dstring);
 	Strings.StrToFloat(dstring, lreal); w := SHORT(lreal);

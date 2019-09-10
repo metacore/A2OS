@@ -1,7 +1,7 @@
 MODULE DiskCaches; (* Simple (disk) cache, fof 2018 *)
 IMPORT SYSTEM, Disks;
 
-	TYPE TransferProcedure = PROCEDURE {DELEGATE} (op,block,num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+	TYPE TransferProcedure = PROCEDURE {DELEGATE} (op,block,num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER);
 
 	CONST BlockSize = 512;
 	CONST NumberCacheLines = 128;
@@ -22,10 +22,10 @@ IMPORT SYSTEM, Disks;
 	Cache* = OBJECT
 	VAR
 		lines: ARRAY NumberCacheLines OF CacheLine;
-		blocksPerCacheLine: LONGINT;
+		blocksPerCacheLine: SIGNED32;
 		transfer: TransferProcedure;
 
-		PROCEDURE &Init*(transfer: TransferProcedure; blocksPerCacheLine = 32: LONGINT);
+		PROCEDURE &Init*(transfer: TransferProcedure; blocksPerCacheLine = 32: SIGNED32);
 		VAR i: SIZE;
 		BEGIN
 			SELF.transfer := transfer;
@@ -37,8 +37,8 @@ IMPORT SYSTEM, Disks;
 		END Init;
 
 		(* LONGINTs for compatibility -- should be largely replaced by SIZEs ! *)
-		PROCEDURE Transfer* (op: LONGINT; block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
-		VAR globalIndex, lineIndex, lineOfs, lineFirstBlock, lineBlocks: LONGINT;
+		PROCEDURE Transfer* (op: SIGNED32; block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER);
+		VAR globalIndex, lineIndex, lineOfs, lineFirstBlock, lineBlocks: SIGNED32;
 		BEGIN
 			WHILE num > 0 DO
 				globalIndex := block DIV blocksPerCacheLine; (* global index *)
@@ -79,19 +79,19 @@ END DiskCaches.
 		...
 		cache: DiskCaches.Cache;
 
-		PROCEDURE TransferX*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
+		PROCEDURE TransferX*(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			.... OLD TRANSFER CODE
 		END TransferX;
 
-		PROCEDURE Transfer(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
+		PROCEDURE Transfer(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIGNED32; VAR res: INTEGER);
 		BEGIN{EXCLUSIVE}
 			cache.Transfer(op,block,num,data,ofs,res)
 		END Transfer;
 
 		....
 
-		PROCEDURE &Init(CONST name : ARRAY OF CHAR; blockSize, cyls, hds, spt : LONGINT);
+		PROCEDURE &Init(CONST name : ARRAY OF CHAR; blockSize, cyls, hds, spt : SIGNED32);
 		BEGIN
 			NEW(cache, TransferX);
 			....

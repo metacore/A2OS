@@ -5,13 +5,13 @@ IMPORT Streams;
 
 VAR
 	etab: ARRAY 64 OF CHAR;
-	dtab: ARRAY 128 OF INTEGER;
+	dtab: ARRAY 128 OF SIGNED16;
 
 
 	PROCEDURE Encode*( CONST image: ARRAY OF CHAR; len: SIZE;
 						  		VAR b64: ARRAY OF CHAR );
 	VAR
-		group, i, ix, ox: LONGINT;
+		group, i, ix, ox: SIGNED32;
 	BEGIN
 		group := 0;  i := 0;  ix := 0;  ox := 0;
 		WHILE ix < len DO
@@ -41,9 +41,9 @@ VAR
 
 	(* returns image length, negative value = error! *)
 	PROCEDURE Decode*( CONST b64: ARRAY OF CHAR;
-								VAR image: ARRAY OF CHAR ): LONGINT;
+								VAR image: ARRAY OF CHAR ): SIGNED32;
 	VAR
-		i, d, code, group, ix, len: LONGINT;
+		i, d, code, group, ix, len: SIGNED32;
 		c: CHAR;
 	BEGIN
 		len := 0;  ix := 0;  group := 0;  i := 0;
@@ -77,10 +77,10 @@ VAR
 
 
 
-	PROCEDURE EncodeStream*( CONST image: ARRAY OF CHAR; len: LONGINT;
+	PROCEDURE EncodeStream*( CONST image: ARRAY OF CHAR; len: SIGNED32;
 						   		  		w: Streams.Writer );
 	VAR
-		group, i, ix, ll: LONGINT;
+		group, i, ix, ll: SIGNED32;
 	BEGIN
 		group := 0;  i := 0; ix := 0;  ll := 0;
 		WHILE ix < len DO
@@ -110,9 +110,9 @@ VAR
 
 	(* returns image length, negative value = error! *)
 	PROCEDURE DecodeStream*( r: Streams.Reader;
-										VAR image: ARRAY OF CHAR ): LONGINT;
+										VAR image: ARRAY OF CHAR ): SIGNED32;
 	VAR
-		i, rest, code, group, len: LONGINT;
+		i, rest, code, group, len: SIGNED32;
 		c: CHAR;
 	BEGIN
 		len := 0; group := 0;  i := 0;
@@ -148,7 +148,7 @@ VAR
 	CONST
 		letters = 26;  digits = 10;
 	VAR
-		i, j: INTEGER;
+		i, j: SIGNED16;
 	BEGIN
 		j := 0;
 		FOR i := 0 TO letters - 1 DO  etab[j] := CHR( i + ORD("A") );  INC( j )  END;
@@ -163,7 +163,7 @@ VAR
 	(*
 	(* testing: expected behaviour:  "admin:1234"  =>  "YWRtaW46MTIzNA=="  =>  "admin:1234"*)
 	PROCEDURE Test*( c: Commands.Context );
-	VAR image, base64: ARRAY 80 OF CHAR;  len: LONGINT; r: Streams.StringReader;
+	VAR image, base64: ARRAY 80 OF CHAR;  len: SIGNED32; r: Streams.StringReader;
 	BEGIN
 		c.out.String( 'admin:1234  =>  ' );
 		image := 'admin:123456789';

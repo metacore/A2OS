@@ -5,7 +5,7 @@ IMPORT StdIO, Commands, Modules, Trace;
 CONST Verbose = FALSE;
 
 PROCEDURE Activate(context: Commands.Context; CONST cmd: ARRAY OF CHAR): BOOLEAN;
-VAR msg: ARRAY 256 OF CHAR;  res: WORD;
+VAR msg: ARRAY 256 OF CHAR;  res: INTEGER;
 BEGIN
 	IF Verbose THEN
 		Trace.String("StdIOShell: Activate Command "); Trace.String(cmd); Trace.Ln;
@@ -40,7 +40,7 @@ TYPE
 	(* excute the shell and termination in separate thread with proper process data structure *)
 	Executor=OBJECT
 	VAR done := FALSE: BOOLEAN;
-	VAR code := Modules.PowerDown: LONGINT;
+	VAR code := Modules.PowerDown: SIGNED32;
 
 		PROCEDURE Wait;
 		BEGIN{EXCLUSIVE}

@@ -39,7 +39,7 @@ TYPE
 	END Example;
 
 VAR
-	Nvalue1, Nvalue2, Nvalue3 : LONGINT;
+	Nvalue1, Nvalue2, Nvalue3 : SIGNED32;
 
 PROCEDURE SetValues*(context : Commands.Context); (** Nvalue1 Nvalue2 Nvalue3 ~ *)
 BEGIN

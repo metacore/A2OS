@@ -78,7 +78,7 @@ TYPE
 	Worker = OBJECT
 	VAR
 		job : Job;
-		state : WORD;
+		state : INTEGER;
 		threadPool : ThreadPool;
 
 		(* WorkerList fields *)
@@ -92,7 +92,7 @@ TYPE
 			state := GotWork;
 		END SetJob;
 
-		PROCEDURE SetState(state : WORD);
+		PROCEDURE SetState(state : INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF (SELF.state < Terminating) OR ((SELF.state = Terminating) & (state = Terminated)) THEN
 				SELF.state := state;

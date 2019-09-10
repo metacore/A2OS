@@ -31,7 +31,7 @@ TYPE
 	END CpuLoad;
 
 VAR
-	nbrOfCpus- : LONGINT;
+	nbrOfCpus- : SIGNED32;
 
 PROCEDURE InitPlugins;
 VAR cpuLoad : CpuLoad; par : WMPerfMonPlugins.Parameter;

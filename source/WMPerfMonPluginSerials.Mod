@@ -52,7 +52,7 @@ VAR
 PROCEDURE Install*;
 VAR
 	plugin : SerialPortTransferRate; p : SerialsParameter;
-	port : Serials.Port; i : LONGINT;
+	port : Serials.Port; i : SIGNED32;
 BEGIN {EXCLUSIVE}
 	RemovePlugins;
 	FOR i := 1 TO Serials.MaxPorts DO
@@ -66,7 +66,7 @@ BEGIN {EXCLUSIVE}
 END Install;
 
 PROCEDURE RemovePlugins;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	(* Remove currently installed plugins *)
 	FOR i := 0 TO LEN(plugins)-1 DO

@@ -9,7 +9,7 @@ VAR
 
 PROCEDURE Call*;	(** [\w] ( cmd {parms} | ^ ) ~ *)
 VAR
-	s: Texts.Scanner; par: POINTER TO ARRAY OF CHAR; i, len, pos, res, beg, end, time: LONGINT;
+	s: Texts.Scanner; par: POINTER TO ARRAY OF CHAR; i, len, pos, res, beg, end, time: SIGNED32;
 	flags: SET; text: Texts.Text; msg: ARRAY 128 OF CHAR; ch: CHAR;
 	context : Commands.Context; arg : Streams.StringReader; out : Streams.Writer;
 BEGIN

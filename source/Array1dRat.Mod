@@ -9,7 +9,7 @@ TYPE
 	Value* = NbrRat.Rational;
 
 	Array* = POINTER TO ARRAY OF Value;
-	Index* = LONGINT;
+	Index* = SIGNED32;
 
 CONST
 	sz = SIZEOF( Value );
@@ -162,7 +162,7 @@ TYPE
 
 	PROCEDURE ScalarProductPat*( VAR x, y: ARRAY OF Value;  VAR res: Value;
 													   xoffset, yoffset, xstep, ystep, piecelen, pieces: Index );
-	VAR xidx, yidx: LONGINT;
+	VAR xidx, yidx: SIGNED32;
 	BEGIN
 		Array1dBytes.PatRangeCheck( xoffset, xstep, piecelen, pieces, LEN( x ) );
 		Array1dBytes.PatRangeCheck( yoffset, ystep, piecelen, pieces, LEN( y ) );
@@ -449,7 +449,7 @@ TYPE
 		WHILE i < len DO val := x[i];  d := val - mean;  mean := mean + d / (i + 1 - offset);  ssq := ssq + d * (val - mean);  INC( i ) END
 	END MeanSsq;
 
-	PROCEDURE kSmallestModify*( k: Index;  VAR a: ARRAY OF Value;  len: LONGINT ): Value;
+	PROCEDURE kSmallestModify*( k: Index;  VAR a: ARRAY OF Value;  len: SIGNED32 ): Value;
 	(* algorithm of Nikolaus Wirth, array is modified ! *)
 	VAR i, j, l, m: Index;  x: Value;
 
@@ -476,7 +476,7 @@ TYPE
 		RETURN a[k]
 	END kSmallestModify;
 
-	PROCEDURE kSmallest*( k: Index;  VAR a: ARRAY OF Value;  len: LONGINT ): Value;
+	PROCEDURE kSmallest*( k: Index;  VAR a: ARRAY OF Value;  len: SIGNED32 ): Value;
 	(** avoids modification by creatning a copy of a, not for frequent use *)
 	VAR copy: Array;
 	BEGIN
@@ -485,7 +485,7 @@ TYPE
 		NEW( copy, len );  Copy( a, copy^, 0, 0, len );  RETURN kSmallestModify( k, copy^, len );
 	END kSmallest;
 
-	PROCEDURE Median*( VAR a: ARRAY OF Value;  len: LONGINT ): Value;
+	PROCEDURE Median*( VAR a: ARRAY OF Value;  len: SIGNED32 ): Value;
 	BEGIN
 		RETURN kSmallest( len DIV 2, a, len );
 	END Median;
@@ -714,9 +714,9 @@ TYPE
 		Copy( temp^, x, 0, to, len );
 	END ShiftBlock;
 
-	PROCEDURE RemovePat*( VAR x: ARRAY OF Value;  offset, step, piecelen, pieces: LONGINT ): Array;
+	PROCEDURE RemovePat*( VAR x: ARRAY OF Value;  offset, step, piecelen, pieces: SIGNED32 ): Array;
 	(* for example: remove row or col from matrix *)
-	VAR srcidx, destidx: LONGINT;  res: Array;
+	VAR srcidx, destidx: SIGNED32;  res: Array;
 	BEGIN
 		Array1dBytes.PatRangeCheck( offset, step, piecelen, pieces, LEN( x ) );
 
@@ -736,15 +736,15 @@ TYPE
 		RETURN res;
 	END RemovePat;
 
-	PROCEDURE Remove*( VAR x: ARRAY OF Value;  offset, len: LONGINT ): Array;   (* optimize if necessary *)
+	PROCEDURE Remove*( VAR x: ARRAY OF Value;  offset, len: SIGNED32 ): Array;   (* optimize if necessary *)
 	BEGIN
 		RETURN RemovePat( x, offset, len, len, 1 );
 	END Remove;
 
-	PROCEDURE InsertPat*( VAR x: ARRAY OF Value;  offset, step, piecelen, pieces: LONGINT ): Array;
+	PROCEDURE InsertPat*( VAR x: ARRAY OF Value;  offset, step, piecelen, pieces: SIGNED32 ): Array;
 	(* for example: insert row or col in matrix *)
 
-	VAR srcidx, destidx: LONGINT;  res: Array;  null: Value;
+	VAR srcidx, destidx: SIGNED32;  res: Array;  null: Value;
 	BEGIN
 		Array1dBytes.PatRangeCheck( offset, step, piecelen, pieces, LEN( x ) + pieces * piecelen );
 
@@ -763,12 +763,12 @@ TYPE
 		RETURN res;
 	END InsertPat;
 
-	PROCEDURE Insert*( VAR x: ARRAY OF Value;  offset, len: LONGINT ): Array;   (* optimize if necessary *)
+	PROCEDURE Insert*( VAR x: ARRAY OF Value;  offset, len: SIGNED32 ): Array;   (* optimize if necessary *)
 	BEGIN
 		RETURN InsertPat( x, offset, len, len, 1 );
 	END Insert;
 
-	PROCEDURE GetPieces*( VAR a: ARRAY OF Value;  offset, step, piecelen: LONGINT ): LONGINT;
+	PROCEDURE GetPieces*( VAR a: ARRAY OF Value;  offset, step, piecelen: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF (LEN( a ) - offset) MOD step >= piecelen THEN RETURN (LEN( a ) - offset) DIV step + 1 ELSE RETURN (LEN( a ) - offset) DIV step END;
 	END GetPieces;

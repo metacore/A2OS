@@ -7,7 +7,7 @@ IMPORT
 
 CONST
 	(*static buffer for constants*)
-	MaxConstSize = 2147483647; (* 2^31 - 1, i.e. the maximum positive LONGINT number *)
+	MaxConstSize = 2147483647; (* 2^31 - 1, i.e. the maximum positive SIGNED32 number *)
 
 
 	(** system calls *)
@@ -17,7 +17,7 @@ CONST
 	registerinterface* = 10; getprocedure* = 11;
 
 	(** Fixup, last address in a fixup chain *)
-	FixupSentinel* = LONGINT(0FFFFFFFFH);
+	FixupSentinel* = SIGNED32(0FFFFFFFFH);
 	UndefEntryNo* = -1;	(** GlobalVariable.EntryNo *)
 
 	(** Calling Conventions *)
@@ -33,9 +33,9 @@ TYPE
 
 	Size* = OBJECT (PCM.Attribute)
 	VAR
-		size*: LONGINT;	(** size in bytes, used for allocation*)
-		align*: LONGINT;	(** on which boundary should this type be aligned *)
-		type*: SHORTINT;	(** Back-End Type *)
+		size*: SIGNED32;	(** size in bytes, used for allocation*)
+		align*: SIGNED32;	(** on which boundary should this type be aligned *)
+		type*: SIGNED8;	(** Back-End Type *)
 		signed*: BOOLEAN;
 		containPtrs*: BOOLEAN;
 		needsrecursion*: BOOLEAN;
@@ -44,8 +44,8 @@ TYPE
 	RecSize* = OBJECT (Size)
 	VAR
 		td*: GlobalVariable;
-		level*: LONGINT;
-		nofMethods*, nofLocalMethods*: LONGINT;
+		level*: SIGNED32;
+		nofMethods*, nofLocalMethods*: SIGNED32;
 	END RecSize;
 
 
@@ -54,24 +54,24 @@ TYPE
 
 	(** Fixup - offset to be patched at a later time *)
 	Fixup* = POINTER TO RECORD
-		offset-: LONGINT;
+		offset-: SIGNED32;
 		next-: Fixup
 	END;
 
 	Variable* = OBJECT (PCM.Attribute)
 	VAR
-		offset*: LONGINT
+		offset*: SIGNED32
 	END Variable;
 
 	GlobalVariable* = OBJECT (Variable)
 		VAR
 			owner-: Module;
-			entryNo*: INTEGER;	(** object-file information set by PCOF *)
+			entryNo*: SIGNED16;	(** object-file information set by PCOF *)
 
 			link-: Fixup;	(** occourencies of var in code *)
 			next-: GlobalVariable;	(** next GVar in the list *)
 
-		PROCEDURE AddFixup(offset: LONGINT);
+		PROCEDURE AddFixup(offset: SIGNED32);
 			VAR l: Fixup;
 		BEGIN
 			NEW(l); l.offset := offset; l.next := link; link := l
@@ -90,16 +90,16 @@ TYPE
 	(* ug *)
 	Attribute* = OBJECT(PCM.Attribute)	(* common part of Procedure and Module *)
 		VAR
-			codeoffset-: LONGINT;  (* entry point relative to code base of owner*)
-			beginOffset- : LONGINT;	 (* entry point relative to code base of owner*)	(* ug *)
-			endOffset- : LONGINT;  (* offset of statement block end relative to code base *)	(* ug *)
+			codeoffset-: SIGNED32;  (* entry point relative to code base of owner*)
+			beginOffset- : SIGNED32;	 (* entry point relative to code base of owner*)	(* ug *)
+			endOffset- : SIGNED32;  (* offset of statement block end relative to code base *)	(* ug *)
 
-		PROCEDURE SetBeginOffset*(offset : LONGINT);  (* ug *)
+		PROCEDURE SetBeginOffset*(offset : SIGNED32);  (* ug *)
 		BEGIN
 			beginOffset := offset
 		END SetBeginOffset;
 
-		PROCEDURE SetEndOffset*(offset : LONGINT); (* ug *)
+		PROCEDURE SetEndOffset*(offset : SIGNED32); (* ug *)
 		BEGIN
 			endOffset := offset
 		END SetEndOffset;
@@ -110,14 +110,14 @@ TYPE
 		VAR
 			owner-: Module;
 			public-: BOOLEAN;
-			locsize*: LONGINT;	(* local variables size *)
-			parsize*: LONGINT;	(* parameters size incl. self/sl, return addr and dynamic link *)
-			entryNr*, fixlist*: LONGINT;	(* set/used by PCOF *)
+			locsize*: SIGNED32;	(* local variables size *)
+			parsize*: SIGNED32;	(* parameters size incl. self/sl, return addr and dynamic link *)
+			entryNr*, fixlist*: SIGNED32;	(* set/used by PCOF *)
 			next-: Procedure;	(* entrylist *)
 			link-: Fixup;
-			finallyOff*: LONGINT; (* Offset of the handled region. Relative to the codeoffset. *)
+			finallyOff*: SIGNED32; (* Offset of the handled region. Relative to the codeoffset. *)
 
-		PROCEDURE AddFixup(offset: LONGINT);
+		PROCEDURE AddFixup(offset: SIGNED32);
 			VAR l: Fixup;
 		BEGIN
 			NEW(l); l.offset := offset; l.next := link; link := l
@@ -136,15 +136,15 @@ TYPE
 
 	Method* = OBJECT (Procedure)
 	VAR
-		mthNo*: LONGINT
+		mthNo*: SIGNED32
 	END Method;
 
 	Module* = OBJECT (Attribute)
 		VAR
-			locsize*: LONGINT;			(** data section size*)
-			constsize*: INTEGER;			(** const section size*)
-			casetablesize*: INTEGER;  	(** length of case table within const section *) (* ug *)
-			nr*: INTEGER;
+			locsize*: SIGNED32;			(** data section size*)
+			constsize*: SIGNED16;			(** const section size*)
+			casetablesize*: SIGNED16;  	(** length of case table within const section *) (* ug *)
+			nr*: SIGNED16;
 
 			const*: ConstArray;
 
@@ -156,7 +156,7 @@ TYPE
 
 			syscalls-: POINTER TO ARRAY OF Fixup;	(** syscalls' fixup lists *)
 
-			finallyOff*: LONGINT; (* offset of the finally in the module init code *)
+			finallyOff*: SIGNED32; (* offset of the finally in the module init code *)
 
 		PROCEDURE & Init*;
 		BEGIN
@@ -171,7 +171,7 @@ TYPE
 		(** ResetLists - remove entries from OwnVars, ExtVars, OwnProcs, ExtProcs *)
 
 		PROCEDURE ResetLists*;
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 
 			PROCEDURE KillPList(VAR root: Procedure);
 				VAR p, q: Procedure;
@@ -205,8 +205,8 @@ TYPE
 		END ResetLists;
 
 		(*fof: increase constant section size - for case tables - thread safe version for PCG386*)
-		PROCEDURE AddCasetable*(tablesize: LONGINT): LONGINT;
-		VAR size,base: LONGINT; c: ConstArray;
+		PROCEDURE AddCasetable*(tablesize: SIGNED32): SIGNED32;
+		VAR size,base: SIGNED32; c: ConstArray;
 		BEGIN{EXCLUSIVE}
 			size := constsize+tablesize*4;
 			ASSERT(size < MaxConstSize);
@@ -224,8 +224,8 @@ TYPE
 
 		(** NewConst - Create a new constant *)
 
-		PROCEDURE NewConst*(VAR a: ARRAY OF SYSTEM.BYTE;  len: LONGINT): LONGINT;
-		VAR  base: LONGINT; c: ConstArray;
+		PROCEDURE NewConst*(VAR a: ARRAY OF SYSTEM.BYTE;  len: SIGNED32): SIGNED32;
+		VAR  base: SIGNED32; c: ConstArray;
 		BEGIN {EXCLUSIVE}
 			ASSERT(len <= LEN(a));
 			base := constsize;
@@ -237,7 +237,7 @@ TYPE
 			END;
 
 			IF PCM.bigEndian THEN
-				IF len = 8 THEN (* const is 64 bits (e.g. HUGEINT, LONGREAL)-> swap low and high 4-byte words separately *)
+				IF len = 8 THEN (* const is 64 bits (e.g. SIGNED64, FLOAT64)-> swap low and high 4-byte words separately *)
 					PCM.SwapBytes(a, 0, 4); PCM.SwapBytes(a, 4, 4);
 				ELSE
 					PCM.SwapBytes(a, 0, len);
@@ -252,8 +252,8 @@ TYPE
 		(** NewStringConst - Create a new string constant; used for big endian: do not change endianness
 				of string constants *)
 
-		PROCEDURE NewStringConst*(VAR a: ARRAY OF SYSTEM.BYTE;  len: LONGINT): LONGINT;
-		VAR  base: LONGINT; c: ConstArray;
+		PROCEDURE NewStringConst*(VAR a: ARRAY OF SYSTEM.BYTE;  len: SIGNED32): SIGNED32;
+		VAR  base: SIGNED32; c: ConstArray;
 		BEGIN {EXCLUSIVE}
 			ASSERT(len <= LEN(a));
 			base := constsize;
@@ -273,8 +273,8 @@ TYPE
 
 	(** fof >> *)
 	(** NewArrayConst - Create a new array constant;  *)
-		PROCEDURE NewArrayConst*( VAR a: ARRAY OF CHAR;  VAR len: ARRAY OF LONGINT;  blen: LONGINT ): LONGINT;
-		VAR base: LONGINT;  c: ConstArray;  tlen, tdim: LONGINT;  clen: SIZE; alen, tbase: LONGINT;  dim: SIZE;
+		PROCEDURE NewArrayConst*( VAR a: ARRAY OF CHAR;  VAR len: ARRAY OF SIGNED32;  blen: SIGNED32 ): SIGNED32;
+		VAR base: SIGNED32;  c: ConstArray;  tlen, tdim: SIGNED32;  clen: SIZE; alen, tbase: SIGNED32;  dim: SIZE;
 		BEGIN {EXCLUSIVE}
 			base := constsize;  dim := LEN( len );  tlen := blen;  tdim := 0;
 			WHILE (tdim < dim) DO tlen := tlen * len[tdim];  INC( tdim );  END;
@@ -295,7 +295,7 @@ TYPE
 
 		(** UseVar - insert a fixup, add to ExtVars or OwnVars *)
 
-		PROCEDURE UseVariable*(v: GlobalVariable; offset: LONGINT);
+		PROCEDURE UseVariable*(v: GlobalVariable; offset: SIGNED32);
 		BEGIN
 			v.AddFixup(offset);
 			IF v.next = NIL THEN
@@ -309,7 +309,7 @@ TYPE
 
 		(** AddOwnProc - Insert local procedure into OwnProcs list *)
 
-		PROCEDURE AddOwnProc*(p: Procedure; codeOffset: LONGINT);
+		PROCEDURE AddOwnProc*(p: Procedure; codeOffset: SIGNED32);
 		BEGIN (*{EXCLUSIVE}*)
 			ASSERT(p.owner = context, 500);	(* must be local *)
 			ASSERT((p.next = NIL), 501);			(* not inserted yet *)
@@ -319,7 +319,7 @@ TYPE
 
 		(** UseProcedure - insert a fixup entry, add to ExtProcs list (if external) *)
 
-		PROCEDURE UseProcedure*(p: Procedure; offset: LONGINT);
+		PROCEDURE UseProcedure*(p: Procedure; offset: SIGNED32);
 		BEGIN
 			p.AddFixup(offset);
 			IF (p.owner # SELF) & (p.next = NIL) THEN
@@ -331,7 +331,7 @@ TYPE
 
 		(** UseSyscall - Add a syscall fixup *)
 
-		PROCEDURE UseSyscall*(syscall, offset: LONGINT);
+		PROCEDURE UseSyscall*(syscall, offset: SIGNED32);
 			VAR l: Fixup;
 		BEGIN
 			NEW(l); l.offset := offset;
@@ -341,10 +341,10 @@ TYPE
 		END UseSyscall;
 	END Module;
 
-	ObjFGeneratorProc* = PROCEDURE (VAR R: PCM.Rider; scope: PCT.ModScope;  VAR codeSize: LONGINT);
+	ObjFGeneratorProc* = PROCEDURE (VAR R: PCM.Rider; scope: PCT.ModScope;  VAR codeSize: SIGNED32);
 
 VAR
-	NofSysCalls-: LONGINT;
+	NofSysCalls-: SIGNED32;
 	sentinel-: GlobalVariable;	(*last element of the VarEntries list *)
 	psentinel-: Procedure;	(** last element of the OwnProcs list *)
 	context*: Module;
@@ -352,7 +352,7 @@ VAR
 
 (** --------------- Miscellaneous ------------------ *)
 
-PROCEDURE SetNumberOfSyscalls*(nofsyscalls: LONGINT);
+PROCEDURE SetNumberOfSyscalls*(nofsyscalls: SIGNED32);
 BEGIN
 	ASSERT(nofsyscalls >= DefaultNofSysCalls, 100);
 	NofSysCalls := nofsyscalls
@@ -361,7 +361,7 @@ END SetNumberOfSyscalls;
 (** ------------ Resource Allocation ----------------- *)
 
 PROCEDURE AllocateTD*(size: RecSize);	(** td => record.td *)
-VAR  zero: HUGEINT; ga: GlobalVariable; (* lk *)
+VAR  zero: SIGNED64; ga: GlobalVariable; (* lk *)
 BEGIN {EXCLUSIVE}
 	IF size.td = NIL THEN
 		zero := 0;

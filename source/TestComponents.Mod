@@ -89,7 +89,7 @@ TYPE
 		BEGIN
 			NEW(panel);
 			panel.bounds.SetExtents(640, 480);
-			panel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			panel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			panel.takesFocus.Set(TRUE);
 
 			NEW(toolbar);
@@ -128,7 +128,7 @@ TYPE
 		tabs : WMStringGrids.StringGrid;
 
 		PROCEDURE Test(sender, data : ANY);
-		VAR i : LONGINT; str : ARRAY 20 OF CHAR;
+		VAR i : SIGNED32; str : ARRAY 20 OF CHAR;
 		BEGIN
 			tabs.model.Acquire;
 			FOR i := 0 TO 4 * 5 - 1 DO
@@ -144,7 +144,7 @@ TYPE
 			toolbar: WMStandardComponents.Panel;
 			button : WMStandardComponents.Button;
 		BEGIN
-			NEW(panel); panel.bounds.SetExtents(800, 700); panel.fillColor.Set(LONGINT(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
+			NEW(panel); panel.bounds.SetExtents(800, 700); panel.fillColor.Set(SIGNED32(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
 
 			NEW(toolbar); toolbar.fillColor.Set(000FF00FFH); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			panel.AddContent(toolbar);
@@ -158,7 +158,7 @@ TYPE
 
 			NEW(tabs);
 			tabs.alignment.Set(WMComponents.AlignClient);
-			tabs.fillColor.Set(LONGINT(0FF0000FFH));
+			tabs.fillColor.Set(SIGNED32(0FF0000FFH));
 			panel.AddContent(tabs);
 			tabs.model.Acquire;
 			tabs.model.SetNofCols(4);
@@ -171,7 +171,7 @@ TYPE
 	END StringGrids;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Test*(context : Commands.Context); (** name ~ *)
 VAR test : TestVisualComponent; name : ARRAY 128 OF CHAR; element : XML.Element;

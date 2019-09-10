@@ -38,23 +38,23 @@ TYPE
 	Real = vyBase.Real;
 	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
-		xi, yi, w, h, dsr: INTEGER;
+		xi, yi, w, h, dsr: SIGNED16;
 		xr, yr: Real;
-		atx, aty: INTEGER;
+		atx, aty: SIGNED16;
 		name: ARRAY 64 OF CHAR
 	END;
 
 VAR
 	UsedFont-: ARRAY 32 OF CHAR;
-	AttachX-, AttachY-: INTEGER;  slink*, dlink*: Objects.Object;
+	AttachX-, AttachY-: SIGNED16;  slink*, dlink*: Objects.Object;
 
 	PROCEDURE Copy( src, dest: tLayer );
 	BEGIN
 		dest^ := src^
 	END Copy;
 
-	PROCEDURE PointInLabel( label: tLayer;  X1, Y1: INTEGER;  VAR msg: Objects.ObjMsg ): BOOLEAN;
-	VAR x, y, X, Y, W, H: INTEGER;
+	PROCEDURE PointInLabel( label: tLayer;  X1, Y1: SIGNED16;  VAR msg: Objects.ObjMsg ): BOOLEAN;
+	VAR x, y, X, Y, W, H: SIGNED16;
 	BEGIN
 		vyHostDisplay.GetStringSize( label.style.fnt, label.name, label.w, label.h, label.dsr );
 		vyPort.GetPictureScreenRegion( msg.dlink( vyPort.Picture ), X, Y, W, H );
@@ -72,7 +72,7 @@ VAR
 	END PointInLabel;
 
 	PROCEDURE Recall( label: tLayer;  VAR msg: Objects.ObjMsg );
-	VAR X, Y, W, H, x, y: INTEGER;  xor, yor: INTEGER;  temp: INTEGER;
+	VAR X, Y, W, H, x, y: SIGNED16;  xor, yor: SIGNED16;  temp: SIGNED16;
 	BEGIN
 		vyPort.GetPictureScreenRegion( msg.dlink( vyPort.Picture ), X, Y, W, H );
 		IF (label.atx = realcoord) THEN
@@ -91,7 +91,7 @@ VAR
 	END Recall;
 
 	PROCEDURE DoControl( label: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR pict: vyPort.Picture;  x, y, oldx, oldy: INTEGER;
+	VAR pict: vyPort.Picture;  x, y, oldx, oldy: SIGNED16;
 	BEGIN
 		x := event.x;  y := event.y;  pict := event.dlink( vyPort.Picture );  oldx := label.xi;  oldy := label.yi;
 		WHILE event.gesture = vyEvents.EvtIdent DO
@@ -104,7 +104,7 @@ VAR
 	END DoControl;
 
 	PROCEDURE Responsible( label: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF (event.gesture = vyEvents.EvtIdent) & (PointInLabel( label, event.x, event.y, event )) THEN
@@ -189,7 +189,7 @@ VAR
 
 	PROCEDURE Open*( F: tLayer;  name: ARRAY OF CHAR );
 	VAR id: ARRAY 32 OF CHAR;
-		i: INTEGER;
+		i: SIGNED16;
 	BEGIN
 		Init( F );  id := "label:";
 		IF vyHostStrings.Length( name ) < 8 THEN vyHostStrings.Append( name, id ) ELSE
@@ -203,7 +203,7 @@ VAR
 	PROCEDURE Insert*;
 	VAR pict: vyPort.Picture;  label: tLayer;  sc: Texts.Scanner;
 		name: ARRAY 32 OF CHAR;
-		X, Y, W, H: INTEGER;
+		X, Y, W, H: SIGNED16;
 	BEGIN
 		Texts.OpenScanner( sc, Oberon.Par.text, Oberon.Par.pos );  Texts.Scan( sc );
 		IF (sc.class # Texts.Name) & (sc.class # Texts.String) THEN vyHostTexts.Msg( "Syntax: vyLabel.Insert <name>" ) END;
@@ -215,7 +215,7 @@ VAR
 		END
 	END Insert;
 
-	PROCEDURE DoSetAttachment*( hor, ver: INTEGER );
+	PROCEDURE DoSetAttachment*( hor, ver: SIGNED16 );
 	BEGIN
 		AttachX := hor;  AttachY := ver
 	END DoSetAttachment;
@@ -223,7 +223,7 @@ VAR
 	PROCEDURE SetAttachment*;
 	VAR sc: vyParser.Scanner;
 		xident, yident: ARRAY 32 OF CHAR;
-		x, y: INTEGER;
+		x, y: SIGNED16;
 	BEGIN
 		vyParser.OpenParScanner( sc );
 		IF ~(vyParser.Name( sc, xident ) & vyParser.Name( sc, yident )) THEN vyHostTexts.Msg( "Justification [left|center|right|real][top|center|bottom|real]" );  RETURN END;

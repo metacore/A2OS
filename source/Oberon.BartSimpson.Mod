@@ -14,13 +14,13 @@ CONST
 TYPE
 	MouseCoord* = POINTER TO MouseCoordDesc;
 	MouseCoordDesc* = RECORD (Gadgets.ObjDesc)
-		x, y: INTEGER;
+		x, y: SIGNED16;
 	END;
 
 	Frame* = POINTER TO FrameDesc;
 	FrameDesc* = RECORD(Gadgets.FrameDesc)
-		oldLX, oldLY, oldRX, oldRY: INTEGER;
-		col: INTEGER
+		oldLX, oldLY, oldRX, oldRY: SIGNED16;
+		col: SIGNED16
 	END;
 
 	MoveMsg* = RECORD (Display.FrameMsg)
@@ -31,7 +31,7 @@ VAR
 	mouse: MouseCoord;	(* the model *)
 	bart: Pictures.Picture;	(* bart simpson picture *)
 	keys: SET;
-	oldX, oldY: INTEGER;
+	oldX, oldY: SIGNED16;
 
 PROCEDURE MouseSpy(me: Oberon.Task);
 VAR U: Gadgets.UpdateMsg;
@@ -104,8 +104,8 @@ BEGIN
 	END
 END FrameAttr;
 
-PROCEDURE DrawEyes(F: Frame; M: Display3.Mask; x, y: INTEGER);
-VAR A: Objects.AttrMsg; mx, my, py, px: LONGINT; r, dx, dy, rp: REAL;
+PROCEDURE DrawEyes(F: Frame; M: Display3.Mask; x, y: SIGNED16);
+VAR A: Objects.AttrMsg; mx, my, py, px: SIGNED32; r, dx, dy, rp: FLOAT32;
 BEGIN
 	IF F.oldLX > 0 THEN
 		Display3.ReplConst(M, Display3.BG, F.oldLX, F.oldLY, 2, 2, Display.replace);
@@ -127,7 +127,7 @@ BEGIN
 	F.oldRX:= SHORT(px); F.oldRY:= SHORT(py);
 END DrawEyes;
 
-PROCEDURE RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: SIGNED16);
 (* handles a redraw of the whole view *)
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
@@ -151,7 +151,7 @@ END CopyFrame;
 PROCEDURE Print(F: Frame; VAR M: Display.DisplayMsg);
 VAR R: Display3.Mask;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -161,7 +161,7 @@ BEGIN
 END Print;
 
 PROCEDURE FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; R: Display3.Mask; F0: Frame;
+VAR x, y, w, h: SIGNED16; R: Display3.Mask; F0: Frame;
 BEGIN
 	WITH F: Frame DO
 		IF M IS Display.FrameMsg THEN

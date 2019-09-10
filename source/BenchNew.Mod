@@ -5,7 +5,7 @@ MODULE BenchNew;	(* pjm *)
 IMPORT Kernel, Commands;
 
 PROCEDURE TestNew*(context : Commands.Context);
-VAR i, n, t: LONGINT;
+VAR i, n, t: SIGNED32;
 BEGIN
 	i := Kernel.GetTicks();
 	REPEAT t := Kernel.GetTicks() UNTIL t # i;

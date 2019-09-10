@@ -67,7 +67,7 @@ TYPE
 		END SaveOperation;
 
 		PROCEDURE InsertText*(pos: SIZE; text: Texts.Text);
-		VAR i: InsertUpdateInfo; u:UpdateInfo; tr: Texts.TextReader; ucs32: LONGINT;
+		VAR i: InsertUpdateInfo; u:UpdateInfo; tr: Texts.TextReader; ucs32: SIGNED32;
 		BEGIN
 			ResetRedo;
 			text.AcquireRead;
@@ -127,12 +127,12 @@ TYPE
 			NEW(objUpdate, pos);
 		END BeginObjectChange;
 
-		PROCEDURE ObjectChanged*(pos, len: SIZE; type: WORD; obj: ANY);
+		PROCEDURE ObjectChanged*(pos, len: SIZE; type: INTEGER; obj: ANY);
 		BEGIN
 			objUpdate.Append(pos, len, obj, type)
 		END ObjectChanged;
 
-		PROCEDURE EndObjectChange*(len: SIZE; type: WORD; to: ANY);
+		PROCEDURE EndObjectChange*(len: SIZE; type: INTEGER; to: ANY);
 		BEGIN
 			ResetRedo;
 			objUpdate.len := len;
@@ -329,14 +329,14 @@ TYPE
 		next: StyleInfo;
 		pos, len: SIZE;
 		style: ANY;
-		type: WORD;
+		type: INTEGER;
 	END;
 
 
 	StyleUpdateInfo= OBJECT(UpdateInfo)
 		VAR
 			len: SIZE;
-			type: WORD;
+			type: INTEGER;
 			new: ANY;
 			old: StyleInfo;
 
@@ -345,7 +345,7 @@ TYPE
 			SELF.pos := pos;
 		END New;
 
-		PROCEDURE Append(pos, len: SIZE; style: ANY; type: WORD);
+		PROCEDURE Append(pos, len: SIZE; style: ANY; type: INTEGER);
 		VAR ai: StyleInfo;
 		BEGIN
 			NEW(ai);

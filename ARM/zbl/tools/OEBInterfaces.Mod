@@ -43,7 +43,7 @@ TYPE
 	VAR
 		name -,							(** Name of the interface instance *)
 		type -: ARRAY 128 OF CHAR;		(** Description of the kind of interface *)
-		state: LONGINT;					(** State *)
+		state: SIGNED32;					(** State *)
 		handle: Handler;					(** Event handler *)
 		sessions -: Session;				(** List of sessions managed by this interface *)
 		next *: Interface;
@@ -99,7 +99,7 @@ TYPE
 		END Kill;
 
 		(** Returns the current state *)
-		PROCEDURE State * (): LONGINT;
+		PROCEDURE State * (): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN state
 		END State;
@@ -262,8 +262,8 @@ TYPE
 		msg: ARRAY 1024 OF CHAR;
 		name -: ARRAY 128 OF CHAR;
 		timer: Kernel.MilliTimer;
-		state: LONGINT;
-		guid *: LONGINT;
+		state: SIGNED32;
+		guid *: SIGNED32;
 		next -: Session;
 
 		PROCEDURE & InitSession * (CONST name: ARRAY OF CHAR);
@@ -271,7 +271,7 @@ TYPE
 			COPY(name, SELF.name)
 		END InitSession;
 
-		PROCEDURE State * (): LONGINT;
+		PROCEDURE State * (): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN state
 		END State;
@@ -310,7 +310,7 @@ TYPE
 	END Factory;
 
 	(** Session start and stop event handler *)
-	Handler * = PROCEDURE {DELEGATE} (event: LONGINT; interface: Interface; session: Session);
+	Handler * = PROCEDURE {DELEGATE} (event: SIGNED32; interface: Interface; session: Session);
 
 	Enumerator * = PROCEDURE {DELEGATE} (session: Session);
 
@@ -322,7 +322,7 @@ VAR
 		factory: Factory;
 		m: Modules.Module;
 		name, msg: ARRAY 128 OF CHAR;
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		name := "OEB";
 		Strings.Append(name, type);
@@ -340,7 +340,7 @@ VAR
 
 	PROCEDURE Register * (CONST type: ARRAY OF CHAR; factory: Factory);
 	VAR
-		ignore: LONGINT;
+		ignore: SIGNED32;
 	BEGIN
 		factory.SetName(type);
 		factories.Add(factory, ignore)

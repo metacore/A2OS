@@ -30,16 +30,16 @@ BEGIN
 	END
 END FrameAttr;
 
-PROCEDURE Cx(F: Frame; x: LONGINT): INTEGER;
+PROCEDURE Cx(F: Frame; x: SIGNED32): SIGNED16;
 BEGIN RETURN SHORT(x * F.W DIV (Display.Width * 2))
 END Cx;
 
-PROCEDURE Cy(F: Frame; y: LONGINT): INTEGER;
+PROCEDURE Cy(F: Frame; y: SIGNED32): SIGNED16;
 BEGIN RETURN -SHORT((-y) * F.H DIV (Display.Height * 2))
 END Cy;
 
-PROCEDURE RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: INTEGER; dlink: Objects.Object);
-VAR obj: Objects.Object; f, g, v: Display.Frame; X, Y, count: INTEGER;
+PROCEDURE RestoreFrame(F: Frame; M: Display3.Mask; x, y, w, h: SIGNED16; dlink: Objects.Object);
+VAR obj: Objects.Object; f, g, v: Display.Frame; X, Y, count: SIGNED16;
 BEGIN
 	Display3.FilledRect3D(M, Display3.FG, Display3.FG, Display3.BG, x, y, w, h, 2, Display.replace);
 
@@ -79,9 +79,9 @@ BEGIN
 END RestoreFrame;
 
 PROCEDURE PrintFrame(F: Frame; VAR M: Display.DisplayMsg);
-VAR R: Display3.Mask; x, y, w, h, count: INTEGER; obj: Objects.Object; f, g, v: Display.Frame; X, Y: INTEGER;
+VAR R: Display3.Mask; x, y, w, h, count: SIGNED16; obj: Objects.Object; f, g, v: Display.Frame; X, Y: SIGNED16;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -125,8 +125,8 @@ BEGIN
 	Gadgets.CopyFrame(M, from, to);
 END CopyFrame;
 
-PROCEDURE Focus(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg);
-VAR X, Y, count: INTEGER; obj: Objects.Object;
+PROCEDURE Focus(F: Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg);
+VAR X, Y, count: SIGNED16; obj: Objects.Object;
 	A: Display.ModifyMsg; keysum: SET;
 BEGIN
 	keysum := M.keys;
@@ -158,7 +158,7 @@ BEGIN
 END Focus;
 
 PROCEDURE FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: Frame; R: Display3.Mask;
+VAR x, y, w, h: SIGNED16; F0: Frame; R: Display3.Mask;
 BEGIN
 	WITH F: Frame DO
 		IF M IS Display.FrameMsg THEN

@@ -29,7 +29,7 @@ TYPE
 	ObjList = POINTER TO ObjListDesc;   (* List of Objects in a text *)
 	ObjListDesc = RECORD
 		obj: Objects.Object;
-		pos: LONGINT;
+		pos: SIGNED32;
 		next: ObjList
 	END;
 
@@ -81,7 +81,7 @@ VAR
 	END ConvertText;
 
 	PROCEDURE ExecuteCommandText( b: Object;  VAR context: Objects.Object );
-	VAR obj: Objects.Object;  text: Texts.Text;  sc: Texts.Scanner;  res: INTEGER;  ntext: Texts.Text;
+	VAR obj: Objects.Object;  text: Texts.Text;  sc: Texts.Scanner;  res: SIGNED16;  ntext: Texts.Text;
 	BEGIN
 		Gadgets.context := context;  Links.GetLink( b, cmdTextName, obj );
 		IF (obj # NIL ) & (obj IS Texts.Text) THEN text := obj( Texts.Text )
@@ -99,7 +99,7 @@ VAR
 		END
 	END ExecuteCommandText;
 
-	PROCEDURE FindObj( VAR sc: Texts.Finder;  VAR pos: LONGINT;  VAR obj: Objects.Object ): BOOLEAN;
+	PROCEDURE FindObj( VAR sc: Texts.Finder;  VAR pos: SIGNED32;  VAR obj: Objects.Object ): BOOLEAN;
 	BEGIN
 		pos := sc.pos;  Texts.FindObj( sc, obj );
 		IF obj # NIL THEN RETURN TRUE ELSE RETURN FALSE END
@@ -122,7 +122,7 @@ All that complicated stuff is done since antsCommandList can handle objects as r
 *)
 
 	PROCEDURE SetTextLibs( b: Object;  lib: Objects.Library );
-	VAR obj: Objects.Object;  text: Texts.Text;  finder: Texts.Finder;  list: ObjList;  pos: LONGINT;  temp: ObjList;  task: TaskAfterStore;
+	VAR obj: Objects.Object;  text: Texts.Text;  finder: Texts.Finder;  list: ObjList;  pos: SIGNED32;  temp: ObjList;  task: TaskAfterStore;
 	BEGIN
 		IF b.tobjlist = NIL THEN
 			aM.dS( "antsScriptObjects: Extracting objects from text" );  Links.GetLink( b, cmdTextName, obj );
@@ -173,7 +173,7 @@ All that complicated stuff is done since antsCommandList can handle objects as r
 	END WriteTextList;
 
 	PROCEDURE LoadTextList( VAR F: Object;  VAR M: Objects.FileMsg );
-	VAR pos: LONGINT;  list, temp: ObjList;
+	VAR pos: SIGNED32;  list, temp: ObjList;
 	BEGIN
 		aM.dS( "Loading Text List" );  Files.ReadLInt( M.R, pos );
 		WHILE (pos >= 0) DO
@@ -188,7 +188,7 @@ All that complicated stuff is done since antsCommandList can handle objects as r
 	END LoadTextList;
 
 	PROCEDURE CopyText*( VAR M: Objects.CopyMsg;  from, to: Object );
-	VAR id: INTEGER;  obj: Objects.Object;
+	VAR id: SIGNED16;  obj: Objects.Object;
 	BEGIN
 		(*
 	IF M.id = Objects.deep THEN RETURN END;
@@ -214,7 +214,7 @@ All that complicated stuff is done since antsCommandList can handle objects as r
 	END CopyButton;
 
 	PROCEDURE ObjectHandler*( F: Objects.Object;  VAR M: Objects.ObjMsg );
-	VAR ver: LONGINT;  F2: Object;
+	VAR ver: SIGNED32;  F2: Object;
 	BEGIN
 		WITH F: Object DO
 			IF M IS Objects.FileMsg THEN
@@ -300,7 +300,7 @@ All that complicated stuff is done since antsCommandList can handle objects as r
 	END LinkSelection;
 
 	PROCEDURE UnLinkSelection*;
-	VAR o, text, obj: Objects.Object;  i: LONGINT;
+	VAR o, text, obj: Objects.Object;  i: SIGNED32;
 		cmdstring: ARRAY 256 OF CHAR;
 		MOS: Display.SelectMsg;  R: Texts.Reader;  ch: CHAR;
 	BEGIN

@@ -8,7 +8,7 @@ TYPE
 	VAR s : S.Scanner;
 
 		m* : TS.Module;
-		pos  : LONGINT;
+		pos  : SIGNED32;
 		comments : TS.Comments;
 		lastStatement : TS.Statement;
 
@@ -26,7 +26,7 @@ TYPE
 		END CommentToStructure;
 
 		PROCEDURE Next;
-		VAR lpos : LONGINT;
+		VAR lpos : SIGNED32;
 		BEGIN
 			s.Next;
 			lpos := s.pos;
@@ -64,7 +64,7 @@ TYPE
 			KernelLog.Ln;
 		END Warn;
 
-		PROCEDURE Eat(sym : LONGINT);
+		PROCEDURE Eat(sym : SIGNED32);
 		VAR t, str : ARRAY 32 OF CHAR;
 		BEGIN
 			IF s.sym = sym THEN Next;
@@ -173,7 +173,7 @@ TYPE
 		PROCEDURE DeclSeq(declarations: TS.Scope);
 		VAR
 			ol : TS.ObjectList;
-			i, j : LONGINT;
+			i, j : SIGNED32;
 
 			PROCEDURE CheckEndOrSemicolon;
 			BEGIN
@@ -256,7 +256,7 @@ TYPE
 			ol : TS.ObjectList;
 			v : TS.Var;
 			t : TS.Type;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			NEW(ol);
 			IF s.sym # S.ident THEN Error("Ident expect") END;
@@ -282,7 +282,7 @@ TYPE
 
 		PROCEDURE Object(CONST name : ARRAY OF CHAR) :  TS.Class;
 		VAR
-			pos: LONGINT;
+			pos: SIGNED32;
 			qualident: TS.Designator;
 			class : TS.Class;
 			body : TS.Statement;
@@ -368,7 +368,7 @@ TYPE
 		END Set;
 
 		PROCEDURE Factor():TS.Expression;
-		VAR sym, pos : LONGINT;
+		VAR sym, pos : SIGNED32;
 			ex : TS.Expression;
 		BEGIN
 			sym := s.sym; pos := s.pos;
@@ -391,8 +391,8 @@ TYPE
 
 		PROCEDURE Term() : TS.Expression;
 		VAR exa, exb : TS.Expression;
-			op : LONGINT;
-			pos : LONGINT;
+			op : SIGNED32;
+			pos : SIGNED32;
 		BEGIN
 			pos := s.pos;
 			exa := Factor();
@@ -414,7 +414,7 @@ TYPE
 
 		PROCEDURE SimpleExpression() : TS.Expression;
 		VAR exa, exb : TS.Expression;
-			op : LONGINT;
+			op : SIGNED32;
 			neg : BOOLEAN;
 		BEGIN
 			neg := (s.sym = S.minus);
@@ -437,7 +437,7 @@ TYPE
 
 		PROCEDURE Expression () : TS.Expression;
 		VAR exa, exb : TS.Expression;
-			op : LONGINT;
+			op : SIGNED32;
 		BEGIN
 			exa := SimpleExpression();
 			IF (s.sym >= S.eql) & (s.sym <= S.is) THEN
@@ -736,7 +736,7 @@ TYPE
 		END Array;
 
 		PROCEDURE Record(record: TS.Record; scope : TS.Scope);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 			debug : TS.NamedObject;
 		BEGIN
 			SysFlag;
@@ -761,7 +761,7 @@ TYPE
 		END Record;
 
 		PROCEDURE FieldList(scope : TS.Scope) : TS.ObjectList;
-		VAR fieldList, t : TS.ObjectList; i : LONGINT;
+		VAR fieldList, t : TS.ObjectList; i : SIGNED32;
 		BEGIN
 			NEW(fieldList);
 			t := FieldDecl(scope);
@@ -778,7 +778,7 @@ TYPE
 		VAR
 			var : TS.Var;
 			t : TS.Type;
-			i : LONGINT;
+			i : SIGNED32;
 			ol : TS.ObjectList;
 		BEGIN
 			NEW(ol);
@@ -816,7 +816,7 @@ TYPE
 		VAR
 			var : TS.Var;
 			t : TS.Type;
-			i : LONGINT;
+			i : SIGNED32;
 			ol : TS.ObjectList;
 			isConst : BOOLEAN;
 			isVar : BOOLEAN;
@@ -864,7 +864,7 @@ TYPE
 		PROCEDURE ProcSignature(scope : TS.Scope) : TS.ProcedureSignature;
 		VAR ps : TS.ProcedureSignature;
 			ol : TS.ObjectList;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			NEW(ps);
 			Next;
@@ -891,7 +891,7 @@ TYPE
 		PROCEDURE ProcDecl(currentScope : TS.Scope) : TS.ProcDecl;
 		VAR pd : TS.ProcDecl; forward : BOOLEAN;
 			name : ARRAY 64 OF CHAR;
-			 i : LONGINT;
+			 i : SIGNED32;
 		BEGIN
 			NEW(pd);
 			IF comments # NIL THEN pd.preComment := comments; comments := NIL END;
@@ -1073,7 +1073,7 @@ VAR Universe* : TS.Scope;
 	System : TS.Module;
 	release : TS.ObjectList;
 	fileList : FileListEntry;
-	nofWorkers : LONGINT;
+	nofWorkers : SIGNED32;
 
 PROCEDURE GetTask(VAR filename : ARRAY OF CHAR) : BOOLEAN;
 BEGIN {EXCLUSIVE}
@@ -1103,7 +1103,7 @@ BEGIN {EXCLUSIVE}
 END DecWorker;
 
 PROCEDURE ScanModule*(CONST filename : ARRAY OF CHAR; dump : BOOLEAN; VAR m : TS.Module);
-VAR t : Texts.Text; res : WORD; format: LONGINT;
+VAR t : Texts.Text; res : INTEGER; format: SIGNED32;
 	s : S.Scanner;
 	p : Parser;
 BEGIN
@@ -1128,11 +1128,11 @@ END ScanModule;
 PROCEDURE ScanForModules;
 VAR
 	e : Files.Enumerator;
-	name : ARRAY 256 OF CHAR; flags : SET; time, date : LONGINT;
+	name : ARRAY 256 OF CHAR; flags : SET; time, date : SIGNED32;
 	size : Files.Size;
 	module : TS.Module;
-	i : LONGINT;
-	t0, t1 : LONGINT;
+	i : SIGNED32;
+	t0, t1 : SIGNED32;
 BEGIN
 	NEW(release);
 	NEW(e);
@@ -1160,7 +1160,7 @@ PROCEDURE Test*(par : Commands.Context) ;
 VAR
 	name :ARRAY 256 OF CHAR;
 	sr : Streams.Reader;
-	t0, t1 : LONGINT;
+	t0, t1 : SIGNED32;
 	module : TS.Module;
 BEGIN
 	sr := par.arg;
@@ -1191,11 +1191,11 @@ END MakeSymbolFile;
 PROCEDURE MakeSymbolFiles*(par : Commands.Context) ;
 CONST NofSymbolCreators = 4;
 VAR e : Files.Enumerator;
-	path, name, exclude : ARRAY 256 OF CHAR; flags : SET; time, date : LONGINT;
+	path, name, exclude : ARRAY 256 OF CHAR; flags : SET; time, date : SIGNED32;
 	size : Files.Size;
 	sr : Streams.Reader;
-	i : LONGINT;
-	t0, t1 : LONGINT;
+	i : SIGNED32;
+	t0, t1 : SIGNED32;
 	symbolCreators : ARRAY NofSymbolCreators OF SymbolCreator;
 BEGIN
 	sr := par.arg;
@@ -1235,7 +1235,7 @@ PROCEDURE MakeSym*(par : Commands.Context) ;
 VAR
 	name :ARRAY 256 OF CHAR;
 	sr : Streams.Reader;
-	t0, t1 : LONGINT;
+	t0, t1 : SIGNED32;
 	module : TS.Module;
 BEGIN
 	sr := par.arg;
@@ -1259,7 +1259,7 @@ BEGIN
 	scope.Add(p)
 END AddStandardProc;
 
-PROCEDURE AddBasicType(scope : TS.Scope; CONST name : ARRAY OF CHAR; type : LONGINT);
+PROCEDURE AddBasicType(scope : TS.Scope; CONST name : ARRAY OF CHAR; type : SIGNED32);
 VAR t : TS.TypeDecl;
 BEGIN
 	NEW(t); t.name := Strings.NewString(name);

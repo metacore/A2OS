@@ -10,11 +10,11 @@ IMPORT Ciphers := CryptoCiphers, U := CryptoUtils, D := CryptoDES;
 TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
 			VAR
-				ske, skd: ARRAY 96 OF SET32; ski: LONGINT;
+				ske, skd: ARRAY 96 OF SET32; ski: SIGNED32;
 				ivx, ivy: SET32;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: LONGINT );
-				VAR X, Y: SET32;  i: LONGINT;
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32 );
+				VAR X, Y: SET32;  i: SIGNED32;
 				BEGIN
 					ASSERT( keybits = 192 );
 					InitKey^( src, 64 );
@@ -40,14 +40,14 @@ TYPE
 					END
 				END InitKey;
 
-				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SHORTINT );
+				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SIGNED8 );
 				BEGIN
 					SetIV^( src, mode );   (* set mode *)
 					ivx := U.SetFromBufferBE( src, 0 );  ivy := U.SetFromBufferBE( src, 4 )
 				END SetIV;
 
 				PROCEDURE Encrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: SIZE );
-				VAR i: SIZE;  r: WORD;  X, Y: SET32;
+				VAR i: SIZE;  r: INTEGER;  X, Y: SET32;
 				BEGIN
 					ASSERT( isKeyInitialized & (mode IN {Ciphers.ECB, Ciphers.CBC}) );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)
@@ -76,7 +76,7 @@ TYPE
 				END Encrypt;
 
 				PROCEDURE Decrypt*( VAR buf: ARRAY OF CHAR;  ofs, len: SIZE );
-				VAR i: SIZE;  r: WORD;  X, Y, X0, Y0: SET32;
+				VAR i: SIZE;  r: INTEGER;  X, Y, X0, Y0: SET32;
 				BEGIN
 					ASSERT( isKeyInitialized );
 					ASSERT( len MOD blockSize = 0 );   (* padding must have been added *)

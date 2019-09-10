@@ -15,11 +15,11 @@ TYPE
 		encoding,	(* 1 = Run length encoding *)
 		bits: CHAR;	(* Bits/Pixel - 1, 2, 4 or 8 *)
 		xMin, yMin, xMax, yMax,	(* Logical image coordinates *)
-		hRes, vRes: INTEGER;	(* Resolution of the origin device in dpi *)
-		palPos, picPos: LONGINT;	(* File position of palette and picture data *)
+		hRes, vRes: SIGNED16;	(* Resolution of the origin device in dpi *)
+		palPos, picPos: SIGNED32;	(* File position of palette and picture data *)
 		vMode, planes: CHAR;	(* not used *)
 		bytesPerLine,	(* Bytes per Scan Line *)
-		paletteInfo: INTEGER	(* Color info: 0 = ?, 1 = Color, 2 = Grayscale *)
+		paletteInfo: SIGNED16	(* Color info: 0 = ?, 1 = Color, 2 = Grayscale *)
 	END;
 
 VAR pcxh: PCXHeader;
@@ -54,7 +54,7 @@ END ReadPCXHeader;
 
 (* Write the PCX File Header *)
 PROCEDURE WritePCXHeader(VAR R: Files.Rider; img: Images.Image);
-VAR j: INTEGER;
+VAR j: SIGNED16;
 BEGIN
 	Files.Write(R, 0AX);	(* manufacturer *)
 	Files.Write(R, 5X);
@@ -80,9 +80,9 @@ PROCEDURE LoadPCX(VAR R: Files.Rider; img: Images.Image);
 VAR
 (*	pcxh: PCXHeader;	*)
 	line: ARRAY 4 OF POINTER TO ARRAY OF CHAR;
-	x, y, z, w, h, rep, pcount: INTEGER;
-	k, p: SHORTINT;
-	c: CHAR; fmt: Images.Format; pix, thispix: Images.Pixel; col: INTEGER; colors: LONGINT;
+	x, y, z, w, h, rep, pcount: SIGNED16;
+	k, p: SIGNED8;
+	c: CHAR; fmt: Images.Format; pix, thispix: Images.Pixel; col: SIGNED16; colors: SIGNED32;
 BEGIN
 	IF ReadPCXHeader(R,pcxh) THEN
 		w := pcxh.xMax-pcxh.xMin; h := pcxh.yMax-pcxh.yMin;
@@ -179,13 +179,13 @@ END LoadPCX;
 
 PROCEDURE StorePCX(VAR R: Files.Rider; img: Images.Image);
 VAR
-	x, y, h, depth, inc, col, runcount, plane, maxplane: INTEGER;
+	x, y, h, depth, inc, col, runcount, plane, maxplane: SIGNED16;
 	fmt: Images.Format;
-	count: LONGINT;
+	count: SIGNED32;
 	lastCh: CHAR;
-	row: ARRAY 3 OF POINTER TO ARRAY OF CHAR; thisred, thisgreen, thisblue, thisalpha: INTEGER; thispix: Images.Pixel;
+	row: ARRAY 3 OF POINTER TO ARRAY OF CHAR; thisred, thisgreen, thisblue, thisalpha: SIGNED16; thispix: Images.Pixel;
 
-	PROCEDURE ProcessRun (lastCh: CHAR; VAR runcount: INTEGER);
+	PROCEDURE ProcessRun (lastCh: CHAR; VAR runcount: SIGNED16);
 	BEGIN
 		IF (runcount = 1) & (BIT.CAND(lastCh, 0C0X) # 0C0X) THEN
 		ELSE

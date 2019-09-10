@@ -20,21 +20,21 @@ type
 	var
 		topNet-: any; (** top-level CELLNET object specific to this runtime context *)
 		finishedAssembly-: boolean; (** assigned to TRUE after the whole architecture has been assembled *)
-		res*: longint; (** error code, 0 in case of success *)
+		res*: signed32; (** error code, 0 in case of success *)
 		
 		procedure Allocate*(scope: any; var c: any; t: Modules.TypeDesc; const name: array of char; isCellNet, isEngine: boolean);
 		end Allocate;
 		
-		procedure AddPort*(c: any; var p: any; const name: array of char; inout: set; width: longint);
+		procedure AddPort*(c: any; var p: any; const name: array of char; inout: set; width: signed32);
 		end AddPort;
 		
-		procedure AddPortArray*(c: any; var ports: any; const name: array of char; inout: set; width: longint; const lens: array of longint);
+		procedure AddPortArray*(c: any; var ports: any; const name: array of char; inout: set; width: signed32; const lens: array of signed32);
 		end AddPortArray;
 
-		procedure AddStaticPortArray*(c: any; var ports: array of any; const name: array of char; inout: set; width: longint);
+		procedure AddStaticPortArray*(c: any; var ports: array of any; const name: array of char; inout: set; width: signed32);
 		end AddStaticPortArray;
 
-		procedure AddPortIntegerProperty*(p: any; const name: array of char; value: longint);
+		procedure AddPortIntegerProperty*(p: any; const name: array of char; value: signed32);
 		end AddPortIntegerProperty;
 
 		procedure AddFlagProperty*(c: any; const name: array of char);
@@ -43,13 +43,13 @@ type
 		procedure AddStringProperty*(c: any; const name: array of char; const value: array of char);
 		end AddStringProperty;
 
-		procedure AddIntegerProperty*(c: any; const name: array of char; value: longint);
+		procedure AddIntegerProperty*(c: any; const name: array of char; value: signed32);
 		end AddIntegerProperty;
 
 		procedure AddBooleanProperty*(c: any; const name: array of char; value: boolean);
 		end AddBooleanProperty;
 
-		procedure AddRealProperty*(c: any; const name: array of char; value: longreal);
+		procedure AddRealProperty*(c: any; const name: array of char; value: float64);
 		end AddRealProperty;
 
 		procedure AddSetProperty*(c: any; const name: array of char; s: set);
@@ -58,7 +58,7 @@ type
 		procedure FinishedProperties*(var c: any);
 		end FinishedProperties;
 
-		procedure Connect*(outPort, inPort: any; depth: longint);
+		procedure Connect*(outPort, inPort: any; depth: signed32);
 		end Connect;
 
 		procedure Delegate*(netPort: any; cellPort: any);
@@ -67,22 +67,22 @@ type
 		procedure Start*(c: any; proc: procedure{DELEGATE});
 		end Start;
 
-		procedure Send*(p: any; value: longint);
+		procedure Send*(p: any; value: signed32);
 		end Send;
 		
 		procedure BulkSend*(p: any; const value: array of system.byte);
 		end BulkSend;
 		
-		procedure SendNonBlocking*(p: any; value: longint): boolean;
+		procedure SendNonBlocking*(p: any; value: signed32): boolean;
 		end SendNonBlocking;
 
-		procedure Receive*(p: any; var value: longint);
+		procedure Receive*(p: any; var value: signed32);
 		end Receive;
 		
 		procedure BulkReceive*(p: any; var value: array of system.byte);
 		end BulkReceive;
 		
-		procedure ReceiveNonBlocking*(p: any; var value: longint): boolean;
+		procedure ReceiveNonBlocking*(p: any; var value: signed32): boolean;
 		begin
 		end ReceiveNonBlocking;
 		
@@ -176,25 +176,25 @@ type
 		AllocateOnContext(GetContext(), scope, c, tag, name, isCellnet, isEngine);
 	end Allocate;
 
-	procedure AddPort*(c: Cell; var p: any; const name: array of char; inout: set; width: longint);
+	procedure AddPort*(c: Cell; var p: any; const name: array of char; inout: set; width: signed32);
 	begin
 		if EnableTrace then trace(c,p,name, inout, width); end;
 		GetContext().AddPort(c.c, p, name, inout, width);
 	end AddPort;
 
-	procedure AddPortArray*(c: Cell; var ports: any; const name: array of char; inout: set; width: longint; const lens: array of longint);
+	procedure AddPortArray*(c: Cell; var ports: any; const name: array of char; inout: set; width: signed32; const lens: array of signed32);
 	begin
 		if EnableTrace then trace(name, inout, width, len(lens)); end;
 		GetContext().AddPortArray(c.c, ports, name, inout, width, lens);
 	end AddPortArray;
 
-	procedure AddStaticPortArray*(c: Cell; var ports: array of any; const name: array of char; inout: set; width: longint);
+	procedure AddStaticPortArray*(c: Cell; var ports: array of any; const name: array of char; inout: set; width: signed32);
 	begin
 		if EnableTrace then trace(name, inout, width, len(ports)); end;
 		GetContext().AddStaticPortArray(c.c, ports, name, inout, width);
 	end AddStaticPortArray;
 
-	procedure AddPortIntegerProperty*(p: any; const name: array of char; value: longint);
+	procedure AddPortIntegerProperty*(p: any; const name: array of char; value: signed32);
 	begin
 		if EnableTrace then trace(p, name, value); end;
 		GetContext().AddPortIntegerProperty(p,name,value);
@@ -213,7 +213,7 @@ type
 		GetContext().AddStringProperty(c.c, name, value);
 	end AddStringProperty;
 
-	procedure AddIntegerProperty*(c: Cell; const name: array of char; var newValue: longint; value: longint);
+	procedure AddIntegerProperty*(c: Cell; const name: array of char; var newValue: signed32; value: signed32);
 	begin
 		if EnableTrace then trace(c, name, newValue, value); end;
 		newValue := value;
@@ -227,7 +227,7 @@ type
 		GetContext().AddBooleanProperty(c.c, name, value);
 	end AddBooleanProperty;
 
-	procedure AddRealProperty*(c: Cell; const name: array of char; var newValue: longreal; value: longreal);
+	procedure AddRealProperty*(c: Cell; const name: array of char; var newValue: float64; value: float64);
 	begin
 		if EnableTrace then trace(c, name, newValue, value, entier(value)); end;
 		newValue := value;
@@ -247,7 +247,7 @@ type
 		GetContext().FinishedProperties(c.c);
 	end FinishedProperties;
 
-	procedure Connect*(outPort, inPort: any; depth: longint);
+	procedure Connect*(outPort, inPort: any; depth: signed32);
 	begin
 		if EnableTrace then trace(outPort, inPort, outPort, inPort, depth); end;
 		GetContext().Connect(outPort, inPort, depth);
@@ -265,7 +265,7 @@ type
 		GetContext().Start(c.c, proc);
 	end Start;
 	
-	procedure Send*(p: any; value: longint);
+	procedure Send*(p: any; value: signed32);
 	begin
 		GetContext().Send(p, value);
 	end Send;
@@ -275,12 +275,12 @@ type
 		GetContext().BulkSend(p,value);
 	end BulkSend;
 	
-	procedure SendNonBlocking*(p: any; value: longint): boolean;
+	procedure SendNonBlocking*(p: any; value: signed32): boolean;
 	begin
 		return GetContext().SendNonBlocking(p, value);
 	end SendNonBlocking;
 
-	procedure Receive*(p: any; var value: longint);
+	procedure Receive*(p: any; var value: signed32);
 	begin
 		GetContext().Receive(p, value);
 	end Receive;
@@ -290,7 +290,7 @@ type
 		GetContext().BulkReceive(p,value);
 	end BulkReceive;
 	
-	procedure ReceiveNonBlocking*(p: any; var value: longint): boolean;
+	procedure ReceiveNonBlocking*(p: any; var value: signed32): boolean;
 	begin
 		return GetContext().ReceiveNonBlocking(p, value);
 	end ReceiveNonBlocking;
@@ -343,10 +343,10 @@ type
 		return firstm.next
 	end CopyModules;
 
-	procedure FreeDownTo(const modulename: array of char): longint;
+	procedure FreeDownTo(const modulename: array of char): signed32;
 	var
-		root, m: Module; res: longint;
-		nbrOfUnloadedModules : longint;
+		root, m: Module; res: signed32;
+		nbrOfUnloadedModules : signed32;
 		msg: array 32 of char;
 	begin
 		nbrOfUnloadedModules := 0;
@@ -401,10 +401,10 @@ type
 		moduleName, typeName, name: array 256 of char;
 		m: Modules.Module;
 		typeInfo: Modules.TypeDesc;
-		i: size; res: longint; 
+		i: size; res: signed32; 
 		str: array 256 of char;
 		scope: Cell;
-		unloaded: longint;
+		unloaded: signed32;
 		starter: Starter;
 		launcher: Launcher;
 		offset: size;
@@ -491,7 +491,7 @@ type
 	end "<<";
 	
 	(*The extra functions for longint and real were introduced because right now primitive types cannot be passed as byte arrays*)
-	type longintSpecial= longint; 
+	type longintSpecial= signed32; 
 	operator "<<"* (p: port out; a: longintSpecial);
 	begin
 		if EnableTrace then trace('longint send');end;
@@ -504,7 +504,7 @@ type
 		BulkReceive(system.val(any,p),a);
 	end "<<";
 
-	type realSpecial= real;
+	type realSpecial= float32;
 	operator "<<"* (p: port out; a: realSpecial);
 	begin
 		if EnableTrace then trace('real send');end;

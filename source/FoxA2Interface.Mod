@@ -8,7 +8,7 @@ CONST
 TYPE
 	Writer* = OBJECT (Basic.Writer)
 	VAR
-		alertCount, commentCount, keywordCount : LONGINT;
+		alertCount, commentCount, keywordCount : SIGNED32;
 
 		PROCEDURE &InitA2Writer(w: Streams.Writer);
 		BEGIN
@@ -30,7 +30,7 @@ TYPE
 			RETURN; (* prohibitively expensive for large files *)
 			IF w IS TextUtilities.TextWriter THEN
 				IF alertCount > 0 THEN w(TextUtilities.TextWriter).SetFontColor(WMGraphics.Red);
-				ELSIF commentCount > 0 THEN w(TextUtilities.TextWriter).SetFontColor(LONGINT(0999999FFH));
+				ELSIF commentCount > 0 THEN w(TextUtilities.TextWriter).SetFontColor(SIGNED32(0999999FFH));
 				ELSE w(TextUtilities.TextWriter).SetFontColor(WMGraphics.Black);
 				END;
 			END;
@@ -101,13 +101,13 @@ TYPE
 
 	END StreamDiagnostics;
 
-	PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position: Streams.Position; type: WORD; CONST message: ARRAY OF CHAR);
+	PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position: Streams.Position; type: INTEGER; CONST message: ARRAY OF CHAR);
 	VAR attributes: Texts.Attributes;
 	BEGIN
 		IF w IS TextUtilities.TextWriter THEN
 			attributes := w(TextUtilities.TextWriter).currentAttributes;
 			IF (type = Diagnostics.TypeWarning) THEN
-				w(TextUtilities.TextWriter).SetFontColor(LONGINT(0808000FFH));
+				w(TextUtilities.TextWriter).SetFontColor(SIGNED32(0808000FFH));
 			ELSIF (type = Diagnostics.TypeError) THEN
 				w(TextUtilities.TextWriter).SetFontColor(WMGraphics.Red);
 			ELSE

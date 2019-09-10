@@ -12,7 +12,7 @@ CONST
 TYPE
 (* Take string and split it in segments delimited by a tag character. *)
 StringSplitter* =OBJECT
-	VAR s: POINTER TO ARRAY OF CHAR; pos: LONGINT; done: BOOLEAN;
+	VAR s: POINTER TO ARRAY OF CHAR; pos: SIGNED32; done: BOOLEAN;
 	PROCEDURE &Init*(CONST s: ARRAY OF CHAR);
 	BEGIN
 		IF s = "" THEN
@@ -22,7 +22,7 @@ StringSplitter* =OBJECT
 		END;
 	END Init;
 	PROCEDURE Next*(tag: CHAR; VAR segment: ARRAY OF CHAR): BOOLEAN;
-	VAR start: LONGINT;
+	VAR start: SIGNED32;
 	BEGIN
 		IF done THEN segment[0] := 0X; RETURN FALSE; END;
 		start := pos;
@@ -284,7 +284,7 @@ PropfindRes* =OBJECT(XML.Document);
 		COPY(url, SELF.url); SELF.AddContent(xmlDecl);
 		NEW(ms); ms.SetName("D:multistatus"); ms.SetAttributeValue("xmlns:D", "DAV:"); SELF.AddContent(ms);
 	END Init1;
-	PROCEDURE addVersion*(CONST ver, author, date, logText, state, dateTime: ARRAY OF CHAR; length: LONGINT);
+	PROCEDURE addVersion*(CONST ver, author, date, logText, state, dateTime: ARRAY OF CHAR; length: SIGNED32);
 	VAR root, r, h, ps, p, s, e: XML.Element; ac: XML.ArrayChars; acStr: ARRAY 128 OF CHAR; statusStr: ARRAY 64 OF CHAR;
 		lengthStr: ARRAY 16 OF CHAR;
 	BEGIN root := SELF.GetRoot();
@@ -454,7 +454,7 @@ PropfindCollectionRes* =OBJECT(XML.Document);
 	</D:response>
 	*)
 
-	PROCEDURE addMember*(CONST name, type, dateTime: ARRAY OF CHAR; length: LONGINT);
+	PROCEDURE addMember*(CONST name, type, dateTime: ARRAY OF CHAR; length: SIGNED32);
 	VAR root, r, h, ps, p, s, rt, e: XML.Element; ac: XML.ArrayChars;
 		acStr: ARRAY 128 OF CHAR; statusStr: ARRAY 64 OF CHAR; lengthStr: ARRAY 16 OF CHAR;
 	BEGIN root := SELF.GetRoot();
@@ -577,7 +577,7 @@ BEGIN
 END IsDAVError;
 
 (* don't write anything. Just for counting what's written to a writer. *)
-PROCEDURE Dev0(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+PROCEDURE Dev0(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 BEGIN END Dev0;
 
 (* Find size of an XML object which must be written. *)
@@ -721,7 +721,7 @@ END ConfigurationReportReq;
 PROCEDURE UpdateReq*(CONST host, ver: ARRAY OF CHAR): XML.Document;
 CONST PLog = FALSE;
 VAR doc: XML.Document; vc,v,h: XML.Element;
-	name: ARRAY 128 OF CHAR; versionNumber: LONGINT;
+	name: ARRAY 128 OF CHAR; versionNumber: SIGNED32;
 BEGIN
 	NEW(doc); doc.AddContent(xmlDecl);
 	NEW(vc); vc.SetName("D:update"); vc.SetAttributeValue("xmlns:D", "DAV:"); doc.AddContent(vc);
@@ -913,7 +913,7 @@ END GetVersionControlHref;
 PROCEDURE GetUpdateVersionName*(doc: XML.Document; VAR versionName: ARRAY OF CHAR);
 VAR
 	e: XML.Element; versionResource: ARRAY 256 OF CHAR; i, dotPos: SIZE;
-	host, path: ARRAY 256 OF CHAR; port: LONGINT;
+	host, path: ARRAY 256 OF CHAR; port: SIGNED32;
 BEGIN
 	e := FindElement(doc.GetRoot(), "DAV:version");
 	IF e # NIL THEN
@@ -1000,7 +1000,7 @@ END XmlDecl;
 
 (* Get character data of an element. *)
 PROCEDURE GetCharData*(parent: XML.Element; VAR charData: ARRAY OF CHAR);
-VAR enum: XMLObjects.Enumerator; p: ANY; cd: XML.ArrayChars; s: XML.String; i: INTEGER;
+VAR enum: XMLObjects.Enumerator; p: ANY; cd: XML.ArrayChars; s: XML.String; i: SIGNED16;
 BEGIN
 	charData[0] := 0X;
 	IF parent # NIL THEN

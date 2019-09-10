@@ -20,9 +20,9 @@ TYPE
 	VbiBuffer* = OBJECT
 		VAR
 			data*: ARRAY VbiBufferSize OF CHAR;
-			readPos*: LONGINT;
-			insertPos*: LONGINT;
-			vbiSize*: LONGINT;
+			readPos*: SIGNED32;
+			insertPos*: SIGNED32;
+			vbiSize*: SIGNED32;
 			timeout: BOOLEAN;
 			timer: ActiveTimers.Timer;
 
@@ -57,7 +57,7 @@ TYPE
 	(** The TVTuner objects represents the tuning facilities of a video capture card. *)
 	TVTuner* = OBJECT
 	VAR
-		frequency*: LONGINT;
+		frequency*: SIGNED32;
 
 	(** Initialize the tuner object. *)
 		PROCEDURE & Init* (vcd: VideoCaptureDevice);
@@ -66,7 +66,7 @@ TYPE
 
 	(** Open the VBI device. *)
 	(** return value: -1 if the device is already open, otherwise 0 *)
-		PROCEDURE OpenVbi* (): LONGINT;
+		PROCEDURE OpenVbi* (): SIGNED32;
 		BEGIN HALT(99)	(** abstract *)
 		END OpenVbi;
 
@@ -86,53 +86,53 @@ TYPE
 		END Close;
 
 	(** Set the channel set. *)
-		PROCEDURE SetChannelSet* (chnlSet: LONGINT);
+		PROCEDURE SetChannelSet* (chnlSet: SIGNED32);
 		BEGIN HALT(99)	(** abstract *)
 		END SetChannelSet;
 
 	(** Get the channel set. *)
-		PROCEDURE GetChannelSet* (): LONGINT;
+		PROCEDURE GetChannelSet* (): SIGNED32;
 		BEGIN HALT(99)	(** abstract *)
 		END GetChannelSet;
 
 	(** Set a channel. *)
 	(** chnl:	channel to set (see range of channel set). *)
-		PROCEDURE SetChannel* (chnl: LONGINT);
+		PROCEDURE SetChannel* (chnl: SIGNED32);
 		BEGIN HALT(99)	(** abstract *)
 		END SetChannel;
 
 	(** Get channel. *)
 	(** return value:	channel *)
-		PROCEDURE GetChannel* (): LONGINT;
+		PROCEDURE GetChannel* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetChannel;
 
-		PROCEDURE GetMaxChannel* (): LONGINT;
+		PROCEDURE GetMaxChannel* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetMaxChannel;
 
 	(** Set TV frequency. *)
-		PROCEDURE SetTVFrequency* (freq: LONGINT);
+		PROCEDURE SetTVFrequency* (freq: SIGNED32);
 		BEGIN
 			NotifyChannelSwitchObservers (freq);
 			SetTVFrequencyImpl (freq);
 		END SetTVFrequency;
 
-		PROCEDURE SetTVFrequencyImpl* (freq: LONGINT);
+		PROCEDURE SetTVFrequencyImpl* (freq: SIGNED32);
 		BEGIN
 		HALT(99);	(** abstract *)
 		END SetTVFrequencyImpl;
 
 	(** Get tuner frequency. *)
 	(** return value:	tuner frequency *)
-		PROCEDURE GetFrequency* (): LONGINT;
+		PROCEDURE GetFrequency* (): SIGNED32;
 		BEGIN
 			RETURN frequency
 		END GetFrequency;
 
 	(** Set radio frequency. *)
 	(** freq:	frequency expressed as frequency * 100. *)
-		PROCEDURE SetRadioFrequency* (freq: LONGINT);
+		PROCEDURE SetRadioFrequency* (freq: SIGNED32);
 		BEGIN HALT(99);	(** abstract *)
 		END SetRadioFrequency;
 
@@ -147,7 +147,7 @@ TYPE
 			channelSwitchObservers := chObs;
 		END InstallChannelSwitchHandler;
 
-		PROCEDURE NotifyChannelSwitchObservers (freq: LONGINT);
+		PROCEDURE NotifyChannelSwitchObservers (freq: SIGNED32);
 		VAR
 			chObs: ChannelSwitchObserver;
 		BEGIN
@@ -160,12 +160,12 @@ TYPE
 
 	(** Get the tuner status. *)
 	(** return value:	tuner status *)
-		PROCEDURE GetTunerStatus* (): LONGINT;
+		PROCEDURE GetTunerStatus* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetTunerStatus;
 
 	(** Calculates the field strength of the radio signal. *)
-		PROCEDURE CalcFieldStrength* (): LONGINT;
+		PROCEDURE CalcFieldStrength* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END CalcFieldStrength;
 
@@ -182,60 +182,60 @@ TYPE
 		END IsStereo;
 
 	(** Set the hue. *)
-		PROCEDURE SetHue* (hue: LONGINT);
+		PROCEDURE SetHue* (hue: SIGNED32);
 		BEGIN HALT(99);	(** abstract *)
 		END SetHue;
 
 	(** Get the hue *)
 	(** return value:	the hue offset *)
-		PROCEDURE GetHue* (): LONGINT;
+		PROCEDURE GetHue* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetHue;
 
 	(** Set the brightness. *)
-		PROCEDURE SetBrightness* (brightness: LONGINT);
+		PROCEDURE SetBrightness* (brightness: SIGNED32);
 		BEGIN HALT(99);	(** abstract *)
 		END SetBrightness;
 
 	(** Get the brightness. *)
 	(** return value:	the brightness offset *)
-		PROCEDURE GetBrightness* (): LONGINT;
+		PROCEDURE GetBrightness* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetBrightness;
 
 	(** Set the chroma saturation. *)
 	(** Adds a gain adjustment to the U- and V-component of the video signal. *)
-		PROCEDURE SetChromaSaturation* (saturation: LONGINT);
+		PROCEDURE SetChromaSaturation* (saturation: SIGNED32);
 		BEGIN HALT(99);	(** abstract *)
 		END SetChromaSaturation;
 
 	(** Get chroma saturation. *)
 	(** return value:	the chroma saturation *)
-		PROCEDURE GetChromaSaturation* (): LONGINT;
+		PROCEDURE GetChromaSaturation* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetChromaSaturation;
 
 	(** Set chroma V saturation *)
 	(** Adds a gain adjustment to the V-component of the video signal. *)
-		PROCEDURE SetChromaVSaturation* (saturation: LONGINT);
+		PROCEDURE SetChromaVSaturation* (saturation: SIGNED32);
 		BEGIN HALT(99);	(** abstract *)
 		END SetChromaVSaturation;
 
 	(** Get the chroma V saturation. *)
 	(** return value:	the chroma V saturation *)
-		PROCEDURE GetChromaVSaturation* (): LONGINT;
+		PROCEDURE GetChromaVSaturation* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetChromaVSaturation;
 
 	(** Set the chroma U saturation. *)
 	(** Adds a gain adjustment to the U-component of the video signal. *)
-		PROCEDURE SetChromaUSaturation* (saturation: LONGINT);
+		PROCEDURE SetChromaUSaturation* (saturation: SIGNED32);
 		BEGIN HALT(99);	(** abstract *)
 		END SetChromaUSaturation;
 
 	(** Get the chroma U saturation. *)
 	(** return value:	the chroma U saturation *)
-		PROCEDURE GetChromaUSaturation* (): LONGINT;
+		PROCEDURE GetChromaUSaturation* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetChromaUSaturation;
 
@@ -248,25 +248,25 @@ TYPE
 	(**				[0] 0 enables luma decimation using selectable H filter, 1 disables luma decimation *)
 	(**				[1] 0 composite video, 1 Y/C component video *)
 	(**				[2] 0 enables the luma notch filter, 1 disables the luma notch filter *)
-		PROCEDURE SetLumaNotch* (notch: LONGINT);
+		PROCEDURE SetLumaNotch* (notch: SIGNED32);
 		BEGIN HALT(99);	(** abstract *)
 		END SetLumaNotch;
 
 	(** Get status of luma notch filters. *)
 	(** return value:	3 bits of EControl/OControl *)
-		PROCEDURE GetLumaNotch* (): LONGINT;
+		PROCEDURE GetLumaNotch* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetLumaNotch;
 
 	(** Set the contrast. *)
 	(** This value ist multiplied by the luminance value to provide contrast adjustment. *)
-		PROCEDURE SetContrast* (contrast: LONGINT);
+		PROCEDURE SetContrast* (contrast: SIGNED32);
 		BEGIN HALT(99);	(** abstract *)
 		END SetContrast;
 
 	(** Get contrast value. *)
 	(** return value:	value of contrast multiplication factor *)
-		PROCEDURE GetContrast* (): LONGINT;
+		PROCEDURE GetContrast* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetContrast;
 
@@ -278,7 +278,7 @@ TYPE
 
 	END TVTuner;
 
-	ChannelSwitchHandler* = PROCEDURE {DELEGATE} (freq: LONGINT; tuner: TVTuner);
+	ChannelSwitchHandler* = PROCEDURE {DELEGATE} (freq: SIGNED32; tuner: TVTuner);
 
 	ChannelSwitchObserver = OBJECT
 	VAR
@@ -293,7 +293,7 @@ TYPE
 	(** Each VideoCaptureDevice must have a tuner, an audio and a vbiBuffer object. These can be accessed
 			via the appropriate GetXXX procedures *)
 
-		PROCEDURE & Init* (base: ADDRESS; irq, product, rev: LONGINT);
+		PROCEDURE & Init* (base: ADDRESS; irq, product, rev: SIGNED32);
 		BEGIN HALT(99);	(** abstract *)
 		END Init;
 
@@ -347,22 +347,22 @@ TYPE
 
 	(** Get the device status. *)
 	(** return value:	device status *)
-		PROCEDURE GetStatus* (): LONGINT;
+		PROCEDURE GetStatus* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetStatus;
 
 	(** Set the video input format *)
 	(** format:	format of video signal (Bt848IFormPalBDGHI etc.) *)
-		PROCEDURE SetInputFormat* (format: LONGINT);
+		PROCEDURE SetInputFormat* (format: SIGNED32);
 		BEGIN HALT(99);	(** abstract *)
 		END SetInputFormat;
 
 	(** Get the video input format. *)
-		PROCEDURE GetInputFormat* (): LONGINT;
+		PROCEDURE GetInputFormat* (): SIGNED32;
 		BEGIN HALT(99);	(** abstract *)
 		END GetInputFormat;
 
-		PROCEDURE SetPixelFormat* (format: LONGINT);
+		PROCEDURE SetPixelFormat* (format: SIGNED32);
 		BEGIN HALT(99);	(** abstract *)
 		END SetPixelFormat;
 
@@ -418,7 +418,7 @@ TYPE
 	(** rows:	number of rows of a frame *)
 	(** frames:	number of frames allocated *)
 	(** format:	AosEvenOnly, AosOddOnly, none (interlaced) *)
-		PROCEDURE SetGeometry* (columns, rows, frames: LONGINT; format: SET);
+		PROCEDURE SetGeometry* (columns, rows, frames: SIGNED32; format: SET);
 		BEGIN HALT(99);	(** abstract *)
 		END SetGeometry;
 
@@ -470,7 +470,7 @@ VAR
 (** Get a video device. *)
 (** idx:	index of video card. *)
 (** return value:	a VideoCaptureDevice object *)
-PROCEDURE GetVideoDevice* (idx: LONGINT): VideoCaptureDevice;
+PROCEDURE GetVideoDevice* (idx: SIGNED32): VideoCaptureDevice;
 VAR
 	devName : ARRAY 32 OF CHAR;
 	nr: ARRAY 4 OF CHAR;
@@ -520,7 +520,7 @@ MODULE MyTVDriver;
 PROCEDURE Install*;
 VAR
 	dev: TVDriver.VideoCaptureDevice;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(dev);
 	... set the device properties ...

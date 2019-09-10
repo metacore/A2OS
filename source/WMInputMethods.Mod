@@ -57,7 +57,7 @@ TYPE
 			END;
 		END InsertChar;
 
-		PROCEDURE InsertMultiChar*(CONST ucs : ARRAY OF LONGINT);
+		PROCEDURE InsertMultiChar*(CONST ucs : ARRAY OF SIGNED32);
 		VAR buf : ARRAY 2 OF Texts.Char32; pos, i : SIZE;
 		BEGIN {EXCLUSIVE}
 			IF valid THEN
@@ -138,7 +138,7 @@ VAR
 	None- : IMEInterface;
 
 (* Returns the installer procedure of the desired IME *)
-PROCEDURE GetIME*(CONST name : ARRAY OF CHAR; VAR res : WORD) : IMEInstaller;
+PROCEDURE GetIME*(CONST name : ARRAY OF CHAR; VAR res : INTEGER) : IMEInstaller;
 VAR
 	config, installerName, msg : ARRAY 128 OF CHAR;
 	moduleName, procedureName : Modules.Name;

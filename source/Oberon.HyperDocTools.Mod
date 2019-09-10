@@ -34,7 +34,7 @@ MODULE HyperDocTools IN Oberon;	(** portable *) (* ejz,  *)
 			curDoc: Documents.Document;
 			node: HyperDocs.Node;
 			title: ARRAY 64 OF CHAR;
-			key: LONGINT;
+			key: SIGNED32;
 			T: Texts.Text;
 	BEGIN
 		curDoc := CurDoc();
@@ -63,10 +63,10 @@ MODULE HyperDocTools IN Oberon;	(** portable *) (* ejz,  *)
 	PROCEDURE ReadControls*(VAR label, link: Objects.Object);
 		VAR
 			T: Texts.Text;
-			beg, end, time, pos: LONGINT;
+			beg, end, time, pos: SIGNED32;
 			R: Texts.Reader;
 			obj: Objects.Object;
-			col: INTEGER;
+			col: SIGNED16;
 			ch: CHAR;
 	BEGIN
 		label := NIL; link := NIL;
@@ -209,7 +209,7 @@ MODULE HyperDocTools IN Oberon;	(** portable *) (* ejz,  *)
 	PROCEDURE LinkInfo*;
 		VAR
 			link, obj: Objects.Object;
-			key: LONGINT;
+			key: SIGNED32;
 			s: HyperDocs.LinkScheme;
 			I: HyperDocs.InfoMsg;
 			val: ARRAY 64 OF CHAR;
@@ -254,7 +254,7 @@ MODULE HyperDocTools IN Oberon;	(** portable *) (* ejz,  *)
 	PROCEDURE Inspect*;
 		VAR
 			label, lnk, obj: Objects.Object;
-			key: LONGINT;
+			key: SIGNED32;
 			s: HyperDocs.LinkScheme;
 			opt: ARRAY 8 OF CHAR;
 	BEGIN
@@ -311,7 +311,7 @@ MODULE HyperDocTools IN Oberon;	(** portable *) (* ejz,  *)
 		VAR
 			S: Attributes.Scanner;
 			label, link: Objects.Object;
-			key, beg, end, time: LONGINT;
+			key, beg, end, time: SIGNED32;
 			T: Texts.Text;
 	BEGIN
 		Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
@@ -377,7 +377,7 @@ MODULE HyperDocTools IN Oberon;	(** portable *) (* ejz,  *)
 			END;
 		VAR
 			T: Texts.Text;
-			pos, key, beg: LONGINT;
+			pos, key, beg: SIGNED32;
 			F: Texts.Finder;
 			obj: Objects.Object;
 			S: HyperDocs.LinkScheme;
@@ -385,7 +385,7 @@ MODULE HyperDocTools IN Oberon;	(** portable *) (* ejz,  *)
 			R: Texts.Reader;
 			style: TextGadgets.Style;
 			label: ARRAY 64 OF CHAR;
-			i, col: INTEGER;
+			i, col: SIGNED16;
 			ch: CHAR;
 	BEGIN
 		T := Oberon.MarkedText();

@@ -8,17 +8,17 @@ MODULE BinHex IN Oberon;	(** portable *) (* ejz,  *)
 
 	VAR
 		encTable: ARRAY 64 OF CHAR;
-		decTable: ARRAY 128 OF INTEGER;
+		decTable: ARRAY 128 OF SIGNED16;
 		W: Texts.Writer;
 
-	PROCEDURE DecodeText*(T: Texts.Text; beg: LONGINT; F: Files.File): BOOLEAN;
+	PROCEDURE DecodeText*(T: Texts.Text; beg: SIGNED32; F: Files.File): BOOLEAN;
 		VAR
 			Rt: Texts.Reader;
 			Rf, R: Files.Rider;
 			S: Texts.Scanner;
-			codes: ARRAY 4 OF INTEGER;
-			dlen: LONGINT;
-			i: INTEGER;
+			codes: ARRAY 4 OF SIGNED16;
+			dlen: SIGNED32;
+			i: SIGNED16;
 			ok, end: BOOLEAN;
 			ch, last: CHAR;
 	BEGIN
@@ -116,7 +116,7 @@ MODULE BinHex IN Oberon;	(** portable *) (* ejz,  *)
 			S: Texts.Scanner;
 			F: Files.File;
 			T: Texts.Text;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 	BEGIN
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 		Texts.Scan(S);
@@ -147,7 +147,7 @@ MODULE BinHex IN Oberon;	(** portable *) (* ejz,  *)
 	END Decode;
 
 	PROCEDURE InitTables;
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		FOR i := 0 TO 127 DO
 			decTable[i] := -1

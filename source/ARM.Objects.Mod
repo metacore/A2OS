@@ -39,19 +39,19 @@ CONST
 	HandlePriorityInv = TRUE; (* enables or disables priority inversion handling. Handling of priority inversion leads to a simplified locking, see Lock, Unlock and Await *)
 
 	(* constant used in GC Process.FindPointers *)
-	InitDiff = MAX(LONGINT);
+	InitDiff = MAX(SIGNED32);
 
 	AddressSize = SIZEOF(ADDRESS);
 	ReturnStackDisplacement = 2 * AddressSize;
 
 TYPE
-	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT;
+	CpuCyclesArray* = ARRAY Machine.MaxCPU OF SIGNED64;
 
 	EventHandler* = PROCEDURE {DELEGATE};
 
 	Timer* = POINTER TO RECORD
 		next*, prev* : Timer;
-		trigger: LONGINT;
+		trigger: SIGNED32;
 		handler: EventHandler
 	END;
 
@@ -79,23 +79,23 @@ TYPE
 		sseAdr: ADDRESS;
 		condition-: Condition;	(** awaited process' condition *)
 		condFP-: ADDRESS;	(** awaited process' condition's context *)
-		mode-: LONGINT;	(** process state *)	(* only changed inside Objects lock ??? *)
-		procID-: LONGINT;	(** processor ID where running *)
+		mode-: SIGNED32;	(** process state *)	(* only changed inside Objects lock ??? *)
+		procID-: SIGNED32;	(** processor ID where running *)
 		waitingOn-: ProtectedObject;	(** obj this process is waiting on (for lock or condition) *)
-		id-: WORD;	(** unique process ID for tracing *)
+		id-: INTEGER;	(** unique process ID for tracing *)
 		flags*: SET;	(** process flags *)
-		priority-, staticPriority*: LONGINT;	(** process dynamic priority (can change during priority inversion handling) and static priority *)	(* exported for AosExceptions *)
+		priority-, staticPriority*: SIGNED32;	(** process dynamic priority (can change during priority inversion handling) and static priority *)	(* exported for AosExceptions *)
 		stack*: Machine.Stack;	(** user-level stack of process *)
 		restartPC-: ADDRESS;	(** entry point of body, for SAFE exception recovery *)
 		restartSP-: ADDRESS;	(** stack level at start of body, for SAFE exception recovery *)
 		exp*: Machine.ExceptionState;
 		oldReturnPC: ADDRESS;
 		cpuCycles-, lastCpuCycles- : CpuCyclesArray;
-		prioRequests : ARRAY NumPriorities OF LONGINT; (* priorities of processes that wait for resources locked by this process, only the highest priority per resource is stored *)
+		prioRequests : ARRAY NumPriorities OF SIGNED32; (* priorities of processes that wait for resources locked by this process, only the highest priority per resource is stored *)
 		context: ANY;
 
 		(* set priority of process: Machine.Objects lock is taken *)
-		PROCEDURE SetPriority(p : LONGINT);
+		PROCEDURE SetPriority(p : SIGNED32);
 		BEGIN
 			DEC(prioRequests[staticPriority]);
 			staticPriority := p;
@@ -183,7 +183,7 @@ TYPE
 
 		(*!TODO: adapt the code according to the new Modules/Reflection *)
 		PROCEDURE FindPointers(bp, pc : ADDRESS; VAR diff0, diff1: SIZE);
-		(*VAR data: Modules.ProcTableEntry; startIndex, i: LONGINT; ptr : ADDRESS; success: BOOLEAN;
+		(*VAR data: Modules.ProcTableEntry; startIndex, i: SIGNED32; ptr : ADDRESS; success: BOOLEAN;
 		BEGIN
 			diff0 := InitDiff; diff1 := InitDiff;
 			(*Modules.FindProc(pc, data, startIndex, success);*)
@@ -245,7 +245,7 @@ TYPE
 		VAR q {UNTRACED}: ARRAY NumPriorities OF ProcessQueue;
 
 		PROCEDURE &Init;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO NumPriorities - 1 DO
 				q[i].head := NIL; q[i].tail := NIL
@@ -253,7 +253,7 @@ TYPE
 		END Init;
 
 		PROCEDURE FindRoots; (* override *)
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			(* only mark queues of user processes since these will not change during GC *)
 			FOR i := Low TO High DO
@@ -358,17 +358,17 @@ TYPE
 	END FinalizerCaller;
 
 	Interrupter = OBJECT (ProtectedObject)	(* to do: like Timer *)
-	VAR interruptNumber: LONGINT;
+	VAR interruptNumber: SIGNED32;
 	END Interrupter;
 
 VAR
 	ready: ReadyProcesses;	(* ready queue represented as an object that contains the queues *)
-	maxReady: LONGINT;	(* for all i : MinPriority <= maxReady < i < NumPriorities : Empty(ready.q[i]) *)
-	lowestAllowedPriority: LONGINT;  (* denotes the minimal user or realtime priority greater than the idle priority that can be
+	maxReady: SIGNED32;	(* for all i : MinPriority <= maxReady < i < NumPriorities : Empty(ready.q[i]) *)
+	lowestAllowedPriority: SIGNED32;  (* denotes the minimal user or realtime priority greater than the idle priority that can be
 	                                                            scheduled depending on the GC status, minPriority = Low if GC is not running,
 	                                                            minPrioriy = GCPriority otherwise *)
 	running-{UNTRACED}: ARRAY Machine.MaxCPU OF Process;	(** processes currently running, exported for Traps, not traced by the GC since it may change during collection *)
-	nextProcessID: WORD;
+	nextProcessID: INTEGER;
 
 	gcBarrier: SET; 			(* barrier that must be passed by all processors before actual collection starts *)
 	gcActivity: GCActivity;	(* active object for GC handling *)
@@ -399,9 +399,9 @@ VAR
 	initObject: ProtectedObject;	(* Active object for the init process *)
 
 	(* Performance monitoring *)
-	idlecount*: ARRAY Machine.MaxCPU OF LONGINT; (** count of idle process timeslice interrupts *)
-	idleCycles- : ARRAY Machine.MaxCPU OF HUGEINT; (** CPU cycles of idle threads *)
-	perfTsc-: ARRAY Machine.MaxCPU OF HUGEINT;
+	idlecount*: ARRAY Machine.MaxCPU OF SIGNED32; (** count of idle process timeslice interrupts *)
+	idleCycles- : ARRAY Machine.MaxCPU OF SIGNED64; (** CPU cycles of idle threads *)
+	perfTsc-: ARRAY Machine.MaxCPU OF SIGNED64;
 
 	(* Statistics *)
 	Nlock-, Nunlock-, Nawait-, NawaitNoIF-, NawaitTrue-, Ncreate-, Nterminate-,
@@ -410,18 +410,18 @@ VAR
 	NtimesliceKernel-, NtimesliceV86-, NtimesliceCritical-,
 	Npreempt-, NpreemptTaken-, NpreemptNothing-,
 	NpreemptKernel-, NpreemptV86-, NpreemptCritical-,
-	Nenter- : LONGINT;
+	Nenter- : SIGNED32;
 
-	debugCounter: LONGINT;
+	debugCounter: SIGNED32;
 
 PROCEDURE GetMaxPrio(VAR queue: ProcessQueue; VAR new: Process);
 VAR
 	t: Heaps.ProcessLink;
-	maxPriority : LONGINT;
+	maxPriority : SIGNED32;
 BEGIN
 	ASSERT(new = NIL);
 	t := queue.head;
-	maxPriority := MIN(LONGINT);
+	maxPriority := MIN(SIGNED32);
 	WHILE (t # NIL) DO
 		IF (t(Process).priority > maxPriority) THEN
 			new := t(Process); maxPriority := t(Process).priority;
@@ -478,8 +478,8 @@ BEGIN (* {t # NIL & t.next = NIL} *)
 END Put;
 
 (* Select a process of at least the specified priority to run next on current processor (returns NIL if none). Caller must hold ready lock. *)
-PROCEDURE Select(VAR new: Process; priority: LONGINT);
-VAR thresholdPrio: LONGINT;
+PROCEDURE Select(VAR new: Process; priority: SIGNED32);
+VAR thresholdPrio: SIGNED32;
 BEGIN
 	IF Heaps.gcStatus.GetgcOngoing() THEN
 		thresholdPrio := GCPriority
@@ -524,7 +524,7 @@ END Remove;
 
 (* Switch to the specified process. Caller must hold ready lock. Return may be on different processor! *)
 PROCEDURE SwitchTo(VAR running: Process; new: Process);	(* parameters used in SwitchToState, TerminateThis, New *)
-VAR id: LONGINT;
+VAR id: SIGNED32;
 BEGIN
 	id := Machine.ID ();
 	INC (running.cpuCycles[id], Machine.GetTimer () - perfTsc[id]);
@@ -608,7 +608,7 @@ END SwitchToState;
 
 (** Preempt the current process. *)
 PROCEDURE Timeslice*(VAR state: Machine.State);
-VAR id: LONGINT; new: Process;
+VAR id: SIGNED32; new: Process;
 BEGIN
 	(* handle a timer tick *)
 	Machine.Acquire(Machine.Objects);
@@ -622,7 +622,7 @@ BEGIN
 					Enter(timer); timer := NIL
 				END
 			ELSE (* reset dummy event *)
-				event.trigger := Machine.ticks + MAX(LONGINT) DIV 2	(* ignore overflow *)
+				event.trigger := Machine.ticks + MAX(SIGNED32) DIV 2	(* ignore overflow *)
 			END
 		END
 	END;
@@ -740,7 +740,7 @@ BEGIN
 END ActiveObject;
 
 (** Return the ID of the active currently executing process. *)
-PROCEDURE GetProcessID* (): WORD;
+PROCEDURE GetProcessID* (): INTEGER;
 VAR r: Process;
 BEGIN
 	r := GetProcessPtr ();
@@ -748,8 +748,8 @@ BEGIN
 END GetProcessID;
 
 (** Set the current process' priority. *)
-PROCEDURE SetPriority*(priority: LONGINT);
-VAR id: LONGINT;
+PROCEDURE SetPriority*(priority: SIGNED32);
+VAR id: SIGNED32;
 BEGIN
 	ASSERT((priority >= Low) & (priority <= Realtime)); (* priority in bounds *)
 	IF HandlePriorityInv THEN
@@ -767,7 +767,7 @@ END SetPriority;
 
 (** Return TRUE iff the specified protected object is locked exclusive to the current process. *)
 PROCEDURE LockedByCurrent*(obj: ANY): BOOLEAN;
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; id: LONGINT; res: BOOLEAN;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; id: SIGNED32; res: BOOLEAN;
 BEGIN
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, hdr);
 	ASSERT(hdr IS Heaps.ProtRecBlock);
@@ -787,8 +787,8 @@ BEGIN
 END LockedByCurrent;
 
 (** Return number of ready and running processes, excluding idle processes. *)
-PROCEDURE NumReady* (): LONGINT;
-VAR i, n: LONGINT; p: Heaps.ProcessLink;
+PROCEDURE NumReady* (): SIGNED32;
+VAR i, n: SIGNED32; p: Heaps.ProcessLink;
 BEGIN
 	n := 0;
 	Machine.Acquire(Machine.Objects);
@@ -806,7 +806,7 @@ END NumReady;
 	return the number of cycles since the process has been created. If FALSE, return the number of cycles
 	consumed since the last time asked. *)
 PROCEDURE GetCpuCycles*(process : Process; VAR cpuCycles : CpuCyclesArray; all : BOOLEAN);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	ASSERT(process # NIL);
 	FOR i := 0 TO Machine.MaxCPU-1 DO cpuCycles[i] := process.cpuCycles[i]; END;
@@ -820,9 +820,9 @@ END GetCpuCycles;
 
 (*! DEBUG *)
 VAR
-	currentProcessTime- : HUGEINT;
-PROCEDURE CurrentProcessTime * (): HUGEINT;
-VAR result: HUGEINT; process: Process; i: LONGINT;
+	currentProcessTime- : SIGNED64;
+PROCEDURE CurrentProcessTime * (): SIGNED64;
+VAR result: SIGNED64; process: Process; i: SIGNED32;
 BEGIN
 	currentProcessTime := Machine.GetTimer();
 	result := currentProcessTime - perfTsc[Machine.ID()];
@@ -831,14 +831,14 @@ BEGIN
 	RETURN result;
 END CurrentProcessTime;
 
-PROCEDURE TimerFrequency * (): HUGEINT;
+PROCEDURE TimerFrequency * (): SIGNED64;
 BEGIN
 	RETURN 333000000
 END TimerFrequency;
 
 (* Handle hardware interrupt and route it to an interrupt handler process. *)
 PROCEDURE FieldIRQ(VAR state: Machine.State);
-VAR t: Process; id: LONGINT; new: Process; preempt: BOOLEAN;
+VAR t: Process; id: SIGNED32; new: Process; preempt: BOOLEAN;
 BEGIN
 	Machine.DisableIRQ(state.INT);	(* do this before acknowledging irq *)
 
@@ -905,7 +905,7 @@ END FieldIRQ;
 
 (* Process scheduled to handle an interrupt. *)
 PROCEDURE InterruptProcess(self: ProtectedObject);
-VAR h: InterruptList; t: Process; int: LONGINT;
+VAR h: InterruptList; t: Process; int: SIGNED32;
 BEGIN
 	int := self(Interrupter).interruptNumber;
 	t := interrupt[int-MinIRQ].process;
@@ -922,8 +922,8 @@ BEGIN
 END InterruptProcess;
 
 (** Install interrupt handler. *)
-PROCEDURE InstallHandler*(h: EventHandler; int: LONGINT);
-VAR t: Process; new: BOOLEAN; ih: Interrupter; n: InterruptList; i: LONGINT;
+PROCEDURE InstallHandler*(h: EventHandler; int: SIGNED32);
+VAR t: Process; new: BOOLEAN; ih: Interrupter; n: InterruptList; i: SIGNED32;
 BEGIN
 	ASSERT((int >= MinIRQ) & (int-MinIRQ < NumIRQ));	(* range check *)
 	IF interrupt[int-MinIRQ].process = NIL THEN	(* first handler for this irq *)
@@ -953,7 +953,7 @@ BEGIN
 END InstallHandler;
 
 (** Remove interrupt handler. *)
-PROCEDURE RemoveHandler*(h: EventHandler; int: LONGINT);
+PROCEDURE RemoveHandler*(h: EventHandler; int: SIGNED32);
 VAR p, c: InterruptList;
 BEGIN
 	ASSERT((int >= MinIRQ) & (int-MinIRQ < NumIRQ)); (* range check *)
@@ -980,8 +980,8 @@ BEGIN
 END RemoveHandler;
 
 (* local procedure *)
-PROCEDURE SetTimeoutAbsOrRel(t: Timer; h: EventHandler; ms: LONGINT; isAbsolute: BOOLEAN);
-VAR e: Timer; trigger: LONGINT;
+PROCEDURE SetTimeoutAbsOrRel(t: Timer; h: EventHandler; ms: SIGNED32; isAbsolute: BOOLEAN);
+VAR e: Timer; trigger: SIGNED32;
 BEGIN
 	ASSERT(Machine.Second= 1000);	(* assume milliseconds for now *)
 	ASSERT((t # NIL) & (h # NIL));
@@ -999,13 +999,13 @@ BEGIN
 END SetTimeoutAbsOrRel;
 
 (** Set (or reset) an event handler object's timeout value. *)
-PROCEDURE SetTimeout*(t: Timer; h: EventHandler; ms: LONGINT);
+PROCEDURE SetTimeout*(t: Timer; h: EventHandler; ms: SIGNED32);
 BEGIN
 	SetTimeoutAbsOrRel(t, h, ms, FALSE)
 END SetTimeout;
 
 (** Set (or reset) an event handler object's timeout value. Here ms is absolute *)
-PROCEDURE SetTimeoutAt*(t: Timer; h: EventHandler; ms: LONGINT);
+PROCEDURE SetTimeoutAt*(t: Timer; h: EventHandler; ms: SIGNED32);
 BEGIN
 	SetTimeoutAbsOrRel(t, h, ms, TRUE)
 END SetTimeoutAt;
@@ -1024,7 +1024,7 @@ END CancelTimeout;
 
 (** Terminate the current process and switch to next process. *)
 PROCEDURE Terminate*; (* exported for Linker *)
-VAR id: LONGINT;
+VAR id: SIGNED32;
 BEGIN
 	IF Stats THEN Machine.AtomicInc(Nterminate) END;
 	Machine.Acquire(Machine.Objects);
@@ -1046,7 +1046,7 @@ BEGIN
 END HaltUnbreakable;
 
 (* Set the return PC which is saved in the process and set it to -1 *)
-PROCEDURE HaltAltPC(haltCode: LONGINT);
+PROCEDURE HaltAltPC(haltCode: SIGNED32);
 VAR bp: ADDRESS; p: Process;
 BEGIN
 	p := running[Machine.ID ()];
@@ -1181,7 +1181,7 @@ END FinalizeProcess;
 
 (* Allocate a new process associated with "obj". Must be outside lock region, because of potential GC. *)
 PROCEDURE NewProcess(body: Body; flags: SET; obj: ProtectedObject; VAR new: Process);
-VAR t: Process; sp: ADDRESS; id: LONGINT; fn: Heaps.FinalizerNode;
+VAR t: Process; sp: ADDRESS; id: SIGNED32; fn: Heaps.FinalizerNode;
 BEGIN
 	NEW(t); NEW(fn); (* implicit call Heaps.NewRec *)
 	t.next := NIL; t.prev := NIL; t.rootedNext := NIL;
@@ -1190,7 +1190,7 @@ BEGIN
 	(* initialize the stack *)
 	Machine.NewStack(t.stack, t, sp);
 	IF VeryConservative THEN
-		Machine.Fill32(t.stack.adr, sp-t.stack.adr, LONGINT(0D0D0DEADH))
+		Machine.Fill32(t.stack.adr, sp-t.stack.adr, SIGNED32(0D0D0DEADH))
 	END;
 	SYSTEM.PUT (sp-1*AddressSize, obj); (* self parameter for body *)
 	SYSTEM.PUT (sp-2*AddressSize, terminate); (* return address for body *)
@@ -1221,8 +1221,8 @@ BEGIN
 END NewProcess;
 
 (* Create the process associated with an active object (kernel call). *)
-PROCEDURE CreateProcess*(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject);
-VAR t: Process; type: ADDRESS; heapBlock {UNTRACED}: Heaps.HeapBlock; i: LONGINT;
+PROCEDURE CreateProcess*(body: Body; priority: SIGNED32; flags: SET; obj: ProtectedObject);
+VAR t: Process; type: ADDRESS; heapBlock {UNTRACED}: Heaps.HeapBlock; i: SIGNED32;
 BEGIN
 	IF Stats THEN Machine.AtomicInc(Ncreate) END;
 
@@ -1267,7 +1267,7 @@ END Lock;
 
 (* Lock a protected object if priority inversion handling is disabled. Header locks, preemption and Machine.Objects locks are used. *)
 PROCEDURE LockNoPriorityInv(obj: ProtectedObject; exclusive: BOOLEAN);
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r: Process; id: LONGINT;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r: Process; id: SIGNED32;
 BEGIN (* {called from user level} *)
 	IF Stats THEN Machine.AtomicInc(Nlock) END;
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, hdr);
@@ -1304,7 +1304,7 @@ END LockNoPriorityInv;
     is locked by a process that itself waits on a resource. The procedure can be rewritten into a non-recursive procedure if needed..
     Remark: parameters of type Heaps.HeapBlock or extensions of it are not passed as parameters for clarity and safety reasons .
     Instead, a ProtectedObject pointer is passed as the first parameter.   *)
-PROCEDURE PropagatePrio(obj: ProtectedObject; prevMaxWaitingPrio, waitingPrio: LONGINT);
+PROCEDURE PropagatePrio(obj: ProtectedObject; prevMaxWaitingPrio, waitingPrio: SIGNED32);
 VAR hdr {UNTRACED}: Heaps.ProtRecBlock; p: Process;
 BEGIN
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, hdr);
@@ -1333,7 +1333,7 @@ END PropagatePrio;
     This procedure is the iterative version of the above commented out recursive procedure.
     Remark: hdr is an actually UNTRACED parameter. The GC, however, can handle this, see procedure Heaps.Mark, there is a check whether the
     pointer to the header part is valid. In case of hdr, the pointer ot the header part is NIL. *)
-PROCEDURE PropagatePrio(hdr: Heaps.ProtRecBlock; prevMaxWaitingPrio, waitingPrio: LONGINT);
+PROCEDURE PropagatePrio(hdr: Heaps.ProtRecBlock; prevMaxWaitingPrio, waitingPrio: SIGNED32);
 VAR propagateFurther: BOOLEAN; p: Process; obj: ProtectedObject;
 BEGIN
 	propagateFurther := TRUE;
@@ -1367,7 +1367,7 @@ END PropagatePrio;
 (* Lock a protected object if priority inversion handling is enabled. Machine.Objects lock is used. *)
 PROCEDURE LockPriorityInv(obj: ProtectedObject; exclusive: BOOLEAN);
 VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r: Process;
-	maxWaitingPrio, prevMaxWaitingPrio: LONGINT;
+	maxWaitingPrio, prevMaxWaitingPrio: SIGNED32;
 BEGIN (* {called from user level} *)
 	IF Stats THEN Machine.AtomicInc(Nlock) END;
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, hdr);
@@ -1432,8 +1432,8 @@ BEGIN
 END FindCondition;
 
 (* Find highest priority in array of priority counts *)
-PROCEDURE MaxPrio(CONST priorityCounts: ARRAY Heaps.NumPriorities OF WORD): WORD;
-VAR i: LONGINT;
+PROCEDURE MaxPrio(CONST priorityCounts: ARRAY Heaps.NumPriorities OF INTEGER): INTEGER;
+VAR i: SIGNED32;
 BEGIN
 	i := LEN(priorityCounts) - 1;
 	WHILE (i >= 0) & (priorityCounts[i] = 0) DO DEC(i) END;
@@ -1461,7 +1461,7 @@ END Unlock;
     Remark: hdr is an actually UNTRACED parameter. The GC, however, can handle this, see procedure Heaps.Mark, there is a check whether the
     pointer to the header part is valid. In case of hdr, the pointer ot the header part is NIL. *)
 PROCEDURE TransferLock(hdr: Heaps.ProtRecBlock; p: Process);
-VAR maxWaitingPrio: LONGINT;
+VAR maxWaitingPrio: SIGNED32;
 BEGIN
 	ASSERT(p # NIL);
 	p.waitingOn := NIL; hdr.lockedBy := p;
@@ -1475,7 +1475,7 @@ END TransferLock;
 
 (* Unlock a protected object if priority inversion handling is disabled. Header locks, preemption and Machine.Objects locks are used. *)
 PROCEDURE UnlockNoPriorityInv(obj: ProtectedObject);
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; t, c, r: Process; id: LONGINT;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; t, c, r: Process; id: SIGNED32;
 BEGIN
 	IF Stats THEN Machine.AtomicInc(Nunlock) END;
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, hdr);
@@ -1525,7 +1525,7 @@ END UnlockNoPriorityInv;
 
 (* Unlock a protected object in case priority inversion handling is enabled. Machine.Objects lock is used. *)
 PROCEDURE UnlockPriorityInv(obj: ProtectedObject);
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; t, c, r: Process; maxWaitingPrio: LONGINT;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; t, c, r: Process; maxWaitingPrio: SIGNED32;
 BEGIN
 	IF Stats THEN Machine.AtomicInc(Nunlock) END;
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, hdr);
@@ -1584,7 +1584,7 @@ END Await;
 
 (* Await a condition if priority inversion handling is disabled. Header locks, preemption and Machine.Objects locks are used. *)
 PROCEDURE AwaitNoPriorityInv(cond: Condition; slink: ADDRESS; obj: ProtectedObject; flags: SET);
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r, c, t: Process; id: LONGINT;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r, c, t: Process; id: SIGNED32;
 BEGIN
 	IF Stats THEN Machine.AtomicInc(Nawait) END;
 	IF 1 IN flags THEN (* compiler did not generate IF *)
@@ -1647,7 +1647,7 @@ END AwaitNoPriorityInv;
 
 (* Await a condition in case priority inversion handling is enabled. Machine.Objects lock is used. *)
 PROCEDURE AwaitPriorityInv(cond: Condition; slink: ADDRESS; obj: ProtectedObject; flags: SET);
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r, c, t: Process; id, maxWaitingPrio, prevMaxWaitingPrio: LONGINT;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r, c, t: Process; id, maxWaitingPrio, prevMaxWaitingPrio: SIGNED32;
 BEGIN
 	IF Stats THEN Machine.AtomicInc(Nawait) END;
 	IF 1 IN flags THEN (* compiler did not generate IF *)
@@ -1732,7 +1732,7 @@ END UpdateState;
 
 (** Start executing user processes. Every processor calls this during initialization. *)
 PROCEDURE Start*;
-VAR id, ignored: LONGINT; idle: Idle; new: Process;
+VAR id, ignored: SIGNED32; idle: Idle; new: Process;
 BEGIN (* running at kernel level (not preemptable) *)
 	ignored := Machine.AcquirePreemption();
 	id := Machine.ID (); (* preemption not enabled yet, because we are running at kernel level *)
@@ -1753,7 +1753,7 @@ END Start;
 (* Initialize module. *)
 PROCEDURE Init; (* can not use NEW *)
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	ProcessorHLT := NIL;
 	maxReady := High; (* scan all queues at start *)
@@ -1772,14 +1772,14 @@ BEGIN
 END Init;
 
 PROCEDURE InitEventHandling;
-VAR i: LONGINT; clock: Clock; (* realtimeClock: RealtimeClock; *)
+VAR i: SIGNED32; clock: Clock; (* realtimeClock: RealtimeClock; *)
 BEGIN
 	FOR i := 0 TO NumIRQ-1 DO
 		interrupt[i].root := NIL; interrupt[i].process := NIL
 	END;
 	(* create normal event list *)
 	NEW(event); event.next := event; event.prev := event;
-	event.trigger := Machine.ticks + MAX(LONGINT) DIV 2;
+	event.trigger := Machine.ticks + MAX(SIGNED32) DIV 2;
 	(* create normal timer processes *)
 	timer := NIL; NEW(clock);
 END InitEventHandling;
@@ -1819,7 +1819,7 @@ END GetCurrentStack;
 
 PROCEDURE InitPrioRequest;
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(init.prioRequests) - 1 DO init.prioRequests[i] := 0 END;
 END InitPrioRequest;

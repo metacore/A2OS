@@ -193,16 +193,16 @@ TYPE
 
 	UARTBuffer = ARRAY UARTBUFLEN OF SYSTEM.BYTE;  
 	UartDesc* = RECORD ( Device.DeviceDesc )
-			id: LONGINT;
-			baseAddr: LONGINT; (* Adress of Base register *)
-			clockFrequency: LONGINT; (* the clock used for the UART *)
-			in, out, oin, oout: LONGINT; (* And and Out index in in (in, out) and outbuffer (oin, oout) *)
-			baudrate: LONGINT; (* Baudrate *) 
-			parity: LONGINT; (* Parity *) 
-			databits: LONGINT; (* Number of data bits *) 
+			id: SIGNED32;
+			baseAddr: SIGNED32; (* Adress of Base register *)
+			clockFrequency: SIGNED32; (* the clock used for the UART *)
+			in, out, oin, oout: SIGNED32; (* And and Out index in in (in, out) and outbuffer (oin, oout) *)
+			baudrate: SIGNED32; (* Baudrate *) 
+			parity: SIGNED32; (* Parity *) 
+			databits: SIGNED32; (* Number of data bits *) 
 			trace: BOOLEAN; (* shall debug output be printed via Log? *)
 			open: BOOLEAN; (* Is the uart already initialised and open? *)
-			irqCnt: LONGINT;
+			irqCnt: SIGNED32;
 			irqEnabled: BOOLEAN; (* true, if this UART is handled by interrupts *) 
 			inbuffer, outbuffer: UARTBuffer; (* receive and sendbuffer *)
 			timeoutActive : BOOLEAN; (* if the timeout counter has been set *)
@@ -210,8 +210,8 @@ TYPE
 	END;  
 	
 	UartCfg = RECORD
-		addr : LONGINT;
-		clock : LONGINT;
+		addr : SIGNED32;
+		clock : SIGNED32;
 	END;
 	
 	Uart* = POINTER TO UartDesc;  
@@ -225,7 +225,7 @@ VAR
 	*)
 	PROCEDURE Init*( VAR uart: Uart; CONST cfg: UartCfg);
 	VAR
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 	
 		uart.baseAddr := cfg.addr;
@@ -243,11 +243,11 @@ VAR
 		
 	END Init;
 	
-	PROCEDURE DoIrq( CONST no : LONGINT );
+	PROCEDURE DoIrq( CONST no : SIGNED32 );
 	VAR
 		uart : Uart;
 		reg, ireg : SET;
-		cnt : LONGINT;
+		cnt : SIGNED32;
 		tort : BOOLEAN;
 	BEGIN
 	
@@ -310,7 +310,7 @@ VAR
 		END;
 	END DoIrq;
 	
-	PROCEDURE PSUartIrqHandler( irq: LONGINT );
+	PROCEDURE PSUartIrqHandler( irq: SIGNED32 );
 	BEGIN
 		(* check the IRQ source *)
 		IF ( irq = Interrupts.PSUART0IRQ ) THEN
@@ -327,15 +327,15 @@ VAR
 
 		res: error code, 0 in case of success
 	*)
-	PROCEDURE SetBaudrate*( VAR uart: Uart; CONST baudrate: LONGINT; VAR res: LONGINT );
+	PROCEDURE SetBaudrate*( VAR uart: Uart; CONST baudrate: SIGNED32; VAR res: SIGNED32 );
 	VAR
 		reg: SET;
-		inputClk: LONGINT;
-		valBAUDDIV, valBRGR, calcBaudrate, baudError: LONGINT;
-		bestError, bestBRGR, bestBAUDDIV: LONGINT;
+		inputClk: SIGNED32;
+		valBAUDDIV, valBRGR, calcBaudrate, baudError: SIGNED32;
+		bestError, bestBRGR, bestBAUDDIV: SIGNED32;
 	BEGIN
 	
-		bestError := MAX(LONGINT);(*1000;*)
+		bestError := MAX(SIGNED32);(*1000;*)
 		
 		(*
 			Make sure the baud rate is not impossilby large.
@@ -422,7 +422,7 @@ VAR
 	(** Enable/Disable the transmitter and receiver of the UART *)
 	PROCEDURE Enable*( CONST uart: Uart; enable: BOOLEAN );
 	VAR reg: SET;
-		tmp : LONGINT;
+		tmp : SIGNED32;
 	BEGIN
 		SYSTEM.GET(uart.baseAddr+XUARTPS_CR_OFFSET, reg );
 
@@ -441,7 +441,7 @@ VAR
 	END Enable;
 	
 	(* select the UART by index, return TRUE if successful *)
-	PROCEDURE GetUartByIndex( CONST no : LONGINT; VAR uart : Uart ) : BOOLEAN;
+	PROCEDURE GetUartByIndex( CONST no : SIGNED32; VAR uart : Uart ) : BOOLEAN;
 	VAR
 		ret : BOOLEAN;
 	BEGIN
@@ -459,7 +459,7 @@ VAR
 	END GetUartByIndex;
 	
 	
-	PROCEDURE EnableIrqMode*( CONST no : LONGINT; FifoLevel : LONGINT );
+	PROCEDURE EnableIrqMode*( CONST no : SIGNED32; FifoLevel : SIGNED32 );
 	VAR
 		reg : SET;
 		uart : Uart;
@@ -496,7 +496,7 @@ VAR
 				
 	END EnableIrqMode;
 	
-	PROCEDURE ShowIrqStatus*(CONST no : LONGINT );
+	PROCEDURE ShowIrqStatus*(CONST no : SIGNED32 );
 	VAR 
 		reg : SET;
 		uart : Uart;
@@ -514,14 +514,14 @@ VAR
 		
 	END ShowIrqStatus;
 	
-	PROCEDURE ShowUartSettings*( CONST no : LONGINT );
+	PROCEDURE ShowUartSettings*( CONST no : SIGNED32 );
 	CONST
 		OFF = 16;
 	VAR
 		uart : Uart;
 		reg : SET;
-		cd, bdiv : LONGINT;
-		sampleClk, baudClk : REAL;
+		cd, bdiv : SIGNED32;
+		sampleClk, baudClk : FLOAT32;
 	BEGIN
 		IF ( GetUartByIndex( no, uart )) THEN
 			
@@ -558,7 +558,7 @@ VAR
 	(**
 		Send data to the UART
 	*)
-	PROCEDURE Send*(CONST uart: Uart; CONST buf: ARRAY OF CHAR; offs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+	PROCEDURE Send*(CONST uart: Uart; CONST buf: ARRAY OF CHAR; offs, len: SIGNED32; propagate: BOOLEAN; VAR res: SIGNED32);
 	VAR csr: SET;
 	BEGIN
 
@@ -596,7 +596,7 @@ VAR
 	(**
 		Receive data from the UART
 	*)
-	PROCEDURE Receive*(CONST uart: Uart; VAR buf: ARRAY OF CHAR; offs, size, min: LONGINT; VAR len, res: LONGINT);
+	PROCEDURE Receive*(CONST uart: Uart; VAR buf: ARRAY OF CHAR; offs, size, min: SIGNED32; VAR len, res: SIGNED32);
 	BEGIN
 		res := 0;
 		len := 0;
@@ -614,7 +614,7 @@ VAR
 		Remarks:
 		blocks until the transmit buffer is not full
 	*)
-	PROCEDURE SendChar*(CONST uart: Uart; ch: CHAR; VAR res: LONGINT);
+	PROCEDURE SendChar*(CONST uart: Uart; ch: CHAR; VAR res: SIGNED32);
 	BEGIN
 
 		(* Wait until there is space in TX FIFO *)
@@ -631,7 +631,7 @@ VAR
 		Remarks:
 		blocks until a character is available
 	*)
-	PROCEDURE ReceiveChar*( CONST uart: Uart; VAR res: LONGINT ): CHAR;
+	PROCEDURE ReceiveChar*( CONST uart: Uart; VAR res: SIGNED32 ): CHAR;
 	BEGIN
 
 		(* wait until data is available *)
@@ -665,24 +665,24 @@ VAR
 	END Close;  
 
 	(* Bytes available for read *)
-	PROCEDURE Available( dev: Device.Device ): LONGINT;  
+	PROCEDURE Available( dev: Device.Device ): SIGNED32;  
 	BEGIN 
 		(*DoUart( dev(Uart));*)
 		RETURN (dev(Uart).in - dev(Uart).out) MOD UARTBUFLEN;
 	END Available;  
 
 	(* Get the number of bytes that are free in the send buffer *)
-	PROCEDURE Free( dev: Device.Device ): LONGINT;  
+	PROCEDURE Free( dev: Device.Device ): SIGNED32;  
 	VAR 
-		avail: LONGINT;  
+		avail: SIGNED32;  
 	BEGIN 
 		avail := UARTBUFLEN - 1 - ((dev(Uart).oin - dev(Uart).oout) MOD UARTBUFLEN );  
 		RETURN avail
 	END Free;  
 	
-	PROCEDURE Write( dev: Device.Device; CONST buf: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR len: LONGINT );
+	PROCEDURE Write( dev: Device.Device; CONST buf: ARRAY OF SYSTEM.BYTE; ofs: SIGNED32; VAR len: SIGNED32 );
 	VAR 
-		end, free: LONGINT;  
+		end, free: SIGNED32;  
 		uart: Uart;  
 	BEGIN 
 		IF (len > 0) & (ofs >= 0) THEN 
@@ -705,9 +705,9 @@ VAR
 	
 	END Write;  
 
-	PROCEDURE Read( dev: Device.Device; VAR buf: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR len: LONGINT );
+	PROCEDURE Read( dev: Device.Device; VAR buf: ARRAY OF SYSTEM.BYTE; ofs: SIGNED32; VAR len: SIGNED32 );
 	VAR 
-		end, available: LONGINT; 
+		end, available: SIGNED32; 
 		uart: Uart;  
 	BEGIN 
 		
@@ -734,7 +734,7 @@ VAR
 
 	PROCEDURE Flush( dev: Device.Device );  
 	VAR 
-		base: LONGINT;
+		base: SIGNED32;
 		value : SET;  
 	BEGIN 
 		base := dev(Uart).baseAddr;
@@ -743,9 +743,9 @@ VAR
 		REPEAT SYSTEM.GET( base+XUARTPS_SR_OFFSET, value ) UNTIL SR_TXEMPTY IN value;
 	END Flush;  
 
-	PROCEDURE EmptyFifo( CONST no : LONGINT );  
+	PROCEDURE EmptyFifo( CONST no : SIGNED32 );  
 	VAR 
-		used, res: LONGINT; 
+		used, res: SIGNED32; 
 		uart : Uart;
 	BEGIN 
 		IF ( GetUartByIndex( no, uart )) THEN
@@ -796,9 +796,9 @@ VAR
 		END;
 	END CheckTxBuffer;
 	
-	PROCEDURE UartHandler( uart: Uart; CONST size : LONGINT );  
+	PROCEDURE UartHandler( uart: Uart; CONST size : SIGNED32 );  
 	VAR 
-		res, k: LONGINT;  
+		res, k: SIGNED32;  
 	BEGIN 
 	
 		INC( uart.irqCnt );
@@ -821,7 +821,7 @@ VAR
 
 	END UartHandler;  
 
-	PROCEDURE Command( dev: Device.Device; cmd, param: LONGINT; VAR res: LONGINT );  
+	PROCEDURE Command( dev: Device.Device; cmd, param: SIGNED32; VAR res: SIGNED32 );  
 	VAR 
 		reg: SET; 
 		uart: Uart;  
@@ -851,7 +851,7 @@ VAR
 	PROCEDURE Open( dev: Device.Device );
 	VAR 
 		uart: Uart; 
-		res: LONGINT; 
+		res: SIGNED32; 
 	BEGIN
 	
 		Trace.StringLn("Entering Open().");
@@ -892,7 +892,7 @@ VAR
 	PROCEDURE Install*;
 	VAR
 		cfg: UartCfg;
-		i, res: LONGINT;
+		i, res: SIGNED32;
 	BEGIN
 	
 		Trace.StringLn("Entering UART install");

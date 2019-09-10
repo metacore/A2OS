@@ -19,13 +19,13 @@ CONST
 	LLRAYY*=H DIV 2;
 
 TYPE Name* = ARRAY 32 OF CHAR;
-TYPE SREAL*=REAL;
+TYPE SREAL*=FLOAT32;
 TYPE PT*= RECORD
 	x*,y*,z*: SREAL
 END;
 
 TYPE IPT*=RECORD
-	i*,j*,k*: INTEGER
+	i*,j*,k*: SIGNED16
 END;
 
 TYPE BOX*=RECORD
@@ -33,7 +33,7 @@ TYPE BOX*=RECORD
 END;
 
 TYPE Aperture* = RECORD
-	width*, height*: REAL
+	width*, height*: FLOAT32
 END;
 
 TYPE COLOR*=RECORD
@@ -49,7 +49,7 @@ TYPE V*= OBJECT
 PROCEDURE tick*;
 END tick;
 PROCEDURE register*;
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE voxelist[i] # NIL DO INC(i) END;
@@ -63,11 +63,11 @@ TYPE Ray* = RECORD
 	theta*, phi*: SREAL;
 	xyz*, dxyz*, ddxyz*, lxyz*,origin*: PT;
 	r*, g*, b*, ra*, ga*, ba*, a*: SREAL;
-	i*, j*, k*, recursion*: INTEGER;
+	i*, j*, k*, recursion*: SIGNED16;
 	scale*: SREAL;
 	length*: SREAL;
 	changed*,traced*: BOOLEAN;
-	face*: INTEGER;
+	face*: SIGNED16;
 	normal*: PT;   (* For lighting/shading; see mcell in srMSpace.Mod *)
 END;
 
@@ -79,7 +79,7 @@ TYPE LIMAGE*= ARRAY LW+2,LH+2 OF COLOR;
 TYPE Voxel*=OBJECT(V)
 VAR
 	passable*: BOOLEAN;
-	rlimit*: INTEGER;
+	rlimit*: SIGNED16;
 	complex*:BOOLEAN;
 PROCEDURE Shade*(VAR ray: Ray);
 END Shade;
@@ -112,11 +112,11 @@ PROCEDURE probe*(x,y,z: SREAL):Voxel;
 BEGIN
 	RETURN(SELF);
 END probe;
-PROCEDURE stroke*( p:PT; level: LONGINT; normal:PT; color: COLOR; mirror: BOOLEAN);
+PROCEDURE stroke*( p:PT; level: SIGNED32; normal:PT; color: COLOR; mirror: BOOLEAN);
 END stroke;
-PROCEDURE strokevoxel*(p:PT; level: LONGINT; voxel:Voxel);
+PROCEDURE strokevoxel*(p:PT; level: SIGNED32; voxel:Voxel);
 END strokevoxel;
-PROCEDURE linevoxel*(a,b: PT; level: LONGINT; v: Voxel);
+PROCEDURE linevoxel*(a,b: PT; level: SIGNED32; v: Voxel);
 END linevoxel;
 PROCEDURE setcamera*(x,y,z: SREAL);
 END setcamera;
@@ -161,10 +161,10 @@ END Voxel;
 
 VAR
 	voxelist: ARRAY 100 OF V;
-	fog*:REAL;
-	rlimit*: INTEGER;
-	iterlimit*: LONGINT;
-	frame*: LONGINT;
+	fog*:FLOAT32;
+	rlimit*: SIGNED16;
+	iterlimit*: SIGNED32;
+	frame*: SIGNED32;
 	img*: Raster.Image;
 	copy*: Raster.Mode;
 	light*: Light;
@@ -184,7 +184,7 @@ VAR
 	world*: Voxel;
 
 PROCEDURE clearvoxelist*;
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN
 	FOR i:=0 TO 99 DO voxelist[i]:=NIL END
 END clearvoxelist;
@@ -256,7 +256,7 @@ BEGIN
 END fzz3;
 
 PROCEDURE tick*;
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN
   IF TRUE OR  ~STOP THEN
 	i := 0;
@@ -439,7 +439,7 @@ END Exit;
 
 PROCEDURE filterlinear1*(VAR img:  IMAGE);
 VAR
-	i,j:LONGINT;
+	i,j:SIGNED32;
 	lr,lg,lb,r,g,b: SREAL;
 BEGIN
 	FOR i:= 0 TO W-1 DO
@@ -454,7 +454,7 @@ END filterlinear1;
 
 PROCEDURE filterlinear2*(VAR img:  IMAGE);
 VAR
-	i,j:LONGINT;
+	i,j:SIGNED32;
 	lr,lg,lb,r,g,b: SREAL;
 BEGIN
 	FOR j:= 0 TO H-1 DO

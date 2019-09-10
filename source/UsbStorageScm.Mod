@@ -32,13 +32,13 @@ TYPE
 		buffer : Usbdi.BufferPtr;
 		timer : Kernel.Timer;
 
-		PROCEDURE ScmShortPack(p1, p2 : CHAR) : INTEGER;
+		PROCEDURE ScmShortPack(p1, p2 : CHAR) : SIGNED16;
 		BEGIN
-			RETURN SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, ORD(p2)*256) + SYSTEM.VAL(SET, ORD(p1)));
+			RETURN SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, ORD(p2)*256) + SYSTEM.VAL(SET, ORD(p1)));
 		END ScmShortPack;
 
-		PROCEDURE ScmSendControl(dir : SET; req, reqtyp, value, index : LONGINT; VAR buffer : Usbdi.Buffer;
-			ofs, bufferlen, timeout : LONGINT) : WORD;
+		PROCEDURE ScmSendControl(dir : SET; req, reqtyp, value, index : SIGNED32; VAR buffer : Usbdi.Buffer;
+			ofs, bufferlen, timeout : SIGNED32) : INTEGER;
 		VAR status : Usbdi.Status; ignore : SIZE;
 		BEGIN
 			IF Debug.Trace & Debug.traceScTransfers THEN
@@ -79,7 +79,7 @@ TYPE
 		END ScmSendControl;
 
 		PROCEDURE ScmBulkTransport(dir : SET; VAR buffer : Usbdi.Buffer; ofs, bufferlen : SIZE;
-			VAR tlen : SIZE; timeout : LONGINT) : LONGINT;
+			VAR tlen : SIZE; timeout : SIGNED32) : SIGNED32;
 		VAR status : Usbdi.Status;
 		BEGIN
 			IF Debug.Trace & Debug.traceScTransfers THEN
@@ -144,8 +144,8 @@ TYPE
 			RETURN Base.ResOk;
 			END ScmBulkTransport;
 
-		PROCEDURE ScmWaitNotBusy(timeout : LONGINT) : WORD;
-		VAR status : CHAR; res : WORD;
+		PROCEDURE ScmWaitNotBusy(timeout : SIGNED32) : INTEGER;
+		VAR status : CHAR; res : INTEGER;
 		BEGIN
 			LOOP
 				res := ScmRead(ScmATA, 17X, status, 1000);
@@ -170,35 +170,35 @@ TYPE
 			RETURN Base.ResTimeout;
 		END ScmWaitNotBusy;
 
-		PROCEDURE ScmReadUserIO(VAR dataflags: CHAR; timeout : LONGINT) : WORD;
-		VAR res : WORD;
+		PROCEDURE ScmReadUserIO(VAR dataflags: CHAR; timeout : SIGNED32) : INTEGER;
+		VAR res : INTEGER;
 		BEGIN
 			res := ScmSendControl(Base.DataIn, 82H, 0C0H, 0, 0, buffer^, 0, 1, timeout);
 			dataflags := buffer[0];
 			RETURN res;
 		END ScmReadUserIO;
 
-		PROCEDURE ScmWriteUserIO(enableflags, dataflags: CHAR; timeout : LONGINT) : WORD;
+		PROCEDURE ScmWriteUserIO(enableflags, dataflags: CHAR; timeout : SIGNED32) : INTEGER;
 		BEGIN
 			RETURN ScmSendControl(Base.DataOut, 82H, 40H, ScmShortPack(enableflags, dataflags), 0, Usbdi.NoData, 0, 0, timeout);
 		END ScmWriteUserIO;
 
-		PROCEDURE ScmRead(access, reg : CHAR; VAR content: CHAR; timeout : LONGINT) : WORD;
-		VAR res : WORD;
+		PROCEDURE ScmRead(access, reg : CHAR; VAR content: CHAR; timeout : SIGNED32) : INTEGER;
+		VAR res : INTEGER;
 		BEGIN
 			res := ScmSendControl(Base.DataIn, ORD(access), 0C0H, ORD(reg), 0, buffer^, 0, 1, timeout);
 			content := buffer[0];
 			RETURN res;
 		END ScmRead;
 
-		PROCEDURE ScmWrite(access, reg, content : CHAR; timeout : LONGINT) : WORD;
+		PROCEDURE ScmWrite(access, reg, content : CHAR; timeout : SIGNED32) : INTEGER;
 		BEGIN
 			access := SYSTEM.VAL(CHAR, SYSTEM.VAL(SET, access) + {0});
 			RETURN ScmSendControl(Base.DataOut, ORD(access), 040H, ScmShortPack(reg, content), 0, Usbdi.NoData, 0, 0, timeout);
 		END ScmWrite;
 
-		PROCEDURE ScmMultipleWrite(access : CHAR; VAR registers, dataout: ARRAY OF CHAR; numregs,  timeout : LONGINT) : WORD;
-		VAR res: WORD; i, tlen : SIZE;
+		PROCEDURE ScmMultipleWrite(access : CHAR; VAR registers, dataout: ARRAY OF CHAR; numregs,  timeout : SIGNED32) : INTEGER;
+		VAR res: INTEGER; i, tlen : SIZE;
 		BEGIN
 			IF numregs > 7 THEN
 				IF Debug.Level >= Debug.Errors THEN KernelLog.String("UsbStorage: ScmMultipleWrite: Numregs > 7."); KernelLog.Ln;END;
@@ -227,8 +227,8 @@ TYPE
 			RETURN ScmWaitNotBusy(timeout);
 		END ScmMultipleWrite;
 
-		PROCEDURE ScmReadBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len: SIZE; VAR tlen : SIZE; timeout : LONGINT): WORD;
-		VAR res : WORD;
+		PROCEDURE ScmReadBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len: SIZE; VAR tlen : SIZE; timeout : SIGNED32): INTEGER;
+		VAR res : INTEGER;
 		BEGIN
 			command[0] := 0C0X;
 			command[1] := SYSTEM.VAL(CHAR, (SYSTEM.VAL(SET, access)+ {1}));
@@ -246,8 +246,8 @@ TYPE
 			RETURN res;
 		END ScmReadBlock;
 
-		PROCEDURE ScmWriteBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len : SIZE; VAR tlen : SIZE; timeout : LONGINT): WORD;
-		VAR res : WORD;
+		PROCEDURE ScmWriteBlock(access, reg : CHAR; VAR content : Usbdi.Buffer; ofs, len : SIZE; VAR tlen : SIZE; timeout : SIGNED32): INTEGER;
+		VAR res : INTEGER;
 		BEGIN
 			command[0] := 40X;
 			command[1] := SYSTEM.VAL(CHAR, (SYSTEM.VAL(SET, access)+ {0,1}));
@@ -268,14 +268,14 @@ TYPE
 		END ScmWriteBlock;
 
 		PROCEDURE ScmRWBlockTest(access : CHAR; VAR registers, dataout : ARRAY OF CHAR;
-			numregs :INTEGER; datareg, statusreg, atapitimeout, qualifier : CHAR; dir : SET; VAR content : Usbdi.Buffer;
-			ofs, contentlen: SIZE; VAR tlen : SIZE; timeout : LONGINT): WORD;
+			numregs :SIGNED16; datareg, statusreg, atapitimeout, qualifier : CHAR; dir : SET; VAR content : Usbdi.Buffer;
+			ofs, contentlen: SIZE; VAR tlen : SIZE; timeout : SIGNED32): INTEGER;
 		VAR
 			tmpreg : CHAR;
 			status : CHAR;
-			i, msgindex, msglen : INTEGER;
+			i, msgindex, msglen : SIGNED16;
 			tmplen : SIZE;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF numregs > 19 THEN
 				IF Debug.Level >= Debug.Errors THEN KernelLog.String("UsbStorage: ScmRWBlockTest too many registers"); KernelLog.Ln; END;
@@ -357,7 +357,7 @@ TYPE
 		END ScmRWBlockTest;
 
 		PROCEDURE ScmSelectAndTestRegisters() : BOOLEAN;
-		VAR selector : INTEGER; status : CHAR;
+		VAR selector : SIGNED16; status : CHAR;
 		BEGIN
 			FOR selector := 0A0H TO 0B0H BY 10H DO (* actually, test 0A0H and 0B0H *)
 				IF ScmWrite(ScmATA, 16X, CHR(selector), 1000) # Base.ResOk THEN RETURN FALSE END;
@@ -391,7 +391,7 @@ TYPE
 		END ScmSetShuttleFeatures;
 
 		PROCEDURE Initialization*() : BOOLEAN;
-		VAR status : CHAR; res : WORD;
+		VAR status : CHAR; res : INTEGER;
 		BEGIN
 			IF Debug.Trace & Debug.traceScInit THEN KernelLog.String("UsbStorage: Initializing SCM USB-ATAPI Shuttle... "); KernelLog.Ln; END;
 			res := ScmWriteUserIO(SYSTEM.VAL(CHAR, (SYSTEM.VAL(SET, ScmUioOE0) + SYSTEM.VAL(SET, ScmUioOE1))),
@@ -492,10 +492,10 @@ TYPE
 		END Initialization;
 
 		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : SIZE; dir : SET;
-			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : SIZE; VAR tlen : SIZE; timeout : LONGINT) : WORD;
+			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : SIZE; VAR tlen : SIZE; timeout : SIGNED32) : INTEGER;
 		VAR
 			registers, data : ARRAY 32 OF CHAR;
-			i : LONGINT; res : WORD;
+			i : SIGNED32; res : INTEGER;
 			status : CHAR;
 			atapilen, tmplen, sector, transfered : SIZE;
 			j : SIZE;
@@ -652,7 +652,7 @@ TYPE
 			RETURN Base.ResOk;
 		END Transport;
 
-		PROCEDURE Wait(ms : LONGINT);
+		PROCEDURE Wait(ms : SIGNED32);
 		BEGIN
 			timer.Sleep(ms);
 		END Wait;

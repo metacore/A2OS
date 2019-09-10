@@ -10,7 +10,7 @@ TYPE
 			width, height: SIZE;
 
 		(* open the decoder on a file *)
-		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
 		VAR
 			xmlScanner: XMLScanner.Scanner;
 			xmlParser: XMLParser.Parser;
@@ -36,7 +36,7 @@ TYPE
 			height := img.height;
 		END Open;
 
-		PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : LONGINT);
+		PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : SIGNED32);
 		BEGIN
 			width := SELF.width;
 			height := SELF.height;
@@ -48,7 +48,7 @@ TYPE
 			SetProgressionLevel, the level is assumed to be maxProgressionLevel of the image,
 			which corresponds to best image quality.
 		 *)
-		PROCEDURE SetProgressionLevel*(progressionLevel: LONGINT);
+		PROCEDURE SetProgressionLevel*(progressionLevel: SIGNED32);
 		END SetProgressionLevel;
 
 		(* return the image in Raster format that best matches the format *)

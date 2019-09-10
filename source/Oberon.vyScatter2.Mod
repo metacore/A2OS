@@ -62,7 +62,7 @@ VAR
 	END Copy;
 
 	PROCEDURE Recall( scatter: tLayer );
-	VAR nrData, i: LONGINT;  sel: vyBase.tVector;  xx, yy: Coordinate;  b, lastb: BOOLEAN;  lastx, lasty: Coordinate;  width: INTEGER;
+	VAR nrData, i: SIGNED32;  sel: vyBase.tVector;  xx, yy: Coordinate;  b, lastb: BOOLEAN;  lastx, lasty: Coordinate;  width: SIGNED16;
 		pattern: ARRAY 256 OF CHAR;
 	BEGIN
 		Attributes.GetString( scatter, "plotpattern", pattern );
@@ -133,7 +133,7 @@ VAR
 	PROCEDURE Actor( layer: vyPort.tLayer;  sel: vyBase.tVector;  x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real;
 								VAR somethingChanged: BOOLEAN );
 	(*vs 0.0a1	md  16.08.94 *)
-	VAR scatter: tLayer;  nrData, i: LONGINT;  new: BOOLEAN;  X, Y: Real;
+	VAR scatter: tLayer;  nrData, i: SIGNED32;  new: BOOLEAN;  X, Y: Real;
 
 		PROCEDURE PointInRect( px, py, x0, y0, x1, y1: Real ): BOOLEAN;
 		BEGIN
@@ -164,7 +164,7 @@ VAR
 	(*? should be supported as the selections with an abstract identifier *)
 	(*vs 0.0a1 *)  (* md  04.06.95 *)
 	CONST toleranz = 2 * vyHostDisplay.pixel;
-	VAR p: vyPort.Picture;  found, i, nrData: LONGINT;  r: Real;  lx, ly, x0, y0: Coordinate;  id, val: vyName.tNameArray;
+	VAR p: vyPort.Picture;  found, i, nrData: SIGNED32;  r: Real;  lx, ly, x0, y0: Coordinate;  id, val: vyName.tNameArray;
 	BEGIN
 		vyHostDisplay.SetCursor( vyHostDisplay.Wheel );  found := -1;  nrData := scatter.x.nrData;
 		p := event.dlink( vyPort.Picture );  id := "";
@@ -192,11 +192,11 @@ VAR
 	END Prompt;
 
 	PROCEDURE Responsible( scatter: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 
 		PROCEDURE InScatter( x, y: Coordinate ): BOOLEAN;
 		CONST eps = 3;
-		VAR minX, minY, maxX, maxY: Real;  x0, y0, x1, y1: Coordinate;  nans: LONGINT;
+		VAR minX, minY, maxX, maxY: Real;  x0, y0, x1, y1: Coordinate;  nans: SIGNED32;
 
 		BEGIN
 			vyTypes.VGetMinMax( scatter.x, minX, maxX, nans );  vyTypes.VGetMinMax( scatter.y, minY, maxY, nans );
@@ -215,7 +215,7 @@ VAR
 	END Responsible;
 
 	PROCEDURE Consume( o: tLayer;  msg: Display.ConsumeMsg );
-	VAR v, w: vyBase.tVector;  minX, maxX, minY, maxY: Real;  pict: vyPort.Picture;  data: Objects.Object;  nans: LONGINT;
+	VAR v, w: vyBase.tVector;  minX, maxX, minY, maxY: Real;  pict: vyPort.Picture;  data: Objects.Object;  nans: SIGNED32;
 	BEGIN
 		pict := msg.dlink( vyPort.Picture );  data := msg.obj;  v := vyBase.GetVFromObj( data );  data := data.slink;
 		w := vyBase.GetVFromObj( data );
@@ -251,7 +251,7 @@ VAR
 	END HandleAttributes;
 
 	PROCEDURE AdjustCoord( pict: vyPort.Picture;  obj: tLayer );
-	VAR minX, maxX, minY, maxY: REAL;  nans: LONGINT;
+	VAR minX, maxX, minY, maxY: FLOAT32;  nans: SIGNED32;
 	BEGIN
 		IF pict # NIL THEN
 			IF (obj.x # NIL ) & (obj.y # NIL ) THEN
@@ -312,7 +312,7 @@ VAR
 	END Store0;
 
 	PROCEDURE Load0( obj: tLayer;  VAR M: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		version := 0;  dlink := M.dlink;  Gadgets.ReadRef( M.R, obj.lib, objsub );
 		IF objsub = NIL THEN Files.ReadInt( M.R, version );  Gadgets.ReadRef( M.R, obj.lib, objsub ) END;
@@ -488,7 +488,7 @@ END Init;*)
 	END ShowP;
 
 	PROCEDURE ShowL*( list: vyLinks.Link );
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN
 		WHILE list # NIL DO
 			New;  Init( newlayer, list.obj );

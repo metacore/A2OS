@@ -56,7 +56,7 @@ TYPE
 		selChanges: vyBase.tVector;   (* changes of the selection by the last action *)
 		oldSelection: vyBase.tVector;   (* safed old selection for restoring after interclick *)
 		selection: vyBase.tVector;
-		nrData-: LONGINT;
+		nrData-: SIGNED32;
 
 		(* dynamic entries - not stored. May be modified *)
 		layer: vyPort.tLayer;
@@ -67,7 +67,7 @@ TYPE
 	END;
 
 VAR
-	selectionMode*: INTEGER;  lastDataSize: LONGINT;  newselector*: tSelector;
+	selectionMode*: SIGNED16;  lastDataSize: SIGNED32;  newselector*: tSelector;
 
 	PROCEDURE New*;
 	BEGIN
@@ -121,7 +121,7 @@ VAR
 		END
 	END Handler;
 
-	PROCEDURE GetAttribute( n: LONGINT;  type: INTEGER;  name: vyName.tNameArray ): vyBase.tVector;
+	PROCEDURE GetAttribute( n: SIGNED32;  type: SIGNED16;  name: vyName.tNameArray ): vyBase.tVector;
 	(*vs 0.0a1 *)  (* md  05.06.95 *)
 	VAR attr: vyBase.Object;
 
@@ -218,7 +218,7 @@ END ReturnToPicture;*)
 
 	PROCEDURE Actor( selector: tSelector;  x0, y0, xLast, yLast, xNew, yNew: Coordinate );
 	(*vs 0.0a1	md  17.08.94 *)
-	VAR x0R, y0R, xLastR, yLastR, xNewR, yNewR: Real;  i: LONGINT;  x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real;
+	VAR x0R, y0R, xLastR, yLastR, xNewR, yNewR: Real;  i: SIGNED32;  x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real;
 		somethingChanged: BOOLEAN;  p: vyPort.Picture;
 
 		PROCEDURE GetRegularRect( lx0, ly0, lx1, ly1: Real;  VAR X0, Y0, X1, Y1: Real );
@@ -262,7 +262,7 @@ END ReturnToPicture;*)
 
 	PROCEDURE DoSelection( selector: tSelector;  VAR event: vyEvents.EventMsg );
 	(*vs 0.0a1	md  17.08.94 *)
-	VAR x0, y0, xOld, yOld, xNew, yNew, xLast, yLast: Coordinate;  gesture: INTEGER;
+	VAR x0, y0, xOld, yOld, xNew, yNew, xLast, yLast: Coordinate;  gesture: SIGNED16;
 	BEGIN
 		vyGraphBase.SetDisplayMode( vyGraphBase.invert );  vyPort.PictureHandleSetPicture( selector.picture );
 		x0 := event.x;  y0 := event.y;  xOld := x0;  yOld := y0;  xLast := x0;  yLast := y0;  xNew := event.x;  yNew := event.y;
@@ -309,9 +309,9 @@ END ReturnToPicture;*)
 
 	END AdjustHighlight;
 
-	PROCEDURE OpenSelector*( layer: vyPort.tLayer;  n: LONGINT;  vizor: tVisualizer;  actor: tIdentifier;  VAR msg: Objects.ObjMsg );
+	PROCEDURE OpenSelector*( layer: vyPort.tLayer;  n: SIGNED32;  vizor: tVisualizer;  actor: tIdentifier;  VAR msg: Objects.ObjMsg );
 	(*vs 0.0a1	md  17.08.94 *)
-	VAR i: LONGINT;  o: vyBase.Object;  selector: tSelector;
+	VAR i: SIGNED32;  o: vyBase.Object;  selector: tSelector;
 	BEGIN
 		(* heuristics: find highlight candidate *)
 		AdjustHighlight( layer );  selector := layer.highlight( tSelector );
@@ -366,7 +366,7 @@ END ReturnToPicture;*)
 	END SetMode;
 (*
 PROCEDURE ColorData*;   (*! remove this from vyHighlight *)
-VAR s: vyParser.Scanner;   color: LONGINT;   i: LONGINT;
+VAR s: vyParser.Scanner;   color: SIGNED32;   i: SIGNED32;
 sel, col: vyBase.tVector;
 
 BEGIN

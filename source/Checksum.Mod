@@ -61,7 +61,7 @@ VAR
 	PROCEDURE ComputeHash( r: Files.Reader; h: Hashes.Hash; out: Streams.Writer );
 	VAR
 		buf: ARRAY 128 OF CHAR;
-		got: SIZE; i, x: LONGINT;
+		got: SIZE; i, x: SIGNED32;
 	BEGIN
 		h.Initialize;
 		WHILE r.Available() > 0 DO

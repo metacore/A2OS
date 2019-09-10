@@ -10,7 +10,7 @@ VAR p0, p1: ADDRESS;
 	edi	: address of frame buffer
 *)
 
-PROCEDURE JumpTo*(adr : ADDRESS; rax, rsi, rdi, rcx, rdx: HUGEINT);
+PROCEDURE JumpTo*(adr : ADDRESS; rax, rsi, rdi, rcx, rdx: SIGNED64);
 CODE {SYSTEM.AMD64, SYSTEM.Privileged}
 
 	MOV RDI, [RBP+rdi];  fbAddr

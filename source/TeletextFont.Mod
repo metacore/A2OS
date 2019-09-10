@@ -8,26 +8,26 @@ IMPORT
 	Files;
 
 TYPE
-	Char32 = LONGINT;
+	Char32 = SIGNED32;
 	Glyph = RECORD
 		img : Graphics.Image;
 		code : Char32; (* import only *)
-		fpos : LONGINT;
+		fpos : SIGNED32;
 		loaded : BOOLEAN;
 	END;
 	GlyphArray = POINTER TO ARRAY OF Glyph;
 
 	GlyphRange = RECORD
-		firstCode, lastCode : LONGINT; (* inclusive *)
+		firstCode, lastCode : SIGNED32; (* inclusive *)
 		glyphs : GlyphArray;
 	END;
 	GlyphRangeArray = POINTER TO ARRAY OF GlyphRange;
 
 	Font = OBJECT(Graphics.Font)
 	VAR
-		nofGlyphRanges : LONGINT;
+		nofGlyphRanges : SIGNED32;
 		glyphRanges : GlyphRangeArray;
-		grc : LONGINT;
+		grc : SIGNED32;
 		placeholderimg : Graphics.Image;
 		fontFile : Files.File;
 		empty : WMRectangles.Rectangle;
@@ -45,7 +45,7 @@ TYPE
 			ascent := 10; descent := 8;
 		END Init;
 
-		PROCEDURE GetGlyphMap*(code : LONGINT; VAR map : Graphics.Image);
+		PROCEDURE GetGlyphMap*(code : SIGNED32; VAR map : Graphics.Image);
 		VAR g : Glyph;
 		BEGIN
 			IF FindGlyph(code, g) THEN
@@ -55,14 +55,14 @@ TYPE
 			END
 		END GetGlyphMap;
 
-		PROCEDURE HasChar(char : LONGINT) : BOOLEAN;
-		VAR dummy : LONGINT;
+		PROCEDURE HasChar(char : SIGNED32) : BOOLEAN;
+		VAR dummy : SIGNED32;
 		BEGIN
 			RETURN FindGlyphRange(char, dummy)
 		END HasChar;
 
 
-		PROCEDURE GetGlyphSpacings*(code : LONGINT; VAR glyphSpacings : Graphics.GlyphSpacings);
+		PROCEDURE GetGlyphSpacings*(code : SIGNED32; VAR glyphSpacings : Graphics.GlyphSpacings);
 		VAR g : Glyph;
 		BEGIN
 			IF FindGlyph(code, g) THEN
@@ -75,8 +75,8 @@ TYPE
 			END
 		END GetGlyphSpacings;
 
-		PROCEDURE LoadGlyph(code : LONGINT; VAR g : Glyph);
-		VAR gri : LONGINT;
+		PROCEDURE LoadGlyph(code : SIGNED32; VAR g : Glyph);
+		VAR gri : SIGNED32;
 		BEGIN
 			IF FindGlyph(code, g) & ~g.loaded THEN
 				ReadGlyph(fontFile, g); g.loaded := TRUE;
@@ -84,8 +84,8 @@ TYPE
 			END
 		END LoadGlyph;
 
-		PROCEDURE FindGlyphRange(code : Char32; VAR gri : LONGINT) : BOOLEAN;
-		VAR a, b, m : LONGINT;
+		PROCEDURE FindGlyphRange(code : Char32; VAR gri : SIGNED32) : BOOLEAN;
+		VAR a, b, m : SIGNED32;
 		BEGIN
 			IF nofGlyphRanges = 0 THEN RETURN FALSE END;
 			(* check cached clyph range *)
@@ -105,15 +105,15 @@ TYPE
 		END FindGlyphRange;
 
 		PROCEDURE FindGlyph(code : Char32; VAR glyph : Glyph) : BOOLEAN;
-		VAR gri : LONGINT;
+		VAR gri : SIGNED32;
 		BEGIN
 			IF FindGlyphRange(code, gri) THEN glyph := glyphRanges[gri].glyphs[code - glyphRanges[gri].firstCode]; RETURN TRUE
 			ELSE RETURN FALSE
 			END
 		END FindGlyph;
 
-		PROCEDURE CountGlyphes():LONGINT;
-		VAR i, c : LONGINT;
+		PROCEDURE CountGlyphes():SIGNED32;
+		VAR i, c : SIGNED32;
 		BEGIN
 			FOR i := 0 TO nofGlyphRanges - 1 DO
 				c := c + glyphRanges[i].lastCode - glyphRanges[i].firstCode + 1;
@@ -132,13 +132,13 @@ TYPE
 			el : XML.Content;
 			s : Strings.String;
 			cont : Objects.Enumerator;
-			nofGlyphs : LONGINT;
+			nofGlyphs : SIGNED32;
 			glyphs : GlyphArray;
 
-			curindex : LONGINT;
+			curindex : SIGNED32;
 
-			PROCEDURE CountRanges(): LONGINT;
-			VAR i : LONGINT; c, r: LONGINT;
+			PROCEDURE CountRanges(): SIGNED32;
+			VAR i : SIGNED32; c, r: SIGNED32;
 			BEGIN
 				c := glyphs[0].code; r := 1;
 				FOR i := 1 TO nofGlyphs - 1 DO
@@ -148,8 +148,8 @@ TYPE
 				RETURN r
 			END CountRanges;
 
-			PROCEDURE GetRangeLength(i : LONGINT): LONGINT;
-			VAR count, c : LONGINT;
+			PROCEDURE GetRangeLength(i : SIGNED32): SIGNED32;
+			VAR count, c : SIGNED32;
 			BEGIN
 				count := 1; c := glyphs[i].code;
 				WHILE (i + count < nofGlyphs) & (glyphs[i + count].code = c + count) DO INC(count) END;
@@ -157,7 +157,7 @@ TYPE
 			END GetRangeLength;
 
 			PROCEDURE MakeRanges;
-			VAR i, j, rl, r : LONGINT;
+			VAR i, j, rl, r : SIGNED32;
 			BEGIN
 				nofGlyphRanges := CountRanges();
 				NEW(glyphRanges, nofGlyphRanges);
@@ -172,8 +172,8 @@ TYPE
 				END
 			END MakeRanges;
 
-			PROCEDURE HexStrToInt(VAR s: ARRAY OF CHAR): LONGINT;
-				VAR vh, d, i: LONGINT;
+			PROCEDURE HexStrToInt(VAR s: ARRAY OF CHAR): SIGNED32;
+				VAR vh, d, i: SIGNED32;
 			BEGIN
 				i:=0;
 				vh := 0;
@@ -188,7 +188,7 @@ TYPE
 				RETURN vh
 			END HexStrToInt;
 
-			PROCEDURE ReadByte(VAR s : ARRAY OF CHAR; pos: LONGINT): LONGINT;
+			PROCEDURE ReadByte(VAR s : ARRAY OF CHAR; pos: SIGNED32): SIGNED32;
 			VAR hex : ARRAY 3 OF CHAR;
 			BEGIN
 				Strings.Copy(s, pos, 2, hex);
@@ -196,8 +196,8 @@ TYPE
 			END ReadByte;
 
 			PROCEDURE GenChar(x : XML.Element);
-			VAR scode, sbitmap : XML.String; code, count, i, w, h : LONGINT; bitmap : Graphics.Image;
-				pos : LONGINT; color : BOOLEAN;
+			VAR scode, sbitmap : XML.String; code, count, i, w, h : SIGNED32; bitmap : Graphics.Image;
+				pos : SIGNED32; color : BOOLEAN;
 				p0, p1 : Raster.Pixel;
 				mode : Raster.Mode;
 			BEGIN
@@ -256,8 +256,8 @@ TYPE
 		END Import;
 
 		(** works up to 255x255x2 *)
-		PROCEDURE RasterToBWRLBytes(img : Raster.Image; VAR buf : ARRAY OF CHAR; VAR pos : LONGINT);
-		VAR i: SIZE; count: LONGINT;
+		PROCEDURE RasterToBWRLBytes(img : Raster.Image; VAR buf : ARRAY OF CHAR; VAR pos : SIGNED32);
+		VAR i: SIZE; count: SIGNED32;
 				p : Raster.Pixel;
 				pix, curpix : BOOLEAN; mode : Raster.Mode;
 		BEGIN
@@ -286,8 +286,8 @@ TYPE
 		END RasterToBWRLBytes;
 
 		PROCEDURE Save(filename : ARRAY OF CHAR);
-		VAR w : Files.Rider; i, j, c: LONGINT; f : Files.File;
-				buf : ARRAY 2024 OF CHAR; fixup: Files.Position; pos : LONGINT;
+		VAR w : Files.Rider; i, j, c: SIGNED32; f : Files.File;
+				buf : ARRAY 2024 OF CHAR; fixup: Files.Position; pos : SIGNED32;
 		BEGIN
 			f := Files.New(filename);f.Set(w, 0);
 			(* write number of ranges *)
@@ -313,7 +313,7 @@ TYPE
 					KernelLog.String("Calling Raster... ");
 					IF c < 319 THEN
 						RasterToBWRLBytes(glyphRanges[i].glyphs[j].img, buf, pos);
-						glyphRanges[i].glyphs[j].fpos := f.Pos(w)(LONGINT);
+						glyphRanges[i].glyphs[j].fpos := f.Pos(w)(SIGNED32);
 						KernelLog.Int(pos, 5); KernelLog.Ln;
 						f.WriteBytes(w, buf, 0, pos)
 					END
@@ -335,12 +335,12 @@ TYPE
 
 		PROCEDURE ReadGlyph(VAR f: Files.File;  VAR g : Glyph);
 		VAR r : Files.Rider;
-			w, h, i, c : LONGINT;
+			w, h, i, c : SIGNED32;
 			pix : BOOLEAN;
 			p0, p1 : Raster.Pixel;
 			mode : Raster.Mode;
 
-			PROCEDURE GetB():LONGINT;
+			PROCEDURE GetB():SIGNED32;
 			VAR ch : CHAR;
 			BEGIN
 				f.Read(r, ch);
@@ -374,8 +374,8 @@ TYPE
 		END ReadGlyph;
 
 		PROCEDURE Load(filename : ARRAY OF CHAR);
-		VAR r : Files.Rider; i, j: LONGINT; f : Files.File;
-				notenoughregisters: LONGINT;
+		VAR r : Files.Rider; i, j: SIGNED32; f : Files.File;
+				notenoughregisters: SIGNED32;
 		BEGIN
 			f := Files.Old(filename); f.Set(r, 0);
 			fontFile := f;

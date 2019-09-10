@@ -19,7 +19,7 @@ TYPE	WriterMonitor* = OBJECT (Streams.Writer);
 			Reset;
 		END Init;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		BEGIN
 			out.Bytes(outBuf, ofs, len);
 			monitor.Bytes(outBuf, ofs, len);
@@ -57,7 +57,7 @@ TYPE	EncryptingWriter* = OBJECT (Streams.Writer);
 			Reset;
 		END Init;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR i: SIZE;
 		BEGIN
 			FOR i:=0 TO len-1 DO buf[i]:=outBuf[ofs+i] END;
@@ -88,7 +88,7 @@ TYPE	EncryptingWriter* = OBJECT (Streams.Writer);
 			SELF.decrypt:=decrypt;
 		END Init;
 
-		PROCEDURE Receiver(VAR inBuf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receiver(VAR inBuf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		BEGIN
 			ASSERT((size > 0) & (min <= size) & (min >= 0));
 			in.Bytes(inBuf, ofs, size, len);
@@ -129,7 +129,7 @@ TYPE
 			Reset;
 		END InitWriter;
 
-		PROCEDURE Add(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Add(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR entry: WriteEntry;
 		BEGIN
 			IF ~ToLastEntry(outBuf, ofs, len, propagate, res) THEN
@@ -142,7 +142,7 @@ TYPE
 		END Add;
 
 		(* check last entry for enough space to host data. If available, remove from list and return *)
-		PROCEDURE ToLastEntry(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD): BOOLEAN;
+		PROCEDURE ToLastEntry(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER): BOOLEAN;
 		BEGIN{EXCLUSIVE}
 			IF last = NIL THEN RETURN FALSE
 			ELSIF last.propagate # propagate THEN RETURN FALSE
@@ -229,7 +229,7 @@ TYPE
 			RETURN out.Pos()
 		END Pos;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		BEGIN
 			out.Bytes(outBuf, ofs, len);
 			IF propagate THEN out.Update END;
@@ -251,7 +251,7 @@ TYPE
 			SELF.monitor:=monitor;
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		BEGIN
 			ASSERT((size > 0) & (min <= size) & (min >= 0));
 			size := MAX(min,MIN(in.Available(),size));
@@ -287,7 +287,7 @@ TYPE
 			SELF.size:=size; remain:=size;
 		END Init;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR num:SIZE;
 		BEGIN
 			num:=MIN(remain,len);
@@ -315,7 +315,7 @@ TYPE
 			total:=size; remain:=size;
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR num, length: SIZE;
 		BEGIN
 			ASSERT(size >= 0);
@@ -352,7 +352,7 @@ TYPE	Base64Writer* = OBJECT (Streams.Writer);
 			group := 0;  i := 0;  ll := 0; done:=FALSE;
 		END Reset;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR ix: SIZE;
 		BEGIN
 			IF done THEN res:=Streams.EOF; RETURN END;
@@ -400,7 +400,7 @@ TYPE	Base64Writer* = OBJECT (Streams.Writer);
 	Base64Reader* = OBJECT(Streams.Reader)
 		VAR in: Streams.Reader;
 			i, rest, group: SIZE;
-			code: INTEGER;
+			code: SIGNED16;
 			done:BOOLEAN;
 
 		PROCEDURE &Init*(in: Streams.Reader);
@@ -418,7 +418,7 @@ TYPE	Base64Writer* = OBJECT (Streams.Writer);
 			group := 0;  i := 0; code:=0; done:=FALSE;
 		END Reset;
 
-		PROCEDURE Receiver(VAR inBuf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receiver(VAR inBuf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR c:CHAR; size4: SIZE;
 		BEGIN
 			size4:=size DIV 4 * 4; (* a multiple of 4*)
@@ -469,7 +469,7 @@ TYPE	Base64Writer* = OBJECT (Streams.Writer);
 	END Base64Reader;
 
 TYPE DumpWriter*= OBJECT(Streams.Writer);
-		PROCEDURE Send* ( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
+		PROCEDURE Send* ( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: INTEGER );
 		BEGIN
 			res:=Streams.Ok;
 		END Send;
@@ -479,11 +479,11 @@ TYPE DumpWriter*= OBJECT(Streams.Writer);
 
 	VAR (*tables for Base64*)
 		etab: ARRAY 64 OF CHAR;
-		dtab: ARRAY 128 OF INTEGER;
+		dtab: ARRAY 128 OF SIGNED16;
 		tablesReady:BOOLEAN;
 
 	PROCEDURE InitTables;
-		VAR i, max: INTEGER;
+		VAR i, max: SIGNED16;
 		BEGIN
 			max := ORD("Z") - ORD("A");
 			FOR i := 0 TO max DO

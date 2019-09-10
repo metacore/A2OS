@@ -30,15 +30,15 @@ CONST
 
 TYPE
 	Loc* = RECORD
-		org*, pos*: LONGINT;	(** pos and line origin of location *)
-		x*, y*, w*: INTEGER;	(** rel. coords *)
-		x1, w1: INTEGER
+		org*, pos*: SIGNED32;	(** pos and line origin of location *)
+		x*, y*, w*: SIGNED16;	(** rel. coords *)
+		x1, w1: SIGNED16
 	END;
 
 	Frame* = POINTER TO FrameDesc;
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
 		file: Texts.Text;
-		org*: LONGINT;
+		org*: SIGNED32;
 		nibble, insert: BOOLEAN;
 		car*: BOOLEAN;
 		carloc*: Loc;
@@ -50,9 +50,9 @@ TYPE
 	END;
 
 	ScrollMsg = RECORD (Display.FrameMsg)
-		org: LONGINT;
-		oldLines, newLines: LONGINT;
-		dy: INTEGER
+		org: SIGNED32;
+		oldLines, newLines: SIGNED32;
+		dy: SIGNED16
 	END;
 
 	StoreMsg = RECORD (Display.FrameMsg)
@@ -65,18 +65,18 @@ VAR
 	fnt: Fonts.Font;
 	list: Gadgets.Frame;
 	lastF: Frame;
-	hBlock, tBlock: INTEGER;
-	charW, lineH: INTEGER;
+	hBlock, tBlock: SIGNED16;
+	charW, lineH: SIGNED16;
 	ch: CHAR;
 	Hex: ARRAY 16 OF CHAR;
 	buf: ARRAY bufSize OF CHAR;
 	sPat: ARRAY MaxPatLen OF CHAR;
-	sDv: ARRAY MaxPatLen + 1 OF INTEGER;
-	sLen: LONGINT;
-	PrintertopY, PrinterbotY, PrinterleftX, PagenoX, HeaderY: INTEGER;
+	sDv: ARRAY MaxPatLen + 1 OF SIGNED16;
+	sLen: SIGNED32;
+	PrintertopY, PrinterbotY, PrinterleftX, PagenoX, HeaderY: SIGNED16;
 
 (** ------------ frame stuff ------------ *)
-PROCEDURE P (x: LONGINT): INTEGER;
+PROCEDURE P (x: SIGNED32): SIGNED16;
 BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 END P;
 
@@ -84,15 +84,15 @@ PROCEDURE IsHexDigit (ch: CHAR): BOOLEAN;
 BEGIN RETURN (ch >= "0") & (ch <="9") OR (CAP(ch) >= "A") & (CAP(ch) <= "F")
 END IsHexDigit;
 
-PROCEDURE HexToInt (ch: CHAR): LONGINT;
+PROCEDURE HexToInt (ch: CHAR): SIGNED32;
 BEGIN
 	IF ch <= "9" THEN  RETURN ORD(ch) - ORD("0")
 	ELSE RETURN ORD(CAP(ch)) - ORD("A") + 10
 	END
 END HexToInt;
 
-PROCEDURE ClipAgainst (VAR x, y, w, h: INTEGER; X, Y, W, H: INTEGER);
-VAR r, t: INTEGER;
+PROCEDURE ClipAgainst (VAR x, y, w, h: SIGNED16; X, Y, W, H: SIGNED16);
+VAR r, t: SIGNED16;
 BEGIN
 	r := x + w; t := y + h;
 	IF x < X THEN x := X END;
@@ -102,12 +102,12 @@ BEGIN
 	w := r - x; h := t - y
 END ClipAgainst;
 
-PROCEDURE LinesVisible* (H: INTEGER): LONGINT;
+PROCEDURE LinesVisible* (H: SIGNED16): SIGNED32;
 BEGIN RETURN (H - Top - Bot - fnt.minY) DIV lineH
 END LinesVisible;
 
-PROCEDURE CalcPlace (x, y, w, h: INTEGER; VAR px, py: INTEGER);
-VAR cx, cy, cw, ch: INTEGER;
+PROCEDURE CalcPlace (x, y, w, h: SIGNED16; VAR px, py: SIGNED16);
+VAR cx, cy, cw, ch: SIGNED16;
 BEGIN
 	cx := 10; cy := 10; cw := Display.Width - 10; ch := Display.Height - 10;
 	px := x; py := y - h DIV 2;
@@ -117,8 +117,8 @@ BEGIN
 	IF py + h >= cy + ch THEN py := cy + ch - 1 - h END
 END CalcPlace;
 
-PROCEDURE LocateLine* (F: Frame; y, Y: INTEGER; VAR loc: Loc);
-VAR pos, last: LONGINT; curY: INTEGER;
+PROCEDURE LocateLine* (F: Frame; y, Y: SIGNED16; VAR loc: Loc);
+VAR pos, last: SIGNED32; curY: SIGNED16;
 BEGIN
 	pos := F.org; curY := y + F.H - Top - lineH;
 	last := F.org + (LinesVisible(F.H) - 1)*16;
@@ -129,8 +129,8 @@ BEGIN
 	loc.org := pos; loc.y := curY - (y + F.H - 1)
 END LocateLine;
 
-PROCEDURE LocateChar* (F: Frame; x, y, X, Y: INTEGER; VAR loc: Loc);
-VAR pos, len: LONGINT; curX: INTEGER;
+PROCEDURE LocateChar* (F: Frame; x, y, X, Y: SIGNED16; VAR loc: Loc);
+VAR pos, len: SIGNED32; curX: SIGNED16;
 BEGIN
 	LocateLine(F, y, Y, loc);
 	len := F.file.len - loc.org - 1;
@@ -154,10 +154,10 @@ BEGIN
 	loc.pos := loc.org + pos; loc.x := curX - x
 END LocateChar;
 
-PROCEDURE LocatePos* (F: Frame; pos: LONGINT; hexBlock: BOOLEAN; VAR loc: Loc);
+PROCEDURE LocatePos* (F: Frame; pos: SIGNED32; hexBlock: BOOLEAN; VAR loc: Loc);
 BEGIN
 	loc.org := ASH(ASH(pos, -4), 4); loc.pos := pos;
-	loc.y := -Top - INTEGER(ASH(pos - F.org, -4) + 1) * lineH + 1;
+	loc.y := -Top - SIGNED16(ASH(pos - F.org, -4) + 1) * lineH + 1;
 	pos := pos - loc.org;
 	IF hexBlock THEN
 		loc.x := hBlock + SHORT(pos*(2*charW + Gab) + (pos DIV 4 + 1) * 5);
@@ -170,7 +170,7 @@ BEGIN
 	END
 END LocatePos;
 
-PROCEDURE ScrollTo* (F: Frame; pos: LONGINT);
+PROCEDURE ScrollTo* (F: Frame; pos: SIGNED32);
 VAR S: ScrollMsg;
 BEGIN
 	IF pos >= F.file.len THEN pos := F.file.len -1 ELSIF pos < 0 THEN pos := 0 END;
@@ -190,8 +190,8 @@ BEGIN
 	F.car := FALSE
 END RemoveCaret;
 
-PROCEDURE SetCaret (F: Frame; pos: LONGINT);
-VAR C: CaretMsg; lines: LONGINT; hexBlock: BOOLEAN;
+PROCEDURE SetCaret (F: Frame; pos: SIGNED32);
+VAR C: CaretMsg; lines: SIGNED32; hexBlock: BOOLEAN;
 BEGIN
 	hexBlock := F.carloc.x < tBlock;
 	RemoveCaret(F);
@@ -209,8 +209,8 @@ BEGIN
 	F.car := TRUE
 END SetCaret;
 
-PROCEDURE FlipCaret (F: Frame; Q: Display3.Mask; x, y: INTEGER; loc: Loc);
-VAR Y: INTEGER;
+PROCEDURE FlipCaret (F: Frame; Q: Display3.Mask; x, y: SIGNED16; loc: Loc);
+VAR Y: SIGNED16;
 BEGIN
 	F.carloc := loc; Y :=  y + F.H - 1 + loc.y;
 	IF loc.x < tBlock THEN
@@ -236,8 +236,8 @@ BEGIN
 	END
 END FlipCaret;
 
-PROCEDURE RestoreSlider (F: Frame; Q: Display3.Mask; x, y: INTEGER);
-VAR Y: INTEGER;
+PROCEDURE RestoreSlider (F: Frame; Q: Display3.Mask; x, y: SIGNED16);
+VAR Y: SIGNED16;
 BEGIN
 	IF F.file.len > 0 THEN Y := SHORT(y + 1 + (F.file.len - F.org) * (F.H - 2 - SliderH) DIV F.file.len)
 	ELSE Y := y + F.H - 1 - SliderH
@@ -248,7 +248,7 @@ BEGIN
 										x + 2, Y, BarW - 6, SliderH, 1, Display.replace)
 END RestoreSlider;
 
-PROCEDURE UpdateArea (F: Frame; u, v, w, h, px, py: INTEGER; dlink: Objects.Object);
+PROCEDURE UpdateArea (F: Frame; u, v, w, h, px, py: SIGNED16; dlink: Objects.Object);
 VAR D: Display.DisplayMsg;
 BEGIN
 	D.device := Display.screen; D.id := Display.area;
@@ -258,8 +258,8 @@ BEGIN
 	F.handle(F, D)
 END UpdateArea;
 
-PROCEDURE ScrollUpdate (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; VAR M: ScrollMsg);
-VAR cx, cy, cw, ch, mx, my, mw, mh, Y, H: INTEGER;
+PROCEDURE ScrollUpdate (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; VAR M: ScrollMsg);
+VAR cx, cy, cw, ch, mx, my, mw, mh, Y, H: SIGNED16;
 BEGIN
 	IF F.stamp # M.stamp THEN F.stamp := M.stamp; RemoveCaret(F); F.org := M.org END;
 
@@ -288,8 +288,8 @@ BEGIN
 	UpdateArea(F, BarW, Y - (y + h - 1), w - BarW, H, M.x, M.y, M.dlink)
 END ScrollUpdate;
 
-PROCEDURE DrawChar (Q: Display3.Mask; VAR X, Y: INTEGER; ch: CHAR);
-VAR pat: Display.Pattern; x, y, dx, w, h: INTEGER;
+PROCEDURE DrawChar (Q: Display3.Mask; VAR X, Y: SIGNED16; ch: CHAR);
+VAR pat: Display.Pattern; x, y, dx, w, h: SIGNED16;
 BEGIN
 	CASE ORD(ch) OF
 		32..126, 128..149, 155: Fonts.GetChar(fnt, ch, dx, x, y, w, h, pat)
@@ -299,8 +299,8 @@ BEGIN
 	INC(X, charW)
 END DrawChar;
 
-PROCEDURE DrawLine (Q: Display3.Mask; x, Y, w, h: INTEGER; pos: LONGINT);
-VAR i: LONGINT; X, tX: INTEGER;
+PROCEDURE DrawLine (Q: Display3.Mask; x, Y, w, h: SIGNED16; pos: SIGNED32);
+VAR i: SIGNED32; X, tX: SIGNED16;
 BEGIN
 	Display3.ReplConst(Q, Display3.textbackC, x + BarW, Y + fnt.minY, w - BarW - 1, h, Display.replace);
 
@@ -325,8 +325,8 @@ BEGIN
 END DrawLine;
 
 (* ------------ msg handlers ------------ *)
-PROCEDURE RestoreFrame (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER);
-VAR pos: LONGINT; Y: INTEGER;
+PROCEDURE RestoreFrame (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16);
+VAR pos: SIGNED32; Y: SIGNED16;
 BEGIN
 	Display3.Rect3D(Q, Display3.topC, Display3.bottomC, x, y, w, h, 1, Display.replace);
 
@@ -353,8 +353,8 @@ BEGIN
 	END
 END RestoreFrame;
 
-PROCEDURE RestoreFrameArea (F: Frame; Q: Display3.Mask; x, y, w, h, U, V, W, H: INTEGER);
-VAR pos, lines: LONGINT; Y, bot: INTEGER;
+PROCEDURE RestoreFrameArea (F: Frame; Q: Display3.Mask; x, y, w, h, U, V, W, H: SIGNED16);
+VAR pos, lines: SIGNED32; Y, bot: SIGNED16;
 BEGIN
 	Display3.Rect3D(Q, Display3.topC, Display3.bottomC, x, y, w, h, 1, Display.replace);
 
@@ -397,15 +397,15 @@ BEGIN
 END RestoreFrameArea;
 
 PROCEDURE PrintFrame (F: Frame; M: Display.DisplayMsg);
-VAR x, y, w, h: INTEGER; Q: Display3.Mask;
+VAR x, y, w, h: SIGNED16; Q: Display3.Mask;
 BEGIN
 	x := M.x; y := M.y; w := P(F.W); h := P(F.H);
 	Gadgets.MakePrinterMask(F, x, y, M.dlink, Q);
 	Printer3.FilledRect3D(Q, Display3.bottomC, Display3.topC, Display3.textbackC, x, y, w, h, P(1), Display.replace);
 END PrintFrame;
 
-PROCEDURE TrackFrame (F: Frame; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg);
-VAR Q, Q0: Display3.Mask; pos: LONGINT; keysum: SET; block: Views.Block; px, py, top: INTEGER; loc, oLoc: Loc;
+PROCEDURE TrackFrame (F: Frame; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg);
+VAR Q, Q0: Display3.Mask; pos: SIGNED32; keysum: SET; block: Views.Block; px, py, top: SIGNED16; loc, oLoc: Loc;
 		CM: Display.ControlMsg; D: Display.DisplayMsg;
 BEGIN
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
@@ -508,7 +508,7 @@ BEGIN
 END TrackFrame;
 
 PROCEDURE Write (F: Frame; VAR M: Oberon.InputMsg);
-VAR R: Texts.Reader; pos: LONGINT; C: CaretMsg; i, j, val: INTEGER; ch: CHAR; keys: SET;
+VAR R: Texts.Reader; pos: SIGNED32; C: CaretMsg; i, j, val: SIGNED16; ch: CHAR; keys: SET;
 BEGIN
 	IF M.ch = UArrow THEN SetCaret(F, F.carloc.pos - 16)
 	ELSIF M.ch = DArrow THEN SetCaret(F, F.carloc.pos + 16)
@@ -577,8 +577,8 @@ BEGIN
 	M.res := 0
 END Write;
 
-PROCEDURE Update (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; M: Texts.UpdateMsg);
-VAR bLine, eLine, lastPos: LONGINT; Y, H: INTEGER;
+PROCEDURE Update (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; M: Texts.UpdateMsg);
+VAR bLine, eLine, lastPos: SIGNED32; Y, H: SIGNED16;
 BEGIN
 	lastPos := F.org + LinesVisible(F.H)*16;
 	IF lastPos > F.file.len THEN lastPos := F.file.len END;
@@ -614,7 +614,7 @@ BEGIN
 END Update;
 
 PROCEDURE Modify (F: Frame; VAR M: Display.ModifyMsg);
-VAR x, y, w, h, Y, H: INTEGER; O: Display3.OverlapMsg;
+VAR x, y, w, h, Y, H: SIGNED16; O: Display3.OverlapMsg;
 BEGIN
 	IF M.stamp # F.stamp THEN
 		F.stamp := M.stamp; F.X := M.X; F.Y := M.Y; F.W := M.W; F.H := M.H;
@@ -662,7 +662,7 @@ BEGIN
 END FrameAttr;
 
 PROCEDURE FrameFile (F: Frame; VAR M: Objects.FileMsg);
-VAR ver: LONGINT;
+VAR ver: SIGNED32;
 BEGIN
 	IF M.id = Objects.load THEN
 		Gadgets.framehandle(F, M);
@@ -683,7 +683,7 @@ BEGIN
 END CopyFrame;
 
 PROCEDURE FrameHandler* (F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR F0: Frame; Q: Display3.Mask; x, y, w, h: INTEGER;
+VAR F0: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16;
 BEGIN
 	WITH F: Frame DO
 		IF M IS Display.FrameMsg THEN
@@ -777,7 +777,7 @@ BEGIN NEW(F); InitFrame(F, NIL); Objects.NewObj := F
 END NewFrame;
 
 PROCEDURE LoadDoc0(D: Documents.Document; F: Files.File);
-VAR main: Frame; T: Texts.Text; R: Files.Rider; i: LONGINT;
+VAR main: Frame; T: Texts.Text; R: Files.Rider; i: SIGNED32;
 BEGIN
 	Files.Set(R, F, 0); Files.ReadBytes(R, buf, bufSize);
 	WHILE ~R.eof DO
@@ -802,7 +802,7 @@ BEGIN
 END LoadDoc;
 
 PROCEDURE StoreDoc (D: Documents.Document);
-VAR main: Frame; rR: Texts.Reader; wR: Files.Rider; F: Files.File; i: INTEGER;
+VAR main: Frame; rR: Texts.Reader; wR: Files.Rider; F: Files.File; i: SIGNED16;
 		new: ARRAY 128 OF CHAR; ch: CHAR; M: StoreMsg;
 BEGIN
 	main := D.dsc(Frame);
@@ -873,7 +873,7 @@ BEGIN
 	END
 END ClearCheck;
 
-PROCEDURE PrintHeader(title: ARRAY OF CHAR; page: LONGINT);
+PROCEDURE PrintHeader(title: ARRAY OF CHAR; page: SIGNED32);
 	VAR str: ARRAY 8 OF CHAR;
 BEGIN
 	IF title # "" THEN
@@ -890,11 +890,11 @@ BEGIN
 	PagenoX := SHORT(LONG(PrinterleftX) + LONG(Printer.FrameW) * 19 DIV 20)
 END InitPagePosition;
 
-PROCEDURE PrintLine(X, Y: INTEGER; pos: LONGINT);
+PROCEDURE PrintLine(X, Y: SIGNED16; pos: SIGNED32);
 	VAR
 		str: ARRAY 8 OF CHAR;
-		i: LONGINT;
-		x,xt: INTEGER;
+		i: SIGNED32;
+		x,xt: SIGNED16;
 BEGIN
 	str[0] := Hex[pos DIV 1048576 MOD 16];
 	str[1] := Hex[pos DIV 65536 MOD 16];
@@ -936,8 +936,8 @@ END PrintLine;
 
 PROCEDURE PrintDoc(D: Documents.Document);
 	VAR
-		pos, page: LONGINT;
-		X, Y: INTEGER;
+		pos, page: SIGNED32;
+		X, Y: SIGNED16;
 BEGIN
 	InitPagePosition(); Printer.UseColor(0, 0, 0);
 	X := PrinterleftX; page := 0;
@@ -1047,7 +1047,7 @@ END OpenThis;
 	Usage: Hex.Open '^' | file
 *)
 PROCEDURE Open*;
-VAR T: Texts.Text; time, beg, end: LONGINT; S: Texts.Scanner;
+VAR T: Texts.Text; time, beg, end: SIGNED32; S: Texts.Scanner;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -1063,10 +1063,10 @@ END Open;
 
 (** Used internaly to handle middle mouse click *)
 PROCEDURE Interpret*;
-VAR i, j, s: LONGINT; set: SET; S: Texts.Scanner;
+VAR i, j, s: SIGNED32; set: SET; S: Texts.Scanner;
 
-	PROCEDURE ReadLInt (): LONGINT;
-	VAR i: LONGINT;
+	PROCEDURE ReadLInt (): SIGNED32;
+	VAR i: SIGNED32;
 	BEGIN
 		i := BIT.LOR(0, ORD(ch)); Texts.Read(R, ch);
 		i := BIT.LOR(i, ASH(ORD(ch), 8)); Texts.Read(R, ch);
@@ -1080,21 +1080,21 @@ BEGIN
 	IF (lastF # NIL) & (S.class IN {Texts.String, Texts.Name}) & (S.s[0] # "-") THEN
 		Texts.OpenReader(R, lastF.file, lastF.pointloc.pos); Texts.Read(R, ch);
 		Texts.WriteString(W, "pos ["); Texts.WriteHex(W, lastF.pointloc.pos); Texts.WriteString(W, "H]: ");
-		IF S.s = "LONGINT (LSB)" THEN
+		IF S.s = "SIGNED32 (LSB)" THEN
 			Texts.WriteInt(W, ReadLInt(), 0)
-		ELSIF S.s = "INTEGER (LSB)" THEN
+		ELSIF S.s = "SIGNED16 (LSB)" THEN
 			i := BIT.LOR(0, ORD(ch)); Texts.Read(R, ch);
 			i := ASH(ASH(BIT.LOR(i, ASH(ORD(ch), 8)), 16), -16);
 			Texts.WriteInt(W, i, 0)
 		ELSIF S.s = "SHORTINT" THEN
 			Texts.WriteInt(W, ASH(ASH(ORD(ch), 24), -24), 0)
-		ELSIF S.s = "LONGINT (MSB)" THEN
+		ELSIF S.s = "SIGNED32 (MSB)" THEN
 			i := BIT.LOR(0, ASH(ORD(ch),24)); Texts.Read(R, ch);
 			i := BIT.LOR(i, ASH(ORD(ch), 16)); Texts.Read(R, ch);
 			i := BIT.LOR(i, ASH(ORD(ch), 8)); Texts.Read(R, ch);
 			i := BIT.LOR(i, ORD(ch));
 			Texts.WriteInt(W, i, 0)
-		ELSIF S.s = "INTEGER (MSB)" THEN
+		ELSIF S.s = "SIGNED16 (MSB)" THEN
 			i := ASH(ASH(ORD(ch), 24), -16); Texts.Read(R, ch);
 			i := BIT.LOR(i, ORD(ch));
 			Texts.WriteInt(W, i, 0)
@@ -1133,10 +1133,10 @@ END Interpret;
 	Usage: HexDocs.Seach ['^' | string | #b{bitdigit} | #h{hexdigit}]
  *)
 PROCEDURE Search*;
-VAR F: Frame; T: Texts.Text; val, pos, beg, end, time: LONGINT; S: Texts.Scanner;
+VAR F: Frame; T: Texts.Text; val, pos, beg, end, time: SIGNED32; S: Texts.Scanner;
 
 	PROCEDURE CalcDispVec;	(* calculate displacement vector *)
-	VAR i, j, d: INTEGER;
+	VAR i, j, d: SIGNED16;
 	BEGIN
 		i := 1; d := 1;
 		WHILE i <= sLen DO
@@ -1146,8 +1146,8 @@ VAR F: Frame; T: Texts.Text; val, pos, beg, end, time: LONGINT; S: Texts.Scanner
 		END
 	END CalcDispVec;
 
-	PROCEDURE SPatFound (text: Texts.Text; VAR pos:LONGINT): BOOLEAN;
-	VAR R: Texts.Reader; l: LONGINT; i: INTEGER; ch: CHAR;
+	PROCEDURE SPatFound (text: Texts.Text; VAR pos:SIGNED32): BOOLEAN;
+	VAR R: Texts.Reader; l: SIGNED32; i: SIGNED16; ch: CHAR;
 	BEGIN
 		IF sLen > 0 THEN
 			Texts.OpenReader(R, text, pos); Texts.Read(R, ch); INC(pos);
@@ -1210,7 +1210,7 @@ END Search;
   Usage: Hex.Locate '^' | pos
 *)
 PROCEDURE Locate*;
-VAR VAR T: Texts.Text; beg, end, time: LONGINT; F: Frame; S: Texts.Scanner;
+VAR VAR T: Texts.Text; beg, end, time: SIGNED32; F: Frame; S: Texts.Scanner;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -1226,7 +1226,7 @@ END Locate;
 
 (* ------------ module init. porcs ------------ *)
 PROCEDURE MakeList;
-VAR obj: Objects.Object; cnt: INTEGER; M: ListRiders.ConnectMsg; A: Objects.AttrMsg;
+VAR obj: Objects.Object; cnt: SIGNED16; M: ListRiders.ConnectMsg; A: Objects.AttrMsg;
 
 	PROCEDURE AddItem (R: ListRiders.Rider; val: ARRAY OF CHAR);
 	VAR d: ListRiders.String;
@@ -1242,8 +1242,8 @@ BEGIN
 		M.R := NIL; list.obj.handle(list.obj, M);
 		cnt := 0;
 		IF M.R # NIL THEN
-			AddItem(M.R, "LONGINT (LSB)");
-			AddItem(M.R, "INTEGER (LSB)");
+			AddItem(M.R, "SIGNED32 (LSB)");
+			AddItem(M.R, "SIGNED16 (LSB)");
 			AddItem(M.R, "SHORTINT");
 			AddItem(M.R, "NUM");
 			AddItem(M.R, "REAL");
@@ -1252,8 +1252,8 @@ BEGIN
 			AddItem(M.R, "-------------");
 			AddItem(M.R, "ADDR (LSB rel.)");
 			AddItem(M.R, "-------------");
-			AddItem(M.R, "LONGINT (MSB)");
-			AddItem(M.R, "INTEGER (MSB)")
+			AddItem(M.R, "SIGNED32 (MSB)");
+			AddItem(M.R, "SIGNED16 (MSB)")
 		END;
 		list.H := Fonts.Default.height*cnt + 6
 	END

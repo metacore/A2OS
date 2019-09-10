@@ -63,13 +63,13 @@ CONST
 	TSA552xCbRSA = {2};	(* 0 for 31.25 kHz, 1 for 62.5 kHz *)
 	TSA552xCbRSB = {1};	(* 0 for FM 50 kHz steps, 1 = use RSA *)
 	TSA552xCbOS = {0};	(* set to 0 for normal operation *)
-	TSA552xRadio = SYSTEM.VAL(LONGINT, TSA552xCbMSB + TSA552xCbT0);
+	TSA552xRadio = SYSTEM.VAL(SIGNED32, TSA552xCbMSB + TSA552xCbT0);
 
 	(* raise the charge pump voltage for fast tuning *)
-	TSA552xFControl = SYSTEM.VAL(LONGINT,
+	TSA552xFControl = SYSTEM.VAL(SIGNED32,
 		TSA552xCbMSB + TSA552xCbCP + TSA552xCbT0 + TSA552xCbRSA + TSA552xCbRSB);
 	(* lower the charge pump voltage for better residual oscillater FM *)
-	TSA552xSControl = SYSTEM.VAL(LONGINT,
+	TSA552xSControl = SYSTEM.VAL(SIGNED32,
 		TSA552xCbMSB + TSA552xCbT0 + TSA552xCbRSA + TSA552xCbRSB);
 	TSCH5FControl = 0082H;	(* ALPS TSCH5 tuner *)
 	TSCH5Radio = 0086H;
@@ -415,70 +415,70 @@ CONST
 	RadioMaxFreq = 10800;
 
 VAR
-	nOfInstalledDevices: LONGINT;
+	nOfInstalledDevices: SIGNED32;
 
 TYPE
 	CardType = RECORD
-		cardID: LONGINT;
+		cardID: SIGNED32;
 		name: ARRAY 32 OF CHAR;
 		tuner: Tuner;
-		tunerPLLAddr: LONGINT;
+		tunerPLLAddr: SIGNED32;
 		dbx: BOOLEAN;
 		msp3400c: BOOLEAN;
 		dpl3518a: BOOLEAN;
-		eepromAddr: LONGINT;
-		eepromSize: LONGINT;
-		audioMUXs: ARRAY 5 OF LONGINT;
-		gpioMUXBits: LONGINT;
+		eepromAddr: SIGNED32;
+		eepromSize: SIGNED32;
+		audioMUXs: ARRAY 5 OF SIGNED32;
+		gpioMUXBits: SIGNED32;
 	END;
 
 	Tuner = RECORD
 		name: ARRAY 32 OF CHAR;
-		type: LONGINT;
-		pllControl: ARRAY 4 OF LONGINT;
-		bandLimits: ARRAY 2 OF LONGINT;
-		bandAddrs: ARRAY 4 OF LONGINT;
+		type: SIGNED32;
+		pllControl: ARRAY 4 OF SIGNED32;
+		bandLimits: ARRAY 2 OF SIGNED32;
+		bandAddrs: ARRAY 4 OF SIGNED32;
 	END;
 
 	Channel = RECORD
-		baseChnl: LONGINT;	(* base channel *)
-		baseChnlFreq: LONGINT;	(* frequency of base channel expressed as fb[MHz] * 16 *)
-		offsetFreq: LONGINT;	(* offset frequency between channels, expressed as fo[MHz] * 16 *)
+		baseChnl: SIGNED32;	(* base channel *)
+		baseChnlFreq: SIGNED32;	(* frequency of base channel expressed as fb[MHz] * 16 *)
+		offsetFreq: SIGNED32;	(* offset frequency between channels, expressed as fo[MHz] * 16 *)
 	END;
 
 	ChannelSet = RECORD
-		maxChnl: LONGINT;	(* max legal channel *)
-		ifFreq: LONGINT;	(* IF frequency expressed as fi[MHz] * 16 *)
+		maxChnl: SIGNED32;	(* max legal channel *)
+		ifFreq: SIGNED32;	(* IF frequency expressed as fi[MHz] * 16 *)
 		chnls: POINTER TO ARRAY OF Channel;
 	END;
 
 	FormatParams = POINTER TO FormatParamsDesc;
 	FormatParamsDesc = RECORD
 		(* total lines, lines before image, image lines *)
-		vTotal, vDelay, vActive: LONGINT;
+		vTotal, vDelay, vActive: SIGNED32;
 		(* total unscaled horizontal pixels, pixels before image, image pixels *)
-		hTotal, hDelay, hActive: LONGINT;
+		hTotal, hDelay, hActive: SIGNED32;
 		(* scaled horizontal image pixels, total scaled horizontal pixels *)
-		scaledHActive, scaledHTotal: LONGINT;
+		scaledHActive, scaledHTotal: SIGNED32;
 		(* frame rate (for NTSC: 30 frames per second) *)
-		frameRate: LONGINT;
+		frameRate: SIGNED32;
 		(* A-delay, B-delay *)
-		aDelay, bDelay: LONGINT;
+		aDelay, bDelay: SIGNED32;
 		(* Iform XTSEL value *)
-		iformXTSel: LONGINT;
+		iformXTSel: SIGNED32;
 		(* VBI number of lines per field, and number of samples per line *)
-		vbiNumLines, vbiNumSamples: LONGINT;
+		vbiNumLines, vbiNumSamples: SIGNED32;
 	END;
 
 	PixelFormat = POINTER TO PixelFormatDesc;
 	PixelFormatDesc = RECORD
-		index: LONGINT;	(* index in supported pixfmt list *)
-		type: LONGINT;	(* what the board is gonna feed us *)
-		bpp: LONGINT;	(* bytes per pixel *)
-		masks: ARRAY 3 OF LONGINT;	(* R,G,B or Y,U,V masks, respectively *)
+		index: SIGNED32;	(* index in supported pixfmt list *)
+		type: SIGNED32;	(* what the board is gonna feed us *)
+		bpp: SIGNED32;	(* bytes per pixel *)
+		masks: ARRAY 3 OF SIGNED32;	(* R,G,B or Y,U,V masks, respectively *)
 		swapBytes: BOOLEAN;	(* bytes swapped within shorts *)
 		swapShorts: BOOLEAN;	(* shorts swapped within longs *)
-		colorFormat: LONGINT;
+		colorFormat: SIGNED32;
 	END;
 
 CONST
@@ -495,11 +495,11 @@ TYPE
 	TVTuner* = OBJECT (TVDriver.TVTuner)
 	VAR
 		vcd: VideoCaptureDevice;
-		chnlSet: LONGINT;
-		chnl: LONGINT;
-		band: LONGINT;
-		afc: LONGINT;
-		radioMode: LONGINT;
+		chnlSet: SIGNED32;
+		chnl: SIGNED32;
+		band: SIGNED32;
+		afc: SIGNED32;
+		radioMode: SIGNED32;
 
 	(** Initialize the tuner object. *)
 	PROCEDURE &Init*(vcd: TVDriver.VideoCaptureDevice);
@@ -510,7 +510,7 @@ TYPE
 
 	(** Open the VBI device. *)
 	(** return value:	-1 if the device is already open, otherwise 0 *)
-	PROCEDURE OpenVbi*(): LONGINT;
+	PROCEDURE OpenVbi*(): SIGNED32;
 	BEGIN
 		IF vcd.vbiFlags * VbiOpen # {} THEN
 			IF DEBUG # DebugOff THEN KernelLog.String("{BT848} vbi device already open."); KernelLog.Ln; END;
@@ -545,7 +545,7 @@ TYPE
 		radioMode := 0;
 		(* enable drivers on the GPIO port that control the MUXes *)
 		temp := SYSTEM.VAL(SET, SYSTEM.GET32(vcd.base + BktrGPIOOutEn)) + SYSTEM.VAL(SET, vcd.card.gpioMUXBits);
-		SYSTEM.PUT32(vcd.base + BktrGPIOOutEn, SYSTEM.VAL(LONGINT, temp));
+		SYSTEM.PUT32(vcd.base + BktrGPIOOutEn, SYSTEM.VAL(SIGNED32, temp));
 		SetTVFrequency(2810);	(* Hack for proper radio reception *)
 		vcd.audio.InitAudioDevices;
 		vcd.audio.SetAudioUnmute;
@@ -557,29 +557,29 @@ TYPE
 	BEGIN
 		vcd.audio.SetAudioMute;
 		temp := SYSTEM.VAL(SET, SYSTEM.GET32(vcd.base + BktrGPIOOutEn)) * (-SYSTEM.VAL(SET, vcd.card.gpioMUXBits));
-		SYSTEM.PUT32(vcd.base + BktrGPIOOutEn, SYSTEM.VAL(LONGINT, temp));
+		SYSTEM.PUT32(vcd.base + BktrGPIOOutEn, SYSTEM.VAL(SIGNED32, temp));
 	END Close;
 
 	(** Set the channel set. *)
 	(** chnlSet:	channel set (only WesternEuropeanChnlSet available at the moment). *)
-	PROCEDURE SetChannelSet*(chnlSet: LONGINT);
+	PROCEDURE SetChannelSet*(chnlSet: SIGNED32);
 	BEGIN
 		ASSERT((chnlSet >= 0) & (chnlSet < NoOfChnlSets));
 		SELF.chnlSet := chnlSet;
 	END SetChannelSet;
 
 	(** Get the channel set. *)
-	PROCEDURE GetChannelSet*(): LONGINT;
+	PROCEDURE GetChannelSet*(): SIGNED32;
 	BEGIN
 		RETURN chnlSet;
 	END GetChannelSet;
 
 	(** Set a channel. *)
 	(** chnl:	channel to set (see range of channel set). *)
-	PROCEDURE SetChannel*(chnl: LONGINT);
+	PROCEDURE SetChannel*(chnl: SIGNED32);
 	VAR
 		i: SIZE;
-		freq: LONGINT;
+		freq: SIGNED32;
 	BEGIN
 		ASSERT(chnl <= freqTable[chnlSet].maxChnl);
 		freq := 0;
@@ -608,24 +608,24 @@ TYPE
 
 	(** Get channel. *)
 	(** return value:	channel *)
-	PROCEDURE GetChannel*(): LONGINT;
+	PROCEDURE GetChannel*(): SIGNED32;
 	BEGIN
 		RETURN chnl;
 	END GetChannel;
 
 	(* Get maximum channel number of selected channel set. *)
 	(* return value:	maximum channel number of channel set *)
-	PROCEDURE GetMaxChannel*(): LONGINT;
+	PROCEDURE GetMaxChannel*(): SIGNED32;
 	BEGIN
 		RETURN freqTable[chnlSet].maxChnl;
 	END GetMaxChannel;
 
 	(** Set TV frequency. *)
 	(** freq:	frequency expressed as frequency * 16. *)
-	PROCEDURE SetTVFrequencyImpl (freq: LONGINT);
+	PROCEDURE SetTVFrequencyImpl (freq: SIGNED32);
 	VAR
-		bandSelect, n: LONGINT;
-		addr, control, band: LONGINT;
+		bandSelect, n: SIGNED32;
+		addr, control, band: SIGNED32;
 		isMute: BOOLEAN;
 	BEGIN {EXCLUSIVE}
 		IF DEBUG >= DebugLow THEN KernelLog.String("{BT848} setting frequency to "); KernelLog.Int(freq, 0); KernelLog.Ln; END;
@@ -647,13 +647,13 @@ TYPE
 		band := vcd.card.tuner.bandAddrs[bandSelect];
 		ASSERT((band # 0) & (control # 0));
 		IF (freq > frequency) THEN
-			ASSERT(vcd.i2cBus.I2CWrite(addr, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(n, -8)) * {0..6}),
-				SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, n) * {0..7})) = 0);
+			ASSERT(vcd.i2cBus.I2CWrite(addr, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(n, -8)) * {0..6}),
+				SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, n) * {0..7})) = 0);
 			ASSERT(vcd.i2cBus.I2CWrite(addr, control, band) = 0);
 		ELSE
 			ASSERT(vcd.i2cBus.I2CWrite(addr, control, band) = 0);
-			ASSERT(vcd.i2cBus.I2CWrite(addr, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(n, -8)) * {0..6}),
-				SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, n) * {0..7})) = 0);
+			ASSERT(vcd.i2cBus.I2CWrite(addr, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(n, -8)) * {0..6}),
+				SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, n) * {0..7})) = 0);
 		END;
 		frequency := freq;
 		IF (vcd.card.msp3400c) THEN vcd.audio.MspAutoDetect; END;
@@ -667,10 +667,10 @@ TYPE
 
 	(** Set radio frequency. *)
 	(** freq:	frequency expressed as frequency * 100. *)
-	PROCEDURE SetRadioFrequency*(freq: LONGINT);
+	PROCEDURE SetRadioFrequency*(freq: SIGNED32);
 	VAR
-		bandSelect, n: LONGINT;
-		addr, control, band: LONGINT;
+		bandSelect, n: SIGNED32;
+		addr, control, band: SIGNED32;
 		isMute: BOOLEAN;
 	BEGIN {EXCLUSIVE}
 		IF DEBUG # DebugOff THEN
@@ -686,10 +686,10 @@ TYPE
 		control := vcd.card.tuner.pllControl[bandSelect];
 		band := vcd.card.tuner.bandAddrs[bandSelect];
 		ASSERT((band # 0) & (control # 0));	(* don't try to set unsupported modes *)
-		band := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, band) + SYSTEM.VAL(SET, radioMode));
+		band := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, band) + SYSTEM.VAL(SET, radioMode));
 		ASSERT(vcd.i2cBus.I2CWrite(addr, control, band) = 0);
-		ASSERT(vcd.i2cBus.I2CWrite(addr, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(n, -8)) * {0..6}),
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, n) * {0..7})) = 0);
+		ASSERT(vcd.i2cBus.I2CWrite(addr, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(n, -8)) * {0..6}),
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, n) * {0..7})) = 0);
 		frequency := (n * 5) - 1070;
 		IF (vcd.card.msp3400c) THEN vcd.audio.MspAutoDetect; END;
 		IF (vcd.card.dpl3518a) THEN vcd.audio.DplAutoDetect; END;
@@ -702,16 +702,16 @@ TYPE
 
 	(** Get the tuner status. *)
 	(** return value:	tuner status *)
-	PROCEDURE GetTunerStatus*(): LONGINT;
+	PROCEDURE GetTunerStatus*(): SIGNED32;
 	BEGIN
 		RETURN vcd.i2cBus.I2CRead(vcd.card.tunerPLLAddr + 1);
 	END GetTunerStatus;
 
 	(** Calculates the field strength of the radio signal. *)
 	(** return value:	field strength (3-bit value) *)
-	PROCEDURE CalcFieldStrength*(): LONGINT;
+	PROCEDURE CalcFieldStrength*(): SIGNED32;
 	BEGIN
-		RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, GetTunerStatus()) * {0..2});
+		RETURN SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, GetTunerStatus()) * {0..2});
 	END CalcFieldStrength;
 
 	(** Returns wether tuner is locked to a stable video signal or not. *)
@@ -734,14 +734,14 @@ TYPE
 	(** 256 steps in the range -90 dgr to +89.3 dgr, in increments of 0.7 dgr. *)
 	(** Note: not applicable to PAL/SECAM, or digital video *)
 	(** hue:	a value between 0x7F and 0x80 results in a hue adjustment by -89 and +90% *)
-	PROCEDURE SetHue*(hue: LONGINT);
+	PROCEDURE SetHue*(hue: SIGNED32);
 	BEGIN
 		SYSTEM.PUT8(vcd.base + BktrHue, hue);
 	END SetHue;
 
 	(** Get the hue *)
 	(** return value:	the hue offset *)
-	PROCEDURE GetHue*(): LONGINT;
+	PROCEDURE GetHue*(): SIGNED32;
 	BEGIN
 		RETURN SYSTEM.GET8(vcd.base + BktrHue);
 	END GetHue;
@@ -752,14 +752,14 @@ TYPE
 	(** steps, from -128 to +127. The resolution of brightness change is *)
 	(** one LSB (0.39% with respect to the full luma range). *)
 	(** brightness:	a value between 0x7F and 0x80 results in a brightness adjustment of +49 and -50% of full scale *)
-	PROCEDURE SetBrightness*(brightness: LONGINT);
+	PROCEDURE SetBrightness*(brightness: SIGNED32);
 	BEGIN
 		SYSTEM.PUT8(vcd.base + BktrBright, brightness);
 	END SetBrightness;
 
 	(** Get the brightness. *)
 	(** return value:	the brightness offset *)
-	PROCEDURE GetBrightness*(): LONGINT;
+	PROCEDURE GetBrightness*(): SIGNED32;
 	BEGIN
 		RETURN SYSTEM.GET8(vcd.base + BktrBright);
 	END GetBrightness;
@@ -767,20 +767,20 @@ TYPE
 	(** Set the chroma saturation. *)
 	(** Adds a gain adjustment to the U- and V-component of the video signal. *)
 	(** saturation:	a value between 0x000 and 0x1FF adjusts the saturation in the range of 0 to 200% *)
-	PROCEDURE SetChromaSaturation*(saturation: LONGINT);
-	VAR temp1, temp2: LONGINT;
+	PROCEDURE SetChromaSaturation*(saturation: SIGNED32);
+	VAR temp1, temp2: SIGNED32;
 	BEGIN
 		temp1 := SYSTEM.GET8(vcd.base + BktrEControl);
 		temp2 := SYSTEM.GET8(vcd.base + BktrOControl);
 		IF (SYSTEM.VAL(SET, saturation) * {8} # {}) THEN
-			temp1 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848EControlSatUMSB
+			temp1 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848EControlSatUMSB
 				+ Bt848EControlSatVMSB);
-			temp2 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) + Bt848OControlSatUMSB
+			temp2 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) + Bt848OControlSatUMSB
 				+ Bt848OControlSatVMSB);
 		ELSE
-			temp1 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-(Bt848EControlSatUMSB
+			temp1 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-(Bt848EControlSatUMSB
 				+ Bt848EControlSatVMSB)));
-			temp2 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * (-(Bt848OControlSatUMSB
+			temp2 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * (-(Bt848OControlSatUMSB
 				+ Bt848OControlSatVMSB)));
 		END;
 		SYSTEM.PUT8(vcd.base + BktrSatULo, saturation);
@@ -791,13 +791,13 @@ TYPE
 
 	(** Get chroma saturation. *)
 	(** return value:	the chroma saturation *)
-	PROCEDURE GetChromaSaturation*(): LONGINT;
-	VAR temp1, temp2: LONGINT;
+	PROCEDURE GetChromaSaturation*(): SIGNED32;
+	VAR temp1, temp2: SIGNED32;
 	BEGIN
 		temp1 := SYSTEM.GET8(vcd.base + BktrSatVLo);
 		temp2 := SYSTEM.GET8(vcd.base + BktrEControl);
 		IF SYSTEM.VAL(SET, temp2) * Bt848EControlSatVMSB # {} THEN
-			RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + {8});
+			RETURN SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + {8});
 		ELSE
 			RETURN temp1;
 		END;
@@ -806,17 +806,17 @@ TYPE
 	(** Set chroma V saturation *)
 	(** Adds a gain adjustment to the V-component of the video signal. *)
 	(** saturation:	a value between 0x000 and 0x1FF adjusts the V saturation in the range of 0 to 200% *)
-	PROCEDURE SetChromaVSaturation*(saturation: LONGINT);
-	VAR temp1, temp2: LONGINT;
+	PROCEDURE SetChromaVSaturation*(saturation: SIGNED32);
+	VAR temp1, temp2: SIGNED32;
 	BEGIN
 		temp1 := SYSTEM.GET8(vcd.base + BktrEControl);
 		temp2 := SYSTEM.GET8(vcd.base + BktrOControl);
 		IF (SYSTEM.VAL(SET, saturation) * {8} # {}) THEN
-			temp1 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848EControlSatVMSB);
-			temp2 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) + Bt848OControlSatVMSB);
+			temp1 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848EControlSatVMSB);
+			temp2 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) + Bt848OControlSatVMSB);
 		ELSE
-			temp1 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848EControlSatVMSB));
-			temp2 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * (-Bt848OControlSatVMSB));
+			temp1 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848EControlSatVMSB));
+			temp2 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * (-Bt848OControlSatVMSB));
 		END;
 		SYSTEM.PUT8(vcd.base + BktrSatVLo, saturation);
 		SYSTEM.PUT8(vcd.base + BktrEControl, temp1);
@@ -825,13 +825,13 @@ TYPE
 
 	(** Get the chroma V saturation. *)
 	(** return value:	the chroma V saturation *)
-	PROCEDURE GetChromaVSaturation*(): LONGINT;
-	VAR temp1, temp2: LONGINT;
+	PROCEDURE GetChromaVSaturation*(): SIGNED32;
+	VAR temp1, temp2: SIGNED32;
 	BEGIN
 		temp1 := SYSTEM.GET8(vcd.base + BktrSatVLo);
 		temp2 := SYSTEM.GET8(vcd.base + BktrEControl);
 		IF (SYSTEM.VAL(SET, temp2) * Bt848EControlSatVMSB # {}) THEN
-			RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + {8});
+			RETURN SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + {8});
 		ELSE
 			RETURN temp1;
 		END;
@@ -840,17 +840,17 @@ TYPE
 	(** Set the chroma U saturation. *)
 	(** Adds a gain adjustment to the U-component of the video signal. *)
 	(** saturation:	a value between 0x000 and 0x1FF adjusts the U saturation in the range of 0 to 200% *)
-	PROCEDURE SetChromaUSaturation*(saturation: LONGINT);
-	VAR temp1, temp2: LONGINT;
+	PROCEDURE SetChromaUSaturation*(saturation: SIGNED32);
+	VAR temp1, temp2: SIGNED32;
 	BEGIN
 		temp1 := SYSTEM.GET8(vcd.base + BktrEControl);
 		temp2 := SYSTEM.GET8(vcd.base + BktrOControl);
 		IF (SYSTEM.VAL(SET, saturation) * {8} # {}) THEN
-			temp1 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848EControlSatUMSB);
-			temp2 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) + Bt848OControlSatUMSB);
+			temp1 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848EControlSatUMSB);
+			temp2 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) + Bt848OControlSatUMSB);
 		ELSE
-			temp1 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848EControlSatUMSB));
-			temp2 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * (-Bt848OControlSatUMSB));
+			temp1 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848EControlSatUMSB));
+			temp2 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * (-Bt848OControlSatUMSB));
 		END;
 		SYSTEM.PUT8(vcd.base + BktrSatULo, saturation);
 		SYSTEM.PUT8(vcd.base + BktrEControl, temp1);
@@ -859,13 +859,13 @@ TYPE
 
 	(** Get the chroma U saturation. *)
 	(** return value:	the chroma U saturation *)
-	PROCEDURE GetChromaUSaturation*(): LONGINT;
-	VAR temp1, temp2: LONGINT;
+	PROCEDURE GetChromaUSaturation*(): SIGNED32;
+	VAR temp1, temp2: SIGNED32;
 	BEGIN
 		temp1 := SYSTEM.GET8(vcd.base + BktrSatULo);
 		temp2 := SYSTEM.GET8(vcd.base + BktrEControl);
 		IF (SYSTEM.VAL(SET, temp2) * Bt848EControlSatUMSB # {}) THEN
-			RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + {8});
+			RETURN SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + {8});
 		ELSE
 			RETURN temp1;
 		END;
@@ -880,48 +880,48 @@ TYPE
 	(**				[0] 0 enables luma decimation using selectable H filter, 1 disables luma decimation *)
 	(**				[1] 0 composite video, 1 Y/C component video *)
 	(**				[2] 0 enables the luma notch filter, 1 disables the luma notch filter *)
-	PROCEDURE SetLumaNotch*(notch: LONGINT);
-	VAR temp1: LONGINT; temp2: LONGINT;
+	PROCEDURE SetLumaNotch*(notch: SIGNED32);
+	VAR temp1: SIGNED32; temp2: SIGNED32;
 	BEGIN
-		temp1 := ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, notch) * {0..2}), 5);
+		temp1 := ASH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, notch) * {0..2}), 5);
 		temp2 := SYSTEM.GET8(vcd.base + BktrEControl);
 		SYSTEM.PUT8(vcd.base + BktrEControl,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * (-SYSTEM.VAL(SET, 00E0H))));
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * (-SYSTEM.VAL(SET, 00E0H))));
 		temp2 := SYSTEM.GET8(vcd.base + BktrOControl);
 		SYSTEM.PUT8(vcd.base + BktrOControl,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * (-SYSTEM.VAL(SET, 00E0H))));
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * (-SYSTEM.VAL(SET, 00E0H))));
 		temp2 := SYSTEM.GET8(vcd.base + BktrEControl);
 		SYSTEM.PUT8(vcd.base + BktrEControl,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) + SYSTEM.VAL(SET, temp1)));
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) + SYSTEM.VAL(SET, temp1)));
 		temp2 := SYSTEM.GET8(vcd.base + BktrOControl);
 		SYSTEM.PUT8(vcd.base + BktrOControl,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) + SYSTEM.VAL(SET, temp1)));
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) + SYSTEM.VAL(SET, temp1)));
 	END SetLumaNotch;
 
 	(** Get status of luma notch filters. *)
 	(** return value:	3 bits of EControl/OControl *)
-	PROCEDURE GetLumaNotch*(): LONGINT;
-	VAR temp1: LONGINT;
+	PROCEDURE GetLumaNotch*(): SIGNED32;
+	VAR temp1: SIGNED32;
 	BEGIN
 		temp1 := SYSTEM.GET8(vcd.base + BktrEControl);
-		RETURN SYSTEM.VAL(LONGINT, ASH(SYSTEM.VAL(LONGINT,
+		RETURN SYSTEM.VAL(SIGNED32, ASH(SYSTEM.VAL(SIGNED32,
 			SYSTEM.VAL(SET, temp1) * SYSTEM.VAL(SET, 00E0H)), -5));
 	END GetLumaNotch;
 
 	(** Set the contrast. *)
 	(** This value ist multiplied by the luminance value to provide contrast adjustment. *)
 	(** contrast:	a value between 0x000 and 0x1FF for an adjustment between 0 and 236% *)
-	PROCEDURE SetContrast*(contrast: LONGINT);
-	VAR temp1, temp2: LONGINT;
+	PROCEDURE SetContrast*(contrast: SIGNED32);
+	VAR temp1, temp2: SIGNED32;
 	BEGIN
 		temp1 := SYSTEM.GET8(vcd.base + BktrEControl);
 		temp2 := SYSTEM.GET8(vcd.base + BktrOControl);
 		IF (SYSTEM.VAL(SET, contrast) * {8} # {}) THEN
-			temp1 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848EControlConMSB);
-			temp2 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) + Bt848OControlConMSB);
+			temp1 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848EControlConMSB);
+			temp2 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) + Bt848OControlConMSB);
 		ELSE
-			temp1 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848EControlConMSB));
-			temp2 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * (-Bt848OControlConMSB));
+			temp1 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848EControlConMSB));
+			temp2 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * (-Bt848OControlConMSB));
 		END;
 		SYSTEM.PUT8(vcd.base + BktrContrastLo, contrast);
 		SYSTEM.PUT8(vcd.base + BktrEControl, temp1);
@@ -930,13 +930,13 @@ TYPE
 
 	(** Get contrast value. *)
 	(** return value:	value of contrast multiplication factor *)
-	PROCEDURE GetContrast*(): LONGINT;
-	VAR temp1, temp2: LONGINT;
+	PROCEDURE GetContrast*(): SIGNED32;
+	VAR temp1, temp2: SIGNED32;
 	BEGIN
 		temp1 := SYSTEM.GET8(vcd.base + BktrContrastLo);
 		temp2 := SYSTEM.GET8(vcd.base + BktrEControl);
 		IF (SYSTEM.VAL(SET, temp2) * Bt848EControlConMSB # {}) THEN
-			RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + {8});
+			RETURN SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + {8});
 		ELSE
 			RETURN temp1;
 		END;
@@ -946,14 +946,14 @@ TYPE
 	(** enable:	TRUE to enable color bars, FALSE for disabling color bars *)
 	PROCEDURE SetColorBars*(enable: BOOLEAN);
 	VAR
-		temp1: LONGINT;
+		temp1: SIGNED32;
 	BEGIN
 		temp1 := SYSTEM.GET8(vcd.base + BktrColorCtl);
 		IF enable THEN
-			SYSTEM.PUT8(vcd.base + BktrColorCtl, SYSTEM.VAL(LONGINT,
+			SYSTEM.PUT8(vcd.base + BktrColorCtl, SYSTEM.VAL(SIGNED32,
 				SYSTEM.VAL(SET, temp1) + Bt848ColorCtlColorBars));
 		ELSE
-			SYSTEM.PUT8(vcd.base + BktrColorCtl, SYSTEM.VAL(LONGINT,
+			SYSTEM.PUT8(vcd.base + BktrColorCtl, SYSTEM.VAL(SIGNED32,
 				SYSTEM.VAL(SET, temp1) * (-Bt848ColorCtlColorBars)));
 		END;
 	END SetColorBars;
@@ -1011,38 +1011,38 @@ TYPE
 		tuner: TVTuner;
 		audio: Audio;
 		i2cBus: I2CBus;
-		id: LONGINT;
-		base: ADDRESS; irq: LONGINT;
-		bt848Tuner: LONGINT;
-		bt848Card: LONGINT;
+		id: SIGNED32;
+		base: ADDRESS; irq: SIGNED32;
+		bt848Tuner: SIGNED32;
+		bt848Card: SIGNED32;
 		mspVersionString: ARRAY 9 OF CHAR;	(* MSP version string 34xxx-xx *)
-		mspAddr: LONGINT;	(* MSP i2c address *)
-		mspSourceSelected: LONGINT;	(* 0 = TV source, 1 = Line-In source, 2 = FM radio source *)
+		mspAddr: SIGNED32;	(* MSP i2c address *)
+		mspSourceSelected: SIGNED32;	(* 0 = TV source, 1 = Line-In source, 2 = FM radio source *)
 		mspUseMonoSource: BOOLEAN;	(* use Tuner's Mono audio output via MSP chip *)
-		slowMSPAudio: LONGINT;	(* 0 = use fast MSP3410/3415 programming sequence *)
+		slowMSPAudio: SIGNED32;	(* 0 = use fast MSP3410/3415 programming sequence *)
 													(* 1 = use slow MSP3410/3415 programming sequence *)
 		dplVersionString: ARRAY 9 OF CHAR;	(* DPL version string 35xxx-xx *)
-		dplAddr: LONGINT;	(* DPL i2c address *)
+		dplAddr: SIGNED32;	(* DPL i2c address *)
 		audioMUXPresent: BOOLEAN;
-		audioMUXSelect: LONGINT;	(* current mode of the audio *)
+		audioMUXSelect: SIGNED32;	(* current mode of the audio *)
 		audioMuteState: BOOLEAN;	(* mute state of the audio *)
-		audioMUXs: ARRAY 5 OF LONGINT;
+		audioMUXs: ARRAY 5 OF SIGNED32;
 		reverseMute: BOOLEAN;
-		gpioMUXBits: LONGINT;
-		xtalPLLMode: LONGINT;
+		gpioMUXBits: SIGNED32;
+		xtalPLLMode: SIGNED32;
 		remoteControl: BOOLEAN;
-		remoteControlAddr: LONGINT;
+		remoteControlAddr: SIGNED32;
 
 		vbiData: ARRAY TVDriver.VbiDataSize OF CHAR;
 		vbiBuffer: TVDriver.VbiBuffer;
-		dmaProg: ARRAY 32768 OF LONGINT;
-		dmaProgLength: LONGINT;
-		oddDmaProg: ARRAY 32768 OF LONGINT;
-		oddDmaProgLength: LONGINT;
-		formatParameters: LONGINT;
-		currentCol: LONGINT;
+		dmaProg: ARRAY 32768 OF SIGNED32;
+		dmaProgLength: SIGNED32;
+		oddDmaProg: ARRAY 32768 OF SIGNED32;
+		oddDmaProgLength: SIGNED32;
+		formatParameters: SIGNED32;
+		currentCol: SIGNED32;
 		videoAddr: Machine.Address32;
-		videoWidth: LONGINT;
+		videoWidth: SIGNED32;
 
 		notificationProcess: NotificationProcess;	(* user land notification handler *)
 		singleFrameCaptured: BOOLEAN;	(* wait variable for single frame capture *)
@@ -1051,22 +1051,22 @@ TYPE
 		vbiFlags: SET;
 
 		dmaProgLoaded: BOOLEAN;
-		frameRows, frameCols: LONGINT;	(* # rows, cols in a frame *)
-		captureAreaXOffset, captureAreaYOffset, captureAreaXSize, captureAreaYSize: LONGINT;
+		frameRows, frameCols: SIGNED32;	(* # rows, cols in a frame *)
+		captureAreaXOffset, captureAreaYOffset, captureAreaXSize, captureAreaYSize: SIGNED32;
 		captureAreaEnabled: BOOLEAN;
-		pixFormat: LONGINT;	(* active pixel format (index into PixelFormatTable *)
-		frames: LONGINT;	(* number of frames allocated *)
-		fifoErrors: LONGINT;	(* number of FIFO capture errors since open *)
-		dmaErrors: LONGINT;	(* number of DMA errors since open *)
-		framesCaptured: LONGINT;	(* # of frames captured since open *)
-		evenFieldsCaptured: LONGINT;	(* number of even fields captured *)
-		oddFieldsCaptured: LONGINT;	(* number of odd fields captured *)
+		pixFormat: SIGNED32;	(* active pixel format (index into PixelFormatTable *)
+		frames: SIGNED32;	(* number of frames allocated *)
+		fifoErrors: SIGNED32;	(* number of FIFO capture errors since open *)
+		dmaErrors: SIGNED32;	(* number of DMA errors since open *)
+		framesCaptured: SIGNED32;	(* # of frames captured since open *)
+		evenFieldsCaptured: SIGNED32;	(* number of even fields captured *)
+		oddFieldsCaptured: SIGNED32;	(* number of odd fields captured *)
 		capControl: SET;
 		bktrCapCtl : SET;
-		fps: LONGINT;	(* frames per second *)
+		fps: SIGNED32;	(* frames per second *)
 
 	(* Initialize the VideoCaptureDevice object. *)
-	PROCEDURE &Init*(base: ADDRESS; irq, product, rev: LONGINT);
+	PROCEDURE &Init*(base: ADDRESS; irq, product, rev: SIGNED32);
 	BEGIN
 		SELF.base := base;
 		SELF.irq := irq;
@@ -1133,9 +1133,9 @@ TYPE
 		EvenField = {1};
 	VAR
 		intStatus, devStatus: SET;
-		tDecSave: LONGINT;
+		tDecSave: SIGNED32;
 		field, wField, reqField: SET;
-		insPos, i: LONGINT;
+		insPos, i: SIGNED32;
 	BEGIN
 		(* check to see if any interrupts are unmasked on this device. If none are, *)
 		(* then we likely got here by way of being on a PCI shared interrupt dispatch *)
@@ -1148,12 +1148,12 @@ TYPE
 
 		IF flags * FileHandlers = {} THEN
 			IF DEBUG >= DebugHigh THEN KernelLog.String("(device not open) "); END;
-			SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoRiscDisabled));
-			SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(LONGINT, AllIntsDisabled));
+			SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoRiscDisabled));
+			SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(SIGNED32, AllIntsDisabled));
 		END;
 		(* record and clear the interrupt status bits *)
 		intStatus := SYSTEM.VAL(SET, SYSTEM.GET32(base + BktrIntStat));
-		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(LONGINT, intStatus * (-I2CBits)));	(* don't touch I2C *)
+		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(SIGNED32, intStatus * (-I2CBits)));	(* don't touch I2C *)
 		(* record and clear the device status register *)
 		devStatus := SYSTEM.VAL(SET, SYSTEM.GET8(base + BktrDStatus));
 		SYSTEM.PUT8(base + BktrDStatus, 0000H);
@@ -1178,10 +1178,10 @@ TYPE
 				IF (intStatus * Bt848IntSCErr # {}) THEN KernelLog.String("(SCErr) "); END;
 			END;
 			tDecSave := SYSTEM.GET8(base + BktrTDec);
-			SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoRiscDisabled));
-			SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(LONGINT, CaptureOff));
+			SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoRiscDisabled));
+			SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(SIGNED32, CaptureOff));
 
-			SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(LONGINT, AllIntsDisabled));
+			SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(SIGNED32, AllIntsDisabled));
 
 			(* reset temporal decimation counter *)
 			SYSTEM.PUT8(base + BktrTDec, 0);
@@ -1198,13 +1198,13 @@ TYPE
 				END;
 			END;
 			SYSTEM.PUT32(base + BktrRISCStrtAdd, Machine.PhysicalAdr(ADDRESSOF(dmaProg), 4));
-			SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoEnabled));
-			SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, capControl));
+			SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoEnabled));
+			SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, capControl));
 
-			SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(LONGINT, Bt848IntMysteryBit +
+			SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(SIGNED32, Bt848IntMysteryBit +
 				Bt848IntRiscI + Bt848IntVSync + Bt848IntFmtChg));
 
-			SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(LONGINT, bktrCapCtl));
+			SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(SIGNED32, bktrCapCtl));
 		END;
 		(* if this is not a RISC program interrupt, return *)
 		IF intStatus * Bt848IntRiscI = {} THEN
@@ -1216,7 +1216,7 @@ TYPE
 		(* changing capture modes, otherwise it shouldn't happen. *)
 		IF flags * AosCapMask = {} THEN
 			IF DEBUG >= DebugHigh THEN KernelLog.String("capture stopped"); KernelLog.Ln; END;
-			SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(LONGINT, CaptureOff));
+			SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(SIGNED32, CaptureOff));
 		END;
 
 		(* determine which field generated this interrupt *)
@@ -1297,9 +1297,9 @@ TYPE
 
 			IF flags * AosSingle # {} THEN
 				(* stop DMA *)
-				SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(LONGINT, AllIntsDisabled));
+				SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(SIGNED32, AllIntsDisabled));
 				(* disable RISC, leave FIFO running *)
-				SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoEnabled));
+				SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoEnabled));
 				IF DEBUG >= DebugHigh THEN KernelLog.String("Single frame captured."); KernelLog.Ln; END;
 				singleFrameCaptured := TRUE;
 			END;
@@ -1345,20 +1345,20 @@ TYPE
 	PROCEDURE ProbeCard;
 	CONST Absent = -1;
 	VAR
-		i, valNirvana: LONGINT;
-		cardID: LONGINT;
-		eepromI2CAddr, tunerI2CAddr: LONGINT;
-		subsystemVendorID, subsystemID: LONGINT;
-		byte252, byte253, byte254, byte255: LONGINT;
+		i, valNirvana: SIGNED32;
+		cardID: SIGNED32;
+		eepromI2CAddr, tunerI2CAddr: SIGNED32;
+		subsystemVendorID, subsystemID: SIGNED32;
+		byte252, byte253, byte254, byte255: SIGNED32;
 		eeprom: ARRAY 256 OF CHAR;
-		startBlock1, startBlock2, startBlock3, startBlock4: LONGINT;
-		dataSizeB1, dataSizeB2, dataSizeB3: LONGINT;
-		totalSizeB1, totalSizeB2, totalSizeB3: LONGINT;
-		headerSizeB4: LONGINT;
-		model, revision: LONGINT;
-		tunerCode: LONGINT;
+		startBlock1, startBlock2, startBlock3, startBlock4: SIGNED32;
+		dataSizeB1, dataSizeB2, dataSizeB3: SIGNED32;
+		totalSizeB1, totalSizeB2, totalSizeB3: SIGNED32;
+		headerSizeB4: SIGNED32;
+		model, revision: SIGNED32;
+		tunerCode: SIGNED32;
 		timer: Kernel.Timer;
-		i2cData: LONGINT;
+		i2cData: SIGNED32;
 	BEGIN
 		NEW(timer);
 		(* select all GPIO bits as input *)
@@ -1382,9 +1382,9 @@ TYPE
 				byte253 := ORD(eeprom[253]);
 				byte254 := ORD(eeprom[254]);
 				byte255 := ORD(eeprom[255]);
-				subsystemID := SYSTEM.VAL(LONGINT,
+				subsystemID := SYSTEM.VAL(SIGNED32,
 					SYSTEM.VAL(SET, ASH(byte252, 8)) + SYSTEM.VAL(SET, byte253));
-				subsystemVendorID := SYSTEM.VAL(LONGINT,
+				subsystemVendorID := SYSTEM.VAL(SIGNED32,
 					SYSTEM.VAL(SET, ASH(byte254, 8)) + SYSTEM.VAL(SET, byte255));
 				IF DEBUG # DebugOff THEN
 					KernelLog.String("{BT848} Subsystem ID: "); KernelLog.Hex(subsystemID, 0); KernelLog.Ln;
@@ -1435,22 +1435,22 @@ TYPE
 				valNirvana := ReadEEProm(0, 256, eeprom);
 				ASSERT(valNirvana = 0);
 				startBlock1 := 0;
-				dataSizeB1 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(ORD(eeprom[startBlock1 + 2]), 8))
+				dataSizeB1 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(ORD(eeprom[startBlock1 + 2]), 8))
 					+ SYSTEM.VAL(SET, ORD(eeprom[startBlock1 + 1])));
 				totalSizeB1 := dataSizeB1 + 3;
 				startBlock2 := totalSizeB1;
-				dataSizeB2 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(ORD(eeprom[startBlock2 + 2]), 8))
+				dataSizeB2 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(ORD(eeprom[startBlock2 + 2]), 8))
 					+ SYSTEM.VAL(SET, ORD(eeprom[startBlock2 + 1])));
 				totalSizeB2 := dataSizeB3 + 3;
 				startBlock3 := totalSizeB1 + totalSizeB2;
-				dataSizeB3 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ORD(eeprom[startBlock3]))
+				dataSizeB3 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ORD(eeprom[startBlock3]))
 					* SYSTEM.VAL(SET, 0070H));
 				totalSizeB3 := dataSizeB3 + 1;
 				startBlock4 := totalSizeB1 + totalSizeB2 + totalSizeB3;
 				headerSizeB4 := 1;
-				model := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(ORD(eeprom[startBlock1 + 12]), 8))
+				model := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(ORD(eeprom[startBlock1 + 12]), 8))
 					+ SYSTEM.VAL(SET, ORD(eeprom[startBlock1 + 11])));
-				revision := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(ORD(eeprom[startBlock1 + 15]), 16))
+				revision := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(ORD(eeprom[startBlock1 + 15]), 16))
 					+ SYSTEM.VAL(SET, ASH(ORD(eeprom[startBlock1 + 14]), 8))
 					+ SYSTEM.VAL(SET, ORD(eeprom[startBlock1 + 13])));
 				tunerCode := ORD(eeprom[startBlock1 + 9]);
@@ -1553,7 +1553,7 @@ TYPE
 
 	(* Selects the tuner. *)
 	(* tunerType:	type of the tuner *)
-	PROCEDURE SelectTuner(tunerType: LONGINT);
+	PROCEDURE SelectTuner(tunerType: SIGNED32);
 	BEGIN
 		card.tuner := tuners[tunerType];
 		IF DEBUG # DebugOff THEN
@@ -1563,10 +1563,10 @@ TYPE
 
 	(* Set the number of frames per second. *)
 	(* frameRate:	number of frames/s *)
-	PROCEDURE SetFPS(frameRate: LONGINT);
+	PROCEDURE SetFPS(frameRate: SIGNED32);
 	VAR
 		fp: FormatParams;
-		iFlag: LONGINT;
+		iFlag: SIGNED32;
 	BEGIN
 		fp := formatParams[formatParameters];
 		IF flags * AosOnlyFieldsMask = AosOnlyEvenFields THEN
@@ -1583,14 +1583,14 @@ TYPE
 			iFlag := 2;
 		END;
 
-		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoRiscDisabled));
-		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(LONGINT, AllIntsCleared));
+		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoRiscDisabled));
+		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(SIGNED32, AllIntsCleared));
 
 		fps := frameRate;
 		SYSTEM.PUT8(base + BktrTDec, 0);
 
 		IF fps < fp.frameRate THEN
-			SYSTEM.PUT8(base + BktrTDec, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, iFlag*(fp.frameRate - fps)) *
+			SYSTEM.PUT8(base + BktrTDec, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, iFlag*(fp.frameRate - fps)) *
 				SYSTEM.VAL(SET, 003FH)));
 		ELSE
 			SYSTEM.PUT8(base + BktrTDec, 0);
@@ -1606,11 +1606,11 @@ TYPE
 	(* bpp:	bytes per pixel *)
 	(* targetBuffer:	pointer to the physical address of the target buffer for video data *)
 	(* cols:	number of columns of the scan line *)
-	PROCEDURE SplitDmaTransfer(VAR prog: ARRAY OF LONGINT; VAR dmaIndex: LONGINT; width: LONGINT;
-		op: SET; bpp: LONGINT; targetBuffer: LONGINT; cols: LONGINT);
+	PROCEDURE SplitDmaTransfer(VAR prog: ARRAY OF SIGNED32; VAR dmaIndex: SIGNED32; width: SIGNED32;
+		op: SET; bpp: SIGNED32; targetBuffer: SIGNED32; cols: SIGNED32);
 	VAR
 		pixelFormat: PixelFormat;
-		startSkip, skip: LONGINT;
+		startSkip, skip: SIGNED32;
 		flag1, flag2: SET;
 	BEGIN
 		pixelFormat := pixelFormatTable[pixFormat];
@@ -1634,12 +1634,12 @@ TYPE
 				flag1 := {};
 			END;
 			IF (flag1 * OpSOL # {}) & (startSkip > 0) THEN
-				prog[dmaIndex] := SYSTEM.VAL(LONGINT, OpSkip + OpSOL + SYSTEM.VAL(SET, startSkip));
+				prog[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSkip + OpSOL + SYSTEM.VAL(SET, startSkip));
 				INC(dmaIndex);
 				flag1 := flag1 * SET (-OpSOL);
 				skip := startSkip;
 			END;
-			prog[dmaIndex] := SYSTEM.VAL(LONGINT, op + flag1 + SYSTEM.VAL(SET, width*bpp - skip));
+			prog[dmaIndex] := SYSTEM.VAL(SIGNED32, op + flag1 + SYSTEM.VAL(SET, width*bpp - skip));
 			INC(dmaIndex);
 			IF op * OpSkip = {} THEN
 				prog[dmaIndex] := targetBuffer;
@@ -1657,12 +1657,12 @@ TYPE
 				flag1 := {}; flag2 := {};
 			END;
 			IF (flag1 * OpSOL # {}) & (startSkip > 0) THEN
-				prog[dmaIndex] := SYSTEM.VAL(LONGINT, OpSkip + OpSOL + SYSTEM.VAL(SET, startSkip));
+				prog[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSkip + OpSOL + SYSTEM.VAL(SET, startSkip));
 				INC(dmaIndex);
 				flag1 := flag1 * SET (-OpSOL);
 				skip := startSkip;
 			END;
-			prog[dmaIndex] := SYSTEM.VAL(LONGINT, op + flag1 + SYSTEM.VAL(SET, width*bpp DIV 2 - skip));
+			prog[dmaIndex] := SYSTEM.VAL(SIGNED32, op + flag1 + SYSTEM.VAL(SET, width*bpp DIV 2 - skip));
 			INC(dmaIndex);
 			IF op * OpSkip = {} THEN
 				prog[dmaIndex] := targetBuffer; INC(dmaIndex);
@@ -1671,7 +1671,7 @@ TYPE
 			IF op * OpWrite # {} THEN
 				op := OpWriteC;
 			END;
-			prog[dmaIndex] := SYSTEM.VAL(LONGINT, op + flag2 + SYSTEM.VAL(SET, width * bpp DIV 2));
+			prog[dmaIndex] := SYSTEM.VAL(SIGNED32, op + flag2 + SYSTEM.VAL(SET, width * bpp DIV 2));
 			INC(dmaIndex);
 			targetBuffer := targetBuffer + width * bpp DIV 2;
 			currentCol := currentCol + width;
@@ -1683,15 +1683,15 @@ TYPE
 	(* cols:	number of columns of a frame *)
 	(* rows:	number of rows of a frame *)
 	(* interlace:	interlace value *)
-	PROCEDURE DmaRgbVbi(mode: LONGINT; cols: LONGINT; rows: LONGINT; interlace: LONGINT);
+	PROCEDURE DmaRgbVbi(mode: SIGNED32; cols: SIGNED32; rows: SIGNED32; interlace: SIGNED32);
 	VAR
-		targetBuffer, buffer, width: LONGINT;
-		pitch: LONGINT;
-		dmaIndex, loopPoint, q: LONGINT;
-		temp1: LONGINT;
-		vbiSamples: LONGINT;	(* VBI samples per line *)
-		vbiLines: LONGINT;	(* VBI lines per field *)
-		numDWords: LONGINT;	(* DWords per line *)
+		targetBuffer, buffer, width: SIGNED32;
+		pitch: SIGNED32;
+		dmaIndex, loopPoint, q: SIGNED32;
+		temp1: SIGNED32;
+		vbiSamples: SIGNED32;	(* VBI samples per line *)
+		vbiLines: SIGNED32;	(* VBI lines per field *)
+		numDWords: SIGNED32;	(* DWords per line *)
 		pixelFormat: PixelFormat;
 	BEGIN
 		pixelFormat := pixelFormatTable[pixFormat];
@@ -1700,26 +1700,26 @@ TYPE
 		numDWords := vbiSamples DIV 4;
 
 		SYSTEM.PUT8(base + BktrColorFmt, pixelFormat.colorFormat);
-		SYSTEM.PUT8(base + BktrADC, SYSTEM.VAL(LONGINT, SyncLevel));
-		SYSTEM.PUT8(base + BktrVBIPackSize, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, numDWords) * {0..7}));
-		SYSTEM.PUT8(base + BktrVBIPackDel, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(numDWords, -8)) * {0}));	(* no hdelay, no ext frame *)
+		SYSTEM.PUT8(base + BktrADC, SYSTEM.VAL(SIGNED32, SyncLevel));
+		SYSTEM.PUT8(base + BktrVBIPackSize, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, numDWords) * {0..7}));
+		SYSTEM.PUT8(base + BktrVBIPackDel, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(numDWords, -8)) * {0}));	(* no hdelay, no ext frame *)
 		SYSTEM.PUT8(base + BktrOForm, 0000H);
 		temp1 := SYSTEM.GET8(base + BktrEVScaleHi);
 		SYSTEM.PUT8(base + BktrEVScaleHi,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + SYSTEM.VAL(SET, 0040H)));	(* set chroma comb *)
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + SYSTEM.VAL(SET, 0040H)));	(* set chroma comb *)
 		temp1 := SYSTEM.GET8(base + BktrOVScaleHi);
 		SYSTEM.PUT8(base + BktrOVScaleHi,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + SYSTEM.VAL(SET, 0040H)));
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + SYSTEM.VAL(SET, 0040H)));
 		temp1 := SYSTEM.GET8(base + BktrEVScaleHi);
 		SYSTEM.PUT8(base + BktrEVScaleHi,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0080H))));	(* clear Ycomb *)
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0080H))));	(* clear Ycomb *)
 		temp1 := SYSTEM.GET8(base + BktrOVScaleHi);
 		SYSTEM.PUT8(base + BktrOVScaleHi,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0080H))));
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0080H))));
 		(* disable gamma correction removal *)
 		temp1 := SYSTEM.GET8(base + BktrColorCtl);
 		SYSTEM.PUT8(base + BktrColorCtl,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848ColorCtlGamma));
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848ColorCtlGamma));
 
 		IF (cols > 385) THEN
 			SYSTEM.PUT8(base + BktrEVTC, 0);
@@ -1736,25 +1736,25 @@ TYPE
 		(* wait for the VRE sync marking the end of the even and *)
 		(* the start of the odd field. Resync here. *)
 		dmaIndex := 0;
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrResync + BktrVRE); INC(dmaIndex);
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrResync + BktrVRE); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
 		loopPoint := dmaIndex;
 		(* store the VBI data *)
 		(* look for sync with packed data *)
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrFM1); INC(dmaIndex);
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrFM1); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
 		FOR q := 0 TO vbiLines-1 DO
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpWrite + OpSOL + OpEOL + SYSTEM.VAL(SET, vbiSamples));
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpWrite + OpSOL + OpEOL + SYSTEM.VAL(SET, vbiSamples));
 			INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT,
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32,
 				Machine.PhysicalAdr(ADDRESSOF(vbiData), 4) + (q * VbiLineSize)); INC(dmaIndex);
 		END;
 
 		IF (mode = AosOddField) OR (mode = AosInterlaced) THEN
 			(* store the odd field video image *)
 			(* look for sync with packed data *)
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrFM1); INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrFM1); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
 			width := cols;
 			FOR q := 0 TO (rows DIV interlace)-1 DO
 				IF TRUE THEN
@@ -1768,16 +1768,16 @@ TYPE
 		END;
 		(* grab the even field *)
 		(* look for the VRO, end of odd field, marker *)
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrGenIRQ + BktrResync + BktrVRO); INC(dmaIndex);
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrGenIRQ + BktrResync + BktrVRO); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
 		(* store the VBI data *)
 		(* look for sync with packed data *)
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrFM1); INC(dmaIndex);
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrFM1); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
 		FOR q := 0 TO vbiLines-1 DO
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpWrite + OpSOL + OpEOL + SYSTEM.VAL(SET, vbiSamples));
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpWrite + OpSOL + OpEOL + SYSTEM.VAL(SET, vbiSamples));
 			INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT,
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32,
 				Machine.PhysicalAdr(ADDRESSOF(vbiData), 4) + ((q+VbiMaxLines)*VbiLineSize)); INC(dmaIndex);
 		END;
 
@@ -1789,8 +1789,8 @@ TYPE
 		END;
 		IF (mode = AosEvenField) OR (mode = AosInterlaced) THEN
 			(* look for sync with packed data *)
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrFM1); INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrFM1); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
 			width := cols;
 			FOR q := 0 TO (rows DIV interlace)-1 DO
 				IF TRUE THEN
@@ -1803,13 +1803,13 @@ TYPE
 			END;
 		END;
 		(* look for end of even field *)
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrGenIRQ + BktrResync + BktrVRE); INC(dmaIndex);
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrGenIRQ + BktrResync + BktrVRE); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
 
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpJump); INC(dmaIndex);
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT,
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpJump); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32,
 			Machine.PhysicalAdr(ADDRESSOF(dmaProg[loopPoint]), 4)); INC(dmaIndex);
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
 	END DmaRgbVbi;
 
 	(* Constructs a RISC program for RGB data capture. *)
@@ -1817,38 +1817,38 @@ TYPE
 	(* cols:	number of columns of a frame *)
 	(* rows:	number of rows of a frame *)
 	(* interlace:	interlace value *)
-	PROCEDURE DmaRgb(mode: LONGINT; cols, rows: LONGINT; interlace: LONGINT);
+	PROCEDURE DmaRgb(mode: SIGNED32; cols, rows: SIGNED32; interlace: SIGNED32);
 	VAR
-		targetBuffer, buffer, width: LONGINT;
-		pitch: LONGINT;
-		dmaIndex, q: LONGINT;
-		temp1: LONGINT;
+		targetBuffer, buffer, width: SIGNED32;
+		pitch: SIGNED32;
+		dmaIndex, q: SIGNED32;
+		temp1: SIGNED32;
 		pixelFormat: PixelFormat;
 	BEGIN
 		pixelFormat := pixelFormatTable[pixFormat];
 		SYSTEM.PUT8(base + BktrColorFmt, pixelFormat.colorFormat);
 		SYSTEM.PUT8(base + BktrVBIPackSize, 0);
 		SYSTEM.PUT8(base + BktrVBIPackDel, 0);
-		SYSTEM.PUT8(base + BktrADC, SYSTEM.VAL(LONGINT, SyncLevel));
+		SYSTEM.PUT8(base + BktrADC, SYSTEM.VAL(SIGNED32, SyncLevel));
 
 		SYSTEM.PUT8(base + BktrOForm, 0000H);
 
 		temp1 := SYSTEM.GET8(base + BktrEVScaleHi);	(* set chroma comb *)
 		SYSTEM.PUT8(base + BktrEVScaleHi,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + SYSTEM.VAL(SET, 0040H)));
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + SYSTEM.VAL(SET, 0040H)));
 		temp1 := SYSTEM.GET8(base + BktrOVScaleHi);
 		SYSTEM.PUT8(base + BktrOVScaleHi,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + SYSTEM.VAL(SET, 0040H)));
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + SYSTEM.VAL(SET, 0040H)));
 		temp1 := SYSTEM.GET8(base + BktrEVScaleHi);	(* clear Ycomb *)
 		SYSTEM.PUT8(base + BktrEVScaleHi,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0080H))));
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0080H))));
 		temp1 := SYSTEM.GET8(base + BktrOVScaleHi);
 		SYSTEM.PUT8(base + BktrOVScaleHi,
-			SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0080H))));
+			SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0080H))));
 
 		(* disable gamma correction removal *)
 		temp1 := SYSTEM.GET8(base + BktrColorCtl);
-		SYSTEM.PUT8(base + BktrColorCtl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848ColorCtlGamma));
+		SYSTEM.PUT8(base + BktrColorCtl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848ColorCtlGamma));
 
 		IF cols > 385 THEN
 			SYSTEM.PUT8(base + BktrEVTC, 0);
@@ -1869,8 +1869,8 @@ TYPE
 		buffer := targetBuffer;
 
 		(* construct sync : for video packet format *)
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrResync + BktrFM1); INC(dmaIndex);
-		dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrResync + BktrFM1); INC(dmaIndex);
+		dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
 		width := cols;
 		FOR q := 0 TO rows DIV interlace - 1 DO
 			IF TRUE THEN
@@ -1884,29 +1884,29 @@ TYPE
 
 		IF mode = 1 THEN
 			(* sync vre *)
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrGenIRQ + BktrVRO); INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpJump); INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, Machine.PhysicalAdr(ADDRESSOF(dmaProg[0]),
-				LEN(dmaProg) * SIZEOF(LONGINT)));
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrGenIRQ + BktrVRO); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpJump); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, Machine.PhysicalAdr(ADDRESSOF(dmaProg[0]),
+				LEN(dmaProg) * SIZEOF(SIGNED32)));
 			dmaProgLength := dmaIndex;
 			RETURN;
 		ELSIF mode = 2 THEN
 			(* sync vro *)
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrGenIRQ + BktrVRE); INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpJump); INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, Machine.PhysicalAdr(ADDRESSOF(dmaProg[0]),
-				LEN(dmaProg) * SIZEOF(LONGINT)));
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrGenIRQ + BktrVRE); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpJump); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, Machine.PhysicalAdr(ADDRESSOF(dmaProg[0]),
+				LEN(dmaProg) * SIZEOF(SIGNED32)));
 			dmaProgLength := dmaIndex;
 			RETURN;
 		ELSIF mode = 3 THEN
 			(* sync vro *)
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrGenIRQ + BktrResync + BktrVRO); INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpJump); INC(dmaIndex);
-			dmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, Machine.PhysicalAdr(ADDRESSOF(oddDmaProg[0]),
-				LEN(oddDmaProg) * SIZEOF(LONGINT)));
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrGenIRQ + BktrResync + BktrVRO); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpJump); INC(dmaIndex);
+			dmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, Machine.PhysicalAdr(ADDRESSOF(oddDmaProg[0]),
+				LEN(oddDmaProg) * SIZEOF(SIGNED32)));
 		END;
 		dmaProgLength := dmaIndex;
 
@@ -1916,8 +1916,8 @@ TYPE
 			dmaIndex := 0;
 
 			(* sync vre IRQ bit *)
-			oddDmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrResync + BktrFM1); INC(dmaIndex);
-			oddDmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0);
+			oddDmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrResync + BktrFM1); INC(dmaIndex);
+			oddDmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0);
 			width := cols;
 			FOR q := 0 TO rows DIV interlace - 1 DO
 				IF TRUE THEN
@@ -1931,24 +1931,24 @@ TYPE
 		END;
 
 		(* sync vre IRQ bit *)
-		oddDmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpSync + BktrGenIRQ + BktrResync + BktrVRE);
+		oddDmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpSync + BktrGenIRQ + BktrResync + BktrVRE);
 			INC(dmaIndex);
-		oddDmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0); INC(dmaIndex);
-		oddDmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, OpJump); INC(dmaIndex);
-		oddDmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, Machine.PhysicalAdr(ADDRESSOF(dmaProg[0]),
-			LEN(dmaProg) * SIZEOF(LONGINT))); INC(dmaIndex);
-		oddDmaProg[dmaIndex] := SYSTEM.VAL(LONGINT, 0);
+		oddDmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0); INC(dmaIndex);
+		oddDmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, OpJump); INC(dmaIndex);
+		oddDmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, Machine.PhysicalAdr(ADDRESSOF(dmaProg[0]),
+			LEN(dmaProg) * SIZEOF(SIGNED32))); INC(dmaIndex);
+		oddDmaProg[dmaIndex] := SYSTEM.VAL(SIGNED32, 0);
 		oddDmaProgLength := dmaIndex;
 	END DmaRgb;
 
 	(* Construct the RISC program sequence. *)
 	(* mode:	AosOddField, AosEvenField, or AosInterlaced *)
-	PROCEDURE BuildDmaProg(mode: LONGINT);
+	PROCEDURE BuildDmaProg(mode: SIGNED32);
 	VAR
-		temp1, temp2, temp3: LONGINT;
+		temp1, temp2, temp3: SIGNED32;
 		fp: FormatParams;
 		pixelFormat: PixelFormat;
-		interlace: LONGINT;
+		interlace: SIGNED32;
 	BEGIN
 		notificationProcess.NotifyHandler;
 		fp := formatParams[formatParameters];
@@ -1958,7 +1958,7 @@ TYPE
 
 		(* disable FIFO and RISC, leave other bits alone *)
 		temp1 := SYSTEM.GET16(base + BktrGPIODmaCtl);
-		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-FifoRiscEnabled)));
+		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-FifoRiscEnabled)));
 		(* set video parameters *)
 		(* horizontal scale *)
 		IF captureAreaEnabled THEN
@@ -1966,24 +1966,24 @@ TYPE
 		ELSE
 			temp2 := ENTIER(1.0 * fp.hTotal * fp.scaledHActive * 4096 / fp.scaledHTotal / frameCols - 4096);
 		END;
-		SYSTEM.PUT8(base + BktrEHScaleLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * {0..7}));
-		SYSTEM.PUT8(base + BktrOHScaleLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * {0..7}));
-		SYSTEM.PUT8(base + BktrEHScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(temp2, -8)) * {0..7}));
-		SYSTEM.PUT8(base + BktrOHScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(temp2, -8)) * {0..7}));
+		SYSTEM.PUT8(base + BktrEHScaleLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * {0..7}));
+		SYSTEM.PUT8(base + BktrOHScaleLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * {0..7}));
+		SYSTEM.PUT8(base + BktrEHScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(temp2, -8)) * {0..7}));
+		SYSTEM.PUT8(base + BktrOHScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(temp2, -8)) * {0..7}));
 
 		(* horizontal active *)
 		temp2 := frameCols;
-		SYSTEM.PUT8(base + BktrEHActiveLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * {0..7}));
-		SYSTEM.PUT8(base + BktrOHActiveLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * {0..7}));
+		SYSTEM.PUT8(base + BktrEHActiveLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * {0..7}));
+		SYSTEM.PUT8(base + BktrOHActiveLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * {0..7}));
 		temp1 := SYSTEM.GET8(base + BktrECrop);
-		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-{0,1})));
+		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-{0,1})));
 		temp1 := SYSTEM.GET8(base + BktrOCrop);
-		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-{0,1})));
+		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-{0,1})));
 		temp1 := SYSTEM.GET8(base + BktrECrop);
-		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) +
+		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) +
 			(SYSTEM.VAL(SET, ASH(temp2, -8)) * {0,1})));
 		temp1 := SYSTEM.GET8(base + BktrOCrop);
-		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) +
+		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) +
 			(SYSTEM.VAL(SET, ASH(temp2, -8)) * {0,1})));
 
 		(* horizontal delay *)
@@ -1993,20 +1993,20 @@ TYPE
 		ELSE
 			temp2 := ENTIER(1.0 * fp.hDelay * frameCols / fp.hActive);
 		END;
-		temp2 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * SYSTEM.VAL(SET, 03FEH));
-		SYSTEM.PUT8(base + BktrEDelayLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * {0..7}));
-		SYSTEM.PUT8(base + BktrODelayLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * {0..7}));
+		temp2 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * SYSTEM.VAL(SET, 03FEH));
+		SYSTEM.PUT8(base + BktrEDelayLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * {0..7}));
+		SYSTEM.PUT8(base + BktrODelayLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * {0..7}));
 		temp1 := SYSTEM.GET8(base + BktrECrop);
-		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) *
+		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) *
 			(-SYSTEM.VAL(SET, 000CH))));
 		temp1 := SYSTEM.GET8(base + BktrOCrop);
-		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) *
+		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) *
 			(-SYSTEM.VAL(SET, 000CH))));
 		temp1 := SYSTEM.GET8(base + BktrECrop);
-		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) +
+		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) +
 			(SYSTEM.VAL(SET, ASH(temp2, -6)) * SYSTEM.VAL(SET, 000CH))));
 		temp1 := SYSTEM.GET8(base + BktrOCrop);
-		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) +
+		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) +
 			(SYSTEM.VAL(SET, ASH(temp2, -6)) * SYSTEM.VAL(SET, 000CH))));
 
 		(* vertical scale *)
@@ -2023,20 +2023,20 @@ TYPE
 				temp3 := ENTIER(1.0 * 65536 - (((fp.vActive * 512 + (frameRows DIV 2)) DIV frameRows) - 512));
 			END;
 		END;
-		temp3 := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp3) * {0..12});
-		SYSTEM.PUT8(base + BktrEVScaleLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp3) * {0..7}));
-		SYSTEM.PUT8(base + BktrOVScaleLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp3) * {0..7}));
+		temp3 := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp3) * {0..12});
+		SYSTEM.PUT8(base + BktrEVScaleLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp3) * {0..7}));
+		SYSTEM.PUT8(base + BktrOVScaleLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp3) * {0..7}));
 		temp1 := SYSTEM.GET8(base + BktrEVScaleHi);
-		SYSTEM.PUT8(base + BktrEVScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) *
+		SYSTEM.PUT8(base + BktrEVScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) *
 			(-{0..4})));
 		temp1 := SYSTEM.GET8(base + BktrOVScaleHi);
-		SYSTEM.PUT8(base + BktrOVScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) *
+		SYSTEM.PUT8(base + BktrOVScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) *
 			(-{0..4})));
 		temp1 := SYSTEM.GET8(base + BktrEVScaleHi);
-		SYSTEM.PUT8(base + BktrEVScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) +
+		SYSTEM.PUT8(base + BktrEVScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) +
 			(SYSTEM.VAL(SET, ASH(temp3, -8)) * {0..4})));
 		temp1 := SYSTEM.GET8(base + BktrOVScaleHi);
-		SYSTEM.PUT8(base + BktrOVScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) +
+		SYSTEM.PUT8(base + BktrOVScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) +
 			(SYSTEM.VAL(SET, ASH(temp3, -8)) * {0..4})));
 
 		(* vertical active *)
@@ -2046,17 +2046,17 @@ TYPE
 			temp2 := fp.vActive;
 		END;
 		temp1 := SYSTEM.GET8(base + BktrECrop);
-		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0030H))));
+		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0030H))));
 		temp1 := SYSTEM.GET8(base + BktrECrop);
-		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) +
+		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) +
 			(SYSTEM.VAL(SET, ASH(temp2, -4)) * SYSTEM.VAL(SET, 0030H))));
-		SYSTEM.PUT8(base + BktrEVActiveLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * {0..7}));
+		SYSTEM.PUT8(base + BktrEVActiveLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * {0..7}));
 		temp1 := SYSTEM.GET8(base + BktrOCrop);
-		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0030H))));
+		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 0030H))));
 		temp1 := SYSTEM.GET8(base + BktrOCrop);
-		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) +
+		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) +
 			(SYSTEM.VAL(SET, ASH(temp2, -4)) * SYSTEM.VAL(SET, 0030H))));
-		SYSTEM.PUT8(base + BktrOVActiveLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * {0..7}));
+		SYSTEM.PUT8(base + BktrOVActiveLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * {0..7}));
 
 		(* vertical delay *)
 		IF captureAreaEnabled THEN
@@ -2065,29 +2065,29 @@ TYPE
 			temp2 := fp.vDelay;
 		END;
 		temp1 := SYSTEM.GET8(base + BktrECrop);
-		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 00C0H))));
+		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 00C0H))));
 		temp1 := SYSTEM.GET8(base + BktrECrop);
-		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) +
+		SYSTEM.PUT8(base + BktrECrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) +
 			(SYSTEM.VAL(SET, ASH(temp2, -2)) * SYSTEM.VAL(SET, 00C0H))));
-		SYSTEM.PUT8(base + BktrEVDelayLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * {0..7}));
+		SYSTEM.PUT8(base + BktrEVDelayLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * {0..7}));
 		temp1 := SYSTEM.GET8(base + BktrOCrop);
-		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 00C0H))));
+		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-SYSTEM.VAL(SET, 00C0H))));
 		temp1 := SYSTEM.GET8(base + BktrOCrop);
-		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) +
+		SYSTEM.PUT8(base + BktrOCrop, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) +
 			(SYSTEM.VAL(SET, ASH(temp2, -2)) * SYSTEM.VAL(SET, 00C0H))));
-		SYSTEM.PUT8(base + BktrOVDelayLo, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp2) * {0..7}));
+		SYSTEM.PUT8(base + BktrOVDelayLo, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp2) * {0..7}));
 		(* end of video params *)
 
-		IF (xtalPLLMode = Bt848UsePLL) & (fp.iformXTSel = SYSTEM.VAL(LONGINT, Bt848IFormXXT1)) THEN
+		IF (xtalPLLMode = Bt848UsePLL) & (fp.iformXTSel = SYSTEM.VAL(SIGNED32, Bt848IFormXXT1)) THEN
 			IF DEBUG >= DebugMed THEN
 				KernelLog.String("{BT848} BuildDmaProg: PLL mode selected"); KernelLog.Ln;
 			END;
-			SYSTEM.PUT8(base + BktrTGCtrl, SYSTEM.VAL(LONGINT, Bt848TGCtrlTGCKIPLL));	(* select PLL mode *)
+			SYSTEM.PUT8(base + BktrTGCtrl, SYSTEM.VAL(SIGNED32, Bt848TGCtrlTGCKIPLL));	(* select PLL mode *)
 		ELSE
 			IF DEBUG >= DebugMed THEN
 				KernelLog.String("{BT848} BuildDmaProg: normal xtal0/xtal1 mode selected"); KernelLog.Ln;
 			END;
-			SYSTEM.PUT8(base + BktrTGCtrl, SYSTEM.VAL(LONGINT, Bt848TGCtrlTGCKIXTAL));	(* select normal xtal 0/xtal 1 mode *)
+			SYSTEM.PUT8(base + BktrTGCtrl, SYSTEM.VAL(SIGNED32, Bt848TGCtrlTGCKIXTAL));	(* select normal xtal 0/xtal 1 mode *)
 		END;
 
 		(* capture control *)
@@ -2098,9 +2098,9 @@ TYPE
 					END;
 					bktrCapCtl := Bt848CapCtlDithFrame + Bt848CapCtlEven;
 					temp1 := SYSTEM.GET8(base + BktrEVScaleHi);
-					SYSTEM.PUT8(base + BktrEVScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-{5})));
+					SYSTEM.PUT8(base + BktrEVScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-{5})));
 					temp1 := SYSTEM.GET8(base + BktrOVScaleHi);
-					SYSTEM.PUT8(base + BktrOVScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-{5})));
+					SYSTEM.PUT8(base + BktrOVScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-{5})));
 					interlace := 1;
 			|   AosOddField:
 					IF DEBUG >= DebugMed THEN
@@ -2108,9 +2108,9 @@ TYPE
 					END;
 					bktrCapCtl := Bt848CapCtlDithFrame + Bt848CapCtlOdd;
 					temp1 := SYSTEM.GET8(base + BktrEVScaleHi);
-					SYSTEM.PUT8(base + BktrEVScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-{5})));
+					SYSTEM.PUT8(base + BktrEVScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-{5})));
 					temp1 := SYSTEM.GET8(base + BktrOVScaleHi);
-					SYSTEM.PUT8(base + BktrOVScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-{5})));
+					SYSTEM.PUT8(base + BktrOVScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-{5})));
 					interlace := 1;
 			ELSE
 					IF DEBUG >= DebugMed THEN
@@ -2118,9 +2118,9 @@ TYPE
 					END;
 					bktrCapCtl := Bt848CapCtlDithFrame + Bt848CapCtlEven + Bt848CapCtlOdd;
 					temp1 := SYSTEM.GET8(base + BktrEVScaleHi);
-					SYSTEM.PUT8(base + BktrEVScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + {5}));
+					SYSTEM.PUT8(base + BktrEVScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + {5}));
 					temp1 := SYSTEM.GET8(base + BktrOVScaleHi);
-					SYSTEM.PUT8(base + BktrOVScaleHi, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + {5}));
+					SYSTEM.PUT8(base + BktrOVScaleHi, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + {5}));
 					interlace := 2;
 		END;
 
@@ -2157,11 +2157,11 @@ TYPE
 	(** Outputs a dump of the RISC program. *)
 	PROCEDURE DumpRisc*;
 	VAR
-		pc, ipc, spc: ADDRESS; errPC, data: LONGINT;
+		pc, ipc, spc: ADDRESS; errPC, data: SIGNED32;
 	BEGIN
 		pc := SYSTEM.GET32(base + BktrRISCStrtAdd);
 		errPC := SYSTEM.GET32(base + BktrRISCCount);
-		Machine.MapPhysical(pc, SIZEOF(LONGINT) * LEN(dmaProg), ipc);
+		Machine.MapPhysical(pc, SIZEOF(SIGNED32) * LEN(dmaProg), ipc);
 		ASSERT(ipc # Machine.NilAdr);
 		spc := ipc;
 		data := SYSTEM.GET32(ipc);
@@ -2172,11 +2172,11 @@ TYPE
 			KernelLog.Ln;
 		i := 0;
 		REPEAT
-			CASE SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(data, -28)) * {0..3}) OF
+			CASE SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(data, -28)) * {0..3}) OF
 					01H:
 						KernelLog.String("{BT848} "); KernelLog.Hex(Machine.PhysicalAdr(ipc, 4), 0);
 							KernelLog.String(" write:"); KernelLog.Ln;
-						KernelLog.String("{BT848}    bytes: "); KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) * {0..11}), 0);
+						KernelLog.String("{BT848}    bytes: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) * {0..11}), 0);
 							KernelLog.Ln;
 						KernelLog.String("{BT848}    enables: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 12, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status set: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 16, 4); KernelLog.Ln;
@@ -2192,7 +2192,7 @@ TYPE
 						KernelLog.String("{BT848} "); KernelLog.Hex(Machine.PhysicalAdr(ipc, 4), 0);
 							KernelLog.String(" write123:"); KernelLog.Ln;
 						KernelLog.String("{BT848}    bytes FIFO 1: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
 						KernelLog.String("{BT848}    enables: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 12, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status set: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 16, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status reset: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 20, 4); KernelLog.Ln;
@@ -2202,10 +2202,10 @@ TYPE
 						KernelLog.String("{BT848}    sol: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 27, 1); KernelLog.Ln;
 						INC(ipc, 4); data := SYSTEM.GET32(ipc);
 						KernelLog.String("{BT848}    bytes FIFO 2: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
 						INC(ipc, 4); data := SYSTEM.GET32(ipc);
 						KernelLog.String("{BT848}    bytes FIFO 3: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(data, 16)) * {0..11}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(data, 16)) * {0..11}), 0); KernelLog.Ln;
 						INC(ipc, 4); data := SYSTEM.GET32(ipc);
 						KernelLog.String("{BT848}    target 1: "); KernelLog.Hex(data, 0); KernelLog.Ln;
 						INC(ipc, 4); data := SYSTEM.GET32(ipc);
@@ -2217,7 +2217,7 @@ TYPE
 						KernelLog.String("{BT848} "); KernelLog.Hex(Machine.PhysicalAdr(ipc, 4), 0);
 							KernelLog.String(" write1s23:"); KernelLog.Ln;
 						KernelLog.String("{BT848}    bytes FIFO 1: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
 						KernelLog.String("{BT848}    enables: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 12, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status set: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 16, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status reset: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 20, 4); KernelLog.Ln;
@@ -2227,10 +2227,10 @@ TYPE
 						KernelLog.String("{BT848}    sol: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 27, 1); KernelLog.Ln;
 						INC(ipc, 4); data := SYSTEM.GET32(ipc);
 						KernelLog.String("{BT848}    bytes FIFO 2: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
 						INC(ipc, 4); data := SYSTEM.GET32(ipc);
 						KernelLog.String("{BT848}    bytes FIFO 3: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(data, 16)) * {0..11}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(data, 16)) * {0..11}), 0); KernelLog.Ln;
 						INC(ipc, 4); data := SYSTEM.GET32(ipc);
 						KernelLog.String("{BT848}    target 1: "); KernelLog.Hex(data, 0); KernelLog.Ln;
 						INC(ipc, 4); data := SYSTEM.GET32(ipc);
@@ -2238,7 +2238,7 @@ TYPE
 						KernelLog.String("{BT848} "); KernelLog.Hex(Machine.PhysicalAdr(ipc, 4), 0);
 							KernelLog.String(" writec:"); KernelLog.Ln;
 						KernelLog.String("{BT848}    bytes FIFO 1: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
 						KernelLog.String("{BT848}    enables: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 12, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status set: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 16, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status reset: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 20, 4); KernelLog.Ln;
@@ -2251,7 +2251,7 @@ TYPE
 						KernelLog.String("{BT848} "); KernelLog.Hex(Machine.PhysicalAdr(ipc, 4), 0);
 							KernelLog.String(" skip:"); KernelLog.Ln;
 						KernelLog.String("{BT848}    bytes FIFO 1: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
 						KernelLog.String("{BT848}    enables: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 12, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status set: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 16, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status reset: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 20, 4); KernelLog.Ln;
@@ -2264,7 +2264,7 @@ TYPE
 						KernelLog.String("{BT848} "); KernelLog.Hex(Machine.PhysicalAdr(ipc, 4), 0);
 							KernelLog.String(" skip123:"); KernelLog.Ln;
 						KernelLog.String("{BT848}    bytes FIFO 1: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
 						KernelLog.String("{BT848}    enables: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 12, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status set: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 16, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status reset: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 20, 4); KernelLog.Ln;
@@ -2274,16 +2274,16 @@ TYPE
 						KernelLog.String("{BT848}    sol: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 27, 1); KernelLog.Ln;
 						INC(ipc, 4); data := SYSTEM.GET32(ipc);
 						KernelLog.String("{BT848}    bytes FIFO 2: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) * {0..11}), 0); KernelLog.Ln;
 						INC(ipc, 4); data := SYSTEM.GET32(ipc);
 						KernelLog.String("{BT848}    bytes FIFO 3: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(data, 16)) * {0..11}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(data, 16)) * {0..11}), 0); KernelLog.Ln;
 						INC(ipc, 4); data := SYSTEM.GET32(ipc);
 				|  07H:
 						KernelLog.String("{BT848} "); KernelLog.Hex(Machine.PhysicalAdr(ipc, 4), 0);
 							KernelLog.String(" jump:"); KernelLog.Ln;
 						KernelLog.String("{BT848}    reserved: ");
-							KernelLog.Int(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) * {0..15}), 0); KernelLog.Ln;
+							KernelLog.Int(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) * {0..15}), 0); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status set: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 16, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    risc status reset: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 20, 4); KernelLog.Ln;
 						KernelLog.String("{BT848}    irq: "); KernelLog.Bits(SYSTEM.VAL(SET, data), 24, 1); KernelLog.Ln;
@@ -2296,7 +2296,7 @@ TYPE
 						KernelLog.String("{BT848} "); KernelLog.Hex(Machine.PhysicalAdr(ipc, 4), 0);
 							KernelLog.String(" sync:"); KernelLog.Ln;
 						KernelLog.String("{BT848}    status: ");
-						CASE SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) * {0..3}) OF
+						CASE SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) * {0..3}) OF
 							   06H:	KernelLog.String("FM1");
 							| 0EH:	KernelLog.String("FM3");
 							| 02H:	KernelLog.String("SOL");
@@ -2334,7 +2334,7 @@ TYPE
 	(** Opens the VideoCaptureDevice object. *)
 	PROCEDURE VideoOpen*;
 	VAR
-		temp1: LONGINT;
+		temp1: SIGNED32;
 	BEGIN
 		IF flags * FileHandlers # {} THEN
 			IF DEBUG # DebugOff THEN KernelLog.String("{BT848} VideoOpen: device already in use"); KernelLog.Ln; END;
@@ -2342,19 +2342,19 @@ TYPE
 		END;
 		flags := flags + FileHandlers;
 		SYSTEM.PUT8(base + BktrDStatus, 0000H);	(* clear device status register *)
-		SYSTEM.PUT8(base + BktrADC, SYSTEM.VAL(LONGINT, SyncLevel));
+		SYSTEM.PUT8(base + BktrADC, SYSTEM.VAL(SIGNED32, SyncLevel));
 		SYSTEM.PUT8(base + BktrIForm, Bt848IFormFPalBDGHI);
 		formatParameters := Bt848IFormFPalBDGHI;
 		temp1 := SYSTEM.GET8(base + BktrIForm);
-		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) +
+		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) +
 			SYSTEM.VAL(SET, formatParams[formatParameters].iformXTSel)));
 		(* work-around for new Hauppauge 878 cards *)
 		IF (card.cardID = CardHauppauge) & ((id = Brooktree878) OR (id = Brooktree879)) THEN
 			temp1 := SYSTEM.GET8(base + BktrIForm);
-			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX3));
+			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX3));
 		ELSE
 			temp1 := SYSTEM.GET8(base + BktrIForm);
-			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX1));
+			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX1));
 		END;
 		SYSTEM.PUT8(base + BktrADelay, formatParams[formatParameters].aDelay);
 		SYSTEM.PUT8(base + BktrBDelay, formatParams[formatParameters].bDelay);
@@ -2367,7 +2367,7 @@ TYPE
 		END;
 		flags := (flags * SET (-AosDevMask)) + AosDev0;
 		(* TO BE DONE: clipping *)
-		SYSTEM.PUT8(base + BktrColorCtl, SYSTEM.VAL(LONGINT, Bt848ColorCtlGamma + Bt848ColorCtlRGBDed));
+		SYSTEM.PUT8(base + BktrColorCtl, SYSTEM.VAL(SIGNED32, Bt848ColorCtlGamma + Bt848ColorCtlRGBDed));
 
 		SYSTEM.PUT8(base + BktrEHScaleLo, 170);
 		SYSTEM.PUT8(base + BktrOHScaleLo, 170);
@@ -2400,15 +2400,15 @@ TYPE
 	BEGIN
 		flags := flags * SET (-(FileHandlers + AosSingle + AosCapMask + AosWantMask));
 
-		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoRiscDisabled));
-		SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(LONGINT, CaptureOff));
+		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoRiscDisabled));
+		SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(SIGNED32, CaptureOff));
 
 		dmaProgLoaded := FALSE;
 		SYSTEM.PUT8(base + BktrTDec, 0);
-		SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(LONGINT, AllIntsDisabled));
+		SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(SIGNED32, AllIntsDisabled));
 
 		SYSTEM.PUT32(base + BktrSReset, 0000H);
-		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(LONGINT, AllIntsCleared));
+		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(SIGNED32, AllIntsCleared));
 
 		notificationProcess.Stop;
 		notificationProcess := NIL;
@@ -2434,29 +2434,29 @@ TYPE
 
 	(** Get the device status. *)
 	(** return value:	device status *)
-	PROCEDURE GetStatus*(): LONGINT;
+	PROCEDURE GetStatus*(): SIGNED32;
 	BEGIN
 		RETURN SYSTEM.GET8(base + BktrDStatus);
 	END GetStatus;
 
 	(** Set the video input format *)
 	(** format:	format of video signal (Bt848IFormPalBDGHI etc.) *)
-	PROCEDURE SetInputFormat*(format: LONGINT);
+	PROCEDURE SetInputFormat*(format: SIGNED32);
 	VAR temp1, temp2: SET;
 	BEGIN
 		temp1 := SYSTEM.VAL(SET, format) * Bt848IFormFormat;
 		temp2 := SYSTEM.VAL(SET, SYSTEM.GET8(base + BktrIForm));
 		temp2 := temp2 * SET (-Bt848IFormFormat);
 		temp2 := temp2 * SET (-Bt848IFormXtSel);
-		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, temp1 + temp2 +
-			SYSTEM.VAL(SET, formatParams[SYSTEM.VAL(LONGINT, temp1)].iformXTSel)));
+		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, temp1 + temp2 +
+			SYSTEM.VAL(SET, formatParams[SYSTEM.VAL(SIGNED32, temp1)].iformXTSel)));
 		CASE format OF
 				Bt848IFormFAuto:
 					flags := (flags * SET (-AosFormMask)) + AosAutoMode;
 			|  Bt848IFormFNTSCM,
 			    Bt848IFormFNTSCJ:
 			    	flags := (flags * SET (-AosFormMask)) + AosNTSC;
-			    	formatParameters := SYSTEM.VAL(LONGINT, temp1);
+			    	formatParameters := SYSTEM.VAL(SIGNED32, temp1);
 			    	SYSTEM.PUT8(base + BktrADelay, formatParams[formatParameters].aDelay);
 			    	SYSTEM.PUT8(base + BktrBDelay, formatParams[formatParameters].bDelay);
 			|  Bt848IFormFPalBDGHI,
@@ -2465,7 +2465,7 @@ TYPE
 				Bt848IFormFRSVD,
 				Bt848IFormFPalM:
 					flags := (flags * SET (-AosFormMask)) + AosPAL;
-					formatParameters := SYSTEM.VAL(LONGINT, temp1);
+					formatParameters := SYSTEM.VAL(SIGNED32, temp1);
 					SYSTEM.PUT8(base + BktrADelay, formatParams[formatParameters].aDelay);
 					SYSTEM.PUT8(base + BktrBDelay, formatParams[formatParameters].bDelay);
 		END;
@@ -2473,15 +2473,15 @@ TYPE
 	END SetInputFormat;
 
 	(** Get the video input format. *)
-	PROCEDURE GetInputFormat*(): LONGINT;
+	PROCEDURE GetInputFormat*(): SIGNED32;
 	VAR
-		temp1: LONGINT;
+		temp1: SIGNED32;
 	BEGIN
 		temp1 := SYSTEM.GET8(base + BktrIForm);
-		RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * Bt848IFormFormat);
+		RETURN SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * Bt848IFormFormat);
 	END GetInputFormat;
 
-	PROCEDURE SetPixelFormat*(format: LONGINT);
+	PROCEDURE SetPixelFormat*(format: SIGNED32);
 	BEGIN
 		pixFormat := format;
 	END SetPixelFormat;
@@ -2489,97 +2489,97 @@ TYPE
 	(** Select RCA as input. *)
 	PROCEDURE SetInputDev0*;
 	VAR
-		temp1: LONGINT;
+		temp1: SIGNED32;
 	BEGIN
 		flags := (flags * SET (-AosDevMask)) + AosDev0;
 		temp1 := SYSTEM.GET8(base + BktrIForm);
-		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
+		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
 		(* work around for new Hauppauge 878 cards *)
 		IF ((card.cardID = CardHauppauge)  & ((id = Brooktree878) OR (id = Brooktree879))) THEN
 			temp1 := SYSTEM.GET8(base + BktrIForm);
-			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX3));
+			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX3));
 		ELSE
 			temp1 := SYSTEM.GET8(base + BktrIForm);
-			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX1));
+			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX1));
 		END;
 		temp1 := SYSTEM.GET8(base + BktrEControl);
-		SYSTEM.PUT8(base + BktrEControl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848EControlComp)));
+		SYSTEM.PUT8(base + BktrEControl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848EControlComp)));
 		temp1 := SYSTEM.GET8(base + BktrOControl);
-		SYSTEM.PUT8(base + BktrOControl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848OControlComp)));
+		SYSTEM.PUT8(base + BktrOControl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848OControlComp)));
 		audio.SetAudioExtern;
 	END SetInputDev0;
 
 	(** Select the tuner as input. *)
 	PROCEDURE SetInputDev1*;
 	VAR
-		temp1: LONGINT;
+		temp1: SIGNED32;
 	BEGIN
 		flags := (flags * SET (-AosDevMask)) + AosDev1;
 		temp1 := SYSTEM.GET8(base + BktrIForm);
-		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
+		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
 		temp1 := SYSTEM.GET8(base + BktrIForm);
-		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX0));
+		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX0));
 		temp1 := SYSTEM.GET8(base + BktrEControl);
-		SYSTEM.PUT8(base + BktrEControl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848EControlComp)));
+		SYSTEM.PUT8(base + BktrEControl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848EControlComp)));
 		temp1 := SYSTEM.GET8(base + BktrOControl);
-		SYSTEM.PUT8(base + BktrOControl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848OControlComp)));
+		SYSTEM.PUT8(base + BktrOControl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848OControlComp)));
 		audio.SetAudioTuner;
 	END SetInputDev1;
 
 	(** Select S-VHS (composite camera) as input. *)
 	PROCEDURE SetInputDev2*;
 	VAR
-		temp1: LONGINT;
+		temp1: SIGNED32;
 	BEGIN
 		flags := (flags * SET (-AosDevMask)) + AosDev2;
 		temp1 := SYSTEM.GET8(base + BktrIForm);
-		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
+		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
 		temp1 := SYSTEM.GET8(base + BktrIForm);
-		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX2));
+		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX2));
 		temp1 := SYSTEM.GET8(base + BktrEControl);
-		SYSTEM.PUT8(base + BktrEControl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848EControlComp)));
+		SYSTEM.PUT8(base + BktrEControl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848EControlComp)));
 		temp1 := SYSTEM.GET8(base + BktrOControl);
-		SYSTEM.PUT8(base + BktrOControl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848OControlComp)));
+		SYSTEM.PUT8(base + BktrOControl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848OControlComp)));
 		audio.SetAudioExtern;
 	END SetInputDev2;
 
 	(** Select S-VHS as input. *)
 	PROCEDURE SetInputDevSVideo*;
 	VAR
-		temp1: LONGINT;
+		temp1: SIGNED32;
 	BEGIN
 		flags := (flags * SET (-AosDevMask)) + AosDevSVideo;
 		temp1 := SYSTEM.GET8(base + BktrIForm);
-		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
+		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848IFormMUXSel)));
 		temp1 := SYSTEM.GET8(base + BktrIForm);
-		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX2));
+		SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX2));
 		temp1 := SYSTEM.GET8(base + BktrEControl);
-		SYSTEM.PUT8(base + BktrEControl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848EControlComp)));
+		SYSTEM.PUT8(base + BktrEControl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848EControlComp)));
 		temp1 := SYSTEM.GET8(base + BktrOControl);
-		SYSTEM.PUT8(base + BktrOControl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848OControlComp)));
+		SYSTEM.PUT8(base + BktrOControl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848OControlComp)));
 		audio.SetAudioExtern;
 	END SetInputDevSVideo;
 
 	(** Select MUX 3 as input. *)
 	PROCEDURE SetInputDev3*;
 	VAR
-		temp1: LONGINT;
+		temp1: SIGNED32;
 	BEGIN
 		IF ((id = Brooktree848A) OR (id = Brooktree849A) OR (id = Brooktree878) OR (id = Brooktree879)) THEN
 			flags := (flags * SET (-AosDevMask)) + AosDev3;
 			temp1 := SYSTEM.GET8(base + BktrIForm);
-			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * SET (-Bt848IFormMUXSel)));
+			SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * SET (-Bt848IFormMUXSel)));
 			IF ((card.cardID = CardHauppauge) & ((id = Brooktree878) OR (id = Brooktree879))) THEN
 				temp1 := SYSTEM.GET8(base + BktrIForm);
-				SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX1));
+				SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX1));
 			ELSE
 				temp1 := SYSTEM.GET8(base + BktrIForm);
-				SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX3));
+				SYSTEM.PUT8(base + BktrIForm, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) + Bt848IFormMMUX3));
 			END;
 			temp1 := SYSTEM.GET8(base + BktrEControl);
-			SYSTEM.PUT8(base + BktrEControl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848EControlComp)));
+			SYSTEM.PUT8(base + BktrEControl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848EControlComp)));
 			temp1 := SYSTEM.GET8(base + BktrOControl);
-			SYSTEM.PUT8(base + BktrOControl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, temp1) * (-Bt848OControlComp)));
+			SYSTEM.PUT8(base + BktrOControl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, temp1) * (-Bt848OControlComp)));
 			audio.SetAudioExtern;
 		END;
 	END SetInputDev3;
@@ -2591,7 +2591,7 @@ TYPE
 	BEGIN
 		ASSERT(flags * AosCapMask = {});
 		videoAddr := addr(Machine.Address32);
-		videoWidth := width(LONGINT);
+		videoWidth := width(SIGNED32);
 		dmaProgLoaded := FALSE;
 	END SetVideo;
 
@@ -2599,9 +2599,9 @@ TYPE
 	PROCEDURE CaptureSingle*;
 	VAR
 		fp: FormatParams;
-		temp1: LONGINT;
-		fpsSave: LONGINT;
-		iFlag: LONGINT;
+		temp1: SIGNED32;
+		fpsSave: SIGNED32;
+		iFlag: SIGNED32;
 		timer: Kernel.Timer;
 	BEGIN
 		NEW(timer);
@@ -2638,20 +2638,20 @@ TYPE
 
 		(* wait for capture to complete *)
 		singleFrameCaptured := FALSE;
-		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(LONGINT, AllIntsCleared));
-		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoEnabled));
-		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, capControl));
+		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(SIGNED32, AllIntsCleared));
+		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoEnabled));
+		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, capControl));
 
-		SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(LONGINT, Bt848IntMysteryBit +
+		SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(SIGNED32, Bt848IntMysteryBit +
 			Bt848IntRiscI + Bt848IntVSync + Bt848IntFmtChg));
 
-		SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(LONGINT, bktrCapCtl));
+		SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(SIGNED32, bktrCapCtl));
 		REPEAT
 		UNTIL singleFrameCaptured;
 		(* stop DMA *)
-		SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(LONGINT, AllIntsDisabled));
+		SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(SIGNED32, AllIntsDisabled));
 		(* disable RISC, leave FIFO running *)
-		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoEnabled));
+		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoEnabled));
 
 		flags := flags * SET (-(AosSingle + AosWantMask));
 	END CaptureSingle;
@@ -2659,8 +2659,8 @@ TYPE
 	(** Start continuous frame capture. *)
 	PROCEDURE CaptureContinuous*;
 	VAR
-		iFlag: LONGINT;
-		temp1: LONGINT;
+		iFlag: SIGNED32;
+		temp1: SIGNED32;
 	BEGIN
 		ASSERT(flags * AosCapMask = {});
 		SYSTEM.PUT8(base + BktrDStatus, 0);
@@ -2687,11 +2687,11 @@ TYPE
 		temp1 := SYSTEM.GET32(base + BktrIntStat);
 		SYSTEM.PUT32(base + BktrIntStat, temp1);
 
-		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoEnabled));
-		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, capControl));
-		SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(LONGINT, bktrCapCtl));
+		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoEnabled));
+		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, capControl));
+		SYSTEM.PUT8(base + BktrCapCtl, SYSTEM.VAL(SIGNED32, bktrCapCtl));
 
-		SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(LONGINT, Bt848IntMysteryBit +
+		SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(SIGNED32, Bt848IntMysteryBit +
 			Bt848IntRiscI + Bt848IntVSync + Bt848IntFmtChg));
 	END CaptureContinuous;
 
@@ -2700,8 +2700,8 @@ TYPE
 	BEGIN
 		IF flags * AosContin # {} THEN
 			(* turn off capture *)
-			SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoRiscDisabled));
-			SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(LONGINT, AllIntsDisabled));
+			SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoRiscDisabled));
+			SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(SIGNED32, AllIntsDisabled));
 			flags := flags * SET (-(AosContin + AosWantMask));
 		END;
 	END StopCaptureContinuous;
@@ -2711,7 +2711,7 @@ TYPE
 	(** rows:	number of rows of a frame *)
 	(** frames:	number of frames allocated *)
 	(** format:	AosEvenOnly, AosOddOnly, none (interlaced) *)
-	PROCEDURE SetGeometry*(columns, rows, frames: LONGINT; format: SET);
+	PROCEDURE SetGeometry*(columns, rows, frames: SIGNED32; format: SET);
 	BEGIN
 		ASSERT(flags * AosCapMask = {});	(* can't change parameters while capturing *)
 		ASSERT(~((format * AosOnlyEvenFields # {}) & (format * AosOnlyOddFields # {})));	(* geometry odd or even only *)
@@ -2731,9 +2731,9 @@ TYPE
 		ASSERT(SYSTEM.VAL(SET, rows) * SYSTEM.VAL(SET, 03FEH) = SYSTEM.VAL(SET, rows));	(* rows too large or not even *)
 		ASSERT(frames <= 32);	(* too many frames *)
 		dmaProgLoaded := FALSE;
-		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoRiscDisabled));
+		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoRiscDisabled));
 
-		SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(LONGINT, AllIntsDisabled));
+		SYSTEM.PUT32(base + BktrIntMask, SYSTEM.VAL(SIGNED32, AllIntsDisabled));
 
 		frameRows := rows;
 		frameCols := columns;
@@ -2767,7 +2767,7 @@ TYPE
 
 	(* Locate tuner address. *)
 	(* return value:	I2C-bus address of tuner, or -1 if none is found *)
-	PROCEDURE LocateTunerAddress(): LONGINT;
+	PROCEDURE LocateTunerAddress(): SIGNED32;
 	CONST Absent = -1;
 	BEGIN
 		IF i2cBus.I2CRead(00C1H) # Absent THEN RETURN 00C0H; END;
@@ -2779,7 +2779,7 @@ TYPE
 
 	(* Locate EEProm address. *)
 	(* return value:	I2C-bus address of EEProm, or -1 if none is found *)
-	PROCEDURE LocateEEPROMAddress(): LONGINT;
+	PROCEDURE LocateEEPROMAddress(): SIGNED32;
 	CONST Absent = -1;
 	BEGIN
 		IF i2cBus.I2CRead(00A0H) # Absent THEN RETURN 00A0H; END;
@@ -2793,17 +2793,17 @@ TYPE
 	(* count:	number of bytes to be read *)
 	(* data:	placeholder for data *)
 	(* return value:	-1 if an error occurred, otherwise 0 *)
-	PROCEDURE ReadEEProm(offset: LONGINT; count: LONGINT; VAR data: ARRAY OF CHAR): LONGINT;
-	VAR addr, x, byte: LONGINT;
+	PROCEDURE ReadEEProm(offset: SIGNED32; count: SIGNED32; VAR data: ARRAY OF CHAR): SIGNED32;
+	VAR addr, x, byte: SIGNED32;
 	BEGIN
-		addr := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, card.eepromAddr) * {0..7});
+		addr := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, card.eepromAddr) * {0..7});
 		IF addr = 0 THEN RETURN -1 END;
 		ASSERT(offset + count <= card.eepromSize * EEPromBlockSize);
 		(* set the start address *)
 		IF i2cBus.I2CWrite(addr, offset, -1) = -1 THEN RETURN -1; END;
 		(* the read cycle *)
 		FOR x := 0 TO count-1 DO
-			byte := i2cBus.I2CRead(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, addr) + {0}));
+			byte := i2cBus.I2CRead(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, addr) + {0}));
 			IF byte = -1 THEN RETURN -1; END;
 			data[x] := SYSTEM.VAL(CHAR, byte);
 		END;
@@ -2815,13 +2815,13 @@ TYPE
 	(* The I2CBus object represents the I2C bus. *)
 	I2CBus = OBJECT
 	VAR
-		cardID: LONGINT;
+		cardID: SIGNED32;
 		base: ADDRESS;
 		dead: BOOLEAN;
 
 	(* Initialize I2CBus object. *)
 	(* base:	base of video capture card *)
-	PROCEDURE &Init*(id: LONGINT; base: ADDRESS);
+	PROCEDURE &Init*(id: SIGNED32; base: ADDRESS);
 	BEGIN
 		SELF.cardID := id;
 		SELF.base := base;
@@ -2837,25 +2837,25 @@ TYPE
 	(* Uses the Brooktree chip I2C-bus capabilities. See modul notes below for details. *)
 	(* addr:	read address *)
 	(* return value:	-1 if an error occured, otherwise the data *)
-	PROCEDURE I2CRead(addr: LONGINT) : LONGINT;
+	PROCEDURE I2CRead(addr: SIGNED32) : SIGNED32;
 	CONST
 		I2CBitTime = {4, 6};
 		I2CBitTime878 = {7};
 		I2CCommand = I2CBitTime + Bt848DataCtlI2CSCL + Bt848DataCtlI2CSDA;
 		I2CCommand878 = I2CBitTime878 + Bt848DataCtlI2CSCL + Bt848DataCtlI2CSDA;
 	VAR
-		x: LONGINT;
+		x: SIGNED32;
 	BEGIN {EXCLUSIVE}
-		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(LONGINT, Bt848IntRAck + Bt848IntI2CDone));	(* clear status bits *)
+		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(SIGNED32, Bt848IntRAck + Bt848IntI2CDone));	(* clear status bits *)
 		IF (cardID = Brooktree848) OR (cardID = Brooktree848A) OR (cardID = Brooktree849A) THEN
-			SYSTEM.PUT32(base + BktrI2CDataCtl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET,
-				ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, addr) * {0..7}), 24)) + I2CCommand));
+			SYSTEM.PUT32(base + BktrI2CDataCtl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET,
+				ASH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, addr) * {0..7}), 24)) + I2CCommand));
 		ELSE
-			SYSTEM.PUT32(base + BktrI2CDataCtl, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET,
-				ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, addr) * {0..7}), 24)) + I2CCommand878));
+			SYSTEM.PUT32(base + BktrI2CDataCtl, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET,
+				ASH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, addr) * {0..7}), 24)) + I2CCommand878));
 		END;
 		(* wait for completion; TO BE DONE: infinite loop protection *)
-		x := MAX(LONGINT);
+		x := MAX(SIGNED32);
 		REPEAT
 			DEC(x);
 		UNTIL (SYSTEM.VAL(SET, SYSTEM.GET32(base + BktrIntStat)) * Bt848IntI2CDone # {}) & (x > 0);
@@ -2863,7 +2863,7 @@ TYPE
 		IF (SYSTEM.VAL(SET, SYSTEM.GET32(base + BktrIntStat)) * Bt848IntRAck = {}) OR (x = 0) THEN
 			RETURN -1;
 		ELSE
-			RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(SYSTEM.GET32(base + BktrI2CDataCtl), -8)) * {0..7});
+			RETURN SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(SYSTEM.GET32(base + BktrI2CDataCtl), -8)) * {0..7});
 		END;
 	END I2CRead;
 
@@ -2873,37 +2873,37 @@ TYPE
 	(* byte1:	first byte *)
 	(* byte2:	second byte *)
 	(* return value:	-1 if an error occured, otherwise 0 *)
-	PROCEDURE I2CWrite(addr: LONGINT; byte1, byte2: LONGINT): LONGINT;
+	PROCEDURE I2CWrite(addr: SIGNED32; byte1, byte2: SIGNED32): SIGNED32;
 	CONST
 		I2CBitTime = {4, 6};
 		I2CBitTime878 = {7};
 		I2CCommand = I2CBitTime + Bt848DataCtlI2CSCL + Bt848DataCtlI2CSDA;
 		I2CCommand878 = I2CBitTime878 + Bt848DataCtlI2CSCL + Bt848DataCtlI2CSDA;
 	VAR
-		x, data: LONGINT;
+		x, data: SIGNED32;
 	BEGIN {EXCLUSIVE}
-		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(LONGINT, Bt848IntRAck + Bt848IntI2CDone));	(* clear status bits *)
+		SYSTEM.PUT32(base + BktrIntStat, SYSTEM.VAL(SIGNED32, Bt848IntRAck + Bt848IntI2CDone));	(* clear status bits *)
 		(* build the command datum *)
 		IF (cardID = Brooktree848) OR (cardID = Brooktree848A) OR (cardID = Brooktree849A) THEN
-			data := SYSTEM.VAL(LONGINT,
-				SYSTEM.VAL(SET, ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, addr) * {0..7}), 24)) +
-				SYSTEM.VAL(SET, ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, byte1) * {0..7}), 16)) +
+			data := SYSTEM.VAL(SIGNED32,
+				SYSTEM.VAL(SET, ASH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, addr) * {0..7}), 24)) +
+				SYSTEM.VAL(SET, ASH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, byte1) * {0..7}), 16)) +
 				I2CCommand);
 		ELSE
-			data := SYSTEM.VAL(LONGINT,
-				SYSTEM.VAL(SET, ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, addr) * {0..7}), 24)) +
-				SYSTEM.VAL(SET, ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, byte1) * {0..7}), 16)) +
+			data := SYSTEM.VAL(SIGNED32,
+				SYSTEM.VAL(SET, ASH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, addr) * {0..7}), 24)) +
+				SYSTEM.VAL(SET, ASH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, byte1) * {0..7}), 16)) +
 				I2CCommand878);
 		END;
 		IF byte2 # -1 THEN
-			data := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, data) +
-				SYSTEM.VAL(SET, ASH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, byte2) * {0..7}), 8)) +
+			data := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, data) +
+				SYSTEM.VAL(SET, ASH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, byte2) * {0..7}), 8)) +
 				Bt848DataCtlI2CW3B);
 		END;
 		(* write the address and data *)
 		SYSTEM.PUT32(base + BktrI2CDataCtl, data);
 		(* wait for completion; TO BE DONE: infinite loop protection *)
-		x := MAX(LONGINT);
+		x := MAX(SIGNED32);
 		REPEAT
 			DEC(x);	(* safety valve *)
 		UNTIL ((SYSTEM.VAL(SET, SYSTEM.GET32(base + BktrIntStat)) * Bt848IntI2CDone) # {}) & (x > 0);
@@ -2944,9 +2944,9 @@ TYPE
 	(* For manual programming of the I2C-bus. See modul notes below for details. *)
 	(* data:	data byte *)
 	(* return value:	-1 if an error occurred, otherwise 0 *)
-	PROCEDURE I2CWriteByte(data: CHAR): LONGINT;
+	PROCEDURE I2CWriteByte(data: CHAR): SIGNED32;
 	VAR
-		x, status: LONGINT;
+		x, status: SIGNED32;
 		timer: Kernel.Timer;
 	BEGIN {EXCLUSIVE}
 		NEW(timer);
@@ -2966,7 +2966,7 @@ TYPE
 		(* look for an ACK *)
 		SYSTEM.PUT32(base + BktrI2CDataCtl, 1); timer.Sleep(1);	(* float data *)
 		SYSTEM.PUT32(base + BktrI2CDataCtl, 3); timer.Sleep(1);	(* strobe clock *)
-		status := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, SYSTEM.GET32(base + BktrI2CDataCtl)) * {0});	(* read the ACK bit *)
+		status := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, SYSTEM.GET32(base + BktrI2CDataCtl)) * {0});	(* read the ACK bit *)
 		SYSTEM.PUT32(base + BktrI2CDataCtl, 1); timer.Sleep(1);	(* release clock *)
 		RETURN status;
 	END I2CWriteByte;
@@ -2977,7 +2977,7 @@ TYPE
 	(* last:	TRUE if this is the last byte to be read, otherwise FALSE *)
 	PROCEDURE I2CReadByte(VAR data: CHAR; last: BOOLEAN);
 	VAR
-		x, bit: LONGINT;
+		x, bit: SIGNED32;
 		byte: CHAR;
 		timer: Kernel.Timer;
 	BEGIN {EXCLUSIVE}
@@ -2987,7 +2987,7 @@ TYPE
 		x := 7;
 		WHILE x >= 0 DO
 			SYSTEM.PUT32(base + BktrI2CDataCtl, 3); timer.Sleep(1);	(* strobe clock *)
-			bit := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, SYSTEM.GET32(base + BktrI2CDataCtl)) * {0}); (* read the data bit *)
+			bit := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, SYSTEM.GET32(base + BktrI2CDataCtl)) * {0}); (* read the data bit *)
 			IF (SYSTEM.VAL(SET, bit) * {0} # {}) THEN byte := SYSTEM.VAL(CHAR, SYSTEM.VAL(SET, byte) + {x}); END;
 			SYSTEM.PUT32(base + BktrI2CDataCtl, 1); timer.Sleep(1);	(* release clock *)
 			DEC(x);
@@ -3031,7 +3031,7 @@ TYPE
 
 	(* Initialize the BTSC device. *)
 	PROCEDURE InitBTSC;
-	VAR valNirwana: LONGINT;
+	VAR valNirwana: SIGNED32;
 	BEGIN
 		KernelLog.Hex(Con1Addr, 0);
 		valNirwana := vcd.i2cBus.I2CWrite(TDA9850WAddr, Con1Addr, 0008H);
@@ -3045,42 +3045,42 @@ TYPE
 
 	(* Read the ID of the MSP device. *)
 	PROCEDURE MspReadId;
-	VAR rev1, rev2: LONGINT;
+	VAR rev1, rev2: SIGNED32;
 	BEGIN
 		rev1 := 0; rev2 := 0;
 		rev1 := MspDplRead(vcd.mspAddr, CHR(0012H), 001EH);
 		rev2 := MspDplRead(vcd.mspAddr, CHR(0012H), 001FH);
 		vcd.mspVersionString := "34";
-		vcd.mspVersionString[2] := CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(rev2, -8)) * {0..7}) DIV 10 +
+		vcd.mspVersionString[2] := CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(rev2, -8)) * {0..7}) DIV 10 +
 			ORD('0'));
-		vcd.mspVersionString[3] := CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(rev2, -8)) * {0..7}) MOD 10 +
+		vcd.mspVersionString[3] := CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(rev2, -8)) * {0..7}) MOD 10 +
 			ORD('0'));
-		vcd.mspVersionString[4] := CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, rev1) * {0..7}) + ORD('@'));
+		vcd.mspVersionString[4] := CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, rev1) * {0..7}) + ORD('@'));
 		vcd.mspVersionString[5] := '-';
-		vcd.mspVersionString[6] := CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(rev1, -8)) * {0..7}) + ORD('@'));
-		vcd.mspVersionString[7] := CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, rev2) * {0..4}));
+		vcd.mspVersionString[6] := CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(rev1, -8)) * {0..7}) + ORD('@'));
+		vcd.mspVersionString[7] := CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, rev2) * {0..4}));
 	END MspReadId;
 
 	(* Read the ID of the DPL device. *)
 	(* Note: This function doesn't work as expected. ID code?? *)
 	PROCEDURE DplReadId;
-	VAR rev1, rev2: LONGINT;
+	VAR rev1, rev2: SIGNED32;
 	BEGIN
 		rev1 := 0; rev2 := 0;
 		rev1 := MspDplRead(vcd.dplAddr, CHR(0012H), 001EH);
 		rev2 := MspDplRead(vcd.dplAddr, CHR(0012H), 001FH);
 		vcd.dplVersionString := "35";
-		vcd.dplVersionString[2] := CHR((SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(rev2, -8)) * {0..7}) - 1) DIV 10 + ORD('0'));
-		vcd.dplVersionString[3] := CHR((SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(rev2, -8)) * {0..7}) - 1) MOD 10 + ORD('0'));
+		vcd.dplVersionString[2] := CHR((SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(rev2, -8)) * {0..7}) - 1) DIV 10 + ORD('0'));
+		vcd.dplVersionString[3] := CHR((SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(rev2, -8)) * {0..7}) - 1) MOD 10 + ORD('0'));
 		vcd.dplVersionString[4] := '-';
-		vcd.dplVersionString[5] := CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(rev1, -8)) * {0..7}) + ORD('@'));
-		vcd.dplVersionString[6] := CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, rev2) * {0..4}));
+		vcd.dplVersionString[5] := CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(rev1, -8)) * {0..7}) + ORD('@'));
+		vcd.dplVersionString[6] := CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, rev2) * {0..4}));
 	END DplReadId;
 
 	(* Auto-detect the MSP device. *)
 	PROCEDURE MspAutoDetect;
 	VAR
-		x, loops, autoDetect, stereo: LONGINT;
+		x, loops, autoDetect, stereo: SIGNED32;
 		id: ARRAY 6 OF CHAR;
 		timer: Kernel.Timer;
 	BEGIN
@@ -3191,7 +3191,7 @@ TYPE
 	(* dev:	device *)
 	(* addr:	write target address *)
 	(* data:	data to be written *)
-	PROCEDURE MspDplWrite(i2cAddr: LONGINT; dev: CHAR; addr: LONGINT; data: LONGINT);
+	PROCEDURE MspDplWrite(i2cAddr: SIGNED32; dev: CHAR; addr: SIGNED32; data: SIGNED32);
 	VAR mspWAddr, addrLo, addrHi, dataLo, dataHi: CHAR;
 	BEGIN
 		mspWAddr := CHR(i2cAddr);
@@ -3215,8 +3215,8 @@ TYPE
 	(* dev:	device *)
 	(* addr:	read address *)
 	(* return value:	data read *)
-	PROCEDURE MspDplRead(i2cAddr: LONGINT; dev: CHAR; addr: LONGINT): LONGINT;
-	VAR data: LONGINT; addrLo, addrHi, data1, data2, devR: CHAR;
+	PROCEDURE MspDplRead(i2cAddr: SIGNED32; dev: CHAR; addr: SIGNED32): SIGNED32;
+	VAR data: SIGNED32; addrLo, addrHi, data1, data2, devR: CHAR;
 	BEGIN
 		addrHi := SYSTEM.VAL(CHAR, SYSTEM.VAL(SET, ASH(addr, -8)) * {0..7});
 		addrLo := SYSTEM.VAL(CHAR, SYSTEM.VAL(SET, addr) * {0..7});
@@ -3231,14 +3231,14 @@ TYPE
 		vcd.i2cBus.I2CReadByte(data1, FALSE);
 		vcd.i2cBus.I2CReadByte(data2, TRUE);
 		vcd.i2cBus.I2CStop;
-		data := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(ORD(data1), 8)) + SYSTEM.VAL(SET, data2));
+		data := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(ORD(data1), 8)) + SYSTEM.VAL(SET, data2));
 		RETURN data;
 	END MspDplRead;
 
 	(* Reset the sound chip. *)
 	(* Uses manual programming of the I2C-bus. See modul notes below for details. *)
 	(* i2cAddr:	I2C-bus address of the chip *)
-	PROCEDURE MspDplReset(i2cAddr: LONGINT);
+	PROCEDURE MspDplReset(i2cAddr: SIGNED32);
 	BEGIN
 		(* put into reset mode *)
 		vcd.i2cBus.I2CStart;
@@ -3301,7 +3301,7 @@ TYPE
 
 	(* Set audio input. *)
 	PROCEDURE SetAudio;
-	VAR idx: LONGINT; temp: SET;
+	VAR idx: SIGNED32; temp: SET;
 	BEGIN
 		IF vcd.audioMuteState THEN
 			IF vcd.reverseMute THEN idx := 3; ELSE idx := 0; END;
@@ -3310,7 +3310,7 @@ TYPE
 		END;
 		temp := SYSTEM.VAL(SET, SYSTEM.GET32(vcd.base + BktrGPIOData)) * (-SYSTEM.VAL(SET, vcd.card.gpioMUXBits));
 		SYSTEM.PUT32(vcd.base + BktrGPIOData,
-			SYSTEM.VAL(LONGINT, temp + SYSTEM.VAL(SET, vcd.card.audioMUXs[idx])));
+			SYSTEM.VAL(SIGNED32, temp + SYSTEM.VAL(SET, vcd.card.audioMUXs[idx])));
 		IF (~vcd.audioMUXPresent & vcd.card.msp3400c) THEN
 			IF vcd.audioMuteState THEN
 				MspDplWrite(vcd.mspAddr, CHR(0012H), 0000H, 0000H);	(* volume to MUTE *)
@@ -3350,19 +3350,19 @@ VAR
 	formatParams: ARRAY NoOfFormatParams OF FormatParams;
 	pixelFormatTable: ARRAY NoOfPixelFormats OF PixelFormat;
 
-	i: LONGINT;
+	i: SIGNED32;
 
 
 (* Scan PCI bus for the specified card. *)
 (* vendor:	vendor id *)
 (* device:	device id *)
-PROCEDURE ScanPCI(vendor, device: LONGINT);
+PROCEDURE ScanPCI(vendor, device: SIGNED32);
 CONST BtDefaultLatencyValue = 10;
 VAR
-	index, bus, dev, fct, irq, rev: LONGINT;
+	index, bus, dev, fct, irq, rev: SIGNED32;
 	base: ADDRESS;
 	vcd: VideoCaptureDevice;
-	command, fun, latency: LONGINT;
+	command, fun, latency: SIGNED32;
 BEGIN
 	IF DEBUG # DebugOff THEN
 		KernelLog.String("{BT848} Scanning PCI bus for vendor: "); KernelLog.Hex(vendor, 0);
@@ -3382,19 +3382,19 @@ BEGIN
 
 		(* enable memory-mapping / bus mastering *)
 		ASSERT(PCI.ReadConfigWord(bus, dev, fct, 4, command) = PCI.Done);
-		ASSERT(PCI.WriteConfigWord(bus, dev, fct, 4, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, command)+{1,2})) = PCI.Done);
+		ASSERT(PCI.WriteConfigWord(bus, dev, fct, 4, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, command)+{1,2})) = PCI.Done);
 		Machine.MapPhysical(base, 4096, base);
 		(* disable the Brooktree device *)
 		SYSTEM.PUT32(base + BktrIntMask, AllIntsDisabled);
-		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(LONGINT, FifoRiscDisabled));
+		SYSTEM.PUT16(base + BktrGPIODmaCtl, SYSTEM.VAL(SIGNED32, FifoRiscDisabled));
 		(* update the device control register on Bt878 and Bt879 cards *)
 		ASSERT(PCI.ReadConfigWord(bus, dev, fct, 0040H, fun) = PCI.Done);
-		fun := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, fun) + {0});	(* enable writes to the sub-system vendor id *)
+		fun := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, fun) + {0});	(* enable writes to the sub-system vendor id *)
 		ASSERT(PCI.WriteConfigWord(bus, dev, fct, 0040H, fun) = PCI.Done);
 		(* PCI latency timer. 32 is a good value for 4 bus mastering slots, if you have more than four, *)
 		(* then 16 would be a better value. *)
 		ASSERT(PCI.ReadConfigDword(bus, dev, fct, PCILatencyTimer, latency) = PCI.Done);
-		latency := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(latency, -8)) * {0..7});
+		latency := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(latency, -8)) * {0..7});
 		IF latency = 0 THEN
 			IF DEBUG # DebugOff THEN
 				KernelLog.String("{BT848} PCI latency 0, setting latency to ");
@@ -3413,7 +3413,7 @@ END ScanPCI;
 (* Install procedure for installing a TV card. *)
 PROCEDURE InstallDevices;
 VAR
-	res: WORD;
+	res: INTEGER;
 	dev: VideoCaptureDevice;
 BEGIN {EXCLUSIVE}
 	IF nOfInstalledDevices = 0 THEN
@@ -3759,7 +3759,7 @@ BEGIN (* of module code *)
 	formatParams[Bt848IFormFAuto].frameRate := 30;
 	formatParams[Bt848IFormFAuto].aDelay := 0068H;
 	formatParams[Bt848IFormFAuto].bDelay := 005DH;
-	formatParams[Bt848IFormFAuto].iformXTSel := SYSTEM.VAL(LONGINT, Bt848IFormXAuto);
+	formatParams[Bt848IFormFAuto].iformXTSel := SYSTEM.VAL(SIGNED32, Bt848IFormXAuto);
 	formatParams[Bt848IFormFAuto].vbiNumLines := 12;
 	formatParams[Bt848IFormFAuto].vbiNumSamples := 1600;
 	(* Bt848IFormFNTSCM *)
@@ -3774,7 +3774,7 @@ BEGIN (* of module code *)
 	formatParams[Bt848IFormFNTSCM].frameRate := 30;
 	formatParams[Bt848IFormFNTSCM].aDelay := 0068H;
 	formatParams[Bt848IFormFNTSCM].bDelay := 005DH;
-	formatParams[Bt848IFormFNTSCM].iformXTSel := SYSTEM.VAL(LONGINT, Bt848IFormXXT0);
+	formatParams[Bt848IFormFNTSCM].iformXTSel := SYSTEM.VAL(SIGNED32, Bt848IFormXXT0);
 	formatParams[Bt848IFormFNTSCM].vbiNumLines := 12;
 	formatParams[Bt848IFormFNTSCM].vbiNumSamples := 1600;
 	(* Bt848IFormFNTSCJ *)
@@ -3789,7 +3789,7 @@ BEGIN (* of module code *)
 	formatParams[Bt848IFormFNTSCJ].frameRate := 30;
 	formatParams[Bt848IFormFNTSCJ].aDelay := 0068H;
 	formatParams[Bt848IFormFNTSCJ].bDelay := 005DH;
-	formatParams[Bt848IFormFNTSCJ].iformXTSel := SYSTEM.VAL(LONGINT, Bt848IFormXXT0);
+	formatParams[Bt848IFormFNTSCJ].iformXTSel := SYSTEM.VAL(SIGNED32, Bt848IFormXXT0);
 	formatParams[Bt848IFormFNTSCJ].vbiNumLines := 12;
 	formatParams[Bt848IFormFNTSCJ].vbiNumSamples := 1600;
 	(* Bt848IFormFPalBDGHI *)
@@ -3804,7 +3804,7 @@ BEGIN (* of module code *)
 	formatParams[Bt848IFormFPalBDGHI].frameRate := 25;
 	formatParams[Bt848IFormFPalBDGHI].aDelay := 007FH;
 	formatParams[Bt848IFormFPalBDGHI].bDelay := 0072H;
-	formatParams[Bt848IFormFPalBDGHI].iformXTSel := SYSTEM.VAL(LONGINT, Bt848IFormXXT1);
+	formatParams[Bt848IFormFPalBDGHI].iformXTSel := SYSTEM.VAL(SIGNED32, Bt848IFormXXT1);
 	formatParams[Bt848IFormFPalBDGHI].vbiNumLines := 16;
 	formatParams[Bt848IFormFPalBDGHI].vbiNumSamples := 2044;
 	(* Bt848IFormFPalM *)
@@ -3819,7 +3819,7 @@ BEGIN (* of module code *)
 	formatParams[Bt848IFormFPalM].frameRate := 30;
 	formatParams[Bt848IFormFPalM].aDelay := 0068H;
 	formatParams[Bt848IFormFPalM].bDelay := 005DH;
-	formatParams[Bt848IFormFPalM].iformXTSel := SYSTEM.VAL(LONGINT, Bt848IFormXXT0);
+	formatParams[Bt848IFormFPalM].iformXTSel := SYSTEM.VAL(SIGNED32, Bt848IFormXXT0);
 	formatParams[Bt848IFormFPalM].vbiNumLines := 16;
 	formatParams[Bt848IFormFPalM].vbiNumSamples := 1600;
 	(* Bt848IFormFPalN *)
@@ -3834,7 +3834,7 @@ BEGIN (* of module code *)
 	formatParams[Bt848IFormFPalN].frameRate := 25;
 	formatParams[Bt848IFormFPalN].aDelay := 007FH;
 	formatParams[Bt848IFormFPalN].bDelay := 0072H;
-	formatParams[Bt848IFormFPalN].iformXTSel := SYSTEM.VAL(LONGINT, Bt848IFormXXT1);
+	formatParams[Bt848IFormFPalN].iformXTSel := SYSTEM.VAL(SIGNED32, Bt848IFormXXT1);
 	formatParams[Bt848IFormFPalN].vbiNumLines := 16;
 	formatParams[Bt848IFormFPalN].vbiNumSamples := 2044;
 	(* Bt848IFormFSecam *)
@@ -3849,7 +3849,7 @@ BEGIN (* of module code *)
 	formatParams[Bt848IFormFSecam].frameRate := 25;
 	formatParams[Bt848IFormFSecam].aDelay := 007FH;
 	formatParams[Bt848IFormFSecam].bDelay := 00A0H;
-	formatParams[Bt848IFormFSecam].iformXTSel := SYSTEM.VAL(LONGINT, Bt848IFormXXT1);
+	formatParams[Bt848IFormFSecam].iformXTSel := SYSTEM.VAL(SIGNED32, Bt848IFormXXT1);
 	formatParams[Bt848IFormFSecam].vbiNumLines := 16;
 	formatParams[Bt848IFormFSecam].vbiNumSamples := 2044;
 	(* Bt848IFormFRSVD *)
@@ -3864,7 +3864,7 @@ BEGIN (* of module code *)
 	formatParams[Bt848IFormFRSVD].frameRate := 25;
 	formatParams[Bt848IFormFRSVD].aDelay := 007FH;
 	formatParams[Bt848IFormFRSVD].bDelay := 0072H;
-	formatParams[Bt848IFormFRSVD].iformXTSel := SYSTEM.VAL(LONGINT, Bt848IFormXXT0);
+	formatParams[Bt848IFormFRSVD].iformXTSel := SYSTEM.VAL(SIGNED32, Bt848IFormXXT0);
 	formatParams[Bt848IFormFRSVD].vbiNumLines := 16;
 	formatParams[Bt848IFormFRSVD].vbiNumSamples := 2044;
 

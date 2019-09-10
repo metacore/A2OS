@@ -16,7 +16,7 @@ IMPORT Out, Files, Objects, Gadgets, Panels, Documents, Desktops;
 PROCEDURE LoadPanel*(D: Documents.Document);
 VAR obj: Objects.Object; main: Gadgets.Frame;
 	F: Files.File; R: Files.Rider; name: ARRAY 64 OF CHAR; ch: CHAR;
-	tag: INTEGER; len: LONGINT; lib: Objects.Library;
+	tag: SIGNED16; len: SIGNED32; lib: Objects.Library;
 BEGIN
 	main := NIL; D.W := 300; D.H := 200;
 
@@ -42,7 +42,7 @@ BEGIN
 END LoadPanel;
 
 PROCEDURE StorePanel*(D: Documents.Document);
-VAR F: Files.File; len: LONGINT; B: Objects.BindMsg; R: Files.Rider; obj: Objects.Object;
+VAR F: Files.File; len: SIGNED32; B: Objects.BindMsg; R: Files.Rider; obj: Objects.Object;
 BEGIN
 	IF D.name # "" THEN
 		obj := D.dsc;

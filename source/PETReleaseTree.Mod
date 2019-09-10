@@ -37,7 +37,7 @@ TYPE
 		END AddNodes;
 
 		PROCEDURE AddBuilds(parent : WMTrees.TreeNode; builds : Build.Builds);
-		VAR node : PETTrees.TreeNode; nofBuilds, i : LONGINT;
+		VAR node : PETTrees.TreeNode; nofBuilds, i : SIGNED32;
 		BEGIN
 			nofBuilds := 0;
 			node := NewNode(parent, "BUILDS");

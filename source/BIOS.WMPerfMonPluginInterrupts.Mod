@@ -93,7 +93,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset;
-		VAR i, offset, temp : LONGINT;
+		VAR i, offset, temp : SIGNED32;
 		BEGIN
 			FOR i := 0 TO 19 DO (* pre-defined interrupts *)
 				dataset[i] := interrupts[i].count;
@@ -125,14 +125,14 @@ TYPE
 	END InterruptStatistics;
 
 	InterruptInfo = RECORD
-		count : LONGINT;
+		count : SIGNED32;
 		handlerInstalled : BOOLEAN;
 		isOther : BOOLEAN;
 	END;
 
 VAR
 	interrupts : ARRAY 256 OF InterruptInfo;
-	others : LONGINT;
+	others : SIGNED32;
 
 PROCEDURE HandleInterrupts(VAR state : Machine.State);
 BEGIN
@@ -146,7 +146,7 @@ BEGIN
 END HandleInterrupts;
 
 PROCEDURE RegisterHandlers;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(interrupts)-1 DO interrupts[i].isOther := TRUE; END;
 	FOR i := 0 TO 19 DO interrupts[i].isOther := FALSE; END;
@@ -164,7 +164,7 @@ BEGIN
 END RegisterHandlers;
 
 PROCEDURE UnregisterHandlers;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(interrupts)-1 DO
 		IF interrupts[i].handlerInstalled THEN

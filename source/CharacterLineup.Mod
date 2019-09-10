@@ -12,7 +12,7 @@ CONST
 
 TYPE
 	CharacterArray = POINTER TO ARRAY OF WMCCGFonts.Glyph;
-	HistoEntry = RECORD ucs, freq : LONGINT; END;
+	HistoEntry = RECORD ucs, freq : SIGNED32; END;
 	FilterHisto = POINTER TO ARRAY OF HistoEntry;
 	Identifier = OBJECT(WMComponents.FormWindow)
 	VAR
@@ -21,19 +21,19 @@ TYPE
 		characters, filterComponents : WMGrids.GenericGrid;
 		toggleFilter : WMStandardComponents.Button;
 
-		curChar :LONGINT;
+		curChar :SIGNED32;
 		fontinfo : WMCCGFonts.GenericFont;
 		bigFont : WMGraphics.Font;
 		charInfo : UnihanParser.Character;
 
 		allCharacters: CharacterArray;
-		nofCharacters: LONGINT;
+		nofCharacters: SIGNED32;
 		filtered : CharacterArray;
 
-		filterArray : ARRAY MaxFilters OF LONGINT;
-		nofFilters : LONGINT;
+		filterArray : ARRAY MaxFilters OF SIGNED32;
+		nofFilters : SIGNED32;
 
-		nofInFilter : LONGINT;
+		nofInFilter : SIGNED32;
 
 		useFilter : BOOLEAN;
 
@@ -107,7 +107,7 @@ TYPE
 			manager.Add(200, 200, SELF, {WM.FlagFrame, WM.FlagClose, WM.FlagMinimize});
 			SetContent(mainPanel);
 			LoadAllCharacters;
-			filterComponents.nofCols.Set(LEN(relevantSubcomponents)(LONGINT));
+			filterComponents.nofCols.Set(LEN(relevantSubcomponents)(SIGNED32));
 			characters.nofRows.Set(nofCharacters DIV NofCols + 1);
 			useFilter := TRUE; nofFilters := 0;
 			Filter(nofFilters, filterArray);
@@ -116,11 +116,11 @@ TYPE
 		PROCEDURE LoadAllCharacters;
 		VAR temp : CharacterArray;
 			g : WMCCGFonts.Glyph;
-			i, j, t, nof, nz : LONGINT;
+			i, j, t, nof, nz : SIGNED32;
 			histo : FilterHisto;
 
 			PROCEDURE UpdateHisto(g : WMCCGFonts.Glyph);
-			VAR i, ucs : LONGINT;
+			VAR i, ucs : SIGNED32;
 			BEGIN
 				FOR i := 0 TO g.nofSubComponents - 1 DO
 					ucs := g.subComponents[i].refucs;
@@ -203,8 +203,8 @@ TYPE
 			END
 		END Update;
 
-		PROCEDURE IsComponentUsed(glyph : WMCCGFonts.Glyph; code : LONGINT) : BOOLEAN;
-		VAR i : LONGINT;
+		PROCEDURE IsComponentUsed(glyph : WMCCGFonts.Glyph; code : SIGNED32) : BOOLEAN;
+		VAR i : SIGNED32;
 			result : BOOLEAN;
 		BEGIN
 			result := FALSE;
@@ -213,8 +213,8 @@ TYPE
 			RETURN result
 		END IsComponentUsed;
 
-		PROCEDURE Filter(nofSubs : LONGINT; CONST subs : ARRAY OF LONGINT);
-		VAR nof, i, j : LONGINT; ok : BOOLEAN;
+		PROCEDURE Filter(nofSubs : SIGNED32; CONST subs : ARRAY OF SIGNED32);
+		VAR nof, i, j : SIGNED32; ok : BOOLEAN;
 		BEGIN
 			KernelLog.String("Filtering for "); KernelLog.Hex(subs[0], 0); KernelLog.Ln;
 
@@ -246,7 +246,7 @@ TYPE
 		END NewCharacter;
 
 		PROCEDURE NewCode(sender, data :ANY);
-		VAR code: LONGINT; res : WORD;
+		VAR code: SIGNED32; res : INTEGER;
 			codeStr: ARRAY 9 OF CHAR;
 		BEGIN
 			codeEdit.GetAsString(codeStr);
@@ -288,20 +288,20 @@ TYPE
 			END
 		END FilterSelection;
 
-		PROCEDURE IsInFilterArray(ucs : LONGINT) : BOOLEAN;
-		VAR i : LONGINT;
+		PROCEDURE IsInFilterArray(ucs : SIGNED32) : BOOLEAN;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO nofFilters - 1 DO IF filterArray[i] = ucs THEN RETURN TRUE END END;
 			RETURN FALSE
 		END IsInFilterArray;
 
-		PROCEDURE AddToFilter(ucs : LONGINT);
+		PROCEDURE AddToFilter(ucs : SIGNED32);
 		BEGIN
 			IF nofFilters < MaxFilters - 1 THEN filterArray[nofFilters] := ucs; INC(nofFilters) END
 		END AddToFilter;
 
-		PROCEDURE RemoveFromFilter(ucs : LONGINT);
-		VAR a, i : LONGINT;
+		PROCEDURE RemoveFromFilter(ucs : SIGNED32);
+		VAR a, i : SIGNED32;
 		BEGIN
 			a := 0;
 			FOR i := 0 TO nofFilters - 1 DO IF filterArray[i] # ucs THEN filterArray[a] := filterArray[i]; INC(a) ELSE DEC(nofFilters) END END;
@@ -331,9 +331,9 @@ TYPE
 			points : ARRAY 2560 OF WMGraphics.Point2d;
 		BEGIN
 			IF WMGrids.CellHighlighted IN state THEN
-				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(0FFFF00FFH), WMGraphics.ModeCopy)
+				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), SIGNED32(0FFFF00FFH), WMGraphics.ModeCopy)
 			ELSE
-				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(0FFFFFFFFH), WMGraphics.ModeCopy)
+				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), SIGNED32(0FFFFFFFFH), WMGraphics.ModeCopy)
 			END;
 			pos := y * NofCols + x;
 			IF useFilter THEN
@@ -360,9 +360,9 @@ TYPE
 			pos := x;
 			IF (relevantSubcomponents # NIL) & (pos < LEN(relevantSubcomponents)) THEN
 				IF WMGrids.CellHighlighted IN state THEN
-					canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(0FFFF00FFH), WMGraphics.ModeCopy)
+					canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), SIGNED32(0FFFF00FFH), WMGraphics.ModeCopy)
 				ELSE
-					canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(0FFFFFFFFH), WMGraphics.ModeCopy)
+					canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), SIGNED32(0FFFFFFFFH), WMGraphics.ModeCopy)
 				END;
 				IF IsInFilterArray(relevantSubcomponents[pos].ucs) THEN
 					canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), 0FFC0H, WMGraphics.ModeSrcOverDst)

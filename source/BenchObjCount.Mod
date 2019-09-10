@@ -24,7 +24,7 @@ TYPE
 		AWAIT(stop)
 	END Tester;
 
-PROCEDURE Report(CONST msg: ARRAY OF CHAR; n, time: LONGINT);
+PROCEDURE Report(CONST msg: ARRAY OF CHAR; n, time: SIGNED32);
 BEGIN
 	KernelLog.Enter;
 	KernelLog.Int(n, 1); KernelLog.String(" threads "); KernelLog.String(msg); KernelLog.String(", ");
@@ -36,7 +36,7 @@ BEGIN
 END Report;
 
 PROCEDURE Max*;
-VAR n, time: LONGINT; total, low, high: SIZE; root, t: Tester;
+VAR n, time: SIGNED32; total, low, high: SIZE; root, t: Tester;
 BEGIN
 	n := Kernel.GetTicks();
 	REPEAT time := Kernel.GetTicks() UNTIL time # n;

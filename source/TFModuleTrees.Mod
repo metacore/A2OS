@@ -82,7 +82,7 @@ TYPE
 			sb.AddContent(gb);
 
 			(* edit panel *)
-			NEW(ep); ep.alignment.Set(WMComponents.AlignClient); ep.fillColor.Set(LONGINT(0DDDD00EEH));
+			NEW(ep); ep.alignment.Set(WMComponents.AlignClient); ep.fillColor.Set(SIGNED32(0DDDD00EEH));
 			panel.AddContent(ep);
 
 			NEW(edit); edit.bounds.SetHeight(20); edit.alignment.Set(WMComponents.AlignTop); edit.tv.showBorder.Set(TRUE);
@@ -99,7 +99,7 @@ TYPE
 			list.Acquire;
 			list.defaultRowHeight.Set(25);
 			list.cellDist.Set(0);
-			list.clCell.Set(LONGINT(0FFFFFFA0H));
+			list.clCell.Set(SIGNED32(0FFFFFFA0H));
 			(*list.SetColSpacings(spacings);
 			list.SetFont(WMGraphics.GetFont("Single", 20, {})); *)
 			list.Release;
@@ -206,7 +206,7 @@ TYPE
 		END Ok;
 
 		PROCEDURE TextChanged*(sender, data:ANY);
-		VAR nof, i : LONGINT;
+		VAR nof, i : SIGNED32;
 			suggestionStr : ARRAY 1024 OF CHAR;
 		BEGIN
 			(* avoid recursion *)
@@ -273,7 +273,7 @@ TYPE
 			references : Reference;
 			errorHighlights, tempHighlights: CurrentHighlights;
 			singleSuggestion : TS.NamedObject;
-			suggestionStart : LONGINT;
+			suggestionStart : SIGNED32;
 
 			cursorScope : TS.Scope;
 			cursorIsFirstLevelScope : BOOLEAN;
@@ -313,8 +313,8 @@ TYPE
 			treeView.MeasureNode(treeView.draggedNode, w, h);
 			Raster.Create(img, w, h, Raster.BGRA8888);
 			NEW(canvas, img);
-			canvas.SetColor(LONGINT(0FF00FFFFH));
-			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(0FF00FFFFH), WMGraphics.ModeCopy);
+			canvas.SetColor(SIGNED32(0FF00FFFFH));
+			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), SIGNED32(0FF00FFFFH), WMGraphics.ModeCopy);
 			KernelLog.String("w= "); KernelLog.Int(w, 0); KernelLog.String("h= "); KernelLog.Int(h, 0); KernelLog.Ln;
 			canvas.DrawString(5, h -  10, "huga");
 			IF StartDrag(treeView.draggedNode, img, 0, 0, NIL, NIL) THEN
@@ -459,12 +459,12 @@ TYPE
 			scanner: BimboScanner.Scanner;
 
 			done : BOOLEAN;
-			cr : Reference; count, i : LONGINT; refs : RefArray;
-			t0, t1: LONGINT; res: WORD;
+			cr : Reference; count, i : SIGNED32; refs : RefArray;
+			t0, t1: SIGNED32; res: INTEGER;
 			child: WMTrees.TreeNode;
 
-			PROCEDURE QuickSort(references: RefArray; lo, hi: LONGINT);
-			VAR i, j: LONGINT; x, t: Reference;
+			PROCEDURE QuickSort(references: RefArray; lo, hi: SIGNED32);
+			VAR i, j: SIGNED32; x, t: Reference;
 			BEGIN
 				i := lo; j := hi;
 				x := references[(lo+hi) DIV 2];
@@ -719,7 +719,7 @@ TYPE
 
 		PROCEDURE RenameHandler(sender, data: ANY);
 		VAR name, curname : ARRAY 64 OF CHAR;
-			instances, replacements : LONGINT;
+			instances, replacements : SIGNED32;
 			cur : Reference;
 
 			PROCEDURE Replace(a, b : SIZE; CONST old, new : ARRAY OF CHAR) : BOOLEAN;
@@ -777,7 +777,7 @@ TYPE
 
 		PROCEDURE SelectRangeHandler(sender, data: ANY);
 		VAR
-			a, b, ch : LONGINT;
+			a, b, ch : SIGNED32;
 			r : Texts.TextReader;
 		BEGIN
 			IF currentNode = NIL THEN RETURN END;
@@ -863,7 +863,7 @@ TYPE
 			END
 		END NextUseHandler;
 
-		PROCEDURE GetTextInfo(CONST name: ARRAY OF CHAR; fp, tp: LONGINT; color: LONGINT; style: SET; def : TS.NamedObject): TextInfo;
+		PROCEDURE GetTextInfo(CONST name: ARRAY OF CHAR; fp, tp: SIGNED32; color: SIGNED32; style: SET; def : TS.NamedObject): TextInfo;
 		VAR newInfo: TextInfo; font: WMGraphics.Font;
 		BEGIN
 			NEW(newInfo); newInfo.next := definitions; definitions := newInfo;
@@ -925,7 +925,7 @@ TYPE
 		PROCEDURE TraverseProcDecl(curNode : WMTrees.TreeNode; p : TS.ProcDecl);
 		VAR params, node : WMTrees.TreeNode;
 			cur : TS.NamedObject;
-			i : LONGINT;
+			i : SIGNED32;
 			ti : TextInfo;
 		BEGIN
 			IF (p.signature # NIL) & (p.signature.params # NIL) THEN
@@ -942,7 +942,7 @@ TYPE
 			END
 		END TraverseProcDecl;
 
-		PROCEDURE MakeReference(no : TS.NamedObject; from, to : LONGINT);
+		PROCEDURE MakeReference(no : TS.NamedObject; from, to : SIGNED32);
 		VAR nr : Reference;
 		BEGIN
 			NEW(nr); nr.next := references; references := nr;
@@ -952,21 +952,21 @@ TYPE
 		PROCEDURE UnknownIdentifierError(scope: TS.Scope; first : BOOLEAN; ident : TS.Ident);
 		VAR s : ARRAY 1024 OF CHAR;
 			cur : CurrentHighlights;
-			color : LONGINT;
+			color : SIGNED32;
 			suggestions : TS.ObjectList;
-			nofSuggestions : LONGINT;
+			nofSuggestions : SIGNED32;
 		BEGIN
-			color := LONGINT(0FF000080H);
+			color := SIGNED32(0FF000080H);
 			TS.s.GetString(ident.name, s);
 		(*	KernelLog.String("*** Unknown identifier :"); KernelLog.String(s); KernelLog.Ln; *)
 			IF editor.tv.cursor.GetPosition() = ident.pos.b THEN
 				suggestionStart := ident.pos.a;
 				cursorScope := scope;
 				cursorIsFirstLevelScope := first;
-				color := LONGINT(0FF800080H);
+				color := SIGNED32(0FF800080H);
 				NEW(suggestions);
 				FindSuggestions(scope, first, s, suggestions);
-				IF suggestions.nofObjs > 0 THEN color := LONGINT(000008080H) END;
+				IF suggestions.nofObjs > 0 THEN color := SIGNED32(000008080H) END;
 				IF suggestions.nofObjs = 1 THEN singleSuggestion := suggestions.objs[0] END;
 			END;
 			NEW(cur); cur.next := errorHighlights; errorHighlights := cur;
@@ -978,17 +978,17 @@ TYPE
 
 		(* Add scope declarations to the tree *)
 		PROCEDURE TraverseScope(curNode : WMTrees.TreeNode; scope : TS.Scope);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 			last, cur : TS.NamedObject;
 			node : WMTrees.TreeNode;
 			ti : TextInfo;
 			imports, consts, vars : WMTrees.TreeNode;
 			type : TS.Type;
-			procType : LONGINT;
+			procType : SIGNED32;
 			image : WMGraphics.Image;
 			d : ANY;
 
-			PROCEDURE Insert(parent : WMTrees.TreeNode; color : LONGINT; style : SET);
+			PROCEDURE Insert(parent : WMTrees.TreeNode; color : SIGNED32; style : SET);
 			BEGIN
 				ti := GetTextInfo("", cur.pos.a, cur.pos.b, color, style, cur);
 				IF cur.altPos.valid THEN MakeReference(cur, cur.altPos.a, cur.altPos.b) END;
@@ -1097,10 +1097,10 @@ TYPE
 			RETURN FALSE
 		END SelectNodeByNamedObject;
 
-		PROCEDURE FindScopeByPos(pos : LONGINT);
+		PROCEDURE FindScopeByPos(pos : SIGNED32);
 		VAR cur : TextInfo;
 			cand, scope : TS.NamedObject;
-			candDist, dist : LONGINT;
+			candDist, dist : SIGNED32;
 		BEGIN
 			cur := definitions;
 			scope := NIL;
@@ -1128,7 +1128,7 @@ TYPE
 		END FindScopeByPos;
 
 		PROCEDURE FindIdentByPos(pos : SIZE);
-		VAR cur : Reference; ct : TextInfo; c : LONGINT;
+		VAR cur : Reference; ct : TextInfo; c : SIGNED32;
 			msg : PETTrees.ExternalDefinitionInfo;
 			filename, definition : ARRAY 256 OF CHAR;
 			m : TS.Module;
@@ -1217,13 +1217,13 @@ TYPE
 		END AddComments;
 
 		PROCEDURE SearchUses*(d : TS.Scope;  VAR ref : Reference);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 			last, cur : TS.NamedObject;
 			nr : Reference;
 			lastVarType : TS.Type;
 
 			PROCEDURE CheckExpressionList(e : TS.ExpressionList; sig : TS.ProcedureSignature; scope : TS.Scope);
-			VAR i, a, b : LONGINT; nr, f : Reference;
+			VAR i, a, b : SIGNED32; nr, f : Reference;
 			BEGIN
 				i := 0;
 				f := NIL;
@@ -1249,7 +1249,7 @@ TYPE
 				END
 			END CheckExpressionList;
 
-			PROCEDURE GetDesignatorRange(d : TS.Designator; VAR a, b : LONGINT);
+			PROCEDURE GetDesignatorRange(d : TS.Designator; VAR a, b : SIGNED32);
 			BEGIN
 				IF d IS TS.Ident THEN
 					IF (a = -1) OR (d(TS.Ident).pos.a < a) THEN a := d(TS.Ident).pos.a END;
@@ -1262,8 +1262,8 @@ TYPE
 				END
 			END GetDesignatorRange;
 
-			PROCEDURE GetExpressionRange(e : TS.Expression; VAR a, b : LONGINT);
-			VAR ta, tb : LONGINT;
+			PROCEDURE GetExpressionRange(e : TS.Expression; VAR a, b : SIGNED32);
+			VAR ta, tb : SIGNED32;
 			BEGIN
 				ta := -1; tb := -1; IF e =  NIL THEN RETURN END;
 				IF e.kind = TS.ExpressionPrimitive THEN
@@ -1338,7 +1338,7 @@ TYPE
 				s : ARRAY 64 OF CHAR;
 				m : TS.Module;
 				te : TS.ExpressionList;
-				lastpos : LONGINT;
+				lastpos : SIGNED32;
 
 				PROCEDURE SetReference(id : TS.Ident; no : TS.NamedObject);
 				BEGIN
@@ -1595,7 +1595,7 @@ TYPE
 			END SearchStatements;
 
 			PROCEDURE CheckSignature(sig : TS.ProcedureSignature);
-			VAR i : LONGINT; cur : TS.NamedObject; t : TS.Type;
+			VAR i : SIGNED32; cur : TS.NamedObject; t : TS.Type;
 			BEGIN
 				IF sig = NIL THEN RETURN END;
 				IF sig.return # NIL THEN CheckType(sig.return) END;
@@ -1684,7 +1684,7 @@ VAR
 
 PROCEDURE GetInsertString(ident : TS.NamedObject; VAR newStr : ARRAY OF CHAR);
 VAR signature : TS.ProcedureSignature;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN
 	COPY(ident.name^, newStr);
 	IF ident IS TS.ProcDecl THEN
@@ -1704,7 +1704,7 @@ END GetInsertString;
 
 PROCEDURE FindSuggestions(scope : TS.Scope; first: BOOLEAN; prefix : ARRAY OF CHAR;	suggestions : TS.ObjectList);
 VAR ol : TS.ObjectList;
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	IF scope = NIL THEN RETURN END;
 	NEW(ol);
@@ -1718,8 +1718,8 @@ BEGIN
 END FindSuggestions;
 
 (** returns the type of the procedure *)
-PROCEDURE GetProcedureType(proc : TS.ProcDecl) : LONGINT;
-VAR type : LONGINT;
+PROCEDURE GetProcedureType(proc : TS.ProcDecl) : SIGNED32;
+VAR type : SIGNED32;
 BEGIN
 	type := ProcOther;
 	IF (proc.signature = NIL) OR (proc.signature.params = NIL) & (proc.signature.return = NIL) THEN

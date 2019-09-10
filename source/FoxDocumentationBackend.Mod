@@ -171,11 +171,11 @@ TYPE
 	Generator*= OBJECT (SyntaxTree.Visitor)
 	VAR
 		w,ws: Streams.StringWriter;
-		case: LONGINT;
+		case: SIGNED32;
 		diagnostics: Diagnostics.Diagnostics;
 
 		(* transient state variables *)
-		level: ARRAY MaxLevels OF LONGINT;
+		level: ARRAY MaxLevels OF SIGNED32;
 
 		current: State;
 		document: DocumentationTree.Document;
@@ -184,7 +184,7 @@ TYPE
 		backend: DocumentationBackend;
 
 		PROCEDURE &Init*(diagnostics: Diagnostics.Diagnostics);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			NEW(w,1024); NEW(ws, 64); case := Scanner.Uppercase;
 			FOR i := 0 TO MaxLevels-1 DO level[i] := 0 END;
@@ -594,7 +594,7 @@ TYPE
 		END VisitCharacterValue;
 
 		PROCEDURE VisitSetValue*(x: SyntaxTree.SetValue);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			w.String("{");
 			i := 0;
@@ -618,8 +618,8 @@ TYPE
 			VisitMathArrayExpression(x.array);
 		END VisitMathArrayValue;
 
-		PROCEDURE FormatedFloat(value: LONGREAL; subtype: LONGINT);
-		VAR string: ARRAY 128 OF CHAR; i: LONGINT;
+		PROCEDURE FormatedFloat(value: FLOAT64; subtype: SIGNED32);
+		VAR string: ARRAY 128 OF CHAR; i: SIGNED32;
 		BEGIN
 			IF subtype = Scanner.Real THEN
 				ws.SetPos(0); ws.Float(value,11(*mantissa X.XXXXXXX *)+5(*exponent E+XXX *)); ws.Get(string);
@@ -661,7 +661,7 @@ TYPE
 		END VisitComplexValue;
 
 		PROCEDURE VisitStringValue*(x: SyntaxTree.StringValue);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < LEN( x.value )) & (x.value[i] # 0X) & (x.value[i] # '"') DO INC( i );  END;
@@ -777,7 +777,7 @@ TYPE
 		END NeedsSection;
 
 		PROCEDURE ExtractParameters(x: SyntaxTree.ProcedureType; doc: DocumentationTree.Document; VAR parameters: DocumentationTree.Document);
-		VAR par: SyntaxTree.Parameter; paragraph,heading: DocumentationTree.Paragraph; i: LONGINT; element: DocumentationTree.TextElement;
+		VAR par: SyntaxTree.Parameter; paragraph,heading: DocumentationTree.Paragraph; i: SIGNED32; element: DocumentationTree.TextElement;
 			string: DocumentationTree.String; id: SyntaxTree.Identifier; done: BOOLEAN;
 		BEGIN
 			i := 0;
@@ -937,7 +937,7 @@ TYPE
 			IF ~first THEN String("}") END;
 		END FlagEnd;
 
-		PROCEDURE Int(value: LONGINT);
+		PROCEDURE Int(value: SIGNED32);
 		VAR s: DocumentationTree.String; textElement: DocumentationTree.TextElement;
 		BEGIN
 			NEW(s,32); Strings.IntToStr(value,s^);
@@ -1186,14 +1186,14 @@ TYPE
 		END PatchLinksP;
 
 		PROCEDURE PatchLinksS(sec: DocumentationTree.Section);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			sec.title.ForAllElementsDo(PatchLinkE);
 			sec.contents.ForAllParagraphsDo(PatchLinksP)
 		END PatchLinksS;
 
 		PROCEDURE PatchLinks(doc: DocumentationTree.Document; scope: SyntaxTree.Scope);
-		VAR i: LONGINT; prev: SyntaxTree.Scope;
+		VAR i: SIGNED32; prev: SyntaxTree.Scope;
 		BEGIN
 			prev := current.scope;
 			current.scope := scope;
@@ -1463,7 +1463,7 @@ TYPE
 	(* helper procedures *)
 
 	PROCEDURE Small(CONST name: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
-	VAR ch: CHAR; i: LONGINT;
+	VAR ch: CHAR; i: SIGNED32;
 	BEGIN
 		i := 0;
 		REPEAT
@@ -1475,8 +1475,8 @@ TYPE
 		UNTIL ch = 0X;
 	END Small;
 
-	PROCEDURE Hex(w: Streams.Writer; x: HUGEINT);
-	VAR i: LONGINT; a: ARRAY 20 OF CHAR; y: HUGEINT;
+	PROCEDURE Hex(w: Streams.Writer; x: SIGNED64);
+	VAR i: SIGNED32; a: ARRAY 20 OF CHAR; y: SIGNED64;
 	BEGIN
 		i := 0;
 		REPEAT
@@ -1575,7 +1575,7 @@ TYPE
 
 	(*
 	PROCEDURE ConvertSpecialSections(document: DocumentationTree.Document);
-	VAR description: DocumentationTree.Paragraphs; i: LONGINT; section: DocumentationTree.Section; par : DocumentationTree.Paragraph;
+	VAR description: DocumentationTree.Paragraphs; i: SIGNED32; section: DocumentationTree.Section; par : DocumentationTree.Paragraph;
 	BEGIN
 		description := document.description;
 		FOR i := document.sections.Length()-1 TO 0 BY -1 DO
@@ -1610,7 +1610,7 @@ TYPE
 
 	(* sentinel used for stopping merging at closing comment of a module if the opening comment comes directly before it.*)
 	PROCEDURE MergeComments(c,sentinel: SyntaxTree.Comment; x: ANY): DocumentationTree.String;
-	VAR i,len: LONGINT; tmp: SyntaxTree.Comment; string: DocumentationTree.String;
+	VAR i,len: SIGNED32; tmp: SyntaxTree.Comment; string: DocumentationTree.String;
 	BEGIN
 		len := 0; tmp := c;
 		WHILE (tmp # sentinel) & (tmp.item = x) DO

@@ -27,12 +27,12 @@ TYPE
 	Section*=OBJECT
 	VAR
 		name-: SectionName; (* name of this section (globally unique-name derived from symbol name) *)
-		type-: SHORTINT; (* CodeSection, InlineCodeSection, ...  *)
+		type-: SIGNED8; (* CodeSection, InlineCodeSection, ...  *)
 
 		fixed-: BOOLEAN; (* whether the position of the section is fixed, as opposed to being restricted by an alignment *)
 		positionOrAlignment-: SIZE; (* the alignment OR the position *)
 		fingerprint-: Basic.Fingerprint; (* fingerprint of the corresponding syntax tree node *)
-		bitsPerUnit-: LONGINT; (* the unit size given in bits *)
+		bitsPerUnit-: SIGNED32; (* the unit size given in bits *)
 
 		symbol-: SyntaxTree.Symbol; (* corresponding symbol in AST *)
 		offset-: SIZE;
@@ -40,7 +40,7 @@ TYPE
 		(* for linking *)
 		isReachable-: BOOLEAN;
 
-		PROCEDURE & InitSection*(type: SHORTINT; CONST n: ObjectFile.SegmentedName; symbol: SyntaxTree.Symbol);
+		PROCEDURE & InitSection*(type: SIGNED8; CONST n: ObjectFile.SegmentedName; symbol: SyntaxTree.Symbol);
 		BEGIN
 			name := n;
 			SELF.symbol := symbol;
@@ -65,7 +65,7 @@ TYPE
 		BEGIN SELF.isReachable := isReachable
 		END SetReachability;
 
-		PROCEDURE SetBitsPerUnit*(bitsPerUnit: LONGINT);
+		PROCEDURE SetBitsPerUnit*(bitsPerUnit: SIGNED32);
 		BEGIN SELF.bitsPerUnit := bitsPerUnit
 		END SetBitsPerUnit;
 
@@ -79,7 +79,7 @@ TYPE
 			SELF.positionOrAlignment := positionOrAlignment
 		END SetPositionOrAlignment;
 
-		PROCEDURE GetSize*(): LONGINT;
+		PROCEDURE GetSize*(): SIGNED32;
 		BEGIN RETURN UnknownSize
 		END GetSize;
 
@@ -88,7 +88,7 @@ TYPE
 		END SetFingerprint;
 
 		(** change the type of a section **)
-		PROCEDURE SetType*(type: SHORTINT);
+		PROCEDURE SetType*(type: SIGNED8);
 		BEGIN SELF.type := type
 		END SetType;
 
@@ -132,7 +132,7 @@ TYPE
 			w.RawInt(type);
 			Basic.WriteSegmentedName(w,name);
 			w.RawBool(fixed);
-			w.RawLInt(positionOrAlignment(LONGINT));
+			w.RawLInt(positionOrAlignment(SIGNED32));
 			w.RawHInt(fingerprint);
 			w.RawLInt(bitsPerUnit);
 		END WriteRaw;
@@ -203,10 +203,10 @@ TYPE
 
 	CommentWriter*= OBJECT (Streams.Writer)
 	VAR
-		firstComment-,lastComment-: Comment; comments-: LONGINT;
+		firstComment-,lastComment-: Comment; comments-: SIGNED32;
 		getPC: GetPCProcedure;
 
-		PROCEDURE AppendToLine*( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE; propagate: BOOLEAN;  VAR res: WORD );
+		PROCEDURE AppendToLine*( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE; propagate: BOOLEAN;  VAR res: INTEGER );
 		VAR pos: SIZE;
 		BEGIN
 			IF len = 0 THEN RETURN END;

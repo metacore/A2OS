@@ -40,7 +40,7 @@ VAR
 		Device.Write (dev, type);
 	END Cmd;
 
-	PROCEDURE Await (numberOfCharacters: LONGINT): BOOLEAN;
+	PROCEDURE Await (numberOfCharacters: SIGNED32): BOOLEAN;
 	BEGIN		
 		IF blocking THEN
 			REPEAT UNTIL Device.Free( dev ) >= numberOfCharacters;
@@ -58,7 +58,7 @@ VAR
 		END;
 	END Ch;
 
-	PROCEDURE Hex( i: LONGINT );
+	PROCEDURE Hex( i: SIGNED32 );
 	BEGIN
 		IF Await ( 15 ) THEN
 			Cmd ( HEX ); Device.WriteInt( dev, i );
@@ -70,7 +70,7 @@ VAR
 	END Hex;
 
 	PROCEDURE Str( CONST str: ARRAY OF CHAR );
-	VAR offset, len, size: LONGINT;
+	VAR offset, len, size: SIGNED32;
 	BEGIN
 		
 		offset := 0;  len := LEN( str );  size := 0;
@@ -88,7 +88,7 @@ VAR
 		
 	END Str;
 
-	PROCEDURE Int( i: LONGINT );
+	PROCEDURE Int( i: SIGNED32 );
 	BEGIN
 		IF Await ( 9 ) THEN
 			Cmd ( INT ); Device.WriteInt( dev, i );
@@ -98,7 +98,7 @@ VAR
 		END;
 	END Int;
 
-	PROCEDURE Real( a: REAL );
+	PROCEDURE Real( a: FLOAT32 );
 	BEGIN
 		IF Await ( 9 ) THEN
 			Cmd ( FLOAT ); Device.WriteReal( dev, a );
@@ -108,7 +108,7 @@ VAR
 		END;
 	END Real;
 
-	PROCEDURE RealHex( a: REAL );
+	PROCEDURE RealHex( a: FLOAT32 );
 	BEGIN
 		IF Await ( 15 )  THEN
 			Cmd ( HEX ); Device.WriteReal( dev, a );
@@ -116,7 +116,7 @@ VAR
 		END;
 	END RealHex;
 
-	PROCEDURE FReal( a: LONGINT );
+	PROCEDURE FReal( a: SIGNED32 );
 	BEGIN
 		IF Await ( 9 )  THEN
 			Cmd ( FLOAT ); Device.WriteInt ( dev, a );
@@ -149,7 +149,7 @@ VAR
 		END;
 	END Ln;
 
-	PROCEDURE Beep( freq, duration: LONGINT );
+	PROCEDURE Beep( freq, duration: SIGNED32 );
 	BEGIN
 		IF Await (12) THEN
 			Device.WriteInt ( dev, BEEP );  Device.WriteInt( dev, freq );
@@ -186,8 +186,8 @@ VAR
 		blocking := FALSE;
 	END BlockingModeOff;
 
-	PROCEDURE Buffer( CONST buf: ARRAY OF CHAR;  offset, len: LONGINT );
-	VAR free: LONGINT;
+	PROCEDURE Buffer( CONST buf: ARRAY OF CHAR;  offset, len: SIGNED32 );
+	VAR free: SIGNED32;
 	BEGIN
 		IF (offset + len) > LEN( buf ) THEN len := LEN( buf ) - offset;  END;
 

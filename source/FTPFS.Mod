@@ -8,7 +8,7 @@ MODULE FTPFS; (** AUTHOR "be/pjm"; PURPOSE "Simple FTP-based file system"; *)
  *Writing back to server not implemented.
  *Recommend extensions to directory when writeback is implemented:
  *	Dirty : BOOLEAN;
- *	Version : INTEGER;
+ *	Version : SIGNED16;
  *)
 IMPORT SYSTEM, Machine, Streams, KernelLog, Modules, Clock, Files, Objects,
 	FTP := FTPClient, DNS, UTF8Strings (*alm 7/23/04*);
@@ -27,14 +27,14 @@ CONST
 	DirPgSize = 102;
 	N = DirPgSize DIV 2;
 
-	DirMark = LONGINT(9B1EA38DH);
-	HeaderMark = LONGINT(9BA71D86H);
+	DirMark = SIGNED32(9B1EA38DH);
+	HeaderMark = SIGNED32(9BA71D86H);
 
 	FillerSize = 4;
 
 	MapIndexSize = (SS-4) DIV 4;
 	MapSize = SS DIV SIZEOF (SET);	(* {MapSize MOD SIZEOF (SET) = 0} *)
-	MapMark = LONGINT(9C2F977FH);
+	MapMark = SIGNED32(9C2F977FH);
 
 	MaxBufs = 4;
 	InitHint = 200*SF;
@@ -50,15 +50,15 @@ TYPE
 	DiskSector = RECORD END;	(* Oberon Sector, size SS *)
 	DiskSectorArr = ARRAY SS OF CHAR;
 
-	DiskAdr = LONGINT;
+	DiskAdr = SIGNED32;
 	FileName = ARRAY FnLength OF CHAR;
 	SectorTable = ARRAY STS OF DiskAdr;
 
 	FileHeader = RECORD (DiskSector)   (* allocated in the first page of each file on disk *)
-		mark: LONGINT;
+		mark: SIGNED32;
 		name: FileName;
-		aleng, bleng: LONGINT;
-		date, time: LONGINT;
+		aleng, bleng: SIGNED32;
+		date, time: SIGNED32;
 		sec: SectorTable;
 		ext: DiskAdr;
 		data: ARRAY SS-HS OF CHAR
@@ -79,15 +79,15 @@ TYPE
 	END;
 
 	DirPage = RECORD (DiskSector)
-		mark: LONGINT;
-		m: LONGINT;
+		mark: SIGNED32;
+		m: SIGNED32;
 		p0: DiskAdr; (*sec no of left descendant in directory*)
 		fill: ARRAY FillerSize OF CHAR;
 		e: ARRAY DirPgSize OF DirEntry
 	END;
 
 	MapIndex = RECORD (DiskSector)
-		mark: LONGINT;
+		mark: SIGNED32;
 		index: ARRAY MapIndexSize OF DiskAdr
 	END;
 
@@ -98,7 +98,7 @@ TYPE
 	FileHd = POINTER TO FileHeader;
 
 	Buffer = POINTER TO RECORD (Files.Hint)
-		apos, lim: LONGINT;
+		apos, lim: SIGNED32;
 		mod: BOOLEAN;
 		next: Buffer;
 		data: DataSector
@@ -128,7 +128,7 @@ TYPE
 		(* "exported" methods: Search, Insert, Delete *)
 
 		PROCEDURE Search(VAR name: FileName; VAR A: DiskAdr);
-		VAR i, L, R: LONGINT; dadr: DiskAdr; a: DirPage;
+		VAR i, L, R: SIGNED32; dadr: DiskAdr; a: DirPage;
 		BEGIN {EXCLUSIVE}
 		ASSERT(state = Opened);
 			dadr := DirRootAdr;
@@ -150,7 +150,7 @@ TYPE
 
 		PROCEDURE insert(VAR name: FileName; dpg0:  DiskAdr; VAR h: BOOLEAN; VAR v: DirEntry; fad: DiskAdr);
 		(*h = "tree has become higher and v is ascending element"*)
-		VAR ch: CHAR; i, j, L, R: LONGINT; dpg1: DiskAdr; u: DirEntry; a: DirPage;
+		VAR ch: CHAR; i, j, L, R: SIGNED32; dpg1: DiskAdr; u: DirEntry; a: DirPage;
 		BEGIN (*~h*)
 			ASSERT(state = Opened);
 			GetSector(vol, dpg0, a);
@@ -214,9 +214,9 @@ TYPE
 			END
 		END Insert;
 
-		PROCEDURE underflow(VAR c: DirPage; (*ancestor page*) dpg0:  DiskAdr; s: LONGINT; (*insertion point in c*)
+		PROCEDURE underflow(VAR c: DirPage; (*ancestor page*) dpg0:  DiskAdr; s: SIGNED32; (*insertion point in c*)
 				VAR h: BOOLEAN); (*c undersize*)
-		VAR i, k: LONGINT; dpg1: DiskAdr; a, b: DirPage; (*a := underflowing page, b := neighbouring page*)
+		VAR i, k: SIGNED32; dpg1: DiskAdr; a, b: DirPage; (*a := underflowing page, b := neighbouring page*)
 		BEGIN
 			GetSector(vol, dpg0, a);
 			(*h & a.m = N-1 & dpg0 = c.e[s-1].p*)
@@ -263,7 +263,7 @@ TYPE
 		PROCEDURE delete(VAR name: FileName; dpg0: DiskAdr; VAR h: BOOLEAN; VAR fad: DiskAdr);
 		(*search and delete entry with key name; if a page underflow arises,
 			balance with adjacent page or merge; h := "page dpg0 is undersize"*)
-		VAR i, L, R: LONGINT; dpg1: DiskAdr; a: DirPage;
+		VAR i, L, R: SIGNED32; dpg1: DiskAdr; a: DirPage;
 
 			PROCEDURE del(dpg1: DiskAdr; VAR h: BOOLEAN);
 				VAR dpg2: DiskAdr; (*global: a, R*) b: DirPage;
@@ -318,7 +318,7 @@ TYPE
 
 		PROCEDURE Startup;
 		VAR
-			j, sec, size, q, free, thres: LONGINT; mi: MapIndex; ms: MapSector;
+			j, sec, size, q, free, thres: SIGNED32; mi: MapIndex; ms: MapSector;
 			s: ARRAY 10 OF CHAR; found: BOOLEAN;
 		BEGIN	(* only called from Init *)
 			size := vol.size; found := FALSE;
@@ -375,13 +375,13 @@ TYPE
 		END Startup;
 
 		PROCEDURE &Init*(vol: Files.Volume);
-		VAR k: LONGINT; A: ARRAY 2000 OF DiskAdr; files: LONGINT; bad: BOOLEAN;
+		VAR k: SIGNED32; A: ARRAY 2000 OF DiskAdr; files: SIGNED32; bad: BOOLEAN;
 
 			PROCEDURE MarkSectors;
-			VAR L, R, i, j, n: LONGINT; x: DiskAdr; hd: FileHeader; sup, sub: IndexSector;
+			VAR L, R, i, j, n: SIGNED32; x: DiskAdr; hd: FileHeader; sup, sub: IndexSector;
 
-				PROCEDURE sift(L, R: LONGINT);
-					VAR i, j: LONGINT; x: DiskAdr;
+				PROCEDURE sift(L, R: SIGNED32);
+					VAR i, j: SIGNED32; x: DiskAdr;
 				BEGIN j := L; x := A[j];
 					LOOP i := j; j := 2*j + 1;
 						IF (j+1 < R) & (A[j] < A[j+1]) THEN INC(j) END ;
@@ -453,7 +453,7 @@ TYPE
 			END MarkSectors;
 
 			PROCEDURE TraverseDir(dpg: DiskAdr);
-				VAR i: LONGINT; a: DirPage;
+				VAR i: SIGNED32; a: DirPage;
 			BEGIN
 				GetSector(vol, dpg, a); MarkSector(vol, dpg); i := 0;
 				WHILE i < a.m DO
@@ -500,7 +500,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Cleanup;
-		VAR i, j, p, q, sec, size: LONGINT; mi: MapIndex; ms: MapSector;
+		VAR i, j, p, q, sec, size: SIGNED32; mi: MapIndex; ms: MapSector;
 		BEGIN {EXCLUSIVE}
 			(*KernelLog.String("DiskFS: Cleanup "); KernelLog.String(vol.name); KernelLog.Ln;*)
 			state := Closing;
@@ -545,7 +545,7 @@ TYPE
 
 TYPE
 	RecursiveLock* = OBJECT
-		VAR lockedBy: ANY; level: LONGINT;
+		VAR lockedBy: ANY; level: SIGNED32;
 
 		PROCEDURE Acquire*;
 		VAR me: ANY;
@@ -605,7 +605,7 @@ TYPE
 	 *Closes the FTP connection after some delay time.
 	 *)
 		PROCEDURE HandleClose;
-			VAR res : WORD;
+			VAR res : INTEGER;
 		BEGIN
 			SELF.ftp.Close (res);
 			KernelLog.Enter;
@@ -614,7 +614,7 @@ TYPE
 			KernelLog.Exit
 		END HandleClose;
 
-		PROCEDURE ScheduleClose (ms : LONGINT);
+		PROCEDURE ScheduleClose (ms : SIGNED32);
 		BEGIN
 			IF WorkAround
 			THEN
@@ -625,7 +625,7 @@ TYPE
 		END ScheduleClose;
 
 		PROCEDURE New0*(CONST name: ARRAY OF CHAR): Files.File;
-		VAR i: LONGINT; res: WORD; f: File; buf: Buffer; head: FileHd; namebuf: FileName;
+		VAR i: SIGNED32; res: INTEGER; f: File; buf: Buffer; head: FileHd; namebuf: FileName;
 		BEGIN (*{EXCLUSIVE}*)
 			lock.Acquire;
 			f := NIL; Check(name, namebuf, res);
@@ -651,7 +651,7 @@ TYPE
 			CONST
 				BufSize = 16*1024;
 
-			VAR res : WORD;
+			VAR res : INTEGER;
 				rd : Streams.Reader;
 				buf : ARRAY BufSize OF CHAR;
 				len : SIZE;
@@ -693,7 +693,7 @@ TYPE
 
 		PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
-			i, k: LONGINT; res: WORD; f: File; header: DiskAdr; buf: Buffer; head: FileHd;
+			i, k: SIGNED32; res: INTEGER; f: File; header: DiskAdr; buf: Buffer; head: FileHd;
 			namebuf, local: FileName; super: SuperIndex; sub: SubIndex; sec: IndexSector;
 
 		BEGIN (*{EXCLUSIVE}*)
@@ -756,7 +756,7 @@ TYPE
 			RETURN f
 		END Old0;
 
-		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER);
 		VAR adr: DiskAdr; namebuf: FileName; head: FileHeader;
 		BEGIN (*{EXCLUSIVE}*)
 			lock.Acquire;
@@ -777,7 +777,7 @@ TYPE
 			lock.Release
 		END Delete0;
 
-		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER);
 		VAR adr: DiskAdr; oldbuf, newbuf: FileName;  head: FileHeader;
 		BEGIN (*{EXCLUSIVE}*)
 			lock.Acquire;
@@ -810,8 +810,8 @@ TYPE
 			lock.Release
 		END Enumerate0;
 
-		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
-			VAR res: WORD; namebuf: FileName; header: DiskAdr;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): SIGNED32;
+			VAR res: INTEGER; namebuf: FileName; header: DiskAdr;
 		BEGIN (*{EXCLUSIVE}*)
 			lock.Acquire;
 			header := 0;
@@ -837,24 +837,24 @@ TYPE
 TYPE
 	File = OBJECT (Files.File)
 		VAR
-			aleng, bleng: LONGINT;
-			nofbufs: LONGINT;
+			aleng, bleng: SIGNED32;
+			nofbufs: SIGNED32;
 			modH, registered: BOOLEAN;
 			firstbuf: Buffer;
 			sechint: DiskAdr;
 			name: FileName;
-			time, date: LONGINT;
+			time, date: SIGNED32;
 			ext: SuperIndex;
 			sec: SectorTable;
 
 		PROCEDURE Set*(VAR r: Files.Rider; pos: Files.Position);
-		VAR a, b: LONGINT;
+		VAR a, b: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			r.eof := FALSE; r.res := 0; r.file := SELF; r.fs := fs;
 			IF pos < 0 THEN
 				a := 0; b := HS
 			ELSIF pos < aleng*SS + bleng - HS THEN
-				a := (LONGINT(pos) + HS) DIV SS; b := (LONGINT(pos) + HS) MOD SS
+				a := (SIGNED32(pos) + HS) DIV SS; b := (SIGNED32(pos) + HS) MOD SS
 			ELSE
 				a := aleng; b := bleng
 			END;
@@ -870,16 +870,16 @@ TYPE
 		VAR buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			buf := r.hint(Buffer);
-			IF LONGINT(r.apos) # buf.apos THEN buf := GetBuf(SELF, LONGINT(r.apos)); r.hint := buf END;
+			IF SIGNED32(r.apos) # buf.apos THEN buf := GetBuf(SELF, SIGNED32(r.apos)); r.hint := buf END;
 			IF r.bpos < buf.lim THEN
 				x := buf.data.B[r.bpos]; INC(r.bpos)
-			ELSIF LONGINT(r.apos) < aleng THEN
+			ELSIF SIGNED32(r.apos) < aleng THEN
 				INC(r.apos);
-				buf := SearchBuf(SELF, LONGINT(r.apos));
+				buf := SearchBuf(SELF, SIGNED32(r.apos));
 				IF buf = NIL THEN
 					buf := r.hint(Buffer);
 					IF buf.mod THEN WriteBuf(SELF, buf) END ;
-					ReadBuf(SELF, buf, LONGINT(r.apos))
+					ReadBuf(SELF, buf, SIGNED32(r.apos))
 				ELSE
 					r.hint := buf
 				END ;
@@ -896,7 +896,7 @@ TYPE
 			IF len > 0 THEN
 				dst := ADDRESSOF(x[ofs]);
 				buf := r.hint(Buffer);
-				IF LONGINT(r.apos) # buf.apos THEN buf := GetBuf(SELF, LONGINT(r.apos)); r.hint := buf END;
+				IF SIGNED32(r.apos) # buf.apos THEN buf := GetBuf(SELF, SIGNED32(r.apos)); r.hint := buf END;
 				LOOP
 					IF len <= 0 THEN EXIT END ;
 					src := ADDRESSOF(buf.data.B[0]) + r.bpos; m := r.bpos + len;
@@ -905,12 +905,12 @@ TYPE
 					ELSIF buf.lim = SS THEN
 						m := buf.lim - r.bpos;
 						IF m > 0 THEN SYSTEM.MOVE(src, dst, m); INC(dst, m); DEC(len, m) END ;
-						IF LONGINT(r.apos) < aleng THEN
-							INC(r.apos); r.bpos := 0; buf := SearchBuf(SELF, LONGINT(r.apos));
+						IF SIGNED32(r.apos) < aleng THEN
+							INC(r.apos); r.bpos := 0; buf := SearchBuf(SELF, SIGNED32(r.apos));
 							IF buf = NIL THEN
 								buf := r.hint(Buffer);
 								IF buf.mod THEN WriteBuf(SELF, buf) END ;
-								ReadBuf(SELF, buf, LONGINT(r.apos))
+								ReadBuf(SELF, buf, SIGNED32(r.apos))
 							ELSE
 								r.hint := buf
 							END
@@ -932,18 +932,18 @@ TYPE
 		VAR buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			buf := r.hint(Buffer);
-			IF LONGINT(r.apos) # buf.apos THEN buf := GetBuf(SELF, LONGINT(r.apos)); r.hint := buf END;
+			IF SIGNED32(r.apos) # buf.apos THEN buf := GetBuf(SELF, SIGNED32(r.apos)); r.hint := buf END;
 			IF r.bpos >= buf.lim THEN
 				IF r.bpos < SS THEN
 					INC(buf.lim); INC(bleng); modH := TRUE
 				ELSE
-					WriteBuf(SELF, buf); INC(r.apos); buf := SearchBuf(SELF, LONGINT(r.apos));
+					WriteBuf(SELF, buf); INC(r.apos); buf := SearchBuf(SELF, SIGNED32(r.apos));
 					IF buf = NIL THEN
 						buf := r.hint(Buffer);
-						IF LONGINT(r.apos) <= aleng THEN
-							ReadBuf(SELF, buf, LONGINT(r.apos))
+						IF SIGNED32(r.apos) <= aleng THEN
+							ReadBuf(SELF, buf, SIGNED32(r.apos))
 						ELSE
-							buf.apos := LONGINT(r.apos); buf.lim := 1; INC(aleng); bleng := 1; modH := TRUE;
+							buf.apos := SIGNED32(r.apos); buf.lim := 1; INC(aleng); bleng := 1; modH := TRUE;
 							IF (aleng - STS) MOD XS = 0 THEN NewSub(SELF) END
 						END
 					ELSE
@@ -962,7 +962,7 @@ TYPE
 			IF len > 0 THEN
 				src := ADDRESSOF(x[ofs]);
 				buf := r.hint(Buffer);
-				IF LONGINT(r.apos) # buf.apos THEN buf := GetBuf(SELF, LONGINT(r.apos)); r.hint := buf END;
+				IF SIGNED32(r.apos) # buf.apos THEN buf := GetBuf(SELF, SIGNED32(r.apos)); r.hint := buf END;
 				LOOP
 					IF len <= 0 THEN EXIT END;
 					buf.mod := TRUE; dst := ADDRESSOF(buf.data.B[0]) + r.bpos; m := r.bpos + len;
@@ -970,16 +970,16 @@ TYPE
 						SYSTEM.MOVE(src, dst, len); r.bpos := m; EXIT
 					ELSIF m <= SS THEN
 						SYSTEM.MOVE(src, dst, len); r.bpos := m;
-						bleng := LONGINT(m); buf.lim := LONGINT(m); modH := TRUE; EXIT
+						bleng := SIGNED32(m); buf.lim := SIGNED32(m); modH := TRUE; EXIT
 					ELSE
 						m := SS - r.bpos;
 						IF m > 0 THEN SYSTEM.MOVE(src, dst, m); INC(src, m); DEC(len, m) END;
-						WriteBuf(SELF, buf); INC(r.apos); r.bpos := 0; buf := SearchBuf(SELF, LONGINT(r.apos));
+						WriteBuf(SELF, buf); INC(r.apos); r.bpos := 0; buf := SearchBuf(SELF, SIGNED32(r.apos));
 						IF buf = NIL THEN
 							buf := r.hint(Buffer);
-							IF LONGINT(r.apos) <= aleng THEN ReadBuf(SELF, buf, LONGINT(r.apos))
+							IF SIGNED32(r.apos) <= aleng THEN ReadBuf(SELF, buf, SIGNED32(r.apos))
 							ELSE
-								buf.apos := LONGINT(r.apos); buf.lim := 0; INC(aleng); bleng := 0; modH := TRUE;
+								buf.apos := SIGNED32(r.apos); buf.lim := 0; INC(aleng); bleng := 0; modH := TRUE;
 								IF (aleng - STS) MOD XS = 0 THEN NewSub(SELF) END
 							END
 						ELSE
@@ -995,12 +995,12 @@ TYPE
 			RETURN aleng*SS + bleng - HS
 		END Length;
 
-		PROCEDURE GetDate*(VAR t, d: LONGINT);
+		PROCEDURE GetDate*(VAR t, d: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			t := time; d := date
 		END GetDate;
 
-		PROCEDURE SetDate*(t, d: LONGINT);
+		PROCEDURE SetDate*(t, d: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			modH := TRUE; time := t; date := d
 		END SetDate;
@@ -1010,7 +1010,7 @@ TYPE
 			Files.JoinName(fs.prefix, SELF.name, name)
 		END GetName;
 
-		PROCEDURE Register0*(VAR res: WORD);
+		PROCEDURE Register0*(VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			Unbuffer(SELF);
 			IF ~registered & (name # "") THEN
@@ -1052,25 +1052,25 @@ BEGIN
 	sec := sec * SF
 END AllocSector;
 
-PROCEDURE MarkSector(vol: Files.Volume;  sec: LONGINT);
+PROCEDURE MarkSector(vol: Files.Volume;  sec: SIGNED32);
 BEGIN
 	ASSERT(~(Files.ReadOnly IN vol.flags));
 	vol.MarkBlock(sec DIV SF)
 END MarkSector;
 
-PROCEDURE FreeSector(vol: Files.Volume;  sec: LONGINT);
+PROCEDURE FreeSector(vol: Files.Volume;  sec: SIGNED32);
 BEGIN
 	ASSERT(~(Files.ReadOnly IN vol.flags));
 	vol.FreeBlock(sec DIV SF)
 END FreeSector;
 
-PROCEDURE Marked(vol: Files.Volume;  sec: LONGINT): BOOLEAN;
+PROCEDURE Marked(vol: Files.Volume;  sec: SIGNED32): BOOLEAN;
 BEGIN
 	ASSERT(~(Files.ReadOnly IN vol.flags));
 	RETURN vol.Marked(sec DIV SF)
 END Marked;
 
-PROCEDURE MatchPrefix(CONST mask, name: ARRAY OF CHAR; VAR pos, diff: LONGINT);
+PROCEDURE MatchPrefix(CONST mask, name: ARRAY OF CHAR; VAR pos, diff: SIGNED32);
 BEGIN
 	pos := 0;
 	LOOP
@@ -1086,8 +1086,8 @@ BEGIN
 	END
 END MatchPrefix;
 
-PROCEDURE Match(pos: LONGINT; CONST pat, name: ARRAY OF CHAR): BOOLEAN;
-VAR i0, i1, j0, j1: LONGINT; f: BOOLEAN;
+PROCEDURE Match(pos: SIGNED32; CONST pat, name: ARRAY OF CHAR): BOOLEAN;
+VAR i0, i1, j0, j1: SIGNED32; f: BOOLEAN;
 BEGIN
 	f := TRUE;
 	IF pos # -1 THEN
@@ -1119,7 +1119,7 @@ BEGIN
 END Match;
 
 PROCEDURE enumerate(fs: Files.FileSystem; CONST mask: ARRAY OF CHAR; dpg: DiskAdr; flags: SET; enum: Files.Enumerator; VAR continue: BOOLEAN; VAR fh: FileHeader; VAR fn: ARRAY OF CHAR);
-VAR i, pos, diff: LONGINT; dpg1: DiskAdr; a: DirPage; time, date, size: LONGINT;
+VAR i, pos, diff: SIGNED32; dpg1: DiskAdr; a: DirPage; time, date, size: SIGNED32;
 BEGIN
 	GetSector(fs.vol, dpg, a); i := 0;
 	WHILE (i < a.m) & continue DO
@@ -1154,8 +1154,8 @@ END enumerate;
 
 (* Check a file name. *)
 
-PROCEDURE Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD);
-	VAR i: LONGINT; ch: CHAR;
+PROCEDURE Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: INTEGER);
+	VAR i: SIGNED32; ch: CHAR;
 BEGIN
 	ch := s[0]; i := 0;
 	IF ("A" <= CAP(ch)) & (CAP(ch) <= "Z") THEN
@@ -1182,8 +1182,8 @@ BEGIN
 	h.date := f.date; h.time := f.time
 END UpdateHeader;
 
-PROCEDURE ReadBuf(f: File; buf: Buffer; pos: LONGINT);
-VAR sec: DiskAdr; xpos: LONGINT;
+PROCEDURE ReadBuf(f: File; buf: Buffer; pos: SIGNED32);
+VAR sec: DiskAdr; xpos: SIGNED32;
 BEGIN
 	IF pos < STS THEN
 		sec := f.sec[pos]
@@ -1197,14 +1197,14 @@ BEGIN
 END ReadBuf;
 
 PROCEDURE NewSuper(f: File);
-VAR i: LONGINT; super: SuperIndex;
+VAR i: SIGNED32; super: SuperIndex;
 BEGIN
 	NEW(super); super.adr := 0; super.mod := TRUE; f.modH := TRUE; f.ext := super;
 	FOR i := 0 TO XS-1 DO super.sub[i] := NIL END
 END NewSuper;
 
 PROCEDURE WriteBuf(f: File; buf: Buffer);
-VAR i, k, xpos: LONGINT; secadr: DiskAdr; super: SuperIndex; sub: SubIndex; vol: Files.Volume;
+VAR i, k, xpos: SIGNED32; secadr: DiskAdr; super: SuperIndex; sub: SubIndex; vol: Files.Volume;
 BEGIN
 	vol := f.fs.vol;
 	Clock.Get(f.time, f.date); f.modH := TRUE;
@@ -1234,7 +1234,7 @@ BEGIN
 	PutSector(vol, secadr, buf.data); buf.mod := FALSE
 END WriteBuf;
 
-PROCEDURE SearchBuf(f: File; pos: LONGINT): Buffer;
+PROCEDURE SearchBuf(f: File; pos: SIGNED32): Buffer;
 VAR buf: Buffer;
 BEGIN
 	buf := f.firstbuf;
@@ -1246,7 +1246,7 @@ BEGIN
 	RETURN buf
 END SearchBuf;
 
-PROCEDURE GetBuf(f: File; pos: LONGINT): Buffer;
+PROCEDURE GetBuf(f: File; pos: SIGNED32): Buffer;
 VAR buf: Buffer;
 BEGIN
 	buf := f.firstbuf;
@@ -1271,7 +1271,7 @@ END GetBuf;
 
 PROCEDURE Unbuffer(f: File);
 VAR
-	i, k: LONGINT; buf: Buffer; super: SuperIndex; sub: SubIndex; head: FileHeader;
+	i, k: SIGNED32; buf: Buffer; super: SuperIndex; sub: SubIndex; head: FileHeader;
 	sec: IndexSector; vol: Files.Volume;
 BEGIN
 	vol := f.fs.vol;
@@ -1311,7 +1311,7 @@ BEGIN
 END Unbuffer;
 
 PROCEDURE NewSub(f: File);
-VAR i, k: LONGINT; sub: SubIndex;
+VAR i, k: SIGNED32; sub: SubIndex;
 BEGIN
 	k := (f.aleng - STS) DIV XS;
 	IF k = XS THEN SYSTEM.HALT(18) END;
@@ -1324,7 +1324,7 @@ END NewSub;
 (** Generate a new file system object.  Files.NewVol has volume parameter, Files.Par has mount prefix. *)
 PROCEDURE NewFS*(context : Files.Parameters);
 VAR
-	vol: Files.Volume; fs: FileSystem; i, j: LONGINT; fh: FileHeader;
+	vol: Files.Volume; fs: FileSystem; i, j: SIGNED32; fh: FileHeader;
 	FTPServer, FTPPrefix, FTPUser, FTPPass: String; (*alm 9/28/04*)
 	ch: CHAR;
 BEGIN
@@ -1355,7 +1355,7 @@ BEGIN
 	    			context.out.String( FTPPass); context.out.Char (" ");
 				NEW(fs, FTPServer, FTPPrefix, FTPUser, FTPPass );
 				fs.vol := vol;
-				ASSERT(vol.size < MAX(LONGINT) DIV SF);
+				ASSERT(vol.size < MAX(SIGNED32) DIV SF);
 				fs.desc := "AosFS";
 				NEW(fs.dir, vol);	(* initialize directory and volume *)
 				ASSERT(fs.dir.state = Opened);	(* will have to undo changes to vol before continuing *)

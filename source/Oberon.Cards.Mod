@@ -24,14 +24,14 @@ TYPE
 	Card* = POINTER TO CardDesc;
 	CardDesc* = RECORD
 		next*, prev*: Card;
-		suit*, nr*: INTEGER;
+		suit*, nr*: SIGNED16;
 		visible*: BOOLEAN;
 	END;
 
 	Move* = POINTER TO MoveDesc;
 	MoveDesc* = RECORD
 		next: Move;
-		time: LONGINT;
+		time: SIGNED32;
 	END;
 
 	Stack* = POINTER TO StackDesc;
@@ -41,7 +41,7 @@ TYPE
 		move: Move;
 		tail*: Card;
 		do*: Methods;
-		bgNr*: INTEGER;
+		bgNr*: SIGNED16;
 	END;
 
 	MethodBlock* = RECORD
@@ -49,7 +49,7 @@ TYPE
 		dropCard*: PROCEDURE (S: Stack; C: Card);
 		moveCard*: PROCEDURE (self, to: Stack; C: Card; undo: BOOLEAN);
 		undoMove*: PROCEDURE (S: Stack; M: Move);
-		restoreStack*: PROCEDURE (S:Stack; M: Display3.Mask; x, y, w, h: INTEGER);
+		restoreStack*: PROCEDURE (S:Stack; M: Display3.Mask; x, y, w, h: SIGNED16);
 		trackMouse*: PROCEDURE (S: Stack; VAR M: Oberon.InputMsg);
 	END;
 
@@ -64,24 +64,24 @@ TYPE
 	END;
 
 	UndoMsg* = RECORD (Display.FrameMsg)
-		time: LONGINT;
+		time: SIGNED32;
 		stack: Stack;
 	END;
 
 	BGMsg* = RECORD (Display.FrameMsg)
-		bgNr*: INTEGER;
+		bgNr*: SIGNED16;
 	END;
 
 VAR
 	methods*: Methods;
-	seed: LONGINT;
+	seed: SIGNED32;
 	cardPicts: Pictures.Picture;
 
 (*	-----------------------------	auxiliary procs	-----------------------------	*)
 
-PROCEDURE Random*(range: LONGINT): LONGINT;
+PROCEDURE Random*(range: SIGNED32): SIGNED32;
 CONST a = 16807; m = 2147483647; q = m DIV a; r = m MOD a;
-VAR g: LONGINT;
+VAR g: SIGNED32;
 BEGIN
 	g:= a*(seed MOD q) - r*(seed DIV q);
 	IF g > 0 THEN seed:= g ELSE seed:= g + m END;
@@ -89,7 +89,7 @@ BEGIN
 END Random;
 
 PROCEDURE Shuffle*(tail: Card);
-VAR c: Card; i, r: INTEGER;
+VAR c: Card; i, r: SIGNED16;
 BEGIN
 	c:= tail.next; r:= 0;
 	WHILE c # tail DO c.visible:= FALSE; c:= c.next; INC(r) END;
@@ -103,9 +103,9 @@ BEGIN
 	END
 END Shuffle;
 
-PROCEDURE TrackMove*(VAR M: Oberon.InputMsg;  x, y: INTEGER; self: Stack; card: Card;
-																draw, fade: PROCEDURE (x, y: INTEGER; card: Card));
-VAR F: Display.Frame; keysum: SET; oX, oY, u, v: INTEGER;
+PROCEDURE TrackMove*(VAR M: Oberon.InputMsg;  x, y: SIGNED16; self: Stack; card: Card;
+																draw, fade: PROCEDURE (x, y: SIGNED16; card: Card));
+VAR F: Display.Frame; keysum: SET; oX, oY, u, v: SIGNED16;
 BEGIN
 	oX:= M.X; oY:= M.Y; keysum:= M.keys; draw(x, y, card);
 	REPEAT
@@ -128,9 +128,9 @@ END TrackMove;
 
 (*	-----------------------------	card stuff	-----------------------------	*)
 
-PROCEDURE DrawCard*(R: Display3.Mask; card: Card; x, y, w, h, bgNr: INTEGER);
+PROCEDURE DrawCard*(R: Display3.Mask; card: Card; x, y, w, h, bgNr: SIGNED16);
 (* x, y top left corner *)
-VAR px, py: INTEGER;
+VAR px, py: SIGNED16;
 BEGIN
 	y:= y-h;
 	IF  card.visible THEN px:= card.nr*CardW; py:= (5-card.suit)*CardH-h
@@ -139,7 +139,7 @@ BEGIN
 	Display3.Pict(R, cardPicts, px, py, w, h, x, y, Display.replace)
 END DrawCard;
 
-PROCEDURE NewCard*(suit, nr: INTEGER; visible: BOOLEAN): Card;
+PROCEDURE NewCard*(suit, nr: SIGNED16; visible: BOOLEAN): Card;
 VAR card: Card;
 BEGIN
 	NEW(card);
@@ -165,7 +165,7 @@ BEGIN
 END WriteCard;
 
 PROCEDURE ReadCard*(VAR R: Files.Rider; VAR card: Card);
-VAR suit, nr: INTEGER; vis: BOOLEAN;
+VAR suit, nr: SIGNED16; vis: BOOLEAN;
 BEGIN
 	Files.ReadInt(R, suit);
 	IF suit = -1 THEN card:= NIL
@@ -247,7 +247,7 @@ BEGIN
 	END
 END UndoMove;
 
-PROCEDURE DrawStack(S: Stack; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE DrawStack(S: Stack; M: Display3.Mask; x, y, w, h: SIGNED16);
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
 	Display3.ReplConst(M, backC, x, y, w, h, Display.replace);
@@ -296,7 +296,7 @@ BEGIN
 END CopyStack;
 
 PROCEDURE StackHandler*(S: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; S0: Stack; c: Card; R: Display3.Mask;
+VAR x, y, w, h: SIGNED16; S0: Stack; c: Card; R: Display3.Mask;
 BEGIN
 	WITH S: Stack DO
 		IF M IS Display.FrameMsg THEN

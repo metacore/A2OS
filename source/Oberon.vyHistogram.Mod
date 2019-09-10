@@ -51,24 +51,24 @@ TYPE
 	(*	tHistogram*= POINTER TO tHistogramDesc;
 	tHistogramDesc*= RECORD
 	(* histogram definition *)
-	offs,width,top: LONGREAL; (* offs<=x<top *)
-	bincount: ARRAY maxBins OF LONGINT; (* top:= offs+bincount*width *) (* bin:= ENTIER (x-offs/width) *)
-	toosmall,toolarge,nans:LONGINT (* special counters *)
+	offs,width,top: FLOAT64; (* offs<=x<top *)
+	bincount: ARRAY maxBins OF SIGNED32; (* top:= offs+bincount*width *) (* bin:= ENTIER (x-offs/width) *)
+	toosmall,toolarge,nans:SIGNED32 (* special counters *)
 
 	END;
 	*)
 	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
-		bins-: ARRAY maxBins+4096  OF LONGINT;  (* patch fof 0711 *)
-		selectBins-: ARRAY maxBins+4096  OF LONGINT;  (* patch fof 0711 *)
-		nrBins-: INTEGER;
-		maxBinHeight: LONGINT;
+		bins-: ARRAY maxBins+4096  OF SIGNED32;  (* patch fof 0711 *)
+		selectBins-: ARRAY maxBins+4096  OF SIGNED32;  (* patch fof 0711 *)
+		nrBins-: SIGNED16;
+		maxBinHeight: SIGNED32;
 		leftBound-, rightBound-, offset-: Real;   (* preset left border  , right border ,offset for bins*)
 		leftHist-, rightHist-, width-: Real;   (* used left and right border *)
 		adapting: BOOLEAN;   (* change left,right,width adaptive to new dataset,
 		for the moment this is a restriction on user interaction ONLY *)
 		respectBounds-: BOOLEAN;   (* if respectbounds then uleft = left, uright=right else use limits of dataset *)
-		toosmall-, toolarge-, nans-: LONGINT
+		toosmall-, toolarge-, nans-: SIGNED32
 	END;
 
 VAR
@@ -90,7 +90,7 @@ VAR
 	PROCEDURE SelectionActor( layer: vyPort.tLayer;  sel: vyBase.tVector;  x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real;
 												VAR somethingChanged: BOOLEAN );
 	(*vs 0.0a1	md  16.08.94 *)
-	VAR histogram: tLayer;  r: Real;  nrData, i: LONGINT;  new: BOOLEAN;
+	VAR histogram: tLayer;  r: Real;  nrData, i: SIGNED32;  new: BOOLEAN;
 	BEGIN
 		histogram := layer( tLayer );  nrData := histogram.x.nrData;
 		FOR i := 0 TO nrData - 1 DO
@@ -102,7 +102,7 @@ VAR
 	END SelectionActor;
 
 	PROCEDURE InstallBins( hist: tLayer );
-	VAR dataRec, sel: vyBase.tVector;  i: LONGINT;  bin: INTEGER;  r, x0, dx: Real;  max, min, maxh, minh: Real;  nans: LONGINT;
+	VAR dataRec, sel: vyBase.tVector;  i: SIGNED32;  bin: SIGNED16;  r, x0, dx: Real;  max, min, maxh, minh: Real;  nans: SIGNED32;
 	BEGIN
 		IF hist.x # NIL THEN
 			dataRec := hist.x;  vyTypes.VGetMinMax( dataRec, min, max, nans );  hist.nans := nans;
@@ -249,7 +249,7 @@ VAR
 	END PointInRight;
 
 	PROCEDURE PointInHistogram( x, y: Coordinate;  hist: tLayer ): BOOLEAN;
-	VAR x0, y0: Real;  min, max: Real;  nans: LONGINT;
+	VAR x0, y0: Real;  min, max: Real;  nans: SIGNED32;
 
 		PROCEDURE PointInRect( X, Y, X0, Y0, X1, Y1: Real ): BOOLEAN;
 		BEGIN
@@ -263,7 +263,7 @@ VAR
 
 	PROCEDURE Respond( hist: tLayer;  VAR event: vyEvents.EventMsg );
 	(*vs 0.0a1 *)  (* md  29.05.95 *)
-	VAR x, y: Coordinate;  x2d, y2d: Real;  pict: vyPort.Picture;  this: INTEGER;
+	VAR x, y: Coordinate;  x2d, y2d: Real;  pict: vyPort.Picture;  this: SIGNED16;
 	BEGIN
 		this := event.gesture;
 		IF (this # vyEvents.EvtLoc) & (this # vyEvents.EvtIdent) THEN RETURN END;
@@ -313,7 +313,7 @@ VAR
 	END Respond;
 
 	PROCEDURE Responsible( histogram: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF (event.gesture = vyEvents.EvtIdent) OR (event.gesture = vyEvents.EvtLoc) THEN
@@ -328,7 +328,7 @@ VAR
 	END Responsible;
 
 	PROCEDURE Consume( o: tLayer;  msg: Display.ConsumeMsg );
-	VAR v: vyBase.tVector;  minX, maxX: Real;  pict: vyPort.Picture;  nans: LONGINT;
+	VAR v: vyBase.tVector;  minX, maxX: Real;  pict: vyPort.Picture;  nans: SIGNED32;
 	BEGIN
 		pict := msg.dlink( vyPort.Picture );  v := vyBase.GetVFromObj( msg.obj );
 		IF v # NIL THEN vyBase.UnSubscribe( o.x, o );
@@ -372,7 +372,7 @@ VAR
 	END HandleAttributes;
 
 	PROCEDURE AdjustCoord( pict: vyPort.Picture;  obj: tLayer );
-	VAR minX, maxX: REAL;  nans: LONGINT;
+	VAR minX, maxX: FLOAT32;  nans: SIGNED32;
 	BEGIN
 		IF pict # NIL THEN
 			IF obj.x # NIL THEN
@@ -415,7 +415,7 @@ VAR
 	END HandleLinks;
 
 	PROCEDURE Store0( obj: tLayer;  VAR M: Objects.FileMsg );
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN
 		Gadgets.WriteRef( M.R, obj.lib, obj.x );
 		FOR i := 0 TO maxBins - 1 DO Files.WriteLInt( M.R, obj.bins[i] ) END;
@@ -436,7 +436,7 @@ VAR
 	END Store0;
 
 	PROCEDURE Load0( obj: tLayer;  VAR M: Objects.FileMsg );
-	VAR objsub: Objects.Object;  i: INTEGER;
+	VAR objsub: Objects.Object;  i: SIGNED16;
 	BEGIN
 		dlink := M.dlink;  Gadgets.ReadRef( M.R, obj.lib, objsub );
 		IF (objsub # NIL ) & (objsub IS vyBase.tVector) THEN obj.x := objsub( vyBase.tVector ) END;
@@ -460,7 +460,7 @@ VAR
 	END Load0;
 
 	PROCEDURE Handler*( obj: Objects.Object;  VAR msg: Objects.ObjMsg );   (*vs 0.0a1	md  20.07.94 *)
-	VAR minX, maxX: LONGREAL;  pict: vyPort.Picture;  nans: LONGINT;
+	VAR minX, maxX: FLOAT64;  pict: vyPort.Picture;  nans: SIGNED32;
 	BEGIN
 		WITH obj: tLayer DO
 			IF msg IS Display.DisplayMsg THEN
@@ -520,7 +520,7 @@ VAR
 	END Handler;
 
 	PROCEDURE Init*( F: tLayer;  data: Objects.Object );
-	VAR id: vyName.tNameArray;  min, max: Real;  nans: LONGINT;
+	VAR id: vyName.tNameArray;  min, max: Real;  nans: SIGNED32;
 	BEGIN
 		F.handle := Handler;  F.x := vyBase.GetVFromObj( data );  COPY( "histogram: ", id );
 		IF (F.x = NIL ) & (data # NIL ) THEN vyHostTexts.Note( vyHostTexts.cWarning, "vyHistogram: can't plot this data as a histogram: not the right type!" );  END;
@@ -536,7 +536,7 @@ VAR
 	END Init;
 
 	PROCEDURE ShowP*;
-	VAR data: Objects.Object;  minX, maxX: Real;  nans: LONGINT;
+	VAR data: Objects.Object;  minX, maxX: Real;  nans: SIGNED32;
 	BEGIN
 		data := vyBase.NextParObj();
 		WHILE data # NIL DO
@@ -553,7 +553,7 @@ VAR
 	END ShowP;
 
 	PROCEDURE ShowL*( list: vyLinks.Link );
-	VAR nans: LONGINT;  minX, maxX: Real;
+	VAR nans: SIGNED32;  minX, maxX: Real;
 	BEGIN
 		WHILE list # NIL DO
 			New;  Init( newlayer, list.obj );  vyTypes.VGetMinMax( newlayer.x, minX, maxX, nans );
@@ -567,7 +567,7 @@ VAR
 	END ShowL;
 
 	PROCEDURE ShowO*( obj: Objects.Object );
-	VAR nans: LONGINT;  minX, maxX: Real;
+	VAR nans: SIGNED32;  minX, maxX: Real;
 	BEGIN
 		New;  Init( newlayer, obj );  vyTypes.VGetMinMax( newlayer.x, minX, maxX, nans );
 		(*pict := vyPort.InsertNewCPicture (0, 0, 1, 1, vyDisplay2d.NewC2d ( minX-F.width, 0, maxX-minX+2*F.width, F.x.nrData/3));
@@ -612,13 +612,13 @@ NEW (newlayer); Init (newlayer, data);  Objects.NewObj := newlayer END New;*)
 		IF width > 0 THEN h.width := width END;
 	END DoSetOffsetWidth;
 
-	PROCEDURE DoSet*( h: tLayer;  left, right: Real;  nrCells: LONGINT );
+	PROCEDURE DoSet*( h: tLayer;  left, right: Real;  nrCells: SIGNED32 );
 	BEGIN
 		IF nrCells < maxBins THEN DoSetBounds( h, left, right );  DoSetOffsetWidth( h, left, (right - left) / nrCells );  END;
 	END DoSet;
 
 	PROCEDURE SetBounds*;
-	VAR sc: vyParser.Scanner;  left, right: REAL;  h: vyPort.tLayer;  hist: tLayer;
+	VAR sc: vyParser.Scanner;  left, right: FLOAT32;  h: vyPort.tLayer;  hist: tLayer;
 	BEGIN
 		NEW( sc );  vyParser.OpenParScanner( sc );
 		IF vyParser.ExpectReal( sc, left ) & vyParser.ExpectReal( sc, right ) THEN
@@ -628,7 +628,7 @@ NEW (newlayer); Init (newlayer, data);  Objects.NewObj := newlayer END New;*)
 	END SetBounds;
 
 	PROCEDURE SetOffsetWidth*;
-	VAR sc: vyParser.Scanner;  offset, width: REAL;  h: vyPort.tLayer;  hist: tLayer;
+	VAR sc: vyParser.Scanner;  offset, width: FLOAT32;  h: vyPort.tLayer;  hist: tLayer;
 	BEGIN
 		NEW( sc );  vyParser.OpenParScanner( sc );
 		IF vyParser.ExpectReal( sc, offset ) & vyParser.ExpectReal( sc, width ) THEN
@@ -639,7 +639,7 @@ NEW (newlayer); Init (newlayer, data);  Objects.NewObj := newlayer END New;*)
 	END SetOffsetWidth;
 
 	PROCEDURE SetBoundsAndCells*;
-	VAR sc: vyParser.Scanner;  left, right: REAL;  cells: LONGINT;  h: vyPort.tLayer;  hist: tLayer;
+	VAR sc: vyParser.Scanner;  left, right: FLOAT32;  cells: SIGNED32;  h: vyPort.tLayer;  hist: tLayer;
 	BEGIN
 		NEW( sc );  vyParser.OpenParScanner( sc );
 		IF vyParser.ExpectReal( sc, left ) & vyParser.ExpectReal( sc, right ) & vyParser.ExpectNumber( sc, cells ) THEN

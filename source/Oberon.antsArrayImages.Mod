@@ -73,7 +73,7 @@ TYPE
 	END FrameLinks;
 
 	PROCEDURE HandleFileMsg( obj: tObject;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  w, h, depth: LONGINT;  version: INTEGER;
+	VAR objsub: Objects.Object;  w, h, depth: SIGNED32;  version: SIGNED16;
 		(*! store Picts as GIF for color preserving or store colors *)
 	BEGIN
 		IF msg.id = Objects.load THEN
@@ -103,7 +103,7 @@ TYPE
 		END
 	END CheckDimensions;
 
-	PROCEDURE MinMax( x, min, max: INTEGER ): INTEGER;
+	PROCEDURE MinMax( x, min, max: SIGNED16 ): SIGNED16;
 	BEGIN
 		IF x < min THEN RETURN min
 		ELSIF x > max THEN RETURN max
@@ -112,7 +112,7 @@ TYPE
 	END MinMax;
 
 	PROCEDURE Sync*( obj: tObject );
-	VAR y, x: INTEGER;  A: antsArrayObjects.tINTEGERArray;  adr: LONGINT;  depth: INTEGER;
+	VAR y, x: SIGNED16;  A: antsArrayObjects.tINTEGERArray;  adr: SIGNED32;  depth: SIGNED16;
 	BEGIN
 		(* caution: Don't send any update messages, Sync is called while writing to double buffer *)
 		IF obj.A # NIL THEN
@@ -183,7 +183,7 @@ TYPE
 	END Gen;
 
 	PROCEDURE FromArray*( obj: tObject;  A: antsArrayObjects.tINTEGERObject );
-	VAR r, g, b: INTEGER;  i: LONGINT;  pal: Images.Palette;  fmt: Images.Format;
+	VAR r, g, b: SIGNED16;  i: SIGNED32;  pal: Images.Palette;  fmt: Images.Format;
 	BEGIN
 		obj.A := A;  obj.w := A.w;  obj.h := A.h;  obj.depth := A.depth;
 
@@ -207,8 +207,8 @@ TYPE
 		END
 	END New;
 
-	PROCEDURE DoToArray*( obj: tObject;  depth: LONGINT;  name: vyName.tNameArray );
-	VAR img: Images.Image;  pal: Images.Palette;  fmt: Images.Format;  x, y: INTEGER;  r, g, b, a: INTEGER;  pix: Images.Pixel;
+	PROCEDURE DoToArray*( obj: tObject;  depth: SIGNED32;  name: vyName.tNameArray );
+	VAR img: Images.Image;  pal: Images.Palette;  fmt: Images.Format;  x, y: SIGNED16;  r, g, b, a: SIGNED16;  pix: Images.Pixel;
 		ncm: vyColorPalettes.NewColMsg;
 	BEGIN
 		IF obj.A # NIL THEN aM.S( "overwriting existing ARRAY" ) END;
@@ -231,7 +231,7 @@ TYPE
 	END DoToArray;
 
 	PROCEDURE ToArray*;
-	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  from: vyBase.Object;  obj: tObject;  depth: LONGINT;
+	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  from: vyBase.Object;  obj: tObject;  depth: SIGNED32;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=NAME from=OBJ depth=INT ~# Convert Image to Array with <depth> greyvalues / colors." );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectObjectFromKeyword( l, "from", from ) &
@@ -256,7 +256,7 @@ TYPE
 			IF obj = NIL THEN
 				Gen;  obj := Objects.NewObj( tObject );  vyName.RegisterNamed( obj, name );  antsObjects.Register( obj )
 			END;
-			obj.img := picture;  obj.w := obj.img.width;  obj.h := obj.img.height;  obj.depth := MAX( LONGINT );
+			obj.img := picture;  obj.w := obj.img.width;  obj.h := obj.img.height;  obj.depth := MAX( SIGNED32 );
 			IF antsCommands.Find( "show" ) & (o1 = NIL ) THEN link := NIL;  vyLinks.InsertObj( link, obj );  vyBase.Show( link, 1, "antsViews" ) END;
 			vyBase.Update( obj )
 		END
@@ -269,7 +269,7 @@ TYPE
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectStringFromKeyword( l, "fname", fname ) THEN
 			Gen;  obj := Objects.NewObj( tObject );  antsToolbox.LoadImage( obj.img, fname, done );
 			IF done THEN
-				obj.w := obj.img.width;  obj.h := obj.img.height;  obj.depth := MAX( LONGINT );  vyName.RegisterNamed( obj, name );
+				obj.w := obj.img.width;  obj.h := obj.img.height;  obj.depth := MAX( SIGNED32 );  vyName.RegisterNamed( obj, name );
 				antsObjects.Register( obj );
 				IF antsCommands.FindKeyword( l, "show" ) THEN link := NIL;  vyLinks.InsertObj( link, obj );  vyBase.Show( link, 1, "antsViews" ) END
 			END

@@ -34,20 +34,20 @@ TYPE
 	(** Buffer for passing network packets to upper layer protocols *)
 	Buffer* = POINTER TO RECORD
 		data*: ARRAY MaxPacketSize OF CHAR;
-		ofs*: LONGINT; (** valid data starts at this offset *)
-		len*: LONGINT; (** length of valid data *)
-		l3ofs*: LONGINT; (** the layer 3 header starts at this offset *)
-		l4ofs*: LONGINT; (** the layer 4 header starts at this offset *)
+		ofs*: SIGNED32; (** valid data starts at this offset *)
+		len*: SIGNED32; (** length of valid data *)
+		l3ofs*: SIGNED32; (** the layer 3 header starts at this offset *)
+		l4ofs*: SIGNED32; (** the layer 4 header starts at this offset *)
 		src*: LinkAdr; (** link layer source address *)
 		calcChecksum*: SET; (** these checksums are already verified by the device *)
-		int*: LONGINT; (** used in TCP, UDP and ICMP, but can be used by any upper layer protocol *)
+		int*: SIGNED32; (** used in TCP, UDP and ICMP, but can be used by any upper layer protocol *)
 		set*: SET; (** used in TCP, but can be used by any upper layer protocol *)
 		next*, prev*: Buffer; (** for queueing the buffer *)
 	END;
 
 	ReceiverList = POINTER TO RECORD
 		next: ReceiverList;
-		type: LONGINT;
+		type: SIGNED32;
 		receiver: Receiver;
 	END;
 
@@ -66,12 +66,12 @@ TYPE
 	LinkDevice* = OBJECT (Plugins.Plugin)
 		VAR
 			(** pubic device properties *)
-			type-: LONGINT; (** LinkType: TypePointToPoint, TypeEthernet *)
+			type-: SIGNED32; (** LinkType: TypePointToPoint, TypeEthernet *)
 			local-: LinkAdr; (** local link address *)
 			broadcast-: LinkAdr; (** link address for sending a broadcast *)
-			mtu-: LONGINT; (** largest packet size in bytes *)
-			adrSize-: LONGINT; (** link address size in bytes *)
-			sendCount-, recvCount-: HUGEINT; (** number of bytes sent and received *)
+			mtu-: SIGNED32; (** largest packet size in bytes *)
+			adrSize-: SIGNED32; (** link address size in bytes *)
+			sendCount-, recvCount-: SIGNED64; (** number of bytes sent and received *)
 			calcChecksum-: SET; (** these checksums are calculated by the device hardware when sending. *)
 
 			recList: ReceiverList; (* receiver list *)
@@ -90,15 +90,15 @@ TYPE
 
 			(* timer and packet count for loopback bandwidth control *)
 			timer: Kernel.MilliTimer;
-			packetCount: LONGINT;
+			packetCount: SIGNED32;
 
 		(** Constructor - Initialize the driver and the device.
 			NOTE:
 			Is normally overridden by device driver. If so, this constructor has to be called at the beginning
 			of the overriding constructor!
 		*)
-		PROCEDURE &Constr*(type, mtu, adrSize: LONGINT);
-		VAR res: WORD;
+		PROCEDURE &Constr*(type, mtu, adrSize: SIGNED32);
+		VAR res: INTEGER;
 		BEGIN
 			ASSERT((mtu >= 0) & (mtu <= MaxPacketSize));
 			ASSERT((adrSize >= 0) & (adrSize <= MaxLinkAdrSize));
@@ -138,14 +138,14 @@ TYPE
 		(** Return the link status of the device.
 			This function has to be overridden by the device driver in order to provide this information.
 		*)
-		PROCEDURE Linked*(): LONGINT;
+		PROCEDURE Linked*(): SIGNED32;
 		BEGIN
 			RETURN LinkUnknown;
 		END Linked;
 
 		(** Send a packet. Called by its user. Can be called concurrently. *)
 
-		PROCEDURE Send*(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT; loopback: BOOLEAN);
+		PROCEDURE Send*(dst: LinkAdr; type: SIGNED32; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32; loopback: BOOLEAN);
 		VAR
 			sniffer: SendSnifferList;
 			discard: BOOLEAN; (* shall the packet be discarded? *)
@@ -172,14 +172,14 @@ TYPE
 		(** Do frame send operation. Must be overridden and implemented by device driver! *)
 		(** Must be able to handle concurrent calls. e.g. by declaring itself as EXCLUSIVE! *)
 
-		PROCEDURE DoSend*(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE DoSend*(dst: LinkAdr; type: SIGNED32; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32);
 		BEGIN
 			HALT(301); (* Abstract! *)
 		END DoSend;
 
 		(* Do internal loopback. Send packet directly to the receive queue. *)
 
-		PROCEDURE Loopback(dst: LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE Loopback(dst: LinkAdr; type: SIGNED32; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32);
 		VAR buf: Buffer;
 		BEGIN
 			IF packetCount >= MaxLoopbackPacketsPerMS THEN
@@ -217,7 +217,7 @@ TYPE
 		END Loopback;
 
 		(** Install a receiver for the given type. Only one receiver can be installed per type! *)
-		PROCEDURE InstallReceiver*(type: LONGINT; r: Receiver);
+		PROCEDURE InstallReceiver*(type: SIGNED32; r: Receiver);
 		VAR item: ReceiverList;
 		BEGIN {EXCLUSIVE}
 			(* can run concurrently with active body *)
@@ -240,7 +240,7 @@ TYPE
 		END InstallReceiver;
 
 		(** Remove the currently installed receiver for the given type. *)
-		PROCEDURE RemoveReceiver*(type: LONGINT);
+		PROCEDURE RemoveReceiver*(type: SIGNED32);
 		VAR item: ReceiverList;
 		BEGIN {EXCLUSIVE}
 			(* can run concurrently with active body *)
@@ -353,7 +353,7 @@ TYPE
 		END RemoveReceiveSniffer;
 
 		(** Queue buffer for upcall. Called from inside the LinkDevice object, normally from the interrupt handler. *)
-		PROCEDURE QueueBuffer*(buf: Buffer; type: LONGINT);
+		PROCEDURE QueueBuffer*(buf: Buffer; type: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			ASSERT(buf # NIL);
 			buf.int := type; (* use "int" field for type information *)
@@ -413,23 +413,23 @@ TYPE
 		The Receiver can do this by itself or delegate this job to other procedures or processes, wherever the
 		buffer is passed to. It has not necessarily to be returned within the receiver upcall.
 	*)
-	Receiver* = PROCEDURE {DELEGATE} (dev: LinkDevice; type: LONGINT; buffer: Buffer);
+	Receiver* = PROCEDURE {DELEGATE} (dev: LinkDevice; type: SIGNED32; buffer: Buffer);
 
 	(* Sniffer for sent packets. May modify type, headers and data. Return TRUE if packet shall be discarded. *)
 	(* Must be able to handle concurrent calls. e.g. by declaring itself as EXCLUSIVE. *)
-	SendSniffer* = PROCEDURE {DELEGATE} (dev: LinkDevice; VAR dst: LinkAdr; VAR type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; VAR h3len, h4len, dofs, dlen: LONGINT): BOOLEAN;
+	SendSniffer* = PROCEDURE {DELEGATE} (dev: LinkDevice; VAR dst: LinkAdr; VAR type: SIGNED32; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; VAR h3len, h4len, dofs, dlen: SIGNED32): BOOLEAN;
 
 	(* Sniffer for received packets. May modify type and buffer. Return TRUE if packet shall be discarded. *)
 	(* Will never be called concurrenty from the same LinkDevice. *)
-	ReceiveSniffer* = PROCEDURE {DELEGATE} (dev: LinkDevice; VAR type: LONGINT; buffer: Buffer): BOOLEAN;
+	ReceiveSniffer* = PROCEDURE {DELEGATE} (dev: LinkDevice; VAR type: SIGNED32; buffer: Buffer): BOOLEAN;
 
 (** Module variables *)
 
 VAR
 	registry*: Plugins.Registry;
 
-	nofBuf: LONGINT; (* number of buffers existing *)
-	nofFreeBuf: LONGINT; (* number of free buffers *)
+	nofBuf: SIGNED32; (* number of buffers existing *)
+	nofFreeBuf: SIGNED32; (* number of free buffers *)
 	freeBufList: Buffer; (* free buffer list *)
 
 (** Get a new buffer - return NIL if MaxNofBuffers is exceeded *)
@@ -472,7 +472,7 @@ END Finalize;
 
 (** Test whether the n bytes of buf1 and buf2 starting at ofs1 and ofs2 respectively are equal *)
 
-PROCEDURE Equal*(VAR buf1, buf2: ARRAY OF CHAR; ofs1, ofs2, n: LONGINT): BOOLEAN;
+PROCEDURE Equal*(VAR buf1, buf2: ARRAY OF CHAR; ofs1, ofs2, n: SIGNED32): BOOLEAN;
 BEGIN
 	WHILE (n > 0) & (buf1[ofs1] = buf2[ofs2]) DO INC(ofs1); INC(ofs2); DEC(n) END;
 	RETURN n <= 0
@@ -482,7 +482,7 @@ END Equal;
 
 (** Put a 32-bit host value into buf[ofs..ofs+3] *)
 
-PROCEDURE Put4*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD);
+PROCEDURE Put4*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: INTEGER);
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+val]
@@ -501,7 +501,7 @@ END Put4;
 
 (** Put a 16-bit host value into buf[ofs..ofs+1] *)
 
-PROCEDURE Put2*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD);
+PROCEDURE Put2*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: INTEGER);
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+val]
@@ -520,7 +520,7 @@ END Put2;
 
 (** Get a 32-bit host value from buf[ofs..ofs+3] *)
 
-PROCEDURE Get4*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD;
+PROCEDURE Get4*(CONST buf: ARRAY OF CHAR; ofs: SIZE): INTEGER;
 CODE
 #IF I386 THEN
 	MOV EBX, [EBP+ofs]
@@ -537,7 +537,7 @@ END Get4;
 
 (** Get a 16-bit host value from buf[ofs..ofs+1] *)
 
-PROCEDURE Get2*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD;
+PROCEDURE Get2*(CONST buf: ARRAY OF CHAR; ofs: SIZE): INTEGER;
 CODE
 #IF I386 THEN
 	MOV EBX, [EBP+ofs]
@@ -556,7 +556,7 @@ END Get2;
 
 (** Put a 32-bit host value into buf[ofs..ofs+3] in network byte order *)
 
-PROCEDURE PutNet4*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD);
+PROCEDURE PutNet4*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: INTEGER);
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+val]
@@ -581,7 +581,7 @@ END PutNet4;
 
 (** Put a 16-bit host value into buf[ofs..ofs+1] in network byte order *)
 
-PROCEDURE PutNet2*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: WORD);
+PROCEDURE PutNet2*(VAR buf: ARRAY OF CHAR; ofs: SIZE; val: INTEGER);
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+val]
@@ -602,7 +602,7 @@ END PutNet2;
 
 (** Get a 32-bit network value from buf[ofs..ofs+3] in host byte order *)
 
-PROCEDURE GetNet4*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD;
+PROCEDURE GetNet4*(CONST buf: ARRAY OF CHAR; ofs: SIZE): INTEGER;
 CODE
 #IF I386 THEN
 	MOV EBX, [EBP+ofs]
@@ -625,7 +625,7 @@ END GetNet4;
 
 (** Get a 16-bit network value from buf[ofs..ofs+1] in host byte order *)
 
-PROCEDURE GetNet2*(CONST buf: ARRAY OF CHAR; ofs: SIZE): WORD;
+PROCEDURE GetNet2*(CONST buf: ARRAY OF CHAR; ofs: SIZE): INTEGER;
 CODE
 #IF I386 THEN
 	MOV EBX, [EBP+ofs]
@@ -734,7 +734,7 @@ Example:
 	CONST
 		Type = 05555H;	(* link-layer protocol type *)
 	VAR
-		dlen: LONGINT;
+		dlen: SIGNED32;
 		l3hdr: ARRAY HdrLen OF CHAR;
 		data: ARRAY MaxDataLen OF CHAR;
 
@@ -747,7 +747,7 @@ Example:
 Packet receiving is driven by the driver object. A receiver interested in a specific type of packet registers itself using the InstallReceiver method. The type parameter specifies the link-layer protocol type, which must be unique. There can only be one receiver installed per type. When a packet arrives, the driver object looks at the protocol type and calls the specific receiver (if any is installed for this type).
 
 Example:
-	PROCEDURE Receiver(dev: Network.LinkDevice; type: LONGINT; buffer: Network.Buffer);
+	PROCEDURE Receiver(dev: Network.LinkDevice; type: SIGNED32; buffer: Network.Buffer);
 	BEGIN
 		ASSERT(type = Type);
 		CheckAdr(buffer.src); (* some link layer source address checks *)

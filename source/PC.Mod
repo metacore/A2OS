@@ -58,7 +58,7 @@ BEGIN
 END OutMsg;
 
 PROCEDURE Configure(CONST base, dest: ARRAY OF CHAR;  errorIsFatal: BOOLEAN);
-VAR name: ARRAY 32 OF CHAR;  i, j: LONGINT;  p: PROCEDURE;
+VAR name: ARRAY 32 OF CHAR;  i, j: SIGNED32;  p: PROCEDURE;
 BEGIN
 	i := 0;
 	WHILE (base[i] # 0X) DO  name[i] := base[i]; INC(i)  END;
@@ -87,7 +87,7 @@ BEGIN
 END LoadBackEnd;
 
 PROCEDURE GetOptions(r: Streams.Reader; VAR opts: ARRAY OF CHAR);
-VAR i: LONGINT; ch: CHAR;
+VAR i: SIGNED32; ch: CHAR;
 BEGIN
 	i := 0;
 	WHILE opts[i] # 0X DO INC(i) END;
@@ -108,7 +108,7 @@ END GetOptions;
 
 (** Extract input file prefix from global options string, exported for PC.Mod *)
 PROCEDURE GetSourcePrefix*(CONST options : OptionString; VAR prefix : ARRAY OF CHAR);
-VAR ch, lastCh : CHAR; i : LONGINT;
+VAR ch, lastCh : CHAR; i : SIGNED32;
 BEGIN
 	prefix := "";
 	i := 0; ch := 0X;
@@ -124,8 +124,8 @@ BEGIN
 	END;
 END GetSourcePrefix;
 
-PROCEDURE SubString(CONST options : ARRAY OF CHAR; VAR from : LONGINT; VAR str: ARRAY OF CHAR);
-VAR ch: CHAR;  j: LONGINT;
+PROCEDURE SubString(CONST options : ARRAY OF CHAR; VAR from : SIGNED32; VAR str: ARRAY OF CHAR);
+VAR ch: CHAR;  j: SIGNED32;
 BEGIN
 	ASSERT(from < LEN(options));
 	ch := options[from]; INC(from); j := 0;
@@ -136,7 +136,7 @@ BEGIN
 END SubString;
 
 PROCEDURE ParseOptions(CONST options: ARRAY OF CHAR; VAR prefix, extension, dest, dump, objF: ARRAY OF CHAR;  VAR cOpt, pOpt: SET);
-VAR  i: LONGINT;  ch: CHAR; ignore : OptionString;
+VAR  i: SIGNED32;  ch: CHAR; ignore : OptionString;
 BEGIN
 	(* default options *)
 	cOpt := DefCodeOpt;
@@ -186,15 +186,15 @@ BEGIN
 	END
 END EmitScope;
 
-PROCEDURE Module*(scanner: PCS.Scanner; CONST source, options: ARRAY OF CHAR; breakpc: LONGINT; log: Streams.Writer;
+PROCEDURE Module*(scanner: PCS.Scanner; CONST source, options: ARRAY OF CHAR; breakpc: SIGNED32; log: Streams.Writer;
 	diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 VAR
 	scope: PCT.ModScope; dest, objF: ARRAY 16 OF CHAR;
-	size: LONGINT; R: PCM.Rider; new, extend, nofile, skip: BOOLEAN;
-	version: CHAR; res: WORD;
+	size: SIGNED32; R: PCM.Rider; new, extend, nofile, skip: BOOLEAN;
+	version: CHAR; res: INTEGER;
 	str: StringBuf;
 	msg: ARRAY 32 OF CHAR;
-	finished: BOOLEAN; copyscanner: PCS.Scanner; sym: SHORTINT;
+	finished: BOOLEAN; copyscanner: PCS.Scanner; sym: SIGNED8;
 BEGIN {EXCLUSIVE}
 	PCM.Init (source, log, diagnostics); (* also resets PCM.count!! *)
 	ParseOptions(options, PCM.prefix, PCM.suffix, dest, PCM.dump, objF, PCM.codeOptions, PCM.parserOptions);
@@ -205,7 +205,7 @@ BEGIN {EXCLUSIVE}
 	nofile := PCM.NoFiles IN PCM.parserOptions;
 	skip := PCM.SkipOldSFImport IN PCM.parserOptions;
 	PCM.bigEndian := PCM.BigEndian IN PCM.parserOptions;
-	PCM.breakpc := MAX(LONGINT);
+	PCM.breakpc := MAX(SIGNED32);
 	IF PCM.Breakpoint IN PCM.parserOptions THEN
 		IF breakpc = NoBreakPC THEN
 			PCM.LogWLn; PCM.LogWStr("No PC Selected");
@@ -224,7 +224,7 @@ BEGIN {EXCLUSIVE}
 	nofile := PCM.NoFiles IN PCM.parserOptions;
 	skip := PCM.SkipOldSFImport IN PCM.parserOptions;
 	PCM.bigEndian := PCM.BigEndian IN PCM.parserOptions;
-	PCM.breakpc := MAX(LONGINT);
+	PCM.breakpc := MAX(SIGNED32);
 	IF PCM.Breakpoint IN PCM.parserOptions THEN
 		IF breakpc = NoBreakPC THEN
 			PCM.LogWLn; PCM.LogWStr("No PC Selected");
@@ -289,7 +289,7 @@ END Module;
 
 (** Compile code contained in t, beginning at position pos *)
 
-PROCEDURE CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos, pc: LONGINT; CONST opt: ARRAY OF CHAR; log: Streams.Writer;
+PROCEDURE CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos, pc: SIGNED32; CONST opt: ARRAY OF CHAR; log: Streams.Writer;
 diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 BEGIN
 	IF t = NIL THEN
@@ -299,9 +299,9 @@ BEGIN
 	Module(PCS.InitWithText(t, pos), source, opt, pc, log, diagnostics, error);
 END CompileText;
 
-PROCEDURE CompileInterface(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc,opt: ARRAY OF CHAR; log: Streams.Writer;
+PROCEDURE CompileInterface(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; CONST pc,opt: ARRAY OF CHAR; log: Streams.Writer;
 diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
-VAR pcNum: LONGINT;
+VAR pcNum: SIGNED32;
 BEGIN
 	Strings.StrToInt(pc, pcNum);
 	CompileText(t,source,pos,pcNum, opt,log, diagnostics, error);
@@ -310,10 +310,10 @@ END CompileInterface;
 
 (** Compile file *)
 
-PROCEDURE CompileFile*(CONST name, opt: ARRAY OF CHAR; pc: LONGINT; log: Streams.Writer;
+PROCEDURE CompileFile*(CONST name, opt: ARRAY OF CHAR; pc: SIGNED32; log: Streams.Writer;
 	diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 VAR
-	atu: Texts.Text; format: LONGINT; res: WORD;
+	atu: Texts.Text; format: SIGNED32; res: INTEGER;
 BEGIN
 	NEW(atu);
 	TextUtilities.LoadAuto(atu, name, format, res);
@@ -327,7 +327,7 @@ END CompileFile;
 
 (** Compile ascii file *)
 
-PROCEDURE CompileAsciiFile*(CONST name, opt: ARRAY OF CHAR; pc: LONGINT; log: Streams.Writer;
+PROCEDURE CompileAsciiFile*(CONST name, opt: ARRAY OF CHAR; pc: SIGNED32; log: Streams.Writer;
 	diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 VAR
 	f: Files.File; r: Files.Reader;
@@ -347,7 +347,7 @@ PROCEDURE Compile*(context : Commands.Context);
 VAR
 	globalOpt, localOpt: OptionString;
 	fullname, prefix, filename: ARRAY 256 OF CHAR;
-	count: LONGINT;
+	count: SIGNED32;
 	error: BOOLEAN;
 	diagnostics : Diagnostics.DiagnosticsList;
 BEGIN
@@ -365,7 +365,7 @@ BEGIN
 			GetOptions(context.arg, localOpt);
 			COPY(prefix, fullname); Strings.Append(fullname, filename);
 			diagnostics.Reset;
-			CompileFile(fullname, localOpt, MAX(LONGINT), context.out, diagnostics, error);
+			CompileFile(fullname, localOpt, MAX(SIGNED32), context.out, diagnostics, error);
 			diagnostics.ToStream(context.out, Diagnostics.All);
 			PCM.LogFlush;
 			IF count MOD 32 = 0 THEN PCT.InitDB(PCT.database) END;
@@ -389,10 +389,10 @@ PROCEDURE InitErrMsg*; (** ~ *)
 VAR
 	f: Files.File; scanner: XMLScanner.Scanner; parser: XMLParser.Parser; errors: XML.Document;
 	e: XML.Element; enum, msgEnum: XMLObjects.Enumerator; p: ANY;
-	code: LONGINT; i: SIZE; str: XML.String;
+	code: SIGNED32; i: SIZE; str: XML.String;
 	dynStr: DynamicStrings.DynamicString;
 	r : Files.Reader;
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	Configuration.Get("Paco.ErrorMessages", ErrorFile, res);
 	IF (res # Configuration.Ok) THEN ErrorFile := DefaultErrorFile END;

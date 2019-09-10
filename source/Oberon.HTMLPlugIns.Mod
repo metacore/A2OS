@@ -27,7 +27,7 @@ MODULE HTMLPlugIns IN Oberon; (** portable *)	(* ejz  *)
 
 	VAR
 		cache: StreamList; createF: BOOLEAN;
-		context: Objects.Object; rec: LONGINT;
+		context: Objects.Object; rec: SIGNED32;
 
 	PROCEDURE Error(plugin: PlugIns.PlugIn; CONST msg1, msg2: ARRAY OF CHAR);
 		VAR W: Texts.Writer;
@@ -40,7 +40,7 @@ MODULE HTMLPlugIns IN Oberon; (** portable *)	(* ejz  *)
 	PROCEDURE GetStream(plugin: PlugIns.PlugIn; url: ARRAY OF CHAR): PlugIns.Stream;
 		VAR
 			F: Files.File; M: HyperDocs.FetchMsg; s: HyperDocs.LinkScheme;
-			stream: PlugIns.Stream; key, tkey: LONGINT;
+			stream: PlugIns.Stream; key, tkey: SIGNED32;
 	BEGIN
 		NEW(stream); PlugIns.InitStream(stream);
 		stream.state := PlugIns.NetworkErr;
@@ -75,7 +75,7 @@ MODULE HTMLPlugIns IN Oberon; (** portable *)	(* ejz  *)
 		Gadgets.Update(me(Notifier).stream)
 	END DoNotify;
 
-	PROCEDURE GetURL0(plugin: PlugIns.PlugIn; CONST url: ARRAY OF CHAR): LONGINT;
+	PROCEDURE GetURL0(plugin: PlugIns.PlugIn; CONST url: ARRAY OF CHAR): SIGNED32;
 		VAR notify: Notifier;
 	BEGIN
 		NEW(notify); notify.stream := GetStream(plugin, url);
@@ -84,7 +84,7 @@ MODULE HTMLPlugIns IN Oberon; (** portable *)	(* ejz  *)
 		RETURN notify.stream.state
 	END GetURL0;
 
-	PROCEDURE GetURL(plugin: PlugIns.PlugIn; CONST url: ARRAY OF CHAR): LONGINT;
+	PROCEDURE GetURL(plugin: PlugIns.PlugIn; CONST url: ARRAY OF CHAR): SIGNED32;
 		VAR stream: PlugIns.Stream; sl: StreamList;
 	BEGIN
 		sl := cache;
@@ -217,7 +217,7 @@ MODULE HTMLPlugIns IN Oberon; (** portable *)	(* ejz  *)
 	END InitView;
 
 	PROCEDURE EMBED(VAR S: HTMLDocs.Scanner; on: BOOLEAN);
-		VAR V: View; plugin: PlugIns.PlugIn; url: PlugIns.URLStr; attr : ARRAY 64 OF CHAR; i: LONGINT;
+		VAR V: View; plugin: PlugIns.PlugIn; url: PlugIns.URLStr; attr : ARRAY 64 OF CHAR; i: SIGNED32;
 	BEGIN
 		IF on THEN
 			NEW(V); NEW(plugin);
@@ -239,7 +239,7 @@ MODULE HTMLPlugIns IN Oberon; (** portable *)	(* ejz  *)
 	END EMBED;
 
 	PROCEDURE ClearCache;
-		VAR res: INTEGER;
+		VAR res: SIGNED16;
 	BEGIN
 		WHILE cache # NIL DO
 			IF ~Strings.Prefix("file", cache.stream.url) THEN
@@ -266,8 +266,8 @@ MODULE HTMLPlugIns IN Oberon; (** portable *)	(* ejz  *)
 	PROCEDURE install(VAR V: View; create: BOOLEAN): BOOLEAN;
 		VAR
 			url: PlugIns.URLStr; plugin: PlugIns.PlugIn; s: HyperDocs.LinkScheme;
-			label: ARRAY 64 OF CHAR; port: INTEGER; F: Files.File;
-			i: LONGINT; R: Texts.Reader; ch, end: CHAR;
+			label: ARRAY 64 OF CHAR; port: SIGNED16; F: Files.File;
+			i: SIGNED32; R: Texts.Reader; ch, end: CHAR;
 	BEGIN
 		Texts.OpenReader(R, Oberon.Par.text, Oberon.Par.pos);
 		Texts.Read(R, ch);

@@ -54,9 +54,9 @@ TYPE
 			rx: Streams.Reader;	(* input channel *)
 			tx: Streams.Writer;	(* output channel *)
 			crc: BOOLEAN;	(* TRUE iff in CRC mode, FALSE iff in checksum mode *)
-			packetSize: LONGINT;	(* size of a packet, including header & checksum/CRC. Initialized by SendInit/ReceiveInit *)
-			retries: LONGINT;	(* # of retries *)
-			blockIndex: LONGINT;	(* # of block *)
+			packetSize: SIGNED32;	(* size of a packet, including header & checksum/CRC. Initialized by SendInit/ReceiveInit *)
+			retries: SIGNED32;	(* # of retries *)
+			blockIndex: SIGNED32;	(* # of block *)
 			msg: ARRAY 256 OF CHAR;	(* error message *)
 
 		PROCEDURE &InitXModem*(rx: Streams.Reader; tx: Streams.Writer);
@@ -64,7 +64,7 @@ TYPE
 			SELF.rx := rx; SELF.tx := tx
 		END InitXModem;
 
-		PROCEDURE Get(r: Streams.Reader; timeout: LONGINT; VAR ch: CHAR): LONGINT;
+		PROCEDURE Get(r: Streams.Reader; timeout: SIGNED32; VAR ch: CHAR): SIGNED32;
 		VAR milliTimer : Kernel.MilliTimer;
 		BEGIN
 			IF (r.Available() = 0) THEN
@@ -79,7 +79,7 @@ TYPE
 			RETURN Ok
 		END Get;
 
-		PROCEDURE Peek(r: Streams.Reader; timeout: LONGINT; VAR ch: CHAR): LONGINT;
+		PROCEDURE Peek(r: Streams.Reader; timeout: SIGNED32; VAR ch: CHAR): SIGNED32;
 		VAR milliTimer : Kernel.MilliTimer;
 		BEGIN
 			IF (r.Available() = 0) THEN
@@ -100,23 +100,23 @@ TYPE
 			REPEAT UNTIL Get(r, PurgeTimeout, ch) = Timeout
 		END Purge;
 
-		PROCEDURE CalcCheckSum(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT): CHAR;
-		VAR i, chksum: LONGINT;
+		PROCEDURE CalcCheckSum(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32): CHAR;
+		VAR i, chksum: SIGNED32;
 		BEGIN
 			chksum := 0;
 			FOR i := 0 TO len-1 DO chksum := chksum + ORD(buffer[ofs+i]) END;
 			RETURN CHR(chksum MOD 100H)
 		END CalcCheckSum;
 
-		PROCEDURE CalcCRC(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT;
-		VAR i, k, crc: LONGINT;
+		PROCEDURE CalcCRC(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32): SIGNED32;
+		VAR i, k, crc: SIGNED32;
 		BEGIN
 			crc := 0;
 			FOR i := 0 TO len-1 DO
-				crc := LONGINT(SET(crc) / SET(ORD(buffer[ofs+i])*100H));
+				crc := SIGNED32(SET(crc) / SET(ORD(buffer[ofs+i])*100H));
 				FOR k := 0 TO 7 DO
 					IF (15 IN SET(crc)) THEN
-						crc := LONGINT(SET(crc*2) /SET(1021H))
+						crc := SIGNED32(SET(crc*2) /SET(1021H))
 					ELSE
 						crc := crc*2
 					END
@@ -143,8 +143,8 @@ TYPE
 			blockIndex := 1; retries := 0; resend := FALSE
 		END Init;
 
-		PROCEDURE GetData(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT);
-		VAR i: LONGINT;
+		PROCEDURE GetData(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32);
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (data.Available() > 0) & (i < len) DO
@@ -153,7 +153,7 @@ TYPE
 			WHILE (i < len) DO buffer[ofs+i] := 0X; INC(i) END
 		END GetData;
 
-		PROCEDURE SetHeader(VAR buf: ARRAY OF CHAR; index: LONGINT);
+		PROCEDURE SetHeader(VAR buf: ARRAY OF CHAR; index: SIGNED32);
 		BEGIN
 			ASSERT(index < 100H);
 			buf[0] := SOH;
@@ -162,7 +162,7 @@ TYPE
 		END SetHeader;
 
 		PROCEDURE SendInit;
-		VAR res: WORD; ch: CHAR;
+		VAR res: INTEGER; ch: CHAR;
 		BEGIN
 			IF DebugS THEN
 				KernelLog.String("SendInit:"); KernelLog.Ln; KernelLog.String("  waiting for 'C'/NAK...")
@@ -192,7 +192,7 @@ TYPE
 		END SendInit;
 
 		PROCEDURE SendData;
-		VAR c, res: LONGINT; ch: CHAR;
+		VAR c, res: SIGNED32; ch: CHAR;
 		BEGIN
 			IF DebugS THEN KernelLog.String("SendData:"); KernelLog.Ln END;
 			(* send block *)
@@ -235,7 +235,7 @@ TYPE
 		END SendData;
 
 		PROCEDURE SendEOT;
-		VAR res: WORD; ch: CHAR;
+		VAR res: INTEGER; ch: CHAR;
 		BEGIN
 			(* send EOT *)
 			tx.Char(EOT); tx.Update;
@@ -255,7 +255,7 @@ TYPE
 		END SendEOT;
 
 		(* completely receiver-driven *)
-		PROCEDURE Send*(): LONGINT;
+		PROCEDURE Send*(): SIGNED32;
 		BEGIN
 			WHILE (state # Abort) & (state # Exit) & (retries < MaxRetries) DO
 				CASE state OF
@@ -273,7 +273,7 @@ TYPE
 	XMReceiver* = OBJECT(XModem)
 		VAR
 			data: Streams.Writer;
-			crcThreshold: LONGINT;
+			crcThreshold: SIGNED32;
 
 		PROCEDURE &Init*(data: Streams.Writer; rx: Streams.Reader; tx: Streams.Writer);
 		BEGIN
@@ -281,13 +281,13 @@ TYPE
 			blockIndex := 1; retries := 0; crcThreshold := 0
 		END Init;
 
-		PROCEDURE PutData(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT);
+		PROCEDURE PutData(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32);
 		BEGIN
 			data.Bytes(buffer, ofs, len)
 		END PutData;
 
-		PROCEDURE GetHeader(VAR buf: ARRAY OF CHAR): LONGINT;
-		VAR index: LONGINT;
+		PROCEDURE GetHeader(VAR buf: ARRAY OF CHAR): SIGNED32;
+		VAR index: SIGNED32;
 		BEGIN
 			IF (buf[0] = SOH) THEN
 				index := ORD(buf[1]);
@@ -299,7 +299,7 @@ TYPE
 		END GetHeader;
 
 		PROCEDURE ReceiveInitCRC;
-		VAR res: WORD; ch: CHAR;
+		VAR res: INTEGER; ch: CHAR;
 		BEGIN
 			IF DebugR THEN
 				KernelLog.String("ReceiveInitCRC:"); KernelLog.Ln; KernelLog.String("  sending 'C'..."); KernelLog.Ln
@@ -334,7 +334,7 @@ TYPE
 		END ReceiveInitCRC;
 
 		PROCEDURE ReceiveInitChecksum;
-		VAR res: WORD; ch: CHAR;
+		VAR res: INTEGER; ch: CHAR;
 		BEGIN
 			packetSize := PacketSizeChksum;
 			(* send NAK *)
@@ -351,7 +351,7 @@ TYPE
 		END ReceiveInitChecksum;
 
 		PROCEDURE ReceiveData;
-		VAR buffer: POINTER TO ARRAY OF CHAR; ch: CHAR; res, i, idx, c, cc: LONGINT; ok: BOOLEAN;
+		VAR buffer: POINTER TO ARRAY OF CHAR; ch: CHAR; res, i, idx, c, cc: SIGNED32; ok: BOOLEAN;
 		BEGIN
 			NEW(buffer,packetSize);
 			IF DebugR THEN
@@ -436,7 +436,7 @@ TYPE
 			END
 		END ReceiveData;
 
-		PROCEDURE Receive*(): LONGINT;
+		PROCEDURE Receive*(): SIGNED32;
 		BEGIN
 			Purge(rx);
 			WHILE (state # Abort) & (state # Exit) & (retries < MaxRetries) DO

@@ -33,8 +33,8 @@ MODULE PlugIns IN Oberon; (** portable *)	(* ejz  *)
 			streams: StreamList; err: BOOLEAN
 		END;
 
-		GetURLProc* = PROCEDURE (plugin: PlugIn; CONST url: ARRAY OF CHAR): LONGINT;
-		PostURLProc* = PROCEDURE (plugin: PlugIn; CONST urlDest, urlSrc: ARRAY OF CHAR): LONGINT;
+		GetURLProc* = PROCEDURE (plugin: PlugIn; CONST url: ARRAY OF CHAR): SIGNED32;
+		PostURLProc* = PROCEDURE (plugin: PlugIn; CONST urlDest, urlSrc: ARRAY OF CHAR): SIGNED32;
 		ErrorProc* = PROCEDURE (plugin: PlugIn; CONST msg1, msg2: ARRAY OF CHAR);
 
 		(** Stream objects are created by calls to getURL. When ever the state of a stream
@@ -42,7 +42,7 @@ MODULE PlugIns IN Oberon; (** portable *)	(* ejz  *)
 		Stream* = POINTER TO RECORD (Objects.Object)
 			file*: FileDir.FileName;	(** file name of the local copy *)
 			url*: URLStr;	(** the requested URL *)
-			state*: LONGINT	(** Done, NetworkErr, UserBreak, OtherError, Transfering *)
+			state*: SIGNED32	(** Done, NetworkErr, UserBreak, OtherError, Transfering *)
 		END;
 
 	PROCEDURE Error(plugin: PlugIn; CONST msg1, msg2: ARRAY OF CHAR);
@@ -68,7 +68,7 @@ MODULE PlugIns IN Oberon; (** portable *)	(* ejz  *)
 
 	(** Determines whether two URLs are equal. *)
 	PROCEDURE SameURL*(CONST urlA, urlB: ARRAY OF CHAR): BOOLEAN;
-		VAR a, b: LONGINT;
+		VAR a, b: SIGNED32;
 	BEGIN
 (* replace this by CAPCompare with special handling for
 	file urls (no file: prefix no drive letter)
@@ -98,7 +98,7 @@ MODULE PlugIns IN Oberon; (** portable *)	(* ejz  *)
 
 	(** Completes the relative URL url using plugin.base.url. *)
 	PROCEDURE MakeFullURL*(plugin: PlugIn; VAR url: ARRAY OF CHAR);
-		VAR full: URLStr; i, j, k: LONGINT;
+		VAR full: URLStr; i, j, k: SIGNED32;
 	BEGIN
 		IF (plugin = NIL) OR (plugin.base = NIL) OR (plugin.base.url = "") THEN
 			RETURN
@@ -192,7 +192,7 @@ MODULE PlugIns IN Oberon; (** portable *)	(* ejz  *)
 	END Requested;
 
 	(** Add a URL to the plugin installers list of required URLs. *)
-	PROCEDURE RequestURL*(plugin: Objects.Object; CONST url: ARRAY OF CHAR): LONGINT;
+	PROCEDURE RequestURL*(plugin: Objects.Object; CONST url: ARRAY OF CHAR): SIGNED32;
 		VAR streaml: StreamList; full: URLStr;
 	BEGIN
 		WITH plugin: PlugIn DO
@@ -213,7 +213,7 @@ MODULE PlugIns IN Oberon; (** portable *)	(* ejz  *)
 	PROCEDURE ProcessStream(plugin: PlugIn; stream: Stream);
 		VAR
 			obj: Objects.Object; str: FileDir.FileName; streaml: StreamList;
-			M: Objects.AttrMsg; res: WORD;
+			M: Objects.AttrMsg; res: INTEGER;
 	BEGIN
 		streaml := FindStream(plugin, stream.url);
 		IF streaml # NIL THEN

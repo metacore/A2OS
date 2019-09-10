@@ -46,11 +46,11 @@ CONST
 	cMedianMonotone* = 0;  cMeanMonotone* = 1;  cHampelMonotone* = 2;  cSaegezahnMonotone* = 3;  cHuberMonotone* = 4;
 
 VAR
-	globalStat: antsBellman.Statistic;  globalGamma: LONGREAL;
+	globalStat: antsBellman.Statistic;  globalGamma: FLOAT64;
 
-	PROCEDURE DoSetMonotone*( monotone: ARRAY OF CHAR ): INTEGER;
+	PROCEDURE DoSetMonotone*( monotone: ARRAY OF CHAR ): SIGNED16;
 
-	VAR type: INTEGER;
+	VAR type: SIGNED16;
 
 	BEGIN
 		IF monotone = "MeanMonotone" THEN type := cMedianMonotone;
@@ -64,9 +64,9 @@ VAR
 		RETURN type;
 	END DoSetMonotone;
 
-	PROCEDURE DoSetNoise*( noise: ARRAY OF CHAR ): INTEGER;
+	PROCEDURE DoSetNoise*( noise: ARRAY OF CHAR ): SIGNED16;
 
-	VAR type: INTEGER;
+	VAR type: SIGNED16;
 
 	BEGIN
 		IF noise = "Gauss" THEN type := cGauss;
@@ -79,9 +79,9 @@ VAR
 		RETURN type;
 	END DoSetNoise;
 
-	PROCEDURE DoSetReko*( reko: ARRAY OF CHAR ): INTEGER;
+	PROCEDURE DoSetReko*( reko: ARRAY OF CHAR ): SIGNED16;
 
-	VAR type: INTEGER;
+	VAR type: SIGNED16;
 
 	BEGIN
 		IF reko = "Mean" THEN type := cMean;
@@ -96,9 +96,9 @@ VAR
 		RETURN type;
 	END DoSetReko;
 
-	PROCEDURE DoSetGamma*( gamma: ARRAY OF CHAR ): INTEGER;
+	PROCEDURE DoSetGamma*( gamma: ARRAY OF CHAR ): SIGNED16;
 
-	VAR type: INTEGER;
+	VAR type: SIGNED16;
 
 	BEGIN
 		IF gamma = "AIC" THEN type := cAIC;
@@ -123,7 +123,7 @@ VAR
 	PROCEDURE DoReadData*( VAR set: antsPottsSimDataStructure.SetChain;  dataChainname, file: ARRAY OF CHAR );
 	(* Einlesen von Daten. Monotones werden mitberechnet. *)
 
-	VAR R: antsReadWrite.Rider;  rows, cols, i, k: LONGINT;
+	VAR R: antsReadWrite.Rider;  rows, cols, i, k: SIGNED32;
 		dataname, datacounter: ARRAY 1024 OF CHAR;
 		dataarray, diffs, eN, meanM, medianM, hampelM, saegezahnM, huberM: antsArrays.X1d;  ok: BOOLEAN;  datavec: vyLongrealVec.tVector;
 
@@ -152,7 +152,7 @@ VAR
 	PROCEDURE DoMonotone*( x: antsArrays.X1d;  VAR y: antsArrays.X1d;  monotonetype: ARRAY OF CHAR );
 	(* Berechnung der Monotones. *)
 
-	VAR statistic: antsPotts1DSurvey.StatisticObj;  matrix: antsArrays.X2d;  type, len: LONGINT;  vec1: vyBase.Object;
+	VAR statistic: antsPotts1DSurvey.StatisticObj;  matrix: antsArrays.X2d;  type, len: SIGNED32;  vec1: vyBase.Object;
 
 	BEGIN
 		type := DoSetMonotone( monotonetype );  len := LEN( x );  vec1 := vyLongrealVec.New( len );
@@ -162,10 +162,10 @@ VAR
 		antsPottsMonotone.LastMonotone( matrix, antsPottsMonotone.cDecr, y );
 	END DoMonotone;
 
-	PROCEDURE CalcDiffAndEN*( x: antsArrays.X1d;  y: antsArrays.X1d;  VAR diff: LONGREAL;  VAR eN: LONGREAL );
+	PROCEDURE CalcDiffAndEN*( x: antsArrays.X1d;  y: antsArrays.X1d;  VAR diff: FLOAT64;  VAR eN: FLOAT64 );
 	(* Berechnet die Differenz zwischen dem grössten und kleinsten Element. Estimated Noise wird mit dem MAD geschätzt. *)
 
-	VAR dummy, i: LONGINT;  z: antsArrays.X1d;
+	VAR dummy, i: SIGNED32;  z: antsArrays.X1d;
 
 	BEGIN
 		diff := Max( y, dummy ) - Min( y, dummy );  NEW( z, LEN( x ) );
@@ -175,10 +175,10 @@ VAR
 		eN := Mad( z );
 	END CalcDiffAndEN;
 
-	PROCEDURE Mad( x: antsArrays.X1d ): LONGREAL;
+	PROCEDURE Mad( x: antsArrays.X1d ): FLOAT64;
 	(* Berechnet den MAD. *)
 
-	VAR len, i: LONGINT;  y: antsArrays.X1d;  mad: LONGREAL;
+	VAR len, i: SIGNED32;  y: antsArrays.X1d;  mad: FLOAT64;
 
 	BEGIN
 		len := LEN( x );  NEW( y, len - 1 );
@@ -192,13 +192,13 @@ VAR
 		mad := antsArrays.Median1dX( y^, len - 1 );  RETURN mad;
 	END Mad;
 
-	PROCEDURE Max*( x: antsArrays.X1d;  VAR m: LONGINT ): LONGREAL;
+	PROCEDURE Max*( x: antsArrays.X1d;  VAR m: SIGNED32 ): FLOAT64;
 	(* Berechnet Maximum und gibt den Index mit zurück. *)
 
-	VAR i: LONGINT;  max: LONGREAL;
+	VAR i: SIGNED32;  max: FLOAT64;
 
 	BEGIN
-		max := MIN( LONGREAL );
+		max := MIN( FLOAT64 );
 
 		FOR i := 0 TO LEN( x ) - 1 DO
 			IF x[i] > max THEN max := x[i];  m := i;  END;
@@ -207,13 +207,13 @@ VAR
 		RETURN max;
 	END Max;
 
-	PROCEDURE Min*( x: antsArrays.X1d;  VAR m: LONGINT ): LONGREAL;
+	PROCEDURE Min*( x: antsArrays.X1d;  VAR m: SIGNED32 ): FLOAT64;
 	(* Berechnet Minimum und gibt den Index mit zurück. *)
 
-	VAR i: LONGINT;  min: LONGREAL;
+	VAR i: SIGNED32;  min: FLOAT64;
 
 	BEGIN
-		min := MAX( LONGREAL );
+		min := MAX( FLOAT64 );
 
 		FOR i := 0 TO LEN( x ) - 1 DO
 			IF x[i] < min THEN min := x[i];  m := i;  END;
@@ -225,13 +225,13 @@ VAR
 	PROCEDURE SetName*( VAR one: ARRAY OF CHAR;  two: ARRAY OF CHAR );
 	(* Kopiert Namen. *)
 
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 
 	BEGIN
 		FOR i := 0 TO LEN( two ) - 1 DO one[i] := two[i];  END;
 	END SetName;
 
-	PROCEDURE DoCreateData*( VAR set: antsPottsSimDataStructure.SetChain;  function: vyName.tNameArray;  datanumber: LONGINT;  fct: vyBase.Object;
+	PROCEDURE DoCreateData*( VAR set: antsPottsSimDataStructure.SetChain;  function: vyName.tNameArray;  datanumber: SIGNED32;  fct: vyBase.Object;
 											    VAR datavec: vyBase.Object;  VAR dataname: ARRAY OF CHAR );
 	(* Kreiert Daten durch eine Funktion. *)
 
@@ -259,12 +259,12 @@ VAR
 	END DoCreateData;
 
 	PROCEDURE DoDataRekoLoop*( VAR set: antsPottsSimDataStructure.SetChain;  dataChainname: ARRAY OF CHAR;  rekotype, gammatype: ARRAY OF CHAR;
-													  gamma: LONGREAL;  VAR datarekoname: ARRAY OF CHAR );
+													  gamma: FLOAT64;  VAR datarekoname: ARRAY OF CHAR );
 	(* Berechnet zu allen Daten eines Datensatzes die Monotones. *)
 
-	VAR i, len: LONGINT;
+	VAR i, len: SIGNED32;
 		dataname, gammastr: ARRAY 1024 OF CHAR;
-		data, datareko, results, eN: antsArrays.X1d;  var, actgamma: LONGREAL;  jumps: antsArrays.L1d;
+		data, datareko, results, eN: antsArrays.X1d;  var, actgamma: FLOAT64;  jumps: antsArrays.L1d;
 
 	BEGIN
 		len := antsPottsSimDataStructure.GetDataChainLen( set, dataChainname );  Strings.Append( datarekoname, rekotype );
@@ -291,11 +291,11 @@ VAR
 	END DoDataRekoLoop;
 
 	PROCEDURE DoDataReko*( VAR set: antsPottsSimDataStructure.SetChain;  dataChainname, dataname: ARRAY OF CHAR;  rekotype, gammatype: ARRAY OF CHAR;
-											  gamma: LONGREAL );
+											  gamma: FLOAT64 );
 	(* Berechnet zu einem Datenvektor die Monotones. *)
 
 	VAR datarekoname, gammastr: ARRAY 1024 OF CHAR;
-		data, datareko, results, eN: antsArrays.X1d;  var, actgamma: LONGREAL;  jumps: antsArrays.L1d;
+		data, datareko, results, eN: antsArrays.X1d;  var, actgamma: FLOAT64;  jumps: antsArrays.L1d;
 
 	BEGIN
 		Strings.Append( datarekoname, rekotype );
@@ -317,11 +317,11 @@ VAR
 		END;
 	END DoDataReko;
 
-	PROCEDURE DoReko*( x: antsArrays.X1d;  VAR y: antsArrays.X1d;  VAR jumps: antsArrays.L1d;  rekotype, gammatype: ARRAY OF CHAR;  var: LONGREAL;
-									  gamma: LONGREAL;  VAR actgamma: LONGREAL );
+	PROCEDURE DoReko*( x: antsArrays.X1d;  VAR y: antsArrays.X1d;  VAR jumps: antsArrays.L1d;  rekotype, gammatype: ARRAY OF CHAR;  var: FLOAT64;
+									  gamma: FLOAT64;  VAR actgamma: FLOAT64 );
 	(* Berechnet eine Datenrekonstruktion abhängig von rekotype und gammatype. *)
 
-	VAR statistic1: antsPotts1DSurvey.StatisticObj;  statistic2: antsTautString.Statistic;  type1, type2: INTEGER;  vec1, vec2: vyBase.Object;  len, i: LONGINT;
+	VAR statistic1: antsPotts1DSurvey.StatisticObj;  statistic2: antsTautString.Statistic;  type1, type2: SIGNED16;  vec1, vec2: vyBase.Object;  len, i: SIGNED32;
 		rstern: antsArrays.I1d;  bellman: antsArrays.X1d;
 
 	BEGIN
@@ -343,7 +343,7 @@ VAR
 				END;
 
 				globalGamma := gamma * 2 * Mad( x ) * Mad( x );
-				antsBellman.Bellman( rstern, bellman, SHORT( len ), 0, MAX( LONGINT ), Function1d, -globalGamma );  NEW( y, len );
+				antsBellman.Bellman( rstern, bellman, SHORT( len ), 0, MAX( SIGNED32 ), Function1d, -globalGamma );  NEW( y, len );
 				antsBellman.Partition( rstern, y, statMean );  actgamma := gamma;
 			ELSE
 				NEW( statistic1 );  antsPotts1DSurvey.CreateStatistics( statistic1, vec1, type1 );
@@ -373,22 +373,22 @@ VAR
 		END;
 	END DoReko;
 
-	PROCEDURE statMean( k1, k2: LONGINT ): LONGREAL;
+	PROCEDURE statMean( k1, k2: SIGNED32 ): FLOAT64;
 
 	BEGIN
 		RETURN globalStat.m[k1, k2];
 	END statMean;
 
-	PROCEDURE Function1d( from, to: LONGINT ): LONGREAL;
+	PROCEDURE Function1d( from, to: SIGNED32 ): FLOAT64;
 
 	BEGIN
 		RETURN globalStat.s[from, to] + globalGamma;
 	END Function1d;
 
-	PROCEDURE DoResults*( x, y: antsArrays.X1d;  VAR z: antsArrays.X1d;  jumps: antsArrays.L1d;  gamma: LONGREAL;  eN: antsArrays.X1d;  noisetype: LONGINT );
+	PROCEDURE DoResults*( x, y: antsArrays.X1d;  VAR z: antsArrays.X1d;  jumps: antsArrays.L1d;  gamma: FLOAT64;  eN: antsArrays.X1d;  noisetype: SIGNED32 );
 	(* Vergleicht 2 Daten und speichert Normen, MAD und Sprünge. *)
 
-	VAR dummy, jumpsum: LONGREAL;  len, length, i: LONGINT;  xyDiffArray: antsArrays.X1d;  xyDiff: vyLongrealVec.tVector;
+	VAR dummy, jumpsum: FLOAT64;  len, length, i: SIGNED32;  xyDiffArray: antsArrays.X1d;  xyDiff: vyLongrealVec.tVector;
 
 	BEGIN
 		jumpsum := 0;  NEW( xyDiffArray, LEN( x ) );  xyDiff := vyLongrealVec.New( LEN( x ) );
@@ -413,10 +413,10 @@ VAR
 		z[5] := jumpsum;
 	END DoResults;
 
-	PROCEDURE DoAddNoise*( x: antsArrays.X1d;  VAR y: antsArrays.X1d;  parameter: LONGREAL;  noisetype: ARRAY OF CHAR );
+	PROCEDURE DoAddNoise*( x: antsArrays.X1d;  VAR y: antsArrays.X1d;  parameter: FLOAT64;  noisetype: ARRAY OF CHAR );
 	(* Verrauscht Daten. *)
 
-	VAR type: INTEGER;  vec1, vec2: vyBase.tVector;  len: LONGINT;  par: LONGREAL;
+	VAR type: SIGNED16;  vec1, vec2: vyBase.tVector;  len: SIGNED32;  par: FLOAT64;
 
 	BEGIN
 		type := DoSetNoise( noisetype );  len := LEN( x );  vec1 := vyLongrealVec.New( len );  vyLongrealVec.CopyToVec( x^, vec1, len, 0, 0 );
@@ -437,10 +437,10 @@ VAR
 
 	PROCEDURE DoDataLoop*( VAR set: antsPottsSimDataStructure.SetChain;  dataChainname: ARRAY OF CHAR;
 											 meanM, medianM, hampelM, saegezahnM, huberM: ARRAY OF CHAR;  gaussN, laplaceN, expN, uniformN: ARRAY OF CHAR;
-											 noiseParameter: LONGREAL;  noiseNumber: LONGINT;  rekotype: ARRAY OF CHAR;  gammatype: ARRAY OF CHAR;  gamma: LONGREAL;
+											 noiseParameter: FLOAT64;  noiseNumber: SIGNED32;  rekotype: ARRAY OF CHAR;  gammatype: ARRAY OF CHAR;  gamma: FLOAT64;
 											 estimateNoise: ARRAY OF CHAR );
 
-	VAR i, len: LONGINT;
+	VAR i, len: SIGNED32;
 		dataname: ARRAY 1024 OF CHAR;
 
 	BEGIN
@@ -456,8 +456,8 @@ VAR
 
 	PROCEDURE DoMonotoneLoop*( VAR set: antsPottsSimDataStructure.SetChain;  dataChainname, dataname: ARRAY OF CHAR;
 													  meanM, medianM, hampelM, saegezahnM, huberM: ARRAY OF CHAR;  gaussN, laplaceN, expN, uniformN: ARRAY OF CHAR;
-													  noiseParameter: LONGREAL;  noiseNumber: LONGINT;  rekotype: ARRAY OF CHAR;  gammatype: ARRAY OF CHAR;
-													  gamma: LONGREAL;  estimateNoise: ARRAY OF CHAR );
+													  noiseParameter: FLOAT64;  noiseNumber: SIGNED32;  rekotype: ARRAY OF CHAR;  gammatype: ARRAY OF CHAR;
+													  gamma: FLOAT64;  estimateNoise: ARRAY OF CHAR );
 
 	VAR monotonename: ARRAY 1024 OF CHAR;
 
@@ -494,10 +494,10 @@ VAR
 	END DoMonotoneLoop;
 
 	PROCEDURE DoDegradedLoop*( VAR set: antsPottsSimDataStructure.SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR;
-													 gaussN, laplaceN, expN, uniformN: ARRAY OF CHAR;  noiseParameter: LONGREAL;  noiseNumber: LONGINT;
-													 rekotype: ARRAY OF CHAR;  gammatype: ARRAY OF CHAR;  gamma: LONGREAL;  estimateNoise: ARRAY OF CHAR );
+													 gaussN, laplaceN, expN, uniformN: ARRAY OF CHAR;  noiseParameter: FLOAT64;  noiseNumber: SIGNED32;
+													 rekotype: ARRAY OF CHAR;  gammatype: ARRAY OF CHAR;  gamma: FLOAT64;  estimateNoise: ARRAY OF CHAR );
 
-	VAR i, j, len, actGaussNumber: LONGINT;  monotone, degraded, alldiffs, allENs: antsArrays.X1d;  parameter, actualDiff: LONGREAL;
+	VAR i, j, len, actGaussNumber: SIGNED32;  monotone, degraded, alldiffs, allENs: antsArrays.X1d;  parameter, actualDiff: FLOAT64;
 		degradedname, actGaussString, actdataname: ARRAY 1024 OF CHAR;
 
 	BEGIN
@@ -569,9 +569,9 @@ VAR
 		END;
 	END DoDegradedLoop;
 
-	PROCEDURE CalcNearestNoiseP*( x, y: antsArrays.X1d;  actualDiff: LONGREAL ): LONGREAL;
+	PROCEDURE CalcNearestNoiseP*( x, y: antsArrays.X1d;  actualDiff: FLOAT64 ): FLOAT64;
 
-	VAR len, i, mind: LONGINT;  a, z: antsArrays.X1d;
+	VAR len, i, mind: SIGNED32;  a, z: antsArrays.X1d;
 
 	BEGIN
 		len := LEN( x );
@@ -582,7 +582,7 @@ VAR
 		ELSE NEW( z, 10 );  NEW( a, 10 );
 		END;
 
-		FOR i := 0 TO LEN( a ) - 1 DO a[i] := MAX( LONGREAL );  END;
+		FOR i := 0 TO LEN( a ) - 1 DO a[i] := MAX( FLOAT64 );  END;
 
 		FOR i := 0 TO len - 1 DO
 			IF (ABS( x[i] - actualDiff ) < Max( a, mind )) THEN a[mind] := ABS( x[i] - actualDiff );  z[mind] := y[i];  END;
@@ -591,9 +591,9 @@ VAR
 		RETURN Mean( z );
 	END CalcNearestNoiseP;
 
-	PROCEDURE Mean*( x: antsArrays.X1d ): LONGREAL;
+	PROCEDURE Mean*( x: antsArrays.X1d ): FLOAT64;
 
-	VAR mean: LONGREAL;  i: LONGINT;
+	VAR mean: FLOAT64;  i: SIGNED32;
 
 	BEGIN
 		mean := 0;
@@ -604,10 +604,10 @@ VAR
 	END Mean;
 
 	PROCEDURE DoRekoLoop*( VAR set: antsPottsSimDataStructure.SetChain;  dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR;
-											  rekotype: ARRAY OF CHAR;  gammatype: ARRAY OF CHAR;  gamma: LONGREAL;  var: LONGREAL;  rekotypenumb: LONGINT );
+											  rekotype: ARRAY OF CHAR;  gammatype: ARRAY OF CHAR;  gamma: FLOAT64;  var: FLOAT64;  rekotypenumb: SIGNED32 );
 
 	VAR rekoname, actreko, gammastr: ARRAY 1024 OF CHAR;
-		degraded, reko, results, datareko: antsArrays.X1d;  actgamma: LONGREAL;  jumps: antsArrays.L1d;
+		degraded, reko, results, datareko: antsArrays.X1d;  actgamma: FLOAT64;  jumps: antsArrays.L1d;
 
 	BEGIN
 		COPY( rekotype, actreko );  rekoname := actreko;
@@ -629,9 +629,9 @@ VAR
 	END DoRekoLoop;
 
 	PROCEDURE DoREKOLoop*( VAR set: antsPottsSimDataStructure.SetChain;  dataChainname: ARRAY OF CHAR;  rekotype: ARRAY OF CHAR;  gammatype: ARRAY OF CHAR;
-											   gamma: LONGREAL );
+											   gamma: FLOAT64 );
 
-	VAR i, j, k, l: LONGINT;  rekotypenumb: LONGINT;  var: LONGREAL;
+	VAR i, j, k, l: SIGNED32;  rekotypenumb: SIGNED32;  var: FLOAT64;
 		datasetname, dataname, monotonename, degradedname: ARRAY 1024 OF CHAR;
 
 	BEGIN

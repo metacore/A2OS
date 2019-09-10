@@ -38,11 +38,11 @@ TYPE
 	Message* = RECORD END;
 
 	Partition* = RECORD
-		type*: LONGINT;	(** partition type *)
-		start*, size*: LONGINT;	(** start block and size of partition in blocks *)
+		type*: SIGNED32;	(** partition type *)
+		start*, size*: SIGNED32;	(** start block and size of partition in blocks *)
 		flags*: SET;	(** Mounted, Primary, Boot, Valid *)
-		ptblock*: LONGINT;	(** block containing partition table entry *)
-		ptoffset*: LONGINT;	(** offset in partition table of entry, 0 if unknown *)
+		ptblock*: SIGNED32;	(** block containing partition table entry *)
+		ptoffset*: SIGNED32;	(** offset in partition table of entry, 0 if unknown *)
 	END;
 	PartitionTable* = POINTER TO ARRAY OF Partition;
 
@@ -50,35 +50,35 @@ TYPE
 
 	Device* = OBJECT (Plugins.Plugin)	(** fields read-only, initialized by extender *)
 		VAR
-			blockSize*: LONGINT;	(** in bytes - unit of block, num & size parameters *)
+			blockSize*: SIGNED32;	(** in bytes - unit of block, num & size parameters *)
 			flags*: SET;	(** ReadOnly, Removable *)
 			table*: PartitionTable;	(** cache for partition table *)
-			openCount*: LONGINT;	(** number of times device has been opened *)
+			openCount*: SIGNED32;	(** number of times device has been opened *)
 
 			(** statistics *)
 			NbytesRead*, NbytesWritten*, (** successfully tranfered bytes *)
 			NnofReads*, NnofWrites*, NnofOthers*, (** operation count *)
-			NnofErrors* : HUGEINT; (** read/write errors *)
+			NnofErrors* : SIGNED64; (** read/write errors *)
 
-		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+		PROCEDURE Transfer*(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER);
 		BEGIN
 			res := Unsupported
 		END Transfer;
 
-		PROCEDURE GetSize*(VAR size: LONGINT; VAR res: WORD);
+		PROCEDURE GetSize*(VAR size: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			res := Unsupported
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Message;  VAR res: WORD);
+		PROCEDURE Handle*(VAR msg: Message;  VAR res: INTEGER);
 		BEGIN
 			res := Unsupported
 		END Handle;
 
 		(** Open the device and increment its open count if successful. If the device is opened for the first time, lock it and update its partition table. *)
 
-		PROCEDURE Open*(VAR res: WORD);
-		VAR lockMsg: LockMsg; unlockMsg: UnlockMsg; ignore: WORD;
+		PROCEDURE Open*(VAR res: INTEGER);
+		VAR lockMsg: LockMsg; unlockMsg: UnlockMsg; ignore: INTEGER;
 		BEGIN
 			res := Ok;
 			IF openCount = 0 THEN
@@ -96,7 +96,7 @@ TYPE
 
 		(** Close the device and decrement its open count. Unlock it if the open count has reached 0. *)
 
-		PROCEDURE Close*(VAR res: WORD);
+		PROCEDURE Close*(VAR res: INTEGER);
 		VAR unlockMsg: UnlockMsg;
 		BEGIN
 			res := Ok; ASSERT(openCount > 0);
@@ -119,7 +119,7 @@ TYPE
 	UnlockMsg* = RECORD (Message) END;	(** allow manual ejection *)
 	SavePowerMsg* = RECORD (Message) END;	(** spin down the device *)
 	GetGeometryMsg* = RECORD (Message)	(** return physical geometry *)
-		cyls*, hds*, spt*: LONGINT
+		cyls*, hds*, spt*: SIGNED32
 	END;
 	ShutdownMsg* = RECORD (Message) END;	(** shut down the device (driver) *)
 
@@ -165,12 +165,12 @@ BEGIN
 	FOR i := 0 TO LEN(old)-1 DO p[i] := old[i] END
 END Resize;
 
-PROCEDURE Get4(VAR b: ARRAY OF CHAR;  i: LONGINT): LONGINT;
+PROCEDURE Get4(VAR b: ARRAY OF CHAR;  i: SIGNED32): SIGNED32;
 BEGIN
 	RETURN ORD(b[i]) + ASH(ORD(b[i+1]), 8) + ASH(ORD(b[i+2]), 16) + ASH(ORD(b[i+3]), 24)
 END Get4;
 
-PROCEDURE Extended(type: LONGINT): BOOLEAN;
+PROCEDURE Extended(type: SIGNED32): BOOLEAN;
 BEGIN
 	RETURN (type = 5) OR (type = 15)
 END Extended;
@@ -182,8 +182,8 @@ END ValidFlag;
 
 (* Read primary partition table entries into p *)
 
-PROCEDURE ReadPrimary(VAR b: DiskBlock; dev: Device;  VAR p: PartitionTable;  VAR n: LONGINT; VAR res: WORD; VAR valid: BOOLEAN);
-VAR e, size, i: LONGINT;
+PROCEDURE ReadPrimary(VAR b: DiskBlock; dev: Device;  VAR p: PartitionTable;  VAR n: SIGNED32; VAR res: INTEGER; VAR valid: BOOLEAN);
+VAR e, size, i: SIGNED32;
 BEGIN
 	n := 0;
 	dev.Transfer(Read, 0, 1, b, 0, res);
@@ -212,8 +212,8 @@ END ReadPrimary;
 
 (* Read "logical drive" partitions into p *)
 
-PROCEDURE ReadLogical(VAR b: DiskBlock; dev: Device;  first: LONGINT;  VAR p: PartitionTable;  VAR n: LONGINT; VAR res: WORD);
-VAR e, sec, size, i: LONGINT; found: BOOLEAN;
+PROCEDURE ReadLogical(VAR b: DiskBlock; dev: Device;  first: SIGNED32;  VAR p: PartitionTable;  VAR n: SIGNED32; VAR res: INTEGER);
+VAR e, sec, size, i: SIGNED32; found: BOOLEAN;
 BEGIN
 	sec := first;
 	REPEAT
@@ -254,8 +254,8 @@ END ReadLogical;
 partition spanning the entire device, with type = 256. If the device has been opened before, do nothing and
 return DeviceInUse, otherwise return Ok. On any other error dev.table is set NIL. *)
 
-PROCEDURE UpdatePartitionTable*(dev: Device; VAR res: WORD);
-VAR p, t: PartitionTable; i, pn, tn, size: LONGINT; buf: DiskBlock; valid: BOOLEAN;
+PROCEDURE UpdatePartitionTable*(dev: Device; VAR res: INTEGER);
+VAR p, t: PartitionTable; i, pn, tn, size: SIGNED32; buf: DiskBlock; valid: BOOLEAN;
 BEGIN
 	IF dev.openCount = 0 THEN
 		tn := 0; res := Ok;
@@ -291,7 +291,7 @@ END UpdatePartitionTable;
 
 (* Clean up the installed devices. *)
 PROCEDURE Cleanup;
-VAR dev: Plugins.Table; i: SIZE; res: WORD; msg: ShutdownMsg;
+VAR dev: Plugins.Table; i: SIZE; res: INTEGER; msg: ShutdownMsg;
 BEGIN
 	registry.GetAll(dev);
 	IF dev # NIL THEN
@@ -315,5 +315,5 @@ END Disks.
 20.10.2000	pjm	Added Cleanup and Valid from Native
 26.03.2007	staubesv Added Device.NnofReads, Device.NnofWrites, Device.NnofOthers and Device.NnofErrors
 
-Block size 512 and LONGINT block number limit us to 1TB = 1024GB.
+Block size 512 and SIGNED32 block number limit us to 1TB = 1024GB.
 *)

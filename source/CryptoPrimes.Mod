@@ -15,11 +15,11 @@ TYPE
 
 VAR
 	one: BigNumber;
-	primes: ARRAY N OF LONGINT;
+	primes: ARRAY N OF SIGNED32;
 
 
-	PROCEDURE NewPrime*( bits: INTEGER;  safe: BOOLEAN ): BigNumber;
-	VAR checks, i: INTEGER;  t, p: BigNumber;
+	PROCEDURE NewPrime*( bits: SIGNED16;  safe: BOOLEAN ): BigNumber;
+	VAR checks, i: SIGNED16;  t, p: BigNumber;
 	BEGIN
 		checks := Checks( bits ); i := 1;
 		LOOP
@@ -42,8 +42,8 @@ VAR
 		END
 	END NewPrime;
 
-	PROCEDURE NewDHPrime*( bits: INTEGER;  safe: BOOLEAN;  add, rem: BigNumber ): BigNumber;
-	VAR checks: INTEGER;  t, p: BigNumber;
+	PROCEDURE NewDHPrime*( bits: SIGNED16;  safe: BOOLEAN;  add, rem: BigNumber ): BigNumber;
+	VAR checks: SIGNED16;  t, p: BigNumber;
 	BEGIN
 		checks := Checks( bits );
 		LOOP
@@ -60,12 +60,12 @@ VAR
 		END
 	END NewDHPrime;
 
-	PROCEDURE Checks( b: SIZE ): INTEGER;
+	PROCEDURE Checks( b: SIZE ): SIGNED16;
 	(* number of Miller-Rabin iterations for an error rate  of less than 2^-80
 		for random 'b'-bit input, b >= 100 (taken from table 4.4 in the Handbook
 		of Applied Cryptography [Menezes, van Oorschot, Vanstone; CRC Press 1996]
 	*)
-	VAR t: INTEGER;
+	VAR t: SIGNED16;
 	BEGIN
 		ASSERT( b >= 100 );
 		IF b >= 1300 THEN t := 2
@@ -86,8 +86,8 @@ VAR
 
 
 
-	PROCEDURE ProbablePrime( bits: INTEGER ): BigNumber;
-	VAR t: BigNumber;  delta, i: LONGINT; p: BigNumber;
+	PROCEDURE ProbablePrime( bits: SIGNED16 ): BigNumber;
+	VAR t: BigNumber;  delta, i: SIGNED32; p: BigNumber;
 		mods: ARRAY N OF UNSIGNED32;
 	BEGIN
 		LOOP
@@ -110,8 +110,8 @@ VAR
 	END ProbablePrime;
 
 
-	PROCEDURE ProbableDHPrime( bits: INTEGER;  add, rem: BigNumber ): BigNumber;
-	VAR d, r, p: BigNumber;  i: LONGINT;
+	PROCEDURE ProbableDHPrime( bits: SIGNED16;  add, rem: BigNumber ): BigNumber;
+	VAR d, r, p: BigNumber;  i: SIGNED32;
 	BEGIN
 		p := B.NewRand( bits, 0, 1 );
 
@@ -129,8 +129,8 @@ VAR
 		END
 	END ProbableDHPrime;
 
-	PROCEDURE ProbableDHPrimeSafe( bits: INTEGER; padd, rem: BigNumber ): BigNumber;
-	VAR d, q, r, qr, qadd, p: BigNumber;  i: LONGINT;
+	PROCEDURE ProbableDHPrimeSafe( bits: SIGNED16; padd, rem: BigNumber ): BigNumber;
+	VAR d, q, r, qr, qadd, p: BigNumber;  i: SIGNED32;
 	BEGIN
 		B.Copy( padd, qadd );  qadd.Shift( -1 );
 		q := B.NewRand( bits, 0, 1 );
@@ -155,8 +155,8 @@ VAR
 	END ProbableDHPrimeSafe;
 
 
-	PROCEDURE IsPrime*( a: BigNumber;  checks: INTEGER;  doTrialDiv: BOOLEAN ): BOOLEAN;
-	VAR i, k: INTEGER;  A, A1, A1odd, check: BigNumber;
+	PROCEDURE IsPrime*( a: BigNumber;  checks: SIGNED16;  doTrialDiv: BOOLEAN ): BOOLEAN;
+	VAR i, k: SIGNED16;  A, A1, A1odd, check: BigNumber;
 	BEGIN
 		IF checks = 0 THEN  checks := Checks( a.BitSize( ) )  END;
 		IF ~ODD( a.d[0] ) THEN  RETURN FALSE  END;
@@ -184,7 +184,7 @@ VAR
 		RETURN TRUE
 	END IsPrime;
 
-	PROCEDURE witness( W, a, a1, a1odd: BigNumber;  k: INTEGER): BOOLEAN;
+	PROCEDURE witness( W, a, a1, a1odd: BigNumber;  k: SIGNED16): BOOLEAN;
 	VAR w: BigNumber;
 	BEGIN
 		w := B.ModExp( W, a1odd, a );
@@ -205,7 +205,7 @@ VAR
 	END witness;
 
 	PROCEDURE Init;
-	VAR sieve: ARRAY N OF SET32; i, j, p, n: LONGINT;
+	VAR sieve: ARRAY N OF SET32; i, j, p, n: SIGNED32;
 	BEGIN
 		(* compute the first N small primes *)
 		FOR i := 0 TO N - 1 DO sieve[i] := {0..31} END;

@@ -76,23 +76,23 @@ CONST
 
 	SizeOf80387Registers* = 80;  ExceptionMaximumParameters* = 15;
 
-	ExceptionGuardPage* = LONGINT(080000001H);
-	ExceptionBreakPoint* = LONGINT(080000003H);
-	ExceptionSingleStep* = LONGINT(080000004H);
-	ExceptionAccessViolation* = LONGINT(0C0000005H);
-	ExceptionIllegalInstruction* = LONGINT(0C000001DH);
-	ExceptionArrayBoundsExceeded* = LONGINT(0C000008CH);
-	ExceptionFltDenormalOperand* = LONGINT(0C000008DH);
-	ExceptionFltDivideByZero* = LONGINT(0C000008EH);
-	ExceptionFltInexactResult* = LONGINT(0C000008FH);
-	ExceptionFltInvalidOperation* = LONGINT(0C0000090H);
-	ExceptionFltOverflow* = LONGINT(0C0000091H);
-	ExceptionFltStackCheck* = LONGINT(0C0000092H);
-	ExceptionFltUndeflow* = LONGINT(0C0000093H);
-	ExceptionIntDivideByZero* = LONGINT(0C0000094H);
-	ExceptionIntOverflow* =LONGINT(0C0000095H);
-	ExceptionPrivInstruction* = LONGINT(0C0000096H);
-	ExceptionStackOverflow* = LONGINT(0C00000FDH);
+	ExceptionGuardPage* = SIGNED32(080000001H);
+	ExceptionBreakPoint* = SIGNED32(080000003H);
+	ExceptionSingleStep* = SIGNED32(080000004H);
+	ExceptionAccessViolation* = SIGNED32(0C0000005H);
+	ExceptionIllegalInstruction* = SIGNED32(0C000001DH);
+	ExceptionArrayBoundsExceeded* = SIGNED32(0C000008CH);
+	ExceptionFltDenormalOperand* = SIGNED32(0C000008DH);
+	ExceptionFltDivideByZero* = SIGNED32(0C000008EH);
+	ExceptionFltInexactResult* = SIGNED32(0C000008FH);
+	ExceptionFltInvalidOperation* = SIGNED32(0C0000090H);
+	ExceptionFltOverflow* = SIGNED32(0C0000091H);
+	ExceptionFltStackCheck* = SIGNED32(0C0000092H);
+	ExceptionFltUndeflow* = SIGNED32(0C0000093H);
+	ExceptionIntDivideByZero* = SIGNED32(0C0000094H);
+	ExceptionIntOverflow* =SIGNED32(0C0000095H);
+	ExceptionPrivInstruction* = SIGNED32(0C0000096H);
+	ExceptionStackOverflow* = SIGNED32(0C00000FDH);
 
 	ContextIntel = 16;
 	ContextControl* = {0, ContextIntel};   (* SS:SP, CS:IP, FLAGS, BP *)
@@ -109,7 +109,7 @@ CONST
 	(** thread priorities *)
 	ThreadPriorityIdle* = -15;  ThreadPriorityBelowNormal* = -1;
 	ThreadPriorityNormal* = 0;  ThreadPriorityAboveNormal* = 1; ThreadPriorityHighest* = 2;
-	ThreadPriorityTimeCritical* = 15;  ThreadPriorityErrorReturn* = MAX( LONGINT );
+	ThreadPriorityTimeCritical* = 15;  ThreadPriorityErrorReturn* = MAX( SIGNED32 );
 
 
 	(** WaitForSingleObject return values *)
@@ -157,24 +157,24 @@ CONST
 TYPE
 	(* OutputStringProc* = PROCEDURE (VAR str: ARRAY OF CHAR); *)
 
-	BOOL* = LONGINT;
+	BOOL* = SIGNED32;
 
 	HANDLE* = ADDRESS;  HMODULE* = ADDRESS;
-	HINSTANCE* = ADDRESS;  ATOM* = INTEGER;  HGLOBAL* = HANDLE;
+	HINSTANCE* = ADDRESS;  ATOM* = SIGNED16;  HGLOBAL* = HANDLE;
 	LPSTR* = ADDRESS;
-	DWORD* = LONGINT;
+	DWORD* = SIGNED32;
 
 	(** The FILETIME structure is a 64-bit value representing the number of 100-nanosecond intervals since January 1, 1601. *)
 	FileTime* = RECORD
-		dwLowDateTime*, dwHighDateTime*: LONGINT
+		dwLowDateTime*, dwHighDateTime*: SIGNED32
 	END;
 
 	(** The FindData structure describes a file found by the FindFirstFile or FindNextFile function. *)
 	FindData* = RECORD
 		dwFileAttributes*: SET;
 		ftCreationTime*, ftLastAccessTime*, ftLastWriteTime*: FileTime;
-		nFileSizeHigh*, nFileSizeLow*: LONGINT;
-		dwReserved0*, dwReserved1*: LONGINT;
+		nFileSizeHigh*, nFileSizeLow*: SIGNED32;
+		dwReserved0*, dwReserved1*: SIGNED32;
 		cFileName*: ARRAY MaxPath OF CHAR;
 		cAlternateFileName*: ARRAY 14 OF CHAR
 	END;
@@ -182,36 +182,36 @@ TYPE
 	(** The SYSTEMTIME structure represents a date and time using individual members for the month, day, year, weekday,
 			hour, minute, second, and millisecond. *)
 	SystemTime* = RECORD
-		wYear*, wMonth*, wDayOfWeek*, wDay*: INTEGER;
-		wHour*, wMinute*, wSecond*, wMilliseconds*: INTEGER
+		wYear*, wMonth*, wDayOfWeek*, wDay*: SIGNED16;
+		wHour*, wMinute*, wSecond*, wMilliseconds*: SIGNED16
 	END;
 
 	(** The SMALL_RECT structure defines the coordinates of the upper left and lower right corners of a rectangle. *)
 	SmallRect* = RECORD
-		left*, top*, right*, bottom*: INTEGER
+		left*, top*, right*, bottom*: SIGNED16
 	END;
 
 
 	(** Critical-section object. *)
 	CriticalSection* = RECORD
-		a, b, c, d, e, f: LONGINT
+		a, b, c, d, e, f: SIGNED32
 	END;
 
 	(** thread context and exception information *)
 
 	FloatingSaveArea* = RECORD
-		ControlWord*, StatusWord*, TagWord*, ErrorOffset*, ErrorSelector*, DataOffset*, DataSelector*: LONGINT;
+		ControlWord*, StatusWord*, TagWord*, ErrorOffset*, ErrorSelector*, DataOffset*, DataSelector*: SIGNED32;
 		RegisterArea*: ARRAY SizeOf80387Registers OF SYSTEM.BYTE;
-		Cr0NpxState*: LONGINT
+		Cr0NpxState*: SIGNED32
 	END;
 
 	Context* = RECORD
 		ContextFlags*: SET;
-		DR0*, DR1*, DR2*, DR3*, DR6*, DR7*: LONGINT;
+		DR0*, DR1*, DR2*, DR3*, DR6*, DR7*: SIGNED32;
 		FloatSave*: FloatingSaveArea;
-		GS*, FS*, ES*, DS*: LONGINT;
+		GS*, FS*, ES*, DS*: SIGNED32;
 		EDI*, ESI*, EBX*, EDX*, ECX*, EAX*: OBJECT;
-		BP*, PC*, CS*, FLAGS*, SP*, SS*: LONGINT; (* whereas BP is EBP and SP is ESP *)
+		BP*, PC*, CS*, FLAGS*, SP*, SS*: SIGNED32; (* whereas BP is EBP and SP is ESP *)
 	END;
 
 	Wow64Context*= RECORD (Context)
@@ -220,18 +220,18 @@ TYPE
 
 	ExceptionRecordPtr* = POINTER TO ExceptionRecord;
 	ExceptionRecord* = RECORD
-		ExceptionCode*, ExceptionFlags*: LONGINT;
+		ExceptionCode*, ExceptionFlags*: SIGNED32;
 		nextExceptionRecord*: ExceptionRecordPtr;
 		ExceptionAddress*: ADDRESS;
-		NumberParameters*: LONGINT;
-		ExceptionInformation*: ARRAY ExceptionMaximumParameters OF LONGINT
+		NumberParameters*: SIGNED32;
+		ExceptionInformation*: ARRAY ExceptionMaximumParameters OF SIGNED32
 	END;
 
 	ExcpFrmPtr* = ADDRESS;
 	ExcpFrmHandler* = PROCEDURE {WINAPI} ( VAR excpRec: ExceptionRecord;
 																														   excpFrame: ExcpFrmPtr;
 																														   VAR context: Context;
-																														   dispatch: LONGINT ): LONGINT;
+																														   dispatch: SIGNED32 ): SIGNED32;
 	ExcpFrm* = RECORD
 		link*: ExcpFrmPtr;
 		handler*: ExcpFrmHandler
@@ -244,8 +244,8 @@ TYPE
 
 	(** A 64-bit signed integer value. *)
 	LargeInteger* = RECORD
-		LowPart*, HighPart*: LONGINT;
-		QuadPart*{ FICTIVE = 0 }: HUGEINT;
+		LowPart*, HighPart*: SIGNED32;
+		QuadPart*{ FICTIVE = 0 }: SIGNED64;
 	END;
 
 	(** A 64-bit unsigned integer value. *)
@@ -253,43 +253,43 @@ TYPE
 
 	(* Added by Alexey *)
 	MemoryStatusEx* = RECORD
-		  dwLength*: LONGINT;
-		  dwMemoryLoad*: LONGINT;
+		  dwLength*: SIGNED32;
+		  dwMemoryLoad*: SIGNED32;
 
-		  ullTotalPhys*: HUGEINT;
-		  ullAvailPhys*: HUGEINT;
-		  ullTotalPageFile*: HUGEINT;
-		  ullAvailPageFile*: HUGEINT;
-		  ullTotalVirtual*: HUGEINT;
-		  ullAvailVirtual*: HUGEINT;
-		  ullAvailExtendedVirtual*: HUGEINT;
+		  ullTotalPhys*: SIGNED64;
+		  ullAvailPhys*: SIGNED64;
+		  ullTotalPageFile*: SIGNED64;
+		  ullAvailPageFile*: SIGNED64;
+		  ullTotalVirtual*: SIGNED64;
+		  ullAvailVirtual*: SIGNED64;
+		  ullAvailExtendedVirtual*: SIGNED64;
 	END;
 
 	(** CreateThread *)
-	ThreadProc* = PROCEDURE {WINAPI} ( lpParameter {UNTRACED}: ANY ): LONGINT;
+	ThreadProc* = PROCEDURE {WINAPI} ( lpParameter {UNTRACED}: ANY ): SIGNED32;
 
 	(** CreateProcess *)
 	ProcessInformation* = RECORD
 		hProcess*, hThread*: HANDLE;
-		dwProcessId*, dwThreadId*: LONGINT
+		dwProcessId*, dwThreadId*: SIGNED32
 	END;
 
 	(** CreateProcess, GetStartupInfo *)
 	StartupInfo* = RECORD
-		cb*: LONGINT;
+		cb*: SIGNED32;
 		lpReserved*, lpDesktop*, lpTitle*: LPSTR;
-		dwX*, dwY*, dwXSize*, dwYSize*: LONGINT;
-		dwXCountChars*, dwYCountChars*: LONGINT;
-		dwFillAttribute*: LONGINT;
+		dwX*, dwY*, dwXSize*, dwYSize*: SIGNED32;
+		dwXCountChars*, dwYCountChars*: SIGNED32;
+		dwFillAttribute*: SIGNED32;
 		dwFlags*: SET;
-		wShowWindow*, cbReserved2*: INTEGER;
+		wShowWindow*, cbReserved2*: SIGNED16;
 		lpReserved2*: ADDRESS;
 		hStdInput*, hStdOutput*, hStdError*: HANDLE
 	END;
 
 	(** The OSVersionInfo data structure contains operating system version information. *)
 	OSVersionInfo* = RECORD
-		dwOSVersionInfoSize*, dwMajorVersion*, dwMinorVersion*, dwBuildNumber*, dwPlatformId*: LONGINT;
+		dwOSVersionInfoSize*, dwMajorVersion*, dwMinorVersion*, dwBuildNumber*, dwPlatformId*: SIGNED32;
 		szCSDVersion*: ARRAY 128 OF CHAR
 	END;
 
@@ -299,53 +299,53 @@ TYPE
 	END;
 
 	CommTimeouts* = RECORD
-		ReadIntervalTimeout*, ReadTotalTimeoutMultiplier*, ReadTotalTimeoutConstant*, WriteTotalTimeoutMultiplier*, WriteTotalTimeoutConstant*: LONGINT
+		ReadIntervalTimeout*, ReadTotalTimeoutMultiplier*, ReadTotalTimeoutConstant*, WriteTotalTimeoutMultiplier*, WriteTotalTimeoutConstant*: SIGNED32
 	END;
 
 	DCB* = RECORD
-		DCBlength*, BaudRate*: LONGINT;
+		DCBlength*, BaudRate*: SIGNED32;
 		flags*: SET;
-		wReserved*, XonLim*, XoffLim*: INTEGER;
+		wReserved*, XonLim*, XoffLim*: SIGNED16;
 		ByteSize*, Parity*, StopBits*, XonChar*, XoffChar*, ErrorChar*, EofChar*, EvtChar*: CHAR;
-		wReserved1*: INTEGER
+		wReserved1*: SIGNED16
 	END;
 
 	ComStat* = RECORD
 		status*: SET;
-		cbInQue*, cbOutQue*: LONGINT
+		cbInQue*, cbOutQue*: SIGNED32
 	END;
 
 	SystemInfo* = RECORD
-		wProcessorArchitecture*: INTEGER;
-		wReserved: INTEGER;
-		dwPageSize*: LONGINT;
-		lpMinimumApplicationAddress*: LONGINT;
-		lpMaximumApplicationAddress*: LONGINT;
-		dwActiveProcessorMask*: LONGINT;
-		dwNumberOfProcessors*: LONGINT;
-		dwProcessorType*: LONGINT;
-		dwAllocationGranularity*: LONGINT;
-		wProcessorLevel*: INTEGER;
-		wProcessorRevision*: INTEGER;
+		wProcessorArchitecture*: SIGNED16;
+		wReserved: SIGNED16;
+		dwPageSize*: SIGNED32;
+		lpMinimumApplicationAddress*: SIGNED32;
+		lpMaximumApplicationAddress*: SIGNED32;
+		dwActiveProcessorMask*: SIGNED32;
+		dwNumberOfProcessors*: SIGNED32;
+		dwProcessorType*: SIGNED32;
+		dwAllocationGranularity*: SIGNED32;
+		wProcessorLevel*: SIGNED16;
+		wProcessorRevision*: SIGNED16;
 	END;
 
 	(*ALEX 2005.10.18 The TIME_ZONE_INFORMATION as defined in winbase.h*)
 	TimeZoneInformation* = RECORD
-		Bias*: LONGINT;
-		StandardName*: ARRAY 32 OF INTEGER;
+		Bias*: SIGNED32;
+		StandardName*: ARRAY 32 OF SIGNED16;
 		StandardDate*: SystemTime;
-		StandardBias*: LONGINT;
-		DaylightName*: ARRAY 32 OF INTEGER;
+		StandardBias*: SIGNED32;
+		DaylightName*: ARRAY 32 OF SIGNED16;
 		DaylightDate*: SystemTime;
-		DaylightBias*: LONGINT;
+		DaylightBias*: SIGNED32;
 	END;
 
 	(** Contains information used in asynchronous (or overlapped) input and output (I/O). *)
 	Overlapped* = RECORD
-		Internal*: LONGINT;
-		InternalHigh*: LONGINT;
-		Offset*: LONGINT;
-		OffsetHigh*: LONGINT;
+		Internal*: SIGNED32;
+		InternalHigh*: SIGNED32;
+		Offset*: SIGNED32;
+		OffsetHigh*: SIGNED32;
 		hEvent*: HANDLE;
 	END;
 
@@ -361,9 +361,9 @@ VAR
 	(** The AllocConsole function allocates a new console for the calling process. *)
 	AllocConsole-: PROCEDURE {WINAPI} ( ): BOOL;
 	(** The AttachConsole function attaches the calling process to the console of the specified process. *)
-	AttachConsole-: PROCEDURE {WINAPI} (in: LONGINT): BOOL;
+	AttachConsole-: PROCEDURE {WINAPI} (in: SIGNED32): BOOL;
 	(**The Beep function generates simple tones on the speaker. The function is synchronous; it does not return control to its caller until the sound finishes.*)
-	Beep-: PROCEDURE {WINAPI} ( dwFreq, dwDuration: LONGINT ): BOOL;
+	Beep-: PROCEDURE {WINAPI} ( dwFreq, dwDuration: SIGNED32 ): BOOL;
 	(** Marks any outstanding I/O operations for the specified file handle. The function only cancels I/O operations in the current process, regardless of which thread created the I/O operation. *)
 	CancelIoEx-: PROCEDURE {WINAPI} ( hFile: HANDLE; VAR lpOverlapped: Overlapped): BOOL;
 	(** The ClearCommBreak function restores character transmission for a specified communications device and places the transmission line in a nonbreak state. *)
@@ -386,7 +386,7 @@ VAR
 	CreateFile-: PROCEDURE {WINAPI} ( CONST lpFileName: ARRAY   OF CHAR;
 																dwDesiredAccess, dwShareMode: SET;
 																lpSecurityAttributes {UNTRACED}: ANY;
-																dwCreationDistribution: LONGINT;
+																dwCreationDistribution: SIGNED32;
 																dwFlagsAndAttributes: SET;
 																hTemplateFile: HANDLE ): HANDLE;
 	(** The CreateProcess function creates a new process and its primary thread. The new process executes the specified
@@ -394,19 +394,19 @@ VAR
 	CreateProcess-: PROCEDURE {WINAPI} ( CONST lpApplicationName, lpCommandLine: ARRAY   OF CHAR;
 																	   lpProcessAttributes, lpThreadAttributes {UNTRACED}: ANY;
 																	   bInheritHandles: BOOL;
-																	   dwCreationFlags: LONGINT;
+																	   dwCreationFlags: SIGNED32;
 																	   lpEnvironment {UNTRACED}: ANY;
 																	   VAR lpCurrentDirectory: ARRAY   OF CHAR;
 																	   VAR lpStartupInfo: StartupInfo;
 																	   VAR lpProcessInformation: ProcessInformation ): BOOL;
 	(** The CreateSemaphore function creates or opens a named or unnamed semaphore object. *)
-	CreateSemaphore-: PROCEDURE {WINAPI} ( lpThreadAttributes: ADDRESS; lInitialCount: LONGINT; lMaximumCount: LONGINT; lpName: LPSTR): HANDLE;
+	CreateSemaphore-: PROCEDURE {WINAPI} ( lpThreadAttributes: ADDRESS; lInitialCount: SIGNED32; lMaximumCount: SIGNED32; lpName: LPSTR): HANDLE;
 	(** The CreateThread function creates a thread to execute within the address space of the calling process. *)
 	CreateThread-: PROCEDURE {WINAPI} ( lpThreadAttributes: ADDRESS;
-																	  dwStackSize: LONGINT;
+																	  dwStackSize: SIGNED32;
 																	  lpStartAddress: ThreadProc;
 																	  lpParameter {UNTRACED}: ANY;  dwCreationFlags: SET;
-																	  VAR lpThreadId: LONGINT ): HANDLE;
+																	  VAR lpThreadId: SIGNED32 ): HANDLE;
 	(** The DeleteCriticalSection function releases all resources used by an unowned critical section object. *)
 	DeleteCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
 	(** The DeleteFile function deletes an existing file. *)
@@ -424,11 +424,11 @@ VAR
 	EnterCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
 	(** The EscapeCommFunction function directs a specified communications device to perform an extended function. *)
 	EscapeCommFunction-: PROCEDURE {WINAPI} ( hFile: HANDLE;
-																					  dwFunc: LONGINT ): BOOL;
+																					  dwFunc: SIGNED32 ): BOOL;
 	(** The ExitProcess function ends a process and all its threads. *)
-	ExitProcess-: PROCEDURE {WINAPI} ( uExitCode: LONGINT );
+	ExitProcess-: PROCEDURE {WINAPI} ( uExitCode: SIGNED32 );
 	(** The ExitThread function ends a thread. *)
-	ExitThread-: PROCEDURE {WINAPI} ( dwExitCode: LONGINT );
+	ExitThread-: PROCEDURE {WINAPI} ( dwExitCode: SIGNED32 );
 	(** The FileTimeToLocalFileTime function converts a file time based on the Coordinated Universal Time (UTC) to a
 			local file time. *)
 	FileTimeToLocalFileTime-: PROCEDURE {WINAPI} ( VAR lpFileTime: FileTime;
@@ -463,52 +463,52 @@ VAR
 																		 VAR lpDCB: DCB ): BOOL;
 	(** The GetComputerName function retrieves the NetBIOS name of the local computer. *)
 	GetComputerName-: PROCEDURE {WINAPI} ( VAR lpBuffer: ARRAY   OF CHAR;
-																			    VAR lpnSize: LONGINT ): BOOL;
+																			    VAR lpnSize: SIGNED32 ): BOOL;
 	(** The GetCurrentDirectory function retrieves the current directory for the current process. *)
-	GetCurrentDirectory-: PROCEDURE {WINAPI} ( nBufferLength: LONGINT;
-																				 VAR lpBuffer: ARRAY   OF CHAR ): LONGINT;
+	GetCurrentDirectory-: PROCEDURE {WINAPI} ( nBufferLength: SIGNED32;
+																				 VAR lpBuffer: ARRAY   OF CHAR ): SIGNED32;
 	(** The GetConsoleWindow function retrieves the window handle used by the console associated with the calling process. *)
 	(*
-	GetConsoleWindow-: PROCEDURE{WINAPI} (): LONGINT ;
+	GetConsoleWindow-: PROCEDURE{WINAPI} (): SIGNED32 ;
 	(** The GetCurrentProcess function returns a pseudohandle for the current process. *)
 	not in smaller versions than Win2000!
 	*)
 	GetCurrentProcess-: PROCEDURE {WINAPI} ( ): HANDLE;
 	(** The GetCurrentProcessId function returns the process identifier of the calling process. *)
-	GetCurrentProcessId-: PROCEDURE {WINAPI} ( ): LONGINT;
+	GetCurrentProcessId-: PROCEDURE {WINAPI} ( ): SIGNED32;
 	(** The GetCurrentThread function returns a pseudohandle for the current thread. *)
 	GetCurrentThread-: PROCEDURE {WINAPI} ( ): HANDLE;
 	(** The GetCurrentThreadId function returns the thread identifier of the calling thread. *)
-	GetCurrentThreadId-: PROCEDURE {WINAPI} ( ): LONGINT;
+	GetCurrentThreadId-: PROCEDURE {WINAPI} ( ): SIGNED32;
 	(** The GetDiskFreeSpace function retrieves information about the specified disk, including the amount of
 			free space on the disk. *)
 	GetDiskFreeSpace-: PROCEDURE {WINAPI} ( VAR lpRootPathName: ARRAY   OF CHAR;
-																			  VAR lpSectorsPerCluster, lpBytesPerSector, lpNumberOfFreeClusters, lpTotalNumberOfClusters: LONGINT ): BOOL;
+																			  VAR lpSectorsPerCluster, lpBytesPerSector, lpNumberOfFreeClusters, lpTotalNumberOfClusters: SIGNED32 ): BOOL;
 	(** The GetDriveType function determines whether a disk drive is a removable, fixed, CD-ROM, RAM disk, or
 			network drive. *)
-	GetDriveType-: PROCEDURE {WINAPI} ( VAR lpRootPathName: ARRAY   OF CHAR ): LONGINT;
+	GetDriveType-: PROCEDURE {WINAPI} ( VAR lpRootPathName: ARRAY   OF CHAR ): SIGNED32;
 	(** The GetExitCodeProcess function retrieves the termination status of the specified process. *)
 	GetExitCodeProcess-: PROCEDURE {WINAPI} ( hProcess: HANDLE;
-																				  VAR lpExitCode: LONGINT ): BOOL;
+																				  VAR lpExitCode: SIGNED32 ): BOOL;
 	(** The GetFileAttributes function returns attributes for a specified file or directory. *)
 	GetFileAttributes-: PROCEDURE {WINAPI} ( VAR lpFileName: ARRAY   OF CHAR ): SET;
 	(** The GetFileSize function retrieves the size, in bytes, of the specified file. *)
-	GetFileSize-: PROCEDURE {WINAPI} ( hFile: HANDLE;  VAR lpFileSizeHigh: LONGINT ): LONGINT;
+	GetFileSize-: PROCEDURE {WINAPI} ( hFile: HANDLE;  VAR lpFileSizeHigh: SIGNED32 ): SIGNED32;
 	(** The GetFileTime function retrieves the date and time that a file was created, last accessed, and last modified. *)
 	GetFileTime-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 																	VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime ): BOOL;
 	(** The GetFullPathName function retrieves the full path and filename of a specified file. *)
 	GetFullPathName-: PROCEDURE {WINAPI} ( CONST lpFileName: ARRAY   OF CHAR;
-																			  nBufferLength: LONGINT;
+																			  nBufferLength: SIGNED32;
 																			  VAR lpBuffer: ARRAY   OF CHAR;
-																			  lpFilePart: LPSTR ): LONGINT;
+																			  lpFilePart: LPSTR ): SIGNED32;
 	(** The GetLastError function returns the calling thread's last-error code value. *)
-	GetLastError-: PROCEDURE {WINAPI} ( ): LONGINT;
+	GetLastError-: PROCEDURE {WINAPI} ( ): SIGNED32;
 	(** The GetLocalTime function retrieves the current local date and time. *)
 	GetLocalTime-: PROCEDURE {WINAPI} ( VAR lpSystemTime: SystemTime );
 	(** The GetLogicalDriveStrings function retrieves a string containing the drive letters. *)  (*ALEX 2005.02.10*)
-	GetLogicalDriveStrings-: PROCEDURE {WINAPI} ( nBufferLength: LONGINT;
-																					   VAR lpBuffer: ARRAY   OF CHAR ): LONGINT;
+	GetLogicalDriveStrings-: PROCEDURE {WINAPI} ( nBufferLength: SIGNED32;
+																					   VAR lpBuffer: ARRAY   OF CHAR ): SIGNED32;
 	(** The GetModuleFileName function retrieves the full path and filename for the executable file containing the
 			specified module. *)
 	(* The GetLogicalDrives function retrieves a bitmask representing the currently available disk drives.
@@ -517,46 +517,46 @@ VAR
 	GetLogicalDrives-: PROCEDURE {WINAPI} ( ): SET;
 	GetModuleFileName-: PROCEDURE {WINAPI} ( hModule: HMODULE;
 																				    VAR lpFileName: ARRAY   OF CHAR;
-																				    nSize: LONGINT ): LONGINT;
+																				    nSize: SIGNED32 ): SIGNED32;
 	(** The GetModuleHandle function returns a module handle for the specified module if the file has been mapped
 			into the address space of the calling process. *)
 	GetModuleHandle-: PROCEDURE {WINAPI} ( CONST lpModuleName: ARRAY   OF CHAR ): HMODULE;
 
 	(** Retrieves the results of an overlapped operation on the specified file, named pipe, or communications device.
 			To specify a timeout interval or wait on an alertable thread. *)
-	GetOverlappedResult-: PROCEDURE {WINAPI} ( hFile: HANDLE; VAR lpOverlapped: Overlapped; VAR lpNumberOfBytesTransferred: LONGINT; bWait: BOOL ): BOOL;
+	GetOverlappedResult-: PROCEDURE {WINAPI} ( hFile: HANDLE; VAR lpOverlapped: Overlapped; VAR lpNumberOfBytesTransferred: SIGNED32; bWait: BOOL ): BOOL;
 
 	(** The GetPrivateProfileString function retrieves a string from the specified section in an initialization file.*)
 	GetPrivateProfileString-: PROCEDURE {WINAPI} ( CONST lpAppName: ARRAY OF CHAR;
 																			CONST lpKeyName: ARRAY OF CHAR;
 																			CONST lpDefault: ARRAY OF CHAR;
 																			CONST lpReturnedString: ARRAY OF CHAR;
-																			nSize: LONGINT;
-																			CONST lpFileName: ARRAY OF CHAR): LONGINT;
+																			nSize: SIGNED32;
+																			CONST lpFileName: ARRAY OF CHAR): SIGNED32;
 	(** The GetProcessAffinityMask function retrieves the process affinity mask for the specified process and the system affinity mask for the system. *)
 	GetProcessAffinityMask- : PROCEDURE {WINAPI} ( hProcess: HANDLE; lpProcessAffinityMask: ADDRESS;  lpSystemAffinityMask: ADDRESS ): BOOL;
 	(** The GetProcessHeap function retrieves a handle to the default heap of the calling process. This handle can then be used in subsequent calls to the heap functions. *)
 	GetProcessHeap- : PROCEDURE {WINAPI} (): HANDLE;
 	(** The GetProcessTimes function returns the times spent in kernel mode, user mode ... for the specified process *)
-	GetProcessTimes- : PROCEDURE {WINAPI} (CONST hProcess: HANDLE; VAR lpCreationTime, lpExitTime, lpKernelTime, lpUserTime: FileTime ): LONGINT;
+	GetProcessTimes- : PROCEDURE {WINAPI} (CONST hProcess: HANDLE; VAR lpCreationTime, lpExitTime, lpKernelTime, lpUserTime: FileTime ): SIGNED32;
 	(** The GetStartupInfo function retrieves the contents of the StartupInfo structure that was specified when
 			the calling process was created. *)
 	GetStartupInfo-: PROCEDURE {WINAPI} ( VAR lpStartupInfo: StartupInfo );
 	(** Retrieves information about the current system. *)
 	GetSystemInfo-: PROCEDURE {WINAPI} ( VAR lpSystemInfo: SystemInfo );
 	(** The GetStdHandle function returns a handle for the standard input, standard output, or standard error device. *)
-	GetStdHandle-: PROCEDURE {WINAPI} ( nStdHandle: LONGINT ): HANDLE;
+	GetStdHandle-: PROCEDURE {WINAPI} ( nStdHandle: SIGNED32 ): HANDLE;
 	(** The GetSystemTime function retrieves the current system date and time. The system time is expressed in
 			Coordinated Universal Time (UTC). *)
 	GetSystemTime-: PROCEDURE {WINAPI} ( VAR lpSystemTime: SystemTime );
 	(** The GetTempFileName function creates a name for a temporary file. The filename is the concatenation of
 			specified path and prefix strings, a hexadecimal string formed from a specified integer, and the .TMP extension. *)
 	GetTempFileName-: PROCEDURE {WINAPI} ( VAR lpPathName, lpPrefixName: ARRAY   OF CHAR;
-																			   uUnique: LONGINT;
-																			   VAR lpTempFileName: ARRAY   OF CHAR ): LONGINT;
+																			   uUnique: SIGNED32;
+																			   VAR lpTempFileName: ARRAY   OF CHAR ): SIGNED32;
 	(** The GetTempPath function retrieves the path of the directory designated for temporary files. *)
-	GetTempPath-: PROCEDURE {WINAPI} ( nBufferLength: LONGINT;
-																	   VAR lpBuffer: ARRAY   OF CHAR ): LONGINT;
+	GetTempPath-: PROCEDURE {WINAPI} ( nBufferLength: SIGNED32;
+																	   VAR lpBuffer: ARRAY   OF CHAR ): SIGNED32;
 	(** The GetThreadContext function retrieves the context of the specified thread. *)
 	GetThreadContext-: PROCEDURE {WINAPI} ( hThread: HANDLE;
 																			  VAR lpContext: Context ): BOOL;
@@ -565,18 +565,18 @@ VAR
 																			  VAR lpContext: Wow64Context ): BOOL;
 	(** The GetThreadPriority function returns the priority value for the specified thread. This value, together with
 			the priority class of the thread's process, determines the thread's base-priority level. *)
-	GetThreadPriority-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
+	GetThreadPriority-: PROCEDURE {WINAPI} ( hThread: HANDLE ): SIGNED32;
 	(** The GetThreadTimes function returns the times spent in kernel mode, user mode ... specified thread.  *)
 	GetThreadTimes-: PROCEDURE {WINAPI} ( hThread: HANDLE;
-																		   VAR lpCreationTime, lpExitTime, lpKernelTime, lpUserTime: FileTime ): LONGINT;   (*ALEX 2005.12.12*)
+																		   VAR lpCreationTime, lpExitTime, lpKernelTime, lpUserTime: FileTime ): SIGNED32;   (*ALEX 2005.12.12*)
 	 (** The GetTickCount function retrieves the number of milliseconds that have elapsed since the system was started. *)
-	GetTickCount-: PROCEDURE {WINAPI} ( ): LONGINT;
+	GetTickCount-: PROCEDURE {WINAPI} ( ): SIGNED32;
 	(** The GetTimeZoneInformation function retrieves information about timezone setup. *)  (*ALEX 2005.10.18*)
-	GetTimeZoneInformation-: PROCEDURE {WINAPI} ( VAR lpTimeZoneInformation: TimeZoneInformation ): LONGINT;
+	GetTimeZoneInformation-: PROCEDURE {WINAPI} ( VAR lpTimeZoneInformation: TimeZoneInformation ): SIGNED32;
 	(** The GetWindowsDir function retrieves the path of the Windows directory. *) (*ALEX 2006.06.05*)
-	GetWindowsDirectory-: PROCEDURE {WINAPI} (  VAR lpBuffer: ARRAY   OF CHAR; nBufferLength: LONGINT ): LONGINT;
+	GetWindowsDirectory-: PROCEDURE {WINAPI} (  VAR lpBuffer: ARRAY   OF CHAR; nBufferLength: SIGNED32 ): SIGNED32;
 	(** The GetVersion function returns the current version number of the operating system. *)
-	GetVersion-: PROCEDURE {WINAPI} ( ): LONGINT;
+	GetVersion-: PROCEDURE {WINAPI} ( ): SIGNED32;
 	(** The GetVersionEx function obtains extended information about the version of the operating system that is
 			currently running. *)
 	GetVersionEx-: PROCEDURE {WINAPI} ( VAR lpVersionInfo: OSVersionInfo ): BOOL;
@@ -585,12 +585,12 @@ VAR
 
 	GetVolumeInformation-: PROCEDURE {WINAPI} ( VAR lpRootPathName: ARRAY   OF CHAR;
 																					    VAR lpVolumeNameBuffer: ARRAY   OF CHAR;
-																					    nVolumeNameSize: LONGINT;
-																					    VAR lpVolumeSerialNumber: LONGINT;
-																					    VAR lpMaximumComponentLength: LONGINT;
-																					    VAR lpFileSystemFlags: LONGINT;
+																					    nVolumeNameSize: SIGNED32;
+																					    VAR lpVolumeSerialNumber: SIGNED32;
+																					    VAR lpMaximumComponentLength: SIGNED32;
+																					    VAR lpFileSystemFlags: SIGNED32;
 																					    VAR lpFileSystemNameBuffer: ARRAY   OF CHAR;
-																					    nFileSystemNameSize: LONGINT ): LONGINT;
+																					    nFileSystemNameSize: SIGNED32 ): SIGNED32;
 
 	(** The GlobalAddAtom function adds a character string to the global atom table and returns a unique value
 			(an atom) identifying the string. *)
@@ -607,7 +607,7 @@ VAR
 	GlobalMemoryStatusEx-: PROCEDURE {WINAPI} (VAR lpBuffer: MemoryStatusEx): BOOL;
 
 	(** The GlobalReAlloc function changes the size or attributes of a specified global memory object. *)
-	GlobalReAlloc-: PROCEDURE {WINAPI} ( hMem: HGLOBAL;  dwBytes: LONGINT;
+	GlobalReAlloc-: PROCEDURE {WINAPI} ( hMem: HGLOBAL;  dwBytes: SIGNED32;
 																		uFlags: SET ): HGLOBAL;
 	(** The GlobalSize function retrieves the current size, in bytes, of the specified global memory object. *)
 	GlobalSize-: PROCEDURE {WINAPI} ( hMem: HGLOBAL ): SIZE;
@@ -615,17 +615,17 @@ VAR
 			the GMEM_MOVEABLE flag. *)
 	GlobalUnlock-: PROCEDURE {WINAPI} ( hMem: HGLOBAL ): BOOL;
 	(** The HeapAlloc function allocates a block of memory from a heap. The allocated memory is not movable. *)
-	HeapAlloc-: PROCEDURE {WINAPI} ( hHeap: HANDLE; dwFlags: LONGINT; size: SIZE): ADDRESS;
+	HeapAlloc-: PROCEDURE {WINAPI} ( hHeap: HANDLE; dwFlags: SIGNED32; size: SIZE): ADDRESS;
 	(** The HeapFree function frees a memory block allocated from a heap by the HeapAlloc or HeapReAlloc function. *)
-	HeapFree-: PROCEDURE {WINAPI} ( hHeap: HANDLE; dwFlags: LONGINT; lpMem: ADDRESS): ADDRESS;
+	HeapFree-: PROCEDURE {WINAPI} ( hHeap: HANDLE; dwFlags: SIGNED32; lpMem: ADDRESS): ADDRESS;
 	(** The InitializeCriticalSection function initializes a critical section object. *)
 	InitializeCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
 	(** The InterlockedDecrement function both decrements (decreases by one) the value of the specified 32-bit
 			variable and checks the resulting value. *)
-	InterlockedDecrement-: PROCEDURE {WINAPI} ( VAR lpAddend: LONGINT ): LONGINT;
+	InterlockedDecrement-: PROCEDURE {WINAPI} ( VAR lpAddend: SIGNED32 ): SIGNED32;
 	(** The InterlockedIncrement function both increments (increases by one) the value of the specified 32-bit variable
 			and checks the resulting value. *)
-	InterlockedIncrement-: PROCEDURE {WINAPI} ( VAR lpAddend: LONGINT ): LONGINT;
+	InterlockedIncrement-: PROCEDURE {WINAPI} ( VAR lpAddend: SIGNED32 ): SIGNED32;
 	(** The LeaveCriticalSection function releases ownership of the specified critical section object. *)
 	LeaveCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection );
 	(** The LocalFileTimeToFileTime function converts a local file time to a file time based on the Coordinated
@@ -648,7 +648,7 @@ VAR
 	(** The QueryDosDevice function retrieves information about MS-DOS device names. *)
 	QueryDosDevice-: PROCEDURE {WINAPI} ( lpDeviceName: ARRAY   OF CHAR;
 																		   VAR lpTargetPath: ARRAY   OF CHAR;
-																		   ucchMax: LONGINT ): LONGINT;
+																		   ucchMax: SIGNED32 ): SIGNED32;
 	(** The QueryPerformanceCounter function retrieves the current value of the high-resolution
 	performance counter, if one exists. *)
 	QueryPerformanceCounter-: PROCEDURE {WINAPI} ( VAR lpPerformaceCount: LargeInteger ): BOOL;
@@ -657,32 +657,32 @@ VAR
 	QueryPerformanceFrequency-: PROCEDURE {WINAPI} ( VAR lpFrequency: LargeInteger ): BOOL;
 
 	(** Retrieves the cycle time for the specified thread (both user and kernel mode, Windows Vista and newer) *)
-	QueryThreadCycleTime- : PROCEDURE {WINAPI} (hThread : HANDLE; VAR cycleTime : HUGEINT) : BOOL;
+	QueryThreadCycleTime- : PROCEDURE {WINAPI} (hThread : HANDLE; VAR cycleTime : SIGNED64) : BOOL;
 	(** The ReadFile function reads data from a file, starting at the position indicated by the file pointer. *)
 	ReadFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 															  VAR lpBuffer: ARRAY   OF SYSTEM.BYTE;
-															  nNumberOfBytesToRead: LONGINT;
-															  VAR lpNumberOfBytesRead: LONGINT;
+															  nNumberOfBytesToRead: SIGNED32;
+															  VAR lpNumberOfBytesRead: SIGNED32;
 															  VAR lpOverlapped: Overlapped ): BOOL;
 	(** The ReadProcessMemory function reads data from an area of memory in a specified process. *)
 	ReadProcessMemory-: PROCEDURE {WINAPI} ( hProcess: HANDLE;
 																				   lpBaseAddress: ADDRESS;
 																				   VAR lpBuffer: ARRAY   OF SYSTEM.BYTE;
-																				   nSize: LONGINT;
-																				   VAR lpNumberOfBytesRead: LONGINT ): BOOL;
+																				   nSize: SIGNED32;
+																				   VAR lpNumberOfBytesRead: SIGNED32 ): BOOL;
 	(** The ReleaseSemaphore function increases the count of the specified semaphore object by a specified amount. *)
-	ReleaseSemaphore-: PROCEDURE {WINAPI} ( hSemaphore: HANDLE; lReleaseCount: LONGINT; lpPreviousCount: ADDRESS): BOOL;
+	ReleaseSemaphore-: PROCEDURE {WINAPI} ( hSemaphore: HANDLE; lReleaseCount: SIGNED32; lpPreviousCount: ADDRESS): BOOL;
 	(** The RemoveDirectory function deletes an existing empty directory. *)
 	RemoveDirectory-: PROCEDURE {WINAPI} ( VAR lpPathName: ARRAY   OF CHAR ): BOOL;
 	(** The ResetEvent function sets the state of the specified event object to nonsignaled. *)
 	ResetEvent-: PROCEDURE {WINAPI} ( hEvent: HANDLE ): BOOL;
 	(** The ResumeThread function decrements a thread's suspend count. *)
-	ResumeThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
+	ResumeThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): SIGNED32;
 	(** The SearchPath function searches for the specified file. *)
 	SearchPath-: PROCEDURE {WINAPI} ( CONST lpPath, lpFileName, lpExtension: ARRAY   OF CHAR;
-																  nBufferLength: LONGINT;
+																  nBufferLength: SIGNED32;
 																  VAR lpBuffer: ARRAY   OF CHAR;
-																  VAR lpFilePart: LPSTR ): LONGINT;
+																  VAR lpFilePart: LPSTR ): SIGNED32;
 	(** The SetCommBreak function suspends character transmission for a specified communications device and places the transmission line in a break state until the ClearCommBreak function is called. *)
 	SetCommBreak-: PROCEDURE {WINAPI} ( hFile: HANDLE ): BOOL;
 	(** The SetCommMask function specifies a set of events to be monitored for a communications device. *)
@@ -694,12 +694,12 @@ VAR
 	SetCommTimeouts-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 																			    VAR lpCommTimeouts: CommTimeouts ): BOOL;
 	(** the SetConsoleCursorPosition  sets the cursor position in the specified console screen buffer. *)
-	SetConsoleCursorPosition-: PROCEDURE {WINAPI} ( hConsoleOutput: HANDLE;  dwCursorPosition:  (* imitate Coord=RECORD x,y: INTEGER END; *) LONGINT ): BOOL;
+	SetConsoleCursorPosition-: PROCEDURE {WINAPI} ( hConsoleOutput: HANDLE;  dwCursorPosition:  (* imitate Coord=RECORD x,y: SIGNED16 END; *) SIGNED32 ): BOOL;
 	(** The SetConsoleScreenBufferSize function changes the size of the specified console screen buffer. *)
 	SetConsoleScreenBufferSize-: PROCEDURE {WINAPI} ( hConsoleOuput: HANDLE;
-																							   dwSize: LONGINT ): BOOL;
+																							   dwSize: SIGNED32 ): BOOL;
 	(** The SetConsoleTextAttribute function sets the attributes of characters written to the console screen buffer by the WriteFile or WriteConsole function, or echoed by the ReadFile or ReadConsole function. *)
-	SetConsoleTextAttribute-: PROCEDURE {WINAPI} (hConsoleOutput: HANDLE; wAttributes: LONGINT): BOOL;
+	SetConsoleTextAttribute-: PROCEDURE {WINAPI} (hConsoleOutput: HANDLE; wAttributes: SIGNED32): BOOL;
 	(** The SetConsoleTitle function sets the title bar string for the current console window. *)
 	SetConsoleTitle-: PROCEDURE {WINAPI} ( VAR lpConsoleTitle: ARRAY   OF CHAR ): BOOL;
 	(** The SetConsoleWindowInfo function sets the current size and position of a console screen buffer's window. *)
@@ -719,9 +719,9 @@ VAR
 	SetFileAttributes-: PROCEDURE {WINAPI} ( VAR lpFileName: ARRAY   OF CHAR;
 																			dwFileAttributes: SET ): BOOL;
 	(** The SetFilePointer function moves the file pointer of an open file. *)
-	SetFilePointer-: PROCEDURE {WINAPI} ( hFile: HANDLE;  lDistanceToMove: LONGINT;
-																	    VAR lpDistanceToMoveHigh: LONGINT;
-																	    dwMoveMethod: LONGINT ): LONGINT;
+	SetFilePointer-: PROCEDURE {WINAPI} ( hFile: HANDLE;  lDistanceToMove: SIGNED32;
+																	    VAR lpDistanceToMoveHigh: SIGNED32;
+																	    dwMoveMethod: SIGNED32 ): SIGNED32;
 	(** The SetFileTime function sets the date and time that a file was created, last accessed, or last modified. *)
 	SetFileTime-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 																    VAR lpCreationTime, lpLastAccessTime, lpLastWriteTime: FileTime ): BOOL;
@@ -734,45 +734,45 @@ VAR
 																			  VAR lpContext: Context ): BOOL;
 	(** The SetThreadPriority function sets the priority value for the specified thread. *)
 	SetThreadPriority-: PROCEDURE {WINAPI} ( hThread: HANDLE;
-																			 nPriority: LONGINT ): BOOL;
+																			 nPriority: SIGNED32 ): BOOL;
 	(** The SetupComm function initializes the communications parameters for a specified communications device. *)
 	SetupComm-: PROCEDURE {WINAPI} ( hFile: HANDLE;
-																    dwInQueue, dwOutQueue: LONGINT ): BOOL;
+																    dwInQueue, dwOutQueue: SIGNED32 ): BOOL;
 	(** The Sleep function suspends the execution of the current thread for a specified interval. *)
-	Sleep-: PROCEDURE {WINAPI} ( dwMilliseconds: LONGINT );
+	Sleep-: PROCEDURE {WINAPI} ( dwMilliseconds: SIGNED32 );
 	(** The SuspendThread function suspends the specified thread. *)
-	SuspendThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
+	SuspendThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): SIGNED32;
 	(** The SuspendThread function suspends the specified thread. *)
-	Wow64SuspendThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): LONGINT;
+	Wow64SuspendThread-: PROCEDURE {WINAPI} ( hThread: HANDLE ): SIGNED32;
 	(** The SystemTimeToFileTime function converts a system time to a file time. *)
 	SystemTimeToFileTime-: PROCEDURE {WINAPI} ( VAR lpSystemTime: SystemTime;
 																					   VAR lpFileTime: FileTime ): BOOL;
 	(** The TerminateThread function terminates a thread. *)
 	TerminateThread-: PROCEDURE {WINAPI} ( hThread: HANDLE;
-																			 dwExitCode: LONGINT ): BOOL;
-	TlsAlloc-: PROCEDURE {WINAPI} ( ): LONGINT;
-	TlsFree-: PROCEDURE {WINAPI} ( dwTlsIndex: LONGINT ): BOOL;
-	TlsGetValue-: PROCEDURE {WINAPI} ( dwTlsIndex: LONGINT ): LONGINT;
-	TlsSetValue-: PROCEDURE {WINAPI} ( dwTlsIndex, lpTlsValue: LONGINT ): BOOL;
+																			 dwExitCode: SIGNED32 ): BOOL;
+	TlsAlloc-: PROCEDURE {WINAPI} ( ): SIGNED32;
+	TlsFree-: PROCEDURE {WINAPI} ( dwTlsIndex: SIGNED32 ): BOOL;
+	TlsGetValue-: PROCEDURE {WINAPI} ( dwTlsIndex: SIGNED32 ): SIGNED32;
+	TlsSetValue-: PROCEDURE {WINAPI} ( dwTlsIndex, lpTlsValue: SIGNED32 ): BOOL;
 	(** The TryEnterCriticalSection function attempts to enter a critical section without blocking. *)
 	TryEnterCriticalSection-: PROCEDURE {WINAPI} ( VAR lpCriticalSection: CriticalSection ): BOOL;
 	(** The VirtualAlloc function reserves or commits a region of pages in the virtual address space of the calling process. *)
-	VirtualAlloc-: PROCEDURE {WINAPI} ( lpAddress: ADDRESS;  dwSize: LONGINT;
+	VirtualAlloc-: PROCEDURE {WINAPI} ( lpAddress: ADDRESS;  dwSize: SIGNED32;
 																    flAllocationType, flProtect: SET ): ADDRESS;
 	(** The VirtualFree function releases or decommits (or both) a region of pages within the virtual address space of the
 			calling process. *)
-	VirtualFree-: PROCEDURE {WINAPI} ( lpAddress: ADDRESS;  dwSize: LONGINT;
+	VirtualFree-: PROCEDURE {WINAPI} ( lpAddress: ADDRESS;  dwSize: SIGNED32;
 																  dwFreeType: SET ): BOOL;
 	(** The WaitForSingleObject function returns when one of the following occurs:
 			The specified object is in the signaled state.
 			The time-out interval elapses. *)
 	WaitForSingleObject-: PROCEDURE {WINAPI} ( hHandle: HANDLE;
-																				   dwMilliseconds: LONGINT ): LONGINT;
+																				   dwMilliseconds: SIGNED32 ): SIGNED32;
 	(** The WriteFile function writes data to a file and is designed for both synchronous and asynchronous operation. *)
 	WriteFile-: PROCEDURE {WINAPI} ( hFile: HANDLE;
 															   CONST lpBuffer: ARRAY   OF SYSTEM.BYTE;
-															   nNumberOfBytesToWrite: LONGINT;
-															   VAR lpNumberOfBytesWritten: LONGINT;
+															   nNumberOfBytesToWrite: SIGNED32;
+															   VAR lpNumberOfBytesWritten: SIGNED32;
 															   VAR lpOverlapped: Overlapped ): BOOL;
 	(** Thread abort notifier, parameter is the threads id. Note this should only be used in modules which
 			can't use the exception handling mechanism provided by module Exceptions. *)
@@ -784,7 +784,7 @@ VAR
 	isEXE-: BOOLEAN;
 
 	PROCEDURE {WINAPI} ExceptionHandler( VAR excpRec: ExceptionRecord; excpFrame: ExcpFrmPtr;
-	 										VAR context: Context;  dispatch: LONGINT ): LONGINT;
+	 										VAR context: Context;  dispatch: SIGNED32 ): SIGNED32;
 	PROCEDURE Trap EXTERN "Runtime.Trap" (number: SIZE);
 	PROCEDURE RestoreActivity EXTERN "Environment.RestoreActivity";
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -806,7 +806,7 @@ VAR
 
 (** Copy a zero-terminated string from address lpString. *)
 	PROCEDURE CopyString*( lpString: LPSTR;  VAR str: ARRAY OF CHAR );
-	VAR i: LONGINT;  ch: CHAR;
+	VAR i: SIGNED32;  ch: CHAR;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		i := 0;
 		IF lpString # NULL THEN
@@ -827,9 +827,9 @@ VAR
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 	END NoOutputString;
 
-	PROCEDURE SendToDebugger*(CONST str: ARRAY OF CHAR;  x: LONGINT );
+	PROCEDURE SendToDebugger*(CONST str: ARRAY OF CHAR;  x: SIGNED32 );
 	VAR s: ARRAY 16 OF CHAR;
-		d, i: LONGINT;
+		d, i: SIGNED32;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		outputDebugString( str );  s[8] := 0X;
 		FOR i := 7 TO 0 BY -1 DO
@@ -840,7 +840,7 @@ VAR
 		outputDebugString( s );  s[0] := 0AX;  s[1] := 0X;  outputDebugString( s )
 	END SendToDebugger;
 
-	PROCEDURE Shutdown*(l: LONGINT);
+	PROCEDURE Shutdown*(l: SIGNED32);
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		outputDebugString("Kernel32.Shutdown");
 		ExitProcess(l);

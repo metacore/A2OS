@@ -38,7 +38,7 @@ TYPE
 			SectionList(document.sections);
 		END Document;
 
-		PROCEDURE Chars*(c: CHAR; rep: LONGINT);
+		PROCEDURE Chars*(c: CHAR; rep: SIGNED32);
 		BEGIN
 			WHILE rep>0 DO writer.Char(c); DEC(rep) END;
 		END Chars;

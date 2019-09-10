@@ -130,7 +130,7 @@
     <Error code="122">actual VAR-parameter is not a variable</Error>
     <Error code="123">type of actual parameter is not identical with that of formal VAR-parameter</Error>
     <Error code="124">type of result expression differs from that of procedure</Error>
-    <Error code="125">type of case expression is neither INTEGER nor CHAR</Error>
+    <Error code="125">type of case expression is neither SIGNED16 nor CHAR</Error>
     <Error code="126">this expression must not be a type or a procedure</Error>
     <Error code="127">illegal use of object</Error>
     <Error code="128">unsatisfied forward reference</Error>

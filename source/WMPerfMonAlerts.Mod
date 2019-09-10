@@ -74,20 +74,20 @@ CONST
 TYPE
 
 	AlertInfo* = RECORD
-		id- : LONGINT;
+		id- : SIGNED32;
 		fullname- : ARRAY 256 OF CHAR;
-		type- : LONGINT;
+		type- : SIGNED32;
 
-		state- : LONGINT;
+		state- : SIGNED32;
 
 		(* alert trigger *)
-		trigger- : LONGINT;
-		value1-, value2- : LONGREAL;
-		violation- :LONGREAL; (* value that triggered trigger *)
-		nbrOfViolations- : LONGINT;
+		trigger- : SIGNED32;
+		value1-, value2- : FLOAT64;
+		violation- :FLOAT64; (* value that triggered trigger *)
+		nbrOfViolations- : SIGNED32;
 
 		lastValueIsValid : BOOLEAN;
-		lastValue : LONGREAL;
+		lastValue : FLOAT64;
 
 		(* command activated when trigger is triggered *)
 		onAlertCommand- : XML.String;
@@ -104,12 +104,12 @@ TYPE
 
 		(* for internal use *)
 		plugin : WMPerfMonPlugins.Plugin;
-		lastState : LONGINT;
-		datasetIdx : LONGINT;
+		lastState : SIGNED32;
+		datasetIdx : SIGNED32;
 		next : AlertObject;
 
-		PROCEDURE SetState(state : LONGINT);
-		VAR oldState : LONGINT;
+		PROCEDURE SetState(state : SIGNED32);
+		VAR oldState : SIGNED32;
 		BEGIN
 			ASSERT((state = Off) OR (state = On) OR (state = Triggered) OR (state = Reset));
 			oldState := info.state;
@@ -128,7 +128,7 @@ TYPE
 			onLeaveCalled := FALSE;
 		END ResetState;
 
-		PROCEDURE Alert(value : LONGREAL);
+		PROCEDURE Alert(value : FLOAT64);
 		BEGIN
 			info.state := Triggered;
 			info.violation := value;
@@ -136,7 +136,7 @@ TYPE
 		END Alert;
 
 		PROCEDURE AlarmTriggered() : BOOLEAN;
-		VAR value : LONGREAL; triggered : BOOLEAN;
+		VAR value : FLOAT64; triggered : BOOLEAN;
 		BEGIN
 			IF info.state = Off THEN RETURN FALSE; END;
 			lastState := info.state;
@@ -175,7 +175,7 @@ TYPE
 			RETURN triggered;
 		END AlarmTriggered;
 
-		PROCEDURE HandleAlert(lastState : LONGINT; triggered : BOOLEAN);
+		PROCEDURE HandleAlert(lastState : SIGNED32; triggered : BOOLEAN);
 		VAR string : Events.Message;
 		BEGIN
 			IF triggered THEN
@@ -278,7 +278,7 @@ TYPE
 			out.Ln;
 		END Show;
 
-		PROCEDURE &Init*(CONST fullname : ARRAY OF CHAR; plugin : WMPerfMonPlugins.Plugin; datasetIdx : LONGINT);
+		PROCEDURE &Init*(CONST fullname : ARRAY OF CHAR; plugin : WMPerfMonPlugins.Plugin; datasetIdx : SIGNED32);
 		BEGIN
 			ASSERT(plugin # NIL);
 			ASSERT((0 <= datasetIdx) & (datasetIdx < LEN(plugin.p.datasetDescriptor)));
@@ -296,24 +296,24 @@ TYPE
 	Status* = RECORD
 		enabled- : BOOLEAN;
 		filename- : ARRAY 256 OF CHAR;
-		nbrOfRules- : LONGINT;
-		nbrOfAlerts- : LONGINT;
-		stamp- : LONGINT; (** incremented each time a alert rule is added or removed *)
+		nbrOfRules- : SIGNED32;
+		nbrOfAlerts- : SIGNED32;
+		stamp- : SIGNED32; (** incremented each time a alert rule is added or removed *)
 	END;
 
 VAR
 	alerts : AlertObject;
 	alertsEnabled : BOOLEAN;
 	alertFile : ARRAY 256 OF CHAR;
-	nbrOfRules, nbrOfAlerts : LONGINT;
-	stamp : LONGINT;
-	uniqueID : LONGINT;
+	nbrOfRules, nbrOfAlerts : SIGNED32;
+	stamp : SIGNED32;
+	uniqueID : SIGNED32;
 
 	(* XML scanner/parser *)
 	xmlHasErrors : BOOLEAN;
 
-PROCEDURE Add*(CONST fullname : ARRAY OF CHAR; type, trigger : LONGINT; value1, value2 : LONGREAL; onAlert, onLeave : XML.String; VAR msg : ARRAY OF CHAR; VAR res : WORD);
-VAR a, alert : AlertObject; plugin : WMPerfMonPlugins.Plugin; index : LONGINT;
+PROCEDURE Add*(CONST fullname : ARRAY OF CHAR; type, trigger : SIGNED32; value1, value2 : FLOAT64; onAlert, onLeave : XML.String; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
+VAR a, alert : AlertObject; plugin : WMPerfMonPlugins.Plugin; index : SIGNED32;
 BEGIN {EXCLUSIVE}
 	plugin := WMPerfMonPlugins.updater.GetByFullname(fullname, index, msg);
 	IF plugin # NIL THEN
@@ -340,7 +340,7 @@ BEGIN {EXCLUSIVE}
 	END;
 END Add;
 
-PROCEDURE AddByString*(CONST string : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE AddByString*(CONST string : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 VAR alert : AlertInfo; r : Streams.StringReader;
 BEGIN
 	NEW(r, LEN(string)); r.SetRaw(string, 0, LEN(string));
@@ -350,7 +350,7 @@ BEGIN
 	END;
 END AddByString;
 
-PROCEDURE AddByStream(r : Streams.Reader; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE AddByStream(r : Streams.Reader; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 VAR alert : AlertInfo;
 BEGIN
 	ParseAlert(r, alert, msg, res);
@@ -360,7 +360,7 @@ BEGIN
 END AddByStream;
 
 PROCEDURE AddByCommand*(context : Commands.Context);
-VAR msg : ARRAY 128 OF CHAR; res : WORD;
+VAR msg : ARRAY 128 OF CHAR; res : INTEGER;
 BEGIN
 	AddByStream(context.arg, msg, res);
 	IF res = Ok THEN
@@ -389,8 +389,8 @@ BEGIN
 	END;
 END RemoveAlertX;
 
-PROCEDURE RemoveAlerts*(CONST fullname : ARRAY OF CHAR) : LONGINT;
-VAR a : AlertObject; nofRemoved : LONGINT; done : BOOLEAN;
+PROCEDURE RemoveAlerts*(CONST fullname : ARRAY OF CHAR) : SIGNED32;
+VAR a : AlertObject; nofRemoved : SIGNED32; done : BOOLEAN;
 BEGIN {EXCLUSIVE}
 	nofRemoved := 0;
 	done := FALSE;
@@ -407,8 +407,8 @@ BEGIN {EXCLUSIVE}
 	RETURN nofRemoved;
 END RemoveAlerts;
 
-PROCEDURE RemoveAlertByID*(id : LONGINT) : LONGINT;
-VAR a : AlertObject; nofRemoved : LONGINT; done : BOOLEAN;
+PROCEDURE RemoveAlertByID*(id : SIGNED32) : SIGNED32;
+VAR a : AlertObject; nofRemoved : SIGNED32; done : BOOLEAN;
 BEGIN {EXCLUSIVE}
 	nofRemoved := 0;
 	done := FALSE;
@@ -425,7 +425,7 @@ BEGIN {EXCLUSIVE}
 	RETURN nofRemoved;
 END RemoveAlertByID;
 
-PROCEDURE SetStateByID*(id, state : LONGINT; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE SetStateByID*(id, state : SIGNED32; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 VAR alert : AlertObject;
 BEGIN {EXCLUSIVE}
 	ASSERT((state = Off) OR (state = On) OR (state = Triggered) OR (state = Reset));
@@ -439,7 +439,7 @@ BEGIN {EXCLUSIVE}
 	END;
 END SetStateByID;
 
-PROCEDURE GetByIdX(id : LONGINT) : AlertObject;
+PROCEDURE GetByIdX(id : SIGNED32) : AlertObject;
 VAR a : AlertObject;
 BEGIN
 	a := alerts;
@@ -447,7 +447,7 @@ BEGIN
 	RETURN a;
 END GetByIdX;
 
-PROCEDURE HandleEvents(events : SET; perf : REAL);
+PROCEDURE HandleEvents(events : SET; perf : FLOAT32);
 BEGIN
 	IF WMPerfMonPlugins.EventSampleLoopDone IN events THEN
 		CheckAlerts;
@@ -455,7 +455,7 @@ BEGIN
 END HandleEvents;
 
 PROCEDURE CheckAlerts;
-VAR a : AlertObject; failed : LONGINT;
+VAR a : AlertObject; failed : SIGNED32;
 BEGIN {EXCLUSIVE}
 	IF alertsEnabled THEN
 		a := alerts;
@@ -472,7 +472,7 @@ BEGIN {EXCLUSIVE}
 END CheckAlerts;
 
 PROCEDURE ExecuteCommand(command : XML.String);
-VAR msg : ARRAY 128 OF CHAR; res : WORD;
+VAR msg : ARRAY 128 OF CHAR; res : INTEGER;
 BEGIN
 	IF command # NIL THEN
 		Commands.Call(command^, {}, res, msg);
@@ -497,8 +497,8 @@ BEGIN
 	RETURN string;
 END GetAttributeValue;
 
-PROCEDURE GetLongreal(elem : XML.Element; CONST name : ARRAY OF CHAR; VAR res : WORD) : LONGREAL;
-VAR string : XML.String; nbr : LONGREAL;
+PROCEDURE GetLongreal(elem : XML.Element; CONST name : ARRAY OF CHAR; VAR res : INTEGER) : FLOAT64;
+VAR string : XML.String; nbr : FLOAT64;
 BEGIN
 	res := Error;
 	string := GetAttributeValue(elem, name);
@@ -509,13 +509,13 @@ BEGIN
 	RETURN nbr;
 END GetLongreal;
 
-PROCEDURE GetLongrealString(value : LONGREAL; VAR string : ARRAY OF CHAR);
+PROCEDURE GetLongrealString(value : FLOAT64; VAR string : ARRAY OF CHAR);
 BEGIN
 	Strings.FloatToStr(value, 10, 10, 3, string);
 END GetLongrealString;
 
-PROCEDURE GetTriggerPtr(string : XML.String) : LONGINT;
-VAR trigger : LONGINT;
+PROCEDURE GetTriggerPtr(string : XML.String) : SIGNED32;
+VAR trigger : SIGNED32;
 BEGIN
 	trigger := Invalid;
 	IF string # NIL THEN
@@ -524,8 +524,8 @@ BEGIN
 	RETURN trigger;
 END GetTriggerPtr;
 
-PROCEDURE GetTrigger(CONST string : ARRAY OF CHAR) : LONGINT;
-VAR trigger : LONGINT;
+PROCEDURE GetTrigger(CONST string : ARRAY OF CHAR) : SIGNED32;
+VAR trigger : SIGNED32;
 BEGIN
 	IF string = XmlGreater THEN trigger := Greater;
 	ELSIF string = XmlGreaterOrEqual THEN trigger := GreaterOrEqual;
@@ -542,7 +542,7 @@ BEGIN
 	RETURN trigger;
 END GetTrigger;
 
-PROCEDURE GetTriggerString(trigger : LONGINT; VAR string: ARRAY OF CHAR);
+PROCEDURE GetTriggerString(trigger : SIGNED32; VAR string: ARRAY OF CHAR);
 BEGIN
 	CASE trigger OF
 		|Greater: string := XmlGreater;
@@ -560,8 +560,8 @@ BEGIN
 	END;
 END GetTriggerString;
 
-PROCEDURE GetTypePtr(string : XML.String) : LONGINT;
-VAR type : LONGINT;
+PROCEDURE GetTypePtr(string : XML.String) : SIGNED32;
+VAR type : SIGNED32;
 BEGIN
 	type := Invalid;
 	IF string # NIL THEN
@@ -570,8 +570,8 @@ BEGIN
 	RETURN type;
 END GetTypePtr;
 
-PROCEDURE GetType(string : ARRAY OF CHAR) : LONGINT;
-VAR type : LONGINT;
+PROCEDURE GetType(string : ARRAY OF CHAR) : SIGNED32;
+VAR type : SIGNED32;
 BEGIN
 	Strings.UpperCase(string);
 	IF string = "STICKY" THEN type := Sticky;
@@ -582,7 +582,7 @@ BEGIN
 	RETURN type;
 END GetType;
 
-PROCEDURE GetStateString*(state : LONGINT; VAR string : ARRAY OF CHAR);
+PROCEDURE GetStateString*(state : SIGNED32; VAR string : ARRAY OF CHAR);
 BEGIN
 	CASE state OF
 		|Off: string := "Off";
@@ -594,7 +594,7 @@ BEGIN
 	END;
 END GetStateString;
 
-PROCEDURE GetTypeString*(type : LONGINT; VAR string : ARRAY OF CHAR);
+PROCEDURE GetTypeString*(type : SIGNED32; VAR string : ARRAY OF CHAR);
 BEGIN
 	CASE type OF
 		|Sticky: string := "Sticky";
@@ -634,7 +634,7 @@ BEGIN
 	END;
 END GetFullTriggerString;
 
-PROCEDURE GetEvent(CONST message : Events.Message; code : SHORTINT) : Events.Event;
+PROCEDURE GetEvent(CONST message : Events.Message; code : SIGNED8) : Events.Event;
 VAR event : Events.Event;
 BEGIN
 	event.originator := EventOriginator;
@@ -647,7 +647,7 @@ BEGIN
 END GetEvent;
 
 (* Parses string: fullname type trigger value1 value2  "onAlertCommand" "onLeaveCommand" *)
-PROCEDURE ParseAlert*(r: Streams.Reader; VAR alert : AlertInfo; VAR msg : ARRAY OF CHAR; res : WORD);
+PROCEDURE ParseAlert*(r: Streams.Reader; VAR alert : AlertInfo; VAR msg : ARRAY OF CHAR; res : INTEGER);
 VAR string : ARRAY 256 OF CHAR;
 BEGIN
 	(* parse fullname *)
@@ -723,9 +723,9 @@ END ParseAlert;
 PROCEDURE ParseXmlAlert(elem : XML.Element; VAR msg : ARRAY OF CHAR) : AlertObject;
 VAR
 	alert : AlertObject; string : XML.String;
-	fullname : ARRAY 256 OF CHAR; type, trigger : LONGINT;  value1, value2 : LONGREAL;
+	fullname : ARRAY 256 OF CHAR; type, trigger : SIGNED32;  value1, value2 : FLOAT64;
 	plugin : WMPerfMonPlugins.Plugin;
-	index : LONGINT; res: WORD;
+	index : SIGNED32; res: INTEGER;
 BEGIN
 	ASSERT(elem # NIL);
 	string := GetAttributeValue(elem, XmlAttributeFullname);
@@ -765,7 +765,7 @@ BEGIN
 	RETURN alert;
 END ParseXmlAlert;
 
-PROCEDURE ParseXmlDocument(document : XML.Document; VAR msg : ARRAY OF CHAR; VAR nbrOfRules: LONGINT; VAR res: WORD) : AlertObject;
+PROCEDURE ParseXmlDocument(document : XML.Document; VAR msg : ARRAY OF CHAR; VAR nbrOfRules: SIGNED32; VAR res: INTEGER) : AlertObject;
 VAR elem : XML.Element; enum : XMLObjects.Enumerator; listHead, alert : AlertObject; ptr : ANY; string : XML.String;
 BEGIN
 	ASSERT(document # NIL);
@@ -804,7 +804,7 @@ BEGIN
 	xmlHasErrors := TRUE;
 END ReportError;
 
-PROCEDURE LoadXmlDocument(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD) : XML.Document;
+PROCEDURE LoadXmlDocument(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : INTEGER) : XML.Document;
 VAR
 	scanner : XMLScanner.Scanner; parser : XMLParser.Parser; document : XML.Document;
 	in : Files.Reader; f : Files.File;
@@ -842,7 +842,7 @@ BEGIN {EXCLUSIVE}
 END GetStatus;
 
 PROCEDURE GetAlerts*() : Alerts;
-VAR result : Alerts; a : AlertObject; i : LONGINT;
+VAR result : Alerts; a : AlertObject; i : SIGNED32;
 BEGIN {EXCLUSIVE}
 	result := NIL;
 	IF nbrOfRules > 0 THEN
@@ -858,7 +858,7 @@ BEGIN {EXCLUSIVE}
 	RETURN result;
 END GetAlerts;
 
-PROCEDURE SetRulesX(CONST filename : ARRAY OF CHAR; alertList : AlertObject; nbrOfRulesP : LONGINT; append : BOOLEAN);
+PROCEDURE SetRulesX(CONST filename : ARRAY OF CHAR; alertList : AlertObject; nbrOfRulesP : SIGNED32; append : BOOLEAN);
 VAR a : AlertObject;
 BEGIN
 	IF ~append THEN
@@ -892,7 +892,7 @@ BEGIN
 	RETURN elem;
 END GetRulesAsXmlX;
 
-PROCEDURE LoadRuleFileX(CONST filename : ARRAY OF CHAR; VAR alerts : AlertObject; VAR nbrOfRules : LONGINT; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE LoadRuleFileX(CONST filename : ARRAY OF CHAR; VAR alerts : AlertObject; VAR nbrOfRules : SIGNED32; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 VAR document : XML.Document;
 BEGIN
 	document := LoadXmlDocument(filename, msg, res);
@@ -901,7 +901,7 @@ BEGIN
 	END;
 END LoadRuleFileX;
 
-PROCEDURE StoreRuleFileX(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE StoreRuleFileX(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 VAR file : Files.File; rules : XML.Element; w : Files.Writer;
 BEGIN
 	file := Files.New(filename);
@@ -921,8 +921,8 @@ BEGIN
 	END;
 END StoreRuleFileX;
 
-PROCEDURE LoadRules*(CONST filename : ARRAY OF CHAR; append : BOOLEAN; VAR msg : ARRAY OF CHAR; VAR res : WORD);
-VAR alerts : AlertObject; nbrOfRules : LONGINT;
+PROCEDURE LoadRules*(CONST filename : ARRAY OF CHAR; append : BOOLEAN; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
+VAR alerts : AlertObject; nbrOfRules : SIGNED32;
 BEGIN {EXCLUSIVE}
 	LoadRuleFileX(filename, alerts, nbrOfRules, msg, res);
 	IF res = Ok THEN
@@ -930,13 +930,13 @@ BEGIN {EXCLUSIVE}
 	END;
 END LoadRules;
 
-PROCEDURE StoreRules*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE StoreRules*(CONST filename : ARRAY OF CHAR; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 BEGIN {EXCLUSIVE}
 	StoreRuleFileX(filename, msg, res);
 END StoreRules;
 
 PROCEDURE Load*(context : Commands.Context); (** [filename] ~ *)
-VAR filename, msg : ARRAY 256 OF CHAR; nbrOfRules: LONGINT; res: WORD; alerts : AlertObject;
+VAR filename, msg : ARRAY 256 OF CHAR; nbrOfRules: SIGNED32; res: INTEGER; alerts : AlertObject;
 BEGIN {EXCLUSIVE}
 	IF ~context.arg.GetString(filename) THEN filename := DefaultAlertFile; END;
 	LoadRuleFileX(filename, alerts, nbrOfRules, msg, res);
@@ -950,7 +950,7 @@ BEGIN {EXCLUSIVE}
 END Load;
 
 PROCEDURE Store*(context : Commands.Context); (** filename ~ *)
-VAR filename, msg : ARRAY 256 OF CHAR; res : WORD;
+VAR filename, msg : ARRAY 256 OF CHAR; res : INTEGER;
 BEGIN {EXCLUSIVE}
 	context.arg.SkipWhitespace; context.arg.String(filename);
 	StoreRuleFileX(filename, msg, res);
@@ -962,7 +962,7 @@ BEGIN {EXCLUSIVE}
 END Store;
 
 PROCEDURE Show*(context : Commands.Context); (** ~ *)
-VAR a : AlertObject; nbr : LONGINT;
+VAR a : AlertObject; nbr : SIGNED32;
 BEGIN {EXCLUSIVE}
 	context.out.String("WMPerfMonAlerts status: Alerts are ");
 	IF alertsEnabled THEN context.out.String("ENABLED"); ELSE context.out.String("DISABLED"); END; context.out.Ln;

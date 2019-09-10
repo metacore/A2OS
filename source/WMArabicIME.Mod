@@ -16,7 +16,7 @@ TYPE
 
 		(* Map characters from US-Keyboard to arabic keyboard *)
 		PROCEDURE KeyEvent*(ucs : SIZE; flags : SET; keysym : SIZE);
-		VAR multiChar : ARRAY 2 OF LONGINT;
+		VAR multiChar : ARRAY 2 OF SIGNED32;
 		BEGIN
 			CASE ucs OF
 			(* unshifted *)
@@ -132,7 +132,7 @@ END Install;
 PROCEDURE SelectedCharToUCS*;
 VAR r : Texts.TextReader;
 	selectionText: Texts.Text;
-	ucs : LONGINT;
+	ucs : SIGNED32;
 	from, to : Texts.TextPosition;
 BEGIN
 	IF Texts.GetLastSelection(selectionText, from, to) THEN

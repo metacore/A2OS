@@ -20,13 +20,13 @@ TYPE
 
 	Argument *= OBJECT
 	VAR
-		next, error*, last, unkeyed : INTEGER;
+		next, error*, last, unkeyed : SIGNED16;
 		msg* : ARRAY 256 OF CHAR;
 
 		arguments : ARRAY 256 OF RECORD
 			key : ARRAY 32 OF CHAR;
 			value : ARRAY MaxArgumentValues,256 OF CHAR;
-			expParams : INTEGER;
+			expParams : SIGNED16;
 			isset : BOOLEAN;
 		END;
 
@@ -40,7 +40,7 @@ TYPE
 		END Init;
 
 
-		PROCEDURE Push* ( CONST key : ARRAY OF CHAR; expParams : INTEGER );
+		PROCEDURE Push* ( CONST key : ARRAY OF CHAR; expParams : SIGNED16 );
 		BEGIN
 			ASSERT ( next < MaxArgumentValues );
 
@@ -52,7 +52,7 @@ TYPE
 		END Push;
 
 
-		PROCEDURE GetKeyedArgument* ( CONST key : ARRAY OF CHAR; VAR value : ARRAY OF CHAR; index : INTEGER );
+		PROCEDURE GetKeyedArgument* ( CONST key : ARRAY OF CHAR; VAR value : ARRAY OF CHAR; index : SIGNED16 );
 		BEGIN
 			IF IsSet ( key ) & (index < next) THEN
 				COPY ( arguments[last].value[index], value );
@@ -60,7 +60,7 @@ TYPE
 		END GetKeyedArgument;
 
 
-		PROCEDURE GetUnkeyedArgument* ( VAR value : ARRAY OF CHAR; index : INTEGER );
+		PROCEDURE GetUnkeyedArgument* ( VAR value : ARRAY OF CHAR; index : SIGNED16 );
 		BEGIN
 			IF index < unkeyed THEN (* muss man array bounds testen? :) *)
 				COPY ( arguments2[index], value );
@@ -68,7 +68,7 @@ TYPE
 		END GetUnkeyedArgument;
 
 
-		PROCEDURE CountUnkeyedArguments* (): INTEGER;
+		PROCEDURE CountUnkeyedArguments* (): SIGNED16;
 		BEGIN
 			RETURN unkeyed;
 		END CountUnkeyedArguments;
@@ -76,7 +76,7 @@ TYPE
 
 		PROCEDURE IsSet* ( CONST key : ARRAY OF CHAR ) : BOOLEAN;
 		VAR
-			idx : INTEGER;
+			idx : SIGNED16;
 			found : BOOLEAN;
 
 		BEGIN
@@ -94,7 +94,7 @@ TYPE
 			ch : CHAR;
 			arg : Streams.Reader;
 			s : ARRAY 256 OF CHAR;
-			a, j : INTEGER;
+			a, j : SIGNED16;
 			found : BOOLEAN;
 
 		BEGIN
@@ -146,7 +146,7 @@ TYPE
 		END Read;
 
 
-		PROCEDURE FindKey ( CONST s : ARRAY OF CHAR; VAR index : INTEGER; VAR found : BOOLEAN );
+		PROCEDURE FindKey ( CONST s : ARRAY OF CHAR; VAR index : SIGNED16; VAR found : BOOLEAN );
 		BEGIN
 			found := FALSE;
 			index := 0;

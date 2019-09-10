@@ -18,10 +18,10 @@ TYPE
 	VAR
 		dead : BOOLEAN;
 		seeking : BOOLEAN;
-		stepSize : LONGINT;
+		stepSize : SIGNED32;
 		tuner : TVDriver.TVTuner;
 		audio : TVDriver.Audio;
-		sigFound, sigLost : LONGINT;
+		sigFound, sigLost : SIGNED32;
 
 		PROCEDURE &Init*(tuner : TVDriver.TVTuner; audio : TVDriver.Audio);
 		BEGIN
@@ -30,7 +30,7 @@ TYPE
 			seeking := FALSE;
 		END Init;
 
-		PROCEDURE SetStepSize(stepSize : LONGINT);
+		PROCEDURE SetStepSize(stepSize : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			SELF.stepSize := stepSize;
 		END SetStepSize;
@@ -101,7 +101,7 @@ TYPE
 		dragging : BOOLEAN;
 		chName : ARRAY 33 OF CHAR;
 
-		vcdNr* : LONGINT;		(* Needed for restore process *)
+		vcdNr* : SIGNED32;		(* Needed for restore process *)
 		nextINchain : TvWindow;
 
 		PROCEDURE &New*(vcd : TVDriver.VideoCaptureDevice);
@@ -223,7 +223,7 @@ TYPE
 			dragging := FALSE
 		END PointerUp;
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : WORD);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : INTEGER);
 		BEGIN
 			Draw^(canvas, w, h, 0)
 		END Draw;
@@ -263,9 +263,9 @@ TYPE
 		END Handle;
 
 		(** Called when the TV frequency is changed. Adapt Teletext decoder etc. *)
-		PROCEDURE HandleSwitch (freq : LONGINT; tuner : TVDriver.TVTuner);
+		PROCEDURE HandleSwitch (freq : SIGNED32; tuner : TVDriver.TVTuner);
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 			ch : TVChannels.TVChannel;
 			title : ARRAY 32 OF CHAR;
 		BEGIN
@@ -305,7 +305,7 @@ TYPE
 		(** Enable teletext decoding and caching *)
 		PROCEDURE StartTeletextCapture*;
 		VAR
-			status : LONGINT;
+			status : SIGNED32;
 		BEGIN
 			IF ~vcd.IsVbiOpen() THEN
 				status := tuner.OpenVbi();
@@ -380,7 +380,7 @@ TYPE
 		END KeyEvent;
 
 		(** Get the current TV frequency *)
-		PROCEDURE GetTVFreq*() : LONGINT;
+		PROCEDURE GetTVFreq*() : SIGNED32;
 		BEGIN
 			RETURN tuner.GetFrequency()
 		END GetTVFreq;
@@ -410,7 +410,7 @@ VAR
 	windows : TvWindow;
 
 (*
-	noOfNotificationCalls : LONGINT;
+	noOfNotificationCalls : SIGNED32;
 
 PROCEDURE NotificationHandler;
 BEGIN
@@ -441,9 +441,9 @@ PROCEDURE BuildChannelTableImpl(filename : ARRAY OF CHAR);
 CONST
 	Delay = 500;
 VAR
-	ch, max, found: LONGINT;
+	ch, max, found: SIGNED32;
 	i, length: SIZE;
-	res: WORD;
+	res: INTEGER;
 	tvWnd : TvWindow;
 	tvCh : TVChannels.TVChannel;
 	channels : TVChannels.ChannelList;
@@ -595,7 +595,7 @@ PROCEDURE Open*(context : Commands.Context);
 VAR
 	tvWnd : TvWindow;
 	vcd : TVDriver.VideoCaptureDevice;
-	devNr : LONGINT;
+	devNr : SIGNED32;
 	param : ARRAY 32 OF CHAR;
 BEGIN
 	IF context # NIL THEN
@@ -646,7 +646,7 @@ VAR
 	manager : WM.WindowManager;
 	xml : XML.Element;
 	s : Strings.String;
-	i : LONGINT;
+	i : SIGNED32;
 	vcd : TVDriver.VideoCaptureDevice;
 	tuner : TVDriver.TVTuner;
 	tvWnd : TvWindow;

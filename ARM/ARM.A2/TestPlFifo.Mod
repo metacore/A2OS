@@ -16,9 +16,9 @@ TYPE
 	Notifier = OBJECT
 	VAR
 		params: ANY;
-		count, result: LONGINT;
+		count, result: SIGNED32;
 
-		PROCEDURE Await(param: ANY): LONGINT;
+		PROCEDURE Await(param: ANY): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			AWAIT((count = 1)); (* & ((param = NIL) OR (param = params)));*)
 			(*TRACE('notified', count);*)
@@ -26,7 +26,7 @@ TYPE
 			RETURN result
 		END Await;
 
-		PROCEDURE Notify (status: LONGINT; param: ANY);
+		PROCEDURE Notify (status: SIGNED32; param: ANY);
 		BEGIN {EXCLUSIVE}
 			result := status;
 			params := param;
@@ -45,10 +45,10 @@ TYPE
 
 	Controller = OBJECT
 	VAR
-		action: LONGINT;
+		action: SIGNED32;
 		notifier: Notifier;
 
-		PROCEDURE & Init (action: LONGINT);
+		PROCEDURE & Init (action: SIGNED32);
 		BEGIN
 			SELF.action := action;
 			IF action <= ActDmaEmpty THEN NEW(notifier) END
@@ -56,7 +56,7 @@ TYPE
 
 		PROCEDURE EmptyCautious;
 		VAR
-			k, v: LONGINT;
+			k, v: SIGNED32;
 		BEGIN
 			FOR k := 1 TO 32768+1 DO
 				REPEAT UNTIL input.available;
@@ -67,7 +67,7 @@ TYPE
 
 		PROCEDURE FillCautious;
 		VAR
-			k: LONGINT;
+			k: SIGNED32;
 		BEGIN
 			FOR k := 1 TO 32768+1 DO
 				REPEAT UNTIL output.ready;
@@ -78,7 +78,7 @@ TYPE
 
 		PROCEDURE EmptyCpu;
 		VAR
-			k, v: LONGINT;
+			k, v: SIGNED32;
 		BEGIN
 			FOR k := 1 TO 32768+1 DO
 				v := input.data
@@ -88,7 +88,7 @@ TYPE
 
 		PROCEDURE FillCpu;
 		VAR
-			k: LONGINT;
+			k: SIGNED32;
 		BEGIN
 			FOR k := 1 TO 32768+1 DO
 				output.data := k
@@ -104,7 +104,7 @@ TYPE
 			program: DMA330ProgramWriter.Program;
 			src: POINTER TO ARRAY OF CHAR;
 			srcOfs: ADDRESS;
-			i, status: LONGINT;
+			i, status: SIGNED32;
 		BEGIN
 			NEW(src, size + alignment);
 			srcOfs := alignment - ADDRESSOF(src[0]) MOD alignment;
@@ -154,7 +154,7 @@ TYPE
 			program: DMA330ProgramWriter.Program;
 			dst: POINTER TO ARRAY OF CHAR;
 			dstOfs: ADDRESS;
-			i, status: LONGINT;
+			i, status: SIGNED32;
 		BEGIN
 			NEW(dst, size + alignment);
 			dstOfs := alignment - ADDRESSOF(dst[0]) MOD alignment;
@@ -208,8 +208,8 @@ VAR
 
 	PROCEDURE InitPl;
 	VAR
-		freq: HUGEINT;
-		res: LONGINT;
+		freq: SIGNED64;
+		res: SIGNED32;
 	BEGIN
 		freq := PsConfig.GetPllClockFrequency(PsConfig.IoPll,res);
 		Trace.String("IO PLL frequency is "); Trace.Int(freq,0); Trace.StringLn(" Hz");
@@ -228,8 +228,8 @@ VAR
 
 	PROCEDURE ResetPl;
 	VAR
-		t: HUGEINT;
-		res: LONGINT;
+		t: SIGNED64;
+		res: SIGNED32;
 	BEGIN
 		(* Reset PL *)
 		ASSERT(PsConfig.SetPlResets({0,1,2,3},res));

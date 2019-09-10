@@ -32,7 +32,7 @@ END SetLanguage;
 
 PROCEDURE GetDefaultLanguage;
 VAR
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	Configuration.Get("Local.Language", currentLanguage.code, res);
 	IF res # Configuration.Ok THEN

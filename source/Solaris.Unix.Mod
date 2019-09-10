@@ -160,7 +160,7 @@ CONST
 	(*--------------------------- Threads -------------------------------*)
 
 TYPE
-	Thread_t* = LONGINT;
+	Thread_t* = SIGNED32;
 	PthreadAttributeDesc = RECORD attr: ADDRESS END;
 
 	Key_t* = ADDRESS;
@@ -263,58 +263,58 @@ TYPE
 	Termios* = RECORD
 		iflags*, oflags*, cflags*, lflags*: SET32;
 		cc*: ARRAY 19 OF CHAR;
-		dummy-: ARRAY 2 OF LONGINT
+		dummy-: ARRAY 2 OF SIGNED32
 	END;
 
 	(*------------------------------------------------------------------*)
 
 TYPE
-	dev_t*		= LONGWORD;
-	ino_t*		= LONGWORD;
-	nlink_t*	= WORD;
-	mode_t*	= WORD;
-	off_t*		= LONGWORD;
-	blksize_t*= WORD;
-	blkcnt_t*	= LONGWORD;
-	uid_t*		= WORD;
-	gid_t*		= WORD;
-	pid_t*		= WORD;
+	dev_t*		= LONGINTEGER;
+	ino_t*		= LONGINTEGER;
+	nlink_t*	= INTEGER;
+	mode_t*	= INTEGER;
+	off_t*		= LONGINTEGER;
+	blksize_t*= INTEGER;
+	blkcnt_t*	= LONGINTEGER;
+	uid_t*		= INTEGER;
+	gid_t*		= INTEGER;
+	pid_t*		= INTEGER;
 
 	Status* = RECORD
 		#IF I386 THEN
 				dev-		: dev_t;
-				pad1		: ARRAY 3 OF WORD;
+				pad1		: ARRAY 3 OF INTEGER;
 				ino-		: ino_t;
-				mode-	: WORD;
-				nlink-		: WORD;
-				uid-		: WORD;
-				gid-		: WORD;
+				mode-	: INTEGER;
+				nlink-		: INTEGER;
+				uid-		: INTEGER;
+				gid-		: INTEGER;
 				rdev-		: dev_t;
-				pad2		: ARRAY 2 OF WORD;
-				size-		: WORD;
-				pad3		: WORD;
+				pad2		: ARRAY 2 OF INTEGER;
+				size-		: INTEGER;
+				pad3		: INTEGER;
 				atime-	: Timeval;
 				mtime-	: Timeval;
 				ctime-	: Timeval;
-				blksize-	: WORD;
-				blocks-	: WORD;
+				blksize-	: INTEGER;
+				blocks-	: INTEGER;
 				fstype-	: ARRAY 16 OF CHAR;
-				pad4		: ARRAY 8 OF WORD
+				pad4		: ARRAY 8 OF INTEGER
 		#ELSIF AMD64 THEN
 				dev-		: dev_t;
 				ino-		: ino_t;
-				mode-	: WORD;
-				nlink-		: WORD;
-				uid-		: WORD;
-				gid-		: WORD;
+				mode-	: INTEGER;
+				nlink-		: INTEGER;
+				uid-		: INTEGER;
+				gid-		: INTEGER;
 				rdev-		: dev_t;
-				size-		: LONGWORD;
+				size-		: LONGINTEGER;
 				atime-	: Timeval;
 				mtime-	: Timeval;
 				ctime-	: Timeval;
-				blksize-	: WORD;
-				pad0		: WORD;
-				blocks-	: LONGWORD;
+				blksize-	: INTEGER;
+				pad0		: INTEGER;
+				blocks-	: LONGINTEGER;
 				fstype-	: ARRAY 16 OF CHAR
 		#ELSE
 			unimplemented
@@ -323,22 +323,22 @@ TYPE
 
 
 	Timeval* = RECORD
-				sec*	: LONGWORD;
-				usec*	: LONGWORD
+				sec*	: LONGINTEGER;
+				usec*	: LONGINTEGER
 			END;
 
 	TmPtr* = POINTER TO Tm;
 	Tm* = RECORD
-				sec*, min*, hour*, mday*, mon*, year*, wday*, yday*, isdst*: LONGINT;
-				gmtoff*, tmzone*: LONGINT;
+				sec*, min*, hour*, mday*, mon*, year*, wday*, yday*, isdst*: SIGNED32;
+				gmtoff*, tmzone*: SIGNED32;
 			END;
 
 	Tms* = RECORD
-				utime*, stime*, cutime*, cstime*: LONGINT
+				utime*, stime*, cutime*, cstime*: SIGNED32
 			END;
 
 	Timezone* = RECORD
-				minuteswest*, dsttime*: LONGINT
+				minuteswest*, dsttime*: SIGNED32
 			END;
 
 	Itimerval* = RECORD
@@ -354,27 +354,27 @@ TYPE
 	Dirent* = POINTER TO RECORD
 				ino-		: ino_t;
 				off-		: off_t;
-				reclen-	: INTEGER;
+				reclen-	: SIGNED16;
 				name-	: (*array of*) CHAR;
 			END;
 
 	Sigset = ARRAY 4 OF SET32;
-	SignalTrap = PROCEDURE ( sig: LONGINT; mc: Mcontext );
+	SignalTrap = PROCEDURE ( sig: SIGNED32; mc: Mcontext );
 
 	Stack* = RECORD
 				sp-	: ADDRESS;
 				size-	: SIZE;
-				flags-	: WORD;
+				flags-	: INTEGER;
 			END;
 
 	Ucontext* = POINTER TO UcontextDesc;
 	UcontextDesc* = RECORD
-				flags-		: LONGWORD;
+				flags-		: LONGINTEGER;
 				link-		: ADDRESS;
 				sigmask-	: Sigset;
 				stack-	: Stack;
 			#IF AMD64 THEN
-				pad: LONGWORD;		(* force proper alignment of 'mc' *)
+				pad: LONGINTEGER;		(* force proper alignment of 'mc' *)
 			#END
 				mc-		: McontextDesc;
 			END;
@@ -382,55 +382,55 @@ TYPE
 	Mcontext* = POINTER TO McontextDesc;
 	McontextDesc* = RECORD
 			#IF I386 THEN
-				r_gs-		: LONGINT;
-				r_fs-		: LONGINT;
-				r_es-		: LONGINT;
-				r_ds-		: LONGINT;
-				r_di-		: LONGINT;
-				r_si-		: LONGINT;
-				r_bp-		: LONGINT;
-				r_nsp-	: LONGINT;
-				r_bx-		: LONGINT;
-				r_dx-		: LONGINT;
-				r_cx-		: LONGINT;
-				r_ax-		: LONGINT;
-				r_trapno-	: LONGINT;
-				r_err-		: LONGINT;
-				r_pc-		: LONGINT;
-				r_cs-		: LONGINT;
-				r_flags-	: LONGINT;
-				r_sp-		: LONGINT;		(* sp at error(signal) *)
-				r_ss		: LONGINT;
+				r_gs-		: SIGNED32;
+				r_fs-		: SIGNED32;
+				r_es-		: SIGNED32;
+				r_ds-		: SIGNED32;
+				r_di-		: SIGNED32;
+				r_si-		: SIGNED32;
+				r_bp-		: SIGNED32;
+				r_nsp-	: SIGNED32;
+				r_bx-		: SIGNED32;
+				r_dx-		: SIGNED32;
+				r_cx-		: SIGNED32;
+				r_ax-		: SIGNED32;
+				r_trapno-	: SIGNED32;
+				r_err-		: SIGNED32;
+				r_pc-		: SIGNED32;
+				r_cs-		: SIGNED32;
+				r_flags-	: SIGNED32;
+				r_sp-		: SIGNED32;		(* sp at error(signal) *)
+				r_ss		: SIGNED32;
 				fpc-		: ADDRESS;
 			#ELSIF AMD64 THEN
-				r_15-		: HUGEINT;
-				r_14-		: HUGEINT;
-				r_13-		: HUGEINT;
-				r_12-		: HUGEINT;
-				r_11-		: HUGEINT;
-				r_10-		: HUGEINT;
-				r_9-		: HUGEINT;
-				r_8-		: HUGEINT;
-				r_di-		: HUGEINT;
-				r_si-		: HUGEINT;
-				r_bp-		: HUGEINT;
-				r_bx-		: HUGEINT;
-				r_dx-		: HUGEINT;
-				r_cx-		: HUGEINT;
-				r_ax-		: HUGEINT;
-				r_trapno-	: HUGEINT;
-				r_err-		: HUGEINT;
-				r_pc-		: HUGEINT;
-				r_cs-		: HUGEINT;
-				r_fl-		: HUGEINT;
-				r_sp-		: HUGEINT;
-				r_ss-		: HUGEINT;
-				r_fs-		: HUGEINT;
-				r_gs-		: HUGEINT;
-				r_es-		: HUGEINT;
-				r_ds-		: HUGEINT;
-				r_fsbase-	: HUGEINT;
-				r_gsbase-: HUGEINT
+				r_15-		: SIGNED64;
+				r_14-		: SIGNED64;
+				r_13-		: SIGNED64;
+				r_12-		: SIGNED64;
+				r_11-		: SIGNED64;
+				r_10-		: SIGNED64;
+				r_9-		: SIGNED64;
+				r_8-		: SIGNED64;
+				r_di-		: SIGNED64;
+				r_si-		: SIGNED64;
+				r_bp-		: SIGNED64;
+				r_bx-		: SIGNED64;
+				r_dx-		: SIGNED64;
+				r_cx-		: SIGNED64;
+				r_ax-		: SIGNED64;
+				r_trapno-	: SIGNED64;
+				r_err-		: SIGNED64;
+				r_pc-		: SIGNED64;
+				r_cs-		: SIGNED64;
+				r_fl-		: SIGNED64;
+				r_sp-		: SIGNED64;
+				r_ss-		: SIGNED64;
+				r_fs-		: SIGNED64;
+				r_gs-		: SIGNED64;
+				r_es-		: SIGNED64;
+				r_ds-		: SIGNED64;
+				r_fsbase-	: SIGNED64;
+				r_gsbase-: SIGNED64
 			#ELSE
 				unimplemented
 			#END
@@ -438,20 +438,20 @@ TYPE
 
 
 	Sigaction = RECORD
-				sa_flags: WORD;
+				sa_flags: INTEGER;
 				sa_handler: ADDRESS;
 				sa_mask: Sigset;
-				pad1, pad2: WORD
+				pad1, pad2: INTEGER
 			END;
 
 	Sched_param = RECORD
-		sched_priority: LONGINT;
-		unused: ARRAY 8 OF LONGINT;
+		sched_priority: SIGNED32;
+		unused: ARRAY 8 OF SIGNED32;
 	END;
 
 
-	OberonXErrorHandler* = PROCEDURE ( disp, err: ADDRESS ): LONGINT;
-	OberonXIOErrorHandler* = PROCEDURE ( disp: ADDRESS ): LONGINT;
+	OberonXErrorHandler* = PROCEDURE ( disp, err: ADDRESS ): SIGNED32;
+	OberonXIOErrorHandler* = PROCEDURE ( disp: ADDRESS ): SIGNED32;
 
 
 VAR
@@ -459,7 +459,7 @@ VAR
 	mainthread: Thread_t;
 	thread_exit: Key_t;
 
-	argc-: LONGINT;  argv-: ADDRESS;  environ: ADDRESS;
+	argc-: SIGNED32;  argv-: ADDRESS;  environ: ADDRESS;
 
 	trap: SignalTrap;
 
@@ -472,110 +472,110 @@ VAR
 
 	sigstack-: ARRAY 32*4096 OF CHAR;
 
-	sysconf	: PROCEDURE {C} ( name: LONGINT ): WORD;
+	sysconf	: PROCEDURE {C} ( name: SIGNED32 ): INTEGER;
 
-	pthread_mutex_init		: PROCEDURE {C} ( mutex: ADDRESS; mutexattr: ADDRESS ): WORD;
-	pthread_mutex_destroy	: PROCEDURE {C} ( mutex: ADDRESS ): WORD;
-	pthread_mutex_lock		: PROCEDURE {C} ( mutex: ADDRESS ): WORD;
-	pthread_mutex_unlock	: PROCEDURE {C} ( mutex: ADDRESS ): WORD;
+	pthread_mutex_init		: PROCEDURE {C} ( mutex: ADDRESS; mutexattr: ADDRESS ): INTEGER;
+	pthread_mutex_destroy	: PROCEDURE {C} ( mutex: ADDRESS ): INTEGER;
+	pthread_mutex_lock		: PROCEDURE {C} ( mutex: ADDRESS ): INTEGER;
+	pthread_mutex_unlock	: PROCEDURE {C} ( mutex: ADDRESS ): INTEGER;
 
-	pthread_mutexattr_init		: PROCEDURE {C} ( mutexattr: ADDRESS ): WORD;
-	pthread_mutexattr_settype	: PROCEDURE {C} ( mutexattr: ADDRESS; type: WORD ): WORD;
+	pthread_mutexattr_init		: PROCEDURE {C} ( mutexattr: ADDRESS ): INTEGER;
+	pthread_mutexattr_settype	: PROCEDURE {C} ( mutexattr: ADDRESS; type: INTEGER ): INTEGER;
 
-	pthread_cond_init		: PROCEDURE {C} ( cond: ADDRESS; condAttr: ADDRESS ): WORD;
-	pthread_cond_destroy	: PROCEDURE {C} ( cond: ADDRESS ): WORD;
-	pthread_cond_wait		: PROCEDURE {C} ( cond: ADDRESS; mutex: ADDRESS ): WORD;
-	pthread_cond_signal		: PROCEDURE {C} ( cond: ADDRESS ): WORD;
+	pthread_cond_init		: PROCEDURE {C} ( cond: ADDRESS; condAttr: ADDRESS ): INTEGER;
+	pthread_cond_destroy	: PROCEDURE {C} ( cond: ADDRESS ): INTEGER;
+	pthread_cond_wait		: PROCEDURE {C} ( cond: ADDRESS; mutex: ADDRESS ): INTEGER;
+	pthread_cond_signal		: PROCEDURE {C} ( cond: ADDRESS ): INTEGER;
 
 	pthread_create	: PROCEDURE {C} ( newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C} (arg: PROCEDURE):ADDRESS; arg:PROCEDURE): Thread_t;
 	pthread_exit		: PROCEDURE {C} ( thr: ADDRESS );
 	pthread_detach	: PROCEDURE {C} ( thr: Thread_t );
-	pthread_kill		: PROCEDURE {C} ( thr: Thread_t; sigid: LONGINT ): LONGINT;
+	pthread_kill		: PROCEDURE {C} ( thr: Thread_t; sigid: SIGNED32 ): SIGNED32;
 	pthread_cancel	: PROCEDURE {C} ( thr: Thread_t );
 	pthread_self		: PROCEDURE {C} ( ): Thread_t;
 
-	pthread_key_create:		PROCEDURE {C} ( key: ADDRESS; destructor: PROCEDURE {C} ( param: ADDRESS ) ): WORD;
-	pthread_setspecific:		PROCEDURE {C} ( key: Key_t; value: ADDRESS ): WORD;
+	pthread_key_create:		PROCEDURE {C} ( key: ADDRESS; destructor: PROCEDURE {C} ( param: ADDRESS ) ): INTEGER;
+	pthread_setspecific:		PROCEDURE {C} ( key: Key_t; value: ADDRESS ): INTEGER;
 	pthread_getspecific:		PROCEDURE {C} ( key: Key_t ): ADDRESS;
 
 	pthread_attr_init					: PROCEDURE {C} ( attr: ADDRESS );
-	pthread_attr_setscope			: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
-	pthread_attr_setdetachstate	: PROCEDURE {C} ( attr: ADDRESS; set: WORD );
+	pthread_attr_setscope			: PROCEDURE {C} ( attr: ADDRESS; set: INTEGER );
+	pthread_attr_setdetachstate	: PROCEDURE {C} ( attr: ADDRESS; set: INTEGER );
 	pthread_attr_setstacksize		: PROCEDURE {C} ( attr: ADDRESS; stackSize: SIZE );
 
-	sched_get_priority_max		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
-	sched_get_priority_min		: PROCEDURE {C} ( policy: LONGINT ): LONGINT;
-	pthread_setschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: LONGINT; param: ADDRESS ): WORD;
-	pthread_getschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: ADDRESS; param: ADDRESS ): WORD;
-	pthread_setcancelstate		: PROCEDURE {C} ( state: LONGINT; oldstate: ADDRESS ): LONGINT;
-	pthread_setcanceltype		: PROCEDURE {C} ( type: LONGINT; oldtype: ADDRESS ): LONGINT;
+	sched_get_priority_max		: PROCEDURE {C} ( policy: SIGNED32 ): SIGNED32;
+	sched_get_priority_min		: PROCEDURE {C} ( policy: SIGNED32 ): SIGNED32;
+	pthread_setschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: SIGNED32; param: ADDRESS ): INTEGER;
+	pthread_getschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: ADDRESS; param: ADDRESS ): INTEGER;
+	pthread_setcancelstate		: PROCEDURE {C} ( state: SIGNED32; oldstate: ADDRESS ): SIGNED32;
+	pthread_setcanceltype		: PROCEDURE {C} ( type: SIGNED32; oldtype: ADDRESS ): SIGNED32;
 
-	thr_suspend		: PROCEDURE {C} ( thread: Thread_t ): LONGINT;
-	thr_continue		: PROCEDURE {C} ( thread: Thread_t ): LONGINT;
+	thr_suspend		: PROCEDURE {C} ( thread: Thread_t ): SIGNED32;
+	thr_continue		: PROCEDURE {C} ( thread: Thread_t ): SIGNED32;
 
-	sigaction			: PROCEDURE {C} ( signum: LONGINT; CONST act, oldact: ADDRESS ): LONGINT;
+	sigaction			: PROCEDURE {C} ( signum: SIGNED32; CONST act, oldact: ADDRESS ): SIGNED32;
 	sigemptyset		: PROCEDURE {C} ( set: ADDRESS );
-	sigfillset			: PROCEDURE {C} ( set: ADDRESS ): LONGINT;
-	sigsuspend		: PROCEDURE {C} ( set: ADDRESS ): LONGINT;
-	sigaddset			: PROCEDURE {C} ( set: ADDRESS; signo: LONGINT );
-	sigdelset			: PROCEDURE {C} ( set: ADDRESS; signo: LONGINT );
-	nanosleep			: PROCEDURE {C} ( req, rem: ADDRESS ): LONGINT;
-	sigaltstack		: PROCEDURE {C} ( ss, oss: ADDRESS ): LONGINT;
-	pthread_sigmask	: PROCEDURE {C} ( how: LONGINT; set: ADDRESS; oldset: ADDRESS ): LONGINT;
+	sigfillset			: PROCEDURE {C} ( set: ADDRESS ): SIGNED32;
+	sigsuspend		: PROCEDURE {C} ( set: ADDRESS ): SIGNED32;
+	sigaddset			: PROCEDURE {C} ( set: ADDRESS; signo: SIGNED32 );
+	sigdelset			: PROCEDURE {C} ( set: ADDRESS; signo: SIGNED32 );
+	nanosleep			: PROCEDURE {C} ( req, rem: ADDRESS ): SIGNED32;
+	sigaltstack		: PROCEDURE {C} ( ss, oss: ADDRESS ): SIGNED32;
+	pthread_sigmask	: PROCEDURE {C} ( how: SIGNED32; set: ADDRESS; oldset: ADDRESS ): SIGNED32;
 
 	(*pid: return param for process id. Only set if initialized non-null. path: pointer to string denoting the executable. file_actions: modify which files are open for the new process, if NIL it inherits open files from parent process. attrp: sets process groups, scheduler, signals etc, leave NIL. argv, evp: char** to the arguments and env. variables*)
-	posix_spawnp- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): LONGINT;
+	posix_spawnp- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): SIGNED32;
 	(*more restrictive than spawnp*)
-	posix_spawn- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): LONGINT;
-	waitpid-			: PROCEDURE {C} ( pid: pid_t; status: ADDRESS; options: LONGINT ): pid_t;
-	pipe-				: PROCEDURE {C} ( pipefd: ADDRESS ): LONGINT; (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)
-	dup2-				: PROCEDURE {C} ( oldfd,newfd: LONGINT ): LONGINT; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
-	dup-				: PROCEDURE {C} ( oldfd: LONGINT ): LONGINT;
+	posix_spawn- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): SIGNED32;
+	waitpid-			: PROCEDURE {C} ( pid: pid_t; status: ADDRESS; options: SIGNED32 ): pid_t;
+	pipe-				: PROCEDURE {C} ( pipefd: ADDRESS ): SIGNED32; (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)
+	dup2-				: PROCEDURE {C} ( oldfd,newfd: SIGNED32 ): SIGNED32; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
+	dup-				: PROCEDURE {C} ( oldfd: SIGNED32 ): SIGNED32;
 
-	read-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): SIZE;
-	write-			: PROCEDURE {C} ( fd: LONGINT; buf: ADDRESS; n: SIZE ): SIZE;
-	open-			: PROCEDURE {C} ( name: ADDRESS;  flags: SET32;  mode: mode_t ): LONGINT;
-	close-		: PROCEDURE {C} ( fd: LONGINT ): LONGINT;
-	lseek-		: PROCEDURE {C} ( fd: LONGINT; offset: off_t; origin: WORD ): off_t;
-	fsync-		: PROCEDURE {C} ( fd: LONGINT ): LONGINT;
-	ioctl-			: PROCEDURE {C} ( fd: LONGINT; request: LONGINT; arg: ADDRESS ): LONGINT;
-	unlink-		: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
-	rename-		: PROCEDURE {C} ( oldname, newname: ADDRESS ): LONGINT;
-	ftruncate-		: PROCEDURE {C} ( fd: LONGINT;  length: SIZE ): LONGINT;
-	chmod-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
-	utime-		: PROCEDURE {C} ( name: ADDRESS;  tb: ADDRESS ): LONGINT;
-	access-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): LONGINT;
-	select-		: PROCEDURE {C} ( width: LONGINT; rd, wr, ex: ADDRESS;  VAR timeout: Timeval ): LONGINT;
+	read-			: PROCEDURE {C} ( fd: SIGNED32; buf: ADDRESS; n: SIZE ): SIZE;
+	write-			: PROCEDURE {C} ( fd: SIGNED32; buf: ADDRESS; n: SIZE ): SIZE;
+	open-			: PROCEDURE {C} ( name: ADDRESS;  flags: SET32;  mode: mode_t ): SIGNED32;
+	close-		: PROCEDURE {C} ( fd: SIGNED32 ): SIGNED32;
+	lseek-		: PROCEDURE {C} ( fd: SIGNED32; offset: off_t; origin: INTEGER ): off_t;
+	fsync-		: PROCEDURE {C} ( fd: SIGNED32 ): SIGNED32;
+	ioctl-			: PROCEDURE {C} ( fd: SIGNED32; request: SIGNED32; arg: ADDRESS ): SIGNED32;
+	unlink-		: PROCEDURE {C} ( name: ADDRESS ): SIGNED32;
+	rename-		: PROCEDURE {C} ( oldname, newname: ADDRESS ): SIGNED32;
+	ftruncate-		: PROCEDURE {C} ( fd: SIGNED32;  length: SIZE ): SIGNED32;
+	chmod-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): SIGNED32;
+	utime-		: PROCEDURE {C} ( name: ADDRESS;  tb: ADDRESS ): SIGNED32;
+	access-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): SIGNED32;
+	select-		: PROCEDURE {C} ( width: SIGNED32; rd, wr, ex: ADDRESS;  VAR timeout: Timeval ): SIGNED32;
 	realpath-		: PROCEDURE {C} ( file_name: ADDRESS; resolved_name: ADDRESS ): ADDRESS;
 
-	chdir-			: PROCEDURE {C} ( name: ADDRESS ): LONGINT;
-	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: mode_t ): LONGINT;
-	rmdir-			: PROCEDURE {C} ( path: ADDRESS ): LONGINT;
+	chdir-			: PROCEDURE {C} ( name: ADDRESS ): SIGNED32;
+	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: mode_t ): SIGNED32;
+	rmdir-			: PROCEDURE {C} ( path: ADDRESS ): SIGNED32;
 
-	stat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): LONGINT;
-	lstat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): LONGINT;
-	fstat-			: PROCEDURE {C} ( fd: LONGINT;  VAR buf: Status ): LONGINT;
+	stat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): SIGNED32;
+	lstat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): SIGNED32;
+	fstat-			: PROCEDURE {C} ( fd: SIGNED32;  VAR buf: Status ): SIGNED32;
 
-	getpid-		: PROCEDURE {C} ( ): LONGINT;
-	getuid-		: PROCEDURE {C} ( ): LONGINT;
+	getpid-		: PROCEDURE {C} ( ): SIGNED32;
+	getuid-		: PROCEDURE {C} ( ): SIGNED32;
 
 	malloc-		: PROCEDURE {C} ( size: SIZE ): ADDRESS;
-	posix_memalign-	: PROCEDURE {C} ( VAR p: ADDRESS; alignment, size: SIZE ): LONGINT;
+	posix_memalign-	: PROCEDURE {C} ( VAR p: ADDRESS; alignment, size: SIZE ): SIGNED32;
 	free-			: PROCEDURE {C} ( p: ADDRESS );
-	mprotect-	: PROCEDURE {C} ( p: ADDRESS; len: SIZE; prot: LONGINT ): LONGINT;
+	mprotect-	: PROCEDURE {C} ( p: ADDRESS; len: SIZE; prot: SIGNED32 ): SIGNED32;
 
-	alarm-		: PROCEDURE {C} ( ms: LONGINT ): LONGINT;
-	setitimer-		: PROCEDURE {C} ( which: LONGINT;  VAR value, ovalue: Itimerval ): LONGINT;
-	getitimer-		: PROCEDURE {C} ( which: LONGINT;  VAR value: Itimerval ): LONGINT;
+	alarm-		: PROCEDURE {C} ( ms: SIGNED32 ): SIGNED32;
+	setitimer-		: PROCEDURE {C} ( which: SIGNED32;  VAR value, ovalue: Itimerval ): SIGNED32;
+	getitimer-		: PROCEDURE {C} ( which: SIGNED32;  VAR value: Itimerval ): SIGNED32;
 
-	gettimeofday-	: PROCEDURE {C} ( VAR tv: Timeval;  VAR tz: Timezone ): LONGINT;
-	mktime-		: PROCEDURE {C} ( VAR tm: Tm ): LONGINT;
+	gettimeofday-	: PROCEDURE {C} ( VAR tv: Timeval;  VAR tz: Timezone ): SIGNED32;
+	mktime-		: PROCEDURE {C} ( VAR tm: Tm ): SIGNED32;
 	localtime-	: PROCEDURE {C} ( CONST tv: Timeval ): TmPtr;
-	time-			: PROCEDURE {C} ( VAR tv: Timeval ): LONGINT;
-	times-		: PROCEDURE {C} ( VAR tms: Tms ): LONGINT;
+	time-			: PROCEDURE {C} ( VAR tv: Timeval ): SIGNED32;
+	times-		: PROCEDURE {C} ( VAR tms: Tms ): SIGNED32;
 
 	system-		: PROCEDURE {C} ( cmd: ADDRESS );
-	uname-		: PROCEDURE {C} ( utsname: ADDRESS ): LONGINT;
+	uname-		: PROCEDURE {C} ( utsname: ADDRESS ): SIGNED32;
 
 	getcwd-		: PROCEDURE {C} ( buf: ADDRESS;  len: SIZE ): ADDRESS;
 	getenv-		: PROCEDURE {C} ( name: ADDRESS ): ADDRESS;
@@ -584,24 +584,24 @@ VAR
 	readdir-		: PROCEDURE {C} ( dir: ADDRESS ): Dirent;
 	closedir-		: PROCEDURE {C} ( dir: ADDRESS );
 
-	sigsetjmp-	: PROCEDURE {C} ( env: ADDRESS;  savemask: LONGINT ): LONGINT;
-	siglongjmp-	: PROCEDURE {C} ( env: ADDRESS;  val: LONGINT );
+	sigsetjmp-	: PROCEDURE {C} ( env: ADDRESS;  savemask: SIGNED32 ): SIGNED32;
+	siglongjmp-	: PROCEDURE {C} ( env: ADDRESS;  val: SIGNED32 );
 
-	kill-			: PROCEDURE {C} ( pid, sig: LONGINT ): LONGINT;
-	exit-			: PROCEDURE {C} ( status: LONGINT );
+	kill-			: PROCEDURE {C} ( pid, sig: SIGNED32 ): SIGNED32;
+	exit-			: PROCEDURE {C} ( status: SIGNED32 );
 	perror-		: PROCEDURE {C} ( msg: ADDRESS );
 
 	errno_location	: PROCEDURE {C} ( ): ADDRESS;
 
-	xSetErrorHandler		: PROCEDURE {C} ( h: ADDRESS ): WORD;
-	xSetIOErrorHandler	: PROCEDURE {C} ( h: ADDRESS ): WORD;
+	xSetErrorHandler		: PROCEDURE {C} ( h: ADDRESS ): INTEGER;
+	xSetIOErrorHandler	: PROCEDURE {C} ( h: ADDRESS ): INTEGER;
 
 	libc-: ADDRESS;
 	libp-: ADDRESS;
 	libx-: ADDRESS;
 
 	libraryPaths: ARRAY 7 OF ARRAY 32 OF CHAR;
-	noPaths: LONGINT;
+	noPaths: SIGNED32;
 
 	PROCEDURE ModifyContext*( cont: Mcontext;  pc, bp, sp: ADDRESS );
 	BEGIN
@@ -621,14 +621,14 @@ VAR
 		perror( ADDRESSOF( msg ) )
 	END Perror;
 
-	PROCEDURE errno*(): LONGINT;
+	PROCEDURE errno*(): SIGNED32;
 	VAR loc: ADDRESS;
 	BEGIN
 		loc := errno_location();
 		RETURN S.GET32( loc );
 	END errno;
 
-	PROCEDURE getnprocs* ( ): LONGINT;
+	PROCEDURE getnprocs* ( ): SIGNED32;
 	BEGIN
 		RETURN sysconf( 15 ); (* 14 for number of processors configured, 15 for number of processors online *)
 	END getnprocs;
@@ -657,7 +657,7 @@ VAR
 	VAR suspendHandler*: PROCEDURE( c: Ucontext );
 
 
-	PROCEDURE {C} SigHandler( sig: LONGINT; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
+	PROCEDURE {C} SigHandler( sig: SIGNED32; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
 	BEGIN
 		IF sig = SIGUSR1 THEN
 			suspendHandler( ucp );
@@ -675,7 +675,7 @@ VAR
 	END InstallTrap;
 
 
-	PROCEDURE InstallHandler( sig: LONGINT );
+	PROCEDURE InstallHandler( sig: SIGNED32 );
 	VAR
 		act: Sigaction;
 		mask: Sigset;
@@ -694,7 +694,7 @@ VAR
 	END InstallHandler;
 
 
-	PROCEDURE HandleSignal*( sig: LONGINT );
+	PROCEDURE HandleSignal*( sig: SIGNED32 );
 	BEGIN
 		InstallHandler( sig )
 	END HandleSignal;
@@ -702,7 +702,7 @@ VAR
 	(*-------------------------------------------------------------------------------------------------------------*)
 
 
-	PROCEDURE ThrInitialize*( VAR low, high: LONGINT ): BOOLEAN;
+	PROCEDURE ThrInitialize*( VAR low, high: SIGNED32 ): BOOLEAN;
 	BEGIN
 		mainthread := pthread_self();
 		high := sched_get_priority_max( SCHED_OTHER );
@@ -755,7 +755,7 @@ VAR
 		state: ARRAY 2048 OF CHAR;
 
 		param: Sched_param;
-		r: LONGINT;
+		r: SIGNED32;
 	BEGIN
 		me := pthread_self();
 		SetSigaltstack();
@@ -787,7 +787,7 @@ VAR
 	VAR
 		attr: PthreadAttributeDesc;
 		id: Thread_t;
-		res: WORD;
+		res: INTEGER;
 	BEGIN
 		pthread_attr_init( ADDRESSOF( attr ) );
 		pthread_attr_setscope( ADDRESSOF( attr ), PTHREAD_SCOPE_SYSTEM);
@@ -797,11 +797,11 @@ VAR
 		RETURN id;
 	END ThrStart;
 
-	PROCEDURE ThrSleep*( ms: LONGINT );
+	PROCEDURE ThrSleep*( ms: SIGNED32 );
 	VAR
 		sltime, rem: RECORD
-			tv_sec: LONGWORD;        (* seconds *)
-         		tv_nsec: LONGWORD;       (* nanoseconds *)
+			tv_sec: LONGINTEGER;        (* seconds *)
+         		tv_nsec: LONGINTEGER;       (* nanoseconds *)
      	END;
 	BEGIN
 		sltime.tv_sec := ms DIV 1000;
@@ -813,11 +813,11 @@ VAR
 	END ThrSleep;
 
 
-	PROCEDURE NanoSleep*( ns: LONGWORD );
+	PROCEDURE NanoSleep*( ns: LONGINTEGER );
 	VAR
 		sltime, rem: RECORD
-			tv_sec: LONGWORD;        (* seconds *)
-			tv_nsec: LONGWORD;       (* nanoseconds *)
+			tv_sec: LONGINTEGER;        (* seconds *)
+			tv_nsec: LONGINTEGER;       (* nanoseconds *)
      	END;
 	BEGIN {UNTRACKED}
 		sltime.tv_sec := ns DIV 1000000000;
@@ -856,10 +856,10 @@ VAR
 		siglongjmp( pthread_getspecific( thread_exit ), 1 )
 	END ThrExit;
 
-	PROCEDURE ThrSetPriority*( thr: Thread_t; prio: LONGINT );
+	PROCEDURE ThrSetPriority*( thr: Thread_t; prio: SIGNED32 );
 	VAR
 		param: Sched_param;
-		policy, r: LONGINT;
+		policy, r: SIGNED32;
 	BEGIN
 	(*	r := pthread_getschedparam( thr, ADDRESSOF( policy ), ADDRESSOF( param ) );
 		param.sched_priority := prio;
@@ -868,10 +868,10 @@ VAR
 		END	*)
 	END ThrSetPriority;
 
-	PROCEDURE ThrGetPriority*( thr: Thread_t ):LONGINT;
+	PROCEDURE ThrGetPriority*( thr: Thread_t ):SIGNED32;
 	VAR
 		param: Sched_param;
-		policy, r: LONGINT;
+		policy, r: SIGNED32;
 	BEGIN
 	    r := pthread_getschedparam( thr, ADDRESSOF( policy ), ADDRESSOF( param ) );
 	    RETURN  param.sched_priority;
@@ -892,7 +892,7 @@ VAR
 	VAR
 		mtx: Mutex_t;
 		attr: MutexAttributeDesc;
-		r: LONGINT;
+		r: SIGNED32;
 	CONST
 		PTHREAD_MUTEX_RECURSIVE = 4;
 	BEGIN
@@ -949,8 +949,8 @@ VAR
 	(*-------------------------------------------------------------------------------------------------------------*)
 
 
-	PROCEDURE {C} X11ErrorHandler( d: ADDRESS; err: ADDRESS ): WORD;
-	VAR res: WORD;
+	PROCEDURE {C} X11ErrorHandler( d: ADDRESS; err: ADDRESS ): INTEGER;
+	VAR res: INTEGER;
 	BEGIN
 		IF oberonXErrorHandler # NIL THEN
 			res := oberonXErrorHandler( d, err );
@@ -958,8 +958,8 @@ VAR
 		RETURN 0;
 	END X11ErrorHandler;
 
-	PROCEDURE {C} X11IOErrorHandler( d: ADDRESS ): WORD;
-	VAR res: WORD;
+	PROCEDURE {C} X11IOErrorHandler( d: ADDRESS ): INTEGER;
+	VAR res: INTEGER;
 	BEGIN
 		IF oberonXIOErrorHandler # NIL THEN
 			res := oberonXIOErrorHandler( d );
@@ -968,7 +968,7 @@ VAR
 	END X11IOErrorHandler;
 
 	PROCEDURE InitXErrorHandlers*( xErrorHandler: OberonXErrorHandler; xIOErrorHandler: OberonXIOErrorHandler );
-	VAR res: WORD;
+	VAR res: INTEGER;
 	BEGIN
 		oberonXErrorHandler := xErrorHandler;
 		oberonXIOErrorHandler := xIOErrorHandler;
@@ -981,7 +981,7 @@ VAR
 
 
 	PROCEDURE Dlsym*( lib: ADDRESS;  CONST sym: ARRAY OF CHAR;  objAddr: ADDRESS );
-	VAR val: LONGINT;
+	VAR val: SIGNED32;
 	BEGIN
 		Glue.Dlsym( lib, sym, objAddr );
 		S.GET( objAddr, val );
@@ -991,8 +991,8 @@ VAR
 		END
 	END Dlsym;
 
-	PROCEDURE Dlopen*( CONST libname: ARRAY OF CHAR;  mode: LONGINT ): ADDRESS;
-	VAR h: ADDRESS;  i, j, k: INTEGER;
+	PROCEDURE Dlopen*( CONST libname: ARRAY OF CHAR;  mode: SIGNED32 ): ADDRESS;
+	VAR h: ADDRESS;  i, j, k: SIGNED16;
 		p: ARRAY 256 OF CHAR;
 	BEGIN
 		IF libname[0] = '/' THEN  h := Glue.dlopen( ADDRESSOF( libname ), mode );
@@ -1018,8 +1018,8 @@ VAR
 		Glue.dlclose( lib )
 	END Dlclose;
 
-	PROCEDURE GetArg*( no: LONGINT;  VAR val: ARRAY OF CHAR );
-	VAR ch: CHAR;  adr: ADDRESS;  i: LONGINT;
+	PROCEDURE GetArg*( no: SIGNED32;  VAR val: ARRAY OF CHAR );
+	VAR ch: CHAR;  adr: ADDRESS;  i: SIGNED32;
 	BEGIN
 		IF no >= argc THEN  val[0] := 0X
 		ELSE
@@ -1029,7 +1029,7 @@ VAR
 	END GetArg;
 
 	PROCEDURE GetArgval*(  CONST argName: ARRAY OF CHAR;  VAR val: ARRAY OF CHAR );
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 		buf: ARRAY 40 OF CHAR;
 	BEGIN
 		i := 1;
@@ -1042,11 +1042,11 @@ VAR
 	END GetArgval;
 
 	PROCEDURE getSysinfo;
-	VAR res: WORD;  p: INTEGER;
+	VAR res: INTEGER;  p: SIGNED16;
 		buf: ARRAY 4096 OF CHAR;
 
-		PROCEDURE copy( VAR p: INTEGER;  VAR dest: ARRAY OF CHAR );
-		VAR i: INTEGER;
+		PROCEDURE copy( VAR p: SIGNED16;  VAR dest: ARRAY OF CHAR );
+		VAR i: SIGNED16;
 		BEGIN
 			WHILE buf[p] <= ' ' DO  INC( p )  END;
 			i := 0;

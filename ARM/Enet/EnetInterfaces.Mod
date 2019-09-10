@@ -25,7 +25,7 @@ TYPE
 
 VAR
 	intfs-: ARRAY MaxNumInterfaces OF Interface;
-	numIntfs-: LONGINT;
+	numIntfs-: SIGNED32;
 
 	(** plugable locks for concurrent manipulation of the interface list *)
 	acquireIntfsWrite*, releaseIntfsWrite*: PROCEDURE{DELEGATE}();

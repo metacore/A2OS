@@ -23,8 +23,8 @@ TYPE
 		BEGIN
 			IF table = NIL THEN NEW(table,64) END;
 			FOR i := 0 TO LEN(table)-1 DO
-				table[i].first := MAX(LONGINT);
-				table[i].last := MIN(LONGINT);
+				table[i].first := MAX(SIGNED32);
+				table[i].last := MIN(SIGNED32);
 			END;
 		END Init;
 
@@ -36,8 +36,8 @@ TYPE
 				new[i] := table[i]
 			END;
 			FOR i := LEN(table) TO LEN(new)-1 DO
-				new[i].first := MAX(LONGINT);
-				new[i].last := MIN(LONGINT);
+				new[i].first := MAX(SIGNED32);
+				new[i].last := MIN(SIGNED32);
 			END;
 			table := new;
 		END Grow;
@@ -507,7 +507,7 @@ TYPE
 		END EmitData;
 
 		PROCEDURE EmitReserve(CONST instruction: IntermediateCode.Instruction);
-		VAR sizeInUnits,i: LONGINT;
+		VAR sizeInUnits,i: SIGNED32;
 		BEGIN
 			sizeInUnits := SHORT(instruction.op1.intValue);
 			ASSERT(sizeInUnits >= 0); (* size is initialized to MIN(SIZE), this checks if size field has been visited *)
@@ -544,7 +544,7 @@ TYPE
 		class-: IntermediateCode.RegisterClass;
 		lastuse-: SIZE;
 		spilled*, spillable*: BOOLEAN;
-		register*, offset*: LONGINT;
+		register*, offset*: SIGNED32;
 		parts-: SIZE;
 	END;
 
@@ -559,7 +559,7 @@ TYPE
 		END Init;
 
 		(* enter a new ticket into the list of live tickets, sorted by lastuse *)
-		PROCEDURE Enter*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; spillable, spilled: BOOLEAN; offset: LONGINT; lastuse: SIZE): Ticket;
+		PROCEDURE Enter*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: SIGNED32; spillable, spilled: BOOLEAN; offset: SIGNED32; lastuse: SIZE): Ticket;
 		VAR ticket,link: Ticket;
 		BEGIN
 			ASSERT(~spilled & (register # None) OR spilled & (offset # None));
@@ -681,7 +681,7 @@ TYPE
 						DEC(lastMapped)
 					END;
 				END;
-				IF lastMapped < firstMapped THEN firstMapped := MAX(LONGINT); lastMapped := -1 END;
+				IF lastMapped < firstMapped THEN firstMapped := MAX(SIGNED32); lastMapped := -1 END;
 			END;
 		END Unmap;
 
@@ -713,27 +713,27 @@ TYPE
 		PROCEDURE &InitPhysicalRegisters;
 		END InitPhysicalRegisters;
 
-		PROCEDURE Allocate*(index: LONGINT; virtualRegister: Ticket);
+		PROCEDURE Allocate*(index: SIGNED32; virtualRegister: Ticket);
 		END Allocate;
 
-		PROCEDURE Mapped*(physical: LONGINT): Ticket;
+		PROCEDURE Mapped*(physical: SIGNED32): Ticket;
 		END Mapped;
 
-		PROCEDURE Free*(index: LONGINT);
+		PROCEDURE Free*(index: SIGNED32);
 		END Free;
 
-		PROCEDURE NextFree*(CONST type: IntermediateCode.Type): LONGINT;
+		PROCEDURE NextFree*(CONST type: IntermediateCode.Type): SIGNED32;
 		END NextFree;
 
 		(* give a hint for the next register to return by NextFree *)
-		PROCEDURE AllocationHint*(index: LONGINT);
+		PROCEDURE AllocationHint*(index: SIGNED32);
 		END AllocationHint;
 
-		PROCEDURE SetReserved*(index: LONGINT; res: BOOLEAN);
+		PROCEDURE SetReserved*(index: SIGNED32; res: BOOLEAN);
 		BEGIN
 		END SetReserved;
 
-		PROCEDURE Reserved*(index: LONGINT): BOOLEAN;
+		PROCEDURE Reserved*(index: SIGNED32): BOOLEAN;
 		BEGIN
 		END Reserved;
 
@@ -741,7 +741,7 @@ TYPE
 		BEGIN
 		END Dump;
 
-		PROCEDURE NumberRegisters*(): LONGINT;
+		PROCEDURE NumberRegisters*(): SIGNED32;
 		BEGIN
 		END NumberRegisters;
 
@@ -753,10 +753,10 @@ TYPE
 	SpillStack*=OBJECT
 	VAR
 		spillStack: ARRAY MaxSpilledRegisters OF Ticket; (* registers of spill stack position to virtual register, none if unused *)
-		spillStackSize,maxSpillStackSize: LONGINT;
+		spillStackSize,maxSpillStackSize: SIGNED32;
 
 		PROCEDURE &Init*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			spillStackSize := 0; maxSpillStackSize := 0;
 			FOR i := 0 TO LEN(spillStack)-1 DO
@@ -765,8 +765,8 @@ TYPE
 		END Init;
 
 		(* return next free spill offset in stack *)
-		PROCEDURE NextFree*(): LONGINT;
-		VAR i: LONGINT; index: Ticket;
+		PROCEDURE NextFree*(): SIGNED32;
+		VAR i: SIGNED32; index: Ticket;
 		BEGIN
 			i := 0;
 			index := spillStack[i];
@@ -776,14 +776,14 @@ TYPE
 			RETURN i
 		END NextFree;
 
-		PROCEDURE Allocate*(offset: LONGINT; ticket: Ticket);
+		PROCEDURE Allocate*(offset: SIGNED32; ticket: Ticket);
 		BEGIN
 			spillStack[ticket.offset] := ticket;
 			IF spillStackSize <= ticket.offset THEN spillStackSize := ticket.offset+1 END;
 			IF maxSpillStackSize < spillStackSize THEN maxSpillStackSize := spillStackSize END;
 		END Allocate;
 
-		PROCEDURE Free*(offset: LONGINT);
+		PROCEDURE Free*(offset: SIGNED32);
 		BEGIN
 			spillStack[offset] := NIL;
 			IF offset+1 = spillStackSize THEN (* rewind spillstack *)
@@ -794,16 +794,16 @@ TYPE
 			END;
 		END Free;
 
-		PROCEDURE Size*(): LONGINT;
+		PROCEDURE Size*(): SIGNED32;
 		BEGIN RETURN spillStackSize
 		END Size;
 
-		PROCEDURE MaxSize*(): LONGINT;
+		PROCEDURE MaxSize*(): SIGNED32;
 		BEGIN RETURN maxSpillStackSize
 		END MaxSize;
 
 		PROCEDURE Dump*(w: Streams.Writer);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			w.String("---- spillstack -----");w.Ln;
 			w.String("spillStackSize = "); w.Int(spillStackSize,1); w.Ln;
@@ -823,7 +823,7 @@ TYPE
 		spillStack-: SpillStack; (* spill stack offset <-> ticket *)
 
 		(* generic *)
-		PROCEDURE & InitTicketGenerator*(diagnostics: Diagnostics.Diagnostics; optimize: BOOLEAN; numberRegisterParts: LONGINT; physicalRegisters: PhysicalRegisters);
+		PROCEDURE & InitTicketGenerator*(diagnostics: Diagnostics.Diagnostics; optimize: BOOLEAN; numberRegisterParts: SIGNED32; physicalRegisters: PhysicalRegisters);
 		BEGIN
 			InitGenerator(diagnostics, optimize);
 			NEW(tickets);
@@ -841,7 +841,7 @@ TYPE
 		(*-------------------  procedures that must be overwritten by implementers  ----------------------*)
 
 		(* input: type (such as that of an intermediate operand), output: type part *)
-		PROCEDURE GetPartType*(CONST type: IntermediateCode.Type; part: LONGINT; VAR typePart: IntermediateCode.Type);
+		PROCEDURE GetPartType*(CONST type: IntermediateCode.Type; part: SIGNED32; VAR typePart: IntermediateCode.Type);
 		BEGIN HALT(100); (* abstract *)
 		END GetPartType;
 
@@ -849,7 +849,7 @@ TYPE
 		BEGIN HALT(100) (* abstract *)
 		END ToSpillStack;
 
-		PROCEDURE AllocateSpillStack*(size: LONGINT);
+		PROCEDURE AllocateSpillStack*(size: SIGNED32);
 		BEGIN HALT(100) (* abstract *)
 		END AllocateSpillStack;
 
@@ -865,7 +865,7 @@ TYPE
 
 		(* Spill register of a ticket, if any *)
 		PROCEDURE Spill*(ticket: Ticket);
-		VAR register,offset,size: LONGINT;
+		VAR register,offset,size: SIGNED32;
 		BEGIN
 			IF (ticket = NIL) OR ~ticket.spillable OR ticket.spilled THEN RETURN END;
 			register := ticket.register;
@@ -886,7 +886,7 @@ TYPE
 
 		(* Make sure a ticket reprents a physical register *)
 		PROCEDURE UnSpill*(ticket: Ticket);
-		VAR mapped:Ticket; register: LONGINT;
+		VAR mapped:Ticket; register: SIGNED32;
 
 			PROCEDURE ExchangeSpill(ticket1, ticket2: Ticket): BOOLEAN;
 			BEGIN
@@ -914,8 +914,8 @@ TYPE
 				RETURN TRUE
 			END ExchangeSpill;
 
-			PROCEDURE SpillToRegister(ticket: Ticket; register: LONGINT);
-			VAR size: LONGINT;
+			PROCEDURE SpillToRegister(ticket: Ticket; register: SIGNED32);
+			VAR size: SIGNED32;
 			BEGIN
 				ASSERT(~physicalRegisters.Reserved(ticket.register) OR (register = ticket.register));
 				ticket.register := register;
@@ -990,8 +990,8 @@ TYPE
 			RETURN spill
 		END GetPreferredSpill;
 
-		PROCEDURE ForceFreeRegister*(CONST type:IntermediateCode.Type): LONGINT;
-		VAR tempReg: LONGINT; ticket: Ticket;
+		PROCEDURE ForceFreeRegister*(CONST type:IntermediateCode.Type): SIGNED32;
+		VAR tempReg: SIGNED32; ticket: Ticket;
 		BEGIN
 			tempReg := physicalRegisters.NextFree(type);
 			WHILE tempReg = None DO
@@ -1002,7 +1002,7 @@ TYPE
 			RETURN tempReg
 		END ForceFreeRegister;
 
-		PROCEDURE ReservePhysicalRegister*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: LONGINT; lastUse: SIZE): Ticket;
+		PROCEDURE ReservePhysicalRegister*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type; register: SIGNED32; lastUse: SIZE): Ticket;
 		VAR ticket: Ticket;
 		BEGIN
 			ticket := tickets.Enter(class, type,register,TRUE, FALSE,None,lastUse);
@@ -1014,7 +1014,7 @@ TYPE
 		END ReservePhysicalRegister;
 
 		PROCEDURE TemporaryTicket*(CONST class: IntermediateCode.RegisterClass; CONST type: IntermediateCode.Type): Ticket;
-		VAR register: LONGINT; ticket: Ticket;
+		VAR register: SIGNED32; ticket: Ticket;
 		BEGIN
 			IF type.form > IntermediateCode.Undefined THEN
 				register := ForceFreeRegister(type);
@@ -1028,11 +1028,11 @@ TYPE
 
 		(*-------------------  register mapping  ----------------------*)
 
-		PROCEDURE MapVirtualRegister*(virtualRegister: SIZE; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type; part: LONGINT);
+		PROCEDURE MapVirtualRegister*(virtualRegister: SIZE; class: IntermediateCode.RegisterClass; type: IntermediateCode.Type; part: SIGNED32);
 		VAR partType: IntermediateCode.Type; lastuse:SIZE;
 
 			PROCEDURE MapTicket(CONST type: IntermediateCode.Type; lastuse:SIZE);
-			VAR index,offset,size: LONGINT; ticket: Ticket;
+			VAR index,offset,size: SIGNED32; ticket: Ticket;
 			BEGIN
 				index := physicalRegisters.NextFree(type);
 				IF index # None THEN
@@ -1056,7 +1056,7 @@ TYPE
 				virtualRegisters.SetMapped(virtualRegister,part,ticket);
 			END MapTicket;
 
-			PROCEDURE AllocateThis(index: LONGINT);
+			PROCEDURE AllocateThis(index: SIGNED32);
 			VAR ticket: Ticket;
 			BEGIN
 				ticket :=  physicalRegisters.Mapped(index);
@@ -1093,7 +1093,7 @@ TYPE
 		END ResetTicket;
 
 		PROCEDURE FreeTicket(ticket: Ticket);
-		VAR size: LONGINT;
+		VAR size: SIGNED32;
 		BEGIN
 			IF ticket.spilled THEN
 				IF dump # NIL THEN
@@ -1123,7 +1123,7 @@ TYPE
 			ResetTicket(ticket);
 		END UnmapTicket;
 
-		PROCEDURE TryAllocate*(CONST operand: IntermediateCode.Operand; part: LONGINT);
+		PROCEDURE TryAllocate*(CONST operand: IntermediateCode.Operand; part: SIGNED32);
 		BEGIN
 			IF (FirstUse(operand.register) = inPC) & (virtualRegisters.Mapped(operand.register,part)=NIL)  THEN
 				IF operand.mode = IntermediateCode.ModeMemory THEN
@@ -1136,7 +1136,7 @@ TYPE
 		END TryAllocate;
 
 		PROCEDURE TryUnmap*(CONST operand: IntermediateCode.Operand);
-		VAR ticket: Ticket; part: LONGINT;
+		VAR ticket: Ticket; part: SIGNED32;
 		BEGIN
 			IF (operand.register >=0) & (LastUse(operand.register) = inPC) THEN
 				part := 0;
@@ -1150,7 +1150,7 @@ TYPE
 			END;
 		END TryUnmap;
 
-		PROCEDURE ReleaseHint*(register: LONGINT);
+		PROCEDURE ReleaseHint*(register: SIGNED32);
 		VAR ticket: Ticket;
 		BEGIN
 			IF register >=0 THEN

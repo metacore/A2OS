@@ -1,12 +1,12 @@
 (* CAPO - Computational Analysis Platform for Oberon - by Alan Freed and Felix Friedrich. *)
 (* Version 1, Update 2 *)
 
-MODULE NbrInt16;   (** AUTHOR "adf"; PURPOSE "Alias for type INTEGER."; *)
+MODULE NbrInt16;   (** AUTHOR "adf"; PURPOSE "Alias for type SIGNED16."; *)
 
 IMPORT NbrInt8, Streams;
 
 TYPE
-	Integer* = INTEGER;
+	Integer* = SIGNED16;
 
 VAR
 	MinNbr-, MaxNbr-: Integer;
@@ -137,5 +137,5 @@ VAR
 	END Store;
 
 BEGIN
-	MinNbr := MIN( INTEGER );  MaxNbr := MAX( INTEGER )
+	MinNbr := MIN( SIGNED16 );  MaxNbr := MAX( SIGNED16 )
 END NbrInt16.

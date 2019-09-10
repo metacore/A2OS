@@ -16,10 +16,10 @@ MODULE ASCIITab IN Oberon;	(** portable *) (* EJZ,  *)
 	VAR
 		W: Texts.Writer;
 
-	PROCEDURE Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER);
+	PROCEDURE Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16);
 		VAR
 			pat: Display.Pattern;
-			i, j, x0, y0, dx, cx, cy, cw, ch, dw, dh: INTEGER;
+			i, j, x0, y0, dx, cx, cy, cw, ch, dw, dh: SIGNED16;
 	BEGIN
 		Display3.ReplConst(Q, Display3.textbackC, x, y, w, h, Display.replace);
 		x0 := x; y0 := y;
@@ -56,10 +56,10 @@ MODULE ASCIITab IN Oberon;	(** portable *) (* EJZ,  *)
 		VAR
 			Q: Display3.Mask;
 			pat: Display.Pattern;
-			x, y, w, h: INTEGER;
-			i, j, x0, y0, dx, cx, cy, cw, ch, dw, dh: INTEGER;
+			x, y, w, h: SIGNED16;
+			i, j, x0, y0, dx, cx, cy, cw, ch, dw, dh: SIGNED16;
 			str: ARRAY 2 OF CHAR;
-		PROCEDURE P(x: INTEGER): INTEGER;
+		PROCEDURE P(x: SIGNED16): SIGNED16;
 		BEGIN
 			RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 		END P;
@@ -98,9 +98,9 @@ MODULE ASCIITab IN Oberon;	(** portable *) (* EJZ,  *)
 		END
 	END Print;
 
-	PROCEDURE Track(F: Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
+	PROCEDURE Track(F: Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
 		VAR
-			w, h, i, j: INTEGER;
+			w, h, i, j: SIGNED16;
 			keysum: SET;
 			Q: Display3.Mask;
 			Ca: Oberon.CaretMsg;
@@ -172,7 +172,7 @@ MODULE ASCIITab IN Oberon;	(** portable *) (* EJZ,  *)
 
 	PROCEDURE Handle*(F: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
-			x, y, w, h: INTEGER;
+			x, y, w, h: SIGNED16;
 			Q: Display3.Mask;
 			name: ARRAY 32 OF CHAR;
 			copy: Frame;

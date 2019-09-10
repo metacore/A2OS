@@ -84,7 +84,7 @@ TYPE
 
 	PROCEDURE Modules*(CONST source: ARRAY OF CHAR; (* source file name, for debugging and better error reports *)
 			reader: Streams.Reader; (* reader to read from *)
-			position: LONGINT; (* starting position in reader *)
+			position: SIGNED32; (* starting position in reader *)
 			diagnostics: Diagnostics.Diagnostics; (* error output and status report *)
 			log: Streams.Writer;
 			CONST options: CompilerOptions;
@@ -97,7 +97,7 @@ TYPE
 		system: Global.System;
 		generatedModule: Formats.GeneratedModule;
 		split: Strings.StringArray;
-		sectionOffset: LONGINT;
+		sectionOffset: SIGNED32;
 		flags: SET;
 		backendName: ARRAY 32 OF CHAR;
 
@@ -449,7 +449,7 @@ TYPE
 		filename, path, file: Files.FileName;
 		error: BOOLEAN;
 		diagnostics: Diagnostics.Diagnostics;
-		time: LONGINT; reader: Streams.Reader;
+		time: SIGNED32; reader: Streams.Reader;
 		importCache: SyntaxTree.ModuleScope;
 		options: CompilerOptions;
 		replacement: SemanticChecker.Replacement;

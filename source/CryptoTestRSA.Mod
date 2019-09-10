@@ -46,7 +46,7 @@ CONST
 		signature: B.BigNumber;
 		pw, digest: ARRAY 64 OF CHAR;
 		f: Files.File; r: Files.Reader;
-		i, ignore: LONGINT;
+		i, ignore: SIGNED32;
 	BEGIN
 		f := Files.Old( PrivateKeyFile ); Files.OpenReader( r, f, 0 );
 		i := 0;

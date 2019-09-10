@@ -65,19 +65,19 @@ TYPE
 			VAR
 				int-	: IP.Interface;	(*! Unix port: dummy, only 'int.localAdr' contains valid data *)
 
-				lport-	: LONGINT;
+				lport-	: SIGNED32;
 				fip-	: IP.Adr;  (* foreign protocol address *)
-				fport-	: LONGINT;
-				state*	: SHORTINT;   (* TCP state *)
+				fport-	: SIGNED32;
+				state*	: SIGNED8;   (* TCP state *)
 
-				socket	: LONGINT;
+				socket	: SIGNED32;
 				sender: Sender;
 
 				(* the next variables are for interface compatibility only *)
-				irs-		: LONGINT;	(* initial receive sequence number *)
-				rcvnxt-	: LONGINT;	(* receive next *)
-				iss-		: LONGINT;	(* initial send sequence number *)
-				sndnxt-	: LONGINT;	(* send next *)
+				irs-		: SIGNED32;	(* initial receive sequence number *)
+				rcvnxt-	: SIGNED32;	(* receive next *)
+				iss-		: SIGNED32;	(* initial send sequence number *)
+				sndnxt-	: SIGNED32;	(* send next *)
 
 
 				PROCEDURE & Init*;
@@ -91,7 +91,7 @@ TYPE
 
 				(** Open a TCP connection (only use once per Connection instance).
 					Use TCP.NilPort for lport to automatically assign an unused local port.*)
-				PROCEDURE Open*( lport: LONGINT;  fip: IP.Adr;  fport: LONGINT;  VAR res: WORD );
+				PROCEDURE Open*( lport: SIGNED32;  fip: IP.Adr;  fport: SIGNED32;  VAR res: INTEGER );
 				VAR
 					localAdr, foreignAdr: Sockets.SocketAdr;
 				BEGIN {EXCLUSIVE}
@@ -153,7 +153,7 @@ TYPE
 
 
 				(** Send data on a TCP connection. *)
-				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
+				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: INTEGER );
 				BEGIN
 					IF trace THEN  Out.String( "Send: socket=" );  Out.Int( socket, 0 )  END;
 					IF state = Established THEN
@@ -176,7 +176,7 @@ TYPE
 					res parameter returns 0 if ok, or a non-zero error code otherwise (e.g. if the connection is closed
 					by the communication partner, or by a call of the Close method). *)
 
-				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
+				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER );
 				VAR p, x: SIZE;
 				BEGIN {EXCLUSIVE}
 					ASSERT( (ofs >= 0) & (ofs + size <= LEN( data )) & (min <= size) );   (* parameter consistency check *)
@@ -236,8 +236,8 @@ TYPE
 
 
 				(** Return number of bytes that may be read without blocking. *)
-				PROCEDURE Available*( ): LONGINT;
-				VAR available: LONGINT;
+				PROCEDURE Available*( ): SIGNED32;
+				VAR available: SIGNED32;
 				BEGIN {EXCLUSIVE}
 					IF state IN {Established, Listen} THEN
 						IF Sockets.Requested( socket ) THEN
@@ -251,13 +251,13 @@ TYPE
 				END Available;
 
 				(** Return connection state. *)
-				PROCEDURE State*( ): LONGINT;
+				PROCEDURE State*( ): SIGNED32;
 				BEGIN
 					RETURN state
 				END State;
 
 				(** Wait until the connection state is either in the good or bad set, up to "ms" milliseconds. *)
-				PROCEDURE AwaitState*( good, bad: SET;  ms: LONGINT;  VAR res: WORD );
+				PROCEDURE AwaitState*( good, bad: SET;  ms: SIGNED32;  VAR res: INTEGER );
 				BEGIN
 					WHILE (ms > 0) & ~(state IN (good+bad)) DO  Objects.Sleep( 10 );  DEC( ms, 10 )  END;
 					IF state IN good THEN
@@ -283,8 +283,8 @@ TYPE
 
 				(** Accept a client waiting on a listening connection. Blocks until a client is available or the
 					  connection is closed. *)
-				PROCEDURE Accept*( VAR client: Connection;  VAR res: WORD );
-				VAR newsocket: LONGINT;  peerAdr: Sockets.SocketAdr;
+				PROCEDURE Accept*( VAR client: Connection;  VAR res: INTEGER );
+				VAR newsocket: SIGNED32;  peerAdr: Sockets.SocketAdr;
 				BEGIN {EXCLUSIVE}
 					IF trace THEN
 						Out.String( "Accept: socket=" ); Out.Int( socket, 0 );  Out.String( " ... " )

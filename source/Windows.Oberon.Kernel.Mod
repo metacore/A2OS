@@ -22,7 +22,7 @@ TYPE
 	Module* = Modules.Module;	(* module descriptor *)
 	ModuleDesc* = Modules.ModuleDesc;*)
 
-	(*TrapHandler* = PROCEDURE (err, fp, pc, pf: LONGINT);*)
+	(*TrapHandler* = PROCEDURE (err, fp, pc, pf: SIGNED32);*)
 
 	Finalizer* = Kernel.Finalizer;
 
@@ -47,24 +47,24 @@ VAR
 	(*inGC*: BOOLEAN;*)	(* executing inside GC? *)	(* for Input *)
 	(*copro*: BOOLEAN;*)	(* is a coprocessor present? *)	(* for Reals *)
 	(*modules* : Modules.Module;*)	(** fake list of modules *)	(* for Compiler *)
-	shutdown*: LONGINT;
+	shutdown*: SIGNED32;
 (*
-	(*StackOrg* : LONGINT;*)	(** highest address on stack (single-process system) *)
-	(*bt*: LONGINT;*)	(** boot table *)
-	(*tspeed*: LONGINT;*)	(** =0: no tracing, >0: tspeed = speed of com output, <0: -tspeed = screen segment *)
-	(*tbase*: INTEGER;*)	(** trace base port, 3F8H=com1, 2F8H=com2, etc. *)
+	(*StackOrg* : SIGNED32;*)	(** highest address on stack (single-process system) *)
+	(*bt*: SIGNED32;*)	(** boot table *)
+	(*tspeed*: SIGNED32;*)	(** =0: no tracing, >0: tspeed = speed of com output, <0: -tspeed = screen segment *)
+	(*tbase*: SIGNED16;*)	(** trace base port, 3F8H=com1, 2F8H=com2, etc. *)
 	(*EnableGC*, DisableGC*: Proc;*)	(** Enable or Disable the GC *)
 	(*timer*: Proc;*)	(** for internal use *)
-	(*runtime*: ARRAY 5 OF LONGINT;*)	(** for internal use *)
+	(*runtime*: ARRAY 5 OF SIGNED32;*)	(** for internal use *)
 *)
 	lockedBy: ANY;
-	level: LONGINT;
+	level: SIGNED32;
 	oberon: ANY;
 	finalizeRoot: OberonFinalizer;	(* finalizers that have to be executed by Oberon *)
-	NfinalizeAlive, NfinalizeDead: LONGINT;
+	NfinalizeAlive, NfinalizeDead: SIGNED32;
 	finalizers: Kernel.FinalizedCollection;	(* collection for all Oberon finalizers *)
 	isEXE-: BOOLEAN;
-	lock-: LONGINT;
+	lock-: SIGNED32;
 	hInstance- : ADDRESS;
 (** -- Low-level tracing support -- *)
 
@@ -91,21 +91,21 @@ END WriteLn;
 
 (** WriteInt - Write "x" as a decimal number.  "w" is the field width. *)
 
-PROCEDURE WriteInt*(x, w: LONGINT);
+PROCEDURE WriteInt*(x, w: SIGNED32);
 BEGIN
 	KernelLog.Int(x, w)
 END WriteInt;
 
 (** WriteHex - Write "x" as a hexadecimal number. The absolute value of "w" is the field width.  If "w" is negative, two hex digits are printed (x MOD 100H), otherwise 8 digits are printed. *)
 
-PROCEDURE WriteHex*(x, w: LONGINT);
+PROCEDURE WriteHex*(x, w: SIGNED32);
 BEGIN
 	KernelLog.Hex(x, w)
 END WriteHex;
 
 (** WriteMemory - Display a block of memory. *)
 
-PROCEDURE WriteMemory*(adr, size: LONGINT);
+PROCEDURE WriteMemory*(adr, size: SIGNED32);
 BEGIN
 	KernelLog.Memory(adr, size)
 END WriteMemory;
@@ -114,7 +114,7 @@ END WriteMemory;
 
 (*(** GetMod - Return the loaded module that contains code address pc. *)
 
-PROCEDURE GetMod*(pc : LONGINT): Module;
+PROCEDURE GetMod*(pc : SIGNED32): Module;
 BEGIN
 	RETURN Modules.ModuleByAdr(pc)
 END GetMod;*)
@@ -180,13 +180,13 @@ END InstallLoop;*)
 	07	LPT1 or IRQ error
 *)
 
-PROCEDURE InstallIP*(p: Proc;  i: INTEGER);
+PROCEDURE InstallIP*(p: Proc;  i: SIGNED16);
 BEGIN
 END InstallIP;*)
 
 (*(** RemoveIP - Uninstall interrupt handler & disable IRQ if necessary *)
 
-PROCEDURE RemoveIP*(p: Proc;  i: INTEGER);
+PROCEDURE RemoveIP*(p: Proc;  i: SIGNED16);
 BEGIN
 END RemoveIP;*)
 
@@ -195,7 +195,7 @@ END RemoveIP;*)
 (*
 (** Available - Return the size in bytes of the remaining free heap space *)
 
-PROCEDURE Available*(): LONGINT;
+PROCEDURE Available*(): SIGNED32;
 BEGIN
 	RETURN 0
 END Available;
@@ -203,7 +203,7 @@ END Available;
 (** LargestAvailable - Return the size in bytes of the largest free available memory block.
 Allocating objects with a size greater than this size will cause the memory allocation to fail. *)
 
-PROCEDURE LargestAvailable*(): LONGINT;
+PROCEDURE LargestAvailable*(): SIGNED32;
 BEGIN
 	RETURN 0
 END LargestAvailable;
@@ -211,7 +211,7 @@ END LargestAvailable;
 
 (** Used - Return the size in bytes of the amount of memory currently in use in the heap (not implemented on Aos). *)
 
-PROCEDURE Used*(): LONGINT;
+PROCEDURE Used*(): SIGNED32;
 BEGIN
 	RETURN 0
 END Used;
@@ -235,14 +235,14 @@ END GC;
 "adr" returns the virtual and "phys" the physical address of the memory.  To deallocate,
 call with size = -(size of block) and adr = virtual address of block.  Max size=64k. *)
 
-PROCEDURE NewDMA*(size: LONGINT;  VAR adr, phys: LONGINT);
+PROCEDURE NewDMA*(size: SIGNED32;  VAR adr, phys: SIGNED32);
 BEGIN
 END NewDMA;*)
 
 (*
 (** MapPhysical - Map a physical memory area into the virtual address space. {physAdr, size MOD PS = 0} *)
 
-PROCEDURE MapPhysical*(physAdr, size: LONGINT;  VAR virtAdr: LONGINT);
+PROCEDURE MapPhysical*(physAdr, size: SIGNED32;  VAR virtAdr: SIGNED32);
 BEGIN
 	Machine.MapPhysical(physAdr, size, virtAdr)
 END MapPhysical;
@@ -251,7 +251,7 @@ END MapPhysical;
 (*
 (** DisableTracing - Disable the GC tracing of a record field of the specified type.  For internal use only. *)
 
-PROCEDURE DisableTracing*(recadr, fldadr: LONGINT);
+PROCEDURE DisableTracing*(recadr, fldadr: SIGNED32);
 BEGIN
 	(*KernelLog.String("DisableTracing");  KernelLog.Hex(recadr, 9);  KernelLog.Hex(fldadr, 9);
 	KernelLog.Ln*)
@@ -296,14 +296,14 @@ END InstallTermHandler;
 
 (** GetClock - Return current time and date *)
 
-PROCEDURE GetClock*(VAR time, date: LONGINT);
+PROCEDURE GetClock*(VAR time, date: SIGNED32);
 BEGIN
 	Clock.Get(time, date)
 END GetClock;
 
 (** SetClock - Set current time and date *)
 
-PROCEDURE SetClock*(time, date: LONGINT);
+PROCEDURE SetClock*(time, date: SIGNED32);
 BEGIN
 	Clock.Set(time, date)
 END SetClock;
@@ -311,13 +311,13 @@ END SetClock;
 (*
 (** GetTimer - Return "ticks" since initialisation (Kernel.TimeUnit ticks per second) *)
 
-PROCEDURE GetTimer*(): LONGINT;
+PROCEDURE GetTimer*(): SIGNED32;
 BEGIN
 	RETURN Kernel.GetTicks();
 END GetTimer;
 
 (** SetTimer - Set timer to expire in approximately "ms" milliseconds. *)
-PROCEDURE SetTimer*(VAR t: MilliTimer;  ms: LONGINT);
+PROCEDURE SetTimer*(VAR t: MilliTimer;  ms: SIGNED32);
 BEGIN
 	Kernel.SetTimer(t, ms)
 END SetTimer;
@@ -341,7 +341,7 @@ END GetConfig;
 (* ------------------------------------------------------------------------------------------------*)
 (* Shutdown - Terminate Oberon after executing all module terminators.  If code = 1, perform an APM power-down, if code = 2, perform a soft reboot, or else just switch off interrupts and loop endlessly. *)
 
-PROCEDURE Shutdown*(code: LONGINT);
+PROCEDURE Shutdown*(code: SIGNED32);
 BEGIN
 	shutdown := code;
 	Modules.Shutdown(code)
@@ -351,7 +351,7 @@ END Shutdown;
 (*
 (** Idle - Called when system is idle. *)
 
-PROCEDURE Idle*(code: LONGINT);	(* code currently unused *)
+PROCEDURE Idle*(code: SIGNED32);	(* code currently unused *)
 BEGIN
 	Objects.Yield
 END Idle;
@@ -378,7 +378,7 @@ BEGIN
 		Traps.Show(p, int, exc, TRUE);
 		INCL(int.FLAGS, Machine.IFBit);	(* enable interrupts on return *)
 		int.EBP := 0; int.ESP := p.restartSP;	(* reset stack *)
-		proc := TerminateInLock; int.EIP := SYSTEM.VAL(LONGINT, proc);	(* terminate *)
+		proc := TerminateInLock; int.EIP := SYSTEM.VAL(SIGNED32, proc);	(* terminate *)
 		return := TRUE	(* return to TerminateInLock procedure at user level *)
 	ELSE
 		lockedBy := NIL; level := 0	(* Oberon.Loop will re-acquire lock *)
@@ -429,7 +429,7 @@ BEGIN
 		me := Objects.ActiveObject();
 		ok := (me = oberon) OR (lockedBy = me);
 	END;
-	IF ~ok THEN HALT(MAX(INTEGER)+1) END	(* to do: halt here *)
+	IF ~ok THEN HALT(MAX(SIGNED16)+1) END	(* to do: halt here *)
 END CheckOberonLock;
 
 

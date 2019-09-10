@@ -8,7 +8,7 @@ TYPE Image= srBase.IMAGE;
 
 PROCEDURE filterbilinear*(VAR img:  Image);
 VAR
-	i,j:LONGINT;
+	i,j:SIGNED32;
 	lr,lg,lb,r,g,b: SREAL;
 BEGIN
 	FOR i:= 0 TO W-1 DO

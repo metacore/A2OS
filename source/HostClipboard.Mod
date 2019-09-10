@@ -16,7 +16,7 @@ TYPE
 VAR
 	getFromClipboard, putToClipboard : ClipboardHandler;
 
-PROCEDURE Get*(text : Texts.Text; VAR res : WORD);
+PROCEDURE Get*(text : Texts.Text; VAR res : INTEGER);
 BEGIN {EXCLUSIVE}
 	ASSERT((text # NIL) & (text.HasWriteLock()));
 	IF (getFromClipboard # NIL) THEN
@@ -27,7 +27,7 @@ BEGIN {EXCLUSIVE}
 	END;
 END Get;
 
-PROCEDURE Put*(text : Texts.Text; VAR res : WORD);
+PROCEDURE Put*(text : Texts.Text; VAR res : INTEGER);
 BEGIN {EXCLUSIVE}
 	ASSERT((text # NIL) & (text.HasReadLock()));
 	IF (putToClipboard # NIL) THEN

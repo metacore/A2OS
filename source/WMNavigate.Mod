@@ -86,7 +86,7 @@ TYPE
 			RETURN rect;
 		END GetPositionOf;
 
-		PROCEDURE Compute(nofEntries, width, height, desiredEntryWidth, desiredEntryHeight : SIZE; mode : LONGINT);
+		PROCEDURE Compute(nofEntries, width, height, desiredEntryWidth, desiredEntryHeight : SIZE; mode : SIGNED32);
 		BEGIN
 			ASSERT(nofEntries >= 0);
 			ASSERT((width >= 0) & (height >= 0));
@@ -158,7 +158,7 @@ TYPE
 
 		(* width, height of remaining area, nofEntries that still need to be placed *)
 		PROCEDURE ComputeAspect;
-		VAR entryRatio, areaRatio : REAL; eWidth, eHeight : SIZE; doesFit : BOOLEAN;
+		VAR entryRatio, areaRatio : FLOAT32; eWidth, eHeight : SIZE; doesFit : BOOLEAN;
 		BEGIN
 			entryRatio := entryWidth / entryHeight;
 			areaRatio := width / height;
@@ -236,12 +236,12 @@ TYPE
 TYPE
 
 	Info = RECORD
-		nofWindows : LONGINT;
+		nofWindows : SIGNED32;
 		windows : Windows;
 		extImages : POINTER TO ARRAY OF WMGraphics.Image;
-		focusIdx : LONGINT;
-		wTimestamp : LONGINT;
-		oTimestamp : LONGINT;
+		focusIdx : SIGNED32;
+		wTimestamp : SIGNED32;
+		oTimestamp : SIGNED32;
 	END;
 
 TYPE
@@ -262,7 +262,7 @@ TYPE
 		info : Info;
 		layout : Layout;
 		lock : Locks.Lock; (* protects info, layout *)
-		state : LONGINT;
+		state : SIGNED32;
 
 		mouseOverIdx, lastMouseOverIdx : SIZE;
 
@@ -457,7 +457,7 @@ TYPE
 		END PropertyChanged;
 
 		PROCEDURE UpdateLayout;
-		VAR border : LONGINT;
+		VAR border : SIGNED32;
 		BEGIN
 			ASSERT(lock.HasLock());
 			border := borderWidth.Get();
@@ -491,7 +491,7 @@ TYPE
 			sizeX, sizeY : SIZE;
 			imgX, imgY, imgWidth, imgHeight, winWidth, winHeight : SIZE;
 			t_width, t_height : SIZE;
-			scaleX, scaleY : REAL;
+			scaleX, scaleY : FLOAT32;
 			canvasState : WMGraphics.CanvasState;
 		BEGIN
 			DrawInternal^(canvas, x, y, width, height, window, hasFocus, mouseOver, extImage);
@@ -696,9 +696,9 @@ TYPE
 			info2 : WMWindowManager.WindowInfo;
 			gx, gy: SIZE;
 			menu : MenuWindow;
-			type : WORD; index2 : SIZE;
+			type : INTEGER; index2 : SIZE;
 			infoKeys : SET;
-			res : WORD;
+			res : INTEGER;
 			rect : WMRectangles.Rectangle;
 			closeWindow : DoCloseWindow;
 			same: BOOLEAN;
@@ -942,10 +942,10 @@ TYPE
 		documentOffset, commandOffset, imageOffset : SIZE;
 
 		owner : MenuWindow;
-		menuLocation : LONGINT;
+		menuLocation : SIGNED32;
 		showThumbnails : BOOLEAN;
 
-		type : WORD;
+		type : INTEGER;
 		index : SIZE;
 		keys : SET;
 
@@ -956,7 +956,7 @@ TYPE
 
 		imageYes, imageNo : WMGraphics.Image;
 
-		PROCEDURE &New(owner : MenuWindow; menuLocation : LONGINT; showThumbnails : BOOLEAN);
+		PROCEDURE &New(owner : MenuWindow; menuLocation : SIGNED32; showThumbnails : BOOLEAN);
 		BEGIN
 			ASSERT(owner # NIL);
 			SELF.owner := owner;
@@ -973,7 +973,7 @@ TYPE
 
 		PROCEDURE SetInfo(window : WMWindowManager.Window; CONST info : WMWindowManager.WindowInfo);
 		VAR
-			vc : WMComponents.VisualComponent; ptr : ANY; i : LONGINT; aux_canvas : WMGraphics.BufferCanvas;
+			vc : WMComponents.VisualComponent; ptr : ANY; i : SIGNED32; aux_canvas : WMGraphics.BufferCanvas;
 			height, imageWidth, imageHeight : SIZE;
 		BEGIN
 			SELF.window := window;
@@ -1107,7 +1107,7 @@ TYPE
 			PROCEDURE DrawBg(y : SIZE);
 			BEGIN
 				IF IsHighlighted(y) THEN
-					canvas.Fill(WMRectangles.MakeRect(0, y, bounds.GetWidth(), y + LineHeight), LONGINT(060606A0H), WMGraphics.ModeSrcOverDst);
+					canvas.Fill(WMRectangles.MakeRect(0, y, bounds.GetWidth(), y + LineHeight), SIGNED32(060606A0H), WMGraphics.ModeSrcOverDst);
 					canvas.SetColor(WMGraphics.White);
 				ELSE
 					canvas.SetColor(WMGraphics.Black);
@@ -1172,7 +1172,7 @@ TYPE
 
 			PROCEDURE DrawLine(VAR y : SIZE);
 			BEGIN
-				canvas.Line(LeftBorder, y + (LineHeight DIV 2), bounds.GetWidth(), y + (LineHeight DIV 2), LONGINT(0C0C0C0FFH), WMGraphics.ModeCopy);
+				canvas.Line(LeftBorder, y + (LineHeight DIV 2), bounds.GetWidth(), y + (LineHeight DIV 2), SIGNED32(0C0C0C0FFH), WMGraphics.ModeCopy);
 				INC(y, LineHeight);
 			END DrawLine;
 
@@ -1184,7 +1184,7 @@ TYPE
 				canvas.DrawImage(LeftBorder + imgX, y + imgY, image, WMGraphics.ModeCopy);
 				WMGraphicUtilities.DrawRect(canvas,
 					WMRectangles.MakeRect(LeftBorder, y, bounds.GetWidth() - RightBorder, y + image.height),
-					LONGINT(0C0C0C0C0H), WMGraphics.ModeSrcOverDst
+					SIGNED32(0C0C0C0C0H), WMGraphics.ModeSrcOverDst
 				);
 				canvas.RestoreState(canvasState);
 			END DrawImage;
@@ -1201,7 +1201,7 @@ TYPE
 		BEGIN
 			Draw^(canvas);
 
-			canvas.Fill(WMRectangles.MakeRect(0, 0, LeftBorder - 5, bounds.GetHeight()), LONGINT(0C0C0C0C0H), WMGraphics.ModeSrcOverDst);
+			canvas.Fill(WMRectangles.MakeRect(0, 0, LeftBorder - 5, bounds.GetHeight()), SIGNED32(0C0C0C0C0H), WMGraphics.ModeSrcOverDst);
 
 			IF (menuLocation = Top) THEN
 				IF (nofDocuments > 0) THEN
@@ -1239,7 +1239,7 @@ TYPE
 
 		close : BOOLEAN;
 
-		PROCEDURE GetSelection(VAR type : WORD; VAR index : SIZE; VAR keys : SET);
+		PROCEDURE GetSelection(VAR type : INTEGER; VAR index : SIZE; VAR keys : SET);
 		BEGIN {EXCLUSIVE}
 			AWAIT(close);
 			type := infoView.type;
@@ -1248,7 +1248,7 @@ TYPE
 		END GetSelection;
 
 		PROCEDURE&New(
-			x, y, width : SIZE; menuLocation : WORD;
+			x, y, width : SIZE; menuLocation : INTEGER;
 			showThumbnails : BOOLEAN;
 			window : WMWindowManager.Window; CONST info : WMWindowManager.WindowInfo
 		);
@@ -1286,7 +1286,7 @@ TYPE
 			manager.SetFocus(SELF);
 		END New;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : WORD); (** override *)
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : INTEGER); (** override *)
 		BEGIN
 			Draw^(canvas, w, h, q);
 			canvas.Fill(shadowRectB, 04FH, WMGraphics.ModeSrcOverDst);
@@ -1377,8 +1377,8 @@ VAR
 	StrTaskList: Strings.String;
 	StrOverview: Strings.String;
 
-	width, height : LONGINT;
-	windowShotScale*:REAL;
+	width, height : SIGNED32;
+	windowShotScale*:FLOAT32;
 
 	windowsAreHidden : BOOLEAN;
 	navigationIsHidden : BOOLEAN;
@@ -1405,7 +1405,7 @@ BEGIN (* must hold window manager lock *)
 END GetWindowImage;
 
 PROCEDURE GenerateName(prefix: Strings.String; VAR str: ARRAY OF CHAR);
-VAR  i,j:LONGINT; num: ARRAY 32 OF CHAR; title: Files.FileName; c:CHAR;
+VAR  i,j:SIGNED32; num: ARRAY 32 OF CHAR; title: Files.FileName; c:CHAR;
 BEGIN
 	i:=0; j:=0;
 	IF prefix#NIL THEN
@@ -1425,8 +1425,8 @@ BEGIN
 	COPY(title, str);
 END GenerateName;
 
-PROCEDURE WindowShot(window: WMWindowManager.Window; scale:REAL);
-VAR str,fn: Files.FileName;  w,h: LONGINT; res: WORD; startTime: Dates.DateTime;
+PROCEDURE WindowShot(window: WMWindowManager.Window; scale:FLOAT32);
+VAR str,fn: Files.FileName;  w,h: SIGNED32; res: INTEGER; startTime: Dates.DateTime;
 	img:WMGraphics.Image;
 BEGIN
 	GenerateName(window.GetTitle(),fn);
@@ -1453,7 +1453,7 @@ END WindowShot;
 
 
 PROCEDURE StoreWindow(window: WMWindowManager.Window); (*! o do: move this to WMComponents.Mod, or use WMRestorable.Mod *)
-VAR fn0,fn: Files.FileName;  s: ARRAY 6 OF CHAR; i, res: LONGINT; f:Files.File; w:Files.Writer;
+VAR fn0,fn: Files.FileName;  s: ARRAY 6 OF CHAR; i, res: SIGNED32; f:Files.File; w:Files.Writer;
 	xml:XML.Content; msg: WMMessages.Message;
 BEGIN
 	IF (WMWindowManager.FlagStorable IN window.flags) THEN
@@ -1492,7 +1492,7 @@ BEGIN
 END StoreWindow;
 
 PROCEDURE DrawIntoCanvas(window : WMWindowManager.Window; canvas : WMGraphics.BufferCanvas; width, height : SIZE; VAR offsetX, offsetY : SIZE);
-VAR image : Raster.Image; winWidth, winHeight, imgWidth, imgHeight : SIZE; scaleX, scaleY : REAL;
+VAR image : Raster.Image; winWidth, winHeight, imgWidth, imgHeight : SIZE; scaleX, scaleY : FLOAT32;
 BEGIN (* must hold window manager lock *)
 	ASSERT((window # NIL) & (canvas # NIL));
 	image := canvas.GetImage();
@@ -1520,15 +1520,15 @@ BEGIN (* must hold window manager lock *)
 END DrawIntoCanvas;
 
 PROCEDURE Clear(VAR windows : Windows);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(windows)-1 DO
 		windows[i] := NIL;
 	END;
 END Clear;
 
-PROCEDURE GetFocusOwnerIndex(CONST windows : Windows; nofWindows : LONGINT) : LONGINT; (* private *)
-VAR index : LONGINT; focusOwner : WMWindowManager.Window;
+PROCEDURE GetFocusOwnerIndex(CONST windows : Windows; nofWindows : SIGNED32) : SIGNED32; (* private *)
+VAR index : SIGNED32; focusOwner : WMWindowManager.Window;
 BEGIN
 	focusOwner := manager.GetFocusOwner();
 	index := 0;
@@ -1540,7 +1540,7 @@ BEGIN
 END GetFocusOwnerIndex;
 
 (** Postcondition: {(windows # NIL) & (0 <= nofWindows < MaxNofWindows) & (windows[i < nofWindows] # NIL)} *)
-PROCEDURE GetWindows(VAR windows : Windows; VAR nofWindows : LONGINT);
+PROCEDURE GetWindows(VAR windows : Windows; VAR nofWindows : SIGNED32);
 VAR
 	window : WMWindowManager.Window;
 
@@ -1551,7 +1551,7 @@ VAR
 	END IsUserWindow;
 
 	PROCEDURE SortWindowsById(VAR windows : Windows);
-	VAR temp : WMWindowManager.Window; i, j : LONGINT;
+	VAR temp : WMWindowManager.Window; i, j : SIGNED32;
 	BEGIN
 		(* for now bubble sort is sufficient *)
 		FOR i := 0 TO nofWindows-1 DO
@@ -1641,7 +1641,7 @@ BEGIN {EXCLUSIVE}
 END Open;
 
 PROCEDURE Close*(context : Commands.Context); (** id  ~ *)
-VAR id : LONGINT;
+VAR id : SIGNED32;
 BEGIN {EXCLUSIVE}
 	IF context.arg.GetInteger(id, FALSE) & (0 <= id) & (id < MaxNavigationWindows) THEN
 		IF (windows[id] # NIL) THEN
@@ -1656,7 +1656,7 @@ BEGIN {EXCLUSIVE}
 END Close;
 
 PROCEDURE ToggleVisibility*(context : Commands.Context); (** id ~ *)
-VAR id : LONGINT;
+VAR id : SIGNED32;
 BEGIN {EXCLUSIVE}
 	IF context.arg.GetInteger(id, FALSE) & (0 <= id) & (id < MaxNavigationWindows) THEN
 		IF (windows[id] # NIL) THEN
@@ -1712,7 +1712,7 @@ BEGIN
 END FocusToPrevious;
 
 PROCEDURE SwitchFocus(backwards : BOOLEAN);
-VAR windows : Windows; nofWindows, focusIdx : LONGINT;
+VAR windows : Windows; nofWindows, focusIdx : SIGNED32;
 BEGIN {EXCLUSIVE}
 	GetWindows(windows, nofWindows);
 	IF (nofWindows >= 1) THEN
@@ -1760,7 +1760,7 @@ BEGIN {EXCLUSIVE}
 END ToggleAll;
 
 PROCEDURE SetIsVisible(isVisible : BOOLEAN);
-VAR windows : Windows; nofWindows, i : LONGINT;
+VAR windows : Windows; nofWindows, i : SIGNED32;
 BEGIN
 	GetWindows(windows, nofWindows);
 	manager.lock.AcquireWrite;
@@ -1800,7 +1800,7 @@ BEGIN {EXCLUSIVE}
 END ToggleFullscreen;
 
 PROCEDURE MoveWindow*(context : Commands.Context);
-VAR options : Options.Options; window : WMWindowManager.Window; x, y : LONGINT;
+VAR options : Options.Options; window : WMWindowManager.Window; x, y : SIGNED32;
 BEGIN {EXCLUSIVE}
 	NEW(options);
 	options.Add("d", "display", Options.Flag);
@@ -1838,7 +1838,7 @@ END CloseWindow;
  *	"d": interpret x, y, w and h parameters as multiples of display width/height
  *)
 PROCEDURE SetViewportRange*(context : Commands.Context); (** [options] [x y [w h]] ~ *)
-VAR options : Options.Options; x, y, w, h : LONGINT;
+VAR options : Options.Options; x, y, w, h : SIGNED32;
 BEGIN
 	NEW(options);
 	options.Add("s", "showTransition", Options.Flag);
@@ -1938,7 +1938,7 @@ BEGIN
 END Init;
 
 PROCEDURE Cleanup;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN {EXCLUSIVE}
 	FOR i := 0 TO LEN(windows)-1 DO
 		IF (windows[i] # NIL) THEN windows[i].Close; END;

@@ -1,12 +1,12 @@
 MODULE ColorModels; (** AUTHOR ""; PURPOSE ""; *)
 (* ported from Oberon.ColorModels.Mod and Oberon.Colors.Mod
- - use LONGINT [0,255] instead of REAL [0,1] (compatible with WMGraphics.Mod)
+ - use SIGNED32 [0,255] instead of FLOAT32 [0,1] (compatible with WMGraphics.Mod)
 *)
 
 (** convert a RedGreenBlue color specification to HueSaturationValue *)
-PROCEDURE RGBToHSV*(r,g,b : LONGINT; VAR h,s,v: REAL);
+PROCEDURE RGBToHSV*(r,g,b : SIGNED32; VAR h,s,v: FLOAT32);
 VAR
-	m,rl,gl,bl, rr, gg, bb: REAL;
+	m,rl,gl,bl, rr, gg, bb: FLOAT32;
 BEGIN
 	rr := r / 255; gg := g / 255; bb := b / 255;
 
@@ -40,10 +40,10 @@ BEGIN
 END RGBToHSV;
 
 (** convert a HueSaturationValue color specification to RedGreenBlue *)
-PROCEDURE HSVToRGB*(h,s,v: REAL; VAR rl,gl,bl: LONGINT);
+PROCEDURE HSVToRGB*(h,s,v: FLOAT32; VAR rl,gl,bl: SIGNED32);
 VAR
-	i: LONGINT;
-	f,p1,p2,p3, r, g, b: REAL;
+	i: SIGNED32;
+	f,p1,p2,p3, r, g, b: FLOAT32;
 BEGIN
 	IF h = 360.0 THEN h:= 0.0; ELSE h:= h / 60.0; END;	(* convert h to be in [0,6] *)
 	i:= ENTIER(h); f:= h - i;
@@ -60,20 +60,20 @@ BEGIN
 END HSVToRGB;
 
 (** convert a RedGreenBlue color specification to CyanMagentaYellow *)
-PROCEDURE RGBToCMY*(r,g,b: REAL; VAR c,m,y: REAL);
+PROCEDURE RGBToCMY*(r,g,b: FLOAT32; VAR c,m,y: FLOAT32);
 BEGIN
 	c:= 1.0 - r/255; m:= 1.0 - g/255; y:= 1.0 - b/255;
 END RGBToCMY;
 
 (** convert a CyanMagentaYellow color specification to RedGreenBlue *)
-PROCEDURE CMYToRGB*(c,m,y: REAL; VAR r,g,b: LONGINT);
+PROCEDURE CMYToRGB*(c,m,y: FLOAT32; VAR r,g,b: SIGNED32);
 BEGIN
 	r:= ENTIER ( (1.0 - c)*255 ); g:= ENTIER ( (1.0 - m)*255 ); b:= ENTIER ( (1.0 - y)*255 );
 END CMYToRGB;
 
 (** CMYK (Cyan Magenta Yellow blacK) model **)
-PROCEDURE RGBToCMYK* (rl, gl, bl: LONGINT; VAR c, m, y, k: REAL);
-VAR r, g, b : REAL;
+PROCEDURE RGBToCMYK* (rl, gl, bl: SIGNED32; VAR c, m, y, k: FLOAT32);
+VAR r, g, b : FLOAT32;
 BEGIN
 	r := rl / 255; g := gl / 255; b := bl / 255;
 	c := 1 - r; m := 1 - g; y := 1 - b;
@@ -89,7 +89,7 @@ BEGIN
 	c := c - k; m := m - k; y := y - k
 END RGBToCMYK;
 
-PROCEDURE CMYKToRGB* (c, m, y, k: REAL; VAR r, g, b: REAL);
+PROCEDURE CMYKToRGB* (c, m, y, k: FLOAT32; VAR r, g, b: FLOAT32);
 BEGIN
 	r := 1 - (k + c); g := 1 - (k + m); b := 1 - (k + y)
 END CMYKToRGB;

@@ -40,21 +40,21 @@ TYPE
 
 	Fixup = OBJECT (PCLIR.InstructionAttribute)
 	VAR
-		pc: LONGINT;
+		pc: SIGNED32;
 		next: Fixup;
 	END Fixup;
 
 	CaseLine = OBJECT (PCLIR.InstructionAttribute)
 	VAR
 		first, last: BOOLEAN;
-		from, to: LONGINT;
+		from, to: SIGNED32;
 	END CaseLine;
 
 	Case = OBJECT (PCLIR.InstructionAttribute)
 	VAR
 		reg: PCA.Reg;
 		prevCase, nextCase: Fixup;
-		curCasePC: LONGINT;
+		curCasePC: SIGNED32;
 		curCaseLine: CaseLine;
 	END Case;
 
@@ -66,24 +66,24 @@ VAR
 
 	currentRegisters: RegisterSet;
 	savedRegisters: ARRAY 10 OF RegisterSet;
-	saveLevel : INTEGER;
+	saveLevel : SIGNED16;
 
 PROCEDURE IsFloat (size: PCLIR.Size): BOOLEAN;
 BEGIN RETURN (size = PCLIR.Float32) OR (size = PCLIR.Float64)
 END IsFloat;
 
-PROCEDURE NewXMM32 (index: LONGINT): XMM32;
+PROCEDURE NewXMM32 (index: SIGNED32): XMM32;
 VAR xmm32: XMM32;
 BEGIN NEW (xmm32, index); RETURN xmm32;
 END NewXMM32;
 
-PROCEDURE NewXMM64 (index: LONGINT): XMM64;
+PROCEDURE NewXMM64 (index: SIGNED32): XMM64;
 VAR xmm64: XMM64;
 BEGIN NEW (xmm64, index); RETURN xmm64;
 END NewXMM64;
 
 (* create a new register with the given size *)
-PROCEDURE NewReg (size: PCLIR.Size; index: LONGINT): PCA.Reg;
+PROCEDURE NewReg (size: PCLIR.Size; index: SIGNED32): PCA.Reg;
 BEGIN CASE size OF
 	| PCLIR.Int8: RETURN PCA.NewReg8 (index);
 	| PCLIR.Int16: RETURN PCA.NewReg16 (index);
@@ -94,7 +94,7 @@ BEGIN CASE size OF
 	END;
 END NewReg;
 
-PROCEDURE AllocReg (size: PCLIR.Size; index: LONGINT);
+PROCEDURE AllocReg (size: PCLIR.Size; index: SIGNED32);
 BEGIN IF size IN PCLIR.FloatSize THEN
 		INCL (currentRegisters.xmm, index);
 	ELSE
@@ -102,7 +102,7 @@ BEGIN IF size IN PCLIR.FloatSize THEN
 	END;
 END AllocReg;
 
-PROCEDURE FreeReg (size: PCLIR.Size; index: LONGINT);
+PROCEDURE FreeReg (size: PCLIR.Size; index: SIGNED32);
 BEGIN IF size IN PCLIR.FloatSize THEN
 		EXCL (currentRegisters.xmm, index);
 	ELSE
@@ -110,8 +110,8 @@ BEGIN IF size IN PCLIR.FloatSize THEN
 	END;
 END FreeReg;
 
-PROCEDURE GetNextFreeReg (registerSet: SET): LONGINT;
-VAR  index: LONGINT;
+PROCEDURE GetNextFreeReg (registerSet: SET): SIGNED32;
+VAR  index: SIGNED32;
 BEGIN index := 0;
 	WHILE index IN registerSet DO INC (index) END;
 	ASSERT (index <= r15);
@@ -120,7 +120,7 @@ END GetNextFreeReg;
 
 (* look within the current register set for a free register with the given size *)
 PROCEDURE AcquireReg (VAR instr: PCLIR.Instruction);
-VAR index: LONGINT; reg: PCA.Reg;
+VAR index: SIGNED32; reg: PCA.Reg;
 BEGIN
 	IF instr.info = NIL THEN
 
@@ -235,7 +235,7 @@ BEGIN
 	END;
 END ReleaseSourceReg;
 
-PROCEDURE NewImm (size: PCLIR.Size; val: LONGINT): PCA.Imm;
+PROCEDURE NewImm (size: PCLIR.Size; val: SIGNED32): PCA.Imm;
 BEGIN
 	CASE size OF
 	| PCLIR.Int8: RETURN PCA.NewImm8 (val);
@@ -245,7 +245,7 @@ BEGIN
 	END;
 END NewImm;
 
-PROCEDURE NewMem (size: PCLIR.Size; reg: PCA.Reg; displacement: LONGINT): PCA.Mem;
+PROCEDURE NewMem (size: PCLIR.Size; reg: PCA.Reg; displacement: SIGNED32): PCA.Mem;
 BEGIN
 	CASE size OF
 	| PCLIR.Int8: RETURN PCA.NewMem8 (reg, displacement);
@@ -258,7 +258,7 @@ BEGIN
 END NewMem;
 
 (*
-PROCEDURE Dump (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE Dump (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	PCM.log.CharLn;
 	PCM.log.CharStr(PCLIR.InstructionSet[instr.op].name); PCM.log.CharLn;
@@ -299,7 +299,7 @@ BEGIN
 	RETURN FALSE;
 END IsAbsolute;
 
-PROCEDURE FixAbsolute (adr: PCM.Attribute; pc: LONGINT);
+PROCEDURE FixAbsolute (adr: PCM.Attribute; pc: SIGNED32);
 BEGIN
 	IF adr # NIL THEN
 		IF adr IS PCBT.GlobalVariable THEN
@@ -311,7 +311,7 @@ BEGIN
 END FixAbsolute;
 
 PROCEDURE FixFixups (VAR fixup: Fixup);
-VAR prevPC: LONGINT;
+VAR prevPC: SIGNED32;
 BEGIN
 	IF fixup # NIL THEN
 		prevPC := assembly.pc;
@@ -361,8 +361,8 @@ BEGIN
 	END;
 END EmitPop;
 
-PROCEDURE EmitResult (VAR instr: PCLIR.Instruction; srcReg: LONGINT);
-VAR op: LONGINT; source: PCA.Reg;
+PROCEDURE EmitResult (VAR instr: PCLIR.Instruction; srcReg: SIGNED32);
+VAR op: SIGNED32; source: PCA.Reg;
 BEGIN
 	AcquireReg (instr);
 
@@ -382,12 +382,12 @@ BEGIN
 	FreeReg (PCLIR.Int64, srcReg);
 END EmitResult;
 
-PROCEDURE EmitReturn (code: PCLIR.Code; VAR instr: PCLIR.Instruction; destReg: LONGINT);
+PROCEDURE EmitReturn (code: PCLIR.Code; VAR instr: PCLIR.Instruction; destReg: SIGNED32);
 VAR
 	piece1: PCLIR.Piece;
 	reg1, dest: PCA.Reg;
 	sourceSize: PCLIR.Size;
-	op: LONGINT;
+	op: SIGNED32;
 
 BEGIN
 	code.GetPiece (instr.src1, piece1);
@@ -414,8 +414,8 @@ BEGIN
 
 END EmitReturn;
 
-PROCEDURE EmitJmp (opCode: LONGINT; code: PCLIR.Code;  VAR instr: PCLIR.Instruction);
-VAR piece1: PCLIR.Piece; offset: LONGINT; fixup: Fixup;
+PROCEDURE EmitJmp (opCode: SIGNED32; code: PCLIR.Code;  VAR instr: PCLIR.Instruction);
+VAR piece1: PCLIR.Piece; offset: SIGNED32; fixup: Fixup;
 BEGIN
 	code.GetPiece (instr.val, piece1);
 
@@ -432,7 +432,7 @@ BEGIN
 
 END EmitJmp;
 
-PROCEDURE EmitType1 (op: LONGINT; code: PCLIR.Code;  VAR instr: PCLIR.Instruction; operand: PCA.Operand);
+PROCEDURE EmitType1 (op: SIGNED32; code: PCLIR.Code;  VAR instr: PCLIR.Instruction; operand: PCA.Operand);
 VAR piece1: PCLIR.Piece;
 BEGIN
 	code.GetPiece (instr.src1, piece1);
@@ -454,7 +454,7 @@ BEGIN
 	END;
 END EmitType1;
 
-PROCEDURE EmitType2 (op: LONGINT; code: PCLIR.Code;  VAR instr: PCLIR.Instruction);
+PROCEDURE EmitType2 (op: SIGNED32; code: PCLIR.Code;  VAR instr: PCLIR.Instruction);
 VAR piece2: PCLIR.Piece;
 BEGIN
 	IF instr.src2 = PCLIR.none THEN
@@ -466,7 +466,7 @@ BEGIN
 	END;
 END EmitType2;
 
-PROCEDURE EmitSSEBitOp (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  op, bit: LONGINT; invert: BOOLEAN);
+PROCEDURE EmitSSEBitOp (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  op, bit: SIGNED32; invert: BOOLEAN);
 VAR RAX, tmp: PCA.Reg;
 BEGIN
 	RAX := PCA.NewReg64 (rAX);
@@ -480,7 +480,7 @@ BEGIN
 	EmitType1 (op, code, instr, tmp);
 END EmitSSEBitOp;
 
-PROCEDURE EmitMove(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  op: LONGINT);
+PROCEDURE EmitMove(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  op: SIGNED32);
 VAR
 	piece1, piece2, piece3: PCLIR.Piece;
 	from, to, size: PCA.Reg;
@@ -514,7 +514,7 @@ BEGIN
 
 END EmitMove;
 
-PROCEDURE EmitCmpJmp (reg: PCA.Reg; val: LONGINT; op: LONGINT; VAR fixup: Fixup);
+PROCEDURE EmitCmpJmp (reg: PCA.Reg; val: SIGNED32; op: SIGNED32; VAR fixup: Fixup);
 VAR fix: Fixup;
 BEGIN
 	assembly.Emit (ASM.opCMP, reg, PCA.NewImm (PCA.default, val), NIL);
@@ -523,12 +523,12 @@ BEGIN
 END EmitCmpJmp;
 
 (* GenEnter - Create Procedure activation frame of given size and clear the stack *)
-PROCEDURE GenEnter (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenEnter (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 CONST PushLoopUnrollSize = 4;
-VAR stackSize, i: LONGINT;  adr: PCBT.Procedure;
+VAR stackSize, i: SIGNED32;  adr: PCBT.Procedure;
 
 	PROCEDURE FixAddress;
-	VAR prevPC, nextPC: LONGINT;
+	VAR prevPC, nextPC: SIGNED32;
 	BEGIN
 		prevPC := assembly.pc;
 		WHILE adr.fixlist # PCBT.FixupSentinel DO
@@ -614,7 +614,7 @@ BEGIN
 END GenEnter;
 
 (* GenExit - Remove procedure activation frame, remove the give size of parameters and return to the caller *)
-PROCEDURE GenExit (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenExit (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	IF instr.val = PCBT.OberonPassivateCC THEN
 		(* pop the stack frame from the stack *)
@@ -634,7 +634,7 @@ BEGIN
 	END;
 END GenExit;
 
-PROCEDURE GenTrap (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenTrap (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	(* prohibit pushing a 16-bit immediate which decrements the stack pointer by two not by 8 *)
 	IF instr.val < 80H THEN
@@ -645,11 +645,11 @@ BEGIN
 	assembly.Emit (ASM.opINT3, NIL, NIL, NIL);
 END GenTrap;
 
-PROCEDURE GenTrapcc (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenTrapcc (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1, piece2: PCLIR.Piece;
 	reg1, reg2: PCA.Reg;
-	cmpop, jmpop: LONGINT;
+	cmpop, jmpop: SIGNED32;
 BEGIN
 	code.GetPiece (instr.src1, piece1);
 	code.GetPiece (instr.src2, piece2);
@@ -686,8 +686,8 @@ BEGIN
 	ReleaseSourceReg (instr.src2, piece2);
 END GenTrapcc;
 
-PROCEDURE GenSaveRegisters (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR index: LONGINT; RAX: PCA.Reg;
+PROCEDURE GenSaveRegisters (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR index: SIGNED32; RAX: PCA.Reg;
 BEGIN
 	RAX := PCA.NewReg64 (rAX);
 	FOR index := rAX TO r15 DO
@@ -702,8 +702,8 @@ BEGIN
 	savedRegisters[saveLevel] := currentRegisters; INC (saveLevel);
 END GenSaveRegisters;
 
-PROCEDURE GenRestoreRegisters (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
-VAR index: LONGINT; RAX: PCA.Reg;
+PROCEDURE GenRestoreRegisters (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
+VAR index: SIGNED32; RAX: PCA.Reg;
 BEGIN
 	DEC (saveLevel);
 	RAX := PCA.NewReg64 (rAX);
@@ -720,7 +720,7 @@ BEGIN
 	currentRegisters.xmm := currentRegisters.xmm + savedRegisters[saveLevel].xmm;
 END GenRestoreRegisters;
 
-PROCEDURE GenPush (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenPush (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1: PCLIR.Piece;
 	reg1, tmp: PCA.Reg;
@@ -745,7 +745,7 @@ BEGIN
 	ReleaseSourceReg (instr.src1, piece1);
 END GenPush;
 
-PROCEDURE GenPop (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenPop (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR tmp: PCA.Reg;
 BEGIN
 	AcquireReg (instr);
@@ -765,28 +765,28 @@ BEGIN
 END GenPop;
 
 (* GenResult - Allocate the registers for functions results (after a call) *)
-PROCEDURE GenResult (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenResult (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN EmitResult (instr, rAX);
 END GenResult;
 
-PROCEDURE GenResult2 (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenResult2 (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN EmitResult (instr, rDX);
 END GenResult2;
 
-PROCEDURE GenReturn (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenReturn (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN EmitReturn (code, instr, rAX);
 END GenReturn;
 
-PROCEDURE GenReturn2 (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenReturn2 (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN EmitReturn (code, instr, rDX);
 END GenReturn2;
 
-PROCEDURE GenLoad (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenLoad (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1: PCLIR.Piece;
 	reg1, tmp: PCA.Reg;
 	imm: PCA.Imm;
-	op: LONGINT;
+	op: SIGNED32;
 BEGIN
 	code.GetPiece (instr.src1, piece1);
 
@@ -820,7 +820,7 @@ BEGIN
 	ReleaseSourceReg (instr.src1, piece1);
 END GenLoad;
 
-PROCEDURE GenLoadC (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenLoadC (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR imm: PCA.Imm;
 BEGIN
 	ASSERT (instr.dstSize IN PCLIR.IntSize);
@@ -835,7 +835,7 @@ BEGIN
 			FixAbsolute (instr.adr, imm.pc);
 		ELSIF (instr.val = 0) & (instr.adr = NIL) THEN
 			assembly.Emit (ASM.opXOR, instr.info(PCA.Reg), instr.info(PCA.Reg), NIL);
-		ELSIF (instr.dstSize = PCLIR.Int64) & (SYSTEM.VAL(LONGINT, instr.val) = instr.val) THEN
+		ELSIF (instr.dstSize = PCLIR.Int64) & (SYSTEM.VAL(SIGNED32, instr.val) = instr.val) THEN
 			(*	since the upper half of the 64bit wide target register is signed extended using
 				this MOV instruction, one can save the leading bits of the 64bit wide immediate value	*)
 			assembly.Emit (ASM.opMOV,  instr.info(PCA.Reg), PCA.NewImm32 (instr.val), NIL);
@@ -845,7 +845,7 @@ BEGIN
 	END;
 END GenLoadC;
 
-PROCEDURE GenLoadSP(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenLoadSP(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR piece1: PCLIR.Piece; reg1: PCA.Reg;
 BEGIN
 	code.GetPiece (instr.src1, piece1);
@@ -854,7 +854,7 @@ BEGIN
 	ReleaseSourceReg (instr.src1, piece1);
 END GenLoadSP;
 
-PROCEDURE GenLoadFP(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenLoadFP(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR piece1: PCLIR.Piece; reg1: PCA.Reg;
 BEGIN
 	code.GetPiece (instr.src1, piece1);
@@ -863,13 +863,13 @@ BEGIN
 	ReleaseSourceReg (instr.src1, piece1);
 END GenLoadFP;
 
-PROCEDURE GenStore (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenStore (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1, piece2: PCLIR.Piece;
 	dest: PCA.Reg;
 	source: PCA.Operand;
 	dstSize: PCLIR.Size;
-	op: LONGINT;
+	op: SIGNED32;
 BEGIN
 	code.GetPiece (instr.src1, piece1);
 	code.GetPiece (instr.src2, piece2);
@@ -912,7 +912,7 @@ BEGIN
 	ReleaseSourceReg (instr.src2, piece2);
 END GenStore;
 
-PROCEDURE GenOut (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenOut (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1, piece2: PCLIR.Piece;
 	reg1, reg2, port, source: PCA.Reg;
@@ -939,7 +939,7 @@ BEGIN
 	ReleaseSourceReg (instr.src2, piece2);
 END GenOut;
 
-PROCEDURE GenIn (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenIn (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1: PCLIR.Piece;
 	reg1, port, dest: PCA.Reg;
@@ -967,27 +967,27 @@ BEGIN
 	ReleaseSourceReg (instr.src1, piece1);
 END GenIn;
 
-PROCEDURE GenNop (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenNop (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN assembly.Emit (ASM.opNOP, NIL, NIL, NIL);
 END GenNop;
 
-PROCEDURE GenLabel(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenLabel(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	IF instr.val = 0 THEN
 		instr.val := assembly.pc;
 	ELSIF assembly.pc >= PCM.breakpc THEN
-		PCM.Error(400, instr.val, ""); PCM.breakpc := MAX(LONGINT)
+		PCM.Error(400, instr.val, ""); PCM.breakpc := MAX(SIGNED32)
 	END;
 	IF  instr.info # NIL THEN
 		FixFixups (instr.info (Fixup));
 	END;
 END GenLabel;
 
-PROCEDURE GenJcc(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenJcc(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1, piece2: PCLIR.Piece;
 	reg1: PCA.Reg; op2: PCA.Operand;
-	cmpop, jmpop: LONGINT;
+	cmpop, jmpop: SIGNED32;
 BEGIN
 	code.GetPiece (instr.src1, piece1);
 	code.GetPiece (instr.src2, piece2);
@@ -1044,12 +1044,12 @@ BEGIN
 	ReleaseSourceReg (instr.src2, piece2);
 END GenJcc;
 
-PROCEDURE GenJmp (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenJmp (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	EmitJmp (ASM.opJMP, code, instr);
 END GenJmp;
 
-PROCEDURE GenCall(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenCall(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR adr: PCBT.Procedure; imm: PCA.Imm; dest: PCA.Reg;
 BEGIN
 	adr := instr.adr(PCBT.Procedure);
@@ -1068,7 +1068,7 @@ BEGIN
 	END
 END GenCall;
 
-PROCEDURE GenCallReg(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenCallReg(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR piece1: PCLIR.Piece; reg1: PCA.Reg;
 BEGIN
 	code.GetPiece (instr.src1, piece1);
@@ -1079,7 +1079,7 @@ BEGIN
 	ReleaseSourceReg (instr.src1, piece1);
 END GenCallReg;
 
-PROCEDURE GenSysCall(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenSysCall(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR imm: PCA.Imm; dest: PCA.Reg;
 BEGIN
 	imm := PCA.NewImm64 (0);
@@ -1089,11 +1089,11 @@ BEGIN
 	PCBT.context.UseSyscall (instr.val, imm.pc);
 END GenSysCall;
 
-PROCEDURE GenSetcc(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenSetcc(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1, piece2: PCLIR.Piece;
 	reg1: PCA.Reg; op2: PCA.Operand;
-	cmpop, setop: LONGINT;
+	cmpop, setop: SIGNED32;
 BEGIN
 	AcquireReg (instr);
 
@@ -1157,14 +1157,14 @@ BEGIN
 	ReleaseSourceReg (instr.src2, piece2);
 END GenSetcc;
 
-PROCEDURE GenKill(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenKill(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR piece1: PCLIR.Piece; reg1: PCA.Reg;
 BEGIN
 	code.GetPiece (instr.src1, piece1);
 	ReleaseSourceReg (instr.src1, piece1);
 END GenKill;
 
-PROCEDURE GenPhi(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenPhi(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1, piece2: PCLIR.Piece;
 	reg1, reg2: PCA.Reg;
@@ -1200,12 +1200,12 @@ BEGIN
 	AllocReg (instr.dstSize, reg1.index);
 END GenPhi;
 
-PROCEDURE GenConv (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenConv (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1: PCLIR.Piece;
 	reg1, tmp: PCA.Reg;
 	srcSize: PCLIR.Size;
-	op: LONGINT;
+	op: SIGNED32;
 BEGIN
 	ASSERT (instr.info = NIL);
 
@@ -1289,7 +1289,7 @@ BEGIN
 	END;
 END GenConv;
 
-PROCEDURE GenNegNot (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenNegNot (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	CASE instr.dstSize OF
 	PCLIR.Int8 .. PCLIR.Int64:
@@ -1305,7 +1305,7 @@ BEGIN
 	END;
 END GenNegNot;
 
-PROCEDURE GenAbs(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenAbs(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1: PCLIR.Piece;
 	reg1, dest, source: PCA.Reg;
@@ -1346,19 +1346,19 @@ BEGIN
 	END;
 END GenAbs;
 
-PROCEDURE GenBts (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenBts (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	ASSERT (instr.dstSize IN PCLIR.IntSize);
 	EmitType2 (ASM.opBTS, code, instr);
 END GenBts;
 
-PROCEDURE GenBtc (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenBtc (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	ASSERT (instr.dstSize IN PCLIR.IntSize);
 	EmitType2 (ASM.opBTR, code, instr);
 END GenBtc;
 
-PROCEDURE GenMul(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenMul(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 (*	ASSERT (instr.dstSigned); *)
 	CASE instr.dstSize OF
@@ -1371,11 +1371,11 @@ BEGIN
 	END;
 END GenMul;
 
-PROCEDURE GenDivMod(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenDivMod(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1, piece2: PCLIR.Piece;
 	reg1, reg2, dividend, quotient, remainder: PCA.Reg;
-	offset: PCA.Imm; prevPC: LONGINT;
+	offset: PCA.Imm; prevPC: SIGNED32;
 BEGIN
 (*	ASSERT (instr.dstSigned); *)
 
@@ -1445,7 +1445,7 @@ BEGIN
 	END;
 END GenDivMod;
 
-PROCEDURE GenAdd (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenAdd (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	CASE instr.dstSize OF
 	PCLIR.Int8 .. PCLIR.Int64:
@@ -1461,7 +1461,7 @@ BEGIN
 	END;
 END GenAdd;
 
-PROCEDURE GenSub (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenSub (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	CASE instr.dstSize OF
 	PCLIR.Int8 .. PCLIR.Int64:
@@ -1477,31 +1477,31 @@ BEGIN
 	END;
 END GenSub;
 
-PROCEDURE GenAnd (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenAnd (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	ASSERT (instr.dstSize IN PCLIR.IntSize);
 	EmitType2 (ASM.opAND, code, instr);
 END GenAnd;
 
-PROCEDURE GenOr (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenOr (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	ASSERT (instr.dstSize IN PCLIR.IntSize);
 	EmitType2 (ASM.opOR, code, instr);
 END GenOr;
 
-PROCEDURE GenXor (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenXor (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN
 	ASSERT (instr.dstSize IN PCLIR.IntSize);
 	EmitType2 (ASM.opXOR, code, instr);
 END GenXor;
 
-PROCEDURE GenShift(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenShift(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1, piece2: PCLIR.Piece;
 	reg2, shift, CL: PCA.Reg;
-	op: LONGINT;
+	op: SIGNED32;
 
-	prevPC: LONGINT;
+	prevPC: SIGNED32;
 	thenOffset, elseOffset: PCA.Imm;
 
 BEGIN
@@ -1570,20 +1570,20 @@ BEGIN
 
 END GenShift;
 
-PROCEDURE GenMoveDown(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenMoveDown(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN EmitMove (code, instr, ASM.opSTD);
 END GenMoveDown;
 
-PROCEDURE GenMove(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenMove(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 BEGIN EmitMove (code, instr, ASM.opCLD);
 END GenMove;
 
-PROCEDURE GenInline(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenInline(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	inline: PCLIR.AsmInline;
 	block: PCLIR.AsmBlock;
 	fixup: PCLIR.AsmFixup;
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	inline := instr.adr(PCLIR.AsmInline);
 
@@ -1600,7 +1600,7 @@ BEGIN
 	END;
 END GenInline;
 
-PROCEDURE GenCase(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenCase(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1: PCLIR.Piece;
 	case: Case;
@@ -1614,7 +1614,7 @@ BEGIN
 	ReleaseSourceReg (instr.src1, piece1);
 END GenCase;
 
-PROCEDURE GenCaseLine(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT);
+PROCEDURE GenCaseLine(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32);
 VAR
 	piece1, piece2: PCLIR.Piece;
 	case: Case; caseLine: CaseLine;
@@ -1670,10 +1670,10 @@ BEGIN
 END GenCaseLine;
 
 (* Debug Procedures *)
-PROCEDURE DumpCode (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT;  context: ANY);
+PROCEDURE DumpCode (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32;  context: ANY);
 END DumpCode;
 
-PROCEDURE Optimize (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT;  context: ANY);
+PROCEDURE Optimize (code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32;  context: ANY);
 VAR
 	piece1, piece2: PCLIR.Piece;
 	src1, src2: PCLIR.Register;
@@ -1759,7 +1759,7 @@ BEGIN
 	| PCLIR.loadc:
 		(* workaround for paco generating code that assigns too large values to bytes *)
 		IF instr.dstSize = PCLIR.Int8 THEN
-			instr.val := SHORTINT(instr.val);
+			instr.val := SIGNED8(instr.val);
 		END;
 	| PCLIR.ret:
 		IF src1 >= 0 THEN
@@ -1847,12 +1847,12 @@ BEGIN
 END Init;
 
 (* Done - Code generator results - Installed in PCBT.CG *)
-PROCEDURE Done (VAR result: WORD);
+PROCEDURE Done (VAR result: INTEGER);
 BEGIN result := 0;
 END Done;
 
-PROCEDURE GetCode (VAR codeArr: PCLIR.CodeArray; VAR length, hdrlength, addressFactor: LONGINT);
-VAR i: LONGINT;
+PROCEDURE GetCode (VAR codeArr: PCLIR.CodeArray; VAR length, hdrlength, addressFactor: SIGNED32);
+VAR i: SIGNED32;
 BEGIN
 	length := assembly.pc;
 	hdrlength := length;

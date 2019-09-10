@@ -27,12 +27,12 @@ Report any problems as soon as possible to ants@AntsInFields.de
 
 IMPORT Texts, Objects, (* Log,*)Strings, aM := antsMessages;
 
-	VAR nls: ARRAY 256 OF CHAR;  nll: LONGINT;
+	VAR nls: ARRAY 256 OF CHAR;  nll: SIGNED32;
 
 
 
-PROCEDURE CheckPattern (t: Texts.Text;  VAR pattern: ARRAY OF CHAR;  len, pos: LONGINT): BOOLEAN;
-	VAR r: Texts.Reader;  ch: CHAR;  i: LONGINT;
+PROCEDURE CheckPattern (t: Texts.Text;  VAR pattern: ARRAY OF CHAR;  len, pos: SIGNED32): BOOLEAN;
+	VAR r: Texts.Reader;  ch: CHAR;  i: SIGNED32;
 BEGIN
 	i := 0;
 	Texts.OpenReader(r, t, pos);
@@ -45,7 +45,7 @@ BEGIN
 	RETURN TRUE
 END CheckPattern;
 
-PROCEDURE FindPattern* (t: Texts.Text;  pattern: ARRAY OF CHAR;  len: LONGINT;  VAR pos: LONGINT): BOOLEAN;
+PROCEDURE FindPattern* (t: Texts.Text;  pattern: ARRAY OF CHAR;  len: SIGNED32;  VAR pos: SIGNED32): BOOLEAN;
 	VAR  ch, first: CHAR;  r: Texts.Reader;
 BEGIN
 	(* Log.Ln; Log.Str("Finding patter: "); Log.Str(pattern); *)
@@ -68,8 +68,8 @@ BEGIN
 	RETURN FALSE
 END FindPattern;
 
-PROCEDURE MakeBuf (s: ARRAY OF CHAR;  len: LONGINT;  NL: BOOLEAN): Texts.Buffer;
-	VAR W: Texts.Writer;  i: LONGINT;
+PROCEDURE MakeBuf (s: ARRAY OF CHAR;  len: SIGNED32;  NL: BOOLEAN): Texts.Buffer;
+	VAR W: Texts.Writer;  i: SIGNED32;
 BEGIN
 	Texts.OpenWriter(W);
 	IF NL THEN
@@ -83,8 +83,8 @@ BEGIN
 	RETURN W.buf
 END MakeBuf;
 
-PROCEDURE CheckLen (VAR s: ARRAY OF CHAR;  VAR len: LONGINT);
-	VAR i: INTEGER;
+PROCEDURE CheckLen (VAR s: ARRAY OF CHAR;  VAR len: SIGNED32);
+	VAR i: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE (i < len) & (s[i] # 0X) DO INC(i) END;
@@ -92,8 +92,8 @@ BEGIN
 END CheckLen;
 
 
-PROCEDURE ReplacePatterns* (t: Texts.Text;  pattern: ARRAY OF CHAR;  slen: LONGINT;  by: ARRAY OF CHAR;  dlen: LONGINT);
-	VAR pos: LONGINT;
+PROCEDURE ReplacePatterns* (t: Texts.Text;  pattern: ARRAY OF CHAR;  slen: SIGNED32;  by: ARRAY OF CHAR;  dlen: SIGNED32);
+	VAR pos: SIGNED32;
 BEGIN
 	CheckLen(pattern, slen);  CheckLen(by, dlen);
 	pos := 0;
@@ -102,8 +102,8 @@ BEGIN
 	END
 END ReplacePatterns;
 
-PROCEDURE AppendPatterns* (t: Texts.Text;  pattern: ARRAY OF CHAR;  slen: LONGINT;  by: ARRAY OF CHAR;  dlen: LONGINT);
-	VAR pos: LONGINT;
+PROCEDURE AppendPatterns* (t: Texts.Text;  pattern: ARRAY OF CHAR;  slen: SIGNED32;  by: ARRAY OF CHAR;  dlen: SIGNED32);
+	VAR pos: SIGNED32;
 BEGIN
 	CheckLen(pattern, slen);  CheckLen(by, dlen);
 	pos := 0;
@@ -112,8 +112,8 @@ BEGIN
 	END
 END AppendPatterns;
 
-PROCEDURE AppendPatternsNl* (t: Texts.Text;  pattern: ARRAY OF CHAR;  slen: LONGINT;  by: ARRAY OF CHAR;  dlen: LONGINT);
-	VAR pos: LONGINT;
+PROCEDURE AppendPatternsNl* (t: Texts.Text;  pattern: ARRAY OF CHAR;  slen: SIGNED32;  by: ARRAY OF CHAR;  dlen: SIGNED32);
+	VAR pos: SIGNED32;
 BEGIN
 	CheckLen(pattern, slen);  CheckLen(by, dlen);
 	pos := 0;
@@ -136,9 +136,9 @@ BEGIN
 	END
 END Copy;
 
-PROCEDURE ReplaceTextPart* (T: Texts.Text;  begpat, endpat: ARRAY OF CHAR;  by: Texts.Buffer;  VAR pos0: LONGINT): BOOLEAN;
+PROCEDURE ReplaceTextPart* (T: Texts.Text;  begpat, endpat: ARRAY OF CHAR;  by: Texts.Buffer;  VAR pos0: SIGNED32): BOOLEAN;
 	(* replaces part of Text t beginning with begpat ending with endpat by contents of Text by *)
-	VAR beg, end: LONGINT;
+	VAR beg, end: SIGNED32;
 BEGIN
 	IF FindPattern(T, begpat, Strings.Length(begpat), pos0) THEN
 		beg := pos0;
@@ -153,8 +153,8 @@ BEGIN
 	END
 END ReplaceTextPart;
 
-PROCEDURE GetTextPart*(T: Texts.Text;  begpat, endpat: ARRAY OF CHAR; VAR in: Texts.Buffer; VAR pos0: LONGINT): BOOLEAN;
-	VAR beg, end: LONGINT;
+PROCEDURE GetTextPart*(T: Texts.Text;  begpat, endpat: ARRAY OF CHAR; VAR in: Texts.Buffer; VAR pos0: SIGNED32): BOOLEAN;
+	VAR beg, end: SIGNED32;
 BEGIN
 	IF FindPattern(T, begpat, Strings.Length(begpat), pos0) THEN
 		beg := pos0;

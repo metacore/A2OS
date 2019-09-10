@@ -35,11 +35,11 @@ TYPE
 
 	Beeper = OBJECT
 	VAR
-		state : LONGINT;
-		hz, intervall : LONGINT;
+		state : SIGNED32;
+		hz, intervall : SIGNED32;
 		timer : Kernel.Timer;
 
-		PROCEDURE Signal(type : LONGINT);
+		PROCEDURE Signal(type : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF type = None THEN
 				state := Waiting;
@@ -86,14 +86,14 @@ TYPE
 VAR
 	beeper : Beeper;
 
-PROCEDURE Signal*(type : LONGINT);
+PROCEDURE Signal*(type : SIGNED32);
 BEGIN {EXCLUSIVE}
 	IF beeper = NIL THEN NEW(beeper); END;
 	beeper.Signal(type);
 END Signal;
 
 PROCEDURE SignalCmd*(context : Commands.Context);
-VAR nbr : LONGINT;
+VAR nbr : SIGNED32;
 BEGIN
 	IF context.arg.GetInteger(nbr, FALSE) THEN
 		Signal(nbr);

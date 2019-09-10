@@ -14,7 +14,7 @@ IMPORT Commands, Files, SambaClient, Strings;
 	PROCEDURE LoadCycle * (context: Commands.Context);
 	VAR
 		msg: ARRAY 128 OF CHAR;
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		Commands.Activate('SystemTools.Load', context, {Commands.Wait}, res, msg);
 		IF res # Commands.Ok THEN

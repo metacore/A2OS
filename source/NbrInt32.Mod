@@ -1,12 +1,12 @@
 (* CAPO - Computational Analysis Platform for Oberon - by Alan Freed and Felix Friedrich. *)
 (* Version 1, Update 2 *)
 
-MODULE NbrInt32;   (** AUTHOR "adf"; PURPOSE "Alias for type LONGINT."; *)
+MODULE NbrInt32;   (** AUTHOR "adf"; PURPOSE "Alias for type SIGNED32."; *)
 
 IMPORT NbrInt8, NbrInt16, Streams;
 
 TYPE
-	Integer* = LONGINT;
+	Integer* = SIGNED32;
 
 VAR
 	MinNbr-, MaxNbr-: Integer;
@@ -146,5 +146,5 @@ VAR
 	END Store;
 
 BEGIN
-	MinNbr := MIN( LONGINT );  MaxNbr := MAX( LONGINT )
+	MinNbr := MIN( SIGNED32 );  MaxNbr := MAX( SIGNED32 )
 END NbrInt32.

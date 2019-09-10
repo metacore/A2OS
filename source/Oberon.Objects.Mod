@@ -29,30 +29,30 @@ Most entities in Oberon are derived from this base type.
     Library* = POINTER TO LibDesc;
 
     ObjMsg* = RECORD	(** Base type of all messages sent to objects. *)
-      stamp*: LONGINT;	(** Message time stamp. *)
+      stamp*: SIGNED32;	(** Message time stamp. *)
       dlink*: Object	(** Sender of the message. *)
     END;
 
     Handler* = PROCEDURE (obj: Object; VAR M: ObjMsg);
 
     ObjDesc* = RECORD	(** Base type of all objects. *)	(* Note: SIZE used in Fonts.GetCharObj *)
-      stamp*: LONGINT;	(** Time stamp of last message processed by object. *)
+      stamp*: SIGNED32;	(** Time stamp of last message processed by object. *)
       dlink*,	(** Next object in the message thread. *)
       slink*: Object;	(** Next object in a list of objects. *)
-      lib*: Library; ref*: INTEGER;	(** Library and reference number of object. *)
+      lib*: Library; ref*: SIGNED16;	(** Library and reference number of object. *)
       handle*: Handler	(** Message handler. *)
     END;
 
     (** Set, get and enumerate the attributes of an object. *)
 	AttrMsg* = RECORD (ObjMsg)
-		id*: INTEGER;	(** get, set or enum. *)
+		id*: SIGNED16;	(** get, set or enum. *)
 		Enum*: PROCEDURE (CONST name: ARRAY OF CHAR);	(** Called by object to enumerate attribute names. *)
 		name*: Name;	(** Name of the attribute to be set or retrieved. *)
-		res*: INTEGER;	(** Return result: < 0 = no response, >= 0 action completed. *)
-		class*: INTEGER;	(** Attribute class (Inval, String, Int, Real, LongReal, Char or Bool). *)
-		i*: LONGINT;
-        x*: REAL;
-        y*: LONGREAL;
+		res*: SIGNED16;	(** Return result: < 0 = no response, >= 0 action completed. *)
+		class*: SIGNED16;	(** Attribute class (Inval, String, Int, Real, LongReal, Char or Bool). *)
+		i*: SIGNED32;
+        x*: FLOAT32;
+        y*: FLOAT64;
 		c*: CHAR;
 		b*: BOOLEAN;
 		s*: ARRAY 256 OF CHAR
@@ -60,16 +60,16 @@ Most entities in Oberon are derived from this base type.
 
 	(** Link objects with each other or retrieve the link structure between objects *)
 	LinkMsg* = RECORD (ObjMsg)
-		id*: INTEGER;	(** get, set or enum. *)
+		id*: SIGNED16;	(** get, set or enum. *)
 		Enum*: PROCEDURE (CONST name: ARRAY OF CHAR);	(** Called by object to enumerate link names. *)
 		name*: Name;	(** Link name. *)
-		res*: INTEGER;	(** Return result: < 0 = no response, >= 0 action completed. *)
+		res*: SIGNED16;	(** Return result: < 0 = no response, >= 0 action completed. *)
         obj*: Object	(** Value of the link to be set, or link result. *)
 	END;
 
 	(** Request to an object to make a copy of itself *)
     CopyMsg* = RECORD (ObjMsg)
-      id*: INTEGER;	(** Copy style: deep or shallow. *)
+      id*: SIGNED16;	(** Copy style: deep or shallow. *)
       obj*: Object	(** Result of the copy operation. *)
     END;
 
@@ -80,8 +80,8 @@ Most entities in Oberon are derived from this base type.
 
 	(** Request to an object to load/store itself. *)
     FileMsg* = RECORD (ObjMsg)
-      id*: INTEGER;	(** load or store *)
-      len*: LONGINT;	(** Length of the object data on loading. *)
+      id*: SIGNED16;	(** load or store *)
+      len*: SIGNED32;	(** Length of the object data on loading. *)
       R*: Files.Rider	(** Rider with which to load or store data. *)
     END;
 
@@ -94,7 +94,7 @@ Most entities in Oberon are derived from this base type.
 	(** A placeholder object created for objects that cannot be loaded. *)
 	DummyDesc* = RECORD (ObjDesc)
 		GName*: Name;	(** Generator procedure of failed object. *)
-		len: LONGINT;	(* length of data block *)
+		len: SIGNED32;	(* length of data block *)
 		blk: POINTER TO ARRAY OF CHAR	(* stores the data on file *)
     END;
 
@@ -110,20 +110,20 @@ Most entities in Oberon are derived from this base type.
 	ArrayIndex = POINTER TO ArrayIndexDesc;
 	ArrayIndexDesc = RECORD (IndexDesc)
 		index: Block;	(* index block, containing the objects *)
-		org: LONGINT;	(* offset in libfile where index block starts *)
-		size: INTEGER	(* size of the actual index block *)
+		org: SIGNED32;	(* offset in libfile where index block starts *)
+		size: SIGNED16	(* size of the actual index block *)
 	END;
 
     Entry = POINTER TO EntryDesc;
     EntryDesc = RECORD
       next: Entry;
-      key: INTEGER;
+      key: SIGNED16;
       name: Name
     END;
 
 	ListDict = POINTER TO ListDictDesc;
 	ListDictDesc = RECORD (DictionaryDesc)
-		key: INTEGER;
+		key: SIGNED16;
 		first: Entry
 	END;
 
@@ -136,20 +136,20 @@ Most entities in Oberon are derived from this base type.
       R: Files.Rider;	(* a rider on the lib file *)
       name*: Name;	(** name of the library. Private library when "", else public library. *)
       dict*: Dictionary;	(** Object names. *)
-      maxref*: INTEGER;	(** Highest ref number used in library. *)
+      maxref*: SIGNED16;	(** Highest ref number used in library. *)
       GName: POINTER TO ARRAY OF GenName;
 
       (** Return a free reference number. *)
-      GenRef*: PROCEDURE (L: Library; VAR ref: INTEGER);
+      GenRef*: PROCEDURE (L: Library; VAR ref: SIGNED16);
 
       (** Return the object with the indicated reference number. *)
-      GetObj*: PROCEDURE (L: Library; ref: INTEGER; VAR obj: Object);
+      GetObj*: PROCEDURE (L: Library; ref: SIGNED16; VAR obj: Object);
 
       (** Insert an object under the indicated reference number. *)
-      PutObj*: PROCEDURE (L: Library; ref: INTEGER; obj: Object);
+      PutObj*: PROCEDURE (L: Library; ref: SIGNED16; obj: Object);
 
       (** Free object with indicated reference number. *)
-      FreeObj*: PROCEDURE (L: Library; ref: INTEGER);
+      FreeObj*: PROCEDURE (L: Library; ref: SIGNED16);
 
       (** Initialize/load library with L.name. *)
       Load*: PROCEDURE (L: Library);
@@ -161,7 +161,7 @@ Most entities in Oberon are derived from this base type.
     NewProc* = PROCEDURE (): Library;	(** Library generator. *)
     EnumProc* = PROCEDURE (L: Library);	(** Enumerator of public libraries *)
 
-	RunRec = RECORD beg, end: INTEGER END;
+	RunRec = RECORD beg, end: SIGNED16 END;
 
 	Alias = POINTER TO AliasDesc;
 	AliasDesc = RECORD
@@ -176,9 +176,9 @@ Most entities in Oberon are derived from this base type.
 	NoObj: Object;
 
     NewObj*: Object;	(** Newly generated objects are returned here. *)
-    stamp: LONGINT;
+    stamp: SIGNED32;
 
-    nofreg: INTEGER;
+    nofreg: SIGNED16;
     LibExt: ARRAY  8, 8 OF CHAR;
     LibNew: ARRAY 8 OF NewProc;
 
@@ -186,7 +186,7 @@ Most entities in Oberon are derived from this base type.
 
   PROCEDURE Stamp* (VAR M: ObjMsg);	(** Timestamp a message.  *)
   BEGIN M.stamp := stamp;
-    IF stamp # MAX(LONGINT) THEN INC(stamp) ELSE stamp := MIN(LONGINT) END
+    IF stamp # MAX(SIGNED32) THEN INC(stamp) ELSE stamp := MIN(SIGNED32) END
   END Stamp;
 
   (*general library management*)
@@ -210,8 +210,8 @@ Most entities in Oberon are derived from this base type.
 
 (* Check if end of s matches ext.  len returns length of ext. *)
 
-	PROCEDURE Match(CONST s, ext: ARRAY OF CHAR; VAR len: LONGINT): BOOLEAN;
-	VAR i, j: LONGINT;
+	PROCEDURE Match(CONST s, ext: ARRAY OF CHAR; VAR len: SIGNED32): BOOLEAN;
+	VAR i, j: SIGNED32;
 	BEGIN
 		i := 0; WHILE ext[i] # 0X DO INC(i) END; len := i;
 		j := 0; WHILE s[j] # 0X DO INC(j) END;
@@ -222,7 +222,7 @@ Most entities in Oberon are derived from this base type.
 
 (** Search, load and cache a public library. *)
   PROCEDURE ThisLibrary* (CONST name: ARRAY OF CHAR): Library;
-    VAR L: Library; len, n, n0, t: LONGINT; proc: NewProc;  A: Alias;
+    VAR L: Library; len, n, n0, t: SIGNED32; proc: NewProc;  A: Alias;
   BEGIN
     A := FirstAlias.next;
     WHILE (A # NIL) & (name # A.name) DO A := A.next END;
@@ -283,7 +283,7 @@ Most entities in Oberon are derived from this base type.
 
 (** Register a new library file extension and its associated generator procedure. *)
   PROCEDURE Register* (CONST ext: ARRAY OF CHAR; new: NewProc);
-    VAR n, len: LONGINT; L: Library;
+    VAR n, len: SIGNED32; L: Library;
   BEGIN n := 0;
     WHILE (n # nofreg) & (ext # LibExt[n]) DO INC(n) END;
     IF n # nofreg THEN LibNew[n] := new
@@ -300,7 +300,7 @@ Most entities in Oberon are derived from this base type.
   (*standard libraries*)
 
   PROCEDURE ReadName (VAR R: Files.Rider; VAR name: ARRAY OF CHAR);
-    VAR i: LONGINT; ch: CHAR;
+    VAR i: SIGNED32; ch: CHAR;
   BEGIN i := 0; Files.Read(R, ch);
     WHILE (ch # ".") & (ch # 0X) DO name[i] := ch; INC(i); Files.Read(R, ch) END;
     name[i] := "."; INC(i); Files.Read(R, ch);
@@ -309,7 +309,7 @@ Most entities in Oberon are derived from this base type.
   END ReadName;
 
   PROCEDURE SplitName (CONST name: ARRAY OF CHAR; VAR MName, PName: ARRAY OF CHAR);
-    VAR i, j: LONGINT;
+    VAR i, j: SIGNED32;
   BEGIN i := 0;
     WHILE name[i] # "." DO MName[i] := name[i]; INC(i) END;
     MName[i] := 0X; INC(i); j := 0;
@@ -356,8 +356,8 @@ Most entities in Oberon are derived from this base type.
 		NewObj := dum
 	END NewDummy;
 
-	PROCEDURE GetObj (L: Library; ref: INTEGER; VAR obj: Object);
-		VAR objOrg: LONGINT; ind: ArrayIndex; MName, PName: ARRAY 256 OF CHAR; n: INTEGER; nl : LONGINT;
+	PROCEDURE GetObj (L: Library; ref: SIGNED16; VAR obj: Object);
+		VAR objOrg: SIGNED32; ind: ArrayIndex; MName, PName: ARRAY 256 OF CHAR; n: SIGNED16; nl : SIGNED32;
 				Mod: Modules.Module; Cmd: Modules.Command; M: FileMsg;
 	BEGIN
 		ind := L.ind(ArrayIndex);
@@ -371,7 +371,7 @@ Most entities in Oberon are derived from this base type.
 					NewObj := NIL;
 					Files.Set(L.R, L.f, objOrg);
 					Files.ReadInt(L.R, n);
-					IF n < 0 THEN nl := MAX(LONGINT) - n ELSE nl := n END; (* fof *)
+					IF n < 0 THEN nl := MAX(SIGNED32) - n ELSE nl := n END; (* fof *)
 					SplitName(L.GName[nl], MName, PName);
 					Mod := Modules.ThisMod(MName);
 					IF Modules.res = 0 THEN
@@ -400,8 +400,8 @@ Most entities in Oberon are derived from this base type.
 		END
 	END GetObj;
 
-	PROCEDURE PutObj (L: Library; ref: INTEGER; obj: Object);
-		VAR index: Block; ind: ArrayIndex; i ,size: LONGINT;
+	PROCEDURE PutObj (L: Library; ref: SIGNED16; obj: Object);
+		VAR index: Block; ind: ArrayIndex; i ,size: SIGNED32;
 	BEGIN
 		IF (ref < 0) OR (obj = NIL) THEN RETURN END;
 		ind := L.ind(ArrayIndex);
@@ -416,19 +416,19 @@ Most entities in Oberon are derived from this base type.
 		IF ref >= L.maxref THEN L.maxref := ref + 1 END
 	END PutObj;
 
-	PROCEDURE FreeObj (L: Library; ref: INTEGER);
+	PROCEDURE FreeObj (L: Library; ref: SIGNED16);
 	BEGIN
 		IF (ref >= 0) & (ref < L.ind(ArrayIndex).size) THEN L.ind(ArrayIndex).index[ref] := NoObj END
 	END FreeObj;
 
-	PROCEDURE GenRef (L: Library; VAR ref: INTEGER);
+	PROCEDURE GenRef (L: Library; VAR ref: SIGNED16);
 	BEGIN ref := L.maxref; INC(L.maxref)
 	END GenRef;
 
 (* Load a standard object library (old format) from position pos in file f. *)
-	PROCEDURE OldLoadLibrary (L: Library; f: Files.File; pos: LONGINT; VAR len: LONGINT);
-		VAR R, S: Files.Rider; Mod: Modules.Module; Cmd: Modules.Command; NofRuns, key, N, i, k, m: INTEGER;
-				clen, dlen: LONGINT; type, n: SHORTINT; ch: CHAR; entry: Entry;
+	PROCEDURE OldLoadLibrary (L: Library; f: Files.File; pos: SIGNED32; VAR len: SIGNED32);
+		VAR R, S: Files.Rider; Mod: Modules.Module; Cmd: Modules.Command; NofRuns, key, N, i, k, m: SIGNED16;
+				clen, dlen: SIGNED32; type, n: SIGNED8; ch: CHAR; entry: Entry;
 				obj: Object; M: FileMsg; MName, PName: Name; GName: ARRAY MaxNews OF Name;
 				run: ARRAY MaxRuns OF RunRec; ind: ArrayIndex; dict: ListDict;
 	BEGIN
@@ -438,7 +438,7 @@ Most entities in Oberon are derived from this base type.
 		Files.Set(S, f, pos + 1 + clen);
 		Files.ReadLInt(S, dlen);
 		Files.ReadInt(S, key);
-		WHILE key # MIN(INTEGER) DO NEW(entry);
+		WHILE key # MIN(SIGNED16) DO NEW(entry);
 			Files.ReadString(S, entry.name);
 			entry.key := key;
 			entry.next := dict.first; dict.first := entry;
@@ -500,8 +500,8 @@ Most entities in Oberon are derived from this base type.
 	END OldLoadLibrary;
 
 (** Load a standard object library from position pos in file f. *)
-	PROCEDURE LoadLibrary* (L: Library; f: Files.File; pos: LONGINT; VAR len: LONGINT);
-		VAR ind: ArrayIndex; dict: ListDict; i, n, N, version, dorg, gorg: LONGINT; key: INTEGER; entry: Entry;
+	PROCEDURE LoadLibrary* (L: Library; f: Files.File; pos: SIGNED32; VAR len: SIGNED32);
+		VAR ind: ArrayIndex; dict: ListDict; i, n, N, version, dorg, gorg: SIGNED32; key: SIGNED16; entry: Entry;
 				R: Files.Rider;
 	BEGIN
 		ind := L.ind(ArrayIndex);
@@ -525,7 +525,7 @@ Most entities in Oberon are derived from this base type.
 			dict := L.dict(ListDict);
 			Files.Set(R, f, dorg);
 			Files.ReadInt(R, key);
-			WHILE (key # MIN(INTEGER)) & ~R.eof DO
+			WHILE (key # MIN(SIGNED16)) & ~R.eof DO
 				NEW(entry);
 				Files.ReadString(R, entry.name);
 				entry.key := key;
@@ -544,8 +544,8 @@ Most entities in Oberon are derived from this base type.
 	END LoadLibrary;
 
 (** Store a standard object library at position pos in file f. *)
-	PROCEDURE StoreLibrary* (L: Library; f: Files.File; pos: LONGINT; VAR len: LONGINT);
-		VAR obj: Object; ind: ArrayIndex; i, olen, org, indorg,n,N: LONGINT; m: INTEGER; entry: Entry;
+	PROCEDURE StoreLibrary* (L: Library; f: Files.File; pos: SIGNED32; VAR len: SIGNED32);
+		VAR obj: Object; ind: ArrayIndex; i, olen, org, indorg,n,N: SIGNED32; m: SIGNED16; entry: Entry;
 				ch: CHAR; GName: ARRAY MaxNews OF GenName; R, indR: Files.Rider; M: FileMsg; A: AttrMsg;
 	BEGIN
 		ind := L.ind(ArrayIndex);
@@ -621,14 +621,14 @@ Most entities in Oberon are derived from this base type.
 			Files.WriteString(R, entry.name);
 			entry := entry.next
 		END;
-		Files.WriteInt(R, MIN(INTEGER));
+		Files.WriteInt(R, MIN(SIGNED16));
 		len := Files.Pos(R) - pos;
 		L.f := f; ind.org := indorg;
 		Files.Set(L.R, L.f, ind.org)
 	END StoreLibrary;
 
 	PROCEDURE LoadFileLib (L: Library);
-		VAR f: Files.File; R: Files.Rider; len: LONGINT; id: CHAR;
+		VAR f: Files.File; R: Files.Rider; len: SIGNED32; id: CHAR;
 	BEGIN
 		f := Files.Old(L.name);
 		IF f # NIL THEN
@@ -640,7 +640,7 @@ Most entities in Oberon are derived from this base type.
 	END LoadFileLib;
 
 	PROCEDURE StoreFileLib (L: Library);
-		VAR f: Files.File; len: LONGINT;
+		VAR f: Files.File; len: SIGNED32;
 	BEGIN
 		f := Files.New(L.name);
 		IF f # NIL THEN StoreLibrary(L, f, 0, len); Files.Register(f) END
@@ -664,19 +664,19 @@ Most entities in Oberon are derived from this base type.
   END NewLibrary;
 
 (** Given an object name, return the object reference number from the dictionary. *)
-	PROCEDURE GetRef* (VAR D: Dictionary; CONST name: ARRAY OF CHAR; VAR ref: INTEGER);
+	PROCEDURE GetRef* (VAR D: Dictionary; CONST name: ARRAY OF CHAR; VAR ref: SIGNED16);
 		VAR cur: Entry;
 	BEGIN
 		IF D IS ListDict THEN
 			cur := D(ListDict).first;
 			WHILE (cur # NIL) & ((cur.key < 0) OR (cur.name # name)) DO cur := cur.next END;
-			IF cur = NIL THEN ref := MIN(INTEGER) ELSE ref := cur.key END
-		ELSE ref := MIN(INTEGER)
+			IF cur = NIL THEN ref := MIN(SIGNED16) ELSE ref := cur.key END
+		ELSE ref := MIN(SIGNED16)
 		END
 	END GetRef;
 
 (** Allocate a key (any integer < 0) to a name. *)
-  PROCEDURE GetKey* (VAR D: Dictionary; CONST name: ARRAY OF CHAR; VAR key: INTEGER);
+  PROCEDURE GetKey* (VAR D: Dictionary; CONST name: ARRAY OF CHAR; VAR key: SIGNED16);
 		VAR cur: Entry;
 	BEGIN
 		IF D IS ListDict THEN
@@ -688,12 +688,12 @@ Most entities in Oberon are derived from this base type.
 				END;
 				key := cur.key
 			END
-		ELSE key := MIN(INTEGER)
+		ELSE key := MIN(SIGNED16)
 		END
   END GetKey;
 
 (** Get name associated with a key/reference number. *)
-	PROCEDURE GetName* (VAR D: Dictionary; key: INTEGER; VAR name: ARRAY OF CHAR);
+	PROCEDURE GetName* (VAR D: Dictionary; key: SIGNED16; VAR name: ARRAY OF CHAR);
 		VAR cur: Entry;
 	BEGIN
 		IF D IS ListDict THEN
@@ -705,7 +705,7 @@ Most entities in Oberon are derived from this base type.
 	END GetName;
 
 (** Associate a name with a reference number. *)
-  PROCEDURE PutName* (VAR D: Dictionary; key: INTEGER; CONST name: ARRAY OF CHAR);
+  PROCEDURE PutName* (VAR D: Dictionary; key: SIGNED16; CONST name: ARRAY OF CHAR);
 (* Note: D could be value parameter *)
 		VAR cur: Entry;
 	BEGIN
@@ -726,7 +726,7 @@ Most entities in Oberon are derived from this base type.
 BEGIN LibBlockId := 0DBX;
 	NEW(FirstLib);  FirstLib.next := NIL;
 	NEW(FirstAlias);  FirstAlias.next := NIL;
-	stamp := MIN(LONGINT);
+	stamp := MIN(SIGNED32);
 	NEW(NoObj);
 	nofreg := 0;
 	Register("Lib", NewLibrary)
@@ -760,7 +760,7 @@ To create a new object, we first have to introduce a new object type, allocate a
 	TYPE
 		MyObj = POINTER TO MyObjDesc;
 		MyObjDesc = RECORD (Objects.ObjDesc)	(* Extension of Objects.ObjDesc. *)
-			A, B: LONGINT;	(* Object instance variables. *)
+			A, B: SIGNED32;	(* Object instance variables. *)
 		END;
 
 	PROCEDURE CreateObj;
@@ -801,13 +801,13 @@ This change also means that MyHandler can only be safely attached to objects (or
 		Out.String(M.s); Out.Ln;	(* Process result. *)
 	END GetName;
 
-You are allowed to define new message types for your own objects, in a similar manner as shown in the message definitions above. Note how many of the messages have id fields; these indicate different sub-operations a message requests. The id values are declared per message as INTEGER constants at the beginning of the module.
+You are allowed to define new message types for your own objects, in a similar manner as shown in the message definitions above. Note how many of the messages have id fields; these indicate different sub-operations a message requests. The id values are declared per message as SIGNED16 constants at the beginning of the module.
 
 3. Forwarding and Broadcasts
 Objects may forward messages to other objects. This is typically done when an object cannot handle a message itself or does not even know the message. Sometimes messages are sent in such a way that each object does some handle of a message, and then forwards it anyway to all other objects it controls. This we call message broadcasting. Messages thus pass from one object to another in ways only known to the objects themselves. The route a message follows we call the message path.
 
 4. Time stamps
-During a message broadcast, more than one message path may lead to the same object, resulting in the object receiving a the message many times (i.e. exactly once for each message path). To allow an object to determine if it has already processed a message, each message that is broadcast is given a timestamp. The receiving object remembers the message timestamp in its field stamp, and can compare it against a later message received. Due to message broadcasts occuring during a message broadcast itself (i.e. recursive broadcasts), you should not assume that message arrive in time stamp sequence. The stamp is a LONGINT value incremented on each broadcast by the procedure Stamp.
+During a message broadcast, more than one message path may lead to the same object, resulting in the object receiving a the message many times (i.e. exactly once for each message path). To allow an object to determine if it has already processed a message, each message that is broadcast is given a timestamp. The receiving object remembers the message timestamp in its field stamp, and can compare it against a later message received. Due to message broadcasts occuring during a message broadcast itself (i.e. recursive broadcasts), you should not assume that message arrive in time stamp sequence. The stamp is a SIGNED32 value incremented on each broadcast by the procedure Stamp.
 
 5. The Message Thread
 The message thread informs an object of the path a message followed to reach it, and can be used to implement path dependent behaviour. The dlink field in the ObjMsg points to the last forwarder of the message. The dlink field of the latter object contains the previous object in the path, and so onwards until the beginning of the path (the thread points backwards). Due to recursive message broadcasts the dlink field in the message and the objects themselves should be saved on the stack before the values are changed:
@@ -855,7 +855,7 @@ Shallow copy means copying an object but reusing its descendants, and deep copy 
 The BindMsg is a request to an object to bind itself to a library. By convention, an object can migrate from library to library, except when bound to a public library. Binding allocates a reference number to an object which is conveniently used as a pointer alias between objects stored in a file.
 
 	PROCEDURE BindObj(obj: Objects.Object; lib: Objects.Library);
-	VAR ref: INTEGER; name: ARRAY 256 OF CHAR;
+	VAR ref: SIGNED16; name: ARRAY 256 OF CHAR;
 	BEGIN
 		IF lib # NIL THEN
 			IF (obj.lib = NIL) OR (obj.lib.name[0] = 0X) & (obj.lib # lib) THEN (* free, or belongs to a private library *)

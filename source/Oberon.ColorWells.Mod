@@ -27,7 +27,7 @@ MODULE ColorWells IN Oberon;	(** eos  **)
 	TYPE
 		ColorWell* = POINTER TO ColorWellDesc;
 		ColorWellDesc* = RECORD (Gadgets.FrameDesc)
-			col*: INTEGER;	(** current value **)
+			col*: SIGNED16;	(** current value **)
 		END;
 
 	VAR
@@ -37,7 +37,7 @@ MODULE ColorWells IN Oberon;	(** eos  **)
 
 	(*--- Drag Marker ---*)
 
-	PROCEDURE DrawMarker (x, y: INTEGER);
+	PROCEDURE DrawMarker (x, y: SIGNED16);
 	BEGIN
 		DEC(x, 3); DEC(y);
 		Effects.OpenCursor(x, y, 16, 17);
@@ -45,7 +45,7 @@ MODULE ColorWells IN Oberon;	(** eos  **)
 		Display.CopyPattern(Display3.black, FGPattern, x, y, Display.paint)
 	END DrawMarker;
 
-	PROCEDURE FadeMarker (x, y: INTEGER);
+	PROCEDURE FadeMarker (x, y: SIGNED16);
 	BEGIN
 		Effects.CloseCursor
 	END FadeMarker;
@@ -67,20 +67,20 @@ MODULE ColorWells IN Oberon;	(** eos  **)
 
 	(*--- Color Wells ---*)
 
-	PROCEDURE TrackColor (well: ColorWell; fx, fy: INTEGER; VAR msg: Oberon.InputMsg);
+	PROCEDURE TrackColor (well: ColorWell; fx, fy: SIGNED16; VAR msg: Oberon.InputMsg);
 		CONST
 			highlightCol = 0; borderCol = 15;
 			border = 3; size = 6; ww = 16*size; hh = 16*size;
 
 		VAR
-			cx, cy, cw, ch: INTEGER; ctxt: Objects.Object; view: Gadgets.View;
-			col, xx, yy, y, c, x, mx, my: INTEGER;
+			cx, cy, cw, ch: SIGNED16; ctxt: Objects.Object; view: Gadgets.View;
+			col, xx, yy, y, c, x, mx, my: SIGNED16;
 			block: Views.Block;
 			keysum, keys: SET;
 			am: Objects.AttrMsg;
 
-		PROCEDURE frameCol (no, drawCol: INTEGER);
-			VAR xc, yc: INTEGER;
+		PROCEDURE frameCol (no, drawCol: SIGNED16);
+			VAR xc, yc: SIGNED16;
 		BEGIN
 			IF no >= 0 THEN
 				xc := xx + no MOD 16 * size;
@@ -168,9 +168,9 @@ MODULE ColorWells IN Oberon;	(** eos  **)
 		Oberon.DrawCursor(Oberon.Mouse, Effects.Arrow, x, y)
 	END TrackColor;
 
-	PROCEDURE TrackMiddle (well: ColorWell; fx, fy: INTEGER; VAR msg: Oberon.InputMsg);
+	PROCEDURE TrackMiddle (well: ColorWell; fx, fy: SIGNED16; VAR msg: Oberon.InputMsg);
 		VAR
-			marker: Oberon.Marker; mask: Display3.Mask; keysum, keys: SET; x, y, u, v: INTEGER; frame: Display.Frame;
+			marker: Oberon.Marker; mask: Display3.Mask; keysum, keys: SET; x, y, u, v: SIGNED16; frame: Display.Frame;
 			am: Objects.AttrMsg;
 	BEGIN
 		marker := Effects.Arrow;
@@ -221,8 +221,8 @@ MODULE ColorWells IN Oberon;	(** eos  **)
 		Oberon.DrawCursor(Oberon.Mouse, Effects.Arrow, x, y)
 	END TrackMiddle;
 
-	PROCEDURE Restore (well: ColorWell; fx, fy: INTEGER; mask: Display3.Mask);
-		VAR w, h: INTEGER;
+	PROCEDURE Restore (well: ColorWell; fx, fy: SIGNED16; mask: Display3.Mask);
+		VAR w, h: SIGNED16;
 	BEGIN
 		w := well.W; h := well.H;
 		Oberon.RemoveMarks(fx, fy, w, h);
@@ -234,11 +234,11 @@ MODULE ColorWells IN Oberon;	(** eos  **)
 		END
 	END Restore;
 
-	PROCEDURE DisplayWell (well: ColorWell; fx, fy: INTEGER; VAR msg: Display.DisplayMsg);
+	PROCEDURE DisplayWell (well: ColorWell; fx, fy: SIGNED16; VAR msg: Display.DisplayMsg);
 		VAR
-			mask: Display3.Mask; x, y, w, h, one, two: INTEGER;
+			mask: Display3.Mask; x, y, w, h, one, two: SIGNED16;
 
-		PROCEDURE P (x: LONGINT): INTEGER;
+		PROCEDURE P (x: SIGNED32): SIGNED16;
 		BEGIN
 			RETURN SHORT(x * LONG(10000) DIV Printer.Unit)
 		END P;
@@ -330,7 +330,7 @@ MODULE ColorWells IN Oberon;	(** eos  **)
 	END Copy;
 
 	PROCEDURE Handle* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR well, copy: ColorWell; fx, fy: INTEGER; mask: Display3.Mask; am: Objects.AttrMsg; ver: LONGINT;
+		VAR well, copy: ColorWell; fx, fy: SIGNED16; mask: Display3.Mask; am: Objects.AttrMsg; ver: SIGNED32;
 	BEGIN
 		well := obj(ColorWell);
 		IF msg IS Display.FrameMsg THEN
@@ -441,7 +441,7 @@ MODULE ColorWells IN Oberon;	(** eos  **)
 		END
 	END Handle;
 
-	PROCEDURE InitColorWell* (well: ColorWell; col: INTEGER);
+	PROCEDURE InitColorWell* (well: ColorWell; col: SIGNED16);
 	BEGIN
 		well.handle := Handle;
 		well.W := 20; well.H := 20;

@@ -17,7 +17,7 @@ TYPE
 
 	(* Drag'n'Drop for components *)
 
-	AddComponentProcedure* = PROCEDURE {DELEGATE} (component : Repositories.Component; VAR res : WORD);
+	AddComponentProcedure* = PROCEDURE {DELEGATE} (component : Repositories.Component; VAR res : INTEGER);
 
 	DropTarget* = OBJECT(WMDropTarget.DropTarget)
 	VAR
@@ -31,7 +31,7 @@ TYPE
 			SELF.addComponent := addComponent;
 		END Init;
 
-		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : SIGNED32) : WMDropTarget.DropInterface;
 		VAR dc : DropComponent;
 		BEGIN
 			IF (type = WMDropTarget.TypeUser) THEN
@@ -55,7 +55,7 @@ TYPE
 			SELF.addComponent := addComponent;
 		END Init;
 
-		PROCEDURE Set(component : Repositories.Component; VAR res : WORD);
+		PROCEDURE Set(component : Repositories.Component; VAR res : INTEGER);
 		BEGIN
 			addComponent(component, res);
 		END Set;
@@ -70,8 +70,8 @@ TYPE
 
 		repositories : Repositories.Repositories;
 
-		lastTimestamp : LONGINT;
-		state : LONGINT;
+		lastTimestamp : SIGNED32;
+		state : SIGNED32;
 
 		PROCEDURE &Init*;
 		VAR i : SIZE;
@@ -128,10 +128,10 @@ TYPE
 		END InitGrid;
 
 		PROCEDURE UpdateGrid;
-		VAR nofRepositories, row : LONGINT;
+		VAR nofRepositories, row : SIGNED32;
 
-			PROCEDURE CountRepositories(repositories : Repositories.Repositories) : LONGINT;
-			VAR nofRepositories : LONGINT;
+			PROCEDURE CountRepositories(repositories : Repositories.Repositories) : SIGNED32;
+			VAR nofRepositories : SIGNED32;
 			BEGIN
 				nofRepositories := 0;
 				IF (repositories # NIL) THEN
@@ -157,7 +157,7 @@ TYPE
 		END UpdateGrid;
 
 		PROCEDURE Finalize*;
-		VAR ignore : LONGINT;
+		VAR ignore : SIGNED32;
 		BEGIN
 			Finalize^;
 			BEGIN {EXCLUSIVE} state := State_Finalizing; END;
@@ -202,8 +202,8 @@ TYPE
 		enum : XMLObjects.Enumerator;
 		draggedComponent : Repositories.Component;
 
-		lastTimestamp, lastRepositoryTimestamp : LONGINT;
-		state : LONGINT;
+		lastTimestamp, lastRepositoryTimestamp : SIGNED32;
+		state : SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -253,7 +253,7 @@ TYPE
 
 		PROCEDURE GetSelectedComponent() : Repositories.Component;
 		VAR
-			component : Repositories.Component; string : Strings.String; id : LONGINT;
+			component : Repositories.Component; string : Strings.String; id : SIGNED32;
 			wrapper : EntryWrapper;
 			scol, srow, ecol, erow : SIZE;
 			ptr : ANY;
@@ -335,7 +335,7 @@ TYPE
 			itf : WMDropTarget.DropInterface;
 			dropText : WMDropTarget.DropText;
 			op : Texts.ObjectPiece;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF (draggedComponent = NIL) THEN RETURN END;
 
@@ -413,7 +413,7 @@ TYPE
 		END UpdateGridSpacings;
 
 		PROCEDURE SetThisRepository*(repository : Repositories.Repository);
-		VAR ignore : LONGINT;
+		VAR ignore : SIGNED32;
 		BEGIN
 			SELF.thisRepository := repository;
 			IF (repository # NIL) THEN
@@ -429,10 +429,10 @@ TYPE
 		VAR
 			repository : Repositories.Repository; wrapper : EntryWrapper;
 			element : XML.Element; image : WMGraphics.Image;
-			row, nofEntries : LONGINT;
+			row, nofEntries : SIGNED32;
 
-			PROCEDURE CountElements(enum : XMLObjects.Enumerator) : LONGINT;
-			VAR nofElements : LONGINT; ptr : ANY;
+			PROCEDURE CountElements(enum : XMLObjects.Enumerator) : SIGNED32;
+			VAR nofElements : SIGNED32; ptr : ANY;
 			BEGIN
 				ASSERT(enum # NIL);
 				nofElements := 0;
@@ -523,7 +523,7 @@ TYPE
 		END UpdateGrid;
 
 		PROCEDURE Finalize*;
-		VAR ignore : LONGINT;
+		VAR ignore : SIGNED32;
 		BEGIN
 			Finalize^;
 			BEGIN {EXCLUSIVE} state := State_Finalizing; END;
@@ -553,7 +553,7 @@ TYPE
 		filenameEditor : WMEditors.Editor;
 		statusLabel : WMStandardComponents.Label;
 
-		opNum : LONGINT;
+		opNum : SIGNED32;
 
 		PROCEDURE &New(context : WMRestorable.Context);
 		BEGIN
@@ -649,7 +649,7 @@ TYPE
 		END LoadRepository;
 
 		PROCEDURE HandleButtons(sender, data : ANY);
-		VAR filename : ARRAY 256 OF CHAR; res : WORD;
+		VAR filename : ARRAY 256 OF CHAR; res : INTEGER;
 		BEGIN
 			IF (sender = loadBtn) THEN
 			filenameEditor.GetAsString(filename);
@@ -684,7 +684,7 @@ TYPE
 		END OnRepositoriesClicked;
 
 		PROCEDURE OnComponentClicked(sender, data : ANY);
-		VAR command, msg : ARRAY 384 OF CHAR; res : WORD; string : Strings.String;
+		VAR command, msg : ARRAY 384 OF CHAR; res : INTEGER; string : Strings.String;
 		BEGIN
 			IF (data # NIL) & (data IS EntryWrapper) THEN
 				IF (data(EntryWrapper).repository # NIL) & (data(EntryWrapper).element # NIL) THEN
@@ -722,7 +722,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 	StrID, StrName, StrType, StrParameter, StrInstance : Strings.String;
 	StrYes, StrNo : Strings.String;

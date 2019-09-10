@@ -55,14 +55,14 @@ TYPE
 	(** Viewer for displaying documents in a desktop. *)
 	DocGadget* = POINTER TO DocGadgetDesc;
 	DocGadgetDesc* = RECORD (Gadgets.FrameDesc)
-		time: LONGINT
+		time: SIGNED32
 	END;
 
 	(** Viewers.Viewer for displaying documents in the tiled viewer system. *)
 	DocViewer* = POINTER TO DocViewerDesc;
 	DocViewerDesc* = RECORD (Viewers.ViewerDesc)
-		menuH*: INTEGER;	(** Menubar height. *)
-		time: LONGINT
+		menuH*: SIGNED16;	(** Menubar height. *)
+		time: SIGNED32
 	END;
 
 	Dummy = POINTER TO RECORD (Display.FrameDesc) END;
@@ -76,11 +76,11 @@ TYPE
 	END;
 
 VAR
-	menuH*: INTEGER;	(** Default menubar heigth of DocGadget and DocViewer *)
-	menuC*: INTEGER;	(** Default menubar panel color *)
-	menuButtonW*: INTEGER;	(** Default menu button width *)
-	namePlateW*: INTEGER;	(** Default nameplate width *)
-	recDocWidth*: INTEGER;	(** recommended minimal document width *)
+	menuH*: SIGNED16;	(** Default menubar heigth of DocGadget and DocViewer *)
+	menuC*: SIGNED16;	(** Default menubar panel color *)
+	menuButtonW*: SIGNED16;	(** Default menu button width *)
+	namePlateW*: SIGNED16;	(** Default nameplate width *)
+	recDocWidth*: SIGNED16;	(** recommended minimal document width *)
 	W: Texts.Writer;
 	recall: Display.Frame;
 
@@ -113,7 +113,7 @@ END HasMenu;
     Main.handle(Main, M); V1.dsc.next := M.obj(Display.Frame)
   END CopyDocViewer;
 
-  PROCEDURE ModifyFrame(V: DocViewer; F: Display.Frame; id, Y, H: INTEGER);
+  PROCEDURE ModifyFrame(V: DocViewer; F: Display.Frame; id, Y, H: SIGNED16);
     VAR M: Display.ModifyMsg;
   BEGIN
     M.F := F; M.id := id; M.dlink := V; V.dlink := NIL;
@@ -121,18 +121,18 @@ END HasMenu;
         IF H < F.H THEN (* reduce *)
         	M.X := F.X; M.Y := F.Y + (F.H - H); M.W := F.W; M.H := H;
             M.dX := 0; M.dY := M.Y - F.Y; M.dW := 0; M.dH := M.H - F.H;
-        	M.mode := Display.state; M.res := MIN(INTEGER); M.x := 0; M.y := 0; Objects.Stamp(M);
+        	M.mode := Display.state; M.res := MIN(SIGNED16); M.x := 0; M.y := 0; Objects.Stamp(M);
         	F.handle(F, M); F.Y := M.Y
         ELSE (* extend *)
         	M.X := F.X; M.Y := Y + H - F.H; M.W := F.W; M.H := F.H;
             M.dX := 0; M.dY := M.Y - F.Y; M.dW := 0; M.dH := 0;
-            M.mode := Display.display; M.res := MIN(INTEGER); M.x := 0; M.y := 0; Objects.Stamp(M);
+            M.mode := Display.display; M.res := MIN(SIGNED16); M.x := 0; M.y := 0; Objects.Stamp(M);
         	F.handle(F, M); F.Y := M.Y
         END
     END;
     M.X := F.X; M.Y := Y; M.W := F.W; M.H := H;
     M.dX := 0; M.dY := M.Y - F.Y; M.dW := 0; M.dH := M.H - F.H;
-	M.mode := Display.display; M.res := MIN(INTEGER); M.x := 0; M.y := 0; Objects.Stamp(M);
+	M.mode := Display.display; M.res := MIN(SIGNED16); M.x := 0; M.y := 0; Objects.Stamp(M);
 	F.handle(F, M); F.Y := Y; F.H := H
   END ModifyFrame;
 
@@ -153,7 +153,7 @@ END HasMenu;
     END
   END Restore;
 
-  PROCEDURE ModifyDocViewer (V: DocViewer; id, Y, H: INTEGER);
+  PROCEDURE ModifyDocViewer (V: DocViewer; id, Y, H: SIGNED16);
     VAR Menu, Main: Display.Frame;
   BEGIN
     Menu := V.dsc; Main := V.dsc.next;
@@ -178,9 +178,9 @@ END HasMenu;
     END
   END ModifyDocViewer;
 
-  PROCEDURE Change (V: DocViewer; X, Y: INTEGER; Keys: SET);
+  PROCEDURE Change (V: DocViewer; X, Y: SIGNED16; Keys: SET);
     VAR Menu, Main: Display.Frame;
-      V1: Viewers.Viewer; keysum: SET; Y0, dY, H: INTEGER;
+      V1: Viewers.Viewer; keysum: SET; Y0, dY, H: SIGNED16;
   BEGIN (*Keys # {}*)
     Menu := V.dsc; Main := V.dsc.next;
     IF Menu IS Dummy THEN V.dsc.H := 5 END;
@@ -377,7 +377,7 @@ END DocViewerHandleSelect;
   END DocViewerHandle;
 
   (** Create and open a new DocViewer. Analogue to  old-fashioned MenuViewers.New. X, Y indicate the opening position. *)
-  PROCEDURE NewDocViewer*(Menu, Main: Display.Frame; menuH, X, Y: INTEGER): DocViewer;
+  PROCEDURE NewDocViewer*(Menu, Main: Display.Frame; menuH, X, Y: SIGNED16): DocViewer;
     VAR V: DocViewer;
   BEGIN NEW(V);
     IF Menu = NIL THEN menuH := 0; Menu := NewDummy() END;
@@ -439,8 +439,8 @@ BEGIN
 	END
 END SetMenuMask;
 
-PROCEDURE ToMain(F: DocGadget; x, y: INTEGER; VAR M: Display.FrameMsg);
-VAR main: Gadgets.Frame; Mdlink, Fdlink: Objects.Object; tx, ty: INTEGER;
+PROCEDURE ToMain(F: DocGadget; x, y: SIGNED16; VAR M: Display.FrameMsg);
+VAR main: Gadgets.Frame; Mdlink, Fdlink: Objects.Object; tx, ty: SIGNED16;
 BEGIN
 	main := Main(F);
 	IF main # NIL THEN
@@ -452,8 +452,8 @@ BEGIN
 	END
 END ToMain;
 
-PROCEDURE ToMenu(F: DocGadget; x, y: INTEGER; VAR M: Display.FrameMsg);
-VAR menu: Gadgets.Frame; Mdlink, Fdlink: Objects.Object; tx, ty: INTEGER;
+PROCEDURE ToMenu(F: DocGadget; x, y: SIGNED16; VAR M: Display.FrameMsg);
+VAR menu: Gadgets.Frame; Mdlink, Fdlink: Objects.Object; tx, ty: SIGNED16;
 BEGIN
 	menu := Menu(F);
 	IF menu # NIL THEN
@@ -465,8 +465,8 @@ BEGIN
 	END
 END ToMenu;
 
-PROCEDURE PositionMain(F: DocGadget; VAR X, Y, W, H: INTEGER);
-VAR border: INTEGER; menu: Gadgets.Frame;
+PROCEDURE PositionMain(F: DocGadget; VAR X, Y, W, H: SIGNED16);
+VAR border: SIGNED16; menu: Gadgets.Frame;
 BEGIN
 	menu := Menu(F);
 	IF menu # NIL THEN border := menu.H ELSE border := 0 END;
@@ -474,7 +474,7 @@ BEGIN
 END PositionMain;
 
 PROCEDURE AdjustDocGadget(F: DocGadget; VAR M: Display.ModifyMsg);
-VAR main, menu: Gadgets.Frame; A: Display.ModifyMsg; border: INTEGER;
+VAR main, menu: Gadgets.Frame; A: Display.ModifyMsg; border: SIGNED16;
 BEGIN
 	menu := Menu(F); main := Main(F);
 	IF menu # NIL THEN border := menu.H ELSE border := 0 END;
@@ -517,11 +517,11 @@ BEGIN
 	END
 END AdjustChildDocGadget;
 
-PROCEDURE RestoreDocGadget(F: DocGadget; R: Display3.Mask; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg);
-VAR menu, main: Gadgets.Frame; D: Display.DisplayMsg; b: INTEGER;
+PROCEDURE RestoreDocGadget(F: DocGadget; R: Display3.Mask; x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg);
+VAR menu, main: Gadgets.Frame; D: Display.DisplayMsg; b: SIGNED16;
 
-	PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-	VAR r, t, r1, t1: INTEGER;
+	PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+	VAR r, t, r1, t1: SIGNED16;
 	BEGIN
 		r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 		IF x < x1 THEN x := x1 END;
@@ -576,9 +576,9 @@ BEGIN
 END RestoreDocGadget;
 
 PROCEDURE PrintDocGadget(F: DocGadget; VAR M: Display.DisplayMsg);
-VAR menu, main: Display.Frame; b, x, y, w, h: INTEGER; PM: Display.DisplayMsg; R: Display3.Mask;
+VAR menu, main: Display.Frame; b, x, y, w, h: SIGNED16; PM: Display.DisplayMsg; R: Display3.Mask;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -635,7 +635,7 @@ BEGIN
 END StoreDocGadget;
 
 PROCEDURE LoadDocGadget(F: DocGadget; VAR M: Objects.FileMsg);
-VAR x, i, j: INTEGER; tmp: SET; obj: Objects.Object; main: Gadgets.Frame;  title: ARRAY 128 OF CHAR;
+VAR x, i, j: SIGNED16; tmp: SET; obj: Objects.Object; main: Gadgets.Frame;  title: ARRAY 128 OF CHAR;
 		L: Objects.LinkMsg; A: Objects.AttrMsg;
 BEGIN
 	Files.ReadInt(M.R, x);
@@ -681,7 +681,7 @@ BEGIN
 END DocGadgetAttr;
 
 PROCEDURE LinkMenu(F: DocGadget; obj: Objects.Object);
-VAR new, main, menu: Gadgets.Frame; h: INTEGER;
+VAR new, main, menu: Gadgets.Frame; h: SIGNED16;
 BEGIN
 	IF (obj # NIL) & (obj IS Gadgets.Frame) THEN
 		new := obj(Gadgets.Frame); h := new.H
@@ -740,7 +740,7 @@ BEGIN
 	END
 END HandleSelect;
 
-PROCEDURE TrackDocGadget(F: DocGadget; x, y, w, h, border: INTEGER; VAR M: Oberon.InputMsg);
+PROCEDURE TrackDocGadget(F: DocGadget; x, y, w, h, border: SIGNED16; VAR M: Oberon.InputMsg);
 VAR PM: Gadgets.PriorityMsg;
 BEGIN
 	IF M.Y >= y + h - border THEN
@@ -765,8 +765,8 @@ BEGIN
 END TrackDocGadget;
 
 PROCEDURE DocGadgetHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: DocGadget; R: Display3.Mask; obj: Objects.Object; main, menu: Gadgets.Frame;
-	border: INTEGER; N: Oberon.ControlMsg; tM: Display.DisplayMsg;
+VAR x, y, w, h: SIGNED16; F0: DocGadget; R: Display3.Mask; obj: Objects.Object; main, menu: Gadgets.Frame;
+	border: SIGNED16; N: Oberon.ControlMsg; tM: Display.DisplayMsg;
 BEGIN
 	WITH F: DocGadget DO
 		IF M IS Display.FrameMsg THEN
@@ -939,7 +939,7 @@ END NewDocGadget;
 (** Initialize a DocGadget with a menu and main frame. The adjust flag is TRUE if the DocGadget should determine its
 size according to the combined size of the menu and main frames. This is the default case. *)
 PROCEDURE Init*(F: DocGadget; menu, main: Gadgets.Frame; adjust: BOOLEAN);
-VAR A: Display.ModifyMsg; oldH: INTEGER;
+VAR A: Display.ModifyMsg; oldH: SIGNED16;
 BEGIN
 	IF menu = NIL THEN HALT(99) END;
 
@@ -987,8 +987,8 @@ of a menu button can be set by following the name by the caption text in square 
 
 	PROCEDURE NewMenu*(menubar: ARRAY OF CHAR): Display.Frame;
 		VAR
-			obj, list: Objects.Object; P, f: Gadgets.Frame; X, p: INTEGER; cmd, title: ARRAY 64 OF CHAR;
-			C: Display.ConsumeMsg; i: LONGINT; havecopy: BOOLEAN;
+			obj, list: Objects.Object; P, f: Gadgets.Frame; X, p: SIGNED16; cmd, title: ARRAY 64 OF CHAR;
+			C: Display.ConsumeMsg; i: SIGNED32; havecopy: BOOLEAN;
 
 		PROCEDURE Button(caption, command: ARRAY OF CHAR);
 		BEGIN
@@ -1005,7 +1005,7 @@ of a menu button can be set by following the name by the caption text in square 
 		END Button;
 
 		PROCEDURE GetString(VAR s: ARRAY OF CHAR);
-			VAR term: CHAR; j: LONGINT;
+			VAR term: CHAR; j: SIGNED32;
 		BEGIN
 			WHILE menubar[i] = " " DO INC(i) END;
 			IF menubar[i] = "'" THEN
@@ -1035,7 +1035,7 @@ of a menu button can be set by following the name by the caption text in square 
 		END GetString;
 
 		PROCEDURE GenTitle(VAR cmd, title: ARRAY OF CHAR);
-			VAR j, k: LONGINT;
+			VAR j, k: SIGNED32;
 		BEGIN
 			j := 0; WHILE (cmd[j] # ".") & (cmd[j] # 0X) & (cmd[j] # " ") DO INC(j) END;
 			IF cmd[j] = "." THEN
@@ -1180,7 +1180,7 @@ END IsInMenu;
 (* ========Desk top commands ========== *)
 
 PROCEDURE AddStandardThings(F: Display.Frame);
-VAR list: Display.Frame; X, Y: INTEGER;C: Display.ConsumeMsg;
+VAR list: Display.Frame; X, Y: SIGNED16;C: Display.ConsumeMsg;
 
 	PROCEDURE Title;
 	VAR obj: Objects.Object; f: Display.Frame;
@@ -1250,12 +1250,12 @@ END AddStandardThings;
 (** Used in the form: Desktops.Open <filename>
 Tries to open <filename> as a desktop; on failure a new desktop is created. *)
 PROCEDURE Open*;
-VAR S: Attributes.Scanner; F: Gadgets.Frame; B: Objects.BindMsg; X, Y: INTEGER;
+VAR S: Attributes.Scanner; F: Gadgets.Frame; B: Objects.BindMsg; X, Y: SIGNED16;
 	obj: Objects.Object; f: Files.File; doc: Documents.Document; filename: ARRAY 64 OF CHAR; v: Views.View;
 	V: DocViewer; main: Gadgets.Frame; A: Objects.AttrMsg;
 
 	PROCEDURE IsDesktop(VAR f: Files.File): BOOLEAN;
-	VAR R: Files.Rider; i, x, y, w, h: INTEGER; s: ARRAY 64 OF CHAR;
+	VAR R: Files.Rider; i, x, y, w, h: SIGNED16; s: ARRAY 64 OF CHAR;
 	BEGIN
 		s := ""; h := 0; w := 0;
 		Files.Set(R, f, 0);
@@ -1375,7 +1375,7 @@ END ChangeBackdrop;
 
 (** Grow the current DocViewer or size DocGadgets to its default size. *)
 PROCEDURE Grow*;
-VAR V1: Viewers.Viewer; D, D1: Documents.Document; obj: Objects.Object; cnt, DW, DH: INTEGER;
+VAR V1: Viewers.Viewer; D, D1: Documents.Document; obj: Objects.Object; cnt, DW, DH: SIGNED16;
 		MM: Display.ModifyMsg; M: Objects.CopyMsg; N: Display.ControlMsg;
 BEGIN
 	obj := Gadgets.executorObj;
@@ -1461,7 +1461,7 @@ END Close;
 (* ======== Doc Viewer commands ========== *)
 
 (* work out where to put a document in the desktop *)
-PROCEDURE AllocateDocGadget(V: DocViewer; w, h: INTEGER; VAR F: Display.Frame; VAR u, v: INTEGER);
+PROCEDURE AllocateDocGadget(V: DocViewer; w, h: SIGNED16; VAR F: Display.Frame; VAR u, v: SIGNED16);
 VAR obj: Objects.Object; P: Gadgets.Frame; view: Views.View;
 	f: Display.Frame;
 BEGIN
@@ -1503,7 +1503,7 @@ END CreateMenu;
 
 (** Open a document in the viewer system or in the desktop, depending on the context and the marker. *)
 PROCEDURE ShowDoc*(D: Documents.Document);
-VAR C: Display.ConsumeMsg; open, menu: Display.Frame; X, Y: INTEGER; v: Viewers.Viewer; V: DocViewer;
+VAR C: Display.ConsumeMsg; open, menu: Display.Frame; X, Y: SIGNED16; v: Viewers.Viewer; V: DocViewer;
 	A: Objects.AttrMsg; DF: DocGadget; CM: Display.ControlMsg;
 	viewerSystem, adaptive: BOOLEAN;
 BEGIN
@@ -1562,7 +1562,7 @@ END ShowDoc;
 (** Replace the document enclosing the current context with the document D. *)
 PROCEDURE ReplaceCurrentDoc*(D: Documents.Document);
 VAR V: DocViewer; obj: Objects.Object; A: Display.ModifyMsg; menu, open: Display.Frame;
-	x, y, w, h: INTEGER; AM: Objects.AttrMsg; addview: BOOLEAN;
+	x, y, w, h: SIGNED16; AM: Objects.AttrMsg; addview: BOOLEAN;
 BEGIN
 	obj := Gadgets.context;
 	WHILE (obj # NIL) & ~(obj IS DocGadget) & ~(obj IS DocViewer) DO obj := obj.dlink END;

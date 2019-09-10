@@ -32,7 +32,7 @@ MODULE ImageGadgets IN Oberon; (** portable **)	(* eos  *)
 	VAR
 		Enum: RECORD
 			img: Images.Image;
-			x, y: INTEGER;	(* map origin on device *)
+			x, y: SIGNED16;	(* map origin on device *)
 		END;
 
 
@@ -60,7 +60,7 @@ MODULE ImageGadgets IN Oberon; (** portable **)	(* eos  *)
 		END
 	END ValidateCache;
 
-	PROCEDURE UpdateCache (frame: Frame; llx, lly, urx, ury: INTEGER);
+	PROCEDURE UpdateCache (frame: Frame; llx, lly, urx, ury: SIGNED16);
 		VAR img: Images.Image; bg: Images.Pixel;
 	BEGIN
 		IF (buffered IN frame.options) & (frame.obj # NIL) THEN
@@ -88,8 +88,8 @@ MODULE ImageGadgets IN Oberon; (** portable **)	(* eos  *)
 	END UpdateCache;
 
 
-	PROCEDURE RestoreRuns (x, y, w, h: INTEGER);
-		VAR x0, len, l, i, j: INTEGER; line: ARRAY 512 OF CHAR; b: CHAR;
+	PROCEDURE RestoreRuns (x, y, w, h: SIGNED16);
+		VAR x0, len, l, i, j: SIGNED16; line: ARRAY 512 OF CHAR; b: CHAR;
 	BEGIN
 		x0 := x;
 		WHILE h > 0 DO
@@ -113,8 +113,8 @@ MODULE ImageGadgets IN Oberon; (** portable **)	(* eos  *)
 		END
 	END RestoreRuns;
 
-	PROCEDURE RestoreLines (x, y, w, h: INTEGER);
-		VAR x0, lineLen, len, l: INTEGER; line: ARRAY 512 OF CHAR; tmp: Images.Image; bg: Images.Pixel;
+	PROCEDURE RestoreLines (x, y, w, h: SIGNED16);
+		VAR x0, lineLen, len, l: SIGNED16; line: ARRAY 512 OF CHAR; tmp: Images.Image; bg: Images.Pixel;
 	BEGIN
 		x0 := x; lineLen := 8*LEN(line) DIV Images.DisplayFormat.bpp;
 		NEW(tmp); Images.InitBuf(tmp, lineLen, 1, Images.DisplayFormat, 0, 0, line);
@@ -134,16 +134,16 @@ MODULE ImageGadgets IN Oberon; (** portable **)	(* eos  *)
 		END
 	END RestoreLines;
 
-	PROCEDURE RestoreBlock (x, y, w, h: INTEGER);
-		VAR offset: LONGINT;
+	PROCEDURE RestoreBlock (x, y, w, h: SIGNED16);
+		VAR offset: SIGNED32;
 	BEGIN
 		offset := (y - Enum.y) * Enum.img.bpr + (x - Enum.x) * Enum.img.fmt.bpp DIV 8;
 		Display.TransferBlock(Enum.img.mem^, offset, Enum.img.bpr, x, y, w, h, Display.set)
 	END RestoreBlock;
 
 	(** restore frame area **)
-	PROCEDURE Restore* (frame: Frame; x, y, w, h, fx, fy: INTEGER; mask: Display3.Mask);
-		VAR img: Images.Image; rx, ry, rw, rh, th: INTEGER;
+	PROCEDURE Restore* (frame: Frame; x, y, w, h, fx, fy: SIGNED16; mask: Display3.Mask);
+		VAR img: Images.Image; rx, ry, rw, rh, th: SIGNED16;
 	BEGIN
 		Oberon.RemoveMarks(fx + x, fy + y, w, h);
 		IF frame.obj = NIL THEN
@@ -185,9 +185,9 @@ MODULE ImageGadgets IN Oberon; (** portable **)	(* eos  *)
 		END
 	END Restore;
 
-	PROCEDURE PrintRect (dx, dy, dw, dh: INTEGER);
+	PROCEDURE PrintRect (dx, dy, dw, dh: SIGNED16);
 		CONST red = Images.r; green = Images.g; blue = Images.b; alpha = Images.a;
-		VAR du, pu, hpu, fy, fx: LONGINT; sy, y, h, sx, x, w, rw: INTEGER; col, pix: Images.Pixel;
+		VAR du, pu, hpu, fy, fx: SIGNED32; sy, y, h, sx, x, w, rw: SIGNED16; col, pix: Images.Pixel;
 	BEGIN
 		DEC(dx, Enum.x); DEC(dy, Enum.y);
 		du := Display.Unit; pu := Printer.Unit; hpu := pu DIV 2;
@@ -232,9 +232,9 @@ MODULE ImageGadgets IN Oberon; (** portable **)	(* eos  *)
 
 	(** print frame **)
 	PROCEDURE Print* (frame: Frame; VAR msg: Display.DisplayMsg);
-		VAR img: Images.Image; iw, ih, w, h, rx, ry, rw, rh: INTEGER; mask: Display3.Mask;
+		VAR img: Images.Image; iw, ih, w, h, rx, ry, rw, rh: SIGNED16; mask: Display3.Mask;
 
-		PROCEDURE p (x: INTEGER): INTEGER;
+		PROCEDURE p (x: SIGNED16): SIGNED16;
 		BEGIN
 			RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 		END p;
@@ -295,7 +295,7 @@ MODULE ImageGadgets IN Oberon; (** portable **)	(* eos  *)
 
 	(** frame handler **)
 	PROCEDURE Handle* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR frame, copy: Frame; fx, fy: INTEGER; mask: Display3.Mask; img: Images.Image; ver: LONGINT;
+		VAR frame, copy: Frame; fx, fy: SIGNED16; mask: Display3.Mask; img: Images.Image; ver: SIGNED32;
 	BEGIN
 		frame := obj(Frame);
 		IF msg IS Display.FrameMsg THEN

@@ -27,7 +27,7 @@ TYPE
 		PROCEDURE WriteToEditor;
 		VAR
 			tw : TextUtilities.TextWriter;
-			i : LONGINT;
+			i : SIGNED32;
 			buffer : ARRAY 256 OF CHAR;
 		BEGIN
 			NEW(tw, editor.text);

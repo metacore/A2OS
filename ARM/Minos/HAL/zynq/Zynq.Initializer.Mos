@@ -40,7 +40,7 @@ CONST
 
 	(** Performs initialization specified in a TCL subset *)
 	PROCEDURE InitSubset(CONST data: ARRAY [*] OF ADDRESS);
-	VAR val, valo, mask: SET; i, j: LONGINT; opcode, adr: LONGINT;
+	VAR val, valo, mask: SET; i, j: SIGNED32; opcode, adr: SIGNED32;
 	BEGIN
 		(*IF LEN(data, 0) = 1 THEN RETURN END;*)
 		i := 0;
@@ -70,7 +70,7 @@ CONST
 
 	(** Perform TCL initialization *)
 	PROCEDURE InitializeTcl;
-	VAR siliconVersion: LONGINT;
+	VAR siliconVersion: SIGNED32;
 	BEGIN
 		siliconVersion := LSH(SYSTEM.GET32(Platform.DevCfgBase + Platform.DevCfgMctrlOffset), -Platform.DevCfgMctrlPsVersionOfs) MOD 4;
 		CASE siliconVersion OF

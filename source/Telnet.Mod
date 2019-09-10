@@ -131,7 +131,7 @@ KernelLog.String("SB "); KernelLog.Int(ORD(option), 0); KernelLog.Ln();
 		ServerConnection = OBJECT (Connection)
 			VAR
 				ctx: ShellCommands.Context;
-				line: ARRAY MaxLine+1 OF CHAR; pos, len: LONGINT;
+				line: ARRAY MaxLine+1 OF CHAR; pos, len: SIGNED32;
 				term: ARRAY 32 OF CHAR;
 
 			PROCEDURE WILL*(option: CHAR);
@@ -147,7 +147,7 @@ KernelLog.String("SB "); KernelLog.Int(ORD(option), 0); KernelLog.Ln();
 			END WILL;
 
 			PROCEDURE IsVT100(str: ARRAY OF CHAR): BOOLEAN;
-				VAR i: LONGINT; old, ch: CHAR;
+				VAR i: SIGNED32; old, ch: CHAR;
 			BEGIN
 				old := 0X; i := 0; ch := str[0];
 				WHILE (ch # 0X) & ~((old = "V") & (ch = "T")) DO
@@ -157,7 +157,7 @@ KernelLog.String("SB "); KernelLog.Int(ORD(option), 0); KernelLog.Ln();
 			END IsVT100;
 
 			PROCEDURE SB*(option: CHAR);
-				VAR term: ARRAY 32 OF CHAR; i: LONGINT; ch: CHAR;
+				VAR term: ARRAY 32 OF CHAR; i: SIGNED32; ch: CHAR;
 			BEGIN
 				IF option = OptTerminalType THEN
 					IF R.Peek() = 0X THEN (* IS *)
@@ -184,7 +184,7 @@ KernelLog.String("SB "); KernelLog.Int(ORD(option), 0); KernelLog.Ln();
 			END SB;
 
 			PROCEDURE Command;
-				VAR msg: ARRAY MaxLine OF CHAR; res: WORD;
+				VAR msg: ARRAY MaxLine OF CHAR; res: INTEGER;
 			BEGIN
 				ShellCommands.Execute(ctx, line, res, msg);
 				IF res # 0 THEN
@@ -198,7 +198,7 @@ KernelLog.String("SB "); KernelLog.Int(ORD(option), 0); KernelLog.Ln();
 			END Prompt;
 
 			PROCEDURE Consume*(ch: CHAR);
-				VAR i: LONGINT; update, echo: BOOLEAN;
+				VAR i: SIGNED32; update, echo: BOOLEAN;
 			BEGIN
 				echo := Echo IN flags; update := echo;
 				IF ch = CR THEN
@@ -287,7 +287,7 @@ KernelLog.String("ESC ["); KernelLog.Char(ch); KernelLog.Ln()
 	END NewAgent;
 
 	PROCEDURE OpenService*;
-	VAR res: WORD;
+	VAR res: INTEGER;
 	BEGIN
 		IF service = NIL THEN
 			NEW(service, 23, NewAgent,res)

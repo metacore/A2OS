@@ -15,7 +15,7 @@ CONST
 	ZmrIrqLen16 = {8};
 	ZmrIrqLen32 = {7, 8};
 	ZmrIrqLenMask = {7, 8};
-	ZmrKey = LSH(LONGINT(0ABCH), 12); (*0AB'C0'00H;*)
+	ZmrKey = LSH(SIGNED32(0ABCH), 12); (*0AB'C0'00H;*)
 
 	CcrDelayMask = {2 .. 13};
 	CcrPrescalerMask = 3H;
@@ -24,7 +24,7 @@ CONST
 	RestartKey = 1999H;
 
 	(** Start the watchdog for delay ms *)
-	PROCEDURE Start * (mode: BOOLEAN; delay: LONGINT);
+	PROCEDURE Start * (mode: BOOLEAN; delay: SIGNED32);
 	VAR val: SET;
 	BEGIN
 		Stop;
@@ -35,7 +35,7 @@ CONST
 
 		(* Set delay *)
 		val := SYSTEM.VAL(SET, LSH(delay * 150'000', -12) + 1) * CcrDelayMask;
-		Platform.swdt.XWDTPS_CCR_OFFSET := CcrKey + SYSTEM.VAL(LONGINT, val);
+		Platform.swdt.XWDTPS_CCR_OFFSET := CcrKey + SYSTEM.VAL(SIGNED32, val);
 
 		(* Enable Watchdog *)
 		IF mode THEN
@@ -45,7 +45,7 @@ CONST
 		END;
 		INCL(val, ZmrWdEn);
 		val := val + ZmrIrqLen4;
-		Platform.swdt.XWDTPS_ZMR_OFFSET := ZmrKey + SYSTEM.VAL(LONGINT, val);
+		Platform.swdt.XWDTPS_ZMR_OFFSET := ZmrKey + SYSTEM.VAL(SIGNED32, val);
 		Feed
 	END Start;
 

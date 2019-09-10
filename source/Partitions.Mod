@@ -63,7 +63,7 @@ CONST
 
 	Trace = FALSE;
 
-	Invalid = MIN(LONGINT);
+	Invalid = MIN(SIGNED32);
 
 	(* InstallBootManager default arguments *)
 	BootManagerMBRFile = "BootManagerMBR.Bin";
@@ -80,7 +80,7 @@ END ShowOps;
 
 (** Show the detailed state of the specified operation *)
 PROCEDURE ShowOp*(context : Commands.Context); (** uid ~ *)
-VAR operation : Lib.Operation; uid : LONGINT;
+VAR operation : Lib.Operation; uid : SIGNED32;
 BEGIN
 	IF context.arg.GetInteger(uid, FALSE)  THEN
 		operation := Lib.operations.GetByUid(uid);
@@ -98,7 +98,7 @@ END ShowOp;
 
 (** Abort a running operation *)
 PROCEDURE Abort*(context : Commands.Context); (** uid  ~ *)
-VAR operation : Lib.Operation; uid : LONGINT;
+VAR operation : Lib.Operation; uid : SIGNED32;
 BEGIN
 	IF context.arg.GetInteger(uid, FALSE) THEN
 		operation := Lib.operations.GetByUid(uid);
@@ -118,7 +118,7 @@ END Abort;
 
 (** Remove (and if necessary abort) operations from the operations registry *)
 PROCEDURE Remove*(context : Commands.Context); (** uid | "all" | "finished" ~*)
-VAR par : ARRAY 128 OF CHAR; uid, num : LONGINT;
+VAR par : ARRAY 128 OF CHAR; uid, num : SIGNED32;
 BEGIN
 	IF context.arg.GetInteger(uid, FALSE) THEN
 		IF Lib.operations.RemoveByUid(uid) THEN
@@ -176,7 +176,7 @@ PROCEDURE Format*(context : Commands.Context); (** dev#part [ "AosFS" | "NatFS" 
 VAR
 	formatAos : Lib.FormatPartition; formatFat : FATScavenger.FormatPartition;
 	fsname, bootfile, quick : ARRAY 128 OF CHAR;
-	fsRes, flags : LONGINT;
+	fsRes, flags : SIGNED32;
 	quickFormat : BOOLEAN;
 	selection : Lib.Selection;
 BEGIN
@@ -244,7 +244,7 @@ VAR
 	configuration : Lib.Configuration;
 	table : Streams.StringWriter;
 	string : ARRAY MaxSize OF CHAR;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN
 	IF GetSelection(context, TRUE, selection) THEN
 		NEW(getConfig, selection.disk, selection.partition, context.out);
@@ -274,7 +274,7 @@ VAR
 	selection : Lib.Selection;
 	configString : Strings.String;
 	ch : CHAR;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN
 	IF GetSelection(context, TRUE, selection) THEN
 		IF context.arg.CanSetPos() THEN
@@ -321,7 +321,7 @@ END Check;
 PROCEDURE ChangeType*(context : Commands.Context); (** dev#part oldtype newtype ~ *)
 VAR
 	change : Lib.ChangePartType;
-	oldtype, newtype : LONGINT;
+	oldtype, newtype : SIGNED32;
 	selection : Lib.Selection;
 BEGIN
 	IF GetSelection(context, TRUE, selection) THEN
@@ -352,7 +352,7 @@ PROCEDURE Delete*(context : Commands.Context); (** dev#part type ~ *)
 VAR
 	delete : Lib.DeletePartition;
 	selection : Lib.Selection;
-	type : LONGINT;
+	type : SIGNED32;
 BEGIN
 	IF GetSelection(context, FALSE, selection) THEN
 		IF ~selection.disk.isDiskette THEN
@@ -376,7 +376,7 @@ PROCEDURE Create*(context : Commands.Context); (** dev#part type sizeMB ~ *)
 VAR
 	create : Lib.CreatePartition;
 	selection : Lib.Selection;
-	type, size : LONGINT;
+	type, size : SIGNED32;
 BEGIN
 	IF GetSelection(context, FALSE, selection) THEN
 		IF ~selection.disk.isDiskette THEN
@@ -436,7 +436,7 @@ PROCEDURE FileToPartition*(context : Commands.Context); (** dev#part filename [b
 VAR
 	fileToPartition : Lib.FileToPartition;
 	filename : ARRAY 128 OF CHAR;
-	block, numblocks : LONGINT;
+	block, numblocks : SIGNED32;
 	selection : Lib.Selection;
 BEGIN
 	IF GetSelection(context, TRUE, selection) THEN
@@ -467,7 +467,7 @@ PROCEDURE PartitionToFile*(context : Commands.Context); (** dev#part filename [b
 VAR
 	partitionToFile : Lib.PartitionToFile;
 	filename : ARRAY 128 OF CHAR;
-	block, numblocks : LONGINT;
+	block, numblocks : SIGNED32;
 	selection : Lib.Selection;
 BEGIN
 	IF GetSelection(context, TRUE, selection) THEN
@@ -577,7 +577,7 @@ END ShowBlockCallback;
 PROCEDURE ShowBlocks*(context : Commands.Context); (** dev#part block [numblocks] ~ *)
 VAR
 	showBlocks : Lib.ShowBlocks;
-	block, numblocks : LONGINT;
+	block, numblocks : SIGNED32;
 	selection : Lib.Selection;
 BEGIN
 	IF GetSelection(context, FALSE, selection) THEN
@@ -721,7 +721,7 @@ BEGIN
 END ShowDevice;
 
 PROCEDURE ShowTable( context : Commands.Context; disk: Lib.Disk; table: Disks.PartitionTable; verbose: BOOLEAN);
-VAR j: SIZE; r: LONGREAL; ugly : ARRAY 10 OF CHAR; temp : ARRAY 128 OF CHAR; ignore : LONGINT;
+VAR j: SIZE; r: FLOAT64; ugly : ARRAY 10 OF CHAR; temp : ARRAY 128 OF CHAR; ignore : SIGNED32;
 BEGIN
 	FOR j := 0 TO LEN(table)-1 DO
 		r := (table[j].size * 1.0D0 * disk.device.blockSize) / (1024*1024); (* M *)

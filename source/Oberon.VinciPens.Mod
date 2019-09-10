@@ -17,7 +17,7 @@ MODULE VinciPens IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Stroker (ctxt: Scheme.Context; args: Object; VAR res: Object);
 		VAR
-			c: Context; col: Gfx.Color; img: Images.Image; w, limit, px, py: REAL; cap: Gfx.CapStyle; join: Gfx.JoinStyle;
+			c: Context; col: Gfx.Color; img: Images.Image; w, limit, px, py: FLOAT32; cap: Gfx.CapStyle; join: Gfx.JoinStyle;
 			str: Object; s: ARRAY 30 OF CHAR; pen: LeoPens.Stroker;
 	BEGIN
 		c := ctxt(Context); col := Gfx.Black; img := NIL; w := 1; limit := 5; cap := Gfx.DefaultCap; join := Gfx.DefaultJoin;
@@ -44,7 +44,7 @@ MODULE VinciPens IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Filler (ctxt: Scheme.Context; args: Object; VAR res: Object);
 		VAR
-			c: Context; col: Gfx.Color; img: Images.Image; eo: BOOLEAN; str: Object; s: ARRAY 30 OF CHAR; px, py: REAL;
+			c: Context; col: Gfx.Color; img: Images.Image; eo: BOOLEAN; str: Object; s: ARRAY 30 OF CHAR; px, py: FLOAT32;
 			pen: LeoPens.Filler;
 	BEGIN
 		c := ctxt(Context); col := Gfx.Black; img := NIL; eo := FALSE;
@@ -94,7 +94,7 @@ MODULE VinciPens IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Dasher (ctxt: Scheme.Context; args: Object; VAR res: Object);
 		VAR
-			c: Context; base: LeoPens.Pen; len: LONGINT; on, off: ARRAY Gfx.MaxDashPatSize OF REAL; cont: BOOLEAN;
+			c: Context; base: LeoPens.Pen; len: SIGNED32; on, off: ARRAY Gfx.MaxDashPatSize OF FLOAT32; cont: BOOLEAN;
 			str: Object; s: ARRAY 30 OF CHAR; ref: Objects.Object; pen: LeoPens.Dasher;
 	BEGIN
 		c := ctxt(Context); base := LeoPens.Default; len := 1; on[0] := 5; off[0] := 5; cont := FALSE;
@@ -120,7 +120,7 @@ MODULE VinciPens IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Outliner (ctxt: Scheme.Context; args: Object; VAR res: Object);
 		VAR
-			c: Context; w, limit: REAL; cap: Gfx.CapStyle; join: Gfx.JoinStyle; base: LeoPens.Pen; mode: SHORTINT;
+			c: Context; w, limit: FLOAT32; cap: Gfx.CapStyle; join: Gfx.JoinStyle; base: LeoPens.Pen; mode: SIGNED8;
 			str: Object; s: ARRAY 30 OF CHAR; ref: Objects.Object; pen: LeoOutliners.Outliner;
 	BEGIN
 		c := ctxt(Context); w := 1; limit := 5; cap := Gfx.DefaultCap; join := Gfx.DefaultJoin;
@@ -150,8 +150,8 @@ MODULE VinciPens IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Arrow (ctxt: Scheme.Context; args: Object; VAR res: Object);
 		VAR
-			c: Context; w, limit, len, coff, cdist: REAL; cap: Gfx.CapStyle; join: Gfx.JoinStyle; base: LeoPens.Pen;
-			mode, dir: SHORTINT; str: Object; s: ARRAY 30 OF CHAR; ref: Objects.Object; pen: LeoOutliners.Arrow;
+			c: Context; w, limit, len, coff, cdist: FLOAT32; cap: Gfx.CapStyle; join: Gfx.JoinStyle; base: LeoPens.Pen;
+			mode, dir: SIGNED8; str: Object; s: ARRAY 30 OF CHAR; ref: Objects.Object; pen: LeoOutliners.Arrow;
 	BEGIN
 		c := ctxt(Context); w := 1; limit := 5; cap := Gfx.DefaultCap; join := Gfx.DefaultJoin;
 		base := LeoPens.Default; mode := LeoOutliners.outlined; dir := LeoOutliners.forwards;

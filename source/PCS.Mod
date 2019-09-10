@@ -17,7 +17,7 @@ MODULE PCS; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: scanner"; *)
 
 		Buffer = POINTER TO ARRAY OF CHAR;
 
-		Token* = SHORTINT;
+		Token* = SIGNED8;
 
 	CONST
 		Eot* = 0X;
@@ -114,24 +114,24 @@ TYPE
 	Scanner* = OBJECT
 		VAR
 			buffer: Buffer;
-			pos: LONGINT;	(*pos in buffer*)
+			pos: SIGNED32;	(*pos in buffer*)
 			ch-: CHAR;	(**look-ahead *)
 			name-: Name;
 			str*: String;
-			numtyp-: INTEGER; (* 1 = char, 2 = integer, 3 = real, 4 = longreal *)
-			intval-: LONGINT;	(* integer value or string length *)
-			longintval-: HUGEINT;
-			realval-: REAL;
-			lrlval-: LONGREAL;
-			numStartPos, numEndPos: LONGINT;
-			curpos-, errpos-: LONGINT;	(*pos in text*)
+			numtyp-: SIGNED16; (* 1 = char, 2 = integer, 3 = real, 4 = longreal *)
+			intval-: SIGNED32;	(* integer value or string length *)
+			longintval-: SIGNED64;
+			realval-: FLOAT32;
+			lrlval-: FLOAT64;
+			numStartPos, numEndPos: SIGNED32;
+			curpos-, errpos-: SIGNED32;	(*pos in text*)
 			isNummer: BOOLEAN;
 
 			(* fof 070731 *)
 			lcase-,ucase-: BOOLEAN;  (* lcase=true: recognize lowercase keywords , ucase=true: recognize uppercase keywords*)
 			firstId: BOOLEAN;  n1: CHAR;
 
-		PROCEDURE err(n: INTEGER);
+		PROCEDURE err(n: SIGNED16);
 		BEGIN PCM.Error(n, errpos, "")
 		END err;
 
@@ -148,7 +148,7 @@ TYPE
 			IF newChar[ORD(ch)] THEN INC(curpos) END; (* curpos := pos; *)
 		END NextChar;
 
-		PROCEDURE SkipUntilNextEnd*(VAR sym: SHORTINT);
+		PROCEDURE SkipUntilNextEnd*(VAR sym: SIGNED8);
 		BEGIN
 			WHILE (sym # eof) & (sym # end) DO
 				IF ch = Eot THEN sym := eof
@@ -159,8 +159,8 @@ TYPE
 			END;
 		END SkipUntilNextEnd;
 
-		PROCEDURE Str(VAR sym: SHORTINT);
-			VAR i: INTEGER; och: CHAR;
+		PROCEDURE Str(VAR sym: SIGNED8);
+			VAR i: SIGNED16; och: CHAR;
 		BEGIN i := 0; och := ch;
 			LOOP NextChar;
 				IF ch = och THEN EXIT END ;
@@ -175,8 +175,8 @@ TYPE
 			END
 		END Str;
 
-		PROCEDURE Identifier(VAR sym: SHORTINT; check: BOOLEAN);
-			VAR i: LONGINT;
+		PROCEDURE Identifier(VAR sym: SIGNED8; check: BOOLEAN);
+			VAR i: SIGNED32;
 		BEGIN i := 0;
 			REPEAT
 				str[i] := ch; INC(i); NextChar
@@ -187,10 +187,10 @@ TYPE
 		END Identifier;
 
 		PROCEDURE Number;
-		VAR i, m, n, d, e: INTEGER; dig: ARRAY 24 OF CHAR; f: LONGREAL; expCh: CHAR; neg: BOOLEAN; longintval: HUGEINT;
+		VAR i, m, n, d, e: SIGNED16; dig: ARRAY 24 OF CHAR; f: FLOAT64; expCh: CHAR; neg: BOOLEAN; longintval: SIGNED64;
 
-			PROCEDURE Ten(e: INTEGER): LONGREAL;
-				VAR x, p: LONGREAL;
+			PROCEDURE Ten(e: SIGNED16): FLOAT64;
+				VAR x, p: FLOAT64;
 			BEGIN x := 1; p := 10;
 				WHILE e > 0 DO
 					IF ODD(e) THEN x := x*p END;
@@ -200,7 +200,7 @@ TYPE
 				RETURN x
 			END Ten;
 
-			PROCEDURE Ord(ch: CHAR; hex: BOOLEAN): INTEGER;
+			PROCEDURE Ord(ch: CHAR; hex: BOOLEAN): SIGNED16;
 			BEGIN (* ("0" <= ch) & (ch <= "9") OR ("A" <= ch) & (ch <= "F") *)
 				IF ch <= "9" THEN RETURN ORD(ch) - ORD("0")
 				ELSIF hex THEN RETURN ORD(ch) - ORD("A") + 10
@@ -261,7 +261,7 @@ TYPE
 					END;
 					IF ("0" <= ch) & (ch <= "9") THEN
 						REPEAT n := Ord(ch, FALSE); NextChar;
-							IF e <= (MAX(INTEGER) - n) DIV 10 THEN e := e*10 + n
+							IF e <= (MAX(SIGNED16) - n) DIV 10 THEN e := e*10 + n
 							ELSE err(203)
 							END
 						UNTIL (ch < "0") OR ("9" < ch);
@@ -303,7 +303,7 @@ TYPE
 			val[i] := 0X
 		END GetNumAsString;
 
-		PROCEDURE Get*(VAR s: SHORTINT);
+		PROCEDURE Get*(VAR s: SIGNED8);
 
 			PROCEDURE Comment;	(* do not read after end of file *)
 				VAR dump: BOOLEAN;
@@ -595,7 +595,7 @@ TYPE
 
 	END Scanner;
 
-	PROCEDURE GetOpName*(op: SHORTINT; VAR name: Name);
+	PROCEDURE GetOpName*(op: SIGNED8; VAR name: Name);
 	BEGIN
 		name := opTable[op];
 	END GetOpName;
@@ -618,7 +618,7 @@ TYPE
 		Files.Register(f);
 	END SaveBuffer;
 *)
-	PROCEDURE NewScanner(b: Buffer;  pos, curpos: LONGINT): Scanner;
+	PROCEDURE NewScanner(b: Buffer;  pos, curpos: SIGNED32): Scanner;
 	VAR s: Scanner;
 	BEGIN
 (*
@@ -633,9 +633,9 @@ TYPE
 		RETURN s
 	END NewScanner;
 
-	PROCEDURE InitWithText*(t: Texts.Text; pos: LONGINT): Scanner;
-		VAR buffer: Buffer; len, i, j: SIZE; ch: LONGINT; r: Texts.TextReader;
-		bytesPerChar: LONGINT;
+	PROCEDURE InitWithText*(t: Texts.Text; pos: SIGNED32): Scanner;
+		VAR buffer: Buffer; len, i, j: SIZE; ch: SIGNED32; r: Texts.TextReader;
+		bytesPerChar: SIGNED32;
 	BEGIN
 		t.AcquireRead;
 		len := t.GetLength();
@@ -672,12 +672,12 @@ TYPE
 	BEGIN
 		NEW(buffer, size);
 		r.Bytes(buffer^, 0, size, read);
-		RETURN NewScanner(buffer, 0, pos(LONGINT))
+		RETURN NewScanner(buffer, 0, pos(SIGNED32))
 	END InitWithReader;
 
 (*
 	PROCEDURE InitReservedCharsOld;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO LEN(reservedChar)-1 DO
 			IF (CHR(i) < "0") OR ("9" < CHR(i)) & (CHR(i) < "A") OR ("Z"< CHR(i)) & (CHR(i) < "a") OR ("z" < CHR(i)) THEN
@@ -691,7 +691,7 @@ TYPE
 
 	PROCEDURE InitReservedChars;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO LEN(reservedChar)-1 DO
 			reservedChar[i] := ((CHR(i) < '0') OR ('9' < CHR(i))) & (CAP(CHR(i)) < "A") OR ("Z" < CAP(CHR(i))) & (CHR(i) # '_')
@@ -700,7 +700,7 @@ TYPE
 
 	PROCEDURE InitNewChar;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO LEN(newChar)-1 DO
 			(* UTF-8 encoded characters with bits 10XXXXXX do not start a new unicode character *)

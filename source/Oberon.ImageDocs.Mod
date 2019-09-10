@@ -35,7 +35,7 @@ MODULE ImageDocs IN Oberon; (** portable **)	(* eos  *)
 	END LoadDoc;
 
 	PROCEDURE StoreDoc (doc: Documents.Document);
-		VAR lm: Objects.LinkMsg; img: Images.Image; bak: ARRAY 64 OF CHAR; res: INTEGER; done: BOOLEAN;
+		VAR lm: Objects.LinkMsg; img: Images.Image; bak: ARRAY 64 OF CHAR; res: SIGNED16; done: BOOLEAN;
 	BEGIN
 		lm.id := Objects.get; lm.name := "Model"; lm.res := -1; doc.dsc.handle(doc.dsc, lm);
 		IF (lm.res >= 0) & (lm.obj # NIL) & (lm.obj IS Images.Image) THEN
@@ -90,7 +90,7 @@ MODULE ImageDocs IN Oberon; (** portable **)	(* eos  *)
 	END NewDoc;
 
 	PROCEDURE Open*;
-		VAR s: Texts.Scanner; text: Texts.Text; beg, end, time: LONGINT; doc: Documents.Document;
+		VAR s: Texts.Scanner; text: Texts.Text; beg, end, time: SIGNED32; doc: Documents.Document;
 	BEGIN
 		Texts.OpenScanner(s, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(s);
 		IF (s.class = Texts.Char) & (s.c = "^") THEN

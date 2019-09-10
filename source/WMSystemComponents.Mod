@@ -38,7 +38,7 @@ TYPE
 			overwriteAll := FALSE; overwriteNever := FALSE; abort := FALSE;
 		END New;
 
-		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : WORD);
+		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : INTEGER);
 		VAR oldFile : Files.File; name : ARRAY 1024 OF CHAR;
 		BEGIN
 			res := -1;
@@ -80,7 +80,7 @@ TYPE
 			IF TraceCopy IN Trace THEN KernelLog.Ln; END;
 		END OpenPut;
 
-		PROCEDURE ClosePut*(VAR res : WORD);
+		PROCEDURE ClosePut*(VAR res : INTEGER);
 		BEGIN
 			IF (f # NIL) & (w # NIL)  THEN
 				w.Update;
@@ -102,7 +102,7 @@ TYPE
 			eh := e
 		END New;
 
-		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : SIGNED32) : WMDropTarget.DropInterface;
 		VAR di : FilesDropInterface;
 		BEGIN
 			IF type = WMDropTarget.TypeFiles THEN
@@ -234,11 +234,11 @@ TYPE
 		END SortDirs;
 
 		PROCEDURE EnumerateSubDirectories(tree : WMTrees.Tree; node : WMTrees.TreeNode; dir : Strings.String);
-		VAR name, path, filename, mask : Files.FileName; flags : SET; time, date : LONGINT; size : Files.Size;
+		VAR name, path, filename, mask : Files.FileName; flags : SET; time, date : SIGNED32; size : Files.Size;
 			dirNode : WMTrees.TreeNode;
 			td : TreeData; has : BOOLEAN;
 			dirArray: POINTER TO ARRAY OF TreeData;
-			i, sz: LONGINT;
+			i, sz: SIGNED32;
 		BEGIN
 			tree.Acquire;
 			IF tree.GetChildren(node) # NIL THEN tree.Release; RETURN END; (* assuming there will be no changes in the structures *)
@@ -316,13 +316,13 @@ TYPE
 	DirEntry* = OBJECT
 	VAR
 		name*, path- : Strings.String;
-		time, date: LONGINT;
+		time, date: SIGNED32;
 		size*: Files.Size;
 		flags : SET;
 		visible : BOOLEAN;
 		node* : WMTrees.TreeNode;
 
-		PROCEDURE &Init*(name, path : Strings.String; time, date : LONGINT; size: Files.Size; flags : SET);
+		PROCEDURE &Init*(name, path : Strings.String; time, date : SIGNED32; size: Files.Size; flags : SET);
 		BEGIN
 			SELF.name := name;
 			SELF.path := path;
@@ -357,7 +357,7 @@ TYPE
 		enumerator : Files.Enumerator;
 		dir : DirEntries;
 		selection : DirEntries;
-		nfiles: SIZE; nofRows : LONGINT;
+		nfiles: SIZE; nofRows : SIGNED32;
 		px, py : SIZE;
 		colWidths : WMGrids.Spacings;
 
@@ -444,7 +444,7 @@ TYPE
 			w : SelectionWrapper;
 			filename : Files.FileName;
 			command : ARRAY 1024 OF CHAR;
-			position: SIZE; res: WORD;
+			position: SIZE; res: INTEGER;
 			msg : ARRAY 256 OF CHAR;
 		BEGIN
 			IF (data # NIL) & (data IS SelectionWrapper) THEN
@@ -550,7 +550,7 @@ TYPE
 
 		PROCEDURE Rename(sender, data : ANY);
 		VAR  d : DirEntry; rename : WMDialogs.MiniStringInput;
-			wmx, wmy: SIZE; res: WORD;
+			wmx, wmy: SIZE; res: INTEGER;
 			name, op, np : ARRAY FileNameLength OF CHAR;
 		BEGIN
 			IF popup # NIL THEN popup.Close; popup := NIL END;
@@ -581,7 +581,7 @@ TYPE
 
 		PROCEDURE Delete(sender, data : ANY);
 		VAR  d : DirEntry; i: SIZE;
-			dr  : LONGINT; res: WORD;
+			dr  : SIGNED32; res: INTEGER;
 			dp : Files.FileName;
 			delete, always, never : BOOLEAN;
 		BEGIN
@@ -618,7 +618,7 @@ TYPE
 		PROCEDURE Duplicate(sender, data : ANY);
 		VAR  d : DirEntry;
 			name : ARRAY FileNameLength (* was 128*) OF CHAR;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF popup # NIL THEN popup.Close; popup := NIL END;
 			IF (data # NIL) & (data IS SelectionWrapper) THEN
@@ -771,13 +771,13 @@ END Open;
 		PROCEDURE MyStartDrag(sender, data : ANY);
 		VAR img : WMGraphics.Image;
 			c : WMGraphics.BufferCanvas;
-			top : LONGINT; i : SIZE;
+			top : SIGNED32; i : SIZE;
 		BEGIN
 			selection := GetSelection();
 			(* render to bitmap *)
 			NEW(img);	Raster.Create(img, 100, 200, Raster.BGRA8888);
 			NEW(c, img);
-			c.SetColor(LONGINT(0FFFF00FFH));
+			c.SetColor(SIGNED32(0FFFF00FFH));
 			top := 0;
 			FOR i := 0 TO LEN(selection) - 1 DO
 				IF selection[i] # NIL THEN
@@ -793,7 +793,7 @@ END Open;
 			END;
 		END MyStartDrag;
 
-		PROCEDURE CopyFile(target : WMDropTarget.DropFiles; CONST local, remote : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE CopyFile(target : WMDropTarget.DropFiles; CONST local, remote : ARRAY OF CHAR; VAR res : INTEGER);
 		VAR w : Streams.Writer;
 			f : Files.File;
 			r : Files.Reader;
@@ -844,7 +844,7 @@ END Open;
 		VAR di : WM.DragInfo;
 			dt : WMDropTarget.DropTarget;
 			itf : WMDropTarget.DropInterface;
-			i : SIZE; res: WORD;
+			i : SIZE; res: INTEGER;
 			sel : DirEntries;
 			url : ARRAY 1024 OF CHAR;
 			text : Texts.Text;
@@ -919,8 +919,8 @@ END Open;
 			grid.model.Release
 		END ResetGrid;
 
-		PROCEDURE DisplayGrid*(CONST data : ARRAY OF DirEntry; noEl : LONGINT);
-		VAR i, gridindex : LONGINT;
+		PROCEDURE DisplayGrid*(CONST data : ARRAY OF DirEntry; noEl : SIGNED32);
+		VAR i, gridindex : SIGNED32;
 			d : DirEntry;
 			t : ARRAY FileNameLength (* was 128*) OF CHAR;
 		BEGIN
@@ -968,7 +968,7 @@ END Open;
 			Refresh(NIL, NIL);
 		END ToggleProps;
 
-		PROCEDURE FillGridRow(rowNo : LONGINT; dir : DirEntry);
+		PROCEDURE FillGridRow(rowNo : SIGNED32; dir : DirEntry);
 		VAR t : ARRAY FileNameLength (* was 128*) OF CHAR;
 		BEGIN
 			grid.model.SetCellText(0, rowNo, dir.name);
@@ -987,7 +987,7 @@ END Open;
 		END FillGridRow;
 
 		PROCEDURE PrepareList;
-		VAR i : SIZE; vis : LONGINT; mask : ARRAY FileNameLength (* was 128*) OF CHAR; s : Strings.String;
+		VAR i : SIZE; vis : SIGNED32; mask : ARRAY FileNameLength (* was 128*) OF CHAR; s : Strings.String;
 		BEGIN
 			IF dir = NIL THEN RETURN END;
 			s := SELF.filter;
@@ -995,7 +995,7 @@ END Open;
 			IF s # NIL THEN COPY(s^, mask) END;
 			IF mask = "" THEN
 				FOR i := 0 TO LEN(dir) - 1 DO dir[i].visible := TRUE END;
-				vis := LEN(dir)(LONGINT);
+				vis := LEN(dir)(SIGNED32);
 			ELSE
 				IF prefixSearch.Get() & ( mask[Strings.Length(mask)] # "*") THEN Strings.Append(mask, "*") END;
 				vis := 0;
@@ -1026,7 +1026,7 @@ END Open;
 		PROCEDURE ScanPath;
 		VAR s, pathS : Strings.String;
 			i, l : SIZE;
-			name, path, filename, mask : Files.FileName; flags : SET; time, date : LONGINT;
+			name, path, filename, mask : Files.FileName; flags : SET; time, date : SIGNED32;
 			size : Files.Size; sorted : BOOLEAN;
 		BEGIN
 			s := SELF.path;
@@ -1082,7 +1082,7 @@ END Open;
 			i, j, m, L, R : SIZE;
 			x : DirEntry;
 			dirName, xName: Strings.String;
-			dirFlag, xFlag: SHORTINT;
+			dirFlag, xFlag: SIGNED8;
 		BEGIN
 			FOR i := 1 TO LEN(dir) - 1 DO
 				x := dir[i]; L := 0; R := i; xName := Strings.NewString(x.name^); Strings.UpperCase(xName^);
@@ -1106,8 +1106,8 @@ END Open;
 		VAR
 			i, j, m, L, R : SIZE;
 			x : DirEntry;
-			dirTime,dirDate:LONGINT;
-			dirFlag, xFlag: SHORTINT;
+			dirTime,dirDate:SIGNED32;
+			dirFlag, xFlag: SIGNED8;
 		BEGIN
 			FOR i := 1 TO LEN(dir) - 1 DO
 				x := dir[i]; L := 0; R := i;

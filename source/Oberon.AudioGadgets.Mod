@@ -11,24 +11,24 @@ MODULE AudioGadgets IN Oberon;	(** portable *) (* EJZ,  *)
 	TYPE
 		LCDFrame* = POINTER TO LCDFrameDesc;
 		LCDFrameDesc* = RECORD (Gadgets.FrameDesc)
-			val: LONGINT;
-			backCol, digiCol, shadowCol: INTEGER;
-			digits, width: INTEGER;
-			border: INTEGER
+			val: SIGNED32;
+			backCol, digiCol, shadowCol: SIGNED16;
+			digits, width: SIGNED16;
+			border: SIGNED16
 		END;
 		TrackFrame* = POINTER TO TrackFrameDesc;
 		TrackFrameDesc* = RECORD (Gadgets.FrameDesc)
 			tobj: Objects.Object;
-			tracks, first, val, point, rows, cols: INTEGER
+			tracks, first, val, point, rows, cols: SIGNED16
 		END;
 
-	PROCEDURE RestoreLCD(F: LCDFrame; Q: Display3.Mask; x, y, w, h: INTEGER; back: BOOLEAN);
+	PROCEDURE RestoreLCD(F: LCDFrame; Q: Display3.Mask; x, y, w, h: SIGNED16; back: BOOLEAN);
 		VAR
-			ledh, ledw, i, ox, oy: INTEGER;
-			val, digi: LONGINT;
+			ledh, ledw, i, ox, oy: SIGNED16;
+			val, digi: SIGNED32;
 			A: Objects.AttrMsg;
-		PROCEDURE HLed(x, y: INTEGER; on: BOOLEAN);
-			VAR j, col: INTEGER;
+		PROCEDURE HLed(x, y: SIGNED16; on: BOOLEAN);
+			VAR j, col: SIGNED16;
 		BEGIN
 			IF on THEN
 				col := F.digiCol
@@ -41,8 +41,8 @@ MODULE AudioGadgets IN Oberon;	(** portable *) (* EJZ,  *)
 				Display3.ReplConst(Q, col, x+F.width+1+j, y+(F.width DIV 2)+1+j, ledw-2*j, 1, Display.replace)
 			END
 		END HLed;
-		PROCEDURE VLed(x, y: INTEGER; on: BOOLEAN);
-			VAR j, col: INTEGER;
+		PROCEDURE VLed(x, y: SIGNED16; on: BOOLEAN);
+			VAR j, col: SIGNED16;
 		BEGIN
 			IF on THEN
 				col := F.digiCol
@@ -111,7 +111,7 @@ MODULE AudioGadgets IN Oberon;	(** portable *) (* EJZ,  *)
 
 	PROCEDURE LCDHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
-			x, y, w, h: INTEGER;
+			x, y, w, h: SIGNED16;
 			Q: Display3.Mask;
 			F1: LCDFrame;
 			A: Objects.AttrMsg;
@@ -283,7 +283,7 @@ MODULE AudioGadgets IN Oberon;	(** portable *) (* EJZ,  *)
 		Objects.NewObj := F
 	END NewLCD;
 
-	PROCEDURE Calc(F: TrackFrame; VAR x, y, w, h, law, raw, hb, track: INTEGER);
+	PROCEDURE Calc(F: TrackFrame; VAR x, y, w, h, law, raw, hb, track: SIGNED16);
 	BEGIN
 		INC(x, 1);
 		INC(y, 1);
@@ -363,9 +363,9 @@ MODULE AudioGadgets IN Oberon;	(** portable *) (* EJZ,  *)
 		RETURN TRUE
 	END UpdateTracks;
 
-	PROCEDURE RestoreTrack(F: TrackFrame; Q: Display3.Mask; x, y, w, h: INTEGER; update: BOOLEAN);
+	PROCEDURE RestoreTrack(F: TrackFrame; Q: Display3.Mask; x, y, w, h: SIGNED16; update: BOOLEAN);
 		VAR
-			law, raw, i, j, hb, track: INTEGER;
+			law, raw, i, j, hb, track: SIGNED16;
 			cap: ARRAY 4 OF CHAR;
 	BEGIN
 		IF ~update THEN
@@ -410,13 +410,13 @@ MODULE AudioGadgets IN Oberon;	(** portable *) (* EJZ,  *)
 		END
 	END RestoreTrack;
 
-	PROCEDURE Track(F: TrackFrame; x, y: INTEGER; VAR M: Oberon.InputMsg);
+	PROCEDURE Track(F: TrackFrame; x, y: SIGNED16; VAR M: Oberon.InputMsg);
 		VAR
 			keysum: SET;
-			w, h, law, raw, hb, track, mx, my, exec: INTEGER;
+			w, h, law, raw, hb, track, mx, my, exec: SIGNED16;
 			Q: Display3.Mask;
-		PROCEDURE DrawEffect(mx, my: INTEGER);
-			VAR px, py, i, j: INTEGER;
+		PROCEDURE DrawEffect(mx, my: SIGNED16);
+			VAR px, py, i, j: SIGNED16;
 		BEGIN
 			exec := -1;
 			Oberon.FadeCursor(Oberon.Mouse);
@@ -503,7 +503,7 @@ MODULE AudioGadgets IN Oberon;	(** portable *) (* EJZ,  *)
 
 	PROCEDURE TrackHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
-			x, y, w, h: INTEGER;
+			x, y, w, h: SIGNED16;
 			F1: TrackFrame;
 			Q: Display3.Mask;
 	BEGIN
@@ -733,7 +733,7 @@ MODULE AudioGadgets IN Oberon;	(** portable *) (* EJZ,  *)
 
 	PROCEDURE SeekButtonHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
-			x, y, w, h: INTEGER;
+			x, y, w, h: SIGNED16;
 			Q: Display3.Mask;
 			keysum: SET;
 			A: Objects.AttrMsg;

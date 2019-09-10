@@ -20,16 +20,16 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 	TYPE
 		Context* = POINTER TO ContextDesc;
 		ContextDesc* = RECORD (GfxRaster.ContextDesc)
-			orgX*, orgY*: REAL;	(** origin of default coordinate system **)
-			scale*: REAL;	(** default scale factor **)
+			orgX*, orgY*: FLOAT32;	(** origin of default coordinate system **)
+			scale*: FLOAT32;	(** default scale factor **)
 			bgCol*: Gfx.Color;	(** background color for erasing **)
 			img*: Images.Image;	(** target buffer **)
 			pix: Images.Pixel;
-			compOp:SHORTINT; (* composition operation for raster device *)
+			compOp:SIGNED8; (* composition operation for raster device *)
 		END;
 
 		RegData = RECORD (GfxRegions.EnumData)
-			dx, dy: INTEGER;
+			dx, dy: SIGNED16;
 			bc: Context;
 			mode: Images.Mode;
 		END;
@@ -41,7 +41,7 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 
 	(*--- Rendering ---*)
 
-	PROCEDURE Color (llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData);
+	PROCEDURE Color (llx, lly, urx, ury: SIGNED16; VAR data: GfxRegions.EnumData);
 		VAR bc: Context; mode: Images.Mode;
 	BEGIN
 		bc := data(RegData).bc;
@@ -49,7 +49,7 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 		Images.Fill(bc.img, llx, lly, urx, ury, bc.pix, mode)
 	END Color;
 
-	PROCEDURE Tile (llx, lly, urx, ury: INTEGER; VAR data: GfxRegions.EnumData);
+	PROCEDURE Tile (llx, lly, urx, ury: SIGNED16; VAR data: GfxRegions.EnumData);
 		VAR bc: Context;
 	BEGIN
 		WITH data: RegData DO
@@ -58,26 +58,26 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 		END
 	END Tile;
 
-	PROCEDURE Dot (rc: GfxRaster.Context; x, y: LONGINT);
+	PROCEDURE Dot (rc: GfxRaster.Context; x, y: SIGNED32);
 		VAR bc: Context; px, py: SIZE; mode: Images.Mode;
 	BEGIN
 		IF (rc.clipState = GfxRaster.In) OR
-			(rc.clipState = GfxRaster.InOut) & GfxRegions.RectInside(INTEGER(x), INTEGER(y), INTEGER(x+1), INTEGER(y+1), rc.clipReg)
+			(rc.clipState = GfxRaster.InOut) & GfxRegions.RectInside(SIGNED16(x), SIGNED16(y), SIGNED16(x+1), SIGNED16(y+1), rc.clipReg)
 		THEN
 			bc := rc(Context);
 			IF bc.pat = NIL THEN
 				Images.InitMode(mode, bc.compOp);
-				Images.Put(bc.img, INTEGER(x), INTEGER(y), bc.pix, mode)
+				Images.Put(bc.img, SIGNED16(x), SIGNED16(y), bc.pix, mode)
 			ELSE
 				px := (x - ENTIER(bc.orgX + bc.pat.px + 0.5)) MOD bc.pat.img.width;
 				py := (y - ENTIER(bc.orgY + bc.pat.py + 0.5)) MOD bc.pat.img.height;
 				Images.InitModeColor(mode, Images.srcOverDst, bc.col.r, bc.col.g, bc.col.b);
-				Images.Copy(bc.pat.img, bc.img, px, py, px+1, py+1, INTEGER(x), INTEGER(y), mode)
+				Images.Copy(bc.pat.img, bc.img, px, py, px+1, py+1, SIGNED16(x), SIGNED16(y), mode)
 			END
 		END
 	END Dot;
 
-	PROCEDURE Rect (rc: GfxRaster.Context; llx, lly, urx, ury: LONGINT);
+	PROCEDURE Rect (rc: GfxRaster.Context; llx, lly, urx, ury: SIGNED32);
 		VAR bc: Context; data: RegData; mode: Images.Mode;
 	BEGIN
 		IF (rc.clipState # GfxRaster.Out) & (llx < urx) & (lly < ury) THEN
@@ -124,11 +124,11 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 	BEGIN
 		bc := ctxt(Context);
 		GfxRaster.ResetClip(bc);
-		GfxRegions.SetToRect(bc.clipReg, 0, 0, INTEGER(bc.img.width), INTEGER(bc.img.height))
+		GfxRegions.SetToRect(bc.clipReg, 0, 0, SIGNED16(bc.img.width), SIGNED16(bc.img.height))
 	END ResetClip;
 
-	PROCEDURE Image (ctxt: Gfx.Context; x, y: REAL; img: Images.Image; VAR filter: GfxImages.Filter);
-		VAR bc: Context; m: GfxMatrix.Matrix; dx, dy, llx, lly, urx, ury: INTEGER; col: Images.Pixel;
+	PROCEDURE Image (ctxt: Gfx.Context; x, y: FLOAT32; img: Images.Image; VAR filter: GfxImages.Filter);
+		VAR bc: Context; m: GfxMatrix.Matrix; dx, dy, llx, lly, urx, ury: SIGNED16; col: Images.Pixel;
 	BEGIN
 		bc := ctxt(Context);
 		GfxMatrix.Translate(bc.ctm, x, y, m);
@@ -143,12 +143,12 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 		THEN
 			GfxImages.Transform(img, bc.img, m, filter)
 		ELSE
-			llx := 0; lly := 0; urx := INTEGER(img.width); ury := INTEGER(img.height);
+			llx := 0; lly := 0; urx := SIGNED16(img.width); ury := SIGNED16(img.height);
 			GfxRegions.ClipRect(llx, lly, urx, ury, bc.clipReg.llx - dx, bc.clipReg.lly - dy, bc.clipReg.urx - dx, bc.clipReg.ury - dy);
 			IF bc.clipReg.llx >  dx THEN dx := bc.clipReg.llx END;
 			IF bc.clipReg.lly > dy THEN dy := bc.clipReg.lly END;
-			IF dx + urx > bc.img.width THEN urx := INTEGER(bc.img.width - dx) END;
-			IF dy + ury > bc.img.height THEN ury := INTEGER(bc.img.height - dy) END;
+			IF dx + urx > bc.img.width THEN urx := SIGNED16(bc.img.width - dx) END;
+			IF dy + ury > bc.img.height THEN ury := SIGNED16(bc.img.height - dy) END;
 			IF dx < 0 THEN llx := -dx; dx := 0 END;
 			IF dy < 0 THEN lly := -dy; dy := 0 END;
 			IF (llx < urx) & (lly < ury) THEN
@@ -189,7 +189,7 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 	(*--- Exported Interface ---*)
 
 	(** set default coordinate origin and scale factor **)
-	PROCEDURE SetCoordinates* (bc: Context; x, y, scale: REAL);
+	PROCEDURE SetCoordinates* (bc: Context; x, y, scale: FLOAT32);
 	BEGIN
 		bc.orgX := x; bc.orgY := y; bc.scale := scale
 	END SetCoordinates;
@@ -201,7 +201,7 @@ MODULE GfxBuffer; (** portable *)	(* eos  *)
 	END SetBGColor;
 
 	(** set composition operation as defined in Raster **)
-	PROCEDURE SetCompOp* (bc: Context; op:SHORTINT);
+	PROCEDURE SetCompOp* (bc: Context; op:SIGNED8);
 	BEGIN
 		bc.compOp := op
 	END SetCompOp;

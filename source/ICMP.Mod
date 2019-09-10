@@ -73,27 +73,27 @@ CONST
 	ParamExcHdrLen = 4;	(* ICMPv6 parameter problem header length *)
 
 TYPE
-	Receiver* = PROCEDURE {DELEGATE} (int: IP.Interface; type, code: LONGINT; fip, lip: IP.Adr; buffer: Network.Buffer);
+	Receiver* = PROCEDURE {DELEGATE} (int: IP.Interface; type, code: SIGNED32; fip, lip: IP.Adr; buffer: Network.Buffer);
 
 VAR
 	receivers: ARRAY 256 OF Receiver; (* registered receivers - array position is ICMP packet type *)
 
 	(* Statistic variables *)
 	NICMPRcvTotal-, NICMPTooSmall-, NICMPBadChecksum-, NICMPNoReceiver-, NICMPDelivered-,
-	NICMPEchoRequest-, NICMPSend-: LONGINT;
+	NICMPEchoRequest-, NICMPSend-: SIGNED32;
 
-	res: WORD;
+	res: INTEGER;
 
 (* Receive an ICMP (v4 and v6) packet *)
-PROCEDURE Input(int: IP.Interface; type: LONGINT; fip, lip: IP.Adr; buffer: Network.Buffer);
+PROCEDURE Input(int: IP.Interface; type: SIGNED32; fip, lip: IP.Adr; buffer: Network.Buffer);
 VAR
-	code: LONGINT;
+	code: SIGNED32;
 	receiver: Receiver;
 	checksumOk: BOOLEAN;
-	sum: LONGINT;
-	pseudoHdrLen: LONGINT;
+	sum: SIGNED32;
+	pseudoHdrLen: SIGNED32;
 	pseudoHdr: ARRAY MaxPseudoHdrLen OF CHAR; (* pseudo header for calculating checksum *)
-	reassembledLength: LONGINT;
+	reassembledLength: SIGNED32;
 	fragmentBuffer: Network.Buffer;
 
 BEGIN
@@ -175,12 +175,12 @@ END Input;
 
 (** Send an ICMP packet. The variables "type" and "code" must conatin the ICMP type and code information.
 	interface can be set to send the ICMP message on a specific interface otherwise it is automatically slected. *)
-PROCEDURE Send*(interface: IP.Interface; fip: IP.Adr; VAR data: ARRAY OF CHAR; ofs, len, type, code, TTL: LONGINT);
+PROCEDURE Send*(interface: IP.Interface; fip: IP.Adr; VAR data: ARRAY OF CHAR; ofs, len, type, code, TTL: SIGNED32);
 VAR
 	hdr: ARRAY ICMPHdrLen OF CHAR;
-	pseudoHdrLen: LONGINT;
+	pseudoHdrLen: SIGNED32;
 	pseudoHdr: ARRAY MaxPseudoHdrLen OF CHAR; (* pseudo header for calculating checksum *)
-	sum: LONGINT;
+	sum: SIGNED32;
 
 BEGIN
 	(* IF no interface was given choose one *)
@@ -213,12 +213,12 @@ END Send;
 
 (** Send an ICMP packet. The variables "type" and "code" must conatin the ICMP type and code information.
 	interface must be set. The ICMPv6 packet is directly send without cache lookups etc. *)
-PROCEDURE SendDirectly*(interface: IPv6.Interface; linkDst: Network.LinkAdr; fip: IP.Adr; VAR data: ARRAY OF CHAR; ofs, len, type, code, TTL: LONGINT);
+PROCEDURE SendDirectly*(interface: IPv6.Interface; linkDst: Network.LinkAdr; fip: IP.Adr; VAR data: ARRAY OF CHAR; ofs, len, type, code, TTL: SIGNED32);
 VAR
 	hdr: ARRAY ICMPHdrLen OF CHAR;
-	pseudoHdrLen: LONGINT;
+	pseudoHdrLen: SIGNED32;
 	pseudoHdr: ARRAY MaxPseudoHdrLen OF CHAR; (* pseudo header for calculating checksum *)
-	sum: LONGINT;
+	sum: SIGNED32;
 
 BEGIN
 	IF DEBUG THEN
@@ -246,7 +246,7 @@ END SendDirectly;
 
 
 (** Install a receiver for this type *)
-PROCEDURE InstallReceiver*(type: LONGINT; r: Receiver; VAR res: WORD);
+PROCEDURE InstallReceiver*(type: SIGNED32; r: Receiver; VAR res: INTEGER);
 BEGIN {EXCLUSIVE}
 	ASSERT(r # NIL);
 	ASSERT((type >=0) & (type <= 255));
@@ -260,7 +260,7 @@ END InstallReceiver;
 
 
 (** Remove the currently installed receiver for this type *)
-PROCEDURE RemoveReceiver*(type: LONGINT; VAR res: WORD);
+PROCEDURE RemoveReceiver*(type: SIGNED32; VAR res: INTEGER);
 BEGIN {EXCLUSIVE}
 	ASSERT((type >=0) & (type <= 255));
 	IF receivers[type] = NIL THEN
@@ -273,12 +273,12 @@ END RemoveReceiver;
 
 
 (** Standard receiver that replies echo requests *)
-PROCEDURE ReplyEcho*(int: IP.Interface; type, code: LONGINT; fip, lip: IP.Adr; buffer: Network.Buffer);
+PROCEDURE ReplyEcho*(int: IP.Interface; type, code: SIGNED32; fip, lip: IP.Adr; buffer: Network.Buffer);
 VAR
 	longData: POINTER TO ARRAY OF CHAR;
 	fragmentBuffer: Network.Buffer;
-	fragmentLen: LONGINT;
-	i: LONGINT;
+	fragmentLen: SIGNED32;
+	i: SIGNED32;
 
 BEGIN
 	Machine.AtomicInc(NICMPEchoRequest);
@@ -317,9 +317,9 @@ END ReplyEcho;
 
 
 (* Send a ICMP message *)
-PROCEDURE SendICMP* (type: LONGINT; fip: IP.Adr; buffer: Network.Buffer);
+PROCEDURE SendICMP* (type: SIGNED32; fip: IP.Adr; buffer: Network.Buffer);
 VAR
-	IPHdrLen: LONGINT; (* length of IP header to copy *)
+	IPHdrLen: SIGNED32; (* length of IP header to copy *)
 	icmpMsg: ARRAY 72 OF CHAR; (* unused (4) + MaxIPHdrLen (60) + UDPHdrLen (8) *)
 
 BEGIN {EXCLUSIVE}
@@ -342,8 +342,8 @@ END SendICMP;
 PROCEDURE SendNeighborAdvertisement*(interface: IPv6.Interface; linkDst: Network.LinkAdr; dstAdr: IP.Adr; solicited: BOOLEAN);
 VAR
 	nsData: ARRAY IPv6.NeighborHdrLen + IPv6.LLAdrOptionLen OF CHAR;
-	nsDataLen: LONGINT;
-	i: LONGINT;
+	nsDataLen: SIGNED32;
+	i: SIGNED32;
 	flagsSet: SET;
 
 BEGIN
@@ -362,7 +362,7 @@ BEGIN
 	(* override flag is true *)
 	flagsSet := flagsSet + {29};
 
-	Network.PutNet4(nsData, 0, SYSTEM.VAL(LONGINT, flagsSet));	(* flags & reserved *)
+	Network.PutNet4(nsData, 0, SYSTEM.VAL(SIGNED32, flagsSet));	(* flags & reserved *)
 
 	FOR i := 0 TO 3 DO		(* Target address 16 byte *)
 		Network.Put4(nsData, 4+(i*4), Network.Get4(interface.localAdr.ipv6Adr, i * 4));
@@ -393,9 +393,9 @@ END SendNeighborAdvertisement;
 PROCEDURE SendNeighborSolicitation*(interface: IPv6.Interface; linkDst: Network.LinkAdr; dstAdr: IP.Adr; multicast: BOOLEAN);
 VAR
 	nsData: ARRAY IPv6.NeighborHdrLen + IPv6.LLAdrOptionLen OF CHAR;
-	nsDataLen: LONGINT;
+	nsDataLen: SIGNED32;
 	solicitedNodeDstAdr: IP.Adr;
-	i: LONGINT;
+	i: SIGNED32;
 
 BEGIN
 	Network.Put4(nsData, 0, 0);	(* Reserved *)
@@ -435,8 +435,8 @@ END SendNeighborSolicitation;
 PROCEDURE SendRouterSolicitation(interface: IPv6.Interface);
 VAR
 	rsData: ARRAY IPv6.RouterSolHdrLen + IPv6.LLAdrOptionLen OF CHAR;
-	rsDataLen: LONGINT;
-	i: LONGINT;
+	rsDataLen: SIGNED32;
+	i: SIGNED32;
 
 BEGIN
 	Network.Put4(rsData, 0, 0); (* Reserved *)
@@ -457,12 +457,12 @@ END SendRouterSolicitation;
 PROCEDURE SendRouterAdvertisement(interface: IPv6.Interface; dstAdr: IP.Adr; dstLinkAdr: Network.LinkAdr; routerConfig: IPv6.RouterConfig);
 VAR
 	raData: POINTER TO ARRAY OF CHAR;
-	raDataLen: LONGINT;
-	nbrOfPrefixes: LONGINT;
+	raDataLen: SIGNED32;
+	nbrOfPrefixes: SIGNED32;
 	prefixConfigItem: IPv6.PrefixConfig;
 	flags: SET;
-	offset: LONGINT;
-	i: LONGINT;
+	offset: SIGNED32;
+	i: SIGNED32;
 
 BEGIN
 	(* Count number of prefix options *)
@@ -567,12 +567,12 @@ END SendRouterAdvertisement;
 
 
 (** Send a ICMPv6 time exceeded message *)
-PROCEDURE SendICMPv6TimeExceeded(interface: IPv6.Interface; discardedPacket: Network.Buffer; srcAdr: IP.Adr; code: LONGINT);
+PROCEDURE SendICMPv6TimeExceeded(interface: IPv6.Interface; discardedPacket: Network.Buffer; srcAdr: IP.Adr; code: SIGNED32);
 VAR
 	(* Max size of a ICMPv6 time exceeded packet including portion of discarded packet is 1280 *)
 	teData: ARRAY TimeExcHdrLen + 1280 - IPv6.MaxIPHdrLen - ICMPHdrLen OF CHAR;
-	teDataLen: LONGINT;
-	i: LONGINT;
+	teDataLen: SIGNED32;
+	i: SIGNED32;
 
 BEGIN
 	Network.Put4(teData, 0, 0); (* Unused *)
@@ -588,12 +588,12 @@ END SendICMPv6TimeExceeded;
 
 
 (** Send a ICMPv6 parameter problem message *)
-PROCEDURE SendICMPv6ParamProb(interface: IPv6.Interface; discardedPacket: Network.Buffer; srcAdr: IP.Adr; probPointer: LONGINT; code: LONGINT);
+PROCEDURE SendICMPv6ParamProb(interface: IPv6.Interface; discardedPacket: Network.Buffer; srcAdr: IP.Adr; probPointer: SIGNED32; code: SIGNED32);
 VAR
 	(* Max size of a ICMPv6 parameter problem packet including portion of discarded packet is 1280 *)
 	ppData: ARRAY ParamExcHdrLen + 1280 - IPv6.MaxIPHdrLen - ICMPHdrLen OF CHAR;
-	ppDataLen: LONGINT;
-	i: LONGINT;
+	ppDataLen: SIGNED32;
+	i: SIGNED32;
 
 BEGIN
 	Network.Put4(ppData, 0, probPointer);
@@ -608,7 +608,7 @@ BEGIN
 END SendICMPv6ParamProb;
 
 (* Receive a neighbor Soliciation message *)
-PROCEDURE ReceiveNeighborSolicitation (interface: IP.Interface; type, code: LONGINT; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
+PROCEDURE ReceiveNeighborSolicitation (interface: IP.Interface; type, code: SIGNED32; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
 VAR
 	ipv6Interface: IPv6.Interface;
 
@@ -628,7 +628,7 @@ END ReceiveNeighborSolicitation;
 
 
 (* Receive a neighbor Advertisement message *)
-PROCEDURE ReceiveNeighborAdvertisement (interface: IP.Interface; type, code: LONGINT; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
+PROCEDURE ReceiveNeighborAdvertisement (interface: IP.Interface; type, code: SIGNED32; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
 VAR
 	ipv6Interface: IPv6.Interface;
 
@@ -648,7 +648,7 @@ END ReceiveNeighborAdvertisement;
 
 
 (* Receive a router solicitation message *)
-PROCEDURE ReceiveRouterSolicitation(interface: IP.Interface; type, code: LONGINT; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
+PROCEDURE ReceiveRouterSolicitation(interface: IP.Interface; type, code: SIGNED32; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
 VAR
 	ipv6Interface: IPv6.Interface;
 
@@ -673,7 +673,7 @@ END ReceiveRouterSolicitation;
 
 
 (* Receive a router advertisement message *)
-PROCEDURE ReceiveRouterAdvertisement (interface: IP.Interface; type, code: LONGINT; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
+PROCEDURE ReceiveRouterAdvertisement (interface: IP.Interface; type, code: SIGNED32; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
 VAR
 	ipv6Interface: IPv6.Interface;
 
@@ -692,7 +692,7 @@ END ReceiveRouterAdvertisement;
 
 
 (* Receive a packet too big message *)
-PROCEDURE ReceivePacketTooBig (interface: IP.Interface; type, code: LONGINT; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
+PROCEDURE ReceivePacketTooBig (interface: IP.Interface; type, code: SIGNED32; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
 VAR
 	ipv6Interface: IPv6.Interface;
 
@@ -713,7 +713,7 @@ END ReceivePacketTooBig;
 (** Reads Source or Target Link-Layer address option. Buffer.ofs has to be set to the Type byte*)
 PROCEDURE LinkLayerAdrOption (VAR buffer: Network.Buffer; VAR linkAdr: Network.LinkAdr);
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 
 BEGIN
 	IF DEBUG THEN
@@ -738,13 +738,13 @@ PROCEDURE PrefixInfoOption(VAR buffer: Network.Buffer;
 							   VAR autonomous: BOOLEAN;
 							   VAR routerAddress: BOOLEAN;
 							   VAR sitePrefix: BOOLEAN;
-							   VAR validLifetime: LONGINT;
-							   VAR preferredLifetime: LONGINT;
-							   VAR sitePrefixLength: LONGINT;
+							   VAR validLifetime: SIGNED32;
+							   VAR preferredLifetime: SIGNED32;
+							   VAR sitePrefixLength: SIGNED32;
 							   VAR prefix: IP.Adr);
 VAR
 	flags: SET;
-	i: LONGINT;
+	i: SIGNED32;
 
 BEGIN
 	prefix.data := ORD(buffer.data[buffer.ofs + 2]);
@@ -779,7 +779,7 @@ END RedirectHdrOption;
 
 
 (* Reads ICMP MTU option *)
-PROCEDURE MTUOption(VAR buffer: Network.Buffer; VAR MTU: LONGINT);
+PROCEDURE MTUOption(VAR buffer: Network.Buffer; VAR MTU: SIGNED32);
 BEGIN
 	MTU := Network.GetNet4(buffer.data, buffer.ofs + 4);
 
@@ -814,7 +814,7 @@ END RouteInfoOption;
 
 PROCEDURE Cleanup;
 VAR
-	res: WORD;
+	res: INTEGER;
 
 BEGIN
 	IPv6.sendNeighborSolicitation := NIL;

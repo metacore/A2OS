@@ -273,26 +273,26 @@ CONST
 TYPE
 	Qh = POINTER {UNSAFE,UNTRACED} TO RECORD
 		horizontalLink: Qh;
-		epCapabilities: ARRAY 2 OF LONGINT;
+		epCapabilities: ARRAY 2 OF SIGNED32;
 		current, next, alternate: ADDRESS;
-		token: LONGINT;
-		buffers: ARRAY 5 OF LONGINT;
+		token: SIGNED32;
+		buffers: ARRAY 5 OF SIGNED32;
 		(** For 64bits datastructures *)
-		extBuffers: ARRAY 5 OF LONGINT;
+		extBuffers: ARRAY 5 OF SIGNED32;
 	END;
 
 	Qtd = POINTER {UNSAFE,UNTRACED} TO RECORD
 		next, alternateNext: ADDRESS;
-		token: LONGINT;
-		buffers: ARRAY 5 OF LONGINT;
+		token: SIGNED32;
+		buffers: ARRAY 5 OF SIGNED32;
 		(** For 64bits datastructures *)
-		extBuffers: ARRAY 5 OF LONGINT;
+		extBuffers: ARRAY 5 OF SIGNED32;
 	END;
 
 	Itd = POINTER {UNSAFE,UNTRACED} TO RECORD
 		next: ADDRESS;
-		transactions: ARRAY 8 OF LONGINT;
-		buffers: ARRAY 7 OF LONGINT;
+		transactions: ARRAY 8 OF SIGNED32;
+		buffers: ARRAY 7 OF SIGNED32;
 	END;
 
 	EnhancedHostController * = OBJECT (UsbHcdi.Hcd)
@@ -300,46 +300,46 @@ TYPE
 		(** Framelist array. Aligned on 4096, at max 4096 B long *)
 		framelist *: UsbHcdi.AlignedMemSpace;
 		(** Number of 4 B elements actually used in the framelist *)
-		framelistSize: LONGINT;
+		framelistSize: SIGNED32;
 		(** Lock for syncrhonizing framelist operations *)
 		framelistLock: Locks.Lock;
 		(** Offset for safe modification of the framelist. Do not modify the framelist less than 1 + framelistOfs of the HC current position. *)
-		framelistOfs: LONGINT;
+		framelistOfs: SIGNED32;
 
-		pwcr * : LONGINT; (* Port Wake Capability Register; Not implemented by device if pwcr = 0 *)
+		pwcr * : SIGNED32; (* Port Wake Capability Register; Not implemented by device if pwcr = 0 *)
 
 		(* Information from Host Controller Capability Registers *)
 		(* HCSPARAMS - Structural Parameters *)
-		capDebugPortNumber : LONGINT; 	(* 0: n/a, other: number of debug port (0-15)*)
+		capDebugPortNumber : SIGNED32; 	(* 0: n/a, other: number of debug port (0-15)*)
 		capPortIndicators : BOOLEAN; 		(* Do the ports support port indicator control? *)
-		capNbrOfCompanionHc : LONGINT; 	(* How many companion host controllers are present (0-15) *)
-		capPortsPerCompanion : LONGINT; 	(* Number of ports supported per companion host controller *)
+		capNbrOfCompanionHc : SIGNED32; 	(* How many companion host controllers are present (0-15) *)
+		capPortsPerCompanion : SIGNED32; 	(* Number of ports supported per companion host controller *)
 		capPortRoutingRules : BOOLEAN; 	(* Port routing rules *)
 		capPortPowerControl : BOOLEAN; 	(* Does the HC support Port Power Control? *)
-		capNbrOfPorts : LONGINT; 			(* Number of physical downstream ports implemented by this host controller *)
+		capNbrOfPorts : SIGNED32; 			(* Number of physical downstream ports implemented by this host controller *)
 		(* HCCPARAMS - Capability Parameters *)
-		capIsoSchedThreshold : LONGINT; 	(* Isochronous Schedule Threshold *)
+		capIsoSchedThreshold : SIGNED32; 	(* Isochronous Schedule Threshold *)
 		capAsynchSchedPark : BOOLEAN; 	(* Does the controller support the park feature for high-speed transfers? *)
 		capProgrammableFLG : BOOLEAN; 	(* FALSE: use default (1024); TRUE: Frame List size is programmable *)
 		cap64bit : BOOLEAN; 				(* 32 / 64 bit memory pointers in the data structures *)
 
 		(* EHCI Extended Capabilities Pointer. Used in relation with USB legacy support *)
-		eecp : LONGINT;
+		eecp : SIGNED32;
 
 		(* The size of control data structures is dependent on whether the HC uses 32bit or 64bit address pointers as indicated
 		by the cap64bit field *)
-		sizeQtd, alignQtd : LONGINT;
-		sizeQh, alignQh : LONGINT;
-		sizeItd, alignItd: LONGINT;
+		sizeQtd, alignQtd : SIGNED32;
+		sizeQh, alignQh : SIGNED32;
+		sizeItd, alignItd: SIGNED32;
 
 		(* HC Companion Port Route Descriptor, NIL of not available.
 		If the capPortRoutingRules is TRUE, the HC provides a description of which port is routed to
 		which companion HC.  *)
-		hcportroute : POINTER TO ARRAY OF LONGINT;
+		hcportroute : POINTER TO ARRAY OF SIGNED32;
 
 		(* queue heads *)
-		isochronousQh* : LONGINT;
-		interruptQh : POINTER TO ARRAY 11 OF LONGINT;
+		isochronousQh* : SIGNED32;
+		interruptQh : POINTER TO ARRAY 11 OF SIGNED32;
 
 		(* this array will provide the 16byte aligned TD's for controlTD, bulkTD, isochronousTD and interruptTD[] *)
 		qhlist : UsbHcdi.AlignedMemSpace;
@@ -356,7 +356,7 @@ TYPE
 		handler: Handler;
 
 		(** Enable power for the specified port *)
-		PROCEDURE EnablePortPower*(port : LONGINT);
+		PROCEDURE EnablePortPower*(port : SIGNED32);
 		VAR status : SET;
 		BEGIN
 			status := SYSTEM.VAL(SET, SYSTEM.GET32(ports[port]));
@@ -364,7 +364,7 @@ TYPE
 		END EnablePortPower;
 
 		(** Disable power for the specified port *)
-		PROCEDURE DisablePortPower*(port : LONGINT);
+		PROCEDURE DisablePortPower*(port : SIGNED32);
 		VAR status : SET;
 		BEGIN
 			status := SYSTEM.VAL(SET, SYSTEM.GET32(ports[port]));
@@ -374,7 +374,7 @@ TYPE
 		(** Enable the specified port.
 		 	The EHCI host controllers do not explicitly support a port enable command. The port will be automatically enabled
 		 	by the host controller after a port reset, if a high-speed capable device is attached to it *)
-		PROCEDURE ResetAndEnablePort*(port : LONGINT) : BOOLEAN;
+		PROCEDURE ResetAndEnablePort*(port : SIGNED32) : BOOLEAN;
 		VAR status : SET; mtimer : Kernel.MilliTimer;
 		BEGIN
 			status := SYSTEM.VAL(SET, SYSTEM.GET32(ports[port]));
@@ -391,7 +391,7 @@ TYPE
 		END ResetAndEnablePort;
 
 		(** Disable the specified port. *)
-		PROCEDURE DisablePort*(port : LONGINT);
+		PROCEDURE DisablePort*(port : SIGNED32);
 		VAR status : SET;
 		BEGIN
 			status := SYSTEM.VAL(SET, SYSTEM.GET32(ports[port]));
@@ -400,7 +400,7 @@ TYPE
 		END DisablePort;
 
 		(** Suspend the specified port (selective suspend). *)
-		PROCEDURE SuspendPort*(port : LONGINT) : BOOLEAN;
+		PROCEDURE SuspendPort*(port : SIGNED32) : BOOLEAN;
 		VAR status : SET;
 		BEGIN
 			status := SYSTEM.VAL(SET, SYSTEM.GET32(ports[port]));
@@ -413,7 +413,7 @@ TYPE
 		END SuspendPort;
 
 		(** Resume a selectively suspended port. *)
-		PROCEDURE ResumePort*(port : LONGINT) : BOOLEAN;
+		PROCEDURE ResumePort*(port : SIGNED32) : BOOLEAN;
 		VAR status : SET; timer : Kernel.Timer;
 		BEGIN
 			status := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcUsbCmd));
@@ -437,7 +437,7 @@ TYPE
 
 		(** Suspend all ports and then stop the host controller. *)
 		PROCEDURE Suspend*;
-		VAR dword : SET; i : LONGINT; ignore : BOOLEAN;
+		VAR dword : SET; i : SIGNED32; ignore : BOOLEAN;
 		BEGIN
 			(* Suspend all individual ports *)
 			FOR i := 0 TO portCount - 1 DO ignore := SuspendPort(i); END;
@@ -449,7 +449,7 @@ TYPE
 
 		(** Restart the host controller and selectively resume all suspended ports.  *)
 		PROCEDURE Resume*() : BOOLEAN;
-		VAR dword : SET; i : LONGINT; res : BOOLEAN;
+		VAR dword : SET; i : SIGNED32; res : BOOLEAN;
 		BEGIN
 			(* Re-start the HC *)
 			dword := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcUsbCmd));
@@ -471,7 +471,7 @@ TYPE
 		 * @param port Port to get the status of
 		 * @return Port status
 		 *)
-		PROCEDURE GetPortStatus*(port : LONGINT; ack : BOOLEAN) : SET;
+		PROCEDURE GetPortStatus*(port : SIGNED32; ack : BOOLEAN) : SET;
 		VAR status, s : SET;
 		BEGIN
 			s := SYSTEM.VAL(SET, SYSTEM.GET32(ports[port]));
@@ -510,7 +510,7 @@ TYPE
 		END HasCompanion;
 
 		(** Route the specified port to a companion host controller if supported. *)
-		PROCEDURE RoutePortToCompanion*(port : LONGINT);
+		PROCEDURE RoutePortToCompanion*(port : SIGNED32);
 		VAR dword : SET;
 		BEGIN
 			(* Assert ports are not globally routed to companion controllers *)
@@ -520,7 +520,7 @@ TYPE
 		END RoutePortToCompanion;
 
 		(** Indicate a port state using the port indicators *)
-		PROCEDURE IndicatePort*(port, indicate : LONGINT);
+		PROCEDURE IndicatePort*(port, indicate : SIGNED32);
 		VAR indicators, dword : SET;
 		BEGIN
 			IF indicate = UsbHcdi.Amber THEN indicators := {14};
@@ -534,9 +534,9 @@ TYPE
 
 		(**	Return the current frame number.
 		 	The micro-frame number is incremented each micro-frame, i.e. per 125us. There are 8 micro-frames per frame *)
-		PROCEDURE GetFrameNumber*() : INTEGER;
+		PROCEDURE GetFrameNumber*() : SIGNED16;
 		BEGIN
-			RETURN SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, LSH(SYSTEM.GET32(iobase + HcFrIndex), -3)) * {0..10});
+			RETURN SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, LSH(SYSTEM.GET32(iobase + HcFrIndex), -3)) * {0..10});
 		END GetFrameNumber;
 
 		(*
@@ -553,7 +553,7 @@ TYPE
 		VAR
 			qh: Qh;
 			dword: SET;
-			nakRL, multi, mmask: LONGINT;
+			nakRL, multi, mmask: SIGNED32;
 		BEGIN
 			ASSERT(pipe.maxPacketSize <= 1024); (* Maximum allowed packet size *)
 
@@ -592,7 +592,7 @@ TYPE
 			END;
 			dword := dword + LSH(SYSTEM.VAL(SET, pipe.endpoint), 8) * QhEndpointNbr;
 			dword := dword + SYSTEM.VAL(SET, pipe.address) * QhDeviceAddress;
-			qh.epCapabilities[0] := SYSTEM.VAL(LONGINT, dword);
+			qh.epCapabilities[0] := SYSTEM.VAL(SIGNED32, dword);
 
 			(* Queue Head Endpoint Capabilities 2 *)
 			multi := 1; (* TODO: How many transactions per frame for high-speed isochronous and interrupts transfer are allowed? *)
@@ -613,13 +613,13 @@ TYPE
 			IF (pipe.type = UsbHcdi.PipeInterrupt) OR (pipe.type = UsbHcdi.PipeIsochronous) THEN
 				dword := dword + SYSTEM.VAL(SET, mmask)  * QhSMask;
 			END;
-			qh.epCapabilities[1] := SYSTEM.VAL(LONGINT, dword);
+			qh.epCapabilities[1] := SYSTEM.VAL(SIGNED32, dword);
 
 			qh.current := 0;
 
 			(* Zero-out the queue head transfer overlay *)
-			qh.next := SYSTEM.VAL(LONGINT, QhTerminate);
-			qh.alternate := SYSTEM.VAL(LONGINT, QhTerminate);
+			qh.next := SYSTEM.VAL(SIGNED32, QhTerminate);
+			qh.alternate := SYSTEM.VAL(SIGNED32, QhTerminate);
 			qh.token := 0;
 
 			qh.buffers[0] := 0;
@@ -640,7 +640,7 @@ TYPE
 		PROCEDURE InsertQH (pipe : UsbHcdi.Pipe) (*: BOOLEAN*);
 		VAR
 			new, curr: Qh;
-			adr, asyncListAddr, queue: LONGINT;
+			adr, asyncListAddr, queue: SIGNED32;
 			dword: SET;
 		BEGIN (*{EXCLUSIVE}*) (* Call from exclusive sections only *)
 			ASSERT(state = UsbHcdi.Initialized);
@@ -670,7 +670,7 @@ TYPE
 					new.horizontalLink := QhHorizontalLink(new, QhTypQh, FALSE);
 					(* If the asynchronous schedule is enabled, exactly one queue head MUST have the H-bit set. *)
 					dword := SYSTEM.VAL(SET, new.epCapabilities[0]) + QhHeadOfReclamation;
-					new.epCapabilities[0] := SYSTEM.VAL(LONGINT, dword);
+					new.epCapabilities[0] := SYSTEM.VAL(SIGNED32, dword);
 					(*Machine.FlushDCacheRange(new, sizeQh);*)
 					(*ShowQueueHead(new, 0, cap64bit);*)
 
@@ -692,8 +692,8 @@ TYPE
 				new := pipe.descriptors[0];
 				new.horizontalLink := curr.horizontalLink;
 				(*SYSTEM.PUT32(pipe.qh + QhHorizontalLinkPointer, adr);*)
-				curr.horizontalLink := SYSTEM.VAL(ADDRESS, new) + SYSTEM.VAL(LONGINT, {1} - {2});
-				(*SYSTEM.PUT32(pipe.queue + QhHorizontalLinkPointer, pipe.qh + SYSTEM.VAL(LONGINT, {1} - {2}));*)
+				curr.horizontalLink := SYSTEM.VAL(ADDRESS, new) + SYSTEM.VAL(SIGNED32, {1} - {2});
+				(*SYSTEM.PUT32(pipe.queue + QhHorizontalLinkPointer, pipe.qh + SYSTEM.VAL(SIGNED32, {1} - {2}));*)
 				(*Machine.FlushDCacheRange(SYSTEM.VAL(ADDRESS, new), sizeQh);
 				Machine.FlushDCacheRange(pipe.queue, sizeQh);*)
 				(* Enable the periodic list if necessary *)
@@ -746,7 +746,7 @@ TYPE
 		 *)
 		 PROCEDURE RemoveAsyncQH(pipe : UsbHcdi.Pipe);
 		 VAR
-		 	(*start, cur, prev  : LONGINT; dword : SET;*)
+		 	(*start, cur, prev  : SIGNED32; dword : SET;*)
 		 	start, curr, prev: Qh;
 		 	dword: SET;
 		 BEGIN (* Caller must hold obj lock *)
@@ -755,11 +755,11 @@ TYPE
 			(*Machine.InvalidateDCacheRange(SYSTEM.VAL(ADDRESS, prev), sizeQh);*)
 			prev := prev.horizontalLink;
 			ASSERT((SYSTEM.VAL(SET, prev) * {1} # {}) & (SYSTEM.VAL(SET, prev) * QhTerminate = {})); (* Pointer references queue head *)
-			prev := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, prev) * {5..31});
+			prev := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, prev) * {5..31});
 			(*Machine.InvalidateDCacheRange(prev, sizeQh);*)
 			curr := prev.horizontalLink;
 			ASSERT((SYSTEM.VAL(SET, curr) * {1} # {}) & (SYSTEM.VAL(SET, curr) * QhTerminate  =  {})); (* Pointer references queue head *)
-			curr := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, curr) * {5..31});
+			curr := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, curr) * {5..31});
 			(*Machine.InvalidateDCacheRange(curr, sizeQh);*)
 
 			(* prev is the address of the queue head that points to the queue head with the address cur *)
@@ -787,7 +787,7 @@ TYPE
 					ASSERT(dword * {1} # {}); (* Pointer references queue head *)
 					ASSERT(dword * {2..4} = {}); (* qTD pointers must be 32byte aligned *)
 					prev := curr;
-					curr := SYSTEM.VAL(LONGINT, dword * {5..31});
+					curr := SYSTEM.VAL(SIGNED32, dword * {5..31});
 					IF curr = pipe.descriptors[0] THEN (* QH found *) EXIT; END;
 					IF curr = start THEN (* list completely searched but QH not found *) EXIT; END;
 					(*Machine.InvalidateDCacheRange(curr, sizeQh);*)
@@ -798,7 +798,7 @@ TYPE
 					IF SYSTEM.VAL(SET, curr.epCapabilities[0]) * QhHeadOfReclamation # {} THEN
 						IF Debug.Trace & Debug.traceQueuing THEN Show("Electing new head of reclamation."); KernelLog.Ln; END;
 						dword := SYSTEM.VAL(SET, prev.epCapabilities[0]);
-						prev.epCapabilities[0] := SYSTEM.VAL(LONGINT, dword + QhHeadOfReclamation);
+						prev.epCapabilities[0] := SYSTEM.VAL(SIGNED32, dword + QhHeadOfReclamation);
 					END;
 					(* Remove QH from asynchronous list and inforam host controller *)
 					prev.horizontalLink := curr.horizontalLink;
@@ -865,7 +865,7 @@ TYPE
 					IF Debug.Level >= Debug.Warnings THEN KernelLog.String("UsbEhci: Could not delete interrupt QH -> QH not found."); KernelLog.Ln; END;
 					EXIT;
 				ELSE
-					cur := SYSTEM.VAL(LONGINT, next * {5..31});
+					cur := SYSTEM.VAL(SIGNED32, next * {5..31});
 				END;
 			END;
 			IF Debug.Trace & Debug.traceQueuing THEN Show("Removed QH at "); KernelLog.Hex(pipe.descriptors[0], 8); KernelLog.Ln; END;
@@ -930,7 +930,7 @@ TYPE
 		(** Remove all transfer descriptors from the pipe's queue head *)
 		PROCEDURE UnlinkTDs (transfer: UsbHcdi.TransferToken);
 		VAR
-			i, len: LONGINT;
+			i, len: SIGNED32;
 			dword: SET;
 			timer: Kernel.Timer;
 			prev, qtd: Qtd;
@@ -965,8 +965,8 @@ TYPE
 				INC(i)
 			END;
 
-			qh.next := SYSTEM.VAL(LONGINT, QhTerminate);
-			qh.alternate := SYSTEM.VAL(LONGINT, QhTerminate);
+			qh.next := SYSTEM.VAL(SIGNED32, QhTerminate);
+			qh.alternate := SYSTEM.VAL(SIGNED32, QhTerminate);
 			IF transfer.len > 0 THEN
 				Machine.InvalidateDCacheRange(transfer.buffer, transfer.len)
 			END;
@@ -975,7 +975,7 @@ TYPE
 		(* Remove ITDs from framelist and free them *)
 		PROCEDURE UnlinkIso (transfer: UsbHcdi.TransferToken);
 		VAR
-			i, count: LONGINT;
+			i, count: SIGNED32;
 			hcFrame: ADDRESS;
 			itd: Itd;
 		BEGIN
@@ -1022,8 +1022,8 @@ TYPE
 			IF dword * TdHalted # {} THEN
 				qh.current := 0;
 				(* Zero-out the queue head transfer overlay *)
-				qh.next := SYSTEM.VAL(LONGINT, QhTerminate);
-				qh.alternate := SYSTEM.VAL(LONGINT, QhTerminate);
+				qh.next := SYSTEM.VAL(SIGNED32, QhTerminate);
+				qh.alternate := SYSTEM.VAL(SIGNED32, QhTerminate);
 				qh.token := 0;
 				qh.buffers[0] := 0;
 				qh.buffers[1] := 0;
@@ -1074,7 +1074,7 @@ TYPE
 		 * Checks that a periodic pipe policy is allowed for this HCD. Returns FALSE if the policy
 		 * requires too much bandwidth, TRUE if the policy is schedulable.
 		 *)
-		PROCEDURE CheckPipePolicy * (interval, size: LONGINT): BOOLEAN;
+		PROCEDURE CheckPipePolicy * (interval, size: SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN TRUE
 		END CheckPipePolicy;
@@ -1149,12 +1149,12 @@ TYPE
 		 * @param bufferlen Number of bytes transmitted/received in the data stage
 		 * @param buffer Buffer where to get/put the specified number of bytes
 		 *)
-		PROCEDURE ScheduleControl*(pipe : UsbHcdi.Pipe; direction : LONGINT; msg : UsbHcdi.ControlMessage;  bufferLen : LONGINT; VAR buffer : Usbdi.Buffer);
+		PROCEDURE ScheduleControl*(pipe : UsbHcdi.Pipe; direction : SIGNED32; msg : UsbHcdi.ControlMessage;  bufferLen : SIGNED32; VAR buffer : Usbdi.Buffer);
 		VAR
 			qtd : Machine.Address32;
 			dword : SET;
 			ranges : ARRAY ScatterGatherListSize OF Machine.Range;
-			numRanges : LONGINT;
+			numRanges : SIGNED32;
 		BEGIN
 			(*Machine.FlushDCacheRange(ADDRESSOF(buffer[0]), bufferLen);*)
 			(* pipe.tdBase = pipe.descriptors[0] + 32 in UsbHcdi *)
@@ -1267,7 +1267,7 @@ TYPE
 			pipe.lastTD := qtd;
 		END ScheduleControl;
 
-		PROCEDURE Schedule*(pipe : UsbHcdi.Pipe; bufferLen, offset: LONGINT; VAR buffer: Usbdi.Buffer);
+		PROCEDURE Schedule*(pipe : UsbHcdi.Pipe; bufferLen, offset: SIGNED32; VAR buffer: Usbdi.Buffer);
 		VAR dword : SET;
 		BEGIN
 			Machine.FlushDCacheRange(ADDRESSOF(buffer[offset]), bufferLen);
@@ -1300,7 +1300,7 @@ TYPE
 			first, last: Qtd;
 			curr: Qtd;
 			dword: SET;
-			i, count: LONGINT;
+			i, count: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			(*transfer.pipe.transferLock.Acquire;*)
 			IF transfer.len > 0 THEN
@@ -1318,10 +1318,10 @@ TYPE
 			END;
 
 			(* last is the end of the new qTD list: mark its next link as invalid *)
-			last.next := SYSTEM.VAL(LONGINT, QtdTerminate);
+			last.next := SYSTEM.VAL(SIGNED32, QtdTerminate);
 			IF transfer.pipe.ioc THEN
 				dword := SYSTEM.VAL(SET, last.token) + QtdIoc;
-				last.token := SYSTEM.VAL(LONGINT, dword)
+				last.token := SYSTEM.VAL(SIGNED32, dword)
 			END;
 			(*Machine.FlushDCacheRange(last, sizeQtd);*)
 
@@ -1381,12 +1381,12 @@ TYPE
 		END ScheduleAperiodic;
 
 		(** Create TDs for a control pipe request *)
-		PROCEDURE CreateControlTDs (pipe: UsbHcdi.Pipe; direction: LONGINT; msg: UsbHcdi.ControlMessage; buffer: (*ARRAY OF CHAR*) ADDRESS; len: LONGINT;VAR firstTD, lastTD: Qtd; VAR tdCount: LONGINT);
+		PROCEDURE CreateControlTDs (pipe: UsbHcdi.Pipe; direction: SIGNED32; msg: UsbHcdi.ControlMessage; buffer: (*ARRAY OF CHAR*) ADDRESS; len: SIGNED32;VAR firstTD, lastTD: Qtd; VAR tdCount: SIGNED32);
 		VAR
 			curr, next, last: Qtd;
 			dword: SET;
 			ranges: POINTER TO ARRAY OF Machine.Range;
-			count, i, numRanges: LONGINT;
+			count, i, numRanges: SIGNED32;
 		BEGIN
 			IF (pipe.speed = UsbHcdi.LowSpeed) OR (pipe.speed = UsbHcdi.FullSpeed) THEN
 				IF pipe.maxRetries = 0 THEN
@@ -1400,12 +1400,12 @@ TYPE
 			curr := firstTD;
 			AssertAlignment(curr, alignQtd);
 
-			curr.alternateNext := SYSTEM.VAL(LONGINT, QtdTerminate); (* Mark Alternate Next qTD Pointer as invalid *)
+			curr.alternateNext := SYSTEM.VAL(SIGNED32, QtdTerminate); (* Mark Alternate Next qTD Pointer as invalid *)
 
 			dword := LSH(SYSTEM.VAL(SET, pipe.maxRetries), 10) * QtdErrorCounter; (* DataToggle = FALSE; Current Page = 0; no IOC *)
 			dword := dword + LSH(SYSTEM.VAL(SET, 8), 16) * QtdBytesToTransfer; (* 8byte control message *)
 			dword := dword + LSH(SYSTEM.VAL(SET, PidSetup), 8) * QtdPidCode + TdActive;
-			curr.token := SYSTEM.VAL(LONGINT, dword);
+			curr.token := SYSTEM.VAL(SIGNED32, dword);
 
 			i := (LEN(msg) DIV PageSize) + 1;
 			REPEAT
@@ -1461,8 +1461,8 @@ TYPE
 			AssertAlignment(curr, alignQtd);
 
 			(* stage 3: status: build status TD *)
-			curr.next := SYSTEM.VAL(LONGINT, QtdTerminate);
-			curr.alternateNext := SYSTEM.VAL(LONGINT, QtdTerminate);
+			curr.next := SYSTEM.VAL(SIGNED32, QtdTerminate);
+			curr.alternateNext := SYSTEM.VAL(SIGNED32, QtdTerminate);
 
 			dword := QtdDataToggle + TdActive; (* dataToggle always TRUE and set ind TD in status stage; CC = not accessed *)
 
@@ -1477,7 +1477,7 @@ TYPE
 			END;
 			dword := dword + LSH(SYSTEM.VAL(SET, pipe.maxRetries), 10) * QtdErrorCounter;
 			IF pipe.ioc THEN dword := dword + QtdIoc; END; (* Set interrupt on completion bit *)
-			curr.token := SYSTEM.VAL(LONGINT, dword);
+			curr.token := SYSTEM.VAL(SIGNED32, dword);
 
 			curr.buffers[0] := 0;
 			curr.buffers[1] := 0;
@@ -1500,16 +1500,16 @@ TYPE
 		END CreateControlTDs;
 
 		(** Create qTD list *)
-		PROCEDURE CreateQTDList (pipe: UsbHcdi.Pipe; direction, len: LONGINT; buffer: ADDRESS; VAR firstTD, lastTD: Qtd; VAR tdCount: LONGINT; tdToggle: BOOLEAN);
+		PROCEDURE CreateQTDList (pipe: UsbHcdi.Pipe; direction, len: SIGNED32; buffer: ADDRESS; VAR firstTD, lastTD: Qtd; VAR tdCount: SIGNED32; tdToggle: BOOLEAN);
 		VAR
 			prev, qtd: Qtd;
-			restlen, curlen, temp: LONGINT;
-			i, j: LONGINT;
+			restlen, curlen, temp: SIGNED32;
+			i, j: SIGNED32;
 			dword: SET;
-			numRanges, idx, offset: LONGINT;
+			numRanges, idx, offset: SIGNED32;
 			sgList: POINTER TO ARRAY OF Machine.Range;
 			buf: ADDRESS;
-			t: HUGEINT;
+			t: SIGNED64;
 		BEGIN
 			ASSERT((pipe.maxRetries >= 0) & (pipe.maxRetries <= 3));
 
@@ -1548,7 +1548,7 @@ TYPE
 				(* physically non-contiguous. The HC detects crossings of page boundaries and increments the current buffer pointer. 	*)
 				qtd.buffers[0] := buf;
 
-				curlen := PageSize - LONGINT(buf MOD PageSize);
+				curlen := PageSize - SIGNED32(buf MOD PageSize);
 				(*TRACE(curlen);*)
 				IF curlen > restlen THEN (* No other buffer pointers needed, fits into the first page *)
 					curlen := restlen;
@@ -1610,7 +1610,7 @@ TYPE
 					qtd.extBuffers[4] := 0;
 				END;
 
-				qtd.alternateNext := SYSTEM.VAL(LONGINT, QtdTerminate); (* Mark Alternate Next qTD Pointer as invalid *)
+				qtd.alternateNext := SYSTEM.VAL(SIGNED32, QtdTerminate); (* Mark Alternate Next qTD Pointer as invalid *)
 
 				(*TRACE(curlen);*)
 				ASSERT(curlen <= 5000H); (* Maximum allowed value for a single qTD: 5*4KB *)
@@ -1640,7 +1640,7 @@ TYPE
 				END;
 				(*TRACE(dword);*)
 
-				qtd.token := SYSTEM.VAL(LONGINT, dword);
+				qtd.token := SYSTEM.VAL(SIGNED32, dword);
 				(*TRACE(SYSTEM.VAL(SET, qtd.token));*)
 				(*Machine.FlushDCacheRange(qtd, sizeQtd);*)
 				prev := qtd;
@@ -1656,8 +1656,8 @@ TYPE
 			itds: ARRAY UsbHcdi.MaxTDs OF ADDRESS;
 			first, last, itd: Itd;
 			adr, currBuf, currOfs, currRange, currTrans, i, itdTxSize, j,
-			numFrames, numRanges, remLen, transSize: LONGINT;
-			fridx, interval, frame: LONGINT;
+			numFrames, numRanges, remLen, transSize: SIGNED32;
+			fridx, interval, frame: SIGNED32;
 			firstEntry: ADDRESS;
 			dword: SET;
 		BEGIN
@@ -1692,7 +1692,7 @@ TYPE
 				currBuf := 0;
 				currTrans := 0;
 
-				itd.buffers[currBuf] := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, adr) * ItdBufferPtr);
+				itd.buffers[currBuf] := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, adr) * ItdBufferPtr);
 
 				(* iTD transactions *)
 				WHILE (remLen > 0) & (currTrans < 8) DO
@@ -1708,7 +1708,7 @@ TYPE
 							adr := sgList[currRange].adr - sgList[currRange].adr MOD 4096
 						END;
 						dword := SYSTEM.VAL(SET, adr) * ItdBufferPtr;
-						itd.buffers[currBuf] := SYSTEM.VAL(LONGINT, dword)
+						itd.buffers[currBuf] := SYSTEM.VAL(SIGNED32, dword)
 					END;
 
 					(* Compute transaction size and evaluate need for IOC *)
@@ -1722,7 +1722,7 @@ TYPE
 
 					(* Write transaction *)
 					dword := dword + ItdActive + SYSTEM.VAL(SET, LSH(transSize, 16)) + SYSTEM.VAL(SET, LSH(currBuf, 12)) * {12 .. 14} + SYSTEM.VAL(SET, currOfs) * {0 .. 11};
-					itd.transactions[currTrans] := SYSTEM.VAL(LONGINT, dword);
+					itd.transactions[currTrans] := SYSTEM.VAL(SIGNED32, dword);
 
 					INC(itdTxSize, transSize);
 					DEC(remLen, transSize);
@@ -1751,25 +1751,25 @@ TYPE
 					END;
 					IF currBuf < 7 THEN
 						dword := SYSTEM.VAL(SET, adr) * ItdBufferPtr;
-						itd.buffers[currBuf] := SYSTEM.VAL(LONGINT, dword);
+						itd.buffers[currBuf] := SYSTEM.VAL(SIGNED32, dword);
 					END
 				END;
 
 				(* Next Link *)
 				dword := {0};
-				itd.next := 1(*SYSTEM.VAL(LONGINT, dword)*);
+				itd.next := 1(*SYSTEM.VAL(SIGNED32, dword)*);
 
 				(* iTD endpoint parameters *)
 				dword := SYSTEM.VAL(SET, itd.buffers[0]);
 				dword := dword * ItdBufferPtr + SYSTEM.VAL(SET, LSH(transfer.pipe.endpoint, 8)) * {8 .. 11} + SYSTEM.VAL(SET, transfer.pipe.address) * {0 .. 6};
-				itd.buffers[0] := SYSTEM.VAL(LONGINT, dword);
+				itd.buffers[0] := SYSTEM.VAL(SIGNED32, dword);
 				dword := SYSTEM.VAL(SET, itd.buffers[1]);
 				dword := dword * ItdBufferPtr + SYSTEM.VAL(SET, transfer.pipe.maxPacketSize) * {0 .. 10};
 				IF transfer.pipe.direction = UsbHcdi.In THEN INCL(dword, 11) END;
-				itd.buffers[1] := SYSTEM.VAL(LONGINT, dword);
+				itd.buffers[1] := SYSTEM.VAL(SIGNED32, dword);
 				dword := SYSTEM.VAL(SET, itd.buffers[2]);
 				dword := dword * ItdBufferPtr + SYSTEM.VAL(SET, transfer.pipe.mult) * {0 .. 1};
-				itd.buffers[2] := SYSTEM.VAL(LONGINT, dword);
+				itd.buffers[2] := SYSTEM.VAL(SIGNED32, dword);
 
 				(*Machine.FlushDCacheRange(itd, sizeItd);*)
 				(*ShowItd(itd, 0);
@@ -1859,7 +1859,7 @@ TYPE
 		VAR
 			itd: Itd;
 			qh: Qh;
-			frame, fridx: LONGINT;
+			frame, fridx: SIGNED32;
 		BEGIN
 			(*itd := transfer.pipe.descriptors[1];*)
 			qh := transfer.pipe.descriptors[0];
@@ -1935,8 +1935,8 @@ TYPE
 			after, before, qtd: Qtd;
 			transfer: UsbHcdi.TransferToken;
 			s, errors: SET;
-			i, restLen, len: LONGINT;
-			loop: LONGINT;
+			i, restLen, len: SIGNED32;
+			loop: SIGNED32;
 			active: BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			FlushPCI;
@@ -1953,7 +1953,7 @@ TYPE
 				Disabling scheduling here leads to problems: some of the transfers does not get finished!
 			*)
 			(*REPEAT UNTIL (SYSTEM.VAL(SET, qh.token) * TdActive = {}) OR (SYSTEM.GET32(iobase + HcAsyncListAddr) # qh);*)
-			(*qh.token := SYSTEM.VAL(LONGINT, s - TdActive);*)
+			(*qh.token := SYSTEM.VAL(SIGNED32, s - TdActive);*)
 
 			(*ASSERT(pipe.transferLock # NIL);*)
 			(*pipe.transferLock.Acquire;*)
@@ -1993,7 +1993,7 @@ TYPE
 								error reported, this is a short packet condition, which can be okay. *)
 
 								(* len bytes should have been transfered for this TD *)
-								len := SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, qtd.token) * QtdBytesToTransfer, -16));
+								len := SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, qtd.token) * QtdBytesToTransfer, -16));
 
 								IF (len # 0) THEN (* Short packet *)
 									restLen := restLen + len;
@@ -2047,7 +2047,7 @@ TYPE
 			qh: Qh;
 			transfer: UsbHcdi.TransferToken;
 			s, errors: SET;
-			restLen, len: LONGINT;
+			restLen, len: SIGNED32;
 			active, error: BOOLEAN;
 		BEGIN
 			FlushPCI;
@@ -2083,7 +2083,7 @@ TYPE
 				error reported, this is a short packet condition, which can be okay. *)
 
 				(* len bytes should have been transfered for this TD *)
-				len := SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, qh.token) * QtdBytesToTransfer, -16));
+				len := SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, qh.token) * QtdBytesToTransfer, -16));
 
 				IF (len # 0) THEN (* Short packet *)
 					restLen := restLen + len;
@@ -2116,7 +2116,7 @@ TYPE
 			transfer: UsbHcdi.TransferToken;
 			itd: Itd;
 			dword, errors: SET;
-			len, tx, totalItd, activeItd: LONGINT;
+			len, tx, totalItd, activeItd: SIGNED32;
 			active: BOOLEAN;
 		BEGIN
 			(*ShowFramelist(ADDRESSOF(framelist.data[framelist.base]), framelistSize, LSH(SYSTEM.GET32(iobase + HcFrIndex), -3) MOD framelistSize, TRUE);*)
@@ -2146,7 +2146,7 @@ TYPE
 							IF ItdActive * dword = {} THEN
 								(* Transaction finished, examine *)
 								errors := errors + dword * ItdTransactionStatus;
-								INC(len, LSH(SYSTEM.VAL(LONGINT, dword * ItdTransactionLength), -16));
+								INC(len, LSH(SYSTEM.VAL(SIGNED32, dword * ItdTransactionLength), -16));
 							ELSE
 								active := TRUE;
 							END
@@ -2198,7 +2198,7 @@ TYPE
 		(* Reset the host controller. Note: This will NOT assert reset on the USB downstream ports. *)
 		PROCEDURE HardwareReset * () : BOOLEAN;
 		CONST MaxWaits = 1000; (* Timeout in milliseconds the HC must have completed the reset command *)
-		VAR dword : SET; i : LONGINT;
+		VAR dword : SET; i : SIGNED32;
 		BEGIN
 			(* Host software mustn't reset the host controller when it's running. Stop it and ... *)
 			dword := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcUsbCmd));
@@ -2237,7 +2237,7 @@ TYPE
 
 		(* Initialization of the data structures of the Host Controller Communication Area *)
 		PROCEDURE InitFrameList(): BOOLEAN;
-		VAR fstn, i, k, j, shift : LONGINT;
+		VAR fstn, i, k, j, shift : SIGNED32;
 		BEGIN
 			(* Host controller interface data structures should not cross page-boundaries... 32 byte alignment.
 			These queue heads are used as skeleton and never contain any qTDs. *)
@@ -2315,7 +2315,7 @@ TYPE
 					IF (SYSTEM.VAL(SET, j) * {0}) = {} THEN EXIT; END;
 					INC(k); j := j DIV 2;
 				END;
-				framelist.data[framelist.base + i] := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, interruptQh[k]) + {1});
+				framelist.data[framelist.base + i] := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, interruptQh[k]) + {1});
 				(*Machine.FlushDCacheRange(ADDRESSOF(framelist.data[framelist.base]), 4096);*)
 			END;
 			RETURN TRUE;
@@ -2326,12 +2326,12 @@ TYPE
 		 * @param int Interrupt Line
 		 * @return TRUE if initialization succeeded, FALSE otherwise
 		 *)
-		PROCEDURE Init * (iobase , irq  :  LONGINT) : BOOLEAN;
+		PROCEDURE Init * (iobase , irq  :  SIGNED32) : BOOLEAN;
 		VAR
-			reg  : LONGINT;
-			dword : SET; qword : HUGEINT;
+			reg  : SIGNED32;
+			dword : SET; qword : SIGNED64;
 			ignore : BOOLEAN;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			IF Debug.Trace & Debug.traceInit THEN KernelLog.String("UsbEhci: Starting host controller initialization..."); KernelLog.Ln; END;
 			SELF.iobase := iobase; SELF.irq := irq;
@@ -2347,22 +2347,22 @@ TYPE
 
 			(* Get and parse the HC structural parameters register (HCSPARAM) *)
 			dword := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcCapSparams));
-			capDebugPortNumber := SYSTEM.VAL(LONGINT, LSH(dword * {20..31}, -20));
+			capDebugPortNumber := SYSTEM.VAL(SIGNED32, LSH(dword * {20..31}, -20));
 			IF dword * {16} # {} THEN capPortIndicators := TRUE; ELSE capPortIndicators := FALSE; END;
-			capNbrOfCompanionHc := SYSTEM.VAL(LONGINT, LSH(dword * {12..15}, -12));
-			capPortsPerCompanion := SYSTEM.VAL(LONGINT, LSH(dword * {8..11}, -8));
+			capNbrOfCompanionHc := SYSTEM.VAL(SIGNED32, LSH(dword * {12..15}, -12));
+			capPortsPerCompanion := SYSTEM.VAL(SIGNED32, LSH(dword * {8..11}, -8));
 			IF dword * {7} # {} THEN capPortRoutingRules := TRUE; ELSE capPortRoutingRules := FALSE; END;
 			IF dword * {4} # {} THEN capPortPowerControl := TRUE; ELSE capPortPowerControl := FALSE; END;
-			capNbrOfPorts  := SYSTEM.VAL(LONGINT, dword * {0..3});
+			capNbrOfPorts  := SYSTEM.VAL(SIGNED32, dword * {0..3});
 
 			(* Get and parse the HC capability parameters register (HCCPARAM) *)
 			dword := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcCapCparams));
-			capIsoSchedThreshold := SYSTEM.VAL(LONGINT, LSH(dword * {4..7}, -4));
+			capIsoSchedThreshold := SYSTEM.VAL(SIGNED32, LSH(dword * {4..7}, -4));
 			IF dword * {2} # {} THEN capAsynchSchedPark := TRUE; ELSE capAsynchSchedPark := FALSE; END;
 			IF dword * {1} # {} THEN capProgrammableFLG := TRUE; ELSE capProgrammableFLG := FALSE; END;
 			IF dword * {0} # {} THEN cap64bit := TRUE; ELSE cap64bit := FALSE; END;
 			(* Get the EHCI Extended Capabilities Pointer (EECP) *)
-			eecp := SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, dword) * {8..15}, - 8));
+			eecp := SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, dword) * {8..15}, - 8));
 
 			(* Get HC companion port route description (60bits, 4bits per port *)
 			IF capPortRoutingRules THEN (* HC companion port route description available *)
@@ -2370,7 +2370,7 @@ TYPE
 				qword := qword + LSH(SYSTEM.GET32(iobase + HcCapPortroute + 4), 32);
 				NEW(hcportroute, 16);
 				FOR i := 0 TO 15 DO
-					hcportroute[i] := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LSH(qword, -i)) * {0..3});
+					hcportroute[i] := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LSH(qword, -i)) * {0..3});
 				END;
 			END;
 
@@ -2382,7 +2382,7 @@ TYPE
 				SYSTEM.PUT32(iobase + HcUsbCmd, dword);
 				framelistSize := 1024;
 			ELSE
-				framelistSize := 1024 (*LSH(SYSTEM.VAL(LONGINT, dword * {2 .. 3}), -2)*);
+				framelistSize := 1024 (*LSH(SYSTEM.VAL(SIGNED32, dword * {2 .. 3}), -2)*);
 				(*IF 15 IN dword THEN INC(framelistSize, 4) END;*)
 			END;
 			IF Debug.Trace & Debug.traceInit THEN
@@ -2403,7 +2403,7 @@ TYPE
 			END;
 			dword := dword + {3}; (* EHCI root hubs always provide per port overcurrent protection *)
 			IF capPortIndicators THEN (* Port indicator control support available *) dword := dword + {7}; END;
-			hubDescriptor[3] := CHR(SYSTEM.VAL(LONGINT, dword));
+			hubDescriptor[3] := CHR(SYSTEM.VAL(SIGNED32, dword));
 			hubDescriptor[4] := CHR(0); (* Reserved *)
 			hubDescriptor[5] := CHR(10); (* 20ms Power on to power good *)
 			hubDescriptor[6] := CHR(0); (* Root hubs don't draw current from the USB *)
@@ -2489,13 +2489,13 @@ TYPE
 
 		(* PCI writes may be posted. A read forces posted writes to be flushed before the read transaction is proceeded. *)
 		PROCEDURE FlushPCI *;
-		VAR ignore : LONGINT;
+		VAR ignore : SIGNED32;
 		BEGIN
 			ignore := SYSTEM.GET32(iobase + HcUsbSts);
 		END FlushPCI;
 
 		(* Release the HC ownership semaphore; eecp is the EHCI Extended Capability Pointer *)
-		PROCEDURE ReleaseHcOwnerShip(bus, device, function, eecp : LONGINT);
+		PROCEDURE ReleaseHcOwnerShip(bus, device, function, eecp : SIGNED32);
 		END ReleaseHcOwnerShip;
 
 		(*
@@ -2563,7 +2563,7 @@ TYPE
 			RETURN TRUE;
 		END Start;
 
-		PROCEDURE &Default*(bus, device, function : LONGINT);
+		PROCEDURE &Default*(bus, device, function : SIGNED32);
 		BEGIN
 			Default^(bus, device, function); (* The high-speed default pipe uses 64byte maxPacketSize0 *)
 			pipes[0, 0, 0].maxPacketSize := 64;
@@ -2589,7 +2589,7 @@ TYPE
 		(** Displays the host controller's data struture on KernelLog *)
 		PROCEDURE ShowSchedule*;
 		CONST MaxIterations =21;
-		VAR dword : SET; first, cur : LONGINT; i, ms : LONGINT;
+		VAR dword : SET; first, cur : SIGNED32; i, ms : SIGNED32;
 		BEGIN
 			IF Debug.Trace THEN
 				KernelLog.String("Host Controller Data Structures for ");
@@ -2611,7 +2611,7 @@ TYPE
 				IF SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcUsbSts)) * StsAsyncSchedule # {} THEN
 					first := SYSTEM.GET32(iobase + HcAsyncListAddr);
 					IF (SYSTEM.VAL(SET, first) * {0..4} = {}) & (first # 0) THEN
-						first := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, first) * {5..31});
+						first := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, first) * {5..31});
 						ShowQueueHead(first, 0, cap64bit);
 						i := 0; cur := first;
 						LOOP
@@ -2620,7 +2620,7 @@ TYPE
 								KernelLog.String("Error: Queue head horizontal link pointer is invalid."); KernelLog.Ln;
 								EXIT;
 							END;
-							cur := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, cur) * {5..31});
+							cur := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, cur) * {5..31});
 							IF (cur = first) OR (i >= MaxIterations) THEN EXIT END;
 
 							ShowQueueHead(cur, 0, cap64bit);
@@ -2689,15 +2689,15 @@ TYPE
 			(* Host Controller Command Register *)
 			KernelLog.String("  HC Command Register: "); KernelLog.Ln;
 			dword := SYSTEM.VAL(SET, SYSTEM.GET32(iobase + HcUsbCmd));
-			KernelLog.String("    Interrupt Threshold: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * {16..23}, -16)), 0);
+			KernelLog.String("    Interrupt Threshold: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * {16..23}, -16)), 0);
 			KernelLog.String(", Async Schedule Park Mode: ");
 			IF dword * {11} # {} THEN
-				KernelLog.String("Enabled ("); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * {8..9}, -8)), 0); KernelLog.Char(")");
+				KernelLog.String("Enabled ("); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * {8..9}, -8)), 0); KernelLog.Char(")");
 			ELSE
 				KernelLog.String("Disabled");
 			END;
 			KernelLog.String(", Frame List Size: ");
-			CASE SYSTEM.VAL(LONGINT, LSH(dword * {2..3}, -2)) OF
+			CASE SYSTEM.VAL(SIGNED32, LSH(dword * {2..3}, -2)) OF
 			 	0: KernelLog.String("1024");
 			 	|1: KernelLog.String("512");
 			 	|2: KernelLog.String("256");
@@ -2804,7 +2804,7 @@ END AssertAlignment;
  * Return the physical page of size 4kB which is right after the physical address (adr + size) in the page ranges sgList.
  * idx is the page index of adr in sgList. When returning, idx indexes the sgList entry containing the return value.
  *)
-PROCEDURE GetNextPhysicalPage (CONST sgList: ARRAY OF Machine.Range; VAR idx: LONGINT; adr: ADDRESS): ADDRESS;
+PROCEDURE GetNextPhysicalPage (CONST sgList: ARRAY OF Machine.Range; VAR idx: SIGNED32; adr: ADDRESS): ADDRESS;
 BEGIN
 	IF adr + PageSize - adr MOD PageSize >= sgList[idx].adr + sgList[idx].size THEN
 		(* Next Page beginning not in the current range: use the next range *)
@@ -2817,9 +2817,9 @@ BEGIN
 	END;
 END GetNextPhysicalPage;
 
-PROCEDURE AdvancePhysBuf (CONST sgList: ARRAY OF Machine.Range; VAR idx: LONGINT; adr: ADDRESS; size: LONGINT): ADDRESS;
+PROCEDURE AdvancePhysBuf (CONST sgList: ARRAY OF Machine.Range; VAR idx: SIGNED32; adr: ADDRESS; size: SIGNED32): ADDRESS;
 VAR
-	next: LONGINT;
+	next: SIGNED32;
 BEGIN
 	next := adr + size;
 	WHILE next - sgList[idx].adr > sgList[idx].size DO
@@ -2831,8 +2831,8 @@ BEGIN
 	RETURN next
 END AdvancePhysBuf;	
 
-PROCEDURE Indent(spaces : LONGINT);
-VAR i : LONGINT;
+PROCEDURE Indent(spaces : SIGNED32);
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 1 TO spaces DO KernelLog.Char(" "); END;
 END Indent;
@@ -2846,12 +2846,12 @@ PROCEDURE ShowQueueHead(qh, firstQtd : ADDRESS; cap64bit : BOOLEAN);
 CONST MaxChainLen = 32;
 VAR
 	dword : SET;
-	val, chainlen : LONGINT;
+	val, chainlen : SIGNED32;
 
-	PROCEDURE ShowQhTyp(qh : LONGINT);
+	PROCEDURE ShowQhTyp(qh : SIGNED32);
 	BEGIN
 		IF Debug.Trace THEN
-		val := SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, qh) * QhTyp, -1));
+		val := SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, qh) * QhTyp, -1));
 		IF val = 0 THEN KernelLog.String("Isochronous Tranfers Desriptor");
 		ELSIF val = 1 THEN KernelLog.String("Queue Head");
 		ELSIF val = 2 THEN KernelLog.String("Split Transaction Isochronous Transfer Descriptor");
@@ -2872,16 +2872,16 @@ BEGIN
 
 	KernelLog.String("    Endpoint Capabilities 1: ");
 	dword := SYSTEM.VAL(SET, SYSTEM.GET32(qh + QhEpCapabilities1));
-	KernelLog.String(" DeviceAddr: "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * QhDeviceAddress), 0);
-	KernelLog.String(", Endpoint: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * QhEndpointNbr, -8)), 0);
-	KernelLog.String(", Speed: "); val := SYSTEM.VAL(LONGINT, LSH(dword * QhEndpointSpeed, -12));
+	KernelLog.String(" DeviceAddr: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * QhDeviceAddress), 0);
+	KernelLog.String(", Endpoint: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * QhEndpointNbr, -8)), 0);
+	KernelLog.String(", Speed: "); val := SYSTEM.VAL(SIGNED32, LSH(dword * QhEndpointSpeed, -12));
 	IF val = 0 THEN KernelLog.String("FullSpeed");
 	ELSIF val = 1 THEN KernelLog.String("LowSpeed");
 	ELSIF val = 2 THEN  KernelLog.String("HighSpeed");
 	ELSE KernelLog.String("ERROR: Not set correctly");
 	END;
-	KernelLog.String(", MaxPacketSize: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * QhMaxPacketLen, -16)), 0);
-	KernelLog.String(", NakRL: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * QhNakCountReload, -28)), 0);
+	KernelLog.String(", MaxPacketSize: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * QhMaxPacketLen, -16)), 0);
+	KernelLog.String(", NakRL: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * QhNakCountReload, -28)), 0);
 
 	KernelLog.String(", Flags: ");
 	IF dword * QhControlEndpointFlag # {} THEN	KernelLog.String("[ControlEp]"); END;
@@ -2892,25 +2892,25 @@ BEGIN
 
 	KernelLog.String("    Endpoint Capabilities 2: ");
 	dword := SYSTEM.VAL(SET, SYSTEM.GET32(qh + QhEpCapabilities2));
-	KernelLog.String("Mult: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * QhMultiplier, -30)), 0);
-	KernelLog.String(", HubAddr: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * QhHubAddr, -16)), 0);
-	KernelLog.String(", HubPort: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * QhPortNbr, -23)), 0);
-	KernelLog.String(", SplitCMask: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * QhSplitCMask, -8)), 0);
-	KernelLog.String(", QhSMask: "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * QhSMask), 0);
+	KernelLog.String("Mult: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * QhMultiplier, -30)), 0);
+	KernelLog.String(", HubAddr: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * QhHubAddr, -16)), 0);
+	KernelLog.String(", HubPort: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * QhPortNbr, -23)), 0);
+	KernelLog.String(", SplitCMask: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * QhSplitCMask, -8)), 0);
+	KernelLog.String(", QhSMask: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * QhSMask), 0);
 	KernelLog.Ln;
 
 	KernelLog.String("    Queue Head Horizontal Link Pointer: ");
 	dword := SYSTEM.VAL(SET, SYSTEM.GET32(qh + QhHorizontalLinkPointer));
 	IF dword * QhTerminate # {} THEN
-		KernelLog.String("Invalid ("); KernelLog.Address(SYSTEM.VAL(LONGINT, dword)); KernelLog.String("H)");
+		KernelLog.String("Invalid ("); KernelLog.Address(SYSTEM.VAL(SIGNED32, dword)); KernelLog.String("H)");
 	ELSE
-		KernelLog.Address(SYSTEM.VAL(LONGINT, dword * {5..31}));
-		KernelLog.String(" ("); ShowQhTyp(SYSTEM.VAL(LONGINT, dword)); KernelLog.String(")");
+		KernelLog.Address(SYSTEM.VAL(SIGNED32, dword * {5..31}));
+		KernelLog.String(" ("); ShowQhTyp(SYSTEM.VAL(SIGNED32, dword)); KernelLog.String(")");
 	END;
 	KernelLog.Ln;
 
 	dword := SYSTEM.VAL(SET, SYSTEM.GET32(qh + QhCurrentQtdPointer));
-	KernelLog.String("    Current qTD Pointer: "); KernelLog.Address(SYSTEM.VAL(LONGINT, dword));
+	KernelLog.String("    Current qTD Pointer: "); KernelLog.Address(SYSTEM.VAL(SIGNED32, dword));
 	KernelLog.String(", Next qTD Pointer: "); KernelLog.Address(SYSTEM.GET32(qh + QhNextQtdPointer));
 	KernelLog.Ln;
 
@@ -2935,7 +2935,7 @@ BEGIN
 					KernelLog.String("        End of Chain"); KernelLog.Ln;
 					chainlen := MaxChainLen; (* abort *)
 				ELSE
-					firstQtd := SYSTEM.VAL(LONGINT, dword * {5..31});
+					firstQtd := SYSTEM.VAL(SIGNED32, dword * {5..31});
 				END;
 			END;
 		END;
@@ -2943,9 +2943,9 @@ BEGIN
 	END;
 END ShowQueueHead;
 
-PROCEDURE ShowQtd(adr: ADDRESS; spaces: LONGINT; cap64bit, overlay: BOOLEAN);
+PROCEDURE ShowQtd(adr: ADDRESS; spaces: SIGNED32; cap64bit, overlay: BOOLEAN);
 VAR
-	i, val: LONGINT;
+	i, val: SIGNED32;
 	dword: SET;
 	qtd: Qtd;
 BEGIN
@@ -2966,7 +2966,7 @@ BEGIN
 		KernelLog.String("qTD Token: ");
 		dword := SYSTEM.VAL(SET, qtd.token);
 		KernelLog.String("Pid: ");
-		val := SYSTEM.VAL(LONGINT, LSH(dword * QtdPidCode, -8));
+		val := SYSTEM.VAL(SIGNED32, LSH(dword * QtdPidCode, -8));
 		IF val = PidSetup THEN KernelLog.String("SETUP");
 		ELSIF val = PidIn THEN KernelLog.String("IN");
 		ELSIF val = PidOut THEN KernelLog.String("OUT");
@@ -2976,9 +2976,9 @@ BEGIN
 		KernelLog.String(", DataToggle: ");
 		IF dword * QtdDataToggle # {} THEN KernelLog.String("DATA1"); ELSE  KernelLog.String("DATA0"); END;
 
-		KernelLog.String(", Bytes to transfer: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * QtdBytesToTransfer, -16)), 0);
+		KernelLog.String(", Bytes to transfer: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * QtdBytesToTransfer, -16)), 0);
 		KernelLog.String(", IOC: "); IF dword * QtdIoc # {} THEN KernelLog.String("Yes"); ELSE KernelLog.String("No"); END;
-		KernelLog.String(", CERR: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * QtdErrorCounter, -10)) ,0);
+		KernelLog.String(", CERR: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * QtdErrorCounter, -10)) ,0);
 		KernelLog.Ln;
 
 		Indent(spaces + 4);
@@ -2996,18 +2996,18 @@ BEGIN
 
 		Indent(spaces + 4); KernelLog.String("Buffer information:");KernelLog.Ln;
 		Indent(spaces + 8); KernelLog.String("Current Buffer: ");
-		KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * QtdCurrentPage, -12)), 0);
+		KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * QtdCurrentPage, -12)), 0);
 		IF SYSTEM.VAL(SET, qtd) * {4} # {} THEN (* Should be transfer overlay since not 32byte aligned *)
 			KernelLog.String(", Nak counter: ");
-			KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, qtd.next) * {1..3}, -1)), 0);
+			KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, qtd.next) * {1..3}, -1)), 0);
 		END;
 		KernelLog.Ln;
 		FOR i := 0 TO 4 DO
 			val := qtd.buffers[i];
 			Indent(spaces + 8);
-			KernelLog.String("Buffer Pointer "); KernelLog.Int(i, 0); KernelLog.String(": "); KernelLog.Address(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, val) * {12..31}));
+			KernelLog.String("Buffer Pointer "); KernelLog.Int(i, 0); KernelLog.String(": "); KernelLog.Address(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, val) * {12..31}));
 
-			val := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, val) * {0..11});
+			val := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, val) * {0..11});
 			IF i = 0 THEN
 				KernelLog.String("   Current Offset: "); KernelLog.Hex(val, 8);
 			ELSIF overlay & (i = 1) THEN
@@ -3030,11 +3030,11 @@ BEGIN
 		Indent(spaces + 4); KernelLog.String("Alternate Next qTD Pointer: ");
 		dword := SYSTEM.VAL(SET, (*SYSTEM.GET32(adr + QtdNextQtdPointer)*) qtd.alternateNext);
 		IF dword * QhTerminate # {} THEN
-			KernelLog.String("Invalid ("); KernelLog.Address(SYSTEM.VAL(LONGINT, dword)); KernelLog.String(")");
+			KernelLog.String("Invalid ("); KernelLog.Address(SYSTEM.VAL(SIGNED32, dword)); KernelLog.String(")");
 		ELSIF dword * {1..3} # {} THEN
-			KernelLog.String("Alignment Error ("); KernelLog.Address(SYSTEM.VAL(LONGINT, dword)); KernelLog.String(")");
+			KernelLog.String("Alignment Error ("); KernelLog.Address(SYSTEM.VAL(SIGNED32, dword)); KernelLog.String(")");
 		ELSE
-			KernelLog.Address(SYSTEM.VAL(LONGINT, dword));
+			KernelLog.Address(SYSTEM.VAL(SIGNED32, dword));
 		END;
 		KernelLog.Ln;
 
@@ -3044,44 +3044,44 @@ BEGIN
 		dword := SYSTEM.VAL(SET, qtd.next);
 		(*SYSTEM.GET(SYSTEM.VAL(ADDRESS, qtd) + QtdNextQtdPointer, dword);*)
 		IF dword * QhTerminate # {} THEN
-			KernelLog.String("Invalid ("); KernelLog.Address(SYSTEM.VAL(LONGINT, dword)); KernelLog.String(")");
+			KernelLog.String("Invalid ("); KernelLog.Address(SYSTEM.VAL(SIGNED32, dword)); KernelLog.String(")");
 			qtd := 0;
 		ELSIF dword * {1..3} # {} THEN
-			KernelLog.String("Alignment Error ("); KernelLog.Address(SYSTEM.VAL(LONGINT, dword)); KernelLog.String(")");
+			KernelLog.String("Alignment Error ("); KernelLog.Address(SYSTEM.VAL(SIGNED32, dword)); KernelLog.String(")");
 			qtd := 0;
 		ELSE
-			KernelLog.Address(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, dword) * {5..31}));
-			qtd := SYSTEM.VAL(LONGINT, dword * {5..31});
+			KernelLog.Address(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, dword) * {5..31}));
+			qtd := SYSTEM.VAL(SIGNED32, dword * {5..31});
 		END;
 		KernelLog.Ln;
 	END;
 END ShowQtd;
 
 (*
-PROCEDURE ShowItd(adr : LONGINT);
-VAR dword : SET; i : LONGINT;
+PROCEDURE ShowItd(adr : SIGNED32);
+VAR dword : SET; i : SIGNED32;
 BEGIN
 	IF Debug.Trace THEN
 	KernelLog.String("UsbEhci: ITD at address "); KernelLog.Hex(adr, 8); KernelLog.Ln;
 	Indent(4);
 	dword := SYSTEM.VAL(SET, SYSTEM.GET32(adr));
-	KernelLog.String("Next Link Pointer: "); KernelLog.Hex(SYSTEM.VAL(LONGINT, dword * {5..31}), 8);
+	KernelLog.String("Next Link Pointer: "); KernelLog.Hex(SYSTEM.VAL(SIGNED32, dword * {5..31}), 8);
 	IF dword * {0} = {} THEN KernelLog.String(" [VALID]"); ELSE KernelLog.String("[INVALID]"); END;
 	KernelLog.String(", Typ: ");
-	CASE SYSTEM.VAL(LONGINT, LSH(dword * {1..2}, -1)) OF
+	CASE SYSTEM.VAL(SIGNED32, LSH(dword * {1..2}, -1)) OF
 		0: KernelLog.String("iTD");
 		|1 : KernelLog.String("QH");
 		|2 : KernelLog.String("siTD");
 		|3 : KernelLog.String("FSTN");
 	END;
 	dword := SYSTEM.VAL(SET, SYSTEM.GET32(adr + 24H));
-	KernelLog.String(", Device Address: "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * {0..6}), 0);
-	KernelLog.String(", Endpoint: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * {8..11}, -7)), 0);
+	KernelLog.String(", Device Address: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * {0..6}), 0);
+	KernelLog.String(", Endpoint: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * {8..11}, -7)), 0);
 	dword := SYSTEM.VAL(SET, SYSTEM.GET32(adr + 28H));
-	KernelLog.String(" MaxPacket: "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * {0..10}), 0);
+	KernelLog.String(" MaxPacket: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * {0..10}), 0);
 	IF dword * {11} # {} THEN KernelLog.String(" [IN]"); ELSE KernelLog.String(" [OUT]"); END;
 	dword := SYSTEM.VAL(SET, SYSTEM.GET32(adr + 2CH));
-	KernelLog.String(", MULT: "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * {0..1}), 0);
+	KernelLog.String(", MULT: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * {0..1}), 0);
 	KernelLog.Ln;
 	FOR i := 0 TO 7 DO
 		Indent(4);
@@ -3097,9 +3097,9 @@ BEGIN
 			KernelLog.String("[Done]");
 		END;
 
-		KernelLog.String(" Length: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * {16..27}, -16)), 0);
-		KernelLog.String(", PG: "); KernelLog.Int(SYSTEM.VAL(LONGINT, LSH(dword * {12..14}, -12)), 0);
-		KernelLog.String(", Offset: "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * {0..11}), 0);
+		KernelLog.String(" Length: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * {16..27}, -16)), 0);
+		KernelLog.String(", PG: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, LSH(dword * {12..14}, -12)), 0);
+		KernelLog.String(", Offset: "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * {0..11}), 0);
 		IF dword * {15} # {} THEN KernelLog.String(" [IOC]"); END;
 		KernelLog.Ln;
 	END;
@@ -3107,7 +3107,7 @@ BEGIN
 		Indent(4);
 		dword := SYSTEM.VAL(SET, SYSTEM.GET32(adr + 24H + i*4));
 		KernelLog.String("Buffer Pointer Page "); KernelLog.Int(i, 0); KernelLog.String(": ");
-		KernelLog.Hex(SYSTEM.VAL(LONGINT, dword * {12..31}), 8);
+		KernelLog.Hex(SYSTEM.VAL(SIGNED32, dword * {12..31}), 8);
 		KernelLog.Ln;
 	END;
 	END;
@@ -3126,10 +3126,10 @@ BEGIN
 	END;
 END ShowInterrupts;
 
-PROCEDURE ShowItd (adr: ADDRESS; space: LONGINT);
+PROCEDURE ShowItd (adr: ADDRESS; space: SIGNED32);
 VAR
 	dword: SET;
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	IF Debug.Trace THEN
 		Indent(space);
@@ -3145,7 +3145,7 @@ BEGIN
 		KernelLog.String("Next Link Pointer: "); KernelLog.Address(SYSTEM.VAL(ADDRESS, dword));
 		IF 0 IN dword THEN KernelLog.String(" [INVALID]") END;
 		KernelLog.String(", Type: ");
-		CASE SYSTEM.VAL(LONGINT, dword * {1 .. 2}) DIV 2 OF
+		CASE SYSTEM.VAL(SIGNED32, dword * {1 .. 2}) DIV 2 OF
 			 0: KernelLog.String("iTD")
 			|1: KernelLog.String("QH")
 			|2: KernelLog.String("siTD")
@@ -3158,9 +3158,9 @@ BEGIN
 			KernelLog.String("Transaction "); KernelLog.Int(i, 0); KernelLog.String(": ");
 
 			dword := SYSTEM.VAL(SET, SYSTEM.GET32(adr + ItdTransaction0 + 4 * i));
-			KernelLog.String("TX Length "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * {16 .. 27}) DIV 10000H, 0);
-			KernelLog.String(", Page select "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * {12 .. 14}) DIV	1000H, 0);
-			KernelLog.String(", Tx offset "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * {0 .. 11}), 0);
+			KernelLog.String("TX Length "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * {16 .. 27}) DIV 10000H, 0);
+			KernelLog.String(", Page select "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * {12 .. 14}) DIV	1000H, 0);
+			KernelLog.String(", Tx offset "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * {0 .. 11}), 0);
 			IF 15 IN dword THEN KernelLog.String(" [IOC]") END;
 
 			IF 30 IN dword THEN KernelLog.String(" [DATA BUFFER ERROR]") END;
@@ -3174,15 +3174,15 @@ BEGIN
 		KernelLog.String("Buffer pointer 0: ");
 		dword := SYSTEM.VAL(SET, SYSTEM.GET32(adr + ItdBufferPtr0));
 		KernelLog.String(" address "); KernelLog.Address(SYSTEM.VAL(ADDRESS, dword * {12 .. 31}));
-		KernelLog.String(", endpoint "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * {8 .. 11}) DIV 100H, 0);
-		KernelLog.String(", dev address "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * {0 .. 6}), 0);
+		KernelLog.String(", endpoint "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * {8 .. 11}) DIV 100H, 0);
+		KernelLog.String(", dev address "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * {0 .. 6}), 0);
 		KernelLog.Ln;
 
 		Indent(space + 4);
 		KernelLog.String("Buffer pointer 1: ");
 		dword := SYSTEM.VAL(SET, SYSTEM.GET32(adr + ItdBufferPtr1));
 		KernelLog.String(" address "); KernelLog.Address(SYSTEM.VAL(ADDRESS, dword * {12 .. 31}));
-		KernelLog.String(", max packet size "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * {0 .. 10}), 0);
+		KernelLog.String(", max packet size "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * {0 .. 10}), 0);
 		IF 11 IN dword THEN KernelLog.String(" [IN]") ELSE KernelLog.String(" [OUT]") END;
 		KernelLog.Ln;
 
@@ -3190,7 +3190,7 @@ BEGIN
 		KernelLog.String("Buffer pointer 2: ");
 		dword := SYSTEM.VAL(SET, SYSTEM.GET32(adr + ItdBufferPtr2));
 		KernelLog.String(" address "); KernelLog.Address(SYSTEM.VAL(ADDRESS, dword * {12 .. 31}));
-		KernelLog.String(", multi "); KernelLog.Int(SYSTEM.VAL(LONGINT, dword * {0 .. 1}), 0); KernelLog.String("x");
+		KernelLog.String(", multi "); KernelLog.Int(SYSTEM.VAL(SIGNED32, dword * {0 .. 1}), 0); KernelLog.String("x");
 		KernelLog.Ln;
 
 		FOR i := 3 TO 6 DO
@@ -3204,9 +3204,9 @@ BEGIN
 END ShowItd;
 
 (** Prints the Framelist and its content. 'framelist' is the base address of the framelist, 'size' is the number of elements in the framelist. If 'expand's is TRUE, ITDs and QHs are also shown. *)
-PROCEDURE ShowFramelist (framelist: ADDRESS; size, hc: LONGINT; expand: BOOLEAN);
+PROCEDURE ShowFramelist (framelist: ADDRESS; size, hc: SIGNED32; expand: BOOLEAN);
 VAR
-	i, entry: LONGINT;
+	i, entry: SIGNED32;
 BEGIN
 	FOR i := 0 TO size - 1 DO
 		entry := SYSTEM.GET32(framelist + 4 * i);
@@ -3226,7 +3226,7 @@ END ShowFramelist;
  * Creates a horizontal link pointer field pointing to 'qh', with type 'type'.
  * Link is marked as invalid if terminate is TRUE.
  *)
-PROCEDURE QhHorizontalLink (qh: ADDRESS; type: LONGINT; terminate: BOOLEAN): LONGINT;
+PROCEDURE QhHorizontalLink (qh: ADDRESS; type: SIGNED32; terminate: BOOLEAN): SIGNED32;
 VAR
 	dword: SET;
 BEGIN
@@ -3234,7 +3234,7 @@ BEGIN
 		dword := QhTerminate
 	END;
 	dword := dword + SYSTEM.VAL(SET, qh) + SYSTEM.VAL(SET, LSH(type, 1));
-	RETURN SYSTEM.VAL(LONGINT, dword)
+	RETURN SYSTEM.VAL(SIGNED32, dword)
 END QhHorizontalLink;
 
 (* Called when this module is unloaded. Unregister all EnhancedHostController objects *)

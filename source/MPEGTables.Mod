@@ -5,52 +5,52 @@ MODULE MPEGTables;
 
 VAR
 	(* zig-zag scanning order *)
-	ZZ*: ARRAY 8 OF ARRAY 8 OF LONGINT;
-	ZZN*: ARRAY 64 OF LONGINT;
+	ZZ*: ARRAY 8 OF ARRAY 8 OF SIGNED32;
+	ZZN*: ARRAY 64 OF SIGNED32;
 
 	(* default intra quantizer matrix *)
-	IQM*: ARRAY 64 OF LONGINT;
+	IQM*: ARRAY 64 OF SIGNED32;
 
 	(* coded blocks pattern codes *)
-	CBP7*: ARRAY 112 OF ARRAY 2 OF LONGINT;	(* table with coded blocks pattern (code length 3..7 bit) *)
-	CBP9*: ARRAY 64 OF ARRAY 2 OF LONGINT;		(* table with coded blocks pattern (code length 8..9 bit) *)
+	CBP7*: ARRAY 112 OF ARRAY 2 OF SIGNED32;	(* table with coded blocks pattern (code length 3..7 bit) *)
+	CBP9*: ARRAY 64 OF ARRAY 2 OF SIGNED32;		(* table with coded blocks pattern (code length 8..9 bit) *)
 
 	(* motion codes *)
-	MC4*: ARRAY 8 OF ARRAY 2 OF LONGINT;		(* table with motion codes (code length 1..4) *)
-	MC7*: ARRAY 8 OF ARRAY 2 OF LONGINT;		(* table with motion codes (code length 5..7) *)
-	MC10*: ARRAY 12 OF ARRAY 2 OF LONGINT;		(* table with motion codes (code length 8..9) *)
+	MC4*: ARRAY 8 OF ARRAY 2 OF SIGNED32;		(* table with motion codes (code length 1..4) *)
+	MC7*: ARRAY 8 OF ARRAY 2 OF SIGNED32;		(* table with motion codes (code length 5..7) *)
+	MC10*: ARRAY 12 OF ARRAY 2 OF SIGNED32;		(* table with motion codes (code length 8..9) *)
 
 	(* DC (= first DCT coefficient) code lengths *)
-	DCL3*: ARRAY 7 OF ARRAY 2 OF LONGINT;		(* table with DC code lengths for luminance *)
-	DCC3*: ARRAY 7 OF ARRAY 2 OF LONGINT;		(* table with DC code lengths for chrominance *)
+	DCL3*: ARRAY 7 OF ARRAY 2 OF SIGNED32;		(* table with DC code lengths for luminance *)
+	DCC3*: ARRAY 7 OF ARRAY 2 OF SIGNED32;		(* table with DC code lengths for chrominance *)
 
 	(* run/level codes *)
-	RLC6*: ARRAY 11 OF ARRAY 3 OF LONGINT;		(* run/level codes of length 4..6 *)
-	RLC8*: ARRAY 12 OF ARRAY 3 OF LONGINT;		(* run/level codes of length 7..8 *)
-	RLC9*: ARRAY 8 OF ARRAY 2 OF LONGINT;		(* run/level codes of length 9 *)
-	RLC11*: ARRAY 8 OF ARRAY 2 OF LONGINT;		(* run/level codes of length 11 *)
-	RLC13*: ARRAY 16 OF ARRAY 2 OF LONGINT;	(* run/level codes of length 13 *)
-	RLC14*: ARRAY 16 OF ARRAY 2 OF LONGINT;	(* run/level codes of length 14 *)
-	RLC16*: ARRAY 16 OF ARRAY 2 OF LONGINT;	(* run/level codes of length 16 *)
-	RLC17*: ARRAY 16 OF ARRAY 2 OF LONGINT;	(* run/level codes of length 17 *)
+	RLC6*: ARRAY 11 OF ARRAY 3 OF SIGNED32;		(* run/level codes of length 4..6 *)
+	RLC8*: ARRAY 12 OF ARRAY 3 OF SIGNED32;		(* run/level codes of length 7..8 *)
+	RLC9*: ARRAY 8 OF ARRAY 2 OF SIGNED32;		(* run/level codes of length 9 *)
+	RLC11*: ARRAY 8 OF ARRAY 2 OF SIGNED32;		(* run/level codes of length 11 *)
+	RLC13*: ARRAY 16 OF ARRAY 2 OF SIGNED32;	(* run/level codes of length 13 *)
+	RLC14*: ARRAY 16 OF ARRAY 2 OF SIGNED32;	(* run/level codes of length 14 *)
+	RLC16*: ARRAY 16 OF ARRAY 2 OF SIGNED32;	(* run/level codes of length 16 *)
+	RLC17*: ARRAY 16 OF ARRAY 2 OF SIGNED32;	(* run/level codes of length 17 *)
 
 	(* run/level codes - second version (available in MPEG-2 only) *)
-	RLC8_2*: ARRAY 12 OF ARRAY 3 OF LONGINT;	(* run/level codes of length 7..8 *)
-	RLC9_2*: ARRAY 8 OF ARRAY 2 OF LONGINT;		(* run/level codes of length 9 (first part) *)
-	RLC9_2_2*: ARRAY 16 OF ARRAY 3 OF LONGINT;	(* run/level codes of length 9 (second part) *)
+	RLC8_2*: ARRAY 12 OF ARRAY 3 OF SIGNED32;	(* run/level codes of length 7..8 *)
+	RLC9_2*: ARRAY 8 OF ARRAY 2 OF SIGNED32;		(* run/level codes of length 9 (first part) *)
+	RLC9_2_2*: ARRAY 16 OF ARRAY 3 OF SIGNED32;	(* run/level codes of length 9 (second part) *)
 
 	(* quantiser scales - MPEG-2 only *)
-	QS0*: ARRAY 32 OF LONGINT;					(* table 0 *)
-	QS1*: ARRAY 32 OF LONGINT;					(* table 1 *)
+	QS0*: ARRAY 32 OF SIGNED32;					(* table 0 *)
+	QS1*: ARRAY 32 OF SIGNED32;					(* table 1 *)
 
 	(* DC predictions for the various precisions available - MPEG-2 only *)
-	DCP*: ARRAY 4 OF LONGINT;
+	DCP*: ARRAY 4 OF SIGNED32;
 
 	(* DC multiplier for intra-coded blocks for the various precisions available - MPEG-2 only *)
-	DCM*: ARRAY 4 OF LONGINT;
+	DCM*: ARRAY 4 OF SIGNED32;
 
 	(* Line numbers for field-based blocks *)
-	FBB*: ARRAY 8 OF LONGINT;
+	FBB*: ARRAY 8 OF SIGNED32;
 
 BEGIN
 	(* Fill in all table values *)

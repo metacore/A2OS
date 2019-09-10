@@ -5,7 +5,7 @@ IMPORT
 	KernelLog, GDI32, Kernel32, User32, SYSTEM;
 
 CONST
-	WS_POPUP* = LONGINT(80000000H);
+	WS_POPUP* = SIGNED32(80000000H);
 	WM_CAP_START* = 0400H;
 
 	WM_CAP_GET_CAPSTREAMPTR* = WM_CAP_START + 1;
@@ -87,35 +87,35 @@ TYPE
 		dwBytesUsed*,
 		dwTimeCaptured*,
 		dwUser*,
-		dwFlags* : LONGINT;
+		dwFlags* : SIGNED32;
 		dwReserved* : ARRAY 4 OF ADDRESS;
 	END;
 
 	Capturerec* = RECORD
-		dwRequestMicroSecPerFrame*: LONGINT;
-		fMakeUserHitOKToCapture*: LONGINT;
-		wPercentDropForError*: LONGINT;
-		fYield*: LONGINT;
-		dwIndexSize*: LONGINT;
-		wChunkGranularity*: LONGINT;
-		fUsingDOSMemory*: LONGINT;
-		wNumVideoRequested*: LONGINT;
-		fCaptureAudio*: LONGINT;
-		wNumAudioRequested*: LONGINT;
-		vKeyAbort*: LONGINT;
-		fAbortLeftMouse*: LONGINT;
-		fAbortRightMouse*: LONGINT;
-		fLimitEnabled*: LONGINT;
-		wTimeLimit*: LONGINT;
-		fMCIControl*: LONGINT;
-		fStepMCIDevice*: LONGINT;
-		dwMCIStartTime*: LONGINT;
-		dwMCIStopTime*: LONGINT;
-		fStepCaptureAt2x*: LONGINT;
-		wStepCaptureAverageFrames*: LONGINT;
-		dwAudioBufferSize*: LONGINT;
-		fDisableWriteCache*: LONGINT;
-		AVStreamMaster*: LONGINT;
+		dwRequestMicroSecPerFrame*: SIGNED32;
+		fMakeUserHitOKToCapture*: SIGNED32;
+		wPercentDropForError*: SIGNED32;
+		fYield*: SIGNED32;
+		dwIndexSize*: SIGNED32;
+		wChunkGranularity*: SIGNED32;
+		fUsingDOSMemory*: SIGNED32;
+		wNumVideoRequested*: SIGNED32;
+		fCaptureAudio*: SIGNED32;
+		wNumAudioRequested*: SIGNED32;
+		vKeyAbort*: SIGNED32;
+		fAbortLeftMouse*: SIGNED32;
+		fAbortRightMouse*: SIGNED32;
+		fLimitEnabled*: SIGNED32;
+		wTimeLimit*: SIGNED32;
+		fMCIControl*: SIGNED32;
+		fStepMCIDevice*: SIGNED32;
+		dwMCIStartTime*: SIGNED32;
+		dwMCIStopTime*: SIGNED32;
+		fStepCaptureAt2x*: SIGNED32;
+		wStepCaptureAverageFrames*: SIGNED32;
+		dwAudioBufferSize*: SIGNED32;
+		fDisableWriteCache*: SIGNED32;
+		AVStreamMaster*: SIGNED32;
 	END;
 
 	CapVideoStreamCallback* = PROCEDURE {WINAPI} (hWnd : HWND; VAR lpVHdr : VHdr) : User32.LResult;
@@ -123,14 +123,14 @@ TYPE
 
 VAR
 	CapCreateCaptureWindow-: PROCEDURE {WINAPI} (CONST lpszWindowName: ARRAY OF CHAR;
-		dwStyle, x, y, nWidth, nHeight : LONGINT;
+		dwStyle, x, y, nWidth, nHeight : SIGNED32;
 		ParentWin : HWND;
-		nId : LONGINT): HWND;
-	CapGetDriverDescription- : PROCEDURE {WINAPI} (wDriverIndex : LONGINT;
-		VAR lpszName : ARRAY OF CHAR; cbName : LONGINT;
-		VAR lpszVer : ARRAY OF CHAR; cbVar : LONGINT) : BOOLEAN;
+		nId : SIGNED32): HWND;
+	CapGetDriverDescription- : PROCEDURE {WINAPI} (wDriverIndex : SIGNED32;
+		VAR lpszName : ARRAY OF CHAR; cbName : SIGNED32;
+		VAR lpszVer : ARRAY OF CHAR; cbVar : SIGNED32) : BOOLEAN;
 	(* PeekMessage is missing in Win32.User32 *)
-	PeekMessage-: PROCEDURE {WINAPI} (VAR lpMsg: User32.Msg; hWnd: HWND; wMsgFilterMin, wMsgFilterMax, wRemoveMsg: LONGINT): LONGINT;
+	PeekMessage-: PROCEDURE {WINAPI} (VAR lpMsg: User32.Msg; hWnd: HWND; wMsgFilterMin, wMsgFilterMax, wRemoveMsg: SIGNED32): SIGNED32;
 
 
 PROCEDURE GetProcAddress(hModule: ADDRESS; VAR adr: ADDRESS; CONST procName: ARRAY OF CHAR);
@@ -156,7 +156,7 @@ BEGIN
 	GetProcAddress(mod, SYSTEM.VAL(ADDRESS, PeekMessage ), "PeekMessageA")
 END Init;
 
-PROCEDURE CapDriverConnect*(hwnd : HWND; index : LONGINT) : BOOLEAN;
+PROCEDURE CapDriverConnect*(hwnd : HWND; index : SIGNED32) : BOOLEAN;
 VAR result : User32.LResult;
 BEGIN
 	result := User32.SendMessage(hwnd, WM_CAP_DRIVER_CONNECT, index, 0);

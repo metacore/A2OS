@@ -25,14 +25,14 @@ CONST
 	LocalPrefix = "129.132.";
 
 VAR log : AosLog.Log;
-	nofNimda*, nofCodeRedVar*:LONGINT;
+	nofNimda*, nofCodeRedVar*:SIGNED32;
 	lastWormIP*, lastWormName*, lastWormOrigin*: ARRAY 64 OF CHAR;
 
 TYPE
 	CodeRedPlugin = OBJECT(WebHTTPServer.HTTPPlugin)
 
 		PROCEDURE CanHandle(host: WebHTTPServer.Host; VAR h : WebHTTP.RequestHeader; secure : BOOLEAN): BOOLEAN;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			WHILE (h.uri[i] # 0X) & (i < LEN(h.uri)) DO INC(i) END;
 			RETURN (i>100)
@@ -73,7 +73,7 @@ VAR
 	np : NimdaPlugin;
 
 PROCEDURE MyMatch(VAR uri :ARRAY OF CHAR;  y: ARRAY OF CHAR) : BOOLEAN;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	WHILE (i < LEN(uri)) & (i < LEN(y)) & (uri[i] = y[i]) &(y[i] # 0X) DO INC(i) END;
 	RETURN  (i < LEN(uri)) & (i < LEN(y)) & (y[i] = 0X)
@@ -105,7 +105,7 @@ END Cached;
 PROCEDURE MyHandle(vn, fn: ARRAY OF CHAR; VAR in: Streams.Reader; VAR out: Streams.Writer;
 	VAR header : WebHTTP.RequestHeader; VAR reply: WebHTTP.ResponseHeader);
 VAR
-	f: Files.File; w : Files.Writer; res: WORD; i, time, date: LONGINT;
+	f: Files.File; w : Files.Writer; res: INTEGER; i, time, date: SIGNED32;
 	ch :CHAR;
 	md : ARRAY 32 OF CHAR;
 	origin : ARRAY 64 OF CHAR;

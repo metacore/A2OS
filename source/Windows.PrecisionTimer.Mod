@@ -8,7 +8,7 @@ IMPORT
 	SYSTEM, Kernel32, KernelLog;
 
 TYPE
-	Counter* = HUGEINT;
+	Counter* = SIGNED64;
 
 CONST
 

@@ -97,11 +97,11 @@ TYPE
 
 VAR
 	window : Window; (* exclusive access only! *)
-	width, height : LONGINT;
-	timeleft : LONGINT; (* exclusive access only! *)
-	nofWindows : LONGINT;
+	width, height : SIGNED32;
+	timeleft : SIGNED32; (* exclusive access only! *)
+	nofWindows : SIGNED32;
 
-	testsRunning : LONGINT; (* exclusive access only! *)
+	testsRunning : SIGNED32; (* exclusive access only! *)
 	stopSelftest : BOOLEAN;
 
 PROCEDURE DecNofWindows;
@@ -115,7 +115,7 @@ BEGIN {EXCLUSIVE}
 	RETURN timeleft < 0;
 END TimeExpired;
 
-PROCEDURE Show*(CONST message : ARRAY OF CHAR; duration : LONGINT);
+PROCEDURE Show*(CONST message : ARRAY OF CHAR; duration : SIGNED32);
 BEGIN {EXCLUSIVE}
 	IF duration <= 0 THEN duration := 500; END;
 	IF window # NIL THEN
@@ -138,7 +138,7 @@ END Show;
 (**	Show the specified message.
 	Optionally specified the duration in milliseconds the window is visible. *)
 PROCEDURE Open*(context : Commands.Context); (** message_string [duration] ~ *)
-VAR message : ARRAY 1024 OF CHAR; duration : LONGINT;
+VAR message : ARRAY 1024 OF CHAR; duration : SIGNED32;
 BEGIN
 	IF context.arg.GetString(message) THEN
 		IF ~context.arg.GetInteger(duration, FALSE) OR (duration <= 0)  THEN duration := DefaultDuration; END;
@@ -159,7 +159,7 @@ PROCEDURE Test*(context : Commands.Context); (** ~ *)
 CONST MinDuration = 1; MaxDuration = 100000;
 VAR
 	random : Random.Generator; timer : Kernel.Timer;
-	number : LONGINT; message : ARRAY 128 OF CHAR;
+	number : SIGNED32; message : ARRAY 128 OF CHAR;
 BEGIN
 	BEGIN {EXCLUSIVE}
 		stopSelftest := FALSE; INC(testsRunning);

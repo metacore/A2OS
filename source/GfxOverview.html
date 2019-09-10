@@ -69,11 +69,11 @@ curves.
 
 <H2><A NAME="Paths.Primitives">Primitives</A></H2>
 <PRE>
-  PROCEDURE DrawLine(ctxt: Context; x0, y0, x1, y1: REAL; mode: SET);
-  PROCEDURE DrawArc(ctxt: Context; x, y, r, start, end: REAL; mode: SET);
-  PROCEDURE DrawRect(ctxt: Context; x0, y0, x1, y1: REAL; mode: SET);
-  PROCEDURE DrawCircle(ctxt: Context; x, y, r: REAL; mode: SET);
-  PROCEDURE DrawEllipse(ctxt: Context; x, y, rx, ry: REAL; mode: SET);
+  PROCEDURE DrawLine(ctxt: Context; x0, y0, x1, y1: FLOAT32; mode: SET);
+  PROCEDURE DrawArc(ctxt: Context; x, y, r, start, end: FLOAT32; mode: SET);
+  PROCEDURE DrawRect(ctxt: Context; x0, y0, x1, y1: FLOAT32; mode: SET);
+  PROCEDURE DrawCircle(ctxt: Context; x, y, r: FLOAT32; mode: SET);
+  PROCEDURE DrawEllipse(ctxt: Context; x, y, rx, ry: FLOAT32; mode: SET);
 </PRE>
 <P>
 These five procedures are provided as a convenience to programmers since they describe often
@@ -125,10 +125,10 @@ odd, otherwise it is inside if the resulting number is different from zero.
   TYPE
     ContextDesc = RECORD
       ...
-      cpx, cpy: REAL;  (* current point in user coordinates *)
+      cpx, cpy: FLOAT32;  (* current point in user coordinates *)
     END;
   
-  PROCEDURE MoveTo(ctxt: Context; x, y: REAL);
+  PROCEDURE MoveTo(ctxt: Context; x, y: FLOAT32);
   PROCEDURE Close(ctxt: Context);
 </PRE>
 <P>
@@ -156,8 +156,8 @@ Gfx offers an alternative way of entering and exiting subpaths which is even mor
 the one using <EM>MoveTo</EM> and <EM>Close</EM>:
 <P>
 <PRE>
-  PROCEDURE Enter(ctxt: Context; x, y, dx, dy: REAL);
-  PROCEDURE Exit(ctxt: Context; dx, dy: REAL);
+  PROCEDURE Enter(ctxt: Context; x, y, dx, dy: FLOAT32);
+  PROCEDURE Exit(ctxt: Context; dx, dy: FLOAT32);
 </PRE>
 <P>
 A subpath can be entered at any point with <EM>Enter</EM>. In addition to the
@@ -181,9 +181,9 @@ which method to use.
 
 <H2><A NAME="Paths.Elements">Subpath Elements</A></H2>
 <PRE>
-  PROCEDURE LineTo(ctxt: Context; x, y: REAL);
-  PROCEDURE ArcTo(ctxt: Context; x, y, x0, y0, x1, y1, x2, y2: REAL);
-  PROCEDURE BezierTo(ctxt: Context; x, y, x1, y1, x2, y2: REAL);
+  PROCEDURE LineTo(ctxt: Context; x, y: FLOAT32);
+  PROCEDURE ArcTo(ctxt: Context; x, y, x0, y0, x1, y1, x2, y2: FLOAT32);
+  PROCEDURE BezierTo(ctxt: Context; x, y, x1, y1, x2, y2: FLOAT32);
 </PRE>
 <P>
 Once a subpath has been started with <EM>MoveTo</EM> or
@@ -213,7 +213,7 @@ In the case of a (cubic) Bezier curve, the additional control points <EM>(x1, y1
     ContextDesc = RECORD
       ...
       path: GfxPaths.Path;  (* current path *)
-      flatness: REAL;  (* current flatness tolerance in device coordinates *)
+      flatness: FLOAT32;  (* current flatness tolerance in device coordinates *)
     END;
     
   PROCEDURE Flatten(ctxt: Context);
@@ -257,14 +257,14 @@ that the current path is always stored in device coordinates.
       ...
       strokeCol, fillCol: GfxColors.Color;  (* current stroke and fill colors *)
       strokePat, fillPat: Pattern;  (* current stroke and fill pattern *)
-      lineWidth: REAL;  (* current line and curve width *)
-      dashPatOn, dashPatOff: ARRAY MaxDashPatSize OF REAL;  (* current dash pattern *)
-      dashPatLen: LONGINT;  (* number of valid elements in dash pattern arrays *)
-      dashPhase: REAL;  (* offset into pattern at first dash *)
+      lineWidth: FLOAT32;  (* current line and curve width *)
+      dashPatOn, dashPatOff: ARRAY MaxDashPatSize OF FLOAT32;  (* current dash pattern *)
+      dashPatLen: SIGNED32;  (* number of valid elements in dash pattern arrays *)
+      dashPhase: FLOAT32;  (* offset into pattern at first dash *)
       capStyle: CapStyle;  (* line cap style *)
       joinStyle: JoinStyle;  (* line join style *)
-      styleLimit: REAL;  (* determines area that may be rendered to by styles *)
-      flatness: REAL;  (* current flatness tolerance in device coordinates *)
+      styleLimit: FLOAT32;  (* determines area that may be rendered to by styles *)
+      flatness: FLOAT32;  (* current flatness tolerance in device coordinates *)
     END;
     
     State = RECORD END;
@@ -278,17 +278,17 @@ that the current path is always stored in device coordinates.
   PROCEDURE SetStrokePattern(ctxt: Context; pat: Pattern);
   PROCEDURE SetFillColor(ctxt: Context; color: GfxColors.Color);
   PROCEDURE SetFillPattern(ctxt: Context; pat: Pattern);
-  PROCEDURE SetLineWidth(ctxt: Context; width: REAL);
-  PROCEDURE SetDashPattern(ctxt: Context; VAR on, off: ARRAY OF REAL; len: LONGINT; phase: REAL);
+  PROCEDURE SetLineWidth(ctxt: Context; width: FLOAT32);
+  PROCEDURE SetDashPattern(ctxt: Context; VAR on, off: ARRAY OF FLOAT32; len: SIGNED32; phase: FLOAT32);
   PROCEDURE SetCapStyle(ctxt: Context; style: CapStyle);
   PROCEDURE SetJoinStyle(ctxt: Context; style: JoinStyle);
-  PROCEDURE SetStyleLimit(ctxt: Context; limit: REAL);
-  PROCEDURE SetFlatness(ctxt: Context; flatness: REAL);
+  PROCEDURE SetStyleLimit(ctxt: Context; limit: FLOAT32);
+  PROCEDURE SetFlatness(ctxt: Context; flatness: FLOAT32);
   
   PROCEDURE Save(ctxt: Context; elems: SET; VAR state: State);
   PROCEDURE Restore(ctxt: Context; state: State);
   
-  PROCEDURE NewPattern(ctxt: Context; map: GfxMaps.Map; px, py: REAL): Pattern;
+  PROCEDURE NewPattern(ctxt: Context; map: GfxMaps.Map; px, py: FLOAT32): Pattern;
 </PRE>
 <P>
 Context attributes have an effect on how paths are rendered. Whenever they are modified,
@@ -375,11 +375,11 @@ and translate the coordinate system but also to rotate and shear it.
   
   PROCEDURE ResetCTM(ctxt: Context);
   PROCEDURE SetCTM(ctxt: Context; VAR mat: GfxTrafos.Matrix);
-  PROCEDURE Translate(ctxt: Context; dx, dy: REAL);
-  PROCEDURE Scale(ctxt: Context; sx, sy: REAL);
-  PROCEDURE ScaleAt(ctxt: Context; sx, sy, x, y: REAL);
-  PROCEDURE Rotate(ctxt: Context; sin, cos: REAL);
-  PROCEDURE RotateAt(ctxt: Context; sin, cos, x, y: REAL);
+  PROCEDURE Translate(ctxt: Context; dx, dy: FLOAT32);
+  PROCEDURE Scale(ctxt: Context; sx, sy: FLOAT32);
+  PROCEDURE ScaleAt(ctxt: Context; sx, sy, x, y: FLOAT32);
+  PROCEDURE Rotate(ctxt: Context; sin, cos: FLOAT32);
+  PROCEDURE RotateAt(ctxt: Context; sin, cos, x, y: FLOAT32);
   PROCEDURE Concat(ctxt: Context; VAR mat: GfxTrafos.Matrix);
 </PRE>
 <P>
@@ -409,18 +409,18 @@ which is used for transforming graphical context attributes
   TYPE
     ContextDesc = RECORD
       ...
-      cpx, cpy: REAL;  (* current point *)
+      cpx, cpy: FLOAT32;  (* current point *)
       font: GfxFonts.Font;  (* current font *)
     END;
   
   PROCEDURE SetFont(ctxt: Context; font: GfxFonts.Font);
-  PROCEDURE SetFontName(ctxt: Context; fontname: ARRAY OF CHAR; size: INTEGER);
-  PROCEDURE GetStringWidth(ctxt: Context; str: ARRAY OF CHAR; VAR dx, dy: REAL);
+  PROCEDURE SetFontName(ctxt: Context; fontname: ARRAY OF CHAR; size: SIGNED16);
+  PROCEDURE GetStringWidth(ctxt: Context; str: ARRAY OF CHAR; VAR dx, dy: FLOAT32);
   
-  PROCEDURE ShowAt(ctxt: Context; x, y: REAL; str: ARRAY OF CHAR);
+  PROCEDURE ShowAt(ctxt: Context; x, y: FLOAT32; str: ARRAY OF CHAR);
   PROCEDURE Show(ctxt: Context; str: ARRAY OF CHAR);
   
-  PROCEDURE DrawStringAt(ctxt: Context; x, y: REAL; str: ARRAY OF CHAR);
+  PROCEDURE DrawStringAt(ctxt: Context; x, y: FLOAT32; str: ARRAY OF CHAR);
   PROCEDURE DrawString(ctxt: Context; str: ARRAY OF CHAR);
 </PRE>
 <P>
@@ -460,9 +460,9 @@ needed, which is encapsulated in module GfxFonts.
     Font = POINTER TO FontDesc;
     FontDesc = RECORD
       name: FontName;  (* e.g. "Oberon-Bold" *)
-      ptsize: INTEGER;	(* point size *)
+      ptsize: SIGNED16;	(* point size *)
       mat: GfxMatrix.Matrix;  (* font matrix *)
-      xmin, ymin, xmax, ymax: INTEGER;  (* union of character bounding boxes *)
+      xmin, ymin, xmax, ymax: SIGNED16;  (* union of character bounding boxes *)
       rfont: Fonts.Font;  (* Oberon raster font (if available) *)
       niceMaps: BOOLEAN;  (* true if returned maps look better than just filled outlines *)
     END;
@@ -470,12 +470,12 @@ needed, which is encapsulated in module GfxFonts.
   VAR
     Default: Font;
   
-  PROCEDURE Open(name: ARRAY OF CHAR; ptsize: INTEGER; mat: GfxMatrix.Matrix): Font;
-  PROCEDURE OpenSize(name: ARRAY OF CHAR; ptsize: INTEGER): Font;
-  PROCEDURE GetWidth(font: Font; ch: CHAR; VAR dx, dy: REAL);
-  PROCEDURE GetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Images.Image);
-  PROCEDURE GetOutline(font: Font; ch: CHAR; x, y: REAL; path: GfxPaths.Path);
-  PROCEDURE GetStringWidth(font: Font; str: ARRAY OF CHAR; VAR dx, dy: REAL);
+  PROCEDURE Open(name: ARRAY OF CHAR; ptsize: SIGNED16; mat: GfxMatrix.Matrix): Font;
+  PROCEDURE OpenSize(name: ARRAY OF CHAR; ptsize: SIGNED16): Font;
+  PROCEDURE GetWidth(font: Font; ch: CHAR; VAR dx, dy: FLOAT32);
+  PROCEDURE GetMap(font: Font; ch: CHAR; VAR x, y, dx, dy: FLOAT32; VAR map: Images.Image);
+  PROCEDURE GetOutline(font: Font; ch: CHAR; x, y: FLOAT32; path: GfxPaths.Path);
+  PROCEDURE GetStringWidth(font: Font; str: ARRAY OF CHAR; VAR dx, dy: FLOAT32);
 </PRE>
 <P>
 Fonts are defined by their name, which consists of family and style (e.g. "Oberon-Bold"),
@@ -499,7 +499,7 @@ Gfx.Tool.
 <HR>
 <H2><A NAME="Images">Images</A></H2>
 <PRE>
-  PROCEDURE DrawImageAt(ctxt: Context; x, y: REAL; img: Images.Image; VAR filter: GfxImages.Filter);
+  PROCEDURE DrawImageAt(ctxt: Context; x, y: FLOAT32; img: Images.Image; VAR filter: GfxImages.Filter);
 </PRE>
 <P>
 Images are rendered with their lower left corner at a given point with
@@ -516,7 +516,7 @@ TYPE
   ClipAreaDesc = RECORD END;
   
   PROCEDURE ResetClip(ctxt: Context);
-  PROCEDURE GetClipRect(ctxt: Context; VAR llx, lly, urx, ury: REAL);
+  PROCEDURE GetClipRect(ctxt: Context; VAR llx, lly, urx, ury: FLOAT32);
   PROCEDURE GetClip(ctxt: Context): ClipArea;
   PROCEDURE SetClip(ctxt: Context; clip: ClipArea);
 </PRE>
@@ -541,8 +541,8 @@ affect the interior of the new clip area until the clip area is reset or a previ
     ContextDesc = RECORD (GfxContexts.ContextDesc)
       clipReg: Region;  (* interior of clip path *)
       pathReg: GfxRegions.Region;  (* interior of current path *)
-      dot: PROCEDURE(rc: Context; x, y: LONGINT);  (* current dot procedure *)
-      rect: PROCEDURE(rc: Context; lx, ly, rx, uy: LONGINT);  (* current rect procedure *)
+      dot: PROCEDURE(rc: Context; x, y: SIGNED32);  (* current dot procedure *)
+      rect: PROCEDURE(rc: Context; lx, ly, rx, uy: SIGNED32);  (* current rect procedure *)
       ...
     END;
 </PRE>
@@ -568,14 +568,14 @@ PostScript operations and writes them to a file.
     ContextDesc = RECORD (GfxContexts.ContextDesc)
       psfile: Files.File;  (* output file *)
       out: Files.Rider;  (* rider on output file *)
-      width, height: REAL;  (* paper size in default coordinates *)
-      left, bot, right, top: REAL;  (* borders in default coordinates *)
+      width, height: FLOAT32;  (* paper size in default coordinates *)
+      left, bot, right, top: FLOAT32;  (* borders in default coordinates *)
       level2, landscape, eps: BOOLEAN;
-      res: LONGINT;  (* device resolution *)
+      res: SIGNED32;  (* device resolution *)
     END;
     
-  PROCEDURE Init(psc: Context; level2, landscape: BOOLEAN; width, height, left, right, bot, top: REAL; res: LONGINT);
-  PROCEDURE InitEPS(psc: Context; level2: BOOLEAN; res: LONGINT);
+  PROCEDURE Init(psc: Context; level2, landscape: BOOLEAN; width, height, left, right, bot, top: FLOAT32; res: SIGNED32);
+  PROCEDURE InitEPS(psc: Context; level2: BOOLEAN; res: SIGNED32);
   PROCEDURE Open(psc: Context; file: Files.File);
   PROCEDURE ShowPage(psc: Context);
   PROCEDURE Close(psc: Context);

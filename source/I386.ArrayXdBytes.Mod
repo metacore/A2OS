@@ -14,9 +14,9 @@ CONST
 	strongIndexChecking = TRUE;  debug = FALSE;
 
 TYPE
-	Index* = LONGINT;
+	Index* = SIGNED32;
 	IndexArray* = POINTER TO ARRAY OF Index;
-	Address* = LONGINT;
+	Address* = SIGNED32;
 
 TYPE
 	(** basic memory structure for arrays with arbitrary dimension  *)
@@ -43,14 +43,14 @@ TYPE
 		if block = TRUE then traverses memory blockwise with largest continuous blocks, 	e.g. (a[0,0,0]-a[0,l2,l1]), (a[1,0,0]-a[1,l2,l1]), ... , (a[l3,0,0]-a[l3,l2,1])*)
 
 	Enumerator* = OBJECT
-	VAR dim: LONGINT;
+	VAR dim: SIGNED32;
 		mem: ArrayMemoryStructure;
-		adr-, size-: LONGINT;
-		lncdim: LONGINT;   (* lowest not continuous dimension *)
+		adr-, size-: SIGNED32;
+		lncdim: SIGNED32;   (* lowest not continuous dimension *)
 		pos-, origin, len: IndexArray;
 
 		PROCEDURE & Init*( mem: ArrayMemoryStructure;  enumorigin, enumlen: IndexArray;  block: BOOLEAN );
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			SELF.mem := mem;
 			IF enumorigin = NIL THEN enumorigin := mem.origin END;
@@ -71,7 +71,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Next*( ): BOOLEAN;
-		VAR i, j: LONGINT;  org, length: LONGINT;
+		VAR i, j: SIGNED32;  org, length: SIGNED32;
 		BEGIN
 			IF lncdim = dim THEN
 				IF debug THEN dbgOut.String( "Enumerator.next: all continuous, dim=" );  dbgOut.Int( lncdim, 0 );  dbgOut.Ln;  END;
@@ -97,9 +97,9 @@ TYPE
 	VAR  (**)
 		protector: ANY;   (* temporary pointer to protect data from being garbage collected *)
 		permutation-: IndexArray;   (* permutation used for INTERNALLY accessing the data. *)
-		bc-: SHORTINT;   (* boundary condition, abstract *)
+		bc-: SIGNED8;   (* boundary condition, abstract *)
 		(** public values *)
-		(* boundaryCondition-: SHORTINT;   *)
+		(* boundaryCondition-: SIGNED8;   *)
 		(* used-: IndexArray;   (*  in preparation *)*)
 
 		(** cache variables for faster access *)
@@ -114,25 +114,25 @@ TYPE
 
 
 	(** get information about elementsize, must be provided by each implementation of Array *)
-		PROCEDURE GetInfo*( VAR elementsize: LONGINT );
+		PROCEDURE GetInfo*( VAR elementsize: SIGNED32 );
 		BEGIN
 			HALT( 1001 );   (* abstract *)
 		END GetInfo;
 
-		PROCEDURE SetBoundaryCondition*( c: SHORTINT );   (* to be overridden in higher level modules to determine access methods*)
+		PROCEDURE SetBoundaryCondition*( c: SIGNED8 );   (* to be overridden in higher level modules to determine access methods*)
 		BEGIN
 			bc := c;
 		END SetBoundaryCondition;
 
 	(** Allocate memory, should be provided by each implementation of Arrays but can also be done here *)
-		PROCEDURE Allocate*( size: LONGINT;  VAR baseadr: LONGINT;  VAR protector: ANY );
+		PROCEDURE Allocate*( size: SIGNED32;  VAR baseadr: SIGNED32;  VAR protector: ANY );
 		VAR alloc: POINTER TO ARRAY OF SYSTEM.BYTE;
 		BEGIN
 			NEW( alloc, size * elementsize );  baseadr := ADDRESSOF( alloc[0] );  protector := alloc;
 		END Allocate;
 
 		PROCEDURE ValidateCache*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			IF dim > 3 THEN f3 := diminc[3];  o3 := origin[3];  l3 := len[3];  ELSE f3 := 0;  l3 := 0;  END;
 			IF dim > 2 THEN f2 := diminc[2];  o2 := origin[2];  l2 := len[2];  ELSE f2 := 0;  l2 := 0;  END;
@@ -142,7 +142,7 @@ TYPE
 			WHILE (i < dim) DO adrwoffset := adrwoffset - origin[i] * diminc[i];  INC( i );  END;
 		END ValidateCache;
 
-		PROCEDURE Init( newdim: LONGINT );
+		PROCEDURE Init( newdim: SIGNED32 );
 		BEGIN
 			dim := newdim;  CheckIndexArray( dim, len );  CheckIndexArray( dim, origin );
 			CheckIndexArray( dim, permutation );  CheckIndexArray( dim, diminc );
@@ -150,7 +150,7 @@ TYPE
 
 	(** NewXdb, allocate memory for the array,  should be called by any constructors of an implementation of array *)
 		PROCEDURE & NewXdB*( neworigin, newlen: IndexArray);
-		VAR i, size: LONGINT;
+		VAR i, size: SIGNED32;
 		BEGIN
 			Init( LEN( newlen ) );
 			IF newlen[0] = 0 THEN RETURN END;   (* newlen[0]=0: create empty array for load procedure *)
@@ -178,7 +178,7 @@ TYPE
 	(** resize and / or shift origin, if copydata=TRUE then all data at same positions are kept *)
 		PROCEDURE NewRangeX*( neworigin, newlen: IndexArray;  preservedata: BOOLEAN );
 		(* reduce or extend dimensions with copy *)
-		VAR same: BOOLEAN;  i: LONGINT;  olddata: ArrayMemoryStructure;
+		VAR same: BOOLEAN;  i: SIGNED32;  olddata: ArrayMemoryStructure;
 
 		BEGIN
 			IF LEN( newlen ) # LEN( neworigin ) THEN HALT( 1001 ) END;
@@ -282,7 +282,7 @@ TYPE
 
 	(** exchange elements at pos1 and pos2 in dimension <dimension>. *)
 		PROCEDURE ToggleElements*( dimension: Index;  pos1, pos2: Index );
-		VAR offset1, offset2, swaplen, diminclen, srcadr, stop, dataadr: LONGINT;  swapcache: IndexArray;
+		VAR offset1, offset2, swaplen, diminclen, srcadr, stop, dataadr: SIGNED32;  swapcache: IndexArray;
 		BEGIN
 			IF (dimension < 0) OR (dimension >= dim) THEN HALT( 1001 );  END;
 			IF (pos1 < origin[dimension]) OR (pos1 >= origin[dimension] + len[dimension]) THEN HALT( 1002 ) END;
@@ -303,7 +303,7 @@ TYPE
 		END ToggleElements;
 	(** permute elements in dimension <dimension>, permutation must have length len[dimension] *)
 		PROCEDURE PermuteElements*( dimension: Index;  permutation: ARRAY OF Index );
-		VAR i, swaplen, diminclen, stop, srcadr, dataadr: LONGINT;  swapcache: IndexArray;
+		VAR i, swaplen, diminclen, stop, srcadr, dataadr: SIGNED32;  swapcache: IndexArray;
 		BEGIN
 			(** index checks: *)
 			IF (dimension < 0) OR (dimension >= dim) THEN HALT( 1001 );  END;
@@ -330,7 +330,7 @@ TYPE
 
 	(** reverse order of elements in dimension <dimension> *)
 		PROCEDURE MirrorDimension*( dimension: Index );
-		VAR swaplen, diminclen, srcadr, stop, i, stop2: LONGINT;  dataadr: LONGINT;  swapcache: IndexArray;
+		VAR swaplen, diminclen, srcadr, stop, i, stop2: SIGNED32;  dataadr: SIGNED32;  swapcache: IndexArray;
 		BEGIN
 			IF (dimension < 0) OR (dimension >= dim) THEN HALT( 1001 );  END;
 
@@ -351,7 +351,7 @@ TYPE
 		END MirrorDimension;
 	(** copy block of data within dimension <dimension> from <from> to <to> *)
 		PROCEDURE BlockCopy*( dimension, from, to, length: Index );
-		VAR swaplen, diminclen, stop: LONGINT;
+		VAR swaplen, diminclen, stop: SIGNED32;
 			(*! todo: handle used *)
 		BEGIN
 			IF (dimension < 0) OR (dimension >= dim) THEN HALT( 1001 );  END;
@@ -374,7 +374,7 @@ TYPE
 		END BlockCopy;
 	(** move block of data within dimension <dimension> from <from> to <to> *)
 		PROCEDURE BlockMove*( dimension, from, to, length: Index );
-		VAR swaplen, diminclen, stop: LONGINT;  movefrom, moveto, movelen, dataadr: LONGINT;  swapcache: IndexArray;
+		VAR swaplen, diminclen, stop: SIGNED32;  movefrom, moveto, movelen, dataadr: SIGNED32;  swapcache: IndexArray;
 			(*! todo: handle used *)
 		BEGIN
 			IF (dimension < 0) OR (dimension >= dim) THEN HALT( 1001 );  END;
@@ -409,7 +409,7 @@ TYPE
 		END BlockMove;
 
 		PROCEDURE LoadXd*( VAR R: DataIO.Reader );
-		VAR version, i, size: LONGINT;  readRawData: BOOLEAN;  readbytes: LONGINT;
+		VAR version, i, size: SIGNED32;  readRawData: BOOLEAN;  readbytes: SIGNED32;
 		BEGIN
 			R.RawLInt( version );  R.RawLInt( dim );  NEW( len, dim );  NEW( diminc, dim );  NEW( origin, dim );  NEW( permutation, dim );
 			GetInfo( elementsize );  size := 1;
@@ -433,7 +433,7 @@ TYPE
 
 		PROCEDURE StoreXd*( VAR W: DataIO.Writer;  storeRawData: BOOLEAN );
 		CONST version = 0;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			W.RawLInt( version );
 			(* baseadr+bytes set while Allocation *)
@@ -463,7 +463,7 @@ TYPE
 	VAR root: Rectangle;
 
 		PROCEDURE & Init*( a: Array;  origin, len: IndexArray );
-		VAR dim, this: LONGINT;  rect: Rectangle;  rectorigin, rectlen: IndexArray;  i: LONGINT;  done: BOOLEAN;
+		VAR dim, this: SIGNED32;  rect: Rectangle;  rectorigin, rectlen: IndexArray;  i: SIGNED32;  done: BOOLEAN;
 
 			PROCEDURE Min( x, y: Index ): Index;
 			BEGIN
@@ -530,10 +530,10 @@ TYPE
 
 	(* The in-line assember code works in WinAos, but not in Aos.  Why?  We don't know yet.
 	(** store memory to Writer as if it was ARRAY OF CHAR *)
-	PROCEDURE StoreMemory( W: DataIO.Writer;  baseadr: LONGINT;  len: LONGINT );
-	VAR proc: PROCEDURE {DELEGATE} ( VAR x: ARRAY OF CHAR;  ofs, len: LONGINT );
+	PROCEDURE StoreMemory( W: DataIO.Writer;  baseadr: SIGNED32;  len: SIGNED32 );
+	VAR proc: PROCEDURE {DELEGATE} ( VAR x: ARRAY OF CHAR;  ofs, len: SIGNED32 );
 
-		PROCEDURE PushAndCall( writer: LONGINT;  call: LONGINT;  baseadr: LONGINT;  len: LONGINT );
+		PROCEDURE PushAndCall( writer: SIGNED32;  call: SIGNED32;  baseadr: SIGNED32;  len: SIGNED32 );
 		CODE {SYSTEM.i386}
 			PUSH	len[EBP]	;  array length
 			PUSH	baseadr[EBP]	;  array position array[0]
@@ -545,15 +545,15 @@ TYPE
 		END PushAndCall;
 
 	BEGIN
-		proc := W.Bytes;  PushAndCall( SYSTEM.VAL( LONGINT, W ), SYSTEM.VAL( LONGINT, proc ), baseadr, len );
+		proc := W.Bytes;  PushAndCall( SYSTEM.VAL( SIGNED32, W ), SYSTEM.VAL( SIGNED32, proc ), baseadr, len );
 	END StoreMemory;
 
 
 (** read memory from reader as if it was ARRAY OF CHAR *)
-	PROCEDURE ReadMemory( R: DataIO.Reader;  baseadr: LONGINT;  size: LONGINT;  VAR len: LONGINT );
-	VAR proc: PROCEDURE {DELEGATE} ( VAR x: ARRAY OF CHAR;  ofs, size: LONGINT;  VAR len: LONGINT );
+	PROCEDURE ReadMemory( R: DataIO.Reader;  baseadr: SIGNED32;  size: SIGNED32;  VAR len: SIGNED32 );
+	VAR proc: PROCEDURE {DELEGATE} ( VAR x: ARRAY OF CHAR;  ofs, size: SIGNED32;  VAR len: SIGNED32 );
 
-		PROCEDURE PushAndCall( reader: LONGINT;  call: LONGINT;  baseadr: LONGINT;  size: LONGINT;  lenadr: LONGINT );
+		PROCEDURE PushAndCall( reader: SIGNED32;  call: SIGNED32;  baseadr: SIGNED32;  size: SIGNED32;  lenadr: SIGNED32 );
 		CODE {SYSTEM.i386}
 			PUSH	len[EBP]	;
 			PUSH	baseadr[EBP]
@@ -566,20 +566,20 @@ TYPE
 		END PushAndCall;
 
 	BEGIN
-		proc := R.Bytes;  PushAndCall( SYSTEM.VAL( LONGINT, R ), SYSTEM.VAL( LONGINT, proc ), baseadr, size, ADDRESSOF( len ) );
+		proc := R.Bytes;  PushAndCall( SYSTEM.VAL( SIGNED32, R ), SYSTEM.VAL( SIGNED32, proc ), baseadr, size, ADDRESSOF( len ) );
 	END ReadMemory;
 *)
 
 	(** oberon versions of Store and Read Memory: *)
-	PROCEDURE StoreMemory( W: DataIO.Writer;  baseadr: LONGINT;  len: LONGINT );   (* store memory to Writer  *)
-	VAR adr: LONGINT;  char: CHAR;
+	PROCEDURE StoreMemory( W: DataIO.Writer;  baseadr: SIGNED32;  len: SIGNED32 );   (* store memory to Writer  *)
+	VAR adr: SIGNED32;  char: CHAR;
 	BEGIN
 		adr := baseadr;  INC( len, baseadr );
 		WHILE (adr < len) DO SYSTEM.GET( adr, char );  W.Char( char );  INC( adr );  END;
 	END StoreMemory;
 
-	PROCEDURE ReadMemory( R: DataIO.Reader;  baseadr: LONGINT;  size: LONGINT;  VAR len: LONGINT );   (* read memory from reader *)
-	VAR adr: LONGINT;  char: CHAR;
+	PROCEDURE ReadMemory( R: DataIO.Reader;  baseadr: SIGNED32;  size: SIGNED32;  VAR len: SIGNED32 );   (* read memory from reader *)
+	VAR adr: SIGNED32;  char: CHAR;
 	BEGIN
 		adr := baseadr;  INC( size, baseadr );  len := 0;
 		WHILE (adr < size) DO R.Char( char );  SYSTEM.PUT( adr, char );  INC( adr );  INC( len );  END;
@@ -594,14 +594,14 @@ TYPE
 	END CheckIndexArray;
 
 	PROCEDURE CopyIndexArray( src: ARRAY OF Index;  dest: IndexArray );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (i < LEN( dest )) DO dest[i] := src[i];  INC( i );  END;
 	END CopyIndexArray;
 
 	PROCEDURE Intersect*( org1, len1, org2, len2: IndexArray;  VAR org, len: IndexArray ): BOOLEAN;
-	VAR i, dim: LONGINT;  o1, o2, l1, l2: LONGINT;
+	VAR i, dim: SIGNED32;  o1, o2, l1, l2: SIGNED32;
 	BEGIN
 		IF (LEN( org1 ) # LEN( len1 )) OR (LEN( org2 ) # LEN( len2 )) THEN HALT( 1000 ) END;
 		dim := MIN( LEN( org1 ), LEN( org2 ) );  NEW( org, dim );  NEW( len, dim );  i := 0;
@@ -622,7 +622,7 @@ TYPE
 		RETURN TRUE;
 	END Intersect;
 
-	PROCEDURE -CheckLEQ*( lesseq, than: LONGINT );
+	PROCEDURE -CheckLEQ*( lesseq, than: SIGNED32 );
 	(* invoke trap  INDEX OUT OF RANGE   if lesseq > than *)
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  than
@@ -635,7 +635,7 @@ TYPE
 		ADD	ESP, 8
 	END CheckLEQ;
 
-	PROCEDURE -CheckLE*( lesseq, than: LONGINT );
+	PROCEDURE -CheckLE*( lesseq, than: SIGNED32 );
 	(* invoke trap  INDEX OUT OF RANGE   if lesseq > than *)
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  than
@@ -648,11 +648,11 @@ TYPE
 		ADD	ESP, 8
 	END CheckLE;
 
-	PROCEDURE -CheckEQ*( equals, this: LONGINT );
+	PROCEDURE -CheckEQ*( equals, this: SIGNED32 );
 	(* invoke trap  INDEX OUT OF RANGE   if equals # this *)
 	(*
 		Oberon code for CheckEQ:
-		PROCEDURE CheckEQ*(lesseq,than: LONGINT)
+		PROCEDURE CheckEQ*(lesseq,than: SIGNED32)
 		BEGIN IF this=equals THEN HALT(100) (* in asm:  invoke trap  INDEX OUT OF RANGE *)  END; END CheckEQ;
 	*)
 	CODE {SYSTEM.i386}
@@ -667,19 +667,19 @@ TYPE
 	END CheckEQ;
 
 (** chck permutation for validity, precondition: permutation has less  than 2^31 entries since bit 31 is used for marking *)
-	PROCEDURE CheckPermutation( dim: LONGINT;  VAR permutation: ARRAY OF LONGINT ): BOOLEAN;
-	VAR i, j: LONGINT;  valid: BOOLEAN;  set: SET;
+	PROCEDURE CheckPermutation( dim: SIGNED32;  VAR permutation: ARRAY OF SIGNED32 ): BOOLEAN;
+	VAR i, j: SIGNED32;  valid: BOOLEAN;  set: SET;
 	BEGIN
 		IF LEN( permutation ) # dim THEN RETURN FALSE END;
 		i := 0;
 		WHILE (i < dim) DO
-			j := SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, permutation[i] ) - {31} );  INCL( SYSTEM.VAL( SET, permutation[j] ), 31 );  INC( i );
+			j := SYSTEM.VAL( SIGNED32, SYSTEM.VAL( SET, permutation[i] ) - {31} );  INCL( SYSTEM.VAL( SET, permutation[j] ), 31 );  INC( i );
 		END;
 		i := 0;  valid := TRUE;
 		WHILE (i < dim) DO
 			set := SYSTEM.VAL( SET, permutation[i] );
 			IF 31 IN set THEN EXCL( set, 31 ) ELSE valid := FALSE END;
-			permutation[i] := SYSTEM.VAL( LONGINT, set );  INC( i );
+			permutation[i] := SYSTEM.VAL( SIGNED32, set );  INC( i );
 		END;
 		RETURN valid;
 	END CheckPermutation;
@@ -687,8 +687,8 @@ TYPE
 (** make a valid permutation from firstpart of permutation, i.e. extend to len LEN(permutation) and check for validity
 	example: beginning = (3,4), full = (1,2,3,4,5) -> full = (3,4,1,2,5)
 	*)
-	PROCEDURE CompletePermutation( beginning: ARRAY OF LONGINT;  full: ARRAY OF LONGINT ): BOOLEAN;
-	VAR srcdim, destdim, i, j, val, this, next: LONGINT;
+	PROCEDURE CompletePermutation( beginning: ARRAY OF SIGNED32;  full: ARRAY OF SIGNED32 ): BOOLEAN;
+	VAR srcdim, destdim, i, j, val, this, next: SIGNED32;
 	BEGIN
 		srcdim := LEN( beginning );  destdim := LEN( full );
 		IF srcdim > destdim THEN HALT( 100 ) END;
@@ -709,7 +709,7 @@ TYPE
 	END CompletePermutation;
 
 	PROCEDURE ApplyPermutation( permutation: ARRAY OF Index;  VAR array: ARRAY OF Index );
-	VAR i, dim: LONGINT;
+	VAR i, dim: SIGNED32;
 	BEGIN
 		dim := LEN( permutation );  i := 0;
 		WHILE (i < dim) DO permutation[i] := array[permutation[i]];  INC( i );  END;
@@ -717,16 +717,16 @@ TYPE
 		WHILE (i < dim) DO array[i] := permutation[i];  INC( i );  END;
 	END ApplyPermutation;
 
-	PROCEDURE IdentityPermutation( dim: LONGINT ): IndexArray;
-	VAR a: IndexArray;  i: LONGINT;
+	PROCEDURE IdentityPermutation( dim: SIGNED32 ): IndexArray;
+	VAR a: IndexArray;  i: SIGNED32;
 	BEGIN
 		NEW( a, dim );  i := 0;
 		WHILE (i < dim) DO a[i] := i;  INC( i );  END;
 		RETURN a;
 	END IdentityPermutation;
 
-	PROCEDURE ComputeIncrease( len: IndexArray;  permutation: IndexArray;  elementsize: LONGINT;  diminc: IndexArray );
-	VAR i: LONGINT;
+	PROCEDURE ComputeIncrease( len: IndexArray;  permutation: IndexArray;  elementsize: SIGNED32;  diminc: IndexArray );
+	VAR i: SIGNED32;
 	BEGIN
 		IF permutation # NIL THEN
 			i := 1;  diminc[permutation[0]] := elementsize;
@@ -753,7 +753,7 @@ TYPE
 	END AMSCopyDescr;
 
 	PROCEDURE EnumArrayPart( mem: ArrayMemoryStructure;  pos, len: IndexArray;  chunks: BOOLEAN ): Enumerator;
-	VAR enum: Enumerator;  i: LONGINT;  check: BOOLEAN;
+	VAR enum: Enumerator;  i: SIGNED32;  check: BOOLEAN;
 	BEGIN
 		check := FALSE;
 		IF pos = NIL THEN pos := mem.origin ELSE check := TRUE;  END;
@@ -781,11 +781,11 @@ TYPE
 *)
 
 (** Traverse memory elementwise with a function proc, proc must be the adress of a  PROCEDURE (VAR l: (elementtype) );
-		example with basic type LONGREAL:  TraverseMemory(ADDRESSOF(p),mem); with p := PROCEDURE (VAR l: LONGREAL); *)
+		example with basic type FLOAT64:  TraverseMemory(ADDRESSOF(p),mem); with p := PROCEDURE (VAR l: FLOAT64); *)
 	PROCEDURE TraverseMemory*( proc: Address;  mem: ArrayMemoryStructure );
-	VAR enum: Enumerator;  len, diminclen, adr: LONGINT;
+	VAR enum: Enumerator;  len, diminclen, adr: SIGNED32;
 
-		PROCEDURE PushAdrAndCall( adr: LONGINT;  calladr: LONGINT );
+		PROCEDURE PushAdrAndCall( adr: SIGNED32;  calladr: SIGNED32 );
 		CODE {SYSTEM.i386}
 			PUSH	[EBP+adr]	;
 			CALL	[EBP+calladr]	;
@@ -801,11 +801,11 @@ TYPE
 	END TraverseMemory;
 
 (** Traverse memory elementwise with a function proc, proc must be the adress of a  PROCEDURE (VAR l,r: (elementtype) );
-	example with basic type LONGREAL;  TraverseMemory(ADDRESSOF(p),left,right); with p := PROCEDURE (VAR l,r: LONGREAL); *)
+	example with basic type FLOAT64;  TraverseMemory(ADDRESSOF(p),left,right); with p := PROCEDURE (VAR l,r: FLOAT64); *)
 	PROCEDURE TraverseMemory2*( proc: Address;  srcmem, destmem: ArrayMemoryStructure );
 	VAR src, dest: Enumerator;
 
-		PROCEDURE PushAdrAndCall2( src, dest: LONGINT;  calladr: LONGINT );
+		PROCEDURE PushAdrAndCall2( src, dest: SIGNED32;  calladr: SIGNED32 );
 		CODE {SYSTEM.i386}
 			PUSH	[EBP+src]	;
 			PUSH	[EBP+dest]
@@ -820,11 +820,11 @@ TYPE
 	END TraverseMemory2;
 
 (** Traverse memory elementwise with a function proc, proc must be the adress of a  PROCEDURE (VAR l,r: (elementtype) );
-	example with basic type LONGREAL;  TraverseMemory(ADDRESSOF(p),left,right,dest); with p := PROCEDURE (VAR l,r,d: LONGREAL); *)
+	example with basic type FLOAT64;  TraverseMemory(ADDRESSOF(p),left,right,dest); with p := PROCEDURE (VAR l,r,d: FLOAT64); *)
 	PROCEDURE TraverseMemory3*( proc: Address;  leftmem, rightmem, destmem: ArrayMemoryStructure );
 	VAR left, right, dest: Enumerator;
 
-		PROCEDURE PushAdrAndCall3( left, right, dest: LONGINT;  calladr: LONGINT );
+		PROCEDURE PushAdrAndCall3( left, right, dest: SIGNED32;  calladr: SIGNED32 );
 		CODE {SYSTEM.i386}
 			PUSH	[EBP+left]	;
 			PUSH	[EBP+right]	;
@@ -842,7 +842,7 @@ TYPE
 	END TraverseMemory3;
 
 	PROCEDURE TraverseAndCopy( src, dest: Enumerator );
-	VAR srcdiminclen, destdiminclen, diminclen, srcadr, destadr: LONGINT;
+	VAR srcdiminclen, destdiminclen, diminclen, srcadr, destadr: SIGNED32;
 	BEGIN
 		srcadr := src.adr;  destadr := dest.adr;  srcdiminclen := src.size;  destdiminclen := dest.size;
 		IF (srcdiminclen < destdiminclen) THEN diminclen := srcdiminclen ELSE diminclen := destdiminclen END;
@@ -877,7 +877,7 @@ TYPE
 	END CopyDataByCoordinateTraversal;
 
 	PROCEDURE CopyDataRaw*( srcmem, destmem: ArrayMemoryStructure );
-	VAR len: LONGINT;
+	VAR len: SIGNED32;
 	BEGIN
 		len := MIN( srcmem.bytes, destmem.bytes );  SYSTEM.MOVE( srcmem.baseadr, destmem.baseadr, len );
 	END CopyDataRaw;
@@ -891,15 +891,15 @@ TYPE
 		END;
 	END CopyDataPositionPreserving;
 
-	PROCEDURE MakeMemoryStructure*( dim: LONGINT;  origin, len: IndexArray;  elementsize: Index;
+	PROCEDURE MakeMemoryStructure*( dim: SIGNED32;  origin, len: IndexArray;  elementsize: Index;
 																 baseadr: Address ): ArrayMemoryStructure;
 	VAR memory: ArrayMemoryStructure;
 	BEGIN
 		NEW( memory );  memory.dim := dim;  NEW( memory.len, dim );  NEW( memory.diminc, dim );  NEW( memory.origin, dim );
 		memory.elementsize := elementsize;  memory.baseadr := baseadr;  memory.adrwoffset := baseadr;
 
-		Array1dBytes.MoveB( ADDRESSOF( len[0] ), ADDRESSOF( memory.len[0] ), SIZEOF( LONGINT ) * dim );
-		Array1dBytes.MoveB( ADDRESSOF( origin[0] ), ADDRESSOF( memory.origin[0] ), SIZEOF( LONGINT ) * dim );
+		Array1dBytes.MoveB( ADDRESSOF( len[0] ), ADDRESSOF( memory.len[0] ), SIZEOF( SIGNED32 ) * dim );
+		Array1dBytes.MoveB( ADDRESSOF( origin[0] ), ADDRESSOF( memory.origin[0] ), SIZEOF( SIGNED32 ) * dim );
 		ComputeIncrease( memory.len, NIL , elementsize, memory.diminc );
 
 		(*  (* bug fixed in Vs 1.1 *)	(** check: *)
@@ -910,7 +910,7 @@ TYPE
 		memory.bytes := memory.diminc[dim - 1] * memory.len[dim - 1];  RETURN memory;
 	END MakeMemoryStructure;
 
-	PROCEDURE MakeContinuousMemStruct*( adr, elements, elementsize: LONGINT;  VAR memory: ArrayMemoryStructure );
+	PROCEDURE MakeContinuousMemStruct*( adr, elements, elementsize: SIGNED32;  VAR memory: ArrayMemoryStructure );
 	BEGIN
 		IF memory = NIL THEN NEW( memory ) END;
 		IF memory.dim # 1 THEN memory.dim := 1;  NEW( memory.len, 1 );  NEW( memory.diminc, 1 );  NEW( memory.origin, 1 );  END;
@@ -920,13 +920,13 @@ TYPE
 
 	PROCEDURE CheckEqDimensions*( l, r: Array );
 	(*! optimzie -> inline:  *)
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		CheckEQ( l.dim, r.dim );  CheckEQ( l.elementsize, r.elementsize );
 		FOR i := 0 TO l.dim - 1 DO CheckEQ( l.len[i], r.len[i] );  CheckEQ( l.origin[i], r.origin[i] );  END;
 	END CheckEqDimensions;
 
-	PROCEDURE ToggleDimensions*( a: Array;  d1, d2: LONGINT;  rearrangeMemory: BOOLEAN );
+	PROCEDURE ToggleDimensions*( a: Array;  d1, d2: SIGNED32;  rearrangeMemory: BOOLEAN );
 	VAR permutation: IndexArray;
 	BEGIN
 		permutation := IdentityPermutation( a.dim );  permutation[d1] := d2;  permutation[d2] := d1;
@@ -938,24 +938,24 @@ TYPE
 		dbgOut.String( s );  dbgOut.Ln;
 	END dbgS;
 
-	PROCEDURE dbgSI( s: ARRAY OF CHAR;  i: LONGINT );
+	PROCEDURE dbgSI( s: ARRAY OF CHAR;  i: SIGNED32 );
 	BEGIN
 		dbgOut.String( s );  dbgOut.Int( i, 10 );  dbgOut.Ln;
 	END dbgSI;
 
-	PROCEDURE dbgSISI( s: ARRAY OF CHAR;  i: LONGINT;  s2: ARRAY OF CHAR;  i2: LONGINT );
+	PROCEDURE dbgSISI( s: ARRAY OF CHAR;  i: SIGNED32;  s2: ARRAY OF CHAR;  i2: SIGNED32 );
 	BEGIN
 		dbgOut.String( s );  dbgOut.Int( i, 1 );  dbgOut.String( s2 );  dbgOut.Int( i2, 1 );  dbgOut.Ln;
 	END dbgSISI;
 
-	PROCEDURE dbgSISISI( s: ARRAY OF CHAR;  i: LONGINT;  s2: ARRAY OF CHAR;  i2: LONGINT;  s3: ARRAY OF CHAR;  i3: LONGINT );
+	PROCEDURE dbgSISISI( s: ARRAY OF CHAR;  i: SIGNED32;  s2: ARRAY OF CHAR;  i2: SIGNED32;  s3: ARRAY OF CHAR;  i3: SIGNED32 );
 	BEGIN
 		dbgOut.String( s );  dbgOut.Int( i, 1 );  dbgOut.String( s2 );  dbgOut.Int( i2, 1 );  dbgOut.String( s3 );
 		dbgOut.Int( i3, 1 );  dbgOut.Ln;
 	END dbgSISISI;
 
 	PROCEDURE dbgWriteMemoryInfo*( a: ArrayMemoryStructure );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		dbgS( "---------------------------------" );  dbgS( "DebugInfo for ArrayXdBytes.Array: " );  dbgSISI( "Array with dimension", a.dim, " and elementsize: ", a.elementsize );  dbgSISI( "Adress:", a.baseadr, "; bytes used:", a.bytes );  dbgSI( "Adr with offset:", a.adrwoffset );
 
@@ -1009,7 +1009,7 @@ TYPE
 
 	(*
 	fof 080728: open array return value not allowed any more
-	PROCEDURE Array1*( x: LONGINT ): ARRAY OF LONGINT;
+	PROCEDURE Array1*( x: SIGNED32 ): ARRAY OF SIGNED32;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
@@ -1018,14 +1018,14 @@ TYPE
 	*)
 
 
-	PROCEDURE Index1*( x: LONGINT ): IndexArray;
+	PROCEDURE Index1*( x: SIGNED32 ): IndexArray;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
 		NEW( index, 1 );  index[0] := x;  RETURN index;
 	END Index1;
 
-	PROCEDURE Array1*( x: LONGINT ): IndexArray;
+	PROCEDURE Array1*( x: SIGNED32 ): IndexArray;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
@@ -1034,7 +1034,7 @@ TYPE
 
 
 	(*
-fof 080728: open array return value not allowed any more	PROCEDURE Array2*( x, y: LONGINT ): ARRAY OF LONGINT;
+fof 080728: open array return value not allowed any more	PROCEDURE Array2*( x, y: SIGNED32 ): ARRAY OF SIGNED32;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
@@ -1042,14 +1042,14 @@ fof 080728: open array return value not allowed any more	PROCEDURE Array2*( x, y
 	END Array2;
 	*)
 
-	PROCEDURE Index2*( x, y: LONGINT ): IndexArray;
+	PROCEDURE Index2*( x, y: SIGNED32 ): IndexArray;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
 		NEW( index, 2 );  index[0] := x;  index[1] := y;  RETURN index
 	END Index2;
 
-	PROCEDURE Array2*( x, y: LONGINT ): IndexArray;
+	PROCEDURE Array2*( x, y: SIGNED32 ): IndexArray;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
@@ -1057,14 +1057,14 @@ fof 080728: open array return value not allowed any more	PROCEDURE Array2*( x, y
 	END Array2;
 
 	(*
-fof 080728: open array return value not allowed any more	PROCEDURE Array3*( x, y, z: LONGINT ): ARRAY OF LONGINT;
+fof 080728: open array return value not allowed any more	PROCEDURE Array3*( x, y, z: SIGNED32 ): ARRAY OF SIGNED32;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
 		NEW( index, 3 );  index[0] := x;  index[1] := y;  index[2] := z;  RETURN index^;
 	END Array3;
 	*)
-	PROCEDURE Array3*( x, y, z: LONGINT ): IndexArray;
+	PROCEDURE Array3*( x, y, z: SIGNED32 ): IndexArray;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
@@ -1072,7 +1072,7 @@ fof 080728: open array return value not allowed any more	PROCEDURE Array3*( x, y
 	END Array3;
 
 
-	PROCEDURE Index3*( x, y, z: LONGINT ): IndexArray;
+	PROCEDURE Index3*( x, y, z: SIGNED32 ): IndexArray;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
@@ -1081,7 +1081,7 @@ fof 080728: open array return value not allowed any more	PROCEDURE Array3*( x, y
 
 	(*
 	fof 080728: open array return value not allowed any more
-	PROCEDURE Array4*( x, y, z, t: LONGINT ): ARRAY OF LONGINT;
+	PROCEDURE Array4*( x, y, z, t: SIGNED32 ): ARRAY OF SIGNED32;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
@@ -1089,28 +1089,28 @@ fof 080728: open array return value not allowed any more	PROCEDURE Array3*( x, y
 	END Array4;
 	*)
 
-	PROCEDURE Index4*( x, y, z, t: LONGINT ): IndexArray;
+	PROCEDURE Index4*( x, y, z, t: SIGNED32 ): IndexArray;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
 		NEW( index, 4 );  index[0] := x;  index[1] := y;  index[2] := z;  index[3] := t;  RETURN index;
 	END Index4;
 
-	PROCEDURE Array4*( x, y, z, t: LONGINT ): IndexArray;
+	PROCEDURE Array4*( x, y, z, t: SIGNED32 ): IndexArray;
 	(*! optimzie -> inline:  *)
 	VAR index: IndexArray;
 	BEGIN
 		NEW( index, 4 );  index[0] := x;  index[1] := y;  index[2] := z;  index[3] := t;  RETURN index;
 	END Array4;
 
-	PROCEDURE IndexX*( VAR a: ARRAY OF LONGINT ): IndexArray;
+	PROCEDURE IndexX*( VAR a: ARRAY OF SIGNED32 ): IndexArray;
 	VAR index: IndexArray;
 	BEGIN
-		NEW( index, LEN( a ) );  SYSTEM.MOVE( ADDRESSOF( a[0] ), ADDRESSOF( index[0] ), LEN( a ) * SIZEOF( LONGINT ) );  RETURN index;
+		NEW( index, LEN( a ) );  SYSTEM.MOVE( ADDRESSOF( a[0] ), ADDRESSOF( index[0] ), LEN( a ) * SIZEOF( SIGNED32 ) );  RETURN index;
 	END IndexX;
 
 	PROCEDURE IndexCpy*( src: IndexArray ): IndexArray;
-	VAR dest: IndexArray;  i: LONGINT;
+	VAR dest: IndexArray;  i: SIGNED32;
 	BEGIN
 		NEW( dest, LEN( src ) );  i := 0;
 		WHILE (i < LEN( dest )) DO dest[i] := src[i];  INC( i );  END;
@@ -1191,7 +1191,7 @@ fof 080728: open array return value not allowed any more	PROCEDURE Array3*( x, y
 	(*
 	PROCEDURE SubArrayMemoryStructure*( a: Array;  pos: ARRAY OF Index;  dims, len: ARRAY OF Index;  VAR memory: ArrayMemoryStructure );
 	(* dimension of Memory LEN(origin)=LEN(len) *)
-	VAR dim, i, thisdim: LONGINT;
+	VAR dim, i, thisdim: SIGNED32;
 	BEGIN
 		dim := LEN( dims );
 		IF (dim # LEN( len )) THEN HALT( 100 ) END;
@@ -1214,7 +1214,7 @@ fof 080728: open array return value not allowed any more	PROCEDURE Array3*( x, y
 	END CopyArrayPartToArrayPart;
 
 	PROCEDURE FillArrayPart*( mem: ArrayMemoryStructure;  pos, len: IndexArray;  val: ARRAY OF SYSTEM.BYTE );
-	VAR src: Enumerator;  nrElems: LONGINT;
+	VAR src: Enumerator;  nrElems: SIGNED32;
 	BEGIN
 		IF LEN( val ) # mem.elementsize THEN HALT( 1001 ) END;
 		src := EnumArrayPart( mem, pos, len, TRUE );  nrElems := src.size DIV mem.elementsize;

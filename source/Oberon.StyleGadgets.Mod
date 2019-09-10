@@ -38,7 +38,7 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 		Frame* = POINTER TO FrameDesc;
 		FrameDesc* = RECORD(Gadgets.FrameDesc)
 			style*: Styles.Style;
-			col*: INTEGER
+			col*: SIGNED16
 		END;
 
 	VAR
@@ -48,17 +48,17 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 
 (* document coordinate stuff *)
 
-	PROCEDURE Screen(x: LONGINT): INTEGER;
+	PROCEDURE Screen(x: SIGNED32): SIGNED16;
 	BEGIN
 		RETURN SHORT(x DIV ScnUnit)
 	END Screen;
 
-	PROCEDURE Doc(x: INTEGER): LONGINT;
+	PROCEDURE Doc(x: SIGNED16): SIGNED32;
 	BEGIN
 		RETURN LONG(x)*ScnUnit;
 	END Doc;
 
-	PROCEDURE DrawTab(F : Frame; msk: Display3.Mask; sel, x, y, mode: INTEGER);
+	PROCEDURE DrawTab(F : Frame; msk: Display3.Mask; sel, x, y, mode: SIGNED16);
 	BEGIN
 		Display3.ReplConst(msk, Display.FG(*- F.col*), x-2, y, 5, 1, mode);
 		Display3.ReplConst(msk, Display.FG(*- F.col*), x-1, y+1, 3, 1, mode);
@@ -66,8 +66,8 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 		IF sel > 0 THEN Display3.ReplConst(msk, Display.FG(*- F.col*), x -2, y + 1, 5, 2, mode) END
 	END DrawTab;
 
-	PROCEDURE DrawMode(F : Frame; msk: Display3.Mask; opts: SET; x, y, w, mode: INTEGER);
-	VAR h: INTEGER;
+	PROCEDURE DrawMode(F : Frame; msk: Display3.Mask; opts: SET; x, y, w, mode: SIGNED16);
+	VAR h: SIGNED16;
 	BEGIN
 		h := BoxH - (BoxH DIV 2)-1; INC(y, BoxH DIV 2+1);
 		IF left IN opts THEN Display3.ReplConst(msk, Display.FG(*- F.col*), x, y, BoxW, h, mode)
@@ -78,8 +78,8 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 		END;
 	END DrawMode;
 
-	PROCEDURE DrawName(style: Styles.Style; msk: Display3.Mask; x, y, w: INTEGER);
-		VAR s: ARRAY 32 OF CHAR; obj: Objects.Object; i: INTEGER;
+	PROCEDURE DrawName(style: Styles.Style; msk: Display3.Mask; x, y, w: SIGNED16);
+		VAR s: ARRAY 32 OF CHAR; obj: Objects.Object; i: SIGNED16;
 	BEGIN RETURN;
 		i := 0; s[0] := 0X; Objects.GetName(style.lib.dict, style.ref, s);
 		IF s[0] # 0X THEN
@@ -94,7 +94,7 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 		END
 	END DrawName;
 
-	PROCEDURE DrawBox(F: Frame; msk: Display3.Mask; x, y, X, Y, W: INTEGER);
+	PROCEDURE DrawBox(F: Frame; msk: Display3.Mask; x, y, X, Y, W: SIGNED16);
 	BEGIN Display3.ReplConst(msk, Display.FG, x+F.X + X, y+F.Y+Y, W, BoxH DIV 2, Display.invert)
 	END DrawBox;
 
@@ -102,16 +102,16 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 	BEGIN RETURN (F.W = F.style.paraW DIV ScnUnit)
 	END Wide;
 
-	PROCEDURE DrawTabs(F: Frame; msk: Display3.Mask; x, y: INTEGER);
-	VAR i, t: INTEGER;
+	PROCEDURE DrawTabs(F: Frame; msk: Display3.Mask; x, y: SIGNED16);
+	VAR i, t: SIGNED16;
 	BEGIN INC(x, F.X); INC(y, F.Y); i := 0;
 		WHILE i < F.style.nTabs DO t := Screen(F.style.tab[i]);
 			IF (t < F.W) OR Wide(F) THEN DrawTab(F, msk, 0, x + t, y, Display.replace) END; INC(i)
 		END
 	END DrawTabs;
 
-	PROCEDURE DrawBar(F: Frame; msk: Display3.Mask; x, y, w: INTEGER);
-	VAR BoxW: INTEGER;
+	PROCEDURE DrawBar(F: Frame; msk: Display3.Mask; x, y, w: SIGNED16);
+	VAR BoxW: SIGNED16;
 	BEGIN
 		INC(x, F.X); INC(y, F.Y); BoxW := 0;
 		Display3.ReplConst(msk, F.col, x, y , w, F.H, Display.replace);
@@ -125,15 +125,15 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 		END
 	END DrawBar;
 
-	PROCEDURE Update(style: Styles.Style; what, dX: INTEGER);
+	PROCEDURE Update(style: Styles.Style; what, dX: SIGNED16);
 		VAR M: Styles.UpdateMsg;
 	BEGIN M.obj := style; M.dX := dX; M.id := what; M.F := NIL; Display.Broadcast(M)
 	END Update;
 
-	PROCEDURE CheckTab(style: Styles.Style; i: INTEGER);
+	PROCEDURE CheckTab(style: Styles.Style; i: SIGNED16);
 	VAR
-		tab: LONGINT;
-		j: INTEGER;
+		tab: SIGNED32;
+		j: SIGNED16;
 	BEGIN
 		tab := style.tab[i]; j := i;
 		IF (j < style.nTabs-1) & (style.tab[j+1] <= tab) THEN
@@ -149,9 +149,9 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 		WHILE (style.nTabs > 0) & (style.tab[style.nTabs-1] > style.paraW) DO DEC(style.nTabs) END
 	END CheckTab;
 
-	PROCEDURE FindTab(F: Frame; x: INTEGER; VAR d, t: INTEGER);
+	PROCEDURE FindTab(F: Frame; x: SIGNED16; VAR d, t: SIGNED16);
 	VAR
-		tab: INTEGER;
+		tab: SIGNED16;
 	BEGIN
 		t := 0; d := 0;
 		WHILE t < F.style.nTabs DO
@@ -160,14 +160,14 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 		END
 	END FindTab;
 
-	PROCEDURE TrackMouse(VAR x, y: INTEGER; VAR keys, keysum: SET);
+	PROCEDURE TrackMouse(VAR x, y: SIGNED16; VAR keys, keysum: SET);
 	BEGIN Input.Mouse(keys, x, y); keysum := keysum + keys;
 		Oberon.DrawCursor(Oberon.Mouse, Oberon.Arrow, x, y)
 	END TrackMouse;
 
-	PROCEDURE TrackLeft(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR left: INTEGER; VAR keysum: SET);
+	PROCEDURE TrackLeft(F: Frame; msk: Display3.Mask; x, y, X, Y: SIGNED16; VAR left: SIGNED16; VAR keysum: SET);
 	VAR
-		d, min, max, left0, boxW: INTEGER;
+		d, min, max, left0, boxW: SIGNED16;
 		Keys: SET;
 	BEGIN
 		d := X - F.X - x;
@@ -194,10 +194,10 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 		Oberon.FadeCursor(Oberon.Mouse)
 	END TrackLeft;
 
-	PROCEDURE TrackRight(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR w: INTEGER; VAR keysum: SET);
+	PROCEDURE TrackRight(F: Frame; msk: Display3.Mask; x, y, X, Y: SIGNED16; VAR w: SIGNED16; VAR keysum: SET);
 	VAR
-		w0, d: INTEGER;
-		max: INTEGER;
+		w0, d: SIGNED16;
+		max: SIGNED16;
 		Keys: SET;
 	BEGIN
 		d := X - F.X - x;
@@ -219,8 +219,8 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 	END TrackRight;
 
 (**)
-	PROCEDURE LocTab(style: Styles.Style; t, x: INTEGER): INTEGER;
-	VAR i, x0: INTEGER;
+	PROCEDURE LocTab(style: Styles.Style; t, x: SIGNED16): SIGNED16;
+	VAR i, x0: SIGNED16;
 	BEGIN
 		x0 := MinTab; i := 0;
 		IF i = t THEN INC(i) END;
@@ -236,9 +236,9 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 	END LocTab;
 
 
-	PROCEDURE TrackTab(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR tabX, t: INTEGER; VAR keysum: SET);
+	PROCEDURE TrackTab(F: Frame; msk: Display3.Mask; x, y, X, Y: SIGNED16; VAR tabX, t: SIGNED16; VAR keysum: SET);
 	VAR
-		d, tabX0: INTEGER;
+		d, tabX0: SIGNED16;
 		new: BOOLEAN;
 		Keys: SET;
 	BEGIN
@@ -283,8 +283,8 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 		Oberon.FadeCursor(Oberon.Mouse)
 	END TrackTab;
 
-	PROCEDURE TrackMode(F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; VAR keysum: SET);
-	VAR x0, y0: INTEGER;
+	PROCEDURE TrackMode(F: Frame; msk: Display3.Mask; x, y, X, Y: SIGNED16; VAR keysum: SET);
+	VAR x0, y0: SIGNED16;
 		Keys: SET;
 	BEGIN
 		INC(x, F.X); INC(y, F.Y);
@@ -298,10 +298,10 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 		Display3.FillPattern(msk, Display.FG, Display.grey1, x, y + BoxH DIV 2 + 1, x, y + BoxH DIV 2 + 1, F.W DIV 2-BoxW, BoxH DIV 2, Display.invert)
 	END TrackMode;
 
-	PROCEDURE Edit (F: Frame; msk: Display3.Mask; x, y, X, Y: INTEGER; Keys: SET; VAR res: INTEGER);
+	PROCEDURE Edit (F: Frame; msk: Display3.Mask; x, y, X, Y: SIGNED16; Keys: SET; VAR res: SIGNED16);
 	VAR
 		mode, keysum: SET;
-		leftX, W, tabX, tab, oldleftX, modif: INTEGER;
+		leftX, W, tabX, tab, oldleftX, modif: SIGNED16;
 		style: Styles.Style;
 	BEGIN
 		Oberon.DrawCursor(Oberon.Mouse, Oberon.Arrow, X, Y);
@@ -378,7 +378,7 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 		d.style := s.style;
 	END CopyF;
 
-	PROCEDURE Restore(F: Frame; msk: Display3.Mask; x, y: INTEGER);
+	PROCEDURE Restore(F: Frame; msk: Display3.Mask; x, y: SIGNED16);
 	BEGIN
 		Oberon.RemoveMarks(x+F.X, y+F.Y, F.W, F.H);
 		Display3.ReplConst(msk, F.col, x+F.X, y+F.Y, F.W, F.H, 0);
@@ -388,7 +388,7 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 	PROCEDURE Handle(F: Objects.Object; VAR M: Objects.ObjMsg);	(* volatile frame never stored/bound etc. *)
 	VAR
 		F1: Frame;
-		x, y: INTEGER;
+		x, y: SIGNED16;
 		msk: Display3.Mask;
 	BEGIN
 		WITH F: Frame DO
@@ -476,7 +476,7 @@ MODULE StyleGadgets IN Oberon; (** portable *)	(* RS, Wed, 9-Jun-1993 *)
 	PROCEDURE Init;
 		VAR
 		img: ARRAY 32 OF SET;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		img[0] := {0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30}; (*055555555H*)
 		FOR i := 1 TO 31 DO

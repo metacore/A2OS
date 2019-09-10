@@ -8,7 +8,7 @@ CONST
 	ModuleName = "WebHTTPServerTools";
 
 PROCEDURE Start*(context : Commands.Context); (** ["\r:" default root directory] ["\l:" log file] *)
-VAR c, opt: CHAR; str, root, log, tls: ARRAY 1024 OF CHAR; msg : ARRAY 128 OF CHAR; res : WORD;
+VAR c, opt: CHAR; str, root, log, tls: ARRAY 1024 OF CHAR; msg : ARRAY 128 OF CHAR; res : INTEGER;
 BEGIN
 	root := ""; log := "";
 	context.arg.SkipWhitespace;
@@ -53,7 +53,7 @@ BEGIN
 END Start;
 
 PROCEDURE Stop*(context : Commands.Context);
-VAR msg : ARRAY 128 OF CHAR; res : WORD; stopped : BOOLEAN;
+VAR msg : ARRAY 128 OF CHAR; res : INTEGER; stopped : BOOLEAN;
 BEGIN
 	WebHTTPServer.StopHTTP(msg, res); stopped := (res = WebHTTPServer.Ok);
 	WebHTTPServer.StopHTTPS(msg, res); stopped := stopped OR (res = WebHTTPServer.Ok);
@@ -102,7 +102,7 @@ BEGIN
 END AddHost;
 
 PROCEDURE RemoveHost*(context : Commands.Context); (** host *)
-VAR hostname: ARRAY 256 OF CHAR; res : WORD;
+VAR hostname: ARRAY 256 OF CHAR; res : INTEGER;
 BEGIN
 	IF context.arg.GetString(hostname) THEN
 		WebHTTPServer.RemoveHost(hostname, res);

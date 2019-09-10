@@ -29,7 +29,7 @@ TYPE
 	tModelDesc* = RECORD (antsModels.tModelDesc)
 	(*Pars*)
 		cooling: antsFunctions.Function;
-		curlen, curtemp: LONGREAL;
+		curlen, curtemp: FLOAT64;
 	END;
 
 CONST
@@ -44,7 +44,7 @@ VAR
 	END StoreM;
 
 	PROCEDURE LoadM( VAR R: Files.Rider;  o: tModel );
-	VAR version: INTEGER;  ref: Objects.Object;
+	VAR version: SIGNED16;  ref: Objects.Object;
 	BEGIN
 		Files.ReadInt( R, version );
 		(*Load*)
@@ -53,8 +53,8 @@ VAR
 		Files.ReadLReal( R, o.curlen );  Files.ReadLReal( R, o.curtemp );
 	END LoadM;
 
-	PROCEDURE Length( vx, vy: vyLongrealVec.tVector ): LONGREAL;
-	VAR i: LONGINT;  len: LONGREAL;  x0, x1, y0, y1: LONGREAL;
+	PROCEDURE Length( vx, vy: vyLongrealVec.tVector ): FLOAT64;
+	VAR i: SIGNED32;  len: FLOAT64;  x0, x1, y0, y1: FLOAT64;
 	BEGIN
 		len := 0;  x0 := vyLongrealVec.Get( vx, 0 );  y0 := vyLongrealVec.Get( vy, 0 );
 		FOR i := 1 TO vyLongrealVec.Len( vx ) - 1 DO
@@ -65,8 +65,8 @@ VAR
 		len := len + Math.sqrt( (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) );  RETURN len;
 	END Length;
 
-	PROCEDURE Swap( vx, vy: vyLongrealVec.tVector;  a, b: LONGINT );
-	VAR xa, xb, ya, yb: LONGREAL;
+	PROCEDURE Swap( vx, vy: vyLongrealVec.tVector;  a, b: SIGNED32 );
+	VAR xa, xb, ya, yb: FLOAT64;
 	BEGIN
 		IF a = b THEN RETURN END;
 		xa := vyLongrealVec.Get( vx, a );  xb := vyLongrealVec.Get( vx, b );  vyLongrealVec.Set( xa, vx, b );
@@ -76,9 +76,9 @@ VAR
 		vyLongrealVec.Set( yb, vy, a );
 	END Swap;
 
-	PROCEDURE OneSweep( s: antsKernel.Kernel;  pos: LONGINT );
-	VAR o: tModel;  O: vyBase.Object;  container: antsVectors.Container;  vx, vy, lenvec: vyBase.tVector;  temp: LONGREAL;
-		len, ran1, ran2: LONGINT;  len1, len2: LONGREAL;
+	PROCEDURE OneSweep( s: antsKernel.Kernel;  pos: SIGNED32 );
+	VAR o: tModel;  O: vyBase.Object;  container: antsVectors.Container;  vx, vy, lenvec: vyBase.tVector;  temp: FLOAT64;
+		len, ran1, ran2: SIGNED32;  len1, len2: FLOAT64;
 	BEGIN
 		o := s.par( tModel );  temp := o.cooling.get( o.cooling, pos );  o.curtemp := temp;  O := s.A;
 		IF (O # NIL ) & (O IS antsVectors.Container) THEN container := O( antsVectors.Container ) ELSE antsSecurity.Halt( "No Container" );  END;
@@ -103,7 +103,7 @@ VAR
 	END OneSweep;
 
 	PROCEDURE Init( s: antsKernel.Kernel );
-	VAR o: tModel;  O: vyBase.Object;  container: antsVectors.Container;  vx, vy, lenvec: vyBase.tVector;  temp: LONGREAL;
+	VAR o: tModel;  O: vyBase.Object;  container: antsVectors.Container;  vx, vy, lenvec: vyBase.tVector;  temp: FLOAT64;
 	BEGIN
 		o := s.par( tModel );  temp := o.cooling.get( o.cooling, 0 );  o.curtemp := temp;  O := s.A;
 		IF (O # NIL ) & (O IS antsVectors.Container) THEN container := O( antsVectors.Container ) ELSE antsSecurity.Halt( "No Container" );  END;
@@ -233,7 +233,7 @@ VAR
 	END NewModel;
 
 	PROCEDURE MakeCircle*;
-	VAR vx, vy: vyBase.Object;  i, len: LONGINT;
+	VAR vx, vy: vyBase.Object;  i, len: SIGNED32;
 	BEGIN
 		antsCommands.InitScan( "vx=OBJ vy=OBJ [len=INT]" );
 		IF antsCommands.ExpectObject( "vx", vx ) & antsCommands.ExpectObject( "vy", vy ) THEN
@@ -253,7 +253,7 @@ VAR
 	END MakeCircle;
 
 	PROCEDURE MakeRandom*;
-	VAR vx, vy: vyBase.Object;  i, len: LONGINT;  ran1, ran2: LONGREAL;
+	VAR vx, vy: vyBase.Object;  i, len: SIGNED32;  ran1, ran2: FLOAT64;
 	BEGIN
 		antsCommands.InitScan( "vx=OBJ vy=OBJ [len=INT]" );
 		IF antsCommands.ExpectObject( "vx", vx ) & antsCommands.ExpectObject( "vy", vy ) THEN
@@ -275,7 +275,7 @@ VAR
 	END MakeRandom;
 
 	PROCEDURE Mix*;
-	VAR vx, vy: vyBase.Object;  i, len, ran1, ran2: LONGINT;
+	VAR vx, vy: vyBase.Object;  i, len, ran1, ran2: SIGNED32;
 	BEGIN
 		antsCommands.InitScan( "vx=OBJ vy=OBJ" );
 		IF antsCommands.ExpectObject( "vx", vx ) & antsCommands.ExpectObject( "vy", vy ) THEN

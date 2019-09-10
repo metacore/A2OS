@@ -50,7 +50,7 @@ TYPE
 	END;
 
 (** Upcall for macro substitution. Ch is the character to be substituted, res is the substitution text and beg is the starting position inside of the text.*)
-	MacroHandler* = PROCEDURE (ch: CHAR; VAR T: Reader; VAR res: Texts.Text; VAR beg: LONGINT);
+	MacroHandler* = PROCEDURE (ch: CHAR; VAR T: Reader; VAR res: Texts.Text; VAR beg: SIGNED32);
 
 	Macro = POINTER TO MacroDesc;
 	MacroDesc = RECORD
@@ -63,12 +63,12 @@ TYPE
 		R*: Reader;		(** Scanner operates with this reader. *)
 		eot*: BOOLEAN;	(** End of text reached? *)
 		nextCh*: CHAR;	(** Character located immediately after scanned token. *)
-		class*: INTEGER;		(** Scanner classes. Scanned tokens are returned in the record fields below. *)
-		i*: LONGINT;
-		x*: REAL;
-		y*: LONGREAL;
+		class*: SIGNED16;		(** Scanner classes. Scanned tokens are returned in the record fields below. *)
+		i*: SIGNED32;
+		x*: FLOAT32;
+		y*: FLOAT64;
 		c*: CHAR;
-		len*: SHORTINT;
+		len*: SIGNED8;
 		s*: ARRAY MaxLen OF CHAR;
 		o*: Objects.Object;
 	END ;
@@ -87,10 +87,10 @@ TYPE
 	CharDesc* = RECORD (AttrDesc) c*: CHAR END;
 
 	IntAttr* = POINTER TO IntDesc;
-	IntDesc* = RECORD (AttrDesc) i*: LONGINT END;
+	IntDesc* = RECORD (AttrDesc) i*: SIGNED32 END;
 
 	RealAttr* = POINTER TO RealDesc;
-	RealDesc* = RECORD (AttrDesc) r*: LONGREAL END;
+	RealDesc* = RECORD (AttrDesc) r*: FLOAT64 END;
 
 	StringAttr* = POINTER TO StringDesc;
 	StringDesc* = RECORD (AttrDesc) s*: ARRAY 256 OF CHAR; END;
@@ -104,7 +104,7 @@ VAR
 
 (** Convert a string to a text. *)
 PROCEDURE StrToTxt*(s: ARRAY OF CHAR; VAR T: Texts.Text);
-VAR newtext :Texts.Text; i:INTEGER;
+VAR newtext :Texts.Text; i:SIGNED16;
 BEGIN
 	i := 0;
 	WHILE (s[i] # 0X) DO Texts.Write(W, s[i]); INC(i); END;
@@ -114,7 +114,7 @@ END StrToTxt;
 
 (** Convert a text to a string. The string might be terminated early if the text is too long to fit. *)
 PROCEDURE TxtToStr*(T: Texts.Text; VAR s: ARRAY OF CHAR);
-VAR R:Texts.Reader; i:INTEGER; ch:CHAR;
+VAR R:Texts.Reader; i:SIGNED16; ch:CHAR;
 BEGIN
 	i:= 0;
 	IF T # NIL THEN
@@ -126,7 +126,7 @@ END TxtToStr;
 
 (* --- Scanning routines --- *)
 
-PROCEDURE OpenR(VAR R: Reader; text: Texts.Text; pos: LONGINT);
+PROCEDURE OpenR(VAR R: Reader; text: Texts.Text; pos: SIGNED32);
 VAR nR: Reader;
 BEGIN
 	NEW(nR); nR.next := R; R := nR; R.substitute := TRUE;
@@ -135,7 +135,7 @@ END OpenR;
 
 (** Read character ch from the Reader. Registered character macros are automatically substituted by making upcalls to the installed macro handlers. *)
 PROCEDURE Read*(VAR R: Reader; VAR ch: CHAR);
-VAR m: Macro; nT: Texts.Text; beg: LONGINT;
+VAR m: Macro; nT: Texts.Text; beg: SIGNED32;
 BEGIN
 	IF R.eot THEN ch := 0X; RETURN END;
 	Texts.Read(R.R, ch);
@@ -180,8 +180,8 @@ BEGIN
 END Read;
 
 (** Open reader R at position pos in text. *)
-PROCEDURE OpenReader*(VAR R: Reader; text: Texts.Text; pos: LONGINT);
-VAR m: Macro; nT: Texts.Text; beg: LONGINT;
+PROCEDURE OpenReader*(VAR R: Reader; text: Texts.Text; pos: SIGNED32);
+VAR m: Macro; nT: Texts.Text; beg: SIGNED32;
 BEGIN
 	NEW(R); R.substitute := TRUE;
 	Texts.OpenReader(R.R, text, pos); R.text := text; R.eot := R.R.eot;
@@ -194,7 +194,7 @@ BEGIN
 END OpenReader;
 
 (** Return current position of Reader R in text R.text. Note that R.text may change as macro characters are being substituted. *)
-PROCEDURE Pos*(VAR R: Reader): LONGINT;
+PROCEDURE Pos*(VAR R: Reader): SIGNED32;
 BEGIN RETURN Texts.Pos(R.R);
 END Pos;
 
@@ -206,7 +206,7 @@ BEGIN
 END IsAscii;
 
 (** Open Scanner S at position pos in text T. *)
-PROCEDURE OpenScanner*(VAR S: Scanner; T: Texts.Text; pos: LONGINT);
+PROCEDURE OpenScanner*(VAR S: Scanner; T: Texts.Text; pos: SIGNED32);
 BEGIN
 	S.R := NIL;
 	OpenReader(S.R, T, pos); Read(S.R, S.nextCh)
@@ -217,11 +217,11 @@ END OpenScanner;
     CONST maxD = 32;
     VAR ch, E: CHAR;
       neg, negE, hex, old: BOOLEAN;
-      i, j, h: SHORTINT;
-      e: INTEGER; k: LONGINT;
-      y: LONGREAL;
+      i, j, h: SIGNED8;
+      e: SIGNED16; k: SIGNED32;
+      y: FLOAT64;
       d: ARRAY maxD OF CHAR;
-	  k1, k2, k3: LONGINT;
+	  k1, k2, k3: SIGNED32;
 
   BEGIN ch := S.nextCh; i := 0;
     LOOP
@@ -310,18 +310,18 @@ END OpenScanner;
           y := k3*Reals.Ten(-32) + k2*Reals.Ten(-24); y := y + k1*Reals.Ten(-16);
           IF ABS(e+h) < 308 THEN y := (y + k*Reals.Ten(-8)) / Reals.Ten(-e-h)
           ELSE y := (y + k*Reals.Ten(-8)) * Reals.Ten(h);
-            IF (e <= 308-32) OR (e <= 308) & (y < MAX(LONGREAL) / Reals.Ten(e)) THEN y := y * Reals.Ten(e)
-              ELSE y := MAX(LONGREAL)
+            IF (e <= 308-32) OR (e <= 308) & (y < MAX(FLOAT64) / Reals.Ten(e)) THEN y := y * Reals.Ten(e)
+              ELSE y := MAX(FLOAT64)
             END
           END;
           IF E = "D" THEN S.class:= LongReal;
-            IF y = MAX(LONGREAL) THEN S.y := Reals.RealL(-1, -1)
+            IF y = MAX(FLOAT64) THEN S.y := Reals.RealL(-1, -1)
               ELSIF neg THEN S.y := - y
               ELSE S.y := y
             END;
             IF Reals.ExpoL(S.y) = 0 THEN S.y:= 0 END
           ELSE S.class := Real;
-            IF MAX(REAL) < y THEN S.x:= Reals.Real(-1)
+            IF MAX(FLOAT32) < y THEN S.x:= Reals.Real(-1)
             ELSIF neg THEN S.x := SHORT(- y)
             ELSE S.x := SHORT(y)
             END;
@@ -347,8 +347,8 @@ BEGIN
 	NEW(M); M.ch := ch; M.handle := handler; M.next := macros; macros := M;
 END AddMacro;
 
-PROCEDURE StandardMacros(ch: CHAR; VAR T: Reader; VAR res: Texts.Text; VAR beg: LONGINT);
-VAR text: Texts.Text; bg, end, time: LONGINT;
+PROCEDURE StandardMacros(ch: CHAR; VAR T: Reader; VAR res: Texts.Text; VAR beg: SIGNED32);
+VAR text: Texts.Text; bg, end, time: SIGNED32;
 BEGIN
 	IF ch = 0X THEN (* Reset *)
 		uparrowdone := FALSE;
@@ -514,9 +514,9 @@ END WriteAttr;
 	Type	T	Attribute classes converted
 
 	Bool	BOOLEAN	Bool, String, Char
-	Int	LONGINT	Int, String, Real, LongReal
-	Real	REAL	Real, String, LongReal, Int
-	LongReal	LONGREAL	LongReal, String, Real, Int
+	Int	SIGNED32	Int, String, Real, LongReal
+	Real	FLOAT32	Real, String, LongReal, Int
+	LongReal	FLOAT64	LongReal, String, Real, Int
 	String	ARRAY OF CHAR	String, Int, Bool, Real, LongReal, Bool
 *)
 
@@ -539,7 +539,7 @@ END WriteAttr;
 		END
 	END GetBool;
 
-	PROCEDURE GetInt*(obj: Objects.Object; name: ARRAY OF CHAR; VAR i: LONGINT);
+	PROCEDURE GetInt*(obj: Objects.Object; name: ARRAY OF CHAR; VAR i: SIGNED32);
 		VAR A: Objects.AttrMsg;
 	BEGIN
 		i := 0;
@@ -559,7 +559,7 @@ END WriteAttr;
 		END
 	END GetInt;
 
-	PROCEDURE GetReal*(obj: Objects.Object; name: ARRAY OF CHAR; VAR x: REAL);
+	PROCEDURE GetReal*(obj: Objects.Object; name: ARRAY OF CHAR; VAR x: FLOAT32);
 		VAR A: Objects.AttrMsg;
 	BEGIN
 		x := 0.0;
@@ -579,7 +579,7 @@ END WriteAttr;
 		END
 	END GetReal;
 
-	PROCEDURE GetLongReal*(obj: Objects.Object; name: ARRAY OF CHAR; VAR y: LONGREAL);
+	PROCEDURE GetLongReal*(obj: Objects.Object; name: ARRAY OF CHAR; VAR y: FLOAT64);
 		VAR A: Objects.AttrMsg;
 	BEGIN
 		y := 0.0;
@@ -627,9 +627,9 @@ END WriteAttr;
 	Type	T	Attribute classes converted
 
 	Bool	BOOLEAN	Bool, String, Char
-	Int	LONGINT	Int, String, Real, LongReal
-	Real	REAL	Real, String, LongReal, Int
-	LongReal	LONGREAL	LongReal, String, Real, Int
+	Int	SIGNED32	Int, String, Real, LongReal
+	Real	FLOAT32	Real, String, LongReal, Int
+	LongReal	FLOAT64	LongReal, String, Real, Int
 	String	ARRAY OF CHAR	String, Int, Bool, Real, LongReal, Bool
 *)
 
@@ -653,7 +653,7 @@ END WriteAttr;
 		END
 	END SetBool;
 
-	PROCEDURE SetInt*(obj: Objects.Object; name: ARRAY OF CHAR; i: LONGINT);
+	PROCEDURE SetInt*(obj: Objects.Object; name: ARRAY OF CHAR; i: SIGNED32);
 		VAR A: Objects.AttrMsg;
 	BEGIN
 		IF obj # NIL THEN
@@ -674,7 +674,7 @@ END WriteAttr;
 		END
 	END SetInt;
 
-	PROCEDURE SetReal*(obj: Objects.Object; name: ARRAY OF CHAR; x: REAL);
+	PROCEDURE SetReal*(obj: Objects.Object; name: ARRAY OF CHAR; x: FLOAT32);
 		VAR A: Objects.AttrMsg;
 	BEGIN
 		IF obj # NIL THEN
@@ -695,7 +695,7 @@ END WriteAttr;
 		END
 	END SetReal;
 
-	PROCEDURE SetLongReal*(obj: Objects.Object; name: ARRAY OF CHAR; y: LONGREAL);
+	PROCEDURE SetLongReal*(obj: Objects.Object; name: ARRAY OF CHAR; y: FLOAT64);
 		VAR A: Objects.AttrMsg;
 	BEGIN
 		IF obj # NIL THEN

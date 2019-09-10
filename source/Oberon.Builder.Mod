@@ -46,7 +46,7 @@ CONST
 TYPE
 	ErrorGadget* = POINTER TO ErrorGadgetDesc;
 	ErrorGadgetDesc* = RECORD (Gadgets.FrameDesc)
-		errno*: INTEGER;
+		errno*: SIGNED16;
 		msg*: POINTER TO ARRAY 128 OF CHAR
 	END;
 
@@ -60,13 +60,13 @@ TYPE
 	ModDesc* = RECORD
 		name*, fname*: FileDir.FileName;
 		opts*: ARRAY 64 OF CHAR;
-		ref*, layer*: INTEGER;
+		ref*, layer*: SIGNED16;
 		impl*: Ref;
 		next*: Mod
 	END;
 
 	Tree* = RECORD
-		maxlayer*: INTEGER;
+		maxlayer*: SIGNED16;
 		list*: Mod
 	END;
 
@@ -78,7 +78,7 @@ TYPE
 
 VAR
 	W: Texts.Writer;
-	sym: SHORTINT; (* << win *)
+	sym: SIGNED8; (* << win *)
 	error, autoMark: BOOLEAN;
 
 	(*Preprocessor*)
@@ -86,8 +86,8 @@ VAR
 	targetW: Texts.Writer;
 	Flags: List;
 	lib: Objects.Library;	(* Library of last character/object read. *)
-	col: SHORTINT;		(* Color index of last character read. *)
-	ifdepth: LONGINT;		(* number of $if levels *)
+	col: SIGNED8;		(* Color index of last character read. *)
+	ifdepth: SIGNED32;		(* number of $if levels *)
 	OPSGet: OPS.GetProc;
 	skipping: BOOLEAN;
 	first: BOOLEAN;	(* first attempt to read Oberon.Text/OP2.Errors *)
@@ -115,7 +115,7 @@ BEGIN
 	END
 END ErrorGadgetAttr;
 
-PROCEDURE RestoreErrorGadget(F: ErrorGadget; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE RestoreErrorGadget(F: ErrorGadget; M: Display3.Mask; x, y, w, h: SIGNED16);
 VAR s: ARRAY 128 OF CHAR;
 BEGIN
 (*
@@ -135,10 +135,10 @@ END RestoreErrorGadget;
 
 PROCEDURE PrintErrorGadget(F: ErrorGadget; VAR M: Display.DisplayMsg);
 	VAR
-		R: Display3.Mask; x, y, w, h: INTEGER;
+		R: Display3.Mask; x, y, w, h: SIGNED16;
 		s: ARRAY 32 OF CHAR;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -162,8 +162,8 @@ BEGIN
 	Gadgets.CopyFrame(M, from, to);
 END CopyErrorGadget;
 
-PROCEDURE GetErrMsg (errNr: INTEGER; VAR msg: ARRAY OF CHAR);
-VAR s: Texts.Scanner; n: INTEGER; ch: CHAR;  warn: BOOLEAN;
+PROCEDURE GetErrMsg (errNr: SIGNED16; VAR msg: ARRAY OF CHAR);
+VAR s: Texts.Scanner; n: SIGNED16; ch: CHAR;  warn: BOOLEAN;
 BEGIN
 	Oberon.OpenScanner(s, "OP2.Errors");
 	IF s.class = Texts.Inval THEN msg[0] := 0X;
@@ -189,7 +189,7 @@ BEGIN
 END GetErrMsg;
 
 PROCEDURE FlipMsg(F: ErrorGadget);
-VAR w, h, dsr: INTEGER; A: Display.ModifyMsg;
+VAR w, h, dsr: SIGNED16; A: Display.ModifyMsg;
 BEGIN
 	IF F.msg = NIL THEN
 		NEW(F.msg); GetErrMsg(F.errno, F.msg^); Display3.StringSize(F.msg^, Fonts.Default, w, h, dsr);
@@ -203,7 +203,7 @@ BEGIN
 END FlipMsg;
 
 PROCEDURE ErrorGadgetHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: ErrorGadget; R: Display3.Mask; keysum: SET;
+VAR x, y, w, h: SIGNED16; F0: ErrorGadget; R: Display3.Mask; keysum: SET;
 BEGIN
 	WITH F: ErrorGadget DO
 		IF M IS Display.FrameMsg THEN
@@ -275,7 +275,7 @@ VAR F: ErrorGadget;
 BEGIN NEW(F); F.W := 20; F.H := 14; F.errno := 255;F.handle := ErrorGadgetHandler; Objects.NewObj := F
 END NewErrorGadget;
 
-PROCEDURE MarkErrorPos(T: Texts.Text; pos: LONGINT; err: INTEGER);
+PROCEDURE MarkErrorPos(T: Texts.Text; pos: SIGNED32; err: SIGNED16);
 VAR obj: Objects.Object;
 BEGIN
 	NewErrorGadget; obj := Objects.NewObj; obj(ErrorGadget).errno := err;
@@ -284,7 +284,7 @@ BEGIN
 END MarkErrorPos;
 
 PROCEDURE RemoveErrors(T: Texts.Text);
-VAR first: LONGINT; F: Texts.Finder; o: Objects.Object;
+VAR first: SIGNED32; F: Texts.Finder; o: Objects.Object;
 BEGIN
 	first := -1;
 	LOOP
@@ -308,8 +308,8 @@ BEGIN
 END RemoveErrors;
 
 PROCEDURE markErrors(VAR S: Texts.Scanner; errtext: Texts.Text; par: Display.Frame);
-VAR c, err: INTEGER; pos, beg, l, k: LONGINT; C: Oberon.CaretMsg;  warn: BOOLEAN;
-	marked: ARRAY MaxErrors OF LONGINT;
+VAR c, err: SIGNED16; pos, beg, l, k: SIGNED32; C: Oberon.CaretMsg;  warn: BOOLEAN;
+	marked: ARRAY MaxErrors OF SIGNED32;
 BEGIN
 	IF (S.class = Texts.Name) & (S.s = "compiling") THEN
 		l := S.line; REPEAT Texts.Scan(S) UNTIL (S.line # l) OR S.eot
@@ -336,7 +336,7 @@ BEGIN
 END markErrors;
 
 PROCEDURE MarkErrors*;
-VAR S: Texts.Scanner; par: Display.Frame; beg, end, time: LONGINT;  T, errtext: Texts.Text;
+VAR S: Texts.Scanner; par: Display.Frame; beg, end, time: SIGNED32;  T, errtext: Texts.Text;
 BEGIN
 	errtext := GetText(par);
 	IF errtext # NIL THEN
@@ -356,8 +356,8 @@ BEGIN
 	IF T # NIL THEN RemoveErrors(T) END
 END ClearErrors;
 
-PROCEDURE ErrorAfter(T: Texts.Text; VAR pos: LONGINT);
-VAR F: Texts.Finder; o: Objects.Object; p: LONGINT;
+PROCEDURE ErrorAfter(T: Texts.Text; VAR pos: SIGNED32);
+VAR F: Texts.Finder; o: Objects.Object; p: SIGNED32;
 BEGIN
 	Texts.OpenFinder(F, T, pos);
 	p := F.pos; Texts.FindObj(F, o);
@@ -366,7 +366,7 @@ BEGIN
 END ErrorAfter;
 
 PROCEDURE NextError*;
-VAR M: Oberon.CaretMsg; pos: LONGINT;
+VAR M: Oberon.CaretMsg; pos: SIGNED32;
 BEGIN
 	M.F := NIL; M.id := Oberon.get; M.car := NIL; M.text := NIL; Display.Broadcast(M);
 	IF (M.car # NIL) & (M.text # NIL) THEN
@@ -385,7 +385,7 @@ END NextError;
 
 (* ---------------- preprocessor --------------------- *)
 
-PROCEDURE err (pos: LONGINT; msg: ARRAY OF CHAR);
+PROCEDURE err (pos: SIGNED32; msg: ARRAY OF CHAR);
 BEGIN
 	Texts.WriteString (W, "  pos  "); Texts.WriteInt (W, pos, 1);
 	Texts.WriteString (W, "  "); Texts.WriteString (W, msg);
@@ -579,7 +579,7 @@ BEGIN
 END Preprocess;
 
 
-PROCEDURE get(VAR sym: SHORTINT);
+PROCEDURE get(VAR sym: SIGNED8);
 	VAR body: BOOLEAN;
 
 	PROCEDURE Skip;
@@ -683,7 +683,7 @@ END InitPreprocessor;
 
 (* ---------------- hierarchy calculation -------------- *)
 
-PROCEDURE MatchSym(s: INTEGER): BOOLEAN;
+PROCEDURE MatchSym(s: SIGNED16): BOOLEAN;
 BEGIN
 	IF s = sym THEN
 		OPS.Get(sym); RETURN TRUE
@@ -691,7 +691,7 @@ BEGIN
 END MatchSym;
 
 PROCEDURE GetOptions(VAR S: Attributes.Scanner; VAR opts: ARRAY OF CHAR);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 BEGIN
 	i := 0;
 	IF (S.class = Attributes.Char) & (S.c = Oberon.OptionChar) THEN
@@ -790,7 +790,7 @@ BEGIN
 	error := TRUE
 END AddModule;
 
-PROCEDURE Mark(VAR T: Tree; m: Mod; layer, n: INTEGER);
+PROCEDURE Mark(VAR T: Tree; m: Mod; layer, n: SIGNED16);
 VAR r: Ref; m0: Mod;
 BEGIN
 	IF layer > m.layer THEN
@@ -810,7 +810,7 @@ BEGIN
 END Mark;
 
 PROCEDURE Hierarchy*(VAR T: Tree);
-VAR m, m0, clist: Mod; n: INTEGER; r: Ref;
+VAR m, m0, clist: Mod; n: SIGNED16; r: Ref;
 BEGIN
 	(* calculate layers *)
 	T.maxlayer := 0; n := 0;
@@ -857,7 +857,7 @@ BEGIN
 END Append;
 
 PROCEDURE InsertHierarchy*;
-VAR S: Attributes.Scanner; m: Mod; T: Tree; list: Display.Frame; F: Icons.Icon; x, y, layer: INTEGER; obj: Objects.Object;
+VAR S: Attributes.Scanner; m: Mod; T: Tree; list: Display.Frame; F: Icons.Icon; x, y, layer: SIGNED16; obj: Objects.Object;
 	A: Objects.AttrMsg; s: FileDir.FileName; opts: ARRAY 64 OF CHAR;
 BEGIN
 	T.list := NIL;
@@ -890,10 +890,10 @@ BEGIN
 END InsertHierarchy;
 
 PROCEDURE Compile*;
-VAR S: Attributes.Scanner; T: Tree; m: Mod; s: FileDir.FileName; opts, options: ARRAY 64 OF CHAR; i, line: INTEGER; S1: Texts.Scanner;
-	fbeg, fend, ftime: LONGINT; text, ftext: Texts.Text; par: Display.Frame; R: Texts.Reader;
+VAR S: Attributes.Scanner; T: Tree; m: Mod; s: FileDir.FileName; opts, options: ARRAY 64 OF CHAR; i, line: SIGNED16; S1: Texts.Scanner;
+	fbeg, fend, ftime: SIGNED32; text, ftext: Texts.Text; par: Display.Frame; R: Texts.Reader;
 
-	PROCEDURE Locate(F: Display.Frame;  T: Texts.Text;  pos: LONGINT);
+	PROCEDURE Locate(F: Display.Frame;  T: Texts.Text;  pos: SIGNED32);
 	VAR M: Oberon.CaretMsg;  N: Oberon.ControlMsg;
 	BEGIN
 		IF pos < 0 THEN pos := 0
@@ -946,7 +946,7 @@ BEGIN
 				RETURN
 			ELSE
 				fbeg := Oberon.Log.len;
-				Compiler.Module(R, "", options, MAX(LONGINT), Oberon.Log, error);
+				Compiler.Module(R, "", options, MAX(SIGNED32), Oberon.Log, error);
 				IF error & autoMark THEN
 					Texts.OpenScanner(S1, Oberon.Log, fbeg); Texts.Scan(S1);
 					markErrors(S1, text, par)
@@ -969,7 +969,7 @@ BEGIN
 					Texts.OpenReader(R, text, 0);
 					InitPreprocessor;
 					COPY(options, opts); Strings.Append(opts, m.opts);
-					Compiler.Module(R, m.fname, opts, MAX(LONGINT), Oberon.Log, error);
+					Compiler.Module(R, m.fname, opts, MAX(SIGNED32), Oberon.Log, error);
 				END;
 				m := m.next
 			END

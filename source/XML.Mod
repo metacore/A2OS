@@ -39,7 +39,7 @@ TYPE
 		END SetPos;
 
 		(** write the content to stream w. level is the current hierarchy level. used for formatting *)
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		END Write;
 
 	END Content;
@@ -73,7 +73,7 @@ TYPE
 			END;
 		END SetNameAsString;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		BEGIN
 			w.String(name^)
 		END Write;
@@ -83,7 +83,7 @@ TYPE
 	Container* = OBJECT (Content)
 	VAR
 		first, last : Content;
-		nofContents : LONGINT;
+		nofContents : SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -186,7 +186,7 @@ TYPE
 		END RemoveContent;
 
 		PROCEDURE GetContents*(): Objects.Enumerator;
-		VAR c : Content; array : Objects.PTRArray; enumerator : Objects.ArrayEnumerator; i : LONGINT;
+		VAR c : Content; array : Objects.PTRArray; enumerator : Objects.ArrayEnumerator; i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			NEW(array, nofContents);
 			c := first;
@@ -198,7 +198,7 @@ TYPE
 			RETURN enumerator;
 		END GetContents;
 
-		PROCEDURE GetNumberOfContents*(): LONGINT;
+		PROCEDURE GetNumberOfContents*(): SIGNED32;
 		BEGIN
 			RETURN nofContents;
 		END GetNumberOfContents;
@@ -267,7 +267,7 @@ TYPE
 			AddContent^(c)
 		END AddContent;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		VAR e: Objects.Enumerator; c: ANY;
 		BEGIN
 			e := GetContents();
@@ -309,7 +309,7 @@ TYPE
 			SELF.encoding := NewString(encoding)
 		END SetEncoding;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		BEGIN
 			w.String('<?xml version="'); w.String(version^);
 			IF encoding # NIL THEN w.String('" encoding="'); w.String(encoding^) END;
@@ -338,7 +338,7 @@ TYPE
 			SELF.standalone := standalone
 		END SetStandalone;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		BEGIN
 			w.String('<?xml version="'); w.String(version^);
 			IF encoding # NIL THEN w.String('" encoding="'); w.String(encoding^) END;
@@ -414,7 +414,7 @@ TYPE
 			END
 		END GetNotationDecl;
 
-		PROCEDURE GetEntityDecl*(CONST name: ARRAY OF CHAR; type: SHORTINT): EntityDecl;
+		PROCEDURE GetEntityDecl*(CONST name: ARRAY OF CHAR; type: SIGNED8): EntityDecl;
 		VAR p: ANY;
 		BEGIN
 			p := NIL;
@@ -436,7 +436,7 @@ TYPE
 			SELF.externalSubset := externalSubset
 		END SetExternalSubset;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY;  level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY;  level : SIGNED32);
 		VAR e: Objects.Enumerator; p: ANY; s: String;
 		BEGIN
 			w.String("<!DOCTYPE "); w.String(name^);
@@ -493,7 +493,7 @@ TYPE
 			SELF.publicId := NewString(publicId)
 		END SetPublicId;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		BEGIN
 			w.String("<!NOTATION "); w.String(name^);
 			IF publicId # NIL THEN
@@ -516,7 +516,7 @@ TYPE
 	EntityDecl* = OBJECT (NotationDecl)
 	VAR
 		value, notationName: String;
-		type: SHORTINT;
+		type: SIGNED8;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -525,12 +525,12 @@ TYPE
 			type := GeneralEntity;
 		END Init;
 
-		PROCEDURE GetType*(): SHORTINT;
+		PROCEDURE GetType*(): SIGNED8;
 		BEGIN
 			RETURN type
 		END GetType;
 
-		PROCEDURE SetType*(type: SHORTINT);
+		PROCEDURE SetType*(type: SIGNED8);
 		BEGIN
 			SELF.type := type
 		END SetType;
@@ -555,7 +555,7 @@ TYPE
 			SELF.notationName := NewString(notationName)
 		END SetNotationName;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		BEGIN
 			w.String("<!ENTITY ");
 			IF type = ParameterEntity THEN w.String("% ") END;
@@ -588,7 +588,7 @@ CONST
 TYPE
 	ElementDecl* = OBJECT (NameContent)
 	VAR
-		contentType: SHORTINT;
+		contentType: SIGNED8;
 		content: CollectionCP;	(* for contentType = Mixed or contentType = Element *)
 		attributeDecls: Objects.Dictionary;
 
@@ -601,12 +601,12 @@ TYPE
 			NEW(arrDict); attributeDecls := arrDict
 		END Init;
 
-		PROCEDURE GetContentType*(): SHORTINT;
+		PROCEDURE GetContentType*(): SIGNED8;
 		BEGIN
 			RETURN contentType
 		END GetContentType;
 
-		PROCEDURE SetContentType*(contentType: SHORTINT);
+		PROCEDURE SetContentType*(contentType: SIGNED8);
 		BEGIN
 			SELF.contentType := contentType
 		END SetContentType;
@@ -638,7 +638,7 @@ TYPE
 			attributeDecls.Add(attributeDecl.name^, attributeDecl)
 		END AddAttributeDecl;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		VAR e: Objects.Enumerator; p: ANY;
 		BEGIN
 			w.String("<!ELEMENT "); w.String(name^); w.Char(Space);
@@ -672,7 +672,7 @@ CONST
 TYPE
 	ContentParticle* = OBJECT (Content)
 	VAR
-		occurence: SHORTINT;
+		occurence: SIGNED8;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -680,12 +680,12 @@ TYPE
 			occurence := ZeroOrOnce;
 		END Init;
 
-		PROCEDURE GetOccurence*(): SHORTINT;
+		PROCEDURE GetOccurence*(): SIGNED8;
 		BEGIN
 			RETURN occurence
 		END GetOccurence;
 
-		PROCEDURE SetOccurence*(occ: SHORTINT);
+		PROCEDURE SetOccurence*(occ: SIGNED8);
 		BEGIN
 			occurence := occ
 		END SetOccurence;
@@ -727,7 +727,7 @@ TYPE
 			SELF.name := name;
 		END SetNameAsString;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		VAR ch: CHAR;
 		BEGIN
 			w.String(name^);
@@ -745,7 +745,7 @@ TYPE
 	CollectionCP* = OBJECT (ContentParticle)
 	VAR
 		children: Objects.Collection;
-		type: SHORTINT;
+		type: SIGNED8;
 
 		PROCEDURE & Init*;
 		VAR arrColl: Objects.ArrayCollection;
@@ -755,12 +755,12 @@ TYPE
 			type := 0;
 		END Init;
 
-		PROCEDURE GetType*(): SHORTINT;
+		PROCEDURE GetType*(): SIGNED8;
 		BEGIN
 			RETURN type
 		END GetType;
 
-		PROCEDURE SetType*(type: SHORTINT);
+		PROCEDURE SetType*(type: SIGNED8);
 		BEGIN
 			SELF.type := type
 		END SetType;
@@ -775,7 +775,7 @@ TYPE
 			children.Add(cp)
 		END AddChild;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		VAR e: Objects.Enumerator; ch: CHAR; p: ANY;
 		BEGIN
 			e := GetChildren();
@@ -812,7 +812,7 @@ TYPE
 	AttributeDecl* = OBJECT (NameContent)
 	VAR
 		defaultValue: String;
-		type: SHORTINT;
+		type: SIGNED8;
 		allowedValues: Objects.Dictionary;
 		required: BOOLEAN;
 
@@ -836,12 +836,12 @@ TYPE
 			SELF.defaultValue := NewString(defaultValue)
 		END SetDefaultValue;
 
-		PROCEDURE GetType*(): SHORTINT;
+		PROCEDURE GetType*(): SIGNED8;
 		BEGIN
 			RETURN type
 		END GetType;
 
-		PROCEDURE SetType*(type: SHORTINT);
+		PROCEDURE SetType*(type: SIGNED8);
 		BEGIN
 			SELF.type := type
 		END SetType;
@@ -869,7 +869,7 @@ TYPE
 			SELF.required := required
 		END SetRequired;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		VAR e: Objects.Enumerator; p: ANY;
 		BEGIN
 			w.String(name^); w.Char(Space);
@@ -911,7 +911,7 @@ TYPE
 TYPE
 	CharReference* = OBJECT (Content)
 	VAR
-		code: LONGINT;
+		code: SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -919,17 +919,17 @@ TYPE
 			code := 0;
 		END Init;
 
-		PROCEDURE SetCode*(code: LONGINT);
+		PROCEDURE SetCode*(code: SIGNED32);
 		BEGIN
 			SELF.code := code
 		END SetCode;
 
-		PROCEDURE GetCode*(): LONGINT;
+		PROCEDURE GetCode*(): SIGNED32;
 		BEGIN
 			RETURN code
 		END GetCode;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		VAR codeArray: ARRAY 16 OF CHAR; codeStr: String;
 		BEGIN
 			DynamicStrings.IntToStr(code, codeArray);
@@ -964,7 +964,7 @@ TYPE
 			END
 		END SetDocument;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		BEGIN
 			w.Char('&'); w.String(name^); w.Char(';')
 		END Write;
@@ -1056,7 +1056,7 @@ TYPE
 			RETURN 0
 		END GetLength;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		VAR s: String;
 		BEGIN
 			s := GetStr(); w.String(s^)
@@ -1102,7 +1102,7 @@ TYPE
 
 	Comment* = OBJECT (ArrayChars)
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		BEGIN
 			NewLine(w, level-1); w.String("<!--"); Write^(w, context, level); w.String("-->"); NewLine(w, level)
 		END Write;
@@ -1112,8 +1112,8 @@ TYPE
 TYPE
 	CDataSect* = OBJECT (ArrayChars)
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
-		VAR s : String; i, j : LONGINT; buf : ARRAY 4 OF CHAR;
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
+		VAR s : String; i, j : SIGNED32; buf : ARRAY 4 OF CHAR;
 		BEGIN
 			w.String("<![CDATA[");
 			s := GetStr(); COPY("   ", buf);
@@ -1182,7 +1182,7 @@ TYPE
 			SELF.instruction := NewString(instruction)
 		END SetInstruction;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		BEGIN
 			w.String("<?"); w.String(target^); w.Char(Space);
 			w.String(instruction^); w.String("?>"); NewLine(w, level)
@@ -1265,7 +1265,7 @@ TYPE
 			END;
 		END SetValueAsString;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		BEGIN
 			IF value = NIL THEN KernelLog.String("NIL attribute "); KernelLog.Ln; RETURN END;
 			w.Char(Space); w.String(name^);
@@ -1473,7 +1473,7 @@ TYPE
 		END GetAttributeValue;
 
 		PROCEDURE GetAttributes*(): Objects.Enumerator;
-		VAR a : Attribute; array : Objects.PTRArray; enumerator : Objects.ArrayEnumerator; i, nofAttributes : LONGINT;
+		VAR a : Attribute; array : Objects.PTRArray; enumerator : Objects.ArrayEnumerator; i, nofAttributes : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			nofAttributes := 0;
 			a := attributes;
@@ -1558,7 +1558,7 @@ TYPE
 			END;
 		END Traverse;
 
-		PROCEDURE WriteAttributes*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE WriteAttributes*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		VAR a : Attribute;
 		BEGIN {EXCLUSIVE}
 			a := attributes;
@@ -1572,7 +1572,7 @@ TYPE
 			END;
 		END WriteAttributes;
 
-		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : LONGINT);
+		PROCEDURE Write*(w: Streams.Writer; context: ANY; level : SIGNED32);
 		VAR c : Content;
 		BEGIN
 			w.Char('<'); w.String(name^);
@@ -1616,7 +1616,7 @@ TYPE
 	ElementRegistry* = OBJECT
 	VAR
 		generators: Objects.Dictionary;
-		timestamp : LONGINT;
+		timestamp : SIGNED32;
 
 		PROCEDURE  &Init*;
 		VAR arrDict: Objects.ArrayDict;
@@ -1691,13 +1691,13 @@ TYPE
 			RETURN e (* stub *)
 		END InstantiateLate;
 
-		PROCEDURE GetTimestamp*() : LONGINT;
+		PROCEDURE GetTimestamp*() : SIGNED32;
 		BEGIN
 			RETURN timestamp;
 		END GetTimestamp;
 
 		PROCEDURE GetElements*() : ElementArray;
-		VAR enumerator : Objects.Enumerator; nofElements, i : LONGINT; ptr : ANY; ea : ElementArray;
+		VAR enumerator : Objects.Enumerator; nofElements, i : SIGNED32; ptr : ANY; ea : ElementArray;
 		BEGIN
 			enumerator := generators.GetEnumerator();
 			nofElements := 0;
@@ -1728,7 +1728,7 @@ VAR
 
 (**	Write an 0X-terminated UTF8 string to a stream (excl. 0X). XML special characters are escaped.
 	Also works for ASCII strings. *)
-PROCEDURE UTF8ToStream*(CONST string : ARRAY OF CHAR; w : Streams.Writer; VAR res : WORD);
+PROCEDURE UTF8ToStream*(CONST string : ARRAY OF CHAR; w : Streams.Writer; VAR res : INTEGER);
 VAR codeLength, stringLength, i : SIZE; ch : CHAR;
 BEGIN
 	ASSERT(w # NIL);
@@ -1763,11 +1763,11 @@ END UTF8ToStream;
 (**	Read an UTF8 string from a stream and undo escaping of XML special characters. If the string array is to small, the string
 	will be truncated and an error will be reported. <string> is always a valid 0X-terminated string.
 	Also works for ASCII strings. *)
-PROCEDURE UTF8FromStream*(VAR string : ARRAY OF CHAR; r : Streams.Reader; VAR res : WORD);
+PROCEDURE UTF8FromStream*(VAR string : ARRAY OF CHAR; r : Streams.Reader; VAR res : INTEGER);
 VAR ch : CHAR;  escapeBuffer : ARRAY 8 OF CHAR; escaping : BOOLEAN; escapeIdx, codeLength, stringLength, i, len, actLen : SIZE;
 
 	PROCEDURE FlushEscapeBuffer;
-	VAR j : LONGINT;
+	VAR j : SIGNED32;
 	BEGIN
 		IF escaping THEN
 			j := 0;
@@ -1846,7 +1846,7 @@ BEGIN
 	string[i] := 0X;
 END UTF8FromStream;
 
-PROCEDURE NewLine(w : Streams.Writer; level : LONGINT);
+PROCEDURE NewLine(w : Streams.Writer; level : SIGNED32);
 BEGIN
 	w.Ln; WHILE level > 0 DO w.Char(Tab); DEC(level) END
 END NewLine;

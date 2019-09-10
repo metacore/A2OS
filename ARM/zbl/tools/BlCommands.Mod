@@ -34,7 +34,7 @@ TYPE
 	END;
 
 	MemoryDest * = RECORD (Destination)
-		address *: LONGINT;
+		address *: SIGNED32;
 		cpus *: SET;
 	END;
 
@@ -86,7 +86,7 @@ TYPE
 		PROCEDURE Program * (CONST resourceName: ARRAY OF CHAR; CONST destination: Destination): BOOLEAN;
 		VAR
 			cmd: Command;
-			cpu: LONGINT;
+			cpu: SIGNED32;
 		BEGIN
 			cmd := "program ";
 			Strings.Append(cmd, resourceName);
@@ -152,7 +152,7 @@ TYPE
 			RETURN ExecuteCommand(cmd)
 		END Start;
 
-		PROCEDURE Mount * (CONST prefix, disk: ARRAY OF CHAR; partition: LONGINT): BOOLEAN;
+		PROCEDURE Mount * (CONST prefix, disk: ARRAY OF CHAR; partition: SIGNED32): BOOLEAN;
 		VAR
 			cmd: Command;
 		BEGIN
@@ -180,7 +180,7 @@ TYPE
 			RETURN ExecuteCommand(cmd)
 		END SetSource;
 
-		PROCEDURE SetTimeout * (value: LONGINT): BOOLEAN;
+		PROCEDURE SetTimeout * (value: SIGNED32): BOOLEAN;
 		VAR
 			cmd: Command;
 			val: ARRAY 32 OF CHAR;
@@ -223,11 +223,11 @@ TYPE
 	VAR
 		target: IP.Adr;
 		socket: UDP.Socket;
-		port: LONGINT;
+		port: SIGNED32;
 
 		PROCEDURE & InitUdpSession * (CONST board: ARRAY OF CHAR);
 		VAR
-			res: LONGINT;
+			res: SIGNED32;
 		BEGIN
 			port := CommandPort;
 			target := IP.StrToAdr(board);
@@ -238,7 +238,7 @@ TYPE
 		VAR
 			hostAdr: IP.Adr;
 			len: SIZE;
-			hostPort, res: LONGINT;
+			hostPort, res: SIGNED32;
 		BEGIN
 			socket.Send(target, port, cmd, 0, Strings.Length(cmd), res);
 			socket.Receive(resp, 0, LEN(ack), CommandTimeout, hostAdr, hostPort, len, res);
@@ -262,7 +262,7 @@ TYPE
 		writer: Streams.Writer;
 		reader: Streams.Reader;
 
-		PROCEDURE & InitUartSession * (port: LONGINT);
+		PROCEDURE & InitUartSession * (port: SIGNED32);
 		VAR
 			p: Serials.Port;
 		BEGIN

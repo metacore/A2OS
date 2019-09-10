@@ -93,9 +93,9 @@ TYPE
 
 	RequestHeader* = RECORD
 		fadr* : IP.Adr;
-		fport* : LONGINT;
-		method* : LONGINT;
-		maj*, min* : LONGINT;
+		fport* : SIGNED32;
+		method* : SIGNED32;
+		maj*, min* : SIGNED32;
 		uri* : ARRAY 4096 OF CHAR;
 		host* : ARRAY 256 OF CHAR;
 		referer* : ARRAY 256 OF CHAR;
@@ -106,8 +106,8 @@ TYPE
 	END;
 
 	ResponseHeader* = RECORD
-		maj*, min* : LONGINT;
-		statuscode* : LONGINT;
+		maj*, min* : SIGNED32;
+		statuscode* : SIGNED32;
 		reasonphrase* : ARRAY 256 OF CHAR;
 		server* : ARRAY 256 OF CHAR;
 		date* : ARRAY 32 OF CHAR;
@@ -124,7 +124,7 @@ TYPE
 		VAR (* General vars: *)
 			outW: Streams.Writer;
 			buf: ARRAY BufSize OF CHAR;
-			bufPos: LONGINT;
+			bufPos: SIGNED32;
 			chunked: BOOLEAN;
 
 			(* Chunked mode vars *)
@@ -143,7 +143,7 @@ TYPE
 			END
 		END Init;
 
-		PROCEDURE Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Sender(CONST inBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR i: SIZE;
 		BEGIN
 			ASSERT(chunked);
@@ -188,10 +188,10 @@ TYPE
 	ChunkedInStream* = OBJECT
 		VAR (* General vars: *)
 			inR: Streams.Reader;
-			remain: LONGINT;
+			remain: SIGNED32;
 			eof : BOOLEAN;
 			(* Chunked mode vars: *)
-			chunkSize: LONGINT;
+			chunkSize: SIGNED32;
 			first : BOOLEAN;
 
 		PROCEDURE &Init*(VAR inR, outR: Streams.Reader);
@@ -201,7 +201,7 @@ TYPE
 			eof := FALSE; first := TRUE;
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR i: SIZE; token: ARRAY 16 OF CHAR; ch: CHAR;
 		BEGIN
 			IF ~eof THEN
@@ -237,10 +237,10 @@ TYPE
 	LimitedOutStream* = OBJECT
 		VAR outW: Streams.Writer;
 			buf: ARRAY BufSize OF CHAR;
-			bufPos: LONGINT;
-			remain-: LONGINT;
+			bufPos: SIGNED32;
+			remain-: SIGNED32;
 
-		PROCEDURE &Init*(VAR inW, outW: Streams.Writer; size : LONGINT);
+		PROCEDURE &Init*(VAR inW, outW: Streams.Writer; size : SIGNED32);
 		BEGIN
 			SELF.outW := outW;
 			remain := size;
@@ -248,7 +248,7 @@ TYPE
 			Streams.OpenWriter(inW, Sender);
 		END Init;
 
-		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Sender(CONST outBuf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR i: SIZE;
 		BEGIN
 			i := ofs;
@@ -277,7 +277,7 @@ TYPE
 		END Update;
 
 		PROCEDURE Padding*(ch: CHAR);
-		VAR i:LONGINT;
+		VAR i:SIGNED32;
 		BEGIN
 			Update; (*compute 'remain'*)
 			WHILE remain>0 DO outW.Char(ch); DEC(remain) END;
@@ -297,7 +297,7 @@ TYPE
 			Streams.OpenReader(outR, Receiver);
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR l: SIZE;
 		BEGIN
 			IF remain > 0 THEN
@@ -322,7 +322,7 @@ BEGIN
 	in.SkipSpaces; in.Token(token)
 END GetToken;
 
-PROCEDURE GetInt(VAR i: LONGINT; CONST buf: ARRAY OF CHAR; VAR x: LONGINT);
+PROCEDURE GetInt(VAR i: SIGNED32; CONST buf: ARRAY OF CHAR; VAR x: SIGNED32);
 VAR ch: CHAR;
 BEGIN
 	x := 0;
@@ -333,15 +333,15 @@ BEGIN
 	END
 END GetInt;
 
-PROCEDURE Match(CONST  buf: ARRAY OF CHAR; with: ARRAY OF CHAR; VAR i: LONGINT): BOOLEAN;
-VAR j: LONGINT;
+PROCEDURE Match(CONST  buf: ARRAY OF CHAR; with: ARRAY OF CHAR; VAR i: SIGNED32): BOOLEAN;
+VAR j: SIGNED32;
 BEGIN
 	j := 0; WHILE (j<LEN(with)) & (with[j] # 0X) &  (i<LEN(buf)) & (buf[i] = with[j]) DO INC(i); INC(j) END;
 	RETURN with[j] = 0X
 END Match;
 
 PROCEDURE EqualsI(CONST buf: ARRAY OF CHAR; with: ARRAY OF CHAR): BOOLEAN;
-VAR j: LONGINT;
+VAR j: SIGNED32;
 BEGIN
 	j := 0; WHILE (with[j] # 0X) & (CAP(buf[j]) = CAP(with[j])) DO INC(j) END;
 	RETURN CAP(with[j]) = CAP(buf[j])
@@ -411,8 +411,8 @@ BEGIN
 	COPY(fieldName, a.key); COPY(value, a.value)
 END SetAdditionalFieldValue;
 
-PROCEDURE GetVersion(VAR ver: ARRAY OF CHAR; VAR maj, min: LONGINT):BOOLEAN;
-VAR i: LONGINT;
+PROCEDURE GetVersion(VAR ver: ARRAY OF CHAR; VAR maj, min: SIGNED32):BOOLEAN;
+VAR i: SIGNED32;
 BEGIN
 	i := 0; maj := 0; min := 0;
 	IF Match(ver, "HTTP/", i) THEN
@@ -425,12 +425,12 @@ BEGIN
 END GetVersion;
 
 (** Version - returns TRUE iff the HTTP version specified in h.maj/h.min is bigger or equal to Maj/Min *)
-PROCEDURE Version*(VAR h: RequestHeader; Maj, Min: LONGINT): BOOLEAN;
+PROCEDURE Version*(VAR h: RequestHeader; Maj, Min: SIGNED32): BOOLEAN;
 BEGIN
 	RETURN (h.maj > Maj) OR ((h.maj = Maj) & (h.min >= Min))
 END Version;
 
-PROCEDURE GetMethod*(VAR s: ARRAY OF CHAR; VAR method: LONGINT);
+PROCEDURE GetMethod*(VAR s: ARRAY OF CHAR; VAR method: SIGNED32);
 BEGIN
 	IF s = "GET" THEN method := GetM
 	ELSIF s = "HEAD" THEN method := HeadM
@@ -464,7 +464,7 @@ BEGIN
 	END
 END GetMethod;
 
-PROCEDURE GetMethodName*(code: LONGINT; VAR name: ARRAY OF CHAR);
+PROCEDURE GetMethodName*(code: SIGNED32; VAR name: ARRAY OF CHAR);
 BEGIN
 	CASE code OF
 		GetM : COPY("GET", name)
@@ -499,7 +499,7 @@ BEGIN
 	END;
 END GetMethodName;
 
-PROCEDURE ParseRequest*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: WORD; log : TFLog.Log);
+PROCEDURE ParseRequest*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: INTEGER; log : TFLog.Log);
 VAR s: ARRAY 32 OF CHAR; af: AdditionalField; ch :CHAR; wellformed: BOOLEAN;
 BEGIN
 	header.host[0] := 0X;
@@ -526,8 +526,8 @@ BEGIN
 	END
 END ParseRequest;
 
-PROCEDURE ParseRequestHeaderFields*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: WORD);
-VAR s: ARRAY 32 OF CHAR; af: AdditionalField; ch :CHAR; i:LONGINT;
+PROCEDURE ParseRequestHeaderFields*(VAR in: Streams.Reader; VAR header: RequestHeader; VAR res: INTEGER);
+VAR s: ARRAY 32 OF CHAR; af: AdditionalField; ch :CHAR; i:SIGNED32;
 BEGIN
 	i:=0;
 	header.additionalFields:=NIL; (*PH 120210*)
@@ -549,9 +549,9 @@ BEGIN
 	res := OK
 END ParseRequestHeaderFields;
 
-PROCEDURE ParseReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: WORD; log : TFLog.Log);
+PROCEDURE ParseReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: INTEGER; log : TFLog.Log);
 VAR s, sLow: ARRAY 32 OF CHAR; af: AdditionalField;
-	i :LONGINT; ch :CHAR; wellformed: BOOLEAN;
+	i :SIGNED32; ch :CHAR; wellformed: BOOLEAN;
 BEGIN
 	GetToken(in, s);
 	wellformed:=GetVersion(s, header.maj, header.min);
@@ -588,9 +588,9 @@ BEGIN
 	END;
 END ParseReply;
 
-PROCEDURE ModifyReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: WORD; log : TFLog.Log);
+PROCEDURE ModifyReply*(VAR in: Streams.Reader; VAR header: ResponseHeader; VAR res: INTEGER; log : TFLog.Log);
 VAR s, sLow: ARRAY 32 OF CHAR; af: AdditionalField;
-	i :LONGINT; ch :CHAR;
+	i :SIGNED32; ch :CHAR;
 BEGIN
 	REPEAT
 		GetToken(in, s);
@@ -660,7 +660,7 @@ BEGIN
 	log.Exit;
 END LogResponseHeader;
 
-PROCEDURE WriteRequestLine*(s: Streams.Writer; maj, min : LONGINT; method : LONGINT; uri, host : ARRAY OF CHAR);
+PROCEDURE WriteRequestLine*(s: Streams.Writer; maj, min : SIGNED32; method : SIGNED32; uri, host : ARRAY OF CHAR);
 VAR name: ARRAY 32 OF CHAR;
 BEGIN
 	GetMethodName(method, name);
@@ -672,7 +672,7 @@ BEGIN
 END WriteRequestLine;
 
 
-PROCEDURE GetReasonPhrase*(code: LONGINT; VAR phrase: ARRAY OF CHAR);
+PROCEDURE GetReasonPhrase*(code: SIGNED32; VAR phrase: ARRAY OF CHAR);
 BEGIN
 	(*	Informational	*)
 	IF (code =  Continue) THEN COPY("Continue", phrase)
@@ -780,7 +780,7 @@ BEGIN
 	dst.Ln()
 END SendResponseHeader;
 
-PROCEDURE SendStatusReply*(code:LONGINT; VAR request: RequestHeader; VAR reply: ResponseHeader; VAR out: Streams.Writer);
+PROCEDURE SendStatusReply*(code:SIGNED32; VAR request: RequestHeader; VAR reply: ResponseHeader; VAR out: Streams.Writer);
 VAR w : Streams.Writer;
 	chunker: ChunkedOutStream;
 BEGIN
@@ -795,7 +795,7 @@ BEGIN
 END SendStatusReply;
 
 PROCEDURE GetPath*(VAR url, path : ARRAY OF CHAR);
-VAR i, j : LONGINT;
+VAR i, j : SIGNED32;
 	protocol : ARRAY 8 OF CHAR;
 BEGIN
 	IF Strings.Length(url) < 7 THEN COPY(url, path)
@@ -815,8 +815,8 @@ BEGIN
 	END
 END GetPath;
 
-PROCEDURE SplitHTTPAdr*(url : ARRAY OF CHAR; VAR host, path: ARRAY OF CHAR; VAR port: LONGINT): BOOLEAN;
-VAR i, j : LONGINT;
+PROCEDURE SplitHTTPAdr*(url : ARRAY OF CHAR; VAR host, path: ARRAY OF CHAR; VAR port: SIGNED32): BOOLEAN;
+VAR i, j : SIGNED32;
 BEGIN
 	(*assuming HTTP or HTTPS*)
 

@@ -180,20 +180,20 @@ TYPE
 		error-: BOOLEAN;
 		Lax-: BOOLEAN;
 
-		indent: LONGINT;   (* for debugging purposes only *)
+		indent: SIGNED32;   (* for debugging purposes only *)
 		hasToken: BOOLEAN;
 		prevPosition-: Position;
 
 		(* conditional compilation *)
 		CONST Processing = 0; ProcessingElse = 1; Skipping = 2; Ignoring = 3; IgnoringElse = 4;
 
-		VAR conditional: WORD;
-		VAR conditionals: ARRAY 10 OF WORD;
+		VAR conditional: INTEGER;
+		VAR conditionals: ARRAY 10 OF INTEGER;
 		VAR definitions: ARRAY 10 OF Scanner.IdentifierType;
 		VAR conditionalCount, definitionCount: SIZE;
 
 		PROCEDURE S( CONST s: ARRAY OF CHAR );   (* for debugging purposes only *)
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			D.Ln;  INC( indent );  D.Int( indent,1 );
 			FOR i := 1 TO indent DO D.Str( "  " );  END;
@@ -201,7 +201,7 @@ TYPE
 		END S;
 
 		PROCEDURE E( CONST s: ARRAY OF CHAR );   (* for debugging purposes only *)
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			D.Ln;  D.Int( indent,1 );
 			FOR i := 1 TO indent DO D.Str( "  " );  END;
@@ -210,7 +210,7 @@ TYPE
 		END E;
 
 		PROCEDURE EE( CONST s, t: ARRAY OF CHAR );   (* for debugging purposes only *)
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			D.Ln;  D.Int( indent,1 );
 			FOR i := 1 TO indent DO D.Str( "  " );  END;
@@ -262,7 +262,7 @@ TYPE
 		END SetLax;
 
 		(** output error message and / or given code *)
-		PROCEDURE Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR);
+		PROCEDURE Error(position: Position; code: SIGNED32; CONST message: ARRAY OF CHAR);
 		BEGIN
 			Basic.ErrorC(diagnostics, scanner.source^, position, code, message);
 			error := TRUE
@@ -429,7 +429,7 @@ TYPE
 			hasToken := FALSE;
 		END NextToken;
 
-		PROCEDURE Symbol*(): LONGINT;
+		PROCEDURE Symbol*(): SIGNED32;
 		BEGIN
 			IF ~hasToken OR (token.symbol = Scanner.Escape) THEN
 				prevPosition := token.position;
@@ -444,7 +444,7 @@ TYPE
 		END Symbol;
 
 		(* stop on escape symbol *)
-		PROCEDURE TokenB*(): LONGINT;
+		PROCEDURE TokenB*(): SIGNED32;
 		BEGIN
 			IF ~hasToken THEN
 				prevPosition := token.position;
@@ -900,7 +900,7 @@ TYPE
 						| 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator | 'ALIAS' OF Expression
 						**)
 		PROCEDURE Factor( ): SyntaxTree.Expression;
-		VAR factor: SyntaxTree.Expression; position: Position; operator: LONGINT;
+		VAR factor: SyntaxTree.Expression; position: Position; operator: SIGNED32;
 		BEGIN
 			IF Trace THEN S( "Factor" ) END;
 			position := token.position;
@@ -1000,7 +1000,7 @@ TYPE
 			MulOp = '*' | '**' | '.*' | '+*' | '/' | '\' | './' | 'div' | 'mod' | '&'.
 		**)
 		PROCEDURE Term( ): SyntaxTree.Expression;
-		VAR term, factor: SyntaxTree.Expression;  operator: LONGINT; position: Position;
+		VAR term, factor: SyntaxTree.Expression;  operator: SIGNED32; position: Position;
 		BEGIN
 			IF Trace THEN S( "Term" ) END;
 			position := token.position;
@@ -1020,7 +1020,7 @@ TYPE
 			AddOp                = '+' | '-' | 'or'.
 		**)
 		PROCEDURE SimpleExpression( ): SyntaxTree.Expression;
-		VAR operator: LONGINT;  term, expression: SyntaxTree.Expression;  position: Position;
+		VAR operator: SIGNED32;  term, expression: SyntaxTree.Expression;  position: Position;
 		BEGIN
 			IF Trace THEN S( "SimpleExpression" ) END;
 			position := token.position;
@@ -1049,7 +1049,7 @@ TYPE
 						| 'in' | 'is'
 		**)
 		PROCEDURE Expression*( ): SyntaxTree.Expression;
-		VAR expression, rightExpression: SyntaxTree.Expression;  operator: LONGINT;  position: Position;
+		VAR expression, rightExpression: SyntaxTree.Expression;  operator: SIGNED32;  position: Position;
 		BEGIN
 			IF Trace THEN S( "Expression" ) END;
 			expression := RangeExpression();
@@ -1792,7 +1792,7 @@ TYPE
 
 		(** PortType = 'port' ('in'|'out') ['(' Expression ')'] *)
 		PROCEDURE PortType(position: Position; parentScope: SyntaxTree.Scope): SyntaxTree.Type;
-		VAR type: SyntaxTree.Type; direction: LONGINT; sizeExpression: SyntaxTree.Expression;
+		VAR type: SyntaxTree.Type; direction: SIGNED32; sizeExpression: SyntaxTree.Expression;
 		BEGIN
 			(* port token already consumed *)
 			IF Optional(Scanner.In) THEN
@@ -1890,7 +1890,7 @@ TYPE
 		PROCEDURE ParameterDeclaration( procedureType: SyntaxTree.ProcedureType ; parentScope: SyntaxTree.Scope);
 		VAR
 			type: SyntaxTree.Type; name: SyntaxTree.Identifier;
-			firstParameter, parameter: SyntaxTree.Parameter;   kind: LONGINT; position: Position;
+			firstParameter, parameter: SyntaxTree.Parameter;   kind: SIGNED32; position: Position;
 		BEGIN
 			IF Trace THEN S( "ParameterDeclaration" ) END;
 			IF Optional( Scanner.Var ) THEN (* var parameter *)
@@ -2066,7 +2066,7 @@ TYPE
 			parameter: SyntaxTree.Parameter;
 			qualifiedIdentifier : SyntaxTree.QualifiedIdentifier;
 			identifier: SyntaxTree.Identifier;
-			kind: LONGINT;
+			kind: SIGNED32;
 		BEGIN
 			IF Trace THEN S( "Procedure" ) END;
 			(* procedure symbol has already been consumed *)
@@ -2160,7 +2160,7 @@ TYPE
 			procedureType: SyntaxTree.ProcedureType;
 			operator: SyntaxTree.Operator;
 			access: SET;
-			i: LONGINT; position: Position;
+			i: SIGNED32; position: Position;
 			modifiers: SyntaxTree.Modifier; (* nopov *)
 			isInline, forward: BOOLEAN;
 		BEGIN

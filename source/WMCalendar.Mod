@@ -41,9 +41,9 @@ TYPE
 	SelectionWrapper* = OBJECT
 	VAR
 		year-, month-, day-,
-		week-, weekDay- : LONGINT;
+		week-, weekDay- : SIGNED32;
 
-		PROCEDURE &Init(year, month, day, week, weekDay : LONGINT);
+		PROCEDURE &Init(year, month, day, week, weekDay : SIGNED32);
 		BEGIN
 			SELF.year := year; SELF.month := month; SELF.day := day;
 			SELF.week := week; SELF.weekDay := weekDay;
@@ -79,7 +79,7 @@ TYPE
 		cellWidth, cellHeight : SIZE;
 		fixWidth, fixHeight : SIZE; (* additional width and height of last column respectively row (division remainder) *)
 
-		state : LONGINT;
+		state : SIGNED32;
 		timer : Kernel.Timer;
 
 		PROCEDURE &Init*;
@@ -120,7 +120,7 @@ TYPE
 		END PropertyChanged;
 
 		PROCEDURE RecacheProperties*;
-		VAR dt : Dates.DateTime; ignore, weekDay : LONGINT; string : Strings.String;
+		VAR dt : Dates.DateTime; ignore, weekDay : SIGNED32; string : Strings.String;
 
 			PROCEDURE GetResizedImage(name : WMProperties.StringProperty; width, height : SIZE) : WMGraphics.Image;
 			VAR newImage, resizedImage : WMGraphics.Image;
@@ -187,7 +187,7 @@ TYPE
 			Release;
 		END PreviousMonth;
 
-		PROCEDURE ChangeMonth(delta : LONGINT);
+		PROCEDURE ChangeMonth(delta : SIGNED32);
 		VAR dt : Dates.DateTime;
 		BEGIN
 			dt.year := year.Get(); dt.month := month.Get(); dt.day := 1;
@@ -206,7 +206,7 @@ TYPE
 		PROCEDURE PointerUp*(x, y : SIZE; keys : SET);
 		VAR
 			selection : SelectionWrapper; dt : Dates.DateTime;
-			year, week, weekDay : LONGINT;
+			year, week, weekDay : SIGNED32;
 		BEGIN
 			PointerUp^(x, y, keys);
 			IF selected & ~(0 IN keys) & allowSelection.Get() THEN
@@ -243,7 +243,7 @@ TYPE
 	 		GetCell(x, y, column, row);
 	 		IF (column # -1) & (row > 0) THEN
 	 			dt := date0;
-	 			Dates.AddDays(dt, ((row - 1) * NofColumns + column)(LONGINT));
+	 			Dates.AddDays(dt, ((row - 1) * NofColumns + column)(SIGNED32));
 	 			RETURN TRUE;
 	 		ELSE
 	 			RETURN FALSE;
@@ -264,7 +264,7 @@ TYPE
 			rect : WMRectangles.Rectangle;
 			dt : Dates.DateTime;
 			string : ARRAY 16 OF CHAR;
-			column, temp, row : LONGINT; color: WMGraphics.Color;
+			column, temp, row : SIGNED32; color: WMGraphics.Color;
 
 			PROCEDURE DrawStringInRect(rect : WMRectangles.Rectangle; CONST string : ARRAY OF CHAR);
 			BEGIN
@@ -356,7 +356,7 @@ TYPE
 		prevBtn, nextBtn : WMStandardComponents.Button;
 		dateLabel : WMStandardComponents.Label;
 
-		state : LONGINT;
+		state : SIGNED32;
 		timer : Kernel.Timer;
 
 		PROCEDURE &Init*;
@@ -428,7 +428,7 @@ TYPE
 	VAR
 		calendar : Calendar;
 		control : CalendarController;
-		colorScheme : LONGINT;
+		colorScheme : SIGNED32;
 		contextMenu : WMPopups.Popup;
 		dragging, resizing : BOOLEAN;
 		lastX, lastY : SIZE;
@@ -481,7 +481,7 @@ TYPE
 			END;
 		END New;
 
-		PROCEDURE SetColorScheme(scheme : LONGINT);
+		PROCEDURE SetColorScheme(scheme : SIGNED32);
 		BEGIN
 			IF (scheme = 0) THEN
 				calendar.clText.Set(WMGraphics.White);
@@ -600,7 +600,7 @@ TYPE
 
 VAR
 	WeekDay : ARRAY 8 OF ARRAY 16 OF CHAR;
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 	StrCalendar, StrCalendarController, StrOnSelect, StrOnSelectInfo : Strings.String;
 
@@ -648,7 +648,7 @@ BEGIN
 
 	NEW(PrototypeYear, NIL, Strings.NewString("Year"), Strings.NewString("Currently displayed year"));
 	PrototypeYear.Set(2000);
-	PrototypeYear.SetBounds(1, MAX(LONGINT));
+	PrototypeYear.SetBounds(1, MAX(SIGNED32));
 
 	NEW(PrototypeMonth, NIL, Strings.NewString("Month"), Strings.NewString("Currently displayed month"));
 	PrototypeMonth.Set(1);

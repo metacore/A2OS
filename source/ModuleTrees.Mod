@@ -49,7 +49,7 @@ TYPE
 		pos : Texts.TextPosition;
 		name : Strings.String;
 		color : WMGraphics.Color;
-		sortInfo : WORD;
+		sortInfo : INTEGER;
 		font : WMGraphics.Font;
 		node : ModuleParser.Node;
 		modulename : ARRAY 32 OF CHAR;
@@ -156,7 +156,7 @@ TYPE
 			END;
 			editor := e;
 			highlight := editor.tv.CreateHighlight();
-			highlight.SetColor(LONGINT(0DDDD0060H));
+			highlight.SetColor(SIGNED32(0DDDD0060H));
 			highlight.SetKind(WMTextView.HLOver)
 		END SetEditor;
 
@@ -544,7 +544,7 @@ TYPE
 		END ClickNode;
 
 		PROCEDURE MiddleClickNode(sender, data : ANY);
-		VAR d : ANY; commandStr, ignoreMsg : ARRAY 128 OF CHAR; len: SIZE; ignore : WORD;
+		VAR d : ANY; commandStr, ignoreMsg : ARRAY 128 OF CHAR; len: SIZE; ignore : INTEGER;
 		BEGIN
 			IF (data # NIL) & (data IS WMTrees.TreeNode) THEN
 				tree.Acquire;
@@ -563,7 +563,7 @@ TYPE
 			END;
 		END MiddleClickNode;
 
-		PROCEDURE GetTextInfo(node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo: WORD; color: WMGraphics.Color; style: SET): TextInfo;
+		PROCEDURE GetTextInfo(node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo: INTEGER; color: WMGraphics.Color; style: SET): TextInfo;
 		VAR newInfo: TextInfo; moduleNode : ModuleParser.Module; font: WMGraphics.Font;
 		BEGIN
 			NEW(newInfo);
@@ -651,8 +651,8 @@ TYPE
 			END;
 		END GetModuleNode;
 
-		PROCEDURE GetProcedureType(procHead : ModuleParser.ProcHead) : WORD;
-		VAR type : WORD;
+		PROCEDURE GetProcedureType(procHead : ModuleParser.ProcHead) : INTEGER;
+		VAR type : INTEGER;
 
 			PROCEDURE InModuleScope(procHead : ModuleParser.ProcHead) : BOOLEAN;
 			BEGIN
@@ -798,7 +798,7 @@ TYPE
 		PROCEDURE AddProcHead(treeNode: WMTrees.TreeNode; procHead: ModuleParser.ProcHead): WMTrees.TreeNode;
 		VAR
 			newNode: WMTrees.TreeNode; caption: Strings.String;
-			color : WMGraphics.Color; image : WMGraphics.Image; type : WORD; d : ANY;
+			color : WMGraphics.Color; image : WMGraphics.Image; type : INTEGER; d : ANY;
 		BEGIN
 			IF (procHead # NIL) THEN
 				color := GetColor(procHead.modifiers, ColorProcedure);
@@ -1220,7 +1220,7 @@ TYPE
 			AddNumberPostfixToCaption(parent, nofConstants);
 		END AddConstDecl;
 
-		PROCEDURE AddIdentDef(parent: WMTrees.TreeNode; node : ModuleParser.Node; identDef: ModuleParser.IdentDef; sortInfo: WORD; color: WMGraphics.Color; style: SET):
+		PROCEDURE AddIdentDef(parent: WMTrees.TreeNode; node : ModuleParser.Node; identDef: ModuleParser.IdentDef; sortInfo: INTEGER; color: WMGraphics.Color; style: SET):
 			WMTrees.TreeNode;
 		VAR newNode: WMTrees.TreeNode;
 		BEGIN
@@ -1237,7 +1237,7 @@ TYPE
 			END
 		END AddIdentDef;
 
-		PROCEDURE AddInfoItem(parent: WMTrees.TreeNode; node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo : WORD; color : WMGraphics.Color; style: SET):
+		PROCEDURE AddInfoItem(parent: WMTrees.TreeNode; node : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortInfo : INTEGER; color : WMGraphics.Color; style: SET):
 			WMTrees.TreeNode;
 		VAR newNode: WMTrees.TreeNode;
 		BEGIN

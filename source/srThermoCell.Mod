@@ -21,7 +21,7 @@ BEGIN
 	v:=voxel
 END setatomvox;
 PROCEDURE bang;
-VAR i:INTEGER;
+VAR i:SIGNED16;
 BEGIN
 	NEW(space);
 	FOR i:=0 TO N-1 DO
@@ -30,7 +30,7 @@ BEGIN
 	END
 END bang;
 PROCEDURE tick*;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	NEW(space);
 	FOR i:=0 TO N-1 DO
@@ -70,7 +70,7 @@ TYPE spectrum=OBJECT(srBase.Voxel);
 VAR
 	space: srM3Space.cell;
 	v: srVoxel.DiffuseVox;
-	frame: LONGINT;
+	frame: SIGNED32;
 
 PROCEDURE & init*;
 BEGIN
@@ -108,7 +108,7 @@ VAR
 
 PROCEDURE randpos*(VAR pt:srBase.PT);
 VAR
-	r: REAL;
+	r: FLOAT32;
 BEGIN
 	r:= 6.2834*rand.Uniform();
 	pt.x := 1/2 + srMath.cos(r)/23;

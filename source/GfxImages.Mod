@@ -21,8 +21,8 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 	TYPE
 		Image* = Raster.Image;
 
-		ShiftProc* = PROCEDURE (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; t: REAL);
-		ScaleProc* = PROCEDURE (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; xy, dxy: REAL);
+		ShiftProc* = PROCEDURE (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; t: FLOAT32);
+		ScaleProc* = PROCEDURE (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; xy, dxy: FLOAT32);
 
 		(** transformation filter **)
 		Filter* = RECORD (Raster.Mode)
@@ -39,7 +39,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 
 	(** predefined filter procedures using box filter (i.e. no filtering): fast and ugly **)
 
-	PROCEDURE HShift* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; tx: REAL);
+	PROCEDURE HShift* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; tx: FLOAT32);
 	BEGIN
 		IF tx >= 0.5 THEN
 			dbit := dbit + dst.fmt.bpp; INC(dadr, dbit DIV 8); dbit := dbit MOD 8;
@@ -49,7 +49,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 		filter.transfer(filter, sadr, sbit, dadr, dbit, len)
 	END HShift;
 
-	PROCEDURE VShift* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; ty: REAL);
+	PROCEDURE VShift* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; ty: FLOAT32);
 	BEGIN
 		IF ty >= 0.5 THEN
 			INC(dadr, dst.bpr);
@@ -63,7 +63,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 		END
 	END VShift;
 
-	PROCEDURE HScale* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; x, dx: REAL);
+	PROCEDURE HScale* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; x, dx: FLOAT32);
 		VAR i0, i1: SIZE;
 	BEGIN
 		Raster.Bind(filter, src.fmt, dst.fmt);
@@ -81,7 +81,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 		END
 	END HScale;
 
-	PROCEDURE VScale* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; y, dy: REAL);
+	PROCEDURE VScale* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; y, dy: FLOAT32);
 		VAR j0, j1: SIZE;
 	BEGIN
 		Raster.Bind(filter, src.fmt, dst.fmt);
@@ -101,7 +101,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 
 	(** predefined filter procedures for linearly filtered transformations: slow and less ugly **)
 
-	PROCEDURE LinearHShift* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; tx: REAL);
+	PROCEDURE LinearHShift* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; tx: FLOAT32);
 		CONST r = Raster.r; g = Raster.g; b = Raster.b; a = Raster.a;
 		VAR w0, w1, sinc, dinc, i, red, green, blue, alpha: SIZE; da: ADDRESS; spix, dpix: Raster.Pixel;
 	BEGIN
@@ -135,7 +135,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 		END
 	END LinearHShift;
 
-	PROCEDURE LinearVShift* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; ty: REAL);
+	PROCEDURE LinearVShift* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE; ty: FLOAT32);
 		CONST r = Raster.r; g = Raster.g; b = Raster.b; a = Raster.a;
 		VAR w0, w1, i, red, green, blue, alpha: SIZE; spix, dpix: Raster.Pixel;
 	BEGIN
@@ -168,7 +168,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 		END
 	END LinearVShift;
 
-	PROCEDURE LinearHScale* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; x, dx: REAL);
+	PROCEDURE LinearHScale* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; x, dx: FLOAT32);
 		VAR i0, i1,  w1, w0, j: SIZE; spix: ARRAY 2 OF Raster.Pixel; dpix: Raster.Pixel;
 	BEGIN
 		Raster.Bind(filter, Raster.PixelFormat, dst.fmt);
@@ -206,7 +206,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 		END
 	END LinearHScale;
 
-	PROCEDURE LinearVScale* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; y, dy: REAL);
+	PROCEDURE LinearVScale* (VAR filter: Raster.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, dlen: SIZE; y, dy: FLOAT32);
 		VAR j0, j1, w1, w0, j: SIZE; spix: ARRAY 2 OF Raster.Pixel; dpix: Raster.Pixel;
 	BEGIN
 		Raster.Bind(filter, Raster.PixelFormat, dst.fmt);
@@ -245,7 +245,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 	END LinearVScale;
 
 	(** initialize filter with compositing operation and transformation procedures **)
-	PROCEDURE InitFilter* (VAR filter: Filter; op: SHORTINT; hshift, vshift: ShiftProc; hscale, vscale: ScaleProc);
+	PROCEDURE InitFilter* (VAR filter: Filter; op: SIGNED8; hshift, vshift: ShiftProc; hscale, vscale: ScaleProc);
 	BEGIN
 		Raster.InitMode(filter, op);
 		filter.hshift := hshift; filter.vshift := vshift;
@@ -279,7 +279,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 		VAR
 			dst: Raster.Image; mode: Raster.Mode; dinc, sinc, h, w, sbit: SIZE;
 			dadr, sadr, sa, da: ADDRESS;
-			mat: GfxMatrix.Matrix; t: REAL;
+			mat: GfxMatrix.Matrix; t: FLOAT32;
 	BEGIN
 		IF ABS(m[0, 0] * m[1, 1]) >= ABS(m[0, 1] * m[1, 0]) THEN	(* no need to swap rows and columns *)
 			IF (m[0, 0] <= 0) OR (m[1, 1] <= 0) THEN
@@ -349,7 +349,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 	END Preprocess;
 
 	(* shift source row by fractional amount *)
-	PROCEDURE SkewRow (src, dst: Image; si, sj, w, di, dj: SIZE; tx: REAL; VAR filter: Filter);
+	PROCEDURE SkewRow (src, dst: Image; si, sj, w, di, dj: SIZE; tx: FLOAT32; VAR filter: Filter);
 		VAR sbit, dbit: SIZE; sadr, dadr: ADDRESS;
 	BEGIN
 		ASSERT((0.0 <= tx) & (tx <= 1.0), 100);	(* rounding problem if using tx < 1.0 *)
@@ -363,7 +363,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 	END SkewRow;
 
 	(* shear rectangle in source image horizontally; clip to destination boundary *)
-	PROCEDURE SkewRows (src, dst: Image; si, sj, w, h, dj: SIZE; x, dx: REAL; VAR filter: Filter);
+	PROCEDURE SkewRows (src, dst: Image; si, sj, w, h, dj: SIZE; x, dx: FLOAT32; VAR filter: Filter);
 		VAR j, di, n: SIZE;
 	BEGIN
 		j := 0;
@@ -459,7 +459,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 	END SkewRows;
 
 	(* shift source column by fractional amount *)
-	PROCEDURE SkewCol (src, dst: Image; si, sj, h, di, dj: SIZE; ty: REAL; VAR filter: Filter);
+	PROCEDURE SkewCol (src, dst: Image; si, sj, h, di, dj: SIZE; ty: FLOAT32; VAR filter: Filter);
 		VAR sbit, dbit: SIZE; sadr, dadr: ADDRESS;
 	BEGIN
 		ASSERT((0.0 <= ty) & (ty <= 1.0), 100);	(* rounding problem with ty < 1.0 *)
@@ -473,7 +473,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 	END SkewCol;
 
 	(* shear rectangle in source image vertically; clip to destination boundary *)
-	PROCEDURE SkewCols (src, dst: Image; si, sj, w, h, di: SIZE; y, dy: REAL; VAR filter: Filter);
+	PROCEDURE SkewCols (src, dst: Image; si, sj, w, h, di: SIZE; y, dy: FLOAT32; VAR filter: Filter);
 		VAR i, dj, n: SIZE;
 	BEGIN
 		i := 0;
@@ -569,7 +569,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 	END SkewCols;
 
 	(** render translated image on destination **)
-	PROCEDURE Translate* (src, dst: Image; tx, ty: REAL; VAR filter: Filter);
+	PROCEDURE Translate* (src, dst: Image; tx, ty: FLOAT32; VAR filter: Filter);
 		VAR ti, tj, i, j, w, h: SIZE; tmp: Image;
 	BEGIN
 		ti := ENTIER(tx); tx := tx - ti;
@@ -592,8 +592,8 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 	END Translate;
 
 	(** render scaled image on destination **)
-	PROCEDURE Scale* (src, dst: Image; sx, sy, tx, ty: REAL; VAR filter: Filter);
-		VAR xl, xr, yb, yt, w, h, sbit, dbit, i: SIZE; sadr, dadr: ADDRESS; dy, y, dx, x: REAL; tmp: Image;
+	PROCEDURE Scale* (src, dst: Image; sx, sy, tx, ty: FLOAT32; VAR filter: Filter);
+		VAR xl, xr, yb, yt, w, h, sbit, dbit, i: SIZE; sadr, dadr: ADDRESS; dy, y, dx, x: FLOAT32; tmp: Image;
 	BEGIN
 		ASSERT((sx > 0) & (sy > 0), 100);
 		xl := ENTIER(tx); xr := -ENTIER(-(tx + sx * src.width));
@@ -658,8 +658,8 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 	END Scale;
 
 	(** render rotated image on destination **)
-	PROCEDURE Rotate* (src, dst: Image; sin, cos, tx, ty: REAL; VAR filter: Filter);
-		VAR m: GfxMatrix.Matrix; tan, htan, wsin, hcos, x, y: REAL; wmax, h, iy, sw, sh: SIZE; tmp: Image;
+	PROCEDURE Rotate* (src, dst: Image; sin, cos, tx, ty: FLOAT32; VAR filter: Filter);
+		VAR m: GfxMatrix.Matrix; tan, htan, wsin, hcos, x, y: FLOAT32; wmax, h, iy, sw, sh: SIZE; tmp: Image;
 	BEGIN
 		ASSERT(ABS(sin * sin + cos * cos - 1) < 0.0001, 100);
 		m[0, 0] := cos; m[0, 1] := sin; m[1, 0] := -sin; m[1, 1] := cos; m[2, 0] := tx; m[2, 1] := ty;
@@ -686,13 +686,13 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 	END Rotate;
 
 	(** render horizontally sheared image on destination **)
-	PROCEDURE ShearRows* (src, dst: Image; sx, tx: REAL; VAR filter: Filter);
+	PROCEDURE ShearRows* (src, dst: Image; sx, tx: FLOAT32; VAR filter: Filter);
 	BEGIN
 		SkewRows(src, dst, 0, 0, src.width, src.height, 0, tx, sx, filter)
 	END ShearRows;
 
 	(** render vertically sheared image on destination **)
-	PROCEDURE ShearCols* (src, dst: Image; sy, ty: REAL; VAR filter: Filter);
+	PROCEDURE ShearCols* (src, dst: Image; sy, ty: FLOAT32; VAR filter: Filter);
 	BEGIN
 		SkewCols(src, dst, 0, 0, src.width, src.height, 0, ty, sy, filter)
 	END ShearCols;
@@ -700,7 +700,7 @@ MODULE GfxImages; (** non-portable *)	(* eos  **)
 	(** render affinely transformed image on destination **)
 	PROCEDURE Transform* (src, dst: Image; m: GfxMatrix.Matrix; VAR filter: Filter);
 		CONST eps = 0.003;
-		VAR det, s, dx, x: REAL; iy, w, h, ix: SIZE; tmp: Image;
+		VAR det, s, dx, x: FLOAT32; iy, w, h, ix: SIZE; tmp: Image;
 	BEGIN
 		Preprocess(src, m, filter);
 		IF (ABS(m[0, 0]) >= eps) & (ABS(m[1, 1]) >= eps) THEN	(* matrix isn't singular *)

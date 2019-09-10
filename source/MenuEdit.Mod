@@ -79,7 +79,7 @@ TYPE
 		PROCEDURE AddButton(sender, data : ANY);
 		VAR button : WMStandardComponents.Button;
 			name, nameD, nameH, str : ARRAY 64 OF CHAR;
-			type, direction : LONGINT;
+			type, direction : SIGNED32;
 			img : WMGraphics.Image;
 			sc : WMStandardComponents.SystemCommand;
 
@@ -230,7 +230,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*;
 VAR winstance : Window;

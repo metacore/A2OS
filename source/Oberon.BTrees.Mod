@@ -29,9 +29,9 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	TYPE
 		Page = POINTER TO PageDesc;
 		PageDesc = RECORD
-			org: LONGINT; (* pos of this page *)
-			p0: LONGINT; (* pos of left page *)
-			m: INTEGER; (* number of entries *)
+			org: SIGNED32; (* pos of this page *)
+			p0: SIGNED32; (* pos of left page *)
+			m: SIGNED16; (* number of entries *)
 			dirty: BOOLEAN; (* page changed *)
 			discard: BOOLEAN; (* TRUE: page is deleted *)
 			next: Page (* next page in cache *)
@@ -40,27 +40,27 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		TreeDesc = RECORD
 			F: Files.File; (* index file *)
 			cache: Page; (* list of cached pages *)
-			org: LONGINT; (* pos of btree header *)
-			root: LONGINT; (* pos of root page *)
-			free: LONGINT; (* pos of first free page *)
-			class: INTEGER; (* 0: LInt, 1: Str *)
-			noCache: INTEGER; (* number of pages in cache *)
-			maxCache: INTEGER (* max. number of pages in cache *)
+			org: SIGNED32; (* pos of btree header *)
+			root: SIGNED32; (* pos of root page *)
+			free: SIGNED32; (* pos of first free page *)
+			class: SIGNED16; (* 0: LInt, 1: Str *)
+			noCache: SIGNED16; (* number of pages in cache *)
+			maxCache: SIGNED16 (* max. number of pages in cache *)
 		END;
 
 		Entry = RECORD
-			org: LONGINT; (* pos of data for key *)
-			p: LONGINT (* pos of right page *)
+			org: SIGNED32; (* pos of data for key *)
+			p: SIGNED32 (* pos of right page *)
 		END;
 
 		LIntEntry = RECORD (Entry)
-			key: LONGINT
+			key: SIGNED32
 		END;
 		LIntPage = POINTER TO LIntPageDesc;
 		LIntPageDesc = RECORD (PageDesc)
 			e: ARRAY 2*LIntPageN OF LIntEntry
 		END;
-		EnumLIntProc* = PROCEDURE (key, org: LONGINT; VAR cont: BOOLEAN); (** enumerator for longin keys *)
+		EnumLIntProc* = PROCEDURE (key, org: SIGNED32; VAR cont: BOOLEAN); (** enumerator for longin keys *)
 
 		StrEntry = RECORD (Entry)
 			key: ARRAY StrKeySize OF CHAR
@@ -69,16 +69,16 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		StrPageDesc = RECORD (PageDesc)
 			e: ARRAY 2*StrPageN OF StrEntry
 		END;
-		EnumStrProc* = PROCEDURE (key: ARRAY OF CHAR; org: LONGINT; VAR cont: BOOLEAN); (** enumerator for string keys *)
+		EnumStrProc* = PROCEDURE (key: ARRAY OF CHAR; org: SIGNED32; VAR cont: BOOLEAN); (** enumerator for string keys *)
 
 	VAR
 		MINStrKey*, MAXStrKey*: ARRAY StrKeySize OF CHAR; (** first and last string key *)
 
 (* Allocate space for a new page. *)
-	PROCEDURE AllocSpace(T: Tree; size: LONGINT): LONGINT;
+	PROCEDURE AllocSpace(T: Tree; size: SIGNED32): SIGNED32;
 		VAR
 			R: Files.Rider;
-			pos: LONGINT;
+			pos: SIGNED32;
 	BEGIN
 		IF T.free > T.org THEN
 			pos := T.free; Files.Set(R, T.F, pos);
@@ -106,7 +106,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	PROCEDURE WriteLIntPage(T: Tree; p: LIntPage);
 		VAR
 			R: Files.Rider;
-			i: LONGINT;
+			i: SIGNED32;
 	BEGIN
 		ASSERT(p.org <= Files.Length(T.F));
 		Files.Set(R, T.F, p.org);
@@ -151,11 +151,11 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END NewLIntPage;
 
 (* Read page at offset org. *)
-	PROCEDURE ReadLIntPage(T: Tree; org: LONGINT; VAR p: LIntPage);
+	PROCEDURE ReadLIntPage(T: Tree; org: SIGNED32; VAR p: LIntPage);
 		VAR
 			R: Files.Rider;
 			p0: Page;
-			i: LONGINT;
+			i: SIGNED32;
 	BEGIN
 		IF org < 0 THEN
 			p := NIL; RETURN
@@ -191,9 +191,9 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END ReadLIntPage;
 
 (** Search for key in T. If the key could be found res = Done else res = NotFound. *)
-	PROCEDURE SearchLInt*(T: Tree; key: LONGINT; VAR org: LONGINT; VAR res: INTEGER);
+	PROCEDURE SearchLInt*(T: Tree; key: SIGNED32; VAR org: SIGNED32; VAR res: SIGNED16);
 		VAR
-			i, L, R: LONGINT;
+			i, L, R: SIGNED32;
 			a: LIntPage;
 	BEGIN
 		ASSERT(T.class = LInt);
@@ -224,9 +224,9 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END SearchLInt;
 
-	PROCEDURE insertLInt(T: Tree; key, org: LONGINT; a: LIntPage; VAR h: BOOLEAN; VAR v: LIntEntry; VAR res: INTEGER);
+	PROCEDURE insertLInt(T: Tree; key, org: SIGNED32; a: LIntPage; VAR h: BOOLEAN; VAR v: LIntEntry; VAR res: SIGNED16);
 		VAR
-			i, L, R: LONGINT;
+			i, L, R: SIGNED32;
 			b: LIntPage;
 			u: LIntEntry;
 	BEGIN
@@ -301,7 +301,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END insertLInt;
 
 (** Insert a new key into T. If a new key was inserted, res = Done else res = EntryChanged. *)
-	PROCEDURE InsertLInt*(T: Tree; key, org: LONGINT; VAR res: INTEGER);
+	PROCEDURE InsertLInt*(T: Tree; key, org: SIGNED32; VAR res: SIGNED16);
 		VAR
 			u: LIntEntry;
 			r, q: LIntPage;
@@ -321,10 +321,10 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END InsertLInt;
 
-	PROCEDURE underflowLInt(T: Tree; c, a: LIntPage; s: LONGINT; VAR h: BOOLEAN);
+	PROCEDURE underflowLInt(T: Tree; c, a: LIntPage; s: SIGNED32; VAR h: BOOLEAN);
 		VAR
 			b: LIntPage;
-			i, k: LONGINT;
+			i, k: SIGNED32;
 	BEGIN
 		IF s < c.m THEN
 			ReadLIntPage(T, c.e[s].p, b); k := (b.m-LIntPageN+1) DIV 2;
@@ -389,13 +389,13 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END underflowLInt;
 
-	PROCEDURE deleteLInt(T: Tree; key: LONGINT; a: LIntPage; VAR h: BOOLEAN; VAR res: INTEGER);
+	PROCEDURE deleteLInt(T: Tree; key: SIGNED32; a: LIntPage; VAR h: BOOLEAN; VAR res: SIGNED16);
 		VAR
-			i, L, R: LONGINT;
+			i, L, R: SIGNED32;
 			q: LIntPage;
 		PROCEDURE del(p: LIntPage; VAR h: BOOLEAN);
 			VAR
-				k: LONGINT;
+				k: SIGNED32;
 				q: LIntPage;
 		BEGIN
 			k := p.m-1; ReadLIntPage(T, p.e[k].p, q);
@@ -442,7 +442,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END deleteLInt;
 
 (** Delete key from T. If key was deleted res = Done else res = NotFound. *)
-	PROCEDURE DeleteLInt*(T: Tree; key: LONGINT; VAR res: INTEGER);
+	PROCEDURE DeleteLInt*(T: Tree; key: SIGNED32; VAR res: SIGNED16);
 		VAR
 			p: Page;
 			r, r0: LIntPage;
@@ -472,13 +472,13 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END DeleteLInt;
 
-	PROCEDURE enumerateLInt(T: Tree; p: LIntPage; min, max: LONGINT; enum: EnumLIntProc; VAR cont: BOOLEAN);
+	PROCEDURE enumerateLInt(T: Tree; p: LIntPage; min, max: SIGNED32; enum: EnumLIntProc; VAR cont: BOOLEAN);
 		VAR
-			key, lkey, i: LONGINT;
+			key, lkey, i: SIGNED32;
 			q: LIntPage;
 	BEGIN
 		IF p # NIL THEN
-			lkey := MIN(LONGINT); i := 0;
+			lkey := MIN(SIGNED32); i := 0;
 			WHILE (i < p.m) & (lkey < max) DO
 				key := p.e[i].key;
 				IF key >= min THEN
@@ -504,7 +504,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END enumerateLInt;
 
 (** Enumerate all keys in T witch range from min upto max (key >= min) & (key <= max). *)
-	PROCEDURE EnumLInt*(T: Tree; min, max: LONGINT; enum: EnumLIntProc);
+	PROCEDURE EnumLInt*(T: Tree; min, max: SIGNED32; enum: EnumLIntProc);
 		VAR
 			r: LIntPage;
 			cont: BOOLEAN;
@@ -517,7 +517,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END EnumLInt;
 
-	PROCEDURE minLIntKey(T: Tree; p: LIntPage; VAR key: LONGINT);
+	PROCEDURE minLIntKey(T: Tree; p: LIntPage; VAR key: SIGNED32);
 	BEGIN
 		IF p # NIL THEN
 			key := p.e[0].key;
@@ -527,7 +527,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END minLIntKey;
 
 (** Searches the smallest key used in T. *)
-	PROCEDURE MinLIntKey*(T: Tree; VAR key: LONGINT; VAR res: INTEGER);
+	PROCEDURE MinLIntKey*(T: Tree; VAR key: SIGNED32; VAR res: SIGNED16);
 		VAR r: LIntPage;
 	BEGIN
 		ASSERT(T.class = LInt);
@@ -535,11 +535,11 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		IF r.m > 0 THEN
 			minLIntKey(T, r, key); res := Done
 		ELSE
-			key := MAX(LONGINT); res := NotFound
+			key := MAX(SIGNED32); res := NotFound
 		END
 	END MinLIntKey;
 
-	PROCEDURE maxLIntKey(T: Tree; p: LIntPage; VAR key: LONGINT);
+	PROCEDURE maxLIntKey(T: Tree; p: LIntPage; VAR key: SIGNED32);
 	BEGIN
 		IF (p # NIL) & (p.m > 0) THEN
 			key := p.e[p.m-1].key;
@@ -549,7 +549,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END maxLIntKey;
 
 (** Searches the biggest key used in T. *)
-	PROCEDURE MaxLIntKey*(T: Tree; VAR key: LONGINT; VAR res: INTEGER);
+	PROCEDURE MaxLIntKey*(T: Tree; VAR key: SIGNED32; VAR res: SIGNED16);
 		VAR r: LIntPage;
 	BEGIN
 		ASSERT(T.class = LInt);
@@ -557,13 +557,13 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		IF r.m > 0 THEN
 			maxLIntKey(T, r, key); res := Done
 		ELSE
-			key := MIN(LONGINT); res := NotFound
+			key := MIN(SIGNED32); res := NotFound
 		END
 	END MaxLIntKey;
 
 (** Create a new b-tree with longint keys. The tree is written to F starting at org.
 		cache gives the minumum number of keys which should fit into the page cache. *)
-	PROCEDURE NewLInt*(F: Files.File; org: LONGINT; cache: INTEGER): Tree;
+	PROCEDURE NewLInt*(F: Files.File; org: SIGNED32; cache: SIGNED16): Tree;
 		VAR
 			T: Tree;
 			R: Files.Rider;
@@ -590,7 +590,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	PROCEDURE WriteStrPage(T: Tree; p: StrPage);
 		VAR
 			R: Files.Rider;
-			i: LONGINT;
+			i: SIGNED32;
 	BEGIN
 		ASSERT(p.org <= Files.Length(T.F));
 		Files.Set(R, T.F, p.org);
@@ -635,11 +635,11 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END NewStrPage;
 
 (* Read page at offset org. *)
-	PROCEDURE ReadStrPage(T: Tree; org: LONGINT; VAR p: StrPage);
+	PROCEDURE ReadStrPage(T: Tree; org: SIGNED32; VAR p: StrPage);
 		VAR
 			R: Files.Rider;
 			p0: Page;
-			i: LONGINT;
+			i: SIGNED32;
 	BEGIN
 		IF org < 0 THEN
 			p := NIL; RETURN
@@ -675,9 +675,9 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END ReadStrPage;
 
 (** Search for key in T. If the key could be found res = Done else res = NotFound. *)
-	PROCEDURE SearchStr*(T: Tree; key: ARRAY OF CHAR; VAR org: LONGINT; VAR res: INTEGER);
+	PROCEDURE SearchStr*(T: Tree; key: ARRAY OF CHAR; VAR org: SIGNED32; VAR res: SIGNED16);
 		VAR
-			i, L, R: LONGINT;
+			i, L, R: SIGNED32;
 			a: StrPage;
 			sKey: ARRAY StrKeySize OF CHAR;
 	BEGIN
@@ -709,9 +709,9 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END SearchStr;
 
-	PROCEDURE insertStr(T: Tree; VAR key: ARRAY OF CHAR; org: LONGINT; a: StrPage; VAR h: BOOLEAN; VAR v: StrEntry; VAR res: INTEGER);
+	PROCEDURE insertStr(T: Tree; VAR key: ARRAY OF CHAR; org: SIGNED32; a: StrPage; VAR h: BOOLEAN; VAR v: StrEntry; VAR res: SIGNED16);
 		VAR
-			i, L, R: LONGINT;
+			i, L, R: SIGNED32;
 			b: StrPage;
 			u: StrEntry;
 	BEGIN
@@ -786,7 +786,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END insertStr;
 
 (** Insert a new key into T. If a new key was inserted, res = Done else res = EntryChanged. *)
-	PROCEDURE InsertStr*(T: Tree; key: ARRAY OF CHAR; org: LONGINT; VAR res: INTEGER);
+	PROCEDURE InsertStr*(T: Tree; key: ARRAY OF CHAR; org: SIGNED32; VAR res: SIGNED16);
 		VAR
 			u: StrEntry;
 			r, q: StrPage;
@@ -807,10 +807,10 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END InsertStr;
 
-	PROCEDURE underflowStr(T: Tree; c, a: StrPage; s: LONGINT; VAR h: BOOLEAN);
+	PROCEDURE underflowStr(T: Tree; c, a: StrPage; s: SIGNED32; VAR h: BOOLEAN);
 		VAR
 			b: StrPage;
-			i, k: LONGINT;
+			i, k: SIGNED32;
 	BEGIN
 		IF s < c.m THEN
 			ReadStrPage(T, c.e[s].p, b); k := (b.m-StrPageN+1) DIV 2;
@@ -875,13 +875,13 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END underflowStr;
 
-	PROCEDURE deleteStr(T: Tree; VAR key: ARRAY OF CHAR; a: StrPage; VAR h: BOOLEAN; VAR res: INTEGER);
+	PROCEDURE deleteStr(T: Tree; VAR key: ARRAY OF CHAR; a: StrPage; VAR h: BOOLEAN; VAR res: SIGNED16);
 		VAR
-			i, L, R: LONGINT;
+			i, L, R: SIGNED32;
 			q: StrPage;
 		PROCEDURE del(p: StrPage; VAR h: BOOLEAN);
 			VAR
-				k: LONGINT;
+				k: SIGNED32;
 				q: StrPage;
 		BEGIN
 			k := p.m-1; ReadStrPage(T, p.e[k].p, q);
@@ -928,7 +928,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END deleteStr;
 
 (** Delete key from T. If key was deleted res = Done else res = NotFound. *)
-	PROCEDURE DeleteStr*(T: Tree; key: ARRAY OF CHAR; VAR res: INTEGER);
+	PROCEDURE DeleteStr*(T: Tree; key: ARRAY OF CHAR; VAR res: SIGNED16);
 		VAR
 			p: Page;
 			r, r0: StrPage;
@@ -963,7 +963,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 		VAR
 			key, lkey: ARRAY StrKeySize OF CHAR;
 			q: StrPage;
-			i: LONGINT;
+			i: SIGNED32;
 	BEGIN
 		IF p # NIL THEN
 			COPY(MINStrKey, lkey); i := 0;
@@ -1015,7 +1015,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END minStrKey;
 
 (** Searches the smallest key used in T. *)
-	PROCEDURE MinStrKey*(T: Tree; VAR key: ARRAY OF CHAR; VAR res: INTEGER);
+	PROCEDURE MinStrKey*(T: Tree; VAR key: ARRAY OF CHAR; VAR res: SIGNED16);
 		VAR r: StrPage;
 	BEGIN
 		ASSERT(T.class = Str);
@@ -1037,7 +1037,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END maxStrKey;
 
 (** Searches the biggest key used in T. *)
-	PROCEDURE MaxStrKey*(T: Tree; VAR key: ARRAY OF CHAR; VAR res: INTEGER);
+	PROCEDURE MaxStrKey*(T: Tree; VAR key: ARRAY OF CHAR; VAR res: SIGNED16);
 		VAR r: StrPage;
 	BEGIN
 		ASSERT(T.class = Str);
@@ -1051,7 +1051,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 
 (** Create a new b-tree with string keys. The tree is written to F starting at org.
 		cache gives the minumum number of keys which should fit into the page cache. *)
-	PROCEDURE NewStr*(F: Files.File; org: LONGINT; cache: INTEGER): Tree;
+	PROCEDURE NewStr*(F: Files.File; org: SIGNED32; cache: SIGNED16): Tree;
 		VAR
 			T: Tree;
 			R: Files.Rider;
@@ -1075,11 +1075,11 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END NewStr;
 
 (** Reopen the b-tree written to F starting at org. *)
-	PROCEDURE Old*(F: Files.File; org: LONGINT): Tree;
+	PROCEDURE Old*(F: Files.File; org: SIGNED32): Tree;
 		VAR
 			T: Tree;
 			R: Files.Rider;
-			tag: INTEGER;
+			tag: SIGNED16;
 	BEGIN
 		NEW(T); T.F := F; T.org := org;
 		Files.Set(R, F, org);
@@ -1119,7 +1119,7 @@ MODULE BTrees IN Oberon;	(** portable *) (* ejz,  *)
 	END Base;
 
 	PROCEDURE Init;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO StrKeySize-2 DO
 			MINStrKey[i] := 0X;

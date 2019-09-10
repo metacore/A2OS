@@ -37,7 +37,7 @@ TYPE
 			panel : WMStandardComponents.Panel;
 			tabPositions : WMTextView.TabPositions; tabStops : WMTextView.CustomTabStops;
 		BEGIN
-			NEW(panel); panel.bounds.SetExtents(300, 100); panel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			NEW(panel); panel.bounds.SetExtents(300, 100); panel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 
 			NEW(tv);tv.alignment.Set(WMComponents.AlignClient);
 			tv.isMultiLine.Set(TRUE); tv.showBorder.Set(TRUE); tv.alwaysShowCursor.Set(FALSE);
@@ -50,7 +50,7 @@ TYPE
 		END CreateForm;
 
 		PROCEDURE CreateContent;
-		VAR framerate : REAL; hours, minutes, seconds : LONGINT;
+		VAR framerate : FLOAT32; hours, minutes, seconds : SIGNED32;
 		BEGIN
 			NEW(text); NEW(tw, text);
 			tw.SetFontStyle(StyleBold); tw.String("Content"); tw.Char(Tab); tw.SetFontStyle(StyleRegular);
@@ -166,7 +166,7 @@ TYPE
 		timeLbl, totTimeLbl: WMStandardComponents.Label;
 
 		player : MediaPlayer.Player;
-		stepSize : LONGINT;
+		stepSize : SIGNED32;
 
 		(* Info about currently loaded content *)
 		filename : Files.FileName;
@@ -180,10 +180,10 @@ TYPE
 			panel, toolbar : WMStandardComponents.Panel;
 			label: WMStandardComponents.Label;
 		BEGIN
-			NEW(panel); panel.bounds.SetExtents(DefaultWidth, DefaultHeight); panel.fillColor.Set(LONGINT(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
+			NEW(panel); panel.bounds.SetExtents(DefaultWidth, DefaultHeight); panel.fillColor.Set(SIGNED32(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
 
 			(* Search / position scrollbar *)
-			NEW(toolbar); toolbar.fillColor.Set(LONGINT(0FFFFFFFFH)); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
+			NEW(toolbar); toolbar.fillColor.Set(SIGNED32(0FFFFFFFFH)); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			panel.AddContent(toolbar);
 
 			NEW(search); search.alignment.Set(WMComponents.AlignClient);
@@ -191,7 +191,7 @@ TYPE
 			toolbar.AddContent(search);
 
 			(* Buttons *)
-			NEW(toolbar); toolbar.fillColor.Set(LONGINT(0A0A0A0FFH)); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
+			NEW(toolbar); toolbar.fillColor.Set(SIGNED32(0A0A0A0FFH)); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			panel.AddContent(toolbar);
 
 			NEW(playBtn); playBtn.alignment.Set(WMComponents.AlignLeft); playBtn.caption.SetAOC("Play");
@@ -270,7 +270,7 @@ TYPE
 		END GenerateControl;
 
 		PROCEDURE Open*(CONST fileName : ARRAY OF CHAR);
-		VAR res : WORD; msg : ARRAY 256 OF CHAR;
+		VAR res : INTEGER; msg : ARRAY 256 OF CHAR;
 		BEGIN
 			COPY(fileName, filename);
 			player.Open(filename, msg, res);
@@ -331,11 +331,11 @@ TYPE
 		VAR pos: SIZE;
 		BEGIN
 			pos := search.pos.Get();
-			player.SetPos(pos(LONGINT))
+			player.SetPos(pos(SIGNED32))
 		END SliderSearch;
 
 		(* Update the Info Labels *)
-		PROCEDURE Update*(status, pos, maxpos, displayTime: LONGINT);
+		PROCEDURE Update*(status, pos, maxpos, displayTime: SIGNED32);
 		VAR temp : ARRAY 16 OF CHAR;
 		BEGIN
 			ConvertTimeToStr(displayTime * 100, temp);
@@ -372,12 +372,12 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 (* Convert milliseconds to hours:minutes:seconds *)
-PROCEDURE ConvertTime(ms : LONGINT; VAR hours, minutes, seconds : LONGINT);
+PROCEDURE ConvertTime(ms : SIGNED32; VAR hours, minutes, seconds : SIGNED32);
 CONST Hour = 60*60*1000; Minute = 60*1000;
-VAR rest : LONGINT;
+VAR rest : SIGNED32;
 BEGIN
 	hours := ms DIV Hour; rest := ms MOD Hour;
 	minutes := rest DIV Minute; rest := rest MOD Minute;
@@ -385,11 +385,11 @@ BEGIN
 END ConvertTime;
 
 (* Convert time in millisecond into string of the form "hh:mm:ss" *)
-PROCEDURE ConvertTimeToStr(ms : LONGINT; VAR timeStr : ARRAY OF CHAR);
-VAR hour, minute, second : LONGINT; nbr : ARRAY 4 OF CHAR;
+PROCEDURE ConvertTimeToStr(ms : SIGNED32; VAR timeStr : ARRAY OF CHAR);
+VAR hour, minute, second : SIGNED32; nbr : ARRAY 4 OF CHAR;
 
 	(* Append 'number' to 'string' using 2 or more digits *)
-	PROCEDURE Append(VAR string : ARRAY OF CHAR; number : LONGINT);
+	PROCEDURE Append(VAR string : ARRAY OF CHAR; number : SIGNED32);
 	BEGIN
 		Strings.IntToStr(number, nbr);
 		IF number >= 10 THEN Strings.Append(string, nbr);

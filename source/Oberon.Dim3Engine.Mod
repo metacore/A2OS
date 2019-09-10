@@ -24,16 +24,16 @@ CONST
 
 
 TYPE
-	Vector* = ARRAY 3 OF REAL;	(** 4th homogenous coordinate (W) is always assumed to be 1 **)
-	Matrix* = ARRAY 3, 4 OF REAL;	(** bottom row is always assumed to be [0, 0, 0, 1] **)
-	Color* = ARRAY 3 OF REAL;	(** red, green and blue value **)
+	Vector* = ARRAY 3 OF FLOAT32;	(** 4th homogenous coordinate (W) is always assumed to be 1 **)
+	Matrix* = ARRAY 3, 4 OF FLOAT32;	(** bottom row is always assumed to be [0, 0, 0, 1] **)
+	Color* = ARRAY 3 OF FLOAT32;	(** red, green and blue value **)
 
 	(** directional  or point light sources **)
 	Light* = POINTER TO LightDesc;
 	LightDesc* = RECORD
 		next*: Light;
-		type*: INTEGER;	(** direct light source -> type = DirectLight; point light source -> type = PointLight **)
-		inten*: REAL;	(** light intensity, 0 < inten <= 1 **)
+		type*: SIGNED16;	(** direct light source -> type = DirectLight; point light source -> type = PointLight **)
+		inten*: FLOAT32;	(** light intensity, 0 < inten <= 1 **)
 		dir*: Vector;	(** light direction or position of point light source in world space **)
 	END;
 
@@ -41,7 +41,7 @@ TYPE
 	LightRefDesc = RECORD
 		next: LightRef;
 		light: Light;
-		factor: REAL;
+		factor: FLOAT32;
 		R: Vector;
 	END;
 
@@ -58,7 +58,7 @@ TYPE
 		fontCol, backCol: Color;	(* used for string textures *)
 		basePict: Pictures.Picture;	(* original texture *)
 		shadedPict: ARRAY 6 OF Dim3Paint.TextureMap; (* shaded textures, maximal 6 mipmaps *)
-		numPict: INTEGER;	(* number of mipmaps used *)
+		numPict: SIGNED16;	(* number of mipmaps used *)
 		transparent: BOOLEAN;	(* use perspective correction *)
 	END;
 
@@ -72,9 +72,9 @@ TYPE
 	PointRefDesc* = RECORD
 		next*, prev*: PointRef;	(** successor and predecessor in doubly linked polygon list **)
 		p*: Point;	(** referenced point **)
-		u, v: REAL;  (** texture coordinates **)
-		inten*: REAL; (** light intensity in point, 0 < inten <= 1 **)
-		specular: REAL; (* specular light intensity, only used during drawing *)
+		u, v: FLOAT32;  (** texture coordinates **)
+		inten*: FLOAT32; (** light intensity in point, 0 < inten <= 1 **)
+		specular: FLOAT32; (* specular light intensity, only used during drawing *)
 		light: LightRef; (* list of lights for specular reflexion *)
 	END;
 
@@ -82,8 +82,8 @@ TYPE
 		next*: Polygon;
 		contour*: PointRef;	(** list of contour point references **)
 		normal*: Vector;	(** vector pointing away from polygon (in WC) **)
-		dist*: REAL;	(** distance of polygon to origin => poly.normal * X + poly.dist = (signed) distance of vector X to plane **)
-		col*: INTEGER;	(** color number of shaded polygon **)
+		dist*: FLOAT32;	(** distance of polygon to origin => poly.normal * X + poly.dist = (signed) distance of vector X to plane **)
+		col*: SIGNED16;	(** color number of shaded polygon **)
 		shape*: Shape;	(** shape that contains polygon **)
 		texture*: Texture; 	(** texture, the plane has to be filled with, NIL if no texture **)
 	END;
@@ -99,11 +99,11 @@ TYPE
 		state*: SET;
 		color*: Color;	(** shape surface color **)
 		grayscale*: BOOLEAN;	(** use grayscale colors **)
-		diffuse*: REAL;	(** coefficient for diffuse reflection **)
-		speccoef*: REAL;	(** coefficien for specular reflection **)
-		specexpo*: INTEGER;	(** exponent for specular reflection **)
+		diffuse*: FLOAT32;	(** coefficient for diffuse reflection **)
+		speccoef*: FLOAT32;	(** coefficien for specular reflection **)
+		specexpo*: SIGNED16;	(** exponent for specular reflection **)
 		center: Vector;	(* center of bounding sphere in WC *)
-		radius: REAL;	(* radius of bounding sphere *)
+		radius: FLOAT32;	(* radius of bounding sphere *)
 		cmd*: POINTER TO ARRAY 64 OF CHAR;	(** associated command string **)
 	END;
 
@@ -120,19 +120,19 @@ TYPE
 		state*: SET;
 		shape*: Shape;	(** the "world shape" **)
 		bspTree: BSPNode;
-		ambient*: REAL;	(** intensity of ambient light **)
-		skyCol*, gndCol*: INTEGER;	(** color numbers for sky and ground **)
+		ambient*: FLOAT32;	(** intensity of ambient light **)
+		skyCol*, gndCol*: SIGNED16;	(** color numbers for sky and ground **)
 		horizon*: BOOLEAN;	(** flag whether to draw horizon or not **)
-		time*: LONGINT;	(** time of selection **)
-		selCount*: INTEGER;	(** number of selected shapes **)
+		time*: SIGNED32;	(** time of selection **)
+		selCount*: SIGNED16;	(** number of selected shapes **)
 		selShape*: Shape;	(** selected shape (if only one selected) **)
 	END;
 
 	(** view specification **)
 	Camera* = RECORD
-		fov*: REAL;	(** field of view angle **)
+		fov*: FLOAT32;	(** field of view angle **)
 		pos*, u*, v*, w*: Vector;	(** camera position and coordinate axes **)
-		zx, zy: REAL;	(* zoom factor in u and v direction *)
+		zx, zy: FLOAT32;	(* zoom factor in u and v direction *)
 	END;
 
 
@@ -150,7 +150,7 @@ VAR
 	(* clipping planes *)
 	clip: ARRAY nPlanes OF RECORD
 		normal: Vector;	(* points away from view volume *)
-		dist: REAL;	(* distance to origin *)
+		dist: FLOAT32;	(* distance to origin *)
 	END;
 
 	(* dyn. Screen *)
@@ -251,9 +251,9 @@ END ReleaseMem;
 
 (** --- Arc tangent of y/x ---**)
 
-PROCEDURE Atan2* (y, x: REAL): REAL;
+PROCEDURE Atan2* (y, x: FLOAT32): FLOAT32;
 BEGIN
-	IF (ABS(x) < 1.0) & (ABS(y) >= ABS(x * MAX(REAL))) THEN	(* y / x would result in overflow/divide by zero trap *)
+	IF (ABS(x) < 1.0) & (ABS(y) >= ABS(x * MAX(FLOAT32))) THEN	(* y / x would result in overflow/divide by zero trap *)
 		IF y >= 0 THEN RETURN Math.pi/2
 		ELSE RETURN -Math.pi/2
 		END
@@ -269,7 +269,7 @@ END Atan2;
 
 (* All routines use VAR parameters for efficiency, so beware of alias problems *)
 
-PROCEDURE InitVector* (VAR v: Vector; x, y, z: REAL);
+PROCEDURE InitVector* (VAR v: Vector; x, y, z: FLOAT32);
 BEGIN
 	v[0] := x; v[1] := y; v[2] := z
 END InitVector;
@@ -288,7 +288,7 @@ BEGIN
 END CrossProd;
 
 (**  dot product of two vectors **)
-PROCEDURE DotProd* (VAR u, v: Vector): REAL;
+PROCEDURE DotProd* (VAR u, v: Vector): FLOAT32;
 BEGIN
 	RETURN u[0]*v[0] + u[1]*v[1] + u[2]*v[2]
 END DotProd;
@@ -296,7 +296,7 @@ END DotProd;
 (** scale vector to unit length **)
 PROCEDURE Normalize* (VAR x: Vector);
 CONST eps = 1.E-7;
-VAR f: REAL;
+VAR f: FLOAT32;
 BEGIN
 	f := Math.sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
 	IF f >= eps THEN
@@ -313,8 +313,8 @@ BEGIN
 END VectorSum;
 
 (* calculate distance between two points *)
-PROCEDURE Distance (x, y: Vector):REAL;
-VAR t1, t2, t0: REAL;
+PROCEDURE Distance (x, y: Vector):FLOAT32;
+VAR t1, t2, t0: FLOAT32;
 BEGIN
 	t0 := x[0] - y[0]; t1 := x[1] - y[1]; t2 := x[2] - y[2];
 	RETURN Math.sqrt(t0*t0 + t1*t1 + t2*t2);
@@ -337,7 +337,7 @@ END ReadVector;
 
 (** concat matrices A and B and store result in C **)
 PROCEDURE ConcatMatrix* (VAR A, B, C: Matrix);
-VAR i: INTEGER; a0, a1, a2: REAL;
+VAR i: SIGNED16; a0, a1, a2: FLOAT32;
 BEGIN
 	FOR i := 0 TO 2 DO
 		a0 := A[i, 0]; a1 := A[i, 1]; a2 := A[i, 2];
@@ -357,9 +357,9 @@ BEGIN
 END Transform;
 
 (** compute rotation matrix **)
-PROCEDURE GetRotation* (VAR M: Matrix; angle, x, y, z: REAL);
+PROCEDURE GetRotation* (VAR M: Matrix; angle, x, y, z: FLOAT32);
 CONST eps = 1.E-10;
-VAR s, c, t: REAL;
+VAR s, c, t: FLOAT32;
 BEGIN
 	t := Math.sqrt(x*x + y*y + z*z);
 	IF t > eps THEN
@@ -383,8 +383,8 @@ END GetRotation;
  *)
 
 (** prepend translation to transformation **)
-PROCEDURE Translate* (VAR M: Matrix; dx, dy, dz: REAL);
-VAR i: INTEGER; m0, m1, m2: REAL;
+PROCEDURE Translate* (VAR M: Matrix; dx, dy, dz: FLOAT32);
+VAR i: SIGNED16; m0, m1, m2: FLOAT32;
 BEGIN
 	FOR i := 0 TO 2 DO
 		m0 := M[i, 0]; m1 := M[i, 1]; m2 := M[i, 2];
@@ -393,7 +393,7 @@ BEGIN
 END Translate;
 
 (** prepend rotation to transformation **)
-PROCEDURE Rotate* (VAR M: Matrix; angle, x, y, z: REAL);
+PROCEDURE Rotate* (VAR M: Matrix; angle, x, y, z: FLOAT32);
 VAR R, Q: Matrix;
 BEGIN
 	GetRotation(R, angle, x, y, z);
@@ -402,8 +402,8 @@ BEGIN
 END Rotate;
 
 (** prepend scale to transformation **)
-PROCEDURE Scale* (VAR M: Matrix; sx, sy, sz: REAL);
-VAR i: INTEGER;
+PROCEDURE Scale* (VAR M: Matrix; sx, sy, sz: FLOAT32);
+VAR i: SIGNED16;
 BEGIN
 	FOR i:= 0 TO 2 DO
 		M[i, 0] := sx*M[i, 0];
@@ -417,8 +417,8 @@ END Scale;
  * you first have to scale, then rotate and finally translate any given point. It is assumed that the matrix consists only of
  * concatenated rotations, translations and scaling transformations.
  **)
-PROCEDURE Decompose* (VAR M: Matrix; VAR angle: REAL; VAR axis, scale, trans: Vector);
-VAR i: INTEGER; sin, cos, m0, m1, m2: REAL;
+PROCEDURE Decompose* (VAR M: Matrix; VAR angle: FLOAT32; VAR axis, scale, trans: Vector);
+VAR i: SIGNED16; sin, cos, m0, m1, m2: FLOAT32;
 BEGIN
 	(* translation is easy: just copy the last column of M *)
 	FOR i := 0 TO 2 DO
@@ -451,7 +451,7 @@ BEGIN
 END Decompose;
 
 PROCEDURE WriteMatrix (VAR R: Files.Rider; VAR M: Matrix);
-VAR i, j: INTEGER;
+VAR i, j: SIGNED16;
 BEGIN
 	FOR i := 0 TO 2 DO
 		FOR j := 0 TO 3 DO
@@ -461,7 +461,7 @@ BEGIN
 END WriteMatrix;
 
 PROCEDURE ReadMatrix (VAR R: Files.Rider; VAR M: Matrix);
-VAR i, j: INTEGER;
+VAR i, j: SIGNED16;
 BEGIN
 	FOR i := 0 TO 2 DO
 		FOR j := 0 TO 3 DO
@@ -473,7 +473,7 @@ END ReadMatrix;
 
 (**--- Colors ---**)
 
-PROCEDURE InitColor* (VAR col: Color; r, g, b: REAL);
+PROCEDURE InitColor* (VAR col: Color; r, g, b: FLOAT32);
 BEGIN
 	col[0] := r; col[1] := g; col[2] := b
 END InitColor;
@@ -481,7 +481,7 @@ END InitColor;
 
 (**--- Points ---**)
 
-PROCEDURE InitPoint* (p: Point; x, y, z: REAL);
+PROCEDURE InitPoint* (p: Point; x, y, z: FLOAT32);
 BEGIN
 	InitVector(p.wc, x, y, z);
 	p.next := NIL
@@ -518,7 +518,7 @@ BEGIN
 END AppendPoint;
 
 (** append point reference to contour and texture coordinates **)
-PROCEDURE AppendTexturePoint* (VAR contour: PointRef; p: Point; u, v: REAL);
+PROCEDURE AppendTexturePoint* (VAR contour: PointRef; p: Point; u, v: FLOAT32);
 VAR ref: PointRef;
 BEGIN
 	NewRef(ref); ref.p := p; ref.u := u; ref.v := v; ref.inten := 0; ref.light := NIL;
@@ -535,7 +535,7 @@ BEGIN
 END AppendTexturePoint;
 
 (* append point reference to contour, inten = light intensity in point (if known) *)
-PROCEDURE AppTextPointSpecial (VAR contour: PointRef; p: Point; inten, u, v: REAL);
+PROCEDURE AppTextPointSpecial (VAR contour: PointRef; p: Point; inten, u, v: FLOAT32);
 VAR ref: PointRef;
 BEGIN
 	NewRef(ref); ref.p := p; ref.u := u; ref.v := v; ref.inten := inten; ref.light := NIL;
@@ -552,8 +552,8 @@ BEGIN
 END AppTextPointSpecial;
 
 (* append point reference to contour, inten = light intensity in point (if known) *)
-PROCEDURE AppPointSpecial (poly: Polygon; VAR contour: PointRef; p: Point; inten: REAL; lightRef: LightRef);
-VAR ref: PointRef; newLight: LightRef; k: REAL; normal, dir: Vector; l: Light;
+PROCEDURE AppPointSpecial (poly: Polygon; VAR contour: PointRef; p: Point; inten: FLOAT32; lightRef: LightRef);
+VAR ref: PointRef; newLight: LightRef; k: FLOAT32; normal, dir: Vector; l: Light;
 BEGIN
 	NewRef(ref); ref.p := p; ref.inten := inten; ref.light := NIL;
 
@@ -603,14 +603,14 @@ BEGIN
 END AppPointSpecial;
 
 (* clip a list of point references to the field of view of a camera *)
-PROCEDURE ClipPoly (contour: PointRef; VAR x, y, w, i, spec, u, v: ARRAY OF REAL; VAR n: INTEGER; shade, texture: BOOLEAN);
+PROCEDURE ClipPoly (contour: PointRef; VAR x, y, w, i, spec, u, v: ARRAY OF FLOAT32; VAR n: SIGNED16; shade, texture: BOOLEAN);
 VAR
-	s, f: ARRAY nPlanes OF PointRef; first, inside: ARRAY nPlanes OF BOOLEAN; dist, fdist: ARRAY nPlanes OF REAL;
+	s, f: ARRAY nPlanes OF PointRef; first, inside: ARRAY nPlanes OF BOOLEAN; dist, fdist: ARRAY nPlanes OF FLOAT32;
 	isList, ref: PointRef;
 
-	PROCEDURE Intersection (pRef, qRef: PointRef; dp, dq: REAL): PointRef;
+	PROCEDURE Intersection (pRef, qRef: PointRef; dp, dq: FLOAT32): PointRef;
 	CONST eps = 1.E-7;
-	VAR s, t, x, y, z: REAL; r, p, q: Point; rRef: PointRef;
+	VAR s, t, x, y, z: FLOAT32; r, p, q: Point; rRef: PointRef;
 	BEGIN
 		p := pRef.p; q := qRef.p;
 		(* the intersection is a linear combination of p and q, whose distances to p and q are dp and dq *)
@@ -633,8 +633,8 @@ VAR
 		END
 	END Intersection;
 
-	PROCEDURE Clip (plane: INTEGER; ref: PointRef);
-	VAR p: Point; d: REAL; in: BOOLEAN; isRef: PointRef;
+	PROCEDURE Clip (plane: SIGNED16; ref: PointRef);
+	VAR p: Point; d: FLOAT32; in: BOOLEAN; isRef: PointRef;
 	BEGIN
 		p := ref.p;
 		IF plane = nPlanes THEN	(* p is inside all clipping planes => append to clipped polygon *)
@@ -668,7 +668,7 @@ VAR
 		IF inside[plane] THEN Clip(plane+1, s[plane]) END
 	END Clip;
 
-	PROCEDURE Close (plane: INTEGER);
+	PROCEDURE Close (plane: SIGNED16);
 	VAR isRef: PointRef;
 	BEGIN
 		IF plane < nPlanes THEN
@@ -702,7 +702,7 @@ END ClipPoly;
 
 (** build the texture for a string **)
 PROCEDURE InitStringTexture* (poly: Polygon; string, font: ARRAY OF CHAR; col, backCol: Color; transparent: BOOLEAN);
-VAR P: Pictures.Picture; width, height, i, dx, x, y, w, h, fontCol, bgCol, X: INTEGER; F: Fonts.Font; pat: Display.Pattern;
+VAR P: Pictures.Picture; width, height, i, dx, x, y, w, h, fontCol, bgCol, X: SIGNED16; F: Fonts.Font; pat: Display.Pattern;
 BEGIN
 	(* calculate size of picture for the string *)
 	F := Fonts.This(font);
@@ -826,7 +826,7 @@ BEGIN
 END CalcPlane;
 
 PROCEDURE WritePoly (VAR R: Files.Rider; poly: Polygon);
-VAR ref: PointRef; p: Point; n: INTEGER; texture: BOOLEAN;
+VAR ref: PointRef; p: Point; n: SIGNED16; texture: BOOLEAN;
 BEGIN
 	texture := poly.texture # NIL;
 	Files.WriteBool(R, texture);
@@ -851,7 +851,7 @@ BEGIN
 END WritePoly;
 
 PROCEDURE ReadPoly (VAR R: Files.Rider; poly: Polygon);
-VAR n: INTEGER; p: Point; texture: BOOLEAN; u, v:REAL;
+VAR n: SIGNED16; p: Point; texture: BOOLEAN; u, v:FLOAT32;
 BEGIN
 	Files.ReadBool(R, texture);
 	IF texture THEN ReadTexture(R, poly) END;
@@ -879,7 +879,7 @@ END ReadPoly;
 PROCEDURE BSPSplit (bsp: BSPNode; poly: Polygon; VAR front, back: Polygon);
 CONST eps = 1.0E-5;
 VAR
-	dcur, dpred, dmin, dmax, s, t, u, v, inten: REAL; cur, pred, frontList, backList: PointRef; curP, predP, is, isList: Point;
+	dcur, dpred, dmin, dmax, s, t, u, v, inten: FLOAT32; cur, pred, frontList, backList: PointRef; curP, predP, is, isList: Point;
 	plane: Polygon; shape: Shape;
 BEGIN
 	plane := bsp.poly;
@@ -897,7 +897,7 @@ BEGIN
 	END;
 
 	frontList := NIL; backList := NIL; isList := NIL;
-	dmin := MAX(REAL); dmax := MIN(REAL);	(* largest distances of points from plane *)
+	dmin := MAX(FLOAT32); dmax := MIN(FLOAT32);	(* largest distances of points from plane *)
 	cur := poly.contour;
 	REPEAT
 		dcur := DotProd(plane.normal, cur.p.wc) + plane.dist;
@@ -989,13 +989,13 @@ END BSPFree;
 
 
 (** return frontmost polygon that intersects given ray; x, y are taken as normalized picture coordinates (-1..1) **)
-PROCEDURE FrontPolygon* (w: World; VAR C: Camera; x, y: REAL): Polygon;
-VAR dir: Vector; i: INTEGER;
+PROCEDURE FrontPolygon* (w: World; VAR C: Camera; x, y: FLOAT32): Polygon;
+VAR dir: Vector; i: SIGNED16;
 
 	PROCEDURE Frontmost (bsp: BSPNode): Polygon;
 	CONST eps = 1.0E-4;
 	VAR
-		front, back: BSPNode; visible: BOOLEAN; nom, denom, t, cphi, sum: REAL; poly: Polygon;
+		front, back: BSPNode; visible: BOOLEAN; nom, denom, t, cphi, sum: FLOAT32; poly: Polygon;
 		v, p, q: Vector; ref: PointRef;
 	BEGIN
 		IF bsp # NIL THEN
@@ -1054,7 +1054,7 @@ END FrontPolygon;
 
 (* calculate specular reflection for a polygon*)
 PROCEDURE CalcSpecularReflection (poly: Polygon; N: Matrix);
-VAR ref: PointRef; lightRef: LightRef; V, R: Vector; t:REAL;
+VAR ref: PointRef; lightRef: LightRef; V, R: Vector; t:FLOAT32;
 BEGIN
 	(* initialize point intensities *)
 	ref := poly.contour;
@@ -1081,8 +1081,8 @@ END CalcSpecularReflection;
 PROCEDURE DrawBSPDirect (bsp: BSPNode; VAR C: Camera; P: Pictures.Picture; N: Matrix);
 VAR
 	poly: Polygon; drawFront, drawBack: BOOLEAN;
-	n: INTEGER; x, y, w, i,s, u, v: ARRAY maxVertices OF REAL; ref: PointRef; p: Point;
-	cos, t, D: REAL;  col: ARRAY 3 OF REAL;
+	n: SIGNED16; x, y, w, i,s, u, v: ARRAY maxVertices OF FLOAT32; ref: PointRef; p: Point;
+	cos, t, D: FLOAT32;  col: ARRAY 3 OF FLOAT32;
 BEGIN
 	IF bsp # NIL THEN
 		(*
@@ -1184,7 +1184,7 @@ END DrawBSPDirect;
 
 (**--- Lights ---**)
 (** Initialisation of light sources; point light -> type = PointLight; direct light -> type = DirectLight **)
-PROCEDURE InitLight* (l: Light; type: INTEGER; VAR dir: Vector; inten: REAL);
+PROCEDURE InitLight* (l: Light; type: SIGNED16; VAR dir: Vector; inten: FLOAT32);
 BEGIN
 	l.dir := dir; l.next := NIL;
 	IF inten > 1.0 THEN l.inten := 1.0 ELSIF inten < 0.0 THEN l.inten := 0.0 ELSE l.inten := inten END;
@@ -1216,8 +1216,8 @@ END ReadLight;
 
 (** Shapes are not real objects (this would probably be overkill), nevertheless, they can handle Attribute messages **)
 PROCEDURE HandleShapeAttr* (s: Shape; VAR M: Objects.AttrMsg);
-VAR n, r, g, b: INTEGER; sub: Shape;
-	  col: ARRAY 3 OF REAL;
+VAR n, r, g, b: SIGNED16; sub: Shape;
+	  col: ARRAY 3 OF FLOAT32;
 BEGIN
 	IF M.id = Objects.get THEN
 		IF M.name = "Cmd" THEN
@@ -1317,7 +1317,7 @@ BEGIN
 	END;
 END SetDitherShape;
 
-PROCEDURE InitShape* (s: Shape; VAR T: Matrix; VAR color: Color; diffuse, coef: REAL; expo: INTEGER;
+PROCEDURE InitShape* (s: Shape; VAR T: Matrix; VAR color: Color; diffuse, coef: FLOAT32; expo: SIGNED16;
 								doGouraud, doSmooth, doDither, doSpecular: BOOLEAN);
 BEGIN
 	s.next := NIL; s.parent := NIL; s.subshapes := NIL;
@@ -1459,7 +1459,7 @@ END AddSubshape;
 
 
 PROCEDURE WriteShape (VAR R: Files.Rider; shape: Shape);
-VAR n: INTEGER; p: Point; poly: Polygon; l: Light; sub: Shape;
+VAR n: SIGNED16; p: Point; poly: Polygon; l: Light; sub: Shape;
 BEGIN
 	Files.WriteBool(R, gouraud IN shape.state);
 	Files.WriteBool(R, smooth IN shape.state);
@@ -1502,7 +1502,7 @@ BEGIN
 END WriteShape;
 
 PROCEDURE ReadShape (VAR R: Files.Rider; shape: Shape);
-VAR ch: CHAR; n: INTEGER; p: Point; poly: Polygon; l: Light; sub: Shape; bool: BOOLEAN;
+VAR ch: CHAR; n: SIGNED16; p: Point; poly: Polygon; l: Light; sub: Shape; bool: BOOLEAN;
 BEGIN
 	shape.state := {};
 	Files.ReadBool(R, bool); IF bool THEN shape.state := shape.state + {gouraud} END;
@@ -1565,7 +1565,7 @@ END ReadShape;
 (* calculate bounding sphere for shape (including subshapes) *)
 PROCEDURE CalcBound (s: Shape);
 CONST eps = 1.E-5;
-VAR p: Point; i: INTEGER; sub: Shape; d, r, t: REAL; v: Vector;
+VAR p: Point; i: SIGNED16; sub: Shape; d, r, t: FLOAT32; v: Vector;
 BEGIN
 	IF s.subshapes # NIL THEN	(* get bounding sphere encompassing all subshape bounds *)
 		sub := s.subshapes;
@@ -1615,7 +1615,7 @@ END CalcBound;
 (* update bounding spheres of parent shapes *)
 PROCEDURE UpdateBound (s: Shape);
 CONST eps = 1.E-7;
-VAR i: INTEGER; parent: Shape; d, r, t: REAL; v: Vector;
+VAR i: SIGNED16; parent: Shape; d, r, t: FLOAT32; v: Vector;
 BEGIN
 	(* update parent shapes *)
 	parent := s.parent;
@@ -1684,8 +1684,8 @@ CONST inFront = 1; behind = -1; splitting = 0;
 VAR pset: Polygon; sub: Shape;
 
 	(* find out if q is in front of, behind or splitting p *)
-	PROCEDURE WhichSide (p, q: Polygon): INTEGER;
-	VAR d: REAL; ref: PointRef;
+	PROCEDURE WhichSide (p, q: Polygon): SIGNED16;
+	VAR d: FLOAT32; ref: PointRef;
 	BEGIN
 		ref := q.contour;
 		REPEAT
@@ -1708,11 +1708,11 @@ VAR pset: Polygon; sub: Shape;
 	(* choose "best" polygon and append it to s.polygons *)
 	PROCEDURE AppendBest (set: Polygon);
 	CONST maxTries = 10;
-	VAR tries, splits, balance, value, bestValue: INTEGER; poly, cand, best, frontSet, backSet, splitSet: Polygon;
+	VAR tries, splits, balance, value, bestValue: SIGNED16; poly, cand, best, frontSet, backSet, splitSet: Polygon;
 	BEGIN
 		IF set # NIL THEN
 			(* select polygon which splits as few others as possible *)
-			tries := 0; bestValue := MAX(INTEGER); cand := set; best := cand;
+			tries := 0; bestValue := MAX(SIGNED16); cand := set; best := cand;
 			WHILE (bestValue > 0) & (cand # NIL) & (tries < maxTries) DO
 				poly := set; splits := 0; balance := 0;
 				WHILE poly # NIL DO
@@ -1784,8 +1784,8 @@ BEGIN
 END InsertShape;
 
 (* determine a priori visibility of shape *)
-PROCEDURE CullShape (s: Shape; VAR C: Camera; VAR N: Matrix; zoom: REAL; pstate: SET);
-VAR v: Vector; r, d: REAL; plane: INTEGER; p: Point; sub: Shape;
+PROCEDURE CullShape (s: Shape; VAR C: Camera; VAR N: Matrix; zoom: FLOAT32; pstate: SET);
+VAR v: Vector; r, d: FLOAT32; plane: SIGNED16; p: Point; sub: Shape;
 BEGIN
 	IF mustClip IN pstate THEN
 		(* transform bounding sphere to camera coordinates *)
@@ -1838,7 +1838,7 @@ BEGIN
 END InitCamera;
 
 (** move camera position in its own coordinate system **)
-PROCEDURE MoveCamera* (VAR C: Camera; right, up, forward: REAL);
+PROCEDURE MoveCamera* (VAR C: Camera; right, up, forward: FLOAT32);
 BEGIN
 	C.pos[0] := C.pos[0] + right*C.u[0] + up*C.v[0] - forward*C.w[0];
 	C.pos[1] := C.pos[1] + right*C.u[1] + up*C.v[1] - forward*C.w[1];
@@ -1846,8 +1846,8 @@ BEGIN
 END MoveCamera;
 
 (** rotate camera in its local coordinate system **)
-PROCEDURE RotateCamera* (VAR C: Camera; angle, x, y, z: REAL);
-VAR R: Matrix; sx, sy, sz: REAL; v: Vector;
+PROCEDURE RotateCamera* (VAR C: Camera; angle, x, y, z: FLOAT32);
+VAR R: Matrix; sx, sy, sz: FLOAT32; v: Vector;
 BEGIN
 	(* transform rotation axis from camera to world coordinates *)
 	sx := x*C.u[0] + y*C.v[0] + z*C.w[0];
@@ -1863,9 +1863,9 @@ END RotateCamera;
 
 
 (** get azimute, pitch and roll angle **)
-PROCEDURE GetCameraAngles* (VAR C: Camera; VAR azi, pitch, roll: REAL);
+PROCEDURE GetCameraAngles* (VAR C: Camera; VAR azi, pitch, roll: FLOAT32);
 CONST eps = 1.0E-7;
-VAR sin, cos: REAL; u: Vector;
+VAR sin, cos: FLOAT32; u: Vector;
 BEGIN
 	(*
 	 * The camera angles are defined as follows: rotating the camera by -azi around y, then rotating by -pitch around x
@@ -1890,8 +1890,8 @@ BEGIN
 END GetCameraAngles;
 
 (** set camera orientation by azimute, pitch and roll angles **)
-PROCEDURE SetCameraAngles* (VAR C: Camera; azi, pitch, roll: REAL);
-VAR sa, ca, sp, cp, sr, cr, t: REAL;
+PROCEDURE SetCameraAngles* (VAR C: Camera; azi, pitch, roll: FLOAT32);
+VAR sa, ca, sp, cp, sr, cr, t: FLOAT32;
 BEGIN
 	(*
 	 * This code calculates a rotation by 'roll' around z, followed by a rotation by 'pitch' around x and a
@@ -2027,8 +2027,8 @@ END SelectShape;
 
 (** shade shape polygons according to shape base color and light sources (shades subshapes, too) **)
 PROCEDURE ShadeShape* (w: World; shape: Shape);
-VAR s: Shape; l: Light; k, sum, d: REAL; i: INTEGER;
-	  poly: Polygon; color: ARRAY 3 OF REAL; dir, normal: Vector; ref: PointRef; lightRef: LightRef;
+VAR s: Shape; l: Light; k, sum, d: FLOAT32; i: SIGNED16;
+	  poly: Polygon; color: ARRAY 3 OF FLOAT32; dir, normal: Vector; ref: PointRef; lightRef: LightRef;
 BEGIN
 	(* shade subshapes *)
 	s := shape.subshapes;
@@ -2147,7 +2147,7 @@ END ShadeShape;
 PROCEDURE HighlightShape* (w: World; shape: Shape);
 
 	PROCEDURE Highlight (shape: Shape);
-	VAR s: Shape; i: INTEGER; max: REAL;
+	VAR s: Shape; i: SIGNED16; max: FLOAT32;
 	BEGIN
 		(* highlight subshapes *)
 		s := shape.subshapes;
@@ -2373,7 +2373,7 @@ END AddShape;
 
 (** print statistical information in log **)
 PROCEDURE Statistics* (w: World);
-VAR pts, polys, shps: INTEGER;
+VAR pts, polys, shps: SIGNED16;
 
 	PROCEDURE CountShapeData(s: Shape);
 	VAR sub: Shape; p: Point; poly: Polygon;
@@ -2406,11 +2406,11 @@ CONST
 	xL = -10.0; xR = -xL;
 	xmin = -1000; xmax = -xmin; ymin = xmin; ymax = xmax;
 VAR
-	angle, sx, sz, cx, cz, z, x1, y1, x2, y2: REAL; u, w: Vector; R00, R02, R10, R12: REAL;
-	contour: PointRef; p: ARRAY 5 OF Point; i: INTEGER;
+	angle, sx, sz, cx, cz, z, x1, y1, x2, y2: FLOAT32; u, w: Vector; R00, R02, R10, R12: FLOAT32;
+	contour: PointRef; p: ARRAY 5 OF Point; i: SIGNED16;
 
-	PROCEDURE DrawPoly (col: INTEGER; xa, ya, xb, yb, xc, yc, xd, yd, xe, ye: REAL);
-	VAR x, y, i: ARRAY  maxVertices OF REAL; n: INTEGER;
+	PROCEDURE DrawPoly (col: SIGNED16; xa, ya, xb, yb, xc, yc, xd, yd, xe, ye: FLOAT32);
+	VAR x, y, i: ARRAY  maxVertices OF FLOAT32; n: SIGNED16;
 	BEGIN
 		InitVector(p[0].vrc, xa, ya, -1); InitVector(p[1].vrc, xb, yb, -1); InitVector(p[2].vrc, xc, yc, -1);
 		InitVector(p[3].vrc, xd, yd, -1); InitVector(p[4].vrc, xe, ye, -1);
@@ -2477,7 +2477,7 @@ END DrawHorizon;
 
 (** draw world in picture **)
 PROCEDURE DrawDirect* (w: World; VAR C: Camera; P: Pictures.Picture);
-VAR N: Matrix; zoom, sin: REAL; i: INTEGER;
+VAR N: Matrix; zoom, sin: FLOAT32; i: SIGNED16;
 BEGIN
 	sin := Math.sin(C.fov);
 	C.zx := Math.cos(C.fov) / sin;	(* used to be compiler bug in DOS_Oberon, simplify when fixed *)

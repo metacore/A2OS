@@ -210,29 +210,29 @@ TYPE
 
 	SendBuffer = POINTER TO RECORD
 		next: SendBuffer;
-		ofs, len: LONGINT;	(* data[ofs..ofs+len-1] is valid *)
-		seq: LONGINT;	(* sequence number of byte data[ofs] (only valid if len # 0) *)
+		ofs, len: SIGNED32;	(* data[ofs..ofs+len-1] is valid *)
+		seq: SIGNED32;	(* sequence number of byte data[ofs] (only valid if len # 0) *)
 		pf: SET;	(* flags of segment *)
 		data: SendData	(* size should be multiple of maxseg *)
 	END;
 
 TYPE
 	ISS = OBJECT
-		VAR iss: LONGINT;	(* next iss to use *)
+		VAR iss: SIGNED32;	(* next iss to use *)
 
-		PROCEDURE Update(hz: LONGINT);
+		PROCEDURE Update(hz: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			INC(iss, ISSInc DIV hz)
 		END Update;
 
-		PROCEDURE Get(): LONGINT;
-		VAR t: LONGINT;
+		PROCEDURE Get(): SIGNED32;
+		VAR t: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			t := iss; INC(iss, ISSInc);
 			RETURN t
 		END Get;
 
-		PROCEDURE &Init*(iss: LONGINT);
+		PROCEDURE &Init*(iss: SIGNED32);
 		BEGIN
 			SELF.iss := iss
 		END Init;
@@ -241,9 +241,9 @@ TYPE
 TYPE
 	Timer = OBJECT	(* temporary *)
 		VAR
-			lastFast, lastSlow: LONGINT;	(* time of last execution *)
-			(*lastTrace: LONGINT;*)
-			now: LONGINT;	(* current tcp "time" - read from other procedures, but only updated inside this object *)
+			lastFast, lastSlow: SIGNED32;	(* time of last execution *)
+			(*lastTrace: SIGNED32;*)
+			now: SIGNED32;	(* current tcp "time" - read from other procedures, but only updated inside this object *)
 			timer: ActiveTimers.Timer;
 
 		PROCEDURE CallDelayedAck(p: Connection);
@@ -257,7 +257,7 @@ TYPE
 		END CallSlowTimer;
 
 		PROCEDURE HandleTimeout;
-		VAR t: LONGINT;
+		VAR t: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			t := Kernel.GetTicks();
 			IF t - lastFast >= Kernel.second DIV FastPeriod THEN
@@ -301,65 +301,65 @@ TYPE
 			(* assigned interface *)
 			int-: IP.Interface;
 			(* local protocol address *)
-			lport-: LONGINT;
+			lport-: SIGNED32;
 			(* foreign protocol address *)
 			fip-: IP.Adr;
-			fport-: LONGINT;
-			state*: SHORTINT;	(* TCP state *)
-			timer: ARRAY NumTimers OF LONGINT;
-			rxtshift-: LONGINT;	(* log(2) of rexmt exponential backoff *)
-			rxtcur-: LONGINT;	(* current retransmission timeout (ticks) *)
-			dupacks-: LONGINT;	(* number of consequtive duplicate acks received *)
-			maxseg-: LONGINT;	(* maximum segment size to send *)
+			fport-: SIGNED32;
+			state*: SIGNED8;	(* TCP state *)
+			timer: ARRAY NumTimers OF SIGNED32;
+			rxtshift-: SIGNED32;	(* log(2) of rexmt exponential backoff *)
+			rxtcur-: SIGNED32;	(* current retransmission timeout (ticks) *)
+			dupacks-: SIGNED32;	(* number of consequtive duplicate acks received *)
+			maxseg-: SIGNED32;	(* maximum segment size to send *)
 			flags: SET;	(* various connection and buffer flags *)
-			error: LONGINT;	(* error on connection (socket error) *)
-			acceptable: LONGINT;	(* number of connections that can be before acceptance *)
+			error: SIGNED32;	(* error on connection (socket error) *)
+			acceptable: SIGNED32;	(* number of connections that can be before acceptance *)
 				(* send sequence *)
-			snduna-: LONGINT;	(* send unacknowledged *)
-			sndnxt-: LONGINT;	(* send next *)
-			sndup: LONGINT;	(* send urgent pointer *)
-			sndwl1-: LONGINT;	(* window update seg seq number *)
-			sndwl2-: LONGINT;	(* window update seg ack number *)
-			iss-: LONGINT;	(* initial send sequence number *)
-			sndwnd-: LONGINT;	(* send window *)
-			sndmax-: LONGINT;	(* highest sequence number sent - used to recognize retransmits *)
+			snduna-: SIGNED32;	(* send unacknowledged *)
+			sndnxt-: SIGNED32;	(* send next *)
+			sndup: SIGNED32;	(* send urgent pointer *)
+			sndwl1-: SIGNED32;	(* window update seg seq number *)
+			sndwl2-: SIGNED32;	(* window update seg ack number *)
+			iss-: SIGNED32;	(* initial send sequence number *)
+			sndwnd-: SIGNED32;	(* send window *)
+			sndmax-: SIGNED32;	(* highest sequence number sent - used to recognize retransmits *)
 				(* receive sequence *)
-			rcvwnd-: LONGINT;	(* receive window *)
-			rcvnxt-: LONGINT;	(* receive next *)
-			rcvup: LONGINT;	(* receive urgent pointer *)
-			irs-: LONGINT;	(* initial receive sequence number *)
-			rcvadv-: LONGINT;	(* advertised window by other end *)
+			rcvwnd-: SIGNED32;	(* receive window *)
+			rcvnxt-: SIGNED32;	(* receive next *)
+			rcvup: SIGNED32;	(* receive urgent pointer *)
+			irs-: SIGNED32;	(* initial receive sequence number *)
+			rcvadv-: SIGNED32;	(* advertised window by other end *)
 				(* congestion control *)
-			sndcwnd-: LONGINT;	(* congestion-controlled window *)
-			sndssthresh-: LONGINT;	(* sndcwnd threshold for slow start - exponential to linear switch *)
+			sndcwnd-: SIGNED32;	(* congestion-controlled window *)
+			sndssthresh-: SIGNED32;	(* sndcwnd threshold for slow start - exponential to linear switch *)
 				(* transmit timing *)
-			idle-: LONGINT;	(* inactivity time *)
-			rtt-: LONGINT;	(* round trip time *)
-			rtseq-: LONGINT;	(* sequence number being timed *)
-			srtt-: LONGINT;	(* smoothed round trip time *)
-			rttvar-: LONGINT;	(* variance in round trip time *)
-			rttmin-: LONGINT;	(* minimum rtt allowed *)
-			maxsndwnd: LONGINT;	(* largest window peer has offered *)
+			idle-: SIGNED32;	(* inactivity time *)
+			rtt-: SIGNED32;	(* round trip time *)
+			rtseq-: SIGNED32;	(* sequence number being timed *)
+			srtt-: SIGNED32;	(* smoothed round trip time *)
+			rttvar-: SIGNED32;	(* variance in round trip time *)
+			rttmin-: SIGNED32;	(* minimum rtt allowed *)
+			maxsndwnd: SIGNED32;	(* largest window peer has offered *)
 				(* RFC 1323 *)
-			sndscale: LONGINT;	(* scaling for send window (0-14) *)
-			rcvscale: LONGINT;	(* scaling for receive window (0-14) *)
-			requestrscale: LONGINT;	(* our pending window scale *)
-			requestedsscale: LONGINT;	(* peer's pending window scale *)
-			tsrecent: LONGINT;	(* timestamp echo data *)
-			tsrecentage: LONGINT;	(* when last updated *)
-			lastacksent-: LONGINT;	(* sequence number of last ack field *)
+			sndscale: SIGNED32;	(* scaling for send window (0-14) *)
+			rcvscale: SIGNED32;	(* scaling for receive window (0-14) *)
+			requestrscale: SIGNED32;	(* our pending window scale *)
+			requestedsscale: SIGNED32;	(* peer's pending window scale *)
+			tsrecent: SIGNED32;	(* timestamp echo data *)
+			tsrecentage: SIGNED32;	(* when last updated *)
+			lastacksent-: SIGNED32;	(* sequence number of last ack field *)
 				(* send buffer *)
-			sndcc-: LONGINT;	(* number of bytes in send buffer *)
-			sndspace-: LONGINT;	(* number of bytes that may still be added before buffer is full *)
+			sndcc-: SIGNED32;	(* number of bytes in send buffer *)
+			sndspace-: SIGNED32;	(* number of bytes that may still be added before buffer is full *)
 			sndhead, sndtail: SendBuffer;	(* queue of segments (contiguous and in order) *)
 			sndcontig: SendData;	(* maxseg size buffer to make data contiguous *)
 				(* receive buffer *)
-			rcvspace-: LONGINT;	(* number of bytes that may still be received before buffer is considered full *)
-			rcvhiwat-: LONGINT;	(* receive high water mark (MaxRecvSpace) *)
+			rcvspace-: SIGNED32;	(* number of bytes that may still be received before buffer is considered full *)
+			rcvhiwat-: SIGNED32;	(* receive high water mark (MaxRecvSpace) *)
 			rcvhead, rcvreasm, rcvtail: Network.Buffer;	(* queue of segments - see description at the beginning of this file *)
 			rcvheadFragment: Network.Buffer; (* current fragment of rcvhead *)
 			timeout: ActiveTimers.Timer;
-			traceflow-: LONGINT;
+			traceflow-: SIGNED32;
 
 		(* Initialization for internal use only. *)
 		PROCEDURE &Init*;
@@ -370,7 +370,7 @@ TYPE
 		(** Open a TCP connection (only use once per Connection instance).
 			Use TCP.NilPort for lport to automatically assign an unused local port.
 		*)
-		PROCEDURE Open*(lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: WORD);
+		PROCEDURE Open*(lport: SIGNED32; fip: IP.Adr; fport: SIGNED32; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			ASSERT((state = Unused) & (lport >= 0) & (lport < 10000H) & (fport >= 0) & (fport < 10000H));
 			IF timeSource # NIL THEN
@@ -413,14 +413,14 @@ TYPE
 
 
 		(** Send data on a TCP connection. *)
-		PROCEDURE Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
-		VAR buf: SendBuffer; len0: LONGINT;
+		PROCEDURE Send*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
+		VAR buf: SendBuffer; len0: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF StrongChecks THEN Invariant(SELF) END;
 			ASSERT(ofs+len <= LEN(data));	(* index check *)
 			LOOP
 				IF len <= 0 THEN EXIT END;
-				IF len <= maxseg THEN len0 := LONGINT(len) ELSE len0 := maxseg END;
+				IF len <= maxseg THEN len0 := SIGNED32(len) ELSE len0 := maxseg END;
 				IF ~((state IN {Established, CloseWait}) & (sndspace >= len0)) THEN	(* can not send immediately *)
 					AWAIT(((state IN {Established, CloseWait}) & (sndspace >= len0)) OR ~(state IN {SynSent..CloseWait}));
 					IF StrongChecks THEN Invariant(SELF) END;
@@ -460,10 +460,10 @@ TYPE
 
 
 		(** Receive data on a TCP connection. The data parameter specifies the buffer. The ofs parameters specify the position in the buffer where data should be received (usually 0), and the size parameters specifies how many bytes of data can be received in the buffer. The min parameter specifies the minimum number of bytes to receive before Receive returns and must by <= size. The len parameter returns the number of bytes received, and the res parameter returns 0 if ok, or a non-zero error code otherwise (e.g. if the connection is closed by the communication partner, or by a call of the Close method). *)
-		PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR
 			buf: Network.Buffer;
-			rlen: LONGINT;
+			rlen: SIGNED32;
 
 		BEGIN {EXCLUSIVE}
 			IF StrongChecks THEN Invariant(SELF) END;
@@ -473,7 +473,7 @@ TYPE
 				WHILE (rcvhead # NIL) & (rcvhead # rcvreasm) & (size > 0) DO
 					IF rcvhead.nextFragment = NIL THEN
 						(* read all available data until user buffer is full *)
-						rlen := MIN(rcvhead.len, size(LONGINT));
+						rlen := MIN(rcvhead.len, size(SIGNED32));
 						Network.Copy(rcvhead.data, data, rcvhead.ofs, ofs, rlen);
 						INC(len, rlen);
 						INC(ofs, rlen);
@@ -498,7 +498,7 @@ TYPE
 						IF rcvheadFragment = NIL THEN
 							rcvheadFragment := rcvhead;
 						END;
-						rlen := MIN(rcvheadFragment.len, size(LONGINT));
+						rlen := MIN(rcvheadFragment.len, size(SIGNED32));
 						Network.Copy(rcvheadFragment.data, data, rcvheadFragment.ofs, ofs, rlen);
 						INC(len, rlen);
 						INC(ofs, rlen);
@@ -581,12 +581,12 @@ TYPE
 
 
 		(** Return number of bytes that may be read without blocking. *)
-		PROCEDURE Available*(): LONGINT;
+		PROCEDURE Available*(): SIGNED32;
 		VAR
-			len: LONGINT;
+			len: SIGNED32;
 			item: Network.Buffer;
 			fragmentBuffer: Network.Buffer;
-			reassembledLength: LONGINT;
+			reassembledLength: SIGNED32;
 
 		BEGIN {EXCLUSIVE}
 			len := 0;
@@ -610,7 +610,7 @@ TYPE
 
 
 		(** Return connection state. *)
-		PROCEDURE State*(): LONGINT;
+		PROCEDURE State*(): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF (state IN FinStates) & (rcvhead # NIL) & (rcvhead.len # 0) THEN	(* workaround for client errors *)
 				IF state = CloseWait THEN	(* act as if we haven't seen a FIN yet *)
@@ -625,7 +625,7 @@ TYPE
 
 
 		(** Wait until the connection state is either in the good or bad set, up to "ms" milliseconds. *)
-		PROCEDURE AwaitState*(good, bad: SET; ms: LONGINT; VAR res: WORD);
+		PROCEDURE AwaitState*(good, bad: SET; ms: SIGNED32; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF ~(state IN (good+bad)) THEN
 				IF ms # -1 THEN
@@ -682,7 +682,7 @@ TYPE
 
 
 		(** Accept a client waiting on a listening connection. Blocks until a client is available or the connection is closed. *)
-		PROCEDURE Accept*(VAR client: Connection; VAR res: WORD);
+		PROCEDURE Accept*(VAR client: Connection; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			AWAIT((state # Listen) OR (acceptNext # NIL));
 			IF acceptNext # NIL THEN
@@ -702,7 +702,7 @@ TYPE
 
 
 		(* Process a received segment for the current Connection. *)
-		PROCEDURE Input(int: IP.Interface; fip: IP.Adr; hdrLen: LONGINT; buffer: Network.Buffer);
+		PROCEDURE Input(int: IP.Interface; fip: IP.Adr; hdrLen: SIGNED32; buffer: Network.Buffer);
 		VAR
 			bufferQueued: BOOLEAN; (* was buffer queued by ProcessInput() ? *)
 			p: Connection;
@@ -761,7 +761,7 @@ TYPE
 		(* Schedule a slow timer event (fig. 25.8). *)
 		PROCEDURE SlowTimer;
 		VAR dropit: BOOLEAN;
-			oldie: LONGINT;
+			oldie: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			oldie := sndnxt;
 			IF StrongChecks THEN Invariant(SELF) END;
@@ -857,13 +857,13 @@ TYPE
 
 	ConnectionPool* = OBJECT
 		VAR
-			eport: LONGINT;
+			eport: SIGNED32;
 			table: ARRAY HashTableSize OF Connection;
 
 		(* Initialization for internal use only. *)
 
 		PROCEDURE &Init*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i:= 0 TO HashTableSize-1 DO
 				table[i] := NIL;
@@ -874,7 +874,7 @@ TYPE
 		(* Finalize all connections in this pool *)
 
 		PROCEDURE Finalize;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i:= 0 TO HashTableSize-1 DO
 				WHILE table[i] # NIL DO
@@ -885,7 +885,7 @@ TYPE
 
 		(* Look for the specified Connection. *)
 
-		PROCEDURE Lookup(lport, fport: LONGINT; fip: IP.Adr): Connection;
+		PROCEDURE Lookup(lport, fport: SIGNED32; fip: IP.Adr): Connection;
 		VAR
 			item: Connection;
 
@@ -906,7 +906,7 @@ TYPE
 
 		PROCEDURE Enumerate*(handle: ConnectionHandler);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			item: Connection;
 		BEGIN
 			FOR i:= 0 TO HashTableSize-1 DO
@@ -923,8 +923,8 @@ TYPE
 			ELSE an active open is assumed.
 			IF (lport = NilPort), an ephemeral port is assigned.
 		*)
-		PROCEDURE Add(p: Connection; lport, fport: LONGINT; VAR res: WORD);
-		VAR i, sport: LONGINT;
+		PROCEDURE Add(p: Connection; lport, fport: SIGNED32; VAR res: INTEGER);
+		VAR i, sport: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF ((fport # NilPort) & (IP.IsNilAdr(p.fip))) OR (* workaround for XOR *)
 				((fport = NilPort) & (~IP.IsNilAdr(p.fip))) THEN
@@ -974,7 +974,7 @@ TYPE
 
 		PROCEDURE Remove(p: Connection);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			item: Connection;
 		BEGIN {EXCLUSIVE}
 			i := HashPool(p.lport, p.fport, p.fip);
@@ -1014,12 +1014,12 @@ VAR
 	lastpcb: Connection;	(* cache last used pcb (never NIL). Note that it is possible that a deleted pcb can be ressurrected by a packet arriving for it. As soon as a packet for another connection arrives, the deleted pcb will vanish. *)
 	nilpcb: Connection;	(* never NIL *)
 	empty: SendData;	(* never NIL *)
-	backoff: ARRAY MaxRxtShift+1 OF LONGINT;	(* exponential backoff multipliers *)
-	totbackoff: LONGINT;
+	backoff: ARRAY MaxRxtShift+1 OF SIGNED32;	(* exponential backoff multipliers *)
+	totbackoff: SIGNED32;
 	outflags: ARRAY NumStates OF SET;	(* output header flags *)
 
 	(* TCP counters *)
-	NTCPError-: ARRAY NumErrors OF LONGINT;
+	NTCPError-: ARRAY NumErrors OF SIGNED32;
 	NTCPConnectAttempt-, NTCPPersistTimer-, NTCPFinWait2Timer-, NTCPSendProbe-, NTCPReXmtPack-,
 		NTCPReXmtByte-, NTCPSendPack-, NTCPSendByte-, NTCPAcks-, NTCPSendCtrl-, NTCPSendUrg-,
 		NTCPSendWinUp-, NTCPSegsTimed-, NTCPSendTotal-, NTCPKeepTimer-, NTCPKeepProbe-,
@@ -1027,7 +1027,7 @@ VAR
 		NTCPAckByte-, NTCPPredData-, NTCPRcvPackFast-, NTCPRcvByteFast-, NTCPConnects-, NTCPRcvWinProbe-,
 		NTCPDrops-, NTCPRcvWinUpd-, NTCPRTTUpdated-, NTCPDelAck-, NTCPConnDrops-, NTCPClosed-, NTCPSplitBuffer-,
 		NTCPRcvPackSlow-, NTCPRcvByteSlow-, NTCPNewBufs-, NTCPTimeWaitTimer-,
-		NTCPUnacceptable-, NTCPAccepts-, NTCPPersistDrop-: LONGINT;
+		NTCPUnacceptable-, NTCPAccepts-, NTCPPersistDrop-: SIGNED32;
 	trace: BOOLEAN;
 	packetDumpListener : PacketDumpListener;
 
@@ -1094,10 +1094,10 @@ END Invariant;
 
 
 (* Hash function for ConnectionPool *)
-PROCEDURE HashPool(lport, fport: LONGINT; fip:IP.Adr): LONGINT;
+PROCEDURE HashPool(lport, fport: SIGNED32; fip:IP.Adr): SIGNED32;
 VAR
-	i: LONGINT;
-	hash: LONGINT;
+	i: SIGNED32;
+	hash: SIGNED32;
 BEGIN
 	(* hash := (lport + fport + fip) MOD HashTableSize; *)
 	hash := lport + fport;
@@ -1122,7 +1122,7 @@ END HashPool;
 (*
 (* Hash function for ConnectionPool. *)
 
-PROCEDURE -HashPool(lport, fport: LONGINT; fip: IP.Adr): LONGINT;
+PROCEDURE -HashPool(lport, fport: SIGNED32; fip: IP.Adr): SIGNED32;
 CODE {SYSTEM.i386}
 	(* hash := (lport + fport + fip) MOD HashTableSize; *)
 	POP ECX
@@ -1147,7 +1147,7 @@ END HashPool;
 
 (* Set x to val, but keep it between min and max. *)
 
-PROCEDURE RangeSet(VAR x: LONGINT; val, min, max: LONGINT);
+PROCEDURE RangeSet(VAR x: SIGNED32; val, min, max: SIGNED32);
 BEGIN
 	IF val < min THEN x := min
 	ELSIF val > max THEN x := max
@@ -1155,7 +1155,7 @@ BEGIN
 	END
 END RangeSet;
 
-PROCEDURE WriteTime(t: LONGINT);
+PROCEDURE WriteTime(t: SIGNED32);
 VAR s: ARRAY 8 OF CHAR;
 BEGIN
 	KernelLog.Int(t DIV Kernel.second, 1);
@@ -1167,7 +1167,7 @@ END WriteTime;
 
 (* TCP error function. *)
 
-PROCEDURE Error(err: WORD; n: LONGINT; p: Connection);
+PROCEDURE Error(err: INTEGER; n: SIGNED32; p: Connection);
 BEGIN
 	IF trace THEN
 		KernelLog.Enter; KernelLog.String("TCP: "); WriteTime(Kernel.GetTicks());
@@ -1190,7 +1190,7 @@ END SetPersist;
 (* Trace Connection fields. *)
 
 PROCEDURE TraceConnection(p: Connection);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	IF Trace THEN
 		KernelLog.String(" state=");
@@ -1289,11 +1289,11 @@ END TraceTCP;
 PROCEDURE Output(p: Connection);
 VAR
 	idle, sendalot: BOOLEAN;
-	optLen, off, sum, win, len, adv, x, startseq, left: LONGINT;
+	optLen, off, sum, win, len, adv, x, startseq, left: SIGNED32;
 	pf: SET; buf: SendBuffer; data: SendData;
 	pseudoHdr: ARRAY MaxPseudoHdrLen OF CHAR;
 	hdr: ARRAY MaxTCPHdrLen OF CHAR;
-	pseudoHdrLen: LONGINT;
+	pseudoHdrLen: SIGNED32;
 BEGIN
 	idle := (p.sndmax = p.snduna);
 	IF idle & (p.idle >= p.rxtcur) THEN p.sndcwnd := p.maxseg END;
@@ -1439,7 +1439,7 @@ BEGIN
 		ELSE
 			p.sndup := p.snduna
 		END;
-		hdr[13] := CHR(SHORT(SHORT(SYSTEM.VAL(LONGINT, pf))));
+		hdr[13] := CHR(SHORT(SHORT(SYSTEM.VAL(SIGNED32, pf))));
 
 		(* set rest of TCP header *)
 		Network.PutNet2(hdr, 0, p.lport);
@@ -1506,12 +1506,12 @@ END Output;
 
 (* Special output function for Rst and KeepAlive packets (fig. 26.34). *)
 
-PROCEDURE Respond(p: Connection; ack, seq: LONGINT; rf: SET);
+PROCEDURE Respond(p: Connection; ack, seq: SIGNED32; rf: SET);
 VAR
-	win, sum: LONGINT;
+	win, sum: SIGNED32;
 	pseudoHdr: ARRAY MaxPseudoHdrLen OF CHAR;
 	hdr: ARRAY MaxTCPHdrLen OF CHAR;
-	pseudoHdrLen: LONGINT;
+	pseudoHdrLen: SIGNED32;
 
 BEGIN
 	win := ASH(p.rcvspace, -p.rcvscale);	(* zero in nilpcb *)
@@ -1528,7 +1528,7 @@ BEGIN
 	Network.PutNet4(hdr, 4, seq);
 	Network.PutNet4(hdr, 8, ack);
 	hdr[12] := CHR(MinTCPHdrLen DIV 4*10H);
-	hdr[13] := CHR(SHORT(SHORT(SYSTEM.VAL(LONGINT, rf))));
+	hdr[13] := CHR(SHORT(SHORT(SYSTEM.VAL(SIGNED32, rf))));
 	Network.PutNet2(hdr, 14, win);
 	Network.Put2(hdr, 16, 0); (* checksum := 0 *)
 	Network.Put2(hdr, 18, 0); (* urgent pointer := 0 *)
@@ -1548,7 +1548,7 @@ END Respond;
 (* Cancel all timers. *)
 
 PROCEDURE CancelTimers(p: Connection);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	FOR i := 0 TO NumTimers-1 DO p.timer[i] := 0 END
 END CancelTimers;
@@ -1556,8 +1556,8 @@ END CancelTimers;
 (* Apply new RTT measurement to smoothed estimators. *)
 
 (*
-PROCEDURE XmitTimer(p: Connection; rtt: LONGINT);
-VAR delta: LONGINT;
+PROCEDURE XmitTimer(p: Connection; rtt: SIGNED32);
+VAR delta: SIGNED32;
 BEGIN
 	Machine.AtomicInc(NTCPRTTUpdated);
 	IF p.srtt # 0 THEN
@@ -1577,13 +1577,13 @@ BEGIN
 END XmitTimer;
 *)
 
-PROCEDURE XmitTimer(p: Connection; rtt: LONGINT);
+PROCEDURE XmitTimer(p: Connection; rtt: SIGNED32);
 (*
 	 m ->  rtt
 	 sa -> p.srtt
 	 sd -> p.rttvar
 *)
-VAR delta: LONGINT;
+VAR delta: SIGNED32;
 BEGIN
 	Machine.AtomicInc(NTCPRTTUpdated);
 	IF p.srtt # 0 THEN
@@ -1608,7 +1608,7 @@ END XmitTimer;
 
 
 (* Drop len bytes from the front of the send buffer. *)
-PROCEDURE SbDrop(p: Connection; len: LONGINT);
+PROCEDURE SbDrop(p: Connection; len: SIGNED32);
 VAR buf: SendBuffer;
 BEGIN
 	DEC(p.sndcc, len); INC(p.sndspace, len);
@@ -1654,7 +1654,7 @@ END CloseConnection;
 
 
 (* Drop a connection (fig. 27.2). *)
-PROCEDURE Drop(p: Connection; err: LONGINT);
+PROCEDURE Drop(p: Connection; err: SIGNED32);
 BEGIN
 	IF p.state >= SynReceived THEN
 		p.state := Closed; Output(p); Machine.AtomicInc(NTCPDrops)
@@ -1665,16 +1665,16 @@ BEGIN
 	p.error := err; CloseConnection(p)
 END Drop;
 
-PROCEDURE SetMSS(p: Connection; mss: LONGINT);
+PROCEDURE SetMSS(p: Connection; mss: SIGNED32);
 	(* Error(NIYMSS, 0, p); *)
 	(* Processing of received MSS option not necessary as long as sending is always done with MSS=536. *)
 END SetMSS;
 
 
 (* Process a received TCP segment. *)
-PROCEDURE Input(int: IP.Interface; type: LONGINT; fip, lip: IP.Adr; buffer: Network.Buffer);
+PROCEDURE Input(int: IP.Interface; type: SIGNED32; fip, lip: IP.Adr; buffer: Network.Buffer);
 VAR
-	lport, fport, hdrLen: LONGINT;
+	lport, fport, hdrLen: SIGNED32;
 	p: Connection;
 BEGIN
 	ASSERT(type = IPTypeTCP);
@@ -1714,16 +1714,16 @@ END Input;
 
 
 (* Process a received TCP segment for the specified Connection. *)
-PROCEDURE ProcessInput(p: Connection; hdrLen: LONGINT; buffer: Network.Buffer; drop: BOOLEAN; VAR bufferQueued: BOOLEAN);
+PROCEDURE ProcessInput(p: Connection; hdrLen: SIGNED32; buffer: Network.Buffer; drop: BOOLEAN; VAR bufferQueued: BOOLEAN);
 CONST
 	Options = 0; TSPresent = 1; NeedOutput = 2;
 
 VAR
-	win, sum, urp, seq, ack, tsval, tsecr, acked, discard, tlen, optLen: LONGINT;
+	win, sum, urp, seq, ack, tsval, tsecr, acked, discard, tlen, optLen: SIGNED32;
 	pseudoHdr: ARRAY MaxPseudoHdrLen OF CHAR;
-	pseudoHdrLen: LONGINT;
+	pseudoHdrLen: SIGNED32;
 	pf, lf: SET;
-	reassembledLength: LONGINT;
+	reassembledLength: SIGNED32;
 	fragmentBuffer: Network.Buffer;
 
 	PROCEDURE GotoDrop;	(* fig. 29.27 *)
@@ -1757,7 +1757,7 @@ VAR
 	END GotoDropAfterAck;
 
 	PROCEDURE ProcessOptions;	(* fig. 28.9 & 28.10 *)
-	VAR opt: CHAR; i, m, optlen: LONGINT;
+	VAR opt: CHAR; i, m, optlen: SIGNED32;
 	BEGIN
 		i := buffer.ofs+MinTCPHdrLen; m := buffer.ofs+hdrLen;
 		LOOP
@@ -1801,7 +1801,7 @@ VAR
 
 	PROCEDURE ProcessListen(): BOOLEAN;	(* fig. 28.15-17 *)
 	VAR
-		res: WORD;
+		res: INTEGER;
 		q: Connection;
 	BEGIN
 		IF Rst IN pf THEN GotoDrop; RETURN FALSE END;
@@ -1885,7 +1885,7 @@ VAR
 		RETURN TRUE
 	END Paws;
 
-	PROCEDURE Trim2(todrop: LONGINT): BOOLEAN;	(* fig. 28.24-25, corrected fig. 28.30*)
+	PROCEDURE Trim2(todrop: SIGNED32): BOOLEAN;	(* fig. 28.24-25, corrected fig. 28.30*)
 	BEGIN
 		IF Syn IN pf THEN
 			EXCL(pf, Syn); INC(seq);
@@ -1903,7 +1903,7 @@ VAR
 		RETURN TRUE
 	END Trim2;
 
-	PROCEDURE Trim3(todrop: LONGINT): BOOLEAN;	(* fig. 28.29 *)
+	PROCEDURE Trim3(todrop: SIGNED32): BOOLEAN;	(* fig. 28.29 *)
 	BEGIN
 		IF todrop >= tlen THEN
 			IF (Syn IN pf) & (p.state = TimeWait) & (seq - p.rcvnxt > 0) THEN
@@ -1925,7 +1925,7 @@ VAR
 	END Trim3;
 
 	PROCEDURE RecordTS;	(* fig. 28.35 *)
-	VAR x: LONGINT;
+	VAR x: SIGNED32;
 	BEGIN
 		IF DoRFC1323 THEN
 			IF pf * {Syn,Fin} # {} THEN x := 1 ELSE x := 0 END;
@@ -1951,7 +1951,7 @@ VAR
 	END ProcessRst;
 
 	PROCEDURE ProcessAck(): BOOLEAN;	(* fig. 29.2-29.14 *)
-	VAR onxt, cw, incr: LONGINT; finacked: BOOLEAN;
+	VAR onxt, cw, incr: SIGNED32; finacked: BOOLEAN;
 	BEGIN
 		IF p.state IN {SynReceived..TimeWait} THEN
 			IF p.state = SynReceived THEN
@@ -2078,7 +2078,7 @@ VAR
 	PROCEDURE Reasm;
 	VAR
 		pos, last: Network.Buffer;
-		lap: LONGINT;
+		lap: SIGNED32;
 
 	BEGIN
 		buffer.set := pf;
@@ -2444,23 +2444,23 @@ END UsrClosed;
 
 
 (* If t is not zero, decrement it. Return true if it has reached 0, false otherwise. *)
-PROCEDURE Expired(VAR t: LONGINT): BOOLEAN;
+PROCEDURE Expired(VAR t: SIGNED32): BOOLEAN;
 BEGIN
 	IF t # 0 THEN DEC(t); RETURN t = 0 ELSE RETURN FALSE END
 END Expired;
 
-PROCEDURE GetID(): LONGINT;
-VAR id, time, date: LONGINT;
+PROCEDURE GetID(): SIGNED32;
+VAR id, time, date: SIGNED32;
 BEGIN
 	Clock.Get(time, date);
-	id := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, time) / SYSTEM.VAL(SET, date));
+	id := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, time) / SYSTEM.VAL(SET, date));
 	RETURN id;
 END GetID;
 
 
 (** Aos command - display all errors *)
 PROCEDURE DisplayErrors*(context : Commands.Context);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	FOR i := 1 TO NumErrors-1 DO
 		IF NTCPError[i] # 0 THEN
@@ -2488,7 +2488,7 @@ BEGIN
 END ToggleTrace;
 
 PROCEDURE Init;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 
 	FOR i := 0 TO MaxRxtShift DO
@@ -2544,7 +2544,7 @@ END Cleanup;
 
 BEGIN
 	ASSERT(~DoRFC1323 OR (ProcOptions & GenOptions)); (* constants should make sense *)
-	ASSERT(SYSTEM.VAL(LONGINT, {Fin}) = 1);	(* bit order for flags cast in Input, Output and Respond *)
+	ASSERT(SYSTEM.VAL(SIGNED32, {Fin}) = 1);	(* bit order for flags cast in Input, Output and Respond *)
 	ASSERT((TimerPeriod MOD FastPeriod = 0) & (TimerPeriod MOD SlowPeriod = 0));
 	trace := FALSE;
 	Init();

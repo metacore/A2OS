@@ -43,7 +43,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END StartAll;
 
 (* Start routine for each Windows thread. *)
-PROCEDURE {WINAPI} Start (lpParameter {UNTRACED}: ANY): LONGINT;
+PROCEDURE {WINAPI} Start (lpParameter {UNTRACED}: ANY): SIGNED32;
 PROCEDURE Execute EXTERN "Activities.Execute" (procedure: PROCEDURE);
 PROCEDURE Idle EXTERN "Activities.Idle";
 BEGIN {UNCOOPERATIVE, UNCHECKED}

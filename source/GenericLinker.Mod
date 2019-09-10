@@ -27,7 +27,7 @@ CONST
 
 TYPE
 	HashEntrySegmentedName = RECORD
-		key: ObjectFile.SegmentedName; (* key[0]= MIN(LONGINT) <=> empty *)
+		key: ObjectFile.SegmentedName; (* key[0]= MIN(SIGNED32) <=> empty *)
 		value: Block;
 	END;
 	HashSegmentedNameArray = POINTER TO ARRAY OF HashEntrySegmentedName;
@@ -37,7 +37,7 @@ TYPE
 		table: HashSegmentedNameArray;
 		size: SIZE;
 		used-: SIZE;
-		maxLoadFactor: REAL;
+		maxLoadFactor: FLOAT32;
 
 		(* Interface *)
 
@@ -115,7 +115,7 @@ TYPE
 			Init(size*2);
 			FOR i := 0 TO oldSize-1 DO
 				key := oldTable[i].key;
-				IF key[0] # MIN(LONGINT) THEN
+				IF key[0] # MIN(SIGNED32) THEN
 					IF oldTable[i].value # NIL THEN
 						Put(key, oldTable[i].value);
 					END;
@@ -148,7 +148,7 @@ TYPE Block* = POINTER TO RECORD (ObjectFile.Section)
 	address*: Address;
 	aliasOf*: Block;
 	referenced, used: BOOLEAN;
-	priority: WORD;
+	priority: INTEGER;
 END;
 
 TYPE Linker* = OBJECT
@@ -501,7 +501,7 @@ END Linker;
 
 VAR unused: Block;
 
-PROCEDURE GetPriority(block: Block): WORD;
+PROCEDURE GetPriority(block: Block): INTEGER;
 BEGIN
 	IF block.fixed THEN RETURN Fixed END;
 	IF block.type = ObjectFile.InitCode THEN RETURN InitCode END;
@@ -516,7 +516,7 @@ BEGIN
 END GetPriority;
 
 PROCEDURE ReadHeader(reader: Streams.Reader; linker: Linker; VAR binary: BOOLEAN; VAR poolMap: ObjectFile.PoolMap; VAR offers, requires: ObjectFile.NameList);
-VAR ch: CHAR; version: WORD; string: ARRAY 32 OF CHAR;
+VAR ch: CHAR; version: INTEGER; string: ARRAY 32 OF CHAR;
 BEGIN
 	reader.String(string);
 	binary := string="FoxOFB";

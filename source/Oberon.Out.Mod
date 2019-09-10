@@ -22,37 +22,37 @@ BEGIN
 END String;
 
 (** Write the integer i in n field positions. *)
-PROCEDURE Int*(i, n: LONGINT);
+PROCEDURE Int*(i, n: SIGNED32);
 BEGIN
 	Texts.WriteInt(W, i, n); Texts.Append(T, W.buf)
 END Int;
 
 (** Write the integer i in hexadecimal with a leading space. *)
-PROCEDURE Hex*(i: LONGINT);
+PROCEDURE Hex*(i: SIGNED32);
 BEGIN
 	Texts.WriteHex(W, i); Texts.Append(T, W.buf)
 END Hex;
 
 (** Write the real x in n field positions. *)
-PROCEDURE Real*(x: REAL; n: INTEGER);
+PROCEDURE Real*(x: FLOAT32; n: SIGNED16);
 BEGIN
 	Texts.WriteReal(W, x, n); Texts.Append(T, W.buf)
 END Real;
 
 (** Write the real x in n field positions in fixed point notation with f fraction digits. *)
-PROCEDURE RealFix*(x: REAL; n, f: INTEGER);
+PROCEDURE RealFix*(x: FLOAT32; n, f: SIGNED16);
 BEGIN
 	Texts.WriteRealFix(W, x, n, f, 0); Texts.Append(T, W.buf)
 END RealFix;
 
 (** Write the longreal x in n field positions. *)
-PROCEDURE LongReal*(x: LONGREAL; n: INTEGER);
+PROCEDURE LongReal*(x: FLOAT64; n: SIGNED16);
 BEGIN
 	Texts.WriteLongReal(W, x, n); Texts.Append(T, W.buf)
 END LongReal;
 
 (** Write the longreal x in n field positions in fixed point notation with f fraction digits. *)
-PROCEDURE LongRealFix*(x: LONGREAL; n, f: INTEGER);
+PROCEDURE LongRealFix*(x: FLOAT64; n, f: SIGNED16);
 BEGIN
 	Texts.WriteLongRealFix(W, x, n, f, 0); Texts.Append(T, W.buf)
 END LongRealFix;

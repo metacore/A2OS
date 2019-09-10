@@ -54,7 +54,7 @@ END Start;
 (** The number of concurrent threads corresponds to the number of bits in the affinity mask of the current process. *)
 PROCEDURE Initialize-;
 CONST Set = MAX (SET) - MIN (SET) + 1;
-VAR self: Unix.Thread_t; affinityMask, mask: Unix.CPUSet; i, j: SIZE; length: WORD;
+VAR self: Unix.Thread_t; affinityMask, mask: Unix.CPUSet; i, j: SIZE; length: INTEGER;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	self := Unix.pthread_self ();
 	ASSERT (Unix.sem_init (ADDRESS OF semaphore, 0, 0) = 0);

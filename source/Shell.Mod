@@ -130,7 +130,7 @@ TYPE
 		next: Alias;
 	END;
 
-	NotifyProcedure* = PROCEDURE {DELEGATE} (command : WORD);
+	NotifyProcedure* = PROCEDURE {DELEGATE} (command : INTEGER);
 
 TYPE
 
@@ -139,7 +139,7 @@ TYPE
 		echo, dead, close: BOOLEAN;
 		context: Commands.Context;
 		command: ARRAY MaxLen OF CHAR;
-		res: WORD;
+		res: INTEGER;
 		nestingLevel : SIZE; (* how many shells run in this shell? *)
 		aliases: Alias;
 		prompt: ARRAY 32 OF CHAR;
@@ -278,7 +278,7 @@ TYPE
 			RETURN ch;
 		END ReadCommand;
 
-		PROCEDURE Parse(VAR cmd: Command; VAR wait: BOOLEAN): WORD;
+		PROCEDURE Parse(VAR cmd: Command; VAR wait: BOOLEAN): INTEGER;
 		VAR sym: SET; pos: SIZE; c, next: CHAR;
 
 			PROCEDURE Init;
@@ -343,7 +343,7 @@ TYPE
 				RETURN cmd
 			END Cmd;
 
-			PROCEDURE CmdLine(VAR command: Command): WORD;
+			PROCEDURE CmdLine(VAR command: Command): INTEGER;
 			VAR cmd, prev: Command; fn: Files.FileName; f: Files.File; fr: Files.Reader; fw: Files.Writer;
 				r: Streams.Reader; w: Streams.Writer; append, piped: BOOLEAN; s: ARRAY 64 OF CHAR;
 			BEGIN
@@ -527,7 +527,7 @@ TYPE
 		PROCEDURE Execute(cmd: Command; wait: BOOLEAN; VAR exit: BOOLEAN);
 		VAR
 			c: Command; flags: SET;
-			res : WORD; msg: ARRAY MaxLen OF CHAR; oldContext: Commands.Context;
+			res : INTEGER; msg: ARRAY MaxLen OF CHAR; oldContext: Commands.Context;
 			moduleName, commandName : Modules.Name; errormsg : ARRAY 128 OF CHAR;
 		BEGIN
 			IF (cmd.command = "alias") THEN

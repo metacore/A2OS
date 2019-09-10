@@ -48,10 +48,10 @@ CONST
 
 TYPE
 	Adr* = RECORD
-		ipv4Adr*: LONGINT;
+		ipv4Adr*: SIGNED32;
 		ipv6Adr*: ARRAY 16 OF CHAR;
-		usedProtocol*: LONGINT;
-		data*: LONGINT;
+		usedProtocol*: SIGNED32;
+		data*: SIGNED32;
 	END; (** An IP Address.	usedProtocol = 0: No protocol yet used
 							usedProtocol = IPv4: IPv4 address stored in field ipv4Adr
 							usedProtocol = IPv6: IPv6 address stored in field ipv6Adr
@@ -76,12 +76,12 @@ TYPE
 
 		(** DNS server list - can be used by DNS, not used in IP itself *)
 		DNS-: ARRAY MaxNofDNS OF Adr; (* DNS server list *)
-		DNScount*: LONGINT; (* number of DNS servers in list *)
+		DNScount*: SIGNED32; (* number of DNS servers in list *)
 
 		(* interface *)
 		next*: Interface; (* next pointer for interface list *)
 		closed*: BOOLEAN; (* is interface already closed? *)
-		protocol*: LONGINT; (* Interface for IPv4 or IPv6?. Only used by IP otherwise use dynamic type checking! *)
+		protocol*: SIGNED32; (* Interface for IPv4 or IPv6?. Only used by IP otherwise use dynamic type checking! *)
 
 
 		(** Set addresses. Is normally called just after instanciation, but can also be called later, e.g. by DHCP.
@@ -89,7 +89,7 @@ TYPE
 			subnet as the "localAdr".
 			"domain" can be an empty string. It is normally used by a DNS implementation. It is not used in IP directly.
 			In IPv6 maskAdr is the prefix of the currently IP address *)
-		PROCEDURE SetAdrs*(localAdr, maskOrPrefixAdr, gatewayAdr: Adr; VAR res: WORD);
+		PROCEDURE SetAdrs*(localAdr, maskOrPrefixAdr, gatewayAdr: Adr; VAR res: INTEGER);
 		BEGIN
 			(* Extensions have to override this method.*)
 			HALT(99);
@@ -106,7 +106,7 @@ TYPE
 		(** Add a domain name server to the interface. *)
 		PROCEDURE DNSAdd*(adr: Adr);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 
 		BEGIN {EXCLUSIVE}
 			(* concurrent lookup is consistent *)
@@ -124,7 +124,7 @@ TYPE
 
 		(** Remove a domain name server from the interface. *)
 		PROCEDURE DNSRemove*(adr: Adr);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			(* concurrent lookup could result in a duplicate address in worst-case *)
 			(* this happends hardly ever and is harmless for DNS anyway *)
@@ -144,7 +144,7 @@ TYPE
 
 
 		(** Send an IP packet on this interface. *)
-		PROCEDURE Send*(type: LONGINT; destAdr: Adr; CONST l4hdr, data: ARRAY OF CHAR; h4len, dofs, dlen, TTL: LONGINT);
+		PROCEDURE Send*(type: SIGNED32; destAdr: Adr; CONST l4hdr, data: ARRAY OF CHAR; h4len, dofs, dlen, TTL: SIGNED32);
 		BEGIN
 			(* Extensions have to override this method.*)
 			HALT(99);
@@ -152,7 +152,7 @@ TYPE
 
 
 		(* Internal procedure to perform the rest of the send operation. Used by "Send" and for IP forwarding. *)
-		PROCEDURE DoSend*(destAdr: Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT) ;
+		PROCEDURE DoSend*(destAdr: Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32) ;
 		BEGIN
 			(* Extensions have to override this method.*)
 			HALT(99);
@@ -192,7 +192,7 @@ TYPE
 
 
 		(** Receive an IP packet *)
-		PROCEDURE IPInput*(dev: Network.LinkDevice; type: LONGINT; buffer: Network.Buffer);
+		PROCEDURE IPInput*(dev: Network.LinkDevice; type: SIGNED32; buffer: Network.Buffer);
 		BEGIN
 			(* Extensions have to override this method.*)
 			HALT(99);
@@ -216,7 +216,7 @@ TYPE
 
 
 		(** Creates a pseudo-header for checksum calculation (TCP/UDP) and returns the length of this header *)
-		PROCEDURE WritePseudoHeader*(VAR pseudoHdr: ARRAY OF CHAR;  src, dst: Adr; protocol, pktLengthUpperLayer: LONGINT): LONGINT;
+		PROCEDURE WritePseudoHeader*(VAR pseudoHdr: ARRAY OF CHAR;  src, dst: Adr; protocol, pktLengthUpperLayer: SIGNED32): SIGNED32;
 		BEGIN
 			(* Extensions have to override this method.*)
 			HALT(99);
@@ -240,11 +240,11 @@ TYPE
 		next*: InterfaceList;
 	END;
 
-	Receiver* = PROCEDURE {DELEGATE} (int: Interface; type: LONGINT; fip, lip: Adr; buffer: Network.Buffer);
+	Receiver* = PROCEDURE {DELEGATE} (int: Interface; type: SIGNED32; fip, lip: Adr; buffer: Network.Buffer);
 	V6InterfaceByDstIP* = PROCEDURE {DELEGATE} (dstAdr: Adr): Interface;
 
 	(** Handler for ARPPool.Enumerate. *)
-	ARPHandler* = PROCEDURE {DELEGATE} (ip: Adr; complete: BOOLEAN; link: Network.LinkAdr; size, sendTime, updateTime, updateDate, hash: LONGINT);
+	ARPHandler* = PROCEDURE {DELEGATE} (ip: Adr; complete: BOOLEAN; link: Network.LinkAdr; size, sendTime, updateTime, updateDate, hash: SIGNED32);
 
 	InterfaceHandler* = PROCEDURE {DELEGATE} (int: Interface);
 
@@ -258,13 +258,13 @@ VAR
 
 	(* IP *)
 	NilAdr*: Adr; (* To check if an IP address is NIL use IsNilAdr instead *)
-	preferredProtocol*: LONGINT;	(* Preferred IP protocol *)
+	preferredProtocol*: SIGNED32;	(* Preferred IP protocol *)
 
 	(* IP counters *)
 	NIPSentToSubnet*, NIPSentToGateway*, NIPSentBroadcast*, NIPCantFragment*,
 	NIPRcvTotal*, NIPTooSmall*, NIPBadVersion*, NIPOptions*, NIPBadChecksum*,
 	NIPBadLength*, NIPTrim*, NIPBadHdrLen*, NIPNotForUs*, NIPCantReassemble*, NIPSrcIsBroadcast*,
-	NIPDelivered*, NIPNoReceiver*, NIPForwarded*, NIPSentLocalLoopback*, NIPSentPointToPoint*: LONGINT;
+	NIPDelivered*, NIPNoReceiver*, NIPForwarded*, NIPSentLocalLoopback*, NIPSentPointToPoint*: SIGNED32;
 
 	(* turn on/off IP forwarding, echo replay *)
 	IPForwarding*: BOOLEAN;
@@ -273,14 +273,14 @@ VAR
 	(* Interface *)
 	interfaces*: Interface; (* list of all installed interfaces *)
 
-	counter: LONGINT; (* Use it only in the module body! *)
+	counter: SIGNED32; (* Use it only in the module body! *)
 
 
 (** Is address not yet specified *)
 PROCEDURE IsNilAdr* (adr: Adr): BOOLEAN;
 VAR
 	isNil: BOOLEAN;
-	i: LONGINT;
+	i: SIGNED32;
 
 BEGIN
 	CASE adr.usedProtocol OF
@@ -314,7 +314,7 @@ END IsNilAdr;
 PROCEDURE AdrsEqual* (adr1, adr2: Adr): BOOLEAN;
 VAR
 	equal: BOOLEAN;
-	i: LONGINT;
+	i: SIGNED32;
 
 BEGIN
 	IF adr1.usedProtocol # adr2.usedProtocol THEN
@@ -365,20 +365,20 @@ END AdrsEqual;
 PROCEDURE StrToAdr*(ipString: ARRAY OF CHAR): Adr;
 VAR
 	retAdr: Adr;
-	i, j, x: LONGINT;
+	i, j, x: SIGNED32;
 	adr: ARRAY 4 OF CHAR;
 	ok: BOOLEAN;
-	charCount: LONGINT;				(* ipv6: number of character between two : *)
+	charCount: SIGNED32;				(* ipv6: number of character between two : *)
 	ipv6AdrPart: ARRAY 6 OF CHAR;		(* two bytes of an IPv6 address *)
 	ipv6AdrRight: ARRAY 16 OF CHAR;	(* right part of an IPv6 address; after :: *)
 	hexToChar: ARRAY 3 OF CHAR;
-	leftParts: LONGINT;					(* number of bytes before :: *)
-	rightParts: LONGINT;				(* number of bytes after :: *)
-	val: LONGINT;
-	res: WORD;
-	state: LONGINT;						(* state of the FSM look at the eof for more info *)
+	leftParts: SIGNED32;					(* number of bytes before :: *)
+	rightParts: SIGNED32;				(* number of bytes after :: *)
+	val: SIGNED32;
+	res: INTEGER;
+	state: SIGNED32;						(* state of the FSM look at the eof for more info *)
 	dPointOcc: BOOLEAN;				(* double point occured *)
-	prefixVal: LONGINT;
+	prefixVal: SIGNED32;
 
 
 	(* compute a subpart (two bytes) of a IPv6 address; subpart:=between two : *)
@@ -511,7 +511,7 @@ BEGIN
 		END;
 
 		IF ok THEN
-			retAdr.ipv4Adr := SYSTEM.VAL (LONGINT, adr);
+			retAdr.ipv4Adr := SYSTEM.VAL (SIGNED32, adr);
 			retAdr.usedProtocol := IPv4;
 			RETURN retAdr;
 		ELSE
@@ -634,15 +634,15 @@ END StrToAdr;
 (** Convert an IP address to a dotted-decimal string. *)
 PROCEDURE AdrToStr*(adr: Adr; VAR string: ARRAY OF CHAR);
 VAR
-	i, j, x: LONGINT;
+	i, j, x: SIGNED32;
 	a: ARRAY 4 OF CHAR;
-	val: LONGINT;
+	val: SIGNED32;
 	hexToStr: ARRAY 5 OF CHAR;
 	prefixLenStr: ARRAY 64 OF CHAR;
-	maxZeroRow: LONGINT;
-	currentZeroRow: LONGINT;
-	maxZeroStart: LONGINT;
-	currentZeroStart: LONGINT;
+	maxZeroRow: SIGNED32;
+	currentZeroRow: SIGNED32;
+	maxZeroStart: SIGNED32;
+	currentZeroStart: SIGNED32;
 	lastZero: BOOLEAN;
 	lastDPoint: BOOLEAN;
 	countEnded: BOOLEAN;
@@ -773,10 +773,10 @@ END AdrToStr;
 	If the LSB is stored at the end [ofs+3], LSBfirst must be set to FALSE.
 		(address "a.b.c.d" is stored as [a,b,c,d])
 *)
-PROCEDURE ArrayToAdr*(CONST array: ARRAY OF CHAR; ofs, protocol: LONGINT; LSBfirst: BOOLEAN): Adr;
+PROCEDURE ArrayToAdr*(CONST array: ARRAY OF CHAR; ofs, protocol: SIGNED32; LSBfirst: BOOLEAN): Adr;
 VAR
 	adr: Adr;
-	i, swapTemp: LONGINT;
+	i, swapTemp: SIGNED32;
 BEGIN
 	ASSERT((protocol = 4) OR (protocol = 6));
 
@@ -824,10 +824,10 @@ END ArrayToAdr;
 	If the LSB should be stored at the end [ofs+3], LSBfirst must be set to FALSE.
 		(address "a.b.c.d" is stored as [a,b,c,d])
 *)
-PROCEDURE AdrToArray*(adr: Adr; VAR array: ARRAY OF CHAR; ofs: LONGINT; LSBfirst: BOOLEAN);
+PROCEDURE AdrToArray*(adr: Adr; VAR array: ARRAY OF CHAR; ofs: SIGNED32; LSBfirst: BOOLEAN);
 VAR
 	tempAdr: Adr;
-	i, swapTemp: LONGINT;
+	i, swapTemp: SIGNED32;
 
 BEGIN
 	tempAdr := adr;
@@ -867,7 +867,7 @@ END AdrToArray;
 (** Reads the IP source address from a buffer *)
 PROCEDURE SrcAdrFromBuffer* (buffer: Network.Buffer): Adr;
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 	adr: Adr;
 
 BEGIN
@@ -899,7 +899,7 @@ END SrcAdrFromBuffer;
 PROCEDURE DestAdrFromBuffer* (buffer: Network.Buffer): Adr;
 VAR
 	adr: Adr;
-	i: LONGINT;
+	i: SIGNED32;
 
 BEGIN
 	CASE ORD(buffer.data[buffer.l3ofs]) DIV 16 OF
@@ -927,7 +927,7 @@ END DestAdrFromBuffer;
 
 
 (* Swap internal representation of an IP address from big to little endian or vice versa. *)
-PROCEDURE -SwapEndian(VAR adr: LONGINT);
+PROCEDURE -SwapEndian(VAR adr: SIGNED32);
 CODE
 #IF I386 THEN
 	POP EAX
@@ -1018,7 +1018,7 @@ END IPConfig;
 	be passed to Checksum2, which sums the data following sequentially on the data summed by this
 	operation. Carries from bit 15 are accumulated in the top 16 bits, so at most 65535 words can be
 	summed by Checksum1 and Checksum2 together. *)
-PROCEDURE Checksum1*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; chk1: LONGINT): LONGINT;
+PROCEDURE Checksum1*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; chk1: SIGNED32): SIGNED32;
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+chk1]
@@ -1076,7 +1076,7 @@ END Checksum1;
 
 (** 	Continue a checksum operation. len can be zero or odd. chk1 can be the result of Checksum1 for
 	the immediately preceding data, or 0 for contiguous data. *)
-PROCEDURE Checksum2*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; chk1: LONGINT): INTEGER;
+PROCEDURE Checksum2*(CONST data: ARRAY OF CHAR; ofs, len: SIZE; chk1: SIGNED32): SIGNED16;
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP+chk1]
@@ -1173,7 +1173,7 @@ END Checksum2;
 
 
 (* Return TRUE if "adr1" and "adr2" are in the same subnet defined by "mask". Only for IPv4 *)
-PROCEDURE SameSubnetv4(adr1, adr2, mask: LONGINT): BOOLEAN;
+PROCEDURE SameSubnetv4(adr1, adr2, mask: SIGNED32): BOOLEAN;
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP + adr1]
@@ -1209,9 +1209,9 @@ END SameSubnetv4;
 (* Return TRUE if adr matches the prefix *)
 PROCEDURE MatchPrefix*(adr: Adr; prefix: Adr): BOOLEAN;
 VAR
-	bytesToCheck: LONGINT;
-	bitsToCheck: LONGINT;
-	i: LONGINT;
+	bytesToCheck: SIGNED32;
+	bitsToCheck: SIGNED32;
+	i: SIGNED32;
 	matches: BOOLEAN;
 	diffSet: SET;
 
@@ -1357,7 +1357,7 @@ END InterfaceListByDevice;
 (** Install a receiver for a type. The type is stored in
 	IPv4: Protocol field
 	IPv6: Next header field *)
-PROCEDURE InstallReceiver*( type: LONGINT; r: Receiver);
+PROCEDURE InstallReceiver*( type: SIGNED32; r: Receiver);
 BEGIN {EXCLUSIVE}
 	IF DEBUG THEN
 		ASSERT(r # NIL);
@@ -1372,7 +1372,7 @@ END InstallReceiver;
 (** Remove the currently installed receiver for a type. The type is stored in
 	IPv4: Protocol field
 	IPv6: Next header field *)
-PROCEDURE RemoveReceiver*(type: LONGINT);
+PROCEDURE RemoveReceiver*(type: SIGNED32);
 BEGIN {EXCLUSIVE}
 	ASSERT((type >=0) & (type <= 255));
 	ASSERT(receivers[type] # NIL);
@@ -1384,10 +1384,10 @@ END RemoveReceiver;
 (** Checks if a string is a valid IPv4 address *)
 PROCEDURE IsValidIPv4Str (CONST ipString: ARRAY OF CHAR): BOOLEAN;
 VAR
-	i,j: LONGINT;
-	ipNr: LONGINT;
+	i,j: SIGNED32;
+	ipNr: SIGNED32;
 	digits: ARRAY 4 OF CHAR;
-	startClass: LONGINT;
+	startClass: SIGNED32;
 BEGIN
 	i := 0;
 
@@ -1474,14 +1474,14 @@ END IsValidIPv4Str;
 (** Checks if a string is a valid IPv6 address *)
 PROCEDURE IsValidIPv6Str (ipString: ARRAY OF CHAR): BOOLEAN;
 VAR
-	i: LONGINT;
-	state: LONGINT; (* -1: error *)
-	charCount: LONGINT;
-	ascD: LONGINT;
-	ascH: LONGINT;
+	i: SIGNED32;
+	state: SIGNED32; (* -1: error *)
+	charCount: SIGNED32;
+	ascD: SIGNED32;
+	ascH: SIGNED32;
 	dPointOcc: BOOLEAN;
-	prefixLenArr: ARRAY 3 OF LONGINT;
-	prefixLen: LONGINT;
+	prefixLenArr: ARRAY 3 OF SIGNED32;
+	prefixLen: SIGNED32;
 
 BEGIN
 	i := 0;
@@ -1610,7 +1610,7 @@ END IsValidIPv6Str;
 (** Set IPv6 address to zero *)
 PROCEDURE SetIPv6AdrNil (adr: Adr);
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 
 BEGIN
 	FOR i := 0 TO 15 DO
@@ -1620,7 +1620,7 @@ END SetIPv6AdrNil;
 
 
 (* Add the interface to the IP configuration. *)
-PROCEDURE AddInterface*(int: Interface; VAR res: WORD);
+PROCEDURE AddInterface*(int: Interface; VAR res: INTEGER);
 VAR
 	item: Interface;
 BEGIN {EXCLUSIVE}

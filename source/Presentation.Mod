@@ -51,7 +51,7 @@ TYPE
 
 
 		PROCEDURE DrawImg(fade : BOOLEAN);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			IF current = NIL THEN KernelLog.String("current is nil"); RETURN; END;
 			IF (current # tail) & (current # head) THEN

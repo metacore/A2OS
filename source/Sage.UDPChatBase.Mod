@@ -78,15 +78,15 @@ TYPE
 	String = Strings.String;
 
 	ACKRec* = POINTER TO RECORD
-		seqNum*: INTEGER;
+		seqNum*: SIGNED16;
 	END;
 
 	Client* = OBJECT
 	VAR
 		ip*: IP.Adr;
-		port*: LONGINT;
-		inSeqNum*, outSeqNum*: INTEGER;
-		uin*: LONGINT;
+		port*: SIGNED32;
+		inSeqNum*, outSeqNum*: SIGNED16;
+		uin*: SIGNED32;
 
 		keepAliveTimer*: Kernel.MilliTimer;
 
@@ -105,18 +105,18 @@ TYPE
 	END Client;
 
 	UserInfo* = POINTER TO RECORD
-		uin*: LONGINT;
+		uin*: SIGNED32;
 		shortName*, fullName*, eMail*: ARRAY 65 OF CHAR;
 	END;
 
 	User* = POINTER TO RECORD (UserInfo)
-		password*: LONGINT;
+		password*: SIGNED32;
 	END;
 
 	Users* = OBJECT
 	VAR
 		list: List;
-		lastUIN: LONGINT;
+		lastUIN: SIGNED32;
 
 		PROCEDURE &New*;
 		BEGIN
@@ -155,7 +155,7 @@ TYPE
 		PROCEDURE Store*;
 		VAR
 			f: FS.File; w: FS.Writer;
-			i: LONGINT;
+			i: SIGNED32;
 			u: User;
 			ptr: ANY;
 		BEGIN
@@ -197,9 +197,9 @@ TYPE
 			RETURN u;
 		END Add;
 
-		PROCEDURE Find* (uin: LONGINT): User;
+		PROCEDURE Find* (uin: SIGNED32): User;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			u: User;
 			ptr: ANY;
 		BEGIN
@@ -215,7 +215,7 @@ TYPE
 			RETURN NIL;
 		END Find;
 
-		PROCEDURE PasswordCorrect* (uin: LONGINT; password: String): BOOLEAN;
+		PROCEDURE PasswordCorrect* (uin: SIGNED32; password: String): BOOLEAN;
 		VAR
 			u: User;
 		BEGIN
@@ -234,7 +234,7 @@ TYPE
 		PROCEDURE AddInt* (n, len: SIZE);
 		VAR
 			i: SIZE;
-			b: SIZE; res: WORD;
+			b: SIZE; res: INTEGER;
 			s: ARRAY 4 OF CHAR;
 		BEGIN
 			ASSERT (len <= 4);
@@ -254,8 +254,8 @@ TYPE
 	List* = OBJECT
 	VAR
 		list: PArray;
-		count: LONGINT;
-		readLock: LONGINT;
+		count: SIGNED32;
+		readLock: SIGNED32;
 
 		PROCEDURE &New*;
 		BEGIN
@@ -265,7 +265,7 @@ TYPE
 		(** return the number of objects in the list. If count is used for indexing elements (e.g. FOR - Loop)
 			in a multi-process situation, the process calling the GetCount method should call Lock before
 			GetCount and Unlock after the last use of an index based on GetCount *)
-		PROCEDURE GetCount*() : LONGINT;
+		PROCEDURE GetCount*() : SIGNED32;
 		BEGIN
 			RETURN count
 		END GetCount;
@@ -273,7 +273,7 @@ TYPE
 		PROCEDURE Grow;
 		VAR
 			old: PArray;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			old := list;
 			NEW (list, LEN(list) * 2);
@@ -293,9 +293,9 @@ TYPE
 		(** return the index of an object. In a multi-process situation, the process calling the IndexOf method
 			should call Lock before IndexOf and Unlock after the last use of an index based on IndexOf.
 			If the object is not found, -1 is returned *)
-		PROCEDURE IndexOf * (x : ANY) : LONGINT;
+		PROCEDURE IndexOf * (x : ANY) : SIGNED32;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			i := 0 ; WHILE i < count DO IF list[i] = x THEN RETURN i END; INC(i) END;
 			RETURN -1
@@ -305,7 +305,7 @@ TYPE
 		the number of calls to Unlock *)
 		PROCEDURE Remove* (x : ANY);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			AWAIT (readLock = 0);
 			i:=0; WHILE (i < count) & (list[i] # x) DO INC(i) END;
@@ -320,7 +320,7 @@ TYPE
 		the number of calls to Unlock *)
 		PROCEDURE Clear*;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			AWAIT(readLock = 0);
 			FOR i := 0 TO count - 1 DO list[i] := NIL END;
@@ -329,7 +329,7 @@ TYPE
 
 		(** return an object based on an index. In a multi-process situation, GetItem is only safe in a locked
 		region Lock / Unlock *)
-		PROCEDURE GetItem* (i: LONGINT) : ANY;
+		PROCEDURE GetItem* (i: SIGNED32) : ANY;
 		BEGIN
 			ASSERT ((i >= 0) & (i < count), 101);
 			RETURN list[i]
@@ -352,7 +352,7 @@ TYPE
 	(*IntervalTimer* = OBJECT (WMComponents.Component)
 	VAR
 		running, terminated: BOOLEAN;
-		interval: LONGINT;
+		interval: SIGNED32;
 		t: Kernel.Timer;
 		onTimer- : WMEvents.EventSource;
 
@@ -371,7 +371,7 @@ TYPE
 			END;
 		END Init;
 
-		PROCEDURE SetInterval* (i: LONGINT);
+		PROCEDURE SetInterval* (i: SIGNED32);
 		BEGIN
 			BEGIN {EXCLUSIVE}
 				interval := i
@@ -411,9 +411,9 @@ TYPE
 		GSonTimerInfo := Strings.NewString("Is called when timer ticks");
 	END Init;*)
 
-PROCEDURE Code (s: ARRAY OF CHAR): LONGINT;
+PROCEDURE Code (s: ARRAY OF CHAR): SIGNED32;
 VAR
-	i: INTEGER; a, b, c: LONGINT;
+	i: SIGNED16; a, b, c: SIGNED32;
 BEGIN
 	a := 0; b := 0; i := 0;
 	WHILE s[i] # 0X DO
@@ -424,7 +424,7 @@ BEGIN
 	RETURN b * 65536 + a
 END Code;
 
-PROCEDURE ServerPacketInit* (command, seqnum: INTEGER; buf: Buffer);
+PROCEDURE ServerPacketInit* (command, seqnum: SIGNED16; buf: Buffer);
 BEGIN
 	buf.Clear;
 	buf.AddInt (VERSION, 2);
@@ -432,24 +432,24 @@ BEGIN
 	buf.AddInt (seqnum, 2);
 END ServerPacketInit;
 
-PROCEDURE ClientPacketInit* (command, seqnum: INTEGER; uin: LONGINT; buf: Buffer);
+PROCEDURE ClientPacketInit* (command, seqnum: SIGNED16; uin: SIGNED32; buf: Buffer);
 BEGIN
 	ServerPacketInit (command, seqnum, buf);
 	buf.AddInt (uin, 4);
 END ClientPacketInit;
 
-PROCEDURE BufGetSInt* (buf: String; VAR receiveBufOffset: LONGINT): INTEGER;
+PROCEDURE BufGetSInt* (buf: String; VAR receiveBufOffset: SIGNED32): SIGNED16;
 VAR
-	n: INTEGER;
+	n: SIGNED16;
 BEGIN
 	n := ORD (buf^[receiveBufOffset]);
 	INC (receiveBufOffset);
 	RETURN n;
 END BufGetSInt;
 
-PROCEDURE BufGetInt* (buf: String; VAR receiveBufOffset: LONGINT): INTEGER;
+PROCEDURE BufGetInt* (buf: String; VAR receiveBufOffset: SIGNED32): SIGNED16;
 VAR
-	b, n, i: INTEGER;
+	b, n, i: SIGNED16;
 BEGIN
 	i := 0; b := 1; n := 0;
 	WHILE i < 2 DO
@@ -461,10 +461,10 @@ BEGIN
 	RETURN n;
 END BufGetInt;
 
-PROCEDURE BufGetLInt* (buf: String; VAR receiveBufOffset: LONGINT): LONGINT;
+PROCEDURE BufGetLInt* (buf: String; VAR receiveBufOffset: SIGNED32): SIGNED32;
 VAR
-	i: INTEGER;
-	b, n: LONGINT;
+	i: SIGNED16;
+	b, n: SIGNED32;
 BEGIN
 	i := 0; b := 1; n := 0;
 	WHILE i < 4 DO
@@ -476,9 +476,9 @@ BEGIN
 	RETURN n;
 END BufGetLInt;
 
-PROCEDURE BufGetString* (buf: String; VAR receiveBufOffset: LONGINT): String;
+PROCEDURE BufGetString* (buf: String; VAR receiveBufOffset: SIGNED32): String;
 VAR
-	len: LONGINT;
+	len: SIGNED32;
 	string: String;
 BEGIN
 	len := BufGetInt (buf, receiveBufOffset);
@@ -488,7 +488,7 @@ BEGIN
 	RETURN string;
 END BufGetString;
 
-PROCEDURE isNextSeqNum* (current, previous: INTEGER): BOOLEAN;
+PROCEDURE isNextSeqNum* (current, previous: SIGNED16): BOOLEAN;
 BEGIN
 	IF (previous < current) OR ((previous > current) & (previous > 0) & (current < 0))  THEN
 		RETURN TRUE;
@@ -497,10 +497,10 @@ BEGIN
 	END;
 END isNextSeqNum;
 
-PROCEDURE SeqNumInACKList* (reqList: List; seqNum: INTEGER;
+PROCEDURE SeqNumInACKList* (reqList: List; seqNum: SIGNED16;
 	VAR req: ACKRec): BOOLEAN;
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 	ptr: ANY;
 BEGIN
 	i := 0;
@@ -515,7 +515,7 @@ BEGIN
 	RETURN FALSE;
 END SeqNumInACKList;
 
-PROCEDURE CommandDecode* (command: INTEGER; VAR str: ARRAY OF CHAR);
+PROCEDURE CommandDecode* (command: SIGNED16; VAR str: ARRAY OF CHAR);
 BEGIN
 
 	CASE command OF

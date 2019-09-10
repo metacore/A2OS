@@ -38,7 +38,7 @@ TYPE
 		next: Cache;
 		name, domain: Name;
 		adr: IP.Adr;
-		expire: LONGINT;
+		expire: SIGNED32;
 	END;
 
 TYPE
@@ -47,7 +47,7 @@ TYPE
 	ServerList = OBJECT
 		VAR
 			server: ARRAY MaxNofServer OF IP.Adr;
-			currentServer, serverCount: LONGINT;
+			currentServer, serverCount: SIGNED32;
 
 		PROCEDURE &Constr*;
 		BEGIN
@@ -57,7 +57,7 @@ TYPE
 
 		(* Update internal server list. Return number of servers. *)
 
-		PROCEDURE Update(): LONGINT;
+		PROCEDURE Update(): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			serverCount := 0;
 			IP.Enumerate(InterfaceHandler);
@@ -94,7 +94,7 @@ TYPE
 		(* Handle a call from IP.Enumerate() - update internal DNS server list. *)
 
 		PROCEDURE InterfaceHandler(int: IP.Interface);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			IF int.dev.Linked() # Network.LinkNotLinked THEN
 				i := 0;
@@ -114,17 +114,17 @@ VAR
 	(** Local domain name *)
 	domain*: Name;
 
-	id: LONGINT;
+	id: SIGNED32;
 	cache: Cache;
-	lastCleanup: LONGINT;
+	lastCleanup: SIGNED32;
 
 	serverlist: ServerList;
 
 	(* Statistic variables *)
-	NDNSReceived-, NDNSSent-, NDNSMismatchID-, NDNSError-: LONGINT;
+	NDNSReceived-, NDNSSent-, NDNSMismatchID-, NDNSError-: SIGNED32;
 
 PROCEDURE CacheCleanup;
-VAR c, p: Cache; now: LONGINT;
+VAR c, p: Cache; now: SIGNED32;
 BEGIN {EXCLUSIVE}
 	now := Kernel.GetTicks();
 	IF now - lastCleanup > Kernel.second THEN
@@ -143,10 +143,10 @@ BEGIN {EXCLUSIVE}
 	END
 END CacheCleanup;
 
-PROCEDURE CacheAdd(name: ARRAY OF CHAR; adr: IP.Adr; domain: ARRAY OF CHAR; timeout: LONGINT);
-VAR c: Cache; expire: LONGINT;
+PROCEDURE CacheAdd(name: ARRAY OF CHAR; adr: IP.Adr; domain: ARRAY OF CHAR; timeout: SIGNED32);
+VAR c: Cache; expire: SIGNED32;
 BEGIN {EXCLUSIVE}
-	IF timeout > MAX(LONGINT) DIV Kernel.second THEN timeout := MAX(LONGINT)
+	IF timeout > MAX(SIGNED32) DIV Kernel.second THEN timeout := MAX(SIGNED32)
 	ELSE timeout := timeout * Kernel.second
 	END;
 	expire := Kernel.GetTicks() + timeout; c := cache.next;
@@ -205,13 +205,13 @@ BEGIN
 	RETURN c
 END CacheFindAdr;
 
-PROCEDURE AppW(VAR k: LONGINT; VAR buf: ARRAY OF CHAR; n: LONGINT);
+PROCEDURE AppW(VAR k: SIGNED32; VAR buf: ARRAY OF CHAR; n: SIGNED32);
 BEGIN
 	buf[k] := CHR(n DIV 100H MOD 100H); buf[k+1] := CHR(n MOD 100H); INC(k, 2)
 END AppW;
 
-PROCEDURE QSect(VAR k: LONGINT; VAR buf, name: ARRAY OF CHAR; type, class: LONGINT);
-VAR i, j: LONGINT;
+PROCEDURE QSect(VAR k: SIGNED32; VAR buf, name: ARRAY OF CHAR; type, class: SIGNED32);
+VAR i, j: SIGNED32;
 BEGIN
 	i := 0; j := k; INC(k);
 	WHILE name[i] # 0X DO
@@ -224,13 +224,13 @@ BEGIN
 	AppW(k, buf, type); AppW(k, buf, class)
 END QSect;
 
-PROCEDURE PickW(VAR k: LONGINT; VAR buf: ARRAY OF CHAR; VAR n: LONGINT);
+PROCEDURE PickW(VAR k: SIGNED32; VAR buf: ARRAY OF CHAR; VAR n: SIGNED32);
 BEGIN
 	n := ASH(ORD(buf[k]), 8) + ORD(buf[k+1]); INC(k, 2)
 END PickW;
 
 PROCEDURE Lower(VAR s: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	i := 0;
 	WHILE s[i] # 0X DO
@@ -239,8 +239,8 @@ BEGIN
 	END
 END Lower;
 
-PROCEDURE GetName(VAR k, i: LONGINT; VAR buf, name: ARRAY OF CHAR);
-VAR len, k0: LONGINT;
+PROCEDURE GetName(VAR k, i: SIGNED32; VAR buf, name: ARRAY OF CHAR);
+VAR len, k0: SIGNED32;
 BEGIN
 	len := ORD(buf[k]); INC(k);
 	WHILE len > 0 DO
@@ -256,14 +256,14 @@ BEGIN
 	name[i] := 0X; Lower(name)
 END GetName;
 
-PROCEDURE Header(VAR k: LONGINT; VAR buf: ARRAY OF CHAR; id, flags, qd, an, ns, ar: LONGINT);
+PROCEDURE Header(VAR k: SIGNED32; VAR buf: ARRAY OF CHAR; id, flags, qd, an, ns, ar: SIGNED32);
 BEGIN
 	AppW(k, buf, id); AppW(k, buf, flags); AppW(k, buf, qd);
 	AppW(k, buf, an); AppW(k, buf, ns); AppW(k, buf, ar)
 END Header;
 
 PROCEDURE Domain(VAR name: ARRAY OF CHAR; localdom: ARRAY OF CHAR; force: BOOLEAN);
-VAR i, j: LONGINT;
+VAR i, j: SIGNED32;
 BEGIN
 	i := 0; j := 0;
 	WHILE name[i] # 0X DO
@@ -287,11 +287,11 @@ BEGIN
 	name[j] := 0X
 END Domain;
 
-PROCEDURE RetrieveInfo(qtype: LONGINT; VAR adr: IP.Adr; VAR buf, hname: ARRAY OF CHAR; VAR len: SIZE; VAR timeout: LONGINT; VAR res: WORD);
+PROCEDURE RetrieveInfo(qtype: SIGNED32; VAR adr: IP.Adr; VAR buf, hname: ARRAY OF CHAR; VAR len: SIZE; VAR timeout: SIGNED32; VAR res: INTEGER);
 VAR
 	name0: Name;
 	adr0: IP.Adr;
-	c, i, k, l, id0, flags, qd, an, ns, ar, type, class, ttl1, ttl0, ttl: LONGINT;
+	c, i, k, l, id0, flags, qd, an, ns, ar, type, class, ttl1, ttl0, ttl: SIGNED32;
 
 BEGIN
 	k := 0; timeout := 0; res := NotFound; hname[0] := 0X;
@@ -372,8 +372,8 @@ BEGIN
 	END
 END RetrieveInfo;
 
-PROCEDURE SendQuery(pcb: UDP.Socket; server: IP.Adr; name: ARRAY OF CHAR; type: LONGINT; VAR buf: ARRAY OF CHAR; VAR res: WORD);
-VAR len: LONGINT;
+PROCEDURE SendQuery(pcb: UDP.Socket; server: IP.Adr; name: ARRAY OF CHAR; type: SIGNED32; VAR buf: ARRAY OF CHAR; VAR res: INTEGER);
+VAR len: SIGNED32;
 BEGIN
 	len := 0; res := 0;
 	Header(len, buf, id, 0 + TypeRD, 1, 0, 0, 0);
@@ -382,8 +382,8 @@ BEGIN
 	INC(NDNSSent);
 END SendQuery;
 
-PROCEDURE ReceiveReply(pcb: UDP.Socket; VAR buf: ARRAY OF CHAR; VAR len: SIZE; VAR res: WORD);
-VAR radr: IP.Adr; rport: LONGINT;
+PROCEDURE ReceiveReply(pcb: UDP.Socket; VAR buf: ARRAY OF CHAR; VAR len: SIZE; VAR res: INTEGER);
+VAR radr: IP.Adr; rport: SIGNED32;
 BEGIN
 	REPEAT
 		pcb.Receive(buf, 0, LEN(buf), UDPTimeout, radr, rport, len, res)
@@ -391,9 +391,9 @@ BEGIN
 	IF res = Ok THEN INC(NDNSReceived) ELSE len := 0 END
 END ReceiveReply;
 
-PROCEDURE QueryDNS(type: LONGINT; VAR buf, qname, hname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR timeout: LONGINT; VAR res: WORD);
+PROCEDURE QueryDNS(type: SIGNED32; VAR buf, qname, hname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR timeout: SIGNED32; VAR res: INTEGER);
 VAR
-	j, k, serverCount: LONGINT;
+	j, k, serverCount: SIGNED32;
 	len: SIZE;
 	pcb: UDP.Socket;
 BEGIN
@@ -436,10 +436,10 @@ END QueryDNS;
 
 (** Find the host responsible for mail exchange of the specified domain. *)
 
-PROCEDURE MailHostByDomain*(domain: ARRAY OF CHAR; VAR hostname: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE MailHostByDomain*(domain: ARRAY OF CHAR; VAR hostname: ARRAY OF CHAR; VAR res: INTEGER);
 VAR
 	buf: ARRAY 512 OF CHAR;
-	timeout: LONGINT;
+	timeout: SIGNED32;
 	c: Cache;
 	adr: IP.Adr;
 BEGIN
@@ -459,11 +459,11 @@ END MailHostByDomain;
 
 (** Find the IP address of the specified host. *)
 
-PROCEDURE HostByName*(hostname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR res: WORD);
+PROCEDURE HostByName*(hostname: ARRAY OF CHAR; VAR adr: IP.Adr; VAR res: INTEGER);
 VAR
 	buf: ARRAY 512 OF CHAR;
 	name: Name;
-	timeout: LONGINT;
+	timeout: SIGNED32;
 	c: Cache;
 	dummy: ARRAY 1 OF CHAR;
 BEGIN
@@ -506,11 +506,11 @@ END HostByName;
 
 (** Find the host name of the specified IP address. *)
 
-PROCEDURE HostByNumber*(adr: IP.Adr; VAR hostname: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE HostByNumber*(adr: IP.Adr; VAR hostname: ARRAY OF CHAR; VAR res: INTEGER);
 VAR
 	buf: ARRAY 512 OF CHAR;
 	name: Name;
-	i, j, k, timeout: LONGINT;
+	i, j, k, timeout: SIGNED32;
 	c: Cache;
 	int: IP.Interface;
 BEGIN

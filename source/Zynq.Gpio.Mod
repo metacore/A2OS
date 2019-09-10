@@ -25,12 +25,12 @@ TYPE
 VAR
 	bankCtrlRegs: ARRAY 4 OF BankCtrlReg;
 	dataRegs: DataReg;
-	i: LONGINT;
+	i: SIGNED32;
 
 	(** Set the direction of 'gpio' to output if 'out' is TRUE and to input otherwise. *)
-	PROCEDURE SetDirection * (gpio: LONGINT; out: BOOLEAN);
+	PROCEDURE SetDirection * (gpio: SIGNED32; out: BOOLEAN);
 	VAR
-		bank, ofs: LONGINT;
+		bank, ofs: SIGNED32;
 	BEGIN
 		GetBankOfs(gpio, bank, ofs);
 		IF (bank < 0) & (ofs < 0) THEN RETURN END;
@@ -43,9 +43,9 @@ VAR
 	END SetDirection;
 
 	(** If 'on' enable (if 'off' disable) output for 'gpio'. 'gpio' direction must be set to output prior to this call. *)
-	PROCEDURE EnableOutput * (gpio: LONGINT; on: BOOLEAN);
+	PROCEDURE EnableOutput * (gpio: SIGNED32; on: BOOLEAN);
 	VAR
-		bank, ofs: LONGINT;
+		bank, ofs: SIGNED32;
 	BEGIN
 		GetBankOfs(gpio, bank, ofs);
 		IF (bank < 0) & (ofs < 0) THEN RETURN END;
@@ -58,9 +58,9 @@ VAR
 	END EnableOutput;
 
 	(** Set the data of output GPIO 'gpio' to 'data' (TRUE for high, FALSE for low). *)
-	PROCEDURE SetData * (gpio: LONGINT; data: BOOLEAN);
+	PROCEDURE SetData * (gpio: SIGNED32; data: BOOLEAN);
 	VAR
-		bank, ofs: LONGINT;
+		bank, ofs: SIGNED32;
 	BEGIN
 		GetBankOfs(gpio, bank, ofs);
 		IF (bank < 0) & (ofs < 0) THEN RETURN END;
@@ -73,9 +73,9 @@ VAR
 	END SetData;
 
 	(** Get data of input GPIO 'gpio': TRUE for high, FALSE for low. *)
-	PROCEDURE GetData * (gpio: LONGINT): BOOLEAN;
+	PROCEDURE GetData * (gpio: SIGNED32): BOOLEAN;
 	VAR
-		bank, ofs: LONGINT;
+		bank, ofs: SIGNED32;
 	BEGIN
 		GetBankOfs(gpio, bank, ofs);
 		IF (bank < 0) & (ofs < 0) THEN HALT(100) END;
@@ -83,7 +83,7 @@ VAR
 		RETURN ofs IN dataRegs.DATA_RO[bank]
 	END GetData;
 
-	PROCEDURE GetBankOfs (gpio: LONGINT; VAR bank, ofs: LONGINT);
+	PROCEDURE GetBankOfs (gpio: SIGNED32; VAR bank, ofs: SIGNED32);
 	BEGIN
 		IF gpio < 54 THEN
 			bank := gpio DIV 32;

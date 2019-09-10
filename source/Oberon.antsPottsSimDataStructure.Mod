@@ -70,7 +70,7 @@ TYPE
 	DegradedDesc* = RECORD (vyBase.ObjDesc)
 		name: POINTER TO ARRAY OF CHAR;
 		degraded: antsArrays.X1d;
-		variance: LONGREAL;
+		variance: FLOAT64;
 		rekoChain: POINTER TO ARRAY OF Reko;
 	END;
 
@@ -145,7 +145,7 @@ TYPE
 
 	PROCEDURE ExistDataset*( set: SetChain;  dataChainname: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 
 	BEGIN
 		IF ~ExistChain( set ) THEN RETURN FALSE;  ELSE
@@ -159,7 +159,7 @@ TYPE
 
 	PROCEDURE ExistDataChain*( set: SetChain;  dataChainname: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 
 	BEGIN
 		IF ~ExistDataset( set, dataChainname ) THEN RETURN FALSE;  ELSE
@@ -173,7 +173,7 @@ TYPE
 
 	PROCEDURE ExistData*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 
 	BEGIN
 		IF ~ExistDataChain( set, dataChainname ) THEN RETURN FALSE;  ELSE
@@ -191,7 +191,7 @@ TYPE
 
 	PROCEDURE ExistDataRekoChain*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 
 	BEGIN
 		IF ~ExistData( set, dataChainname, dataname ) THEN RETURN FALSE;  ELSE
@@ -209,7 +209,7 @@ TYPE
 
 	PROCEDURE ExistDataReko*( set: SetChain;  dataChainname, dataname, datarekoname: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistDataRekoChain( set, dataChainname, dataname ) THEN RETURN FALSE;  ELSE
@@ -231,7 +231,7 @@ TYPE
 
 	PROCEDURE ExistMonotoneChain*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 
 	BEGIN
 		IF ~ExistData( set, dataChainname, dataname ) THEN RETURN FALSE;  ELSE
@@ -249,7 +249,7 @@ TYPE
 
 	PROCEDURE ExistMonotone*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistMonotoneChain( set, dataChainname, dataname ) THEN RETURN FALSE;  ELSE
@@ -271,7 +271,7 @@ TYPE
 
 	PROCEDURE ExistDegradedChain*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistMonotone( set, dataChainname, dataname, monotonename ) THEN RETURN FALSE;  ELSE
@@ -295,7 +295,7 @@ TYPE
 
 	PROCEDURE ExistDegraded*( set: SetChain;  dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR i, j, k, l: LONGINT;
+	VAR i, j, k, l: SIGNED32;
 
 	BEGIN
 		IF ~ExistDegradedChain( set, dataChainname, dataname, monotonename ) THEN RETURN FALSE;  ELSE
@@ -323,7 +323,7 @@ TYPE
 
 	PROCEDURE ExistRekoChain*( set: SetChain;  dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR i, j, k, l: LONGINT;
+	VAR i, j, k, l: SIGNED32;
 
 	BEGIN
 		IF ~ExistDegraded( set, dataChainname, dataname, monotonename, degradedname ) THEN RETURN FALSE;  ELSE
@@ -353,7 +353,7 @@ TYPE
 	PROCEDURE ExistReko*( set: SetChain;
 										   dataChainname, dataname, monotonename, degradedname, rekoname: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR i, j, k, l, m: LONGINT;
+	VAR i, j, k, l, m: SIGNED32;
 
 	BEGIN
 		IF ~ExistRekoChain( set, dataChainname, dataname, monotonename, degradedname ) THEN RETURN FALSE;  ELSE
@@ -386,15 +386,15 @@ TYPE
 
 (* Die folgenden Get...Len-Methoden berechnen die Länge des jeweiligen Arrays in der Datenbank und geben diese zurück. *)
 
-	PROCEDURE GetSetChainLen*( set: SetChain ): LONGINT;
+	PROCEDURE GetSetChainLen*( set: SetChain ): SIGNED32;
 
 	BEGIN
 		IF ~ExistChain( set ) THEN RETURN -1;  ELSE RETURN LEN( set.chain );  END;
 	END GetSetChainLen;
 
-	PROCEDURE GetDataChainLen*( set: SetChain;  dataChainname: ARRAY OF CHAR ): LONGINT;
+	PROCEDURE GetDataChainLen*( set: SetChain;  dataChainname: ARRAY OF CHAR ): SIGNED32;
 
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 
 	BEGIN
 		IF ~ExistDataChain( set, dataChainname ) THEN RETURN -1;  ELSE
@@ -404,9 +404,9 @@ TYPE
 		END;
 	END GetDataChainLen;
 
-	PROCEDURE GetDataRekoChainLen*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR ): LONGINT;
+	PROCEDURE GetDataRekoChainLen*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR ): SIGNED32;
 
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 
 	BEGIN
 		IF ~ExistDataRekoChain( set, dataChainname, dataname ) THEN RETURN -1;  ELSE
@@ -420,9 +420,9 @@ TYPE
 		END;
 	END GetDataRekoChainLen;
 
-	PROCEDURE GetMonotoneChainLen*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR ): LONGINT;
+	PROCEDURE GetMonotoneChainLen*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR ): SIGNED32;
 
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 
 	BEGIN
 		IF ~ExistMonotoneChain( set, dataChainname, dataname ) THEN RETURN -1;  ELSE
@@ -436,9 +436,9 @@ TYPE
 		END;
 	END GetMonotoneChainLen;
 
-	PROCEDURE GetDegradedChainLen*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR ): LONGINT;
+	PROCEDURE GetDegradedChainLen*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR ): SIGNED32;
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistDegradedChain( set, dataChainname, dataname, monotonename ) THEN RETURN -1;  ELSE
@@ -459,9 +459,9 @@ TYPE
 	END GetDegradedChainLen;
 
 	PROCEDURE GetRekoChainLen*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR;
-														 degradedname: ARRAY OF CHAR ): LONGINT;
+														 degradedname: ARRAY OF CHAR ): SIGNED32;
 
-	VAR i, j, k, l: LONGINT;
+	VAR i, j, k, l: SIGNED32;
 
 	BEGIN
 		IF ~ExistRekoChain( set, dataChainname, dataname, monotonename, degradedname ) THEN RETURN -1;  ELSE
@@ -489,9 +489,9 @@ TYPE
 	Stelle ind im Array der Datenbank zurück. Letztere geben die Daten (data, datareko, monotone, reko, results) in
 	den jeweiligen Objekten zurück. *)
 
-	PROCEDURE GetDataSetName*( set: SetChain;  ind: LONGINT;  VAR a: ARRAY OF CHAR );
+	PROCEDURE GetDataSetName*( set: SetChain;  ind: SIGNED32;  VAR a: ARRAY OF CHAR );
 
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 
 	BEGIN
 		IF ~ExistChain( set ) THEN antsSecurity.Halt( "No SetChain found !!!" );  ELSE
@@ -503,7 +503,7 @@ TYPE
 
 	PROCEDURE GetData*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR ): antsArrays.X1d;
 
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 
 	BEGIN
 		IF ~ExistData( set, dataChainname, dataname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -517,9 +517,9 @@ TYPE
 		END;
 	END GetData;
 
-	PROCEDURE GetDataName*( set: SetChain;  dataChainname: ARRAY OF CHAR;  ind: LONGINT;  VAR a: ARRAY OF CHAR );
+	PROCEDURE GetDataName*( set: SetChain;  dataChainname: ARRAY OF CHAR;  ind: SIGNED32;  VAR a: ARRAY OF CHAR );
 
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 
 	BEGIN
 		IF ~ExistDataChain( set, dataChainname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -536,7 +536,7 @@ TYPE
 
 	PROCEDURE GetDataReko*( set: SetChain;  dataChainname, dataname, datarekoname: ARRAY OF CHAR ): antsArrays.X1d;
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistDataReko( set, dataChainname, dataname, datarekoname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -558,7 +558,7 @@ TYPE
 
 	PROCEDURE GetDataResults*( set: SetChain;  dataChainname, dataname, datarekoname: ARRAY OF CHAR ): antsArrays.X1d;
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistDataReko( set, dataChainname, dataname, datarekoname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -578,9 +578,9 @@ TYPE
 		END;
 	END GetDataResults;
 
-	PROCEDURE GetDataRekoName*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR;  ind: LONGINT;  VAR a: ARRAY OF CHAR );
+	PROCEDURE GetDataRekoName*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR;  ind: SIGNED32;  VAR a: ARRAY OF CHAR );
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistDataRekoChain( set, dataChainname, dataname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -603,7 +603,7 @@ TYPE
 
 	PROCEDURE GetMonotone*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR ): antsArrays.X1d;
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistMonotone( set, dataChainname, dataname, monotonename ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -623,9 +623,9 @@ TYPE
 		END;
 	END GetMonotone;
 
-	PROCEDURE GetMonotoneName*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR;  ind: LONGINT;  VAR a: ARRAY OF CHAR );
+	PROCEDURE GetMonotoneName*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR;  ind: SIGNED32;  VAR a: ARRAY OF CHAR );
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistMonotoneChain( set, dataChainname, dataname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -649,7 +649,7 @@ TYPE
 	PROCEDURE GetDegraded*( set: SetChain;
 												dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR ): antsArrays.X1d;
 
-	VAR i, j, k, l: LONGINT;
+	VAR i, j, k, l: SIGNED32;
 
 	BEGIN
 		IF ~ExistDegraded( set, dataChainname, dataname, monotonename, degradedname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -673,10 +673,10 @@ TYPE
 		END;
 	END GetDegraded;
 
-	PROCEDURE GetDegradedName*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR;  ind: LONGINT;
+	PROCEDURE GetDegradedName*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR;  ind: SIGNED32;
 														  VAR a: ARRAY OF CHAR );
 
-	VAR i, j, k, l: LONGINT;
+	VAR i, j, k, l: SIGNED32;
 
 	BEGIN
 		IF ~ExistDegradedChain( set, dataChainname, dataname, monotonename ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -704,7 +704,7 @@ TYPE
 	PROCEDURE GetReko*( set: SetChain;
 										dataChainname, dataname, monotonename, degradedname, rekoname: ARRAY OF CHAR ): antsArrays.X1d;
 
-	VAR i, j, k, l, m: LONGINT;
+	VAR i, j, k, l, m: SIGNED32;
 
 	BEGIN
 		IF ~ExistReko( set, dataChainname, dataname, monotonename, degradedname, rekoname ) THEN
@@ -736,9 +736,9 @@ TYPE
 	END GetReko;
 
 	PROCEDURE GetRekoName*( set: SetChain;  dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR;
-												  ind: LONGINT;  VAR a: ARRAY OF CHAR );
+												  ind: SIGNED32;  VAR a: ARRAY OF CHAR );
 
-	VAR i, j, k, l, m: LONGINT;
+	VAR i, j, k, l, m: SIGNED32;
 
 	BEGIN
 		IF ~ExistRekoChain( set, dataChainname, dataname, monotonename, degradedname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -771,7 +771,7 @@ TYPE
 	PROCEDURE GetResults*( set: SetChain;
 											dataChainname, dataname, monotonename, degradedname, rekoname: ARRAY OF CHAR ): antsArrays.X1d;
 
-	VAR i, j, k, l, m: LONGINT;
+	VAR i, j, k, l, m: SIGNED32;
 
 	BEGIN
 		IF ~ExistReko( set, dataChainname, dataname, monotonename, degradedname, rekoname ) THEN
@@ -802,10 +802,10 @@ TYPE
 		END;
 	END GetResults;
 
-	PROCEDURE GetDiff*( set: SetChain;  dataChainname, dataname, mon: ARRAY OF CHAR ): LONGREAL;
+	PROCEDURE GetDiff*( set: SetChain;  dataChainname, dataname, mon: ARRAY OF CHAR ): FLOAT64;
 	(* Gibt die Differenz zwischen dem grössten und kleinsten Element in Monotone zurück. *)
 
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 
 	BEGIN
 		IF ~ExistData( set, dataChainname, dataname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -830,7 +830,7 @@ TYPE
 	PROCEDURE GetAllDiff*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR ): antsArrays.X1d;
 	(* Gibt alle Differenzen wie in obiger Methode zurück. *)
 
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 
 	BEGIN
 		IF ~ExistData( set, dataChainname, dataname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -844,10 +844,10 @@ TYPE
 		END;
 	END GetAllDiff;
 
-	PROCEDURE GetEN*( set: SetChain;  dataChainname, dataname, mon: ARRAY OF CHAR ): LONGREAL;
+	PROCEDURE GetEN*( set: SetChain;  dataChainname, dataname, mon: ARRAY OF CHAR ): FLOAT64;
 	(* Gibt die Estimated Noises zurück. *)
 
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 
 	BEGIN
 		IF ~ExistData( set, dataChainname, dataname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -872,7 +872,7 @@ TYPE
 	PROCEDURE GetAllEN*( set: SetChain;  dataChainname, dataname: ARRAY OF CHAR ): antsArrays.X1d;
 	(* Gibt alle Estimated Noises zurück. *)
 
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 
 	BEGIN
 		IF ~ExistData( set, dataChainname, dataname ) THEN antsSecurity.Halt( "No Data found !!!" );  ELSE
@@ -889,7 +889,7 @@ TYPE
 	PROCEDURE IncNoiseNumber*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR;  type: ARRAY OF CHAR );
 	(* Incrementiert die Anzahl einer bestimmten Noise-Art. Ist nur wegen der Namensgebung implementiert. *)
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistMonotone( set, dataChainname, dataname, monotonename ) THEN antsSecurity.Halt( "No Monotone in IncNoiseNumber !!!" );  ELSE
@@ -917,7 +917,7 @@ TYPE
 	PROCEDURE DecNoiseNumber*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR;  type: ARRAY OF CHAR );
 	(* Decrementiert die Anzahl einer bestimmten Noise-Art. Ist nur wegen der Namensgebung implementiert. *)
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistMonotone( set, dataChainname, dataname, monotonename ) THEN antsSecurity.Halt( "No Monotone in DecNoiseNumber !!!" );  ELSE
@@ -942,10 +942,10 @@ TYPE
 		END;
 	END DecNoiseNumber;
 
-	PROCEDURE GetNoiseNumber*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR;  type: ARRAY OF CHAR ): LONGINT;
+	PROCEDURE GetNoiseNumber*( set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR;  type: ARRAY OF CHAR ): SIGNED32;
 	(* Gibt die Anzahl einer bestimmten Noise-Art zurück. Ist nur wegen der Namensgebung implementiert. *)
 
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 
 	BEGIN
 		IF ~ExistMonotone( set, dataChainname, dataname, monotonename ) THEN antsSecurity.Halt( "No such monotone in IncNoiseNumber !!!" );  ELSE
@@ -970,10 +970,10 @@ TYPE
 		END;
 	END GetNoiseNumber;
 
-	PROCEDURE GetNoiseVariance*( set: SetChain;  dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR ): LONGREAL;
+	PROCEDURE GetNoiseVariance*( set: SetChain;  dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR ): FLOAT64;
 	(* Gibt die Varianz einer Verrauschung zurück. *)
 
-	VAR i, j, k, l: LONGINT;
+	VAR i, j, k, l: SIGNED32;
 
 	BEGIN
 		IF ~ExistDegraded( set, dataChainname, dataname, monotonename, degradedname ) THEN antsSecurity.Halt( "No such degraded in GetNoiseVariance !!!" );  ELSE
@@ -1011,7 +1011,7 @@ TYPE
 	PROCEDURE NewDataChain*( VAR set: SetChain;  name: ARRAY OF CHAR );
 
 	VAR dummy: POINTER TO ARRAY OF DataChain;
-		newdataChain: DataChain;  i, len: LONGINT;
+		newdataChain: DataChain;  i, len: SIGNED32;
 
 	BEGIN
 		IF set.chain = NIL THEN len := 0;  NEW( set.chain, 1 );
@@ -1035,7 +1035,7 @@ TYPE
 										 data, diffs, estimatedNoises, meanM, medianM, hampelM, saegezahnM, huberM: antsArrays.X1d );
 
 	VAR dummy: POINTER TO ARRAY OF Data;
-		newdata: Data;  len, i, j: LONGINT;
+		newdata: Data;  len, i, j: SIGNED32;
 
 	BEGIN
 		FOR j := 0 TO LEN( set.chain ) - 1 DO
@@ -1073,7 +1073,7 @@ TYPE
 												  datareko, results: antsArrays.X1d );
 
 	VAR dummy: POINTER TO ARRAY OF Reko;
-		newdatareko: Reko;  len, i, j, k: LONGINT;
+		newdatareko: Reko;  len, i, j, k: SIGNED32;
 
 	BEGIN
 		FOR k := 0 TO LEN( set.chain ) - 1 DO
@@ -1112,7 +1112,7 @@ TYPE
 												    monotone: antsArrays.X1d );
 
 	VAR dummy: POINTER TO ARRAY OF Monotone;
-		newmonotone: Monotone;  len, i, j, k: LONGINT;
+		newmonotone: Monotone;  len, i, j, k: SIGNED32;
 
 	BEGIN
 		FOR k := 0 TO LEN( set.chain ) - 1 DO
@@ -1147,10 +1147,10 @@ TYPE
 	END NewMonotone;
 
 	PROCEDURE NewDegraded*( VAR set: SetChain;  dataChainname, dataname, monotonename, name: ARRAY OF CHAR;
-												  degraded: antsArrays.X1d;  parameter: LONGREAL );
+												  degraded: antsArrays.X1d;  parameter: FLOAT64 );
 
 	VAR dummy: POINTER TO ARRAY OF Degraded;
-		newdegraded: Degraded;  len, i, j, k, l: LONGINT;
+		newdegraded: Degraded;  len, i, j, k, l: SIGNED32;
 
 	BEGIN
 		FOR l := 0 TO LEN( set.chain ) - 1 DO
@@ -1195,7 +1195,7 @@ TYPE
 										  name: ARRAY OF CHAR;  reko: antsArrays.X1d;  results: antsArrays.X1d );
 
 	VAR dummy: POINTER TO ARRAY OF Reko;
-		newreko: Reko;  len, i, j, k, l, m: LONGINT;
+		newreko: Reko;  len, i, j, k, l, m: SIGNED32;
 
 	BEGIN
 		FOR m := 0 TO LEN( set.chain ) - 1 DO
@@ -1255,7 +1255,7 @@ TYPE
 
 	PROCEDURE DeleteDataset*( VAR set: SetChain;  dataChainname: ARRAY OF CHAR ): BOOLEAN;
 
-	VAR dummy: SetChain;  i, j, k, this: LONGINT;
+	VAR dummy: SetChain;  i, j, k, this: SIGNED32;
 
 	BEGIN
 		IF ~ExistDataset( set, dataChainname ) THEN RETURN FALSE;  ELSE
@@ -1282,7 +1282,7 @@ TYPE
 	PROCEDURE DeleteData*( VAR set: SetChain;  dataChainname, dataname: ARRAY OF CHAR ): BOOLEAN;
 
 	VAR dummy: POINTER TO ARRAY OF Data;
-		i, j, k, this: LONGINT;  ok: BOOLEAN;
+		i, j, k, this: SIGNED32;  ok: BOOLEAN;
 
 	BEGIN
 		IF ~ExistData( set, dataChainname, dataname ) THEN RETURN FALSE;  ELSE
@@ -1315,7 +1315,7 @@ TYPE
 	PROCEDURE DeleteDataReko*( VAR set: SetChain;  dataChainname, dataname, datarekoname: ARRAY OF CHAR ): BOOLEAN;
 
 	VAR dummy: POINTER TO ARRAY OF Reko;
-		i, j, k, l, this: LONGINT;
+		i, j, k, l, this: SIGNED32;
 
 	BEGIN
 		IF ~ExistDataReko( set, dataChainname, dataname, datarekoname ) THEN RETURN FALSE;  ELSE
@@ -1359,7 +1359,7 @@ TYPE
 	PROCEDURE DeleteMonotone*( VAR set: SetChain;  dataChainname, dataname, monotonename: ARRAY OF CHAR ): BOOLEAN;
 
 	VAR dummy: POINTER TO ARRAY OF Monotone;
-		i, j, k, l, this: LONGINT;
+		i, j, k, l, this: SIGNED32;
 
 	BEGIN
 		IF ~ExistMonotone( set, dataChainname, dataname, monotonename ) THEN RETURN FALSE;  ELSE
@@ -1404,7 +1404,7 @@ TYPE
 													  dataChainname, dataname, monotonename, degradedname: ARRAY OF CHAR ): BOOLEAN;
 
 	VAR dummy: POINTER TO ARRAY OF Degraded;
-		i, j, k, l, m, this: LONGINT;
+		i, j, k, l, m, this: SIGNED32;
 
 	BEGIN
 		IF ~ExistDegraded( set, dataChainname, dataname, monotonename, degradedname ) THEN RETURN FALSE;  ELSE
@@ -1457,7 +1457,7 @@ TYPE
 											  dataChainname, dataname, monotonename, degradedname, rekoname: ARRAY OF CHAR ): BOOLEAN;
 
 	VAR dummy: POINTER TO ARRAY OF Reko;
-		i, j, k, l, m, n, this: LONGINT;
+		i, j, k, l, m, n, this: SIGNED32;
 
 	BEGIN
 		IF ~ExistReko( set, dataChainname, dataname, monotonename, degradedname, rekoname ) THEN RETURN FALSE;  ELSE

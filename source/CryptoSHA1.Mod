@@ -7,7 +7,7 @@ CONST
 	BlockSize = 64;
 
 TYPE
-	State = ARRAY 5 OF LONGINT;
+	State = ARRAY 5 OF SIGNED32;
 
 	Hash* = OBJECT (Hashes.Hash)
 		VAR
@@ -25,11 +25,11 @@ TYPE
 
 		PROCEDURE Initialize*;
 		BEGIN
-			hash[0] := LONGINT( 067452301H );
-			hash[1] := LONGINT( 0EFCDAB89H );
-			hash[2] := LONGINT( 098BADCFEH );
-			hash[3] := LONGINT( 010325476H );
-			hash[4] := LONGINT( 0C3D2E1F0H );
+			hash[0] := SIGNED32( 067452301H );
+			hash[1] := SIGNED32( 0EFCDAB89H );
+			hash[2] := SIGNED32( 098BADCFEH );
+			hash[3] := SIGNED32( 010325476H );
+			hash[4] := SIGNED32( 0C3D2E1F0H );
 			Nl := 0;
 			Nh := 0;
 			cn := 0;
@@ -74,7 +74,7 @@ TYPE
 
 		(** get the hashvalue of length SELF.size *)
 		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
-			VAR p: LONGINT;
+			VAR p: SIGNED32;
 		BEGIN
 			cdata[cn] := 80X;  INC( cn );
 			IF cn > BlockSize - 8 THEN
@@ -83,7 +83,7 @@ TYPE
 			END;
 			p := BlockSize - 8;
 			WHILE cn < p  DO  cdata[cn] := 0X;  INC( cn )  END;
-			U.IntToBufferBE( Nh(LONGINT), cdata, p );  U.IntToBufferBE( Nl(LONGINT), cdata, p + 4 );
+			U.IntToBufferBE( Nh(SIGNED32), cdata, p );  U.IntToBufferBE( Nl(SIGNED32), cdata, p + 4 );
 
 			HashContextBlock;
 			U.BlockToBufferBE( hash, buf, pos )
@@ -104,57 +104,57 @@ TYPE
 
 
 
-(*	PROCEDURE F1( b, c, d: LONGINT ): LONGINT;
+(*	PROCEDURE F1( b, c, d: SIGNED32 ): SIGNED32;
 	BEGIN
-		RETURN S.VAL( LONGINT, ((S.VAL( SET32, c ) / S.VAL( SET32, d )) * S.VAL( SET32, b )) / S.VAL( SET32, d ) )
+		RETURN S.VAL( SIGNED32, ((S.VAL( SET32, c ) / S.VAL( SET32, d )) * S.VAL( SET32, b )) / S.VAL( SET32, d ) )
 	END F1;
 
-	PROCEDURE F2( b, c, d: LONGINT ): LONGINT;
+	PROCEDURE F2( b, c, d: SIGNED32 ): SIGNED32;
 	BEGIN
-		RETURN S.VAL( LONGINT, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) )
+		RETURN S.VAL( SIGNED32, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) )
 	END F2;
 
-	PROCEDURE F3( b, c, d: LONGINT ): LONGINT;
+	PROCEDURE F3( b, c, d: SIGNED32 ): SIGNED32;
 	BEGIN
-		RETURN S.VAL( LONGINT, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((S.VAL( SET32, b ) + S.VAL( SET32, c )) * S.VAL( SET32, d )) )
+		RETURN S.VAL( SIGNED32, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((S.VAL( SET32, b ) + S.VAL( SET32, c )) * S.VAL( SET32, d )) )
 	END F3;
 *)
 
-	PROCEDURE -tr0019( a: LONGINT; VAR b: LONGINT; c, d, e: LONGINT; VAR  f: LONGINT; x: SET32 );
+	PROCEDURE -tr0019( a: SIGNED32; VAR b: SIGNED32; c, d, e: SIGNED32; VAR  f: SIGNED32; x: SET32 );
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + 5A827999H + ROT( a, 5 ) +
+		f := S.VAL( SIGNED32, x ) + e + 5A827999H + ROT( a, 5 ) +
 			(*F1( b, c, d );*)
-			S.VAL( LONGINT, ((S.VAL( SET32, c ) / S.VAL( SET32, d )) * S.VAL( SET32, b )) / S.VAL( SET32, d ) );
+			S.VAL( SIGNED32, ((S.VAL( SET32, c ) / S.VAL( SET32, d )) * S.VAL( SET32, b )) / S.VAL( SET32, d ) );
 		b := ROT( b, 30 );
 	END tr0019;
 
-	PROCEDURE -tr2039( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET32 );
+	PROCEDURE -tr2039( a: SIGNED32;  VAR b: SIGNED32;  c, d, e: SIGNED32;  VAR f: SIGNED32;  x: SET32 );
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + 6ED9EBA1H + ROT( a, 5 ) +
+		f := S.VAL( SIGNED32, x ) + e + 6ED9EBA1H + ROT( a, 5 ) +
 			(*F2( b, c, d );*)
-			S.VAL( LONGINT, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
+			S.VAL( SIGNED32, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
 		b := ROT( b, 30 );
 	END tr2039;
 
-	PROCEDURE -tr4059( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET32);
+	PROCEDURE -tr4059( a: SIGNED32;  VAR b: SIGNED32;  c, d, e: SIGNED32;  VAR f: SIGNED32;  x: SET32);
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + LONGINT(8F1BBCDCH) + ROT( a, 5 ) +
+		f := S.VAL( SIGNED32, x ) + e + SIGNED32(8F1BBCDCH) + ROT( a, 5 ) +
 			(*F3( b, c, d );*)
-			S.VAL( LONGINT, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((S.VAL( SET32, b ) + S.VAL( SET32, c )) * S.VAL( SET32, d )) );
+			S.VAL( SIGNED32, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((S.VAL( SET32, b ) + S.VAL( SET32, c )) * S.VAL( SET32, d )) );
 		b := ROT( b, 30 )
 	END tr4059;
 
-	PROCEDURE -tr6079( a: LONGINT;  VAR b: LONGINT;  c, d, e: LONGINT;  VAR f: LONGINT;  x: SET32 );
+	PROCEDURE -tr6079( a: SIGNED32;  VAR b: SIGNED32;  c, d, e: SIGNED32;  VAR f: SIGNED32;  x: SET32 );
 	BEGIN
-		f := S.VAL( LONGINT, x ) + e + LONGINT(0CA62C1D6H) + ROT( a, 5 ) +
+		f := S.VAL( SIGNED32, x ) + e + SIGNED32(0CA62C1D6H) + ROT( a, 5 ) +
 			(*F2( b, c, d );*)
-			S.VAL( LONGINT, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
+			S.VAL( SIGNED32, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
 		b := ROT( b, 30 );
 	END tr6079;
 
 	PROCEDURE HashBlock( VAR state: State;  CONST buf: ARRAY OF CHAR;  pos: SIZE );
 	VAR
-		A, B, C, D, E, T: LONGINT;
+		A, B, C, D, E, T: SIGNED32;
 		x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, xa, xb, xc, xd, xe, xf: SET32;
 	BEGIN
 		A := state[0];  B := state[1];  C := state[2];  D := state[3];  E := state[4];

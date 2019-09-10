@@ -8,7 +8,7 @@ CONST
 
 TYPE
 
-	Datatype* = REAL;
+	Datatype* = FLOAT32;
 	Matrix* = ARRAY [*,*] OF Datatype;
 
 	MatrixValue* = RECORD(Types.Generic)
@@ -41,7 +41,7 @@ TYPE
 		END Get;
 
 		(** Generically set data of model. Implicit type conversion if necessary and possible *)
-		PROCEDURE SetGeneric*(CONST value : Types.Any; VAR res : WORD); (** abstract *)
+		PROCEDURE SetGeneric*(CONST value : Types.Any; VAR res : INTEGER); (** abstract *)
 		VAR matrix : Matrix;
 		BEGIN
 			GetMatrix(value, matrix, res);
@@ -49,15 +49,15 @@ TYPE
 		END SetGeneric;
 
 		(** Generically get data of model. Implicit type conversion if necessary and possible *)
-		PROCEDURE GetGeneric*(VAR value : Types.Any; VAR res : WORD); (** abstract *)
+		PROCEDURE GetGeneric*(VAR value : Types.Any; VAR res : INTEGER); (** abstract *)
 		BEGIN
 			AcquireRead;
 			SetMatrix(value, matrix, res);
 			ReleaseRead;
 		END GetGeneric;
 
-		PROCEDURE WriteValue*(w : Streams.Writer; level : LONGINT); (** protected *)
-		VAR column, row, nofColumns, nofRows : LONGINT;
+		PROCEDURE WriteValue*(w : Streams.Writer; level : SIGNED32); (** protected *)
+		VAR column, row, nofColumns, nofRows : SIGNED32;
 		BEGIN
 			WriteValue^(w, level);
 			nofColumns := LEN(matrix, 0);
@@ -94,8 +94,8 @@ TYPE
 VAR
 	StrMatrix : Strings.String;
 
-PROCEDURE GetStringLength(CONST matrix : Matrix) : LONGINT;
-VAR length, nofColumns, nofRows : LONGINT;
+PROCEDURE GetStringLength(CONST matrix : Matrix) : SIGNED32;
+VAR length, nofColumns, nofRows : SIGNED32;
 BEGIN
 	length := 0;
 	nofColumns := LEN(matrix, 0);
@@ -108,11 +108,11 @@ BEGIN
 	RETURN length;
 END GetStringLength;
 
-PROCEDURE MatrixToString(CONST matrix : Matrix; VAR string : ARRAY OF CHAR; VAR res : WORD);
-VAR length, nofColumns, nofRows, column, row,  i : LONGINT; error : BOOLEAN;
+PROCEDURE MatrixToString(CONST matrix : Matrix; VAR string : ARRAY OF CHAR; VAR res : INTEGER);
+VAR length, nofColumns, nofRows, column, row,  i : SIGNED32; error : BOOLEAN;
 
-	PROCEDURE Append(VAR string : ARRAY OF CHAR; VAR index : LONGINT; CONST suffix : ARRAY OF CHAR) : BOOLEAN;
-	VAR result : BOOLEAN; length, i : LONGINT;
+	PROCEDURE Append(VAR string : ARRAY OF CHAR; VAR index : SIGNED32; CONST suffix : ARRAY OF CHAR) : BOOLEAN;
+	VAR result : BOOLEAN; length, i : SIGNED32;
 	BEGIN
 		length := Strings.Length(suffix);
 		ASSERT(length > 0);
@@ -128,7 +128,7 @@ VAR length, nofColumns, nofRows, column, row,  i : LONGINT; error : BOOLEAN;
 		RETURN result;
 	END Append;
 
-	PROCEDURE AppendFloat(VAR string : ARRAY OF CHAR; VAR index : LONGINT; float : LONGREAL) : BOOLEAN;
+	PROCEDURE AppendFloat(VAR string : ARRAY OF CHAR; VAR index : SIGNED32; float : FLOAT64) : BOOLEAN;
 	VAR floatStr : ARRAY 128 OF CHAR;
 	BEGIN
 		Strings.FloatToStr(float, 0, 10, 4, floatStr);
@@ -168,24 +168,24 @@ BEGIN
 	END;
 END MatrixToString;
 
-PROCEDURE StringToMatrix(CONST string : ARRAY OF CHAR; VAR matrix : Matrix; VAR res : WORD);
+PROCEDURE StringToMatrix(CONST string : ARRAY OF CHAR; VAR matrix : Matrix; VAR res : INTEGER);
 VAR
-	nofColumns, nofRows, column, row, length, index : LONGINT;
+	nofColumns, nofRows, column, row, length, index : SIGNED32;
 
 	PROCEDURE IsWhitespace(character : CHAR) : BOOLEAN;
 	BEGIN
 		RETURN (character <= " ") & (character # 0X);
 	END IsWhitespace;
 
-	PROCEDURE SkipWhitespace(CONST string : ARRAY OF CHAR; length : LONGINT; VAR index : LONGINT);
+	PROCEDURE SkipWhitespace(CONST string : ARRAY OF CHAR; length : SIGNED32; VAR index : SIGNED32);
 	BEGIN
 		ASSERT(length < LEN(string));
 		WHILE (index < length) & (string[index] # 0X) & IsWhitespace(string[index]) DO INC(index); END;
 		ASSERT(index <= length);
 	END SkipWhitespace;
 
-	PROCEDURE CountFloats(CONST string : ARRAY OF CHAR; length : LONGINT; VAR index : LONGINT) : LONGINT;
-	VAR nofFloats : LONGINT;
+	PROCEDURE CountFloats(CONST string : ARRAY OF CHAR; length : SIGNED32; VAR index : SIGNED32) : SIGNED32;
+	VAR nofFloats : SIGNED32;
 	BEGIN
 		nofFloats := 1;
 		WHILE (index < length) & (string[index] # "]") DO
@@ -197,7 +197,7 @@ VAR
 		RETURN nofFloats;
 	END CountFloats;
 
-	PROCEDURE Consume(CONST string : ARRAY OF CHAR; character : CHAR; VAR index : LONGINT) : BOOLEAN;
+	PROCEDURE Consume(CONST string : ARRAY OF CHAR; character : CHAR; VAR index : SIGNED32) : BOOLEAN;
 	VAR result : BOOLEAN;
 	BEGIN
 		result := (index < LEN(string)) & (string[index] = character);
@@ -205,9 +205,9 @@ VAR
 		RETURN result;
 	END Consume;
 
-	PROCEDURE GetDimensions(CONST string : ARRAY OF CHAR; length : LONGINT; VAR nofColumns, nofRows : LONGINT; VAR res : WORD);
+	PROCEDURE GetDimensions(CONST string : ARRAY OF CHAR; length : SIGNED32; VAR nofColumns, nofRows : SIGNED32; VAR res : INTEGER);
 	CONST Start = 0; ExpectRow = 1; ReadingRow = 2; Error = 9; Done = 10;
-	VAR oldIndex, index : LONGINT; state, nofFloats : LONGINT;
+	VAR oldIndex, index : SIGNED32; state, nofFloats : SIGNED32;
 	BEGIN
 		res := Types.CannotConvert;
 		index := 0;
@@ -270,8 +270,8 @@ VAR
 		END;
 	END GetDimensions;
 
-	PROCEDURE ReadFloat(CONST string : ARRAY OF CHAR; VAR index : LONGINT) : LONGREAL;
-	VAR floatStr : ARRAY 128 OF CHAR; float : LONGREAL; i : LONGINT;
+	PROCEDURE ReadFloat(CONST string : ARRAY OF CHAR; VAR index : SIGNED32) : FLOAT64;
+	VAR floatStr : ARRAY 128 OF CHAR; float : FLOAT64; i : SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (string[index] # ",") & (string[index] # "]") DO
@@ -329,7 +329,7 @@ BEGIN
 	END;
 END StringToMatrix;
 
-PROCEDURE GetMatrix(CONST source : Types.Any; VAR value : Matrix; VAR res : WORD);
+PROCEDURE GetMatrix(CONST source : Types.Any; VAR value : Matrix; VAR res : INTEGER);
 VAR matrixValue : MatrixValue;
 BEGIN
 	res := Types.Ok;
@@ -359,7 +359,7 @@ BEGIN
 	END;
 END GetMatrix;
 
-PROCEDURE SetMatrix(VAR target : Types.Any; CONST value : Matrix; VAR res : WORD);
+PROCEDURE SetMatrix(VAR target : Types.Any; CONST value : Matrix; VAR res : INTEGER);
 VAR matrixValue : MatrixValue;
 BEGIN
 	res := Types.Ok;
@@ -390,13 +390,13 @@ BEGIN
 	END;
 END SetMatrix;
 
-PROCEDURE MatrixValueGetter(CONST self : Types.Generic; VAR target : Types.Any; VAR res : WORD);
+PROCEDURE MatrixValueGetter(CONST self : Types.Generic; VAR target : Types.Any; VAR res : INTEGER);
 BEGIN
 	ASSERT(self IS MatrixValue);
 	SetMatrix(target, self(MatrixValue).value, res);
 END MatrixValueGetter;
 
-PROCEDURE MatrixValueSetter(CONST self : Types.Generic; CONST source : Types.Any; VAR res : WORD);
+PROCEDURE MatrixValueSetter(CONST self : Types.Generic; CONST source : Types.Any; VAR res : INTEGER);
 BEGIN
 	ASSERT(self IS MatrixValue);
 	GetMatrix(source, self(MatrixValue).value, res);

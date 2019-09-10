@@ -65,7 +65,7 @@ BEGIN
 END Update;
 
 PROCEDURE SetBackColor*;
-	VAR s: vyParser.Scanner;   focus: vyPort.Picture;  i: LONGINT;
+	VAR s: vyParser.Scanner;   focus: vyPort.Picture;  i: SIGNED32;
 BEGIN NEW(s);  vyParser.OpenParScanner(s);
 	IF ~vyParser.ExpectNumber(s, i) THEN  RETURN END;
 	focus := vyPort.GetFocusPicture ();
@@ -77,7 +77,7 @@ END SetBackColor;
 
 
 PROCEDURE SetColor*;
-	VAR s: vyParser.Scanner;   layer: vyPort.tLayer;  i: LONGINT;  name: ARRAY 32 OF CHAR;
+	VAR s: vyParser.Scanner;   layer: vyPort.tLayer;  i: SIGNED32;  name: ARRAY 32 OF CHAR;
 BEGIN
 	NEW(s);  vyParser.OpenParScanner(s);
 	IF vyParser.ExpectName(s, name) & vyParser.ExpectNumber (s, i) THEN
@@ -94,7 +94,7 @@ BEGIN
 END SetColor;
 
 PROCEDURE SetC2d*;
-	VAR s: vyParser.Scanner;   focus: vyPort.Picture;  x2d, y2d, w2d, h2d: REAL;
+	VAR s: vyParser.Scanner;   focus: vyPort.Picture;  x2d, y2d, w2d, h2d: FLOAT32;
 BEGIN
 	focus := vyPort.GetFocusPicture ();
 	IF focus = NIL THEN vyHostTexts.Note (vyHostTexts.cNotify, "no picture focused");  RETURN  END;
@@ -105,7 +105,7 @@ BEGIN
 END SetC2d;
 
 PROCEDURE SetWidth*;
-	VAR s: vyParser.Scanner;   layer: vyPort.tLayer;  i: LONGINT;
+	VAR s: vyParser.Scanner;   layer: vyPort.tLayer;  i: SIGNED32;
 BEGIN NEW(s);  vyParser.OpenParScanner(s);
 	IF vyParser.ExpectNumber (s, i) THEN
 		layer := GetLayer (); IF layer = NIL THEN RETURN END;
@@ -115,7 +115,7 @@ BEGIN NEW(s);  vyParser.OpenParScanner(s);
 END SetWidth;
 
 PROCEDURE SetPattern*;
-	VAR s: vyParser.Scanner;   layer: vyPort.tLayer;   name, pattern: ARRAY 32 OF CHAR;  pat: LONGINT;
+	VAR s: vyParser.Scanner;   layer: vyPort.tLayer;   name, pattern: ARRAY 32 OF CHAR;  pat: SIGNED32;
 BEGIN
 	NEW(s);  vyParser.OpenParScanner(s);
 
@@ -155,7 +155,7 @@ END SetFont;
 
 
 PROCEDURE SetPortRatio*;
-	VAR ppl, whr: REAL;  sc: vyParser.Scanner;
+	VAR ppl, whr: FLOAT32;  sc: vyParser.Scanner;
 BEGIN vyParser.OpenParScanner(sc);
 	IF vyParser.Real (sc, ppl) & vyParser.Real (sc, whr)  THEN vyPort.SetDefaultFrameRatio (ppl, whr)
 	ELSE vyParser.MsgSyntax (" vyGraphicCtl.SetPortRatio", "portsPerWidth;whRelation")
@@ -165,7 +165,7 @@ END SetPortRatio;
 
 PROCEDURE DefineUserPalette*;
 	(*vs 0.0d0   md  14.08.95 15:21:50 *)
-	VAR r1, g1, b1, r2, g2, b2, start, end: LONGINT;  sc: vyParser.Scanner;
+	VAR r1, g1, b1, r2, g2, b2, start, end: SIGNED32;  sc: vyParser.Scanner;
 BEGIN
 	vyParser.OpenParScanner(sc);
 	IF ~(vyParser.Number(sc, r1) & vyParser.Number(sc, g1) & vyParser.Number(sc, b1)  &

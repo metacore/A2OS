@@ -12,26 +12,26 @@ CONST
 
 TYPE
 	Rect = RECORD
-		x1, y1, x2, y2: INTEGER
+		x1, y1, x2, y2: SIGNED16
 	END;
 
 VAR
-	W, H: INTEGER;
+	W, H: SIGNED16;
 	rect: ARRAY MaxRect OF Rect;
-	count: INTEGER;
-	prop, limit: INTEGER;
+	count: SIGNED16;
+	prop, limit: SIGNED16;
 	cols: ARRAY 8 OF SET;
-	col: INTEGER;
+	col: SIGNED16;
 	mask: Display3.Mask;
 
-PROCEDURE Proportion(a, b: INTEGER): INTEGER;
-VAR t: REAL;
+PROCEDURE Proportion(a, b: SIGNED16): SIGNED16;
+VAR t: FLOAT32;
 BEGIN
 	t := ENTIER(1.5 + RandomNumbers.Uniform() * (prop - 2.0)) / (1.0 * prop);
 	RETURN SHORT(ENTIER(a * t + b * (1 - t)))
 END Proportion;
 
-PROCEDURE Add(x1, y1, x2, y2: INTEGER);
+PROCEDURE Add(x1, y1, x2, y2: SIGNED16);
 BEGIN
 	IF count < MaxRect THEN
 		rect[count].x1 := x1; rect[count].y1 := y1;
@@ -40,8 +40,8 @@ BEGIN
 	END
 END Add;
 
-PROCEDURE Select(VAR x1, y1, x2, y2: INTEGER);
-VAR x, y, n: INTEGER;
+PROCEDURE Select(VAR x1, y1, x2, y2: SIGNED16);
+VAR x, y, n: SIGNED16;
 BEGIN
 	x := SHORT(ENTIER(RandomNumbers.Uniform() * W));
 	y := SHORT(ENTIER(RandomNumbers.Uniform() * H));
@@ -69,7 +69,7 @@ BEGIN
 END Start;
 
 PROCEDURE Step;
-VAR x, y, x1, y1, x2, y2: INTEGER;
+VAR x, y, x1, y1, x2, y2: SIGNED16;
 BEGIN
 	IF count > 0 THEN
 		Select(x1, y1, x2, y2);
@@ -89,7 +89,7 @@ PROCEDURE Stop;
 END Stop;
 
 PROCEDURE Install*;
-VAR name: ARRAY 32 OF CHAR; c, d, n: INTEGER;
+VAR name: ARRAY 32 OF CHAR; c, d, n: SIGNED16;
 BEGIN
 	FOR n := 0 TO 7 DO cols[n] := {} END;
 	d := maxCol + 1; In.Open;
@@ -127,7 +127,7 @@ BEGIN SaveScreen.RemoveFader(Start, Step, Stop)
 END Remove;
 
 PROCEDURE Configuration*;
-VAR first: BOOLEAN; k, n: INTEGER;
+VAR first: BOOLEAN; k, n: SIGNED16;
 BEGIN
 	Out.String("SaveArt: "); Out.Ln;
 	Out.String("    prop "); Out.Int(prop, 0); Out.Ln;
@@ -151,7 +151,7 @@ BEGIN
 END Configuration;
 
 PROCEDURE InstallDefault*;
-VAR k: INTEGER;
+VAR k: SIGNED16;
 BEGIN
 	prop := defProp;
 	limit := defLimit;

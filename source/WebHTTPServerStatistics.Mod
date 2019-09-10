@@ -10,7 +10,7 @@ TYPE
 	VAR
 		host : ARRAY 256 OF CHAR;
 		uri : ARRAY 1024 OF CHAR;
-		hits : LONGINT;
+		hits : SIGNED32;
 		next : Link;
 
 		PROCEDURE Hit;

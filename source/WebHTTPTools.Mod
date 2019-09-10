@@ -8,8 +8,8 @@ IMPORT
 VAR log : TFLog.Log;
 
 (*
-PROCEDURE StrToIntDef(x: ARRAY OF CHAR; def : LONGINT):LONGINT;
-VAR i, v, sgn: LONGINT;
+PROCEDURE StrToIntDef(x: ARRAY OF CHAR; def : SIGNED32):SIGNED32;
+VAR i, v, sgn: SIGNED32;
 BEGIN
 	IF x[0] = "-" THEN sgn := -1; INC(i) ELSE sgn := 1 END;
 	WHILE (i < LEN(x)) & (x[i] # 0X) DO
@@ -20,8 +20,8 @@ BEGIN
 END StrToIntDef;
 *)
 
-PROCEDURE HexStrToIntDef(CONST x: ARRAY OF CHAR; def : LONGINT):LONGINT;
-VAR i, v: LONGINT;
+PROCEDURE HexStrToIntDef(CONST x: ARRAY OF CHAR; def : SIGNED32):SIGNED32;
+VAR i, v: SIGNED32;
 BEGIN
 	WHILE (i < LEN(x)) & (x[i] # 0X) DO
 		IF (x[i] >= "0") & (x[i] <= "9") THEN v := v * 16 + (ORD(x[i])-ORD("0"))
@@ -33,7 +33,7 @@ BEGIN
 END HexStrToIntDef;
 
 PROCEDURE MatchPrefixI(CONST prefix, str: ARRAY OF CHAR):BOOLEAN;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	i := 0; WHILE (prefix[i] # 0X) & (CAP(prefix[i]) = CAP(str[i])) DO INC(i) END;
 	RETURN prefix[i] = 0X
@@ -43,7 +43,7 @@ PROCEDURE Get*(context : Commands.Context);
 VAR h : WebHTTP.ResponseHeader;
 		rh : WebHTTP.RequestHeader;
 		in : Streams.Reader;
-		res: WORD; i: SIZE; cs : LONGINT;
+		res: INTEGER; i: SIZE; cs : SIGNED32;
 		ch : CHAR; token : ARRAY 16 OF CHAR;
 		name : ARRAY 32 OF CHAR;
 		url : ARRAY 256 OF CHAR;
@@ -92,7 +92,7 @@ END Get;
 PROCEDURE Head*(context : Commands.Context);
 VAR
 	h : WebHTTP.ResponseHeader;
-	res : WORD;
+	res : INTEGER;
 	url : ARRAY 256 OF CHAR;
 	con : TCP.Connection;
 BEGIN
@@ -113,7 +113,7 @@ VAR
 	h: WebHTTP.ResponseHeader;
 	con: TCP.Connection;
 	in: Streams.Reader;
-	res: WORD; i: SIZE; cs: LONGINT;
+	res: INTEGER; i: SIZE; cs: SIGNED32;
 	ch : CHAR;
 BEGIN
 	IF ~context.arg.GetString(baseUrl) THEN
@@ -188,7 +188,7 @@ VAR
 	h: WebHTTP.ResponseHeader;
 	in: Streams.Reader;
 	con: TCP.Connection;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	IF ~context.arg.GetString(url) THEN RETURN END;
 

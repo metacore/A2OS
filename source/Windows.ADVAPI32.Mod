@@ -7,7 +7,7 @@ IMPORT SYSTEM, Kernel32, Modules, KernelLog; 		(* ALEX *)
 
 CONST
 	(** HKEYs *)
-	HKEYClassesRoot* = LONGINT(080000000H);  HKEYCurrentUser* = LONGINT(080000001H);
+	HKEYClassesRoot* = SIGNED32(080000000H);  HKEYCurrentUser* = SIGNED32(080000001H);
 
 	(** value type *)
 	RegNone* = 0;  RegSZ* = 01H;
@@ -51,10 +51,10 @@ TYPE
     	LPCSTR* = ARRAY  OF CHAR;
     	HWND* = Kernel32.HANDLE;
 	HINSTANCE* = Kernel32.HINSTANCE;
-	INT* =  LONGINT;
+	INT* =  SIGNED32;
 	LPCTSTR* = LPCSTR;
 	SC_HANDLE* = Kernel32.HANDLE;
-	DWORD* = LONGINT;
+	DWORD* = SIGNED32;
 	LPDWORD* = ADDRESS;
 	BOOL* = Kernel32.BOOL;
 	LPSERVICE_MAIN_FUNCTIONA = PROCEDURE {WINAPI} (dwNumServicesArgs: DWORD; VAR lpServiceArgVectors: ARRAY  OF CHAR): BOOL;
@@ -82,33 +82,33 @@ TYPE
 
 VAR
 	(** The GetUserName function retrieves the user name of the current thread. *)
-	GetUserName-: PROCEDURE {WINAPI} (VAR lpBuffer: ARRAY   OF CHAR;  VAR nSize: LONGINT): Kernel32.BOOL;
+	GetUserName-: PROCEDURE {WINAPI} (VAR lpBuffer: ARRAY   OF CHAR;  VAR nSize: SIGNED32): Kernel32.BOOL;
 	(** The RegCloseKey function releases a handle to the specified key. *)
-	RegCloseKey-: PROCEDURE {WINAPI} (hKey: HKEY): LONGINT;
+	RegCloseKey-: PROCEDURE {WINAPI} (hKey: HKEY): SIGNED32;
 	(** The RegCreateKeyEx function creates the specified key. *)
-	RegCreateKeyEx-: PROCEDURE {WINAPI} (hKey: HKEY;  lpSubKey: ARRAY   OF CHAR;  Reserved: LONGINT;  lpClass: ARRAY   OF CHAR;  dwOptions, samDesired: SET;  lpSecurityAttributes: ANY;  VAR phkResult: HKEY;  VAR lpdwDisposition: LONGINT): LONGINT;
+	RegCreateKeyEx-: PROCEDURE {WINAPI} (hKey: HKEY;  lpSubKey: ARRAY   OF CHAR;  Reserved: SIGNED32;  lpClass: ARRAY   OF CHAR;  dwOptions, samDesired: SET;  lpSecurityAttributes: ANY;  VAR phkResult: HKEY;  VAR lpdwDisposition: SIGNED32): SIGNED32;
 	(** The RegDeleteKey function deleted a subkey. *)
-	RegDeleteKey-: PROCEDURE {WINAPI} (hKey: HKEY;  lpSubKey: ARRAY   OF CHAR): LONGINT;
+	RegDeleteKey-: PROCEDURE {WINAPI} (hKey: HKEY;  lpSubKey: ARRAY   OF CHAR): SIGNED32;
 	(** The RegDeleteValue function removes a named value from the specified registry key. *)
-	RegDeleteValue-: PROCEDURE {WINAPI} (hKey: HKEY;  lpValueName: ARRAY   OF CHAR): LONGINT;
+	RegDeleteValue-: PROCEDURE {WINAPI} (hKey: HKEY;  lpValueName: ARRAY   OF CHAR): SIGNED32;
 	(** The RegEnumKeyEx function enumerates subkeys of the specified open registry key. *)
-	RegEnumKeyEx-: PROCEDURE {WINAPI} (hKey: HKEY;  dwIndex: LONGINT;  VAR lpName: ARRAY   OF CHAR;  VAR lpcbName: LONGINT;  VAR lpReserved: LONGINT;  VAR lpClass: ARRAY   OF CHAR;  VAR lpcbClass: LONGINT;  VAR lpftLastWriteTime: Kernel32.FileTime): LONGINT;
+	RegEnumKeyEx-: PROCEDURE {WINAPI} (hKey: HKEY;  dwIndex: SIGNED32;  VAR lpName: ARRAY   OF CHAR;  VAR lpcbName: SIGNED32;  VAR lpReserved: SIGNED32;  VAR lpClass: ARRAY   OF CHAR;  VAR lpcbClass: SIGNED32;  VAR lpftLastWriteTime: Kernel32.FileTime): SIGNED32;
 	(** The RegEnumValue function enumerates the values for the specified open registry key. *)
-	RegEnumValue-: PROCEDURE {WINAPI} (hKey: HKEY;  dwIndex: LONGINT;  VAR lpValueName: ARRAY   OF CHAR;  VAR lpcbValueName: LONGINT;  VAR lpReserved, type: LONGINT;  VAR lpData: ARRAY   OF SYSTEM.BYTE;  VAR lpcbData: LONGINT): LONGINT;
+	RegEnumValue-: PROCEDURE {WINAPI} (hKey: HKEY;  dwIndex: SIGNED32;  VAR lpValueName: ARRAY   OF CHAR;  VAR lpcbValueName: SIGNED32;  VAR lpReserved, type: SIGNED32;  VAR lpData: ARRAY   OF SYSTEM.BYTE;  VAR lpcbData: SIGNED32): SIGNED32;
 	(** The RegOpenKeyEx function opens the specified key. *)
-	RegOpenKeyEx-: PROCEDURE {WINAPI} (hKey: HKEY;  lpSubKey: ARRAY   OF CHAR;  ulOptions: LONGINT;  samDesired: SET;  VAR phkResult: HKEY): LONGINT;
+	RegOpenKeyEx-: PROCEDURE {WINAPI} (hKey: HKEY;  lpSubKey: ARRAY   OF CHAR;  ulOptions: SIGNED32;  samDesired: SET;  VAR phkResult: HKEY): SIGNED32;
 	(** The RegQueryValueEx function retrieves the type and data for a specified value name associated with an
 			open registry key. *)
-	RegQueryValueEx-: PROCEDURE {WINAPI} (hKey: HKEY;  lpValueName: ARRAY   OF CHAR;  VAR lpReserved, lpType: LONGINT;  VAR lpData: ARRAY   OF SYSTEM.BYTE;  VAR lpcbData: LONGINT): LONGINT;
+	RegQueryValueEx-: PROCEDURE {WINAPI} (hKey: HKEY;  lpValueName: ARRAY   OF CHAR;  VAR lpReserved, lpType: SIGNED32;  VAR lpData: ARRAY   OF SYSTEM.BYTE;  VAR lpcbData: SIGNED32): SIGNED32;
 	(** The RegSetValueEx function sets the data and type of a specified value under a registry key. *)
-	RegSetValueEx-: PROCEDURE {WINAPI} (hKey: HKEY;  lpValueName: ARRAY   OF CHAR;  Reserved, dwType: LONGINT;  VAR lpData: ARRAY   OF SYSTEM.BYTE;  cbData: LONGINT): LONGINT;
+	RegSetValueEx-: PROCEDURE {WINAPI} (hKey: HKEY;  lpValueName: ARRAY   OF CHAR;  Reserved, dwType: SIGNED32;  VAR lpData: ARRAY   OF SYSTEM.BYTE;  cbData: SIGNED32): SIGNED32;
 	(** The GetFileVersionInfo function returns version information about a specified file. *)
-	GetFileVersionInfo-: PROCEDURE {WINAPI} (lpstrFilename: ARRAY   OF CHAR;  dwHandle, dwLen: LONGINT;  VAR lpDate: ARRAY   OF SYSTEM.BYTE): Kernel32.BOOL;
+	GetFileVersionInfo-: PROCEDURE {WINAPI} (lpstrFilename: ARRAY   OF CHAR;  dwHandle, dwLen: SIGNED32;  VAR lpDate: ARRAY   OF SYSTEM.BYTE): Kernel32.BOOL;
 	(** The GetFileVersionInfoSize function determines whether the operating system can obtain version information
 			about a specified file. *)
-	GetFileVersionInfoSize-: PROCEDURE {WINAPI} (lpstrFilename: ARRAY   OF CHAR;  VAR lpdwHandle: LONGINT): LONGINT;
+	GetFileVersionInfoSize-: PROCEDURE {WINAPI} (lpstrFilename: ARRAY   OF CHAR;  VAR lpdwHandle: SIGNED32): SIGNED32;
 	(** The VerQueryValue function returns selected version information from the specified version-information resource. *)
-	VerQueryValue-: PROCEDURE {WINAPI} (pBlock: ARRAY   OF SYSTEM.BYTE;  lpSubBlock: ARRAY   OF CHAR;  VAR lplpBuffer: ADDRESS;  VAR puLen: LONGINT): Kernel32.BOOL;
+	VerQueryValue-: PROCEDURE {WINAPI} (pBlock: ARRAY   OF SYSTEM.BYTE;  lpSubBlock: ARRAY   OF CHAR;  VAR lplpBuffer: ADDRESS;  VAR puLen: SIGNED32): Kernel32.BOOL;
 
 
 
@@ -139,7 +139,7 @@ VAR
 
 
 	PROCEDURE InstallService*(srvName, serviceDesc, exeFile: ARRAY OF CHAR): BOOLEAN;
-	VAR newService, scm: SC_HANDLE; err: LONGINT;
+	VAR newService, scm: SC_HANDLE; err: SIGNED32;
 	BEGIN
 		scm := OpenSCManager(NIL,NIL,SC_MANAGER_CREATE_SERVICE);
 		IF scm = Kernel32.NULL THEN
@@ -167,7 +167,7 @@ VAR
 
 	PROCEDURE UninstallService*(srvName: ARRAY OF CHAR): BOOLEAN;
 	VAR scm, service:  SC_HANDLE;
-		ret: BOOL; err: LONGINT;
+		ret: BOOL; err: SIGNED32;
 	BEGIN
 		scm := OpenSCManager(NIL, NIL, SC_MANAGER_ALL_ACCESS);
 		IF scm = Kernel32.NULL THEN
@@ -196,8 +196,8 @@ VAR
 	END UninstallService;
 
 
-	PROCEDURE OutError*(funcName: ARRAY OF CHAR): LONGINT;
-	VAR err: LONGINT;
+	PROCEDURE OutError*(funcName: ARRAY OF CHAR): SIGNED32;
+	VAR err: SIGNED32;
 	BEGIN
 		err := Kernel32.GetLastError();
 		KernelLog.Enter;

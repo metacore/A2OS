@@ -1,12 +1,12 @@
 (* CAPO - Computational Analysis Platform for Oberon - by Alan Freed and Felix Friedrich. *)
 (* Version 1, Update 2 *)
 
-MODULE NbrInt8;   (** AUTHOR "adf"; PURPOSE "Alias for type SHORTINT."; *)
+MODULE NbrInt8;   (** AUTHOR "adf"; PURPOSE "Alias for type SIGNED8."; *)
 
 IMPORT Streams;
 
 TYPE
-	Integer* = SHORTINT;
+	Integer* = SIGNED8;
 
 VAR
 	MinNbr-, MaxNbr-: Integer;
@@ -113,5 +113,5 @@ VAR
 	END Store;
 
 BEGIN
-	MinNbr := MIN( SHORTINT );  MaxNbr := MAX( SHORTINT )
+	MinNbr := MIN( SIGNED8 );  MaxNbr := MAX( SIGNED8 )
 END NbrInt8.

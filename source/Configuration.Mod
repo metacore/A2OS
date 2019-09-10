@@ -54,7 +54,7 @@ BEGIN {EXCLUSIVE}
 END GetSetting;
 
 PROCEDURE GetElementX(CONST type, key : ARRAY OF CHAR) : XML.Element;
-VAR e : XML.Element; name : ARRAY 64 OF CHAR; i, j : LONGINT;
+VAR e : XML.Element; name : ARRAY 64 OF CHAR; i, j : SIGNED32;
 BEGIN
 	IF (config # NIL) THEN
 		i := 0; e := config.GetRoot();
@@ -76,7 +76,7 @@ BEGIN
 END GetElementX;
 
 (** 	Find the setting specified by the key, which is a path name through the sections to the setting, and return its value. *)
-PROCEDURE Get*(CONST key: ARRAY OF CHAR; VAR val: ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE Get*(CONST key: ARRAY OF CHAR; VAR val: ARRAY OF CHAR; VAR res : INTEGER);
 VAR e: XML.Element; s: Strings.String; a: XML.Attribute;
 BEGIN {EXCLUSIVE}
 	e := GetElementX(Setting, key);
@@ -107,7 +107,7 @@ BEGIN {EXCLUSIVE}
 	END;
 END Get;
 
-PROCEDURE GetBoolean*(CONST key : ARRAY OF CHAR; VAR value : BOOLEAN; VAR res : WORD);
+PROCEDURE GetBoolean*(CONST key : ARRAY OF CHAR; VAR value : BOOLEAN; VAR res : INTEGER);
 VAR string : ARRAY 8 OF CHAR;
 BEGIN
 	Get(key, string, res);
@@ -122,8 +122,8 @@ BEGIN
 	END;
 END GetBoolean;
 
-PROCEDURE GetColor*(CONST key : ARRAY OF CHAR; VAR value : LONGINT; VAR res : WORD);
-VAR string : ARRAY 16 OF CHAR; tempres : WORD;
+PROCEDURE GetColor*(CONST key : ARRAY OF CHAR; VAR value : SIGNED32; VAR res : INTEGER);
+VAR string : ARRAY 16 OF CHAR; tempres : INTEGER;
 BEGIN
 	Get(key, string, res);
 	IF (res = Ok) THEN
@@ -134,7 +134,7 @@ BEGIN
 END GetColor;
 
 
-PROCEDURE GetInteger*(CONST key : ARRAY OF CHAR; VAR value : LONGINT; VAR res : WORD);
+PROCEDURE GetInteger*(CONST key : ARRAY OF CHAR; VAR value : SIGNED32; VAR res : INTEGER);
 VAR string : ARRAY 16 OF CHAR;
 BEGIN
 	Get(key, string, res);
@@ -145,8 +145,8 @@ BEGIN
 END GetInteger;
 
 (** update (or insert if necessairy) the setting specified by the key. if the specified section/setting is not yet existing, it will be created *)
-PROCEDURE Put*(CONST key, val : ARRAY OF CHAR; VAR res : WORD);
-VAR e, child : XML.Element; i, j : LONGINT; name : ARRAY 64 OF CHAR;
+PROCEDURE Put*(CONST key, val : ARRAY OF CHAR; VAR res : INTEGER);
+VAR e, child : XML.Element; i, j : SIGNED32; name : ARRAY 64 OF CHAR;
 BEGIN {EXCLUSIVE}
 	res := Ok;
 	IF config # NIL THEN
@@ -175,19 +175,19 @@ BEGIN {EXCLUSIVE}
 	END
 END Put;
 
-PROCEDURE PutBoolean*(CONST key : ARRAY OF CHAR; value : BOOLEAN; VAR res : WORD);
+PROCEDURE PutBoolean*(CONST key : ARRAY OF CHAR; value : BOOLEAN; VAR res : INTEGER);
 BEGIN
 	IF value THEN Put(key, "TRUE", res) ELSE Put(key, "FALSE", res); END;
 END PutBoolean;
 
-PROCEDURE PutColor*(CONST key : ARRAY OF CHAR; value : LONGINT; VAR res : WORD);
+PROCEDURE PutColor*(CONST key : ARRAY OF CHAR; value : SIGNED32; VAR res : INTEGER);
 VAR string : ARRAY 9 OF CHAR;
 BEGIN
 	Strings.IntToHexStr(value, 8, string);
 	Put(key, string, res);
 END PutColor;
 
-PROCEDURE PutInteger*(CONST key : ARRAY OF CHAR; value : LONGINT; VAR res : WORD);
+PROCEDURE PutInteger*(CONST key : ARRAY OF CHAR; value : SIGNED32; VAR res : INTEGER);
 VAR string : ARRAY 16 OF CHAR;
 BEGIN
 	Strings.IntToStr(value, string);

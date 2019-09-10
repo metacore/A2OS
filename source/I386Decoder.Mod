@@ -546,11 +546,11 @@ TYPE
 
 	IA32ImmArg = OBJECT (IA32Arg)
 		VAR
-			imm : LONGINT;
-			rep : LONGINT;
-			width : LONGINT;
+			imm : SIGNED32;
+			rep : SIGNED32;
+			width : SIGNED32;
 
-		PROCEDURE &New*(imm: LONGINT; rep, width : LONGINT);
+		PROCEDURE &New*(imm: SIGNED32; rep, width : SIGNED32);
 		BEGIN
 			SELF.imm := imm;
 			SELF.rep:= rep;
@@ -560,9 +560,9 @@ TYPE
 
 	IA32RegArg = OBJECT (IA32Arg)
 		VAR
-			reg, width : LONGINT;
+			reg, width : SIGNED32;
 
-		PROCEDURE &New*(reg: LONGINT);
+		PROCEDURE &New*(reg: SIGNED32);
 		BEGIN
 			width := 4;
 			SELF.reg := reg
@@ -571,7 +571,7 @@ TYPE
 
 	IA32SpecialRegArg = OBJECT (IA32RegArg)
 		VAR
-			specialKind : LONGINT;
+			specialKind : SIGNED32;
 
 		PROCEDURE GetRepresentation (w : Streams.Writer);
 		BEGIN
@@ -589,10 +589,10 @@ TYPE
 
 	IA32MemArg = OBJECT (IA32Arg)
 		VAR
-			base, index, scale, disp, fpSize : LONGINT;
+			base, index, scale, disp, fpSize : SIGNED32;
 			bytePtr, wordPtr : BOOLEAN;
 
-		PROCEDURE &New*(b, i, s, d: LONGINT);
+		PROCEDURE &New*(b, i, s, d: SIGNED32);
 		BEGIN
 			fpSize := 0;
 			base := b; index := i; scale := s; disp := d;
@@ -602,14 +602,14 @@ TYPE
 
 	IA32Opcode = OBJECT (Decoder.Opcode)
 	VAR
-		op : LONGINT; (* first-byte-value of opcode *)
-		prefixes : LONGINT; (* Number of prefixes *)
+		op : SIGNED32; (* first-byte-value of opcode *)
+		prefixes : SIGNED32; (* Number of prefixes *)
 		prefix : ARRAY 4 OF CHAR;
 		adrPrefix, opPrefix : BOOLEAN;
-		opcodeBytes : LONGINT;
+		opcodeBytes : SIGNED32;
 		opcodeByte : ARRAY 3 OF CHAR;
-		argStructure : LONGINT;
-		width : LONGINT;
+		argStructure : SIGNED32;
+		width : SIGNED32;
 		arg1, arg2, arg3 : IA32Arg;
 
 		PROCEDURE &New*(proc : Decoder.ProcedureInfo; stream : Streams.Writer);
@@ -656,7 +656,7 @@ TYPE
 
 		PROCEDURE PrintInstruction*(w : Streams.Writer);
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 			opStr : ARRAY 20 OF CHAR;
 		BEGIN
 			(* print prefixes *)
@@ -1187,7 +1187,7 @@ TYPE
 
 		PROCEDURE PrintVariables*(w : Streams.Writer);
 		VAR
-			numPrints : LONGINT;
+			numPrints : SIGNED32;
 
 			PROCEDURE DetectVar (memArg : IA32MemArg);
 			VAR
@@ -1252,7 +1252,7 @@ TYPE
 					(* add opcode position and length of full opcode to immediate argument value *)
 					INC(absImm, offset + length)
 				END;
-				WriteHex32(LONGINT(absImm), w)
+				WriteHex32(SIGNED32(absImm), w)
 			END WriteHex;
 
 		BEGIN
@@ -1269,7 +1269,7 @@ TYPE
 			END
 		END WriteImm;
 
-		PROCEDURE WriteAdrReg(regNr : LONGINT; w : Streams.Writer);
+		PROCEDURE WriteAdrReg(regNr : SIGNED32; w : Streams.Writer);
 		BEGIN
 			IF adrPrefix THEN
 				IF regNr = 0 THEN w.String("AX")
@@ -1298,7 +1298,7 @@ TYPE
 
 		PROCEDURE WriteReg (regArg : IA32RegArg; writer : Streams.Writer);
 		VAR
-			reg, w : LONGINT;
+			reg, w : SIGNED32;
 			oP : BOOLEAN;
 		BEGIN
 			IF regArg IS IA32SpecialRegArg THEN
@@ -1359,7 +1359,7 @@ TYPE
 		PROCEDURE WriteMem(memArg : IA32MemArg; w : Streams.Writer);
 		VAR
 			intStr : ARRAY 20 OF CHAR;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			CASE memArg.fpSize OF
 				FPSizeSingle : w.String("SINGLE ")
@@ -1437,8 +1437,8 @@ TYPE
 			END
 		END DoPrefixes;
 
-		PROCEDURE GetImm (bytes: LONGINT) : LONGINT;
-			VAR ch: CHAR; byte: INTEGER;
+		PROCEDURE GetImm (bytes: SIGNED32) : SIGNED32;
+			VAR ch: CHAR; byte: SIGNED16;
 		BEGIN
 			IF bytes = 1 THEN (* 8 bit *)
 				ch := ReadChar();
@@ -1453,7 +1453,7 @@ TYPE
 
 		PROCEDURE ModRm (VAR regArg: IA32RegArg; VAR memOrRegArg: IA32Arg);
 		VAR
-			byte, mod, base, index, scale, disp : LONGINT;
+			byte, mod, base, index, scale, disp : SIGNED32;
 			newRegArg : IA32RegArg; newMemArg : IA32MemArg;
 		BEGIN
 			byte := ORD(ReadChar());
@@ -1486,10 +1486,10 @@ TYPE
 			END
 		END ModRm;
 
-		PROCEDURE Type1 (opcode: IA32Opcode; baseOp : LONGINT);
+		PROCEDURE Type1 (opcode: IA32Opcode; baseOp : SIGNED32);
 		(* type 1: add, or, adc, sbb, and, sub, xor, cmp *)
 			VAR
-				kind, immWidth : LONGINT;
+				kind, immWidth : SIGNED32;
 				regArg : IA32RegArg;
 				immArg : IA32ImmArg;
 				secondArg : IA32Arg;
@@ -1518,7 +1518,7 @@ TYPE
 		END Type1;
 
 (*		PROCEDURE Add(opcode : IA32Opcode);
-			VAR reg, base, inx, d: INTEGER; scale, mode: SHORTINT; disp, imm: LONGINT;
+			VAR reg, base, inx, d: SIGNED16; scale, mode: SIGNED8; disp, imm: SIGNED32;
 		BEGIN
 			Type1(opcode,  mode, d, reg, base, inx, scale, disp, imm);
 			opcode.instr := opADD
@@ -1564,7 +1564,7 @@ TYPE
 
 		PROCEDURE Mov (opcode: IA32Opcode);
 			VAR
-				op, disp, immWidth : LONGINT;
+				op, disp, immWidth : SIGNED32;
 				regArg : IA32RegArg;
 				immArg : IA32ImmArg;
 				memArg : IA32MemArg;
@@ -2001,7 +2001,7 @@ TYPE
 
 		PROCEDURE InOut (opcode : IA32Opcode);
 			VAR
-				port: LONGINT;
+				port: SIGNED32;
 				in, dx: BOOLEAN;
 				dataRegArg, portRegArg : IA32RegArg;
 				portImmArg : IA32ImmArg;
@@ -2650,7 +2650,7 @@ TYPE
 		VAR
 			statArg : IA32RegArg;
 			secondArg : IA32Arg;
-			stat : LONGINT;
+			stat : SIGNED32;
 		BEGIN
 			ModRm(statArg, secondArg);
 			IF secondArg IS IA32MemArg THEN
@@ -2925,7 +2925,7 @@ TYPE
 		END Cmov;
 
 		PROCEDURE PushPop2 (opcode : IA32Opcode);
-		VAR regArg : IA32RegArg; reg : LONGINT;
+		VAR regArg : IA32RegArg; reg : SIGNED32;
 		BEGIN
 			CASE opcode.op OF
 				0A0H: opcode.instr := opPUSH; reg := FS
@@ -3306,7 +3306,7 @@ TYPE
 
 VAR
 
-	PROCEDURE IntToHex(h, width: LONGINT; VAR s: ARRAY OF CHAR);
+	PROCEDURE IntToHex(h, width: SIGNED32; VAR s: ARRAY OF CHAR);
 	VAR c: CHAR;
 	BEGIN
 		IF (width <= 0) THEN width := 8 END;

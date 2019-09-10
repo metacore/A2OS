@@ -36,7 +36,7 @@ MODULE LeoPathEditors IN Oberon; (** portable **)	(* eos  *)
 	END RevertPoint;
 
 	PROCEDURE ApplyPoint (editor: LeoPanels.Editor);
-		VAR obj: Objects.Object; p: LeoPaths.Point; x, y: REAL;
+		VAR obj: Objects.Object; p: LeoPaths.Point; x, y: FLOAT32;
 	BEGIN
 		Links.GetLink(editor, "Model", obj);
 		IF (obj # NIL) & (obj IS LeoPaths.Point) & (editor.fig # NIL) THEN
@@ -101,7 +101,7 @@ MODULE LeoPathEditors IN Oberon; (** portable **)	(* eos  *)
 	END RevertSegment;
 
 	PROCEDURE ApplySegment (editor: LeoPanels.Editor);
-		VAR obj: Objects.Object; seg: LeoPaths.Segment; b: BOOLEAN; i: LONGINT;
+		VAR obj: Objects.Object; seg: LeoPaths.Segment; b: BOOLEAN; i: SIGNED32;
 	BEGIN
 		Links.GetLink(editor, "Model", obj);
 		IF (obj # NIL) & (obj IS LeoPaths.Segment) & (editor.fig # NIL) THEN
@@ -155,12 +155,12 @@ MODULE LeoPathEditors IN Oberon; (** portable **)	(* eos  *)
 	END ApplyTool;
 
 	PROCEDURE DragPoint* (
-		tool: LeoTools.Tool; fx, fy: INTEGER; mask: Display3.Mask; c: Leonardo.Container;
-		ox, oy: REAL; CONST str: ARRAY OF CHAR; VAR keys: SET
+		tool: LeoTools.Tool; fx, fy: SIGNED16; mask: Display3.Mask; c: Leonardo.Container;
+		ox, oy: FLOAT32; CONST str: ARRAY OF CHAR; VAR keys: SET
 	);
 		VAR
 			frame: LeoFrames.Frame; fig: Leonardo.Figure; rm: Leonardo.RenderMsg; p: LeoPaths.Point;
-			mkeys, keystate, kstate: SET; x0, y0, x1, y1, len, mx, my: INTEGER; tol: REAL; s: ARRAY 128 OF CHAR;
+			mkeys, keystate, kstate: SET; x0, y0, x1, y1, len, mx, my: SIGNED16; tol: FLOAT32; s: ARRAY 128 OF CHAR;
 	BEGIN
 		frame := tool.frame; fig := frame.obj(Leonardo.Figure);
 		Oberon.FadeCursor(Oberon.Mouse);
@@ -209,7 +209,7 @@ MODULE LeoPathEditors IN Oberon; (** portable **)	(* eos  *)
 		CONST
 			status = " +MM: insert point";
 		VAR
-			tool: LeoTools.Tool; fx, fy, x, y: INTEGER; px, py, tol: REAL; k, keysum, keys: SET; mask: Display3.Mask;
+			tool: LeoTools.Tool; fx, fy, x, y: SIGNED16; px, py, tol: FLOAT32; k, keysum, keys: SET; mask: Display3.Mask;
 			closed, connect: BOOLEAN; pen: LeoPens.Pen; p0, p1, p: LeoPaths.Point; poly: LeoPaths.Segment;
 			fig: Leonardo.Figure; sm: LeoPaths.SplitMsg; recv: Leonardo.Shape;
 	BEGIN
@@ -332,7 +332,7 @@ MODULE LeoPathEditors IN Oberon; (** portable **)	(* eos  *)
 		CONST
 			status = " +MM: insert point";
 		VAR
-			tool: LeoTools.Tool; fx, fy, x, y: INTEGER; px, py, tol: REAL; k, keysum, keys: SET; mask: Display3.Mask;
+			tool: LeoTools.Tool; fx, fy, x, y: SIGNED16; px, py, tol: FLOAT32; k, keysum, keys: SET; mask: Display3.Mask;
 			closed, connect: BOOLEAN; pen: LeoPens.Pen; p0, p1, p: LeoPaths.Point; bez: LeoPaths.Segment;
 			fig: Leonardo.Figure; sm: LeoPaths.SplitMsg; recv: Leonardo.Shape;
 	BEGIN
@@ -453,7 +453,7 @@ MODULE LeoPathEditors IN Oberon; (** portable **)	(* eos  *)
 
 	PROCEDURE TrackArc (frame: LeoFrames.Frame; VAR msg: Oberon.InputMsg);
 		VAR
-			tool: LeoTools.Tool; fx, fy, hx, hy, len, mx, my, l, x, y: INTEGER; x0, y0, x1, y1, px, py: REAL; s: ARRAY 128 OF CHAR;
+			tool: LeoTools.Tool; fx, fy, hx, hy, len, mx, my, l, x, y: SIGNED16; x0, y0, x1, y1, px, py: FLOAT32; s: ARRAY 128 OF CHAR;
 			mask: Display3.Mask; state, keysum, keys: SET; closed: BOOLEAN; pen: LeoPens.Pen; arc: LeoPaths.Arc; fig: Leonardo.Figure;
 	BEGIN
 		IF msg.keys = {} THEN
@@ -511,7 +511,7 @@ MODULE LeoPathEditors IN Oberon; (** portable **)	(* eos  *)
 	END TrackArc;
 
 	PROCEDURE RevertArcTool (e: LeoPanels.Editor);
-		VAR b: BOOLEAN; m: LONGINT;
+		VAR b: BOOLEAN; m: SIGNED32;
 	BEGIN
 		Attributes.GetBool(ClosedCurve, "Value", b); Attributes.SetBool(e, "Closed", b);
 		Attributes.GetInt(ArcMode, "Value", m); Attributes.SetInt(e, "Mode", m);
@@ -520,7 +520,7 @@ MODULE LeoPathEditors IN Oberon; (** portable **)	(* eos  *)
 	END RevertArcTool;
 
 	PROCEDURE ApplyArcTool (e: LeoPanels.Editor);
-		VAR b: BOOLEAN; m: LONGINT; obj: Objects.Object;
+		VAR b: BOOLEAN; m: SIGNED32; obj: Objects.Object;
 	BEGIN
 		Attributes.GetBool(e, "Closed", b); Attributes.SetBool(ClosedCurve, "Value", b);
 		Attributes.GetInt(e, "Mode", m); Attributes.SetInt(ArcMode, "Value", m);
@@ -591,7 +591,7 @@ MODULE LeoPathEditors IN Oberon; (** portable **)	(* eos  *)
 	END RevertArc;
 
 	PROCEDURE ApplyArc (editor: LeoPanels.Editor);
-		VAR obj: Objects.Object; arc: LeoPaths.Arc; b: BOOLEAN; i: LONGINT;
+		VAR obj: Objects.Object; arc: LeoPaths.Arc; b: BOOLEAN; i: SIGNED32;
 	BEGIN
 		Links.GetLink(editor, "Model", obj);
 		IF (obj # NIL) & (obj IS LeoPaths.Arc) & (editor.fig # NIL) THEN

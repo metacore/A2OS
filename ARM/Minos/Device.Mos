@@ -30,17 +30,17 @@ TYPE
 	DeviceDesc* = RECORD 
 		(* Send "len" number of bytes from "buf" starting at offset "ofs". After the call, "len" conatins the number of
 		bytes that were sent. This call is non blocking *)
-		Write*: PROCEDURE ( dev: Device;  CONST buf: ARRAY OF SYSTEM.BYTE; ofs: LONGINT;  VAR len: LONGINT );  
+		Write*: PROCEDURE ( dev: Device;  CONST buf: ARRAY OF SYSTEM.BYTE; ofs: SIGNED32;  VAR len: SIGNED32 );  
 		(* Read "len" bytes into "buf" at offset "ofs". 
 			After the call, "len" contains the number of bytes that have actually been read. 
 			This call is non blocking *)
-		Read*: PROCEDURE ( dev: Device;  VAR buf: ARRAY OF SYSTEM.BYTE;  ofs: LONGINT;  VAR len: LONGINT );  
+		Read*: PROCEDURE ( dev: Device;  VAR buf: ARRAY OF SYSTEM.BYTE;  ofs: SIGNED32;  VAR len: SIGNED32 );  
 		(* Returns the number of bytes available in the input buffer *)
-		Available*: PROCEDURE ( dev: Device ): LONGINT;  
+		Available*: PROCEDURE ( dev: Device ): SIGNED32;  
 		(* The number of free bytes available in the send buffer *)
-		Free*: PROCEDURE ( dev: Device ): LONGINT;  
+		Free*: PROCEDURE ( dev: Device ): SIGNED32;  
 		(* Execute a driver specific command identified by "cmd". "param" is the parameter of the command *)
-		Command*: PROCEDURE ( dev: Device;  cmd, param: LONGINT;  VAR res: LONGINT );  
+		Command*: PROCEDURE ( dev: Device;  cmd, param: SIGNED32;  VAR res: SIGNED32 );  
 		(* Flush all bytes in the send buffer *)
 		Flush*: PROCEDURE ( dev: Device );  
 		(* Get the textual version of the last occured error *)
@@ -50,7 +50,7 @@ TYPE
 		(* Shutdown and disable this driver *)
 		Close*: PROCEDURE ( dev: Device );  
 		(* Result of last operation *)
-		res*: LONGINT;  
+		res*: SIGNED32;  
 		(* Name of this device. This is used for identification by an application *)
 		name*: DeviceName;  
 		(* Pointer to the next registered driver. This field is not exported, as it is only used by the Registry *)
@@ -100,27 +100,27 @@ VAR
 	END DumpDevices;
 
 	(* Dummy procedures for initialisation *)
-	PROCEDURE NullAvailable( dev: Device ): LONGINT;  
+	PROCEDURE NullAvailable( dev: Device ): SIGNED32;  
 	BEGIN 
 		RETURN 0
 	END NullAvailable;  
 
-	PROCEDURE NullFree( dev: Device ): LONGINT;   (* fof: otherwise Log blocks *)
+	PROCEDURE NullFree( dev: Device ): SIGNED32;   (* fof: otherwise Log blocks *)
 	BEGIN 
-		RETURN MAX(LONGINT)
+		RETURN MAX(SIGNED32)
 	END NullFree;  
 
-	PROCEDURE NullWrite( dev: Device;  CONST buf: ARRAY OF SYSTEM.BYTE;  ofs: LONGINT;  VAR len: LONGINT );  
+	PROCEDURE NullWrite( dev: Device;  CONST buf: ARRAY OF SYSTEM.BYTE;  ofs: SIGNED32;  VAR len: SIGNED32 );  
 	BEGIN 
 	(* len := 0;  *)  (* fof: Write blocks for NULL device *)
 	END NullWrite;  
 
-	PROCEDURE NullRead( dev: Device;  VAR buf: ARRAY OF SYSTEM.BYTE;  ofs: LONGINT; VAR len: LONGINT );  
+	PROCEDURE NullRead( dev: Device;  VAR buf: ARRAY OF SYSTEM.BYTE;  ofs: SIGNED32; VAR len: SIGNED32 );  
 	BEGIN 
 		len := 0
 	END NullRead;  
 
-	PROCEDURE NullCommand( dev: Device;  cmd, param: LONGINT;  VAR res: LONGINT );  
+	PROCEDURE NullCommand( dev: Device;  cmd, param: SIGNED32;  VAR res: SIGNED32 );  
 	BEGIN 
 		res := 0;  
 	END NullCommand;  
@@ -155,7 +155,7 @@ VAR
 	(* Read a single character chr from the device dev. This call is blocking *)
 	PROCEDURE Read*( dev: Device;  VAR chr: CHAR );  
 	VAR 
-		len: LONGINT;  
+		len: SIGNED32;  
 	BEGIN 
 		REPEAT len := 1;  dev.Read( dev, chr, 0, len );  UNTIL len = 1;  
 	END Read;  
@@ -163,7 +163,7 @@ VAR
 	(* Write a single character "chr" to the device "dev". This call is blocking *)
 	PROCEDURE Write*( dev: Device;  chr: CHAR );  
 	VAR 
-		len: LONGINT;  
+		len: SIGNED32;  
 	BEGIN 
 		REPEAT len := 1;  dev.Write( dev, chr, 0, len ) UNTIL len = 1;  
 	END Write;  
@@ -190,9 +190,9 @@ VAR
 	END WriteBool;  
 	
 	(* Read len bytes from the device dev and store them in buf starting at location offset. This call is blocking *)
-	PROCEDURE ReadBytes( dev: Device;  VAR buf: ARRAY OF SYSTEM.BYTE; offset, len: LONGINT );  
+	PROCEDURE ReadBytes( dev: Device;  VAR buf: ARRAY OF SYSTEM.BYTE; offset, len: SIGNED32 );  
 	VAR 
-		receive: LONGINT;  
+		receive: SIGNED32;  
 	BEGIN 
 		len := offset + len;  
 		WHILE offset < len DO 
@@ -202,9 +202,9 @@ VAR
 	END ReadBytes;  
 
 	(* Write len bytes from the device dev and store them in buf starting at location offset. This call is blocking *)
-	PROCEDURE WriteBytes*( dev: Device;  CONST buf: ARRAY OF SYSTEM.BYTE; offset, len: LONGINT );  
+	PROCEDURE WriteBytes*( dev: Device;  CONST buf: ARRAY OF SYSTEM.BYTE; offset, len: SIGNED32 );  
 	VAR 
-		toSend: LONGINT;  
+		toSend: SIGNED32;  
 	BEGIN 
 		len := offset + len;  
 		WHILE offset < len DO 
@@ -213,32 +213,32 @@ VAR
 		END;  
 	END WriteBytes;  
 
-	PROCEDURE ReadChars*( dev: Device;  VAR buf: ARRAY OF CHAR;  offset, len: LONGINT );  
+	PROCEDURE ReadChars*( dev: Device;  VAR buf: ARRAY OF CHAR;  offset, len: SIGNED32 );  
 	BEGIN 
 		ReadBytes( dev, buf, offset, len );  
 	END ReadChars;  
 
-	PROCEDURE WriteChars*( dev: Device;  CONST buf: ARRAY OF CHAR;  offset, len: LONGINT );  
+	PROCEDURE WriteChars*( dev: Device;  CONST buf: ARRAY OF CHAR;  offset, len: SIGNED32 );  
 	BEGIN 
 		WriteBytes( dev, buf, offset, len );  
 	END WriteChars;  
 
-	PROCEDURE ReadInt*( dev: Device;  VAR int: LONGINT );  
+	PROCEDURE ReadInt*( dev: Device;  VAR int: SIGNED32 );  
 	BEGIN 
 		ReadBytes( dev, int, 0, 4 );  
 	END ReadInt;  
 
-	PROCEDURE WriteInt*( dev: Device;  int: LONGINT );  
+	PROCEDURE WriteInt*( dev: Device;  int: SIGNED32 );  
 	BEGIN 
 		WriteBytes( dev, int, 0, 4 );  
 	END WriteInt;  
 
-	PROCEDURE ReadReal*( dev: Device;  VAR real: REAL );  
+	PROCEDURE ReadReal*( dev: Device;  VAR real: FLOAT32 );  
 	BEGIN 
 		ReadBytes( dev, real, 0, 4 );  
 	END ReadReal;  
 
-	PROCEDURE WriteReal*( dev: Device;  real: REAL );  
+	PROCEDURE WriteReal*( dev: Device;  real: FLOAT32 );  
 	BEGIN 
 		WriteBytes( dev, real, 0, 4 );  
 	END WriteReal;  
@@ -254,7 +254,7 @@ VAR
 	END WriteSet;  
 
 	PROCEDURE ReadStr*( dev: Device;  VAR buf: ARRAY OF CHAR );  
-	VAR i: LONGINT;  ch: CHAR;  
+	VAR i: SIGNED32;  ch: CHAR;  
 	BEGIN 
 		i := 0;  
 		REPEAT Read( dev, ch );  buf[i] := ch;  INC( i ) UNTIL ((ch = 0X) OR (i >= LEN( buf )));  
@@ -262,7 +262,7 @@ VAR
 	END ReadStr;  
 
 	PROCEDURE WriteStr*( dev: Device;  CONST buf: ARRAY OF CHAR );  
-	VAR len: LONGINT;  
+	VAR len: SIGNED32;  
 	BEGIN 
 		len := 0;  
 		
@@ -273,13 +273,13 @@ VAR
 	END WriteStr;  
 	
 	(* Just here to make the interface consistent *)
-	PROCEDURE Available*( dev: Device ): LONGINT;  
+	PROCEDURE Available*( dev: Device ): SIGNED32;  
 	BEGIN 
 		RETURN dev.Available( dev )
 	END Available;  
 
 	(* Just here to make the interface consistent *)
-	PROCEDURE Free*( dev: Device ): LONGINT;  
+	PROCEDURE Free*( dev: Device ): SIGNED32;  
 	BEGIN 
 		RETURN dev.Free( dev )
 	END Free;  
@@ -303,7 +303,7 @@ VAR
 	END Close;  
 
 	(* Just here to make the interface consistent *)
-	PROCEDURE Command*( dev: Device;  cmd, param: LONGINT;  VAR res: LONGINT );  
+	PROCEDURE Command*( dev: Device;  cmd, param: SIGNED32;  VAR res: SIGNED32 );  
 	BEGIN 
 		dev.Command( dev, cmd, param, res );  
 	END Command;  

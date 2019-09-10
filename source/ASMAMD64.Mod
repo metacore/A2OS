@@ -722,7 +722,7 @@ CONST
 TYPE
 	Name = ARRAY 20 OF CHAR;
 
-	OperandType* = LONGINT;
+	OperandType* = SIGNED32;
 
 	CPUOptions* = SET;
 
@@ -731,12 +731,12 @@ TYPE
 		options-: SET;	(* options for the instruction *)
 		opcode-: ARRAY 9 OF CHAR;
 		operands-: ARRAY maxOperands OF OperandType;
-		opCount-: LONGINT;
+		opCount-: SIGNED32;
 	END;
 
 	Mnemonic = RECORD
 		name-: ARRAY maxMnemonicNameLength OF CHAR;
-		firstInstr-, lastInstr-: LONGINT;
+		firstInstr-, lastInstr-: SIGNED32;
 	END;
 
 	CPUType = RECORD;
@@ -747,26 +747,26 @@ TYPE
 	Register = RECORD;
 		name-: Name;
 		type-: OperandType;
-		index-: LONGINT;
+		index-: SIGNED32;
 	END;
 
 VAR
 	(* repository *)
 	mnemonics-: ARRAY maxMnemonics OF Mnemonic;
-	mnemCount: LONGINT;
+	mnemCount: SIGNED32;
 
 	instructions-: ARRAY maxInstructions OF Instruction;
-	instrCount: LONGINT;
+	instrCount: SIGNED32;
 
 	registers-: ARRAY maxRegisters OF Register;
-	regCount: LONGINT;
+	regCount: SIGNED32;
 
 	cpus-: ARRAY maxCPUs OF CPUType;
-	cpuCount: LONGINT;
+	cpuCount: SIGNED32;
 
 (* perform a binary search for the index of the specified mnemonic *)
-PROCEDURE FindMnem* (CONST mnem: ARRAY OF CHAR): LONGINT;
-VAR l, r, m: LONGINT;
+PROCEDURE FindMnem* (CONST mnem: ARRAY OF CHAR): SIGNED32;
+VAR l, r, m: SIGNED32;
 BEGIN
 	l := 0;
 	r := mnemCount;
@@ -781,8 +781,8 @@ BEGIN
 END FindMnem;
 
 (* search for the register name and return it's index *)
-PROCEDURE FindReg* (CONST reg: ARRAY OF CHAR): LONGINT;
-VAR i: LONGINT;
+PROCEDURE FindReg* (CONST reg: ARRAY OF CHAR): SIGNED32;
+VAR i: SIGNED32;
 BEGIN
 	FOR i := 0 TO regCount - 1 DO
 		IF registers[i].name = reg THEN RETURN i END;
@@ -791,8 +791,8 @@ BEGIN
 END FindReg;
 
 (* search for the register name and return it's index *)
-PROCEDURE FindCPU* (CONST cpu: ARRAY OF CHAR): LONGINT;
-VAR i: LONGINT;
+PROCEDURE FindCPU* (CONST cpu: ARRAY OF CHAR): SIGNED32;
+VAR i: SIGNED32;
 BEGIN
 	FOR i := 0 TO cpuCount - 1 DO
 		IF cpus[i].name = cpu THEN RETURN i END;
@@ -833,7 +833,7 @@ BEGIN
 END Instr;
 
 (* insert an new register *)
-PROCEDURE Reg (CONST name: ARRAY OF CHAR; type: OperandType; index: LONGINT);
+PROCEDURE Reg (CONST name: ARRAY OF CHAR; type: OperandType; index: SIGNED32);
 BEGIN
 	COPY (name, registers[regCount].name);
 	registers[regCount].type := type;

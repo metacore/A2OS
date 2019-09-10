@@ -6,10 +6,10 @@ MODULE UUDecoder IN Oberon; (** portable *)	(* ejz  *)
 
 	VAR
 		encTable: ARRAY 64 OF CHAR;
-		decTable: ARRAY 97 OF INTEGER;
+		decTable: ARRAY 97 OF SIGNED16;
 		W: Texts.Writer;
 
-	PROCEDURE GetName*(T: Texts.Text; VAR beg: LONGINT; VAR name: ARRAY OF CHAR): BOOLEAN;
+	PROCEDURE GetName*(T: Texts.Text; VAR beg: SIGNED32; VAR name: ARRAY OF CHAR): BOOLEAN;
 		VAR S: Texts.Scanner;
 	BEGIN
 		Texts.OpenScanner(S, T, beg);
@@ -31,11 +31,11 @@ MODULE UUDecoder IN Oberon; (** portable *)	(* ejz  *)
 		RETURN FALSE
 	END GetName;
 
-	PROCEDURE DecodeText*(T: Texts.Text; beg: LONGINT; F: Files.File): BOOLEAN;
+	PROCEDURE DecodeText*(T: Texts.Text; beg: SIGNED32; F: Files.File): BOOLEAN;
 		VAR
 			R: Texts.Reader;
 			ch: CHAR;
-			bytes, chars, c0, c1, c2, c3: INTEGER;
+			bytes, chars, c0, c1, c2, c3: SIGNED16;
 			Ri: Files.Rider;
 			ok: BOOLEAN;
 	BEGIN
@@ -99,7 +99,7 @@ MODULE UUDecoder IN Oberon; (** portable *)	(* ejz  *)
 		RETURN ok
 	END DecodeText;
 
-	PROCEDURE Do(T: Texts.Text; beg: LONGINT);
+	PROCEDURE Do(T: Texts.Text; beg: SIGNED32);
 		VAR
 			name: ARRAY 32 OF CHAR;
 			F: Files.File;
@@ -126,7 +126,7 @@ MODULE UUDecoder IN Oberon; (** portable *)	(* ejz  *)
 		VAR
 			S: Texts.Scanner;
 			T: Texts.Text;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 	BEGIN
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 		Texts.Scan(S);
@@ -163,7 +163,7 @@ MODULE UUDecoder IN Oberon; (** portable *)	(* ejz  *)
 	END Decode;
 
 	PROCEDURE InitUUTables;
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		FOR i := 0 TO 63 DO
 			encTable[i] := CHR(i+32)

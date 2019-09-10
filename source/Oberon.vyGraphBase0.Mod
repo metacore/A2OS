@@ -46,14 +46,14 @@ CONST
 	cDisplayBuffer*= 0;
 	cImageBuffer*=1;
 TYPE
-	tPatPrinter* = PROCEDURE (x, y: INTEGER);
+	tPatPrinter* = PROCEDURE (x, y: SIGNED16);
 
 	tSign* = POINTER TO tSignDesc;
 	tSignDesc = RECORD
 		pat: Display.Pattern;
 		print: tPatPrinter;
-		w-, h-: INTEGER;
-		wDIV2-, hDIV2-: INTEGER
+		w-, h-: SIGNED16;
+		wDIV2-, hDIV2-: SIGNED16
 	END;
 
 	doubleBuffer*= POINTER TO doubleBufferDesc;
@@ -62,38 +62,38 @@ TYPE
 		displayBuffer: vyPortability.displayBuffer;
 		imageBuffer: Images.Image;
 		mask: Display3.Mask;
-		x,y,w,h: INTEGER;
+		x,y,w,h: SIGNED16;
 		active-: BOOLEAN;
-		type-: INTEGER;
+		type-: SIGNED16;
 	END;
 
 
 	(* brush for drawing in images *)
 	Brush = RECORD
-		brul, brur: ARRAY BrushSize OF INTEGER;
-		bufl, bufr: ARRAY BrushSize OF INTEGER;
-		bufh, brushr: INTEGER;
-		x, y: INTEGER
+		brul, brur: ARRAY BrushSize OF SIGNED16;
+		bufl, bufr: ARRAY BrushSize OF SIGNED16;
+		bufh, brushr: SIGNED16;
+		x, y: SIGNED16
 	END;
 
 VAR
-	du, pu, hpu: LONGINT;  (* Display.Unit, Printer.Unit, Printer.Unit DIV 2 *)(* fof 020624 *)
+	du, pu, hpu: SIGNED32;  (* Display.Unit, Printer.Unit, Printer.Unit DIV 2 *)(* fof 020624 *)
 	clipMask*: Display3.Mask;
 	db-: doubleBuffer;
-	xPrnOrg, yPrnOrg, xPortOrg, yPortOrg: INTEGER;
-	status: INTEGER;
+	xPrnOrg, yPrnOrg, xPortOrg, yPortOrg: SIGNED16;
+	status: SIGNED16;
 	(* global draw variables, do NOT export! *)
 	(* globale variablen werden nur von Prozeduren gesetzt, z.B. wegen Farbmanagment für Images etc. *)
 	contextfcol-, contextbcol-: Display.Color;
-	contextmode: INTEGER;
+	contextmode: SIGNED16;
 	contextstyle: SET;
-	contextpattern: LONGINT;
-	contextpensize: INTEGER;
+	contextpattern: SIGNED32;
+	contextpensize: SIGNED16;
 	contextfnt: ARRAY 64 OF CHAR;
-	tmpr, tmpg, tmpb: INTEGER;
+	tmpr, tmpg, tmpb: SIGNED16;
 	Enum: RECORD
 		img: Images.Image;
-		x, y: INTEGER
+		x, y: SIGNED16
 		(* map origin on device *)
 	END;
 
@@ -104,7 +104,7 @@ VAR
 	brush: Brush;
 	stringpict: Pictures.Picture;
 	contextpatternternimage: Images.Image;
-	contextalpha : INTEGER;
+	contextalpha : SIGNED16;
 	PrntPat: ARRAY 9 OF Display.Pattern;  (** printer contextpatternterns (same as in Printer3) **)
 	tmpPatPic: Pictures.Picture;  (* used for converting contextpatternterns to maps *)
 
@@ -116,22 +116,22 @@ CONST
 	paint = Display.paint;
 
 VAR
-	copyPattern*: PROCEDURE ( sgn: tSign;  x, y: INTEGER);
-	dot*: PROCEDURE ( x, y: INTEGER);
-	replConst*: PROCEDURE ( x, y, w, h: INTEGER);
-	replString*: PROCEDURE ( X, Y: INTEGER;  fnt, str: ARRAY OF CHAR);
-	replPict*: PROCEDURE (picture: Pictures.Picture;  px, py, x, y, w, h: INTEGER);
-	pict*: PROCEDURE (picture: Pictures.Picture;  x, y, w, h, dx, dy: INTEGER);
-	stretchedpict*: PROCEDURE (picture: Pictures.Picture;  x, y, w, h, dx, dy, dw, dh: INTEGER);
-	image*: PROCEDURE (VAR image: Images.Image;  x, y, w, h, dx, dy: INTEGER);
-	stretchedimage*: PROCEDURE (VAR image: Images.Image;  x, y, w, h, dx, dy, dw, dh: INTEGER);
-	line*: PROCEDURE ( x0, y0, x1, y1 : INTEGER);
-	circle*: PROCEDURE ( x, y, r: INTEGER );
-	ellipse*: PROCEDURE ( x, y, a, b: INTEGER );
-	rect*: PROCEDURE ( x, y, w, h: INTEGER);
-	rect3d*: PROCEDURE ( x, y, a, b: INTEGER);
-	paintrect*: PROCEDURE ( x, y, w, h: INTEGER);
-	poly* : PROCEDURE ( VAR x, y: ARRAY OF INTEGER;  n: INTEGER);
+	copyPattern*: PROCEDURE ( sgn: tSign;  x, y: SIGNED16);
+	dot*: PROCEDURE ( x, y: SIGNED16);
+	replConst*: PROCEDURE ( x, y, w, h: SIGNED16);
+	replString*: PROCEDURE ( X, Y: SIGNED16;  fnt, str: ARRAY OF CHAR);
+	replPict*: PROCEDURE (picture: Pictures.Picture;  px, py, x, y, w, h: SIGNED16);
+	pict*: PROCEDURE (picture: Pictures.Picture;  x, y, w, h, dx, dy: SIGNED16);
+	stretchedpict*: PROCEDURE (picture: Pictures.Picture;  x, y, w, h, dx, dy, dw, dh: SIGNED16);
+	image*: PROCEDURE (VAR image: Images.Image;  x, y, w, h, dx, dy: SIGNED16);
+	stretchedimage*: PROCEDURE (VAR image: Images.Image;  x, y, w, h, dx, dy, dw, dh: SIGNED16);
+	line*: PROCEDURE ( x0, y0, x1, y1 : SIGNED16);
+	circle*: PROCEDURE ( x, y, r: SIGNED16 );
+	ellipse*: PROCEDURE ( x, y, a, b: SIGNED16 );
+	rect*: PROCEDURE ( x, y, w, h: SIGNED16);
+	rect3d*: PROCEDURE ( x, y, a, b: SIGNED16);
+	paintrect*: PROCEDURE ( x, y, w, h: SIGNED16);
+	poly* : PROCEDURE ( VAR x, y: ARRAY OF SIGNED16;  n: SIGNED16);
 
 	(** setting global variables *)
 PROCEDURE SetBackColor* (col: Display.Color);
@@ -144,52 +144,52 @@ BEGIN
 	Display.GetColor(col, tmpr, tmpg, tmpb);  Images.SetRGBA(contextfpix, tmpr, tmpg, tmpb, contextalpha)
 END SetForeColor;
 
-PROCEDURE SetFColRGBA* (r, g, b, a: INTEGER);
+PROCEDURE SetFColRGBA* (r, g, b, a: SIGNED16);
 BEGIN
 	Images.SetRGBA(contextfpix, r, g, b, a);  contextfcol := Display.RGB(r, g, b)
 END SetFColRGBA;
 
-PROCEDURE SetBColRGBA* (r, g, b, a: INTEGER);
+PROCEDURE SetBColRGBA* (r, g, b, a: SIGNED16);
 BEGIN
 	Images.SetRGBA(contextbpix, r, g, b, a);  contextbcol := Display.RGB(r, g, b)
 END SetBColRGBA;
 
-PROCEDURE SetPenSize* (size : INTEGER);  (*! remove penSize !! *)
+PROCEDURE SetPenSize* (size : SIGNED16);  (*! remove penSize !! *)
 BEGIN	contextpensize := size 	END SetPenSize;
-PROCEDURE SetDisplayMode* (m: INTEGER);
+PROCEDURE SetDisplayMode* (m: SIGNED16);
 BEGIN	contextmode := m 	END SetDisplayMode;
 PROCEDURE SetDisplayStyle* (s: SET);
 BEGIN	contextstyle := s 	END SetDisplayStyle;
-PROCEDURE SetDisplayPattern* (p: LONGINT);
+PROCEDURE SetDisplayPattern* (p: SIGNED32);
 BEGIN contextpattern := p 	END SetDisplayPattern;
 PROCEDURE SetFont* (f: ARRAY OF CHAR);
 BEGIN COPY(f, contextfnt) 	END SetFont;
-PROCEDURE SetAlpha* (a: INTEGER);
+PROCEDURE SetAlpha* (a: SIGNED16);
 BEGIN contextalpha := a
 END SetAlpha;
 
-PROCEDURE Min (x, y: INTEGER): INTEGER;
+PROCEDURE Min (x, y: SIGNED16): SIGNED16;
 BEGIN
 	IF x < y THEN RETURN x ELSE RETURN y END
 END Min;
 
-PROCEDURE Max (x, y: INTEGER): INTEGER;
+PROCEDURE Max (x, y: SIGNED16): SIGNED16;
 BEGIN
 	IF x > y THEN RETURN x ELSE RETURN y END
 END Max;
 
-PROCEDURE StandardizeRect (VAR x, y, w, h: INTEGER);
+PROCEDURE StandardizeRect (VAR x, y, w, h: SIGNED16);
 BEGIN IF w < 0 THEN x := x + w;  w := - w END;
 	IF h < 0 THEN y := y + h;  h := - h END
 END StandardizeRect;
 
-PROCEDURE RectInRect (x, y, w, h, X, Y, W, H: INTEGER): BOOLEAN;
+PROCEDURE RectInRect (x, y, w, h, X, Y, W, H: SIGNED16): BOOLEAN;
 BEGIN StandardizeRect (x, y, w, h);  StandardizeRect (X, Y, W, H);
 	RETURN (x >= X) & (x + w <= X + W) & (y >= Y) & (y + h <= Y + H)
 END RectInRect;
 
-PROCEDURE RectIntersection (VAR x, y, w, h: INTEGER;  X, Y, W, H: INTEGER);
-	VAR x1, y1, X1, Y1: INTEGER;
+PROCEDURE RectIntersection (VAR x, y, w, h: SIGNED16;  X, Y, W, H: SIGNED16);
+	VAR x1, y1, X1, Y1: SIGNED16;
 BEGIN StandardizeRect (x, y, w, h);  StandardizeRect (X, Y, W, H);
 	x1 := x + w;  y1 := y + h;  X1 := X + W;  Y1 := Y + H;
 	x := Max (x, X);
@@ -201,7 +201,7 @@ BEGIN StandardizeRect (x, y, w, h);  StandardizeRect (X, Y, W, H);
 	IF h < 0 THEN w := 0;  h := 0 END
 END RectIntersection;
 
-PROCEDURE PlacedRectIntersect (VAR x, y, w, h, dx, dy: INTEGER;  X, Y, W, H: INTEGER);
+PROCEDURE PlacedRectIntersect (VAR x, y, w, h, dx, dy: SIGNED16;  X, Y, W, H: SIGNED16);
 BEGIN
 	IF (dx + w < X) OR (dx > X + W) OR (dy + h < Y) OR (dy > Y + H) THEN w := 0;  h := 0;  RETURN END;
 	IF dx < X THEN DEC(w, X - dx);  INC(x, X - dx) ;  dx := X END;
@@ -211,27 +211,27 @@ BEGIN
 END PlacedRectIntersect;
 
 
-PROCEDURE EmptyIntersection (x, y, w, h, X, Y, W, H: INTEGER): BOOLEAN;
+PROCEDURE EmptyIntersection (x, y, w, h, X, Y, W, H: SIGNED16): BOOLEAN;
 BEGIN StandardizeRect (x, y, w, h);  StandardizeRect (X, Y, W, H);
 	RETURN (x > X + W) OR (X > x + w) OR (y > Y + H) OR (Y > y + h)
 END EmptyIntersection;
 
 (** Screen primitives *)
 
-PROCEDURE CopyPatternC (sgn: tSign;  x, y: INTEGER);
-	VAR w, h: INTEGER;
+PROCEDURE CopyPatternC (sgn: tSign;  x, y: SIGNED16);
+	VAR w, h: SIGNED16;
 BEGIN
 	Display.GetDim(sgn.pat, w, h);
 	Display3.CopyPattern (clipMask, contextfcol, sgn.pat, x, y, contextmode)
 END CopyPatternC;
 
-PROCEDURE DotC (x, y: INTEGER);
+PROCEDURE DotC (x, y: SIGNED16);
 BEGIN	Display3.Dot ( clipMask, contextfcol, x, y, contextmode) END DotC;
 
-PROCEDURE ReplConstC (x, y, w, h: INTEGER);
+PROCEDURE ReplConstC (x, y, w, h: SIGNED16);
 BEGIN	Display3.ReplConst (clipMask, contextfcol, x, y, w, h, contextmode) END ReplConstC;
 
-PROCEDURE ReplStringC (X, Y: INTEGER;  fnt, str: ARRAY OF CHAR);
+PROCEDURE ReplStringC (X, Y: SIGNED16;  fnt, str: ARRAY OF CHAR);
 	VAR f: Fonts.Font;
 BEGIN
 	f := Fonts.This (fnt);
@@ -239,38 +239,38 @@ BEGIN
 	Display3.String(clipMask, contextfcol, X, Y, f, str, contextmode)
 END ReplStringC;
 
-PROCEDURE LineC (x0, y0, x1, y1 : INTEGER);
+PROCEDURE LineC (x0, y0, x1, y1 : SIGNED16);
 BEGIN Display3.Line (clipMask, contextfcol, contextpattern, x0, y0, x1, y1, contextpensize, contextmode)END LineC;
 
-PROCEDURE CircleC (x, y, r: INTEGER);
+PROCEDURE CircleC (x, y, r: SIGNED16);
 BEGIN Display3.Circle (clipMask, contextfcol, contextpattern , x, y, r, contextpensize, contextstyle, contextmode) END CircleC;
 
-PROCEDURE EllipseC (x, y, a, b: INTEGER);
+PROCEDURE EllipseC (x, y, a, b: SIGNED16);
 BEGIN Display3.Ellipse(clipMask, contextfcol, contextpattern , x, y, a, b, contextpensize, contextstyle, contextmode) END EllipseC;
 
-PROCEDURE RectC (x, y, w, h: INTEGER);
+PROCEDURE RectC (x, y, w, h: SIGNED16);
 BEGIN Display3.Rect(clipMask, contextfcol, contextpattern, x, y, w, h, contextpensize, contextmode) END RectC;
 
-PROCEDURE Rect3DC (x, y, w, h: INTEGER);
+PROCEDURE Rect3DC (x, y, w, h: SIGNED16);
 BEGIN Display3.Rect3D(clipMask, contextfcol, contextbcol, x, y, w, h, contextpensize, contextmode) END Rect3DC;
 
-PROCEDURE PaintRectC (x, y, w, h: INTEGER);
+PROCEDURE PaintRectC (x, y, w, h: SIGNED16);
 BEGIN	Display3.FillPattern(clipMask, contextfcol, contextpattern, 0, 0, x, y, w, h, contextmode) END PaintRectC;
 
-PROCEDURE PolyC (VAR x, y: ARRAY OF INTEGER;  n: INTEGER);
+PROCEDURE PolyC (VAR x, y: ARRAY OF SIGNED16;  n: SIGNED16);
 BEGIN Display3.Poly(clipMask, contextfcol, contextpattern, x, y, n, 1, contextstyle, contextmode) END PolyC;
 
-PROCEDURE ReplPictC (picture: Pictures.Picture;  px, py, x, y, w, h: INTEGER);
+PROCEDURE ReplPictC (picture: Pictures.Picture;  px, py, x, y, w, h: SIGNED16);
 BEGIN	Display3.ReplPict(clipMask, picture, px, py, x, y, w, h, contextmode) END ReplPictC;
 
-PROCEDURE PictC (picture: Pictures.Picture;  x, y, w, h, dx, dy: INTEGER);
+PROCEDURE PictC (picture: Pictures.Picture;  x, y, w, h, dx, dy: SIGNED16);
 BEGIN Display3.Pict(clipMask, picture, x, y, w, h, dx, dy, contextmode) END PictC;
 
-PROCEDURE StretchedPictC (picture: Pictures.Picture;  x, y, w, h, dx, dy, dw, dh : INTEGER);
+PROCEDURE StretchedPictC (picture: Pictures.Picture;  x, y, w, h, dx, dy, dw, dh : SIGNED16);
 BEGIN vyPortability.StretchedPict(clipMask, picture, x, y, w, h, dx, dy, dw, dh, contextmode) END StretchedPictC;
 
-PROCEDURE RestoreRuns (x, y, w, h: INTEGER);
-	VAR x0, len, l, i, j, y0: INTEGER;  line: ARRAY 512 OF CHAR;  b: CHAR;
+PROCEDURE RestoreRuns (x, y, w, h: SIGNED16);
+	VAR x0, len, l, i, j, y0: SIGNED16;  line: ARRAY 512 OF CHAR;  b: CHAR;
 BEGIN
 	x0 := x;  y0 := 0;
 	WHILE h > 0 DO
@@ -291,8 +291,8 @@ BEGIN
 	END
 END RestoreRuns;
 
-PROCEDURE RestoreLines (x, y, w, h: INTEGER);
-	VAR x0, lineLen, len, l: INTEGER;  line: ARRAY 512 OF CHAR;  tmp: Images.Image;
+PROCEDURE RestoreLines (x, y, w, h: SIGNED16);
+	VAR x0, lineLen, len, l: SIGNED16;  line: ARRAY 512 OF CHAR;  tmp: Images.Image;
 BEGIN
 	x0 := x;  lineLen := 8 * LEN(line) DIV Images.DisplayFormat.bpp;
 	NEW(tmp);  Images.InitBuf(tmp, lineLen, 1, Images.DisplayFormat, 0, 0, line);
@@ -308,8 +308,8 @@ BEGIN
 	END
 END RestoreLines;
 
-PROCEDURE RestoreBlock (x, y, w, h: INTEGER);
-	VAR offset: LONGINT;
+PROCEDURE RestoreBlock (x, y, w, h: SIGNED16);
+	VAR offset: SIGNED32;
 BEGIN
 	offset := (y - Enum.y ) * Enum.img.bpr + (x - Enum.x ) * Enum.img.fmt.bpp DIV 8;
 	Display.TransferBlock(Enum.img.mem^, offset, Enum.img.bpr, x, y, w, h, Display.set)
@@ -318,8 +318,8 @@ END RestoreBlock;
 
 
 (** restore frame area **)
-PROCEDURE ImageC (VAR img: Images.Image;  x, y, w, h, dx, dy: INTEGER);
-	VAR rx, ry, rw, rh, rxx, ryy: INTEGER;
+PROCEDURE ImageC (VAR img: Images.Image;  x, y, w, h, dx, dy: SIGNED16);
+	VAR rx, ry, rw, rh, rxx, ryy: SIGNED16;
 BEGIN
 	rx := dx;  ry := dy;  rw := w;  rh := h;  rxx := x;  ryy := y;
 	IF clipMask = NIL THEN
@@ -368,12 +368,12 @@ BEGIN
 END ImageC;
 
 
-PROCEDURE StretchedImageC (VAR sP: Images.Image;  X, Y, W, H, DX, DY, DW, DH: INTEGER);
-	VAR y, x0, x1: INTEGER;  oldpix, pix: Images.Pixel;
-	xe, ye: INTEGER;
-	nx, ny, nw, nh, ndx, ndy, ndw, ndh: INTEGER;  thisx, nextx, thisy, nexty: INTEGER;
-	scalex, scaley: LONGREAL;  r, g, b, a: INTEGER;
-	scalexl, scaleyl: INTEGER;
+PROCEDURE StretchedImageC (VAR sP: Images.Image;  X, Y, W, H, DX, DY, DW, DH: SIGNED16);
+	VAR y, x0, x1: SIGNED16;  oldpix, pix: Images.Pixel;
+	xe, ye: SIGNED16;
+	nx, ny, nw, nh, ndx, ndy, ndw, ndh: SIGNED16;  thisx, nextx, thisy, nexty: SIGNED16;
+	scalex, scaley: FLOAT64;  r, g, b, a: SIGNED16;
+	scalexl, scaleyl: SIGNED16;
 BEGIN
 	IF (W = DW) & (H = DH) THEN ImageC(sP, X, Y, W, H, DX, DY) END;
 (*	ASSERT(RectInRect(X, Y, W, H, 0, 0, sP.width, sP.height), 100);*)
@@ -455,8 +455,8 @@ END StretchedImageC;
 (** initialize picture from map **)
 PROCEDURE ImageToPict (img: Images.Image;  pict: Pictures.Picture);
 VAR
-	i, y, r, g, b, a, x, w: INTEGER;  pal: Images.Palette;  fmt: Images.Format;  byte: ARRAY 256 OF CHAR;
-	int: ARRAY 256 OF INTEGER;
+	i, y, r, g, b, a, x, w: SIGNED16;  pal: Images.Palette;  fmt: Images.Format;  byte: ARRAY 256 OF CHAR;
+	int: ARRAY 256 OF SIGNED16;
 BEGIN
 	Pictures.Create(pict, img.width, img.height, 8);
 	(* uses display palette *)
@@ -489,14 +489,14 @@ BEGIN
 END ImageToPict;
 
 
-PROCEDURE ImageP (VAR img: Images.Image;  x, y, w, h, dx, dy: INTEGER);
+PROCEDURE ImageP (VAR img: Images.Image;  x, y, w, h, dx, dy: SIGNED16);
 	VAR p: Pictures.Picture;
 BEGIN
 	NEW(p);  ImageToPict(img, p);
 	pictPrn(p, x, y, w, h, dx, dy)
 END ImageP;
 
-PROCEDURE StretchedImageP (VAR img: Images.Image;  x, y, w, h, dx, dy, dw, dh: INTEGER);
+PROCEDURE StretchedImageP (VAR img: Images.Image;  x, y, w, h, dx, dy, dw, dh: SIGNED16);
 	VAR p: Pictures.Picture;
 BEGIN
 	NEW(p);  ImageToPict(img, p);
@@ -507,21 +507,21 @@ END StretchedImageP;
 (** image based primitives *)
 
 
-PROCEDURE Doti (x, y: INTEGER);
+PROCEDURE Doti (x, y: SIGNED16);
 BEGIN
 	IF (x < 0) OR (x > contextimg.width - 1) THEN RETURN END;
 	IF (y < 0) OR (y > contextimg.height - 1) THEN RETURN END;
 	Images.Put(contextimg, x, y, contextfpix, Images.SrcOverDst)
 END Doti;
 
-PROCEDURE ReplConsti (x, y, w, h: INTEGER);
+PROCEDURE ReplConsti (x, y, w, h: SIGNED16);
 BEGIN
 	RectIntersection(x, y, w, h, 0, 0, contextimg.width, contextimg.height);
 	IF (w <= 0) OR (h <= 0) THEN RETURN END;
 	Images.Fill(contextimg, x, y, x + w, y + h, contextfpix, Images.SrcOverDst)
 END ReplConsti;
 
-PROCEDURE DirectReplConsti (x, y, w, h: INTEGER);  (* faster, but assert x,y in Image range FIRST !! *)
+PROCEDURE DirectReplConsti (x, y, w, h: SIGNED16);  (* faster, but assert x,y in Image range FIRST !! *)
 BEGIN
 	IF (x>=0) & (y>=0) & (1.0D0+x+LONG(w) < 10000) & (1.0D0+ y+LONG(h) < 10000) THEN
 	Images.Fill(contextimg, x, y, x + w, y + h, contextfpix, Images.SrcOverDst)
@@ -529,7 +529,7 @@ BEGIN
 END DirectReplConsti;
 
 PROCEDURE PatternToImage (pat: Display.Pattern;  patimg: Images.Image);
-	VAR w, h, y, x: INTEGER;
+	VAR w, h, y, x: SIGNED16;
 BEGIN
 	ASSERT(pat # 0, 100);
 	IF (1 <= pat) & (pat <= 8) THEN pat := PrntPat[pat] END;
@@ -560,7 +560,7 @@ BEGIN
 	*)
 END PatternToImage;
 
-PROCEDURE FillPatterni (pX, pY, X, Y, W, H: INTEGER);
+PROCEDURE FillPatterni (pX, pY, X, Y, W, H: SIGNED16);
 BEGIN
 	RectIntersection(X, Y, W, H, 0, 0, contextimg.width, contextimg.height);
 	IF (W <= 0) OR (H <= 0) THEN RETURN END;
@@ -573,8 +573,8 @@ BEGIN
 END FillPatterni;
 
 
-PROCEDURE CopyPatterni ( sgn: tSign;  X, Y: INTEGER);
-	VAR W, H: INTEGER;  pat: Display.Pattern;
+PROCEDURE CopyPatterni ( sgn: tSign;  X, Y: SIGNED16);
+	VAR W, H: SIGNED16;  pat: Display.Pattern;
 BEGIN
 	Display.GetDim(sgn.pat, W, H);
 	pat := contextpattern;
@@ -585,8 +585,8 @@ BEGIN
 	(* ReplConsti(X-W DIV 2, Y-H DIV 2, W,H); *)
 END CopyPatterni;
 
-PROCEDURE Recti (X, Y, W, H: INTEGER);
-	VAR width: INTEGER;
+PROCEDURE Recti (X, Y, W, H: SIGNED16);
+	VAR width: SIGNED16;
 BEGIN
 	width := Min(contextpensize, Min(H DIV 2, W DIV 2));
 	ReplConsti( X, Y, width, H);
@@ -595,8 +595,8 @@ BEGIN
 	ReplConsti(X + width, Y + H - width, W - 2 * width, width)
 END Recti;
 
-PROCEDURE Rect3Di (X, Y, W, H: INTEGER);
-	VAR width: INTEGER;  pix: Images.Pixel;
+PROCEDURE Rect3Di (X, Y, W, H: SIGNED16);
+	VAR width: SIGNED16;  pix: Images.Pixel;
 BEGIN
 	pix := contextfpix;
 	width := Min(contextpensize, Min(H DIV 2, W DIV 2));
@@ -612,8 +612,8 @@ BEGIN
 	END
 END Rect3Di;
 
-PROCEDURE BrushJump (VAR b: Brush;  x, y: INTEGER);
-	VAR i: INTEGER;
+PROCEDURE BrushJump (VAR b: Brush;  x, y: SIGNED16);
+	VAR i: SIGNED16;
 BEGIN
 	IF (b.x # x) OR (b.y # y) THEN
 		b.x := x;  b.y := y;
@@ -621,9 +621,9 @@ BEGIN
 	END
 END BrushJump;
 
-PROCEDURE BrushWalk (VAR b: Brush;  x, y: INTEGER);
-	VAR i, dx, dy, t: INTEGER;
-PROCEDURE Max (x, y: INTEGER): INTEGER;
+PROCEDURE BrushWalk (VAR b: Brush;  x, y: SIGNED16);
+	VAR i, dx, dy, t: SIGNED16;
+PROCEDURE Max (x, y: SIGNED16): SIGNED16;
 BEGIN IF x > y THEN RETURN x ELSE RETURN y END
 END Max;
 BEGIN
@@ -652,17 +652,17 @@ BEGIN
 END BrushWalk;
 
 PROCEDURE BrushFlush (VAR b: Brush);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	FOR i := 0 TO b.bufh - 1 DO
 		FillPatterni( 0, 0, b.bufl[i], b.y + i - b.brushr, b.bufr[i] - b.bufl[i] + 1, 1)
 	END
 END BrushFlush;
 
-PROCEDURE InitBrush (VAR b: Brush;  w: INTEGER);
-	VAR r, x, y, d, dx, dy: INTEGER;
+PROCEDURE InitBrush (VAR b: Brush;  w: SIGNED16);
+	VAR r, x, y, d, dx, dy: SIGNED16;
 
-PROCEDURE Set (x, y: INTEGER);
+PROCEDURE Set (x, y: SIGNED16);
 BEGIN
 	b.brul[y + r] := - x + 1;  b.brur[y + r] := x;  b.brul[ - y + r] := - x + 1;  b.brur[ - y + r] := x;
 	IF y + r > b.bufh THEN b.bufh := y + r END
@@ -672,7 +672,7 @@ BEGIN b.bufh := 0;
 	(* b.contextimg := contextimg; b.col := col; b.mode := mode; b.contextpattern := contextpattern; *)
 	IF w >= BrushSize THEN w := BrushSize - 1 END;
 
-	b.x := MIN(INTEGER);  b.y := MIN(INTEGER);
+	b.x := MIN(SIGNED16);  b.y := MIN(SIGNED16);
 	r := w DIV 2;  (* radius *)
 	IF r < 0 THEN r := 1 END;
 	x := r;  y := 0;  d := 2 * r;  dx := 4 * r;  dy := 0;
@@ -684,8 +684,8 @@ BEGIN b.bufh := 0;
 	b.brushr := r;  INC(b.bufh)
 END InitBrush;
 
-PROCEDURE Linei (X, Y, X1, Y1: INTEGER);
-	VAR x, y, dx, dy, inx, iny, d, dy2, dx2: INTEGER;
+PROCEDURE Linei (X, Y, X1, Y1: SIGNED16);
+	VAR x, y, dx, dy, inx, iny, d, dy2, dx2: SIGNED16;
 BEGIN
 	dx := contextpensize DIV 2;  dx2 := contextpensize + 1;
 	x := X;  y := Y;  dx := X1 - X;  dy := Y1 - Y;
@@ -775,13 +775,13 @@ BEGIN
 	END
 END Linei;
 
-PROCEDURE FilledPolyi (VAR X, Y: ARRAY OF INTEGER;  n: INTEGER);
+PROCEDURE FilledPolyi (VAR X, Y: ARRAY OF SIGNED16;  n: SIGNED16);
 TYPE
 	Run = POINTER TO RunDesc0;
-	RunDesc0 = RECORD next: Run;  x: INTEGER END;
+	RunDesc0 = RECORD next: Run;  x: SIGNED16 END;
 VAR
 	scan: ARRAY 2000 OF Run;  free, s: Run;
-	i, miny, maxy, x0, x1: INTEGER;
+	i, miny, maxy, x0, x1: SIGNED16;
 
 PROCEDURE New (VAR s: Run);
 BEGIN IF free = NIL THEN NEW(s) ELSE s := free;  free := free.next;  s.next := NIL END
@@ -796,7 +796,7 @@ BEGIN
 	END
 END Free;
 
-PROCEDURE Insert (VAR s: Run;  x: INTEGER);
+PROCEDURE Insert (VAR s: Run;  x: SIGNED16);
 	VAR t, t0: Run;
 BEGIN
 	IF s = NIL THEN New(s);  s.x := x
@@ -811,8 +811,8 @@ BEGIN
 		END
 	END
 END Insert;
-PROCEDURE line (x1, y1, x2, y2: INTEGER);  (* standard bresenham *)
-	VAR x, y, d, dx, dy, incx, incy: INTEGER;
+PROCEDURE line (x1, y1, x2, y2: SIGNED16);  (* standard bresenham *)
+	VAR x, y, d, dx, dy, incx, incy: SIGNED16;
 BEGIN
 	(* Seg(x1,y1); *)
 	x := x1;  y := y1;  dx := (x2 - x1) * 2;  dy := (y2 - y1) * 2;
@@ -830,7 +830,7 @@ BEGIN
 	END
 END line;
 BEGIN free := NIL;
-	miny := MAX(INTEGER);  maxy := MIN(INTEGER);
+	miny := MAX(SIGNED16);  maxy := MIN(SIGNED16);
 	i := 0;  WHILE i < n DO IF Y[i] < miny THEN miny := Y[i] END;  IF Y[i] > maxy THEN maxy := Y[i] END;  INC(i) END;
 	i := 0;  WHILE i <= maxy - miny DO scan[i] := NIL;  INC(i) END;
 	i := 1;
@@ -852,8 +852,8 @@ BEGIN free := NIL;
 	END
 END FilledPolyi;
 
-PROCEDURE Polyi (VAR X, Y: ARRAY OF INTEGER;  n: INTEGER );
-	VAR i: INTEGER;
+PROCEDURE Polyi (VAR X, Y: ARRAY OF SIGNED16;  n: SIGNED16 );
+	VAR i: SIGNED16;
 BEGIN
 	IF Display3.filled IN contextstyle THEN FilledPolyi( X, Y, n)
 	ELSE
@@ -868,10 +868,10 @@ BEGIN
 	END
 END Polyi;
 
-PROCEDURE Ellipsei ( X, Y, a, b: INTEGER);
-	VAR x1, y1: INTEGER;  d, dx, dy, x2, y2, a1, a2, a8, b1, b2, b8: LONGINT;
+PROCEDURE Ellipsei ( X, Y, a, b: SIGNED16);
+	VAR x1, y1: SIGNED16;  d, dx, dy, x2, y2, a1, a2, a8, b1, b2, b8: SIGNED32;
 
-PROCEDURE Dot4 (x1, x2, y1, y2: INTEGER);
+PROCEDURE Dot4 (x1, x2, y1, y2: SIGNED16);
 BEGIN
 	IF contextpattern = Display.solid THEN
 		Doti(x1, y1);  Doti(x1, y2);
@@ -900,8 +900,8 @@ BEGIN
 	END
 END Ellipsei;
 
-PROCEDURE Circlei ( X, Y, r: INTEGER);
-	VAR x, y, dx, dy, d, e: INTEGER;
+PROCEDURE Circlei ( X, Y, r: SIGNED16);
+	VAR x, y, dx, dy, d, e: SIGNED16;
 BEGIN
 	IF Display3.filled IN contextstyle THEN
 		x := r;  y := 0;  e := 0;  dx := 2;  dy := 2;
@@ -952,18 +952,18 @@ BEGIN
 	END
 END Circlei;
 
-PROCEDURE PaintRecti (x, y, w, h: INTEGER);
+PROCEDURE PaintRecti (x, y, w, h: SIGNED16);
 BEGIN	FillPatterni( 0, 0, x, y, w, h) END PaintRecti;
 
-PROCEDURE Picti (sP: Pictures.Picture;  X, Y, W, H, DX, DY: INTEGER);
-	VAR pixs: ARRAY 256 OF Images.Pixel;  idx, max: INTEGER;  pr, pg, pb: INTEGER;  y, x0, x1: INTEGER;  oldpix: Images.Pixel;  xi, yi, xe, ye: INTEGER;
+PROCEDURE Picti (sP: Pictures.Picture;  X, Y, W, H, DX, DY: SIGNED16);
+	VAR pixs: ARRAY 256 OF Images.Pixel;  idx, max: SIGNED16;  pr, pg, pb: SIGNED16;  y, x0, x1: SIGNED16;  oldpix: Images.Pixel;  xi, yi, xe, ye: SIGNED16;
 BEGIN
 	(*! check for redundance ! *)
 
 	PlacedRectIntersect(X, Y, W, H, DX, DY, 0, 0, contextimg.width, contextimg.height);
 	IF (W = 0) OR (H = 0) THEN RETURN END;
 
-	idx := 0;  max := INTEGER(ASH(1, sP.depth));
+	idx := 0;  max := SIGNED16(ASH(1, sP.depth));
 	WHILE (idx < max) DO
 		Pictures.GetColor(sP, idx, pr, pg, pb);
 		Images.SetRGBA(pixs[idx], pr, pg, pb, contextalpha);
@@ -993,8 +993,8 @@ BEGIN
 	contextfpix := oldpix
 END Picti;
 
-PROCEDURE Stringi (x, y: INTEGER;  fnt: Fonts.Font;  s: ARRAY OF CHAR);
-	VAR r: Objects.Object;  p: INTEGER;  X, Y, w, h, dsr: INTEGER;  idx, x0, x1, xs, ys, xe, ye, xi, yi: INTEGER;
+PROCEDURE Stringi (x, y: SIGNED16;  fnt: Fonts.Font;  s: ARRAY OF CHAR);
+	VAR r: Objects.Object;  p: SIGNED16;  X, Y, w, h, dsr: SIGNED16;  idx, x0, x1, xs, ys, xe, ye, xi, yi: SIGNED16;
 BEGIN
 	(* create sting on picture first, should be fastest method for the moment*)
 	(* check booundaries, use DirectReplConst i/o Doti !!! *)
@@ -1057,7 +1057,7 @@ BEGIN
 	*)
 END Stringi;
 
-PROCEDURE ReplStringi (X, Y: INTEGER;  fnt, str: ARRAY OF CHAR);
+PROCEDURE ReplStringi (X, Y: SIGNED16;  fnt, str: ARRAY OF CHAR);
 	VAR f: Fonts.Font;
 BEGIN
 	f := Fonts.This (fnt);
@@ -1066,12 +1066,12 @@ BEGIN
 END ReplStringi;
 
 
-PROCEDURE StretchedPicti (sP: Pictures.Picture;  X, Y, W, H, DX, DY, DW, DH: INTEGER);
-	VAR pixs: ARRAY 256 OF Images.Pixel;  idx, max: INTEGER;  pr, pg, pb: INTEGER;  y, x0, x1: INTEGER;  oldpix: Images.Pixel;
-	xe, ye: INTEGER;
-	nx, ny, nw, nh, ndx, ndy, ndw, ndh: INTEGER;  thisx, nextx, thisy, nexty: INTEGER;
-	scalex, scaley: LONGREAL;
-	scalexl, scaleyl: INTEGER;
+PROCEDURE StretchedPicti (sP: Pictures.Picture;  X, Y, W, H, DX, DY, DW, DH: SIGNED16);
+	VAR pixs: ARRAY 256 OF Images.Pixel;  idx, max: SIGNED16;  pr, pg, pb: SIGNED16;  y, x0, x1: SIGNED16;  oldpix: Images.Pixel;
+	xe, ye: SIGNED16;
+	nx, ny, nw, nh, ndx, ndy, ndw, ndh: SIGNED16;  thisx, nextx, thisy, nexty: SIGNED16;
+	scalex, scaley: FLOAT64;
+	scalexl, scaleyl: SIGNED16;
 BEGIN
 	IF (W = DW) & (H = DH) THEN Picti(sP, X, Y, W, H, DX, DY) END;
 	(*
@@ -1082,7 +1082,7 @@ BEGIN
 	IF EmptyIntersection(DX, DY, DW, DH, 0, 0, contextimg.width, contextimg.height) THEN RETURN END;
 	oldpix := contextfpix;
 	(* colors .. *)
-	idx := 0;  max := INTEGER(ASH(1, sP.depth));
+	idx := 0;  max := SIGNED16(ASH(1, sP.depth));
 	WHILE (idx < max) DO
 		Pictures.GetColor(sP, idx, pr, pg, pb);
 		Images.SetRGBA(pixs[idx], pr, pg, pb, contextalpha);
@@ -1155,8 +1155,8 @@ BEGIN
 END StretchedPicti;
 
 
-PROCEDURE Imagei (VAR img: Images.Image;  x, y, w, h, dx, dy: INTEGER);
-	VAR tx, tx0, ty: INTEGER;  pix, pix0: Images.Pixel;  r, g, b, a: INTEGER;
+PROCEDURE Imagei (VAR img: Images.Image;  x, y, w, h, dx, dy: SIGNED16);
+	VAR tx, tx0, ty: SIGNED16;  pix, pix0: Images.Pixel;  r, g, b, a: SIGNED16;
 BEGIN
 	PlacedRectIntersect(x, y, w, h, dx, dy, 0, 0, contextimg.width, contextimg.height);
 	IF (w = 0) OR (h = 0) THEN RETURN END;
@@ -1190,8 +1190,8 @@ END Imagei;
 
 
 
-PROCEDURE IGetRun (P: Images.Image;  VAR pix: Images.Pixel;  VAR x: INTEGER;  y: INTEGER);
-PROCEDURE Equals (VAR pix1: Images.Pixel;  x, y: INTEGER): BOOLEAN;
+PROCEDURE IGetRun (P: Images.Image;  VAR pix: Images.Pixel;  VAR x: SIGNED16;  y: SIGNED16);
+PROCEDURE Equals (VAR pix1: Images.Pixel;  x, y: SIGNED16): BOOLEAN;
 	VAR pix2: Images.Pixel;
 BEGIN
 	Images.Get(P, x, y, pix2, Images.SrcCopy);
@@ -1204,12 +1204,12 @@ BEGIN
 	WHILE (x < P.width) & Equals(pix, x, y) DO INC(x) END
 END IGetRun;
 
-PROCEDURE StretchedImagei (VAR sP: Images.Image;  X, Y, W, H, DX, DY, DW, DH: INTEGER);
-	VAR y, x0, x1: INTEGER;  oldpix, pix: Images.Pixel;
-	xe, ye: INTEGER;
-	nx, ny, nw, nh, ndx, ndy, ndw, ndh: INTEGER;  thisx, nextx, thisy, nexty: INTEGER;
-	scalex, scaley: LONGREAL;  r, g, b, a: INTEGER;
-	scalexl, scaleyl: INTEGER;
+PROCEDURE StretchedImagei (VAR sP: Images.Image;  X, Y, W, H, DX, DY, DW, DH: SIGNED16);
+	VAR y, x0, x1: SIGNED16;  oldpix, pix: Images.Pixel;
+	xe, ye: SIGNED16;
+	nx, ny, nw, nh, ndx, ndy, ndw, ndh: SIGNED16;  thisx, nextx, thisy, nexty: SIGNED16;
+	scalex, scaley: FLOAT64;  r, g, b, a: SIGNED16;
+	scalexl, scaleyl: SIGNED16;
 BEGIN
 	IF (W = DW) & (H = DH) THEN Imagei(sP, X, Y, W, H, DX, DY) END;
 	(* first check if displayed: *)
@@ -1293,8 +1293,8 @@ END StretchedImagei;
 
 (** printing primitives *)
 
-PROCEDURE PointToPrnPoint (VAR x, y: INTEGER);
-	VAR xL, yL : LONGINT;
+PROCEDURE PointToPrnPoint (VAR x, y: SIGNED16);
+	VAR xL, yL : SIGNED32;
 BEGIN
 	xL := x - xPortOrg;  xL := xL * du;
 	x := xPrnOrg + SHORT ((xL + hpu) DIV pu);
@@ -1302,13 +1302,13 @@ BEGIN
 	y := yPrnOrg + SHORT ((yL + hpu) DIV pu)
 END PointToPrnPoint;
 
-PROCEDURE SizeToPrnSize (VAR w, h: INTEGER);
+PROCEDURE SizeToPrnSize (VAR w, h: SIGNED16);
 BEGIN
 	w := SHORT ((LONG(w) * du) DIV pu);
 	h := SHORT ((LONG(h) * du) DIV pu)
 END SizeToPrnSize;
 
-PROCEDURE CopyPatternPrn (sgn: tSign;  x, y: INTEGER);
+PROCEDURE CopyPatternPrn (sgn: tSign;  x, y: SIGNED16);
 BEGIN
 	IF sgn.print # NIL THEN sgn.print (x, y) (*! ändern: sgn.print muss abgefangen werden können*)
 	ELSE (*! GetPatternSize ?*)
@@ -1319,8 +1319,8 @@ BEGIN
 	END
 END CopyPatternPrn;
 
-PROCEDURE DotPrn (x, y: INTEGER);
-	VAR w, h : INTEGER;
+PROCEDURE DotPrn (x, y: SIGNED16);
+	VAR w, h : SIGNED16;
 BEGIN
 	w := 1;  h := 1;
 	PointToPrnPoint (x, y);
@@ -1328,19 +1328,19 @@ BEGIN
 	Printer3.ReplConst(clipMask, contextfcol, x, y, w, h, contextmode)
 END DotPrn;
 
-PROCEDURE ReplConstPrn (x, y, w, h: INTEGER);
+PROCEDURE ReplConstPrn (x, y, w, h: SIGNED16);
 BEGIN
 	PointToPrnPoint (x, y);  SizeToPrnSize (w, h);
 	Printer3.ReplConst (clipMask, contextfcol, x, y, w, h, paint)
 END ReplConstPrn;
 
-PROCEDURE ReplStringPrn (X, Y: INTEGER;  fnt, str: ARRAY OF CHAR);
+PROCEDURE ReplStringPrn (X, Y: SIGNED16;  fnt, str: ARRAY OF CHAR);
 BEGIN
 	PointToPrnPoint (X, Y);  Printer3.String (clipMask, contextfcol, X, Y, Fonts.This(fnt), str, contextmode)
 END ReplStringPrn;
 
-PROCEDURE LinePrn (x0, y0, x1, y1 : INTEGER);
-	VAR u, v: INTEGER;
+PROCEDURE LinePrn (x0, y0, x1, y1 : SIGNED16);
+	VAR u, v: SIGNED16;
 BEGIN
 	u := contextpensize;  v := contextpensize;
 	SizeToPrnSize(u, v);
@@ -1349,24 +1349,24 @@ BEGIN
 	Printer3.Line (clipMask, contextfcol, contextpattern, x0, y0, x1, y1, u, paint)
 END LinePrn;
 
-PROCEDURE CirclePrn (x, y, r: INTEGER);
-	VAR u: INTEGER;
+PROCEDURE CirclePrn (x, y, r: SIGNED16);
+	VAR u: SIGNED16;
 BEGIN
 	PointToPrnPoint (x, y);
 	u := contextpensize;  SizeToPrnSize (r, u);
 	Printer3.Circle (clipMask, contextfcol, contextpattern, x, y, r, u, contextstyle, paint)
 END CirclePrn;
 
-PROCEDURE EllipsePrn (x, y, a, b: INTEGER);
-	VAR u, v: INTEGER;
+PROCEDURE EllipsePrn (x, y, a, b: SIGNED16);
+	VAR u, v: SIGNED16;
 BEGIN
 	u := contextpensize;  v := contextpensize;  SizeToPrnSize (u, v);
 	PointToPrnPoint (x, y);  SizeToPrnSize (a, b);
 	Printer3.Ellipse(clipMask, contextfcol, contextpattern, x, y, a, b, u, contextstyle, paint)
 END EllipsePrn;
 
-PROCEDURE RectPrn (x, y, w, h: INTEGER);
-	VAR i, j: INTEGER;
+PROCEDURE RectPrn (x, y, w, h: SIGNED16);
+	VAR i, j: SIGNED16;
 BEGIN
 	i := contextpensize;  j := contextpensize;
 	SizeToPrnSize(j, i);
@@ -1374,16 +1374,16 @@ BEGIN
 	Printer3.Rect(clipMask, contextfcol, contextpattern, x, y, w, h, j, paint)
 END RectPrn;
 
-PROCEDURE Rect3DPrn (x, y, w, h: INTEGER);
-	VAR i, j: INTEGER;
+PROCEDURE Rect3DPrn (x, y, w, h: SIGNED16);
+	VAR i, j: SIGNED16;
 BEGIN
 	i := contextpensize;  j := contextpensize;  SizeToPrnSize(i, j);
 	PointToPrnPoint (x, y);  SizeToPrnSize (w, h);
 	Printer3.Rect3D(clipMask, contextfcol, contextbcol, x, y, w, h, j, paint)
 END Rect3DPrn;
 
-PROCEDURE PaintRectPrn (x, y, w, h: INTEGER);
-	VAR width, i: INTEGER;
+PROCEDURE PaintRectPrn (x, y, w, h: SIGNED16);
+	VAR width, i: SIGNED16;
 BEGIN
 	width := 1;
 	i := width;
@@ -1392,21 +1392,21 @@ BEGIN
 	Printer3.FillPattern(clipMask, contextfcol, contextpattern, 0, 0, x, y, w, h, paint)
 END PaintRectPrn;
 
-PROCEDURE PolyPrn (VAR x, y: ARRAY OF INTEGER;  n: INTEGER);
-	VAR i : INTEGER;  w1, w2: INTEGER;
+PROCEDURE PolyPrn (VAR x, y: ARRAY OF SIGNED16;  n: SIGNED16);
+	VAR i : SIGNED16;  w1, w2: SIGNED16;
 BEGIN
 	w1 := 1;  w2 := 1;  SizeToPrnSize(w1, w2);
 	FOR i := 0 TO n - 1 DO PointToPrnPoint(x[i], y[i]) END;  (* ! be careful, x,y are VAR parameters !*)
 	Display3.Poly(clipMask, contextfcol, contextpattern, x, y, n, w1, contextstyle, paint)
 END PolyPrn;
 
-PROCEDURE ReplPictPrn (picture: Pictures.Picture;  px, py, x, y, w, h: INTEGER);
+PROCEDURE ReplPictPrn (picture: Pictures.Picture;  px, py, x, y, w, h: SIGNED16);
 BEGIN
 	PointToPrnPoint(px, py);  PointToPrnPoint(x, y);  SizeToPrnSize(w, h);
 	Printer3.ReplPict(clipMask, picture, px, py, x, y, w, h, contextmode)
 END ReplPictPrn;
 
-PROCEDURE pictPrn (picture: Pictures.Picture;  x, y, w, h, dx, dy: INTEGER);
+PROCEDURE pictPrn (picture: Pictures.Picture;  x, y, w, h, dx, dy: SIGNED16);
 	VAR dbpict: Pictures.Picture;
 BEGIN
 	NEW(dbpict);
@@ -1416,7 +1416,7 @@ BEGIN
 	Printer3.Pict(clipMask, dbpict, dx, dy, w, h, contextmode)
 END pictPrn;
 
-PROCEDURE stretchedpictPrn (picture: Pictures.Picture;  x, y, w, h, dx, dy, dw, dh: INTEGER);
+PROCEDURE stretchedpictPrn (picture: Pictures.Picture;  x, y, w, h, dx, dy, dw, dh: SIGNED16);
 	VAR dbpict: Pictures.Picture;
 BEGIN
 	NEW(dbpict);
@@ -1428,7 +1428,7 @@ END stretchedpictPrn;
 
 (** Pattern management *)
 
-PROCEDURE StdSignPrinter (x, y: INTEGER);
+PROCEDURE StdSignPrinter (x, y: SIGNED16);
 END StdSignPrinter;
 
 PROCEDURE StorePattern* (VAR R: Files.Rider;  sgn: tSign);
@@ -1446,8 +1446,8 @@ END StorePattern;
 PROCEDURE LoadPattern* (VAR R: Files.Rider): tSign;
 VAR
 	sgn: tSign;
-	w: INTEGER;
-	adr: LONGINT;
+	w: SIGNED16;
+	adr: SIGNED32;
 BEGIN
 	Files.ReadInt(R, w);
 	IF w = - 1 THEN RETURN NIL END;
@@ -1463,7 +1463,7 @@ BEGIN
 	RETURN sgn
 END LoadPattern;
 
-PROCEDURE NewPattern* (image: ARRAY OF SET;  w, h: INTEGER;  prn: tPatPrinter): tSign;
+PROCEDURE NewPattern* (image: ARRAY OF SET;  w, h: SIGNED16;  prn: tPatPrinter): tSign;
 	VAR sgn: tSign;
 BEGIN
 	NEW (sgn);
@@ -1536,7 +1536,7 @@ BEGIN
 END SetImagePrimitives;
 
 
-PROCEDURE OpenPrinter* (x, y, px, py: INTEGER);
+PROCEDURE OpenPrinter* (x, y, px, py: SIGNED16);
 BEGIN
 	status := print;  xPrnOrg := x;  yPrnOrg := y;  xPortOrg := px;  yPortOrg := py;  SetPrinterPrimitives
 END OpenPrinter;
@@ -1547,7 +1547,7 @@ BEGIN
 	SetDisplayPrimitives
 END ClosePrinter;
 
-PROCEDURE OpenBuffer*(VAR b: doubleBuffer; x,y,w,h: INTEGER; translucent: BOOLEAN);
+PROCEDURE OpenBuffer*(VAR b: doubleBuffer; x,y,w,h: SIGNED16; translucent: BOOLEAN);
 VAR newdisplayb: BOOLEAN;
 BEGIN
 	IF b = NIL THEN
@@ -1601,7 +1601,7 @@ BEGIN
 	END;
 END WriteBuffer;
 
-PROCEDURE CloseBuffer*(b: doubleBuffer; VAR x,y: INTEGER);
+PROCEDURE CloseBuffer*(b: doubleBuffer; VAR x,y: SIGNED16);
 BEGIN
 	IF b.displayBuffer # NIL THEN
 		vyPortability.CloseBuffer(b.displayBuffer);
@@ -1615,12 +1615,12 @@ END CloseBuffer;
 
 (*
 
-PROCEDURE SetBuffer* (b: Bitmaps.Bitmap;  X, Y: INTEGER);
+PROCEDURE SetBuffer* (b: Bitmaps.Bitmap;  X, Y: SIGNED16);
 BEGIN
 	db.dbBitmap := b;  db.X := X;  db.Y := Y
 END SetBuffer;
 
-PROCEDURE OpenBuffer* (b: Bitmaps.Bitmap;  X, Y: INTEGER);
+PROCEDURE OpenBuffer* (b: Bitmaps.Bitmap;  X, Y: SIGNED16);
 BEGIN
 	SetBuffer(b, X, Y);  db.active := TRUE;  SetDisplayPrimitives;
 	db.display := Display.cur;  db.displayMask := clipMask;
@@ -1629,13 +1629,13 @@ BEGIN
 	clipMask := db.dbMask
 END OpenBuffer;
 
-PROCEDURE OpenImgBuffer* (img: Images.Image;  X, Y: INTEGER);
+PROCEDURE OpenImgBuffer* (img: Images.Image;  X, Y: SIGNED16);
 BEGIN
 	SetBuffer(NIL, X, Y);  db.active := TRUE;  contextimg := img;  SetImagePrimitives
 END OpenImgBuffer;
 
 
-PROCEDURE CloseBuffer* (VAR X, Y: INTEGER);
+PROCEDURE CloseBuffer* (VAR X, Y: SIGNED16);
 BEGIN
 	IF db.active = TRUE THEN
 		db.active := FALSE;  X := db.X;  Y := db.Y;  SetDisplayPrimitives ;
@@ -1646,13 +1646,13 @@ BEGIN
 END CloseBuffer;
 
 
-PROCEDURE EnumBitmap (X, Y, W, H: INTEGER);
+PROCEDURE EnumBitmap (X, Y, W, H: SIGNED16);
 BEGIN
 	Bitmaps.CopyBlock(sbmp, dbmp, X + dX, Y + dY, W, H, X, Y)
 END EnumBitmap;
 
-PROCEDURE ClipAgainst (VAR x, y, w, h: INTEGER;  x1, y1, w1, h1: INTEGER);
-	VAR r, t, r1, t1: INTEGER;
+PROCEDURE ClipAgainst (VAR x, y, w, h: SIGNED16;  x1, y1, w1, h1: SIGNED16);
+	VAR r, t, r1, t1: SIGNED16;
 BEGIN
 	r := x + w - 1;  r1 := x1 + w1 - 1;  t := y + h - 1;  t1 := y1 + h1 - 1;
 	IF x < x1 THEN x := x1 END;
@@ -1663,7 +1663,7 @@ BEGIN
 	IF (w < 0) OR (h < 0) THEN w := 0;  h := 0 END
 END ClipAgainst;
 
-PROCEDURE Display3Bitmaps (M: Display3.Mask;  B: Displays.Display;  on: Displays.Display;  X, Y, W, H, DX, DY: INTEGER);
+PROCEDURE Display3Bitmaps (M: Display3.Mask;  B: Displays.Display;  on: Displays.Display;  X, Y, W, H, DX, DY: SIGNED16);
 BEGIN
 	dX := X - DX;  dY := Y - DY;
 	ClipAgainst(DX, DY, W, H, M.X, M.Y, M.W, M.H);
@@ -1671,7 +1671,7 @@ BEGIN
 	Display3.EnumRect(M, DX, DY, W, H, EnumBitmap);
 	sbmp := NIL;  dbmp := NIL
 END Display3Bitmaps;
-PROCEDURE WriteBuffer* (x, y, w, h, dx, dy: INTEGER);
+PROCEDURE WriteBuffer* (x, y, w, h, dx, dy: SIGNED16);
 BEGIN
 	IF db.dbBitmap # NIL THEN
 		Display3Bitmaps(db.displayMask, db.dbBitmap, db.display, x, y, w, h, dx, dy)

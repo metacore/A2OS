@@ -8,7 +8,7 @@ IMPORT
 	Unix, KernelLog;
 
 TYPE
-	Counter* = HUGEINT; (** Timer counter value type *)
+	Counter* = SIGNED64; (** Timer counter value type *)
 
 CONST
 	(*
@@ -27,18 +27,18 @@ CONST
 
 TYPE
 	Timespec = RECORD
-		sec: LONGWORD;
-		nsec: LONGINT;
+		sec: LONGINTEGER;
+		nsec: SIGNED32;
 	END;
 
 VAR
-	clock_gettime: PROCEDURE{C}(clk_id: LONGINT; CONST tp: Timespec): LONGINT;
-	clock_getres: PROCEDURE{C}(clk_id: LONGINT; CONST res: Timespec): LONGINT;
+	clock_gettime: PROCEDURE{C}(clk_id: SIGNED32; CONST tp: Timespec): SIGNED32;
+	clock_getres: PROCEDURE{C}(clk_id: SIGNED32; CONST res: Timespec): SIGNED32;
 
 	(*! It is preferable to use CLOCK_MONOTONIC_RAW (not influenced by system time adjustments),
 		but for some reason CLOCK_MONOTONIC is ~3 times faster
 	*)
-	clockType := CLOCK_MONOTONIC: LONGINT; (* timer clock type *)
+	clockType := CLOCK_MONOTONIC: SIGNED32; (* timer clock type *)
 	frequency: Counter; (* timer frequency in Hz *)
 
 	(**
@@ -48,7 +48,7 @@ VAR
 	VAR t: Timespec;
 	BEGIN
 		IF clock_gettime(clockType, t) = 0 THEN
-			RETURN HUGEINT(t.sec)*1000000000 + HUGEINT(t.nsec);
+			RETURN SIGNED64(t.sec)*1000000000 + SIGNED64(t.nsec);
 		ELSE
 			RETURN 0;
 		END;

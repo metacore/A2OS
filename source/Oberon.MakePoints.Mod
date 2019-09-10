@@ -14,7 +14,7 @@ Refer to the "General ETH Oberon System Source License" contract available at: h
 		Move ::= { destpoint }
 
 		attributes is a SET
-		maxcoord, mincoord, timefactor are REAL
+		maxcoord, mincoord, timefactor are FLOAT32
 		all other numbers are INTEGERs
 
 		Figure attributes: 0=no morph
@@ -37,9 +37,9 @@ CONST
 	nomorph = 0;
 
 TYPE
-	Point = RECORD x, y, z: REAL END;
+	Point = RECORD x, y, z: FLOAT32 END;
 	Figure = ARRAY MaxPoint OF Point;
-	Movement = ARRAY MaxPoint OF INTEGER;
+	Movement = ARRAY MaxPoint OF SIGNED16;
 	Pat = POINTER TO RECORD
 		w, h: CHAR;
 		pixmap: ARRAY 8192 OF CHAR
@@ -48,14 +48,14 @@ TYPE
 VAR
 	figure: ARRAY MaxFig OF Figure;	(* figures known to the system *)
 	move: ARRAY MaxFig OF Movement;	(* movement between figures *)
-	timefactor: ARRAY MaxFig OF REAL;
+	timefactor: ARRAY MaxFig OF FLOAT32;
 	attributes: ARRAY MaxFig OF SET;
-	curfig, curpoint: INTEGER;
+	curfig, curpoint: SIGNED16;
 	min, max: Point;
 	w: Texts.Writer;
 
 (* several output routines *)
-PROCEDURE Rea(x: LONGREAL; n: INTEGER);
+PROCEDURE Rea(x: FLOAT64; n: SIGNED16);
 BEGIN Texts.WriteLongRealFix(w, x, 0, n, 0); Texts.Append(Oberon.Log, w.buf)
 END Rea;
 
@@ -71,7 +71,7 @@ PROCEDURE Ln;
 BEGIN Texts.WriteLn(w); Texts.Append(Oberon.Log, w.buf)
 END Ln;
 
-PROCEDURE Int(x: LONGINT; n: INTEGER);
+PROCEDURE Int(x: SIGNED32; n: SIGNED16);
 BEGIN Texts.WriteInt(w, x, n); Texts.Append(Oberon.Log, w.buf)
 END Int;
 
@@ -80,8 +80,8 @@ PROCEDURE Prepare;
 BEGIN
 	ASSERT(curfig < MaxFig);
 	IF Verbose THEN Ln END;
-	min.x := MAX(REAL); min.y := MAX(REAL); min.z := MAX(REAL);
-	max.x := MIN(REAL); max.y := MIN(REAL); max.z := MIN(REAL);
+	min.x := MAX(FLOAT32); min.y := MAX(FLOAT32); min.z := MAX(FLOAT32);
+	max.x := MIN(FLOAT32); max.y := MIN(FLOAT32); max.z := MIN(FLOAT32);
 	IF ~Verbose & (curfig > 0) & (curfig MOD 20 = 0) THEN Ln; Ch(" ") END;
 	Int(curfig, 0); Ch(" ");
 	curpoint := 0;
@@ -91,7 +91,7 @@ END Prepare;
 
 (* postpare for creating another figure *)
 PROCEDURE Postpare;
-VAR k: INTEGER;
+VAR k: SIGNED16;
 BEGIN
 	IF Verbose THEN
 		Str("pts="); Int(curpoint, 0);
@@ -108,20 +108,20 @@ BEGIN
 END Postpare;
 
 (* retrieve a previous set point *)
-PROCEDURE GetPoint(VAR p: Point; n: INTEGER);
+PROCEDURE GetPoint(VAR p: Point; n: SIGNED16);
 BEGIN
 	ASSERT((n >= 0) & (n < curpoint));
 	p := figure[curfig, n]
 END GetPoint;
 
 (* set the coordinates for a point *)
-PROCEDURE SetPoint(VAR p: Point; x, y, z: REAL);
+PROCEDURE SetPoint(VAR p: Point; x, y, z: FLOAT32);
 BEGIN
 	p.x := x; p.y := y; p.z := z
 END SetPoint;
 
 (* set the coordinates for the next point *)
-PROCEDURE Set(x, y, z: REAL);
+PROCEDURE Set(x, y, z: FLOAT32);
 BEGIN
 	ASSERT((curpoint >= 0) & (curpoint < MaxPoint));
 	IF Verbose THEN
@@ -137,7 +137,7 @@ BEGIN
 END Set;
 
 (* change the current figure's timefactor *)
-PROCEDURE SetTimeFactor(t: REAL);
+PROCEDURE SetTimeFactor(t: FLOAT32);
 BEGIN
 	timefactor[curfig] := t
 END SetTimeFactor;
@@ -149,14 +149,14 @@ BEGIN
 END SetAttributes;
 
 (* interpolate between f and t using proportion p *)
-PROCEDURE From(f, t, p: REAL): REAL;
+PROCEDURE From(f, t, p: FLOAT32): FLOAT32;
 BEGIN
 	RETURN f * p + t * (1.0 - p)
 END From;
 
 (* rotate the two coordinates x, y with the given factors c, s *)
-PROCEDURE Rotate(c, s: REAL; VAR x, y: REAL);
-VAR t: REAL;
+PROCEDURE Rotate(c, s: FLOAT32; VAR x, y: FLOAT32);
+VAR t: FLOAT32;
 BEGIN
 	t := x * s + y * c;
 	x := x * c - y * s;
@@ -164,8 +164,8 @@ BEGIN
 END Rotate;
 
 (* calculate distance between two points *)
-PROCEDURE DistanceSqr(p1, p2: Point): REAL;
-VAR dx, dy, dz: REAL;
+PROCEDURE DistanceSqr(p1, p2: Point): FLOAT32;
+VAR dx, dy, dz: FLOAT32;
 BEGIN
 	dx := p1.x - p2.x; dy := p1.y - p2.y; dz := p1.z - p2.z;
 	RETURN dx * dx + dy * dy + dz * dz
@@ -174,8 +174,8 @@ END DistanceSqr;
 (* calculate movement between figures using a distance matrix.  this method uses O(MaxPoint^2) time
 	and memory. unfort this method is slower and gives the same results as the other method!
 PROCEDURE InitMovement;
-VAR dist: POINTER TO ARRAY MaxPoint, MaxPoint OF REAL; rowmin: POINTER TO ARRAY MaxPoint OF REAL;
-	cur, nxt, n, p, q, r, c: INTEGER; min: REAL;
+VAR dist: POINTER TO ARRAY MaxPoint, MaxPoint OF FLOAT32; rowmin: POINTER TO ARRAY MaxPoint OF FLOAT32;
+	cur, nxt, n, p, q, r, c: SIGNED16; min: FLOAT32;
 BEGIN
 	Str("interpolating: ");
 	NEW(dist); NEW(rowmin);
@@ -184,7 +184,7 @@ BEGIN
 		nxt := (cur + curfig - 1) MOD curfig;
 		(* setup the maxtrix *)
 		FOR p := 0 TO MaxPoint - 1 DO
-			rowmin[p] := MAX(REAL);
+			rowmin[p] := MAX(FLOAT32);
 			FOR q := 0 TO MaxPoint - 1 DO
 				dist[p, q] := DistanceSqr(figure[cur, p], figure[nxt, q]);
 				IF dist[p, q] < rowmin[p] THEN rowmin[p] := dist[p, q] END
@@ -192,7 +192,7 @@ BEGIN
 		END;
 		(* now MaxPoint times find the minimum matrix element *)
 		FOR n := 0 TO MaxPoint - 1 DO
-			min := MAX(REAL);
+			min := MAX(FLOAT32);
 			FOR p := 0 TO MaxPoint - 1 DO
 				IF rowmin[p] < min THEN
 					FOR q := 0 TO MaxPoint - 1 DO
@@ -201,15 +201,15 @@ BEGIN
 				END
 			END;
 			move[cur, c] := r;
-			rowmin[r] := MAX(REAL);
+			rowmin[r] := MAX(FLOAT32);
 			FOR p := 0 TO MaxPoint - 1 DO
-				dist[r, p] := MAX(REAL);
+				dist[r, p] := MAX(FLOAT32);
 				IF dist[p, c] = rowmin[p] THEN
-					dist[p, c] := MAX(REAL);
+					dist[p, c] := MAX(FLOAT32);
 					FOR q := 0 TO MaxPoint - 1 DO
 						IF dist[p, q] < rowmin[p] THEN rowmin[p] := dist[p, q] END
 					END
-				ELSE dist[p, c] := MAX(REAL)
+				ELSE dist[p, c] := MAX(FLOAT32)
 				END
 			END
 		END
@@ -220,8 +220,8 @@ END InitMovement;
 
 (* calculate movement between figures *)
 PROCEDURE InitMovement;
-VAR f, g, p, q, r: INTEGER; d: REAL; dist: ARRAY MaxPoint OF REAL;
-	 done, taken: ARRAY MaxPoint OF BOOLEAN; fav: ARRAY MaxPoint OF INTEGER;
+VAR f, g, p, q, r: SIGNED16; d: FLOAT32; dist: ARRAY MaxPoint OF FLOAT32;
+	 done, taken: ARRAY MaxPoint OF BOOLEAN; fav: ARRAY MaxPoint OF SIGNED16;
 BEGIN
 	Str("interpolating:");
 	FOR f := 0 TO curfig - 1 DO
@@ -234,7 +234,7 @@ BEGIN
 			END;
 			(* calculate favourite points *)
 			FOR p := 0 TO MaxPoint - 1 DO
-				dist[p] := MAX(REAL);
+				dist[p] := MAX(FLOAT32);
 				FOR q := 0 TO MaxPoint - 1 DO
 					d := DistanceSqr(figure[f, p], figure[g, q]);
 					IF d < dist[p] THEN fav[p] := q; dist[p] := d END
@@ -244,7 +244,7 @@ BEGIN
 			FOR p := 0 TO MaxPoint - 1 DO
 				IF Verbose & (p MOD 10 = 0) THEN Ch(".") END;
 				(* select the point closest to its favourite *)
-				d := MAX(REAL);
+				d := MAX(FLOAT32);
 				FOR q := 0 TO MaxPoint - 1 DO
 					IF (~done[q]) & (dist[q] < d) THEN d := dist[q]; r := q END
 				END;
@@ -255,7 +255,7 @@ BEGIN
 				(* recalculate distances that have changed *)
 				FOR r := 0 TO MaxPoint - 1 DO
 					IF (~done[r]) & taken[fav[r]] THEN
-						dist[r] := MAX(REAL);
+						dist[r] := MAX(FLOAT32);
 						FOR q := 0 TO MaxPoint - 1 DO
 							IF ~taken[q] THEN
 								d := DistanceSqr(figure[f, r], figure[g, q]);
@@ -274,7 +274,7 @@ END InitMovement;
 (* set up the sphere figure *)
 PROCEDURE Sphere;
 CONST radius = 0.8;
-VAR a, b, cos, sin: REAL;
+VAR a, b, cos, sin: FLOAT32;
 BEGIN
 	Set(radius, 0, 0); Set(-radius, 0, 0);
 	Set(0, radius, 0); Set(0, -radius, 0);
@@ -294,7 +294,7 @@ END Sphere;
 (* set up the torus figure *)
 PROCEDURE Torus;
 CONST small = 7; large = MaxPoint DIV small; sradius = 0.09; lradius = 0.8;
-VAR a, cos, sin: REAL; k, m: INTEGER; p: Point;
+VAR a, cos, sin: FLOAT32; k, m: SIGNED16; p: Point;
 BEGIN
 	FOR k := 0 TO small - 1 DO
 		a := M.pi / (small / 2.0) * k;
@@ -313,7 +313,7 @@ END Torus;
 (* set up the cylinder figure *)
 PROCEDURE Cylinder;
 CONST radius = 0.3; left = -0.9; right = 0.9; size = 15; length = MaxPoint DIV size;
-VAR a: REAL; k, m: INTEGER; p: Point;
+VAR a: FLOAT32; k, m: SIGNED16; p: Point;
 BEGIN
 	FOR k := 0 TO size - 1 DO
 		a := M.pi / (size / 2.0) * k;
@@ -330,7 +330,7 @@ END Cylinder;
 
 (* set up the cube figure *)
 PROCEDURE Cube;
-VAR w: REAL; k, x, y, z: INTEGER;
+VAR w: FLOAT32; k, x, y, z: SIGNED16;
 BEGIN
 	k := 2; WHILE k*k*k < MaxPoint DO INC(k) END; DEC(k);
 	w := k - 1.0;
@@ -346,7 +346,7 @@ END Cube;
 (* set up the box figure *)
 PROCEDURE Box;
 CONST t = 0.507; u = 0.5;
-VAR w, v: REAL; m, n: INTEGER;
+VAR w, v: FLOAT32; m, n: SIGNED16;
 BEGIN
 	Set(t, t, t); Set(t, t, -t);
 	Set(t, -t, t); Set(t, -t, -t);
@@ -368,7 +368,7 @@ END Box;
 (* set up the spiral figure *)
 PROCEDURE Spiral;
 CONST spirals = 4; radius = 0.8;
-VAR d, a, dd, aa: REAL; k: INTEGER;
+VAR d, a, dd, aa: FLOAT32; k: SIGNED16;
 BEGIN
 	d := radius / MaxPoint;
 	a := spirals * 2.0 * M.pi / MaxPoint;
@@ -384,7 +384,7 @@ END Spiral;
 PROCEDURE Milky;
 CONST Size = 0.6; Height = 0.1; Twist = 4 * M.pi; Var = 0.05;
 	Centre = 0.15; CentreSize = 0.07 * Size; Earth = 0.06; EarthDist = 0.8 * Size; EarthSize = 0.08 * Size;
-VAR k, m: LONGINT; a, e: REAL; p: Point;
+VAR k, m: SIGNED32; a, e: FLOAT32; p: Point;
 BEGIN
 	m := (ENTIER(MaxPoint * Centre));
 	FOR k := 0 TO m - 1 DO
@@ -417,7 +417,7 @@ END Milky;
 (* set up the plane figure *)
 PROCEDURE Plane;
 CONST w = 1.4; h = 1.4;
-VAR m, x, y: INTEGER; v: REAL;
+VAR m, x, y: SIGNED16; v: FLOAT32;
 BEGIN
 	m := SHORT(ENTIER(M.sqrt(MaxPoint)));
 	v := m - 1.0;
@@ -431,7 +431,7 @@ END Plane;
 (* set up the cone figure *)
 PROCEDURE Eiffel;
 CONST w = 3.0; h = 3.0; d = 2.8; b = 0.35;
-VAR m, x, y: INTEGER; xx, yy, a, v: REAL;
+VAR m, x, y: SIGNED16; xx, yy, a, v: FLOAT32;
 BEGIN
 	m := SHORT(ENTIER(M.sqrt(MaxPoint)));
 	v := m - 1.0;
@@ -448,7 +448,7 @@ END Eiffel;
 (* set up the trigsurface figure *)
 PROCEDURE TrigSurface;
 CONST w = 1.4; h = 1.4; c = 0.15; b = 0.02;
-VAR m, x, y: INTEGER; u, v, p, q: REAL;
+VAR m, x, y: SIGNED16; u, v, p, q: FLOAT32;
 BEGIN
 	m := SHORT(ENTIER(M.sqrt(MaxPoint)));
 	v := m - 1.0;
@@ -466,7 +466,7 @@ END TrigSurface;
 PROCEDURE Mobius;
 CONST band = 4; strips = MaxPoint DIV band; width = 0.3; radius = 1.5;
 	from = M.pi * 0.15; to = M.pi * 0.85; range = to - from;
-VAR m, n: INTEGER; a, b, c, w, cos, sin: REAL; p: ARRAY band OF Point;
+VAR m, n: SIGNED16; a, b, c, w, cos, sin: FLOAT32; p: ARRAY band OF Point;
 BEGIN
 	w := band - 1.0;
 	b := 2.0 * M.pi / strips;
@@ -497,7 +497,7 @@ PROCEDURE Dumbbell;
 CONST one = 27; half = (one - 1) DIV 2; two = MaxPoint DIV one; w = 0.8; h = 0.4;
 	x0 = 0.0000; xa = 0.6250; xb = 0.7083; xc = 0.8750; xd = 1.000;
 	y0 = 0.3333; ya = 0.2500; yb = 0.9000; yc = 0.9000; yd = 0.1667;
-VAR m, n, na, nb, nc, nd: INTEGER; v, cos, sin, d0, da, db, dc, dd: REAL; p: Point;
+VAR m, n, na, nb, nc, nd: SIGNED16; v, cos, sin, d0, da, db, dc, dd: FLOAT32; p: Point;
 BEGIN
 	da := M.sqrt((xa - x0) * (xa - x0) + (ya - y0) * (ya - y0));
 	db := M.sqrt((xb - xa) * (xb - xa) + (yb - ya) * (yb - ya));
@@ -531,7 +531,7 @@ END Dumbbell;
 (* set up the small ball figure *)
 PROCEDURE Ball1;
 CONST radius = 0.6; pack = 0.25;
-VAR n: INTEGER; a, b, c, t, u, v, w: REAL; p: Point;
+VAR n: SIGNED16; a, b, c, t, u, v, w: FLOAT32; p: Point;
 BEGIN
 	a := 0.001; b := M.pi * radius;
 	WHILE b - a > 0.01 DO
@@ -562,7 +562,7 @@ END Ball1;
 (* set up the large ball figure *)
 PROCEDURE Ball2;
 CONST radius = 0.99; pack = 1.25;
-VAR n: INTEGER; a, b, c, t, u, v, w: REAL; p: Point;
+VAR n: SIGNED16; a, b, c, t, u, v, w: FLOAT32; p: Point;
 BEGIN
 	a := 0.001; b := M.pi * radius;
 	WHILE b - a > 0.01 DO
@@ -593,7 +593,7 @@ END Ball2;
 (* set up the cross figure *)
 PROCEDURE Cross;
 CONST width = 0.9; diam = 0.05;
-VAR k, m: INTEGER; v: REAL;
+VAR k, m: SIGNED16; v: FLOAT32;
 BEGIN
 	Set(width, 0, 0); Set(-width, 0, 0);
 	Set(0, width, 0); Set(0, -width, 0);
@@ -613,7 +613,7 @@ END Cross;
 (* set up the helix figure *)
 PROCEDURE Helix;
 CONST width = 1.1; breadth = 0.24; links = 11; acid = 7; twist = 1.7 * M.pi;
-VAR m, n, y: INTEGER; x, a, cos, sin, db: REAL; p: Point;
+VAR m, n, y: SIGNED16; x, a, cos, sin, db: FLOAT32; p: Point;
 BEGIN
 	db := 2.0 * breadth / (acid + 1.0);
 	FOR n := 1 TO links DO
@@ -644,10 +644,10 @@ END Helix;
 (* set up the key figure *)
 PROCEDURE Key;
 CONST crad = 0.38; cx = 0.4 + crad; clrad = 0.2;
-VAR m, k: INTEGER; from, to, angle, circlet, circ, dist, u, v, t, d, e: REAL; q: ARRAY 13 OF Point;
+VAR m, k: SIGNED16; from, to, angle, circlet, circ, dist, u, v, t, d, e: FLOAT32; q: ARRAY 13 OF Point;
 
-	PROCEDURE Stack(x, y: REAL);
-	VAR i: INTEGER;
+	PROCEDURE Stack(x, y: FLOAT32);
+	VAR i: SIGNED16;
 	BEGIN
 		FOR i := 0 TO 4 DO
 			Set(x, y, From(-0.04, 0.04, i / 4.0))
@@ -707,7 +707,7 @@ END Key;
 (* set up the venus figure *)
 PROCEDURE Venus;
 CONST radius = 0.38; len = 0.6; width = 0.05; cross = 0.30;
-VAR m, n: INTEGER; dist, d, a, b: REAL; p: Point;
+VAR m, n: SIGNED16; dist, d, a, b: FLOAT32; p: Point;
 BEGIN
 	m := (MaxPoint - 3) DIV 3;
 	dist := 2 * (M.pi * (2 * radius - width) + len + cross * 2);
@@ -746,7 +746,7 @@ END Venus;
 (* set up the mars figure *)
 PROCEDURE Mars;
 CONST radius = 0.38; len = 0.6; width = 0.05; arrow = 0.30; angle = 0.23 * M.pi;
-VAR k, m, n: INTEGER; cos, sin, dist, d, a, b: REAL; p: Point; pp: ARRAY (MaxPoint DIV 3) OF Point;
+VAR k, m, n: SIGNED16; cos, sin, dist, d, a, b: FLOAT32; p: Point; pp: ARRAY (MaxPoint DIV 3) OF Point;
 BEGIN
 	m := (MaxPoint - 3) DIV 3;
 	dist := 2 * (M.pi * (2 * radius - width) + len + arrow * 2);
@@ -794,12 +794,12 @@ END Mars;
 (* set up the text figure *)
 PROCEDURE Text(CONST font, text: ARRAY OF CHAR);
 CONST width = 1.8; maxheight = 1.6;
-VAR m, n, p, dx, x, y, w, h, x0, count, totalw, totalh, pixels, max, min, dot, times: INTEGER;
-	pattern: Display.Pattern; pat: Pat; s: SET; adr: ADDRESS; len: LONGINT; f: Fonts.Font;
-	pixelw, pixeld, woff, hoff: REAL;
+VAR m, n, p, dx, x, y, w, h, x0, count, totalw, totalh, pixels, max, min, dot, times: SIGNED16;
+	pattern: Display.Pattern; pat: Pat; s: SET; adr: ADDRESS; len: SIGNED32; f: Fonts.Font;
+	pixelw, pixeld, woff, hoff: FLOAT32;
 
-	PROCEDURE Pixel(x, y: INTEGER);
-	VAR xx, yy: REAL; g, h, i: INTEGER;
+	PROCEDURE Pixel(x, y: SIGNED16);
+	VAR xx, yy: FLOAT32; g, h, i: SIGNED16;
 	BEGIN
 		xx := pixelw * x; yy := pixelw * y;
 		FOR g := 0 TO pixels - 1 DO
@@ -855,9 +855,9 @@ BEGIN
 END Text;
 
 (* set up the pyramid figure *)
-PROCEDURE Pyramid(n: INTEGER);
+PROCEDURE Pyramid(n: SIGNED16);
 CONST d = 0.15; h = 0.15;
-VAR x, y, x0, y0: REAL; k, p, q: INTEGER;
+VAR x, y, x0, y0: FLOAT32; k, p, q: SIGNED16;
 BEGIN
 	x := 0; y := n * h * 0.5;
 	x0 := x; y0 := y;
@@ -896,7 +896,7 @@ END Pyramid;
 (* set up the hypercube figure *)
 PROCEDURE Hypercube;
 CONST inner = 0.3; outer = 0.5;
-VAR diag, dist, d, e, f: REAL;
+VAR diag, dist, d, e, f: FLOAT32;
 BEGIN
 	Set(inner, inner, inner); Set(inner, inner, -inner);
 	Set(inner, -inner, inner); Set(inner, -inner, -inner);
@@ -936,7 +936,7 @@ END Hypercube;
 PROCEDURE Mug;
 CONST bottom = 5; side = 12; ear = 3; dots = side + bottom - 1; dist = 0.09; earbend = 0.92;
 	radius = bottom * dist; height = side * dist; earrad = ear * dist;
-VAR p: ARRAY dots OF Point; k, n, rots: INTEGER; a, b, cos, sin: REAL;
+VAR p: ARRAY dots OF Point; k, n, rots: SIGNED16; a, b, cos, sin: FLOAT32;
 BEGIN
 	SetPoint(p[0], earrad, 0, -dist * 0.5); SetPoint(p[1], earrad + dist, 0, -dist * 0.5);
 	SetPoint(p[2], earrad, 0, dist * 0.5); SetPoint(p[3], earrad + dist, 0, dist * 0.5);
@@ -971,7 +971,7 @@ END Mug;
 (* set up the eggs figure *)
 PROCEDURE Eggs;
 CONST N = 5; R = 7; W = 1.9; A = 0.12; B = 0.19; Q = MaxPoint DIV N; P = Q DIV R;
-VAR p: ARRAY Q OF Point; k, m: INTEGER; a, cos, sin: REAL;
+VAR p: ARRAY Q OF Point; k, m: SIGNED16; a, cos, sin: FLOAT32;
 BEGIN
 	a := M.pi / P;
 	FOR m := 0 TO P - 1 DO
@@ -995,10 +995,10 @@ END Eggs;
 (* set up the South African flag figure *)
 PROCEDURE ZAFlag;
 CONST b = 0; bb = 0.04; w = 1.7; wr = 2 / 3; tr = 18; hr = 3; xhr = 4; h = w * wr; xoff = -0.5 * w; yoff = -0.5 * h;
-VAR t, tt, hh, h1, d3, d4, d5, dist, d: REAL; xy1, xh1, xd1, xy2, xh2, xd2: REAL;
+VAR t, tt, hh, h1, d3, d4, d5, dist, d: FLOAT32; xy1, xh1, xd1, xy2, xh2, xd2: FLOAT32;
 
-	PROCEDURE Stripe(xfrom, xto, yfrom, yto, dst: REAL);
-	VAR e, x, y, z: REAL;
+	PROCEDURE Stripe(xfrom, xto, yfrom, yto, dst: FLOAT32);
+	VAR e, x, y, z: FLOAT32;
 	BEGIN e := 0;
 		WHILE e < dst DO
 			x := From(xfrom, xto, e / dst);
@@ -1035,19 +1035,19 @@ BEGIN
 END ZAFlag;
 
 (* set up n components of the pc figure *)
-PROCEDURE Component(n: INTEGER);
+PROCEDURE Component(n: SIGNED16);
 CONST S = 0.8 / 3.5; Lines = 40;
-VAR nlines, k: INTEGER; dist, d, e, f: REAL; src, dst: ARRAY Lines OF Point;
-	limit, box, keyb, screen: INTEGER;
+VAR nlines, k: SIGNED16; dist, d, e, f: FLOAT32; src, dst: ARRAY Lines OF Point;
+	limit, box, keyb, screen: SIGNED16;
 
-	PROCEDURE Line(x0, y0, z0, x1, y1, z1: REAL);
+	PROCEDURE Line(x0, y0, z0, x1, y1, z1: FLOAT32);
 	BEGIN
 		src[nlines].x := x0; src[nlines].y := y0; src[nlines].z := z0;
 		dst[nlines].x := x1; dst[nlines].y := y1; dst[nlines].z := z1;
 		INC(nlines)
 	END Line;
 
-	PROCEDURE Lineto(x, y, z: REAL);
+	PROCEDURE Lineto(x, y, z: FLOAT32);
 	BEGIN
 		src[nlines] := dst[nlines - 1];
 		dst[nlines].x := x; dst[nlines].y := y; dst[nlines].z := z;
@@ -1185,11 +1185,11 @@ END DefaultFigures;
 
 (* write the generated figures to disk *)
 PROCEDURE WriteData;
-VAR f, p: INTEGER; maxint, minint, max, min, factor: REAL;
+VAR f, p: SIGNED16; maxint, minint, max, min, factor: FLOAT32;
 	F: Files.File; R: Files.Rider;
 BEGIN
 	Str("writing "); Str(Filename); Str("   ");
-	max := MIN(REAL); min := MAX(REAL);
+	max := MIN(FLOAT32); min := MAX(FLOAT32);
 	FOR f := 0 TO curfig - 1 DO
 		FOR p := 0 TO MaxPoint - 1 DO
 			IF figure[f, p].x < min THEN min := figure[f, p].x END;
@@ -1200,7 +1200,7 @@ BEGIN
 			IF figure[f, p].z > max THEN max := figure[f, p].z END
 		END
 	END;
-	maxint := MAX(INTEGER) - 2.0;
+	maxint := MAX(SIGNED16) - 2.0;
 	minint := -maxint;
 	factor := (maxint - minint) / (max - min);
 	IF Verbose THEN

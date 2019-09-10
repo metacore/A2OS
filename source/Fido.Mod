@@ -7,7 +7,7 @@ IMPORT KernelLog, Modules, Objects, Kernel, Streams, ProcessInfo;
 TYPE
 	Watchdog* = OBJECT
 		VAR
-			timer: Kernel.Timer; delay: LONGINT; time: Kernel.MilliTimer; alive, done: BOOLEAN;
+			timer: Kernel.Timer; delay: SIGNED32; time: Kernel.MilliTimer; alive, done: BOOLEAN;
 			name: ARRAY 32 OF CHAR;
 
 		PROCEDURE Cleanup;
@@ -27,7 +27,7 @@ TYPE
 			Kernel.SetTimer(time, delay)
 		END Reset;
 
-		PROCEDURE &Init*(CONST name: ARRAY OF CHAR; delay: LONGINT);
+		PROCEDURE &Init*(CONST name: ARRAY OF CHAR; delay: SIGNED32);
 		BEGIN
 			COPY(name, SELF.name); SELF.delay := delay;
 			alive := TRUE; done := FALSE;

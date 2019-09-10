@@ -7,7 +7,7 @@ MODULE BenchClockDrift;	(* pjm *)
 IMPORT Machine, KernelLog, Kernel;
 
 PROCEDURE Run*;
-VAR t: HUGEINT; i: LONGINT; m: Kernel.MilliTimer;
+VAR t: SIGNED64; i: SIGNED32; m: Kernel.MilliTimer;
 BEGIN
 	FOR i := 1 TO 10 DO
 		Kernel.SetTimer(m, 1);

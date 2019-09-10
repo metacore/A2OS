@@ -54,7 +54,7 @@ TYPE
 	Socket* = OBJECT
 		VAR
 			next: Socket; (* link for socket pool *)
-			lport: LONGINT; (* local port *)
+			lport: SIGNED32; (* local port *)
 
 			hdr: ARRAY UDPHdrLen OF CHAR; (* UDP prototype header for sending *)
 			pseudoHdr: ARRAY MaxPseudoHdrLen OF CHAR; (* pseudo header for calculating checksum *)
@@ -70,7 +70,7 @@ TYPE
 
 
 		(** Constructor *)
-		PROCEDURE &Open*(lport: LONGINT; VAR res: WORD);
+		PROCEDURE &Open*(lport: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			open := TRUE;
 			ASSERT((lport >= 0) & (lport < 10000H));
@@ -91,7 +91,7 @@ TYPE
 
 		(** Send a UDP datagram to the foreign address specified by "fip" and "fport".
 			The data is in "data[ofs..ofs+len-1]".  In case of concurrent sends the datagrams are serialized. *)
-		PROCEDURE Send*(fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: SIZE; VAR res: WORD);
+		PROCEDURE Send*(fip: IP.Adr; fport: SIGNED32; CONST data: ARRAY OF CHAR; ofs, len: SIZE; VAR res: INTEGER);
 		VAR
 			int: IP.Interface;
 
@@ -112,7 +112,7 @@ TYPE
 
 		(** Send a broadcast UDP datagram via interface "int" to port "lport". Normally only used by DHCP.
 			The data is in "data[ofs..ofs+len-1]".  In case of concurrent sends the datagrams are serialized. *)
-		PROCEDURE SendBroadcast*(int: IP.Interface; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: SIZE);
+		PROCEDURE SendBroadcast*(int: IP.Interface; fport: SIGNED32; CONST data: ARRAY OF CHAR; ofs, len: SIZE);
 		BEGIN {EXCLUSIVE}
 			ASSERT((fport >= 0) & (fport < 10000H));
 			ASSERT((len >= 0) & (len <= MaxUDPDataLen));
@@ -127,7 +127,7 @@ TYPE
 		"len" returns the actual datagram size and "data[ofs..ofs+len-1]" returns the data.
 		"res" returns "Timeout" in case of a timeout and "BufferOverflow" if the received datagram was too big.
 		*)
-		PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size: SIZE; ms: LONGINT; VAR fip: IP.Adr; VAR fport: LONGINT; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size: SIZE; ms: SIGNED32; VAR fip: IP.Adr; VAR fport: SIGNED32; VAR len: SIZE; VAR res: INTEGER);
 		VAR
 			buffer: Network.Buffer;
 			fragmentBuffer: Network.Buffer;
@@ -193,18 +193,18 @@ TYPE
 
 
 		(* Internal send operation. Called from "Send" and "SendBroadcast". *)
-		PROCEDURE DoSend(int: IP.Interface; fip: IP.Adr; fport: LONGINT; CONST data: ARRAY OF CHAR; ofs, len: SIZE);
+		PROCEDURE DoSend(int: IP.Interface; fip: IP.Adr; fport: SIGNED32; CONST data: ARRAY OF CHAR; ofs, len: SIZE);
 		VAR
-			sum: LONGINT;
-			pseudoHdrLen: LONGINT;
+			sum: SIGNED32;
+			pseudoHdrLen: SIGNED32;
 		BEGIN
 			(* set UDP header *)
 			Network.PutNet2(hdr, 2, fport); (* foreign port *)
-			Network.PutNet2(hdr, 4, (len+UDPHdrLen)(LONGINT)); (* UPD length *)
+			Network.PutNet2(hdr, 4, (len+UDPHdrLen)(SIGNED32)); (* UPD length *)
 			Network.Put2(hdr, 6, 0); (* checksum := 0 *)
 			IF ~(Network.ChecksumUDP IN int.dev.calcChecksum) THEN
 				(* set pseudo header *)
-				pseudoHdrLen := int.WritePseudoHeader(pseudoHdr, int.localAdr, fip, IPTypeUDP, (len+UDPHdrLen)(LONGINT));
+				pseudoHdrLen := int.WritePseudoHeader(pseudoHdr, int.localAdr, fip, IPTypeUDP, (len+UDPHdrLen)(SIGNED32));
 
 				sum := IP.Checksum1(pseudoHdr, 0, pseudoHdrLen, 0);
 				sum := IP.Checksum1(hdr, 0, UDPHdrLen, sum);
@@ -212,7 +212,7 @@ TYPE
 
 				Network.Put2(hdr, 6, sum); (* checksum := sum *)
 			END;
-			int.Send(IPTypeUDP, fip, hdr, data, UDPHdrLen, ofs(LONGINT), len(LONGINT), IP.MaxTTL);
+			int.Send(IPTypeUDP, fip, hdr, data, UDPHdrLen, ofs(SIGNED32), len(SIGNED32), IP.MaxTTL);
 		END DoSend;
 
 
@@ -260,7 +260,7 @@ TYPE
 	SocketPool = OBJECT
 		VAR
 			table: ARRAY HashTableSize OF Socket;
-			eport: LONGINT;
+			eport: SIGNED32;
 
 		(* Initialize the pool. *)
 		PROCEDURE &Init*;
@@ -274,7 +274,7 @@ TYPE
 
 
 		(* Look for the specified Socket *)
-		PROCEDURE Lookup(lport: LONGINT): Socket;
+		PROCEDURE Lookup(lport: SIGNED32): Socket;
 		VAR item: Socket;
 		BEGIN
 			item := table[lport MOD HashTableSize];
@@ -290,7 +290,7 @@ TYPE
 		VAR
 			ok: BOOLEAN;
 			i: SIZE;
-			sport: LONGINT;
+			sport: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF p.lport = NilPort THEN
 				(* find an unused ephemeral port *)
@@ -362,18 +362,18 @@ VAR
 
 	(* Statistic variables *)
 	NUDPRcvTotal-, NUDPTooSmall-, NUDPBadChecksum-, NUDPRcvBroadcast-, NUDPUnknownPort-,
-	NUDPQueued-, NUDPQueueOverflow-, NUDPTrim-, NUDPBadHdrLen-: LONGINT;
+	NUDPQueued-, NUDPQueueOverflow-, NUDPTrim-, NUDPBadHdrLen-: SIGNED32;
 
 
 (* Receive a UDP datagram. *)
-PROCEDURE Input(int: IP.Interface; type: LONGINT; fip, lip: IP.Adr; buffer: Network.Buffer);
+PROCEDURE Input(int: IP.Interface; type: SIGNED32; fip, lip: IP.Adr; buffer: Network.Buffer);
 VAR
 	(* pseudo header for calculating checksum *)
 	pseudoHdr: ARRAY MaxPseudoHdrLen OF CHAR;
-	pseudoHdrLen: LONGINT;
-	sum, tlen: LONGINT;
+	pseudoHdrLen: SIGNED32;
+	sum, tlen: SIGNED32;
 	s: Socket;
-	reassembledLength: LONGINT;
+	reassembledLength: SIGNED32;
 	fragmentBuffer: Network.Buffer;
 
 BEGIN

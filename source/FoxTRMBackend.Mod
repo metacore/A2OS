@@ -56,7 +56,7 @@ TYPE
 			first := NIL; last := NIL;
 		END Init;
 
-		PROCEDURE Enter(fixup: BinaryCode.Fixup; currentPC: BinaryCode.Unit; bits: LONGINT);
+		PROCEDURE Enter(fixup: BinaryCode.Fixup; currentPC: BinaryCode.Unit; bits: SIGNED32);
 		VAR entry: FixupEntry; maxPC: BinaryCode.Unit;
 		BEGIN
 			maxPC := currentPC + ASH(1,bits-1) -1; (* signed *)
@@ -91,10 +91,10 @@ TYPE
 		toVirtual: ARRAY Registers OF Ticket; (* registers real register -> none / reserved / split / blocked / virtual register (>0) *)
 		reserved: ARRAY Registers OF BOOLEAN;
 		unusable: Ticket;
-		hint: LONGINT;
+		hint: SIGNED32;
 
 		PROCEDURE &InitPhysicalRegisters(supportFP: BOOLEAN);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(toVirtual)-1 DO
 				toVirtual[i] := NIL;
@@ -114,36 +114,36 @@ TYPE
 			IF b THEN toVirtual[InstructionSet.FP] := unusable ELSE toVirtual[InstructionSet.FP] := NIL END;
 		END SupportFP;
 
-		PROCEDURE NumberRegisters*(): LONGINT;
+		PROCEDURE NumberRegisters*(): SIGNED32;
 		BEGIN
 			RETURN Registers
 		END NumberRegisters;
 
-		PROCEDURE Allocate*(index: LONGINT; virtualRegister: Ticket);
+		PROCEDURE Allocate*(index: SIGNED32; virtualRegister: Ticket);
 		BEGIN
 			Assert(toVirtual[index]=NIL,"register already allocated");
 			toVirtual[index] := virtualRegister;
 			ASSERT(~virtualRegister.spilled);
 		END Allocate;
 
-		PROCEDURE SetReserved*(index: LONGINT; res: BOOLEAN);
+		PROCEDURE SetReserved*(index: SIGNED32; res: BOOLEAN);
 		BEGIN
 			reserved[index] := res;
 		END SetReserved;
 
-		PROCEDURE Reserved*(index: LONGINT): BOOLEAN;
+		PROCEDURE Reserved*(index: SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN (index>0) & reserved[index]
 		END Reserved;
 
-		PROCEDURE Free*(index: LONGINT);
+		PROCEDURE Free*(index: SIGNED32);
 		BEGIN
 			Assert((toVirtual[index] # NIL),"register not reserved");
 			toVirtual[index] := NIL;
 		END Free;
 
-		PROCEDURE NextFree*(CONST type: IntermediateCode.Type):LONGINT;
-		VAR i: LONGINT;
+		PROCEDURE NextFree*(CONST type: IntermediateCode.Type):SIGNED32;
+		VAR i: SIGNED32;
 		BEGIN
 			ASSERT(type.sizeInBits=32);
 			i := 0;
@@ -159,17 +159,17 @@ TYPE
 			RETURN i;
 		END NextFree;
 
-		PROCEDURE AllocationHint*(index: LONGINT);
+		PROCEDURE AllocationHint*(index: SIGNED32);
 		BEGIN hint := index
 		END AllocationHint;
 
-		PROCEDURE Mapped*(physical: LONGINT): Ticket;
+		PROCEDURE Mapped*(physical: SIGNED32): Ticket;
 		BEGIN
 			RETURN toVirtual[physical]
 		END Mapped;
 
 		PROCEDURE Dump*(w: Streams.Writer);
-		VAR i: LONGINT; virtual: Ticket;
+		VAR i: SIGNED32; virtual: Ticket;
 		BEGIN
 			w.String("---- registers ----"); w.Ln;
 			FOR i := 0 TO LEN(toVirtual)-1 DO
@@ -192,16 +192,16 @@ TYPE
 		opSP, opLR, opFP, null, noOperand: InstructionSet.Operand;
 		instructionSet: InstructionSet.InstructionSet;
 
-		stackSize, spillStackPosition: LONGINT;
+		stackSize, spillStackPosition: SIGNED32;
 		stackSizeKnown: BOOLEAN;
 		inStackAllocation: BOOLEAN;
 		builtinsModuleName: SyntaxTree.IdentifierString;
 
 		forwardFixups: ForwardFixupList;
-		spillStackStart: LONGINT;
+		spillStackStart: SIGNED32;
 		backend: BackendTRM;
 		supportFP: BOOLEAN;
-		pushChainLength: LONGINT;
+		pushChainLength: SIGNED32;
 		patchSpartan6: BOOLEAN;
 
 		PROCEDURE SetInstructionSet(instructionSet: InstructionSet.InstructionSet);
@@ -244,7 +244,7 @@ TYPE
 		END CheckStackPointer;
 
 		PROCEDURE PatchSpartan6;
-		VAR i: LONGINT; opx: InstructionSet.Operand;
+		VAR i: SIGNED32; opx: InstructionSet.Operand;
 		BEGIN
 			IF patchSpartan6 THEN
 				IF (out.os.fixed) & ((out.os.alignment + out.pc) MOD 1024 = 959) THEN
@@ -257,7 +257,7 @@ TYPE
 			END;
 		END PatchSpartan6;
 
-		PROCEDURE Emit(op: LONGINT; CONST op1, op2: InstructionSet.Operand);
+		PROCEDURE Emit(op: SIGNED32; CONST op1, op2: InstructionSet.Operand);
 		VAR pc: BinaryCode.Unit;
 		BEGIN
 			pc := (out.os.alignment + out.pc);
@@ -271,13 +271,13 @@ TYPE
 			PatchSpartan6;
 		END Emit;
 
-		PROCEDURE Emit2(op: LONGINT; CONST op1, op2: InstructionSet.Operand);
+		PROCEDURE Emit2(op: SIGNED32; CONST op1, op2: InstructionSet.Operand);
 		BEGIN
 			CheckStackPointer(op1);
 			Emit(op, op1, op2);
 		END Emit2;
 
-		PROCEDURE Emit2N(op: LONGINT; CONST op1: InstructionSet.Operand; n: LONGINT);
+		PROCEDURE Emit2N(op: SIGNED32; CONST op1: InstructionSet.Operand; n: SIGNED32);
 		VAR op2: InstructionSet.Operand;
 		BEGIN
 			CheckStackPointer(op1);
@@ -285,12 +285,12 @@ TYPE
 			Emit(op, op1, op2);
 		END Emit2N;
 
-		PROCEDURE Emit1(op: LONGINT; CONST op1: InstructionSet.Operand);
+		PROCEDURE Emit1(op: SIGNED32; CONST op1: InstructionSet.Operand);
 		BEGIN
 			Emit(op, op1, emptyOperand);
 		END Emit1;
 
-		PROCEDURE Emit1N(op: LONGINT; n: LONGINT);
+		PROCEDURE Emit1N(op: SIGNED32; n: SIGNED32);
 		VAR op1: InstructionSet.Operand;
 		BEGIN
 			instructionSet.InitImmediate(op1,0,n);
@@ -299,7 +299,7 @@ TYPE
 
 		(*------------------- overwritten methods ----------------------*)
 		PROCEDURE Section*(in: IntermediateCode.Section; out: BinaryCode.Section);
-		VAR oldSpillStackSize: LONGINT;
+		VAR oldSpillStackSize: SIGNED32;
 
 			PROCEDURE CheckEmptySpillStack(): BOOLEAN;
 			BEGIN
@@ -343,7 +343,7 @@ TYPE
 		END Section;
 
 		PROCEDURE Supported*(CONST instr: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN;
-		VAR sizeInBits: LONGINT; form: LONGINT; opcode: LONGINT; value: HUGEINT; exp: LONGINT;
+		VAR sizeInBits: SIGNED32; form: SIGNED32; opcode: SIGNED32; value: SIGNED64; exp: SIGNED32;
 		BEGIN
 			opcode := instr.opcode;
 			form := instr.op1.type.form;
@@ -479,7 +479,7 @@ TYPE
 		END Supported;
 
 		(* input: type (such as that of an intermediate operand), output: low and high type (such as in low and high type of an operand) *)
-		PROCEDURE GetPartType*(CONST type: IntermediateCode.Type; part: LONGINT; VAR typePart: IntermediateCode.Type);
+		PROCEDURE GetPartType*(CONST type: IntermediateCode.Type; part: SIGNED32; VAR typePart: IntermediateCode.Type);
 		BEGIN
 			ASSERT(type.sizeInBits >0); ASSERT(part < 2);
 			IF (part = 0) OR (type.sizeInBits =64) THEN
@@ -490,7 +490,7 @@ TYPE
 		END GetPartType;
 
 		PROCEDURE GetSpillOperand(ticket: Ticket; VAR mem: Operand);
-		VAR offset: LONGINT; register: LONGINT;
+		VAR offset: SIGNED32; register: SIGNED32;
 		BEGIN
 
 			D.String("spill stack used in "); Basic.WriteSegmentedName(D.Log, in.name); D.String(": "); D.Int(inPC,1); D.Ln;
@@ -509,7 +509,7 @@ TYPE
 			Emit2(opST,reg,mem);
 		END ToSpillStack;
 
-		PROCEDURE AllocateSpillStack*(size: LONGINT);
+		PROCEDURE AllocateSpillStack*(size: SIGNED32);
 		BEGIN
 		END AllocateSpillStack;
 
@@ -544,7 +544,7 @@ TYPE
 		END ExchangeTickets;
 
 		PROCEDURE CheckFixups;
-		VAR  fixup, forward, newFixup: BinaryCode.Fixup; fixupOp: InstructionSet.Operand; checkPC, iterCount: LONGINT;
+		VAR  fixup, forward, newFixup: BinaryCode.Fixup; fixupOp: InstructionSet.Operand; checkPC, iterCount: SIGNED32;
 
 			PROCEDURE CheckPC(): BinaryCode.Unit;
 			CONST safety=16; (* max number of TRM instructions to emit IR instruction *)
@@ -603,7 +603,7 @@ TYPE
 		END IsFloat;
 
 		PROCEDURE Generate*(VAR instruction: IntermediateCode.Instruction);
-		VAR opcode: SHORTINT; ticket: Ticket; hwreg, lastUse: LONGINT;
+		VAR opcode: SIGNED8; ticket: Ticket; hwreg, lastUse: SIGNED32;
 		BEGIN
 			CheckFixups;
 
@@ -731,7 +731,7 @@ TYPE
 		END TicketToOperand;
 
 		(* updateStackSize is important as intermediate RETURNS should not change stack size *)
-		PROCEDURE AllocateStack(size: LONGINT; updateStackSize: BOOLEAN);
+		PROCEDURE AllocateStack(size: SIGNED32; updateStackSize: BOOLEAN);
 		VAR  sizeOperand: InstructionSet.Operand;
 		BEGIN
 			inStackAllocation := TRUE;
@@ -757,7 +757,7 @@ TYPE
 		END AllocateStack;
 
 		PROCEDURE EmitEnter(CONST instr: IntermediateCode.Instruction);
-		VAR cc: LONGINT; mem: InstructionSet.Operand;
+		VAR cc: SIGNED32; mem: InstructionSet.Operand;
 		BEGIN
 			stackSize := 0;
 			(*
@@ -775,12 +775,12 @@ TYPE
 				spilln <-- SP
 			*)
 			cc := SHORT(instr.op1.intValue);
-			spillStackPosition := - LONGINT(instr.op2.intValue)-1; (* relative to logical frame pointer ! *)
-			AllocateStack(LONGINT(instr.op2.intValue+spillStack.MaxSize()), TRUE);
+			spillStackPosition := - SIGNED32(instr.op2.intValue)-1; (* relative to logical frame pointer ! *)
+			AllocateStack(SIGNED32(instr.op2.intValue+spillStack.MaxSize()), TRUE);
 		END EmitEnter;
 
 		PROCEDURE EmitLeave(CONST instr: IntermediateCode.Instruction);
-		VAR cc: LONGINT; mem: InstructionSet.Operand;
+		VAR cc: SIGNED32; mem: InstructionSet.Operand;
 		BEGIN
 			IF ~supportFP THEN (* frame pointer might have been used *)
 				AllocateStack(-stackSize, FALSE);
@@ -789,7 +789,7 @@ TYPE
 		END EmitLeave;
 
 		PROCEDURE EmitExit(CONST instr: IntermediateCode.Instruction);
-		VAR cc: LONGINT; mem: InstructionSet.Operand;
+		VAR cc: SIGNED32; mem: InstructionSet.Operand;
 		BEGIN
 			instructionSet.InitMemory(mem, InstructionSet.SP, 0);
 			Emit2(opLD, opLR, mem);
@@ -797,7 +797,7 @@ TYPE
 			Emit1(opBR, opLR);
 		END EmitExit;
 
-		PROCEDURE ResultRegister(part: LONGINT): InstructionSet.Operand;
+		PROCEDURE ResultRegister(part: SIGNED32): InstructionSet.Operand;
 		VAR register: InstructionSet.Operand;
 		BEGIN
 			IF part = Low THEN instructionSet.InitRegister(register,0)
@@ -806,7 +806,7 @@ TYPE
 			RETURN register
 		END ResultRegister;
 
-		PROCEDURE EmitResult(VAR instr: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitResult(VAR instr: IntermediateCode.Instruction; part: SIGNED32);
 		VAR op,result: Operand;
 		BEGIN
 			AcquireDestinationRegister(instr.op1, part,op);
@@ -815,7 +815,7 @@ TYPE
 			ReleaseDestinationRegister(instr.op1,part,op);
 		END EmitResult;
 
-		PROCEDURE EmitReturn(VAR instr: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitReturn(VAR instr: IntermediateCode.Instruction; part: SIGNED32);
 		VAR op,result: Operand;
 		BEGIN
 			MakeRegister(instr.op1,part,op);
@@ -823,7 +823,7 @@ TYPE
 			MovIfDifferent(result, op);
 		END EmitReturn;
 
-		PROCEDURE EmitMov(VAR vop1,vop2: IntermediateCode.Operand; part: LONGINT);
+		PROCEDURE EmitMov(VAR vop1,vop2: IntermediateCode.Operand; part: SIGNED32);
 		VAR left,right: Operand; rightTicket: Ticket; neg: BOOLEAN;
 		BEGIN
 			rightTicket := NIL;
@@ -847,7 +847,7 @@ TYPE
 
 		PROCEDURE EmitConv(VAR instr: IntermediateCode.Instruction);
 		VAR left,right,temp: Operand;
-			srcSize, destSize: LONGINT;
+			srcSize, destSize: SIGNED32;
 		BEGIN
 			srcSize := instr.op2.type.sizeInBits;
 			destSize := instr.op1.type.sizeInBits;
@@ -946,11 +946,11 @@ TYPE
 			AllocateStack(-SHORT(instruction.op2.intValue), TRUE)
 		END EmitCall;
 
-		PROCEDURE GetImmediate32(val: LONGINT; CONST reg: InstructionSet.Operand; emit: BOOLEAN): LONGINT;
-		VAR ops: LONGINT; set: SET32;
+		PROCEDURE GetImmediate32(val: SIGNED32; CONST reg: InstructionSet.Operand; emit: BOOLEAN): SIGNED32;
+		VAR ops: SIGNED32; set: SET32;
 
-			PROCEDURE Add(val,pos: LONGINT; VAR first: BOOLEAN): LONGINT;
-			VAR imm: InstructionSet.Operand; ops: LONGINT; op: InstructionSet.Operand;
+			PROCEDURE Add(val,pos: SIGNED32; VAR first: BOOLEAN): SIGNED32;
+			VAR imm: InstructionSet.Operand; ops: SIGNED32; op: InstructionSet.Operand;
 			BEGIN
 				instructionSet.InitImmediate(imm, 0, val);
 				IF pos # 0 THEN
@@ -980,8 +980,8 @@ TYPE
 				RETURN ops
 			END Add;
 
-			PROCEDURE Compute(val: SET): LONGINT;
-			VAR v,i: LONGINT; ops: LONGINT; first: BOOLEAN;
+			PROCEDURE Compute(val: SET): SIGNED32;
+			VAR v,i: SIGNED32; ops: SIGNED32; first: BOOLEAN;
 			BEGIN
 				v := 0; ops := 0; first := TRUE;
 				FOR i := 31 TO 0 BY -1 DO
@@ -1002,16 +1002,16 @@ TYPE
 			RETURN ops
 		END GetImmediate32;
 
-		PROCEDURE ImmediateToOperand(imm: HUGEINT; part: LONGINT; signed: BOOLEAN; bits: LONGINT; VAR op: Operand);
-		VAR immOp: InstructionSet.Operand; maxImmValue, minImmValue : LONGINT;
+		PROCEDURE ImmediateToOperand(imm: SIGNED64; part: SIGNED32; signed: BOOLEAN; bits: SIGNED32; VAR op: Operand);
+		VAR immOp: InstructionSet.Operand; maxImmValue, minImmValue : SIGNED32;
 
-			PROCEDURE ImmediateToOp32(imm: LONGINT; VAR op: InstructionSet.Operand);
-			VAR ops: LONGINT;
+			PROCEDURE ImmediateToOp32(imm: SIGNED32; VAR op: InstructionSet.Operand);
+			VAR ops: SIGNED32;
 			BEGIN
 				IF (imm>=0) & (imm < ASH(1,instructionSet.ImmediateFixupBits)) THEN
 					instructionSet.InitImmediate(immOp, 0, imm);
 					Emit2(opMOV, op, immOp);
-				ELSIF (imm <0) & (imm > MIN(LONGINT)) & (ABS(imm) < ASH(1,instructionSet.ImmediateFixupBits)) THEN
+				ELSIF (imm <0) & (imm > MIN(SIGNED32)) & (ABS(imm) < ASH(1,instructionSet.ImmediateFixupBits)) THEN
 					instructionSet.InitImmediate(immOp, 0, 0);
 					Emit2(opMOV, op, immOp);
 					instructionSet.InitImmediate(immOp, 0, ABS(imm));
@@ -1045,9 +1045,9 @@ TYPE
 			END;
 		END ImmediateToOperand;
 
-		PROCEDURE MakeRegister(VAR vop: IntermediateCode.Operand; part: LONGINT; VAR rop: Operand);
-		VAR virtualReg: SIZE; tmp, imm: Operand; offset: LONGINT; symbol: ObjectFile.Identifier;
-			sizeInBits: LONGINT;
+		PROCEDURE MakeRegister(VAR vop: IntermediateCode.Operand; part: SIGNED32; VAR rop: Operand);
+		VAR virtualReg: SIZE; tmp, imm: Operand; offset: SIGNED32; symbol: ObjectFile.Identifier;
+			sizeInBits: SIGNED32;
 		BEGIN
 			(*InstructionSet.InitOperand(rop); *)
 			instructionSet.InitOperand(imm);
@@ -1085,7 +1085,7 @@ TYPE
 		END MakeRegister;
 
 		(* if the symbol has a statically known offset then return offset and set resulting section to nil, otherwise do not set resulting section to nil *)
-		PROCEDURE GetSymbolOffset(VAR vop: IntermediateCode.Operand; VAR sectionName: ObjectFile.Identifier): LONGINT;
+		PROCEDURE GetSymbolOffset(VAR vop: IntermediateCode.Operand; VAR sectionName: ObjectFile.Identifier): SIGNED32;
 		VAR offset: SIZE; section: Sections.Section;
 		BEGIN
 			sectionName := vop.symbol;
@@ -1098,12 +1098,12 @@ TYPE
 				END;
 				sectionName.name := "";
 			END;
-			RETURN offset(LONGINT);
+			RETURN offset(SIGNED32);
 		END GetSymbolOffset;
 
-		PROCEDURE GetMemory(VAR vop: IntermediateCode.Operand; part: LONGINT; VAR memoryOperand: InstructionSet.Operand; ticket: Ticket);
-		VAR virtualReg: SIZE; register: LONGINT; registerOperand, temporary: InstructionSet.Operand; symbol: ObjectFile.Identifier;
-			offset: LONGINT;
+		PROCEDURE GetMemory(VAR vop: IntermediateCode.Operand; part: SIGNED32; VAR memoryOperand: InstructionSet.Operand; ticket: Ticket);
+		VAR virtualReg: SIZE; register: SIGNED32; registerOperand, temporary: InstructionSet.Operand; symbol: ObjectFile.Identifier;
+			offset: SIGNED32;
 		BEGIN
 			virtualReg := vop.register;
 			ASSERT(vop.mode = IntermediateCode.ModeMemory);
@@ -1136,7 +1136,7 @@ TYPE
 			END;
 		END GetMemory;
 
-		PROCEDURE Load(VAR vop: IntermediateCode.Operand; part: LONGINT; CONST register: Operand);
+		PROCEDURE Load(VAR vop: IntermediateCode.Operand; part: SIGNED32; CONST register: Operand);
 		VAR memoryOperand: Operand;
 		BEGIN
 			ASSERT(register.type = InstructionSet.Register);
@@ -1144,15 +1144,15 @@ TYPE
 			Emit2(opLD,register,memoryOperand);
 		END Load;
 
-		PROCEDURE Store(VAR vop: IntermediateCode.Operand; part: LONGINT; CONST register: Operand);
+		PROCEDURE Store(VAR vop: IntermediateCode.Operand; part: SIGNED32; CONST register: Operand);
 		VAR memoryOperand: Operand;
 		BEGIN
 			GetMemory(vop,part,memoryOperand,NIL);
 			Emit2(opST,register,memoryOperand);
 		END Store;
 
-		PROCEDURE UnsignedImmediate(vop: IntermediateCode.Operand; part: LONGINT; bits: LONGINT; allowNegation: BOOLEAN; VAR neg: BOOLEAN; VAR rop: Operand): BOOLEAN;
-		VAR value,offset : LONGINT; symbol: ObjectFile.Identifier;
+		PROCEDURE UnsignedImmediate(vop: IntermediateCode.Operand; part: SIGNED32; bits: SIGNED32; allowNegation: BOOLEAN; VAR neg: BOOLEAN; VAR rop: Operand): BOOLEAN;
+		VAR value,offset : SIGNED32; symbol: ObjectFile.Identifier;
 		BEGIN
 			IF (vop.mode = IntermediateCode.ModeImmediate) THEN
 				offset := GetSymbolOffset(vop, symbol);
@@ -1166,7 +1166,7 @@ TYPE
 				ELSIF (value >= 0) & (value < ASH(1,bits)) THEN
 					instructionSet.InitImmediate(rop, 0, value); neg := FALSE;
 					RETURN TRUE
-				ELSIF allowNegation & (value <0) & (value # MIN(LONGINT)) & (-value < ASH(1,bits)) THEN
+				ELSIF allowNegation & (value <0) & (value # MIN(SIGNED32)) & (-value < ASH(1,bits)) THEN
 					instructionSet.InitImmediate(rop, 0, -value); neg := TRUE;
 					RETURN TRUE
 				END;
@@ -1174,16 +1174,16 @@ TYPE
 			RETURN FALSE
 		END UnsignedImmediate;
 
-		PROCEDURE HardwareIntegerRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT;
+		PROCEDURE HardwareIntegerRegister(index: SIGNED32; sizeInBits: SIGNED32): SIGNED32;
 		BEGIN RETURN index
 		END HardwareIntegerRegister;
 
-		PROCEDURE HardwareFloatRegister(index: LONGINT; sizeInBits: LONGINT): LONGINT;
+		PROCEDURE HardwareFloatRegister(index: SIGNED32; sizeInBits: SIGNED32): SIGNED32;
 		BEGIN RETURN index
 		END HardwareFloatRegister;
 
-		PROCEDURE GetTypedHardwareRegister(index: LONGINT; type: IntermediateCode.Type): LONGINT;
-		VAR size: LONGINT;
+		PROCEDURE GetTypedHardwareRegister(index: SIGNED32; type: IntermediateCode.Type): SIGNED32;
+		VAR size: SIGNED32;
 		BEGIN
 			IF type.form IN IntermediateCode.Integer THEN
 				RETURN HardwareIntegerRegister(index, type.sizeInBits)
@@ -1194,13 +1194,13 @@ TYPE
 			END;
 		END GetTypedHardwareRegister;
 
-		PROCEDURE ParameterRegister(CONST type: IntermediateCode.Type; index: LONGINT): LONGINT;
+		PROCEDURE ParameterRegister(CONST type: IntermediateCode.Type; index: SIGNED32): SIGNED32;
 		BEGIN
 			RETURN GetTypedHardwareRegister(index, type)
 		END ParameterRegister;
 
-		PROCEDURE PhysicalRegister(virtualReg: SIZE; part: LONGINT; VAR offset: LONGINT): LONGINT;
-		VAR register: LONGINT; fpOffset: LONGINT; ticket: Ticket;
+		PROCEDURE PhysicalRegister(virtualReg: SIZE; part: SIGNED32; VAR offset: SIGNED32): SIGNED32;
+		VAR register: SIGNED32; fpOffset: SIGNED32; ticket: Ticket;
 		BEGIN
 			IF virtualReg = IntermediateCode.FP THEN
 				IF stackSizeKnown THEN
@@ -1227,16 +1227,16 @@ TYPE
 			RETURN register
 		END PhysicalRegister;
 
-		PROCEDURE GetRegister(CONST virtual: IntermediateCode.Operand; part:LONGINT; VAR physical: Operand);
-		VAR type: IntermediateCode.Type; virtualRegister: SIZE; physicalRegister: LONGINT;
-			tmp,imm: Operand; offset: LONGINT; ticket: Ticket; ops: LONGINT;
+		PROCEDURE GetRegister(CONST virtual: IntermediateCode.Operand; part:SIGNED32; VAR physical: Operand);
+		VAR type: IntermediateCode.Type; virtualRegister: SIZE; physicalRegister: SIGNED32;
+			tmp,imm: Operand; offset: SIGNED32; ticket: Ticket; ops: SIGNED32;
 		BEGIN
 			ASSERT(virtual.mode = IntermediateCode.ModeRegister);
 			GetPartType(virtual.type,part,type);
 
 			virtualRegister := virtual.register;
 
-			offset := virtual.offset(LONGINT);
+			offset := virtual.offset(SIGNED32);
 			physicalRegister := PhysicalRegister(virtual.register,part,offset);
 			instructionSet.InitRegister(physical, physicalRegister);
 
@@ -1276,7 +1276,7 @@ TYPE
 			IF ~IsSameRegister(a,b) THEN Emit2(opMOV, a, b) END;
 		END MovIfDifferent;
 
-		PROCEDURE AcquireDestinationRegister(CONST vop: IntermediateCode.Operand; part: LONGINT; VAR op: Operand);
+		PROCEDURE AcquireDestinationRegister(CONST vop: IntermediateCode.Operand; part: SIGNED32; VAR op: Operand);
 		VAR  type: IntermediateCode.Type;
 		BEGIN
 			GetPartType(vop.type,part,type);
@@ -1290,7 +1290,7 @@ TYPE
 			END;
 		END AcquireDestinationRegister;
 
-		PROCEDURE PrepareOp3(CONST instruction: IntermediateCode.Instruction;part: LONGINT; allowNegation: BOOLEAN; VAR negate: BOOLEAN; VAR dest, left, right: Assembler.Operand);
+		PROCEDURE PrepareOp3(CONST instruction: IntermediateCode.Instruction;part: SIGNED32; allowNegation: BOOLEAN; VAR negate: BOOLEAN; VAR dest, left, right: Assembler.Operand);
 		VAR vop1,vop2, vop3: IntermediateCode.Operand; op2: InstructionSet.Operand;
 			opx: Operand;
 		BEGIN
@@ -1343,7 +1343,7 @@ TYPE
 			END;
 		END PrepareFOp3;
 
-		PROCEDURE PrepareOp2(CONST instruction: IntermediateCode.Instruction;part: LONGINT; allowNegation: BOOLEAN; VAR negate: BOOLEAN; VAR left, right: Assembler.Operand);
+		PROCEDURE PrepareOp2(CONST instruction: IntermediateCode.Instruction;part: SIGNED32; allowNegation: BOOLEAN; VAR negate: BOOLEAN; VAR left, right: Assembler.Operand);
 		VAR vop1,vop2: IntermediateCode.Operand;
 		BEGIN
 			vop1 := instruction.op1; vop2 := instruction.op2;
@@ -1355,7 +1355,7 @@ TYPE
 			AcquireDestinationRegister(vop1,part,left);
 		END PrepareOp2;
 
-		PROCEDURE ReleaseDestinationRegister(VAR vop: IntermediateCode.Operand; part: LONGINT; left: Assembler.Operand);
+		PROCEDURE ReleaseDestinationRegister(VAR vop: IntermediateCode.Operand; part: SIGNED32; left: Assembler.Operand);
 		BEGIN
 			IF vop.mode = IntermediateCode.ModeMemory THEN
 				ASSERT(left.type = InstructionSet.Register);
@@ -1364,7 +1364,7 @@ TYPE
 			END;
 		END ReleaseDestinationRegister;
 
-		PROCEDURE FinishOp(VAR vop: IntermediateCode.Operand; part: LONGINT; dest, left: Assembler.Operand);
+		PROCEDURE FinishOp(VAR vop: IntermediateCode.Operand; part: SIGNED32; dest, left: Assembler.Operand);
 		VAR op: Operand;
 		BEGIN
 			IF vop.mode = IntermediateCode.ModeMemory THEN
@@ -1444,7 +1444,7 @@ TYPE
 		PROCEDURE EmitMul(VAR instruction: IntermediateCode.Instruction);
 		VAR negate: BOOLEAN;
 			op1Low, op2Low, op3Low, op1High, op2High, op3High, destLow, destHigh: Operand;
-			value: HUGEINT; exp: LONGINT; iop3: IntermediateCode.Operand;
+			value: SIGNED64; exp: SIGNED32; iop3: IntermediateCode.Operand;
 			inst: IntermediateCode.Instruction;
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
@@ -1488,7 +1488,7 @@ TYPE
 
 		PROCEDURE EmitDiv(CONST instruction: IntermediateCode.Instruction);
 		VAR
-			value: HUGEINT; exp: LONGINT; iop3: IntermediateCode.Operand;
+			value: SIGNED64; exp: SIGNED32; iop3: IntermediateCode.Operand;
 			inst: IntermediateCode.Instruction;
 		BEGIN
 			IF instruction.opcode = IntermediateCode.div THEN
@@ -1505,7 +1505,7 @@ TYPE
 		(* undefined for float and huegint, huegint version as library *)
 		PROCEDURE EmitMod(CONST instruction: IntermediateCode.Instruction);
 		VAR
-			value: HUGEINT;exp: LONGINT; op3:IntermediateCode.Operand; inst: IntermediateCode.Instruction;
+			value: SIGNED64;exp: SIGNED32; op3:IntermediateCode.Operand; inst: IntermediateCode.Instruction;
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(instruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
 				IntermediateCode.InitImmediate(op3, instruction.op3.type, value-1);
@@ -1516,7 +1516,7 @@ TYPE
 			HALT(100); (*! mod is not supported by hardware, must be runtime call -- cf. method Supported *)
 		END EmitMod;
 
-		PROCEDURE EmitAndPart(VAR instruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitAndPart(VAR instruction: IntermediateCode.Instruction; part: SIGNED32);
 		VAR left, right, dest: Operand; negate: BOOLEAN;
 		BEGIN
 			PrepareOp3(instruction,part,FALSE,negate,dest,left,right);
@@ -1532,7 +1532,7 @@ TYPE
 				END;
 		END EmitAnd;
 
-		PROCEDURE EmitOr(VAR instruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitOr(VAR instruction: IntermediateCode.Instruction; part: SIGNED32);
 		VAR left, right, dest: Operand; negate: BOOLEAN;
 		BEGIN
 			PrepareOp3(instruction,part,FALSE,negate,dest, left,right);
@@ -1540,7 +1540,7 @@ TYPE
 			FinishOp(instruction.op1,part,dest, left)
 		END EmitOr;
 
-		PROCEDURE EmitXor(VAR instruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitXor(VAR instruction: IntermediateCode.Instruction; part: SIGNED32);
 		VAR dest, left, right: Operand; negate: BOOLEAN;
 		BEGIN
 			PrepareOp3(instruction,part,FALSE,negate,dest,left,right);
@@ -1556,7 +1556,7 @@ TYPE
 		END GetTemporaryRegister;
 
 		PROCEDURE EmitShift(VAR instr: IntermediateCode.Instruction);
-		VAR op2, op3, dest, imm, one, opx, mask, opx2: Operand; shift: LONGINT; fixup, fixup2: BinaryCode.Fixup;
+		VAR op2, op3, dest, imm, one, opx, mask, opx2: Operand; shift: SIGNED32; fixup, fixup2: BinaryCode.Fixup;
 		BEGIN
 			instructionSet.InitOperand(imm); instructionSet.InitOperand(one);
 
@@ -1719,7 +1719,7 @@ TYPE
 
 		PROCEDURE EmitCopy(VAR instr: IntermediateCode.Instruction);
 		VAR op1, op2, op3: Operand; mem1, mem2: InstructionSet.Operand; reg: Operand;
-			prevSize: SIZE; i: LONGINT; ticket: Ticket;
+			prevSize: SIZE; i: SIGNED32; ticket: Ticket;
 		BEGIN
 			MakeRegister(instr.op1, Low, op1);
 			MakeRegister(instr.op2, Low, op2);
@@ -1746,14 +1746,14 @@ TYPE
 				Emit2N(opADD, op2, 1);
 				Emit2N(opSUB, op3, 1);
 
-				Emit1N(opBGT, -(out.pc-prevSize+1)(LONGINT));
+				Emit1N(opBGT, -(out.pc-prevSize+1)(SIGNED32));
 				UnmapTicket(ticket);
 			END;
 		END EmitCopy;
 
 		PROCEDURE EmitFill(VAR instr: IntermediateCode.Instruction; down: BOOLEAN);
 		VAR op1, op2, op3: Operand; mem1: InstructionSet.Operand;
-			prevSize: SIZE; i: LONGINT; ticket: Ticket;
+			prevSize: SIZE; i: SIGNED32; ticket: Ticket;
 		BEGIN
 			MakeRegister(instr.op1, Low, op1);
 			MakeRegister(instr.op2, Low, op2);
@@ -1775,12 +1775,12 @@ TYPE
 				END;
 				Emit2N(opSUB, op3, 1);
 
-				Emit1N(opBGT, -(out.pc-prevSize+1)(LONGINT));
+				Emit1N(opBGT, -(out.pc-prevSize+1)(SIGNED32));
 				UnmapTicket(ticket);
 			END;
 		END EmitFill;
 
-		PROCEDURE BrForward(op: LONGINT): BinaryCode.Fixup;
+		PROCEDURE BrForward(op: SIGNED32): BinaryCode.Fixup;
 		VAR fixupOp: InstructionSet.Operand; fixup: BinaryCode.Fixup; identifier: ObjectFile.Identifier;
 		BEGIN
 			identifier.name := in.name;
@@ -1799,20 +1799,20 @@ TYPE
 		END SetTarget;
 
 		PROCEDURE EmitBr (VAR instr: IntermediateCode.Instruction);
-		VAR dest, destPC: SIZE; offset: LONGINT; target: Operand; reverse: BOOLEAN;
-			(* jump operands *)  op2, op3: Operand; hiHit, hiFail, lowHit: LONGINT;
-				failPC: LONGINT;
+		VAR dest, destPC: SIZE; offset: SIGNED32; target: Operand; reverse: BOOLEAN;
+			(* jump operands *)  op2, op3: Operand; hiHit, hiFail, lowHit: SIGNED32;
+				failPC: SIGNED32;
 					pattern: ObjectFile.FixupPatterns; fixup, failFixup: BinaryCode.Fixup;
 					float,negate: BOOLEAN; identifier: ObjectFile.Identifier;
 
-			PROCEDURE JmpDest(brop: LONGINT);
+			PROCEDURE JmpDest(brop: SIGNED32);
 			VAR op1: Operand; fixupOp: InstructionSet.Operand; oldLR, thisPC: Operand; ticket1, ticket2: Ticket;
 			BEGIN
 				IF instr.op1.mode = IntermediateCode.ModeImmediate THEN
 					Assert(instr.op1.symbol.name # "", "branch without symbol destination");
 					dest := (instr.op1.symbolOffset); (* this is the offset in the in-data section (intermediate code), it is not byte-relative *)
 					destPC := in.instructions[dest].pc + instr.op1.offset;
-					offset := (destPC - out.pc)(LONGINT);
+					offset := (destPC - out.pc)(SIGNED32);
 					fixup := BinaryCode.NewFixup(BinaryCode.Relative, out.pc, instr.op1.symbol, instr.op1.symbolOffset, instr.op1.offset,0,NIL);
 					IF (fixup.symbol.name = in.name) & (fixup.symbolOffset > inPC) THEN (* forward jump *)
 						forwardFixups.Enter(fixup, out.pc, instructionSet.RelativeBranchFixupBits);
@@ -1844,7 +1844,7 @@ TYPE
 							Emit2(opMOV,oldLR, opLR);
 							Emit1N(opBL,0);
 							(* exactly here we have the current PC in LR, so we compute the offset here *)
-							offset := (out.pc-destPC)(LONGINT);
+							offset := (out.pc-destPC)(SIGNED32);
 							Emit2(opMOV, thisPC, opLR);
 							Emit2(opMOV, opLR, oldLR);
 							UnmapTicket(ticket1);
@@ -2041,7 +2041,7 @@ TYPE
 			END;
 		END EmitBr;
 
-		PROCEDURE EmitPop(VAR vop: IntermediateCode.Operand; part: LONGINT);
+		PROCEDURE EmitPop(VAR vop: IntermediateCode.Operand; part: SIGNED32);
 		VAR mem: InstructionSet.Operand; reg: Operand;
 		BEGIN
 			instructionSet.InitMemory(mem, InstructionSet.SP, 0);
@@ -2051,7 +2051,7 @@ TYPE
 			ReleaseDestinationRegister(vop, part, reg);
 		END EmitPop;
 
-		PROCEDURE EmitPush(VAR vop: IntermediateCode.Operand; part: LONGINT);
+		PROCEDURE EmitPush(VAR vop: IntermediateCode.Operand; part: SIGNED32);
 		VAR mem: InstructionSet.Operand; reg: Operand; pc: SIZE;
 		BEGIN
 			MakeRegister(vop, part, reg);
@@ -2111,7 +2111,7 @@ TYPE
 
 		END EmitNeg;
 
-		PROCEDURE EmitNot(VAR instr: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitNot(VAR instr: IntermediateCode.Instruction; part: SIGNED32);
 		VAR left,right: Operand; negate: BOOLEAN;
 		BEGIN
 			PrepareOp2(instr,part,FALSE,negate,left,right);
@@ -2199,7 +2199,7 @@ TYPE
 		cg: CodeGeneratorTRM;
 		patchSpartan6: BOOLEAN;
 		myInstructionSet: InstructionSet.InstructionSet;
-		recentInstructionWidth : LONGINT;
+		recentInstructionWidth : SIGNED32;
 
 		PROCEDURE &InitBackendTRM;
 		BEGIN
@@ -2225,13 +2225,13 @@ TYPE
 		BEGIN
 			IF SELF.instructionWidth # instructionWidth THEN
 				SetInstructionWidth^(instructionWidth);
-				NEW(myInstructionSet,instructionWidth(LONGINT));
+				NEW(myInstructionSet,instructionWidth(SIGNED32));
 				cg.SetInstructionSet(myInstructionSet);
 			END;
 		END SetInstructionWidth;
 
 		PROCEDURE GetSystem*(): Global.System;
-		VAR system: System; variableOffset: WORD;
+		VAR system: System; variableOffset: INTEGER;
 		BEGIN
 			IF preciseGC THEN variableOffset := -32 ELSE variableOffset := 0 END;
 			NEW(system, 18, 32, 32, 32, 32, 32, 32, 64(* parameter offset 0: handled locally *), variableOffset,  cooperative);
@@ -2246,11 +2246,11 @@ TYPE
 		END SupportedInstruction;
 
 		PROCEDURE SupportedImmediate*(CONST immediate: IntermediateCode.Operand): BOOLEAN;
-		VAR reg: InstructionSet.Operand; int: LONGINT;
+		VAR reg: InstructionSet.Operand; int: SIGNED32;
 		BEGIN
 			IF immediate.type.form IN  IntermediateCode.Integer THEN
 				IF immediate.type.sizeInBits < 64 THEN
-					int := LONGINT(immediate.intValue);
+					int := SIGNED32(immediate.intValue);
 					RETURN ((ABS(int) < ASH(1,myInstructionSet.ImmediateFixupBits)) OR (cg.GetImmediate32(int, reg, FALSE) < 3))
 				ELSE
 					RETURN (ABS(immediate.intValue) < ASH(1,myInstructionSet.ImmediateFixupBits))
@@ -2422,10 +2422,10 @@ TYPE
 		BEGIN instructionSet := "TRM"
 		END GetDescription;
 
-		PROCEDURE FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: LONGINT);
+		PROCEDURE FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: SIGNED32);
 		VAR
 			section: Sections.Section; binarySection: BinaryCode.Section; label: BinaryCode.LabelList; module: Formats.GeneratedModule;
-			i: LONGINT; pooledName: Basic.SegmentedName;
+			i: SIGNED32; pooledName: Basic.SegmentedName;
 		BEGIN
 			module := ProcessSyntaxTreeModule(x);
 			Basic.ToSegmentedName(sectionName, pooledName);
@@ -2459,7 +2459,7 @@ TYPE
 		END CheckCodeAddress;
 
 		PROCEDURE ResolvedSection(in: IntermediateCode.Section): BinaryCode.Section;
-		VAR section: BinaryCode.Section; unit: LONGINT;
+		VAR section: BinaryCode.Section; unit: SIGNED32;
 		BEGIN
 
 			(*VAR and CONST sections go to the data memory, only code sections go to code memory

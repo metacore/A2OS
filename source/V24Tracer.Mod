@@ -7,13 +7,13 @@ TYPE
 	SerialPortTracer = OBJECT
 	VAR
 		port : Serials.Port;
-		seq : LONGINT;	(* Sequence number of this serial port tracer *)
+		seq : SIGNED32;	(* Sequence number of this serial port tracer *)
 		ch : CHAR;
 		V24writer : Streams.Writer;	(* Writer used by this serial port tracer *)
 		alive : BOOLEAN;
-		res : WORD;
+		res : INTEGER;
 
-	PROCEDURE &Init*(seqNo, portNo, bps : LONGINT);
+	PROCEDURE &Init*(seqNo, portNo, bps : SIGNED32);
 	BEGIN
 		port := Serials.GetPort(portNo);
 		IF res = 0 THEN
@@ -62,7 +62,7 @@ TYPE
 
 VAR running, fine : BOOLEAN;
 	tracingport : ARRAY 2 OF SerialPortTracer;
-	activeseq : LONGINT;
+	activeseq : SIGNED32;
 
 PROCEDURE SetMode*(context : Commands.Context);
 VAR name : ARRAY 100 OF CHAR;
@@ -72,7 +72,7 @@ BEGIN
 END SetMode;
 
 PROCEDURE Enable*(context : Commands.Context);
-VAR inPort, outPort, baud : LONGINT;
+VAR inPort, outPort, baud : SIGNED32;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.Int(inPort, FALSE);
 	context.arg.SkipWhitespace; context.arg.Int(outPort, FALSE);

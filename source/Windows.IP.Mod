@@ -34,10 +34,10 @@ CONST
 TYPE
 
 	Adr* = RECORD
-		ipv4Adr*: LONGINT;
+		ipv4Adr*: SIGNED32;
 		ipv6Adr*: ARRAY 16 OF CHAR;
-		usedProtocol*: LONGINT;
-		data*: LONGINT;
+		usedProtocol*: SIGNED32;
+		data*: SIGNED32;
 	END; (** An IP Address.	usedProtocol = 0: No protocol yet used
 							usedProtocol = IPv4: IPv4 address stored in field ipv4Adr
 							usedProtocol = IPv6: IPv6 address stored in field ipv6Adr
@@ -70,7 +70,7 @@ VAR
 PROCEDURE IsNilAdr* (adr: Adr): BOOLEAN;
 VAR
 	isNil: BOOLEAN;
-	i: LONGINT;
+	i: SIGNED32;
 
 BEGIN
 	CASE adr.usedProtocol OF
@@ -101,7 +101,7 @@ END IsNilAdr;
 PROCEDURE AdrsEqual* (adr1, adr2: Adr): BOOLEAN;
 VAR
 	equal: BOOLEAN;
-	i: LONGINT;
+	i: SIGNED32;
 
 BEGIN
 	IF adr1.usedProtocol # adr2.usedProtocol THEN
@@ -147,7 +147,7 @@ END AdrsEqual;
 (** Convert a dotted-decimal string to an ip address. Return NilAdr on failure. *)
 PROCEDURE StrToAdr*(CONST s: ARRAY OF CHAR): Adr;
 VAR
-	i, j, x: LONGINT;
+	i, j, x: SIGNED32;
 	adr: ARRAY 4 OF CHAR;
 	ok: BOOLEAN;
 	ip: Adr;
@@ -168,7 +168,7 @@ BEGIN
 		END
 	END;
 	IF ok THEN
-		ip.ipv4Adr := SYSTEM.VAL(LONGINT,adr);
+		ip.ipv4Adr := SYSTEM.VAL(SIGNED32,adr);
 		ip.usedProtocol := IPv4;
 		RETURN ip;
 	ELSE
@@ -179,15 +179,15 @@ END StrToAdr;
 (** Convert an IP address to a dotted-decimal string. *)
 PROCEDURE AdrToStr*(adr: Adr; VAR string: ARRAY OF CHAR);
 VAR
-	i, j, x: LONGINT;
+	i, j, x: SIGNED32;
 	a: ARRAY 4 OF CHAR;
-	val : LONGINT;
+	val : SIGNED32;
 	hexToStr: ARRAY 5 OF CHAR;
 	prefixLenStr: ARRAY 64 OF CHAR;
-	maxZeroRow: LONGINT;
-	currentZeroRow: LONGINT;
-	maxZeroStart: LONGINT;
-	currentZeroStart: LONGINT;
+	maxZeroRow: SIGNED32;
+	currentZeroRow: SIGNED32;
+	maxZeroStart: SIGNED32;
+	currentZeroStart: SIGNED32;
 	lastZero: BOOLEAN;
 	lastDPoint: BOOLEAN;
 	countEnded: BOOLEAN;
@@ -317,10 +317,10 @@ END AdrToStr;
 	If the LSB is stored at the end [ofs+3], LSBfirst must be set to FALSE.
 		(address "a.b.c.d" is stored as [a,b,c,d])
 *)
-PROCEDURE ArrayToAdr*(CONST  array: ARRAY OF CHAR; ofs, protocol: LONGINT; LSBfirst: BOOLEAN): Adr;
+PROCEDURE ArrayToAdr*(CONST  array: ARRAY OF CHAR; ofs, protocol: SIGNED32; LSBfirst: BOOLEAN): Adr;
 VAR
 	adr: Adr;
-	i, swapTemp: LONGINT;
+	i, swapTemp: SIGNED32;
 BEGIN
 	ASSERT((protocol = 4) OR (protocol = 6));
 
@@ -364,10 +364,10 @@ END ArrayToAdr;
 	If the LSB should be stored at the end [ofs+3], LSBfirst must be set to FALSE.
 		(address "a.b.c.d" is stored as [a,b,c,d])
 *)
-PROCEDURE AdrToArray*(adr: Adr; CONST array: ARRAY OF CHAR; ofs: LONGINT; LSBfirst: BOOLEAN);
+PROCEDURE AdrToArray*(adr: Adr; CONST array: ARRAY OF CHAR; ofs: SIGNED32; LSBfirst: BOOLEAN);
 VAR
 	tempAdr: Adr;
-	i, swapTemp: LONGINT;
+	i, swapTemp: SIGNED32;
 
 BEGIN
 	tempAdr := adr;
@@ -407,10 +407,10 @@ BEGIN
 END InterfaceByDstIP;
 
 		(* Find MULTIPLE IP address of the specified host. *)
-PROCEDURE InitInterfaces( hostname: ARRAY OF CHAR; VAR res: WORD );
+PROCEDURE InitInterfaces( hostname: ARRAY OF CHAR; VAR res: INTEGER );
 	VAR hostent: WSock32.PHostent; str: ARRAY 64 OF CHAR;
 		adr, adr2: Adr;
-		int0, int:Interface; i:LONGINT;
+		int0, int:Interface; i:SIGNED32;
 		addr: ADDRESS;
 	BEGIN
 		hostent := WSock32.gethostbyname(hostname);
@@ -440,7 +440,7 @@ PROCEDURE InitInterfaces( hostname: ARRAY OF CHAR; VAR res: WORD );
 END InitInterfaces;
 
 PROCEDURE Init;
-	VAR name: ARRAY 256 OF CHAR; res: WORD;
+	VAR name: ARRAY 256 OF CHAR; res: INTEGER;
 BEGIN
 	KernelLog.String("IP.Init: Hostname ");
 	res := WSock32.gethostname(name, 256);
@@ -457,7 +457,7 @@ BEGIN
 END Init;
 
 (* Swap internal representation of an IP address from big to little endian or vice versa. *)
-PROCEDURE -SwapEndian(VAR adr: LONGINT);
+PROCEDURE -SwapEndian(VAR adr: SIGNED32);
 CODE
 #IF I386 THEN
 	POP EAX

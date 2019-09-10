@@ -35,42 +35,42 @@ CONST
 	ColSubDiv = 6;	(* subdivision of color range in black and white printing *)
 
 TYPE
-	RealVector = ARRAY N OF REAL;
-	Poly = RECORD a, b, c, d, t: REAL END ;
+	RealVector = ARRAY N OF FLOAT32;
+	Poly = RECORD a, b, c, d, t: FLOAT32 END ;
 	PolyVector = ARRAY N OF Poly;
 
 	Set = POINTER TO ARRAY OF SET;
 
 	Font = RECORD
 		name: ARRAY 32 OF CHAR;
-		pitch: SHORTINT;
+		pitch: SIGNED8;
 		chartab: Set;	(* ARRAY 256 OF BIT *)
 	END;
 
 	HPFontDesc = RECORD	(* the HP font descriptor *)
-		size: INTEGER;
-		res0: SHORTINT;
-		type: SHORTINT;
+		size: SIGNED16;
+		res0: SIGNED8;
+		type: SIGNED8;
 		res1,
 		base,
 		cellwidth,
-		cellheight: INTEGER;
-		orient: SHORTINT;
-		space: SHORTINT;
+		cellheight: SIGNED16;
+		orient: SIGNED8;
+		space: SIGNED8;
 		symbol,
 		pitch,
 		height,
-		xheight: INTEGER;
+		xheight: SIGNED16;
 		widthtype,style*,
 		strokeweight,typeface,
-		res2, serifstyle: SHORTINT;
-		res3: INTEGER;
-		underdist,underheight: SHORTINT;
+		res2, serifstyle: SIGNED8;
+		res3: SIGNED16;
+		underdist,underheight: SIGNED8;
 		textheight,
 		textwidth,
-		res4,res5: INTEGER;
-		pitchext,heightext :SHORTINT;
-		res6,res7,res8 :INTEGER;
+		res4,res5: SIGNED16;
+		pitchext,heightext :SIGNED8;
+		res6,res7,res8 :SIGNED16;
 		name: ARRAY 16 OF CHAR;
 	END;
 
@@ -81,29 +81,29 @@ TYPE
 		top,
 		width,
 		height,
-		delta: INTEGER;
+		delta: SIGNED16;
 	END;
 
 	RunP = POINTER TO RunDscP;
 	RunDscP = RECORD
 		next, prev: RunP;
-		x, y, w, h, col: INTEGER
+		x, y, w, h, col: SIGNED16
 	END;
 
 VAR
 	r, u: Files.Rider;
-	Unit: LONGINT;
-	Depth, Width, Height: INTEGER;
-	CurFont, PrevFont: SHORTINT;
+	Unit: SIGNED32;
+	Depth, Width, Height: SIGNED16;
+	CurFont, PrevFont: SIGNED8;
 	M: POINTER TO ARRAY HPPageHeight OF Set;
-	maxX, maxY, minX, minY: INTEGER;
-	nofonts: INTEGER;
+	maxX, maxY, minX, minY: SIGNED16;
+	nofonts: SIGNED16;
 	font: POINTER TO ARRAY maxfonts OF Font;
 	freeP: RunP;
 
 (* Font table procedures *)
 
-PROCEDURE LookupFont(name: ARRAY OF CHAR;  VAR i: SHORTINT;  VAR inserted: BOOLEAN);
+PROCEDURE LookupFont(name: ARRAY OF CHAR;  VAR i: SIGNED8;  VAR inserted: BOOLEAN);
 BEGIN
 	inserted := FALSE;
 	i := 0;  WHILE (i < nofonts) & (font[i].name # name) DO INC(i) END;
@@ -120,34 +120,34 @@ END LookupFont;
 
 (* Set procedures *)
 
-PROCEDURE New(VAR s: Set;  len: LONGINT);
-VAR i, size: LONGINT;
+PROCEDURE New(VAR s: Set;  len: SIGNED32);
+VAR i, size: SIGNED32;
 BEGIN
 	size := (len + 31) DIV 32;	(* size in SET elements *)
 	NEW(s, size); (* size in bytes *)
 	i:= 0;  WHILE i < size DO s[i] := {};  INC(i) END
 END New;
 
-PROCEDURE Incl(s: Set;  e1: LONGINT);
+PROCEDURE Incl(s: Set;  e1: SIGNED32);
 BEGIN
 	INCL(s[e1 DIV 32], e1 MOD 32);
 END Incl;
 
-PROCEDURE In(s: Set;  e1: LONGINT): BOOLEAN;
+PROCEDURE In(s: Set;  e1: SIGNED32): BOOLEAN;
 BEGIN
 	RETURN e1 MOD 32 IN s[e1 DIV 32]
 END In;
 
-(* Swap bytes in INTEGER *)
+(* Swap bytes in SIGNED16 *)
 
-PROCEDURE SB(i: INTEGER): INTEGER;
+PROCEDURE SB(i: SIGNED16): SIGNED16;
 BEGIN
-	RETURN INTEGER(ASH(i, -8) MOD 100H + ASH(i MOD 100H, 8))
+	RETURN SIGNED16(ASH(i, -8) MOD 100H + ASH(i MOD 100H, 8))
 END SB;
 
 (* Reverse bits in CHAR *)
 PROCEDURE Reverse(VAR c: CHAR);
-VAR ib, ob: SET;  ip,op: INTEGER;
+VAR ib, ob: SET;  ip,op: SIGNED16;
 BEGIN
 	ib := SET(ORD(c));
 	ip := 0;  op := 7;  ob := {};
@@ -155,13 +155,13 @@ BEGIN
 		IF ip IN ib THEN INCL(ob, op) END;
 		INC(ip);  DEC(op)
 	END;
-	c := CHR(LONGINT(ob))
+	c := CHR(SIGNED32(ob))
 END Reverse;
 
 (* Write procedures *)
 
 PROCEDURE WriteString(VAR s: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	i:= 0;
 	WHILE s[i] # 0X DO
@@ -177,8 +177,8 @@ BEGIN
 	END
 END WriteString;
 
-PROCEDURE WriteInt(x: INTEGER);
-VAR i, xx: LONGINT;  s: ARRAY 7 OF CHAR;
+PROCEDURE WriteInt(x: SIGNED16);
+VAR i, xx: SIGNED32;  s: ARRAY 7 OF CHAR;
 BEGIN
 	i := 0;  xx := ABS(x);
 	REPEAT
@@ -189,7 +189,7 @@ BEGIN
 	REPEAT DEC(i);  Files.Write(r, s[i]) UNTIL i = 0
 END WriteInt;
 
-PROCEDURE Pos(x, y: INTEGER);
+PROCEDURE Pos(x, y: SIGNED16);
 BEGIN
 	y := Height - y - HPY;  DEC(x, HPX);
 	Files.Write(r, ESC);  Files.Write(r, "*");  Files.Write(r, "p");
@@ -197,13 +197,13 @@ BEGIN
 	WriteInt(y);  Files.Write(r, "Y")
 END Pos;
 
-PROCEDURE SetRes(res: INTEGER);
+PROCEDURE SetRes(res: SIGNED16);
 BEGIN
 	Files.Write(r, ESC);  Files.Write(r, "*");  Files.Write(r, "t");  WriteInt(res);
 	Files.Write(r, "R")
 END SetRes;
 
-PROCEDURE Block(w, h: INTEGER);
+PROCEDURE Block(w, h: SIGNED16);
 BEGIN
 	IF (w = 1) & (h =1 ) THEN	(* it's only a dot, execute dot macro *)
 		Files.Write(r, ESC);  Files.Write(r, "&");  Files.Write(r, "f");
@@ -243,16 +243,16 @@ END dot;
 *)
 
 PROCEDURE InitPage;
-VAR y: INTEGER;
+VAR y: SIGNED16;
 BEGIN
 	NEW(M);
 	y := 0;  WHILE y < Height DO M[y] := NIL; INC(y) END;
-	maxX := MIN(INTEGER);  maxY := MIN(INTEGER);
-	minX := MAX(INTEGER);  minY := MAX(INTEGER)
+	maxX := MIN(SIGNED16);  maxY := MIN(SIGNED16);
+	minX := MAX(SIGNED16);  minY := MAX(SIGNED16)
 END InitPage;
 
 PROCEDURE ClosePage;
-VAR j, l, x, y: INTEGER;
+VAR j, l, x, y: SIGNED16;
 BEGIN
 	IF M = NIL THEN RETURN END;
 	y := minY;
@@ -269,14 +269,14 @@ BEGIN
 		END;
 		INC(y)
 	END;
-	maxX := MIN(INTEGER);
-	maxY := MIN(INTEGER);
-	minX := MAX(INTEGER);
-	minY := MAX(INTEGER)
+	maxX := MIN(SIGNED16);
+	maxY := MIN(SIGNED16);
+	minX := MAX(SIGNED16);
+	minY := MAX(SIGNED16)
 END ClosePage;
 
-PROCEDURE CreateFontDesc(id, base, cw, ch, or, sp, pi, he: INTEGER;  name: ARRAY OF CHAR);
-VAR i: INTEGER;  a: ADDRESS;  x: CHAR;  fd: HPFontDesc;  fdlen: INTEGER;
+PROCEDURE CreateFontDesc(id, base, cw, ch, or, sp, pi, he: SIGNED16;  name: ARRAY OF CHAR);
+VAR i: SIGNED16;  a: ADDRESS;  x: CHAR;  fd: HPFontDesc;  fdlen: SIGNED16;
 BEGIN
 	fdlen := SIZEOF(HPFontDesc);
 	Files.Write(r, ESC);  Files.Write(r, "*");  Files.Write(r, "c");  WriteInt(id);  Files.Write(r, "D");
@@ -317,17 +317,17 @@ BEGIN
 END CreateFontDesc;
 
 (* define one character for LaserJet *)
-PROCEDURE DownloadChar(fnt: Fonts.Font;  ch:CHAR;  num: INTEGER);
+PROCEDURE DownloadChar(fnt: Fonts.Font;  ch:CHAR;  num: SIGNED16);
 CONST maxpat = 256;
 TYPE
 	Pattern = POINTER TO PatternDesc;
 	PatternDesc = RECORD
-		w, h: SHORTINT;
+		w, h: SIGNED8;
 		raster: ARRAY (maxpat+7) DIV 8 * maxpat OF CHAR;
 	END;
 VAR
-	hdr: HPCharDesc;  size, i, hdrlen, dx, x, y, w, h: INTEGER;  pat, a: ADDRESS;
-	c: CHAR;  p: Pattern;  j, k, l: INTEGER;
+	hdr: HPCharDesc;  size, i, hdrlen, dx, x, y, w, h: SIGNED16;  pat, a: ADDRESS;
+	c: CHAR;  p: Pattern;  j, k, l: SIGNED16;
 BEGIN
 	hdrlen := SIZEOF(HPCharDesc);
 	(* Get char definition *)
@@ -370,12 +370,12 @@ BEGIN
 	END
 END DownloadChar;
 
-PROCEDURE SwitchOn(fntno: SHORTINT);
+PROCEDURE SwitchOn(fntno: SIGNED8);
 BEGIN
 	Files.Write(r, ESC);  Files.Write(r, "(");  WriteInt(BaseFont+fntno);  Files.Write(r, "X")
 END SwitchOn;
 
-PROCEDURE CreateFont (fnt: Fonts.Font; fntno, pitch, orient, spacing: INTEGER);
+PROCEDURE CreateFont (fnt: Fonts.Font; fntno, pitch, orient, spacing: SIGNED16);
 BEGIN
 	(* create font descriptor for new font arrived *)
 	CreateFontDesc(fntno, fnt.maxY, (* baseline *)
@@ -389,10 +389,10 @@ BEGIN
 END CreateFont;
 
 PROCEDURE SetFont(name: ARRAY OF CHAR;  VAR s : ARRAY OF CHAR);
-VAR i: INTEGER;  fntno,pitch: SHORTINT;  inserted: BOOLEAN;
+VAR i: SIGNED16;  fntno,pitch: SIGNED8;  inserted: BOOLEAN;
 
-	PROCEDURE ToPr3Font(VAR fn: ARRAY OF CHAR;  VAR pi: SHORTINT);
-	VAR i: INTEGER;  ch, ch2, ch3: CHAR;
+	PROCEDURE ToPr3Font(VAR fn: ARRAY OF CHAR;  VAR pi: SIGNED8);
+	VAR i: SIGNED16;  ch, ch2, ch3: CHAR;
 	BEGIN
 		i := 0;  ch := fn[i];
 		WHILE ((ch < "0") OR (ch > "9")) & (ch # ".") & (ch # 0X) DO INC(i);  ch := fn[i] END;
@@ -443,8 +443,8 @@ BEGIN
 	END
 END SetFont;
 
-PROCEDURE LoadFont(f: SHORTINT);	(* load used font with used chars *)
-VAR i: INTEGER;
+PROCEDURE LoadFont(f: SIGNED8);	(* load used font with used chars *)
+VAR i: SIGNED16;
 BEGIN
 	CreateFont(Fonts.This(font[f].name), BaseFont+f, font[f].pitch, PORTRAIT, PROPOR);
 	i:= 0;
@@ -454,7 +454,7 @@ BEGIN
 	END
 END LoadFont;
 
-PROCEDURE Dot(x, y: INTEGER);
+PROCEDURE Dot(x, y: SIGNED16);
 BEGIN
 	IF M = NIL THEN InitPage END;	(* the first graphic usage *)
 	IF M[y] = NIL THEN New(M[y], Width) END;
@@ -465,8 +465,8 @@ BEGIN
 	IF y < minY THEN minY := y END
 END Dot;
 
-PROCEDURE line(x0, y0, x1, y1: INTEGER);
-VAR x, y, dx, dy, d, inc: INTEGER;
+PROCEDURE line(x0, y0, x1, y1: SIGNED16);
+VAR x, y, dx, dy, d, inc: SIGNED16;
 BEGIN
 	IF y1 - y0 < x0 - x1 THEN
 		x := x0;
@@ -495,8 +495,8 @@ BEGIN
 	END
 END line;
 
-PROCEDURE circle (x0, y0, r: INTEGER);
-VAR x, y, q: INTEGER;
+PROCEDURE circle (x0, y0, r: SIGNED16);
+VAR x, y, q: SIGNED16;
 BEGIN
 	x := 0; y := r; q := r;
 	WHILE x <= y DO
@@ -509,8 +509,8 @@ BEGIN
 	END
 END circle;
 
-PROCEDURE ellipse(x0, y0, a, b: INTEGER);
-VAR a2, b2, ex, ey, q: LONGINT; x, y: INTEGER;
+PROCEDURE ellipse(x0, y0, a, b: SIGNED16);
+VAR a2, b2, ex, ey, q: SIGNED32; x, y: SIGNED16;
 BEGIN
 	IF (a <= 800) & (b <= 800) THEN (* longint range guard *)
 		a2 := LONG(a) * a; b2 := LONG(b) * b;
@@ -532,8 +532,8 @@ BEGIN
 	END
 END ellipse;
 
-PROCEDURE PrintPoly(x0, y0: INTEGER; VAR p, q: Poly; lim: REAL);
-VAR t: REAL;
+PROCEDURE PrintPoly(x0, y0: SIGNED16; VAR p, q: Poly; lim: FLOAT32);
+VAR t: FLOAT32;
 BEGIN t := 0;
 	REPEAT
 		Dot(SHORT(ENTIER(((p.a * t + p.b) * t + p.c) * t + p.d) + x0),SHORT(ENTIER(((q.a * t + q.b) * t + q.c) * t + q.d) + y0));
@@ -541,9 +541,9 @@ BEGIN t := 0;
 	UNTIL t >= lim
 END PrintPoly;
 
-PROCEDURE SolveTriDiag(VAR a, b, c, y: RealVector; n: INTEGER);
-VAR i: INTEGER;
-		r: REAL;
+PROCEDURE SolveTriDiag(VAR a, b, c, y: RealVector; n: SIGNED16);
+VAR i: SIGNED16;
+		r: FLOAT32;
 BEGIN (*a, b, c of tri-diag matrix T; solve Ty' = y for y', assign y' to y*)
 	i := 1;
 	WHILE i < n DO
@@ -560,8 +560,8 @@ BEGIN (*a, b, c of tri-diag matrix T; solve Ty' = y for y', assign y' to y*)
 	END
 END SolveTriDiag;
 
-PROCEDURE OpenSpline(VAR x, y, d: RealVector; n: INTEGER);
-VAR i: INTEGER; d1, d2: REAL;
+PROCEDURE OpenSpline(VAR x, y, d: RealVector; n: SIGNED16);
+VAR i: SIGNED16; d1, d2: FLOAT32;
 		a, b, c: RealVector;
 BEGIN (*from x, y compute d = y'*)
 	b[0] := 1.0/(x[1] - x[0]); a[0] := 2.0*b[0]; c[0] := b[0];
@@ -578,8 +578,8 @@ BEGIN (*from x, y compute d = y'*)
 	SolveTriDiag(a, b, c, d, n)
 END OpenSpline;
 
-PROCEDURE ClosedSpline(VAR x, y, d: RealVector; n: INTEGER);
-VAR i: INTEGER; d1, d2, hn, dn,r: REAL;
+PROCEDURE ClosedSpline(VAR x, y, d: RealVector; n: SIGNED16);
+VAR i: SIGNED16; d1, d2, hn, dn,r: FLOAT32;
 		a, b, c, w: RealVector;
 BEGIN (*from x, y compute d = y'*)
 	hn := 1.0/(x[n-1] - x[n-2]);
@@ -608,8 +608,8 @@ BEGIN (*from x, y compute d = y'*)
 	d[i] := d[0]
 END ClosedSpline;
 
-PROCEDURE spline (x0, y0, n, open: INTEGER; VAR u,v: ARRAY OF INTEGER);
-VAR i: INTEGER; dx, dy, ds: REAL;
+PROCEDURE spline (x0, y0, n, open: SIGNED16; VAR u,v: ARRAY OF SIGNED16);
+VAR i: SIGNED16; dx, dy, ds: FLOAT32;
 		x, xd, y, yd, s: RealVector;
 		p, q: PolyVector;
 BEGIN (*from u, v compute x, y, s*)
@@ -643,8 +643,8 @@ BEGIN (*from u, v compute x, y, s*)
 	WHILE i < n-1 DO PrintPoly( x0, y0, p[i], q[i], p[i+1].t - p[i].t); INC(i) END
 END spline;
 
-PROCEDURE GetDim(label: ARRAY OF CHAR;  def: INTEGER;  VAR val: INTEGER);
-VAR v: REAL; S: Texts.Scanner;
+PROCEDURE GetDim(label: ARRAY OF CHAR;  def: SIGNED16;  VAR val: SIGNED16);
+VAR v: FLOAT32; S: Texts.Scanner;
 BEGIN
 	Oberon.OpenScanner(S, label);
 	IF (S.class = Texts.Int) OR (S.class = Texts.Real) THEN
@@ -695,7 +695,7 @@ PROCEDURE UseListFont*(P: Printer.Printer;  name: ARRAY OF CHAR);
 	(* not implemented *)
 END UseListFont;
 
-PROCEDURE ReplConst*(P: Printer.Printer;  x, y, w, h: INTEGER);
+PROCEDURE ReplConst*(P: Printer.Printer;  x, y, w, h: SIGNED16);
 BEGIN
 	IF (w > 0) & (h > 0 ) THEN Pos(x, y+h);  Block(w,h) END
 END ReplConst;
@@ -706,14 +706,14 @@ BEGIN
 	WriteString(s)
 END ContString;
 
-PROCEDURE String*(P: Printer.Printer;  x, y: INTEGER;  s: ARRAY OF CHAR;  fnt: Fonts.Font);
+PROCEDURE String*(P: Printer.Printer;  x, y: SIGNED16;  s: ARRAY OF CHAR;  fnt: Fonts.Font);
 BEGIN
 	SetFont(fnt.name, s);
 	Pos(x, y);
 	WriteString(s)
 END String;
 
-PROCEDURE ReplPattern*(P: Printer.Printer;  x, y, w, h, col: INTEGER);
+PROCEDURE ReplPattern*(P: Printer.Printer;  x, y, w, h, col: SIGNED16);
 BEGIN
 	col := ((100 DIV 16) * col) MOD 100 + 1;	(* to range 1..100 *)
 	Pos(x, y+h);
@@ -723,11 +723,11 @@ BEGIN
 	Files.Write(r, "2");  Files.Write(r, "P")
 END ReplPattern;
 
-PROCEDURE Picture*(print: Printer.Printer; P: Pictures.Picture; px, py, pw, ph, X, Y, W, H, mode: INTEGER);
-CONST Shift = 100000;	(* max device distance: MAX(LONGINT) DIV Shift *)
-VAR scaleX, scaleY: LONGINT;  trailer, run: RunP;  x0, x, y, col: INTEGER;  colored: BOOLEAN;
+PROCEDURE Picture*(print: Printer.Printer; P: Pictures.Picture; px, py, pw, ph, X, Y, W, H, mode: SIGNED16);
+CONST Shift = 100000;	(* max device distance: MAX(SIGNED32) DIV Shift *)
+VAR scaleX, scaleY: SIGNED32;  trailer, run: RunP;  x0, x, y, col: SIGNED16;  colored: BOOLEAN;
 
-	PROCEDURE RGBToPatNr(red, green, blue: INTEGER; VAR pNr: INTEGER);
+	PROCEDURE RGBToPatNr(red, green, blue: SIGNED16; VAR pNr: SIGNED16);
 	(* pNr: 0..ColSubdiv-1  [white, light ...dark, black] *)
 		CONST ColNrRange = 2550 DIV ColSubDiv;
 	BEGIN
@@ -736,13 +736,13 @@ VAR scaleX, scaleY: LONGINT;  trailer, run: RunP;  x0, x, y, col: INTEGER;  colo
 		IF pNr >= ColSubDiv THEN pNr := ColSubDiv - 1 ELSIF pNr < 0 THEN pNr := 0 END
 	END RGBToPatNr;
 
-	PROCEDURE Scale(pixel, scale: LONGINT): INTEGER;
+	PROCEDURE Scale(pixel, scale: SIGNED32): SIGNED16;
 	BEGIN
 		RETURN SHORT(pixel * scale DIV Shift)
 	END Scale;
 
 	PROCEDURE PrintRun(VAR run: RunP);
-		VAR red, green, blue, pNr: INTEGER;
+		VAR red, green, blue, pNr: SIGNED16;
 	BEGIN
 		run.w := Scale(run.x + run.w, scaleX); run.x := Scale(run.x, scaleX);	(* scale right and left *)
 		run.h := Scale(run.y + run.h, scaleY); run.y := Scale(run.y, scaleY);	(* scale top and bottom *)
@@ -768,7 +768,7 @@ VAR scaleX, scaleY: LONGINT;  trailer, run: RunP;  x0, x, y, col: INTEGER;  colo
 		run := run.next; freeP.next := NIL		(* advance in run list *)
 	END PrintRun;
 
-	PROCEDURE InsertRun(run: RunP; x, y, w, col: INTEGER);
+	PROCEDURE InsertRun(run: RunP; x, y, w, col: SIGNED16);
 	(* inserts a new run before run *)
 		VAR r: RunP;
 	BEGIN	(* x + w <= run.x *)
@@ -777,7 +777,7 @@ VAR scaleX, scaleY: LONGINT;  trailer, run: RunP;  x0, x, y, col: INTEGER;  colo
 		r.next := run; r.prev := run.prev; run.prev.next := r; run.prev := r	(* add r to run list *)
 	END InsertRun;
 
-	PROCEDURE EnlargeRun(trailer: RunP; VAR run: RunP; x, y, w, col: INTEGER);
+	PROCEDURE EnlargeRun(trailer: RunP; VAR run: RunP; x, y, w, col: SIGNED16);
 	BEGIN
 		WHILE (run # trailer) & (run.x < x) DO PrintRun(run) END;	(* print runs before x *)
 		IF run = trailer THEN InsertRun(run, x, y, w, col)
@@ -812,17 +812,17 @@ BEGIN
 	UseColor(print, 0, 0, 0)
 END Picture;
 
-PROCEDURE Circle*(P: Printer.Printer;  x0, y0, r: INTEGER);
+PROCEDURE Circle*(P: Printer.Printer;  x0, y0, r: SIGNED16);
 BEGIN
 	circle (x0, y0, r)
 END Circle;
 
-PROCEDURE Ellipse*(P: Printer.Printer;  x0, y0, a, b: INTEGER);
+PROCEDURE Ellipse*(P: Printer.Printer;  x0, y0, a, b: SIGNED16);
 BEGIN
 	ellipse(x0, y0, a, b)
 END Ellipse;
 
-PROCEDURE Line*(P: Printer.Printer;  x0, y0, x1, y1: INTEGER);
+PROCEDURE Line*(P: Printer.Printer;  x0, y0, x1, y1: SIGNED16);
 BEGIN
 	IF x0 = x1 THEN	(* if it is a vertical line *)
 		ReplConst(P, x0,y0,1,ABS(y1-y0))
@@ -832,16 +832,16 @@ BEGIN
 	END
 END Line;
 
-PROCEDURE UseColor*(P: Printer.Printer;  red, green, blue: INTEGER);
+PROCEDURE UseColor*(P: Printer.Printer;  red, green, blue: SIGNED16);
 	(* not implemented *)
 END UseColor;
 
-PROCEDURE Spline*(P: Printer.Printer;  x0, y0, n, open: INTEGER;  VAR X, Y: ARRAY OF INTEGER);
+PROCEDURE Spline*(P: Printer.Printer;  x0, y0, n, open: SIGNED16;  VAR X, Y: ARRAY OF SIGNED16);
 BEGIN
 	spline(x0, y0, n, open, X, Y)
 END Spline;
 
-PROCEDURE Page*(P: Printer.Printer;  nofcopies: INTEGER);
+PROCEDURE Page*(P: Printer.Printer;  nofcopies: SIGNED16);
 BEGIN
 	ClosePage;	(* close graphics page *)
 	IF nofcopies > 1 THEN	(* make a copy from the page *)
@@ -852,7 +852,7 @@ BEGIN
 END Page;
 
 PROCEDURE Close*(P: Printer.Printer);
-VAR tmp: Files.Rider;  ch: CHAR;  i: SHORTINT;
+VAR tmp: Files.Rider;  ch: CHAR;  i: SIGNED8;
 BEGIN
 	Files.Set(tmp, Files.Base(r), 0);
 	Files.Set(r, Files.Base(u), 0);
@@ -878,7 +878,7 @@ BEGIN
 END Close;
 
 PROCEDURE GetMetric* (P: Printer.Printer;  fnt: Fonts.Font): Fonts.Font;
-VAR name: ARRAY 32 OF CHAR;  i: INTEGER;  metric: Fonts.Font;
+VAR name: ARRAY 32 OF CHAR;  i: SIGNED16;  metric: Fonts.Font;
 BEGIN
 	COPY(fnt.name, name);
 	i := 0;  WHILE (name[i] # ".") & (name[i] # 0X) DO INC(i) END;

@@ -80,8 +80,8 @@ TYPE
 			pt: ARRAY 4 OF WMGraphics.Point2d;
 			string : ARRAY 32 OF CHAR;
 			temp : Strings.String;
-			min, max, cur, center : LONGINT;
-			centerPixel, curPixel : LONGINT;
+			min, max, cur, center : SIGNED32;
+			centerPixel, curPixel : SIGNED32;
 		BEGIN
 			DrawBackground^(canvas);
 
@@ -193,7 +193,7 @@ TYPE
 		END HandleJoystickMessage;
 
 		PROCEDURE HandleCalibrationButton(sender, data : ANY);
-		VAR res : WORD; message : ARRAY 128 OF CHAR;
+		VAR res : INTEGER; message : ARRAY 128 OF CHAR;
 		BEGIN
 			IF joystick.calibrationMode THEN
 				joystick.StopCalibration(message, res);
@@ -243,10 +243,10 @@ TYPE
 			AddContent(panel);
 		END InitNameLabel;
 
-		PROCEDURE InitButtonsPanel(nbrOfButtons : LONGINT);
+		PROCEDURE InitButtonsPanel(nbrOfButtons : SIGNED32);
 		VAR
 			panel : WMStandardComponents.Panel; label : WMStandardComponents.Label;
-			number : ARRAY 32 OF CHAR; i : LONGINT;
+			number : ARRAY 32 OF CHAR; i : SIGNED32;
 		BEGIN
 			NEW(panel);
 			panel.bounds.SetHeight(26);
@@ -274,11 +274,11 @@ TYPE
 			AddContent(panel);
 		END InitButtonsPanel;
 
-		PROCEDURE InitCoolieHatPanels(nbrOfCoolieHats : LONGINT);
+		PROCEDURE InitCoolieHatPanels(nbrOfCoolieHats : SIGNED32);
 		VAR
 			panel : WMStandardComponents.Panel; label : WMStandardComponents.Label;
 			caption : ARRAY 16 OF CHAR;
-			i, j : LONGINT;
+			i, j : SIGNED32;
 		BEGIN
 			IF nbrOfCoolieHats <= 0 THEN RETURN; END;
 			NEW(hats, nbrOfCoolieHats);
@@ -316,8 +316,8 @@ TYPE
 			END;
 		END InitCoolieHatPanels;
 
-		PROCEDURE InitAxisPanel(nbrOfAxis : LONGINT; implementedAxis : SET);
-		VAR panel : WMStandardComponents.Panel; i : LONGINT; name : ARRAY 16 OF CHAR;
+		PROCEDURE InitAxisPanel(nbrOfAxis : SIGNED32; implementedAxis : SET);
+		VAR panel : WMStandardComponents.Panel; i : SIGNED32; name : ARRAY 16 OF CHAR;
 		BEGIN
 			NEW(panel);
 			panel.alignment.Set(WMComponents.AlignClient);
@@ -401,7 +401,7 @@ TYPE
 	Window = OBJECT (WMComponents.FormWindow)
 
 		PROCEDURE &New*(joystick : Joysticks.Joystick);
-		VAR joystickPanel : JoystickPanel; width : LONGINT;
+		VAR joystickPanel : JoystickPanel; width : SIGNED32;
 		BEGIN
 			ASSERT(joystick # NIL);
 			IncCount;
@@ -440,7 +440,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 	VAR
 

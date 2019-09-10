@@ -26,7 +26,7 @@ VAR
 
 	PROCEDURE Init;
 	VAR
-		i, result: LONGINT;
+		i, result: SIGNED32;
 	BEGIN
 		Platform.slcr.SDIO_CLK_CTRL := 0;
 		FOR i := 0 TO Platform.SdNb - 1 DO
@@ -38,7 +38,7 @@ VAR
 					SdEnvironment.String("[SD]	regs = "); SdEnvironment.Address(Platform.SdBase[0]); SdEnvironment.Ln;
 					SdEnvironment.String("[SD]	irq = "); SdEnvironment.Int(Platform.SdIrq[0], 0); SdEnvironment.Ln
 				END;
-				INC(Platform.slcr.SDIO_CLK_CTRL, LSH(LONGINT(1), i));
+				INC(Platform.slcr.SDIO_CLK_CTRL, LSH(SIGNED32(1), i));
 				CASE i OF
 					 0:
 					 	NEW(hc0);

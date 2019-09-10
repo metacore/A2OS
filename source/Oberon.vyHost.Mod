@@ -112,10 +112,10 @@ CONST idversion* = "vyHost Oberon S3 0.1d3";   (* may be maintained or changed b
 	*)
 TYPE
 	(** voyager specific **)
-	Index* = LONGINT;  	(*= index type for open arrays *)
-	(*	Coordinate*=INTEGER; 	(*= type used for output coordinates *)
-	Color*= INTEGER;
-	RealNumber*=LONGREAL;  (*= base type for numerics and 2d coordinates*)
+	Index* = SIGNED32;  	(*= index type for open arrays *)
+	(*	Coordinate*=SIGNED16; 	(*= type used for output coordinates *)
+	Color*= SIGNED16;
+	RealNumber*=FLOAT64;  (*= base type for numerics and 2d coordinates*)
 
 	FilesReader*=Files.Rider;
 	FilesWriter*=Files.Rider;
@@ -126,7 +126,7 @@ TYPE
 	(** basic graphic types *)
 	tCoordinate* = POINTER TO tCoordinateDesc;
 	tCoordinateDesc* = RECORD
-	x0*, y0*,w0*,h0*: INTEGER
+	x0*, y0*,w0*,h0*: SIGNED16
 	END;
 	tRegion2d* = POINTER TO tRegion2dDesc;
 	tRegion2dDesc* = RECORD
@@ -136,10 +136,10 @@ TYPE
 
 	tCoordinate2d* = POINTER TO tCoordinate2dDesc;
 	tCoordinate2dDesc* = RECORD (tCoordinateDesc)
-	x*, y*, w*, h*: INTEGER; 			(* screen region *)
+	x*, y*, w*, h*: SIGNED16; 			(* screen region *)
 	x2d*, y2d*, w2d*, h2d*: RealNumber; 	(* real world region *)
 	xFact*, yFact*: RealNumber;
-	x02d*, y02d*: INTEGER;
+	x02d*, y02d*: SIGNED16;
 	zoomCache*: tRegion2d;
 	END;
 	*)
@@ -163,8 +163,8 @@ TYPE
 	ProcQPtr=POINTER TO ProcQElem;  	(*! move to Action type *)
 	ProcQElem=RECORD(*! move to Action type *)
 	Proc:	TickProc;
-	TickDelta:	LONGINT;  (* time delta, in ticks. 0: always *)
-	NextTime:	LONGINT;
+	TickDelta:	SIGNED32;  (* time delta, in ticks. 0: always *)
+	NextTime:	SIGNED32;
 	next:ProcQPtr
 	END; *)
 	(*
@@ -174,17 +174,17 @@ TYPE
 	Do*: tActionProc;
 	failed-:BOOLEAN;          (*= If a pre-action failed, abort action chain and bail out.
 	Use Output for explicit status *)
-	todoCount-:LONGINT;
+	todoCount-:SIGNED32;
 	preAction-:tAction; 		(* NIL, or an action which must be done, before this one can be invoked *)
-	TickDelta: LONGINT; 	(* NIL, or an action which must be done, before this one can be invoked *)
+	TickDelta: SIGNED32; 	(* NIL, or an action which must be done, before this one can be invoked *)
 	termination: tAction;
 	END;
 	*)
 VAR
 	(*	ProcToCall:ProcQPtr;
 	countTask: Oberon.Task; *)
-	(*	slow*: INTEGER; 	(*= slow motion factor. All deltas are multiplied by this factor *) *)
-	ticks-: LONGINT;
+	(*	slow*: SIGNED16; 	(*= slow motion factor. All deltas are multiplied by this factor *) *)
+	ticks-: SIGNED32;
 	w: Texts.Writer;
 	(*	(*= basic types, copied from OPT. A generic module will not need to access OPT, but can use these copies *)
 	undftyp*, bytetyp*, booltyp*, chartyp*, sinttyp*, inttyp*, linttyp*,
@@ -211,7 +211,7 @@ END AppendToText;
 
 (** Caret mark. Default output position **)
 
-PROCEDURE GetCaret* (VAR F: Frame;   VAR text: Texts.Text;   VAR pos: LONGINT);
+PROCEDURE GetCaret* (VAR F: Frame;   VAR text: Texts.Text;   VAR pos: SIGNED32);
 	(*= get viewer and text of current insertion caret. *)
 	VAR Cmsg: Oberon.CaretMsg;
 BEGIN
@@ -225,10 +225,10 @@ END GetCaret;
 
 (** Latest selection **)
 
-PROCEDURE GetSelectionText* (VAR text: Texts.Text;  VAR beg, end: LONGINT);
+PROCEDURE GetSelectionText* (VAR text: Texts.Text;  VAR beg, end: SIGNED32);
 	(*= get recent selection. *)
 
-	VAR time: LONGINT;
+	VAR time: SIGNED32;
 BEGIN
 	Oberon.GetSelection(text, beg, end, time);
 	IF time < 0 THEN text := NIL END
@@ -242,7 +242,7 @@ BEGIN
 	HALT(100)
 END GetPar;
 
-PROCEDURE GetParText* (VAR text: Texts.Text;  VAR pos: LONGINT);  	(*= get parameters text. *)
+PROCEDURE GetParText* (VAR text: Texts.Text;  VAR pos: SIGNED32);  	(*= get parameters text. *)
 BEGIN
 	text := Oberon.Par.text;  pos := Oberon.Par.pos
 END GetParText;
@@ -280,7 +280,7 @@ END GetNamedText;
 PROCEDURE GetVisibleOutput (VAR F: Frame;  VAR text: Texts.Text);
 	(*= Get a guaranteed text output path. If no text is accessible, or the text
 	cannot be made visible, an error is occured *)
-	VAR pos: LONGINT;
+	VAR pos: SIGNED32;
 BEGIN
 	GetCaret(F, text, pos);
 	IF (F = NIL) OR (text = NIL) THEN HALT(fatalcc) END;
@@ -308,16 +308,16 @@ BEGIN
 END StringAppend;
 
 
-PROCEDURE StringAppendInt* (x, n: LONGINT;  VAR dest: ARRAY OF CHAR;  VAR pos: Index);
-	(*= LONGINT to character string.
+PROCEDURE StringAppendInt* (x, n: SIGNED32;  VAR dest: ARRAY OF CHAR;  VAR pos: Index);
+	(*= SIGNED32 to character string.
 	append x as string at pos of dest; if n>0, fill with leading spaces;
 	pos is moved to new end *)
-	VAR i: INTEGER;   x0: LONGINT;
+	VAR i: SIGNED16;   x0: SIGNED32;
 	a: ARRAY 11 OF CHAR;
 BEGIN
 	i := 0;   (* FOF changed *)
 	IF x < 0 THEN
-		IF x = MIN(LONGINT) THEN StringAppend(" -2147483648", 0, dest, pos);   RETURN
+		IF x = MIN(SIGNED32) THEN StringAppend(" -2147483648", 0, dest, pos);   RETURN
 		ELSE DEC(n);   x0 := - x
 		END
 	ELSE x0 := x
@@ -331,9 +331,9 @@ BEGIN
 	dest[pos] := 0X
 END StringAppendInt;
 
-PROCEDURE StringAppendHex* (x: LONGINT;  VAR dest: ARRAY OF CHAR;   VAR pos: Index);
+PROCEDURE StringAppendHex* (x: SIGNED32;  VAR dest: ARRAY OF CHAR;   VAR pos: Index);
 	(* no leading space used *)
-	VAR i: INTEGER;   y: LONGINT;
+	VAR i: SIGNED16;   y: SIGNED32;
 	a: ARRAY 10 OF CHAR;
 BEGIN
 	i := 0;
@@ -345,9 +345,9 @@ BEGIN
 	dest[pos] := 0X
 END  StringAppendHex;
 
-PROCEDURE StringAppendDate* (t, d: LONGINT;  VAR dest: ARRAY OF CHAR;   VAR pos: Index);
+PROCEDURE StringAppendDate* (t, d: SIGNED32;  VAR dest: ARRAY OF CHAR;   VAR pos: Index);
 
-PROCEDURE StringAppendPair (ch: CHAR;   x: LONGINT);
+PROCEDURE StringAppendPair (ch: CHAR;   x: SIGNED32);
 BEGIN dest[pos] := ch;   INC(pos);
 	dest[pos] := CHR(x DIV 10 + 30H);   INC(pos);
 	dest[pos] := CHR(x MOD 10 + 30H);   INC(pos)
@@ -371,7 +371,7 @@ BEGIN	Oberon.Remove(countTask);  countTask:=NIL
 END Stop;
 
 PROCEDURE Step*;
-VAR M: TickMsg; t: LONGINT;  pq:ProcQPtr;
+VAR M: TickMsg; t: SIGNED32;  pq:ProcQPtr;
 BEGIN
 IF countTask=NIL THEN Stop END;
 
@@ -389,7 +389,7 @@ Display.Broadcast(M);
 
 END Step;
 
-PROCEDURE Register* (p:TickProc; delta:LONGINT);  (*vs 0.1d0 gs *)
+PROCEDURE Register* (p:TickProc; delta:SIGNED32);  (*vs 0.1d0 gs *)
 (*! avoid double entries *)
 VAR pq:ProcQPtr;
 BEGIN
@@ -413,8 +413,8 @@ END DeRegister;
 
 PROCEDURE Tick (me:Oberon.Task); 	(* vs S3 *)(* Installed as an Oberon Task *)
 
-VAR t: LONGINT;  pq:ProcQPtr;  mintime:LONGINT;
-BEGIN	t:=Oberon.Time();  pq:=ProcToCall;   mintime:=MAX(LONGINT);  (*? wrap around *)
+VAR t: SIGNED32;  pq:ProcQPtr;  mintime:SIGNED32;
+BEGIN	t:=Oberon.Time();  pq:=ProcToCall;   mintime:=MAX(SIGNED32);  (*? wrap around *)
 IF pq#NIL THEN
 WHILE pq#NIL DO
 IF pq.NextTime<=t THEN pq.Proc;  pq.NextTime:=t+pq.TickDelta*slow;
@@ -443,7 +443,7 @@ END Run;
 
 (** For module Oberon **)
 
-PROCEDURE CallWString* (name: ARRAY OF CHAR;   pars: ARRAY OF CHAR;   new: BOOLEAN;   VAR res: INTEGER);
+PROCEDURE CallWString* (name: ARRAY OF CHAR;   pars: ARRAY OF CHAR;   new: BOOLEAN;   VAR res: SIGNED16);
 	(*= call an Oberon command with parameters passed as a string *)
 	VAR par: Oberon.ParList;  	w: Texts.Writer;
 BEGIN Texts.OpenWriter(w);
@@ -461,11 +461,11 @@ BEGIN Texts.OpenWriter(w);
 	Oberon.Call(name, par, new, res)
 END CallWString;
 
-PROCEDURE CallWStringX* (name, pre: ARRAY OF CHAR;   pars: ARRAY OF CHAR;   new: BOOLEAN;   VAR res: INTEGER);
+PROCEDURE CallWStringX* (name, pre: ARRAY OF CHAR;   pars: ARRAY OF CHAR;   new: BOOLEAN;   VAR res: SIGNED16);
 	(*= call an Oberon command with parameters passed as a string.
 	If res is FALSE,add prefix  and try again *)
 	VAR 	name2: ARRAY 32 OF CHAR;
-	i, j: INTEGER;
+	i, j: SIGNED16;
 BEGIN CallWString(name, pars, new, res);   IF res = 0 THEN RETURN END;
 	i := 0;   j := 0;   WHILE pre[i] # 0X DO name2[i] := pre[i];   INC(i) END;
 	j := 0;   WHILE name[j] # 0X DO  name2[i] := name[j];   INC(i);   INC(j) END;
@@ -485,34 +485,34 @@ Contents	Tools and hacks for Oberon
 (*
 (*! defunct. Use NaN support of module Reals.
 Remove calls to these functions *)
-PROCEDURE IsNaN* (x: LONGREAL): BOOLEAN;
+PROCEDURE IsNaN* (x: FLOAT64): BOOLEAN;
 BEGIN
 RETURN (Reals.IsNaNL(x))
 END IsNaN;
 
-PROCEDURE NaNCode* (x: LONGREAL): INTEGER;
-VAR h, l: LONGINT;
+PROCEDURE NaNCode* (x: FLOAT64): SIGNED16;
+VAR h, l: SIGNED32;
 BEGIN
 Reals.NaNCodeL(x, h, l);
 RETURN  SHORT(l)	(*! code high part not yet supported *)
 END NaNCode;
 
-PROCEDURE NaN* (code: INTEGER): LONGREAL;
-VAR x: LONGREAL;
+PROCEDURE NaN* (code: SIGNED16): FLOAT64;
+VAR x: FLOAT64;
 BEGIN
 RETURN Reals.NaN(code) (*! hack: Reals.NaNL not yet supported in MacOberon 2.3 *)
 END NaN;
 *)
-(*PROCEDURE NoNumberNaN* ():LONGREAL;
-VAR x:LONGREAL;
+(*PROCEDURE NoNumberNaN* ():FLOAT64;
+VAR x:FLOAT64;
 BEGIN
 RETURN Reals.NaN(cnonumber);(*! hack: Reals.NaNL not yet supported in MacOberon 2.3 *)
 END NoNumberNaN;
 
 *)
 
-PROCEDURE XpwrI* (x: REAL;   i: INTEGER): REAL;
-	VAR z: REAL;
+PROCEDURE XpwrI* (x: FLOAT32;   i: SIGNED16): FLOAT32;
+	VAR z: FLOAT32;
 BEGIN IF i < 0 THEN  x := 1 / x;  i := - i END;
 	z := 1;
 	WHILE i > 0 DO
@@ -523,8 +523,8 @@ BEGIN IF i < 0 THEN  x := 1 / x;  i := - i END;
 	RETURN z
 END XpwrI;
 
-PROCEDURE XLpwrIL* (x: LONGREAL;   i: LONGINT): LONGREAL;
-	VAR z: LONGREAL;
+PROCEDURE XLpwrIL* (x: FLOAT64;   i: SIGNED32): FLOAT64;
+	VAR z: FLOAT64;
 BEGIN IF i < 0 THEN  x := 1 / x;  i := - i END;
 	z := 1;
 	WHILE i > 0 DO
@@ -535,9 +535,9 @@ BEGIN IF i < 0 THEN  x := 1 / x;  i := - i END;
 	RETURN z
 END XLpwrIL;
 
-PROCEDURE Ten* (i: INTEGER): REAL;
+PROCEDURE Ten* (i: SIGNED16): FLOAT32;
 	(* special case of XpwrI(10.0,i) -- optimize ! Use Reals.Ten*)
-	VAR x, z: REAL;
+	VAR x, z: FLOAT32;
 BEGIN
 	IF i < 0 THEN x := 0.1  ELSE x := 10.0  END;
 	z := 1;
@@ -549,9 +549,9 @@ BEGIN
 
 END Ten;
 
-PROCEDURE TenL* (i: LONGINT): LONGREAL;
+PROCEDURE TenL* (i: SIGNED32): FLOAT64;
 	(* special case of XpwrI(10.0,i) -- optimize ! Use Reals.Ten*)
-	VAR x, z: LONGREAL;
+	VAR x, z: FLOAT64;
 BEGIN IF i < 0 THEN x := 0.1  ELSE x := 10.0  END;
 	z := 1;
 	WHILE i > 0 DO (* z*u**e=x**i, e>0 *)
@@ -568,18 +568,18 @@ These are high risk routines. They expect that all position and sizes are valid,
 text segment is of expected type*)
 
 PROCEDURE GetString*
- (VAR text: Texts.Text;  pos: LONGINT;   len: INTEGER;   VAR s: ARRAY OF CHAR): BOOLEAN;
-	VAR i: INTEGER;   r: Texts.Reader;  temp: BOOLEAN;
+ (VAR text: Texts.Text;  pos: SIGNED32;   len: SIGNED16;   VAR s: ARRAY OF CHAR): BOOLEAN;
+	VAR i: SIGNED16;   r: Texts.Reader;  temp: BOOLEAN;
 BEGIN Texts.OpenReader(r, text, pos);
-	IF len >= LEN(s) THEN len := INTEGER(LEN(s)) - 1;   temp := FALSE
+	IF len >= LEN(s) THEN len := SIGNED16(LEN(s)) - 1;   temp := FALSE
 	ELSE temp := TRUE END;
 	i := 0;   WHILE i < len DO Texts.Read(r, s[i]);   INC(i) END;
 	s[i] := 0X;
 	RETURN temp
 END GetString;
 
-PROCEDURE GetLInt* (VAR text: Texts.Text;  pos: LONGINT;   len: INTEGER;  VAR x: LONGINT): BOOLEAN;
-	VAR i: INTEGER;   r: Texts.Reader;   neg, res: BOOLEAN;  c: CHAR;
+PROCEDURE GetLInt* (VAR text: Texts.Text;  pos: SIGNED32;   len: SIGNED16;  VAR x: SIGNED32): BOOLEAN;
+	VAR i: SIGNED16;   r: Texts.Reader;   neg, res: BOOLEAN;  c: CHAR;
 BEGIN IF (text = NIL) OR ((pos < 0) OR (len <= 0)) THEN x := 0;   RETURN FALSE END;
 
 	(*! add error check and perform proper test *)
@@ -598,25 +598,25 @@ BEGIN IF (text = NIL) OR ((pos < 0) OR (len <= 0)) THEN x := 0;   RETURN FALSE E
 	RETURN res
 END GetLInt;
 
-PROCEDURE GetInt* (VAR text: Texts.Text;  pos: LONGINT;   len: INTEGER;  VAR x: INTEGER): BOOLEAN;
-	VAR res: BOOLEAN;  xl: LONGINT;
+PROCEDURE GetInt* (VAR text: Texts.Text;  pos: SIGNED32;   len: SIGNED16;  VAR x: SIGNED16): BOOLEAN;
+	VAR res: BOOLEAN;  xl: SIGNED32;
 BEGIN res := GetLInt(text, pos, len, xl);
 	IF res THEN 	(*! Add range check *)
 		x := SHORT(xl);   RETURN TRUE
 	ELSE RETURN FALSE END
 END GetInt;
 
-PROCEDURE GetSInt* (VAR text: Texts.Text;  pos: LONGINT;   len: INTEGER;  VAR x: SHORTINT): BOOLEAN;
-	VAR res: BOOLEAN;  xl: LONGINT;
+PROCEDURE GetSInt* (VAR text: Texts.Text;  pos: SIGNED32;   len: SIGNED16;  VAR x: SIGNED8): BOOLEAN;
+	VAR res: BOOLEAN;  xl: SIGNED32;
 BEGIN res := GetLInt(text, pos, len, xl);
 	IF res THEN 	(*! Add range check *)
 		x := SHORT(SHORT(xl));   RETURN TRUE
 	ELSE RETURN FALSE END
 END GetSInt;
 
-PROCEDURE GetLReal* (VAR text: Texts.Text;  pos: LONGINT;   len: INTEGER;
-VAR x: LONGREAL): BOOLEAN;
-	VAR i: INTEGER;   r: Texts.Reader;   more, res, negex: BOOLEAN;  c: CHAR;  pre, post, exp, pow: LONGINT;
+PROCEDURE GetLReal* (VAR text: Texts.Text;  pos: SIGNED32;   len: SIGNED16;
+VAR x: FLOAT64): BOOLEAN;
+	VAR i: SIGNED16;   r: Texts.Reader;   more, res, negex: BOOLEAN;  c: CHAR;  pre, post, exp, pow: SIGNED32;
 	(*xx:ARRAY 2 OF CHAR; *)neg: BOOLEAN;
 BEGIN IF (text = NIL) OR ((pos < 0) OR (len <= 0)) THEN x := 0;   RETURN FALSE END;
 	Texts.OpenReader(r, text, pos);  (*xx[1]:=0X;*)
@@ -671,9 +671,9 @@ BEGIN IF (text = NIL) OR ((pos < 0) OR (len <= 0)) THEN x := 0;   RETURN FALSE E
 		RETURN res;   (**! dummy *)
 	END GetLReal;
 
-	PROCEDURE GetReal* (VAR text: Texts.Text;  pos: LONGINT;   len: INTEGER;
-VAR x: REAL): BOOLEAN;
-	VAR xl: LONGREAL;   res: BOOLEAN;
+	PROCEDURE GetReal* (VAR text: Texts.Text;  pos: SIGNED32;   len: SIGNED16;
+VAR x: FLOAT32): BOOLEAN;
+	VAR xl: FLOAT64;   res: BOOLEAN;
 BEGIN res := GetLReal(text, pos, len, xl);
 	IF res THEN	(*! Add range check *)
 		x := SHORT(xl);   RETURN TRUE
@@ -689,7 +689,7 @@ BEGIN
 	(*!show logo*)
 END ShowId;
 
-PROCEDURE DisplayNewPattern* ( x, y: INTEGER;   VAR img: ARRAY OF SET): ADDRESS;
+PROCEDURE DisplayNewPattern* ( x, y: SIGNED16;   VAR img: ARRAY OF SET): ADDRESS;
 BEGIN
 	RETURN Display.NewPattern(x, y, img)
 END  DisplayNewPattern;
@@ -774,13 +774,13 @@ BEGIN Oberon.Remove(action)
 END Suspend;
 
 PROCEDURE Resume* (action:tAction);
-VAR t: LONGINT;
+VAR t: SIGNED32;
 BEGIN t:=Oberon.Time();action.time:=t;Oberon.Install(action)
 END Resume;
 
 PROCEDURE DoRunAction (action:Oberon.Task);
 (*= Internal version of DoAction, to be used with timer. *)
-VAR t: LONGINT;
+VAR t: SIGNED32;
 BEGIN
 WITH action:tAction DO
 action.failed:=FALSE;
@@ -795,11 +795,11 @@ END;
 END;
 END DoRunAction;
 
-PROCEDURE RunAction* (action:tAction;  requcount:LONGINT;  delay:LONGINT;  termination:tAction);
+PROCEDURE RunAction* (action:tAction;  requcount:SIGNED32;  delay:SIGNED32;  termination:tAction);
 (*= Install an action as background task, and run it repeatedly. If reqcount>0, stop after reqcount runs and call termination.
 Use delay between successive calls. Update events must be supported by the Do action if required.
 *)
-VAR t: LONGINT;
+VAR t: SIGNED32;
 BEGIN 	t:=Oberon.Time();     (*? wrap around *)
 IF action=NIL THEN RETURN  END;
 IF requcount<1 THEN action.todoCount:=-1 ELSE action.todoCount:=requcount END;

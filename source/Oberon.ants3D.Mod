@@ -31,7 +31,7 @@ IMPORT vyLinks, antsArrayObjects, antsCommands, vyRealVec, vyBase, vyCG := vyNam
 TYPE
 	ConsistencyObject= OBJECT (antsHybridObjects.Object)
 	VAR in: antsArrayObjects.tINTEGERObject;
-		out: vyRealVec.tChunkedMatrix;  x0, y0, w0, h0: LONGINT;
+		out: vyRealVec.tChunkedMatrix;  x0, y0, w0, h0: SIGNED32;
 
 	PROCEDURE Update*;
 	BEGIN
@@ -70,11 +70,11 @@ BEGIN
 	NEW(c); Objects.NewObj := c;
 END GenConsistencyObject;
 
-PROCEDURE UpdateMatrix(A: antsArrayObjects.tINTEGERObject;  VAR m: vyRealVec.tMatrixChunk;  x0, y0, w0, h0: LONGINT;  scaleminmax: BOOLEAN);
-	VAR min, max: LONGINT;  x, y: LONGINT;
+PROCEDURE UpdateMatrix(A: antsArrayObjects.tINTEGERObject;  VAR m: vyRealVec.tMatrixChunk;  x0, y0, w0, h0: SIGNED32;  scaleminmax: BOOLEAN);
+	VAR min, max: SIGNED32;  x, y: SIGNED32;
 BEGIN
 	IF scaleminmax THEN
-		min := MAX(INTEGER);  max := MIN(INTEGER);
+		min := MAX(SIGNED16);  max := MIN(SIGNED16);
 		FOR y := y0 TO y0 + h0 - 1 DO
 			FOR x := x0 TO x0 + w0 - 1 DO
 				IF A.A[y, x] > max THEN max := A.A[y, x] END;
@@ -92,16 +92,16 @@ BEGIN
 END UpdateMatrix;
 
 
-PROCEDURE MatrixFromArray (A: antsArrayObjects.tINTEGERObject;  VAR m: vyRealVec.tMatrixChunk;  x0, y0, w0, h0: LONGINT;  scaleminmax: BOOLEAN);
+PROCEDURE MatrixFromArray (A: antsArrayObjects.tINTEGERObject;  VAR m: vyRealVec.tMatrixChunk;  x0, y0, w0, h0: SIGNED32;  scaleminmax: BOOLEAN);
 BEGIN
 	m := vyRealVec.NEWMatrix (h0, w0);
 	UpdateMatrix(A,m,x0,y0,w0,h0,scaleminmax);
 END MatrixFromArray;
 
 PROCEDURE ScaleMatrix*;
-	VAR  obj: vyBase.Object;  par: LONGREAL;  y, x: LONGINT;
+	VAR  obj: vyBase.Object;  par: FLOAT64;  y, x: SIGNED32;
 BEGIN
-	antsCommands.InitScan("name=NAME scale=REAL");
+	antsCommands.InitScan("name=NAME scale=FLOAT32");
 	IF antsCommands.ExpectObject("name", obj) &
 		antsCommands.ExpectReal("scale", par) THEN
 		WITH obj: vyRealVec.tChunkedMatrix DO
@@ -115,7 +115,7 @@ BEGIN
 	END
 END ScaleMatrix;
 
-PROCEDURE MatrixObjectFromArray* (A: antsArrayObjects.tINTEGERObject;  x, y, w, h: LONGINT;  scaleminmax: BOOLEAN):
+PROCEDURE MatrixObjectFromArray* (A: antsArrayObjects.tINTEGERObject;  x, y, w, h: SIGNED32;  scaleminmax: BOOLEAN):
 vyRealVec.tChunkedMatrix;
 	VAR m: vyRealVec.tMatrixChunk;  data: vyRealVec.tChunkedMatrix; c: ConsistencyObject;
 BEGIN
@@ -144,7 +144,7 @@ BEGIN
 END View3d;
 
 
-PROCEDURE DataFromArray (A: antsArrayObjects.tINTEGERObject;  name: vyCG.tNameArray;  x, y, w, h: LONGINT;  scaleminmax: BOOLEAN);
+PROCEDURE DataFromArray (A: antsArrayObjects.tINTEGERObject;  name: vyCG.tNameArray;  x, y, w, h: SIGNED32;  scaleminmax: BOOLEAN);
 	VAR m: vyRealVec.tMatrixChunk;  data: vyRealVec.tChunkedMatrix;  obj: vyLinks.Link;
 BEGIN
 	MatrixFromArray(A, m, x, y, w, h, scaleminmax);
@@ -156,7 +156,7 @@ END DataFromArray;
 PROCEDURE MakeMatrixFromArray*;
 	VAR l: antsCommands.tScanList;   name: vyCG.tNameArray;
 	obj: vyBase.Object;  A: antsArrayObjects.tINTEGERObject;
-	x, y, w, h: LONGINT;
+	x, y, w, h: SIGNED32;
 
 BEGIN
 	l := antsCommands.ScanFromPar("from=OBJ name=NAME [x=INT y=INT w=INT h=INT]");
@@ -180,7 +180,7 @@ END MakeMatrixFromArray;
 
 PROCEDURE NewFromRegion*;
 	VAR A: antsArrayObjects.tINTEGERObject;  region: antsRegions.tRegion;   name: vyCG.tNameArray;
-	x, y, w, h: LONGINT;
+	x, y, w, h: SIGNED32;
 BEGIN
 	antsCommands.InitScan("name=NAME ~# interactive creates 3d-Matrix from Array");
 	IF
@@ -202,9 +202,9 @@ END NewFromRegion;
 
 (*PROCEDURE MakeMatrixFromLayer*;
 VAR l: antsCommands.tScanList; p: antsCommands.tParameter; name: vyCG.tNameArray;
-real: LONGREAL; obj: vyBase.Object; A: antsArrayObjects.tINTEGERObject; obj2: vyLinks.Link; 			surface: vyPicture.tLayer;
+real: FLOAT64; obj: vyBase.Object; A: antsArrayObjects.tINTEGERObject; obj2: vyLinks.Link; 			surface: vyPicture.tLayer;
 c3: vyLayers3d.tCoordinate3d;
-pict : vyPicture.Picture; x,y,w,h: LONGINT; l1: vyPort.tLayer; l2 : antsViews.tLayer;
+pict : vyPicture.Picture; x,y,w,h: SIGNED32; l1: vyPort.tLayer; l2 : antsViews.tLayer;
 
 BEGIN
 l := antsCommands.ScanFromPar();
@@ -222,7 +222,7 @@ END MakeMatrixFromLayer;
 
 PROCEDURE MakeVectorFromLine*;
 	VAR l: antsCommands.tScanList ;  name: vyCG.tNameArray;
-	obj: vyBase.Object;  A: antsArrayObjects.tINTEGERObject;  x, y: LONGINT;  v: vyBase.tVector;  vertical: BOOLEAN;
+	obj: vyBase.Object;  A: antsArrayObjects.tINTEGERObject;  x, y: SIGNED32;  v: vyBase.tVector;  vertical: BOOLEAN;
 
 BEGIN
 	l := antsCommands.ScanFromPar("from=OBJ name=NAME y=INT [>vertical] ~# put content of line in <from> in new vector <name> ");

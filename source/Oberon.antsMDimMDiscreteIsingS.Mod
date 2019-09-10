@@ -32,7 +32,7 @@ TYPE
 
 	tModel* = POINTER TO tModelDesc;
 	tModelDesc* = RECORD (antsModels.tModelDesc);
-		dim-: LONGINT;
+		dim-: SIGNED32;
 		n*: antsNeighbourhoods.Neighbours;
 		f: antsMatrixPar.Matrix;
 		l: antsMatrixPar.Matrix;
@@ -46,7 +46,7 @@ TYPE
 	END StoreM;
 
 	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Files.ReadLInt( R, s.dim );  Gadgets.ReadRef( R, s.lib, objsub );
 		IF objsub # NIL THEN s.n := objsub( antsNeighbourhoods.Neighbours ) END;
@@ -62,11 +62,11 @@ TYPE
 
 (*! implement cache, general: speed up *)
 
-	PROCEDURE Local( o, c: antsArrayObjects.tINTEGERObject;  dim: LONGINT;  par: array;  x, y: LONGINT;  M: tModel;  s: antsKernel.Kernel );
-	VAR theta: LONGREAL;  f: antsMatrixPar.Matrix;  ran, u, z: LONGREAL;  count: INTEGER;
+	PROCEDURE Local( o, c: antsArrayObjects.tINTEGERObject;  dim: SIGNED32;  par: array;  x, y: SIGNED32;  M: tModel;  s: antsKernel.Kernel );
+	VAR theta: FLOAT64;  f: antsMatrixPar.Matrix;  ran, u, z: FLOAT64;  count: SIGNED16;
 
-		PROCEDURE U( y, x, val: LONGINT ): LONGREAL;
-		VAR i: LONGINT;
+		PROCEDURE U( y, x, val: SIGNED32 ): FLOAT64;
+		VAR i: SIGNED32;
 		BEGIN
 			theta := 0;
 			FOR i := 1 TO M.n.clen - 1 DO
@@ -76,7 +76,7 @@ TYPE
 		END U;
 
 	(*
-PROCEDURE Penalize (y, x, val: LONGINT): LONGREAL;
+PROCEDURE Penalize (y, x, val: SIGNED32): FLOAT64;
 BEGIN
 IF s.Aorig # NIL THEN
 RETURN - par[0] * o.depth * (val - s.Aorig(antsArrayObjects.tObject).A[y, x]) * (val - s.Aorig(antsArrayObjects.tObject).A[y, x])
@@ -96,14 +96,14 @@ END Penalize;
 		c.A[(y) MOD o.h, (x) MOD o.w] := count
 	END Local;
 
-	PROCEDURE Sync( m: tModel;  depth: LONGINT );
+	PROCEDURE Sync( m: tModel;  depth: SIGNED32 );
 	BEGIN
 		IF (m.f.dimx # depth) OR (m.f.dimy # depth) THEN antsMatrixPar.ChangeDim( m.f, SHORT( depth ), SHORT( depth ) ) END;
 		IF (m.l.dimy # depth) OR (m.l.dimx # 1) THEN antsMatrixPar.ChangeDim( m.l, SHORT( depth ), 1 ) END
 	END Sync;
 
 	PROCEDURE OneSweep*( s: antsKernel.Kernel );
-	VAR A, Cache: antsArrayObjects.tINTEGERObject;  par: array;  model: tModel;  dim, x, y: LONGINT;  x0, y0, w0, h0: INTEGER;
+	VAR A, Cache: antsArrayObjects.tINTEGERObject;  par: array;  model: tModel;  dim, x, y: SIGNED32;  x0, y0, w0, h0: SIGNED16;
 
 	BEGIN
 		A := s.A( antsArrayObjects.tINTEGERObject );  model := s.par( tModel );  x0 := 0;  y0 := 0;  w0 := SHORT( A.w - 1 );

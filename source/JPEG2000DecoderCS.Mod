@@ -31,8 +31,8 @@ MODULE JPEG2000DecoderCS;
 			of control mechanism to prevent "out of memory" traps etc. (especially caused
 			by corrupted codestreams)
 		*)
-		MAX_IMG_WIDTH = MAX(LONGINT);	(* Default: MAX(LONGINT) *)
-		MAX_IMG_HEIGHT = MAX(LONGINT);	(* Default: MAX(LONGINT) *)
+		MAX_IMG_WIDTH = MAX(SIGNED32);	(* Default: MAX(SIGNED32) *)
+		MAX_IMG_HEIGHT = MAX(SIGNED32);	(* Default: MAX(SIGNED32) *)
 		MAX_TILES = 65535;		(* Default: 65535 (= (maximum tile index + 1) -> refer to the Isot parameter of the SOT segment) *)
 		MAX_COMPONENTS = 16384;	(* Default: 16384 (= maximum number of components -> refer to the Csiz parameter of the SIZ segment) *)
 		MAX_LAYERS = 65535;	(* Default: 65535 (= maximum number of layers -> refer to the SGcod parameter of the COD segment) *)
@@ -52,7 +52,7 @@ MODULE JPEG2000DecoderCS;
 			This tile-part index is set, when the codestream reader
 			and its subcomponents are running in rebuild mode
 		*)
-		REBUILD_TILEPART* = MAX(LONGINT);
+		REBUILD_TILEPART* = MAX(SIGNED32);
 
 		(* --- END General constants --- *)
 
@@ -120,8 +120,8 @@ MODULE JPEG2000DecoderCS;
 TYPE
 
 		PrecinctExp = RECORD
-			ppx : LONGINT;	(* Precinct width exponent *)
-			ppy : LONGINT;	(* Precinct height exponent *)
+			ppx : SIGNED32;	(* Precinct width exponent *)
+			ppy : SIGNED32;	(* Precinct height exponent *)
 		END;
 
 
@@ -129,25 +129,25 @@ TYPE
 		CodingStyle = OBJECT
 			VAR
 				maxps : BOOLEAN;			(* Maximum precinct size used? *)
-				ndec : LONGINT;				(* Number of decomposition levels *)
-				cblw : LONGINT;				(* Code-block width exponent *)
-				cblh : LONGINT;				(* Code-block heigth exponent *)
+				ndec : SIGNED32;				(* Number of decomposition levels *)
+				cblw : SIGNED32;				(* Code-block width exponent *)
+				cblh : SIGNED32;				(* Code-block heigth exponent *)
 				selcb : BOOLEAN;				(* Selective arithmetic coding bypass? *)
 				rescp : BOOLEAN;				(* Reset context probabilities on coding pass boundaries? *)
 				term : BOOLEAN;				(* Termination on each coding pass? *)
 				vert : BOOLEAN;				(* Vertically causal context? *)
 				pred : BOOLEAN;				(* Predictable termination? *)
 				segs : BOOLEAN;				(* Segmentation symbols used? *)
-				trans : LONGINT;				(* Wavelet transformation type *)
+				trans : SIGNED32;				(* Wavelet transformation type *)
 				precs : POINTER TO ARRAY OF PrecinctExp;	(* Precinct sizes (in defined order) *)
 		END CodingStyle;
 
 		(** Component Independent Coding Style *)
 		CICodingStyle = OBJECT
 			VAR
-				po : LONGINT;		(* Progression order *)
-				nl : LONGINT;		(* Number of layers *)
-				mct : LONGINT;	(* Multiple component tranformation type *)
+				po : SIGNED32;		(* Progression order *)
+				nl : SIGNED32;		(* Number of layers *)
+				mct : SIGNED32;	(* Multiple component tranformation type *)
 				sop : BOOLEAN;	(* SOP markers used? *)
 				eph : BOOLEAN;	(* EPH markers used? *)
 		END CICodingStyle;
@@ -155,23 +155,23 @@ TYPE
 		Component = OBJECT
 			VAR
 				signed : BOOLEAN;	(* TRUE if component samples are signed values *)
-				depth : LONGINT;		(* Component bit depth *)
-				subsx : LONGINT;		(* Horizonal separation (sub-sampling factor) of the component *)
-				subsy : LONGINT;		(* Vertical separation (sub-sampling factor) of the component *)
+				depth : SIGNED32;		(* Component bit depth *)
+				subsx : SIGNED32;		(* Horizonal separation (sub-sampling factor) of the component *)
+				subsy : SIGNED32;		(* Vertical separation (sub-sampling factor) of the component *)
 		END Component;
 
 		Quantization = OBJECT
 			VAR
-				style : LONGINT;			(* Quantization style *)
-				nguardb : LONGINT;		(* Number of guard bits *)
-				nstepsiz : LONGINT;
+				style : SIGNED32;			(* Quantization style *)
+				nguardb : SIGNED32;		(* Number of guard bits *)
+				nstepsiz : SIGNED32;
 				stepsiz : POINTER TO ARRAY OF QuantStep;	(* Array containing quantization step sizes (if signalled in codestream) *)
 		END Quantization;
 
 		QuantStep = OBJECT
 			VAR
-				mant : LONGINT;	(* Mantissa *)
-				exp : LONGINT;	(* Exponent *)
+				mant : SIGNED32;	(* Mantissa *)
+				exp : SIGNED32;	(* Exponent *)
 		END QuantStep;
 
 		(**
@@ -180,23 +180,23 @@ TYPE
 		*)
 		ImageInfo* = OBJECT
 			VAR
-				xsiz, ysiz : LONGINT;		(* Width / height of reference grid *)
-				xos, yos : LONGINT;		(* Horizontal / vertical offset from the origin *)
-				nt : LONGINT;			(* Overall number of tiles *)
-				nxt, nyt : LONGINT;		(* Number of tiles in horizontal / vertical direction *)
-				xt, yt : LONGINT;		(* Width / height of one reference tile w.r.t the reference grid *)
-				xtos, ytos : LONGINT;	(* Horizontal / vertical offset from the origin to the first tile *)
-				ncomp : LONGINT;		(* Number of components in the image *)
+				xsiz, ysiz : SIGNED32;		(* Width / height of reference grid *)
+				xos, yos : SIGNED32;		(* Horizontal / vertical offset from the origin *)
+				nt : SIGNED32;			(* Overall number of tiles *)
+				nxt, nyt : SIGNED32;		(* Number of tiles in horizontal / vertical direction *)
+				xt, yt : SIGNED32;		(* Width / height of one reference tile w.r.t the reference grid *)
+				xtos, ytos : SIGNED32;	(* Horizontal / vertical offset from the origin to the first tile *)
+				ncomp : SIGNED32;		(* Number of components in the image *)
 				comps : POINTER TO ARRAY OF Component;
 
 			(**
 				Get width of image on reference grid at decomposition level 'declevel'.
 			*)
-			PROCEDURE GetImgWidth* (declevel : LONGINT) : LONGINT;
+			PROCEDURE GetImgWidth* (declevel : SIGNED32) : SIGNED32;
 				VAR
-					tmp : LONGINT;
+					tmp : SIGNED32;
 				BEGIN
-					tmp := LSH(LONGINT( 1), declevel) - 1;
+					tmp := LSH(SIGNED32( 1), declevel) - 1;
 
 					RETURN LSH(xsiz + tmp, -declevel) - LSH(xos + tmp, -declevel);
 			END GetImgWidth;
@@ -204,11 +204,11 @@ TYPE
 			(**
 				Get height of image on reference grid at decomposition level 'declevel'.
 			*)
-			PROCEDURE GetImgHeight* (declevel : LONGINT) : LONGINT;
+			PROCEDURE GetImgHeight* (declevel : SIGNED32) : SIGNED32;
 				VAR
-					tmp : LONGINT;
+					tmp : SIGNED32;
 				BEGIN
-					tmp := LSH(LONGINT( 1), declevel) - 1;
+					tmp := LSH(SIGNED32( 1), declevel) - 1;
 
 					RETURN LSH(ysiz + tmp, -declevel) - LSH(yos + tmp, -declevel);
 			END GetImgHeight;
@@ -216,11 +216,11 @@ TYPE
 			(**
 				Get horizontal image offset relative to reference grid origin at decomposition level 'declevel'.
 			*)
-			PROCEDURE GetImgULX* (declevel : LONGINT) : LONGINT;
+			PROCEDURE GetImgULX* (declevel : SIGNED32) : SIGNED32;
 				VAR
-					tmp : LONGINT;
+					tmp : SIGNED32;
 				BEGIN
-					tmp := LSH(LONGINT( 1), declevel) - 1;
+					tmp := LSH(SIGNED32( 1), declevel) - 1;
 
 					RETURN LSH(xos + tmp, -declevel);
 			END GetImgULX;
@@ -228,11 +228,11 @@ TYPE
 			(**
 				Get vertical image offset relative to reference grid origin at decomposition level 'declevel'.
 			*)
-			PROCEDURE GetImgULY* (declevel : LONGINT) : LONGINT;
+			PROCEDURE GetImgULY* (declevel : SIGNED32) : SIGNED32;
 				VAR
-					tmp : LONGINT;
+					tmp : SIGNED32;
 				BEGIN
-					tmp := LSH(LONGINT( 1), declevel) - 1;
+					tmp := LSH(SIGNED32( 1), declevel) - 1;
 
 					RETURN LSH(yos + tmp, -declevel);
 			END GetImgULY;
@@ -240,14 +240,14 @@ TYPE
 			(**
 				Get width of one component on reference grid at decomposition level 'declevel'.
 			*)
-			PROCEDURE GetCompImgWidth* (component, declevel : LONGINT) : LONGINT;
+			PROCEDURE GetCompImgWidth* (component, declevel : SIGNED32) : SIGNED32;
 				VAR
-					subsx, tmp, cx0, cx1 : LONGINT;
+					subsx, tmp, cx0, cx1 : SIGNED32;
 					(* cx0 : Horizontal coordinate of upper left hand sample of component *)
 					(* cx1 - 1: Horizontal coordinate of lower right hand sample of component *)
 				BEGIN
 					subsx := comps[component].subsx;
-					tmp := LSH(LONGINT( 1), declevel) - 1;
+					tmp := LSH(SIGNED32( 1), declevel) - 1;
 
 					cx0 := (xos + subsx - 1) DIV subsx;
 					cx1 := (xsiz + subsx - 1) DIV subsx;
@@ -258,14 +258,14 @@ TYPE
 			(**
 				Get height of one component on reference grid at decomposition level 'declevel'.
 			*)
-			PROCEDURE GetCompImgHeight* (component, declevel : LONGINT) : LONGINT;
+			PROCEDURE GetCompImgHeight* (component, declevel : SIGNED32) : SIGNED32;
 				VAR
-					subsy, tmp, cy0, cy1 : LONGINT;
+					subsy, tmp, cy0, cy1 : SIGNED32;
 					(* cy0 : Vertical coordinate of upper left hand sample of component *)
 					(* cy1 - 1: Vertical coordinate of lower right hand sample of component *)
 				BEGIN
 					subsy := comps[component].subsy;
-					tmp := LSH(LONGINT( 1), declevel) - 1;
+					tmp := LSH(SIGNED32( 1), declevel) - 1;
 
 					cy0 := (yos + subsy - 1) DIV subsy;
 					cy1 := (ysiz + subsy - 1) DIV subsy;
@@ -277,7 +277,7 @@ TYPE
 			(**
 				Get total numbe of tiles in the image.
 			*)
-			PROCEDURE GetNumTiles* () : LONGINT;
+			PROCEDURE GetNumTiles* () : SIGNED32;
 				BEGIN
 					RETURN nt;
 			END GetNumTiles;
@@ -285,7 +285,7 @@ TYPE
 			(**
 				Get number of tiles in horizontal direction.
 			*)
-			PROCEDURE GetNumTilesX* () : LONGINT;
+			PROCEDURE GetNumTilesX* () : SIGNED32;
 				BEGIN
 					RETURN nxt;
 			END GetNumTilesX;
@@ -293,7 +293,7 @@ TYPE
 			(**
 				Get number of tiles in horizontal direction.
 			*)
-			PROCEDURE GetNumTilesY* () : LONGINT;
+			PROCEDURE GetNumTilesY* () : SIGNED32;
 				BEGIN
 					RETURN nyt;
 			END GetNumTilesY;
@@ -301,11 +301,11 @@ TYPE
 			(**
 				Get width of tile with index 'tile' on reference grid at decomposition level 'declevel'.
 			*)
-			PROCEDURE GetTileWidth* (tile, declevel : LONGINT) : LONGINT;
+			PROCEDURE GetTileWidth* (tile, declevel : SIGNED32) : SIGNED32;
 				VAR
-					tx0, tx1, p, tmp : LONGINT;
+					tx0, tx1, p, tmp : SIGNED32;
 				BEGIN
-					tmp := LSH(LONGINT( 1), declevel) - 1;
+					tmp := LSH(SIGNED32( 1), declevel) - 1;
 
 					(* Compute the horizontal index of the current tile in the reference grid *)
 					p := tile MOD nxt;
@@ -329,11 +329,11 @@ TYPE
 			(**
 				Get height of tile with index 'tile' on reference grid at decomposition level 'declevel'.
 			*)
-			PROCEDURE GetTileHeight* (tile, declevel : LONGINT) : LONGINT;
+			PROCEDURE GetTileHeight* (tile, declevel : SIGNED32) : SIGNED32;
 				VAR
-					ty0, ty1, q, tmp : LONGINT;
+					ty0, ty1, q, tmp : SIGNED32;
 				BEGIN
-					tmp := LSH(LONGINT( 1), declevel) - 1;
+					tmp := LSH(SIGNED32( 1), declevel) - 1;
 
 					(* Compute the vertical index of the current tile in the reference grid *)
 					q := tile DIV nxt;
@@ -358,11 +358,11 @@ TYPE
 				Get horizontal offset of tile with index 'tile' relative to reference grid origin
 				at decomposition level 'declevel'.
 			*)
-			PROCEDURE GetTileULX* (tile, declevel : LONGINT) : LONGINT;
+			PROCEDURE GetTileULX* (tile, declevel : SIGNED32) : SIGNED32;
 				VAR
-					tx0, p, tmp : LONGINT;
+					tx0, p, tmp : SIGNED32;
 				BEGIN
-					tmp := LSH(LONGINT( 1), declevel) - 1;
+					tmp := LSH(SIGNED32( 1), declevel) - 1;
 
 					(* Compute the horizontal index of the current tile in the reference grid *)
 					p := tile MOD nxt;
@@ -381,11 +381,11 @@ TYPE
 				Get horizontal offset of tile with index 'tile' relative to reference grid origin
 				at decomposition level 'declevel'.
 			*)
-			PROCEDURE GetTileULY* (tile, declevel : LONGINT) : LONGINT;
+			PROCEDURE GetTileULY* (tile, declevel : SIGNED32) : SIGNED32;
 				VAR
-					ty0, q, tmp : LONGINT;
+					ty0, q, tmp : SIGNED32;
 				BEGIN
-					tmp := LSH(LONGINT( 1), declevel) - 1;
+					tmp := LSH(SIGNED32( 1), declevel) - 1;
 
 					(* Compute the vertical index of the current tile in the reference grid *)
 					q := tile DIV nxt;
@@ -400,7 +400,7 @@ TYPE
 					RETURN LSH(ty0 + tmp, -declevel);
 			END GetTileULY;
 
-			PROCEDURE GetNumComponents* () : LONGINT;
+			PROCEDURE GetNumComponents* () : SIGNED32;
 				BEGIN
 					RETURN ncomp;
 			END GetNumComponents;
@@ -408,7 +408,7 @@ TYPE
 			(**
 				Get horizontal subsampling factor of component 'component'
 			*)
-			PROCEDURE GetSubsX* (component : LONGINT) : LONGINT;
+			PROCEDURE GetSubsX* (component : SIGNED32) : SIGNED32;
 				BEGIN
 					RETURN comps[component].subsx;
 			END GetSubsX;
@@ -416,13 +416,13 @@ TYPE
 			(**
 				Get vertical subsampling factor of component 'component'
 			*)
-			PROCEDURE GetSubsY* (component : LONGINT) : LONGINT;
+			PROCEDURE GetSubsY* (component : SIGNED32) : SIGNED32;
 				BEGIN
 					RETURN comps[component].subsy;
 			END GetSubsY;
 
 
-			PROCEDURE GetBitDepth* (component : LONGINT) : LONGINT;
+			PROCEDURE GetBitDepth* (component : SIGNED32) : SIGNED32;
 				BEGIN
 					RETURN comps[component].depth;
 			END GetBitDepth;
@@ -441,7 +441,7 @@ TYPE
 				cstyle : POINTER TO ARRAY OF ARRAY OF CodingStyle;
 				cics : POINTER TO ARRAY OF CICodingStyle;
 				quant : POINTER TO ARRAY OF ARRAY OF Quantization;
-				roiShift : POINTER TO ARRAY OF ARRAY OF LONGINT;
+				roiShift : POINTER TO ARRAY OF ARRAY OF SIGNED32;
 
 			PROCEDURE &InitNew*;
 				BEGIN
@@ -463,7 +463,7 @@ TYPE
 			(**
 				TRUE if arithmetic bypass coding is used for the given tile-component.
 			*)
-			PROCEDURE BypassCoding* (tile, component : LONGINT) : BOOLEAN;
+			PROCEDURE BypassCoding* (tile, component : SIGNED32) : BOOLEAN;
 				BEGIN
 					RETURN cstyle[tile][component].selcb;
 			END BypassCoding;
@@ -471,7 +471,7 @@ TYPE
 			(**
 				TRUE if regular termination is used when decoding data for the given tile-component.
 			*)
-			PROCEDURE RegularTermination* (tile, component : LONGINT) : BOOLEAN;
+			PROCEDURE RegularTermination* (tile, component : SIGNED32) : BOOLEAN;
 				BEGIN
 					RETURN cstyle[tile][component].term;
 			END RegularTermination;
@@ -479,7 +479,7 @@ TYPE
 			(**
 				TRUE if vertically causal context formation is used when decoding data for the given tile-component.
 			*)
-			PROCEDURE VerticallyCausalContext* (tile, component : LONGINT) : BOOLEAN;
+			PROCEDURE VerticallyCausalContext* (tile, component : SIGNED32) : BOOLEAN;
 				BEGIN
 					RETURN cstyle[tile][component].vert;
 			END VerticallyCausalContext;
@@ -487,7 +487,7 @@ TYPE
 			(**
 				TRUE if predictable termination is used when decoding data for the given tile-component.
 			*)
-			PROCEDURE PredictableTermination* (tile, component : LONGINT) : BOOLEAN;
+			PROCEDURE PredictableTermination* (tile, component : SIGNED32) : BOOLEAN;
 				BEGIN
 					RETURN cstyle[tile][component].pred;
 			END PredictableTermination;
@@ -495,7 +495,7 @@ TYPE
 			(**
 				TRUE if contexts are reset after each coding pass when decoding data for the given tile-component.
 			*)
-			PROCEDURE ResetContexts* (tile, component : LONGINT) : BOOLEAN;
+			PROCEDURE ResetContexts* (tile, component : SIGNED32) : BOOLEAN;
 				BEGIN
 					RETURN cstyle[tile][component].rescp;
 			END ResetContexts;
@@ -503,7 +503,7 @@ TYPE
 			(**
 				TRUE if segmentation symbols are used when decoding data for the given tile-component.
 			*)
-			PROCEDURE SegmentationSymbols* (tile, component : LONGINT) : BOOLEAN;
+			PROCEDURE SegmentationSymbols* (tile, component : SIGNED32) : BOOLEAN;
 				BEGIN
 					RETURN cstyle[tile][component].segs;
 			END SegmentationSymbols;
@@ -511,7 +511,7 @@ TYPE
 			(**
 				The wavelet transformation type used for the give tile-component
 			*)
-			PROCEDURE GetWavTransType* (tile, component : LONGINT) : LONGINT;
+			PROCEDURE GetWavTransType* (tile, component : SIGNED32) : SIGNED32;
 				BEGIN
 					RETURN cstyle[tile][component].trans;
 			END GetWavTransType;
@@ -519,7 +519,7 @@ TYPE
 			(**
 				TRUE if the wavelet transformation for the given tile-component is reversible
 			*)
-			PROCEDURE IsReversibleWavTrans* (tile, component : LONGINT) : BOOLEAN;
+			PROCEDURE IsReversibleWavTrans* (tile, component : SIGNED32) : BOOLEAN;
 				BEGIN
 					RETURN cstyle[tile][component].trans = TRANS_5X3_REV;
 			END IsReversibleWavTrans;
@@ -527,7 +527,7 @@ TYPE
 			(**
 				TRUE if a multiple component transformation is used for the given tile.
 			*)
-			PROCEDURE CompTransUsed* (tile : LONGINT) : BOOLEAN;
+			PROCEDURE CompTransUsed* (tile : SIGNED32) : BOOLEAN;
 				BEGIN
 					RETURN cics[tile].mct # 0;
 			END CompTransUsed;
@@ -536,7 +536,7 @@ TYPE
 				Returns the number of wavelet decomposition levels for a given
 				tile-component.
 			*)
-			PROCEDURE GetNumDecLevels* (tile, component : LONGINT) : LONGINT;
+			PROCEDURE GetNumDecLevels* (tile, component : SIGNED32) : SIGNED32;
 				BEGIN
 					RETURN cstyle[tile][component].ndec;
 			END GetNumDecLevels;
@@ -545,9 +545,9 @@ TYPE
 				Gets the minimum number of wavelet decomposition levels over all
 				tile-components
 			*)
-			PROCEDURE GetImgMinDecLevels* () : LONGINT;
+			PROCEDURE GetImgMinDecLevels* () : SIGNED32;
 				VAR
-					min, i, j : LONGINT;
+					min, i, j : SIGNED32;
 				BEGIN
 					min := cstyle[0][0].ndec;
 
@@ -566,9 +566,9 @@ TYPE
 				Gets the maximum number of wavelet decomposition levels over all
 				tile-components
 			*)
-			PROCEDURE GetImgMaxDecLevels* () : LONGINT;
+			PROCEDURE GetImgMaxDecLevels* () : SIGNED32;
 				VAR
-					max, i, j : LONGINT;
+					max, i, j : SIGNED32;
 				BEGIN
 					max := cstyle[0][0].ndec;
 
@@ -587,9 +587,9 @@ TYPE
 				Gets the minimum number of wavelet decomposition levels
 				for a given tile.
 			*)
-			PROCEDURE GetMinDecLevels* (tile : LONGINT) : LONGINT;
+			PROCEDURE GetMinDecLevels* (tile : SIGNED32) : SIGNED32;
 				VAR
-					min, i : LONGINT;
+					min, i : SIGNED32;
 				BEGIN
 					min := cstyle[tile][0].ndec;
 
@@ -603,9 +603,9 @@ TYPE
 			END GetMinDecLevels;
 
 
-			PROCEDURE GetMaxDecLevels* (tile : LONGINT) : LONGINT;
+			PROCEDURE GetMaxDecLevels* (tile : SIGNED32) : SIGNED32;
 				VAR
-					max, i : LONGINT;
+					max, i : SIGNED32;
 				BEGIN
 					max := cstyle[tile][0].ndec;
 
@@ -622,7 +622,7 @@ TYPE
 			(**
 				Gets the number of layers for a given tile
 			*)
-			PROCEDURE GetNumLayers* (tile : LONGINT) : LONGINT;
+			PROCEDURE GetNumLayers* (tile : SIGNED32) : SIGNED32;
 				BEGIN
 					RETURN cics[tile].nl;
 			END GetNumLayers;
@@ -630,9 +630,9 @@ TYPE
 			(**
 				Gets the minimum number of layers over all tiles
 			*)
-			PROCEDURE GetMinNumLayers* () : LONGINT;
+			PROCEDURE GetMinNumLayers* () : SIGNED32;
 				VAR
-					i, min : LONGINT;
+					i, min : SIGNED32;
 				BEGIN
 					min := cics[0].nl;
 
@@ -650,7 +650,7 @@ TYPE
 				Gets the precinct width exponent for a given tile, component and
 				resolution level
 			*)
-			PROCEDURE GetPPX (tile, comp, reslevel : LONGINT) : LONGINT;
+			PROCEDURE GetPPX (tile, comp, reslevel : SIGNED32) : SIGNED32;
 				BEGIN
 					IF cstyle[tile][comp].maxps THEN
 						RETURN MAX_PREC_SIZ;
@@ -663,7 +663,7 @@ TYPE
 				Gets the precinct height exponent for a given tile, component and
 				resolution level
 			*)
-			PROCEDURE GetPPY (tile, comp, reslevel : LONGINT) : LONGINT;
+			PROCEDURE GetPPY (tile, comp, reslevel : SIGNED32) : SIGNED32;
 				BEGIN
 					IF cstyle[tile][comp].maxps THEN
 						RETURN MAX_PREC_SIZ;
@@ -675,9 +675,9 @@ TYPE
 			(**
 				Returns the maximum code-block width exponent for a specific tile.
 			*)
-			PROCEDURE GetMaxCblkWidthExp* (tile : LONGINT) : LONGINT;
+			PROCEDURE GetMaxCblkWidthExp* (tile : SIGNED32) : SIGNED32;
 				VAR
-					i, maxw : LONGINT;
+					i, maxw : SIGNED32;
 				BEGIN
 					maxw := cstyle[tile][0].cblw;
 
@@ -693,9 +693,9 @@ TYPE
 			(**
 				Returns the maximum code-block height exponent for a specific tile.
 			*)
-			PROCEDURE GetMaxCblkHeightExp* (tile : LONGINT) : LONGINT;
+			PROCEDURE GetMaxCblkHeightExp* (tile : SIGNED32) : SIGNED32;
 				VAR
-					i, maxh : LONGINT;
+					i, maxh : SIGNED32;
 				BEGIN
 					maxh := cstyle[tile][0].cblh;
 
@@ -711,7 +711,7 @@ TYPE
 			(**
 				Returns the quantization style for a given tile-component
 			*)
-			PROCEDURE GetQuantStyle* (tile, comp : LONGINT) : LONGINT;
+			PROCEDURE GetQuantStyle* (tile, comp : SIGNED32) : SIGNED32;
 				BEGIN
 					RETURN quant[tile][comp].style;
 			END GetQuantStyle;
@@ -720,7 +720,7 @@ TYPE
 				Gets the exponent used in the calculation of the quantization step
 				(for a given tile, component, resolution level and subband)
 			*)
-			PROCEDURE GetQuantExponent* (tile, comp, reslevel, subband : LONGINT) : LONGINT;
+			PROCEDURE GetQuantExponent* (tile, comp, reslevel, subband : SIGNED32) : SIGNED32;
 				BEGIN
 					IF reslevel = 0 THEN
 						RETURN quant[tile][comp].stepsiz[0].exp
@@ -733,7 +733,7 @@ TYPE
 				Gets the mantissa used in the calculation of the quantization step
 				(for a given tile, component, resolution level and subband)
 			*)
-			PROCEDURE GetQuantMantissa* (tile, comp, reslevel, subband : LONGINT) : LONGINT;
+			PROCEDURE GetQuantMantissa* (tile, comp, reslevel, subband : SIGNED32) : SIGNED32;
 				BEGIN
 					IF reslevel = 0 THEN
 						RETURN quant[tile][comp].stepsiz[0].mant;
@@ -745,7 +745,7 @@ TYPE
 			(**
 				TRUE, if ROI coding is used for a given tile-component
 			*)
-			PROCEDURE ROIUsed* (tile, comp : LONGINT) : BOOLEAN;
+			PROCEDURE ROIUsed* (tile, comp : SIGNED32) : BOOLEAN;
 				BEGIN
 					RETURN (roiShift # NIL) & (roiShift[tile][comp] >= 0);
 			END ROIUsed;
@@ -754,7 +754,7 @@ TYPE
 				Returns the shift value (as defined in the Maxshift method) for
 				ROI decoding (or -1 if there is no such value)
 			*)
-			PROCEDURE GetROIShift* (tile, comp : LONGINT) : LONGINT;
+			PROCEDURE GetROIShift* (tile, comp : SIGNED32) : SIGNED32;
 				BEGIN
 					IF (roiShift = NIL) THEN
 						RETURN -1;
@@ -769,33 +769,33 @@ TYPE
 			Holds the progression state for a single tile
 		*)
 		ProgState = RECORD
-			progNr : LONGINT;		(* The current progression number = number of prog. changes so far *)
-			progOrder : LONGINT;	(* The progression order *)
-			curLay : LONGINT;		(* The current layer *)
+			progNr : SIGNED32;		(* The current progression number = number of prog. changes so far *)
+			progOrder : SIGNED32;	(* The progression order *)
+			curLay : SIGNED32;		(* The current layer *)
 			startLay : J2KU.LongInt2DArrayPtr;
-			endLay : LONGINT;		(* The last layer of this progression *)
-			startRes : LONGINT;		(* The resolution level to start with *)
-			curRes : LONGINT;		(* The current res. level *)
-			endRes : LONGINT;		(* The last res. level of this progression *)
-			startComp : LONGINT;	(* The component to start with *)
-			curComp : LONGINT;		(* The current component *)
-			endComp : LONGINT;	(* The last component of this progression *)
+			endLay : SIGNED32;		(* The last layer of this progression *)
+			startRes : SIGNED32;		(* The resolution level to start with *)
+			curRes : SIGNED32;		(* The current res. level *)
+			endRes : SIGNED32;		(* The last res. level of this progression *)
+			startComp : SIGNED32;	(* The component to start with *)
+			curComp : SIGNED32;		(* The current component *)
+			endComp : SIGNED32;	(* The last component of this progression *)
 			curPrec : J2KU.LongInt3DArrayPtr;
 			(* NOTE: The following state variables are not needed in the case of position-first progressions *)
-			curX : LONGINT;
-			curY : LONGINT;
+			curX : SIGNED32;
+			curY : SIGNED32;
 		END;
 
 		(*
 			Specifies progression changes.
 		*)
 		ProgChange = RECORD
-			progOrder : LONGINT;	(* The progression order *)
-			startRes : LONGINT;		(* The first res. level of this progression *)
-			startComp : LONGINT;	(* The first component of this progression *)
-			endLay : LONGINT;		(* The last layer of this progression *)
-			endRes : LONGINT;		(* The last res .level of this progression *)
-			endComp : LONGINT;	(* The last component of this progression *)
+			progOrder : SIGNED32;	(* The progression order *)
+			startRes : SIGNED32;		(* The first res. level of this progression *)
+			startComp : SIGNED32;	(* The first component of this progression *)
+			endLay : SIGNED32;		(* The last layer of this progression *)
+			endRes : SIGNED32;		(* The last res .level of this progression *)
+			endComp : SIGNED32;	(* The last component of this progression *)
 		END;
 
 		ProgChangeArrayPtr = POINTER TO ARRAY OF ProgChange;
@@ -823,9 +823,9 @@ TYPE
 				3rd dim.: 0: Number of code-blocks in horizontal direction,
 						1: Number of code-blocks in vertical direction
 			*)
-			nblocks : POINTER TO ARRAY OF ARRAY OF ARRAY 2 OF LONGINT;
-			nprecx : LONGINT;	(* The number of precincts in horizontal direction for a specific tile, component, resolution level (per subband) *)
-			nprecy : LONGINT;	(* The number of precincts in vertical direction for a specific tile, component, resolution leve (per subband) *)
+			nblocks : POINTER TO ARRAY OF ARRAY OF ARRAY 2 OF SIGNED32;
+			nprecx : SIGNED32;	(* The number of precincts in horizontal direction for a specific tile, component, resolution level (per subband) *)
+			nprecy : SIGNED32;	(* The number of precincts in vertical direction for a specific tile, component, resolution leve (per subband) *)
 		END;
 
 
@@ -836,12 +836,12 @@ TYPE
 		PacketDecoder = OBJECT(J2KU.BitSource)
 			VAR
 				cr : CodestreamReader;	(* A reference to the codestream reader so we can read bytes from the stream *)
-				curTile : LONGINT;		(* The tile for which packets are decoded currently *)
-				curByte : LONGINT;		(* A buffer containing the current byte in the packet (-header) *)
-				curBytePos : LONGINT;	(* The position in the current byte buffer. 8 means the buffer is empty, 0 means we're at the beginning of the buffer *)
+				curTile : SIGNED32;		(* The tile for which packets are decoded currently *)
+				curByte : SIGNED32;		(* A buffer containing the current byte in the packet (-header) *)
+				curBytePos : SIGNED32;	(* The position in the current byte buffer. 8 means the buffer is empty, 0 means we're at the beginning of the buffer *)
 				decSpec : DecoderSpecs;(* A reference to the current decoder specification *)
 				pph : DataListElement;		(* The current data element of packed packet headers *)
-				pphPos : LONGINT;		(* The position in the data array of the current first data element *)
+				pphPos : SIGNED32;		(* The position in the data array of the current first data element *)
 				pphTileFirstLast : POINTER TO ARRAY OF ARRAY OF DataListElement;	(* The currently first/last data elements of each tile *)
 				pphTilePos : J2KU.LongIntArrayPtr;		(* The poitions in the data array of the currently first data element of each tile *)
 				pphMainUsed : BOOLEAN;	(* Indicates wether packed packet headers in the main header are used *)
@@ -856,7 +856,7 @@ TYPE
 					4th dim: 0: x direction
 							1: y direction
 				*)
-				incStep : POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF ARRAY 2 OF LONGINT;
+				incStep : POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF ARRAY 2 OF SIGNED32;
 
 				(*
 					Same as above, only that the minimal increment step over all resolution levels are stored.
@@ -865,7 +865,7 @@ TYPE
 					3rd dim: 0: x direction
 							1: y direction
 				*)
-				minIncStep : POINTER TO ARRAY OF ARRAY OF ARRAY 2 OF LONGINT;
+				minIncStep : POINTER TO ARRAY OF ARRAY OF ARRAY 2 OF SIGNED32;
 
 				(*
 					The start and end of each tile. The start index is the start index of the tile-component. The end index
@@ -878,7 +878,7 @@ TYPE
 					5th dim: 0: start index
 							1: end index
 				*)
-				sotEot : POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF ARRAY 2, 2 OF LONGINT;
+				sotEot : POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF ARRAY 2, 2 OF SIGNED32;
 
 				(*
 					Same as above, only that the values of the largest tile-component over all resolution levels are stored
@@ -889,7 +889,7 @@ TYPE
 					4th dim: 0: start index
 							1: end index
 				*)
-				maxSotEot : POINTER TO ARRAY OF ARRAY OF ARRAY 2, 2 OF LONGINT;
+				maxSotEot : POINTER TO ARRAY OF ARRAY OF ARRAY 2, 2 OF SIGNED32;
 
 				(*
 					Pointers to tag trees (inclusion tree & zero bit-plane information tree):
@@ -957,7 +957,7 @@ TYPE
 								decSpec : DecoderSpecs;
 								pphMain : DataListElement);
 				VAR
-					nt, ncomp : LONGINT;
+					nt, ncomp : SIGNED32;
 				BEGIN
 					SELF.cr := cr;
 
@@ -1004,9 +1004,9 @@ TYPE
 				by the CodestreamReader.
 				t:	The index of the new current tile in the reference grid
 			*)
-			PROCEDURE SetAndInitTile(t : LONGINT);
+			PROCEDURE SetAndInitTile(t : SIGNED32);
 				VAR
-					c, r, ndec : LONGINT;
+					c, r, ndec : SIGNED32;
 				BEGIN
 
 					BuildIncSotEotArrays(t);
@@ -1037,7 +1037,7 @@ TYPE
 			(*
 				Sets t as new current tile
 			*)
-			PROCEDURE SetTile (t : LONGINT);
+			PROCEDURE SetTile (t : SIGNED32);
 				BEGIN
 					IF pphTileUsed # NIL THEN
 						(* Store the packet packet headers of the previous tile (if there was one) *)
@@ -1069,10 +1069,10 @@ TYPE
 			(*
 				Build helper arrays for finding precinct start & end points
 			*)
-			PROCEDURE BuildIncSotEotArrays (tile : LONGINT);
+			PROCEDURE BuildIncSotEotArrays (tile : SIGNED32);
 				VAR
-					c, r, subsX, subsY, ndec, ppx, ppy, shift : LONGINT;
-					tileCompULX, tileCompWidth, tileCompULY, tileCompHeight : LONGINT;
+					c, r, subsX, subsY, ndec, ppx, ppy, shift : SIGNED32;
+					tileCompULX, tileCompWidth, tileCompULY, tileCompHeight : SIGNED32;
 					subbInfo : J2KU.SubbandInfo;
 				BEGIN
 
@@ -1082,8 +1082,8 @@ TYPE
 						subsX := decSpec.imgInfo.comps[c].subsx;
 						subsY := decSpec.imgInfo.comps[c].subsy;
 
-						minIncStep[tile][c][0] := MAX(LONGINT);
-						minIncStep[tile][c][1] := MAX(LONGINT);
+						minIncStep[tile][c][0] := MAX(SIGNED32);
+						minIncStep[tile][c][1] := MAX(SIGNED32);
 
 						NEW(incStep[tile][c], ndec + 1);
 						NEW(sotEot[tile][c], ndec + 1);
@@ -1120,7 +1120,7 @@ TYPE
 								sotEot[tile][c][r][0][1] := 1;
 								incStep[tile][c][r][0] := 1;
 							ELSE
-								sotEot[tile][c][r][0][0] := LONGINT(
+								sotEot[tile][c][r][0][0] := SIGNED32(
 																		SET( tileCompULX)
 																		* (SET( incStep[tile][c][r][0] - 1) / SET( J2KU.SWAP_MASK))
 															);
@@ -1132,7 +1132,7 @@ TYPE
 								sotEot[tile][c][r][1][1] := 1;
 								incStep[tile][c][r][1] := 1;
 							ELSE
-								sotEot[tile][c][r][1][0] := LONGINT(
+								sotEot[tile][c][r][1][0] := SIGNED32(
 																		SET( tileCompULY)
 																		* (SET( incStep[tile][c][r][1] - 1) / SET( J2KU.SWAP_MASK))
 															);
@@ -1149,7 +1149,7 @@ TYPE
 							maxSotEot[tile][c][0][1] := 1;
 							minIncStep[tile][c][0] := 1;
 						ELSE
-							maxSotEot[tile][c][0][0] := LONGINT(
+							maxSotEot[tile][c][0][0] := SIGNED32(
 																		SET( tileCompULX)
 																		* (SET( minIncStep[tile][c][0] - 1) / SET( J2KU.SWAP_MASK))
 															);
@@ -1161,7 +1161,7 @@ TYPE
 							maxSotEot[tile][c][1][1] := 1;
 							minIncStep[tile][c][1] := 1;
 						ELSE
-							maxSotEot[tile][c][1][0] := LONGINT(
+							maxSotEot[tile][c][1][0] := SIGNED32(
 																		SET( tileCompULY)
 																		* (SET( minIncStep[tile][c][1] - 1) / SET( J2KU.SWAP_MASK))
 															);
@@ -1175,18 +1175,18 @@ TYPE
 			(*
 				Creates and initializes a precinct information object
 			*)
-			PROCEDURE CreatePrecinctInfo(tile, comp, reslevel : LONGINT; VAR precInfo : PrecinctInfo);
+			PROCEDURE CreatePrecinctInfo(tile, comp, reslevel : SIGNED32; VAR precInfo : PrecinctInfo);
 				VAR
-					incX, incY, incXR, incYR, maxSotX, maxSotY, maxEotX, maxEotY, sotX, sotY, xr, yr : LONGINT;
-					ppx, ppy, nprecx, nprecy, nprec, curPrec, px, py, width, height : LONGINT;
-					cblkw, cblkh : LONGINT;
-					nband, subband : LONGINT;
+					incX, incY, incXR, incYR, maxSotX, maxSotY, maxEotX, maxEotY, sotX, sotY, xr, yr : SIGNED32;
+					ppx, ppy, nprecx, nprecy, nprec, curPrec, px, py, width, height : SIGNED32;
+					cblkw, cblkh : SIGNED32;
+					nband, subband : SIGNED32;
 					subbInfo : J2KU.SubbandInfo;
-					cblkwCeil, cblkhCeil : LONGINT;	(* These values are needed when we perform integer division with 'ceil' operation *)
-					precw, prech : LONGINT;	(* The width and height of the precincts (i.e. 2^ppx & 2^ppy) *)
-					ndec : LONGINT;
+					cblkwCeil, cblkhCeil : SIGNED32;	(* These values are needed when we perform integer division with 'ceil' operation *)
+					precw, prech : SIGNED32;	(* The width and height of the precincts (i.e. 2^ppx & 2^ppy) *)
+					ndec : SIGNED32;
 					maxpsUsed : BOOLEAN;		(* Maximum precinct size used? *)
-					tmp : LONGINT;
+					tmp : SIGNED32;
 				BEGIN
 					cblkw := decSpec.cstyle[tile][comp].cblw;
 					cblkh := decSpec.cstyle[tile][comp].cblh;
@@ -1207,8 +1207,8 @@ TYPE
 							cblkh := ppy;
 						END;
 
-						precw := LSH(LONGINT( 1), ppx);
-						prech := LSH(LONGINT( 1), ppy);
+						precw := LSH(SIGNED32( 1), ppx);
+						prech := LSH(SIGNED32( 1), ppy);
 
 						nband := 1;
 					ELSE
@@ -1227,8 +1227,8 @@ TYPE
 							3 subbands from the same and the LL-band from the next lower
 							resolution level
 						*)
-						precw := LSH(LONGINT( 1), ppx - 1);
-						prech := LSH(LONGINT( 1), ppy - 1);
+						precw := LSH(SIGNED32( 1), ppx - 1);
+						prech := LSH(SIGNED32( 1), ppy - 1);
 
 						nband := 3;
 					END;
@@ -1240,7 +1240,7 @@ TYPE
 
 					IF subbInfo.width > 0 THEN
 						(* NOTE: Implicit 'ceil' operation is done in this division (i.e. shift) by adding [divisor - 1] to the dividend *)
-						tmp := LSH(subbInfo.ulcx + subbInfo.width + LSH(LONGINT( 1), ppx) - 1, -ppx);
+						tmp := LSH(subbInfo.ulcx + subbInfo.width + LSH(SIGNED32( 1), ppx) - 1, -ppx);
 						nprecx := tmp - LSH(subbInfo.ulcx, -ppx);
 					ELSE
 						nprecx := 0;
@@ -1248,7 +1248,7 @@ TYPE
 
 					IF subbInfo.height > 0 THEN
 						(* NOTE: Implicit 'ceil' operation is done in this division (i.e. shift) by adding [divisor - 1] to the dividend *)
-						tmp := LSH(subbInfo.ulcy + subbInfo.height + LSH(LONGINT( 1), ppy) - 1, -ppy);
+						tmp := LSH(subbInfo.ulcy + subbInfo.height + LSH(SIGNED32( 1), ppy) - 1, -ppy);
 						nprecy := tmp - LSH(subbInfo.ulcy, -ppy);
 					ELSE
 						nprecy := 0;
@@ -1271,8 +1271,8 @@ TYPE
 					maxEotY := maxSotEot[tile][comp][1][1];
 					sotX := sotEot[tile][comp][reslevel][0][0];
 					sotY := sotEot[tile][comp][reslevel][1][0];
-					cblkwCeil := LSH(LONGINT( 1), cblkw) - 1;
-					cblkhCeil := LSH(LONGINT( 1), cblkh) - 1;
+					cblkwCeil := LSH(SIGNED32( 1), cblkw) - 1;
+					cblkhCeil := LSH(SIGNED32( 1), cblkh) - 1;
 
 					(* Build the information on number of code-blocks per precinct *)
 					curPrec := 0;
@@ -1383,17 +1383,17 @@ TYPE
 				Initializes all state & information objects contained in the subbands of
 				a given tile, component & resolution level
 			*)
-			PROCEDURE InitSubbands (tile, comp, reslevel : LONGINT; VAR precInfo : PrecinctInfo);
+			PROCEDURE InitSubbands (tile, comp, reslevel : SIGNED32; VAR precInfo : PrecinctInfo);
 				VAR
-					nl : LONGINT;
-					nband, subband : LONGINT;
+					nl : SIGNED32;
+					nband, subband : SIGNED32;
 					subbInfo : J2KU.SubbandInfo;
-					ppx, ppy, nprec, precx, nprecx, precy, nprecy, precIdx : LONGINT;
-					nblocks, ncblkx, ncblky, cblkIdx, cblkIdxX, cblkIdxY, cblkPrecIdx, i, j, cblkw, cblkh : LONGINT;
+					ppx, ppy, nprec, precx, nprecx, precy, nprecy, precIdx : SIGNED32;
+					nblocks, ncblkx, ncblky, cblkIdx, cblkIdxX, cblkIdxY, cblkPrecIdx, i, j, cblkw, cblkh : SIGNED32;
 					cblkInfoObj : J2KU.CblkInfo;
-					cblkStartX, cblkStartY : LONGINT;	(* The start coordinates of the first code-blocks in each column/row of code-blocks in a subband *)
-					nomCblkw, nomCblkh : LONGINT;	(* The nominal code-block width and height. These are the actual values, not just the exponents *)
-					tmp1, tmp2 : LONGINT;
+					cblkStartX, cblkStartY : SIGNED32;	(* The start coordinates of the first code-blocks in each column/row of code-blocks in a subband *)
+					nomCblkw, nomCblkh : SIGNED32;	(* The nominal code-block width and height. These are the actual values, not just the exponents *)
+					tmp1, tmp2 : SIGNED32;
 				BEGIN
 					nl := decSpec.cics[tile].nl;
 					ppx := decSpec.GetPPX(tile, comp, reslevel);
@@ -1424,8 +1424,8 @@ TYPE
 						nband := 3;
 					END;
 
-					nomCblkw := LSH(LONGINT( 1), cblkw);
-					nomCblkh := LSH(LONGINT( 1), cblkh);
+					nomCblkw := LSH(SIGNED32( 1), cblkw);
+					nomCblkh := LSH(SIGNED32( 1), cblkh);
 
 					nprecx := precInfo.nprecx;
 					nprecy := precInfo.nprecy;
@@ -1468,7 +1468,7 @@ TYPE
 								IF nblocks > 0 THEN
 									NEW(lblock[tile][comp][reslevel][subband][precIdx], nblocks);
 									NEW(cblkInfo[tile][comp][reslevel][subband][precIdx], nblocks);
-									Machine.Fill32(ADDRESSOF(lblock[tile][comp][reslevel][subband][precIdx][0]), nblocks*SIZEOF(LONGINT), 3);
+									Machine.Fill32(ADDRESSOF(lblock[tile][comp][reslevel][subband][precIdx][0]), nblocks*SIZEOF(SIGNED32), 3);
 								END;
 
 								cblkPrecIdx := 0;
@@ -1554,9 +1554,9 @@ TYPE
 			(*
 				Sets packed packet headers for a given tile
 			*)
-			PROCEDURE SetPPHeadersTile (pphNewFirst, pphNewLast : DataListElement; tile : LONGINT);
+			PROCEDURE SetPPHeadersTile (pphNewFirst, pphNewLast : DataListElement; tile : SIGNED32);
 				VAR
-					nt, i : LONGINT;
+					nt, i : SIGNED32;
 				BEGIN
 					(* We assume that checks are done prior to a call to this procedure -> we use an assertion as 'ultima ratio' *)
 					ASSERT(~pphMainUsed);
@@ -1630,10 +1630,10 @@ TYPE
 				precno:		The precinct to which the code-blocks in the packet belong to
 				RETURN:	The number of code-blocks for which data has been read; -1 if an error occured
 			*)
-			PROCEDURE DecodePacket (comp, reslevel, layer, precno : LONGINT; VAR cblk : ARRAY OF J2KU.CodedCblk; VAR cblkInfo : ARRAY OF J2KU.CblkInfo) : LONGINT;
+			PROCEDURE DecodePacket (comp, reslevel, layer, precno : SIGNED32; VAR cblk : ARRAY OF J2KU.CodedCblk; VAR cblkInfo : ARRAY OF J2KU.CblkInfo) : SIGNED32;
 				VAR
-					blocksInPacket, i, j, bit, bitsUsed, subband, nbands,  ncblx, ncbly, cblkx, cblky : LONGINT;
-					cblkPrecIdx, cpasses, nseg, passtype, dataLen, lastIdx : LONGINT;
+					blocksInPacket, i, j, bit, bitsUsed, subband, nbands,  ncblx, ncbly, cblkx, cblky : SIGNED32;
+					cblkPrecIdx, cpasses, nseg, passtype, dataLen, lastIdx : SIGNED32;
 					inclTree, zeroTree : J2KU.TagTree;
 					emptyPkt, included : BOOLEAN;
 					cInfo : J2KU.CblkInfo;
@@ -1711,7 +1711,7 @@ TYPE
 								IF included THEN (* Code-block is included *)
 									(* If code-block included for the first time then update zero-bit plane tag-tree *)
 									IF ~zeroTree.IsValid(cblkx, cblky) THEN
-										IF ~zeroTree.Update(cblkx, cblky, MAX(LONGINT)) THEN
+										IF ~zeroTree.Update(cblkx, cblky, MAX(SIGNED32)) THEN
 											(* Error occurred *)
 											RETURN -1;
 										END;
@@ -1874,9 +1874,9 @@ TYPE
 			END DecodePacket;
 
 
-			PROCEDURE ReadCodingPasses() : LONGINT;
+			PROCEDURE ReadCodingPasses() : SIGNED32;
 				VAR
-					buf : LONGINT;
+					buf : SIGNED32;
 				BEGIN
 
 					buf := NextBit();
@@ -1908,7 +1908,7 @@ TYPE
 					RETURN 37 + buf;
 			END ReadCodingPasses;
 
-			PROCEDURE GetNumPrecincts(comp, reslevel : LONGINT) : LONGINT;
+			PROCEDURE GetNumPrecincts(comp, reslevel : SIGNED32) : SIGNED32;
 				BEGIN
 					RETURN precInfo[curTile][comp][reslevel].nprecx * precInfo[curTile][comp][reslevel].nprecy;
 			END GetNumPrecincts;
@@ -1917,10 +1917,10 @@ TYPE
 				Returns the maximum number of code-blocks in a packet for the current tile
 				(i.e. maximum over all components and resolution levels for the current tile)
 			*)
-			PROCEDURE GetMaxNumCodeblocksPkt() : LONGINT;
+			PROCEDURE GetMaxNumCodeblocksPkt() : SIGNED32;
 				VAR
-					ncomp, nprec, ndec, maxCblks, curCblks : LONGINT;
-					i, r, k : LONGINT;
+					ncomp, nprec, ndec, maxCblks, curCblks : SIGNED32;
+					i, r, k : SIGNED32;
 				BEGIN
 					ncomp := decSpec.imgInfo.GetNumComponents();
 					(* Initialize maximum to 0 *)
@@ -1965,11 +1965,11 @@ TYPE
 				in component 'comp', resolution level 'reslevel', subband 'subband' and
 				having code-block index 'cblkSubbIdx' within the subband.
 			*)
-			PROCEDURE GetCblkInfo (comp, reslevel, subband, cblkSubbIdx : LONGINT) : J2KU.CblkInfo;
+			PROCEDURE GetCblkInfo (comp, reslevel, subband, cblkSubbIdx : SIGNED32) : J2KU.CblkInfo;
 				VAR
-					lastIdx, cblkPrecIdx, cblkPrecIdxX, cblkPrecIdxY : LONGINT;
-					nprecx, precIdx, precMin, precMax, precX, precY, precFirstInRowIdx : LONGINT;
-					subbIdx, cblkSubbIdxX, cblkSubbIdxY, cblkInfoUpLeftIdx, cblkInfoLowRightIdx : LONGINT;
+					lastIdx, cblkPrecIdx, cblkPrecIdxX, cblkPrecIdxY : SIGNED32;
+					nprecx, precIdx, precMin, precMax, precX, precY, precFirstInRowIdx : SIGNED32;
+					subbIdx, cblkSubbIdxX, cblkSubbIdxY, cblkInfoUpLeftIdx, cblkInfoLowRightIdx : SIGNED32;
 					subbInfo : J2KU.SubbandInfo;
 				BEGIN
 					nprecx := precInfo[curTile][comp][reslevel].nprecx;
@@ -1992,7 +1992,7 @@ TYPE
 						(* Get the index of the first code-block in the precinct, i.e. the code-block at the upper left corner of the precinct *)
 						cblkInfoUpLeftIdx := cblkInfo[curTile][comp][reslevel][subbIdx][precX][0].index;
 						(* Get the index of the last code-block in the precinct, i.e. the code-block at the lower right corner of the precinct *)
-						lastIdx := LEN(cblkInfo[curTile][comp][reslevel][subbIdx][precX]^)(LONGINT) - 1;
+						lastIdx := LEN(cblkInfo[curTile][comp][reslevel][subbIdx][precX]^)(SIGNED32) - 1;
 						cblkInfoLowRightIdx := cblkInfo[curTile][comp][reslevel][subbIdx][precX][lastIdx].index;
 
 						IF (cblkInfoUpLeftIdx MOD subbInfo.nblocksx) > cblkSubbIdxX THEN
@@ -2020,7 +2020,7 @@ TYPE
 						(* Get the index of the first code-block in the precinct, i.e. the code-block at the upper left corner of the precinct *)
 						cblkInfoUpLeftIdx := cblkInfo[curTile][comp][reslevel][subbIdx][precFirstInRowIdx][0].index;
 						(* Get the index of the last code-block in the precinct, i.e. the code-block at the lower right corner of the precinct *)
-						lastIdx := LEN(cblkInfo[curTile][comp][reslevel][subbIdx][precFirstInRowIdx]^)(LONGINT) - 1;
+						lastIdx := LEN(cblkInfo[curTile][comp][reslevel][subbIdx][precFirstInRowIdx]^)(SIGNED32) - 1;
 						cblkInfoLowRightIdx := cblkInfo[curTile][comp][reslevel][subbIdx][precFirstInRowIdx][lastIdx].index;
 
 						IF (cblkInfoUpLeftIdx DIV subbInfo.nblocksx) > cblkSubbIdxY THEN
@@ -2050,19 +2050,19 @@ TYPE
 					RETURN cblkInfo[curTile][comp][reslevel][subbIdx][precIdx][cblkPrecIdx];
 			END GetCblkInfo;
 
-			PROCEDURE GetIncStep (comp, reslevel : LONGINT; VAR xStep, yStep : LONGINT);
+			PROCEDURE GetIncStep (comp, reslevel : SIGNED32; VAR xStep, yStep : SIGNED32);
 				BEGIN
 					xStep := incStep[curTile][comp][reslevel][0];
 					yStep := incStep[curTile][comp][reslevel][1];
 			END GetIncStep;
 
-			PROCEDURE GetMinIncStep (comp : LONGINT; VAR xStep, yStep : LONGINT);
+			PROCEDURE GetMinIncStep (comp : SIGNED32; VAR xStep, yStep : SIGNED32);
 				BEGIN
 					xStep := minIncStep[curTile][comp][0];
 					yStep := minIncStep[curTile][comp][1];
 			END GetMinIncStep;
 
-			PROCEDURE GetSotEot (comp, reslevel : LONGINT; VAR sotX, eotX, sotY, eotY : LONGINT);
+			PROCEDURE GetSotEot (comp, reslevel : SIGNED32; VAR sotX, eotX, sotY, eotY : SIGNED32);
 				BEGIN
 					sotX := sotEot[curTile][comp][reslevel][0][0];
 					eotX := sotEot[curTile][comp][reslevel][0][1];
@@ -2070,7 +2070,7 @@ TYPE
 					eotY := sotEot[curTile][comp][reslevel][1][1];
 			END GetSotEot;
 
-			PROCEDURE GetMaxSotEot (comp : LONGINT; VAR sotX, eotX, sotY, eotY : LONGINT);
+			PROCEDURE GetMaxSotEot (comp : SIGNED32; VAR sotX, eotX, sotY, eotY : SIGNED32);
 				BEGIN
 					sotX := maxSotEot[curTile][comp][0][0];
 					eotX := maxSotEot[curTile][comp][0][1];
@@ -2080,7 +2080,7 @@ TYPE
 
 			PROCEDURE ReadSOP;
 				VAR
-					marker : LONGINT;
+					marker : SIGNED32;
 					tmpBytes : ARRAY 6 OF CHAR;
 				BEGIN
 					(* See, if the marker is used *)
@@ -2095,12 +2095,12 @@ TYPE
 
 			PROCEDURE ReadEPH;
 				VAR
-					marker : LONGINT;
+					marker : SIGNED32;
 					tmpBytes : ARRAY 2 OF CHAR;
 				BEGIN
 
 					IF (pph # NIL) & ((LEN(pph.data^) - pphPos) >= 2) THEN
-						marker :=	LONGINT(
+						marker :=	SIGNED32(
 										SET( LSH(LONG(ORD(pph.data[pphPos])), 8))
 										+ SET( LONG(ORD(pph.data[pphPos + 1])))
 									);
@@ -2120,7 +2120,7 @@ TYPE
 			END ReadEPH;
 
 
-			PROCEDURE NextByte () : LONGINT;
+			PROCEDURE NextByte () : SIGNED32;
 				VAR
 					byte8 : CHAR;
 				BEGIN
@@ -2151,7 +2151,7 @@ TYPE
 				Reads the next bit in the stream (i.e. the next bit in the buffer which contains the
 				most recently read "stream byte". Bit unstuffing is performed, where necessary.
 			*)
-			PROCEDURE NextBit*() : LONGINT;
+			PROCEDURE NextBit*() : SIGNED32;
 				BEGIN
 					IF curBytePos =  0 THEN
 
@@ -2167,7 +2167,7 @@ TYPE
 
 					DEC(curBytePos);
 
-					RETURN LONGINT( SET( LSH(curByte, -curBytePos)) * {0}	);
+					RETURN SIGNED32( SET( LSH(curByte, -curBytePos)) * {0}	);
 			END NextBit;
 
 
@@ -2175,16 +2175,16 @@ TYPE
 				Reads the next bits in the stream (i.e. the next bits from the stream).
 				At most 32 bits may be read. Bit unstuffing is performed, where necessary.
 			*)
-			PROCEDURE NextBits (n : LONGINT) : LONGINT;
+			PROCEDURE NextBits (n : SIGNED32) : SIGNED32;
 				VAR
-					result : LONGINT;
+					result : SIGNED32;
 				BEGIN
 					IF n <= curBytePos THEN
 						DEC(curBytePos, n);
 
-						RETURN LONGINT(
+						RETURN SIGNED32(
 										SET( LSH(curByte, -curBytePos))
-										* SET( LSH(LONGINT( 1), n) - 1)
+										* SET( LSH(SIGNED32( 1), n) - 1)
 									);
 
 
@@ -2192,11 +2192,11 @@ TYPE
 						result := 0;
 
 						REPEAT
-							result := LONGINT(
+							result := SIGNED32(
 													SET( LSH(result, curBytePos))
 													+	(
 															SET( curByte)
-															* SET( LSH(LONGINT( 1), curBytePos) - 1)
+															* SET( LSH(SIGNED32( 1), curBytePos) - 1)
 														)
 												);
 
@@ -2215,7 +2215,7 @@ TYPE
 
 						DEC(curBytePos, n);
 
-						result := LONGINT(
+						result := SIGNED32(
 												SET( LSH(result, n))
 												+ SET( LSH(curByte, -curBytePos))
 											);
@@ -2231,21 +2231,21 @@ TYPE
 		CodestreamReader* = OBJECT
 			VAR
 				s : Streams.Reader;	(* A reference to the stream containing the JPEG2000 codestream *)
-				ntp : LONGINT;				(* The number of tile-parts found in the stream (including the current part) *)
+				ntp : SIGNED32;				(* The number of tile-parts found in the stream (including the current part) *)
 				ntilePartsRead : J2KU.LongIntArrayPtr;	(* The number of tile-parts found in the stream, for each tile *)
 				ntilePartsAvailable : J2KU.LongIntArrayPtr;	(* The number of tile-parts for each tile as signalled in by a TNSot parameter of a SOT segment of at least one tile-part *)
-				curTile : LONGINT;			(* The index of the current tile for which data is being read *)
-				curPart : LONGINT;			(* The index of the current tile-part of curTile for which data is being read *)
+				curTile : SIGNED32;			(* The index of the current tile for which data is being read *)
+				curPart : SIGNED32;			(* The index of the current tile-part of curTile for which data is being read *)
 				partRem : Streams.Position;		(* Number of bytes remaining in the current tile-part *)
 				initError : BOOLEAN;		(* TRUE if an error occured during initialization *)
 				pktDec : PacketDecoder;		(* The packet decoder used to extract encoded code-block data *)
 				cblkBuf : POINTER TO ARRAY OF J2KU.CodedCblk;		(* Buffer for coded code-blocks obtained from the packed decoder *)
 				cblkInfoBuf : POINTER TO ARRAY OF J2KU.CblkInfo;
-				cblkBufSize : LONGINT;
-				ncblkInBuf : LONGINT;
-				cblkBufPos : LONGINT;
+				cblkBufSize : SIGNED32;
+				ncblkInBuf : SIGNED32;
+				cblkBufPos : SIGNED32;
 				endOfCS : BOOLEAN;
-				curMarker : LONGINT;
+				curMarker : SIGNED32;
 				(*
 					Subband information objects
 					1st dim: tile index
@@ -2255,7 +2255,7 @@ TYPE
 				subbInfos : POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF J2KU.SubbandInfo;
 				decSpec : DecoderSpecs;
 				ppmUsed : BOOLEAN;		(* True if packed packet headers in the main header are used *)
-				buf8 : LONGINT;
+				buf8 : SIGNED32;
 				buf8Valid : BOOLEAN;
 
 				(*
@@ -2271,7 +2271,7 @@ TYPE
 				*)
 				progStates : POINTER TO ARRAY OF ProgState;
 
-				curLay, curComp, curRes : LONGINT;
+				curLay, curComp, curRes : SIGNED32;
 				(*
 					Current precinct(s) for which packets are being received.
 					1st dim: component
@@ -2280,15 +2280,15 @@ TYPE
 				*)
 				curPrec : J2KU.LongInt3DArrayPtr;
 				lmin : J2KU.LongInt2DArrayPtr;
-				lmax, cmax, rmax, rmin, cmin : LONGINT;
-				curX, curY, incX, incY : LONGINT;
-				xmax, ymax, xmin, ymin : LONGINT;
-				progOrder : LONGINT;
+				lmax, cmax, rmax, rmin, cmin : SIGNED32;
+				curX, curY, incX, incY : SIGNED32;
+				xmax, ymax, xmin, ymin : SIGNED32;
+				progOrder : SIGNED32;
 
-				maxStartLayer, maxEndLayer : LONGINT;
-				startLayer, endLayer : LONGINT;
-				maxStartDecLvl, maxEndDecLvl : LONGINT;
-				startDecLvl, endDecLvl : LONGINT;
+				maxStartLayer, maxEndLayer : SIGNED32;
+				startLayer, endLayer : SIGNED32;
+				maxStartDecLvl, maxEndDecLvl : SIGNED32;
+				startDecLvl, endDecLvl : SIGNED32;
 
 				(* If TRUE, tile-part and main headers will be printed (to a certain extent) *)
 				printCSInfo : BOOLEAN;
@@ -2322,18 +2322,18 @@ TYPE
 								stream : Streams.Reader);
 				VAR
 					ok : BOOLEAN;
-					nt, ncomp, comp, i, j : LONGINT;
+					nt, ncomp, comp, i, j : SIGNED32;
 					markerStr : ARRAY 8 OF CHAR;
 					nppmLeft, nppmRead : SIZE;
 					ppmFirst, ppmLast : DataListElement;
-					ncod, nqcd, npoc, ncrg : LONGINT; (* Counter variables used for constraint checking *)
+					ncod, nqcd, npoc, ncrg : SIGNED32; (* Counter variables used for constraint checking *)
 					ncoc, nqcc, nrgn : J2KU.LongIntArrayPtr;
 					changes : ProgChangeArrayPtr;
 					cstyle : CodingStyle;
 					cics : CICodingStyle;
 					quant : Quantization;
 					imgInfo : ImageInfo;
-					roiShift : LONGINT;
+					roiShift : SIGNED32;
 				BEGIN
 					s := stream;
 					curMarker := s.Net16();
@@ -2375,9 +2375,9 @@ TYPE
 						NEW(nqcc, ncomp);
 						NEW(nrgn, ncomp);
 
-						Machine.Fill32(ADDRESSOF(ncoc[0]), imgInfo.ncomp*SIZEOF(LONGINT), 0);
-						Machine.Fill32(ADDRESSOF(nqcc[0]), imgInfo.ncomp*SIZEOF(LONGINT), 0);
-						Machine.Fill32(ADDRESSOF(nrgn[0]), imgInfo.ncomp*SIZEOF(LONGINT), 0);
+						Machine.Fill32(ADDRESSOF(ncoc[0]), imgInfo.ncomp*SIZEOF(SIGNED32), 0);
+						Machine.Fill32(ADDRESSOF(nqcc[0]), imgInfo.ncomp*SIZEOF(SIGNED32), 0);
+						Machine.Fill32(ADDRESSOF(nrgn[0]), imgInfo.ncomp*SIZEOF(SIGNED32), 0);
 
 						nppmLeft := 0;
 						nppmRead := 0;
@@ -2395,7 +2395,7 @@ TYPE
 						NEW(decSpec.cics, nt);
 						NEW(decSpec.quant, nt, ncomp);
 						NEW(decSpec.roiShift, nt, ncomp);
-						Machine.Fill32(ADDRESSOF(decSpec.roiShift[0][0]), nt*ncomp*SIZEOF(LONGINT), -1);
+						Machine.Fill32(ADDRESSOF(decSpec.roiShift[0][0]), nt*ncomp*SIZEOF(SIGNED32), -1);
 
 						curMarker := s.Net16();
 					END;
@@ -2568,8 +2568,8 @@ TYPE
 						NEW(ntilePartsRead, nt);
 						NEW(ntilePartsAvailable, nt);
 
-						Machine.Fill32(ADDRESSOF(ntilePartsRead[0]), nt*SIZEOF(LONGINT), 0);
-						Machine.Fill32(ADDRESSOF(ntilePartsAvailable[0]), nt*SIZEOF(LONGINT), 0);
+						Machine.Fill32(ADDRESSOF(ntilePartsRead[0]), nt*SIZEOF(SIGNED32), 0);
+						Machine.Fill32(ADDRESSOF(ntilePartsAvailable[0]), nt*SIZEOF(SIGNED32), 0);
 
 						ncblkInBuf := 0;
 						cblkBufPos := 0;
@@ -2580,13 +2580,13 @@ TYPE
 
 						(* We set the maximum range to the maximum allowed (we don't use it here anyhow) *)
 						maxStartLayer := 0;
-						maxEndLayer := MAX(LONGINT);
-						maxStartDecLvl := MAX(LONGINT);
+						maxEndLayer := MAX(SIGNED32);
+						maxStartDecLvl := MAX(SIGNED32);
 						maxEndDecLvl := 0;
 						(* Whole image shall be decoded by default *)
 						startLayer := 0;
-						endLayer := MAX(LONGINT);
-						startDecLvl := MAX(LONGINT);
+						endLayer := MAX(SIGNED32);
+						startDecLvl := MAX(SIGNED32);
 						endDecLvl := 0;
 
 						NEW(subbInfos, nt, ncomp);
@@ -2619,7 +2619,7 @@ TYPE
 					markerStr : ARRAY 8 OF CHAR;
 					ok : BOOLEAN;
 					bytesSkipped: Streams.Position;
-					ncomp, c, ndec: LONGINT;
+					ncomp, c, ndec: SIGNED32;
 				BEGIN
 
 					(* Check preconditions *)
@@ -2645,7 +2645,7 @@ TYPE
 						(* Need to see if we have a byte (of the stream) in the buffer -> flush buffer if so *)
 						IF buf8Valid THEN
 							buf8Valid := FALSE;
-							curMarker := LONGINT(
+							curMarker := SIGNED32(
 													SET( LSH(buf8, 8))
 													+ SET( LONG(ORD(s.Get())))
 											);
@@ -2683,7 +2683,7 @@ TYPE
 								FOR c := 0 TO ncomp - 1 DO
 									ndec := decSpec.cstyle[curTile][c].ndec;
 									NEW(lmin[c], ndec + 1);
-									Machine.Fill32(ADDRESSOF(lmin[c][0]), (ndec+1)*SIZEOF(LONGINT), 0);
+									Machine.Fill32(ADDRESSOF(lmin[c][0]), (ndec+1)*SIZEOF(SIGNED32), 0);
 								END;
 
 								lmax := -1;
@@ -2750,7 +2750,7 @@ TYPE
 
 			PROCEDURE InitTile () : BOOLEAN;
 				VAR
-					nblocksPkt : LONGINT;
+					nblocksPkt : SIGNED32;
 				BEGIN
 					(* See how much packets there are at most for this tile *)
 					nblocksPkt := pktDec.GetMaxNumCodeblocksPkt();
@@ -2773,7 +2773,7 @@ TYPE
 
 				maxStartLayer and maxEndLayer are inclusive.
 			*)
-			PROCEDURE SetMaxLayerRange* (maxStartLayer, maxEndLayer : LONGINT);
+			PROCEDURE SetMaxLayerRange* (maxStartLayer, maxEndLayer : SIGNED32);
 				BEGIN
 					SELF.maxStartLayer := maxStartLayer;
 					SELF.maxEndLayer := maxEndLayer;
@@ -2785,7 +2785,7 @@ TYPE
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE SetLayerRange* (startLayer, endLayer : LONGINT);
+			PROCEDURE SetLayerRange* (startLayer, endLayer : SIGNED32);
 				BEGIN
 					SELF.startLayer := startLayer;
 					SELF.endLayer := endLayer;
@@ -2797,7 +2797,7 @@ TYPE
 
 				startLayer and endLayer are inclusive.
 			*)
-			PROCEDURE GetLayerRange* (VAR startLayer, endLayer : LONGINT);
+			PROCEDURE GetLayerRange* (VAR startLayer, endLayer : SIGNED32);
 				BEGIN
 					startLayer := SELF.startLayer;
 					endLayer := SELF.endLayer;
@@ -2811,7 +2811,7 @@ TYPE
 				maxStartDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				maxEndDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetMaxDecLevelRange* (maxStartDecLvl, maxEndDecLvl : LONGINT);
+			PROCEDURE SetMaxDecLevelRange* (maxStartDecLvl, maxEndDecLvl : SIGNED32);
 				BEGIN
 					SELF.maxStartDecLvl := maxStartDecLvl;
 					SELF.maxEndDecLvl := maxEndDecLvl;
@@ -2824,7 +2824,7 @@ TYPE
 				startDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				endDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE SetDecLevelRange* (startDecLvl, endDecLvl : LONGINT);
+			PROCEDURE SetDecLevelRange* (startDecLvl, endDecLvl : SIGNED32);
 				BEGIN
 					SELF.startDecLvl := startDecLvl;
 					SELF.endDecLvl := endDecLvl;
@@ -2837,7 +2837,7 @@ TYPE
 				startDecLvl : The decompositon level to start at (inclusive) -> upper bound
 				endDecLvl : The decomposition level to end at (inclusive) -> lower bound
 			*)
-			PROCEDURE GetDecLevelRange* (VAR startDecLvl, endDecLvl : LONGINT);
+			PROCEDURE GetDecLevelRange* (VAR startDecLvl, endDecLvl : SIGNED32);
 				BEGIN
 					startDecLvl := SELF.startDecLvl;
 					endDecLvl := SELF.endDecLvl;
@@ -2859,9 +2859,9 @@ TYPE
 				ncblocks: 	The number of code-blocks that shall be fetched
 				RETURN:	The actual number of code-blocks fetched
 			*)
-			PROCEDURE GetCodeBlocks* (VAR cblocks : ARRAY OF J2KU.CodedCblk; VAR cblockInfos: ARRAY OF J2KU.CblkInfo; ncblocks : LONGINT) : LONGINT;
+			PROCEDURE GetCodeBlocks* (VAR cblocks : ARRAY OF J2KU.CodedCblk; VAR cblockInfos: ARRAY OF J2KU.CblkInfo; ncblocks : SIGNED32) : SIGNED32;
 				VAR
-					i, cblkDecLvl : LONGINT;
+					i, cblkDecLvl : SIGNED32;
 					startPos: Streams.Position;
 					ok : BOOLEAN;
 				BEGIN
@@ -2937,7 +2937,7 @@ TYPE
 
 			PROCEDURE AdvanceLayResComPos () : BOOLEAN;
 				VAR
-					kmax, c, r : LONGINT;
+					kmax, c, r : SIGNED32;
 				BEGIN
 					kmax := pktDec.GetNumPrecincts(curComp, curRes) - 1;
 
@@ -2950,7 +2950,7 @@ TYPE
 										(* We have reached the end of this progression -> get next progression *)
 										ProgressionChange();
 
-										curLay := MAX(LONGINT);
+										curLay := MAX(SIGNED32);
 										FOR c := cmin TO cmax DO
 											FOR r := rmin TO rmax DO
 												IF (r < LEN(lmin[c]^)) & (lmin[c][r] < curLay) THEN
@@ -2979,7 +2979,7 @@ TYPE
 
 			PROCEDURE AdvanceResLayComPos () : BOOLEAN;
 				VAR
-					kmax, c : LONGINT;
+					kmax, c : SIGNED32;
 				BEGIN
 					kmax := pktDec.GetNumPrecincts(curComp, curRes) - 1;
 
@@ -2996,7 +2996,7 @@ TYPE
 										INC(curRes);
 									END;
 
-									curLay := MAX(LONGINT);
+									curLay := MAX(SIGNED32);
 									FOR c := cmin TO cmax DO
 										IF (curRes < LEN(lmin[c]^)) & (lmin[c][curRes] < curLay) THEN
 											curLay := lmin[c][curRes];
@@ -3020,7 +3020,7 @@ TYPE
 			PROCEDURE AdvanceResPosComLay () : BOOLEAN;
 				VAR
 					foundNext : BOOLEAN;
-					incXR, incYR : LONGINT;
+					incXR, incYR : SIGNED32;
 				BEGIN
 					foundNext := FALSE;
 
@@ -3075,7 +3075,7 @@ TYPE
 			PROCEDURE AdvancePosComResLay () : BOOLEAN;
 				VAR
 					foundNext : BOOLEAN;
-					incXR, incYR : LONGINT;
+					incXR, incYR : SIGNED32;
 				BEGIN
 					foundNext := FALSE;
 
@@ -3130,7 +3130,7 @@ TYPE
 			PROCEDURE AdvanceComPosResLay () : BOOLEAN;
 				VAR
 					foundNext : BOOLEAN;
-					incXR, incYR : LONGINT;
+					incXR, incYR : SIGNED32;
 				BEGIN
 					foundNext := FALSE;
 
@@ -3191,7 +3191,7 @@ TYPE
 			*)
 			PROCEDURE ProgressionChange;
 				VAR
-					nextProgIdx, c, r : LONGINT;
+					nextProgIdx, c, r : SIGNED32;
 				BEGIN
 
 					(* Update next first layer index *)
@@ -3249,7 +3249,7 @@ TYPE
 		(*
 			PROCEDURE ProgressionChange ();
 				VAR
-					nextProgIdx, c, r : LONGINT;
+					nextProgIdx, c, r : SIGNED32;
 				BEGIN
 					(* Update next first layer index *)
 					FOR c := cmin TO cmax DO
@@ -3349,8 +3349,8 @@ TYPE
 
 			PROCEDURE CreateSubbandInfos;
 				VAR
-					c, ndec, tx0, tx1, ty0, ty1, tcx0, tcx1, tcy0, tcy1, p, q, curIdx, reslevel, declevel, tmpW, tmpH : LONGINT;
-					ppx, ppy, cblw, cblh : LONGINT;
+					c, ndec, tx0, tx1, ty0, ty1, tcx0, tcx1, tcy0, tcy1, p, q, curIdx, reslevel, declevel, tmpW, tmpH : SIGNED32;
+					ppx, ppy, cblw, cblh : SIGNED32;
 					parentBand, llBand, hlBand, lhBand, hhBand : J2KU.SubbandInfo;
 					cstyle : CodingStyle;
 					imgInfo : ImageInfo;
@@ -3422,8 +3422,8 @@ TYPE
 
 
 						(* Values used for implicit 'ceil' operation after division (i.e. shifting) *)
-						tmpW := LSH(LONGINT( 1), cblw) - 1;
-						tmpH := LSH(LONGINT( 1), cblh) - 1;
+						tmpW := LSH(SIGNED32( 1), cblw) - 1;
+						tmpH := LSH(SIGNED32( 1), cblh) - 1;
 
 						(* We have to allocate space for all subbands in each decomposition level *)
 						NEW(subbInfos[curTile][c], 4 * ndec + 1);
@@ -3491,8 +3491,8 @@ TYPE
 							END;
 
 							(* Values used for implicit 'ceil' operation after division (i.e. shifting) *)
-							tmpW := LSH(LONGINT( 1), cblw) - 1;
-							tmpH := LSH(LONGINT( 1), cblh) - 1;
+							tmpW := LSH(SIGNED32( 1), cblw) - 1;
+							tmpH := LSH(SIGNED32( 1), cblh) - 1;
 
 							(* The HL subband *)
 							NEW(hlBand);
@@ -3592,8 +3592,8 @@ TYPE
 							END;
 
 							(* Values used for implicit 'ceil' operation after division (i.e. shifting) *)
-							tmpW := LSH(LONGINT( 1), cblw) - 1;
-							tmpH := LSH(LONGINT( 1), cblh) - 1;
+							tmpW := LSH(SIGNED32( 1), cblw) - 1;
+							tmpH := LSH(SIGNED32( 1), cblh) - 1;
 
 							NEW(llBand);
 							llBand.type := J2KU.SUB_LL;
@@ -3652,9 +3652,9 @@ TYPE
 			(**
 				Gets the number of magnitude bits for all samples in a specific subband.
 			*)
-			PROCEDURE GetNumMagBits (tile, comp, reslevel, subband : LONGINT) : LONGINT;
+			PROCEDURE GetNumMagBits (tile, comp, reslevel, subband : SIGNED32) : SIGNED32;
 				VAR
-					exp, idx : LONGINT;
+					exp, idx : SIGNED32;
 					quant : Quantization;
 				BEGIN
 					quant := decSpec.quant[tile][comp];
@@ -3681,7 +3681,7 @@ TYPE
 
 			PROCEDURE CreatePrecCounter;
 				VAR
-					c, r, ndec, ncomp, nl : LONGINT;
+					c, r, ndec, ncomp, nl : SIGNED32;
 					cstyle : CodingStyle;
 				BEGIN
 
@@ -3699,7 +3699,7 @@ TYPE
 
 						FOR r := 0 TO ndec DO
 							NEW(curPrec[c][r], nl);
-							(*Machine.Fill32(ADDRESSOF(curPrec[c][r][0]), nl*SIZEOF(LONGINT), 0);*)
+							(*Machine.Fill32(ADDRESSOF(curPrec[c][r][0]), nl*SIZEOF(SIGNED32), 0);*)
 						END;
 					END;
 
@@ -3708,10 +3708,10 @@ TYPE
 			(**
 				Gets the subband information objects for a specific subband
 			*)
-			PROCEDURE GetSubbandInfo* (tile, comp, reslevel, subband : LONGINT) : J2KU.SubbandInfo;
+			PROCEDURE GetSubbandInfo* (tile, comp, reslevel, subband : SIGNED32) : J2KU.SubbandInfo;
 				VAR
-					ndec : LONGINT;
-					subbOff : LONGINT;
+					ndec : SIGNED32;
+					subbOff : SIGNED32;
 				BEGIN
 					ndec := decSpec.cstyle[tile][comp].ndec;
 
@@ -3727,7 +3727,7 @@ TYPE
 			(*
 				Reads the next 2 bytes in the stream, without advancing
 			*)
-			PROCEDURE Peek16 () : LONGINT;
+			PROCEDURE Peek16 () : SIGNED32;
 				BEGIN
 
 					IF ~buf8Valid THEN
@@ -3736,7 +3736,7 @@ TYPE
 					END;
 
 					RETURN
-						LONGINT(
+						SIGNED32(
 							SET( LSH(buf8, 8))
 							+ SET( ORD(s.Peek()))
 						);
@@ -3755,7 +3755,7 @@ TYPE
 
 			END ReadByte;
 
-			PROCEDURE ReadBytes(VAR bytes : ARRAY OF CHAR; nbytes : LONGINT);
+			PROCEDURE ReadBytes(VAR bytes : ARRAY OF CHAR; nbytes : SIGNED32);
 				VAR
 					len, off : SIZE;
 				BEGIN
@@ -3778,7 +3778,7 @@ TYPE
 				find out the tile index to which the last read tile-part header belongs to.
 				RETURN:	The index of the current tile
 			*)
-			PROCEDURE CurrentTile* () : LONGINT;
+			PROCEDURE CurrentTile* () : SIGNED32;
 				BEGIN
 					RETURN curTile;
 			END CurrentTile;
@@ -3788,7 +3788,7 @@ TYPE
 				find out the tile-part index to which the last read tile-part header belongs to.
 				RETURN:	The index of the current tile-part
 			*)
-			PROCEDURE CurrentTilePart* () : LONGINT;
+			PROCEDURE CurrentTilePart* () : SIGNED32;
 				BEGIN
 					RETURN curPart;
 			END CurrentTilePart;
@@ -3813,7 +3813,7 @@ TYPE
 			*)
 			PROCEDURE AllTilePartsRead* () : BOOLEAN;
 				VAR
-					progVol, ncomps, nlayers, c, r : LONGINT;
+					progVol, ncomps, nlayers, c, r : SIGNED32;
 				BEGIN
 					IF TilePartAvailable() THEN
 						RETURN FALSE;
@@ -3872,17 +3872,17 @@ TYPE
 
 			PROCEDURE ReadSOTSegment() : BOOLEAN;
 				VAR
-					lsot, psot, comp, i : LONGINT;
+					lsot, psot, comp, i : SIGNED32;
 					sPos, ePos: Streams.Position;
-					ncod, nqcd, npoc, nmax : LONGINT; (* Counter variables used for constraint checking *)
+					ncod, nqcd, npoc, nmax : SIGNED32; (* Counter variables used for constraint checking *)
 					ncoc, nqcc, nrgn : J2KU.LongIntArrayPtr;
-					tileIdx, partIdx, nparts, ncomp, nt : LONGINT;
+					tileIdx, partIdx, nparts, ncomp, nt : SIGNED32;
 					ch : CHAR;
 					ok : BOOLEAN;
 					cstyle : CodingStyle;
 					cics : CICodingStyle;
 					quant : Quantization;
-					roiShift : LONGINT;
+					roiShift : SIGNED32;
 					pptFirst, pptLast : DataListElement;
 					pptUsed : BOOLEAN;
 					changes : ProgChangeArrayPtr;
@@ -3905,9 +3905,9 @@ TYPE
 					NEW(nqcc, ncomp);
 					NEW(nrgn, ncomp);
 
-					Machine.Fill32(ADDRESSOF(ncoc[0]), ncomp*SIZEOF(LONGINT), 0);
-					Machine.Fill32(ADDRESSOF(nqcc[0]), ncomp*SIZEOF(LONGINT), 0);
-					Machine.Fill32(ADDRESSOF(nrgn[0]), ncomp*SIZEOF(LONGINT), 0);
+					Machine.Fill32(ADDRESSOF(ncoc[0]), ncomp*SIZEOF(SIGNED32), 0);
+					Machine.Fill32(ADDRESSOF(nqcc[0]), ncomp*SIZEOF(SIGNED32), 0);
+					Machine.Fill32(ADDRESSOF(nrgn[0]), ncomp*SIZEOF(SIGNED32), 0);
 
 					pptUsed := FALSE;
 					pptFirst := NIL;
@@ -4152,7 +4152,7 @@ TYPE
 
 			PROCEDURE ReadSIZSegment(VAR imgInfo : ImageInfo) : BOOLEAN;
 				VAR
-					rsiz, lsiz, i, ssizInt : LONGINT;
+					rsiz, lsiz, i, ssizInt : SIGNED32;
 					sPos, ePos: Streams.Position;
 					ssiz, ch : CHAR;
 				BEGIN
@@ -4220,12 +4220,12 @@ TYPE
 						NEW(imgInfo.comps[i]);
 						s.Char(ssiz);
 						ssizInt := ORD(ssiz);
-						IF (SET( ssizInt) * SET( LONGINT(  00000080H))) # {} THEN
+						IF (SET( ssizInt) * SET( SIGNED32(  00000080H))) # {} THEN
 							 imgInfo.comps[i].signed := TRUE;
 						ELSE
 							 imgInfo.comps[i].signed := FALSE;
 						END;
-						imgInfo.comps[i].depth := LONGINT( SET( ssizInt) * SET( LONGINT( 0000007FH))) + 1;
+						imgInfo.comps[i].depth := SIGNED32( SET( ssizInt) * SET( SIGNED32( 0000007FH))) + 1;
 						s.Char(ch);
 						imgInfo.comps[i].subsx := ORD(ch);
 						s.Char(ch);
@@ -4247,7 +4247,7 @@ TYPE
 
 			PROCEDURE ReadCODSegment (VAR cod : CodingStyle; VAR cics : CICodingStyle) : BOOLEAN;
 				VAR
-					lcod, nl, i, scodInt, cblsInt, precsizInt: LONGINT;
+					lcod, nl, i, scodInt, cblsInt, precsizInt: SIGNED32;
 					scod, prog, mct, ndec, cblw, cblh, cbls, trans, precsiz: CHAR;
 					sPos, ePos: Streams.Position;
 					tmpCod : CodingStyle;
@@ -4318,8 +4318,8 @@ TYPE
 						RETURN FALSE;
 					END;
 
-					tmpCod.cblw := LONGINT( SET( ORD(cblw)) * SET( LONGINT( 0000000FH))) + 2;
-					tmpCod.cblh :=  LONGINT( SET( ORD(cblh)) * SET( LONGINT( 0000000FH))) + 2;
+					tmpCod.cblw := SIGNED32( SET( ORD(cblw)) * SET( SIGNED32( 0000000FH))) + 2;
+					tmpCod.cblh :=  SIGNED32( SET( ORD(cblh)) * SET( SIGNED32( 0000000FH))) + 2;
 					IF ((tmpCod.cblw > 10) OR (tmpCod.cblh > 10)) OR (tmpCod.cblw + tmpCod.cblh > 12) THEN
 						KernelLog.String("ERROR: Invalid code-block width or height exponent: width exp. = ");
 						KernelLog.Int(tmpCod.cblw, 0);
@@ -4346,7 +4346,7 @@ TYPE
 						FOR i := 0 TO tmpCod.ndec DO
 							s.Char(precsiz);
 							precsizInt := ORD(precsiz);
-							tmpCod.precs[i].ppx := LONGINT( SET( precsizInt) * SET( LONGINT( 0000000FH)));
+							tmpCod.precs[i].ppx := SIGNED32( SET( precsizInt) * SET( SIGNED32( 0000000FH)));
 							tmpCod.precs[i].ppy := LSH(precsizInt, -4);
 						END;
 					END;
@@ -4368,9 +4368,9 @@ TYPE
 			END ReadCODSegment;
 
 
-			PROCEDURE ReadCOCSegment(VAR coc : CodingStyle; VAR comp : LONGINT) : BOOLEAN;
+			PROCEDURE ReadCOCSegment(VAR coc : CodingStyle; VAR comp : SIGNED32) : BOOLEAN;
 				VAR
-					lcoc, ccoc, i, scocInt, cblsInt, precsizInt, ncomp : LONGINT;
+					lcoc, ccoc, i, scocInt, cblsInt, precsizInt, ncomp : SIGNED32;
 					ccocByte, scoc, ndec, cblw, cblh, cbls, trans, precsiz: CHAR;
 					tmpCoc : CodingStyle; sPos, ePos: Streams.Position;
 				BEGIN
@@ -4430,8 +4430,8 @@ TYPE
 						RETURN FALSE;
 					END;
 
-					tmpCoc.cblw := LONGINT( SET( ORD(cblw)) * SET( LONGINT( 0000000FH))) + 2;
-					tmpCoc.cblh :=  LONGINT( SET( ORD(cblh)) * SET( LONGINT( 0000000FH))) + 2;
+					tmpCoc.cblw := SIGNED32( SET( ORD(cblw)) * SET( SIGNED32( 0000000FH))) + 2;
+					tmpCoc.cblh :=  SIGNED32( SET( ORD(cblh)) * SET( SIGNED32( 0000000FH))) + 2;
 					IF ((tmpCoc.cblw > 10) OR (tmpCoc.cblh > 10)) OR (tmpCoc.cblw + tmpCoc.cblh > 12) THEN
 						KernelLog.String("ERROR (CodestreamReader.ReadCOCSegment) : Invalid code-block width or height exponent: width exp. = ");
 						KernelLog.Int(tmpCoc.cblw, 0);
@@ -4457,7 +4457,7 @@ TYPE
 						FOR i := 0 TO tmpCoc.ndec DO
 							s.Char(precsiz);
 							precsizInt := ORD(precsiz);
-							tmpCoc.precs[i].ppx := LONGINT( SET( precsizInt) * SET( LONGINT( 0000000FH)));
+							tmpCoc.precs[i].ppx := SIGNED32( SET( precsizInt) * SET( SIGNED32( 0000000FH)));
 							tmpCoc.precs[i].ppy := LSH(precsizInt, -4);
 						END;
 					END;
@@ -4478,9 +4478,9 @@ TYPE
 			END ReadCOCSegment;
 
 
-			PROCEDURE ReadRGNSegment(VAR roiShift, comp : LONGINT) : BOOLEAN;
+			PROCEDURE ReadRGNSegment(VAR roiShift, comp : SIGNED32) : BOOLEAN;
 				VAR
-					lrgn, crgn, ncomp : LONGINT;
+					lrgn, crgn, ncomp : SIGNED32;
 					sPos, ePos: Streams.Position;
 					crgnByte, srgn, sprgn : CHAR;
 				BEGIN
@@ -4540,7 +4540,7 @@ TYPE
 
 			PROCEDURE ReadQCDSegment(VAR quant : Quantization) : BOOLEAN;
 				VAR
-					lqcd, ssize, i, sqcdInt : LONGINT;
+					lqcd, ssize, i, sqcdInt : SIGNED32;
 					sPos, ePos: Streams.Position;
 					sqcd, ch : CHAR;
 					tmp : Quantization;
@@ -4560,7 +4560,7 @@ TYPE
 					sqcdInt := ORD(sqcd);
 
 					NEW(tmp);
-					tmp.style := LONGINT( SET( sqcdInt) * SET( LONGINT( 0000001FH)));
+					tmp.style := SIGNED32( SET( sqcdInt) * SET( SIGNED32( 0000001FH)));
 					tmp.nguardb := LSH(sqcdInt, -5);
 
 					CASE tmp.style OF
@@ -4580,7 +4580,7 @@ TYPE
 								NEW(tmp.stepsiz, 1);
 								NEW(tmp.stepsiz[0]);
 								ssize := s.Net16();
-								tmp.stepsiz[0].mant := LONGINT( SET( ssize) * SET( LONGINT( 000007FFH)));
+								tmp.stepsiz[0].mant := SIGNED32( SET( ssize) * SET( SIGNED32( 000007FFH)));
 								tmp.stepsiz[0].exp := LSH(ssize, -11);
 						|	QUANT_EXP :
 								(* There are as many step sizes signalled as there ae subbands *)
@@ -4589,7 +4589,7 @@ TYPE
 								FOR i := 0 TO tmp.nstepsiz - 1 DO
 									NEW(tmp.stepsiz[i]);
 									ssize := s.Net16();
-									tmp.stepsiz[i].mant := LONGINT( SET( ssize) * SET( LONGINT( 000007FFH)));
+									tmp.stepsiz[i].mant := SIGNED32( SET( ssize) * SET( SIGNED32( 000007FFH)));
 									tmp.stepsiz[i].exp := LSH(ssize, -11);
 								END;
 						ELSE
@@ -4614,9 +4614,9 @@ TYPE
 					RETURN TRUE;
 			END ReadQCDSegment;
 
-			PROCEDURE ReadQCCSegment(VAR quant : Quantization; VAR comp : LONGINT) : BOOLEAN;
+			PROCEDURE ReadQCCSegment(VAR quant : Quantization; VAR comp : SIGNED32) : BOOLEAN;
 				VAR
-					lqcc, ssize, i, sqccInt, cqcc, cqccLen, ncomp : LONGINT;
+					lqcc, ssize, i, sqccInt, cqcc, cqccLen, ncomp : SIGNED32;
 					sPos, ePos: Streams.Position;
 					sqcc, cqccByte, ch : CHAR;
 					tmp : Quantization;
@@ -4653,7 +4653,7 @@ TYPE
 					sqccInt := ORD(sqcc);
 
 					NEW(tmp);
-					tmp.style := LONGINT( SET( sqccInt) * SET( LONGINT( 0000001FH)));
+					tmp.style := SIGNED32( SET( sqccInt) * SET( SIGNED32( 0000001FH)));
 					tmp.nguardb := LSH(sqccInt, -5);
 
 					CASE tmp.style OF
@@ -4673,7 +4673,7 @@ TYPE
 								NEW(tmp.stepsiz, 1);
 								NEW(tmp.stepsiz[0]);
 								ssize := s.Net16();
-								tmp.stepsiz[0].mant := LONGINT( SET( ssize) * SET( LONGINT( 000007FFH)));
+								tmp.stepsiz[0].mant := SIGNED32( SET( ssize) * SET( SIGNED32( 000007FFH)));
 								tmp.stepsiz[0].exp := LSH(ssize, -11);
 						|	QUANT_EXP :
 								(* There are as many step sizes signalled as there ae subbands *)
@@ -4682,7 +4682,7 @@ TYPE
 								FOR i := 0 TO tmp.nstepsiz - 1 DO
 									NEW(tmp.stepsiz[i]);
 									ssize := s.Net16();
-									tmp.stepsiz[i].mant := LONGINT( SET( ssize) * SET( LONGINT( 000007FFH)));
+									tmp.stepsiz[i].mant := SIGNED32( SET( ssize) * SET( SIGNED32( 000007FFH)));
 									tmp.stepsiz[i].exp := LSH(ssize, -11);
 								END;
 						ELSE
@@ -4710,7 +4710,7 @@ TYPE
 
 			PROCEDURE ReadPOCSegment(VAR changes : 	ProgChangeArrayPtr) : BOOLEAN;
 				VAR
-					nchanges, lpoc, i : LONGINT;
+					nchanges, lpoc, i : SIGNED32;
 					sPos, ePos: Streams.Position;
 					rspoc, repoc, cspocByte, cepocByte, ppoc : CHAR;
 					twoBytes : BOOLEAN;
@@ -4787,7 +4787,7 @@ TYPE
 			(* NOTE: We just skip this segment *)
 			PROCEDURE ReadTLMSegment() : BOOLEAN;
 				VAR
-					ltlm : LONGINT;
+					ltlm : SIGNED32;
 				BEGIN
 
 				(*
@@ -4811,7 +4811,7 @@ TYPE
 			(* NOTE: We just skip this segment *)
 			PROCEDURE ReadPLMSegment() : BOOLEAN;
 				VAR
-					lplm : LONGINT;
+					lplm : SIGNED32;
 				BEGIN
 
 				(*
@@ -4835,7 +4835,7 @@ TYPE
 			(* NOTE: We just skip this segment *)
 			PROCEDURE ReadPLTSegment() : BOOLEAN;
 				VAR
-					lplt : LONGINT;
+					lplt : SIGNED32;
 				BEGIN
 
 				(*
@@ -4936,7 +4936,7 @@ TYPE
 
 			PROCEDURE ReadPPTSegment(VAR first, last : DataListElement) : BOOLEAN;
 				VAR
-				 	lppt: LONGINT;
+				 	lppt: SIGNED32;
 					bytesLeft : SIZE;
 					sPos, ePos: Streams.Position;
 					actLen: SIZE;
@@ -4993,7 +4993,7 @@ TYPE
 			(* NOTE: We just skip this segment *)
 			PROCEDURE ReadCRGSegment() : BOOLEAN;
 				VAR
-				 	lcrg : LONGINT;
+				 	lcrg : SIGNED32;
 				BEGIN
 
 				(*
@@ -5016,7 +5016,7 @@ TYPE
 
 			PROCEDURE ReadCOMSegment () : BOOLEAN;
 				VAR
-					lcom, rcom, i : LONGINT;
+					lcom, rcom, i : SIGNED32;
 					com : J2KU.ByteArrayPtr;
 				BEGIN
 
@@ -5063,8 +5063,8 @@ TYPE
 				*)
 				bufferedBlocks : POINTER TO ARRAY OF ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF POINTER TO ARRAY OF J2KU.CodedCblk;
 				reBuildMode : BOOLEAN;	(* TRUE, if we are in rebuild mode *)
-				curSubbIdx, curSubbCblk : LONGINT;
-				maxSubbIdx, maxSubbCblk : LONGINT;
+				curSubbIdx, curSubbCblk : SIGNED32;
+				maxSubbIdx, maxSubbCblk : SIGNED32;
 				getAllLayers : BOOLEAN;		(*	TRUE, if for a tile all layers shall be delivered (which is much easier
 													than having to determine which data is contained in the requested
 													layer range, and which not)
@@ -5091,7 +5091,7 @@ TYPE
 
 			PROCEDURE InitTile () : BOOLEAN;
 				VAR
-					c, r, nblocks, subband, nband, ndec : LONGINT;
+					c, r, nblocks, subband, nband, ndec : SIGNED32;
 					cstyle : CodingStyle;
 					subbInfo : J2KU.SubbandInfo;
 				BEGIN
@@ -5202,12 +5202,12 @@ TYPE
 			(* Aadds a coded code-block to the output buffer *)
 			PROCEDURE AddBlock (VAR cblock : J2KU.CodedCblk; cblockInfo : J2KU.CblkInfo);
 				VAR
-					i, j : LONGINT;
+					i, j : SIGNED32;
 					tmpSegLen : J2KU.LongIntArrayPtr;
-					totSegLen, firstSegLen, lastSegLen : LONGINT;
-					dataEndPos : LONGINT;
-					nseg : LONGINT;
-					locComp, locRes, locSubb, locSubbCblk : LONGINT;
+					totSegLen, firstSegLen, lastSegLen : SIGNED32;
+					dataEndPos : SIGNED32;
+					nseg : SIGNED32;
+					locComp, locRes, locSubb, locSubbCblk : SIGNED32;
 				BEGIN
 					(* Buffer variables locally, so the compiler won't get in trouble ;-) *)
 					locComp := cblockInfo.subbinfo.component;
@@ -5287,7 +5287,7 @@ TYPE
 
 							(* If there is anything in between the two segments -> move it *)
 							IF cblock.nseg > 2 THEN
-								SYSTEM.MOVE(ADDRESSOF(tmpSegLen[i+1]), ADDRESSOF(cblock.segLen[1]), (cblock.nseg-2)*SIZEOF(LONGINT));
+								SYSTEM.MOVE(ADDRESSOF(tmpSegLen[i+1]), ADDRESSOF(cblock.segLen[1]), (cblock.nseg-2)*SIZEOF(SIGNED32));
 							END;
 						ELSE
 							cblock.nseg := 1;
@@ -5305,13 +5305,13 @@ TYPE
 			*)
 			PROCEDURE UpdateBufferedBlock (VAR cblk : J2KU.CodedCblk; cblkInfo : J2KU.CblkInfo);
 				VAR
-					newDataLen, newSegs : LONGINT;
-					newSize, newSegSize : LONGINT;
+					newDataLen, newSegs : SIGNED32;
+					newSize, newSegSize : SIGNED32;
 					tmpBlock : J2KU.CodedCblk;
 					tmpData : J2KU.ByteArrayPtr;
 					tmpSegLen : J2KU.LongIntArrayPtr;
-					layLeft: LONGINT;
-					comp, reslevel, subbIdx, cblkSubbIdx : LONGINT;
+					layLeft: SIGNED32;
+					comp, reslevel, subbIdx, cblkSubbIdx : SIGNED32;
 				BEGIN
 					newDataLen := cblk.dataLen;
 					newSegs := cblk.nseg;
@@ -5364,7 +5364,7 @@ TYPE
 								newSegSize := newSegs + LSH(newSegs * layLeft, -1);
 								NEW(tmpBlock.segLen, newSegSize);
 
-								Machine.Fill32(ADDRESSOF(tmpBlock.segLen[0]), newSegSize*SIZEOF(LONGINT), 0);
+								Machine.Fill32(ADDRESSOF(tmpBlock.segLen[0]), newSegSize*SIZEOF(SIGNED32), 0);
 							ELSIF LEN(tmpBlock.segLen^) < (newSegs + tmpBlock.nseg) THEN
 								tmpSegLen := tmpBlock.segLen;
 								(* NOTE: See reasoning above *)
@@ -5372,14 +5372,14 @@ TYPE
 								NEW(tmpBlock.segLen, newSegSize);
 
 								(* Move the existing segment lengths to the new array *)
-								SYSTEM.MOVE(ADDRESSOF(tmpSegLen[0]), ADDRESSOF(tmpBlock.segLen[0]), LEN(tmpSegLen^) * SIZEOF(LONGINT));
+								SYSTEM.MOVE(ADDRESSOF(tmpSegLen[0]), ADDRESSOF(tmpBlock.segLen[0]), LEN(tmpSegLen^) * SIZEOF(SIGNED32));
 								(* Init the remaining fields with 0 *)
-								Machine.Fill32(ADDRESSOF(tmpBlock.segLen[LEN(tmpSegLen^)]), (newSegSize-LEN(tmpSegLen^))*SIZEOF(LONGINT), 0);
+								Machine.Fill32(ADDRESSOF(tmpBlock.segLen[LEN(tmpSegLen^)]), (newSegSize-LEN(tmpSegLen^))*SIZEOF(SIGNED32), 0);
 							END;
 
 							IF decSpec.cstyle[curTile][comp].term THEN
 								IF newSegs > 1 THEN
-									SYSTEM.MOVE(ADDRESSOF(cblk.segLen[0]), ADDRESSOF(tmpBlock.segLen[tmpBlock.nseg]), newSegs * SIZEOF(LONGINT));
+									SYSTEM.MOVE(ADDRESSOF(cblk.segLen[0]), ADDRESSOF(tmpBlock.segLen[tmpBlock.nseg]), newSegs * SIZEOF(SIGNED32));
 									INC(tmpBlock.nseg, newSegs);
 								ELSE
 									tmpBlock.segLen[tmpBlock.nseg] := cblk.dataLen;
@@ -5394,7 +5394,7 @@ TYPE
 									INC(tmpSegLen[tmpBlock.nseg], cblk.segLen[0]);
 
 									(* Copy the other segment lenghts *)
-									SYSTEM.MOVE(ADDRESSOF(cblk.segLen[1]), ADDRESSOF(tmpSegLen[tmpBlock.nseg + 1]), (newSegs-1)*SIZEOF(LONGINT));
+									SYSTEM.MOVE(ADDRESSOF(cblk.segLen[1]), ADDRESSOF(tmpSegLen[tmpBlock.nseg + 1]), (newSegs-1)*SIZEOF(SIGNED32));
 
 									(* If the last segment is terminated we need to increment the number of segments *)
 									(* truncpt MOD ENTROPY_NUM_PASSES =  2-> significance propagation pass *)
@@ -5429,9 +5429,9 @@ TYPE
 			(**
 				-> See CodestreamReader.GetCodeBlocks
 			*)
-			PROCEDURE GetCodeBlocks* (VAR cblocks : ARRAY OF J2KU.CodedCblk; VAR cblockInfos : ARRAY OF J2KU.CblkInfo; ncblocks : LONGINT) : LONGINT;
+			PROCEDURE GetCodeBlocks* (VAR cblocks : ARRAY OF J2KU.CodedCblk; VAR cblockInfos : ARRAY OF J2KU.CblkInfo; ncblocks : SIGNED32) : SIGNED32;
 				VAR
-					i, j, tmpCblkInBuf, cblkDecLvl, subbIdx, cblkSubbIdx : LONGINT;
+					i, j, tmpCblkInBuf, cblkDecLvl, subbIdx, cblkSubbIdx : SIGNED32;
 					startPos: Streams.Position;
 					ok, deliver : BOOLEAN;
 				BEGIN
@@ -5554,12 +5554,12 @@ TYPE
 			(*
 				Same as GetCodeBlocks, but used when in rebuild mode
 			*)
-			PROCEDURE GetBufferedBlocks (VAR cblocks : ARRAY OF J2KU.CodedCblk; VAR cblockInfos : ARRAY OF J2KU.CblkInfo; ncblocks : LONGINT) : LONGINT;
+			PROCEDURE GetBufferedBlocks (VAR cblocks : ARRAY OF J2KU.CodedCblk; VAR cblockInfos : ARRAY OF J2KU.CblkInfo; ncblocks : SIGNED32) : SIGNED32;
 				VAR
-					ncblocksRet: LONGINT;
-					ndec, cblkDecLvl : LONGINT;
-					curSubbType : LONGINT;
-					locCurComp, locCurRes, locCurSubbIdx, locCurSubbCblk : LONGINT;
+					ncblocksRet: SIGNED32;
+					ndec, cblkDecLvl : SIGNED32;
+					curSubbType : SIGNED32;
+					locCurComp, locCurRes, locCurSubbIdx, locCurSubbCblk : SIGNED32;
 				BEGIN
 					ncblocksRet := 0;
 					(*
@@ -5594,7 +5594,7 @@ TYPE
 								WHILE locCurSubbIdx <= maxSubbIdx DO
 
 									curSubbType := J2KU.SubbandIndexToSubband(locCurRes, locCurSubbIdx);
-									maxSubbCblk := LEN(bufferedBlocks[curTile][locCurComp][locCurRes][locCurSubbIdx]^)(LONGINT) - 1;
+									maxSubbCblk := LEN(bufferedBlocks[curTile][locCurComp][locCurRes][locCurSubbIdx]^)(SIGNED32) - 1;
 
 									(* Loop over blocks in subband *)
 									WHILE locCurSubbCblk <= maxSubbCblk DO
@@ -5718,7 +5718,7 @@ TYPE
 			PROCEDURE NextTilePart*() : BOOLEAN;
 				VAR
 					imgInfo : ImageInfo;
-					ntiles : LONGINT;
+					ntiles : SIGNED32;
 					ok : BOOLEAN;
 				BEGIN
 					IF reBuildMode THEN
@@ -5791,9 +5791,9 @@ TYPE
 
 		(* --- Utility functions --- *)
 
-		PROCEDURE MarkerToString (marker : LONGINT; VAR str : ARRAY OF CHAR);
+		PROCEDURE MarkerToString (marker : SIGNED32; VAR str : ARRAY OF CHAR);
 			VAR
-				i : LONGINT;
+				i : SIGNED32;
 			BEGIN
 				ASSERT (LEN(str) >= 7);
 

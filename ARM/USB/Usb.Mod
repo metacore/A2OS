@@ -114,11 +114,11 @@ TYPE
 TYPE
 
 	DeviceDescriptor* = POINTER TO RECORD (Usbdi.DeviceDescriptor)
-		bMaxPacketSize0- : LONGINT;
+		bMaxPacketSize0- : SIGNED32;
 
-		iManufacturer- : LONGINT;
-		iProduct- : LONGINT;
-		iSerialNumber- : LONGINT;
+		iManufacturer- : SIGNED32;
+		iProduct- : SIGNED32;
+		iSerialNumber- : SIGNED32;
 
 		sManufacturer- : Lib.AsciiString;
 		sProduct- : Lib.AsciiString;
@@ -131,11 +131,11 @@ TYPE
 
 	(** As specified in the Universal Serial Bus Specification 1.1/2.0 **)
 	ConfigurationDescriptor* = POINTER TO RECORD (Usbdi.ConfigurationDescriptor)
-		bLength- : LONGINT;
-		wTotalLength- : LONGINT;
-		iConfiguration- : LONGINT;
+		bLength- : SIGNED32;
+		wTotalLength- : SIGNED32;
+		iConfiguration- : SIGNED32;
 		bmAttributes- : SET;
-		bMaxPower- : LONGINT;
+		bMaxPower- : SIGNED32;
 
 		sConfiguration- : Lib.AsciiString;
 		uConfiguration- : Lib.UnicodeString;
@@ -149,8 +149,8 @@ TYPE
 		Oberon Usb addition: "Driver" points to the device driver for this interface, NIL means no driver (yet) attached
 		to this interface  **)
 	InterfaceDescriptor* = POINTER TO RECORD (Usbdi.InterfaceDescriptor)
-		bLength- : LONGINT;
-		iInterface- : LONGINT;
+		bLength- : SIGNED32;
+		iInterface- : SIGNED32;
 		sInterface- : Lib.AsciiString;
 		uInterface- : Lib.UnicodeString;
 		driver- : Usbdi.Driver;
@@ -158,14 +158,14 @@ TYPE
 
 	(** EndpointDescriptor: As specified in the Universal Serial Bus Specification 1.1/2.0 **)
 	EndpointDescriptor* = POINTER TO RECORD (Usbdi.EndpointDescriptor)
-		bLength- : LONGINT;
-		bInterval- : LONGINT; (* Raw value; interpretation dependend on transfer speed and transfer type *)
-		mult- : LONGINT; (* Only for high-speed isochronous & interrupt transfers: How many transactions per microframe (1,2 or 3) *)
+		bLength- : SIGNED32;
+		bInterval- : SIGNED32; (* Raw value; interpretation dependend on transfer speed and transfer type *)
+		mult- : SIGNED32; (* Only for high-speed isochronous & interrupt transfers: How many transactions per microframe (1,2 or 3) *)
 	END;
 
 	InterfaceAssociationDescriptor* = POINTER TO RECORD (Usbdi.InterfaceAssociationDescriptor);
-		bLength- : LONGINT;
-		iFunction- : LONGINT;
+		bLength- : SIGNED32;
+		iFunction- : SIGNED32;
 		sFunction- : Lib.AsciiString;
 		uFunction- : Lib.UnicodeString;
 	END;
@@ -183,28 +183,28 @@ TYPE
 		(* Other speed configurations *)
 		otherconfigurations- : Usbdi.Configurations;
 
-		address* : LONGINT;
-		speed* : LONGINT; (* Usb.LowSpeed, Usb.FullSpeed, Usb.HighSpeed *)
+		address* : SIGNED32;
+		speed* : SIGNED32; (* Usb.LowSpeed, Usb.FullSpeed, Usb.HighSpeed *)
 
 		(* This device is connected to the port <port> of the UsbDevice <parent> *)
 		parent* : UsbDevice;
-		port* : LONGINT;
+		port* : SIGNED32;
 
 		(* 	If this is a low- or fullspeed device that is connected to a high-speed bus, the device is connected to
 			the high-speed hub with the device address <ttAddress> at port <ttPort> *)
-		ttAddress*, ttPort* : LONGINT;
+		ttAddress*, ttPort* : SIGNED32;
 
 		hubFlag* : BOOLEAN;
 		(* USB hub specific fields *)
-		nbrOfPorts* : LONGINT;
+		nbrOfPorts* : SIGNED32;
 		deviceAtPort* : POINTER TO ARRAY OF UsbDevice;
 		portPermanentDisabled* : POINTER TO ARRAY OF BOOLEAN;
-		portErrors* : POINTER TO ARRAY OF LONGINT;
+		portErrors* : POINTER TO ARRAY OF SIGNED32;
 
 		(* Private, exported readonly to grant access to bytesTransfered field of the controller *)
 		controller* : UsbHcdi.Hcd;
 
-		PROCEDURE SetState*(state : LONGINT);
+		PROCEDURE SetState*(state : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF Debug.Trace & Debug.traceDeviceStates THEN ShowStateTransition(SELF, state); END;
 			SELF.state := state;
@@ -216,8 +216,8 @@ TYPE
 		 * @param endpointAddr: Address of endpoint to be searched
 		 * @return: Pipe for specified endpoint; NIL if endpoint not found
 		 *)
-		PROCEDURE GetPipeByInterface(interface : InterfaceDescriptor; endpointAddr : LONGINT) : UsbHcdi.Pipe;
-		VAR pipe : UsbHcdi.Pipe; endpoint : EndpointDescriptor; endp : LONGINT;
+		PROCEDURE GetPipeByInterface(interface : InterfaceDescriptor; endpointAddr : SIGNED32) : UsbHcdi.Pipe;
+		VAR pipe : UsbHcdi.Pipe; endpoint : EndpointDescriptor; endp : SIGNED32;
 		BEGIN
 			WHILE (endp < interface.bNumEndpoints) DO (* Search all endpoints of the interface *)
 				IF interface.endpoints[endp].bEndpointAddress = endpointAddr THEN (* Found ! *)
@@ -233,7 +233,7 @@ TYPE
 					pipe.device := SELF;
 					pipe.ttPort := ttPort;
 					pipe.ttAddress := ttAddress;
-					pipe.type := SYSTEM.VAL(INTEGER,endpoint.bmAttributes *  {0,1});
+					pipe.type := SYSTEM.VAL(SIGNED16,endpoint.bmAttributes *  {0,1});
 					IF pipe.type = UsbHcdi.PipeControl THEN
 						pipe.direction := UsbHcdi.In;
 					ELSE
@@ -255,8 +255,8 @@ TYPE
 		END GetPipeByInterface;
 
 		(** Allocate a pipe for the specified endpoint *)
-		PROCEDURE GetPipe*(endpoint : LONGINT) : Usbdi.Pipe;
-		VAR pipe : UsbHcdi.Pipe; intfc, altIntfc : LONGINT; interface : InterfaceDescriptor;
+		PROCEDURE GetPipe*(endpoint : SIGNED32) : Usbdi.Pipe;
+		VAR pipe : UsbHcdi.Pipe; intfc, altIntfc : SIGNED32; interface : InterfaceDescriptor;
 		BEGIN
 			IF SYSTEM.VAL(SET, endpoint) * {0..3} = {} THEN (* Special case: Default control pipe is always allocated *)
 				ASSERT(defaultpipe#NIL);
@@ -288,7 +288,7 @@ TYPE
 		END FreePipe;
 
 		(* Register this USB device at the USB hub <hub> *)
-		PROCEDURE Register*(hub: UsbDevice; portNbr: LONGINT);
+		PROCEDURE Register*(hub: UsbDevice; portNbr: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			ASSERT(hub.hubFlag);
 			parent := hub; port := portNbr;
@@ -298,7 +298,7 @@ TYPE
 
 		(*  this device from the hub it is connected to and remove its driver if installed *)
 		PROCEDURE Remove*;
-		VAR n : LONGINT;device: UsbDevice;
+		VAR n : SIGNED32;device: UsbDevice;
 		BEGIN {EXCLUSIVE}
 			IF hubFlag THEN
 				FOR n := 0 TO nbrOfPorts - 1 DO
@@ -332,21 +332,21 @@ TYPE
 		(** Implementation of the USB standard device requests, see USB Specification Rev 1.1, p. 185 *)
 
 		(** The ClearFeature standard request is used to clear or disable a specific feature. *)
-		PROCEDURE ClearFeature*(recipient : SET;  feature, recipientNumber : LONGINT) : BOOLEAN;
+		PROCEDURE ClearFeature*(recipient : SET;  feature, recipientNumber : SIGNED32) : BOOLEAN;
 		BEGIN
 			ASSERT((recipient = Usbdi.Device) OR (recipient =Usbdi.Interface) OR (recipient = Usbdi.Endpoint));
 			RETURN Request(recipient, SrClearFeature, feature, recipientNumber, 0, Usbdi.NoData) = Usbdi.Ok;
 		END ClearFeature;
 
 		(** This request is used to set or enable a specific feature *)
-		PROCEDURE SetFeature*(recipient : SET; feature, recipientNumber : LONGINT) : BOOLEAN;
+		PROCEDURE SetFeature*(recipient : SET; feature, recipientNumber : SIGNED32) : BOOLEAN;
 		BEGIN
 			ASSERT((recipient = Usbdi.Device) OR (recipient = Usbdi.Interface) OR (recipient = Usbdi.Endpoint));
 			RETURN Request(recipient, SrSetFeature, feature, recipientNumber, 0, Usbdi.NoData) = Usbdi.Ok;
 		END SetFeature;
 
 		(** Sets the address of the USB device dev to adr (should only be used by the USB driver) *)
-		PROCEDURE SetAddress*(adr : LONGINT) : BOOLEAN;
+		PROCEDURE SetAddress*(adr : SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Request(Usbdi.ToDevice, SrSetAddress, adr, 0, 0, Usbdi.NoData) = Usbdi.Ok THEN
 				address := adr; RETURN TRUE;
@@ -355,7 +355,7 @@ TYPE
 		END SetAddress;
 
 		(** This requests returns the current device configuration value. If the returned value is zero, the device is not configured. *)
-		PROCEDURE GetConfiguration*(VAR conf : LONGINT) : BOOLEAN;
+		PROCEDURE GetConfiguration*(VAR conf : SIGNED32) : BOOLEAN;
 		VAR buffer : Usbdi.BufferPtr;
 		BEGIN
 			NEW(buffer, 1);
@@ -367,7 +367,7 @@ TYPE
 		END GetConfiguration;
 
 		(** This requests sets the device configuration *)
-		PROCEDURE SetConfiguration*(conf : LONGINT) : BOOLEAN;
+		PROCEDURE SetConfiguration*(conf : SIGNED32) : BOOLEAN;
 		BEGIN
 			ASSERT(configurations[conf].bConfigurationValue <= 255);
 			IF Request(Usbdi.ToDevice + Usbdi.Standard, SrSetConfiguration, configurations[conf].bConfigurationValue, 0, 0, Usbdi.NoData) = Usbdi.Ok THEN
@@ -379,7 +379,7 @@ TYPE
 		END SetConfiguration;
 
 		(** This request returns the specified descriptor if the descriptor exists *)
-		PROCEDURE GetDescriptor*(descriptor, index, wIndex, len : LONGINT; VAR buffer : Usbdi.Buffer) : BOOLEAN;
+		PROCEDURE GetDescriptor*(descriptor, index, wIndex, len : SIGNED32; VAR buffer : Usbdi.Buffer) : BOOLEAN;
 		VAR status : Usbdi.Status;
 		BEGIN
 			ASSERT(len >= 2);
@@ -388,13 +388,13 @@ TYPE
 		END GetDescriptor;
 
 		(** This request may be used to update existing descriptors or new descriptors may be added *)
-		PROCEDURE SetDescriptor*(type : SET;  index, wIndex, len : LONGINT; VAR buffer : Usbdi.Buffer) : BOOLEAN;
+		PROCEDURE SetDescriptor*(type : SET;  index, wIndex, len : SIGNED32; VAR buffer : Usbdi.Buffer) : BOOLEAN;
 		BEGIN
-			RETURN Request(Usbdi.ToDevice, SrSetDescriptor, index + 100H*SYSTEM.VAL(LONGINT, type), wIndex, len, buffer) = Usbdi.Ok;
+			RETURN Request(Usbdi.ToDevice, SrSetDescriptor, index + 100H*SYSTEM.VAL(SIGNED32, type), wIndex, len, buffer) = Usbdi.Ok;
 		END SetDescriptor;
 
 		(** This request returns the selected alternate settings for the specified interface *)
-		PROCEDURE GetInterface*(interfaceNumber : LONGINT; VAR setting : LONGINT): BOOLEAN;
+		PROCEDURE GetInterface*(interfaceNumber : SIGNED32; VAR setting : SIGNED32): BOOLEAN;
 		VAR buffer : Usbdi.BufferPtr;
 		BEGIN
 			NEW(buffer, 1);
@@ -406,38 +406,38 @@ TYPE
 		END GetInterface;
 
 		(** This requests allows the host to select an alternate setting for the specified interface *)
-		PROCEDURE SetInterface*(interfaceNumber, setting : LONGINT): BOOLEAN;
+		PROCEDURE SetInterface*(interfaceNumber, setting : SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN Request(Usbdi.ToDevice + Usbdi.Standard + Usbdi.Interface, SrSetInterface, setting, interfaceNumber, 0, Usbdi.NoData) = Usbdi.Ok;
 		END SetInterface;
 
 		(** This request returns status for the specified recipient *)
-		PROCEDURE GetStatus*(recipient: SET;  recipientNumber: LONGINT; VAR status : SET): BOOLEAN;
+		PROCEDURE GetStatus*(recipient: SET;  recipientNumber: SIGNED32; VAR status : SET): BOOLEAN;
 		VAR buffer : Usbdi.BufferPtr;
 		BEGIN
 			ASSERT((recipient = Usbdi.Device) OR (recipient = Usbdi.Interface) OR (recipient = Usbdi.Endpoint));
 			NEW(buffer, 2);
 			IF Request(Usbdi.ToHost + Usbdi.Standard + recipient, SrGetStatus , 0, recipientNumber, 2, buffer) = Usbdi.Ok THEN
-				status := SYSTEM.VAL(SET, ORD(buffer[0]) + 100H*SYSTEM.VAL(LONGINT, ORD(buffer[1])));
+				status := SYSTEM.VAL(SET, ORD(buffer[0]) + 100H*SYSTEM.VAL(SIGNED32, ORD(buffer[1])));
 				RETURN TRUE;
 			END;
 			RETURN FALSE;
 		END GetStatus;
 
 		(** This request is used to set and then report an endpoint's synchronization frame *)
-		PROCEDURE SynchFrame*(endpoint: LONGINT; VAR frameNumber : LONGINT): BOOLEAN;  (* UNTESTED *)
+		PROCEDURE SynchFrame*(endpoint: SIGNED32; VAR frameNumber : SIGNED32): BOOLEAN;  (* UNTESTED *)
 		VAR buffer : Usbdi.BufferPtr;
 		BEGIN
 			NEW(buffer, 2);
 			IF Request(Usbdi.ToDevice + Usbdi.Standard + Usbdi.Endpoint, SrSynchFrame, 0, endpoint, 2, buffer) = Usbdi.Ok THEN
-				frameNumber := ORD(buffer[0]) + 100H*SYSTEM.VAL(LONGINT, ORD(buffer[1]));
+				frameNumber := ORD(buffer[0]) + 100H*SYSTEM.VAL(SIGNED32, ORD(buffer[1]));
 				RETURN TRUE;
 			END;
 			RETURN FALSE;
 		END SynchFrame;
 
 		(** USB device request *)
-		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : LONGINT; VAR buffer : Usbdi.Buffer) : Usbdi.Status;
+		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : SIGNED32; VAR buffer : Usbdi.Buffer) : Usbdi.Status;
 		BEGIN
 			RETURN defaultpipe.Request(bmRequestType, bRequest, wValue, wIndex, wLength, buffer);
 		END Request;
@@ -448,15 +448,15 @@ TYPE
 		 * @param type Configuration descriptor or Other-Speed configuration descriptor
 		 * @return Buffer containing the configuration, NIL if operation fails
 		 *)
-		PROCEDURE InternalGetConfigurations(type : LONGINT; configurations : Usbdi.Configurations) : BOOLEAN;
-		VAR buffer : Usbdi.BufferPtr; c, length : LONGINT;
+		PROCEDURE InternalGetConfigurations(type : SIGNED32; configurations : Usbdi.Configurations) : BOOLEAN;
+		VAR buffer : Usbdi.BufferPtr; c, length : SIGNED32;
 		BEGIN
 			ASSERT(((type = DescriptorConfiguration) & (descriptor # NIL)) OR ((type = DescriptorOtherSpeedConfig) & (qualifier # NIL)));
 			FOR c := 0 TO LEN(configurations)-1 DO
 				(* Get the total size of this configuration *)
 				NEW(buffer, 8);
 				IF GetDescriptor(type, c, 0, 8, buffer) THEN
-					length := ORD(buffer[2])+ 256*SYSTEM.VAL(LONGINT, ORD(buffer[3]));
+					length := ORD(buffer[2])+ 256*SYSTEM.VAL(SIGNED32, ORD(buffer[3]));
 					NEW(buffer, length);
 					IF GetDescriptor(type, c, 0, length, buffer) THEN (* Load and parse configuration *)
 						configurations[c] := ParseConfigurationDescriptor(buffer);
@@ -576,7 +576,7 @@ TYPE
 	 * UsbDevice object use Request for the actual transfer, we simply overwrite it and emulated the results of the control transfers. *)
 	EmulatedHubDevice* = OBJECT(UsbDevice);
 
-		PROCEDURE GetPipe*(endpoint : LONGINT) : Usbdi.Pipe;
+		PROCEDURE GetPipe*(endpoint : SIGNED32) : Usbdi.Pipe;
 		BEGIN
 			HALT(99); RETURN NIL; (* Root hubs don't provide pipes *)
 		END GetPipe;
@@ -586,13 +586,13 @@ TYPE
 			HALT(99); (* Root hubs don't provide pipes *)
 		END FreePipe;
 
-		PROCEDURE Register*(hub: UsbDevice; portNbr: LONGINT);
+		PROCEDURE Register*(hub: UsbDevice; portNbr: SIGNED32);
 		BEGIN
 			HALT(99);
 		END Register;
 
 		(** Emulated USB device request *)
-		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : LONGINT; VAR buffer : Usbdi.Buffer) : Usbdi.Status;
+		PROCEDURE Request*(bmRequestType : SET;  bRequest, wValue, wIndex, wLength : SIGNED32; VAR buffer : Usbdi.Buffer) : Usbdi.Status;
 		VAR res : Usbdi.Status;
 		BEGIN
 			res := Usbdi.Stalled;
@@ -602,7 +602,7 @@ TYPE
 						ASSERT(wLength = 2);
 						IF (bmRequestType * Usbdi.ToHost # {}) & (bmRequestType - Usbdi.ToHost = {})  THEN
 							(* Get Device status: Indicate Selfpowered, Remote Wakeup disabled *)
-							buffer[0] := CHR(SYSTEM.VAL(LONGINT, {0})); buffer[1] := 0X; res := Usbdi.Ok;
+							buffer[0] := CHR(SYSTEM.VAL(SIGNED32, {0})); buffer[1] := 0X; res := Usbdi.Ok;
 						ELSIF (bmRequestType * Usbdi.ToHost # {}) & (bmRequestType - Usbdi.ToHost = Usbdi.Interface) THEN
 							(* Get Interface status:  Reserved *)
 							 buffer[0] := 0X; buffer[1] := 0X; res := Usbdi.Ok;
@@ -636,7 +636,7 @@ TYPE
 			descriptor : DeviceDescriptor; configuration : ConfigurationDescriptor;
 			interface : InterfaceDescriptor; endpoint : EndpointDescriptor;
 			name : Lib.AsciiString;
-			i, j : LONGINT;
+			i, j : SIGNED32;
 		BEGIN
 			(* Emulate device descriptor *)
 			NEW(descriptor); SELF.descriptor := descriptor;
@@ -710,7 +710,7 @@ TYPE
 		drivers- : ARRAY DmMaxPriorities OF RegisteredDriver;
 
 		(* Incremented each time a driver is added or removed *)
-		nbrOfDriverEvents- : LONGINT;
+		nbrOfDriverEvents- : SIGNED32;
 
 		(* local copy of rootHubs, since it could be modified while operating on it *)
 		rootHubs : RootHubArray;
@@ -719,7 +719,7 @@ TYPE
 
 		(* For each interface of the USB device <dev> try to install a registered driver; called when a new USB device is found *)
 		PROCEDURE ProbeDevice*(dev : UsbDevice);
-		VAR n : LONGINT;
+		VAR n : SIGNED32;
 		BEGIN
 			FOR n := 0 TO dev.actConfiguration.bNumInterfaces - 1 DO
 				IF dev.actConfiguration.interfaces[n](InterfaceDescriptor).driver = NIL THEN
@@ -731,7 +731,7 @@ TYPE
 
 		(* Load driver using driver database services *)
 		PROCEDURE ConsultDriverDatabase(dev : UsbDevice) : BOOLEAN;
-		VAR  loaded : BOOLEAN; d : DeviceDescriptor; i : InterfaceDescriptor; intf : LONGINT;
+		VAR  loaded : BOOLEAN; d : DeviceDescriptor; i : InterfaceDescriptor; intf : SIGNED32;
 		BEGIN
 			IF (dev # NIL) & (dev.descriptor # NIL) THEN
 				d := dev.descriptor (DeviceDescriptor);
@@ -762,7 +762,7 @@ TYPE
 		END ConsultDriverDatabase;
 
 		PROCEDURE LookupDriver(dev : UsbDevice; interface : InterfaceDescriptor; VAR temp : RegisteredDriver) : Usbdi.Driver;
-		VAR drv : Usbdi.Driver; i : LONGINT;
+		VAR drv : Usbdi.Driver; i : SIGNED32;
 		BEGIN
 			LOOP (* Search all priority lists *)
 				temp := drivers[i].next;
@@ -798,14 +798,14 @@ TYPE
 
 		(* Checks whether an appropriate driver for the USB device <dev> is registred in registredDrivers.
 		 *  If yes, a unique Plugins.Name is generated and the driver is added to the usbDrivers registry *)
-		PROCEDURE Install(dev : UsbDevice; interfaceIdx : LONGINT);
+		PROCEDURE Install(dev : UsbDevice; interfaceIdx : SIGNED32);
 		VAR
 			temp : RegisteredDriver;
 			drv : Usbdi.Driver;
 			interface : InterfaceDescriptor;
-			i, res : LONGINT;
+			i, res : SIGNED32;
 			name : Usbdi.Name;
-			suffix : LONGINT; (* 0-99; suffix is used to generate unique names for AosPlugin.Name *)
+			suffix : SIGNED32; (* 0-99; suffix is used to generate unique names for AosPlugin.Name *)
 		BEGIN
 			interface := dev.actConfiguration.interfaces[interfaceIdx] (InterfaceDescriptor);
 			(* Search an USB device driver for this device (See USB Common Class Specification, 3.10 Locating USB Drivers) *)
@@ -862,7 +862,7 @@ TYPE
 
 		(* For all USB devices which are attached to any USB root hub in the system the procedure ProbeDeviceChain() is called *)
 		PROCEDURE ProbeDriversInternal;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN (* Works with local copy of rootHubs array *)
 			GetRootHubs(rootHubs);
 			IF rootHubs # NIL THEN
@@ -875,7 +875,7 @@ TYPE
 
 		(* Called by ProbeDrivers; calls Install() for all devices which don't already have a driver instance installed *)
 		PROCEDURE ProbeDeviceChain(dev : UsbDevice);
-		VAR n : LONGINT;
+		VAR n : SIGNED32;
 		BEGIN
 			FOR n := 0 TO dev.actConfiguration.bNumInterfaces - 1 DO
 				IF dev.actConfiguration.interfaces[n](InterfaceDescriptor).driver = NIL THEN
@@ -891,8 +891,8 @@ TYPE
 		END ProbeDeviceChain;
 
 		(** Add a USB device driver to the internal registry. Driver names have to be unique and no longer than 30 characters (incl. Null-String) *)
-		PROCEDURE Add*(probe : Usbdi.ProbeProc; CONST name: Usbdi.Name; CONST desc: Usbdi.Description; priority : LONGINT);
-		VAR temp, new : RegisteredDriver; i : LONGINT;
+		PROCEDURE Add*(probe : Usbdi.ProbeProc; CONST name: Usbdi.Name; CONST desc: Usbdi.Description; priority : SIGNED32);
+		VAR temp, new : RegisteredDriver; i : SIGNED32;
 		BEGIN
 			(* The specified name mustn't be longer than 30 characters (including 0X) *)
 			WHILE (name[i] # 0X) & (i < 32) DO INC(i); END;
@@ -948,7 +948,7 @@ TYPE
 			driver : Usbdi.Driver;
 			regname : Plugins.Name;
 			temp : RegisteredDriver;
-			i, suffix : LONGINT;
+			i, suffix : SIGNED32;
 		BEGIN
 			plugin := usbDrivers.Get(name);
 			IF plugin # NIL THEN (* Uninstall this instance *)
@@ -997,7 +997,7 @@ TYPE
 			regname : Plugins.Name;
 			plugin : Plugins.Plugin;
 			dev : UsbDevice;
-			i, j : LONGINT;
+			i, j : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF Debug.Trace & Debug.traceDm THEN KernelLog.String("Usb: Removing driver: "); KernelLog.String(name); KernelLog.Ln; END;
 			(* Remove device driver from internal registry *)
@@ -1047,8 +1047,8 @@ TYPE
 
 		(* Appends the suffix to name; the suffix is a number between 0-99 which is added as 2 ASCII characters (each 1 bytes)
 		 * note: name mustn't be longer than 30 characters (incl. Null-Termination)  *)
-		PROCEDURE AddSuffix*(CONST name: Plugins.Name; suffix : LONGINT) :  Plugins.Name;
-		VAR i : LONGINT; newName : Plugins.Name;
+		PROCEDURE AddSuffix*(CONST name: Plugins.Name; suffix : SIGNED32) :  Plugins.Name;
+		VAR i : SIGNED32; newName : Plugins.Name;
 		BEGIN
 			WHILE name[i]#0X DO newName[i]:=name[i]; INC(i); END;
 			(* Append suffix to name *)
@@ -1065,8 +1065,8 @@ TYPE
 		END AddSuffix;
 
 		(* Returns the suffix of the Plugins.Name name *)
-		PROCEDURE GetSuffix(CONST name : Plugins.Name) : LONGINT;
-		VAR i, suffix : LONGINT;
+		PROCEDURE GetSuffix(CONST name : Plugins.Name) : SIGNED32;
+		VAR i, suffix : SIGNED32;
 		BEGIN
 			WHILE (name[i] # 0X) & (i < 32) DO INC(i); END;
 			suffix:= (ORD(name[i-2]) - 48) * 10 + ORD(name[i-1])-48;
@@ -1076,7 +1076,7 @@ TYPE
 
 		(* Displays a list of registered drivers *)
 		PROCEDURE Show*;
-		VAR temp : RegisteredDriver; i : LONGINT;
+		VAR temp : RegisteredDriver; i : SIGNED32;
 		BEGIN
 			KernelLog.Ln; KernelLog.String("Usb: Registered USB device drivers: "); KernelLog.Ln;
 			FOR i := 0 TO DmMaxPriorities - 1 DO
@@ -1103,7 +1103,7 @@ TYPE
 		END Terminate;
 
 		PROCEDURE &Init*;
-		VAR  i : LONGINT; temp : RegisteredDriver;
+		VAR  i : SIGNED32; temp : RegisteredDriver;
 		BEGIN
 			alive := TRUE; dead := FALSE;
 			FOR i := 0 TO 11 DO NEW(temp); drivers[i] := temp; END; (* Allocate list heads *)
@@ -1142,21 +1142,21 @@ VAR
 	usbDrivers- : (*Plugins.*)Registry;	(* Instanciated USB device drivers (linked to a attached USB device) 	*)
 	drivers- : DriverManager;   			(* Usb internal registry for installable USB device drivers 			*)
 	rootHubs : RootHubArray;
-	nbrOfTopologyEvents- : LONGINT;	(* Incremented each time a device is connected/disconnected *)
+	nbrOfTopologyEvents- : SIGNED32;	(* Incremented each time a device is connected/disconnected *)
 
 PROCEDURE ParseDeviceDescriptor(buffer : Usbdi.Buffer) : DeviceDescriptor;
 VAR descriptor : DeviceDescriptor;
 BEGIN
 	IF LEN(buffer) >= 18 THEN
 		NEW(descriptor);
-		descriptor.bcdUSB := ORD(buffer[2]) + 256*SYSTEM.VAL(LONGINT, ORD(buffer[3]));
+		descriptor.bcdUSB := ORD(buffer[2]) + 256*SYSTEM.VAL(SIGNED32, ORD(buffer[3]));
 		descriptor.bDeviceClass := ORD(buffer[4]);
 		descriptor.bDeviceSubClass := ORD(buffer[5]);
 		descriptor.bDeviceProtocol := ORD(buffer[6]);
 		descriptor.bMaxPacketSize0 := ORD(buffer[7]);
-		descriptor.idVendor := ORD(buffer[8]) + 256*SYSTEM.VAL(LONGINT, ORD(buffer[9]));
-		descriptor.idProduct := ORD(buffer[10]) + 256*SYSTEM.VAL(LONGINT, ORD(buffer[11]));
-		descriptor.bcdDevice := ORD(buffer[12]) +  256*SYSTEM.VAL(LONGINT, ORD(buffer[13]));
+		descriptor.idVendor := ORD(buffer[8]) + 256*SYSTEM.VAL(SIGNED32, ORD(buffer[9]));
+		descriptor.idProduct := ORD(buffer[10]) + 256*SYSTEM.VAL(SIGNED32, ORD(buffer[11]));
+		descriptor.bcdDevice := ORD(buffer[12]) +  256*SYSTEM.VAL(SIGNED32, ORD(buffer[13]));
 		descriptor.iManufacturer := ORD(buffer[14]);
 		descriptor.iProduct := ORD(buffer[15]);
 		descriptor.iSerialNumber := ORD(buffer[16]);
@@ -1176,7 +1176,7 @@ VAR qualifier : DeviceDescriptor;
 BEGIN
 	IF LEN(buffer) >= 10 THEN
 		NEW(qualifier);
-		qualifier.bcdUSB := ORD(buffer[2]) + 256*SYSTEM.VAL(LONGINT, ORD(buffer[3]));
+		qualifier.bcdUSB := ORD(buffer[2]) + 256*SYSTEM.VAL(SIGNED32, ORD(buffer[3]));
 		qualifier.bDeviceClass := ORD(buffer[4]);
 		qualifier.bDeviceSubClass := ORD(buffer[5]);
 		qualifier.bDeviceProtocol := ORD(buffer[6]);
@@ -1189,7 +1189,7 @@ END ParseDeviceQualifier;
 
 (** Parse all Interface Association Descriptors in the given configuration. All other descriptor types are skipped. *)
 PROCEDURE ParseInterfaceAssociation(buffer : Usbdi.Buffer) : Usbdi.Iads;
-VAR iads : Usbdi.Iads; iad : InterfaceAssociationDescriptor; idx, num, i : LONGINT;
+VAR iads : Usbdi.Iads; iad : InterfaceAssociationDescriptor; idx, num, i : SIGNED32;
 BEGIN
 	IF Debug.Trace & Debug.traceParsing THEN KernelLog.String("Usb: Parsing interface association descriptors:"); KernelLog.Ln; END;
 	(* Determine number of available IADs *)
@@ -1212,7 +1212,7 @@ BEGIN
 				iad.bFunctionClass := ORD(buffer[idx+4]);
 				iad.bFunctionSubClass := ORD(buffer[idx+5]);
 				iad.bFunctionProtocol := ORD(buffer[idx+6]);
-				iad.iFunction := ORD(buffer[idx+7]) + 256*SYSTEM.VAL(LONGINT, ORD(buffer[idx+8]));
+				iad.iFunction := ORD(buffer[idx+7]) + 256*SYSTEM.VAL(SIGNED32, ORD(buffer[idx+8]));
 				iads[i] := iad;
 				INC(i);
 			END;
@@ -1229,7 +1229,7 @@ END ParseInterfaceAssociation;
 
 (* Parse all non-standard descriptors found in the configuration *)
 PROCEDURE ParseUnknownDescriptors(configuration : Usbdi.ConfigurationDescriptor; buffer : Usbdi.Buffer) : Usbdi.UnknownDescriptor;
-VAR idx, i,  type,  curIntf, curAltIntf, curEp : LONGINT; list, unknown : Usbdi.UnknownDescriptor;
+VAR idx, i,  type,  curIntf, curAltIntf, curEp : SIGNED32; list, unknown : Usbdi.UnknownDescriptor;
 
 	PROCEDURE AppendToList(head, unknown : Usbdi.UnknownDescriptor);
 	VAR u : Usbdi.UnknownDescriptor;
@@ -1239,7 +1239,7 @@ VAR idx, i,  type,  curIntf, curAltIntf, curEp : LONGINT; list, unknown : Usbdi.
 	END AppendToList;
 
 	PROCEDURE AppendNonStandard(unknown : Usbdi.UnknownDescriptor) : BOOLEAN;
-	VAR i : LONGINT; intf, altIntf : Usbdi.InterfaceDescriptor; endp : Usbdi.EndpointDescriptor;
+	VAR i : SIGNED32; intf, altIntf : Usbdi.InterfaceDescriptor; endp : Usbdi.EndpointDescriptor;
 	BEGIN
 		IF (curIntf = -1) THEN (* Append to configuration *)
 			IF configuration.unknown = NIL THEN configuration.unknown := unknown;
@@ -1338,11 +1338,11 @@ BEGIN
 END ParseUnknownDescriptors;
 
 (* Parse the first endpoint descriptor found in the configuration beginning at index idx *)
-PROCEDURE ParseEndpointDescriptor(buffer : Usbdi.Buffer; VAR idx : LONGINT) : EndpointDescriptor;
+PROCEDURE ParseEndpointDescriptor(buffer : Usbdi.Buffer; VAR idx : SIGNED32) : EndpointDescriptor;
 VAR endpoint : EndpointDescriptor; dword : SET;
 
-	PROCEDURE GetEndpointType(address, attributes : SET) : LONGINT;
-	VAR type : LONGINT;
+	PROCEDURE GetEndpointType(address, attributes : SET) : SIGNED32;
+	VAR type : SIGNED32;
 	BEGIN
 		IF attributes * {0..1} = {} THEN
 			type := Usbdi.Control;
@@ -1373,20 +1373,20 @@ BEGIN
 	ASSERT(ORD(buffer[idx+1])=DescriptorEndpoint);
 	NEW(endpoint);
 	endpoint.bLength := ORD(buffer[idx + 0]);
-	endpoint.bEndpointAddress := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ORD(buffer[idx + 2])) * {0..3, 7});
+	endpoint.bEndpointAddress := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ORD(buffer[idx + 2])) * {0..3, 7});
 	endpoint.bmAttributes := SYSTEM.VAL(SET, ORD(buffer[idx + 3]));
 	endpoint.type := GetEndpointType(SYSTEM.VAL(SET, endpoint.bEndpointAddress), endpoint.bmAttributes);
-	dword := SYSTEM.VAL(SET, ORD(buffer[idx + 4]) + 256*SYSTEM.VAL(LONGINT, ORD(buffer[idx + 5])));
-	endpoint.wMaxPacketSize := SYSTEM.VAL(LONGINT, dword * {0..10});
-	endpoint.mult := LSH(SYSTEM.VAL(LONGINT, dword * {11..12}), -11) + 1;
+	dword := SYSTEM.VAL(SET, ORD(buffer[idx + 4]) + 256*SYSTEM.VAL(SIGNED32, ORD(buffer[idx + 5])));
+	endpoint.wMaxPacketSize := SYSTEM.VAL(SIGNED32, dword * {0..10});
+	endpoint.mult := LSH(SYSTEM.VAL(SIGNED32, dword * {11..12}), -11) + 1;
 	endpoint.bInterval := ORD(buffer[idx + 6]);
 	idx := idx + ORD(buffer[idx + 0]);
 	RETURN endpoint;
 END ParseEndpointDescriptor;
 
 (* Parse the first interface descriptor beginning at index idx  including its endpoints *)
-PROCEDURE ParseInterfaceDescriptor(buffer :Usbdi.Buffer; VAR idx : LONGINT) : InterfaceDescriptor;
-VAR interface : InterfaceDescriptor; e : LONGINT;
+PROCEDURE ParseInterfaceDescriptor(buffer :Usbdi.Buffer; VAR idx : SIGNED32) : InterfaceDescriptor;
+VAR interface : InterfaceDescriptor; e : SIGNED32;
 BEGIN
 	IF (Debug.Trace & Debug.traceParsing) & (idx+1 < LEN(buffer))  THEN ShowParse("interface",idx, ORD(buffer[idx+1]), ORD(buffer[idx+0])); END;
 	(* Skip non-USB-standard descriptors (e.g. HID descriptors) *)
@@ -1421,11 +1421,11 @@ END ParseInterfaceDescriptor;
 
 (* Parse the configuration descriptor including all standard interfaces, alternate interfaces and endpoints. *)
 PROCEDURE ParseConfigurationDescriptor(buffer : Usbdi.Buffer) : ConfigurationDescriptor;
-VAR configuration : ConfigurationDescriptor; i, j, idx, num, intfNbr : LONGINT;
+VAR configuration : ConfigurationDescriptor; i, j, idx, num, intfNbr : SIGNED32;
 
 	(* Return the number of alternate interfaces of interface <intf> starting at idx *)
-	PROCEDURE NumAltInterfaces(intf, idx : LONGINT) : LONGINT;
-	VAR res : LONGINT;
+	PROCEDURE NumAltInterfaces(intf, idx : SIGNED32) : SIGNED32;
+	VAR res : SIGNED32;
 	BEGIN
 		WHILE(idx + 3 < LEN(buffer)) DO
 			IF (ORD(buffer[idx+1]) = DescriptorInterface) & (ORD(buffer[idx+2]) = intf) & (ORD(buffer[idx+3]) # 0) THEN
@@ -1443,7 +1443,7 @@ BEGIN
 	END;
 	NEW(configuration);
 	configuration.bLength := ORD(buffer[0]);
-	configuration.wTotalLength := ORD(buffer[2])+ 256*SYSTEM.VAL(LONGINT, ORD(buffer[3]));
+	configuration.wTotalLength := ORD(buffer[2])+ 256*SYSTEM.VAL(SIGNED32, ORD(buffer[3]));
 	configuration.bNumInterfaces := ORD(buffer[4]);
 	configuration.bConfigurationValue := ORD(buffer[5]);
 	configuration.iConfiguration := ORD(buffer[6]);
@@ -1486,7 +1486,7 @@ BEGIN
 END ParseConfigurationDescriptor;
 
 (* Skip all descriptors except those with the specified type *)
-PROCEDURE SkipOthers(type : LONGINT; buffer : Usbdi.Buffer; VAR idx : LONGINT);
+PROCEDURE SkipOthers(type : SIGNED32; buffer : Usbdi.Buffer; VAR idx : SIGNED32);
 BEGIN
 	(* Skip non-USB-standard descriptors (e.g. HID descriptors) *)
 	WHILE(idx+1 < LEN(buffer)) & (ORD(buffer[idx+1]) # type) (* & (ORD(buffer[idx+1]) # DescriptorIad) *) DO
@@ -1495,7 +1495,7 @@ BEGIN
 	END;
 END SkipOthers;
 
-PROCEDURE ShowParse(CONST string : ARRAY OF CHAR; index, type, length : LONGINT);
+PROCEDURE ShowParse(CONST string : ARRAY OF CHAR; index, type, length : SIGNED32);
 BEGIN
 	IF Debug.Trace THEN
 	KernelLog.String("Usb: Parsing "); KernelLog.String(string); KernelLog.String(" at index "); KernelLog.Int(index, 0);
@@ -1507,13 +1507,13 @@ END ShowParse;
 PROCEDURE GetStrings*(dev : UsbDevice);
 VAR
 	buffer : Usbdi.BufferPtr;
-	langid : LONGINT;
-	i, j, k, len : LONGINT;
+	langid : SIGNED32;
+	i, j, k, len : SIGNED32;
 	configuration : ConfigurationDescriptor;
 	interface, altInterface : InterfaceDescriptor;
 
-	PROCEDURE GetString(descriptorIndex, langID : LONGINT) :  Lib.UnicodeString;
-	VAR unicode : Lib.UnicodeString; size, i, len : LONGINT; res : BOOLEAN;
+	PROCEDURE GetString(descriptorIndex, langID : SIGNED32) :  Lib.UnicodeString;
+	VAR unicode : Lib.UnicodeString; size, i, len : SIGNED32; res : BOOLEAN;
 	BEGIN
 		(*First, get the length of the string descriptor to be loaded... *)
 		NEW(buffer, 2);
@@ -1525,9 +1525,9 @@ VAR
 				(* ORD(buffer[0]) (length in bytes) - 2 (descriptortype and length field) DIV 2 : device delivers 16byte per character *)
 				size :=  ((ORD(buffer[0])-2) DIV 2);
 				NEW(unicode, size);
-				(* Convert ARRAY OF CHAR to ARRAY OF LONGINT *)
+				(* Convert ARRAY OF CHAR to ARRAY OF SIGNED32 *)
 				FOR i:=0 TO size-1 DO
-					unicode[i] := ORD(buffer[(2*i)+2])+SYSTEM.VAL(LONGINT, ORD(buffer[(2*i)+3]))*100H;
+					unicode[i] := ORD(buffer[(2*i)+2])+SYSTEM.VAL(SIGNED32, ORD(buffer[(2*i)+3]))*100H;
 				END;
 			ELSIF Debug.Level >= Debug.Warnings THEN KernelLog.String("Usb: Couldn't load string descriptor"); KernelLog.Ln;
 			END;
@@ -1561,7 +1561,7 @@ BEGIN
 		ELSIF LangIdSupported(buffer, IdSystemDefault) THEN langid := IdSystemDefault;
 		ELSIF LangIdSupported(buffer, IdUserDefault) THEN langid := IdUserDefault;
 		ELSIF ORD(buffer[0])-2 > 0 THEN (* at least one other language is supported... use it *)
-			langid := ORD(buffer[3]) + 100H*SYSTEM.VAL(LONGINT, ORD(buffer[4]));
+			langid := ORD(buffer[3]) + 100H*SYSTEM.VAL(SIGNED32, ORD(buffer[4]));
 			IF Debug.Trace & Debug.traceParsing THEN KernelLog.String("Usb: Used LANGID code for GetString():"); KernelLog.Int(langid, 0); KernelLog.Ln; END;
 		ELSE
 			IF Debug.Level >= Debug.Warnings THEN KernelLog.String("Usb: Couldn't load string descriptor (No supported language found)"); KernelLog.Ln; END;
@@ -1617,19 +1617,19 @@ BEGIN
 END GetStrings;
 
 (** Returns TRUE if the <langid> is supported, FALSE otherwise *)
-PROCEDURE LangIdSupported(buffer : Usbdi.Buffer; langid : LONGINT): BOOLEAN;
-VAR supported : BOOLEAN; i : LONGINT;
+PROCEDURE LangIdSupported(buffer : Usbdi.Buffer; langid : SIGNED32): BOOLEAN;
+VAR supported : BOOLEAN; i : SIGNED32;
 BEGIN
 	(* LANDID code array:  buf[0]=length of code array, buf[1]=DecriptorString, buf[2*i]+buf[2*i+1] : LangID codes *)
 	IF (ORD(buffer[0]) MOD 2 # 0) OR (ORD(buffer[0]) < 4) THEN RETURN FALSE; END;
 	(* Check whether langID is a element of the LANGID code array *)
 	FOR i := 2 TO ORD(buffer[0])-2 BY 2 DO
-		IF (ORD(buffer[i])+SYSTEM.VAL(LONGINT, ORD(buffer[i+1]))*100H) = langid THEN supported := TRUE; END;
+		IF (ORD(buffer[i])+SYSTEM.VAL(SIGNED32, ORD(buffer[i+1]))*100H) = langid THEN supported := TRUE; END;
 	END;
 	RETURN supported;
 END LangIdSupported;
 
-PROCEDURE ShowState(state : LONGINT);
+PROCEDURE ShowState(state : SIGNED32);
 BEGIN
 	IF Debug.Trace THEN
 	CASE state OF
@@ -1646,7 +1646,7 @@ BEGIN
 	END;
 END ShowState;
 
-PROCEDURE ShowStateTransition(dev : UsbDevice; newState : LONGINT);
+PROCEDURE ShowStateTransition(dev : UsbDevice; newState : SIGNED32);
 BEGIN
 	IF Debug.Trace THEN
 	KernelLog.String("Usb: Device "); dev.ShowName; KernelLog.String(": State transition from ");
@@ -1655,7 +1655,7 @@ BEGIN
 END ShowStateTransition;
 
 PROCEDURE GetRootHubs*(VAR rootHubsCopy : RootHubArray);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN {EXCLUSIVE}
 	IF rootHubs = NIL THEN rootHubsCopy := NIL; RETURN; END;
 	IF (rootHubsCopy = NIL) OR (LEN(rootHubs) # LEN(rootHubsCopy)) THEN
@@ -1666,7 +1666,7 @@ BEGIN {EXCLUSIVE}
 	END;
 END GetRootHubs;
 
-PROCEDURE RootHubEvent(event : LONGINT; plugin : Plugins.Plugin);
+PROCEDURE RootHubEvent(event : SIGNED32; plugin : Plugins.Plugin);
 VAR hcd : UsbHcdi.Hcd;
 BEGIN
 	hcd := plugin(UsbHcdi.Hcd);
@@ -1681,7 +1681,7 @@ BEGIN
 END RootHubEvent;
 
 PROCEDURE AddRootHub(hcd : UsbHcdi.Hcd);
-VAR roothub : EmulatedHubDevice; temp : RootHubArray; i : LONGINT;
+VAR roothub : EmulatedHubDevice; temp : RootHubArray; i : SIGNED32;
 BEGIN {EXCLUSIVE}
 	NEW(roothub, hcd);
 	IF rootHubs = NIL THEN
@@ -1699,7 +1699,7 @@ BEGIN {EXCLUSIVE}
 END AddRootHub;
 
 PROCEDURE RemoveRootHub(hcd : UsbHcdi.Hcd);
-VAR i, j : LONGINT; temp : RootHubArray; roothub : EmulatedHubDevice;
+VAR i, j : SIGNED32; temp : RootHubArray; roothub : EmulatedHubDevice;
 BEGIN {EXCLUSIVE}
 	IF rootHubs # NIL THEN
 		IF LEN(rootHubs) > 1 THEN
@@ -1726,7 +1726,7 @@ BEGIN {EXCLUSIVE}
 END RemoveRootHub;
 
 PROCEDURE InstallRootHubs;
-VAR table : Plugins.Table; i : LONGINT;
+VAR table : Plugins.Table; i : SIGNED32;
 BEGIN
 	UsbHcdi.controllers.AddEventHandler(RootHubEvent, i); (* ignore res *)
 	UsbHcdi.controllers.GetAll(table);

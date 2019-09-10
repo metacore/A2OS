@@ -20,7 +20,7 @@ TYPE
     LocalIdentEntry = OBJECT
     VAR
         next: LocalIdentEntry;
-        level: LONGINT;
+        level: SIGNED32;
         name: SyntaxTree.Identifier;
         local: SyntaxTree.Identifier;
     END LocalIdentEntry;
@@ -28,8 +28,8 @@ TYPE
     LocalIdentTable = OBJECT
     VAR
         head: LocalIdentEntry;
-        level: LONGINT;
-        suffix: LONGINT;
+        level: SIGNED32;
+        suffix: SIGNED32;
 
         PROCEDURE & Init;
         BEGIN
@@ -155,7 +155,7 @@ TYPE
         identMain: SyntaxTree.Identifier;
         localIdentTable: LocalIdentTable;
 
-        indent: LONGINT;    (* for debugging purposes only *)
+        indent: SIGNED32;    (* for debugging purposes only *)
 
         (** constructor, init parser with scanner providing input and with diagnostics for error output *)
         PROCEDURE & Init*(scanner: Scanner.Scanner; diagnostics: Diagnostics.Diagnostics);
@@ -217,7 +217,7 @@ TYPE
         END InitSystemNames;
 
         PROCEDURE S(CONST s: ARRAY OF CHAR);    (* for debugging purposes only *)
-            VAR i: LONGINT;
+            VAR i: SIGNED32;
         BEGIN
             D.Ln;
             INC(indent);
@@ -232,7 +232,7 @@ TYPE
         END S;
 
         PROCEDURE E(CONST s: ARRAY OF CHAR);    (* for debugging purposes only *)
-            VAR i: LONGINT;
+            VAR i: SIGNED32;
         BEGIN
             D.Ln;
             D.Int(indent, 1);
@@ -246,7 +246,7 @@ TYPE
         END E;
 
         PROCEDURE EE(CONST s, t: ARRAY OF CHAR);    (* for debugging purposes only *)
-            VAR i: LONGINT;
+            VAR i: SIGNED32;
         BEGIN
             D.Ln;
             D.Int(indent, 1);
@@ -261,7 +261,7 @@ TYPE
         END EE;
 
         (** output error message and / or given code *)
-        PROCEDURE Error(position: Position; code: LONGINT; CONST message: ARRAY OF CHAR);
+        PROCEDURE Error(position: Position; code: SIGNED32; CONST message: ARRAY OF CHAR);
             VAR errorMessage: ARRAY 256 OF CHAR;
         BEGIN
             Basic.ErrorC(diagnostics, scanner.source^, position, code, errorMessage);
@@ -488,8 +488,8 @@ KernelLog.Ln();
     Tilde* = 43;              (* ~ *)        lynx@unop     (not)
 *)
 
-        PROCEDURE MapOperator(symbol: Scanner.Symbol): LONGINT;
-            VAR operator: LONGINT;
+        PROCEDURE MapOperator(symbol: Scanner.Symbol): SIGNED32;
+            VAR operator: SIGNED32;
         BEGIN
             CASE symbol OF
               Scanner.Exclamation:
@@ -545,7 +545,7 @@ KernelLog.Ln();
         PROCEDURE NewUnaryExpression(
                 position: Position;
                 operand: SyntaxTree.Expression;
-                operator: LONGINT): SyntaxTree.Expression;
+                operator: SIGNED32): SyntaxTree.Expression;
             VAR expressionList: SyntaxTree.ExpressionList;
                 expression: SyntaxTree.Expression;
                 designator: SyntaxTree.Designator;
@@ -567,7 +567,7 @@ KernelLog.Ln();
         PROCEDURE NewBinaryExpression(
                 position: Position;
                 left, right: SyntaxTree.Expression;
-                operator: LONGINT): SyntaxTree.Expression;
+                operator: SIGNED32): SyntaxTree.Expression;
             VAR expressionList: SyntaxTree.ExpressionList;
                 expression: SyntaxTree.Expression;
                 designator: SyntaxTree.Designator;
@@ -606,7 +606,7 @@ KernelLog.Ln();
             RETURN expression;
         END NewReceiveExpression;
 
-        PROCEDURE MapNumberType(numberType: LONGINT): LONGINT;
+        PROCEDURE MapNumberType(numberType: SIGNED32): SIGNED32;
         BEGIN
             CASE numberType OF
               Scanner.IntNumber:
@@ -708,7 +708,7 @@ KernelLog.Ln();
         **)
         PROCEDURE ArgumentList(expressionList: SyntaxTree.ExpressionList);
             VAR expression: SyntaxTree.Expression;
-                modifier: LONGINT;
+                modifier: SIGNED32;
         BEGIN
             IF Trace THEN
                 S("ArgumentList")
@@ -959,7 +959,7 @@ KernelLog.Ln();
         **)
         PROCEDURE UnaryExpression(): SyntaxTree.Expression;
             VAR expression: SyntaxTree.Expression;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -991,7 +991,7 @@ KernelLog.Ln();
         **)
         PROCEDURE MultiplicativeExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -1019,7 +1019,7 @@ KernelLog.Ln();
         **)
         PROCEDURE AdditiveExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -1047,7 +1047,7 @@ KernelLog.Ln();
         **)
         PROCEDURE ShiftExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -1079,7 +1079,7 @@ KernelLog.Ln();
         **)
         PROCEDURE RelationalExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -1109,7 +1109,7 @@ KernelLog.Ln();
         **)
         PROCEDURE EqualityExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -1136,7 +1136,7 @@ KernelLog.Ln();
         **)
         PROCEDURE AndExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -1163,7 +1163,7 @@ KernelLog.Ln();
         **)
         PROCEDURE ExclusiveOrExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -1190,7 +1190,7 @@ KernelLog.Ln();
         **)
         PROCEDURE InclusiveOrExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -1217,7 +1217,7 @@ KernelLog.Ln();
         **)
         PROCEDURE ConditionalAndExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -1244,7 +1244,7 @@ KernelLog.Ln();
         **)
         PROCEDURE ConditionalOrExpression(): SyntaxTree.Expression;
             VAR expression, rightExpression: SyntaxTree.Expression;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -1400,7 +1400,7 @@ KernelLog.Ln();
         **)
         PROCEDURE NewAsopStatement(
                 position: Position;
-                operator: LONGINT;
+                operator: SIGNED32;
                 left: SyntaxTree.Designator;
                 right: SyntaxTree.Expression;
                 outer: SyntaxTree.Statement): SyntaxTree.Statement;
@@ -1496,7 +1496,7 @@ KernelLog.Ln();
             VAR designator: SyntaxTree.Designator;
                 expressionList: SyntaxTree.ExpressionList;
                 statement: SyntaxTree.Statement;
-                operator: LONGINT;
+                operator: SIGNED32;
                 position: Position;
                 length, i: SIZE;
                 temp: SyntaxTree.Expression;
@@ -1834,7 +1834,7 @@ KernelLog.Ln();
 
         PROCEDURE NewLynxAddsel(
                 position: Position;
-                index: LONGINT;
+                index: SIGNED32;
                 variable: SyntaxTree.Identifier;
                 channel: SyntaxTree.Expression;
                 outer: SyntaxTree.Statement): SyntaxTree.Statement;
@@ -1882,7 +1882,7 @@ KernelLog.Ln();
         PROCEDURE SelectSection(
                 statements: SyntaxTree.StatementSequence;
                 caseStatement: SyntaxTree.CaseStatement;
-                index: LONGINT;
+                index: SIGNED32;
                 outer: SyntaxTree.Statement);
             VAR typename, varname: SyntaxTree.Identifier;
                 type: SyntaxTree.Type;
@@ -2000,7 +2000,7 @@ KernelLog.Ln();
             VAR statement: SyntaxTree.Statement;
                 caseStatement: SyntaxTree.CaseStatement;
                 expression: SyntaxTree.Expression;
-                index: LONGINT;
+                index: SIGNED32;
                 position: Position;
         BEGIN
             IF Trace THEN
@@ -2580,7 +2580,7 @@ KernelLog.Ln();
             VAR type: SyntaxTree.Type;
                 position: Position;
                 name: SyntaxTree.Identifier;
-                direction: LONGINT;
+                direction: SIGNED32;
                 qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
         BEGIN
             IF Trace THEN
@@ -2957,7 +2957,7 @@ KernelLog.Ln();
             VAR type: SyntaxTree.Type;
                 name: SyntaxTree.Identifier;
                 parameter: SyntaxTree.Parameter;
-                kind: LONGINT; position: Position;
+                kind: SIGNED32; position: Position;
         BEGIN
             IF Trace THEN
                 S("FixedParameter")
@@ -3469,7 +3469,7 @@ KernelLog.Ln();
         **)
         PROCEDURE PortDeclaration(cell: SyntaxTree.CellType; parentScope: SyntaxTree.Scope);
             VAR position: Position;
-                direction: LONGINT;
+                direction: SIGNED32;
                 type: SyntaxTree.Type;
                 arrayType: SyntaxTree.ArrayType;
                 expression: SyntaxTree.Expression;

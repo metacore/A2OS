@@ -234,7 +234,7 @@ END SuspendSelection;
 
 (*-- Locate gadget at screen coordinates X, Y --*)
 PROCEDURE LocateP*;
-	VAR F: Display.Frame; X, Y: INTEGER; u, v: INTEGER;
+	VAR F: Display.Frame; X, Y: SIGNED16; u, v: SIGNED16;
 BEGIN
 	X := Oberon.Pointer.X;
 	Y := Oberon.Pointer.Y;
@@ -249,7 +249,7 @@ END LocateP;
 
 (*-- Locate gadget at screen coordinates X, Y --*)
 PROCEDURE Locate*;
-	VAR L: Display.LocateMsg; X, Y: INTEGER;
+	VAR L: Display.LocateMsg; X, Y: SIGNED16;
 BEGIN
 	X := Oberon.Pointer.X;
 	Y := Oberon.Pointer.Y;
@@ -266,7 +266,7 @@ END Locate;
 (*-- Move selected gadget to absolute coordinates X, Y --*)
 PROCEDURE MoveGadget*;
 	VAR S: Display.SelectMsg; M: Display.ModifyMsg; F: Display.Frame;
-		AS: Attributes.Scanner; X, Y: INTEGER;
+		AS: Attributes.Scanner; X, Y: SIGNED16;
 BEGIN
 	Out.String("Moving gadget."); Out.Ln;
 	Attributes.OpenScanner(AS, Oberon.Par.text, Oberon.Par.pos);
@@ -425,7 +425,7 @@ END ShowValue;
 (*-- Resize selected gadgets --*)
 PROCEDURE Resize*;
 	VAR S: Display.SelectMsg; obj: Objects.Object; F: Display.Frame; M: Display.ModifyMsg;
-		AS: Attributes.Scanner; W, H: INTEGER;
+		AS: Attributes.Scanner; W, H: SIGNED16;
 BEGIN
 	Out.String("Resize selected gadgets"); Out.Ln;
 	Attributes.OpenScanner(AS, Oberon.Par.text, Oberon.Par.pos);

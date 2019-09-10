@@ -99,12 +99,12 @@ TYPE
 			RETURN media
 		END GetMedia;
 
-		PROCEDURE IsMediumSupported*(medium: SHORTINT): BOOLEAN;
+		PROCEDURE IsMediumSupported*(medium: SIGNED8): BOOLEAN;
 		BEGIN
 			RETURN medium IN media
 		END IsMediumSupported;
 
-		PROCEDURE AddMedium*(medium: SHORTINT);
+		PROCEDURE AddMedium*(medium: SIGNED8);
 		BEGIN
 			IF medium IN {All, Aural, Braille, Embossed, Handheld, Print, Projection, Screen, TTY, TV} THEN
 				IF medium # All THEN EXCL(media, All) END;
@@ -156,7 +156,7 @@ TYPE
 
 	Selector* = OBJECT
 		VAR
-			a, b, c: LONGINT;
+			a, b, c: SIGNED32;
 			simpleSelectors: Objects.Collection;
 			lastSimpleSel: SimpleSelector;
 
@@ -167,7 +167,7 @@ TYPE
 			NEW(arrColl); simpleSelectors := arrColl
 		END Init;
 
-		PROCEDURE GetSpecifity*(VAR a, b, c: LONGINT);
+		PROCEDURE GetSpecifity*(VAR a, b, c: SIGNED32);
 		BEGIN
 			a := SELF.a; b := SELF.b; c := SELF.c
 		END GetSpecifity;
@@ -208,7 +208,7 @@ TYPE
 	SimpleSelector* = OBJECT
 		VAR
 			next: SimpleSelector;
-			combinator: SHORTINT;
+			combinator: SIGNED8;
 			elementName: String;
 			subSelectors: Objects.Collection;
 
@@ -224,12 +224,12 @@ TYPE
 			RETURN next
 		END GetNext;
 
-		PROCEDURE GetCombinator*(): SHORTINT;
+		PROCEDURE GetCombinator*(): SIGNED8;
 		BEGIN
 			RETURN combinator
 		END GetCombinator;
 
-		PROCEDURE SetCombinator*(combinator: SHORTINT);
+		PROCEDURE SetCombinator*(combinator: SIGNED8);
 		BEGIN
 			IF combinator IN {Descendant, Child, Sibling} THEN
 				SELF.combinator := combinator
@@ -301,7 +301,7 @@ TYPE
 	Attribute* = OBJECT (SubSelector)
 		VAR
 			name, value: String;
-			relation: SHORTINT;
+			relation: SIGNED8;
 
 		PROCEDURE & Init*;
 		BEGIN
@@ -318,12 +318,12 @@ TYPE
 			SELF.name := NewString(name)
 		END SetName;
 
-		PROCEDURE GetRelation*(): SHORTINT;
+		PROCEDURE GetRelation*(): SIGNED8;
 		BEGIN
 			RETURN relation
 		END GetRelation;
 
-		PROCEDURE SetRelation*(relation: SHORTINT);
+		PROCEDURE SetRelation*(relation: SIGNED8);
 		BEGIN
 			IF relation IN {Equal, Includes, Dashmatch} THEN
 				SELF.relation := relation
@@ -477,12 +477,12 @@ CONST
 TYPE
 	Term* = OBJECT
 		VAR
-			operator, unaryOperator: SHORTINT;
-			type: SHORTINT;
-			intVal: LONGINT;
-			realVal: LONGREAL;
+			operator, unaryOperator: SIGNED8;
+			type: SIGNED8;
+			intVal: SIGNED32;
+			realVal: FLOAT64;
 			stringVal: String;
-			unit: SHORTINT;
+			unit: SIGNED8;
 			expr: Objects.Collection;	(* if term is a function *)
 
 		PROCEDURE & Init*;
@@ -513,36 +513,36 @@ TYPE
 			END
 		END Copy;*)
 
-		PROCEDURE GetOperator*(): SHORTINT;
+		PROCEDURE GetOperator*(): SIGNED8;
 		BEGIN
 			RETURN operator
 		END GetOperator;
 
-		PROCEDURE SetOperator*(operator: SHORTINT);
+		PROCEDURE SetOperator*(operator: SIGNED8);
 		BEGIN
 			IF (operator = Slash) OR (operator = Comma) THEN
 				SELF.operator := operator
 			END
 		END SetOperator;
 
-		PROCEDURE GetUnaryOperator*(): SHORTINT;
+		PROCEDURE GetUnaryOperator*(): SIGNED8;
 		BEGIN
 			RETURN unaryOperator
 		END GetUnaryOperator;
 
-		PROCEDURE SetUnaryOperator*(unaryOperator: SHORTINT);
+		PROCEDURE SetUnaryOperator*(unaryOperator: SIGNED8);
 		BEGIN
 			IF (unaryOperator = Minus) OR (unaryOperator = Plus) THEN
 				SELF.unaryOperator := unaryOperator
 			END
 		END SetUnaryOperator;
 
-		PROCEDURE GetType*(): SHORTINT;
+		PROCEDURE GetType*(): SIGNED8;
 		BEGIN
 			RETURN type
 		END GetType;
 
-		PROCEDURE SetType*(type: SHORTINT);
+		PROCEDURE SetType*(type: SIGNED8);
 		BEGIN
 			CASE type OF
 			| IntNumber, Color, Ident: realVal := 0.0; stringVal := NIL; unit := Undefined; expr := NIL
@@ -558,22 +558,22 @@ TYPE
 			SELF.type := type
 		END SetType;
 
-		PROCEDURE GetIntVal*(): LONGINT;
+		PROCEDURE GetIntVal*(): SIGNED32;
 		BEGIN
 			RETURN intVal
 		END GetIntVal;
 
-		PROCEDURE SetIntVal*(intVal: LONGINT);
+		PROCEDURE SetIntVal*(intVal: SIGNED32);
 		BEGIN
 			SELF.intVal := intVal
 		END SetIntVal;
 
-		PROCEDURE GetRealVal*(): LONGREAL;
+		PROCEDURE GetRealVal*(): FLOAT64;
 		BEGIN
 			RETURN realVal
 		END GetRealVal;
 
-		PROCEDURE SetRealVal*(realVal: LONGREAL);
+		PROCEDURE SetRealVal*(realVal: FLOAT64);
 		BEGIN
 			SELF.realVal := realVal
 		END SetRealVal;
@@ -593,17 +593,17 @@ TYPE
 			RETURN (type = StringIdent) & (stringVal # NIL) & (stringVal^ = ident)
 		END IsStringIdent;
 
-		PROCEDURE IsIdent*(ident: LONGINT): BOOLEAN;
+		PROCEDURE IsIdent*(ident: SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN (type = Ident) & (intVal = ident)
 		END IsIdent;
 
-		PROCEDURE GetUnit*(): SHORTINT;
+		PROCEDURE GetUnit*(): SIGNED8;
 		BEGIN
 			RETURN unit
 		END GetUnit;
 
-		PROCEDURE SetUnit*(unit: SHORTINT);
+		PROCEDURE SetUnit*(unit: SIGNED8);
 		BEGIN
 			IF unit IN {em, ex, px, in, cm, mm, pt, pc, deg, grad, rad, ms, s, Hz, kHz} THEN
 				SELF.unit := unit
@@ -664,7 +664,7 @@ TYPE
 	Page* = OBJECT
 	VAR
 		selector: String;
-		pseudoPage: SHORTINT;
+		pseudoPage: SIGNED8;
 		declarations: Objects.Collection;
 
 		PROCEDURE & Init*;
@@ -684,12 +684,12 @@ TYPE
 			SELF.selector := NewString(selector)
 		END SetSelector;
 
-		PROCEDURE GetPseudoPage*(): SHORTINT;
+		PROCEDURE GetPseudoPage*(): SIGNED8;
 		BEGIN
 			RETURN pseudoPage
 		END GetPseudoPage;
 
-		PROCEDURE SetPseudoPage*(pseudoPage: SHORTINT);
+		PROCEDURE SetPseudoPage*(pseudoPage: SIGNED8);
 		BEGIN
 			IF pseudoPage IN {Left, Right, First} THEN
 				SELF.pseudoPage := pseudoPage
@@ -729,7 +729,7 @@ TYPE
 
 	END FontFace;
 
-	PROCEDURE IntToRGBA*(color: LONGINT; VAR r, g, b, a: CHAR);
+	PROCEDURE IntToRGBA*(color: SIGNED32; VAR r, g, b, a: CHAR);
 	BEGIN
 			a := CHR(color DIV 1000000H);
 			r := CHR(color DIV 10000H MOD 100H);
@@ -737,7 +737,7 @@ TYPE
 			b := CHR(color MOD 100H)
 	END IntToRGBA;
 
-	PROCEDURE RGBAToInt*(r, g, b, a: CHAR; VAR color: LONGINT);
+	PROCEDURE RGBAToInt*(r, g, b, a: CHAR; VAR color: SIGNED32);
 	BEGIN
 		color := ASH(ORD(a), 24) + ASH(ORD(r), 16) + ASH(ORD(g), 8) + ORD(b)
 	END RGBAToInt;

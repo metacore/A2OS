@@ -27,7 +27,7 @@ VAR
 	selectionData: POINTER TO ARRAY OF CHAR;
 	ownSelection: BOOLEAN;
 	myProperty, oberonType: X11.Atom;
-	retries: INTEGER;
+	retries: SIGNED16;
 	disp: XDisplay.Display;
 
 
@@ -65,7 +65,7 @@ BEGIN
 END RequestSelection;
 
 PROCEDURE SendSelection(VAR event: X11.SelectionRequestEvent);
-	VAR ev: X11.SelectionEvent; R: Texts.Reader; i, size: LONGINT; ch: CHAR; f: Files.File; r: Files.Rider;
+	VAR ev: X11.SelectionEvent; R: Texts.Reader; i, size: SIGNED32; ch: CHAR; f: Files.File; r: Files.Rider;
 BEGIN
 	ev.typ := X11.SelectionNotify;
 	ev.requestor := event.requestor;
@@ -111,7 +111,7 @@ BEGIN
 END SendSelection;
 
 PROCEDURE ReceiveSelection(VAR event: X11.SelectionEvent);
-	VAR type: X11.Atom; format: WORD; len, after: LONGWORD;  prop, adr: ADDRESS; ch: CHAR; f: Files.File; r: Files.Rider; i: LONGINT;
+	VAR type: X11.Atom; format: INTEGER; len, after: LONGINTEGER;  prop, adr: ADDRESS; ch: CHAR; f: Files.File; r: Files.Rider; i: SIGNED32;
 BEGIN
 	IF (event.property = X11.None) & (retries = 0) THEN
 		retries := 1; RequestSelection; RETURN
@@ -151,7 +151,7 @@ BEGIN
 END ReceiveSelection;
 
 PROCEDURE Cut*;
-	VAR t: Texts.Text; beg, end, time: LONGINT;
+	VAR t: Texts.Text; beg, end, time: SIGNED32;
 BEGIN
 	Texts.Delete(scrap, 0, scrap.len); Oberon.GetSelection(t, beg, end, time);
 	IF time > 0 THEN Texts.Save(t, beg, end, B); Texts.Delete(t, beg, end); Texts.Append(scrap, B) END ;
@@ -159,7 +159,7 @@ BEGIN
 END Cut;
 
 PROCEDURE Copy*;
-	VAR t: Texts.Text; beg, end, time: LONGINT;
+	VAR t: Texts.Text; beg, end, time: SIGNED32;
 BEGIN
 	Texts.Delete(scrap, 0, scrap.len); Oberon.GetSelection(t, beg, end, time);
 	IF time >= 0 THEN Texts.Save(t, beg, end, B); Texts.Append(scrap, B) END ;

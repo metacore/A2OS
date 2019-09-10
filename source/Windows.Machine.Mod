@@ -64,10 +64,10 @@ CONST
 
 TYPE
 	Vendor* = ARRAY 13 OF CHAR;
-	IDMap* = ARRAY 16 OF SHORTINT;
+	IDMap* = ARRAY 16 OF SIGNED8;
 
 	Range* = RECORD
-		adr*, size*: LONGINT
+		adr*, size*: SIGNED32
 	END;
 
 	MemoryBlock* = POINTER {UNSAFE, UNTRACED} TO MemoryBlockDesc;
@@ -103,8 +103,8 @@ VAR
 	version*: ARRAY 64 OF CHAR;   (** Aos version *)
 	features*,features2*: SET;   (** processor features *)
 	fcr*: SET;   (** default floating-point control register value (default rounding mode is towards -infinity, for ENTIER) *)
-	mhz*: HUGEINT;   (** clock rate of GetTimer() in MHz, or 0 if not known *)
-	boottime-: HUGEINT; (** in timer units *)
+	mhz*: SIGNED64;   (** clock rate of GetTimer() in MHz, or 0 if not known *)
+	boottime-: SIGNED64; (** in timer units *)
 
 	commandLine-: ARRAY 256 OF CHAR;
 	hin, hout: Kernel32.HANDLE;
@@ -112,7 +112,7 @@ VAR
 VAR
 	lock-: ARRAY MaxLocks OF CHAR;  (* not implemented as SET because of shared access *)
 	cs: ARRAY MaxLocks OF Kernel32.CriticalSection;
-	taken: ARRAY MaxLocks OF LONGINT;
+	taken: ARRAY MaxLocks OF SIGNED32;
 	defaultConfigFile, userConfigFile, traceName: ARRAY Kernel32.MaxPath OF CHAR;
 
 	gcThreshold-: SIZE;
@@ -121,8 +121,8 @@ VAR
 
 	(** Convert a string to an integer.  Parameter i specifies where in the string scanning should begin (usually 0 in the first call).  Scanning stops at the first non-valid character, and i returns the updated position.  Parameter s is the string to be scanned.  The value is returned as result, or 0 if not valid.  Syntax: number = ["-"] digit {digit} ["H" | "h"] .  digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" .  If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
 
-	PROCEDURE StrToInt*( VAR i: SIZE;  CONST s: ARRAY OF CHAR ): LONGINT;
-	VAR vd, vh, sgn, d: LONGINT;  hex: BOOLEAN;
+	PROCEDURE StrToInt*( VAR i: SIZE;  CONST s: ARRAY OF CHAR ): SIGNED32;
+	VAR vd, vh, sgn, d: SIGNED32;  hex: BOOLEAN;
 	BEGIN
 		vd := 0;  vh := 0;  hex := FALSE;
 		IF s[i] = "-" THEN sgn := -1;  INC( i ) ELSE sgn := 1 END;
@@ -141,7 +141,7 @@ VAR
 	(** -- Atomic operations -- *)
 
 	(** Atomic INC(x). *)
-	PROCEDURE -AtomicInc*(VAR x: LONGINT);
+	PROCEDURE -AtomicInc*(VAR x: SIGNED32);
 	CODE
 #IF AMD64 THEN
 		POP RAX
@@ -157,7 +157,7 @@ VAR
 	END AtomicInc;
 
 	(** Atomic DEC(x). *)
-	PROCEDURE -AtomicDec*(VAR x: LONGINT);
+	PROCEDURE -AtomicDec*(VAR x: SIGNED32);
 	CODE
 #IF AMD64 THEN
 		POP RAX
@@ -173,7 +173,7 @@ VAR
 	END AtomicDec;
 
 	(** Atomic EXCL. *)
-	PROCEDURE AtomicExcl* (VAR s: SET; bit: LONGINT);
+	PROCEDURE AtomicExcl* (VAR s: SET; bit: SIGNED32);
 	CODE
 #IF AMD64 THEN
 		MOV EAX, [RBP + bit]
@@ -191,7 +191,7 @@ VAR
 	END AtomicExcl;
 
 	(** Atomic INC(x, y). *)
-	PROCEDURE -AtomicAdd*(VAR x: LONGINT; y: LONGINT);
+	PROCEDURE -AtomicAdd*(VAR x: SIGNED32; y: SIGNED32);
 	CODE
 #IF AMD64 THEN
 		POP RBX
@@ -225,7 +225,7 @@ VAR
 	END AtomicTestSet;
 
 	(* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
-	PROCEDURE -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
+	PROCEDURE -AtomicCAS* (VAR x: SIGNED32; old, new: SIGNED32): SIGNED32;
 	CODE
 #IF AMD64 THEN
 		POP RBX		; new
@@ -265,7 +265,7 @@ VAR
 	END CurrentPC;
 
 	(** Fill "size" bytes at "destAdr" with "filler". "size" must be multiple of 4. *)
-	PROCEDURE Fill32* (destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	PROCEDURE Fill32* (destAdr: ADDRESS; size: SIZE; filler: SIGNED32);
 	CODE
 #IF AMD64 THEN
 		MOV RDI, [RBP + destAdr]
@@ -341,7 +341,7 @@ VAR
 
 (** CPU identification. *)
 
-	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: LONGINT;  VAR features1,features2: SET );
+	PROCEDURE CPUID*( VAR vendor: Vendor;  VAR version: SIGNED32;  VAR features1,features2: SET );
 	CODE
 #IF AMD64 THEN
 		MOV	EAX, 0
@@ -441,13 +441,13 @@ VAR
 	END Shutdown;
 
 (* Dan: from new Machine *)
-PROCEDURE -GetTimer*(): HUGEINT;
+PROCEDURE -GetTimer*(): SIGNED64;
 CODE {SYSTEM.Pentium}
 	RDTSC	; set EDX:EAX
 END GetTimer;
 
 (* Dan:  mono CPU PCs *)
-PROCEDURE ID*(): LONGINT;
+PROCEDURE ID*(): SIGNED32;
 BEGIN
 	RETURN 0
 END ID;
@@ -509,7 +509,7 @@ BEGIN
 END SetupSSE2Ext;
 
 PROCEDURE ReadCommandLine(VAR commandLine: ARRAY OF CHAR);
-VAR adr: ADDRESS; i: LONGINT; ch: CHAR;
+VAR adr: ADDRESS; i: SIGNED32; ch: CHAR;
 BEGIN
 	adr := Kernel32.GetCommandLine();
 	SYSTEM.GET(adr,ch);
@@ -522,7 +522,7 @@ BEGIN
 END ReadCommandLine;
 
 PROCEDURE ParseLine(VAR c: ARRAY OF CHAR; VAR iniFile: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 
 	PROCEDURE SkipSpaces;
 	BEGIN
@@ -535,7 +535,7 @@ VAR i: LONGINT;
 	END SkipName;
 
 	PROCEDURE CheckName(CONST name: ARRAY OF CHAR): BOOLEAN;
-	VAR j: LONGINT;
+	VAR j: SIGNED32;
 	BEGIN
 		j := 0;
 		WHILE (c[i] = name[j]) & (c[i] # 0X) & (name[j] # 0X) DO
@@ -545,7 +545,7 @@ VAR i: LONGINT;
 	END CheckName;
 
 	PROCEDURE ReadName(VAR name: ARRAY OF CHAR);
-	VAR j: LONGINT;
+	VAR j: SIGNED32;
 	BEGIN
 		SkipSpaces;
 		j := 0;
@@ -570,7 +570,7 @@ END ParseLine;
 
 
 PROCEDURE TraceChar(c: CHAR);
-VAR len: LONGINT; b: Kernel32.BOOL;
+VAR len: SIGNED32; b: Kernel32.BOOL;
 BEGIN
 	len := 1;
 	b := Kernel32.WriteFile(hout,c,len,len,NIL);
@@ -588,7 +588,7 @@ BEGIN
 END SetTraceFile;
 
 PROCEDURE SetTraceConsole*;
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	Trace.String("trace -> console"); Trace.Ln;
 	res := Kernel32.AllocConsole ();
@@ -601,11 +601,11 @@ END SetTraceConsole;
 PROCEDURE SetupTraceName(VAR traceName: ARRAY OF CHAR);
 VAR
 	ext: ARRAY 256 OF CHAR;
-	extPos,i,j: LONGINT;
+	extPos,i,j: SIGNED32;
 	systemTime: Kernel32.SystemTime;
 	ch: CHAR;
 
-	PROCEDURE AppendDecimals(int: LONGINT; from, to: LONGINT);
+	PROCEDURE AppendDecimals(int: SIGNED32; from, to: SIGNED32);
 	BEGIN
 		WHILE to >= from DO
 			traceName[i] := CHR(ORD("0")+ int DIV to MOD 10); INC(i);
@@ -648,7 +648,7 @@ BEGIN
 END SetupTraceName;
 
 PROCEDURE RemoveTraceFile;
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	IF (traceName # "") & (traceName # "Console") THEN
 		Trace.String("removing "); Trace.String(traceName); Trace.Ln;
@@ -667,7 +667,7 @@ BEGIN
 END RemoveTraceFile;
 
 PROCEDURE ToExecutablePath(CONST name: ARRAY OF CHAR; VAR fullName: ARRAY OF CHAR);
-VAR i,j: LONGINT;
+VAR i,j: SIGNED32;
 BEGIN
 	IGNORE Kernel32.GetModuleFileName(Kernel32.hInstance, fullName, LEN( fullName )(Kernel32.DWORD) );
 	j := -1; i := 0;
@@ -683,7 +683,7 @@ BEGIN
 END ToExecutablePath;
 
 PROCEDURE Append(VAR s: ARRAY OF CHAR; CONST t: ARRAY OF CHAR);
-VAR i,j: LONGINT;
+VAR i,j: SIGNED32;
 BEGIN
 	i := 0;
 	WHILE(s[i] # 0X) DO INC(i) END;
@@ -696,7 +696,7 @@ BEGIN
 END Append;
 
 PROCEDURE Init*;
-VAR vendor: Vendor; ver: LONGINT; hfile: Kernel32.HANDLE;
+VAR vendor: Vendor; ver: SIGNED32; hfile: Kernel32.HANDLE;
 BEGIN
 	Kernel32.Init;
 	(*	trace[1] := 0X; Trace.Char := LogChar; Trace.Color := TraceColor; *)
@@ -747,22 +747,22 @@ END Init;
 
 	(* Initialize locks. *)
 	PROCEDURE InitLocks;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE i < MaxLocks DO Kernel32.InitializeCriticalSection( cs[i] ); lock[i] := "N"; taken[i] := 0; INC( i ) END;
 	END InitLocks;
 
 	PROCEDURE CleanupLocks*;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE i < MaxLocks DO Kernel32.DeleteCriticalSection( cs[i] ); taken[i] := 0; lock[i] := "N"; INC( i ) END;
 	END CleanupLocks;
 
 (** Acquire a spin-lock. *)
-	PROCEDURE Acquire*( level: LONGINT );   (* non reentrant lock  (non reentrance "ensured" by ASSERT statement ), CriticalSections are reentrant *)
-	VAR i: WORD;
+	PROCEDURE Acquire*( level: SIGNED32 );   (* non reentrant lock  (non reentrance "ensured" by ASSERT statement ), CriticalSections are reentrant *)
+	VAR i: INTEGER;
 	BEGIN
 		Kernel32.EnterCriticalSection( cs[level] );
 		taken[level] := Kernel32.GetCurrentThreadId();
@@ -778,7 +778,7 @@ END Init;
 	END Acquire;
 
 (** Release a spin-lock. *)
-	PROCEDURE Release*( level: LONGINT );   (* release lock *)
+	PROCEDURE Release*( level: SIGNED32 );   (* release lock *)
 	BEGIN
 		IF StrongChecks THEN
 			ASSERT ( lock[level] ="Y", 1002 );
@@ -805,7 +805,7 @@ END Init;
 
 (** dummy procedure to make GC work for both I386 and Win32 *)
 PROCEDURE GetKernelStacks*(VAR stack: ARRAY OF Stack);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	FOR i := 0 TO MaxCPU-1 DO
 		stack[i].adr := NilVal;
@@ -843,7 +843,7 @@ PROCEDURE GetFreeK* (VAR total, lowFree, highFree: SIZE);
 VAR
 	stat: Kernel32.MemoryStatusEx;
 BEGIN
-	total := MAX(LONGINT); lowFree := 0; highFree := total;
+	total := MAX(SIGNED32); lowFree := 0; highFree := total;
 	(*<< added by Alexey *)
 	IF GetMemStatus(stat) THEN
 		total := SHORT(stat.ullTotalVirtual DIV 1024);
@@ -855,7 +855,7 @@ END GetFreeK;
 
 (* ug *)
 PROCEDURE TraceMemBlocks*;
-VAR memBlock {UNTRACED}: MemoryBlock; i : LONGINT;
+VAR memBlock {UNTRACED}: MemoryBlock; i : SIGNED32;
 BEGIN
 	memBlock := memBlockHead;
 	i := 0;
@@ -892,7 +892,7 @@ BEGIN
 END InsertMemoryBlock;
 
 	(* expand heap by allocating a new memory block *)
-	PROCEDURE ExpandHeap*( dummy: LONGINT; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS );
+	PROCEDURE ExpandHeap*( dummy: SIGNED32; size: SIZE; VAR memoryBlock: MemoryBlock; VAR beginBlockAdr, endBlockAdr: ADDRESS );
 	VAR mBlock: MemoryBlock;  alloc: SIZE;  adr,initVal: ADDRESS; continue: BOOLEAN;
 	BEGIN
 		ASSERT(SIZEOF(MemoryBlockDesc) <= StaticBlockSize); (* make sure MemoryBlock contents fits into one StaticBlock *)
@@ -983,7 +983,7 @@ PROCEDURE PhysicalAdr*(adr: ADDRESS; size: SIZE): ADDRESS;
 END PhysicalAdr;
 
 (* function returning the number of processors that are available to Aos *)
-PROCEDURE NumberOfProcessors*( ): LONGINT;
+PROCEDURE NumberOfProcessors*( ): SIGNED32;
 VAR info: Kernel32.SystemInfo;
 BEGIN
 	Kernel32.GetSystemInfo( info );
@@ -991,7 +991,7 @@ BEGIN
 END NumberOfProcessors;
 
 (* function for changing byte order *)
-PROCEDURE ChangeByteOrder* (n: LONGINT): LONGINT;
+PROCEDURE ChangeByteOrder* (n: SIGNED32): SIGNED32;
 CODE
 #IF AMD64 THEN
 	MOV EAX, [RBP+n]				; load n in eax
@@ -1004,22 +1004,22 @@ CODE
 #END
 END ChangeByteOrder;
 
-	PROCEDURE  Portin8*(port: LONGINT; VAR val: CHAR);
+	PROCEDURE  Portin8*(port: SIGNED32; VAR val: CHAR);
 	END Portin8;
 
-	PROCEDURE  Portin16*(port: LONGINT; VAR val: INTEGER);
+	PROCEDURE  Portin16*(port: SIGNED32; VAR val: SIGNED16);
 	END Portin16;
 
-	PROCEDURE  Portin32*(port: LONGINT; VAR val: LONGINT);
+	PROCEDURE  Portin32*(port: SIGNED32; VAR val: SIGNED32);
 	END Portin32;
 
-	PROCEDURE  Portout8*(port: LONGINT; val: CHAR);
+	PROCEDURE  Portout8*(port: SIGNED32; val: CHAR);
 	END Portout8;
 
-	PROCEDURE  Portout16*(port: LONGINT; val: INTEGER);
+	PROCEDURE  Portout16*(port: SIGNED32; val: SIGNED16);
 	END Portout16;
 
-	PROCEDURE  Portout32*(port: LONGINT; val: LONGINT);
+	PROCEDURE  Portout32*(port: SIGNED32; val: SIGNED32);
 	END Portout32;
 
 BEGIN

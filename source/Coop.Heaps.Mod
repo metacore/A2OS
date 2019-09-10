@@ -68,7 +68,7 @@ TYPE
 
 	HeapBlock* = POINTER TO HeapBlockDesc;	(* base object of all heap blocks *)
 	HeapBlockDesc* = RECORD
-		mark: LONGINT;
+		mark: SIGNED32;
 		dataAdr-: ADDRESS;
 		size-: SIZE;
 		nextRealtime: HeapBlock;
@@ -89,12 +89,12 @@ TYPE
 
 	ProtRecBlock* = POINTER TO ProtRecBlockDesc;
 	ProtRecBlockDesc* = RECORD  (RecordBlockDesc)
-		count*: LONGINT;
+		count*: SIGNED32;
 		locked*: BOOLEAN;
 		awaitingLock*, awaitingCond*: ProcessQueue;
 		lockedBy*: ANY;
 		lock*: ANY;	(* used by Win32, unused for I386 *)
-		waitingPriorities*: ARRAY NumPriorities OF LONGINT;
+		waitingPriorities*: ARRAY NumPriorities OF SIGNED32;
 	END;
 
 	ArrayBlock* = POINTER TO ArrayBlockDesc;
@@ -126,18 +126,18 @@ VAR
 	(** Statistics. Will only be maintained if Stats = TRUE *)
 
 	(** Memory allocation statistics *)
-	Nnew- : LONGINT;			(** Number of times NewBlock has been called since system startup *)
-	NnewBytes- : HUGEINT;		(** Number of bytes allocated by NewBlock since system startup *)
+	Nnew- : SIGNED32;			(** Number of times NewBlock has been called since system startup *)
+	NnewBytes- : SIGNED64;		(** Number of bytes allocated by NewBlock since system startup *)
 
 	(** Garbage collection statistics *)
-	Ngc- : LONGINT; 			(** Number of GC cycles since system startup *)
+	Ngc- : SIGNED32; 			(** Number of GC cycles since system startup *)
 
 	(** Statistics considering the last GC cyle *)
-	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: LONGINT;
-	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns- : HUGEINT;
-	NgcSweeps-, NgcSweepTime-, NgcSweepMax-: HUGEINT;
+	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: SIGNED32;
+	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns- : SIGNED64;
+	NgcSweeps-, NgcSweepTime-, NgcSweepMax-: SIGNED64;
 
-	freeBlockFound-, freeBlockNotFound-: LONGINT;
+	freeBlockFound-, freeBlockNotFound-: SIGNED32;
 
 	allocationLogger-: PROCEDURE(p: ANY);
 
@@ -175,7 +175,7 @@ BEGIN
 END CallFinalizers;
 
 (* Check reachability of finalized objects. *)
-PROCEDURE CheckFinalizedObjects (cycle: LONGWORD);
+PROCEDURE CheckFinalizedObjects (cycle: LONGINTEGER);
 VAR n, p, t: FinalizerNode; pointer {UNTRACED}: BaseTypes.Pointer;
 
 	PROCEDURE MarkDelegate(p: Finalizer);
@@ -236,7 +236,7 @@ END GetFinalizer;
 
 (** Check finalizers registered in the specified module, which is about to be freed or shut down. Remove all finalizer procedures in this module from the finalizer lists so they won't be called any more. *)
 PROCEDURE CleanupModuleFinalizers*(codeAdr: ADDRESS; codeLen: SIZE; CONST name: ARRAY OF CHAR);
-VAR n, p, t: FinalizerNode; codeEnd: ADDRESS; N1, N2: LONGINT;
+VAR n, p, t: FinalizerNode; codeEnd: ADDRESS; N1, N2: SIGNED32;
 BEGIN
 	codeEnd := codeAdr + codeLen; N1 := 0; N2 := 0;
 	Machine.Acquire(Machine.Heaps);
@@ -284,7 +284,7 @@ BEGIN
 END LazySweepGC;
 
 (* initialize a free heap block *)
-PROCEDURE InitFreeBlock(freeBlock: FreeBlock; mark: LONGINT; dataAdr: ADDRESS; size: SIZE);
+PROCEDURE InitFreeBlock(freeBlock: FreeBlock; mark: SIGNED32; dataAdr: ADDRESS; size: SIZE);
 VAR freeBlockAdr: ADDRESS;
 BEGIN
 	freeBlock.mark := mark;
@@ -398,7 +398,7 @@ END NewRec;
 (** NewProtRec - Implementation of NEW with a protected record. *)
 PROCEDURE NewProtRec*(VAR p: ANY; tag: ADDRESS; isRealtime: BOOLEAN);
 VAR size, blockSize: SIZE; protRecBlockAdr, dataBlockAdr: ADDRESS;
-	protRecBlock {UNTRACED}: ProtRecBlock; i: LONGINT; pc: ADDRESS;
+	protRecBlock {UNTRACED}: ProtRecBlock; i: SIGNED32; pc: ADDRESS;
 BEGIN
 	SYSTEM.GET(tag, size);
 	blockSize := BlockHeaderSize + SIZEOF(ProtRecBlockDesc) + BlockHeaderSize + size;
@@ -507,7 +507,7 @@ BEGIN
 END NewArr;
 
 PROCEDURE FillStaticType*(VAR staticTypeAddr: ADDRESS; startAddr, typeInfoAdr: ADDRESS; size, recSize: SIZE;
-							numPtrs, numSlots: LONGINT);
+							numPtrs, numSlots: SIGNED32);
 VAR p, offset: ADDRESS; staticTypeBlock {UNTRACED}: StaticTypeBlock;
 BEGIN
 	Machine.Acquire(Machine.Heaps);

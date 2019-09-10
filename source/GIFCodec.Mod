@@ -15,7 +15,7 @@ CONST
 	BlockTerminator = 0X;
 
 TYPE
-	CodePages = RECORD code, ref: LONGINT END;
+	CodePages = RECORD code, ref: SIGNED32 END;
 	CodeBook = ARRAY 4096 OF CodePages;
 
 	Header = RECORD
@@ -28,7 +28,7 @@ TYPE
 	VAR
 		w : Streams.Writer;
 		cb: CodeBook;
-		lastBlock: ARRAY 4096 OF LONGINT;
+		lastBlock: ARRAY 4096 OF SIGNED32;
 
 		(* open the encoder on a Streams writer *)
 		PROCEDURE Open*(out : Streams.Writer);
@@ -36,10 +36,10 @@ TYPE
 			w := out
 		END Open;
 
-		PROCEDURE SetQuality*(quality : LONGINT);
+		PROCEDURE SetQuality*(quality : SIGNED32);
 		END SetQuality;
 
-		PROCEDURE WriteImage*(img : Raster.Image; VAR res : WORD);
+		PROCEDURE WriteImage*(img : Raster.Image; VAR res : INTEGER);
 		VAR pal : Raster.Palette;
 		BEGIN
 			NEW(pal); Raster.ComputePalette(img, pal, 0,256, 8);
@@ -52,9 +52,9 @@ TYPE
 		END WriteImage;
 
 		PROCEDURE WriteScrDesc(w: Streams.Writer; img: Raster.Image);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
-			w.RawInt(INTEGER(img.width)); w.RawInt(INTEGER(img.height));
+			w.RawInt(SIGNED16(img.width)); w.RawInt(SIGNED16(img.height));
 			i := ASH(7+ 8 (*img.fmt.bpp*), 4); i := i+ 8 (*img.fmt.bpp*) - 1;
 			w.Char( CHR(i) );
 			w.Char( 0X );
@@ -62,7 +62,7 @@ TYPE
 		END WriteScrDesc;
 
 		PROCEDURE WriteColMap(w: Streams.Writer; img: Raster.Image; pal : Raster.Palette);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i :=  0 TO 255 DO
 				w.Char(pal.col[i][Raster.r]); w.Char(pal.col[i][Raster.g]); w.Char(pal.col[i][Raster.b])
@@ -80,12 +80,12 @@ TYPE
 		BEGIN
 			w.Char(2CX);
 			w.RawInt( 0); w.RawInt(0);
-			w.RawInt(INTEGER(img.width)); w.RawInt(INTEGER(img.height));
+			w.RawInt(SIGNED16(img.width)); w.RawInt(SIGNED16(img.height));
 			w.Char(CHR(8 (*img.fmt.bpp*) - 1));
 		END WriteImageDesc;
 
-		PROCEDURE InitCodeBook(codeLen: LONGINT);
-		VAR i, to: LONGINT;
+		PROCEDURE InitCodeBook(codeLen: SIGNED32);
+		VAR i, to: SIGNED32;
 		BEGIN
 			i := 0; to := ASH(1, codeLen);
 			WHILE i < to DO
@@ -98,16 +98,16 @@ TYPE
 		PROCEDURE WriteData(w: Streams.Writer; img: Raster.Image; pal : Raster.Palette);
 		CONST byteLen=8;
 		VAR
-			last, in, clearCode, endCode, codept, startSize, prefix, bufpos, bitsfree, codelen: LONGINT;
+			last, in, clearCode, endCode, codept, startSize, prefix, bufpos, bitsfree, codelen: SIGNED32;
 			buffer: ARRAY 256 OF CHAR;
-			i2, len: LONGINT;
+			i2, len: SIGNED32;
 			page: CodePages;
-			x, y, width : LONGINT;
+			x, y, width : SIGNED32;
 			pix : Raster.Pixel;
 			mode : Raster.Mode;
 
-			PROCEDURE WriteCode(code: LONGINT);
-			VAR temp, bitsleft: LONGINT;
+			PROCEDURE WriteCode(code: SIGNED32);
+			VAR temp, bitsleft: SIGNED32;
 			BEGIN
 				bitsleft := codelen;
 				WHILE bitsleft > 0 DO
@@ -120,7 +120,7 @@ TYPE
 						temp := ASH(code, byteLen-bitsfree) MOD 256;
 						buffer[bufpos] := CHR(ORD(buffer[bufpos]) + temp);
 						INC(bufpos); buffer[bufpos] := 0X;
-						code := INTEGER(ASH(code, -bitsfree));
+						code := SIGNED16(ASH(code, -bitsfree));
 						bitsleft := bitsleft - bitsfree; bitsfree := byteLen
 					END;
 					IF bufpos = 255 THEN
@@ -133,19 +133,19 @@ TYPE
 		BEGIN
 			codelen := 8 (*img.fmt.bpp*); IF codelen < 2 THEN codelen := 2 END;
 			w.Char(CHR(codelen));
-			clearCode := INTEGER(ASH(1, codelen)); endCode := clearCode + 1;
+			clearCode := SIGNED16(ASH(1, codelen)); endCode := clearCode + 1;
 			codept := endCode + 1; lastBlock[codept] := Dummy;
 
 			startSize := codelen;
 			InitCodeBook(codelen); INC(codelen);
-			x := 0; y := 0; width := img.width(LONGINT);
+			x := 0; y := 0; width := img.width(SIGNED32);
 
 			Raster.InitMode(mode, Raster.srcCopy);
 
 			Raster.Get(img, x, y, pix, mode);
 			prefix := Raster.PaletteIndex(pal, ORD(pix[Raster.r]), ORD(pix[Raster.g]), ORD(pix[Raster.b]));
 			INC(x); bufpos := 0; buffer[0] := 0X; bitsfree := 8;
-			len := INTEGER(ASH(1, codelen));
+			len := SIGNED16(ASH(1, codelen));
 
 			WriteCode(clearCode);
 			LOOP
@@ -161,11 +161,11 @@ TYPE
 				IF (i2 = Dummy) OR ((page.ref = Dummy) & (page.code # in)) THEN
 					WriteCode(prefix);
 					IF codept = len THEN
-						INC(codelen); len := INTEGER(ASH(1, codelen))
+						INC(codelen); len := SIGNED16(ASH(1, codelen))
 					END;
 					IF codept >= 4095 THEN
 							WriteCode(clearCode);
-							codelen := startSize; InitCodeBook(codelen); INC(codelen); len := INTEGER(ASH(1, codelen));
+							codelen := startSize; InitCodeBook(codelen); INC(codelen); len := SIGNED16(ASH(1, codelen));
 							codept := endCode+1
 					ELSE
 						cb[codept].ref := lastBlock[prefix]; cb[codept].code := in; lastBlock[prefix] := codept;
@@ -203,7 +203,7 @@ TYPE
 	VAR
 		r : Streams.Reader;
 		errors : BOOLEAN;
-		width, height : LONGINT;
+		width, height : SIGNED32;
 		pal, localPal, globalPal : Raster.Palette;
 		backGrndCol: Raster.Pixel; transparent, interlaced: BOOLEAN;
 		lcdFlags, backGrndIdx : CHAR;
@@ -217,13 +217,13 @@ TYPE
 		END Error;
 
 		(* open the decoder on an InputStream *)
-		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
 		VAR
 			header : Header;
 			ch : CHAR;
-			n, size : LONGINT;
+			n, size : SIGNED32;
 			length : SIZE;
-			w, h : INTEGER;
+			w, h : SIGNED16;
 		BEGIN
 			IF in = NIL THEN Error("Input Stream is NIL"); RETURN END;
 			SELF.r := in;
@@ -266,7 +266,7 @@ TYPE
 			res := 0;
 		END Open;
 
-		PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : LONGINT);
+		PROCEDURE GetImageInfo*(VAR width, height : SIZE; VAR format, maxProgressionLevel : SIGNED32);
 		BEGIN
 			width := SELF.width; height := SELF.height
 		END GetImageInfo;
@@ -277,15 +277,15 @@ TYPE
 			SetProgressionLevel, the level is assumed to be maxProgressionLevel of the image,
 			which corresponds to best image quality.
 		 *)
-		PROCEDURE SetProgressionLevel*(progressionLevel: LONGINT);
+		PROCEDURE SetProgressionLevel*(progressionLevel: SIGNED32);
 		END SetProgressionLevel;
 
 		(* return the image in Raster format that best matches the format *)
 		PROCEDURE GetNativeImage*(VAR img : Raster.Image);
 		VAR
-			images, w, h, left, top : INTEGER;
+			images, w, h, left, top : SIGNED16;
 			label, ch, transPix, idFlags : CHAR;
-			n, size : LONGINT;
+			n, size : SIGNED32;
 			error : BOOLEAN;
 		BEGIN
 			NEW(img);
@@ -358,7 +358,7 @@ TYPE
 	VAR
 		r : Streams.Reader;
 		errors : BOOLEAN;
-		width, height : LONGINT;
+		width, height : SIGNED32;
 		pal, localPal, globalPal : Raster.Palette;
 		backGrndCol: Raster.Pixel; transparent, interlaced: BOOLEAN;
 		lcdFlags, backGrndIdx : CHAR;
@@ -371,13 +371,13 @@ TYPE
 		END Error;
 
 		(* open the decoder on an InputStream *)
-		PROCEDURE Open*(in : Streams.Reader; VAR res : WORD);
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
 		VAR
 			header : Header;
 			ch : CHAR;
-			n, size: LONGINT;
+			n, size: SIGNED32;
 			length: SIZE;
-			w, h : INTEGER;
+			w, h : SIGNED16;
 		BEGIN
 			IF in = NIL THEN Error("Input Stream is NIL"); RETURN END;
 			SELF.r := in;
@@ -420,12 +420,12 @@ TYPE
 			res := 0;
 		END Open;
 
-		PROCEDURE GetImageSequence*(VAR sequence : Codecs.ImageSequence; VAR res : WORD);
+		PROCEDURE GetImageSequence*(VAR sequence : Codecs.ImageSequence; VAR res : INTEGER);
 		VAR
 			first, last, current : Codecs.ImageDescriptor;
 			label, ch, transPix, idFlags : CHAR;
-			n, size : LONGINT;
-			temp, delayTime, disposeMode : INTEGER;
+			n, size : SIGNED32;
+			temp, delayTime, disposeMode : SIGNED16;
 			valid, userInput, error : BOOLEAN;
 		BEGIN
 			res := Codecs.ResFailed;
@@ -510,15 +510,15 @@ TYPE
 	END GIFAnimationDecoder;
 
 VAR
-	red, green, blue : ARRAY 256 OF INTEGER;
+	red, green, blue : ARRAY 256 OF SIGNED16;
 
 PROCEDURE LoadData (r : Streams.Reader; pal : Raster.Palette; img: Raster.Image; interlaced: BOOLEAN; VAR error : BOOLEAN);
 VAR
 	ch: CHAR;
-	codeBits, clearCode, endCode, curBits, maxCode, nextCode, bits, x, y, lines, prevCode, curCode, seq, len: INTEGER;
-	n, buf, blkPos, blkSize, ptr: LONGINT; bytesRead: SIZE;
+	codeBits, clearCode, endCode, curBits, maxCode, nextCode, bits, x, y, lines, prevCode, curCode, seq, len: SIGNED16;
+	n, buf, blkPos, blkSize, ptr: SIGNED32; bytesRead: SIZE;
 	pix, run: ARRAY 1000H OF CHAR;
-	prev: ARRAY 1000H OF INTEGER;
+	prev: ARRAY 1000H OF SIGNED16;
 	block: ARRAY 255 OF CHAR;
 
 	PROCEDURE Dot (pix: CHAR);
@@ -532,20 +532,20 @@ VAR
 		IF x = img.width THEN
 			IF interlaced THEN
 				IF lines >= 8 THEN INC(y, 8) ELSE INC(y, lines) END;
-				WHILE y > INTEGER(img.height-1) DO
+				WHILE y > SIGNED16(img.height-1) DO
 					lines := lines DIV 2; y := lines DIV 2
 				END
 			ELSE
 				INC(y)
 			END;
-			x := 0; ptr := y * img.bpr(LONGINT);
+			x := 0; ptr := y * img.bpr(SIGNED32);
 		END
 	END Dot;
 
 BEGIN
 	error := FALSE;
 	r.Char(ch); codeBits := ORD(ch);
-	clearCode := INTEGER(ASH(1, codeBits)); endCode := clearCode+1;
+	clearCode := SIGNED16(ASH(1, codeBits)); endCode := clearCode+1;
 	n := 0;
 	WHILE n < clearCode DO
 		pix[n] := CHR(n); prev[n] := -1; INC(n)
@@ -553,7 +553,7 @@ BEGIN
 	WHILE n <= endCode DO
 		pix[n] := 0X; prev[n] := -1; INC(n)
 	END;
-	curBits := codeBits + 1; maxCode := INTEGER(ASH(1, curBits)); nextCode := endCode+1;
+	curBits := codeBits + 1; maxCode := SIGNED16(ASH(1, curBits)); nextCode := endCode+1;
 	buf := 0; bits := 0; blkPos := 0; blkSize := 0;	(* bit buffer and current block are empty *)
 	x := 0; y := 0; ptr := 0;
 	IF interlaced THEN lines := 16 END;
@@ -576,7 +576,7 @@ BEGIN
 		buf := ASH(buf, -curBits); DEC(bits, curBits);
 
 		IF curCode = clearCode THEN
-			curBits := codeBits+1; maxCode := INTEGER(ASH(1, curBits)); nextCode := endCode+1
+			curBits := codeBits+1; maxCode := SIGNED16(ASH(1, curBits)); nextCode := endCode+1
 		ELSIF curCode = endCode THEN
 			EXIT
 		ELSIF prevCode = clearCode THEN
@@ -598,7 +598,7 @@ BEGIN
 			(* the sequence just output gets a new code *)
 			pix[nextCode] := pix[seq]; prev[nextCode] := prevCode; INC(nextCode);
 			IF (nextCode = maxCode) & (curBits < 12) THEN
-				INC(curBits); maxCode := INTEGER(ASH(1, curBits))
+				INC(curBits); maxCode := SIGNED16(ASH(1, curBits))
 			END
 		END;
 		prevCode := curCode
@@ -612,7 +612,7 @@ BEGIN
 	END
 END LoadData;
 
-PROCEDURE GetColor(CONST pixel : Raster.Pixel) : LONGINT;
+PROCEDURE GetColor(CONST pixel : Raster.Pixel) : SIGNED32;
 BEGIN
 	RETURN ORD(pixel[Raster.a]) + 100H * ORD(pixel[Raster.b]) + 10000H * ORD(pixel[Raster.g]) + 1000000H * ORD(pixel[Raster.r]);
 END GetColor;

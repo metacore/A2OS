@@ -38,7 +38,7 @@ TYPE
 		f: antsFunctions.Function;
 		xr, yr, wr, hr: Real;
 		dx: Real;
-		grid: INTEGER;
+		grid: SIGNED16;
 		inedit: BOOLEAN;   (* temp *)
 		viewEditWin: BOOLEAN;
 		fcache: antsFunctions.Array;   (* temp *)
@@ -66,9 +66,9 @@ VAR
 	END Grid;
 
 	PROCEDURE Recall( editor: tLayer );
-	VAR x, y, w, h: Coordinate;  X, Y, W, H: Real;  xr, dx: LONGREAL;  i, count, accuracy: LONGINT;
+	VAR x, y, w, h: Coordinate;  X, Y, W, H: Real;  xr, dx: FLOAT64;  i, count, accuracy: SIGNED32;
 
-		PROCEDURE Min( r1, r2: LONGREAL ): LONGREAL;
+		PROCEDURE Min( r1, r2: FLOAT64 ): FLOAT64;
 		BEGIN
 			IF r1 < r2 THEN RETURN r1 ELSE RETURN r2 END
 		END Min;
@@ -120,9 +120,9 @@ VAR
 
 	PROCEDURE Edit( editor: tLayer;  event: vyEvents.EventMsg ): BOOLEAN;
 	(*vs 0.0a1   md  14.02.95 *)
-	VAR x2d, y2d, oldy2d, oldx2d: Real;  i, oldi: LONGINT;
-		sx2d, sy2d, soldy2d, soldx2d: Real;  si, soldi: LONGINT;  symmetric: BOOLEAN;   (* if symmetric *)
-		out: BOOLEAN;  changed: BOOLEAN;  c: vyGraphBase.tCoordinate2d;  x, y, w, h: INTEGER;  gesture: INTEGER;
+	VAR x2d, y2d, oldy2d, oldx2d: Real;  i, oldi: SIGNED32;
+		sx2d, sy2d, soldy2d, soldx2d: Real;  si, soldi: SIGNED32;  symmetric: BOOLEAN;   (* if symmetric *)
+		out: BOOLEAN;  changed: BOOLEAN;  c: vyGraphBase.tCoordinate2d;  x, y, w, h: SIGNED16;  gesture: SIGNED16;
 
 		PROCEDURE Get2dLocation( x, y: Coordinate;  VAR X, Y: Real );
 		BEGIN
@@ -137,13 +137,13 @@ VAR
 			END
 		END Get2dLocation;
 
-		PROCEDURE Discretize( VAR x: Real;  VAR mult: LONGINT );
+		PROCEDURE Discretize( VAR x: Real;  VAR mult: SIGNED32 );
 		BEGIN
 			mult := ENTIER( (x - editor.xr + editor.dx / 2) / editor.dx );  x := editor.xr + editor.dx * mult
 		END Discretize;
 
-		PROCEDURE Linear( a: antsFunctions.Array;  from, to: LONGINT );
-		VAR t, i: LONGINT;  a1, a2: LONGREAL;
+		PROCEDURE Linear( a: antsFunctions.Array;  from, to: SIGNED32 );
+		VAR t, i: SIGNED32;  a1, a2: FLOAT64;
 		BEGIN
 			IF from > to THEN t := to;  to := from;  from := t END;
 			a1 := a[from];  a2 := a[to];
@@ -180,10 +180,10 @@ VAR
 	END Edit;
 
 	PROCEDURE Responsible( editor: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 
 		PROCEDURE Check( x, y: Coordinate ): BOOLEAN;
-		VAR X, Y: LONGREAL;
+		VAR X, Y: FLOAT64;
 		BEGIN
 			vyGraphBase.PointToPoint2d( x, y, X, Y );
 			IF (X >= editor.xr) & (Y >= editor.yr) & (X <= editor.xr + editor.wr) & (Y <= editor.yr + editor.hr) THEN RETURN TRUE
@@ -215,7 +215,7 @@ VAR
 	END Store0;
 
 	PROCEDURE Load0( obj: tLayer;  VAR M: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( M.R, version );  Gadgets.ReadRef( M.R, obj.lib, objsub );
 		IF objsub # NIL THEN obj.f := objsub( antsFunctions.Function ) END;
@@ -279,7 +279,7 @@ VAR
 	END symmetric;
 
 	PROCEDURE IncAccuracy;
-	VAR accuracy: LONGINT;
+	VAR accuracy: SIGNED32;
 	BEGIN
 		Attributes.GetInt( tempLayer, "Accuracy", accuracy );
 		IF accuracy = 0 THEN accuracy := 1 END;
@@ -289,7 +289,7 @@ VAR
 	END IncAccuracy;
 
 	PROCEDURE DecAccuracy;
-	VAR accuracy: LONGINT;
+	VAR accuracy: SIGNED32;
 	BEGIN
 		Attributes.GetInt( tempLayer, "Accuracy", accuracy );
 		IF accuracy > 1 THEN accuracy := accuracy DIV 2;  END;
@@ -299,7 +299,7 @@ VAR
 	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );
 	VAR copy: tLayer;  uhandle: Objects.Handler;  gen: PROCEDURE;
 		accstr: ARRAY 64 OF CHAR;
-		acc: LONGINT;
+		acc: SIGNED32;
 
 	CONST GenProc = "antsFctEdit.Alloc";   (* Gen Procedure as String *)
 	BEGIN
@@ -465,9 +465,9 @@ VAR
 	END ShowP;
 
 	PROCEDURE Show*;
-	VAR l: antsCommands.tScanList;  from, to, by: LONGREAL;  f: antsFunctions.Function;  obj: vyBase.Object;
+	VAR l: antsCommands.tScanList;  from, to, by: FLOAT64;  f: antsFunctions.Function;  obj: vyBase.Object;
 	BEGIN
-		l := antsCommands.ScanFromPar( "name=OBJ from=REAL to=REAL by=REAL" );
+		l := antsCommands.ScanFromPar( "name=OBJ from=FLOAT32 to=FLOAT32 by=FLOAT32" );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) & antsCommands.ExpectRealFromKeyword( l, "from", from ) &
 		    antsCommands.ExpectRealFromKeyword( l, "to", to ) & antsCommands.ExpectRealFromKeyword( l, "by", by ) THEN
 			f := obj( antsFunctions.Function );  DoShow( f, from, 0, to, 1, by )

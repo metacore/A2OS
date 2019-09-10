@@ -25,7 +25,7 @@ Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
 
 (* setting individual components may lead to consistency problems and is discouraged *)
 IMPORT M := MathL IN A2;
-TYPE real = LONGREAL;
+TYPE real = FLOAT64;
 
 TYPE Complex* = OBJECT (* POINTER TO ComplexDesc;
 	ComplexDesc* = RECORD *)

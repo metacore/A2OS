@@ -62,7 +62,7 @@ TYPE
 	(* The procedures needed to register type Stack so that its instances can be made persistent. *)
 
 	PROCEDURE LoadObj( R: DataIO.Reader;  VAR obj: OBJECT );
-	VAR version: SHORTINT;  ver: NbrInt.Integer;  new: Stack;
+	VAR version: SIGNED8;  ver: NbrInt.Integer;  new: Stack;
 	BEGIN
 		R.RawSInt( version );
 		IF version = -1 THEN

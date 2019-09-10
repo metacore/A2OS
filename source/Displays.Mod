@@ -14,7 +14,7 @@ CONST
 		(** color components. *)
 	red* = 00FF0000H; green* = 0000FF00H; blue* = 000000FFH;
 
-	trans* = LONGINT(80000000H);	(** transparency for Mask. *)
+	trans* = SIGNED32(80000000H);	(** transparency for Mask. *)
 	invert* = 40000000H;	(** inverting. *)
 	(*alpha = 0C0000000H;	(** alpha blending. *)*)
 
@@ -25,14 +25,14 @@ VAR
 TYPE
 	Display* = OBJECT (Plugins.Plugin)
 		VAR
-			width*, height*: LONGINT;	(** dimensions of visible display. *)
-			offscreen*: LONGINT;	(** number of non-visible lines at the bottom of the display. *)
-			format*: LONGINT;	(** format for Transfer. *)
-			unit*: LONGINT;	(** approximate square pixel size = unit/36000 mm. *)
-			fbadr-: ADDRESS; fbsize-, fbstride-: LONGINT; (** frame buffer address, size and stride *)
+			width*, height*: SIGNED32;	(** dimensions of visible display. *)
+			offscreen*: SIGNED32;	(** number of non-visible lines at the bottom of the display. *)
+			format*: SIGNED32;	(** format for Transfer. *)
+			unit*: SIGNED32;	(** approximate square pixel size = unit/36000 mm. *)
+			fbadr-: ADDRESS; fbsize-, fbstride-: SIGNED32; (** frame buffer address, size and stride *)
 
 		(** Transfer a block of pixels in "raw" display format to (op = set) or from (op = get) the display.  Pixels in the rectangular area are transferred from left to right and top to bottom.  The pixels are transferred to or from "buf", starting at "ofs".  The line byte increment is "stride", which may be positive, negative or zero. *)
-		PROCEDURE Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: WORD);
+		PROCEDURE Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: INTEGER);
 		VAR bufadr, buflow, bufhigh, dispadr,w0,b,d: ADDRESS;
 		BEGIN
 			IF w > 0 THEN
@@ -96,24 +96,24 @@ TYPE
 		END Transfer;
 
 		(** Fill a rectangle in color "col". *)
-		PROCEDURE Fill*(col, x, y, w, h: LONGINT);
+		PROCEDURE Fill*(col, x, y, w, h: SIGNED32);
 		BEGIN
 			Fill0(SELF, col, x, y, w, h)
 		END Fill;
 
 		(** Equivalent to Fill(col, x, y, 1, 1). *)
-		PROCEDURE Dot*(col, x, y: LONGINT);
+		PROCEDURE Dot*(col, x, y: SIGNED32);
 		BEGIN
 			Fill(col, x, y, 1, 1)
 		END Dot;
 
 		(** Transfer a block of pixels from a 1-bit mask to the display.  Pixels in the rectangular area are transferred from left to right and top to bottom.  The pixels are transferred from "buf", starting at bit offset "bitofs".  The line byte increment is "stride", which may be positive, negative or zero. "fg" and "bg" specify the colors for value 1 and 0 pixels respectively. *)
-		PROCEDURE Mask*(VAR buf: ARRAY OF CHAR; bitof, stride, fg, bg, x, y, w, h: LONGINT);
+		PROCEDURE Mask*(VAR buf: ARRAY OF CHAR; bitof, stride, fg, bg, x, y, w, h: SIGNED32);
 		CONST SetSize = MAX (SET) + 1;
-		VAR p: ADDRESS; i, bitofs: LONGINT; s: SET;
+		VAR p: ADDRESS; i, bitofs: SIGNED32; s: SET;
 		BEGIN
 			IF (w > 0) & (h > 0) THEN
-				i := LONGINT(ADDRESSOF(buf[0]) MOD SIZEOF(SET));
+				i := SIGNED32(ADDRESSOF(buf[0]) MOD SIZEOF(SET));
 				bitofs := bitof + i * 8;
 				p := ADDRESSOF(buf[0])-i + bitofs DIV SetSize * SIZEOF (SET);	(* p always aligned to 32-bit boundary *)
 				bitofs := bitofs MOD SetSize; stride := stride*8;
@@ -140,7 +140,7 @@ TYPE
 		END Mask;
 
 		(** Copy source block sx, sy, w, h to destination dx, dy.  Overlap is allowed. *)
-		PROCEDURE Copy*(sx, sy, w, h, dx, dy: LONGINT);
+		PROCEDURE Copy*(sx, sy, w, h, dx, dy: SIGNED32);
 		BEGIN
 			Copy0(SELF, sx, sy, w, h, dx, dy)
 		END Copy;
@@ -150,27 +150,27 @@ TYPE
 		END Update;
 
 		(** Map a color value to an 8-bit CLUT index.  Only used if format = index8. *)
-		PROCEDURE ColorToIndex*(col: LONGINT): LONGINT;
+		PROCEDURE ColorToIndex*(col: SIGNED32): SIGNED32;
 		BEGIN
 				(* default implementation is not very useful and should be overridden. *)
-			RETURN LONGINT(
+			RETURN SIGNED32(
 					SET32(ASH(col, 7-23)) * {5..7} +
 					SET32(ASH(col, 4-15)) * {2..4} +
 					SET32(ASH(col, 1-7)) * {0..1})
 		END ColorToIndex;
 
 		(** Map an 8-bit CLUT index to a color value.  Only used if format = index8. *)
-		PROCEDURE IndexToColor*(index: LONGINT): LONGINT;
+		PROCEDURE IndexToColor*(index: SIGNED32): SIGNED32;
 		BEGIN
 				(* default implementation is not very useful and should be overridden. *)
 			RETURN
-					ASH(LONGINT(SET32(index) * {5..7}), 23-7) +
-					ASH(LONGINT(SET32(index) * {2..4}), 15-4) +
-					ASH(LONGINT(SET32(index) * {0..1}), 7-1)
+					ASH(SIGNED32(SET32(index) * {5..7}), 23-7) +
+					ASH(SIGNED32(SET32(index) * {2..4}), 15-4) +
+					ASH(SIGNED32(SET32(index) * {0..1}), 7-1)
 		END IndexToColor;
 
 		(** Initialize a linear frame buffer for Transfer. *)
-		PROCEDURE InitFrameBuffer*(adr: ADDRESS; size, stride: LONGINT);
+		PROCEDURE InitFrameBuffer*(adr: ADDRESS; size, stride: SIGNED32);
 		BEGIN
 			ASSERT((height+offscreen)*stride <= size);
 			fbadr := adr; fbsize := size; fbstride := stride;
@@ -178,13 +178,13 @@ TYPE
 
 (*
 		(** Draw a line. *)
-		PROCEDURE Line*(col, x1, y1, x2, y2: LONGINT);	(* error term, major, minor? *)
+		PROCEDURE Line*(col, x1, y1, x2, y2: SIGNED32);	(* error term, major, minor? *)
 		BEGIN
 			HALT(99)
 		END Line;
 
 		(* Like Mask, but replicate the mask in the specified rectangular area. *)
-		PROCEDURE ReplMask*(VAR buf: ARRAY OF CHAR; bitofs, stride, fg, bg, px, py, pw, ph, x, y, w, h: LONGINT);
+		PROCEDURE ReplMask*(VAR buf: ARRAY OF CHAR; bitofs, stride, fg, bg, px, py, pw, ph, x, y, w, h: SIGNED32);
 		BEGIN
 			HALT(99)
 		END ReplMask;
@@ -202,8 +202,8 @@ VAR
 	registry*: Plugins.Registry;
 	buf: POINTER TO ARRAY BufSize OF CHAR;
 
-PROCEDURE Fill0(d: Display; col, x, y, w, h: LONGINT);
-VAR j, w0, h0, s: LONGINT; p: ADDRESS; t, c: SET32; invert: BOOLEAN;
+PROCEDURE Fill0(d: Display; col, x, y, w, h: SIGNED32);
+VAR j, w0, h0, s: SIGNED32; p: ADDRESS; t, c: SET32; invert: BOOLEAN;
 BEGIN {EXCLUSIVE}
 	IF (w > 0) & (h > 0) & (col >= 0) THEN	(* opaque or invert *)
 		invert := ASH(col, 1) < 0;
@@ -214,7 +214,7 @@ BEGIN {EXCLUSIVE}
 				c := SET32(ASH(col, 24) + ASH(col, 16) + ASH(col, 8) + col)
 			|color565:
 				s := 4;
-				col := LONGINT( SET32(ASH(col, 15-23)) * {11..15} +
+				col := SIGNED32( SET32(ASH(col, 15-23)) * {11..15} +
 						SET32(ASH(col, 10-15)) * {5..10} +
 						SET32(ASH(col, 4-7)) * {0..4});
 				c := SET32(ASH(col MOD 10000H, 16) + col MOD 10000H)
@@ -249,8 +249,8 @@ BEGIN {EXCLUSIVE}
 	END
 END Fill0;
 
-PROCEDURE Copy0(d: Display; sx, sy, w, h, dx, dy: LONGINT);
-VAR w0, h0, s: LONGINT;
+PROCEDURE Copy0(d: Display; sx, sy, w, h, dx, dy: SIGNED32);
+VAR w0, h0, s: SIGNED32;
 BEGIN {EXCLUSIVE}
 	IF (w > 0) & (h > 0) THEN
 		IF buf = NIL THEN NEW(buf) END;

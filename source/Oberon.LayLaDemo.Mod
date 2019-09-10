@@ -6,9 +6,9 @@ MODULE LayLaDemo IN Oberon;	(** portable *)
 IMPORT Gadgets, Texts, Objects, LayLa, LayLa2, Layouts, Out, Oberon,
 				PanelDocs, Documents, Desktops, Display;
 
-PROCEDURE GetText (VAR T : Texts.Text; VAR beg : LONGINT);
+PROCEDURE GetText (VAR T : Texts.Text; VAR beg : SIGNED32);
 VAR s : Texts.Scanner;
-		end, time : LONGINT;
+		end, time : SIGNED32;
 		Name : ARRAY 64 OF CHAR;
 BEGIN
 	Texts.OpenScanner (s, Oberon.Par.text, Oberon.Par.pos);
@@ -27,7 +27,7 @@ END GetText;
 
 PROCEDURE Insert*;
 VAR T : Texts.Text;
-		pos : LONGINT;
+		pos : SIGNED32;
 		obj : Objects.Object;
 BEGIN
 	GetText (T, pos);
@@ -37,7 +37,7 @@ END Insert;
 
 PROCEDURE InsertDoc*;
 VAR T : Texts.Text;
-		pos : LONGINT;
+		pos : SIGNED32;
 		obj : Objects.Object;
 		doc : Documents.Document;
 BEGIN
@@ -54,7 +54,7 @@ END InsertDoc;
 
 PROCEDURE Insert2*;
 VAR T : Texts.Text;
-		pos : LONGINT;
+		pos : SIGNED32;
 		obj : Objects.Object;
 BEGIN
 	GetText (T, pos);

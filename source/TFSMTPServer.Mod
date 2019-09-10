@@ -83,7 +83,7 @@ TYPE
 		PROCEDURE SaveMessage(m : Message) : BOOLEAN;
 		VAR path, filePath : ARRAY 256 OF CHAR;
 			f : Files.File; w : Files.Writer;
-			i : SIZE; res: WORD; p : ANY;
+			i : SIZE; res: INTEGER; p : ANY;
 		BEGIN
 			COPY(mailPath^, path);
 			Strings.Append(path, "/"); Strings.Append(path, userName^);
@@ -112,7 +112,7 @@ TYPE
 
 		PROCEDURE Forward(m : Message; CONST sender : ARRAY OF CHAR) : BOOLEAN;
 		VAR smtpSession : SMTPClient.SMTPSession; p : ANY;
-			res: WORD; i : SIZE;
+			res: INTEGER; i : SIZE;
 		BEGIN
 			NEW(smtpSession);
 			smtpSession.Open(mailRelay, mailHost, 25, res);
@@ -166,7 +166,7 @@ TYPE
 			NEW(s, l); COPY(x, s^); NEW(line); line.s := s; recipients.Add(line)
 		END AddRecipient;
 
-		PROCEDURE Reply(code: LONGINT; CONST text1, text2 : ARRAY OF CHAR);
+		PROCEDURE Reply(code: SIGNED32; CONST text1, text2 : ARRAY OF CHAR);
 		BEGIN
 			out.Int(code, 3);  out.String(" "); out.String(text1); out.String(" "); out.String(text2);
 			out.Ln; out.Update
@@ -200,7 +200,7 @@ TYPE
 		END From;
 
 		PROCEDURE Rcpt():BOOLEAN;
-		VAR recipient : ARRAY 1024 OF CHAR; errcount : LONGINT;
+		VAR recipient : ARRAY 1024 OF CHAR; errcount : SIGNED32;
 		BEGIN
 			errcount := 0; isSpam:=TRUE;
 			LOOP
@@ -236,7 +236,7 @@ TYPE
 		PROCEDURE SaveLostMessage(m : Message) : BOOLEAN;
 		VAR path, filePath : ARRAY 256 OF CHAR;
 			f : Files.File; w : Files.Writer;
-			i : SIZE; res: WORD; p : ANY;
+			i : SIZE; res: INTEGER; p : ANY;
 		BEGIN
 			COPY(mailPath^, path);
 			Strings.Append(path, "/"); Strings.Append(path, "lost");
@@ -337,7 +337,7 @@ VAR smtp : TCPServices.Service;
 	errors : BOOLEAN;
 
 PROCEDURE EqualsI(CONST buf, with: ARRAY OF CHAR): BOOLEAN;
-VAR j: LONGINT;
+VAR j: SIGNED32;
 BEGIN
 	j := 0; WHILE (with[j] # 0X) & (CAP(buf[j]) = CAP(with[j])) DO INC(j) END;
 	RETURN CAP(with[j]) = CAP(buf[j])
@@ -405,7 +405,7 @@ BEGIN
 END CreateAccounts;
 
 PROCEDURE Start*;
-VAR e: XML.Element; a: XML.Attribute; s : String; res : WORD;
+VAR e: XML.Element; a: XML.Attribute; s : String; res : INTEGER;
 BEGIN
 	IF smtp = NIL THEN
 		IF LoadSettings("TFMailConfig.XML") THEN

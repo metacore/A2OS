@@ -21,7 +21,7 @@ TYPE
 			setColor := cch
 		END Init;
 
-		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : SIGNED32) : WMDropTarget.DropInterface;
 		VAR cdi : ColorDropInterface;
 		BEGIN
 			IF type = WMDropTarget.TypeInt32 THEN
@@ -41,7 +41,7 @@ TYPE
 			setColor := cch
 		END Init;
 
-		PROCEDURE Set*(i : LONGINT);
+		PROCEDURE Set*(i : SIGNED32);
 		VAR c : Color;
 		BEGIN
 			NEW(c); c.value := i; setColor(SELF, c)
@@ -122,7 +122,7 @@ TYPE
 
 		(* called if user modifies the input-field *)
 		PROCEDURE ValueChanged(sender, data : ANY);
-		VAR buf : ARRAY 128 OF CHAR; new : LONGINT;
+		VAR buf : ARRAY 128 OF CHAR; new : SIGNED32;
 		BEGIN
 			input.GetAsString(buf);
 			IF ~IsNumber(buf) THEN
@@ -216,8 +216,8 @@ TYPE
 		BEGIN
 			rect := GetClientRect(); w := rect.r DIV 2; h := rect.b DIV 2;
 			(* background *)
-			c.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(0AAAAAAFFH), WMGraphics.ModeCopy);
-			c.Fill(WMRectangles.MakeRect(w, h, 2*w, 2*h), LONGINT(0AAAAAAFFH), WMGraphics.ModeCopy);
+			c.Fill(WMRectangles.MakeRect(0, 0, w, h), SIGNED32(0AAAAAAFFH), WMGraphics.ModeCopy);
+			c.Fill(WMRectangles.MakeRect(w, h, 2*w, 2*h), SIGNED32(0AAAAAAFFH), WMGraphics.ModeCopy);
 			(* current color *)
 			DrawBackground^(c);
 			(* frame *)
@@ -226,7 +226,7 @@ TYPE
 
 		(* return a string with the hex representation of the current color. the string is lead by a '0' and terminated by a 'H' *)
 		PROCEDURE GetHexValue(VAR hex: ARRAY OF CHAR);
-		VAR buf : ARRAY 10 OF CHAR; i : LONGINT;
+		VAR buf : ARRAY 10 OF CHAR; i : SIGNED32;
 		BEGIN
 			Strings.IntToHexStr(fillColor.Get(), 7, buf);
 			hex[0] := '0';
@@ -293,7 +293,7 @@ TYPE
 			text : Texts.Text;
 			textPos : Texts.TextPosition;
 			hex: ARRAY 10 OF CHAR;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF (data # NIL) & (data IS WMWindowManager.DragInfo) THEN
 				di := data(WMWindowManager.DragInfo);
@@ -414,7 +414,7 @@ VAR
 (* ----- helpers --------------------------------------- *)
 
 PROCEDURE IsNumber(CONST str : ARRAY OF CHAR) : BOOLEAN;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	i := 0;
 	WHILE str[i] # 0X DO

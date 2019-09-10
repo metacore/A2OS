@@ -10,7 +10,7 @@ TYPE
 	Solver* = OBJECT
 			VAR u-, w-, vt-: Mtx.Matrix;   (**  result matrices; u is size m*n, w is size n*n; note that the algorithm returns the transpose  vT(size n*n) instead of v *)
 				threshold*: Nbr.Real;   (** for level of accuracy; default = 1.0D-10*)
-				iterations*: LONGINT;   (** for detection of non-convergence; default = 30*)
+				iterations*: SIGNED32;   (** for detection of non-convergence; default = 30*)
 				Reciprocal: Vec.Map;
 				zero, mag: Nbr.Real;
 
@@ -24,9 +24,9 @@ TYPE
 				END Initialize;
 
 				PROCEDURE decompose;
-				VAR m, n: LONGINT;
+				VAR m, n: SIGNED32;
 					rv1: POINTER TO ARRAY OF Nbr.Real;
-					anorm, scale, c, f, g, h, s, x, y, z: Nbr.Real;  i, its, j, jj, k, l, nm: LONGINT;  flag: BOOLEAN;
+					anorm, scale, c, f, g, h, s, x, y, z: Nbr.Real;  i, its, j, jj, k, l, nm: SIGNED32;  flag: BOOLEAN;
 				BEGIN
 					IF u = NIL THEN Errors.Error(  "A NIL matrix was supplied." );  RETURN END;
 					m := u.rows;  n := u.cols;  NEW( rv1, n );
@@ -200,18 +200,18 @@ TYPE
 		IF x > y THEN RETURN x ELSE RETURN y END;
 	END Max;
 
-	PROCEDURE MinI( i, j: LONGINT ): LONGINT;
+	PROCEDURE MinI( i, j: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF i < j THEN RETURN i ELSE RETURN j;  END;
 	END MinI;
 
-	PROCEDURE sign( x: Nbr.Real ): LONGINT;
+	PROCEDURE sign( x: Nbr.Real ): SIGNED32;
 	BEGIN
 		IF x >= 0 THEN RETURN 1 ELSE RETURN -1 END;
 	END sign;
 
 	PROCEDURE Log( m: Mtx.Matrix );
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 	BEGIN
 		FOR j := 0 TO m.rows - 1 DO
 			FOR i := 0 TO m.cols - 1 DO  (*Out.LongRealFix( m.Get(j, i), 10, 5 );  *)END;

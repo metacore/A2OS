@@ -28,7 +28,7 @@ MODULE Backup IN Oberon;	(** portable, except where noted *) (*JG 20.5.94/pm 16.
 	END Format;
 
 	PROCEDURE InitOberon*;
-      VAR S: Texts.Scanner; i: INTEGER;
+      VAR S: Texts.Scanner; i: SIGNED16;
 	BEGIN
       Texts.WriteString(W, "Backup.InitOberon ");
       Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
@@ -52,7 +52,7 @@ MODULE Backup IN Oberon;	(** portable, except where noted *) (*JG 20.5.94/pm 16.
       Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
 	END InitDOS;
 
-    PROCEDURE ListEntry (name: ARRAY OF CHAR; date, time: LONGINT; size: LONGINT);
+    PROCEDURE ListEntry (name: ARRAY OF CHAR; date, time: SIGNED32; size: SIGNED32);
     BEGIN
 	    Texts.WriteString(W, name);
         IF diroption = "d" THEN
@@ -63,7 +63,7 @@ MODULE Backup IN Oberon;	(** portable, except where noted *) (*JG 20.5.94/pm 16.
 
 	PROCEDURE Directory*;
 		VAR par: Oberon.ParList; T: Texts.Text; R: Texts.Reader;
-          freeEntries, freeSpace: INTEGER; ch: CHAR;
+          freeEntries, freeSpace: SIGNED16; ch: CHAR;
 	BEGIN
 		par := Oberon.Par;
 		Texts.OpenReader(R, par.text, par.pos); Texts.Read(R, ch);
@@ -113,7 +113,7 @@ MODULE Backup IN Oberon;	(** portable, except where noted *) (*JG 20.5.94/pm 16.
 
 	PROCEDURE ReadFiles*;
 		VAR par: Oberon.ParList; S: Texts.Scanner; T: Texts.Text;
-        beg, end, time: LONGINT; freeEntries, freeSpace: INTEGER;
+        beg, end, time: SIGNED32; freeEntries, freeSpace: SIGNED16;
         name, oname: ARRAY 32 OF CHAR;
 	BEGIN
 		Diskette.OpenVol(freeEntries, freeSpace);
@@ -134,13 +134,13 @@ MODULE Backup IN Oberon;	(** portable, except where noted *) (*JG 20.5.94/pm 16.
         Diskette.CloseVol
 	END ReadFiles;
 
-    PROCEDURE ReadEntry (name: ARRAY OF CHAR; date, time: LONGINT; size: LONGINT);
+    PROCEDURE ReadEntry (name: ARRAY OF CHAR; date, time: SIGNED32; size: SIGNED32);
     BEGIN
         IF size # 0 THEN ReadFile(name, name) END
     END ReadEntry;
 
 	PROCEDURE ReadAll*;
-      VAR freeEntries, freeSpace: INTEGER;
+      VAR freeEntries, freeSpace: SIGNED16;
 	BEGIN
 	   Texts.WriteString(W, "Backup.ReadAll"); Texts.WriteLn(W);
 		Texts.Append(Oberon.Log, W.buf);
@@ -163,7 +163,7 @@ MODULE Backup IN Oberon;	(** portable, except where noted *) (*JG 20.5.94/pm 16.
 
 	PROCEDURE WriteFiles*;
 		VAR par: Oberon.ParList; S: Texts.Scanner; T: Texts.Text;
-           beg, end, time: LONGINT; freeEntries, freeSpace: INTEGER;
+           beg, end, time: SIGNED32; freeEntries, freeSpace: SIGNED16;
            name, oname: ARRAY 32 OF CHAR;
 	BEGIN
 		Diskette.OpenVol(freeEntries, freeSpace);
@@ -196,7 +196,7 @@ MODULE Backup IN Oberon;	(** portable, except where noted *) (*JG 20.5.94/pm 16.
 
 	PROCEDURE DeleteFiles*;
 		VAR par: Oberon.ParList; T: Texts.Text; S: Texts.Scanner;
-          beg, end, time: LONGINT; freeEntries, freeSpace: INTEGER;
+          beg, end, time: SIGNED32; freeEntries, freeSpace: SIGNED16;
 	BEGIN
 		Diskette.OpenVol(freeEntries, freeSpace);
 		(*Diskette.GetSectors(0, 1, b, 0);  Diskette.PutSectors(0, 1, b, 0);*)	(* writable? *)

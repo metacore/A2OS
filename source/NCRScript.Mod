@@ -43,23 +43,23 @@ MODULE NCRScript;	(** non-portable *)	(* Contributed by P. Ryser to the System 3
 
 	TYPE
 		TableEntry* = RECORD
-			count*: LONGINT; address*: Machine.Address32;
+			count*: SIGNED32; address*: Machine.Address32;
 		END;
 		BufferTable* = ARRAY dsaTableSize OF TableEntry;
 
 	VAR
 		ScriptsAddress*: Machine.Address32;
-		Script*: ARRAY  2*67H + 3 OF LONGINT;
+		Script*: ARRAY  2*67H + 3 OF SIGNED32;
 
 
 	PROCEDURE CheckAlign;
 	VAR adr: ADDRESS;
 	BEGIN
 		adr := ADDRESSOF(Script[0]);
-		ASSERT(SYSTEM.VAL (LONGINT, adr) MOD 4 = 0, 100)
+		ASSERT(SYSTEM.VAL (SIGNED32, adr) MOD 4 = 0, 100)
 	END CheckAlign;
 
-	PROCEDURE SetUnsigned(VAR integer: LONGINT; hugeint: HUGEINT);
+	PROCEDURE SetUnsigned(VAR integer: SIGNED32; hugeint: SIGNED64);
 	BEGIN
 		integer := SHORT(hugeint);
 	END SetUnsigned;
@@ -156,10 +156,10 @@ MODULE NCRScript;
 		EntTest2MsgOut* = 0000002D4H;
 
 	VAR
-		Script*: ARRAY 201 OF LONGINT;
+		Script*: ARRAY 201 OF SIGNED32;
 
 
-	PROCEDURE SetUnsigned(VAR integer: LONGINT; hugeint: HUGEINT);
+	PROCEDURE SetUnsigned(VAR integer: SIGNED32; hugeint: SIGNED64);
 	BEGIN
 		integer := SHORT(hugeint);
 	END SetUnsigned;

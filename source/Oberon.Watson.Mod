@@ -83,8 +83,8 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		Cmnt = POINTER TO CmntDesc;
 		CmntDesc = RECORD
 			next: Cmnt;
-			wPos, bPos, ePos, insert: LONGINT;
-			cnt: INTEGER;
+			wPos, bPos, ePos, insert: SIGNED32;
+			cnt: SIGNED16;
 			ln: BOOLEAN
 		END;
 
@@ -98,14 +98,14 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		IdentDesc = RECORD
 			next: LocalIdent;
 			name: Name;
-			beg, end: LONGINT;
-			class: INTEGER;
+			beg, end: SIGNED32;
+			class: SIGNED16;
 		END;
 
 		Fixup = POINTER TO FixupDesc;	(* list of type names to fixup *)
 		FixupDesc = RECORD
 			next: Fixup;
-			insert: LONGINT;
+			insert: SIGNED32;
 			name: Name;
 			qualified: BOOLEAN;
 		END;
@@ -113,7 +113,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		History = POINTER TO HistoryDesc;	(* history list *)
 		HistoryDesc = RECORD
 			next, succ: History;
-			nr: LONGINT;
+			nr: SIGNED32;
 			cmd: ARRAY 64 OF CHAR
 		END;
 
@@ -122,7 +122,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		W: Texts.Writer;
 
 		history: History;	(* document history *)
-		lastHistNr: LONGINT;	(* last history number used *)
+		lastHistNr: SIGNED32;	(* last history number used *)
 		oObj: Objects.Object;	(* public object (default hierarchy) *)
 		linkText: Texts.Text;	(* public object (link text to find corresponding tutorial) *)
 		aObj: Objects.Object;	(* public object (archive of compressed def files) *)
@@ -134,7 +134,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	(* variables for Mod-Reader *)
 		(* variables to remeber infos during scannig *)
-		mods : INTEGER;	(* # of imported modules *)
+		mods : SIGNED16;	(* # of imported modules *)
 		mod : ARRAY MaxMods OF ModItem;
 		options: ARRAY 12 OF CHAR;	(* set by GetArgs and appended at a control's cmd *)
 		localIds: IdentDesc;	(* non exported ident list *)
@@ -145,35 +145,35 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		ModT: Texts.Text;	(* source text *)
 		R: Texts.Reader;	(* reader on source text *)
 		id, label: Name;	(* current ident/tutorial-label *)
-		num: LONGINT;	(* current number *)
-		begPos, wPos: LONGINT;	(* beginning of symbol in source text (wPos = end of last symbol) *)
+		num: SIGNED32;	(* current number *)
+		begPos, wPos: SIGNED32;	(* beginning of symbol in source text (wPos = end of last symbol) *)
 		numLines,	(* #lines skiped while scanning one symbol *)
-		lines: INTEGER;	(* lines already read *)
-		level, recLevel: INTEGER;	(* level: procedure level | recLevel: record level *)
+		lines: SIGNED16;	(* lines already read *)
+		level, recLevel: SIGNED16;	(* level: procedure level | recLevel: record level *)
 		wasRecord: BOOLEAN;	(* last type read was a record *)
 		newLine: BOOLEAN;	(* TRUE when read a line feed while scanning one symbol *)
 		ch: CHAR;     (* current character *)
-		sym: SHORTINT;	(* current symbol *)
+		sym: SIGNED8;	(* current symbol *)
 
 		(* variables needed to write definition text *)
 		OutT: Texts.Text;	(* text for definition output *)
 		italic: Fonts.Font;	(* pointer to Oberon10i font *)
-		lastPos, importPos: LONGINT;	(* position of last error *)
+		lastPos, importPos: SIGNED32;	(* position of last error *)
 		noerr: BOOLEAN;
-		curErr: SHORTINT;	(* current error code *)
+		curErr: SIGNED8;	(* current error code *)
 		doItalic: BOOLEAN;	(* forces output of comments in italic *)
 
 	(* ---------------------- string operations ----------------------- *)
 
 	PROCEDURE Append (VAR d: ARRAY OF CHAR; s: ARRAY OF CHAR);	(* append string s to d *)
-		VAR i, j: INTEGER; ch: CHAR;
+		VAR i, j: SIGNED16; ch: CHAR;
 	BEGIN
 		i := 0; WHILE d[i] # 0X DO INC(i) END;
 		j := 0; REPEAT ch := s[j]; d[i] := ch; INC(i); INC(j) UNTIL ch = 0X
 	END Append;
 
 	PROCEDURE AppendCh (VAR d: ARRAY OF CHAR; ch: CHAR);	(* append char ch to string d *)
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		i := 0; WHILE d[i] # 0X DO INC(i) END;
 		d[i]:= ch; d[i+1]:= 0X
@@ -181,7 +181,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	PROCEDURE QualIdent (VAR qualifier, identifier: ARRAY OF CHAR);
 	(* separates module and object name *)
-		VAR i, j: INTEGER;
+		VAR i, j: SIGNED16;
 	BEGIN
 		i := 0; j := 0;
 		WHILE (qualifier[i] # ".") & (qualifier[i] # 0X) DO INC(i) END;
@@ -192,7 +192,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	(* ---------------------- output procedure ----------------------- *)
 
-	PROCEDURE SetColor(col: SHORTINT);	(*  sets W color to col *)
+	PROCEDURE SetColor(col: SIGNED8);	(*  sets W color to col *)
 	BEGIN Texts.SetColor(W, col)
 	END SetColor;
 
@@ -204,11 +204,11 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	BEGIN Texts.WriteString(W, str)
 	END Str;
 
-	PROCEDURE Int(i: LONGINT);	(*  writes an integer to W *)
+	PROCEDURE Int(i: SIGNED32);	(*  writes an integer to W *)
 	BEGIN Texts.WriteInt(W, i, 0)
 	END Int;
 
-	PROCEDURE Indent (i: INTEGER); 	(*  writes i tabs to W *)
+	PROCEDURE Indent (i: SIGNED16); 	(*  writes i tabs to W *)
 	BEGIN WHILE i > 0 DO Texts.Write(W, TAB); DEC(i) END
 	END Indent;
 
@@ -236,7 +236,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	(* ---------------------- history procedure ----------------------- *)
 
-	PROCEDURE AddDocToHistory(oldNr: LONGINT): History;
+	PROCEDURE AddDocToHistory(oldNr: SIGNED32): History;
 		VAR new, h: History;
 	BEGIN
 		h:= history; WHILE (h # NIL) & (h.nr # oldNr) DO h:= h.next END;
@@ -245,7 +245,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		RETURN new
 	END AddDocToHistory;
 
-	PROCEDURE GetDocSucc(nr: LONGINT): History;
+	PROCEDURE GetDocSucc(nr: SIGNED32): History;
 		VAR h: History;
 	BEGIN
 		h:= history; WHILE (h # NIL) & (h.nr # nr) DO h:= h.next END;
@@ -253,7 +253,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END GetDocSucc;
 
 	PROCEDURE MakeHistoryCmd(h: History; cmd, mod, obj: ARRAY OF CHAR);
-		VAR i, j: INTEGER;
+		VAR i, j: SIGNED16;
 	BEGIN
 		IF h # NIL THEN
 			COPY(cmd, h.cmd);
@@ -304,7 +304,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	(* *************** DEF FILE *************** *)
 
 	PROCEDURE OpenDef(T: Texts.Text; mod: ARRAY OF CHAR; compressed: BOOLEAN);	(* Opens a saved def-text *)
-		VAR R: Files.Rider; len: LONGINT; x, y, w, h, tag, res: INTEGER; s: ARRAY 64 OF CHAR; ch: CHAR;
+		VAR R: Files.Rider; len: SIGNED32; x, y, w, h, tag, res: SIGNED16; s: ARRAY 64 OF CHAR; ch: CHAR;
 				A: Objects.AttrMsg;
 	BEGIN Append(mod, defFileExt);
 		IF compressed THEN	(* def. file is stored in the archive *)
@@ -365,7 +365,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		RETURN cur
 	END FindIdent;
 
-	PROCEDURE InsertIdent(VAR name: Name; class: INTEGER; VAR obj: LocalIdent);
+	PROCEDURE InsertIdent(VAR name: Name; class: SIGNED16; VAR obj: LocalIdent);
 	(* iserts ident name in list, if current level is the top level (= no local ident) *)
 	BEGIN
 		IF level = 0 THEN
@@ -390,7 +390,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	(* ---------------------- buffer / text operations ----------------------- *)
 
-	PROCEDURE Copy(beg, end: LONGINT);
+	PROCEDURE Copy(beg, end: SIGNED32);
 	(* copies the given text strech (= [beg, end)) from source text to writer W. Makes a copy of all objects in the text *)
 		VAR F: Texts.Finder; obj: Objects.Object; C: Objects.CopyMsg;
 	BEGIN
@@ -410,12 +410,12 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	(* ---------------------- write error procedure ----------------------- *)
 
-	PROCEDURE Pos(): LONGINT;	(* returns the current position in the source text *)
+	PROCEDURE Pos(): SIGNED32;	(* returns the current position in the source text *)
 	BEGIN RETURN Texts.Pos(R)-1
 	END Pos;
 
-	PROCEDURE err(n: SHORTINT);	(* writes an error msg to the Oberon log *)
-		VAR pos: LONGINT;
+	PROCEDURE err(n: SIGNED8);	(* writes an error msg to the Oberon log *)
+		VAR pos: SIGNED32;
 	BEGIN noerr:= FALSE; pos:= Pos();
 		Texts.OpenBuf(W.buf); Texts.SetFont(W, Fonts.Default);
 		IF lastPos+10 < pos THEN lastPos:= pos;
@@ -464,7 +464,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	PROCEDURE Identifier(name: ARRAY OF CHAR);
 	(* writes an identifier & Control to W and checks if a Control-cmd is needed *)
-		VAR par: ARRAY 32 OF CHAR; i, j: INTEGER; ch: CHAR;
+		VAR par: ARRAY 32 OF CHAR; i, j: SIGNED16; ch: CHAR;
 	BEGIN
 		IF label # "" THEN
 			(* if there is a tutorial label (= 'Tutorial.Label'), set par to 'Tutorial.html Label'*)
@@ -483,8 +483,8 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END Identifier;
 
 	PROCEDURE Keywords(VAR last: Cmnt; word: ARRAY OF CHAR; ln, indent: BOOLEAN);	(* writes a word and shift comments *)
-		VAR cmnt: Cmnt; offset: LONGINT;
-	BEGIN offset:= LEN(word)(LONGINT)-1;
+		VAR cmnt: Cmnt; offset: SIGNED32;
+	BEGIN offset:= LEN(word)(SIGNED32)-1;
 		IF indent THEN
 			IF ln THEN Ln; INC(offset) END;
 			Ln; Indent(1+recLevel); INC(offset, 2)
@@ -495,7 +495,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		last:= cmnts.next
 	END Keywords;
 
-	PROCEDURE Cmnts(offset: LONGINT);
+	PROCEDURE Cmnts(offset: SIGNED32);
 		VAR fix: Fixup; curC: Cmnt;
 	BEGIN curC:= cmnts.next;
 		WHILE curC # NIL DO
@@ -517,7 +517,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END Cmnts;
 
 	PROCEDURE Imports;	(* writes import list to W *)
-		VAR i, j: INTEGER; first, ln: BOOLEAN;
+		VAR i, j: SIGNED16; first, ln: BOOLEAN;
 
 		PROCEDURE OutCmnt(cmnt: Cmnt);
 		BEGIN
@@ -589,7 +589,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		SetColor(TextCol)
 	END Link;
 
-	PROCEDURE Fixups(offset: LONGINT);	(* writes type fixups to OutT at position off *)
+	PROCEDURE Fixups(offset: SIGNED32);	(* writes type fixups to OutT at position off *)
 		VAR cur: Fixup;
 	BEGIN cur:= fixups.next;
 		WHILE cur # NIL DO
@@ -605,7 +605,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END GetCh;
 
 	PROCEDURE Ident;	(* reads an identifier into id *)
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN i := 0;
 		REPEAT
 			id[i] := ch; INC(i); GetCh
@@ -617,7 +617,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END Ident;
 
 	PROCEDURE String(ch0: CHAR);	(* skips a string *)
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE ch # ch0 DO
@@ -628,9 +628,9 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END String;
 
 	PROCEDURE Number(ch0: CHAR);		(* reads a number into num *)
-		VAR digit: ARRAY 24 OF CHAR; n: INTEGER;
+		VAR digit: ARRAY 24 OF CHAR; n: SIGNED16;
 
-		PROCEDURE Ord(ch: CHAR; hex: BOOLEAN): INTEGER;	(* converts a char to an integer *)
+		PROCEDURE Ord(ch: CHAR; hex: BOOLEAN): SIGNED16;	(* converts a char to an integer *)
 		BEGIN
 			IF ch <= "9" THEN RETURN ORD(ch)-ORD("0")
 			ELSIF hex THEN RETURN ORD(ch)-ORD("A")+10
@@ -639,10 +639,10 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		END Ord;
 
 		PROCEDURE ToNum(hex: BOOLEAN);	(* converts string digit to variable num *)
-			VAR i, d: INTEGER;
+			VAR i, d: SIGNED16;
 		BEGIN i:= 0;
 			WHILE i < n DO d:= Ord(digit[i], hex);
-				IF num <= MAX(LONGINT) - d THEN num:= num*10+d END;
+				IF num <= MAX(SIGNED32) - d THEN num:= num*10+d END;
 				INC(i)
 			END
 		END ToNum;
@@ -667,9 +667,9 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		END
 	END Number;
 
-	PROCEDURE Comment(VAR oLine: INTEGER);	(* scans a comment and sets label or writes an exported comment to W *)
+	PROCEDURE Comment(VAR oLine: SIGNED16);	(* scans a comment and sets label or writes an exported comment to W *)
 	(* cnt: # of '*' at the end of a comment | lev: level recursiv comments *)
-		VAR cmnt: Cmnt; pos: LONGINT; lev, cnt: INTEGER; ch0: CHAR;
+		VAR cmnt: Cmnt; pos: SIGNED32; lev, cnt: SIGNED16; ch0: CHAR;
 	BEGIN ch0:= ch; lev:= 1; cnt:= 0;
 		IF ch = "*" THEN GetCh;
 			IF ch = ")" THEN GetCh; RETURN END
@@ -713,7 +713,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		wPos: after last symbol or start of line
 		begPos: beginnig of current symbol
 	*)
-		VAR oLine: INTEGER; s: SHORTINT; ch0: CHAR;
+		VAR oLine: SIGNED16; s: SIGNED8; ch0: CHAR;
 	BEGIN
 		IF sym = eot THEN RETURN END;	(* nothing more to scan *)
 		s:= none; oLine:= lines;
@@ -792,7 +792,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	PROCEDURE FindMod(VAR name: Name): BOOLEAN;
 	(* checks if module is in import list and returns module's real name *)
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN i:= 0;
 		REPEAT
 			IF mod[i].alias = name THEN
@@ -807,11 +807,11 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	(* ---------------- check single char/symbol ----------------- *)
 
-	PROCEDURE CheckSym(s: INTEGER);
+	PROCEDURE CheckSym(s: SIGNED16);
 	BEGIN IF sym = s THEN Sym ELSE err(errSym) END
 	END CheckSym;
 
-	PROCEDURE CheckMark(VAR vis: SHORTINT);
+	PROCEDURE CheckMark(VAR vis: SIGNED8);
 	BEGIN
 		IF (sym = times) OR (sym = minus) THEN
 			IF level > 0 THEN vis:= internal
@@ -825,7 +825,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	(* ---------------- parse (qulified) identifier ----------------- *)
 
-	PROCEDURE qualident(VAR end: LONGINT);	(* writes a (qualified) ident *)
+	PROCEDURE qualident(VAR end: SIGNED32);	(* writes a (qualified) ident *)
 		VAR qualifier: Name;
 	BEGIN end:= Pos();
 		COPY(id, qualifier); Sym;
@@ -843,7 +843,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	(* ---------------- parse constat block ----------------- *)
 
 	PROCEDURE ConstExpression;	(* parses and writes an expression *)
-		VAR beg: LONGINT; follow: SET;
+		VAR beg: SIGNED32; follow: SET;
 	BEGIN beg:= wPos; curErr:= errConst;
 		follow:= {rbrak, of};
 		LOOP
@@ -860,7 +860,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END ConstExpression;
 
 	PROCEDURE ConstDef;	(* parses and writes constant declarations *)
-		VAR cmnt: Cmnt; obj: LocalIdent; vis: SHORTINT; first, newL, needsLn: BOOLEAN;
+		VAR cmnt: Cmnt; obj: LocalIdent; vis: SIGNED8; first, newL, needsLn: BOOLEAN;
 	BEGIN first:= TRUE; needsLn:= NeedsLn(); cmnt:= cmnts.next; Sym;
 		WHILE sym = ident DO newL:= newL OR newLine;
 			Sym; CheckMark(vis);
@@ -898,7 +898,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END SysFlags;
 
 	PROCEDURE RecordType;	(* parses and writes a record definition *)
-		VAR endPos: LONGINT; flag: Name;
+		VAR endPos: SIGNED32; flag: Name;
 	BEGIN
 		IF sym = record THEN
 			Keywords(cmnts.next, "RECORD", FALSE, FALSE)
@@ -945,7 +945,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END PointerType;
 
 	PROCEDURE FormalParameters(resync: BOOLEAN);	(* parses and writes a paramater definition list of a procedure *)
-		VAR endPos: LONGINT;
+		VAR endPos: SIGNED32;
 	BEGIN Str(" (");
 		IF (sym = ident) OR (sym = var) OR (sym=const) THEN
 			LOOP
@@ -970,7 +970,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END FormalParameters;
 
 	PROCEDURE SkipFormalParameters(resync: BOOLEAN);	(* skips a paramater definition list of a procedure *)
-		VAR lev: INTEGER;
+		VAR lev: SIGNED16;
 	BEGIN
 		lev:= 1;
 		LOOP Sym;
@@ -1052,7 +1052,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END SkipType;
 
 	PROCEDURE TypeDef;	(* parses and writes a type declaration block *)
-		VAR cmnt: Cmnt; obj: LocalIdent; vis: SHORTINT; first, newL, needsLn: BOOLEAN;
+		VAR cmnt: Cmnt; obj: LocalIdent; vis: SIGNED8; first, newL, needsLn: BOOLEAN;
 	BEGIN wasRecord:= FALSE; recLevel:= 0; first:= TRUE; needsLn:= NeedsLn(); cmnt:= cmnts.next; Sym;
 		WHILE sym = ident DO newL:= newL OR newLine;
 			Sym; CheckMark(vis);
@@ -1072,7 +1072,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	(* ---------------- parse variable declaration block ----------------- *)
 
 	PROCEDURE VarDef;	(* parses and writes a variable declaration block *)
-		VAR cmnt: Cmnt; vis: SHORTINT; first, isVis, newL, needsLn, writeVar: BOOLEAN; flag: Name;
+		VAR cmnt: Cmnt; vis: SIGNED8; first, isVis, newL, needsLn, writeVar: BOOLEAN; flag: Name;
 	BEGIN  first:= TRUE; needsLn:= NeedsLn(); cmnt:= cmnts.next;
 		writeVar := sym = var;
 		IF writeVar THEN Sym END;
@@ -1109,7 +1109,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	PROCEDURE ProcedureDeclaration(blockvis: BOOLEAN);
 		(* parses and writes/skips one procedure declaration. *)
 		CONST LProc = 0; XProc = 1; IProc = 2; CProc = 3;
-		VAR procId, self, typId, sysflag: Name; vis, mode: SHORTINT; fwd, init, varPar, constPar: BOOLEAN;
+		VAR procId, self, typId, sysflag: Name; vis, mode: SIGNED8; fwd, init, varPar, constPar: BOOLEAN;
 	BEGIN fwd:= FALSE; init:= FALSE; mode:= LProc;
 		IF sym = arrow THEN fwd:= TRUE; Sym END;
 		IF sym = lbrace THEN  Sym; COPY(id, sysflag); CheckSym(ident); CheckSym(rbrace)  END;
@@ -1175,7 +1175,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	(* ---------------- parse a module/procedure block ----------------- *)
 
 	PROCEDURE Assert;	(* parses an ASSERT statement *)
-		VAR beg, end, level: LONGINT;
+		VAR beg, end, level: SIGNED32;
 	BEGIN Texts.SetFont(W, italic);
 		beg:= Pos();
 		Sym; (*skip first ( *)
@@ -1203,7 +1203,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	END Assert;
 
 	PROCEDURE Block(blockId: Name; vis: BOOLEAN);	(* parses a module/procedure bolock *)
-		VAR endcnt, len: LONGINT; nl: BOOLEAN;
+		VAR endcnt, len: SIGNED32; nl: BOOLEAN;
 	BEGIN
 		nl := FALSE;
 		LOOP
@@ -1340,7 +1340,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	PROCEDURE MakeDef*(VAR mod: ARRAY OF CHAR; T: Texts.Text);	(* options = ["p"] *)
 		VAR
-			mT: Texts.Text; B: Texts.Buffer; name: ARRAY 128 OF CHAR; newName: Name; i: INTEGER;
+			mT: Texts.Text; B: Texts.Buffer; name: ARRAY 128 OF CHAR; newName: Name; i: SIGNED16;
 			doPlain: BOOLEAN; obj: Objects.Object;
 	BEGIN
 		Str("reading "); NEW(ModT);
@@ -1387,7 +1387,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	PROCEDURE Convert2HTML(in, out: Texts.Text);
 		VAR label: ARRAY 64 OF CHAR; R: Texts.Reader; BR: TextGadgets0.BackRd; fnt: Fonts.Font;
-				obj: Objects.Object; i, l: INTEGER; bold, italic: BOOLEAN; ch, ch0: CHAR;
+				obj: Objects.Object; i, l: SIGNED16; bold, italic: BOOLEAN; ch, ch0: CHAR;
 
 		PROCEDURE GetChar(VAR R: Texts.Reader; VAR ch: CHAR);
 		BEGIN Texts.Read(R, ch); INC(l)
@@ -1412,7 +1412,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		END OutChar;
 
 		PROCEDURE ConvertControl(obj: Objects.Object);
-			VAR cmd: ARRAY 24 OF CHAR; i: INTEGER; A: Objects.AttrMsg;
+			VAR cmd: ARRAY 24 OF CHAR; i: SIGNED16; A: Objects.AttrMsg;
 		BEGIN
 			A.id:= Objects.get; A.res:= -1; A.name:= "Name"; A.s:= ""; obj.handle(obj, A);
 			IF (A.res >= 0) & (A.s # "") THEN
@@ -1561,10 +1561,10 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	(* *************** WATSON MAIN PART *************** *)
 
 	PROCEDURE GetArgs (VAR S: Texts.Scanner; VAR name: ARRAY OF CHAR);	(* reads in the given params *)
-		VAR text: Texts.Text; beg, end, time: LONGINT; optS: SET; k: SHORTINT; A: Objects.AttrMsg;
+		VAR text: Texts.Text; beg, end, time: SIGNED32; optS: SET; k: SIGNED8; A: Objects.AttrMsg;
 
 		PROCEDURE SetOrder(str: ARRAY OF CHAR);
-			VAR i: INTEGER; ch: CHAR;
+			VAR i: SIGNED16; ch: CHAR;
 		BEGIN i:= 0;
 				WHILE str[i]#0X DO ch:= str[i];
 					IF (ch = "T") & ~(TutTyp IN optS) THEN INCL(optS, TutTyp); order[k]:= ch; INC(k)
@@ -1611,12 +1611,12 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	BEGIN IF h.name = defName THEN stop:= TRUE; defFound:= TRUE END
 	END CheckDefName;
 
-	PROCEDURE Which(VAR mod: ARRAY OF CHAR; VAR typ: INTEGER);
+	PROCEDURE Which(VAR mod: ARRAY OF CHAR; VAR typ: SIGNED16);
 	(* determines source file to get information from *)
-		VAR F: Files.File; i: INTEGER;
+		VAR F: Files.File; i: SIGNED16;
 
 		PROCEDURE OpenDef(mod: ARRAY OF CHAR);	(* tries to open an existing def file *)
-			VAR res: INTEGER; A: Objects.AttrMsg;
+			VAR res: SIGNED16; A: Objects.AttrMsg;
 		BEGIN Append(mod, defFileExt);
 			F:= Files.Old(mod); IF F # NIL THEN RETURN END;
 
@@ -1631,7 +1631,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 		PROCEDURE OpenTutorial(VAR mod: ARRAY OF CHAR);
 		(* tries to open the corresponding tutorial (refers to the link text) *)
-			VAR tutName: ARRAY 64 OF CHAR; S: Texts.Scanner; i, j: INTEGER;
+			VAR tutName: ARRAY 64 OF CHAR; S: Texts.Scanner; i, j: SIGNED16;
 		BEGIN
 			Texts.OpenScanner(S, linkText, 0); Texts.Scan(S); Texts.Scan(S);
 			REPEAT
@@ -1658,7 +1658,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		END OpenTutorial;
 
 		PROCEDURE OpenMod(VAR mod: ARRAY OF CHAR);	(* tries to open the mod file *)
-			VAR fileName: ARRAY 64 OF CHAR; i, j, k: INTEGER; A: Objects.AttrMsg;
+			VAR fileName: ARRAY 64 OF CHAR; i, j, k: SIGNED16; A: Objects.AttrMsg;
 		BEGIN
 			A.id:= Objects.get; A.name:= "Value"; A.res:= -1; mObj.handle(mObj, A);
 			IF A.res < 0 THEN A.s:= "*.Mod" END;
@@ -1715,7 +1715,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		END
 	END Which;
 
-	PROCEDURE JumpTo(F: TextGadgets.Frame; pos: LONGINT);
+	PROCEDURE JumpTo(F: TextGadgets.Frame; pos: SIGNED32);
 	(* set caret to position pos in text F.text and select objects name *)
 		VAR BR: TextGadgets0.BackRd; ch: CHAR; S: Oberon.SelectMsg; C: Oberon.CaretMsg;
 	BEGIN
@@ -1728,9 +1728,9 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		Display.Broadcast(C)
 	END JumpTo;
 
-	PROCEDURE FindMarker(T: Texts.Text; name: ARRAY OF CHAR): LONGINT;
+	PROCEDURE FindMarker(T: Texts.Text; name: ARRAY OF CHAR): SIGNED32;
 	(* looks for a Control with given name and returns its position *)
-		VAR F: Texts.Finder; obj: Objects.Object; pos: LONGINT; A: Objects.AttrMsg;
+		VAR F: Texts.Finder; obj: Objects.Object; pos: SIGNED32; A: Objects.AttrMsg;
 	BEGIN
 		IF name # "" THEN
 			Texts.OpenFinder(F, T, 0);
@@ -1747,12 +1747,12 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 		RETURN 0
 	END FindMarker;
 
-	PROCEDURE Open(mod: ARRAY OF CHAR; T: Texts.Text; pos: LONGINT): History;
+	PROCEDURE Open(mod: ARRAY OF CHAR; T: Texts.Text; pos: SIGNED32): History;
 	(* opens a TextDoc displaying the given text. Sets caret to position pos (if not 0) *)
 		VAR D, oldD: Objects.Object; F: TextGadgets.Frame; h: History; A: Objects.AttrMsg;
 
 		PROCEDURE IsWatsonDoc(D: Documents.Document): BOOLEAN;
-			VAR i: INTEGER;
+			VAR i: SIGNED16;
 		BEGIN
 			i:= 0; WHILE (D.name[i] # 0X) & (D.name[i] # ".") DO INC(i) END;
 			RETURN (D.name[i] # 0X) & (D.name[i+1] = "D") & (D.name[i+2] = "e") & (D.name[i+3] = "f")
@@ -1802,7 +1802,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	(** command called by document's menu button 'Back' *)
 	PROCEDURE Back*;	(** param:  none *)
-		VAR D: Documents.Document; oldNr: LONGINT; h: History; A: Objects.AttrMsg;
+		VAR D: Documents.Document; oldNr: SIGNED32; h: History; A: Objects.AttrMsg;
 	BEGIN
 		D:= Desktops.CurDoc(Gadgets.context);
 		IF D # NIL THEN
@@ -1836,7 +1836,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	(** user command to get best information about the given module *)
 	PROCEDURE ShowDef*;	(** param: ["\"options] mod *)
-		VAR S: Texts.Scanner; T: Texts.Text; h: History; mod, dummy: ARRAY 32 OF CHAR; typ: INTEGER;
+		VAR S: Texts.Scanner; T: Texts.Text; h: History; mod, dummy: ARRAY 32 OF CHAR; typ: SIGNED16;
 	BEGIN
 		GetArgs(S, mod); QualIdent(mod, dummy);
 		Which(mod, typ);
@@ -1858,7 +1858,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	(** user command to get best information about the given object in the specified module *)
 	PROCEDURE ShowObj*;	(** param: ["\"options] mod.obj *)
-		VAR S: Texts.Scanner; T: Texts.Text; h: History; mod, objName: ARRAY 32 OF CHAR; typ: INTEGER;
+		VAR S: Texts.Scanner; T: Texts.Text; h: History; mod, objName: ARRAY 32 OF CHAR; typ: SIGNED16;
 	BEGIN
 		GetArgs(S, mod); QualIdent(mod, objName);
 		Which(mod, typ);
@@ -1897,7 +1897,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 	(** user command to make definition files of given modules (if 'c' in options -> converts defs to HTML docs) *)
 	PROCEDURE MakeDefs*;	(** param: ["\"options] mods *)
 		VAR S: Texts.Scanner; T, HT: Texts.Text; F: Files.File; mod: ARRAY 32 OF CHAR;
-				l: LONGINT; conv: BOOLEAN;
+				l: SIGNED32; conv: BOOLEAN;
 	BEGIN
 		GetArgs(S, mod);
 		l:= 0; conv:= FALSE; WHILE ~conv & (options[l] # 0X) DO conv:= (options[l] = "c"); INC(l) END;
@@ -1922,7 +1922,7 @@ MODULE Watson IN Oberon;	(** portable *)	(** PS/tk  *)
 
 	(** user command to convert definition files to HTML documents *)
 	PROCEDURE ConvertDefs*;	(** param: ["\"options] defs *)
-		VAR S: Texts.Scanner; T, outT: Texts.Text; F: Files.File; l: LONGINT; text: ARRAY 64 OF CHAR;
+		VAR S: Texts.Scanner; T, outT: Texts.Text; F: Files.File; l: SIGNED32; text: ARRAY 64 OF CHAR;
 	BEGIN
 		GetArgs(S, text); NEW(T); NEW(outT);
 		WHILE S.class = Texts.Name DO

@@ -17,12 +17,12 @@ TYPE
 
 		event : Bluetooth.EventPacket; (* for EventHandler, must be global *)
 
-		eventExpectedParams : LONGINT; (* expected length of parameters in bytes *)
-		eventParamOffset : LONGINT;
+		eventExpectedParams : SIGNED32; (* expected length of parameters in bytes *)
+		eventParamOffset : SIGNED32;
 
 		acl: Bluetooth.ACLPacket;
-		aclExpectedParams : LONGINT; (* expected length of parameters in bytes *)
-		aclParamOffset : LONGINT;
+		aclExpectedParams : SIGNED32; (* expected length of parameters in bytes *)
+		aclParamOffset : SIGNED32;
 
 		PROCEDURE &Init*(name: ARRAY OF CHAR; sender: Streams.Sender; receiver: Streams.Receiver);
 		VAR plugin : Plugins.Plugin;
@@ -132,7 +132,7 @@ TYPE
 		PROCEDURE ReadACL(packet : Usbdi.Buffer; actLen : SIZE);
 		VAR
 			queue: Bluetooth.Queue;
-			i: SIZE; len: LONGINT;
+			i: SIZE; len: SIGNED32;
 
 			PROCEDURE DeliverPacket;
 			BEGIN
@@ -191,8 +191,8 @@ TYPE
 			END;
 		END ReadACL;
 
-		PROCEDURE Send*(type: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
-		VAR  i: LONGINT;
+		PROCEDURE Send*(type: SIGNED32; VAR data: ARRAY OF CHAR; ofs, len: SIGNED32; VAR res: INTEGER);
+		VAR  i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF TraceSend THEN
 				KernelLog.Ln;
@@ -212,8 +212,8 @@ TYPE
 			END;
 		END Send;
 
-		PROCEDURE Send1H*(type: LONGINT; VAR hdr: ARRAY OF CHAR; hdrlen: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
-		VAR  i: LONGINT; buffer : POINTER TO ARRAY OF CHAR; bufferLen : LONGINT;
+		PROCEDURE Send1H*(type: SIGNED32; VAR hdr: ARRAY OF CHAR; hdrlen: SIGNED32; VAR data: ARRAY OF CHAR; ofs, len: SIGNED32; VAR res: INTEGER);
+		VAR  i: SIGNED32; buffer : POINTER TO ARRAY OF CHAR; bufferLen : SIGNED32;
 		BEGIN
 			IF TraceSend THEN
 				KernelLog.Ln;
@@ -241,12 +241,12 @@ TYPE
 			END;
 		END Send1H;
 
-		PROCEDURE Send2H*(type: LONGINT; VAR hdr1: ARRAY OF CHAR; hdr1len: LONGINT;
-				VAR hdr2: ARRAY OF CHAR; hdr2len: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
+		PROCEDURE Send2H*(type: SIGNED32; VAR hdr1: ARRAY OF CHAR; hdr1len: SIGNED32;
+				VAR hdr2: ARRAY OF CHAR; hdr2len: SIGNED32; VAR data: ARRAY OF CHAR; ofs, len: SIGNED32; VAR res: INTEGER);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			buffer : POINTER TO ARRAY OF CHAR;
-			bufferLen : LONGINT;
+			bufferLen : SIGNED32;
 		BEGIN
 			IF TraceSend THEN
 				KernelLog.String("UsbBluetooth: Send2H: "); KernelLog.String(name); KernelLog.String(": ");
@@ -276,7 +276,7 @@ TYPE
 
 	END UsbTransportLayer;
 
-PROCEDURE ShowEvent(event : LONGINT);
+PROCEDURE ShowEvent(event : SIGNED32);
 BEGIN
 	CASE event OF
 		 01H: KernelLog.String("Inquiry Compete");
@@ -318,7 +318,7 @@ BEGIN
 	END;
 END ShowEvent;
 
-PROCEDURE ShowErrorCode(errorcode : WORD);
+PROCEDURE ShowErrorCode(errorcode : INTEGER);
 BEGIN
 	CASE errorcode OF
 		00H: KernelLog.String("OK");

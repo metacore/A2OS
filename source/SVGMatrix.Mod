@@ -6,7 +6,7 @@ CONST
 	Eps = 1.0E-5;
 
 TYPE
-	Number*=LONGREAL;
+	Number*=FLOAT64;
 
 	Point*=RECORD
 		x*, y* : Number;

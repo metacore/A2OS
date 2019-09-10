@@ -82,7 +82,7 @@ TYPE
 
 VAR
 	intToChar: POINTER TO ARRAY OF CHAR;
-	charToInt: POINTER TO ARRAY OF LONGINT;
+	charToInt: POINTER TO ARRAY OF SIGNED32;
 	(** The initial key assigned to a Data.Datum.  It is the only key that can be overwritten via SetKey. *)
 	Sentinel-: Key;
 
@@ -254,7 +254,7 @@ VAR
 
 (* The procedures needed to register type Datum so that its instances can be made persistent. *)
 	PROCEDURE LoadObj( R: DataIO.Reader;  VAR obj: OBJECT );
-	VAR version: SHORTINT;  ver: NbrInt.Integer;  new: Datum;
+	VAR version: SIGNED8;  ver: NbrInt.Integer;  new: Datum;
 	BEGIN
 		R.RawSInt( version );
 		IF version = -1 THEN

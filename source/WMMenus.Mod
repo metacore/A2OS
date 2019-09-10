@@ -26,9 +26,9 @@ CONST
 	ShadowOffsetVertical = 5;
 	ShadowOffsetHorizontal = 5;
 
-	LightGrey = LONGINT(0C0C0C0FFH);
-	LightGreyDrag = LONGINT(0C0C0C0C0H);
-	WhiteDrag = LONGINT(0FFFFFFC0H);
+	LightGrey = SIGNED32(0C0C0C0FFH);
+	LightGreyDrag = SIGNED32(0C0C0C0C0H);
+	WhiteDrag = SIGNED32(0FFFFFFC0H);
 
 	TextImageDistance = 4;
 	MinImageWidth = 4;
@@ -60,7 +60,7 @@ TYPE
 		horizontalI : BOOLEAN;
 
 		openDirection- : WMProperties.Int32Property;
-		openDirectionI : LONGINT;
+		openDirectionI : SIGNED32;
 
 		clSelected : WMProperties.ColorProperty;
 
@@ -82,7 +82,7 @@ TYPE
 
 		(* pointer handling *)
 		leftClick, dragPossible : BOOLEAN;
-		downX, downY : LONGINT;
+		downX, downY : SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -201,7 +201,7 @@ TYPE
 				WHILE (child # NIL) DO
 					IF ~(child IS Separator) THEN
 						IF (child = hover) THEN
-							canvas.Fill(WMRectangles.MakeRect(x, 0, x + ItemWidth(child, horizontalI), bounds.GetHeight()), LONGINT(0FFFF00FFH), WMGraphics.ModeCopy);
+							canvas.Fill(WMRectangles.MakeRect(x, 0, x + ItemWidth(child, horizontalI), bounds.GetHeight()), SIGNED32(0FFFF00FFH), WMGraphics.ModeCopy);
 						ELSIF (child = selection) THEN
 							canvas.Fill(WMRectangles.MakeRect(x, 0, x + ItemWidth(child, horizontalI), bounds.GetHeight()), clSelected.Get(), WMGraphics.ModeCopy);
 						END;
@@ -239,7 +239,7 @@ TYPE
 					x := HMenuDistance;
 					IF ~(child IS Separator) THEN
 						IF (child = hover) THEN
-							canvas.Fill(WMRectangles.MakeRect(0, y, bounds.GetWidth(), y + ItemHeight(child)), LONGINT(0FFFF00FFH), WMGraphics.ModeCopy);
+							canvas.Fill(WMRectangles.MakeRect(0, y, bounds.GetWidth(), y + ItemHeight(child)), SIGNED32(0FFFF00FFH), WMGraphics.ModeCopy);
 						ELSIF (child = selection) THEN
 							canvas.Fill(WMRectangles.MakeRect(0, y, bounds.GetWidth(), y + ItemHeight(child)), clSelected.Get(), WMGraphics.ModeCopy);
 						END;
@@ -593,7 +593,7 @@ TYPE
 		END MyStartDrag;
 
 		PROCEDURE DragWasAccepted(sender, data : ANY);
-		VAR di : WMWindowManager.DragInfo; itf : WMDropTarget.DropInterface; ignoreRes : WORD;
+		VAR di : WMWindowManager.DragInfo; itf : WMDropTarget.DropInterface; ignoreRes : INTEGER;
 		BEGIN
 			IF (data # NIL) & (data IS WMWindowManager.DragInfo) THEN
 				di := data(WMWindowManager.DragInfo);
@@ -763,9 +763,9 @@ TYPE
 
 	ShadowWindow = OBJECT(WMWindowManager.Window)
 	VAR
-		type, color : LONGINT;
+		type, color : SIGNED32;
 
-		PROCEDURE &New(type : LONGINT);
+		PROCEDURE &New(type : SIGNED32);
 		BEGIN
 			ASSERT((type = Right) OR (type = Bottom));
 			SELF.type := type;
@@ -773,7 +773,7 @@ TYPE
 			color := 04FH;
 		END New;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : LONGINT);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : SIGNED32);
 		BEGIN
 			canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), color, WMGraphics.ModeSrcOverDst);
 		END Draw;
@@ -787,7 +787,7 @@ TYPE
 		menuPanel : MenuPanel;
 		takesFocus : BOOLEAN;
 
-		PROCEDURE &Open*(x, y : SIZE; openDirection : LONGINT; menu : WMTrees.Tree; root : WMTrees.TreeNode; parent : MenuPanel; takesFocus, indicate : BOOLEAN);
+		PROCEDURE &Open*(x, y : SIZE; openDirection : SIGNED32; menu : WMTrees.Tree; root : WMTrees.TreeNode; parent : MenuPanel; takesFocus, indicate : BOOLEAN);
 		VAR width, height, dx, dy : SIZE; ignore : BOOLEAN; flags : SET;
 		BEGIN
 			NEW(menuPanel);
@@ -841,7 +841,7 @@ TYPE
 			END;
 		END FocusLost;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : LONGINT); (** override *)
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : SIGNED32); (** override *)
 		BEGIN
 			Draw^(canvas, w, h, q);
 			WMGraphicUtilities.DrawRect(canvas, WMRectangles.MakeRect(0, 0, w, h), WMGraphics.Black, WMGraphics.ModeCopy);
@@ -986,7 +986,7 @@ BEGIN
 END AddChild;
 
 PROCEDURE Find*(CONST path : ARRAY OF CHAR; menu : WMTrees.Tree) : WMTrees.TreeNode;
-VAR caption : ARRAY 256 OF CHAR; child, node, parent : WMTrees.TreeNode; i, j : LONGINT;
+VAR caption : ARRAY 256 OF CHAR; child, node, parent : WMTrees.TreeNode; i, j : SIGNED32;
 BEGIN
 	ASSERT(menu # NIL);
 	node := NIL;
@@ -1023,7 +1023,7 @@ BEGIN
 END Find;
 
 PROCEDURE AddItemNode*(CONST path : ARRAY OF CHAR; menu : WMTrees.Tree) : WMTrees.TreeNode;
-VAR caption : ARRAY 256 OF CHAR; node, parent : WMTrees.TreeNode; i, j : LONGINT;
+VAR caption : ARRAY 256 OF CHAR; node, parent : WMTrees.TreeNode; i, j : SIGNED32;
 BEGIN
 	ASSERT(menu # NIL);
 	menu.Acquire;

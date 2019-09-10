@@ -4,7 +4,7 @@ IMPORT
 	Kernel32,SYSTEM,Streams,FileHandlers;
 
 PROCEDURE Read(VAR commandLine: ARRAY OF CHAR);
-VAR adr: ADDRESS; i: LONGINT; ch: CHAR;
+VAR adr: ADDRESS; i: SIGNED32; ch: CHAR;
 BEGIN
 	adr := Kernel32.GetCommandLine();
 	SYSTEM.GET(adr,ch);

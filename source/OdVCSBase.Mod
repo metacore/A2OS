@@ -105,19 +105,19 @@ TYPE
 	PLinkNode = POINTER TO TLinkNode;
 	TLinkNode = RECORD
 						next: PLinkNode;
-						pos: LONGINT;
+						pos: SIGNED32;
 					END;
 	THashList = ARRAY HashLen OF PLinkNode;
 	PHashList = POINTER TO THashList;
 	TWorkBytes = ARRAY PrefixLen OF CHAR;
 	TData = POINTER TO ARRAY OF CHAR;
 	TLog* = RECORD
-		versionID*: LONGINT;
+		versionID*: SIGNED32;
 		author*: ARRAY 127 OF CHAR;
 		logText*: ARRAY 256 OF CHAR;
 		date*: ARRAY 22 OF CHAR;
-		lenOfDelta: LONGINT;
-		lenOfOld: LONGINT; (* file length of old version to allocate
+		lenOfDelta: SIGNED32;
+		lenOfOld: SIGNED32; (* file length of old version to allocate
 			a matching buffer *)
 		flags* : SET;
 	END;
@@ -128,7 +128,7 @@ TYPE
 VAR
 	errMsg*: ARRAY 256 OF CHAR;
 	formatStr: ARRAY FormatLen+1 OF CHAR;
-	res: WORD;
+	res: INTEGER;
 
 (* Split a filename in it's directory part and member name.
 	filename = [ filesystem ":" ] ["/"] [ dir "/" ] base. *)
@@ -160,10 +160,10 @@ BEGIN
 END splitDirBase;
 
 (** Create directory for a filename if it doesn't exist. *)
-PROCEDURE makeDirs(name: ARRAY OF CHAR): WORD;
+PROCEDURE makeDirs(name: ARRAY OF CHAR): INTEGER;
 VAR
 	dir, base: ARRAY 128 OF CHAR;
-	res: WORD;
+	res: INTEGER;
 	dirFile: Files.File;
 BEGIN
 	Files.SplitPath(name, dir, base);
@@ -177,7 +177,7 @@ BEGIN
 END makeDirs;
 
 PROCEDURE DateTime*(VAR s: ARRAY OF CHAR);
-VAR date, time: LONGINT; dateTime: Dates.DateTime; timeStr: ARRAY 16 OF CHAR;
+VAR date, time: SIGNED32; dateTime: Dates.DateTime; timeStr: ARRAY 16 OF CHAR;
 BEGIN
 	Clock.Get(time, date);
 	dateTime := Dates.OberonToDateTime(date, time);
@@ -187,10 +187,10 @@ END DateTime;
 
 (** Hashing stuff *)
 
-PROCEDURE Hash(toHash: TWorkBytes): LONGINT;
+PROCEDURE Hash(toHash: TWorkBytes): SIGNED32;
 
 VAR
-	i, h: LONGINT;
+	i, h: SIGNED32;
 
 BEGIN
 	h := 0;
@@ -201,10 +201,10 @@ BEGIN
 END Hash;
 
 
-PROCEDURE AccessArray(arr: TData; len, left, right: LONGINT; VAR ret: ARRAY OF CHAR);
+PROCEDURE AccessArray(arr: TData; len, left, right: SIGNED32; VAR ret: ARRAY OF CHAR);
 
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 
 BEGIN
 	IF (arr = NIL) OR (left > len - 1) OR (right > len - 1) THEN RETURN END;
@@ -215,11 +215,11 @@ BEGIN
 END AccessArray;
 
 
-PROCEDURE BuildLinkList(new: TData; lenNew: LONGINT; hashList: PHashList);
+PROCEDURE BuildLinkList(new: TData; lenNew: SIGNED32; hashList: PHashList);
 
 VAR
 	actBytes: TWorkBytes;
-	i, h: LONGINT;
+	i, h: SIGNED32;
 	oldNode, newNode: PLinkNode;
 
 BEGIN
@@ -240,12 +240,12 @@ BEGIN
 	END;
 END BuildLinkList;
 
-PROCEDURE FindLongest(old, new: TData; lenOld, lenNew, oldPos: LONGINT;
-		VAR copyStart: PLinkNode; VAR copyLen: LONGINT; hashList: PHashList);
+PROCEDURE FindLongest(old, new: TData; lenOld, lenNew, oldPos: SIGNED32;
+		VAR copyStart: PLinkNode; VAR copyLen: SIGNED32; hashList: PHashList);
 
 VAR
 	work: TWorkBytes;
-	h, n: LONGINT;
+	h, n: SIGNED32;
 	start: PLinkNode;
 
 BEGIN
@@ -274,9 +274,9 @@ END FindLongest;
 (** Delta stuff *)
 
 (** DeltaAddTag   AddLen(ci) AddData(d) *)
-PROCEDURE EmitAdd(old: TData; VAR dr: Files.Rider; offset, length: LONGINT);
+PROCEDURE EmitAdd(old: TData; VAR dr: Files.Rider; offset, length: SIGNED32);
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	dr.file.Write(dr, DeltaAddTag);
 	Files.WriteNum(dr, length);
@@ -284,7 +284,7 @@ BEGIN
 END EmitAdd;
 
 (**  DeltaCopyTag CopyLen(ci) CopyOffset(ci)  *)
-PROCEDURE EmitCopy(VAR dr: Files.Rider; offset, length: LONGINT);
+PROCEDURE EmitCopy(VAR dr: Files.Rider; offset, length: SIGNED32);
 BEGIN
 	dr.file.Write(dr, DeltaCopyTag);
 	Files.WriteNum(dr, length);
@@ -293,10 +293,10 @@ END EmitCopy;
 
 (** add delta information to diff data *)
 PROCEDURE CreateDelta*(old, new: TData; VAR dr: Files.Rider;
-	lenOld, lenNew: LONGINT);
+	lenOld, lenNew: SIGNED32);
 
 VAR
-	oldPos, addStart, copyLen: LONGINT;
+	oldPos, addStart, copyLen: SIGNED32;
 	copyStart: PLinkNode;
 	hashList: PHashList;
 
@@ -341,7 +341,7 @@ END CreateDelta;
 PROCEDURE ApplyDelta*(old, new: TData; dr: Files.Rider);
 
 VAR
-	oldPos, newPos, len, i, kk: LONGINT;
+	oldPos, newPos, len, i, kk: SIGNED32;
 	tag: CHAR;
 BEGIN
 	oldPos := 0;
@@ -387,7 +387,7 @@ END NameToDelta;
 
 PROCEDURE NameToBak(name: TFileName; VAR df: TFileName);
 VAR
-	i: INTEGER;
+	i: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE (name[i] # 0X) DO
@@ -398,9 +398,9 @@ BEGIN
 END NameToBak;
 
 (* get text length from delta file, rider is set to beginning of text *)
-PROCEDURE GetTextLen(VAR fr: Files.Rider; f: Files.File): LONGINT;
+PROCEDURE GetTextLen(VAR fr: Files.Rider; f: Files.File): SIGNED32;
 VAR
-	len: LONGINT;
+	len: SIGNED32;
 BEGIN
 	f.Set(fr, FormatLen+4+1); (* skip format + flags(SET) + TextTag *)
 	Files.ReadNum(fr, len);
@@ -409,9 +409,9 @@ END GetTextLen;
 
 
 (* get newest version number from first diff in file with rider *)
-PROCEDURE GetNewestVersion(fr: Files.Rider; f: Files.File): LONGINT;
+PROCEDURE GetNewestVersion(fr: Files.Rider; f: Files.File): SIGNED32;
 VAR
-	newestVersion, len: LONGINT;
+	newestVersion, len: SIGNED32;
 	tag: CHAR;
 	df: Files.File;
 	dfr: Files.Rider;
@@ -428,10 +428,10 @@ BEGIN
 END GetNewestVersion;
 
 (* get position of diff from version n to n-1 *)
-PROCEDURE GetDiffPos(fr: Files.Rider; f: Files.File; n: LONGINT): Files.Position;
+PROCEDURE GetDiffPos(fr: Files.Rider; f: Files.File; n: SIGNED32): Files.Position;
 VAR
 	diffPos, nextDiffPos: Files.Position;
-	len, diffLen, version: LONGINT;
+	len, diffLen, version: SIGNED32;
 	tag: CHAR;
 	df: Files.File;
 	dfr: Files.Rider;
@@ -459,9 +459,9 @@ BEGIN
 END GetDiffPos;
 
 (** get newest version number from first diff in file by name *)
-PROCEDURE Init*(name: TFileName): LONGINT;
+PROCEDURE Init*(name: TFileName): SIGNED32;
 VAR
-	newestVersion: LONGINT;
+	newestVersion: SIGNED32;
 	df: Files.File;
 	dfr: Files.Rider;
 	dfn: TFileName;
@@ -479,12 +479,12 @@ END Init;
 
 
 (** get log data for version n *)
-PROCEDURE GetLog*(name: TFileName; n: LONGINT; VAR log: TLog);
+PROCEDURE GetLog*(name: TFileName; n: SIGNED32; VAR log: TLog);
 
 VAR
-	diffLen, num: LONGINT;
+	diffLen, num: SIGNED32;
 	diffStart: Files.Position;
-	textLen: LONGINT;
+	textLen: SIGNED32;
 	dFileName: TFileName;
 	df: Files.File;
 	dr: Files.Rider;
@@ -564,14 +564,14 @@ BEGIN
 END GetLog;
 
 (** get delta information for a version, set dr to beginning *)
-PROCEDURE GetDelta*(name: TFileName; n: LONGINT; VAR df: Files.File;
+PROCEDURE GetDelta*(name: TFileName; n: SIGNED32; VAR df: Files.File;
 	VAR dr: Files.Rider);
 VAR
 	diffStart: Files.Position;
-	diffLen, version: LONGINT;
+	diffLen, version: SIGNED32;
 	dFileName: TFileName;
 	log: TLog;
-	tag: CHAR; num: LONGINT;
+	tag: CHAR; num: SIGNED32;
 BEGIN
 	IF df = NIL THEN
 		NameToDelta(name, dFileName);
@@ -620,11 +620,11 @@ BEGIN
 END GetDelta;
 
 (** set log data for a version *)
-PROCEDURE SetLog*(name: TFileName; n: INTEGER; log: TLog);
+PROCEDURE SetLog*(name: TFileName; n: SIGNED16; log: TLog);
 
 VAR
-	nrOfDeltas: INTEGER;
-	fPos: LONGINT;
+	nrOfDeltas: SIGNED16;
+	fPos: SIGNED32;
 	dFileName: TFileName;
 	oldLog: TLog;
 	df: Files.File;
@@ -656,11 +656,11 @@ BEGIN
 END SetLog;
 
 (** not yet implemented *)
-PROCEDURE GetDeltaList*(name: TFileName; VAR list: TDList): INTEGER;
+PROCEDURE GetDeltaList*(name: TFileName; VAR list: TDList): SIGNED16;
 
 VAR
 	log: TLog;
-	i: INTEGER;
+	i: SIGNED16;
 
 BEGIN
 	i := 1;
@@ -683,25 +683,25 @@ BEGIN
 END WriteTag;
 
 (** DeltaV.Create: Create a new version of <name> in <history path><name>.VCS. Also for initial version..*)
-PROCEDURE Create*(historyName, name: TFileName; log: TLog; flags: SET): LONGINT;
+PROCEDURE Create*(historyName, name: TFileName; log: TLog; flags: SET): SIGNED32;
 BEGIN
 	RETURN newVersion(historyName, name, log, flags)
 END Create;
 
 (** Create a new version of <name> in <name>.VCS. Also for initial version.
 Old variant without an explicit history path.*)
-PROCEDURE NewVersion*(name: TFileName; log: TLog; flags: SET): LONGINT;
+PROCEDURE NewVersion*(name: TFileName; log: TLog; flags: SET): SIGNED32;
 BEGIN
 	RETURN newVersion(name, name, log, flags)
 END NewVersion;
 
-PROCEDURE newVersion(historyName, name: TFileName; log: TLog; flags: SET): LONGINT;
+PROCEDURE newVersion(historyName, name: TFileName; log: TLog; flags: SET): SIGNED32;
 VAR
 	ch: CHAR;
 	i: Files.Position;
 	tmpDFileName, dFileName, dFileNameBak: TFileName;
 	old, new: TData;
-	lenNew, oldDiffStart: LONGINT;
+	lenNew, oldDiffStart: SIGNED32;
 	odf, ndf, f, diff: Files.File; (* old/new delta file *)
 	odfRdr, ndfRdr, fRdr, diffRdr: Files.Rider;
 	msg: ARRAY 256 OF CHAR;
@@ -713,7 +713,7 @@ BEGIN
 	f := Files.Old(name);
 	IF f # NIL THEN
 	f.Set(fRdr, 0);
-		lenNew := f.Length()(LONGINT);
+		lenNew := f.Length()(SIGNED32);
 		NEW(new, lenNew);
 		(* read new file version in buffer new *)
 		fRdr.file.ReadBytes(fRdr, new^, 0, lenNew);
@@ -741,7 +741,7 @@ BEGIN
 		log.versionID :=  GetNewestVersion(odfRdr, odf);
 		INC(log.versionID);
 		log.lenOfOld := GetTextLen(odfRdr, odf);
-		oldDiffStart := odfRdr.file.Pos(odfRdr)(LONGINT) + log.lenOfOld;
+		oldDiffStart := odfRdr.file.Pos(odfRdr)(SIGNED32) + log.lenOfOld;
 	ELSE (* first version *)
 		log.versionID := 1;
 		log.lenOfOld := 0;
@@ -797,14 +797,14 @@ END newVersion;
 (** Get a version from <name>.VCS and save it as <newFileName>.
 DeltaV.Select: can be used because the complete paths are already given for source and sink.
 *)
-PROCEDURE View*(name: TFileName; n: LONGINT; newFileName: TFileName): WORD;
+PROCEDURE View*(name: TFileName; n: SIGNED32; newFileName: TFileName): INTEGER;
 VAR
-	version: LONGINT; res: WORD;
+	version: SIGNED32; res: INTEGER;
 	ok: BOOLEAN;
 	dFileName: TFileName;
 	old, new: TData;
 	log: TLog;
-	lenOld, lenNew: LONGINT;
+	lenOld, lenNew: SIGNED32;
 	df, f: Files.File;
 	dr, r: Files.Rider;
 BEGIN
@@ -860,18 +860,18 @@ BEGIN
 END View;
 
 (** remove versions newer than <n> and create new working file if it doesn't exist *)
-PROCEDURE Extract*(name: TFileName; n: LONGINT): LONGINT;
+PROCEDURE Extract*(name: TFileName; n: SIGNED32): SIGNED32;
 
 VAR
-	version: LONGINT;
+	version: SIGNED32;
 	ok: BOOLEAN;
 	tmpDFileName, dFileName, dFileNameBak: TFileName;
 	old, new: TData;
 	log: TLog;
-	lenOld, lenNew, lenDelta, fPos: LONGINT;
+	lenOld, lenNew, lenDelta, fPos: SIGNED32;
 	tdf, df, f: Files.File;
 	tdr, dr, r, deltaRdr: Files.Rider;
-	i: LONGINT; ch: CHAR;
+	i: SIGNED32; ch: CHAR;
 	flags: SET;
 BEGIN
 	tmpDFileName := TmpDFile;

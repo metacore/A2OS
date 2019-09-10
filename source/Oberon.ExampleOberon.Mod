@@ -5,7 +5,7 @@ IMPORT AosKernel := Kernel IN A2, Texts, Oberon, Kernel;
 
 TYPE
 	Example = OBJECT
-		VAR i: LONGINT; w: Texts.Writer; t: Texts.Text; timer: AosKernel.Timer;
+		VAR i: SIGNED32; w: Texts.Writer; t: Texts.Text; timer: AosKernel.Timer;
 	BEGIN {ACTIVE}
 		NEW(timer);
 		Kernel.LockOberon;

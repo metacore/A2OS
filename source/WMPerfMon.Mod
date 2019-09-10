@@ -125,7 +125,7 @@ TYPE
 			panel : WMStandardComponents.Panel;
 			alerts : WMPerfMonTabAlerts.AlertsTab; systemPanel : WMPerfMonTabSystem.SystemTab;
 			processManager : WMProcessInfo.ProcessManager;
-			caption : Strings.String; i : LONGINT;
+			caption : Strings.String; i : SIGNED32;
 		BEGIN
 			panel := WMPerfMonComponents.NewPanel(WMComponents.AlignClient, 0, 0);
 
@@ -196,7 +196,7 @@ TYPE
 		END TabSelected;
 
 		PROCEDURE SelectTabByName(CONST name : ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			LOOP
 				IF i >= LEN(tabList) THEN EXIT; END;
@@ -240,7 +240,7 @@ TYPE
 			vc : WMComponents.VisualComponent;
 			configuration, size : WMRestorable.XmlElement;
 			curTabName : ARRAY 32 OF CHAR;
-			si, sbs, scri : LONGINT;
+			si, sbs, scri : SIGNED32;
 			scale : BOOLEAN;
 		BEGIN
 			vc := CreateForm(); scaling := FALSE; scale := FALSE;
@@ -289,7 +289,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*;
 VAR w : Window;

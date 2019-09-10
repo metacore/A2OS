@@ -70,7 +70,7 @@ MODULE HPCalc IN Oberon;	(** portable *)	(** prk  **)
 		o A Swap operation which swaps the TOS and TOS-1 (proposed by pjm)
 		o When clicking on Integer it displays "switch to base mode".  This should be "switched to integer mode". (found by PM)
 		o Execute Reset and then any operation which takes a parameter.  Garbage is displayed at the top of the stack. (found by PM)
-		o use LONGREAL instead of REAL, everywhere. (PM proposal)
+		o use FLOAT64 instead of FLOAT32, everywhere. (PM proposal)
 		o small improvement in the OutS/OutR/OutI procedures
 		o improved parsing: in hex view mode, the input is interpreted as hex input.
 		o copy of partial results now supported
@@ -85,7 +85,7 @@ MODULE HPCalc IN Oberon;	(** portable *)	(** prk  **)
 		o DROP command inserted (PS proposal)
 
 	1.1 / 04.06.96 prk
-		o changed the stack. Uses Reals and BIT instead of SYSTEM to convert to and from LONGINT
+		o changed the stack. Uses Reals and BIT instead of SYSTEM to convert to and from SIGNED32
 		o View modes (Decimal or Hex) inserted
 		o Name changed to HPCalc
 		o Output fields are now locked
@@ -123,10 +123,10 @@ TYPE
 
 	CalcModel = POINTER TO CalcModelDesc;
 	CalcModelDesc = RECORD (Gadgets.ObjDesc)
-		Stack: ARRAY StackSize OF LONGINT;
-		TOS: LONGINT;
-		Mode, Base: SHORTINT;
-		Status: SHORTINT;
+		Stack: ARRAY StackSize OF SIGNED32;
+		TOS: SIGNED32;
+		Mode, Base: SIGNED8;
+		Status: SIGNED8;
 		SubPanel: Objects.Object;	(* functions displayed, used to remove the functions *)
 	END;
 
@@ -153,7 +153,7 @@ VAR
 
 (* ---------------------- Stack Handling Functions ----------------- *)
 
-PROCEDURE Push(m: CalcModel; i: LONGINT);	(* push to the stack *)
+PROCEDURE Push(m: CalcModel; i: SIGNED32);	(* push to the stack *)
 BEGIN
 	m.Stack[m.TOS] := i;
 	IF m.TOS < StackSize-1 THEN INC(m.TOS)
@@ -161,36 +161,36 @@ BEGIN
 	END
 END Push;
 
-PROCEDURE Pop(m: CalcModel; VAR i: LONGINT);	(* pop from the stack *)
+PROCEDURE Pop(m: CalcModel; VAR i: SIGNED32);	(* pop from the stack *)
 BEGIN
 	IF m.TOS > 0 THEN DEC(m.TOS); i := m.Stack[m.TOS]
 	ELSE m.Status := Error
 	END
 END Pop;
 
-PROCEDURE PushI(m: CalcModel; i: LONGINT);	(* push Longint from the stack *)
+PROCEDURE PushI(m: CalcModel; i: SIGNED32);	(* push Longint from the stack *)
 BEGIN	Push (m, i); Push (m, 0)
 END PushI;
 
-PROCEDURE PopI(m: CalcModel; VAR i: LONGINT);	(* pop Longint from the stack *)
-	VAR dummy: LONGINT;
+PROCEDURE PopI(m: CalcModel; VAR i: SIGNED32);	(* pop Longint from the stack *)
+	VAR dummy: SIGNED32;
 BEGIN	Pop (m, dummy); Pop (m, i)
 END PopI;
 
-PROCEDURE PushR(m: CalcModel; r: LONGREAL);	(* push Longreal on the stack *)
-	VAR h, l: LONGINT;
+PROCEDURE PushR(m: CalcModel; r: FLOAT64);	(* push Longreal on the stack *)
+	VAR h, l: SIGNED32;
 BEGIN
 	Reals.IntL (r, h, l); Push (m, h); Push (m, l)
 END PushR;
 
-PROCEDURE PopR(m: CalcModel; VAR r: LONGREAL);	(* pop Longreal from the stack *)
-	VAR h, l: LONGINT;
+PROCEDURE PopR(m: CalcModel; VAR r: FLOAT64);	(* pop Longreal from the stack *)
+	VAR h, l: SIGNED32;
 BEGIN
 	Pop (m, l); Pop (m, h); r := Reals.RealL (h, l)
 END PopR;
 
 PROCEDURE RotateStack (m: CalcModel);
-	VAR i, h, l: LONGINT;
+	VAR i, h, l: SIGNED32;
 BEGIN
 	IF (m.TOS <= 2) THEN RETURN END;	(* to few elements!! *)
 	h := m.Stack[0]; l := m.Stack[1];
@@ -221,11 +221,11 @@ BEGIN
 	RemoveSub (m);
 END ResetModel;
 
-PROCEDURE ChangeMode (m: CalcModel; from, to: SHORTINT);
-	VAR i: LONGINT;
+PROCEDURE ChangeMode (m: CalcModel; from, to: SIGNED8);
+	VAR i: SIGNED32;
 
-	PROCEDURE Convert (VAR h, l: LONGINT);
-		VAR r: LONGREAL;
+	PROCEDURE Convert (VAR h, l: SIGNED32);
+		VAR r: FLOAT64;
 	BEGIN
 		IF (from = Real) & (to = Integer) THEN
 			r := Reals.RealL (h, l); h := ENTIER(r); l := 0
@@ -243,8 +243,8 @@ BEGIN
 	END;
 END ChangeMode;
 
-PROCEDURE GetModelValue (F: CalcModel; pos: INTEGER; VAR s: ARRAY OF CHAR): INTEGER;	(* get textual value from stack *)
-	VAR	lr: LONGREAL; l, h: LONGINT;
+PROCEDURE GetModelValue (F: CalcModel; pos: SIGNED16; VAR s: ARRAY OF CHAR): SIGNED16;	(* get textual value from stack *)
+	VAR	lr: FLOAT64; l, h: SIGNED32;
 BEGIN
 	(* Check Range *)
 	IF (F.TOS <= pos*2) THEN
@@ -335,14 +335,14 @@ END GetModel;
 (*	The basic functions of the calculator *)
 
 PROCEDURE DoRealFunction (m: CalcModel; VAR FN: ARRAY OF CHAR);
-	VAR	a, b, r: LONGREAL;
+	VAR	a, b, r: FLOAT64;
 BEGIN
 	IF FN = "ABS" THEN
 		PopR (m, b); r := ABS (b)
 	ELSIF FN = "MAXL" THEN
-		r := MAX(LONGINT)
+		r := MAX(SIGNED32)
 	ELSIF FN = "MINL" THEN
-		r := MIN(LONGINT)
+		r := MIN(SIGNED32)
 	ELSIF FN = "SIN" THEN
 		PopR (m, b); r := MathL.sin (b)
 	ELSIF FN= "COS" THEN
@@ -397,14 +397,14 @@ BEGIN
 END DoRealFunction;
 
 PROCEDURE DoIntegerFunction (m: CalcModel; VAR FN: ARRAY OF CHAR);
-	VAR a, b, r: LONGINT;
+	VAR a, b, r: SIGNED32;
 BEGIN
 	IF FN = "+" THEN
 		PopI (m, b); PopI (m, a); r := a+b
 	ELSIF FN = "MAXL" THEN
-		r := MAX(LONGINT)
+		r := MAX(SIGNED32)
 	ELSIF FN = "MINL" THEN
-		r := MIN(LONGINT)
+		r := MIN(SIGNED32)
 	ELSIF FN = "-" THEN
 		PopI (m, b); PopI (m, a); r := a-b
 	ELSIF FN = "*" THEN
@@ -441,7 +441,7 @@ BEGIN
 END DoIntegerFunction;
 
 PROCEDURE Calc;
-	VAR r, r1: LONGREAL; tmp: ARRAY 64 OF CHAR; j, l: LONGINT; hex, number: BOOLEAN; ch: CHAR; R: Texts.Reader;
+	VAR r, r1: FLOAT64; tmp: ARRAY 64 OF CHAR; j, l: SIGNED32; hex, number: BOOLEAN; ch: CHAR; R: Texts.Reader;
 		m: CalcModel; o, dlink: Objects.Object;
 
 	PROCEDURE Read;
@@ -557,7 +557,7 @@ END RemoveFunctions;
 (** Append the functions buttons to the main panel *)
 PROCEDURE ShowFunctions*;
 	VAR class, tmp: ARRAY 32 OF CHAR; f: Functions; obj: Panels.Panel; S: Texts.Scanner; v, o: Objects.Object;
-			x, y: INTEGER; ctxt, new: Display.Frame; locked: BOOLEAN; h: INTEGER;
+			x, y: SIGNED16; ctxt, new: Display.Frame; locked: BOOLEAN; h: SIGNED16;
 			cm: Display.ConsumeMsg; mm: Display.ModifyMsg; ctrl: Display.ControlMsg;
 			m: CalcModel;
 
@@ -660,9 +660,9 @@ END NewView;
 
 (** HPCalc Panel generation *)
 PROCEDURE New*;	(* create a new HPCalc panel *)
-	VAR	p: Panels.Panel; c: CalcModel; v: Gadgets.Frame; f: FunctionClass; x, y: INTEGER; cmd: ARRAY 64 OF CHAR;
+	VAR	p: Panels.Panel; c: CalcModel; v: Gadgets.Frame; f: FunctionClass; x, y: SIGNED16; cmd: ARRAY 64 OF CHAR;
 
-	PROCEDURE NewCommand (msg: ARRAY OF CHAR; x, y: INTEGER);
+	PROCEDURE NewCommand (msg: ARRAY OF CHAR; x, y: SIGNED16);
 		VAR v: Objects.Object;
 	BEGIN
 		v := NewButton (msg, cmd); Panels.InsertChild (p, v(Gadgets.Frame), x, y);

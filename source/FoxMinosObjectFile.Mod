@@ -308,7 +308,7 @@ TYPE
 			END;
 		END GetEntries;
 
-		PROCEDURE Put32(offset: SIZE; number: LONGINT);
+		PROCEDURE Put32(offset: SIZE; number: SIGNED32);
 		BEGIN
 			IF Trace THEN
 				D.String("put32 at offset "); D.Int(offset,1);D.String(" : "); D.Hex(number,-8); D.Ln;
@@ -322,7 +322,7 @@ TYPE
 			code[offset] := CHR(number MOD 100H);
 		END Put32;
 
-		PROCEDURE Get32(offset: SIZE): LONGINT;
+		PROCEDURE Get32(offset: SIZE): SIGNED32;
 		BEGIN
 			RETURN ORD(code[offset]) + 100H*ORD(code[offset+1]) + 10000H * ORD(code[offset+2]) + 1000000H*ORD(code[offset+3]);
 		END Get32;
@@ -392,7 +392,7 @@ TYPE
 									Basic.WriteSegmentedName(D.Log, fixup.symbol.name); D.String("+"); D.Int(fixup.displacement,1) ;
 									D.Ln;
 								END;
-								Put32(this, patch(LONGINT));
+								Put32(this, patch(SIGNED32));
 								prev := this;
 							ELSE (* external fixup, handled in imports *)
 							END;
@@ -407,8 +407,8 @@ TYPE
 		BEGIN
 			Global.ModuleFileName(module.module.name,module.module.context,moduleName);
 			fp := fingerprinter.SymbolFP(module.module);
-			w.RawString(moduleName); w.RawLInt(LONGINT(fp.public));
-			w.RawLInt(FixSelf()(LONGINT));
+			w.RawString(moduleName); w.RawLInt(SIGNED32(fp.public));
+			w.RawLInt(FixSelf()(SIGNED32));
 			Imports;
 			Commands;
 			Entries(bodyOffset);
@@ -450,7 +450,7 @@ TYPE
 								opCode | pno | next
 							*)
 							instr := instr MOD 1000000H + i * 10000H + prev DIV 4;
-							Put32(this, instr(LONGINT));
+							Put32(this, instr(SIGNED32));
 							prev := this;
 							first := first.nextFixup;
 						END;
@@ -470,12 +470,12 @@ TYPE
 					END;
 					w.RawString(name);
 					fp := fingerprinter.SymbolFP(import.module);
-					w.RawLInt(LONGINT(fp.public));
+					w.RawLInt(SIGNED32(fp.public));
 
 					(* get all imported entries of imported module *)
 					GetEntries(import.module.moduleScope, numberEntries, entries);
 					(* generate fixups to all non-zero entries *)
-					w.RawLInt(MakeFixups()(LONGINT));
+					w.RawLInt(MakeFixups()(SIGNED32));
 				END;
 				import := import.nextImport;
 			END;
@@ -499,7 +499,7 @@ TYPE
 							D.Str("Command : "); D.Str(name); D.Str(" @ "); D.Int(p.offset ,1);
 						END;
 						w.RawString(name);
-						w.RawLInt((p.offset DIV 4)(LONGINT));
+						w.RawLInt((p.offset DIV 4)(SIGNED32));
 						IF Trace THEN D.Ln END
 					END
 				END
@@ -513,18 +513,18 @@ TYPE
 			i,numberEntries: SIZE; entry: ARRAY 256 OF IntermediateCode.Section; (* more is not allowed anyway in the runtime system *)
 		BEGIN
 			GetEntries(moduleScope, numberEntries, entry);
-			w.RawLInt(numberEntries(LONGINT));
+			w.RawLInt(numberEntries(SIGNED32));
 			w.RawLInt(0); (* body entry: body is fixed at position 0, cf. MakeSectionOffsets *)
 			FOR i := 1 TO numberEntries DO
 				ASSERT(entry[i].offset MOD 4 = 0);
-				w.RawLInt((entry[i].offset)(LONGINT) DIV 4); (* entries here must be byte wise because jumps take place with absolute fixup - I cannot distinguish here *)
+				w.RawLInt((entry[i].offset)(SIGNED32) DIV 4); (* entries here must be byte wise because jumps take place with absolute fixup - I cannot distinguish here *)
 			END;
 		END Entries;
 
 		(* dataSize:Int32 *)
 		PROCEDURE Data;
 		BEGIN
-			w.RawLInt(dataSize(LONGINT));
+			w.RawLInt(dataSize(SIGNED32));
 		END Data;
 
 		(* codeLen:Int32 {code:Int32}:codeLen *)
@@ -532,7 +532,7 @@ TYPE
 		VAR i: SIZE;
 		BEGIN
 			ASSERT(codeSize MOD 4 = 0);
-			w.RawLInt((codeSize DIV 4)(LONGINT));
+			w.RawLInt((codeSize DIV 4)(SIGNED32));
 			FOR i := 0 TO codeSize-1 DO
 				w.Char(code[i]);
 			END;

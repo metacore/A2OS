@@ -1,7 +1,7 @@
 (* ETH Oberon, Copyright 2000 ETH Zuerich Institut fuer Computersysteme, ETH Zentrum, CH-8092 Zuerich.
 Refer to the "General ETH Oberon System Source License" contract available at: http://www.oberon.ethz.ch/ *)
 
-(* fof: modification of Scrollbars to handle REAL and LONGREAL numbers, needed by ants *)
+(* fof: modification of Scrollbars to handle FLOAT32 and FLOAT64 numbers, needed by ants *)
 (* this file is part of the ants distribution by Felix Friedrich, (c) 2002, above Copyright of the ETH applies. *)
 
 
@@ -23,14 +23,14 @@ Refer to the "General ETH Oberon System Source License" contract available at: h
 		Frame* = POINTER TO FrameDesc;
 		FrameDesc* = RECORD (Gadgets.FrameDesc)
 			state0*: SET;
-			backC*, knoblen: INTEGER;
-			min*, max*, step*, val*,size*: LONGREAL;
+			backC*, knoblen: SIGNED16;
+			min*, max*, step*, val*,size*: FLOAT64;
 			stepO*, minO*, maxO*: Objects.Object;
 			vertical*: BOOLEAN
 		END;
 
 	VAR
-		HoldTime, WaitTime, mayscroll: LONGINT;
+		HoldTime, WaitTime, mayscroll: SIGNED32;
 
 	PROCEDURE TimeOk (): BOOLEAN;
 	BEGIN
@@ -40,11 +40,11 @@ Refer to the "General ETH Oberon System Source License" contract available at: h
 	END TimeOk;
 
 	(* Given a position, calculate the relative slider position. *)
-PROCEDURE Value (F: Frame; x, y, w, h, X, Y: INTEGER; min, max: LONGREAL): LONGREAL;
-	VAR res: LONGREAL;
+PROCEDURE Value (F: Frame; x, y, w, h, X, Y: SIGNED16; min, max: FLOAT64): FLOAT64;
+	VAR res: FLOAT64;
 
-PROCEDURE CalcVal (x, w, bx, bw: INTEGER; min, max: LONGREAL): LONGREAL;
-	VAR r, d: LONGREAL;
+PROCEDURE CalcVal (x, w, bx, bw: SIGNED16; min, max: FLOAT64): FLOAT64;
+	VAR r, d: FLOAT64;
 BEGIN
 	d := max - min;
 	IF d = 0 THEN r := 0
@@ -65,11 +65,11 @@ BEGIN
 END Value;
 
 (* Given the min, max and val, calculate the absolute bar position *)
-PROCEDURE Pos (F: Frame; x, y, w, h, bw: INTEGER; min, max, val: LONGREAL): INTEGER;
-	VAR res: INTEGER;
+PROCEDURE Pos (F: Frame; x, y, w, h, bw: SIGNED16; min, max, val: FLOAT64): SIGNED16;
+	VAR res: SIGNED16;
 
-PROCEDURE CalcPos (x, w, bw: INTEGER; min, max, val: LONGREAL): INTEGER;
-	VAR d: LONGREAL;
+PROCEDURE CalcPos (x, w, bw: SIGNED16; min, max, val: FLOAT64): SIGNED16;
+	VAR d: FLOAT64;
 BEGIN
 	d := ABS(max - min);
 	IF d = 0 THEN RETURN x
@@ -91,7 +91,7 @@ BEGIN
 	RETURN res
 END Pos;
 
-PROCEDURE SendUpdate (F: Frame; px, py: INTEGER; dlink: Objects.Object; full: BOOLEAN);
+PROCEDURE SendUpdate (F: Frame; px, py: SIGNED16; dlink: Objects.Object; full: BOOLEAN);
 	VAR D: Display.DisplayMsg;
 BEGIN
 	D.device := Display.screen; D.id := Display.area; D.dlink := dlink;
@@ -108,7 +108,7 @@ BEGIN
 	F.handle(F, D)
 END SendUpdate;
 
-PROCEDURE SetValue (F: Frame; val: LONGREAL);
+PROCEDURE SetValue (F: Frame; val: FLOAT64);
 	VAR name: ARRAY 64 OF CHAR;
 BEGIN
 	F.val := val;
@@ -118,8 +118,8 @@ BEGIN
 	END
 END SetValue;
 
-PROCEDURE SetValueAndUpdate (F: Frame; val: LONGREAL; px, py: INTEGER; dlink: Objects.Object);
-	VAR name: ARRAY 64 OF CHAR; stepsize: LONGREAL;
+PROCEDURE SetValueAndUpdate (F: Frame; val: FLOAT64; px, py: SIGNED16; dlink: Objects.Object);
+	VAR name: ARRAY 64 OF CHAR; stepsize: FLOAT64;
 BEGIN
 	F.val := val;
 	IF F.obj # NIL THEN
@@ -147,7 +147,7 @@ BEGIN
 END GetValue;
 
 PROCEDURE AdjustKnoblen (F: Frame);
-	VAR W: INTEGER; kl: LONGREAL;
+	VAR W: SIGNED16; kl: FLOAT64;
 BEGIN
 	IF F.minO # NIL THEN Attributes.GetLongReal(F.minO, "Value", F.min) END;
 	IF F.maxO # NIL THEN Attributes.GetLongReal(F.maxO, "Value", F.max) END;
@@ -159,8 +159,8 @@ BEGIN
 	F.knoblen := SHORT(ENTIER(kl))
 END AdjustKnoblen;
 
-PROCEDURE DrawKnob (Q: Display3.Mask; x, y, w, h: INTEGER; vertical: BOOLEAN);
-	VAR m: INTEGER;
+PROCEDURE DrawKnob (Q: Display3.Mask; x, y, w, h: SIGNED16; vertical: BOOLEAN);
+	VAR m: SIGNED16;
 BEGIN
 	IF vertical THEN
 		Display3.FilledRect3D(Q, Display3.topC, Display3.bottomC, Display3.groupC, x, y, w, h, 1, Display3.replace);
@@ -179,8 +179,8 @@ BEGIN
 	END
 END DrawKnob;
 
-PROCEDURE RestoreFrame (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER);
-	VAR i: INTEGER;
+PROCEDURE RestoreFrame (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16);
+	VAR i: SIGNED16;
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
 	Display3.FilledRect3D(Q, Display3.bottomC, Display3.topC, F.backC, x, y, w, h, 1, Display3.replace);
@@ -229,12 +229,12 @@ BEGIN
 	END
 END RestoreFrame;
 
-PROCEDURE P (x: LONGINT): INTEGER;
+PROCEDURE P (x: SIGNED32): SIGNED16;
 BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 END P;
 
-PROCEDURE PrintKnob (Q: Display3.Mask; x, y, w, h: INTEGER; vertical: BOOLEAN);
-	VAR m: INTEGER;
+PROCEDURE PrintKnob (Q: Display3.Mask; x, y, w, h: SIGNED16; vertical: BOOLEAN);
+	VAR m: SIGNED16;
 BEGIN
 	IF vertical THEN
 		Printer3.FilledRect3D(Q, Display3.topC, Display3.bottomC, Display3.groupC, x, y, w, h, P(1), Display3.replace);
@@ -254,7 +254,7 @@ BEGIN
 END PrintKnob;
 
 PROCEDURE PrintFrame (F: Frame; VAR M: Display.DisplayMsg);
-	VAR Q: Display3.Mask; x, y, w, h, barw, knoblen, one, i : INTEGER;
+	VAR Q: Display3.Mask; x, y, w, h, barw, knoblen, one, i : SIGNED16;
 BEGIN
 	Gadgets.MakePrinterMask(F, M.x, M.y, M.dlink, Q);
 	x := M.x; y := M.y; w := P(F.W); h := P(F.H); barw := P(barW); knoblen := P(F.knoblen); one := P(1);
@@ -303,11 +303,11 @@ BEGIN
 	END
 END PrintFrame;
 
-PROCEDURE TrackFrame (F: Frame; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg);
-	VAR Q: Display3.Mask; keysum: SET; n: INTEGER; pos, npos, dpos, oldpos: LONGREAL;
+PROCEDURE TrackFrame (F: Frame; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg);
+	VAR Q: Display3.Mask; keysum: SET; n: SIGNED16; pos, npos, dpos, oldpos: FLOAT64;
 
-PROCEDURE Pushed (x, y, w, h: INTEGER; step: LONGREAL);
-	VAR pos: LONGREAL; on, newstate: BOOLEAN;
+PROCEDURE Pushed (x, y, w, h: SIGNED16; step: FLOAT64);
+	VAR pos: FLOAT64; on, newstate: BOOLEAN;
 
 PROCEDURE On (): BOOLEAN;
 BEGIN RETURN Effects.Inside(M.X, M.Y, x, y, w, h)
@@ -611,7 +611,7 @@ BEGIN
 END FrameBind;
 
 PROCEDURE FrameFile (F: Frame; VAR M: Objects.FileMsg);
-	VAR ver: LONGINT;
+	VAR ver: SIGNED32;
 BEGIN
 	IF M.id = Objects.store THEN
 		Files.WriteNum(M.R, VersionNo);
@@ -639,7 +639,7 @@ BEGIN
 END FrameFile;
 
 PROCEDURE FrameHandler* (F: Objects.Object; VAR M: Objects.ObjMsg);
-	VAR x, y, w, h: INTEGER; F1: Frame; Q: Display3.Mask;
+	VAR x, y, w, h: SIGNED16; F1: Frame; Q: Display3.Mask;
 BEGIN
 	WITH F: Frame DO
 		IF M IS Display.FrameMsg THEN

@@ -399,7 +399,7 @@ TYPE
 		END SetTabColor;
 
 		(* Set fixed width for the specified tab. If width = 0, the width of the tab is detemined by the width of the caption String *)
-		PROCEDURE SetTabWidth*(tab : Tab; width : LONGINT);
+		PROCEDURE SetTabWidth*(tab : Tab; width : SIGNED32);
 		BEGIN
 			Acquire;
 			tab.width := width;
@@ -740,11 +740,11 @@ BEGIN
 	NEW(t); RETURN t;
 END GenTab;
 
-PROCEDURE RectGlassShade*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; openSides : SET; borderWidth : LONGINT; down : BOOLEAN);
-VAR i, ul, dr, da, w, a, b, c, d : LONGINT;
+PROCEDURE RectGlassShade*(canvas : WMGraphics.Canvas; rect : WMRectangles.Rectangle; openSides : SET; borderWidth : SIGNED32; down : BOOLEAN);
+VAR i, ul, dr, da, w, a, b, c, d : SIGNED32;
 BEGIN
-	IF down THEN ul := 090H; dr := LONGINT(0FFFFFF90H)
-	ELSE dr := 090H; ul := LONGINT(0FFFFFF90H)
+	IF down THEN ul := 090H; dr := SIGNED32(0FFFFFF90H)
+	ELSE dr := 090H; ul := SIGNED32(0FFFFFF90H)
 	END;
 	da := 90H DIV borderWidth;
 	FOR i := 0 TO borderWidth - 1 DO
@@ -762,7 +762,7 @@ BEGIN
 		IF ~(3 IN openSides) THEN canvas.Fill(WMRectangles.MakeRect(rect.r - 1 - i, rect.t + a, rect.r - i, rect.b - c), dr, WMGraphics.ModeSrcOverDst) END;
 		DEC(ul, da); DEC(dr, da)
 	END;
-	i := 3; ul := LONGINT(0FFFFFF40H); w := 5;
+	i := 3; ul := SIGNED32(0FFFFFF40H); w := 5;
 	canvas.Fill(WMRectangles.MakeRect(rect.l + i , rect.t + i, rect.l + i + w, rect.t + i + 2), ul, WMGraphics.ModeSrcOverDst);
 	canvas.Fill(WMRectangles.MakeRect(rect.l + i, rect.t + i, rect.l + i + 2, rect.t + i + w), ul, WMGraphics.ModeSrcOverDst);
 END RectGlassShade;
@@ -797,16 +797,16 @@ BEGIN
 	ColorPrototype.Set(0000FF88H);
 	NEW(ProtoTcDefault, ColorPrototype, NIL, NIL); plTabs.Add(ProtoTcDefault);
 	NEW(ColorPrototype, NIL, Strings.NewString("ClHover"), Strings.NewString("color of the tab item, if the mouse is over it"));
-	ColorPrototype.Set(LONGINT(0FFFF00FFH));
+	ColorPrototype.Set(SIGNED32(0FFFF00FFH));
 	NEW(ProtoTcHover, ColorPrototype, NIL, NIL); plTabs.Add(ProtoTcHover);
 	NEW(ColorPrototype, NIL, Strings.NewString("ClSelected"), Strings.NewString("color of the the tab item, if it is selected"));
-	ColorPrototype.Set(LONGINT(0FFFF00FFH));
+	ColorPrototype.Set(SIGNED32(0FFFF00FFH));
 	NEW(ProtoTcSelected, ColorPrototype, NIL, NIL); plTabs.Add(ProtoTcSelected);
 	NEW(ColorPrototype, NIL, Strings.NewString("ClAttention"), Strings.NewString("color of the the tab item, if attention is required"));
-	ColorPrototype.Set(LONGINT(0FF8040FFH));
+	ColorPrototype.Set(SIGNED32(0FF8040FFH));
 	NEW(ProtoTcAttention, ColorPrototype, NIL, NIL); plTabs.Add(ProtoTcAttention);
 	NEW(ColorPrototype, NIL, Strings.NewString("ClSelectedAttention"), Strings.NewString("color of the tab item, if it is selected and requires attention"));
-	ColorPrototype.Set(LONGINT(0FF9020FFH));
+	ColorPrototype.Set(SIGNED32(0FF9020FFH));
 	NEW(ProtoTcSelectedAttention, ColorPrototype, NIL, NIL); plTabs.Add(ProtoTcSelectedAttention);
 	(* background bitmaps *)
 	NEW(StringPrototype, NIL, Strings.NewString("BgLeftDefault"), Strings.NewString("Left default background bitmap"));

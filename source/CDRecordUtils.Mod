@@ -42,9 +42,9 @@ TYPE
 
 	WAVInfo* = OBJECT
 		VAR
-			compression*, size*, nofchannels*, samplerate*, encoding* : LONGINT;
+			compression*, size*, nofchannels*, samplerate*, encoding* : SIGNED32;
 
-		PROCEDURE Open*(filename : Strings.String): LONGINT;
+		PROCEDURE Open*(filename : Strings.String): SIGNED32;
 		VAR
 			bytesRead: SIZE;
 			file: Files.File;
@@ -69,7 +69,7 @@ TYPE
 				RETURN ResErr;
 			END;
 			*)
-			IF size < 1024 THEN size := (file.Length() - 8)(LONGINT); END;
+			IF size < 1024 THEN size := (file.Length() - 8)(SIGNED32); END;
 
 			r.Bytes(buf, 0, 4, bytesRead);
 			IF buf # "WAVE" THEN
@@ -103,7 +103,7 @@ TYPE
 	END WAVInfo;
 
 	Frame = RECORD
-		mpegver, bitrate, samplerate, padding, layer, size : LONGINT
+		mpegver, bitrate, samplerate, padding, layer, size : SIGNED32
 	END;
 
 	ID3v1* = OBJECT
@@ -113,9 +113,9 @@ TYPE
 
 	MP3Info* = OBJECT
 	VAR
-		nofframes*, playtime* : LONGINT;
+		nofframes*, playtime* : SIGNED32;
 		id3v1*: ID3v1;
-		bitrateTable: ARRAY 6, 16 OF LONGINT;
+		bitrateTable: ARRAY 6, 16 OF SIGNED32;
 
 		PROCEDURE &New*;
 		BEGIN
@@ -123,9 +123,9 @@ TYPE
 			id3v1 := NIL;
 		END New;
 
-		PROCEDURE GetNextFrame(r: Files.Reader; VAR frame: Frame): LONGINT;
+		PROCEDURE GetNextFrame(r: Files.Reader; VAR frame: Frame): SIGNED32;
 		VAR
-			n, start, tmp: LONGINT;
+			n, start, tmp: SIGNED32;
 			bytesRead: SIZE;
 			chr: CHAR;
 			buf : ARRAY 4 OF CHAR;
@@ -230,7 +230,7 @@ TYPE
 			RETURN ResOk;
 		END GetNextFrame;
 
-		PROCEDURE Open*(filename: String): LONGINT;
+		PROCEDURE Open*(filename: String): SIGNED32;
 		VAR
 			file : Files.File;
 			r: Files.Reader;
@@ -261,7 +261,7 @@ TYPE
 			RETURN ResOk;
 		END Open;
 
-		PROCEDURE InitTable(VAR table: ARRAY OF ARRAY OF LONGINT);
+		PROCEDURE InitTable(VAR table: ARRAY OF ARRAY OF SIGNED32);
 		BEGIN
 			table[0][0] := 0;			table[1][0] := 0;			table[2][0] := 0; 		table[3][0] := 0;			table[4][0] := 0; 		table[5][0] := 0;
 			table[0][1] :=32;		table[1][1] := 32;		table[2][1] := 32; 		table[3][1] := 32;		table[4][1] := 8; 		table[5][1] := 8;
@@ -287,12 +287,12 @@ TYPE
 
 	StandardDialog* = OBJECT(WMDialogs.Dialog);
 	VAR
-		width*, height*: LONGINT;
+		width*, height*: SIGNED32;
 		ok*, abort*: WMStandardComponents.Button;
 		content*: WMComponents.VisualComponent;
 		buttonPanel*: WMStandardComponents.Panel;
 
-		PROCEDURE &New*(title: String; bounds: WMRectangles.Rectangle; width, height: LONGINT);
+		PROCEDURE &New*(title: String; bounds: WMRectangles.Rectangle; width, height: SIGNED32);
 		BEGIN
 			x := bounds.l + ((bounds.r - bounds.l - width) DIV 2); IF x < 0 THEN x := 0 END;
 			y := bounds.t + ((bounds.b - bounds.t - height) DIV 2); IF y < 20 THEN y := 20 END;
@@ -488,7 +488,7 @@ TYPE
 			NEW(cur, NIL, NIL, NIL);
 		END Init;
 
-		PROCEDURE SetPos*(pos: HUGEINT);
+		PROCEDURE SetPos*(pos: SIGNED64);
 		BEGIN
 			IF pos < start.Get() THEN
 				pos := start.Get();
@@ -499,12 +499,12 @@ TYPE
 			Invalidate();
 		END SetPos;
 
-		PROCEDURE GetPos*(): HUGEINT;
+		PROCEDURE GetPos*(): SIGNED64;
 		BEGIN
 			RETURN cur.Get();
 		END GetPos;
 
-		PROCEDURE SetRange*(start, end: HUGEINT);
+		PROCEDURE SetRange*(start, end: SIGNED64);
 		BEGIN
 			SELF.start.Set(start);
 			SELF.end.Set(end);
@@ -522,11 +522,11 @@ TYPE
 		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR
 			rect: WMRectangles.Rectangle;
-			width: LONGINT;
+			width: SIGNED32;
 			pt: ARRAY 4 OF WMGraphics.Point2d;
 		BEGIN
 			IF end.Get() > start.Get() THEN
-				width := LONGINT((cur.Get()-start.Get()) * bounds.GetWidth() DIV (end.Get()-start.Get()));
+				width := SIGNED32((cur.Get()-start.Get()) * bounds.GetWidth() DIV (end.Get()-start.Get()));
 			END;
 			rect := WMRectangles.MakeRect(0, 0, width, bounds.GetHeight());
 
@@ -547,7 +547,7 @@ TYPE
 	ListBox* =  OBJECT(WMComponents.VisualComponent);
 	VAR
 		grid: WMStringGrids.StringGrid;
-		nofRows: LONGINT;
+		nofRows: SIGNED32;
 		caption*: WMProperties.StringProperty;
 		label: WMStandardComponents.Label;
 		selected*: WMProperties.SizeProperty;
@@ -678,7 +678,7 @@ TYPE
 	END ExplorerPanel;
 
 
-PROCEDURE ReadID3v1(VAR filename: String; VAR id3v1: ID3v1): LONGINT;
+PROCEDURE ReadID3v1(VAR filename: String; VAR id3v1: ID3v1): SIGNED32;
 VAR
 	file: Files.File;
 	r: Files.Reader;
@@ -703,34 +703,34 @@ BEGIN
 END ReadID3v1;
 
 
-PROCEDURE ConvertLE16Int*(CONST buf : ARRAY OF CHAR): LONGINT;
+PROCEDURE ConvertLE16Int*(CONST buf : ARRAY OF CHAR): SIGNED32;
 BEGIN
 	RETURN ASH(ORD(buf[1]), 8) + ORD(buf[0]);
 END ConvertLE16Int;
 
-PROCEDURE ConvertLE32Int*(CONST buf : ARRAY OF CHAR): LONGINT;
+PROCEDURE ConvertLE32Int*(CONST buf : ARRAY OF CHAR): SIGNED32;
 BEGIN
 	RETURN ASH(ORD(buf[3]), 24) + ASH(ORD(buf[2]), 16) + ASH(ORD(buf[1]), 8) + ORD(buf[0]);
 END ConvertLE32Int;
 
-PROCEDURE ConvertBE16Int*(CONST buf : ARRAY OF CHAR): LONGINT;
+PROCEDURE ConvertBE16Int*(CONST buf : ARRAY OF CHAR): SIGNED32;
 BEGIN
 	RETURN ASH(ORD(buf[0]), 8) + ORD(buf[1]);
 END ConvertBE16Int;
 
-PROCEDURE ConvertBE32Int*(CONST buf : ARRAY OF CHAR): LONGINT;
+PROCEDURE ConvertBE32Int*(CONST buf : ARRAY OF CHAR): SIGNED32;
 BEGIN
 	RETURN ASH(ORD(buf[0]), 24) + ASH(ORD(buf[1]), 16) + ASH(ORD(buf[2]), 8) + ORD(buf[3]);
 END ConvertBE32Int;
 
 
-PROCEDURE SetLE16*(x: INTEGER; VAR dst : ARRAY OF CHAR);
+PROCEDURE SetLE16*(x: SIGNED16; VAR dst : ARRAY OF CHAR);
 BEGIN
 	dst[0] := CHR(x MOD 100H);
 	dst[1] := CHR(x DIV 100H MOD 100H);
 END SetLE16;
 
-PROCEDURE SetLE32*(x: LONGINT; VAR dst: ARRAY OF CHAR);
+PROCEDURE SetLE32*(x: SIGNED32; VAR dst: ARRAY OF CHAR);
 BEGIN
 	dst[0] := CHR(x MOD 100H);
 	dst[1] := CHR(x DIV 100H MOD 100H);
@@ -738,13 +738,13 @@ BEGIN
 	dst[3] := CHR(x DIV 1000000H MOD 100H);
 END SetLE32;
 
-PROCEDURE SetBE16*(x: INTEGER; VAR dst : ARRAY OF CHAR);
+PROCEDURE SetBE16*(x: SIGNED16; VAR dst : ARRAY OF CHAR);
 BEGIN
 	dst[1] := CHR(x MOD 100H);
 	dst[0] := CHR(x DIV 100H MOD 100H);
 END SetBE16;
 
-PROCEDURE SetBE32*(x: LONGINT; VAR dst: ARRAY OF CHAR);
+PROCEDURE SetBE32*(x: SIGNED32; VAR dst: ARRAY OF CHAR);
 BEGIN
 	dst[3] := CHR(x MOD 100H);
 	dst[2] := CHR(x DIV 100H MOD 100H);
@@ -752,9 +752,9 @@ BEGIN
 	dst[0] := CHR(x DIV 1000000H MOD 100H);
 END SetBE32;
 
-PROCEDURE Mp3ToWave*(srcFileName, destFileName : Strings.String; onConvertStatusChanged: StatusProc) : WORD;
+PROCEDURE Mp3ToWave*(srcFileName, destFileName : Strings.String; onConvertStatusChanged: StatusProc) : INTEGER;
 VAR
-	res: WORD;
+	res: INTEGER;
 	srcFile, destFile : Files.File;
 	decoder: Codecs.AudioDecoder;
 	encoder: Codecs.AudioEncoder;
@@ -790,7 +790,7 @@ BEGIN
 	END;
 
 	decoder.Open(in, res);
-	decoder.SetStreamLength(srcFile.Length()(LONGINT));
+	decoder.SetStreamLength(srcFile.Length()(SIGNED32));
 	NEW(buffer);
 	buffer.len := 4096;
 	NEW(buffer.data, 4096);
@@ -810,11 +810,11 @@ BEGIN
 
 END Mp3ToWave;
 
-PROCEDURE GetFreeSpace*(CONST destination: ARRAY OF CHAR; VAR freeSpace: LONGINT): WORD;
+PROCEDURE GetFreeSpace*(CONST destination: ARRAY OF CHAR; VAR freeSpace: SIGNED32): INTEGER;
 VAR
 	fs: Files.FileSystem;
 	prefix, name: ARRAY MaxLen OF CHAR;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	res := ResErr;
 	Files.SplitName(destination, prefix, name);
@@ -826,11 +826,11 @@ BEGIN
 	RETURN res;
 END GetFreeSpace;
 
-PROCEDURE IsReadOnly*(CONST destination: ARRAY OF CHAR; VAR readOnly: BOOLEAN): WORD;
+PROCEDURE IsReadOnly*(CONST destination: ARRAY OF CHAR; VAR readOnly: BOOLEAN): INTEGER;
 VAR
 	fs: Files.FileSystem;
 	prefix, name: ARRAY MaxLen OF CHAR;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	res := ResErr;
 	Files.SplitName(destination, prefix, name);
@@ -842,10 +842,10 @@ BEGIN
 	RETURN res;
 END IsReadOnly;
 
-PROCEDURE GetDevice*(file: Files.File; VAR device: Disks.Device): WORD;
+PROCEDURE GetDevice*(file: Files.File; VAR device: Disks.Device): INTEGER;
 VAR
 	fs: Files.FileSystem;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	res := ResErr;
 	fs := file.fs;

@@ -31,7 +31,7 @@ TYPE
 
 	tModel* = POINTER TO tModelDesc;
 	tModelDesc* = RECORD (antsModels.tModelDesc)
-		a: ARRAY 6 OF LONGREAL
+		a: ARRAY 6 OF FLOAT64
 	END;
 	(*
 	a[0]: Fact1
@@ -43,28 +43,28 @@ TYPE
 	*)
 
 
-	PROCEDURE Open*( M: tModel;  a: ARRAY OF LONGREAL );
-	VAR i: LONGINT;
+	PROCEDURE Open*( M: tModel;  a: ARRAY OF FLOAT64 );
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 5 DO M.a[i] := a[i] END
 	END Open;
 
 	PROCEDURE StoreM( VAR R: Files.Rider;  s: tModel );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		Files.WriteInt( R, 0 );
 		FOR i := 0 TO 5 DO Files.WriteLReal( R, s.a[i] ) END
 	END StoreM;
 
 	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );
-	VAR version: INTEGER;  i: LONGINT;
+	VAR version: SIGNED16;  i: SIGNED32;
 	BEGIN
 		Files.ReadInt( R, version );
 		FOR i := 0 TO 5 DO Files.ReadLReal( R, s.a[i] ) END
 	END LoadM;
 
 	PROCEDURE OneSweep( s: antsKernel.Kernel );
-	VAR model: tModel;  ran: LONGREAL;  v1, v2: vyBase.tVector;  x, y: LONGREAL;
+	VAR model: tModel;  ran: FLOAT64;  v1, v2: vyBase.tVector;  x, y: FLOAT64;
 
 	BEGIN
 		model := s.par( tModel );  v1 := antsVectors.GetVector( s.A( antsVectors.Container ), 0 );
@@ -81,7 +81,7 @@ TYPE
 	END OneSweep;
 
 	PROCEDURE Uniform( s: antsKernel.Kernel );
-	VAR v1, v2: vyBase.tVector;  ran: LONGREAL;
+	VAR v1, v2: vyBase.tVector;  ran: FLOAT64;
 	BEGIN
 		v1 := antsVectors.GetVector( s.A( antsVectors.Container ), 0 );
 		v2 := antsVectors.GetVector( s.A( antsVectors.Container ), 1 );  vyLongrealVec.SetLen( v1( vyLongrealVec.tVector ), 0 );
@@ -92,9 +92,9 @@ TYPE
 		vyLongrealVec.Append( ran, v2( vyLongrealVec.tVector ) )
 	END Uniform;
 
-	PROCEDURE ArrayHandleAttribute( VAR M: Objects.AttrMsg;  prefix: ARRAY OF CHAR;  VAR array: ARRAY OF LONGREAL ): BOOLEAN;
+	PROCEDURE ArrayHandleAttribute( VAR M: Objects.AttrMsg;  prefix: ARRAY OF CHAR;  VAR array: ARRAY OF FLOAT64 ): BOOLEAN;
 	VAR cur: ARRAY 64 OF CHAR;
-		i: LONGINT;  len: LONGINT;
+		i: SIGNED32;  len: SIGNED32;
 	BEGIN
 		len := LEN( array );
 		IF M.id = Objects.enum THEN
@@ -123,7 +123,7 @@ TYPE
 	END ArrayHandleAttribute;
 
 	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		WITH o: tModel DO
 			IF M IS antsKernel.samplingMsg THEN
@@ -171,9 +171,9 @@ TYPE
 
 	PROCEDURE NewModel*;
 	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  M: tModel;
-		a: ARRAY 6 OF LONGREAL;
+		a: ARRAY 6 OF FLOAT64;
 	BEGIN
-		l := antsCommands.ScanFromPar( "name=NAME f1=REAL f2=REAL v1=REAL v2=REAL add1=REAL add2=REAL" );
+		l := antsCommands.ScanFromPar( "name=NAME f1=FLOAT32 f2=FLOAT32 v1=FLOAT32 v2=FLOAT32 add1=FLOAT32 add2=FLOAT32" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectRealFromKeyword( l, "f1", a[0] ) &
 		    antsCommands.ExpectRealFromKeyword( l, "f2", a[1] ) & antsCommands.ExpectRealFromKeyword( l, "v1", a[2] ) &
 		    antsCommands.ExpectRealFromKeyword( l, "v2", a[3] ) & antsCommands.ExpectRealFromKeyword( l, "add1", a[4] ) &

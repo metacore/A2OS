@@ -334,15 +334,15 @@ CONST
 	DSM_IF_UP = 5;
 
 VAR
-	installed: LONGINT; (* number of installed devices *)
+	installed: SIGNED32; (* number of installed devices *)
 
 TYPE
 
 	(* base Rx/Tx descriptor, as described in RTL8169 specs *)
 	RxTxDescriptor = RECORD
 		flags: SET;
-		vLanTag: LONGINT;
-		bufAdrLo, bufAdrHi: LONGINT;
+		vLanTag: SIGNED32;
+		bufAdrLo, bufAdrHi: SIGNED32;
 	END;
 
 	(* buffer for transmission *)
@@ -359,19 +359,19 @@ TYPE
 
 	(* Statistics counters as specified by Realtek *)
 	TallyCounters = RECORD
-		txPackets: HUGEINT;
-		rxPacktes: HUGEINT;
-		txErrors: HUGEINT;
-		rxErrors: LONGINT;
-		rxMissed: INTEGER;
-		alignErrors: INTEGER;
-		txOneCollision: LONGINT;
-		txMultiCollision: LONGINT;
-		rxUnicast: HUGEINT;
-		rxBroadcast: HUGEINT;
-		rxMulticast: LONGINT;
-		txAborted: INTEGER;
-		txUnderrun: INTEGER;
+		txPackets: SIGNED64;
+		rxPacktes: SIGNED64;
+		txErrors: SIGNED64;
+		rxErrors: SIGNED32;
+		rxMissed: SIGNED16;
+		alignErrors: SIGNED16;
+		txOneCollision: SIGNED32;
+		txMultiCollision: SIGNED32;
+		rxUnicast: SIGNED64;
+		rxBroadcast: SIGNED64;
+		rxMulticast: SIGNED32;
+		txAborted: SIGNED16;
+		txUnderrun: SIGNED16;
 	END;
 
 	(* LinkDevice: interface to Bluebottle *)
@@ -379,12 +379,12 @@ TYPE
 	VAR
 		ctrl: Controller;
 
-		PROCEDURE Linked*(): LONGINT;
+		PROCEDURE Linked*(): SIGNED32;
 		BEGIN
 			RETURN ctrl.linkStatus;
 		END Linked;
 
-		PROCEDURE DoSend*(dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE DoSend*(dst: Network.LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: SIGNED32);
 		BEGIN
 			ctrl.SendFrame(dst, type, l3hdr, l4hdr, data, h3len, h4len, dofs, dlen);
 		END DoSend;
@@ -401,31 +401,31 @@ TYPE
 	Controller = OBJECT
 	VAR
 		next: Controller; (* next controller in list *)
-		base: ADDRESS; irq: LONGINT;
+		base: ADDRESS; irq: SIGNED32;
 		dev: LinkDevice;
 		rdsBuf: ARRAY RxRingSize*SIZEOF(RxTxDescriptor)+255 OF CHAR;
 		tdsBuf: ARRAY TxRingSize*SIZEOF(RxTxDescriptor)+255 OF CHAR;
 		rds: ARRAY RxRingSize OF POINTER{UNSAFE, UNTRACED} TO RxTxDescriptor;
 		tds: ARRAY TxRingSize OF POINTER{UNSAFE, UNTRACED} TO RxTxDescriptor;
-		curRD, curTD: LONGINT;
-		firstRD, firstTD: LONGINT;
-		lastRD, lastTD: LONGINT;
+		curRD, curTD: SIGNED32;
+		firstRD, firstTD: SIGNED32;
+		lastRD, lastTD: SIGNED32;
 		(*rxBuffer, rxLast: TxBuffer;*)
 		rxBuffer, rxLast: RxBuffer;
 		txBuffer, txLast: TxBuffer;
 
-		nofFreeTx: LONGINT; (* number of free tx descriptors *)
+		nofFreeTx: SIGNED32; (* number of free tx descriptors *)
 
-		nRxOverflow: HUGEINT;
-		nTxOverflow: HUGEINT;
-		nRxFrames, nTxFrames: LONGINT;
-		nRxErrorFrames: LONGINT;
-		nTxErrorFrames: LONGINT;
+		nRxOverflow: SIGNED64;
+		nTxOverflow: SIGNED64;
+		nRxFrames, nTxFrames: SIGNED32;
+		nRxErrorFrames: SIGNED32;
+		nTxErrorFrames: SIGNED32;
 
-		linkStatus: LONGINT;
+		linkStatus: SIGNED32;
 
-		pciBus, pciDev, pciFct: LONGINT;
-		hwCfgMethod, chipsetInd: LONGINT;
+		pciBus, pciDev, pciFct: SIGNED32;
+		hwCfgMethod, chipsetInd: SIGNED32;
 		hwIcVerUnknown: BOOLEAN;
 		phy_auto_nego_reg: SET;
 		cp_cmd: SET;
@@ -433,9 +433,9 @@ TYPE
 		use_timer_interrrupt: BOOLEAN;
 		eee_enable: BOOLEAN;
 		intr_mask: SET;
-		rx_buf_sz: LONGINT;
+		rx_buf_sz: SIGNED32;
 		autoneg: BOOLEAN;
-		speed: LONGINT;
+		speed: SIGNED32;
 		duplexFull: BOOLEAN;
 		wol_enabled: BOOLEAN;
 
@@ -450,13 +450,13 @@ TYPE
 		PROCEDURE &InitController(
 												dev: LinkDevice;
 												base: ADDRESS;
-												irq: LONGINT;
-												pciBus, pciDev, pciFct: LONGINT;
-												hwCfgMethod: LONGINT;
-												chipsetInd: LONGINT;
+												irq: SIGNED32;
+												pciBus, pciDev, pciFct: SIGNED32;
+												hwCfgMethod: SIGNED32;
+												chipsetInd: SIGNED32;
 												hwIcVerUnknown: BOOLEAN);
 		VAR
-			res, i: LONGINT;
+			res, i: SIGNED32;
 			s: SET;
 		BEGIN
 			(* update list of installed controllers, insert at head *)
@@ -590,7 +590,7 @@ TYPE
 
 		PROCEDURE get_mac_address;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			s: SET;
 		BEGIN
 			(* MAC address is in registers 00H - 05H *)
@@ -683,10 +683,10 @@ TYPE
 			phy_power_up;
 		END powerup_pll;
 
-		PROCEDURE ephy_write(regAddr: LONGINT; value: SET);
-		VAR i: LONGINT;
+		PROCEDURE ephy_write(regAddr: SIGNED32; value: SET);
+		VAR i: SIGNED32;
 		BEGIN
-			Write32(EPHYAR,EPHYAR_Write + S.VAL(SET,LSH(S.VAL(LONGINT,S.VAL(SET,regAddr) * EPHYAR_Reg_Mask),EPHYAR_Reg_shift)) + (value * EPHYAR_Data_Mask));
+			Write32(EPHYAR,EPHYAR_Write + S.VAL(SET,LSH(S.VAL(SIGNED32,S.VAL(SET,regAddr) * EPHYAR_Reg_Mask),EPHYAR_Reg_shift)) + (value * EPHYAR_Data_Mask));
 
 			(* Check if the RTL8101 has completed EPHY write *)
 			i := 0;
@@ -700,15 +700,15 @@ TYPE
 			Delay(1);
 		END ephy_write;
 
-		PROCEDURE ephy_write1(regAddr: LONGINT; value: LONGINT);
+		PROCEDURE ephy_write1(regAddr: SIGNED32; value: SIGNED32);
 		BEGIN
 			ephy_write(regAddr,S.VAL(SET,value));
 		END ephy_write1;
 
-		PROCEDURE ephy_read(regAddr: LONGINT): SET;
-		VAR i: LONGINT;
+		PROCEDURE ephy_read(regAddr: SIGNED32): SET;
+		VAR i: SIGNED32;
 		BEGIN
-			Write32(EPHYAR,EPHYAR_Read + S.VAL(SET,LSH(S.VAL(LONGINT,S.VAL(SET,regAddr) * EPHYAR_Reg_Mask),EPHYAR_Reg_shift)));
+			Write32(EPHYAR,EPHYAR_Read + S.VAL(SET,LSH(S.VAL(SIGNED32,S.VAL(SET,regAddr) * EPHYAR_Reg_Mask),EPHYAR_Reg_shift)));
 
 			(* Check if the RTL8101 has completed EPHY read *)
 			i := 0;
@@ -873,7 +873,7 @@ TYPE
 			END;
 		END disable_rxdvgate;
 
-		PROCEDURE dsm(dev_state: LONGINT);
+		PROCEDURE dsm(dev_state: SIGNED32);
 		BEGIN
 			CASE dev_state OF
 				|DSM_MAC_INIT:
@@ -925,7 +925,7 @@ TYPE
 		PROCEDURE hw_start;
 		VAR
 			options1, options2, s: SET;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			Write32(RxConfig, S.VAL(SET,LSH(RX_DMA_BURST,RxCfgDMAShift)));
 
@@ -1108,7 +1108,7 @@ TYPE
 
 				cp_cmd := cp_cmd * S.VAL(SET,0x2063);
 
-				i := PCI.ReadConfigByte(pciBus,pciDev,pciFct,0x80,S.VAL(LONGINT,s)); ASSERT(i = PCI.Done);
+				i := PCI.ReadConfigByte(pciBus,pciDev,pciFct,0x80,S.VAL(SIGNED32,s)); ASSERT(i = PCI.Done);
 				TRACE(pciBus,pciDev,pciFct,S.VAL(ADDRESS,s));
 				IF s * S.VAL(SET,0x03) # {} THEN
 					Write8(Config5, Read8(Config5) + {0});
@@ -1447,9 +1447,9 @@ TYPE
 		END set_bios_setting;
 
 		PROCEDURE mdio_wait_for(
-												regAddr: LONGINT;
-												nRetries: LONGINT;
-												delay: LONGINT;
+												regAddr: SIGNED32;
+												nRetries: SIGNED32;
+												delay: SIGNED32;
 												mask: SET;
 												val: SET
 											);
@@ -1463,12 +1463,12 @@ TYPE
 		END mdio_wait_for;
 
 		(* Writing to MDIO of the PHY *)
-		PROCEDURE mdio_write(regAddr: LONGINT; data: SET);
+		PROCEDURE mdio_write(regAddr: SIGNED32; data: SET);
 		VAR
-			d: LONGINT;
+			d: SIGNED32;
 		BEGIN
 			IF hwCfgMethod # CFG_METHOD_17 THEN
-				d := LSH(S.VAL(LONGINT,(S.VAL(SET,regAddr)*PHYAR_Reg_Mask)),PHYAR_Reg_shift);
+				d := LSH(S.VAL(SIGNED32,(S.VAL(SET,regAddr)*PHYAR_Reg_Mask)),PHYAR_Reg_shift);
 				Write32(PHYAR,PHYAR_Write + S.VAL(SET,d) + (data*PHYAR_Data_Mask));
 				(* Check if the RTL8101 has completed writing to the specified MII register *)
 				mdio_wait_for(PHYAR,10,1,PHYAR_Flag,{});
@@ -1478,18 +1478,18 @@ TYPE
 			END;
 		END mdio_write;
 
-		PROCEDURE mdio_write1(regAddr: LONGINT; data: LONGINT);
+		PROCEDURE mdio_write1(regAddr: SIGNED32; data: SIGNED32);
 		BEGIN
 			mdio_write(regAddr,S.VAL(SET,data));
 		END mdio_write1;
 
 		(* Reading from MDIO of the PHY *)
-		PROCEDURE mdio_read(regAddr: LONGINT): SET;
+		PROCEDURE mdio_read(regAddr: SIGNED32): SET;
 		VAR
-			d, i: LONGINT;
+			d, i: SIGNED32;
 		BEGIN
 			IF hwCfgMethod # CFG_METHOD_17 THEN
-				d := LSH(S.VAL(LONGINT,S.VAL(SET,regAddr)*PHYAR_Reg_Mask),PHYAR_Reg_shift);
+				d := LSH(S.VAL(SIGNED32,S.VAL(SET,regAddr)*PHYAR_Reg_Mask),PHYAR_Reg_shift);
 				Write32(PHYAR,PHYAR_Read + S.VAL(SET,d));
 				(* Check if the RTL8101 has completed retrieving data from the specified MII register *)
 				i := 0;
@@ -1505,10 +1505,10 @@ TYPE
 			END;
 		END mdio_read;
 
-		PROCEDURE phyio_write(regAddr: LONGINT; data: SET);
-		VAR d, i: LONGINT;
+		PROCEDURE phyio_write(regAddr: SIGNED32; data: SET);
+		VAR d, i: SIGNED32;
 		BEGIN
-			d := LSH(S.VAL(LONGINT,S.VAL(SET,regAddr)*PHYIO_Reg_Mask),PHYIO_Reg_shift);
+			d := LSH(S.VAL(SIGNED32,S.VAL(SET,regAddr)*PHYIO_Reg_Mask),PHYIO_Reg_shift);
 			Write32(PHYIO,PHYIO_Write + S.VAL(SET,d) + (data * PHYIO_Data_Mask));
 			(* Check if the RTL8101 has completed writing to the specified MII register *)
 			i := 0;
@@ -1521,7 +1521,7 @@ TYPE
 		END phyio_write;
 
 		PROCEDURE xmii_reset_enable;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			mdio_write(0x1f,{});
 			mdio_write(NetworkMii.BMCR,mdio_read(NetworkMii.BMCR)+NetworkMii.BMCR_Reset);
@@ -1557,7 +1557,7 @@ TYPE
 		END check_hw_phy_mcu_code_ver;
 
 		PROCEDURE write_hw_phy_mcu_code_ver;
-		VAR ver: LONGINT;
+		VAR ver: SIGNED32;
 		BEGIN
 			IF hwCfgMethod = CFG_METHOD_17 THEN
 				ver := 0x0001;
@@ -1582,7 +1582,7 @@ TYPE
 			Addr_16 = [0x1f,0x1f,0x19,0x1c,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1d,0x1f,0x1c,0x19,0x1f];
 			Val_16 = [0x0004,0x0004,0x7070,0x0600,0x9700,0x7fe0,0x4c00,0x4007,0x4400,0x4800,0x7c1f,0x4c00,0x5310,0x6000,0x6800,0x673e,0x0000,0x0000,0x571f,0x5ffb,0xaa04,0x5b58,0x6100,0x3016,0x5b64,0x6080,0xa6fa,0xdcdb,0x0015,0xb915,0xb511,0xd16b,0x000f,0xb40f,0xd06b,0x000d,0xb206,0x7c01,0x5800,0x7c04,0x5c00,0x3010,0x7c01,0x5801,0x7c04,0x5c04,0x3016,0x307e,0x30f4,0x319f,0x7fe0,0x4c60,0x6803,0x7d00,0x6900,0x6520,0x0000,0x0000,0xaf03,0x6115,0x303a,0x6097,0x57e0,0x580c,0x588c,0x5f80,0x4827,0x7c1f,0x4c00,0x7c1f,0x4c10,0x8400,0x7c30,0x6020,0x48bf,0x7c1f,0x4c00,0x7c1f,0x4c01,0xb802,0x3053,0x7c08,0x6808,0x0000,0x0000,0x7c10,0x6810,0xd6cf,0x0002,0x80fe,0x7fe0,0x4c80,0x7c10,0x6800,0x7c08,0x6800,0x0000,0x0000,0x7c23,0x5c23,0x481e,0x7c1f,0x4c00,0x7c1f,0x4c02,0x5310,0x81ff,0x30c1,0x7fe0,0x4d00,0x4832,0x7c1f,0x4c00,0x7c1f,0x4c10,0x7c08,0x6000,0xa4bd,0xd9b3,0x00fe,0x7fe0,0x4d20,0x7e00,0x6200,0x3001,0x7fe0,0x4dc0,0xd09d,0x0002,0xb4fe,0x7fe0,0x4d80,0x7c04,0x6004,0x6802,0x6728,0x0000,0x0000,0x7c08,0x6000,0x486c,0x7c1f,0x4c00,0x7c1f,0x4c01,0x9503,0x7e00,0x6200,0x571f,0x5fbb,0xaa05,0x5b58,0x7d80,0x6100,0x309a,0x5b64,0x7d80,0x6080,0xcdab,0x0058,0xcd8d,0x0056,0xd96b,0x0054,0xd0a0,0x00d8,0xcba0,0x0003,0x80ec,0x30a7,0x30b4,0x7fe0,0x4ce0,0x4832,0x7c1f,0x4c00,0x7c1f,0x4c08,0x7c08,0x6008,0x8300,0xb902,0x307e,0x3068,0x7fe0,0x4da0,0x6628,0x0000,0x0000,0x56a0,0x590c,0x5fa0,0xcba4,0x0004,0xcd8d,0x0002,0x80fc,0x7fe0,0x4ca0,0x7c08,0x6408,0x0000,0x0000,0x7d00,0x6800,0xb603,0x7c10,0x6010,0x7d1f,0x551f,0x5fb3,0xaa05,0x7c80,0x5800,0x5b58,0x30d7,0x7c80,0x5800,0x5b64,0x4827,0x7c1f,0x4c00,0x7c1f,0x4c10,0x8400,0x7c10,0x6000,0x7fe0,0x4cc0,0x7d00,0x6400,0x0000,0x0000,0x5fbb,0x4824,0x7c1f,0x4c00,0x7c1f,0x4c04,0x8200,0x7ce0,0x5400,0x7d00,0x6500,0x0000,0x0000,0x30a7,0x3001,0x7fe0,0x4e00,0x4007,0x4400,0x5310,0x6800,0x673e,0x0000,0x0000,0x570f,0x5fff,0xaa05,0x585b,0x7d80,0x6100,0x3107,0x5867,0x7d80,0x6080,0x9403,0x7e00,0x6200,0xcda3,0x00e8,0xcd85,0x00e6,0xd96b,0x00e4,0x96e4,0x6800,0x673e,0x0000,0x0000,0x7fe0,0x4e20,0x96dd,0x8b04,0x7c08,0x5008,0xab03,0x7c08,0x5000,0x6801,0x677e,0x0000,0x0000,0xdb7c,0x00ee,0x0000,0x7fe1,0x4e40,0x4837,0x4418,0x41c7,0x7fe0,0x4e40,0x7c40,0x5400,0x7c1f,0x4c01,0x7c1f,0x4c01,0x8fc2,0xd2a0,0x004b,0x9204,0xa042,0x3132,0x30f4,0x7fe1,0x4e60,0x489c,0x4628,0x7fe0,0x4e60,0x7e28,0x4628,0x7c40,0x5400,0x7c01,0x5800,0x7c04,0x5c00,0x41e8,0x7c1f,0x4c01,0x7c1f,0x4c01,0x8fa8,0xb241,0xa02a,0x314c,0x7fe0,0x4ea0,0x7c02,0x4402,0x4448,0x4894,0x7c1f,0x4c01,0x7c1f,0x4c03,0x4824,0x7c1f,0x4c07,0x41ef,0x41ff,0x4891,0x7c1f,0x4c07,0x7c1f,0x4c17,0x8400,0x8ef8,0x41c7,0x8f8d,0x92d5,0xa10f,0xd480,0x0008,0xd580,0x00b8,0xa202,0x3167,0x7c04,0x4404,0x3167,0xd484,0x00f3,0xd484,0x00f1,0x30f4,0x7fe0,0x4ee0,0x7c40,0x5400,0x4488,0x41cf,0x30f4,0x7fe0,0x4ec0,0x48f3,0x7c1f,0x4c01,0x7c1f,0x4c09,0x4508,0x41c7,0x8fb0,0xd218,0x00ae,0xd2a4,0x009e,0x3188,0x7fe0,0x4e80,0x4832,0x7c1f,0x4c01,0x7c1f,0x4c11,0x4428,0x7c40,0x5440,0x7c01,0x5801,0x7c04,0x5c04,0x41e8,0xa4b3,0x319d,0x7fe0,0x4f20,0x6800,0x673e,0x0000,0x0000,0x570f,0x5fff,0xaa04,0x585b,0x6100,0x31ad,0x5867,0x6080,0xbcf2,0x3001,0x0004,0x0200,0x7030,0x0000];
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			s: SET;
 		BEGIN
 			IF notWrRamCodeToMicroP THEN RETURN; END;
@@ -1748,9 +1748,9 @@ TYPE
 			hwHasWrRamCodeToMicroP := TRUE;
 		END init_hw_phy_mcu;
 
-		PROCEDURE eri_read(addr: LONGINT; len, type: LONGINT): SET;
+		PROCEDURE eri_read(addr: SIGNED32; len, type: SIGNED32): SET;
 		VAR
-			i, shift, val_shift: LONGINT;
+			i, shift, val_shift: SIGNED32;
 			mask, value1, value2: SET;
 		BEGIN
 			ASSERT((len > 0) & (len <= 4));
@@ -1759,8 +1759,8 @@ TYPE
 
 			WHILE len > 0 DO
 				val_shift := addr MOD ERIAR_Addr_Align;
-				addr := S.VAL(LONGINT,S.VAL(SET,addr)-S.VAL(SET,0x3));
-				Write32(ERIAR,ERIAR_Read+S.VAL(SET,LSH(type,ERIAR_Type_shift))+S.VAL(SET,LSH(LONGINT(ERIAR_ByteEn),ERIAR_ByteEn_shift))+S.VAL(SET,addr));
+				addr := S.VAL(SIGNED32,S.VAL(SET,addr)-S.VAL(SET,0x3));
+				Write32(ERIAR,ERIAR_Read+S.VAL(SET,LSH(type,ERIAR_Type_shift))+S.VAL(SET,LSH(SIGNED32(ERIAR_ByteEn),ERIAR_ByteEn_shift))+S.VAL(SET,addr));
 
 				(* Check if the RTL8101 has completed ERI read *)
 				i := 0;
@@ -1772,15 +1772,15 @@ TYPE
 
 				ASSERT(i < 10);
 
-				IF len = 1 THEN mask := S.VAL(SET,LSH(HUGEINT(0xFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
-				ELSIF len = 2 THEN mask := S.VAL(SET,LSH(HUGEINT(0xFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
-				ELSIF len = 3 THEN mask := S.VAL(SET,LSH(HUGEINT(0xFFFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
-				ELSE mask := S.VAL(SET,LSH(HUGEINT(0xFFFFFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
+				IF len = 1 THEN mask := S.VAL(SET,LSH(SIGNED64(0xFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
+				ELSIF len = 2 THEN mask := S.VAL(SET,LSH(SIGNED64(0xFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
+				ELSIF len = 3 THEN mask := S.VAL(SET,LSH(SIGNED64(0xFFFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
+				ELSE mask := S.VAL(SET,LSH(SIGNED64(0xFFFFFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
 				END;
 
 				value1 := Read32(ERIDR) * mask;
-				value1 := S.VAL(SET,LSH(S.VAL(HUGEINT,value1),-val_shift*8));
-				value1 := S.VAL(SET,LSH(S.VAL(HUGEINT,value1),shift*8));
+				value1 := S.VAL(SET,LSH(S.VAL(SIGNED64,value1),-val_shift*8));
+				value1 := S.VAL(SET,LSH(S.VAL(SIGNED64,value1),shift*8));
 				value2 := value2 + value1;
 
 				IF len <= 4 - val_shift THEN
@@ -1797,9 +1797,9 @@ TYPE
 			RETURN value2;
 		END eri_read;
 
-		PROCEDURE eri_write(addr: LONGINT; len: LONGINT; value: SET; type: LONGINT);
+		PROCEDURE eri_write(addr: SIGNED32; len: SIGNED32; value: SET; type: SIGNED32);
 		VAR
-			i, shift, val_shift: LONGINT;
+			i, shift, val_shift: SIGNED32;
 			mask, value1, value2: SET;
 		BEGIN
 			ASSERT((len > 0) & (len <= 4));
@@ -1808,21 +1808,21 @@ TYPE
 
 			WHILE len > 0 DO
 				val_shift := addr MOD ERIAR_Addr_Align;
-				addr := S.VAL(LONGINT,S.VAL(SET,addr)-S.VAL(SET,0x3));
+				addr := S.VAL(SIGNED32,S.VAL(SET,addr)-S.VAL(SET,0x3));
 
-				IF len = 1 THEN mask := S.VAL(SET,LSH(HUGEINT(0xFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
-				ELSIF len = 2 THEN mask := S.VAL(SET,LSH(HUGEINT(0xFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
-				ELSIF len = 3 THEN mask := S.VAL(SET,LSH(HUGEINT(0xFFFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
-				ELSE mask := S.VAL(SET,LSH(HUGEINT(0xFFFFFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
+				IF len = 1 THEN mask := S.VAL(SET,LSH(SIGNED64(0xFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
+				ELSIF len = 2 THEN mask := S.VAL(SET,LSH(SIGNED64(0xFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
+				ELSIF len = 3 THEN mask := S.VAL(SET,LSH(SIGNED64(0xFFFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
+				ELSE mask := S.VAL(SET,LSH(SIGNED64(0xFFFFFFFF),val_shift * 8)) * S.VAL(SET,0xFFFFFFFF);
 				END;
 
-  				value1 := S.VAL(SET,LSH(S.VAL(HUGEINT,value),val_shift*8));
-				value1 := S.VAL(SET,LSH(S.VAL(HUGEINT,value1),-shift*8));
+  				value1 := S.VAL(SET,LSH(S.VAL(SIGNED64,value),val_shift*8));
+				value1 := S.VAL(SET,LSH(S.VAL(SIGNED64,value1),-shift*8));
 
 				value1 := value1 + eri_read(addr,4,type) - mask;
 
 				Write32(ERIDR,value1);
-				Write32(ERIAR,ERIAR_Write+S.VAL(SET,LSH(type,ERIAR_Type_shift))+S.VAL(SET,LSH(LONGINT(ERIAR_ByteEn),ERIAR_ByteEn_shift))+S.VAL(SET,addr));
+				Write32(ERIAR,ERIAR_Write+S.VAL(SET,LSH(type,ERIAR_Type_shift))+S.VAL(SET,LSH(SIGNED32(ERIAR_ByteEn),ERIAR_ByteEn_shift))+S.VAL(SET,addr));
 
 				(* Check if the RTL8101 has completed ERI write *)
 				i := 0;
@@ -2257,7 +2257,7 @@ TYPE
 
 		END hw_phy_config;
 
-		PROCEDURE set_speed_xmii(autoneg: BOOLEAN; speed: LONGINT; duplexFull: BOOLEAN);
+		PROCEDURE set_speed_xmii(autoneg: BOOLEAN; speed: SIGNED32; duplexFull: BOOLEAN);
 		VAR
 			auto_nego: SET;
 		BEGIN
@@ -2342,7 +2342,7 @@ TYPE
 		END wait_txrx_fifo_empty;
 
 		PROCEDURE nic_reset;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			Write32(RxConfig,S.VAL(SET,LSH(RX_DMA_BURST,RxCfgDMAShift)));
 
@@ -2381,7 +2381,7 @@ TYPE
 
 		PROCEDURE SetupRxRing(): Machine.Address32;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			adr, physAdr: ADDRESS;
 			buf, prev: RxBuffer;
 		BEGIN
@@ -2447,7 +2447,7 @@ TYPE
 
 		PROCEDURE SetupTxRing(): Machine.Address32;
 		VAR
-			r: LONGINT;
+			r: SIGNED32;
 			adr, physAdr: ADDRESS;
 			buf, prev: TxBuffer;
 		BEGIN
@@ -2515,9 +2515,9 @@ TYPE
 			RETURN Machine.PhysicalAdr(adr, SizeOfRxTxFDHdr)(Machine.Address32);
 		END SetupTxRing;
 
-		PROCEDURE SendFrame(dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE SendFrame(dst: Network.LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: SIGNED32);
 		VAR
-			txLen, offset, type4: LONGINT;
+			txLen, offset, type4: SIGNED32;
 			bufBase: ADDRESS;
 			chksums: SET;
 		BEGIN {EXCLUSIVE}
@@ -2536,7 +2536,7 @@ TYPE
 			(* set source mac address (6 bytes @ offset 6 of eth frame) *)
 			S.MOVE(ADDRESSOF(dev.local[0]), bufBase + 6, 6);
 			(* set upper layer type, bring type from host to network byte order *)
-			S.PUT16(bufBase + 12, ROT(S.VAL(INTEGER, SHORT(type)), 8));
+			S.PUT16(bufBase + 12, ROT(S.VAL(SIGNED16, SHORT(type)), 8));
 
 			offset := 14; (* eth header has 14 bytes *)
 			(* move layer 3 and layer 4 headers, data *)
@@ -2572,7 +2572,7 @@ TYPE
 			chksums := {};
 			IF type = 0800H THEN
 				INCL(chksums, 29(*18*)); (* offload IP checksum *)
-				type4 := S.VAL(SHORTINT, l3hdr[9]); (* get type if IP data *)
+				type4 := S.VAL(SIGNED8, l3hdr[9]); (* get type if IP data *)
 				IF type4 = 6 THEN (* TCP/IP *)
 					INCL(chksums, 30(*16*)); (* offload TCP checksum *)
 				ELSIF type4 = 17 THEN
@@ -2587,7 +2587,7 @@ TYPE
 			tds[curTD].flags := tds[curTD].flags + {31, 29, 28} (*+ chksums*);
 			tds[curTD].flags := tds[curTD].flags + (S.VAL(SET, txLen) * {0..15});
 
-			tds[curTD].vLanTag := S.VAL(LONGINT,chksums);
+			tds[curTD].vLanTag := S.VAL(SIGNED32,chksums);
 
 			(* move to next Tx Descriptor, Tx Buffer *)
 			INC(curTD);
@@ -2602,42 +2602,42 @@ TYPE
 			Write8(38H,{6});
 		END SendFrame;
 
-		PROCEDURE Read8(reg: LONGINT): SET;
+		PROCEDURE Read8(reg: SIGNED32): SET;
 		BEGIN
-			RETURN S.VAL(SET,LONGINT(S.GET8(base+reg)));
+			RETURN S.VAL(SET,SIGNED32(S.GET8(base+reg)));
 		END Read8;
 
-		PROCEDURE Write8(reg: LONGINT; val: SET);
+		PROCEDURE Write8(reg: SIGNED32; val: SET);
 		BEGIN
-			S.PUT8(base+reg,SHORTINT(S.VAL(LONGINT,val)));
+			S.PUT8(base+reg,SIGNED8(S.VAL(SIGNED32,val)));
 			(*KernelLog.String("W8 0x"); KernelLog.Hex(reg,-2);
-			KernelLog.String(" 0x"); KernelLog.Hex(S.VAL(LONGINT,val),-2);
+			KernelLog.String(" 0x"); KernelLog.Hex(S.VAL(SIGNED32,val),-2);
 			KernelLog.Ln;*)
 		END Write8;
 
-		PROCEDURE Read16(reg: LONGINT): SET;
+		PROCEDURE Read16(reg: SIGNED32): SET;
 		BEGIN
-			RETURN S.VAL(SET,LONGINT(S.GET16(base+reg)));
+			RETURN S.VAL(SET,SIGNED32(S.GET16(base+reg)));
 		END Read16;
 
-		PROCEDURE Write16(reg: LONGINT; val: SET);
+		PROCEDURE Write16(reg: SIGNED32; val: SET);
 		BEGIN
-			S.PUT16(base+reg,INTEGER(S.VAL(LONGINT,val)));
+			S.PUT16(base+reg,SIGNED16(S.VAL(SIGNED32,val)));
 			(*KernelLog.String("W16 0x"); KernelLog.Hex(reg,-2);
-			KernelLog.String(" 0x"); KernelLog.Hex(S.VAL(LONGINT,val),-4);
+			KernelLog.String(" 0x"); KernelLog.Hex(S.VAL(SIGNED32,val),-4);
 			KernelLog.Ln;*)
 		END Write16;
 
-		PROCEDURE Read32(reg: LONGINT): SET;
+		PROCEDURE Read32(reg: SIGNED32): SET;
 		BEGIN
 			RETURN S.VAL(SET,S.GET32(base+reg));
 		END Read32;
 
-		PROCEDURE Write32(reg: LONGINT; val: SET);
+		PROCEDURE Write32(reg: SIGNED32; val: SET);
 		BEGIN
 			S.PUT32(base+reg,val);
 			(*KernelLog.String("W32 0x"); KernelLog.Hex(reg,-2);
-			KernelLog.String(" 0x"); KernelLog.Hex(S.VAL(LONGINT,val),-8);
+			KernelLog.String(" 0x"); KernelLog.Hex(S.VAL(SIGNED32,val),-8);
 			KernelLog.Ln;*)
 		END Write32;
 
@@ -2668,7 +2668,7 @@ TYPE
 
 		PROCEDURE ReadFrames;
 		VAR
-			adr: ADDRESS; type, size: LONGINT;
+			adr: ADDRESS; type, size: SIGNED32;
 			dstAdr: Network.LinkAdr;
 			buf: Network.Buffer;
 			s: SET;
@@ -2680,7 +2680,7 @@ TYPE
 					INC(nRxErrorFrames);
 				ELSIF CheckChecksumErrors(rds[curRD]^) THEN
 					(* find out how many bytes have been received, including CRC *)
-					size := S.VAL(LONGINT, rds[curRD].flags * {0..13});
+					size := S.VAL(SIGNED32, rds[curRD].flags * {0..13});
 
 					IF DebugReceive IN Debug THEN
 						KernelLog.String("Received a frame of length ");
@@ -2749,7 +2749,7 @@ TYPE
 		END ReadFrames;
 
 		PROCEDURE UpdateTxRing;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN { EXCLUSIVE }
 			i := lastTD;
 			WHILE (i # curTD) DO
@@ -2900,7 +2900,7 @@ TYPE
 		PROCEDURE DebugConfig;
 		VAR
 			s: SET;
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			KernelLog.String("*** BEGIN OF NIC CONFIGURATION ***"); KernelLog.Ln;
 
@@ -2910,25 +2910,25 @@ TYPE
 
 			KernelLog.String("Rx Descriptor base address:"); KernelLog.Ln;
 			KernelLog.String("  ");
-			res := S.VAL(LONGINT,Read32(0E4H + 4H));
+			res := S.VAL(SIGNED32,Read32(0E4H + 4H));
 			KernelLog.Hex(res, 8);
-			res := S.VAL(LONGINT,Read32(0E4H));
+			res := S.VAL(SIGNED32,Read32(0E4H));
 			KernelLog.Hex(res, 8);
 			KernelLog.Ln;
 
 			KernelLog.String("Tx Normal Priority Descriptor base address:"); KernelLog.Ln;
 			KernelLog.String("  ");
-			res := S.VAL(LONGINT,Read32(020H + 4H));
+			res := S.VAL(SIGNED32,Read32(020H + 4H));
 			KernelLog.Hex(res, 8);
-			res := S.VAL(LONGINT,Read32(020H));
+			res := S.VAL(SIGNED32,Read32(020H));
 			KernelLog.Hex(res, 8);
 			KernelLog.Ln;
 
-			res := S.VAL(LONGINT,Read16(0DAH));
+			res := S.VAL(SIGNED32,Read16(0DAH));
 			KernelLog.String("Receive Packet Max Size:"); KernelLog.Ln;
 			KernelLog.String("  "); KernelLog.Int(res, 0); KernelLog.Ln;
 
-			res := S.VAL(LONGINT,Read8(0ECH));
+			res := S.VAL(SIGNED32,Read8(0ECH));
 			KernelLog.String("Max Transmit Packet Size:"); KernelLog.Ln;
 			KernelLog.String("  "); KernelLog.Int(res * 128, 0); KernelLog.Ln;
 
@@ -3035,7 +3035,7 @@ TYPE
 		(* wait until reset has finished *)
 		REPEAT
 			Delay(1);
-			s := S.VAL(SET,LONGINT(S.GET8(base+ChipCmd)));
+			s := S.VAL(SET,SIGNED32(S.GET8(base+ChipCmd)));
 		UNTIL s * CmdReset = {};
 	END SoftReset;
 
@@ -3047,7 +3047,7 @@ TYPE
 	END irq_mask_and_ack;
 
 	(* Get device name given the determined configuration method *)
-	PROCEDURE GetDeviceName(hwCfgMethod: LONGINT; VAR name: ARRAY OF CHAR);
+	PROCEDURE GetDeviceName(hwCfgMethod: SIGNED32; VAR name: ARRAY OF CHAR);
 	BEGIN
 		CASE hwCfgMethod OF
 			|CFG_METHOD_1: name := "RTL8101E";
@@ -3073,10 +3073,10 @@ TYPE
 	END GetDeviceName;
 
 	(* Identify device and the required configuration method *)
-	PROCEDURE IdentifyDevice(base: ADDRESS; VAR hwCfgMethod: LONGINT; VAR hwIcVerUnknown: BOOLEAN; VAR chipsetInd: LONGINT; VAR hwName: ARRAY OF CHAR);
+	PROCEDURE IdentifyDevice(base: ADDRESS; VAR hwCfgMethod: SIGNED32; VAR hwIcVerUnknown: BOOLEAN; VAR chipsetInd: SIGNED32; VAR hwName: ARRAY OF CHAR);
 	VAR
 		s: SET;
-		v, id, i: LONGINT;
+		v, id, i: SIGNED32;
 	BEGIN
 		(*! disable interrupts ? *)
 		irq_mask_and_ack(base);
@@ -3086,8 +3086,8 @@ TYPE
 
 		(* identify the device *)
 		s := S.VAL(SET,S.GET32(base+40H));
-		v := S.VAL(LONGINT,s * {23,26..30});
-		id := S.VAL(LONGINT,s * {20..22});
+		v := S.VAL(SIGNED32,s * {23,26..30});
+		id := S.VAL(SIGNED32,s * {20..22});
 
 		hwCfgMethod := -1;
 		hwName := "";
@@ -3182,10 +3182,10 @@ TYPE
 	END IdentifyDevice;
 
 	(* Scan the PCI bus for the specified card. *)
-	PROCEDURE ScanPCI(vendor, device: LONGINT);
+	PROCEDURE ScanPCI(vendor, device: SIGNED32);
 	VAR
-		index, bus, dev, fct, res, irq, i: LONGINT; base: ADDRESS; d: LinkDevice; c: Controller; name: Plugins.Name;
-		hwCfgMethod, chipsetInd: LONGINT;
+		index, bus, dev, fct, res, irq, i: SIGNED32; base: ADDRESS; d: LinkDevice; c: Controller; name: Plugins.Name;
+		hwCfgMethod, chipsetInd: SIGNED32;
 		hwIcVerUnknown: BOOLEAN;
 		hwName: ARRAY 256 OF CHAR;
 	BEGIN
@@ -3271,10 +3271,10 @@ TYPE
 
 	PROCEDURE TestDevice(ctrl: Controller);
 	VAR
-		i, diff, bytes, times: LONGINT;
+		i, diff, bytes, times: SIGNED32;
 		milliTimer : Kernel.MilliTimer;
 		data: ARRAY 1024 OF CHAR;
-		bw: REAL;
+		bw: FLOAT32;
 		dst: Network.LinkAdr;
 	BEGIN
 		dst[0] := 000X;
@@ -3337,7 +3337,7 @@ TYPE
 		installedControllers := NIL;
 	END Cleanup;
 
-	PROCEDURE Delay(ms: LONGINT);
+	PROCEDURE Delay(ms: SIGNED32);
 	VAR
 		t: Kernel.MilliTimer;
 	BEGIN
@@ -3352,7 +3352,7 @@ VAR
 	VAR
 		addr, physAddr: ADDRESS;
 		dsc: ARRAY TxRingSize OF POINTER{UNSAFE,UNTRACED} TO RxTxDescriptor;
-		r: LONGINT;
+		r: SIGNED32;
 	BEGIN
 		addr := ADDRESSOF(buf[0]);
 		TRACE(addr);

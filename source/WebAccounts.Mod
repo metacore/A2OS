@@ -680,7 +680,7 @@ TYPE
 
 		PROCEDURE Internalize*(input: XML.Content);
 		VAR container: XML.Container; elem: XML.Element; oidStr: Strings.String;
-			persObj: PrevalenceSystem.PersistentObject; oidNr: LONGINT;
+			persObj: PrevalenceSystem.PersistentObject; oidNr: SIGNED32;
 		BEGIN
 			container := input(XML.Container);
 
@@ -895,7 +895,7 @@ TYPE
 			RETURN row
 		END GetTableHeader;
 
-		PROCEDURE OnDetailViewActivated*(entryOid: LONGINT; request: HTTPSupport.HTTPRequest);
+		PROCEDURE OnDetailViewActivated*(entryOid: SIGNED32; request: HTTPSupport.HTTPRequest);
 		BEGIN reInitializeSubContainer := TRUE (* the sub container has to showed in the default mode *)
 		END OnDetailViewActivated;
 
@@ -1591,7 +1591,7 @@ TYPE
 		VAR statusMsg: XML.Content) : BOOLEAN;
 		(* parameters "username", "password", "confpassword", "email", "defaultmsgname" or "accountoid"*)
 	VAR username, password, confpassword, email, defaultmsgname, accountOidStr: Strings.String; obj: WebAccount;
-		accountOid: LONGINT; persObj: PrevalenceSystem.PersistentObject;
+		accountOid: SIGNED32; persObj: PrevalenceSystem.PersistentObject;
 	BEGIN
 		IF ((accountContainerName # NIL) & (accountContainerName^ = WebAccountsContainerName)) THEN
 			username := params.GetParameterValueByName("username");

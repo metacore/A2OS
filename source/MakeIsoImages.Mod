@@ -110,8 +110,8 @@ TYPE
 		Begin: ARRAY 3 OF CHAR;
 		SysIndicator: CHAR;
 		End: ARRAY 3 OF CHAR;
-		StartSec: LONGINT;
-		NofSecs: LONGINT;
+		StartSec: SIGNED32;
+		NofSecs: SIGNED32;
 	END;
 
 	PartitionTable = ARRAY NumPartitions OF Partition;
@@ -159,20 +159,20 @@ TYPE
 	BCValidationEntry = RECORD
 		HeaderId: CHAR;
 		PlatformId: CHAR;
-		Reserved: INTEGER;
+		Reserved: SIGNED16;
 		IdString: ARRAY 24 OF CHAR;
-		Checksum: INTEGER;
+		Checksum: SIGNED16;
 		KeyBytes: ARRAY 2 OF CHAR;
 	END;
 
 	BCInitialDefaultEntry = RECORD
 		BootIndicator: CHAR;
 		BootMediaType: CHAR;
-		LoadSegment: INTEGER;
+		LoadSegment: SIGNED16;
 		SystemType: CHAR;
 		Unused1: CHAR;
-		SectorCount: INTEGER;
-		LoadRBA: LONGINT;
+		SectorCount: SIGNED16;
+		LoadRBA: SIGNED32;
 		Unused2: ARRAY 20 OF CHAR;
 	END;
 
@@ -183,8 +183,8 @@ TYPE
 			next*: Node;
 			name*, fullpath*: String;
 			shortname: String;
-			lba: LONGINT;
-			size*: LONGINT; (* size in bytes *)
+			lba: SIGNED32;
+			size*: SIGNED32; (* size in bytes *)
 	END Node;
 
 	Directory* = OBJECT(Node)
@@ -192,11 +192,11 @@ TYPE
 			parent*, nextdir*: Directory;
 			subdir*: Directory; (* first subdirectory in this directory *)
 			content*: Node; (*Pointer to first entry in directory *)
-			depth*: LONGINT;
+			depth*: SIGNED32;
 			fullpath*: String; (* set only if tree is physical *)
-			no: LONGINT; (* no in pathtable *)
+			no: SIGNED32; (* no in pathtable *)
 
-		PROCEDURE &New*(parent: Directory; name, fullpath: String; depth: LONGINT);
+		PROCEDURE &New*(parent: Directory; name, fullpath: String; depth: SIGNED32);
 		BEGIN
 			SELF.parent := parent;
 			SELF.name := name;
@@ -211,7 +211,7 @@ TYPE
 		jolietFile: File; (* points to the file in the joliet tree if there is one *)
 		prevSession*: BOOLEAN; (* file is from a previous session *)
 
-		PROCEDURE &New*(name, fullpath: String; size: LONGINT);
+		PROCEDURE &New*(name, fullpath: String; size: SIGNED32);
 		BEGIN
 			SELF.name := name;
 			SELF.fullpath := fullpath;
@@ -222,13 +222,13 @@ TYPE
 	DirectoryTree* = OBJECT
 		VAR
 			root*: Directory;
-			dircnt*: LONGINT; (* number of directories *)
-			size*: LONGINT; (* total size of direcotry tree in bytes *)
-			sizeFiles*: LONGINT; (* total size of associated files in bytes *)
-			type: LONGINT; (* ISO Level1 / ISO Level 2 / Joliet *)
+			dircnt*: SIGNED32; (* number of directories *)
+			size*: SIGNED32; (* total size of direcotry tree in bytes *)
+			sizeFiles*: SIGNED32; (* total size of associated files in bytes *)
+			type: SIGNED32; (* ISO Level1 / ISO Level 2 / Joliet *)
 			flags*: SET;
 
-		PROCEDURE &New*(root: Directory; type: LONGINT; flags: SET);
+		PROCEDURE &New*(root: Directory; type: SIGNED32; flags: SET);
 		BEGIN
 			(* the parent of the root dir shall be the root dir itself *)
 			root.parent := root;
@@ -238,7 +238,7 @@ TYPE
 		END New;
 
 		(* build up joliet tree from an iso tree *)
-		PROCEDURE CloneTree(type: LONGINT): DirectoryTree;
+		PROCEDURE CloneTree(type: SIGNED32): DirectoryTree;
 		VAR
 			newRoot: Directory;
 			tree: DirectoryTree;
@@ -317,13 +317,13 @@ TYPE
 			END;
 		END CountDirs;
 
-		PROCEDURE AssignFirstDirLba(startLba: LONGINT);
+		PROCEDURE AssignFirstDirLba(startLba: SIGNED32);
 		BEGIN
 			size := AssignDirLba(root, startLba);
 			size := size * SectorSize;
 		END AssignFirstDirLba;
 
-		PROCEDURE AssignFirstFileLba(startLba: LONGINT);
+		PROCEDURE AssignFirstFileLba(startLba: SIGNED32);
 		BEGIN
 			sizeFiles := AssignFileLba(root, startLba);
 			sizeFiles := sizeFiles * SectorSize;
@@ -333,7 +333,7 @@ TYPE
 		VAR
 			enumerator: Files.Enumerator;
 			name, filename, path, mask: ARRAY MaxLen OF CHAR;
-			time, date: LONGINT;
+			time, date: SIGNED32;
 			size: Files.Size;
 			flags: SET;
 			newDir: Directory;
@@ -353,7 +353,7 @@ TYPE
 						BuildTree(newDir);
 						tmp := newDir;
 					ELSE
-						NEW(newFile, Strings.NewString(filename), NIL, size(LONGINT));
+						NEW(newFile, Strings.NewString(filename), NIL, size(SIGNED32));
 						tmp := newFile;
 					END;
 					IF dir.content = NIL THEN
@@ -419,7 +419,7 @@ TYPE
 
 		PROCEDURE Split(head: Node): Node;
 		VAR
-			len, i: LONGINT;
+			len, i: SIGNED32;
 			node, secondhalf: Node;
 		BEGIN
 			node := head;
@@ -604,7 +604,7 @@ TYPE
 
 		PROCEDURE ReplaceNonDChars(VAR str: ARRAY OF CHAR);
 		VAR
-			i: SIZE; num: WORD;
+			i: SIZE; num: INTEGER;
 		BEGIN
 			WHILE str[i] # 0X DO
 				num := ORD(str[i]);
@@ -646,10 +646,10 @@ TYPE
 			RETURN max;
 		END GetMaxPathLengthDir;
 
-		PROCEDURE AssignDirLba(dir: Directory; startsec: LONGINT): LONGINT;
+		PROCEDURE AssignDirLba(dir: Directory; startsec: SIGNED32): SIGNED32;
 		VAR
 			cur: Directory;
-			secs, nextsec: LONGINT;
+			secs, nextsec: SIGNED32;
 		BEGIN
 			secs := 0;
 			dir.lba := startsec;
@@ -664,10 +664,10 @@ TYPE
 			RETURN nextsec - startsec;
 		END AssignDirLba;
 
-		PROCEDURE CalcDirLength(dir: Directory): LONGINT;
+		PROCEDURE CalcDirLength(dir: Directory): SIGNED32;
 		VAR
 			node: Node;
-			secs: LONGINT; ofs, len: SIZE;
+			secs: SIGNED32; ofs, len: SIZE;
 		BEGIN
 			secs := 0;
 			node := dir.content;
@@ -689,11 +689,11 @@ TYPE
 			RETURN secs;
 		END CalcDirLength;
 
-		PROCEDURE AssignFileLba(dir: Directory; startsec: LONGINT): LONGINT;
+		PROCEDURE AssignFileLba(dir: Directory; startsec: SIGNED32): SIGNED32;
 		VAR
 			node: Node;
 			cur: Directory;
-			secs, nextsec: LONGINT;
+			secs, nextsec: SIGNED32;
 		BEGIN
 			nextsec := startsec;
 			node := dir.content;
@@ -748,7 +748,7 @@ TYPE
 
 			(* add record for self reference *)
 			rec := SYSTEM.VAL(DirectoryRecordPtr, recAdr);
-			ASSERT(ADDRESSOF(rec^) = SYSTEM.VAL(LONGINT, rec));
+			ASSERT(ADDRESSOF(rec^) = SYSTEM.VAL(SIGNED32, rec));
 			rec.Len := 22X;
 			SetBothByteOrder32(dir.lba, rec.Lba);
 			SetBothByteOrder32(dir.size, rec.Size);
@@ -830,10 +830,10 @@ TYPE
 			SELF.dev := dev;
 		END New;
 
-		PROCEDURE Read*(startsec: LONGINT): LONGINT;
+		PROCEDURE Read*(startsec: SIGNED32): SIGNED32;
 		VAR
 			voldescr: PSVolumeDescriptor;
-			res: WORD; treeType: LONGINT;
+			res: INTEGER; treeType: SIGNED32;
 			rootRec: DirectoryRecord;
 			root: Directory;
 			tmp, name: ARRAY MaxLen OF CHAR;
@@ -856,9 +856,9 @@ TYPE
 			RETURN ResOk;
 		END Read;
 
-		PROCEDURE ReadDir(parent: Directory): WORD;
+		PROCEDURE ReadDir(parent: Directory): INTEGER;
 		VAR
-			index, size, lba, len: LONGINT; res: WORD;
+			index, size, lba, len: SIGNED32; res: INTEGER;
 			name : ARRAY MaxLen OF CHAR;
 			dirRec: DirectoryRecord;
 			file: File;
@@ -930,9 +930,9 @@ TYPE
 		VAR
 			pvd: PSVolumeDescriptorPtr;
 
-		PROCEDURE Open*(filename: Strings.String): LONGINT;
+		PROCEDURE Open*(filename: Strings.String): SIGNED32;
 		VAR
-			ofs, total: LONGINT;
+			ofs, total: SIGNED32;
 			bytesRead: SIZE;
 			file: Files.File;
 			r: Files.Reader;
@@ -968,9 +968,9 @@ TYPE
 	Queue = OBJECT
 	VAR
 		queue: POINTER TO ARRAY OF ANY;
-		head, tail, size: LONGINT;
+		head, tail, size: SIGNED32;
 
-		PROCEDURE &New*(size: LONGINT);
+		PROCEDURE &New*(size: SIGNED32);
 		BEGIN
 			head := 0; tail := 0;
 			SELF.size := size;
@@ -1002,8 +1002,8 @@ TYPE
 		VAR
 			tree: DirectoryTree;
 			table: POINTER TO ARRAY OF Directory;
-			size: LONGINT; (* length of pathtable in bytes *)
-			lbaLType, lbaRType: LONGINT;
+			size: SIGNED32; (* length of pathtable in bytes *)
+			lbaLType, lbaRType: SIGNED32;
 
 		PROCEDURE &New*(tree: DirectoryTree);
 		BEGIN
@@ -1016,7 +1016,7 @@ TYPE
 			queue: Queue;
 			ptr : ANY;
 			cur: Directory;
-			no: LONGINT;
+			no: SIGNED32;
 		BEGIN
 			NEW(table, tree.dircnt);
 			NEW(queue, tree.dircnt);
@@ -1028,7 +1028,7 @@ TYPE
 				cur := ptr(Directory);
 				table[no] := cur;
 				INC(no); cur.no := no;
-				INC(size, CalcRecordLength(cur)(LONGINT));
+				INC(size, CalcRecordLength(cur)(SIGNED32));
 				cur := cur.subdir;
 				WHILE cur # NIL DO
 					queue.Put(cur);
@@ -1052,7 +1052,7 @@ TYPE
 			RETURN len;
 		END CalcRecordLength;
 
-		PROCEDURE Write	(w: Streams.Writer; tableType: LONGINT);
+		PROCEDURE Write	(w: Streams.Writer; tableType: SIGNED32);
 		VAR
 			dir: Directory;
 			buf: POINTER TO ARRAY OF CHAR;
@@ -1061,7 +1061,7 @@ TYPE
 		BEGIN
 			NEW(buf, MaxLen); (* max record length *)
 			rec := SYSTEM.VAL(PathTableRecordPtr, ADDRESSOF(buf^));
-			ASSERT(ADDRESSOF(rec^) = SYSTEM.VAL(LONGINT, rec));
+			ASSERT(ADDRESSOF(rec^) = SYSTEM.VAL(SIGNED32, rec));
 
 			(* first write entry for root record *)
 			rec.IdentLen := 1X;
@@ -1110,7 +1110,7 @@ TYPE
 	BCEntry = POINTER TO RECORD
 		next: BCEntry;
 		image: String;
-		loadRBA, size: LONGINT;
+		loadRBA, size: SIGNED32;
 		bootable: BOOLEAN;
 		emulation: CHAR;
 		id: String;
@@ -1120,8 +1120,8 @@ TYPE
 	(* at the moment only the default entry is implemented *)
 	BootCatalog* = OBJECT
 		VAR
-			size: LONGINT; (* size in bytes *)
-			sizeImages: LONGINT; (* size of associated images *)
+			size: SIGNED32; (* size in bytes *)
+			sizeImages: SIGNED32; (* size of associated images *)
 			root: BCEntry;
 
 			PROCEDURE &New*;
@@ -1137,7 +1137,7 @@ TYPE
 				IF file # NIL THEN
 					INC(size, 32);
 					NEW(root);
-					root.size := file.Length()(LONGINT);
+					root.size := file.Length()(SIGNED32);
 					root.image := image;
 					root.id := id;
 					root.bootable := bootable;
@@ -1150,7 +1150,7 @@ TYPE
 				END;
 			END AddDefaultEntry;
 
-			PROCEDURE AssignFirstImageLba(startlba: LONGINT);
+			PROCEDURE AssignFirstImageLba(startlba: SIGNED32);
 			VAR
 				cur: BCEntry;
 			BEGIN
@@ -1201,7 +1201,7 @@ TYPE
 			VAR
 				file: Files.File;
 				r: Files.Reader;
-				bytesRead: SIZE; i: LONGINT;
+				bytesRead: SIZE; i: SIGNED32;
 				buf: POINTER TO ARRAY OF CHAR;
 				table: PartitionTable;
 			BEGIN
@@ -1222,9 +1222,9 @@ TYPE
 				END;
 			END GetSysType;
 
-			PROCEDURE WriteImages(w: Streams.Writer): WORD;
+			PROCEDURE WriteImages(w: Streams.Writer): INTEGER;
 			VAR
-				res : WORD;
+				res : INTEGER;
 				cur: BCEntry;
 			BEGIN
 				cur := root;
@@ -1239,14 +1239,14 @@ TYPE
 				RETURN ResOk;
 			END WriteImages;
 
-			PROCEDURE CalcChecksum16(CONST buf: ARRAY OF CHAR): INTEGER;
+			PROCEDURE CalcChecksum16(CONST buf: ARRAY OF CHAR): SIGNED16;
 			VAR
-				checksum: LONGINT; i, numWords: SIZE;
+				checksum: SIGNED32; i, numWords: SIZE;
 			BEGIN
 				checksum := 0;
 				numWords := LEN(buf) DIV 2;
 				FOR i := 0 TO numWords - 1 DO
-					checksum := (checksum + SYSTEM.VAL(INTEGER, buf[i * 2])) MOD 10000H;
+					checksum := (checksum + SYSTEM.VAL(SIGNED16, buf[i * 2])) MOD 10000H;
 				END;
 				RETURN SHORT(10000H - checksum);
 			END CalcChecksum16;
@@ -1260,7 +1260,7 @@ TYPE
 		VAR
 			left, right: Entry;
 			name: ARRAY MaxLen OF CHAR;
-			count: LONGINT;
+			count: SIGNED32;
 
 		PROCEDURE &New*(CONST name: ARRAY OF CHAR);
 		BEGIN
@@ -1273,7 +1273,7 @@ TYPE
 		VAR
 			root: Entry;
 
-		PROCEDURE GetCount(CONST str: ARRAY OF CHAR): LONGINT;
+		PROCEDURE GetCount(CONST str: ARRAY OF CHAR): SIGNED32;
 		VAR
 			entry, tmp: Entry;
 		BEGIN
@@ -1308,12 +1308,12 @@ TYPE
 	END NameMap;
 
 	IsoSettings* = RECORD
-		isoLevel*: LONGINT;
-		padToSize*: LONGINT; (* small images are padded to padToSize sectors *)
+		isoLevel*: SIGNED32;
+		padToSize*: SIGNED32; (* small images are padded to padToSize sectors *)
 		joliet*: BOOLEAN;
 		flags*: SET;
 		bootCatalog*: BootCatalog;
-		startLba*: LONGINT;
+		startLba*: SIGNED32;
 		volumeIdent: String;
 	END;
 
@@ -1351,12 +1351,12 @@ BEGIN
 	END;
 END Pad;
 
-PROCEDURE WriteFiles(w: Streams.Writer; dir: Directory): WORD;
+PROCEDURE WriteFiles(w: Streams.Writer; dir: Directory): INTEGER;
 VAR
 	node: Node;
 	cur: Directory;
 	pathname: ARRAY MaxLen OF CHAR;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	node := dir.content;
 	WHILE node # NIL DO
@@ -1385,12 +1385,12 @@ BEGIN
 	RETURN ResOk;
 END WriteFiles;
 
-PROCEDURE WriteFile(w: Streams.Writer; CONST pathname: ARRAY OF CHAR): LONGINT;
+PROCEDURE WriteFile(w: Streams.Writer; CONST pathname: ARRAY OF CHAR): SIGNED32;
 VAR
 	file: Files.File;
 	r: Files.Reader;
 	buf: ARRAY 1024 OF CHAR;
-	bytesRead: SIZE; res: WORD;
+	bytesRead: SIZE; res: INTEGER;
 BEGIN
 	res := ErrFileNotFound;
 	status.fileName := Strings.NewString(pathname);
@@ -1424,7 +1424,7 @@ BEGIN
 END InitSetTerminator;
 
 (* Initialize Boot Record *)
-PROCEDURE InitBootRecord(VAR descr: BootRecord; lba: LONGINT);
+PROCEDURE InitBootRecord(VAR descr: BootRecord; lba: SIGNED32);
 BEGIN
 	descr.Type := 0X;
 	SetStringWithPadding(ISO9660Id, descr.StdIdent, 0X, FALSE);
@@ -1434,7 +1434,7 @@ BEGIN
 END InitBootRecord;
 
 (* initialize Primary  / Supplementary volume descriptor *)
-PROCEDURE InitPSVolumeDescriptor(VAR descr: PSVolumeDescriptor; tree: DirectoryTree; table: PathTable; volSize, descrType: LONGINT);
+PROCEDURE InitPSVolumeDescriptor(VAR descr: PSVolumeDescriptor; tree: DirectoryTree; table: PathTable; volSize, descrType: SIGNED32);
 VAR
 	rec: DirectoryRecord;
 	time: Dates.DateTime;
@@ -1501,7 +1501,7 @@ BEGIN
 	descr.FileStructVer := 1X;
 END InitPSVolumeDescriptor;
 
-PROCEDURE SetBothByteOrder16(x: INTEGER; VAR dst: ARRAY OF CHAR);
+PROCEDURE SetBothByteOrder16(x: SIGNED16; VAR dst: ARRAY OF CHAR);
 BEGIN
 	dst[0] := CHR(x MOD 100H);
 	dst[1] := CHR(x DIV 100H MOD 100H);
@@ -1509,7 +1509,7 @@ BEGIN
 	dst[3] := dst[0];
 END SetBothByteOrder16;
 
-PROCEDURE SetBothByteOrder32(x: LONGINT; VAR dst: ARRAY OF CHAR);
+PROCEDURE SetBothByteOrder32(x: SIGNED32; VAR dst: ARRAY OF CHAR);
 BEGIN
 	dst[0] := CHR(x MOD 100H);
 	dst[1] := CHR(x DIV 100H MOD 100H);
@@ -1522,7 +1522,7 @@ BEGIN
 END SetBothByteOrder32;
 
 (* we set the time so that it is displayed correct in bluebottle *)
-PROCEDURE SetTime(time: Dates.DateTime; ofs: LONGINT; VAR dst: ARRAY OF CHAR);
+PROCEDURE SetTime(time: Dates.DateTime; ofs: SIGNED32; VAR dst: ARRAY OF CHAR);
 BEGIN
 	dst[0] := CHR(time.year - 1900);
 	dst[1] := CHR(time.month + 1);
@@ -1554,7 +1554,7 @@ END SetStringWithPadding;
 
 PROCEDURE ConvertUTF8ToUCS2(VAR src, dst: ARRAY OF CHAR);
 VAR
-	ucs4: ARRAY MaxLen OF LONGINT;
+	ucs4: ARRAY MaxLen OF SIGNED32;
 	i, len: SIZE;
 BEGIN
 	UTF8Strings.UTF8toUnicode(src, ucs4, len);
@@ -1569,7 +1569,7 @@ END ConvertUTF8ToUCS2;
 (* converts an identifier to a zero terminated utf8 string *)
 PROCEDURE ConvertIdentToUTF8*(CONST id: ARRAY OF CHAR; len: SIZE; ucs2: BOOLEAN; VAR str: ARRAY OF CHAR);
 VAR
-	i, p: SIZE; val: LONGINT;
+	i, p: SIZE; val: SIGNED32;
 	b: BOOLEAN;
 BEGIN
 	ASSERT(len <= LEN(id));
@@ -1590,7 +1590,7 @@ BEGIN
 	Strings.TrimRight(str, ' ');
 END ConvertIdentToUTF8;
 
-PROCEDURE MakeImageFromDir*(rootDir, isoDest: String; settings: IsoSettings; writeStatusChanged: Utils.StatusProc): WORD;
+PROCEDURE MakeImageFromDir*(rootDir, isoDest: String; settings: IsoSettings; writeStatusChanged: Utils.StatusProc): INTEGER;
 VAR
 	root: Directory;
 	isotree: DirectoryTree;
@@ -1605,7 +1605,7 @@ BEGIN
 	RETURN MakeImage(isotree, isoDest, settings);
 END MakeImageFromDir;
 
-PROCEDURE MakeImageFromTree*(root: Directory; isoDest: String; settings: IsoSettings; writeStatusChanged: Utils.StatusProc): WORD;
+PROCEDURE MakeImageFromTree*(root: Directory; isoDest: String; settings: IsoSettings; writeStatusChanged: Utils.StatusProc): INTEGER;
 VAR
 	isotree: DirectoryTree;
 BEGIN
@@ -1615,13 +1615,13 @@ BEGIN
 	RETURN MakeImage(isotree, isoDest, settings);
 END MakeImageFromTree;
 
-PROCEDURE MakeImage*(isotree: DirectoryTree; isoDest: String; settings: IsoSettings): WORD;
+PROCEDURE MakeImage*(isotree: DirectoryTree; isoDest: String; settings: IsoSettings): INTEGER;
 VAR
 	fOut: Files.File;
 	out: Files.Writer;
 	jtree : DirectoryTree;
 	isotable, jtable: PathTable;
-	lba, freeSpace, padding: LONGINT; res: WORD;
+	lba, freeSpace, padding: SIGNED32; res: INTEGER;
 	pdescr, sdescr: PSVolumeDescriptor;
 	bdescr: BootRecord;
 	tdescr: SetTerminator;
@@ -1748,9 +1748,9 @@ BEGIN
 END DirExists;
 
 (* SaveImage is used to copy data cds *)
-PROCEDURE SaveImage*(dev: ATADisks.DeviceATAPI; startsec: LONGINT; CONST dest: ARRAY OF CHAR; onWriteStatusChanged: Utils.StatusProc): WORD;
+PROCEDURE SaveImage*(dev: ATADisks.DeviceATAPI; startsec: SIGNED32; CONST dest: ARRAY OF CHAR; onWriteStatusChanged: Utils.StatusProc): INTEGER;
 VAR
-	sec, size: LONGINT; res: WORD;
+	sec, size: SIGNED32; res: INTEGER;
 	buf: ARRAY TransferSize*SectorSize OF CHAR;
 	pvd: PSVolumeDescriptor;
 	f: Files.File;
@@ -1795,10 +1795,10 @@ BEGIN
 	RETURN ResOk;
 END SaveImage;
 
-PROCEDURE GetVolumeDescriptor*(dev: ATADisks.DeviceATAPI; startsec: LONGINT; VAR descr: PSVolumeDescriptor; descrType: LONGINT): WORD;
+PROCEDURE GetVolumeDescriptor*(dev: ATADisks.DeviceATAPI; startsec: SIGNED32; VAR descr: PSVolumeDescriptor; descrType: SIGNED32): INTEGER;
 VAR
 	type: CHAR;
-	sec: LONGINT; res: WORD;
+	sec: SIGNED32; res: INTEGER;
 	tmp: ARRAY MaxLen OF CHAR;
 	buf: ARRAY SectorSize OF CHAR;
 BEGIN
@@ -1827,7 +1827,7 @@ END GetVolumeDescriptor;
 PROCEDURE Make*(context : Commands.Context);
 VAR
 	rootDir, isoDest: String;
-	res : WORD;
+	res : INTEGER;
 	settings: IsoSettings;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(isoDest^);

@@ -6,7 +6,7 @@ IMPORT  Machine, Clock, Heaps, SHA3 := CryptoSHA3(*, Out := KernelLog*);
 
 	PROCEDURE CSRand*( VAR rand: ARRAY OF CHAR; bits: SIZE );
 	VAR
-		seed: HUGEINT; i, j, len: SIZE;
+		seed: SIGNED64; i, j, len: SIZE;
 		h: SHA3.Hash;
 		buf: ARRAY 64 OF CHAR;
 	BEGIN
@@ -30,8 +30,8 @@ IMPORT  Machine, Clock, Heaps, SHA3 := CryptoSHA3(*, Out := KernelLog*);
 		END
 	END CSRand;
 
-	PROCEDURE Noise( ): HUGEINT;
-	VAR tm, dt: HUGEINT; t, d: LONGINT;  total, free, largest: SIZE;
+	PROCEDURE Noise( ): SIGNED64;
+	VAR tm, dt: SIGNED64; t, d: SIGNED32;  total, free, largest: SIZE;
 	BEGIN
 		tm := Machine.GetTimer( );
 		Clock.Get( t, d );

@@ -25,21 +25,21 @@ MODULE WTSDraw IN Oberon;	(** portable *)
 		W: Texts.Writer;
 		fontname: ARRAY 8, 32 OF CHAR;
 		libname: ARRAY 8, 32 OF CHAR;
-		elem: ARRAY 8 OF PROCEDURE (VAR R: Files.Rider; col, x, y, w, h: INTEGER): Display.Frame;
+		elem: ARRAY 8 OF PROCEDURE (VAR R: Files.Rider; col, x, y, w, h: SIGNED16): Display.Frame;
 
-	PROCEDURE Data(VAR R: Files.Rider; VAR x, y, w, h, color: INTEGER);
+	PROCEDURE Data(VAR R: Files.Rider; VAR x, y, w, h, color: SIGNED16);
 	BEGIN Files.ReadInt(R, x); Files.ReadInt(R, y);
 		Files.ReadInt(R, w); Files.ReadInt(R, h); Files.ReadInt(R, color)
 	END Data;
 
 	PROCEDURE ReadString(VAR R: Files.Rider; VAR s: ARRAY  OF CHAR);
-		VAR i: INTEGER; ch: CHAR;
+		VAR i: SIGNED16; ch: CHAR;
 	BEGIN i := 0;
 		REPEAT Files.Read(R, ch); s[i] := ch; INC(i) UNTIL (i = LEN(s)) OR (ch < 0DX); s[i-1] := 0X
 	END ReadString;
 
-	PROCEDURE RLine(col, x, y, w, h: INTEGER): Display.Frame;
-		VAR X, Y: ARRAY 2 OF INTEGER; lw: INTEGER; L: BasicFigures.Figure;
+	PROCEDURE RLine(col, x, y, w, h: SIGNED16): Display.Frame;
+		VAR X, Y: ARRAY 2 OF SIGNED16; lw: SIGNED16; L: BasicFigures.Figure;
 	BEGIN X[0] := 0; Y[0] := 0;
 		IF w > h THEN X[1] := w; Y[1] := 0; lw := h ELSE X[1] := 0; Y[1] := h; lw := w END;
 		NEW(L); BasicFigures.InitLine(L, X[0], Y[0], X[1], Y[1]);
@@ -50,8 +50,8 @@ MODULE WTSDraw IN Oberon;	(** portable *)
 		RETURN L
 	END RLine;
 
-	PROCEDURE Line(col, x, y, w, h: INTEGER): Display.Frame;
-		VAR X, Y: ARRAY 2 OF INTEGER; L: BasicFigures.Figure;
+	PROCEDURE Line(col, x, y, w, h: SIGNED16): Display.Frame;
+		VAR X, Y: ARRAY 2 OF SIGNED16; L: BasicFigures.Figure;
 	BEGIN X[0] := 0; Y[0] := 0; X[1] := w; Y[1] := h;
 		IF w < 0 THEN X[0] := -w; X[1] := 0 END;
 		IF h < 0 THEN Y[0] := -h; Y[1] := 0 END;
@@ -63,8 +63,8 @@ MODULE WTSDraw IN Oberon;	(** portable *)
 		RETURN L
 	END Line;
 
-	PROCEDURE NewCap*(fnt: Objects.Library; col, X, Y: INTEGER; s: ARRAY OF CHAR): TextFields.Caption;
-	VAR cap: TextFields.Caption; x: INTEGER;
+	PROCEDURE NewCap*(fnt: Objects.Library; col, X, Y: SIGNED16; s: ARRAY OF CHAR): TextFields.Caption;
+	VAR cap: TextFields.Caption; x: SIGNED16;
 	BEGIN
 		NEW(cap);
 		NEW(cap.text); Texts.Open(cap.text,"");
@@ -75,15 +75,15 @@ MODULE WTSDraw IN Oberon;	(** portable *)
 		RETURN cap;
 	END NewCap;
 
-	PROCEDURE Caption(fnt: Fonts.Font; col, X, Y: INTEGER; VAR s: ARRAY OF CHAR): Display.Frame;
+	PROCEDURE Caption(fnt: Fonts.Font; col, X, Y: SIGNED16; VAR s: ARRAY OF CHAR): Display.Frame;
 		VAR C: Display.Frame;
 	BEGIN
 		C := NewCap(fnt, col, X, Y, s); C.handle := TextFields.CaptionHandler;
 		RETURN C
 	END Caption;
 
-	PROCEDURE Rect(VAR R: Files.Rider; col, x, y, w, h: INTEGER): Display.Frame;
-		VAR state: SET; len: INTEGER; lw, vers: SHORTINT; L: BasicFigures.Figure;
+	PROCEDURE Rect(VAR R: Files.Rider; col, x, y, w, h: SIGNED16): Display.Frame;
+		VAR state: SET; len: SIGNED16; lw, vers: SIGNED8; L: BasicFigures.Figure;
 	BEGIN
 		Files.ReadInt(R, len); Files.Read(R, lw); Files.Read(R, vers);
 		state := {}; IF vers > 0 THEN INCL(state, BasicFigures.filled); col := -BasicFigures.filled + vers END;
@@ -91,8 +91,8 @@ MODULE WTSDraw IN Oberon;	(** portable *)
 		RETURN L
 	END Rect;
 
-	PROCEDURE Curves(VAR R: Files.Rider; col, x, y, w, h: INTEGER): Display.Frame;
-		VAR len, kind, lw, r: INTEGER; C: BasicFigures.Figure;
+	PROCEDURE Curves(VAR R: Files.Rider; col, x, y, w, h: SIGNED16): Display.Frame;
+		VAR len, kind, lw, r: SIGNED16; C: BasicFigures.Figure;
 	BEGIN
 		Files.ReadInt(R, len); Files.ReadInt(R, kind); Files.ReadInt(R, lw);
 		IF kind = 0 THEN RETURN Line(col, x, y, w, h)
@@ -104,8 +104,8 @@ MODULE WTSDraw IN Oberon;	(** portable *)
 		END
 	END Curves;
 
-	PROCEDURE Macro(lib: Objects.Library; col, X, Y: INTEGER; VAR s : ARRAY OF CHAR): Display.Frame;
-		VAR (* F: Display.Frame; *) obj: Objects.Object; ref: INTEGER;
+	PROCEDURE Macro(lib: Objects.Library; col, X, Y: SIGNED16; VAR s : ARRAY OF CHAR): Display.Frame;
+		VAR (* F: Display.Frame; *) obj: Objects.Object; ref: SIGNED16;
 	BEGIN Objects.GetRef(lib.dict, s, ref); lib.GetObj(lib, ref, obj);
 	(*
 		F := Figures0.ViewTo(obj(Display.Frame)); F.X := X; F.Y := Y;
@@ -119,10 +119,10 @@ MODULE WTSDraw IN Oberon;	(** portable *)
 		IF name = "TTL0" THEN RETURN Objects.ThisLibrary("TTL.Lib") END
 	END ThisLib;
 
-	PROCEDURE Item(VAR R: Files.Rider; type: SHORTINT): Display.Frame;
+	PROCEDURE Item(VAR R: Files.Rider; type: SIGNED8): Display.Frame;
 		VAR s, t: ARRAY 64 OF CHAR;
-			x, y, w, h, col: INTEGER;
-			no: SHORTINT;
+			x, y, w, h, col: SIGNED16;
+			no: SIGNED8;
 	BEGIN
 		IF type = 0 THEN Files.Read(R, no);
 			IF no = 0 THEN Files.Read(R, no); ReadString(R, fontname[no])
@@ -146,7 +146,7 @@ MODULE WTSDraw IN Oberon;	(** portable *)
 	END Item;
 
 	PROCEDURE Load(VAR R: Files.Rider; VAR link: Objects.Object);
-		VAR p: Display.Frame; tag, type: SHORTINT;
+		VAR p: Display.Frame; tag, type: SIGNED8;
 	BEGIN
 		Files.Read(R, tag); Files.Read(R, type);
 		WHILE type # -1 DO p := Item(R, type);
@@ -155,9 +155,9 @@ MODULE WTSDraw IN Oberon;	(** portable *)
 		END
 	END Load;
 
-	PROCEDURE CoordCheck(obj: Objects.Object): INTEGER;
-		VAR G: Display.Frame; obj0: Objects.Object; Y0, Y1: INTEGER;
-	BEGIN Y0 := MAX(INTEGER); Y1 := MIN(INTEGER); obj0 := obj;
+	PROCEDURE CoordCheck(obj: Objects.Object): SIGNED16;
+		VAR G: Display.Frame; obj0: Objects.Object; Y0, Y1: SIGNED16;
+	BEGIN Y0 := MAX(SIGNED16); Y1 := MIN(SIGNED16); obj0 := obj;
 		WHILE obj0 # NIL DO G := obj0(Display.Frame);
 			IF G.Y <  Y0 THEN Y0 := G.Y END;
 			IF G.Y + G.H > Y1 THEN Y1 := G.Y + G.H END;

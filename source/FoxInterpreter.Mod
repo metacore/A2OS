@@ -24,14 +24,14 @@ TYPE
 	Container*= InterpreterSymbols.Container;
 
 	Builtin*=OBJECT (InterpreterSymbols.Object)
-	VAR id: LONGINT;
+	VAR id: SIGNED32;
 	END Builtin;
 
 	Item*= RECORD
 		object*: InterpreterSymbols.Item;
 		in*: InterpreterSymbols.Item;
 		name*: StringPool.Index;
-		i*: ARRAY MaxIndex OF LONGINT; (* indices if applicable *)
+		i*: ARRAY MaxIndex OF SIGNED32; (* indices if applicable *)
 	END;
 
 	CommandStatement = OBJECT (SyntaxTree.Statement)
@@ -157,7 +157,7 @@ TYPE
 		BEGIN
 			FOR i := 0 TO x.elements.Length()-1 DO
 				IF GetValue(x.elements.GetExpression(i), value) THEN
-					IF value IS Integer THEN INCL(s, LONGINT(value(Integer).value))
+					IF value IS Integer THEN INCL(s, SIGNED32(value(Integer).value))
 					ELSIF value IS Range THEN s := s + {FIRST(value(Range).value)..LAST(value(Range).value)}
 					ELSE Error("wrong value type")
 					END;
@@ -178,13 +178,13 @@ TYPE
 			item.object := a; value := TRUE;
 		END VisitMathArrayExpression;
 
-		PROCEDURE NewInt(i: HUGEINT);
+		PROCEDURE NewInt(i: SIGNED64);
 		VAR v: Integer;
 		BEGIN
 			NEW(v, i); item.object := v; value := TRUE
 		END NewInt;
 
-		PROCEDURE NewReal(i: LONGREAL);
+		PROCEDURE NewReal(i: FLOAT64);
 		VAR v: Real;
 		BEGIN
 			NEW(v, i); item.object := v; value := TRUE
@@ -221,7 +221,7 @@ TYPE
 		END NewChar;
 
 		PROCEDURE VisitUnaryExpression*(x: SyntaxTree.UnaryExpression);
-		VAR value: Value; i: HUGEINT; r: LONGREAL; b: BOOLEAN; operator: LONGINT;
+		VAR value: Value; i: SIGNED64; r: FLOAT64; b: BOOLEAN; operator: SIGNED32;
 		BEGIN
 			operator := x.operator;
 			IF ~GetValue(x.left, value) THEN
@@ -259,7 +259,7 @@ TYPE
 		END VisitUnaryExpression;
 
 		PROCEDURE VisitBinaryExpression*(x: SyntaxTree.BinaryExpression);
-		VAR left, right: Value; operator: LONGINT; li, ri: HUGEINT; lr, rr: LONGREAL; lb, rb:  BOOLEAN; sl, sr: SET;
+		VAR left, right: Value; operator: SIGNED32; li, ri: SIGNED64; lr, rr: FLOAT64; lb, rb:  BOOLEAN; sl, sr: SET;
 		BEGIN
 			operator := x.operator;
 			IF ~GetValue(x.left, left) OR ~GetValue(x.right, right) THEN RETURN END;
@@ -347,7 +347,7 @@ TYPE
 		END VisitBinaryExpression;
 
 		PROCEDURE VisitRangeExpression*(x: SyntaxTree.RangeExpression);
-		VAR first,last,step: HUGEINT; value: Integer;
+		VAR first,last,step: SIGNED64; value: Integer;
 		BEGIN
 			IF ~ExpectInteger(x.first, value) THEN RETURN END;
 			first := value.value;
@@ -418,7 +418,7 @@ TYPE
 
 (*
 		PROCEDURE FindType(CONST types: POINTER TO ARRAY OF Modules.TypeDesc; CONST name: ARRAY OF CHAR): Modules.TypeDesc;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 		IF types = NIL THEN RETURN NIL END;
 		FOR i := 0 TO LEN(types)-1 DO
@@ -429,7 +429,7 @@ TYPE
 		RETURN NIL;
 		END FindType;
 
-		PROCEDURE FindProc(CONST types: POINTER TO ARRAY OF Modules.ProcedureEntry; CONST name: ARRAY OF CHAR; VAR num: LONGINT): BOOLEAN;
+		PROCEDURE FindProc(CONST types: POINTER TO ARRAY OF Modules.ProcedureEntry; CONST name: ARRAY OF CHAR; VAR num: SIGNED32): BOOLEAN;
 		BEGIN
 		IF types = NIL THEN RETURN FALSE END;
 		FOR num := 0 TO LEN(types)-1 DO
@@ -440,7 +440,7 @@ TYPE
 			RETURN FALSE;
 		END FindProc;
 
-		PROCEDURE FindField(CONST types: POINTER TO ARRAY OF Modules.FieldEntry; CONST name: ARRAY OF CHAR; VAR num: LONGINT): BOOLEAN;
+		PROCEDURE FindField(CONST types: POINTER TO ARRAY OF Modules.FieldEntry; CONST name: ARRAY OF CHAR; VAR num: SIGNED32): BOOLEAN;
 		BEGIN
 		IF types = NIL THEN RETURN FALSE END;
 		FOR num := 0 TO LEN(types)-1 DO
@@ -454,7 +454,7 @@ TYPE
 *)
 
 		PROCEDURE VisitIdentifierDesignator*(x: SyntaxTree.IdentifierDesignator);
-		VAR moduleName: Modules.Name; msg: ARRAY 128 OF CHAR; res: WORD;
+		VAR moduleName: Modules.Name; msg: ARRAY 128 OF CHAR; res: INTEGER;
 			builtin : Builtin; anyValue: Any;
 		BEGIN
 			ASSERT(x.left = NIL);
@@ -480,7 +480,7 @@ TYPE
 		END VisitIdentifierDesignator;
 
 		PROCEDURE VisitSelectorDesignator*(x: SyntaxTree.SelectorDesignator);
-		VAR traverse: BOOLEAN; name: ARRAY 128 OF CHAR; num: LONGINT;
+		VAR traverse: BOOLEAN; name: ARRAY 128 OF CHAR; num: SIGNED32;
 		BEGIN
 			Expression(x.left); traverse := FALSE;
 			IF error THEN RETURN END;
@@ -548,7 +548,7 @@ TYPE
 		PROCEDURE VisitBracketDesignator*(x: SyntaxTree.BracketDesignator);
 		VAR array: MathArrayValue; i: SIZE; element: Value; index: Integer; obj: PersistentObjects.Object;
 			leftValue, rightValue: Value; filter: InterpreterSymbols.ObjectFilter; expression: SyntaxTree.Expression;
-			attribute, value: ARRAY 128 OF CHAR; val: LONGINT;
+			attribute, value: ARRAY 128 OF CHAR; val: SIGNED32;
 		BEGIN
 			Expression(x.left);
 			IF (item.object # NIL) & (item.object IS MathArrayValue) THEN
@@ -556,7 +556,7 @@ TYPE
 				FOR i := 0 TO x.parameters.Length()-1 DO
 					array := element(MathArrayValue);
 					IF GetInteger(x.parameters.GetExpression(i), index) THEN
-						element := array.GetValue(LONGINT(index.value));
+						element := array.GetValue(SIGNED32(index.value));
 					END;
 				END;
 				item.object := element;
@@ -580,9 +580,9 @@ TYPE
 								obj := filter.Filter(obj, "name", value);
 							ELSIF leftValue IS Integer THEN
 								IF obj IS PersistentObjects.ObjectList THEN
-									item.object := obj(PersistentObjects.ObjectList).GetElement(LONGINT(leftValue(Integer).value))
+									item.object := obj(PersistentObjects.ObjectList).GetElement(SIGNED32(leftValue(Integer).value))
 								ELSIF obj IS Container THEN
-									item.object := obj(Container).GetItem(LONGINT(leftValue(Integer).value))
+									item.object := obj(Container).GetItem(SIGNED32(leftValue(Integer).value))
 								ELSE Error("cannot be indexed")
 								END;
 							END;
@@ -794,10 +794,10 @@ TYPE
 		CONST
 			LeftDelimiter = '{'; RightDelimiter = '}';
 		VAR
-			position : LONGINT; ch: CHAR;
+			position : SIGNED32; ch: CHAR;
 			destination, expMaker: Scanner.StringMaker; destinationWriter, expressionWriter: Streams.Writer; scanner: Scanner.Scanner; parser: Parser;
 			expression: SyntaxTree.Expression; value: Value; len: SIZE;
-			comment: LONGINT;
+			comment: SIGNED32;
 
 			PROCEDURE Next(VAR ch: CHAR);
 			BEGIN
@@ -877,10 +877,10 @@ TYPE
 		END TranslateString;
 
 		PROCEDURE VisitCommandStatement(x: CommandStatement);
-		VAR t: Strings.String; res: WORD; msg: ARRAY 128 OF CHAR; i: SIZE; array: Strings.StringArray; pos: LONGINT;
+		VAR t: Strings.String; res: INTEGER; msg: ARRAY 128 OF CHAR; i: SIZE; array: Strings.StringArray; pos: SIGNED32;
 			command: ARRAY 256 OF CHAR; context: Commands.Context;
 
-			PROCEDURE CreateContext(paramString : Strings.String; pos: LONGINT) : Commands.Context;
+			PROCEDURE CreateContext(paramString : Strings.String; pos: SIGNED32) : Commands.Context;
 			VAR c : Commands.Context; arg : Streams.StringReader; dummy : ARRAY 1 OF CHAR; len: SIZE;
 			BEGIN
 				IF (paramString = NIL) THEN
@@ -1117,7 +1117,7 @@ TYPE
 		END VisitRepeatStatement;
 
 		PROCEDURE VisitForStatement*(x: SyntaxTree.ForStatement);
-		VAR fromV, toV, byV: Integer; from, to, by,i: HUGEINT; int: Integer;
+		VAR fromV, toV, byV: Integer; from, to, by,i: SIGNED64; int: Integer;
 		BEGIN
 			IF ExpectInteger(x.from, fromV) & ExpectInteger(x.to, toV) THEN
 				from := fromV.value;
@@ -1201,7 +1201,7 @@ TYPE
 		END InitResolver;
 
 		PROCEDURE Traverse(CONST name: ARRAY OF CHAR; array: BOOLEAN);
-		VAR index: LONGINT; success: BOOLEAN;
+		VAR index: SIGNED32; success: BOOLEAN;
 		BEGIN
 			IF array THEN index := 0 ELSE index := -1 END;
 			REPEAT
@@ -1316,23 +1316,23 @@ BEGIN
 	NEW(global, NIL, container);
 END InitGlobalScope;
 
-VAR c: LONGINT;
-VAR d: RECORD e: LONGINT END;
+VAR c: SIGNED32;
+VAR d: RECORD e: SIGNED32 END;
 
-	PROCEDURE Getter(): LONGINT;
+	PROCEDURE Getter(): SIGNED32;
 	BEGIN
 		RETURN 123;
 	END Getter;
 
-	PROCEDURE Setter(a: LONGINT): LONGINT;
+	PROCEDURE Setter(a: SIGNED32): SIGNED32;
 	BEGIN
 		TRACE(a);
 		RETURN a+123;
 	END Setter;
 
 	TYPE TestO= OBJECT
-	VAR i: LONGINT;
-	PROCEDURE &P(s: SHORTINT);
+	VAR i: SIGNED32;
+	PROCEDURE &P(s: SIGNED8);
 	BEGIN
 		i := 999+s;
 	END P;

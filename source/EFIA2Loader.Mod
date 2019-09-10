@@ -19,12 +19,12 @@ VAR
 
 	(* search a mode that with the preferred horizontal and vertical resolution. Returns the corresponding mode
 	number or -1 if no such mode is found or if an error occurs *)
-	PROCEDURE SearchGraphicsMode(prot : EFIGraphicsOutput.Protocol; prefWidth, prefHeight, prefDepth, prefFormat : LONGINT; VAR info: EFIGraphicsOutput.GraphicsModeInfo): LONGINT;
+	PROCEDURE SearchGraphicsMode(prot : EFIGraphicsOutput.Protocol; prefWidth, prefHeight, prefDepth, prefFormat : SIGNED32; VAR info: EFIGraphicsOutput.GraphicsModeInfo): SIGNED32;
 	VAR
 		mode : EFIGraphicsOutput.GraphicsMode;
 		sizeofInfo : EFI.Int;
 		maxMode : EFI.Int32;
-		i : LONGINT;
+		i : SIGNED32;
 		status : EFI.Status;
 	BEGIN
 		(* the currently set mode stores the number of available modes. Valid mode numbers are 0 to maxMode-1 *)
@@ -50,13 +50,13 @@ VAR
 		RETURN -1;
 	END SearchGraphicsMode;
 
-	PROCEDURE GetFrameBuffer(prefWidth, prefHeight, prefDepth, prefFormat : LONGINT; VAR framebufAddr : ADDRESS; VAR framebufSize : SIZE; VAR info: EFIGraphicsOutput.GraphicsModeInfo): EFI.Status;
+	PROCEDURE GetFrameBuffer(prefWidth, prefHeight, prefDepth, prefFormat : SIGNED32; VAR framebufAddr : ADDRESS; VAR framebufSize : SIZE; VAR info: EFIGraphicsOutput.GraphicsModeInfo): EFI.Status;
 	VAR
 		handle : EFI.Handle;
 		handleBuf : ARRAY 128 OF EFI.Handle;
 		handleBufSize, i : EFI.Int;
 		prot : EFI.Protocol; goProt : EFIGraphicsOutput.Protocol;
-		modeNumber : LONGINT;
+		modeNumber : SIGNED32;
 		framebufPhysAddr : EFI.PhysicalAddress;
 		status : EFI.Status;
 	BEGIN
@@ -93,7 +93,7 @@ VAR
 	VAR
 		handle : EFI.Handle;
 		handleBuf : ARRAY 512 OF EFI.Handle;
-		handleBufSize, i: EFI.Int;  j : LONGINT;
+		handleBufSize, i: EFI.Int;  j : SIGNED32;
 		prot : EFI.Protocol; goProt : EFIGraphicsOutput.Protocol;
 		mode : EFIGraphicsOutput.GraphicsMode;
 		info : EFIGraphicsOutput.GraphicsModeInfo;
@@ -156,11 +156,11 @@ VAR
 		btPos : ADDRESS;
 		status : EFI.Status;
 
-		type : LONGINT;
-		fileSize : LONGINT;
+		type : SIGNED32;
+		fileSize : SIGNED32;
 
 		cfgname, cfgval : ADDRESS;
-		cfgnamelen, cfgvallen : LONGINT;
+		cfgnamelen, cfgvallen : SIGNED32;
 
 		parseError : BOOLEAN;
 
@@ -183,7 +183,7 @@ VAR
 		END IsWhitespace;
 
 		(* searches the next configuration entry in the config file and returns the positions and lengths of its name and value *)
-		PROCEDURE ReadConfig (VAR name : ADDRESS; VAR namelen : LONGINT; VAR val : ADDRESS; VAR vallen : LONGINT) : BOOLEAN;
+		PROCEDURE ReadConfig (VAR name : ADDRESS; VAR namelen : SIGNED32; VAR val : ADDRESS; VAR vallen : SIGNED32) : BOOLEAN;
 		VAR ch : CHAR;
 		BEGIN
 			(* skip whitespace *)
@@ -303,7 +303,7 @@ VAR
 	END LoadBootTable;
 
 	PROCEDURE AddConfig(CONST name, val : ARRAY OF CHAR);
-	VAR strlenName, strlenVal : LONGINT;
+	VAR strlenName, strlenVal : SIGNED32;
 	BEGIN
 		strlenName:=0; WHILE (name[strlenName] # 0X) & (strlenName < LEN(name)) DO INC(strlenName); END;
 		strlenVal:=0; WHILE (val[strlenVal] # 0X) & (strlenVal < LEN(val)) DO INC(strlenVal); END;
@@ -313,7 +313,7 @@ VAR
 
 	(* add a config string entry to the boot table. The table always ends with a termination symbol which is overwritten
 	if another entry is added. The lengths must not include a terminating 0. *)
-	PROCEDURE AddConfigA(name : ADDRESS; namelen : LONGINT; val : ADDRESS; vallen : LONGINT);
+	PROCEDURE AddConfigA(name : ADDRESS; namelen : SIGNED32; val : ADDRESS; vallen : SIGNED32);
 	VAR btEnd : ADDRESS;
 	cfgStrSize : SIZE;
 	BEGIN
@@ -337,7 +337,7 @@ VAR
 
 	(* search in the config string entries of the boot table (NOT in the config file) for the configuration with name 'name' *)
 	PROCEDURE GetConfig(CONST name : ARRAY OF CHAR; VAR val : ARRAY OF CHAR);
-	VAR btIdx : ADDRESS; i : LONGINT; ch : CHAR;
+	VAR btIdx : ADDRESS; i : SIGNED32; ch : CHAR;
 	BEGIN
 		btIdx := bootTableCfgStrEntry + 8; (* skip type and size fields *)
 		(* copied from BIOS.I386.Machine.Mod - GetConfig *)
@@ -370,8 +370,8 @@ VAR
 		val[0] := 0X
 	END GetConfig;
 
-	PROCEDURE Allocate(allocAddr: EFI.PhysicalAddress; kernelPages: LONGINT): EFI.Status;
-	VAR allocAdrCopy : EFI.PhysicalAddress; chunkPages: LONGINT; status: EFI.Status;
+	PROCEDURE Allocate(allocAddr: EFI.PhysicalAddress; kernelPages: SIGNED32): EFI.Status;
+	VAR allocAdrCopy : EFI.PhysicalAddress; chunkPages: SIGNED32; status: EFI.Status;
 	BEGIN
 		chunkPages := kernelPages;
 		chunkPages := 1;
@@ -394,13 +394,13 @@ VAR
 		Allocates makes sure the memory at kernelRelocAddress is allocated (by us or by someone else) s.t.
 		the boot table will certainly not be allocated there.
 	*)
-	PROCEDURE LoadKernel(CONST kernelFileName : ARRAY OF EFI.Char16; VAR kernelAddr: ADDRESS; VAR kernelSize : LONGINT) : EFI.Status;
+	PROCEDURE LoadKernel(CONST kernelFileName : ARRAY OF EFI.Char16; VAR kernelAddr: ADDRESS; VAR kernelSize : SIGNED32) : EFI.Status;
 	VAR
 		loadAddr : ADDRESS;
 		allocAddr : EFI.PhysicalAddress;
 		kernelImageFile : EFIFileProtocol.Protocol;
-		kernelPages : LONGINT;
-		i : LONGINT;
+		kernelPages : SIGNED32;
+		i : SIGNED32;
 		status : EFI.Status;
 	BEGIN
 		kernelImageFile := EFILib.OpenFile(kernelFileName);
@@ -487,11 +487,11 @@ VAR
 		kernelAddr, btAddr, fbAddr, highAddr, memmapAddr: ADDRESS;
 		fbSize: EFI.Int;
 		adr: EFI.PhysicalAddress;
-		kernelSize: LONGINT;
+		kernelSize: SIGNED32;
 		kernelStat, btStat, fbStat, status, memmapStat : EFI.Status;
 		kernelFileName, configFileName, arg : ARRAY 128 OF EFI.Char16;
 		val : ARRAY 100 OF CHAR;
-		i: SIZE; dWidth, dHeight, dDepth, dFormat : LONGINT;
+		i: SIZE; dWidth, dHeight, dDepth, dFormat : SIGNED32;
 		size: EFI.Int64;
 		buf : ARRAY 100 OF EFI.Char16;
 		fbInfo: EFIGraphicsOutput.GraphicsModeInfo;

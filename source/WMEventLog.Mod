@@ -20,14 +20,14 @@ CONST
 
 	PollingInterval = 1000;
 
-	GridBgFillColor = LONGINT(0E0E0E0FFH);
+	GridBgFillColor = SIGNED32(0E0E0E0FFH);
 	NofColumns = 7;
 
-	ColorUnknown = LONGINT(0C0C0C0FFH);
+	ColorUnknown = SIGNED32(0C0C0C0FFH);
 	ColorInformation = WMGraphics.White;
 	ColorWarning = WMGraphics.Yellow;
-	ColorError = LONGINT(0FF0000C0H);
-	ColorCritical = LONGINT(0FF0000E0H);
+	ColorError = SIGNED32(0FF0000C0H);
+	ColorCritical = SIGNED32(0FF0000E0H);
 	ColorAlert = WMGraphics.Blue;
 	ColorFailure = WMGraphics.Red;
 	ColorOther = WMGraphics.White;
@@ -61,7 +61,7 @@ TYPE
 
 		update, fullUpdate : BOOLEAN;
 
-		state : LONGINT;
+		state : SIGNED32;
 		timer : Kernel.Timer;
 
 		PROCEDURE HandleButtons(sender, data : ANY);
@@ -112,7 +112,7 @@ TYPE
 		END FilterOriginator;
 
 		PROCEDURE FilterClassification(event : Events.Event; VAR discard : BOOLEAN);
-		VAR string : ARRAY 16 OF CHAR; value : LONGINT;
+		VAR string : ARRAY 16 OF CHAR; value : SIGNED32;
 		BEGIN
 			discard := FALSE;
 
@@ -160,9 +160,9 @@ TYPE
 			END;
 		END Filter;
 
-		PROCEDURE UpdateRow(row : LONGINT; event : Events.Event);
+		PROCEDURE UpdateRow(row : SIGNED32; event : Events.Event);
 		VAR
-			col : LONGINT; caption : ARRAY 128 OF CHAR;
+			col : SIGNED32; caption : ARRAY 128 OF CHAR;
 			dt : Dates.DateTime;
 
 		BEGIN (* has lock on grid and grid.model *)
@@ -425,7 +425,7 @@ TYPE
 		filenameEdit : WMEditors.Editor;
 
 		PROCEDURE HandleLoadButton(sender, data : ANY);
-		VAR events : EventsUtils.EventContainer; filename, msg : ARRAY 256 OF CHAR; res : WORD;
+		VAR events : EventsUtils.EventContainer; filename, msg : ARRAY 256 OF CHAR; res : INTEGER;
 		BEGIN
 			filenameEdit.GetAsString(filename);
 			IF filename # "" THEN
@@ -442,7 +442,7 @@ TYPE
 		END HandleLoadButton;
 
 		PROCEDURE HandleStoreButton(sender, data : ANY);
-		VAR filename, msg : ARRAY 256 OF CHAR; res : WORD;
+		VAR filename, msg : ARRAY 256 OF CHAR; res : INTEGER;
 		BEGIN
 			filenameEdit.GetAsString(filename);
 			IF (filename # "") & (eventLog.events # NIL) THEN
@@ -534,7 +534,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 	StrEventLog : Strings.String;
 
@@ -543,7 +543,7 @@ BEGIN
 	StrEventLog := Strings.NewString("EventLog");
 END InitStrings;
 
-PROCEDURE NewEditor(CONST caption : ARRAY OF CHAR; alignment : WORD; width : SIZE; onEnter : WMEvents.EventListener) : WMEditors.Editor;
+PROCEDURE NewEditor(CONST caption : ARRAY OF CHAR; alignment : INTEGER; width : SIZE; onEnter : WMEvents.EventListener) : WMEditors.Editor;
 VAR editor : WMEditors.Editor;
 BEGIN
 	NEW(editor); editor.bounds.SetWidth(width); editor.alignment.Set(WMComponents.AlignLeft);

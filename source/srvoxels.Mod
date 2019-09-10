@@ -13,7 +13,7 @@ TYPE SREAL=srBase.SREAL;
 
 TYPE marshrunner=OBJECT(srBase.V);
 VAR
-	i,j,k,ii,jj,kk,iii,jjj,kkk,t: INTEGER;
+	i,j,k,ii,jj,kk,iii,jjj,kkk,t: SIGNED16;
 	cost: SREAL;
 	p,q,qq: srBase.PT;
 	corridor, pillar,sky,cage,building,FLOWER, CRIMSONFLOWER, DAISY, BLOOM: MSpace.cell;
@@ -74,7 +74,7 @@ VAR
 	tree: srTree.tree;
 	azure,crimson,yellow: srBase.COLOR;cp: srBase.PT;
 	avatar: ARRAY 10 OF srBase.Voxel;
-	av: LONGINT;
+	av: SIGNED32;
 	rota: srRotaVox.RVox;
 	mrmkitty: ARRAY 77 OF srTexVox.TexVox;
 	title: srBase.Name;
@@ -374,10 +374,10 @@ BEGIN
 	srBase.world:=cage;
 END init;
 
-PROCEDURE cylinder(target: MSpace.cell; start, end: PT;  radius: REAL; t:INTEGER; color:COLOR);
+PROCEDURE cylinder(target: MSpace.cell; start, end: PT;  radius: FLOAT32; t:SIGNED16; color:COLOR);
 VAR
-	i: INTEGER;
-	sin,cos: REAL;
+	i: SIGNED16;
+	sin,cos: FLOAT32;
 	p,q,normal: PT;
 BEGIN
 	FOR i:= 0 TO t DO
@@ -417,7 +417,7 @@ END tick;
 
 PROCEDURE fill5cosm;
 VAR
-	i, j: LONGINT;
+	i, j: SIGNED32;
 	theta, phi: SREAL;
 	a: srBase.PT;
 	sky:srBase.COLOR;
@@ -441,7 +441,7 @@ END fill5cosm;
 
 PROCEDURE fillcell;
 VAR
-	i, j: LONGINT;
+	i, j: SIGNED32;
 	theta, phi: SREAL;
 	a,normal: srBase.PT;
 	reddishgray:srBase.COLOR;
@@ -469,7 +469,7 @@ BEGIN
 END fillcell;
 PROCEDURE fillX;
 VAR
-	i, j,k: LONGINT;
+	i, j,k: SIGNED32;
 	a,b: SREAL;
 	v: ARRAY 8 OF srBase.PT;
 BEGIN

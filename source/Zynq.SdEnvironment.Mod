@@ -8,15 +8,15 @@ IMPORT
 	Machine, Objects, KernelLog, Strings, Locks, PsConfig, BootConfig;
 
 TYPE
-	Time* = HUGEINT; (* Time type *)
+	Time* = SIGNED64; (* Time type *)
 
 VAR
-	InstallHandler *: PROCEDURE (handler: Objects.EventHandler; irq: LONGINT);
+	InstallHandler *: PROCEDURE (handler: Objects.EventHandler; irq: SIGNED32);
 
 	Char *: PROCEDURE (c: CHAR);
 	String *: PROCEDURE (CONST str: ARRAY OF CHAR);
-	Int *: PROCEDURE (i: HUGEINT; w: LONGINT);
-	Hex *: PROCEDURE (i: HUGEINT; w: LONGINT);
+	Int *: PROCEDURE (i: SIGNED64; w: SIGNED32);
+	Hex *: PROCEDURE (i: SIGNED64; w: SIGNED32);
 	Address *: PROCEDURE (a: ADDRESS);
 	Set *: PROCEDURE (s: SET);
 	Boolean *: PROCEDURE (b: BOOLEAN);
@@ -26,9 +26,9 @@ VAR
 
 	GetTimeCounter-: PROCEDURE(): Time;
 
-	cpuClockHz: LONGINT;
+	cpuClockHz: SIGNED32;
 
-	PROCEDURE Enable * (sd: LONGINT): BOOLEAN;
+	PROCEDURE Enable * (sd: SIGNED32): BOOLEAN;
 	VAR
 		key, value: ARRAY 32 OF CHAR;
 	BEGIN
@@ -39,11 +39,11 @@ VAR
 		RETURN value = "1"
 	END Enable;
 
-	PROCEDURE HcClock * (sd: LONGINT): LONGINT;
+	PROCEDURE HcClock * (sd: SIGNED32): SIGNED32;
 	VAR
-		clock, res: LONGINT;
+		clock, res: SIGNED32;
 	BEGIN
-		clock := LONGINT(PsConfig.GetIoClockFrequency(PsConfig.IoSdio, res));
+		clock := SIGNED32(PsConfig.GetIoClockFrequency(PsConfig.IoSdio, res));
 		ASSERT(res = 0);
 		RETURN clock
 	END HcClock;
@@ -60,25 +60,25 @@ VAR
 	(** Convert microseconds to time counts *)
 	PROCEDURE FromMicro*(us: Time): Time;
 	BEGIN
-		RETURN us * ENTIERH(0.5D0+LONGREAL(cpuClockHz)/2.0D6);
+		RETURN us * ENTIERH(0.5D0+FLOAT64(cpuClockHz)/2.0D6);
 	END FromMicro;
 
 	(** Convert time counts to microseconds *)
 	PROCEDURE ToMicro*(time: Time): Time;
 	BEGIN
-		RETURN ENTIERH((0.5D0 + time) / (LONGREAL(cpuClockHz)) * 2.0D6)
+		RETURN ENTIERH((0.5D0 + time) / (FLOAT64(cpuClockHz)) * 2.0D6)
 	END ToMicro;
 
 	(** Convert milliseconds to time counts *)
 	PROCEDURE FromMilli*(ms: Time): Time;
 	BEGIN
-		RETURN ms * ENTIERH(0.5D0 + LONGREAL(cpuClockHz)/2.0D3);
+		RETURN ms * ENTIERH(0.5D0 + FLOAT64(cpuClockHz)/2.0D3);
 	END FromMilli;
 
 	(** Convert time counts to milliseconds *)
 	PROCEDURE ToMilli*(time: Time): Time;
 	BEGIN
-		RETURN ENTIERH((0.5D0 + time) / (LONGREAL(cpuClockHz)) * 2.0D3)
+		RETURN ENTIERH((0.5D0 + time) / (FLOAT64(cpuClockHz)) * 2.0D3)
 	END ToMilli;
 
 	PROCEDURE WaitMilli*(ms: Time);

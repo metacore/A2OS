@@ -10,12 +10,12 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 		CopySelf = TRUE;
 
 	VAR
-		res*: INTEGER; M: INTEGER;
+		res*: SIGNED16; M: SIGNED16;
         W: Texts.Writer;
 		iso, quoted: BOOLEAN;
 		host: ARRAY 32 OF CHAR;
         spat: ARRAY maxlen OF CHAR; (*file name pattern, search pattern*)
-        d: ARRAY 256 OF INTEGER;
+        d: ARRAY 256 OF SIGNED16;
 
 	PROCEDURE MarkedText(): Texts.Text;
 	VAR V, F: Display.Frame;
@@ -42,7 +42,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 	END Response;
 
 	PROCEDURE OpenViewer(name: ARRAY OF CHAR; T: Texts.Text; user: BOOLEAN);
-	VAR V: MenuViewers.Viewer; X, Y: INTEGER;
+	VAR V: MenuViewers.Viewer; X, Y: SIGNED16;
 			menu: ARRAY 128 OF CHAR;
 	BEGIN X := Oberon.Mouse.X;
 		IF user THEN
@@ -55,14 +55,14 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 		V := MenuViewers.New(TextFrames.NewMenu(name, menu), TextFrames.NewText(T, 0), TextFrames.menuH, X, Y);
 	END OpenViewer;
 
-	PROCEDURE Connect(VAR S: NS.Connection; host: ARRAY OF CHAR; port: INTEGER; VAR res: INTEGER);
+	PROCEDURE Connect(VAR S: NS.Connection; host: ARRAY OF CHAR; port: SIGNED16; VAR res: SIGNED16);
 	VAR ip: NS.IPAdr;
 	BEGIN NS.GetIP(host, ip);
 		NEW(S); NS.OpenConnection(S, NS.anyport, ip, port, res);
 	END Connect;
 
 	PROCEDURE SendCmd(S: NS.Connection; cmd, arg: ARRAY OF CHAR);
-	VAR buf: ARRAY 514 OF CHAR; i, j: INTEGER;
+	VAR buf: ARRAY 514 OF CHAR; i, j: SIGNED16;
 	BEGIN i := 0;
 		WHILE cmd[i] # 0X DO buf[i] := cmd[i]; INC(i) END;
 		IF arg[0] # 0X THEN buf[i] := " "; INC(i); j := 0;
@@ -73,7 +73,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 	END SendCmd;
 
 	PROCEDURE Prefix(t: ARRAY OF CHAR; VAR s: ARRAY OF CHAR): BOOLEAN;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN i := 0;
 		WHILE (t[i] # 0X) & (t[i] = s[i]) DO INC(i) END;
 		RETURN (t[i] = 0X)
@@ -91,14 +91,14 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 	BEGIN RETURN ((ch >= "0") & (ch <= "9")) OR ((ch >= "A") & (ch <= "F"))
 	END IsHexDigit;
 
-	PROCEDURE HexVal(ch: CHAR): INTEGER;
+	PROCEDURE HexVal(ch: CHAR): SIGNED16;
 	BEGIN
 		IF (ch >= "0") & (ch <= "9") THEN RETURN ORD(ch)-ORD("0")
 		ELSIF (ch >= "A") & (ch <= "F") THEN RETURN ORD(ch)-ORD("A")+10 END
 	END HexVal;
 
 	PROCEDURE WriteStringI2O(VAR W: Texts.Writer; VAR str: ARRAY OF CHAR; quoted: BOOLEAN);
-	VAR i: LONGINT; ch: CHAR;
+	VAR i: SIGNED32; ch: CHAR;
 	BEGIN i := 0;
 		WHILE str[i] # 0X DO ch := str[i];
 			IF iso THEN
@@ -115,7 +115,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 
 	PROCEDURE ReceiveHead(S: NS.Connection; dir, full: BOOLEAN);
 	VAR from, subject, date: ARRAY 256 OF CHAR; to: BOOLEAN;
-			s: ARRAY 1024 OF CHAR; i: INTEGER;
+			s: ARRAY 1024 OF CHAR; i: SIGNED16;
 	BEGIN
 		NS.ReadString(S, s); subject[0] := 0X; from[0] := 0X; date[0] := 0X; to := FALSE;
 		IF s[0] = "+" THEN NS.ReadString(S, s); iso := FALSE; quoted := FALSE;
@@ -185,8 +185,8 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 	BEGIN SendCmd(S, "quit", ""); NS.ReadString(S, s); NS.CloseConnection(S)
 	END Close;
 
-	PROCEDURE OpenPop(VAR S: NS.Connection; host: ARRAY OF CHAR; VAR mails: INTEGER): BOOLEAN;
-	VAR s: ARRAY 256 OF CHAR; i: INTEGER;  user, passwd: ARRAY 16 OF CHAR;
+	PROCEDURE OpenPop(VAR S: NS.Connection; host: ARRAY OF CHAR; VAR mails: SIGNED16): BOOLEAN;
+	VAR s: ARRAY 256 OF CHAR; i: SIGNED16;  user, passwd: ARRAY 16 OF CHAR;
 	BEGIN
 		Connect(S, host, POP, res);
 		IF res = 0 THEN NS.ReadString(S, s);
@@ -225,7 +225,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 	VAR Mail: NS.Connection;
 			arg: ARRAY 8 OF CHAR;
 			text: Texts.Text;
-			mails, k: INTEGER;
+			mails, k: SIGNED16;
 	BEGIN
 		IF OpenPop(Mail, host, mails) THEN
 			k := 1;
@@ -250,8 +250,8 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
         END
 	END Directory;
 
-	PROCEDURE LocateMail (VAR text: Texts.Text; VAR pos: LONGINT);
-	VAR f: Display.Frame; F: TextFrames.Frame; end, time: LONGINT;
+	PROCEDURE LocateMail (VAR text: Texts.Text; VAR pos: SIGNED32);
+	VAR f: Display.Frame; F: TextFrames.Frame; end, time: SIGNED32;
 	BEGIN f := Oberon.Par.frame;
 		IF Oberon.Par.vwr.dsc = f THEN	(*menu frame*)
 			f := f.next;
@@ -262,7 +262,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
         END
 	END LocateMail;
 
-	PROCEDURE MailNo (text: Texts.Text; pos: LONGINT; VAR mail: INTEGER; VAR beg, end: LONGINT);
+	PROCEDURE MailNo (text: Texts.Text; pos: SIGNED32; VAR mail: SIGNED16; VAR beg, end: SIGNED32);
 	  VAR R: Texts.Reader; ch: CHAR;
 	BEGIN mail := 0;
         Texts.OpenReader(R, text, 0); Texts.Read(R, ch); end := 0;
@@ -274,7 +274,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 		END
 	END MailNo;
 
-	PROCEDURE DeleteMail(S: NS.Connection; mailno: INTEGER; VAR done: BOOLEAN);
+	PROCEDURE DeleteMail(S: NS.Connection; mailno: SIGNED16; VAR done: BOOLEAN);
 	  VAR s: ARRAY 256 OF CHAR; arg: ARRAY 8 OF CHAR;
 	BEGIN
 		Strings.IntToStr(mailno, arg);
@@ -284,8 +284,8 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 
 	PROCEDURE delete;
 	VAR Mail: NS.Connection;
-			text: Texts.Text; pos, beg, end: LONGINT;
-			n, mails: INTEGER;
+			text: Texts.Text; pos, beg, end: SIGNED32;
+			n, mails: SIGNED16;
 			done: BOOLEAN;
 	BEGIN
         LocateMail(text, pos); MailNo(text, pos, n, beg, end);
@@ -309,8 +309,8 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 
 	PROCEDURE deleteAll;
 	VAR Mail: NS.Connection;
-			text: Texts.Text; pos, beg, end: LONGINT;
-			mails, n, d: INTEGER;
+			text: Texts.Text; pos, beg, end: SIGNED32;
+			mails, n, d: SIGNED16;
 			done: BOOLEAN;
 	BEGIN
         LocateMail(text, pos); MailNo(text, pos, n, beg, end);
@@ -332,7 +332,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 		END
 	END DeleteAll;
 
-	PROCEDURE ReceiveMail(S: NS.Connection; mailno: INTEGER; VAR text: Texts.Text);
+	PROCEDURE ReceiveMail(S: NS.Connection; mailno: SIGNED16; VAR text: Texts.Text);
 	VAR arg: ARRAY 8 OF CHAR;
 	BEGIN
 		Strings.IntToStr(mailno, arg);
@@ -343,7 +343,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 	END ReceiveMail;
 
 	PROCEDURE show;
-	VAR Mail: NS.Connection; text: Texts.Text; pos, d: LONGINT; n, mails: INTEGER;
+	VAR Mail: NS.Connection; text: Texts.Text; pos, d: SIGNED32; n, mails: SIGNED16;
 	BEGIN
 		LocateMail(text, pos); MailNo(text, pos, n, d, d);
 		IF (n > 0) & OpenPop(Mail, host, mails) THEN
@@ -368,8 +368,8 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 
 	PROCEDURE getAll;
 	VAR Mail: NS.Connection; f: Files.File;
-			S: Texts.Scanner; text: Texts.Text; mpos, pos, len, d: LONGINT;
-			n, mails: INTEGER;
+			S: Texts.Scanner; text: Texts.Text; mpos, pos, len, d: SIGNED32;
+			n, mails: SIGNED16;
 	BEGIN
         Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
         IF S.class = Texts.Name THEN f := Files.Old(S.s);
@@ -399,7 +399,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 	END GetAll;
 
     PROCEDURE Store*;
-	  VAR S: Texts.Scanner; T: Texts.Text; f: Files.File; len: LONGINT;
+	  VAR S: Texts.Scanner; T: Texts.Text; f: Files.File; len: SIGNED32;
 	BEGIN
       Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
       IF S.class = Texts.Name THEN T := MarkedText();
@@ -415,11 +415,11 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
     VAR
       par: Oberon.ParList; S: Texts.Scanner; T: Texts.Text; RT: Texts.Reader;
       this: Files.File; R: Files.Rider;
-      i, j, n: INTEGER; beg, end, time, pos, fpos, len: LONGINT; ch: CHAR;
+      i, j, n: SIGNED16; beg, end, time, pos, fpos, len: SIGNED32; ch: CHAR;
       name, buf: ARRAY 32 OF CHAR;
 
-      PROCEDURE Forward (n: INTEGER);
-        VAR m: INTEGER; j: INTEGER;
+      PROCEDURE Forward (n: SIGNED16);
+        VAR m: SIGNED16; j: SIGNED16;
       BEGIN m := M - n; j := 0;
         WHILE j # m DO buf[j] := buf[n + j]; INC(j) END;
         WHILE j # M DO Texts.Read(RT, buf[j]); INC(j) END
@@ -482,8 +482,8 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 		VAR T: Texts.Text;
 		S: Texts.Scanner;
 		V: Viewers.Viewer;
-		X, Y: INTEGER;
-		beg, end, time, pos, len: LONGINT;
+		X, Y: SIGNED16;
+		beg, end, time, pos, len: SIGNED32;
         f: Files.File;
   BEGIN
     Oberon.GetSelection(T, beg, end, time);
@@ -506,13 +506,13 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 
 	(*--SMTP--*)
 
-	PROCEDURE HexDigit(i: INTEGER): CHAR;
+	PROCEDURE HexDigit(i: SIGNED16): CHAR;
 	BEGIN
 		IF i < 10 THEN RETURN CHR(i+ORD("0")) ELSE RETURN CHR(i+ORD("A")-10) END;
 	END HexDigit;
 
 	PROCEDURE ReadStringO2I(VAR R: Texts.Reader; VAR s: ARRAY OF CHAR; quoted: BOOLEAN);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 			ch, iso: CHAR;
 	BEGIN
 		i := 0;
@@ -534,8 +534,8 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 		s[i] := 0X
 	END ReadStringO2I;
 
-	PROCEDURE Recipient(VAR i: INTEGER; VAR s, rcpt: ARRAY OF CHAR);
-	VAR j: INTEGER;
+	PROCEDURE Recipient(VAR i: SIGNED16; VAR s, rcpt: ARRAY OF CHAR);
+	VAR j: SIGNED16;
 	BEGIN j := 0;
 		WHILE (s[i] # 0X) & (s[i] < "0") DO INC(i) END;
 		WHILE (s[i] >= "0") OR (s[i] = ".") OR (s[i] = "%") OR (s[i] = "-") DO rcpt[j] := s[i]; INC(j); INC(i) END;
@@ -543,7 +543,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 	END Recipient;
 
 	PROCEDURE SendText(S: NS.Connection; VAR R: Texts.Reader; user: ARRAY OF CHAR);
-	VAR s: ARRAY 512 OF CHAR; t: ARRAY 32 OF CHAR; i, j: INTEGER;
+	VAR s: ARRAY 512 OF CHAR; t: ARRAY 32 OF CHAR; i, j: SIGNED16;
 	BEGIN
 		s := "Mime-Version: 1.0"; NS.WriteString(S, s);
 		s := "Content-Type: text/plain; charset=";
@@ -568,7 +568,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 	VAR Mail: NS.Connection;
 			R: Texts.Reader; text: Texts.Text;
 			s, t: ARRAY 2048 OF CHAR;
-			rcpt: ARRAY 64 OF CHAR; i: INTEGER;
+			rcpt: ARRAY 64 OF CHAR; i: SIGNED16;
 			user, pwd: ARRAY 16 OF CHAR;
 	BEGIN
 		text := MarkedText();
@@ -625,7 +625,7 @@ MODULE TextMail IN Oberon;	(** portable *)	(*RS/ARD/JG, 12.10.97*)
 
     PROCEDURE Cite*;
       VAR  V: Viewers.Viewer; R: Texts.Reader; T: TextFrames.Frame;
-        pos, end: LONGINT; ch: CHAR;
+        pos, end: SIGNED32; ch: CHAR;
     BEGIN
       V := Oberon.MarkedViewer();
       IF (V.dsc # NIL) & (V.dsc.next IS TextFrames.Frame) THEN

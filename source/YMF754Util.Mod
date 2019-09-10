@@ -13,7 +13,7 @@ VAR
 	w, binW: Files.Writer;
 	token: ARRAY 1024 OF CHAR;
 	f, binF: Files.File;
-	c, l: LONGINT; res: WORD;
+	c, l: SIGNED32; res: INTEGER;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(name);
 	c := 1;

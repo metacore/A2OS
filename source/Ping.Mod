@@ -11,18 +11,18 @@ CONST
 VAR
 	running: BOOLEAN; (* is an echo request (ping) currently running? *)
 	timer: Objects.Timer;
-	timeout: LONGINT;
-	pingSize: LONGINT;
+	timeout: SIGNED32;
+	pingSize: SIGNED32;
 	ms: Kernel.MilliTimer;
 
 (** Ping a host. Call: Ping.Ping host [pingSize] [timeout] ~ *)
 
 PROCEDURE Ping*(context : Commands.Context);
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 	hostname: DNS.Name;
 	fip: IP.Adr;
-	res1, res2: WORD;
+	res1, res2: INTEGER;
 	data: ARRAY PingHdrSize+MaxPingSize OF CHAR;
 
 BEGIN {EXCLUSIVE}
@@ -77,7 +77,7 @@ BEGIN {EXCLUSIVE}
 END Ping;
 
 PROCEDURE TimeoutHandler;
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN {EXCLUSIVE}
 	IF running THEN
 		KernelLog.String("Ping: Timeout! No reply received within "); KernelLog.Int(timeout, 0);
@@ -90,8 +90,8 @@ BEGIN {EXCLUSIVE}
 	END;
 END TimeoutHandler;
 
-PROCEDURE GetReply(int: IP.Interface; type, code: LONGINT; fip, lip: IP.Adr; buffer: Network.Buffer);
-VAR res: WORD;
+PROCEDURE GetReply(int: IP.Interface; type, code: SIGNED32; fip, lip: IP.Adr; buffer: Network.Buffer);
+VAR res: INTEGER;
 BEGIN {EXCLUSIVE}
 	IF running THEN
 		KernelLog.String("Ping: Successful! Reply received within "); KernelLog.Int(Kernel.Elapsed(ms), 0);
@@ -107,7 +107,7 @@ BEGIN {EXCLUSIVE}
 END GetReply;
 
 PROCEDURE Cleanup;
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN {EXCLUSIVE}
 	IF running THEN
 		running := FALSE;

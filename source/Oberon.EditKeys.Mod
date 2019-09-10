@@ -33,7 +33,7 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 		END;
 		SequenceDesc = RECORD
 			next: Sequence;
-			sym: INTEGER;
+			sym: SIGNED16;
 			cmd: CHAR;
 			def: Definition;
 			stretch: Texts.Buffer
@@ -42,8 +42,8 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 	VAR
 		defs, dmy: Definition;
 		ch, cmd, hotKey: CHAR;
-		sym, errs: INTEGER;
-		errpos: LONGINT;
+		sym, errs: SIGNED16;
+		errpos: SIGNED32;
 		name, trig: Ident;
 		stretch, buf, indent: Texts.Buffer;
 		T: Texts.Text;
@@ -52,10 +52,10 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 		map: ARRAY 17 OF CHAR;
 		preset: RECORD
 			set: SET;
-			pos, caret: LONGINT;
+			pos, caret: SIGNED32;
 			frame: TextGadgets.Frame;
 			def, fnt: Fonts.Font;
-			voff: SHORTINT
+			voff: SIGNED8
 		END;
 
 	PROCEDURE OpenText(title: ARRAY OF CHAR; T: Texts.Text; systemtrack: BOOLEAN);
@@ -71,7 +71,7 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 	END OpenText;
 
 	PROCEDURE Flip (VAR src, dst: ARRAY OF CHAR);
-		VAR i, j: INTEGER;
+		VAR i, j: SIGNED16;
 	BEGIN i := -1; j := 0;
 		REPEAT INC(i) UNTIL src[i] = 0X;
 		WHILE i > 0 DO DEC(i); dst[j] := src[i]; INC(j) END;
@@ -104,7 +104,7 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 	END Ln;
 
 	PROCEDURE Char (ch: CHAR);
-		VAR pat: Display.Pattern; i, n, dx, x, y, w, h: INTEGER;
+		VAR pat: Display.Pattern; i, n, dx, x, y, w, h: SIGNED16;
 			d: ARRAY 3 OF CHAR;
 	BEGIN Fonts.GetChar(W.lib(Fonts.Font), ch, dx, x, y, w, h, pat);
 		IF h > 0 THEN Ch(ch); Str(" (* ") END;
@@ -126,7 +126,7 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 	(* table handler *)
 
 	PROCEDURE Find (VAR name, trig: Ident; insert: BOOLEAN): Definition;
-		VAR p, q, d, x: Definition; i: INTEGER;
+		VAR p, q, d, x: Definition; i: SIGNED16;
 	BEGIN Flip(name, trig); p := defs; d := p.right; q := NIL; x := NIL;
 		WHILE d # NIL DO i := 0;
 			WHILE (trig[i] # 0X) & (trig[i] = d.trig[i]) DO INC(i) END;
@@ -164,7 +164,7 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 	END ResetDefs;
 
 	PROCEDURE Trigger (VAR trig: Ident): Definition;
-		VAR d, x: Definition; i: INTEGER;
+		VAR d, x: Definition; i: SIGNED16;
 	BEGIN d := defs.right; x := NIL;
 		WHILE d # NIL DO i := 0;
 			WHILE (trig[i] # 0X) & (trig[i] = d.trig[i]) DO INC(i) END;
@@ -191,14 +191,14 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 	END GetCh;
 
 	PROCEDURE CharCode;
-		VAR c: INTEGER;
+		VAR c: SIGNED16;
 	BEGIN c := 0;
 		WHILE ("0" <= ch) & (ch <= "9") DO c := c * 10 + SHORT(ORD(ch) - 30H); GetCh END;
 		name[0] := CHR(c); name[1] := 0X	(*unchecked*)
 	END CharCode;
 
 	PROCEDURE Name;
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN i := 0;
 		REPEAT name[i] := ch; INC(i); GetCh
 		UNTIL (ch <= " ") OR (ch = "(") OR (ch = ")") OR R.eot OR (i = IdentLen-1);
@@ -206,13 +206,13 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 		name[i] := 0X
 	END Name;
 
-	PROCEDURE Save (text: Texts.Text; beg, end: LONGINT; buf: Texts.Buffer);
+	PROCEDURE Save (text: Texts.Text; beg, end: SIGNED32; buf: Texts.Buffer);
 	BEGIN
 		IF end > beg THEN Texts.Save(text, beg, end, buf) END
 	END Save;
 
 	PROCEDURE Stretch;
-		VAR beg, end: LONGINT;
+		VAR beg, end: SIGNED32;
 	BEGIN beg := Texts.Pos(R); end := beg; GetCh;
 		WHILE ~R.eot & (ch # 22X) DO INC(end); GetCh END;
 		IF ch = 22X THEN GetCh;
@@ -278,7 +278,7 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 		stretch := NIL
 	END ParseText;
 
-	PROCEDURE ReadText (name: ARRAY OF CHAR; beg: LONGINT);
+	PROCEDURE ReadText (name: ARRAY OF CHAR; beg: SIGNED32);
 	BEGIN Texts.OpenReader(R, T, beg); GetCh;
 		IF ~R.eot THEN Str("EditKeys reading "); Str(name); WLog; errs := 0; errpos := -10; ParseText;
 			IF errs = 0 THEN (*Str(" done")*) ELSE Str(" error"); ResetDefs END;
@@ -290,12 +290,12 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 	(* macro processor *)
 
 	PROCEDURE Insert (frame: TextGadgets.Frame; buf: Texts.Buffer);
-		VAR pos, len: LONGINT;
+		VAR pos, len: SIGNED32;
 	BEGIN pos := frame.carpos.pos; len := buf.len;
 		Texts.Insert(frame.text, pos, buf); TextGadgets0.SetCaret(frame, pos + len)
 	END Insert;
 
-	PROCEDURE Delete (frame: TextGadgets.Frame; beg, end: LONGINT);
+	PROCEDURE Delete (frame: TextGadgets.Frame; beg, end: SIGNED32);
 	BEGIN Texts.Delete(frame.text, beg, end); TextGadgets0.SetCaret(frame, beg)
 	END Delete;
 
@@ -303,7 +303,7 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 	BEGIN INC(errs); Gap; Str(s); Str(" in "); FlipStr(def.trig); Ln; WLog
 	END Err;
 
-	PROCEDURE PopArg (def: Definition; class: SHORTINT; VAR S: Texts.Scanner; VAR stack: Sequence);
+	PROCEDURE PopArg (def: Definition; class: SIGNED8; VAR S: Texts.Scanner; VAR stack: Sequence);
 		VAR B: Texts.Buffer;
 	BEGIN
 		IF stack # NIL THEN NEW(T); Texts.Open(T, "");
@@ -319,13 +319,13 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 	BEGIN NEW(u); u.next := stack; stack := u; u.stretch := buf
 	END PushArg;
 
-	PROCEDURE ThisArg (n: LONGINT; args: Sequence): Sequence;
+	PROCEDURE ThisArg (n: SIGNED32; args: Sequence): Sequence;
 	BEGIN
 		WHILE (n > 0) & (args # NIL) DO DEC(n); args := args.next END;
 		RETURN args
 	END ThisArg;
 
-	PROCEDURE GetArguments (text: Texts.Text; pos: LONGINT; VAR pin: LONGINT; VAR args: Sequence);
+	PROCEDURE GetArguments (text: Texts.Text; pos: SIGNED32; VAR pin: SIGNED32; VAR args: Sequence);
 		VAR B: Texts.Buffer; R: Texts.Reader; ch: CHAR;
 	BEGIN pin := pos; DEC(pos); Texts.OpenReader(R, text, pos); Texts.Read(R, ch);
 		IF ch = ":" THEN pin := pos;
@@ -354,7 +354,7 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 	END GetArguments;
 
 	PROCEDURE Expand (def: Definition; VAR stack, args, params: Sequence);
-		VAR d: Definition; seq, u: Sequence; B: Texts.Buffer; S: Texts.Scanner; par: Oberon.ParList; res: INTEGER;
+		VAR d: Definition; seq, u: Sequence; B: Texts.Buffer; S: Texts.Scanner; par: Oberon.ParList; res: SIGNED16;
 	BEGIN
 		IF ~def.in THEN def.in := TRUE; seq := def.seq;
 			WHILE (errs = 0) & (seq # NIL) DO
@@ -428,8 +428,8 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 		END
 	END InitialExec;
 
-	PROCEDURE Process (frame: TextGadgets.Frame; ch: CHAR; VAR del: LONGINT);
-		VAR def: Definition; org, pos, i, tlen, pin: LONGINT; stack, args, params: Sequence; default: BOOLEAN;
+	PROCEDURE Process (frame: TextGadgets.Frame; ch: CHAR; VAR del: SIGNED32);
+		VAR def: Definition; org, pos, i, tlen, pin: SIGNED32; stack, args, params: Sequence; default: BOOLEAN;
 			dmy: Texts.Reader;
 	BEGIN errs := 0; del := 0; Texts.OpenBuf(buf); org := frame.carpos.pos;
 		pos := org - (IdentLen-1);
@@ -459,7 +459,7 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 
 	PROCEDURE Key (frame: TextGadgets.Frame; ch: CHAR; VAR handled: BOOLEAN);
 		CONST TAB = 9X; LF = 0AX; CR = 0DX; DEL = 7FX;
-		VAR del, pos, beg: LONGINT; voff: SHORTINT; fnt: Fonts.Font; ch1: CHAR;
+		VAR del, pos, beg: SIGNED32; voff: SIGNED8; fnt: Fonts.Font; ch1: CHAR;
 	BEGIN handled := TRUE; pos := frame.carpos.pos;
 		IF frame.text.len > 0 THEN
 			IF pos < frame.text.len THEN Texts.OpenReader(R, frame.text, pos); Texts.Read(R, ch1) END;
@@ -531,7 +531,7 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 	END Reset;
 
 	PROCEDURE Read*;
-		VAR S: Texts.Scanner; text: Texts.Text; beg, end, time: LONGINT;
+		VAR S: Texts.Scanner; text: Texts.Text; beg, end, time: SIGNED32;
 	BEGIN Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 		IF (S.class = Texts.Char) & (S.c = "@") & (S.line = 0) THEN
 			Oberon.GetSelection(text, beg, end, time);
@@ -550,10 +550,10 @@ MODULE EditKeys IN Oberon;	(** portable *)	(* CAS/MH 27 Jan 93 / jm 2.5.95 *)
 
 	PROCEDURE Definitions*;
 		VAR S: Texts.Scanner; T, text: Texts.Text; tree: Definition;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 
 		PROCEDURE Sort(VAR d: Definition; VAR pat: ARRAY OF CHAR; VAR tree: Definition);
-			VAR i: INTEGER; t: Definition; n: Ident;
+			VAR i: SIGNED16; t: Definition; n: Ident;
 
 			PROCEDURE Ins(VAR tree: Definition; t: Definition; VAR n: Ident);
 				VAR m: Ident;

@@ -47,9 +47,9 @@ TYPE
 		END Init;
 
 		(** Get the number of cached teletext pages. Subpages are counted too *)
-		PROCEDURE Count*() : LONGINT;
+		PROCEDURE Count*() : SIGNED32;
 		VAR
-			i, cnt : LONGINT;
+			i, cnt : SIGNED32;
 			pag, cur : TeletextPage;
 		BEGIN
 			FOR i := 0 TO 799 DO
@@ -66,11 +66,11 @@ TYPE
 			RETURN cnt
 		END Count;
 
-		PROCEDURE MakeEmptyPage(pageNum, subPage : LONGINT) : TeletextPage;
+		PROCEDURE MakeEmptyPage(pageNum, subPage : SIGNED32) : TeletextPage;
 		VAR
 			existingPage, newPage : TeletextPage;
 			newPageNumber : BOOLEAN;
-			next, prev : LONGINT;
+			next, prev : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			(* subPage: ordered double-linked list *)
 			IF pages[pageNum].data = NIL THEN
@@ -164,16 +164,16 @@ TYPE
 
 	TeletextPageSet* = OBJECT
 		VAR
-		next-, prev- : LONGINT;
+		next-, prev- : SIGNED32;
 		data- : TeletextPage;
 	END TeletextPageSet;
 
 	TeletextPage* = OBJECT
 	VAR
 		nextSub-, prevSub- : TeletextPage;
-		pageNumber, subPageNo- : LONGINT;
+		pageNumber, subPageNo- : SIGNED32;
 		text- : Texts.Text;
-		attributes-: ARRAY FormattedPageSize OF SHORTINT;
+		attributes-: ARRAY FormattedPageSize OF SIGNED8;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -182,7 +182,7 @@ TYPE
 
 		PROCEDURE Reset;
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			text.AcquireWrite;
 			text.Delete(0, text.GetLength());
@@ -197,21 +197,21 @@ TYPE
 	PageBuffer = OBJECT
 	VAR
 		vbi : VbiDecoder;	(* needed to write into the correct TeletextSuite *)
-		pageNo, subPageNo : LONGINT;
+		pageNo, subPageNo : SIGNED32;
 		data : ARRAY VtPageSize OF CHAR;
-		language : LONGINT;
+		language : SIGNED32;
 		discardPage, suppressHeader, boxedContent : BOOLEAN;
 		packets: SET;
-		lastPacket: LONGINT;
+		lastPacket: SIGNED32;
 
 		PROCEDURE &Init*(vbi : VbiDecoder);
 		BEGIN
 			SELF.vbi := vbi
 		END Init;
 
-		PROCEDURE Reset(page, sub : LONGINT);
+		PROCEDURE Reset(page, sub : SIGNED32);
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			pageNo := page;
 			subPageNo := sub;
@@ -227,9 +227,9 @@ TYPE
 		END Reset;
 
 		(* Remove any non-printable characters from the channel name *)
-		PROCEDURE SkipBlanks(VAR name : ARRAY OF CHAR; VAR startPos : LONGINT);
+		PROCEDURE SkipBlanks(VAR name : ARRAY OF CHAR; VAR startPos : SIGNED32);
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			i := startPos;
 			WHILE (i < LEN(name)-1) & ((name[i] < '0') OR (ORD(name[i]) > 150)) DO
@@ -245,9 +245,9 @@ TYPE
 		END IsDigit;
 
 		(* remove the page number from the channel name *)
-		PROCEDURE SkipPageNum(VAR name : ARRAY OF CHAR; VAR startPos : LONGINT);
+		PROCEDURE SkipPageNum(VAR name : ARRAY OF CHAR; VAR startPos : SIGNED32);
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			i := startPos;
 			IF IsDigit(name[i]) & IsDigit(name[i+1]) & IsDigit(name[i+2]) & (name[i+3] = ' ') THEN
@@ -266,17 +266,17 @@ TYPE
 		PROCEDURE MarkupPage;
 		VAR
 			text: ARRAY FormattedPageSize OF Texts.Char32;
-			fgColor, bgColor: ARRAY FormattedPageSize OF SHORTINT;
+			fgColor, bgColor: ARRAY FormattedPageSize OF SIGNED8;
 			flashing, boxed: ARRAY FormattedPageSize OF BOOLEAN;
 			forceAlpha, isGraphics, holdGraphics, isDouble, hasDouble, conceal, isFlashing, separatedGraphics : BOOLEAN;
 			teletextPage: TeletextPage;
-			i, j, k, begin : LONGINT;
-			ch : LONGINT;
-			fg, bg, isBoxed : SHORTINT;
+			i, j, k, begin : SIGNED32;
+			ch : SIGNED32;
+			fg, bg, isBoxed : SIGNED8;
 
-		PROCEDURE CreateAttribute(fg, bg: SHORTINT; flashing, boxed: BOOLEAN) : SHORTINT;
+		PROCEDURE CreateAttribute(fg, bg: SIGNED8; flashing, boxed: BOOLEAN) : SIGNED8;
 		VAR
-			attr: SHORTINT;
+			attr: SIGNED8;
 		BEGIN
 			(* Teletext is very memory-intensive (approx. 1000 pages per TV channel) => Compress attributes *)
 			(* 'fg' is coded into bits 0-2, 'bg' is coded into 3-5, 'flashing' is coded in bit no. 6 and 'boxed' modifies the sign *)
@@ -505,9 +505,9 @@ TYPE
 
 		(* Process double height content. Stretch graphic characters to double height. Characters: Underline on the succeeding row..
 			The result will be stored in current and succeeding line *)
-		PROCEDURE DoubleHeight (VAR txt : ARRAY OF LONGINT; pos : LONGINT);
+		PROCEDURE DoubleHeight (VAR txt : ARRAY OF SIGNED32; pos : SIGNED32);
 		VAR
-			c : LONGINT;
+			c : SIGNED32;
 		BEGIN
 			c := txt [pos];
 			IF ((c >= 57344) & (c < 57376)) OR ((c >= 57408) & (c < 57440)) THEN
@@ -580,17 +580,17 @@ TYPE
 		extractName* : BOOLEAN;
 		dead : BOOLEAN;
 		parallel: BOOLEAN;
-		off, thresh : LONGINT;
-		line, spos : LONGINT;
+		off, thresh : SIGNED32;
+		line, spos : SIGNED32;
 		buffers: ARRAY 8 OF PageBuffer;
-		freq : REAL;
-		vtstep, vcstep, vpsstep : LONGINT;
-		norm : LONGINT;
+		freq : FLOAT32;
+		vtstep, vcstep, vpsstep : SIGNED32;
+		norm : SIGNED32;
 		currentSuite : TeletextSuite;
 
 		PROCEDURE &Init*(vcd : TVDriver.VideoCaptureDevice);
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 			tuner : TVDriver.TVTuner;
 		BEGIN
 			IF vcd = NIL THEN
@@ -616,7 +616,7 @@ TYPE
 		END GetChannel;
 
 		(** Get the amount of pages in the current teletext suite *)
-		PROCEDURE Count*(): LONGINT;
+		PROCEDURE Count*(): SIGNED32;
 		BEGIN
 			RETURN currentSuite.Count()
 		END Count;
@@ -624,7 +624,7 @@ TYPE
 		(** Reset the ringbuffer with raw data, the channel name and all page buffers *)
 		PROCEDURE ResetAll*;
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			vbiBuffer.readPos := vbiBuffer.insertPos;
 			vbiBuffer.vbiSize := 0;
@@ -641,7 +641,7 @@ TYPE
 		END Stop;
 
 		(** Channel switch: Redirect teletext output to the appropriate TeletextSuite *)
-		PROCEDURE SetFrequency*(freq : LONGINT);
+		PROCEDURE SetFrequency*(freq : SIGNED32);
 		BEGIN
 			currentSuite := SelectTeletextSuite(freq);
 			ResetAll
@@ -650,7 +650,7 @@ TYPE
 		(* unham 2 bytes into 1, auto-correct 1 bit errors, report 2 bit errors by returning FALSE *)
 		PROCEDURE UnHam(ch1, ch2 : CHAR; VAR error: BOOLEAN) : CHAR;
 		VAR
-			v1, v2: LONGINT;
+			v1, v2: SIGNED32;
 		BEGIN
 			v1 := unHamTab [ORD (ch1)];
 			v2 := unHamTab [ORD (ch2)];
@@ -668,13 +668,13 @@ TYPE
 		END UnHam;
 
 		(* Extract channel name from the first teletext line *)
-		PROCEDURE ExtractChannelName (rawName : ARRAY OF CHAR; language: LONGINT);
+		PROCEDURE ExtractChannelName (rawName : ARRAY OF CHAR; language: SIGNED32);
 		VAR
 			tmp: ARRAY 17 OF CHAR;
-			i, j, begin, end: LONGINT;
+			i, j, begin, end: SIGNED32;
 			done : BOOLEAN;
 
-			PROCEDURE Is3Digits (pos: LONGINT) : BOOLEAN;
+			PROCEDURE Is3Digits (pos: SIGNED32) : BOOLEAN;
 			BEGIN
 				IF pos > 14 THEN RETURN FALSE END;
 				IF (rawName[pos] < '0') OR (rawName[pos] > '9') THEN RETURN FALSE END;
@@ -686,7 +686,7 @@ TYPE
 
 			PROCEDURE GetChar(ch: CHAR) : CHAR;
 			VAR
-				utf: LONGINT;
+				utf: SIGNED32;
 			BEGIN
 				CASE ORD(ch) OF
 					  35 : utf := nationals [language][0]
@@ -791,12 +791,12 @@ TYPE
 		(* decode data in teletext-like packages *)
 		PROCEDURE DecodeVt(dat : ARRAY OF CHAR);
 		VAR
-			magPack, mag, pack : LONGINT;
+			magPack, mag, pack : SIGNED32;
 			pg : CHAR;
-			page, subPage, pTen, pUnit, designationCode, pageFunction, pageCoding : LONGINT;
-			sub1, sub2 : LONGINT;
+			page, subPage, pTen, pUnit, designationCode, pageFunction, pageCoding : SIGNED32;
+			sub1, sub2 : SIGNED32;
 			chName : ARRAY 17 OF CHAR;
-			i, flg : LONGINT;
+			i, flg : SIGNED32;
 			flags, bits : SET;
 			error: BOOLEAN;
 		BEGIN
@@ -986,11 +986,11 @@ TYPE
 			END
 		END DecodeVt;
 
-		PROCEDURE SetFreq(f : REAL; n : LONGINT);
+		PROCEDURE SetFreq(f : FLOAT32; n : SIGNED32);
 		VAR
-			vtfreq : REAL;
-			vpsfreq : REAL;
-			vcfreq : REAL;
+			vtfreq : FLOAT32;
+			vpsfreq : FLOAT32;
+			vcfreq : FLOAT32;
 		BEGIN
 			IF norm # 0 THEN
 				vtfreq := 5.72725
@@ -1021,10 +1021,10 @@ TYPE
 
 		(* primitive automatic gain control to determine the right slicing offset *)
 		(*it should suffice to do this once per channel change *)
-		PROCEDURE AGC(pos, start, stop, step : LONGINT);
+		PROCEDURE AGC(pos, start, stop, step : SIGNED32);
 		VAR
-			i : LONGINT;
-			min, max : LONGINT;
+			i : SIGNED32;
+			min, max : SIGNED32;
 		BEGIN
 			min := 255;
 			max := 0;
@@ -1043,10 +1043,10 @@ TYPE
 			off := 128 - thresh
 		END AGC;
 
-		PROCEDURE Scan(step, pos : LONGINT) : CHAR;
+		PROCEDURE Scan(step, pos : SIGNED32) : CHAR;
 		VAR
 			dat : SET;
-			j, ord : LONGINT;
+			j, ord : SIGNED32;
 		BEGIN
 			dat := {};
 			FOR j := 7 TO 0 BY -1 DO
@@ -1060,9 +1060,9 @@ TYPE
 		END Scan;
 
 		(** Search for teletext packages and decode them if found *)
-		PROCEDURE DecodeLine(pos : LONGINT);
+		PROCEDURE DecodeLine(pos : SIGNED32);
 		VAR
-			i, p : LONGINT;
+			i, p : SIGNED32;
 			data : ARRAY 45 OF CHAR;
 		BEGIN
 			AGC(pos, 120, 450, 1);
@@ -1105,7 +1105,7 @@ TYPE
 
 		PROCEDURE Decode;
 		VAR
-			readPos, curPos : LONGINT;
+			readPos, curPos : SIGNED32;
 		BEGIN
 			readPos := vbiBuffer.readPos;
 			IF vbiBuffer.vbiSize >= VbiDataSize THEN
@@ -1145,10 +1145,10 @@ VAR
 	teletextSuites*: TeletextSuite;
 
 	(* Hamming table for fast decoding *)
-	unHamTab : ARRAY 256 OF LONGINT;
+	unHamTab : ARRAY 256 OF SIGNED32;
 
 	(* Latin national option character subset *)
-	nationals : ARRAY 8 OF ARRAY 13 OF LONGINT;
+	nationals : ARRAY 8 OF ARRAY 13 OF SIGNED32;
 
 	PROCEDURE BuildTeletextSuites;
 	VAR
@@ -1165,7 +1165,7 @@ VAR
 	END BuildTeletextSuites;
 
 	(** Select teletext suite according to the given TV frequency *)
-	PROCEDURE SelectTeletextSuite* (freq: LONGINT): TeletextSuite;
+	PROCEDURE SelectTeletextSuite* (freq: SIGNED32): TeletextSuite;
 	VAR
 		suite: TeletextSuite;
 	BEGIN

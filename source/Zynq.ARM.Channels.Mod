@@ -14,10 +14,10 @@ CONST
 	ChanOffset  = 256*4; (* ActiveCells AXI4 Stream channel offset in bytes *)
 (*
 	OutDataOffset = 0;
-	OutReadyOffset = SIZEOF(LONGINT);
+	OutReadyOffset = SIZEOF(SIGNED32);
 
 	InpAvailableOffset = 0;
-	InpDataOffset = 2*SIZEOF(LONGINT);
+	InpDataOffset = 2*SIZEOF(SIGNED32);
 *)
 
 TYPE
@@ -34,12 +34,12 @@ VAR
 	inputs: ARRAY 2 OF ARRAY 256 OF PortDesc;
 	outputs: ARRAY 2 OF ARRAY 256 OF PortDesc;
 
-	locks: ARRAY 2 OF LONGINT; (* locks for each physical channel *)
+	locks: ARRAY 2 OF SIGNED32; (* locks for each physical channel *)
 
 (**
 	Writing to and reading from a port can be described by the following high-level code:
 
-	PROCEDURE WriteToPort(out: Output; data: LONGINT);
+	PROCEDURE WriteToPort(out: Output; data: SIGNED32);
 	VAR
 		portDesc: POINTER {UNSAFE} TO PortDesc;
 		outDesc: OutputDesc;
@@ -49,7 +49,7 @@ VAR
 		outDesc.data := data;
 	END WriteToPort;
 
-	PROCEDURE ReadFromPort(inp: Input; VAR data: LONGINT);
+	PROCEDURE ReadFromPort(inp: Input; VAR data: SIGNED32);
 	VAR
 		portDesc: POINTER {UNSAFE} TO PortDesc;
 		inpDesc: InputDesc;
@@ -63,7 +63,7 @@ VAR
 
 	(** AXI4 Stream output port descriptor *)
 	OutputDesc* = POINTER{UNSAFE,UNTRACED} TO RECORD
-		data: LONGINT; (** output data, write only *)
+		data: SIGNED32; (** output data, write only *)
 		ready: BOOLEAN; (** TRUE when output is available for sending data *)
 		padding: ARRAY 3 OF CHAR;
 	END;
@@ -72,7 +72,7 @@ VAR
 	InputDesc* = POINTER{UNSAFE,UNTRACED} TO RECORD
 		available: BOOLEAN; (** TRUE when input data is available *)
 		padding: ARRAY 7 OF CHAR;
-		data: LONGINT; (** input data, read only *)
+		data: SIGNED32; (** input data, read only *)
 	END;
 *)
 
@@ -82,7 +82,7 @@ VAR
 		physicalPortNum: physical port number
 		logicalPortNum: logical port number
 	*)
-	PROCEDURE GetInput*(physicalPortNum, logicalPortNum: LONGINT; VAR port: Input): BOOLEAN;
+	PROCEDURE GetInput*(physicalPortNum, logicalPortNum: SIGNED32; VAR port: Input): BOOLEAN;
 	VAR
 		portDesc: POINTER {UNSAFE} TO PortDesc;
 		portAddr: ADDRESS;
@@ -108,7 +108,7 @@ VAR
 		physicalPortNum: physical port number
 		logicalPortNum: logical port number
 	*)
-	PROCEDURE GetOutput*(physicalPortNum, logicalPortNum: LONGINT; VAR port: Output): BOOLEAN;
+	PROCEDURE GetOutput*(physicalPortNum, logicalPortNum: SIGNED32; VAR port: Output): BOOLEAN;
 	VAR
 		portDesc: POINTER {UNSAFE} TO PortDesc;
 		portAddr: ADDRESS;
@@ -233,8 +233,8 @@ VAR
 	END Ready;
 
 	(** Returns number of data elements available to read from an input port *)
-	PROCEDURE Available*(inp: Input): LONGINT;
-	VAR available: LONGINT;
+	PROCEDURE Available*(inp: Input): SIGNED32;
+	VAR available: SIGNED32;
 	(*VAR p: POINTER {UNSAFE} TO PortDesc;*)
 	BEGIN
 		CODE
@@ -258,7 +258,7 @@ VAR
 	END Available;
 
 	(** Send data to an output port (blocking version) *)
-	PROCEDURE Send*(out: Output; x: LONGINT);
+	PROCEDURE Send*(out: Output; x: SIGNED32);
 	(*VAR p: POINTER {UNSAFE} TO PortDesc;*)
 	BEGIN
 		CODE
@@ -280,7 +280,7 @@ VAR
 	END Send;
 
 	(** Send data to an output port (non-blocking version) *)
-	PROCEDURE SendNonBlocking*(out: Output; x: LONGINT): BOOLEAN;
+	PROCEDURE SendNonBlocking*(out: Output; x: SIGNED32): BOOLEAN;
 	VAR b: BOOLEAN;
 	(*VAR p: POINTER {UNSAFE} TO PortDesc;*)
 	BEGIN
@@ -312,28 +312,28 @@ VAR
 		RETURN b;
 	END SendNonBlocking;
 
-	OPERATOR "<<"*(out: Output; x: LONGINT);
+	OPERATOR "<<"*(out: Output; x: SIGNED32);
 	BEGIN
 		Send(out,x);
 	END "<<";
 
-	OPERATOR ">>"*(x: LONGINT; out: Output);
+	OPERATOR ">>"*(x: SIGNED32; out: Output);
 	BEGIN
 		Send(out,x);
 	END ">>";
 
-	OPERATOR "<<?"*(out: Output; x: LONGINT): BOOLEAN;
+	OPERATOR "<<?"*(out: Output; x: SIGNED32): BOOLEAN;
 	BEGIN
 		RETURN SendNonBlocking(out,x);
 	END "<<?";
 
-	OPERATOR ">>?"*(x: LONGINT; out: Output): BOOLEAN;
+	OPERATOR ">>?"*(x: SIGNED32; out: Output): BOOLEAN;
 	BEGIN
 		RETURN SendNonBlocking(out,x);
 	END ">>?";
 
 	(** Receive data from an input port (blocking version) *)
-	PROCEDURE Receive*(inp: Input; VAR x: LONGINT);
+	PROCEDURE Receive*(inp: Input; VAR x: SIGNED32);
 	(*VAR p: POINTER {UNSAFE} TO PortDesc;*)
 	BEGIN
 		CODE
@@ -356,7 +356,7 @@ VAR
 	END Receive;
 
 	(** Receive data from an input port (non-blocking version) *)
-	PROCEDURE ReceiveNonBlocking*(inp: Input; VAR x: LONGINT): BOOLEAN;
+	PROCEDURE ReceiveNonBlocking*(inp: Input; VAR x: SIGNED32): BOOLEAN;
 	VAR b: BOOLEAN;
 	(*VAR p: POINTER {UNSAFE} TO PortDesc;*)
 	BEGIN
@@ -389,27 +389,27 @@ VAR
 		RETURN b;
 	END ReceiveNonBlocking;
 
-	OPERATOR ">>"*(inp: Input; VAR x: LONGINT);
+	OPERATOR ">>"*(inp: Input; VAR x: SIGNED32);
 	BEGIN
 		Receive(inp,x);
 	END ">>";
 
-	OPERATOR "<<"*(VAR x: LONGINT; inp: Input);
+	OPERATOR "<<"*(VAR x: SIGNED32; inp: Input);
 	BEGIN
 		Receive(inp,x);
 	END "<<";
 
-	OPERATOR ">>?"*(inp: Input; VAR x: LONGINT): BOOLEAN;
+	OPERATOR ">>?"*(inp: Input; VAR x: SIGNED32): BOOLEAN;
 	BEGIN
 		RETURN ReceiveNonBlocking(inp,x);
 	END ">>?";
 
-	OPERATOR "<<?"*(VAR x: LONGINT; inp: Input): BOOLEAN;
+	OPERATOR "<<?"*(VAR x: SIGNED32; inp: Input): BOOLEAN;
 	BEGIN
 		RETURN ReceiveNonBlocking(inp,x);
 	END "<<?";
 
-	PROCEDURE SendMultiple(portAddr, dataAddr: ADDRESS; numElements: LONGINT);
+	PROCEDURE SendMultiple(portAddr, dataAddr: ADDRESS; numElements: SIGNED32);
 	CODE
 		LDR R0, [FP,#portAddr]
 		LDR R1, [FP,#dataAddr]
@@ -476,7 +476,7 @@ VAR
 
 	END SendMultiple;
 
-	PROCEDURE ReceiveMultiple(portAddr, dataAddr: ADDRESS; numElements: LONGINT);
+	PROCEDURE ReceiveMultiple(portAddr, dataAddr: ADDRESS; numElements: SIGNED32);
 	CODE
 		LDR R0, [FP,#portAddr]
 		ADD R0, R0, #8
@@ -544,23 +544,23 @@ VAR
 
 	END ReceiveMultiple;
 
-	OPERATOR "<<"*(port: Output; x: SET32); BEGIN Send(port,SYSTEM.VAL(LONGINT,x)); END "<<";
-	OPERATOR ">>"*(x: SET32; port: Output); BEGIN Send(port,SYSTEM.VAL(LONGINT,x)); END ">>";
-	OPERATOR "<<?"*(port: Output; x: SET32): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END "<<?";
-	OPERATOR ">>?"*(x: SET32; port: Output): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END ">>?";
-	OPERATOR ">>"*(port: Input; VAR x: SET32); BEGIN Receive(port,SYSTEM.VAL(LONGINT,x)); END ">>";
-	OPERATOR "<<"*(VAR x: SET32; port: Input); BEGIN Receive(port,SYSTEM.VAL(LONGINT,x)); END "<<";
-	OPERATOR ">>?"*(port: Input; VAR x: SET32): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END ">>?";
-	OPERATOR "<<?"*(VAR x: SET32; port: Input): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END "<<?";
+	OPERATOR "<<"*(port: Output; x: SET32); BEGIN Send(port,SYSTEM.VAL(SIGNED32,x)); END "<<";
+	OPERATOR ">>"*(x: SET32; port: Output); BEGIN Send(port,SYSTEM.VAL(SIGNED32,x)); END ">>";
+	OPERATOR "<<?"*(port: Output; x: SET32): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(SIGNED32,x)); END "<<?";
+	OPERATOR ">>?"*(x: SET32; port: Output): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(SIGNED32,x)); END ">>?";
+	OPERATOR ">>"*(port: Input; VAR x: SET32); BEGIN Receive(port,SYSTEM.VAL(SIGNED32,x)); END ">>";
+	OPERATOR "<<"*(VAR x: SET32; port: Input); BEGIN Receive(port,SYSTEM.VAL(SIGNED32,x)); END "<<";
+	OPERATOR ">>?"*(port: Input; VAR x: SET32): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(SIGNED32,x)); END ">>?";
+	OPERATOR "<<?"*(VAR x: SET32; port: Input): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(SIGNED32,x)); END "<<?";
 
-	OPERATOR "<<"*(port: Output; x: REAL); BEGIN Send(port,SYSTEM.VAL(LONGINT,x)); END "<<";
-	OPERATOR ">>"*(x: REAL; port: Output); BEGIN Send(port,SYSTEM.VAL(LONGINT,x)); END ">>";
-	OPERATOR "<<?"*(port: Output; x: REAL): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END "<<?";
-	OPERATOR ">>?"*(x: REAL; port: Output): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END ">>?";
-	OPERATOR ">>"*(port: Input; VAR x: REAL); BEGIN Receive(port,SYSTEM.VAL(LONGINT,x)); END ">>";
-	OPERATOR "<<"*(VAR x: REAL; port: Input); BEGIN Receive(port,SYSTEM.VAL(LONGINT,x)); END "<<";
-	OPERATOR ">>?"*(port: Input; VAR x: REAL): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END ">>?";
-	OPERATOR "<<?"*(VAR x: REAL; port: Input): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(LONGINT,x)); END "<<?";
+	OPERATOR "<<"*(port: Output; x: FLOAT32); BEGIN Send(port,SYSTEM.VAL(SIGNED32,x)); END "<<";
+	OPERATOR ">>"*(x: FLOAT32; port: Output); BEGIN Send(port,SYSTEM.VAL(SIGNED32,x)); END ">>";
+	OPERATOR "<<?"*(port: Output; x: FLOAT32): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(SIGNED32,x)); END "<<?";
+	OPERATOR ">>?"*(x: FLOAT32; port: Output): BOOLEAN; BEGIN RETURN SendNonBlocking(port,SYSTEM.VAL(SIGNED32,x)); END ">>?";
+	OPERATOR ">>"*(port: Input; VAR x: FLOAT32); BEGIN Receive(port,SYSTEM.VAL(SIGNED32,x)); END ">>";
+	OPERATOR "<<"*(VAR x: FLOAT32; port: Input); BEGIN Receive(port,SYSTEM.VAL(SIGNED32,x)); END "<<";
+	OPERATOR ">>?"*(port: Input; VAR x: FLOAT32): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(SIGNED32,x)); END ">>?";
+	OPERATOR "<<?"*(VAR x: FLOAT32; port: Input): BOOLEAN; BEGIN RETURN ReceiveNonBlocking(port,SYSTEM.VAL(SIGNED32,x)); END "<<?";
 
 END Channels.
 

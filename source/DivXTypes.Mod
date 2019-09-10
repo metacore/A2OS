@@ -49,22 +49,22 @@ MODULE DivXTypes;
 	TYPE
 		(* Helper Types *)
 		PointerToArrayOfCHAR* = POINTER TO ARRAY OF CHAR;
-		PointerToArrayOfLONGINT* = POINTER TO ARRAY OF LONGINT;
-		PointerToArrayOfSHORTINT* = POINTER TO ARRAY OF SHORTINT;
+		PointerToArrayOfLONGINT* = POINTER TO ARRAY OF SIGNED32;
+		PointerToArrayOfSHORTINT* = POINTER TO ARRAY OF SIGNED8;
 
-		DCStoreLumArray* = POINTER TO ARRAY OF ARRAY OF LONGINT;
-		ACLeftLumArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF LONGINT;
-		ACTopLumArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF LONGINT;
-		DCStoreChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF LONGINT;
-		ACLeftChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGINT;
-		ACTopChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGINT;
+		DCStoreLumArray* = POINTER TO ARRAY OF ARRAY OF SIGNED32;
+		ACLeftLumArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF SIGNED32;
+		ACTopLumArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF SIGNED32;
+		DCStoreChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF SIGNED32;
+		ACLeftChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF SIGNED32;
+		ACTopChrArray* = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF SIGNED32;
 
 
 	TYPE
 		VideoBuffer*=RECORD
 		data*: POINTER TO ARRAY OF CHAR;
-		index*: LONGINT;
-		size*: LONGINT;
+		index*: SIGNED32;
+		size*: SIGNED32;
 	END;
 
 	(* 2 helper functions *)
@@ -72,9 +72,9 @@ MODULE DivXTypes;
 		MyUtils*  = OBJECT
 
 		(* Compare to arrays up to "len" elements *)
-		PROCEDURE CompareCharArrays*( VAR ar1,ar2: ARRAY OF CHAR; len: LONGINT ): BOOLEAN;
+		PROCEDURE CompareCharArrays*( VAR ar1,ar2: ARRAY OF CHAR; len: SIGNED32 ): BOOLEAN;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			IF ( len > LEN( ar1 ) ) OR ( len > LEN( ar2 ) ) THEN
 				RETURN FALSE;
@@ -89,7 +89,7 @@ MODULE DivXTypes;
 		END CompareCharArrays;
 
 		(* Set Mem To given value *)
-		PROCEDURE MemSet*( d: PointerToArrayOfCHAR; offset: LONGINT; val: CHAR; len: LONGINT );
+		PROCEDURE MemSet*( d: PointerToArrayOfCHAR; offset: SIGNED32; val: CHAR; len: SIGNED32 );
 		VAR
 			begin, end: ADDRESS;
 		BEGIN
@@ -110,14 +110,14 @@ MODULE DivXTypes;
 
 	TYPE TabTypePtr* = POINTER TO TabType;
 	TYPE TabType* = RECORD
-		val*, len*: LONGINT;
+		val*, len*: SIGNED32;
 	END;
 
 	(* Tables that are used in more than one object *)
 	TYPE MP4Tables* = OBJECT
 	VAR
-		intraQuantMatrix*: ARRAY 64 OF LONGINT;
-		nonIntraQuantMatrix*: ARRAY 64 OF LONGINT;
+		intraQuantMatrix*: ARRAY 64 OF SIGNED32;
+		nonIntraQuantMatrix*: ARRAY 64 OF SIGNED32;
 		zigZagScan*, alternateHorizontalScan*, alternateVerticalScan*: PointerToArrayOfLONGINT;
 
 	PROCEDURE &init*;
@@ -239,7 +239,7 @@ MODULE DivXTypes;
 		acLeftChr*: ACLeftChrArray;
 		acTopChr*: ACTopChrArray;
 
-		predictDir*: LONGINT;
+		predictDir*: SIGNED32;
 
 		PROCEDURE &init*;
 		BEGIN
@@ -259,25 +259,25 @@ MODULE DivXTypes;
 	VAR
 		hdr*: MP4Header;
 		mp4Tables*: MP4Tables;
-		quantStore*: ARRAY ( DecMbr + 1 ) OF ARRAY ( DecMbc + 1 ) OF LONGINT;
+		quantStore*: ARRAY ( DecMbr + 1 ) OF ARRAY ( DecMbc + 1 ) OF SIGNED32;
 
 		coeffPred*: ACDC;
 
-		clpData*, clp*: POINTER TO ARRAY OF LONGINT;	(* Attention, needed offset to access elements: +512  *)
+		clpData*, clp*: POINTER TO ARRAY OF SIGNED32;	(* Attention, needed offset to access elements: +512  *)
 
 		horizontalSize*, verticalSize*, juiceHor*, juiceVer*, codedPictureWidth*, codedPictureHeight*,
-		chromWidth*, chromHeight*: LONGINT;
+		chromWidth*, chromHeight*: SIGNED32;
 
 		(* Buffers for the Pictures *)
 		edgedRef*, edgedFor*, frameRef*, frameFor*, displayFrame*: PointerToArrayOfCHAR;
-		edgedRefBaseOffset*: ARRAY 3 OF LONGINT;	(* Required, because OBERON doesn't support Pointer Arithmetic *)
-		edgedForBaseOffset*: ARRAY 3 OF LONGINT;	(* Required, because OBERON doesn't support Pointer Arithmetic *)
-		frameRefBaseOffset*: ARRAY 3 OF LONGINT;	(* Required, because OBERON doesn't support Pointer Arithmetic *)
-		frameForBaseOffset*: ARRAY 3 OF LONGINT;	(* Required, because OBERON doesn't support Pointer Arithmetic *)
-		displayFrameBaseOffset*: ARRAY 3 OF LONGINT;
+		edgedRefBaseOffset*: ARRAY 3 OF SIGNED32;	(* Required, because OBERON doesn't support Pointer Arithmetic *)
+		edgedForBaseOffset*: ARRAY 3 OF SIGNED32;	(* Required, because OBERON doesn't support Pointer Arithmetic *)
+		frameRefBaseOffset*: ARRAY 3 OF SIGNED32;	(* Required, because OBERON doesn't support Pointer Arithmetic *)
+		frameForBaseOffset*: ARRAY 3 OF SIGNED32;	(* Required, because OBERON doesn't support Pointer Arithmetic *)
+		displayFrameBaseOffset*: ARRAY 3 OF SIGNED32;
 
-		modeMap*: ARRAY ( DecMbr + 1 ) OF ARRAY ( DecMbc + 2 ) OF LONGINT;
-		mbWidth*, mbHeight*: LONGINT;
+		modeMap*: ARRAY ( DecMbr + 1 ) OF ARRAY ( DecMbc + 2 ) OF SIGNED32;
+		mbWidth*, mbHeight*: SIGNED32;
 
 		PROCEDURE &init*;
 		BEGIN
@@ -288,7 +288,7 @@ MODULE DivXTypes;
 
 		PROCEDURE SetUpState*( buffers: MP4Buffers);
 		VAR
-			i, j, cc, offset: LONGINT;
+			i, j, cc, offset: SIGNED32;
 		BEGIN
 			(* picture dimension vars *)
 			horizontalSize := hdr.width;
@@ -440,18 +440,18 @@ MODULE DivXTypes;
 		latterHalfvbvOccupancy*, shape*, timeIncrementResolution*, fixedVopRate*, fixedVopTimeIncrement*, width*, height*,
 		interlaced*, obmcDisable*, spriteUsage*, not8Bit*, quantPrecision*, bitsPerPixel*, quantType*, loadIntraQuantMatrix*,
 		loadNonIntraQuantMatrix*, quarterPixel*, complexityEstimationDisable*, errorResDisable*, dataPartitioning*,
-		intraacdcPredDisable*, scalability*: LONGINT;
+		intraacdcPredDisable*, scalability*: SIGNED32;
 
 		(* gop *)
 		timeCode*, closedGov*, brokenLink*, vop*, predictionType*, timeBase*, timeInc*, vopCoded*, roundingType*,
 		horSpatRef*, verSpatRef*, changeCRDisable*, constantAlpha*, constantAlphaValue*, intradcvlcthr*, quantizer*,
-		fCodeFor*, shapeCodingType*: LONGINT;
+		fCodeFor*, shapeCodingType*: SIGNED32;
 
 		(* macroblock *)
-		notCoded*, mcbpc*, derivedMbType*, cbpc*, acPredFlag*, cbpy*, dQuant*, cbp*: LONGINT;
+		notCoded*, mcbpc*, derivedMbType*, cbpc*, acPredFlag*, cbpy*, dQuant*, cbp*: SIGNED32;
 
 		(* extra/derived *)
-		mbASize*, mbXSize*, mbYSize*, picNum*, mba*, mbXPos*, mbYPos*, intraBlockRescaled*: LONGINT;
+		mbASize*, mbXSize*, mbYSize*, picNum*, mba*, mbXPos*, mbYPos*, intraBlockRescaled*: SIGNED32;
 
 		PROCEDURE & init*; (* opt: DecoderOptions ); *)
 		BEGIN
@@ -487,10 +487,10 @@ MODULE DivXTypes;
 	(* Contains decoder options *)
 	TYPE DecoderOptions* = OBJECT
 	VAR
-		xDim*,yDim*, displayYSize*, displayCSize*: LONGINT;	(* Size Of Image *)
+		xDim*,yDim*, displayYSize*, displayCSize*: SIGNED32;	(* Size Of Image *)
 		deblockYH*, deblockYV*, deringY*, deblockCH*, deblockCV*, deringC*: BOOLEAN;
 
-		PROCEDURE &init*(width: LONGINT; height: LONGINT );
+		PROCEDURE &init*(width: SIGNED32; height: SIGNED32 );
 		BEGIN
 			SetPostProcessLevel( 10 );
 			xDim := width;
@@ -501,7 +501,7 @@ MODULE DivXTypes;
 		END init;
 
 		(* Set Postprocesslevel *)
-		PROCEDURE SetPostProcessLevel*( n: LONGINT );
+		PROCEDURE SetPostProcessLevel*( n: SIGNED32 );
 		BEGIN
 			CASE n OF
 					0: deblockYH := FALSE; deblockYV := FALSE; deringY := FALSE;
@@ -527,7 +527,7 @@ MODULE DivXTypes;
 	MP4Buffers *= OBJECT
 	VAR
 		displayBuffer*, edgedRefBuffer*, edgedForBuffer*: PointerToArrayOfCHAR;
-		edgedRefBufferSize*, edgedForBufferSize*, displayBufferSize*: LONGINT;
+		edgedRefBufferSize*, edgedForBufferSize*, displayBufferSize*: SIGNED32;
 
 		PROCEDURE &init*( opt: DecoderOptions );
 		BEGIN

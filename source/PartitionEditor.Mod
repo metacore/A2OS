@@ -9,7 +9,7 @@ CONST
 	WindowTitle = "Partition Table Editor";
 	WindowWidth = 680; WindowHeight = 140;
 
-	Grey = LONGINT(0C0C0C0FFH);
+	Grey = SIGNED32(0C0C0C0FFH);
 
 TYPE
 
@@ -27,7 +27,7 @@ TYPE
 
 		(**	Retrieve the blockNumber currently displayed in the blockNumberEditor. Returns FALSE
 			if the string is no valid number *)
-		PROCEDURE GetBlockNumber(VAR blockNumber : LONGINT) : BOOLEAN;
+		PROCEDURE GetBlockNumber(VAR blockNumber : SIGNED32) : BOOLEAN;
 		VAR nbr : ARRAY 16 OF CHAR;
 		BEGIN
 			blockNumberEditor.GetAsString(nbr);
@@ -41,7 +41,7 @@ TYPE
 		PROCEDURE HandleButtons(sender, data : ANY);
 		VAR
 			deviceName : ARRAY 32 OF CHAR;
-			pt : PartitionTable.PartitionTable; blockNumber : LONGINT; res : WORD;
+			pt : PartitionTable.PartitionTable; blockNumber : SIGNED32; res : INTEGER;
 			message: ARRAY 256 OF CHAR;
 		BEGIN
 			IF (sender = storeBtn) THEN
@@ -161,8 +161,8 @@ TYPE
 			END;
 		END New;
 
-		PROCEDURE Load(deviceName : ARRAY OF CHAR; block : LONGINT);
-		VAR pt : PartitionTable.PartitionTable; blockStr : ARRAY 16 OF CHAR; message: ARRAY 256 OF CHAR; res : WORD;
+		PROCEDURE Load(deviceName : ARRAY OF CHAR; block : SIGNED32);
+		VAR pt : PartitionTable.PartitionTable; blockStr : ARRAY 16 OF CHAR; message: ARRAY 256 OF CHAR; res : INTEGER;
 		BEGIN
 			Strings.TrimWS(deviceName);
 			deviceNameEditor.SetAsString(deviceName);
@@ -197,8 +197,8 @@ TYPE
 			width := WindowWidth; height := WindowHeight;
 		END Resizing;
 
-		PROCEDURE HandleChange(changeType : LONGINT; VAR partition : PartitionTable.Partition);
-		VAR deviceName : ARRAY 32 OF CHAR; res : WORD;
+		PROCEDURE HandleChange(changeType : SIGNED32; VAR partition : PartitionTable.Partition);
+		VAR deviceName : ARRAY 32 OF CHAR; res : INTEGER;
 		BEGIN
 			deviceNameEditor.GetAsString(deviceName);
 			PartitionTable.Changed(changeType, partition, deviceName, res);
@@ -222,9 +222,9 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
-PROCEDURE GetErrorMessage(CONST string1, devicename : ARRAY OF CHAR; res : WORD; VAR message: ARRAY OF CHAR);
+PROCEDURE GetErrorMessage(CONST string1, devicename : ARRAY OF CHAR; res : INTEGER; VAR message: ARRAY OF CHAR);
 VAR nbr : ARRAY 8 OF CHAR;
 BEGIN
 	COPY(string1, message);
@@ -241,7 +241,7 @@ END GetErrorMessage;
 
 (* open an editor window *)
 PROCEDURE Open*(context : Commands.Context); (** DeviceName [Block] ~ *)
-VAR window : Window; deviceName : ARRAY 128 OF CHAR; block : LONGINT;
+VAR window : Window; deviceName : ARRAY 128 OF CHAR; block : SIGNED32;
 BEGIN
 	deviceName := ""; block := 0;
 	context.arg.SkipWhitespace; context.arg.String(deviceName);

@@ -41,7 +41,7 @@ BEGIN
 END FindType;
 
 PROCEDURE DealiaseType*(t : TS.Type) : TS.Type;
-VAR pos : LONGINT;
+VAR pos : SIGNED32;
 BEGIN
 	pos := -1;
 	IF t = NIL THEN RETURN NIL END;
@@ -92,7 +92,7 @@ END ShowType;
 PROCEDURE GetSourceReference*(no : TS.NamedObject; VAR filename, scopePath : ARRAY OF CHAR );
 VAR s : TS.Scope;
 	stack : ARRAY 32 OF TS.NamedObject;
-	tos : LONGINT;
+	tos : SIGNED32;
 BEGIN
 	scopePath := "";
 	filename := "";

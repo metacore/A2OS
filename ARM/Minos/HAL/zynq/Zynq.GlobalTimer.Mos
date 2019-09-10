@@ -39,7 +39,7 @@ CONST
 	
 VAR
 	sreg : SET;
-	reg : LONGINT;
+	reg : SIGNED32;
 BEGIN
 
 	Trace.Ln;
@@ -89,10 +89,10 @@ BEGIN
 
 END ShowTimer;
 
-PROCEDURE GetTimerValue( VAR upper, lower : LONGINT );
+PROCEDURE GetTimerValue( VAR upper, lower : SIGNED32 );
 VAR
-	high, low : LONGINT;
-	tmp : LONGINT;
+	high, low : SIGNED32;
+	tmp : SIGNED32;
 	running : BOOLEAN;
 BEGIN
 
@@ -117,19 +117,19 @@ BEGIN
 		
 END GetTimerValue;
 
-PROCEDURE GetTimerLowValue*() : LONGINT;
+PROCEDURE GetTimerLowValue*() : SIGNED32;
 VAR
-	high, low : LONGINT;
+	high, low : SIGNED32;
 BEGIN
 	GetTimerValue( high, low );
 	RETURN low;
 END GetTimerLowValue;
 
-PROCEDURE GetTime*(): HUGEINT;
+PROCEDURE GetTime*(): SIGNED64;
 TYPE
-	Hugeint = ARRAY 2 OF LONGINT;
+	Hugeint = ARRAY 2 OF SIGNED32;
 VAR
-	time: HUGEINT;
+	time: SIGNED64;
 BEGIN
 	GetTimerValue(SYSTEM.VAL(Hugeint, time)[1], SYSTEM.VAL(Hugeint, time)[0]);
 	RETURN time
@@ -137,7 +137,7 @@ END GetTime;
 
 PROCEDURE ShowValue*();
 VAR
-	high, low : LONGINT;
+	high, low : SIGNED32;
 BEGIN
 	GetTimerValue( high, low );
 	Trace.Ln;

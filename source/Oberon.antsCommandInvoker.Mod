@@ -62,8 +62,8 @@ BEGIN
 	END
 END FrameAttr;
 
-PROCEDURE RestoreFrame(R: Display3.Mask; F: Frame; x, y, w, h, u, v, w1, h1: INTEGER; dlink: Objects.Object);
-VAR D: Display.DisplayMsg; L: Gadgets.Frame; O: Display3.OverlapMsg; A: Objects.AttrMsg; ll, lr, lb, lt: INTEGER;
+PROCEDURE RestoreFrame(R: Display3.Mask; F: Frame; x, y, w, h, u, v, w1, h1: SIGNED16; dlink: Objects.Object);
+VAR D: Display.DisplayMsg; L: Gadgets.Frame; O: Display3.OverlapMsg; A: Objects.AttrMsg; ll, lr, lb, lt: SIGNED16;
 	col: Display.Color;
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
@@ -81,7 +81,7 @@ BEGIN
 END CopyFrame;
 
 PROCEDURE ComeBack(t: Oberon.Task);
-VAR f: Frame; cmd,string: ARRAY 256 OF CHAR; res: INTEGER; i,j: INTEGER;
+VAR f: Frame; cmd,string: ARRAY 256 OF CHAR; res: SIGNED16; i,j: SIGNED16;
 BEGIN
 	WITH t: TaskAfterStore DO
 		f := t.f;
@@ -121,8 +121,8 @@ END InvokeCommand;
 
 
 PROCEDURE FrameHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR F2: Frame; x, y, w, h: INTEGER;
-	keysum: SET; ver: LONGINT; f: Gadgets.Frame; R: Display3.Mask;
+VAR F2: Frame; x, y, w, h: SIGNED16;
+	keysum: SET; ver: SIGNED32; f: Gadgets.Frame; R: Display3.Mask;
 BEGIN
 	WITH F: Frame DO
 		IF M IS Objects.AttrMsg THEN

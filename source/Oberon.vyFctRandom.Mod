@@ -48,9 +48,9 @@ VAR
 		vyRealVec.SetLen( dense, cLength );  vyRealVec.Fill( dense, 0.5, 0, cLength )
 	END DefaultDense;
 
-	PROCEDURE Integral( d: vyBase.tVector ): REAL;
+	PROCEDURE Integral( d: vyBase.tVector ): FLOAT32;
 	(*vs 0.0d0  md  14.02.95 17:45:03 *)
-	VAR sum, dx: REAL;  i: LONGINT;
+	VAR sum, dx: FLOAT32;  i: SIGNED32;
 	BEGIN
 		sum := 0;
 		dx := 1 / (d.nrData - 1);   (*interval width*)
@@ -82,10 +82,10 @@ VAR
 		END
 	END Handler;
 
-	PROCEDURE Random*( factor: REAL ): REAL;
+	PROCEDURE Random*( factor: FLOAT32 ): FLOAT32;
 	(*! ????  careful check needed. What does it do ? *)
 	(*vs 0.0d0  md  14.02.95 10:36:18 *)
-	VAR x, y, y1, y2, dx, dindx, offset: LONGREAL;  i: INTEGER;
+	VAR x, y, y1, y2, dx, dindx, offset: FLOAT64;  i: SIGNED16;
 	BEGIN
 		IF (RandomData.x.nrData >= cNNNN) THEN CleanUp;  vyBase.Update( gMouseDense ) END;
 		x := vyRandom.Uniform();
@@ -105,9 +105,9 @@ VAR
 		RETURN SHORT( x )
 	END Random;
 
-	PROCEDURE RandomVector*( x: vyBase.tVector;  nrData: LONGINT );
+	PROCEDURE RandomVector*( x: vyBase.tVector;  nrData: SIGNED32 );
 	(*vs 0.0d0  md  05.07.95 15:00:06 *)
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		vector := TRUE;
 		IF (x # NIL ) & (nrData > 0) THEN
@@ -120,7 +120,7 @@ VAR
 
 	PROCEDURE Recall( denseEditor: vyFctEdit.tLayer );
 	(*vs 0.0d0  md  23.06.95 15:22:19 *)
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		vyGraphBase.SetPatternJustification( vyGraphBase.center, vyGraphBase.center );
 		vyGraphBase.SetDisplayMode( vyGraphBase.replace );  vyGraphBase.SetForeColor( 15 );
@@ -187,7 +187,7 @@ VAR
 	END InitMouseData;
 
 	PROCEDURE Simulate*;
-	VAR sc: vyParser.Scanner;  i: LONGINT;  r, x: REAL;  b: BOOLEAN;
+	VAR sc: vyParser.Scanner;  i: SIGNED32;  r, x: FLOAT32;  b: BOOLEAN;
 	BEGIN
 		x := 1.0;  vyParser.OpenParScanner( sc );
 		IF vyParser.Number( sc, i ) THEN

@@ -56,7 +56,7 @@ MODULE LeoImageEditors IN Oberon; (** portable **)	(* eos  *)
 
 	PROCEDURE Track (frame: LeoFrames.Frame; VAR msg: Oberon.InputMsg);
 		VAR
-			tool: LeoTools.Tool; fx, fy, hx, hy, len, mx, my, l, x, y: INTEGER; x0, y0, x1, y1: REAL; s: ARRAY 128 OF CHAR;
+			tool: LeoTools.Tool; fx, fy, hx, hy, len, mx, my, l, x, y: SIGNED16; x0, y0, x1, y1: FLOAT32; s: ARRAY 128 OF CHAR;
 			mask: Display3.Mask; state, keysum, keys: SET; fig: Leonardo.Figure; img: LeoImages.Image;
 	BEGIN
 		IF msg.keys = {} THEN
@@ -158,7 +158,7 @@ MODULE LeoImageEditors IN Oberon; (** portable **)	(* eos  *)
 	END Revert;
 
 	PROCEDURE Apply (e: LeoPanels.Editor);
-		VAR obj: Objects.Object; img: LeoImages.Image; i: LONGINT; b: BOOLEAN;
+		VAR obj: Objects.Object; img: LeoImages.Image; i: SIGNED32; b: BOOLEAN;
 	BEGIN
 		Links.GetLink(e, "Model", obj);
 		IF (obj # NIL) & (obj IS LeoImages.Image) THEN

@@ -16,7 +16,7 @@ MODULE DBFDump IN Oberon; (* ejz  *)
 			R: DBF.Reader;
 			field: DBF.Field;
 			value: DBF.FieldValue;
-			i, j: LONGINT;
+			i, j: SIGNED32;
 		PROCEDURE Error;
 		BEGIN
 			CASE R.res OF

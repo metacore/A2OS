@@ -11,8 +11,8 @@ CONST
 TYPE
 
 	DCB32 = RECORD  (* DCB structure for Win32 *)
-		DCBlength: LONGINT;   (* sizeof(DCB) *)
-		BaudRate: LONGINT;   (* current baud rate*)
+		DCBlength: SIGNED32;   (* sizeof(DCB) *)
+		BaudRate: SIGNED32;   (* current baud rate*)
 		flags: SET;   (* bits in flags:
 				DWORD fBinary: 1; (* binary mode, no EOF check *)
 				DWORD fParity: 1; (* enable parity checking *)
@@ -28,12 +28,12 @@ TYPE
 				DWORD fRtsControl:2; (* RTS flow control *)
 				DWORD fAbortOnError:1; (* abort reads/writes on error *)
 				DWORD fDummy2:17; (* reserved *) *)
-		wReserved: INTEGER;   (* not currently used *)
-		XonLim: INTEGER;   (* transmit XON threshold *)
-		XoffLim: INTEGER;   (* transmit XOFF threshold *)
-		ByteSize: SHORTINT;   (* number of bits/byte, 4-8 *)
-		Parity: SHORTINT;   (* 0-4=no,odd,even,mark,space *)
-		StopBits: SHORTINT;   (* 0, 1, 2 = 1, 1.5, 2 *)
+		wReserved: SIGNED16;   (* not currently used *)
+		XonLim: SIGNED16;   (* transmit XON threshold *)
+		XoffLim: SIGNED16;   (* transmit XOFF threshold *)
+		ByteSize: SIGNED8;   (* number of bits/byte, 4-8 *)
+		Parity: SIGNED8;   (* 0-4=no,odd,even,mark,space *)
+		StopBits: SIGNED8;   (* 0, 1, 2 = 1, 1.5, 2 *)
 		XonChar: CHAR;   (* Tx and Rx XON character *)
 		XoffChar: CHAR;   (* Tx and Rx XOFF character *)
 		ErrorChar: CHAR;   (* error replacement character *)
@@ -41,11 +41,11 @@ TYPE
 		EvtChar: CHAR (* received event character *)
 	END;
 	COMMTIMEOUTS = RECORD  (* COMMTIMEOUTS *)
-		ReadInterval: LONGINT;
-		ReadTotalMultiplier: LONGINT;
-		ReadTotalConstant: LONGINT;
-		WriteTotalMultiplier: LONGINT;
-		WriteTotalConstant: LONGINT
+		ReadInterval: SIGNED32;
+		ReadTotalMultiplier: SIGNED32;
+		ReadTotalConstant: SIGNED32;
+		WriteTotalMultiplier: SIGNED32;
+		WriteTotalConstant: SIGNED32
 	END;
 	COMSTAT32 = RECORD  (* COMSTAT for Win32 *)
 		status: SET;   (* fields in status:
@@ -57,17 +57,17 @@ TYPE
 				DWORD fEof : 1; (* EOF character sent *)
 				DWORD fTxim : 1; (* character waiting for Tx *)
 				DWORD fReserved : 25; (* reserved *) *)
-		cbInQueue: LONGINT;   (* bytes in input buffer *)
-		cbOutQueue: LONGINT (* bytes in output buffer *)
+		cbInQueue: SIGNED32;   (* bytes in input buffer *)
+		cbOutQueue: SIGNED32 (* bytes in output buffer *)
 	END;
 	*)
 
 	(*	Handle = POINTER TO RECORD (Kernel32.Object)
 	(*
 			recBuf: ARRAY BufSize OF S.BYTE;
-			recBufSize, recBufPos: LONGINT;
+			recBufSize, recBufPos: SIGNED32;
 			*)
-		port: LONGINT
+		port: SIGNED32
 	END;
 *)
 
@@ -82,7 +82,7 @@ TYPE
 
 		rOverlapped, wOverlapped: Kernel32.Overlapped;
 
-		PROCEDURE & Init*( port: LONGINT );
+		PROCEDURE & Init*( port: SIGNED32 );
 		VAR fn: Heaps.FinalizerNode;
 		BEGIN
 			NEW(timer);
@@ -99,7 +99,7 @@ TYPE
 			NEW( fn ); fn.finalizer := SELF.FinalizePort; Heaps.AddFinalizer( SELF, fn );
 		END Init;
 
-		PROCEDURE Open*( bps, data, parity, stop: LONGINT;  VAR res: WORD );
+		PROCEDURE Open*( bps, data, parity, stop: SIGNED32;  VAR res: INTEGER );
 		BEGIN {EXCLUSIVE}
 			IF handle = Kernel32.InvalidHandleValue THEN
 				SetPortState( bps, data, parity, stop, res );
@@ -116,8 +116,8 @@ TYPE
 		END Open;
 
 	(** Send len characters from buf to output, starting at ofs. res is non-zero on error. *)
-		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
-		VAR written: LONGINT;  ret: Kernel32.BOOL;
+		PROCEDURE Send*( CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: INTEGER );
+		VAR written: SIGNED32;  ret: Kernel32.BOOL;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + len );   (* array bound check not implemented in Kernel32.WriteFile *)
 			IF (handle # Kernel32.InvalidHandleValue) THEN
@@ -138,8 +138,8 @@ TYPE
 		END Send;
 
 	(** Send a single character to the UART. *)
-		PROCEDURE SendChar*( ch: CHAR; VAR res: WORD );
-		VAR ret: Kernel32.BOOL;  written: LONGINT;
+		PROCEDURE SendChar*( ch: CHAR; VAR res: INTEGER );
+		VAR ret: Kernel32.BOOL;  written: SIGNED32;
 		BEGIN
 			IF handle # Kernel32.InvalidHandleValue THEN
 				written := 0;
@@ -162,7 +162,7 @@ TYPE
 		Wait until at least min bytes (possibly zero) are available.
 			res is non-zero on error. *)
 
-		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive*( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER);
 		VAR l, read, ret: Kernel32.DWORD;
 		BEGIN
 			ASSERT ( LEN( buf ) >= ofs + size );
@@ -203,8 +203,8 @@ TYPE
 		END Receive;
 
 	(** Wait for the next character is received in the input buffer.  *)
-		PROCEDURE ReceiveChar*( VAR ch: CHAR;  VAR res: WORD );
-		VAR l, ret, read: LONGINT;
+		PROCEDURE ReceiveChar*( VAR ch: CHAR;  VAR res: INTEGER );
+		VAR l, ret, read: SIGNED32;
 		BEGIN
 			IF handle # Kernel32.InvalidHandleValue THEN
 				read := 0;
@@ -237,10 +237,10 @@ TYPE
 	data is the number of bits per communication unit.  parity is the parity mode.
 	stop is the number of stop bits.
 	res: Ok, PortInUse, NoSuchPort, WrongBPS, WrongData, WrongParity, WrongStop, Failed *)
-		PROCEDURE SetPortState( bps, data, parity, stop: LONGINT;  VAR res: WORD );
+		PROCEDURE SetPortState( bps, data, parity, stop: SIGNED32;  VAR res: INTEGER );
 		VAR
 			hFile: Kernel32.HANDLE;  dcb: Kernel32.DCB;
-			ret: Kernel32.BOOL;  err: LONGINT;
+			ret: Kernel32.BOOL;  err: SIGNED32;
 			windowsComName: ARRAY 16 OF CHAR;
 		BEGIN
 			res := Serials.Ok;
@@ -314,7 +314,7 @@ TYPE
 		END FinalizePort;
 
 	(** Get the port state: speed, no. of data bits, parity, no. of stop bits (only valid if openstat is TRUE) *)
-		PROCEDURE GetPortState*( VAR openstat: BOOLEAN;  VAR bps, data, parity, stop: LONGINT );
+		PROCEDURE GetPortState*( VAR openstat: BOOLEAN;  VAR bps, data, parity, stop: SIGNED32 );
 		VAR dcb: Kernel32.DCB;  ret: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			openstat := FALSE;
@@ -358,7 +358,7 @@ TYPE
 
 	(** SetMC - Set the specified modem control lines.  s may contain DTR, RTS & Break. *)
 		PROCEDURE SetMC*( s: SET );
-		VAR res: WORD;
+		VAR res: INTEGER;
 		BEGIN {EXCLUSIVE}
 			IF handle # Kernel32.InvalidHandleValue THEN
 				IF Serials.Break IN s THEN res := Kernel32.SetCommBreak( handle ) END;
@@ -374,7 +374,7 @@ TYPE
 	(** GetMC - Return the state of the specified modem control lines.  s contains
 			the current state of DSR, CTS, RI, DCD & Break Interrupt. *)
 		PROCEDURE GetMC*( VAR s: SET );
-		VAR state: WORDSET;  res: WORD;
+		VAR state: INTEGERSET;  res: INTEGER;
 		BEGIN {EXCLUSIVE}
 			s := {};
 			IF handle # Kernel32.InvalidHandleValue THEN
@@ -405,7 +405,7 @@ TYPE
 
 	(** Scan the installed serial ports  *)
 	PROCEDURE Scan*(context : Commands.Context);
-	VAR i, ret: LONGINT; name,winname: ARRAY 256 OF CHAR;
+	VAR i, ret: SIGNED32; name,winname: ARRAY 256 OF CHAR;
 		strNumber: ARRAY 4 OF CHAR; found: BOOLEAN;
 	BEGIN
 		context.out.String( "Serial port detection and inspection (WinAos):" ); context.out.Ln;
@@ -431,7 +431,7 @@ TYPE
 (** Create a port object for each windows COM port *)
 	PROCEDURE Init*;
 	VAR
-		i, ret: LONGINT;
+		i, ret: SIGNED32;
 		name : ARRAY 8 OF CHAR;
 		winname: ARRAY 256 OF CHAR;
 		port: Port;

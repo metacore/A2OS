@@ -28,7 +28,7 @@ TYPE
 
 		PROCEDURE & InitSdDevice (card: Sd.Card);
 		VAR
-			bufferSize: LONGINT;
+			bufferSize: SIGNED32;
 		BEGIN
 			SELF.card := card;
 			blockSize := BlockSize;
@@ -51,7 +51,7 @@ TYPE
 			END;
 		END InitSdDevice;
 
-		PROCEDURE Transfer0 * (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+		PROCEDURE Transfer0 * (op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER);
 		VAR ok: BOOLEAN;
 		BEGIN
 			CASE op OF
@@ -62,7 +62,7 @@ TYPE
 			END
 		END Transfer0;
 
-		PROCEDURE Transfer * (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; offs: SIZE; VAR res: WORD);
+		PROCEDURE Transfer * (op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; offs: SIZE; VAR res: INTEGER);
 		VAR
 			t: SdEnvironment.Time;
 		BEGIN{EXCLUSIVE}
@@ -82,14 +82,14 @@ TYPE
 (*			TRACE(block,num,t);*)
 		END Transfer;
 
-		PROCEDURE GetSize * (VAR size: LONGINT; VAR res: WORD);
+		PROCEDURE GetSize * (VAR size: SIGNED32; VAR res: INTEGER);
 		BEGIN
-			size := LONGINT(card.csd.capacity);
-			IF size < 0 THEN size := MAX(LONGINT) END;
+			size := SIGNED32(card.csd.capacity);
+			IF size < 0 THEN size := MAX(SIGNED32) END;
 			res := Disks.Ok
 		END GetSize;
 
-		PROCEDURE Handle * (VAR msg: Disks.Message;  VAR res: WORD);
+		PROCEDURE Handle * (VAR msg: Disks.Message;  VAR res: INTEGER);
 		BEGIN
 			res := 0;
 			IF msg IS Disks.LockMsg THEN
@@ -103,7 +103,7 @@ TYPE
 		END Handle;
 (*
 		(** Make sure that the RU ru is in cache entry idx *)
-		PROCEDURE UpdateCacheEntry (ru, idx: LONGINT; VAR res: LONGINT): BOOLEAN;
+		PROCEDURE UpdateCacheEntry (ru, idx: SIGNED32; VAR res: SIGNED32): BOOLEAN;
 		VAR entry: POINTER {UNSAFE} TO CacheEntry;
 		BEGIN
 			entry := ADDRESSOF(cache[idx]);
@@ -127,7 +127,7 @@ TYPE
 		(** Write back all modified cache entries to disk and invalidate all entries *)
 		PROCEDURE Sync;
 		(*VAR
-			i, len, res, ofs: LONGINT;
+			i, len, res, ofs: SIGNED32;
 			wbentry, wbnext: POINTER {UNSAFE} TO WriteBufferEntry;
 			ignore: BOOLEAN;*)
 		BEGIN {EXCLUSIVE}
@@ -167,11 +167,11 @@ TYPE
 	END Device;
 
 	(** Handle SD Controller Events: create & register a new disk on card insertion, remove disk on card removal *)
-	PROCEDURE HandleSdEvent * (card: Sd.Card; event: LONGINT);
+	PROCEDURE HandleSdEvent * (card: Sd.Card; event: SIGNED32);
 	VAR
 		disk, prev: Device;
 		name, id: ARRAY 32 OF CHAR;
-		result: WORD;
+		result: INTEGER;
 	BEGIN
 		CASE event OF
 			 Sd.OnInitialization:
@@ -249,10 +249,10 @@ TYPE
 
 VAR
 	devices: Device;
-	diskId: LONGINT;
+	diskId: SIGNED32;
 
 	(* Statistics *)
-	NcacheHits *, NcacheMiss *, NcacheEvict *, NbufferWrites *, NbufferSize *, NbufferQueueSize *, NbufferQueueSamples *: LONGINT;
+	NcacheHits *, NcacheMiss *, NcacheEvict *, NbufferWrites *, NbufferSize *, NbufferQueueSize *, NbufferQueueSamples *: SIGNED32;
 
 	rdTime, wrTime: SdEnvironment.Time;
 

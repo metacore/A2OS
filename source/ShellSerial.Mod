@@ -41,17 +41,17 @@ BEGIN
 	RETURN TRUE;
 END Yield;
 
-PROCEDURE ModemReceive(context : Commands.Context; modemMode: LONGINT); (** [[filename] portNbr BitsPerSecond DataBits Parity StopBits] ~ *)
+PROCEDURE ModemReceive(context : Commands.Context; modemMode: SIGNED32); (** [[filename] portNbr BitsPerSecond DataBits Parity StopBits] ~ *)
 VAR
 	fileName : Files.FileName;
-	length: LONGINT;
-	port : Serials.Port; portNbr, bps, data, parity, stop: LONGINT; res : WORD;
+	length: SIGNED32;
+	port : Serials.Port; portNbr, bps, data, parity, stop: SIGNED32; res : INTEGER;
 	isOpen0 : BOOLEAN;
-	bps0, data0, parity0, stop0 : LONGINT;
+	bps0, data0, parity0, stop0 : SIGNED32;
 	w : Streams.Writer; r : Streams.Reader;
 	isTracePort: BOOLEAN;
 	params: SET;
-	i, receiveRes: LONGINT;
+	i, receiveRes: SIGNED32;
 BEGIN
 	IF ~context.arg.GetString(fileName) & (modemMode # XYModem.YModem) THEN
 		context.result := Commands.CommandParseError;
@@ -176,7 +176,7 @@ BEGIN
 	RETURN (ch >= "0") & (ch <= "9")
 END IsDigit;*)
 
-PROCEDURE Wait(ms: LONGINT);
+PROCEDURE Wait(ms: SIGNED32);
 VAR timer: Kernel.Timer;
 BEGIN
 	NEW(timer); timer.Sleep(ms);
@@ -185,7 +185,7 @@ END Wait;
 (** Open a shell listening on the specified <portNbr> *)
 PROCEDURE Open*(context : Commands.Context); (** [portNbr BitsPerSecond DataBits Parity StopBits Prompt] ~ *)
 VAR
-	port : Serials.Port; portNbr, bps, data, parity, stop: LONGINT; res : WORD;
+	port : Serials.Port; portNbr, bps, data, parity, stop: SIGNED32; res : INTEGER;
 	prompt: ARRAY 32 OF CHAR;
 	w : Streams.Writer; r : Streams.Reader;
 	params: SET;
@@ -226,9 +226,9 @@ END Open;
 PROCEDURE Cleanup;
 VAR
 	port : Serials.Port;
-	i: LONGINT; res : WORD;
+	i: SIGNED32; res : INTEGER;
 	isOpen0, isTracePort : BOOLEAN;
-	bps0, data0, parity0, stop0 : LONGINT;
+	bps0, data0, parity0, stop0 : SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(shells)-1 DO
 		IF (shells[i] # NIL) THEN

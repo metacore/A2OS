@@ -4,15 +4,15 @@ IMPORT
 	Vectors := W3dVectors;
 
 TYPE
-	Plane* = RECORD n* : Vectors.TVector3d; d* : LONGREAL END;
+	Plane* = RECORD n* : Vectors.TVector3d; d* : FLOAT64 END;
 	Ray* = RECORD p, d : Vectors.TVector3d END;
 
 	Frustum* = OBJECT
 	VAR
 		nearP*, farP*, bottomP*, rightP*, topP*, leftP* : Plane;
 
-		PROCEDURE Make*(p, d, u : Vectors.TVector3d; focus, w, h, near, far : LONGREAL);
-		VAR left, z, p0, p1, p2, p3, f0, f1, f2, near0, near1, near2, far0, far1, far2 : Vectors.TVector3d; factor : LONGREAL;
+		PROCEDURE Make*(p, d, u : Vectors.TVector3d; focus, w, h, near, far : FLOAT64);
+		VAR left, z, p0, p1, p2, p3, f0, f1, f2, near0, near1, near2, far0, far1, far2 : Vectors.TVector3d; factor : FLOAT64;
 		BEGIN
 			left := Vectors.Cross(d, u);
 			z := Vectors.VAdd3(p, Vectors.VScaled3(d, - focus));
@@ -42,7 +42,7 @@ TYPE
 			topP := MakePlane(z, p3, p2);
 		END Make;
 
-		PROCEDURE IsBSOutsideBehind*(center : Vectors.TVector3d; r: LONGREAL): BOOLEAN;
+		PROCEDURE IsBSOutsideBehind*(center : Vectors.TVector3d; r: FLOAT64): BOOLEAN;
 		BEGIN
 			RETURN  (Distance(nearP, center) > r) OR
 							(Distance(leftP, center) > r) OR
@@ -60,14 +60,14 @@ BEGIN
 	RETURN result
 END MakePlane;
 
-PROCEDURE Distance*(e: Plane; p : Vectors.TVector3d) : LONGREAL;
+PROCEDURE Distance*(e: Plane; p : Vectors.TVector3d) : FLOAT64;
 BEGIN
 	RETURN Vectors.Scalar3(e.n, p) + e.d
 END Distance;
 
 (** intersection between g and e, g is treated as line *)
 PROCEDURE Intersection*(VAR g : Ray; VAR e : Plane; VAR p : Vectors.TVector3d) : BOOLEAN;
-VAR m, d: LONGREAL;
+VAR m, d: FLOAT64;
 BEGIN
   d := Vectors.Scalar3(e.n, g.d);
   IF d = 0 THEN RETURN FALSE END;

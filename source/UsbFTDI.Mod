@@ -571,7 +571,7 @@ TYPE
 			Serials.UnRegisterPort(SELF.port);
 		END Disconnect;
 
-		PROCEDURE ResetCmd(type:LONGINT):BOOLEAN;
+		PROCEDURE ResetCmd(type:SIGNED32):BOOLEAN;
 		VAR status : Usbdi.Status;
 		BEGIN
 			(*
@@ -604,7 +604,7 @@ TYPE
 			RETURN ResetCmd(FtdiResetPurgeRx);
 		END PurgeRx;
 		PROCEDURE SetEventChar(ch:CHAR):BOOLEAN;
-		VAR wValue:LONGINT;status : Usbdi.Status;
+		VAR wValue:SIGNED32;status : Usbdi.Status;
 		BEGIN
 			wValue:=LAND(ORD(ch),100H);
 			status := device.Request(Usbdi.ToDevice + Usbdi.Vendor + Usbdi.Device, FtdiEventCharRequest, wValue, 0, 0, data1^);
@@ -616,7 +616,7 @@ TYPE
 			END;
 		END SetEventChar;
 		PROCEDURE SetErrorChar(ch:CHAR):BOOLEAN;
-		VAR wValue:LONGINT;status : Usbdi.Status;
+		VAR wValue:SIGNED32;status : Usbdi.Status;
 		BEGIN
 			wValue:=LAND(ORD(ch),100H);
 			status := device.Request(Usbdi.ToDevice + Usbdi.Vendor + Usbdi.Device, FtdiErrorCharRequest, wValue, 0, 0, data1^);
@@ -743,12 +743,12 @@ TYPE
 		*)
 
 (*
-		PROCEDURE BaseToDivisor(baud:INTEGER ):LONGINT;
+		PROCEDURE BaseToDivisor(baud:SIGNED16 ):SIGNED32;
 
 		VAR
 
-			divfrac: ARRAY 8 OF LONGINT(* = { 0, 3, 2, 4, 1, 5, 6, 7 };*);
-			divisor3, divisor: LONGINT;
+			divfrac: ARRAY 8 OF SIGNED32(* = { 0, 3, 2, 4, 1, 5, 6, 7 };*);
+			divisor3, divisor: SIGNED32;
 		BEGIN
 			divfrac[0]:=0;divfrac[1]:=3;divfrac[2]:=2;divfrac[3]:=4;
 			divfrac[4]:=1;divfrac[5]:=5;divfrac[6]:=6;divfrac[7]:=7;
@@ -772,9 +772,9 @@ TYPE
 
 
 		(* Set baudrate divisor; returns TRUE if operation succeeded, FALSE otherwise *)
-		PROCEDURE SetBaudrate(baudrate : LONGINT) : BOOLEAN;
-		VAR divisor : LONGINT; status : Usbdi.Status;
-			 wValue, wIndex:LONGINT;
+		PROCEDURE SetBaudrate(baudrate : SIGNED32) : BOOLEAN;
+		VAR divisor : SIGNED32; status : Usbdi.Status;
+			 wValue, wIndex:SIGNED32;
 		BEGIN
 			IF Trace * TraceCommands # {} THEN ShowModule("SetBaudrate to "); KernelLog.Int(baudrate, 0); KernelLog.String(" bps."); KernelLog.Ln; END;
 			port.portbps := 0; (* indicates invalid value *)
@@ -840,10 +840,10 @@ TYPE
 
 		(* Vendor-specific request: Used to set the Line Control Register (LCR) *)
 		PROCEDURE SetLCR(set : SET) : BOOLEAN;
-		VAR status : Usbdi.Status;wValue:LONGINT;
+		VAR status : Usbdi.Status;wValue:SIGNED32;
 		BEGIN
 			(*data1[0] := SYSTEM.VAL(CHAR, set);*)
-			wValue:=SYSTEM.VAL(LONGINT,set);
+			wValue:=SYSTEM.VAL(SIGNED32,set);
 			status := device.Request(Usbdi.ToDevice + Usbdi.Vendor + Usbdi.Device, FtdiSetDataRequest, wValue, 0, 0, data1^);
 			IF status # Usbdi.Ok THEN
 				IF Debug THEN ShowModule("SetLCR failed."); KernelLog.Ln; END;
@@ -873,14 +873,14 @@ TYPE
 		(* Vendor-specific request: used to set RTS & DTR Bits of the Modem Control Register (MCR) *)
 		(* Updates DTR&RTS in mc *)
 		PROCEDURE SetMCR(set : SET) : BOOLEAN;
-		VAR status : Usbdi.Status;wValue:LONGINT;
+		VAR status : Usbdi.Status;wValue:SIGNED32;
 		BEGIN
 			IF Serials.DTR IN set THEN INCL(mcr, FtdiDtrMask); ELSE EXCL(mcr, FtdiDtrMask); END;
 			IF Serials.RTS IN set THEN INCL(mcr, FtdiRtsMask); ELSE EXCL(mcr, FtdiRtsMask); END;
 			(*INCL(mcr, MctMcrOut2); (* Always enable Out2 *)*)
 
-			(*data1[0] := CHR(SYSTEM.VAL(LONGINT, mcr));*)
-			wValue:=SYSTEM.VAL(LONGINT,mcr);
+			(*data1[0] := CHR(SYSTEM.VAL(SIGNED32, mcr));*)
+			wValue:=SYSTEM.VAL(SIGNED32,mcr);
 			status := device.Request(Usbdi.ToDevice + Usbdi.Vendor + Usbdi.Device, FtdiModemCtrlRequest, wValue, 0, 0, data1^);
 			IF status # Usbdi.Ok THEN
 				IF Debug THEN ShowModule("SetMCR failed: "); KernelLog.Ln; END;
@@ -925,23 +925,23 @@ TYPE
 	Port = OBJECT(Serials.Port)
 	VAR
 		driver : UsbFtdiDriver;
-		portbps : LONGINT;
+		portbps : SIGNED32;
 		data1 : Usbdi.BufferPtr; (* datax -> ARRAY x OF CHAR *)
 		buf: ARRAY BufSize OF CHAR;
 		sendBuffer: Usbdi.BufferPtr;
 		head, tail: SIZE;
 		open: BOOLEAN;
-		diagnostic: LONGINT;
+		diagnostic: SIGNED32;
 
-		log: ARRAY 16 OF LONGINT;
-		logPos: LONGINT;
+		log: ARRAY 16 OF SIGNED32;
+		logPos: SIGNED32;
 
 		PROCEDURE & InitPort;
 		BEGIN
 			NEW(sendBuffer, 128); NEW(data1,1);
 		END InitPort;
 
-		PROCEDURE Open(bps, data, parity, stop : LONGINT; VAR res: WORD);
+		PROCEDURE Open(bps, data, parity, stop : SIGNED32; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF open THEN
 				IF Verbose THEN ShowModule(name); KernelLog.String(" already open"); KernelLog.Ln; END;
@@ -957,7 +957,7 @@ TYPE
 		END Open;
 
 		(** Send len characters from buf to output, starting at ofs. res is non-zero on error. *)
-		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR status : Usbdi.Status;
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
@@ -975,7 +975,7 @@ TYPE
 		END Send;
 
 		(** Send a single character to the UART. *)
-		PROCEDURE SendChar(ch: CHAR; VAR res : WORD);
+		PROCEDURE SendChar(ch: CHAR; VAR res : INTEGER);
 		VAR status : Usbdi.Status;
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
@@ -992,7 +992,7 @@ TYPE
 		END SendChar;
 
 		(** Wait for the next character is received in the input buffer. The buffer is fed by HandleData *)
-		PROCEDURE ReceiveChar(VAR ch: CHAR; VAR res: WORD);
+		PROCEDURE ReceiveChar(VAR ch: CHAR; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN res := Serials.Closed; RETURN; END;
 			AWAIT(tail # head);
@@ -1007,7 +1007,7 @@ TYPE
 
 		(** Receive size characters into buf, starting at ofs and return the effective number of bytes read in len.
 			Wait until at least min bytes (possibly zero) are available. res is non-zero on error. *)
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR ch: CHAR;
 		BEGIN
 			len := 0;
@@ -1049,19 +1049,19 @@ TYPE
 					buf[tail] := ch; tail := n
 				ELSE
 					IF Debug THEN
-						IF log[logPos]#MAX(LONGINT) THEN
+						IF log[logPos]#MAX(SIGNED32) THEN
 							KernelLog.String("UsbFTDI.Port.HandleData: Buffer overflow detected"); KernelLog.Ln;
 							KernelLog.Int(Kernel.GetTicks(), 1); KernelLog.Ln;
 							FOR i := 0 TO LEN(log)-1 DO
 								KernelLog.Int(i,1); KernelLog.String(":"); KernelLog.Int(log[(logPos+i) MOD LEN(log)], 1); KernelLog.Ln;
 							END;
-							log[logPos]:= MAX(LONGINT)
+							log[logPos]:= MAX(SIGNED32)
 						END;
 					END;
 					EXIT;
 				END;
 				INC(i);
-				diagnostic := SYSTEM.VAL(LONGINT, driver.diagnostics - {Serials.OverrunError, Serials.ParityError, Serials.FramingError, Serials.BreakInterrupt});
+				diagnostic := SYSTEM.VAL(SIGNED32, driver.diagnostics - {Serials.OverrunError, Serials.ParityError, Serials.FramingError, Serials.BreakInterrupt});
 					(* not including Serials.OE, Serials.PE, Serials.FE & Serials.BI, otherwise the driver stops receiving data when frame errors occur *)
 			END;
 		END HandleData;
@@ -1071,7 +1071,7 @@ TYPE
 			RETURN (tail - head) MOD BufSize
 		END Available;
 
-		PROCEDURE SetPortState(bps, data, parity, stop : LONGINT; VAR res: WORD);
+		PROCEDURE SetPortState(bps, data, parity, stop : SIGNED32; VAR res: INTEGER);
 		VAR s : SET;
 		BEGIN
 			IF (bps > 0) & (921600 MOD bps = 0) THEN
@@ -1132,7 +1132,7 @@ TYPE
 		END SetPortState;
 
 		(** Get the port state: speed, no. of data bits, parity, no. of stop bits *)
-		PROCEDURE GetPortState(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : LONGINT);
+		PROCEDURE GetPortState(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : SIGNED32);
 		VAR set : SET; res : BOOLEAN;
 		BEGIN
 			(* get parameters *)
@@ -1140,7 +1140,7 @@ TYPE
 			bps := portbps;
 
 			res := driver.GetLCR(set);
-			data:=LAND(SYSTEM.VAL(LONGINT,set),0FFH);
+			data:=LAND(SYSTEM.VAL(SIGNED32,set),0FFH);
 
 
 			IF set * FtdiSetDataStopBits2 # {} THEN
@@ -1213,7 +1213,7 @@ TYPE
 		END GetMC;
 
 		PROCEDURE Close;
-		VAR timer : Kernel.Timer; counter : LONGINT;
+		VAR timer : Kernel.Timer; counter : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF ~open THEN
 				IF Verbose THEN ShowModule(name); KernelLog.String(" not open"); KernelLog.Ln; END;
@@ -1234,8 +1234,8 @@ TYPE
 
 	END Port;
 
-PROCEDURE LAND(x, y: LONGINT): LONGINT;
-BEGIN RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, x) * SYSTEM.VAL(SET, y))
+PROCEDURE LAND(x, y: SIGNED32): SIGNED32;
+BEGIN RETURN SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, x) * SYSTEM.VAL(SET, y))
 END LAND;
 
 PROCEDURE ShowModule(CONST string : ARRAY OF CHAR);

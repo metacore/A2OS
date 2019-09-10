@@ -15,22 +15,22 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		FrameDesc* = RECORD(Display.FrameDesc)
 			text*: Terminals.Terminal;
 			fnt*: Fonts.Font;
-			cursorState*, charW*, lineH*: INTEGER;
+			cursorState*, charW*, lineH*: SIGNED16;
 			hasSel*: BOOLEAN;
-			selTime*: LONGINT;
+			selTime*: SIGNED32;
 			selFrom*, selTo*: Terminals.Location;
 		END;
 
 		UpdateMsg* = RECORD(Display.FrameMsg)
 			text: Terminals.Terminal;
-			op, fromLine, fromCol, toLine, toCol: INTEGER;
+			op, fromLine, fromCol, toLine, toCol: SIGNED16;
 			oldCur: Terminals.Location
 		END;
 
 	VAR w: Texts.Writer;
 
 	PROCEDURE NotifyDisplay*
-		(t: Terminals.Terminal; op, fromLine, fromCol, toLine, toCol: INTEGER; oldCur: Terminals.Location);
+		(t: Terminals.Terminal; op, fromLine, fromCol, toLine, toCol: SIGNED16; oldCur: Terminals.Location);
 		VAR msg: UpdateMsg;
 	BEGIN msg.text := t; msg.op := op;
 		msg.fromLine := fromLine; msg.fromCol := fromCol; msg.toLine := toLine; msg.toCol := toCol; msg.oldCur := oldCur;
@@ -47,8 +47,8 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 	BEGIN Open(to, from.handle, from.text, from.fnt)
 	END Copy;
 
-	PROCEDURE DrawCursor(f: Frame; line, col: INTEGER; mode: INTEGER);
-		VAR x, y, w, h: INTEGER;
+	PROCEDURE DrawCursor(f: Frame; line, col: SIGNED16; mode: SIGNED16);
+		VAR x, y, w, h: SIGNED16;
 	BEGIN w := f.charW; h := f.lineH; x := f.X + HSpace + w * col; y := f.Y + f.H - VSpace - h * line;
 		IF (x < f.X + f.W - HSpace) & (y > f.Y + VSpace) THEN
 			IF mode = FullCursor THEN Display.ReplConst(white, x - w, y, w, h - Gap, Display.invert)
@@ -61,14 +61,14 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		END
 	END DrawCursor;
 
-	PROCEDURE SetCursor*(f: Frame; state: INTEGER);
+	PROCEDURE SetCursor*(f: Frame; state: SIGNED16);
 		VAR loc: Terminals.Location;
 	BEGIN loc := f.text.cursor; DrawCursor(f, loc.line, loc.col, f.cursorState);
 		f.cursorState := state; DrawCursor(f, loc.line, loc.col, state)
 	END SetCursor;
 
-	PROCEDURE DrawSelection(f: Frame; fromLine, fromCol, toLine, toCol: INTEGER);
-		VAR x, y, w, h, top, left, right, cw, tw: INTEGER;
+	PROCEDURE DrawSelection(f: Frame; fromLine, fromCol, toLine, toCol: SIGNED16);
+		VAR x, y, w, h, top, left, right, cw, tw: SIGNED16;
 	BEGIN top := f.Y + f.H - VSpace; left := f.X + HSpace; right := f.X + f.W - HSpace; h := f.lineH; cw := f.charW;
 		y := top - fromLine * h; x := left + (fromCol - 1) * cw;
 		IF fromLine = toLine THEN w := (toCol - fromCol + 1) * cw;
@@ -97,8 +97,8 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		END
 	END RemoveSelection;
 
-	PROCEDURE SetSelection*(f: Frame; fromLine, fromCol, toLine, toCol: INTEGER);
-		VAR h: INTEGER; loc: Terminals.Location;
+	PROCEDURE SetSelection*(f: Frame; fromLine, fromCol, toLine, toCol: SIGNED16);
+		VAR h: SIGNED16; loc: Terminals.Location;
 	BEGIN RemoveSelection(f); h := f.H - 2 * VSpace;
 		IF h < toLine * f.lineH THEN toLine := h DIV f.lineH; toCol := f.text.width + 1 END;
 		IF fromCol > f.text.line[fromLine].len THEN fromCol := f.text.line[fromLine].len + 1 END;
@@ -112,7 +112,7 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 	END SetSelection;
 
 	PROCEDURE TextOf(f: Frame): Texts.Text;
-		VAR i, j, len: INTEGER; line: Terminals.Line; text: Texts.Text;
+		VAR i, j, len: SIGNED16; line: Terminals.Line; text: Texts.Text;
 	BEGIN Texts.SetFont(w, f.fnt); i := 1;
 		REPEAT j := 1; line := f.text.line[i]; len := line.len;
 			WHILE j <= len DO Texts.Write(w, line.ch[j].ch); INC(j) END;
@@ -123,15 +123,15 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		Texts.Append(text, w.buf); RETURN text
 	END TextOf;
 
-	PROCEDURE TextPos(f: Frame; line, col: INTEGER): INTEGER;
-		VAR i, l, len: INTEGER; text: Terminals.Terminal;
+	PROCEDURE TextPos(f: Frame; line, col: SIGNED16): SIGNED16;
+		VAR i, l, len: SIGNED16; text: Terminals.Terminal;
 	BEGIN i := 1; len := 0; text := f.text;
 		WHILE i < line DO len := len + text.line[i].len; INC(i) END;
 		IF i <= Terminals.Height THEN l := text.line[i].len ELSE l := 0 END;
 		IF l >= col THEN RETURN len + col + i - 2 ELSE RETURN len + l + i - 1 END
 	END TextPos;
 
-	PROCEDURE GetSelection*(f: Frame; VAR text: Texts.Text; VAR beg, end, time: LONGINT);
+	PROCEDURE GetSelection*(f: Frame; VAR text: Texts.Text; VAR beg, end, time: SIGNED32);
 	BEGIN
 		IF f.hasSel THEN time := f.selTime; text := TextOf(f);
 			beg := TextPos(f, f.selFrom.line, f.selFrom.col); end := TextPos(f, f.selTo.line, f.selTo.col) + 1
@@ -143,8 +143,8 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 	BEGIN Oberon.RemoveMarks(f.X, f.Y, f.W, f.H); SetCursor(f, FadedCursor); RemoveSelection(f)
 	END Neutralize;
 
-	PROCEDURE DrawChar(f: Frame; x, y: INTEGER; char: Terminals.Char);
-		VAR dx, cx, cy, cw, ch: INTEGER; p: Display.Pattern; fnt: Fonts.Font;
+	PROCEDURE DrawChar(f: Frame; x, y: SIGNED16; char: Terminals.Char);
+		VAR dx, cx, cy, cw, ch: SIGNED16; p: Display.Pattern; fnt: Fonts.Font;
 	BEGIN fnt := f.fnt; Fonts.GetChar(fnt, char.ch, dx, cx, cy, cw, ch, p);
 		Display.CopyPattern(white, p, x + cx - fnt.minX, y + cy - fnt.minY, Display.paint);
 		IF ODD(char.attr DIV Terminals.bold) THEN
@@ -158,8 +158,8 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		END
 	END DrawChar;
 
-	PROCEDURE UpdateLine(f: Frame; line, fromCol, toCol: INTEGER);
-		VAR x, y, w, h, w2: INTEGER; l: Terminals.Line; text: Terminals.Terminal;
+	PROCEDURE UpdateLine(f: Frame; line, fromCol, toCol: SIGNED16);
+		VAR x, y, w, h, w2: SIGNED16; l: Terminals.Line; text: Terminals.Terminal;
 	BEGIN h := f.lineH; y := f.Y + f.H - VSpace - line * h;
 		IF y > f.Y + VSpace THEN text := f.text;
 			l := text.line[line]; w := f.charW; x := w * fromCol;
@@ -174,8 +174,8 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		END
 	END UpdateLine;
 
-	PROCEDURE UpdateScrolling(f: Frame; top, bot, dH: INTEGER);
-		VAR y, lh, h, diff, w: INTEGER;
+	PROCEDURE UpdateScrolling(f: Frame; top, bot, dH: SIGNED16);
+		VAR y, lh, h, diff, w: SIGNED16;
 	BEGIN lh := f.lineH; y := f.Y + f.H - VSpace - bot * lh; diff := (f.Y + VSpace - y + lh) DIV lh;
 		IF diff < 0 THEN diff := 0 END;
 		y := y + diff * lh; h := (bot - diff - top - ABS(dH) + 1) * lh;
@@ -192,7 +192,7 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		END
 	END UpdateScrolling;
 
-	PROCEDURE Update*(f: Frame; op, fromLine, fromCol, toLine, toCol: INTEGER; oldCur: Terminals.Location);
+	PROCEDURE Update*(f: Frame; op, fromLine, fromCol, toLine, toCol: SIGNED16; oldCur: Terminals.Location);
 		VAR cursor: Terminals.Location;
 	BEGIN Oberon.RemoveMarks(f.X, f.Y, f.W, f.H); RemoveSelection(f); cursor := f.text.cursor;
 		IF op = Terminals.update THEN DrawCursor(f, oldCur.line, oldCur.col, f.cursorState);
@@ -210,8 +210,8 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		END
 	END Update;
 
-	PROCEDURE TrackSelection*(f: Frame; VAR keySum: SET; x, y: INTEGER);
-		VAR keys: SET; top, bot, h, left, w, len, tw: INTEGER; from, to, oldTo: Terminals.Location;
+	PROCEDURE TrackSelection*(f: Frame; VAR keySum: SET; x, y: SIGNED16);
+		VAR keys: SET; top, bot, h, left, w, len, tw: SIGNED16; from, to, oldTo: Terminals.Location;
 	BEGIN top := f.Y + f.H - VSpace; h := f.lineH; tw := f.text.width;
 		IF Terminals.Height * h > top - f.Y - VSpace THEN bot := top - ((top - f.Y - VSpace) DIV h) * h
 		ELSE bot := top - Terminals.Height * h
@@ -254,8 +254,8 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		END
 	END TrackSelection;
 
-	PROCEDURE Call*(f: Frame; cmdLine, cmdCol: INTEGER; new: BOOLEAN);
-		VAR i, len: INTEGER; line: Terminals.Line; ch: CHAR;
+	PROCEDURE Call*(f: Frame; cmdLine, cmdCol: SIGNED16; new: BOOLEAN);
+		VAR i, len: SIGNED16; line: Terminals.Line; ch: CHAR;
 			name: ARRAY Terminals.MaxWidth OF CHAR;
 	BEGIN
 		IF cmdCol > 0 THEN i := 0; line := f.text.line[cmdLine]; len := line.len; ch := line.ch[cmdCol].ch;
@@ -269,7 +269,7 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 	END Call;
 
 	PROCEDURE DrawLine(f: Frame; from: Terminals.Location);
-		VAR line: Terminals.Line; x1, x2, y, tocol, len: INTEGER;
+		VAR line: Terminals.Line; x1, x2, y, tocol, len: SIGNED16;
 	BEGIN
 		IF from.col > 0 THEN line := f.text.line[from.line]; len := line.len; tocol := from.col;
 			WHILE (tocol < len) & (line.ch[tocol + 1].ch > " ") DO INC(tocol) END;
@@ -280,8 +280,8 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		END
 	END DrawLine;
 
-	PROCEDURE TrackWord*(f: Frame; x, y: INTEGER; VAR cmdLine, cmdCol: INTEGER; VAR keySum: SET);
-		VAR keys: SET; top, bot, h, left, w, len: INTEGER; pos, oldPos: Terminals.Location; line: Terminals.Line;
+	PROCEDURE TrackWord*(f: Frame; x, y: SIGNED16; VAR cmdLine, cmdCol: SIGNED16; VAR keySum: SET);
+		VAR keys: SET; top, bot, h, left, w, len: SIGNED16; pos, oldPos: Terminals.Location; line: Terminals.Line;
 	BEGIN top := f.Y + f.H - VSpace; h := f.lineH;
 		IF Terminals.Height * h > top - f.Y - VSpace THEN bot := top - ((top - f.Y - VSpace) DIV h) * h
 		ELSE bot := top - Terminals.Height * h
@@ -306,8 +306,8 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		cmdLine := pos.line; cmdCol := pos.col
 	END TrackWord;
 
-	PROCEDURE Edit*(f: Frame; keys: SET; x, y: INTEGER);
-		VAR keySum: SET; text: Texts.Text; beg, end, time: LONGINT; cmdLine, cmdCol: INTEGER;
+	PROCEDURE Edit*(f: Frame; keys: SET; x, y: SIGNED16);
+		VAR keySum: SET; text: Texts.Text; beg, end, time: SIGNED32; cmdLine, cmdCol: SIGNED16;
 			msg: Oberon.ConsumeMsg;
 	BEGIN
 		IF Left IN keys THEN keySum := keys;
@@ -332,8 +332,8 @@ MODULE TerminalFrames IN Oberon; (** portable *) (* ww 5 Jun 92 *)
 		END
 	END Edit;
 
-	PROCEDURE Modify*(f: Frame; id, Y, H, dY: INTEGER);
-		VAR y, h, l1, l2, w: INTEGER; cursor: Terminals.Location;
+	PROCEDURE Modify*(f: Frame; id, Y, H, dY: SIGNED16);
+		VAR y, h, l1, l2, w: SIGNED16; cursor: Terminals.Location;
 	BEGIN Neutralize(f); cursor := f.text.cursor; DrawCursor(f, cursor.line, cursor.col, f.cursorState);
 		IF H < 2 * VSpace THEN f.Y := Y; f.H := H; Display.ReplConst(black, f.X, Y, f.W, H, Display.replace)
 		ELSIF id = Display.reduce THEN h := ((H - 2 * VSpace - 1) DIV f.lineH) * f.lineH;

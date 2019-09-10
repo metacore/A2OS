@@ -87,7 +87,7 @@ VAR
 
 	NModules, NObjects, NDefinitions, NArrays, NRecords, NPointers, NDelegates, NProcedureTypes,
 	NExclusive, NExclusiveMain, NActive,
-	NSyncsCount: LONGINT;	(* statistical counters *)
+	NSyncsCount: SIGNED32;	(* statistical counters *)
 
 (* ============================================================== *)
 (* ------------- The Parser Object ---------------------------------- *)
@@ -95,10 +95,10 @@ TYPE
 		(* Synchronize a thread with its child processes, await till all left the monitor or timeout *)
 	Barrier = OBJECT (Kernel.Timer)
 		VAR
-			timeout: LONGINT;
-			started, ended: LONGINT;
+			timeout: SIGNED32;
+			started, ended: SIGNED32;
 
-			PROCEDURE & SInit*(timeout: LONGINT);
+			PROCEDURE & SInit*(timeout: SIGNED32);
 			BEGIN started := 0; ended := 0; SELF.timeout := timeout*1000; Init;
 			END SInit;
 
@@ -118,7 +118,7 @@ TYPE
 			BEGIN Sleep(timeout)
 			END Await;
 
-			PROCEDURE Stats(VAR started, inside: LONGINT);
+			PROCEDURE Stats(VAR started, inside: SIGNED32);
 			BEGIN started := SELF.started; inside := SELF.started - SELF.ended
 			END Stats;
 	END Barrier;
@@ -131,8 +131,8 @@ TYPE
 			sym, savedsym: PCS.Token;
 			scanner, savedscanner: PCS.Scanner;
 			scope, codescope: PCT.Scope;		(*codescope is the scope where the code is defined, where a WITH is used*)
-			looplevel, scopelevel: SHORTINT;	(*copy of scope(ProcScope).level or 0 (rec/mod)*)
-			forexitcount, forretcount, retcount, fincount: LONGINT;	(*nested for-loops inside a LOOP-statement, used to remove the temp for-counters*)
+			looplevel, scopelevel: SIGNED8;	(*copy of scope(ProcScope).level or 0 (rec/mod)*)
+			forexitcount, forretcount, retcount, fincount: SIGNED32;	(*nested for-loops inside a LOOP-statement, used to remove the temp for-counters*)
 			curloop: PCB.LoopInfo;
 			code: PCC.Code;
 			inline: BOOLEAN;
@@ -144,12 +144,12 @@ TYPE
 			inspect: BOOLEAN;		(* TRUE if body is parsed to find hidden local variables, i.e. procedure calls that return pointers *)
 
 			forwardPtr: ARRAY 128 OF RECORD  ptr: PCT.Pointer; name: PCS.Name  END;
-			nofForwardPtr: LONGINT;
+			nofForwardPtr: SIGNED32;
 
 		(* --------------------------------------------------------- *)
 		(* Parser utilities *)
 
-		PROCEDURE Error(n: WORD; pos: LONGINT);
+		PROCEDURE Error(n: INTEGER; pos: SIGNED32);
 		BEGIN PCM.Error(n, pos, "")
 		END Error;
 
@@ -269,8 +269,8 @@ TYPE
 		END OperatorDef;
 
 		PROCEDURE FPSection(scope: PCT.ProcScope; pflags: SET); (* ejz *)
-			VAR name: ARRAY 32 OF PCS.Name; i, n: LONGINT; res: WORD; VarPar: BOOLEAN;
-				pos: ARRAY 32 OF LONGINT; t: PCT.Struct;
+			VAR name: ARRAY 32 OF PCS.Name; i, n: SIGNED32; res: INTEGER; VarPar: BOOLEAN;
+				pos: ARRAY 32 OF SIGNED32; t: PCT.Struct;
 			(** fof >> *)
 			ConstPar: BOOLEAN;
 			(** << fof  *)
@@ -322,7 +322,7 @@ TYPE
 		END FPSection;
 
 		PROCEDURE FormalPars(scope: PCT.ProcScope; VAR rtype: PCT.Struct; pflags: SET); (* ejz *)
-			VAR o: PCT.Symbol; res: WORD;
+			VAR o: PCT.Symbol; res: INTEGER;
 		BEGIN
 			rtype := PCT.NoType;
 			IF sym = lparen THEN
@@ -362,13 +362,13 @@ TYPE
 			IF {PCT.CParam, PCT.WinAPIParam} * pflags # {} (* fof for Linux *) THEN scope.ReversePars() END (* ejz *)
 		END FormalPars;
 
-		PROCEDURE CheckOperator(scope: PCT.ProcScope; VAR name: PCS.Name; rtype: PCT.Struct; pos: LONGINT);
+		PROCEDURE CheckOperator(scope: PCT.ProcScope; VAR name: PCS.Name; rtype: PCT.Struct; pos: SIGNED32);
 		VAR
 			opStr: ARRAY PCS.MaxStrLen OF CHAR;
 			p: PCT.Parameter;
 			recScope: PCT.RecScope;
 
-			PROCEDURE CheckCardinality(nofparam: LONGINT): BOOLEAN;
+			PROCEDURE CheckCardinality(nofparam: SIGNED32): BOOLEAN;
 			BEGIN
 				CASE opStr[0] OF
 				| "+", "-": RETURN (nofparam = 1) OR (nofparam = 2)
@@ -421,7 +421,7 @@ TYPE
 		END CheckOperator;
 
 		PROCEDURE RecordType(VAR t: PCT.Struct;  pointed: BOOLEAN);
-			VAR recstruct: PCT.Record; ptr: PCT.Pointer; recscope: PCT.RecScope; recparser: RecordParser; bpos: LONGINT; res: WORD;
+			VAR recstruct: PCT.Record; ptr: PCT.Pointer; recscope: PCT.RecScope; recparser: RecordParser; bpos: SIGNED32; res: INTEGER;
 				intf: ARRAY 32 OF PCT.Interface;
 		BEGIN
 			t := PCT.NoType;
@@ -466,7 +466,7 @@ TYPE
 		END Interface;
 
 		PROCEDURE ObjectType(VAR t: PCT.Struct;  name: StringPool.Index);
-			VAR recstruct: PCT.Record; ptr: PCT.Pointer; recscope: PCT.RecScope; parser: ObjectParser; bpos, i: LONGINT; res: WORD;
+			VAR recstruct: PCT.Record; ptr: PCT.Pointer; recscope: PCT.RecScope; parser: ObjectParser; bpos, i: SIGNED32; res: INTEGER;
 				intf: ARRAY 32 OF PCT.Interface;
 
 		BEGIN
@@ -501,8 +501,8 @@ TYPE
 			END
 		END ObjectType;
 
-		PROCEDURE DefinitionType(pos: LONGINT;  VAR t: PCT.Struct;  name: StringPool.Index);
-		VAR  intf: ARRAY 1 OF PCT.Interface; parser: InterfaceParser; recscope: PCT.RecScope; int: PCT.Interface; res: WORD;
+		PROCEDURE DefinitionType(pos: SIGNED32;  VAR t: PCT.Struct;  name: StringPool.Index);
+		VAR  intf: ARRAY 1 OF PCT.Interface; parser: InterfaceParser; recscope: PCT.RecScope; int: PCT.Interface; res: INTEGER;
 		BEGIN
 			INCL(PCM.codeOptions, PCM.ExportDefinitions);
 			IF sym = refines THEN
@@ -531,7 +531,7 @@ TYPE
 
 (** fof >> *)
 		PROCEDURE TensorType( VAR t: PCT.Struct );
-		VAR aarray: PCT.Tensor;  base: PCT.Struct;  res: WORD;
+		VAR aarray: PCT.Tensor;  base: PCT.Struct;  res: INTEGER;
 		BEGIN
 			Type( base, noname );  NEW( aarray );  t := aarray;  PCT.InitTensor( aarray, base, res );
 			IF res # PCT.Ok THEN Error( res, scanner.errpos ) END;
@@ -540,7 +540,7 @@ TYPE
 (** << fof  *)
 
 		PROCEDURE ArrayType (VAR t: PCT.Struct;  enhArray: BOOLEAN (* fof *));
-		VAR	index: PCB.Expression;  array: PCT.Array;  pos0, pos: LONGINT; res: WORD; base: PCT.Struct;
+		VAR	index: PCB.Expression;  array: PCT.Array;  pos0, pos: SIGNED32; res: INTEGER; base: PCT.Struct;
 			(** fof >> *)
 			earray: PCT.EnhArray;  first: BOOLEAN;  aarray: PCT.Tensor;
 			(** << fof  *)
@@ -614,7 +614,7 @@ TYPE
 		END ArrayType;
 
 		PROCEDURE PointerType(VAR t: PCT.Struct;  name: StringPool.Index);
-			VAR pos, pos1: LONGINT; res: WORD; id: PCS.Name; o: PCT.Symbol; ptr: PCT.Pointer;
+			VAR pos, pos1: SIGNED32; res: INTEGER; id: PCS.Name; o: PCT.Symbol; ptr: PCT.Pointer;
 		BEGIN
 			IF sym = record THEN
 				scanner.Get(sym);  RecordType(t, TRUE)
@@ -661,7 +661,7 @@ TYPE
 		END PointerType;
 
 		PROCEDURE Type (VAR t: PCT.Struct;  name: StringPool.Index);
-			VAR o: PCT.Symbol; procscope: PCT.ProcScope;  pos: LONGINT; res: WORD;
+			VAR o: PCT.Symbol; procscope: PCT.ProcScope;  pos: SIGNED32; res: INTEGER;
 				proc: PCT.Delegate; sf: SET;
 		BEGIN
 			pos := scanner.errpos;
@@ -716,7 +716,7 @@ TYPE
 		END Type;
 
 		PROCEDURE VarDecl;
-			VAR id: ARRAY MaxIdentDef OF IdentDefDesc; pos: ARRAY MaxIdentDef OF LONGINT; (** fof  *) c, n: LONGINT; res: WORD; t: PCT.Struct; flag: ARRAY MaxIdentDef OF SET;
+			VAR id: ARRAY MaxIdentDef OF IdentDefDesc; pos: ARRAY MaxIdentDef OF SIGNED32; (** fof  *) c, n: SIGNED32; res: INTEGER; t: PCT.Struct; flag: ARRAY MaxIdentDef OF SET;
 		BEGIN n := 1;
 			pos[0] := scanner.errpos;   (* fof *)
 			IdentDef (id[0], TRUE);
@@ -737,7 +737,7 @@ TYPE
 		END VarDecl;
 
 		PROCEDURE TypeDecl;
-			VAR i: IdentDefDesc; pos: LONGINT; res: WORD; t: PCT.Struct;
+			VAR i: IdentDefDesc; pos: SIGNED32; res: INTEGER; t: PCT.Struct;
 		BEGIN
 			pos := scanner.errpos;
 			IdentDef(i, FALSE); Check(eql); Type(t, i.name);
@@ -746,7 +746,7 @@ TYPE
 		END TypeDecl;
 
 		PROCEDURE ConstDecl;
-			VAR i: IdentDefDesc; x: PCB.Const; pos: LONGINT; res: WORD; long: HUGEINT;
+			VAR i: IdentDefDesc; x: PCB.Const; pos: SIGNED32; res: INTEGER; long: SIGNED64;
 		BEGIN
 			pos := scanner.errpos;
 			IdentDef(i, FALSE);  Check(eql);  ConstExpr(x);
@@ -755,7 +755,7 @@ TYPE
 
 				IF x.con.type = PCT.Int64 THEN
 					long := x.con.long;
-					IF long DIV 2 <= LONG(MAX(LONGINT)) THEN
+					IF long DIV 2 <= LONG(MAX(SIGNED32)) THEN
 						(*!fof: replace this with a warning once everything is converted *)
 						PCM.Error(-1,pos,"unsigned longint is a hugeint -> use SHORT");
 					END;
@@ -765,7 +765,7 @@ TYPE
 		END ConstDecl;
 
 		PROCEDURE FixForwards;
-		VAR obj: PCT.Symbol; state: SHORTINT; res: WORD;
+		VAR obj: PCT.Symbol; state: SIGNED8; res: INTEGER;
 		BEGIN
 			state := PCT.structallocated;
 			IF isRecord THEN state := PCT.structdeclared END;
@@ -790,7 +790,7 @@ TYPE
 		END ListOf;
 
 		PROCEDURE DeclSeq;
-		VAR t: PCT.Struct; name: PCS.Name; pos: LONGINT; res: WORD;
+		VAR t: PCT.Struct; name: PCS.Name; pos: SIGNED32; res: INTEGER;
 		BEGIN
 			WHILE sym = definition DO
 				pos := scanner.errpos;
@@ -850,7 +850,7 @@ TYPE
 
 		PROCEDURE Qualident (VAR o: PCT.Symbol);		(*Qualident = [ident "."] ident*)
 			(* returns the object or unknownObj *)
-			VAR pos: LONGINT;
+			VAR pos: SIGNED32;
 		BEGIN
 			IF sym = ident THEN
 				IF scanner.name = self THEN
@@ -929,7 +929,7 @@ TYPE
 			LOOP
 				IF Range( y, texp, bexp ) THEN
 					IF y = NIL THEN NEW( z, scanner.errpos, PCT.NewIntConst( 0, PCT.Int32 ) );  y := z;  END;
-					IF texp = NIL THEN NEW( z, scanner.errpos, PCT.NewIntConst( MAX( LONGINT ), PCT.Int32 ) );  texp := z END;
+					IF texp = NIL THEN NEW( z, scanner.errpos, PCT.NewIntConst( MAX( SIGNED32 ), PCT.Int32 ) );  texp := z END;
 					IF bexp = NIL THEN NEW( z, scanner.errpos, PCT.NewIntConst( 1, PCT.Int32 ) );  bexp := z END;
 					x.Append( y );  x.Append( texp );  x.Append( bexp );
 				ELSE x.Append( y );
@@ -1070,7 +1070,7 @@ TYPE
 		END Designator;
 
 		PROCEDURE Element(VAR x: PCB.Expression);
-			VAR y: PCB.Expression; pos: LONGINT;
+			VAR y: PCB.Expression; pos: SIGNED32;
 		BEGIN
 			Expr(x);
 			IF sym = upto THEN
@@ -1082,7 +1082,7 @@ TYPE
 		END Element;
 
 		PROCEDURE Set(VAR x: PCB.Expression);
-			VAR y: PCB.Expression; pos: LONGINT;
+			VAR y: PCB.Expression; pos: SIGNED32;
 		BEGIN
 			scanner.Get(sym);
 			IF sym # rbrace THEN
@@ -1101,12 +1101,12 @@ TYPE
 		PROCEDURE MathArray( VAR x: PCB.Expression );
 		(* temporary patch to make array expressions work. This will be improved in the new compiler *)
 		VAR array: PCB.ArrayExpression;
-			len: ARRAY 32 OF LONGINT;
-			dim: LONGINT;  type: PCT.Struct;
+			len: ARRAY 32 OF SIGNED32;
+			dim: SIGNED32;  type: PCT.Struct;
 			name: ARRAY 256 OF CHAR;
 			error: BOOLEAN;
 			bytes: POINTER TO ARRAY OF SYSTEM.BYTE;
-			pos: LONGINT;  size: LONGINT;
+			pos: SIGNED32;  size: SIGNED32;
 
 			PROCEDURE Parse( a: PCB.ArrayExpression );
 			VAR array: PCB.ArrayExpression; first,aq: PCB.ArrayQ;
@@ -1134,8 +1134,8 @@ TYPE
 				a.SetArray(first);
 			END Parse;
 
-			PROCEDURE CheckLens( a: PCB.ArrayQ;  d: LONGINT );
-			VAR l, pos: LONGINT;
+			PROCEDURE CheckLens( a: PCB.ArrayQ;  d: SIGNED32 );
+			VAR l, pos: SIGNED32;
 			BEGIN
 				IF d > dim THEN dim := d END;
 				l := 0;
@@ -1181,7 +1181,7 @@ TYPE
 			END Convert;
 
 			PROCEDURE FillConst( a: PCB.ArrayQ );
-			VAR s: SHORTINT;  i: INTEGER;  l: LONGINT;  r: REAL;  x: LONGREAL;  con: PCT.Const;
+			VAR s: SIGNED8;  i: SIGNED16;  l: SIGNED32;  r: FLOAT32;  x: FLOAT64;  con: PCT.Const;
 			BEGIN
 				WHILE (a # NIL ) DO
 					IF a.e IS PCB.ArrayExpression  THEN FillConst( a.e(PCB.ArrayExpression).array )
@@ -1260,7 +1260,7 @@ TYPE
 
 		PROCEDURE Factor(VAR x: PCB.Expression);
 		VAR el: PCB.ExprList;  d, dh: PCB.Designator;  o: PCT.Symbol; h: PCT.Variable; hiddenVarName : StringPool.Index;
-			rtype: PCT.Struct; pos: LONGINT; mod: PCT.Symbol; ap: PCB.AnyProc; res : WORD;
+			rtype: PCT.Struct; pos: SIGNED32; mod: PCT.Symbol; ap: PCB.AnyProc; res : INTEGER;
 			m: PCT.Proc;
 			pars: ARRAY 1 OF PCB.Expression; (* ug *)
 			(** fof >> *)
@@ -1385,7 +1385,7 @@ TYPE
 
 		PROCEDURE Term(VAR x: PCB.Expression);
 			VAR
-				y : PCB.Expression;  op: PCS.Token; pos: LONGINT;
+				y : PCB.Expression;  op: PCS.Token; pos: SIGNED32;
 				mod: PCT.Symbol;
 				pars: ARRAY 2 OF PCB.Expression; (* ug *)
 		BEGIN
@@ -1410,7 +1410,7 @@ TYPE
 			END
 		END Term;
 
-		PROCEDURE CallAssignmentOp(op: PCS.Token; mod: PCT.Symbol; p1: PCB.Designator; p2: PCB.Expression; pos: LONGINT; suppress: BOOLEAN);
+		PROCEDURE CallAssignmentOp(op: PCS.Token; mod: PCT.Symbol; p1: PCB.Designator; p2: PCB.Expression; pos: SIGNED32; suppress: BOOLEAN);
 		VAR
 			pars: ARRAY 2 OF PCT.Struct;
 			name: PCS.Name; o: PCT.Symbol; d: PCB.Designator; el: PCB.ExprList;
@@ -1443,14 +1443,14 @@ TYPE
 			END;
 		END CallAssignmentOp;
 
-		PROCEDURE CallOperator(op: PCS.Token; mod: PCT.Symbol; pars: ARRAY OF PCB.Expression; pos: LONGINT): PCB.Expression;
+		PROCEDURE CallOperator(op: PCS.Token; mod: PCT.Symbol; pars: ARRAY OF PCB.Expression; pos: SIGNED32): PCB.Expression;
 		VAR
 			name: PCS.Name; o: PCT.Symbol; d: PCB.Designator; el: PCB.ExprList;
 			parents: BOOLEAN;
 			searchScope: PCT.Scope;
 			args: ARRAY 2 OF PCT.Struct;
 			dh: PCB.Designator;  h: PCT.Variable; hiddenVarName : StringPool.Index;
-			rtype: PCT.Struct; res: WORD; i : SIZE;
+			rtype: PCT.Struct; res: INTEGER; i : SIZE;
 		BEGIN
 			PCS.GetOpName(op, name);
 			IF (mod # NIL) & (mod IS PCT.Module) THEN
@@ -1492,7 +1492,7 @@ TYPE
 		END CallOperator;
 
 		PROCEDURE SimpleExpr(VAR x: PCB.Expression);
-			VAR y: PCB.Expression;  op: PCS.Token;  pos: LONGINT;
+			VAR y: PCB.Expression;  op: PCS.Token;  pos: SIGNED32;
 				mod: PCT.Symbol;
 				pars1: ARRAY 1 OF PCB.Expression; pars2: ARRAY 2 OF PCB.Expression; (* ug *)
 		BEGIN
@@ -1536,7 +1536,7 @@ TYPE
 		END SimpleExpr;
 
 		PROCEDURE Expr(VAR x: PCB.Expression);
-			VAR y: PCB.Expression;  op: PCS.Token; pos: LONGINT;
+			VAR y: PCB.Expression;  op: PCS.Token; pos: SIGNED32;
 				mod: PCT.Symbol;
 				pars : ARRAY 2 OF PCB.Expression; (* ug *)
 		BEGIN
@@ -1561,14 +1561,14 @@ TYPE
 		END Expr;
 
 		PROCEDURE ConstExpr(VAR x: PCB.Const);
-			VAR pos: LONGINT; y: PCB.Expression;
+			VAR pos: SIGNED32; y: PCB.Expression;
 		BEGIN
 			pos := scanner.errpos;
 			Expr(y);
 			x := PCB.ConstExpression(pos, y)
 		END ConstExpr;
 
-		PROCEDURE Case(body, suppress: BOOLEAN; VAR awaitCount: LONGINT; VAR caseinfo: PCB.CaseInfo);
+		PROCEDURE Case(body, suppress: BOOLEAN; VAR awaitCount: SIGNED32; VAR caseinfo: PCB.CaseInfo);
 			VAR x, y: PCB.Const; firstline: BOOLEAN;
 		BEGIN
 			firstline := TRUE;
@@ -1586,7 +1586,7 @@ TYPE
 			StatementSeq(body, suppress, awaitCount)
 		END Case;
 
-		PROCEDURE If(body, suppress: BOOLEAN; VAR awaitCount: LONGINT);
+		PROCEDURE If(body, suppress: BOOLEAN; VAR awaitCount: SIGNED32);
 			VAR cond: PCB.Expression; info: PCB.LoopInfo;  ifsuppress, elsifclause: BOOLEAN;
 		BEGIN
 			(* if/elsif already checked *)
@@ -1609,7 +1609,7 @@ TYPE
 		END If;
 
 		PROCEDURE BlockModifier(allowBody, suppress: BOOLEAN; VAR locked: BOOLEAN);
-			VAR x: PCB.Const; c: LONGINT; res: WORD;
+			VAR x: PCB.Const; c: SIGNED32; res: INTEGER;
 		BEGIN
 			IF sym = lbrace THEN
 				locked := FALSE;
@@ -1676,7 +1676,7 @@ TYPE
 			END
 		END BlockModifier;
 
-		PROCEDURE StatementBlock(body, suppress: BOOLEAN; VAR awaitCount: LONGINT);
+		PROCEDURE StatementBlock(body, suppress: BOOLEAN; VAR awaitCount: SIGNED32);
 		VAR  lock: BOOLEAN;
 		BEGIN
 			(*sym = begin*)
@@ -1698,8 +1698,8 @@ TYPE
 			Check(end)
 		END StatementBlock;
 
-		PROCEDURE CallNewOnObject (code: PCC.Code;  suppress: BOOLEAN;  proc: PCB.Designator;  params: PCB.ExprList;  curlevel: SHORTINT);
-		VAR varName: StringPool.Index; symbol: PCT.Variable; res: WORD; parameters: PCB.ExprList; item: PCB.Expression; tempVar: PCB.Designator;
+		PROCEDURE CallNewOnObject (code: PCC.Code;  suppress: BOOLEAN;  proc: PCB.Designator;  params: PCB.ExprList;  curlevel: SIGNED8);
+		VAR varName: StringPool.Index; symbol: PCT.Variable; res: INTEGER; parameters: PCB.ExprList; item: PCB.Expression; tempVar: PCB.Designator;
 		BEGIN
 			symbol := codescope.FindHiddenVar (-PCB.newfn, codescope);
 			ASSERT (suppress OR (symbol # NIL));
@@ -1716,29 +1716,29 @@ TYPE
 			PCB.Assign (code, suppress, params.first(PCB.Designator), tempVar, FALSE);
 		END CallNewOnObject;
 
-		PROCEDURE StatementSeq(body, suppress: BOOLEAN; VAR awaitCount: LONGINT);
+		PROCEDURE StatementSeq(body, suppress: BOOLEAN; VAR awaitCount: SIGNED32);
 			VAR  d, d1: PCB.Designator; x, y: PCB.Expression; c: PCB.Const; o, o1: PCT.Symbol;
-				param: PCB.ExprList;  pos, stack: LONGINT; res: WORD;
+				param: PCB.ExprList;  pos, stack: SIGNED32; res: INTEGER;
 				oldscope: PCT.Scope; s: PCT.WithScope; procscope: PCT.ProcScope;
 				awaitparser: AwaitParser;
 				loopinfo: PCB.LoopInfo;  caseinfo: PCB.CaseInfo;
 				first, ifsuppress, oldUnlockOnExit: BOOLEAN;
-				oldforcount: LONGINT;
+				oldforcount: SIGNED32;
 				i: SIZE;
 				mod: PCT.Symbol;
 				name: StringPool.Index;
 				proc: PCT.Proc; procScope: PCT.ProcScope;
 				module: PCT.Module; modScope: PCT.ModScope;
-				returnPos, temp: POINTER TO ARRAY OF LONGINT;
+				returnPos, temp: POINTER TO ARRAY OF SIGNED32;
 				ap: PCB.AnyProc; m: PCT.Method; indexer: BOOLEAN;
 				sproc: PCB.SProc;
 				ae: PCB.ArrayExpression;
 				be: PCB.BuiltInEl;
 				arrayType: PCT.EnhArray;
-				aindex: POINTER TO ARRAY OF LONGINT;
+				aindex: POINTER TO ARRAY OF SIGNED32;
 
-				PROCEDURE AssignIndices(ae: PCB.ArrayExpression; dim: LONGINT);
-				VAR a: PCB.ArrayQ; index: PCB.EnhIndex; i: LONGINT; j: SIZE;
+				PROCEDURE AssignIndices(ae: PCB.ArrayExpression; dim: SIGNED32);
+				VAR a: PCB.ArrayQ; index: PCB.EnhIndex; i: SIGNED32; j: SIZE;
 				BEGIN
 					a := ae.array;
 					i := 0;
@@ -1821,7 +1821,7 @@ TYPE
 								PCB.CallProc(code, suppress, d, param, scopelevel);
 							END;
 						ELSE
-							HALT(MAX(INTEGER));
+							HALT(MAX(SIGNED16));
 						END (* if -> proccall *);
 						indexer := FALSE;
 				| if:
@@ -2021,7 +2021,7 @@ TYPE
 			owner: PCT.Proc;
 			name: ARRAY 32 OF CHAR;
 			export: BOOLEAN;
-			awaitCount: LONGINT;	(* parsing a body starts with awaitCount = 0 *)
+			awaitCount: SIGNED32;	(* parsing a body starts with awaitCount = 0 *)
 		BEGIN
 			IF sym = begin THEN
 				IF suppress THEN
@@ -2075,9 +2075,9 @@ TYPE
 
 		PROCEDURE ProcDecl;
 		VAR
-			procparser: ProcedureParser; procscope: PCT.ProcScope; pos: LONGINT; res: WORD;
+			procparser: ProcedureParser; procscope: PCT.ProcScope; pos: SIGNED32; res: INTEGER;
 			i: IdentDefDesc; flags: SET; rtype: PCT.Struct; forward, suppress : BOOLEAN;
-			opName: PCS.Name; pflags: SET; right: SHORTINT; (* ejz *)
+			opName: PCS.Name; pflags: SET; right: SIGNED8; (* ejz *)
 			opStr: ARRAY PCS.MaxStrLen OF CHAR;
 		BEGIN
 			flags := {}; forward := FALSE; pflags := {}; (* ejz *)
@@ -2177,7 +2177,7 @@ TYPE
 		END ProcDecl;
 
 		PROCEDURE SkipScope;
-		VAR cnt: LONGINT;
+		VAR cnt: SIGNED32;
 		BEGIN
 			(*skip decl section*)
 			WHILE (sym # eof) & (sym # begin) & (sym # end) & (sym # codeToken) DO
@@ -2261,7 +2261,7 @@ TYPE
 		END Body;
 
 		PROCEDURE DeclSeq;	(* vars and procs are allowed, no const and types *)
-		VAR res: WORD;
+		VAR res: INTEGER;
 		BEGIN
 			LOOP
 				(* allow ident w/o var, to minimize the misleading err 83 in the rest of the module *)
@@ -2341,7 +2341,7 @@ TYPE
 		END Body;
 
 		PROCEDURE DeclSeq;	(* vars and procs are allowed, no const and types *)
-		VAR res: WORD;
+		VAR res: INTEGER;
 		BEGIN
 			LOOP
 				(* allow ident w/o var, to minimize the misleading err 83 in the rest of the module *)
@@ -2430,7 +2430,7 @@ TYPE
 		END Body;
 
 		PROCEDURE DeclSeq;
-			VAR name: PCS.Name; procscope: PCT.ProcScope;  t: PCT.Struct; pos: LONGINT; res: WORD;
+			VAR name: PCS.Name; procscope: PCT.ProcScope;  t: PCT.Struct; pos: SIGNED32; res: INTEGER;
 		BEGIN
 			WHILE sym = procedure DO
 				pos := scanner.errpos;
@@ -2505,7 +2505,7 @@ TYPE
 		VAR modscope: PCT.ModScope;	(*cached value*)
 
 		PROCEDURE ImportList;
-			VAR alias, name: StringPool.Index; new: PCT.Module; res: WORD;
+			VAR alias, name: StringPool.Index; new: PCT.Module; res: INTEGER;
 		BEGIN
 			LOOP
 				IF sym # ident THEN Error(ident, scanner.errpos); EXIT END;
@@ -2582,7 +2582,7 @@ TYPE
 		END ParseInterface;
 
 		PROCEDURE Await*;
-		VAR count, inside: LONGINT;
+		VAR count, inside: SIGNED32;
 		BEGIN
 			sync.Await;
 			sync.Stats(count, inside);
@@ -2593,7 +2593,7 @@ TYPE
 		END Await;
 
 		PROCEDURE & InitModule*(modscope: PCT.ModScope; s: PCS.Scanner);
-			VAR recscope: PCT.RecScope; rec: PCT.Record; res: WORD;i, j: LONGINT;   (** fof  *)
+			VAR recscope: PCT.RecScope; rec: PCT.Record; res: INTEGER;i, j: SIGNED32;   (** fof  *)
 		BEGIN
 			Machine.AtomicInc(NModules);
 			NEW(sync, 10(*timeout*)); sync.Enter;
@@ -2649,7 +2649,7 @@ TYPE
 
 		(** fof >> *)
 		PROCEDURE Epilog;
-		VAR res: WORD;  sym: PCT.Symbol;  var: PCT.Variable;
+		VAR res: INTEGER;  sym: PCT.Symbol;  var: PCT.Variable;
 		BEGIN
 			(* check if the array module has been used in PCArrays. If so then put it into the scope to protect from unloading *)
 			IF PCArrays.ArrayModule # NIL THEN  (* must be done here by this process *)

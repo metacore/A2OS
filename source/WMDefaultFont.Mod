@@ -9,13 +9,13 @@ TYPE
 	Glyph = RECORD
 		img : Graphics.Image;
 		available : BOOLEAN;
-		dx, x, y, w, h : LONGINT;
+		dx, x, y, w, h : SIGNED32;
 	END;
 
 	Font = OBJECT(Graphics.Font)
 	VAR glyphs : ARRAY 256 OF Glyph;
 		placeholderimg : Graphics.Image;
-		height : LONGINT;
+		height : SIGNED32;
 
 		PROCEDURE &Init*;
 		VAR mode : Raster.Mode; pix : Raster.Pixel;
@@ -28,7 +28,7 @@ TYPE
 		END Init;
 
 		(* map unicode to oberon *)
-		PROCEDURE MapChars(VAR ch : LONGINT);
+		PROCEDURE MapChars(VAR ch : SIGNED32);
 		BEGIN
 
 			CASE ch OF
@@ -66,13 +66,13 @@ TYPE
 
 		END MapChars;
 
-		PROCEDURE HasChar*(code : LONGINT) : BOOLEAN;
+		PROCEDURE HasChar*(code : SIGNED32) : BOOLEAN;
 		BEGIN
 			MapChars(code);
 			RETURN (code >= 0) & (code < 256) & (glyphs[code].available)
 		END HasChar;
 
-		PROCEDURE GetGlyphMap*(code : LONGINT; VAR map : Graphics.Image);
+		PROCEDURE GetGlyphMap*(code : SIGNED32; VAR map : Graphics.Image);
 		BEGIN
 			MapChars(code);
 			IF (code >= 0) & (code < 256) & (glyphs[code].available) & (glyphs[code].img # NIL) THEN
@@ -81,7 +81,7 @@ TYPE
 			END
 		END GetGlyphMap;
 
-		PROCEDURE GetGlyphSpacings*(code : LONGINT; VAR glyphSpacings : Graphics.GlyphSpacings);
+		PROCEDURE GetGlyphSpacings*(code : SIGNED32; VAR glyphSpacings : Graphics.GlyphSpacings);
 		BEGIN
 			MapChars(code);
 			IF (code >= 0) & (code < 256) & (glyphs[code].available) THEN
@@ -102,7 +102,7 @@ TYPE
 VAR
 	bit: ARRAY 100H, 8 OF BOOLEAN;	(* Bit[b, i] means bit i in byte b is set *)
 	buffer: ARRAY 2500 OF CHAR;
-	nof : LONGINT;
+	nof : SIGNED32;
 	f : Font;
 
 PROCEDURE LoadDefaultFont*() : Font;
@@ -120,11 +120,11 @@ PROCEDURE StreamLoad(r : Streams.Reader) : Font;
 VAR
 	font : Font;
 	famch, varch, idch, typech, ch : CHAR;
-	t, height, minX, maxX, minY, maxY, nofRuns, rbeg, rend : INTEGER;
+	t, height, minX, maxX, minY, maxY, nofRuns, rbeg, rend : SIGNED16;
 
-	runs : ARRAY 32 OF RECORD beg, end : LONGINT END;
+	runs : ARRAY 32 OF RECORD beg, end : SIGNED32 END;
 
-	nofGlyphs, i, j, run, bits, b, pos, xw : LONGINT;
+	nofGlyphs, i, j, run, bits, b, pos, xw : SIGNED32;
 	p1 : Raster.Pixel;
 	mode : Raster.Mode;
 
@@ -190,7 +190,7 @@ BEGIN
 END StreamLoad;
 
 PROCEDURE InitBitTable;
-VAR b, i: LONGINT;
+VAR b, i: SIGNED32;
 BEGIN
 	FOR b := 0 TO 0FFH DO
 		FOR i := 0 TO 7 DO
@@ -199,8 +199,8 @@ BEGIN
 	END
 END InitBitTable;
 
-PROCEDURE A(hv :HUGEINT);
-VAR v: LONGINT;
+PROCEDURE A(hv :SIGNED64);
+VAR v: SIGNED32;
 BEGIN
 	v := SHORT(hv);
 	buffer[nof] := CHR(v MOD 100H); INC(nof);

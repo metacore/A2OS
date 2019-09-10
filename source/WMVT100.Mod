@@ -55,7 +55,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END SB;
 
 			PROCEDURE ESC(ch: CHAR);
-				VAR par: ARRAY 4 OF LONGINT; i, n: LONGINT; done: BOOLEAN;
+				VAR par: ARRAY 4 OF SIGNED32; i, n: SIGNED32; done: BOOLEAN;
 			BEGIN
 				IF ~(Telnet.VT100 IN flags) THEN RETURN END;
 				R.Char(ch);
@@ -143,7 +143,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END ESC;
 
 			PROCEDURE Consume*(ch: CHAR);
-				VAR buf: ARRAY 128 OF LONGINT; i, n: SIZE;
+				VAR buf: ARRAY 128 OF SIGNED32; i, n: SIZE;
 			BEGIN
 				CASE ch OF
 					0X: (* NUL *)
@@ -205,7 +205,7 @@ MODULE WMVT100; (* ejz,  ph *)
 
 		Char = RECORD
 			attr: Attribute;
-			char: LONGINT
+			char: SIGNED32
 		END;
 
 		Data = POINTER TO ARRAY OF Char;
@@ -236,8 +236,8 @@ MODULE WMVT100; (* ejz,  ph *)
 				RETURN cursor.ofs
 			END GetCol;
 
-			PROCEDURE GetRow(): LONGINT;
-				VAR l: Line; row: LONGINT;
+			PROCEDURE GetRow(): SIGNED32;
+				VAR l: Line; row: SIGNED32;
 			BEGIN {EXCLUSIVE}
 				l := top; row := 0;
 				WHILE l # cursor.line DO
@@ -247,7 +247,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END GetRow;
 
 			PROCEDURE appendLine(): Line;
-				VAR line: Line; i: LONGINT; ch: Char;
+				VAR line: Line; i: SIGNED32; ch: Char;
 			BEGIN
 				NEW(line); line.next := NIL;
 				NEW(line.data, cols);
@@ -317,7 +317,7 @@ MODULE WMVT100; (* ejz,  ph *)
 
 
 
-			PROCEDURE writeChars(VAR buf: ARRAY OF LONGINT; n: SIZE);
+			PROCEDURE writeChars(VAR buf: ARRAY OF SIGNED32; n: SIZE);
 				VAR l: Line; i, ofs: SIZE; wrap: BOOLEAN;
 			BEGIN
 				wrap := FALSE;
@@ -342,7 +342,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END writeChars;
 
-			PROCEDURE WriteChars(VAR buf: ARRAY OF LONGINT; n: SIZE);
+			PROCEDURE WriteChars(VAR buf: ARRAY OF SIGNED32; n: SIZE);
 			BEGIN {EXCLUSIVE}
 				writeChars(buf,n);
 			END WriteChars;
@@ -382,7 +382,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				goto(col,row,scroll)
 			END Goto;
 
-			PROCEDURE SetTop(row: LONGINT);
+			PROCEDURE SetTop(row: SIGNED32);
 			BEGIN {EXCLUSIVE}
 				KernelLog.String("SetTop "); KernelLog.Int(row, 0); KernelLog.Ln();
 				IF row < 0 THEN
@@ -414,7 +414,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END EraseLine;
 
-			PROCEDURE Erase(mode: CHAR; par: ARRAY OF LONGINT; n: LONGINT);
+			PROCEDURE Erase(mode: CHAR; par: ARRAY OF SIGNED32; n: SIGNED32);
 			BEGIN {EXCLUSIVE}
 				CASE mode OF
 					"J": sel.beg.line := NIL; cursor.line := last; cursor.ofs := 0;
@@ -464,8 +464,8 @@ MODULE WMVT100; (* ejz,  ph *)
 				END
 			END Dim;
 
-			PROCEDURE SetAttributes(attrs: ARRAY OF LONGINT; n: LONGINT);
-				VAR c: WMGraphics.Color; i: LONGINT;
+			PROCEDURE SetAttributes(attrs: ARRAY OF SIGNED32; n: SIGNED32);
+				VAR c: WMGraphics.Color; i: SIGNED32;
 			BEGIN {EXCLUSIVE}
 				NewAttr();
 				i := 0;
@@ -491,7 +491,7 @@ MODULE WMVT100; (* ejz,  ph *)
 				canvas.Fill(canvas.clipRect, bg, WMGraphics.ModeCopy);
 				l := first;
 				WHILE l # top DO
-					l.t := MIN(INTEGER); l.b := MIN(INTEGER); l := l.next
+					l.t := MIN(SIGNED16); l.b := MIN(SIGNED16); l := l.next
 				END;
 				attr := NIL; bottom := dY + rows*boxH;
 				box.t := dY; box.b := dY + boxH; j := 0;
@@ -521,7 +521,7 @@ MODULE WMVT100; (* ejz,  ph *)
 					INC(box.t, boxH); INC(box.b, boxH)
 				END;
 				WHILE l # NIL DO
-					l.t := MAX(INTEGER); l.b := MAX(INTEGER); l := l.next
+					l.t := MAX(SIGNED16); l.b := MAX(SIGNED16); l := l.next
 				END;
 				IF hasFocus & (cursor.ofs >= 0) & (cursor.ofs < cols) THEN
 					l := cursor.line; box.t := l.t; box.b := l.b;
@@ -590,7 +590,7 @@ MODULE WMVT100; (* ejz,  ph *)
 
 			PROCEDURE Copy;
 				VAR
-					l: Line; apos, pos, ofs, end: SIZE; buf: ARRAY 2 OF LONGINT;
+					l: Line; apos, pos, ofs, end: SIZE; buf: ARRAY 2 OF SIGNED32;
 					attr: Attribute; tattr: Texts.Attributes;
 			BEGIN {EXCLUSIVE}
 				IF sel.beg.line = NIL THEN RETURN END;
@@ -644,7 +644,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END Copy;
 
 			PROCEDURE Paste;
-				VAR R: Texts.TextReader; ch: LONGINT;
+				VAR R: Texts.TextReader; ch: SIGNED32;
 			BEGIN {EXCLUSIVE}
 				Texts.clipboard.AcquireRead();
 				NEW(R, Texts.clipboard);
@@ -737,7 +737,7 @@ MODULE WMVT100; (* ejz,  ph *)
 			END CursorKey;
 
 			PROCEDURE KeyEvent*(ucs: SIZE; flags: SET; VAR keySym: SIZE);
-			VAR echo: ARRAY 1 OF LONGINT; col: WMGraphics.Color;
+			VAR echo: ARRAY 1 OF SIGNED32; col: WMGraphics.Color;
 			BEGIN
 				IF ~(Inputs.Release IN flags) & hasFocus THEN
 					IF (keySym DIV 256) = 0 THEN
@@ -746,7 +746,7 @@ MODULE WMVT100; (* ejz,  ph *)
 						IF doEcho THEN
 							col:=attr.fg;
 							attr.fg:=WMGraphics.Red;
-							echo[0]:=keySym(LONGINT);
+							echo[0]:=keySym(SIGNED32);
 							writeChars(echo,1);
 							attr.fg:=col;
 						END;
@@ -834,8 +834,8 @@ MODULE WMVT100; (* ejz,  ph *)
 				takesFocus.Set(TRUE);
 			END Initialize;
 
-			PROCEDURE &New*(C: Connection; cols, rows: LONGINT);
-				VAR i: LONGINT;
+			PROCEDURE &New*(C: Connection; cols, rows: SIGNED32);
+				VAR i: SIGNED32;
 			BEGIN
 				Init();
 				SetNameAsString(Strings.NewString("VT100Frame"));
@@ -897,14 +897,14 @@ MODULE WMVT100; (* ejz,  ph *)
 		END Window;
 
 
-	VAR nofWindows:LONGINT;
+	VAR nofWindows:SIGNED32;
 
 
 
-	PROCEDURE Open*(CONST name: ARRAY OF CHAR; port:LONGINT; type:LONGINT; error:Streams.Writer):Window;
+	PROCEDURE Open*(CONST name: ARRAY OF CHAR; port:SIGNED32; type:SIGNED32; error:Streams.Writer):Window;
 	VAR
 		inst: Window;
-		title: Strings.String; adr: IP.Adr; res: WORD;
+		title: Strings.String; adr: IP.Adr; res: INTEGER;
 		C: TCP.Connection; TC: Connection;
 	BEGIN
 		IF port = 0 THEN port := 23 END;
@@ -929,7 +929,7 @@ MODULE WMVT100; (* ejz,  ph *)
 		RETURN inst
 	END Open;
 
-	PROCEDURE GetRemote(context : Commands.Context; VAR name: ARRAY OF CHAR; VAR port:LONGINT);
+	PROCEDURE GetRemote(context : Commands.Context; VAR name: ARRAY OF CHAR; VAR port:SIGNED32);
 	VAR
 		 sr: Streams.StringReader;
 	BEGIN
@@ -947,7 +947,7 @@ MODULE WMVT100; (* ejz,  ph *)
 
 	PROCEDURE Start*(context : Commands.Context);
 	VAR
-		name,protocol: ARRAY 256 OF CHAR; port: LONGINT;
+		name,protocol: ARRAY 256 OF CHAR; port: SIGNED32;
 		window:Window;
 	BEGIN
 		IF (context=NIL) OR ~context.arg.GetString(protocol) OR ((protocol#"Tcp")&(protocol#"Telnet")&(protocol#"VT100")) THEN

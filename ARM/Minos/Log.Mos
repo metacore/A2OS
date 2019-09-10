@@ -24,33 +24,33 @@ CONST
 TYPE 
 	strP* = PROCEDURE ( CONST str: ARRAY OF CHAR );  
 	setP* = PROCEDURE ( s: SET );  
-	intP* = PROCEDURE ( i: LONGINT );  
-	hexP* = PROCEDURE ( i: LONGINT );  
-	realP* = PROCEDURE ( real: REAL );  
+	intP* = PROCEDURE ( i: SIGNED32 );  
+	hexP* = PROCEDURE ( i: SIGNED32 );  
+	realP* = PROCEDURE ( real: FLOAT32 );  
 	boolP* = PROCEDURE ( b: BOOLEAN );  
 	trapModeP* = PROCEDURE ( b: BOOLEAN );  
 	chP* = PROCEDURE ( c: CHAR );  
 	lnP* = PROCEDURE;  
 	clearP* = PROCEDURE;  
 	flushP* = PROCEDURE;  
-	bufferP* = PROCEDURE ( CONST buf: ARRAY OF CHAR (*SYSTEM.BYTE*);  offset, len: LONGINT );  
-	beepP* = PROCEDURE ( freq, duration: LONGINT );  
+	bufferP* = PROCEDURE ( CONST buf: ARRAY OF CHAR (*SYSTEM.BYTE*);  offset, len: SIGNED32 );  
+	beepP* = PROCEDURE ( freq, duration: SIGNED32 );  
 
 VAR 
-	gMode: LONGINT;  str: strP;  int: intP;  real: realP;  bool: boolP;  ln: lnP;  ch: chP;  
+	gMode: SIGNED32;  str: strP;  int: intP;  real: realP;  bool: boolP;  ln: lnP;  ch: chP;  
 	flush: flushP;  hex: hexP;  set: setP;  buffer: bufferP;  clear: clearP;  beep: beepP;  
 	trapMode: trapModeP;  
 	
 	(** output procedures, output only generated if mode <= current mode (gMode) *)
-	PROCEDURE Str*( mode: LONGINT;  CONST s: ARRAY OF CHAR );  
+	PROCEDURE Str*( mode: SIGNED32;  CONST s: ARRAY OF CHAR );  
 	BEGIN 
 		IF gMode >= mode THEN str( s ) END;  
 	END Str;  
 	
-	PROCEDURE StringA*( CONST s: ARRAY OF CHAR; CONST len : LONGINT; CONST addColon : BOOLEAN );
+	PROCEDURE StringA*( CONST s: ARRAY OF CHAR; CONST len : SIGNED32; CONST addColon : BOOLEAN );
 	VAR
-		i : LONGINT;
-		rest : LONGINT;
+		i : SIGNED32;
+		rest : SIGNED32;
 	BEGIN
 		IF ( LEN( s ) < len ) THEN
 			rest := len - LEN( s );
@@ -66,55 +66,55 @@ VAR
 		END;
 	END StringA;
 
-	PROCEDURE Int*( mode: LONGINT;  i: LONGINT );  
+	PROCEDURE Int*( mode: SIGNED32;  i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= mode THEN int( i ) END;  
 	END Int;  
 
-	PROCEDURE Hex*( mode: LONGINT;  i: LONGINT );  
+	PROCEDURE Hex*( mode: SIGNED32;  i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= mode THEN hex( i ) END;  
 	END Hex;  
 
-	PROCEDURE Real*( mode: LONGINT;  r: REAL );  
+	PROCEDURE Real*( mode: SIGNED32;  r: FLOAT32 );  
 	BEGIN 
 		IF gMode >= mode THEN real( r ) END;  
 	END Real;  
 
-	PROCEDURE Bool*( mode: LONGINT;  b: BOOLEAN );  
+	PROCEDURE Bool*( mode: SIGNED32;  b: BOOLEAN );  
 	BEGIN 
 		IF gMode >= mode THEN bool( b ) END;  
 	END Bool;  
 
-	PROCEDURE Ch*( mode: LONGINT;  c: CHAR );  
+	PROCEDURE Ch*( mode: SIGNED32;  c: CHAR );  
 	BEGIN 
 		IF gMode >= mode THEN ch( c ) END;  
 	END Ch;  
 
-	PROCEDURE Buffer*( mode: LONGINT;  CONST buf: ARRAY OF CHAR (* SYSTEM.BYTE *);  
-										 offset, len: LONGINT );  
+	PROCEDURE Buffer*( mode: SIGNED32;  CONST buf: ARRAY OF CHAR (* SYSTEM.BYTE *);  
+										 offset, len: SIGNED32 );  
 	BEGIN 
 		IF gMode >= mode THEN buffer( buf, offset, len ) END;  
 	END Buffer;  
 
-	PROCEDURE Ln*( mode: LONGINT );  
+	PROCEDURE Ln*( mode: SIGNED32 );  
 	BEGIN 
 		IF gMode >= mode THEN ln;  END;  
 	END Ln;  
 
-	PROCEDURE Flush*( mode: LONGINT );  
+	PROCEDURE Flush*( mode: SIGNED32 );  
 	BEGIN 
 		IF gMode >= mode THEN flush END;  
 	END Flush;  
 
-	PROCEDURE Clear*( mode: LONGINT );  
+	PROCEDURE Clear*( mode: SIGNED32 );  
 	BEGIN 
 		IF gMode >= mode THEN clear END;  
 	END Clear;  
 
 (*
-	PROCEDURE ShowTD*( mode: LONGINT;  ptr: LONGINT );  
-	VAR size, i: LONGINT;  
+	PROCEDURE ShowTD*( mode: SIGNED32;  ptr: SIGNED32 );  
+	VAR size, i: SIGNED32;  
 	BEGIN 
 		IF gMode >= mode THEN 
 			SYSTEM.GET( ptr - 4, ptr );  ptr := ptr MOD 1000000H + Platform.RAMCore;  
@@ -129,18 +129,18 @@ VAR
 		END;  
 	END ShowTD;  
 *)
-	PROCEDURE Time*( mode: LONGINT );  
-	VAR timer: LONGINT;  len: LONGINT;  
+	PROCEDURE Time*( mode: SIGNED32 );  
+	VAR timer: SIGNED32;  len: SIGNED32;  
 	BEGIN 
 		(* Int( mode, Kernel.GetTime() ); *)
 	END Time;  
 
-	PROCEDURE Beep*( mode: LONGINT;  freq, duration: LONGINT );  
+	PROCEDURE Beep*( mode: SIGNED32;  freq, duration: SIGNED32 );  
 	BEGIN 
 		IF gMode >= mode THEN beep( freq, duration ) END;  
 	END Beep;  
 
-	PROCEDURE Tab*( mode: LONGINT);  
+	PROCEDURE Tab*( mode: SIGNED32);  
 	BEGIN 
 		Ch(mode, TAB);
 	END Tab;  
@@ -162,27 +162,27 @@ VAR
 		IF gMode >= normal THEN str( s );  ln();  END;  
 	END SL;  
 
-	PROCEDURE IL*( i: LONGINT );  
+	PROCEDURE IL*( i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= normal THEN int( i );  ln();  END;  
 	END IL;  
 
-	PROCEDURE RL*( r: REAL );  
+	PROCEDURE RL*( r: FLOAT32 );  
 	BEGIN 
 		IF gMode >= normal THEN real( r );  ln();  END;  
 	END RL;  
 
-	PROCEDURE I*( i: LONGINT );  
+	PROCEDURE I*( i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= normal THEN int( i );  END;  
 	END I;  
 
-	PROCEDURE H*( i: LONGINT );  
+	PROCEDURE H*( i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= normal THEN hex( i );  END;  
 	END H;  
 
-	PROCEDURE R*( r: REAL );  
+	PROCEDURE R*( r: FLOAT32 );  
 	BEGIN 
 		IF gMode >= normal THEN real( r ) END;  
 	END R;  
@@ -212,20 +212,20 @@ VAR
 		IF gMode >= normal THEN str( s1 );  ch( ':' );  str( s2 );  ln;  END;  
 	END SS;  
 
-	PROCEDURE SI*( CONST s: ARRAY OF CHAR;  i: LONGINT );  
+	PROCEDURE SI*( CONST s: ARRAY OF CHAR;  i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= normal THEN 
 			str( s );  ch( ':' );  
-			IF i = MAX(LONGINT) THEN str( "--" );  ELSE int( i );  END;  
+			IF i = MAX(SIGNED32) THEN str( "--" );  ELSE int( i );  END;  
 			ln;  
 		END;  
 	END SI;  
 
-	PROCEDURE SR*( CONST s: ARRAY OF CHAR;  r: REAL );  
+	PROCEDURE SR*( CONST s: ARRAY OF CHAR;  r: FLOAT32 );  
 	BEGIN 
 		IF gMode >= normal THEN 
 			str( s );  ch( ':' );  
-			IF r = MAX(REAL) THEN str( "--" ) ELSE real( r );  END;  
+			IF r = MAX(FLOAT32) THEN str( "--" ) ELSE real( r );  END;  
 			ln;  
 		END;  
 	END SR;  
@@ -251,27 +251,27 @@ VAR
 		IF gMode >= error THEN str( s );  ln();  END;  
 	END eSL;  
 
-	PROCEDURE eIL*( i: LONGINT );  
+	PROCEDURE eIL*( i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= error THEN int( i );  ln();  END;  
 	END eIL;  
 
-	PROCEDURE eRL*( r: REAL );  
+	PROCEDURE eRL*( r: FLOAT32 );  
 	BEGIN 
 		IF gMode >= error THEN real( r );  ln();  END;  
 	END eRL;  
 
-	PROCEDURE eI*( i: LONGINT );  
+	PROCEDURE eI*( i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= error THEN int( i );  END;  
 	END eI;  
 
-	PROCEDURE eH*( i: LONGINT );  
+	PROCEDURE eH*( i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= error THEN hex( i );  END;  
 	END eH;  
 
-	PROCEDURE eR*( r: REAL );  
+	PROCEDURE eR*( r: FLOAT32 );  
 	BEGIN 
 		IF gMode >= error THEN real( r ) END;  
 	END eR;  
@@ -301,20 +301,20 @@ VAR
 		IF gMode >= error THEN str( s1 );  ch( ':' );  str( s2 );  ln;  END;  
 	END eSS;  
 
-	PROCEDURE eSI*( CONST s: ARRAY OF CHAR;  i: LONGINT );  
+	PROCEDURE eSI*( CONST s: ARRAY OF CHAR;  i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= error THEN 
 			str( s );  ch( '=' );  
-			IF i = MAX(LONGINT) THEN str( "--" );  ELSE int( i );  END;  
+			IF i = MAX(SIGNED32) THEN str( "--" );  ELSE int( i );  END;  
 			ln;  
 		END;  
 	END eSI;  
 
-	PROCEDURE eSR*( CONST s: ARRAY OF CHAR;  r: REAL );  
+	PROCEDURE eSR*( CONST s: ARRAY OF CHAR;  r: FLOAT32 );  
 	BEGIN 
 		IF gMode >= error THEN 
 			str( s );  ch( '=' );  
-			IF r = MAX(REAL) THEN str( "--" ) ELSE real( r );  END;  
+			IF r = MAX(FLOAT32) THEN str( "--" ) ELSE real( r );  END;  
 			ln;  
 		END;  
 	END eSR;  
@@ -341,27 +341,27 @@ VAR
 		IF gMode >= verbose THEN str( s );  ln();  END;  
 	END vSL;  
 
-	PROCEDURE vI*( i: LONGINT );  
+	PROCEDURE vI*( i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= verbose THEN int( i );  END;  
 	END vI;  
 
-	PROCEDURE vIL*( i: LONGINT );  
+	PROCEDURE vIL*( i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= verbose THEN int( i );  ln();  END;  
 	END vIL;  
 
-	PROCEDURE vRL*( r: REAL );  
+	PROCEDURE vRL*( r: FLOAT32 );  
 	BEGIN 
 		IF gMode >= verbose THEN real( r );  ln();  END;  
 	END vRL;  
 
-	PROCEDURE vH*( i: LONGINT );  
+	PROCEDURE vH*( i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= verbose THEN hex( i );  END;  
 	END vH;  
 
-	PROCEDURE vR*( r: REAL );  
+	PROCEDURE vR*( r: FLOAT32 );  
 	BEGIN 
 		IF gMode >= verbose THEN real( r ) END;  
 	END vR;  
@@ -391,20 +391,20 @@ VAR
 		IF gMode >= verbose THEN str( s1 );  ch( ':' );  str( s2 );  ln;  END;  
 	END vSS;  
 
-	PROCEDURE vSI*( CONST s: ARRAY OF CHAR;  i: LONGINT );  
+	PROCEDURE vSI*( CONST s: ARRAY OF CHAR;  i: SIGNED32 );  
 	BEGIN 
 		IF gMode >= verbose THEN 
 			str( s );  ch( '=' );  
-			IF i = MAX(LONGINT) THEN str( "--" );  ELSE int( i );  END;  
+			IF i = MAX(SIGNED32) THEN str( "--" );  ELSE int( i );  END;  
 			ln;  
 		END;  
 	END vSI;  
 
-	PROCEDURE vSR*( CONST s: ARRAY OF CHAR;  r: REAL );  
+	PROCEDURE vSR*( CONST s: ARRAY OF CHAR;  r: FLOAT32 );  
 	BEGIN 
 		IF gMode >= verbose THEN 
 			str( s );  ch( '=' );  
-			IF r = MAX(REAL) THEN str( "--" ) ELSE real( r );  END;  
+			IF r = MAX(FLOAT32) THEN str( "--" ) ELSE real( r );  END;  
 			ln;  
 		END;  
 	END vSR;  
@@ -428,13 +428,13 @@ VAR
 	END Redirect2;  
 
 (** set output mode *)
-	PROCEDURE SetMode*( mode: LONGINT );  
+	PROCEDURE SetMode*( mode: SIGNED32 );  
 	BEGIN 
 		gMode := mode;  
 	END SetMode;  
 
 (** get output mode *)
-	PROCEDURE GetMode*( ): LONGINT;  
+	PROCEDURE GetMode*( ): SIGNED32;  
 	BEGIN 
 		RETURN gMode
 	END GetMode;  
@@ -477,15 +477,15 @@ VAR
 	BEGIN 
 	END NullSet;  
 
-	PROCEDURE NullInt*( i: LONGINT );  
+	PROCEDURE NullInt*( i: SIGNED32 );  
 	BEGIN 
 	END NullInt;  
 
-	PROCEDURE NullHex*( i: LONGINT );  
+	PROCEDURE NullHex*( i: SIGNED32 );  
 	BEGIN 
 	END NullHex;  
 
-	PROCEDURE NullReal*( real: REAL );  
+	PROCEDURE NullReal*( real: FLOAT32 );  
 	BEGIN 
 	END NullReal;  
 
@@ -497,11 +497,11 @@ VAR
 	BEGIN 
 	END NullChar;  
 
-	PROCEDURE NullBuffer*( CONST buf: ARRAY OF CHAR (* SYSTEM.BYTE *);  offset, len: LONGINT );  
+	PROCEDURE NullBuffer*( CONST buf: ARRAY OF CHAR (* SYSTEM.BYTE *);  offset, len: SIGNED32 );  
 	BEGIN 
 	END NullBuffer;  
 
-	PROCEDURE NullBeep*( freq, duration: LONGINT );  
+	PROCEDURE NullBeep*( freq, duration: SIGNED32 );  
 	BEGIN 
 	END NullBeep;  
 

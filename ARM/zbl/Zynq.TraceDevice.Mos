@@ -10,14 +10,14 @@ VAR
 	uart: PsUartMin.UartRegisters;
 
 	PROCEDURE TraceChar(ch: CHAR);
-	VAR ignore: LONGINT;
+	VAR ignore: SIGNED32;
 	BEGIN
 		PsUartMin.SendChar(uart, ch, TRUE, NIL, ignore);
 	END TraceChar;
 
 	PROCEDURE Install *;
 	VAR
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		Trace.Init;
 		PsUartMin.Install(Board.KernelOutputUart, Platform.UartBase[Board.KernelOutputUart], Board.UartInputClockHz, res);

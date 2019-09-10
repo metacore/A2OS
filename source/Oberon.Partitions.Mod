@@ -19,7 +19,7 @@ CONST
 
 	N2KSS = 2048;
 	N2KBPS = N2KSS DIV BS;
-	N2KDirMark = LONGINT(9B1EA38DH);
+	N2KDirMark = SIGNED32(9B1EA38DH);
 
 	AosSSLog2 = 12;
 	AosSS = ASH(1, AosSSLog2);
@@ -28,7 +28,7 @@ CONST
 	AosSTS = 128;
 	AosXS = AosSS DIV 4;
 	AosHS = 568;
-	AosDirMark = LONGINT(9B1EA38DH);
+	AosDirMark = SIGNED32(9B1EA38DH);
 
 	AosType = 76;
 	NativeType1 = 79;
@@ -59,7 +59,7 @@ CONST
 	CoreChecksumError = 9003;	(* core file checksum mismatch *)
 	OutOfSlots = 9004;	(* out of primary partition slots *)
 	PartitionTooSmall = 9005;	(* partition too small to create *)
-	Interrupted = MAX(LONGINT);
+	Interrupted = MAX(SIGNED32);
 
 	DisketteLimit = 2880;	(* if device has <= this many sectors, assume it is a diskette without partition table *)
 
@@ -129,7 +129,7 @@ VAR
 
 (* Write partition type *)
 
-PROCEDURE WriteType(VAR w: Texts.Writer; type: LONGINT);
+PROCEDURE WriteType(VAR w: Texts.Writer; type: SIGNED32);
 VAR s: ARRAY 40 OF CHAR;
 BEGIN
 (* list from Linux fdisk, Microsoft Partitioning Summary (Q69912), Hal Landis' list & Jacques Eloff, http://home.global.co.za/~eloffjl/parcodes.html *)
@@ -267,7 +267,7 @@ BEGIN
 *)
 END WriteType;
 
-PROCEDURE WriteErrorMsg(VAR w: Texts.Writer; res: WORD);
+PROCEDURE WriteErrorMsg(VAR w: Texts.Writer; res: INTEGER);
 BEGIN
 	IF res = Disks.MediaChanged THEN
 		Texts.WriteString(w, "media changed")
@@ -288,7 +288,7 @@ BEGIN
 	END
 END WriteErrorMsg;
 
-PROCEDURE WriteTransferError(VAR w: Texts.Writer; dev: Disks.Device; op, start, res: LONGINT);
+PROCEDURE WriteTransferError(VAR w: Texts.Writer; dev: Disks.Device; op, start, res: SIGNED32);
 BEGIN
 	CASE op OF
 		Read: Texts.WriteString(w, "Read")
@@ -301,13 +301,13 @@ BEGIN
 	WriteErrorMsg(w, res)
 END WriteTransferError;
 
-PROCEDURE IsDOS(type: LONGINT): BOOLEAN;	(* see FATFiles.IsDOS *)
+PROCEDURE IsDOS(type: SIGNED32): BOOLEAN;	(* see FATFiles.IsDOS *)
 BEGIN
 	RETURN FALSE	(* FATFiles no longer used *)
 	(*RETURN (type = 1) OR (type = 4) OR (type = 6)	(* DOS partition *)*)
 END IsDOS;
 
-PROCEDURE WriteK(VAR W: Texts.Writer; k: LONGINT);
+PROCEDURE WriteK(VAR W: Texts.Writer; k: SIGNED32);
 VAR suffix: CHAR;
 BEGIN
 	IF k < 10*1024 THEN suffix := "K"
@@ -317,9 +317,9 @@ BEGIN
 	Texts.WriteInt(W, k, 1); Texts.Write(W, suffix); Texts.Write(W, "B")
 END WriteK;
 
-PROCEDURE Progress(t: Texts.Text; now, max: LONGINT; VAR next: LONGINT);
+PROCEDURE Progress(t: Texts.Text; now, max: SIGNED32; VAR next: SIGNED32);
 CONST Inc = 10;
-VAR pc: LONGINT;
+VAR pc: SIGNED32;
 BEGIN
 	IF next = 0 THEN Texts.WriteString(w, "%:") END;
 	pc := now*100 DIV max;
@@ -340,8 +340,8 @@ BEGIN
 	END
 END UserInterrupt;
 
-PROCEDURE ShowDevice(VAR w: Texts.Writer; d: Disks.Device; verbose: BOOLEAN; VAR res: WORD);
-VAR size: LONGINT; geo: Disks.GetGeometryMsg;
+PROCEDURE ShowDevice(VAR w: Texts.Writer; d: Disks.Device; verbose: BOOLEAN; VAR res: INTEGER);
+VAR size: SIGNED32; geo: Disks.GetGeometryMsg;
 BEGIN
 	Texts.WriteString(w, "Disk: "); Texts.WriteString(w, d.name);
 	d.getSize(d, size, res);
@@ -380,7 +380,7 @@ BEGIN
 	Texts.WriteLn(w)
 END ShowDevice;
 
-PROCEDURE WritePart(VAR w: Texts.Writer; dev: Disks.Device; part: LONGINT);
+PROCEDURE WritePart(VAR w: Texts.Writer; dev: Disks.Device; part: SIGNED32);
 BEGIN
 	ASSERT((part >= 0) & (part <= 99));
 	Texts.WriteString(w, dev.name); Texts.Write(w, "#");
@@ -388,10 +388,10 @@ BEGIN
 	Texts.Write(w, " ")
 END WritePart;
 
-PROCEDURE WriteTable(VAR w: Texts.Writer; d: Disks.Device; table: Disks.PartitionTable; verbose: BOOLEAN; VAR dosnum: LONGINT);
-VAR j: LONGINT; r: LONGREAL;
+PROCEDURE WriteTable(VAR w: Texts.Writer; d: Disks.Device; table: Disks.PartitionTable; verbose: BOOLEAN; VAR dosnum: SIGNED32);
+VAR j: SIGNED32; r: FLOAT64;
 BEGIN
-	FOR j := 0 TO LEN(table)(LONGINT)-1 DO
+	FOR j := 0 TO LEN(table)(SIGNED32)-1 DO
 		r := (table[j].size * 1.0D0 * d.blockSize) / (1024*1024);	(* M *)
 		WritePart(w, d, j);
 		Texts.SetFont(w, Fonts.This("Courier10.Scn.Fnt"));
@@ -428,8 +428,8 @@ END WriteTable;
 
 (* Get geometry from partition table, if possible. *)
 
-PROCEDURE GetTableGeometry(dev: Disks.Device; VAR hds, spt: LONGINT): BOOLEAN;
-VAR buf: ARRAY BS OF CHAR; res, p, hd, sec, i: LONGINT; ok: BOOLEAN;
+PROCEDURE GetTableGeometry(dev: Disks.Device; VAR hds, spt: SIGNED32): BOOLEAN;
+VAR buf: ARRAY BS OF CHAR; res, p, hd, sec, i: SIGNED32; ok: BOOLEAN;
 BEGIN
 	ok := FALSE;
 	ASSERT(dev.blockSize = BS);
@@ -460,8 +460,8 @@ END GetTableGeometry;
 
 (* Get drive geometry and adjust it. *)
 
-PROCEDURE GetGeometry(dev: Disks.Device; VAR geo: Disks.GetGeometryMsg; VAR res: WORD);
-VAR thds, tspt, dsize: LONGINT; org: Disks.GetGeometryMsg;
+PROCEDURE GetGeometry(dev: Disks.Device; VAR geo: Disks.GetGeometryMsg; VAR res: INTEGER);
+VAR thds, tspt, dsize: SIGNED32; org: Disks.GetGeometryMsg;
 BEGIN
 	dev.handle(dev, geo, res);
 	IF res # Ok THEN
@@ -509,15 +509,15 @@ BEGIN
 	END
 END GetGeometry;
 
-PROCEDURE Extended(type: LONGINT): BOOLEAN;
+PROCEDURE Extended(type: SIGNED32): BOOLEAN;
 BEGIN
 	RETURN (type = 5) OR (type = 15)
 END Extended;
 
 (* Add a free partition entry at the end (to keep partition numbers the same) *)
 
-PROCEDURE NewFree(type: LONGINT; VAR table: Disks.PartitionTable; start, size, ptblock: LONGINT; flags: SET);
-VAR j: LONGINT; p: Disks.Partition; new: Disks.PartitionTable;
+PROCEDURE NewFree(type: SIGNED32; VAR table: Disks.PartitionTable; start, size, ptblock: SIGNED32; flags: SET);
+VAR j: SIGNED32; p: Disks.Partition; new: Disks.PartitionTable;
 BEGIN
 	p.type := type; p.start := start; p.size := size; p.flags := flags;
 	p.ptblock := ptblock; p.ptoffset := 0;	(* find free ptoffset later *)
@@ -526,19 +526,19 @@ BEGIN
 	new[j] := p; table := new
 END NewFree;
 
-PROCEDURE FindFreePrimary(VAR table: Disks.PartitionTable; spt, hds: LONGINT);
-VAR i, g, t, max, start, end, prevstart, nextstart: LONGINT;
+PROCEDURE FindFreePrimary(VAR table: Disks.PartitionTable; spt, hds: SIGNED32);
+VAR i, g, t, max, start, end, prevstart, nextstart: SIGNED32;
 BEGIN
 	start := spt; g := hds * spt;	(* skip first track *)
 	max := table[0].size - g;	(* reserve one cylinder at end of disk *)
-	FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find overlapping partition, if any *)
+	FOR i := 1 TO LEN(table)(SIGNED32)-1 DO	(* find overlapping partition, if any *)
 		IF (Disks.Primary IN table[i].flags) & (table[i].start <= start) & (start < table[i].start+table[i].size) THEN
 			start := table[i].start	(* start search at this partition instead *)
 		END
 	END;
 	LOOP
-		prevstart := start; end := MAX(LONGINT);
-		FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition start after or on start *)
+		prevstart := start; end := MAX(SIGNED32);
+		FOR i := 1 TO LEN(table)(SIGNED32)-1 DO	(* find first partition start after or on start *)
 			IF (Disks.Primary IN table[i].flags) & (table[i].start >= start) & (table[i].start < end) THEN
 				end := table[i].start	(* free space ends at this start position *)
 			END
@@ -549,14 +549,14 @@ BEGIN
 		DEC(end, end MOD g);	(* end on cylinder boundary *)
 			(* {start..end-1 is free and aligned} *)
 		IF end-start > 0 THEN NewFree(FreeSpace, table, start, end-start, 0, {Disks.Primary}) END;
-		nextstart := MAX(LONGINT);
-		FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition end after prevstart *)
+		nextstart := MAX(SIGNED32);
+		FOR i := 1 TO LEN(table)(SIGNED32)-1 DO	(* find first partition end after prevstart *)
 			IF Disks.Primary IN table[i].flags THEN
 				t := table[i].start+table[i].size-1;
 				IF (t > prevstart) & (t < nextstart) THEN nextstart := t END
 			END
 		END;
-		IF nextstart = MAX(LONGINT) THEN
+		IF nextstart = MAX(SIGNED32) THEN
 			EXIT	(* no more partitions end after prevstart *)
 		ELSE
 			start := nextstart+1
@@ -564,11 +564,11 @@ BEGIN
 	END
 END FindFreePrimary;
 
-PROCEDURE FindFreeExtended(VAR table: Disks.PartitionTable; spt, hds: LONGINT);
-VAR i, g, t, max, start, end, prevstart, nextstart: LONGINT;
+PROCEDURE FindFreeExtended(VAR table: Disks.PartitionTable; spt, hds: SIGNED32);
+VAR i, g, t, max, start, end, prevstart, nextstart: SIGNED32;
 BEGIN
 	t := -1; i := 1;
-	WHILE i < LEN(table)(LONGINT) DO
+	WHILE i < LEN(table)(SIGNED32) DO
 		IF Extended(table[i].type) THEN
 			ASSERT(t = -1); t := i	(* at most one extended partition allowed *)
 		END;
@@ -577,8 +577,8 @@ BEGIN
 	IF t # -1 THEN
 		start := table[t].start; g := hds * spt; max := start + table[t].size;
 		LOOP
-			prevstart := start; end := MAX(LONGINT);
-			FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition start after or on start *)
+			prevstart := start; end := MAX(SIGNED32);
+			FOR i := 1 TO LEN(table)(SIGNED32)-1 DO	(* find first partition start after or on start *)
 				IF ~(Disks.Primary IN table[i].flags) & (table[i].start >= start) & (table[i].start < end) THEN
 					end := table[i].start
 				END
@@ -591,14 +591,14 @@ BEGIN
 			DEC(end, end MOD g);	(* end on cylinder boundary *)
 				(* {start..end-1 is free and aligned} *)
 			IF end-start > 0 THEN NewFree(FreeSpace, table, start, end-start, start-spt, {}) END;
-			nextstart := MAX(LONGINT);
-			FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition end after prevstart *)
+			nextstart := MAX(SIGNED32);
+			FOR i := 1 TO LEN(table)(SIGNED32)-1 DO	(* find first partition end after prevstart *)
 				IF ~(Disks.Primary IN table[i].flags) THEN
 					t := table[i].start+table[i].size-1;
 					IF (t > prevstart) & (t < nextstart) THEN nextstart := t END
 				END
 			END;
-			IF nextstart = MAX(LONGINT) THEN
+			IF nextstart = MAX(SIGNED32) THEN
 				EXIT	(* no more partitions end after prevstart *)
 			ELSE
 				start := nextstart+1
@@ -608,13 +608,13 @@ BEGIN
 END FindFreeExtended;
 
 PROCEDURE FindReserved(VAR table: Disks.PartitionTable);
-VAR i, t, max, start, end, prevstart, nextstart: LONGINT;
+VAR i, t, max, start, end, prevstart, nextstart: SIGNED32;
 BEGIN
 	 IF ShowReserved THEN
 		start := 0; max := table[0].size;
 		LOOP
-			prevstart := start; end := MAX(LONGINT);
-			FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition start after or on start *)
+			prevstart := start; end := MAX(SIGNED32);
+			FOR i := 1 TO LEN(table)(SIGNED32)-1 DO	(* find first partition start after or on start *)
 				IF (table[i].start >= start) & (table[i].start < end) THEN
 					end := table[i].start	(* free space ends at this start position *)
 				END
@@ -622,12 +622,12 @@ BEGIN
 			IF end > max THEN end := max END;	(* clip to end of disk *)
 				(* {start..end-1 is free} *)
 			IF end-start > 0 THEN NewFree(ReservedSpace, table, start, end-start, 0, {Disks.Primary}) END;
-			nextstart := MAX(LONGINT);
-			FOR i := 1 TO LEN(table)(LONGINT)-1 DO	(* find first partition end after prevstart *)
+			nextstart := MAX(SIGNED32);
+			FOR i := 1 TO LEN(table)(SIGNED32)-1 DO	(* find first partition end after prevstart *)
 				t := table[i].start+table[i].size-1;
 				IF (t > prevstart) & (t < nextstart) THEN nextstart := t END
 			END;
-			IF nextstart = MAX(LONGINT) THEN
+			IF nextstart = MAX(SIGNED32) THEN
 				EXIT	(* no more partitions end after prevstart *)
 			ELSE
 				start := nextstart+1
@@ -638,23 +638,23 @@ END FindReserved;
 
 (* Return TRUE iff partition i contains sector x. *)
 
-PROCEDURE Contains(table: Disks.PartitionTable; i, x: LONGINT): BOOLEAN;
+PROCEDURE Contains(table: Disks.PartitionTable; i, x: SIGNED32): BOOLEAN;
 BEGIN
 	RETURN (table[i].start <= x) & (x < table[i].start + table[i].size)
 END Contains;
 
-PROCEDURE PartitionsOverlap(table: Disks.PartitionTable; i, j: LONGINT): BOOLEAN;
+PROCEDURE PartitionsOverlap(table: Disks.PartitionTable; i, j: SIGNED32): BOOLEAN;
 BEGIN
 	RETURN Contains(table, i, table[j].start) OR Contains(table, i, table[j].start+table[j].size-1)
 		OR Contains(table, j, table[i].start) OR Contains(table, j, table[i].start+table[i].size-1)
 END PartitionsOverlap;
 
 PROCEDURE CheckTable(dev: Disks.Device; table: Disks.PartitionTable): BOOLEAN;
-VAR i, j, ext: LONGINT;
+VAR i, j, ext: SIGNED32;
 BEGIN
 	ext := -1;
 		(* check all partitions for size, and presence of at most one extended partition *)
-	FOR i := 0 TO LEN(table)(LONGINT)-1 DO
+	FOR i := 0 TO LEN(table)(SIGNED32)-1 DO
 		IF (table[i].start < 0) OR (table[i].size < 0) OR (table[i].start+table[i].size < 0) THEN
 			Texts.WriteString(w, "Warning: "); WritePart(w, dev, i);
 			Texts.WriteString(w, "too large"); Texts.WriteLn(w);
@@ -671,9 +671,9 @@ BEGIN
 		END
 	END;
 		(* check all primary partitions and logical drives for overlap *)
-	FOR i := 1 TO LEN(table)(LONGINT)-1 DO
+	FOR i := 1 TO LEN(table)(SIGNED32)-1 DO
 		IF Disks.Primary IN table[i].flags THEN	(* primary partition *)
-			FOR j := 1 TO LEN(table)(LONGINT)-1 DO
+			FOR j := 1 TO LEN(table)(SIGNED32)-1 DO
 				IF (i # j) & (Disks.Primary IN table[j].flags) & PartitionsOverlap(table, i, j) THEN
 					Texts.WriteString(w, "Error: "); WritePart(w, dev, i);
 					Texts.WriteString(w, "and "); WritePart(w, dev, j);
@@ -682,7 +682,7 @@ BEGIN
 				END
 			END
 		ELSE	(* logical drive in extended partition *)
-			FOR j := 1 TO LEN(table)(LONGINT)-1 DO
+			FOR j := 1 TO LEN(table)(SIGNED32)-1 DO
 				IF (i # j) & (j # ext) & PartitionsOverlap(table, i, j) THEN
 					Texts.WriteString(w, "Error: "); WritePart(w, dev, i);
 					Texts.WriteString(w, "and "); WritePart(w, dev, j);
@@ -697,7 +697,7 @@ END CheckTable;
 
 (* Find free space on the disk and insert placeholder partitions (table is reallocated). *)
 
-PROCEDURE FindFreeSpace(dev: Disks.Device; VAR table: Disks.PartitionTable; spt, hds: LONGINT);
+PROCEDURE FindFreeSpace(dev: Disks.Device; VAR table: Disks.PartitionTable; spt, hds: SIGNED32);
 BEGIN
 	ASSERT((hds > 0) & (spt > 0) & (table[0].start = 0));
 	IF CheckTable(dev, table) THEN
@@ -709,7 +709,7 @@ END FindFreeSpace;
 
 PROCEDURE Show*;	(** ["detail"] ~ *)
 VAR
-	dev: Disks.DeviceTable; table: Disks.PartitionTable; i: SIZE; res, dosnum: LONGINT; t: Texts.Text;
+	dev: Disks.DeviceTable; table: Disks.PartitionTable; i: SIZE; res, dosnum: SIGNED32; t: Texts.Text;
 	d: Disks.Device; verbose: BOOLEAN; par: ARRAY 32 OF CHAR; geo: Disks.GetGeometryMsg;
 BEGIN
 	In.Open; In.String(par);
@@ -743,14 +743,14 @@ BEGIN
 	END
 END Show;
 
-PROCEDURE Put2(VAR b: ARRAY OF CHAR; i, val: LONGINT);
+PROCEDURE Put2(VAR b: ARRAY OF CHAR; i, val: SIGNED32);
 BEGIN
 	ASSERT((val >= 0) & (val < 10000H));
 	b[i] := CHR(val MOD 100H);
 	b[i+1] := CHR(ASH(val, -8) MOD 100H)
 END Put2;
 
-PROCEDURE Put4(VAR b: ARRAY OF CHAR; i, val: LONGINT);
+PROCEDURE Put4(VAR b: ARRAY OF CHAR; i, val: SIGNED32);
 BEGIN
 	b[i] := CHR(val MOD 100H);
 	b[i+1] := CHR(ASH(val, -8) MOD 100H);
@@ -758,12 +758,12 @@ BEGIN
 	b[i+3] := CHR(ASH(val, -24) MOD 100H)
 END Put4;
 
-PROCEDURE Get2(VAR b: ARRAY OF CHAR; i: LONGINT): LONGINT;
+PROCEDURE Get2(VAR b: ARRAY OF CHAR; i: SIGNED32): SIGNED32;
 BEGIN
 	RETURN ORD(b[i]) + ASH(ORD(b[i+1]), 8)
 END Get2;
 
-PROCEDURE Get4(VAR b: ARRAY OF CHAR; i: LONGINT): LONGINT;
+PROCEDURE Get4(VAR b: ARRAY OF CHAR; i: SIGNED32): SIGNED32;
 BEGIN
 	RETURN ORD(b[i]) + ASH(ORD(b[i+1]), 8) + ASH(ORD(b[i+2]), 16) + ASH(ORD(b[i+3]), 24)
 END Get4;
@@ -780,12 +780,12 @@ END GetDriveNum;
 
 (* Write the OBL boot loader and an empty config table to disk. *)
 
-PROCEDURE InitOBL(dev: Disks.Device; part, flag: LONGINT; VAR res: WORD);
+PROCEDURE InitOBL(dev: Disks.Device; part, flag: SIGNED32; VAR res: INTEGER);
 CONST Size = LoaderSize*BS;
 VAR
-	b: ARRAY Size OF CHAR; i, tsize, rsize, lsize: LONGINT;
+	b: ARRAY Size OF CHAR; i, tsize, rsize, lsize: SIGNED32;
 	f: Files.File; r: Files.Rider; geo: Disks.GetGeometryMsg;
-	size : LONGINT;
+	size : SIGNED32;
 BEGIN
 	ASSERT(dev.blockSize = BS);
 	GetGeometry(dev, geo, res);
@@ -836,8 +836,8 @@ END InitOBL;
 
 (* Initialize the Aos file system in a partition. See AosFiles.Volume.Init *)
 
-PROCEDURE InitAosFS(dev: Disks.Device; part, fsres, flag: LONGINT; VAR res: WORD);
-VAR fssize, i, j, ofs, size, x, fsofs: LONGINT; b: ARRAY BS OF CHAR;
+PROCEDURE InitAosFS(dev: Disks.Device; part, fsres, flag: SIGNED32; VAR res: INTEGER);
+VAR fssize, i, j, ofs, size, x, fsofs: SIGNED32; b: ARRAY BS OF CHAR;
 BEGIN
 	ofs := dev.table[part].start; size := dev.table[part].size;
 	ASSERT(dev.blockSize = BS);
@@ -886,8 +886,8 @@ END InitAosFS;
 
 (* Initialize the Native file system in a partition. *)
 
-PROCEDURE InitNativeFS(dev: Disks.Device; part, fsres, flag: LONGINT; VAR res: WORD);
-VAR ofs, size, fssize, fsofs, startfs, i: LONGINT; b: ARRAY N2KSS*2 OF CHAR;
+PROCEDURE InitNativeFS(dev: Disks.Device; part, fsres, flag: SIGNED32; VAR res: INTEGER);
+VAR ofs, size, fssize, fsofs, startfs, i: SIGNED32; b: ARRAY N2KSS*2 OF CHAR;
 BEGIN
 	ofs := dev.table[part].start; size := dev.table[part].size;
 	ASSERT(dev.blockSize = BS);
@@ -928,8 +928,8 @@ END InitNativeFS;
 
 (* Check if an Oberon file system is present on a partition. Returns 0 if no Oberon file system found, 1 for a Native file system, 2 for an old Aos file system and 3 for a new Aos file system. *)
 
-PROCEDURE DetectFS(dev: Disks.Device; part: LONGINT): LONGINT;
-VAR b: ARRAY BS OF CHAR; res, fs: LONGINT;
+PROCEDURE DetectFS(dev: Disks.Device; part: SIGNED32): SIGNED32;
+VAR b: ARRAY BS OF CHAR; res, fs: SIGNED32;
 BEGIN
 	ASSERT(dev.blockSize = BS);
 	fs := 0; dev.transfer(dev, Read, dev.table[part].start, 1, b, 0, res);
@@ -962,8 +962,8 @@ END CheckDiskette;
 
 (* Scan command line for a device/partition specification and open the specified partition. *)
 
-PROCEDURE ScanOpenPart(VAR dev: Disks.Device; check: BOOLEAN; VAR part: LONGINT);	(* dev#part *)
-VAR devtable: Disks.DeviceTable; i, res, num: LONGINT; name: ARRAY 32 OF CHAR; ch: CHAR;
+PROCEDURE ScanOpenPart(VAR dev: Disks.Device; check: BOOLEAN; VAR part: SIGNED32);	(* dev#part *)
+VAR devtable: Disks.DeviceTable; i, res, num: SIGNED32; name: ARRAY 32 OF CHAR; ch: CHAR;
 BEGIN
 	dev := NIL; part := -1;
 	In.Open; In.Name(name); In.Char(ch); In.LongInt(num);
@@ -1001,18 +1001,18 @@ END ScanOpenPart;
 
 (* Pseudo-random number. *)
 
-PROCEDURE Random (VAR seed: LONGINT; N :LONGINT): LONGINT;
+PROCEDURE Random (VAR seed: SIGNED32; N :SIGNED32): SIGNED32;
 BEGIN
 		(* this is not a good one, but ok for this purpose *)
 	seed := (seed + 773) * 13 MOD 9999991;
 	RETURN seed MOD N
 END Random;
 
-PROCEDURE CheckPartition(dev: Disks.Device; part: LONGINT; VAR res: WORD);
+PROCEDURE CheckPartition(dev: Disks.Device; part: SIGNED32; VAR res: INTEGER);
 CONST Size = 16*512; Max = 50;
 VAR
-	start, size, i, j, pr, seed, len, ticks, t0, t1, date: LONGINT;
-	ch: CHAR; buf: ARRAY Size OF CHAR; maxblocks: LONGINT;
+	start, size, i, j, pr, seed, len, ticks, t0, t1, date: SIGNED32;
+	ch: CHAR; buf: ARRAY Size OF CHAR; maxblocks: SIGNED32;
 BEGIN
 	maxblocks := Size DIV dev.blockSize; ASSERT(maxblocks > 0);
 	WritePart(w, dev, part); Texts.WriteString(w, "checking...");
@@ -1072,7 +1072,7 @@ END CheckPartition;
 
 (* Read OBL variables from the specified partition. *)
 
-PROCEDURE GetVars(dev: Disks.Device; part: LONGINT; VAR tsize, reserved, fsOfs, res: LONGINT);
+PROCEDURE GetVars(dev: Disks.Device; part: SIGNED32; VAR tsize, reserved, fsOfs, res: SIGNED32);
 VAR b: ARRAY BS OF CHAR;
 BEGIN
 	ASSERT(dev.blockSize = BS);
@@ -1088,8 +1088,8 @@ END GetVars;
 
 (* Read a config table from the specified partition. *)
 
-PROCEDURE GetTable(dev: Disks.Device; part: LONGINT; VAR table: ConfigTable; VAR res: WORD);
-VAR tsize, reserved, fsOfs: LONGINT;
+PROCEDURE GetTable(dev: Disks.Device; part: SIGNED32; VAR table: ConfigTable; VAR res: INTEGER);
+VAR tsize, reserved, fsOfs: SIGNED32;
 BEGIN
 	table := NIL; GetVars(dev, part, tsize, reserved, fsOfs, res);
 	IF res = Ok THEN
@@ -1100,8 +1100,8 @@ END GetTable;
 
 (* Overwrite the config table on the specified partition. *)
 
-PROCEDURE PutTable(dev: Disks.Device; part: LONGINT; table: ConfigTable; VAR res: WORD);
-VAR tsize, reserved, fsOfs: LONGINT;
+PROCEDURE PutTable(dev: Disks.Device; part: SIGNED32; table: ConfigTable; VAR res: INTEGER);
+VAR tsize, reserved, fsOfs: SIGNED32;
 BEGIN
 	GetVars(dev, part, tsize, reserved, fsOfs, res);
 	IF res = Ok THEN
@@ -1112,8 +1112,8 @@ END PutTable;
 
 (* Find the next occurance of the specified entry type in the config table. *)
 
-PROCEDURE FindEntry(table: ConfigTable; i, type: LONGINT): LONGINT;
-VAR t: LONGINT;
+PROCEDURE FindEntry(table: ConfigTable; i, type: SIGNED32): SIGNED32;
+VAR t: SIGNED32;
 BEGIN
 	LOOP
 		t := Get4(table^, i);
@@ -1126,8 +1126,8 @@ END FindEntry;
 
 (* Add an entry to the end of the table. *)
 
-PROCEDURE AddEntry(table: ConfigTable; type, dsize: LONGINT; VAR data: ARRAY OF CHAR);
-VAR i, j, size: LONGINT;
+PROCEDURE AddEntry(table: ConfigTable; type, dsize: SIGNED32; VAR data: ARRAY OF CHAR);
+VAR i, j, size: SIGNED32;
 BEGIN
 	ASSERT(dsize >= 0);
 	i := FindEntry(table, 0, -1);	(* find end of table *)
@@ -1140,8 +1140,8 @@ END AddEntry;
 
 (* Delete the specified entry. *)
 
-PROCEDURE DeleteEntry(table: ConfigTable; i: LONGINT);
-VAR j: SIZE; s: LONGINT;
+PROCEDURE DeleteEntry(table: ConfigTable; i: SIGNED32);
+VAR j: SIZE; s: SIGNED32;
 BEGIN
 	ASSERT(Get4(table^, i) # -1);	(* can not delete end marker *)
 	s := Get4(table^, i+4);
@@ -1150,9 +1150,9 @@ END DeleteEntry;
 
 (* Write the specified file to the device, starting at block pos. *)
 
-PROCEDURE WriteFile(f: Files.File; dev: Disks.Device; pos: LONGINT; VAR sum, res: LONGINT);
+PROCEDURE WriteFile(f: Files.File; dev: Disks.Device; pos: SIGNED32; VAR sum, res: SIGNED32);
 CONST Size = 32;
-VAR buf: ARRAY Size*BS OF CHAR; r: Files.Rider; n, num: LONGINT;
+VAR buf: ARRAY Size*BS OF CHAR; r: Files.Rider; n, num: SIGNED32;
 BEGIN
 	ASSERT(dev.blockSize = BS);
 	Files.Set(r, f, 0); num := (Files.Length(f)+BS-1) DIV BS; sum := 0;
@@ -1170,9 +1170,9 @@ BEGIN
 	sum := (-sum) MOD 100H
 END WriteFile;
 
-PROCEDURE CheckFile(f: Files.File; dev: Disks.Device; pos: LONGINT; sum: LONGINT; VAR res: WORD);
+PROCEDURE CheckFile(f: Files.File; dev: Disks.Device; pos: SIGNED32; sum: SIGNED32; VAR res: INTEGER);
 CONST Size = 32;
-VAR buf1, buf2: ARRAY Size*BS OF CHAR; r: Files.Rider; n, num, i: LONGINT;
+VAR buf1, buf2: ARRAY Size*BS OF CHAR; r: Files.Rider; n, num, i: SIGNED32;
 BEGIN
 	ASSERT(dev.blockSize = BS);
 	Files.Set(r, f, 0); num := (Files.Length(f)+BS-1) DIV BS;
@@ -1197,16 +1197,16 @@ BEGIN
 	IF res # Ok THEN
 		Kernel.WriteMemory(ADDRESSOF(buf1[i])-64, 128);
 		Kernel.WriteMemory(ADDRESSOF(buf2[i])-64, 128);
-		HALT(MAX(INTEGER))
+		HALT(MAX(SIGNED16))
 	END
 *)
 END CheckFile;
 
 (* Write a boot file on the specified partition. *)
 
-PROCEDURE InitBootFile(dev: Disks.Device; part: LONGINT; f: Files.File; VAR res: WORD);
+PROCEDURE InitBootFile(dev: Disks.Device; part: SIGNED32; f: Files.File; VAR res: INTEGER);
 CONST Frag = 7; LoadAdr = 1000H; StartAdr = 1000H; Frags = 1;
-VAR table: ConfigTable; i, tsize, reserved, fsOfs, sum, start: LONGINT; data: ARRAY 12+8*Frags OF CHAR;
+VAR table: ConfigTable; i, tsize, reserved, fsOfs, sum, start: SIGNED32; data: ARRAY 12+8*Frags OF CHAR;
 BEGIN
 	GetTable(dev, part, table, res);
 	IF res = Ok THEN
@@ -1235,7 +1235,7 @@ BEGIN
 	END
 END InitBootFile;
 
-PROCEDURE NativeType(type: LONGINT): BOOLEAN;
+PROCEDURE NativeType(type: SIGNED32): BOOLEAN;
 BEGIN
 	RETURN (type = NativeType1) OR (type = NativeType2) OR (type = AosType)
 END NativeType;
@@ -1243,7 +1243,7 @@ END NativeType;
 (* Format a partition with an N2KFS or AosFS. *)
 
 PROCEDURE Format*;	(** dev#part [ "AosFS" | "NatFS" | "NatFS2" [ FSRes [ BootFile [ Flag ] ] ] ] ~ *)
-VAR dev: Disks.Device; part, type, res, fs, fsres, flag, size: LONGINT; name: ARRAY 32 OF CHAR; done: BOOLEAN; f: Files.File;
+VAR dev: Disks.Device; part, type, res, fs, fsres, flag, size: SIGNED32; name: ARRAY 32 OF CHAR; done: BOOLEAN; f: Files.File;
 BEGIN
 	ScanOpenPart(dev, TRUE, part); done := FALSE;
 	IF dev # NIL THEN
@@ -1331,7 +1331,7 @@ END Format;
 (* Update the boot file in an existing Oberon partition. *)
 
 PROCEDURE UpdateBootFile*;	(** dev#part [ BootFile ] ~ *)
-VAR dev: Disks.Device; part, res, fs: LONGINT; name: ARRAY 32 OF CHAR; done: BOOLEAN; f: Files.File;
+VAR dev: Disks.Device; part, res, fs: SIGNED32; name: ARRAY 32 OF CHAR; done: BOOLEAN; f: Files.File;
 BEGIN
 	ScanOpenPart(dev, TRUE, part); done := FALSE;
 	IF dev # NIL THEN
@@ -1365,7 +1365,7 @@ BEGIN
 END UpdateBootFile;
 
 PROCEDURE GetConfig*;	(** dev#part | ^ *)
-VAR dev: Disks.Device; part, res, i: LONGINT; table: ConfigTable; t: Texts.Text; ch: CHAR;
+VAR dev: Disks.Device; part, res, i: SIGNED32; table: ConfigTable; t: Texts.Text; ch: CHAR;
 BEGIN
 	ScanOpenPart(dev, TRUE, part);
 	IF dev # NIL THEN
@@ -1413,7 +1413,7 @@ BEGIN
 	RETURN (ch >= "0") & (ch <= "9") OR (CAP(ch) >= "A") & (CAP(ch) <= "F")
 END IsHex;
 
-PROCEDURE HexVal(ch: CHAR): LONGINT;
+PROCEDURE HexVal(ch: CHAR): SIGNED32;
 BEGIN
 	CASE ch OF
 		"0".."9": RETURN ORD(ch)-ORD("0")
@@ -1422,8 +1422,8 @@ BEGIN
 	END
 END HexVal;
 
-PROCEDURE UnQuote(VAR config: ARRAY OF CHAR; VAR len: LONGINT);
-VAR i, j: LONGINT;
+PROCEDURE UnQuote(VAR config: ARRAY OF CHAR; VAR len: SIGNED32);
+VAR i, j: SIGNED32;
 BEGIN
 	i := 0;
 	WHILE i < len DO
@@ -1441,7 +1441,7 @@ END UnQuote;
 (* Parse the configuration strings on the command line and add them to the config table. *)
 
 PROCEDURE ParseConfig(table: ConfigTable): BOOLEAN;
-VAR config: ARRAY MaxConfig OF CHAR; i: LONGINT; ch: CHAR;
+VAR config: ARRAY MaxConfig OF CHAR; i: SIGNED32; ch: CHAR;
 BEGIN
 	i := 0;
 	LOOP
@@ -1473,7 +1473,7 @@ BEGIN
 END ParseConfig;
 
 PROCEDURE SetConfig*;	(** dev#part { str = "val" } ~ *)
-VAR dev: Disks.Device; part, res, i: LONGINT; table: ConfigTable;
+VAR dev: Disks.Device; part, res, i: SIGNED32; table: ConfigTable;
 BEGIN
 	ScanOpenPart(dev, TRUE, part);
 	IF dev # NIL THEN
@@ -1501,7 +1501,7 @@ BEGIN
 END SetConfig;
 
 PROCEDURE Check*;	(** dev#part | ^ *)
-VAR dev: Disks.Device; part, res: LONGINT;
+VAR dev: Disks.Device; part, res: SIGNED32;
 BEGIN
 	ScanOpenPart(dev, TRUE, part);
 	IF dev # NIL THEN
@@ -1510,8 +1510,8 @@ BEGIN
 	END
 END Check;
 
-PROCEDURE ChangePartType(dev: Disks.Device; part: LONGINT; oldtype, newtype: LONGINT; VAR res: WORD);
-VAR b: ARRAY BS OF CHAR; e: LONGINT;
+PROCEDURE ChangePartType(dev: Disks.Device; part: SIGNED32; oldtype, newtype: SIGNED32; VAR res: INTEGER);
+VAR b: ARRAY BS OF CHAR; e: SIGNED32;
 BEGIN
 	ASSERT(dev.table[part].type = oldtype);
 	ASSERT(dev.blockSize = BS);
@@ -1530,7 +1530,7 @@ BEGIN
 END ChangePartType;
 
 PROCEDURE ChangeType*;	(** dev#part oldtype newtype ~ *)
-VAR dev: Disks.Device; part, oldtype, newtype, res: LONGINT;
+VAR dev: Disks.Device; part, oldtype, newtype, res: SIGNED32;
 BEGIN
 	ScanOpenPart(dev, TRUE, part);
 	IF dev # NIL THEN
@@ -1556,8 +1556,8 @@ BEGIN
 	END
 END ChangeType;
 
-PROCEDURE DeletePrimary(dev: Disks.Device; part: LONGINT; type: LONGINT; VAR res: WORD);
-VAR b: ARRAY BS OF CHAR; e, i: LONGINT;
+PROCEDURE DeletePrimary(dev: Disks.Device; part: SIGNED32; type: SIGNED32; VAR res: INTEGER);
+VAR b: ARRAY BS OF CHAR; e, i: SIGNED32;
 BEGIN
 	ASSERT(dev.table[part].type = type);
 	ASSERT(dev.blockSize = BS);
@@ -1573,7 +1573,7 @@ BEGIN
 END DeletePrimary;
 
 PROCEDURE Delete*;	(** dev#part type ~ *)
-VAR dev: Disks.Device; part, type, res: LONGINT;
+VAR dev: Disks.Device; part, type, res: SIGNED32;
 BEGIN
 	ScanOpenPart(dev, TRUE, part);
 	IF dev # NIL THEN
@@ -1608,8 +1608,8 @@ BEGIN
 	END
 END Delete;
 
-PROCEDURE CreatePrimary(dev: Disks.Device; table: Disks.PartitionTable; part, size, spt, hds, type: LONGINT; VAR res: WORD);
-VAR i, e, t, start, end: LONGINT; buf: ARRAY BS OF CHAR;
+PROCEDURE CreatePrimary(dev: Disks.Device; table: Disks.PartitionTable; part, size, spt, hds, type: SIGNED32; VAR res: INTEGER);
+VAR i, e, t, start, end: SIGNED32; buf: ARRAY BS OF CHAR;
 BEGIN
 	ASSERT(dev.blockSize = BS);
 	ASSERT(table[part].type = FreeSpace);
@@ -1657,7 +1657,7 @@ END CreatePrimary;
 
 PROCEDURE Create*;	(** dev#part sizeMB ~ *)
 VAR
-	dev: Disks.Device; part, size, res: LONGINT; table: Disks.PartitionTable; geo: Disks.GetGeometryMsg;
+	dev: Disks.Device; part, size, res: SIGNED32; table: Disks.PartitionTable; geo: Disks.GetGeometryMsg;
 BEGIN
 	ScanOpenPart(dev, FALSE, part);
 	IF dev # NIL THEN
@@ -1696,7 +1696,7 @@ BEGIN
 END Create;
 
 PROCEDURE SetFlag(on: BOOLEAN);	(* dev#part ~ *)
-VAR dev: Disks.Device; part, res, e: LONGINT; b: ARRAY BS OF CHAR; mod: BOOLEAN;
+VAR dev: Disks.Device; part, res, e: SIGNED32; b: ARRAY BS OF CHAR; mod: BOOLEAN;
 BEGIN
 	ScanOpenPart(dev, TRUE, part);
 	IF (dev # NIL) & (dev.blockSize = BS) THEN
@@ -1754,7 +1754,7 @@ END Deactivate;
 PROCEDURE FileToPartition*;	(** dev#part name [block numblocks] ~ *)
 CONST Size = 32*BS;
 VAR
-	dev: Disks.Device; part, res, pos, num, pr, i, ofs, size: LONGINT; name: ARRAY 64 OF CHAR;
+	dev: Disks.Device; part, res, pos, num, pr, i, ofs, size: SIGNED32; name: ARRAY 64 OF CHAR;
 	f: Files.File; r: Files.Rider; buf: ARRAY Size OF CHAR; ch: CHAR;
 BEGIN
 	ScanOpenPart(dev, TRUE, part);
@@ -1773,9 +1773,9 @@ BEGIN
 						Texts.Append(Oberon.Log, w.buf);
 						size := 0
 					END;
-					IF size < 0 THEN size := MAX(LONGINT) END	(* use complete partition *)
+					IF size < 0 THEN size := MAX(SIGNED32) END	(* use complete partition *)
 				ELSE
-					ofs := 0; size := MAX(LONGINT)
+					ofs := 0; size := MAX(SIGNED32)
 				END;
 				IF size > 0 THEN
 					num := (Files.Length(f)+BS-1) DIV BS - ofs;
@@ -1810,7 +1810,7 @@ END FileToPartition;
 PROCEDURE PartitionToFile*;	(** dev#part name [block numblocks] ~ *)
 CONST Size = 32*BS;
 VAR
-	dev: Disks.Device; part, res, pos, num, pr, i, ofs, size: LONGINT; name: ARRAY 64 OF CHAR;
+	dev: Disks.Device; part, res, pos, num, pr, i, ofs, size: SIGNED32; name: ARRAY 64 OF CHAR;
 	f: Files.File; r: Files.Rider; buf: ARRAY Size OF CHAR; ch: CHAR;
 BEGIN
 	ScanOpenPart(dev, TRUE, part);
@@ -1829,9 +1829,9 @@ BEGIN
 						Texts.Append(Oberon.Log, w.buf);
 						size := 0
 					END;
-					IF size < 0 THEN size := MAX(LONGINT) END	(* use complete partition *)
+					IF size < 0 THEN size := MAX(SIGNED32) END	(* use complete partition *)
 				ELSE
-					ofs := 0; size := MAX(LONGINT)
+					ofs := 0; size := MAX(SIGNED32)
 				END;
 				IF size > 0 THEN
 					IF ofs + size > dev.table[part].size THEN size := dev.table[part].size - ofs END;
@@ -1864,7 +1864,7 @@ END PartitionToFile;
 
 PROCEDURE WriteMBR*;	(** dev#0 name ~ *)
 VAR
-	dev: Disks.Device; part, res, i: LONGINT; name: ARRAY 64 OF CHAR;
+	dev: Disks.Device; part, res, i: SIGNED32; name: ARRAY 64 OF CHAR;
 	f: Files.File; r: Files.Rider; buf1, buf2: ARRAY BS OF CHAR;
 BEGIN
 	ScanOpenPart(dev, TRUE, part);
@@ -1901,10 +1901,10 @@ END WriteMBR;
 
 (* Overwrite the existing boot loader with the new one, leaving critical data untouched. *)
 
-PROCEDURE UpdateOBL(dev: Disks.Device; part: LONGINT; f: Files.File; VAR res: WORD);
+PROCEDURE UpdateOBL(dev: Disks.Device; part: SIGNED32; f: Files.File; VAR res: INTEGER);
 CONST Size = LoaderSize*BS;
 VAR
-	b, bnew: ARRAY Size OF CHAR; i, tsize, rsize, lsize: LONGINT;
+	b, bnew: ARRAY Size OF CHAR; i, tsize, rsize, lsize: SIGNED32;
 	r: Files.Rider;
 BEGIN
 	ASSERT(dev.blockSize = BS);
@@ -1948,7 +1948,7 @@ The BBL must imperatively have the same size, 4 blocks, as the OBL.
 The same BBL is applicable to all AosFS partitions. *)
 
 PROCEDURE UpdateBootLoader*;	(** dev#part BootLoader ~ *)
-VAR dev: Disks.Device; part, res, fs: LONGINT; name: ARRAY 32 OF CHAR; done: BOOLEAN; f: Files.File;
+VAR dev: Disks.Device; part, res, fs: SIGNED32; name: ARRAY 32 OF CHAR; done: BOOLEAN; f: Files.File;
 BEGIN
 	ScanOpenPart(dev, TRUE, part); done := FALSE;
 	IF dev # NIL THEN
@@ -1980,8 +1980,8 @@ BEGIN
 	END
 END UpdateBootLoader;
 
-PROCEDURE WriteHex(VAR wr: Texts.Writer; x, w: LONGINT);
-VAR buf: ARRAY 10 OF CHAR; i, j: LONGINT;
+PROCEDURE WriteHex(VAR wr: Texts.Writer; x, w: SIGNED32);
+VAR buf: ARRAY 10 OF CHAR; i, j: SIGNED32;
 BEGIN
 	IF w >= 0 THEN j := 8 ELSE j := 2; w := -w END;
 	FOR i := j+1 TO w DO Texts.Write(wr, " ") END;
@@ -1996,8 +1996,8 @@ BEGIN
 	Texts.WriteString(wr, buf)
 END WriteHex;
 
-PROCEDURE WriteHexDump(VAR w: Texts.Writer; VAR buf: ARRAY OF CHAR; ofs, size, base: LONGINT);
-VAR i: LONGINT; ch: CHAR;
+PROCEDURE WriteHexDump(VAR w: Texts.Writer; VAR buf: ARRAY OF CHAR; ofs, size, base: SIGNED32);
+VAR i: SIGNED32; ch: CHAR;
 BEGIN
 	WHILE ofs < size DO
 		WriteHex(w, base+ofs, 8);
@@ -2023,7 +2023,7 @@ END WriteHexDump;
 
 PROCEDURE ShowBlocks*;	(** dev#part block [numblocks] ~ *)
 VAR
-	dev: Disks.Device; part, pos, num, res: LONGINT; buf: POINTER TO ARRAY OF CHAR;
+	dev: Disks.Device; part, pos, num, res: SIGNED32; buf: POINTER TO ARRAY OF CHAR;
 	t: Texts.Text; ch: CHAR;
 BEGIN
 	ScanOpenPart(dev, TRUE, part);
@@ -2076,23 +2076,23 @@ BEGIN
 	Texts.WriteInt(w, AosSS, 1);
 	Texts.WriteString(w, " byte sectors");
 	Texts.WriteLn(w);
-	Texts.WriteLongRealFix(w, 1.0D0*MAX(LONGINT)/Unit, 1, 2, 0);
+	Texts.WriteLongRealFix(w, 1.0D0*MAX(SIGNED32)/Unit, 1, 2, 0);
 	Texts.WriteString(w, "Gb positioning limit in file because of 31 bit Set & Pos parameters");
 	Texts.WriteLn(w);
 	Texts.WriteLongRealFix(w, ((1.0D0*AosXS*AosXS+AosSTS)*AosSS-AosHS)/Unit, 1, 2, 0);
 	Texts.WriteString(w, "Gb file size limit because of triple index structure");
 	Texts.WriteLn(w);
-	Texts.WriteLongRealFix(w, 1.0D0*MAX(LONGINT)/AosSF*AosSS/Unit, 1, 2, 0);
+	Texts.WriteLongRealFix(w, 1.0D0*MAX(SIGNED32)/AosSF*AosSS/Unit, 1, 2, 0);
 	Texts.WriteString(w, "Gb volume size limit because of sector factor ");
 	Texts.WriteInt(w, AosSF, 1); Texts.WriteLn(w);
-	Texts.WriteLongRealFix(w, (1.0D0*MAX(LONGINT)+1)*AosSS/Unit, 1, 2, 0);
+	Texts.WriteLongRealFix(w, (1.0D0*MAX(SIGNED32)+1)*AosSS/Unit, 1, 2, 0);
 	Texts.WriteString(w, "Gb file size limit because of 31 bit apos field");
 	Texts.WriteLn(w);
 	Texts.Append(Oberon.Log, w.buf)
 END ShowAosFSLimits;
 
 PROCEDURE Eject*;	(** dev ~ *)
-VAR devtable: Disks.DeviceTable; i, res: LONGINT; name: ARRAY 32 OF CHAR; msg: Disks.EjectMsg;
+VAR devtable: Disks.DeviceTable; i, res: SIGNED32; name: ARRAY 32 OF CHAR; msg: Disks.EjectMsg;
 BEGIN
 	res := -1;
 	In.Open; In.Name(name);

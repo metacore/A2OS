@@ -42,12 +42,12 @@ TYPE
 
 	Controller= OBJECT
 		VAR
-			base,irq:LONGINT; OHCI*: FirewireLowUtil.OHCIDesc; t: Kernel.Timer; timer: Kernel.MilliTimer;
+			base,irq:SIGNED32; OHCI*: FirewireLowUtil.OHCIDesc; t: Kernel.Timer; timer: Kernel.MilliTimer;
 			timeout: BOOLEAN; clock: Objects.Timer;
 
 		(** Is used to handle an await timeout *)
 		PROCEDURE HandleTimeout;
-		VAR ms: LONGINT;
+		VAR ms: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			ms:= Kernel.Left(timer);
 			IF ms <= 0 THEN
@@ -83,7 +83,7 @@ TYPE
 		END SelfIDAlloc;
 
 		(** Reads a quadlet and returns the content as a set *)
-		PROCEDURE ReadSetQuadlet(address:LONGINT):SET;
+		PROCEDURE ReadSetQuadlet(address:SIGNED32):SET;
 		BEGIN
 			RETURN SYSTEM.VAL(SET, SYSTEM.GET32(address));
 		END ReadSetQuadlet;
@@ -91,7 +91,7 @@ TYPE
 		(** Checks the selfID packet stream: checks if the generation counter corresponds to the actual one and also checks the integrity of the packets *)
 		PROCEDURE CheckSelfIDStream():BOOLEAN;
 		CONST offsetSize = 2; selfIDError= 31; selfIDSizeMask = {0..8};
-		VAR selfIDSize, address, reg: SET; size: LONGINT; error: BOOLEAN;
+		VAR selfIDSize, address, reg: SET; size: SIGNED32; error: BOOLEAN;
 		BEGIN
 			(* KernelLog.String("Entering CheckSelfIDStream"); KernelLog.Ln(); *)
 			error:= FALSE;
@@ -122,8 +122,8 @@ TYPE
 		END CheckSelfIDStream;
 
 		(** Prints the content of a buffer as a set *)
-		PROCEDURE PrintBuffer(address: SET; size: LONGINT);
-		VAR i, j, adr: LONGINT;
+		PROCEDURE PrintBuffer(address: SET; size: SIGNED32);
+		VAR i, j, adr: SIGNED32;
 		BEGIN
 			i:= 0;
 			j:= 0;
@@ -134,8 +134,8 @@ TYPE
 		END PrintBuffer;
 
 		(** Checks the integrity of selfID packets *)
-		PROCEDURE CheckIntegrity(address: SET; size:LONGINT):BOOLEAN;
-		VAR i: LONGINT;data, invData : SET; error: BOOLEAN; j: LONGINT;
+		PROCEDURE CheckIntegrity(address: SET; size:SIGNED32):BOOLEAN;
+		VAR i: SIGNED32;data, invData : SET; error: BOOLEAN; j: SIGNED32;
 		BEGIN
 			(* KernelLog.String("Entering CheckIntegrity"); KernelLog.Ln(); *)
 			error:= FALSE;
@@ -157,9 +157,9 @@ TYPE
 		END CheckIntegrity;
 
 		(** Compares the generation field of selfID packets with the generation counter of the system to see if they correspond *)
-		PROCEDURE CompareSelfIDGen(address:SET; size:LONGINT):BOOLEAN;
+		PROCEDURE CompareSelfIDGen(address:SET; size:SIGNED32):BOOLEAN;
 		CONST selfIDGenMask = {16..23}; offsetGen = 16;
-		VAR header, selfIDGeneration: SET; i: LONGINT; error: BOOLEAN;
+		VAR header, selfIDGeneration: SET; i: SIGNED32; error: BOOLEAN;
 		BEGIN
 			(* KernelLog.String("Entering Procedure CompareSelfIDGen"); KernelLog.Ln(); *)
 			(* Read the header of the first SelfID packet *)
@@ -178,15 +178,15 @@ TYPE
 			RETURN error;
 		END CompareSelfIDGen;
 
-		(** Converts a SET to a LONGINT *)
-		PROCEDURE ConvertToLongint(reg: SET):LONGINT;
+		(** Converts a SET to a SIGNED32 *)
+		PROCEDURE ConvertToLongint(reg: SET):SIGNED32;
 		BEGIN
-			RETURN SYSTEM.VAL(LONGINT,reg);
+			RETURN SYSTEM.VAL(SIGNED32,reg);
 		END ConvertToLongint;
 
 		(** Processes sent packets *)
 		PROCEDURE ProcSentPckts(contest: Contest) ;
-		VAR packet: OHCIPacket; status: SET; ack,dataSize: LONGINT; block: FirewireLowUtil.Block;
+		VAR packet: OHCIPacket; status: SET; ack,dataSize: SIGNED32; block: FirewireLowUtil.Block;
 		CONST acks= 4; code= {0..4};
 		BEGIN
 			(* KernelLog.String("Processing sent packets!"); KernelLog.Ln(); *)
@@ -201,7 +201,7 @@ TYPE
 				(* KernelLog.String("Printing the status: "); FirewireLowUtil.PrintSet(status); KernelLog.Ln(); *)
 
 				(* check if it's an ack *)
-				IF (acks IN status) THEN ack:= SYSTEM.VAL(LONGINT,status*code);
+				IF (acks IN status) THEN ack:= SYSTEM.VAL(SIGNED32,status*code);
 					(* KernelLog.String("It's an ack!"); KernelLog.Ln(); *)
 				ELSE (* it's an event code *)
 					KernelLog.String("It's an event code!"); KernelLog.Ln();
@@ -258,12 +258,12 @@ TYPE
 
 		(** Processes dma receive buffers *)
 		PROCEDURE ProcRcvdPckts(context: Contest);
-		VAR block: FirewireLowUtil.Block; i, bufSize, packetSize, resCount,packetBytesLeft, packetBytesRight: LONGINT;
-			bufferAddr, tCode,ack: SET; packetAddr,nextDesc: LONGINT; complete: BOOLEAN;
+		VAR block: FirewireLowUtil.Block; i, bufSize, packetSize, resCount,packetBytesLeft, packetBytesRight: SIGNED32;
+			bufferAddr, tCode,ack: SET; packetAddr,nextDesc: SIGNED32; complete: BOOLEAN;
 		BEGIN
 			(* KernelLog.String("Entering ProcRcvdPckts"); KernelLog.Ln(); *)
-			bufSize:= SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ConvertToLongint(context.prgr.curDesc)))*{0..15});
-			resCount:= SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(ConvertToLongint(context.prgr.curDesc) + 12))*{0..15});
+			bufSize:= SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,SYSTEM.GET32(ConvertToLongint(context.prgr.curDesc)))*{0..15});
+			resCount:= SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,SYSTEM.GET32(ConvertToLongint(context.prgr.curDesc) + 12))*{0..15});
 			packetSize:= FirewireLowUtil.PacketLength(context);
 			bufferAddr:= SYSTEM.VAL(SET,SYSTEM.GET32(ConvertToLongint(context.prgr.curDesc) + 4));
 
@@ -302,8 +302,8 @@ TYPE
 				(* now go to next buffer/descriptor *)
 				nextDesc:= SYSTEM.GET32(ConvertToLongint(context.prgr.curDesc) + 8)-1; (* -1 to eliminate the z *)
 				ASSERT(nextDesc > 0);
-				bufSize:= SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(nextDesc))*{0..15});
-				resCount:= SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,SYSTEM.GET32(nextDesc + 12))*{0..15});
+				bufSize:= SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,SYSTEM.GET32(nextDesc))*{0..15});
+				resCount:= SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,SYSTEM.GET32(nextDesc + 12))*{0..15});
 				packetBytesRight:= bufSize - resCount; i:= 0;
 				ASSERT(packetAddr > 0);
 				ASSERT(packetBytesRight <= FirewireLowUtil.BufSize-packetBytesLeft);
@@ -335,13 +335,13 @@ TYPE
 				context.prgr.packetOffset:= bufSize-resCount;
 			END;
 
-			IF (SYSTEM.VAL(LONGINT,tCode) = 	FirewireLowUtil.PhyARReq) THEN
+			IF (SYSTEM.VAL(SIGNED32,tCode) = 	FirewireLowUtil.PhyARReq) THEN
 				(* We always get this packet after bus reset, just throw it away *)
 				(* i:=0;
 				KernelLog.String("Dumping packet:"); KernelLog.Ln();
 				WHILE i< packetSize DO
 					quad:= SYSTEM.VAL(SET,SYSTEM.GET32(packetAddr +i));
-					IF i= 12 THEN quad:= quad*{8..31}; KernelLog.Int(SYSTEM.VAL(LONGINT,LSH(quad,-8)),2);
+					IF i= 12 THEN quad:= quad*{8..31}; KernelLog.Int(SYSTEM.VAL(SIGNED32,LSH(quad,-8)),2);
 						KernelLog.Ln()
 					END;
 					FirewireLowUtil.PrintSet(quad); INC(i,4);
@@ -359,7 +359,7 @@ TYPE
 				KernelLog.String("Dumping packet:"); KernelLog.Ln();
 				WHILE i< packetSize DO
 					quad:= SYSTEM.VAL(SET,SYSTEM.GET32(packetAddr +i));
-					IF i= 12 THEN quad:= quad*{8..31}; KernelLog.Int(SYSTEM.VAL(LONGINT,LSH(quad,-8)),2);
+					IF i= 12 THEN quad:= quad*{8..31}; KernelLog.Int(SYSTEM.VAL(SIGNED32,LSH(quad,-8)),2);
 						KernelLog.Ln()
 					END;
 					FirewireLowUtil.PrintSet(quad); INC(i,4);
@@ -372,7 +372,7 @@ TYPE
 
 		(** Frees unused DMA buffers of receive contexts *)
 		PROCEDURE FreeDMABuffer(context:Contest);
-		VAR curDesc: LONGINT; active: LONGINT;
+		VAR curDesc: SIGNED32; active: SIGNED32;
 		BEGIN
 			active:= 10;
 			curDesc:= ConvertToLongint(context.prgr.curDesc);
@@ -391,14 +391,14 @@ TYPE
 		END FreeDMABuffer;
 
 		(** Checks the transaction code of a received packet to see if its a response or request packet *)
-		PROCEDURE PacketReceived(context: Contest; bufferAddr:SET; packetSize: LONGINT; complete: BOOLEAN);
-		VAR tCode: LONGINT;
+		PROCEDURE PacketReceived(context: Contest; bufferAddr:SET; packetSize: SIGNED32; complete: BOOLEAN);
+		VAR tCode: SIGNED32;
 		BEGIN
 			(* KernelLog.String("Entering Packet received"); KernelLog.Ln(); *)
 			IF OHCI.inBusReset THEN KernelLog.String("Ignoring packet, because OHCI is in bus reset!"); RETURN END;
 
 			(* get tCode *)
-			tCode:= SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,LSH(SYSTEM.GET32(ConvertToLongint(bufferAddr)),-4))*{0..3});
+			tCode:= SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,LSH(SYSTEM.GET32(ConvertToLongint(bufferAddr)),-4))*{0..3});
 
 			(* KernelLog.String("The transaction code is: ");KernelLog.Int(tCode,2); KernelLog.Ln(); *)
 			CASE tCode OF
@@ -425,7 +425,7 @@ TYPE
 		END PacketReceived;
 
 		(** Creates a reply packet to read or write requests *)
-		PROCEDURE CreateReplyPacket(VAR p: FirewireLowUtil.OHCIPacket; dataAddr: LONGINT; dataSize: LONGINT);
+		PROCEDURE CreateReplyPacket(VAR p: FirewireLowUtil.OHCIPacket; dataAddr: SIGNED32; dataSize: SIGNED32);
 		BEGIN
 			(* KernelLog.String("Data size in CreateReaplyPacket is: "); KernelLog.Int(dataSize,2); KernelLog.Ln(); *)
 			p:= OHCI.packetFIFO.GetPacket();
@@ -443,8 +443,8 @@ TYPE
 		END CreateReplyPacket;
 
 		(** Writes packet data to a host memory address *)
-		PROCEDURE WriteToAddress(dataAddr: LONGINT; dataLen: LONGINT; writeAddrLo, writeAddrHi: SET):LONGINT;
-		VAR i: LONGINT;
+		PROCEDURE WriteToAddress(dataAddr: SIGNED32; dataLen: SIGNED32; writeAddrLo, writeAddrHi: SET):SIGNED32;
+		VAR i: SIGNED32;
 		BEGIN
 			(* KernelLog.String("WriteToAddress!"); KernelLog.Ln();
 			KernelLog.String("Printing the address"); KernelLog.Ln();
@@ -463,8 +463,8 @@ TYPE
 		END WriteToAddress;
 
 		(** Reads packet data from a host memory address *)
-		PROCEDURE ReadFromAddress(VAR bufferAddr: ARRAY OF SET; dataLen: LONGINT; readAddrLo, readAddrHi: SET): LONGINT;
-		VAR i: LONGINT;
+		PROCEDURE ReadFromAddress(VAR bufferAddr: ARRAY OF SET; dataLen: SIGNED32; readAddrLo, readAddrHi: SET): SIGNED32;
+		VAR i: SIGNED32;
 		BEGIN
 			(* KernelLog.String("ReadFromAddress!"); KernelLog.Ln();
 			KernelLog.String("Printing the address"); KernelLog.Ln();
@@ -479,8 +479,8 @@ TYPE
 		END ReadFromAddress;
 
 		(** Handles incoming requests *)
-		PROCEDURE HandleIncomingPacket(bufferAddr: SET; packetSize, tCode: LONGINT; complete: BOOLEAN);
-		VAR addrHi,addrLo: SET; rCode,dataLen,addr: LONGINT; packet: FirewireLowUtil.OHCIPacket; respBufferAddr: LONGINT;
+		PROCEDURE HandleIncomingPacket(bufferAddr: SET; packetSize, tCode: SIGNED32; complete: BOOLEAN);
+		VAR addrHi,addrLo: SET; rCode,dataLen,addr: SIGNED32; packet: FirewireLowUtil.OHCIPacket; respBufferAddr: SIGNED32;
 			respQuadlet: ARRAY 1 OF SET;
 		BEGIN
 			(* KernelLog.String("Entered routine HandleIcomingPacket!"); KernelLog.Ln(); *)
@@ -542,9 +542,9 @@ TYPE
 		END HandleIncomingPacket;
 
 		(** Handles incoming packet responses *)
-		PROCEDURE HandlePacketResponse(respContext: Contest; bufferAddr: SET; packetSize, tCode: LONGINT);
+		PROCEDURE HandlePacketResponse(respContext: Contest; bufferAddr: SET; packetSize, tCode: SIGNED32);
 		VAR oneBack,temp: POINTER TO ListMember; tLabel, nodeID: SET; found, tCodeMatch: BOOLEAN; packet: OHCIPacket;
-			data: LONGINT; i: LONGINT; context: Contest; n: FirewireLowUtil.FIFONode;
+			data: SIGNED32; i: SIGNED32; context: Contest; n: FirewireLowUtil.FIFONode;
 		BEGIN
 			(* KernelLog.String("Entering handle packet response!"); KernelLog.Ln(); *)
 			context:= OHCI.ATController.GetReqContest();
@@ -591,10 +591,10 @@ TYPE
 			END; i:= 0;
 
 			KernelLog.String("The transaction code is: "); KernelLog.Int(tCode,2); KernelLog.Ln();
-			KernelLog.String("The packet transaction code is: "); KernelLog.Int(SYSTEM.VAL(LONGINT,packet.tCode),2); KernelLog.Ln();
+			KernelLog.String("The packet transaction code is: "); KernelLog.Int(SYSTEM.VAL(SIGNED32,packet.tCode),2); KernelLog.Ln();
 			*)
 
-			CASE SYSTEM.VAL(LONGINT,packet.tCode) OF
+			CASE SYSTEM.VAL(SIGNED32,packet.tCode) OF
 			FirewireLowUtil.QWriteATReq:
 				IF (tCode = FirewireLowUtil.NoDataWARRes) THEN tCodeMatch:= TRUE END
 			|FirewireLowUtil.BWriteATReq:
@@ -702,7 +702,7 @@ TYPE
 
 		(** This is the interrupt handler *)
 		PROCEDURE HandleInterrupt;
-		VAR status, reg, nodeID: SET; ctx,i: LONGINT; root, error: BOOLEAN;
+		VAR status, reg, nodeID: SET; ctx,i: SIGNED32; root, error: BOOLEAN;
 		CONST dead= 11; isValid= 31; id= {0..5}; isRoot= 30;
 		BEGIN
 			FirewireLowUtil.WriteReg(FirewireLowUtil.CIntMask,{31});
@@ -833,7 +833,7 @@ TYPE
 					ELSE KernelLog.String("This should not happen!"); KernelLog.Ln(); END;
 					IF error THEN FirewireLowUtil.SetPhyControl({8},{6})
 					ELSE (* Go on and build the maps *)
-						OHCI.nodeID:= SYSTEM.VAL(LONGINT,FirewireLowUtil.ReadReg(FirewireLowUtil.NodeID)*{0..5});
+						OHCI.nodeID:= SYSTEM.VAL(SIGNED32,FirewireLowUtil.ReadReg(FirewireLowUtil.NodeID)*{0..5});
 						BuildMaps(); BEGIN {EXCLUSIVE} OHCI.selfIDComplete:= TRUE; END;
 					 END;
 				ELSE KernelLog.String("SelfID received outside of bus reset"); KernelLog.Ln() END;
@@ -945,12 +945,12 @@ TYPE
 		END HandleInterrupt;
 
 		(**  Builds the descriptor list to send a packet over the 1394 bus *)
-		PROCEDURE SendPacket(contest: Contest; VAR packet : OHCIPacket; z: LONGINT);
+		PROCEDURE SendPacket(contest: Contest; VAR packet : OHCIPacket; z: SIGNED32);
 		VAR cycleTimer: SET; desc,descLast: FirewireLowUtil.GeneralDesc; descOMI: FirewireLowUtil.OutputMoreImmediate;
 			descOL: FirewireLowUtil.OutputLast; descOLI: FirewireLowUtil.OutputLastImmediate; block: FirewireLowUtil.Block;
 			branchAddressPtr: ADDRESS; ptrToBuf: FirewireLowUtil.CharBuffer;
 		BEGIN
-			(* KernelLog.String("Sending packet to node: "); KernelLog.Int(SYSTEM.VAL(LONGINT,packet.nodeID),2); KernelLog.Ln(); *)
+			(* KernelLog.String("Sending packet to node: "); KernelLog.Int(SYSTEM.VAL(SIGNED32,packet.nodeID),2); KernelLog.Ln(); *)
 
 			desc.address := {};
 			desc.branchAddress := {};
@@ -977,7 +977,7 @@ TYPE
 				ELSE (* KernelLog.String("Packet type is asynchronous"); KernelLog.Ln(); *)
 					desc.data[0]:= LSH(packet.speed,16) + {23} +
 					packet.header[0]*{0..15}; (* mask the first 16 bit of a packet header *)
-					IF SYSTEM.VAL(LONGINT,packet.tCode) = FirewireLowUtil.StreamATReq THEN
+					IF SYSTEM.VAL(SIGNED32,packet.tCode) = FirewireLowUtil.StreamATReq THEN
 						(* KernelLog.String("Sending an asynchronous stream packet"); KernelLog.Ln(); *)
 						(* Sending an asynchronous stream packet *)
 						desc.data[1]:= packet.header[0] * {16..31}; desc.data[0]:= desc.data[0] - {23}
@@ -990,7 +990,7 @@ TYPE
 
 				IF packet.dataSize > 0 THEN (* block or stream transmit *)
 					(* KernelLog.String("DataSize is bigger than zero: this is a block or stream transmit"); KernelLog.Ln(); *)
-					IF SYSTEM.VAL(LONGINT,packet.tCode) = FirewireLowUtil.StreamATReq THEN
+					IF SYSTEM.VAL(SIGNED32,packet.tCode) = FirewireLowUtil.StreamATReq THEN
 						(* KernelLog.String("It's a stream packet!"); KernelLog.Ln(); *)
 						desc.control:= descOMI.key + {3}; (* two header quadlets for stream packets *)
 					ELSE (* 4 header quadlets for block packets *)
@@ -1058,7 +1058,7 @@ TYPE
 				(* KernelLog.String("Dumping the data in buffer::SendPacket"); KernelLog.Ln();
 				i:= 0;
 				WHILE i< (packet.dataSize-1) DO
-					FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,descLast.address)+i)));INC(i,4);
+					FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,descLast.address)+i)));INC(i,4);
 				END; *)
 				branchAddressPtr:= block.start + 40; block.end:= block.start + 32;
 				ptrToBuf:= packet.ptrToBlckBufAddr;
@@ -1078,7 +1078,7 @@ TYPE
 		(** This procedure checks the packet type to find out which context to use,
 		builds the program and fills the FIFO. IF the packet awaits a response, It will wait until the response comes *)
 		PROCEDURE OHCISend(VAR packet: OHCIPacket):BOOLEAN;
-		VAR contest: FirewireLowUtil.Contest; result: BOOLEAN; i,ms: LONGINT;
+		VAR contest: FirewireLowUtil.Contest; result: BOOLEAN; i,ms: SIGNED32;
 		BEGIN
 			IF packet.dataSize > OHCI.MaxPacketSize THEN KernelLog.String("The packet size is too big!"); KernelLog.Ln();
 				RETURN FALSE;
@@ -1086,10 +1086,10 @@ TYPE
 
 			(* Find out what kind of packet we have *)
 			IF packet.type = FirewireLowUtil.raw THEN contest:= OHCI.ATController.GetReqContest()
-			ELSIF SYSTEM.VAL(LONGINT,packet.tCode) = FirewireLowUtil.ITCode THEN OHCI.ITController.ResetIterator();
+			ELSIF SYSTEM.VAL(SIGNED32,packet.tCode) = FirewireLowUtil.ITCode THEN OHCI.ITController.ResetIterator();
 				contest:= OHCI.ITController.GetNextContest() (* there are min 4 contests! *)
-			ELSIF ((SYSTEM.VAL(LONGINT,packet.tCode) =  FirewireLowUtil.NoDataWATRes) OR (SYSTEM.VAL(LONGINT,packet.tCode) =  FirewireLowUtil.QReadATRes)
-				 OR (SYSTEM.VAL(LONGINT,packet.tCode) =  FirewireLowUtil.BReadATRes) OR (SYSTEM.VAL(LONGINT,packet.tCode) =  FirewireLowUtil.LockATRes))
+			ELSIF ((SYSTEM.VAL(SIGNED32,packet.tCode) =  FirewireLowUtil.NoDataWATRes) OR (SYSTEM.VAL(SIGNED32,packet.tCode) =  FirewireLowUtil.QReadATRes)
+				 OR (SYSTEM.VAL(SIGNED32,packet.tCode) =  FirewireLowUtil.BReadATRes) OR (SYSTEM.VAL(SIGNED32,packet.tCode) =  FirewireLowUtil.LockATRes))
 				THEN contest:= OHCI.ATController.GetResContest()
 			ELSE contest:= OHCI.ATController.GetReqContest()
 			END;
@@ -1125,7 +1125,7 @@ TYPE
 
 		(** Fills the FIFO with the context program *)
 		PROCEDURE FillFifo(contest: FirewireLowUtil.Contest):BOOLEAN;
-		VAR packet: OHCIPacket; error: BOOLEAN; z: LONGINT; tempAddr: LONGINT;
+		VAR packet: OHCIPacket; error: BOOLEAN; z: SIGNED32; tempAddr: SIGNED32;
 		CONST isRunning= 15; active= 10;
 		BEGIN
 			(* KernelLog.String("Entering FillFifo"); KernelLog.Ln(); *)
@@ -1184,17 +1184,17 @@ TYPE
 		(** Decides if it's a local or external 1394 packet. IF it's an external packet it will be sent to the OHCI send procedures *)
 		PROCEDURE  SendPacket1394(context: Contest;VAR packet: OHCIPacket):BOOLEAN; (* core.c *)
 		CONST queued = 0;
-		VAR speed: LONGINT;
+		VAR speed: SIGNED32;
 		BEGIN
 
 			IF packet.host.inBusReset
-			OR (packet.generation # SYSTEM.VAL(LONGINT,LSH(FirewireLowUtil.ReadReg(FirewireLowUtil.SelfIDCount)*{16..23},-16))) THEN
+			OR (packet.generation # SYSTEM.VAL(SIGNED32,LSH(FirewireLowUtil.ReadReg(FirewireLowUtil.SelfIDCount)*{16..23},-16))) THEN
 				KernelLog.String("Generation mismatch or host in bus reset!"); KernelLog.Ln(); RETURN FALSE
 			END;
 
 			packet.state:= FirewireLowUtil.QUEUED;
 
-			IF ( SYSTEM.VAL(LONGINT,packet.nodeID) = packet.host.nodeID ) THEN (* It's a local request *)
+			IF ( SYSTEM.VAL(SIGNED32,packet.nodeID) = packet.host.nodeID ) THEN (* It's a local request *)
 				KernelLog.String("It's an internal packet!"); KernelLog.Ln(); (*
 				size:= packet.dataSize + packet.headerSize;
 
@@ -1216,7 +1216,7 @@ TYPE
 			END;
 
 			IF (packet.type = FirewireLowUtil.async) & (packet.nodeID # {0..5}) THEN
-				speed:= OHCI.SpeedMap[OHCI.nodeID][SYSTEM.VAL(LONGINT,packet.nodeID)];
+				speed:= OHCI.SpeedMap[OHCI.nodeID][SYSTEM.VAL(SIGNED32,packet.nodeID)];
 				packet.speed:= FirewireLowUtil.ConvertToSet(speed);
 			END;
 
@@ -1282,7 +1282,7 @@ TYPE
 
 		(** Configure the asynchronous receive request/response contexts *)
 		PROCEDURE ConfigARR;
-		VAR reqCont, resCont: FirewireLowUtil.Contest; controller: FirewireLowUtil.ADMAController; size: LONGINT;
+		VAR reqCont, resCont: FirewireLowUtil.Contest; controller: FirewireLowUtil.ADMAController; size: SIGNED32;
 		BEGIN
 			OHCI.ARDescNum:= 4;
 			InitARRDesc();
@@ -1314,7 +1314,7 @@ TYPE
 
 		(** Configure the asynchronous transmit request/response contexts *)
 		PROCEDURE ConfigATR;
-		VAR reqCont, resCont: FirewireLowUtil.Contest; controller: FirewireLowUtil.ADMAController; size : LONGINT;
+		VAR reqCont, resCont: FirewireLowUtil.Contest; controller: FirewireLowUtil.ADMAController; size : SIGNED32;
 		BEGIN
 			OHCI.ATDescNum:= 32;
 			(* Initialize contest with a scheduling buffer with place for 10 packets *)
@@ -1342,7 +1342,7 @@ TYPE
 
 		(** Configures the isochronous receive contexts *)
 		PROCEDURE ConfigIR;
-     		 VAR contest: FirewireLowUtil.IRContest; controller: FirewireLowUtil.IRDMAController; size, avIRCont, i: LONGINT;
+     		 VAR contest: FirewireLowUtil.IRContest; controller: FirewireLowUtil.IRDMAController; size, avIRCont, i: SIGNED32;
      		str: ARRAY 5 OF CHAR;
       		BEGIN
         		avIRCont:= FirewireLowUtil.GetAvailableIRCont();
@@ -1365,7 +1365,7 @@ TYPE
 
 		(** Configure the isochronous transmit contexts *)
 		PROCEDURE ConfigIT;
-		VAR contest: FirewireLowUtil.Contest; controller: FirewireLowUtil.ITDMAController; size, avITCont, i: LONGINT;
+		VAR contest: FirewireLowUtil.Contest; controller: FirewireLowUtil.ITDMAController; size, avITCont, i: SIGNED32;
 			str: ARRAY 5 OF CHAR;
 		BEGIN
 			avITCont:= FirewireLowUtil.GetAvailableITCont();
@@ -1387,7 +1387,7 @@ TYPE
 
 		(** Generates the dma receive programs and starts the contexts *)
 		PROCEDURE InitAsyncRecvCont;
-			VAR i: LONGINT; desc: FirewireLowUtil.InputMoreDesc; s, Z, branchAddress, dataAddress:SET;
+			VAR i: SIGNED32; desc: FirewireLowUtil.InputMoreDesc; s, Z, branchAddress, dataAddress:SET;
 			quadlet1, quadlet2, quadlet3, quadlet4, reqCount: SET; reqCntst, resCntst: FirewireLowUtil.Contest; block: FirewireLowUtil.Block;
 			branchAddressPtr: ADDRESS;
 		BEGIN
@@ -1463,7 +1463,7 @@ TYPE
 
 		(** Initializes the isochronous receive contexts *)
 		PROCEDURE InitIsochRecvCont;
-		VAR i: LONGINT; desc: FirewireLowUtil.InputMoreDesc; s, Z, branchAddress, dataAddress:SET;
+		VAR i: SIGNED32; desc: FirewireLowUtil.InputMoreDesc; s, Z, branchAddress, dataAddress:SET;
 			quadlet1, quadlet2, quadlet3, quadlet4, reqCount: SET; contest: FirewireLowUtil.IRContest; block: FirewireLowUtil.Block;
 			branchAddressPtr: ADDRESS;
 		BEGIN
@@ -1506,7 +1506,7 @@ TYPE
 
 		(** Initializes the isochronous transmit context *)
 		PROCEDURE InitIsochXmitCont;
-		VAR i: LONGINT; contest: FirewireLowUtil.Contest;
+		VAR i: SIGNED32; contest: FirewireLowUtil.Contest;
 		BEGIN
 			OHCI.ITController.ResetIterator();
 			WHILE OHCI.ITController.hasNext DO contest:= OHCI.ITController.GetNextContest();
@@ -1561,8 +1561,8 @@ TYPE
 
 		(* Not used: it was intended as a packet scheduler
 		PROCEDURE Schedule(contest: FirewireLowUtil.Contest);
-		VAR block: FirewireLowUtil.Block; quadlet3,quadlet: SET; branchAddress, avlbl, resdl, i: LONGINT; packet: FirewireLowUtil.Packet;
-			dataAddress, copyAddress: LONGINT;
+		VAR block: FirewireLowUtil.Block; quadlet3,quadlet: SET; branchAddress, avlbl, resdl, i: SIGNED32; packet: FirewireLowUtil.Packet;
+			dataAddress, copyAddress: SIGNED32;
 		CONST notLast= 0; reqCount = {0..15}; resCount = {0..15}; branchMask = {4..31};
 		BEGIN
 			(* read value of Z *)
@@ -1576,7 +1576,7 @@ TYPE
 			quadlet:= SYSTEM.VAL(SET, SYSTEM.GET32(block.start + 12));
 			resdl:= ConvertToLongint(quadlet*reqCount);
 			(* read data address *)
-			dataAddress:= SYSTEM.VAL(LONGINT, SYSTEM.GET32(block.start + 4));
+			dataAddress:= SYSTEM.VAL(SIGNED32, SYSTEM.GET32(block.start + 4));
 			(* schedule packet *)
 			copyAddress:= ADDRESSOF(packet);
 			FOR i:= 0 TO avlbl-resdl-1 DO (* SYSTEM.MOVE(dataAddress+i,copyAddress+i,8) *)
@@ -1593,7 +1593,7 @@ TYPE
 				quadlet:= SYSTEM.VAL(SET, SYSTEM.GET32(branchAddress + 12));
 				resdl:= ConvertToLongint(quadlet*reqCount);
 				(* read data address *)
-				dataAddress:= SYSTEM.VAL(LONGINT, SYSTEM.GET32(branchAddress + 4));
+				dataAddress:= SYSTEM.VAL(SIGNED32, SYSTEM.GET32(branchAddress + 4));
 				FOR i:= 0 TO avlbl-resdl-1 DO SYSTEM.MOVE(dataAddress+i,copyAddress+i,8) END;
 				(* KernelLog.String("Difference between available and residual is: "); KernelLog.Int(avlbl - resdl,2); KernelLog.Ln(); *)
 				PrintBuffer(FirewireLowUtil.ConvertToSet(dataAddress),(avlbl-resdl) DIV 4);
@@ -1607,7 +1607,7 @@ TYPE
 
 		(** Schedules packets for isochronous contexts *)
 		PROCEDURE IsoSchedule(reg: SET);
-		VAR controller: FirewireLowUtil.IRDMAController; i: LONGINT;
+		VAR controller: FirewireLowUtil.IRDMAController; i: SIGNED32;
 		BEGIN
 			(* This call will fail in PacketReceived, because implementation is missing *)
 			FOR i:= 0 TO controller.avIRCont-1 DO
@@ -1654,7 +1654,7 @@ TYPE
 
 		(** Inits the OHCI data structure *)
 		PROCEDURE InitOHCI;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i:= 0 TO 62 DO
 				OHCI.Nodes[i]:= NIL
@@ -1669,7 +1669,7 @@ TYPE
 		END InitOHCI;
 
 		(** Initializes the OHCI registers *)
-		PROCEDURE&Init*(base,irq:LONGINT);
+		PROCEDURE&Init*(base,irq:SIGNED32);
 		CONST irmcCmcIsc = {31,30,29}; cycClkAcc = {16..23}; pmcBmc = {28,27}; postedWriteEnable= {18};
 			programPhyEnable= 23; aPhyEnhanceEnable= 22; rcvPhyPkt = 10; postedWriteErr = 8;
 		VAR reg:SET;
@@ -1806,7 +1806,7 @@ TYPE
 		(** Checks to see who is the bus manager and tries to become it if necessary. This procedure is not complete *)
 		PROCEDURE CheckBusManager;
 		CONST isRoot= 30;
-		VAR selfIDBuf: SET; reg: SET;nodeID,data: SET;countReg,selfIDSize,IRMID: SET; i,j,size: LONGINT;
+		VAR selfIDBuf: SET; reg: SET;nodeID,data: SET;countReg,selfIDSize,IRMID: SET; i,j,size: SIGNED32;
 		BEGIN
 			nodeID:= FirewireLowUtil.ReadReg(FirewireLowUtil.NodeID)*{0..5};
 			OHCI.nodeID:= ConvertToLongint(nodeID);
@@ -1863,18 +1863,18 @@ TYPE
 		END ScanUnitDirectory;
 
 		(** Processes the unit directory of each device on the bus *)
-		PROCEDURE ProcessUnitDirectory(VAR ud: FirewireLowUtil.UnitDirectory; node: FirewireLowUtil.Node; addrLow, addrHigh: SET; VAR id: LONGINT);
-		VAR length,addr,code,value,i: LONGINT; udTemp: FirewireLowUtil.UnitDirectory; context: Contest; buffer: SET;
+		PROCEDURE ProcessUnitDirectory(VAR ud: FirewireLowUtil.UnitDirectory; node: FirewireLowUtil.Node; addrLow, addrHigh: SET; VAR id: SIGNED32);
+		VAR length,addr,code,value,i: SIGNED32; udTemp: FirewireLowUtil.UnitDirectory; context: Contest; buffer: SET;
 		BEGIN
 			(* KernelLog.String("Processing the unit directory!"); KernelLog.Ln(); *)
 			context:= OHCI.ATController.GetReqContest();
-			addr:= SYSTEM.VAL(LONGINT,addrLow);
+			addr:= SYSTEM.VAL(SIGNED32,addrLow);
 			(* Get the length of the unit directory *)
 			IF ~Read1394(context,OHCI,node.phyID,node.generation,addrLow,addrHigh,buffer,4) THEN
 				KernelLog.String("There was an error::ProcessUnitDirectory"); KernelLog.Ln(); RETURN
 			END;
 
-			length:= SYSTEM.VAL(LONGINT,LSH(buffer,-16));
+			length:= SYSTEM.VAL(SIGNED32,LSH(buffer,-16));
 			NEW(ud,length);
 
 			ud.addrLow:= addrLow;
@@ -1893,8 +1893,8 @@ TYPE
 
 				ud.udEntries[i]:= buffer;
 
-				code:= SYSTEM.VAL(LONGINT,LSH(buffer,-24));
-				value:= SYSTEM.VAL(LONGINT,buffer*{0..23});
+				code:= SYSTEM.VAL(SIGNED32,LSH(buffer,-24));
+				value:= SYSTEM.VAL(SIGNED32,buffer*{0..23});
 				CASE code OF
 					FirewireLowUtil.ConfigRomVendorID: ud.vendorID:= value;
 					|FirewireLowUtil.ConfigRomModelID: ud.modelID:= value;
@@ -1920,7 +1920,7 @@ TYPE
 
 		(** Process the root directory of each device on the bus *)
 		PROCEDURE ProcessRootDirectory(node: FirewireLowUtil.Node);
-		VAR context: Contest; buffer, addrLow, addrHigh: SET; code, value, addr, busInfoLength, rootDirLength, id: LONGINT;
+		VAR context: Contest; buffer, addrLow, addrHigh: SET; code, value, addr, busInfoLength, rootDirLength, id: SIGNED32;
 			ud: FirewireLowUtil.UnitDirectory;
 		BEGIN
 			(* KernelLog.String("Processing root directory"); KernelLog.Ln(); *)
@@ -1928,14 +1928,14 @@ TYPE
 			addrHigh:= FirewireLowUtil.CSRBaseHigh;
 			addrLow:= FirewireLowUtil.CSRBaseLow;
 			addrLow:= addrLow + FirewireLowUtil.CSRConfigRom;
-			addr:= SYSTEM.VAL(LONGINT,addrLow);
+			addr:= SYSTEM.VAL(SIGNED32,addrLow);
 			context:= OHCI.ATController.GetReqContest();
 			(* get the length of the bus info block *)
 			IF ~Read1394(context,OHCI,node.phyID,node.generation,addrLow,addrHigh,buffer,4) THEN
 				KernelLog.String("There was an error::ProcessRootDirectory"); KernelLog.Ln(); RETURN
 			END;
 
-			busInfoLength:= SYSTEM.VAL(LONGINT,LSH(buffer,-24));
+			busInfoLength:= SYSTEM.VAL(SIGNED32,LSH(buffer,-24));
 
 			addr:= addr + 4 + busInfoLength*4;
 			addrLow:= SYSTEM.VAL(SET,addr);
@@ -1945,7 +1945,7 @@ TYPE
 				KernelLog.String("There was an error::ProcessRootDirectory"); KernelLog.Ln(); RETURN
 			END;
 
-			rootDirLength:= SYSTEM.VAL(LONGINT,LSH(buffer,-16));
+			rootDirLength:= SYSTEM.VAL(SIGNED32,LSH(buffer,-16));
 
 			INC(addr,4);
 			addrLow:= SYSTEM.VAL(SET,addr);
@@ -1955,8 +1955,8 @@ TYPE
 					KernelLog.String("There was an error::ProcessRootDirectory"); KernelLog.Ln(); RETURN
 				END;
 
-				code:= SYSTEM.VAL(LONGINT,LSH(buffer,-24));
-				value:= SYSTEM.VAL(LONGINT,buffer*{0..23});
+				code:= SYSTEM.VAL(SIGNED32,LSH(buffer,-24));
+				value:= SYSTEM.VAL(SIGNED32,buffer*{0..23});
 				CASE code OF
 					FirewireLowUtil.ConfigRomVendorID: node.vendorID:= value; (* perhaps look also for a text leaf *)
 					|FirewireLowUtil.ConfigRomNodeCapabilities: node.capabilities:= SYSTEM.VAL(SET,value);
@@ -1976,8 +1976,8 @@ TYPE
 		END ScanRootDirectory;
 
 		(** Scan a node's directories *)
-		PROCEDURE ScanEachNode(physicalID: SET; generation: LONGINT);
-		VAR buffer: ARRAY 5 OF SET; bufferLength,i: LONGINT;
+		PROCEDURE ScanEachNode(physicalID: SET; generation: SIGNED32);
+		VAR buffer: ARRAY 5 OF SET; bufferLength,i: SIGNED32;
 			node: FirewireLowUtil.Node; found: BOOLEAN; guid: FirewireLowUtil.GUID;
 		BEGIN
 			(* KernelLog.String("Entering scan each node"); KernelLog.Ln(); *)
@@ -2012,7 +2012,7 @@ TYPE
 
 		(** Scan all nodes on the bus *)
 		PROCEDURE ScanNodes*;
-		VAR i,generation: LONGINT; sid: FirewireLowUtil.SelfID; node: FirewireLowUtil.Node;
+		VAR i,generation: SIGNED32; sid: FirewireLowUtil.SelfID; node: FirewireLowUtil.Node;
 		BEGIN
 			(* KernelLog.String("Entering scan nodes"); KernelLog.Ln(); *)
 			WHILE OHCI.TopologyMap[i] # NIL DO
@@ -2049,16 +2049,16 @@ TYPE
 
 		(** Builds the topology and the speed map *)
 		PROCEDURE BuildMaps;
-		VAR size,i,j,addr: LONGINT; quad,reg: SET; sid: FirewireLowUtil.SelfID; esid: FirewireLowUtil.ExtSelfID;
-			speed, children: ARRAY 64 OF LONGINT; c: LONGINT;
+		VAR size,i,j,addr: SIGNED32; quad,reg: SET; sid: FirewireLowUtil.SelfID; esid: FirewireLowUtil.ExtSelfID;
+			speed, children: ARRAY 64 OF SIGNED32; c: SIGNED32;
 		BEGIN
 			OHCI.numOfNodes:= 0;
 			(* KernelLog.String("Entering BuildMaps!"); KernelLog.Ln(); *)
-			addr:= SYSTEM.VAL(LONGINT,OHCI.SelfIDBufferAdr) + 4; (* first quadlet has only management info *)
+			addr:= SYSTEM.VAL(SIGNED32,OHCI.SelfIDBufferAdr) + 4; (* first quadlet has only management info *)
 			(* Count the nodes and remember the ids *)
 			reg:= FirewireLowUtil.ReadReg(FirewireLowUtil.SelfIDCount);
 			(* mask the size *)
-			size:= SYSTEM.VAL(LONGINT,LSH(reg * {2..10},-2));
+			size:= SYSTEM.VAL(SIGNED32,LSH(reg * {2..10},-2));
 			size:= ((size-1) DIV 2)-1; (* we just need to look at the first quadlet of each selfid packet *)
 
 			(* Initialize *)
@@ -2101,7 +2101,7 @@ TYPE
 					IF (sid.p0 = {0,1}) THEN INC(children[i]) END;
 					IF (sid.p1 = {0,1}) THEN INC(children[i]) END;
 					IF (sid.p2 = {0,1}) THEN INC(children[i]) END;
-					speed[i]:= SYSTEM.VAL(LONGINT,sid.sp);
+					speed[i]:= SYSTEM.VAL(SIGNED32,sid.sp);
 				END;
 
 				(* Check if there are more packets from this node *)
@@ -2142,7 +2142,7 @@ TYPE
 		(** Transactions *)
 
 		(** Creates a Lock packet *)
-		PROCEDURE Lock1394(context: Contest; ohci: FirewireLowUtil.OHCIDesc; nodeID: SET; generation: LONGINT; addrLow, addrHigh: SET; extCode: LONGINT;
+		PROCEDURE Lock1394(context: Contest; ohci: FirewireLowUtil.OHCIDesc; nodeID: SET; generation: SIGNED32; addrLow, addrHigh: SET; extCode: SIGNED32;
 			VAR data: SET; VAR  arg: SET):BOOLEAN;
 		VAR packet: OHCIPacket; success: BOOLEAN;
 		BEGIN
@@ -2177,9 +2177,9 @@ TYPE
 		END Lock1394;
 
 		(** Creates a write packet *)
-		PROCEDURE Write1394*(context: Contest; ohci: FirewireLowUtil.OHCIDesc; nodeID: SET; generation: LONGINT; VAR buffer: SET;  addrLow, addrHigh: SET;
-			length: LONGINT):BOOLEAN;
-		VAR packet: OHCIPacket; success: BOOLEAN; tries: LONGINT;
+		PROCEDURE Write1394*(context: Contest; ohci: FirewireLowUtil.OHCIDesc; nodeID: SET; generation: SIGNED32; VAR buffer: SET;  addrLow, addrHigh: SET;
+			length: SIGNED32):BOOLEAN;
+		VAR packet: OHCIPacket; success: BOOLEAN; tries: SIGNED32;
 		BEGIN
 			success:= FALSE; tries:= 0;
 
@@ -2219,9 +2219,9 @@ TYPE
 		END Write1394;
 
 		(** Creates a read packet *)
-		PROCEDURE Read1394*(context: Contest; ohci: FirewireLowUtil.OHCIDesc; nodeID: SET;generation: LONGINT; addrLow,addrHigh:SET;
-		VAR buffer: SET; length: LONGINT):BOOLEAN;
-		VAR packet: OHCIPacket; success: BOOLEAN; tries,i: LONGINT;
+		PROCEDURE Read1394*(context: Contest; ohci: FirewireLowUtil.OHCIDesc; nodeID: SET;generation: SIGNED32; addrLow,addrHigh:SET;
+		VAR buffer: SET; length: SIGNED32):BOOLEAN;
+		VAR packet: OHCIPacket; success: BOOLEAN; tries,i: SIGNED32;
 		BEGIN
 			(* KernelLog.String("Read1394"); KernelLog.Ln(); *)
 			success:= FALSE; tries:= 0;
@@ -2273,9 +2273,9 @@ TYPE
 		(** Node manager relative part *)
 
 		(** Sends a read quadlet packet *)
-		PROCEDURE NodeManagerReadQ(context: Contest; host:FirewireLowUtil.OHCIDesc; nodeID: SET; generation: LONGINT;
+		PROCEDURE NodeManagerReadQ(context: Contest; host:FirewireLowUtil.OHCIDesc; nodeID: SET; generation: SIGNED32;
 			addrLow,addrHigh: SET;  VAR quad: SET):BOOLEAN;
-		VAR success: BOOLEAN; i: LONGINT;
+		VAR success: BOOLEAN; i: SIGNED32;
 		BEGIN
 			success:= FALSE; i:= 0;
 			WHILE ~success & (i < 4) DO
@@ -2291,9 +2291,9 @@ TYPE
 		END NodeManagerReadQ;
 
 		(** Reads the bus info block of a node *)
-		PROCEDURE ReadBusInfoBlock(host: FirewireLowUtil.OHCIDesc; nodeID: SET; generation: LONGINT; VAR buffer: ARRAY OF SET;
-			bufferLength: LONGINT):BOOLEAN;
-		VAR addrLow,addrHigh, base: SET; i, headerSize: LONGINT; vendorID: LONGINT; context: Contest;
+		PROCEDURE ReadBusInfoBlock(host: FirewireLowUtil.OHCIDesc; nodeID: SET; generation: SIGNED32; VAR buffer: ARRAY OF SET;
+			bufferLength: SIGNED32):BOOLEAN;
+		VAR addrLow,addrHigh, base: SET; i, headerSize: SIGNED32; vendorID: SIGNED32; context: Contest;
 		BEGIN
 			addrHigh:= FirewireLowUtil.CSRBaseHigh;
 			addrLow:= FirewireLowUtil.CSRBaseLow + FirewireLowUtil.CSRConfigRom;
@@ -2301,7 +2301,7 @@ TYPE
 			(*
 			KernelLog.String("The base low address is: "); FirewireLowUtil.PrintSet(addrLow); KernelLog.Ln();
 			KernelLog.String("The base high address is: "); FirewireLowUtil.PrintSet(addrHigh); KernelLog.Ln();
-			KernelLog.String("Reading bus info block of node with nodeID: "); KernelLog.Int(SYSTEM.VAL(LONGINT,nodeID),2);
+			KernelLog.String("Reading bus info block of node with nodeID: "); KernelLog.Int(SYSTEM.VAL(SIGNED32,nodeID),2);
 			KernelLog.Ln(); *)
 
 			buffer[0]:= {};
@@ -2320,15 +2320,15 @@ TYPE
 				RETURN TRUE
 			END;
 
-			headerSize:= SYSTEM.VAL(LONGINT,LSH(buffer[0],-24));
+			headerSize:= SYSTEM.VAL(SIGNED32,LSH(buffer[0],-24));
 
 			(* Increment address *)
 
-			addrLow:= SYSTEM.VAL(SET,SYSTEM.VAL(LONGINT,addrLow)+4);
+			addrLow:= SYSTEM.VAL(SET,SYSTEM.VAL(SIGNED32,addrLow)+4);
 
 			IF headerSize = 1 THEN
 				(* KernelLog.String("Node has a minimal rom format!"); KernelLog.Ln(); *)
-				vendorID:= SYSTEM.VAL(LONGINT,buffer[0]*{0..23});
+				vendorID:= SYSTEM.VAL(SIGNED32,buffer[0]*{0..23});
 				(* KernelLog.String("The vendor ID is: "); KernelLog.Int(vendorID,2); KernelLog.Ln(); *)
 				RETURN FALSE
 			END;
@@ -2342,10 +2342,10 @@ TYPE
 				IF ~NodeManagerReadQ(context,host,nodeID,generation,addrLow,addrHigh,buffer[i]) THEN
 					KernelLog.String("Quadlet read error!"); KernelLog.Ln(); RETURN TRUE
 				END;
-				addrLow:= base + SYSTEM.VAL(SET,SYSTEM.VAL(LONGINT,addrLow)+4);
+				addrLow:= base + SYSTEM.VAL(SET,SYSTEM.VAL(SIGNED32,addrLow)+4);
 			END;
 
-			vendorID:= SYSTEM.VAL(LONGINT,LSH(buffer[3],-8));
+			vendorID:= SYSTEM.VAL(SIGNED32,LSH(buffer[3],-8));
 
 			(* KernelLog.String("The vendorID is "); KernelLog.Int(vendorID,2); KernelLog.Ln(); *)
 
@@ -2357,7 +2357,7 @@ TYPE
 
 		(** Prints OHCI information *)
 		PROCEDURE PrintOHCIInfo;
-		VAR reg: SET; val: LONGINT;
+		VAR reg: SET; val: SIGNED32;
 		BEGIN
 			reg:= FirewireLowUtil.ReadReg(FirewireLowUtil.Version);
 			KernelLog.String("Printing the OHCI information:"); KernelLog.Ln();
@@ -2408,7 +2408,7 @@ VAR c*:Controller;
 
 (** Procedure to print the specifier ID of a node; not used *)
 PROCEDURE ScanRomOfNodes*;
-VAR j,i:LONGINT; node: FirewireLowUtil.Node;
+VAR j,i:SIGNED32; node: FirewireLowUtil.Node;
 BEGIN
 	c.ScanNodes();
 	(* Printing the content of the nodes array *)
@@ -2429,7 +2429,7 @@ END ScanRomOfNodes;
 (** Test procedure to send a ping packet *)
 PROCEDURE SendPingPacket*;
 VAR context: Contest;set0,set1,set2,set3,set4,set5,set6,set7: SET;
-	dataSize: LONGINT; packet: OHCIPacket; block: FirewireLowUtil.Block;
+	dataSize: SIGNED32; packet: OHCIPacket; block: FirewireLowUtil.Block;
 BEGIN
 	context:= c.OHCI.ATController.GetReqContest();
 	set0:= {28} + {25} + {23} + {20,21} + {18,19} + {2,3};
@@ -2467,7 +2467,7 @@ END SendPingPacket;
 (** Test procedure to send a read packet *)
 PROCEDURE SendReadPacket*;
 VAR context: Contest; set0, set1, set2, set3, set4, set5, set6, set7: SET;
-	dataSize: LONGINT; packet: OHCIPacket; block: FirewireLowUtil.Block;
+	dataSize: SIGNED32; packet: OHCIPacket; block: FirewireLowUtil.Block;
 BEGIN
 	context:= c.OHCI.ATController.GetReqContest();
 	set0:= {28} + {25} + {20,21} + {18,19} + {2,3};
@@ -2518,7 +2518,7 @@ END SendReadPacket;
 
 (** Send a compare swap lock packet to hd to access maint-utility register *)
 PROCEDURE SendLockPacket*;
-VAR nodeID: SET; context: Contest; generation: LONGINT; addrLow, addrHigh: SET; extCode: LONGINT; data, arg: SET;
+VAR nodeID: SET; context: Contest; generation: SIGNED32; addrLow, addrHigh: SET; extCode: SIGNED32; data, arg: SET;
 BEGIN
 	extCode:= 2H; (* compare swap extended transaction code *)
 	addrLow:= FirewireLowUtil.CSRBaseLow; addrHigh:= FirewireLowUtil.CSRBaseHigh;
@@ -2538,7 +2538,7 @@ END SendLockPacket;
 
 (** Test procedure to send a write packet *)
 PROCEDURE SendWritePacket*;
-VAR nodeID: SET; context: Contest; generation: LONGINT; addrLow, addrHigh: SET;
+VAR nodeID: SET; context: Contest; generation: SIGNED32; addrLow, addrHigh: SET;
 	buffer: ARRAY 1 OF SET;
 BEGIN
 	addrLow:= FirewireLowUtil.CSRBaseLow; addrHigh:= FirewireLowUtil.CSRBaseHigh;
@@ -2558,13 +2558,13 @@ END SendWritePacket;
 
 (** Test procedure to read the bus info block *)
 PROCEDURE Test1394*;
-VAR ohci: FirewireLowUtil.OHCIDesc; generation: LONGINT; sid: FirewireLowUtil.SelfID;
-	buffer: ARRAY 4 OF SET; i: LONGINT;
+VAR ohci: FirewireLowUtil.OHCIDesc; generation: SIGNED32; sid: FirewireLowUtil.SelfID;
+	buffer: ARRAY 4 OF SET; i: SIGNED32;
 BEGIN
  ohci:= c.OHCI; generation:= FirewireLowUtil.GetGeneration(); i:= 0;
  WHILE ohci.TopologyMap[i] # NIL DO
 	IF ~(ohci.TopologyMap[i] IS FirewireLowUtil.ExtSelfID) &
-		(SYSTEM.VAL(LONGINT,ohci.TopologyMap[i].physicalID) # c.OHCI.nodeID) THEN
+		(SYSTEM.VAL(SIGNED32,ohci.TopologyMap[i].physicalID) # c.OHCI.nodeID) THEN
 		sid:= ohci.TopologyMap[i];
 		IF c.ReadBusInfoBlock(ohci,sid.physicalID,generation,buffer,4) THEN
 			KernelLog.String("There was a problem reading the bus info block::Test1394!"); KernelLog.Ln()
@@ -2575,8 +2575,8 @@ BEGIN
 END Test1394;
 
 (** Scan the PCI for 1394 devices *)
-PROCEDURE ScanPCI(vendor,device: LONGINT);
-VAR index, bus, dev, fct, base, irq: LONGINT; res: WORD;
+PROCEDURE ScanPCI(vendor,device: SIGNED32);
+VAR index, bus, dev, fct, base, irq: SIGNED32; res: INTEGER;
 BEGIN
 	index := 0;
 	WHILE(PCI.FindPCIDevice(device, vendor, index, bus, dev, fct) = PCI.Done) (*?*)

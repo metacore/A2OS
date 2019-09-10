@@ -35,25 +35,25 @@ TYPE
 
 	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
-		pos: INTEGER;
-		digits: INTEGER
+		pos: SIGNED16;
+		digits: SIGNED16
 	END;
 
 VAR
 	newlayer-: tLayer;
 
-	PROCEDURE Min( a, b: INTEGER ): INTEGER;
+	PROCEDURE Min( a, b: SIGNED16 ): SIGNED16;
 	BEGIN
 		IF a < b THEN RETURN a ELSE RETURN b END
 	END Min;
 
-	PROCEDURE Max( a, b: INTEGER ): INTEGER;
+	PROCEDURE Max( a, b: SIGNED16 ): SIGNED16;
 	BEGIN
 		IF a > b THEN RETURN a ELSE RETURN b END
 	END Max;
 
 	PROCEDURE Recall( scale: tLayer;  VAR msg: Display.DisplayMsg );
-	VAR x, y, w, h: Coordinate;  x2d1, x2d2, y2d1, y2d2: LONGREAL;
+	VAR x, y, w, h: Coordinate;  x2d1, x2d2, y2d1, y2d2: FLOAT64;
 	BEGIN
 		vyAxis.SetColors( scale.style.fcol, scale.style.fcol, scale.style.fcol );  vyAxis.PlotLabels( TRUE );
 		vyAxis.SetLabelFont( scale.style.fnt );  vyAxis.AutomaticTicks( TRUE );
@@ -72,7 +72,7 @@ VAR
 	END Recall;
 
 (* PROCEDURE DoControl (scale: tLayer; VAR event: vyEvents.EventMsg);
-VAR x,y,w,h: INTEGER; X,Y,W,H: INTEGER;
+VAR x,y,w,h: SIGNED16; X,Y,W,H: SIGNED16;
 BEGIN
 x := event.x;   y := event.y;   pict := event.dlink(vyPort.Picture);
 WHILE event.gesture=vyEvents.Evt DO vyEvents.GetEvent (event);
@@ -98,7 +98,7 @@ END DoControl; *)
 	END DoControl2;
 
 	PROCEDURE Responsible( scale: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF ((event.gesture = vyEvents.EvtIdent) OR (event.gesture = vyEvents.EvtSelect)) THEN
@@ -113,7 +113,7 @@ END DoControl; *)
 	END Store0;
 
 	PROCEDURE Load0( o: tLayer;  VAR M: Objects.FileMsg );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		Files.ReadInt( M.R, version );  Files.ReadInt( M.R, o.pos );  Files.ReadInt( M.R, o.digits )
 	END Load0;
@@ -219,8 +219,8 @@ END DoControl; *)
 		vyPort.Write( pict )
 	END Insert;
 
-	PROCEDURE ScaleToPicture( p: vyPort.Picture;  posx, posy: LONGINT );
-	VAR p1: vyPort.Picture;  a: Objects.AttrMsg;  layer: tLayer;  minw, minh: INTEGER;  x, y, w, h, dsr: INTEGER;
+	PROCEDURE ScaleToPicture( p: vyPort.Picture;  posx, posy: SIGNED32 );
+	VAR p1: vyPort.Picture;  a: Objects.AttrMsg;  layer: tLayer;  minw, minh: SIGNED16;  x, y, w, h, dsr: SIGNED16;
 	BEGIN
 		New;  layer := Objects.NewObj( tLayer );  layer.digits := 2;  minw := vyAxis.MinStdWidth();
 		minh := vyAxis.MinStdWidth();  vyGraphBase.GetStringFrame( 0, 0, layer.style.fnt, "999.99", x, y, w, h, dsr );  INC( minw, w );
@@ -241,7 +241,7 @@ END DoControl; *)
 	END ScaleToPicture;
 
 	PROCEDURE ScalesToPort*;
-	VAR M: Display.SelectMsg;  pict: vyPort.Picture;  i, j: INTEGER;  a: Objects.AttrMsg;
+	VAR M: Display.SelectMsg;  pict: vyPort.Picture;  i, j: SIGNED16;  a: Objects.AttrMsg;
 	BEGIN
 		M.id := Display.get;  M.F := NIL;  M.sel := NIL;  M.obj := NIL;  M.time := -1;  Display.Broadcast( M );
 		IF M.time # -1 THEN

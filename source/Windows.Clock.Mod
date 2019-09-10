@@ -11,14 +11,14 @@ todo
 *)
 
 IMPORT Kernel32;
-VAR	tz*: LONGINT;	(** system time zone offset in minutes (from -720 to 720) *)
-	starttime*, startdate*: LONGINT;	(** time this module was loaded (usually boot time) *)
+VAR	tz*: SIGNED32;	(** system time zone offset in minutes (from -720 to 720) *)
+	starttime*, startdate*: SIGNED32;	(** time this module was loaded (usually boot time) *)
 
 	(** Get time (t) and date (d).
 	day = d MOD 32, month = d DIV 32 MOD 16, year = 1900+d DIV 512,
 	hour = t DIV 4096 MOD 32, minute = t DIV 64 MOD 64, second = t MOD 64 *)
 
-PROCEDURE Get* (VAR t, d: LONGINT);
+PROCEDURE Get* (VAR t, d: SIGNED32);
 	VAR st: Kernel32.SystemTime;
 BEGIN
 	t := 0;  d := 0;
@@ -32,7 +32,7 @@ BEGIN
 END Get;
 
 (** Set time (t) and date (d). *)
-PROCEDURE Set* (t, d: LONGINT);
+PROCEDURE Set* (t, d: SIGNED32);
 	VAR st: Kernel32.SystemTime;retBOOL: Kernel32.BOOL;								(* Dan 09.11.05 *)
 BEGIN
 	st.wDay := SHORT(d MOD 20H);  d := ASH(d, - 5);

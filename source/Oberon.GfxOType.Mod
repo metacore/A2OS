@@ -28,8 +28,8 @@ MODULE GfxOType IN Oberon; (** portable *)	(* eos  *)
 		(* outline enumeration *)
 		OutlineData = RECORD (OType.OutlineData)
 			path: GfxPaths.Path;
-			dx, dy: REAL;
-			x, y: REAL;
+			dx, dy: FLOAT32;
+			x, y: FLOAT32;
 		END;
 
 		(* raster enumeration *)
@@ -44,8 +44,8 @@ MODULE GfxOType IN Oberon; (** portable *)	(* eos  *)
 
 	(*--- Opening Fonts ---*)
 
-	PROCEDURE OpenInstance (fam: OType.Font; glyph: OType.Glyph; ptsize: INTEGER; VAR mat: GfxMatrix.Matrix): Font;
-		VAR font: Font; scale: REAL; dpi: INTEGER; m: OType.Matrix;
+	PROCEDURE OpenInstance (fam: OType.Font; glyph: OType.Glyph; ptsize: SIGNED16; VAR mat: GfxMatrix.Matrix): Font;
+		VAR font: Font; scale: FLOAT32; dpi: SIGNED16; m: OType.Matrix;
 	BEGIN
 		NEW(font); font.class := Class; font.fam := fam; font.glyph := glyph;
 		scale := Math.sqrt(GfxMatrix.Det(mat));
@@ -64,7 +64,7 @@ MODULE GfxOType IN Oberon; (** portable *)	(* eos  *)
 		RETURN font
 	END OpenInstance;
 
-	PROCEDURE Open (VAR family, style: ARRAY OF CHAR; ptsize: INTEGER; VAR mat: GfxMatrix.Matrix): GfxFonts.Font;
+	PROCEDURE Open (VAR family, style: ARRAY OF CHAR; ptsize: SIGNED16; VAR mat: GfxMatrix.Matrix): GfxFonts.Font;
 		VAR font: Font; name: GfxFonts.FontName; fam: OType.Font; glyph: OType.Glyph;
 	BEGIN
 		font := NIL;
@@ -86,15 +86,15 @@ MODULE GfxOType IN Oberon; (** portable *)	(* eos  *)
 
 	(*--- Font Methods ---*)
 
-	PROCEDURE Derive (gfont: GfxFonts.Font; ptsize: INTEGER; VAR mat: GfxMatrix.Matrix): GfxFonts.Font;
+	PROCEDURE Derive (gfont: GfxFonts.Font; ptsize: SIGNED16; VAR mat: GfxMatrix.Matrix): GfxFonts.Font;
 		VAR font: Font;
 	BEGIN
 		font := gfont(Font);
 		RETURN OpenInstance(font.fam, font.glyph, ptsize, mat)
 	END Derive;
 
-	PROCEDURE GetWidth (gfont: GfxFonts.Font; ch: CHAR; VAR dx, dy: REAL);
-		VAR font: Font; num: INTEGER; mode: SET;
+	PROCEDURE GetWidth (gfont: GfxFonts.Font; ch: CHAR; VAR dx, dy: FLOAT32);
+		VAR font: Font; num: SIGNED16; mode: SET;
 	BEGIN
 		font := gfont(Font);
 		num := OType.UnicodeToGlyph(font.fam, OType.CharToUnicode[ORD(ch)]);
@@ -108,7 +108,7 @@ MODULE GfxOType IN Oberon; (** portable *)	(* eos  *)
 		END
 	END GetWidth;
 
-	PROCEDURE FillRect (llx, lly, urx, ury, opacity: INTEGER; VAR data: OType.RasterData0);
+	PROCEDURE FillRect (llx, lly, urx, ury, opacity: SIGNED16; VAR data: OType.RasterData0);
 		VAR alpha: Images.Pixel;
 	BEGIN
 		WITH data: RasterData DO
@@ -117,8 +117,8 @@ MODULE GfxOType IN Oberon; (** portable *)	(* eos  *)
 		END
 	END FillRect;
 
-	PROCEDURE GetMap (gfont: GfxFonts.Font; ch: CHAR; VAR x, y, dx, dy: REAL; VAR map: Images.Image);
-		VAR font: Font; num: INTEGER; mode: SET; data: RasterData;
+	PROCEDURE GetMap (gfont: GfxFonts.Font; ch: CHAR; VAR x, y, dx, dy: FLOAT32; VAR map: Images.Image);
+		VAR font: Font; num: SIGNED16; mode: SET; data: RasterData;
 	BEGIN
 		font := gfont(Font);
 		num := OType.UnicodeToGlyph(font.fam, OType.CharToUnicode[ORD(ch)]);
@@ -162,8 +162,8 @@ MODULE GfxOType IN Oberon; (** portable *)	(* eos  *)
 		END
 	END LineTo;
 
-	PROCEDURE BezierTo (x, y: ARRAY OF OType.F26D6; n: INTEGER; VAR data: OType.OutlineData0);
-		VAR t, x1, x2, y1, y2: REAL;
+	PROCEDURE BezierTo (x, y: ARRAY OF OType.F26D6; n: SIGNED16; VAR data: OType.OutlineData0);
+		VAR t, x1, x2, y1, y2: FLOAT32;
 	BEGIN
 		WITH data: OutlineData DO
 			IF n = 2 THEN	(* degree 2 *)
@@ -177,8 +177,8 @@ MODULE GfxOType IN Oberon; (** portable *)	(* eos  *)
 		END
 	END BezierTo;
 
-	PROCEDURE GetOutline (gfont: GfxFonts.Font; ch: CHAR; x, y: REAL; path: GfxPaths.Path);
-		VAR font: Font; num: INTEGER; data: OutlineData;
+	PROCEDURE GetOutline (gfont: GfxFonts.Font; ch: CHAR; x, y: FLOAT32; path: GfxPaths.Path);
+		VAR font: Font; num: SIGNED16; data: OutlineData;
 	BEGIN
 		font := gfont(Font);
 		GfxPaths.Clear(path);

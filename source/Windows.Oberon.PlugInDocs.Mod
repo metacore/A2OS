@@ -12,7 +12,7 @@ MODULE PlugInDocs IN Oberon; (** portable *)	(* ejz  *)
 		END;
 
 	PROCEDURE Exchange(old, new: Documents.Document);
-		VAR name: Objects.Name; w, h: INTEGER;
+		VAR name: Objects.Name; w, h: SIGNED16;
 	BEGIN
 		Gadgets.GetObjName(old, name); w := old.W; h := old.H;
 		old^ := new^;
@@ -20,7 +20,7 @@ MODULE PlugInDocs IN Oberon; (** portable *)	(* ejz  *)
 		Gadgets.Update(old); Gadgets.Update(old.dsc)
 	END Exchange;
 
-	PROCEDURE GetStream(doc: Documents.Document; R: Request; stream: PlugIns.Stream; state: LONGINT): BOOLEAN;
+	PROCEDURE GetStream(doc: Documents.Document; R: Request; stream: PlugIns.Stream; state: SIGNED32): BOOLEAN;
 		VAR new: Documents.Document;
 	BEGIN
 Out.String("GetStream "); Out.Int(state, 0); Out.Ln();
@@ -73,7 +73,7 @@ HALT(100);
 		VAR
 			S: Attributes.Scanner; R: Request;
 			obj: Objects.Object; doc: Documents.Document;
-			res: WORD;
+			res: INTEGER;
 	BEGIN
 		Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 		Attributes.Scan(S);
@@ -97,7 +97,7 @@ Out.String("PlugInDocs.Load URL "); Out.String(R.url); Out.Ln();
 		END
 	END Load;
 
-	PROCEDURE PostStream(doc: Documents.Document; R: Request; stream: PlugIns.Stream; state: LONGINT): BOOLEAN;
+	PROCEDURE PostStream(doc: Documents.Document; R: Request; stream: PlugIns.Stream; state: SIGNED32): BOOLEAN;
 	BEGIN
 Out.String("PostStream "); Out.Int(state, 0); Out.Ln();
 		IF state # PlugIns.Transfering THEN
@@ -134,7 +134,7 @@ Out.String("PostStream "); Out.Int(state, 0); Out.Ln();
 	END PostHandler;
 
 	PROCEDURE PostNames(VAR url, file: ARRAY OF CHAR);
-		VAR i, j, k, l: LONGINT;
+		VAR i, j, k, l: SIGNED32;
 	BEGIN
 		Win32FS.GetTempDirectory(file);
 		l := 0; WHILE file[l] # 0X DO INC(l) END;
@@ -153,7 +153,7 @@ Out.String("PostStream "); Out.Int(state, 0); Out.Ln();
 		VAR
 			S: Attributes.Scanner; R: Request;
 			obj: Objects.Object; doc: Documents.Document;
-			file, name: FileDir.FileName; res: WORD;
+			file, name: FileDir.FileName; res: INTEGER;
 	BEGIN
 		Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 		Attributes.Scan(S);

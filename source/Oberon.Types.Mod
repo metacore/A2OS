@@ -12,7 +12,7 @@ TYPE
 	Type* = Modules.TypeDesc;
 
 VAR
-	(*newRec: PROCEDURE(VAR p: LONGINT;  tag: LONGINT);*)
+	(*newRec: PROCEDURE(VAR p: SIGNED32;  tag: SIGNED32);*)
 
 (** Returned the named (record) type from module mod. *)
 PROCEDURE This* (mod: Modules.Module; name: ARRAY OF CHAR): Type;
@@ -21,7 +21,7 @@ BEGIN
 END This;
 
 (** Return the type extension level level of type t. *)
-PROCEDURE BaseOf* (t: Type; level: INTEGER): Type;
+PROCEDURE BaseOf* (t: Type; level: SIGNED16): Type;
 BEGIN
 	S.GET(ADDRESS(t.tag) - 8 - 4*level, t);
 	IF t # NIL THEN
@@ -31,9 +31,9 @@ BEGIN
 END BaseOf;
 
 (** What is the extension level of t? *)
-PROCEDURE LevelOf* (t: Type): INTEGER;
+PROCEDURE LevelOf* (t: Type): SIGNED16;
 BEGIN
-	RETURN INTEGER(t.flags-{Modules.ProtTypeBit})
+	RETURN SIGNED16(t.flags-{Modules.ProtTypeBit})
 END LevelOf;
 
 (*
@@ -60,7 +60,7 @@ BEGIN
 	IF BaseOf(t, LevelOf(otype)) # otype THEN o := NIL; RETURN END ;
 	Heaps.NewRec(o,ADDRESS(t.tag),FALSE); (* ug: only allow copying of non-realtime objects *)
 	(*
-	newRec(S.VAL(LONGINT, o), S.VAL(LONGINT,t.tag))
+	newRec(S.VAL(SIGNED32, o), S.VAL(SIGNED32,t.tag))
 	*)
 END NewObj;
 

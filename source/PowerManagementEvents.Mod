@@ -15,7 +15,7 @@ CONST WOLport*=7; (*usually sent to port 7 or 9, but any port can be used in pri
 (** usage: PowerManagementEvents.Wake host MAC ~  *)
 PROCEDURE Wake*(context : Commands.Context);
 VAR
-	i, j, res, hex, pos: LONGINT;
+	i, j, res, hex, pos: SIGNED32;
 	c: CHAR;
 	hostname: ARRAY 128 OF CHAR;
 	fip: IP.Adr;

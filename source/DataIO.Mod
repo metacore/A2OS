@@ -26,7 +26,7 @@ TYPE
 		next: Card;
 
 		PROCEDURE Read( R: Reader );
-		VAR res: WORD;
+		VAR res: INTEGER;
 			msg: ARRAY 64 OF CHAR;
 			string: NbrStrings.String;  module: Modules.Module;  moduleName, typeName: Modules.Name;
 		BEGIN
@@ -111,7 +111,7 @@ TYPE
 
 	(** Reads a date and time. *)
 		PROCEDURE DateTime*( VAR x: Dates.DateTime );
-		VAR d, t: LONGINT;
+		VAR d, t: SIGNED32;
 		BEGIN
 			IF ReaderAvailable() THEN RawNum( d );  RawNum( t );  x := Dates.OberonToDateTime( d, t ) ELSE HALT( 1000 ) END
 		END DateTime;
@@ -186,7 +186,7 @@ TYPE
 
 		(** Writes a date and time. *)
 		PROCEDURE DateTime*( x: Dates.DateTime );
-		VAR d, t: LONGINT;
+		VAR d, t: SIGNED32;
 		BEGIN
 			Dates.DateTimeToOberon( x, d, t );  RawNum( d );  RawNum( t );  Update
 		END DateTime;
@@ -250,7 +250,7 @@ TYPE
 	File* = OBJECT  (** Not shareable between multiple processes. *)
 	VAR F: Files.File;
 		lib: Library;
-		initialwpos: LONGINT;
+		initialwpos: SIGNED32;
 		R-: Reader;
 		W-: Writer;
 
@@ -307,7 +307,7 @@ VAR
 	The writer is placed at the end of the file, which is at the beginning if the file is new,
 	thereby preventing existing data from being overwritten. *)
 	PROCEDURE Open*( fileName: Files.FileName ): File;
-	VAR existingFile: BOOLEAN;  dummy, libPos: LONGINT;  file: File;  libR: Reader;
+	VAR existingFile: BOOLEAN;  dummy, libPos: SIGNED32;  file: File;  libR: Reader;
 		name, fName: ARRAY Files.NameLength OF CHAR;
 		suffix: ARRAY Files.PrefixLength OF CHAR;
 	BEGIN
@@ -339,7 +339,7 @@ VAR
 	writings append the file.  Calling Rewind moves the reader and writer to the beginning of the file,
 	and will therefore overwrite all contents previously held by the file. All prior data will be lost. *)
 	PROCEDURE Rewind*( f: File );
-	VAR dummy: LONGINT;
+	VAR dummy: SIGNED32;
 	BEGIN
 		IF f # NIL THEN
 			NEW( f.lib );  NEW( f.R, f.F, 0 );  NEW( f.W, f.F, 0 );  f.initialwpos := 0;  f.R.lib := f.lib;  f.R.file := f;  f.W.lib := f.lib;  f.W.file := f;
@@ -356,7 +356,7 @@ VAR
 	BEGIN
 		f.W.Update;  NEW( libPosW, f.F, 0 );   (* writing library position to very first position *)
 
-		libPosW.RawLInt( f.W.Pos()(LONGINT) + f.initialwpos );  libPosW.Update;  f.lib.Write( f.W );
+		libPosW.RawLInt( f.W.Pos()(SIGNED32) + f.initialwpos );  libPosW.Update;  f.lib.Write( f.W );
 
 		f.W.Update;  Files.Register( f.F );  f.F := NIL;  f.lib := NIL;  f.R := NIL;  f.W := NIL
 	END Close;

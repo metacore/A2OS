@@ -15,7 +15,7 @@ TYPE
 		dtd: XML.DocTypeDecl;
 		elemReg*: XML.ElementRegistry;
 		reportError*: PROCEDURE {DELEGATE} (pos, line, row: Streams.Position; CONST msg: ARRAY OF CHAR);
-		res*: LONGINT; (* result success / error code *)
+		res*: SIGNED32; (* result success / error code *)
 		ds1, ds2 : DynamicStrings.DynamicString; (** utility string, { (ds1 # NIL) & (ds2 # NIL) } *)
 
 		PROCEDURE &Init*(s: Scanner.Scanner);
@@ -41,12 +41,12 @@ TYPE
 			END
 		END CheckSymbol;
 
-		PROCEDURE ExpandCharacterRef(num: LONGINT): CHAR;
+		PROCEDURE ExpandCharacterRef(num: SIGNED32): CHAR;
 		BEGIN
 			RETURN CHR(SHORT(SHORT(num)))
 		END ExpandCharacterRef;
 
-		PROCEDURE ExpandEntityRef(CONST name: ARRAY OF CHAR; type: SHORTINT): String;
+		PROCEDURE ExpandEntityRef(CONST name: ARRAY OF CHAR; type: SIGNED8): String;
 		VAR generalEntity: XML.EntityDecl;
 		BEGIN
 			IF dtd # NIL THEN
@@ -305,7 +305,7 @@ TYPE
 		*)
 		PROCEDURE ParseElementDecl(dtd: XML.DocTypeDecl);
 		VAR ed: XML.ElementDecl; ccp: XML.CollectionCP; s: String;
-			contentType: SHORTINT;
+			contentType: SIGNED8;
 		BEGIN
 			scanner.ScanMarkup();
 			IF ~CheckSymbol({Scanner.Name}, "Element name expected") THEN RETURN END;
@@ -430,7 +430,7 @@ TYPE
 			choice		::=	'(' S? cp (S? '|' S? cp)+ S? ')'
 			seq			::=	'(' S? cp (S? ',' S? cp)* S? ')'
 		*)
-		PROCEDURE ParseContentParticle(VAR contentType: SHORTINT): XML.CollectionCP;
+		PROCEDURE ParseContentParticle(VAR contentType: SIGNED8): XML.CollectionCP;
 		VAR cp: XML.ContentParticle; ncp: XML.NameContentParticle; ccp: XML.CollectionCP; s: String;
 		BEGIN
 			IF ~CheckSymbol({Scanner.ParenOpen}, "'(' expected") THEN RETURN ccp END;
@@ -673,7 +673,7 @@ TYPE
 		END ParseCDataSect;
 
 		PROCEDURE ParseCharData(): XML.ArrayChars;
-		VAR cd: XML.ArrayChars; oldpos: LONGINT; s,s2: String;
+		VAR cd: XML.ArrayChars; oldpos: SIGNED32; s,s2: String;
 		BEGIN
 			oldpos := scanner.GetOldPos();
 			NEW(cd); (* cd.SetFilePos(scanner.GetFile(), scanner.GetOldPos()); cd.SetLen(scanner.GetPos() - oldpos); *)
@@ -713,7 +713,7 @@ TYPE
 		END ParseElement;
 
 		PROCEDURE ParseStartTag(VAR e: XML.Element; VAR empty: BOOLEAN);
-		VAR s: String; pos: LONGINT; firstInstantiationFailed: BOOLEAN;
+		VAR s: String; pos: SIGNED32; firstInstantiationFailed: BOOLEAN;
 		BEGIN
 			pos := scanner.GetOldPos();
 			scanner.ScanMarkup();
@@ -779,11 +779,11 @@ TYPE
 
 		PROCEDURE ExpandCharacterRefs(s: String): String;
 		VAR
-			from, to: LONGINT;
+			from, to: SIGNED32;
 			ch : CHAR;
 
-			PROCEDURE ReplaceEntity(CONST source: ARRAY OF CHAR; VAR srcPos: LONGINT; VAR dest: ARRAY OF CHAR; VAR destPos: LONGINT);
-			VAR ch: CHAR; name: ARRAY 32 OF CHAR; sp, dp: LONGINT; string: Strings.String; pos: LONGINT;
+			PROCEDURE ReplaceEntity(CONST source: ARRAY OF CHAR; VAR srcPos: SIGNED32; VAR dest: ARRAY OF CHAR; VAR destPos: SIGNED32);
+			VAR ch: CHAR; name: ARRAY 32 OF CHAR; sp, dp: SIGNED32; string: Strings.String; pos: SIGNED32;
 			BEGIN
 				ASSERT(source[srcPos] = "&");
 				sp := srcPos+1;
@@ -895,7 +895,7 @@ TYPE
 		END ExpandCharacterRefs;
 
 		PROCEDURE ParseEntityValue(): String;
-		VAR s, es: String; start, end, len: SIZE; val: LONGINT; msg: ARRAY 17 OF CHAR;
+		VAR s, es: String; start, end, len: SIZE; val: SIGNED32; msg: ARRAY 17 OF CHAR;
 		BEGIN
 			ds1.Clear; ds1.Append(s^);
 			start := 0; len := ds1.Length();
@@ -951,7 +951,7 @@ TYPE
 
 		PROCEDURE ParseAttributeValue(): String;
 		VAR
-			s, es: String; start, end, len, val: LONGINT; msg: ARRAY 17 OF CHAR;
+			s, es: String; start, end, len, val: SIGNED32; msg: ARRAY 17 OF CHAR;
 			expanded : BOOLEAN;
 		BEGIN
 			s := scanner.GetString(Scanner.Str_AttributeValue);
@@ -959,7 +959,7 @@ TYPE
 		END ParseAttributeValue;
 
 		PROCEDURE ParseCharRef(): XML.CharReference;
-		VAR cRef: XML.CharReference; code: LONGINT; res: WORD; s: String;
+		VAR cRef: XML.CharReference; code: SIGNED32; res: INTEGER; s: String;
 		BEGIN
 			s := scanner.GetString(Scanner.CharRef);
 			IF s[0] = 'x' THEN	(* hexadecimal *)
@@ -1013,7 +1013,7 @@ BEGIN
 	RETURN i = len
 END IsPubidLiteral;
 
-PROCEDURE StrToInt(VAR str: ARRAY OF CHAR): LONGINT;
+PROCEDURE StrToInt(VAR str: ARRAY OF CHAR): SIGNED32;
 BEGIN
 	IF str[0] = 'x' THEN	(* str in hexadecimal form *)
 		str[0] := ' ';
@@ -1031,7 +1031,7 @@ BEGIN
 END DefaultReportError;
 
 PROCEDURE ExpandPredefinedEntity(CONST name : ARRAY OF CHAR) : Strings.String;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(predefinedEntities)-1 DO
 		IF (name = predefinedEntities[i].name) THEN

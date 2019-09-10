@@ -66,7 +66,7 @@ TYPE
 			top := MIN(top, dy);
 		END CheckLeftTop;
 
-		PROCEDURE SetLeftTop(dxf, dyf: REAL);
+		PROCEDURE SetLeftTop(dxf, dyf: FLOAT32);
 		BEGIN
 			SELF.left := ENTIER(dx * dxf); SELF.top := ENTIER(dy * dyf); CheckLeftTop;
 		END SetLeftTop;

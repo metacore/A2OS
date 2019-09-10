@@ -65,7 +65,7 @@ TYPE
 		END PropertyChanged;
 
 		(* position a line line in parent coordinates*)
-		PROCEDURE Set*(x0,y0, x1, y1: LONGINT);
+		PROCEDURE Set*(x0,y0, x1, y1: SIGNED32);
 		VAR rect:WMRectangles.Rectangle; changed:BOOLEAN;
 		BEGIN
 			rect:=bounds.Get();
@@ -100,9 +100,9 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		CONST pi=3.1516; headscale= 0.25;
-		VAR  alpha: REAL;
+		VAR  alpha: FLOAT32;
 			dx,dy: SIZE;
-			size:LONGINT; head: LONGREAL;
+			size:SIGNED32; head: FLOAT64;
 		BEGIN
 			DrawBackground^(canvas);
 			IF (colorI # 0) THEN
@@ -295,7 +295,7 @@ BEGIN
 	StrIsVerticalDescription := Strings.NewString("Horizontal or vertical line?");
 END InitStrings;
 
-PROCEDURE arctan2(x,y: REAL): REAL; (*arctan in range 0..2pi*)
+PROCEDURE arctan2(x,y: FLOAT32): FLOAT32; (*arctan in range 0..2pi*)
 	BEGIN
 		IF (x>0) & (y>=0) THEN RETURN Math.arctan(y/x)
 		ELSIF (x>0) & (y<0) THEN RETURN Math.arctan(y/x)+2*Math.pi

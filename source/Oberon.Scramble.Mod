@@ -27,19 +27,19 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 		Frame* = POINTER TO FrameDesc;
 		FrameDesc* = RECORD (Gadgets.FrameDesc)
 			pict: Pictures.Picture;
-			n, m: INTEGER;
-			arrange: ARRAY MaxN, MaxM OF RECORD x, y: INTEGER END;
-			empty: RECORD x, y: INTEGER END;
+			n, m: SIGNED16;
+			arrange: ARRAY MaxN, MaxM OF RECORD x, y: SIGNED16 END;
+			empty: RECORD x, y: SIGNED16 END;
 			focus, done, num: BOOLEAN
 		END;
 		UpdateMsg = RECORD (Display.FrameMsg)
-			i0, i1, j0, j1: INTEGER
+			i0, i1, j0, j1: SIGNED16
 		END;
 
 	VAR
 		W: Texts.Writer;
 
-	PROCEDURE CalcSize(F: Frame; x, y: INTEGER; VAR xo, yo, dx, dy: INTEGER);
+	PROCEDURE CalcSize(F: Frame; x, y: SIGNED16; VAR xo, yo, dx, dy: SIGNED16);
 	BEGIN
 		dx := (F.W-2*Border) DIV F.n;
 		IF ~F.num & (F.n*dx > F.pict.width) THEN
@@ -53,9 +53,9 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 		yo := y+Border+(F.H-2*Border-F.m*dy) DIV 2
 	END CalcSize;
 
-	PROCEDURE DrawRect(F: Frame; Q: Display3.Mask; i0, i1, j0, j1, xo, yo, dx, dy: INTEGER);
+	PROCEDURE DrawRect(F: Frame; Q: Display3.Mask; i0, i1, j0, j1, xo, yo, dx, dy: SIGNED16);
 		VAR
-			i, j: INTEGER;
+			i, j: SIGNED16;
 			num: ARRAY 4 OF CHAR;
 	BEGIN
 		FOR i := i0 TO i1 DO
@@ -78,8 +78,8 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 		END
 	END DrawRect;
 
-	PROCEDURE Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER);
-		VAR xo, yo, dx, dy, i, j, d: INTEGER;
+	PROCEDURE Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16);
+		VAR xo, yo, dx, dy, i, j, d: SIGNED16;
 	BEGIN
 		CalcSize(F, x, y, xo, yo, dx, dy);
 		Display3.ReplConst(Q, Display3.textbackC, x+Border, y+Border, F.W-2*Border, yo-y-Border, Display.replace);
@@ -98,8 +98,8 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 		END
 	END Restore;
 
-	PROCEDURE Update(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; VAR U: UpdateMsg);
-		VAR xo, yo, dx, dy: INTEGER;
+	PROCEDURE Update(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; VAR U: UpdateMsg);
+		VAR xo, yo, dx, dy: SIGNED16;
 	BEGIN
 		IF ~F.done THEN
 			CalcSize(F, x, y, xo, yo, dx, dy);
@@ -114,7 +114,7 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 	END Update;
 
 	PROCEDURE CheckDone(F: Frame);
-		VAR i, j: INTEGER;
+		VAR i, j: SIGNED16;
 	BEGIN
 		F.done := TRUE;
 		FOR i := 0 TO F.n-1 DO
@@ -173,11 +173,11 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 		M.res := 0
 	END Consume;
 
-	PROCEDURE Track(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg);
+	PROCEDURE Track(F: Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg);
 		VAR
 			U: UpdateMsg;
 			keysum: SET;
-			i, j, xo, yo, dx, dy: INTEGER;
+			i, j, xo, yo, dx, dy: SIGNED16;
 			inside: BOOLEAN;
 			Q: Display3.Mask;
 		PROCEDURE Drop;
@@ -284,7 +284,7 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 	END Track;
 
 	PROCEDURE Arrange(F: Frame; scramble: BOOLEAN);
-		VAR i, j, n: INTEGER;
+		VAR i, j, n: SIGNED16;
 	BEGIN
 		FOR i := 0 TO MaxN-1 DO
 			FOR j := 0 TO MaxM-1 DO
@@ -326,7 +326,7 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 	END Arrange;
 
 	PROCEDURE CopyFrame(VAR M: Objects.CopyMsg; F, F1: Frame);
-		VAR i, j: INTEGER;
+		VAR i, j: SIGNED16;
 	BEGIN
 		Gadgets.CopyFrame(M, F, F1);
 		F1.n := F.n;
@@ -345,7 +345,7 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 
 	PROCEDURE Handle*(F: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
-			x, y, w, h: INTEGER;
+			x, y, w, h: SIGNED16;
 			Q: Display3.Mask;
 			copy: Frame;
 	BEGIN
@@ -553,10 +553,10 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 			F: Files.File;
 			R: Files.Rider;
 			main: Frame;
-			tag, x, y, w, h, ref: INTEGER;
+			tag, x, y, w, h, ref: SIGNED16;
 			gen: ARRAY 64 OF CHAR;
 			lib: Objects.Library;
-			len: LONGINT;
+			len: SIGNED32;
 			obj: Objects.Object;
 	BEGIN
 		main := NIL;
@@ -596,7 +596,7 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 			F: Files.File;
 			R: Files.Rider;
 			B: Objects.BindMsg;
-			len: LONGINT;
+			len: SIGNED32;
 	BEGIN
 		Texts.WriteString(W, "Store ");
 		Texts.Append(Oberon.Log, W.buf);
@@ -709,7 +709,7 @@ MODULE Scramble IN Oberon;	(** portable *) (* Copyright (C) 1995 by Emil J. Zell
 	PROCEDURE Env(VAR S: Texts.Scanner; VAR F: Frame);
 		VAR
 			text: Texts.Text;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 			doc: Documents.Document;
 	BEGIN
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);

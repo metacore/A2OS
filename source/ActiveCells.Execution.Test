@@ -19,7 +19,7 @@ positive: tester module
 				RETURN ~(31 IN set);
 			END Await;
 			
-			PROCEDURE Done*(i: LONGINT);
+			PROCEDURE Done*(i: SIGNED32);
 			BEGIN{EXCLUSIVE}
 				INCL(set, i);
 			END Done;
@@ -63,7 +63,7 @@ negative: simple communication with error
 
 	TYPE
 		Out = CELL (out: PORT OUT);
-		VAR data: LONGINT;
+		VAR data: SIGNED32;
 		BEGIN
 			data := 122;
 			out << data;
@@ -71,7 +71,7 @@ negative: simple communication with error
 		END Out;
 
 		In = CELL(in: PORT IN);
-		VAR data: LONGINT;
+		VAR data: SIGNED32;
 		BEGIN
 			data << in;
 			tester.Assert(data = 123);
@@ -102,7 +102,7 @@ positive: simple communication without error
 
 	TYPE
 		Out = CELL (out: PORT OUT);
-		VAR data: LONGINT;
+		VAR data: SIGNED32;
 		BEGIN
 			data := 123;
 			out << data;
@@ -110,7 +110,7 @@ positive: simple communication without error
 		END Out;
 
 		In = CELL(in: PORT IN);
-		VAR data: LONGINT;
+		VAR data: SIGNED32;
 		BEGIN
 			data << in;
 			tester.Assert(data = 123);

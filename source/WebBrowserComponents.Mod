@@ -220,8 +220,8 @@ TYPE
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
 		BEGIN
 			DrawBackground^(canvas);
-			canvas.Line(0, 0, x-1, 0, LONGINT(0808080FFH), WMGraphics.ModeSrcOverDst);
-			canvas.Line(0, 1, x-1, 1, LONGINT(0C0C0C0FFH), WMGraphics.ModeSrcOverDst);
+			canvas.Line(0, 0, x-1, 0, SIGNED32(0808080FFH), WMGraphics.ModeSrcOverDst);
+			canvas.Line(0, 1, x-1, 1, SIGNED32(0C0C0C0FFH), WMGraphics.ModeSrcOverDst);
 		END DrawBackground;
 	END HR;
 
@@ -258,7 +258,7 @@ TYPE
 			hScrollbar : WMStandardComponents.Scrollbar;
 			tv : WMTextView.TextView;
 			isoDecoder : Codecs.TextDecoder;
-			result : WORD;
+			result : INTEGER;
 		BEGIN
 			Init;
 			takesFocus.Set(FALSE);
@@ -293,7 +293,7 @@ TYPE
 	HTTPConnectionPool* = OBJECT
 	VAR
 		connection : ARRAY MaxHTTPConnections OF ResourceConnection;
-		conCnt : LONGINT;
+		conCnt : SIGNED32;
 (*logW : MultiLogger.LogWindow;
 log : Streams.Writer;*)
 		PROCEDURE & Init*;
@@ -315,7 +315,7 @@ log : Streams.Writer;*)
 			con : ResourceConnection;
 			charset: WebHTTP.AdditionalField;
 			reader : Streams.Reader;
-			result : WORD;
+			result : INTEGER;
 			cnt : SIZE;
 		BEGIN
 			server := GetServer(url^);
@@ -559,7 +559,7 @@ END GetMimeType;
 PROCEDURE LoadImage*(reader : Streams.Reader; mimeType : ARRAY OF CHAR; name : ARRAY OF CHAR): WMGraphics.Image;
 VAR
 	img : WMGraphics.Image;
-	res: WORD; w, h : SIZE; x : LONGINT;
+	res: INTEGER; w, h : SIZE; x : SIGNED32;
 	decoder : Codecs.ImageDecoder;
 	ext : String;
 

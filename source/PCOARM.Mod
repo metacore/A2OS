@@ -219,11 +219,11 @@ CONST
 
 TYPE
 	DCDList = POINTER TO RECORD
-		pc: LONGINT;
+		pc: SIGNED32;
 		next: DCDList;
 	END;
 
-	Callback* = PROCEDURE {DELEGATE} (pc: LONGINT);
+	Callback* = PROCEDURE {DELEGATE} (pc: SIGNED32);
 
 VAR
 	(*Trace W: Texts.Writer;
@@ -231,22 +231,22 @@ VAR
 	AddrMode: ARRAY 5 OF SET; (* contains bitmasks for validity checks *)
 	f: Files.File;
 	r: Files.Rider;
-	start: LONGINT;
+	start: SIGNED32;
 	code: PCLIR.CodeArray;
-	codelen: LONGINT;
+	codelen: SIGNED32;
 	codeTooLong: BOOLEAN;
-	sourcepos*: LONGINT;
+	sourcepos*: SIGNED32;
 	dcd: BOOLEAN;
-	codeBarrier: LONGINT;
+	codeBarrier: SIGNED32;
 	codeBarrierCallback: Callback;
 	callbackLocked: BOOLEAN;
 
-PROCEDURE GetCodePos*(): LONGINT;
+PROCEDURE GetCodePos*(): SIGNED32;
 BEGIN RETURN codelen
 END GetCodePos;
 
-PROCEDURE GetInstruction*(pos: LONGINT): SET;
-VAR factor, i, l: LONGINT;
+PROCEDURE GetInstruction*(pos: SIGNED32): SET;
+VAR factor, i, l: SIGNED32;
 BEGIN ASSERT(pos < codelen);
 	factor := 1;
 	FOR i := 0 TO 3 DO
@@ -258,12 +258,12 @@ BEGIN ASSERT(pos < codelen);
 	RETURN SYSTEM.VAL(SET32, l)
 END GetInstruction;
 
-PROCEDURE GetCode*(VAR codeArr: PCLIR.CodeArray; VAR length, hdrLength, addressFactor: LONGINT);
+PROCEDURE GetCode*(VAR codeArr: PCLIR.CodeArray; VAR length, hdrLength, addressFactor: SIGNED32);
 BEGIN
 	codeArr := code; length := codelen; hdrLength := codelen DIV 4; addressFactor := 4
 END GetCode;
 
-PROCEDURE Lsh(v, s: LONGINT): SET;
+PROCEDURE Lsh(v, s: SIGNED32): SET;
 BEGIN RETURN SYSTEM.VAL(SET32, LSH(v,s))
 END Lsh;
 
@@ -272,12 +272,12 @@ PROCEDURE CheckCondition(c: SET);
 BEGIN ASSERT(c - {31, 30, 29, 28} = {})
 END CheckCondition;
 
-PROCEDURE CheckAddressingMode(mode: LONGINT; am: SET);
+PROCEDURE CheckAddressingMode(mode: SIGNED32; am: SET);
 BEGIN ASSERT(am - AddrMode[mode-1] = {})
 END CheckAddressingMode;
 *)
 
-PROCEDURE CheckReg(register: LONGINT);
+PROCEDURE CheckReg(register: SIGNED32);
 BEGIN ASSERT((0 <= register) & (register < 16), ErrInvalidRegister)
 END CheckReg;
 
@@ -287,12 +287,12 @@ BEGIN ASSERT (registers - Registers = {}, ErrInvalidRegisterSet)
 END CheckRegisterSet;
 *)
 
-PROCEDURE CheckImm(imm, max: LONGINT);
+PROCEDURE CheckImm(imm, max: SIGNED32);
 BEGIN ASSERT((0 <= imm) & (imm < max), ErrImmediateTooBig)
 END CheckImm;
 
 (*
-PROCEDURE CheckSignedImm(imm, min, max: LONGINT);
+PROCEDURE CheckSignedImm(imm, min, max: SIGNED32);
 BEGIN ASSERT((min < imm), ErrImmediateTooSmall);
 	ASSERT((imm < max), ErrImmediateTooBig)
 END CheckSignedImm;
@@ -303,7 +303,7 @@ BEGIN ASSERT(set * (-mask) = {}, ErrInvalidMode)
 END CheckSet;
 
 (** Addressing Mode 3 Helpers *)
-PROCEDURE MakeA3Immediate*(VAR addrMode: SET; offset: LONGINT): SET;
+PROCEDURE MakeA3Immediate*(VAR addrMode: SET; offset: SIGNED32): SET;
 VAR neg: BOOLEAN; address: SET;
 BEGIN
 	neg := offset < 0; offset := ABS(offset);
@@ -318,13 +318,13 @@ BEGIN
 	RETURN address
 END MakeA3Immediate;
 
-PROCEDURE MakeA3Register*(register: LONGINT): SET;
+PROCEDURE MakeA3Register*(register: SIGNED32): SET;
 BEGIN RETURN SYSTEM.VAL(SET32, register)
 END MakeA3Register;
 
 (**----- Data Processing  Instructions (Addressing Mode 1) -------*)
-PROCEDURE MakeA1Immediate*(immediate: LONGINT; VAR imm: SET): BOOLEAN;
-VAR rot: LONGINT;
+PROCEDURE MakeA1Immediate*(immediate: SIGNED32; VAR imm: SET): BOOLEAN;
+VAR rot: SIGNED32;
 BEGIN
 	rot := 0; imm := SYSTEM.VAL(SET32, immediate);
 	WHILE (rot < 32) & (ODD(rot) OR (imm * { 8..31} # {})) DO
@@ -339,135 +339,135 @@ BEGIN
 	END
 END MakeA1Immediate;
 
-PROCEDURE MakeA1Register*(reg: LONGINT): SET;
+PROCEDURE MakeA1Register*(reg: SIGNED32): SET;
 BEGIN CheckReg(reg);
 	RETURN SYSTEM.VAL(SET32, reg)
 END MakeA1Register;
 
-PROCEDURE MakeA1RegSHIFTReg*(reg, shiftreg: LONGINT; mode: SET): SET;
+PROCEDURE MakeA1RegSHIFTReg*(reg, shiftreg: SIGNED32; mode: SET): SET;
 BEGIN CheckReg(reg); CheckReg(shiftreg); CheckSet(mode, ShiftMask);
 	RETURN Lsh(shiftreg, 8) + mode + A1ShiftReg + SYSTEM.VAL(SET32, reg)
 END MakeA1RegSHIFTReg;
 
-PROCEDURE MakeA1RegSHIFTImm*(reg, imm: LONGINT; mode: SET): SET;
+PROCEDURE MakeA1RegSHIFTImm*(reg, imm: SIGNED32; mode: SET): SET;
 BEGIN CheckReg(reg); CheckImm(imm, 20H); CheckSet(mode, ShiftMask);
 	RETURN Lsh(imm, 7) + mode + A1ShiftImm + SYSTEM.VAL(SET32, reg)
 END MakeA1RegSHIFTImm;
 
 (** ADC - add with carry (rD <- rN + shifterOperand + carry) *)
-PROCEDURE ADC*(cond, addrMode: SET; rD, rN: LONGINT; shifterOperand, S: SET);
+PROCEDURE ADC*(cond, addrMode: SET; rD, rN: SIGNED32; shifterOperand, S: SET);
 BEGIN Code(cond + opADC + addrMode + Lsh(rN, 16) + Lsh(rD, 12) + shifterOperand + S)
 END ADC;
 
 (** ADD -  add (rD <- rN + shifterOperand) *)
-PROCEDURE ADD*(cond, addrMode: SET; rD, rN: LONGINT; shifterOperand, S: SET);
+PROCEDURE ADD*(cond, addrMode: SET; rD, rN: SIGNED32; shifterOperand, S: SET);
 BEGIN Code(cond + opADD + addrMode + Lsh(rN, 16) + Lsh(rD, 12) + shifterOperand + S)
 END ADD;
 
 (** AND - bitwise and (rD <- rN AND shifterOperand) *)
-PROCEDURE AND*(cond, addrMode: SET; rD, rN: LONGINT; shifterOperand, S: SET);
+PROCEDURE AND*(cond, addrMode: SET; rD, rN: SIGNED32; shifterOperand, S: SET);
 BEGIN CheckSet(shifterOperand, {0..11});
 	Code(cond + opAND + addrMode + Lsh(rN, 16) + Lsh(rD, 12) + shifterOperand + S)
 END AND;
 
 (** BIC - clears bits (rD <- rN AND NOT shifterOperand) *)
-PROCEDURE BIC*(cond, addrMode: SET; rD, rN: LONGINT; shifterOperand, S: SET);
+PROCEDURE BIC*(cond, addrMode: SET; rD, rN: SIGNED32; shifterOperand, S: SET);
 BEGIN Code(cond + opBIC + addrMode + Lsh(rN, 16) + Lsh(rD, 12) + shifterOperand + S)
 END BIC;
 
 (** CMN - compare negative (CC updated based on rN + shifterOperand) *)
-PROCEDURE CMN*(cond, addrMode: SET; rN: LONGINT; shifterOperand: SET);
+PROCEDURE CMN*(cond, addrMode: SET; rN: SIGNED32; shifterOperand: SET);
 BEGIN Code(cond + opCMN + addrMode + Lsh(rN, 16) + shifterOperand)
 END CMN;
 
 (** CMP - compare (CC updateed based on rN - shifterOperand) *)
-PROCEDURE CMP*(cond, addrMode: SET; rN: LONGINT; shifterOperand: SET);
+PROCEDURE CMP*(cond, addrMode: SET; rN: SIGNED32; shifterOperand: SET);
 BEGIN Code(cond + opCMP + addrMode + Lsh(rN, 16) + shifterOperand)
 END CMP;
 
 (** EOR - XOr (rD <- rN XOR shifterOperand) *)
-PROCEDURE EOR*(cond, addrMode: SET; rD, rN: LONGINT; shifterOperand, S: SET);
+PROCEDURE EOR*(cond, addrMode: SET; rD, rN: SIGNED32; shifterOperand, S: SET);
 BEGIN Code(cond + opEOR + addrMode + Lsh(rN, 16) + Lsh(rD, 12) + shifterOperand + S)
 END EOR;
 
 (** MOV - move (rD <- shifterOperand) *)
-PROCEDURE MOV*(cond, addrMode: SET; rD: LONGINT; shifterOperand, S: SET);
+PROCEDURE MOV*(cond, addrMode: SET; rD: SIGNED32; shifterOperand, S: SET);
 BEGIN Code(cond + opMOV + addrMode + Lsh(rD, 12) + shifterOperand + S)
 END MOV;
 
 (** MVN - move negative (rD <- NOT shifterOperand) *)
-PROCEDURE MVN*(cond, addrMode: SET; rD: LONGINT; shifterOperand, S: SET);
+PROCEDURE MVN*(cond, addrMode: SET; rD: SIGNED32; shifterOperand, S: SET);
 BEGIN Code(cond + opMVN + addrMode + Lsh(rD, 12) + shifterOperand + S)
 END MVN;
 
 (** ORR - bitwise OR (rD <- rN OR shifterOperand) *)
-PROCEDURE ORR*(cond, addrMode: SET; rD, rN: LONGINT; shifterOperand, S: SET);
+PROCEDURE ORR*(cond, addrMode: SET; rD, rN: SIGNED32; shifterOperand, S: SET);
 BEGIN Code(cond + opORR + addrMode + Lsh(rN, 16) + Lsh(rD, 12) + shifterOperand + S)
 END ORR;
 
 (** RSB -  reverse subtract (rD <- shifterOperand - rN) *)
-PROCEDURE RSB*(cond, addrMode: SET; rD, rN: LONGINT; shifterOperand, S: SET);
+PROCEDURE RSB*(cond, addrMode: SET; rD, rN: SIGNED32; shifterOperand, S: SET);
 BEGIN Code(cond + opRSB + addrMode + Lsh(rN, 16) + Lsh(rD, 12) + shifterOperand + S)
 END RSB;
 
 (** RSC -  reverse subtract with carry (rD <- shifterOperand - rN - NOT(carry)) *)
-PROCEDURE RSC*(cond, addrMode: SET; rD, rN: LONGINT; shifterOperand, S: SET);
+PROCEDURE RSC*(cond, addrMode: SET; rD, rN: SIGNED32; shifterOperand, S: SET);
 BEGIN Code(cond + opRSC + addrMode + Lsh(rN, 16) + Lsh(rD, 12) + shifterOperand + S)
 END RSC;
 
 (** SBC - subtract with carry (rD <- rN - shifterOperand - NOT(carry))*)
-PROCEDURE SBC*(cond, addrMode: SET; rD, rN: LONGINT; shifterOperand, S: SET);
+PROCEDURE SBC*(cond, addrMode: SET; rD, rN: SIGNED32; shifterOperand, S: SET);
 BEGIN Code(cond + opSBC + addrMode + Lsh(rN, 16) + Lsh(rD, 12) + shifterOperand + S)
 END SBC;
 
 (** SUB -  subtract (rD <- rN - shifterOperand) *)
-PROCEDURE SUB*(cond, addrMode: SET; rD, rN: LONGINT; shifterOperand, S: SET);
+PROCEDURE SUB*(cond, addrMode: SET; rD, rN: SIGNED32; shifterOperand, S: SET);
 BEGIN Code(cond + opSUB + addrMode + Lsh(rN, 16) + Lsh(rD, 12) + shifterOperand + S)
 END SUB;
 
 (** TEQ -  test equivalence (CC updated based on rN XOR shifterOperand) *)
-PROCEDURE TEQ*(cond, addrMode: SET; rN: LONGINT; shifterOperand: SET);
+PROCEDURE TEQ*(cond, addrMode: SET; rN: SIGNED32; shifterOperand: SET);
 BEGIN Code(cond + opTEQ + addrMode + Lsh(rN, 16) + shifterOperand)
 END TEQ;
 
 (** TST -  test (CC updated based on rN AND shifterOperand) *)
-PROCEDURE TST*(cond, addrMode: SET; rN: LONGINT; shifterOperand: SET);
+PROCEDURE TST*(cond, addrMode: SET; rN: SIGNED32; shifterOperand: SET);
 BEGIN Code(cond + opTST + addrMode + Lsh(rN, 16) + shifterOperand)
 END TST;
 
 (**----------------------- Multiply  Instructions -----------------------*)
 (** MLA - multiply accumulate (rD <- (rM * rS) + rN) *)
-PROCEDURE MLA*(cond: SET; rD, rM, rS, rN: LONGINT; S: SET);
+PROCEDURE MLA*(cond: SET; rD, rM, rS, rN: SIGNED32; S: SET);
 BEGIN ASSERT(rD # rM, NONORTHOGONALITYEXCEPTION);
 	Code(cond + opMLA + Lsh(rD, 16) + Lsh(rN, 12) + Lsh(rS, 8) + Lsh(rM, 0) + S)
 END MLA;
 
 (** MUL - multiply (rD <- rM * rS) *)
-PROCEDURE MUL*(cond: SET; rD, rM, rS: LONGINT; S: SET);
+PROCEDURE MUL*(cond: SET; rD, rM, rS: SIGNED32; S: SET);
 BEGIN ASSERT(rD # rM, NONORTHOGONALITYEXCEPTION);
 	Code(cond + opMUL + Lsh(rD, 16) + Lsh(rS, 8) + Lsh(rM, 0) + S)
 END MUL;
 
 (** SMLAL - signed multiply accumulate long (rDLo <- (rA * rB)[31:0] + rDLo, rDHi <- (rA * rB)[63:32] + rDHi + carry) *)
-PROCEDURE SMLAL*(cond: SET; rDHi, rDLo, rM, rS: LONGINT; S: SET);
+PROCEDURE SMLAL*(cond: SET; rDHi, rDLo, rM, rS: SIGNED32; S: SET);
 BEGIN ASSERT((rDHi # rDLo) & (rDHi # rM) & (rDLo # rM), NONORTHOGONALITYEXCEPTION);
 	Code(cond + opSMLAL + Lsh(rDHi, 16) + Lsh(rDLo, 12) + Lsh(rS, 8) + Lsh(rM, 0) + S)
 END SMLAL;
 
 (** SMULL - signed multiply long (rDLo <- (rM * rS)[31:0], rDHi <- (rM * rS)[63:32]) *)
-PROCEDURE SMULL*(cond: SET; rDHi, rDLo, rM, rS: LONGINT; S: SET);
+PROCEDURE SMULL*(cond: SET; rDHi, rDLo, rM, rS: SIGNED32; S: SET);
 BEGIN ASSERT((rDHi # rDLo) & (rDHi # rM) & (rDLo # rM), NONORTHOGONALITYEXCEPTION);
 	Code(cond + opSMULL + Lsh(rDHi, 16) + Lsh(rDLo, 12) + Lsh(rS, 8) + Lsh(rM, 0) + S)
 END SMULL;
 
 (** UMLAL - unsigned multiply accumulate long (rDLo <- (rM*rS)[31:0] + rDLo, rDHi <- (rM*rS)[63:32] + rDHi + carry) *)
-PROCEDURE UMLAL*(cond: SET; rDLo, rDHi, rM, rS: LONGINT; S: SET);
+PROCEDURE UMLAL*(cond: SET; rDLo, rDHi, rM, rS: SIGNED32; S: SET);
 BEGIN ASSERT((rDHi # rDLo) & (rDHi # rM) & (rDLo # rM), NONORTHOGONALITYEXCEPTION);
 	Code(cond + opUMLAL + Lsh(rDHi, 16) + Lsh(rDLo, 12) + Lsh(rS, 8) + Lsh(rM, 0) + S)
 END UMLAL;
 
 (** UMULL - unsigned multply long (rDLo <- (rM*rS)[31:0], rDHi <- (rM*rS)[63:32]) *)
-PROCEDURE UMULL*(cond: SET; rDLo, rDHi, rM, rS: LONGINT; S: SET);
+PROCEDURE UMULL*(cond: SET; rDLo, rDHi, rM, rS: SIGNED32; S: SET);
 BEGIN ASSERT((rDHi # rDLo) & (rDHi # rM) & (rDLo # rM), NONORTHOGONALITYEXCEPTION);
 	Code(cond + opUMULL + Lsh(rDHi, 16) + Lsh(rDLo, 12) + Lsh(rS, 8) + Lsh(rM, 0) + S)
 END UMULL;
@@ -475,7 +475,7 @@ END UMULL;
 (**------------------------- Branch  Instructions  -------------------------*)
 
 (** B - branch to address. (PC <- PC + extS(address << 2)). Hint: PC is 2 instructions ahead *)
-PROCEDURE B*(cond: SET; address: LONGINT);
+PROCEDURE B*(cond: SET; address: SIGNED32);
 BEGIN ASSERT((ABS(address) < 1000000H), ErrBranchOffsetTooBig);
 	ASSERT(cond # {31, 30, 29, 28});
 	Code(cond + opB + Mask24*SET(address))
@@ -483,13 +483,13 @@ END B;
 
 (** BL - branch to address. (LR <- address of instr. after branch instruction, PC <- PC + extS(address << 2))
 	Hint: - PC is 2 instructions ahead *)
-PROCEDURE BL*(cond: SET; address: LONGINT);
+PROCEDURE BL*(cond: SET; address: SIGNED32);
 BEGIN Code(cond + opBL + Mask24*SET(address))
 END BL;
 
 (**------------ Load/Store Instructions (Addressing Modes 2, 3 & 4) --------------*)
 
-PROCEDURE MakeA2Immediate*(VAR addrMode: SET; offset: LONGINT): SET;
+PROCEDURE MakeA2Immediate*(VAR addrMode: SET; offset: SIGNED32): SET;
 VAR neg: BOOLEAN; address: SET;
 BEGIN
 	neg := offset < 0; offset := ABS(offset);
@@ -503,42 +503,42 @@ BEGIN
 	RETURN address
 END MakeA2Immediate;
 
-PROCEDURE MakeA2Register*(register: LONGINT): SET;
+PROCEDURE MakeA2Register*(register: SIGNED32): SET;
 BEGIN RETURN SYSTEM.VAL(SET32, register)
 END MakeA2Register;
 
-PROCEDURE MakeA2ScaledRegister*(reg: LONGINT; mode: SET; shift: LONGINT): SET;
+PROCEDURE MakeA2ScaledRegister*(reg: SIGNED32; mode: SET; shift: SIGNED32): SET;
 BEGIN CheckReg(reg); CheckImm(shift, 20H); CheckSet(mode, ShiftMask);
 	RETURN Lsh(shift, 7) + mode + Lsh(reg, 0)
 END MakeA2ScaledRegister;
 
 (** LDM - uses Addressing Mode 4 *)
-PROCEDURE LDM*(cond, addrMode: SET; rD: LONGINT; registers, W: SET);
+PROCEDURE LDM*(cond, addrMode: SET; rD: SIGNED32; registers, W: SET);
 BEGIN Code(cond + opLDM + addrMode + Lsh(rD, 16) + registers + W)
 END LDM;
 
 (** LDR - uses Addressing Mode 2 *)
-PROCEDURE LDR*(cond, addrMode: SET; rD, rAdr: LONGINT; address: SET);
+PROCEDURE LDR*(cond, addrMode: SET; rD, rAdr: SIGNED32; address: SET);
 BEGIN Code(cond + opLDR + addrMode + Lsh(rAdr, 16) + Lsh(rD, 12) + address)
 END LDR;
 
 (** LDRH - uses Addressing Mode 3 *)
-PROCEDURE LDRH*(cond, addrMode: SET; rD, rAdr: LONGINT; address: SET);
+PROCEDURE LDRH*(cond, addrMode: SET; rD, rAdr: SIGNED32; address: SET);
 BEGIN Code(cond + opLDRH + addrMode + Lsh(rAdr, 16) + Lsh(rD, 12) + address)
 END LDRH;
 
 (** STM - uses Addressing Mode 4 *)
-PROCEDURE STM*(cond, addrMode: SET; rD: LONGINT; registers, W: SET);
+PROCEDURE STM*(cond, addrMode: SET; rD: SIGNED32; registers, W: SET);
 BEGIN Code(cond + opSTM + addrMode + Lsh(rD, 16) + registers + W)
 END STM;
 
 (** STR - uses Addressing Mode 2 *)
-PROCEDURE STR*(cond, addrMode: SET; rAdr, rS: LONGINT; address: SET);
+PROCEDURE STR*(cond, addrMode: SET; rAdr, rS: SIGNED32; address: SET);
 BEGIN Code(cond + opSTR + addrMode + Lsh(rAdr, 16) + Lsh(rS, 12) + address)
 END STR;
 
 (** STRH - uses Addressing Mode 3 *)
-PROCEDURE STRH*(cond, addrMode: SET; rAdr, rS: LONGINT; address: SET);
+PROCEDURE STRH*(cond, addrMode: SET; rAdr, rS: SIGNED32; address: SET);
 BEGIN ASSERT(address*{6,5}={}, NONORTHOGONALITYEXCEPTION);
 	Code(cond + opSTRH + addrMode + Lsh(rAdr, 16) + Lsh(rS, 12) + address)
 END STRH;
@@ -546,13 +546,13 @@ END STRH;
 (**--------------------------- Miscellaneous -----------------------------*)
 
 (** SWI - software interrupt *)
-PROCEDURE SWI*(cond: SET; code: LONGINT);
+PROCEDURE SWI*(cond: SET; code: SIGNED32);
 BEGIN CheckImm(code, 1000000H);
 	Code(cond + opSWI + Mask24*Lsh(code, 0))
 END SWI;
 
 (** DCD - puts a 32bit value into the code *)
-PROCEDURE DCD*(value: LONGINT);
+PROCEDURE DCD*(value: SIGNED32);
 BEGIN dcd := TRUE; Code(SET(value))
 END DCD;
 
@@ -568,7 +568,7 @@ BEGIN callbackLocked := FALSE; CheckCallback
 END Unlock;
 
 (* SetConstantPoolBarrier - *)
-PROCEDURE SetConstantPoolBarrier*(pc: LONGINT);
+PROCEDURE SetConstantPoolBarrier*(pc: SIGNED32);
 BEGIN
 	ASSERT((codelen < pc) & (pc < codelen + 1000H) OR (pc = -1), INTERNALERROR);
 	codeBarrier := pc
@@ -590,12 +590,12 @@ BEGIN
 	END
 END CheckCallback;
 
-PROCEDURE ExtractRegister(code: SET; pos: LONGINT): LONGINT;
-BEGIN RETURN LSH(SYSTEM.VAL(LONGINT, SET32(code)), -pos) MOD 10H
+PROCEDURE ExtractRegister(code: SET; pos: SIGNED32): SIGNED32;
+BEGIN RETURN LSH(SYSTEM.VAL(SIGNED32, SET32(code)), -pos) MOD 10H
 END ExtractRegister;
 
-PROCEDURE FixLoad*(pc: LONGINT; address: LONGINT);
-VAR b, addrMode, addr: SET; currPos: LONGINT;
+PROCEDURE FixLoad*(pc: SIGNED32; address: SIGNED32);
+VAR b, addrMode, addr: SET; currPos: SIGNED32;
 BEGIN
 	b := GetInstruction(pc);
 	currPos := codelen;
@@ -613,8 +613,8 @@ BEGIN
 	codelen := currPos;
 END FixLoad;
 
-PROCEDURE FixJump*(pc: LONGINT; address: LONGINT);
-VAR b: SET; currPos: LONGINT;
+PROCEDURE FixJump*(pc: SIGNED32; address: SIGNED32);
+VAR b: SET; currPos: SIGNED32;
 BEGIN
 	b := GetInstruction(pc);
 	ASSERT(b * opB = opB);
@@ -624,8 +624,8 @@ BEGIN
 	codelen := currPos
 END FixJump;
 
-PROCEDURE FixCall*(pc: LONGINT; address: LONGINT): LONGINT;
-VAR b: SET; currPos: LONGINT;
+PROCEDURE FixCall*(pc: SIGNED32; address: SIGNED32): SIGNED32;
+VAR b: SET; currPos: SIGNED32;
 BEGIN
 	b := GetInstruction(pc);
 	ASSERT(b * opBL = opBL);
@@ -633,14 +633,14 @@ BEGIN
 	codelen := pc;
 	BL(b*CondMask, address);
 	codelen := currPos;
-	RETURN SYSTEM.VAL(LONGINT, SET32(b*Mask24))
+	RETURN SYSTEM.VAL(SIGNED32, SET32(b*Mask24))
 END FixCall;
 
-PROCEDURE FixCaseTable*(pc: LONGINT; address: LONGINT);
-VAR fixup, currPos: LONGINT;
+PROCEDURE FixCaseTable*(pc: SIGNED32; address: SIGNED32);
+VAR fixup, currPos: SIGNED32;
 BEGIN
 	ASSERT((address >= 0) & (address < 10000H), ErrCaseOffsetTooBig);
-	fixup := SYSTEM.VAL(LONGINT, SET32(GetInstruction(pc) * { 16..31 }));
+	fixup := SYSTEM.VAL(SIGNED32, SET32(GetInstruction(pc) * { 16..31 }));
 	currPos := codelen;
 	codelen := pc;
 	DCD(fixup + address);
@@ -663,7 +663,7 @@ END Init;
 
 PROCEDURE Code(opcode: SET);
 TYPE Bytes= ARRAY 4 OF CHAR;
-VAR b: Bytes; i: INTEGER; c32: SET32; 
+VAR b: Bytes; i: SIGNED16; c32: SET32; 
 BEGIN
 	ASSERT(codelen MOD 4 = 0); (* in case PutChar did not write 4x characters *)
 	(*Trace IF Trace & dcd THEN
@@ -704,20 +704,20 @@ BEGIN
 		SYSTEM.MOVE(ADDRESSOF(code[start]), ADDRESSOF(b[0]), codelen-start);
 		f.WriteBytes(r, b^, 0, codelen-start);
 		Files.Register(f);
-	ELSIF (codelen - start < 0) THEN HALT(MAX(INTEGER)) (* show stack*)
+	ELSIF (codelen - start < 0) THEN HALT(MAX(SIGNED16)) (* show stack*)
 	END;
 	f := NIL;
 END Close;
 
 PROCEDURE BoP*(name: ARRAY OF CHAR);
-(* VAR dcd: DCDList; i: LONGINT; b: ARRAY InstructionSize OF CHAR;
+(* VAR dcd: DCDList; i: SIGNED32; b: ARRAY InstructionSize OF CHAR;
 BEGIN
 	Trace IF Trace THEN
 		IF (start # codelen) THEN
 			dcd := dcdList;
 			WHILE (start < codelen) DO
 				FOR i := 0 TO InstructionSize-1 DO b[i] := code[start+i] END;
-				PCARMDecoder.Decode(start, SYSTEM.VAL(LONGINT, b), (dcd # NIL) & (dcd.pc = start));
+				PCARMDecoder.Decode(start, SYSTEM.VAL(SIGNED32, b), (dcd # NIL) & (dcd.pc = start));
 				IF (dcd # NIL) & (dcd.pc = start) THEN dcd := dcd.next END;
 				INC(start, InstructionSize)
 			END;
@@ -736,14 +736,14 @@ PROCEDURE EoP*;
 END EoP;
 
 PROCEDURE Dump*;
-(* VAR dcd: DCDList; i: LONGINT; b: ARRAY InstructionSize OF CHAR;
+(* VAR dcd: DCDList; i: SIGNED32; b: ARRAY InstructionSize OF CHAR;
 BEGIN
 	Trace IF Trace THEN
 		IF (start # codelen) THEN
 			dcd := dcdList;
 			WHILE (start < codelen) DO
 				FOR i := 0 TO InstructionSize-1 DO b[i] := code[start+i] END;
-				PCARMDecoder.Decode(start, SYSTEM.VAL(LONGINT, b), (dcd # NIL) & (dcd.pc = start));
+				PCARMDecoder.Decode(start, SYSTEM.VAL(SIGNED32, b), (dcd # NIL) & (dcd.pc = start));
 				IF (dcd # NIL) & (dcd.pc = start) THEN dcd := dcd.next END;
 				INC(start, InstructionSize)
 			END;

@@ -109,7 +109,7 @@ TYPE
 		-1 if the first Object is "smaller" then the second Object
 		0 if both Objects are "equal"
 		1 if the first Object is "greater" then the second Object *)
-	CompareMethod* = PROCEDURE {DELEGATE} (first, second: ANY): WORD;
+	CompareMethod* = PROCEDURE {DELEGATE} (first, second: ANY): INTEGER;
 
 	SortedList* = OBJECT(List);
 	VAR
@@ -153,7 +153,7 @@ TYPE
 		VAR
 			lowerBound, upperBound: SIZE;
 			middle: SIZE;
-			value: WORD;
+			value: INTEGER;
 		BEGIN
 			IF count = 0 THEN RETURN 0; END;
 			IF compare(list[0], x) >= 1 THEN RETURN 0; END;

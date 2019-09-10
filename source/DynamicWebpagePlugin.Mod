@@ -329,7 +329,7 @@ TYPE
 
 	(* Returns true iff back or refresh button was pressed and increases the state counter if back button was not pressed *)
 	PROCEDURE BackRefreshButtonWasPressed(request: HTTPSupport.HTTPRequest; session: HTTPSession.Session) : BOOLEAN;
-	VAR httpVar: HTTPSupport.HTTPVariable; httpCounter, sessionCounter: LONGINT; p: ANY;
+	VAR httpVar: HTTPSupport.HTTPVariable; httpCounter, sessionCounter: SIGNED32; p: ANY;
 		dynStr: DynamicStrings.DynamicString; str: Strings.String; numberStr: ARRAY 14 OF CHAR;
 	BEGIN (* request # NIL & session # NIL *)
 		httpVar := request.GetVariableByName(DynamicWebpage.StateCounterVariable);
@@ -407,7 +407,7 @@ TYPE
 
 	(* returns true iff the transformation worked without an error *)
 	PROCEDURE TransformXMLTree(file: Files.File; VAR n: XML.Content; VAR request: HTTPSupport.HTTPRequest;
-		transformationDepth: INTEGER;  w: Streams.Writer) : BOOLEAN;
+		transformationDepth: SIGNED16;  w: Streams.Writer) : BOOLEAN;
 	VAR enum, resultEnum: XMLObjects.Enumerator; pChild, pResultChild: ANY; elem: XML.Element;
 		child, newChild, resultChild: XML.Content; errormsg: ARRAY 256 OF CHAR; wasTransformed: BOOLEAN;
 		elemName : Strings.String; container, snapshot, resultContainer: XML.Container;
@@ -795,7 +795,7 @@ TYPE
 	END ReadRegisteredModules;
 
 	PROCEDURE RegisterModuleByName(moduleName: Strings.String);
-	VAR module: Modules.Module; factory : DynamicWebpage.ActiveElementDescSetFactory; i: SIZE; res: WORD;
+	VAR module: Modules.Module; factory : DynamicWebpage.ActiveElementDescSetFactory; i: SIZE; res: INTEGER;
 		msg: ARRAY 1024 OF CHAR; desc: DynamicWebpage.ActiveElementDescriptor;
 		descList: DynamicWebpage.ActiveElementDescSet;
 	BEGIN

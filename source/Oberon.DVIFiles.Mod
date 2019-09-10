@@ -10,10 +10,10 @@ TYPE
    Special* = POINTER TO SpecialDesc;
    SpecialDesc* = RECORD (* contains cached data about a special *)
       next*: Special; (* leads to the other specials with same pos *)
-      pos*: LONGINT; (* position of first data-byte in the dvi-file *)
+      pos*: SIGNED32; (* position of first data-byte in the dvi-file *)
    END;
    PageDesc = RECORD
-      offset: LONGINT;
+      offset: SIGNED32;
       specialCacheComplete: BOOLEAN;
       spec: Special
    END;
@@ -22,18 +22,18 @@ TYPE
    FontInfoDesc* = RECORD
       next: FontInfo;
       name*: POINTER TO ARRAY OF CHAR; (** font's name **)
-      no: LONGINT;
-      checksum*: LONGINT; (** font's tfm-checksum **)
-      s,d,a,l: LONGINT; (* cf. DVIViewers *)
-      width*: ARRAY 256 OF LONGREAL; (** widths in dvi-units **)
+      no: SIGNED32;
+      checksum*: SIGNED32; (** font's tfm-checksum **)
+      s,d,a,l: SIGNED32; (* cf. DVIViewers *)
+      width*: ARRAY 256 OF FLOAT64; (** widths in dvi-units **)
    END;
 
    File* = POINTER TO FileDesc;
    FileDesc* = RECORD(Gadgets.ObjDesc)
       fileName: ARRAY 128 OF CHAR;
       file: Files.File;
-      num*,den*,mag*: LONGREAL;
-      pageNr*: LONGINT; (* number of pages in the dvi-file *)
+      num*,den*,mag*: FLOAT64;
+      pageNr*: SIGNED32; (* number of pages in the dvi-file *)
       page: POINTER TO ARRAY OF PageDesc;
       fonts: FontInfo;
 
@@ -41,7 +41,7 @@ TYPE
 
 
    (** Read an unsigned byte from rider r. **)
-   PROCEDURE ReadByte*(VAR r: Files.Rider): LONGINT;
+   PROCEDURE ReadByte*(VAR r: Files.Rider): SIGNED32;
    VAR c: CHAR;
    BEGIN
       Files.Read(r,c);
@@ -49,25 +49,25 @@ TYPE
    END ReadByte;
 
    (** Read a signed byte from rider r. **)
-   PROCEDURE ReadSignedByte*(VAR r: Files.Rider): LONGINT;
-   VAR s: SHORTINT;
+   PROCEDURE ReadSignedByte*(VAR r: Files.Rider): SIGNED32;
+   VAR s: SIGNED8;
    BEGIN
       Files.Read(r,s);
       RETURN s
    END ReadSignedByte;
 
    (** Read an unsigned word (two bytes) from rider r. **)
-   PROCEDURE ReadWord*(VAR r: Files.Rider): LONGINT;
-   VAR l,u: LONGINT;
+   PROCEDURE ReadWord*(VAR r: Files.Rider): SIGNED32;
+   VAR l,u: SIGNED32;
    BEGIN
       u:= ReadByte(r); l:= ReadByte(r);
       RETURN u*100H+l;
    END ReadWord;
 
    (** Read a signed word (two bytes) from rider r. **)
-   PROCEDURE ReadSignedWord*(VAR r: Files.Rider): LONGINT;
+   PROCEDURE ReadSignedWord*(VAR r: Files.Rider): SIGNED32;
    CONST Sign = 8000H; Moduli = 10000H;
-   VAR s: LONGINT;
+   VAR s: SIGNED32;
    BEGIN
       s:= ReadWord(r);
       IF s >= Sign THEN RETURN s - Moduli
@@ -75,17 +75,17 @@ TYPE
    END ReadSignedWord;
 
    (** Read an unsigned trio (three bytes) from rider r. **)
-   PROCEDURE ReadTrio*(VAR r: Files.Rider): LONGINT;
-   VAR l,u: LONGINT;
+   PROCEDURE ReadTrio*(VAR r: Files.Rider): SIGNED32;
+   VAR l,u: SIGNED32;
    BEGIN
       u:= ReadByte(r); l:= ReadWord(r);
       RETURN u*10000H+l;
    END ReadTrio;
 
    (** Read a signed trio (three bytes) from rider r. **)
-   PROCEDURE ReadSignedTrio*(VAR r: Files.Rider): LONGINT;
+   PROCEDURE ReadSignedTrio*(VAR r: Files.Rider): SIGNED32;
    CONST Sign = 800000H; Moduli = 1000000H;
-   VAR s: LONGINT;
+   VAR s: SIGNED32;
    BEGIN
       s:= ReadTrio(r);
       IF s >= Sign THEN RETURN s - Moduli
@@ -93,15 +93,15 @@ TYPE
    END ReadSignedTrio;
 
    (** Read a signed quad (four bytes) from rider r. **)
-   PROCEDURE ReadSignedQuad*(VAR r: Files.Rider): LONGINT;
-   VAR l,u: LONGINT;
+   PROCEDURE ReadSignedQuad*(VAR r: Files.Rider): SIGNED32;
+   VAR l,u: SIGNED32;
    BEGIN
       u:= ReadWord(r); l:= ReadWord(r);
       RETURN ASH(u,16)+l;
    END ReadSignedQuad;
 
    (** Read size bytes as an unsigned value from rider r. **)
-   PROCEDURE Read*(VAR r: Files.Rider; size: LONGINT): LONGINT;
+   PROCEDURE Read*(VAR r: Files.Rider; size: SIGNED32): SIGNED32;
    BEGIN
       CASE size OF
          4: RETURN ReadSignedQuad(r);
@@ -112,7 +112,7 @@ TYPE
    END Read;
 
    (** Read size bytes as a signed value from rider r. **)
-   PROCEDURE ReadSigned*(VAR r: Files.Rider; size: LONGINT): LONGINT;
+   PROCEDURE ReadSigned*(VAR r: Files.Rider; size: SIGNED32): SIGNED32;
    BEGIN
       CASE size OF
          4: RETURN ReadSignedQuad(r);
@@ -124,14 +124,14 @@ TYPE
 
    (** Read four bytes from rider r and interpret them as
        fixed-point number. **)
-   PROCEDURE ReadFixedWord*(VAR r: Files.Rider): LONGREAL;
+   PROCEDURE ReadFixedWord*(VAR r: Files.Rider): FLOAT64;
    CONST Multiplier = 9.5367431640625D-7;
    BEGIN
       RETURN ReadSignedQuad(r) * Multiplier
    END ReadFixedWord;
 
    (** Advance rider r by numberOfBytes bytes. **)
-   PROCEDURE SkipBytes*(VAR r: Files.Rider; numberOfBytes: LONGINT);
+   PROCEDURE SkipBytes*(VAR r: Files.Rider; numberOfBytes: SIGNED32);
    BEGIN
       Files.Set(r,Files.Base(r),Files.Pos(r)+numberOfBytes);
    END SkipBytes;
@@ -148,10 +148,10 @@ TYPE
    PROCEDURE ReadCharacterWidths(font: FontInfo);
    VAR
       tfmFile: Files.File; tfm: Files.Rider;
-      checksum: LONGINT; (* tfm-checksum of the font *)
-      w: POINTER TO ARRAY OF LONGREAL;
-      wIndex: ARRAY 256 OF INTEGER;
-      headerLength,begin,end,widthNr,i: LONGINT;
+      checksum: SIGNED32; (* tfm-checksum of the font *)
+      w: POINTER TO ARRAY OF FLOAT64;
+      wIndex: ARRAY 256 OF SIGNED16;
+      headerLength,begin,end,widthNr,i: SIGNED32;
 
       PROCEDURE OpenTFMFile(VAR fontName: ARRAY OF CHAR): Files.File;
       CONST
@@ -204,14 +204,14 @@ TYPE
    END ReadCharacterWidths;
 
 
-   PROCEDURE ParsePostamble(m: File; postamble: LONGINT): LONGINT;
+   PROCEDURE ParsePostamble(m: File; postamble: SIGNED32): SIGNED32;
    CONST
       FontDfn1Cmd = 243;
       FontDfn4Cmd = 246;
       NopCmd = 138;
       PostPostCmd = 249;
    VAR
-      r: Files.Rider; lastPage,currCmd: LONGINT; f: FontInfo;
+      r: Files.Rider; lastPage,currCmd: SIGNED32; f: FontInfo;
    BEGIN
       Files.Set(r,m.file,postamble); SkipBytes(r,1); (* skip command-number *)
       lastPage:= ReadSignedQuad(r); m.num:= ReadSignedQuad(r);
@@ -243,8 +243,8 @@ TYPE
       RETURN lastPage
    END ParsePostamble;
 
-   PROCEDURE ScanPages(m: File; lastPageOffset,postambleOffset: LONGINT);
-   VAR currPage,currPageOffset, prevOffset: LONGINT;
+   PROCEDURE ScanPages(m: File; lastPageOffset,postambleOffset: SIGNED32);
+   VAR currPage,currPageOffset, prevOffset: SIGNED32;
       r: Files.Rider; s: Special;
    BEGIN
       NEW(m.page,m.pageNr);
@@ -258,7 +258,7 @@ TYPE
          (* set up special-cache as a circluar list with two sentinels *)
          m.page[currPage-1].specialCacheComplete:= FALSE;
          NEW(m.page[currPage-1].spec); NEW(s);
-         m.page[currPage-1].spec.pos:= 0; s.pos:= MAX(LONGINT);
+         m.page[currPage-1].spec.pos:= 0; s.pos:= MAX(SIGNED32);
          m.page[currPage-1].spec.next:= s;
          s.next:= m.page[currPage-1].spec;
          SkipBytes(r,1+10*4);
@@ -273,7 +273,7 @@ TYPE
    CONST DVITag = 0F702H; EndTag = 223; DVIVersion = 02H;
    VAR
       r: Files.Rider;
-      l,postambleOffset: LONGINT;
+      l,postambleOffset: SIGNED32;
    BEGIN
       m.file:= Files.Old(m.fileName);
       IF m.file = NIL THEN COPY("",m.fileName); RETURN END;
@@ -306,7 +306,7 @@ TYPE
       ScanPages(m,l,postambleOffset); (* create the page-descriptors *)
    END LoadDVIFile;
 
-   PROCEDURE GetPage*(m: File; pageNo: LONGINT;
+   PROCEDURE GetPage*(m: File; pageNo: SIGNED32;
       VAR r: Files.Rider): BOOLEAN;
    BEGIN
       IF (m.fileName = "") OR (pageNo < 1) OR (pageNo > m.pageNr) THEN
@@ -316,7 +316,7 @@ TYPE
       RETURN TRUE;
    END GetPage;
 
-   PROCEDURE GetFont*(m: File; fontNo: LONGINT): FontInfo;
+   PROCEDURE GetFont*(m: File; fontNo: SIGNED32): FontInfo;
    VAR f: FontInfo;
    BEGIN
       IF m.fileName = "" THEN RETURN NIL END;
@@ -327,21 +327,21 @@ TYPE
       RETURN f
    END GetFont;
 
-   PROCEDURE IsSpecialCacheComplete*(m: File; pageNo: LONGINT): BOOLEAN;
+   PROCEDURE IsSpecialCacheComplete*(m: File; pageNo: SIGNED32): BOOLEAN;
    BEGIN
       RETURN (m.fileName # "") & (pageNo >= 1) & (pageNo <= m.pageNr) &
          m.page[pageNo-1].specialCacheComplete;
    END IsSpecialCacheComplete;
 
-   PROCEDURE CacheComplete*(m: File; pageNo: LONGINT);
+   PROCEDURE CacheComplete*(m: File; pageNo: SIGNED32);
    BEGIN
       IF (m.fileName # "") & (pageNo >= 1) & (pageNo <= m.pageNr) THEN
          m.page[pageNo-1].specialCacheComplete:= TRUE
       END
    END CacheComplete;
 
-   PROCEDURE FindSpecial(m: File; pageNo,pos: LONGINT): Special;
-   (* Precondition: 0 < pos < MAX(LONGINT).
+   PROCEDURE FindSpecial(m: File; pageNo,pos: SIGNED32): Special;
+   (* Precondition: 0 < pos < MAX(SIGNED32).
       Postcondition for the result s: s.pos < pos <= s.next.pos. *)
    BEGIN
       WHILE (pos > m.page[pageNo-1].spec.next.pos) OR
@@ -352,8 +352,8 @@ TYPE
       RETURN m.page[pageNo-1].spec
    END FindSpecial;
 
-   PROCEDURE GetCachedSpecial*(m: File; pageNo,pos: LONGINT): Special;
-   (* Precondition: 0 < pos < MAX(LONGINT). *)
+   PROCEDURE GetCachedSpecial*(m: File; pageNo,pos: SIGNED32): Special;
+   (* Precondition: 0 < pos < MAX(SIGNED32). *)
    VAR s: Special;
    BEGIN
       IF (m.fileName = "") OR (pageNo < 1) OR (pageNo > m.pageNr) THEN
@@ -364,7 +364,7 @@ TYPE
       ELSE RETURN NIL END
    END GetCachedSpecial;
 
-   PROCEDURE CacheSpecial*(m: File; pageNo: LONGINT; new: Special);
+   PROCEDURE CacheSpecial*(m: File; pageNo: SIGNED32; new: Special);
    VAR s: Special;
    BEGIN
       s:= FindSpecial(m,pageNo,new.pos);

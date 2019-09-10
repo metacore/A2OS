@@ -733,9 +733,9 @@ TYPE
 	(* Immediate argument *)
 	ArgImm = OBJECT (Arg)
 		VAR
-			imm : HUGEINT;
+			imm : SIGNED64;
 
-		PROCEDURE &New *(imm : HUGEINT);
+		PROCEDURE &New *(imm : SIGNED64);
 		BEGIN SELF.imm := imm;
 		END New;
 
@@ -748,9 +748,9 @@ TYPE
 	(* register argument *)
 	ArgReg = OBJECT (Arg)
 		VAR
-			reg : LONGINT;
+			reg : SIGNED32;
 
-		PROCEDURE &New *(reg : LONGINT);
+		PROCEDURE &New *(reg : SIGNED32);
 		BEGIN SELF.reg := reg;
 		END New;
 
@@ -763,9 +763,9 @@ TYPE
 	(* memory reference argument *)
 	ArgMem = OBJECT (Arg)
 		VAR
-			segment, reg, scale, base: LONGINT; disp : HUGEINT;
+			segment, reg, scale, base: SIGNED32; disp : SIGNED64;
 
-		PROCEDURE &New *(segment, reg, scale , base: LONGINT; disp : HUGEINT);
+		PROCEDURE &New *(segment, reg, scale , base: SIGNED32; disp : SIGNED64);
 		BEGIN
 			SELF.segment := segment;
 			SELF.reg := reg;
@@ -819,9 +819,9 @@ TYPE
 	(* AMD64 instruction *)
 	AMD64Opcode = OBJECT (Decoder.Opcode)
 	VAR
-		prefixCount : LONGINT;
+		prefixCount : SIGNED32;
 		prefixes : SET;
-		instr: LONGINT;
+		instr: SIGNED32;
 		arg : ARRAY maxArgs OF Arg;
 		hidePrefixes: BOOLEAN;
 
@@ -1366,7 +1366,7 @@ TYPE
 
 		PROCEDURE PrintArguments*(w : Streams.Writer);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO maxArgs - 1 DO
 				IF arg[i] # NIL THEN
@@ -1378,7 +1378,7 @@ TYPE
 
 		PROCEDURE PrintVariables*(w : Streams.Writer);
 		VAR
-			i, count: LONGINT;
+			i, count: SIGNED32;
 			argMem: ArgMem;
 			field : Decoder.FieldInfo;
 
@@ -1421,60 +1421,60 @@ TYPE
 		PROCEDURE DecodeThis*(opcode : Decoder.Opcode);
 		VAR
 			opc : AMD64Opcode;
-			byte, code, arg, mod, segment, reg, rm, scale, index, base, disp: LONGINT;
+			byte, code, arg, mod, segment, reg, rm, scale, index, base, disp: SIGNED32;
 			modRM : BOOLEAN;
 
-			PROCEDURE ReadImm8 (): LONGINT;
+			PROCEDURE ReadImm8 (): SIGNED32;
 			BEGIN
 				RETURN ORD (ReadChar ());
 			END ReadImm8;
 
-			PROCEDURE ReadImm16 (): LONGINT;
+			PROCEDURE ReadImm16 (): SIGNED32;
 			BEGIN
 				RETURN ReadInt ();
 			END ReadImm16;
 
-			PROCEDURE ReadImm32 (): LONGINT;
+			PROCEDURE ReadImm32 (): SIGNED32;
 			BEGIN
 				RETURN ReadLInt ();
 			END ReadImm32;
 
-			PROCEDURE ReadImm64 (): HUGEINT;
+			PROCEDURE ReadImm64 (): SIGNED64;
 			BEGIN
 				RETURN ReadHInt ();
 			END ReadImm64;
 
-			PROCEDURE ReadOffset8 (): LONGINT;
+			PROCEDURE ReadOffset8 (): SIGNED32;
 			VAR
-				offset: LONGINT;
+				offset: SIGNED32;
 			BEGIN
 				offset := ORD (ReadChar ());
 				IF offset >= 080H THEN DEC (offset, 100H) END;
 				RETURN offset;
 			END ReadOffset8;
 
-			PROCEDURE ReadOffset16 (): LONGINT;
+			PROCEDURE ReadOffset16 (): SIGNED32;
 			VAR
-				offset: LONGINT;
+				offset: SIGNED32;
 			BEGIN
 				offset := ReadInt ();
 				IF offset >= 08000H THEN DEC (offset, 10000H) END;
 				RETURN offset;
 			END ReadOffset16;
 
-			PROCEDURE ReadOffset32 (): LONGINT;
+			PROCEDURE ReadOffset32 (): SIGNED32;
 			BEGIN
 				RETURN ReadLInt ();
 			END ReadOffset32;
 
-			PROCEDURE ReadOffset64 (): HUGEINT;
+			PROCEDURE ReadOffset64 (): SIGNED64;
 			BEGIN
 				RETURN ReadHInt ();
 			END ReadOffset64;
 
-			PROCEDURE ReadHInt (): HUGEINT;
+			PROCEDURE ReadHInt (): SIGNED64;
 			VAR
-				value: HUGEINT;
+				value: SIGNED64;
 			BEGIN
 				SYSTEM.PUT (ADDRESSOF (value), ReadLInt ());
 				SYSTEM.PUT (ADDRESSOF (value) + 4, ReadLInt ());
@@ -1524,19 +1524,19 @@ TYPE
 				END;
 			END DecodePrefixes;
 
-			PROCEDURE Prefix (prefix: LONGINT): BOOLEAN;
+			PROCEDURE Prefix (prefix: SIGNED32): BOOLEAN;
 			BEGIN
 				RETURN prefix IN opc.prefixes;
 			END Prefix;
 
 			(* set the current opcode instruction *)
-			PROCEDURE Instr (instr : LONGINT);
+			PROCEDURE Instr (instr : SIGNED32);
 			BEGIN
 				opc.instr := instr;
 			END Instr;
 
 			(* set opcode instruction based on current operand size override *)
-			PROCEDURE InstrOp (instr16, instr32, instr64 : LONGINT);
+			PROCEDURE InstrOp (instr16, instr32, instr64 : SIGNED32);
 			BEGIN
 				IF Prefix (prREXW) THEN
 					Instr (instr64);
@@ -1576,7 +1576,7 @@ TYPE
 				END
 			END ModRM;
 
-			PROCEDURE GetOperandSize () : LONGINT;
+			PROCEDURE GetOperandSize () : SIGNED32;
 			BEGIN
 				IF Prefix (prREXW) THEN
 					RETURN 64;
@@ -1587,7 +1587,7 @@ TYPE
 				END
 			END GetOperandSize;
 
-			PROCEDURE  GetOperandReg (offset: LONGINT): LONGINT;
+			PROCEDURE  GetOperandReg (offset: SIGNED32): SIGNED32;
 			BEGIN
 				IF Prefix (prREXW) THEN
 					RETURN regRAX + offset;
@@ -1598,7 +1598,7 @@ TYPE
 				END
 			END GetOperandReg;
 
-			PROCEDURE  GetReg (base, offset : LONGINT; extension : BOOLEAN) : LONGINT;
+			PROCEDURE  GetReg (base, offset : SIGNED32; extension : BOOLEAN) : SIGNED32;
 			BEGIN
 				IF base = regES THEN
 					IF offset >= 6 THEN Invalid; END;
@@ -1618,7 +1618,7 @@ TYPE
 				END
 			END GetReg;
 
-			PROCEDURE GetAddressReg (offset: LONGINT; extension: BOOLEAN): LONGINT;
+			PROCEDURE GetAddressReg (offset: SIGNED32; extension: BOOLEAN): SIGNED32;
 			BEGIN
 				IF extension THEN
 					IF prAddress IN opc.prefixes THEN RETURN regR8D + offset ELSE RETURN regR8 + offset END;
@@ -1627,26 +1627,26 @@ TYPE
 				END
 			END GetAddressReg;
 
-			PROCEDURE  AddImm (imm: HUGEINT);
+			PROCEDURE  AddImm (imm: SIGNED64);
 			VAR
 				argImm: ArgImm;
 			BEGIN
 				NEW (argImm, imm); opc.arg[arg] := argImm; INC (arg);
 			END AddImm;
 
-			PROCEDURE  AddReg (reg: LONGINT);
+			PROCEDURE  AddReg (reg: SIGNED32);
 			VAR
 				argReg: ArgReg;
 			BEGIN
 				NEW (argReg, reg); opc.arg[arg] := argReg; INC (arg);
 			END AddReg;
 
-			PROCEDURE  AddRMReg (base: LONGINT);
+			PROCEDURE  AddRMReg (base: SIGNED32);
 			BEGIN
 				ModRM; AddReg (GetReg (base, reg, prREXR IN opc.prefixes));
 			END AddRMReg;
 
-			PROCEDURE  AddMem (segment, reg, scale , base: LONGINT; disp: HUGEINT);
+			PROCEDURE  AddMem (segment, reg, scale , base: SIGNED32; disp: SIGNED64);
 			VAR
 				argMem: ArgMem;
 			BEGIN
@@ -1655,7 +1655,7 @@ TYPE
 
 			PROCEDURE  AddModMem;
 			VAR
-				reg, baseReg, scaling : LONGINT;
+				reg, baseReg, scaling : SIGNED32;
 			BEGIN
 				ModRM;
 
@@ -1694,7 +1694,7 @@ TYPE
 				AddMem (segment, reg, scaling, baseReg, disp);
 			END AddModMem;
 
-			PROCEDURE AddModRM (base: LONGINT);
+			PROCEDURE AddModRM (base: SIGNED32);
 			BEGIN
 				ModRM;
 				IF mod = 3 THEN
@@ -1704,7 +1704,7 @@ TYPE
 				END
 			END AddModRM;
 
-			PROCEDURE AddFPReg (offset: LONGINT);
+			PROCEDURE AddFPReg (offset: SIGNED32);
 			BEGIN
 				AddReg (regST0 + offset);
 			END AddFPReg;
@@ -1796,7 +1796,7 @@ TYPE
 			PROCEDURE Wsd; BEGIN AddModRM (regXMM0) END Wsd;
 			PROCEDURE Wss; BEGIN AddModRM (regXMM0) END Wss;
 
-			PROCEDURE Type1 (instr, offset : LONGINT);
+			PROCEDURE Type1 (instr, offset : SIGNED32);
 			BEGIN
 				Instr (instr);
 				CASE offset OF
@@ -1809,7 +1809,7 @@ TYPE
 				END
 			END Type1;
 
-			PROCEDURE Type2 (instr, offset : LONGINT);
+			PROCEDURE Type2 (instr, offset : SIGNED32);
 			BEGIN
 				Instr (instr);
 
@@ -1822,7 +1822,7 @@ TYPE
 				END
 			END Type2;
 
-			PROCEDURE Type3 (instr : LONGINT);
+			PROCEDURE Type3 (instr : SIGNED32);
 			BEGIN
 				IF Prefix (prF3) THEN Invalid;
 				ELSIF Prefix (pr66) THEN Instr (instr); Vdq; Wdq;
@@ -2227,27 +2227,27 @@ TYPE
 
 			PROCEDURE Groupx87;
 
-				PROCEDURE MemInstr (instr : LONGINT);
+				PROCEDURE MemInstr (instr : SIGNED32);
 				BEGIN
 					Instr (instr);
 					AddModMem;
 				END MemInstr;
 
-				PROCEDURE StackInstr0i (instr : LONGINT);
+				PROCEDURE StackInstr0i (instr : SIGNED32);
 				BEGIN
 					Instr (instr);
 					AddFPReg (0);
 					AddFPReg (rm);
 				END StackInstr0i;
 
-				PROCEDURE StackInstri0 (instr : LONGINT);
+				PROCEDURE StackInstri0 (instr : SIGNED32);
 				BEGIN
 					Instr (instr);
 					AddFPReg (rm);
 					AddFPReg (0);
 				END StackInstri0;
 
-				PROCEDURE FPInstr0i (meminstr, stackinstr: LONGINT);
+				PROCEDURE FPInstr0i (meminstr, stackinstr: SIGNED32);
 				BEGIN
 					IF mod # 3 THEN
 						MemInstr (meminstr);
@@ -2256,7 +2256,7 @@ TYPE
 					END;
 				END FPInstr0i;
 
-				PROCEDURE FPInstri0 (meminstr, stackinstr: LONGINT);
+				PROCEDURE FPInstri0 (meminstr, stackinstr: SIGNED32);
 				BEGIN
 					IF mod # 3 THEN
 						MemInstr (meminstr);
@@ -3061,7 +3061,7 @@ TYPE
 
 	END AMD64Decoder;
 
-PROCEDURE PrintReg (w : Streams.Writer; reg : LONGINT);
+PROCEDURE PrintReg (w : Streams.Writer; reg : SIGNED32);
 BEGIN
 	CASE reg OF
 	| regAL: w.String ("AL");
@@ -3215,11 +3215,11 @@ BEGIN
 	END
 END PrintReg;
 
-PROCEDURE PrintImm (n: HUGEINT; w : Streams.Writer);
-VAR high, low: LONGINT;
+PROCEDURE PrintImm (n: SIGNED64; w : Streams.Writer);
+VAR high, low: SIGNED32;
 BEGIN
 	IF (n >= -80H) & (n < 100H) THEN
-		w.Int (SHORTINT(n), 0);
+		w.Int (SIGNED8(n), 0);
 	ELSE
 		SYSTEM.GET (ADDRESSOF (n), low);
 		SYSTEM.GET (ADDRESSOF (n) + 4, high);

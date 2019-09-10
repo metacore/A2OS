@@ -27,13 +27,13 @@ TYPE
 		PROCEDURE Allocate * (): ADDRESS;
 			VAR
 				buf: TdBuffer;
-				count, tdIn, tdOut: LONGINT;
+				count, tdIn, tdOut: SIGNED32;
 
 				(** Allocate a new TD buffer and mark as used the last 32-byte block before a 4kB page boundary. *)
 				PROCEDURE AllocateBuffer;
 				VAR
 					buf: TdBuffer;
-					count: LONGINT;
+					count: SIGNED32;
 				BEGIN
 					(* No buffer found: allocate a new one *)
 					NEW(buf);
@@ -67,11 +67,11 @@ TYPE
 				ASSERT(buf # NIL);
 		END Allocate;
 
-		PROCEDURE Free * (td: ADDRESS(*; size: LONGINT*));
+		PROCEDURE Free * (td: ADDRESS(*; size: SIGNED32*));
 			VAR
 				buf: TdBuffer;
 				adr: ADDRESS;
-				slot, tdIn, tdOut: LONGINT;
+				slot, tdIn, tdOut: SIGNED32;
 			BEGIN
 				(*ASSERT(size MOD BlockSize = 0);*)
 				buf := buffers;

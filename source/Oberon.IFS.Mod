@@ -6,21 +6,21 @@ MODULE  IFS IN Oberon;	(** portable *)
 IMPORT  RandomNumbers, In, Out, XYplane;
 
 VAR
-	a1, b1, c1, d1, e1, f1, p1: REAL;   (* IFS parameters *)
-	a2, b2, c2, d2, e2, f2, p2: REAL;   (* IFS parameters *)
-	a3, b3, c3, d3, e3, f3, p3: REAL;   (* IFS parameters *)
-	a4, b4, c4, d4, e4, f4, p4: REAL;   (* IFS parameters *)
-	X, Y: REAL;		(* the position of the pen *)
-	x0: INTEGER;	(* Distance of origin fm left edge[pixels] *)
-	y0: INTEGER;	(* Distance of origin from bottom edge[pixels] *)
-	e: INTEGER;	(* Size of unit interval [pixels] *)
+	a1, b1, c1, d1, e1, f1, p1: FLOAT32;   (* IFS parameters *)
+	a2, b2, c2, d2, e2, f2, p2: FLOAT32;   (* IFS parameters *)
+	a3, b3, c3, d3, e3, f3, p3: FLOAT32;   (* IFS parameters *)
+	a4, b4, c4, d4, e4, f4, p4: FLOAT32;   (* IFS parameters *)
+	X, Y: FLOAT32;		(* the position of the pen *)
+	x0: SIGNED16;	(* Distance of origin fm left edge[pixels] *)
+	y0: SIGNED16;	(* Distance of origin from bottom edge[pixels] *)
+	e: SIGNED16;	(* Size of unit interval [pixels] *)
 	initialized: BOOLEAN;	(* Are parameters initialized? *)
 
 PROCEDURE  Draw*;	(* command marked for export *)
 VAR
-	x, y: REAL; 				(* new position *)
-	xi, eta: INTEGER;	   (* pixel coordinates of pen *)
-	rn: REAL;
+	x, y: FLOAT32; 				(* new position *)
+	xi, eta: SIGNED16;	   (* pixel coordinates of pen *)
+	rn: FLOAT32;
 BEGIN
 IF initialized THEN
 	REPEAT

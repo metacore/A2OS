@@ -78,7 +78,7 @@ TYPE
 		adjustFocusPosition- : WMProperties.BooleanProperty;
 
 		focus, focusCell, highlight : CellPos; (* focusCell is the master Cell of focus *)
-		selectionMode : WORD;
+		selectionMode : INTEGER;
 		selStart, selEnd : CellPos;
 		selA : CellPos;
 		selecting : BOOLEAN;
@@ -250,7 +250,7 @@ TYPE
 			END
 		END GetRowHeight;
 
-		PROCEDURE SetSelectionMode*(mode : WORD);
+		PROCEDURE SetSelectionMode*(mode : INTEGER);
 		BEGIN
 			Acquire;
 			IF mode # selectionMode THEN
@@ -260,7 +260,7 @@ TYPE
 			Release
 		END SetSelectionMode;
 
-		PROCEDURE GetSelectionMode*():WORD;
+		PROCEDURE GetSelectionMode*():INTEGER;
 		BEGIN
 			RETURN selectionMode
 		END GetSelectionMode;

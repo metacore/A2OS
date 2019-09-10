@@ -30,8 +30,8 @@ TYPE
 	(*Pars*)
 		v2: vyBase.Object;
 		v1: vyBase.Object;
-		ph: LONGREAL;
-		pv: LONGREAL;
+		ph: FLOAT64;
+		pv: FLOAT64;
 	END;
 
 CONST
@@ -47,7 +47,7 @@ VAR
 	END StoreM;
 
 	PROCEDURE LoadM( VAR R: Files.Rider;  o: tModel );
-	VAR version: INTEGER;  ref: Objects.Object;
+	VAR version: SIGNED16;  ref: Objects.Object;
 	BEGIN
 		Files.ReadInt( R, version );
 		(*Load*)
@@ -59,7 +59,7 @@ VAR
 	END LoadM;
 
 	PROCEDURE OneSweep( s: antsKernel.Kernel );
-	VAR o: tModel;  O: vyBase.Object;  u1, u2, val1, val2, min, max: LONGREAL;  v1, v2: vyLongrealVec.tVector;
+	VAR o: tModel;  O: vyBase.Object;  u1, u2, val1, val2, min, max: FLOAT64;  v1, v2: vyLongrealVec.tVector;
 		(*
 	AO: antsArrayObjects.tObject;
 	A: antsArrayObjects.tArray
@@ -223,10 +223,10 @@ VAR
 	END NewModel;
 
 	PROCEDURE Many1d*;
-	VAR linePlot: vyLinePlot.tLayer;  pict: vyPort.Picture;  c: vyDisplay2d.tCoordinate2d;  nans: LONGINT;  r, ran: LONGREAL;
-		v: vyLongrealVec.tVector;  i: LONGINT;  j: LONGINT;  hist0, hist1, hist2: vyLongrealVec.tVector;  link: vyLinks.Link;  obj: vyBase.Object;
+	VAR linePlot: vyLinePlot.tLayer;  pict: vyPort.Picture;  c: vyDisplay2d.tCoordinate2d;  nans: SIGNED32;  r, ran: FLOAT64;
+		v: vyLongrealVec.tVector;  i: SIGNED32;  j: SIGNED32;  hist0, hist1, hist2: vyLongrealVec.tVector;  link: vyLinks.Link;  obj: vyBase.Object;
 		vname: ARRAY 256 OF CHAR;
-		append: BOOLEAN;  len: LONGINT;
+		append: BOOLEAN;  len: SIGNED32;
 	BEGIN
 		antsCommands.InitScan( "[len= INT] [>new]" );
 		IF antsCommands.GetNumber( "len", len ) THEN ELSE len := 500 END;

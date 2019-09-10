@@ -68,7 +68,7 @@ TYPE
 		CONST PLog = FALSE; TempFile = "GetDir.Temp";
 			PropCh = '_';
 		VAR pattern: Files.FileName; (* basicAuth: WebDAVAuthBase.Basic; *)
-			enum: Files.Enumerator; prefixLen, len, time, date, size: LONGINT;
+			enum: Files.Enumerator; prefixLen, len, time, date, size: SIGNED32;
 			dateTimeStr, timeStr: ARRAY 32 OF CHAR; entryFlags, flags: SET;
 			w: Files.Writer;
 			name: ARRAY 1024 OF CHAR;
@@ -101,8 +101,8 @@ TYPE
 		PROCEDURE Put(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; VAR response: WebHTTP.ResponseHeader;
 			VAR in: Streams.Reader; VAR xmlDoc: XML.Document);
 		VAR confRes, conf, res: OdUtil.Line; xmlErr: OdXml.ErrorRes;
-			fn: Files.FileName; f: Files.File; rc: LONGINT; props: OdDeltavBase.VersionProperties;
-			s: ARRAY 16 OF CHAR; len: LONGINT;
+			fn: Files.FileName; f: Files.File; rc: SIGNED32; props: OdDeltavBase.VersionProperties;
+			s: ARRAY 16 OF CHAR; len: SIGNED32;
 			basicAuth: OdAuthBase.Basic;
 		BEGIN
 			(* Check authentication *)
@@ -194,10 +194,10 @@ TYPE
 		(** Server REPORT. Similar to PROPFIND.*)
 		PROCEDURE Report(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; VAR response: WebHTTP.ResponseHeader;
 			VAR in: Streams.Reader; VAR xmlOut: XML.Document);
-		VAR confRes, baseline0, baseline1, conf, res, propName: OdUtil.Line; body: ARRAY 512 OF CHAR; pos, avail: LONGINT;
+		VAR confRes, baseline0, baseline1, conf, res, propName: OdUtil.Line; body: ARRAY 512 OF CHAR; pos, avail: SIGNED32;
 			scanner: OdXml.Scanner; parser: OdXml.Parser; xmlFile: Files.File; xmlR: Files.Rider;
 			xmlDoc: XML.Document; xmlErr: OdXml.ErrorRes; e: XML.Element;
-			contentLength: LONGINT; bodyReader: Files.Reader;
+			contentLength: SIGNED32; bodyReader: Files.Reader;
 			depth: ARRAY 16 OF CHAR;
 		BEGIN
 			response.statuscode := WebHTTP.OK; OdDeltavBase.preCond := OdCond.Ok;
@@ -263,10 +263,10 @@ TYPE
 		(** Server PROPFIND. *)
 		PROCEDURE Propfind(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader;
 			VAR response: WebHTTP.ResponseHeader; VAR in: Streams.Reader; VAR xmlOut: XML.Document);
-		VAR confRes, baseline, conf, res: OdUtil.Line; body: ARRAY 512 OF CHAR; pos, avail: LONGINT;
+		VAR confRes, baseline, conf, res: OdUtil.Line; body: ARRAY 512 OF CHAR; pos, avail: SIGNED32;
 			scanner: OdXml.Scanner; parser: OdXml.Parser; xmlFile: Files.File; xmlR: Files.Rider;
 			xmlDoc: XML.Document; xmlErr: OdXml.ErrorRes; e: XML.Element; elName: OdUtil.Line;
-			contentLength: LONGINT; bodyReader: Files.Reader;
+			contentLength: SIGNED32; bodyReader: Files.Reader;
 			depth: ARRAY 16 OF CHAR; errMsg: ARRAY 128 OF CHAR;
 		BEGIN
 			response.statuscode := WebHTTP.MultiStatus; OdDeltavBase.preCond := OdCond.Ok;
@@ -324,7 +324,7 @@ TYPE
 		(** Server PROPPATCH.  *)
 		PROCEDURE Proppatch(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; VAR response: WebHTTP.ResponseHeader;
 			VAR in: Streams.Reader; VAR xmlOut: XML.Document);
-		VAR confRes, baseline, conf, res, line: OdUtil.Line; body: ARRAY 512 OF CHAR; pos, avail: LONGINT;
+		VAR confRes, baseline, conf, res, line: OdUtil.Line; body: ARRAY 512 OF CHAR; pos, avail: SIGNED32;
 			scanner: OdXml.Scanner; parser: OdXml.Parser; xmlFile: Files.File; xmlR: Files.Rider;
 			xmlDoc: XML.Document; xmlErr: OdXml.ErrorRes; e, patch, proptag, prop, href: XML.Element;
 			s, propName: XML.String;
@@ -469,7 +469,7 @@ TYPE
 		(** Server VERSION-CONTROL. Similar to PROPFIND*)
 		PROCEDURE VersionControl(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; VAR response: WebHTTP.ResponseHeader;
 			VAR in: Streams.Reader; VAR xmlOut: XML.Document);
-		VAR pos, avail, i: LONGINT; log: OdVCSBase.TLog;  flags: SET; ok: BOOLEAN; flagString: ARRAY 64 OF CHAR;
+		VAR pos, avail, i: SIGNED32; log: OdVCSBase.TLog;  flags: SET; ok: BOOLEAN; flagString: ARRAY 64 OF CHAR;
 			confRes, conf, res, ver: OdUtil.Line; body: ARRAY 512 OF CHAR;
 			scanner: OdXml.Scanner; parser: OdXml.Parser;
 			xmlFile: Files.File; xmlR: Files.Rider;
@@ -523,7 +523,7 @@ TYPE
 		PROCEDURE BaselineControl(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; VAR response: WebHTTP.ResponseHeader;
 			VAR in: Streams.Reader; VAR xmlOut: XML.Document);
 		CONST PLog = FALSE;
-		VAR pos, avail, i: LONGINT; log: OdVCSBase.TLog;  flags: SET; ok: BOOLEAN; flagString: ARRAY 64 OF CHAR;
+		VAR pos, avail, i: SIGNED32; log: OdVCSBase.TLog;  flags: SET; ok: BOOLEAN; flagString: ARRAY 64 OF CHAR;
 			confRes, conf, ver: OdUtil.Line; body: ARRAY 512 OF CHAR;
 			scanner: OdXml.Scanner; parser: OdXml.Parser; xmlFile: Files.File; xmlR: Files.Rider;
 			xmlDoc: XML.Document; xmlErr: OdXml.ErrorRes; href: XML.Element;
@@ -583,7 +583,7 @@ TYPE
 			VAR in: Streams.Reader; VAR xmlOut: XML.Document);
 		CONST PLog = FALSE;
 		VAR confRes, conf, res: OdUtil.Line;
-			log: OdVCSBase.TLog;  flags: SET; ok: BOOLEAN; body: ARRAY 512 OF CHAR; avail: LONGINT;
+			log: OdVCSBase.TLog;  flags: SET; ok: BOOLEAN; body: ARRAY 512 OF CHAR; avail: SIGNED32;
 			scanner: OdXml.Scanner; parser: OdXml.Parser; xmlFile: Files.File; xmlR: Files.Rider;
 			xmlDoc: XML.Document; xmlErr: OdXml.ErrorRes;
 			props: OdDeltavBase.VersionProperties;
@@ -708,7 +708,7 @@ TYPE
 		PROCEDURE Update(host: WebHTTPServer.Host; VAR request: WebHTTP.RequestHeader; VAR response: WebHTTP.ResponseHeader;
 			VAR in: Streams.Reader; VAR xmlOut: XML.Document);
 		CONST PLog = FALSE;
-		VAR pos, avail, i: LONGINT; log: OdVCSBase.TLog;  flags: SET; ok: BOOLEAN; flagString: ARRAY 64 OF CHAR;
+		VAR pos, avail, i: SIGNED32; log: OdVCSBase.TLog;  flags: SET; ok: BOOLEAN; flagString: ARRAY 64 OF CHAR;
 			confRes, conf, res, histVer: OdUtil.Line; body: ARRAY 512 OF CHAR;
 			scanner: OdXml.Scanner; parser: OdXml.Parser; xmlFile: Files.File; xmlR: Files.Rider;
 			xmlDoc: XML.Document; xmlErr: OdXml.ErrorRes;
@@ -900,11 +900,11 @@ VAR
 
 (** Sends all available data from a connection to a file. Perhaps more efficient with AosActive.TimeOut ?
 	Without reading connection. Seems not to work at the moment. *)
-PROCEDURE Con2FileNew(in: Streams.Reader; len: LONGINT; f: Files.File);
+PROCEDURE Con2FileNew(in: Streams.Reader; len: SIGNED32; f: Files.File);
 CONST SleepMax = 100; SleepTime = 200 (*ms*); BufSize = 1024;
-VAR i, read, slept, startTicks: LONGINT;
+VAR i, read, slept, startTicks: SIGNED32;
 	fr: Files.Rider; buf: ARRAY BufSize OF CHAR;
-	avail, rc: LONGINT; ch: CHAR;
+	avail, rc: SIGNED32; ch: CHAR;
 BEGIN
 	IF Log THEN
 			log.Enter; log.String("Con2File "); log.TimeStamp; log.Exit;
@@ -957,11 +957,11 @@ END Con2FileNew;
 
 (** Sends all available data from a connection to a file. Perhaps more efficient with Objects.TimeOut ?
 	Old version with reading from connection after using Streams.Reader. *)
-PROCEDURE Con2FileOld(in: Streams.Reader; con: TCP.Connection; len: LONGINT; f: Files.File);
+PROCEDURE Con2FileOld(in: Streams.Reader; con: TCP.Connection; len: SIGNED32; f: Files.File);
 CONST SleepMax = 100; SleepTime = 200 (*ms*); BufSize = 1024;
-VAR i, read, slept, startTicks: LONGINT; timer: Kernel.Timer;
+VAR i, read, slept, startTicks: SIGNED32; timer: Kernel.Timer;
 	fr: Files.Rider; buf: ARRAY BufSize OF CHAR;
-	avail, rc: LONGINT; ch: CHAR;
+	avail, rc: SIGNED32; ch: CHAR;
 BEGIN
 	IF Log THEN
 			log.Enter; log.String("Con2File "); log.TimeStamp; log.Exit;
@@ -1023,7 +1023,7 @@ BEGIN
 END Con2FileOld;
 
 (* Find size of an XML object which must be written. *)
-PROCEDURE XmlSize(doc: XML.Document): LONGINT;
+PROCEDURE XmlSize(doc: XML.Document): SIGNED32;
 VAR counter: Streams.Writer;
 BEGIN
 	Streams.OpenWriter(counter, OdUtil.Dev0); doc.Write(counter, 0); counter.Update();
@@ -1105,14 +1105,14 @@ END Uninstall;
 
 (* Day of week: "Mon"-"Sun" *)
 PROCEDURE Day(VAR day: ARRAY OF CHAR);
-VAR d, t: LONGINT;
+VAR d, t: SIGNED32;
 BEGIN
 	Clock.Get(t, d);
 	Strings.FormatDateTime("www", Dates.OberonToDateTime(d, t), day);
 END Day;
 
 PROCEDURE setLog;
-	VAR fileName: Files.FileName; res: WORD;
+	VAR fileName: Files.FileName; res: INTEGER;
 	BEGIN
 		Day(day);
 		Strings.Concat(logFileBase, ".", fileName); Strings.Append(fileName, day);
@@ -1370,12 +1370,12 @@ VAR pp : PostTestPlugin;
 
 
 				(* pastes the fileClipboard into the file with the given name if it doesn't exist already *)
-PROCEDURE Paste*(name: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE Paste*(name: ARRAY OF CHAR; VAR res: INTEGER);
 VAR writer : Writer;
 	reader : Reader;
 	file : File;
 	chunk : ARRAY 4096 OF CHAR;
-	len : LONGINT;
+	len : SIGNED32;
 BEGIN
 	IF fileClipboard = NIL THEN RETURN END;
 	IF Old(name) # NIL THEN res := FileAlreadyExists;			(* File already exists *)

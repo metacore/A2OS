@@ -3,10 +3,10 @@ MODULE WinDisks;   (**  AUTHOR "fof"; PURPOSE "module to access partitions under
 IMPORT Kernel32, SYSTEM, Strings, KernelLog, Streams, Commands, Disks, Plugins, Modules, WinFS;
 
 VAR
-	DeviceIoControl: PROCEDURE {WINAPI} ( hDevice: Kernel32.HANDLE;  dwIoControlCode: LONGINT;  VAR lpInBuffer: ARRAY OF SYSTEM.BYTE;  nInBufferSize: LONGINT;
-																	    VAR lpOutBuffer: ARRAY OF SYSTEM.BYTE;  nOutBufferSize: LONGINT;  VAR lpBytesReturned: LONGINT;  lpOverlapped: ANY ): Kernel32.BOOL;
+	DeviceIoControl: PROCEDURE {WINAPI} ( hDevice: Kernel32.HANDLE;  dwIoControlCode: SIGNED32;  VAR lpInBuffer: ARRAY OF SYSTEM.BYTE;  nInBufferSize: SIGNED32;
+																	    VAR lpOutBuffer: ARRAY OF SYSTEM.BYTE;  nOutBufferSize: SIGNED32;  VAR lpBytesReturned: SIGNED32;  lpOverlapped: ANY ): Kernel32.BOOL;
 
-	SetFilePointer: PROCEDURE {WINAPI} ( hFile: Kernel32.HANDLE;  lDistanceToMove: LONGINT;  VAR lpDistanceToMoveHigh: LONGINT;  dwMoveMethod: LONGINT ): LONGINT;
+	SetFilePointer: PROCEDURE {WINAPI} ( hFile: Kernel32.HANDLE;  lDistanceToMove: SIGNED32;  VAR lpDistanceToMoveHigh: SIGNED32;  dwMoveMethod: SIGNED32 ): SIGNED32;
 
 CONST
 	MaxExtents = 1;   (* do not handle more than one extents (yet?) *)
@@ -14,23 +14,23 @@ CONST
 
 TYPE
 	DISK_GEOMETRY = RECORD
-		Cylinders: HUGEINT;
-		MediaType: LONGINT;
-		TracksPerCylinder: LONGINT;
-		SectorsPerTrack: LONGINT;
-		BytesPerSector: LONGINT;
+		Cylinders: SIGNED64;
+		MediaType: SIGNED32;
+		TracksPerCylinder: SIGNED32;
+		SectorsPerTrack: SIGNED32;
+		BytesPerSector: SIGNED32;
 	END;
 
 	DISK_EXTENT = RECORD   (* immer auf größten Member aligniert *)
-		DiskNumber: LONGINT;
-		padding: LONGINT;
-		StartingOffset: HUGEINT;
-		ExtentLength: HUGEINT;
+		DiskNumber: SIGNED32;
+		padding: SIGNED32;
+		StartingOffset: SIGNED64;
+		ExtentLength: SIGNED64;
 	END;
 
 	VOLUME_DISK_EXTENTS = RECORD    (* immer auf größten Member aligniert: hugeint *)
-		NumberOfDiskExtents: LONGINT;   (* the msdn reports something different (LONGINT) but it works this way only *)
-		padding: LONGINT;
+		NumberOfDiskExtents: SIGNED32;   (* the msdn reports something different (SIGNED32) but it works this way only *)
+		padding: SIGNED32;
 		extents: ARRAY   MaxExtents OF DISK_EXTENT;   (* should be dynamic *)
 	END;
 
@@ -48,17 +48,17 @@ TYPE
 
 	VirtualDisk = OBJECT (Disks.Device)
 	VAR handle: Kernel32.HANDLE;
-		size: LONGINT;
+		size: SIGNED32;
 		next: VirtualDisk;
-		drive: LONGINT;
+		drive: SIGNED32;
 
-		PROCEDURE Finish( VAR res: WORD );
+		PROCEDURE Finish( VAR res: INTEGER );
 		BEGIN
 			IGNORE Kernel32.CloseHandle( handle );  KernelLog.String("Disk closed"); KernelLog.Ln;
 		END Finish;
 
-		PROCEDURE Transfer*( op, block, num: LONGINT;  VAR data: ARRAY OF CHAR;  ofs: SIZE;  VAR res: WORD );
-		VAR bool, n,err: LONGINT;  pos: HUGEINT;  poslow, poshigh: LONGINT;  large: Kernel32.LargeInteger;
+		PROCEDURE Transfer*( op, block, num: SIGNED32;  VAR data: ARRAY OF CHAR;  ofs: SIZE;  VAR res: INTEGER );
+		VAR bool, n,err: SIGNED32;  pos: SIGNED64;  poslow, poshigh: SIGNED32;  large: Kernel32.LargeInteger;
 		BEGIN {EXCLUSIVE}
 			IF (block < 0) OR (num < 1) OR (block + num > size) THEN res := BlockNumberInvalid;  RETURN;  END;
 
@@ -116,17 +116,17 @@ TYPE
 			END;
 		END Transfer;
 
-		PROCEDURE GetSize*( VAR size: LONGINT; VAR res: WORD );
+		PROCEDURE GetSize*( VAR size: SIGNED32; VAR res: INTEGER );
 		BEGIN
 			size := SELF.size;  res := Disks.Ok;
 		END GetSize;
 
-		PROCEDURE Handle*( VAR msg: Disks.Message;  VAR res: WORD );
+		PROCEDURE Handle*( VAR msg: Disks.Message;  VAR res: INTEGER );
 		BEGIN
 			res := Disks.Unsupported;
 		END Handle;
 
-		PROCEDURE & New*( handle: Kernel32.HANDLE;  CONST diskname: ARRAY OF CHAR; drive: LONGINT; flags: SET;  blockSize, blocks: LONGINT );
+		PROCEDURE & New*( handle: Kernel32.HANDLE;  CONST diskname: ARRAY OF CHAR; drive: SIGNED32; flags: SET;  blockSize, blocks: SIGNED32 );
 		BEGIN
 			ASSERT( handle > 0 );  SELF.handle := handle;  SELF.blockSize := blockSize;  SELF.size := blocks;  SetName( diskname );  desc := "Windows Disk ";
 			SELF.drive := drive;
@@ -167,7 +167,7 @@ VAR
 
 (** Remove virtual disk *)
 	PROCEDURE Uninstall*(context : Commands.Context);   (** diskname ~ *)
-	VAR diskname: Plugins.Name;  plugin: Plugins.Plugin;  drive: LONGINT; v: VirtualDisk;
+	VAR diskname: Plugins.Name;  plugin: Plugins.Plugin;  drive: SIGNED32; v: VirtualDisk;
 	BEGIN
 		context.arg.SkipWhitespace;
 		context.arg.String(diskname);
@@ -198,13 +198,13 @@ VAR
 	END Uninstall;
 
 	PROCEDURE Cleanup;
-	VAR res: WORD;
+	VAR res: INTEGER;
 	BEGIN {EXCLUSIVE}
 		WHILE (disks # NIL ) DO disks.Finish( res );  Disks.registry.Remove( disks );  disks := disks.next;  END;
 	END Cleanup;
 
 	PROCEDURE ReportDiskGeometry( VAR pdg: DISK_GEOMETRY; out : Streams.Writer );
-	VAR size: LONGREAL;
+	VAR size: FLOAT64;
 	BEGIN
 		out.String( "Disk type: " );
 		CASE pdg.MediaType OF
@@ -225,7 +225,7 @@ VAR
 	END ReportDiskGeometry;
 
 	PROCEDURE GetDiskGeometry( handle: Kernel32.HANDLE;  VAR pdg: DISK_GEOMETRY ): BOOLEAN;
-	VAR done, returned: LONGINT;
+	VAR done, returned: SIGNED32;
 	BEGIN
 		done := DeviceIoControl( handle, IOCTL_DISK_GET_DRIVE_GEOMETRY, NIL , 0, pdg, SIZEOF( DISK_GEOMETRY ), returned, NIL );  RETURN done > 0;
 	END GetDiskGeometry;
@@ -234,35 +234,35 @@ VAR
 
 	 *)
 	PROCEDURE LockVolume(handle: Kernel32.HANDLE): BOOLEAN;
-	VAR done,returned: LONGINT;
+	VAR done,returned: SIGNED32;
 	BEGIN
 		done := DeviceIoControl(handle, FSCTL_LOCK_VOLUME, NIL,0, NIL, 0, returned, NIL);
 		RETURN done > 0;
 	END LockVolume;
 
 	PROCEDURE UnlockVolume(handle: Kernel32.HANDLE): BOOLEAN;
-	VAR done,returned: LONGINT;
+	VAR done,returned: SIGNED32;
 	BEGIN
 		done := DeviceIoControl(handle, FSCTL_UNLOCK_VOLUME, NIL,0, NIL, 0, returned, NIL);
 		RETURN done > 0;
 	END UnlockVolume;
 
 	PROCEDURE DismountVolume(handle: Kernel32.HANDLE): BOOLEAN;
-	VAR done,returned: LONGINT;
+	VAR done,returned: SIGNED32;
 	BEGIN
 		done := DeviceIoControl(handle, FSCTL_DISMOUNT_VOLUME, NIL,0, NIL, 0, returned, NIL);
 		RETURN done > 0;
 	END DismountVolume;
 
 
-	PROCEDURE AppendInt( VAR name: ARRAY OF CHAR;  i: LONGINT );
+	PROCEDURE AppendInt( VAR name: ARRAY OF CHAR;  i: SIGNED32 );
 	VAR str: ARRAY 8 OF CHAR;
 	BEGIN
 		Strings.IntToStr( i, str );  Strings.Append( name, str );
 	END AppendInt;
 
 	PROCEDURE OpenVolume( VAR handle: Kernel32.HANDLE;  flags: SET; CONST name: ARRAY OF CHAR; context : Commands.Context ): BOOLEAN;
-	VAR devname: ARRAY 256 OF CHAR;  tflags: WORDSET; errorcode : LONGINT;
+	VAR devname: ARRAY 256 OF CHAR;  tflags: INTEGERSET; errorcode : SIGNED32;
 	BEGIN
 		Strings.Concat( "\\.\", name, devname );
 		IF Disks.ReadOnly IN flags THEN tflags := {Kernel32.GenericRead} ELSE tflags := {(*2 (* Kernel32.GenericDelete *), *)Kernel32.GenericWrite,Kernel32.GenericRead} END;
@@ -283,7 +283,7 @@ VAR
 		RETURN handle # Kernel32.InvalidHandleValue;
 	END OpenVolume;
 
-	PROCEDURE OutSize( f: LONGREAL; out : Streams.Writer );
+	PROCEDURE OutSize( f: FLOAT64; out : Streams.Writer );
 	BEGIN
 		IF f > 1.E9 THEN out.FloatFix( f / 1024 / 1024 / 1024, 4, 3, 0 );  out.String( " GiB" );
 		ELSIF f > 1.E6 THEN out.FloatFix( f / 1024 / 1024, 4, 3, 0 );  out.String( " MiB" );
@@ -293,7 +293,7 @@ VAR
 	END OutSize;
 
 	PROCEDURE GetPhysicalDrive( VAR handle: Kernel32.HANDLE; flags: SET;  VAR name: ARRAY OF CHAR; context : Commands.Context );
-	VAR done, returned: LONGINT;  extents: VOLUME_DISK_EXTENTS;  drive: LONGINT;  first, last: LONGREAL;  bps: LONGREAL;  pdg: DISK_GEOMETRY;   (* number of first and last block used *)
+	VAR done, returned: SIGNED32;  extents: VOLUME_DISK_EXTENTS;  drive: SIGNED32;  first, last: FLOAT64;  bps: FLOAT64;  pdg: DISK_GEOMETRY;   (* number of first and last block used *)
 	BEGIN
 		done := DeviceIoControl( handle, VOLUME_GET_VOLUME_DISK_EXTENTS, NIL , 0, extents, SIZEOF( VOLUME_DISK_EXTENTS ), returned, NIL );
 		IF done > 0 THEN
@@ -325,8 +325,8 @@ VAR
 	PROCEDURE Install*(context : Commands.Context);   (** diskname filename [blocksize]  ~ *)
 	VAR
 		diskname, flagss: ARRAY 256 OF CHAR;  flags: SET;
-		res: WORD; handle: Kernel32.HANDLE;  pdg: DISK_GEOMETRY;  size: LONGINT;  vd: VirtualDisk;  drive: LONGINT;
-		i: LONGINT;
+		res: INTEGER; handle: Kernel32.HANDLE;  pdg: DISK_GEOMETRY;  size: SIGNED32;  vd: VirtualDisk;  drive: SIGNED32;
+		i: SIGNED32;
 	BEGIN
 		context.arg.SkipWhitespace;
 		context.arg.String(diskname);
@@ -354,7 +354,7 @@ VAR
 			ELSE
 				ReportDiskGeometry( pdg, context.out);
 				IF pdg.MediaType = RemovableMedia THEN INCL(flags,Disks.Removable) END;
-				IF pdg.Cylinders > MAX( LONGINT ) THEN
+				IF pdg.Cylinders > MAX( SIGNED32 ) THEN
 					HALT( 100 )
 				ELSE
 					size := SHORT( pdg.Cylinders ) * pdg.TracksPerCylinder * pdg.SectorsPerTrack;
@@ -373,8 +373,8 @@ VAR
 		END;
 	END Install;
 
-	PROCEDURE Notification(type: LONGINT; drives: SET);
-	VAR v: VirtualDisk; res: WORD;
+	PROCEDURE Notification(type: SIGNED32; drives: SET);
+	VAR v: VirtualDisk; res: INTEGER;
 	BEGIN
 		IF type = WinFS.deviceArrival THEN
 		ELSIF type = WinFS.deviceRemove THEN

@@ -14,7 +14,7 @@ TYPE
 	Character* = OBJECT
 	VAR
 		radical*, tradvariant*, simpvariant*,
-		additionalstrokes*, totalstrokes*, freq*, xfreq* : LONGINT;
+		additionalstrokes*, totalstrokes*, freq*, xfreq* : SIGNED32;
 		mandarin*, pinyin*, cantonese*, korean*, definition* : String;
 	END Character;
 
@@ -24,26 +24,26 @@ TYPE (* generic sortable list *)
 	END;
 
 	(* return -1, if a < b; 0, if a = b; 1, if a > b *)
-	CompareProc = PROCEDURE {DELEGATE} (a, b : ListElement) : LONGINT;
+	CompareProc = PROCEDURE {DELEGATE} (a, b : ListElement) : SIGNED32;
 
 TYPE
 	PIMEEntry = POINTER TO RECORD(ListElement)
 		pinyin : ARRAY 8 OF CHAR;
-		ucs : LONGINT;
-		freq : LONGINT;
+		ucs : SIGNED32;
+		freq : SIGNED32;
 	END;
 
 
 VAR
 	codeArray : POINTER TO ARRAY OF Character;
-	nofLines : LONGINT;
+	nofLines : SIGNED32;
 	tok : ARRAY 32 OF CHAR;
 	data : ARRAY 256 OF CHAR;
 	cap : ARRAY 256 OF CHAR; (* lookup for capital characters *)
 	isNum : ARRAY 256 OF BOOLEAN;
 
-PROCEDURE GetHex(r : Streams.Reader) : LONGINT;
-VAR c : CHAR; res: LONGINT;
+PROCEDURE GetHex(r : Streams.Reader) : SIGNED32;
+VAR c : CHAR; res: SIGNED32;
 BEGIN
 	res := 0;
 	c := r.Get();
@@ -56,21 +56,21 @@ BEGIN
 	RETURN res
 END GetHex;
 
-PROCEDURE HasCode*(code : LONGINT) : BOOLEAN;
+PROCEDURE HasCode*(code : SIGNED32) : BOOLEAN;
 BEGIN
 	RETURN (code >= 0) & (code < MaxCode) & (codeArray[code] # NIL)
 END HasCode;
 
 (** If not existing, creates the character *)
-PROCEDURE GetCharacter*(code : LONGINT) : Character;
+PROCEDURE GetCharacter*(code : SIGNED32) : Character;
 BEGIN
 	ASSERT( (code >= 0) & (code < MaxCode) );
 	IF (codeArray[code] = NIL) THEN NEW(codeArray[code]) END;
 	RETURN codeArray[code]
 END GetCharacter;
 
-PROCEDURE CountCharacters() : LONGINT;
-VAR i, count : LONGINT;
+PROCEDURE CountCharacters() : SIGNED32;
+VAR i, count : SIGNED32;
 BEGIN
 	count := 0;
 	FOR i := 0 TO MaxCode - 1 DO IF codeArray[i] # NIL THEN INC(count) END END;
@@ -78,7 +78,7 @@ BEGIN
 END CountCharacters;
 
 PROCEDURE ParseLine(r: Streams.Reader);
-VAR code : LONGINT; c : CHAR; char : Character;
+VAR code : SIGNED32; c : CHAR; char : Character;
 BEGIN
 	c := r.Get();
 	IF c = "U" THEN
@@ -116,7 +116,7 @@ END ParseLine;
 
 PROCEDURE AddRadicals;
 VAR f : Files.File; r : Files.Reader;
-	code, count : LONGINT; char : Character;
+	code, count : SIGNED32; char : Character;
 BEGIN
 	f := Files.Old("Radicals.txt");
 	IF f # NIL THEN
@@ -139,7 +139,7 @@ END AddRadicals;
 
 PROCEDURE AddFrequencies;
 VAR f : Files.File; r : Files.Reader;
-	code, count, i : LONGINT; char : Character;
+	code, count, i : SIGNED32; char : Character;
 BEGIN
 	f := Files.Old("frequencies.txt");
 	IF f # NIL THEN
@@ -195,7 +195,7 @@ END ParseFile;
 (** Merge-sort a single-linked list. The root element is a dummy node *)
 (* Algorithm by Simon Tatham *)
 PROCEDURE Sort(root: ListElement; compare : CompareProc);	(* root is dummy node *)
-VAR m, n, np, nq: LONGINT; p, q, tail: ListElement;
+VAR m, n, np, nq: SIGNED32; p, q, tail: ListElement;
 BEGIN
 	n := 1;
 	REPEAT
@@ -219,7 +219,7 @@ BEGIN
 	UNTIL m <= 1
 END Sort;
 
-PROCEDURE ComparePinyinFreq(a, b: ListElement) : LONGINT;
+PROCEDURE ComparePinyinFreq(a, b: ListElement) : SIGNED32;
 BEGIN
 	IF a(PIMEEntry).pinyin < b(PIMEEntry).pinyin THEN RETURN -1 END;
 	IF a(PIMEEntry).pinyin > b(PIMEEntry).pinyin THEN RETURN 1 END;
@@ -231,14 +231,14 @@ END ComparePinyinFreq;
 
 
 PROCEDURE BuildBasicPinyinIMETable*;
-VAR i: LONGINT; p, words : SIZE;
+VAR i: SIGNED32; p, words : SIZE;
 	list : ListElement; (* first element is dummy for sort *)
 	cur : ListElement;
 	str : ARRAY 16 OF CHAR;
 	f : Files.File;
 	w : Files.Writer;
 
-	PROCEDURE AddEntry(pinyin : ARRAY OF CHAR; code, freq : LONGINT);
+	PROCEDURE AddEntry(pinyin : ARRAY OF CHAR; code, freq : SIGNED32);
 	VAR e : PIMEEntry;
 	BEGIN
 		NEW(e);
@@ -248,7 +248,7 @@ VAR i: LONGINT; p, words : SIZE;
 	END AddEntry;
 
 
-	PROCEDURE FixBugs(pinyin : ARRAY OF CHAR; code, freq : LONGINT);
+	PROCEDURE FixBugs(pinyin : ARRAY OF CHAR; code, freq : SIGNED32);
 	VAR i, l : SIZE; t : ARRAY 100 OF CHAR;
 	BEGIN
 		Strings.Trim(pinyin, " ");
@@ -269,7 +269,7 @@ VAR i: LONGINT; p, words : SIZE;
 		END
 	END FixBugs;
 
-	PROCEDURE DumpChar(i : LONGINT; c : Character);
+	PROCEDURE DumpChar(i : SIGNED32; c : Character);
 	VAR p, t : ARRAY 256 OF CHAR;
 	BEGIN
 		IF c.mandarin = NIL THEN
@@ -329,7 +329,7 @@ BEGIN
 END BuildBasicPinyinIMETable;
 
 PROCEDURE InitLookup;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	(* to captial conversion table *)
 	FOR i := 0 TO 255 DO cap[i] := CHR(i) END;

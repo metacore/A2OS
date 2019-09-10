@@ -75,28 +75,28 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 
 	TYPE
 		Bee = RECORD
-			x, y: ARRAY 3 OF INTEGER;  (* bee positions x[time], y[time] *)
-			vx, vy: INTEGER;  (* bee velocity *)
+			x, y: ARRAY 3 OF SIGNED16;  (* bee positions x[time], y[time] *)
+			vx, vy: SIGNED16;  (* bee velocity *)
 		END;
 		BeeSwarm = POINTER TO ARRAY OF Bee;
 
 		Swarm = POINTER TO SwarmDesc;
 		SwarmDesc = RECORD (Gadgets.FrameDesc)
-			speed, time: INTEGER;  (* speed of swarm *)
-			size: INTEGER;  (* number of bees in swarm *)
-			mincol, maxcol, col, colstep: INTEGER;  (* display colors and update step for swarm *)
-			wacc, wvel: INTEGER;  (* maximum wasp acceleration and velocity *)
-			border: INTEGER;  (* minimum border for wasp *)
+			speed, time: SIGNED16;  (* speed of swarm *)
+			size: SIGNED16;  (* number of bees in swarm *)
+			mincol, maxcol, col, colstep: SIGNED16;  (* display colors and update step for swarm *)
+			wacc, wvel: SIGNED16;  (* maximum wasp acceleration and velocity *)
+			border: SIGNED16;  (* minimum border for wasp *)
 			wasp: Bee;  (* the wasp, special kind of bee *)
-			bacc, bvel: INTEGER;  (* maximum bee acceleration and velocity *)
+			bacc, bvel: SIGNED16;  (* maximum bee acceleration and velocity *)
 			bees: BeeSwarm;  (* the swarm of bees *)
 		END;
 
 		Task = POINTER TO TaskDesc;
 		TaskDesc = RECORD (Oberon.TaskDesc)
-			x, y: INTEGER; keys: SET;  (* mouse state *)
-			timeout: LONGINT;  (* timeout of state *)
-			ticks: LONGINT;  (* ticks for swarm gadgets *)
+			x, y: SIGNED16; keys: SET;  (* mouse state *)
+			timeout: SIGNED32;  (* timeout of state *)
+			ticks: SIGNED32;  (* ticks for swarm gadgets *)
 		END;
 
 		SwarmMsg = RECORD (Display.FrameMsg) END;
@@ -104,13 +104,13 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 	VAR
 		W: Texts.Writer;  (* everybody needs a writer now and then *)
 		task: Task;  (* singleton screensaver task *)
-		Second, Tick: LONGINT;
+		Second, Tick: SIGNED32;
 		warn: BOOLEAN;
 
 	(* Swarm *)
 
 	PROCEDURE RandomizeSwarm (VAR s: Swarm);
-		VAR i, startv: INTEGER;
+		VAR i, startv: SIGNED16;
 	BEGIN
 		s.wasp.x[0] := s.border+SHORT(ENTIER((s.W-(2*s.border))*RandomNumbers.Uniform())); s.wasp.x[1] := s.wasp.x[0];
 		s.wasp.y[0] := s.border+SHORT(ENTIER((s.H-(2*s.border))*RandomNumbers.Uniform())); s.wasp.y[1] := s.wasp.y[0];
@@ -124,7 +124,7 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 		END
 	END RandomizeSwarm;
 
-	PROCEDURE InitSwarm (VAR s: Swarm; speed, size, width, height, border, mincol, maxcol, bacc, bvel, wacc, wvel: INTEGER);
+	PROCEDURE InitSwarm (VAR s: Swarm; speed, size, width, height, border, mincol, maxcol, bacc, bvel, wacc, wvel: SIGNED16);
 	BEGIN
 		s.speed := speed; s.time := 0;
 		s.size := size; NEW(s.bees, s.size);
@@ -135,7 +135,7 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 		RandomizeSwarm(s)
 	END InitSwarm;
 
-	PROCEDURE ResizeSwarm (s: Swarm; size: INTEGER);
+	PROCEDURE ResizeSwarm (s: Swarm; size: SIGNED16);
 	BEGIN  (* resizing the swarm forces a redraw *)
 		IF size > s.size THEN
 			s.size := size; NEW(s.bees, s.size);
@@ -145,9 +145,9 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 		END
 	END ResizeSwarm;
 
-	PROCEDURE AgeSwarm (s: Swarm; m: Display3.Mask; x, y: INTEGER);
+	PROCEDURE AgeSwarm (s: Swarm; m: Display3.Mask; x, y: SIGNED16);
 		(* move and draw wasp and bees without background *)
-		VAR i, dx, dy, dist, acc: INTEGER; bees: BeeSwarm;
+		VAR i, dx, dy, dist, acc: SIGNED16; bees: BeeSwarm;
 	BEGIN
 		(* handle wasp *)
 		s.wasp.x[2] := s.wasp.x[1]; s.wasp.x[1] := s.wasp.x[0];  (* age coordinates... *)
@@ -204,9 +204,9 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 		END
 	END AgeSwarm;
 
-	PROCEDURE DrawSwarm (s: Swarm; m: Display3.Mask; x, y: INTEGER);
+	PROCEDURE DrawSwarm (s: Swarm; m: Display3.Mask; x, y: SIGNED16);
 		(* only draw the swarm in its current from with a black background *)
-		VAR i: INTEGER; bees: BeeSwarm;
+		VAR i: SIGNED16; bees: BeeSwarm;
 	BEGIN
 		bees := s.bees;
 		Display3.ReplConst(m, Display.FG, x, y, s.W, s.H, Display.paint);
@@ -218,9 +218,9 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 
 	PROCEDURE PrintSwarm (s: Swarm; M: Display.DisplayMsg);
 		(* print swarm with black background, I suppose it only looks good on a color printer *)
-		VAR Q: Display3.Mask; i, x, y: INTEGER; bees: BeeSwarm;
+		VAR Q: Display3.Mask; i, x, y: SIGNED16; bees: BeeSwarm;
 
-		PROCEDURE P(x: INTEGER): INTEGER;
+		PROCEDURE P(x: SIGNED16): SIGNED16;
 		BEGIN RETURN SHORT(x * LONG(10000) DIV Printer.Unit)
 		END P;
 
@@ -236,7 +236,7 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 
 	PROCEDURE CopySwarm (from: Swarm; to: Swarm);
 		(* deep copy of a swarm *)
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		to.speed := from.speed; to.time := from.time;
 		to.size := from.size; to.W := from.W; to.H := from.H; to.border := from.border;
@@ -252,8 +252,8 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 
 	PROCEDURE HandleAttributes (s: Swarm; VAR M: Objects.AttrMsg);
 
-		PROCEDURE SetColors (min, max: INTEGER);
-			VAR swap: INTEGER;
+		PROCEDURE SetColors (min, max: SIGNED16);
+			VAR swap: SIGNED16;
 		BEGIN
 			IF (s.mincol = min) & (s.maxcol = max) THEN RETURN END;
 			s.mincol := min; s.maxcol := max;
@@ -261,7 +261,7 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 			s.col := s.mincol; s.colstep := 1;
 		END SetColors;
 
-		PROCEDURE Resize (size: INTEGER);
+		PROCEDURE Resize (size: SIGNED16);
 		BEGIN
 			IF size < 10 THEN size := 10 ELSIF size > 200 THEN size := 200 END;
 			IF s.size = size THEN RETURN END;
@@ -269,15 +269,15 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 			Gadgets.Update(s)   (* resizing forces update *)
 		END Resize;
 
-		PROCEDURE SetInt (VAR x: INTEGER; new, min, max: INTEGER);
+		PROCEDURE SetInt (VAR x: SIGNED16; new, min, max: SIGNED16);
 		BEGIN
 			IF new < min THEN new := min ELSIF new > max THEN new := max END;
 			IF x = new THEN RETURN END;
 			x := new
 		END SetInt;
 
-		PROCEDURE SetBorder (border: INTEGER);
-			VAR max: INTEGER;
+		PROCEDURE SetBorder (border: SIGNED16);
+			VAR max: SIGNED16;
 		BEGIN
 			IF s.W > s.H THEN max := s.W DIV 2 ELSE max := s.H DIV 2 END;
 			SetInt(s.border, border, 0, max);
@@ -330,7 +330,7 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 	END Copy;
 
 	PROCEDURE Handle (F: Objects.Object; VAR M: Objects.ObjMsg);
-		VAR x, y, w, h, tag: INTEGER; s1: Swarm; Q: Display3.Mask; keysum: SET; O: Display3.OverlapMsg;
+		VAR x, y, w, h, tag: SIGNED16; s1: Swarm; Q: Display3.Mask; keysum: SET; O: Display3.OverlapMsg;
 
 		PROCEDURE Selected (): BOOLEAN;
 			(* return if object or any of its parents is selected, maybe we're overdoing things a bit here but it's well worth the trouble... *)
@@ -464,7 +464,7 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 
 	PROCEDURE Exec*;	(** Simple executor procedure to call more than one command from a button *)
 		(* simple trick to execute more than one command in a row, separator is a comma *)
-		VAR i: INTEGER; s: ARRAY 255 OF CHAR; R: Texts.Reader; ch: CHAR;
+		VAR i: SIGNED16; s: ARRAY 255 OF CHAR; R: Texts.Reader; ch: CHAR;
 			executor, dlink, sender, receiver: Objects.Object;
 	BEGIN
 		executor := Gadgets.executorObj; dlink := Gadgets.context; sender := Gadgets.senderObj; receiver := Gadgets.receiverObj;
@@ -510,7 +510,7 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 		Warning(name); RETURN default  (* some error occured, return default *)
 	END GetBool;
 
-	PROCEDURE GetInt (name: ARRAY OF CHAR; default: LONGINT): LONGINT;
+	PROCEDURE GetInt (name: ARRAY OF CHAR; default: SIGNED32): SIGNED32;
 		(* return longint model of public object name, or default if failure *)
 		VAR L: Objects.LinkMsg; A: Objects.AttrMsg; obj: Objects.Object;
 	BEGIN
@@ -529,8 +529,8 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 		Warning(name); RETURN default  (* some error occured, return default *)
 	END GetInt;
 
-	PROCEDURE GetSleepTime (): LONGINT;
-		VAR sleep: LONGINT;
+	PROCEDURE GetSleepTime (): SIGNED32;
+		VAR sleep: SIGNED32;
 	BEGIN
 		sleep := GetInt(SleepObj, SleepDef);
 		IF sleep < 1 THEN sleep := 1 END;  (* can't prevent user from setting stupid sleep time *)
@@ -541,11 +541,11 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 	(* Screensaver *)
 
 	PROCEDURE FadeAway (): BOOLEAN;  (* dummy procedure to blank screen *)
-		VAR minx, miny, maxx, maxy: INTEGER; keys: SET;
+		VAR minx, miny, maxx, maxy: SIGNED16; keys: SET;
 
-		PROCEDURE Fade (pat: Display.Pattern; delay: LONGINT): BOOLEAN;
+		PROCEDURE Fade (pat: Display.Pattern; delay: SIGNED32): BOOLEAN;
 			CONST steps = 32;
-			VAR i, x, y: INTEGER; time: LONGINT;
+			VAR i, x, y: SIGNED16; time: SIGNED32;
 		BEGIN
 			FOR i := 0 TO steps-1 DO
 				y := Display.Height-i;
@@ -582,8 +582,8 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
     	dcm.F := NIL;  dcm.id := Display.restore;  Display.Broadcast(dcm)
     END RestoreDisplay;
 
-	PROCEDURE SwarmOut (speed, size, border, mincol, maxcol, bacc, bvel, wacc, wvel: INTEGER);
-		VAR s: Swarm; m: Display3.Mask; minx, miny, maxx, maxy, x, y: INTEGER; keys: SET; tdiff, timeout: LONGINT;
+	PROCEDURE SwarmOut (speed, size, border, mincol, maxcol, bacc, bvel, wacc, wvel: SIGNED16);
+		VAR s: Swarm; m: Display3.Mask; minx, miny, maxx, maxy, x, y: SIGNED16; keys: SET; tdiff, timeout: SIGNED32;
 	BEGIN
 		Oberon.RemoveMarks(0, 0, Display.Width, Display.Height);
 		IF FadeAway() THEN
@@ -615,7 +615,7 @@ MODULE Swarm IN Oberon;  (** BES, Oct 16 96 - Oct 25 96 *)
 	(* Screensaver Task *)
 
 	PROCEDURE TaskHandler (task: Oberon.Task);
-		VAR x, y: INTEGER; keys: SET; time: LONGINT; msg: SwarmMsg;
+		VAR x, y: SIGNED16; keys: SET; time: SIGNED32; msg: SwarmMsg;
 	BEGIN
 		WITH task: Task DO
 			time := Input.Time();

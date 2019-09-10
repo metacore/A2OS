@@ -51,12 +51,12 @@ BEGIN
 	RETURN TRUE;
 END DisplayAvailable;
 
-PROCEDURE DisplayWidth*(): LONGINT;
+PROCEDURE DisplayWidth*(): SIGNED32;
 BEGIN
 	RETURN Display.Width;
 END DisplayWidth;
 
-PROCEDURE DisplayHeight*(): LONGINT;
+PROCEDURE DisplayHeight*(): SIGNED32;
 BEGIN
 	RETURN Display.Height;
 END DisplayHeight;
@@ -68,14 +68,14 @@ END DisplayUpdate;
 
 
 
-PROCEDURE OpenBuffer*(VAR db: displayBuffer; VAR w,h: INTEGER);
+PROCEDURE OpenBuffer*(VAR db: displayBuffer; VAR w,h: SIGNED16);
 BEGIN	db := NIL; (* indicates that buffer is unusable, that is for vyGraphBase0 => Images are used exclusively *)
 END OpenBuffer;
 
 PROCEDURE CloseBuffer*(db: displayBuffer);
 END CloseBuffer;
 
-PROCEDURE WriteBuffer*(db: displayBuffer; m: Display3.Mask; atx,aty: INTEGER);
+PROCEDURE WriteBuffer*(db: displayBuffer; m: Display3.Mask; atx,aty: SIGNED16);
 END WriteBuffer;
 
 PROCEDURE LockOberon*; (* Locks the Oberon.Loop to stop receiveing Display-messages , e.g. while opening new displays, used in Windows *)
@@ -84,7 +84,7 @@ END LockOberon; (* not necessary for native *)
 PROCEDURE UnlockOberon*; (* Unlocks the Oberon.Loop *)
 END UnlockOberon; (* not necessary for native *)
 
-PROCEDURE StretchedPict*(M: Display3.Mask; pict: Pictures.Picture; x,y,w,h,dx,dy,dw,dh,mode: INTEGER);
+PROCEDURE StretchedPict*(M: Display3.Mask; pict: Pictures.Picture; x,y,w,h,dx,dy,dw,dh,mode: SIGNED16);
 END StretchedPict; (* not implemented for native. Since images are used as double buffer, that's no hard restriction (but: no printing) *)
 
 PROCEDURE TypeOf*(p: ANY): Type;

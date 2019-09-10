@@ -36,88 +36,88 @@ TYPE
 	Element = POINTER TO ElemDesc;
 	ElemDesc= RECORD
 							next: Element;
-							x, y, w: INTEGER
+							x, y, w: SIGNED16
 						END;
 
 
 	Lockrec= RECORD
 						scaledpict: Pictures.Picture;					(* Skaliertes Picture falls Gadget locked *)
-						lw, lh, lpx, lpy, actlw, actlh: INTEGER		(* Originalframegrösse ; aktuelle Abstand zu Ecke ; aktuelle Framegrösse*)
+						lw, lh, lpx, lpy, actlw, actlh: SIGNED16		(* Originalframegrösse ; aktuelle Abstand zu Ecke ; aktuelle Framegrösse*)
 				END;
 
 	Frame* = POINTER TO FrameDesc;
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
 		pict*: Pictures.Picture;
-		px, py: INTEGER;			(* Position des Bildes innerhalb des Frames; Nullpkt. linke, obere Ecke *)
+		px, py: SIGNED16;			(* Position des Bildes innerhalb des Frames; Nullpkt. linke, obere Ecke *)
 		locked: BOOLEAN;		(* Pictures ändern möglich oder nicht *)
 		lockdata: Lockrec;		(* Daten für Zustand locked *)
 		border: BOOLEAN;		(* Rand sichtbar oder nicht *)
-		selection*: INTEGER;
-		sx*, sy*, sw*, sh*: INTEGER;	(** Selektionsbereich *)
+		selection*: SIGNED16;
+		sx*, sy*, sw*, sh*: SIGNED16;	(** Selektionsbereich *)
 		selstruct: Element; 						(* Beliebige Fläche selektiert *)
 		seloutline: Element;			(* Darstellung des selektierten *)
-		selcolor: INTEGER;		(* Selektionsfarbe *)
-		selcol: INTEGER;				(* Farbe der Fläche *)
-		seltime: LONGINT;
+		selcolor: SIGNED16;		(* Selektionsfarbe *)
+		selcol: SIGNED16;				(* Farbe der Fläche *)
+		seltime: SIGNED32;
 		selpict: Pictures.Picture;
 		car* : BOOLEAN;
-		cx*, cy*: INTEGER;
-		string: RECORD len, x, y: INTEGER END;
-		zoom: INTEGER;				(* Zoomweite: 1=normal *)
+		cx*, cy*: SIGNED16;
+		string: RECORD len, x, y: SIGNED16 END;
+		zoom: SIGNED16;				(* Zoomweite: 1=normal *)
 		grid: BOOLEAN;				(* Rasterlinien *)
-		time: LONGINT;
-		col*: INTEGER; 	(* für Version 1.6 *)
+		time: SIGNED32;
+		col*: SIGNED16; 	(* für Version 1.6 *)
 	END;
 
-	TrackMMProc* = PROCEDURE (F: Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
+	TrackMMProc* = PROCEDURE (F: Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
 
 	DrawSelectionMsg = RECORD (Display.FrameMsg) END;
 	DrawCaretMsg = RECORD (Display.FrameMsg) END;
-	DrawGridMsg = RECORD (Display.FrameMsg) u, v, w, h: INTEGER END;
-	ZoomMsg = RECORD (Display.DisplayMsg) zoom: INTEGER END;
-	FocusMsg = RECORD (Display.FrameMsg) u, v: INTEGER END;
+	DrawGridMsg = RECORD (Display.FrameMsg) u, v, w, h: SIGNED16 END;
+	ZoomMsg = RECORD (Display.DisplayMsg) zoom: SIGNED16 END;
+	FocusMsg = RECORD (Display.FrameMsg) u, v: SIGNED16 END;
 	SelectMsg = RECORD (Display.SelectMsg)
 							pict: Pictures.Picture;
-							u, v, w, h: INTEGER
+							u, v, w, h: SIGNED16
 						END;
 
 	Region = POINTER TO RegionDesc;
 	RegionDesc= RECORD
 							next: Region;
-							px, py: INTEGER;
+							px, py: SIGNED16;
 							P, pict: Pictures.Picture
 						END;
 
 VAR
 	trackMM*: TrackMMProc;		(** Handler für Operationen *)
 	trackSelMM*: RECORD			(** Handler für Selektionsoperationen *)
-								id*: SHORTINT;
+								id*: SIGNED8;
 								track*: TrackMMProc
 						END;
 	undo (*, redo *): Region;	(* Picture für letzte Änderung rückgängig machbar *)
 	cursor*: Oberon.Marker;
-	seltype: INTEGER;
-	selcolor*: INTEGER;		(** Farbe für Selektion *)
+	seltype: SIGNED16;
+	selcolor*: SIGNED16;		(** Farbe für Selektion *)
 	clipboard: RECORD
-						id, col: INTEGER;
+						id, col: SIGNED16;
 						P: Pictures.Picture;
 						selstruct: Element;
-						sw, sh: INTEGER;
-						Paste: PROCEDURE(D: Pictures.Picture; dx, dy: INTEGER);
+						sw, sh: SIGNED16;
+						Paste: PROCEDURE(D: Pictures.Picture; dx, dy: SIGNED16);
 					END;
-	seldir: ARRAY 4 OF RECORD dx, dy, ind: SHORTINT END;	(* Hilfsarray für Outlinebestimmung von bel. Selektion *)
+	seldir: ARRAY 4 OF RECORD dx, dy, ind: SIGNED8 END;	(* Hilfsarray für Outlinebestimmung von bel. Selektion *)
 
-PROCEDURE Min(a, b: INTEGER): INTEGER;
+PROCEDURE Min(a, b: SIGNED16): SIGNED16;
 BEGIN
 	IF a<b THEN RETURN a ELSE RETURN b END;
 END Min;
 
-PROCEDURE Max(a, b: INTEGER): INTEGER;
+PROCEDURE Max(a, b: SIGNED16): SIGNED16;
 BEGIN
 	IF a>b THEN RETURN a ELSE RETURN b END;
 END Max;
 
-PROCEDURE SizeFrame(F: Frame; d: INTEGER);	(* ps - 21.5.96 *)
+PROCEDURE SizeFrame(F: Frame; d: SIGNED16);	(* ps - 21.5.96 *)
 VAR M: Display.ModifyMsg;
 BEGIN
 	INC(F.px, d); INC(F.py, d); INC(F.lockdata.lpx, d); INC(F.lockdata.lpy, d);
@@ -204,15 +204,15 @@ BEGIN
 END FrameLinks;
 
 (** Wandelt die absoluten Bildschirmkoordinaten in Picturekoordinaten um *)
-PROCEDURE ScreentoPict*(F: Frame; x, y, absx, absy: INTEGER; VAR px, py: INTEGER);
+PROCEDURE ScreentoPict*(F: Frame; x, y, absx, absy: SIGNED16; VAR px, py: SIGNED16);
 BEGIN
 	px:= (absx-x-F.px*F.zoom) DIV F.zoom;
 	py:= (absy-y-F.H+F.pict.height*F.zoom+F.py*F.zoom) DIV F.zoom
 END ScreentoPict;
 
 (** Wandelt relative Picturekoordinaten in absulute Bildschirmkoordinaten um *)
-PROCEDURE PicttoScreen*(F: Frame; x, y, relx, rely: INTEGER; VAR absx, absy: INTEGER);
-VAR h: INTEGER;
+PROCEDURE PicttoScreen*(F: Frame; x, y, relx, rely: SIGNED16; VAR absx, absy: SIGNED16);
+VAR h: SIGNED16;
 BEGIN
 	IF F.locked & (F.lockdata.scaledpict # NIL) THEN h := F.lockdata.scaledpict.height ELSE h := F.pict.height END;
 	absx:= (relx+F.px)*F.zoom+x;
@@ -229,7 +229,7 @@ BEGIN
 	END
 END RemoveSelection;
 
-PROCEDURE SetSelection(F: Frame; id: INTEGER);
+PROCEDURE SetSelection(F: Frame; id: SIGNED16);
 VAR M: DrawSelectionMsg;
 BEGIN
 	F.selection:= id;
@@ -237,8 +237,8 @@ BEGIN
 	F.time:= Oberon.Time();
 END SetSelection;
 
-PROCEDURE GetSelection(VAR F: Frame; VAR P: Pictures.Picture; VAR time: LONGINT; VAR x, y, w, h: INTEGER);
-VAR M: SelectMsg; M2: Display.SelectMsg; time2: LONGINT;
+PROCEDURE GetSelection(VAR F: Frame; VAR P: Pictures.Picture; VAR time: SIGNED32; VAR x, y, w, h: SIGNED16);
+VAR M: SelectMsg; M2: Display.SelectMsg; time2: SIGNED32;
 BEGIN
 	M.id := Display.get; M.time := -1; M.pict := NIL; M.F := NIL; M.obj := NIL;
 	Display.Broadcast(M);
@@ -263,8 +263,8 @@ BEGIN
 	END
 END GetSelection;
 
-PROCEDURE DrawOutline(F: Frame; Q: D3.Mask; sx, sy: INTEGER);
-VAR act: Element; x0, y0: INTEGER;
+PROCEDURE DrawOutline(F: Frame; Q: D3.Mask; sx, sy: SIGNED16);
+VAR act: Element; x0, y0: SIGNED16;
 BEGIN
 	act:= F.seloutline;
 	IF act#NIL THEN act:= act.next END;
@@ -275,8 +275,8 @@ BEGIN
 	END;
 END DrawOutline;
 
-PROCEDURE DrawSelection(F: Frame; Q: D3.Mask; x, y: INTEGER);
-VAR ox, oy: INTEGER;
+PROCEDURE DrawSelection(F: Frame; Q: D3.Mask; x, y: SIGNED16);
+VAR ox, oy: SIGNED16;
 BEGIN
 	PicttoScreen(F, x, y, F.sx, F.sy, ox, oy);
 	Oberon.FadeCursor(Oberon.Mouse);
@@ -289,16 +289,16 @@ END DrawSelection;
 
 (** Kopiert Picture-Palette *)
 PROCEDURE CopyPalette*(S, D: Pictures.Picture);
-VAR i, r, g, b: INTEGER;
+VAR i, r, g, b: SIGNED16;
 BEGIN
 	i:=0;
 	WHILE i< ASH(1, S.depth) DO Pictures.GetColor(S, i, r, g, b); Pictures.SetColor(D, i, r, g, b); INC(i) END
 END CopyPalette;
 
 (** Gibt die letzte Selektion in Form eines Pictures zurück *)
-PROCEDURE GetSelectedPict*(VAR P: Pictures.Picture; VAR x, y, w, h: INTEGER);
+PROCEDURE GetSelectedPict*(VAR P: Pictures.Picture; VAR x, y, w, h: SIGNED16);
 VAR F: Frame;
-		time: LONGINT;
+		time: SIGNED32;
 		act: Element;
 BEGIN
 	GetSelection(F, P, time, x, y, w, h);
@@ -327,7 +327,7 @@ BEGIN
 END GetSelectedPict;
 
 (** Gibt Selektion innerhalb eines bestimmten Frames zurück *)
-PROCEDURE GetSelectioninFrame*(F: Frame; VAR P: Pictures.Picture; VAR x, y, w, h: INTEGER);
+PROCEDURE GetSelectioninFrame*(F: Frame; VAR P: Pictures.Picture; VAR x, y, w, h: SIGNED16);
 VAR act: Element;
 BEGIN
 	IF (F#NIL) & (F.selection#No) THEN
@@ -357,7 +357,7 @@ BEGIN
 	END
 END GetSelectioninFrame;
 
-PROCEDURE Select(F: Frame; x, y: INTEGER; VAR M: Display.SelectMsg);
+PROCEDURE Select(F: Frame; x, y: SIGNED16; VAR M: Display.SelectMsg);
 VAR F1: Frame;
 BEGIN
 	IF M.id= Display.get THEN
@@ -388,9 +388,9 @@ BEGIN
 END Select;
 
 (** Gibt einen String in den angegebenen Bereich aus *)
-PROCEDURE DisplayText*(sx, sy, sw, sh: INTEGER; text: ARRAY OF CHAR);
+PROCEDURE DisplayText*(sx, sy, sw, sh: SIGNED16; text: ARRAY OF CHAR);
 CONST bg= 3;
-VAR i, x: INTEGER; f: Fonts.Font; dx, fx, fy, fw, fh: INTEGER; pat: Display.Pattern;
+VAR i, x: SIGNED16; f: Fonts.Font; dx, fx, fy, fw, fh: SIGNED16; pat: Display.Pattern;
 BEGIN
 	Display.ReplConst(bg, sx, sy, sw, sh, Display.replace);
 	i:=0; x:= sx+4; f:= Fonts.Default;
@@ -403,8 +403,8 @@ BEGIN
 END DisplayText;
 
 (** Testet, ob die Koordinaten mx,my innerhalb des dargestellten Picture sind *)
-PROCEDURE InsidePict*(F: Frame; mx, my, x, y: INTEGER): BOOLEAN;
-VAR px, py: INTEGER;
+PROCEDURE InsidePict*(F: Frame; mx, my, x, y: SIGNED16): BOOLEAN;
+VAR px, py: SIGNED16;
 BEGIN
 	PicttoScreen(F, x, y, 0, 0, px, py);
 	IF Effects.Inside(mx, my, px, py, F.pict.width*F.zoom, F.pict.height*F.zoom) THEN RETURN TRUE ELSE RETURN FALSE END
@@ -419,13 +419,13 @@ BEGIN
 	END
 END Defocus;
 
-PROCEDURE Neutralize(F: Frame; x, y, w, h: INTEGER);
+PROCEDURE Neutralize(F: Frame; x, y, w, h: SIGNED16);
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h); Defocus(F); RemoveSelection(F)
 END Neutralize;
 
-PROCEDURE DrawGrid(F: Frame; Q: D3.Mask; x,y ,w ,h, picx, picy, picw, pich : INTEGER);
-VAR px, py, sx, sy, dh: INTEGER;
+PROCEDURE DrawGrid(F: Frame; Q: D3.Mask; x,y ,w ,h, picx, picy, picw, pich : SIGNED16);
+VAR px, py, sx, sy, dh: SIGNED16;
 BEGIN
 	IF picx<0 THEN picw:= picw+picx; picx:= 0 END;
 	IF picx+picw>F.pict.width THEN picw:= F.pict.width-picx END;
@@ -475,9 +475,9 @@ BEGIN
 	END
 END DrawGrid;
 
-PROCEDURE DisplayBlock(F: Frame; Q: D3.Mask; p: Pictures.Picture; x, y ,w ,h, picx, picy, picw, pich: INTEGER);
+PROCEDURE DisplayBlock(F: Frame; Q: D3.Mask; p: Pictures.Picture; x, y ,w ,h, picx, picy, picw, pich: SIGNED16);
 (* Stellt ein gezoomtes Gebiet auf dem Bildschirm dar *)
-VAR px, py, col, px0, dy, ox, oy, sx, sy, dh: INTEGER;
+VAR px, py, col, px0, dy, ox, oy, sx, sy, dh: SIGNED16;
 BEGIN
 	IF picx<0 THEN picw:= picw+picx; picx:= 0 END;
 	IF picx+picw>p.width THEN picw:= p.width-picx END;
@@ -532,8 +532,8 @@ BEGIN
 END DisplayBlock;
 
 (** Zeichnet den Pictureausschnitt neu *)
-PROCEDURE RestorePict*(F: Frame; Q: D3.Mask; x, y, w, h, picx, picy, picw, pich: INTEGER);
-VAR px, py: INTEGER; p: Pictures.Picture;
+PROCEDURE RestorePict*(F: Frame; Q: D3.Mask; x, y, w, h, picx, picy, picw, pich: SIGNED16);
+VAR px, py: SIGNED16; p: Pictures.Picture;
 BEGIN
 	IF F.locked & (F.lockdata.scaledpict # NIL) THEN p := F.lockdata.scaledpict ELSE p := F.pict END;
 
@@ -546,9 +546,9 @@ BEGIN
 	END;
 END RestorePict;
 
-PROCEDURE Restore (F: Frame; Q: D3.Mask; x, y, w, h, picx, picy, picw, pich: INTEGER);
+PROCEDURE Restore (F: Frame; Q: D3.Mask; x, y, w, h, picx, picy, picw, pich: SIGNED16);
 (* Zeichnet ein bestimmtes Gebiet neu inkl Background *)
-VAR sx, sy: INTEGER; M: D3.Mask; pw, ph: REAL; L: Lockrec;
+VAR sx, sy: SIGNED16; M: D3.Mask; pw, ph: FLOAT32; L: Lockrec;
 BEGIN
 	NEW(M);
 	D3.Open(M);
@@ -599,13 +599,13 @@ BEGIN
 	END
 END Restore;
 
-PROCEDURE DrawCaret(Q: D3.Mask; x, y: INTEGER);
+PROCEDURE DrawCaret(Q: D3.Mask; x, y: SIGNED16);
 BEGIN
 	Oberon.FadeCursor(Oberon.Mouse);
 	D3.CopyPattern(Q, D3.black, Display.cross, x-6, y-6, Display.invert)
 END DrawCaret;
 
-PROCEDURE SetCaret(F: Frame; cx, cy: INTEGER);
+PROCEDURE SetCaret(F: Frame; cx, cy: SIGNED16);
 VAR M: DrawCaretMsg;
 BEGIN
 	Oberon.Defocus;
@@ -617,7 +617,7 @@ END SetCaret;
 PROCEDURE Print (F: Frame; VAR M: Display.DisplayMsg);
 VAR R: D3.Mask;
 
-  PROCEDURE PP(x: INTEGER): INTEGER;
+  PROCEDURE PP(x: SIGNED16): SIGNED16;
   BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
   END PP;
 
@@ -678,7 +678,7 @@ BEGIN
 END StoreFrame;
 
 PROCEDURE LoadFrame(F: Frame; VAR M: Objects.FileMsg);
-VAR version, w, h: INTEGER; obj: Objects.Object;
+VAR version, w, h: SIGNED16; obj: Objects.Object;
 BEGIN
 	Files.ReadInt(M.R, version);
 	IF (version#16970) & (version#16971) THEN HALT(99) END;
@@ -714,7 +714,7 @@ BEGIN
 END LoadFrame;
 
 (** Sichert den angegebenen Bereich des Picture als Undo-Information *)
-PROCEDURE SavePicture*(P: Pictures.Picture; x, y ,w, h: INTEGER);
+PROCEDURE SavePicture*(P: Pictures.Picture; x, y ,w, h: SIGNED16);
 BEGIN
 	IF undo=NIL THEN NEW(undo) END;
 	NEW(undo.P);
@@ -726,8 +726,8 @@ BEGIN
 	END
 END SavePicture;
 
-PROCEDURE ScanBorder(S: Pictures.Picture; y0: INTEGER; VAR list: Element);
-VAR i, x, y, decx, decy, x0 : INTEGER; vertex, act, last: Element;
+PROCEDURE ScanBorder(S: Pictures.Picture; y0: SIGNED16; VAR list: Element);
+VAR i, x, y, decx, decy, x0 : SIGNED16; vertex, act, last: Element;
 BEGIN
 	y:=y0; x0:=0; WHILE Pictures.Get(S, x0+1, y0)=0 DO INC(x0) END;
 	x:= x0;
@@ -749,25 +749,25 @@ BEGIN
 	UNTIL (x=x0) & (y=y0);
 END ScanBorder;
 
-PROCEDURE SelectArea(F: Frame; P: Pictures.Picture; x0, y0: INTEGER);
+PROCEDURE SelectArea(F: Frame; P: Pictures.Picture; x0, y0: SIGNED16);
 CONST    size=10;
 
 TYPE Stack=POINTER TO StackDesc;
 		StackDesc=RECORD
-			x, y: ARRAY size OF INTEGER;
+			x, y: ARRAY size OF SIGNED16;
 			prev, next: Stack;
 		END;
 
 VAR  st: Stack;
-		bg,fg : INTEGER;
+		bg,fg : SIGNED16;
 		x, y,
 		l, r, 		(*left and right border of actual line*)
 		l0, r0, 	(*left and right border of previous line*)
 		l2, r2,
-		pos: INTEGER;  	(*stack pointer*)
+		pos: SIGNED16;  	(*stack pointer*)
 		first, act: Element;
 
-	PROCEDURE PUT(x, y: INTEGER);
+	PROCEDURE PUT(x, y: SIGNED16);
 	(*put the pair x, y onto the stack*)
 	BEGIN
 		IF pos=size THEN
@@ -778,7 +778,7 @@ VAR  st: Stack;
 		INC(pos);
 	END PUT;
 
-	PROCEDURE GET(VAR x, y: INTEGER): BOOLEAN;
+	PROCEDURE GET(VAR x, y: SIGNED16): BOOLEAN;
 	(*fetch the pair x, y from the stack, return FALSE<=>stack is empty*)
 	BEGIN
 		IF pos=0 THEN
@@ -793,7 +793,7 @@ VAR  st: Stack;
 		END; (*if*)
 	END GET;
 
-	PROCEDURE ScanRight(x0, lim, y: INTEGER;  background : BOOLEAN): INTEGER;
+	PROCEDURE ScanRight(x0, lim, y: SIGNED16;  background : BOOLEAN): SIGNED16;
 	(*scan line on y to first pixel in col, starting at x0*)
 	BEGIN
 		IF background THEN WHILE (x0<lim) & (bg # Pictures.Get(P,x0,y)) DO INC(x0) END;
@@ -801,7 +801,7 @@ VAR  st: Stack;
 		RETURN x0;
 	END ScanRight;
 
-	PROCEDURE ScanLeft(x0, lim, y: INTEGER;  background : BOOLEAN): INTEGER;
+	PROCEDURE ScanLeft(x0, lim, y: SIGNED16;  background : BOOLEAN): SIGNED16;
 	(*scan line on y to first pixel in col, starting at x0*)
 	BEGIN
 		IF background THEN WHILE (x0>lim) & (bg #  Pictures.Get(P,x0,y)) DO DEC(x0) END;
@@ -809,7 +809,7 @@ VAR  st: Stack;
 		RETURN x0;
 	END ScanLeft;
 
-	PROCEDURE FillLine(x, y: INTEGER;  VAR l, r: INTEGER);
+	PROCEDURE FillLine(x, y: SIGNED16;  VAR l, r: SIGNED16);
 	(*fill line starting at x, y with black, return left & right end of line*)
 	VAR p: Element;
 
@@ -827,7 +827,7 @@ VAR  st: Stack;
 	END FillLine;
 
 BEGIN
-	F.sx:=MAX(INTEGER); F.sy:=MAX(INTEGER); F.sw:=0; F.sh:=0;
+	F.sx:=MAX(SIGNED16); F.sy:=MAX(SIGNED16); F.sw:=0; F.sh:=0;
 	bg := Pictures.Get(P,x0, y0);
 	first:= NIL;
 	IF Rembrandt0.color.col = bg THEN fg:= Rembrandt0.color.col+1 ELSE fg:= Rembrandt0.color.col END;
@@ -899,8 +899,8 @@ BEGIN
 	F.selstruct:= first;
 END SelectArea;
 
-PROCEDURE TrackObjectSelection(F: Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR x0, y0, oldsel: INTEGER; keysum: SET; P: Pictures.Picture; act: Element; f: Frame; fM: FocusMsg;
+PROCEDURE TrackObjectSelection(F: Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR x0, y0, oldsel: SIGNED16; keysum: SET; P: Pictures.Picture; act: Element; f: Frame; fM: FocusMsg;
 BEGIN
 	oldsel:= F.selection;
 	RemoveSelection(F);
@@ -949,7 +949,7 @@ BEGIN
 END TrackObjectSelection;
 
 PROCEDURE ProcessList(F: Frame; VAR first: Element);
-VAR act: Element;  P: Pictures.Picture; x0, y0, col: INTEGER;
+VAR act: Element;  P: Pictures.Picture; x0, y0, col: SIGNED16;
 BEGIN col:=D3.FG;
 	y0:=F.sh DIV 2; x0:= 1;
 	first:= first.next;
@@ -981,10 +981,10 @@ BEGIN col:=D3.FG;
 	END
 END ProcessList;
 
-PROCEDURE Line(x0, y0, x1, y1: INTEGER; VAR first: Element);
-VAR x, y, d, dx, dy, incx, incy, oldy: INTEGER;
+PROCEDURE Line(x0, y0, x1, y1: SIGNED16; VAR first: Element);
+VAR x, y, d, dx, dy, incx, incy, oldy: SIGNED16;
 
-	PROCEDURE AddtoList(x, y: INTEGER; w: INTEGER);
+	PROCEDURE AddtoList(x, y: SIGNED16; w: SIGNED16);
 	VAR p: Element;
 	BEGIN
 		NEW(p); p.x:= x; p.y:= y; p.w:= w;
@@ -1018,8 +1018,8 @@ BEGIN
 END Line;
 
 (** Zeichnet eine Linie von x0, y0 nach x1, y1 mit Dicke dw; kann als Gummilinie benutzt werden *)
-PROCEDURE DisplayLine*(F: Frame; x, y: INTEGER; Q: D3.Mask; col, x0, y0, x1, y1, dw: INTEGER);
-VAR lx, ly, d, dx, dy, incx, incy, sx, sy: INTEGER;
+PROCEDURE DisplayLine*(F: Frame; x, y: SIGNED16; Q: D3.Mask; col, x0, y0, x1, y1, dw: SIGNED16);
+VAR lx, ly, d, dx, dy, incx, incy, sx, sy: SIGNED16;
 BEGIN
 	ScreentoPict(F, x, y, x0, y0, x0, y0);
 	ScreentoPict(F, x, y, x1, y1, x1, y1);
@@ -1049,10 +1049,10 @@ BEGIN
 	END
 END DisplayLine;
 
-PROCEDURE TrackFreehandSelection(F: Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR x0, y0, ox, oy, mx, my, px0, py0, px1, py1, startx, starty, oldsel: INTEGER; keysum: SET; list: Element;
-		ofsx, ofsy, ofsw, ofsh: INTEGER; nomove: BOOLEAN;
-		prev, last: RECORD x, y: INTEGER END; Q: D3.Mask;
+PROCEDURE TrackFreehandSelection(F: Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR x0, y0, ox, oy, mx, my, px0, py0, px1, py1, startx, starty, oldsel: SIGNED16; keysum: SET; list: Element;
+		ofsx, ofsy, ofsw, ofsh: SIGNED16; nomove: BOOLEAN;
+		prev, last: RECORD x, y: SIGNED16 END; Q: D3.Mask;
 BEGIN
 	oldsel:= F.selection;
 	RemoveSelection(F);
@@ -1072,7 +1072,7 @@ BEGIN
 	Oberon.FadeCursor(Oberon.Mouse);
 	DisplayLine(F, x, y, Q, F.selcolor, x0, y0, x0, y0, F.zoom);
 	F.sx:= px0; F.sy:= py0; F.sw:= px0; F.sh:= py0;
-	prev.x:= MAX(INTEGER); prev.y:= MAX(INTEGER); last:= prev;
+	prev.x:= MAX(SIGNED16); prev.y:= MAX(SIGNED16); last:= prev;
 	REPEAT
 		ox:=mx; oy:= my;
 		Input.Mouse(M.keys, mx, my);
@@ -1180,9 +1180,9 @@ BEGIN
 	UndoRedo(redo, undo)
 END Redo; *)
 
-PROCEDURE WriteChar(F: Frame; lib: Objects.Library; col: INTEGER; ch: CHAR; VAR px, py: INTEGER);
+PROCEDURE WriteChar(F: Frame; lib: Objects.Library; col: SIGNED16; ch: CHAR; VAR px, py: SIGNED16);
 (* Schreibt einen Buchstaben an die Position px, py im Picture *)
-VAR dx: INTEGER; obj: Objects.Object;
+VAR dx: SIGNED16; obj: Objects.Object;
 BEGIN
 	IF (px# F.string.x) OR (py#F.string.y) THEN
 		F.string.len:=0;
@@ -1208,8 +1208,8 @@ BEGIN
 	F.string.x:=px; F.string.y:= py;
 END WriteChar;
 
-PROCEDURE Write(F: Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR obj: Objects.Object; VAR px, py: INTEGER;
+PROCEDURE Write(F: Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR obj: Objects.Object; VAR px, py: SIGNED16;
 BEGIN
 	px:= F.cx; py:= F.cy;
 	WriteChar(F, M.fnt, Rembrandt0.color.col, M.ch, px, py);
@@ -1221,9 +1221,9 @@ BEGIN
 	M.res:= 0
 END Write;
 
-PROCEDURE CopyText(F: Frame; text: Texts.Text; beg, end: LONGINT; x, y: INTEGER);
+PROCEDURE CopyText(F: Frame; text: Texts.Text; beg, end: SIGNED32; x, y: SIGNED16);
 (* Kopiert einen selektierten Text an die Caretposition im Picture *)
-VAR R: Texts.Reader; ch: CHAR; px, py: INTEGER;
+VAR R: Texts.Reader; ch: CHAR; px, py: SIGNED16;
 BEGIN
 	Texts.OpenReader(R, text, beg);
 	Texts.Read(R, ch);
@@ -1237,7 +1237,7 @@ BEGIN
 	SetCaret(F, px, py);
 END CopyText;
 
-PROCEDURE CopyOver(F: Frame; P: Pictures.Picture; x, y: INTEGER);
+PROCEDURE CopyOver(F: Frame; P: Pictures.Picture; x, y: SIGNED16);
 BEGIN
 	IF F.car & (P # NIL) THEN
 		Oberon.RemoveMarks(x, y, F.W, F.H);
@@ -1248,10 +1248,10 @@ BEGIN
 END CopyOver;
 
 (** Aufspannen eines Rechtecks mit der Maus; analog Effects.SizeRect jedoch zusätzlich mit Prozentangabe falls info=TRUE *)
-PROCEDURE SizeRect*(F: Frame; x, y: INTEGER; Q: D3.Mask; VAR keysum: SET; VAR mx, my, sx, sy, sw, sh: INTEGER; info: BOOLEAN);
-VAR keys: SET; ox, oy, opx, opy, dz, oldsw, oldsh, cmx, cmy: INTEGER; disptext: ARRAY 22 OF CHAR;
+PROCEDURE SizeRect*(F: Frame; x, y: SIGNED16; Q: D3.Mask; VAR keysum: SET; VAR mx, my, sx, sy, sw, sh: SIGNED16; info: BOOLEAN);
+VAR keys: SET; ox, oy, opx, opy, dz, oldsw, oldsh, cmx, cmy: SIGNED16; disptext: ARRAY 22 OF CHAR;
 
-	PROCEDURE ConvertNumberstoText(x, y: LONGINT; VAR text: ARRAY OF CHAR);
+	PROCEDURE ConvertNumberstoText(x, y: SIGNED32; VAR text: ARRAY OF CHAR);
 	BEGIN
 		text[0]:= "X"; text[1]:= ":"; text[2]:= " ";
 		IF x>999 THEN text[3]:= CHR(x DIV 1000+48) ELSE text[3]:= " " END;
@@ -1326,8 +1326,8 @@ BEGIN
 END SizeRect;
 
 (** Handler für rechte Maustaste *)
-PROCEDURE TrackSelection*(F: Frame; VAR M: Oberon.InputMsg; x, y, w, h: INTEGER);
-VAR Q: D3.Mask; cM: Display.ConsumeMsg; ox, oy, fx, fy, oldsel: INTEGER; P: Pictures.Picture;
+PROCEDURE TrackSelection*(F: Frame; VAR M: Oberon.InputMsg; x, y, w, h: SIGNED16);
+VAR Q: D3.Mask; cM: Display.ConsumeMsg; ox, oy, fx, fy, oldsel: SIGNED16; P: Pictures.Picture;
 		F0: Frame;
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
@@ -1378,8 +1378,8 @@ BEGIN
 	M.res := 0
 END TrackSelection;
 
-PROCEDURE MovePicture(F: Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR ox, oy, ow, oh: INTEGER;
+PROCEDURE MovePicture(F: Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR ox, oy, ow, oh: SIGNED16;
 	f: Display.Frame; C: Display.ConsumeMsg; CM: Objects.CopyMsg;
 BEGIN
 	(* Gadgets.MakeMask(F, x, y, M.dlink, Q); *)
@@ -1423,8 +1423,8 @@ BEGIN
 	M.res:=0
 END MovePicture;
 
-PROCEDURE MakePictMask(F: Frame; x, y: INTEGER; Q: D3.Mask);
-VAR ax, ay, aw, ah : INTEGER;
+PROCEDURE MakePictMask(F: Frame; x, y: SIGNED16; Q: D3.Mask);
+VAR ax, ay, aw, ah : SIGNED16;
 BEGIN
 		IF F.px>0 THEN
 			ax:=x+F.px
@@ -1449,8 +1449,8 @@ BEGIN
 		IF F.border THEN D3.AdjustMask(Q, ax, ay, aw, ah) ELSE D3.AdjustMask(Q, ax-1, ay-1, aw+2, ah+2) END;
 END MakePictMask;
 
-PROCEDURE MoveBlock(F: Frame; x, y: INTEGER; Q: D3.Mask; VAR M: Oberon.InputMsg; P: Pictures.Picture; VAR sx, sy: INTEGER; w, h: INTEGER; interclick: BOOLEAN);
-VAR keys: SET; omx, omy, px, py, dx, dy, opx, opy, dw, dh : INTEGER; first: BOOLEAN;
+PROCEDURE MoveBlock(F: Frame; x, y: SIGNED16; Q: D3.Mask; VAR M: Oberon.InputMsg; P: Pictures.Picture; VAR sx, sy: SIGNED16; w, h: SIGNED16; interclick: BOOLEAN);
+VAR keys: SET; omx, omy, px, py, dx, dy, opx, opy, dw, dh : SIGNED16; first: BOOLEAN;
 BEGIN
 	Oberon.RemoveMarks(x, y, F.W, F.H); RemoveSelection(F);
 	IF F.zoom=1 THEN
@@ -1549,10 +1549,10 @@ BEGIN
 	END
 END MoveBlock;
 
-PROCEDURE MoveStructure(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg; fselcol, typ: INTEGER; fp: Pictures.Picture; struct: Element; first: BOOLEAN; VAR selx, sely, selw, selh: INTEGER; interclick: BOOLEAN);
-VAR Q: D3.Mask; keys: SET; sx, sy, xx, yy, ox, oy, opx, opy, oldbw, oldbh: INTEGER; P: Pictures.Picture;
+PROCEDURE MoveStructure(F: Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg; fselcol, typ: SIGNED16; fp: Pictures.Picture; struct: Element; first: BOOLEAN; VAR selx, sely, selw, selh: SIGNED16; interclick: BOOLEAN);
+VAR Q: D3.Mask; keys: SET; sx, sy, xx, yy, ox, oy, opx, opy, oldbw, oldbh: SIGNED16; P: Pictures.Picture;
 
-	PROCEDURE DrawUniSel(dx, dy: INTEGER);
+	PROCEDURE DrawUniSel(dx, dy: SIGNED16);
 	VAR act: Element;
 	BEGIN
 		act:= struct;
@@ -1562,7 +1562,7 @@ VAR Q: D3.Mask; keys: SET; sx, sy, xx, yy, ox, oy, opx, opy, oldbw, oldbh: INTEG
 		END
 	END DrawUniSel;
 
-	PROCEDURE DrawPolySel(dx, dy: INTEGER);
+	PROCEDURE DrawPolySel(dx, dy: SIGNED16);
 	VAR act: Element;
 	BEGIN
 		act:= struct;
@@ -1572,8 +1572,8 @@ VAR Q: D3.Mask; keys: SET; sx, sy, xx, yy, ox, oy, opx, opy, oldbw, oldbh: INTEG
 		END;
 	END DrawPolySel;
 
-	PROCEDURE DoubleBuffering(w, h: INTEGER);
-	VAR dx, dy, fromx, fromy, bw, bh: INTEGER;
+	PROCEDURE DoubleBuffering(w, h: SIGNED16);
+	VAR dx, dy, fromx, fromy, bw, bh: SIGNED16;
 	BEGIN
 		IF w>0 THEN
 			fromx:= selx; dx:= w; bw:= selw+w
@@ -1658,8 +1658,8 @@ BEGIN
 	END
 END MoveStructure;
 
-PROCEDURE HandleStructure(F: Frame; x, y: INTEGER; VAR M: Oberon.InputMsg; f: Frame; struct: Element; same: BOOLEAN; selx, sely, selw, selh: INTEGER);
-VAR typ: INTEGER; act: Element; P: Pictures.Picture; opx, opy: INTEGER;
+PROCEDURE HandleStructure(F: Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg; f: Frame; struct: Element; same: BOOLEAN; selx, sely, selw, selh: SIGNED16);
+VAR typ: SIGNED16; act: Element; P: Pictures.Picture; opx, opy: SIGNED16;
 
 	PROCEDURE DrawPolySel;
 	VAR act: Element;
@@ -1729,9 +1729,9 @@ BEGIN
 	Pictures.Update(F.pict, selx, sely, selw, selh);
 END HandleStructure;
 
-PROCEDURE HandleMove(F: Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
+PROCEDURE HandleMove(F: Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
 (* Verschiebt selektierter Teil *)
-VAR Q: D3.Mask; px, py, ux, uy, uw, uh, ox, oy: INTEGER;
+VAR Q: D3.Mask; px, py, ux, uy, uw, uh, ox, oy: SIGNED16;
 		P: Pictures.Picture;
 BEGIN
 	IF F.selection=Image THEN
@@ -1777,8 +1777,8 @@ BEGIN
 	M.res:=0
 END HandleMove;
 
-PROCEDURE HandleStamp(F: Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR px, py, mx, my, w, h: INTEGER; Q: D3.Mask;
+PROCEDURE HandleStamp(F: Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR px, py, mx, my, w, h: SIGNED16; Q: D3.Mask;
 BEGIN
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
 	SavePicture(F.pict, 0, 0, F.pict.width, F.pict.height);
@@ -1795,9 +1795,9 @@ BEGIN
 	M.keys:= {}; M.res:=0
 END HandleStamp;
 
-PROCEDURE TrackCaret(F: Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR f: Frame; p: Pictures.Picture; sx, sy, sw, sh, dx, dy: INTEGER; time, time2: LONGINT;
-		text: Texts.Text; beg, end: LONGINT; keys: SET;Q: D3.Mask; mx, my: INTEGER;
+PROCEDURE TrackCaret(F: Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR f: Frame; p: Pictures.Picture; sx, sy, sw, sh, dx, dy: SIGNED16; time, time2: SIGNED32;
+		text: Texts.Text; beg, end: SIGNED32; keys: SET;Q: D3.Mask; mx, my: SIGNED16;
 BEGIN
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
 	keys := M.keys;
@@ -1865,7 +1865,7 @@ BEGIN
 	END;
 END TrackCaret;
 
-PROCEDURE TrackEffects(F: Frame; VAR M: Oberon.InputMsg; x, y, w, h: INTEGER);
+PROCEDURE TrackEffects(F: Frame; VAR M: Oberon.InputMsg; x, y, w, h: SIGNED16);
 VAR keys: SET;
 BEGIN
 	IF trackMM#NIL THEN
@@ -1881,7 +1881,7 @@ BEGIN
 	END
 END TrackEffects;
 
-PROCEDURE Edit (F: Frame; VAR M: Oberon.InputMsg; x, y, w, h: INTEGER);
+PROCEDURE Edit (F: Frame; VAR M: Oberon.InputMsg; x, y, w, h: SIGNED16);
 BEGIN
 	IF M.keys = {MR} THEN
 		IF ~Effects.InBorder(M.X, M.Y, x, y, w, h) THEN selcolor:= D3.FG; TrackSelection(F, M, x, y, w, h)
@@ -1902,7 +1902,7 @@ BEGIN
 	END
 END Edit;
 
-PROCEDURE Zoom(F: Frame; Q: D3.Mask; x, y, w, h, factor: INTEGER);
+PROCEDURE Zoom(F: Frame; Q: D3.Mask; x, y, w, h, factor: SIGNED16);
 BEGIN
 	IF (F.selection#No) & (F.selection#Image) THEN
 		Neutralize(F, x, y, w, h);
@@ -1917,12 +1917,12 @@ BEGIN
 END Zoom;
 
 (** Zoomfaktor abfragen bzw. setzen *)
-PROCEDURE GetZoom*(F: Frame; VAR factor: INTEGER);
+PROCEDURE GetZoom*(F: Frame; VAR factor: SIGNED16);
 BEGIN
 	factor:= F.zoom
 END GetZoom;
 
-PROCEDURE SetZoom*(F: Frame; factor: INTEGER);
+PROCEDURE SetZoom*(F: Frame; factor: SIGNED16);
 VAR zM: ZoomMsg;
 BEGIN
 	zM.F:= F; zM.zoom:= factor; Display.Broadcast(zM)
@@ -1982,7 +1982,7 @@ BEGIN
 	cursor:= Effects.Cross;
 END ClipboardStamp;
 
-PROCEDURE ClipboardDraw(D: Pictures.Picture; dx, dy: INTEGER);
+PROCEDURE ClipboardDraw(D: Pictures.Picture; dx, dy: SIGNED16);
 VAR act: Element;
 BEGIN
 	IF clipboard.id= Block THEN
@@ -2006,7 +2006,7 @@ BEGIN
 END ClipboardDraw;
 
 PROCEDURE CutCopy(clear: BOOLEAN);
-VAR P, D: Pictures.Picture; F: Frame; px, py, pw, ph: INTEGER; time: LONGINT; act: Element;
+VAR P, D: Pictures.Picture; F: Frame; px, py, pw, ph: SIGNED16; time: SIGNED32; act: Element;
 BEGIN
 	P:= NIL; F:= NIL;
 	GetSelection(F, P, time, px, py, pw, ph);
@@ -2115,8 +2115,8 @@ END FreehandSelect;
 
 (** Generiert Pattern-Code aus der letzten Block-Selektion; sollte nicht grösser als 32*32 sein *)
 PROCEDURE MakePattern*;
-VAR F: Frame; P: Pictures.Picture; sx, sy, sw, sh, x0, x1, y: INTEGER;
-		time: LONGINT; first: BOOLEAN;
+VAR F: Frame; P: Pictures.Picture; sx, sy, sw, sh, x0, x1, y: SIGNED16;
+		time: SIGNED32; first: BOOLEAN;
 BEGIN
 	GetSelection(F, P, time, sx, sy, sw, sh);
 	IF time # -1 THEN
@@ -2124,7 +2124,7 @@ BEGIN
 		ELSE
 			y:=0;
 			Out.String("VAR pattern: ARRAY "); Out.Int(P.height, 2); Out.String(" OF SET;"); Out.Ln;
-			Out.String("       pat: LONGINT;");Out.Ln;
+			Out.String("       pat: SIGNED32;");Out.Ln;
 			WHILE y<P.height DO
 				x0:=0; Out.String("pattern["); Out.Int(y, 2); Out.String("]:={"); first:= TRUE;
 				WHILE x0<P.width DO
@@ -2149,7 +2149,7 @@ END MakePattern;
 
 (** Haupthandler *)
 PROCEDURE Handle* (F: Objects.Object; VAR M: Objects.ObjMsg);
-  VAR x, y, w, h, ox, oy: INTEGER; F1: Frame; Q: D3.Mask;
+  VAR x, y, w, h, ox, oy: SIGNED16; F1: Frame; Q: D3.Mask;
 BEGIN
   WITH F: Frame DO
     IF M IS Display.FrameMsg THEN

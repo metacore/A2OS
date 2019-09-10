@@ -13,14 +13,14 @@ TYPE
 	PieMenu = OBJECT(WMComponents.VisualComponent)
 	VAR
 		lastX, lastY : SIZE;
-		dir : ARRAY 4 * MenuPoints OF RECORD x, y : LONGINT END;
+		dir : ARRAY 4 * MenuPoints OF RECORD x, y : SIGNED32 END;
 		clDefault, clHover, clShadow, clLine : WMProperties.ColorProperty;
 		useBgBitmap : WMProperties.BooleanProperty;
 		bgBitmapName : WMProperties.StringProperty;
 		bgBitmap : WMGraphics.Image;
 		shadow: WMProperties.Int32Property;
 		dx, dy : SIZE;
-		dirNr : LONGINT;
+		dirNr : SIGNED32;
 		on0, on1, on2, on3, closeIt : WMEvents.EventSource;
 		images : ARRAY 4 OF WMGraphics.Image;
 		texts : ARRAY 4 OF Strings.String;
@@ -128,13 +128,13 @@ TYPE
 			END
 		END GetSector;
 
-		PROCEDURE SetImage(nr : LONGINT; image : WMGraphics.Image);
+		PROCEDURE SetImage(nr : SIGNED32; image : WMGraphics.Image);
 		BEGIN
 			images[nr] := image;
 			Invalidate
 		END SetImage;
 
-		PROCEDURE SetText(nr: LONGINT; text: Strings.String);
+		PROCEDURE SetText(nr: SIGNED32; text: Strings.String);
 		BEGIN
 			texts[nr] := text;
 			Invalidate
@@ -218,7 +218,7 @@ TYPE
 
 		PROCEDURE Draw*(canvas : WMGraphics.Canvas);
 		VAR sector, shadow : ARRAY 2 * MenuPoints + 2 OF WMGraphics.Point2d;
-			i, j: SIZE; shadowEffect : LONGINT;
+			i, j: SIZE; shadowEffect : SIGNED32;
 			x, y, dx, dy : SIZE;
 			font : WMGraphics.Font;
 		BEGIN
@@ -246,7 +246,7 @@ TYPE
 						canvas.FillPolygonFlat(sector, 2 * MenuPoints + 2, clDefault.Get(), WMGraphics.ModeCopy)
 					END;
 				ELSE
-					canvas.FillPolygonFlat(sector, 2 * MenuPoints + 2, LONGINT(0CCCC0030H), WMGraphics.ModeCopy)
+					canvas.FillPolygonFlat(sector, 2 * MenuPoints + 2, SIGNED32(0CCCC0030H), WMGraphics.ModeCopy)
 				END;
 				IF ~useBgBitmap.Get() THEN
 					FOR j := 0 TO 2 * MenuPoints +2 - 2 DO canvas.Line(sector[j].x, sector[j].y, sector[j + 1].x, sector[j + 1].y,  clLine.Get(), WMGraphics.ModeCopy) END;
@@ -304,7 +304,7 @@ TYPE
 			on2 := piemenu.on2;
 			on3 := piemenu.on3;
 			onClose := piemenu.closeIt;
-			piemenu.fillColor.Set(LONGINT(0FFFFFF80H)); piemenu.takesFocus.Set(TRUE);
+			piemenu.fillColor.Set(SIGNED32(0FFFFFF80H)); piemenu.takesFocus.Set(TRUE);
 			onClose.Add(CloseIt);
 			RETURN piemenu;
 		END CreateForm;
@@ -333,12 +333,12 @@ TYPE
 			pointerThreshold := 100
 		END New;
 
-		PROCEDURE SetImage*(nr : LONGINT; image : WMGraphics.Image);
+		PROCEDURE SetImage*(nr : SIGNED32; image : WMGraphics.Image);
 		BEGIN
 			piemenu.SetImage(nr, image);
 		END SetImage;
 
-		PROCEDURE SetText*(nr: LONGINT; text: Strings.String);
+		PROCEDURE SetText*(nr: SIGNED32; text: Strings.String);
 		BEGIN
 			piemenu.SetText(nr, text);
 		END SetText;
@@ -403,9 +403,9 @@ BEGIN
 	NEW(StringPrototype, NIL, Strings.NewString("BgBitmap"), Strings.NewString("Name of the background bitmap")); StringPrototype.Set(Strings.NewString(""));
 	NEW(ProtoPmBgBitmapName, StringPrototype, NIL, NIL); plPieMenu.Add(ProtoPmBgBitmapName);
 	(* colors *)
-	NEW(ColorPrototype, NIL, Strings.NewString("ClDefault"), Strings.NewString("Default color")); ColorPrototype.Set(LONGINT(0CCCC0080H));
+	NEW(ColorPrototype, NIL, Strings.NewString("ClDefault"), Strings.NewString("Default color")); ColorPrototype.Set(SIGNED32(0CCCC0080H));
 	NEW(ProtoPmClDefault, ColorPrototype, NIL, NIL); plPieMenu.Add(ProtoPmClDefault);
-	NEW(ColorPrototype, NIL, Strings.NewString("ClHover"), Strings.NewString("Mouseover color")); ColorPrototype.Set(LONGINT(0CC880080H));
+	NEW(ColorPrototype, NIL, Strings.NewString("ClHover"), Strings.NewString("Mouseover color")); ColorPrototype.Set(SIGNED32(0CC880080H));
 	NEW(ProtoPmClHover , ColorPrototype, NIL, NIL); plPieMenu.Add(ProtoPmClHover);
 	NEW(ColorPrototype, NIL, Strings.NewString("ClShadow"), Strings.NewString("Shadow color")); ColorPrototype.Set(80H);
 	NEW(ProtoPmClShadow, ColorPrototype, NIL, NIL); plPieMenu.Add(ProtoPmClShadow);

@@ -12,9 +12,9 @@ CONST
 VAR
 	running: BOOLEAN; (* is traceroute currently running? *)
 	timer: Objects.Timer;
-	timeoutMS: LONGINT; (* timeout in ms *)
-	pingSize: LONGINT; (* ping size in bytes *)
-	TTL: LONGINT; (* time-to-live for outgoing packets *)
+	timeoutMS: SIGNED32; (* timeout in ms *)
+	pingSize: SIGNED32; (* ping size in bytes *)
+	TTL: SIGNED32; (* time-to-live for outgoing packets *)
 	fip: IP.Adr; (* foreign IP address *)
 	timeout: BOOLEAN; (* timeout occurred *)
 	replyIP: IP.Adr; (* If not IP.NilAdr, a packet was received with this foreign IP address *)
@@ -26,7 +26,7 @@ PROCEDURE TraceRoute*(context : Commands.Context);
 VAR
 	hostname: DNS.Name;
 	milliTimer : Kernel.MilliTimer;
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	BEGIN {EXCLUSIVE}
 		AWAIT(~running);
@@ -118,7 +118,7 @@ END TraceRoute;
 
 PROCEDURE SendEchoRequest;
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 	data: ARRAY PingHdrSize+MaxPingSize OF CHAR;
 BEGIN
 	FOR i := 0 TO PingHdrSize-1 DO
@@ -144,7 +144,7 @@ BEGIN {EXCLUSIVE}
 	timeout := TRUE;
 END TimeoutHandler;
 
-PROCEDURE GetReply(int: IP.Interface; type, code: LONGINT; fip, lip: IP.Adr; buffer: Network.Buffer);
+PROCEDURE GetReply(int: IP.Interface; type, code: SIGNED32; fip, lip: IP.Adr; buffer: Network.Buffer);
 BEGIN {EXCLUSIVE}
 	Objects.CancelTimeout(timer);
 	IF (type = ICMP.TypeTimeExceededv4) OR (type = ICMP.TypeTimeExceededv6) THEN

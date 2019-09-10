@@ -46,14 +46,14 @@ TYPE
 	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc = RECORD (vyPort.tLayerDesc)
 		lBounded, rBounded: BOOLEAN;
-		lBound, rBound: REAL;
-		a, b: REAL
+		lBound, rBound: FLOAT32;
+		a, b: FLOAT32
 	END;
 
 	PROCEDURE New*;
 	VAR line: tLayer;
 	BEGIN
-		NEW( line );  line.lBounded := FALSE;  line.rBounded := FALSE;  line.lBound := MIN( REAL );  line.rBound := MAX( REAL );  line.a := 0;  line.b := 0;
+		NEW( line );  line.lBounded := FALSE;  line.rBounded := FALSE;  line.lBound := MIN( FLOAT32 );  line.rBound := MAX( FLOAT32 );  line.a := 0;  line.b := 0;
 		line.handle := Handler;  Objects.NewObj := line
 	END New;
 
@@ -63,7 +63,7 @@ TYPE
 	END Copy;
 
 	PROCEDURE Recall( line: tLayer;  VAR msg: Display.DisplayMsg );
-	VAR x, y, w, h: INTEGER;  from, to, y2d: Real;
+	VAR x, y, w, h: SIGNED16;  from, to, y2d: Real;
 	BEGIN
 		vyPort.GetPictureScreenRegion( msg.dlink( vyPort.Picture ), x, y, w, h );  from := line.lBound;  to := line.rBound;
 		IF ~line.lBounded THEN vyGraphBase.PointToPoint2d( x, y, from, y2d ) END;
@@ -73,7 +73,7 @@ TYPE
 
 	PROCEDURE Respond( line: tLayer;  VAR event: vyEvents.EventMsg );
 	(** vs 0.0d0 *)  (* md  29.05.95 13:03:40 *)
-	VAR lx, ly: INTEGER;  id, val: vyName.tNameArray;
+	VAR lx, ly: SIGNED16;  id, val: vyName.tNameArray;
 	BEGIN
 		id := "y := ";  val := "";  vyHostStrings.AppendRealFix( line.a, 5, 3, 5, val );  vyHostStrings.Append( id, val );
 		vyHostStrings.Append( id, "*x + " );  val := "";  vyHostStrings.AppendRealFix( line.b, 5, 3, 5, val );
@@ -91,7 +91,7 @@ TYPE
 
 	PROCEDURE Responsible( line: tLayer;  VAR event: vyEvents.EventMsg );
 	CONST toleranz = 4;
-	VAR priority: INTEGER;  x, y: INTEGER;  x2d, y2d: Real;
+	VAR priority: SIGNED16;  x, y: SIGNED16;  x2d, y2d: Real;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF (event.gesture = vyEvents.EvtIdent) THEN
@@ -172,7 +172,7 @@ TYPE
 		F.handle := Handler
 	END Init;
 
-	PROCEDURE Open*( F: tLayer;  lBounded, rBounded: BOOLEAN;  lBound, rBound, a, b: REAL );
+	PROCEDURE Open*( F: tLayer;  lBounded, rBounded: BOOLEAN;  lBound, rBound, a, b: FLOAT32 );
 	VAR id: vyName.tNameArray;
 	BEGIN
 		Init( F );  id := "line";  vyPort.OpenLayer( F, id );  F.lBounded := lBounded;  F.rBounded := rBounded;  F.lBound := lBound;
@@ -180,9 +180,9 @@ TYPE
 	END Open;
 
 (*PROCEDURE Show*;
-VAR data: Objects.Object;  F: tLayer;  count: INTEGER;
+VAR data: Objects.Object;  F: tLayer;  count: SIGNED16;
 pict: vyPort.Picture;
-a, b : REAL;
+a, b : FLOAT32;
 inconsistentConditions : BOOLEAN;
 BEGIN
 data:=vyBase.NextParObj();
@@ -206,7 +206,7 @@ Objects.NewObj := pict
 END Show;*)
 
 	PROCEDURE Insert*;
-	VAR line: tLayer;  a, b: REAL;  sc: vyParser.Scanner;
+	VAR line: tLayer;  a, b: FLOAT32;  sc: vyParser.Scanner;
 	BEGIN
 		vyParser.OpenParScanner( sc );
 		IF ~(vyParser.Real( sc, a ) & vyParser.Real( sc, b )) THEN vyParser.MsgSyntax( "Insert", "??/2;??/2" );  RETURN END;

@@ -8,12 +8,12 @@ MODULE JPEG2000DecoderUtil;
 
 	CONST
 
-		(* Number of bits used to represent a LONGINT *)
-		LONGINT_BITS* = LONGINT(SIZEOF(LONGINT) * 8);
-		(* Mask to set / test for the sign bit of a LONGINT, i.e. the MSB of a LONGINT register *)
+		(* Number of bits used to represent a SIGNED32 *)
+		LONGINT_BITS* = SIGNED32(SIZEOF(SIGNED32) * 8);
+		(* Mask to set / test for the sign bit of a SIGNED32, i.e. the MSB of a SIGNED32 register *)
 		LONGINT_SIGN_BIT* = {LONGINT_BITS - 1};
 
-		SWAP_MASK* = LONGINT(-1);
+		SWAP_MASK* = SIGNED32(-1);
 
 		(* --- Subband types --- *)
 		SUB_LL*	= 0;
@@ -33,27 +33,27 @@ MODULE JPEG2000DecoderUtil;
 
 	TYPE
 		(* --- Utility types --- *)
-		LongIntArrayPtr* = POINTER TO ARRAY OF LONGINT;
+		LongIntArrayPtr* = POINTER TO ARRAY OF SIGNED32;
 		LongInt2DArrayPtr* = POINTER TO ARRAY OF LongIntArrayPtr;
 		LongInt3DArrayPtr* = POINTER TO ARRAY OF LongInt2DArrayPtr;
 		LongInt4DArrayPtr* = POINTER TO ARRAY OF LongInt3DArrayPtr;
 
 		ByteArrayPtr* = POINTER TO ARRAY OF CHAR;
-		RealArrayPtr* = POINTER TO ARRAY OF REAL;
+		RealArrayPtr* = POINTER TO ARRAY OF FLOAT32;
 		SetArrayPtr* = POINTER TO ARRAY OF SET;
 
 		ByteArrayReader* = OBJECT
 			VAR
 				arr : ByteArrayPtr;			(* A pointer to the raw coded code-block data  that will be processed *)
 				arrPos, 						(* The byte position in the raw coded code-block data *)
-				dataLen : LONGINT;			(* The number of total bytes of this array (adding the offset) *)
+				dataLen : SIGNED32;			(* The number of total bytes of this array (adding the offset) *)
 
-			PROCEDURE &InitNew* (arr : ByteArrayPtr; offset, len : LONGINT);
+			PROCEDURE &InitNew* (arr : ByteArrayPtr; offset, len : SIGNED32);
 				BEGIN
 					ReInit(arr, offset, len);
 			END InitNew;
 
-			PROCEDURE ReInit* (arr : ByteArrayPtr; offset, len : LONGINT);
+			PROCEDURE ReInit* (arr : ByteArrayPtr; offset, len : SIGNED32);
 				BEGIN
 					SELF.arr := arr;
 					arrPos := offset;
@@ -63,7 +63,7 @@ MODULE JPEG2000DecoderUtil;
 			(**
 				Sets the byte array from which to read data.
 			*)
-			PROCEDURE SetArray* (arr : ByteArrayPtr; offset, len : LONGINT);
+			PROCEDURE SetArray* (arr : ByteArrayPtr; offset, len : SIGNED32);
 				BEGIN
 
 					(*
@@ -90,7 +90,7 @@ MODULE JPEG2000DecoderUtil;
 				Reads the next byte in the internal array. If no (more)
 				data is available then -1 is returned.
 			*)
-			PROCEDURE Read* () : LONGINT;
+			PROCEDURE Read* () : SIGNED32;
 				BEGIN
 					IF (arr = NIL) OR (arrPos >= dataLen) THEN
 						(* End of array *)
@@ -109,7 +109,7 @@ MODULE JPEG2000DecoderUtil;
 		*)
 		BitSource* = OBJECT
 			VAR
-				PROCEDURE NextBit* () : LONGINT;
+				PROCEDURE NextBit* () : SIGNED32;
 				END NextBit;
 		END BitSource;
 
@@ -121,8 +121,8 @@ MODULE JPEG2000DecoderUtil;
 		DataBitReader* = OBJECT(BitSource)
 			VAR
 				br : ByteArrayReader;
-				curByte : LONGINT;
-				curBytePos : LONGINT;
+				curByte : SIGNED32;
+				curBytePos : SIGNED32;
 
 			PROCEDURE &InitNew* (br : ByteArrayReader);
 				BEGIN
@@ -136,11 +136,11 @@ MODULE JPEG2000DecoderUtil;
 					curByte := 0;
 			END ReInit;
 
-			PROCEDURE NextBit* () : LONGINT;
+			PROCEDURE NextBit* () : SIGNED32;
 				BEGIN
 					IF curBytePos =  0 THEN
 						(* Do bit unstuffing? *)
-						IF LONGINT(SET(curByte) * {0..7}) = 0FFH THEN
+						IF SIGNED32(SET(curByte) * {0..7}) = 0FFH THEN
 							curBytePos := 7;
 						ELSE
 							curBytePos := 8;
@@ -150,7 +150,7 @@ MODULE JPEG2000DecoderUtil;
 
 					DEC(curBytePos);
 
-					RETURN LONGINT(SET(LSH(curByte, -curBytePos))
+					RETURN SIGNED32(SET(LSH(curByte, -curBytePos))
 											* {0}
 										);
 			END NextBit;
@@ -158,7 +158,7 @@ MODULE JPEG2000DecoderUtil;
 			(**
 				Starts a new (raw/bypass) segment.
 			*)
-			PROCEDURE NextSegment* (data : ByteArrayPtr; offset, len : LONGINT);
+			PROCEDURE NextSegment* (data : ByteArrayPtr; offset, len : SIGNED32);
 				BEGIN
 					br.SetArray(data, offset, len);
 					curBytePos := 0;
@@ -171,7 +171,7 @@ MODULE JPEG2000DecoderUtil;
 			*)
 			PROCEDURE CheckBytePadding* () : BOOLEAN;
 				VAR
-					seq : LONGINT;
+					seq : SIGNED32;
 				BEGIN
 
 					(* If there are no bits left and the current byte is 0xFF then there is a next byte with bit stuffing *)
@@ -186,7 +186,7 @@ MODULE JPEG2000DecoderUtil;
 						alternating sequence of 0's and 1's, starting with a 0
 					*)
 					IF curBytePos > 0 THEN
-						seq := LONGINT(SET(curByte) * SET(LSH(1, curBytePos) - 1));
+						seq := SIGNED32(SET(curByte) * SET(LSH(1, curBytePos) - 1));
 
 						IF seq # LSH(55H, curBytePos - 8) THEN
 							RETURN FALSE;
@@ -224,11 +224,11 @@ MODULE JPEG2000DecoderUtil;
 			information on the compressed data is contained as well.
 		*)
 		CodedCblk* = RECORD
-			cpasses* : LONGINT;		(* Number of coding passes for this coded code-block *)
-			nseg* : LONGINT;			(* The number of of segments for this coded code-block *)
+			cpasses* : SIGNED32;		(* Number of coding passes for this coded code-block *)
+			nseg* : SIGNED32;			(* The number of of segments for this coded code-block *)
 			segLen* : LongIntArrayPtr;	(* The length of each segment of raw data for this coded code-block and the included coding passes *)
-			dataOffset* : LONGINT;		(* The offset into the data array where the data for this coded code-block begins *)
-			dataLen* : LONGINT;		(* Thel length of all segments together *)
+			dataOffset* : SIGNED32;		(* The offset into the data array where the data for this coded code-block begins *)
+			dataLen* : SIGNED32;		(* Thel length of all segments together *)
 			data* : ByteArrayPtr;	(* The compressed image data *)
 		END;
 
@@ -238,8 +238,8 @@ MODULE JPEG2000DecoderUtil;
 		*)
 		BlkInfo* = OBJECT
 			VAR
-				ulx*, uly* : LONGINT;		(* The blocks upper-left corner x and y coordinates. these coordinates are relative to the reference grid *)
-				height*, width* : LONGINT;	(* The width and height of the block (in samples) *)
+				ulx*, uly* : SIGNED32;		(* The blocks upper-left corner x and y coordinates. these coordinates are relative to the reference grid *)
+				height*, width* : SIGNED32;	(* The width and height of the block (in samples) *)
 		END BlkInfo;
 
 		(**
@@ -248,14 +248,14 @@ MODULE JPEG2000DecoderUtil;
 		CblkInfo* = OBJECT(BlkInfo)
 			VAR
 				(* TODO: Do we really need those two fields? *)
-				ulsx*, ulsy* : LONGINT;			(* The code-blocks upper-left corner x and y coordinates. See SubbandInfo object for more information *)
-				truncpt* : LONGINT;				(* The truncation point for the code-block, i.e. the total number of coding passes read for the code-block up to now *)
+				ulsx*, ulsy* : SIGNED32;			(* The code-blocks upper-left corner x and y coordinates. See SubbandInfo object for more information *)
+				truncpt* : SIGNED32;				(* The truncation point for the code-block, i.e. the total number of coding passes read for the code-block up to now *)
 				cpasseslyr* : LongIntArrayPtr;	(* The number of coding passes for each layer *)
-				zerobp* : LONGINT;				(* The number of zero bit-planes for this code-block *)
-				curbp* : LONGINT;				(* The index of the least significant bit-plane which has been decoded (31 means that no bit-plane has been decoded yet) *)
+				zerobp* : SIGNED32;				(* The number of zero bit-planes for this code-block *)
+				curbp* : SIGNED32;				(* The index of the least significant bit-plane which has been decoded (31 means that no bit-plane has been decoded yet) *)
 				datalenlyr* : LongIntArrayPtr;	(* The data length for the code-block in each layer *)
 				subbinfo* : SubbandInfo;			(* A reference to the subband info object which describes the subband this code-block belongs to *)
-				index* : LONGINT;				(* Index of the code-block in the subband (numbered in raster order) *)
+				index* : SIGNED32;				(* Index of the code-block in the subband (numbered in raster order) *)
 		END CblkInfo;
 
 
@@ -267,26 +267,26 @@ MODULE JPEG2000DecoderUtil;
 		*)
 		SubbandInfo* = OBJECT
 			VAR
-				type* : LONGINT;				(* The subband type: SUB_LL, SUB_HL, SUB_LH or SUB_HH *)
-				index* : LONGINT;				(* The index of the subband relativ to the other subbands of the same decomposition level *)
+				type* : SIGNED32;				(* The subband type: SUB_LL, SUB_HL, SUB_LH or SUB_HH *)
+				index* : SIGNED32;				(* The index of the subband relativ to the other subbands of the same decomposition level *)
 												(* -> SUB_LL: 0, SUB_HL: 0, SUB_LH: 1, SUB_HH: 2 *)
-				ulcx*, ulcy* : LONGINT;			(* The upper left horizontal and vertical coordinates relative to the component this subband belongs to *)
+				ulcx*, ulcy* : SIGNED32;			(* The upper left horizontal and vertical coordinates relative to the component this subband belongs to *)
 												(* NOTE: These are the actual coordinates of the subband in the component domain of the image *)
-				ulsx*, ulsy* : LONGINT;			(* The upper left horizontal and vertical coordinates of the subband *)
+				ulsx*, ulsy* : SIGNED32;			(* The upper left horizontal and vertical coordinates of the subband *)
 												(* NOTE: These coordinates ensure that the subband is placed at the right position for the filtering process. If the image consists of only 1 tile then these coordinates are almost the same as ulcx & ulcy (except that we usually start at the origin here)*)
-				width*, height* : LONGINT;		(* The width and height of the subband (in component samples) *)
-				nblocksx*, nblocksy* : LONGINT;	(* The number of code-blocks (in horizontal and vertical direction) contained in this subband *)
-				magbits* : LONGINT;			(* The maximum number of magnitude bits for any coefficient in this subband (this number plays a role in the entropy decoding and dequantization process *)
-				component* : LONGINT;			(* The index of the component to which the subband belongs to *)
-				reslevel* : LONGINT;			(* The resolution level to which the subband belongs to *)
-				declevel* : LONGINT;			(* The decomposition level this subband belongs to *)
+				width*, height* : SIGNED32;		(* The width and height of the subband (in component samples) *)
+				nblocksx*, nblocksy* : SIGNED32;	(* The number of code-blocks (in horizontal and vertical direction) contained in this subband *)
+				magbits* : SIGNED32;			(* The maximum number of magnitude bits for any coefficient in this subband (this number plays a role in the entropy decoding and dequantization process *)
+				component* : SIGNED32;			(* The index of the component to which the subband belongs to *)
+				reslevel* : SIGNED32;			(* The resolution level to which the subband belongs to *)
+				declevel* : SIGNED32;			(* The decomposition level this subband belongs to *)
 		END SubbandInfo;
 
 		(**
 			Used as node in a tag tree.
 		*)
 		TreeNode = RECORD
-			value : LONGINT;
+			value : SIGNED32;
 			valid : BOOLEAN;
 		END;
 
@@ -299,9 +299,9 @@ MODULE JPEG2000DecoderUtil;
 		TagTree* = OBJECT
 			VAR
 				(* The index of the maximum level of this tag tree = LEN(nodes^) - 1 *)
-				maxLevel : LONGINT;
-				maxX : LONGINT;	(* max. index in x direction (equals max. horizontal index of coded matrix) *)
-				maxY : LONGINT;	(* max. index in y direction (equals max. vertical index of coded matrix) *)
+				maxLevel : SIGNED32;
+				maxX : SIGNED32;	(* max. index in x direction (equals max. horizontal index of coded matrix) *)
+				maxY : SIGNED32;	(* max. index in y direction (equals max. vertical index of coded matrix) *)
 				(*
 					1st dim.: level (top node is located at level 0)
 					2nd dim.: node index
@@ -309,9 +309,9 @@ MODULE JPEG2000DecoderUtil;
 				nodes : POINTER TO ARRAY OF POINTER TO ARRAY OF TreeNode;
 				src : BitSource;	(* A reference to the bit source *)
 
-			PROCEDURE &InitNew*(ncblx, ncbly : LONGINT; src : BitSource);
+			PROCEDURE &InitNew*(ncblx, ncbly : SIGNED32; src : BitSource);
 				VAR
-					x, y, i, j, prod : LONGINT;
+					x, y, i, j, prod : SIGNED32;
 				BEGIN
 					maxX := ncblx - 1;
 					maxY := ncbly - 1;
@@ -344,8 +344,8 @@ MODULE JPEG2000DecoderUtil;
 							nodes[i][j].valid := FALSE;
 						END;
 
-						x := LSH(x, -1) + LONGINT(SET(x) * {0});
-						y := LSH(y, -1) + LONGINT(SET(y) * {0});
+						x := LSH(x, -1) + SIGNED32(SET(x) * {0});
+						y := LSH(y, -1) + SIGNED32(SET(y) * {0});
 					END;
 
 					SELF.src := src;
@@ -361,9 +361,9 @@ MODULE JPEG2000DecoderUtil;
 										if the current value is lower than or equal to the threshold
 				RETURN: TRUE, if the update operation succeeded, FALSE otherwise
 			*)
-			PROCEDURE Update*(x, y : LONGINT; threshold : LONGINT) : BOOLEAN;
+			PROCEDURE Update*(x, y : SIGNED32; threshold : SIGNED32) : BOOLEAN;
 				VAR
-					level, shift, bit, idx, nextIdx, prevIdx : LONGINT;
+					level, shift, bit, idx, nextIdx, prevIdx : SIGNED32;
 				BEGIN
 					(*
 						Precondition :	There is a level lev <= maxLevel, and an index idx such that
@@ -443,7 +443,7 @@ MODULE JPEG2000DecoderUtil;
 				Test if the node (x,y) is valid (at the max. level)
 				RETURN:	TRUE, if the node (x,y) is valid (at the max. level), FALSE otherwise
 			*)
-			PROCEDURE IsValid* (x, y : LONGINT) : BOOLEAN;
+			PROCEDURE IsValid* (x, y : SIGNED32) : BOOLEAN;
 				BEGIN
 					IF (x > maxX) OR (y > maxY) THEN
 						KernelLog.String("ERROR (TagTree.IsValid): Index out of bounds");
@@ -459,7 +459,7 @@ MODULE JPEG2000DecoderUtil;
 							strategy. So the returned value only makes sense if the the node is valid.
 				RETURN:	The current value of the node (x,y) (or 0 -> see SUMMARY above), -1 if an error occurred
 			*)
-			PROCEDURE CurrentVal* (x, y : LONGINT) : LONGINT;
+			PROCEDURE CurrentVal* (x, y : SIGNED32) : SIGNED32;
 				BEGIN
 					IF (x > maxX) OR (y > maxY) THEN
 						KernelLog.String("ERROR (TagTree.CurrentVal): Index out of bounds");
@@ -480,14 +480,14 @@ MODULE JPEG2000DecoderUtil;
 			VAR
 				r: Files.Rider;
 
-			PROCEDURE Send(VAR buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+			PROCEDURE Send(VAR buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 				BEGIN
 					r.file.WriteBytes(r, buf, ofs, len);
 					IF propagate THEN r.file.Update END;
 					IF r.res = 0 THEN res := Streams.Ok ELSE res := WRITE_ERROR (* not all bytes written *) END
 			END Send;
 
-			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
+			PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIGNED32; VAR len, res: SIGNED32);
 				BEGIN
 					r.file.ReadBytes(r, buf, ofs, size);
 					len := size - r.res;
@@ -501,7 +501,7 @@ MODULE JPEG2000DecoderUtil;
 			VAR
 				r: RiderWrapper;
 
-			PROCEDURE &InitFileStream* (f : Files.File; pos : LONGINT);
+			PROCEDURE &InitFileStream* (f : Files.File; pos : SIGNED32);
 				BEGIN
 					NEW(r); f.Set(r.r, pos);
 					InitReader(r.Receive, DEFAULT_READER_SIZE)
@@ -534,7 +534,7 @@ MODULE JPEG2000DecoderUtil;
 				(**
 					The identifier of the component that this options apply to.
 				*)
-				component* : LONGINT;
+				component* : SIGNED32;
 		END ComponentOptions;
 
 		CodestreamReaderOptions* = OBJECT(ComponentOptions)
@@ -577,8 +577,8 @@ MODULE JPEG2000DecoderUtil;
 
 		InverseDWTOptions* = OBJECT(ComponentOptions)
 			VAR
-				filterRev* : LONGINT;	(** The reversible filter to use *)
-				filterIrrev* : LONGINT;	(** The irreversible filter to use *)
+				filterRev* : SIGNED32;	(** The reversible filter to use *)
+				filterIrrev* : SIGNED32;	(** The irreversible filter to use *)
 		END InverseDWTOptions;
 
 		InverseMCTOptions* = OBJECT(ComponentOptions)
@@ -594,9 +594,9 @@ MODULE JPEG2000DecoderUtil;
 
 
 	(* RETURN: The logarithm (base 2) of the largest power of 2 <= x *)
-	PROCEDURE Log2Floor* (x : LONGINT) : LONGINT;
+	PROCEDURE Log2Floor* (x : SIGNED32) : SIGNED32;
 		VAR
-			logVal : LONGINT;
+			logVal : SIGNED32;
 		BEGIN
 			(* NOTE: We don't check wether x >= 1 *)
 			logVal := 0;
@@ -617,7 +617,7 @@ MODULE JPEG2000DecoderUtil;
 		The others constitute a group of 3 and are indexed in raster order
 		(i.e. raster order relative to the reference grid)
 	*)
-	PROCEDURE SubbandToSubbandIndex* (subband : LONGINT) : LONGINT;
+	PROCEDURE SubbandToSubbandIndex* (subband : SIGNED32) : SIGNED32;
 		BEGIN
 			CASE subband OF
 				|	SUB_LL :
@@ -640,7 +640,7 @@ MODULE JPEG2000DecoderUtil;
 		we need to know the resolution level, since the whole operation is not
 		bijective.
 	*)
-	PROCEDURE SubbandIndexToSubband* (reslevel, subbIndex : LONGINT) : LONGINT;
+	PROCEDURE SubbandIndexToSubband* (reslevel, subbIndex : SIGNED32) : SIGNED32;
 		BEGIN
 			IF reslevel = 0 THEN
 				ASSERT(subbIndex = 0);

@@ -9,11 +9,11 @@ TYPE SREAL=srBase.SREAL;
 TYPE RVox*=OBJECT(Voxel);
 VAR
 	child: Voxel;
-	phi: REAL; (* rotation angle about Z axis in radians *)
-	dtick: REAL;
+	phi: FLOAT32; (* rotation angle about Z axis in radians *)
+	dtick: FLOAT32;
 	center:PT;
 
-PROCEDURE&init*(c:Voxel; dt: REAL);
+PROCEDURE&init*(c:Voxel; dt: FLOAT32);
 BEGIN
 	child:=c;
 	dtick:=dt;
@@ -40,8 +40,8 @@ END dia;
 PROCEDURE Shade*(VAR ray: Ray);
 VAR
 	a,b,c,dxyz:PT;
-	dc,x,y,z: REAL;
-	i: INTEGER;
+	dc,x,y,z: FLOAT32;
+	i: SIGNED16;
 BEGIN
 	(* advance ray to its intersection with the sphere of radius 1/2 centered in the voxel*)
 	a:=ray.lxyz;

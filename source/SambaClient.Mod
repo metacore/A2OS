@@ -17,7 +17,7 @@ TYPE
 	Connection = POINTER TO RECORD
 		out: Streams.Writer;
 		in: Streams.Reader;
-		tid, uid, sid: INTEGER;
+		tid, uid, sid: SIGNED16;
 		ipaddr: ARRAY 16 OF CHAR;
 		user, pw: ARRAY 64 OF CHAR;
 		path, mask, fnLast: ARRAY 256 OF CHAR;
@@ -33,7 +33,7 @@ TYPE
 
 		PROCEDURE New0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
-			key: LONGINT;
+			key: SIGNED32;
 			f: File;
 		BEGIN
 			IF Trace THEN KernelLog.String("FileSystem.New - Name: "); KernelLog.String(name); KernelLog.Ln(); END;
@@ -59,7 +59,7 @@ TYPE
 		PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
 			f: File;
-			key: LONGINT;
+			key: SIGNED32;
 		BEGIN
 			IF Trace THEN KernelLog.String("FileSystem.Old - Name: "); KernelLog.String(name); KernelLog.Ln(); END;
 
@@ -80,10 +80,10 @@ TYPE
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
 
-		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER);
 		VAR
 			check : BOOLEAN;
-			closekey : LONGINT;
+			closekey : SIGNED32;
 			nameTrimmed: Files.FileName;
 		BEGIN
 			IF Trace THEN
@@ -101,10 +101,10 @@ TYPE
 
 			lock.Acquire();
 			(* SEND *)
-			SendSMBHeader(INTEGER(39 + Strings.Length(nameTrimmed)), 06X, c);
+			SendSMBHeader(SIGNED16(39 + Strings.Length(nameTrimmed)), 06X, c);
 			c.out.Net8(1);								(* Word count *)
 			c.out.RawInt(22);							(* search attributes *)
-			c.out.RawInt(INTEGER(2 + Strings.Length(nameTrimmed)));
+			c.out.RawInt(SIGNED16(2 + Strings.Length(nameTrimmed)));
 			c.out.Net8(4);								(* ascii *)
 			c.out.RawString(nameTrimmed);						(* name *)
 			c.out.Update();
@@ -123,10 +123,10 @@ TYPE
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
 
-		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER);
 		VAR
 			check : BOOLEAN;
-			closekey : LONGINT;
+			closekey : SIGNED32;
 			old1, new1: Files.FileName;
 		BEGIN
 			IF Trace THEN
@@ -146,10 +146,10 @@ TYPE
 
 			lock.Acquire();
 			(* SEND *)
-			SendSMBHeader(INTEGER(41 + Strings.Length(new1) + Strings.Length(old1)), 07X, c);
+			SendSMBHeader(SIGNED16(41 + Strings.Length(new1) + Strings.Length(old1)), 07X, c);
 			c.out.Net8(1);			(* Word count *)
 			c.out.RawInt(22);		(* search attributes *)
-			c.out.RawInt(INTEGER(4 + Strings.Length(new1) + Strings.Length(old1)));
+			c.out.RawInt(SIGNED16(4 + Strings.Length(new1) + Strings.Length(old1)));
 			c.out.Net8(4);			(* ascii *)
 			c.out.RawString(old1);	(* old name *)
 			c.out.Net8(4);			(* ascii *)
@@ -173,14 +173,14 @@ TYPE
 		PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
 		VAR
 			check, endOfSearch, findFirst: BOOLEAN;
-			byteCount, dataOff, paraOff, eos: INTEGER;
+			byteCount, dataOff, paraOff, eos: SIGNED16;
 			fileFlags : SET;
 			curPos: Files.Position;
-			attr, nextEntryOff, progress: LONGINT; maskLen: SIZE;
-			t: ARRAY 2 OF LONGINT;
+			attr, nextEntryOff, progress: SIGNED32; maskLen: SIZE;
+			t: ARRAY 2 OF SIGNED32;
 			ch: ARRAY 2 OF CHAR;
 			dt: Dates.DateTime;
-			date, time, size: LONGINT;
+			date, time, size: SIGNED32;
 			maskModified, dirMask, filename: Files.FileName;
 		BEGIN
 			endOfSearch := FALSE;
@@ -318,8 +318,8 @@ TYPE
 
 		(** Return the unique non-zero key of the named file, if it exists. *)
 
-		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
-		VAR key: LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): SIGNED32;
+		VAR key: SIGNED32;
 		BEGIN
 			lock.Acquire();
 			key := OpenAndX(c, name, 40H, FALSE);
@@ -330,7 +330,7 @@ TYPE
 		(** Create a new directory structure. May not be supported by the actual implementation.
 			End users use Files.CreateDirectory instead.*)
 
-		PROCEDURE CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: WORD);
+		PROCEDURE CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: INTEGER);
 		VAR check: BOOLEAN;
 		BEGIN
 			IF Trace THEN
@@ -340,9 +340,9 @@ TYPE
 
 			lock.Acquire();
 			(* SEND *)
-			SendSMBHeader(INTEGER(37+ Strings.Length(name)), 00X, c);
+			SendSMBHeader(SIGNED16(37+ Strings.Length(name)), 00X, c);
 			c.out.Net8(0);											(* Word count *)
-			c.out.RawInt(INTEGER(2 + Strings.Length(name)));			(* byte count *)
+			c.out.RawInt(SIGNED16(2 + Strings.Length(name)));			(* byte count *)
 			c.out.Net8(4);											(* buffer format *)
 			c.out.RawString(name);
 			c.out.Update();
@@ -362,7 +362,7 @@ TYPE
 		(** Remove a directory. If force=TRUE, any subdirectories and files should be automatically deleted.
 			End users use Files.RemoveDirectory instead. *)
 
-		PROCEDURE RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: LONGINT; VAR res: WORD);
+		PROCEDURE RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key: SIGNED32; VAR res: INTEGER);
 		VAR check: BOOLEAN;
 		BEGIN
 			IF Trace THEN
@@ -372,9 +372,9 @@ TYPE
 
 			lock.Acquire();
 			(* SEND *)
-			SendSMBHeader(INTEGER(37+ Strings.Length(name)), 01X, c);
+			SendSMBHeader(SIGNED16(37+ Strings.Length(name)), 01X, c);
 			c.out.Net8(0);											(* Word count *)
-			c.out.RawInt(INTEGER(2 + Strings.Length(name)));			(* byte count *)
+			c.out.RawInt(SIGNED16(2 + Strings.Length(name)));			(* byte count *)
 			c.out.Net8(4);											(* buffer format *)
 			c.out.RawString(name);
 			c.out.Update();
@@ -438,10 +438,10 @@ TYPE
 		PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE);
 		VAR
 			check: BOOLEAN;
-			dataOff, byteCount, padding: INTEGER;
+			dataOff, byteCount, padding: SIGNED16;
 			i : SIZE;
-			adjLen, adjOff: INTEGER;
-			localKey: INTEGER;
+			adjLen, adjOff: SIGNED16;
+			localKey: SIGNED16;
 		BEGIN
 			IF Trace THEN KernelLog.String("File.ReadBytes - Read AndX"); KernelLog.Ln(); END;
 
@@ -466,7 +466,7 @@ TYPE
 	 			IF len > RWLimit THEN
 	 				adjLen := RWLimit;
 	 			ELSE
-	 				adjLen := INTEGER(len);
+	 				adjLen := SIGNED16(len);
 	 			END;
 
 			 	(* SEND *)
@@ -476,7 +476,7 @@ TYPE
 			 	c.out.Net8(0);				(* reserved *)
 			 	c.out.RawInt(0);				(* andx offset *)
 			 	c.out.RawInt(SHORT(key));	(* fid *)
-			 	c.out.RawLInt(r.apos(LONGINT));	(* offset *)
+			 	c.out.RawLInt(r.apos(SIGNED32));	(* offset *)
 			 	c.out.RawInt(adjLen);		(* max count low *)
 			 	c.out.RawInt(adjLen);		(* min count *)
 			 	c.out.Net32(0);				(* max count 64k *)
@@ -538,9 +538,9 @@ TYPE
 		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE);
 		VAR
 			check: BOOLEAN;
-			bytesWritten: INTEGER;
-			adjLen, adjOff: INTEGER;
-			localKey: INTEGER;
+			bytesWritten: SIGNED16;
+			adjLen, adjOff: SIGNED16;
+			localKey: SIGNED16;
 		BEGIN
 			fs(FileSystem).lock.Acquire();
 
@@ -571,7 +571,7 @@ TYPE
 	 			IF len > RWLimit THEN
 	 				adjLen := RWLimit;
 	 			ELSE
-	 				adjLen := len(INTEGER);
+	 				adjLen := len(SIGNED16);
 	 			END;
 
 			 	(* Send *)
@@ -581,7 +581,7 @@ TYPE
 			 	c.out.Net8(0);				(* reserved *)
 			 	c.out.RawInt(0);				(* andx offset *)
 			 	c.out.RawInt(SHORT(key));	(* fid *)
-			 	c.out.RawLInt(r.apos(LONGINT));	(* offset *)
+			 	c.out.RawLInt(r.apos(SIGNED32));	(* offset *)
 			 	c.out.RawLInt(0);			(* reserved *)
 			 	c.out.RawInt(0);				(* write mode *)
 			 	c.out.RawInt(0);				(* remaining *)
@@ -625,7 +625,7 @@ TYPE
 
 		PROCEDURE Length*(): Files.Size;
 		VAR
-			filesize: LONGINT;
+			filesize: SIGNED32;
 			check: BOOLEAN;
 		BEGIN
 			fs(FileSystem).lock.Acquire();
@@ -636,9 +636,9 @@ TYPE
 			END;
 
 		 	(* SEND *)
-		 	SendSMBHeader(37 + INTEGER(Strings.Length(filename)), 08X, c);
+		 	SendSMBHeader(37 + SIGNED16(Strings.Length(filename)), 08X, c);
 			c.out.Net8(0);											(* word count *)
-			c.out.RawInt(INTEGER(Strings.Length(filename)) + 1);		(* byte count *)
+			c.out.RawInt(SIGNED16(Strings.Length(filename)) + 1);		(* byte count *)
 			c.out.Net8(4);											(* buffer format ascii *)
 			c.out.RawString(filename);								(* filename *)
 			c.out.Update();
@@ -667,12 +667,12 @@ TYPE
 
 		(** Return the time (t) and date (d) when a file was last modified. *)
 
-		PROCEDURE GetDate*(VAR t, d: LONGINT);
+		PROCEDURE GetDate*(VAR t, d: SIGNED32);
 		BEGIN HALT(301) END GetDate;	(* abstract *)
 
 		(** Set the modification time (t) and date (d) of a file. *)
 
-		PROCEDURE SetDate*(t, d: LONGINT);
+		PROCEDURE SetDate*(t, d: SIGNED32);
 		BEGIN HALT(301) END SetDate;	(* abstract *)
 
 		(** Return the canonical name of a file. *)
@@ -688,7 +688,7 @@ TYPE
 
 		(** Register a file created with New in the directory, replacing the previous file in the directory with the same name. The file is automatically updated.  End users use Files.Register instead. *)
 
-		PROCEDURE Register0*(VAR res: WORD);
+		PROCEDURE Register0*(VAR res: INTEGER);
 		BEGIN END Register0;
 
 		(** Flush the changes made to a file from its buffers. Register0 will automatically update a file. *)
@@ -704,10 +704,10 @@ TYPE
 	VAR
 		connection: TCP.Connection;
 
-		PROCEDURE Connect(CONST host: ARRAY OF CHAR; port: LONGINT; VAR c: Connection);
+		PROCEDURE Connect(CONST host: ARRAY OF CHAR; port: SIGNED32; VAR c: Connection);
 		VAR
 			fadr: IP.Adr;
-			res: WORD;
+			res: INTEGER;
 		BEGIN {EXCLUSIVE}
 			res := 0;
 			DNS.HostByName(host, fadr, res);
@@ -724,7 +724,7 @@ TYPE
 
 	END TCPSender;
 
-PROCEDURE SendSMBHeader(ntb: INTEGER; cmd: CHAR; c: Connection);
+PROCEDURE SendSMBHeader(ntb: SIGNED16; cmd: CHAR; c: Connection);
 BEGIN
 	(* NETBIOS *)
 	c.out.Net16(0);
@@ -749,7 +749,7 @@ END SendSMBHeader;
 PROCEDURE RecieveResponse(cmd: CHAR; c: Connection): BOOLEAN;
 VAR
 	check: BOOLEAN;
-	variable: INTEGER;
+	variable: SIGNED16;
 BEGIN
 	check := FALSE;
 	c.in.Reset();
@@ -824,7 +824,7 @@ END RecieveResponse;
 
 PROCEDURE CheckFFSMB(c: Connection): BOOLEAN;
 VAR
-	variable: SHORTINT;
+	variable: SIGNED8;
 BEGIN
 	c.in.RawSInt(variable);
 	IF variable = -1 THEN
@@ -844,7 +844,7 @@ END CheckFFSMB;
 
 PROCEDURE ReplaceSlash(VAR name: ARRAY OF CHAR);
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	i := 0;
 	WHILE (i < Strings.Length(name)) DO
@@ -858,7 +858,7 @@ END ReplaceSlash;
 PROCEDURE NegotiateProtocol(c: Connection): BOOLEAN;
 VAR
 	check : BOOLEAN;
-	variable: LONGINT;
+	variable: SIGNED32;
 BEGIN
 	IF Trace THEN KernelLog.String("Negotiate Protocol"); KernelLog.Ln(); END;
 
@@ -891,13 +891,13 @@ END NegotiateProtocol;
 
 PROCEDURE SessionSetup(c: Connection): BOOLEAN;
 VAR
-	byteCount: INTEGER;
+	byteCount: SIGNED16;
 	check : BOOLEAN;
 BEGIN
 	IF Trace THEN KernelLog.String("Session Setup"); KernelLog.Ln(); END;
 
 	(* SEND *)
-	byteCount := INTEGER(
+	byteCount := SIGNED16(
 		Strings.Length(c.user)
 		+ Strings.Length(c.pw)
 		+ Strings.Length(PrimaryDomain)
@@ -913,7 +913,7 @@ BEGIN
 	c.out.RawInt(2);			(* mpx *)
 	c.out.RawInt(0);			(* Vc *)
 	c.out.Net32(0);			(* session key *)
-	c.out.RawInt(INTEGER(Strings.Length(c.pw)+1));	(* ANSI len *)
+	c.out.RawInt(SIGNED16(Strings.Length(c.pw)+1));	(* ANSI len *)
 	c.out.RawInt(0);	(* UNICODE len *)
 	c.out.Net32(0);			(* reserved *)
 	c.out.Net32(268435456);	(* capabilities *)
@@ -944,14 +944,14 @@ BEGIN
 	IF Trace THEN KernelLog.String("Tree Connect"); KernelLog.Ln(); END;
 
 	(* SEND *)
-	SendSMBHeader(54 + INTEGER(Strings.Length(c.ipaddr) + Strings.Length(c.path) + Strings.Length(c.pw)), 75X, c);
+	SendSMBHeader(54 + SIGNED16(Strings.Length(c.ipaddr) + Strings.Length(c.path) + Strings.Length(c.pw)), 75X, c);
 	c.out.Net8(4);			(* Word count *)
 	c.out.Net8(255);		(* no andx *)
 	c.out.Net8(0);			(* reserved *)
 	c.out.RawInt(0);			(* andx offset *)
 	c.out.RawInt(0);			(* disconnected tid *)
-	c.out.RawInt(INTEGER(Strings.Length(c.pw)+1));	(* pw length *)
-	c.out.RawInt(INTEGER(11 + Strings.Length(c.ipaddr) + Strings.Length(c.path) + Strings.Length(c.pw)));		(* bcc *)
+	c.out.RawInt(SIGNED16(Strings.Length(c.pw)+1));	(* pw length *)
+	c.out.RawInt(SIGNED16(11 + Strings.Length(c.ipaddr) + Strings.Length(c.path) + Strings.Length(c.pw)));		(* bcc *)
 	c.out.RawString(c.pw);
 	c.out.String("\\");
 	c.out.String(c.ipaddr);
@@ -972,18 +972,18 @@ BEGIN
 	RETURN TRUE;
 END TreeConnect;
 
-PROCEDURE Trans2Find(c: Connection; cmd: INTEGER): BOOLEAN;
+PROCEDURE Trans2Find(c: Connection; cmd: SIGNED16): BOOLEAN;
 VAR
 	check : BOOLEAN;
-	len: INTEGER;
+	len: SIGNED16;
 BEGIN
 	IF Trace THEN KernelLog.String("TRANS 2 - "); END;
 
 	IF cmd = 1 THEN			(* FIND FIRST *)
-		len := INTEGER(Strings.Length(c.mask));
+		len := SIGNED16(Strings.Length(c.mask));
 		IF Trace THEN KernelLog.String("FIND FIRST"); KernelLog.Ln; END;
 	ELSIF cmd = 2 THEN		(* FIND NEXT *)
-		len := INTEGER(Strings.Length(c.fnLast));
+		len := SIGNED16(Strings.Length(c.fnLast));
 		IF Trace THEN KernelLog.String("FIND NEXT"); KernelLog.Ln; END;
 	ELSE
 		RETURN FALSE;
@@ -1042,10 +1042,10 @@ BEGIN
 	RETURN TRUE;
 END Trans2Find;
 
-PROCEDURE OpenAndX(c: Connection; name: ARRAY OF CHAR; access: INTEGER; create: BOOLEAN): INTEGER;
+PROCEDURE OpenAndX(c: Connection; name: ARRAY OF CHAR; access: SIGNED16; create: BOOLEAN): SIGNED16;
 VAR
 	check: BOOLEAN;
-	fid: INTEGER;
+	fid: SIGNED16;
 BEGIN
 	IF Trace THEN
 		KernelLog.String("Open AndX"); KernelLog.Ln();
@@ -1057,7 +1057,7 @@ BEGIN
 	ReplaceSlash(name);
 
 	(* SEND *)
-	SendSMBHeader(66 + INTEGER(Strings.Length(name)), 2DX, c);
+	SendSMBHeader(66 + SIGNED16(Strings.Length(name)), 2DX, c);
 	c.out.Net8(15);			(* word count *)
 	c.out.Net8(255);		(* andx*)
 	c.out.Net8(0); 			(* reserved *)
@@ -1077,7 +1077,7 @@ BEGIN
 	c.out.Net32(0);			(* allocation size *)
 	c.out.Net32(0);			(* timeout *)
 	c.out.Net32(0);			(* reserved *)
-	c.out.RawInt(1 + INTEGER(Strings.Length(name)));	(* byte count *)
+	c.out.RawInt(1 + SIGNED16(Strings.Length(name)));	(* byte count *)
 	c.out.RawString(name);
 	c.out.Update();
 
@@ -1097,7 +1097,7 @@ BEGIN
 	RETURN fid;
 END OpenAndX;
 
-PROCEDURE CloseFile(c: Connection; key: LONGINT);
+PROCEDURE CloseFile(c: Connection; key: SIGNED32);
 VAR
 	check: BOOLEAN;
 BEGIN
@@ -1174,11 +1174,11 @@ BEGIN
 	END;
 END StartClient;
 
-PROCEDURE GetDateTime(t: ARRAY OF LONGINT; VAR datetime: Dates.DateTime);
+PROCEDURE GetDateTime(t: ARRAY OF SIGNED32; VAR datetime: Dates.DateTime);
 VAR
-	second, minute, hour, day, month, year, totalDays, NofDaysMnth: LONGINT;
-	tsh: HUGEINT;
-	ts: LONGINT;
+	second, minute, hour, day, month, year, totalDays, NofDaysMnth: SIGNED32;
+	tsh: SIGNED64;
+	ts: SIGNED32;
 	continue: BOOLEAN;
 BEGIN
 	tsh := t[1] * 100000000H + t[0];

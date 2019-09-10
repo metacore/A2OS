@@ -168,7 +168,7 @@ TYPE
 	END ErrorReporter;
 
 PROCEDURE ParseText(
-	text : Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc,opt: ARRAY OF CHAR;
+	text : Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; CONST pc,opt: ARRAY OF CHAR;
 	log: Streams.Writer; diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 VAR
 	r : Streams.StringReader;

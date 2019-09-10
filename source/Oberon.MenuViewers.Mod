@@ -7,7 +7,7 @@ MODULE MenuViewers IN Oberon;	(** portable *) (*JG 16.10.94, color version *)
 
   CONST
     FullColor = 15;
-    minint = MIN(INTEGER);
+    minint = MIN(SIGNED16);
     replace = Display.replace; invert = Display.invert;
     extend = Display.extend; reduce = Display.reduce;
 
@@ -19,11 +19,11 @@ MODULE MenuViewers IN Oberon;	(** portable *) (*JG 16.10.94, color version *)
 
     ViewerDesc* = RECORD
       (Viewers.ViewerDesc)
-      menuH*: INTEGER
+      menuH*: SIGNED16
     END;
 
   VAR
-    LightFrame, DarkFrame: INTEGER;
+    LightFrame, DarkFrame: SIGNED16;
 
   PROCEDURE Copy (V: Viewer; VAR V1: Viewer);
     VAR Menu, Main: Display.Frame; M: Objects.CopyMsg;
@@ -43,8 +43,8 @@ MODULE MenuViewers IN Oberon;	(** portable *) (*JG 16.10.94, color version *)
     Display.ReplConst(DarkFrame, V.X + V.W - 1, V.Y, 1, V.H - 1, replace)
   END Draw;
 
-  PROCEDURE Extend (V: Viewer; newY, newH: INTEGER);
-    VAR dH: INTEGER;
+  PROCEDURE Extend (V: Viewer; newY, newH: SIGNED16);
+    VAR dH: SIGNED16;
   BEGIN dH := V.Y - newY;
     IF dH > 0 THEN
       Display.ReplConst(LightFrame, V.X, newY, 1, dH, replace);
@@ -54,13 +54,13 @@ MODULE MenuViewers IN Oberon;	(** portable *) (*JG 16.10.94, color version *)
     END
   END Extend;
 
-  PROCEDURE Reduce (V: Viewer; newY: INTEGER);
+  PROCEDURE Reduce (V: Viewer; newY: SIGNED16);
   BEGIN
     Display.ReplConst(DarkFrame, V.X + 1, newY, V.W - 2, 1, replace)
   END Reduce;
 
-  PROCEDURE Grow (V: Viewer; oldH: INTEGER);
-    VAR dH: INTEGER;
+  PROCEDURE Grow (V: Viewer; oldH: SIGNED16);
+    VAR dH: SIGNED16;
   BEGIN dH := V.H - oldH;
     IF dH > 0 THEN
       Display.ReplConst(LightFrame, V.X, V.Y + oldH, 1, dH, replace);
@@ -69,12 +69,12 @@ MODULE MenuViewers IN Oberon;	(** portable *) (*JG 16.10.94, color version *)
     END
   END Grow;
 
-  PROCEDURE Shrink (V: Viewer; newH: INTEGER);
+  PROCEDURE Shrink (V: Viewer; newH: SIGNED16);
   BEGIN
     Display.ReplConst(LightFrame, V.X + 1, V.Y + newH - 1, V.W - 2, 1, replace)
   END Shrink;
 
-  PROCEDURE ModifyFrame (F: Display.Frame; id, dY, Y, H: INTEGER);
+  PROCEDURE ModifyFrame (F: Display.Frame; id, dY, Y, H: SIGNED16);
     VAR M: Display.ModifyMsg;
   BEGIN
     M.F := F; M.id := id; M.mode := Display.display; M.dlink := NIL;
@@ -107,7 +107,7 @@ MODULE MenuViewers IN Oberon;	(** portable *) (*JG 16.10.94, color version *)
     END
   END Restore;
 
-  PROCEDURE ModifyViewer (V: Viewer; id, Y, H: INTEGER);
+  PROCEDURE ModifyViewer (V: Viewer; id, Y, H: SIGNED16);
     VAR Menu, Main: Display.Frame;
   BEGIN
     Menu := V.dsc; Main := V.dsc.next;
@@ -142,9 +142,9 @@ MODULE MenuViewers IN Oberon;	(** portable *) (*JG 16.10.94, color version *)
     END
   END ModifyViewer;
 
-  PROCEDURE Change (V: Viewer; X, Y: INTEGER; Keys: SET);
+  PROCEDURE Change (V: Viewer; X, Y: SIGNED16; Keys: SET);
     VAR Menu, Main: Display.Frame;
-      V1: Viewers.Viewer; keysum: SET; Y0, dY, H: INTEGER;
+      V1: Viewers.Viewer; keysum: SET; Y0, dY, H: SIGNED16;
   BEGIN (*Keys # {}*)
     Menu := V.dsc; Main := V.dsc.next;
     Oberon.DrawCursor(Oberon.Mouse, Oberon.Arrow, X, Y);
@@ -290,7 +290,7 @@ MODULE MenuViewers IN Oberon;	(** portable *) (*JG 16.10.94, color version *)
     V.dsc.handle(V.dsc, M); COPY(M.s, name)
   END GetName;
 
-  PROCEDURE New* (Menu, Main: Display.Frame; menuH, X, Y: INTEGER): Viewer;
+  PROCEDURE New* (Menu, Main: Display.Frame; menuH, X, Y: SIGNED16): Viewer;
     VAR V: Viewer;
   BEGIN NEW(V);
     V.handle := Handle; V.dsc := Menu; V.dsc.next := Main; V.menuH := menuH;

@@ -20,7 +20,7 @@ TYPE
 	END;
 
 PROCEDURE OpenScanner(VAR S: Texts.Scanner);
-VAR beg, end, time: LONGINT; T: Texts.Text; BEGIN
+VAR beg, end, time: SIGNED32; T: Texts.Text; BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	IF (S.class = Texts.Char) & (S.c = "^") THEN
 		Oberon.GetSelection(T, beg, end, time);
@@ -37,7 +37,7 @@ BEGIN
 	END
 END GetString;
 
-PROCEDURE GetInteger(VAR S: Texts.Scanner; VAR v: LONGINT): BOOLEAN;
+PROCEDURE GetInteger(VAR S: Texts.Scanner; VAR v: SIGNED32): BOOLEAN;
 BEGIN
 	IF (S.class = Texts.Int) THEN v := S.i; Texts.Scan(S); RETURN TRUE
 	ELSE v := 0; RETURN FALSE
@@ -103,7 +103,7 @@ BEGIN
 	END
 END Split;
 
-PROCEDURE GetErrorMsg(res: WORD; VAR s: ARRAY OF CHAR);
+PROCEDURE GetErrorMsg(res: INTEGER; VAR s: ARRAY OF CHAR);
 BEGIN
 	CASE res OF
 	| FATFiles.ErrReadOnly: COPY("read-only file system", s)
@@ -155,7 +155,7 @@ END SetRootDirectory;
 
 PROCEDURE CreateDirectory*; (** path (including prefix, e.g. "FAT:/New Folder/A/B/C") *)
 VAR p: ARRAY 1024 OF CHAR; W: Texts.Writer; S: Texts.Scanner;
-	res: WORD; msg: ARRAY 256 OF CHAR;
+	res: INTEGER; msg: ARRAY 256 OF CHAR;
 BEGIN
 	Texts.OpenWriter(W);
 	Texts.WriteString(W, "Creating directory: "); Texts.Append(Oberon.Log, W.buf);
@@ -178,7 +178,7 @@ END CreateDirectory;
 
 PROCEDURE RemoveDirectory*; (** path ["\F"]. Path includes prefix, e.g. "FAT:/A/B/C". Use "\F" option to force deletion of non-empty directories. *)
 VAR p: ARRAY 1024 OF CHAR; W: Texts.Writer; S: Texts.Scanner;
-	res: WORD; msg: ARRAY 256 OF CHAR; force: BOOLEAN; o: CHAR;
+	res: INTEGER; msg: ARRAY 256 OF CHAR; force: BOOLEAN; o: CHAR;
 BEGIN
 	Texts.OpenWriter(W);
 	Texts.WriteString(W, "Deleting directory: "); Texts.Append(Oberon.Log, W.buf);
@@ -202,7 +202,7 @@ END RemoveDirectory;
 
 PROCEDURE SetCache*; (** prefix cacheSize *)
 VAR W: Texts.Writer; S: Texts.Scanner; path: Path; fs: Files.FileSystem; p: ARRAY 1024 OF CHAR;
-	cacheSize: LONGINT; writeback: BOOLEAN;
+	cacheSize: SIGNED32; writeback: BOOLEAN;
 BEGIN
 	Texts.OpenWriter(W); OpenScanner(S);
 	IF GetString(S, p) & GetInteger(S, cacheSize) THEN
@@ -278,7 +278,7 @@ END Template;
 
 PROCEDURE QuickFormat*; (** prefix [label] *)
 VAR p: ARRAY 128 OF CHAR; path: Path; fs: Files.FileSystem;
-	W: Texts.Writer; S: Texts.Scanner; res: WORD; msg: ARRAY 256 OF CHAR;
+	W: Texts.Writer; S: Texts.Scanner; res: INTEGER; msg: ARRAY 256 OF CHAR;
 BEGIN
 	Texts.OpenWriter(W);
 	OpenScanner(S);

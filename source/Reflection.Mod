@@ -127,7 +127,7 @@ CONST
 	END CheckHeapAddress;
 
 	PROCEDURE Wait(w: Streams.Writer);
-	VAR i: WORD;
+	VAR i: INTEGER;
 	BEGIN
 		IF LineDelay > 0 THEN
 			FOR i := 0 TO LineDelay DO END;
@@ -346,23 +346,23 @@ CONST
 	VAR
 		b: BOOLEAN;
 		c: CHAR;
-		s: SHORTINT; i: INTEGER; l: LONGINT; h: HUGEINT;
+		s: SIGNED8; i: SIGNED16; l: SIGNED32; h: SIGNED64;
 		sz: SIZE; a, pc: ADDRESS;
-		word: WORD; lword: LONGWORD;
+		word: INTEGER; lword: LONGINTEGER;
 		s8: SIGNED8; s16: SIGNED16; s32: SIGNED32; s64: SIGNED64;
 		u8: UNSIGNED8; u16: UNSIGNED16; u32: UNSIGNED32;
-		r: REAL; x: LONGREAL;
-		cplx {UNTRACED}: POINTER {UNSAFE} TO RECORD re,im: REAL END;
-		lcplx {UNTRACED}: POINTER {UNSAFE} TO RECORD re,im: LONGREAL END;
+		r: FLOAT32; x: FLOAT64;
+		cplx {UNTRACED}: POINTER {UNSAFE} TO RECORD re,im: FLOAT32 END;
+		lcplx {UNTRACED}: POINTER {UNSAFE} TO RECORD re,im: FLOAT64 END;
 		set: SET;
 		procedure: ARRAY 256 OF CHAR;
 
-		PROCEDURE Signed(i: HUGEINT);
+		PROCEDURE Signed(i: SIGNED64);
 		BEGIN
 			w.Int(i,1);
 		END Signed;
 
-		PROCEDURE Unsigned(i: HUGEINT; size: SIZE);
+		PROCEDURE Unsigned(i: SIGNED64; size: SIZE);
 		BEGIN
 			w.Hex(i,-2*size);
 		END Unsigned;
@@ -379,22 +379,22 @@ CONST
 			size := SIZEOF(CHAR);
 			SYSTEM.GET(adr, c); IF (c > " ") & (c <= "~") THEN w.Char( c ); ELSE w.Hex( ORD( c ), -2 );  w.Char( "X" ) END;
 		| sfTypeSHORTINT:
-			size := SIZEOF(SHORTINT);
+			size := SIZEOF(SIGNED8);
 			SYSTEM.GET(adr, s); Signed(s);
 		| sfTypeINTEGER:
-			size := SIZEOF(INTEGER);
+			size := SIZEOF(SIGNED16);
 			SYSTEM.GET(adr, i); Signed(i);
 		| sfTypeLONGINT:
-			size := SIZEOF(LONGINT);
+			size := SIZEOF(SIGNED32);
 			SYSTEM.GET(adr, l); Signed(l);
 		| sfTypeHUGEINT:
-			size := SIZEOF(HUGEINT);
+			size := SIZEOF(SIGNED64);
 			SYSTEM.GET(adr, h); Signed(h);
 		| sfTypeWORD:
-			size := SIZEOF(WORD);
+			size := SIZEOF(INTEGER);
 			SYSTEM.GET(adr, word); Signed(word);
 		| sfTypeLONGWORD:
-			size := SIZEOF(LONGWORD);
+			size := SIZEOF(LONGINTEGER);
 			SYSTEM.GET(adr, lword); Signed(lword);
 		| sfTypeSIGNED8:
 			size := SIZEOF(SIGNED8);
@@ -421,22 +421,22 @@ CONST
 			size := SIZEOF(UNSIGNED64);
 			SYSTEM.GET(adr, s64); Unsigned(s64, SIZEOF(UNSIGNED64));
 		| sfTypeREAL:
-			size := SIZEOF(REAL);
+			size := SIZEOF(FLOAT32);
 			SYSTEM.GET(adr, r); w.Float(r,12);
 			w.String(" (");
 			SYSTEM.GET(adr, u32); Unsigned(u32, SIZEOF(UNSIGNED32));
 			w.String(")");
 		| sfTypeLONGREAL:
-			size := SIZEOF(LONGREAL);
+			size := SIZEOF(FLOAT64);
 			SYSTEM.GET(adr, x); w.Float(x,13);
 			w.String(" (");
 			SYSTEM.GET(adr, s64); Unsigned(s64, SIZEOF(UNSIGNED64));
 			w.String(")");
 		| sfTypeCOMPLEX:
-			size := SIZEOF(COMPLEX);
+			size := SIZEOF(COMPLEX32);
 			cplx := adr; w.Float(cplx.re,12); w.String("+ i*"); w.Float(cplx.im,12);
 		| sfTypeLONGCOMPLEX:
-			size := SIZEOF(LONGCOMPLEX);
+			size := SIZEOF(COMPLEX64);
 			lcplx := adr;
 			w.Float(lcplx.re,13); w.String("+ i*"); w.Float(lcplx.im,13);
 		| sfTypeSET:
@@ -977,7 +977,7 @@ CONST
 
 	(** Write a process's state in one line. *)
 	PROCEDURE WriteProcess*(w: Streams.Writer; p: Objects.Process);
-	VAR adr: ADDRESS; mode: WORD; m: Modules.Module;
+	VAR adr: ADDRESS; mode: INTEGER; m: Modules.Module;
 	BEGIN
 		IF p # NIL THEN
 			w.Int(p.id, 5);
@@ -1075,7 +1075,7 @@ TYPE
 		RETURN TRUE;
 	END FindVar;
 
-	PROCEDURE WriteVar*(w: Streams.Writer; v: Variable; VAR col: LONGINT);
+	PROCEDURE WriteVar*(w: Streams.Writer; v: Variable; VAR col: SIGNED32);
 	BEGIN
 	END WriteVar;
 
@@ -1102,12 +1102,12 @@ TYPE
 			w.String("):"); ReportType(w, refs, offset);
 		| sfTypeBOOLEAN: w.String("BOOLEAN");
 		| sfTypeCHAR: w.String("CHAR");
-		| sfTypeSHORTINT: w.String("SHORTINT");
-		| sfTypeINTEGER: w.String("INTEGER");
-		| sfTypeLONGINT: w.String("LONGINT");
-		| sfTypeHUGEINT: w.String("HUGEINT");
-		| sfTypeWORD: w.String("WORD");
-		| sfTypeLONGWORD: w.String("LONGWORD");
+		| sfTypeSHORTINT: w.String("SIGNED8");
+		| sfTypeINTEGER: w.String("SIGNED16");
+		| sfTypeLONGINT: w.String("SIGNED32");
+		| sfTypeHUGEINT: w.String("SIGNED64");
+		| sfTypeWORD: w.String("INTEGER");
+		| sfTypeLONGWORD: w.String("LONGINTEGER");
 		| sfTypeSIGNED8: w.String("SIGNED8");
 		| sfTypeSIGNED16: w.String("SIGNED16");
 		| sfTypeSIGNED32: w.String("SIGNED32");
@@ -1116,10 +1116,10 @@ TYPE
 		| sfTypeUNSIGNED16: w.String("UNSIGNED16");
 		| sfTypeUNSIGNED32: w.String("UNSIGNED32");
 		| sfTypeUNSIGNED64: w.String("UNSIGNED64");
-		| sfTypeREAL: w.String("REAL");
-		| sfTypeLONGREAL: w.String("LONGREAL");
-		| sfTypeCOMPLEX: w.String("COMPLEX");
-		| sfTypeLONGCOMPLEX: w.String("LONGCOMPLEX");
+		| sfTypeREAL: w.String("FLOAT32");
+		| sfTypeLONGREAL: w.String("FLOAT64");
+		| sfTypeCOMPLEX: w.String("COMPLEX32");
+		| sfTypeLONGCOMPLEX: w.String("COMPLEX64");
 		| sfTypeSET: w.String("SET");
 		| sfTypeANY: w.String("ANY");
 		| sfTypeOBJECT: w.String("OBJECT");
@@ -1244,7 +1244,7 @@ TYPE
 
 VAR trace: Streams.Writer;
 
-	PROCEDURE WriteMode*(mode : LONGINT; out : Streams.Writer);
+	PROCEDURE WriteMode*(mode : SIGNED32; out : Streams.Writer);
 	BEGIN
 		CASE mode OF
 			|Objects.Ready : out.String("rdy");
@@ -1347,7 +1347,7 @@ VAR trace: Streams.Writer;
 	END TraceProcesses;
 
 	PROCEDURE Test*;
-	VAR res: WORD; mod: Modules.Module; msg: ARRAY 32 OF CHAR; pos: SIZE;
+	VAR res: INTEGER; mod: Modules.Module; msg: ARRAY 32 OF CHAR; pos: SIZE;
 	BEGIN
 		mod := Modules.ThisModule("Reflection",res,msg);
 		ReportModule(trace, mod.refs, pos);

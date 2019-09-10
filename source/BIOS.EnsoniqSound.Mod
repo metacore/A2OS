@@ -76,13 +76,13 @@ TYPE
 	END BufferObj;
 
 	MixerChannel*=OBJECT(SoundDevices.MixerChannel)
-	VAR vol : LONGINT;
+	VAR vol : SIGNED32;
 		muted : BOOLEAN;
 		name, desc : POINTER TO ARRAY OF CHAR;
-		reg : LONGINT; (* register of mixerchannel *)
+		reg : SIGNED32; (* register of mixerchannel *)
 		drv : Driver;
 
-		PROCEDURE &Constr*(drv: Driver; name, desc : ARRAY OF CHAR; reg : LONGINT);
+		PROCEDURE &Constr*(drv: Driver; name, desc : ARRAY OF CHAR; reg : SIGNED32);
 		VAR i : SIZE;
 		BEGIN
 			SELF.drv := drv;
@@ -102,19 +102,19 @@ TYPE
 			SELF.drv.mixerChannels[i] := SELF
 		END Constr;
 
-		PROCEDURE SetVolume*(vol : LONGINT);
-		VAR resl : LONGINT;
+		PROCEDURE SetVolume*(vol : SIGNED32);
+		VAR resl : SIGNED32;
 		BEGIN
 			IF vol > 0FFH THEN SELF.vol := 0FFH END;
 			IF vol < 0 THEN SELF.vol := 0 END;
 			SELF.vol := vol;
 			resl := 31-SELF.vol DIV 8;
 			resl := resl+256*resl;
-			drv.EsWrCd(reg, SYSTEM.VAL(INTEGER, resl));
+			drv.EsWrCd(reg, SYSTEM.VAL(SIGNED16, resl));
 			CallListener
 		END SetVolume;
 
-		PROCEDURE GetVolume*() : LONGINT;
+		PROCEDURE GetVolume*() : SIGNED32;
 		BEGIN
 			RETURN(vol)
 		END GetVolume;
@@ -155,7 +155,7 @@ TYPE
 		BEGIN
 			IF SELF.muted # muted THEN (* change mute state *)
 				IF muted THEN
-					drv.EsWrCd(reg, SYSTEM.VAL(INTEGER, 8000H))
+					drv.EsWrCd(reg, SYSTEM.VAL(SIGNED16, 8000H))
 				ELSE
 					SetVolume(vol)
 				END;
@@ -166,29 +166,29 @@ TYPE
 	END MixerChannel;
 
 	PlayMixerChannel=OBJECT(MixerChannel)
-		PROCEDURE SetVolume*(vol: LONGINT);
-		VAR resl : LONGINT;
+		PROCEDURE SetVolume*(vol: SIGNED32);
+		VAR resl : SIGNED32;
 		BEGIN
 			IF vol > 0FFH THEN vol := 0FFH END;
 			IF vol < 0 THEN vol := 0 END;
 			SELF.vol := vol;
 			resl := 63-vol DIV 4;
 			resl := resl+256*resl;
-			drv.EsWrCd(reg, SYSTEM.VAL(INTEGER, resl)); (* Master Out *)
+			drv.EsWrCd(reg, SYSTEM.VAL(SIGNED16, resl)); (* Master Out *)
 			CallListener
 		END SetVolume;
 	END PlayMixerChannel;
 
 	RecMixerChannel=OBJECT(MixerChannel)
-		PROCEDURE SetVolume*(vol: LONGINT);
-		VAR resl : LONGINT;
+		PROCEDURE SetVolume*(vol: SIGNED32);
+		VAR resl : SIGNED32;
 		BEGIN
 			IF vol > 0FFH THEN vol := 0FFH END;
 			IF vol < 0 THEN vol := 0 END;
 			SELF.vol := vol;
 			resl := vol DIV 16;
 			resl := resl+256*resl;
-			drv.EsWrCd(reg, SYSTEM.VAL(INTEGER, resl)); (* Record Gain *)
+			drv.EsWrCd(reg, SYSTEM.VAL(SIGNED16, resl)); (* Record Gain *)
 			CallListener
 		END SetVolume;
 	END RecMixerChannel;
@@ -197,12 +197,12 @@ TYPE
 	VAR active, free: BOOLEAN;
 		first, last: POINTER TO Bufferlist; (* fast access to buffers *)
 		blistener : SoundDevices.BufferListener;
-		vol : INTEGER;
-		ratedone : LONGINT; (* for sample rate conversion *)
+		vol : SIGNED16;
+		ratedone : SIGNED32; (* for sample rate conversion *)
 
-		pos : LONGINT; (* actual position in buffer *)
-		samplingRate, samplingResolution, nofSubChannels: LONGINT;
-		delta: LONGINT; (* number of bytes for one sample *)
+		pos : SIGNED32; (* actual position in buffer *)
+		samplingRate, samplingResolution, nofSubChannels: SIGNED32;
+		delta: SIGNED32; (* number of bytes for one sample *)
 		drv : Driver;
 		pause, stop, start : BOOLEAN;
 		silent, rsilent : BOOLEAN; (* is a  channel playing/recording? *)
@@ -224,7 +224,7 @@ TYPE
 			pause := FALSE; stop := FALSE; start := FALSE
 		END Init;
 
-		PROCEDURE SetVolume*(vol: LONGINT);
+		PROCEDURE SetVolume*(vol: SIGNED32);
 		(* standard : 100H *)
 		BEGIN
 			IF vol > 0FFFFH THEN vol := 0FFFFH; END;
@@ -232,12 +232,12 @@ TYPE
 			SELF.vol := SHORT(vol)
 		END SetVolume;
 
-		PROCEDURE GetVolume*() : LONGINT;
+		PROCEDURE GetVolume*() : SIGNED32;
 		BEGIN
 			RETURN vol
 		END GetVolume;
 
-		PROCEDURE GetPosition() : LONGINT;
+		PROCEDURE GetPosition() : SIGNED32;
 		BEGIN
 			RETURN pos
 		END GetPosition;
@@ -401,10 +401,10 @@ TYPE
 					IF Trace THEN KernelLog.String("Enabling ADC Interrupt"); END;
 					drv.rloopcount := 0;
 					Machine.Portout8(drv.base+Es1370RegMemPage, 0DX); (*1101*)
-					Machine.Portout32(drv.base+34H, SYSTEM.VAL(LONGINT, Bsize DIV 4-1));
+					Machine.Portout32(drv.base+34H, SYSTEM.VAL(SIGNED32, Bsize DIV 4-1));
 					(*additionally resets the counter of transfered longwords to 0*)
 
-					drv.EsState.rctrl := SYSTEM.VAL(LONGINT, {4}+SYSTEM.VAL(SET, drv.EsState.rctrl));
+					drv.EsState.rctrl := SYSTEM.VAL(SIGNED32, {4}+SYSTEM.VAL(SET, drv.EsState.rctrl));
 					Machine.Portout32(drv.base+Es1370RegControl, drv.EsState.rctrl) (*AdcEn*)
 				END
 			END
@@ -416,14 +416,14 @@ TYPE
 			recordchannels : ARRAY 32 OF RecordChannel;
 			pcm, line, cd : MixerChannel;
 			time: Kernel.Timer; (* used in init *)
-			base, irq : LONGINT; (* base address, interrupt nr of soundcard *)
+			base, irq : SIGNED32; (* base address, interrupt nr of soundcard *)
 
 			EsState : RECORD (* actual state of the soundcard *)
-				sctrl : LONGINT; (* serial control register *)
-				rctrl : LONGINT; (* irq / chip select block *)
+				sctrl : SIGNED32; (* serial control register *)
+				rctrl : SIGNED32; (* irq / chip select block *)
 			END;
 			p2, pr2 : POINTER TO ARRAY OF CHAR; (* points to intern soundbuffer for play/record *)
-			loopcount, rloopcount : LONGINT; (* determines if first or second bufferpart is playing *)
+			loopcount, rloopcount : SIGNED32; (* determines if first or second bufferpart is playing *)
 			next: Driver;
 			introbj : Introbj; (* interrupt handler *)
 			masterout : PlayMixerChannel;
@@ -439,12 +439,12 @@ TYPE
 
 		(** Change the Record Source*)
 		(** 0: Microphone, 1: CD IN, 4: LINE IN, 5: STEREO MIX (DEFAULT) *)
-		PROCEDURE SetRecordSource*(i: INTEGER);
+		PROCEDURE SetRecordSource*(i: SIGNED16);
 		BEGIN
-			EsWrCd(1AH, SYSTEM.VAL(INTEGER, i+i*256))
+			EsWrCd(1AH, SYSTEM.VAL(SIGNED16, i+i*256))
 		END SetRecordSource;
 
-		PROCEDURE &Constructor*(irq, base: LONGINT);
+		PROCEDURE &Constructor*(irq, base: SIGNED32);
 		BEGIN
 			NEW(bufferobj);
 			buffersToReturn := NIL;
@@ -485,11 +485,11 @@ TYPE
 		END WaitBuffersToReturn;
 
 		(* wait until sample rate converter is ready to accept commands/data *)
-		PROCEDURE EsWaitSrcReady() : LONGINT;
-		VAR t, r : LONGINT;
+		PROCEDURE EsWaitSrcReady() : SIGNED32;
+		VAR t, r : SIGNED32;
 		BEGIN
 			FOR t := 0 TO 500 DO
-				Machine.Portin32(base+Es1371RegSmprate, SYSTEM.VAL(LONGINT, r));
+				Machine.Portin32(base+Es1371RegSmprate, SYSTEM.VAL(SIGNED32, r));
 				IF ~(23 IN SYSTEM.VAL(SET, r)) THEN
 					RETURN r
 				END
@@ -499,9 +499,9 @@ TYPE
 		END EsWaitSrcReady;
 
 		(* set the address part of the value for the sample rate converter *)
-		PROCEDURE EsSrcRamAddro(reg: LONGINT): SET;
+		PROCEDURE EsSrcRamAddro(reg: SIGNED32): SET;
 		VAR s, s2 : SET;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			s := SYSTEM.VAL(SET, reg);
 			s := s*{0..6};
@@ -513,7 +513,7 @@ TYPE
 		END EsSrcRamAddro;
 
 		(* set the data part of the value for the src *)
-		PROCEDURE EsSrcRamDatao(reg: LONGINT): SET;
+		PROCEDURE EsSrcRamDatao(reg: SIGNED32): SET;
 		VAR s : SET;
 		BEGIN
 			s := SYSTEM.VAL(SET, reg);
@@ -522,8 +522,8 @@ TYPE
 		END EsSrcRamDatao;
 
 		(* write to the sample rate converter *)
-		PROCEDURE EsSrcWrite(reg, data: LONGINT);
-		VAR r : LONGINT;
+		PROCEDURE EsSrcWrite(reg, data: SIGNED32);
+		VAR r : SIGNED32;
 		VAR s : SET;
 		BEGIN
 			r := EsWaitSrcReady();
@@ -531,27 +531,27 @@ TYPE
 			s := s * {19..22};
 			s := s + EsSrcRamAddro(reg)+EsSrcRamDatao(data);
 			s := s + {24};
-			r := SYSTEM.VAL(LONGINT, s);
+			r := SYSTEM.VAL(SIGNED32, s);
 			Machine.Portout32(base+Es1371RegSmprate, r)
 		END EsSrcWrite;
 
 		(* read from sample rate converter *)
-		PROCEDURE EsSrcRead(reg: LONGINT) : LONGINT;
-		VAR r : LONGINT; s : SET;
+		PROCEDURE EsSrcRead(reg: SIGNED32) : SIGNED32;
+		VAR r : SIGNED32; s : SET;
 		BEGIN
 			r := EsWaitSrcReady();
 			s := SYSTEM.VAL(SET, r);
 			s := s*{19..22};
 			s := s + EsSrcRamAddro(reg);
-			r := SYSTEM.VAL(LONGINT, r);
+			r := SYSTEM.VAL(SIGNED32, r);
 			Machine.Portout32(base+Es1371RegSmprate, r);
 			r := EsWaitSrcReady();
-			RETURN SYSTEM.VAL(LONGINT, EsSrcRamDatao(r))
+			RETURN SYSTEM.VAL(SIGNED32, EsSrcRamDatao(r))
 		END EsSrcRead;
 
 		(* set the adc sample rate *)
-		PROCEDURE EsAdcRate(rate, set: LONGINT);
-		VAR n, truncm, freq, result, tmp : LONGINT;
+		PROCEDURE EsAdcRate(rate, set: SIGNED32);
+		VAR n, truncm, freq, result, tmp : SIGNED32;
 			stmp : SET;
 		BEGIN
 			IF rate > 48000 THEN rate := 48000 END;
@@ -559,7 +559,7 @@ TYPE
 			n := rate DIV 3000;
 			IF ((n=15) OR (n=13) OR (n=11) OR (n=9)) THEN DEC(n) END;
 			truncm := (21*n-1);
-			truncm := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, truncm)+{0});
+			truncm := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, truncm)+{0});
 			freq := ((48000*32768) DIV rate) * n;
 			result := ((48000*32768) DIV (freq DIV n));
 			IF set>0 THEN
@@ -567,31 +567,31 @@ TYPE
 					IF (truncm > 239) THEN truncm := 239; END;
 					tmp := ((239-truncm) DIV 2) * 512;
 					stmp := SYSTEM.VAL(SET, tmp) + SYSTEM.VAL(SET, n*16);
-					tmp := SYSTEM.VAL(LONGINT, stmp);
+					tmp := SYSTEM.VAL(SIGNED32, stmp);
 					EsSrcWrite(EsSmpregAdc, tmp)
 				ELSE
 					IF (truncm < 119) THEN truncm := 119; END;
 					tmp := ((119-truncm) DIV 2) * 512;
 					stmp := SYSTEM.VAL(SET, tmp)+SYSTEM.VAL(SET, n*16)+{15};
-					tmp := SYSTEM.VAL(LONGINT, stmp);
+					tmp := SYSTEM.VAL(SIGNED32, stmp);
 					EsSrcWrite(EsSmpregAdc, tmp)
 				END;
 
 				tmp := EsSrcRead(EsSmpregAdc+1);
 				stmp := SYSTEM.VAL(SET, tmp)*{0..7};
 				stmp := stmp + (SYSTEM.VAL(SET, freq DIV 32)*{10..15});
-				EsSrcWrite(EsSmpregAdc+1, SYSTEM.VAL(LONGINT, stmp));
+				EsSrcWrite(EsSmpregAdc+1, SYSTEM.VAL(SIGNED32, stmp));
 
-				EsSrcWrite(EsSmpregAdc+3, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, freq)*{0..14}));
+				EsSrcWrite(EsSmpregAdc+3, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, freq)*{0..14}));
 
-				EsSrcWrite(EsSmpregVolAdc, SYSTEM.VAL(LONGINT, n * 256));
-				EsSrcWrite(EsSmpregVolAdc+1, SYSTEM.VAL(LONGINT, n * 256))
+				EsSrcWrite(EsSmpregVolAdc, SYSTEM.VAL(SIGNED32, n * 256));
+				EsSrcWrite(EsSmpregVolAdc+1, SYSTEM.VAL(SIGNED32, n * 256))
 			END
 		END EsAdcRate;
 
 		(* set the dac sample rate for dac number "set" *)
-		PROCEDURE EsDacRate(rate, set: LONGINT);
-		VAR freq, r, result, dac, dis, temp : LONGINT;
+		PROCEDURE EsDacRate(rate, set: SIGNED32);
+		VAR freq, r, result, dac, dis, temp : SIGNED32;
 		VAR stmp : SET;
 
 		BEGIN
@@ -604,44 +604,44 @@ TYPE
 				IF set = 1 THEN dis := 20; ELSE dis := 21; END;
 				r := EsWaitSrcReady();
 				stmp := SYSTEM.VAL(SET, r)*{19..22};
-				r := SYSTEM.VAL(LONGINT, stmp);
+				r := SYSTEM.VAL(SIGNED32, stmp);
 				Machine.Portout32(base+Es1371RegSmprate, r);
 				r := EsSrcRead(dac+1);
 				stmp := SYSTEM.VAL(SET, r)*{0..7};
 				stmp := stmp + (SYSTEM.VAL(SET, freq DIV 32)*{10..15});
-				temp := SYSTEM.VAL(LONGINT, stmp);
+				temp := SYSTEM.VAL(SIGNED32, stmp);
 				EsSrcWrite(dac+1, temp);
 				stmp := SYSTEM.VAL(SET, freq);
 				stmp := stmp*{0..14};
-				temp := SYSTEM.VAL(LONGINT, stmp);
+				temp := SYSTEM.VAL(SIGNED32, stmp);
 				EsSrcWrite(dac+3, temp);
 				r := EsWaitSrcReady();
 				stmp := SYSTEM.VAL(SET, r);
 				stmp := stmp*({22}+{dis}+{19});
-				r := SYSTEM.VAL(LONGINT, stmp);
+				r := SYSTEM.VAL(SIGNED32, stmp);
 				Machine.Portout32(base+Es1371RegSmprate, r)
 			END
 		END EsDacRate;
 
 		(* write ac97 codec *)
-		PROCEDURE EsWrCd(addr, data: LONGINT);
-		VAR t, res, x, i: LONGINT;
+		PROCEDURE EsWrCd(addr, data: SIGNED32);
+		VAR t, res, x, i: SIGNED32;
 		VAR tset, tset2 : SET;
 		BEGIN
 			t := 0;
 			REPEAT
 				INC(t);
-				Machine.Portin32(base+Es1371RegCodec, SYSTEM.VAL(LONGINT, res))
+				Machine.Portin32(base+Es1371RegCodec, SYSTEM.VAL(SIGNED32, res))
 			UNTIL ((t>2000) OR ~(30 IN SYSTEM.VAL(SET, res)));
-			Machine.Portin32(base+Es1371RegSmprate, SYSTEM.VAL(LONGINT, x));
+			Machine.Portin32(base+Es1371RegSmprate, SYSTEM.VAL(SIGNED32, x));
 			t := EsWaitSrcReady();
-			t := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, t)*{19..22});
+			t := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, t)*{19..22});
 			Machine.Portout32(base+Es1371RegSmprate, t);
 
 			t := 0;
 			REPEAT
 				INC(t);
-				Machine.Portin32(base+Es1371RegSmprate, SYSTEM.VAL(LONGINT, res))
+				Machine.Portin32(base+Es1371RegSmprate, SYSTEM.VAL(SIGNED32, res))
 			UNTIL (t>2000) OR (SYSTEM.VAL(SET, res)*{16..18, 23} = {16});
 
 			tset := SYSTEM.VAL(SET, addr)*{0..6};
@@ -651,7 +651,7 @@ TYPE
 			END;
 			tset := SYSTEM.VAL(SET, data)*{0..15};
 			tset := tset+tset2;
-			res := SYSTEM.VAL(LONGINT, tset);
+			res := SYSTEM.VAL(SIGNED32, tset);
 			Machine.Portout32(base+Es1371RegCodec, res);
 			t := EsWaitSrcReady();
 			Machine.Portout32(base+Es1371RegSmprate, x)
@@ -659,7 +659,7 @@ TYPE
 
 		(* initialise the driver *)
 		PROCEDURE Initdrv;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 			sndbuf : Machine.Address32; (* physical address of the intern soundbuffer *)
 		BEGIN
 
@@ -679,7 +679,7 @@ TYPE
 			introbj.numplayer := 0;
 
 			(* set Bit 19 instead if you want to play direct 8 Bit sound *)
-			EsState.sctrl := SYSTEM.VAL(LONGINT, {20});
+			EsState.sctrl := SYSTEM.VAL(SIGNED32, {20});
 			EsState.rctrl := 0;
 			NEW(time);
 
@@ -687,37 +687,37 @@ TYPE
 
 	(*********** INIT like in BSD driver *******************************)
 
-			Machine.Portout32(base+Es1370RegStatus, SYSTEM.VAL(LONGINT, {29})); (* No idea why this is needed *)
+			Machine.Portout32(base+Es1370RegStatus, SYSTEM.VAL(SIGNED32, {29})); (* No idea why this is needed *)
 			time.Sleep(20);
-			Machine.Portout32(base+Es1370RegSerialControl, SYSTEM.VAL(LONGINT, 0));
-			Machine.Portout32(base+Es1371RegLegacy, SYSTEM.VAL(LONGINT, 0));
+			Machine.Portout32(base+Es1370RegSerialControl, SYSTEM.VAL(SIGNED32, 0));
+			Machine.Portout32(base+Es1371RegLegacy, SYSTEM.VAL(SIGNED32, 0));
 			(* Now not again RegLegacy like in BSD-Driver *)
-			Machine.Portout32(base+Es1370RegControl, SYSTEM.VAL(LONGINT, Es1371SyncRes));
-			time.Sleep(2);	Machine.Portout32(base+Es1370RegControl, SYSTEM.VAL(LONGINT, {}));
-			Machine.Portout32(base+Es1371RegSmprate, SYSTEM.VAL(LONGINT, Es1371DisSrc));
+			Machine.Portout32(base+Es1370RegControl, SYSTEM.VAL(SIGNED32, Es1371SyncRes));
+			time.Sleep(2);	Machine.Portout32(base+Es1370RegControl, SYSTEM.VAL(SIGNED32, {}));
+			Machine.Portout32(base+Es1371RegSmprate, SYSTEM.VAL(SIGNED32, Es1371DisSrc));
 
 			FOR i := 0 TO 07FH DO
-				EsSrcWrite(SYSTEM.VAL(INTEGER, i), 0)
+				EsSrcWrite(SYSTEM.VAL(SIGNED16, i), 0)
 			END;
-			EsSrcWrite(EsSmpregDac1, SYSTEM.VAL(LONGINT, {8}));
-			EsSrcWrite(EsSmpregDac1+1, SYSTEM.VAL(LONGINT, {14}));
-			EsSrcWrite(EsSmpregDac2, SYSTEM.VAL(LONGINT, {8}));
-			EsSrcWrite(EsSmpregDac2+1, SYSTEM.VAL(LONGINT, {14}));
+			EsSrcWrite(EsSmpregDac1, SYSTEM.VAL(SIGNED32, {8}));
+			EsSrcWrite(EsSmpregDac1+1, SYSTEM.VAL(SIGNED32, {14}));
+			EsSrcWrite(EsSmpregDac2, SYSTEM.VAL(SIGNED32, {8}));
+			EsSrcWrite(EsSmpregDac2+1, SYSTEM.VAL(SIGNED32, {14}));
 			(*Why not?*)
-			EsSrcWrite(EsSmpregAdc, SYSTEM.VAL(LONGINT, {8}));
-			EsSrcWrite(EsSmpregAdc+1, SYSTEM.VAL(LONGINT, {14}));
+			EsSrcWrite(EsSmpregAdc, SYSTEM.VAL(SIGNED32, {8}));
+			EsSrcWrite(EsSmpregAdc+1, SYSTEM.VAL(SIGNED32, {14}));
 
-			EsSrcWrite(EsSmpregVolAdc, SYSTEM.VAL(LONGINT, {12}));
-			EsSrcWrite(EsSmpregVolAdc+1, SYSTEM.VAL(LONGINT, {12}));
-			EsSrcWrite(EsSmpregVolDac1, SYSTEM.VAL(LONGINT, {12}));
-			EsSrcWrite(EsSmpregVolDac1+1, SYSTEM.VAL(LONGINT, {12}));
-			EsSrcWrite(EsSmpregVolDac2, SYSTEM.VAL(LONGINT, {12}));
-			EsSrcWrite(EsSmpregVolDac2+1, SYSTEM.VAL(LONGINT, {12}));
+			EsSrcWrite(EsSmpregVolAdc, SYSTEM.VAL(SIGNED32, {12}));
+			EsSrcWrite(EsSmpregVolAdc+1, SYSTEM.VAL(SIGNED32, {12}));
+			EsSrcWrite(EsSmpregVolDac1, SYSTEM.VAL(SIGNED32, {12}));
+			EsSrcWrite(EsSmpregVolDac1+1, SYSTEM.VAL(SIGNED32, {12}));
+			EsSrcWrite(EsSmpregVolDac2, SYSTEM.VAL(SIGNED32, {12}));
+			EsSrcWrite(EsSmpregVolDac2+1, SYSTEM.VAL(SIGNED32, {12}));
 
 			EsAdcRate(48000, 1); (* set the base (hardware) samplerate for recording *)
 			EsDacRate(48000, 2); (* set the base (hardware) samplerate for playback *)
 			(*EsDacRate(40100, 1);(* DAC1 is not used in this driver *) *)
-			Machine.Portout32(base+Es1371RegSmprate, SYSTEM.VAL(LONGINT, 0));
+			Machine.Portout32(base+Es1371RegSmprate, SYSTEM.VAL(SIGNED32, 0));
 
 	(*****************************************************)
 
@@ -727,27 +727,27 @@ TYPE
 			rloopcount := 0;
 			NEW(p2, Bsize);
 			loopcount := 0;
-			Machine.Portout32(base+Es1370RegControl, SYSTEM.VAL(LONGINT, {})); (* Disable all Channels *)
+			Machine.Portout32(base+Es1370RegControl, SYSTEM.VAL(SIGNED32, {})); (* Disable all Channels *)
 
 			sndbuf := Machine.PhysicalAdr(ADDRESSOF(pr2[0]), Bsize)(Machine.Address32);
 			IF sndbuf = -1 THEN KernelLog.String("not enough defragmented space"); END;
 
 
 			Machine.Portout8(base+Es1370RegMemPage, 0DX); (*1101*)
-			Machine.Portout32(base+30H, SYSTEM.VAL(LONGINT, sndbuf)); (* physical buf adress *)
+			Machine.Portout32(base+30H, SYSTEM.VAL(SIGNED32, sndbuf)); (* physical buf adress *)
 
-			Machine.Portout32(base+34H, SYSTEM.VAL(LONGINT, Bsize DIV 4-1)); (* size of buffer (in longwords -1) *)
+			Machine.Portout32(base+34H, SYSTEM.VAL(SIGNED32, Bsize DIV 4-1)); (* size of buffer (in longwords -1) *)
 
 			(* number of samples to playback until interrupt for ADC*)
 			(* set it to Bsize DIV 4-1 for 16bitmono/8bitstereo and to Bsize DIV 2-1 for 8bitmono *)
-			Machine.Portout32(base+Es1370RegAdcScount, SYSTEM.VAL(LONGINT, Bsize DIV 8-1));
+			Machine.Portout32(base+Es1370RegAdcScount, SYSTEM.VAL(SIGNED32, Bsize DIV 8-1));
 
 			(* enable interrupt and set dataformat for ADC*)
 			(* 14: LoopMode OFF, driver is always in loop mode *)
 			(* 4,5: 00:8BMono 01:8BStereo 10:16BM 11:16BS *)
 			(* 10: INTERRUPT ENABLE*)
 
-			EsState.sctrl := SYSTEM.VAL(LONGINT, {4, 5, 10}+SYSTEM.VAL(SET, EsState.sctrl));
+			EsState.sctrl := SYSTEM.VAL(SIGNED32, {4, 5, 10}+SYSTEM.VAL(SET, EsState.sctrl));
 			Machine.Portout32(base+Es1370RegSerialControl, EsState.sctrl);
 
 
@@ -755,19 +755,19 @@ TYPE
 			IF sndbuf = -1 THEN KernelLog.String("not enough defragmented space") END;
 
 			Machine.Portout8(base+Es1370RegMemPage, 0CX); (*1100*)
-			Machine.Portout32(base+38H, SYSTEM.VAL(LONGINT, sndbuf)); (*physical buf adress*)
+			Machine.Portout32(base+38H, SYSTEM.VAL(SIGNED32, sndbuf)); (*physical buf adress*)
 
-			Machine.Portout32(base+3CH, SYSTEM.VAL(LONGINT, Bsize DIV 4-1)); (* size of buffer (in longwords -1) *)
+			Machine.Portout32(base+3CH, SYSTEM.VAL(SIGNED32, Bsize DIV 4-1)); (* size of buffer (in longwords -1) *)
 
 			(* number of samples to record until interrupt for DAC2*)
 			(* set it to Bsize DIV 4-1 for 16bitmono/8bitstereo and to Bsize DIV 2-1 for 8bitmono *)
-			Machine.Portout32(base+Es1370RegDac2Scount, SYSTEM.VAL(LONGINT, Bsize DIV 8-1));
+			Machine.Portout32(base+Es1370RegDac2Scount, SYSTEM.VAL(SIGNED32, Bsize DIV 8-1));
 
 			(* enable interrupt and set dataformat for DAC2*)
 			(*14: LoopMode OFF, driver is always in loop mode*)
 			(*2,3: 00:8BMono 01:8BStereo 10:16BM 11:16BS *)
 			(*9: INTERRUPT ENABLE*)
-		 	EsState.sctrl := SYSTEM.VAL(LONGINT, {2, 3, 9} + SYSTEM.VAL(SET, EsState.sctrl));
+		 	EsState.sctrl := SYSTEM.VAL(SIGNED32, {2, 3, 9} + SYSTEM.VAL(SET, EsState.sctrl));
 			Machine.Portout32(base+Es1370RegSerialControl, EsState.sctrl)
 		END Initdrv;
 
@@ -784,14 +784,14 @@ TYPE
 			EsWrCd(10H, 4040H); (*Line In*)
 			EsWrCd(18H, 4040H); (*PCM Out*)
 
-			EsWrCd(1AH, SYSTEM.VAL(INTEGER, 5+5*256)); (*Record Source Stereo Mix*)
-			EsWrCd(1CH, SYSTEM.VAL(INTEGER, 0+0*256)); (*Record Gain*)
-			EsWrCd(1EH, SYSTEM.VAL(INTEGER, 0)); (*Record Gain Mic*)
+			EsWrCd(1AH, SYSTEM.VAL(SIGNED16, 5+5*256)); (*Record Source Stereo Mix*)
+			EsWrCd(1CH, SYSTEM.VAL(SIGNED16, 0+0*256)); (*Record Gain*)
+			EsWrCd(1EH, SYSTEM.VAL(SIGNED16, 0)); (*Record Gain Mic*)
 
 	(* alternatives:
-			EsWrCd(1AH, SYSTEM.VAL(INTEGER, 0)); (* Record Source Micro *)
-			EsWrCd(1CH, SYSTEM.VAL(INTEGER, 15+15*256)); (*Record Gain*)
-			EsWrCd(1EH, SYSTEM.VAL(INTEGER, 15)); (*Record Gain Mic*)
+			EsWrCd(1AH, SYSTEM.VAL(SIGNED16, 0)); (* Record Source Micro *)
+			EsWrCd(1CH, SYSTEM.VAL(SIGNED16, 15+15*256)); (*Record Gain*)
+			EsWrCd(1EH, SYSTEM.VAL(SIGNED16, 15)); (*Record Gain Mic*)
 	*)
 
 			IF Trace THEN KernelLog.String("Volume initialized"); KernelLog.Ln END
@@ -800,7 +800,7 @@ TYPE
 		PROCEDURE Finalize;
 		BEGIN
 			(* disable interrupt *)
-			Machine.Portout32(base+Es1370RegSerialControl, SYSTEM.VAL(LONGINT, {20}));
+			Machine.Portout32(base+Es1370RegSerialControl, SYSTEM.VAL(SIGNED32, {20}));
 			Objects.RemoveHandler(introbj.HandleInterrupt, Machine.IRQ0+irq);
 			time.Sleep(100); (* make sure interrup has terminated *)
 			IF Modules.shutdown = Modules.None THEN
@@ -809,7 +809,7 @@ TYPE
 		END Finalize;
 
 		PROCEDURE Init*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			Initdrv;
 			Initvol; (* initialise the hardware volume *)
@@ -851,9 +851,9 @@ TYPE
 		END Init;
 
 		PROCEDURE OpenPlayChannel*(VAR channel : SoundDevices.Channel;
-		samplingRate, samplingResolution, nofSubChannels, format : LONGINT;
-		VAR res : WORD);
-		VAR i, count : LONGINT;
+		samplingRate, samplingResolution, nofSubChannels, format : SIGNED32;
+		VAR res : INTEGER);
+		VAR i, count : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			channel := NIL;
 			count := 0;
@@ -886,9 +886,9 @@ TYPE
 		END OpenPlayChannel;
 
 		PROCEDURE OpenRecordChannel*(VAR channel : SoundDevices.Channel;
-		samplingRate, samplingResolution, nofSubChannels, format : LONGINT;
-		VAR res: WORD);
-		VAR i : LONGINT;
+		samplingRate, samplingResolution, nofSubChannels, format : SIGNED32;
+		VAR res: INTEGER);
+		VAR i : SIGNED32;
 		BEGIN
 			channel := NIL;
 			i := 0;
@@ -911,12 +911,12 @@ TYPE
 			END
 		END OpenRecordChannel;
 
-		PROCEDURE NofNativeFrequencies*():LONGINT;
+		PROCEDURE NofNativeFrequencies*():SIGNED32;
 		BEGIN
 			RETURN 1
 		END NofNativeFrequencies;
 
-		PROCEDURE GetNativeFrequency*(nr: LONGINT): LONGINT;
+		PROCEDURE GetNativeFrequency*(nr: SIGNED32): SIGNED32;
 		BEGIN
 			RETURN 48000
 		END GetNativeFrequency;
@@ -958,7 +958,7 @@ TYPE
 			END
 		END UnregisterMixerChangeListener;
 
-		PROCEDURE GetMixerChannel*(channelNr: LONGINT; VAR channel: SoundDevices.MixerChannel);
+		PROCEDURE GetMixerChannel*(channelNr: SIGNED32; VAR channel: SoundDevices.MixerChannel);
 		BEGIN
 			IF (channelNr<NumMixerChannels) & (channelNr>=0) THEN
 				channel := (mixerChannels[channelNr])
@@ -967,7 +967,7 @@ TYPE
 			END;
 		END GetMixerChannel;
 
-		PROCEDURE GetNofMixerChannels*() : LONGINT;
+		PROCEDURE GetNofMixerChannels*() : SIGNED32;
 		BEGIN
 			RETURN NumMixerChannels
 		END GetNofMixerChannels;
@@ -981,7 +981,7 @@ TYPE
 
 	(* interrupt handling Object *)
 	Introbj=OBJECT
-	VAR numplayer : LONGINT;
+	VAR numplayer : SIGNED32;
 		 driver : Driver;
 		VAR copy : BOOLEAN;
 
@@ -1022,7 +1022,7 @@ TYPE
 		END Activate;
 
 		PROCEDURE HandleInterrupt; (* interrupt handler *)
-		VAR r, where : LONGINT;
+		VAR r, where : SIGNED32;
 			sr, ssctrl : SET;
 		BEGIN {EXCLUSIVE}
 			Machine.Portin32(driver.base+Es1370RegStatus, r);
@@ -1039,7 +1039,7 @@ TYPE
 
 					driver.reccopy := TRUE;
 					ssctrl := SYSTEM.VAL(SET, driver.EsState.sctrl)-{10};
-					Machine.Portout32(driver.base+Es1370RegSerialControl, SYSTEM.VAL(LONGINT, ssctrl));
+					Machine.Portout32(driver.base+Es1370RegSerialControl, SYSTEM.VAL(SIGNED32, ssctrl));
 					Machine.Portout32(driver.base+Es1370RegSerialControl, driver.EsState.sctrl)
 				END;
 				IF 1 IN sr THEN (* DAC2 int pending *)
@@ -1052,12 +1052,12 @@ TYPE
 
 					driver.playcopy := TRUE;
 					ssctrl := SYSTEM.VAL(SET, driver.EsState.sctrl)-{9};
-					Machine.Portout32(driver.base+Es1370RegSerialControl, SYSTEM.VAL(LONGINT, ssctrl));
+					Machine.Portout32(driver.base+Es1370RegSerialControl, SYSTEM.VAL(SIGNED32, ssctrl));
 					Machine.Portout32(driver.base+Es1370RegSerialControl, driver.EsState.sctrl)
 				END;
 				IF 2 IN sr THEN (* DAC1 int pending, should never happen *)
 					ssctrl := SYSTEM.VAL(SET, driver.EsState.sctrl)-{8};
-					Machine.Portout32(driver.base+Es1370RegSerialControl, SYSTEM.VAL(LONGINT, ssctrl));
+					Machine.Portout32(driver.base+Es1370RegSerialControl, SYSTEM.VAL(SIGNED32, ssctrl));
 					Machine.Portout32(driver.base+Es1370RegSerialControl, driver.EsState.sctrl)
 				END
 			END
@@ -1085,13 +1085,13 @@ TYPE
 		END Setplaycopy;
 
 		(* make sure amplitude is in the allowed range *)
-		PROCEDURE Clip(VAR lsigned: LONGINT);
+		PROCEDURE Clip(VAR lsigned: SIGNED32);
 		BEGIN
-			IF lsigned >MAX(INTEGER) THEN
-				lsigned := MAX(INTEGER)
+			IF lsigned >MAX(SIGNED16) THEN
+				lsigned := MAX(SIGNED16)
 			END;
-			IF lsigned <MIN(INTEGER) THEN
-				lsigned := MIN(INTEGER)
+			IF lsigned <MIN(SIGNED16) THEN
+				lsigned := MIN(SIGNED16)
 			END
 		END Clip;
 
@@ -1122,11 +1122,11 @@ TYPE
 			END eightmono;
 
 			(* fills first or second half of intern buffer *)
-			PROCEDURE Playcopy(from, to : LONGINT);
-			VAR signed : INTEGER;
-				lsigned, i, j, l : LONGINT;
-				nr : LONGINT; (* ratedone MOD 48000 *)
-				temp : LONGINT;
+			PROCEDURE Playcopy(from, to : SIGNED32);
+			VAR signed : SIGNED16;
+				lsigned, i, j, l : SIGNED32;
+				nr : SIGNED32; (* ratedone MOD 48000 *)
+				temp : SIGNED32;
 
 				PROCEDURE Readnextsample;
 				BEGIN
@@ -1208,9 +1208,9 @@ TYPE
 
 							IF first THEN (* don't have to mix *)
 								FOR l := 0 TO 1 DO
-									signed := SYSTEM.VAL(INTEGER, driver.playchannels[j].sample[2*l]);
+									signed := SYSTEM.VAL(SIGNED16, driver.playchannels[j].sample[2*l]);
 									lsigned := LONG(signed);
-									signed := SYSTEM.VAL(INTEGER, driver.playchannels[j].oldsample[2*l]);
+									signed := SYSTEM.VAL(SIGNED16, driver.playchannels[j].oldsample[2*l]);
 									lsigned := ENTIER((1-driver.playchannels[j].ratedone/48000)*
 									LONG(signed)+(driver.playchannels[j].ratedone/48000)*lsigned+0.5);
 
@@ -1223,15 +1223,15 @@ TYPE
 								END
 							ELSE (* mix with current buffercontent *)
 								FOR l := 0 TO 1 DO
-									signed := SYSTEM.VAL(INTEGER, driver.playchannels[j].sample[2*l]);
+									signed := SYSTEM.VAL(SIGNED16, driver.playchannels[j].sample[2*l]);
 									lsigned := LONG(signed);
-									signed := SYSTEM.VAL(INTEGER, driver.playchannels[j].oldsample[2*l]);
+									signed := SYSTEM.VAL(SIGNED16, driver.playchannels[j].oldsample[2*l]);
 									lsigned := ENTIER((1-driver.playchannels[j].ratedone/48000)*
 									LONG(signed)+(driver.playchannels[j].ratedone/48000)*lsigned+0.5);
 
 									lsigned := lsigned*(driver.playchannels[j].vol) DIV 256 (*DIV 32*);
 
-									signed := SYSTEM.VAL(INTEGER, driver.p2[i+2*l]);
+									signed := SYSTEM.VAL(SIGNED16, driver.p2[i+2*l]);
 									lsigned := LONG(signed) + lsigned;
 
 									Clip(lsigned);
@@ -1250,14 +1250,14 @@ TYPE
 					IF ~ (5 IN SYSTEM.VAL(SET, driver.EsState.rctrl)) THEN
 						IF Trace THEN KernelLog.String("Enabling DAC2 Interrupt"); KernelLog.Ln END;
 						Machine.Portout8(driver.base+Es1370RegMemPage, 0CX); (*1100*)
-						Machine.Portout32(driver.base+3CH, SYSTEM.VAL(LONGINT, Bsize DIV 4-1));
+						Machine.Portout32(driver.base+3CH, SYSTEM.VAL(SIGNED32, Bsize DIV 4-1));
 						(*resets the counter of transferred longwords to 0*)
-						driver.EsState.rctrl := SYSTEM.VAL(LONGINT, {5}+SYSTEM.VAL(SET, driver.EsState.rctrl));
+						driver.EsState.rctrl := SYSTEM.VAL(SIGNED32, {5}+SYSTEM.VAL(SET, driver.EsState.rctrl));
 						Machine.Portout32(driver.base+Es1370RegControl, driver.EsState.rctrl); (*Dac2En*)
 					END;
 				ELSE (* make sure playing is stopped *)
 					IF (5 IN SYSTEM.VAL(SET, driver.EsState.rctrl)) THEN
-						temp := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, driver.EsState.rctrl)-{5});
+						temp := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, driver.EsState.rctrl)-{5});
 						Machine.Portout32(driver.base+Es1370RegControl, temp); (*Dac2Dis*)
 						FOR i := 0 TO Bsize-1 DO driver.p2[i] := CHR(0) END;
 						driver.EsState.rctrl := temp
@@ -1266,11 +1266,11 @@ TYPE
 				driver.bufferobj.Setinplaycopy(FALSE)
 			END Playcopy;
 
-			PROCEDURE Reccopy(from, to: LONGINT);
+			PROCEDURE Reccopy(from, to: SIGNED32);
 			VAR sample : Sample;
-				signed : INTEGER;
-				lsigned, i, j, l : LONGINT;
-				nr : LONGINT; (* ratedone MOD 48000 *)
+				signed : SIGNED16;
+				lsigned, i, j, l : SIGNED32;
+				nr : SIGNED32; (* ratedone MOD 48000 *)
 
 			BEGIN {EXCLUSIVE}
 				FOR j := 0 TO 31 DO
@@ -1301,7 +1301,7 @@ TYPE
 									sample[3] := driver.pr2[i+3];
 
 									FOR l := 0 TO 1 DO
-										signed := SYSTEM.VAL(INTEGER, sample[2*l]);
+										signed := SYSTEM.VAL(SIGNED16, sample[2*l]);
 										lsigned := LONG(signed);
 										lsigned := lsigned*(driver.recordchannels[j].vol) DIV 256;
 										Clip(lsigned);
@@ -1324,8 +1324,8 @@ TYPE
 										END
 									ELSE
 										IF driver.recordchannels[j].nofSubChannels=1 THEN
-											lsigned := SYSTEM.VAL(INTEGER, sample[0]);
-											lsigned := lsigned+SYSTEM.VAL(INTEGER, sample[2]);
+											lsigned := SYSTEM.VAL(SIGNED16, sample[0]);
+											lsigned := lsigned+SYSTEM.VAL(SIGNED16, sample[2]);
 											signed := SHORT(lsigned DIV 2);
 											driver.recordchannels[j].first.content.data[driver.recordchannels[j].pos]
 											:= CHR(signed MOD 256);
@@ -1353,15 +1353,15 @@ TYPE
 				IF ~driver.rallsilent THEN (* make sure recording is in progress *)
 					IF ~ (4 IN SYSTEM.VAL(SET, driver.EsState.rctrl)) THEN
 						Machine.Portout8(driver.base+Es1370RegMemPage,  0DX); (*1101*)
-						Machine.Portout32(driver.base+34H, SYSTEM.VAL(LONGINT, Bsize DIV 4-1));
+						Machine.Portout32(driver.base+34H, SYSTEM.VAL(SIGNED32, Bsize DIV 4-1));
 						(*resets the counter of transferred longwords to 0*)
 
-						driver.EsState.rctrl := SYSTEM.VAL(LONGINT, {4}+SYSTEM.VAL(SET, driver.EsState.rctrl));
+						driver.EsState.rctrl := SYSTEM.VAL(SIGNED32, {4}+SYSTEM.VAL(SET, driver.EsState.rctrl));
 						Machine.Portout32(driver.base+Es1370RegControl, driver.EsState.rctrl) (*AdcEn*)
 					END
 				ELSE (* make sure recording is stopped *)
 					IF (4 IN SYSTEM.VAL(SET, driver.EsState.rctrl)) THEN
-						driver.EsState.rctrl := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, driver.EsState.rctrl)-{4});
+						driver.EsState.rctrl := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, driver.EsState.rctrl)-{4});
 						Machine.Portout32(driver.base+Es1370RegControl, driver.EsState.rctrl); (*AdcDis*)
 						FOR i := 0 TO Bsize-1 DO driver.pr2[i] := CHR(0) END
 					END
@@ -1400,7 +1400,7 @@ TYPE
 	END Introbj;
 
 VAR installedDrivers: Driver;
-	installed: LONGINT;
+	installed: SIGNED32;
 
 PROCEDURE DefaultBufferListener(buffer: SoundDevices.Buffer);
 END DefaultBufferListener;
@@ -1415,8 +1415,8 @@ BEGIN
 	installed := 0;
 END Cleanup;
 
-PROCEDURE ScanPCI(vendor, device: LONGINT; name: Plugins.Name);
-VAR index, bus, dev, fct, base, irq, i : LONGINT; res: WORD;
+PROCEDURE ScanPCI(vendor, device: SIGNED32; name: Plugins.Name);
+VAR index, bus, dev, fct, base, irq, i : SIGNED32; res: INTEGER;
 	driver : Driver;
 	drivername : Plugins.Name;
 BEGIN

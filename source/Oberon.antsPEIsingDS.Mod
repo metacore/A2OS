@@ -32,8 +32,8 @@ TYPE
 	tModel* = POINTER TO tModelDesc;
 	tModelDesc* = RECORD (antsModels.tModelDesc);
 	(* a0  a[0] ,a1 a[1] ,a2 a[2] ,a3 a[3] ,a4 a[4] ,a5 a[5] ,b2 a[6] ,b4 a[7] ,b5 a[8] ,g0 a[9] ,g1 a[10] ,g2 a[11] ,d a[12] ,
-		e  a[13] ,pen a[14] : LONGREAL; *)
-		a: ARRAY 14 OF LONGREAL;
+		e  a[13] ,pen a[14] : FLOAT64; *)
+		a: ARRAY 14 OF FLOAT64;
 
 		(* Parameters:
 		a[0] : No Edges  .
@@ -55,25 +55,25 @@ TYPE
 		cp, ce: antsCaches.FullCache
 	END;
 VAR
-	GM: tModel;  depth: INTEGER;
+	GM: tModel;  depth: SIGNED16;
 
 	PROCEDURE Open*( M: tModel );
 	BEGIN
 		M.cp := NIL;  M.ce := NIL;  M.synced := FALSE
 	END Open;
 
-	PROCEDURE dist( e1, e2: INTEGER ): LONGREAL;
+	PROCEDURE dist( e1, e2: SIGNED16 ): FLOAT64;
 	BEGIN
 		RETURN -((e1 - e2) * (e1 - e2) / depth)
 	END dist;
 
-	PROCEDURE f1( e1, e2, e3, e4: INTEGER ): LONGREAL;
+	PROCEDURE f1( e1, e2, e3, e4: SIGNED16 ): FLOAT64;
 	(*
 	| e4
 	- e1   -e2
 	| e3
 	*)
-	VAR sum: INTEGER;
+	VAR sum: SIGNED16;
 	BEGIN
 		sum := e1 + e2 + e3 + e4;
 		IF sum = 0 THEN RETURN GM.a[0]
@@ -85,13 +85,13 @@ VAR
 		END
 	END f1;
 
-	PROCEDURE f2( e1, e2, e3, e4: INTEGER ): LONGREAL;
+	PROCEDURE f2( e1, e2, e3, e4: SIGNED16 ): FLOAT64;
 	(*
 	- e4
 	| e1          |e2
 	- e3
 	*)
-	VAR sum: INTEGER;
+	VAR sum: SIGNED16;
 	BEGIN
 
 		sum := e1 + e2 + e3 + e4;
@@ -104,40 +104,40 @@ VAR
 		END
 	END f2;
 
-	PROCEDURE f3( e, p1, p2: INTEGER ): LONGREAL;
+	PROCEDURE f3( e, p1, p2: SIGNED16 ): FLOAT64;
 	(* p1 * |e * p2 *)
 	BEGIN
 		IF e = 1 THEN RETURN dist( p1, p2 ) * GM.a[9] ELSE RETURN dist( p1, p2 ) * GM.a[10] END
 	END f3;
 
-	PROCEDURE f4( p: INTEGER ): LONGREAL;
+	PROCEDURE f4( p: SIGNED16 ): FLOAT64;
 	BEGIN
 		RETURN GM.a[11] * p
 	END f4;
 
-	PROCEDURE f5( e: INTEGER ): LONGREAL;
+	PROCEDURE f5( e: SIGNED16 ): FLOAT64;
 	BEGIN
 		RETURN GM.a[12] * e
 	END f5;
 
-	PROCEDURE f6( p1, p2: INTEGER ): LONGREAL;
+	PROCEDURE f6( p1, p2: SIGNED16 ): FLOAT64;
 	BEGIN
 		RETURN GM.a[13] * dist( p1, p2 )
 	END f6;
 
-	PROCEDURE UP( VAR a: ARRAY OF INTEGER ): LONGREAL;
+	PROCEDURE UP( VAR a: ARRAY OF SIGNED16 ): FLOAT64;
 	BEGIN
 		RETURN f3( a[5], a[0], a[1] ) + f3( a[6], a[0], a[2] ) + f3( a[7], a[0], a[3] ) + f3( a[8], a[0], a[4] ) + f4( a[0] ) +
 				    f6( a[0], a[9] )
 	END UP;
 
-	PROCEDURE EP( cooling: LONGREAL;  VAR a: ARRAY OF INTEGER ): LONGREAL;
+	PROCEDURE EP( cooling: FLOAT64;  VAR a: ARRAY OF SIGNED16 ): FLOAT64;
 	BEGIN
 		RETURN Math.exp( cooling * UP( a ) );
 	END EP;
 
-	PROCEDURE DistriFromLocalChar( F: antsPEV.tField;  y, x: LONGINT );
-	VAR po, p, p1, p2, p3, p4, e1, e2, e3, e4: INTEGER;  nges, prob, rand: LONGREAL;
+	PROCEDURE DistriFromLocalChar( F: antsPEV.tField;  y, x: SIGNED32 );
+	VAR po, p, p1, p2, p3, p4, e1, e2, e3, e4: SIGNED16;  nges, prob, rand: FLOAT64;
 	BEGIN
 		(* insert penalization to AOrig here *)
 		po := F.Aorig.A[y, x];  antsPEV.EGetPNeighbours( F, y, x, p, p1, p2, p3, p4, e1, e2, e3, e4 );  nges := 0;
@@ -154,9 +154,9 @@ VAR
 	END DistriFromLocalChar;
 
 	PROCEDURE FastestC( F: antsPEV.tField );
-	VAR y, x, w, h, offset: LONGINT;  p: INTEGER;
-		a: ARRAY 11 OF INTEGER;
-		rand: LONGREAL;  c: antsCaches.FullCache;  A, H, V, O: antsArrayObjects.tINTEGERArray;
+	VAR y, x, w, h, offset: SIGNED32;  p: SIGNED16;
+		a: ARRAY 11 OF SIGNED16;
+		rand: FLOAT64;  c: antsCaches.FullCache;  A, H, V, O: antsArrayObjects.tINTEGERArray;
 	BEGIN
 		c := GM.cp;  A := F.A.A;  V := F.Ev.A;  H := F.Eh.A;  O := F.Aorig.A;  w := F.w;  h := F.h;
 		FOR y := 0 TO h - 1 DO
@@ -171,19 +171,19 @@ VAR
 		END;
 	END FastestC;
 
-	PROCEDURE UE( VAR a: ARRAY OF INTEGER ): LONGREAL;
+	PROCEDURE UE( VAR a: ARRAY OF SIGNED16 ): FLOAT64;
 	BEGIN
 		RETURN f1( a[1], a[0], a[3], a[4] ) + f1( a[0], a[2], a[5], a[6] ) + f2( a[0], a[7], a[3], a[5] ) + f2( a[0], a[8], a[4], a[6] ) +
 				    f3( a[0], a[9], a[10] ) + f5( a[0] );
 	END UE;
 
-	PROCEDURE EE( cooling: LONGREAL;  VAR a: ARRAY OF INTEGER ): LONGREAL;
+	PROCEDURE EE( cooling: FLOAT64;  VAR a: ARRAY OF SIGNED16 ): FLOAT64;
 	BEGIN
 		RETURN Math.exp( cooling * UE( a ) );
 	END EE;
 
-	PROCEDURE DistriFromLocalCharE( F: antsPEV.tField;  y, x: LONGINT );
-	VAR e, p1, p2, e1, e2, e3, e4, e5, e6, e7, e8: INTEGER;  nges, ges, prob: LONGREAL;
+	PROCEDURE DistriFromLocalCharE( F: antsPEV.tField;  y, x: SIGNED32 );
+	VAR e, p1, p2, e1, e2, e3, e4, e5, e6, e7, e8: SIGNED16;  nges, ges, prob: FLOAT64;
 	BEGIN
 		antsPEV.EGetENeighboursH( F, y, x, e, p1, p2 );
 		antsPEV.E2GetENeighboursH( F, y, x, e, e1, e2, e3, e4, e5, e6, e7, e8 );
@@ -201,8 +201,8 @@ VAR
 	END DistriFromLocalCharE;
 
 	PROCEDURE FastestEC( F: antsPEV.tField );
-	VAR y, x, w, h, offset: LONGINT;
-		a: ARRAY 11 OF INTEGER;
+	VAR y, x, w, h, offset: SIGNED32;
+		a: ARRAY 11 OF SIGNED16;
 		c: antsCaches.FullCache;  A, H, V: antsArrayObjects.tINTEGERArray;
 	BEGIN
 		c := GM.ce;  A := F.A.A;  H := F.Eh.A;  V := F.Ev.A;  w := F.w;  h := F.h;
@@ -220,9 +220,9 @@ VAR
 		END;
 	END FastestEC;
 
-	PROCEDURE CreateCaches( m: tModel;  d: INTEGER );
-	VAR A: ARRAY 11 OF INTEGER;
-		i: INTEGER;  offset: LONGINT;  c: antsCaches.FullCache;  s: LONGREAL;
+	PROCEDURE CreateCaches( m: tModel;  d: SIGNED16 );
+	VAR A: ARRAY 11 OF SIGNED16;
+		i: SIGNED16;  offset: SIGNED32;  c: antsCaches.FullCache;  s: FLOAT64;
 	BEGIN
 		FOR i := 0 TO 4 DO A[i] := d;  END;
 		FOR i := 5 TO 8 DO A[i] := 2 END;
@@ -289,15 +289,15 @@ VAR
 		antsPEV.DoUniform( s.A( antsPEV.tField ) );
 	END Uniform;
 
-	PROCEDURE WriteArray( VAR R: Files.Rider;  VAR A: ARRAY OF LONGREAL );
-	VAR i: LONGINT;
+	PROCEDURE WriteArray( VAR R: Files.Rider;  VAR A: ARRAY OF FLOAT64 );
+	VAR i: SIGNED32;
 	BEGIN
 		Files.WriteLInt( R, LEN( A ) );  aM.dSISI( "Writing len at pos", LEN( A ), "  ", Files.Pos( R ) );
 		FOR i := 0 TO LEN( A ) - 1 DO Files.WriteLReal( R, A[i] );  END;
 	END WriteArray;
 
-	PROCEDURE ReadArray( VAR R: Files.Rider;  VAR A: ARRAY OF LONGREAL );
-	VAR i, len: LONGINT;
+	PROCEDURE ReadArray( VAR R: Files.Rider;  VAR A: ARRAY OF FLOAT64 );
+	VAR i, len: SIGNED32;
 	BEGIN
 		Files.ReadLInt( R, len );  aM.dSISI( "Reading len at pos", len, "   ", Files.Pos( R ) );
 		FOR i := 0 TO len - 1 DO Files.ReadLReal( R, A[i] );  END;
@@ -309,14 +309,14 @@ VAR
 	END StoreM;
 
 	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  ReadArray( R, s.a );
 	END LoadM;
 
-	PROCEDURE ArrayHandleAttribute( VAR M: Objects.AttrMsg;  prefix: ARRAY OF CHAR;  VAR array: ARRAY OF LONGREAL ): BOOLEAN;
+	PROCEDURE ArrayHandleAttribute( VAR M: Objects.AttrMsg;  prefix: ARRAY OF CHAR;  VAR array: ARRAY OF FLOAT64 ): BOOLEAN;
 	VAR cur: ARRAY 64 OF CHAR;
-		i: LONGINT;  len: LONGINT;
+		i: SIGNED32;  len: SIGNED32;
 	BEGIN
 		len := LEN( array );
 		IF M.id = Objects.enum THEN
@@ -393,10 +393,10 @@ VAR
 
 	PROCEDURE NewModel*;
 	VAR l: antsCommands.tScanList;  name: vyCG.tNameArray;  M: tModel;
-		a: ARRAY 14 OF LONGREAL;
-		i: LONGINT;
+		a: ARRAY 14 OF FLOAT64;
+		i: SIGNED32;
 	BEGIN
-		l := antsCommands.ScanFromPar( "name= NAME a0=REAL a1=REAL a2=REAL a3=REAL a4=REAL a5=REAL b2=REAL b4=REAL b5=REAL g1=REAL g2=REAL d=REAL e=REAL pen=REAL" );
+		l := antsCommands.ScanFromPar( "name= NAME a0=FLOAT32 a1=FLOAT32 a2=FLOAT32 a3=FLOAT32 a4=FLOAT32 a5=FLOAT32 b2=FLOAT32 b4=FLOAT32 b5=FLOAT32 g1=FLOAT32 g2=FLOAT32 d=FLOAT32 e=FLOAT32 pen=FLOAT32" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectRealFromKeyword( l, "a0", a[0] ) &
 		    antsCommands.ExpectRealFromKeyword( l, "a1", a[1] ) & antsCommands.ExpectRealFromKeyword( l, "a2", a[2] ) &
 		    antsCommands.ExpectRealFromKeyword( l, "a3", a[3] ) & antsCommands.ExpectRealFromKeyword( l, "a4", a[4] ) &

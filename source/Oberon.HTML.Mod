@@ -27,7 +27,7 @@ VAR
 	sep: CHAR;
 
 PROCEDURE S(s: ARRAY OF CHAR);
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE s[i] # 0X DO Files.Write(out, s[i]); INC(i) END
@@ -39,7 +39,7 @@ PROCEDURE L; BEGIN Files.Write(out, sep); END L;
 
 (* Check if font matches type.  type = digit { digit } ("." | "b" | "i"). *)
 PROCEDURE MatchFont(font: ARRAY OF CHAR;  type: ARRAY OF CHAR): BOOLEAN;
-VAR i, j: LONGINT;
+VAR i, j: SIGNED32;
 BEGIN
 	i := 0;
 	WHILE (font[i] # 0X) & ((font[i] < "0") OR (font[i] > "9")) DO	(* skip name *)
@@ -53,8 +53,8 @@ BEGIN
 END MatchFont;
 
 (* Delimit a paragraph: begins at lastnl and ends at end *)
-PROCEDURE GetPara(T: Texts.Text; VAR R: Texts.Reader; VAR beg, end: LONGINT; VAR typ: SHORTINT);
-VAR ch, firstch: CHAR; firstfnt: Objects.Library; firstcol: INTEGER; lastnl: LONGINT;
+PROCEDURE GetPara(T: Texts.Text; VAR R: Texts.Reader; VAR beg, end: SIGNED32; VAR typ: SIGNED8);
+VAR ch, firstch: CHAR; firstfnt: Objects.Library; firstcol: SIGNED16; lastnl: SIGNED32;
 BEGIN
 	beg := Texts.Pos(R); end := beg; lastnl := beg;
 
@@ -89,7 +89,7 @@ BEGIN
 	END
 END GetPara;
 
-PROCEDURE WriteStretch(T: Texts.Text; beg, end: LONGINT);
+PROCEDURE WriteStretch(T: Texts.Text; beg, end: SIGNED32);
 VAR R: Texts.Reader; ch: CHAR; lastlib: Objects.Library;
 BEGIN
 	IF end > beg THEN
@@ -130,9 +130,9 @@ BEGIN
 	END
 END WriteStretch;
 
-PROCEDURE WritePara(T: Texts.Text; beg, end: LONGINT);
-VAR R: Texts.Reader; ch: CHAR; col: INTEGER;
-	pos, lstart: LONGINT; anchor: ARRAY 512 OF CHAR; apos: INTEGER;
+PROCEDURE WritePara(T: Texts.Text; beg, end: SIGNED32);
+VAR R: Texts.Reader; ch: CHAR; col: SIGNED16;
+	pos, lstart: SIGNED32; anchor: ARRAY 512 OF CHAR; apos: SIGNED16;
 BEGIN col := -1; pos := beg; anchor := "";
 	Texts.OpenReader(R, T, beg);
 	Texts.Read(R, ch);
@@ -161,8 +161,8 @@ BEGIN col := -1; pos := beg; anchor := "";
 	WriteStretch(T, beg, end)
 END WritePara;
 
-PROCEDURE GetPrefix(T: Texts.Text; VAR beg, end: LONGINT; VAR s: ARRAY OF CHAR);
-VAR R: Texts.Reader; old: LONGINT; ch: CHAR; i: INTEGER;
+PROCEDURE GetPrefix(T: Texts.Text; VAR beg, end: SIGNED32; VAR s: ARRAY OF CHAR);
+VAR R: Texts.Reader; old: SIGNED32; ch: CHAR; i: SIGNED16;
 BEGIN
 	old := beg; i := 0;
 	Texts.OpenReader(R, T, beg);
@@ -177,8 +177,8 @@ BEGIN
 	END
 END GetPrefix;
 
-PROCEDURE ConvertText(T: Texts.Text; start: LONGINT; VAR filename: ARRAY OF CHAR);
-VAR R: Texts.Reader; beg, end, nbeg, nend: LONGINT; typ, ntyp: SHORTINT; body: BOOLEAN;
+PROCEDURE ConvertText(T: Texts.Text; start: SIGNED32; VAR filename: ARRAY OF CHAR);
+VAR R: Texts.Reader; beg, end, nbeg, nend: SIGNED32; typ, ntyp: SIGNED8; body: BOOLEAN;
 
 	PROCEDURE StartBody;
 	BEGIN
@@ -261,7 +261,7 @@ END ConvertText;
 
 (** Show a preview of the HTML text in a text viewer - Processes ONLY one text! *)
 PROCEDURE Show*;
-VAR S: Texts.Scanner; T, t: Texts.Text; time, beg, end: LONGINT;
+VAR S: Texts.Scanner; T, t: Texts.Text; time, beg, end: SIGNED32;
 	filename: ARRAY 64 OF CHAR; f: Files.File;
 BEGIN
 	sep := 0DX;
@@ -296,11 +296,11 @@ BEGIN
 END Show;
 
 PROCEDURE Compile*;
-	VAR S: Texts.Scanner; T: Texts.Text; filename: ARRAY 64 OF CHAR; f: Files.File; beg, end, time: LONGINT;
+	VAR S: Texts.Scanner; T: Texts.Text; filename: ARRAY 64 OF CHAR; f: Files.File; beg, end, time: SIGNED32;
 
 	PROCEDURE CompileT;
-		VAR R: Texts.Reader; beg, end: LONGINT; typ: SHORTINT;
-				res, i: INTEGER; bak: ARRAY 64 OF CHAR;
+		VAR R: Texts.Reader; beg, end: SIGNED32; typ: SIGNED8;
+				res, i: SIGNED16; bak: ARRAY 64 OF CHAR;
 	BEGIN
 		IF T.len > 0 THEN
 		(* Get the file name from the source text, at the beginning i.e. pos 0 *)
@@ -340,7 +340,7 @@ BEGIN
 			CompileT()
 		END
 	ELSE
-		end := MAX(LONGINT) - 100;
+		end := MAX(SIGNED32) - 100;
 		IF (S.class = Texts.Char) & (S.c = "^") THEN
 			Oberon.GetSelection(T, beg, end, time);
 			IF time >= 0 THEN Texts.OpenScanner(S, T, beg); Texts.Scan(S) END

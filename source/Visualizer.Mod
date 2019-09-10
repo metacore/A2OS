@@ -164,12 +164,12 @@ TYPE
 
 	ModuleArray = POINTER TO ARRAY OF ModuleEntry;
 
-	EnumeratorProc = PROCEDURE {DELEGATE} (entry : ModuleEntry; indent : LONGINT);
+	EnumeratorProc = PROCEDURE {DELEGATE} (entry : ModuleEntry; indent : SIGNED32);
 
 	ModuleList = OBJECT
 	VAR
 		head : ModuleEntry;
-		nofEntries : LONGINT;
+		nofEntries : SIGNED32;
 
 		PROCEDURE Add(CONST name : ARRAY OF CHAR; module : ModuleParser.Module) : BOOLEAN;
 		VAR entry : ModuleEntry;
@@ -186,7 +186,7 @@ TYPE
 		END Add;
 
 		PROCEDURE GetAll() : ModuleArray;
-		VAR array : ModuleArray; entry : ModuleEntry; i : LONGINT;
+		VAR array : ModuleArray; entry : ModuleEntry; i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF (nofEntries > 0) THEN
 				NEW(array, nofEntries);
@@ -202,7 +202,7 @@ TYPE
 			RETURN array;
 		END GetAll;
 
-		PROCEDURE Enumerate(proc : EnumeratorProc; indent : LONGINT);
+		PROCEDURE Enumerate(proc : EnumeratorProc; indent : SIGNED32);
 		VAR array : ModuleArray; i : SIZE;
 		BEGIN
 			array := GetAll();
@@ -228,14 +228,14 @@ TYPE
 			RETURN entry;
 		END FindByNameX;
 
-		PROCEDURE InclFlag(CONST name : ARRAY OF CHAR; flag : LONGINT);
+		PROCEDURE InclFlag(CONST name : ARRAY OF CHAR; flag : SIGNED32);
 		VAR entry : ModuleEntry;
 		BEGIN {EXCLUSIVE}
 			entry := FindByNameX(name);
 			IF (entry # NIL) THEN INCL(entry.flags, flag); END;
 		END InclFlag;
 
-		PROCEDURE ExclFlag(CONST name : ARRAY OF CHAR; flag : LONGINT);
+		PROCEDURE ExclFlag(CONST name : ARRAY OF CHAR; flag : SIGNED32);
 		VAR entry : ModuleEntry;
 		BEGIN {EXCLUSIVE}
 			entry := FindByNameX(name);
@@ -252,7 +252,7 @@ TYPE
 
 	Edge = POINTER TO RECORD
 		from, to : ARRAY 128 OF CHAR;
-		count : LONGINT;
+		count : SIGNED32;
 		next : Edge;
 	END;
 
@@ -310,15 +310,15 @@ TYPE
 		list : List;
 		modules : ModuleList;
 
-		types, variables, procedures, hasA, dependencies : LONGINT; (* Enumeration:  None | Public | All *)
+		types, variables, procedures, hasA, dependencies : SIGNED32; (* Enumeration:  None | Public | All *)
 		showAllTypes : BOOLEAN;
-		mode : LONGINT;
+		mode : SIGNED32;
 
 		hasAEdges, dependsOnEdges : EdgeList;
 
 		excludedModules : Strings.StringArray;
 
-		state : LONGINT;
+		state : SIGNED32;
 
 		PROCEDURE &Init(out : Streams.Writer); (* private *)
 		BEGIN
@@ -486,7 +486,7 @@ TYPE
 			END;
 		END FieldDecl;
 
-		PROCEDURE TypeDecl(typeDecl : ModuleParser.TypeDecl; indent : LONGINT);
+		PROCEDURE TypeDecl(typeDecl : ModuleParser.TypeDecl; indent : SIGNED32);
 		BEGIN
 			ASSERT(typeDecl # NIL);
 			FixTypeDeclName(typeDecl);
@@ -543,7 +543,7 @@ TYPE
 			END;
 		END TypeDecl;
 
-		PROCEDURE Module(module : ModuleParser.Module; indent : LONGINT);
+		PROCEDURE Module(module : ModuleParser.Module; indent : SIGNED32);
 		BEGIN
 			ASSERT(module # NIL);
 			Indent(indent); out.String("subgraph cluster"); out.String(module.ident.name^); out.String(" {"); out.Ln;
@@ -555,7 +555,7 @@ TYPE
 			Indent(indent); out.String("}"); out.Ln;
 		END Module;
 
-		PROCEDURE GenerateModuleNode(module : ModuleParser.Module; indent : LONGINT);
+		PROCEDURE GenerateModuleNode(module : ModuleParser.Module; indent : SIGNED32);
 		BEGIN
 			ASSERT(module # NIL);
 			IF (module.declSeq # NIL) THEN
@@ -575,7 +575,7 @@ TYPE
 			END;
 		END GenerateModuleNode;
 
-		PROCEDURE GenerateNodes(module : ModuleParser.Module; indent : LONGINT);
+		PROCEDURE GenerateNodes(module : ModuleParser.Module; indent : SIGNED32);
 		VAR typeDecl : ModuleParser.TypeDecl;
 		BEGIN
 			ASSERT(module # NIL);
@@ -592,13 +592,13 @@ TYPE
 			END;
 		END GenerateNodes;
 
-		PROCEDURE AddEdge(CONST from, to : ARRAY OF CHAR; indent : LONGINT);
+		PROCEDURE AddEdge(CONST from, to : ARRAY OF CHAR; indent : SIGNED32);
 		BEGIN
 			Indent(indent);
 			out.Char('"'); out.String(from); out.String('" -> "'); out.String(to); out.Char('"'); out.Ln;
 		END AddEdge;
 
-		PROCEDURE GenerateHasAEdges(entry : ModuleEntry; indent : LONGINT);
+		PROCEDURE GenerateHasAEdges(entry : ModuleEntry; indent : SIGNED32);
 		VAR
 			typeDecl : ModuleParser.TypeDecl;
 
@@ -717,7 +717,7 @@ TYPE
 			END;
 		END GenerateHasAEdges;
 
-		PROCEDURE GenerateDependsOnEdges(entry : ModuleEntry; indent : LONGINT);
+		PROCEDURE GenerateDependsOnEdges(entry : ModuleEntry; indent : SIGNED32);
 		VAR typeDecl : ModuleParser.TypeDecl;
 
 			PROCEDURE CheckProcedures(procDecl : ModuleParser.ProcDecl);
@@ -782,7 +782,7 @@ TYPE
 			END;
 		END GenerateDependsOnEdges;
 
-		PROCEDURE GenerateEdges(entry : ModuleEntry; indent : LONGINT);
+		PROCEDURE GenerateEdges(entry : ModuleEntry; indent : SIGNED32);
 		VAR typeDecl : ModuleParser.TypeDecl; object : ModuleParser.Object; record : ModuleParser.Record; name, name2 : Strings.String;
 
 			PROCEDURE GetRecordName(record : ModuleParser.Record) : Strings.String;
@@ -843,7 +843,7 @@ TYPE
 			END;
 		END GenerateEdges;
 
-		PROCEDURE AddSuperTypesSimple(entry : ModuleEntry; indent : LONGINT);
+		PROCEDURE AddSuperTypesSimple(entry : ModuleEntry; indent : SIGNED32);
 		VAR superClass : ModuleParser.Object; superRecord : ModuleParser.Record; typeDecl : ModuleParser.TypeDecl;
 		BEGIN
 			IF (AddSuperType IN entry.flags) & (entry.module # NIL) & (entry.module.declSeq # NIL) & (entry.module.declSeq.typeDecl # NIL) THEN
@@ -879,7 +879,7 @@ TYPE
 			END;
 		END AddSuperTypesSimple;
 
-		PROCEDURE AddSuperTypeModulesToList(entry : ModuleEntry; indent : LONGINT);
+		PROCEDURE AddSuperTypeModulesToList(entry : ModuleEntry; indent : SIGNED32);
 		VAR
 			superClass : ModuleParser.Object; superRecord : ModuleParser.Record;
 			typeDecl : ModuleParser.TypeDecl;
@@ -942,7 +942,7 @@ TYPE
 			END;
 		END AddSuperTypeModulesToList;
 
-		PROCEDURE AddUsedTypeModulesToList(entry : ModuleEntry; ident : LONGINT);
+		PROCEDURE AddUsedTypeModulesToList(entry : ModuleEntry; ident : SIGNED32);
 		VAR
 			typeDecl : ModuleParser.TypeDecl; varDecl : ModuleParser.VarDecl;
 			moduleName, typeName : ARRAY 128 OF CHAR;
@@ -980,7 +980,7 @@ TYPE
 			END;
 		END AddUsedTypeModulesToList;
 
-		PROCEDURE AddDependeciesModulesToList(entry : ModuleEntry; ident : LONGINT);
+		PROCEDURE AddDependeciesModulesToList(entry : ModuleEntry; ident : SIGNED32);
 		VAR
 			typeDecl : ModuleParser.TypeDecl; procDecl : ModuleParser.ProcDecl;
 			moduleName, typeName : ARRAY 128 OF CHAR;
@@ -1068,7 +1068,7 @@ TYPE
 			RETURN typeDecl;
 		END FindTypeDecl;
 
-		PROCEDURE ParseModule(entry : ModuleEntry; ident : LONGINT);
+		PROCEDURE ParseModule(entry : ModuleEntry; ident : SIGNED32);
 		VAR filename : Files.FileName; file : Files.File;
 		BEGIN
 			IF (entry.name # "SYSTEM") & (entry.module = NIL) & ~(Parsed IN entry.flags) THEN
@@ -1107,7 +1107,7 @@ TYPE
 		END ParseModule;
 
 		PROCEDURE AddTypes;
-		VAR done : BOOLEAN; nofEntries : LONGINT;
+		VAR done : BOOLEAN; nofEntries : SIGNED32;
 		BEGIN
 			IF (mode = Simple) THEN
 				IF (hasA # None) THEN modules.Enumerate(AddUsedTypeModulesToList, 4); END;
@@ -1134,7 +1134,7 @@ TYPE
 		END AddTypes;
 
 		PROCEDURE ProcessOptions(options : Options.Options);
-		VAR string : ARRAY 512 OF CHAR; integer : LONGINT; sizeString : SizeString; i : SIZE;
+		VAR string : ARRAY 512 OF CHAR; integer : SIGNED32; sizeString : SizeString; i : SIZE;
 		BEGIN
 			sizeString := "";
 			IF options.GetString("size", string) THEN
@@ -1223,7 +1223,7 @@ TYPE
 			Indent(4); out.String("]"); out.Ln;
 		END Open;
 
-		PROCEDURE AddModule(module : ModuleParser.Module; indent : LONGINT);
+		PROCEDURE AddModule(module : ModuleParser.Module; indent : SIGNED32);
 		BEGIN
 			ASSERT(module # NIL);
 			ASSERT(state = Running);
@@ -1304,7 +1304,7 @@ TYPE
 			out.Update;
 		END Close;
 
-		PROCEDURE Indent(indent : LONGINT); (* private *)
+		PROCEDURE Indent(indent : SIGNED32); (* private *)
 		BEGIN
 			WHILE (indent > 0) DO out.Char(" "); DEC(indent); END;
 		END Indent;
@@ -1363,8 +1363,8 @@ END GetTypeName;
 PROCEDURE IsBasicType(CONST string : ARRAY OF CHAR) : BOOLEAN;
 BEGIN
 	RETURN (string = "CHAR") OR (string = "ANY") OR (string = "BOOLEAN") OR (string = "SET")
-		OR (string = "SHORTINT") OR (string = "INTEGER") OR (string = "LONGINT") OR (string = "HUGEINT")
-		OR (string = "REAL") OR (string = "LONGREAL")
+		OR (string = "SIGNED8") OR (string = "SIGNED16") OR (string = "SIGNED32") OR (string = "SIGNED64")
+		OR (string = "FLOAT32") OR (string = "FLOAT64")
 		OR (string = "ADDRESS") OR (string = "SIZE") OR (string = "SYSTEM.BYTE");
 END IsBasicType;
 
@@ -1421,7 +1421,7 @@ VAR
 	reader : TextUtilities.TextReader;
 	diagnostics : Diagnostics.StreamDiagnostics;
 	writer : Streams.Writer;
-	format : LONGINT; res: WORD;
+	format : SIGNED32; res: INTEGER;
 BEGIN
 	module := NIL;
 	NEW(text);
@@ -1438,8 +1438,8 @@ BEGIN
 	END;
 END ParseFile;
 
-PROCEDURE GetMode(CONST string : ARRAY OF CHAR) : LONGINT;
-VAR mode : LONGINT;
+PROCEDURE GetMode(CONST string : ARRAY OF CHAR) : SIGNED32;
+VAR mode : SIGNED32;
 BEGIN
 	ASSERT((string = "none") OR (string = "public") OR (string = "all"));
 	IF (string = "none") THEN mode := None;
@@ -1465,7 +1465,7 @@ VAR
 	END IsValid;
 
 	PROCEDURE CheckOptions(options : Options.Options; out : Streams.Writer) : BOOLEAN;
-	VAR string : ARRAY 32 OF CHAR; integer : LONGINT; error : BOOLEAN;
+	VAR string : ARRAY 32 OF CHAR; integer : SIGNED32; error : BOOLEAN;
 	BEGIN
 		ASSERT((options # NIL) & (out # NIL));
 		error := FALSE;

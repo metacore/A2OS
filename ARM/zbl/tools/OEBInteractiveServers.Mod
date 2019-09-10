@@ -20,7 +20,7 @@ CONST
 TYPE
 	Server * = OBJECT (OEBServers.Server)
 	VAR
-		event: LONGINT;
+		event: SIGNED32;
 		interface: OEBInterfaces.Interface;
 		session: OEBInterfaces.Session;
 		sessions: FoxBasic.List;
@@ -40,7 +40,7 @@ TYPE
 			NEW(sessions, 0)
 		END Init;
 
-		PROCEDURE Handle * (event: LONGINT; interface: OEBInterfaces.Interface; session: OEBInterfaces.Session);
+		PROCEDURE Handle * (event: SIGNED32; interface: OEBInterfaces.Interface; session: OEBInterfaces.Session);
 		BEGIN {EXCLUSIVE}
 			TRACE('RECEIVED', event, interface.name, session.name);
 			AWAIT(~handle);
@@ -54,7 +54,7 @@ TYPE
 		VAR
 			reply: ARRAY 128 OF CHAR;
 			info: SessionInfo;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			TRACE(event, session.name, interface.name);
 			IF event = OEBInterfaces.EventEnter THEN
@@ -114,7 +114,7 @@ TYPE
 			END
 		END DoHandle;
 
-		PROCEDURE GetSession * (id: LONGINT): OEBInterfaces.Session;
+		PROCEDURE GetSession * (id: SIGNED32): OEBInterfaces.Session;
 		VAR
 			info: SessionInfo;
 		BEGIN {EXCLUSIVE}
@@ -123,7 +123,7 @@ TYPE
 			RETURN info.session
 		END GetSession;
 
-		PROCEDURE GetInterface * (id: LONGINT): OEBInterfaces.Interface;
+		PROCEDURE GetInterface * (id: SIGNED32): OEBInterfaces.Interface;
 		VAR
 			info: SessionInfo;
 		BEGIN {EXCLUSIVE}
@@ -132,7 +132,7 @@ TYPE
 			RETURN info.interface
 		END GetInterface;
 
-		PROCEDURE ExecuteCommand * (id: LONGINT; CONST cmd: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR): LONGINT;
+		PROCEDURE ExecuteCommand * (id: SIGNED32; CONST cmd: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR): SIGNED32;
 		VAR
 			interface: OEBInterfaces.Interface;
 			session: OEBInterfaces.Session;
@@ -180,7 +180,7 @@ TYPE
 
 VAR
 	factory: Factory;
-	nextId: LONGINT;
+	nextId: SIGNED32;
 
 	PROCEDURE Cleanup;
 	BEGIN

@@ -26,7 +26,7 @@ CONST
 	WindowMinWidth = 600;
 	WindowMinHeight = 300;
 
-	OberonColor =  LONGINT(0D1616CAFH);
+	OberonColor =  SIGNED32(0D1616CAFH);
 
 	UpperPanelHeight = 60;
 	LowerPanelHeight = 60;
@@ -148,7 +148,7 @@ TYPE
 			UpdateLabel;
 		END ClickHandler;
 
-		PROCEDURE GetTotalSize(VAR size, sizeOnDisk : LONGINT);
+		PROCEDURE GetTotalSize(VAR size, sizeOnDisk : SIGNED32);
 		VAR i : SIZE;
 		BEGIN
 			size := 0; sizeOnDisk := 0;
@@ -164,7 +164,7 @@ TYPE
 		END GetTotalSize;
 
 		PROCEDURE UpdateLabel;
-		VAR caption : ARRAY 128 OF CHAR; nbr : ARRAY 16 OF CHAR; size, sizeOnDisk : LONGINT;
+		VAR caption : ARRAY 128 OF CHAR; nbr : ARRAY 16 OF CHAR; size, sizeOnDisk : SIGNED32;
 		BEGIN
 			caption := "Total Size: ";
 			GetTotalSize(size, sizeOnDisk);
@@ -245,7 +245,7 @@ TYPE
 		END SetPackages;
 
 		PROCEDURE HandleButtons(sender, data : ANY);
-		VAR newState : LONGINT; i : SIZE; checkbox : WMStandardComponents.Checkbox; ignore : ARRAY 512 OF CHAR; install : BOOLEAN;
+		VAR newState : SIGNED32; i : SIZE; checkbox : WMStandardComponents.Checkbox; ignore : ARRAY 512 OF CHAR; install : BOOLEAN;
 		BEGIN
 			IF (sender = allBtn) THEN
 				newState := WMStandardComponents.Checked;
@@ -425,7 +425,7 @@ TYPE
 		END ClickHandler;
 
 		PROCEDURE ApplyConfiguration;
-		VAR step : LONGINT;
+		VAR step : SIGNED32;
 		BEGIN
 			ASSERT(config # NIL);
 			FOR step := 1 TO Installer.NofSteps-1 DO
@@ -453,7 +453,7 @@ TYPE
 			END;
 		END ApplyConfiguration;
 
-		PROCEDURE NewLabel(CONST caption : ARRAY OF CHAR; width : LONGINT) : WMStandardComponents.Label;
+		PROCEDURE NewLabel(CONST caption : ARRAY OF CHAR; width : SIGNED32) : WMStandardComponents.Label;
 		VAR label : WMStandardComponents.Label;
 		BEGIN
 			NEW(label);
@@ -467,7 +467,7 @@ TYPE
 			RETURN label;
 		END NewLabel;
 
-		PROCEDURE NewEditor(VAR editor : WMEditors.Editor; CONST caption : ARRAY OF CHAR; width : LONGINT);
+		PROCEDURE NewEditor(VAR editor : WMEditors.Editor; CONST caption : ARRAY OF CHAR; width : SIGNED32);
 		BEGIN
 			NEW(editor);
 			IF (width > 0) THEN
@@ -498,7 +498,7 @@ TYPE
 	InstallerBgPanel = OBJECT(WMComponents.VisualComponent)
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR color : LONGINT; rect : WMRectangles.Rectangle;
+		VAR color : SIGNED32; rect : WMRectangles.Rectangle;
 		BEGIN
 			DrawBackground^(canvas); (* fills background with fillColor *)
 			rect := GetClientRect();
@@ -523,7 +523,7 @@ TYPE
 		PROCEDURE DrawForeground*(canvas : WMGraphics.Canvas);
 		BEGIN
 			DrawForeground^(canvas);
-			WMGraphicUtilities.DrawBevel(canvas, GetClientRect(), 1, TRUE, LONGINT(0808080FFH), WMGraphics.ModeCopy);
+			WMGraphicUtilities.DrawBevel(canvas, GetClientRect(), 1, TRUE, SIGNED32(0808080FFH), WMGraphics.ModeCopy);
 		END DrawForeground;
 
 		PROCEDURE &Init*;
@@ -561,7 +561,7 @@ TYPE
 		configurationSettings : ConfigurationSettings;
 
 		pages : ARRAY NofPages OF WMComponents.VisualComponent;
-		currentPage : LONGINT;
+		currentPage : SIGNED32;
 
 		packages : Installer.Packages;
 
@@ -606,7 +606,7 @@ TYPE
 		END GetDiskPartString;
 
 		PROCEDURE ReallyDoInstallation(selection : WMPartitionsComponents.Selection) : BOOLEAN;
-		VAR res : WORD; string : ARRAY 256 OF CHAR; diskPartString : Strings.String;
+		VAR res : INTEGER; string : ARRAY 256 OF CHAR; diskPartString : Strings.String;
 		BEGIN
 			ASSERT(IsValidSelection(selection));
 			string := "The installation will delete all content on partition ";
@@ -741,7 +741,7 @@ TYPE
 		END UnlockPartition;
 
 		PROCEDURE OpenDevice(device : Disks.Device) : BOOLEAN;
-		VAR res : WORD;
+		VAR res : INTEGER;
 		BEGIN
 			IF (device # NIL) THEN
 				device.Open(res);
@@ -754,7 +754,7 @@ TYPE
 		END OpenDevice;
 
 		PROCEDURE CloseDevice(device : Disks.Device);
-		VAR ignore : WORD;
+		VAR ignore : INTEGER;
 		BEGIN
 			IF opened & (device # NIL) THEN
 				device.Close(ignore);
@@ -762,7 +762,7 @@ TYPE
 		END CloseDevice;
 
 		PROCEDURE GetConfiguration(selection : WMPartitionsComponents.Selection; packages : Installer.Packages; VAR configuration : Installer.Configuration) : BOOLEAN;
-		VAR reader : Streams.Reader; res : WORD; msg : ARRAY 128 OF CHAR;
+		VAR reader : Streams.Reader; res : INTEGER; msg : ARRAY 128 OF CHAR;
 		BEGIN
 			IF IsValidSelection(selection) THEN
 				NEW(configuration, selection.disk, selection.partition);
@@ -870,7 +870,7 @@ TYPE
 			RETURN FALSE;
 		END QuickInstall;
 
-		PROCEDURE SelectPage(pageNr : LONGINT);
+		PROCEDURE SelectPage(pageNr : SIGNED32);
 		BEGIN
 			ASSERT((pageNr >= 0) & (pageNr < LEN(pages)));
 			DisableUpdate;
@@ -1030,7 +1030,7 @@ TYPE
 			toolbar.AddContent(selectionLabel);
 			NEW(partitionSelector); partitionSelector.alignment.Set(WMComponents.AlignClient);
 			partitionSelector.fillColor.Set(WMGraphics.White);
-			partitionSelector.clBackground.Set(LONGINT(0E0E0E0FFH) (* OberonColorLight *));
+			partitionSelector.clBackground.Set(SIGNED32(0E0E0E0FFH) (* OberonColorLight *));
 			partitionSelector.onSelection.Add(HandleSelection);
 			panel.AddContent(partitionSelector);
 
@@ -1206,7 +1206,7 @@ TYPE
 		installer : Installer.Installer;
 		notifyProc : NotifyProc;
 
-		last : HUGEINT;
+		last : SIGNED64;
 		timer : Kernel.Timer;
 		alive, dead : BOOLEAN;
 
@@ -1266,7 +1266,7 @@ BEGIN
 END InitStrings;
 
 PROCEDURE LoadOberonText(CONST filename : ARRAY OF CHAR; VAR text : Texts.Text);
-VAR reader : Streams.Reader; decoder : Codecs.TextDecoder; res : WORD;
+VAR reader : Streams.Reader; decoder : Codecs.TextDecoder; res : INTEGER;
 BEGIN
 	text := NIL;
 	reader := Codecs.OpenInputStream(filename);

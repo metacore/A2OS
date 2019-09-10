@@ -39,7 +39,7 @@ BEGIN v := vyRealVec.NewFilledNamed(128, 1.2, 'RConstVec128');
 END RConstVec128;
 
 PROCEDURE RRndmVec128*;
-	VAR v: vyRealVec.tVector; VAR i: LONGINT;
+	VAR v: vyRealVec.tVector; VAR i: SIGNED32;
 BEGIN v := vyRealVec.New(128);
 	vyRealVec.SetLen(v, 128);
 	FOR i := 0 TO 127 DO
@@ -51,7 +51,7 @@ BEGIN v := vyRealVec.New(128);
 END RRndmVec128;
 
 PROCEDURE RRndm2dimVec128*;
-	VAR v, w: vyRealVec.tVector; VAR i: LONGINT;
+	VAR v, w: vyRealVec.tVector; VAR i: SIGNED32;
 BEGIN
 	v := vyRealVec.New(128);
 	w := vyRealVec.New(128);
@@ -69,7 +69,7 @@ END RRndm2dimVec128;
 
 
 PROCEDURE ChangeLastRndmVector*;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 
 BEGIN
 	IF lastrndmvec = NIL THEN RRndmVec128

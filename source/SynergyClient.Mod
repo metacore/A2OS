@@ -22,11 +22,11 @@ TYPE
 		manager : WMWindowManager.WindowManager;
 		originator : WMWindowManager.ViewPort;
 		mouseKeys : SET;
-		mouseX, mouseY : LONGINT;
+		mouseX, mouseY : SIGNED32;
 		running : BOOLEAN;
 		screenName : ARRAY 128 OF CHAR;
 
-		lastKeysym, lastUcs : LONGINT;
+		lastKeysym, lastUcs : SIGNED32;
 
 		PROCEDURE &New*(conn : TCP.Connection; sName : ARRAY OF CHAR);
 		BEGIN
@@ -39,24 +39,24 @@ TYPE
 			originator := WMWindowManager.GetDefaultView(); (* make synergy events appear as coming from the default view. *)
 		END New;
 
-		PROCEDURE GetPacket16(pos : LONGINT) : LONGINT;
-		VAR int16 : INTEGER;
+		PROCEDURE GetPacket16(pos : SIGNED32) : SIGNED32;
+		VAR int16 : SIGNED16;
 		BEGIN
 			int16 := ORD(packet[pos]) * 256 + ORD(packet[pos + 1]);
 			RETURN int16
 		END GetPacket16;
 
-		PROCEDURE GetPacket32(pos : LONGINT) : LONGINT;
-		VAR int32 : LONGINT;
+		PROCEDURE GetPacket32(pos : SIGNED32) : SIGNED32;
+		VAR int32 : SIGNED32;
 		BEGIN
 			int32 := ORD(packet[pos]) * 1000000H + ORD(packet[pos + 1]) * 10000H + ORD(packet[pos + 2]) * 100H + ORD(packet[pos + 3]);
 			RETURN int32
 		END GetPacket32;
 
 		PROCEDURE SendClientHello(screenName : ARRAY OF CHAR);
-		VAR strLen : LONGINT;
+		VAR strLen : SIGNED32;
 		BEGIN {EXCLUSIVE}
-			strLen := Strings.Length(screenName)(LONGINT);
+			strLen := Strings.Length(screenName)(SIGNED32);
 			out.Net32(11 + 4 + strLen);
 			out.String("Synergy");
 			out.Net16(1);
@@ -66,7 +66,7 @@ TYPE
 			out.Update
 		END SendClientHello;
 
-		PROCEDURE SendDINF(left, top, width, height, wrap, pointerX, pointerY : LONGINT);
+		PROCEDURE SendDINF(left, top, width, height, wrap, pointerX, pointerY : SIGNED32);
 		BEGIN  {EXCLUSIVE}
 			out.Net32(4 + 7 * 2);
 			out.String("DINF");
@@ -83,7 +83,7 @@ TYPE
 			out.Update
 		END SendNOP;
 
-		PROCEDURE MouseEvent(x, y, dz: LONGINT; keys : SET);
+		PROCEDURE MouseEvent(x, y, dz: SIGNED32; keys : SET);
 		VAR msg : WMMessages.Message;
 		BEGIN
 			msg.originator := originator;
@@ -94,7 +94,7 @@ TYPE
 			IF manager # NIL THEN IF manager.sequencer.Add(msg) THEN END END;
 		END MouseEvent;
 
-		PROCEDURE KeyEvent(ucs: LONGINT; flags : SET; keysym : LONGINT);
+		PROCEDURE KeyEvent(ucs: SIGNED32; flags : SET; keysym : SIGNED32);
 		VAR msg : WMMessages.Message;
 		BEGIN
 			msg.originator := originator;
@@ -105,7 +105,7 @@ TYPE
 			IF manager.sequencer.Add(msg) THEN END;
 		END KeyEvent;
 
-		PROCEDURE ConvertKey(keyId, keyMask, keyButton : LONGINT; VAR ucs: LONGINT; VAR flags : SET; VAR keysym : LONGINT; down : BOOLEAN);
+		PROCEDURE ConvertKey(keyId, keyMask, keyButton : SIGNED32; VAR ucs: SIGNED32; VAR flags : SET; VAR keysym : SIGNED32; down : BOOLEAN);
 		BEGIN
 			IF down THEN flags := {} ELSE flags := {Inputs.Release} END;
 			IF keyMask MOD 2 = 1 THEN (* shift is pressed *)
@@ -163,14 +163,14 @@ TYPE
 
 		PROCEDURE Loop;
 		VAR
-			packetLength, i : LONGINT;
+			packetLength, i : SIGNED32;
 			packetType : ARRAY 5 OF CHAR;
 
 			len: SIZE;
-			x, dz, w, h : LONGINT;
-			keyId, keyMask, keyButton : LONGINT;
+			x, dz, w, h : SIGNED32;
+			keyId, keyMask, keyButton : SIGNED32;
 
-			ucs, keysym : LONGINT;
+			ucs, keysym : SIGNED32;
 			flags : SET;
 
 		BEGIN
@@ -251,7 +251,7 @@ VAR
 PROCEDURE Connect*(context : Commands.Context);
 VAR
 	serverIP : IP.Adr;
-	res : WORD;
+	res : INTEGER;
 	connection : TCP.Connection;
 	server, screenName : ARRAY 128 OF CHAR;
 BEGIN
@@ -286,7 +286,7 @@ BEGIN
 END Close;
 
 PROCEDURE Cleanup;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	IF client # NIL THEN
 		client.connection.Close();

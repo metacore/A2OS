@@ -17,7 +17,7 @@ MODULE GIFImages IN Oberon; (** non-portable *)	(* eos  **)
 
 	(*--- Image Format T8 (8 bit palette with transparent color 0) ---*)
 
-	PROCEDURE PackT8 (VAR fmt: Images.Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Images.Pixel);
+	PROCEDURE PackT8 (VAR fmt: Images.Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Images.Pixel);
 		CONST r = Images.r; g = Images.g; b = Images.b;
 	BEGIN
 		IF pix[Images.a] # 0X THEN
@@ -27,7 +27,7 @@ MODULE GIFImages IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END PackT8;
 
-	PROCEDURE UnpackT8 (VAR fmt: Images.Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Images.Pixel);
+	PROCEDURE UnpackT8 (VAR fmt: Images.Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Images.Pixel);
 		CONST r = Images.r; g = Images.g; b = Images.b; a = Images.a;
 		VAR idx: CHAR;
 	BEGIN
@@ -50,10 +50,10 @@ MODULE GIFImages IN Oberon; (** non-portable *)	(* eos  **)
 	PROCEDURE LoadData (VAR r: Files.Rider; img: Images.Image; interlaced: BOOLEAN);
 		VAR
 			ch: CHAR;
-			codeBits, clearCode, endCode, curBits, maxCode, nextCode, bits, x, y, lines, prevCode, curCode, seq, len: INTEGER;
-			n, buf, blkPos, blkSize, ptr: LONGINT;
+			codeBits, clearCode, endCode, curBits, maxCode, nextCode, bits, x, y, lines, prevCode, curCode, seq, len: SIGNED16;
+			n, buf, blkPos, blkSize, ptr: SIGNED32;
 			pix, run: ARRAY 1000H OF CHAR;
-			prev: ARRAY 1000H OF INTEGER;
+			prev: ARRAY 1000H OF SIGNED16;
 			block: ARRAY 255 OF CHAR;
 
 		PROCEDURE dot (pix: CHAR);
@@ -74,7 +74,7 @@ MODULE GIFImages IN Oberon; (** non-portable *)	(* eos  **)
 
 	BEGIN
 		Files.Read(r, ch); codeBits := ORD(ch);
-		clearCode := INTEGER(ASH(1, codeBits)); endCode := clearCode+1;
+		clearCode := SIGNED16(ASH(1, codeBits)); endCode := clearCode+1;
 		n := 0;
 		WHILE n < clearCode DO
 			pix[n] := CHR(n); prev[n] := -1; INC(n)
@@ -82,7 +82,7 @@ MODULE GIFImages IN Oberon; (** non-portable *)	(* eos  **)
 		WHILE n <= endCode DO
 			pix[n] := 0X; prev[n] := -1; INC(n)
 		END;
-		curBits := codeBits+1; maxCode := INTEGER(ASH(1, curBits)); nextCode := endCode+1;
+		curBits := codeBits+1; maxCode := SIGNED16(ASH(1, curBits)); nextCode := endCode+1;
 		buf := 0; bits := 0; blkPos := 0; blkSize := 0;	(* bit buffer and current block are empty *)
 		x := 0; y := img.height-1; ptr := y * img.bpr;
 		IF interlaced THEN lines := 16 END;
@@ -105,7 +105,7 @@ MODULE GIFImages IN Oberon; (** non-portable *)	(* eos  **)
 			buf := ASH(buf, -curBits); DEC(bits, curBits);
 
 			IF curCode = clearCode THEN
-				curBits := codeBits+1; maxCode := INTEGER(ASH(1, curBits)); nextCode := endCode+1
+				curBits := codeBits+1; maxCode := SIGNED16(ASH(1, curBits)); nextCode := endCode+1
 			ELSIF curCode = endCode THEN
 				EXIT
 			ELSIF prevCode = clearCode THEN
@@ -127,7 +127,7 @@ MODULE GIFImages IN Oberon; (** non-portable *)	(* eos  **)
 				(* the sequence just output gets a new code *)
 				pix[nextCode] := pix[seq]; prev[nextCode] := prevCode; INC(nextCode);
 				IF (nextCode = maxCode) & (curBits < 12) THEN
-					INC(curBits); maxCode := INTEGER(ASH(1, curBits))
+					INC(curBits); maxCode := SIGNED16(ASH(1, curBits))
 				END
 			END;
 			prevCode := curCode
@@ -143,8 +143,8 @@ MODULE GIFImages IN Oberon; (** non-portable *)	(* eos  **)
 
 	PROCEDURE Load (img: Images.Image; VAR fname: ARRAY OF CHAR; VAR done: BOOLEAN);
 		VAR
-			file: Files.File; r: Files.Rider; sig: ARRAY 7 OF CHAR; w, h, images, left, top: INTEGER;
-			lcdFlags, backGrndIdx, ch, label, transPix, idFlags: CHAR; pal: Images.Palette; n, size: LONGINT;
+			file: Files.File; r: Files.Rider; sig: ARRAY 7 OF CHAR; w, h, images, left, top: SIGNED16;
+			lcdFlags, backGrndIdx, ch, label, transPix, idFlags: CHAR; pal: Images.Palette; n, size: SIGNED32;
 			backGrndCol: Images.Pixel; fmt: Images.Format; transparent, interlaced: BOOLEAN;
 	BEGIN
 		file := Files.Old(fname);

@@ -12,13 +12,13 @@ CONST
 	Terminated = 3;
 
 VAR
-	state : LONGINT;
+	state : SIGNED32;
 
 PROCEDURE Snow*(context : Commands.Context); (** [nofFlakes] ~ *)
 VAR
 	flakes : POINTER TO ARRAY OF WMWindowManager.BufferWindow;
-	flakePos : POINTER TO ARRAY OF RECORD x, y : LONGINT END;
-	nofFlakes, i, j : LONGINT;
+	flakePos : POINTER TO ARRAY OF RECORD x, y : SIGNED32 END;
+	nofFlakes, i, j : SIGNED32;
 	f, f1, f2 : WMGraphics.Image;
 	timer : Kernel.Timer;
 	random : Random.Generator;

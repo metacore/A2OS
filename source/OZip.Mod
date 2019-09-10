@@ -16,7 +16,7 @@ IMPORT Streams, Commands, Files, Strings, BW := BorrowsWheeler, Huffman;
 
 CONST
 	BlockSize* = 8*1024;
-	ComprTag = LONGINT(0FEFD1F2FH);
+	ComprTag = SIGNED32(0FEFD1F2FH);
 	Suffix = ".oz";
 
 
@@ -44,7 +44,7 @@ CONST
 	PROCEDURE Uncompress*( r: Streams.Reader;  w: Streams.Writer ): BOOLEAN;
 	VAR
 		huff: Huffman.Decoder;
-		tag, len, bwIndex: LONGINT;
+		tag, len, bwIndex: SIGNED32;
 		bw: BW.Decoder;
 		buffer: ARRAY BlockSize OF CHAR;
 	BEGIN
@@ -71,7 +71,7 @@ CONST
 
 	PROCEDURE NewFile( CONST name: ARRAY OF CHAR ): Files.File;
 	VAR
-		tname, name2: ARRAY 128 OF CHAR;  res: LONGINT;
+		tname, name2: ARRAY 128 OF CHAR;  res: SIGNED32;
 	BEGIN
 		tname := "./";
 		Strings.Append( tname, name );

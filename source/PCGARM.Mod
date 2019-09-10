@@ -47,9 +47,9 @@ CONST
 	floatCC = -6;
 
 TYPE
-	XOpcode = SHORTINT;	(* extended opcode type *)
+	XOpcode = SIGNED8;	(* extended opcode type *)
 	XRegister = RECORD
-		Low, High: LONGINT;	(* low & high register of value *)
+		Low, High: SIGNED32;	(* low & high register of value *)
 	END;
 
 	Info = OBJECT(PCLIR.InstructionAttribute)
@@ -61,7 +61,7 @@ TYPE
 												case: dst.Low contains offset of start of jmpTable
 												loadreg: dst.Low = pc of savereg that belongs to this loadreg
 									*)
-			pos: LONGINT; (* position in code, -1 if unkown *)
+			pos: SIGNED32; (* position in code, -1 if unkown *)
 			fixup: Info; (* for fixup-lists. *)
 			target: BOOLEAN; (* valid for PCLIR.label with val = 0: TRUE if label is a target of a jump *)
 
@@ -74,19 +74,19 @@ VAR HexTab: ARRAY 16 OF CHAR;
 	codeName: ARRAY 32 OF CHAR;
 	regs: RA.ARMRegisters;
 	pool: PCARMCP.ConstantPool;
-	lastLabelPos: LONGINT;
+	lastLabelPos: SIGNED32;
 
 	(* indices of DIV/MOD, Int64 & floating point syscalls in PCLIR.CG.SysCallMap *)
-	DivIndex, ModIndex: LONGINT;
-	Int64LSH, Int64ASH: LONGINT;
+	DivIndex, ModIndex: SIGNED32;
+	Int64LSH, Int64ASH: SIGNED32;
 	FAdd, FSub, FMul, FDiv, FNeg, FAbs, FEntier, FIntToReal, FRealToInt, FRealToReal,
-	FEq, FLe, FLt, FNe, FGe, FGt, FLongOffset: LONGINT;
+	FEq, FLe, FLt, FNe, FGe, FGt, FLongOffset: SIGNED32;
 
 	bimboTrace: BOOLEAN;
 
 (* ----------- Helper Functions -----------------*)
 PROCEDURE InitHexTab;
-VAR i: SHORTINT;
+VAR i: SIGNED8;
 BEGIN
 	FOR i := 0 TO 9 DO HexTab[i] := CHR(ORD("0") + i) END;
 	FOR i := 0 TO 5 DO HexTab[i+10] := CHR(ORD("A") + i) END
@@ -104,12 +104,12 @@ PROCEDURE Ln;
 BEGIN KernelLog.Ln;
 END Ln;
 
-PROCEDURE Int(i: LONGINT);
+PROCEDURE Int(i: SIGNED32);
 BEGIN KernelLog.Int(i, 0)
 END Int;
 
-PROCEDURE Hex(value, len: LONGINT);
-VAR hex:POINTER TO ARRAY OF CHAR; i: LONGINT;
+PROCEDURE Hex(value, len: SIGNED32);
+VAR hex:POINTER TO ARRAY OF CHAR; i: SIGNED32;
 BEGIN
 	NEW(hex,len+2);
 	FOR i := 1 TO len DO
@@ -121,7 +121,7 @@ BEGIN
 END Hex;
 
 PROCEDURE Set(s: SET);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	FOR i := 31 TO 0 BY -1 DO
 		IF (i IN s) THEN KernelLog.Char("1") ELSE KernelLog.Char("0") END
@@ -132,11 +132,11 @@ PROCEDURE Bool(b: BOOLEAN);
 BEGIN IF b THEN Write("TRUE") ELSE Write("FALSE") END
 END Bool;
 
-PROCEDURE ToDo(pc: LONGINT; msg: ARRAY OF CHAR);
+PROCEDURE ToDo(pc: SIGNED32; msg: ARRAY OF CHAR);
 BEGIN KernelLog.Int(pc, 5); Write(" TODO: "); WriteLn(msg); HALT(INTERNALERROR);
 END ToDo;
 
-PROCEDURE Error(pc: LONGINT; msg: ARRAY OF CHAR);
+PROCEDURE Error(pc: SIGNED32; msg: ARRAY OF CHAR);
 BEGIN KernelLog.Int(pc, 5); Write(" ERROR: "); WriteLn(msg)
 END Error;
 
@@ -159,13 +159,13 @@ BEGIN
 END Diadic;
 
 (* SpecialRegister - returns TRUE iff virtualReg is a special register (i.e., SP, FP, LR, PC or a hardware register) *)
-PROCEDURE SpecialRegister(virtualReg: LONGINT): BOOLEAN;
+PROCEDURE SpecialRegister(virtualReg: SIGNED32): BOOLEAN;
 BEGIN RETURN (virtualReg = PCLIR.SP) OR (virtualReg = PCLIR.FP) OR (virtualReg <= PCLIR.HwReg)
 END SpecialRegister;
 
 (* MapSpecialRegister - maps a PCLIR special register to a ARM hardware register *)
-PROCEDURE MapSpecialRegister(virtualReg: LONGINT): LONGINT;
-VAR reg: LONGINT;
+PROCEDURE MapSpecialRegister(virtualReg: SIGNED32): SIGNED32;
+VAR reg: SIGNED32;
 BEGIN
 	CASE virtualReg OF
 	| PCLIR.SP: reg := SP
@@ -179,9 +179,9 @@ BEGIN
 END MapSpecialRegister;
 
 (* ResolveRegister -  returns a physical register number for a given virtual register *)
-PROCEDURE ResolveRegister(code: PCLIR.Code; virtualReg: LONGINT): XRegister;
+PROCEDURE ResolveRegister(code: PCLIR.Code; virtualReg: SIGNED32): XRegister;
 VAR p: PCLIR.Piece; res: XRegister;
-	tiLow, tiHigh, tiSize: LONGINT;
+	tiLow, tiHigh, tiSize: SIGNED32;
 BEGIN
 	res.High := -1;
 	IF (virtualReg = PCLIR.FP) THEN res.Low := FP
@@ -200,7 +200,7 @@ BEGIN
 END ResolveRegister;
 
 (* XResolveRegister -  returns a physical register number & a flag whether it is signed for a given virtual register *)
-PROCEDURE XResolveRegister(code: PCLIR.Code; virtualReg: LONGINT; VAR physicalReg: XRegister; VAR signed: BOOLEAN);
+PROCEDURE XResolveRegister(code: PCLIR.Code; virtualReg: SIGNED32; VAR physicalReg: XRegister; VAR signed: BOOLEAN);
 VAR p: PCLIR.Piece;
 BEGIN
 	signed := FALSE;
@@ -219,7 +219,7 @@ END XResolveRegister;
 
 (* FindDefinition - returns the instruction that defined the virtual register *)
 (* can also be used to get the instruction at pc 'virtualReg' *)
-PROCEDURE FindDefinition(code: PCLIR.Code; virtualReg: LONGINT): PCLIR.Instruction;
+PROCEDURE FindDefinition(code: PCLIR.Code; virtualReg: SIGNED32): PCLIR.Instruction;
 VAR p: PCLIR.Piece;
 BEGIN
 	IF (virtualReg >= 0) THEN
@@ -239,8 +239,8 @@ END IsLoadStoreSpecial;
 (* LoadConstant - loads 'value' into a register and returns the register. If 'register' # -1, 'register' is used.
 	Otherwise, a free register is allocated
  *)
-PROCEDURE LoadConstant(pc, register, value, count: LONGINT): LONGINT;
-VAR addrMode, address, imm: SET; valid: BOOLEAN; offset: LONGINT;
+PROCEDURE LoadConstant(pc, register, value, count: SIGNED32): SIGNED32;
+VAR addrMode, address, imm: SET; valid: BOOLEAN; offset: SIGNED32;
 BEGIN
 	IF (register = -1) THEN register := regs.AllocReg(RA.NewIntConst(value), valid, count)
 	ELSE regs.SetRegisterContent(register, RA.NewIntConst(value))
@@ -266,7 +266,7 @@ BEGIN
 END LoadConstant;
 
 (* InstructionType - returns the type (= size of destination/source register) of an instruction *)
-PROCEDURE InstructionType(code: PCLIR.Code; VAR i: PCLIR.Instruction): LONGINT;
+PROCEDURE InstructionType(code: PCLIR.Code; VAR i: PCLIR.Instruction): SIGNED32;
 VAR d: PCLIR.Instruction;
 BEGIN
 	IF (FDst IN i.info(Info).flags) THEN RETURN i.dstSize
@@ -278,7 +278,7 @@ BEGIN
 END InstructionType;
 
 (* Size - returns the number of hardware registers needed to store this data type *)
-PROCEDURE Size(type: LONGINT): LONGINT;
+PROCEDURE Size(type: SIGNED32): SIGNED32;
 BEGIN
 	CASE type OF
 	|PCLIR.Int8, PCLIR.Int16, PCLIR.Int32, PCLIR.Float32: RETURN 1
@@ -288,12 +288,12 @@ BEGIN
 END Size;
 
 (* LoadAddress - loads an address into a register 'rAdr' *)
-PROCEDURE LoadAddress(rAdr: LONGINT; adr: PCM.Attribute);
-VAR offset: LONGINT; addrMode, address: SET;
+PROCEDURE LoadAddress(rAdr: SIGNED32; adr: PCM.Attribute);
+VAR offset: SIGNED32; addrMode, address: SET;
 BEGIN
 	IF bimboTrace THEN
 		Hex(PCO.GetCodePos(), 8); WriteLn(" LoadAddress");
-		IF (PCO.GetCodePos() = 90H) THEN HALT(MAX(INTEGER)) END;
+		IF (PCO.GetCodePos() = 90H) THEN HALT(MAX(SIGNED16)) END;
 	END;
 
 	IF Trace THEN KernelLog.Enter END;
@@ -335,7 +335,7 @@ BEGIN
 END LoadAddress;
 
 (* SystemCall - generate a syscall with number 'nr' *)
-PROCEDURE SystemCall(nr: LONGINT);
+PROCEDURE SystemCall(nr: SIGNED32);
 VAR addrMode, address: SET;
 BEGIN
 	(*
@@ -369,15 +369,15 @@ BEGIN
 	RETURN TRUE
 END Init;
 
-PROCEDURE Done(VAR res: WORD);
+PROCEDURE Done(VAR res: INTEGER);
 BEGIN
 	PCO.Close;
 	res := 0
 END Done;
 
 (* Enter - generate PAF and clear local variables *)
-PROCEDURE Enter(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; locsize, i, rS, rC, fixup: LONGINT; adr: PCBT.Procedure;
+PROCEDURE Enter(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; locsize, i, rS, rC, fixup: SIGNED32; adr: PCBT.Procedure;
 	addrMode, address, flags: SET;
 BEGIN
 	PCO.BoP(code.name); (* tracing only: formats output *)
@@ -464,8 +464,8 @@ BEGIN
 END Enter;
 
 (* Exit - destroy PAF and return to caller *)
-PROCEDURE Exit(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; rT: LONGINT; imm: SET;
+PROCEDURE Exit(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; rT: SIGNED32; imm: SET;
 BEGIN
 	info := instr.info(Info); info.pos := PCO.GetCodePos();
 	IF (info.xop = nopaf) THEN
@@ -530,7 +530,7 @@ BEGIN
 END Exit;
 
 PROCEDURE Compare(code: PCLIR.Code; VAR instr: PCLIR.Instruction);
-VAR type: LONGINT; rA, rB: XRegister; rT, rBx: LONGINT; valid, dummy: BOOLEAN; imm: SET;
+VAR type: SIGNED32; rA, rB: XRegister; rT, rBx: SIGNED32; valid, dummy: BOOLEAN; imm: SET;
 BEGIN
 	type := InstructionType(code, instr);
 
@@ -542,7 +542,7 @@ BEGIN
 			rT := regs.AllocReg(RA.NewIntConst(1), valid, 1);
 			IF ~valid THEN PCO.MOV(AL, PCO.A1Imm, rT, PCO.A1Immediate1, {}) END;
 
-			IF (type = PCLIR.Int64) THEN (* HUGEINT *)
+			IF (type = PCLIR.Int64) THEN (* SIGNED64 *)
 				rBx := regs.AllocReg(NIL, valid, 1);
 				dummy := PCO.MakeA1Immediate(32, imm); ASSERT(dummy);
 				(*
@@ -565,7 +565,7 @@ BEGIN
 				PCO.TST(PCO.GE, PCO.A1Reg, rA.High, PCO.MakeA1RegSHIFTReg(rT, rBx, PCO.Lsl));
 				(* end *)
 				regs.FreeReg(rBx)
-			ELSE	(* # HUGEINT *)
+			ELSE	(* # SIGNED64 *)
 				(*
 					cc <- rA.Low & (1 << rB.Low)
 				*)
@@ -573,7 +573,7 @@ BEGIN
 			END;
 			regs.FreeReg(rT)
 		ELSE
-			IF (type = PCLIR.Int64) THEN (* HUGEINT *)
+			IF (type = PCLIR.Int64) THEN (* SIGNED64 *)
 				(*
 					cc <- rA.High = rB.High
 					if equal:
@@ -595,7 +595,7 @@ BEGIN
 	END
 END Compare;
 
-PROCEDURE Trap(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE Trap(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR info: Info; cond: SET;
 BEGIN
 	info := instr.info(Info);
@@ -609,10 +609,10 @@ BEGIN
 	| PCLIR.tne: cond := NE
 	END;
 	PCO.SWI(cond, instr.val);
-	IF (instr.op = PCLIR.trap) & (instr.val # MAX(INTEGER)) THEN pool.Flush(PCO.GetCodePos()) END
+	IF (instr.op = PCLIR.trap) & (instr.val # MAX(SIGNED16)) THEN pool.Flush(PCO.GetCodePos()) END
 END Trap;
 
-PROCEDURE SaveRegisters(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE SaveRegisters(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR rs: SET;
 BEGIN
 	instr.info(Info).pos := PCO.GetCodePos();
@@ -624,7 +624,7 @@ BEGIN
 	IF (rs # {}) THEN PCO.STM(AL, PCO.A4DB, SP, rs, PCO.A4W) END
 END SaveRegisters;
 
-PROCEDURE LoadRegisters(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE LoadRegisters(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR rs: SET; saveregs: PCLIR.Instruction;
 BEGIN
 	instr.info(Info).pos := PCO.GetCodePos();
@@ -636,7 +636,7 @@ BEGIN
 	IF (rs # {}) THEN PCO.LDM(AL, PCO.A4IA, SP, rs, PCO.A4W); regs.InvalidateAll END
 END LoadRegisters;
 
-PROCEDURE Return(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE Return(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR rReturn, rS: XRegister; info: Info; srcDef: PCLIR.Instruction; mode, soLow, soHigh: SET;
 BEGIN (* TODO: check if HUGEINTs are returned correctly *)
 	info := instr.info(Info);
@@ -678,7 +678,7 @@ BEGIN (* TODO: check if HUGEINTs are returned correctly *)
 	END;
 END Return;
 
-PROCEDURE Result(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE Result(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR info: Info; next: PCLIR.Instruction; rD, rResult: XRegister;
 BEGIN (* TODO: check if HUGEINTs are returned correctly *)
 	(* TODO check how Floats are 'resulted'. Maybe we should also allocate RReturn2 in the first case below, if instr.dstSize = PCLIR.Float64 *)
@@ -720,7 +720,7 @@ BEGIN (* TODO: check if HUGEINTs are returned correctly *)
 	END
 END Result;
 
-PROCEDURE Pop(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE Pop(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR info: Info; addrMode, address: SET; rD: XRegister;
 BEGIN
 	(*
@@ -744,7 +744,7 @@ BEGIN
 	END
 END Pop;
 
-PROCEDURE Push(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE Push(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR addrMode, address: SET; rS: XRegister; size: PCLIR.Size;
 BEGIN
 	(*
@@ -778,8 +778,8 @@ BEGIN
 	PCO.STR(AL, addrMode, SP, rS.Low, address); regs.FreeReg(rS.Low)
 END Push;
 
-PROCEDURE LoadStore(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; rD, tmp: XRegister; rBase, rOffset, offset, deltaOffset, size: LONGINT; addrMode, address: SET;
+PROCEDURE LoadStore(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; rD, tmp: XRegister; rBase, rOffset, offset, deltaOffset, size: SIGNED32; addrMode, address: SET;
 	signed, twoRegisters, valid, valid2: BOOLEAN; content, content2: RA.Content; instrDef: PCLIR.Instruction;
 BEGIN
 	info := instr.info(Info); info.pos := PCO.GetCodePos();
@@ -816,7 +816,7 @@ BEGIN
 	(* generate content records *)
 	IF (instr.src1 = PCLIR.Absolute) THEN
 		IF bimboTrace THEN
-			Write("  absolute addressing: instr.adr = "); Hex(LONGINT(ADDRESS(instr.adr)), 8); Write("; instr.val = "); Int(instr.val); Ln;
+			Write("  absolute addressing: instr.adr = "); Hex(SIGNED32(ADDRESS(instr.adr)), 8); Write("; instr.val = "); Int(instr.val); Ln;
 		END;
 		content := RA.NewMemAddress(instr.adr, 0);
 		IF twoRegisters THEN content2 := RA.NewMemAddress(instr.adr, 4) END
@@ -1009,8 +1009,8 @@ BEGIN
 END LoadStore;
 
 (* LoadC - load constant into register *)
-PROCEDURE LoadC(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; rD: LONGINT;
+PROCEDURE LoadC(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; rD: SIGNED32;
 BEGIN
 	info := instr.info(Info); info.pos := PCO.GetCodePos();
 	IF (instr.adr # NIL) THEN
@@ -1053,19 +1053,19 @@ BEGIN
 	END
 END LoadC;
 
-PROCEDURE In(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE In(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 BEGIN
 	instr.info(Info).pos := PCO.GetCodePos();
 	Error(pc, "'in' not supported")
 END In;
 
-PROCEDURE Out(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE Out(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 BEGIN
 	instr.info(Info).pos := PCO.GetCodePos();
 	Error(pc, "'out' not supported")
 END Out;
 
-PROCEDURE Nop(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE Nop(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 BEGIN
 	instr.info(Info).pos := PCO.GetCodePos();
 	(*
@@ -1074,7 +1074,7 @@ BEGIN
 	PCO.MOV(AL, PCO.A1Reg, R0, PCO.MakeA1Register(R0), {})
 END Nop;
 
-PROCEDURE Label(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE Label(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR info, f: Info;
 BEGIN
 	info := instr.info(Info); info.pos := PCO.GetCodePos();
@@ -1091,7 +1091,7 @@ BEGIN
 		PCO.sourcepos := instr.val;
 		IF (info.pos >= PCM.breakpc) THEN (* PC.Compile \f support *)
 			PCM.Error(400, lastLabelPos, "");
-			PCM.breakpc := MAX(LONGINT)
+			PCM.breakpc := MAX(SIGNED32)
 		END;
 		lastLabelPos := instr.val
 	END;
@@ -1108,8 +1108,8 @@ BEGIN
 
 END Label;
 
-PROCEDURE JCC(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; cond: SET; target: PCLIR.Instruction; offset: LONGINT;
+PROCEDURE JCC(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; cond: SET; target: PCLIR.Instruction; offset: SIGNED32;
 BEGIN
 	info := instr.info(Info);
 
@@ -1146,7 +1146,7 @@ BEGIN
 END JCC;
 
 PROCEDURE FloatingPointComparison(code: PCLIR.Code; VAR instr: PCLIR.Instruction);
-VAR info: Info; long: BOOLEAN; def: PCLIR.Instruction; rA, rB: XRegister; rs, addrMode, address: SET; cmpOp: LONGINT;
+VAR info: Info; long: BOOLEAN; def: PCLIR.Instruction; rA, rB: XRegister; rs, addrMode, address: SET; cmpOp: SIGNED32;
 BEGIN
 	info := instr.info(Info); (* info.pos not needed *)
 	long := (InstructionType(code, instr) = PCLIR.Float64);
@@ -1196,7 +1196,7 @@ BEGIN
 	IF (rs # {}) THEN PCO.LDM(AL, PCO.A4IA, SP, rs, PCO.A4W); regs.InvalidateAll END
 END FloatingPointComparison;
 
-PROCEDURE Call(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE Call(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR info: Info; addrMode, address: SET; adr: PCBT.Procedure;
 BEGIN
 	PCO.Lock;
@@ -1248,7 +1248,7 @@ BEGIN
 	PCO.Unlock
 END Call;
 
-PROCEDURE CallReg(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE CallReg(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR rAdr: XRegister;
 BEGIN
 	PCO.Lock;
@@ -1266,7 +1266,7 @@ BEGIN
 	PCO.Unlock
 END CallReg;
 
-PROCEDURE SysCall(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE SysCall(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 BEGIN
 	PCO.Lock;
 	instr.info(Info).pos := PCO.GetCodePos();
@@ -1275,8 +1275,8 @@ BEGIN
 	PCO.Unlock
 END SysCall;
 
-PROCEDURE SetCC(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; true, false: SET; rD: LONGINT; dummy: BOOLEAN;
+PROCEDURE SetCC(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; true, false: SET; rD: SIGNED32; dummy: BOOLEAN;
 BEGIN
 	info := instr.info(Info);
 	Compare(code, instr);
@@ -1308,8 +1308,8 @@ BEGIN
 	regs.SetRegisterContent(rD, NIL)
 END SetCC;
 
-PROCEDURE Kill(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; i: PCLIR.Instruction; rD,  rPhi, pos, delta: LONGINT; phiFound, killFound: BOOLEAN;
+PROCEDURE Kill(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; i: PCLIR.Instruction; rD,  rPhi, pos, delta: SIGNED32; phiFound, killFound: BOOLEAN;
 	reg: RA.Register;
 BEGIN
 	info := instr.info(Info); info.pos := PCO.GetCodePos();
@@ -1370,7 +1370,7 @@ BEGIN
 	END
 END Kill;
 
-PROCEDURE Phi(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE Phi(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR reg: XRegister;
 BEGIN
 	instr.info(Info).pos := PCO.GetCodePos();
@@ -1379,7 +1379,7 @@ BEGIN
 	reg := ResolveRegister(code, instr.src2); regs.FreeReg(reg.Low)
 END Phi;
 
-PROCEDURE LoadSP(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE LoadSP(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR rA: XRegister;
 BEGIN
 	instr.info(Info).pos := PCO.GetCodePos();
@@ -1391,10 +1391,10 @@ BEGIN
 	regs.FreeReg(rA.Low)
 END LoadSP;
 
-PROCEDURE Copy(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
+PROCEDURE Copy(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
 VAR info: Info; srcDef: PCLIR.Instruction;
 
-	PROCEDURE CopyRegister(from: LONGINT; VAR to: LONGINT; useCount: LONGINT);
+	PROCEDURE CopyRegister(from: SIGNED32; VAR to: SIGNED32; useCount: SIGNED32);
 	BEGIN
 		IF (regs.GetRegisterUseCount(from) > 1) OR (to # -1) THEN
 			(* the source register is sill used or the result is expected to be in a designated register => copy *)
@@ -1420,8 +1420,8 @@ BEGIN
 	IF (Size(instr.dstSize) = 2) THEN CopyRegister(srcDef.info(Info).dst.High, info.dst.High, instr.dstCount) END
 END Copy;
 
-PROCEDURE Conversion(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; srcDef: PCLIR.Instruction; rD: XRegister; op: LONGINT; addrMode, address, rs: SET;
+PROCEDURE Conversion(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; srcDef: PCLIR.Instruction; rD: XRegister; op: SIGNED32; addrMode, address, rs: SET;
 BEGIN (* TODO simplify *)
 	info := instr.info(Info); info.pos := PCO.GetCodePos();
 	srcDef := FindDefinition(code, instr.src1);
@@ -1460,8 +1460,8 @@ BEGIN (* TODO simplify *)
 				regs.FreeReg(srcDef.info(Info).dst.High) (* overflow check: srcDef.info.dst.High = 0 ? *)
 			END
 		ELSE (* instr.dstSize IN PCLIR.FloatSize *)
-			IF (srcDef.dstSize = PCLIR.Int64) THEN Error(pc, "Conversion Int64 -> [LONG]REAL not supported")
-			ELSE (* 32bit Integer -> [LONG]REAL *)
+			IF (srcDef.dstSize = PCLIR.Int64) THEN Error(pc, "Conversion Int64 -> [LONG]FLOAT32 not supported")
+			ELSE (* 32bit Integer -> [LONG]FLOAT32 *)
 				(* free source register *)
 				regs.FreeReg(srcDef.info(Info).dst.Low);
 
@@ -1512,8 +1512,8 @@ BEGIN (* TODO simplify *)
 		END
 
 	ELSE (* srcDef.dstSize IN PCLIR.FloatSize *)
-		IF (instr.dstSize = PCLIR.Int64) THEN Error(pc, "Conversion [LONG]REAL -> Int64 not supported")
-		ELSIF (instr.dstSize IN PCLIR.IntSize) THEN (* [LONG]REAL -> IntX *)
+		IF (instr.dstSize = PCLIR.Int64) THEN Error(pc, "Conversion [LONG]FLOAT32 -> Int64 not supported")
+		ELSIF (instr.dstSize IN PCLIR.IntSize) THEN (* [LONG]FLOAT32 -> IntX *)
 			(* free source register(s) *)
 			regs.FreeReg(srcDef.info(Info).dst.Low);
 			IF (srcDef.dstSize = PCLIR.Float64) THEN regs.FreeReg(srcDef.info(Info).dst.High) END;
@@ -1551,7 +1551,7 @@ BEGIN (* TODO simplify *)
 			(* restore saved registers *)
 			IF (rs # {}) THEN PCO.LDM(AL, PCO.A4IA, SP, rs, PCO.A4W) END
 
-		ELSE (* [LONG]REAL -> [LONG]REAL *)
+		ELSE (* [LONG]FLOAT32 -> [LONG]FLOAT32 *)
 			(* free source register(s) *)
 			regs.FreeReg(srcDef.info(Info).dst.Low);
 			IF (srcDef.dstSize = PCLIR.Float64) THEN regs.FreeReg(srcDef.info(Info).dst.High) END;
@@ -1606,8 +1606,8 @@ BEGIN (* TODO simplify *)
 	END
 END Conversion;
 
-PROCEDURE BitOp(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR rA, rB, rD: XRegister; rT, rBx: LONGINT; addrMode, so: SET; info: Info; dummy: BOOLEAN; imm: SET;
+PROCEDURE BitOp(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR rA, rB, rD: XRegister; rT, rBx: SIGNED32; addrMode, so: SET; info: Info; dummy: BOOLEAN; imm: SET;
 BEGIN
 	info := instr.info(Info);
 	info.pos := PCO.GetCodePos();
@@ -1665,14 +1665,14 @@ BEGIN
 	regs.FreeReg(rA.Low); regs.FreeReg(rB.Low); regs.FreeReg(rT)
 END BitOp;
 
-PROCEDURE DivMod(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; rs, addrMode, address: SET; rD, rA, rB: XRegister;  op, returnR: LONGINT;
+PROCEDURE DivMod(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; rs, addrMode, address: SET; rD, rA, rB: XRegister;  op, returnR: SIGNED32;
 BEGIN
 	info := instr.info(Info); info.pos := PCO.GetCodePos();
 	(* if this is a floating point DIV/MOD, we are in the wrong place...*)
 	IF (instr.dstSize IN PCLIR.FloatSize) THEN
 		FloatingPointDPI(code, instr, pc)
-	ELSE (* TODO: HUGEINT *)
+	ELSE (* TODO: SIGNED64 *)
 		(* since the ARM does support neither DIV nor MOD, these are implemented as system calls
 			MEM[SP...] <- used registers, SP <- SP + (nof registers saved)*4
 			SP <- SP - 4, MEM[SP..SP+3] <- rA
@@ -1719,8 +1719,8 @@ BEGIN
 	END
 END DivMod;
 
-PROCEDURE DataProcessingInstruction(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR rA, rB, rC, rD: XRegister; val, type: LONGINT; info: Info; mode, conl, conr, sol, sor: SET; b, sC: BOOLEAN;
+PROCEDURE DataProcessingInstruction(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR rA, rB, rC, rD: XRegister; val, type: SIGNED32; info: Info; mode, conl, conr, sol, sor: SET; b, sC: BOOLEAN;
 BEGIN
 	info := instr.info(Info);
 	info.pos := PCO.GetCodePos();
@@ -1803,7 +1803,7 @@ BEGIN
 			IF (FSrc1 IN info.flags) THEN regs.FreeReg(rA.Low) END;
 			IF (FSrc2 IN info.flags) THEN regs.FreeReg(rB.Low) END;
 			IF (FSrc3 IN info.flags) THEN regs.FreeReg(rC.Low) END
-		ELSIF (type = PCLIR.Int64) THEN (* HUGEINT: do not forget Carry Poppins *)
+		ELSIF (type = PCLIR.Int64) THEN (* SIGNED64: do not forget Carry Poppins *)
 			ASSERT({FDst, FSrc1} * info.flags = {FDst, FSrc1}, INTERNALERROR);
 			ASSERT(~(FVal IN info.flags), INTERNALERROR);
 			ASSERT((rA.High # -1) & ((rB.High # -1) OR ((instr.op = PCLIR.bsh) OR (instr.op = PCLIR.ash) OR (instr.op = PCLIR.rot))), INTERNALERROR);
@@ -1907,7 +1907,7 @@ BEGIN
 END DataProcessingInstruction;
 
 (* GetSHIFTMask - returns a SHIFT mask used to AND a shift value *)
-PROCEDURE GetSHIFTMask(size: LONGINT): SET;
+PROCEDURE GetSHIFTMask(size: SIGNED32): SET;
 VAR imm: SET; b: BOOLEAN;
 BEGIN
 	CASE size OF
@@ -1920,7 +1920,7 @@ BEGIN
 	RETURN imm
 END GetSHIFTMask;
 
-PROCEDURE PrepareShifterOperands(xop: PCLIR.Opcode; size: LONGINT; flags: SET; rB, rC: XRegister; val: LONGINT; sC: BOOLEAN;
+PROCEDURE PrepareShifterOperands(xop: PCLIR.Opcode; size: SIGNED32; flags: SET; rB, rC: XRegister; val: SIGNED32; sC: BOOLEAN;
 																VAR mode, conl, conr, sol, sor: SET);
 BEGIN
 	IF IsShift(xop)  THEN
@@ -1988,7 +1988,7 @@ BEGIN
 END PrepareShifterOperands;
 
 (* GetROTShifter - returns an immediate value used to shift a ROT mask *)
-PROCEDURE GetROTShifter(size: LONGINT): LONGINT;
+PROCEDURE GetROTShifter(size: SIGNED32): SIGNED32;
 BEGIN
 	CASE size OF
 	| PCLIR.Int8: RETURN 24
@@ -1998,8 +1998,8 @@ BEGIN
 END GetROTShifter;
 
 (* ROTPrologue - generates ROT prologue code *)
-PROCEDURE ROTPrologue(rA, size: LONGINT);
-VAR rT, shifter: LONGINT; valid: BOOLEAN;
+PROCEDURE ROTPrologue(rA, size: SIGNED32);
+VAR rT, shifter: SIGNED32; valid: BOOLEAN;
 BEGIN
 	(*
 		rT <- -1
@@ -2014,8 +2014,8 @@ BEGIN
 END ROTPrologue;
 
 (* ROTEpilogue - generates ROT epilogue code *)
-PROCEDURE ROTEpilogue(rD, size: LONGINT; signed: BOOLEAN);
-VAR shifter: LONGINT; sm: SET;
+PROCEDURE ROTEpilogue(rD, size: SIGNED32; signed: BOOLEAN);
+VAR shifter: SIGNED32; sm: SET;
 BEGIN
 	(*
 		rD <- rD OR (rD LSR 16)
@@ -2037,8 +2037,8 @@ BEGIN
 END ROTEpilogue;
 
 (* FloatingPointDPI - I like long identifiers like 'FloatingPointDataProcessingInstruction', but Oberon does not ! *)
-PROCEDURE FloatingPointDPI(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR rA, rB, rD: XRegister; info: Info; long: BOOLEAN; def: PCLIR.Instruction; rs, addrMode, address: SET; op: LONGINT;
+PROCEDURE FloatingPointDPI(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR rA, rB, rD: XRegister; info: Info; long: BOOLEAN; def: PCLIR.Instruction; rs, addrMode, address: SET; op: SIGNED32;
 BEGIN
 	info := instr.info(Info); (* info.pos already set by DataProcessingInstruction/DivMod *)
 	long := (instr.dstSize = PCLIR.Float64);
@@ -2113,8 +2113,8 @@ BEGIN
 	IF (rs # {}) THEN PCO.LDM(AL, PCO.A4IA, SP, rs, PCO.A4W); regs.InvalidateAll END
 END FloatingPointDPI;
 
-PROCEDURE Move(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR reg: XRegister; rT, rT1, rA, rB, rC: LONGINT; dummy: BOOLEAN; addrMode, address: SET;
+PROCEDURE Move(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR reg: XRegister; rT, rT1, rA, rB, rC: SIGNED32; dummy: BOOLEAN; addrMode, address: SET;
 BEGIN
 	PCO.Lock;
 	instr.info(Info).pos := PCO.GetCodePos();
@@ -2165,8 +2165,8 @@ BEGIN
 	PCO.Unlock
 END Move;
 
-PROCEDURE Inline(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; i, dummy: LONGINT; inline: PCLIR.AsmInline; block: PCLIR.AsmBlock;
+PROCEDURE Inline(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; i, dummy: SIGNED32; inline: PCLIR.AsmInline; block: PCLIR.AsmBlock;
 	fixup: PCLIR.AsmFixup; adr: PCM.Attribute; opcode: SET; call: BOOLEAN;
 BEGIN
 	PCO.Lock;
@@ -2220,8 +2220,8 @@ BEGIN
 	regs.InvalidateAll
 END Inline;
 
-PROCEDURE Case(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; reg: XRegister; rBase, rIdx, rT, min, max, range, pos, table, i: LONGINT; imm: SET;
+PROCEDURE Case(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; reg: XRegister; rBase, rIdx, rT, min, max, range, pos, table, i: SIGNED32; imm: SET;
 	adr: PCBT.GlobalVariable; dummy: BOOLEAN; const: PCBT.ConstArray;
 BEGIN
 	PCO.Lock;
@@ -2305,8 +2305,8 @@ BEGIN
 	PCO.Unlock
 END Case;
 
-PROCEDURE CaseLabel(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR case: PCLIR.Instruction; PC, offset: LONGINT;
+PROCEDURE CaseLabel(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR case: PCLIR.Instruction; PC, offset: SIGNED32;
 BEGIN
 	PC := PCO.GetCodePos(); instr.info(Info).pos := PC;
 	case := FindDefinition(code, instr.src1);
@@ -2317,8 +2317,8 @@ BEGIN
 	regs.InvalidateAll
 END CaseLabel;
 
-PROCEDURE CaseElse(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: LONGINT);
-VAR info: Info; case: PCLIR.Instruction; adr, i, PC, table: LONGINT;
+PROCEDURE CaseElse(code: PCLIR.Code; VAR instr: PCLIR.Instruction; pc: SIGNED32);
+VAR info: Info; case: PCLIR.Instruction; adr, i, PC, table: SIGNED32;
 BEGIN
 	PC := PCO.GetCodePos(); info := instr.info(Info); info.pos := PC;
 	case := FindDefinition(code, instr.src1);
@@ -2339,19 +2339,19 @@ END CaseElse;
 
 PROCEDURE Optimize(code: PCLIR.Code);
 TYPE Stack = POINTER TO RECORD
-			pc: LONGINT;
+			pc: SIGNED32;
 			next: Stack;
 		END;
 VAR i, d, d2, s, t: PCLIR.Piece; info: Info;
-	ip, dp, dp2, sp, tmp, val: LONGINT;
-	pc: LONGINT;
+	ip, dp, dp2, sp, tmp, val: SIGNED32;
+	pc: SIGNED32;
 	op: PCLIR.Opcode;
 	ok, imm: BOOLEAN;
 	stack, lrStack: Stack;
-	type: LONGINT;
+	type: SIGNED32;
 
-	PROCEDURE IncreaseUse(p: PCLIR.Piece; pc: LONGINT);
-	VAR usePC: LONGINT; usePiece: PCLIR.Piece;
+	PROCEDURE IncreaseUse(p: PCLIR.Piece; pc: SIGNED32);
+	VAR usePC: SIGNED32; usePiece: PCLIR.Piece;
 	BEGIN
 		IF (p.instr[pc].suppress) THEN
 			(* increase use of registers used by this (now no longer suppressed) instruction *)
@@ -2374,8 +2374,8 @@ VAR i, d, d2, s, t: PCLIR.Piece; info: Info;
 		INC(p.instr[pc].dstCount); p.instr[pc].suppress := FALSE
 	END IncreaseUse;
 
-	PROCEDURE DecreaseUse(p: PCLIR.Piece; pc: LONGINT);
-	VAR usePC: LONGINT; usePiece: PCLIR.Piece;
+	PROCEDURE DecreaseUse(p: PCLIR.Piece; pc: SIGNED32);
+	VAR usePC: SIGNED32; usePiece: PCLIR.Piece;
 	BEGIN
 		ASSERT(p.instr[pc].dstCount > 0, INTERNALERROR);
 		DEC(p.instr[pc].dstCount);
@@ -2435,7 +2435,7 @@ VAR i, d, d2, s, t: PCLIR.Piece; info: Info;
 	END IsCondition;
 *)
 
-	PROCEDURE LoadStoreOffset(VAR i: PCLIR.Instruction): LONGINT;
+	PROCEDURE LoadStoreOffset(VAR i: PCLIR.Instruction): SIGNED32;
 	BEGIN
 		IF (i.dstSize = PCLIR.Int16) THEN RETURN 100H	(* halfword accesses have a 8bit immediate *)
 		ELSE RETURN 1000H	(* word/byte accesses have a 12bit immediate *)
@@ -2445,8 +2445,8 @@ VAR i, d, d2, s, t: PCLIR.Piece; info: Info;
 	(* Unchanged - returns TRUE if a register is not changed between the definition and the use.
 			only hardware registers can be changed, of course.
 	*)
-	PROCEDURE Unchanged(register, definition, use: LONGINT): BOOLEAN;
-	VAR pos, pc: LONGINT; piece: PCLIR.Piece; changed: BOOLEAN;
+	PROCEDURE Unchanged(register, definition, use: SIGNED32): BOOLEAN;
+	VAR pos, pc: SIGNED32; piece: PCLIR.Piece; changed: BOOLEAN;
 	BEGIN
 		changed := FALSE;
 		(* the stack pointer can only be changed by loadsp, push and pop instructions *)
@@ -2534,7 +2534,7 @@ BEGIN
 
 			ELSIF (type IN PCLIR.FloatSize) THEN
 
-			ELSE (* HUGEINT *)
+			ELSE (* SIGNED64 *)
 
 			END
 
@@ -2802,10 +2802,10 @@ END Optimize;
 (*  Debug
 (** DumpCode (Debug) - TraverseProc, dumps whole code to global writer W *)
 
-PROCEDURE DumpCode*(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: LONGINT;  context: ANY);
-VAR  op: PCLIR.Opcode;  info: Info; format: SHORTINT; flags: SET;
+PROCEDURE DumpCode*(code: PCLIR.Code;  VAR instr: PCLIR.Instruction;  pc: SIGNED32;  context: ANY);
+VAR  op: PCLIR.Opcode;  info: Info; format: SIGNED8; flags: SET;
 
-	PROCEDURE Reg(r: LONGINT);
+	PROCEDURE Reg(r: SIGNED32);
 	BEGIN
 		IF r = PCLIR.FP THEN
 			Texts.WriteString(PCLIR.W, "FP")
@@ -2822,7 +2822,7 @@ VAR  op: PCLIR.Opcode;  info: Info; format: SHORTINT; flags: SET;
 	END Reg;
 
 	PROCEDURE Indirect(VAR instr: PCLIR.Instruction);
-	VAR offset: LONGINT;
+	VAR offset: SIGNED32;
 	BEGIN
 		IF instr.src1 <= PCLIR.HwReg THEN
 			Reg(instr.src1)
@@ -2836,19 +2836,19 @@ VAR  op: PCLIR.Opcode;  info: Info; format: SHORTINT; flags: SET;
 		END
 	END Indirect;
 
-	PROCEDURE CaseOpd(src: PCLIR.Register;  min, max: LONGINT);
+	PROCEDURE CaseOpd(src: PCLIR.Register;  min, max: SIGNED32);
 	BEGIN
 		Reg(src); Texts.WriteString(PCLIR.W, "  {"); Texts.WriteInt(PCLIR.W, min, 0);
 		Texts.WriteString(PCLIR.W, ", "); Texts.WriteInt(PCLIR.W, max, 0);  Texts.Write(PCLIR.W, "}")
 	END CaseOpd;
 
-	PROCEDURE CaseLineOpd(base, val: LONGINT);
+	PROCEDURE CaseLineOpd(base, val: SIGNED32);
 	BEGIN
 		Texts.WriteInt(PCLIR.W, val, 0); Texts.WriteString(PCLIR.W, "  {");
 		Texts.WriteInt(PCLIR.W, base, 0); Texts.WriteString(PCLIR.W, "}")
 	END CaseLineOpd;
 
-	PROCEDURE CaseElseOpd(base: LONGINT);
+	PROCEDURE CaseElseOpd(base: SIGNED32);
 	BEGIN Texts.WriteString(PCLIR.W, "  {"); Texts.WriteInt(PCLIR.W, base, 0); Texts.WriteString(PCLIR.W, "}")
 	END CaseElseOpd;
 
@@ -2940,7 +2940,7 @@ BEGIN NEW(info); instr.info := info
 END InstructionInit;
 
 PROCEDURE Install*;
-VAR i: PCLIR.Opcode; idx: LONGINT;
+VAR i: PCLIR.Opcode; idx: SIGNED32;
 BEGIN
 	PCLIR.CG.MaxCodeSize := PCO.MaxCodeLength;
 	PCLIR.CG.Init := Init;
@@ -2985,11 +2985,11 @@ BEGIN
 	PCLIR.CG.SysCallMap[DivIndex] := CHR(241);
 	PCLIR.CG.SysCallMap[ModIndex] := CHR(242);
 
-	(* HUGEINT syscalls *)
+	(* SIGNED64 syscalls *)
 	PCLIR.CG.SysCallMap[Int64LSH] := CHR(190);
 	PCLIR.CG.SysCallMap[Int64ASH] := CHR(191);
 
-	(* REAL syscalls *)
+	(* FLOAT32 syscalls *)
 	PCLIR.CG.SysCallMap[FAdd] := CHR(200);
 	PCLIR.CG.SysCallMap[FSub] := CHR(201);
 	PCLIR.CG.SysCallMap[FMul] := CHR(202);
@@ -3007,7 +3007,7 @@ BEGIN
 	PCLIR.CG.SysCallMap[FGe] := CHR(214);
 	PCLIR.CG.SysCallMap[FGt] := CHR(215);
 
-	(* LONGREAL syscalls *)
+	(* FLOAT64 syscalls *)
 	PCLIR.CG.SysCallMap[FAdd+FLongOffset] := CHR(220);
 	PCLIR.CG.SysCallMap[FSub+FLongOffset] := CHR(221);
 	PCLIR.CG.SysCallMap[FMul+FLongOffset] := CHR(222);

@@ -16,7 +16,7 @@ MODULE PasswordFields IN Oberon;	(** portable *) (* ejz,  *)
 		Frame* = POINTER TO FrameDesc;
 		FrameDesc* = RECORD (TextFields.TextFieldDesc)
 			passWord: ARRAY 64 OF CHAR;
-			len: LONGINT
+			len: SIGNED32
 		END;
 
 	PROCEDURE Copy*(VAR M: Objects.CopyMsg; from, to: Frame);
@@ -29,7 +29,7 @@ MODULE PasswordFields IN Oberon;	(** portable *) (* ejz,  *)
 	PROCEDURE Handler*(F: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
 			F1: Frame;
-			i: LONGINT;
+			i: SIGNED32;
 	BEGIN
 		WITH F: Frame DO
 			IF M IS Display.FrameMsg THEN

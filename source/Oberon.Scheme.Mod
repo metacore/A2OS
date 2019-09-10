@@ -17,7 +17,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 			- complex and bignum numbers
 			- make more robust
 		- custom memory management
-			- Object is LONGINT combining type and address
+			- Object is SIGNED32 combining type and address
 			- custom GC
 		- continuations: copy contents of stack
 		- macro support; replace derived expressions by library syntax
@@ -54,8 +54,8 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		(** abstract scheme objects (pointer-based implementation not to be relied on) **)
 		Object* = POINTER TO ObjDesc;
 		ObjDesc = RECORD
-			type: SHORTINT;	(* object type *)
-			sub: SHORTINT;	(* subtype *)
+			type: SIGNED8;	(* object type *)
+			sub: SIGNED8;	(* subtype *)
 			dsc, next: Object;	(* optimization for pairs *)
 		END;
 
@@ -66,19 +66,19 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		Buffer = POINTER TO ARRAY OF CHAR;
 
 		Stretch = RECORD
-			pos, len: LONGINT;
+			pos, len: SIGNED32;
 			buf: Buffer;
 		END;
 
 		(** string memory pools **)
 		Pool* = RECORD
-			avail, pos: LONGINT;
+			avail, pos: SIGNED32;
 			buf: Buffer;
 		END;
 
 		Symbol = POINTER TO RECORD (ObjDesc)
 			stretch: Stretch;
-			hash: LONGINT;
+			hash: SIGNED32;
 			link: Symbol;
 		END;
 
@@ -107,15 +107,15 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		END;
 
 		Fixnum = POINTER TO RECORD (ObjDesc)
-			int: LONGINT;
+			int: SIGNED32;
 		END;
 
 		Flonum = POINTER TO RECORD (ObjDesc)
-			real: LONGREAL;
+			real: FLOAT64;
 		END;
 
 		Rational = POINTER TO RECORD (ObjDesc)
-			num, denom: LONGINT;
+			num, denom: SIGNED32;
 		END;
 
 		Reference = POINTER TO RECORD (ObjDesc)
@@ -123,7 +123,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		END;
 
 		Vector = POINTER TO RECORD (ObjDesc)
-			size: LONGINT;
+			size: SIGNED32;
 			elem: POINTER TO ARRAY OF Object;
 		END;
 
@@ -143,7 +143,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 			open, ready, eof: BOOLEAN;
 			read: PROCEDURE (port: Input; VAR ch: CHAR);
 			unread: PROCEDURE (port: Input);
-			getpos: PROCEDURE (port: Input): LONGINT;
+			getpos: PROCEDURE (port: Input): SIGNED32;
 		END;
 
 		FileInput = POINTER TO RECORD (InputDesc)
@@ -156,7 +156,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		END;
 
 		StringInput = POINTER TO RECORD (InputDesc)
-			pos: LONGINT;
+			pos: SIGNED32;
 			ps: POINTER TO ARRAY OF CHAR;
 		END;
 
@@ -181,26 +181,26 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 
 		Stack = RECORD
 			obj: RECORD
-				size, top: LONGINT;
+				size, top: SIGNED32;
 				elem: ObjectElems
 			END;
 			eval: RECORD
-				size, top: LONGINT;
+				size, top: SIGNED32;
 				elem: EvalElems
 			END;
 			env: RECORD
-				size, top: LONGINT;
+				size, top: SIGNED32;
 				elem: EnvElems
 			END
 		END;
 
 		Token = RECORD
-			pos: LONGINT;
-			kind: INTEGER;
+			pos: SIGNED32;
+			kind: SIGNED16;
 			bool: BOOLEAN;
 			char: CHAR;
-			num, denom: LONGINT;
-			real: LONGREAL;
+			num, denom: SIGNED32;
+			real: FLOAT64;
 			s: ARRAY 100H OF CHAR;
 		END;
 
@@ -236,8 +236,8 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		pool.avail := 0
 	END InitPool;
 
-	PROCEDURE AllocStretch (len: LONGINT; VAR pool: Pool; VAR str: Stretch);
-		VAR buf: Buffer; pos: LONGINT;
+	PROCEDURE AllocStretch (len: SIGNED32; VAR pool: Pool; VAR str: Stretch);
+		VAR buf: Buffer; pos: SIGNED32;
 	BEGIN
 		IF len > maxPoolSize DIV 2 THEN	(* allocate in separate buffer *)
 			NEW(buf, len); pos := 0
@@ -252,7 +252,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END AllocStretch;
 
 	PROCEDURE MakeStretch (VAR s: ARRAY OF CHAR; VAR pool: Pool; VAR str: Stretch);
-		VAR len, n: LONGINT;
+		VAR len, n: SIGNED32;
 	BEGIN
 		len := 0; WHILE s[len] # 0X DO INC(len) END;
 		AllocStretch(len, pool, str);
@@ -268,7 +268,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		s[n] := 0X
 	END GetStretch;
 
-	PROCEDURE SetStretch (VAR str: Stretch; pos, len: LONGINT; VAR s: ARRAY OF CHAR);
+	PROCEDURE SetStretch (VAR str: Stretch; pos, len: SIGNED32; VAR s: ARRAY OF CHAR);
 		VAR buf: Buffer; n: SIZE;
 	BEGIN
 		buf := str.buf; pos := str.pos + pos; n := 0;
@@ -349,8 +349,8 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		NEW(str); str.type := string; MakeStretch(val, pool, str.stretch); RETURN str
 	END NewLiteral;
 
-	PROCEDURE NewString* (len: LONGINT; fill: CHAR; VAR pool: Pool): Object;
-		VAR str: String; n, pos: LONGINT; buf: Buffer;
+	PROCEDURE NewString* (len: SIGNED32; fill: CHAR; VAR pool: Pool): Object;
+		VAR str: String; n, pos: SIGNED32; buf: Buffer;
 	BEGIN
 		NEW(str); str.type := string; AllocStretch(len, pool, str.stretch);
 		n := 0; buf := str.stretch.buf; pos := str.stretch.pos;
@@ -363,22 +363,22 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		RETURN obj.type = string
 	END IsString;
 
-	PROCEDURE StringLen* (obj: Object): LONGINT;
+	PROCEDURE StringLen* (obj: Object): SIGNED32;
 	BEGIN
 		RETURN obj(String).stretch.len
 	END StringLen;
 
-	PROCEDURE GetString* (obj: Object; pos, len: LONGINT; VAR s: ARRAY OF CHAR);
+	PROCEDURE GetString* (obj: Object; pos, len: SIGNED32; VAR s: ARRAY OF CHAR);
 	BEGIN
 		GetStretch(obj(String).stretch, pos, len, s)
 	END GetString;
 
-	PROCEDURE SetString* (obj: Object; pos, len: LONGINT; s: ARRAY OF CHAR);
+	PROCEDURE SetString* (obj: Object; pos, len: SIGNED32; s: ARRAY OF CHAR);
 	BEGIN
 		SetStretch(obj(String).stretch, pos, len, s)
 	END SetString;
 
-	PROCEDURE CopyString* (src, dst: Object; spos, len, dpos: LONGINT);
+	PROCEDURE CopyString* (src, dst: Object; spos, len, dpos: SIGNED32);
 		VAR s, d: String; buf: ARRAY 256 OF CHAR;
 	BEGIN
 		s := src(String); d := dst(String);
@@ -392,8 +392,8 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 
 	(**--- Numbers ---**)
 
-	PROCEDURE GCD (a, b: LONGINT): LONGINT;
-		VAR t: LONGINT;
+	PROCEDURE GCD (a, b: SIGNED32): SIGNED32;
+		VAR t: SIGNED32;
 	BEGIN
 		IF b > a THEN t := b; b := a; a := t END;
 		WHILE b > 1 DO t := b; b := a MOD b; a := t END;
@@ -402,14 +402,14 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		END
 	END GCD;
 
-	PROCEDURE NewInteger* (val: LONGINT): Object;
+	PROCEDURE NewInteger* (val: SIGNED32): Object;
 		VAR fix: Fixnum;
 	BEGIN
 		NEW(fix); fix.type := number; fix.sub := fixnum; fix.int := val; RETURN fix
 	END NewInteger;
 
-	PROCEDURE NewRational* (num, denom: LONGINT): Object;
-		VAR gcd: LONGINT; rat: Rational;
+	PROCEDURE NewRational* (num, denom: SIGNED32): Object;
+		VAR gcd: SIGNED32; rat: Rational;
 	BEGIN
 		IF denom < 0 THEN num := -num; denom := -denom END;
 		gcd := GCD(ABS(num), denom);
@@ -421,7 +421,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		END
 	END NewRational;
 
-	PROCEDURE NewReal* (val: LONGREAL): Object;
+	PROCEDURE NewReal* (val: FLOAT64): Object;
 		VAR flo: Flonum;
 	BEGIN
 		NEW(flo); flo.type := number; flo.sub := flonum; flo.real := val; RETURN flo
@@ -429,7 +429,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 
 
 	PROCEDURE ToExact* (obj: Object): Object;
-		VAR r: LONGREAL; h, l, exp: LONGINT;
+		VAR r: FLOAT64; h, l, exp: SIGNED32;
 	BEGIN
 		IF obj.sub IN {fixnum, rational} THEN RETURN obj
 		ELSE r := obj(Flonum).real
@@ -444,7 +444,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		ELSE h := 40000000H + ASH(h MOD 100000H, 10) + ASH(l, -22) MOD 400H	(* 1.f * 2^(exp-1023) *)
 		END;
 		exp := exp-1023;
-		IF exp >= 31 THEN RETURN false	(* too large for LONGINT *)
+		IF exp >= 31 THEN RETURN false	(* too large for SIGNED32 *)
 		ELSIF exp <= -31 THEN RETURN zero	(* underflow *)
 		END;
 		WHILE exp <= 0 DO h := h DIV 2; INC(exp) END;
@@ -467,8 +467,8 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END ToInexact;
 
 
-	PROCEDURE GetInteger* (obj: Object; VAR val: LONGINT; VAR exact: BOOLEAN);
-		VAR rat: Rational; r: LONGREAL;
+	PROCEDURE GetInteger* (obj: Object; VAR val: SIGNED32; VAR exact: BOOLEAN);
+		VAR rat: Rational; r: FLOAT64;
 	BEGIN
 		IF obj.sub = fixnum THEN
 			val := obj(Fixnum).int; exact := TRUE
@@ -477,14 +477,14 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 			IF rat.num MOD rat.denom >= rat.denom DIV 2 THEN INC(val) END
 		ELSE
 			r := obj(Flonum).real+0.5; exact := FALSE;
-			IF r < MIN(LONGINT) THEN val := MIN(LONGINT)
-			ELSIF r > MAX(LONGINT) THEN val := MAX(LONGINT)
+			IF r < MIN(SIGNED32) THEN val := MIN(SIGNED32)
+			ELSIF r > MAX(SIGNED32) THEN val := MAX(SIGNED32)
 			ELSE val := ENTIER(r)
 			END
 		END
 	END GetInteger;
 
-	PROCEDURE GetRational* (obj: Object; VAR num, denom: LONGINT; VAR exact: BOOLEAN);
+	PROCEDURE GetRational* (obj: Object; VAR num, denom: SIGNED32; VAR exact: BOOLEAN);
 		VAR rat: Rational;
 	BEGIN
 		exact := obj.sub IN {fixnum, rational};
@@ -500,7 +500,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		END
 	END GetRational;
 
-	PROCEDURE GetReal* (obj: Object; VAR val: LONGREAL);
+	PROCEDURE GetReal* (obj: Object; VAR val: FLOAT64);
 		VAR rat: Rational;
 	BEGIN
 		IF obj.sub = fixnum THEN val := obj(Fixnum).int
@@ -546,8 +546,8 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END IsInexact;
 
 
-	PROCEDURE Compare* (obj1, obj2: Object): LONGINT;
-		VAR n1, d1, n2, d2, t1, t2: LONGINT; r: Rational; p1, p2: LONGREAL;
+	PROCEDURE Compare* (obj1, obj2: Object): SIGNED32;
+		VAR n1, d1, n2, d2, t1, t2: SIGNED32; r: Rational; p1, p2: FLOAT64;
 	BEGIN
 		IF obj1 = obj2 THEN RETURN 0
 		ELSIF IsInexact(obj1) OR IsInexact(obj2) THEN
@@ -581,7 +581,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Compare;
 
 	PROCEDURE Add* (obj1, obj2: Object): Object;
-		VAR n1, n2, d1, d2, gcd: LONGINT; r: Rational; x1, x2: LONGREAL;
+		VAR n1, n2, d1, d2, gcd: SIGNED32; r: Rational; x1, x2: FLOAT64;
 	BEGIN
 		IF obj1 = zero THEN RETURN obj2
 		ELSIF obj2 = zero THEN RETURN obj1
@@ -589,29 +589,29 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		ELSIF IsInexact(obj2) THEN obj1 := ToInexact(obj1); RETURN NewReal(obj1(Flonum).real + obj2(Flonum).real)
 		ELSIF IsInteger(obj1) & IsInteger(obj2) THEN
 			n1 := obj1(Fixnum).int; n2 := obj2(Fixnum).int;
-			IF (n2 > 0) & (MAX(LONGINT) - n2 < n1) THEN RETURN inf
-			ELSIF (n2 < 0) & (MIN(LONGINT) - n2 > n1) THEN RETURN ninf
+			IF (n2 > 0) & (MAX(SIGNED32) - n2 < n1) THEN RETURN inf
+			ELSIF (n2 < 0) & (MIN(SIGNED32) - n2 > n1) THEN RETURN ninf
 			ELSE RETURN NewInteger(n1 + n2)
 			END
 		ELSIF IsInteger(obj1) THEN
 			r := obj2(Rational); n2 := r.num; d2 := r.denom; n1 := obj1(Fixnum).int;
-			IF (n2 >= 0) & ((MAX(LONGINT) - n2) DIV d2 < n1) THEN x2 := n2; RETURN NewReal(x2/d2 + n1)
-			ELSIF (n2 < 0) & ((MIN(LONGINT) - n2) DIV d2 > n1) THEN x2 := n2; RETURN NewReal(x2/d2 + n1)
+			IF (n2 >= 0) & ((MAX(SIGNED32) - n2) DIV d2 < n1) THEN x2 := n2; RETURN NewReal(x2/d2 + n1)
+			ELSIF (n2 < 0) & ((MIN(SIGNED32) - n2) DIV d2 > n1) THEN x2 := n2; RETURN NewReal(x2/d2 + n1)
 			ELSE RETURN NewRational(n1 * d2 + n2, d2)
 			END
 		ELSIF IsInteger(obj2) THEN
 			r := obj1(Rational); n1 := r.num; d1 := r.denom; n2 := obj2(Fixnum).int;
-			IF (n1 >= 0) & ((MAX(LONGINT) - n1) DIV d1 < n2) THEN x1 := n1; RETURN NewReal(x1/d1 + n2)
-			ELSIF (n1 < 0) & ((MIN(LONGINT) - n1) DIV d1 > n2) THEN x1 := n1; RETURN NewReal(x1/d1 + n2)
+			IF (n1 >= 0) & ((MAX(SIGNED32) - n1) DIV d1 < n2) THEN x1 := n1; RETURN NewReal(x1/d1 + n2)
+			ELSIF (n1 < 0) & ((MIN(SIGNED32) - n1) DIV d1 > n2) THEN x1 := n1; RETURN NewReal(x1/d1 + n2)
 			ELSE RETURN NewRational(n2 * d1 + n1, d1)
 			END
 		ELSE
 			r := obj1(Rational); n1 := r.num; d1 := r.denom;
 			r := obj2(Rational); n2 := r.num; d2 := r.denom;
 			gcd := GCD(d1, d2); d1 := d1 DIV gcd; d2 := d2 DIV gcd;
-			IF (MAX(LONGINT) DIV d1 > gcd * d2) & (MAX(LONGINT) DIV ABS(n1) > d2) & (MAX(LONGINT) DIV ABS(n2) > d1) THEN
+			IF (MAX(SIGNED32) DIV d1 > gcd * d2) & (MAX(SIGNED32) DIV ABS(n1) > d2) & (MAX(SIGNED32) DIV ABS(n2) > d1) THEN
 				n1 := n1 * d2; n2 := n2 * d1;
-				IF (n1 >= 0) & (MAX(LONGINT) - n1 > n2) OR (n1 < 0) & (MIN(LONGINT) - n1 < n2) THEN
+				IF (n1 >= 0) & (MAX(SIGNED32) - n1 > n2) OR (n1 < 0) & (MIN(SIGNED32) - n1 < n2) THEN
 					RETURN NewRational(n1 + n2, gcd * d1 * d2)
 				END
 			END;
@@ -625,13 +625,13 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	BEGIN
 		IF obj = zero THEN RETURN zero
 		ELSIF IsInexact(obj) THEN RETURN NewReal(-obj(Flonum).real)
-		ELSIF IsInteger(obj) THEN RETURN NewInteger(-obj(Fixnum).int)	(* int = MAX(LONGINT)? *)
-		ELSE r := obj(Rational); RETURN NewRational(-r.num, r.denom)	(* num = MAX(LONGINT)? *)
+		ELSIF IsInteger(obj) THEN RETURN NewInteger(-obj(Fixnum).int)	(* int = MAX(SIGNED32)? *)
+		ELSE r := obj(Rational); RETURN NewRational(-r.num, r.denom)	(* num = MAX(SIGNED32)? *)
 		END
 	END Neg;
 
 	PROCEDURE Sub* (obj1, obj2: Object): Object;
-		VAR n1, n2, d1, d2, gcd: LONGINT; r: Rational; x1, x2: LONGREAL;
+		VAR n1, n2, d1, d2, gcd: SIGNED32; r: Rational; x1, x2: FLOAT64;
 	BEGIN
 		IF obj1 = zero THEN RETURN Neg(obj2)
 		ELSIF obj2 = zero THEN RETURN obj1
@@ -639,29 +639,29 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		ELSIF IsInexact(obj2) THEN obj1 := ToInexact(obj1); RETURN NewReal(obj1(Flonum).real - obj2(Flonum).real)
 		ELSIF IsInteger(obj1) & IsInteger(obj2) THEN
 			n1 := obj1(Fixnum).int; n2 := obj2(Fixnum).int;
-			IF (n2 < 0) & (MAX(LONGINT) + n2 < n1) THEN RETURN inf
-			ELSIF (n2 > 0) & (MIN(LONGINT) + n2 > n1) THEN RETURN ninf
+			IF (n2 < 0) & (MAX(SIGNED32) + n2 < n1) THEN RETURN inf
+			ELSIF (n2 > 0) & (MIN(SIGNED32) + n2 > n1) THEN RETURN ninf
 			ELSE RETURN NewInteger(n1 - n2)
 			END
 		ELSIF IsInteger(obj1) THEN
 			r := obj2(Rational); n2 := r.num; d2 := r.denom; n1 := obj1(Fixnum).int;
-			IF (n2 <= 0) & ((MAX(LONGINT) + n2) DIV d2 < n1) THEN x2 := n2; RETURN NewReal(x2/d2 + n1)
-			ELSIF (n2 > 0) & ((MIN(LONGINT) + n2) DIV d2 > n1) THEN x2 := n2; RETURN NewReal(x2/d2 + n1)
+			IF (n2 <= 0) & ((MAX(SIGNED32) + n2) DIV d2 < n1) THEN x2 := n2; RETURN NewReal(x2/d2 + n1)
+			ELSIF (n2 > 0) & ((MIN(SIGNED32) + n2) DIV d2 > n1) THEN x2 := n2; RETURN NewReal(x2/d2 + n1)
 			ELSE RETURN NewRational(n1 * d2 - n2, d2)
 			END
 		ELSIF IsInteger(obj2) THEN
 			r := obj1(Rational); n1 := r.num; d1 := r.denom; n2 := obj2(Fixnum).int;
-			IF (n1 <= 0) & ((MAX(LONGINT) + n1) DIV d1 < n2) THEN x1 := n1; RETURN NewReal(x1/d1 + n2)
-			ELSIF (n1 > 0) & ((MIN(LONGINT) + n1) DIV d1 > n2) THEN x1 := n1; RETURN NewReal(x1/d1 + n2)
+			IF (n1 <= 0) & ((MAX(SIGNED32) + n1) DIV d1 < n2) THEN x1 := n1; RETURN NewReal(x1/d1 + n2)
+			ELSIF (n1 > 0) & ((MIN(SIGNED32) + n1) DIV d1 > n2) THEN x1 := n1; RETURN NewReal(x1/d1 + n2)
 			ELSE RETURN NewRational(n2 * d1 - n1, d1)
 			END
 		ELSE
 			r := obj1(Rational); n1 := r.num; d1 := r.denom;
 			r := obj2(Rational); n2 := r.num; d2 := r.denom;
 			gcd := GCD(d1, d2); d1 := d1 DIV gcd; d2 := d2 DIV gcd;
-			IF (MAX(LONGINT) DIV d1 > gcd * d2) & (MAX(LONGINT) DIV ABS(n1) > d2) & (MAX(LONGINT) DIV ABS(n2) > d1) THEN
+			IF (MAX(SIGNED32) DIV d1 > gcd * d2) & (MAX(SIGNED32) DIV ABS(n1) > d2) & (MAX(SIGNED32) DIV ABS(n2) > d1) THEN
 				n1 := n1 * d2; n2 := n2 * d1;
-				IF (n1 <= 0) & (MAX(LONGINT) + n1 > n2) OR (n1 > 0) & (MIN(LONGINT) + n1 < n2) THEN
+				IF (n1 <= 0) & (MAX(SIGNED32) + n1 > n2) OR (n1 > 0) & (MIN(SIGNED32) + n1 < n2) THEN
 					RETURN NewRational(n1 - n2, gcd * d1 * d2)
 				END
 			END;
@@ -671,7 +671,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Sub;
 
 	PROCEDURE Mul * (obj1, obj2: Object): Object;
-		VAR n1, n2, d1, d2, gcd: LONGINT; r: Rational; x1, x2: LONGREAL;
+		VAR n1, n2, d1, d2, gcd: SIGNED32; r: Rational; x1, x2: FLOAT64;
 	BEGIN
 		IF (obj1 = zero) OR (obj2 = zero) THEN RETURN zero
 		ELSIF obj1 = one THEN RETURN obj2
@@ -681,7 +681,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		ELSIF IsInteger(obj1) & IsInteger(obj2) THEN
 			n1 := obj1(Fixnum).int; n2 := obj2(Fixnum).int;
 			IF (n1 = 0) OR (n2 = 0) THEN RETURN zero
-			ELSIF MAX(LONGINT) DIV ABS(n1) < ABS(n2) THEN x1 := n1; RETURN NewReal(x1 * n2)
+			ELSIF MAX(SIGNED32) DIV ABS(n1) < ABS(n2) THEN x1 := n1; RETURN NewReal(x1 * n2)
 			ELSE RETURN NewInteger(n1 * n2)
 			END
 		ELSIF IsInteger(obj1) THEN
@@ -689,7 +689,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 			gcd := GCD(d2, ABS(n1));
 			IF gcd # 1 THEN n1 := n1 DIV gcd; d2 := d2 DIV gcd END;
 			IF n1 = 0 THEN RETURN zero
-			ELSIF MAX(LONGINT) DIV ABS(n1) < ABS(n2) THEN x2 := n2; RETURN NewReal(x2/d2 * n1)
+			ELSIF MAX(SIGNED32) DIV ABS(n1) < ABS(n2) THEN x2 := n2; RETURN NewReal(x2/d2 * n1)
 			ELSE RETURN NewRational(n1 * n2, d2)
 			END
 		ELSIF IsInteger(obj2) THEN
@@ -697,7 +697,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 			gcd := GCD(d1, ABS(n2));
 			IF gcd # 1 THEN n2 := n2 DIV gcd; d1 := d1 DIV gcd END;
 			IF n2 = 0 THEN RETURN zero
-			ELSIF MAX(LONGINT) DIV ABS(n2) < ABS(n1) THEN x1 := n1; RETURN NewReal(x1/d1 * n2)
+			ELSIF MAX(SIGNED32) DIV ABS(n2) < ABS(n1) THEN x1 := n1; RETURN NewReal(x1/d1 * n2)
 			ELSE RETURN NewRational(n2 * n1, d1)
 			END
 		ELSE
@@ -707,7 +707,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 			IF gcd # 1 THEN n2 := n2 DIV gcd; d1 := d1 DIV gcd END;
 			gcd := GCD(d2, ABS(n1));
 			IF gcd # 1 THEN n1 := n1 DIV gcd; d2 := d2 DIV gcd END;
-			IF (MAX(LONGINT) DIV d1 < d2) OR (MAX(LONGINT) DIV ABS(n1) < ABS(n2)) THEN
+			IF (MAX(SIGNED32) DIV d1 < d2) OR (MAX(SIGNED32) DIV ABS(n1) < ABS(n2)) THEN
 				x1 := n1; x2 := n2; RETURN NewReal(x1/n1 * x2/n2)
 			ELSE
 				RETURN NewRational(n1 * n2, d1 * d2)
@@ -726,7 +726,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Inv;
 
 	PROCEDURE Div * (obj1, obj2: Object): Object;
-		VAR n1, n2, d1, d2, gcd: LONGINT; r: Rational; x1, x2: LONGREAL;
+		VAR n1, n2, d1, d2, gcd: SIGNED32; r: Rational; x1, x2: FLOAT64;
 	BEGIN
 		IF obj1 = one THEN RETURN Inv(obj2)
 		ELSIF obj2 = one THEN RETURN obj1
@@ -735,20 +735,20 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		ELSIF IsInteger(obj1) & IsInteger(obj2) THEN RETURN NewRational(obj1(Fixnum).int, obj2(Fixnum).int)
 		ELSIF IsInteger(obj1) THEN
 			n1 := obj1(Fixnum).int; r := obj2(Rational); n2 := r.num; d2 := r.denom;
-			IF MAX(LONGINT) DIV ABS(n1) < d2 THEN x1 := n1; RETURN NewReal(x1 * d2/n2)
+			IF MAX(SIGNED32) DIV ABS(n1) < d2 THEN x1 := n1; RETURN NewReal(x1 * d2/n2)
 			ELSE RETURN NewRational(n1 * d2, n2)
 			END
 		ELSIF IsInteger(obj2) THEN
 			n2 := obj2(Fixnum).int; r := obj1(Rational); n1 := r.num; d1 := r.denom;
 			gcd := GCD(n1, n2);
 			IF gcd # 1 THEN n1 := n1 DIV gcd; n2 := n2 DIV gcd END;
-			IF MAX(LONGINT) DIV ABS(n2) < d1 THEN x1 := n1; RETURN NewReal((x1/d1)/n2)
+			IF MAX(SIGNED32) DIV ABS(n2) < d1 THEN x1 := n1; RETURN NewReal((x1/d1)/n2)
 			ELSE RETURN NewRational(n1, d1 * n2)
 			END
 		ELSE
 			r := obj1(Rational); n1 := r.num; d1 := r.denom;
 			r := obj2(Rational); n2 := r.num; d2 := r.denom;
-			IF (MAX(LONGINT) DIV d1 < ABS(n2)) OR (MAX(LONGINT) DIV d2 < ABS(n1)) THEN
+			IF (MAX(SIGNED32) DIV d1 < ABS(n2)) OR (MAX(SIGNED32) DIV d2 < ABS(n1)) THEN
 				x1 := n1; x2 := n2; RETURN NewReal((x1 * d2)/(x2 * d1))
 			ELSE
 				RETURN NewRational(n1 * d2, d1 * n2)
@@ -757,7 +757,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Div;
 
 	PROCEDURE Quotient* (obj1, obj2: Object; VAR q, r, m: Object);
-		VAR n1, n2, iq, ir, im: LONGINT; ex1, ex2: BOOLEAN;
+		VAR n1, n2, iq, ir, im: SIGNED32; ex1, ex2: BOOLEAN;
 	BEGIN
 		GetInteger(obj1, n1, ex1); GetInteger(obj2, n2, ex2);
 		IF n2 > 0 THEN
@@ -776,7 +776,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Quotient;
 
 	PROCEDURE Sqrt* (obj: Object): Object;
-		VAR x: LONGREAL; res, exres: Object;
+		VAR x: FLOAT64; res, exres: Object;
 	BEGIN
 		GetReal(obj, x);
 		IF x < 0.0D0 THEN RETURN nan END;
@@ -791,7 +791,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Sqrt;
 
 	PROCEDURE Exp* (obj: Object): Object;
-		VAR x: LONGREAL;
+		VAR x: FLOAT64;
 	BEGIN
 		GetReal(obj, x);
 		IF (x = 0.0D0) & (obj.sub = fixnum) THEN RETURN one
@@ -800,7 +800,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Exp;
 
 	PROCEDURE Ln* (obj: Object): Object;
-		VAR x: LONGREAL;
+		VAR x: FLOAT64;
 	BEGIN
 		GetReal(obj, x);
 		IF x < 0.0D0 THEN RETURN nan
@@ -810,14 +810,14 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Ln;
 
 	PROCEDURE Expt* (base, power: Object): Object;
-		VAR x, y, res: LONGREAL;
+		VAR x, y, res: FLOAT64;
 	BEGIN
 		GetReal(base, x);
 		IF x < 0.0D0 THEN RETURN nan
 		ELSE
 			GetReal(power, y);
 			res := MathL.exp(y * MathL.ln(x));
-			IF (base.sub = fixnum) & (power.sub = fixnum) & (res <= MAX(LONGINT)) THEN
+			IF (base.sub = fixnum) & (power.sub = fixnum) & (res <= MAX(SIGNED32)) THEN
 				RETURN NewInteger(ENTIER(res + 0.5))
 			ELSE
 				RETURN NewReal(res)
@@ -826,13 +826,13 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Expt;
 
 	PROCEDURE Sin* (obj: Object): Object;
-		VAR x: LONGREAL;
+		VAR x: FLOAT64;
 	BEGIN
 		GetReal(obj, x); RETURN NewReal(MathL.sin(x))
 	END Sin;
 
 	PROCEDURE ASin* (obj: Object): Object;
-		VAR x: LONGREAL;
+		VAR x: FLOAT64;
 	BEGIN
 		GetReal(obj, x);
 		IF ABS(x) > 1.0D0 THEN RETURN nan
@@ -844,13 +844,13 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END ASin;
 
 	PROCEDURE Cos* (obj: Object): Object;
-		VAR x: LONGREAL;
+		VAR x: FLOAT64;
 	BEGIN
 		GetReal(obj, x); RETURN NewReal(MathL.cos(x))
 	END Cos;
 
 	PROCEDURE ACos* (obj: Object): Object;
-		VAR x: LONGREAL;
+		VAR x: FLOAT64;
 	BEGIN
 		GetReal(obj, x);
 		IF ABS(x) > 1.0D0 THEN RETURN nan
@@ -862,7 +862,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END ACos;
 
 	PROCEDURE Tan* (obj: Object): Object;
-		VAR x, y: LONGREAL;
+		VAR x, y: FLOAT64;
 	BEGIN
 		GetReal(obj, x);
 		y := MathL.cos(x);
@@ -876,16 +876,16 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Tan;
 
 	PROCEDURE ATan* (obj: Object): Object;
-		VAR x: LONGREAL;
+		VAR x: FLOAT64;
 	BEGIN
 		GetReal(obj, x); RETURN NewReal(MathL.arctan(x))
 	END ATan;
 
 	PROCEDURE ATan2* (obj1, obj2: Object): Object;
-		VAR x, y, phi: LONGREAL;
+		VAR x, y, phi: FLOAT64;
 	BEGIN
 		GetReal(obj1, x); GetReal(obj2, y);
-		IF (ABS(x) < 1.0D0) & (ABS(y) >= ABS(x * MAX(LONGREAL))) THEN	(* y/x would overflow *)
+		IF (ABS(x) < 1.0D0) & (ABS(y) >= ABS(x * MAX(FLOAT64))) THEN	(* y/x would overflow *)
 			IF y >= 0.0D0 THEN phi := MathL.pi/2.0D0
 			ELSE phi := -MathL.pi/2.0D0
 			END
@@ -965,11 +965,11 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 
 	(**--- Symbols ---**)
 
-	PROCEDURE HashCode (VAR s: ARRAY OF CHAR): LONGINT;
+	PROCEDURE HashCode (VAR s: ARRAY OF CHAR): SIGNED32;
 		CONST a0 = 31415; b = 27183; m = ASH(1, 16) - 15;
-		VAR n, a, h: LONGINT;
+		VAR n, a, h: SIGNED32;
 	BEGIN
-		(* taken from Sedgewick; a * m < MAX(LONGINT); no overflow checks (a*b!) *)
+		(* taken from Sedgewick; a * m < MAX(SIGNED32); no overflow checks (a*b!) *)
 		n := 0; a := a0; h := 0;
 		WHILE s[n] # 0X DO
 			h := (a * h + LONG(ORD(s[n]))) MOD m;
@@ -979,7 +979,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END HashCode;
 
 	PROCEDURE NewSymbol* (name: ARRAY OF CHAR): Object;
-		VAR hash, idx: LONGINT; sym: Symbol;
+		VAR hash, idx: SIGNED32; sym: Symbol;
 	BEGIN
 		hash := HashCode(name); idx := hash MOD dirSize; sym := symTab[idx];
 		WHILE sym # NIL DO
@@ -1049,8 +1049,8 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 
 	(**--- Vectors ---**)
 
-	PROCEDURE NewVector* (size: LONGINT; fill: Object): Object;
-		VAR vec: Vector; n: LONGINT;
+	PROCEDURE NewVector* (size: SIGNED32; fill: Object): Object;
+		VAR vec: Vector; n: SIGNED32;
 	BEGIN
 		NEW(vec); vec.type := vector; vec.size := size;
 		IF size # 0 THEN NEW(vec.elem, size) END;
@@ -1063,17 +1063,17 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		RETURN obj.type = vector
 	END IsVector;
 
-	PROCEDURE VectorLen* (obj: Object): LONGINT;
+	PROCEDURE VectorLen* (obj: Object): SIGNED32;
 	BEGIN
 		RETURN obj(Vector).size
 	END VectorLen;
 
-	PROCEDURE VectorAt* (obj: Object; idx: LONGINT): Object;
+	PROCEDURE VectorAt* (obj: Object; idx: SIGNED32): Object;
 	BEGIN
 		RETURN obj(Vector).elem[idx]
 	END VectorAt;
 
-	PROCEDURE SetVectorAt* (obj: Object; idx: LONGINT; val: Object);
+	PROCEDURE SetVectorAt* (obj: Object; idx: SIGNED32; val: Object);
 	BEGIN
 		obj(Vector).elem[idx] := val
 	END SetVectorAt;
@@ -1161,7 +1161,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		ip := obj(Input); ip.unread(ip)
 	END Unread;
 
-	PROCEDURE Pos* (obj: Object): LONGINT;
+	PROCEDURE Pos* (obj: Object): SIGNED32;
 		VAR ip: Input;
 	BEGIN
 		ip := obj(Input); RETURN ip.getpos(ip)
@@ -1184,7 +1184,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		fip := ip(FileInput); Files.Set(fip.r, Files.Base(fip.r), Files.Pos(fip.r)-1)
 	END UnreadFile;
 
-	PROCEDURE FilePos (ip: Input): LONGINT;
+	PROCEDURE FilePos (ip: Input): SIGNED32;
 	BEGIN
 		RETURN Files.Pos(ip(FileInput).r)
 	END FilePos;
@@ -1211,12 +1211,12 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		tip := ip(TextInput); Texts.OpenReader(tip.r, tip.text, Texts.Pos(tip.r)-1)
 	END UnreadText;
 
-	PROCEDURE TextPos (ip: Input): LONGINT;
+	PROCEDURE TextPos (ip: Input): SIGNED32;
 	BEGIN
 		RETURN Texts.Pos(ip(TextInput).r)
 	END TextPos;
 
-	PROCEDURE NewTextInput* (text: Texts.Text; pos: LONGINT): Object;
+	PROCEDURE NewTextInput* (text: Texts.Text; pos: SIGNED32): Object;
 		VAR tip: TextInput;
 	BEGIN
 		NEW(tip); tip.type := port; tip.sub := input; tip.open := TRUE; tip.ready := TRUE; tip.eof := FALSE;
@@ -1239,7 +1239,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		DEC(ip(StringInput).pos)
 	END UnreadString;
 
-	PROCEDURE StringPos (ip: Input): LONGINT;
+	PROCEDURE StringPos (ip: Input): SIGNED32;
 	BEGIN
 		RETURN ip(StringInput).pos
 	END StringPos;
@@ -1272,7 +1272,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Write;
 
 	PROCEDURE WriteStr* (obj: Object; s: ARRAY OF CHAR);
-		VAR op: Output; i: LONGINT;
+		VAR op: Output; i: SIGNED32;
 	BEGIN
 		op := obj(Output);
 		i := 0; WHILE s[i] # 0X DO op.write(op, s[i]); INC(i) END;
@@ -1339,7 +1339,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 
 
 	PROCEDURE WriteObj* (out, obj: Object);
-		VAR op: Output; c: CHAR; n, len, l, m: LONGINT; s: ARRAY 100 OF CHAR;
+		VAR op: Output; c: CHAR; n, len, l, m: SIGNED32; s: ARRAY 100 OF CHAR;
 
 		PROCEDURE ch (c: CHAR);
 		BEGIN
@@ -1347,7 +1347,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		END ch;
 
 		PROCEDURE str (s: ARRAY OF CHAR);
-			VAR n: LONGINT;
+			VAR n: SIGNED32;
 		BEGIN
 			n := 0; WHILE s[n] # 0X DO op.write(op, s[n]); INC(n) END
 		END str;
@@ -1466,7 +1466,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END InitStack;
 
 	PROCEDURE PushObj (VAR stack: Stack; obj: Object);
-		VAR elem: ObjectElems; n: LONGINT;
+		VAR elem: ObjectElems; n: SIGNED32;
 	BEGIN
 		IF stack.obj.top = stack.obj.size THEN
 			INC(stack.obj.size, stackBlock);
@@ -1480,7 +1480,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END PushObj;
 
 	PROCEDURE PushEnv (VAR stack: Stack; env: Environment);
-		VAR elem: EnvElems; n: LONGINT;
+		VAR elem: EnvElems; n: SIGNED32;
 	BEGIN
 		IF stack.env.top = stack.env.size THEN
 			INC(stack.env.size, stackBlock);
@@ -1494,7 +1494,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END PushEnv;
 
 	PROCEDURE PushEval (VAR stack: Stack; eval: Evaluator);
-		VAR elem: EvalElems; n: LONGINT;
+		VAR elem: EvalElems; n: SIGNED32;
 	BEGIN
 		IF stack.eval.top = stack.eval.size THEN
 			INC(stack.eval.size, stackBlock);
@@ -1546,7 +1546,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		END
 	END Fail;
 
-	PROCEDURE FailCode* (ctxt: Context; code: INTEGER; obj: Object);
+	PROCEDURE FailCode* (ctxt: Context; code: SIGNED16; obj: Object);
 	BEGIN
 		CASE code OF
 		| errEval: Fail(ctxt, "cannot evaluate object", obj)
@@ -1570,7 +1570,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END NewEnvironment;
 
 	PROCEDURE Extend* (outer: Environment; par, arg: Object; ctxt: Context): Environment;
-		VAR env: Environment; dsc: Object; bind: Binding; idx: LONGINT;
+		VAR env: Environment; dsc: Object; bind: Binding; idx: SIGNED32;
 	BEGIN
 		env := NewEnvironment(outer);
 		WHILE par.type = pair DO
@@ -1596,7 +1596,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END Extend;
 
 	PROCEDURE DefineVariable* (var, val: Object; env: Environment);
-		VAR sym: Symbol; idx: LONGINT; bind: Binding;
+		VAR sym: Symbol; idx: SIGNED32; bind: Binding;
 	BEGIN
 		sym := var(Symbol);
 		idx := sym.hash MOD envSize; bind := env.chain[idx];
@@ -1645,7 +1645,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END SetVariable;
 
 	PROCEDURE WriteEnv* (out: Object; env: Environment);
-		VAR i: LONGINT; b: Binding;
+		VAR i: SIGNED32; b: Binding;
 	BEGIN
 		WriteStr(out, "environment"); Write(out, newline);
 		FOR i := 0 TO envSize-1 DO
@@ -1823,7 +1823,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END LetXToLet;
 
 	PROCEDURE LetrecToLet (ctxt: Context; exp: Object; VAR res: Object);
-		VAR obj, body, unassigned, arg, set, quote, sym, inner: Object; tmp: ARRAY 3 OF CHAR; n: LONGINT;
+		VAR obj, body, unassigned, arg, set, quote, sym, inner: Object; tmp: ARRAY 3 OF CHAR; n: SIGNED32;
 	BEGIN
 		IF exp.type # pair THEN FailCode(ctxt, errArg, exp)
 		ELSE
@@ -2157,10 +2157,10 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		END
 	END ScanCh;
 
-	PROCEDURE ScanNumber (in: Object; VAR ch: CHAR; radix: LONGINT; VAR t: Token);
-		VAR part, state, sign, i, d: LONGINT; polar, exact: BOOLEAN; r, f, imag: LONGREAL;
+	PROCEDURE ScanNumber (in: Object; VAR ch: CHAR; radix: SIGNED32; VAR t: Token);
+		VAR part, state, sign, i, d: SIGNED32; polar, exact: BOOLEAN; r, f, imag: FLOAT64;
 
-		PROCEDURE derationalize (n, d: LONGINT): LONGREAL;
+		PROCEDURE derationalize (n, d: SIGNED32): FLOAT64;
 		BEGIN
 			IF d = 0 THEN t.kind := invalid; RETURN 0
 			ELSE RETURN n/d
@@ -2188,7 +2188,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 				ELSIF state = 11 THEN exact := FALSE; state := 12
 				ELSIF state = 14 THEN state := 15
 				ELSIF state IN {9, 12} THEN
-					IF sign * i > MAX(LONGINT) DIV radix THEN t.kind := invalid
+					IF sign * i > MAX(SIGNED32) DIV radix THEN t.kind := invalid
 					ELSE i := radix * i
 					END;
 					ScanCh(in, ch)
@@ -2244,7 +2244,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 				ELSIF state IN {8, 11, 18} THEN
 					d := ORD(ch) - ORD("0");
 					IF d >= radix THEN t.kind := invalid
-					ELSIF sign * i > (MAX(LONGINT) - d) DIV radix THEN t.kind := invalid
+					ELSIF sign * i > (MAX(SIGNED32) - d) DIV radix THEN t.kind := invalid
 					ELSE i := radix * i + sign * d
 					END;
 					ScanCh(in, ch)
@@ -2262,7 +2262,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 				ELSIF state = 6 THEN i := 0; state := 8
 				ELSIF (state IN {8, 11}) & (radix = 16) THEN
 					d := ORD(ch) - (ORD("a") - 10);
-					IF sign * i > (MAX(LONGINT) - d) DIV 16 THEN t.kind := invalid
+					IF sign * i > (MAX(SIGNED32) - d) DIV 16 THEN t.kind := invalid
 					ELSE i := 16 * i + sign * d
 					END;
 					ScanCh(in, ch)
@@ -2274,7 +2274,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 				ELSIF (state = 6) & (radix = 16) THEN i := 0; state := 8
 				ELSIF (state IN {8, 11}) & (radix = 16) THEN
 					d := ORD(ch) - (ORD("a") - 10);
-					IF sign * i > (MAX(LONGINT) - d) DIV 16 THEN t.kind := invalid
+					IF sign * i > (MAX(SIGNED32) - d) DIV 16 THEN t.kind := invalid
 					ELSE i := 16 * i + sign * d
 					END;
 					ScanCh(in, ch)
@@ -2337,7 +2337,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	END ScanNumber;
 
 	PROCEDURE Scan (in: Object; VAR t: Token);
-		VAR ch: CHAR; i: LONGINT;
+		VAR ch: CHAR; i: SIGNED32;
 	BEGIN
 		ScanCh(in, ch);
 		LOOP
@@ -2412,7 +2412,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	(**--- Parser ---**)
 
 	PROCEDURE ReadObj (ctxt: Context; VAR token: Token; VAR obj: Object): BOOLEAN;
-		VAR n: LONGINT; stack: Stack; tok: Token; vec, list, last: Object;
+		VAR n: SIGNED32; stack: Stack; tok: Token; vec, list, last: Object;
 	BEGIN
 		Scan(ctxt.in, token);
 		CASE token.kind OF
@@ -2511,19 +2511,19 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 
 	(**--- Conversions ---**)
 
-	PROCEDURE NumberToString* (obj: Object; radix: LONGINT; VAR pool: Pool): Object;
-		VAR i: LONGINT; buf: ARRAY 400 OF CHAR;
+	PROCEDURE NumberToString* (obj: Object; radix: SIGNED32; VAR pool: Pool): Object;
+		VAR i: SIGNED32; buf: ARRAY 400 OF CHAR;
 
 		PROCEDURE str (s: ARRAY OF CHAR);
-			VAR j: LONGINT;
+			VAR j: SIGNED32;
 		BEGIN
 			WHILE s[j] # 0X DO buf[i] := s[j]; INC(i); INC(j) END
 		END str;
 
-		PROCEDURE int (x: LONGINT);
-			VAR j: LONGINT; d: ARRAY 32 OF INTEGER;
+		PROCEDURE int (x: SIGNED32);
+			VAR j: SIGNED32; d: ARRAY 32 OF SIGNED16;
 		BEGIN
-			IF x = MIN(LONGINT) THEN
+			IF x = MIN(SIGNED32) THEN
 				IF radix = 2 THEN str("-10000000000000000000000000000000")
 				ELSIF radix = 8 THEN str("-20000000000")
 				ELSIF radix = 16 THEN str("-80000000")
@@ -2559,7 +2559,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 		RETURN NewLiteral(buf, pool)
 	END NumberToString;
 
-	PROCEDURE StringToNumber* (obj: Object; radix: LONGINT): Object;
+	PROCEDURE StringToNumber* (obj: Object; radix: SIGNED32): Object;
 		VAR buf: ARRAY 400 OF CHAR; in: Object; ch: CHAR; t: Token;
 	BEGIN
 		GetString(obj, 0, StringLen(obj), buf);
@@ -2595,7 +2595,7 @@ MODULE Scheme IN Oberon; (** portable *)	(* eos  *)
 	(**--- Execution ---**)
 
 	PROCEDURE Execute*;
-		VAR text: Texts.Text; pos, end, time: LONGINT; s: Texts.Scanner; in, out, obj, res: Object; ctxt: Context; env: Environment;
+		VAR text: Texts.Text; pos, end, time: SIGNED32; s: Texts.Scanner; in, out, obj, res: Object; ctxt: Context; env: Environment;
 	BEGIN
 		text := Oberon.Par.text; pos := Oberon.Par.pos;
 		Texts.OpenScanner(s, text, pos); Texts.Scan(s);

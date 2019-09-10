@@ -335,7 +335,7 @@ TYPE
 	IdentDef* = OBJECT
 	VAR
 		ident*: InfoItem;
-		vis*: SHORTINT;
+		vis*: SIGNED8;
 		initializer*: InfoItem;
 		external*: Strings.String;
 	END IdentDef;
@@ -1453,7 +1453,7 @@ BEGIN
 	END;
 END SplitName;
 
-PROCEDURE FindType(CONST name : ARRAY OF CHAR; type : WORD; definitionModule : Module; cache : ModuleCache) : TypeDecl;
+PROCEDURE FindType(CONST name : ARRAY OF CHAR; type : INTEGER; definitionModule : Module; cache : ModuleCache) : TypeDecl;
 VAR
 	module : Module; import : Import; typeDecl : TypeDecl;
 	moduleName, importName, typeName : ARRAY 256 OF CHAR;
@@ -1638,7 +1638,7 @@ VAR
 	module : Module;
 	scanner : FoxScanner.Scanner;
 	text : Texts.Text; reader : TextUtilities.TextReader;
-	format, res : WORD;
+	format, res : INTEGER;
 BEGIN
 	NEW(text);
 	TextUtilities.LoadAuto(text, filename, format, res);

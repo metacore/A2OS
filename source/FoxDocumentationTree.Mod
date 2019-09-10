@@ -161,7 +161,7 @@ TYPE
 	Paragraph*=OBJECT
 	VAR
 		type-: ParagraphType;
-		level-: LONGINT;
+		level-: SIGNED32;
 		text*: Text;
 		description-: Text;
 		label*: Strings.String;
@@ -174,7 +174,7 @@ TYPE
 		BEGIN SELF.type := type; SELF.level := level; NEW(text,4); NEW(description, 4);
 		END InitParagraph;
 
-		PROCEDURE SetLevel*(level: LONGINT);
+		PROCEDURE SetLevel*(level: SIGNED32);
 		BEGIN SELF.level := level
 		END SetLevel;
 
@@ -222,12 +222,12 @@ TYPE
 	*)
 	Section*=OBJECT
 	VAR
-		level-: LONGINT;
+		level-: SIGNED32;
 		title-: Text;
 		contents-: Paragraphs;
 		label-: String;
 
-		PROCEDURE &InitSection*(level: LONGINT);
+		PROCEDURE &InitSection*(level: SIGNED32);
 		BEGIN NEW(contents,4); SELF.level := level; NEW(title,4); label := NIL;
 		END InitSection;
 
@@ -244,7 +244,7 @@ TYPE
 			label := Strings.NewString(l);
 		END WriteLabel;
 
-		PROCEDURE WriteHeading*(level: LONGINT; CONST string: ARRAY OF CHAR);
+		PROCEDURE WriteHeading*(level: SIGNED32; CONST string: ARRAY OF CHAR);
 		VAR paragraph: Paragraph;
 		BEGIN
 			paragraph := contents.AppendNew(ParagraphType.Heading);
@@ -260,7 +260,7 @@ TYPE
 	*)
 	Sections*=OBJECT (Basic.List)
 
-		PROCEDURE AppendNew*(level: LONGINT): Section;
+		PROCEDURE AppendNew*(level: SIGNED32): Section;
 		VAR section: Section;
 		BEGIN
 			NEW(section, level); AddSection(section); RETURN section;
@@ -365,12 +365,12 @@ TYPE
 	BEGIN NEW(paragraphs,4); RETURN paragraphs
 	END NewParagraphs;
 
-	PROCEDURE NewSection*(level: LONGINT): Section;
+	PROCEDURE NewSection*(level: SIGNED32): Section;
 	VAR section: Section;
 	BEGIN NEW(section,level); RETURN section
 	END NewSection;
 
-	PROCEDURE NewSections*(level: LONGINT): Sections;
+	PROCEDURE NewSections*(level: SIGNED32): Sections;
 	VAR sections: Sections;
 	BEGIN NEW(sections,4); RETURN sections
 	END NewSections;

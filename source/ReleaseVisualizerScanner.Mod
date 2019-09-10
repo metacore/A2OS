@@ -41,7 +41,7 @@ TYPE
 			NEW(data, initialSize); length := 0;
 		END Init;
 
-		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR i : SIZE; n : Strings.String;
 		BEGIN
 			IF length + len + 1 >= LEN(data) THEN
@@ -84,12 +84,12 @@ TYPE
 	Scanner* = OBJECT
 		VAR
 			buffer: Strings.String;
-			pos: LONGINT;	(*pos in buffer*)
+			pos: SIGNED32;	(*pos in buffer*)
 			ch-: CHAR;	(**look-ahead *)
 			str-: ARRAY 1024 OF CHAR;
-			sym- : LONGINT;
-			numStartPos, numEndPos: LONGINT;
-			curpos-, errpos-: LONGINT;	(*pos in text*)
+			sym- : SIGNED32;
+			numStartPos, numEndPos: SIGNED32;
+			curpos-, errpos-: SIGNED32;	(*pos in text*)
 			isNummer: BOOLEAN;
 			commentStr- : StringMaker;
 			cw : Streams.Writer;
@@ -100,7 +100,7 @@ TYPE
 			cw := commentStr.GetWriter()
 		END Init;
 
-		PROCEDURE err(n: INTEGER);
+		PROCEDURE err(n: SIGNED16);
 		BEGIN
 		END err;
 
@@ -114,8 +114,8 @@ TYPE
 			IF newChar[ORD(ch)] THEN INC(curpos) END; (* curpos := pos; *)
 		END NextChar;
 
-		PROCEDURE Str(VAR sym: LONGINT);
-		VAR i: LONGINT; och: CHAR;
+		PROCEDURE Str(VAR sym: SIGNED32);
+		VAR i: SIGNED32; och: CHAR;
 		BEGIN i := 0; och := ch;
 			LOOP NextChar;
 				IF ch = och THEN EXIT END ;
@@ -130,8 +130,8 @@ TYPE
 			END
 		END Str;
 
-		PROCEDURE Identifier(VAR sym: LONGINT);
-			VAR i: LONGINT;
+		PROCEDURE Identifier(VAR sym: SIGNED32);
+			VAR i: SIGNED32;
 		BEGIN i := 0;
 			REPEAT
 				str[i] := ch; INC(i); NextChar
@@ -156,7 +156,7 @@ TYPE
 			val[i] := 0X
 		END GetNumAsString;
 
-		PROCEDURE Get(VAR s: LONGINT);
+		PROCEDURE Get(VAR s: SIGNED32);
 
 			PROCEDURE Comment;	(* do not read after end of file *)
 			BEGIN NextChar; cw.Char(ch);
@@ -304,9 +304,9 @@ TYPE
 
 	END Scanner;
 
-PROCEDURE InitWithText*(t: Texts.Text; pos: LONGINT): Scanner;
-	VAR buffer: Strings.String; len, i, j: SIZE; ch: LONGINT; r: Texts.TextReader;
-	bytesPerChar: LONGINT;
+PROCEDURE InitWithText*(t: Texts.Text; pos: SIGNED32): Scanner;
+	VAR buffer: Strings.String; len, i, j: SIZE; ch: SIGNED32; r: Texts.TextReader;
+	bytesPerChar: SIGNED32;
 	s : Scanner;
 BEGIN
 	t.AcquireRead;
@@ -344,7 +344,7 @@ END ExpandBuf;
 
 PROCEDURE InitReservedChars;
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(reservedChar)-1 DO
 		IF CHR(i) <= 20X THEN	(* TAB, CR, ESC ... *)
@@ -365,7 +365,7 @@ END InitReservedChars;
 
 PROCEDURE InitNewChar;
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(newChar)-1 DO
 		(* UTF-8 encoded characters with bits 10XXXXXX do not start a new unicode character *)

@@ -48,19 +48,19 @@ TYPE
 
 	(* HID descriptor according to the Device Class Definition for HID, p. 22 *)
 	HidDescriptor* = POINTER TO RECORD
-		bLength- : LONGINT;
-		bDescriptorType- : LONGINT;
-		bcdHID- : LONGINT;
-		bCountryCode- : LONGINT;
-		bNumDescriptors- : LONGINT;
-		bClassDescriptorType- : LONGINT;
-		wDescriptorLength- : LONGINT;
+		bLength- : SIGNED32;
+		bDescriptorType- : SIGNED32;
+		bcdHID- : SIGNED32;
+		bCountryCode- : SIGNED32;
+		bNumDescriptors- : SIGNED32;
+		bClassDescriptorType- : SIGNED32;
+		wDescriptorLength- : SIGNED32;
 		optionalDescriptors- : POINTER TO ARRAY OF OptionalDescriptor;
 	END;
 
 	OptionalDescriptor* = RECORD
-		bDescriptorType- : LONGINT;
-		wDescriptorLength- : LONGINT;
+		bDescriptorType- : SIGNED32;
+		wDescriptorLength- : SIGNED32;
 	END;
 
 TYPE
@@ -78,7 +78,7 @@ TYPE
 		 * @reportId 0: idle rate applies to all reports, otherwise it applies only to reports with the corresponding reportId
 		 * @return TRUE, if requests succeeds, FALSE otherwise
 		 *)
-		PROCEDURE SetIdle*(reportId, duration : LONGINT) : BOOLEAN;
+		PROCEDURE SetIdle*(reportId, duration : SIGNED32) : BOOLEAN;
 		BEGIN
 			ASSERT(interface.bInterfaceClass = 3H);
 			RETURN device.Request(HidSetRequest, HrSetIdle, reportId + duration*100H, interface.bInterfaceNumber, 0, Usbdi.NoData) = Usbdi.Ok;
@@ -91,7 +91,7 @@ TYPE
 		 * @param idle Idle rate; 0: infinite duration, otherwise: idle rate in milliseconds; Only valid then request succeeded!
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		 *)
-		PROCEDURE GetIdle*(reportId : LONGINT; VAR idle : LONGINT) : BOOLEAN;
+		PROCEDURE GetIdle*(reportId : SIGNED32; VAR idle : SIGNED32) : BOOLEAN;
 		VAR buffer : Usbdi.BufferPtr;
 		BEGIN
 			ASSERT(interface.bInterfaceClass = 3H);
@@ -110,7 +110,7 @@ TYPE
 		 * @param protocol 0: Boot Protocol, 1: Report Protocol
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		 *)
-		PROCEDURE SetProtocol*(protocol : LONGINT) : BOOLEAN;
+		PROCEDURE SetProtocol*(protocol : SIGNED32) : BOOLEAN;
 		BEGIN
 			ASSERT(interface.bInterfaceClass = 3H);
 			ASSERT(((protocol = BootProtocol) OR (protocol = ReportProtocol)) & (interface.bInterfaceSubClass = 1));
@@ -124,7 +124,7 @@ TYPE
 		 * @param protocol 0: Boot Protocol, 1: Report Protocol (Only valid if request succeeds!)
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		 *)
-		PROCEDURE GetProtocol*(VAR protocol : LONGINT) : BOOLEAN;
+		PROCEDURE GetProtocol*(VAR protocol : SIGNED32) : BOOLEAN;
 		VAR buffer : Usbdi.BufferPtr;
 		BEGIN
 			IF (interface.bInterfaceClass # 3H) OR (interface.bInterfaceSubClass #  1) THEN
@@ -149,7 +149,7 @@ TYPE
 		 * @param len: Lenght of the report
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		 *)
-		PROCEDURE SetReport*(type, id : LONGINT; VAR buffer: Usbdi.Buffer; len : LONGINT) : BOOLEAN;
+		PROCEDURE SetReport*(type, id : SIGNED32; VAR buffer: Usbdi.Buffer; len : SIGNED32) : BOOLEAN;
 		BEGIN
 			ASSERT(interface.bInterfaceClass = 3H);
 			RETURN device.Request(HidSetRequest, HrSetReport, id + type*100H, interface.bInterfaceNumber, len, buffer) = Usbdi.Ok;
@@ -164,7 +164,7 @@ TYPE
 		 * @param len: Expected length of the report
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		*)
-		PROCEDURE GetReport*(type, id : LONGINT; VAR buffer: Usbdi.Buffer; len : LONGINT) : BOOLEAN;
+		PROCEDURE GetReport*(type, id : SIGNED32; VAR buffer: Usbdi.Buffer; len : SIGNED32) : BOOLEAN;
 		BEGIN
 			ASSERT(LEN(buffer) >= len);
 			ASSERT(interface.bInterfaceClass = 3H);
@@ -172,7 +172,7 @@ TYPE
 		END GetReport;
 
 		(** This request returns the specified descriptor if the descriptor exists *)
-		PROCEDURE GetDescriptor*(descriptor, index, wIndex, len : LONGINT; VAR buffer : Usbdi.Buffer) : BOOLEAN;
+		PROCEDURE GetDescriptor*(descriptor, index, wIndex, len : SIGNED32; VAR buffer : Usbdi.Buffer) : BOOLEAN;
 		BEGIN
 			ASSERT(LEN(buffer) >= len);
 			RETURN device.Request(Usbdi.ToHost + Usbdi.Standard + Usbdi.Interface, SrGetDescriptor, index + descriptor*100H, wIndex, len, buffer) = Usbdi.Ok;
@@ -197,7 +197,7 @@ TYPE
 
 (* Load and parse the HID descriptor correspondig to the drivers interface *)
 PROCEDURE ParseHidDescriptor(descriptor : Usbdi.BufferPtr) : HidDescriptor;
-VAR hid : HidDescriptor;  i : LONGINT;
+VAR hid : HidDescriptor;  i : SIGNED32;
 BEGIN
 	IF (descriptor # NIL) & (LEN(descriptor) >= 8) THEN
 		NEW(hid);
@@ -226,7 +226,7 @@ BEGIN
 END ParseHidDescriptor;
 
 PROCEDURE ShowHidDescriptor*(hd : HidDescriptor);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	KernelLog.String("HID Descriptor: ");
 	IF hd = NIL THEN KernelLog.String("NIL"); END; KernelLog.Ln;

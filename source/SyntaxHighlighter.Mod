@@ -56,7 +56,7 @@ CONST
 
 	Statistics = TRUE;
 
-	NOTCLOSED = MAX(LONGINT) - 128; (* some safety distance to protect against overflow *)
+	NOTCLOSED = MAX(SIGNED32) - 128; (* some safety distance to protect against overflow *)
 
 	MaxOpenLength = 32;
 	MaxCloseLength = 32;
@@ -102,7 +102,7 @@ TYPE
 		defined- : SET;
 		next : Style;
 
-		PROCEDURE &Init(CONST name : Identifier; color, bgcolor, voff : LONGINT; CONST fontname : ARRAY OF CHAR; fontsize : LONGINT; fontstyle : SET);
+		PROCEDURE &Init(CONST name : Identifier; color, bgcolor, voff : SIGNED32; CONST fontname : ARRAY OF CHAR; fontsize : SIGNED32; fontstyle : SET);
 		BEGIN
 			ASSERT(name # "");
 			SELF.name := name;
@@ -199,7 +199,7 @@ TYPE
 		END ResetMatchers;
 
 		PROCEDURE GetStyle(position : SIZE; VAR start, end : SIZE) : Style;
-		VAR style : Style; entry : DataEntry; location : WORD;
+		VAR style : Style; entry : DataEntry; location : INTEGER;
 		BEGIN
 			style := NIL;
 			IF Find(position, entry) THEN
@@ -405,9 +405,9 @@ TYPE
 
 		entry : DataEntry;
 
-		level : LONGINT;
+		level : SIGNED32;
 
-		state : LONGINT;
+		state : SIGNED32;
 		firstPosition : SIZE;
 
 		next : RegionMatcher;
@@ -462,7 +462,7 @@ TYPE
 			RETURN length = openLength;
 		END CheckOpen;
 
-		PROCEDURE FeedChar(char32 : Texts.Char32; position : SIZE; VAR newState : LONGINT);
+		PROCEDURE FeedChar(char32 : Texts.Char32; position : SIZE; VAR newState : SIGNED32);
 		VAR char : CHAR; openMatch, closeMatch : BOOLEAN;
 
 			PROCEDURE AddToCircularBuffer(char : CHAR; VAR buffer : ARRAY OF CHAR; VAR first, length, maxLength : SIZE);
@@ -577,7 +577,7 @@ TYPE
 TYPE
 
 	Token* = RECORD
-		type-, subtype- : SHORTINT;
+		type-, subtype- : SIGNED8;
 		startPosition-, endPosition- : SIZE;
 		value- : ARRAY MaxTokenLength OF CHAR;
 		length : SIZE; (* if type = Type_Identifier: of string value *)
@@ -647,7 +647,7 @@ TYPE
 		PROCEDURE Scan(reader : Texts.TextReader; from, to : SIZE; CONST state : State; VAR match : BOOLEAN);
 		VAR
 			matcher, owner, oldOwner : RegionMatcher; char32 : Texts.Char32; continue : BOOLEAN; entry : DataEntry; oldPosition, position : SIZE;
-			mstate, tempState: LONGINT; nofMatching : SIZE;
+			mstate, tempState: SIGNED32; nofMatching : SIZE;
 
 			PROCEDURE CheckLongestMatch(VAR owner : RegionMatcher);
 			VAR matcher : RegionMatcher; length, maxLength : SIZE;
@@ -763,7 +763,7 @@ TYPE
 				res : BOOLEAN;
 				start, end, oldStart, oldEnd : SIZE;
 				ignore, match : BOOLEAN;
-				location : WORD;
+				location : INTEGER;
 			BEGIN
 				IF Statistics THEN INC(NnofPatchInsert); END;
 				fullLayout := FALSE;
@@ -833,7 +833,7 @@ TYPE
 				left, middle, right : DataEntry;
 				start, end, oldStart, oldEnd : SIZE;
 				match, ignore, res : BOOLEAN;
-				location : WORD;
+				location : INTEGER;
 			BEGIN
 				fullLayout := FALSE;
 				state.FindTriple(position, hasLeft, hasMiddle, hasRight, left, middle, right);
@@ -1061,7 +1061,7 @@ TYPE
 			RETURN style;
 		END GetStyle;
 
-		PROCEDURE AddToken(CONST tokenname : ARRAY OF CHAR; style : Style; VAR res : WORD);
+		PROCEDURE AddToken(CONST tokenname : ARRAY OF CHAR; style : Style; VAR res : INTEGER);
 		VAR token, t : Word; length, index1, index2 : SIZE;
 		BEGIN
 			ASSERT((Strings.Length(tokenname) > 0) & (style # NIL) & (style.name # ""));
@@ -1088,7 +1088,7 @@ TYPE
 			END;
 		END AddToken;
 
-		PROCEDURE AddWord(CONST keyword : ARRAY OF CHAR; style : Style; VAR res : WORD);
+		PROCEDURE AddWord(CONST keyword : ARRAY OF CHAR; style : Style; VAR res : INTEGER);
 		VAR word, w : Word; nofWildcards, index1, index2, length : SIZE;
 		BEGIN
 			ASSERT((Strings.Length(keyword) > 0) & (style # NIL) & (style.name # ""));
@@ -1147,7 +1147,7 @@ TYPE
 			END;
 		END AddRegion;
 
-		PROCEDURE DebugInterface*(code : WORD; state : State);
+		PROCEDURE DebugInterface*(code : INTEGER; state : State);
 		VAR out : Streams.Writer;
 		BEGIN
 			ASSERT(state # NIL);
@@ -1170,7 +1170,7 @@ TYPE
 				WHILE (word # NIL) DO out.String(word.name); out.String(" "); word := word.next; END;
 			END DumpWordList;
 
-			PROCEDURE DumpTokens(out : Streams.Writer; level : LONGINT);
+			PROCEDURE DumpTokens(out : Streams.Writer; level : SIGNED32);
 			VAR i, j : SIZE;
 			BEGIN
 				ASSERT(out # NIL);
@@ -1238,7 +1238,7 @@ VAR
 
 	global_highlighters : Highlighters;
 
-	traceLevel : LONGINT;
+	traceLevel : SIGNED32;
 
 	(* Statistics (not thread-safe) *)
 	NnofRebuildRegions, NnofPatchRegions,
@@ -1366,8 +1366,8 @@ BEGIN
 	RETURN i = length;
 END Equal;
 
-PROCEDURE Indent(out : Streams.Writer; level : LONGINT);
-VAR i : LONGINT;
+PROCEDURE Indent(out : Streams.Writer; level : SIGNED32);
+VAR i : SIGNED32;
 BEGIN
 	ASSERT(out # NIL);
 	FOR i := 1 TO level DO out.Char(" "); END;
@@ -1386,8 +1386,8 @@ END Indent;
 	Content: 		[4, 7]
 	CloseString:		[8, 10]
 *)
-PROCEDURE GetLocation(position : SIZE; CONST entry : DataEntry) : WORD;
-VAR location: WORD; closeLength : SIZE;
+PROCEDURE GetLocation(position : SIZE; CONST entry : DataEntry) : INTEGER;
+VAR location: INTEGER; closeLength : SIZE;
 BEGIN
 	IF entry.eol THEN closeLength := 0; ELSE closeLength := entry.region.closeLength; END;
 	IF (position >= entry.open) THEN
@@ -1413,10 +1413,10 @@ VAR
 	style : Style; string : Strings.String;
 	styleName : Identifier;
 	fontname : ARRAY 128 OF CHAR;
-	fontsize, color, bgcolor, voff : LONGINT;
+	fontsize, color, bgcolor, voff : SIGNED32;
 	fontstyle : SET;
 	defined : SET;
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	ASSERT((element # NIL) & (styles # NIL) & (diagnostics # NIL));
 	string := element.GetName();
@@ -1538,13 +1538,13 @@ END ParseStyles;
 
 PROCEDURE ParseGroup(
 	CONST element : XML.Element; CONST highlighter : Highlighter; CONST styles : Styles;
-	CONST type : LONGINT;
+	CONST type : SIGNED32;
 	CONST source : ARRAY OF CHAR; CONST diagnostics : Diagnostics.Diagnostics; VAR error : BOOLEAN);
 VAR
 	string : Strings.String; ptr : ANY;
 	reader : Streams.StringReader;
 	token : ARRAY 128 OF CHAR;
-	style : Style; res : WORD;
+	style : Style; res : INTEGER;
 BEGIN
 	ASSERT((element # NIL) & (highlighter # NIL) & (styles # NIL) & (diagnostics # NIL));
 	ASSERT((type = TypeWords) OR (type = TypeTokens));
@@ -1991,7 +1991,7 @@ PROCEDURE Highlight*(context : Commands.Context); (** filename highlighterName ~
 VAR
 	file : Files.File; filename : Files.FileName; highlighterName : Identifier;
 	highlighter : Highlighter;
-	text : Texts.Text; format: LONGINT; res: WORD;
+	text : Texts.Text; format: SIGNED32; res: INTEGER;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(filename);
 	context.arg.SkipWhitespace; context.arg.String(highlighterName);

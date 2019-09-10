@@ -35,8 +35,8 @@ MODULE VinciDocs IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Load (doc: Documents.Document);
 		VAR
-			text: Texts.Text; file: Files.File; r: Files.Rider; tag, x, y, w, h: INTEGER; gen: ARRAY 64 OF CHAR; ch: CHAR;
-			pos, len: LONGINT; body: Scheme.Object; tframe: TextGadgets.Frame;
+			text: Texts.Text; file: Files.File; r: Files.Rider; tag, x, y, w, h: SIGNED16; gen: ARRAY 64 OF CHAR; ch: CHAR;
+			pos, len: SIGNED32; body: Scheme.Object; tframe: TextGadgets.Frame;
 			gframe: VinciGadgets.Frame;
 	BEGIN
 		NEW(text);
@@ -84,7 +84,7 @@ MODULE VinciDocs IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Store (doc: Documents.Document);
 		VAR
-			file: Files.File; bak: ARRAY 64 OF CHAR; res: INTEGER; r: Files.Rider; pos, len: LONGINT;
+			file: Files.File; bak: ARRAY 64 OF CHAR; res: SIGNED16; r: Files.Rider; pos, len: SIGNED32;
 			obj: Objects.Object; frame: VinciGadgets.Frame;
 	BEGIN
 		Texts.WriteString(W, "Store ");
@@ -188,7 +188,7 @@ MODULE VinciDocs IN Oberon; (** portable *)	(* eos  *)
 	END Show;
 
 	PROCEDURE Open*;
-		VAR s: Texts.Scanner; text: Texts.Text; name: ARRAY 64 OF CHAR; beg, end, time: LONGINT; buf: Texts.Buffer;
+		VAR s: Texts.Scanner; text: Texts.Text; name: ARRAY 64 OF CHAR; beg, end, time: SIGNED32; buf: Texts.Buffer;
 	BEGIN
 		Texts.OpenScanner(s, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(s);
 		text := NIL; name := "";
@@ -265,7 +265,7 @@ MODULE VinciDocs IN Oberon; (** portable *)	(* eos  *)
 	PROCEDURE ToEPS*;
 		VAR
 			doc: Documents.Document; obj: Objects.Object; body: Scheme.Object; s: Attributes.Scanner; file: Files.File;
-			level2: BOOLEAN; dpi: LONGINT; eps: GfxPS.Context; ctxt: Vinci.Context;
+			level2: BOOLEAN; dpi: SIGNED32; eps: GfxPS.Context; ctxt: Vinci.Context;
 	BEGIN
 		doc := Documents.MarkedDoc();
 		Links.GetLink(doc.dsc, "Model", obj);

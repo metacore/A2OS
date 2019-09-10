@@ -41,23 +41,23 @@ TYPE
 		(* assigned interface *)
 		int-: IP.Interface;
 		(* local protocol address *)
-		lport-: LONGINT;
+		lport-: SIGNED32;
 		(* foreign protocol address *)
 		fip-: IP.Adr;
-		fport-: LONGINT;
-		state*: SHORTINT;   (* TCP state *)
+		fport-: SIGNED32;
+		state*: SIGNED8;   (* TCP state *)
 		(* send sequence *)
-		sndnxt-: LONGINT;   (* send next *)
-		iss-: LONGINT;   (* initial send sequence number *)
+		sndnxt-: SIGNED32;   (* send next *)
+		iss-: SIGNED32;   (* initial send sequence number *)
 		(* receive sequence *)
-		rcvnxt-: LONGINT;   (* receive next *)
-		irs-: LONGINT;   (* initial receive sequence number *)
+		rcvnxt-: SIGNED32;   (* receive next *)
+		irs-: SIGNED32;   (* initial receive sequence number *)
 		socket: WSock32.Socket;
-		sndwnd-: LONGINT;   (* send window *)
-		sndcwnd-: LONGINT;   (* congestion-controlled window *)
-		sndcc-: LONGINT;   (* number of bytes in send buffer *)
-		rcvwnd-: LONGINT;   (* receive window *)
-		srtt-: LONGINT;   (* smoothed round trip time *)
+		sndwnd-: SIGNED32;   (* send window *)
+		sndcwnd-: SIGNED32;   (* congestion-controlled window *)
+		sndcc-: SIGNED32;   (* number of bytes in send buffer *)
+		rcvwnd-: SIGNED32;   (* receive window *)
+		srtt-: SIGNED32;   (* smoothed round trip time *)
 		(* receiver: Receiver;  *)
 		(* sender: Sender;  *)
 		(* lip: IP.Adr; *)
@@ -76,8 +76,8 @@ TYPE
 	(** Open a TCP connection (only use once per Connection instance).
 				Use TCP.NilPort for lport to automatically assign an unused local port.
 			*)
-		PROCEDURE Open*( lport: LONGINT;  fip: IP.Adr;  fport: LONGINT;  VAR res: WORD );
-		VAR adr: WSock32.sockaddrIn;  err: LONGINT; str: ARRAY 64 OF CHAR;
+		PROCEDURE Open*( lport: SIGNED32;  fip: IP.Adr;  fport: SIGNED32;  VAR res: INTEGER );
+		VAR adr: WSock32.sockaddrIn;  err: SIGNED32; str: ARRAY 64 OF CHAR;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN
 				KernelLog.Enter;  KernelLog.String( "Open connection: lport=" );  KernelLog.Int( lport, 1 );
@@ -145,8 +145,8 @@ TYPE
 		END Open;
 
 	(** Send data on a TCP connection. *)
-		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
-		VAR err : LONGINT;
+		PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: INTEGER );
+		VAR err : SIGNED32;
 		BEGIN
 			ASSERT((ofs >= 0) & (ofs + len <= LEN(data)));
 
@@ -157,7 +157,7 @@ TYPE
 			END;
 
 			res := Streams.Ok;
-			err := WSock32.send( socket, data[ofs], len(WORD), {} );
+			err := WSock32.send( socket, data[ofs], len(INTEGER), {} );
 
 			IF (err < 0) OR ((err = 0) & (len > 0)) THEN
 				KernelLog.String( "TCP.Send :" );  WSock32.DispError;  res := NotConnected;
@@ -165,8 +165,8 @@ TYPE
 		END Send;
 
 	(** Receive data on a TCP connection. The data parameter specifies the buffer. The ofs parameters specify the position in the buffer where data should be received (usually 0), and the size parameters specifies how many bytes of data can be received in the buffer. The min parameter specifies the minimum number of bytes to receive before Receive returns and must by <= size. The len parameter returns the number of bytes received, and the res parameter returns 0 if ok, or a non-zero error code otherwise (e.g. if the connection is closed by the communication partner, or by a call of the Close method). *)
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
-		VAR ret: LONGINT;
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER );
+		VAR ret: SIGNED32;
 		BEGIN
 			ASSERT ( (ofs >= 0) & (ofs + size <= LEN( data )) & (min <= size) );
 
@@ -185,7 +185,7 @@ TYPE
 			END;
 
 			REPEAT
-				ret := WSock32.recv( socket, data[ofs], size(WORD), {} );
+				ret := WSock32.recv( socket, data[ofs], size(INTEGER), {} );
 				IF ret > 0 THEN INC( len, ret ); INC(ofs, ret); DEC(size, ret); END;
 			UNTIL (size <= 0) OR (len >= min) OR (ret <= 0);
 
@@ -215,7 +215,7 @@ TYPE
 		END Receive;
 
 	(** Return connection state. *)
-		PROCEDURE State*( ): LONGINT;
+		PROCEDURE State*( ): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN state
 		END State;
@@ -225,7 +225,7 @@ TYPE
 			INCL( flags, Timeout )
 		END HandleTimeout;
 
-		PROCEDURE AwaitState*( good, bad: SET;  ms: LONGINT;  VAR res: WORD );
+		PROCEDURE AwaitState*( good, bad: SET;  ms: SIGNED32;  VAR res: INTEGER );
 		BEGIN {EXCLUSIVE}
 			IF ~(state IN (good + bad)) THEN
 				IF ms # -1 THEN
@@ -244,7 +244,7 @@ TYPE
 
 	(** Close a TCP connection (half-close). *)
 		PROCEDURE Close*;
-		VAR res: WORD; closetimer: Objects.Timer; (* fof 070102 *)
+		VAR res: INTEGER; closetimer: Objects.Timer; (* fof 070102 *)
 		BEGIN {EXCLUSIVE}
 			IF state = Closed THEN RETURN END;
 			(*IF receiver # NIL THEN receiver.Terminate END;  *)
@@ -279,7 +279,7 @@ TYPE
 		END Close;
 
 		PROCEDURE SetPortAndIp;
-		VAR sockname: WSock32.sockaddrIn;  lensockname: LONGINT;  res: WORD;
+		VAR sockname: WSock32.sockaddrIn;  lensockname: SIGNED32;  res: INTEGER;
 		BEGIN
 			lensockname := SIZEOF( WSock32.sockaddrIn );
 			res := WSock32.getsockname( socket, sockname, lensockname );
@@ -297,8 +297,8 @@ TYPE
 		END SetPortAndIp;
 
 	(** Accept a client waiting on a listening connection. Blocks until a client is available or the connection is closed. *)
-		PROCEDURE Accept*( VAR client: Connection;  VAR res: WORD );
-		VAR s: WSock32.Socket;  adr: WSock32.sockaddrIn;  adrlen: LONGINT;
+		PROCEDURE Accept*( VAR client: Connection;  VAR res: INTEGER );
+		VAR s: WSock32.Socket;  adr: WSock32.sockaddrIn;  adrlen: SIGNED32;
 			str: ARRAY 64 OF CHAR;
 		BEGIN
 			IF Trace THEN KernelLog.Enter;  KernelLog.String( "Accepting connections" );  Report( SELF );  KernelLog.Exit; END;
@@ -352,8 +352,8 @@ TYPE
 			RETURN FALSE;
 		END Requested;
 
-		PROCEDURE Available*( ): LONGINT;
-		VAR ret, res: LONGINT;  fdset: WSock32.FDSet;
+		PROCEDURE Available*( ): SIGNED32;
+		VAR ret, res: SIGNED32;  fdset: WSock32.FDSet;
 			data: ARRAY 256 OF CHAR;
 		BEGIN  (* {EXCLUSIVE} *)
 			(* IF Trace THEN KernelLog.String("available: "); KernelLog.Int(receiver.Available(),1); KernelLog.Ln END; *)
@@ -392,7 +392,7 @@ TYPE
 
 	(* Finalize the Connection object *)
 		PROCEDURE Finalize( ptr: ANY );
-		VAR res: WORD;
+		VAR res: INTEGER;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN KernelLog.Enter;  KernelLog.String( "TCP.Finalize " );  Report( SELF );  KernelLog.Exit; END;
 			ASSERT ( ptr = SELF );
@@ -427,7 +427,7 @@ VAR
 		pool.Enumerate( Finalize )
 	END Cleanup;
 
-	PROCEDURE ReportState( state: LONGINT );
+	PROCEDURE ReportState( state: SIGNED32 );
 	BEGIN
 		KernelLog.String( "State=" );
 		CASE state OF
@@ -464,7 +464,7 @@ VAR
 		KernelLog.String( "]" );
 	END Report;
 
-	PROCEDURE ReportResult( res: WORD );
+	PROCEDURE ReportResult( res: INTEGER );
 	BEGIN
 		IF res = Ok THEN KernelLog.String( "Ok" );
 		ELSIF res = ConnectionRefused THEN KernelLog.String( "ConnectionRefused" )

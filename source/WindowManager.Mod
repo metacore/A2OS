@@ -27,7 +27,7 @@ TYPE
 		lastKeys : SET;
 		modifierKeys : SET;
 		meta : BOOLEAN;
-		fx, fy, inffx, inffy, factor, intfactor : REAL;
+		fx, fy, inffx, inffy, factor, intfactor : FLOAT32;
 
 		PROCEDURE &New*(disp : Displays.Display);
 		BEGIN
@@ -56,8 +56,8 @@ TYPE
 			state := modifierKeys
 		END GetKeyState;
 
-		PROCEDURE KeyEvent(ucs : LONGINT; flags : SET; keysym : LONGINT);
-		VAR msg : Messages.Message; done : BOOLEAN; r : Rectangle; originX, originY : LONGINT; w, h : REAL;
+		PROCEDURE KeyEvent(ucs : SIGNED32; flags : SET; keysym : SIGNED32);
+		VAR msg : Messages.Message; done : BOOLEAN; r : Rectangle; originX, originY : SIGNED32; w, h : FLOAT32;
 		BEGIN
 			manager.lock.AcquireWrite;
 			modifierKeys := flags;
@@ -101,8 +101,8 @@ TYPE
 
 		PROCEDURE PointerEvent(x, y, z, dx, dy, dz : SIZE; keys : SET);
 		VAR
-			msg : Messages.Message; of : REAL; i : SIZE; ignore : BOOLEAN;
-			centerX, centerY : REAL; w : Window;
+			msg : Messages.Message; of : FLOAT32; i : SIZE; ignore : BOOLEAN;
+			centerX, centerY : FLOAT32; w : Window;
 		BEGIN
 			ignore := FALSE;
 			msg.originator := SELF;
@@ -204,14 +204,14 @@ TYPE
 		END SetInitialWindowBounds;
 
 		(** Set the observed range. *)
-		PROCEDURE SetRange*(x, y, w, h : REAL; showTransition : BOOLEAN);
+		PROCEDURE SetRange*(x, y, w, h : FLOAT32; showTransition : BOOLEAN);
 		VAR
-			sx, sy, sx2, sy2, dx, dy, dx2, dy2, x2, y2  : REAL;
-			i, steps : LONGINT;
+			sx, sy, sx2, sy2, dx, dy, dx2, dy2, x2, y2  : FLOAT32;
+			i, steps : SIGNED32;
 		CONST Steps = 16;
 
-			PROCEDURE Set(x, y, w, h : REAL);
-			VAR tf : REAL;
+			PROCEDURE Set(x, y, w, h : FLOAT32);
+			VAR tf : FLOAT32;
 			BEGIN
 				range.l := x;
 				range.t := y;
@@ -369,7 +369,7 @@ TYPE
 
 	DirtyQ = OBJECT
 	VAR
-		dirtyHead, dirtyTail : LONGINT;
+		dirtyHead, dirtyTail : SIGNED32;
 		dirtyBuf : ARRAY DirtyBufSize OF Rectangle;
 		overflow : BOOLEAN;
 
@@ -387,7 +387,7 @@ TYPE
 		END Get;
 
 		PROCEDURE Add(VAR r : Rectangle);
-		VAR t : Rectangle; i: LONGINT;
+		VAR t : Rectangle; i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF (dirtyTail + 1) MOD DirtyBufSize = dirtyHead THEN
 				KernelLog.Enter; KernelLog.String("WindowManager: Buffer Full"); KernelLog.Exit;
@@ -421,7 +421,7 @@ TYPE
 		views : WM.ViewPort;
 
 		(* pointer handling *)
-		kdprev : LONGINT;
+		kdprev : SIGNED32;
 		pointerKeys : SET;
 		(* used by CheckPointerImg *)
 		pointerOwner : Window;
@@ -650,10 +650,10 @@ TYPE
 			lock.ReleaseWrite
 		END ToBack;
 
-		PROCEDURE SetWindowFlag*(w : Window; flag : LONGINT; include :  BOOLEAN);
+		PROCEDURE SetWindowFlag*(w : Window; flag : SIGNED32; include :  BOOLEAN);
 		VAR flagChanged, isAdded : BOOLEAN;
 
-			PROCEDURE SetFlagInternal(w : Window; flag : LONGINT; include : BOOLEAN);
+			PROCEDURE SetFlagInternal(w : Window; flag : SIGNED32; include : BOOLEAN);
 			VAR dl : WM.DecorList;
 			BEGIN
 				IF include THEN INCL(w.flags, flag); ELSE EXCL(w.flags, flag); END;
@@ -815,7 +815,7 @@ TYPE
 	(** View management *)
 		(** Add a view *)
 		PROCEDURE AddView*(v : WM.ViewPort);
-		VAR res : WORD;
+		VAR res : INTEGER;
 		BEGIN
 			lock.AcquireWrite;
 			v.manager := SELF;
@@ -1034,11 +1034,11 @@ TYPE
 		VAR
 			newOwner : Window;
 			view : ViewPort;
-			kd, i : LONGINT;
+			kd, i : SIGNED32;
 			m : Messages.Message;
 			keys : SET;
 
-				PROCEDURE MouseMessage(sub:LONGINT);
+				PROCEDURE MouseMessage(sub:SIGNED32);
 				VAR bounds : Rect.Rectangle; vp : ViewPort;
 				BEGIN
 					(* do not translate to local coordinates here: must be done by sequencer! *)
@@ -1063,7 +1063,7 @@ TYPE
 					END
 				END MouseMessage;
 
-				PROCEDURE DragMessage(sub : LONGINT; dst : Window);
+				PROCEDURE DragMessage(sub : SIGNED32; dst : Window);
 				BEGIN
 					IF (dst # NIL)  THEN
 						m.msgType := Messages.MsgDrag;
@@ -1311,7 +1311,7 @@ TYPE
 			right : DW.RightWindow;
 			bottom : DW.BottomWindow;
 			l, t, r, b : SIZE;
-			th, lw, rw, bh : LONGINT;
+			th, lw, rw, bh : SIGNED32;
 
 			PROCEDURE InitW(n : Window);
 			BEGIN
@@ -1380,22 +1380,22 @@ TYPE
 	END WindowManager;
 
 VAR
-	DoubleClick: LONGINT;
+	DoubleClick: SIGNED32;
 TYPE
 	MouseObj = OBJECT (Inputs.Sink)
 	VAR
 		view : ViewPort;
 		x, y, z : SIZE;
-		threshold, speedup: LONGINT;
+		threshold, speedup: SIGNED32;
 		enableMMEmulation : BOOLEAN;
 
 		(* double click support *)
-		lastTime: LONGINT; lastX, lastY: SIZE;
+		lastTime: SIGNED32; lastX, lastY: SIZE;
 		prevKeys: SET; inDoubleClick: BOOLEAN;
 	(*CONST
 		DoubleClick = 400 (* ms *);*)
 
-		PROCEDURE &Init*(t, s:LONGINT);
+		PROCEDURE &Init*(t, s:SIGNED32);
 		BEGIN
 			Inputs.mouse.Register(SELF);
 			threshold := t; speedup := s;
@@ -1406,7 +1406,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Handle*(VAR msg: Inputs.Message);
-		VAR dx, dy, dz, nx, ny, nz: SIZE; modifierFlags : SET; time: LONGINT;
+		VAR dx, dy, dz, nx, ny, nz: SIZE; modifierFlags : SET; time: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF (msg IS Inputs.MouseMsg) THEN
 				WITH msg: Inputs.MouseMsg DO
@@ -1484,7 +1484,7 @@ TYPE
 	(** The keyboard handler *)
 	KeyboardObj = OBJECT (Inputs.Sink)
 	VAR
-		view : ViewPort; ch : LONGINT;
+		view : ViewPort; ch : SIGNED32;
 
 		PROCEDURE Handle*(VAR msg: Inputs.Message);
 		BEGIN {EXCLUSIVE}
@@ -1494,7 +1494,7 @@ TYPE
 			view.KeyEvent(ch, msg(Inputs.KeyboardMsg).flags, msg(Inputs.KeyboardMsg).keysym)
 		END Handle;
 
-		PROCEDURE MapChars(VAR ch : LONGINT);
+		PROCEDURE MapChars(VAR ch : SIGNED32);
 		BEGIN
 			ch := CharToUnicode[ch];
 		END MapChars;
@@ -1521,7 +1521,7 @@ TYPE
 
 	Fifi = OBJECT
 	VAR
-		timer: Kernel.Timer; delay: LONGINT; time: Kernel.MilliTimer; alive, done: BOOLEAN;
+		timer: Kernel.Timer; delay: SIGNED32; time: Kernel.MilliTimer; alive, done: BOOLEAN;
 
 		PROCEDURE Cleanup;
 		BEGIN {EXCLUSIVE}
@@ -1540,7 +1540,7 @@ TYPE
 			Kernel.SetTimer(time, delay)
 		END Reset;
 
-		PROCEDURE &Init*(delay: LONGINT);
+		PROCEDURE &Init*(delay: SIGNED32);
 		BEGIN
 			SELF.delay := delay;
 			alive := TRUE; done := FALSE;
@@ -1565,7 +1565,7 @@ VAR
 	toucher :Toucher;
 	defaultKeyboard : KeyboardObj;
 	defaultMouse : MouseObj;
-	CharToUnicode: ARRAY 256 OF LONGINT; (** mapping from Oberon character codes to Unicodes **)
+	CharToUnicode: ARRAY 256 OF SIGNED32; (** mapping from Oberon character codes to Unicodes **)
 
 
 PROCEDURE Bound(VAR x:SIZE; min, max:SIZE);
@@ -1579,7 +1579,7 @@ BEGIN
 	Bound(x.t, 0, img.height); Bound(x.b, 0, img.height)
 END ClipAtImage;
 
-PROCEDURE FillSession(wm : WindowManager; bgColor: LONGINT; noPointer: BOOLEAN);
+PROCEDURE FillSession(wm : WindowManager; bgColor: SIGNED32; noPointer: BOOLEAN);
 VAR bg : DW.BackWindow; t : Window;
 BEGIN
 	NEW(bg, bgColor);
@@ -1592,8 +1592,8 @@ BEGIN
 	wm.lock.AcquireWrite; t := wm.ReplaceBackground(bg); wm.lock.ReleaseWrite;
 END FillSession;
 
-PROCEDURE Replace*(color: LONGINT; noPointer: BOOLEAN);
-VAR disp : Plugins.Plugin; view : ViewPort; r : Rectangle; res : WORD;
+PROCEDURE Replace*(color: SIGNED32; noPointer: BOOLEAN);
+VAR disp : Plugins.Plugin; view : ViewPort; r : Rectangle; res : INTEGER;
 BEGIN
 	disp := Displays.registry.Await("");
 	IF (disp(Displays.Display).format = Displays.color8888) THEN
@@ -1624,7 +1624,7 @@ BEGIN
 END Replace;
 
 PROCEDURE InitCharMaps;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	FOR i := 0 TO 127 DO CharToUnicode[i] := i END;
 	CharToUnicode[128] := 0C4H;
@@ -1667,8 +1667,8 @@ BEGIN
 END CleanUp;
 
 PROCEDURE Install*(context: Commands.Context);
-VAR options: Options.Options; color: LONGINT; noPointer: BOOLEAN;
-CONST DefaultColor = LONGINT(8080FFFFH);
+VAR options: Options.Options; color: SIGNED32; noPointer: BOOLEAN;
+CONST DefaultColor = SIGNED32(8080FFFFH);
 BEGIN
 	NEW(options);
 	options.Add("c","bgColor",Options.Integer);
@@ -1688,7 +1688,7 @@ BEGIN
 END TraceChain;
 
 PROCEDURE SetDoubleClick*(context: Commands.Context);
-VAR options: Options.Options; speed: LONGINT;
+VAR options: Options.Options; speed: SIGNED32;
 BEGIN
 	NEW(options);
 	options.Add("s","speed",Options.Integer);

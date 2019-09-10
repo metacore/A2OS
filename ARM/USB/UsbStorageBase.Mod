@@ -132,10 +132,10 @@ TYPE
 
 	(* Information delivered by UFI Inquiry command *)
 	InquiryResult = POINTER TO RECORD
-		deviceType : LONGINT; 			(* Peripheral device type; 00h: direct access device (floppy), 1FH > none *)
+		deviceType : SIGNED32; 			(* Peripheral device type; 00h: direct access device (floppy), 1FH > none *)
 		removable : BOOLEAN; 			(* Removable media bit *)
-		ansiVersion : LONGINT; 			(* Should be 0 for compatible devices *)
-		additionalLength : LONGINT;
+		ansiVersion : SIGNED32; 			(* Should be 0 for compatible devices *)
+		additionalLength : SIGNED32;
 		validStrings : BOOLEAN; 		(* Are the fields below valid? *)
 		vendor : ARRAY 9 OF CHAR;
 		product : ARRAY 17 OF CHAR;
@@ -144,13 +144,13 @@ TYPE
 
 	(* Information delivered by UFI Mode Sense Command when Flexible Disk Page is requested *)
 	FlexibleDiskPage = POINTER TO RECORD
-		TransferRate : LONGINT; (* kbits/s *)
-		NumberOfHeads : LONGINT;
-		SectorsPerTrack : LONGINT; (* 1 - 63 *)
-		BytesPerSector : LONGINT;
-		NumberOfCylinders : LONGINT;
-		MotorOnDelay, MotorOffDelay : LONGINT;
-		MediumRotationRate : LONGINT; (* r.p.m. *)
+		TransferRate : SIGNED32; (* kbits/s *)
+		NumberOfHeads : SIGNED32;
+		SectorsPerTrack : SIGNED32; (* 1 - 63 *)
+		BytesPerSector : SIGNED32;
+		NumberOfCylinders : SIGNED32;
+		MotorOnDelay, MotorOffDelay : SIGNED32;
+		MediumRotationRate : SIGNED32; (* r.p.m. *)
 	END;
 
 TYPE
@@ -158,16 +158,16 @@ TYPE
 	UsbStorageDevice = OBJECT (Disks.Device)
 	VAR
 		usbDriver : StorageDriver;
-		lun : LONGINT; (* Logical Unit Number of this storage device*)
+		lun : SIGNED32; (* Logical Unit Number of this storage device*)
 
-		transportProtocol : LONGINT;
+		transportProtocol : SIGNED32;
 
 		(* Fields used by the DiskManager *)
-		number : LONGINT; (* Suffix appended to name to get unique device name *)
+		number : SIGNED32; (* Suffix appended to name to get unique device name *)
 		next : UsbStorageDevice;
 
-		PROCEDURE Transfer* (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR diskres: LONGINT);
-		VAR direction : SET; cmd : ARRAY 12 OF CHAR; i, tlen, trans, offset, num0 : LONGINT;
+		PROCEDURE Transfer* (op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIGNED32; VAR diskres: SIGNED32);
+		VAR direction : SET; cmd : ARRAY 12 OF CHAR; i, tlen, trans, offset, num0 : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF (op = Disks.Read) OR (op = Disks.Write) THEN
 				FOR i := 0 TO 11 DO cmd[i] := 0X; END;
@@ -215,7 +215,7 @@ TYPE
 		END Transfer;
 
 		(** Get number of blocks and size of blocks using the UFI Read Capacity command *)
-		PROCEDURE GetSize* (VAR size, res: LONGINT);
+		PROCEDURE GetSize* (VAR size, res: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF Debug.Trace & Debug.traceInfo THEN KernelLog.String("UsbStorage: GetSize: "); KernelLog.Ln; END;
 			(* Some devices I've seen didn't like to be asked for their capacity when no medium was inserted... *)
@@ -235,8 +235,8 @@ TYPE
 			res := ResOk; (* Allow short transfer *)
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Disks.Message; VAR diskres: LONGINT);
-		VAR cmd : ARRAY 12 OF CHAR; i : LONGINT; fdp : FlexibleDiskPage;
+		PROCEDURE Handle*(VAR msg: Disks.Message; VAR diskres: SIGNED32);
+		VAR cmd : ARRAY 12 OF CHAR; i : SIGNED32; fdp : FlexibleDiskPage;
 		BEGIN {EXCLUSIVE}
 			FOR i := 0 TO 11 DO cmd[i] := CHR(0); END;
 			IF msg IS Disks.GetGeometryMsg THEN
@@ -281,9 +281,9 @@ TYPE
 		sdevs- : UsbStorageDevice; (* list of storage devices associated to this driver *)
 		description* : Plugins.Description;
 
-		transportProtocol*, transportMethod* : LONGINT;
+		transportProtocol*, transportMethod* : SIGNED32;
 
-		bulkIn*, bulkOut*, interrupt* : LONGINT; (* adresses of the used endpoints *)
+		bulkIn*, bulkOut*, interrupt* : SIGNED32; (* adresses of the used endpoints *)
 		bulkInPipe-, bulkOutPipe-, interruptPipe-, defaultPipe- : Usbdi.Pipe;
 
 		initialize* : BOOLEAN; (* if TRUE, the Initialization() procedure is called *)
@@ -291,27 +291,27 @@ TYPE
 		timer : Kernel.Timer;
 
 		(** Transport layer specific reset procedure *)
-		PROCEDURE Reset*(timeout : LONGINT) : LONGINT;
+		PROCEDURE Reset*(timeout : SIGNED32) : SIGNED32;
 		BEGIN
 			HALT(301); RETURN 0; (* abstract *)
 		END Reset;
 
 		(** Transport layer specific transfer procedure *)
-		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : LONGINT; dir :  SET;
-			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : LONGINT;
+		PROCEDURE Transport*(cmd : ARRAY OF CHAR; cmdlen : SIGNED32; dir :  SET;
+			VAR buffer : ARRAY OF CHAR; ofs, bufferlen : SIGNED32; VAR tlen : SIGNED32; timeout : SIGNED32) : SIGNED32;
 		BEGIN
 			HALT(301); RETURN 0;  (* abstract *)
 		END Transport;
 
 		(* Bulk-only transport layer only *)
-		PROCEDURE GetMaxLun*(VAR lun : LONGINT) : LONGINT;
+		PROCEDURE GetMaxLun*(VAR lun : SIGNED32) : SIGNED32;
 		BEGIN
 			HALT(301); RETURN 0; (* abstract *)
 		END GetMaxLun;
 
 		(* UFI command: Test whether the specified logical unit is ready *)
-		PROCEDURE TestUnitReady(lun : LONGINT) : LONGINT;
-		VAR cmd : ARRAY 12 OF CHAR; i, ignore : LONGINT;
+		PROCEDURE TestUnitReady(lun : SIGNED32) : SIGNED32;
+		VAR cmd : ARRAY 12 OF CHAR; i, ignore : SIGNED32;
 		BEGIN
 			cmd[0] := CHR(UfiTestUnitReady);
 			cmd[1] := CHR(LSH(lun, 5));
@@ -320,8 +320,8 @@ TYPE
 		END TestUnitReady;
 
 		(* Issues TestUnitReady commands until device is ready or an error occurs *)
-		PROCEDURE WaitForReady(lun, timeout : LONGINT) : LONGINT;
-		VAR retry, res : LONGINT;
+		PROCEDURE WaitForReady(lun, timeout : SIGNED32) : SIGNED32;
+		VAR retry, res : SIGNED32;
 		BEGIN
 			IF Debug.Trace & Debug.traceScRequests THEN KernelLog.String("UsbStorageBase: WaitForReady..."); KernelLog.Ln; END;
 			retry := 0;
@@ -345,8 +345,8 @@ TYPE
 		(* UFI command: Start/Stop Unit. 														*)
 		(* Note: Since UFI devices control the motor on/off themselves, it's not implemented here.	*)
 		(* We just use the command to eject the media, thus the name							*)
-		PROCEDURE EjectMedia(lun : LONGINT) : LONGINT;
-		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen, res : LONGINT;
+		PROCEDURE EjectMedia(lun : SIGNED32) : SIGNED32;
+		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen, res : SIGNED32;
 		BEGIN
 			cmd[0] := CHR(UfiStartStop);
 			cmd[1] := CHR(LSH(lun, 5));
@@ -357,8 +357,8 @@ TYPE
 		END EjectMedia;
 
 		(* UFI command: Prevent/Allow Medium Removal *)
-		PROCEDURE PreventMediumRemoval(lun : LONGINT; prevent : BOOLEAN) : LONGINT;
-		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen, res : LONGINT;
+		PROCEDURE PreventMediumRemoval(lun : SIGNED32; prevent : BOOLEAN) : SIGNED32;
+		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen, res : SIGNED32;
 		BEGIN
 			cmd[0] := CHR(UfiAllowRemoval);
 			cmd[1] := CHR(LSH(lun, 5));
@@ -369,19 +369,19 @@ TYPE
 		END PreventMediumRemoval;
 
 		(* UFI command: Request UFI device to do a reset or perform a self-test *)
-		PROCEDURE SendDiagnostic(lun : LONGINT) : LONGINT;
-		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen, res : LONGINT;
+		PROCEDURE SendDiagnostic(lun : SIGNED32) : SIGNED32;
+		VAR cmd, data : ARRAY 12 OF CHAR; i, tlen, res : SIGNED32;
 		BEGIN
 			cmd[0] := CHR(UfiSendDiag);
-			cmd[1] := CHR(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LSH(lun, 5)) + {2}));
+			cmd[1] := CHR(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LSH(lun, 5)) + {2}));
 			FOR i := 2 TO 11 DO cmd[i] := 0X; END;
 			res := InvokeTransport(cmd, 12, DataOut, data, 0, 0, tlen, CommandTimeout);
 			RETURN res;
 		END SendDiagnostic;
 
 		(* UFI command: Get the number of blocks and the blocksize of the specified logical unit *)
-		PROCEDURE ReadCapacity(lun : LONGINT; VAR blocks, blocksize : LONGINT) : LONGINT;
-		VAR cmd, data : ARRAY 12 OF CHAR; res, i, tlen : LONGINT;
+		PROCEDURE ReadCapacity(lun : SIGNED32; VAR blocks, blocksize : SIGNED32) : SIGNED32;
+		VAR cmd, data : ARRAY 12 OF CHAR; res, i, tlen : SIGNED32;
 		BEGIN
 			IF Debug.Trace & Debug.traceInfo THEN KernelLog.String("UsbStorage: ReadCapacity: "); KernelLog.Ln; END;
 			cmd[0] := CHR(UfiReadCapacity);
@@ -411,8 +411,8 @@ TYPE
 		END ReadCapacity;
 
 		(* UFI command: Inquiry the specified locigal unit; Returns NIL in error case *)
-		PROCEDURE Inquiry(lun : LONGINT) : InquiryResult;
-		VAR cmd : ARRAY 12 OF CHAR; data : ARRAY 36 OF CHAR; result : InquiryResult; i, j, tlen, res : LONGINT;
+		PROCEDURE Inquiry(lun : SIGNED32) : InquiryResult;
+		VAR cmd : ARRAY 12 OF CHAR; data : ARRAY 36 OF CHAR; result : InquiryResult; i, j, tlen, res : SIGNED32;
 		BEGIN
 			IF Debug.Trace & Debug.traceInfo THEN
 				KernelLog.String("UsbStorage: Inquiry logical device "); KernelLog.Int(lun, 0); KernelLog.String("... "); KernelLog.Ln;
@@ -457,15 +457,15 @@ TYPE
 		END Inquiry;
 
 		(* The mode sense command allows the UFI device to report medium or device parameters to the host *)
-		PROCEDURE ModeSense(lun, pagecontrol, page, length : LONGINT) : FlexibleDiskPage;
-		VAR cmd : ARRAY 12 OF CHAR; data : Usbdi.BufferPtr; actLen, res : LONGINT; fdp : FlexibleDiskPage;
+		PROCEDURE ModeSense(lun, pagecontrol, page, length : SIGNED32) : FlexibleDiskPage;
+		VAR cmd : ARRAY 12 OF CHAR; data : Usbdi.BufferPtr; actLen, res : SIGNED32; fdp : FlexibleDiskPage;
 
 			(* page[index] is first byte of flexible disk page *)
-			PROCEDURE ParseFlexibleDiskPage(page : Usbdi.BufferPtr; index : LONGINT) : FlexibleDiskPage;
-			VAR temp : LONGINT; fdp : FlexibleDiskPage;
+			PROCEDURE ParseFlexibleDiskPage(page : Usbdi.BufferPtr; index : SIGNED32) : FlexibleDiskPage;
+			VAR temp : SIGNED32; fdp : FlexibleDiskPage;
 			BEGIN
 				ASSERT((page # NIL) & (LEN(page) - index >= 32));
-				ASSERT(SYSTEM.VAL(LONGINT, (SYSTEM.VAL(SET, page[index]) * {0..5})) = PageFlexibleDisk);
+				ASSERT(SYSTEM.VAL(SIGNED32, (SYSTEM.VAL(SET, page[index]) * {0..5})) = PageFlexibleDisk);
 				NEW(fdp);
 				temp := LSH(ORD(page[index+2]), 8) + ORD(page[index+3]);
 				IF temp = 00FAH THEN fdp.TransferRate := 250;
@@ -509,7 +509,7 @@ TYPE
 				RETURN NIL;
 			END;
 
-			IF (ORD(data[1]) + 100H*SYSTEM.VAL(LONGINT, ORD(data[0]))) # length + 8 THEN
+			IF (ORD(data[1]) + 100H*SYSTEM.VAL(SIGNED32, ORD(data[0]))) # length + 8 THEN
 				IF Debug.Level >= Debug.Warnings THEN KernelLog.String("UsbStorage: ModeSense: Error: Wrong Mode Data Length returned."); KernelLog.Ln; END;
 				RETURN NIL;
 			END;
@@ -528,12 +528,12 @@ TYPE
 
 		(* UFI command: The Request Sense command instructs the UFI device to transfer sense data to the host for
 		 * the specified logical unit *)
-		PROCEDURE RequestSense(lun, cmdlen : LONGINT) : LONGINT;
+		PROCEDURE RequestSense(lun, cmdlen : SIGNED32) : SIGNED32;
 		VAR
 			cmd : ARRAY 12 OF CHAR; data : ARRAY 36 OF CHAR;
 			key, asc, ascq : CHAR;
-			information : LONGINT;
-			i, tlen, res : LONGINT;
+			information : SIGNED32;
+			i, tlen, res : SIGNED32;
 		BEGIN
 			IF Debug.Trace & Debug.traceSensing THEN KernelLog.String("UsbStorage: Doing auto sense..."); KernelLog.Ln; END;
 			IF (transportProtocol = ProtocolUTS) OR (transportProtocol = ProtocolRBC) THEN
@@ -598,8 +598,8 @@ TYPE
 			END;
 		END RequestSense;
 
-	(*	PROCEDURE ReadWrite10(lun, blockSize, op, block, num : LONGINT; VAR data : ARRAY OF CHAR; ofs : LONGINT; VAR diskres : LONGINT);
-		VAR cmd : ARRAY 12 OF CHAR;  trans, tlen, i, res : LONGINT; direction : SET;
+	(*	PROCEDURE ReadWrite10(lun, blockSize, op, block, num : SIGNED32; VAR data : ARRAY OF CHAR; ofs : SIGNED32; VAR diskres : SIGNED32);
+		VAR cmd : ARRAY 12 OF CHAR;  trans, tlen, i, res : SIGNED32; direction : SET;
 		BEGIN
 			FOR i:= 0 TO 11 DO cmd[i] := 0X; END;
 			IF op = Disks.Read THEN
@@ -625,10 +625,10 @@ TYPE
 			END;
 		END ReadWrite10;
 
-		PROCEDURE ReadWrite12(lun, op, block, num : LONGINT; VAR data : ARRAY OF CHAR; ofs : LONGINT; VAR diskres : LONGINT);
-		VAR cmd : ARRAY 12 OF CHAR;  trans, tlen, i, res : LONGINT; direction : SET;
+		PROCEDURE ReadWrite12(lun, op, block, num : SIGNED32; VAR data : ARRAY OF CHAR; ofs : SIGNED32; VAR diskres : SIGNED32);
+		VAR cmd : ARRAY 12 OF CHAR;  trans, tlen, i, res : SIGNED32; direction : SET;
 		BEGIN
-			ASSERT(num < MAX(LONGINT));
+			ASSERT(num < MAX(SIGNED32));
 			FOR i:= 0 TO 11 DO cmd[i] := 0X; END;
 			IF op = Disks.Read THEN
 				cmd[0] := CHR(UfiRead12); direction := DataIn;
@@ -648,10 +648,10 @@ TYPE
 		END ReadWrite12; *)
 
 		(* Generic Transport Handler  *)
-		PROCEDURE InvokeTransport (CONST cmd : ARRAY OF CHAR; cmdlen : INTEGER; dir : SET;
-			VAR data : ARRAY OF CHAR; ofs, datalen : LONGINT; VAR tlen : LONGINT; timeout : LONGINT) : LONGINT;
+		PROCEDURE InvokeTransport (CONST cmd : ARRAY OF CHAR; cmdlen : SIGNED16; dir : SET;
+			VAR data : ARRAY OF CHAR; ofs, datalen : SIGNED32; VAR tlen : SIGNED32; timeout : SIGNED32) : SIGNED32;
 		VAR
-			sensecmdlen, res, retry, i : LONGINT; forceRetry : BOOLEAN;
+			sensecmdlen, res, retry, i : SIGNED32; forceRetry : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			(* here one could add additional stuff for the different protocols *)
 			IF transportProtocol = ProtocolUFI THEN
@@ -689,7 +689,7 @@ TYPE
 					res := Reset(5000); (* ignore res *)
 					IF res # ResOk THEN
 					(*	TODO:
-						lun := SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, ORD(cmd[1])) * {5..7}, -5));
+						lun := SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, ORD(cmd[1])) * {5..7}, -5));
 						res := SendDiagnostic(lun); (* hardware reset; ignore res *) *)
 						RETURN ResFatalError;
 					ELSE
@@ -713,7 +713,7 @@ TYPE
 					IF (ORD(cmd[0]) = UfiInquiry) OR (ORD(cmd[0]) = UfiRequestSense) THEN RETURN res; END;
 				END;
 
-				res := RequestSense(SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, ORD(cmd[1])) * {5..7}, -5)), sensecmdlen);
+				res := RequestSense(SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, ORD(cmd[1])) * {5..7}, -5)), sensecmdlen);
 				IF Debug.Trace & Debug.traceScTransfers THEN KernelLog.String("UsbStorageBase: Sent sense command, res: "); ShowRes(res); KernelLog.Ln; END;
 
 				IF (res = ResWriteProtected) OR (res = ResDeviceInUse) OR (res = ResMediaMissing) OR (res = ResUnsupported) OR (res = ResDisconnected)THEN
@@ -743,8 +743,8 @@ TYPE
 			RETURN TRUE;
 		END Initialization;
 
-		PROCEDURE RegisterDevice(lun : LONGINT) : BOOLEAN;
-		VAR stordev : UsbStorageDevice; info : InquiryResult; i, j : LONGINT;
+		PROCEDURE RegisterDevice(lun : SIGNED32) : BOOLEAN;
+		VAR stordev : UsbStorageDevice; info : InquiryResult; i, j : SIGNED32;
 		BEGIN
 			info := Inquiry(lun);
 			IF info # NIL THEN
@@ -790,7 +790,7 @@ TYPE
 		END RegisterDevice;
 
 		PROCEDURE RegisterDevices() : BOOLEAN;
-		VAR lun, maxlun, res : LONGINT; succeeded : LONGINT; (* How many storage device were added to the disk manager? *)
+		VAR lun, maxlun, res : SIGNED32; succeeded : SIGNED32; (* How many storage device were added to the disk manager? *)
 		BEGIN
 			maxlun := 0; succeeded := 0;
 			IF transportMethod = MethodBulkOnly THEN (* logical devices support *)
@@ -850,7 +850,7 @@ TYPE
 			diskManager.RemovedDriver(SELF);
 		END Disconnect;
 
-		PROCEDURE Wait(ms : LONGINT);
+		PROCEDURE Wait(ms : SIGNED32);
 		BEGIN
 			timer.Sleep(ms);
 		END Wait;
@@ -870,10 +870,10 @@ TYPE
 		storageDeviceList : UsbStorageDevice;
 		suffixUsed : ARRAY 100 OF BOOLEAN;
 		regName : ARRAY 32 OF CHAR;
-		res : LONGINT;
+		res : SIGNED32;
 
 		PROCEDURE Add*(dev : UsbStorageDevice);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			ASSERT(dev#NIL);
 			(* add new device to list *)
@@ -1000,7 +1000,7 @@ TYPE
 
 VAR
 	diskManager- : DiskManager;
-	performance- : LONGINT;
+	performance- : SIGNED32;
 
 (* displays the UFI command to KernelLog *)
 PROCEDURE ShowUFICmd(cmd : CHAR) ;
@@ -1070,7 +1070,7 @@ BEGIN
 	END;
 END ShowFlexibleDiskPage;
 
-PROCEDURE ShowSenseData(key, asc, ascq : CHAR;  information : LONGINT; valid : BOOLEAN);
+PROCEDURE ShowSenseData(key, asc, ascq : CHAR;  information : SIGNED32; valid : BOOLEAN);
 BEGIN
 	IF Debug.Trace THEN
 	KernelLog.String("UsbStorage: Sense Key: "); KernelLog.Int(ORD(key), 0);
@@ -1136,7 +1136,7 @@ BEGIN
 	END;
 END ShowSenseData;
 
-PROCEDURE ShowRes(res : LONGINT);
+PROCEDURE ShowRes(res : SIGNED32);
 BEGIN
 	IF Debug.Level >= Debug.Errors THEN
 	CASE res OF
@@ -1162,7 +1162,7 @@ END ShowRes;
 
 (** Shows all devices which are registered at the UsbStorage Disk Manager and the Disks.registry *)
 PROCEDURE Show*(context : Commands.Context);
-VAR table : Plugins.Table; i : LONGINT;
+VAR table : Plugins.Table; i : SIGNED32;
 BEGIN
 	(* show all devices which are registered at the UsbStorage disk manager *)
 	diskManager.Show;

@@ -86,11 +86,11 @@ CONST
 	SerialNumberUnset = -4;
 
 VAR
-	frameCnt: LONGINT;
+	frameCnt: SIGNED32;
 	OggS: ARRAY 4 OF CHAR;
-	nrOfPages: LONGINT;
-	FloorRanges: ARRAY 4 OF LONGINT;
-	InverseDBLookup: ARRAY InverseDBLookupSize OF LONGINT;
+	nrOfPages: SIGNED32;
+	FloorRanges: ARRAY 4 OF SIGNED32;
+	InverseDBLookup: ARRAY InverseDBLookupSize OF SIGNED32;
 
 	(** state of the player *);
 	stopped*, playing*: BOOLEAN;
@@ -99,8 +99,8 @@ TYPE
 	BitReader = OBJECT
 		VAR
 			r: Streams.Reader;
-			bsBuff, bsLive: LONGINT;
-			bytesRead: LONGINT;
+			bsBuff, bsLive: SIGNED32;
+			bytesRead: SIGNED32;
 
 			PROCEDURE &Init*(r: Streams.Reader);
 			BEGIN
@@ -115,7 +115,7 @@ TYPE
 			END IsOk;
 
 			(* get the number of bytes read *)
-			PROCEDURE GetBytesRead(): LONGINT;
+			PROCEDURE GetBytesRead(): SIGNED32;
 			BEGIN
 				RETURN SELF.bytesRead
 			END GetBytesRead;
@@ -123,8 +123,8 @@ TYPE
 			(* read a number of bits (lsb first) from the reader (max: 32)
 				note: if n is 32 (bigger is not allowed) then the last bit will be interpreted as the sign
 				and may give wrong results, otherwise the sign-bit of the returned longint will not be affected anyway *)
-			PROCEDURE GetBits(n: LONGINT): LONGINT;
-			VAR r, factor: LONGINT;
+			PROCEDURE GetBits(n: SIGNED32): SIGNED32;
+			VAR r, factor: SIGNED32;
 			BEGIN
 				r := 0; factor := 1;
 				WHILE (n > 0) DO
@@ -136,8 +136,8 @@ TYPE
 			END GetBits;
 
 			(* get the next bit from the stream (lsb first) *)
-			PROCEDURE GetBit(): LONGINT;
-			VAR res: LONGINT;
+			PROCEDURE GetBit(): SIGNED32;
+			VAR res: SIGNED32;
 			BEGIN
 				IF (bsLive = 0) THEN
 					bsBuff := ORD(r.Get());
@@ -153,9 +153,9 @@ TYPE
 			END GetBit;
 
 			(* get a hugeint *)
-			PROCEDURE GetHugeInt(): HUGEINT;
+			PROCEDURE GetHugeInt(): SIGNED64;
 			VAR
-				huge: HUGEINT;
+				huge: SIGNED64;
 			BEGIN
 				huge := GetBits(16);
 				huge := huge + 10000H * GetBits(16);
@@ -180,7 +180,7 @@ TYPE
 	(* read from a buffer, returning various sized integers *)
 	BufferReader = OBJECT
 		VAR
-			bsBuff, bsLive, pos, len: LONGINT;
+			bsBuff, bsLive, pos, len: SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -198,12 +198,12 @@ TYPE
 			OGGUtilities.String("*** --- ***")
 		END Print;
 
-		PROCEDURE SetLen(len: LONGINT);
+		PROCEDURE SetLen(len: SIGNED32);
 		BEGIN
 			SELF.len := len
 		END SetLen;
 
-		PROCEDURE GetLen(): LONGINT;
+		PROCEDURE GetLen(): SIGNED32;
 		BEGIN
 			RETURN SELF.len
 		END GetLen;
@@ -215,25 +215,25 @@ TYPE
 		END IsOk;
 
 		(* get the current position in the buffer *)
-		PROCEDURE GetPos(): LONGINT;
+		PROCEDURE GetPos(): SIGNED32;
 		BEGIN
 			RETURN pos
 		END GetPos;
 
-		PROCEDURE GetBitCount(): LONGINT;
+		PROCEDURE GetBitCount(): SIGNED32;
 		BEGIN
 			RETURN (pos - 1) * 8 + (8 - bsLive)
 		END GetBitCount;
 
 		(* get the current byte from the buffer as a longint *)
-		PROCEDURE GetCurByte(VAR buf: ARRAY OF CHAR): LONGINT;
+		PROCEDURE GetCurByte(VAR buf: ARRAY OF CHAR): SIGNED32;
 		BEGIN
 			RETURN ORD(buf[pos])
 		END GetCurByte;
 
 		(* get the next bit from the buffer (lsb first) *)
-		PROCEDURE GetBit(VAR buf: ARRAY OF CHAR): LONGINT;
-		VAR res: LONGINT;
+		PROCEDURE GetBit(VAR buf: ARRAY OF CHAR): SIGNED32;
+		VAR res: SIGNED32;
 		BEGIN
 			IF ((LEN(buf) # pos) & (len # pos) & (bsLive = 0)) THEN
 				bsBuff := ORD(buf[pos]);
@@ -249,8 +249,8 @@ TYPE
 		(* read a number of bits (lsb first) from the buffer (max: 32)
 				note: if n is 32 (bigger is not allowed) then the last bit will be interpreted as the sign (by the processor)
 				and may give wrong results, otherwise the sign-bit of the returned longint will not be affected anyway *)
-		PROCEDURE GetBits(VAR buf: ARRAY OF CHAR; n: LONGINT): LONGINT;
-		VAR r, factor: LONGINT;
+		PROCEDURE GetBits(VAR buf: ARRAY OF CHAR; n: SIGNED32): SIGNED32;
+		VAR r, factor: SIGNED32;
 		BEGIN
 			r := 0;
 			factor := 1;
@@ -263,9 +263,9 @@ TYPE
 		END GetBits;
 
 		(* get a hugeint *)
-		PROCEDURE GetHugeInt(VAR buf: ARRAY OF CHAR): HUGEINT;
+		PROCEDURE GetHugeInt(VAR buf: ARRAY OF CHAR): SIGNED64;
 		VAR
-			huge: HUGEINT;
+			huge: SIGNED64;
 		BEGIN
 			huge := GetBits(buf, 16);
 			huge := huge + 10000H * GetBits(buf, 16);
@@ -275,10 +275,10 @@ TYPE
 		END GetHugeInt;
 
 		(* get a 32 bit unsigned integer *)
-		PROCEDURE Get32UnsignedBits (VAR buf: ARRAY OF CHAR): HUGEINT;
+		PROCEDURE Get32UnsignedBits (VAR buf: ARRAY OF CHAR): SIGNED64;
 		VAR
-			res: HUGEINT;
-			tmp: LONGINT;
+			res: SIGNED64;
+			tmp: SIGNED32;
 			BEGIN
 			tmp := 1;
 			res := GetBits(buf, 31) + GetBit(buf) * LSH(tmp, 31);
@@ -293,9 +293,9 @@ TYPE
 	END BufferReader;
 
 	OggPageHeader = RECORD
-		headerTypeFlag, pageSegments,pageSize,headerLength, streamSerialNo: LONGINT;
-		pageNo, checksum, absGranulePos: HUGEINT;
-		segTable: ARRAY MaxNrOfSegments OF LONGINT
+		headerTypeFlag, pageSegments,pageSize,headerLength, streamSerialNo: SIGNED32;
+		pageNo, checksum, absGranulePos: SIGNED64;
+		segTable: ARRAY MaxNrOfSegments OF SIGNED32
 	END;
 
 	OggPage = RECORD
@@ -306,7 +306,7 @@ TYPE
 	(* not really a stream, more a structure to keep stream-serialnumber, decoder and it's type together *)
 	LogicalOggStream = OBJECT
 		VAR
-			serialNumber*: LONGINT;
+			serialNumber*: SIGNED32;
 			decoder*: Decoder;
 			soundOutput: SoundOutput;
 			type*: ARRAY OggStreamTypeLength OF CHAR;
@@ -314,7 +314,7 @@ TYPE
 
 		(* init a new LogicalOggStream, type must have a length of 6 *)
 		PROCEDURE &Init*(dec: Decoder; soundOutput: SoundOutput; type: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@ LogicalOggStream::Init()")
@@ -336,7 +336,7 @@ TYPE
 			bitReader: BitReader;
 			page: OggPage;
 			streams: ARRAY MaxLogicalStreams OF LogicalOggStream;
-			nrOfStreams*: LONGINT;
+			nrOfStreams*: SIGNED32;
 
 		(* init the OggStreamReader *)
 		PROCEDURE &Init*(reader: Streams.Reader);
@@ -351,7 +351,7 @@ TYPE
 		END Init;
 
 		(** register an ogg-stream decoder of a given oggstream-type, type must have a length of 6*)
-		PROCEDURE RegisterDecoder*(dec: Decoder; soundOutput: SoundOutput; type: ARRAY OF CHAR): LONGINT;
+		PROCEDURE RegisterDecoder*(dec: Decoder; soundOutput: SoundOutput; type: ARRAY OF CHAR): SIGNED32;
 		VAR
 			logOggStream: LogicalOggStream;
 		BEGIN
@@ -374,7 +374,7 @@ TYPE
 		(** unregister an logical ogg-stream , usually used when it's finished *)
 		PROCEDURE UnregisterLogicalOggStream*(stream: LogicalOggStream);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			found: BOOLEAN;
 		BEGIN
 			i := 0; found := FALSE;
@@ -400,7 +400,7 @@ TYPE
 		VAR
 			type: ARRAY OggStreamTypeLength OF CHAR;
 			firstPage: BOOLEAN;
-			pos, i: LONGINT;
+			pos, i: SIGNED32;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@ Dispatch()")
@@ -423,9 +423,9 @@ TYPE
 			END;
 		END Dispatch;
 
-		PROCEDURE DecodePage(VAR oggStream: LogicalOggStream): LONGINT;
+		PROCEDURE DecodePage(VAR oggStream: LogicalOggStream): SIGNED32;
 		VAR
-			res, seg, pos, len, i: LONGINT;
+			res, seg, pos, len, i: SIGNED32;
 			decodingSuccess: BOOLEAN;
 		BEGIN
 			IF (Trace IN Debug) THEN
@@ -453,9 +453,9 @@ TYPE
 		END DecodePage;
 
 		(* get a LogicalOggStream by serial-number *)
-		PROCEDURE GetLogicalOggStreamBySerialNr(serialNr: LONGINT): LogicalOggStream;
+		PROCEDURE GetLogicalOggStreamBySerialNr(serialNr: SIGNED32): LogicalOggStream;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@ GetLogicalOggStreamBySerialNr()")
@@ -474,7 +474,7 @@ TYPE
 		(* get a LogicalOggStream by type-string *)
 		PROCEDURE GetLogicalOggStreamByType(type: ARRAY OF CHAR): LogicalOggStream;
 		VAR
-			i, j: LONGINT;
+			i, j: SIGNED32;
 			oggStream: LogicalOggStream;
 			found: BOOLEAN;
 		BEGIN
@@ -499,7 +499,7 @@ TYPE
 		END GetLogicalOggStreamByType;
 
 		PROCEDURE Stop*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(streams) - 1 DO
 				IF streams[i] # NIL THEN
@@ -510,9 +510,9 @@ TYPE
 
 
 		(** start playing an ogg-stream *)
-		PROCEDURE Start*(): LONGINT;
+		PROCEDURE Start*(): SIGNED32;
 		VAR
-			retCode: LONGINT;
+			retCode: SIGNED32;
 			lastPage: BOOLEAN;
 			oggStream: LogicalOggStream;
 		BEGIN
@@ -569,9 +569,9 @@ TYPE
 		END Start;
 
 		(* reads the next page of the stream buffering its content *)
-		PROCEDURE NextPage(): LONGINT;
+		PROCEDURE NextPage(): SIGNED32;
 		VAR
-			res, i: LONGINT;
+			res, i: SIGNED32;
 			ch: CHAR;
 		BEGIN
 			(* look for the capture pattern *)
@@ -617,7 +617,7 @@ TYPE
 			bufferAllocated: BOOLEAN;
 
 			(* some single information *)
-			resSize, n, residueType, cacheSize, lastWindowFlag, nrOfSamples: LONGINT;
+			resSize, n, residueType, cacheSize, lastWindowFlag, nrOfSamples: SIGNED32;
 			preCached: BOOLEAN;
 
 			(* information needed during decoding process *)
@@ -634,13 +634,13 @@ TYPE
 			(* Residue *)
 			residuePartitionProc: ARRAY 3 OF ResiduePartitionProc;
 			doNotDecode, noResidue: ARRAY MaxChannels OF BOOLEAN;
-			residueNumbers: ARRAY MaxChannels OF LONGINT; (* stores info of residue vector of each channel *)
+			residueNumbers: ARRAY MaxChannels OF SIGNED32; (* stores info of residue vector of each channel *)
 
 			(* FloorType1 *)
-			floor1Y: ARRAY Floor1Final OF LONGINT;
+			floor1Y: ARRAY Floor1Final OF SIGNED32;
 			floor1Step2Flag: ARRAY Floor1Final OF BOOLEAN;
 
-		PROCEDURE &Init*(channels: LONGINT);
+		PROCEDURE &Init*(channels: SIGNED32);
 		BEGIN
 			bufferAllocated := FALSE;
 			NEW(codec);
@@ -650,8 +650,8 @@ TYPE
 			residuePartitionProc[2] := ResiduePartitionProc2
 		END Init;
 
-		PROCEDURE AllocateBuffers(channels: LONGINT);
-		VAR i: LONGINT;
+		PROCEDURE AllocateBuffers(channels: SIGNED32);
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO channels - 1 DO
 				NEW(residues[i]);
@@ -665,11 +665,11 @@ TYPE
 	(** contains information about current window sizes during decode process *)
 	Window = OBJECT
 		VAR
-			small, long: LONGINT;
-			center*, leftStart*, leftEnd*, leftSize*, rightStart*, rightEnd*, rightSize*: LONGINT;
+			small, long: SIGNED32;
+			center*, leftStart*, leftEnd*, leftSize*, rightStart*, rightEnd*, rightSize*: SIGNED32;
 			lookupsLeft*, lookupsRight*: ARRAY 2 OF Slope;
 
-		PROCEDURE &Init*(small, long: LONGINT);
+		PROCEDURE &Init*(small, long: SIGNED32);
 		BEGIN
 			SELF.small := small DIV 2;
 			SELF.long := long DIV 2;
@@ -682,7 +682,7 @@ TYPE
 		END Init;
 
 		(* return the correct lookup-table index for blocksize n *)
-		PROCEDURE GetLookupTable(n: LONGINT): LONGINT;
+		PROCEDURE GetLookupTable(n: SIGNED32): SIGNED32;
 		BEGIN
 			IF n = small THEN
 				RETURN 0
@@ -691,8 +691,8 @@ TYPE
 			END
 		END GetLookupTable;
 
-		PROCEDURE ApplyWindow(VAR data: ARRAY OF HUGEINT; VAR decState: DecoderState);
-		VAR i, rIdx, lIdx, n: LONGINT;
+		PROCEDURE ApplyWindow(VAR data: ARRAY OF SIGNED64; VAR decState: DecoderState);
+		VAR i, rIdx, lIdx, n: SIGNED32;
 		BEGIN
 			lIdx := GetLookupTable(leftSize);
 			rIdx := GetLookupTable(rightSize);
@@ -738,12 +738,12 @@ TYPE
 	END Window;
 
 	Slope = OBJECT
-		VAR data: ARRAY OGGUtilities.MaxBlocksize OF LONGINT;
-			length: LONGINT;
+		VAR data: ARRAY OGGUtilities.MaxBlocksize OF SIGNED32;
+			length: SIGNED32;
 
-		PROCEDURE &Init*(length: LONGINT; slope: SlopeFunction);
-		VAR i: LONGINT;
-			tmp: REAL;
+		PROCEDURE &Init*(length: SIGNED32; slope: SlopeFunction);
+		VAR i: SIGNED32;
+			tmp: FLOAT32;
 		BEGIN
 			SELF.length := length;
 			FOR i := 0 TO length - 1 DO
@@ -757,7 +757,7 @@ TYPE
 			PrintLen(length);
 		END Print;
 
-		PROCEDURE PrintLen(len: LONGINT);
+		PROCEDURE PrintLen(len: SIGNED32);
 		BEGIN
 			OGGUtilities.String("### SLOPE ###");
 			OGGUtilities.Var("length", length);
@@ -777,13 +777,13 @@ TYPE
 		END DecodeHeader;
 
 		(** abstract method *)
-		PROCEDURE DecodePacket(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState): LONGINT;
+		PROCEDURE DecodePacket(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState): SIGNED32;
 		BEGIN
 			HALT(301)
 		END DecodePacket;
 
 		(** abstract method *)
-		PROCEDURE ComputeCurve(VAR decState: DecoderState; ch: LONGINT);
+		PROCEDURE ComputeCurve(VAR decState: DecoderState; ch: SIGNED32);
 		BEGIN
 			HALT(301)
 		END ComputeCurve;
@@ -799,8 +799,8 @@ TYPE
 	(* FloorType0 is no longer supported by Xiph.Org and therefore nearly deprecated *)
 	FloorType0 = OBJECT(AbstractFloorType)
 		VAR
-			order, rate, barkMapSize, amplitudeBits, amplitudeOffset, numberOfBooks: LONGINT;
-			bookList: ARRAY Floor0BookListSize OF LONGINT;
+			order, rate, barkMapSize, amplitudeBits, amplitudeOffset, numberOfBooks: SIGNED32;
+			bookList: ARRAY Floor0BookListSize OF SIGNED32;
 
 		(** print to the logfile *)
 		PROCEDURE Print;
@@ -842,10 +842,10 @@ TYPE
 			RETURN TRUE
 		END DecodeHeader;
 
-		PROCEDURE DecodePacket(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState): LONGINT;
+		PROCEDURE DecodePacket(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState): SIGNED32;
 	(*	VAR
-			amplitude, booknumber, lookupOffset: LONGINT;
-			lastFP: HUGEINT;
+			amplitude, booknumber, lookupOffset: SIGNED32;
+			lastFP: SIGNED64;
 			codebook: Codebook; *)
 		BEGIN
 		(*
@@ -879,10 +879,10 @@ TYPE
 			RETURN Ok
 		END DecodePacket;
 
-		PROCEDURE ComputeCurve(VAR decState: DecoderState; ch: LONGINT);
+		PROCEDURE ComputeCurve(VAR decState: DecoderState; ch: SIGNED32);
 			(*
 		VAR
-			n, i, linearFloorValue, iterationCond: LONGINT;
+			n, i, linearFloorValue, iterationCond: SIGNED32;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@FloorType0::ComputeCurve()")
@@ -916,9 +916,9 @@ TYPE
 		END ComputeCurve;
 
 		(* calculate a bark value *)
-		PROCEDURE Bark(x: REAL): LONGINT;
+		PROCEDURE Bark(x: FLOAT32): SIGNED32;
 			(*
-		VAR res: REAL;
+		VAR res: FLOAT32;
 		BEGIN
 			res := 13.1 * Math.arctan(0.00074 * x);
 			res := res + 2.24 * Math.arctan(0.0000000158 * x * x);
@@ -931,15 +931,15 @@ TYPE
 
 	FloorType1 = OBJECT(AbstractFloorType)
 		VAR
-			partitions*, multiplier*, rangebits*, maxClass*, values*: LONGINT;
-			partitionClassList*: ARRAY Floor1PartitionClassListSize OF LONGINT;
-			classDimensions*, classSubclasses*, classMasterbooks*: ARRAY Floor1ClassSize OF LONGINT;
-			subclassBooks*: ARRAY Floor1ClassSize, Floor1SubclassSize OF LONGINT;
-			xList*, xListSortPtr: ARRAY Floor1XListSize OF LONGINT;
-			xListSize*, confNr*: LONGINT;
+			partitions*, multiplier*, rangebits*, maxClass*, values*: SIGNED32;
+			partitionClassList*: ARRAY Floor1PartitionClassListSize OF SIGNED32;
+			classDimensions*, classSubclasses*, classMasterbooks*: ARRAY Floor1ClassSize OF SIGNED32;
+			subclassBooks*: ARRAY Floor1ClassSize, Floor1SubclassSize OF SIGNED32;
+			xList*, xListSortPtr: ARRAY Floor1XListSize OF SIGNED32;
+			xListSize*, confNr*: SIGNED32;
 
 		PROCEDURE &Init*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO Floor1XListSize - 1 DO
 				xListSortPtr[i] := i
@@ -948,7 +948,7 @@ TYPE
 
 		(** print to the logfile *)
 		PROCEDURE Print;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			OGGUtilities.String("### FloorType1 ###");
 			OGGUtilities.Var("partitions", partitions);
@@ -969,11 +969,11 @@ TYPE
 			OGGUtilities.String("### END (FloorType1) ###"); OGGUtilities.String("")
 		END Print;
 
-		PROCEDURE ComputeCurve(VAR decState: DecoderState; ch: LONGINT);
+		PROCEDURE ComputeCurve(VAR decState: DecoderState; ch: SIGNED32);
 		VAR
-			i: LONGINT;
-			range, lowNeighborOff, highNeighborOff, predicted, val, highroom, lowroom, room: LONGINT; (* step 1 variables *)
-			n, hx, hy, lx, ly: LONGINT; (* step 2 variables *)
+			i: SIGNED32;
+			range, lowNeighborOff, highNeighborOff, predicted, val, highroom, lowroom, room: SIGNED32; (* step 1 variables *)
+			n, hx, hy, lx, ly: SIGNED32; (* step 2 variables *)
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@VorbisCodec::FloorType1::ComputeCurve()")
@@ -1051,9 +1051,9 @@ TYPE
 			END;
 		END ComputeCurve;
 
-		PROCEDURE DecodePacket(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState): LONGINT;
+		PROCEDURE DecodePacket(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; VAR decState: DecoderState): SIGNED32;
 		VAR
-			range, book, i, j, class, cdim, cbits, csub, cval, offset, nonzero: LONGINT;
+			range, book, i, j, class, cdim, cbits, csub, cval, offset, nonzero: SIGNED32;
 			codebook: Codebook;
 		BEGIN
 			IF (Trace IN Debug) THEN
@@ -1106,7 +1106,7 @@ TYPE
 		(* decode floor1-description from codec setup header *)
 		PROCEDURE DecodeHeader(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR;
 										VAR info: Info; VAR codec: CodecSetup): BOOLEAN;
-		VAR i, j, k: LONGINT;
+		VAR i, j, k: SIGNED32;
 		BEGIN
 			partitions := bufReader.GetBits(buf, 5);
 			maxClass := -1;
@@ -1167,9 +1167,9 @@ TYPE
 	(* container for values needed by ResiduePartitionProc *)
 	ResidueInfo = OBJECT
 	VAR
-		partitionSize, outputVectorNr, offset, codebookNr, ch: LONGINT;
+		partitionSize, outputVectorNr, offset, codebookNr, ch: SIGNED32;
 
-		PROCEDURE Init(partitionSize, outputVectorNr, offset, codebookNr, ch: LONGINT);
+		PROCEDURE Init(partitionSize, outputVectorNr, offset, codebookNr, ch: SIGNED32);
 		BEGIN
 			SELF.partitionSize := partitionSize;
 			SELF.outputVectorNr := outputVectorNr;
@@ -1181,16 +1181,16 @@ TYPE
 
 	Residue = OBJECT
 		VAR
-			begin, end, partitionSize, classifications, classbook: LONGINT;
-			cascades: ARRAY ResidueCascadeSize OF LONGINT;
-			books: ARRAY ResidueBookSize, 8 OF LONGINT;
-			nr: LONGINT;
-			decodemap, partword2: ARRAY 1024, PartwordSize OF LONGINT;
-			partword01: ARRAY MaxChannels, 1024, PartwordSize OF LONGINT;
+			begin, end, partitionSize, classifications, classbook: SIGNED32;
+			cascades: ARRAY ResidueCascadeSize OF SIGNED32;
+			books: ARRAY ResidueBookSize, 8 OF SIGNED32;
+			nr: SIGNED32;
+			decodemap, partword2: ARRAY 1024, PartwordSize OF SIGNED32;
+			partword01: ARRAY MaxChannels, 1024, PartwordSize OF SIGNED32;
 
 		(** print to the logfile *)
 		PROCEDURE Print;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			OGGUtilities.String("### Residue ###");
 			OGGUtilities.Var("begin", begin);
@@ -1209,7 +1209,7 @@ TYPE
 		(* decode residue configuration from codec setup header (for all three residue types the same *)
 		PROCEDURE DecodeHeader(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR;
 										VAR info: Info; VAR codec: CodecSetup): BOOLEAN;
-		VAR i, j, k, highBits, lowBits, bitFlag, val, mult, deco, partvals, dim: LONGINT;
+		VAR i, j, k, highBits, lowBits, bitFlag, val, mult, deco, partvals, dim: SIGNED32;
 			tmpSet: SET;
 		BEGIN
 			begin := bufReader.GetBits(buf, 24);
@@ -1265,12 +1265,12 @@ TYPE
 
 		(* decode residue vectors filling residue-array, residueNumbers will serve as an index into that array *)
 		PROCEDURE DecodePacket(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR;
-														VAR decState: DecoderState; ch: LONGINT);
+														VAR decState: DecoderState; ch: SIGNED32);
 		VAR
-			i, j, k, l, s, t: LONGINT;
-			samplesPerPartition, partitionsPerWord, n, partvals, offset, temp, vqclass, vqbook: LONGINT;
+			i, j, k, l, s, t: SIGNED32;
+			samplesPerPartition, partitionsPerWord, n, partvals, offset, temp, vqclass, vqbook: SIGNED32;
 			codebook: Codebook;
-			dim, used: LONGINT;
+			dim, used: SIGNED32;
 		BEGIN
 			(* decodemap, macht jOrbis so. vielleicht funktionierts ja so ... *)
 			dim := decState.codec.codebooks[classbook].dimensions;
@@ -1374,11 +1374,11 @@ TYPE
 
 	Mapping = OBJECT
 		VAR
-			submaps*, couplingSteps*: LONGINT;
-			magnitude*, angle*: ARRAY MappingMagnitudeSize OF LONGINT;
-			mux*: ARRAY MappingMuxSize OF LONGINT;
-			submapFloor*, submapResidue*: ARRAY MappingSubmapFloorSize OF LONGINT;
-			nr*: LONGINT;
+			submaps*, couplingSteps*: SIGNED32;
+			magnitude*, angle*: ARRAY MappingMagnitudeSize OF SIGNED32;
+			mux*: ARRAY MappingMuxSize OF SIGNED32;
+			submapFloor*, submapResidue*: ARRAY MappingSubmapFloorSize OF SIGNED32;
+			nr*: SIGNED32;
 
 		(** print to the logfile *)
 		PROCEDURE Print;
@@ -1398,7 +1398,7 @@ TYPE
 		(* decode mapping configuration from codec setup header *)
 		PROCEDURE DecodeHeader(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR;
 										VAR info: Info; VAR codec: CodecSetup): BOOLEAN;
-		VAR tmp, i: LONGINT;
+		VAR tmp, i: SIGNED32;
 		BEGIN
 			IF (bufReader.GetBits(buf, 1) = 1) THEN
 				submaps := bufReader.GetBits(buf, 4) + 1
@@ -1469,7 +1469,7 @@ TYPE
 	END Mapping;
 
 	Mode = OBJECT
-		VAR blockflag*, windowType*, transformType*, mapping*: LONGINT;
+		VAR blockflag*, windowType*, transformType*, mapping*: SIGNED32;
 
 		(** print to the logfile *)
 		PROCEDURE Print;
@@ -1508,14 +1508,14 @@ TYPE
 
 	Codebook = OBJECT
 		VAR
-			entries*, dimensions*, lookupType*, valueBits*, lookupValues*: LONGINT;
+			entries*, dimensions*, lookupType*, valueBits*, lookupValues*: SIGNED32;
 			sequenceP*: BOOLEAN;
-			minimumValueFP*, deltaValueFP*: HUGEINT; (* fixed-point values *)
+			minimumValueFP*, deltaValueFP*: SIGNED64; (* fixed-point values *)
 			codewordLengths*: OGGUtilities.IntList;
-			multiplicandsFP, valuelistFP*: ARRAY MaxNumberOfMultiplicands OF HUGEINT;
+			multiplicandsFP, valuelistFP*: ARRAY MaxNumberOfMultiplicands OF SIGNED64;
 			huffmanTree*: OGGUtilities.HuffmanTree;
 			valid*: BOOLEAN;
-			cbNumber-: LONGINT;
+			cbNumber-: SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -1541,10 +1541,10 @@ TYPE
 		END Print;
 
 		(* decode codebooks from codec setup header *)
-		PROCEDURE DecodeHeader(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; nr: LONGINT): BOOLEAN;
+		PROCEDURE DecodeHeader(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR; nr: SIGNED32): BOOLEAN;
 		VAR
-			curEntry, curLength, number, i, j, k, sparsecount, indexDiv, index: LONGINT;
-			valFP, lastFP: HUGEINT;
+			curEntry, curLength, number, i, j, k, sparsecount, indexDiv, index: SIGNED32;
+			valFP, lastFP: SIGNED64;
 			newEntry: OGGUtilities.IntElement;
 			ordered, sparse, flag: BOOLEAN;
 			codewords: OGGUtilities.IntList;
@@ -1582,7 +1582,7 @@ TYPE
 					IF (curLength > 31) THEN
 						KernelLog.String("ASSERTION failed - codeword too long"); KernelLog.Ln
 					END;
-					(* codewords mustn't be longer than a (positive) LONGINT *)
+					(* codewords mustn't be longer than a (positive) SIGNED32 *)
 					ASSERT (curLength <= 31);
 					NEW(newEntry, curLength);
 					codewordLengths.Append(newEntry)
@@ -1597,7 +1597,7 @@ TYPE
 					IF (curLength > 31) THEN
 						KernelLog.String("ASSERTION failed - codeword too long"); KernelLog.Ln
 					END;
-					(* codewords mustn't be longer than a (positive) LONGINT *)
+					(* codewords mustn't be longer than a (positive) SIGNED32 *)
 					ASSERT (curLength <= 31);
 					FOR i := curEntry TO (curEntry + number - 1) DO
 						NEW(newEntry, curLength);
@@ -1708,9 +1708,9 @@ TYPE
 		END DecodeHeader;
 
 		(* read the next codeword from the buffer *)
-		PROCEDURE GetCodeword(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR): LONGINT;
+		PROCEDURE GetCodeword(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR): SIGNED32;
 		VAR
-			bit: LONGINT;
+			bit: SIGNED32;
 			hNode: OGGUtilities.HuffmanNode;
 		BEGIN
 			hNode := huffmanTree.start;
@@ -1722,10 +1722,10 @@ TYPE
 		END GetCodeword;
 
 		(* build the list of codewods from a list of lengths (algorithm from Tremor-source code) *)
-		PROCEDURE MakeCodewords(VAR list: OGGUtilities.IntList; sparsecount: LONGINT; VAR res: OGGUtilities.IntList);
+		PROCEDURE MakeCodewords(VAR list: OGGUtilities.IntList; sparsecount: SIGNED32; VAR res: OGGUtilities.IntList);
 		VAR
-			i: HUGEINT; j, count, length, entry, tmp: LONGINT;
-			marker: ARRAY OGGUtilities.MaxCodewordLength OF LONGINT;
+			i: SIGNED64; j, count, length, entry, tmp: SIGNED32;
+			marker: ARRAY OGGUtilities.MaxCodewordLength OF SIGNED32;
 			cur, curRes: OGGUtilities.IntElement;
 		BEGIN
 			NEW(res, NIL);
@@ -1784,10 +1784,10 @@ TYPE
 		END MakeCodewords;
 
 		(* count the number of valid codewords *)
-		PROCEDURE CountValidCodewords(VAR list: OGGUtilities.IntList): LONGINT;
+		PROCEDURE CountValidCodewords(VAR list: OGGUtilities.IntList): SIGNED32;
 		VAR
 			cur: OGGUtilities.IntElement;
-			cnt: LONGINT;
+			cnt: SIGNED32;
 		BEGIN
 			cur := list.start(OGGUtilities.IntElement);
 			cnt := 0;
@@ -1801,18 +1801,18 @@ TYPE
 
 	CodecSetup = OBJECT
 		VAR
-			codebookCnt*, floorCnt*, residueCnt*, mappingCnt*, modeCnt*: LONGINT;
+			codebookCnt*, floorCnt*, residueCnt*, mappingCnt*, modeCnt*: SIGNED32;
 			codebooks*: ARRAY MaxNumberOfCodebooks OF Codebook;
-			floorTypes*: ARRAY MaxNumberOfFloors OF LONGINT;
+			floorTypes*: ARRAY MaxNumberOfFloors OF SIGNED32;
 			floorConf*: ARRAY MaxNumberOfFloors OF AbstractFloorType;
-			residueTypes*: ARRAY MaxNumberOfResidues OF LONGINT;
+			residueTypes*: ARRAY MaxNumberOfResidues OF SIGNED32;
 			residues*: ARRAY MaxNumberOfResidues OF Residue;
 			mappings*: ARRAY MaxNumberOfMappings OF Mapping;
 			modes*: ARRAY MaxNumberOfModes OF Mode;
 
 		(** print all elements of the codec setup *)
 		PROCEDURE Print;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			OGGUtilities.String("***** CodecSetup *****");
 			OGGUtilities.Var("codebookCnt", codebookCnt);
@@ -1840,7 +1840,7 @@ TYPE
 
 	CommentListElement = OBJECT (OGGUtilities.ListElement)
 		VAR
-			length*: HUGEINT;
+			length*: SIGNED64;
 			text*: ARRAY MaxCommentLength OF CHAR;
 
 			PROCEDURE Print;
@@ -1851,7 +1851,7 @@ TYPE
 
 	 CommentList = OBJECT (OGGUtilities.List)
 		 VAR
-			vendorLength*: HUGEINT;
+			vendorLength*: SIGNED64;
 			vendorString*: ARRAY MaxVendorLength OF CHAR;
 			(* other comment fields are already defined in OGGUtilities.List *)
 
@@ -1876,9 +1876,9 @@ TYPE
 
 	Info = OBJECT
 	VAR
-		version, sampleRate: HUGEINT;
-		channels, bitrateMax, bitrateNom, bitrateMin: LONGINT;
-		blocksizes: ARRAY 2 OF LONGINT;
+		version, sampleRate: SIGNED64;
+		channels, bitrateMax, bitrateNom, bitrateMin: SIGNED32;
+		blocksizes: ARRAY 2 OF SIGNED32;
 		comment: CommentList;
 
 		PROCEDURE &Init*;
@@ -1900,20 +1900,20 @@ TYPE
 	END Info;
 
 	(* buffer for the inverse MDCT *)
-	MdctBufferT = ARRAY OGGUtilities.MaxBlocksize DIV 2 OF HUGEINT;
+	MdctBufferT = ARRAY OGGUtilities.MaxBlocksize DIV 2 OF SIGNED64;
 	MdctBuffer = POINTER TO MdctBufferT;
 
 	(** does nothing except printing arguments of Decode()-procedure *)
 	DumpDecoder* = OBJECT
 		VAR
-			packetNr-: LONGINT;
+			packetNr-: SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
 			packetNr := 0;
 		END Init;
 
-		PROCEDURE Decode*(VAR buf: ARRAY OF CHAR; pos, len: LONGINT; continuedPacket: BOOLEAN; VAR soundOutput: SoundOutput): BOOLEAN;
+		PROCEDURE Decode*(VAR buf: ARRAY OF CHAR; pos, len: SIGNED32; continuedPacket: BOOLEAN; VAR soundOutput: SoundOutput): BOOLEAN;
 		BEGIN
 			INC(packetNr);
 			IF (Trace IN Debug) THEN
@@ -1925,14 +1925,14 @@ TYPE
 
 	MdctObject = OBJECT
 		VAR
-			n, log2n: LONGINT;
-			bitrev: ARRAY OGGUtilities.MaxBlocksize DIV 4 OF LONGINT;
-			trig: ARRAY OGGUtilities.MaxBlocksize + (OGGUtilities.MaxBlocksize DIV 4) OF LONGINT;
+			n, log2n: SIGNED32;
+			bitrev: ARRAY OGGUtilities.MaxBlocksize DIV 4 OF SIGNED32;
+			trig: ARRAY OGGUtilities.MaxBlocksize + (OGGUtilities.MaxBlocksize DIV 4) OF SIGNED32;
 			x, w: MdctBuffer;
 
-		PROCEDURE &Init*(n: LONGINT);
-		VAR ae, ao, be, bo, ce, co, i, j, acc, mask, msb, notAcc: LONGINT;
-			float: LONGREAL;
+		PROCEDURE &Init*(n: SIGNED32);
+		VAR ae, ao, be, bo, ce, co, i, j, acc, mask, msb, notAcc: SIGNED32;
+			float: FLOAT64;
 		BEGIN
 			NEW(x);
 			NEW(w);
@@ -1978,9 +1978,9 @@ TYPE
 		END Init;
 
 		(** performs the inverse MDCT *)
-		PROCEDURE Backward(VAR data: ARRAY OF HUGEINT);
-		VAR n2, n4, n8, inO, xO, a, i, xx, b, o1, o2, o3, o4: LONGINT;
-			temp1, temp2: HUGEINT;
+		PROCEDURE Backward(VAR data: ARRAY OF SIGNED64);
+		VAR n2, n4, n8, inO, xO, a, i, xx, b, o1, o2, o3, o4: SIGNED32;
+			temp1, temp2: SIGNED64;
 		BEGIN
 			n2 := n DIV 2;
 			n4 := n DIV 4;
@@ -2045,7 +2045,7 @@ TYPE
 
 
 		(* Mdct-Kernel: xxx is an out-parameter *)
-		PROCEDURE Kernel(n, n2, n4, n8: LONGINT);
+		PROCEDURE Kernel(n, n2, n4, n8: SIGNED32);
 		BEGIN
 			KernelStep1(n2, n4);
 			KernelStep2(n2);
@@ -2062,9 +2062,9 @@ TYPE
 
 
 		(* step 2 *)
-		PROCEDURE KernelStep1(n2, n4: LONGINT);
-		VAR xA, xB, w2, a, i: LONGINT;
-			x0, x1: HUGEINT;
+		PROCEDURE KernelStep1(n2, n4: SIGNED32);
+		VAR xA, xB, w2, a, i: SIGNED32;
+			x0, x1: SIGNED64;
 		BEGIN
 			xA := n4;
 			xB := 0;
@@ -2091,9 +2091,9 @@ TYPE
 		END KernelStep1;
 
 		(* step 3 *)
-		PROCEDURE KernelStep2(n2: LONGINT);
-		VAR i, s, r, w1, w2, k0, k1, a, wbase, sEnd: LONGINT;
-			wA, wB, aev, aov: HUGEINT;
+		PROCEDURE KernelStep2(n2: SIGNED32);
+		VAR i, s, r, w1, w2, k0, k1, a, wbase, sEnd: SIGNED32;
+			wA, wB, aev, aov: SIGNED64;
 		BEGIN
 			FOR i := 0 TO log2n - 3 - 1 DO
 				k0 := LSH(n, -(i + 2));
@@ -2130,9 +2130,9 @@ TYPE
 		END KernelStep2;
 
 		(* step 4, 5, 6, 7 *)
-		PROCEDURE KernelStep3(n2, n8: LONGINT);
-		VAR c, bit, x1, x2, t1, t2, i: LONGINT;
-			wa, wb, wc, wd, wace, waco, wbce, wbco: HUGEINT;
+		PROCEDURE KernelStep3(n2, n8: SIGNED32);
+		VAR c, bit, x1, x2, t1, t2, i: SIGNED32;
+			wa, wb, wc, wd, wace, waco, wbce, wbco: SIGNED64;
 		BEGIN
 			c := n;
 			bit := 0;
@@ -2170,13 +2170,13 @@ TYPE
 	SoundOutput = OBJECT
 		VAR
 			output: OGGUtilities.BufferPool;
-			nrOfBuffers, nrOfChannels, samplingRate, samplingResolution, volume: LONGINT;
-			minAmplitude, maxAmplitude: LONGINT;
+			nrOfBuffers, nrOfChannels, samplingRate, samplingResolution, volume: SIGNED32;
+			minAmplitude, maxAmplitude: SIGNED32;
 			initSoundChannelDone*: BOOLEAN;
 			channel: SoundDevices.Channel;
 			driver: SoundDevices.Driver;
 
-		PROCEDURE &Init*(nrOfBuffers, volume: LONGINT);
+		PROCEDURE &Init*(nrOfBuffers, volume: SIGNED32);
 		BEGIN
 			SELF.volume := volume;
 			SELF.nrOfBuffers := nrOfBuffers;
@@ -2192,8 +2192,8 @@ TYPE
 			IF channel # NIL THEN channel.Close() END
 		END CloseSoundChannel;
 
-		PROCEDURE InitSoundChannel*(nrOfChannels, samplingRate, samplingResolution: LONGINT);
-		VAR i: LONGINT; res: WORD;
+		PROCEDURE InitSoundChannel*(nrOfChannels, samplingRate, samplingResolution: SIGNED32);
+		VAR i: SIGNED32; res: INTEGER;
 			buffer: SoundDevices.Buffer;
 		BEGIN
 		 	IF (Trace IN Debug) THEN
@@ -2227,9 +2227,9 @@ TYPE
 			END
 		END InitSoundChannel;
 
-		PROCEDURE Output*(VAR input: ARRAY OF OGGUtilities.PCMBuffer; nrOfSamples: LONGINT);
+		PROCEDURE Output*(VAR input: ARRAY OF OGGUtilities.PCMBuffer; nrOfSamples: SIGNED32);
 		VAR buffer: SoundDevices.Buffer;
-			i, ch, current, bufferPos: LONGINT;
+			i, ch, current, bufferPos: SIGNED32;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@SoundOutput::Output()")
@@ -2284,8 +2284,8 @@ TYPE
 			- upsizes with the max amplitude
 			- does the clipping
 		*)
-		PROCEDURE GetSample(sample: HUGEINT): LONGINT;
-		VAR retSample: LONGINT;
+		PROCEDURE GetSample(sample: SIGNED64): SIGNED32;
+		VAR retSample: SIGNED32;
 		BEGIN
 			(* can do a normal multiplication here *)
 			sample := sample * maxAmplitude;
@@ -2314,9 +2314,9 @@ TYPE
 			filenameSet: BOOLEAN;
 			file: Files.File;
 			writer: Files.Writer;
-			frameCnt: LONGINT;
+			frameCnt: SIGNED32;
 
-		PROCEDURE &Init*(nrOfBuffers, volume: LONGINT);
+		PROCEDURE &Init*(nrOfBuffers, volume: SIGNED32);
 		BEGIN
 			filenameSet := FALSE;
 			file := NIL;
@@ -2339,7 +2339,7 @@ TYPE
 			END
 		END CloseSoundChannel;
 
-		PROCEDURE InitSoundChannel*(localNrOfChannels, samplingRate, localSamplingResolution: LONGINT);
+		PROCEDURE InitSoundChannel*(localNrOfChannels, samplingRate, localSamplingResolution: SIGNED32);
 		BEGIN
 			nrOfChannels := localNrOfChannels;
 			samplingResolution := localSamplingResolution;
@@ -2352,8 +2352,8 @@ TYPE
 			initSoundChannelDone := TRUE
 		END InitSoundChannel;
 
-		PROCEDURE Output*(VAR input: ARRAY OF OGGUtilities.PCMBuffer; nrOfSamples: LONGINT);
-			VAR i, ch, current: LONGINT;
+		PROCEDURE Output*(VAR input: ARRAY OF OGGUtilities.PCMBuffer; nrOfSamples: SIGNED32);
+			VAR i, ch, current: SIGNED32;
 		BEGIN
 			INC(frameCnt);
 			IF file # NIL THEN
@@ -2377,13 +2377,13 @@ TYPE
 	VorbisDecoder* = OBJECT
 		VAR
 			buf: ARRAY MaxPageSize OF CHAR; (* why not this size? *)
-			pos, packetCnt: LONGINT;
+			pos, packetCnt: SIGNED32;
 			appendPacket, firstDataPacket: BOOLEAN;
 			info: Info;
 			soundOutput: SoundOutput;
 			bufReader: BufferReader;
 			decState: DecoderState;
-			nrOfSamplesPlayed: LONGINT;
+			nrOfSamplesPlayed: SIGNED32;
 			mdct: ARRAY 2 OF MdctObject; (* for each of the two blocksizes one Mdct *)
 
 		PROCEDURE &Init*;
@@ -2402,10 +2402,10 @@ TYPE
 		END ResetDecoder;
 
 
-		PROCEDURE Decode*(VAR buf: ARRAY OF CHAR; pos,len: LONGINT; continuedPacket:
-					BOOLEAN; VAR soundOutput: SoundOutput): LONGINT;
+		PROCEDURE Decode*(VAR buf: ARRAY OF CHAR; pos,len: SIGNED32; continuedPacket:
+					BOOLEAN; VAR soundOutput: SoundOutput): SIGNED32;
 		VAR
-			i, typeLen: LONGINT;
+			i, typeLen: SIGNED32;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@Decode()"); OGGUtilities.w.Ln;
@@ -2447,8 +2447,8 @@ TYPE
 		END Decode;
 
 		(* start the decoding proccess *)
-		PROCEDURE StartDecode(VAR soundOutput: SoundOutput): LONGINT;
-		VAR res: LONGINT;
+		PROCEDURE StartDecode(VAR soundOutput: SoundOutput): SIGNED32;
+		VAR res: SIGNED32;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@StartDecode()")
@@ -2504,9 +2504,9 @@ TYPE
 			RETURN res
 		END StartDecode;
 
-		PROCEDURE DecodeIdentificationHeader(): LONGINT;
+		PROCEDURE DecodeIdentificationHeader(): SIGNED32;
 		VAR
-			tmp: LONGINT;
+			tmp: SIGNED32;
 			set: SET;
 		BEGIN
 			(* version *)
@@ -2538,9 +2538,9 @@ TYPE
 			RETURN Ok
 		END DecodeIdentificationHeader;
 
-		PROCEDURE DecodeCommentHeader(): LONGINT;
+		PROCEDURE DecodeCommentHeader(): SIGNED32;
 		VAR
-			i, j: HUGEINT;
+			i, j: SIGNED64;
 			commentElement: CommentListElement;
 		BEGIN
 			info.comment.vendorLength := bufReader.Get32UnsignedBits(buf);
@@ -2565,9 +2565,9 @@ TYPE
 			RETURN Ok
 		END DecodeCommentHeader;
 
-		PROCEDURE DecodeSetupHeader(VAR codec: CodecSetup): LONGINT;
+		PROCEDURE DecodeSetupHeader(VAR codec: CodecSetup): SIGNED32;
 		VAR
-			tmp, i, timeCnt: LONGINT;
+			tmp, i, timeCnt: SIGNED32;
 			codebook: Codebook;
 			floor1: FloorType1;
 			residue: Residue;
@@ -2705,7 +2705,7 @@ TYPE
 			RETURN Ok
 		END DecodeSetupHeader;
 
-		PROCEDURE DecodeDataPacket(res: WORD);
+		PROCEDURE DecodeDataPacket(res: INTEGER);
 		BEGIN
 			IF (Trace IN Debug) THEN OGGUtilities.String("@DecodeDataPacket()") END;
 			INC(frameCnt);
@@ -2745,7 +2745,7 @@ TYPE
 		(* cache the second half of the data and set the cache size correctly
 		(cached data starts at offset 0) *)
 		PROCEDURE CacheRightHandData;
-		VAR ch, i: LONGINT;
+		VAR ch, i: SIGNED32;
 		BEGIN
 			IF decState.preCached THEN
 				FOR ch := 0 TO decState.info.channels - 1 DO
@@ -2766,7 +2766,7 @@ TYPE
 		(* overlap cached-data from previous frame with data from current frame
 		data starts at offset 0 *)
 		PROCEDURE OverlapAdd;
-		VAR ch, i, start: LONGINT;
+		VAR ch, i, start: SIGNED32;
 		BEGIN
 			FOR ch := 0 TO decState.info.channels - 1 DO
 				IF (decState.cacheSize = decState.n DIV 2) THEN
@@ -2813,7 +2813,7 @@ TYPE
 		END OverlapAdd;
 
 		PROCEDURE WindowData;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO decState.info.channels - 1 DO
 				decState.win.ApplyWindow(decState.floor[i].data, decState)
@@ -2821,7 +2821,7 @@ TYPE
 		END WindowData;
 
 		PROCEDURE Mdct;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO decState.info.channels - 1 DO
 				mdct[decState.mode.blockflag].Backward(decState.floor[i].data)
@@ -2829,8 +2829,8 @@ TYPE
 		END Mdct;
 
 		PROCEDURE DotProduct;
-		VAR i, n, chptr: LONGINT;
-			residueVal, floorVal: HUGEINT;
+		VAR i, n, chptr: SIGNED32;
+			residueVal, floorVal: SIGNED64;
 		BEGIN
 			(* multiply each element of the floor-vector with each element of the residue-vector *)
 			n := decState.n DIV 2;
@@ -2851,8 +2851,8 @@ TYPE
 
 		PROCEDURE InverseCoupling;
 		VAR
-			i, j, angIdx, magIdx: LONGINT;
-			newM, newA, m, a: HUGEINT; (* all fixed-point *)
+			i, j, angIdx, magIdx: SIGNED32;
+			newM, newA, m, a: SIGNED64; (* all fixed-point *)
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@InverseCoupling()")
@@ -2883,7 +2883,7 @@ TYPE
 		END InverseCoupling;
 
 		PROCEDURE ResidueDecode;
-		VAR i, j, residueNr, ch: LONGINT;
+		VAR i, j, residueNr, ch: SIGNED32;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@ResidueDecode()")
@@ -2914,7 +2914,7 @@ TYPE
 		END ResidueDecode;
 
 		PROCEDURE NonzeroVectorPropagate;
-		VAR i, magnitude, angle: LONGINT;
+		VAR i, magnitude, angle: SIGNED32;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@NonZeroVectorPropagate()")
@@ -2929,9 +2929,9 @@ TYPE
 			END
 		END NonzeroVectorPropagate;
 
-		PROCEDURE FloorCurveDecode(): LONGINT;
+		PROCEDURE FloorCurveDecode(): SIGNED32;
 		VAR
-			submapNumber, floorNumber, floorType, i, res: LONGINT;
+			submapNumber, floorNumber, floorType, i, res: SIGNED32;
 			floor: AbstractFloorType;
 		BEGIN
 			IF (Trace IN Debug) THEN
@@ -2952,8 +2952,8 @@ TYPE
 		END FloorCurveDecode;
 
 		(* calculate determining points of the window and return the amount of data to be returned *)
-		PROCEDURE WindowDecode(VAR res: WORD): LONGINT;
-		VAR modeNr, previousWindowFlag, nextWindowFlag, previousSize, currentSize: LONGINT;
+		PROCEDURE WindowDecode(VAR res: INTEGER): SIGNED32;
+		VAR modeNr, previousWindowFlag, nextWindowFlag, previousSize, currentSize: SIGNED32;
 		BEGIN
 			IF (Trace IN Debug) THEN
 				OGGUtilities.String("@WindowDecode()")
@@ -3018,14 +3018,14 @@ TYPE
 	ResiduePartitionProc = PROCEDURE {DELEGATE} (VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR;
 													VAR decSate: DecoderState);
 	(* slope-function vorbis window-type 0 *)
-	SlopeFunction = PROCEDURE {DELEGATE} (x, n: LONGINT): REAL;
+	SlopeFunction = PROCEDURE {DELEGATE} (x, n: SIGNED32): FLOAT32;
 	(** decodes len bytes from the buffer starting at pos to a valid soundOutput *)
-	Decoder* = PROCEDURE {DELEGATE} (VAR buf: ARRAY OF CHAR; pos, len: LONGINT; continuedPage: BOOLEAN;
-										VAR soundOutput: SoundOutput): LONGINT;
+	Decoder* = PROCEDURE {DELEGATE} (VAR buf: ARRAY OF CHAR; pos, len: SIGNED32; continuedPage: BOOLEAN;
+										VAR soundOutput: SoundOutput): SIGNED32;
 
 	(* descending part of the window *)
-	PROCEDURE SlopeRight(x, n: LONGINT): REAL;
-		VAR res: REAL;
+	PROCEDURE SlopeRight(x, n: SIGNED32): FLOAT32;
+		VAR res: FLOAT32;
 	BEGIN
 		res := Math.sin( ((n - x - 0.5) / n) * (Math.pi / 2) );
 		res := Math.sin( res * res * Math.pi / 2);
@@ -3033,8 +3033,8 @@ TYPE
 	END SlopeRight;
 
 	(* ascending part of the window *)
-	PROCEDURE SlopeLeft(x, n: LONGINT): REAL;
-		VAR res: REAL;
+	PROCEDURE SlopeLeft(x, n: SIGNED32): FLOAT32;
+		VAR res: FLOAT32;
 	BEGIN
 		res := Math.sin( ((x + 0.5) / n) * (Math.pi / 2) );
 		res := Math.sin( res * res * Math.pi / 2);
@@ -3045,7 +3045,7 @@ TYPE
 	PROCEDURE ResiduePartitionProc0(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR;
 										VAR decState: DecoderState);
 	VAR
-		step, i, j, o, offset, entry, outputVectorNr: LONGINT;
+		step, i, j, o, offset, entry, outputVectorNr: SIGNED32;
 		codebook: Codebook;
 		t: OGGUtilities.Vector;
 		resInfo: ResidueInfo;
@@ -3078,7 +3078,7 @@ TYPE
 	PROCEDURE ResiduePartitionProc1(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR;
 											VAR decState: DecoderState);
 	VAR
-		i, j, t, outputVectorNr, offset, entry: LONGINT;
+		i, j, t, outputVectorNr, offset, entry: SIGNED32;
 		codebook: Codebook;
 		resInfo: ResidueInfo;
 	BEGIN
@@ -3102,7 +3102,7 @@ TYPE
 	(* for residue-type 2, used as a delegate *)
 	PROCEDURE ResiduePartitionProc2(VAR bufReader: BufferReader; VAR buf: ARRAY OF CHAR;
 												VAR decState: DecoderState);
-	VAR i, j, entry, chptr, t, ch, offset, n, dim: LONGINT;
+	VAR i, j, entry, chptr, t, ch, offset, n, dim: SIGNED32;
 		cb: Codebook;
 		resInfo: ResidueInfo;
 	BEGIN
@@ -3130,8 +3130,8 @@ TYPE
 
 	(* lookup table for calculated floor values *)
 	PROCEDURE InitInverseDBLookup;
-	VAR InverseDBLookupReal: ARRAY 256 OF REAL;
-		i: LONGINT;
+	VAR InverseDBLookupReal: ARRAY 256 OF FLOAT32;
+		i: SIGNED32;
 	BEGIN
 InverseDBLookupReal[0] := 0.00000010649863;
 InverseDBLookupReal[1] := 0.00000011341951;
@@ -3414,7 +3414,7 @@ InverseDBLookupReal[255] := 1;
 		output: SoundOutput;
 		rh : WebHTTP.RequestHeader;
 		h : WebHTTP.ResponseHeader;
-		res: WORD; volume, nrOfBuffers: LONGINT;
+		res: INTEGER; volume, nrOfBuffers: SIGNED32;
 		con : TCP.Connection;
 		outputFilename: ARRAY 64 OF CHAR;
 		timer: Kernel.Timer;
@@ -3537,7 +3537,7 @@ InverseDBLookupReal[255] := 1;
 	END IsM3UPlaylist;
 
 	PROCEDURE GetURLFromM3U(VAR url: Strings.String);
-	VAR res: WORD;
+	VAR res: INTEGER;
 		rh : WebHTTP.RequestHeader;
 		h : WebHTTP.ResponseHeader;
 		con : TCP.Connection;

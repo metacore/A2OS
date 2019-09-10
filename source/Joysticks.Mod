@@ -76,7 +76,7 @@ CONST
 
 	MaxNbrOfButtons* = 32; 	(* {0 <= MaxNbrOfButtons <= 32} *)
 	MaxNbrOfAxis* = 32; 		(* {0 <= MaxNbrOfAxis <= 32} *)
-	MaxNbrOfCoolieHats* = 8;	(* {0 <= MaxNbrOfCoolieHats < MAX(LONGINT)} *)
+	MaxNbrOfCoolieHats* = 8;	(* {0 <= MaxNbrOfCoolieHats < MAX(SIGNED32)} *)
 
 	DefaultDeadzone = 0.5; (* in percent {0 <= DefaultDeadzone <= 100} *)
 
@@ -88,7 +88,7 @@ CONST
 TYPE
 
 	JoystickMessage* = RECORD
-		id- : LONGINT; (** joystick identifier *)
+		id- : SIGNED32; (** joystick identifier *)
 	END;
 
 	(** The joystick id has been disconnected *)
@@ -105,7 +105,7 @@ TYPE
 		buttons* : SET;
 
 		 (** Joystick.implementedAxis bit field indicates which axis are implemented. The range of the values is [MinAxisValue, MaxAxisValue] *)
-		axis* : ARRAY MaxNbrOfAxis OF LONGINT;
+		axis* : ARRAY MaxNbrOfAxis OF SIGNED32;
 
 		(** Joystick.nbrOfCoolieHats starting at index 0 *)
 		coolieHat* : ARRAY MaxNbrOfCoolieHats OF SET;
@@ -161,15 +161,15 @@ TYPE
 
 	Axis = RECORD
 		(* specified by implementor, i.e. should be values *)
-		minValue, maxValue, centerValue : LONGINT;
+		minValue, maxValue, centerValue : SIGNED32;
 
 		(* values determined by joystick calibration *)
-		calMinValue, calMaxValue, calCenterValue : LONGINT;
-		calCenterOffset : LONGINT;
-		scaleFactorLow, scaleFactorHigh : REAL;
+		calMinValue, calMaxValue, calCenterValue : SIGNED32;
+		calCenterOffset : SIGNED32;
+		scaleFactorLow, scaleFactorHigh : FLOAT32;
 
 		(* user configuration *)
-		deadzone : REAL; (* in percent *)
+		deadzone : FLOAT32; (* in percent *)
 	END;
 
 TYPE
@@ -177,10 +177,10 @@ TYPE
 	Joystick* = OBJECT(Plugins.Plugin);
 	VAR
 		(** Part of client interface *)
-		id- : LONGINT;
-		nbrOfButtons- : LONGINT;
-		nbrOfCoolieHats- : LONGINT;
-		nbrOfAxis- : LONGINT;
+		id- : SIGNED32;
+		nbrOfButtons- : SIGNED32;
+		nbrOfCoolieHats- : SIGNED32;
+		nbrOfAxis- : SIGNED32;
 		implementedAxis- : SET;
 		connected- : BOOLEAN;
 		calibrationMode- : BOOLEAN;
@@ -226,8 +226,8 @@ TYPE
 		END Poll;
 
 		(** Set the deadzone for all axis *)
-		PROCEDURE SetGlobalDeadzone*(deadzone : REAL; VAR errorMessage : ARRAY OF CHAR; VAR res : WORD);
-		VAR i : LONGINT;
+		PROCEDURE SetGlobalDeadzone*(deadzone : FLOAT32; VAR errorMessage : ARRAY OF CHAR; VAR res : INTEGER);
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO MaxNbrOfAxis - 1 DO
 				IF i IN implementedAxis THEN
@@ -238,7 +238,7 @@ TYPE
 		END SetGlobalDeadzone;
 
 		(** Set the deadzone for the specified axis *)
-		PROCEDURE SetDeadzone*(axisNbr : LONGINT; deadzone : REAL; VAR errorMessage : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE SetDeadzone*(axisNbr : SIGNED32; deadzone : FLOAT32; VAR errorMessage : ARRAY OF CHAR; VAR res : INTEGER);
 		BEGIN
 			IF (axisNbr < 0) OR (axisNbr >= MaxNbrOfAxis) OR (~(axisNbr IN implementedAxis)) THEN
 				errorMessage := ErrorAxisNotImplemented;
@@ -254,20 +254,20 @@ TYPE
 
 		(* Initialize minimum and maximum of raw joystick data axis values *)
 		PROCEDURE StartCalibration*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO MaxNbrOfAxis - 1 DO
 				IF i IN implementedAxis THEN
-					axis[i].calMinValue := MAX(LONGINT);
-					axis[i].calMaxValue := MIN(LONGINT);
+					axis[i].calMinValue := MAX(SIGNED32);
+					axis[i].calMaxValue := MIN(SIGNED32);
 				END;
 			END;
 			calibrationMode := TRUE;
 		END StartCalibration;
 
 		(* At the time this procedure is called, the axes should be in center position *)
-		PROCEDURE StopCalibration*(VAR errorMsg : ARRAY OF CHAR; VAR res : WORD);
-		VAR i : LONGINT;
+		PROCEDURE StopCalibration*(VAR errorMsg : ARRAY OF CHAR; VAR res : INTEGER);
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO MaxNbrOfAxis - 1 DO
 				IF i IN implementedAxis THEN
@@ -313,7 +313,7 @@ TYPE
 			END;
 		END Handle;
 
-		PROCEDURE AddAxis*(index, minValue, maxValue : LONGINT);
+		PROCEDURE AddAxis*(index, minValue, maxValue : SIGNED32);
 		BEGIN
 			ASSERT((index >= 0) & (index < MaxNbrOfAxis));
 			ASSERT(minValue < maxValue);
@@ -342,7 +342,7 @@ TYPE
 		END AddCoolieHat;
 
 		PROCEDURE ScaleRawValues(VAR message : JoystickDataMessage);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO MaxNbrOfAxis - 1 DO
 				IF i IN implementedAxis THEN
@@ -362,7 +362,7 @@ TYPE
 		END ScaleRawValues;
 
 		PROCEDURE ApplyDeadzone(VAR message : JoystickDataMessage);
-		VAR deadzone, i : LONGINT;
+		VAR deadzone, i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO MaxNbrOfAxis - 1 DO
 				IF i IN implementedAxis THEN
@@ -376,7 +376,7 @@ TYPE
 
 		(* Find minimum and maximum of raw joystick data axis values *)
 		PROCEDURE GetCalibrationData(VAR message : JoystickDataMessage);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO MaxNbrOfAxis - 1 DO
 				IF i IN implementedAxis THEN
@@ -394,7 +394,7 @@ TYPE
 		END Show;
 
 		PROCEDURE ShowAxis;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO MaxNbrOfAxis - 1 DO
 				IF i IN implementedAxis THEN
@@ -403,7 +403,7 @@ TYPE
 			END;
 		END ShowAxis;
 
-		PROCEDURE ShowAxisNbr(axisNbr : LONGINT);
+		PROCEDURE ShowAxisNbr(axisNbr : SIGNED32);
 		VAR str : ARRAY 32 OF CHAR;
 		BEGIN
 			KernelLog.String("Axis "); GetAxisName(axisNbr, str); KernelLog.String(str); KernelLog.String(": "); KernelLog.Ln;
@@ -424,7 +424,7 @@ TYPE
 		END ShowAxisNbr;
 
 		PROCEDURE ShowDataMessage(msg : JoystickDataMessage);
-		VAR i : LONGINT; name: ARRAY 16 OF CHAR;
+		VAR i : SIGNED32; name: ARRAY 16 OF CHAR;
 		BEGIN
 			KernelLog.String("Buttons: "); KernelLog.Bits(msg.buttons, 0, 32);
 			KernelLog.String(", Axis: ");
@@ -440,7 +440,7 @@ TYPE
 			KernelLog.Ln;
 		END ShowDataMessage;
 
-		PROCEDURE &Init*(nbrOfButtons : LONGINT);
+		PROCEDURE &Init*(nbrOfButtons : SIGNED32);
 		VAR name, temp : ARRAY 128 OF CHAR;
 		BEGIN
 			ASSERT(nbrOfButtons <= MaxNbrOfButtons);
@@ -456,9 +456,9 @@ TYPE
 
 VAR
 	registry- : Plugins.Registry;
-	nextId : LONGINT;
+	nextId : SIGNED32;
 
-PROCEDURE EventHandler(event : WORD; plugin : Plugins.Plugin);
+PROCEDURE EventHandler(event : INTEGER; plugin : Plugins.Plugin);
 VAR
 	joystick : Joystick;
 	connectedMsg : JoystickConnectedMessage; disconnectedMsg : JoystickDisconnectedMessage;
@@ -477,14 +477,14 @@ BEGIN
 	END;
 END EventHandler;
 
-PROCEDURE GetId() : LONGINT;
+PROCEDURE GetId() : SIGNED32;
 BEGIN {EXCLUSIVE}
 	INC(nextId);
 	RETURN nextId;
 END GetId;
 
-PROCEDURE Round(value : REAL) : LONGINT;
-VAR result : LONGINT;
+PROCEDURE Round(value : FLOAT32) : SIGNED32;
+VAR result : SIGNED32;
 BEGIN
 	result := ENTIER(value);
 	IF ABS(value) - ENTIER(ABS(value)) >= 0.5 THEN
@@ -493,7 +493,7 @@ BEGIN
 	RETURN result;
 END Round;
 
-PROCEDURE GetAxisName*(axisNbr : LONGINT; VAR name: ARRAY OF CHAR);
+PROCEDURE GetAxisName*(axisNbr : SIGNED32; VAR name: ARRAY OF CHAR);
 VAR nbr : ARRAY 16 OF CHAR;
 BEGIN
 	CASE axisNbr OF
@@ -525,7 +525,7 @@ BEGIN
 END Show;
 
 PROCEDURE Init;
-VAR res : WORD;
+VAR res : INTEGER;
 BEGIN
 	registry.AddEventHandler(EventHandler, res);
 	IF res # Plugins.Ok THEN

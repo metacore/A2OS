@@ -19,7 +19,7 @@ END;
 TYPE Pointer* = OBJECT {DISPOSABLE,PLAIN}
 
 	VAR descriptor- {UNTRACED}: Descriptor; (* stores the address of the type descriptor *)
-	VAR cycle* := 0: LONGWORD; (* stores the last garbage collection cycle which reached the pointer *)
+	VAR cycle* := 0: LONGINTEGER; (* stores the last garbage collection cycle which reached the pointer *)
 	VAR references*: Counters.Counter; (* counts how many times the pointer is referenced by local variables *)
 	VAR nextMarked* {UNTRACED} := NIL: Pointer; (* stores the next item in the linked list of marked pointers *)
 	VAR nextWatched* {UNTRACED} := NIL: Pointer; (* stores the next item in the linked list of watched pointers *)

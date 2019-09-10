@@ -82,7 +82,7 @@ TYPE
 			END
 		END EmitAt;
 
-		PROCEDURE PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: SIZE; value: HUGEINT; type: SyntaxTree.Type): BOOLEAN;
+		PROCEDURE PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: SIZE; value: SIGNED64; type: SyntaxTree.Type): BOOLEAN;
 		VAR instruction: IntermediateCode.Instruction; section: Sections.Section; op1: IntermediateCode.Operand;
 			pooledName: Basic.SegmentedName; itype: IntermediateCode.Type;
 		BEGIN
@@ -454,7 +454,7 @@ TYPE
 			section: Sections.Section;
 			emptyOperand, dataOperand: IntermediateCode.Operand;
 			dataInstruction: IntermediateCode.Instruction;
-			hugeintValue: HUGEINT;
+			hugeintValue: SIGNED64;
 		BEGIN
 			section := allSections.FindByName(sectionName);
 			ASSERT(section # NIL);
@@ -463,7 +463,7 @@ TYPE
 				(* BOOLEAN *)
 				IF syntaxTreeValue(SyntaxTree.BooleanValue).value THEN hugeintValue := 1 ELSE hugeintValue := 0 END
 			ELSIF syntaxTreeValue IS SyntaxTree.IntegerValue THEN
-				(* INTEGER *)
+				(* SIGNED16 *)
 				hugeintValue := syntaxTreeValue(SyntaxTree.IntegerValue).value;
 			ELSE
 				HALT(100)
@@ -790,7 +790,7 @@ TYPE
 				IF parameter.parameterType = 0 THEN (* Boolean *)
 					value := SyntaxTree.NewBooleanValue(-1, parameter.boolean); value.SetType(system.booleanType);
 				ELSE
-					value := SyntaxTree.NewIntegerValue(-1, parameter.integer); value.SetType(system.integerType);
+					value := SyntaxTree.NewIntegerValue(-1, parameter.integer); value.SetType(Global.Signed16);
 				END;
 				Basic.ToSegmentedName(parameter.name, pooledName);
 				irLinker.PatchValueInSection(pooledName,value);
@@ -953,7 +953,7 @@ TYPE
 		fileName[i] := 0X;
 	END SectionNameToFileName;
 
-	PROCEDURE GetPriority*(block: Sections.Section): WORD;
+	PROCEDURE GetPriority*(block: Sections.Section): INTEGER;
 	CONST Fixed=0; EntryCode=1;InitCode=2; ExitCode=3; BodyCode=4;Code=5; Data=6; Const=7; Empty =8;
 	BEGIN
 		IF block.fixed THEN RETURN Fixed END;
@@ -1062,7 +1062,7 @@ TYPE
 					IF parameter.parameterType = 0 THEN (* Boolean *)
 						value := SyntaxTree.NewBooleanValue(-1, parameter.boolean); value.SetType(system.booleanType);
 					ELSE
-						value := SyntaxTree.NewIntegerValue(-1, parameter.integer); value.SetType(system.integerType);
+						value := SyntaxTree.NewIntegerValue(-1, parameter.integer); value.SetType(Global.Signed16);
 					END;
 					Basic.ToSegmentedName(parameter.name, pooledName);
 					irLinker.PatchValueInSection(pooledName,value);

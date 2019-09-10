@@ -16,10 +16,10 @@ CONST
 TYPE
 
 	EntryEntity* = RECORD
-		Format* : LONGINT; (* 1 *)
+		Format* : SIGNED32; (* 1 *)
 		Name* : ARRAY 256 OF CHAR; (* 2 *)
 		NodeKind* : ARRAY 32 OF CHAR; (* 3 *)
-		Revision* : LONGINT; (* 4 *)
+		Revision* : SIGNED32; (* 4 *)
 		GlobalRemoval* : BOOLEAN;
 		Url*, UrlConst* : ARRAY 256 OF CHAR; (* 5 *)
 		RepositoryRoot* : ARRAY 256 OF CHAR; (* 6 *)
@@ -27,7 +27,7 @@ TYPE
 		TextLastUpdated* : ARRAY 32 OF CHAR; (* 8 *)
 		Checksum* : ARRAY 33 OF CHAR; (* 9 *)
 		LastChangedDate* : ARRAY 32 OF CHAR; (* 10: len ?= 28? *)
-		LastChangedRevision* : LONGINT; (* 11 *)
+		LastChangedRevision* : SIGNED32; (* 11 *)
 		LastChangedAuthor* : ARRAY 256 OF CHAR; (* 12 *)
 		Props* : ARRAY 256 OF CHAR; (* 13: maybe longer? *)
 		(*PropsMods : ARRAY 256 OF CHAR; (* 14: maybe longer *)*)
@@ -108,7 +108,7 @@ TYPE
 			END;
 		END ReadVersionUrl;
 
-		PROCEDURE SetPath* ( CONST p : ARRAY OF CHAR; VAR res : WORD );
+		PROCEDURE SetPath* ( CONST p : ARRAY OF CHAR; VAR res : INTEGER );
 		BEGIN
 			r := NIL;
 			readGlobalData := FALSE;
@@ -119,7 +119,7 @@ TYPE
 			ASSERT ( (res = SVNOutput.ResOK) OR (res = SVNOutput.ResNOTVERSIONED) );
 		END SetPath;
 
-		PROCEDURE AnalyzePath ( VAR res : WORD );
+		PROCEDURE AnalyzePath ( VAR res : INTEGER );
 		BEGIN
 			pathIsFile := FALSE;
 			res := SVNOutput.ResOK;
@@ -159,7 +159,7 @@ TYPE
 
 		PROCEDURE CreateTempfile*;
 		VAR
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF SVNUtil.FileExists ( entriesfiletemp ) THEN
 				Files.Delete ( entriesfiletemp, res );
@@ -192,7 +192,7 @@ TYPE
 			COPY ( adminDir.RepositoryRoot, repos );
 		END GetRepo;
 
-		PROCEDURE GetVersion* () : LONGINT;
+		PROCEDURE GetVersion* () : SIGNED32;
 		BEGIN
 			IF ~pathIsFile THEN
 				RETURN adminDir.Revision;
@@ -274,10 +274,10 @@ TYPE
 			- name: name of the directory inside the path which will be added
 			- addGlobal: usually the first
 		*)
-		PROCEDURE Add* ( CONST path : ARRAY OF CHAR; CONST name : ARRAY OF CHAR; addGlobal : BOOLEAN; VAR res : WORD );
+		PROCEDURE Add* ( CONST path : ARRAY OF CHAR; CONST name : ARRAY OF CHAR; addGlobal : BOOLEAN; VAR res : INTEGER );
 		VAR
 			file, entryfile, tmp, tmp2 : Files.FileName;
-			res1: WORD; time, date : LONGINT;
+			res1: INTEGER; time, date : SIGNED32;
 			size : Files.Size;
 			w : Files.Writer;
 			flags : SET;
@@ -368,9 +368,9 @@ TYPE
 			RETURN w;
 		END CreateDummy;
 
-		PROCEDURE ReadData* ( VAR res : WORD );
+		PROCEDURE ReadData* ( VAR res : INTEGER );
 		VAR
-			i : INTEGER;
+			i : SIGNED16;
 			tmp : ARRAY 256 OF CHAR;
 			start: ARRAY 2 OF CHAR;
 		BEGIN
@@ -437,7 +437,7 @@ TYPE
 			END;
 		END ReadData;
 
-		PROCEDURE ReadFileData ( CONST name : ARRAY OF CHAR; VAR res : WORD );
+		PROCEDURE ReadFileData ( CONST name : ARRAY OF CHAR; VAR res : INTEGER );
 		VAR
 			tmp : ARRAY 256 OF CHAR;
 			start: ARRAY 2 OF CHAR;
@@ -554,9 +554,9 @@ TYPE
 
 
 
-		PROCEDURE ReadWriteLines* ( count : LONGINT );
+		PROCEDURE ReadWriteLines* ( count : SIGNED32 );
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 			tmp : ARRAY 256 OF CHAR;
 		BEGIN
 			FOR i := 1 TO count DO
@@ -626,7 +626,7 @@ TYPE
 
 		PROCEDURE WriteUpdate*;
 		VAR
-			res : WORD;
+			res : INTEGER;
 			overwrite : BOOLEAN;
 		BEGIN
 			w.Update;
@@ -671,7 +671,7 @@ TYPE
 		w.Char ( 0AX );
 	END WriteString;
 
-	PROCEDURE WriteInt ( w : Files.Writer; line : LONGINT );
+	PROCEDURE WriteInt ( w : Files.Writer; line : SIGNED32 );
 	BEGIN
 		IF line # 0 THEN
 			w.Int ( line, 0 );
@@ -681,7 +681,7 @@ TYPE
 
 	PROCEDURE Write* ( w : Files.Writer; data : EntryEntity );
 	VAR
-		i : LONGINT;
+		i : SIGNED32;
 		tmp : ARRAY 34 OF CHAR;
 	BEGIN
 		IF data.Name = "" THEN
@@ -761,7 +761,7 @@ TYPE
 		key = "svn:wc:ra_dav:version-url";
 	VAR
 		tmp,fstr,fstr2 : ARRAY 256 OF CHAR;
-		read, len: SIZE; i : LONGINT; res: WORD;
+		read, len: SIZE; i : SIGNED32; res: INTEGER;
 		keyLength: SIZE;
 		fr, fw : Files.File;
 		r : Files.Reader;
@@ -853,7 +853,7 @@ TYPE
 	PROCEDURE CreateDirectory* ( CONST path : ARRAY OF CHAR );
 	VAR
 		tmp, tmp2, svndir : Files.FileName;
-		res : WORD;
+		res : INTEGER;
 		f : Files.File;
 		w : Files.Writer;
 	BEGIN
@@ -885,7 +885,7 @@ TYPE
 		nextFileEntry : BOOLEAN;
 		f : Files.File;
 		r : Files.Reader;
-		i : LONGINT;
+		i : SIGNED32;
 		s : Strings.String;
 		start: ARRAY 2 OF CHAR;
 	BEGIN
@@ -936,7 +936,7 @@ BEGIN
 END CheckChecksum;
 
 
-	PROCEDURE Traverse* ( CONST path : ARRAY OF CHAR; handler : TraverseHandler; data : ANY; verurl : BOOLEAN;  VAR res : WORD );
+	PROCEDURE Traverse* ( CONST path : ARRAY OF CHAR; handler : TraverseHandler; data : ANY; verurl : BOOLEAN;  VAR res : INTEGER );
 	VAR
 		tmp, tmp2 : ARRAY 256 OF CHAR;
 		adminEntry : Entry;
@@ -986,7 +986,7 @@ END CheckChecksum;
 
 	PROCEDURE CopyToBaseFile* ( CONST file : ARRAY OF CHAR );
 	VAR
-		res : WORD;
+		res : INTEGER;
 		overwrite : BOOLEAN;
 		dest, path, name : Files.FileName;
 	BEGIN

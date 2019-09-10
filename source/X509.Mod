@@ -17,13 +17,13 @@ TYPE
 	(** Represent an issuer or a subject. Only mandatory fields are kept. Fields are NIL if not present. *)
 	Entity * = RECORD
 		country-, organisation-, organisationUnit-, distName-, state-, commonName-: POINTER TO ARRAY OF CHAR;
-		serial-: LONGINT;
+		serial-: SIGNED32;
 	END;
 
 	(** Base certificate type. Certificates are specialized according to the encryption algorithm they provide. *)
 	Certificate * = POINTER TO RECORD
 		(* tbsCertificate field of X.509 *)
-		version-, serial-: LONGINT;
+		version-, serial-: SIGNED32;
 		algorithm-: POINTER TO ARRAY OF CHAR;
 		validity-: RECORD notBefore-, notAfter-: Dates.DateTime END;
 		identifier-: POINTER TO ARRAY OF CHAR;
@@ -326,7 +326,7 @@ VAR
 	(** Selects the reading type: UTCTime or GeneralizedTime *)
 	PROCEDURE ReadTime(reader: Streams.Reader; VAR date: Dates.DateTime): BOOLEAN;
 	VAR
-		pos: LONGINT;
+		pos: SIGNED32;
 		res: BOOLEAN;
 	BEGIN
 		res := ReadUTCTime(reader, date);
@@ -344,7 +344,7 @@ VAR
 		Serial = 7;
 	VAR
 		data, key, value: ASN1.Triplet;
-		currentData: LONGINT;
+		currentData: SIGNED32;
 	BEGIN
 		data := triplet.child;
 		WHILE data # NIL DO

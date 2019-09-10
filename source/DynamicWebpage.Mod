@@ -147,7 +147,7 @@ MODULE DynamicWebpage; (** AUTHOR "Luc Blaeser"; PURPOSE "Basetypes for Dynamic 
 				 must be thread safe
 		 *)
 
-		 VAR idCounter: LONGINT;
+		 VAR idCounter: SIGNED32;
 
 		 (** get a new unique object id for statefull active element created while the transformation process *)
 		 PROCEDURE CreateNewObjectId*() : Strings.String;

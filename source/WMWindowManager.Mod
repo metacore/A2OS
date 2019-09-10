@@ -34,10 +34,10 @@ TYPE
 	Rectangle = Rectangles.Rectangle;
 	String = Strings.String;
 	Message = Messages.Message;
-	RealRect* = RECORD l*, t*, r*, b* : REAL END;
+	RealRect* = RECORD l*, t*, r*, b* : FLOAT32 END;
 
 	PointerInfo* = OBJECT
-	VAR hotX*, hotY* : LONGINT; img* : Graphics.Image;
+	VAR hotX*, hotY* : SIGNED32; img* : Graphics.Image;
 	END PointerInfo;
 
 	(**	All fields are read-only except for the module SkinEngine.Mod!
@@ -50,10 +50,10 @@ TYPE
 		useBitmaps* : BOOLEAN;
 
 		(** frame color if not using bitmaps (a = active, i = inactive) *)
-		baCol*, biCol* : LONGINT;
+		baCol*, biCol* : SIGNED32;
 
 		(** frame shading width if not using bitmaps (a = active, i = inactive) *)
-		basw*, bisw* : LONGINT;
+		basw*, bisw* : SIGNED32;
 
 		(** height / width of frame windows th = top height, bh = bottom height, lw = left width, rw = right width *)
 		th*, bh*, lw*, rw* : SIZE;
@@ -72,15 +72,15 @@ TYPE
 		ca*, ci*, closeHover*,
 		ma*, mi*, minimizeHover* : Graphics.Image;
 
-		minimizeOffset* : LONGINT; (** offset correction for minimize button *)
+		minimizeOffset* : SIGNED32; (** offset correction for minimize button *)
 
 		(** Window title position and color (a = active, i = inactive) *)
-		atextX*, atextY*, atextColor*, itextX*, itextY*, itextColor* : LONGINT;
+		atextX*, atextY*, atextColor*, itextX*, itextY*, itextColor* : SIGNED32;
 
 		bgColor*, fgColor*, selectCol*, desktopColor* : Graphics.Color;
 
 		topFocusThreshold*, topThreshold*, bottomFocusThreshold*, bottomThreshold*,
-		leftFocusThreshold*, leftThreshold*, rightFocusThreshold*, rightThreshold* : LONGINT;
+		leftFocusThreshold*, leftThreshold*, rightFocusThreshold*, rightThreshold* : SIGNED32;
 
 		(* Initialize/reset to zero-style for windows *)
 		PROCEDURE &Init*;
@@ -102,14 +102,14 @@ TYPE
 			minimizeOffset := 0;
 
 			(* window caption *)
-			atextX := 5; atextY := 15; atextColor := LONGINT(0FFFF00FFH);
+			atextX := 5; atextY := 15; atextColor := SIGNED32(0FFFF00FFH);
 			itextX := 5; itextY := 15; itextColor := 04444FFH;
 
 			(* desktop *)
-			bgColor := LONGINT(08080FFFFH);
+			bgColor := SIGNED32(08080FFFFH);
 			fgColor := 0000000FFH;
 			selectCol := 0FFFFH;
-			desktopColor := LONGINT(08080FFFFH);
+			desktopColor := SIGNED32(08080FFFFH);
 
 			topFocusThreshold := 0; topThreshold := 0;
 			bottomFocusThreshold := 0; bottomThreshold := 0;
@@ -151,21 +151,21 @@ TYPE
 	END MessagePreviewList;
 
 	DocumentInfo* = RECORD
-		id* : LONGINT;
+		id* : SIGNED32;
 		name* : ARRAY 32 OF CHAR; (* if name = "", this document info is not valid *)
 		fullname* : ARRAY 256 OF CHAR;
 		modified*, hasFocus* : BOOLEAN;
 	END;
 
 	VisualComponentInfo* = RECORD
-		width*, height* : LONGINT; (* preferred width and height of visual component *)
+		width*, height* : SIGNED32; (* preferred width and height of visual component *)
 		generator* : PROCEDURE {DELEGATE} () : ANY; (* NIL if no visual component available *)
 	END;
 
 	(** A window may provide information about currently opened documents. Additionally, it can provide a visual component that controls it. *)
 	WindowInfo* = RECORD
 		openDocuments* : ARRAY 16 OF DocumentInfo;
-		handleDocumentInfo* : PROCEDURE {DELEGATE} (CONST info : DocumentInfo; new : BOOLEAN; VAR res : WORD);
+		handleDocumentInfo* : PROCEDURE {DELEGATE} (CONST info : DocumentInfo; new : BOOLEAN; VAR res : INTEGER);
 		vc* : VisualComponentInfo;
 	END;
 
@@ -173,9 +173,9 @@ TYPE
 
 	Window* = OBJECT
 	VAR
-		id- : LONGINT;
+		id- : SIGNED32;
 
-		timestamp* : LONGINT; (* incremented at each call of procedure Draw *)
+		timestamp* : SIGNED32; (* incremented at each call of procedure Draw *)
 
 		(** Ranges in global coordinates *)
 		bounds* : Rectangle; (** current range *)
@@ -442,7 +442,7 @@ TYPE
 		PROCEDURE Handle*(VAR m : Message);
 		BEGIN
 			IF m.msgType = Messages.MsgKey THEN
-				KeyEvent(m.x(LONGINT), m.flags, m.y(LONGINT))
+				KeyEvent(m.x(SIGNED32), m.flags, m.y(SIGNED32))
 			ELSIF m.msgType = Messages.MsgPointer THEN
 				(* global to local transformation by sequencer thread: *)
 				m.x := m.x-bounds.l;
@@ -477,7 +477,7 @@ TYPE
 		(** Draw request form the window manager. The canvas becomes invalid when the method ends. The
 		draw method may not modify window or WindowManager properties.
 		w, h is the area in view coordinates, q is the Quality 0 lowest 1 mid 2 high. A window may ignore q  *)
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : WORD);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : INTEGER);
 		END Draw;
 
 		(** Is called by the windowmanager with reduce set, if the window is resized or moved on slow machines *)
@@ -500,7 +500,7 @@ TYPE
 		canvas* : Graphics.BufferCanvas;
 		canvasGen-: Graphics.CanvasGenerator;
 		pointerThreshold*,
-		maxInterpolation* : LONGINT; (* allows limiting the interpolation degree on Draw *)
+		maxInterpolation* : SIGNED32; (* allows limiting the interpolation degree on Draw *)
 
 		PROCEDURE &Init*(w, h : SIZE; alpha : BOOLEAN);
 		BEGIN
@@ -519,7 +519,7 @@ TYPE
 		END SetCanvasGenerator;
 
 		PROCEDURE IsHit*(x, y  : SIZE) : BOOLEAN;
-		VAR w, h : SIZE; fx, fy : REAL;
+		VAR w, h : SIZE; fx, fy : FLOAT32;
 		BEGIN
 			w := GetWidth(); h := GetHeight();
 			IF (w > 0) & (h > 0) & ((w # img.width) OR (h # img.height)) THEN
@@ -529,7 +529,7 @@ TYPE
 			END
 		END IsHit;
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : WORD);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : INTEGER);
 		VAR img: Graphics.Image;
 		BEGIN
 			img := SELF.img;
@@ -553,7 +553,7 @@ TYPE
 		END Draw;
 
 		PROCEDURE Invalidate*(rect : Rectangle);
-		VAR w, h : SIZE; fx, fy : REAL;
+		VAR w, h : SIZE; fx, fy : FLOAT32;
 		BEGIN
 			w := GetWidth(); h := GetHeight();
 			IF (w > 0) & (h > 0) & ((w # img.width) OR (h # img.height))  THEN
@@ -565,7 +565,7 @@ TYPE
 		END Invalidate;
 
 		PROCEDURE Handle*(VAR m : Message);
-		VAR w, h : SIZE; fx, fy : REAL;
+		VAR w, h : SIZE; fx, fy : FLOAT32;
 		BEGIN
 			w := GetWidth(); h := GetHeight();
 			IF (w > 0) & (h > 0) & ((w # img.width) OR (h # img.height)) & (m.msgType = Messages.MsgPointer) THEN
@@ -613,7 +613,7 @@ TYPE
 			IF manager # NIL THEN manager.AddVisibleDirty(SELF, bounds) END
 		END SetCanvasGenerator;
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : WORD);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : INTEGER);
 		BEGIN
 			BEGIN{EXCLUSIVE}
 				AWAIT(~swapping); drawing := TRUE;
@@ -683,7 +683,7 @@ TYPE
 		END Refresh;
 
 		(** Set the observed range *)
-		PROCEDURE SetRange*(x, y, w, h : REAL; showTransition : BOOLEAN);
+		PROCEDURE SetRange*(x, y, w, h : FLOAT32; showTransition : BOOLEAN);
 		END SetRange;
 
 		(**  Return the modifier keys that are pressed in the view *)
@@ -917,7 +917,7 @@ TYPE
 
 		(**	Set or unset a window flag
 			Note: Setting FlagStayOnTop unsets FlagStayOnBottom and vice versa *)
-		PROCEDURE SetWindowFlag*(w : Window; flag : LONGINT; value : BOOLEAN);
+		PROCEDURE SetWindowFlag*(w : Window; flag : SIGNED32; value : BOOLEAN);
 		BEGIN
 			ASSERT(w # NIL);
 			ASSERT((flag = FlagFrame) OR (flag = FlagStayOnTop) OR (flag = FlagStayOnBottom) OR (flag = FlagHidden));
@@ -1054,22 +1054,22 @@ VAR
 	pointerNull: PointerInfo;
 
 	(* Changes whenever a Window is added or removed to/from a WindowManager *)
-	wTimestamp- : LONGINT;
+	wTimestamp- : SIGNED32;
 
 	(* Changes whenever the keyboard focus is given to another window or the visibility of a window changed *)
-	oTimestamp- : LONGINT;
+	oTimestamp- : SIGNED32;
 
 	(* Coordinate offsets use to determine position of a new window *)
 	x1, y1 : SIZE;
 
 	format* : Raster.Format;
 
-	nextId : LONGINT;
+	nextId : SIGNED32;
 
 	standardCursorImage: Graphics.Image;
 
 (* Get a unique identifier *)
-PROCEDURE GetId() : LONGINT;
+PROCEDURE GetId() : SIGNED32;
 BEGIN {EXCLUSIVE}
 	INC(nextId);
 	RETURN nextId;
@@ -1086,13 +1086,13 @@ BEGIN {EXCLUSIVE}
 END IncOTimestamp;
 
 (** Block until a window is added/removed, changes its visibility or the keyboard focus changes *)
-PROCEDURE AwaitChange*(wTs, oTs : LONGINT);
+PROCEDURE AwaitChange*(wTs, oTs : SIGNED32);
 BEGIN {EXCLUSIVE}
 	AWAIT((wTimestamp # wTs) OR (oTimestamp # oTs));
 END AwaitChange;
 
 PROCEDURE ClearInfo*(VAR info : WindowInfo);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(info.openDocuments)-1 DO
 		info.openDocuments[i].id := 0;
@@ -1113,7 +1113,7 @@ BEGIN
 	NEW(t, LEN(x)); COPY(x, t^); RETURN t
 END NewString;
 
-PROCEDURE LoadCursor*(CONST name : ARRAY OF CHAR; hx, hy : LONGINT; VAR pi : PointerInfo);
+PROCEDURE LoadCursor*(CONST name : ARRAY OF CHAR; hx, hy : SIGNED32; VAR pi : PointerInfo);
 BEGIN
 	IF pi = NIL THEN NEW(pi) END;
 	pi.img := Graphics.LoadImage(name, TRUE); pi.hotX := hx; pi.hotY := hy;

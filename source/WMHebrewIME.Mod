@@ -76,7 +76,7 @@ END Install;
 PROCEDURE SelectedCharToUCS*;
 VAR r : Texts.TextReader;
 	selectionText: Texts.Text;
-	ucs : LONGINT;
+	ucs : SIGNED32;
 	from, to : Texts.TextPosition;
 BEGIN
 	IF Texts.GetLastSelection(selectionText, from, to) THEN

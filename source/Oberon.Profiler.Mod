@@ -17,9 +17,9 @@ TYPE
 	Range = POINTER TO RangeDesc;
 	RangeDesc = RECORD
 		name: ARRAY 64 OF CHAR;
-		low, hi: LONGINT;
-		hits: LONGINT;	(*hits inside this range (local and not)*)
-		locals: LONGINT;	(*local hits*)
+		low, hi: SIGNED32;
+		hits: SIGNED32;	(*hits inside this range (local and not)*)
+		locals: SIGNED32;	(*local hits*)
 		dsc, next: Range;
 	END;
 
@@ -33,8 +33,8 @@ VAR
 		next_trace points to the next trace in the list.
 	*)
 
-	trace: POINTER TO ARRAY Machine.MaxCPU,  8*1024 OF LONGINT;
-	tracePos: ARRAY Machine.MaxCPU OF LONGINT;
+	trace: POINTER TO ARRAY Machine.MaxCPU,  8*1024 OF SIGNED32;
+	tracePos: ARRAY Machine.MaxCPU OF SIGNED32;
 	topM, topP: Range;
 	pflag, vflag, nflag, tflag: BOOLEAN;
 	normal, title: Fonts.Font;
@@ -65,7 +65,7 @@ BEGIN	RETURN a.hits > b.hits
 END HitsGT;
 
 (* ----------- Output Routines --------------- *)
-PROCEDURE CreateStyle(at: LONGINT): Objects.Object;
+PROCEDURE CreateStyle(at: SIGNED32): Objects.Object;
 VAR o: TextGadgets.Style;
 BEGIN
 	IF (at >= LEN(StyleCache)) OR (StyleCache[at] = NIL) THEN
@@ -81,7 +81,7 @@ BEGIN
 	END;
 END CreateStyle;
 
-PROCEDURE Write(VAR w: Texts.Writer; name: ARRAY OF CHAR; cnt, tot: LONGINT);
+PROCEDURE Write(VAR w: Texts.Writer; name: ARRAY OF CHAR; cnt, tot: SIGNED32);
 BEGIN
 	Texts.WriteString(w, name);
 	Texts.Write(w, 9X);
@@ -89,9 +89,9 @@ BEGIN
 	Texts.WriteLn(w);
 END Write;
 
-PROCEDURE DumpHierarchy(top: Range; VAR w: Texts.Writer; level: LONGINT);
+PROCEDURE DumpHierarchy(top: Range; VAR w: Texts.Writer; level: SIGNED32);
 (*traverse the structure top and dump the results*)
-	VAR tw: Texts.Writer; p: Range; outline: Outlines.Outline; sum: LONGINT;
+	VAR tw: Texts.Writer; p: Range; outline: Outlines.Outline; sum: SIGNED32;
 BEGIN
 	IF top = NIL THEN RETURN END;
 	Write(w, top.name, top.locals, top.hits);
@@ -136,12 +136,12 @@ BEGIN
 END DumpList;
 
 (* ------------- Stack related routines -------------- *)
-PROCEDURE FindProcedure(pc: LONGINT; VAR low, hi: LONGINT; VAR name: ARRAY OF CHAR);
+PROCEDURE FindProcedure(pc: SIGNED32; VAR low, hi: SIGNED32; VAR name: ARRAY OF CHAR);
 (*search a procedure in the reference section of the module*)
-	VAR i, dummy, refstart, refpos, limit, oldprocstart, procstart: LONGINT; ch: CHAR; mod: Modules.Module;
+	VAR i, dummy, refstart, refpos, limit, oldprocstart, procstart: SIGNED32; ch: CHAR; mod: Modules.Module;
 
-	PROCEDURE ReadNum (VAR pos: LONGINT; VAR i: LONGINT);
-		VAR n: LONGINT; s: SHORTINT; x: CHAR;
+	PROCEDURE ReadNum (VAR pos: SIGNED32; VAR i: SIGNED32);
+		VAR n: SIGNED32; s: SIGNED8; x: CHAR;
 	BEGIN
 		s := 0; n := 0; SYSTEM.GET(pos, x); INC(pos);
 		WHILE ORD(x) >= 128 DO INC(n, ASH(ORD(x) - 128, s)); INC(s, 7); SYSTEM.GET(pos, x); INC(pos) END;
@@ -153,7 +153,7 @@ BEGIN
 	mod := Modules.ThisModuleByAdr(pc);
 	WHILE mod.name[i] # 0X DO  name[i] := mod.name[i]; INC(i) END;
 	name[i] := "."; INC(i);
-	IF (SYSTEM.VAL(LONGINT, mod.refs) # 0) & (LEN(mod.refs) # 0) THEN
+	IF (SYSTEM.VAL(SIGNED32, mod.refs) # 0) & (LEN(mod.refs) # 0) THEN
 		refstart := 0;  refpos := ADDRESSOF(mod.refs[0]);
 		procstart := 0;
 		limit := refpos + LEN(mod.refs);
@@ -190,7 +190,7 @@ BEGIN
 	END
 END FindProcedure;
 
-PROCEDURE Init(top: Range; pc: LONGINT; proc: BOOLEAN);
+PROCEDURE Init(top: Range; pc: SIGNED32; proc: BOOLEAN);
 	VAR m: Modules.Module;
 BEGIN
 	IF pc = 0 THEN
@@ -207,7 +207,7 @@ BEGIN
 	END;
 END Init;
 
-PROCEDURE Find(top: Range; pc: LONGINT; proc: BOOLEAN): Range;
+PROCEDURE Find(top: Range; pc: SIGNED32; proc: BOOLEAN): Range;
 (*Find/Insert an entry in the list*)
 	VAR p, q: Range;
 BEGIN
@@ -227,7 +227,7 @@ BEGIN
 END Find;
 
 PROCEDURE Analyze;
-VAR	p, q: Range;  pc, pos, next, i: LONGINT;
+VAR	p, q: Range;  pc, pos, next, i: SIGNED32;
 BEGIN
 	FOR i := 0 TO Machine.MaxCPU - 1 DO
 		next := 0;
@@ -249,7 +249,7 @@ BEGIN
 END Analyze;
 
 PROCEDURE DumpTrace*;
-VAR	pc, pos, next, i: LONGINT; low, hi: LONGINT; name: ARRAY 64 OF CHAR; W: Texts.Writer; t: Texts.Text;
+VAR	pc, pos, next, i: SIGNED32; low, hi: SIGNED32; name: ARRAY 64 OF CHAR; W: Texts.Writer; t: Texts.Text;
 BEGIN
 	Texts.OpenWriter(W);
 	Texts.SetFont(W, Fonts.This("Courier10.Scn.Fnt"));
@@ -310,8 +310,8 @@ BEGIN
 	RETURN res
 END CollectOverview;
 
-PROCEDURE Output(call: ARRAY OF CHAR; times, use: LONGINT);
-VAR t: Texts.Text; w: Texts.Writer; i: LONGINT;
+PROCEDURE Output(call: ARRAY OF CHAR; times, use: SIGNED32);
+VAR t: Texts.Text; w: Texts.Writer; i: SIGNED32;
 BEGIN
 	i := 0; WHILE i < LEN(StyleCache) DO StyleCache[i] := NIL; INC(i) END;
 	Texts.OpenWriter(w);
@@ -345,8 +345,8 @@ BEGIN
 	topP := NIL; topM := NIL
 END Output;
 
-PROCEDURE HandleTimer(id: LONGINT; CONST state: Machine.State);
-VAR pc, bp: ADDRESS; cnt, pos: LONGINT;
+PROCEDURE HandleTimer(id: SIGNED32; CONST state: Machine.State);
+VAR pc, bp: ADDRESS; cnt, pos: SIGNED32;
 BEGIN
 	pos := tracePos[id];
 
@@ -365,8 +365,8 @@ END HandleTimer;
 	default repetitions = 1
 *)
 PROCEDURE Profile*;
-VAR times, n, max, i: LONGINT; s: Texts.Scanner; call: ARRAY 256 OF CHAR;
-		res: INTEGER;
+VAR times, n, max, i: SIGNED32; s: Texts.Scanner; call: ARRAY 256 OF CHAR;
+		res: SIGNED16;
 BEGIN
 	(*parse parameters*)
 	Texts.OpenScanner(s, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(s);
@@ -404,7 +404,7 @@ BEGIN
 END Profile;
 
 PROCEDURE Start*;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 BEGIN
 	NEW(topM); topM.low := 0; topM.hi := 0; topM.name := "huga";
 	NEW(topP); topP.low := 0; topP.hi := 0; topP.name := "huga";
@@ -414,7 +414,7 @@ BEGIN
 END Start;
 
 PROCEDURE Stop*;
-	VAR i, max: LONGINT;
+	VAR i, max: SIGNED32;
 BEGIN
 	Machine.InstallEventHandler(NIL);
 	FOR i := 0 TO Machine.MaxCPU-1 DO
@@ -437,7 +437,7 @@ BEGIN
 END Dummy;
 
 PROCEDURE Dummy2*;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 BEGIN
 	FOR i := 0 TO 20 DO
 		Out.Int(i, 0); Out.Ln

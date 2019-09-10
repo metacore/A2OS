@@ -5,14 +5,14 @@ MODULE Magnifier IN Oberon; (** portable *)	(* ejz  *)
 	IMPORT SYSTEM, Modules, Display, Oberon, Effects, In, Out;
 
 	VAR
-		W, H, W2, H2, Z: INTEGER;
+		W, H, W2, H2, Z: SIGNED16;
 		Marker, eArrow, oArrow: Oberon.Marker;
 		buf, buf1, buf2: POINTER TO ARRAY OF CHAR;
-		vX, vY, pix: LONGINT;
+		vX, vY, pix: SIGNED32;
 		installed: BOOLEAN;
 
-	PROCEDURE FlipArrow(X, Y: LONGINT);
-		VAR cx, cy, cw, ch: INTEGER;
+	PROCEDURE FlipArrow(X, Y: SIGNED32);
+		VAR cx, cy, cw, ch: SIGNED16;
 	BEGIN
 		Display.GetClip(cx, cy, cw, ch);
 		Display.SetClip(0, 0, Display.Width, Display.Height);
@@ -20,7 +20,7 @@ MODULE Magnifier IN Oberon; (** portable *)	(* ejz  *)
 		Display.SetClip(cx, cy, cw, ch)
 	END FlipArrow;
 
-	PROCEDURE Rect(VAR X, Y: INTEGER);
+	PROCEDURE Rect(VAR X, Y: SIGNED16);
 	BEGIN
 		IF X < W2 THEN X := W2 END;
 		IF X >= (Display.Width-W2) THEN X := Display.Width-W2-1 END;
@@ -52,8 +52,8 @@ MODULE Magnifier IN Oberon; (** portable *)	(* ejz  *)
 		END
 	END ShowView;
 
-	PROCEDURE Draw(X, Y: INTEGER);
-		VAR i, j, m, n: LONGINT; p: LONGINT;
+	PROCEDURE Draw(X, Y: SIGNED16);
+		VAR i, j, m, n: SIGNED32; p: SIGNED32;
 	BEGIN
 		IF (X >= vX) & (X < (vX+Z*W)) & (Y >= vY) & (Y < (vY+Z*H)) THEN
 			FadeView();
@@ -88,7 +88,7 @@ MODULE Magnifier IN Oberon; (** portable *)	(* ejz  *)
 		Display.TransferBlock(buf2^, 0, pix*Z*W, vX, vY, Z*W, Z*H, Display.set)
 	END Draw;
 
-	PROCEDURE Fade(X, Y: INTEGER);
+	PROCEDURE Fade(X, Y: SIGNED16);
 	BEGIN
 		FlipArrow(X, Y); Rect(X, Y)
 	END Fade;
@@ -113,7 +113,7 @@ MODULE Magnifier IN Oberon; (** portable *)	(* ejz  *)
 	END GetParams;
 
 	PROCEDURE Zoom*;	(** width height zoomfactor *)
-		VAR keys: SET; X, Y: INTEGER;
+		VAR keys: SET; X, Y: SIGNED16;
 	BEGIN
 		IF installed OR ~OK() OR ~GetParams() THEN RETURN END; installed := TRUE;
 		oArrow := Oberon.Arrow; eArrow := Effects.Arrow;

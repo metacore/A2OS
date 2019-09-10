@@ -150,13 +150,13 @@ TYPE
 	UhciFrameList = POINTER TO RECORD
 		index : SIZE;
 		framelistbase : Machine.Address32;
-		field : ARRAY 2*1024 OF LONGINT; (* hack: double it, so that we pass a 4K page boundary; field must be 4K aligned *)
+		field : ARRAY 2*1024 OF SIGNED32; (* hack: double it, so that we pass a 4K page boundary; field must be 4K aligned *)
 	END;
 
 	UhciController = OBJECT (UsbHcdi.Hcd)
 	VAR
 		(* Serial Bus Specification Release Number (for PCI config space)*)
-		bcdUSB : LONGINT;
+		bcdUSB : SIGNED32;
 
 		(* UHCI data structures specific *)
 		framelist : UhciFrameList;
@@ -173,72 +173,72 @@ TYPE
 		allocator: UsbVarTdAlloc.Allocator;
 
 		(** Enable power for the specified port *)
-		PROCEDURE EnablePortPower*(port : LONGINT);
+		PROCEDURE EnablePortPower*(port : SIGNED32);
 			(* Do nothing: Port power is always provided by UHCI host controllers *)
 		END EnablePortPower;
 
 		(** Disable power of the specified port *)
-		PROCEDURE DisablePortPower*(port : LONGINT);
+		PROCEDURE DisablePortPower*(port : SIGNED32);
 			(* Do nothing: Port power is always provided by UHCI host controllers *)
 		END DisablePortPower;
 
-		PROCEDURE & Default * (bus, device, function: LONGINT);
+		PROCEDURE & Default * (bus, device, function: SIGNED32);
 		BEGIN
 			Default^(bus, device, function);
 			NEW(allocator, 1024 * 1024, 16)
 		END Default;
 
 		(** Reset and enable the specified port *)
-		PROCEDURE ResetAndEnablePort*(port : LONGINT) : BOOLEAN;
-		VAR status : INTEGER; mtimer : Kernel.MilliTimer;
+		PROCEDURE ResetAndEnablePort*(port : SIGNED32) : BOOLEAN;
+		VAR status : SIGNED16; mtimer : Kernel.MilliTimer;
 		BEGIN
 			(* reset port *)
-			Machine.Portin16(ports[port], SYSTEM.VAL(INTEGER, status));
-			Machine.Portout16(ports[port], SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, status) + PortReset - PortChangeMask));
+			Machine.Portin16(ports[port], SYSTEM.VAL(SIGNED16, status));
+			Machine.Portout16(ports[port], SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, status) + PortReset - PortChangeMask));
 			Wait(UsbHcdi.PortResetTime); (* at least 10ms [USB2.0spec, 11.5.1.5 Resetting] *)
-			Machine.Portout16(ports[port], SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, status) - PortReset - PortChangeMask));
+			Machine.Portout16(ports[port], SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, status) - PortReset - PortChangeMask));
 			Wait(2); (* Nowhere specified, but doesn't work without *)
-			Machine.Portin16(ports[port], SYSTEM.VAL(INTEGER, status));
+			Machine.Portin16(ports[port], SYSTEM.VAL(SIGNED16, status));
 			IF SYSTEM.VAL(SET, status) * PortReset # {} THEN RETURN FALSE; END;
 			(* enable port *)
-			Machine.Portout16(ports[port], SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, status) + PortEnabled - PortChangeMask));
+			Machine.Portout16(ports[port], SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, status) + PortEnabled - PortChangeMask));
 			Kernel.SetTimer(mtimer, UsbHcdi.PortEnableTimeout);
 			REPEAT
-				Machine.Portin16(ports[port], SYSTEM.VAL(INTEGER, status));
+				Machine.Portin16(ports[port], SYSTEM.VAL(SIGNED16, status));
 			UNTIL (SYSTEM.VAL(SET, status) * PortEnabled # {}) OR Kernel.Expired(mtimer);
 
 			(* The HC will set PortConnectStatusChange & PortEnabledChange, clear it *)
-			Machine.Portout16(ports[port], SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, status) + PortChangeMask));
+			Machine.Portout16(ports[port], SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, status) + PortChangeMask));
 
 			RETURN SYSTEM.VAL(SET, status) * PortEnabled # {};
 		END ResetAndEnablePort;
 
 		(** Disables port number <port> on this root hub *)
-		PROCEDURE DisablePort*(port : LONGINT);
-		VAR status : INTEGER; mtimer : Kernel.MilliTimer;
+		PROCEDURE DisablePort*(port : SIGNED32);
+		VAR status : SIGNED16; mtimer : Kernel.MilliTimer;
 		BEGIN
-			Machine.Portin16(ports[port], SYSTEM.VAL(INTEGER, status));
-			Machine.Portout16(ports[port], SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, status) - PortEnabled - PortChangeMask));
+			Machine.Portin16(ports[port], SYSTEM.VAL(SIGNED16, status));
+			Machine.Portout16(ports[port], SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, status) - PortEnabled - PortChangeMask));
 			Kernel.SetTimer(mtimer, UsbHcdi.PortEnableTimeout);
 			REPEAT
-				Machine.Portin16(ports[port], SYSTEM.VAL(INTEGER, status));
+				Machine.Portin16(ports[port], SYSTEM.VAL(SIGNED16, status));
 			UNTIL (SYSTEM.VAL(SET, status) * PortEnabled = {}) OR Kernel.Expired(mtimer);
 
 			(* The HC will set PortConnectStatusChange & PortEnabledChange, clear it *)
-			Machine.Portout16(ports[port], SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, status) + PortChangeMask));
+			Machine.Portout16(ports[port], SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, status) + PortChangeMask));
 		END DisablePort;
 
 		(**
 		 * Get the status of the port <port> of this root hub.
 		 * Registers which indicate changes are reset by GetPortStatus if ack = TRUE;
 		 *)
-		PROCEDURE GetPortStatus*(port : LONGINT; ack : BOOLEAN):SET;
+		PROCEDURE GetPortStatus*(port : SIGNED32; ack : BOOLEAN):SET;
 		VAR status, s : SET;
 		BEGIN
-			Machine.Portin16(ports[port], SYSTEM.VAL(INTEGER, s));
+			Machine.Portin16(ports[port], SYSTEM.VAL(SIGNED16, s));
 
 			(* reset the PortEnabledChange and the PortConnectStatusChange bit *)
-			IF ack & (s * PortChangeMask # {}) THEN Machine.Portout16(ports[port], SYSTEM.VAL(INTEGER, s)); END;
+			IF ack & (s * PortChangeMask # {}) THEN Machine.Portout16(ports[port], SYSTEM.VAL(SIGNED16, s)); END;
 
 			status := UsbHcdi.PortStatusPowered; (* UHCI root hub ports are always powered *)
 			IF s * PortCurrentConnectStatus	# {} THEN status := status + UsbHcdi.PortStatusDevicePresent END;
@@ -266,18 +266,18 @@ TYPE
 		PROCEDURE Reset;
 		BEGIN {EXCLUSIVE}
 			(* do a global reset for 50ms, disconnect all devices *)
-			Machine.Portout16(iobase + UsbCmd, SYSTEM.VAL(INTEGER, CmdGlobalReset) ); Wait (50);
-			Machine.Portout16(iobase + UsbCmd, SYSTEM.VAL(INTEGER, 0) ); Wait (10);
+			Machine.Portout16(iobase + UsbCmd, SYSTEM.VAL(SIGNED16, CmdGlobalReset) ); Wait (50);
+			Machine.Portout16(iobase + UsbCmd, SYSTEM.VAL(SIGNED16, 0) ); Wait (10);
 		END Reset;
 
 		(* Returns the current frame number; the frame number is incremented by the Host Controller at the end of each frame time;
 		 * GetFrameNumber() is used for time stamps *)
-		PROCEDURE GetFrameNumber*() : LONGINT;
-		VAR frameNumber : INTEGER;
+		PROCEDURE GetFrameNumber*() : SIGNED32;
+		VAR frameNumber : SIGNED16;
 		BEGIN
 			Machine.Portin16(iobase + FrNum, frameNumber);
-			frameNumber := SYSTEM.VAL(INTEGER, SYSTEM.VAL(SET, frameNumber) * {0..10});
-			RETURN SYSTEM.VAL(LONGINT, frameNumber);
+			frameNumber := SYSTEM.VAL(SIGNED16, SYSTEM.VAL(SET, frameNumber) * {0..10});
+			RETURN SYSTEM.VAL(SIGNED32, frameNumber);
 		END GetFrameNumber;
 
 		(** Removes the USB transfer request <req> from the host controller schedule *)
@@ -288,7 +288,7 @@ TYPE
 
 		(** Removes the USB transfer request <req> from the host controller schedule *)
 		PROCEDURE UnlinkTDsInternal*(transfer: UsbHcdi.TransferToken);
-		VAR td : Machine.Address32; dword : SET; timer : Kernel.Timer; i: LONGINT;
+		VAR td : Machine.Address32; dword : SET; timer : Kernel.Timer; i: SIGNED32;
 		BEGIN
 			(*IF pipe.firstTD = 0 THEN RETURN END; (* pipe has not yet been used *)*)
 			(* deactivate all TDs in list *)
@@ -328,7 +328,7 @@ TYPE
 
 		(* Insert the queue head qh into the appropriate queue *)
 		PROCEDURE InsertQH*(pipe : UsbHcdi.Pipe) : BOOLEAN;
-		VAR qhtmp, slots, index, queueslots : LONGINT;
+		VAR qhtmp, slots, index, queueslots : SIGNED32;
 		BEGIN (* only call from exclusive regions *)
 			(* build qh. Both link and queue head link pointer are invalid *)
 			pipe.descriptors[0] := allocator.Allocate(16);
@@ -373,7 +373,7 @@ TYPE
 				UnlinkTDsInternal(pipe.transfers)
 			END;
 
-			delthis := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, pipe.descriptors[0]) + {1});
+			delthis := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, pipe.descriptors[0]) + {1});
 			queue := Machine.Ensure32BitAddress (pipe.queue);
 
 			LOOP (* traverse list of queue heads *)
@@ -387,7 +387,7 @@ TYPE
 					SYSTEM.PUT32(queue, qhtmp);
 					EXIT;
 				END;
-				queue := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, qhtmp) - {1})
+				queue := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, qhtmp) - {1})
 			END;
 			NEW(timer); timer.Sleep(10); (* > 1ms to be sure that HC is not operating on this QH *)
 		END RemoveQH;
@@ -415,8 +415,8 @@ TYPE
 			END;
 		END Schedule;
 
-		PROCEDURE ScheduleControl(transfer: UsbHcdi.TransferToken; pipe : UsbHcdi.Pipe; direction : LONGINT; msg : UsbHcdi.ControlMessage;  bufferLen : LONGINT; buffer : ADDRESS);
-		VAR td, prev : Machine.Address32; i, pid, restlen, databufferAdr, curlen : LONGINT; tdStatus : SET; j: LONGINT;
+		PROCEDURE ScheduleControl(transfer: UsbHcdi.TransferToken; pipe : UsbHcdi.Pipe; direction : SIGNED32; msg : UsbHcdi.ControlMessage;  bufferLen : SIGNED32; buffer : ADDRESS);
+		VAR td, prev : Machine.Address32; i, pid, restlen, databufferAdr, curlen : SIGNED32; tdStatus : SET; j: SIGNED32;
 		BEGIN
 		 	(* Control transfers use a three stage protocol:	*)
 			(*	stage1: control setup transaction				*)
@@ -506,8 +506,8 @@ TYPE
 			LinkTDs(pipe, transfer.tds[0])
 		END ScheduleControl;
 
-		PROCEDURE ScheduleBulk(transfer: UsbHcdi.TransferToken; pipe : UsbHcdi.Pipe; bufferLen, offset: LONGINT; buffer: ADDRESS);
-		VAR td, prev : Machine.Address32; i, pid, restlen, curlen, databuffer : LONGINT; tdStatus : SET;
+		PROCEDURE ScheduleBulk(transfer: UsbHcdi.TransferToken; pipe : UsbHcdi.Pipe; bufferLen, offset: SIGNED32; buffer: ADDRESS);
+		VAR td, prev : Machine.Address32; i, pid, restlen, curlen, databuffer : SIGNED32; tdStatus : SET;
 			firstTD: ADDRESS;
 		BEGIN
 			(*firstTD :=  allocator.Allocate(16);*)
@@ -576,12 +576,12 @@ TYPE
 		BEGIN (* works without being exclusive *)
 			IF Debug.Stats THEN INC(NnofInterrupts); END;
 			IF state >= UsbHcdi.Initialized THEN (* controller is active -> handle interrupts *)
-				Machine.Portin16(iobase + UsbSts, SYSTEM.VAL(INTEGER, s));
+				Machine.Portin16(iobase + UsbSts, SYSTEM.VAL(SIGNED16, s));
 				IF s # {} THEN
 					IF Debug.Stats THEN INC(NnofInterruptsHandled); END;
 					IF Debug.Trace & Debug.traceInterrupts THEN ShowInterrupts(s); END;
 					(* reset the USB status register *)
-					Machine.Portout16(iobase + UsbSts, SYSTEM.VAL(INTEGER, s));
+					Machine.Portout16(iobase + UsbSts, SYSTEM.VAL(SIGNED16, s));
 					IF s * StatusHChalted # {} THEN KernelLog.String("UsbUhci: Error: Host Controller halted"); KernelLog.Ln; SetState(UsbHcdi.Halted); END;
 					IF s * StatusProcessError # {} THEN KernelLog.String("UsbUhci: Host Controller process error"); KernelLog.Ln; END;
 					IF s * StatusSystemError # {} THEN KernelLog.String("UsbUhci: Host system error"); KernelLog.Ln; END;
@@ -596,7 +596,7 @@ TYPE
 		 * The GetTransferredLen procedure builds the sum of all TD.ActLen fields of all executed TD's in the queue <qh> and then
 		 * writes this value into the req.bufferLen field *)
 		PROCEDURE GetTransferredLen(transfer : UsbHcdi.TransferToken; VAR errors : SET);
-		VAR td, thislen, actlen, maxlen, val : LONGINT; addr : Machine.Address32; s : SET;
+		VAR td, thislen, actlen, maxlen, val : SIGNED32; addr : Machine.Address32; s : SET;
 		BEGIN
 			actlen := 0; addr := transfer.tds[0];
 			LOOP
@@ -605,12 +605,12 @@ TYPE
 				s := SYSTEM.VAL(SET, val);
 				IF s * TDActive # {} THEN (* this TD has not yet been executed *) EXIT; END;
 
-				thislen := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, val+1) * {0..10}); (* access the ActLen field of the TD *)
+				thislen := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, val+1) * {0..10}); (* access the ActLen field of the TD *)
 
 				val := SYSTEM.GET32(addr + TDToken);
-				IF SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, val) * {0..7}) # PidSetup THEN actlen := actlen + thislen; END;
+				IF SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, val) * {0..7}) # PidSetup THEN actlen := actlen + thislen; END;
 
-				maxlen := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ASH(val, -21) + 1) * {0..10});
+				maxlen := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ASH(val, -21) + 1) * {0..10});
 				IF thislen < maxlen THEN
 					errors := errors + UsbHcdi.ShortPacket;
 				END;
@@ -628,7 +628,7 @@ TYPE
 		PROCEDURE UpdatePipeStatus*(pipe : UsbHcdi.Pipe);
 		VAR
 			transfer: UsbHcdi.TransferToken;
-			count, val, pid : LONGINT;
+			count, val, pid : SIGNED32;
 			td, addr : Machine.Address32;
 			errors, s : SET;
 			datatoggle : BOOLEAN;
@@ -662,7 +662,7 @@ TYPE
 
 				val := SYSTEM.GET32(addr + TDToken);
 
-				pid := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, val) * {0..7});
+				pid := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, val) * {0..7});
 				IF SYSTEM.VAL(SET, val) * TDDataToggle # {} THEN datatoggle := TRUE ELSE datatoggle := FALSE END;
 
 				IF (s * (TDCrcTimeout + TDDataBuffer + TDStalled + TDBitStuff + TDBabble)) # {} THEN (* marginal speed up *)
@@ -705,7 +705,7 @@ TYPE
 		 *	08   	[Oberon specific]  Pointer to PipePolicy
 		 *	12   	[Oberon specific]  Pointer to last TD in queue
 		 *)
-		PROCEDURE BuildQH(td: Machine.Address32; f1, f2: LONGINT; f3 : ANY;  f4 : LONGINT);
+		PROCEDURE BuildQH(td: Machine.Address32; f1, f2: SIGNED32; f3 : ANY;  f4 : SIGNED32);
 		BEGIN
 			SYSTEM.PUT32(td, f1);		(* QH queue head  link pointer field		*)
 			SYSTEM.PUT32(td + 4, f2);	(* QH queue element link pointer field	*)
@@ -723,7 +723,7 @@ TYPE
 		 *
 		 * For more details see Intel UHCI Design Guide v1.1, p. 20-25
 		 * builds a TD. Is also used to build queue heads *)
-		PROCEDURE BuildTD(td : Machine.Address32; f1, f2, f3, f4 : LONGINT);
+		PROCEDURE BuildTD(td : Machine.Address32; f1, f2, f3, f4 : SIGNED32);
 		BEGIN
 			SYSTEM.PUT32(td + TDLinkPointer, f1);
 			SYSTEM.PUT32(td + TDControlStatus, f2);
@@ -731,10 +731,10 @@ TYPE
 			SYSTEM.PUT32(td + TDBufferPointer, f4);
 		END BuildTD;
 
-		PROCEDURE BuildTDLinkPointer (VAR td : Machine.Address32; flags : SET; LinkPointer : LONGINT);
+		PROCEDURE BuildTDLinkPointer (VAR td : Machine.Address32; flags : SET; LinkPointer : SIGNED32);
 		BEGIN
 			ASSERT( SYSTEM.VAL( SET, LinkPointer) * {0..3} = {});
-			SYSTEM.PUT32(td, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LinkPointer) + flags));
+			SYSTEM.PUT32(td, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LinkPointer) + flags));
 		END BuildTDLinkPointer;
 
 		PROCEDURE BuildTDControlStatus (VAR td : Machine.Address32; status : SET);
@@ -742,7 +742,7 @@ TYPE
 			status := status + {0..10}; SYSTEM.PUT32(td + TDControlStatus, status);
 		END BuildTDControlStatus;
 
-		PROCEDURE BuildTDToken (VAR td: Machine.Address32; PID, DeviceAddress, EndPoint : LONGINT; DataToggle : BOOLEAN; maxLength : LONGINT);
+		PROCEDURE BuildTDToken (VAR td: Machine.Address32; PID, DeviceAddress, EndPoint : SIGNED32; DataToggle : BOOLEAN; maxLength : SIGNED32);
 		VAR s : SET;
 		BEGIN
 			(* maxLength specifies the maximum number of data bytes allowed for the transfer,
@@ -756,8 +756,8 @@ TYPE
 		END BuildTDToken;
 
 		(* Initializes the host controller and builds up the basics of the UHCI data structures *)
-		PROCEDURE Init(base: Machine.Address32; IRQ : LONGINT) : BOOLEAN;
-		VAR i, k, j : LONGINT; dword : SET;
+		PROCEDURE Init(base: Machine.Address32; IRQ : SIGNED32) : BOOLEAN;
+		VAR i, k, j : SIGNED32; dword : SET;
 		BEGIN
 			iobase := base; irq := IRQ; DMAchaining := FALSE;
 			(* Configure the ports;  no more documented in the specs, but 3-4 possible *)
@@ -772,7 +772,7 @@ TYPE
 			hubDescriptor[2] := CHR(portCount);
 			dword := dword + {1};  	(* UHCI root hubs don't implement port power switching *)
 			dword := dword + {4}; 	(* UHCI root hubs don't implement overcurrent detection *)
-			hubDescriptor[3] := CHR(SYSTEM.VAL(LONGINT, dword));
+			hubDescriptor[3] := CHR(SYSTEM.VAL(SIGNED32, dword));
 			hubDescriptor[4] := CHR(0); (* Reserved *)
 			hubDescriptor[5] := CHR(10); (* 20ms Power on to power good *)
 			hubDescriptor[6] := CHR(0); (* Root hubs don't draw current from the USB *)
@@ -803,11 +803,11 @@ TYPE
 
 			(* Build queue heads for bulk-, control- and interupt transfers *)
 			BuildTD(bulkTD, 1, 1, 0, 0);
-			BuildTD(controlTD, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, bulkTD) + {1} ), 1, 0, 0);
-			BuildTD(isochronousTD, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, controlTD) + {1}), 1, 0, 0);
-			BuildTD(interruptTD[0], SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, isochronousTD) + {1} ), 1, 0, 0);
+			BuildTD(controlTD, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, bulkTD) + {1} ), 1, 0, 0);
+			BuildTD(isochronousTD, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, controlTD) + {1}), 1, 0, 0);
+			BuildTD(interruptTD[0], SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, isochronousTD) + {1} ), 1, 0, 0);
 			FOR i:=1 TO 10 DO
-				BuildTD(interruptTD[i], SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, interruptTD[i-1]) + {1} ), 1, 0, 0);
+				BuildTD(interruptTD[i], SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, interruptTD[i-1]) + {1} ), 1, 0, 0);
 			END;
 			(* => end of queue 10 points to 9, end of 8 points to 7 , ..., end of 1 points to 0 *)
 			(* => if we start at queue 10, then we will pass all others too; if we start at 9 then we will pass all queues < 9, too etc.*)
@@ -825,7 +825,7 @@ TYPE
 					IF (SYSTEM.VAL(SET, j) * {0}) = {} THEN EXIT; END;
 					INC(k); j := j DIV 2;
 				END;
-				framelist.field[framelist.index + i] := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, interruptTD[k]) + {1} );
+				framelist.field[framelist.index + i] := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, interruptTD[k]) + {1} );
 			END;
 
 			Reset; (* Reset the host controller *)
@@ -842,29 +842,29 @@ TYPE
 
 		(* Resets and then starts the host controller. As soon as the host controller is started, it processes the schedule *)
 		PROCEDURE Start():BOOLEAN;
-		VAR t : LONGINT; s : SET;
+		VAR t : SIGNED32; s : SET;
 		BEGIN
 			(* Perform host controller reset *)
-			Machine.Portout16(iobase + UsbCmd, SYSTEM.VAL(INTEGER, CmdHostControllerReset) );
+			Machine.Portout16(iobase + UsbCmd, SYSTEM.VAL(SIGNED16, CmdHostControllerReset) );
 
 			(* The host controller will clear the CmdHostControllerReset Bit after about 64 bit times *)
 			t := 10000;
 			REPEAT
-				Machine.Portin16(iobase + UsbCmd, SYSTEM.VAL(INTEGER, s));
+				Machine.Portin16(iobase + UsbCmd, SYSTEM.VAL(SIGNED16, s));
 				DEC( t );
 			UNTIL ((t = 0) OR ( ~(1 IN s)));
 
 			IF t = 0 THEN (* ERROR: Host Controller should have cleared the Bit !! *) RETURN FALSE END;
 
 			(* Enable all interrupts, but remember: perhaps they are not being routed by the PIIX4 *)
-			Machine.Portout16(iobase + UsbIntr, SYSTEM.VAL(INTEGER, IntShortPacket + IntIOC + IntResume + IntTimeoutCRC) );
+			Machine.Portout16(iobase + UsbIntr, SYSTEM.VAL(SIGNED16, IntShortPacket + IntIOC + IntResume + IntTimeoutCRC) );
 
 			(* We start at frame 0 and also set the framelistbase address *)
-			Machine.Portout16(iobase + FrNum, SYSTEM.VAL(INTEGER, 0) ); (* 16 bit! *)
-			Machine.Portout32(iobase + FlBaseAdr, SYSTEM.VAL(LONGINT, framelist.framelistbase));
+			Machine.Portout16(iobase + FrNum, SYSTEM.VAL(SIGNED16, 0) ); (* 16 bit! *)
+			Machine.Portout32(iobase + FlBaseAdr, SYSTEM.VAL(SIGNED32, framelist.framelistbase));
 
 			(* Start the controller, set max-packet size (64byte) and set the pseudo-semaphore which we don't need *)
-			Machine.Portout16(iobase + UsbCmd, SYSTEM.VAL(INTEGER, CmdRunStop + CmdConfigureFlag + CmdMaxPacket) );
+			Machine.Portout16(iobase + UsbCmd, SYSTEM.VAL(SIGNED16, CmdRunStop + CmdConfigureFlag + CmdMaxPacket) );
 
 			SetState(UsbHcdi.Operational);
 			RETURN TRUE;
@@ -893,7 +893,7 @@ TYPE
 			END;
 		END ShowSchedule;
 
-		PROCEDURE DoStrongChecks(pipe : UsbHcdi.Pipe; len, ofs : LONGINT; buffer : ADDRESS);
+		PROCEDURE DoStrongChecks(pipe : UsbHcdi.Pipe; len, ofs : SIGNED32; buffer : ADDRESS);
 		VAR i : ADDRESS;
 		BEGIN
 			IF len > 0 THEN
@@ -912,15 +912,15 @@ TYPE
 
 		(* for debugging: display diagnostics of this host controller to KernelLog *)
 		PROCEDURE Diag;
-		VAR s : SET; 	framenum : LONGINT;
+		VAR s : SET; 	framenum : SIGNED32;
 		BEGIN
 			IF Debug.Trace THEN
 			Diag^;
-			Machine.Portin16 (iobase + FrNum, SYSTEM.VAL(INTEGER, framenum));
-			framenum := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, framenum) * {0..10});
+			Machine.Portin16 (iobase + FrNum, SYSTEM.VAL(SIGNED16, framenum));
+			framenum := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, framenum) * {0..10});
 			KernelLog.String("  Frame 0"); KernelLog.Hex(framenum, 8);
 			KernelLog.String("    LastStatus: ");
-			Machine.Portin16 (iobase + UsbSts, SYSTEM.VAL(INTEGER, s));
+			Machine.Portin16 (iobase + UsbSts, SYSTEM.VAL(SIGNED16, s));
 			IF s # {} THEN
 				IF s * StatusHChalted # {} THEN KernelLog.String ("[HChalted]"); END;
 				IF s * StatusProcessError # {} THEN KernelLog.String ("[Process Error]"); END;
@@ -933,7 +933,7 @@ TYPE
 				KernelLog.String("[ok]"); KernelLog.Ln;
 			END;
 			KernelLog.String ("    IRQ enable status: ");
-			Machine.Portin16 (iobase + UsbIntr, SYSTEM.VAL(INTEGER, s));
+			Machine.Portin16 (iobase + UsbIntr, SYSTEM.VAL(SIGNED16, s));
 			IF s * IntShortPacket # {} THEN KernelLog.String("[Short Packet]"); END;
 			IF s * IntIOC # {} THEN KernelLog.String ("[IOC]"); END;
 			IF s * IntResume # {} THEN KernelLog.String ("[Resume]"); END;
@@ -945,11 +945,11 @@ TYPE
 	END UhciController;
 
 VAR
-	qhCounter : LONGINT; (* used by HumanQH; only for debug puposes *)
+	qhCounter : SIGNED32; (* used by HumanQH; only for debug puposes *)
 
 (* Debug: displays the information in the queue head qh and all TD's in that queue the queue is traversed only horizontally *)
-PROCEDURE HumanQH(qh : LONGINT; controller : UhciController);
-VAR val,addr : LONGINT; s : SET; pipe : UsbHcdi.Pipe; ptr : ANY;
+PROCEDURE HumanQH(qh : SIGNED32; controller : UhciController);
+VAR val,addr : SIGNED32; s : SET; pipe : UsbHcdi.Pipe; ptr : ANY;
 BEGIN
 	IF Debug.Trace THEN
 	IF qhCounter > ShowScheduleMaxQH THEN
@@ -999,7 +999,7 @@ BEGIN
 	val := SYSTEM.GET32(qh); s := SYSTEM.VAL(SET, val);
 	IF s * TDQHSelect # {} THEN KernelLog.String(" [QH]"); ELSE KernelLog.String(" [TD]"); END;
 	IF s * TDTerminate # {} THEN KernelLog.String(" [Terminate]"); END;
-	val := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, val) * {4..31});
+	val := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, val) * {4..31});
 	addr := val; (* addr := queue head link pointer *)
 	KernelLog.String("[PTR val: "); KernelLog.Hex(val, 8); KernelLog.String("H]"); KernelLog.Ln;
 
@@ -1008,7 +1008,7 @@ BEGIN
 	val := SYSTEM.GET32(qh + 4); s := SYSTEM.VAL(SET,val);
 	IF s * TDQHSelect # {} THEN KernelLog.String(" [QH]"); ELSE KernelLog.String(" [TD]"); END;
 	IF s * TDTerminate # {} THEN KernelLog.String(" [Terminate]"); END;
-	val := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, val) * {4..31});
+	val := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, val) * {4..31});
 	KernelLog.String("[PTR val: "); KernelLog.Hex(val, 8); KernelLog.String("G]"); KernelLog.Ln;
 
 	(* third show the queued TDs in this queue *)
@@ -1030,12 +1030,12 @@ END HumanQH;
 
 (* Debug: displays the information of the  Transfer Descriptor nexttd and all linked TD's and displays it *)
 PROCEDURE HumanTD(nexttd: Machine.Address32);
-VAR addr, val : LONGINT; s : SET;
+VAR addr, val : SIGNED32; s : SET;
 	t: Kernel.MilliTimer;
 BEGIN
 	IF Debug.Trace THEN
 	LOOP
-		addr := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, nexttd) * {4..31}); (* TD's are 16byte aligned *)
+		addr := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, nexttd) * {4..31}); (* TD's are 16byte aligned *)
 		KernelLog.String("TD at address: "); KernelLog.Hex(addr, 8); KernelLog.Ln;
 		(* link pointer information *)
 		val := SYSTEM.GET32(addr); s := SYSTEM.VAL(SET, val);
@@ -1061,7 +1061,7 @@ BEGIN
 		IF s * TDStalled # {} THEN KernelLog.String(" [Stalled]"); END;
 		IF s * TDBitStuff # {} THEN KernelLog.String(" [BitStuff]"); END;
 		IF s * TDBabble # {} THEN KernelLog.String(" [Babble]"); END;
-		KernelLog.String (" [Actlen: "); val := SYSTEM.VAL(LONGINT, s * {0..10});
+		KernelLog.String (" [Actlen: "); val := SYSTEM.VAL(SIGNED32, s * {0..10});
 		IF val = 07FFH THEN val := 0; ELSE INC(val); END; KernelLog.Int(val, 0); KernelLog.String(" ]");
 		KernelLog.String(" [MaxLen: "); val := SYSTEM.GET32(addr + 8);
 		val := LSH(val, -21); IF val = 7FFH THEN val := 0; ELSE INC(val); END;
@@ -1081,8 +1081,8 @@ BEGIN
 		s := SYSTEM.VAL(SET,val);
 		IF s * TDDataToggle # {} THEN KernelLog.String("DATA1"); ELSE KernelLog.String("DATA0"); END;
 
-		KernelLog.String(" Device Adr: "); KernelLog.Int(LSH(SYSTEM.VAL(LONGINT, s * {8..14}), -8),0);
-		KernelLog.String(" Endpoint: "); KernelLog.Int(LSH(SYSTEM.VAL(LONGINT, s * {15..18}), -15),0);
+		KernelLog.String(" Device Adr: "); KernelLog.Int(LSH(SYSTEM.VAL(SIGNED32, s * {8..14}), -8),0);
+		KernelLog.String(" Endpoint: "); KernelLog.Int(LSH(SYSTEM.VAL(SIGNED32, s * {15..18}), -15),0);
 		KernelLog.Ln;
 
 		nexttd := SYSTEM.GET32(addr);
@@ -1112,17 +1112,17 @@ CONST
 	UhciClassCode = 0C0300H;
 VAR
 	hostController : UhciController;
-	bus, device, function : LONGINT;
-	iobase, irqline : LONGINT;
-	index : LONGINT;
-	res : LONGINT;
+	bus, device, function : SIGNED32;
+	iobase, irqline : SIGNED32;
+	index : SIGNED32;
+	res : SIGNED32;
 BEGIN
 	index := 0;
 	WHILE PCI.FindPCIClassCode(UhciClassCode, index, bus, device, function) = PCI.Done DO
 		(* Get IRQ line - should be set by BIOS *)
 		res := PCI.ReadConfigByte(bus, device, function, PCI.IntlReg, irqline); ASSERT(res = PCI.Done);
 		res := PCI.ReadConfigDword(bus, device, function, PCI.Adr4Reg, iobase); ASSERT(res = PCI.Done);
-		iobase := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, iobase) * {1..31});
+		iobase := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, iobase) * {1..31});
 		IF irqline # 0 THEN
 			res := PCI.WriteConfigWord(bus, device, function, 0C0H, 2000H); (* disable legacy emulation *)
 			IF res = PCI.Done THEN

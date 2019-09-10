@@ -6,22 +6,22 @@ CONST
 	StackSize* = 8192;
 
 TYPE
-	F26D6* = LONGINT;						(** fixed point format 26.6 used for fractional pixel coordinates **)
-	F2D14* = INTEGER;						(** fixed point format 2.14 used for unit vectors **)
-	FUnit* = INTEGER;						(** unscaled point coordinates **)
-	Fixed* = LONGINT;						(** fixed point format 16.16 used for scalar fixed point numbers **)
+	F26D6* = SIGNED32;						(** fixed point format 26.6 used for fractional pixel coordinates **)
+	F2D14* = SIGNED16;						(** fixed point format 2.14 used for unit vectors **)
+	FUnit* = SIGNED16;						(** unscaled point coordinates **)
+	Fixed* = SIGNED32;						(** fixed point format 16.16 used for scalar fixed point numbers **)
 
 	(** program code **)
 	Code* = POINTER TO ARRAY OF CHAR;
 
 	(** program stack **)
-	Stack* = ARRAY StackSize OF LONGINT;
+	Stack* = ARRAY StackSize OF SIGNED32;
 
 	(** addresses within code blocks **)
 	Address* = RECORD
 		code*: Code;						(** instruction sequence **)
-		len*: LONGINT;						(** code length **)
-		pc*: LONGINT;						(** location within code **)
+		len*: SIGNED32;						(** code length **)
+		pc*: SIGNED32;						(** location within code **)
 	END;
 
 	(** user defined functions **)
@@ -37,19 +37,19 @@ TYPE
 	(** call stack **)
 	Frame* = RECORD
 		ret*: Address;						(* return address *)
-		start*: LONGINT;					(* starting pc of function (within context.code) *)
-		count*: INTEGER;					(* number of times the function has to be evaluated *)
+		start*: SIGNED32;					(* starting pc of function (within context.code) *)
+		count*: SIGNED16;					(* number of times the function has to be evaluated *)
 	END;
 	CallStack* = ARRAY 32 OF Frame;
 
 	(** program store **)
-	Store* = POINTER TO ARRAY OF LONGINT;
+	Store* = POINTER TO ARRAY OF SIGNED32;
 
 	(** control value table **)
 	CVT* = POINTER TO ARRAY OF F26D6;
 
 	(** glyph zone **)
-	Contours* = POINTER TO ARRAY OF INTEGER;
+	Contours* = POINTER TO ARRAY OF SIGNED16;
 	Coord* = ARRAY 2 OF F26D6;
 	Point* = RECORD
 		org*, cur*: Coord;					(** original and current point coordinates **)
@@ -60,7 +60,7 @@ TYPE
 
 	Zone* = POINTER TO ZoneDesc;
 	ZoneDesc* = RECORD
-		contours*: INTEGER;					(** number of contours in this zone **)
+		contours*: SIGNED16;					(** number of contours in this zone **)
 		first*: Contours;						(** starting points of each contour; first[contours] contains total number of points in zone **)
 		pt*: Points;							(** points in this zone **)
 	END;
@@ -73,12 +73,12 @@ TYPE
 	(** execution context **)
 	Context* = RECORD
 		code*: Code;						(** program code **)
-		codeLen*: LONGINT;				(* code length *)
+		codeLen*: SIGNED32;				(* code length *)
 		stack*: Stack;						(** program stack **)
 		callStack*: CallStack;				(** call stack of program **)
-		pc*: LONGINT;						(* current position within code *)
-		tos*: INTEGER;						(* stack pointer *)
-		ctos*: INTEGER;						(* call stack pointer *)
+		pc*: SIGNED32;						(* current position within code *)
+		tos*: SIGNED16;						(* stack pointer *)
+		ctos*: SIGNED16;						(* call stack pointer *)
 
 		func*: Functions;					(** user defined functions **)
 		instr*: Instructions;					(** user defined instructions **)
@@ -88,25 +88,25 @@ TYPE
 
 		ptsize*: F26D6;						(** current point size **)
 		xppm*, yppm*, ppm: F26D6;			(** number of pixels per Em in x/y direction **)
-		upm*: INTEGER;						(** units per Em **)
+		upm*: SIGNED16;						(** units per Em **)
 		rotated*, stretched*: BOOLEAN;		(* glyph transformation info *)
 		xratio, yratio, ratio*: Fixed;			(** aspect ratio **)
 
 		minDist*: F26D6;					(** feature preserving minimum distance **)
 		cvtCutIn*: F26D6;					(** control value table cut in **)
 		swVal*, swCutIn*: F26D6;			(** single width cut in and single width value **)
-		deltaBase*, deltaShift*: INTEGER;	(** delta exception parameters **)
+		deltaBase*, deltaShift*: SIGNED16;	(** delta exception parameters **)
 		autoFlip*: BOOLEAN;				(** whether to make CVT entries sign independent **)
 		inhibitFit*, ignorePrep*: BOOLEAN;	(** instruction control flags **)
 		fixDropouts*: BOOLEAN;			(** scan control flag **)
-		scanType*: INTEGER;				(** current scan type **)
+		scanType*: SIGNED16;				(** current scan type **)
 
-		rp0*, rp1*, rp2*: INTEGER;			(** reference points **)
-		gep0*, gep1*, gep2*: INTEGER;		(** zone indices **)
+		rp0*, rp1*, rp2*: SIGNED16;			(** reference points **)
+		gep0*, gep1*, gep2*: SIGNED16;		(** zone indices **)
 		zp0, zp1, zp2: Zone;					(* zone pointers, equal to zone[gepN] *)
 		free*, proj*, proj2*: Vector;			(** freedom vector, projection vector, and dual projection vector **)
 		period*, phase*, threshold*: F26D6;	(** parameters of current round state **)
-		loop*: INTEGER;						(** number of times to execute the next loop-aware instruction **)
+		loop*: SIGNED16;						(** number of times to execute the next loop-aware instruction **)
 	END;
 
 	(** static part of graphics state **)
@@ -114,11 +114,11 @@ TYPE
 		minDist: F26D6;
 		cvtCutIn: F26D6;
 		swVal, swCutIn: F26D6;
-		deltaBase, deltaShift: INTEGER;
+		deltaBase, deltaShift: SIGNED16;
 		autoFlip: BOOLEAN;
 		inhibitFit, ignorePrep: BOOLEAN;
 		fixDropouts: BOOLEAN;
-		scanType: INTEGER;
+		scanType: SIGNED16;
 	END;
 
 	(** debug upcalls **)
@@ -139,8 +139,8 @@ VAR
 
 (**--- Arithmetic ---**)
 
-PROCEDURE ShiftDiv* (a, n, d: LONGINT): LONGINT;
-	VAR b: LONGINT;
+PROCEDURE ShiftDiv* (a, n, d: SIGNED32): SIGNED32;
+	VAR b: SIGNED32;
 BEGIN
 	b := ASH( 1, 31-n );
 	IF (-b <= a) & (a < b) THEN
@@ -150,7 +150,7 @@ BEGIN
 	END;
 END ShiftDiv;
 
-PROCEDURE MulShift* (a, b, n: LONGINT): LONGINT;
+PROCEDURE MulShift* (a, b, n: SIGNED32): SIGNED32;
 BEGIN
 	IF (-10000H <= a) & (a < 10000H) & (-8000H <= b) & (b < 8000H) THEN
 		RETURN ASH(a * b, n)
@@ -159,7 +159,7 @@ BEGIN
 	END
 END MulShift;
 
-PROCEDURE MulDiv*( a, b, c: LONGINT ): LONGINT;
+PROCEDURE MulDiv*( a, b, c: SIGNED32 ): SIGNED32;
 BEGIN
 	IF (-10000H <= a) & (a < 10000H) & (-8000H <= b) & (b < 8000H) THEN
 		IF c > 0 THEN
@@ -185,7 +185,7 @@ BEGIN
 END MulDiv;
 
 PROCEDURE Norm*( x, y: F26D6 ): F26D6;
-	VAR n, r, b, t: LONGINT; nh, rh, bh, th: HUGEINT;
+	VAR n, r, b, t: SIGNED32; nh, rh, bh, th: SIGNED64;
 BEGIN
 	IF (-8000H <= x) & (x < 8000H) & (-8000H <= y) & (y < 8000H) THEN
 		(* x*x + y*y representable in 32 bits *)
@@ -245,7 +245,7 @@ BEGIN
 	RETURN (LONG(fu) * PPEm(c) + c.upm DIV 2) DIV c.upm
 END FUnitToPixel;
 
-PROCEDURE CVTValue (n: LONGINT; VAR c: Context): F26D6;
+PROCEDURE CVTValue (n: SIGNED32; VAR c: Context): F26D6;
 	VAR ratio: F26D6;
 BEGIN
 	IF n < 0 THEN
@@ -280,7 +280,7 @@ BEGIN
 END GetDistance;
 
 PROCEDURE Move (VAR p: Point; free, proj: Vector; dist: F26D6);
-	VAR dot: LONGINT;
+	VAR dot: SIGNED32;
 BEGIN
 	IF proj.x = 4000H THEN
 		IF free.x # 0 THEN
@@ -303,8 +303,8 @@ BEGIN
 	END
 END Move;
 
-PROCEDURE GetRefDist (VAR c: Context; flag: BOOLEAN; VAR zone: Zone; VAR ref: LONGINT; VAR dx, dy: F26D6);
-	VAR dot: LONGINT; dist: F26D6;
+PROCEDURE GetRefDist (VAR c: Context; flag: BOOLEAN; VAR zone: Zone; VAR ref: SIGNED32; VAR dx, dy: F26D6);
+	VAR dot: SIGNED32; dist: F26D6;
 BEGIN
 	IF flag THEN	(* rp1 in zp0 *)
 		ref := c.rp1; zone := c.zp0
@@ -332,7 +332,7 @@ END GetRefDist;
 
 (* push n bytes *)
 PROCEDURE NPUSHB (VAR c: Context);
-	VAR n: LONGINT;
+	VAR n: SIGNED32;
 BEGIN
 	INC(c.pc); n := ORD(c.code[c.pc]);
 	WHILE n > 0 DO
@@ -344,7 +344,7 @@ END NPUSHB;
 
 (* push n words *)
 PROCEDURE NPUSHW (VAR c: Context);
-	VAR n, hi, lo: LONGINT;
+	VAR n, hi, lo: SIGNED32;
 BEGIN
 	INC(c.pc); n := ORD(c.code[c.pc]);
 	WHILE n > 0 DO
@@ -359,7 +359,7 @@ END NPUSHW;
 
 (* push bytes *)
 PROCEDURE PUSHB (VAR c: Context);
-	VAR n: LONGINT;
+	VAR n: SIGNED32;
 BEGIN
 	n := ORD(c.code[c.pc]) - 0B0H;
 	WHILE n >= 0 DO
@@ -371,7 +371,7 @@ END PUSHB;
 
 (* push words *)
 PROCEDURE PUSHW (VAR c: Context);
-	VAR n, hi, lo: LONGINT;
+	VAR n, hi, lo: SIGNED32;
 BEGIN
 	n := ORD(c.code[c.pc]) - 0B8H;
 	WHILE n >= 0 DO
@@ -395,7 +395,7 @@ END RS;
 
 (* write store *)
 PROCEDURE WS (VAR c: Context);
-	VAR value: LONGINT;
+	VAR value: SIGNED32;
 BEGIN
 	value := c.stack[c.tos]; DEC(c.tos);
 	c.store[c.stack[c.tos]] := value; DEC(c.tos);
@@ -465,7 +465,7 @@ END SFVTCA;
 
 (* set projection vector to line *)
 PROCEDURE SPVTL (VAR c: Context);
-	VAR p1, p2: LONGINT; dx, dy, d: F26D6;
+	VAR p1, p2: SIGNED32; dx, dy, d: F26D6;
 BEGIN
 	p1 := c.stack[c.tos]; DEC(c.tos);
 	p2 := c.stack[c.tos]; DEC(c.tos);
@@ -489,7 +489,7 @@ END SPVTL;
 
 (* set freedom vector to line *)
 PROCEDURE SFVTL (VAR c: Context);
-	VAR p1, p2: LONGINT; dx, dy, d: F26D6;
+	VAR p1, p2: SIGNED32; dx, dy, d: F26D6;
 BEGIN
 	p1 := c.stack[c.tos]; DEC(c.tos);
 	p2 := c.stack[c.tos]; DEC(c.tos);
@@ -517,7 +517,7 @@ END SFVTPV;
 
 (* set dual projection vector to line *)
 PROCEDURE SDPVTL (VAR c: Context);
-	VAR p1, p2: LONGINT; dx, dy, d: F26D6;
+	VAR p1, p2: SIGNED32; dx, dy, d: F26D6;
 BEGIN
 	p1 := c.stack[c.tos]; DEC(c.tos);
 	p2 := c.stack[c.tos]; DEC(c.tos);
@@ -581,7 +581,7 @@ END GFV;
 
 (* set reference point i *)
 PROCEDURE SRPi (VAR c: Context);
-	VAR rp: INTEGER;
+	VAR rp: SIGNED16;
 BEGIN
 	rp := SHORT(c.stack[c.tos]); DEC(c.tos);
 	CASE c.code[c.pc] OF
@@ -594,7 +594,7 @@ END SRPi;
 
 (* set zone pointer i *)
 PROCEDURE SZPi (VAR c: Context);
-	VAR gep: INTEGER;
+	VAR gep: SIGNED16;
 BEGIN
 	gep := SHORT(c.stack[c.tos]); DEC(c.tos);
 	CASE c.code[c.pc] OF
@@ -651,7 +651,7 @@ END ROFF;
 
 (* super round and super round 45 degrees *)
 PROCEDURE SROUND (VAR c: Context);
-	VAR gridPeriod: F26D6; code, cd: LONGINT;
+	VAR gridPeriod: F26D6; code, cd: SIGNED32;
 BEGIN
 	IF ODD(ORD(c.code[c.pc])) THEN								(* super round 45 degrees *)
 		gridPeriod := 45											(* funnily enough, this is really 64*(1/sqrt(2)) *)
@@ -693,7 +693,7 @@ END SMD;
 
 (* instruction execution control *)
 PROCEDURE INSTCTRL (VAR c: Context);
-	VAR sel, val: LONGINT;
+	VAR sel, val: SIGNED32;
 BEGIN
 	sel := c.stack[c.tos]; DEC(c.tos);
 	IF sel = 1 THEN c.inhibitFit := FALSE
@@ -709,7 +709,7 @@ END INSTCTRL;
 
 (* scan conversion control *)
 PROCEDURE SCANCTRL (VAR c: Context);
-	VAR n, thold: LONGINT;
+	VAR n, thold: SIGNED32;
 BEGIN
 	n := c.stack[c.tos] MOD 10000H; DEC(c.tos);
 	thold := n MOD 256;
@@ -732,7 +732,7 @@ END SCANCTRL;
 
 (* scan type *)
 PROCEDURE SCANTYPE (VAR c: Context);
-	VAR st: INTEGER;
+	VAR st: SIGNED16;
 BEGIN
 	st := SHORT(c.stack[c.tos]); DEC(c.tos);
 	IF st IN {3, 6, 7} THEN st := 2 END;
@@ -796,7 +796,7 @@ END SDS;
 
 (* get coordinate projected onto the projection vector *)
 PROCEDURE GC (VAR c: Context);
-	VAR p: LONGINT; dist: F26D6;
+	VAR p: SIGNED32; dist: F26D6;
 BEGIN
 	p := c.stack[c.tos];
 	IF ODD(ORD(c.code[c.pc])) THEN								(* use original coordinates *)
@@ -811,7 +811,7 @@ END GC;
 
 (* set coordinate from stack using projection and freedom vector *)
 PROCEDURE SCFS (VAR c: Context);
-	VAR dist, d: F26D6; p: LONGINT;
+	VAR dist, d: F26D6; p: SIGNED32;
 BEGIN
 	dist := c.stack[c.tos]; DEC(c.tos);
 	p := c.stack[c.tos]; DEC(c.tos);
@@ -822,7 +822,7 @@ END SCFS;
 
 (* measure distance *)
 PROCEDURE MD (VAR c: Context);
-	VAR p1, p2: LONGINT; d1, d2: F26D6;
+	VAR p1, p2: SIGNED32; d1, d2: F26D6;
 BEGIN
 	(*
 		- original implementation used zone 0 for p1 and zone 1 for p2
@@ -859,7 +859,7 @@ END MPS;
 
 (* flip point *)
 PROCEDURE FLIPPT (VAR c: Context);
-	VAR p: LONGINT; pt: Points;
+	VAR p: SIGNED32; pt: Points;
 BEGIN
 	(* both TTI and FreeType don't use zp0; instead they work in zone 1 directly *)
 	pt := c.zone[1].pt;
@@ -874,7 +874,7 @@ END FLIPPT;
 
 (* flip range on/off *)
 PROCEDURE FLIPRG (VAR c: Context);
-	VAR on: BOOLEAN; hi, lo: LONGINT; pt: Points;
+	VAR on: BOOLEAN; hi, lo: SIGNED32; pt: Points;
 BEGIN
 	on := ODD(ORD(c.code[c.pc]));
 	hi := c.stack[c.tos]; DEC(c.tos);
@@ -889,7 +889,7 @@ END FLIPRG;
 
 (* shift point by the last point *)
 PROCEDURE SHP (VAR c: Context);
-	VAR zone: Zone; p: LONGINT; dx, dy: F26D6; pt: Points;
+	VAR zone: Zone; p: SIGNED32; dx, dy: F26D6; pt: Points;
 BEGIN
 	GetRefDist(c, ODD(ORD(c.code[c.pc])), zone, p, dx, dy);
 	pt := c.zp2.pt;
@@ -909,7 +909,7 @@ END SHP;
 
 (* shift contour by the last point *)
 PROCEDURE SHC (VAR c: Context);
-	VAR zone: Zone; ref, cont, cur, last: LONGINT; dx, dy: F26D6; pt: Points;
+	VAR zone: Zone; ref, cont, cur, last: SIGNED32; dx, dy: F26D6; pt: Points;
 BEGIN
 	(*
 		- TTI uses original coordinates (which is probably wrong)
@@ -935,7 +935,7 @@ END SHC;
 
 (* shift zone by the last point *)
 PROCEDURE SHZ (VAR c: Context);
-	VAR zone, z: Zone; ref, cur, last: LONGINT; dx, dy: F26D6; pt: Points;
+	VAR zone, z: Zone; ref, cur, last: SIGNED32; dx, dy: F26D6; pt: Points;
 BEGIN
 	(*
 		- TTI uses original coordinates (which is probably wrong)
@@ -962,7 +962,7 @@ END SHZ;
 
 (* shift point by a pixel amount *)
 PROCEDURE SHPIX (VAR c: Context);
-	VAR dist, dx, dy: F26D6; pt: Points; p: LONGINT;
+	VAR dist, dx, dy: F26D6; pt: Points; p: SIGNED32;
 BEGIN
 	dist := c.stack[c.tos]; DEC(c.tos);
 	dx := MulShift(dist, c.free.x, -14);
@@ -984,7 +984,7 @@ END SHPIX;
 
 (* move stack indirect relative point *)
 PROCEDURE MSIRP (VAR c: Context);
-	VAR dist, d: F26D6; p: LONGINT; org: Coord; pt: Points;
+	VAR dist, d: F26D6; p: SIGNED32; org: Coord; pt: Points;
 BEGIN
 	dist := c.stack[c.tos]; DEC(c.tos);
 	p := c.stack[c.tos]; DEC(c.tos);
@@ -1006,7 +1006,7 @@ END MSIRP;
 
 (* move direct absolute point *)
 PROCEDURE MDAP (VAR c: Context);
-	VAR p: LONGINT; d, dist: F26D6;
+	VAR p: SIGNED32; d, dist: F26D6;
 BEGIN
 	p := c.stack[c.tos]; DEC(c.tos);
 	IF ODD(ORD(c.code[c.pc])) THEN
@@ -1022,7 +1022,7 @@ END MDAP;
 
 (* move indirect absolute point *)
 PROCEDURE MIAP (VAR c: Context);
-	VAR cvt, p: LONGINT; dist, d: F26D6; pt: Points; xy: Coord;
+	VAR cvt, p: SIGNED32; dist, d: F26D6; pt: Points; xy: Coord;
 BEGIN
 	cvt := c.stack[c.tos]; DEC(c.tos);
 	p := c.stack[c.tos]; DEC(c.tos);
@@ -1046,7 +1046,7 @@ END MIAP;
 
 (* move direct relative point *)
 PROCEDURE MDRP (VAR c: Context);
-	VAR p: LONGINT; d, dist: F26D6;
+	VAR p: SIGNED32; d, dist: F26D6;
 BEGIN
 	p := c.stack[c.tos]; DEC(c.tos);
 	d := Project(c.zp1.pt[p].org, c.proj2) - Project(c.zp0.pt[c.rp0].org, c.proj2);
@@ -1075,7 +1075,7 @@ END MDRP;
 
 (* move indirect relative point *)
 PROCEDURE MIRP (VAR c: Context);
-	VAR cvt, p: LONGINT; dcvt, od, cd, dist: F26D6; pt: Points; xy: Coord;
+	VAR cvt, p: SIGNED32; dcvt, od, cd, dist: F26D6; pt: Points; xy: Coord;
 BEGIN
 	IF LEN(c.stack) <= c.tos THEN RETURN END;
 	cvt := c.stack[c.tos]; DEC(c.tos);
@@ -1121,7 +1121,7 @@ END MIRP;
 
 (* align relative point *)
 PROCEDURE ALIGNRP (VAR c: Context);
-	VAR p: LONGINT; dist: F26D6;
+	VAR p: SIGNED32; dist: F26D6;
 BEGIN
 	WHILE c.loop > 0 DO
 		p := c.stack[c.tos]; DEC(c.tos);
@@ -1133,8 +1133,8 @@ BEGIN
 	INC(c.pc)
 END ALIGNRP;
 
-PROCEDURE DivHL( a,  b: HUGEINT ): LONGINT;
-VAR q: HUGEINT; positive: BOOLEAN;
+PROCEDURE DivHL( a,  b: SIGNED64 ): SIGNED32;
+VAR q: SIGNED64; positive: BOOLEAN;
 BEGIN
 	positive := TRUE;
 	IF a < 0 THEN  positive := ~positive;  a := -a  END;
@@ -1147,9 +1147,9 @@ END DivHL;
 (* move point to intersection of two lines *)
 PROCEDURE ISECT (VAR c: Context);
 	VAR
-		b1, b0, a1, a0, p: LONGINT; pt: Points;
+		b1, b0, a1, a0, p: SIGNED32; pt: Points;
 		ax0, ay0, ax1, ay1, bx0, by0, bx1, by1: F26D6;
-		dxa, dya, dxb, dyb, dx, dy, v, det: HUGEINT;
+		dxa, dya, dxb, dyb, dx, dy, v, det: SIGNED64;
 BEGIN
 	b1 := c.stack[c.tos];  DEC(c.tos);
 	b0 := c.stack[c.tos];  DEC(c.tos);
@@ -1183,7 +1183,7 @@ END ISECT;
 
 (* align points *)
 PROCEDURE ALIGNPTS (VAR c: Context);
-	VAR p1, p2: LONGINT; dist: F26D6;
+	VAR p1, p2: SIGNED32; dist: F26D6;
 BEGIN
 	p1 := c.stack[c.tos]; DEC(c.tos);
 	p2 := c.stack[c.tos]; DEC(c.tos);
@@ -1196,7 +1196,7 @@ END ALIGNPTS;
 
 (* interpolate point by the last relative stretch *)
 PROCEDURE IP (VAR c: Context);
-	VAR od1, od2, cd1, cd2, od, cd, dist: F26D6; pt: Points; p: LONGINT;
+	VAR od1, od2, cd1, cd2, od, cd, dist: F26D6; pt: Points; p: SIGNED32;
 BEGIN
 	od1 := Project(c.zp0.pt[c.rp1].org, c.proj2);
 	od2 := Project(c.zp1.pt[c.rp2].org, c.proj2);
@@ -1223,7 +1223,7 @@ END IP;
 
 (* untouch point *)
 PROCEDURE UTP (VAR c: Context);
-	VAR p: LONGINT;
+	VAR p: SIGNED32;
 BEGIN
 	p := c.stack[c.tos]; DEC(c.tos);
 	IF c.free.x # 0 THEN
@@ -1238,9 +1238,9 @@ END UTP;
 (* interpolate untouched points through the outline *)
 PROCEDURE IUP (VAR c: Context);
 	VAR
-		z: Zone; pt: Points; n, xy, beg, nil, first, end, cur: LONGINT; dxy: F26D6;
+		z: Zone; pt: Points; n, xy, beg, nil, first, end, cur: SIGNED32; dxy: F26D6;
 
-	PROCEDURE interpol (p0, p1, rp0, rp1: LONGINT);
+	PROCEDURE interpol (p0, p1, rp0, rp1: SIGNED32);
 		VAR oxy0, cxy0, dxy0, oxy1, cxy1, dxy1, cxy: F26D6;
 	BEGIN
 		IF p0 <= p1 THEN
@@ -1318,7 +1318,7 @@ END IUP;
 
 (* delta exception Pn *)
 PROCEDURE DELTAP (VAR c: Context);
-	VAR base, ppm, n, p, arg: LONGINT;
+	VAR base, ppm, n, p, arg: SIGNED32;
 BEGIN
 	base := c.deltaBase;
 	IF c.code[c.pc] = 71X THEN INC(base, 16)							(* DELTAP2 *)
@@ -1342,7 +1342,7 @@ END DELTAP;
 
 (* delta exception Cn *)
 PROCEDURE DELTAC (VAR c: Context);
-	VAR base, ppm, n, cvt, arg: LONGINT;
+	VAR base, ppm, n, cvt, arg: SIGNED32;
 BEGIN
 	base := c.deltaBase;
 	IF c.code[c.pc] = 74X THEN INC(base, 16)							(* DELTAC2 *)
@@ -1387,7 +1387,7 @@ END CLEAR;
 
 (* swap the top two elements on the stack *)
 PROCEDURE SWAP (VAR c: Context);
-	VAR tmp: LONGINT;
+	VAR tmp: SIGNED32;
 BEGIN
 	tmp := c.stack[c.tos]; c.stack[c.tos] := c.stack[c.tos-1]; c.stack[c.tos-1] := tmp; INC(c.pc)
 END SWAP;
@@ -1400,14 +1400,14 @@ END DEPTH;
 
 (* copy the indexed element to the top of the stack *)
 PROCEDURE CINDEX (VAR c: Context);
-	VAR idx: LONGINT;
+	VAR idx: SIGNED32;
 BEGIN
 	idx := c.stack[c.tos]; c.stack[c.tos] := c.stack[c.tos - idx]; INC(c.pc)
 END CINDEX;
 
 (* move the indexed element to the top of the stack *)
 PROCEDURE MINDEX (VAR c: Context);
-	VAR idx, pos, elem: LONGINT;
+	VAR idx, pos, elem: SIGNED32;
 BEGIN
 	idx := c.stack[c.tos];
 	pos := c.tos - idx; elem := c.stack[pos];
@@ -1420,7 +1420,7 @@ END MINDEX;
 
 (* roll the top three stack elements *)
 PROCEDURE ROLL (VAR c: Context);
-	VAR elem: LONGINT;
+	VAR elem: SIGNED32;
 BEGIN
 	elem := c.stack[c.tos-2]; c.stack[c.tos-2] := c.stack[c.tos-1]; c.stack[c.tos-1] := c.stack[c.tos]; c.stack[c.tos] := elem;
 	INC(c.pc)
@@ -1504,7 +1504,7 @@ END JROF;
 
 (* comparison *)
 PROCEDURE COMPARE (VAR c: Context);
-	VAR b, a: LONGINT; res: BOOLEAN;
+	VAR b, a: SIGNED32; res: BOOLEAN;
 BEGIN
 	b := c.stack[c.tos]; DEC(c.tos); a := c.stack[c.tos];
 	CASE c.code[c.pc] OF
@@ -1523,7 +1523,7 @@ END COMPARE;
 
 (* odd *)
 PROCEDURE oDD (VAR c: Context);
-	VAR r: LONGINT;
+	VAR r: SIGNED32;
 BEGIN
 	r := Round(c.stack[c.tos], c.period, c.phase, c.threshold) DIV 40H;
 	IF ODD(r) THEN c.stack[c.tos] := 1 ELSE c.stack[c.tos] := 0 END;
@@ -1532,7 +1532,7 @@ END oDD;
 
 (* even *)
 PROCEDURE EVEN (VAR c: Context);
-	VAR r: LONGINT;
+	VAR r: SIGNED32;
 BEGIN
 	r := Round(c.stack[c.tos], c.period, c.phase, c.threshold) DIV 40H;
 	IF ODD(r) THEN c.stack[c.tos] := 0 ELSE c.stack[c.tos] := 1 END;
@@ -1541,7 +1541,7 @@ END EVEN;
 
 (* logical and *)
 PROCEDURE AND (VAR c: Context);
-	VAR b, a: LONGINT;
+	VAR b, a: SIGNED32;
 BEGIN
 	b := c.stack[c.tos]; DEC(c.tos); a := c.stack[c.tos];
 	IF a * b # 0 THEN c.stack[c.tos] := 1 ELSE c.stack[c.tos] := 0 END;
@@ -1550,7 +1550,7 @@ END AND;
 
 (* logical or *)
 PROCEDURE oR (VAR c: Context);
-	VAR b, a: LONGINT;
+	VAR b, a: SIGNED32;
 BEGIN
 	b := c.stack[c.tos]; DEC(c.tos); a := c.stack[c.tos];
 	IF (a # 0) OR (b # 0) THEN c.stack[c.tos] := 1 ELSE c.stack[c.tos] := 0 END;
@@ -1662,7 +1662,7 @@ END NROUND;
 
 (* function definition *)
 PROCEDURE FDEF (VAR c: Context);
-	VAR n: LONGINT;
+	VAR n: SIGNED32;
 BEGIN
 	n := c.stack[c.tos]; DEC(c.tos);
 	c.func[n].code := c.code; c.func[n].len := c.codeLen; c.func[n].pc := c.pc;
@@ -1686,7 +1686,7 @@ END ENDF;
 
 (* call function *)
 PROCEDURE CALL (VAR c: Context);
-	VAR n: LONGINT;
+	VAR n: SIGNED32;
 BEGIN
 	n := c.stack[c.tos]; DEC(c.tos);
 	INC(c.ctos);
@@ -1697,7 +1697,7 @@ END CALL;
 
 (* loop and call function *)
 PROCEDURE LOOPCALL (VAR c: Context);
-	VAR n, count: LONGINT;
+	VAR n, count: SIGNED32;
 BEGIN
 	n := c.stack[c.tos]; DEC(c.tos);
 	count := c.stack[c.tos]; DEC(c.tos);
@@ -1709,7 +1709,7 @@ END LOOPCALL;
 
 (* instruction definition *)
 PROCEDURE IDEF (VAR c: Context);
-	VAR op: CHAR; i: LONGINT;
+	VAR op: CHAR; i: SIGNED32;
 BEGIN
 	op := CHR(c.stack[c.tos]); DEC(c.tos);
 	i := 0; WHILE (c.instr[i].beg.code # NIL) & (c.instr[i].opcode # op) DO INC(i) END;
@@ -1722,7 +1722,7 @@ END IDEF;
 
 (* user defined instructions *)
 PROCEDURE UNDEF (VAR c: Context);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 BEGIN
 	i := 0; WHILE (c.instr[i].beg.code # NIL) & (c.instr[i].opcode # c.code[c.pc]) DO INC(i) END;
 	IF c.instr[i].beg.code # NIL THEN											(* found instruction *)
@@ -1746,7 +1746,7 @@ END DEBUG;
 
 (* get information *)
 PROCEDURE GETINFO (VAR c: Context);
-	VAR sel, val: LONGINT;
+	VAR sel, val: SIGNED32;
 BEGIN
 	sel := c.stack[c.tos]; val := 0;
 	IF ODD(sel) THEN END;	(* give back version number 0 *)
@@ -1760,7 +1760,7 @@ END GETINFO;
 (*--- Initialization ---*)
 
 PROCEDURE InitBuiltins;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 BEGIN
 	FOR i := 0 TO 0FFH DO Builtin[i] := UNDEF END;
 
@@ -1851,32 +1851,32 @@ END InitBuiltins;
 (*--- Exported Interface ---*)
 
 (** allocation procedures for all dynamically sized memory structures **)
-PROCEDURE NewCode* (VAR code: Code; size: LONGINT);
+PROCEDURE NewCode* (VAR code: Code; size: SIGNED32);
 BEGIN
 	IF size > 0 THEN NEW(code, size) ELSE code := NIL END
 END NewCode;
 
-PROCEDURE NewFunctions* (VAR func: Functions; size: LONGINT);
+PROCEDURE NewFunctions* (VAR func: Functions; size: SIGNED32);
 BEGIN
 	IF size > 0 THEN NEW(func, size) ELSE func := NIL END
 END NewFunctions;
 
-PROCEDURE NewInstructions* (VAR instr: Instructions; size: LONGINT);
+PROCEDURE NewInstructions* (VAR instr: Instructions; size: SIGNED32);
 BEGIN
 	IF size > 0 THEN NEW(instr, size) ELSE instr := NIL END
 END NewInstructions;
 
-PROCEDURE NewStore* (VAR store: Store; size: LONGINT);
+PROCEDURE NewStore* (VAR store: Store; size: SIGNED32);
 BEGIN
 	IF size > 0 THEN NEW(store, size) ELSE store := NIL END
 END NewStore;
 
-PROCEDURE NewCVT* (VAR cvt: CVT; size: LONGINT);
+PROCEDURE NewCVT* (VAR cvt: CVT; size: SIGNED32);
 BEGIN
 	IF size > 0 THEN NEW(cvt, size) ELSE cvt := NIL END
 END NewCVT;
 
-PROCEDURE NewZone* (VAR zone: Zone; contours, points: INTEGER);
+PROCEDURE NewZone* (VAR zone: Zone; contours, points: SIGNED16);
 BEGIN {EXCLUSIVE}
 	NEW(zone); zone.contours := contours;
 	NEW(zone.first, contours+1);
@@ -1897,7 +1897,7 @@ BEGIN
 END SetStructures;
 
 (** set instance specific context parameters **)
-PROCEDURE SetResolution* (VAR c: Context; ptsize, xppm, yppm: F26D6; upm: INTEGER; rotated, stretched: BOOLEAN);
+PROCEDURE SetResolution* (VAR c: Context; ptsize, xppm, yppm: F26D6; upm: SIGNED16; rotated, stretched: BOOLEAN);
 BEGIN
 	c.ptsize := ptsize; c.xppm := xppm; c.yppm := yppm;
 	IF xppm >= yppm THEN
@@ -1945,7 +1945,7 @@ BEGIN
 END RestoreState;
 
 (** execute program **)
-PROCEDURE Execute* (VAR c: Context; code: Code; len: LONGINT; z0, z1: Zone);
+PROCEDURE Execute* (VAR c: Context; code: Code; len: SIGNED32; z0, z1: Zone);
 BEGIN
 	c.code := code; c.codeLen := len; c.pc := 0; c.tos := -1; c.ctos := -1;
 	c.zone[0] := z0; c.zone[1] := z1;

@@ -24,24 +24,24 @@ MODULE TestMathLong;
 			calc: CalcHandler;
 			compare: CompareHandler;
 			show: ShowHandler;
-			n, ok: LONGINT;
+			n, ok: SIGNED32;
 			next: Command;
 		END;
 		
 		ResultDesc = RECORD
-			single: REAL;
+			single: FLOAT32;
 			boolean: BOOLEAN;
-			int: LONGINT;
-			double: LONGREAL;
+			int: SIGNED32;
+			double: FLOAT64;
 		END;
 	
 	VAR
 		filenames: ARRAY 2, 20 OF CHAR;
 		rd: OFS.Rider;
 		cmds: Command;
-		singlepar: ARRAY 2 OF REAL;
-		intpar: LONGINT;
-		doublepar: ARRAY 2 OF LONGREAL;
+		singlepar: ARRAY 2 OF FLOAT32;
+		intpar: SIGNED32;
+		doublepar: ARRAY 2 OF FLOAT64;
 		trueres: ResultDesc;
 		calcres: ResultDesc;
 
@@ -53,7 +53,7 @@ MODULE TestMathLong;
 	PROCEDURE CalcMUL(); BEGIN calcres.single := singlepar[0]*singlepar[1] END CalcMUL;
 	PROCEDURE CalcDIV(); BEGIN calcres.single := singlepar[0]/singlepar[1] END CalcDIV;
 	PROCEDURE CalcENTIER(); BEGIN calcres.int := ENTIER(singlepar[0]) END CalcENTIER;
-	PROCEDURE CalcREAL(); BEGIN calcres.single := REAL(intpar) END CalcREAL;
+	PROCEDURE CalcREAL(); BEGIN calcres.single := FLOAT32(intpar) END CalcREAL;
 	PROCEDURE CalcGREATER(); BEGIN calcres.boolean := (singlepar[0]>singlepar[1]) END CalcGREATER;
 	PROCEDURE CalcLOWER(); BEGIN calcres.boolean := (singlepar[0]<singlepar[1]) END CalcLOWER;
 	PROCEDURE CalcSIN(); BEGIN calcres.single := Math.Sin(singlepar[0]) END CalcSIN;
@@ -74,10 +74,10 @@ MODULE TestMathLong;
 	PROCEDURE CalcLOWERD(); BEGIN calcres.boolean := doublepar[0] < doublepar[1] END CalcLOWERD;
 	PROCEDURE CalcFLOATD(); BEGIN calcres.double := intpar END CalcFLOATD;
 	PROCEDURE CalcFIXD(); BEGIN calcres.int := ENTIER(doublepar[0]) END CalcFIXD;
-	PROCEDURE CalcSINGLED(); BEGIN calcres.single := REAL(doublepar[0]) END CalcSINGLED;
+	PROCEDURE CalcSINGLED(); BEGIN calcres.single := FLOAT32(doublepar[0]) END CalcSINGLED;
 	PROCEDURE CalcDOUBLED(); BEGIN calcres.double := singlepar[0] END CalcDOUBLED;
 
-	PROCEDURE GetRelativeError(a, b: REAL): REAL;
+	PROCEDURE GetRelativeError(a, b: FLOAT32): FLOAT32;
 	BEGIN
 		IF b # 0.0 THEN
 			a := ABS(a/b) - 1.0;
@@ -116,7 +116,7 @@ MODULE TestMathLong;
 	END CompareRelative31eps;
 	
 	PROCEDURE CompareRelative1epsLR(): BOOLEAN;
-		VAR x0, y0: LONGREAL;
+		VAR x0, y0: FLOAT64;
 	BEGIN
 		x0 := calcres.double;
 		y0 := trueres.double;
@@ -147,7 +147,7 @@ MODULE TestMathLong;
 		Log.S(" ("); Log.R(trueres.single); Log.SL(")");
 	END ShowIR;
 	
-	PROCEDURE ShowLR(a: LONGREAL);
+	PROCEDURE ShowLR(a: FLOAT64);
 		VAR x: FPE64.Float64;
 	BEGIN
 		x := SYSTEM.VAL(FPE64.Float64, a);
@@ -198,7 +198,7 @@ MODULE TestMathLong;
 	END ShowLogDate;
 	
 	PROCEDURE GetCommandName(VAR s: ARRAY OF CHAR);
-		VAR ch: CHAR; i: LONGINT;
+		VAR ch: CHAR; i: SIGNED32;
 	BEGIN
 		i := 0;
 		REPEAT
@@ -210,7 +210,7 @@ MODULE TestMathLong;
 	END GetCommandName;
 	
 	PROCEDURE ReadParameters(VAR s: ARRAY OF CHAR);
-		VAR i, ir, ilr: LONGINT;
+		VAR i, ir, ilr: SIGNED32;
 	BEGIN
 		ir := 0;
 		ilr := 0;
@@ -251,9 +251,9 @@ MODULE TestMathLong;
 		VAR
 			f: OFS.File;
 			name: ARRAY 12 OF CHAR;
-			n, ok, i: LONGINT;
+			n, ok, i: SIGNED32;
 			cmd: Command;
-			t, dt: LONGINT;
+			t, dt: SIGNED32;
 	BEGIN
 		dt := 0;
 		FOR i := 0 TO LEN(filenames, 0)-1 DO
@@ -314,7 +314,7 @@ MODULE TestMathLong;
 		Log.S("Successful: "); Log.IL(ok);
 		Log.S("Unsuccessful: "); Log.IL(n-ok); Log.L;
 		Log.S("Calculation time [ms]: ");
-		Log.RL(REAL(dt)/REAL(Platform.CLOCKDIVISOR)*10.0);
+		Log.RL(FLOAT32(dt)/FLOAT32(Platform.CLOCKDIVISOR)*10.0);
 		Kernel.MilliWait(1000);
 		Minos.Reset;
 	END Run;

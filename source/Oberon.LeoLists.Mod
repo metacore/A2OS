@@ -19,7 +19,7 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 		Line = POINTER TO RECORD
 			next, prev: Line;
 			shape: Leonardo.Shape;
-			level: INTEGER;
+			level: SIGNED16;
 			parent, open: BOOLEAN;
 		END;
 
@@ -36,11 +36,11 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 
 	VAR
 		Font: Fonts.Font;
-		Time, Wait: LONGINT;
+		Time, Wait: SIGNED32;
 
 
-	PROCEDURE DrawFold (mask: Display3.Mask; col, x, y, dim, mode: INTEGER; open: BOOLEAN);
-		VAR d: INTEGER;
+	PROCEDURE DrawFold (mask: Display3.Mask; col, x, y, dim, mode: SIGNED16; open: BOOLEAN);
+		VAR d: SIGNED16;
 	BEGIN
 		dim := dim DIV 2; d := 1 + 2*dim;
 		IF open THEN
@@ -58,8 +58,8 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 		END
 	END DrawFold;
 
-	PROCEDURE DrawLine (list: List; mask: Display3.Mask; x, y, w: INTEGER; l: Line);
-		VAR fg, bg: INTEGER; s: ARRAY 64 OF CHAR;
+	PROCEDURE DrawLine (list: List; mask: Display3.Mask; x, y, w: SIGNED16; l: Line);
+		VAR fg, bg: SIGNED16; s: ARRAY 64 OF CHAR;
 	BEGIN
 		IF l.shape = list.active THEN fg := Display3.white; bg := Display3.black
 		ELSIF l.shape.sel THEN fg := Display3.white; bg := 12
@@ -77,8 +77,8 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 		Display3.String(mask, fg, x, y - Font.minY, Font, s, Display.paint)
 	END DrawLine;
 
-	PROCEDURE Restore (list: List; x, y, w, h, lx, ly: INTEGER; mask: Display3.Mask);
-		VAR l: Line; cy: INTEGER;
+	PROCEDURE Restore (list: List; x, y, w, h, lx, ly: SIGNED16; mask: Display3.Mask);
+		VAR l: Line; cy: SIGNED16;
 	BEGIN
 		Oberon.RemoveMarks(lx + x, ly + y, w, h);
 		Display3.Rect3D(mask, Display3.bottomC, Display3.topC, lx, ly, list.W, list.H, 1, Display.replace);
@@ -100,7 +100,7 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 	PROCEDURE Print (list: List; VAR msg: Display.DisplayMsg);
 	END Print;
 
-	PROCEDURE UpdateLevel (list: List; cont: Objects.Object; VAR l: Line; level: INTEGER);
+	PROCEDURE UpdateLevel (list: List; cont: Objects.Object; VAR l: Line; level: SIGNED16);
 		VAR shape: Leonardo.Shape; lm: Objects.LinkMsg; ll: Line;
 	BEGIN
 		shape := NIL;
@@ -154,7 +154,7 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 	END UpdateModel;
 
 	PROCEDURE SetPos (list: List; update: BOOLEAN);
-		VAR l: Line; pos: LONGINT;
+		VAR l: Line; pos: SIGNED32;
 	BEGIN
 		IF list.pos # NIL THEN
 			l := list.lines.next; pos := 0;
@@ -167,7 +167,7 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 	END SetPos;
 
 	PROCEDURE SetMax (list: List);
-		VAR l: Line; max: LONGINT;
+		VAR l: Line; max: SIGNED32;
 	BEGIN
 		IF list.max # NIL THEN
 			l := list.lines.next; max := 0;
@@ -188,7 +188,7 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 	END SetCont;
 
 	PROCEDURE Update (list: List; VAR msg: Gadgets.UpdateMsg);
-		VAR dm: Display.DisplayMsg; pos, first: LONGINT; l: Line;
+		VAR dm: Display.DisplayMsg; pos, first: SIGNED32; l: Line;
 	BEGIN
 		IF list.pos # NIL THEN list.pos.handle(list.pos, msg) END;
 		IF list.max # NIL THEN list.max.handle(list.max, msg) END;
@@ -227,8 +227,8 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 		END
 	END Update;
 
-	PROCEDURE ScrollDist (list: List; y: INTEGER): INTEGER;
-		VAR n, bot, scroll: INTEGER; l, last: Line;
+	PROCEDURE ScrollDist (list: List; y: SIGNED16): SIGNED16;
+		VAR n, bot, scroll: SIGNED16; l, last: Line;
 	BEGIN
 		n := (list.H-2) DIV Font.height; bot := (list.H-1) - n * Font.height;
 		IF y > (list.H-2) THEN
@@ -263,7 +263,7 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 		RETURN scroll
 	END ScrollDist;
 
-	PROCEDURE LocateLine (list: List; y: INTEGER; VAR l: Line; VAR ly: INTEGER);
+	PROCEDURE LocateLine (list: List; y: SIGNED16; VAR l: Line; VAR ly: SIGNED16);
 	BEGIN
 		l := list.first; ly := (list.H-1) - Font.height;
 		WHILE (l # list.lines) & (ly >= y) & (ly > Font.height) DO
@@ -281,8 +281,8 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 		END
 	END MayScroll;
 
-	PROCEDURE Scroll (list: List; scroll, lx, ly: INTEGER; mask: Display3.Mask; dlink: Objects.Object);
-		VAR l: Line; n, dy, y, bot: INTEGER; dm: Display.DisplayMsg;
+	PROCEDURE Scroll (list: List; scroll, lx, ly: SIGNED16; mask: Display3.Mask; dlink: Objects.Object);
+		VAR l: Line; n, dy, y, bot: SIGNED16; dm: Display.DisplayMsg;
 	BEGIN
 		l := list.first; n := scroll;
 		WHILE n > 0 DO
@@ -345,10 +345,10 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 
 	PROCEDURE TrackSel (list: List; VAR msg: Oberon.InputMsg);
 		VAR
-			fig: Leonardo.Figure; lx, ly, fy, scroll, oy, lines, my, x, y, cy, dy: INTEGER; mask: Display3.Mask;
+			fig: Leonardo.Figure; lx, ly, fy, scroll, oy, lines, my, x, y, cy, dy: SIGNED16; mask: Display3.Mask;
 			state, keysum, keys: SET; first, ol, cl: Line;
 
-		PROCEDURE invert (l: Line; y: INTEGER);
+		PROCEDURE invert (l: Line; y: SIGNED16);
 			VAR shape: Leonardo.Shape;
 		BEGIN
 			shape := l.shape;
@@ -428,7 +428,7 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 
 	PROCEDURE TrackPoint (list: List; VAR msg: Oberon.InputMsg);
 		VAR
-			update: BOOLEAN; lx, ly, oy, ox, x, y, scroll, cy, cx: INTEGER; mask: Display3.Mask; ol, cl: Line;
+			update: BOOLEAN; lx, ly, oy, ox, x, y, scroll, cy, cx: SIGNED16; mask: Display3.Mask; ol, cl: Line;
 			keysum, keys: SET;
 
 		PROCEDURE feedback;
@@ -572,7 +572,7 @@ MODULE LeoLists IN Oberon; (** portable **)	(* eos  *)
 	END Copy;
 
 	PROCEDURE Handle* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR list, copy: List; keys: SET; lx, ly: INTEGER; mask: Display3.Mask; fig: Leonardo.Figure; ver: LONGINT;
+		VAR list, copy: List; keys: SET; lx, ly: SIGNED16; mask: Display3.Mask; fig: Leonardo.Figure; ver: SIGNED32;
 	BEGIN
 		list := obj(List);
 		IF msg IS Display.FrameMsg THEN

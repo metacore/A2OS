@@ -23,8 +23,8 @@ CONST
 
 TYPE
 	Bar = RECORD
-		min, max, val: LONGINT;
-		backC, knoblen: INTEGER;
+		min, max, val: SIGNED32;
+		backC, knoblen: SIGNED16;
 		vertical: BOOLEAN
 	END;
 
@@ -38,16 +38,16 @@ VAR
 	last: View;
 	W: Texts.Writer;
 
-PROCEDURE Max (x, y: INTEGER): INTEGER;
+PROCEDURE Max (x, y: SIGNED16): SIGNED16;
 BEGIN IF x > y THEN RETURN x; ELSE RETURN y; END;
 END Max;
 
-PROCEDURE Min (x, y: INTEGER): INTEGER;
+PROCEDURE Min (x, y: SIGNED16): SIGNED16;
 BEGIN IF x < y THEN RETURN x; ELSE RETURN y; END;
 END Min;
 
-PROCEDURE ClipAgainst (VAR x, y, w, h: INTEGER; X, Y, W, H: INTEGER);
-VAR r, t: INTEGER;
+PROCEDURE ClipAgainst (VAR x, y, w, h: SIGNED16; X, Y, W, H: SIGNED16);
+VAR r, t: SIGNED16;
 BEGIN
 	r := x + w; t := y + h;
 	IF x < X THEN x := X END;
@@ -57,15 +57,15 @@ BEGIN
 	w := r - x; h := t - y
 END ClipAgainst;
 
-PROCEDURE P (X: LONGINT): INTEGER;
+PROCEDURE P (X: SIGNED32): SIGNED16;
 BEGIN RETURN SHORT(X * Display.Unit DIV Printer.Unit)
 END P;
 
-PROCEDURE Value (VAR bar: Bar; x, y, w, h, X, Y: INTEGER; min, max: LONGINT): LONGINT;
-VAR res: WORD;
+PROCEDURE Value (VAR bar: Bar; x, y, w, h, X, Y: SIGNED16; min, max: SIGNED32): SIGNED32;
+VAR res: INTEGER;
 
-	PROCEDURE CalcVal (x, w, bx, bw: INTEGER; min, max: LONGINT): LONGINT;
-	VAR r, d: LONGINT;
+	PROCEDURE CalcVal (x, w, bx, bw: SIGNED16; min, max: SIGNED32): SIGNED32;
+	VAR r, d: SIGNED32;
 	BEGIN
 		d := max - min;
 		IF (d = 0) OR (w = bw) THEN r := 0
@@ -85,11 +85,11 @@ BEGIN
 	RETURN res
 END Value;
 
-PROCEDURE Pos (VAR bar: Bar; x, y, w, h, bw: INTEGER; min, max, val: LONGINT): INTEGER;
-VAR res: INTEGER;
+PROCEDURE Pos (VAR bar: Bar; x, y, w, h, bw: SIGNED16; min, max, val: SIGNED32): SIGNED16;
+VAR res: SIGNED16;
 
-	PROCEDURE CalcPos (x, w, bw: INTEGER; min, max, val: LONGINT): INTEGER;
-	VAR d: LONGINT;
+	PROCEDURE CalcPos (x, w, bw: SIGNED16; min, max, val: SIGNED32): SIGNED16;
+	VAR d: SIGNED32;
 	BEGIN
 		d := ABS(max - min);
 		IF d > 0 THEN
@@ -115,7 +115,7 @@ END Pos;
 (* --------------------- SLIDER - VIEW ------------------- *)
 
 PROCEDURE UpdateBars (F: View);
-VAR min, max, len: LONGINT; vx, vy, w, h, W, H, VH: INTEGER;
+VAR min, max, len: SIGNED32; vx, vy, w, h, W, H, VH: SIGNED16;
 BEGIN
 	IF F.hasVBar THEN	(* vertical *)
 		H:= F.H - 2*F.border;
@@ -190,7 +190,7 @@ END AdjustChildToBar;
 
 (* ---------------------- SLIDER ------------------------- *)
 
-PROCEDURE DrawKnob (Q: Display3.Mask; x, y, w, h: INTEGER; vertical: BOOLEAN);
+PROCEDURE DrawKnob (Q: Display3.Mask; x, y, w, h: SIGNED16; vertical: BOOLEAN);
 BEGIN
 	Display3.FilledRect3D(Q, Display3.topC, Display3.bottomC, Display3.groupC, x, y, w, h, 1, Display3.replace);
 	IF vertical THEN
@@ -208,7 +208,7 @@ BEGIN
 	END
 END DrawKnob;
 
-PROCEDURE DrawBar (Q: Display3.Mask; VAR bar: Bar; x, y, w, h: INTEGER);
+PROCEDURE DrawBar (Q: Display3.Mask; VAR bar: Bar; x, y, w, h: SIGNED16);
 BEGIN
     Oberon.RemoveMarks(x, y, w, h);
 	Display3.ReplConst(Q, bar.backC, x, y, w, h, Display.replace);
@@ -225,7 +225,7 @@ BEGIN
 	END
 END DrawBar;
 
-PROCEDURE PrintKnob (Q: Display3.Mask; x, y, w, h: INTEGER; vertical: BOOLEAN);
+PROCEDURE PrintKnob (Q: Display3.Mask; x, y, w, h: SIGNED16; vertical: BOOLEAN);
 BEGIN
 	Printer3.FilledRect3D(Q, Display3.topC, Display3.bottomC, Display3.groupC, x, y, w, h, P(1), Display.replace);
 	IF vertical THEN
@@ -243,8 +243,8 @@ BEGIN
 	END
 END PrintKnob;
 
-PROCEDURE PrintBar (Q: Display3.Mask; VAR bar: Bar; x, y, w, h: INTEGER);
-VAR knoblen: INTEGER;
+PROCEDURE PrintBar (Q: Display3.Mask; VAR bar: Bar; x, y, w, h: SIGNED16);
+VAR knoblen: SIGNED16;
 BEGIN
 	knoblen := P(bar.knoblen);
 	Printer3.ReplConst(Q, bar.backC, x, y, w, h, Display.replace);
@@ -259,8 +259,8 @@ BEGIN
 	END
 END PrintBar;
 
-PROCEDURE MoveContent (VAR bar: Bar; Q: Display3.Mask; x, y, w, h: INTEGER; F: View; dlink: Objects.Object);
-VAR dv, cx, cy, cw, ch, mx, my, mw, mh: INTEGER; copy: BOOLEAN; D: Display.DisplayMsg;
+PROCEDURE MoveContent (VAR bar: Bar; Q: Display3.Mask; x, y, w, h: SIGNED16; F: View; dlink: Objects.Object);
+VAR dv, cx, cy, cw, ch, mx, my, mw, mh: SIGNED16; copy: BOOLEAN; D: Display.DisplayMsg;
 BEGIN
 	IF (F.obj # NIL) & (F.obj IS Display.Frame) THEN
 		DrawBar(Q, bar, x, y, w, h);
@@ -329,8 +329,8 @@ BEGIN
 	END
 END MoveContent;
 
-PROCEDURE TrackBar (F: View; VAR M: Oberon.InputMsg; VAR bar: Bar; x, y, w, h: INTEGER);
-	VAR keysum: SET; Q: Display3.Mask; pos, npos, oldpos: LONGINT;
+PROCEDURE TrackBar (F: View; VAR M: Oberon.InputMsg; VAR bar: Bar; x, y, w, h: SIGNED16);
+	VAR keysum: SET; Q: Display3.Mask; pos, npos, oldpos: SIGNED32;
 BEGIN
 		Gadgets.MakeMask(F, M.x + F.X, M.y + F.Y, M.dlink, Q); Display3.Copy(Q, Q);
 		keysum:= M.keys; oldpos := bar.val; pos := oldpos;
@@ -350,7 +350,7 @@ BEGIN
 		M.res:= 0
 END TrackBar;
 
-PROCEDURE InitBar (VAR b: Bar; min, max, val: LONGINT; backC: INTEGER; vertical: BOOLEAN; width: INTEGER);
+PROCEDURE InitBar (VAR b: Bar; min, max, val: SIGNED32; backC: SIGNED16; vertical: BOOLEAN; width: SIGNED16);
 BEGIN
 	b.min:= min; b.max:= max; b.val:= val; b.backC:= backC; b.vertical:= vertical;
 	b.knoblen := SHORT(width - ABS(max - min));
@@ -360,8 +360,8 @@ END InitBar;
 
 (* --------------------- SLIDER - VIEW ------------------- *)
 
-PROCEDURE RestoreBars (F: View; x, y: INTEGER; dlink: Objects.Object);
-VAR M: Display3.Mask; w, h: INTEGER;
+PROCEDURE RestoreBars (F: View; x, y: SIGNED16; dlink: Objects.Object);
+VAR M: Display3.Mask; w, h: SIGNED16;
 BEGIN
 	Gadgets.MakeMask(F, x, y, dlink, M);
 	Oberon.RemoveMarks(x, y, F.W, F.H);
@@ -373,7 +373,7 @@ END RestoreBars;
 
 (* --------------------- VIEW ------------------- *)
 
-PROCEDURE ToFrame (F: View; x, y: INTEGER; VAR M: Display.FrameMsg);
+PROCEDURE ToFrame (F: View; x, y: SIGNED16; VAR M: Display.FrameMsg);
 VAR f: Display.Frame;
 BEGIN
 	IF (F.obj # NIL) & (F.obj IS Display.Frame) THEN
@@ -384,8 +384,8 @@ BEGIN
 END ToFrame;
 
 (* background drawing procedure *)
-PROCEDURE Background (F: View; X, Y: INTEGER; M: Display3.Mask; col, x, y, w, h, mode: INTEGER);
-VAR cx, cy, cw, ch, t: INTEGER;
+PROCEDURE Background (F: View; X, Y: SIGNED16; M: Display3.Mask; col, x, y, w, h, mode: SIGNED16);
+VAR cx, cy, cw, ch, t: SIGNED16;
 BEGIN
 	cx := M.X; cy := M.Y; cw := M.W; ch := M.H;
 	Display3.AdjustMask(M, x, y, w, h);
@@ -410,10 +410,10 @@ BEGIN
 	M.X := cx; M.Y := cy; M.W := cw; M.H := ch
 END Background;
 
-PROCEDURE CutoutBack (F: View; R: Display3.Mask; x, y, w, h, X, Y, W, H: INTEGER);
-VAR B, T, nH: INTEGER;
+PROCEDURE CutoutBack (F: View; R: Display3.Mask; x, y, w, h, X, Y, W, H: SIGNED16);
+VAR B, T, nH: SIGNED16;
 
-	PROCEDURE Enum (x1, y1, w1, h1: INTEGER);
+	PROCEDURE Enum (x1, y1, w1, h1: SIGNED16);
 	BEGIN IF (w1 > 0) & (h1 > 0) THEN Background(F, X, Y , R, Views.background, x1, y1, w1, h1, Display.replace) END
 	END Enum;
 
@@ -427,8 +427,8 @@ BEGIN
 	IF x + w < X + W THEN Enum(x + w, B, Min(W, X + W - (x + w)), nH) END; (* right block *)
 END CutoutBack;
 
-PROCEDURE RestoreView (F: View; x, y: INTEGER; dlink: Objects.Object);
-	VAR R: Display3.Mask; f: Display.Frame; w, h, col, fx, fy, fw, fh, cx, cy, cw, ch: INTEGER;
+PROCEDURE RestoreView (F: View; x, y: SIGNED16; dlink: Objects.Object);
+	VAR R: Display3.Mask; f: Display.Frame; w, h, col, fx, fy, fw, fh, cx, cy, cw, ch: SIGNED16;
 			M: Display.DisplayMsg;
 BEGIN
 	w := F.W; h := F.H;
@@ -460,8 +460,8 @@ BEGIN
 	END
 END RestoreView;
 
-PROCEDURE RestoreViewArea (F: View; x, y, u, v, w1, h1: INTEGER; dlink: Objects.Object);
-	VAR R: Display3.Mask; f: Display.Frame; w, h, col, fx, fy, fw, fh, cx, cy, cw, ch: INTEGER;
+PROCEDURE RestoreViewArea (F: View; x, y, u, v, w1, h1: SIGNED16; dlink: Objects.Object);
+	VAR R: Display3.Mask; f: Display.Frame; w, h, col, fx, fy, fw, fh, cx, cy, cw, ch: SIGNED16;
 			M: Display.DisplayMsg;
 BEGIN
 	w := F.W; h := F.H;
@@ -497,8 +497,8 @@ BEGIN
 END RestoreViewArea;
 
 PROCEDURE PrintView (F: View; M: Display.DisplayMsg);
-VAR R: Display3.Mask; f: Display.Frame; x, y, w, h, t, backC: INTEGER; Pr: Display.DisplayMsg;
-	X, Y: INTEGER;
+VAR R: Display3.Mask; f: Display.Frame; x, y, w, h, t, backC: SIGNED16; Pr: Display.DisplayMsg;
+	X, Y: SIGNED16;
 BEGIN
 	X := F.absX; Y := F.absY; F.absX := M.x; F.absY := M.y;
 	x:= M.x; y:= M.y; w:= P(F.W); h:= P(F.H);
@@ -539,11 +539,11 @@ BEGIN
 	F.absX := X; F.absY := Y
 END PrintView;
 
-PROCEDURE InHotspot (X, Y, x, y, w, h: INTEGER): BOOLEAN;
+PROCEDURE InHotspot (X, Y, x, y, w, h: SIGNED16): BOOLEAN;
 CONST size = 10; GravQ = 4; MinGrav = 2;
 
-	PROCEDURE InBorder (mx, my, X, Y, W, H: INTEGER): BOOLEAN;
-		VAR hg, vg: INTEGER;
+	PROCEDURE InBorder (mx, my, X, Y, W, H: SIGNED16): BOOLEAN;
+		VAR hg, vg: SIGNED16;
 	BEGIN
 		IF (W <= Effects.gravity*3) OR (H <= Effects.gravity*3) THEN
 			hg := Min(Effects.gravity, Max(W DIV GravQ, MinGrav));
@@ -586,7 +586,7 @@ BEGIN
 END TrackSelectChild;
 
 PROCEDURE TrackView (F: View; VAR M: Oberon.InputMsg);
-VAR last0: View; Mdlink, Fdlink: Objects.Object; f: Display.Frame; x, y, b: INTEGER; L: Display.LocateMsg;
+VAR last0: View; Mdlink, Fdlink: Objects.Object; f: Display.Frame; x, y, b: SIGNED16; L: Display.LocateMsg;
 BEGIN
 	x:= M.x + F.X; y:= M.y + F.Y;
 	L.x:= M.x; L.y:= M.y; L.dlink := M.dlink; L.X := M.X; L.Y := M.Y; L.F := NIL; L.loc := NIL; L.res := -1;
@@ -639,7 +639,7 @@ BEGIN
 	END
 END TrackView;
 
-PROCEDURE AdjustToFrame (F: View; x, y: INTEGER; VAR M: Display.ModifyMsg);
+PROCEDURE AdjustToFrame (F: View; x, y: SIGNED16; VAR M: Display.ModifyMsg);
 VAR B: Display3.UpdateMaskMsg;
 BEGIN
 	IF F.obj # NIL THEN
@@ -649,8 +649,8 @@ BEGIN
 	END
 END AdjustToFrame;
 
-PROCEDURE AdjustChild (F: View; x, y, w, h: INTEGER; VAR M: Display.ModifyMsg);
-VAR RM, R: Display3.Mask; cx, cy: INTEGER;
+PROCEDURE AdjustChild (F: View; x, y, w, h: SIGNED16; VAR M: Display.ModifyMsg);
+VAR RM, R: Display3.Mask; cx, cy: SIGNED16;
 BEGIN
 	IF last = F THEN  (* moved or resized in this view *)
 		IF M.stamp # F.stamp THEN cx := F.vx + M.dX; cy := F.vy + (M.dY + M.dH) - M.H + 1
@@ -704,7 +704,7 @@ BEGIN
 END Absolute;
 
 PROCEDURE CleverAdjust (F: View; VAR M: Display.ModifyMsg);
-VAR x, y, w, h, x0, y0, w0, h0, x1, y1, w1, h1: INTEGER; D: Display.DisplayMsg; O: Display3.OverlapMsg;
+VAR x, y, w, h, x0, y0, w0, h0, x1, y1, w1, h1: SIGNED16; D: Display.DisplayMsg; O: Display3.OverlapMsg;
 		abs: BOOLEAN;
 BEGIN
 	(* calculate old position *)
@@ -806,7 +806,7 @@ BEGIN
 	END
 END Adjust;
 
-PROCEDURE Consume (F: View;  x, y: INTEGER; VAR M: Display.ConsumeMsg);
+PROCEDURE Consume (F: View;  x, y: SIGNED16; VAR M: Display.ConsumeMsg);
 VAR f: Display.Frame; CM: Display.ControlMsg; BM: Objects.BindMsg;
 BEGIN
 	IF (M.id = Display.drop) & (M.F = F) THEN
@@ -840,7 +840,7 @@ BEGIN
 END Consume;
 
 PROCEDURE Locate (F: View; VAR M: Display.LocateMsg);
-VAR f: Display.Frame; u, v, fx, fy, fw, fh, cx, cy, cw, ch: INTEGER;
+VAR f: Display.Frame; u, v, fx, fy, fw, fh, cx, cy, cw, ch: SIGNED16;
 BEGIN
 	u := M.x + F.X; v := M.y + F.Y + F.H - 1;
 	IF F.obj # NIL THEN
@@ -863,7 +863,7 @@ BEGIN
 	M.res:= 0
 END Locate;
 
-PROCEDURE UpdateMask (F: View; x, y: INTEGER; VAR M: Display3.UpdateMaskMsg);
+PROCEDURE UpdateMask (F: View; x, y: SIGNED16; VAR M: Display3.UpdateMaskMsg);
 	VAR R: Display3.Mask; O: Display3.OverlapMsg;
 BEGIN
 	IF M.F = F.obj THEN
@@ -879,7 +879,7 @@ BEGIN
 END UpdateMask;
 
 PROCEDURE MakeMask (v: Gadgets.View; M: Display3.Mask; ondisplay: BOOLEAN);
-VAR x, y, w, h: INTEGER;
+VAR x, y, w, h: SIGNED16;
 BEGIN
 	WITH v: View DO
 		x:= v.border; w:= x*2; y:= x; h:= w;
@@ -961,7 +961,7 @@ BEGIN
 END ViewLinks;
 
 PROCEDURE ViewHandler* (F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR F0: View; f: Gadgets.Frame; vNo: LONGINT; x, y, w, h, u, v: INTEGER;
+VAR F0: View; f: Gadgets.Frame; vNo: SIGNED32; x, y, w, h, u, v: SIGNED16;
 		D: Display.DisplayMsg; S: Display.SelectMsg;
 BEGIN
 	WITH F: View DO

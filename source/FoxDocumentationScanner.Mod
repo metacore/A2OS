@@ -18,11 +18,11 @@ TYPE
 	String*= POINTER TO ARRAY OF CHAR;
 
 	Symbol*= RECORD
-		position*: LONGINT;
+		position*: SIGNED32;
 		token*: Token;
-		level*: LONGINT;
+		level*: SIGNED32;
 		string*: String;
-		stringLength*: LONGINT;
+		stringLength*: SIGNED32;
 		hasWhitespace*: BOOLEAN;
 	END;
 
@@ -35,7 +35,7 @@ TYPE
 		diagnostics: Diagnostics.Diagnostics;   (* error logging *)
 
 		ch: CHAR;   (* look-ahead character *)
-		position-: LONGINT;   (* current position *)
+		position-: SIGNED32;   (* current position *)
 		prevToken: Token;
 
 		(*
@@ -44,7 +44,7 @@ TYPE
 			position: reference position (offset) of the input stream , for error output
 			diagnostics: error output object
 		*)
-		PROCEDURE & InitializeScanner*(reader: Streams.Reader; position: LONGINT; diagnostics: Diagnostics.Diagnostics);
+		PROCEDURE & InitializeScanner*(reader: Streams.Reader; position: SIGNED32; diagnostics: Diagnostics.Diagnostics);
 		BEGIN
 			SELF.reader := reader;
 			SELF.diagnostics := diagnostics;
@@ -88,7 +88,7 @@ TYPE
 		END IdentifierStart;
 
 		PROCEDURE AppendCharacter(VAR symbol: Symbol; ch: CHAR);
-		VAR s: String;  i: LONGINT;
+		VAR s: String;  i: SIGNED32;
 		BEGIN
 			IF symbol.string = NIL THEN NEW(symbol.string,32); symbol.stringLength := 0; END;
 			IF symbol.stringLength = LEN(symbol.string)-1 THEN
@@ -102,7 +102,7 @@ TYPE
 			INC(symbol.stringLength);
 		END AppendCharacter;
 
-		PROCEDURE AppendCharacters(VAR symbol: Symbol; ch: CHAR; number: LONGINT);
+		PROCEDURE AppendCharacters(VAR symbol: Symbol; ch: CHAR; number: SIGNED32);
 		BEGIN
 			WHILE number > 0 DO
 				AppendCharacter(symbol,ch); DEC(number)
@@ -127,7 +127,7 @@ TYPE
 			UNTIL (ch <= " ");
 		END ReadLiteralWS;
 
-		PROCEDURE ReadCharacters(this: CHAR; min,max: LONGINT; VAR symbol: Symbol; token: Token);
+		PROCEDURE ReadCharacters(this: CHAR; min,max: SIGNED32; VAR symbol: Symbol; token: Token);
 		BEGIN
 			symbol.level := 0;
 			WHILE (ch = this) DO INC(symbol.level); GetNextCharacter END;
@@ -157,7 +157,7 @@ TYPE
 			END SkipBlanks;
 
 			PROCEDURE ReadCode;
-			VAR ending: LONGINT; end:BOOLEAN;
+			VAR ending: SIGNED32; end:BOOLEAN;
 			BEGIN
 				ending := 0; end := FALSE;
 				REPEAT
@@ -273,7 +273,7 @@ TYPE
 					END;
 				END;
 			|  '-':
-				IF firstInLine THEN ReadCharacters (ch, 4, MAX(LONGINT), symbol, Token.Line)
+				IF firstInLine THEN ReadCharacters (ch, 4, MAX(SIGNED32), symbol, Token.Line)
 				ELSE ReadLiteral(symbol, Token.String);
 				END;
 			|  '{': ReadCharacters (ch, 3, 3, symbol, Token.CodeBegin);

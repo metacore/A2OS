@@ -18,7 +18,7 @@ MODULE LeoSplineEditors IN Oberon; (** portable **)	(* eos  *)
 		CONST
 			status = " +MM: insert point";
 		VAR
-			tool: LeoTools.Tool; fx, fy, x, y: INTEGER; px, py, tol: REAL; k, keysum, keys: SET; mask: Display3.Mask;
+			tool: LeoTools.Tool; fx, fy, x, y: SIGNED16; px, py, tol: FLOAT32; k, keysum, keys: SET; mask: Display3.Mask;
 			closed, connect: BOOLEAN; pen: LeoPens.Pen; p0, p1, p: LeoPaths.Point; sp: LeoSplines.Spline; fig: Leonardo.Figure;
 			sm: LeoPaths.SplitMsg; recv: Leonardo.Shape;
 	BEGIN

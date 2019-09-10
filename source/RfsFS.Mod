@@ -22,7 +22,7 @@ TYPE
 	END;
 
 	Buffer* = POINTER TO RECORD (Files.Hint)
-		apos*, lim*: LONGINT;
+		apos*, lim*: SIGNED32;
 		mod: BOOLEAN;
 		next: Buffer;
 		data*: DataSector
@@ -36,11 +36,11 @@ TYPE
 		(** Creates a new file with the specified name **)
 		PROCEDURE New0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
-			res: WORD;
+			res: INTEGER;
 			f: File;
 			buf: Buffer;
 			namebuf, nameTemp: FileName;
-			hashval, errorcode: LONGINT;
+			hashval, errorcode: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			f := NIL;
 			Check(name, namebuf, res);
@@ -83,11 +83,11 @@ TYPE
 		(** opens an existing File **)
 		PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
-			res: WORD;
+			res: INTEGER;
 			f: File;
 			buf: Buffer;
 			namebuf: FileName;
-			hashval, errorcode, fileLen, time, date: LONGINT;
+			hashval, errorcode, fileLen, time, date: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			f := NIL;
 			Check(name, namebuf, res);
@@ -135,8 +135,8 @@ TYPE
 		END Old0;
 
 		(** deletes a file, res = 0 indicates succsess **)
-		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: WORD);
-		VAR namebuf: FileName; errorcode: LONGINT;
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: INTEGER);
+		VAR namebuf: FileName; errorcode: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			Check(name, namebuf, res);
 			IF res = 0 THEN
@@ -164,8 +164,8 @@ TYPE
 		END Delete0;
 
 		(** renames a file. res = 0 indicates success **)
-		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
-		VAR oldbuf, newbuf: FileName; errorcode: LONGINT;
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER);
+		VAR oldbuf, newbuf: FileName; errorcode: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			Check(old, oldbuf, res);
 			IF res = 0 THEN
@@ -197,7 +197,7 @@ TYPE
 		(** enumerates the contents of a directory **)
 		PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
 		VAR fnTmp, fn: ARRAY Files.PrefixLength+FnLength OF CHAR; dir: RfsClientProxy.Dir;
-				errorcode, cookie, endOfDir, helper, time, date, size, detail: LONGINT;
+				errorcode, cookie, endOfDir, helper, time, date, size, detail: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			fn := ".";
 			cookie := 0;
@@ -233,11 +233,11 @@ TYPE
 		END Enumerate0;
 
 		(** return an unique id for a file registered in the filesystem **)
-		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): SIGNED32;
 			VAR
-				res: WORD;
+				res: INTEGER;
 				namebuf: FileName;
-				hashval, errorcode: LONGINT;
+				hashval, errorcode: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			hashval := 0;
 			Check(name, namebuf, res);
@@ -263,7 +263,7 @@ TYPE
 		END RfsInit;
 
 		PROCEDURE Finalize;
-			VAR errorcode: LONGINT;
+			VAR errorcode: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			stubs.Unmount(errorcode);
 			Finalize^;	(* see note in Files *)
@@ -274,16 +274,16 @@ TYPE
 TYPE
 	File* = OBJECT (Files.File)
 		VAR
-			aleng, bleng: LONGINT;
-			nofbufs: LONGINT;
+			aleng, bleng: SIGNED32;
+			nofbufs: SIGNED32;
 			modH, registered: BOOLEAN;
 			firstbuf*: Buffer;
 			name*, nameTemp*: FileName;
-			time, date: LONGINT;
+			time, date: SIGNED32;
 
 		(** positions a rider on a file at a given position. Riders cannot be positioned past the end of a file **)
 		PROCEDURE Set*(VAR r: Files.Rider; pos: Files.Position);
-		VAR a, b: LONGINT;
+		VAR a, b: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			r.eof := FALSE;
 			r.res := 0;
@@ -292,8 +292,8 @@ TYPE
 			IF pos < 0 THEN
 				a := 0; b := 0;
 			ELSIF pos < aleng*BufSize + bleng THEN
-				a := LONGINT(pos) DIV BufSize;
-				b := LONGINT(pos) MOD BufSize;
+				a := SIGNED32(pos) DIV BufSize;
+				b := SIGNED32(pos) MOD BufSize;
 			ELSE
 				a := aleng;
 				b := bleng;
@@ -325,25 +325,25 @@ TYPE
 
 		(** reads one byte from a file **)
 		PROCEDURE Read*(VAR r: Files.Rider; VAR x: CHAR);
-		VAR buf: Buffer; errorcode: LONGINT;
+		VAR buf: Buffer; errorcode: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			buf := r.hint(Buffer);
-			IF LONGINT(r.apos) # buf.apos THEN
-				buf := GetBuf(SELF, LONGINT(r.apos));
+			IF SIGNED32(r.apos) # buf.apos THEN
+				buf := GetBuf(SELF, SIGNED32(r.apos));
 				r.hint := buf;
 			END;
 			IF r.bpos < buf.lim THEN
 				x := buf.data.B[r.bpos];
 				INC(r.bpos);
-			ELSIF LONGINT(r.apos) < aleng THEN
+			ELSIF SIGNED32(r.apos) < aleng THEN
 				INC(r.apos);
-				buf := SearchBuf(SELF, LONGINT(r.apos));
+				buf := SearchBuf(SELF, SIGNED32(r.apos));
 				IF buf = NIL THEN
 					buf := r.hint(Buffer);
 					IF buf.mod THEN
 						WriteBuf(SELF, buf, errorcode);
 					END ;
-						ReadBuf(SELF, buf, LONGINT(r.apos), errorcode);
+						ReadBuf(SELF, buf, SIGNED32(r.apos), errorcode);
 				ELSE
 					r.hint := buf;
 				END;
@@ -368,7 +368,7 @@ TYPE
 
 		(** read len bytes from a file. **)
 		PROCEDURE ReadBytes*(VAR r: Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE);
-		VAR src, dst: ADDRESS; m: SIZE; errorcode: LONGINT; buf: Buffer;
+		VAR src, dst: ADDRESS; m: SIZE; errorcode: SIGNED32; buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			IF LEN(x)-ofs < len THEN
 				SYSTEM.HALT(19);
@@ -376,8 +376,8 @@ TYPE
 			IF len > 0 THEN
 				dst := ADDRESSOF(x[ofs]);
 				buf := r.hint(Buffer);
-				IF LONGINT(r.apos) # buf.apos THEN
-					buf := GetBuf(SELF, LONGINT(r.apos)); r.hint := buf;
+				IF SIGNED32(r.apos) # buf.apos THEN
+					buf := GetBuf(SELF, SIGNED32(r.apos)); r.hint := buf;
 				END;
 				LOOP
 					IF len <= 0 THEN
@@ -397,16 +397,16 @@ TYPE
 							INC(dst, m);
 							DEC(len, m)
 						END;
-						IF LONGINT(r.apos) < aleng THEN
+						IF SIGNED32(r.apos) < aleng THEN
 							INC(r.apos);
 							r.bpos := 0;
-							buf := SearchBuf(SELF, LONGINT(r.apos));
+							buf := SearchBuf(SELF, SIGNED32(r.apos));
 							IF buf = NIL THEN
 								buf := r.hint(Buffer);
 								IF buf.mod THEN
 									WriteBuf(SELF, buf, errorcode)
 								END;
-								ReadBuf(SELF, buf, LONGINT(r.apos), errorcode);
+								ReadBuf(SELF, buf, SIGNED32(r.apos), errorcode);
 							ELSE
 								r.hint := buf;
 							END;
@@ -441,11 +441,11 @@ TYPE
 
 		(** writes one byte into a file **)
 		PROCEDURE Write*(VAR r: Files.Rider; x: CHAR);
-		VAR buf: Buffer; errorcode: LONGINT;
+		VAR buf: Buffer; errorcode: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			buf := r.hint(Buffer);
-			IF LONGINT(r.apos) # buf.apos THEN
-				buf := GetBuf(SELF, LONGINT(r.apos));
+			IF SIGNED32(r.apos) # buf.apos THEN
+				buf := GetBuf(SELF, SIGNED32(r.apos));
 				r.hint := buf
 			END;
 			IF r.bpos >= buf.lim THEN
@@ -456,13 +456,13 @@ TYPE
 				ELSE
 					WriteBuf(SELF, buf, errorcode);
 					INC(r.apos);
-					buf := SearchBuf(SELF, LONGINT(r.apos));
+					buf := SearchBuf(SELF, SIGNED32(r.apos));
 					IF buf = NIL THEN
 						buf := r.hint(Buffer);
-						IF LONGINT(r.apos) <= aleng THEN
-							ReadBuf(SELF, buf, LONGINT(r.apos), errorcode)
+						IF SIGNED32(r.apos) <= aleng THEN
+							ReadBuf(SELF, buf, SIGNED32(r.apos), errorcode)
 						ELSE
-							buf.apos := LONGINT(r.apos);
+							buf.apos := SIGNED32(r.apos);
 							buf.lim := 1;
 							INC(aleng);
 							bleng := 1;
@@ -488,7 +488,7 @@ TYPE
 
 		(** write len bytes into a file **)
 		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE);
-		VAR src, dst: ADDRESS; m: SIZE; errorcode: LONGINT; buf: Buffer;
+		VAR src, dst: ADDRESS; m: SIZE; errorcode: SIGNED32; buf: Buffer;
 		BEGIN {EXCLUSIVE}
 			IF LEN(x)-ofs < len THEN
 				SYSTEM.HALT(19);
@@ -496,8 +496,8 @@ TYPE
 			IF len > 0 THEN
 				src := ADDRESSOF(x[ofs]);
 				buf := r.hint(Buffer);
-				IF LONGINT(r.apos) # buf.apos THEN
-					buf := GetBuf(SELF, LONGINT(r.apos));
+				IF SIGNED32(r.apos) # buf.apos THEN
+					buf := GetBuf(SELF, SIGNED32(r.apos));
 					r.hint := buf
 				END;
 				LOOP
@@ -514,8 +514,8 @@ TYPE
 					ELSIF m <= BufSize THEN
 						SYSTEM.MOVE(src, dst, len);
 						r.bpos := m;
-						bleng := LONGINT(m);
-						buf.lim := LONGINT(m);
+						bleng := SIGNED32(m);
+						buf.lim := SIGNED32(m);
 						modH := TRUE;
 						EXIT
 					ELSE
@@ -529,13 +529,13 @@ TYPE
 						WriteBuf(SELF, buf, errorcode);
 						INC(r.apos);
 						r.bpos := 0;
-						buf := SearchBuf(SELF, LONGINT(r.apos));
+						buf := SearchBuf(SELF, SIGNED32(r.apos));
 						IF buf = NIL THEN
 							buf := r.hint(Buffer);
-							IF LONGINT(r.apos) <= aleng THEN
-								ReadBuf(SELF, buf, LONGINT(r.apos), errorcode)
+							IF SIGNED32(r.apos) <= aleng THEN
+								ReadBuf(SELF, buf, SIGNED32(r.apos), errorcode)
 							ELSE
-								buf.apos := LONGINT(r.apos);
+								buf.apos := SIGNED32(r.apos);
 								buf.lim := 0;
 								INC(aleng);
 								bleng := 0;
@@ -577,7 +577,7 @@ TYPE
 		END Length;
 
 		(** returns the last modified of a file **)
-		PROCEDURE GetDate*(VAR t, d: LONGINT);
+		PROCEDURE GetDate*(VAR t, d: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			t := time;
 			d := date;
@@ -594,8 +594,8 @@ TYPE
 		END GetDate;
 
 		(** sets the write-timestamp of file **)
-		PROCEDURE SetDate*(t, d: LONGINT);
-			VAR errorcode: LONGINT; fsCasted: FileSystem;
+		PROCEDURE SetDate*(t, d: SIGNED32);
+			VAR errorcode: SIGNED32; fsCasted: FileSystem;
 		BEGIN {EXCLUSIVE}
 			time := t;
 			date := d;
@@ -626,10 +626,10 @@ TYPE
 		END GetName;
 
 		(** registers a file in the filesystem **)
-		PROCEDURE Register0*(VAR res: WORD);
+		PROCEDURE Register0*(VAR res: INTEGER);
 		VAR
 			buf: Buffer;
-			errorcode: LONGINT;
+			errorcode: SIGNED32;
 			fsCasted : FileSystem;
 		BEGIN
 			IF ~registered & (name # "") THEN
@@ -660,7 +660,7 @@ TYPE
 
 
 		PROCEDURE Update*;
-			VAR buf: Buffer; errorcode: LONGINT;
+			VAR buf: Buffer; errorcode: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			buf := firstbuf;
 			REPEAT
@@ -684,8 +684,8 @@ TYPE
 VAR newfs*: FileSystem;
 
 
-PROCEDURE Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD);
-	VAR i: LONGINT; ch: CHAR;
+PROCEDURE Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: INTEGER);
+	VAR i: SIGNED32; ch: CHAR;
 BEGIN
 	ch := s[0]; i := 0;
 	IF ch = "/" THEN
@@ -710,8 +710,8 @@ BEGIN
 END Check;
 
 (*
-PROCEDURE CheckTmp(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: WORD);
-	VAR i: LONGINT; ch: CHAR;
+PROCEDURE CheckTmp(VAR s: ARRAY OF CHAR; VAR name: FileName; VAR res: INTEGER);
+	VAR i: SIGNED32; ch: CHAR;
 BEGIN
 	s[6] := 0X;
 	KernelLog.String("CheckTMP : ");
@@ -756,14 +756,14 @@ END CheckTmp;
 
 
 (** Read Buf - reads a buffer from a file f into buf **)
-PROCEDURE ReadBuf(f: File; buf: Buffer; pos: LONGINT; VAR errorcode: LONGINT);
+PROCEDURE ReadBuf(f: File; buf: Buffer; pos: SIGNED32; VAR errorcode: SIGNED32);
 VAR fsCasted: FileSystem; received: SIZE;
 BEGIN
 	fsCasted := f.fs(FileSystem);
 	fsCasted.stubs.Read(f.key, pos*BufSize, BufSize, buf.data.B, 0, received, errorcode);
 	IF errorcode = Ok THEN
 		IF pos < f.aleng THEN
-			buf.lim := received(LONGINT);
+			buf.lim := received(SIGNED32);
 		ELSE
 			buf.lim := f.bleng;
 		END;
@@ -784,7 +784,7 @@ BEGIN
 		fsCasted.stubs.Read(f.key, pos*BufSize, BufSize, buf.data.B, 0, received, errorcode);
 		IF errorcode = Ok THEN
 			IF pos < f.aleng THEN
-				buf.lim := received(LONGINT);
+				buf.lim := received(SIGNED32);
 			ELSE
 				buf.lim := f.bleng;
 			END;
@@ -795,8 +795,8 @@ BEGIN
 END ReadBuf;
 
 (** WriteBuf - writes a buffer buf into a file f **)
-PROCEDURE WriteBuf(f: File; buf: Buffer; VAR errorcode: LONGINT);
-VAR fsCasted: FileSystem; written: LONGINT;
+PROCEDURE WriteBuf(f: File; buf: Buffer; VAR errorcode: SIGNED32);
+VAR fsCasted: FileSystem; written: SIGNED32;
 BEGIN
 	f.modH := TRUE;
 	fsCasted := f.fs(FileSystem);
@@ -822,7 +822,7 @@ BEGIN
 	END;
 END WriteBuf;
 
-PROCEDURE SearchBuf(f: File; pos: LONGINT): Buffer;
+PROCEDURE SearchBuf(f: File; pos: SIGNED32): Buffer;
 VAR buf: Buffer;
 BEGIN
 	buf := f.firstbuf;
@@ -834,8 +834,8 @@ BEGIN
 	RETURN buf
 END SearchBuf;
 
-PROCEDURE GetBuf(f: File; pos: LONGINT): Buffer;
-VAR buf: Buffer; errorcode: LONGINT;
+PROCEDURE GetBuf(f: File; pos: SIGNED32): Buffer;
+VAR buf: Buffer; errorcode: SIGNED32;
 BEGIN
 	buf := f.firstbuf;
 	LOOP

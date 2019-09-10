@@ -14,7 +14,7 @@ VAR
 
 	PROCEDURE StartServer*(context: Commands.Context);
 	VAR
-		res: WORD;
+		res: INTEGER;
 	BEGIN
 		server := TLS.GetConnection();
 		server.Open(123, IP.NilAdr, TCP.NilPort, res)
@@ -25,7 +25,7 @@ VAR
 		server.Close
 	END StopServer;
 
-	PROCEDURE OpenClient*(lport:LONGINT; fadr:IP.Adr; fport:LONGINT; VAR res:WORD);
+	PROCEDURE OpenClient*(lport:SIGNED32; fadr:IP.Adr; fport:SIGNED32; VAR res:INTEGER);
 	BEGIN
 		client := TLS.GetConnection();
 		client.Open(lport, fadr, fport, res);
@@ -38,7 +38,7 @@ VAR
 
 
 	PROCEDURE StartClient*(context: Commands.Context);
-	VAR res:WORD;
+	VAR res:INTEGER;
 	BEGIN
 		OpenClient(TCP.NilPort, IP.StrToAdr("127.0.0.1"), 443, res);
 	END StartClient;
@@ -60,12 +60,12 @@ VAR
 			x : WebHTTP.AdditionalField;
 			host : ARRAY 128 OF CHAR;
 			url, path : ARRAY 2048 OF CHAR;
-			port : LONGINT;
+			port : SIGNED32;
 			fadr: IP.Adr;
 			dechunk: WebHTTP.ChunkedInStream;
 			lin : WebHTTP.LimitedInStream;
 			success:BOOLEAN;
-			res:WORD;
+			res:INTEGER;
 			out:Streams.Reader;
 			ch:CHAR;
 		BEGIN

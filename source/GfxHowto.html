@@ -528,7 +528,7 @@ of a subpath, which can be useful for slightly adjusting an already defined patt
 Let's define a simple dash-dot pattern:
 <P>
 <PRE>
-  VAR on, off: ARRAY 2 OF REAL;
+  VAR on, off: ARRAY 2 OF FLOAT32;
   on[0] := 4; off[0] := 2; on[1] := 1; off[1] := 2;
   Gfx.SetDashPattern(ctxt, on, off, 2, 0);
 </PRE>
@@ -536,7 +536,7 @@ Let's define a simple dash-dot pattern:
 Here follows a simple dash pattern that starts in the middle of a dash:
 <P>
 <PRE>
-  VAR onoff: ARRAY 2 OF REAL;
+  VAR onoff: ARRAY 2 OF FLOAT32;
   onoff[0] := 10;
   Gfx.SetDashPattern(ctxt, onoff, onoff, 1, 5);
 </PRE>
@@ -907,7 +907,7 @@ By enumerating the mask and adding the enumerated rectangles to the region:
 <PRE>
   VAR R: GfxRegions.Region;
   
-  PROCEDURE AddRect (x, y, w, h: INTEGER);
+  PROCEDURE AddRect (x, y, w, h: SIGNED16);
   BEGIN
     GfxRegions.AddRect(R, x, y, x + w, y + h)
   END AddRect;

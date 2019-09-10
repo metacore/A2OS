@@ -17,7 +17,7 @@ TYPE
 			Invalidate(WMRectangles.MakeRect(0, 0, GetWidth(), GetHeight()));
 		END New;
 		(* Overwrite draw procedure because we do not want any interpolation *)
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : WORD);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : INTEGER);
 		BEGIN
 			Draw^(canvas, w, h, 0);
 		END Draw;
@@ -29,7 +29,7 @@ TYPE
 		PROCEDURE Open;
 		VAR str : ARRAY 16 OF CHAR;
 			name, version : ARRAY 64 OF CHAR;
-			i : LONGINT;
+			i : SIGNED32;
 			info : GDI32.BitmapInfoHeader;
 			capRec : VfW.Capturerec;
 			found : BOOLEAN;
@@ -106,7 +106,7 @@ TYPE
 		END Stop;
 
 		PROCEDURE MsgLoop;
-		VAR msg: User32.Msg;  i: LONGINT;
+		VAR msg: User32.Msg;  i: SIGNED32;
 		BEGIN
 			LOOP
 				i := User32.GetMessage( msg, 0, 0, 0 );
@@ -144,7 +144,7 @@ VAR
 PROCEDURE SimulateImage*(context : Commands.Context); (** filename ~ *)
 VAR
 	fn, name : Files.FileName;
-	res, x: WORD; w, h : SIZE;;
+	res, x: INTEGER; w, h : SIZE;;
 	dec : Codecs.ImageDecoder;
 	rdr : Streams.Reader;
 	ext : ARRAY 16 OF CHAR;
@@ -177,16 +177,16 @@ BEGIN
 	END;
 END SimulateImage;
 
-PROCEDURE GetTimer():HUGEINT;
-VAR t : HUGEINT;
+PROCEDURE GetTimer():SIGNED64;
+VAR t : SIGNED64;
 	res : Kernel32.BOOL;
 BEGIN
 	res := Kernel32.QueryPerformanceCounter(SYSTEM.VAL(Kernel32.LargeInteger, t));
 	RETURN t;
 END GetTimer;
 
-PROCEDURE GetFreq():HUGEINT;
-VAR t : HUGEINT;
+PROCEDURE GetFreq():SIGNED64;
+VAR t : SIGNED64;
 	res : Kernel32.BOOL;
 BEGIN
 	res := Kernel32.QueryPerformanceFrequency(SYSTEM.VAL(Kernel32.LargeInteger, t));
@@ -196,10 +196,10 @@ END GetFreq;
 PROCEDURE {WINAPI} FrameReceived (hWnd : VfW.HWND; VAR lpVHdr : VfW.VHdr) : User32.LResult;
 VAR y : SIZE;
 	i : ADDRESS;
-	t0, t1 : HUGEINT;
-	t, f : LONGREAL;
+	t0, t1 : SIGNED64;
+	t, f : FLOAT64;
 	trap : BOOLEAN;
-	bytesperpixel:LONGINT;
+	bytesperpixel:SIGNED32;
 BEGIN
 	trap := TRUE;
 	t0 := GetTimer();
@@ -229,7 +229,7 @@ FINALLY
 END FrameReceived;
 
 PROCEDURE {WINAPI} YieldCallback(hWnd : VfW.HWND) : User32.LResult;
-VAR msg: User32.Msg;  i, j: LONGINT;
+VAR msg: User32.Msg;  i, j: SIGNED32;
 BEGIN
 	REPEAT
 		i := VfW.PeekMessage( msg, hWnd, 0, 0, 1 );
@@ -241,7 +241,7 @@ END YieldCallback;
 PROCEDURE SnapshotFirstPossible*;
 VAR str : ARRAY 16 OF CHAR;
 	name, version : ARRAY 64 OF CHAR;
-	i : LONGINT;
+	i : SIGNED32;
 	timer : Kernel.Timer;
 	info : GDI32.BitmapInfoHeader;
 BEGIN

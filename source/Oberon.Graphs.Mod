@@ -12,10 +12,10 @@ CONST
 TYPE
 	Graph* = POINTER TO GraphDesc;
 	GraphDesc* = RECORD (Gadgets.FrameDesc)
-		col*: INTEGER;
-		beg*, end*: INTEGER;
-		x*: ARRAY BufSize OF REAL;
-		y*: ARRAY  BufSize OF REAL
+		col*: SIGNED16;
+		beg*, end*: SIGNED16;
+		x*: ARRAY BufSize OF FLOAT32;
+		y*: ARRAY  BufSize OF FLOAT32
 	END;
 
 PROCEDURE GraphAttr(F: Graph; VAR M: Objects.AttrMsg);
@@ -29,8 +29,8 @@ BEGIN
 	END
 END GraphAttr;
 
-PROCEDURE RestoreGraph(F: Graph; M: Display3.Mask; x, y, w, h: INTEGER);
-VAR i, p, q: INTEGER;
+PROCEDURE RestoreGraph(F: Graph; M: Display3.Mask; x, y, w, h: SIGNED16);
+VAR i, p, q: SIGNED16;
 BEGIN
 	Display3.FilledRect3D(M, Display3.bottomC, Display3.topC, F.col, x, y, w, h, 1, Display.replace);
 
@@ -55,7 +55,7 @@ BEGIN
 END CopyGraph;
 
 PROCEDURE GraphHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h, p, q: INTEGER; F0: Graph; R: Display3.Mask;
+VAR x, y, w, h, p, q: SIGNED16; F0: Graph; R: Display3.Mask;
 	A: Objects.AttrMsg;
 BEGIN
 	WITH F: Graph DO

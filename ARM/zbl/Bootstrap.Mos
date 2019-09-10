@@ -15,7 +15,7 @@ CONST
 VAR
 	m: Modules.Module;
 	v: OFSDiskVolumes.Volume;
-	res: LONGINT;
+	res: SIGNED32;
 
 BEGIN
 	TraceDevice.Install; (* install trace if it has not yet been installed *)	

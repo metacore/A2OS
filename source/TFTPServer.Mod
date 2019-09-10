@@ -31,47 +31,47 @@ TYPE
 	TFTP = OBJECT
 		VAR socket: UDP.Socket;
 			fip: IP.Adr;
-			lport, fport: LONGINT;
-			res: WORD;
+			lport, fport: SIGNED32;
+			res: INTEGER;
 			dead: BOOLEAN;
 			buf: ARRAY BlockSize + 4 OF CHAR;
 			timer: Kernel.Timer;
 
 		(* Log functions *)
-		PROCEDURE LogEnter(level: WORD);
+		PROCEDURE LogEnter(level: INTEGER);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.Enter END
 		END LogEnter;
 
-		PROCEDURE LogExit(level: WORD);
+		PROCEDURE LogExit(level: INTEGER);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.Exit END
 		END LogExit;
 
-		PROCEDURE Log(level: WORD; CONST s: ARRAY OF CHAR);
+		PROCEDURE Log(level: INTEGER; CONST s: ARRAY OF CHAR);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.String(s) END
 		END Log;
 
-		PROCEDURE LogInt(level: WORD; i: SIZE);
+		PROCEDURE LogInt(level: INTEGER; i: SIZE);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.Int(i, 0) END
 		END LogInt;
 
 		(* Get2 - reads a (big endian) 16bit value from 'buf' at position 'ofs'..'ofs'+1 *)
-		PROCEDURE Get2(CONST buf: ARRAY OF CHAR; ofs: SIZE): LONGINT;
+		PROCEDURE Get2(CONST buf: ARRAY OF CHAR; ofs: SIZE): SIGNED32;
 		BEGIN RETURN ORD(buf[ofs])*100H + ORD(buf[ofs+1])
 		END Get2;
 
 		(* Put2 - writes a (big endian) 16bit value to 'buf' at position 'ofs'..'ofs'+1 *)
-		PROCEDURE Put2(VAR buf: ARRAY OF CHAR; ofs: SIZE; value: LONGINT);
+		PROCEDURE Put2(VAR buf: ARRAY OF CHAR; ofs: SIZE; value: SIGNED32);
 		BEGIN buf[ofs] := CHR(value DIV 100H MOD 100H); buf[ofs+1] := CHR(value MOD 100H)
 		END Put2;
 
 		(* PacketType - returns the type of a packet *)
-		PROCEDURE PacketType(CONST buf: ARRAY OF CHAR): LONGINT;
+		PROCEDURE PacketType(CONST buf: ARRAY OF CHAR): SIGNED32;
 		BEGIN RETURN Get2(buf, 0)
 		END PacketType;
 
 		(* ExtractString - extracts a 0X terminated 8bit string from a buffer *)
 		PROCEDURE ExtractString(CONST buf: ARRAY OF CHAR; VAR ofs: SIZE; VAR s: ARRAY OF CHAR);
-		VAR pos: LONGINT;
+		VAR pos: SIGNED32;
 		BEGIN
 			WHILE (ofs < LEN(buf)) & (buf[ofs] # 0X) DO
 				IF (pos < LEN(s)-1) THEN s[pos] := buf[ofs]; INC(pos) END;
@@ -81,8 +81,8 @@ TYPE
 		END ExtractString;
 
 		(* SendAck - sends an ack packet *)
-		PROCEDURE SendAck(blockNr: LONGINT; VAR res: WORD);
-		VAR ackHdr: ARRAY 4 OF CHAR; retries: LONGINT;
+		PROCEDURE SendAck(blockNr: SIGNED32; VAR res: INTEGER);
+		VAR ackHdr: ARRAY 4 OF CHAR; retries: SIGNED32;
 		BEGIN
 			Put2(ackHdr, 0, ACK); Put2(ackHdr, 2, blockNr);
 			REPEAT
@@ -92,8 +92,8 @@ TYPE
 		END SendAck;
 
 		(* SendError - sends an error packet *)
-		PROCEDURE SendError(errNo: INTEGER; s: ErrorMsg; VAR res: WORD);
-		VAR errHdr: ARRAY BlockSize+4 OF CHAR; p, retries: LONGINT;
+		PROCEDURE SendError(errNo: SIGNED16; s: ErrorMsg; VAR res: INTEGER);
+		VAR errHdr: ARRAY BlockSize+4 OF CHAR; p, retries: SIGNED32;
 		BEGIN
 			Put2(errHdr, 0, ERROR); Put2(errHdr, 2, errNo);
 			IF ((errNo = 0) & (s = "")) OR ((errNo > 0) & (errNo < 8)) THEN s := errorMsg[errNo] END;
@@ -120,15 +120,15 @@ TYPE
 		VAR
 			ip: IP.Adr;
 			ack: ARRAY 4 OF CHAR;
-			port, wait, retries, blockNr: LONGINT;
+			port, wait, retries, blockNr: SIGNED32;
 			len: SIZE;
 			acked: BOOLEAN;
 			file: Files.File;
 			r: Files.Rider;
 
 		(* Init - constructor *)
-		PROCEDURE &Init*(fip: IP.Adr; fport: LONGINT; CONST filename: Files.FileName; VAR res: WORD);
-		VAR retries: LONGINT;
+		PROCEDURE &Init*(fip: IP.Adr; fport: SIGNED32; CONST filename: Files.FileName; VAR res: INTEGER);
+		VAR retries: SIGNED32;
 		BEGIN SELF.fip := fip; SELF.fport := fport;
 			file := Files.Old(filename);
 			IF (file # NIL) THEN
@@ -175,7 +175,7 @@ TYPE
 						acked := (res = Ok) & (PacketType(ack) = ACK) & (Get2(ack, 2) = blockNr) & (IP.AdrsEqual(ip, fip)) & (fport = port);
 						IF acked THEN Log(3, "got ack") ELSE Log(3, "ack failed") END
 					ELSE
-						Log(3, "unknown error "); LogInt(3, LONGINT(res))
+						Log(3, "unknown error "); LogInt(3, SIGNED32(res))
 					END;
 					LogExit(3)
 				UNTIL acked OR (res # Ok) OR (wait > MaxWait)
@@ -194,15 +194,15 @@ TYPE
 	TFTPWRQ = OBJECT(TFTP)
 		VAR
 			ip: IP.Adr;
-			port, waitPacket, retries, blockNr: LONGINT;
+			port, waitPacket, retries, blockNr: SIGNED32;
 			len: SIZE;
 			Abort: BOOLEAN;
 			file: Files.File;
 			r: Files.Rider;
 
 		(* Init - constructor *)
-		PROCEDURE &Init*(fip: IP.Adr; fport: LONGINT; CONST filename: Files.FileName; VAR res: WORD);
-		VAR retries: LONGINT;
+		PROCEDURE &Init*(fip: IP.Adr; fport: SIGNED32; CONST filename: Files.FileName; VAR res: INTEGER);
+		VAR retries: SIGNED32;
 		BEGIN
 			SELF.fip := fip; SELF.fport := fport; res := 0;
 			file := Files.Old(filename);
@@ -300,7 +300,7 @@ TYPE
 			tftprrq: TFTPRRQ;
 			tftpwrq: TFTPWRQ;
 
-		PROCEDURE &Init*(port: LONGINT; VAR res: WORD);
+		PROCEDURE &Init*(port: SIGNED32; VAR res: INTEGER);
 		BEGIN NEW(socket, port, res); lport := port
 		END Init;
 
@@ -335,7 +335,7 @@ TYPE
 								LogEnter(2); Log(2, TFTPId); Log(2, "read request: "); Log(2, errorMsg[1]); LogExit(2);
 								SendError(1, "", res)
 							ELSIF (res # Ok) THEN
-								LogEnter(2); Log(2, TFTPId); Log(2, "read request: "); Log(2, ": error "); LogInt(2, LONGINT(res)); LogExit(2);
+								LogEnter(2); Log(2, TFTPId); Log(2, "read request: "); Log(2, ": error "); LogInt(2, SIGNED32(res)); LogExit(2);
 								SendError(0, "", res)
 							ELSE
 								LogEnter(2); Log(2, TFTPId); Log(2, "read request: "); Log(2, ": transfer started"); LogExit(2)
@@ -352,7 +352,7 @@ TYPE
 									LogEnter(2); Log(2, TFTPId); Log(2, "write request: "); Log(2, errorMsg[6]); LogExit(2);
 									SendError(6, "", res)
 								ELSIF (res # Ok) THEN
-									LogEnter(2); Log(2, TFTPId); Log(2, "write request: "); Log(2, ": error "); LogInt(2, LONGINT(res)); LogExit(2);
+									LogEnter(2); Log(2, TFTPId); Log(2, "write request: "); Log(2, ": error "); LogInt(2, SIGNED32(res)); LogExit(2);
 									SendError(0, "", res)
 								ELSE
 									LogEnter(2); Log(2, TFTPId); Log(2, "write request: "); Log(2, ": transfer started"); LogExit(2)
@@ -366,7 +366,7 @@ TYPE
 				ELSIF (res = UDP.Timeout) THEN (* nothing *)
 				ELSE
 					Stop := TRUE;
-					LogEnter(2); Log(2, TFTPId); Log(2, "socket error "); LogInt(2, LONGINT(res)); LogExit(2);
+					LogEnter(2); Log(2, TFTPId); Log(2, "socket error "); LogInt(2, SIGNED32(res)); LogExit(2);
 				END
 			UNTIL Stop;
 		END;
@@ -375,12 +375,12 @@ TYPE
 
 VAR
 	tftpserver: TFTPServer;
-	TraceLevel: WORD;
+	TraceLevel: INTEGER;
 	errorMsg: ARRAY 8 OF ErrorMsg;
 	generator: Random.Generator;
 
 PROCEDURE Start*;
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	IF (tftpserver = NIL) THEN
 		KernelLog.Enter; KernelLog.String("Starting TFTP Server..."); KernelLog.Exit;

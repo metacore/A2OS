@@ -114,9 +114,9 @@ CONST
 		END;
 	END GetValue;
 
-	PROCEDURE GetIntValue * (CONST key: ARRAY OF CHAR): LONGINT;
+	PROCEDURE GetIntValue * (CONST key: ARRAY OF CHAR): SIGNED32;
 	VAR
-		value: LONGINT;
+		value: SIGNED32;
 	BEGIN
 		IF key = "CpuClockHz" THEN value := CpuClockHz
 		ELSIF key = "CpuNb" THEN value := CpuNb
@@ -157,10 +157,10 @@ CONST
 	PROCEDURE Init *;
 	END Init;
 
-	PROCEDURE WriteIntValue (i: LONGINT; VAR s: ARRAY OF CHAR);
-	VAR j,k: LONGINT; digits: ARRAY 10 OF LONGINT;
+	PROCEDURE WriteIntValue (i: SIGNED32; VAR s: ARRAY OF CHAR);
+	VAR j,k: SIGNED32; digits: ARRAY 10 OF SIGNED32;
 	BEGIN
-		IF (i = MIN(LONGINT)) THEN COPY("-2147483648", s)
+		IF (i = MIN(SIGNED32)) THEN COPY("-2147483648", s)
 		ELSE
 			IF (i < 0) THEN i := -i; s[0] := "-"; j := 1
 			ELSE j := 0

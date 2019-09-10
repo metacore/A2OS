@@ -20,13 +20,13 @@ TYPE
 	(** Socket. Stores the state of a UDP communication endpoint. *)
 	Socket* = OBJECT
 			VAR
-				socket: LONGINT;
-				lport: LONGINT;   (* local port *)
+				socket: SIGNED32;
+				lport: SIGNED32;   (* local port *)
 				open: BOOLEAN;
 
 
 				(** Constructor *)
-				PROCEDURE & Open*( lport: LONGINT;  VAR res: WORD );
+				PROCEDURE & Open*( lport: SIGNED32;  VAR res: INTEGER );
 				VAR laddr: Sockets.SocketAdr;
 				BEGIN
 					ASSERT( (lport >= 0) & (lport < 10000H) );
@@ -53,9 +53,9 @@ TYPE
 					   The data is in "data[ofs..ofs+len-1]".  In case of concurrent sends the datagrams are serialized.
 					*)
 				PROCEDURE Send*( fip: IP.Adr;
-								   fport: LONGINT;
+								   fport: SIGNED32;
 								   CONST data: ARRAY OF CHAR;  ofs, len: SIZE;
-								   VAR res: WORD );
+								   VAR res: INTEGER );
 				VAR addr: Sockets.SocketAdr;
 				BEGIN {EXCLUSIVE}
 					ASSERT( (fport >= 0) & (fport < 10000H) );
@@ -68,7 +68,7 @@ TYPE
 				(** Send a broadcast UDP datagram via interface "int" to port "lport". Normally only used by DHCP.
 					   The data is in "data[ofs..ofs+len-1]".  In case of concurrent sends the datagrams are serialized.
 					*)
-				PROCEDURE SendBroadcast*( int: IP.Interface;  fport: LONGINT;
+				PROCEDURE SendBroadcast*( int: IP.Interface;  fport: SIGNED32;
 										      CONST data: ARRAY OF CHAR;  ofs, len: SIZE );
 				BEGIN (*{EXCLUSIVE}*)
 					ASSERT( (fport >= 0) & (fport < 10000H) );  ASSERT( (len >= 0) & (len <= MaxUDPDataLen) );
@@ -84,8 +84,8 @@ TYPE
 					"res" returns "Timeout" in case of a timeout and "BufferOverflow" if the received datagram was
 					too big.
 				*)
-				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size: SIZE; ms: LONGINT;
-									 VAR fip: IP.Adr;  VAR fport: LONGINT; VAR len: SIZE; VAR res: WORD );
+				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size: SIZE; ms: SIGNED32;
+									 VAR fip: IP.Adr;  VAR fport: SIGNED32; VAR len: SIZE; VAR res: INTEGER );
 				VAR
 					addr: Sockets.SocketAdr; i: SIZE;
 				BEGIN {EXCLUSIVE}

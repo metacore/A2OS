@@ -50,21 +50,21 @@ MODULE SaveParticles IN Oberon;
 
 	TYPE
 		Particle = RECORD
-			x, y, vx, vy: INTEGER;
-			tolive: INTEGER;
-			color: INTEGER;
+			x, y, vx, vy: SIGNED16;
+			tolive: SIGNED16;
+			color: SIGNED16;
 		END;
 
 	VAR
-		particleCount: INTEGER;
-		particleSize: INTEGER;
-		speed: INTEGER;
-		frameRate: INTEGER;
-		origin: INTEGER;
+		particleCount: SIGNED16;
+		particleSize: SIGNED16;
+		speed: SIGNED16;
+		frameRate: SIGNED16;
+		origin: SIGNED16;
 		particle: ARRAY maxParticleCount OF Particle;
 
 
-	PROCEDURE CreateParticle(VAR p: Particle; color: INTEGER);
+	PROCEDURE CreateParticle(VAR p: Particle; color: SIGNED16);
 	BEGIN
 		CASE origin OF
 		| randomOrigin:
@@ -86,7 +86,7 @@ MODULE SaveParticles IN Oberon;
 
 	PROCEDURE StartParticles;
 		VAR
-			i: INTEGER;
+			i: SIGNED16;
 	BEGIN
 		SaveScreen.SetFrameRate(frameRate);
 		Display.ReplConst(Display.FG,
@@ -97,9 +97,9 @@ MODULE SaveParticles IN Oberon;
 
 	PROCEDURE StepParticles;
 		VAR
-			ox, oy, i: INTEGER;
+			ox, oy, i: SIGNED16;
 			p: Particle;
-			rightLimit, topLimit: INTEGER;
+			rightLimit, topLimit: SIGNED16;
 	BEGIN
 		rightLimit := Display.Left + Display.Width - particleSize;
 		topLimit := Display.Bottom + Display.Height - particleSize;
@@ -125,7 +125,7 @@ MODULE SaveParticles IN Oberon;
 	END StopParticles;
 
 	PROCEDURE Install*;	(** {name value} *)
-		VAR name: ARRAY 32 OF CHAR; n: INTEGER;
+		VAR name: ARRAY 32 OF CHAR; n: SIGNED16;
 	BEGIN
 		In.Open;
 		LOOP

@@ -81,16 +81,16 @@ TYPE
 			END;
 		END ExpectAnyIdentifier;
 
-		PROCEDURE ExpectIntegerWithSign(VAR integer: LONGINT): BOOLEAN;
+		PROCEDURE ExpectIntegerWithSign(VAR integer: SIGNED32): BOOLEAN;
 		VAR
 			result, isNegated: BOOLEAN;
 		BEGIN
 			isNegated := ThisSymbol(Scanner.Minus);
 			IF ExpectSymbol(Scanner.Number) & (token.numberType = Scanner.Integer) THEN
 				IF isNegated THEN
-					integer := -token.integer(LONGINT)
+					integer := -token.integer(SIGNED32)
 				ELSE
-					integer := token.integer(LONGINT)
+					integer := token.integer(SIGNED32)
 				END;
 				result := TRUE
 			ELSE
@@ -99,12 +99,12 @@ TYPE
 			RETURN result
 		END ExpectIntegerWithSign;
 
-		PROCEDURE ExpectIntegerWithoutSign(VAR integer: LONGINT): BOOLEAN;
+		PROCEDURE ExpectIntegerWithoutSign(VAR integer: SIGNED32): BOOLEAN;
 		VAR
 			result: BOOLEAN;
 		BEGIN
 			IF ExpectSymbol(Scanner.Number) & (token.numberType = Scanner.Integer) THEN
-				integer := token.integer(LONGINT);
+				integer := token.integer(SIGNED32);
 				result := TRUE
 			ELSE
 				result := FALSE
@@ -157,10 +157,10 @@ TYPE
 		(** parse an intermediate code operand **)
 		PROCEDURE ParseOperand(VAR operand: IntermediateCode.Operand; sectionList: Sections.SectionList);
 		VAR
-			positionOfOperand, pos: Position; registerNumber, symbolOffset, integer: LONGINT;
-			someHugeint: HUGEINT;
+			positionOfOperand, pos: Position; registerNumber, symbolOffset, integer: SIGNED32;
+			someHugeint: SIGNED64;
 			hasTypeDescriptor, isMemoryOperand, lastWasIdentifier, isNegated: BOOLEAN;
-			someLongreal: LONGREAL;
+			someLongreal: FLOAT64;
 			identifier: SyntaxTree.IdentifierString;
 			type: IntermediateCode.Type;
 			sectionOfSymbol: Sections.Section;
@@ -230,7 +230,7 @@ TYPE
 							IntermediateCode.InitNumber(operand, someHugeint);
 						ELSIF type.form = IntermediateCode.Float THEN
 							ASSERT(hasTypeDescriptor);
-							IntermediateCode.InitFloatImmediate(operand, type, REAL(someHugeint))
+							IntermediateCode.InitFloatImmediate(operand, type, FLOAT32(someHugeint))
 						ELSE
 							ASSERT(hasTypeDescriptor & (type.form IN IntermediateCode.Integer));
 							IntermediateCode.InitImmediate(operand, type, someHugeint)
@@ -239,7 +239,7 @@ TYPE
 						IF isNegated THEN someLongreal := -token.real ELSE someLongreal := token.real END;
 						(* if no type description was included: use float type with same amount of bits as address type *)
 						IF ~hasTypeDescriptor THEN
-							IntermediateCode.InitType(type, IntermediateCode.Float, INTEGER(system.addressSize))
+							IntermediateCode.InitType(type, IntermediateCode.Float, SIGNED16(system.addressSize))
 						END;
 						IF type.form IN IntermediateCode.Integer THEN
 							Error(positionOfOperand, "floating point immediate value not applicable")
@@ -272,7 +272,7 @@ TYPE
 			IF isMemoryOperand & ExpectSymbol(Scanner.RightBracket) THEN
 				IntermediateCode.SetType(operand, IntermediateCode.UnsignedIntegerType(system.addressSize)); (* set the type of the inner operand to the platform's address type *)
 				IF ~hasTypeDescriptor THEN
-					IntermediateCode.InitType(type, IntermediateCode.SignedInteger, INTEGER(system.addressSize)) (* default: signed integer type of address size *)
+					IntermediateCode.InitType(type, IntermediateCode.SignedInteger, SIGNED16(system.addressSize)) (* default: signed integer type of address size *)
 				END;
 				IntermediateCode.InitMemory(operand, type, operand, 0) (* TODO: add offset? *)
 			END
@@ -281,9 +281,9 @@ TYPE
 		(** parse an intermediate code instruction **)
 		PROCEDURE ParseInstruction(VAR instruction: IntermediateCode.Instruction; sectionList: Sections.SectionList);
 		VAR
-			opCode: SHORTINT;
+			opCode: SIGNED8;
 			positionOfInstruction, positionOfOperand: Position;
-			operandNumber: LONGINT;
+			operandNumber: SIGNED32;
 			operand: IntermediateCode.Operand;
 			operands: ARRAY 3 OF IntermediateCode.Operand;
 			operandType: IntermediateCode.Type;
@@ -368,7 +368,7 @@ TYPE
 		(** parse a list of section properties **)
 		PROCEDURE ParseSectionProperties(VAR section: IntermediateCode.Section);
 		VAR
-			positionOfProperty: Position;  integer: LONGINT;
+			positionOfProperty: Position;  integer: SIGNED32;
 		BEGIN
 			IF Trace THEN D.Ln; D.String(">>> ParseSectionProperties"); D.Ln END;
 
@@ -431,7 +431,7 @@ TYPE
 			pos, positionOfDirective:Position;
 			identifier: Scanner.IdentifierString;
 			afterModuleDirective, afterImportsDirective, afterFirstSection, isExternalSection: BOOLEAN;
-			sectionType: SHORTINT;
+			sectionType: SIGNED8;
 			section: IntermediateCode.Section;
 			name: Basic.SegmentedName;
 			moduleName: SyntaxTree.IdentifierString;

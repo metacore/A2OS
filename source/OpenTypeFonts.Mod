@@ -22,14 +22,14 @@ MODULE OpenTypeFonts; (** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType
 	TYPE
 		RasterData* = RECORD (OType.RasterData)
 			adr*: ADDRESS;							(* base address of pattern *)
-			bpr*: LONGINT;									(* number of bytes per row *)
-			len*: LONGINT;									(* pattern length *)
+			bpr*: SIGNED32;									(* number of bytes per row *)
+			len*: SIGNED32;									(* pattern length *)
 		END;
 
 		Char* = POINTER TO CharDesc;
 		CharDesc* = RECORD								(** The objects in a font library. *)	(* Note: offset used in GetCharObj *)
-			dx*, x*, y*, w*, h*: INTEGER;					(** Character width, pattern offset (x, y), pattern size (w, h). *)
-			pat*: LONGINT									(** Character raster data. *)
+			dx*, x*, y*, w*, h*: SIGNED16;					(** Character width, pattern offset (x, y), pattern size (w, h). *)
+			pat*: SIGNED32									(** Character raster data. *)
 		END;
 
 	VAR
@@ -39,8 +39,8 @@ MODULE OpenTypeFonts; (** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType
 
 
 	(* fill rectangle in pattern *)
-	PROCEDURE FillRect*(llx, lly, urx, ury, opacity: INTEGER; VAR data: OType.RasterData0);
-		VAR x0, x1, h, n: INTEGER; adr, a: ADDRESS; mask: SET; byte: CHAR;
+	PROCEDURE FillRect*(llx, lly, urx, ury, opacity: SIGNED16; VAR data: OType.RasterData0);
+		VAR x0, x1, h, n: SIGNED16; adr, a: ADDRESS; mask: SET; byte: CHAR;
 	BEGIN
 		WITH data: RasterData DO
 			x0 := llx DIV 8; x1 := urx DIV 8;
@@ -55,7 +55,7 @@ MODULE OpenTypeFonts; (** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType
 			WHILE n > 0 DO
 				ASSERT((data.adr <= a) & (a < data.adr + data.len), 110);
 				SYSTEM.GET(a, byte);
-				SYSTEM.PUT(a, CHR(LONGINT(SET(ORD(byte)) + mask)));
+				SYSTEM.PUT(a, CHR(SIGNED32(SET(ORD(byte)) + mask)));
 				DEC(n); INC(a, data.bpr)
 			END;
 			IF x0 < x1 THEN
@@ -75,7 +75,7 @@ MODULE OpenTypeFonts; (** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType
 					WHILE n > 0 DO
 						ASSERT((data.adr <= a) & (a < data.adr + data.len), 112);
 						SYSTEM.GET(a, byte);
-						SYSTEM.PUT(a, CHR(LONGINT(SET(ORD(byte)) + mask)));
+						SYSTEM.PUT(a, CHR(SIGNED32(SET(ORD(byte)) + mask)));
 						DEC(n); INC(a, data.bpr)
 					END
 				END
@@ -87,8 +87,8 @@ MODULE OpenTypeFonts; (** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType
 		CONST
 			mode = {OType.Hinted, OType.Width, OType.Raster};
 		VAR
-			file: Files.File; r, m: Files.Rider; font: OType.Font; i, chars, ranges, xmin, ymin, xmax, ymax, j: INTEGER;
-			beg, end: ARRAY 64 OF INTEGER; data: RasterData; no, bytes, k: LONGINT;
+			file: Files.File; r, m: Files.Rider; font: OType.Font; i, chars, ranges, xmin, ymin, xmax, ymax, j: SIGNED16;
+			beg, end: ARRAY 64 OF SIGNED16; data: RasterData; no, bytes, k: SIGNED32;
 			ras: OpenTypeScan.Rasterizer;
 	BEGIN
 		file := Files.New(name);
@@ -129,7 +129,7 @@ MODULE OpenTypeFonts; (** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType
 			INC(i)
 		END;
 
-		xmin := MAX(INTEGER); ymin := MAX(INTEGER); xmax := MIN(INTEGER); ymax := MIN(INTEGER);
+		xmin := MAX(SIGNED16); ymin := MAX(SIGNED16); xmax := MIN(SIGNED16); ymax := MIN(SIGNED16);
 		i := 0;
 		WHILE i < ranges DO
 			j := beg[i];
@@ -182,9 +182,9 @@ MODULE OpenTypeFonts; (** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType
 	**)
 	PROCEDURE Make*(context : Commands.Context);
 	VAR
-		temp : ARRAY 256 OF CHAR; tempInt : LONGINT;
-		font: OType.Font; name, fname, str: ARRAY 32 OF CHAR; style: ARRAY 3 OF CHAR; sizes, i: LONGINT;
-		size: ARRAY 16 OF LONGINT; res: INTEGER; inst: OType.Instance;
+		temp : ARRAY 256 OF CHAR; tempInt : SIGNED32;
+		font: OType.Font; name, fname, str: ARRAY 32 OF CHAR; style: ARRAY 3 OF CHAR; sizes, i: SIGNED32;
+		size: ARRAY 16 OF SIGNED32; res: SIGNED16; inst: OType.Instance;
 	BEGIN
 		context.arg.SkipWhitespace; context.arg.String(name);
 		context.out.String(name); context.out.Ln;
@@ -235,7 +235,7 @@ MODULE OpenTypeFonts; (** AUTHOR "eos, PL"; PURPOSE "Bluebottle port of OpenType
 	END Make;
 
 	PROCEDURE IsNumber(str : ARRAY OF CHAR): BOOLEAN;
-	VAR i : LONGINT;
+	VAR i : SIGNED32;
 	BEGIN
 		Strings.StrToInt(str, i);
 		IF i # 0 THEN RETURN TRUE ELSE RETURN FALSE END

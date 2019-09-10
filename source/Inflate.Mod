@@ -19,9 +19,9 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 
 	TYPE
 		Tree = RECORD
-			maxbits, len: LONGINT;
-			code: POINTER TO ARRAY OF RECORD code, len: LONGINT END;
-			blcount, nextcode: POINTER TO ARRAY OF LONGINT
+			maxbits, len: SIGNED32;
+			code: POINTER TO ARRAY OF RECORD code, len: SIGNED32 END;
+			blcount, nextcode: POINTER TO ARRAY OF SIGNED32
 		END;
 
 		Window = RECORD
@@ -32,14 +32,14 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 		Reader* = OBJECT (Streams.Reader)
 			VAR
 				input: Streams.Reader;
-				bits, nbits: LONGINT;
+				bits, nbits: SIGNED32;
 				buffer: RECORD
 					data: ARRAY DefaultReaderSize OF CHAR;
 					size: SIZE
 				END;
 				eof: BOOLEAN;
 
-			PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+			PROCEDURE Receive*(VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 				VAR n: SIZE;
 			BEGIN
 				len := 0;
@@ -73,7 +73,7 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 				res := Streams.Ok; InitReader(SELF.Receive, DefaultReaderSize);
 			END Init;
 
-			PROCEDURE ReadBits(nbits: LONGINT; VAR bits: LONGINT);
+			PROCEDURE ReadBits(nbits: SIGNED32; VAR bits: SIGNED32);
 				VAR ch: CHAR;
 			BEGIN
 				WHILE SELF.nbits < nbits DO
@@ -85,8 +85,8 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 				SELF.bits := ASH(SELF.bits, -nbits); DEC(SELF.nbits, nbits)
 			END ReadBits;
 
-			PROCEDURE SwapBits(VAR bits: LONGINT; n: LONGINT);
-				VAR x, y: LONGINT;
+			PROCEDURE SwapBits(VAR bits: SIGNED32; n: SIGNED32);
+				VAR x, y: SIGNED32;
 			BEGIN
 				x := 0; y := bits;
 				WHILE n > 0 DO
@@ -97,8 +97,8 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 				bits := x
 			END SwapBits;
 
-			PROCEDURE BuildTree(VAR T: Tree; VAR ncode: ARRAY OF LONGINT; ncodes, maxbits: LONGINT);
-				VAR code, len, n, i, j, x: LONGINT;
+			PROCEDURE BuildTree(VAR T: Tree; VAR ncode: ARRAY OF SIGNED32; ncodes, maxbits: SIGNED32);
+				VAR code, len, n, i, j, x: SIGNED32;
 			BEGIN
 				ASSERT(maxbits <= 16);
 				T.maxbits := maxbits;
@@ -149,8 +149,8 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 				END
 			END BuildTree;
 
-			PROCEDURE ReadCode(VAR T: Tree; VAR code: LONGINT);
-				VAR bits, i, l, n: LONGINT;
+			PROCEDURE ReadCode(VAR T: Tree; VAR code: SIGNED32);
+				VAR bits, i, l, n: SIGNED32;
 			BEGIN
 				ReadBits(T.maxbits, bits); i := bits MOD T.len;
 				code := T.code[i].code; l := T.code[i].len; n := T.maxbits-l;
@@ -161,8 +161,8 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 
 			PROCEDURE DynamicHuffman(VAR Temp,litT, distT: Tree);
 				VAR
-					bits, hlit, hdist, hclen, i, j, n, max: LONGINT;
-					clen: ARRAY 286+32 OF LONGINT; lit: ARRAY 286 OF LONGINT; dist: ARRAY 32 OF LONGINT;
+					bits, hlit, hdist, hclen, i, j, n, max: SIGNED32;
+					clen: ARRAY 286+32 OF SIGNED32; lit: ARRAY 286 OF SIGNED32; dist: ARRAY 32 OF SIGNED32;
 			BEGIN
 				ReadBits(5, bits); hlit := 257 + bits MOD 32;
 				ASSERT((hlit >= 257) & (hlit <= 286));
@@ -220,7 +220,7 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 			END DynamicHuffman;
 
 			PROCEDURE FixedHuffman(VAR litT, distT: Tree);
-				VAR i: LONGINT; clen: ARRAY 288 OF LONGINT;
+				VAR i: SIGNED32; clen: ARRAY 288 OF SIGNED32;
 			BEGIN
 				i := 0;
 				WHILE i <= 143 DO
@@ -263,7 +263,7 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 			END CopyData;
 
 			PROCEDURE Inflate;
-				VAR win: POINTER TO Window; litT, distT,temp: Tree; bits, d, l: LONGINT; i, length: SIZE; final: BOOLEAN;
+				VAR win: POINTER TO Window; litT, distT,temp: Tree; bits, d, l: SIGNED32; i, length: SIZE; final: BOOLEAN;
 			BEGIN
 				NEW(win);
 				win.in := 0; win.out := 0; win.size := 0;
@@ -289,8 +289,8 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 								CopyData(win^)
 							END;
 							input.Bytes(win.data, win.in, i, length);
-							DEC(l, length(LONGINT)); INC(win.size, length(LONGINT));
-							win.in := (win.in + length(LONGINT)) MOD WindowSize
+							DEC(l, length(SIGNED32)); INC(win.size, length(SIGNED32));
+							win.in := (win.in + length(SIGNED32)) MOD WindowSize
 						END
 					ELSIF bits < 3 THEN (* compressed *)
 						IF bits = 2 THEN
@@ -310,12 +310,12 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 								DEC(l, 257);
 								i := lenTab[l].extra; l := lenTab[l].base;
 								IF i > 0 THEN
-									ReadBits(i(LONGINT), bits); INC(l, bits MOD ASH(1, i))
+									ReadBits(i(SIGNED32), bits); INC(l, bits MOD ASH(1, i))
 								END;
 								ReadCode(distT, d);
 								i := distTab[d].extra; d := distTab[d].base;
 								IF i > 0 THEN
-									ReadBits(i(LONGINT), bits); INC(d, bits MOD ASH(1, i))
+									ReadBits(i(SIGNED32), bits); INC(d, bits MOD ASH(1, i))
 								END;
 								WHILE win.size > (WindowSize-l) DO
 									CopyData(win^)
@@ -348,9 +348,9 @@ MODULE Inflate; (** AUTHOR "ejz"; PURPOSE "Aos inflate stream"; *)
 		END Reader;
 
 	VAR
-		clenTab: ARRAY 19 OF LONGINT;
-		lenTab: ARRAY 285-257+1 OF RECORD base, extra: LONGINT END;
-		distTab: ARRAY 29-0+1 OF RECORD base, extra: LONGINT END;
+		clenTab: ARRAY 19 OF SIGNED32;
+		lenTab: ARRAY 285-257+1 OF RECORD base, extra: SIGNED32 END;
+		distTab: ARRAY 29-0+1 OF RECORD base, extra: SIGNED32 END;
 
 	PROCEDURE OpenReader*(VAR R: Reader; input: Streams.Reader);
 	BEGIN

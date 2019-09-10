@@ -121,26 +121,26 @@ TYPE
 			pathLabel, fmaskLabel, contentLabel : WMStandardComponents.Label;
 			filledPathString : ARRAY 1024 OF CHAR;
 		BEGIN
-			NEW(panel); panel.bounds.SetExtents(700, 500); panel.fillColor.Set(LONGINT(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
+			NEW(panel); panel.bounds.SetExtents(700, 500); panel.fillColor.Set(SIGNED32(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
 
-			NEW(toolbarPath); toolbarPath.fillColor.Set(LONGINT(0FFFFFFFFH));  toolbarPath.bounds.SetHeight(25);
+			NEW(toolbarPath); toolbarPath.fillColor.Set(SIGNED32(0FFFFFFFFH));  toolbarPath.bounds.SetHeight(25);
 			toolbarPath.alignment.Set(WMComponents.AlignTop);
 			panel.AddContent(toolbarPath);
 
-			NEW(toolbarFMask); toolbarFMask.fillColor.Set(LONGINT(0FFFFFFFFH)); toolbarFMask.bounds.SetHeight(25);
+			NEW(toolbarFMask); toolbarFMask.fillColor.Set(SIGNED32(0FFFFFFFFH)); toolbarFMask.bounds.SetHeight(25);
 			toolbarFMask.alignment.Set(WMComponents.AlignTop);
 			panel.AddContent(toolbarFMask);
 
-			NEW(toolbar); toolbar.fillColor.Set(LONGINT(0FFFFFFFFH)); toolbar.bounds.SetHeight(25);
+			NEW(toolbar); toolbar.fillColor.Set(SIGNED32(0FFFFFFFFH)); toolbar.bounds.SetHeight(25);
 			toolbar.alignment.Set(WMComponents.AlignTop);
 			panel.AddContent(toolbar);
 
-			NEW(toolbarSearch); toolbarSearch.fillColor.Set(LONGINT(0FFFFFFFFH)); toolbarSearch.bounds.SetHeight(20);
+			NEW(toolbarSearch); toolbarSearch.fillColor.Set(SIGNED32(0FFFFFFFFH)); toolbarSearch.bounds.SetHeight(20);
 			toolbarSearch.alignment.Set(WMComponents.AlignTop);
 			panel.AddContent(toolbarSearch);
 
 			NEW(pathLabel); pathLabel.alignment.Set(WMComponents.AlignLeft);
-			pathLabel.bounds.SetWidth(70); pathLabel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			pathLabel.bounds.SetWidth(70); pathLabel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			pathLabel.SetCaption(" Path:");
 			toolbarPath.AddContent(pathLabel);
 
@@ -150,16 +150,16 @@ TYPE
 			pathEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			pathEdit.tv.borders.Set(WMRectangles.MakeRect(3, 3, 1, 1));
 			pathEdit.tv.showBorder.Set(TRUE);
-			pathEdit.fillColor.Set(LONGINT(0FFFFFFFFH));
+			pathEdit.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			toolbarPath.AddContent(pathEdit);
 
 			NEW(pathLabel); pathLabel.alignment.Set(WMComponents.AlignLeft);
-			pathLabel.bounds.SetWidth(300); pathLabel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			pathLabel.bounds.SetWidth(300); pathLabel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			pathLabel.SetCaption(" e.g. FS:, FS:/subDir, FS:/subDir/subSubDir, etc.");
 			toolbarPath.AddContent(pathLabel);
 
 			NEW(fmaskLabel); fmaskLabel.alignment.Set(WMComponents.AlignLeft);
-			fmaskLabel.bounds.SetWidth(70); fmaskLabel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			fmaskLabel.bounds.SetWidth(70); fmaskLabel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			fmaskLabel.SetCaption(" Files:");
 			toolbarFMask.AddContent(fmaskLabel);
 
@@ -169,11 +169,11 @@ TYPE
 			fmaskEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			fmaskEdit.tv.borders.Set(WMRectangles.MakeRect(3, 3, 1, 1));
 			fmaskEdit.tv.showBorder.Set(TRUE);
-			fmaskEdit.fillColor.Set(LONGINT(0FFFFFFFFH));
+			fmaskEdit.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			toolbarFMask.AddContent(fmaskEdit);
 
 			NEW(contentLabel); contentLabel.alignment.Set(WMComponents.AlignLeft);
-			contentLabel.bounds.SetWidth(70); contentLabel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			contentLabel.bounds.SetWidth(70); contentLabel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			contentLabel.SetCaption(" Content:");
 			toolbar.AddContent(contentLabel);
 
@@ -182,7 +182,7 @@ TYPE
 			contentEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			contentEdit.tv.borders.Set(WMRectangles.MakeRect(3, 3, 1, 1));
 			contentEdit.tv.showBorder.Set(TRUE);
-			contentEdit.fillColor.Set(LONGINT(0FFFFFFFFH));
+			contentEdit.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			toolbar.AddContent(contentEdit);
 
 			NEW(searchBtn);
@@ -200,7 +200,7 @@ TYPE
 			toolbarSearch.AddContent(stopBtn);
 
 			NEW(status); status.alignment.Set(WMComponents.AlignBottom); status.bounds.SetHeight(20);
-			panel.AddContent(status); status.fillColor.Set(LONGINT(0CCCCCCFFH));
+			panel.AddContent(status); status.fillColor.Set(SIGNED32(0CCCCCCFFH));
 
 			NEW(statusLabel); statusLabel.bounds.SetWidth(panel.bounds.GetWidth());
 			statusLabel.caption.SetAOC("Status : Ready"); statusLabel.alignment.Set(WMComponents.AlignLeft);
@@ -409,7 +409,7 @@ TYPE
 		VAR mask, name : ARRAY 1024 OF CHAR;
 			flags : SET;
 			len: SIZE;
-			time, date : LONGINT;
+			time, date : SIGNED32;
 			size : Files.Size;
 			e : Files.Enumerator;
 		BEGIN
@@ -442,7 +442,7 @@ TYPE
 		END
 	END Searcher;
 
-	GridDisplayHandler = PROCEDURE {DELEGATE} (CONST data : ARRAY OF WMSystemComponents.DirEntry; noEl : LONGINT);
+	GridDisplayHandler = PROCEDURE {DELEGATE} (CONST data : ARRAY OF WMSystemComponents.DirEntry; noEl : SIGNED32);
 	SearchStatusHandler = PROCEDURE {DELEGATE};
 
 	GridDisplayer= OBJECT
@@ -495,13 +495,13 @@ TYPE
 TYPE
 	RetrievedList = RECORD
 		data : ARRAY RListSize OF WMSystemComponents.DirEntry;
-		noEl : INTEGER;
+		noEl : SIGNED16;
 	END;
 
 	ListBuffer = OBJECT
 	VAR
 		data : ARRAY RListSize OF WMSystemComponents.DirEntry;
-		in, out, maxNoEl : INTEGER;
+		in, out, maxNoEl : SIGNED16;
 		finished : BOOLEAN;
 
 		PROCEDURE &Init*;
@@ -528,7 +528,7 @@ TYPE
 		END Finished;
 
 		PROCEDURE Get(VAR rlist : RetrievedList);
-		VAR i, j : INTEGER;
+		VAR i, j : SIGNED16;
 		BEGIN {EXCLUSIVE}
 			AWAIT((in - out >= maxNoEl) OR finished);
 			i := 0;
@@ -544,7 +544,7 @@ TYPE
 	END ListBuffer;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Restore*(context : WMRestorable.Context);
 VAR w : Window;

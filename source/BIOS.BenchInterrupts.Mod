@@ -23,11 +23,11 @@ CONST
 	MaxNofSamples = 1000000;
 
 VAR
-	mhz : LONGINT;
+	mhz : SIGNED32;
 
-	start, stop : HUGEINT;
+	start, stop : SIGNED64;
 	ngc : SIZE;
-	data : POINTER TO ARRAY OF LONGINT;
+	data : POINTER TO ARRAY OF SIGNED32;
 
 PROCEDURE InterruptHandler(VAR state: Machine.State);
 BEGIN
@@ -48,7 +48,7 @@ END SoftwareInterrupt;
 
 (** Start the 1st Level Interrupt Handler latency benchmark *)
 PROCEDURE Bench*(context : Commands.Context); (** [nofSamples] ~ *)
-VAR nofSamples, ignore : LONGINT; oldNgc, index : SIZE;
+VAR nofSamples, ignore : SIGNED32; oldNgc, index : SIZE;
 BEGIN {EXCLUSIVE}
 	context.arg.SkipWhitespace; context.arg.Int(nofSamples, FALSE);
 	IF (nofSamples < MinNofSamples) THEN nofSamples := MinNofSamples;
@@ -72,12 +72,12 @@ BEGIN {EXCLUSIVE}
 	context.out.String("done."); context.out.Ln;
 END Bench;
 
-PROCEDURE CyclesToMs(cycles : HUGEINT; mhz : LONGINT) : LONGREAL;
+PROCEDURE CyclesToMs(cycles : SIGNED64; mhz : SIGNED32) : FLOAT64;
 BEGIN
-	RETURN LONGREAL(cycles) / (1000*mhz);
+	RETURN FLOAT64(cycles) / (1000*mhz);
 END CyclesToMs;
 
-PROCEDURE ShowMs(cycles : HUGEINT; out : Streams.Writer);
+PROCEDURE ShowMs(cycles : SIGNED64; out : Streams.Writer);
 BEGIN
 	IF (mhz # 0) THEN
 		out.String(" ("); out.FloatFix(CyclesToMs(cycles, mhz), 0, 6, 0); out.String(" ms)");
@@ -87,13 +87,13 @@ END ShowMs;
 (** Show the results of the last benchmark run *)
 PROCEDURE Show*(context : Commands.Context); (** mhz ~ *)
 VAR
-	nofSamples, min, avg, max : LONGINT; i : SIZE; sum : HUGEINT;
-	diff, diffSum, standardDeviation : LONGREAL;
+	nofSamples, min, avg, max : SIGNED32; i : SIZE; sum : SIGNED64;
+	diff, diffSum, standardDeviation : FLOAT64;
 BEGIN {EXCLUSIVE}
 	context.arg.SkipWhitespace; context.arg.Int(mhz, FALSE);
 	IF (data # NIL) THEN
-		nofSamples := LEN(data)(LONGINT);
-		min := MAX(LONGINT); max := MIN(LONGINT); sum := 0;
+		nofSamples := LEN(data)(SIGNED32);
+		min := MAX(SIGNED32); max := MIN(SIGNED32); sum := 0;
 		(* calculate min, max and sum *)
 		FOR i := 0 TO LEN(data)-1 DO
 			IF (data[i] < min) THEN min := data[i];

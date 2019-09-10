@@ -24,31 +24,31 @@ CONST
 	MR = 0;
 
 VAR
-	width, sprayspeed, smearspeed, smx, smy, cdx, cdy: INTEGER; symmetric: SET;
+	width, sprayspeed, smearspeed, smx, smy, cdx, cdy: SIGNED16; symmetric: SET;
 	filled, double: BOOLEAN;
-	sintable: ARRAY 91 OF REAL;
+	sintable: ARRAY 91 OF FLOAT32;
 	oldtrackMM: Rembrandt.TrackMMProc;
 	oldcursor: Oberon.Marker;
-	oldval: INTEGER; oldobj: Objects.Object;
+	oldval: SIGNED16; oldobj: Objects.Object;
 
-PROCEDURE Min(a, b: INTEGER): INTEGER;
+PROCEDURE Min(a, b: SIGNED16): SIGNED16;
 BEGIN
 	IF a<b THEN RETURN a ELSE RETURN b END
 END Min;
 
-PROCEDURE Max(a, b: INTEGER): INTEGER;
+PROCEDURE Max(a, b: SIGNED16): SIGNED16;
 BEGIN
 	IF a<b THEN RETURN b ELSE RETURN a END
 END Max;
 
-PROCEDURE Update(P : Pictures.Picture; x, y, w, h: INTEGER);
+PROCEDURE Update(P : Pictures.Picture; x, y, w, h: SIGNED16);
 BEGIN
 	IF x<0 THEN w:=w+x; x:=0 END;
 	IF y<0 THEN h:=h+y; y:=0 END;
 	IF (w>0) & (h>0) THEN Pictures.Update(P, x, y, w, h) END
 END Update;
 
-PROCEDURE GetRun(P : Pictures.Picture; VAR col, x: INTEGER; y: INTEGER);
+PROCEDURE GetRun(P : Pictures.Picture; VAR col, x: SIGNED16; y: SIGNED16);
 BEGIN
 	IF (y<0) OR (y>=P.height) THEN
 		INC(x); col:= D3.BG
@@ -61,8 +61,8 @@ BEGIN
 	END
 END GetRun;
 
-PROCEDURE FilledCircle(P : Pictures.Picture; xm, ym, r, col: INTEGER);
-VAR x, y , dx, dy, d : INTEGER;
+PROCEDURE FilledCircle(P : Pictures.Picture; xm, ym, r, col: SIGNED16);
+VAR x, y , dx, dy, d : SIGNED16;
 BEGIN
 	x := r; y := 0; d := 2*r-1; dx := 4*r; dy := 0;
 	WHILE y < r DO
@@ -73,7 +73,7 @@ BEGIN
 	END
 END FilledCircle;
 
-PROCEDURE SetPoint(P: Pictures.Picture; x, y, col: INTEGER);
+PROCEDURE SetPoint(P: Pictures.Picture; x, y, col: SIGNED16);
 BEGIN
 	IF width=1 THEN
 		IF symmetric#{} THEN
@@ -107,8 +107,8 @@ BEGIN
 	END;
 END SetPoint;
 
-PROCEDURE Circle(P : Pictures.Picture; xm, ym, r: INTEGER);
-VAR x, y, d, col : INTEGER; sym: SET;
+PROCEDURE Circle(P : Pictures.Picture; xm, ym, r: SIGNED16);
+VAR x, y, d, col : SIGNED16; sym: SET;
 BEGIN
 	sym:= symmetric; symmetric:= {};
 	col:= Rembrandt0.color.col;
@@ -132,8 +132,8 @@ BEGIN
 	symmetric:= sym
 END Circle;
 
-PROCEDURE SetLine(P: Pictures.Picture; x0, y0, x1, y1, col: INTEGER);
-VAR x, y, d, dx, dy, incx, incy, w, h: INTEGER;
+PROCEDURE SetLine(P: Pictures.Picture; x0, y0, x1, y1, col: SIGNED16);
+VAR x, y, d, dx, dy, incx, incy, w, h: SIGNED16;
 BEGIN
 	x:= x0; y:= y0;
 	dx:= (x1-x0)*2; dy:= (y1-y0)*2;
@@ -188,7 +188,7 @@ BEGIN
 	Update(P, x, y, w+width, h+width)
 END SetLine;
 
-PROCEDURE SetRectangle(P: Pictures.Picture; x, y, w, h: INTEGER);
+PROCEDURE SetRectangle(P: Pictures.Picture; x, y, w, h: SIGNED16);
 BEGIN
 	IF (filled) OR (w<width) OR (h<width) THEN
 		Rembrandt0.ReplConst(P, Rembrandt0.color.col, x, y, w, h)
@@ -201,26 +201,26 @@ BEGIN
 	Update(P, x, y, w, h)
 END SetRectangle;
 
-PROCEDURE Fillarea(F: Rembrandt.Frame; x0, y0: INTEGER);
+PROCEDURE Fillarea(F: Rembrandt.Frame; x0, y0: SIGNED16);
 (* fills the area around x0,y0*)
 CONST    size=10;
 
 TYPE Stack=POINTER TO StackDesc;
 		StackDesc=RECORD
-			x, y: ARRAY size OF INTEGER;
+			x, y: ARRAY size OF SIGNED16;
 			prev, next: Stack;
 		END;
 
 VAR  st: Stack;
-	bg: INTEGER;
+	bg: SIGNED16;
 	x, y,
 	l, r, 		(*left and right border of actual line*)
 	l0, r0, 	(*left and right border of previous line*)
 	l2, r2,
-	pos: INTEGER;  	(*stack pointer*)
+	pos: SIGNED16;  	(*stack pointer*)
 	P : Pictures.Picture;
 
-	PROCEDURE PUT(x, y: INTEGER);
+	PROCEDURE PUT(x, y: SIGNED16);
 	(*put the pair x, y onto the stack*)
 	BEGIN
 		IF pos=size THEN
@@ -231,7 +231,7 @@ VAR  st: Stack;
 		INC(pos);
 	END PUT;
 
-	PROCEDURE GET(VAR x, y: INTEGER): BOOLEAN;
+	PROCEDURE GET(VAR x, y: SIGNED16): BOOLEAN;
 	(*fetch the pair x, y from the stack, return FALSE<=>stack is empty*)
 	BEGIN
 		IF pos=0 THEN
@@ -246,7 +246,7 @@ VAR  st: Stack;
 		END; (*if*)
 	END GET;
 
-	PROCEDURE ScanRight(x0, lim, y: INTEGER;  background : BOOLEAN): INTEGER;
+	PROCEDURE ScanRight(x0, lim, y: SIGNED16;  background : BOOLEAN): SIGNED16;
 	(*scan line on y to first pixel in col, starting at x0*)
 	BEGIN
 		IF background THEN WHILE (x0<lim) & (bg # Pictures.Get(P,x0,y)) DO INC(x0) END;
@@ -254,7 +254,7 @@ VAR  st: Stack;
 		RETURN x0;
 	END ScanRight;
 
-	PROCEDURE ScanLeft(x0, lim, y: INTEGER;  background : BOOLEAN): INTEGER;
+	PROCEDURE ScanLeft(x0, lim, y: SIGNED16;  background : BOOLEAN): SIGNED16;
 	(*scan line on y to first pixel in col, starting at x0*)
 	BEGIN
 		IF background THEN WHILE (x0>lim) & (bg #  Pictures.Get(P,x0,y)) DO DEC(x0) END;
@@ -262,7 +262,7 @@ VAR  st: Stack;
 		RETURN x0;
 	END ScanLeft;
 
-	PROCEDURE FillLine(x, y: INTEGER;  VAR l, r: INTEGER);
+	PROCEDURE FillLine(x, y: SIGNED16;  VAR l, r: SIGNED16);
 	(*fill line starting at x, y with black, return left & right end of line*)
 	BEGIN
 		l:=ScanLeft(x, -1, y, FALSE)+1;
@@ -338,7 +338,7 @@ BEGIN
 	Update(P,0,0,P.width,P.height);
 END Fillarea;
 
-PROCEDURE GetColor(P: Pictures.Picture; x, y: INTEGER): INTEGER;
+PROCEDURE GetColor(P: Pictures.Picture; x, y: SIGNED16): SIGNED16;
 BEGIN
 	IF (x<0) OR (x>P.width) OR (y<0) OR (y>P.height) THEN
 		RETURN D3.BG
@@ -347,8 +347,8 @@ BEGIN
 	END
 END GetColor;
 
-PROCEDURE SetSmear(F: Rembrandt.Frame; xm, ym, direction: INTEGER);
-VAR r, maxy, maxx, y, d, dx, dy, x, col, dr, i: INTEGER;
+PROCEDURE SetSmear(F: Rembrandt.Frame; xm, ym, direction: SIGNED16);
+VAR r, maxy, maxx, y, d, dx, dy, x, col, dr, i: SIGNED16;
 BEGIN
 	r:= width DIV 2;
 		IF direction= down THEN
@@ -431,8 +431,8 @@ BEGIN
 	Pictures.Update(F.pict, xm-r, ym-r, width, width)
 END SetSmear;
 
-PROCEDURE SetClone(F: Rembrandt.Frame; xm, ym: INTEGER);
-VAR x, y , dx, dy, d, r , col, i, j: INTEGER;
+PROCEDURE SetClone(F: Rembrandt.Frame; xm, ym: SIGNED16);
+VAR x, y , dx, dy, d, r , col, i, j: SIGNED16;
 BEGIN
 	r:= width DIV 2;
 	x := r; y := 0; d := 2*r-1; dx := 4*r; dy := 0;
@@ -457,8 +457,8 @@ BEGIN
 	Pictures.Update(F.pict, xm+cdx-r, ym+cdy-r, width, width);
 END SetClone;
 
-PROCEDURE Delete(F: Rembrandt.Frame; xm, ym: INTEGER);
-VAR x, y , dx, dy, d, r , col, i, j: INTEGER;
+PROCEDURE Delete(F: Rembrandt.Frame; xm, ym: SIGNED16);
+VAR x, y , dx, dy, d, r , col, i, j: SIGNED16;
 BEGIN
 	IF width>1 THEN
 		r:= (width+1) DIV 2; INC(xm); INC(ym);
@@ -493,8 +493,8 @@ BEGIN
 	END
 END Delete;
 
-PROCEDURE HandleScale(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR Q: D3.Mask; ox, oy, selx, sely, selw, selh, zoom: INTEGER; S, P: Pictures.Picture;
+PROCEDURE HandleScale(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR Q: D3.Mask; ox, oy, selx, sely, selw, selh, zoom: SIGNED16; S, P: Pictures.Picture;
 BEGIN
 	IF F.selection#Rembrandt.No THEN
 		Rembrandt.GetZoom(F, zoom);
@@ -513,7 +513,7 @@ BEGIN
 	M.res:=0;
 END HandleScale;
 
-PROCEDURE ConvertInttoString(number: INTEGER; VAR text: ARRAY OF CHAR);
+PROCEDURE ConvertInttoString(number: SIGNED16; VAR text: ARRAY OF CHAR);
 BEGIN
 	IF number<0 THEN text[0]:= "-"; number:=-number ELSE text[0]:= " " END;
 	text[1]:= CHR((number MOD 1000) DIV 100 +48);
@@ -522,8 +522,8 @@ BEGIN
 	text[4]:= 0X;
 END ConvertInttoString;
 
-PROCEDURE Rot(mx, my: INTEGER; VAR x, y: INTEGER; VAR phi: INTEGER);
-VAR hx, hy: INTEGER;
+PROCEDURE Rot(mx, my: SIGNED16; VAR x, y: SIGNED16; VAR phi: SIGNED16);
+VAR hx, hy: SIGNED16;
 BEGIN
 	IF phi>180 THEN
 		phi:= phi-360
@@ -546,11 +546,11 @@ BEGIN
 	END
 END Rot;
 
-PROCEDURE HandleRotate(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
+PROCEDURE HandleRotate(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
 CONST dispw=40; disph=16;
-VAR keysum: SET; ox, oy, px, py, dphi, phi: INTEGER; Q: D3.Mask;
-		orx1, ory1, orx2, ory2, orx3, ory3, orx4, ory4, cmx, cmy: INTEGER; S, D, P: Pictures.Picture;
-		ox1, oy1, ox2, oy2, ox3, oy3, ox4, oy4, selx, sely, selw, selh, zoom: INTEGER;
+VAR keysum: SET; ox, oy, px, py, dphi, phi: SIGNED16; Q: D3.Mask;
+		orx1, ory1, orx2, ory2, orx3, ory3, orx4, ory4, cmx, cmy: SIGNED16; S, D, P: Pictures.Picture;
+		ox1, oy1, ox2, oy2, ox3, oy3, ox4, oy4, selx, sely, selw, selh, zoom: SIGNED16;
 		disptext: ARRAY 8 OF CHAR;
 
 	PROCEDURE DrawRectangle;
@@ -562,9 +562,9 @@ VAR keysum: SET; ox, oy, px, py, dphi, phi: INTEGER; Q: D3.Mask;
 		D3.Line(Q, D3.black, Display.solid, orx1, ory1, orx4, ory4, zoom, Display.invert);
 	END DrawRectangle;
 
-	PROCEDURE Rotation(S: Pictures.Picture; phi: INTEGER): Pictures.Picture;
-	VAR D: Pictures.Picture; px, py: INTEGER;
-			dx, dy, tan, sin, maxx, maxy, h1, h2: REAL;
+	PROCEDURE Rotation(S: Pictures.Picture; phi: SIGNED16): Pictures.Picture;
+	VAR D: Pictures.Picture; px, py: SIGNED16;
+			dx, dy, tan, sin, maxx, maxy, h1, h2: FLOAT32;
 	BEGIN
 	IF (phi>0) & (phi<91) THEN
 		sin:= sintable[phi];
@@ -723,8 +723,8 @@ BEGIN
 	M.keys:= keysum
 END HandleRotate;
 
-PROCEDURE HandlePoints(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR keysum: SET; px0, py0, px1, py1, r: INTEGER;
+PROCEDURE HandlePoints(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR keysum: SET; px0, py0, px1, py1, r: SIGNED16;
 BEGIN
 	r:= width DIV 2;
 	keysum := M.keys;
@@ -763,8 +763,8 @@ BEGIN
 	M.keys:= keysum
 END HandlePoints;
 
-PROCEDURE HandleLines(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR keysum: SET; ox, oy, mx, my, px0, py0, px1, py1, x0, y0: INTEGER; Q: D3.Mask; r, zoom: INTEGER; first: BOOLEAN;
+PROCEDURE HandleLines(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR keysum: SET; ox, oy, mx, my, px0, py0, px1, py1, x0, y0: SIGNED16; Q: D3.Mask; r, zoom: SIGNED16; first: BOOLEAN;
 BEGIN
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
 	IF F.car THEN smx:= F.cx; smy:= F.cy END;
@@ -806,8 +806,8 @@ BEGIN
 	END
 END HandleLines;
 
-PROCEDURE HandleRectangles(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR Q: D3.Mask; rx, ry, rw, rh, px, py: INTEGER;
+PROCEDURE HandleRectangles(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR Q: D3.Mask; rx, ry, rw, rh, px, py: SIGNED16;
 BEGIN
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
 	IF F.car THEN smx:= F.cx; smy:= F.cy END;
@@ -820,8 +820,8 @@ BEGIN
 	END
 END HandleRectangles;
 
-PROCEDURE HandleFill(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR keysum: SET; x0, y0: INTEGER;
+PROCEDURE HandleFill(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR keysum: SET; x0, y0: SIGNED16;
 BEGIN
 	IF F.car THEN smx:= F.cx; smy:= F.cy END;
 	keysum := M.keys;
@@ -849,8 +849,8 @@ BEGIN
 	END
 END HandleFill;
 
-PROCEDURE HandleSpray(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR dx, dy, px, py, r, i, dw: INTEGER;
+PROCEDURE HandleSpray(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR dx, dy, px, py, r, i, dw: SIGNED16;
 BEGIN
 	Rembrandt.ScreentoPict(F, x, y, M.X, M.Y, px, py);
 	IF F.car THEN cdx:= F.cx-px; cdy:= F.cy-py; smx:= F.cx; smy:= F.cy END;
@@ -903,8 +903,8 @@ BEGIN
 	UNTIL M.keys = {};
 END HandleSpray;
 
-PROCEDURE HandleSmear(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR keysum: SET; ox, oy, px, py: INTEGER;
+PROCEDURE HandleSmear(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR keysum: SET; ox, oy, px, py: SIGNED16;
 BEGIN
 	Rembrandt.SavePicture(F.pict, 0, 0, F.pict.width, F.pict.height);
 	ox:=M.X; oy:=M.Y; keysum := {};
@@ -925,8 +925,8 @@ BEGIN
 	M.keys:= keysum
 END HandleSmear;
 
-PROCEDURE HandleClone(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR keysum: SET; ox, oy, px, py, r: INTEGER; Q: D3.Mask;
+PROCEDURE HandleClone(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR keysum: SET; ox, oy, px, py, r: SIGNED16; Q: D3.Mask;
 BEGIN
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
 	Rembrandt.SavePicture(F.pict, 0, 0, F.pict.width, F.pict.height);
@@ -959,8 +959,8 @@ BEGIN
 	M.keys:= keysum
 END HandleClone;
 
-PROCEDURE HandleCircle(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR keysum: SET; ox, oy, px, py, mx, my, r, or, d, zoom: INTEGER; Q: D3.Mask;
+PROCEDURE HandleCircle(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR keysum: SET; ox, oy, px, py, mx, my, r, or, d, zoom: SIGNED16; Q: D3.Mask;
 BEGIN
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
 	Rembrandt.GetZoom(F, zoom);
@@ -1009,8 +1009,8 @@ BEGIN
 	M.keys:= keysum
 END HandleCircle;
 
-PROCEDURE HandleSpecialDel(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR keysum: SET; ox, oy, px, py, r, zoom: INTEGER; Q: D3.Mask;
+PROCEDURE HandleSpecialDel(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR keysum: SET; ox, oy, px, py, r, zoom: SIGNED16; Q: D3.Mask;
 BEGIN
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
 	Rembrandt.GetZoom(F, zoom);
@@ -1036,8 +1036,8 @@ BEGIN
 	M.keys:= keysum
 END HandleSpecialDel;
 
-PROCEDURE HandleErease(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR keysum: SET; px0, py0, px1, py1, r, zoom, omx, omy: INTEGER; Q: D3.Mask;
+PROCEDURE HandleErease(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR keysum: SET; px0, py0, px1, py1, r, zoom, omx, omy: SIGNED16; Q: D3.Mask;
 BEGIN
 	Gadgets.MakeMask(F, x, y, M.dlink, Q);
 	Rembrandt.GetZoom(F, zoom);
@@ -1082,8 +1082,8 @@ BEGIN
 	M.keys:= keysum
 END HandleErease;
 
-PROCEDURE HandlePick(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: INTEGER);
-VAR keysum: SET; ox, oy, px, py: INTEGER; obj: Objects.Object; aM: Objects.AttrMsg;
+PROCEDURE HandlePick(F: Rembrandt.Frame; VAR M: Oberon.InputMsg; x, y: SIGNED16);
+VAR keysum: SET; ox, oy, px, py: SIGNED16; obj: Objects.Object; aM: Objects.AttrMsg;
 BEGIN
 	ox:=M.X; oy:=M.Y; keysum := {};
 	Rembrandt.ScreentoPict(F, x, y, M.X, M.Y, px, py);
@@ -1112,7 +1112,7 @@ END HandlePick;
 
 (** Spiegelt den selektierten Bereich an der Y-Achse *)
 PROCEDURE FlipH*;
-VAR x, px, py, pw, ph: INTEGER;
+VAR x, px, py, pw, ph: SIGNED16;
 		 P, D: Pictures.Picture; F: Rembrandt.Frame;
 BEGIN
 	Rembrandt.GetSelectedPict(P, px, py, pw, ph);
@@ -1130,7 +1130,7 @@ END FlipH;
 
 (** Spiegelt den selektierten Bereich an der X-Achse *)
 PROCEDURE FlipV*;
-VAR y, px, py, pw, ph: INTEGER;
+VAR y, px, py, pw, ph: SIGNED16;
 		 P, D: Pictures.Picture; F: Rembrandt.Frame;
 BEGIN
 	Rembrandt.GetSelectedPict(P, px, py, pw, ph);
@@ -1148,9 +1148,9 @@ END FlipV;
 
 (** Generiert aus dem selektierten Bereich ein Picture der Grösse eines Icons *)
 PROCEDURE MakeIcon*;
-VAR P, S, D: Pictures.Picture; px, py, pw, ph, iconw, iconh, bw, bh, bwr, bhr, i, j, k, l, col, r, g, b, weight: INTEGER;
+VAR P, S, D: Pictures.Picture; px, py, pw, ph, iconw, iconh, bw, bh, bwr, bhr, i, j, k, l, col, r, g, b, weight: SIGNED16;
 		T: Texts.Scanner;  F: Rembrandt.Frame;
-		wr, wg, wb: REAL; maxw, maxh, incbwr, incbhr: INTEGER;
+		wr, wg, wb: FLOAT32; maxw, maxh, incbwr, incbhr: SIGNED16;
 BEGIN
 	Texts.OpenScanner(T, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(T);
@@ -1208,7 +1208,7 @@ END MakeIcon;
 (** Dithert ein markiertes Picture mit den Parameter Helligkeit und Sättigung *)
 PROCEDURE Reduce*;
 VAR D: Pictures.Picture;
-		ds, dv, r, g, b: INTEGER;
+		ds, dv, r, g, b: SIGNED16;
 		S: Texts.Scanner;
 		F: Rembrandt.Frame;
 BEGIN
@@ -1446,12 +1446,12 @@ BEGIN
 	END
 END SetWidth;
 
-PROCEDURE GetWidth*(): INTEGER;
+PROCEDURE GetWidth*(): SIGNED16;
 BEGIN
 	RETURN width
 END GetWidth;
 
-PROCEDURE Width*(w: INTEGER);
+PROCEDURE Width*(w: SIGNED16);
 VAR obj: Objects.Object; M: Objects.AttrMsg;
 BEGIN
 	width:= ABS(w);
@@ -1514,7 +1514,7 @@ END SetSmearSpeed;
 
 (** Picturepalette des markierten Pictures laden *)
 PROCEDURE LoadColors*;
-VAR i, r, g, b: INTEGER; F: Rembrandt.Frame;
+VAR i, r, g, b: SIGNED16; F: Rembrandt.Frame;
 BEGIN
 	F:= RembrandtDocs.MarkedFrame();
 	IF F#NIL THEN
@@ -1529,7 +1529,7 @@ END LoadColors;
 
 (** Bildschirmpalette in markiertes Picture speichern *)
 PROCEDURE StoreColors*;
-VAR i, r, g, b: INTEGER; F: Rembrandt.Frame;
+VAR i, r, g, b: SIGNED16; F: Rembrandt.Frame;
 BEGIN
 	F:= RembrandtDocs.MarkedFrame();
 	IF F#NIL THEN

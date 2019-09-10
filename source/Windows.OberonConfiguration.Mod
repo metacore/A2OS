@@ -27,7 +27,7 @@ TYPE
 			END;
 
 	tSegment* = POINTER TO RECORD (tEntry)
-				nEntries: LONGINT;
+				nEntries: SIGNED32;
 				entries: tEntry;
 			END;
 
@@ -38,14 +38,14 @@ TYPE
 
 	tWriter = OBJECT
 			VAR PutCh: WriterProc;
-				EndOfLine: SHORTINT;
+				EndOfLine: SIGNED8;
 
-				PROCEDURE & Init*( w: WriterProc;  eol: SHORTINT );
+				PROCEDURE & Init*( w: WriterProc;  eol: SIGNED8 );
 				BEGIN
 					PutCh := w;  EndOfLine := eol;
 				END Init;
 
-				PROCEDURE WriteSpace( level: LONGINT );
+				PROCEDURE WriteSpace( level: SIGNED32 );
 				VAR tab: CHAR;
 				BEGIN
 					tab := TAB;
@@ -66,7 +66,7 @@ TYPE
 
 				(*
 				PROCEDURE WriteQuotedString(str: ARRAY OF CHAR);
-				VAR i: LONGINT; q1 (* " *) ,q2 (* ' *) : BOOLEAN;  ch: CHAR;
+				VAR i: SIGNED32; q1 (* " *) ,q2 (* ' *) : BOOLEAN;  ch: CHAR;
 				BEGIN
 					ch := str[i]; q1 := FALSE; q2 := FALSE;
 					WHILE(ch #0X) DO
@@ -88,13 +88,13 @@ TYPE
 
 
 				PROCEDURE WriteString( str: ARRAY OF CHAR );
-				VAR ch: CHAR;  i: LONGINT;
+				VAR ch: CHAR;  i: SIGNED32;
 				BEGIN
 					ch := str[i];
 					WHILE (ch # 0X) DO PutCh( ch );  INC( i );  ch := str[i];  END;
 				END WriteString;
 
-				PROCEDURE WriteEntry( e: tEntry;  VAR level: LONGINT );
+				PROCEDURE WriteEntry( e: tEntry;  VAR level: SIGNED32 );
 				BEGIN
 					IF e IS tValue THEN
 					WITH e: tValue DO
@@ -115,7 +115,7 @@ TYPE
 					END;
 				END WriteEntry;
 
-				PROCEDURE WriteSegment( s: tSegment;  VAR level: LONGINT );
+				PROCEDURE WriteSegment( s: tSegment;  VAR level: SIGNED32 );
 				VAR entry: tEntry;
 				BEGIN
 					IF s = NIL THEN RETURN END;
@@ -133,8 +133,8 @@ TYPE
 			VAR writer: tWriter;
 				ch, lastch: CHAR;
 				noerr: BOOLEAN;
-				pos: LONGINT;
-				buflen, bufpos: LONGINT;
+				pos: SIGNED32;
+				buflen, bufpos: SIGNED32;
 				buf: ARRAY MaxIdLen + 2 OF CHAR;
 				och: CHAR;
 				GetCh: ReaderProc;
@@ -147,8 +147,8 @@ TYPE
 
 				PROCEDURE err( n: ARRAY OF CHAR );
 
-					PROCEDURE Int( x: LONGINT );
-					VAR i: LONGINT;
+					PROCEDURE Int( x: SIGNED32 );
+					VAR i: SIGNED32;
 						a: ARRAY 12 OF CHAR;
 					BEGIN
 						i := 0;
@@ -174,8 +174,8 @@ TYPE
 					IF buflen > 0 THEN Getchb( ch ) ELSE GetCh( ch );  INC( pos );  END;
 				END Getch;
 
-				PROCEDURE Get( VAR sym: SHORTINT );
-				VAR s: SHORTINT;
+				PROCEDURE Get( VAR sym: SIGNED8 );
+				VAR s: SIGNED8;
 				BEGIN
 					IF och # 0X THEN  (* ignore controls in string *)
 						IF ch = och THEN och := 0X;  s := char;  Getch( ch ) ELSE
@@ -217,20 +217,20 @@ TYPE
 
 			(** parser *)
 
-				PROCEDURE White( VAR sym: SHORTINT );
+				PROCEDURE White( VAR sym: SIGNED8 );
 				BEGIN
 					WHILE (sym = whitespace) OR (sym = eol) DO Get( sym ) END;
 				END White;
 
-				PROCEDURE SkipNL( VAR sym: SHORTINT );
+				PROCEDURE SkipNL( VAR sym: SIGNED8 );
 				BEGIN
 					WHILE (sym = whitespace) DO Get( sym );  END;
 					IF sym = eol THEN Get( sym ) END;
 					WHILE (sym = whitespace) DO Get( sym );  END;
 				END SkipNL;
 
-				PROCEDURE Entry( VAR sym: SHORTINT;  name: ARRAY OF CHAR;  segment: tSegment );
-				VAR value: tString;  i: LONGINT;
+				PROCEDURE Entry( VAR sym: SIGNED8;  name: ARRAY OF CHAR;  segment: tSegment );
+				VAR value: tString;  i: SIGNED32;
 				BEGIN
 					i := 0;
 					WHILE (sym = char) OR (sym = whitespace) OR (sym = equals) DO
@@ -240,7 +240,7 @@ TYPE
 					value[i] := 0X;  AddValue( segment, name, value );  SkipNL( sym );
 				END Entry;
 
-				PROCEDURE Subsection( VAR sym: SHORTINT;  name: ARRAY OF CHAR;  segment: tSegment ): BOOLEAN;
+				PROCEDURE Subsection( VAR sym: SIGNED8;  name: ARRAY OF CHAR;  segment: tSegment ): BOOLEAN;
 				VAR seg: tSegment;
 				BEGIN
 					IF sym # lbrace THEN RETURN FALSE END;
@@ -249,8 +249,8 @@ TYPE
 					RETURN TRUE
 				END Subsection;
 
-				PROCEDURE AssignHead( VAR sym: SHORTINT;  VAR name: ARRAY OF CHAR ): BOOLEAN;
-				VAR lastsym: SHORTINT;  buflastch: CHAR;
+				PROCEDURE AssignHead( VAR sym: SIGNED8;  VAR name: ARRAY OF CHAR ): BOOLEAN;
+				VAR lastsym: SIGNED8;  buflastch: CHAR;
 				BEGIN
 					ASSERT( buflen = 0 );
 					IF sym # char THEN RETURN FALSE END;
@@ -271,7 +271,7 @@ TYPE
 					END;
 				END AssignHead;
 
-				PROCEDURE Segment( VAR sym: SHORTINT;  segment: tSegment );
+				PROCEDURE Segment( VAR sym: SIGNED8;  segment: tSegment );
 				VAR name: tName;
 				BEGIN
 					WHILE (sym # eot) & (sym # rbrace) DO
@@ -285,7 +285,7 @@ TYPE
 				END Segment;
 
 				PROCEDURE Configuration( ): tSegment;
-				VAR s: SHORTINT;  segment: tSegment;
+				VAR s: SIGNED8;  segment: tSegment;
 				BEGIN
 					buflen := 0;  bufpos := 0;  noerr := TRUE;  Getch( ch );  Get( s );  White( s );
 					segment := AddSegment( NIL , "" );  Segment( s, segment );
@@ -294,11 +294,11 @@ TYPE
 
 			END tParser;
 VAR
-	EndOfLine*: SHORTINT;  PathSeparator-: CHAR;
+	EndOfLine*: SIGNED8;  PathSeparator-: CHAR;
 
 	(** output *)
 
-	PROCEDURE Write*( e: tEntry;  w: WriterProc;  level: LONGINT );
+	PROCEDURE Write*( e: tEntry;  w: WriterProc;  level: SIGNED32 );
 	VAR writer: tWriter;
 	BEGIN
 		IF e = NIL THEN RETURN END;
@@ -367,7 +367,7 @@ VAR
 	END Delete;
 
 	PROCEDURE StripQuotes*( VAR n: ARRAY OF CHAR );
-	VAR i: LONGINT;  ch, och: CHAR;   (* strips the quotes and deletes rest (!) *)
+	VAR i: SIGNED32;  ch, och: CHAR;   (* strips the quotes and deletes rest (!) *)
 	BEGIN
 		ch := n[0];
 		IF (ch = "'") OR (ch = '"') THEN
@@ -433,7 +433,7 @@ VAR
 	END EnumerateVals;
 
 	PROCEDURE Find*( root: tSegment;  name: ARRAY OF CHAR ): tEntry;
-	VAR name0: tName;  ch: CHAR;  i, j: LONGINT;  entry: tEntry;
+	VAR name0: tName;  ch: CHAR;  i, j: SIGNED32;  entry: tEntry;
 	BEGIN
 		i := 1;  j := 0;  ch := name[0];
 		WHILE (ch # 0X) DO
@@ -449,7 +449,7 @@ VAR
 	END Find;
 
 	PROCEDURE FindOrCreateSegment(root: tSegment; name: ARRAY OF CHAR): tSegment;
-	VAR name0: tName;  ch: CHAR;  i, j: LONGINT;  entry: tEntry;
+	VAR name0: tName;  ch: CHAR;  i, j: SIGNED32;  entry: tEntry;
 	BEGIN
 		i := 1;  j := 0;  ch := name[0];
 		WHILE (ch # 0X) DO
@@ -475,7 +475,7 @@ VAR
 	END FindOrCreateSegment;
 
 	PROCEDURE DeletePath*(root: tSegment; name: ARRAY OF CHAR): BOOLEAN;
-		VAR name0: tName;  ch: CHAR;  i, j: LONGINT;  entry: tEntry;
+		VAR name0: tName;  ch: CHAR;  i, j: SIGNED32;  entry: tEntry;
 	BEGIN
 		i := 1;  j := 0;  ch := name[0];
 		WHILE (ch # 0X) DO

@@ -40,10 +40,10 @@ MODULE SaveSisyphus IN Oberon;	(** portable *)
 		END;
 
 	VAR
-		N: LONGINT; (* no. of figurs *)
+		N: SIGNED32; (* no. of figurs *)
 		Fig: POINTER TO ARRAY MaxN OF Icon;	(* stored on heap *)
-		State: INTEGER;	(* frame number *)
-		x0, y0: INTEGER;	(* sisiphus' location *)
+		State: SIGNED16;	(* frame number *)
+		x0, y0: SIGNED16;	(* sisiphus' location *)
 
 	(* declare state variables *)
 
@@ -51,7 +51,7 @@ MODULE SaveSisyphus IN Oberon;	(** portable *)
 	PROCEDURE Start;
 
 		PROCEDURE EmptyFig;	(*Sisiphus*)
-			VAR j: INTEGER;
+			VAR j: SIGNED16;
 		BEGIN N := 1; j := 1;
 			WHILE j < Side DO
 				Fig[0, 0].image[j] := {};
@@ -63,17 +63,17 @@ MODULE SaveSisyphus IN Oberon;	(** portable *)
 		END EmptyFig;
 
 		PROCEDURE LoadFig; (* read portable file format *)	(*Sisiphus*)
-			VAR F: Files.File; R: Files.Rider; i, j: INTEGER;
+			VAR F: Files.File; R: Files.Rider; i, j: SIGNED16;
 
-			PROCEDURE ReadInt (VAR x: LONGINT);
-				VAR n: LONGINT; i: SHORTINT; ch: CHAR;
+			PROCEDURE ReadInt (VAR x: SIGNED32);
+				VAR n: SIGNED32; i: SIGNED8; ch: CHAR;
 			BEGIN i := 0; n := 0; Files.Read(R, ch);
 				WHILE ORD(ch) >= 128 DO INC(n, ASH(ORD(ch) - 128, i)); INC(i, 7); Files.Read(R, ch) END;
 				x := n + ASH(ORD(ch) MOD 64 - ORD(ch) DIV 64 * 64, i)
 			END ReadInt;
 
 			PROCEDURE ReadSet (VAR s: SET);
-				VAR x: LONGINT; i: INTEGER;
+				VAR x: SIGNED32; i: SIGNED16;
 			BEGIN ReadInt(x); s := {}; i := 0;
 				WHILE i < 32 DO
 					IF ODD(x) THEN INCL(s, i) END;
@@ -103,11 +103,11 @@ MODULE SaveSisyphus IN Oberon;	(** portable *)
 			END
 		END LoadFig;
 
-		PROCEDURE HotSpot (X, Y, W, H, X0, Y0: INTEGER);	(*Sisiphus*)
+		PROCEDURE HotSpot (X, Y, W, H, X0, Y0: SIGNED16);	(*Sisiphus*)
 			CONST d = 6;
-			VAR dx, dy: LONGINT; r: INTEGER;
+			VAR dx, dy: SIGNED32; r: SIGNED16;
 
-			PROCEDURE Block (x, y, w, h, col, mode: INTEGER);
+			PROCEDURE Block (x, y, w, h, col, mode: SIGNED16);
 			BEGIN
 				IF x < X THEN DEC(w, X-x); x := X END;
 				IF x+w > X+W THEN w := X+W-x END;
@@ -118,7 +118,7 @@ MODULE SaveSisyphus IN Oberon;	(** portable *)
 				Display.ReplConst(col, x, y, w, h, mode)
 			END Block;
 
-			PROCEDURE Dot4 (x1, x2, y1, y2, col, mode: INTEGER);
+			PROCEDURE Dot4 (x1, x2, y1, y2, col, mode: SIGNED16);
 				CONST r = (d+1) DIV 2;
 			BEGIN
 				Block(x1-r, y1-r, 2*r+1, 2*r+1, col, mode);
@@ -127,8 +127,8 @@ MODULE SaveSisyphus IN Oberon;	(** portable *)
 				Block(x2-r, y2-r, 2*r+1, 2*r+1, col, mode)
 			END Dot4;
 
-			PROCEDURE Circle (X, Y, R, col, mode: INTEGER);
-				VAR x, y, dx, dy, d: INTEGER;
+			PROCEDURE Circle (X, Y, R, col, mode: SIGNED16);
+				VAR x, y, dx, dy, d: SIGNED16;
 			BEGIN
 				x := R; y := 0; dx := 8*(x-1); dy := 8*y+4; d := 1 - 4*R;
 				WHILE x > y DO
@@ -155,7 +155,7 @@ MODULE SaveSisyphus IN Oberon;	(** portable *)
 
 
 	PROCEDURE Step;
-		VAR oldX, oldY : INTEGER;
+		VAR oldX, oldY : SIGNED16;
 	BEGIN
 		oldX := x0; oldY := y0;
 		INC(State); INC(x0,boogieDistance);

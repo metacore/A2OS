@@ -20,8 +20,8 @@ TYPE
 	ColorPicker* = POINTER TO ColorPickerDesc;
 	ColorPickerDesc* = RECORD (Gadgets.FrameDesc)
 		cmd*: ARRAY 64 OF CHAR;		(** Cmd attribute *)
-		colors*: ARRAY 256 OF INTEGER;		(** colors to be displayed *)
-		col*: INTEGER;		(** last color to be picked *)
+		colors*: ARRAY 256 OF SIGNED16;		(** colors to be displayed *)
+		col*: SIGNED16;		(** last color to be picked *)
 	END;
 
 VAR
@@ -36,8 +36,8 @@ END WriteVersion;
 
 (* ----------- Color Picker ---------- *)
 
-PROCEDURE Parse(VAR s: ARRAY OF CHAR; VAR n: INTEGER; VAR values: ARRAY OF INTEGER);
-VAR i: INTEGER; val: LONGINT; neg: BOOLEAN;
+PROCEDURE Parse(VAR s: ARRAY OF CHAR; VAR n: SIGNED16; VAR values: ARRAY OF SIGNED16);
+VAR i: SIGNED16; val: SIGNED32; neg: BOOLEAN;
 BEGIN
 	n := 0;
 	i := 0;
@@ -58,11 +58,11 @@ BEGIN
 	END
 END Parse;
 
-PROCEDURE Unparse(n: INTEGER; VAR values: ARRAY OF INTEGER; VAR s: ARRAY OF CHAR);
-VAR i, j: INTEGER;
+PROCEDURE Unparse(n: SIGNED16; VAR values: ARRAY OF SIGNED16; VAR s: ARRAY OF CHAR);
+VAR i, j: SIGNED16;
 
-	PROCEDURE Out(i: LONGINT);
-	VAR k: INTEGER; x0: LONGINT; a: ARRAY 10 OF CHAR;
+	PROCEDURE Out(i: SIGNED32);
+	VAR k: SIGNED16; x0: SIGNED32; a: ARRAY 10 OF CHAR;
 	BEGIN k := 0;
 		IF i < 0 THEN x0 := -i
 		ELSE x0 := i
@@ -82,7 +82,7 @@ BEGIN
 END Unparse;
 
 PROCEDURE ColorPickerAttr(F: ColorPicker; VAR M: Objects.AttrMsg);
-VAR n: INTEGER;
+VAR n: SIGNED16;
 BEGIN
 	IF M.id = Objects.get THEN
 		IF M.name = "Gen" THEN M.class := Objects.String; COPY("ColorTools.NewColorPicker", M.s); M.res := 0
@@ -110,8 +110,8 @@ BEGIN
 	END;
 END ColorPickerAttr;
 
-PROCEDURE Grid(F: ColorPicker; R: Display3.Mask; b, x, y: INTEGER);
-VAR i, j, c, max: INTEGER;
+PROCEDURE Grid(F: ColorPicker; R: Display3.Mask; b, x, y: SIGNED16);
+VAR i, j, c, max: SIGNED16;
 BEGIN
 	IF Display.Depth(0) >= 8 THEN max := 16 ELSE max := 4 END;
 	c := 0; j := max - 1;
@@ -122,8 +122,8 @@ BEGIN
 	END;
 END Grid;
 
-PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-VAR r, t, r1, t1: INTEGER;
+PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+VAR r, t, r1, t1: SIGNED16;
 BEGIN
 	r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 	IF x < x1 THEN x := x1 END;
@@ -133,11 +133,11 @@ BEGIN
 	w := r - x + 1; h := t - y + 1;
 END ClipAgainst;
 
-PROCEDURE PickColor(F: ColorPicker; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg);
-VAR bw, bw4: INTEGER;
-VAR keys, keysum: SET; X, Y, i, j, li, lj, ofs, px, py, b, max: INTEGER; block: Views.Block;
+PROCEDURE PickColor(F: ColorPicker; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg);
+VAR bw, bw4: SIGNED16;
+VAR keys, keysum: SET; X, Y, i, j, li, lj, ofs, px, py, b, max: SIGNED16; block: Views.Block;
 
-	PROCEDURE Cell(X, Y: INTEGER; VAR i, j: INTEGER);
+	PROCEDURE Cell(X, Y: SIGNED16; VAR i, j: SIGNED16);
 	BEGIN
 		IF Effects.Inside(X, Y, x+2, y + 2 + ofs, bw, bw) THEN
 			i := (X - x - 2) DIV b; j := (Y - (y + 2 + ofs)) DIV b;
@@ -146,7 +146,7 @@ VAR keys, keysum: SET; X, Y, i, j, li, lj, ofs, px, py, b, max: INTEGER; block: 
 		END;
 	END Cell;
 
-	PROCEDURE Highlight(colno, i, j: INTEGER);
+	PROCEDURE Highlight(colno, i, j: SIGNED16);
 	BEGIN
 		IF i >= 0 THEN
 			Oberon.FadeCursor(Oberon.Mouse);
@@ -154,8 +154,8 @@ VAR keys, keysum: SET; X, Y, i, j, li, lj, ofs, px, py, b, max: INTEGER; block: 
 		END;
 	END Highlight;
 
-	PROCEDURE CalcPlace(VAR px, py: INTEGER);
-	VAR cx, cy, cw, ch: INTEGER; (* clipping area *) f: Objects.Object;
+	PROCEDURE CalcPlace(VAR px, py: SIGNED16);
+	VAR cx, cy, cw, ch: SIGNED16; (* clipping area *) f: Objects.Object;
 	BEGIN
 		cx := 0; cy := 0; cw := Display.Width; ch := Display.Height;
 		f := Gadgets.context;
@@ -207,8 +207,8 @@ BEGIN
 	END;
 END PickColor;
 
-PROCEDURE RestoreColorPicker(R: Display3.Mask; F: ColorPicker; x, y, w, h: INTEGER);
-VAR b, max: INTEGER;
+PROCEDURE RestoreColorPicker(R: Display3.Mask; F: ColorPicker; x, y, w, h: SIGNED16);
+VAR b, max: SIGNED16;
 BEGIN
 	IF Display.Depth(0) >= 8 THEN max := 16 ELSE max := 4 END;
 	b := (w - 4) DIV max;
@@ -218,9 +218,9 @@ BEGIN
 END RestoreColorPicker;
 
 PROCEDURE PrintColorPicker(F: ColorPicker; VAR M: Display.DisplayMsg);
-VAR R: Display3.Mask; x, y, w, h, b, i, j, c, max: INTEGER;
+VAR R: Display3.Mask; x, y, w, h, b, i, j, c, max: SIGNED16;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -248,7 +248,7 @@ BEGIN
 END CopyColorPicker;
 
 PROCEDURE ColorPickerHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h, u, v: INTEGER; F0: ColorPicker; R: Display3.Mask; ver: LONGINT;
+VAR x, y, w, h, u, v: SIGNED16; F0: ColorPicker; R: Display3.Mask; ver: SIGNED32;
 BEGIN
 	WITH F: ColorPicker DO
 		IF M IS Objects.AttrMsg THEN
@@ -328,7 +328,7 @@ BEGIN
 END ColorPickerHandler;
 
 PROCEDURE InitColorPicker*(F: ColorPicker);
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN F.W := 32+4; F.H := 32+4; F.col := 15; F.state := {Gadgets.lockedsize};
 	F.handle := ColorPickerHandler;
 	F.cmd := "ColorTools.ChangeColor #Col ~";
@@ -348,7 +348,7 @@ END NewColorPicker;
 Change the color of the selected text or the selected gadgets.
 *)
 PROCEDURE ChangeColor*;
-	VAR col: INTEGER; S: Texts.Scanner;
+	VAR col: SIGNED16; S: Texts.Scanner;
 	MOS: Display.SelectMsg; MTS: Oberon.SelectMsg; MA: Objects.AttrMsg; MU: Gadgets.UpdateMsg;
 	obj: Objects.Object;
 BEGIN

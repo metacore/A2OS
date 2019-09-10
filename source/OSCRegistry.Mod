@@ -53,7 +53,7 @@ MODULE OSCRegistry;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: Registry 
 			END InitOSCMethodTree;
 
 			(* Searches in s[pos..end] for the next '/'. *)
-			PROCEDURE nextAddrPartIndex(s: String; pos: INTEGER; VAR nextpos: INTEGER );
+			PROCEDURE nextAddrPartIndex(s: String; pos: SIGNED16; VAR nextpos: SIGNED16 );
 			BEGIN
 				ASSERT(s[pos] = '/');
 				(* skip '/' *)
@@ -64,7 +64,7 @@ MODULE OSCRegistry;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: Registry 
 			END nextAddrPartIndex;
 
 			(* dumps this element. As this class should never be used, this function traps *)
-			PROCEDURE dump(ident: INTEGER); BEGIN HALT(BadClassUsed); END dump;
+			PROCEDURE dump(ident: SIGNED16); BEGIN HALT(BadClassUsed); END dump;
 
 		END OSCMethodTree;
 
@@ -73,7 +73,7 @@ MODULE OSCRegistry;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: Registry 
 		(* This class represents an OSC Container. *)
 		OSCMethodContainer = OBJECT(OSCMethodTree)
 			VAR
-				size: INTEGER; (* the actual number of elements in the childs array. *)
+				size: SIGNED16; (* the actual number of elements in the childs array. *)
 				childs: Childs;
 
 			PROCEDURE &Init*(fullname, name: String);
@@ -86,11 +86,11 @@ MODULE OSCRegistry;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: Registry 
 			(* This message matches the pattern in the address of the message m with all the stored childs.
 				pos: actual position in the OSC address adr. equals to the first character of the current part of the address
 				adr == m.address *)
-			PROCEDURE runMessage(adr: String; pos: INTEGER; m: OSC.OSCMessage);
+			PROCEDURE runMessage(adr: String; pos: SIGNED16; m: OSC.OSCMessage);
 			VAR
-				i: INTEGER;
+				i: SIGNED16;
 				name: String;
-				nextpos: INTEGER;
+				nextpos: SIGNED16;
 				element: OSCMethodTree;
 			BEGIN
 				nextAddrPartIndex(adr, pos, nextpos);
@@ -114,12 +114,12 @@ MODULE OSCRegistry;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: Registry 
 			(* deletes a method. removes also all containers, that are not needed anymore.
 				returns the number of deleted objects.
 				pos is the actual position in the address string adr. *)
-			PROCEDURE deleteMethod(adr: String; pos: INTEGER): INTEGER;
+			PROCEDURE deleteMethod(adr: String; pos: SIGNED16): SIGNED16;
 				VAR
 					element: OSCMethodTree;
 					name: String;
-					nextpos, elementpos: INTEGER;
-					count: INTEGER;
+					nextpos, elementpos: SIGNED16;
+					count: SIGNED16;
 			BEGIN
 				nextAddrPartIndex(adr, pos, nextpos);
 				name := Strings.Substring(pos+1, nextpos, adr^);
@@ -151,9 +151,9 @@ MODULE OSCRegistry;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: Registry 
 
 			(* adds a method to the OSC Address Space. Creates interior nodes as needed.
 				returns the inserted OSCMethod or NIL on failure. *)
-			PROCEDURE insertMethod(adr: String; pos: INTEGER; method: OSCMethodHandler): OSCMethod;
+			PROCEDURE insertMethod(adr: String; pos: SIGNED16; method: OSCMethodHandler): OSCMethod;
 				VAR
-					nextpos: INTEGER;
+					nextpos: SIGNED16;
 					subaddr, name: String;
 					newcontainer: OSCMethodContainer;
 					newmethod: OSCMethod;
@@ -201,15 +201,15 @@ MODULE OSCRegistry;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: Registry 
 
 			(* searches for a child with name as the last pattern. Returns the corresponding Method or Container *)
 			PROCEDURE search(name: String): OSCMethodTree;
-			VAR i: INTEGER;
+			VAR i: SIGNED16;
 			BEGIN
 				RETURN searchpos(name, i);
 			END search;
 
 			(* searches for a child with name as the last pattern.
 				Returns the corresponding Method or Container and the index of it in the childs array (in pos) *)
-			PROCEDURE searchpos(name: String; VAR pos: INTEGER): OSCMethodTree;
-			VAR i: INTEGER;
+			PROCEDURE searchpos(name: String; VAR pos: SIGNED16): OSCMethodTree;
+			VAR i: SIGNED16;
 			BEGIN
 				FOR i := 0 TO SELF.size - 1 DO
 					IF Strings.Equal(name, childs[i].name) THEN
@@ -224,7 +224,7 @@ MODULE OSCRegistry;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: Registry 
 			PROCEDURE grow;
 				VAR
 					newchilds: Childs;
-					i: INTEGER;
+					i: SIGNED16;
 			BEGIN
 				NEW(newchilds, LEN(childs)*2);
 				FOR i := 0 TO size-1 DO
@@ -237,9 +237,9 @@ MODULE OSCRegistry;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: Registry 
 				This function is called when an character class is encountered during matching.
 				patternpos is the index of the classes opening '['.
 				namepos points to character to match next in the current name. *)
-			PROCEDURE matchcclass(name: String; namepos: INTEGER; pattern: String; patternpos: INTEGER): BOOLEAN;
+			PROCEDURE matchcclass(name: String; namepos: SIGNED16; pattern: String; patternpos: SIGNED16): BOOLEAN;
 			VAR
-				n, p: INTEGER;
+				n, p: SIGNED16;
 				negated, result, done: BOOLEAN;
 			BEGIN
 				n := namepos; p := patternpos;
@@ -289,9 +289,9 @@ MODULE OSCRegistry;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: Registry 
 				 This function is called then a list of strings is encountered in the pattern during matching.
 				 patternpos points to the lists opening '{'.
 				 namepos is the index of the next character to match in name. *)
-			PROCEDURE matchlist(name: String; namepos: INTEGER; pattern: String; patternpos: INTEGER): BOOLEAN;
+			PROCEDURE matchlist(name: String; namepos: SIGNED16; pattern: String; patternpos: SIGNED16): BOOLEAN;
 			VAR
-				restofpattern, p, n: INTEGER;
+				restofpattern, p, n: SIGNED16;
 			BEGIN
 				p := patternpos; n := namepos;
 				(* find rest of pattern *)
@@ -331,9 +331,9 @@ MODULE OSCRegistry;  (** AUTHOR "heulemar"; PURPOSE "OpenSoundControl: Registry 
 				name: The name to match; pattern: The pattern, which is tried to match with name.
 				namepos: The index of the next character to match in name.
 				patternpos: The index of the next character in pattern to match with name. *)
-			PROCEDURE matchpos(name: String; namepos: INTEGER; pattern: String; patternpos: INTEGER): BOOLEAN;
+			PROCEDURE matchpos(name: String; namepos: SIGNED16; pattern: String; patternpos: SIGNED16): BOOLEAN;
 			VAR
-				p, n: INTEGER;
+				p, n: SIGNED16;
 			BEGIN
 				n := namepos;
 				p := patternpos;
@@ -405,8 +405,8 @@ SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 The OpenSound Control WWW page is http://www.cnmat.berkeley.edu/OpenSoundControl *)
 
 			(* dumps this container *)
-			PROCEDURE dump(ident: INTEGER);
-			VAR i: INTEGER;
+			PROCEDURE dump(ident: SIGNED16);
+			VAR i: SIGNED16;
 			BEGIN
 				FOR i := 0 TO ident DO KernelLog.String(dumpident); END;
 				KernelLog.String("Container: "); KernelLog.String(SELF.fullname^);
@@ -439,8 +439,8 @@ The OpenSound Control WWW page is http://www.cnmat.berkeley.edu/OpenSoundControl
 				SELF.method(m);
 			END runMessage;
 
-			PROCEDURE dump(ident: INTEGER);
-			VAR i: INTEGER;
+			PROCEDURE dump(ident: SIGNED16);
+			VAR i: SIGNED16;
 			BEGIN
 				FOR i := 0 TO ident DO KernelLog.String(dumpident); END;
 				KernelLog.String("Method: "); KernelLog.String(SELF.fullname^);
@@ -478,7 +478,7 @@ The OpenSound Control WWW page is http://www.cnmat.berkeley.edu/OpenSoundControl
 			(* removes the method with the address adr (if found), removes also any unneded interior nodes *)
 			PROCEDURE RemoveMethod*(adr: String);
 			VAR
-				i: INTEGER;
+				i: SIGNED16;
 			BEGIN
 				i := root.deleteMethod(adr, 0);
 			END RemoveMethod;
@@ -492,7 +492,7 @@ The OpenSound Control WWW page is http://www.cnmat.berkeley.edu/OpenSoundControl
 			(* dumps the whole registry *)
 			PROCEDURE DumpRegistry*;
 			VAR
-				ident: INTEGER;
+				ident: SIGNED16;
 			BEGIN
 				ident := 0;
 				KernelLog.String("Dump of registry starts:"); KernelLog.Ln;

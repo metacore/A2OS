@@ -13,9 +13,9 @@ TYPE
 			c : WMGraphics.BufferCanvas;
 			state : WMGraphics.CanvasState;
 
-			fx, fy, inffx, inffy, factor, intfactor : REAL;
+			fx, fy, inffx, inffy, factor, intfactor : FLOAT32;
 
-		PROCEDURE &New*(manager : WM.WindowManager; w, h : LONGINT);
+		PROCEDURE &New*(manager : WM.WindowManager; w, h : SIGNED32);
 		BEGIN
 			SELF.manager := manager;
 			NEW(backbuffer);
@@ -40,10 +40,10 @@ TYPE
 			Update(WMRectangles.MakeRect(ENTIER(range.l)-1, ENTIER(range.t)-1, ENTIER(range.r) + 1, ENTIER(range.b) + 1), top)
 		END Refresh;
 
-		PROCEDURE SetRange*(x, y, w, h : REAL; showTransition : BOOLEAN);
+		PROCEDURE SetRange*(x, y, w, h : FLOAT32; showTransition : BOOLEAN);
 
-			PROCEDURE Set(x, y, w, h : REAL);
-			VAR tf : REAL;
+			PROCEDURE Set(x, y, w, h : FLOAT32);
+			VAR tf : FLOAT32;
 			BEGIN
 				range.l := x;
 				range.t := y;
@@ -129,7 +129,7 @@ VAR manager : WM.WindowManager;
 	viewport : WM.ViewPort;
 	sv : View;
 	p : Plugins.Plugin;
-	w, h: LONGINT; res: WORD;
+	w, h: SIGNED32; res: INTEGER;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(fn);
 	IF ~((context.arg.Peek() >= '0') & (context.arg.Peek() <= '9')) THEN
@@ -166,7 +166,7 @@ PROCEDURE SnapShotRange*(context : Commands.Context);
 VAR manager : WM.WindowManager;
 	fn : ARRAY 100 OF CHAR;
 	sv : View;
-	w, h, rl, rt, rw, rh: LONGINT; res: WORD;
+	w, h, rl, rt, rw, rh: SIGNED32; res: INTEGER;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(fn);
 	context.arg.SkipWhitespace; context.arg.Int(w, FALSE);

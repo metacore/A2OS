@@ -26,14 +26,14 @@ MODULE ZipDocs IN Oberon; (** portable *)	(* ejz  *)
 		END;
 	END GetArcName;
 
-	PROCEDURE doExtract(action: INTEGER);
+	PROCEDURE doExtract(action: SIGNED16);
 	VAR
-		S: Texts.Scanner; T, T2: Texts.Text; beg, end, time: LONGINT;
+		S: Texts.Scanner; T, T2: Texts.Text; beg, end, time: SIGNED32;
 		D: Documents.Document;
 		arc: Zip.Archive; ent: Zip.Entry; arcname, name, tempname: ARRAY 256 OF CHAR;
-		line, res: LONGINT;
+		line, res: SIGNED32;
 		tempfile: Files.File;
-		res2 : INTEGER;
+		res2 : SIGNED16;
 	BEGIN
 		Oberon.GetSelection(T, beg, end, time);
 		D := Desktops.CurDoc(Gadgets.context);
@@ -121,8 +121,8 @@ MODULE ZipDocs IN Oberon; (** portable *)	(* ejz  *)
 		name: ARRAY 256 OF CHAR;
 		arc: Zip.Archive;
 		ent: Zip.Entry;
-		res: WORD;
-		n, m: LONGINT;	(* number of extracted files *)
+		res: INTEGER;
+		n, m: SIGNED32;	(* number of extracted files *)
 	BEGIN
 		GetArcName(name);
 		arc := Zip.OpenArchive(name, res);
@@ -149,9 +149,9 @@ MODULE ZipDocs IN Oberon; (** portable *)	(* ejz  *)
 
 	PROCEDURE Add*;
 	VAR
-		S: Texts.Scanner; T: Texts.Text; beg, end, time, res: LONGINT;
+		S: Texts.Scanner; T: Texts.Text; beg, end, time, res: SIGNED32;
 		arc: Zip.Archive;
-		strategy, level: SHORTINT;
+		strategy, level: SIGNED8;
 		arcname, oldname, newname: ARRAY 256 OF CHAR;
 		D: Documents.Document;
 	BEGIN
@@ -222,11 +222,11 @@ MODULE ZipDocs IN Oberon; (** portable *)	(* ejz  *)
 	PROCEDURE Delete*;
 	VAR
 		name: ARRAY 256 OF CHAR;
-		S: Texts.Scanner; T, T2: Texts.Text; beg, end, time: LONGINT;
+		S: Texts.Scanner; T, T2: Texts.Text; beg, end, time: SIGNED32;
 		D: Documents.Document;
 		arc: Zip.Archive;
 		ent: Zip.Entry;
-		line, res: LONGINT;
+		line, res: SIGNED32;
 	BEGIN
 		Oberon.GetSelection(T, beg, end, time);
 		GetArcName(name);
@@ -321,7 +321,7 @@ MODULE ZipDocs IN Oberon; (** portable *)	(* ejz  *)
 	END DocHandler;
 
 	PROCEDURE LoadDoc(D: Documents.Document);
-		VAR res: WORD;
+		VAR res: INTEGER;
 	BEGIN
 		ZipTool.WriteDirectory(W, D.name, TRUE, TRUE, res);
 		Texts.Append(D.dsc(TextGadgets.Frame).text, W.buf)

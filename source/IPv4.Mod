@@ -21,14 +21,14 @@ CONST
 	MinIPHdrLen*= 20;
 	MaxIPHdrLen* = 60;
 	TOS = 10X; (* type-of-service on outgoing datagrams *)
-	BroadcastAdr = LONGINT(0FFFFFFFFH);
+	BroadcastAdr = SIGNED32(0FFFFFFFFH);
 
 TYPE
 	ARPEntry = POINTER TO RECORD
 		next: ARPEntry;
 		ip: IP.Adr;
 		ether: Network.LinkAdr;
-		sendTime, updateTime, updateDate: LONGINT;
+		sendTime, updateTime, updateDate: SIGNED32;
 		complete: BOOLEAN;
 		buf: IP.Packet; (* buffer for a packet waiting to be sent, NIL if none *)
 	END;
@@ -38,7 +38,7 @@ TYPE
 	VAR
 		(* ARP hash table *)
 		arpTable: ARRAY ARPHashSize OF ARPEntry;
-		NARPEntries: LONGINT;
+		NARPEntries: SIGNED32;
 
 		(* The interface is trying to get an IP from a DHCP *)
 		doingDHCPRequest*: BOOLEAN;
@@ -48,9 +48,9 @@ TYPE
 			"name" must be a unique name for this interface (tested in "AddInterface").
 			"dev" must be a Network.LinkDevice that can be used in other interfaces => multiple IP addresses on the
 			same interface. *)
-		PROCEDURE &Constr*(name: IP.Name; dev: Network.LinkDevice; VAR res: WORD);
+		PROCEDURE &Constr*(name: IP.Name; dev: Network.LinkDevice; VAR res: INTEGER);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 
 		BEGIN
 			ASSERT(dev # NIL);
@@ -112,7 +112,7 @@ TYPE
 
 
 		(** Send an IP packet on this interface. *)
-		PROCEDURE Send*(type: LONGINT; fip:IP. Adr; CONST l4hdr, data: ARRAY OF CHAR; h4len, dofs, dlen, TTL: LONGINT);
+		PROCEDURE Send*(type: SIGNED32; fip:IP. Adr; CONST l4hdr, data: ARRAY OF CHAR; h4len, dofs, dlen, TTL: SIGNED32);
 		VAR
 			l3hdr: ARRAY MaxIPHdrLen OF CHAR;
 
@@ -143,7 +143,7 @@ TYPE
 
 
 		(* Internal procedure to perform the rest of the send operation. Used by "Send" and for IP forwarding. *)
-		PROCEDURE DoSend*(destAdr: IP.Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT) ;
+		PROCEDURE DoSend*(destAdr: IP.Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32) ;
 		VAR
 			linkDst: Network.LinkAdr;
 
@@ -187,7 +187,7 @@ TYPE
 
 
 		(* Receive an ARP packet *)
-		PROCEDURE ARPInput* (dev: Network.LinkDevice; type: LONGINT; buffer: Network.Buffer);
+		PROCEDURE ARPInput* (dev: Network.LinkDevice; type: SIGNED32; buffer: Network.Buffer);
 		VAR
 			src, dst: IP.Adr;
 			forus: BOOLEAN;
@@ -225,9 +225,9 @@ TYPE
 
 
 		(* Receive an IP packet *)
-		PROCEDURE IPInput(dev: Network.LinkDevice; type: LONGINT; buffer: Network.Buffer);
+		PROCEDURE IPInput(dev: Network.LinkDevice; type: SIGNED32; buffer: Network.Buffer);
 		VAR
-			hlen: LONGINT;
+			hlen: SIGNED32;
 			src, dst: IP.Adr;
 			receiver: IP.Receiver;
 			int: IP.Interface;
@@ -303,7 +303,7 @@ TYPE
 		(** Performs a check for Network if a packet is accepted by this interface *)
 		PROCEDURE IsIPPacketAccepted(buffer: Network.Buffer): BOOLEAN;
 		VAR
-			dstAdr: LONGINT;
+			dstAdr: SIGNED32;
 			interface: IP.Interface;
 			accept: BOOLEAN;
 
@@ -338,7 +338,7 @@ TYPE
 			If "gatewayAdr" is "NilAdr", the subnet is considered to have no gateway, else it must be in the same
 			subnet as the "localAdr".
 			"domain" can be an empty string. It is normally used by a DNS implementation. It is not used in IP directly. *)
-		PROCEDURE SetAdrs*(localAdr, maskAdr, gatewayAdr: IP.Adr; VAR res: WORD);
+		PROCEDURE SetAdrs*(localAdr, maskAdr, gatewayAdr: IP.Adr; VAR res: INTEGER);
 		VAR
 			maskSet: SET;
 
@@ -372,9 +372,9 @@ TYPE
 			(* compute other addresses  *)
 			maskSet := SYSTEM.VAL(SET, maskAdr.ipv4Adr);
 			subnetAdr.usedProtocol := IP.IPv4;
-			subnetAdr.ipv4Adr := SYSTEM.VAL (LONGINT, SYSTEM.VAL (SET, localAdr.ipv4Adr) * maskSet);
+			subnetAdr.ipv4Adr := SYSTEM.VAL (SIGNED32, SYSTEM.VAL (SET, localAdr.ipv4Adr) * maskSet);
 			broadAdr.usedProtocol := IP.IPv4;
-			broadAdr.ipv4Adr := SYSTEM.VAL (LONGINT, SYSTEM.VAL (SET, subnetAdr.ipv4Adr) + (-maskSet));
+			broadAdr.ipv4Adr := SYSTEM.VAL (SIGNED32, SYSTEM.VAL (SET, subnetAdr.ipv4Adr) + (-maskSet));
 
 			IF (~IP.IsNilAdr (gatewayAdr)) &
 			    ( ~SameSubnet(gatewayAdr.ipv4Adr, localAdr.ipv4Adr, maskAdr.ipv4Adr)) THEN
@@ -411,7 +411,7 @@ TYPE
 
 
 		(** Creates a pseudo-header for checksum calculation (TCP/UDP) and returns the length of this header *)
-		PROCEDURE WritePseudoHeader*(VAR pseudoHdr: ARRAY OF CHAR;  src, dst: IP.Adr; protocol, pktLengthUpperLayer: LONGINT): LONGINT;
+		PROCEDURE WritePseudoHeader*(VAR pseudoHdr: ARRAY OF CHAR;  src, dst: IP.Adr; protocol, pktLengthUpperLayer: SIGNED32): SIGNED32;
 		BEGIN
 			(* UDP/TCP Pseudo-header (for checksum calculation)
 
@@ -458,7 +458,7 @@ TYPE
 		PROCEDURE ARPEnumerate*(handle: IP.ARPHandler);
 		VAR
 			p: ARPEntry;
-			i: LONGINT;
+			i: SIGNED32;
 
 		BEGIN
 			FOR i := 0 TO ARPHashSize-1 DO
@@ -475,7 +475,7 @@ TYPE
 		PROCEDURE ARPEnter(ip:IP. Adr; ether: Network.LinkAdr; forus: BOOLEAN);
 		VAR
 			p, q: ARPEntry;
-			n: LONGINT;
+			n: SIGNED32;
 
 			(* Create a new entry at the front of the hash list *)
 			PROCEDURE NewEntry;
@@ -522,7 +522,7 @@ TYPE
 				END;
 				(* send queued packet *)
 				IF p.buf # NIL THEN
-					dev.Send(ether, EtherTypeIP, p.buf^, p.buf^, p.buf^, 0, 0, 0, LEN(p.buf^)(LONGINT), FALSE);
+					dev.Send(ether, EtherTypeIP, p.buf^, p.buf^, p.buf^, 0, 0, 0, LEN(p.buf^)(SIGNED32), FALSE);
 					p.buf := NIL; (* 26.02.04 : fixes the resend bug *)
 				END;
 				(* update entry *)
@@ -534,7 +534,7 @@ TYPE
 
 
 		(* Send an ARP reply. Assume arp/ofs contains a valid ARP request packet. *)
-		PROCEDURE ARPReply(VAR arp: ARRAY OF CHAR; ofs: LONGINT);
+		PROCEDURE ARPReply(VAR arp: ARRAY OF CHAR; ofs: SIGNED32);
 		BEGIN
 			Machine.AtomicInc(NARPReply);
 			arp[ofs+7] := 2X;	(* reply operation *)
@@ -565,8 +565,8 @@ TYPE
 
 
 		(* Queue an IP packet awaiting an ARP reply. *)
-		PROCEDURE ARPQueue(dst: IP.Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
-		VAR p: ARPEntry; n: LONGINT;
+		PROCEDURE ARPQueue(dst: IP.Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32);
+		VAR p: ARPEntry; n: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			ASSERT (dst.usedProtocol = 4, 2345);
 
@@ -610,7 +610,7 @@ TYPE
 		(* Send an ARP request *)
 		PROCEDURE ARPRequest(ip: IP.Adr);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			arp: ARRAY ARPPktLen OF CHAR;
 		BEGIN
 			ASSERT (ip.usedProtocol = 4, 2345);
@@ -631,7 +631,7 @@ TYPE
 
 		(** Writes the configuration of this interface *)
 		PROCEDURE OutInterface*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 			str : ARRAY 32 OF CHAR;
 		BEGIN
 			IF closed THEN
@@ -677,19 +677,19 @@ TYPE
 
 VAR
 	(* Module variables *)
-	nextID: INTEGER;
+	nextID: SIGNED16;
 
 	(* ARP *)
 	arpProto: ARRAY ARPHdrLen OF CHAR;
-	minARPTime: LONGINT;	(* minimum time between ARP requests in ticks *)
+	minARPTime: SIGNED32;	(* minimum time between ARP requests in ticks *)
 
 	(* ARP counters *)
 	NARPPut-, NARPRcvTotal-, NARPRcvTooSmall-, NARPRcvIgnored-, NARPRcvDuplicate-, NARPBadAddr-,
-	NARPRequest-, NARPReply-, NARPSkipped-: LONGINT;
+	NARPRequest-, NARPReply-, NARPSkipped-: SIGNED32;
 
 
 (* Return TRUE if "adr1" and "adr2" are in the same subnet defined by "mask". *)
-PROCEDURE SameSubnet(adr1, adr2, mask: LONGINT): BOOLEAN;
+PROCEDURE SameSubnet(adr1, adr2, mask: SIGNED32): BOOLEAN;
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP + adr1]
@@ -723,7 +723,7 @@ END SameSubnet;
 
 
 (* Inline hash function for ARP hash table *)
-PROCEDURE ARPHash(ip: LONGINT): LONGINT;
+PROCEDURE ARPHash(ip: SIGNED32): SIGNED32;
 CODE
 #IF I386 THEN
 	MOV EAX, [EBP + ip]
@@ -776,7 +776,7 @@ END IsARPPacketAccepted;
 PROCEDURE IsIPPacketValid(VAR buffer: Network.Buffer): BOOLEAN;
 VAR
 	isValid: BOOLEAN;
-	hlen, tlen, frag: LONGINT;
+	hlen, tlen, frag: SIGNED32;
 
 BEGIN
 	isValid := FALSE;
@@ -847,7 +847,7 @@ END IsARPPacketValid;
 
 
 (* Return a unique datagram ID *)
-PROCEDURE GetNextID*(): INTEGER;
+PROCEDURE GetNextID*(): SIGNED16;
 BEGIN {EXCLUSIVE}
 	INC(nextID);
 	RETURN nextID;

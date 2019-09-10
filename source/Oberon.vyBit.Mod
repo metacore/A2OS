@@ -42,7 +42,7 @@ CONST idversion* = ' v0r0a2';
 
 	(** File storage *)
 
-PROCEDURE Write* (VAR R: Files.Rider;  count: LONGINT;  VAR x: ARRAY OF BOOLEAN;  start: LONGINT);
+PROCEDURE Write* (VAR R: Files.Rider;  count: SIGNED32;  VAR x: ARRAY OF BOOLEAN;  start: SIGNED32);
 
 BEGIN
 	ASSERT(start >= 0, 100);  ASSERT(count >= 0, 101);
@@ -51,7 +51,7 @@ BEGIN
 	WHILE start < count DO Files.WriteBool(R, x[start]);  INC(start) END
 END Write;
 
-PROCEDURE Read* (VAR R: Files.Rider;  count: LONGINT;  VAR x: ARRAY OF BOOLEAN;  start: LONGINT);
+PROCEDURE Read* (VAR R: Files.Rider;  count: SIGNED32;  VAR x: ARRAY OF BOOLEAN;  start: SIGNED32);
 
 BEGIN
 	ASSERT(start >= 0, 100);  ASSERT(count >= 0, 101);
@@ -63,11 +63,11 @@ END Read;
 (*= Formatted write, eg. packed, sparse... *)
 (*! add implementations *)
 (*= file is a series of packages of structure
-<formatkey>: LONGINT
+<formatkey>: SIGNED32
 0: terminate. No further information in this record
 1: plain
 2: repeat packing
-<start><count> : LONGINT
+<start><count> : SIGNED32
 <privat packing data>
 *)
 (*= packed format.
@@ -78,7 +78,7 @@ count: total number of entries
 *)
 (*! check add implementations *)
 
-PROCEDURE WriteFmt* (prefform: LONGINT;  VAR R: Files.Rider;  count: LONGINT;  VAR x: ARRAY OF BOOLEAN;  start: LONGINT);
+PROCEDURE WriteFmt* (prefform: SIGNED32;  VAR R: Files.Rider;  count: SIGNED32;  VAR x: ARRAY OF BOOLEAN;  start: SIGNED32);
 
 	(*= prefform is the preferred storage format, but the internal algorithm may choose a different one *)
 
@@ -91,9 +91,9 @@ BEGIN
 	Files.WriteLInt(R, fmtend)
 END WriteFmt;
 
-PROCEDURE ReadFmt* (VAR form: LONGINT;  VAR R: Files.Rider;  count: LONGINT;  VAR x: ARRAY OF BOOLEAN;  start: LONGINT);
+PROCEDURE ReadFmt* (VAR form: SIGNED32;  VAR R: Files.Rider;  count: SIGNED32;  VAR x: ARRAY OF BOOLEAN;  start: SIGNED32);
 
-	VAR stop: LONGINT;
+	VAR stop: SIGNED32;
 
 BEGIN
 	(*! add implementations for non plain. form ignored so far *)
@@ -107,8 +107,8 @@ END ReadFmt;
 
 (** General adminstration **)
 
-PROCEDURE Fill* (len: LONGINT; VAR x: ARRAY OF BOOLEAN;  start: LONGINT; val: BOOLEAN);
-	VAR i: LONGINT;
+PROCEDURE Fill* (len: SIGNED32; VAR x: ARRAY OF BOOLEAN;  start: SIGNED32; val: BOOLEAN);
+	VAR i: SIGNED32;
 BEGIN
 	ASSERT(start >= 0, 100); ASSERT(len >= 0, 101);
 	ASSERT(start <= LEN(x) - len, 102);
@@ -116,16 +116,16 @@ BEGIN
 	WHILE i < len DO x[i] := val;  INC(i) END
 END Fill;
 
-PROCEDURE FillPat* (count: LONGINT; VAR x: ARRAY OF BOOLEAN;  start, step: LONGINT; 	val: BOOLEAN);
+PROCEDURE FillPat* (count: SIGNED32; VAR x: ARRAY OF BOOLEAN;  start, step: SIGNED32; 	val: BOOLEAN);
 BEGIN ASSERT(start >= 0, 100); ASSERT(count >= 0, 101);
 	ASSERT(count * step <= LEN(x) - start, 102); 	ASSERT(step > 0, 103);
 	count := start + count * step;  (* used as top *)
 	WHILE start < count DO x[start] := val;  INC(start, step) END;
 END FillPat;
 
-PROCEDURE Copy* (len: LONGINT;
-VAR src: ARRAY OF BOOLEAN; srcstart: LONGINT;
-VAR dest: ARRAY OF BOOLEAN; deststart: LONGINT );
+PROCEDURE Copy* (len: SIGNED32;
+VAR src: ARRAY OF BOOLEAN; srcstart: SIGNED32;
+VAR dest: ARRAY OF BOOLEAN; deststart: SIGNED32 );
 BEGIN
 	ASSERT(len > 0, 100);
 	ASSERT(srcstart <= LEN(src) - len, 101);
@@ -133,8 +133,8 @@ BEGIN
 	vyBase.COPYB(src, srcstart, len, dest, deststart);
 END Copy;
 
-PROCEDURE CopyPat* (count: LONGINT; VAR src: ARRAY OF BOOLEAN; start, step: LONGINT; VAR dest: ARRAY OF BOOLEAN;  deststart, deststep: LONGINT);
-	VAR i, j, top: LONGINT;
+PROCEDURE CopyPat* (count: SIGNED32; VAR src: ARRAY OF BOOLEAN; start, step: SIGNED32; VAR dest: ARRAY OF BOOLEAN;  deststart, deststep: SIGNED32);
+	VAR i, j, top: SIGNED32;
 BEGIN
 	ASSERT((start >= 0) & (deststart >= 0), 100); ASSERT(count >= 0, 101);
 	ASSERT((step > 0) & (deststep > 0), 103);
@@ -144,8 +144,8 @@ BEGIN
 	WHILE i < top DO dest[i] := src[i]; INC(i, step); INC(j, deststep) END;
 END CopyPat;
 
-PROCEDURE Count* (len: LONGINT;  VAR x: ARRAY OF BOOLEAN): LONGINT;
-	VAR i: LONGINT;
+PROCEDURE Count* (len: SIGNED32;  VAR x: ARRAY OF BOOLEAN): SIGNED32;
+	VAR i: SIGNED32;
 BEGIN
 	i := 0;
 	WHILE i < len DO IF x[i] THEN INC(i) END;  END;
@@ -154,47 +154,47 @@ END Count;
 
 (** Basic operators **)
 
-PROCEDURE And* (VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN;  len: LONGINT); (** vs 0.1d0 gs *)
-	VAR i: LONGINT;
+PROCEDURE And* (VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN;  len: SIGNED32); (** vs 0.1d0 gs *)
+	VAR i: SIGNED32;
 BEGIN
 	i := 0;  WHILE i < len DO z[i] := x[i] & y[i]; 	INC(i) END;
 END And;
 
-PROCEDURE Or* (VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN;  len: LONGINT); (** vs 0.1d0 gs *)
-VAR i: LONGINT; BEGIN
+PROCEDURE Or* (VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN;  len: SIGNED32); (** vs 0.1d0 gs *)
+VAR i: SIGNED32; BEGIN
 	i := 0;  WHILE i < len DO z[i] := x[i] OR y[i]; 	INC(i) END;
 END Or;
 
-PROCEDURE XOr* (VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN;  len: LONGINT); (** vs 0.1d0 gs *)
-	VAR i: LONGINT;
+PROCEDURE XOr* (VAR x, y: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN;  len: SIGNED32); (** vs 0.1d0 gs *)
+	VAR i: SIGNED32;
 BEGIN
 	i := 0;  WHILE i < len DO z[i] := (x[i] & ~y[i]) OR (~x[i] & y[i]); INC(i) END;
 END XOr;
 
-PROCEDURE Not* (VAR x: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN;  len: LONGINT); (** vs 0.1d0 gs *)
-	VAR i: LONGINT;
+PROCEDURE Not* (VAR x: ARRAY OF BOOLEAN; VAR z: ARRAY OF BOOLEAN;  len: SIGNED32); (** vs 0.1d0 gs *)
+	VAR i: SIGNED32;
 BEGIN
 	i := 0;  WHILE i < len DO z[i] := ~x[i]; 	INC(i) END;
 END Not;
 
 (** 2D matrix support **)
 
-PROCEDURE Get2d* (VAR x: ARRAY OF BOOLEAN;  rows, row, column: LONGINT): BOOLEAN;
+PROCEDURE Get2d* (VAR x: ARRAY OF BOOLEAN;  rows, row, column: SIGNED32): BOOLEAN;
 BEGIN
 	ASSERT(rows >= row);
 	RETURN x[row * rows + column]
 END Get2d;
 
-PROCEDURE Set2d* (VAR x: ARRAY OF BOOLEAN;  rows, row, column: LONGINT; val: BOOLEAN);
+PROCEDURE Set2d* (VAR x: ARRAY OF BOOLEAN;  rows, row, column: SIGNED32; val: BOOLEAN);
 BEGIN
 	ASSERT(rows >= row);
 	x[row * rows + column] := val
 END Set2d;
 
 PROCEDURE Get2dM* (VAR x: ARRAY OF BOOLEAN;
-rowoffset, coloffset, nrrows, nrcolumns: LONGINT; VAR dest: ARRAY OF ARRAY OF BOOLEAN);  (*vs 0.1d0 gs *)
+rowoffset, coloffset, nrrows, nrcolumns: SIGNED32; VAR dest: ARRAY OF ARRAY OF BOOLEAN);  (*vs 0.1d0 gs *)
 	(*= copy a 1-dim array as nrrows,nrcolumns submatrix into dest *)
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 BEGIN	k := 0;
 	FOR i := rowoffset TO rowoffset + nrrows DO
 		FOR j := coloffset TO coloffset + nrcolumns DO dest[i, j] := x[k];  INC(k);
@@ -203,9 +203,9 @@ BEGIN	k := 0;
 END Get2dM;
 
 PROCEDURE Set2dM* (VAR x: ARRAY OF BOOLEAN;
-rowoffset, coloffset, nrrows, nrcolumns: LONGINT; VAR src: ARRAY OF ARRAY OF BOOLEAN);  (*vs 0.1d0 gs *)
+rowoffset, coloffset, nrrows, nrcolumns: SIGNED32; VAR src: ARRAY OF ARRAY OF BOOLEAN);  (*vs 0.1d0 gs *)
 	(*= set a 1-dim array as nrrows,nrcolumns submatrix from src *)
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 BEGIN 	k := 0;
 	FOR i := rowoffset TO rowoffset + nrrows DO
 		FOR j := coloffset TO coloffset + nrcolumns DO x[k] := src[i, j];  INC(k);
@@ -214,13 +214,13 @@ BEGIN 	k := 0;
 END Set2dM;
 
 (* 2D support - FORTRAN-like *)
-PROCEDURE Get2dF* (VAR x: ARRAY OF BOOLEAN;  columns, row, column: LONGINT): BOOLEAN;
+PROCEDURE Get2dF* (VAR x: ARRAY OF BOOLEAN;  columns, row, column: SIGNED32): BOOLEAN;
 BEGIN
 	ASSERT(columns >= column);
 	RETURN x[row + column * columns]
 END Get2dF;
 
-PROCEDURE Set2dF* (VAR x: ARRAY OF BOOLEAN;  columns, row, column: LONGINT; val: BOOLEAN);
+PROCEDURE Set2dF* (VAR x: ARRAY OF BOOLEAN;  columns, row, column: SIGNED32; val: BOOLEAN);
 BEGIN
 	ASSERT(columns >= column);
 	x[row + column * columns] := val

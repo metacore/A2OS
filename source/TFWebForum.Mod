@@ -95,7 +95,7 @@ TYPE
 		END Tail;
 
 		PROCEDURE TAHTMLString(CONST s : ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE s[i] # 0X DO
@@ -111,7 +111,7 @@ TYPE
 		END TAHTMLString;
 
 		PROCEDURE HTMLString(CONST s : ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE s[i] # 0X DO
@@ -128,7 +128,7 @@ TYPE
 		END HTMLString;
 
 (*		PROCEDURE URIString(VAR s : ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE s[i] # 0X DO
@@ -145,7 +145,7 @@ TYPE
 	EntryInfo = RECORD
 		subject, id, datetime, author : String;
 		entry : XML.Element;
-		level : LONGINT;
+		level : SIGNED32;
 	END;
 
 	EntryList = POINTER TO ARRAY OF EntryInfo;
@@ -155,7 +155,7 @@ TYPE
 		forum : XML.Element;
 		errors : BOOLEAN;
 		entryList : EntryList;
-		nofEntries : LONGINT;
+		nofEntries : SIGNED32;
 		title, editor, password : Strings.String;
 		filename : ARRAY 128 OF CHAR;
 
@@ -234,7 +234,7 @@ TYPE
 		END Store;
 
 		PROCEDURE AddEntryToParent*(parent, entry : XML.Element);
-		VAR id, t : LONGINT;
+		VAR id, t : SIGNED32;
 			s : String;
 			ids : ARRAY 10 OF CHAR;
 			contents : XMLObjects.Enumerator;
@@ -314,7 +314,7 @@ TYPE
 		PROCEDURE AddEntryToList(e : XML.Element);
 		VAR subject, author, email, datetime, ip, text : String;
 			path : ARRAY 512 OF CHAR;
-			new : EntryList; i : LONGINT;
+			new : EntryList; i : SIGNED32;
 			t : XML.Element;
 		BEGIN
 			IF entryList = NIL THEN NEW(entryList, 1024) END;
@@ -347,7 +347,7 @@ TYPE
 			END;
 		END Traverse;
 
-		PROCEDURE GetSubjectList*(VAR e : EntryList; VAR nof : LONGINT);
+		PROCEDURE GetSubjectList*(VAR e : EntryList; VAR nof : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF entryList = NIL THEN forum.Traverse(Traverse, NIL) END;
 			e := entryList;
@@ -455,7 +455,7 @@ VAR
 	uriLiteral : ARRAY 256 OF BOOLEAN;
 	empty : String;
 	forumList : ForumList;
-	nofForum : LONGINT;
+	nofForum : SIGNED32;
 
 PROCEDURE GetSubElementByType*(parent: XML.Element; CONST type : ARRAY OF CHAR): XML.Element;
 VAR enum: XMLObjects.Enumerator; p: ANY; e: XML.Element; s: XML.String;
@@ -631,7 +631,7 @@ VAR
 	chunker : WebHTTP.ChunkedOutStream;
 	h : HTMLWriter;
 	entryList : EntryList;
-	nof, i, j : LONGINT;
+	nof, i, j : SIGNED32;
 	link : ARRAY 256 OF CHAR;
 	e : ARRAY 2 OF CHAR;
 BEGIN
@@ -674,7 +674,7 @@ VAR
 	w : Streams.Writer;
 	chunker : WebHTTP.ChunkedOutStream;
 	h : HTMLWriter;
-	nof, i, j, thisIndent : LONGINT;
+	nof, i, j, thisIndent : SIGNED32;
 	entry : XML.Element;
 	firstReply : BOOLEAN;
 	link, title : ARRAY 256 OF CHAR;
@@ -1105,7 +1105,7 @@ BEGIN
 END Access;
 
 PROCEDURE InitURILiterals;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO 255 DO uriLiteral[i] := FALSE END;
 	FOR i :=  61H TO  7AH DO uriLiteral[i] := TRUE END;(* RFC2396 lowalpha *)
@@ -1124,7 +1124,7 @@ END InitURILiterals;
 
 PROCEDURE AddForum(CONST id,fileName : ARRAY OF CHAR);
 VAR new : ForumList;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN
 	IF nofForum >= LEN(forumList) THEN
 		NEW(new, LEN(forumList) * 2);
@@ -1137,7 +1137,7 @@ BEGIN
 END AddForum;
 
 PROCEDURE GetForumInternal(CONST id : ARRAY OF CHAR) : Forum;
-VAR i : LONGINT; result : Forum;
+VAR i : SIGNED32; result : Forum;
 BEGIN
 	i := 0;
 	WHILE (i < nofForum) & (result = NIL)  DO
@@ -1182,7 +1182,7 @@ END LoadForumList;
 PROCEDURE StoreForumList;
 VAR f : Files.File;
 	w : Files.Writer;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN {EXCLUSIVE}
 	f := Files.New(ForumConfigFile);
 	Files.OpenWriter(w, f, 0);

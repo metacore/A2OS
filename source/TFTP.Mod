@@ -28,15 +28,15 @@ TYPE
 
 	TFTPClient* = OBJECT
 		(* Log functions *)
-		PROCEDURE LogEnter(level: LONGINT);
+		PROCEDURE LogEnter(level: SIGNED32);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.Enter END
 		END LogEnter;
 
-		PROCEDURE LogExit(level: LONGINT);
+		PROCEDURE LogExit(level: SIGNED32);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.Exit END
 		END LogExit;
 
-		PROCEDURE Log(level: LONGINT; s: ARRAY OF CHAR);
+		PROCEDURE Log(level: SIGNED32; s: ARRAY OF CHAR);
 		BEGIN IF (TraceLevel >= level) THEN KernelLog.String(s) END
 		END Log;
 
@@ -45,23 +45,23 @@ TYPE
 		END LogInt;
 
 		(* Get2 - reads a (big endian) 16bit value from 'buf' at position 'ofs'..'ofs'+1 *)
-		PROCEDURE Get2(VAR buf: ARRAY OF CHAR; ofs: LONGINT): LONGINT;
+		PROCEDURE Get2(VAR buf: ARRAY OF CHAR; ofs: SIGNED32): SIGNED32;
 		BEGIN RETURN ORD(buf[ofs])*100H + ORD(buf[ofs+1])
 		END Get2;
 
 		(* Put2 - writes a (big endian) 16bit value to 'buf' at position 'ofs'..'ofs'+1 *)
-		PROCEDURE Put2(VAR buf: ARRAY OF CHAR; ofs, value: LONGINT);
+		PROCEDURE Put2(VAR buf: ARRAY OF CHAR; ofs, value: SIGNED32);
 		BEGIN buf[ofs] := CHR(value DIV 100H MOD 100H); buf[ofs+1] := CHR(value MOD 100H)
 		END Put2;
 
 		(* PacketType - returns the type of a packet *)
-		PROCEDURE PacketType(VAR buf: ARRAY OF CHAR): LONGINT;
+		PROCEDURE PacketType(VAR buf: ARRAY OF CHAR): SIGNED32;
 		BEGIN RETURN Get2(buf, 0)
 		END PacketType;
 
 		(* ExtractString - extracts a 0X terminated 8bit string from a buffer *)
-		PROCEDURE ExtractString(VAR buf: ARRAY OF CHAR; VAR ofs: LONGINT; VAR s: ARRAY OF CHAR);
-		VAR pos: LONGINT;
+		PROCEDURE ExtractString(VAR buf: ARRAY OF CHAR; VAR ofs: SIGNED32; VAR s: ARRAY OF CHAR);
+		VAR pos: SIGNED32;
 		BEGIN
 			WHILE (ofs < LEN(buf)) & (buf[ofs] # 0X) DO
 				IF (pos < LEN(s)-1) THEN s[pos] := buf[ofs]; INC(pos) END;
@@ -71,8 +71,8 @@ TYPE
 		END ExtractString;
 
 		(* PutString - puts a 0X terminated 8bit string to a buffer *)
-		PROCEDURE PutString(VAR buf: ARRAY OF CHAR; VAR ofs: LONGINT; s: ARRAY OF CHAR);
-		VAR pos: LONGINT;
+		PROCEDURE PutString(VAR buf: ARRAY OF CHAR; VAR ofs: SIGNED32; s: ARRAY OF CHAR);
+		VAR pos: SIGNED32;
 		BEGIN
 			WHILE (pos < LEN(s)) & (s[pos] # 0X) DO
 				IF (ofs < LEN(buf)-1) THEN buf[ofs] := s[pos]; INC(ofs) END;
@@ -82,8 +82,8 @@ TYPE
 		END PutString;
 
 		(* ReceiveAck - receives a server answer *)
-		PROCEDURE ReceiveAck(socket: UDP.Socket; VAR fip: IP.Adr; VAR fport: LONGINT; blockNr: LONGINT; VAR ack: ARRAY OF CHAR): BOOLEAN;
-		VAR ip: IP.Adr; port, ofs, wait: LONGINT; len: SIZE; res: WORD; acked: BOOLEAN; msg: ARRAY 256 OF CHAR;
+		PROCEDURE ReceiveAck(socket: UDP.Socket; VAR fip: IP.Adr; VAR fport: SIGNED32; blockNr: SIGNED32; VAR ack: ARRAY OF CHAR): BOOLEAN;
+		VAR ip: IP.Adr; port, ofs, wait: SIGNED32; len: SIZE; res: INTEGER; acked: BOOLEAN; msg: ARRAY 256 OF CHAR;
 		BEGIN
 			wait := 0;
 			REPEAT
@@ -106,7 +106,7 @@ TYPE
 						Log(3, "; error "); LogInt(3, Get2(ack, 2)); Log(3, ": "); Log(3, msg)
 					END
 				ELSE
-					Log(3, "unknown error "); LogInt(3, LONGINT(res))
+					Log(3, "unknown error "); LogInt(3, SIGNED32(res))
 				END;
 				LogExit(3)
 			UNTIL acked OR (res # Ok) OR (wait > MaxWait);
@@ -115,8 +115,8 @@ TYPE
 		END ReceiveAck;
 
 		(* SendAck - sends an ack packet *)
-		PROCEDURE SendAck(socket: UDP.Socket; fip: IP.Adr; fport: LONGINT; blockNr: LONGINT; VAR res: WORD);
-		VAR ackHdr: ARRAY 4 OF CHAR; retries: LONGINT;
+		PROCEDURE SendAck(socket: UDP.Socket; fip: IP.Adr; fport: SIGNED32; blockNr: SIGNED32; VAR res: INTEGER);
+		VAR ackHdr: ARRAY 4 OF CHAR; retries: SIGNED32;
 		BEGIN
 			Put2(ackHdr, 0, ACK); Put2(ackHdr, 2, blockNr);
 			REPEAT
@@ -126,8 +126,8 @@ TYPE
 		END SendAck;
 
 		(* SendError - sends an error packet *)
-		PROCEDURE SendError(socket: UDP.Socket; fip: IP.Adr; fport: LONGINT; errNo: INTEGER; s: ErrorMsg; VAR res: WORD);
-		VAR errHdr: ARRAY BlockSize+4 OF CHAR; p, retries: LONGINT;
+		PROCEDURE SendError(socket: UDP.Socket; fip: IP.Adr; fport: SIGNED32; errNo: SIGNED16; s: ErrorMsg; VAR res: INTEGER);
+		VAR errHdr: ARRAY BlockSize+4 OF CHAR; p, retries: SIGNED32;
 		BEGIN
 			Put2(errHdr, 0, ERROR); Put2(errHdr, 2, errNo);
 			IF ((errNo = 0) & (s = "")) OR ((errNo > 0) & (errNo < 8)) THEN s := errorMsg[errNo] END;
@@ -141,7 +141,7 @@ TYPE
 
 		(* GetSocket - finds & initializes a free UDP socket *)
 		PROCEDURE GetSocket*(VAR socket: UDP.Socket): BOOLEAN;
-		VAR retries, lport: LONGINT; res: WORD;
+		VAR retries, lport: SIGNED32; res: INTEGER;
 		BEGIN
 			REPEAT
 				INC(retries); lport := 1024 + generator.Integer() MOD 64512;
@@ -152,9 +152,9 @@ TYPE
 		END GetSocket;
 
 		(* Send - send a file to TFTP server at fip:fport *)
-		PROCEDURE Send*(localFN, remoteFN: ARRAY OF CHAR; fip: IP.Adr; fport: LONGINT): BOOLEAN;
+		PROCEDURE Send*(localFN, remoteFN: ARRAY OF CHAR; fip: IP.Adr; fport: SIGNED32): BOOLEAN;
 		VAR buf, ack: ARRAY 4+BlockSize OF CHAR; socket: UDP.Socket; msg: ARRAY 256 OF CHAR;
-			file: Files.File; r: Files.Rider; ofs, retries, blockNr, errNo: LONGINT; res: WORD; acked: BOOLEAN;
+			file: Files.File; r: Files.Rider; ofs, retries, blockNr, errNo: SIGNED32; res: INTEGER; acked: BOOLEAN;
 		BEGIN
 			acked := FALSE;
 			file := Files.Old(localFN);
@@ -231,8 +231,8 @@ TYPE
 		END Send;
 
 		(* Receive - receive a file from TFTP server at source:port *)
-		PROCEDURE Receive*(remoteFN, localFN: ARRAY OF CHAR; fip: IP.Adr; fport: LONGINT): BOOLEAN;
-		VAR socket: UDP.Socket; ofs, blockNr, port, retries, waitPacket: LONGINT; len: SIZE; res: WORD; ok, Abort: BOOLEAN; ip: IP.Adr;
+		PROCEDURE Receive*(remoteFN, localFN: ARRAY OF CHAR; fip: IP.Adr; fport: SIGNED32): BOOLEAN;
+		VAR socket: UDP.Socket; ofs, blockNr, port, retries, waitPacket: SIGNED32; len: SIZE; res: INTEGER; ok, Abort: BOOLEAN; ip: IP.Adr;
 			buf: ARRAY 4+BlockSize OF CHAR; file: Files.File; r: Files.Rider;
 		BEGIN
 			ok := FALSE;
@@ -321,7 +321,7 @@ TYPE
 		END Receive;
 	END TFTPClient;
 
-VAR TraceLevel: LONGINT;
+VAR TraceLevel: SIGNED32;
 	errorMsg: ARRAY 8 OF ErrorMsg;
 	generator: Random.Generator;
 

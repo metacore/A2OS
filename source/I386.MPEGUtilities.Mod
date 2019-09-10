@@ -18,22 +18,22 @@ CONST
 	EnableMMX = TRUE;
 
 VAR
-	IdctBorder*: POINTER TO ARRAY OF LONGINT;
-	ii: LONGINT;
+	IdctBorder*: POINTER TO ARRAY OF SIGNED32;
+	ii: SIGNED32;
 
 TYPE
 	(* Helper Types *)
 	PointerToArrayOfCHAR* = POINTER TO ARRAY OF CHAR;
-	PointerToArrayOfLONGINT* = POINTER TO ARRAY OF LONGINT;
+	PointerToArrayOfLONGINT* = POINTER TO ARRAY OF SIGNED32;
 
 	Dequantizer* = OBJECT
 		PROCEDURE DequantizeNonintraCoeffs*(
 			coeffs: PointerToArrayOfLONGINT;
 			nonintraQM: PointerToArrayOfLONGINT;
-			qScale: LONGINT): BOOLEAN;
+			qScale: SIGNED32): BOOLEAN;
 		VAR
-			i: LONGINT;
-			sign: LONGINT;
+			i: SIGNED32;
+			sign: SIGNED32;
 
 		BEGIN
 			FOR i := 0 TO 63 DO
@@ -68,12 +68,12 @@ TYPE
 		PROCEDURE DequantizeIntraCoeffs*(
 			coeffs: PointerToArrayOfLONGINT;
 			intraQM: PointerToArrayOfLONGINT;
-			qScale: LONGINT;
-			VAR prediction: LONGINT;
+			qScale: SIGNED32;
+			VAR prediction: SIGNED32;
 			first: BOOLEAN;
 			mbSkipped: BOOLEAN): BOOLEAN;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 
 		BEGIN
 			(* dequantize all coefficients *)
@@ -115,10 +115,10 @@ TYPE
 		PROCEDURE DequantizeNonintraCoeffs2*(
 			coeffs: PointerToArrayOfLONGINT;
 			nonintraQM: PointerToArrayOfLONGINT;
-			qScale: LONGINT);
+			qScale: SIGNED32);
 		VAR
-			i: LONGINT;
-			sum: LONGINT;
+			i: SIGNED32;
+			sum: SIGNED32;
 
 		BEGIN
 			FOR i := 0 TO 63 DO
@@ -148,11 +148,11 @@ TYPE
 		PROCEDURE DequantizeIntraCoeffs2*(
 			coeffs: PointerToArrayOfLONGINT;
 			intraQM: PointerToArrayOfLONGINT;
-			qScale: LONGINT;
-			dcPrecision: LONGINT);
+			qScale: SIGNED32;
+			dcPrecision: SIGNED32);
 		VAR
-			i: LONGINT;
-			sum: LONGINT;
+			i: SIGNED32;
+			sum: SIGNED32;
 
 		BEGIN
 			(* special treatment of DC *)
@@ -179,7 +179,7 @@ TYPE
 
 
 		(* Performs the mismatch contros - used for intra and non-intra - MPEG2 only *)
-		PROCEDURE MismatchControl(VAR coeffs63: LONGINT; sum: LONGINT);
+		PROCEDURE MismatchControl(VAR coeffs63: SIGNED32; sum: SIGNED32);
 		BEGIN
 			IF (sum MOD 2) = 0 THEN
 				(* sum is even *)
@@ -206,16 +206,16 @@ TYPE
 	Frame* = OBJECT
 		VAR
 			buffer*: PointerToArrayOfCHAR;
-			cbOffset*, crOffset*: LONGINT;
-			frameNr*: LONGINT;
-			picType*: LONGINT;			(* I, P or B-Frame -> 1, 2 or 3 *)
+			cbOffset*, crOffset*: SIGNED32;
+			frameNr*: SIGNED32;
+			picType*: SIGNED32;			(* I, P or B-Frame -> 1, 2 or 3 *)
 	END Frame;
 
 	(* MPEG-2 Picture Coding Extension *)
 	PicCodingExt* = OBJECT
 		VAR
-			dcPrecision*: LONGINT;								(* DC precision *)
-			picStructure*: LONGINT;								(* picture structure *)
+			dcPrecision*: SIGNED32;								(* DC precision *)
+			picStructure*: SIGNED32;								(* picture structure *)
 			topFieldFirst*: BOOLEAN;
 			framePredFrameDct*: BOOLEAN;
 			concealmentMV*: BOOLEAN;						(* concealment motion vectors used *)
@@ -255,18 +255,18 @@ TYPE
 	MotionVectorInfos* = OBJECT
 		VAR
 			fullPel*: ARRAY 2 OF ARRAY 2 OF BOOLEAN;						(* full Pel or half Pel *)
-			fCode*: ARRAY 2 OF ARRAY 2 OF LONGINT;							(* MPEG-2 version of forw/back f code *)
-			f*: ARRAY 2 OF ARRAY 2 OF LONGINT;
-			rSize*: ARRAY 2 OF ARRAY 2 OF LONGINT;
+			fCode*: ARRAY 2 OF ARRAY 2 OF SIGNED32;							(* MPEG-2 version of forw/back f code *)
+			f*: ARRAY 2 OF ARRAY 2 OF SIGNED32;
+			rSize*: ARRAY 2 OF ARRAY 2 OF SIGNED32;
 			motionVerticalFieldSelect*: ARRAY 2 OF ARRAY 2 OF BOOLEAN;		(* flag to choose reference field for prediction *)
-			motionCode*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF LONGINT;
-			motionResidual*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF LONGINT;
-			dmVector*: ARRAY 2 OF LONGINT;
+			motionCode*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF SIGNED32;
+			motionResidual*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF SIGNED32;
+			dmVector*: ARRAY 2 OF SIGNED32;
 
-			mv*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF LONGINT;				(* calculated motion vectors *)
-			pmv*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF LONGINT;				(* predictions *)
+			mv*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF SIGNED32;				(* calculated motion vectors *)
+			pmv*: ARRAY 2 OF ARRAY 2 OF ARRAY 2 OF SIGNED32;				(* predictions *)
 
-			PROCEDURE Dump*(r, s, t: LONGINT);
+			PROCEDURE Dump*(r, s, t: SIGNED32);
 			BEGIN
 				KernelLog.String("Motion Vector Type: ");
 				IF s = 0 THEN
@@ -296,7 +296,7 @@ TYPE
 	IDCT* = OBJECT
 		PROCEDURE PerformIDCT*(block: PointerToArrayOfLONGINT );
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 
 		BEGIN
 			FOR i:= 0 TO 7 DO
@@ -308,39 +308,39 @@ TYPE
 			END;
 		END PerformIDCT;
 
-		PROCEDURE IDCTRow( blk: PointerToArrayOfLONGINT; baseIndex: LONGINT);
+		PROCEDURE IDCTRow( blk: PointerToArrayOfLONGINT; baseIndex: SIGNED32);
 		VAR
-			x0, x1, x2, x3, x4, x5, x6, x7, x8: LONGINT;
+			x0, x1, x2, x3, x4, x5, x6, x7, x8: SIGNED32;
 			adr, tempAdr: ADDRESS;
 
 		BEGIN
 			adr := ADDRESSOF( blk[baseIndex] );
 
 			(* shortcut *)
-			x1 := SYSTEM.GET32( adr + 4*SIZEOF(LONGINT) ) * 2048;
-			x2 := SYSTEM.GET32( adr + 6*SIZEOF(LONGINT) );
-			x3 := SYSTEM.GET32( adr + 2*SIZEOF(LONGINT) );
-			x4 := SYSTEM.GET32( adr + SIZEOF(LONGINT) );
-			x5 := SYSTEM.GET32( adr + 7*SIZEOF(LONGINT) );
-			x6 := SYSTEM.GET32( adr + 5*SIZEOF(LONGINT) );
-			x7 := SYSTEM.GET32( adr + 3*SIZEOF(LONGINT) );
+			x1 := SYSTEM.GET32( adr + 4*SIZEOF(SIGNED32) ) * 2048;
+			x2 := SYSTEM.GET32( adr + 6*SIZEOF(SIGNED32) );
+			x3 := SYSTEM.GET32( adr + 2*SIZEOF(SIGNED32) );
+			x4 := SYSTEM.GET32( adr + SIZEOF(SIGNED32) );
+			x5 := SYSTEM.GET32( adr + 7*SIZEOF(SIGNED32) );
+			x6 := SYSTEM.GET32( adr + 5*SIZEOF(SIGNED32) );
+			x7 := SYSTEM.GET32( adr + 3*SIZEOF(SIGNED32) );
 
 			IF ( x1 = 0 ) & ( x2 = 0 ) & ( x3 = 0 ) & ( x4 = 0 ) & ( x5 = 0 ) & ( x6 = 0 ) & ( x7 = 0 )  THEN
 				x0 := SYSTEM.GET32( adr ) * 8;
 				SYSTEM.PUT32( adr , x0 );
-				tempAdr := adr + SIZEOF( LONGINT );
+				tempAdr := adr + SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + SIZEOF( LONGINT );
+				tempAdr := tempAdr + SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + SIZEOF( LONGINT );
+				tempAdr := tempAdr + SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + SIZEOF( LONGINT );
+				tempAdr := tempAdr + SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + SIZEOF( LONGINT );
+				tempAdr := tempAdr + SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + SIZEOF( LONGINT );
+				tempAdr := tempAdr + SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + SIZEOF( LONGINT );
+				tempAdr := tempAdr + SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
 				RETURN
 			END;
@@ -375,55 +375,55 @@ TYPE
 
 			(* fourth stage *)
 			SYSTEM.PUT32( adr, ( x7 + x1 ) DIV 256 );
-			tempAdr := adr + SIZEOF( LONGINT );
+			tempAdr := adr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, ( x3 + x2 ) DIV 256 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, ( x0 + x4 ) DIV 256 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, ( x8 + x6 ) DIV 256 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, ( x8 - x6 ) DIV 256 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, ( x0 - x4 ) DIV 256 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, ( x3 - x2 ) DIV 256 );
-			tempAdr := tempAdr + SIZEOF( LONGINT );
+			tempAdr := tempAdr + SIZEOF( SIGNED32 );
 			SYSTEM.PUT32( tempAdr, ( x7 - x1 ) DIV 256 )
 		END IDCTRow;
 
-		PROCEDURE IDCTCol( blk: PointerToArrayOfLONGINT; baseIndex: LONGINT );
+		PROCEDURE IDCTCol( blk: PointerToArrayOfLONGINT; baseIndex: SIGNED32 );
 		VAR
-			x0, x1, x2, x3, x4, x5, x6, x7, x8: LONGINT;
+			x0, x1, x2, x3, x4, x5, x6, x7, x8: SIGNED32;
 			adr, tempAdr, sourceAdr: ADDRESS;
 
 		BEGIN
 			adr := ADDRESSOF( blk[baseIndex] );
 
 			(* shortcut *)
-			x1 := SYSTEM.GET32( adr + 32*SIZEOF(LONGINT) ) * 256;
-			x2 := SYSTEM.GET32( adr + 48*SIZEOF(LONGINT) );
-			x3 := SYSTEM.GET32( adr + 16*SIZEOF(LONGINT) );
-			x4 := SYSTEM.GET32( adr + 8*SIZEOF(LONGINT) );
-			x5 := SYSTEM.GET32( adr + 56*SIZEOF(LONGINT) );
-			x6 := SYSTEM.GET32( adr + 40*SIZEOF(LONGINT) );
-			x7 := SYSTEM.GET32( adr + 24*SIZEOF(LONGINT) );
+			x1 := SYSTEM.GET32( adr + 32*SIZEOF(SIGNED32) ) * 256;
+			x2 := SYSTEM.GET32( adr + 48*SIZEOF(SIGNED32) );
+			x3 := SYSTEM.GET32( adr + 16*SIZEOF(SIGNED32) );
+			x4 := SYSTEM.GET32( adr + 8*SIZEOF(SIGNED32) );
+			x5 := SYSTEM.GET32( adr + 56*SIZEOF(SIGNED32) );
+			x6 := SYSTEM.GET32( adr + 40*SIZEOF(SIGNED32) );
+			x7 := SYSTEM.GET32( adr + 24*SIZEOF(SIGNED32) );
 
 			IF ( x1 = 0 ) & ( x2 = 0 ) & ( x3 = 0 ) & ( x4 = 0 ) & ( x5 = 0 ) & ( x6 = 0 ) & ( x7 = 0 )  THEN
 				x0 := IdctBorder[( ( SYSTEM.GET32( adr ) + 32 ) DIV 64 ) + 512];	(* +512 is the base offset in the array *)
 				SYSTEM.PUT32( adr , x0 );
-				tempAdr := adr + 8*SIZEOF( LONGINT );
+				tempAdr := adr + 8*SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+				tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+				tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+				tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+				tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+				tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
-				tempAdr := tempAdr + 8*SIZEOF( LONGINT );
+				tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
 				SYSTEM.PUT32( tempAdr, x0 );
 				RETURN
 			END;
@@ -460,21 +460,21 @@ TYPE
 			(* fourth stage *)
 			tempAdr := adr;
 			sourceAdr := ADDRESSOF(IdctBorder[512] );
-			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x7 + x1 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x3 + x2 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x0 + x4 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x8 + x6 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x8 - x6 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x0 - x4 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x3 - x2 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) );
-			tempAdr := tempAdr + 8*SIZEOF( LONGINT );
-			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x7 - x1 ) DIV 16384 )*SIZEOF(LONGINT) ) + sourceAdr ) )
+			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x7 + x1 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x3 + x2 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x0 + x4 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x8 + x6 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x8 - x6 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x0 - x4 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x3 - x2 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) );
+			tempAdr := tempAdr + 8*SIZEOF( SIGNED32 );
+			SYSTEM.PUT32( tempAdr, SYSTEM.GET32( ( ( ( x7 - x1 ) DIV 16384 )*SIZEOF(SIGNED32) ) + sourceAdr ) )
 		END IDCTCol;
 	END IDCT;
 
@@ -482,17 +482,17 @@ TYPE
 	(* Partially based on AVI.AVIStream *)
 	BitStream* = OBJECT
 		VAR
-			first: LONGINT;						(* First element in the ringbuffer *)
-			last: LONGINT;						(* Last element in the ringbuffer (only used until input reports EOF) *)
-			bitIndex: LONGINT;					(* Position (Bit) in the current LONGINT (buffer[0..3] or [4..7]) *)
+			first: SIGNED32;						(* First element in the ringbuffer *)
+			last: SIGNED32;						(* Last element in the ringbuffer (only used until input reports EOF) *)
+			bitIndex: SIGNED32;					(* Position (Bit) in the current SIGNED32 (buffer[0..3] or [4..7]) *)
 			buffer: ARRAY 8 OF CHAR;			(* Local buffer (two LONGINTs) *)
 			bufAdr: ADDRESS;					(* Address of buffer[0] *)
 			input: Codecs.DemuxStream;		(* The underlying Reader *)
 			eof: BOOLEAN;						(* End of File *)
 			bitsLeft: SIZE;					(* only used when eof is TRUE *)
 
-			len: LONGINT;
-			i: LONGINT;
+			len: SIGNED32;
+			i: SIGNED32;
 
 		(* Constructor *)
 		PROCEDURE & Init*( r: Codecs.DemuxStream );
@@ -512,7 +512,7 @@ TYPE
 
 		PROCEDURE Reset*;
 		VAR
-			dummy: LONGINT; result: WORD;
+			dummy: SIGNED32; result: INTEGER;
 
 		BEGIN
 			input.SetPosX(Codecs.SeekByte, 0, dummy, result);
@@ -561,11 +561,11 @@ TYPE
 
 		(* Read next n bits without advancing in stream. At least one, at most 32 Bits are allowed (this is not checked!) *)
 		(* Returns -1 if eof *)
-		PROCEDURE ShowBits*(n: LONGINT): LONGINT;
+		PROCEDURE ShowBits*(n: SIGNED32): SIGNED32;
 		VAR
-			nbit: LONGINT;
-			bufa, bufb: LONGINT;
-			temp: LONGINT;
+			nbit: SIGNED32;
+			bufa, bufb: SIGNED32;
+			temp: SIGNED32;
 
 		BEGIN
 			IF eof & (bitsLeft < n) THEN
@@ -581,7 +581,7 @@ TYPE
 				bufb := Machine.ChangeByteOrder(SYSTEM.GET32(bufAdr + 4 - first));
 
 				 temp := LSH(LSH(bufa, bitIndex), nbit - bitIndex );
-				RETURN SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, LSH(bufb, nbit - 32)) + SYSTEM.VAL(SET, temp));
+				RETURN SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, LSH(bufb, nbit - 32)) + SYSTEM.VAL(SET, temp));
 			ELSE
 				(* the n bits are completely in the first 32 bits *)
 				bufa := Machine.ChangeByteOrder(SYSTEM.GET32(bufAdr + first));
@@ -605,9 +605,9 @@ TYPE
 		END ShowBuffer;
 
 		(* Read next n bits and advance bit stream. At most 32 bits are allowed *)
-		PROCEDURE GetBits*( n: LONGINT): LONGINT;
+		PROCEDURE GetBits*( n: SIGNED32): SIGNED32;
 		VAR
-			ret: LONGINT;
+			ret: SIGNED32;
 		BEGIN
 			ret := ShowBits( n );
 			SkipBits( n );
@@ -615,7 +615,7 @@ TYPE
 		END GetBits;
 
 		(* Skip next n bits. At most 32 bits are allowed *)
-		PROCEDURE SkipBits*(n: LONGINT);
+		PROCEDURE SkipBits*(n: SIGNED32);
 		BEGIN
 			IF eof & (bitsLeft <= 0) THEN
 				RETURN;
@@ -641,10 +641,10 @@ TYPE
 
 		PROCEDURE SetPos*(pos: Streams.Position);
 		VAR
-			dummy: LONGINT; result: WORD;
+			dummy: SIGNED32; result: INTEGER;
 
 		BEGIN
-			input.SetPosX(Codecs.SeekByte, pos(LONGINT), dummy, result);
+			input.SetPosX(Codecs.SeekByte, pos(SIGNED32), dummy, result);
 			first := 0;
 			last := -1;
 			bitIndex := 0;
@@ -678,10 +678,10 @@ TYPE
 		END init;
 
 		(* Read the next motion code from the stream *)
-		PROCEDURE ReadMotionCode*(): LONGINT;
+		PROCEDURE ReadMotionCode*(): SIGNED32;
 		VAR
-			bits: LONGINT;
-			res: LONGINT;
+			bits: SIGNED32;
+			res: SIGNED32;
 
 		BEGIN
 			IF eof THEN RETURN 0 END;
@@ -746,11 +746,11 @@ TYPE
 
 		(* Read the next run/level code from the stream. Assumption: 10 = end of block (not 0/1) *)
 		(* Returns EndOfBlock *)
-		PROCEDURE ReadRunLevelCode*(c: PointerToArrayOfLONGINT; VAR cur: LONGINT; MPEG2: BOOLEAN): BOOLEAN;
+		PROCEDURE ReadRunLevelCode*(c: PointerToArrayOfLONGINT; VAR cur: SIGNED32; MPEG2: BOOLEAN): BOOLEAN;
 		VAR
-			run, length: LONGINT;
-			level: LONGINT;
-			index: LONGINT;
+			run, length: SIGNED32;
+			level: SIGNED32;
+			index: SIGNED32;
 
 		BEGIN
 			IF eof THEN RETURN TRUE END;
@@ -919,11 +919,11 @@ TYPE
 
 		(* Read the next run/level code from the stream (second table, MPEG2 only) *)
 		(* Returns EndOfBlock *)
-		PROCEDURE ReadRunLevelCode2*(c: PointerToArrayOfLONGINT; VAR cur: LONGINT): BOOLEAN;
+		PROCEDURE ReadRunLevelCode2*(c: PointerToArrayOfLONGINT; VAR cur: SIGNED32): BOOLEAN;
 		VAR
-			run, length: LONGINT;
-			level: LONGINT;
-			index: LONGINT;
+			run, length: SIGNED32;
+			level: SIGNED32;
+			index: SIGNED32;
 
 		BEGIN
 			IF eof THEN RETURN TRUE END;
@@ -1140,9 +1140,9 @@ TYPE
 
 		(* Read the macroblock address increment *)
 		(* Return value: > 0 -> increment; -1 -> error; -2 -> escape; -3 -> stuffing *)
-		PROCEDURE ReadAddressIncrement*():LONGINT;
+		PROCEDURE ReadAddressIncrement*():SIGNED32;
 		VAR
-			tmp: LONGINT;
+			tmp: SIGNED32;
 
 		BEGIN
 			IF eof THEN RETURN 0 END;
@@ -1244,9 +1244,9 @@ TYPE
 		END ReadAddressIncrement;
 
 
-		PROCEDURE ReadMacroBlockType*(type: LONGINT; VAR intra, pattern, back, forw, quant: BOOLEAN): BOOLEAN;
+		PROCEDURE ReadMacroBlockType*(type: SIGNED32; VAR intra, pattern, back, forw, quant: BOOLEAN): BOOLEAN;
 		VAR
-			tmp: LONGINT;
+			tmp: SIGNED32;
 
 		BEGIN
 			IF eof THEN RETURN FALSE END;
@@ -1465,11 +1465,11 @@ TYPE
 
 		PROCEDURE ReadSequenceExtension*(
 			VAR MainProfile: BOOLEAN;
-			 VAR LevelID: LONGINT;
-			 VAR ChromaFormat: LONGINT;
-			 VAR videoWidth, videoHeight: LONGINT): BOOLEAN;
+			 VAR LevelID: SIGNED32;
+			 VAR ChromaFormat: SIGNED32;
+			 VAR videoWidth, videoHeight: SIGNED32): BOOLEAN;
 		VAR
-			tmp: LONGINT;
+			tmp: SIGNED32;
 
 		BEGIN
 			IF eof THEN RETURN FALSE END;
@@ -1639,9 +1639,9 @@ TYPE
 
 		PROCEDURE ReadQuantizerMatrix*(matrix: PointerToArrayOfLONGINT);
 		VAR
-			i, j: LONGINT;
-			tmp: LONGINT;
-			zzQM: ARRAY 64 OF LONGINT;
+			i, j: SIGNED32;
+			tmp: SIGNED32;
+			zzQM: ARRAY 64 OF SIGNED32;
 
 		BEGIN
 			IF eof THEN RETURN END;
@@ -1664,7 +1664,7 @@ TYPE
 		END ReadQuantizerMatrix;
 
 
-		PROCEDURE ReadMotionVectors*(s: LONGINT; VAR mvi: MotionVectorInfos; frameMotionType: LONGINT);
+		PROCEDURE ReadMotionVectors*(s: SIGNED32; VAR mvi: MotionVectorInfos; frameMotionType: SIGNED32);
 		BEGIN
 			IF eof THEN RETURN END;
 
@@ -1686,7 +1686,7 @@ TYPE
 		END ReadMotionVectors;
 
 
-		PROCEDURE ReadMotionVectorsHelper(r, s: LONGINT; VAR mvi: MotionVectorInfos);
+		PROCEDURE ReadMotionVectorsHelper(r, s: SIGNED32; VAR mvi: MotionVectorInfos);
 		BEGIN
 			IF eof THEN RETURN END;
 
@@ -1726,12 +1726,12 @@ TYPE
 
 	TYPE MMXConsts = POINTER TO MMXConstsDesc;
 	TYPE MMXConstsDesc = RECORD
-		mmwMultY, mmwMultUG, mmwMultUB, mmwMultVR, mmwMultVG: HUGEINT;
+		mmwMultY, mmwMultUG, mmwMultUB, mmwMultVR, mmwMultVG: SIGNED64;
 
 		(* various masks and other constants *)
-		mmb10, mmw0080, mmw00ff, mmwCutRed, mmwCutGreen, mmwCutBlue: HUGEINT;
+		mmb10, mmw0080, mmw00ff, mmwCutRed, mmwCutGreen, mmwCutBlue: SIGNED64;
 
-		mask5, mask6, maskBlue: HUGEINT;
+		mask5, mask6, maskBlue: SIGNED64;
 	END;
 
 	(* Convert colorspace (copied and slightly edited from the DivXPlayer) *)
@@ -1765,11 +1765,11 @@ TYPE
 		(* Convert picture from one colorspace to an another *)
 		PROCEDURE Convert*(
 			src: PointerToArrayOfCHAR;
-			srcYBaseOffset: LONGINT;
-			yStride: LONGINT;
-			srcUBaseOffset, srcVBaseOffset,uvStride: LONGINT;
+			srcYBaseOffset: SIGNED32;
+			yStride: SIGNED32;
+			srcUBaseOffset, srcVBaseOffset,uvStride: SIGNED32;
 			img: Raster.Image;
-			 width, height, dstStride: LONGINT );
+			 width, height, dstStride: SIGNED32 );
 		BEGIN
 			IF img.fmt.code = Raster.BGR888.code THEN
 				ConvertYUVToRGB888( src, srcYBaseOffset,  yStride, srcUBaseOffset, srcVBaseOffset, uvStride, img, width, height,
@@ -1791,9 +1791,9 @@ TYPE
 			pucYBaseOffset, pucUBaseOffset, pucVBaseOffset: ADDRESS;
 			strideY, strideUV: SIZE;
 			pucOut: Raster.Image;
-			widthY, heightY, strideOut: LONGINT );
+			widthY, heightY, strideOut: SIGNED32 );
 		VAR
-			y, horizCount: LONGINT;
+			y, horizCount: SIGNED32;
 			pusOut: ADDRESS;
 
 		BEGIN
@@ -1960,15 +1960,15 @@ TYPE
 			strideY: SIZE;
 			strideUV: SIZE;
 			pucOut: Raster.Image;
-			widthY, heightY, strideOut: LONGINT );
+			widthY, heightY, strideOut: SIGNED32 );
 		VAR
-			xCount, yCount, strideDiff: LONGINT;
+			xCount, yCount, strideDiff: SIGNED32;
 			pusOut: ADDRESS;
-			r, g, b: LONGINT;
-			y, u, v: LONGINT;
+			r, g, b: SIGNED32;
+			y, u, v: SIGNED32;
 
 		BEGIN
-			strideDiff := (strideOut - widthY)*SIZEOF(INTEGER); (* expressed in bytes *)
+			strideDiff := (strideOut - widthY)*SIZEOF(SIGNED16); (* expressed in bytes *)
 
 			IF heightY < 0 THEN
 				(* we are flipping our output upside-down *)
@@ -2001,10 +2001,10 @@ TYPE
 					IF g > 255 THEN g := 255; ELSIF g < 0 THEN g := 0 END;
 					IF b > 255 THEN b := 255; ELSIF b < 0 THEN b := 0 END;
 
-					SYSTEM.PUT16( pusOut,  INTEGER( SET(r DIV 8 ) + SET(( g DIV 4 ) * 32 ) +
+					SYSTEM.PUT16( pusOut,  SIGNED16( SET(r DIV 8 ) + SET(( g DIV 4 ) * 32 ) +
 																SET((b DIV 8 ) * 2048 ) ) );
 
-					pusOut := pusOut + SIZEOF( INTEGER );
+					pusOut := pusOut + SIZEOF( SIGNED16 );
 				END;
 
 				pucYBaseOffset := pucYBaseOffset + strideY;
@@ -2022,12 +2022,12 @@ TYPE
 			pucYBaseOffset, pucUBaseOffset, pucVBaseOffset: ADDRESS;
 			strideY, strideUV: SIZE;
 			pucOut: Raster.Image;
-			widthY, heightY, strideOut: LONGINT );
+			widthY, heightY, strideOut: SIGNED32 );
 		VAR
-			xCount, yCount, strideDiff: LONGINT;
+			xCount, yCount, strideDiff: SIGNED32;
 			pusOut: ADDRESS;
-			r, g, b: LONGINT;
-			y, u, v: LONGINT;
+			r, g, b: SIGNED32;
+			y, u, v: SIGNED32;
 		BEGIN
 			strideDiff := (strideOut - widthY)*3; (* expressed in bytes *)
 
@@ -2099,7 +2099,7 @@ TYPE
 			END;
 		END ClearBlock;
 
-		(* clear an 8x8 LONGINT array *)
+		(* clear an 8x8 SIGNED32 array *)
 		PROCEDURE ClearBlockLongint*(block: PointerToArrayOfLONGINT);
 		BEGIN
 			IF EnableMMX THEN
@@ -2119,7 +2119,7 @@ TYPE
 
 			FOR i := 0 TO 63 DO
 				SYSTEM.PUT32( adr, 0 );
-				INC(adr, SIZEOF(LONGINT));
+				INC(adr, SIZEOF(SIGNED32));
 			END;
 		END ClearBlockGeneric;
 
@@ -2154,14 +2154,14 @@ TYPE
 		END CopyBlock;
 
 		(* move a block by overwriting the destination, motion vectors in half pel precision *)
-		PROCEDURE MoveBlockOverwrite*(src, dest: PointerToArrayOfCHAR; destOffs, mvX, mvY, srcIncr, destIncr, lines: LONGINT);
+		PROCEDURE MoveBlockOverwrite*(src, dest: PointerToArrayOfCHAR; destOffs, mvX, mvY, srcIncr, destIncr, lines: SIGNED32);
 		VAR
 			buffer: ARRAY 16 OF CHAR;		(* temporary buffer *)
 			bufadr: SIZE;				(* address of buffer *)
-			index: LONGINT;				(* position in buffer *)
-			i, j: LONGINT;					(* loop vars *)
+			index: SIGNED32;				(* position in buffer *)
+			i, j: SIGNED32;					(* loop vars *)
 			s, d: ADDRESS;				(* addresses of src and dest *)
-			tmp1, tmp2: LONGINT;			(* temporary var *)
+			tmp1, tmp2: SIGNED32;			(* temporary var *)
 
 		BEGIN
 			s := ADDRESSOF(src[destOffs])+ (mvY DIV 2)*destIncr + (mvX DIV 2);
@@ -2247,14 +2247,14 @@ TYPE
 		END MoveBlockOverwrite;
 
 		(* move a block by interpolating (sum DIV 2) with the destination, motion vectors in half pel precision *)
-		PROCEDURE MoveBlockInterp*(src, dest: PointerToArrayOfCHAR; destOffs, mvX, mvY, srcIncr, destIncr, lines: LONGINT);
+		PROCEDURE MoveBlockInterp*(src, dest: PointerToArrayOfCHAR; destOffs, mvX, mvY, srcIncr, destIncr, lines: SIGNED32);
 		VAR
 			buffer: ARRAY 16 OF CHAR;		(* temporary buffer *)
 			bufadr: ADDRESS;			(* address of buffer *)
-			index: LONGINT;				(* position in buffer *)
-			i, j: LONGINT;					(* loop vars *)
+			index: SIGNED32;				(* position in buffer *)
+			i, j: SIGNED32;					(* loop vars *)
 			s, d: ADDRESS;					(* addresses of src and dest *)
-			tmp1, tmp2: LONGINT;			(* temporary var *)
+			tmp1, tmp2: SIGNED32;			(* temporary var *)
 
 		BEGIN
 			s := ADDRESSOF(src[destOffs])+ (mvY DIV 2)*destIncr + (mvX DIV 2);
@@ -2373,7 +2373,7 @@ TYPE
 		(* Add macroblock to a block in the actual picture *)
 		PROCEDURE TransferIDCTAddGeneric( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE );
 		VAR
-			x, y: SIZE; s, d: ADDRESS; sum: LONGINT;
+			x, y: SIZE; s, d: ADDRESS; sum: SIGNED32;
 		BEGIN
 			stride := stride -  8;
 			s := ADDRESSOF( source[0] );
@@ -2390,7 +2390,7 @@ TYPE
 					ELSE
 						SYSTEM.PUT8( d, sum )
 					END;
-					s := s + SIZEOF( LONGINT );
+					s := s + SIZEOF( SIGNED32 );
 					d := d + SIZEOF( CHAR );
 
 				END;
@@ -2429,7 +2429,7 @@ TYPE
 		(* Copy a macroblock to the actual picture *)
 		PROCEDURE TransferIDCTCopyGeneric( source: PointerToArrayOfLONGINT; dest: PointerToArrayOfCHAR; destOffset, stride: SIZE );
 		VAR
-			x, y: SIZE; s, d: ADDRESS; val: LONGINT;
+			x, y: SIZE; s, d: ADDRESS; val: SIGNED32;
 		BEGIN
 			stride := stride - 8;
 			s := ADDRESSOF( source[0] );
@@ -2445,7 +2445,7 @@ TYPE
 					ELSE
 						SYSTEM.PUT8( d, val )
 					END;
-					s := s + SIZEOF(LONGINT);
+					s := s + SIZEOF(SIGNED32);
 					d := d + SIZEOF( CHAR );
 				END;
 				d := d + stride
@@ -2460,11 +2460,11 @@ TYPE
 			MOV EDX, -8
 
 		loop:
-			MOVQ MMX0,  [EAX]				;  eight bytes (two LONGINT) of source into mm0
-			PACKSSDW MMX0, [EAX+8]		; Pack next 8 bytes (two LONGINT) together with mm0
+			MOVQ MMX0,  [EAX]				;  eight bytes (two SIGNED32) of source into mm0
+			PACKSSDW MMX0, [EAX+8]		; Pack next 8 bytes (two SIGNED32) together with mm0
 			MOVQ MMX1, [EAX+16]
 			PACKSSDW MMX1, [EAX+24]
-			PACKUSWB MMX0, MMX1			; Pack 4 INTEGER with another 4 INTEGER into mm0
+			PACKUSWB MMX0, MMX1			; Pack 4 SIGNED16 with another 4 SIGNED16 into mm0
 			MOVQ [EBX], MMX0				; Write mm0 to dest
 			ADD EBX, EDI					; Add stride to dest
 			ADD EAX, 32					; next source

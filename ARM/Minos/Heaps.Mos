@@ -17,9 +17,9 @@ VAR
 	heap		: ADDRESS;   	(*origin of free space*)
 	heapEnd	: ADDRESS;
 
-	PROCEDURE New*( VAR p: LONGINT;  T: LONGINT );   (*1*)
+	PROCEDURE New*( VAR p: SIGNED32;  T: SIGNED32 );   (*1*)
 	(*allocate record, add tag field of 1 word with offset -4*)
-	VAR i, size: LONGINT;  
+	VAR i, size: SIGNED32;  
 	BEGIN
 		p := heap + 4;
 		SYSTEM.PUT( heap, T );   (*adr of type descriptor (tag) to tagfield of new record*)
@@ -32,9 +32,9 @@ VAR
 		ASSERT(heapStart <= heap);
 	END New; 
 	
-	PROCEDURE AllocH*(VAR a: LONGINT; len, elsize: LONGINT);  (*2*)
+	PROCEDURE AllocH*(VAR a: SIGNED32; len, elsize: SIGNED32);  (*2*)
 		(*allocate open array on heap, prefix with size field of 1 word with offset -4*)
-		VAR i, adr, size: LONGINT;
+		VAR i, adr, size: SIGNED32;
 	BEGIN
 		size := len * elsize + 4; adr := ADDRESSOF(a);
 		SYSTEM.PUT(adr, heap - 8);   (*address of array into descriptor*)
@@ -48,18 +48,18 @@ VAR
 		ASSERT(heapStart <= heap);
 	END AllocH;
 
-	PROCEDURE AllocS*(VAR a: LONGINT; len, elsize: LONGINT);  (*3*)
+	PROCEDURE AllocS*(VAR a: SIGNED32; len, elsize: SIGNED32);  (*3*)
 		(*allocate open array on stack*)
-		VAR adr: LONGINT;
+		VAR adr: SIGNED32;
 	BEGIN adr := ADDRESSOF(a); SYSTEM.SETSP(SYSTEM.SP() - len * elsize);
 		SYSTEM.PUT(adr, SYSTEM.SP());   (*address of array into descriptor*)
 		SYSTEM.PUT(adr-4, len)   (*length of array into descriptor*)
 	END AllocS;
 	
-	PROCEDURE Alloc*( VAR adr: LONGINT;  size: LONGINT );
+	PROCEDURE Alloc*( VAR adr: SIGNED32;  size: SIGNED32 );
 	(*allocate area from free space*)
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		IF size MOD 4 # 0 THEN INC(size, 4 - size MOD 4) END;
 		adr := heap;
@@ -71,12 +71,12 @@ VAR
 		ASSERT(heapStart <= heap);
 	END Alloc;  
 	
-	PROCEDURE HeapSize*(): LONGINT;
+	PROCEDURE HeapSize*(): SIGNED32;
 	BEGIN
 		RETURN heapEnd - heapStart
 	END HeapSize;
 	
-	PROCEDURE Free*(): LONGINT;
+	PROCEDURE Free*(): SIGNED32;
 	BEGIN
 		RETURN heapEnd - heap
 	END Free;
@@ -86,7 +86,7 @@ VAR
 	(** NewSys - Implementation of SYSTEM.NEW. **)
 	PROCEDURE NewSys*(VAR pointer: ANY; size: SIZE; isRealtime: BOOLEAN);
 	VAR
-		pointerAsInteger: LONGINT;
+		pointerAsInteger: SIGNED32;
 	BEGIN	
 		Alloc(pointerAsInteger, size);
 		pointer := SYSTEM.VAL(ANY, pointerAsInteger)
@@ -96,16 +96,16 @@ VAR
 	- this is essentially a wrapper that calls New(...) **)
 	PROCEDURE NewRec*(VAR pointer: ANY; typeTag: ADDRESS; isRealtime: BOOLEAN);
 	VAR
-		pointerAsInteger: LONGINT;
+		pointerAsInteger: SIGNED32;
 	BEGIN
-		New(pointerAsInteger, SYSTEM.VAL(LONGINT, typeTag));
+		New(pointerAsInteger, SYSTEM.VAL(SIGNED32, typeTag));
 		pointer := SYSTEM.VAL(ANY, pointerAsInteger)
 	END NewRec;
 
 	(** NewArr - Implementation of NEW with an array containing pointers. *)
 	PROCEDURE NewArr*(VAR p: ANY; elemTag: ADDRESS; numElems, numDims: SIZE; isRealtime: BOOLEAN);
 	VAR
-		openArray: ARRAY 2 OF LONGINT;
+		openArray: ARRAY 2 OF SIGNED32;
 	BEGIN
 		AllocH(openArray[1], numElems * numDims, SYSTEM.GET32(elemTag));
 		p := SYSTEM.VAL(ANY, openArray[1]);

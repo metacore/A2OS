@@ -26,39 +26,39 @@ CONST
 TYPE
 	NamePlate* = POINTER TO NamePlateDesc;
 	NamePlateDesc* = RECORD (Gadgets.FrameDesc)
-		selbeg, selend: INTEGER;
-		time: LONGINT;
-		carpos, carx, cary: INTEGER;
+		selbeg, selend: SIGNED16;
+		time: SIGNED32;
+		carpos, carx, cary: SIGNED16;
 		val: ARRAY MaxLen OF CHAR;
-		start: INTEGER
+		start: SIGNED16
 	END;
 
 VAR
 	W: Texts.Writer;
-	invTF: INTEGER; (* focus & selection color for text fields *)
-	XtraOffset: INTEGER;
+	invTF: SIGNED16; (* focus & selection color for text fields *)
+	XtraOffset: SIGNED16;
 
 PROCEDURE Update(obj: Objects.Object);
 VAR M: Desktops.UpdateNameMsg;
 BEGIN M.obj := obj; M.F := NIL; Display.Broadcast(M)
 END Update;
 
-PROCEDURE Min(x, y: INTEGER): INTEGER;
+PROCEDURE Min(x, y: SIGNED16): SIGNED16;
 BEGIN IF x < y THEN RETURN x; ELSE RETURN y; END;
 END Min;
 
-PROCEDURE Yoffset(F: NamePlate): INTEGER;
+PROCEDURE Yoffset(F: NamePlate): SIGNED16;
 BEGIN RETURN F.H DIV 2 - Fonts.Default.height DIV 2 + ABS(Fonts.Default.minY);
 END Yoffset;
 
-PROCEDURE Length(VAR S: ARRAY OF CHAR): INTEGER;
-VAR p: INTEGER;
+PROCEDURE Length(VAR S: ARRAY OF CHAR): SIGNED16;
+VAR p: SIGNED16;
 BEGIN
 	p := 0; WHILE S[p] # 0X DO INC(p); END; RETURN p
 END Length;
 
-PROCEDURE InsertChar(VAR S: ARRAY OF CHAR; pos: INTEGER; ch: CHAR);
-VAR len, p: INTEGER;
+PROCEDURE InsertChar(VAR S: ARRAY OF CHAR; pos: SIGNED16; ch: CHAR);
+VAR len, p: SIGNED16;
 BEGIN
 	len := Length(S);
 	IF pos > len THEN pos := len ELSIF pos < 0 THEN pos := 0 END;
@@ -69,8 +69,8 @@ BEGIN
 	END
 END InsertChar;
 
-PROCEDURE DeleteChar(VAR S: ARRAY OF CHAR; pos: INTEGER);
-VAR len, p: INTEGER;
+PROCEDURE DeleteChar(VAR S: ARRAY OF CHAR; pos: SIGNED16);
+VAR len, p: SIGNED16;
 BEGIN
 	len := Length(S);
 	IF pos > len THEN pos := len ELSIF pos < 0 THEN pos := 0 END;
@@ -79,8 +79,8 @@ BEGIN
 	END
 END DeleteChar;
 
-PROCEDURE Delete(VAR S: ARRAY OF CHAR; beg, end: INTEGER); (* [beg, end) *)
-VAR len, p: INTEGER;
+PROCEDURE Delete(VAR S: ARRAY OF CHAR; beg, end: SIGNED16); (* [beg, end) *)
+VAR len, p: SIGNED16;
 BEGIN
 	IF beg < 0 THEN beg := 0 END;
 	len := Length(S); IF end > len THEN end := len END;
@@ -89,7 +89,7 @@ BEGIN
 END Delete;
 
 PROCEDURE DocToPlate(F: NamePlate);
-	VAR i, j, k: LONGINT;
+	VAR i, j, k: SIGNED32;
 BEGIN
 	IF F.carpos >= 0 THEN RETURN END;
 	COPY(F.obj(Documents.Document).name, F.val);
@@ -118,7 +118,7 @@ END DocToPlate;
 
 PROCEDURE PlateToDoc(F: NamePlate);
 	VAR
-		i, j: LONGINT;
+		i, j: SIGNED32;
 		lastChar: CHAR;
 BEGIN
 	IF F.carpos >= 0 THEN RETURN END;
@@ -210,7 +210,7 @@ BEGIN
 END UpdateNamePlate;
 
 PROCEDURE ConsumeChar(F: NamePlate; ch: CHAR);
-VAR x, y: INTEGER;
+VAR x, y: SIGNED16;
 BEGIN
 	IF ch = 7FX THEN
 		IF F.carpos > 0 THEN
@@ -266,8 +266,8 @@ BEGIN
 	END
 END ConsumeChar;
 
-PROCEDURE LocateChar(F: NamePlate; x, mx: INTEGER; VAR pos: INTEGER);
-VAR p: INTEGER; r: Objects.Object; X: INTEGER;
+PROCEDURE LocateChar(F: NamePlate; x, mx: SIGNED16; VAR pos: SIGNED16);
+VAR p: SIGNED16; r: Objects.Object; X: SIGNED16;
 BEGIN
 	p := F.start; X := x + Xoffset + XtraOffset;
 	WHILE (F.val[p] # 0X) DO
@@ -278,8 +278,8 @@ BEGIN
 	pos := p;
 END LocateChar;
 
-PROCEDURE LocatePos(F: NamePlate; pos: INTEGER; VAR x, y: INTEGER);
-VAR r: Objects.Object; p: INTEGER;
+PROCEDURE LocatePos(F: NamePlate; pos: SIGNED16; VAR x, y: SIGNED16);
+VAR r: Objects.Object; p: SIGNED16;
 BEGIN
 	x := Xoffset + XtraOffset; y := Yoffset(F); p := F.start;
 	WHILE (F.val[p] # 0X) & (p < pos) DO
@@ -288,24 +288,24 @@ BEGIN
 	END;
 END LocatePos;
 
-PROCEDURE FlipCaret(R: Display3.Mask; F: NamePlate; x, y: INTEGER);
+PROCEDURE FlipCaret(R: Display3.Mask; F: NamePlate; x, y: SIGNED16);
 BEGIN
 	IF F.carpos >= 0 THEN Display3.ReplConst(R, invTF, x + F.carx, y + F.cary-3, CarWidth, CarHeight, Display.invert); END;
 END FlipCaret;
 
-PROCEDURE SetCaret(R: Display3.Mask; F: NamePlate; x, y, pos: INTEGER);
+PROCEDURE SetCaret(R: Display3.Mask; F: NamePlate; x, y, pos: SIGNED16);
 BEGIN
 	LocatePos(F, pos, F.carx, F.cary);
 	Display3.ReplConst(R, invTF, x + F.carx, y + F.cary-3, CarWidth, CarHeight, Display.invert);
 END SetCaret;
 
-PROCEDURE RemoveCaret(R: Display3.Mask; F: NamePlate; x, y: INTEGER);
+PROCEDURE RemoveCaret(R: Display3.Mask; F: NamePlate; x, y: SIGNED16);
 BEGIN
 	IF F.carpos >= 0 THEN FlipCaret(R, F, x, y); F.carpos := -1 END
 END RemoveCaret;
 
-PROCEDURE TrackCaret(VAR DR: Display3.Mask; F: NamePlate; x, y: INTEGER);
-VAR mx, my, pos: INTEGER; keys, keysum: SET; time, beg, end, p: LONGINT; text: Texts.Text;
+PROCEDURE TrackCaret(VAR DR: Display3.Mask; F: NamePlate; x, y: SIGNED16);
+VAR mx, my, pos: SIGNED16; keys, keysum: SET; time, beg, end, p: SIGNED32; text: Texts.Text;
 	R: Texts.Reader; ch: CHAR;
 BEGIN
 	RemoveCaret(DR, F, x, y); keysum := {};
@@ -340,20 +340,20 @@ BEGIN
 	END
 END TrackCaret;
 
-PROCEDURE FlipSelection(R: Display3.Mask; F: NamePlate; x, y: INTEGER; spos, epos: INTEGER);
-VAR sx, sy, ex, ey: INTEGER;
+PROCEDURE FlipSelection(R: Display3.Mask; F: NamePlate; x, y: SIGNED16; spos, epos: SIGNED16);
+VAR sx, sy, ex, ey: SIGNED16;
 BEGIN
 	LocatePos(F, spos, sx, sy); LocatePos(F, epos, ex, ey);
 	Display3.ReplConst(R, invTF, x + sx, y + sy - 3, (ex - sx), Min(CarHeight, F.H - 4), Display.invert);
 END FlipSelection;
 
-PROCEDURE RemoveSelection(R: Display3.Mask; F: NamePlate; x, y: INTEGER);
+PROCEDURE RemoveSelection(R: Display3.Mask; F: NamePlate; x, y: SIGNED16);
 BEGIN
 	IF F.selbeg >= 0 THEN FlipSelection(R, F, x, y, F.selbeg, F.selend); F.selbeg := -1; END;
 END RemoveSelection;
 
-PROCEDURE TrackSelection(R: Display3.Mask; F: NamePlate; x, y: INTEGER);
-VAR mx, my, pos, spos, epos, len: INTEGER; keys, keysum: SET; time: LONGINT;
+PROCEDURE TrackSelection(R: Display3.Mask; F: NamePlate; x, y: SIGNED16);
+VAR mx, my, pos, spos, epos, len: SIGNED16; keys, keysum: SET; time: SIGNED32;
 	C: Oberon.ConsumeMsg;
 BEGIN
 	Oberon.FadeCursor(Oberon.Mouse);
@@ -406,8 +406,8 @@ BEGIN
 	END
 END TrackSelection;
 
-PROCEDURE GetSelection(F: NamePlate; VAR text: Texts.Text; VAR beg, end, time: LONGINT);
-VAR p: INTEGER; W: Texts.Writer;
+PROCEDURE GetSelection(F: NamePlate; VAR text: Texts.Text; VAR beg, end, time: SIGNED32);
+VAR p: SIGNED16; W: Texts.Writer;
 BEGIN
 	NEW(text); Texts.Open(text, "");
 	(* old
@@ -466,7 +466,7 @@ BEGIN
 END NamePlateAttr;
 
 PROCEDURE ConsumeText(F: NamePlate; VAR M: Oberon.ConsumeMsg);
-VAR R: Texts.Reader; ch: CHAR; pos: LONGINT;
+VAR R: Texts.Reader; ch: CHAR; pos: SIGNED32;
 BEGIN
 	F.selbeg := -1;
 	pos := M.beg; Texts.OpenReader(R, M.text, pos);
@@ -483,10 +483,10 @@ BEGIN
 	UpdateNamePlate(F);
 END ConsumeText;
 
-PROCEDURE Dot(R: Display3.Mask; x, y: INTEGER);
-VAR c: INTEGER;
+PROCEDURE Dot(R: Display3.Mask; x, y: SIGNED16);
+VAR c: SIGNED16;
 
-	PROCEDURE D(col: INTEGER);
+	PROCEDURE D(col: SIGNED16);
 	BEGIN Display3.Dot(R, col, x, y, Display.replace);
 		INC(c); INC(x); IF c MOD 4 = 0 THEN INC(y); DEC(x, 4); END;
 	END D;
@@ -498,8 +498,8 @@ BEGIN
 	D(13); D(0); D(14); D(14);
 END Dot;
 
-PROCEDURE RestoreNamePlate(R: Display3.Mask; F: NamePlate; x, y, w, h: INTEGER; dlink: Objects.Object);
-VAR p, X, Y, cx, cy, cw, ch: INTEGER; r: Objects.Object; col: Display.Color;
+PROCEDURE RestoreNamePlate(R: Display3.Mask; F: NamePlate; x, y, w, h: SIGNED16; dlink: Objects.Object);
+VAR p, X, Y, cx, cy, cw, ch: SIGNED16; r: Objects.Object; col: Display.Color;
 BEGIN
 	FindModel(F, dlink);
 	Oberon.RemoveMarks(x, y, w, h);
@@ -574,9 +574,9 @@ BEGIN
 END RestoreNamePlate;
 
 PROCEDURE PrintNamePlate(F: NamePlate; VAR M: Display.DisplayMsg);
-VAR R: Display3.Mask; x, y, w, h: INTEGER;
+VAR R: Display3.Mask; x, y, w, h: SIGNED16;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -600,7 +600,7 @@ BEGIN
 END CopyNamePlate;
 
 PROCEDURE NamePlateHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR F2: NamePlate; x, y, w, h: INTEGER; R: Display3.Mask; ver: LONGINT; obj: Objects.Object; A: Objects.AttrMsg;
+VAR F2: NamePlate; x, y, w, h: SIGNED16; R: Display3.Mask; ver: SIGNED32; obj: Objects.Object; A: Objects.AttrMsg;
 BEGIN
 	IF Oberon.New THEN XtraOffset := 15 ELSE XtraOffset := 0 END;
 	WITH F: NamePlate DO

@@ -66,12 +66,12 @@ CONST
 	*)
 
 TYPE
-	OperandType = INTEGER;
-	OperandFormatType = INTEGER;
-	RegisterIndex = LONGINT;
+	OperandType = SIGNED16;
+	OperandFormatType = SIGNED16;
+	RegisterIndex = SIGNED32;
 
 	InstructionFormat* = RECORD
-		mnemonic-: LONGINT;
+		mnemonic-: SIGNED32;
 		code, mask: SET;
 		capabilities-: SET; (* what kind of capabilities an architecture must have to support this instruction *)
 		op1, op2: OperandFormatType;
@@ -79,25 +79,25 @@ TYPE
 
 	Mnemonic* = RECORD
 		name-: ARRAY maxMnemonicNameLength OF CHAR;
-		number-: LONGINT;
-		firstInstructionFormat, lastInstructionFormat: LONGINT;
+		number-: SIGNED32;
+		firstInstructionFormat, lastInstructionFormat: SIGNED32;
 	END;
 
 	NumberedName=RECORD (* for sorting mnemonics *)
 		name: ARRAY maxMnemonicNameLength OF CHAR;
-		number: LONGINT;
+		number: SIGNED32;
 	END;
 
 	Operand*=RECORD
 		type-: OperandType;
-		size: LONGINT; (* size in bits *)
+		size: SIGNED32; (* size in bits *)
 		register-: RegisterIndex; (* register index *)
-		imm-: LONGINT; (* value *)
+		imm-: SIGNED32; (* value *)
 		fixup-: BinaryCode.Fixup;
 	END;
 
 	Instruction*=RECORD
-		format-: LONGINT;
+		format-: SIGNED32;
 		op1-, op2-: Operand;
 	END;
 
@@ -105,16 +105,16 @@ TYPE
 		VAR mnemonics-: ARRAY numberMnemonics OF Mnemonic;
 		mnemonicsSorted-: ARRAY numberMnemonics OF NumberedName;
 		instructionFormats-: ARRAY maxNumberInstructions OF InstructionFormat;
-		numberInstructionFormats-: LONGINT;
-		inverseCondition-: ARRAY numberMnemonics OF LONGINT;
-		instructionW-: LONGINT;
+		numberInstructionFormats-: SIGNED32;
+		inverseCondition-: ARRAY numberMnemonics OF SIGNED32;
+		instructionW-: SIGNED32;
 
-		RelativeBranchFixupBits-: LONGINT;
-		BranchAndLinkFixupBits-: LONGINT;
-		ImmediateFixupBits-: LONGINT;
-		MemoryOffsetFixupBits-: LONGINT;
+		RelativeBranchFixupBits-: SIGNED32;
+		BranchAndLinkFixupBits-: SIGNED32;
+		ImmediateFixupBits-: SIGNED32;
+		MemoryOffsetFixupBits-: SIGNED32;
 
-		PROCEDURE & InitInstructionSet * (instructionWidth: LONGINT);
+		PROCEDURE & InitInstructionSet * (instructionWidth: SIGNED32);
 		BEGIN
 			ASSERT(instructionWidth>0);
 			instructionW:=instructionWidth;
@@ -147,8 +147,8 @@ TYPE
 		disas
 		*)
 
-	PROCEDURE FindInstructionFormat(mnem: LONGINT; op1, op2: Operand): LONGINT;
-	VAR i: LONGINT; instructionFormat: InstructionFormat;
+	PROCEDURE FindInstructionFormat(mnem: SIGNED32; op1, op2: Operand): SIGNED32;
+	VAR i: SIGNED32; instructionFormat: InstructionFormat;
 
 		PROCEDURE Matches(operand: Operand; operandFormatType: OperandType): BOOLEAN;
 		BEGIN
@@ -200,8 +200,8 @@ TYPE
 		RETURN None;
 	END FindInstructionFormat;
 
-	PROCEDURE MakeInstruction*(VAR instruction: Instruction; mnemonic: LONGINT; op1, op2: Operand);
-	VAR instructionFormat: LONGINT;
+	PROCEDURE MakeInstruction*(VAR instruction: Instruction; mnemonic: SIGNED32; op1, op2: Operand);
+	VAR instructionFormat: SIGNED32;
 	BEGIN
 		instructionFormat := FindInstructionFormat(mnemonic, op1, op2);
 		instruction.format := instructionFormat;
@@ -213,11 +213,11 @@ TYPE
 	BEGIN RETURN instruction.format # None
 	END IsValidInstruction;
 
-	PROCEDURE Encode*(CONST instruction: Instruction): LONGINT;
+	PROCEDURE Encode*(CONST instruction: Instruction): SIGNED32;
 	VAR codeSet: SET; instructionFormat: InstructionFormat; error: BOOLEAN;
 
-		PROCEDURE Unsigned(val: LONGINT; from, to: LONGINT);
-		VAR i: LONGINT;
+		PROCEDURE Unsigned(val: SIGNED32; from, to: SIGNED32);
+		VAR i: SIGNED32;
 		BEGIN
 			ASSERT ( from <= to );
 			FOR i := from TO to DO
@@ -228,8 +228,8 @@ TYPE
 			ASSERT(val = 0);
 		END Unsigned;
 
-		PROCEDURE Signed(val: LONGINT; from, to: LONGINT);
-		VAR i: LONGINT;
+		PROCEDURE Signed(val: SIGNED32; from, to: SIGNED32);
+		VAR i: SIGNED32;
 		BEGIN
 			ASSERT ( from <= to );
 			FOR i := from TO to-1 DO
@@ -243,19 +243,19 @@ TYPE
 		END Signed;
 
 		PROCEDURE EncodeOperand(op: Operand; type: OperandFormatType);
-		VAR imm: LONGINT;
+		VAR imm: SIGNED32;
 
-			PROCEDURE Fixup(from, to: LONGINT);
-			VAR patterns: ObjectFile.FixupPatterns; displacement: LONGINT; mode: SHORTINT;
+			PROCEDURE Fixup(from, to: SIGNED32);
+			VAR patterns: ObjectFile.FixupPatterns; displacement: SIGNED32; mode: SIGNED8;
 			BEGIN
 				NEW(patterns, 1);
 				patterns[0].offset := from; patterns[0].bits := to-from+1;
 				IF (opBL <= instructionFormat.mnemonic) & (instructionFormat.mnemonic <= opBF) THEN
 					mode := BinaryCode.Relative;
-					displacement := (op.fixup.displacement-1)(LONGINT);
+					displacement := (op.fixup.displacement-1)(SIGNED32);
 				ELSE
 					mode := BinaryCode.Absolute;
-					displacement := (op.fixup.displacement)(LONGINT);
+					displacement := (op.fixup.displacement)(SIGNED32);
 				END;
 				op.fixup.InitFixup(mode, 0, op.fixup.symbol, op.fixup.symbolOffset, displacement, 0, patterns);
 			END Fixup;
@@ -290,11 +290,11 @@ TYPE
 		RETURN SetToNumber(codeSet);
 	END Encode;
 
-	PROCEDURE Decode*(code: LONGINT; VAR instruction: Instruction);
-	VAR instructionFormat: InstructionFormat; i: LONGINT; codeSet: SET;
+	PROCEDURE Decode*(code: SIGNED32; VAR instruction: Instruction);
+	VAR instructionFormat: InstructionFormat; i: SIGNED32; codeSet: SET;
 
-		PROCEDURE Unsigned(from, to: LONGINT): LONGINT;
-		VAR val, i: LONGINT;
+		PROCEDURE Unsigned(from, to: SIGNED32): SIGNED32;
+		VAR val, i: SIGNED32;
 		BEGIN
 			val := 0;
 			FOR i := to TO from BY -1 DO
@@ -304,8 +304,8 @@ TYPE
 			RETURN val
 		END Unsigned;
 
-		PROCEDURE Signed(from, to: LONGINT): LONGINT;
-		VAR val, i: LONGINT; negative:BOOLEAN;
+		PROCEDURE Signed(from, to: SIGNED32): SIGNED32;
+		VAR val, i: SIGNED32; negative:BOOLEAN;
 		BEGIN
 			val := 0;
 			negative := to IN codeSet; (* two's complement negate *)
@@ -354,8 +354,8 @@ TYPE
 		DecodeOperand(instruction.op2, instructionFormat.op2);
 	END Decode;
 
-	PROCEDURE EmitInstruction*(CONST instruction: Instruction; mnem: LONGINT; code: BinaryCode.Section);
-	VAR encoding: LONGINT;
+	PROCEDURE EmitInstruction*(CONST instruction: Instruction; mnem: SIGNED32; code: BinaryCode.Section);
+	VAR encoding: SIGNED32;
 
 		PROCEDURE PatchFixup(op: Operand; type: OperandFormatType);
 		BEGIN
@@ -386,7 +386,7 @@ TYPE
 		ASSERT(code.os.unit =instructionW); ASSERT(code.os.bits.GetSize() MOD instructionW = 0);
 	END EmitInstruction;
 
-	PROCEDURE Emit*(mnem: LONGINT; CONST op1, op2: Operand; code: BinaryCode.Section);
+	PROCEDURE Emit*(mnem: SIGNED32; CONST op1, op2: Operand; code: BinaryCode.Section);
 	VAR instruction: Instruction;
 	BEGIN
 		MakeInstruction(instruction, mnem, op1, op2);
@@ -394,8 +394,8 @@ TYPE
 	END Emit;
 
 	(* perform a binary search for the index of the specified mnemonic *)
-	PROCEDURE FindMnemonic* (CONST mnem: ARRAY OF CHAR): LONGINT;
-	VAR l, r, m: LONGINT;
+	PROCEDURE FindMnemonic* (CONST mnem: ARRAY OF CHAR): SIGNED32;
+	VAR l, r, m: SIGNED32;
 	BEGIN
 		(*
 		IF mnem = "LD" THEN
@@ -417,7 +417,7 @@ TYPE
 		RETURN None;
 	END FindMnemonic;
 
-	PROCEDURE FindRegister*(CONST name: ARRAY OF CHAR): SHORTINT;
+	PROCEDURE FindRegister*(CONST name: ARRAY OF CHAR): SIGNED8;
 	BEGIN
 		IF name[0] = "R" THEN
 			IF name[2] = 0X THEN
@@ -452,8 +452,8 @@ TYPE
 		END;
 	END FindRegister;
 
-	PROCEDURE NumberToSet(code: LONGINT): SET;
-	VAR i: LONGINT; set: SET;
+	PROCEDURE NumberToSet(code: SIGNED32): SET;
+	VAR i: SIGNED32; set: SET;
 	BEGIN
 		ASSERT(MAX(SET) >= 31);
 		set := {};
@@ -464,8 +464,8 @@ TYPE
 		RETURN set
 	END NumberToSet;
 
-	PROCEDURE SetToNumber(set: SET): LONGINT;
-	VAR i, num: LONGINT;
+	PROCEDURE SetToNumber(set: SET): SIGNED32;
+	VAR i, num: SIGNED32;
 	BEGIN
 		ASSERT(MAX(SET) >= 31);
 		num := 0;
@@ -477,14 +477,14 @@ TYPE
 
 	(** setup instruction and mnemonic tables **)
 	PROCEDURE InitInstructions;
-	VAR curMnemonic: LONGINT;
+	VAR curMnemonic: SIGNED32;
 		checkMnemonics: ARRAY numberMnemonics OF BOOLEAN;
-		isimmP,isfloatP,isvecP: LONGINT; (*shorthands for positions iside the instruction word*)
-		isSpecialBR:LONGINT;
+		isimmP,isfloatP,isvecP: SIGNED32; (*shorthands for positions iside the instruction word*)
+		isSpecialBR:SIGNED32;
 		opcodeP,capabilityP,currOpCode, brModesP, brCondP:SET;
 
-		PROCEDURE SortMnemonics(lo, hi: LONGINT);
-		VAR i, j: LONGINT; x, t: NumberedName;
+		PROCEDURE SortMnemonics(lo, hi: SIGNED32);
+		VAR i, j: SIGNED32; x, t: NumberedName;
 		BEGIN
 			i := lo; j := hi;
 			x := mnemonicsSorted[(lo+hi) DIV 2];
@@ -500,7 +500,7 @@ TYPE
 			IF (i < hi) THEN SortMnemonics(i, hi) END
 		END SortMnemonics;
 
-		PROCEDURE AddMnemonic(number: LONGINT; CONST name: ARRAY OF CHAR);
+		PROCEDURE AddMnemonic(number: SIGNED32; CONST name: ARRAY OF CHAR);
 		BEGIN
 			ASSERT(number<numberMnemonics);
 			IF checkMnemonic THEN checkMnemonics[number] := TRUE END;
@@ -512,7 +512,7 @@ TYPE
 			mnemonics[number].firstInstructionFormat := numberInstructionFormats;
 		END AddMnemonic;
 
-		PROCEDURE AddAlias(alias,number: LONGINT; CONST name: ARRAY OF CHAR);
+		PROCEDURE AddAlias(alias,number: SIGNED32; CONST name: ARRAY OF CHAR);
 		BEGIN
 			IF checkMnemonic THEN checkMnemonics[alias] := TRUE END;
 
@@ -541,30 +541,30 @@ TYPE
 		END AddInstruction;
 
 		PROCEDURE CheckMnemonics;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO numberMnemonics-1 DO
 				ASSERT(checkMnemonics[i]);
 			END;
 		END CheckMnemonics;
 
-		PROCEDURE Inverse(mnem1, mnem2: LONGINT);
+		PROCEDURE Inverse(mnem1, mnem2: SIGNED32);
 		BEGIN
 			inverseCondition[mnem1] := mnem2;
 			inverseCondition[mnem2] := mnem1
 		END Inverse;
 
 		(*Turn a number into a set of bits at the start of an instruction word*)
-		PROCEDURE makeOpcode(num: LONGINT) :SET;
-		VAR shifted: LONGINT;
+		PROCEDURE makeOpcode(num: SIGNED32) :SET;
+		VAR shifted: SIGNED32;
 		BEGIN
 			(*left shift then convert to set*)
 			shifted:=LSH(num,( instructionW-opcodeW ) );
 			RETURN NumberToSet(shifted);
 		END makeOpcode;
 
-		PROCEDURE makeCondition(num:LONGINT):SET;
-		VAR shifted: LONGINT;
+		PROCEDURE makeCondition(num:SIGNED32):SET;
+		VAR shifted: SIGNED32;
 		BEGIN
 			shifted:=LSH(num,( instructionW-opcodeW-conditionW) );
 			RETURN NumberToSet(shifted);
@@ -822,20 +822,20 @@ TYPE
 		IF checkMnemonic THEN CheckMnemonics END;
 	END InitInstructions;
 
-	PROCEDURE InitRegister*(VAR operand: Operand; reg: LONGINT);
+	PROCEDURE InitRegister*(VAR operand: Operand; reg: SIGNED32);
 	BEGIN
 		operand.type := Register;
 		operand.register := SHORT(reg);
 	END InitRegister;
 
-	PROCEDURE InitImmediate*(VAR operand: Operand; bits: LONGINT; imm: LONGINT);
+	PROCEDURE InitImmediate*(VAR operand: Operand; bits: SIGNED32; imm: SIGNED32);
 	BEGIN
 		operand.type := Immediate;
 		operand.size := bits;
 		operand.imm := imm;
 	END InitImmediate;
 
-	PROCEDURE InitMemory*(VAR operand: Operand; reg1: RegisterIndex; imm: LONGINT);
+	PROCEDURE InitMemory*(VAR operand: Operand; reg1: RegisterIndex; imm: SIGNED32);
 	BEGIN
 		operand.type := Memory;
 		operand.register := reg1;
@@ -847,7 +847,7 @@ TYPE
 	END InitMemory;
 
 	(* generate immediate operand with fixup *)
-	PROCEDURE InitFixup*(VAR operand: Operand; bits: SHORTINT; fixup: BinaryCode.Fixup (*symbol: Sections.Section; offset, displacement: LONGINT *));
+	PROCEDURE InitFixup*(VAR operand: Operand; bits: SIGNED8; fixup: BinaryCode.Fixup (*symbol: Sections.Section; offset, displacement: SIGNED32 *));
 	BEGIN
 		operand.type := Immediate;
 		operand.imm := 0;
@@ -930,8 +930,8 @@ TYPE
 		END;
 	END DumpInstruction;
 
-	PROCEDURE DumpBits*(w: Streams.Writer; set: SET; numberBits: LONGINT);
-	VAR i: LONGINT;
+	PROCEDURE DumpBits*(w: Streams.Writer; set: SET; numberBits: SIGNED32);
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := numberBits-1 TO 0 BY -1 DO
 			IF i IN set THEN w.String("1") ELSE w.String("0") END;
@@ -939,9 +939,9 @@ TYPE
 	END DumpBits;
 
 	PROCEDURE DumpInstructionFormats*(context: Commands.Context);
-	VAR i, j, k, mnemNum: LONGINT; instr: InstructionFormat; first: BOOLEAN; mnemonic: Mnemonic; options: Options.Options; sorted: BOOLEAN;
+	VAR i, j, k, mnemNum: SIGNED32; instr: InstructionFormat; first: BOOLEAN; mnemonic: Mnemonic; options: Options.Options; sorted: BOOLEAN;
 
-		PROCEDURE DumpType(type: INTEGER);
+		PROCEDURE DumpType(type: SIGNED16);
 		BEGIN
 			IF type = None THEN RETURN END;
 			IF first THEN context.out.String(" "); first := FALSE; ELSE context.out.String(", ") END;
@@ -989,7 +989,7 @@ TYPE
 
 	END InstructionSet;
 
-	PROCEDURE Hex(ch: CHAR): LONGINT;
+	PROCEDURE Hex(ch: CHAR): SIGNED32;
 	BEGIN
 		IF (ch <= 'F') & (ch >= 'A') THEN RETURN ORD(ch)-ORD('A')+10
 		ELSIF (ch <= 'f') & (ch >= 'a') THEN RETURN ORD(ch)-ORD('a')+10
@@ -999,7 +999,7 @@ TYPE
 	END Hex;
 
 	PROCEDURE ReadCode(file: Files.File): BitSets.BitSet;
-	VAR r: Files.Reader;  val, val2: LONGINT;line: ARRAY 10 OF CHAR; lineNr: LONGINT; bitSet: BitSets.BitSet; i: LONGINT;
+	VAR r: Files.Reader;  val, val2: SIGNED32;line: ARRAY 10 OF CHAR; lineNr: SIGNED32; bitSet: BitSets.BitSet; i: SIGNED32;
 	BEGIN
 	(*todo: probably screws up on anything but 18 bit double packed*)
 		IF file = NIL THEN RETURN NIL END;
@@ -1025,7 +1025,7 @@ TYPE
 	END ReadCode;
 
 	PROCEDURE ReadData(file: Files.File): BitSets.BitSet;
-	VAR r: Files.Reader;  val, val2: LONGINT;line: ARRAY 10 OF CHAR; lineNr: LONGINT; bitSet: BitSets.BitSet; i: LONGINT;
+	VAR r: Files.Reader;  val, val2: SIGNED32;line: ARRAY 10 OF CHAR; lineNr: SIGNED32; bitSet: BitSets.BitSet; i: SIGNED32;
 	BEGIN
 		IF file = NIL THEN RETURN NIL END;
 		lineNr := 0;
@@ -1050,7 +1050,7 @@ TYPE
 		Disasm = OBJECT (Disassembler.Disassembler)
 
 			PROCEDURE DisassembleInstruction(bitSet: BitSets.BitSet; VAR adr: Disassembler.Unit; maxInstructionSize: Disassembler.Unit; w:Streams.Writer);
-			VAR instruction: Instruction; value: WORD; mnemonic: WORD;
+			VAR instruction: Instruction; value: INTEGER; mnemonic: INTEGER;
 			BEGIN
 				(* maxInstructionSize can be ignored here *)
 				value := bitSet.GetBits(adr*36,decodeInstance.instructionW);    (*bitset treated as series of 36 bit slots, individual words left aligned.*)
@@ -1072,8 +1072,8 @@ TYPE
 		END Disasm;
 
 	VAR disassembler: Disasm; codeFileName, dataFileName, logFileName: Files.FileName; codeFile, dataFile, logFile: Files.File;code, data: BitSets.BitSet; options: Options.Options;
-		address: WORD;
-		instructionWidth: WORD;
+		address: INTEGER;
+		instructionWidth: INTEGER;
 	BEGIN
 		IF context.arg.GetString(codeFileName) THEN
 			codeFile := Files.Old(codeFileName);

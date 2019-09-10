@@ -2,7 +2,7 @@
 Refer to the "General ETH Oberon System Source License" contract available at: http://www.oberon.ethz.ch/ *)
 
 MODULE Math;	(** portable *)
-(** AUTHOR "?"; PURPOSE "Math utility module (REAL)"; *)
+(** AUTHOR "?"; PURPOSE "Math utility module (FLOAT32)"; *)
 
 (* Aos version - requires floating-point instruction support. *)
 
@@ -15,7 +15,7 @@ CONST
 	eps = 1.2E-7;
 
 TYPE
-	Value = REAL;
+	Value = FLOAT32;
 
 PROCEDURE Expo (x: Value): UNSIGNED32;
 BEGIN
@@ -39,7 +39,7 @@ END Equal;
 
 PROCEDURE sin*(x: Value): Value;
 VAR
-	k: WORD;
+	k: INTEGER;
 	xk, prev, res: Value;
 BEGIN
 #IF I386 THEN
@@ -80,7 +80,7 @@ END sin;
 
 PROCEDURE cos*(x: Value): Value;
 VAR
-	k: WORD;
+	k: INTEGER;
 	prev, res, xk: Value;
 BEGIN
 #IF I386 THEN
@@ -121,7 +121,7 @@ END cos;
 
 PROCEDURE arctan*(x: Value): Value;
 VAR
-	k: WORD;
+	k: INTEGER;
 	prev, res, term, xk: Value;
 BEGIN
 #IF I386 THEN
@@ -206,7 +206,7 @@ END sqrt;
 
 PROCEDURE ln*(x: Value): Value;
 VAR
-	k: WORD;
+	k: INTEGER;
 	res, y, yk: Value;
 BEGIN
 	IF x <= 0 THEN
@@ -267,7 +267,7 @@ END ln;
 
 PROCEDURE exp*(x: Value): Value;
 VAR
-	k: WORD;
+	k: INTEGER;
 	prev, res, xk: Value;
 BEGIN
 #IF I386 THEN

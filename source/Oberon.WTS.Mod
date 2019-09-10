@@ -10,13 +10,13 @@ CONST
 
 VAR
 	R*: Files.Rider;
-	E: INTEGER;
+	E: SIGNED16;
 	elem: ARRAY 32, 32 OF CHAR;
 	W, X: Texts.Writer;
 	L: Objects.Library;
 	styleOk: BOOLEAN;
 	styles: ARRAY MaxStyles OF TextGadgets.Style;
-	nofStyles: INTEGER;
+	nofStyles: SIGNED16;
 
 	PROCEDURE Msg(s: ARRAY OF CHAR; cr: BOOLEAN);
 	BEGIN Texts.WriteString(X, s);
@@ -24,19 +24,19 @@ VAR
 		Texts.Append(Oberon.Log, X.buf)
 	END Msg;
 
-	PROCEDURE WriteText(VAR R: Files.Rider; lib: Objects.Library; col, voff: SHORTINT; len: LONGINT);
+	PROCEDURE WriteText(VAR R: Files.Rider; lib: Objects.Library; col, voff: SIGNED8; len: SIGNED32);
 	VAR ch: CHAR;
 	BEGIN Texts.SetFont(W, lib); Texts.SetColor(W, col); Texts.SetOffset(W, voff);
 		WHILE len > 0 DO Files.Read(R, ch); Texts.Write(W, ch); DEC(len) END
 	END WriteText;
 
-	PROCEDURE Parc(VAR R: Files.Rider; n: INTEGER);
+	PROCEDURE Parc(VAR R: Files.Rider; n: SIGNED16);
 	VAR
 		style: TextGadgets.Style;
-		ref: INTEGER;
-		i, tabs: LONGINT;
-		opts: LONGINT;
-		x: LONGINT;
+		ref: SIGNED16;
+		i, tabs: SIGNED32;
+		opts: SIGNED32;
+		x: SIGNED32;
 	BEGIN
 		IF L = NIL THEN NEW(L); Objects.OpenLibrary(L) END;
 		style := TextGadgets.newStyle();
@@ -71,8 +71,8 @@ VAR
 		Texts.SetFont(W, L); Texts.Write(W, CHR(ref))
 	END Parc;
 
-	PROCEDURE PutObj(F: Display.Frame; w, h: INTEGER);
-		VAR ref: INTEGER; M: Display.ModifyMsg;
+	PROCEDURE PutObj(F: Display.Frame; w, h: SIGNED16);
+		VAR ref: SIGNED16; M: Display.ModifyMsg;
 	BEGIN
 		IF (F.W # w) OR (F.H # h) THEN
 			M.id := Display.extend; M.mode := Display.state;
@@ -85,10 +85,10 @@ VAR
 		Texts.SetFont(W, L); Texts.Write(W, CHR(ref))
 	END PutObj;
 
-	PROCEDURE Elem(VAR R, S: Files.Rider; n: LONGINT);
-	VAR w, h, pos: LONGINT;
+	PROCEDURE Elem(VAR R, S: Files.Rider; n: SIGNED32);
+	VAR w, h, pos: SIGNED32;
 		ch: CHAR;
-		proc, cmd: ARRAY 32 OF CHAR; res: INTEGER;
+		proc, cmd: ARRAY 32 OF CHAR; res: SIGNED16;
 	BEGIN Files.ReadLInt(R, w); Files.ReadLInt(R, h); Files.Read(R, ch);
 		IF ORD(ch) = E THEN
 			Files.ReadString(R, elem[E]); Files.ReadString(R, proc); Msg("   ", FALSE); Msg(elem[E], TRUE);
@@ -129,8 +129,8 @@ VAR
 
 	PROCEDURE Conv(VAR R: Files.Rider; VAR T: Texts.Text);
 	VAR
-		hlen, len: LONGINT;
-		N, lib, col, voff: SHORTINT;
+		hlen, len: SIGNED32;
+		N, lib, col, voff: SIGNED8;
 		LName: ARRAY 32, 32 OF CHAR;
 		S: Files.Rider;
 	BEGIN	(*type read 01 F0*)
@@ -149,7 +149,7 @@ VAR
 	END Conv;
 
 	PROCEDURE Backup(name: ARRAY OF CHAR);
-	VAR bak: ARRAY 32 OF CHAR; i, res: INTEGER;
+	VAR bak: ARRAY 32 OF CHAR; i, res: SIGNED16;
 	BEGIN i := 0;
 		WHILE name[i] # 0X DO bak[i] := name[i]; INC(i) END;
 		bak[i] := "."; bak[i+1] := "B"; bak[i+2] := "a"; bak[i+3] := "k"; bak[i+4] := 0X;
@@ -158,11 +158,11 @@ VAR
 
 	PROCEDURE Convert*;
 	VAR
-		F: Files.File; len: LONGINT;
+		F: Files.File; len: SIGNED32;
 		S: Texts.Scanner; T: Texts.Text;
 		name: ARRAY 32 OF CHAR; x, y: CHAR;
 		bak: BOOLEAN;
-		i: INTEGER;
+		i: SIGNED16;
 	BEGIN
 		styleOk := FALSE; bak := FALSE;
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);

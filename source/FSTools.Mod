@@ -81,7 +81,7 @@ VAR
 	unsafeMode : BOOLEAN;
 
 PROCEDURE ExpandAlias(CONST alias : ARRAY OF CHAR; VAR genvol, genfs: ARRAY OF CHAR);
-VAR t: ARRAY 64 OF CHAR; i, j: LONGINT; res: WORD;
+VAR t: ARRAY 64 OF CHAR; i, j: SIGNED32; res: INTEGER;
 BEGIN
 	genvol[0] := 0X; genfs[0] := 0X;
 	t := "Files.Alias.";
@@ -105,7 +105,7 @@ END ExpandAlias;
 PROCEDURE GetFileSystemFactory(CONST name : ARRAY OF CHAR; error : Streams.Writer) : Files.FileSystemFactory;
 VAR
 	factory : Files.FileSystemFactory;
-	moduleName, procedureName : Modules.Name; msg : ARRAY 128 OF CHAR; res : WORD;
+	moduleName, procedureName : Modules.Name; msg : ARRAY 128 OF CHAR; res : INTEGER;
 BEGIN
 	factory := NIL;
 	Commands.Split(name, moduleName, procedureName, res, msg);
@@ -123,7 +123,7 @@ END GetFileSystemFactory;
 PROCEDURE Mount*(context : Commands.Context); (** prefix alias [volpar] ["|" fspar] ~ *)
 VAR
 	factory : Files.FileSystemFactory;
-	parvol, parfs: Files.Parameters; i, res: LONGINT;
+	parvol, parfs: Files.Parameters; i, res: SIGNED32;
 	alias, genvol, genfs : ARRAY 64 OF CHAR; prefix: Files.Prefix;
 BEGIN
 	IF context.arg.GetString(prefix) & context.arg.GetString(alias) THEN
@@ -177,7 +177,7 @@ BEGIN
 END Mount;
 
 PROCEDURE Unmount*(context : Commands.Context); (** prefix[\f] *)
-VAR prefix: Files.Prefix; fs: Files.FileSystem; i: LONGINT; force: BOOLEAN; option : ARRAY 8 OF CHAR; ch : CHAR;
+VAR prefix: Files.Prefix; fs: Files.FileSystem; i: SIGNED32; force: BOOLEAN; option : ARRAY 8 OF CHAR; ch : CHAR;
 BEGIN
 	context.arg.SkipWhitespace;
 	i := 0; ch := context.arg.Peek();
@@ -242,7 +242,7 @@ BEGIN
 END WriteK;
 
 PROCEDURE Watch*(context : Commands.Context); (** ~ *)
-VAR prefix : Files.Prefix; free, total: LONGINT; i: SIZE; fs: Files.FileSystem; ft: Files.FileSystemTable; found : BOOLEAN;
+VAR prefix : Files.Prefix; free, total: SIGNED32; i: SIZE; fs: Files.FileSystem; ft: Files.FileSystemTable; found : BOOLEAN;
 BEGIN
 	prefix := "";
 	context.arg.SkipWhitespace; context.arg.String(prefix);
@@ -296,7 +296,7 @@ VAR
 	enum : Files.Enumerator;
 	flags, fileflags : SET;
 	count : SIZE;
-	time, date : LONGINT;
+	time, date : SIGNED32;
 	total, size : Files.Size;
 	name : ARRAY MaxNameLen OF CHAR;
 	dt : Dates.DateTime;
@@ -353,7 +353,7 @@ PROCEDURE EnumerateDirectory(
 	CONST arguments : ARRAY OF CHAR);
 VAR
 	name : Files.FileName;
-	flags : SET; time, date : LONGINT;
+	flags : SET; time, date : SIGNED32;
 	size: Files.Size; subDirEnum : Files.Enumerator;
 
 	PROCEDURE PrepareContext(context : Commands.Context; CONST currentFile, arguments : ARRAY OF CHAR);
@@ -408,7 +408,7 @@ VAR
 	enum : Files.Enumerator;
 	enumContext : Commands.Context;
 	arg : Streams.StringReader;
-	res : WORD;
+	res : INTEGER;
 	ignore: SIZE;
 BEGIN
 	NEW(options);
@@ -501,7 +501,7 @@ BEGIN
 END CreateFile;
 
 PROCEDURE CopyTo*(context : Commands.Context); (** targetpath sourcepath {filename} ~ *)
-VAR targetPath, sourcePath, targetFullname, sourceFullname,  filename : Files.FileName; overwrite : BOOLEAN; nofFilesCopied, nofErrors: LONGINT; res : WORD;
+VAR targetPath, sourcePath, targetFullname, sourceFullname,  filename : Files.FileName; overwrite : BOOLEAN; nofFilesCopied, nofErrors: SIGNED32; res : INTEGER;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(targetPath);
 	context.arg.SkipWhitespace; context.arg.String(sourcePath);
@@ -536,7 +536,7 @@ PROCEDURE CopyFiles*(context : Commands.Context); (** [Options] {source  => dest
 VAR
 	source, destination : FileList;
 	overwritten, error, ignoreErrors, quiet : BOOLEAN;
-	nofFiles, n : LONGINT; res: WORD;
+	nofFiles, n : SIGNED32; res: INTEGER;
 	options: Options.Options;
 BEGIN
 	NEW(options);
@@ -592,7 +592,7 @@ BEGIN
 	END;
 END CopyFiles;
 
-PROCEDURE GenerateName(CONST prefix: ARRAY OF CHAR; index: LONGINT; VAR str: ARRAY OF CHAR);
+PROCEDURE GenerateName(CONST prefix: ARRAY OF CHAR; index: SIGNED32; VAR str: ARRAY OF CHAR);
 VAR startTime: Dates.DateTime; num: ARRAY 32 OF CHAR;
 BEGIN
 	startTime := Dates.Now();
@@ -607,7 +607,7 @@ BEGIN
 END GenerateName;
 
 PROCEDURE Backup*(context: Commands.Context);
-VAR index: LONGINT; fileList: FileList; nofFiles, n: LONGINT; res: WORD; str: Files.FileName; overwritten: BOOLEAN;
+VAR index: SIGNED32; fileList: FileList; nofFiles, n: SIGNED32; res: INTEGER; str: Files.FileName; overwritten: BOOLEAN;
 BEGIN
 	overwritten := FALSE;
 	nofFiles := GetFileList(context, fileList);
@@ -630,7 +630,7 @@ PROCEDURE DeleteFiles*(context : Commands.Context); (** [Options] {file} ~ *)
 VAR
 	filelist : FileList;
 	error, ignoreErrors, silent : BOOLEAN;
-	nofFiles, n, ndone : LONGINT; res: WORD;
+	nofFiles, n, ndone : SIGNED32; res: INTEGER;
 	options : Options.Options;
 BEGIN
 	NEW(options);
@@ -676,7 +676,7 @@ PROCEDURE RenameFiles*(context : Commands.Context); (** [Options] {source => des
 VAR
 	source, target : FileList;
 	error, ignoreErrors : BOOLEAN;
-	nofFiles, n : LONGINT; res: WORD;
+	nofFiles, n : SIGNED32; res: INTEGER;
 	options : Options.Options;
 BEGIN
 	NEW(options);
@@ -716,7 +716,7 @@ BEGIN
 END RenameFiles;
 
 PROCEDURE CreateDirectory*(context : Commands.Context); (* path ~ *)
-VAR path : Files.FileName; res : WORD;
+VAR path : Files.FileName; res : INTEGER;
 BEGIN
 	IF context.arg.GetString(path) THEN
 		Files.CreateDirectory(path, res);
@@ -732,7 +732,7 @@ BEGIN
 END CreateDirectory;
 
 PROCEDURE DeleteDirectory*(context : Commands.Context); (* path ~ *)
-VAR path : Files.FileName; res : WORD;
+VAR path : Files.FileName; res : INTEGER;
 BEGIN
 	IF context.arg.GetString(path) THEN
 		Files.RemoveDirectory(path, FALSE, res);
@@ -751,12 +751,12 @@ END DeleteDirectory;
 PROCEDURE CompareDirectories*(context : Commands.Context); (** directory1 directory2 ~ *)
 VAR
 	fileList1, fileList2 : FileList;
-	length1, length2 : LONGINT;
+	length1, length2 : SIGNED32;
 	dirname1, dirname2 : Files.FileName;
-	index1, index2 : LONGINT;
-	differences : LONGINT;
+	index1, index2 : SIGNED32;
+	differences : SIGNED32;
 
-	PROCEDURE GetSortedFileList(CONST dirname : ARRAY OF CHAR; VAR index : LONGINT) : FileList;
+	PROCEDURE GetSortedFileList(CONST dirname : ARRAY OF CHAR; VAR index : SIGNED32) : FileList;
 	VAR mask : Files.FileName; fileList : FileList;
 	BEGIN
 		COPY(dirname, mask);
@@ -769,8 +769,8 @@ VAR
 		RETURN fileList;
 	END GetSortedFileList;
 
-	PROCEDURE CompareEntries(CONST entry1, entry2 : ARRAY OF CHAR) : LONGINT;
-	VAR result : LONGINT; prefix : Files.Prefix; filename1, filename2, pathname, path : Files.FileName;
+	PROCEDURE CompareEntries(CONST entry1, entry2 : ARRAY OF CHAR) : SIGNED32;
+	VAR result : SIGNED32; prefix : Files.Prefix; filename1, filename2, pathname, path : Files.FileName;
 	BEGIN
 		Files.SplitName(entry1, prefix, pathname);
 		Files.SplitPath(pathname, path, filename1);
@@ -854,8 +854,8 @@ BEGIN
 	END;
 END CompareFiles;
 
-PROCEDURE SortFileList(filelist : FileList; length : LONGINT );
-VAR i, j : LONGINT; temp : Strings.String;
+PROCEDURE SortFileList(filelist : FileList; length : SIGNED32 );
+VAR i, j : SIGNED32; temp : Strings.String;
 BEGIN
 	(* bubble sort *)
 	FOR i := 0 TO length-1 DO
@@ -880,11 +880,11 @@ BEGIN
 END ResizeFilelist;
 
 (* Checks whether a file list entry contains mask characters and adds the corresponding files if it does *)
-PROCEDURE InsertFiles(CONST mask : ARRAY OF CHAR; VAR filelist : FileList; VAR index : LONGINT);
+PROCEDURE InsertFiles(CONST mask : ARRAY OF CHAR; VAR filelist : FileList; VAR index : SIGNED32);
 VAR
 	enum : Files.Enumerator;
 	fileflags : SET;
-	time, date : LONGINT;
+	time, date : SIGNED32;
 	size: Files.Size;
 	name : ARRAY MaxNameLen OF CHAR;
 BEGIN
@@ -982,11 +982,11 @@ BEGIN
 	RETURN Strings.NewString(targetName);
 END GetTargetName;
 
-PROCEDURE InsertFilesAndFixDestination(context : Commands.Context; CONST sourceMask, targetMask : ARRAY OF CHAR; VAR source, target : FileList; VAR index : LONGINT) : BOOLEAN;
+PROCEDURE InsertFilesAndFixDestination(context : Commands.Context; CONST sourceMask, targetMask : ARRAY OF CHAR; VAR source, target : FileList; VAR index : SIGNED32) : BOOLEAN;
 VAR
 	enum : Files.Enumerator;
 	fileflags : SET;
-	time, date : LONGINT;
+	time, date : SIGNED32;
 	size : Files.Size;
 	name : ARRAY MaxNameLen OF CHAR;
 BEGIN
@@ -1009,8 +1009,8 @@ BEGIN
 	RETURN Strings.ContainsChar(string, "*", FALSE) OR Strings.ContainsChar(string, "?", FALSE);
 END IsMask;
 
-PROCEDURE GetFileList(context : Commands.Context; VAR filelist : FileList) : LONGINT;
-VAR filename : ARRAY MaxNameLen OF CHAR; done, error : BOOLEAN; count : LONGINT;
+PROCEDURE GetFileList(context : Commands.Context; VAR filelist : FileList) : SIGNED32;
+VAR filename : ARRAY MaxNameLen OF CHAR; done, error : BOOLEAN; count : SIGNED32;
 BEGIN
 	NEW(filelist, InitialFilelistSize);
 	WHILE ~done & ~error DO
@@ -1036,8 +1036,8 @@ BEGIN
 	RETURN count;
 END GetFileList;
 
-PROCEDURE GetSimpleFileLists(context : Commands.Context; VAR source, target : FileList) : LONGINT;
-VAR sourceFilename, targetFilename : Files.FileName; count : LONGINT;
+PROCEDURE GetSimpleFileLists(context : Commands.Context; VAR source, target : FileList) : SIGNED32;
+VAR sourceFilename, targetFilename : Files.FileName; count : SIGNED32;
 BEGIN
 	IF context.arg.GetString(sourceFilename) & context.arg.GetString(targetFilename) THEN
 		count := 1;
@@ -1057,9 +1057,9 @@ BEGIN
 	RETURN count;
 END GetSimpleFileLists;
 
-PROCEDURE GetFileLists(context : Commands.Context;  VAR source, target : FileList) : LONGINT;
+PROCEDURE GetFileLists(context : Commands.Context;  VAR source, target : FileList) : SIGNED32;
 VAR
-	filename : ARRAY MaxNameLen OF CHAR; done, error : BOOLEAN; count : LONGINT;
+	filename : ARRAY MaxNameLen OF CHAR; done, error : BOOLEAN; count : SIGNED32;
 	sourceString, targetString : String;
 BEGIN
 	NEW(source, InitialFilelistSize); NEW(target, InitialFilelistSize);
@@ -1117,7 +1117,7 @@ BEGIN
 	out.String("FSTools: Pattern matching is disabled in SAFE mode. Press FSTools.Unsafe ~ to enable pattern matching."); out.Ln;
 END ShowUnsafeMessage;
 
-PROCEDURE ShowRes(out : Streams.Writer; res : WORD);
+PROCEDURE ShowRes(out : Streams.Writer; res : INTEGER);
 BEGIN
 	out.String("(");
 	CASE res OF
@@ -1136,7 +1136,7 @@ END ShowRes;
 PROCEDURE CloseFiles*(context : Commands.Context); (** [Options] {file} ~ *)
 VAR
 	filelist : FileList;
-	nofFiles, res, n, ndone : LONGINT;
+	nofFiles, res, n, ndone : SIGNED32;
 	file: Files.File;
 BEGIN
 	nofFiles := GetFileList(context, filelist);

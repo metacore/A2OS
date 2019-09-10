@@ -45,7 +45,7 @@ TYPE
 	tEntry = POINTER TO tEntryDesc;
 	tEntryDesc = RECORD (vyLinks.LinkDesc)
 		name, val: ARRAY 256 OF CHAR;
-		X, Y, W, H: INTEGER;
+		X, Y, W, H: SIGNED16;
 		selected: BOOLEAN;
 		visible: BOOLEAN;
 		node: tNode
@@ -56,10 +56,10 @@ TYPE
 		root: Objects.Object;
 		name, val: ARRAY 256 OF CHAR;
 		entriesvisible: BOOLEAN;
-		entriescount: LONGINT;
+		entriescount: SIGNED32;
 		repetition: BOOLEAN;
-		X, Y, W, H: INTEGER;
-		x, y: LONGREAL;
+		X, Y, W, H: SIGNED16;
+		x, y: FLOAT64;
 		selected: BOOLEAN;
 		visible: BOOLEAN
 	END;
@@ -67,11 +67,11 @@ TYPE
 	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc* = RECORD (vyPort.tLayerDesc)
 		node: tNode;
-		distance: INTEGER;
+		distance: SIGNED16;
 		forbidden: ARRAY 128 OF vyName.tNameArray;
-		forbiddencount: INTEGER;
+		forbiddencount: SIGNED16;
 		commands: vyCommandMenus.List;
-		lastLink: LONGINT;
+		lastLink: SIGNED32;
 		lifeUpdate: BOOLEAN
 	END;
 
@@ -80,8 +80,8 @@ TYPE
 
 VAR
 	enumChar: ARRAY 1024 OF vyName.tNameArray;
-	enumCount: INTEGER;  ObjList: vyLinks.Link;  LastObj: vyLinks.Link;  tempLayer: tLayer;  Xtemp, Ytemp, Wtemp, Htemp: INTEGER;
-	tempNode: tNode;  nousersandsources: BOOLEAN;  GVList: ViewList;  gadgets: ViewList;  maxdepth: INTEGER;
+	enumCount: SIGNED16;  ObjList: vyLinks.Link;  LastObj: vyLinks.Link;  tempLayer: tLayer;  Xtemp, Ytemp, Wtemp, Htemp: SIGNED16;
+	tempNode: tNode;  nousersandsources: BOOLEAN;  GVList: ViewList;  gadgets: ViewList;  maxdepth: SIGNED16;
 
 	PROCEDURE StoreEntry( VAR R: Files.Rider;  lib: Objects.Library;  entry: vyLinks.Link );
 	BEGIN
@@ -96,7 +96,7 @@ VAR
 	END StoreEntry;
 
 	PROCEDURE LoadEntry( VAR R: Files.Rider;  lib: Objects.Library;  VAR entry: vyLinks.Link );
-	VAR i: INTEGER;  mentry: tEntry;  version: INTEGER;
+	VAR i: SIGNED16;  mentry: tEntry;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Files.ReadInt( R, i );
 		IF i < 0 THEN entry := NIL;  RETURN END;
@@ -121,7 +121,7 @@ VAR
 	END StoreNode;
 
 	PROCEDURE LoadNode( VAR R: Files.Rider;  lib: Objects.Library;  VAR node: tNode );
-	VAR i: INTEGER;  subobj: Objects.Object;  version: INTEGER;
+	VAR i: SIGNED16;  subobj: Objects.Object;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Files.ReadInt( R, i );
 		IF i < 0 THEN node := NIL;  RETURN END;
@@ -135,7 +135,7 @@ VAR
 	END LoadNode;
 
 	PROCEDURE Store0( o: tLayer;  VAR M: Objects.FileMsg );
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN
 		Files.WriteInt( M.R, 0 );  StoreNode( M.R, o.lib, o.node );  Files.WriteInt( M.R, o.distance );
 		Files.WriteInt( M.R, o.forbiddencount );
@@ -144,7 +144,7 @@ VAR
 	END Store0;
 
 	PROCEDURE Load0( o: tLayer;  VAR M: Objects.FileMsg );
-	VAR i: INTEGER;  version: INTEGER;
+	VAR i: SIGNED16;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( M.R, version );  LoadNode( M.R, o.lib, o.node );  Files.ReadInt( M.R, o.distance );
 		Files.ReadInt( M.R, o.forbiddencount );
@@ -172,7 +172,7 @@ VAR
 	END PutInList;
 
 	PROCEDURE Equal( CONST s1, s2: ARRAY OF CHAR ): BOOLEAN;
-	VAR j: INTEGER;
+	VAR j: SIGNED16;
 	BEGIN
 		j := 0;
 		WHILE (s1[j] # 0X) DO
@@ -182,13 +182,13 @@ VAR
 		RETURN TRUE
 	END Equal;
 
-	PROCEDURE Min( a, b: INTEGER ): INTEGER;
+	PROCEDURE Min( a, b: SIGNED16 ): SIGNED16;
 	BEGIN
 		IF a < b THEN RETURN a ELSE RETURN b END
 	END Min;
 
 	PROCEDURE MyEnum( CONST name: ARRAY OF CHAR );
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN
 		FOR i := 0 TO Min( tempLayer.forbiddencount, LEN( tempLayer.forbidden ) ) - 1 DO
 			IF Equal( tempLayer.forbidden[i], name ) THEN RETURN END
@@ -207,9 +207,9 @@ VAR
 		END
 	END Enqueue;
 
-	PROCEDURE Entries( node: tNode;  CONST rname, rval: ARRAY OF CHAR;  depth: LONGINT );
+	PROCEDURE Entries( node: tNode;  CONST rname, rval: ARRAY OF CHAR;  depth: SIGNED32 );
 	VAR msg: Objects.AttrMsg;  lmsg: Objects.LinkMsg;
-	VAR i: LONGINT;  ec1, ec2: LONGINT;  name: vyName.tNameArray;  Entry: tEntry;  subnode: tNode;
+	VAR i: SIGNED32;  ec1, ec2: SIGNED32;  name: vyName.tNameArray;  Entry: tEntry;  subnode: tNode;
 	BEGIN
 
 		node.selected := FALSE;  node.visible := TRUE;  node.entriesvisible := TRUE;  COPY( rname, node.name );  COPY( rval, node.val );
@@ -286,7 +286,7 @@ VAR
 	END Entries;
 
 	PROCEDURE ListFromDummy( layer: tLayer );
-	VAR obj: vyBase.Object;  node: tNode;  i: LONGINT;
+	VAR obj: vyBase.Object;  node: tNode;  i: SIGNED32;
 	BEGIN
 		NEW( obj );  obj.handle := vyBase.objecthandle;  NEW( node );  node.root := obj;  Entries( node, "", "", 0 );
 		FOR i := 0 TO enumCount - 1 DO COPY( enumChar[i], layer.forbidden[layer.forbiddencount] );  INC( layer.forbiddencount ) END;
@@ -294,8 +294,8 @@ VAR
 		INC( layer.forbiddencount );  layer.forbidden[layer.forbiddencount] := "Gen";  INC( layer.forbiddencount )
 	END ListFromDummy;
 
-	PROCEDURE BoxedText( a1, a2: ARRAY OF CHAR;  x, y: LONGREAL;  VAR X, Y, W, H: INTEGER;  n: tNode;  selected: BOOLEAN );
-	VAR dsr: INTEGER;
+	PROCEDURE BoxedText( a1, a2: ARRAY OF CHAR;  x, y: FLOAT64;  VAR X, Y, W, H: SIGNED16;  n: tNode;  selected: BOOLEAN );
+	VAR dsr: SIGNED16;
 	BEGIN
 		vyHostStrings.Append( a1, ": " );  vyHostStrings.Append( a1, a2 );
 		vyGraphBase.GetStringFrame2d( x, y, vyGraphBase.S.fnt, a1, X, Y, W, H, dsr );  H := H + dsr;  Y := Y - dsr;
@@ -311,8 +311,8 @@ VAR
 		END
 	END BoxedText;
 
-	PROCEDURE RecallNode( n: tNode;  VAR x, y: LONGREAL;  oldx, oldy: LONGREAL;  drx, dry: LONGREAL;  SY1, SY2: INTEGER );
-	VAR e: tEntry;  X, Y, W, H: INTEGER;  w, h: LONGREAL;  firstline: BOOLEAN;
+	PROCEDURE RecallNode( n: tNode;  VAR x, y: FLOAT64;  oldx, oldy: FLOAT64;  drx, dry: FLOAT64;  SY1, SY2: SIGNED16 );
+	VAR e: tEntry;  X, Y, W, H: SIGNED16;  w, h: FLOAT64;  firstline: BOOLEAN;
 	BEGIN
 		IF ~n.visible THEN RETURN END;
 		vyGraphBase.Line2d( oldx, y, x, y );  BoxedText( n.name, n.val, x, y, X, Y, W, H, n, n.selected );  n.X := X;  n.Y := Y;
@@ -343,7 +343,7 @@ VAR
 		x := x - w / 2
 	END RecallNode;
 
-	PROCEDURE xyinNode( n: tNode;  VAR x, y: INTEGER ): tNode;
+	PROCEDURE xyinNode( n: tNode;  VAR x, y: SIGNED16 ): tNode;
 	VAR e: tEntry;  n0: tNode;
 	BEGIN
 		IF vyRectangles.PointInRect( x, y, n.X, n.Y, n.W, n.H ) THEN RETURN n END;
@@ -361,7 +361,7 @@ VAR
 		RETURN NIL
 	END xyinNode;
 
-	PROCEDURE xyinEntry( n: tNode;  VAR x, y: INTEGER;  VAR mynode: tNode ): tEntry;
+	PROCEDURE xyinEntry( n: tNode;  VAR x, y: SIGNED16;  VAR mynode: tNode ): tEntry;
 	VAR e: tEntry;  n0: tEntry;
 	BEGIN
 		IF n.entries # NIL THEN
@@ -482,7 +482,7 @@ VAR
 		END
 	END SelectInRectEntry;
 
-	PROCEDURE DoSelect( L: tLayer;  x, y, w, h: INTEGER );
+	PROCEDURE DoSelect( L: tLayer;  x, y, w, h: SIGNED16 );
 	BEGIN
 		Xtemp := x;  Ytemp := y;  Wtemp := w;  Htemp := h;  vyGraphBase.Global2Local( Xtemp, Ytemp );
 		ForAllVisibleDo( L.node, SelectInRectNode, SelectInRectEntry )
@@ -499,7 +499,7 @@ VAR
 	END SubscribeNameEntry;
 
 	PROCEDURE HideIfForbiddenNode( n: tNode );
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN
 		FOR i := 0 TO tempLayer.forbiddencount - 1 DO
 			IF Equal( tempLayer.forbidden[i], n.name ) THEN n.visible := FALSE END
@@ -507,7 +507,7 @@ VAR
 	END HideIfForbiddenNode;
 
 	PROCEDURE HideIfForbiddenEntry( n: tEntry );
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN
 		FOR i := 0 TO tempLayer.forbiddencount - 1 DO
 			IF Equal( tempLayer.forbidden[i], n.name ) THEN n.visible := FALSE END
@@ -515,7 +515,7 @@ VAR
 	END HideIfForbiddenEntry;
 
 	PROCEDURE SelectIfForbiddenNode( n: tNode );
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN
 		FOR i := 0 TO tempLayer.forbiddencount - 1 DO
 			IF Equal( tempLayer.forbidden[i], n.name ) THEN n.selected := TRUE END
@@ -523,7 +523,7 @@ VAR
 	END SelectIfForbiddenNode;
 
 	PROCEDURE SelectIfForbiddenEntry( n: tEntry );
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN
 		FOR i := 0 TO tempLayer.forbiddencount - 1 DO
 			IF Equal( tempLayer.forbidden[i], n.name ) THEN n.selected := TRUE END
@@ -537,7 +537,7 @@ VAR
 	END HideNamed;
 
 	PROCEDURE Select( L: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR x0, y0: INTEGER;  oldx, oldy: INTEGER;
+	VAR x0, y0: SIGNED16;  oldx, oldy: SIGNED16;
 	BEGIN
 		tempLayer := L;  UnSelectAll( L );  vyGraphBase.SetDisplayMode( vyGraphBase.invert );  x0 := event.x;  y0 := event.y;
 		vyEvents.GetEvent( event );
@@ -553,12 +553,12 @@ VAR
 		IF event.gesture = vyEvents.EvtRemove THEN HideNamed() END
 	END Select;
 
-	PROCEDURE InNode( L: tLayer;  x, y: INTEGER ): tNode;
+	PROCEDURE InNode( L: tLayer;  x, y: SIGNED16 ): tNode;
 	BEGIN
 		vyGraphBase.Global2Local( x, y );  RETURN xyinNode( L.node, x, y )
 	END InNode;
 
-	PROCEDURE InEntry( L: tLayer;  x, y: INTEGER;  VAR mynode: tNode ): tEntry;
+	PROCEDURE InEntry( L: tLayer;  x, y: SIGNED16;  VAR mynode: tNode ): tEntry;
 	BEGIN
 		vyGraphBase.Global2Local( x, y );  RETURN xyinEntry( L.node, x, y, mynode )
 	END InEntry;
@@ -617,7 +617,7 @@ VAR
 	END UpdateSpecial;
 
 	PROCEDURE Recall( layer: tLayer;  msg: Display.DisplayMsg );
-	VAR x, y, w, h: INTEGER;  hp: vyPort.Picture;  drx, dry, xr, yr: LONGREAL;
+	VAR x, y, w, h: SIGNED16;  hp: vyPort.Picture;  drx, dry, xr, yr: FLOAT64;
 	BEGIN
 		IF (layer.lifeUpdate) & ((Oberon.Time() - layer.lastLink) > TICKS) THEN
 			LinksUpdate( layer );  layer.lastLink := Oberon.Time()
@@ -632,7 +632,7 @@ VAR
 
 	PROCEDURE Responsible( layer: tLayer;  VAR event: vyEvents.EventMsg );
 	(** vs 0.0d0	md  14.07.94 *)
-	VAR priority: INTEGER;  node, entrynode: tNode;  entry: tEntry;
+	VAR priority: SIGNED16;  node, entrynode: tNode;  entry: tEntry;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF (event.gesture = vyEvents.EvtIdent) THEN priority := vyEvents.PrioNormal
@@ -985,7 +985,7 @@ VAR
 	END Gen;
 
 	PROCEDURE AllObjects*;
-	VAR obj: vyBase.Object;  c: vyDisplay2d.tCoordinate2d;  pict: vyPort.Picture;  x, y, w, h: REAL;  L: tLayer;
+	VAR obj: vyBase.Object;  c: vyDisplay2d.tCoordinate2d;  pict: vyPort.Picture;  x, y, w, h: FLOAT32;  L: tLayer;
 		name: ARRAY 256 OF CHAR;
 	BEGIN
 		aM.vS( "antsObejctView.AllObjects, view all current Objects" );  aM.vS( "Warning; antsObjectViews decrease system speed" );  obj := antsObjects.obj;  NEW( L );  L.forbiddencount := 0;  vyPort.OpenLayer( L, "OV" );
@@ -998,7 +998,7 @@ VAR
 	END AllObjects;
 
 	PROCEDURE ShowP*;
-	VAR data: Objects.Object;  c: vyDisplay2d.tCoordinate2d;  pict: vyPort.Picture;  x, y, w, h: REAL;  L: tLayer;
+	VAR data: Objects.Object;  c: vyDisplay2d.tCoordinate2d;  pict: vyPort.Picture;  x, y, w, h: FLOAT32;  L: tLayer;
 		name: ARRAY 256 OF CHAR;
 	BEGIN
 		aM.vS( "antsObjectView.ShowP" );  data := vyBase.NextParObj();

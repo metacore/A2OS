@@ -16,7 +16,7 @@ TYPE
 	VAR
 		caption : String;
 		color, textColor : WMGraphics.Color;
-		align: WORD;
+		align: INTEGER;
 		img : WMGraphics.Image;
 		data : ANY;
 		flags : SET;
@@ -271,7 +271,7 @@ TYPE
 			END
 		END GetCellImage;
 
-		PROCEDURE SetTextAlign*(col, row : SIZE; align : WORD);
+		PROCEDURE SetTextAlign*(col, row : SIZE; align : INTEGER);
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -283,7 +283,7 @@ TYPE
 			END
 		END SetTextAlign;
 
-		PROCEDURE GetTextAlign*(col, row : SIZE) : WORD;
+		PROCEDURE GetTextAlign*(col, row : SIZE) : INTEGER;
 		BEGIN
 			ASSERT(Objects.ActiveObject() = lockedBy, 3000);
 			IF (col >= 0) & (row >= 0) & (col < nofCols) & (row < nofRows) THEN
@@ -499,13 +499,13 @@ BEGIN
 	plStringGrid.Add(PrototypeTclTextSelected);
 	NEW(PrototypeTfontHeight, NIL, Strings.NewString("FontHeight"), Strings.NewString("height of the tree item text"));
 	plStringGrid.Add(PrototypeTfontHeight);
-	PrototypeTclCell.Set(LONGINT(0FFFFFFFFH));
-	PrototypeTclFixed.Set(LONGINT(0CCCCCCFFH));
-	PrototypeTclHover.Set(LONGINT(0FFFF00FFH));
+	PrototypeTclCell.Set(SIGNED32(0FFFFFFFFH));
+	PrototypeTclFixed.Set(SIGNED32(0CCCCCCFFH));
+	PrototypeTclHover.Set(SIGNED32(0FFFF00FFH));
 	PrototypeTclSelected.Set(00000FFFFH);
 	PrototypeTclTextDefault.Set(0000000FFH);
 	PrototypeTclTextHover.Set(00000FFFFH);
-	PrototypeTclTextSelected.Set(LONGINT(0FFFFFFFFH));
+	PrototypeTclTextSelected.Set(SIGNED32(0FFFFFFFFH));
 
 	PrototypeTfontHeight.Set(12);
 	WMComponents.propertyListList.Add("StringGrid", plStringGrid);

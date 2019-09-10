@@ -29,7 +29,7 @@ CONST
 	SBP2DeviceTypeAndLUNKey= 14H;
 	SBP2FirmwareRevKey= 3CH;
 	SBP2BusyTimeOutAddrHi= 0FFFFH;
-	SBP2BusyTimeOutAddrLo= LONGINT(0F0000210H);
+	SBP2BusyTimeOutAddrLo= SIGNED32(0F0000210H);
 	SBP2AgentResetData= 0FH;
 
 	SBP2AgentStateOffset= 0H;
@@ -49,7 +49,7 @@ CONST
 	LogicalUnitReset= 0EH;
 	TargetResetRequest= 0FH;
 
-	UninitializedLUN= LONGINT(0FFFFFFFFH);
+	UninitializedLUN= SIGNED32(0FFFFFFFFH);
 
 	BusyTimeOut = 0FH;
 
@@ -65,15 +65,15 @@ CONST
 
 TYPE
 	Address= RECORD
-	value: LONGINT;
+	value: SIGNED32;
 	next: POINTER TO Address;
 	END;
 
 	Buffer= POINTER TO ARRAY OF CHAR;
 
 	Command= RECORD
-		bufferLen: LONGINT;
-		dataDirection: LONGINT;
+		bufferLen: SIGNED32;
+		dataDirection: SIGNED32;
 		bufferAddr: SET;
 		ptrToBfr: Buffer;
 		cdb: ARRAY 12 OF CHAR; (* scsi command or sthg else *)
@@ -82,7 +82,7 @@ TYPE
 	Node= POINTER TO NodeDesc;
 
 	NodeDesc= RECORD
-		bufAddr: LONGINT;
+		bufAddr: SIGNED32;
 		ptrToBfr: Buffer;
 		next: Node;
 	END;
@@ -111,15 +111,15 @@ TYPE
 	END FIFOList;
 
 	BufferFIFO= OBJECT
-	VAR q: FIFO; list: FIFOList; usedQ: FIFO; usedList: FIFOList; bufSize: LONGINT;
+	VAR q: FIFO; list: FIFOList; usedQ: FIFO; usedList: FIFOList; bufSize: SIGNED32;
 		owner : ANY;
 
-		PROCEDURE GetBuffer(VAR ptrToBfr: Buffer):LONGINT;
+		PROCEDURE GetBuffer(VAR ptrToBfr: Buffer):SIGNED32;
 		VAR n:Node;
 		BEGIN {EXCLUSIVE}
 			n:=list.DequeuedNode(q); (* Print(debug,"Dequeuning node"); *)
 			IF n =  NIL THEN (* Print(debug,"Allocating new buffer!"); *)
-				NEW(n); n.bufAddr:= SYSTEM.VAL(LONGINT,AllocBuf(bufSize,n.ptrToBfr))
+				NEW(n); n.bufAddr:= SYSTEM.VAL(SIGNED32,AllocBuf(bufSize,n.ptrToBfr))
 			END;
 			usedList.Enqueue(usedQ,n);
 			(* Print(debug,"Returning address!");
@@ -129,7 +129,7 @@ TYPE
 			RETURN n.bufAddr;
 		END GetBuffer;
 
-		PROCEDURE ReleaseBuffer(ptrToBfr: Buffer; bufAddr: LONGINT);
+		PROCEDURE ReleaseBuffer(ptrToBfr: Buffer; bufAddr: SIGNED32);
 		VAR n: Node;
 		BEGIN {EXCLUSIVE}
 		ASSERT(bufAddr > 0);
@@ -141,14 +141,14 @@ TYPE
 			list.Enqueue(q,n);
 		END ReleaseBuffer;
 
-		PROCEDURE &Init*(numOfBuf,bufSize: LONGINT);
-		VAR n: Node;i: LONGINT;
+		PROCEDURE &Init*(numOfBuf,bufSize: SIGNED32);
+		VAR n: Node;i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			NEW(list); NEW(usedList); SELF.bufSize:= bufSize;
 			IF numOfBuf > 0 THEN
 				FOR i:= 0 TO numOfBuf-1 DO
 					NEW(n);
-					n.bufAddr:= SYSTEM.VAL(LONGINT,AllocBuf(bufSize,n.ptrToBfr));
+					n.bufAddr:= SYSTEM.VAL(SIGNED32,AllocBuf(bufSize,n.ptrToBfr));
 					list.Enqueue(q,n)
 				END
 			END
@@ -159,9 +159,9 @@ TYPE
 	(** The SBP2 fireWire device *)
 	Sbp2Dev= OBJECT(Disks.Device)
 	VAR
-		DataBufferSize: LONGINT;
-		id*: LONGINT;
-		speedCode*: LONGINT;
+		DataBufferSize: SIGNED32;
+		id*: SIGNED32;
+		speedCode*: SIGNED32;
 		mgmtAgntAddrLow*: SET;
 		mgmtAgntAddrHigh*: SET;
 		cmdBlckAgntAddrLow*: SET;
@@ -176,13 +176,13 @@ TYPE
 		logoutOrb: Sbp2LogoutOrb;
 		statusBlock: Sbp2StatusBlock;
 
-		maxPayload*: LONGINT;
+		maxPayload*: SIGNED32;
 
-		commandSetSpecID*: LONGINT;
-		commandSet*: LONGINT;
+		commandSetSpecID*: SIGNED32;
+		commandSet*: SIGNED32;
 		unitChar*: SET;
 		logicalUnitNumber*: SET;
-		firmwareRev*: LONGINT;
+		firmwareRev*: SIGNED32;
 
 		loginComplete*: BOOLEAN;
 
@@ -193,9 +193,9 @@ TYPE
 		t: Kernel.Timer;
 
 		PROCEDURE Config;
-		VAR size ,payloadNotCoded: LONGINT; diskres: WORD;
+		VAR size ,payloadNotCoded: SIGNED32; diskres: INTEGER;
 		BEGIN
-			payloadNotCoded:= SYSTEM.VAL(LONGINT,LSH({0},maxPayload+1));
+			payloadNotCoded:= SYSTEM.VAL(SIGNED32,LSH({0},maxPayload+1));
 			NEW(dataBufferFIFO,10,payloadNotCoded);
 			NEW(commandOrbFIFO,NumOfOrbs,OrbSize);
 			GetSize(size,diskres);
@@ -203,7 +203,7 @@ TYPE
 		END Config;
 
 PROCEDURE CreateCommandOrb(VAR commandOrb: Sbp2CommandOrb; VAR command: Command);
-VAR dataBufAddr,addr,direction,i,numOfOrbs,payloadNotCoded: LONGINT;
+VAR dataBufAddr,addr,direction,i,numOfOrbs,payloadNotCoded: SIGNED32;
 BEGIN
 	commandOrb.nextOrbHi:= NullPointerOrbHi;
 	commandOrb.nextOrbLo:= {};
@@ -238,7 +238,7 @@ BEGIN
 		commandOrb.misc:= commandOrb.misc + SYSTEM.VAL(SET,LSH(direction,27));
 		(* check how big the buffer has to be *)
 		(* KernelLog.Int(maxPayload,2);KernelLog.Ln(); *)
-		payloadNotCoded:= SYSTEM.VAL(LONGINT,LSH({0},maxPayload+1));
+		payloadNotCoded:= SYSTEM.VAL(SIGNED32,LSH({0},maxPayload+1));
 		(* KernelLog.Int(payloadNotCoded,2); *)
 		numOfOrbs:= command.bufferLen DIV payloadNotCoded;
 
@@ -259,20 +259,20 @@ BEGIN
 			ASSERT((command.bufferLen MOD 4) = 0);
 			ASSERT(command.bufferLen <= 1024);
 			FOR i:= 0 TO (command.bufferLen DIV 4)-1 DO
-				SYSTEM.PUT32(dataBufAddr+i*4,SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)+i*4));
+				SYSTEM.PUT32(dataBufAddr+i*4,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)+i*4));
 			END;
 		ELSE command.bufferAddr:= SYSTEM.VAL(SET,dataBufAddr)
 		END;
 
 		(* Now copy the  commandOrb into a buffer *)
 		commandOrb.bufAddr:= SYSTEM.VAL(SET,commandOrbFIFO.GetBuffer(commandOrb.ptrToBfr));
-		addr:= SYSTEM.VAL(LONGINT,commandOrb.bufAddr);
+		addr:= SYSTEM.VAL(SIGNED32,commandOrb.bufAddr);
 		ASSERT(addr > 0);
-		SYSTEM.PUT32(addr,SYSTEM.VAL(LONGINT,commandOrb.nextOrbHi));
-		SYSTEM.PUT32(addr+4,SYSTEM.VAL(LONGINT,commandOrb.nextOrbLo));
-		SYSTEM.PUT32(addr+8,SYSTEM.VAL(LONGINT,commandOrb.dataDescHi));
-		SYSTEM.PUT32(addr+12,SYSTEM.VAL(LONGINT,commandOrb.dataDescLo));
-		SYSTEM.PUT32(addr+16,SYSTEM.VAL(LONGINT,commandOrb.misc));
+		SYSTEM.PUT32(addr,SYSTEM.VAL(SIGNED32,commandOrb.nextOrbHi));
+		SYSTEM.PUT32(addr+4,SYSTEM.VAL(SIGNED32,commandOrb.nextOrbLo));
+		SYSTEM.PUT32(addr+8,SYSTEM.VAL(SIGNED32,commandOrb.dataDescHi));
+		SYSTEM.PUT32(addr+12,SYSTEM.VAL(SIGNED32,commandOrb.dataDescLo));
+		SYSTEM.PUT32(addr+16,SYSTEM.VAL(SIGNED32,commandOrb.misc));
 
 
 
@@ -297,7 +297,7 @@ BEGIN
 	END
 END CreateCommandOrb;
 
-PROCEDURE LinkCommandOrb(commandOrb: Sbp2CommandOrb;VAR diskres: WORD);
+PROCEDURE LinkCommandOrb(commandOrb: Sbp2CommandOrb;VAR diskres: INTEGER);
 VAR buffer: ARRAY 2 OF SET; quadlet: SET;
 BEGIN
 	diskres:= 0;
@@ -325,13 +325,13 @@ BEGIN
 		(* Print(debug,"Printing the buffer Address of the last orb");
 		FirewireLowUtil.PrintSet(lastOrb.bufAddr); *)
 	ELSE (* the orb pointer is already set *)
-		SYSTEM.PUT32(SYSTEM.VAL(LONGINT,lastOrb.bufAddr),0);
-		SYSTEM.PUT32(SYSTEM.VAL(LONGINT,lastOrb.bufAddr)+4,SYSTEM.VAL(LONGINT,commandOrb.bufAddr));
+		SYSTEM.PUT32(SYSTEM.VAL(SIGNED32,lastOrb.bufAddr),0);
+		SYSTEM.PUT32(SYSTEM.VAL(SIGNED32,lastOrb.bufAddr)+4,SYSTEM.VAL(SIGNED32,commandOrb.bufAddr));
 		(* swap bytes *)
-		InvertByteOrder(SYSTEM.VAL(LONGINT,lastOrb.bufAddr)+4,4);
+		InvertByteOrder(SYSTEM.VAL(SIGNED32,lastOrb.bufAddr)+4,4);
 		(* release buffer *)
-		commandOrbFIFO.ReleaseBuffer(lastOrb.ptrToBfr,SYSTEM.VAL(LONGINT,lastOrb.bufAddr));
-		dataBufferFIFO.ReleaseBuffer(lastOrb.ptrToDataBfr,SYSTEM.VAL(LONGINT,lastOrb.dataDescLo));
+		commandOrbFIFO.ReleaseBuffer(lastOrb.ptrToBfr,SYSTEM.VAL(SIGNED32,lastOrb.bufAddr));
+		dataBufferFIFO.ReleaseBuffer(lastOrb.ptrToDataBfr,SYSTEM.VAL(SIGNED32,lastOrb.dataDescLo));
 		lastOrb.bufAddr:= commandOrb.bufAddr;
 		lastOrb.ptrToBfr:= commandOrb.ptrToBfr;
 		lastOrb.dataDescLo:= commandOrb.dataDescLo;
@@ -347,12 +347,12 @@ BEGIN
 	END
 END LinkCommandOrb;
 
-PROCEDURE HandleStatus(statusBufAddr: LONGINT);
-VAR statusHi: SET; length: LONGINT; scsiStatus: LONGINT;
+PROCEDURE HandleStatus(statusBufAddr: SIGNED32);
+VAR statusHi: SET; length: SIGNED32; scsiStatus: SIGNED32;
 BEGIN
 	statusHi:= SYSTEM.VAL(SET,SYSTEM.GET32(statusBufAddr));
 	(* Check if target stored any scsi status information, check the length *)
-	length:= SYSTEM.VAL(LONGINT,LSH(statusHi,-24)*{0..2});
+	length:= SYSTEM.VAL(SIGNED32,LSH(statusHi,-24)*{0..2});
 	IF length > 1 THEN (* there is scsi sense data, something went wrong *)
 	ELSE scsiStatus:= good; (* for future use *)
 	END;
@@ -378,16 +378,16 @@ BEGIN
 	SYSTEM.PUT32(statusBufAddr,{});
 END HandleStatus;
 
-PROCEDURE SendCommand(VAR command: Command;VAR diskres: WORD): BOOLEAN;
+PROCEDURE SendCommand(VAR command: Command;VAR diskres: INTEGER): BOOLEAN;
 VAR
-	commandOrb: Sbp2CommandOrb;i,addr,retBufferAddr : LONGINT; (* t: Kernel.Timer; *)
+	commandOrb: Sbp2CommandOrb;i,addr,retBufferAddr : SIGNED32; (* t: Kernel.Timer; *)
 	statusHi,statusLow: SET;
 	milliTimer : Kernel.MilliTimer;
 BEGIN
 	(* remember return buffer address *)
 	(* Print(debug,"Printing the return buffer address");
 	FirewireLowUtil.PrintSet(command.bufferAddr); *)
-	retBufferAddr:= SYSTEM.VAL(LONGINT,command.bufferAddr);
+	retBufferAddr:= SYSTEM.VAL(SIGNED32,command.bufferAddr);
 	(* ASSERT(retBufferAddr > 0); *)
 	(* KernelLog.String("Printing commandOrb.cdb: "); KernelLog.Int(ADDRESSOF(commandOrb.cdb),2); KernelLog.Ln();
 	ASSERT(ADDRESSOF(commandOrb.cdb) > 0); *)
@@ -400,7 +400,7 @@ BEGIN
 
 	(* initialize status block *)
 	FOR i:= 0 TO 7 DO
-		SYSTEM.PUT32(SYSTEM.VAL(LONGINT,statusBlock.bufAddr)+i*4,0);
+		SYSTEM.PUT32(SYSTEM.VAL(SIGNED32,statusBlock.bufAddr)+i*4,0);
 	END;
 	(* link up the orb and ring the doorbell *)
 
@@ -408,7 +408,7 @@ BEGIN
 
 
 	(* wait for the status *)
-	addr:= SYSTEM.VAL(LONGINT,statusBlock.bufAddr);
+	addr:= SYSTEM.VAL(SIGNED32,statusBlock.bufAddr);
 	statusHi:= SYSTEM.VAL(SET,SYSTEM.GET32(addr));
 	statusLow:= SYSTEM.VAL(SET,SYSTEM.GET32(addr+4));
 
@@ -424,7 +424,7 @@ BEGIN
 	IF command.dataDirection = DataRead THEN
 		ASSERT((blockSize MOD 4)=0);
 		FOR i:= 0 TO (command.bufferLen DIV 4)-1 DO
-			SYSTEM.PUT32(retBufferAddr+i*4,SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)+i*4))
+			SYSTEM.PUT32(retBufferAddr+i*4,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)+i*4))
 		END;
 		InvertByteOrder(retBufferAddr,command.bufferLen);
 	END;
@@ -432,8 +432,8 @@ BEGIN
 	RETURN TRUE;
 END SendCommand;
 
-PROCEDURE Handle *(VAR msg: Disks.Message; VAR diskres: WORD);
-(* VAR command: Command; cylinders,heads,sectors,i: LONGINT; *)
+PROCEDURE Handle *(VAR msg: Disks.Message; VAR diskres: INTEGER);
+(* VAR command: Command; cylinders,heads,sectors,i: SIGNED32; *)
 BEGIN
 	KernelLog.String("HANDLE"); KernelLog.Ln;
 	diskres := Disks.Unsupported;
@@ -452,9 +452,9 @@ BEGIN
 		IF ~SendCommand(command,diskres) THEN END;
 		IF (diskres # Disks.Ok) THEN RETURN; END;
 
-		cylinders:= SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)+1);
-		heads:= SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)+3);
-		sectors:= SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)+6);
+		cylinders:= SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)+1);
+		heads:= SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)+3);
+		sectors:= SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)+6);
 
 		Print(debug,"cylinders: "); KernelLog.Int(cylinders,2); KernelLog.Ln();
 		Print(debug,"cylinders: "); KernelLog.Int(heads,2); KernelLog.Ln();
@@ -466,12 +466,12 @@ BEGIN
 	(* KernelLog.Int(SELF.blockSize,2); *)
 END Handle;
 
-PROCEDURE Transfer*(op,block,num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR diskres: WORD);
-VAR i, payloadNotCoded: LONGINT; command: Command; numOfBlocks,tries: LONGINT;
+PROCEDURE Transfer*(op,block,num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR diskres: INTEGER);
+VAR i, payloadNotCoded: SIGNED32; command: Command; numOfBlocks,tries: SIGNED32;
 BEGIN
 
 	tries:= 0;
-	payloadNotCoded:= SYSTEM.VAL(LONGINT,LSH({0},maxPayload+1));
+	payloadNotCoded:= SYSTEM.VAL(SIGNED32,LSH({0},maxPayload+1));
 	numOfBlocks:= payloadNotCoded DIV blockSize;
 
 	FOR i:= 0 TO 11 DO command.cdb[i]:= CHR(0) END;
@@ -513,8 +513,8 @@ BEGIN
 	END;
 END Transfer;
 
-PROCEDURE GetSize*(VAR size: LONGINT;VAR diskres: WORD);
-VAR command: Command; i: LONGINT; (* dev: Sbp2Dev; *)
+PROCEDURE GetSize*(VAR size: SIGNED32;VAR diskres: INTEGER);
+VAR command: Command; i: SIGNED32; (* dev: Sbp2Dev; *)
 BEGIN
 
 	command.bufferAddr:= AllocBuf(1024,command.ptrToBfr);
@@ -529,8 +529,8 @@ BEGIN
 	IF ~SendCommand(command,diskres) THEN END;
 	IF (diskres # Disks.Ok) THEN RETURN; END;
 
-	size:= SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr));
-	blockSize:= SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)+4);
+	size:= SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr));
+	blockSize:= SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)+4);
 
 	INC (size);
 
@@ -562,12 +562,12 @@ END GetSize;
 	END;
 
 	Sbp2LoginOrb*= RECORD
-		passwordHi: LONGINT;
-		passwordLo: LONGINT;
-		loginRespHi: LONGINT;
-		loginRespLo: LONGINT;
+		passwordHi: SIGNED32;
+		passwordLo: SIGNED32;
+		loginRespHi: SIGNED32;
+		loginRespLo: SIGNED32;
 		lunMisc: SET;
-		passwrdRespLens: LONGINT;
+		passwrdRespLens: SIGNED32;
 		statusFIFOHi: SET;
 		statusFIFOLo: SET;
 		bufAddr: SET;
@@ -575,7 +575,7 @@ END GetSize;
 	END;
 
 	Sbp2LoginResponse*= RECORD
-		lenLoginID: LONGINT;
+		lenLoginID: SIGNED32;
 		commandBlckAgntHi: SET;
 		commandBlckAgntLo: SET;
 		reconnectHold: SET;
@@ -584,12 +584,12 @@ END GetSize;
 	END;
 
 	Sbp2QueryLoginsOrb*= RECORD
-		reserved1: LONGINT;
-		reserved2: LONGINT;
+		reserved1: SIGNED32;
+		reserved2: SIGNED32;
 		queryRespHi: SET;
 		queryRespLo: SET;
 		lunMisc: SET;
-		reservedRespLen: LONGINT;
+		reservedRespLen: SIGNED32;
 		statusFIFOHi: SET;
 		statusFIFOLo: SET;
 		bufAddr: SET;
@@ -597,21 +597,21 @@ END GetSize;
 	END;
 
 	Sbp2QueryLoginsResp*= RECORD
-		lenMaxLogins: LONGINT;
+		lenMaxLogins: SIGNED32;
 		miscIDs: SET;
-		initiatorMiscHi: LONGINT;
-		initiatorMiscLo: LONGINT;
+		initiatorMiscHi: SIGNED32;
+		initiatorMiscLo: SIGNED32;
 		bufAddr: SET;
 		ptrToBfr: Buffer;
 	END;
 
 	Sbp2ReconnectOrb*= RECORD
-		reserved1: LONGINT;
-		reserved2: LONGINT;
-		reserved3: LONGINT;
-		reserved4: LONGINT;
+		reserved1: SIGNED32;
+		reserved2: SIGNED32;
+		reserved3: SIGNED32;
+		reserved4: SIGNED32;
 		loginIDMisc: SET;
-		reserved5: LONGINT;
+		reserved5: SIGNED32;
 		statusFIFOHi: SET;
 		statusFIFOLo: SET;
 		bufAddr: SET;
@@ -619,12 +619,12 @@ END GetSize;
 	END;
 
 	Sbp2LogoutOrb*= RECORD
-		reserved1: LONGINT;
-		reserved2: LONGINT;
-		reserved3: LONGINT;
-		reserved4: LONGINT;
+		reserved1: SIGNED32;
+		reserved2: SIGNED32;
+		reserved3: SIGNED32;
+		reserved4: SIGNED32;
 		loginIDMisc: SET;
-		reserved5: LONGINT;
+		reserved5: SIGNED32;
 		statusFIFOHi: SET;
 		statusFIFOLo: SET;
 		bufAddr: SET;
@@ -645,20 +645,20 @@ END GetSize;
 
 	Sbp2CommandInfo*= RECORD
 		command: Sbp2CommandOrb;
-		dataDirection: LONGINT;
+		dataDirection: SIGNED32;
 	END;
 
 VAR
 	debug: BOOLEAN;
 	sbpDevGrps: ARRAY 63 OF SbpDevGrp; (* This should be updated if the driver has to scan more than one bus *)
-	numOfGrps: LONGINT;
+	numOfGrps: SIGNED32;
 	host: FirewireLowUtil.OHCIDesc;
 
 (** Set the maximum speed and payload size for a new identified device *)
 PROCEDURE MaxSpeedAndSize(VAR dev: Sbp2Dev);
 BEGIN
 	(* Print(debug,"Setting max speed and payload size"); *)
-	dev.speedCode:= host.SpeedMap[host.nodeID][SYSTEM.VAL(LONGINT,dev.nodeEntry.phyID)];
+	dev.speedCode:= host.SpeedMap[host.nodeID][SYSTEM.VAL(SIGNED32,dev.nodeEntry.phyID)];
 	IF ConvertSpeedToPayload(dev.speedCode) > ConvertPayloadToMaxRec(host.MaxPacketSize) THEN
 		dev.maxPayload:= ConvertPayloadToMaxRec(host.MaxPacketSize)
 	ELSE dev.maxPayload:= ConvertSpeedToPayload(dev.speedCode)
@@ -707,8 +707,8 @@ BEGIN
 END InvertByteOrderWord;
 
 (*
-PROCEDURE InvertByteOrderBuf(VAR buffer: ARRAY OF SET; length: LONGINT);
-VAR numOfWords, i: LONGINT; quadlet,quadletSwap: SET;
+PROCEDURE InvertByteOrderBuf(VAR buffer: ARRAY OF SET; length: SIGNED32);
+VAR numOfWords, i: SIGNED32; quadlet,quadletSwap: SET;
 BEGIN
 	numOfWords:= length DIV 4; i:= 0; length:= 0;
 	WHILE i # numOfWords DO
@@ -725,8 +725,8 @@ BEGIN
 END InvertByteOrderBuf;
 *)
 
-PROCEDURE InvertByteOrder(bufAddr: LONGINT; length: LONGINT);
-VAR  numOfWords, i: LONGINT; quadlet,quadletSwap: SET;
+PROCEDURE InvertByteOrder(bufAddr: SIGNED32; length: SIGNED32);
+VAR  numOfWords, i: SIGNED32; quadlet,quadletSwap: SET;
 BEGIN
 	numOfWords:= length DIV 4; i:= 0; length:= 0;
 	WHILE i # numOfWords DO
@@ -737,13 +737,13 @@ BEGIN
 		quadletSwap:= quadletSwap+LSH(quadlet*{16..23},-8);
 		quadletSwap:= quadletSwap+LSH(quadlet*{24..31},-24);
 		(* FirewireLowUtil.PrintSet(quadletSwap); *)
-		SYSTEM.PUT32(bufAddr+length,SYSTEM.VAL(LONGINT,quadletSwap));
+		SYSTEM.PUT32(bufAddr+length,SYSTEM.VAL(SIGNED32,quadletSwap));
 		INC(i); INC(length,4);
 	END;
 END InvertByteOrder;
 
 (* Allocates quadlet aligned buffers *)
-PROCEDURE AllocBuf(size:LONGINT;VAR ptrToBfr: Buffer):SET;
+PROCEDURE AllocBuf(size:SIGNED32;VAR ptrToBfr: Buffer):SET;
 VAR buffer: Buffer; adr: ADDRESS; s: SET;
 BEGIN
 	NEW(buffer, size + 4);
@@ -759,7 +759,7 @@ BEGIN
 END AllocBuf;
 
 PROCEDURE Probe*;
-VAR i,j,k: LONGINT; node: FirewireLowUtil.Node; ud: FirewireLowUtil.UnitDirectory;
+VAR i,j,k: SIGNED32; node: FirewireLowUtil.Node; ud: FirewireLowUtil.UnitDirectory;
 BEGIN
 	i:= 0; j:= 0; k:= 0;
 	(* Print(debug,"<<<<<<<<<<<<<<<<<<<<<<<<<< SBP2 >>>>>>>>>>>>>>>>>>>>>>>>>>"); *)
@@ -782,7 +782,7 @@ BEGIN
 	(* Print(debug,"Leaving Probe!"); *)
 END Probe;
 
-PROCEDURE ConvertSpeedToPayload(speed: LONGINT):LONGINT;
+PROCEDURE ConvertSpeedToPayload(speed: SIGNED32):SIGNED32;
 BEGIN
 	CASE speed OF
 		0: RETURN 7H  (* 512 *);
@@ -794,7 +794,7 @@ BEGIN
 	END;
 END ConvertSpeedToPayload;
 
-PROCEDURE ConvertPayloadToMaxRec(payload: LONGINT):LONGINT;
+PROCEDURE ConvertPayloadToMaxRec(payload: SIGNED32):SIGNED32;
 BEGIN
 	payload:= payload-20;
 	IF payload = 4 THEN RETURN 1H
@@ -821,7 +821,7 @@ PROCEDURE CreateCommandOrbPool(dev: Sbp2Dev);
 END CreateCommandOrbPool;
 
 PROCEDURE Sbp2LogoutDevice(VAR dev: Sbp2Dev): BOOLEAN;
-VAR buffer: ARRAY 2 OF SET; i,addr: LONGINT; t: Kernel.Timer;
+VAR buffer: ARRAY 2 OF SET; i,addr: SIGNED32; t: Kernel.Timer;
 BEGIN
 	NEW(t);
 	(* Print(debug,"Logging out of the device"); *)
@@ -833,9 +833,9 @@ BEGIN
 	dev.logoutOrb.loginIDMisc:= {};
 	dev.logoutOrb.loginIDMisc:= (* SYSTEM.VAL(SET,LSH(7,16)); *) {16,17,18};
 	(* set the login id *)
-	(* Print(debug,"Printing the login id: "); FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,dev.loginResp.bufAddr)))*{0..15});
+	(* Print(debug,"Printing the login id: "); FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,dev.loginResp.bufAddr)))*{0..15});
 	dev.logoutOrb.loginIDMisc:=
-		dev.logoutOrb.loginIDMisc + SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,dev.loginResp.bufAddr)))*{0..15};
+		dev.logoutOrb.loginIDMisc + SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,dev.loginResp.bufAddr)))*{0..15};
 	(* set the notify bit *) *)
 	dev.logoutOrb.loginIDMisc:= dev.logoutOrb.loginIDMisc + {31};
 	dev.logoutOrb.reserved5:= 0;
@@ -846,7 +846,7 @@ BEGIN
 
 	(* now write the structure into the buffers *)
 	(* Print(debug,"Printing the logoutOrb buffer address"); *)
-	addr:= SYSTEM.VAL(LONGINT,dev.logoutOrb.bufAddr);
+	addr:= SYSTEM.VAL(SIGNED32,dev.logoutOrb.bufAddr);
 	(* FirewireLowUtil.PrintSet(dev.logoutOrb.bufAddr); *)
 	SYSTEM.PUT32(addr,dev.logoutOrb.reserved1);
 	SYSTEM.PUT32(addr+4,dev.logoutOrb.reserved2);
@@ -884,7 +884,7 @@ BEGIN
 
 	(* should wait up to 20 seconds *)
 	t.Sleep(50);
-	addr:= SYSTEM.VAL(LONGINT,dev.statusBlock.bufAddr);
+	addr:= SYSTEM.VAL(SIGNED32,dev.statusBlock.bufAddr);
 	(* Print(debug,"Printing the status"); *) i:= 0;
 	WHILE (SYSTEM.GET32(addr) = 0) & (i<10) DO t.Sleep(50); INC(i); Print(debug,"I'm waiting"); END;
 	(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(addr)));
@@ -910,23 +910,23 @@ BEGIN
 END Sbp2LogoutDevice;
 
 PROCEDURE Sbp2LoginDevice(VAR dev: Sbp2Dev): BOOLEAN;
-VAR buffer: ARRAY 2 OF SET; i,addr: LONGINT; t: Kernel.Timer; statusHi: SET;
+VAR buffer: ARRAY 2 OF SET; i,addr: SIGNED32; t: Kernel.Timer; statusHi: SET;
 BEGIN
 	NEW(t);
 	(* Print(debug,"Logging into device"); *)
 	(* initialize login orb, no password *)
 	dev.loginOrb.passwordHi:= 0;
 	dev.loginOrb.passwordLo:= 0;
-	dev.loginOrb.loginRespHi:= 0; (* LSH(SYSTEM.VAL(LONGINT,LSH(FirewireLowUtil.GetBusID(),6)) + host.nodeID,16); *)
-	dev.loginOrb.loginRespLo:= SYSTEM.VAL(LONGINT,dev.loginResp.bufAddr);
+	dev.loginOrb.loginRespHi:= 0; (* LSH(SYSTEM.VAL(SIGNED32,LSH(FirewireLowUtil.GetBusID(),6)) + host.nodeID,16); *)
+	dev.loginOrb.loginRespLo:= SYSTEM.VAL(SIGNED32,dev.loginResp.bufAddr);
 	dev.loginOrb.lunMisc:= (* SYSTEM.VAL(SET,LSH(LoginRequest,16)) + *)
 	LSH({},20) (* one second reconnect time *) +
 	LSH({0},28) (* exclusive login *) +
 	LSH({0},31) (* notify us when the login is complete *);
 	(* now set the lun if initialized *)
-	IF SYSTEM.VAL(LONGINT,dev.logicalUnitNumber) # UninitializedLUN THEN
+	IF SYSTEM.VAL(SIGNED32,dev.logicalUnitNumber) # UninitializedLUN THEN
 		dev.loginOrb.lunMisc:= dev.loginOrb.lunMisc + SYSTEM.VAL(SET,dev.logicalUnitNumber);
-		(* KernelLog.Int(SYSTEM.VAL(LONGINT,dev.logicalUnitNumber),2); KernelLog.Ln(); *)
+		(* KernelLog.Int(SYSTEM.VAL(SIGNED32,dev.logicalUnitNumber),2); KernelLog.Ln(); *)
 	ELSE Print(debug,"LUN uninitialized");
 	END;
 	dev.loginOrb.passwrdRespLens:= 16;
@@ -937,7 +937,7 @@ BEGIN
 
 	(* now write the structure into the buffers *)
 	(* Print(debug,"Printing the loginOrb buffer address"); *)
-	addr:= SYSTEM.VAL(LONGINT,dev.loginOrb.bufAddr);
+	addr:= SYSTEM.VAL(SIGNED32,dev.loginOrb.bufAddr);
 	(* FirewireLowUtil.PrintSet(dev.loginOrb.bufAddr); *)
 	SYSTEM.PUT32(addr,dev.loginOrb.passwordHi);
 	SYSTEM.PUT32(addr+4,dev.loginOrb.passwordLo);
@@ -977,7 +977,7 @@ BEGIN
 
 	(* should wait up to 20 seconds *)
 	t.Sleep(50);
-	addr:= SYSTEM.VAL(LONGINT,dev.statusBlock.bufAddr);
+	addr:= SYSTEM.VAL(SIGNED32,dev.statusBlock.bufAddr);
 	(* Print(debug,"Printing the status"); *) i:= 0;
 	WHILE (SYSTEM.GET32(addr) = 0) & (i<10) DO t.Sleep(50); INC(i); Print(debug,"I'm waiting"); END;
 	(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(addr)));
@@ -999,7 +999,7 @@ BEGIN
 	(* take the command block agent address *)
 	(* Print(debug,"Printing the command block agent address"); *)
 
-	addr:= SYSTEM.VAL(LONGINT,dev.loginResp.bufAddr);
+	addr:= SYSTEM.VAL(SIGNED32,dev.loginResp.bufAddr);
 	(* Print(debug,"Printing the login id: "); FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(addr))*{0..15}); *)
 	dev.cmdBlckAgntAddrHigh:= SYSTEM.VAL(SET,SYSTEM.GET32(addr+4));
 	(* FirewireLowUtil.PrintSet(dev.cmdBlckAgntAddrHigh); *)
@@ -1011,11 +1011,11 @@ BEGIN
 
 END Sbp2LoginDevice;
 
-PROCEDURE HpsbNodeWrite(ne: FirewireLowUtil.Node; addrLow, addrHigh: SET;buffer:  SET; len: LONGINT):BOOLEAN;
-VAR generation,i: LONGINT; result: BOOLEAN;
+PROCEDURE HpsbNodeWrite(ne: FirewireLowUtil.Node; addrLow, addrHigh: SET;buffer:  SET; len: SIGNED32):BOOLEAN;
+VAR generation,i: SIGNED32; result: BOOLEAN;
 BEGIN
-	(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,bufAddr))));
-	FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,bufAddr)+4))); *)
+	(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,bufAddr))));
+	FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,bufAddr)+4))); *)
 	generation:= FirewireLowUtil.GetGeneration();
 	i:= 0;
 	WHILE (i<4) & ~result DO
@@ -1051,8 +1051,8 @@ BEGIN
 END StartDev;
 
 (** Scans the unit directory *)
-PROCEDURE ScanUD(node: FirewireLowUtil.Node;index: LONGINT; ud, udPar: FirewireLowUtil.UnitDirectory; isLUN: BOOLEAN);
-VAR devGrp: SbpDevGrp; i: LONGINT; dev: Sbp2Dev; devNum,lunNum: ARRAY 10 OF CHAR;
+PROCEDURE ScanUD(node: FirewireLowUtil.Node;index: SIGNED32; ud, udPar: FirewireLowUtil.UnitDirectory; isLUN: BOOLEAN);
+VAR devGrp: SbpDevGrp; i: SIGNED32; dev: Sbp2Dev; devNum,lunNum: ARRAY 10 OF CHAR;
 name: Plugins.Name;
 BEGIN
 	ParseUD(devGrp,ud,udPar,isLUN);
@@ -1081,7 +1081,7 @@ BEGIN
 END ScanUD;
 
 PROCEDURE AddStorageDevices(VAR dev: Sbp2Dev);
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	(* now add to disk system *)
 	Disks.registry.Add(dev,res);
@@ -1100,7 +1100,7 @@ BEGIN
 END RemoveStorageDevice;
 
 PROCEDURE RemoveAllStorageDevices;
-VAR index,index2,numOfDev: LONGINT; grp: SbpDevGrp; dev: Sbp2Dev;
+VAR index,index2,numOfDev: SIGNED32; grp: SbpDevGrp; dev: Sbp2Dev;
 BEGIN
 	index:= 0; index2:= 0;
 	numOfDev:= numOfGrps;
@@ -1117,14 +1117,14 @@ BEGIN
 END RemoveAllStorageDevices;
 
 PROCEDURE ParseUD(VAR grp: SbpDevGrp; ud,udPar: FirewireLowUtil.UnitDirectory; isLUN: BOOLEAN);
-VAR mgmtAgntAddrLow, mgmtAgntAddrHigh, unitChar: SET; commandSetSpecID, commandSet, firmwareRev: LONGINT;
-	i,j,length,key,value: LONGINT; dev: Sbp2Dev;
+VAR mgmtAgntAddrLow, mgmtAgntAddrHigh, unitChar: SET; commandSetSpecID, commandSet, firmwareRev: SIGNED32;
+	i,j,length,key,value: SIGNED32; dev: Sbp2Dev;
 BEGIN
 	(* Print(debug,"Parsing unit directory!"); *)
 	length:= ud.GetLength(); i:= 0;
 	WHILE i < (length) DO
-		key:= SYSTEM.VAL(LONGINT,LSH(ud.udEntries[i],-24));
-		value:= SYSTEM.VAL(LONGINT,ud.udEntries[i]*{0..23});
+		key:= SYSTEM.VAL(SIGNED32,LSH(ud.udEntries[i],-24));
+		value:= SYSTEM.VAL(SIGNED32,ud.udEntries[i]*{0..23});
 		CASE key OF
 			SBP2CSROffsetKey: mgmtAgntAddrLow:= FirewireLowUtil.CSRBaseLow;
 				mgmtAgntAddrHigh:= FirewireLowUtil.CSRBaseHigh;
@@ -1183,7 +1183,7 @@ END Print;
 
 (** Test procedure *)
 PROCEDURE TestTransfer*;
-VAR diskres: WORD; ofs,i: LONGINT; data: ARRAY 1024 OF CHAR; dev: Sbp2Dev;grp: SbpDevGrp;
+VAR diskres: INTEGER; ofs,i: SIGNED32; data: ARRAY 1024 OF CHAR; dev: Sbp2Dev;grp: SbpDevGrp;
 	tempSet: SET;
 BEGIN
 	ofs:= 0;
@@ -1210,9 +1210,9 @@ BEGIN
 	FOR i:= 0 TO 3 DO
 		data[i]:= SYSTEM.VAL(CHAR,{0});
 	END;
-	(* SYSTEM.PUT32(ADDRESSOF(data),SYSTEM.VAL(LONGINT,{0,3,6,9,12,15,18,21,24,27,30}));
-	SYSTEM.PUT32(ADDRESSOF(data)+512,SYSTEM.VAL(LONGINT,{1,11}));
-	SYSTEM.PUT32(ADDRESSOF(data)+1024,SYSTEM.VAL(LONGINT,{1,2,3,4,5})); *)
+	(* SYSTEM.PUT32(ADDRESSOF(data),SYSTEM.VAL(SIGNED32,{0,3,6,9,12,15,18,21,24,27,30}));
+	SYSTEM.PUT32(ADDRESSOF(data)+512,SYSTEM.VAL(SIGNED32,{1,11}));
+	SYSTEM.PUT32(ADDRESSOF(data)+1024,SYSTEM.VAL(SIGNED32,{1,2,3,4,5})); *)
 	Print(debug,"Writing to medium");
 	dev.Transfer(Disks.Write,900,2,data,ofs,diskres);
 
@@ -1233,7 +1233,7 @@ BEGIN
 END TestTransfer;
 
 (* PROCEDURE TestHandle*(par:ANY):ANY;
-VAR msg: Disks.GetGeometryMsg; diskres: LONGINT; dev: Sbp2Dev;grp: SbpDevGrp;
+VAR msg: Disks.GetGeometryMsg; diskres: SIGNED32; dev: Sbp2Dev;grp: SbpDevGrp;
 BEGIN
 	grp:= sbpDevGrps[0];
 	dev:= grp[0];
@@ -1242,8 +1242,8 @@ BEGIN
 END TestHandle; *)
 
 (*
-PROCEDURE Transfer*(op,block,num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR diskres: LONGINT);
-VAR i,addr: LONGINT; command: Command; dev: Sbp2Dev; grp: SbpDevGrp; statusHi: SET;
+PROCEDURE Transfer*(op,block,num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR diskres: SIGNED32);
+VAR i,addr: SIGNED32; command: Command; dev: Sbp2Dev; grp: SbpDevGrp; statusHi: SET;
 BEGIN
 	grp:= sbpDevGrps[0];
 	dev:= grp[0];
@@ -1280,10 +1280,10 @@ BEGIN
 	grp[0]:= dev;
 	sbpDevGrps[0]:= grp;
 
-	(* SYSTEM.PUT32(ADDRESSOF(data),SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)));
+	(* SYSTEM.PUT32(ADDRESSOF(data),SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)));
 
 		(* check the status *)
-	addr:= SYSTEM.VAL(LONGINT,dev.statusBlock.bufAddr);
+	addr:= SYSTEM.VAL(SIGNED32,dev.statusBlock.bufAddr);
 	statusHi:= SYSTEM.VAL(SET,SYSTEM.GET32(addr));
 	WHILE statusHi = {} DO
 		statusHi:= SYSTEM.VAL(SET,SYSTEM.GET32(addr));
@@ -1299,14 +1299,14 @@ BEGIN
 	END; *)
 	(*
 	IF op = Disks.Read THEN
-		(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)))); *)
-		SYSTEM.PUT32(ADDRESSOF(data),SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)));
+		(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)))); *)
+		SYSTEM.PUT32(ADDRESSOF(data),SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)));
 		InvertByteOrder(ADDRESSOF(data),4);
 	END; *)
 END Transfer;
 
-PROCEDURE GetSize*(VAR size: LONGINT;diskres: LONGINT);
-VAR command: Command; data : ARRAY 8 OF CHAR; i: LONGINT; dev: Sbp2Dev; grp: SbpDevGrp;
+PROCEDURE GetSize*(VAR size: SIGNED32;diskres: SIGNED32);
+VAR command: Command; data : ARRAY 8 OF CHAR; i: SIGNED32; dev: Sbp2Dev; grp: SbpDevGrp;
 BEGIN
 	grp:= sbpDevGrps[0];
 	dev:= grp[0];
@@ -1332,11 +1332,11 @@ BEGIN
 	FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(ADDRESSOF(data)))); *)
 
 	(* FOR i := 0 TO 3 DO
-		size := size*100H + SYSTEM.GET8(SYSTEM.VAL(LONGINT,command.bufferAddr)+i);
-		blockSize := blockSize*100H + SYSTEM.GET8(SYSTEM.VAL(LONGINT,command.bufferAddr)+4+i);
+		size := size*100H + SYSTEM.GET8(SYSTEM.VAL(SIGNED32,command.bufferAddr)+i);
+		blockSize := blockSize*100H + SYSTEM.GET8(SYSTEM.VAL(SIGNED32,command.bufferAddr)+4+i);
 	END; *)
-	size:= SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr));
-	blockSize:= SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)+4);
+	size:= SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr));
+	blockSize:= SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)+4);
 
 	INC (size);
 
@@ -1355,7 +1355,7 @@ END GetSize;
 
 PROCEDURE TestSendCommand*(par:ANY):ANY;
 VAR buffer,bufferAnsw: ARRAY 1024 OF CHAR; command: Command; grp: SbpDevGrp; dev: Sbp2Dev; statusHi: SET;
-	addr,i,diskres,size: LONGINT;
+	addr,i,diskres,size: SIGNED32;
 BEGIN
 	(* check size
 	Print(debug,"Checking the size");
@@ -1370,27 +1370,27 @@ BEGIN
 	Print(debug,"Writing to medium");
 	command.bufferLen:= 1024;
 	command.bufferAddr:= SYSTEM.VAL(SET,ADDRESSOF(buffer));
-	SYSTEM.PUT32(SYSTEM.VAL(LONGINT,command.bufferAddr),SYSTEM.VAL(LONGINT,{0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30}));
+	SYSTEM.PUT32(SYSTEM.VAL(SIGNED32,command.bufferAddr),SYSTEM.VAL(SIGNED32,{0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30}));
 	command.dataDirection:= DataWrite;
 	FOR i:= 0 TO 2 DO
 		SYSTEM.PUT32(ADDRESSOF(command.cdb)+i*4,0);
 	END;
 	command.cdb[0]:= 2AX; (* write *)
-	command.cdb[1]:= CHR(SYSTEM.VAL(LONGINT,{5}));
-	command.cdb[2]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH(SYSTEM.VAL(SET,260),-24)));
-	command.cdb[3]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH(SYSTEM.VAL(SET,260),-16)));
-	command.cdb[4]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH(SYSTEM.VAL(SET,260),-8)));
-	command.cdb[5]:= CHR(SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,260)*{0..7}));
-	command.cdb[7]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH({6},-8)));
-	command.cdb[8]:= CHR(SYSTEM.VAL(LONGINT,{6}*{0..7}));
+	command.cdb[1]:= CHR(SYSTEM.VAL(SIGNED32,{5}));
+	command.cdb[2]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH(SYSTEM.VAL(SET,260),-24)));
+	command.cdb[3]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH(SYSTEM.VAL(SET,260),-16)));
+	command.cdb[4]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH(SYSTEM.VAL(SET,260),-8)));
+	command.cdb[5]:= CHR(SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,260)*{0..7}));
+	command.cdb[7]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH({6},-8)));
+	command.cdb[8]:= CHR(SYSTEM.VAL(SIGNED32,{6}*{0..7}));
 	IF ~SendCommand(dev, command,diskres) THEN Print(debug,"Send command failed") END;
 
 	(* check the status *)
-	addr:= SYSTEM.VAL(LONGINT,dev.statusBlock.bufAddr);
+	addr:= SYSTEM.VAL(SIGNED32,dev.statusBlock.bufAddr);
 	statusHi:= SYSTEM.VAL(SET,SYSTEM.GET32(addr));
 	WHILE statusHi = {} DO
 		statusHi:= SYSTEM.VAL(SET,SYSTEM.GET32(addr));
-		(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)))); *)
+		(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)))); *)
 	END;
 	FirewireLowUtil.PrintSet(statusHi);
 	FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(addr+4)));
@@ -1405,27 +1405,27 @@ BEGIN
 
 	command.bufferLen:= 1024;
 	command.bufferAddr:= SYSTEM.VAL(SET,ADDRESSOF(bufferAnsw));
-	(* SYSTEM.PUT32(command.bufferAddr,SYSTEM.VAL(LONGINT,{0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30})); *)
+	(* SYSTEM.PUT32(command.bufferAddr,SYSTEM.VAL(SIGNED32,{0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30})); *)
 	command.dataDirection:= DataRead;
 	FOR i:= 0 TO 2 DO
 		SYSTEM.PUT32(ADDRESSOF(command.cdb)+i*4,0);
 	END;
 	command.cdb[0]:= 28X; (* read *)
-	command.cdb[1]:= CHR(SYSTEM.VAL(LONGINT,{5}));
-	command.cdb[2]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH(SYSTEM.VAL(SET,245),-24)));
-	command.cdb[3]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH(SYSTEM.VAL(SET,245),-16)));
-	command.cdb[4]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH(SYSTEM.VAL(SET,245),-8)));
-	command.cdb[5]:= CHR(SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,245)*{0..7}));
-	command.cdb[7]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH({5},-8)));
-	command.cdb[8]:= CHR(SYSTEM.VAL(LONGINT,{5}*{0..7}));
+	command.cdb[1]:= CHR(SYSTEM.VAL(SIGNED32,{5}));
+	command.cdb[2]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH(SYSTEM.VAL(SET,245),-24)));
+	command.cdb[3]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH(SYSTEM.VAL(SET,245),-16)));
+	command.cdb[4]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH(SYSTEM.VAL(SET,245),-8)));
+	command.cdb[5]:= CHR(SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,245)*{0..7}));
+	command.cdb[7]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH({5},-8)));
+	command.cdb[8]:= CHR(SYSTEM.VAL(SIGNED32,{5}*{0..7}));
 	IF ~SendCommand(dev, command,diskres) THEN Print(debug,"Send command failed") END;
 
 	(* check the status *)
-	addr:= SYSTEM.VAL(LONGINT,dev.statusBlock.bufAddr);
+	addr:= SYSTEM.VAL(SIGNED32,dev.statusBlock.bufAddr);
 	statusHi:= SYSTEM.VAL(SET,SYSTEM.GET32(addr));
 	WHILE statusHi = {} DO
 		statusHi:= SYSTEM.VAL(SET,SYSTEM.GET32(addr));
-		(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)))); *)
+		(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)))); *)
 	END;
 	FirewireLowUtil.PrintSet(statusHi);
 	FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(addr+4)));
@@ -1436,33 +1436,33 @@ BEGIN
 	ELSE Print(debug,"There was no error sending the command!");
 	END;
 
-	FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr))));
+	FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr))));
 
 	Print(debug,"Reading from medium");
 
 	command.bufferLen:= 1024;
 	command.bufferAddr:= SYSTEM.VAL(SET,ADDRESSOF(bufferAnsw));
-	(* SYSTEM.PUT32(command.bufferAddr,SYSTEM.VAL(LONGINT,{0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30})); *)
+	(* SYSTEM.PUT32(command.bufferAddr,SYSTEM.VAL(SIGNED32,{0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30})); *)
 	command.dataDirection:= DataRead;
 	FOR i:= 0 TO 2 DO
 		SYSTEM.PUT32(ADDRESSOF(command.cdb)+i*4,0);
 	END;
 	command.cdb[0]:= 28X; (* read *)
-	command.cdb[1]:= CHR(SYSTEM.VAL(LONGINT,{5}));
-	command.cdb[2]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH(SYSTEM.VAL(SET,260),-24)));
-	command.cdb[3]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH(SYSTEM.VAL(SET,260),-16)));
-	command.cdb[4]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH(SYSTEM.VAL(SET,260),-8)));
-	command.cdb[5]:= CHR(SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,260)*{0..7}));
-	command.cdb[7]:= CHR(SYSTEM.VAL(LONGINT,{0..7}*LSH({5},-8)));
-	command.cdb[8]:= CHR(SYSTEM.VAL(LONGINT,{5}*{0..7}));
+	command.cdb[1]:= CHR(SYSTEM.VAL(SIGNED32,{5}));
+	command.cdb[2]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH(SYSTEM.VAL(SET,260),-24)));
+	command.cdb[3]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH(SYSTEM.VAL(SET,260),-16)));
+	command.cdb[4]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH(SYSTEM.VAL(SET,260),-8)));
+	command.cdb[5]:= CHR(SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,260)*{0..7}));
+	command.cdb[7]:= CHR(SYSTEM.VAL(SIGNED32,{0..7}*LSH({5},-8)));
+	command.cdb[8]:= CHR(SYSTEM.VAL(SIGNED32,{5}*{0..7}));
 	IF ~SendCommand(dev, command,diskres) THEN Print(debug,"Send command failed") END;
 
 	(* check the status *)
-	addr:= SYSTEM.VAL(LONGINT,dev.statusBlock.bufAddr);
+	addr:= SYSTEM.VAL(SIGNED32,dev.statusBlock.bufAddr);
 	statusHi:= SYSTEM.VAL(SET,SYSTEM.GET32(addr));
 	WHILE statusHi = {} DO
 		statusHi:= SYSTEM.VAL(SET,SYSTEM.GET32(addr));
-		(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr)))); *)
+		(* FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr)))); *)
 	END;
 	FirewireLowUtil.PrintSet(statusHi);
 	FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(addr+4)));
@@ -1473,7 +1473,7 @@ BEGIN
 	ELSE Print(debug,"There was no error sending the command!");
 	END;
 
-	FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(LONGINT,command.bufferAddr))));
+	FirewireLowUtil.PrintSet(SYSTEM.VAL(SET,SYSTEM.GET32(SYSTEM.VAL(SIGNED32,command.bufferAddr))));
 
 	RETURN NIL;
 END TestSendCommand;

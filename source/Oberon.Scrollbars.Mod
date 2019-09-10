@@ -17,14 +17,14 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 		Frame* = POINTER TO FrameDesc;
 		FrameDesc* = RECORD (Gadgets.FrameDesc)
 			state0*: SET;
-			backC*, knoblen: INTEGER;
-			min*, max*, step*, val*: LONGINT;
+			backC*, knoblen: SIGNED16;
+			min*, max*, step*, val*: SIGNED32;
 			stepO*, minO*, maxO*: Objects.Object;
 			vertical*: BOOLEAN
 		END;
 
 	VAR
-		HoldTime, WaitTime, mayscroll: LONGINT;
+		HoldTime, WaitTime, mayscroll: SIGNED32;
 
 	PROCEDURE TimeOk (): BOOLEAN;
 	BEGIN
@@ -34,11 +34,11 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 	END TimeOk;
 
 	(* Given a position, calculate the relative slider position. *)
-	PROCEDURE Value (F: Frame; x, y, w, h, X, Y: INTEGER; min, max: LONGINT): LONGINT;
-	VAR res: WORD;
+	PROCEDURE Value (F: Frame; x, y, w, h, X, Y: SIGNED16; min, max: SIGNED32): SIGNED32;
+	VAR res: INTEGER;
 
-		PROCEDURE CalcVal (x, w, bx, bw: INTEGER; min, max: LONGINT): LONGINT;
-		VAR r, d: LONGINT;
+		PROCEDURE CalcVal (x, w, bx, bw: SIGNED16; min, max: SIGNED32): SIGNED32;
+		VAR r, d: SIGNED32;
 		BEGIN
 			d := max - min;
 			IF d = 0 THEN r := 0
@@ -59,11 +59,11 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 	END Value;
 
 	(* Given the min, max and val, calculate the absolute bar position *)
-	PROCEDURE Pos (F: Frame; x, y, w, h, bw: INTEGER; min, max, val: LONGINT): INTEGER;
-	VAR res: INTEGER;
+	PROCEDURE Pos (F: Frame; x, y, w, h, bw: SIGNED16; min, max, val: SIGNED32): SIGNED16;
+	VAR res: SIGNED16;
 
-		PROCEDURE CalcPos (x, w, bw: INTEGER; min, max, val: LONGINT): INTEGER;
-		VAR d: LONGINT;
+		PROCEDURE CalcPos (x, w, bw: SIGNED16; min, max, val: SIGNED32): SIGNED16;
+		VAR d: SIGNED32;
 		BEGIN
 			d := ABS(max - min);
 			IF d = 0 THEN RETURN x
@@ -85,7 +85,7 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 		RETURN res
 	END Pos;
 
-	PROCEDURE SendUpdate (F: Frame; px, py: INTEGER; dlink: Objects.Object; full: BOOLEAN);
+	PROCEDURE SendUpdate (F: Frame; px, py: SIGNED16; dlink: Objects.Object; full: BOOLEAN);
 	VAR D: Display.DisplayMsg;
 	BEGIN
 		D.device := Display.screen; D.id := Display.area; D.dlink := dlink;
@@ -102,7 +102,7 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 		F.handle(F, D)
 	END SendUpdate;
 
-	PROCEDURE SetValue (F: Frame; val: LONGINT);
+	PROCEDURE SetValue (F: Frame; val: SIGNED32);
 	VAR name: ARRAY 64 OF CHAR;
 	BEGIN
 		F.val := val;
@@ -112,7 +112,7 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 		END
 	END SetValue;
 
-	PROCEDURE SetValueAndUpdate (F: Frame; val: LONGINT; px, py: INTEGER; dlink: Objects.Object);
+	PROCEDURE SetValueAndUpdate (F: Frame; val: SIGNED32; px, py: SIGNED16; dlink: Objects.Object);
 	VAR name: ARRAY 64 OF CHAR;
 	BEGIN
 		F.val := val;
@@ -133,7 +133,7 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 	END GetValue;
 
 	PROCEDURE AdjustKnoblen (F: Frame);
-	VAR W: INTEGER; kl: LONGINT;
+	VAR W: SIGNED16; kl: SIGNED32;
 	BEGIN
 		IF F.minO # NIL THEN Attributes.GetInt(F.minO, "Value", F.min) END;
 		IF F.maxO # NIL THEN Attributes.GetInt(F.maxO, "Value", F.max) END;
@@ -144,8 +144,8 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 		F.knoblen := SHORT(kl)
 	END AdjustKnoblen;
 
-	PROCEDURE DrawKnob (Q: Display3.Mask; x, y, w, h: INTEGER; vertical: BOOLEAN);
-	VAR m: INTEGER;
+	PROCEDURE DrawKnob (Q: Display3.Mask; x, y, w, h: SIGNED16; vertical: BOOLEAN);
+	VAR m: SIGNED16;
 	BEGIN
 		IF vertical THEN
 			Display3.FilledRect3D(Q, Display3.topC, Display3.bottomC, Display3.groupC, x, y, w, h, 1, Display3.replace);
@@ -164,8 +164,8 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 		END
 	END DrawKnob;
 
-	PROCEDURE RestoreFrame (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER);
-	VAR i : INTEGER;
+	PROCEDURE RestoreFrame (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16);
+	VAR i : SIGNED16;
 	BEGIN
 		Oberon.RemoveMarks(x, y, w, h);
 		Display3.FilledRect3D(Q, Display3.bottomC, Display3.topC, F.backC, x, y, w, h, 1, Display3.replace);
@@ -214,12 +214,12 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 		END
 	END RestoreFrame;
 
-	PROCEDURE P (x: LONGINT): INTEGER;
+	PROCEDURE P (x: SIGNED32): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
-	PROCEDURE PrintKnob (Q: Display3.Mask; x, y, w, h: INTEGER; vertical: BOOLEAN);
-	VAR m: INTEGER;
+	PROCEDURE PrintKnob (Q: Display3.Mask; x, y, w, h: SIGNED16; vertical: BOOLEAN);
+	VAR m: SIGNED16;
 	BEGIN
 		IF vertical THEN
 			Printer3.FilledRect3D(Q, Display3.topC, Display3.bottomC, Display3.groupC, x, y, w, h, P(1), Display3.replace);
@@ -239,7 +239,7 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 	END PrintKnob;
 
 	PROCEDURE PrintFrame (F: Frame; VAR M: Display.DisplayMsg);
-	VAR Q: Display3.Mask; x, y, w, h, barw, knoblen, one, i : INTEGER;
+	VAR Q: Display3.Mask; x, y, w, h, barw, knoblen, one, i : SIGNED16;
 	BEGIN
 		Gadgets.MakePrinterMask(F, M.x, M.y, M.dlink, Q);
 		x := M.x; y := M.y; w := P(F.W); h := P(F.H); barw := P(barW); knoblen := P(F.knoblen); one := P(1);
@@ -288,11 +288,11 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 		END
 	END PrintFrame;
 
-	PROCEDURE TrackFrame (F: Frame; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg);
-	VAR Q: Display3.Mask; keysum: SET; n: INTEGER; pos, npos, dpos, oldpos: LONGINT;
+	PROCEDURE TrackFrame (F: Frame; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg);
+	VAR Q: Display3.Mask; keysum: SET; n: SIGNED16; pos, npos, dpos, oldpos: SIGNED32;
 
-		PROCEDURE Pushed (x, y, w, h: INTEGER; step: LONGINT);
-		VAR pos: LONGINT; on, newstate: BOOLEAN;
+		PROCEDURE Pushed (x, y, w, h: SIGNED16; step: SIGNED32);
+		VAR pos: SIGNED32; on, newstate: BOOLEAN;
 
 			PROCEDURE On (): BOOLEAN;
 			BEGIN RETURN Effects.Inside(M.X, M.Y, x, y, w, h)
@@ -559,7 +559,7 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 	END FrameBind;
 
 	PROCEDURE FrameFile (F: Frame; VAR M: Objects.FileMsg);
-	VAR ver: LONGINT;
+	VAR ver: SIGNED32;
 	BEGIN
 		IF M.id = Objects.store THEN
 			Files.WriteNum(M.R, VersionNo);
@@ -587,7 +587,7 @@ MODULE Scrollbars IN Oberon;	(** portable *)		(** ps (based on sources of rv and
 	END FrameFile;
 
 	PROCEDURE FrameHandler* (F: Objects.Object; VAR M: Objects.ObjMsg);
-	VAR x, y, w, h: INTEGER; F1: Frame; Q: Display3.Mask;
+	VAR x, y, w, h: SIGNED16; F1: Frame; Q: Display3.Mask;
 	BEGIN
 		WITH F: Frame DO
 			IF M IS Display.FrameMsg THEN

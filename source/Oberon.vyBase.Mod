@@ -85,8 +85,8 @@ CONST
 
 TYPE
 	(*** Numeric Types *)
-	Index* = LONGINT;      	(*= default type for counts, indices of arrays, and related purposes *)
-	Real* = LONGREAL;      	(*= default type for numerics and 2d/3d graphics *)
+	Index* = SIGNED32;      	(*= default type for counts, indices of arrays, and related purposes *)
+	Real* = FLOAT64;      	(*= default type for numerics and 2d/3d graphics *)
 
 	(*** Access Types *)
 	(*= -- must match declaration in vyHost.
@@ -201,9 +201,9 @@ TYPE
 		Do*: tActionProc;
 		failed-: BOOLEAN;              (*= If a pre-action failed, abort action chain and bail out.
 		Use Output for explicit status *)
-		todoCount-: LONGINT;
+		todoCount-: SIGNED32;
 		preAction-: tAction;     		(* NIL, or an action which must be done, before this one can be invoked *)
-		TickDelta: LONGINT;     	(* NIL, or an action which must be done, before this one can be invoked *)
+		TickDelta: SIGNED32;     	(* NIL, or an action which must be done, before this one can be invoked *)
 		termination: tAction;
 
 		(*= These fields are unused. They are recommended fields for application use *)
@@ -217,7 +217,7 @@ TYPE
 	Objects may be: Vars, sets of cases, transformations, modules, formats ... The object information should not be
 	duplicated. Multiple access can be achieved by duplicating the reference to an object. *)
 	(*=
-	S3: we use a LONGINT identification. Typically, about 2000 objects are built up during one analysis session.
+	S3: we use a SIGNED32 identification. Typically, about 2000 objects are built up during one analysis session.
 	So it is not a problem to renumber/rescale on load/store operations.
 	*)
 
@@ -230,11 +230,11 @@ TYPE
 	Object* = POINTER TO ObjDesc;
 	ObjDesc* =  RECORD
 		(Gadgets.ObjDesc)
-		(*    *)	ObjectId-: LONGINT;
+		(*    *)	ObjectId-: SIGNED32;
 		(*01*)	Name-	: tName;      			(* a storage id. Objects should be identified as Object *)
-		(*    *)	createdT-, createdD-: LONGINT;
+		(*    *)	createdT-, createdD-: SIGNED32;
 		(*D: 7bit yr, 4bit mon 5bit day; T: 5bit hr, 6bit min 6bit s *)
-		(*    *)	modifiedT-, modifiedD-: LONGINT;
+		(*    *)	modifiedT-, modifiedD-: SIGNED32;
 		(*02*)	key: tKey;
 		(*03*)	struct- : OPTStruct;      	(* structure description. This need not correspond to physical storage *)
 		(*    *)	disposition- : SET;      			(* object disposition flags *)
@@ -278,7 +278,7 @@ TYPE
 	(*= Data are objects which allow operations, such as arithmetic or logical operations. These operations should be supported by the handler. The handler should operate quietly, leaving error reports to explicit inspections. *)
 	tStatus* = SET;
 	(*	tFormat= SET;
-	tType=INTEGER;*)
+	tType=SIGNED16;*)
 	tData* = POINTER TO tDataDesc;
 	tDataDesc* = RECORD (ObjDesc)
 		status* : tStatus;
@@ -308,8 +308,8 @@ TYPE
 	tBuf* = POINTER TO tBufDesc;
 	tBufDesc* = RECORD
 		str* : OPTStruct;
-		len* : LONGINT;       (*= Nr of entries allocated to a chunk. aka  LEN. This is the buffer capacity. *)
-		usedentries* : LONGINT;       (*= Nr of used entries in a chunk. >=0  *)
+		len* : SIGNED32;       (*= Nr of entries allocated to a chunk. aka  LEN. This is the buffer capacity. *)
+		usedentries* : SIGNED32;       (*= Nr of used entries in a chunk. >=0  *)
 		aux* : tBuf;       (*= auxiliary pointer, to hold case nrs for indexed sort *)
 		cache* : tCache;       (*= cached information, such as min, max *)
 		next* : tBuf
@@ -322,11 +322,11 @@ TYPE
 	conventions, or transposed, following FORTRAN conventions *)
 	(*= tLayout will be changed to use OPTStruct. *)
 	tLenArray* = POINTER TO tLenArrayDesc;
-	tLenArrayDesc = ARRAY OF LONGINT;
+	tLenArrayDesc = ARRAY OF SIGNED32;
 	tLayout* = POINTER TO tLayoutDesc;
 	tLayoutDesc* = RECORD
 		(*! defunct. replace by type struct *)
-		dim*: INTEGER;
+		dim*: SIGNED16;
 		transposed*: BOOLEAN
 	END;
 	(* abstract layouts *)
@@ -343,7 +343,7 @@ TYPE
 	tVector* = POINTER TO tVectorDesc;
 	tVectorDesc* = RECORD (tDataDesc)
 		Layout*: tLayout;      	(* NIL = vector *)
-		nrData*: LONGINT;
+		nrData*: SIGNED32;
 		buf*: tBuf
 	END;
 
@@ -362,7 +362,7 @@ TYPE
 	(*= state information for persistent storage *)
 	tProfile = RECORD
 	magic: ARRAY 8 OF CHAR;
-	profileversion: LONGINT;
+	profileversion: SIGNED32;
 	END; (* may be saved *)
 	*)
 
@@ -408,8 +408,8 @@ TYPE
 	ProcQPtr = POINTER TO ProcQElem;      	(*! move to Action type *)
 	ProcQElem = RECORD(*! move to Action type *)
 		Proc: 	TickProc;
-		TickDelta: 	LONGINT;      (* time delta, in ticks. 0: always *)
-		NextTime: 	LONGINT;
+		TickDelta: 	SIGNED32;      (* time delta, in ticks. 0: always *)
+		NextTime: 	SIGNED32;
 		next: ProcQPtr
 	END;
 
@@ -423,8 +423,8 @@ TYPE
 		gadget: Frame	(*= back link. obj.gadget.vyobj= obj *)(*? not used ?*)(*? frame?*)
 	END;
 	FrameDesc* = RECORD (Gadgets.FrameDesc) (*? or use Gadgets.View ? *)
-		(*		defunctx*, defuncty* : INTEGER;       (* cached absolute location, is updated by frame's handler. defunct. use messages *) *)
-		borderW* : INTEGER;
+		(*		defunctx*, defuncty* : SIGNED16;       (* cached absolute location, is updated by frame's handler. defunct. use messages *) *)
+		borderW* : SIGNED16;
 		hotupdate* : BOOLEAN;
 
 		vyobj: FrameObject;     (*= 	allow inheritance form Objjects.
@@ -454,7 +454,7 @@ VAR
 	currentThread-: 	tThread;      	(* add objects to this thread. Must not be NIL! *)
 	lastThread-: 	tThread;      	(* add threads here. Must not be NIL!  *)
 	Trash-: 	tThread;      	(* defunct objects - cleaned by GC *)
-	objcount-: 	LONGINT;         (* for unique id *)
+	objcount-: 	SIGNED32;         (* for unique id *)
 	objecthandle*: 	Objects.Handler;      	(* may be used if no handler is installed.
 	Default:objecthandle := ObjectHandler;  *)
 	framehandle*: Objects.Handler;   (* may be used if no handler is installed.
@@ -463,15 +463,15 @@ VAR
 	w* : 	TextsWriter;      	(*= a general writer. Output goes to Log *)
 	werr* : 	TextsWriter;      (* =a writer for exception messages. Output goes to Log *)
 	Log* : Text;      (*= a persistent text. May be mapped to Oberon.Log *)
-	slow*: INTEGER;     	(*= slow motion factor. All deltas are multiplied by this factor *)
+	slow*: SIGNED16;     	(*= slow motion factor. All deltas are multiplied by this factor *)
 	lastmsg-: Objects.ObjMsg;
 	ProcToCall: ProcQPtr;
 	countTask: Oberon.Task;
-	ticks-: LONGINT;
+	ticks-: SIGNED32;
 
 	(* global buffer used for PROCEDURE Show *)
 	showParameter* : vyLinks.Link;
-	parameterCount* : INTEGER;
+	parameterCount* : SIGNED16;
 
 	recurse: BOOLEAN;
 
@@ -486,7 +486,7 @@ END AppendToLog;
 
 
 (*** Base Procedures *)
-PROCEDURE NextIdCount (): LONGINT;
+PROCEDURE NextIdCount (): SIGNED32;
 BEGIN INC(objcount);       RETURN objcount
 END NextIdCount;
 
@@ -530,13 +530,13 @@ PROCEDURE DumpItem* (item: vyLinks.Link);
 	(*! provide portable version of DumpItem - disabled for now *)
 	(*	Texts.OpenWriter(w);
 	IF item=NIL THEN Texts.WriteString(w," _ NIL _") ELSE
-	Texts.WriteHex(w,SYSTEM.VAL(LONGINT,item));
+	Texts.WriteHex(w,SYSTEM.VAL(SIGNED32,item));
 	(*Texts.WriteString(w," [");
-	Texts.WriteHex(w,SYSTEM.VAL(LONGINT,ob.handle));
+	Texts.WriteHex(w,SYSTEM.VAL(SIGNED32,ob.handle));
 	Texts.WriteString(w,"] ");
 	*)
 	Texts.WriteString(w," _>");
-	Texts.WriteHex(w,SYSTEM.VAL(LONGINT,item.next));
+	Texts.WriteHex(w,SYSTEM.VAL(SIGNED32,item.next));
 	END;
 	Texts.WriteLn(w);
 	vyHost.AppendToLog(w); (* DumpItem *)
@@ -818,7 +818,7 @@ BEGIN	ASSERT(ob # NIL);        (*! dummy *)
 END StoreObject0;
 
 PROCEDURE LoadObject0* (ob: Object;        VAR M: Objects.FileMsg);
-	VAR version, uid: LONGINT;       ch: CHAR;       obsub: Objects.Object;    name: tName;    list: vyLinks.Link;
+	VAR version, uid: SIGNED32;       ch: CHAR;       obsub: Objects.Object;    name: tName;    list: vyLinks.Link;
 BEGIN	ASSERT(ob # NIL);        	(*! dummy *)
 	Files.ReadLInt(M.R, version);
 	ASSERT((version >= minVersion) &  (version <= maxVersion), precc);
@@ -929,7 +929,7 @@ BEGIN ASSERT ( lastThread # NIL );
 END Report;
 
 PROCEDURE WriteVS* (VAR w: TextsWriter ;      name, vs: ARRAY OF CHAR);
-	VAR D, T: LONGINT;
+	VAR D, T: SIGNED32;
 BEGIN Oberon.GetClock(T, D);
 	Texts.WriteString(w, name);      Texts.Write(w, " ");      Texts.WriteString(w, vs);
 	Texts.WriteDate(w, T, D);
@@ -978,7 +978,7 @@ END
 END HandleItemAttributes;
 
 PROCEDURE LoadItem* (ob: vyLinks.Link; VAR M:Objects.FileMsg);
-VAR version,uid: LONGINT;
+VAR version,uid: SIGNED32;
 BEGIN	(*ASSERT(ob # NIL); 	(*! dummy *)
 Files.ReadLInt(M.R,version);
 ASSERT((version>=minVersion) &  (version<=maxVersion));
@@ -1075,7 +1075,7 @@ END NewItem;
 
 
 (** Basic Objects: Gadget Support *)
-PROCEDURE DateTimeString (d, t: LONGINT;     VAR s: ARRAY OF CHAR);
+PROCEDURE DateTimeString (d, t: SIGNED32;     VAR s: ARRAY OF CHAR);
 	VAR ts: ARRAY 64 OF CHAR;
 BEGIN
 	Strings.DateToStr(d, s);     Strings.Append(s, ' ');    Strings.TimeToStr(t, ts);    Strings.Append(s, ts)
@@ -1124,7 +1124,7 @@ BEGIN
 END HandleObjectAttributes;
 
 PROCEDURE HandleObjectLinks (obj: Object;      VAR M: Objects.LinkMsg);
-	VAR seqnr: LONGINT;   stub: ARRAY 32 OF CHAR;
+	VAR seqnr: SIGNED32;   stub: ARRAY 32 OF CHAR;
 BEGIN
 	IF M.id = Objects.enum THEN
 		IF M.res < 0 THEN
@@ -1475,7 +1475,7 @@ BEGIN
 END NewVec;
 
 (** Low level buffer routines for chunked data *)
-PROCEDURE FindAllocLen* (v: tVector;      VAR l, freetrail: LONGINT;      VAR firstfree: tBuf);
+PROCEDURE FindAllocLen* (v: tVector;      VAR l, freetrail: SIGNED32;      VAR firstfree: tBuf);
 	(* find total allocated len and number of trailing free entries. firstfree is the first chunk containing trailing free entries*)
 	VAR chunk: tBuf;
 BEGIN l := 0;      freetrail := 0;      firstfree := NIL;
@@ -1492,9 +1492,9 @@ BEGIN l := 0;      freetrail := 0;      firstfree := NIL;
 END FindAllocLen;
 
 (*?usedentries needs strict control. *)
-PROCEDURE MarkUsed* (count: LONGINT;      v: tVector);
+PROCEDURE MarkUsed* (count: SIGNED32;      v: tVector);
 	(*= risky mark routine. only sets the used counts. no fields are updated *)
-	VAR last: tBuf;      l, free, needed, get: LONGINT;
+	VAR last: tBuf;      l, free, needed, get: SIGNED32;
 BEGIN
 	IF v.nrData < 0 THEN v.nrData := 0 END;
 	IF count <= v.nrData THEN needed := 0;      v.nrData := count;
@@ -1520,10 +1520,10 @@ BEGIN
 	END
 END MarkUsed;
 
-PROCEDURE Loc* (i: LONGINT;       v:  tVector;       VAR chunk: tBuf;       VAR loc: LONGINT);
+PROCEDURE Loc* (i: SIGNED32;       v:  tVector;       VAR chunk: tBuf;       VAR loc: SIGNED32);
 	(*= (external world) pos i to internal storage chunk location loc. If space is allocated for element i, chunk reference and location are returned.
 	If i is beyond allocation, the last chunk reference is returned with loc<0; -loc more elements needed *)
-PROCEDURE getChunkLoc (pos: LONGINT;       chunkstart: LONGINT;       VAR chunk: tBuf;       VAR loc: LONGINT);
+PROCEDURE getChunkLoc (pos: SIGNED32;       chunkstart: SIGNED32;       VAR chunk: tBuf;       VAR loc: SIGNED32);
 BEGIN 	loc := pos - chunkstart;
 	WHILE (chunk # NIL) & (loc >= chunk.usedentries) DO
 		IF chunk.next # NIL THEN
@@ -1541,10 +1541,10 @@ BEGIN	ASSERT((v # NIL) & (v.buf # NIL) );    (* gs 20001118 *)
 	getChunkLoc(i, 0, chunk, loc)
 END Loc;
 
-PROCEDURE Pos* (v:  tVector;        chunk: tBuf;        loc: LONGINT): LONGINT;
+PROCEDURE Pos* (v:  tVector;        chunk: tBuf;        loc: SIGNED32): SIGNED32;
 	(*= internal storage chunk location to (external world) pos*)
-PROCEDURE getPos (chunkstart: LONGINT;      curchunk: tBuf;      chunk: tBuf;       loc: LONGINT): LONGINT;
-	VAR pos: LONGINT;
+PROCEDURE getPos (chunkstart: SIGNED32;      curchunk: tBuf;      chunk: tBuf;       loc: SIGNED32): SIGNED32;
+	VAR pos: SIGNED32;
 BEGIN 	pos := chunkstart;
 	WHILE (chunk # curchunk) &  (curchunk.next # NIL)  DO
 	INC(pos, curchunk.usedentries);       curchunk := curchunk.next END;
@@ -1558,7 +1558,7 @@ END Pos;
 (** Abstract variable types *)
 
 (** Enquiry Routines *)
-PROCEDURE Len* (v: tData;      dim: INTEGER): LONGINT;
+PROCEDURE Len* (v: tData;      dim: SIGNED16): SIGNED32;
 	(*! should work for any data structure which has a matrix representation *)
 BEGIN
 	IF v IS tVector THEN WITH
@@ -1596,7 +1596,7 @@ END CloneLayout;
 (*! This procedure must already be available in the compiler.
 PROCEDURE SequentialPos* (layout:tLayout; indices: ARRAY OF Index):Index;
 (*= Calculate sequential offset for indices, taking dimensions and transposed from layout*)
-VAR i:LONGINT;tempindex,prevsize:LONGINT;
+VAR i:SIGNED32;tempindex,prevsize:SIGNED32;
 BEGIN
 ASSERT(LEN(indices)>=layout.dim,100);i:=layout.dim-1;
 prevsize.len[i]:=layout.; tempindex:=indices[i];
@@ -1606,7 +1606,7 @@ END SequentialPos;
 (** Index calculation - linear storage for matrices *)
 PROCEDURE VecIndex* (VAR lens, indices: ARRAY OF Index): Index;
 	(*! check *)
-	VAR i: LONGINT;     tempindex: Index;     prevsize: LONGINT;
+	VAR i: SIGNED32;     tempindex: Index;     prevsize: SIGNED32;
 BEGIN
 	tempindex := indices[0];      prevsize := lens[0];
 	FOR i := 1 TO LEN(lens) - 1 DO
@@ -1617,7 +1617,7 @@ END VecIndex;
 
 PROCEDURE VecIndexT* (VAR lens, indices: ARRAY OF Index): Index;
 	(*! check *)
-	VAR i: LONGINT;     tempindex: Index;     l, prevsize: LONGINT;
+	VAR i: SIGNED32;     tempindex: Index;     l, prevsize: SIGNED32;
 BEGIN l := LEN(lens) - 1;
 	tempindex := indices[l];      prevsize := lens[l];
 	FOR i := l TO 0 BY - 1 DO
@@ -1640,7 +1640,7 @@ END VecIndex2T;
 
 (** Housekeeping - used internally only *)
 
-PROCEDURE GC* (count: LONGINT;       v: tData;       pos: LONGINT);
+PROCEDURE GC* (count: SIGNED32;       v: tData;       pos: SIGNED32);
 	(*= Do internal garbage collection on v. Do not destroy any valid data. *)
 	(*! interface to be specified *)
 	VAR oldchunk, chunk:  tBuf;
@@ -1681,12 +1681,12 @@ BEGIN WITH src: tVector DO
 	END
 END DoToAllChunks;
 
-PROCEDURE Piece* (VAR count: LONGINT;
-src: tVector;      srcpos: LONGINT;
-dest: tVector;      destpos: LONGINT;
-VAR piececount: LONGINT;
-VAR srcchunk: tBuf;      VAR srcloc: LONGINT;
-VAR destchunk: tBuf;      VAR destloc: LONGINT);
+PROCEDURE Piece* (VAR count: SIGNED32;
+src: tVector;      srcpos: SIGNED32;
+dest: tVector;      destpos: SIGNED32;
+VAR piececount: SIGNED32;
+VAR srcchunk: tBuf;      VAR srcloc: SIGNED32;
+VAR destchunk: tBuf;      VAR destloc: SIGNED32);
 	(*= Find intersection of requested count that fits into src and dest *)
 BEGIN
 	Loc(srcpos, src, srcchunk, srcloc);      ASSERT(srcloc >= 0);
@@ -1698,11 +1698,11 @@ BEGIN
 	count := count - piececount
 END Piece;
 
-PROCEDURE DoToAllPieces* (src, dest: tData;       action: PROCEDURE (VAR piececount: LONGINT;
-VAR srcchunk: tBuf;      VAR srcloc: LONGINT;
-VAR destchunk: tBuf;      VAR destloc: LONGINT));
+PROCEDURE DoToAllPieces* (src, dest: tData;       action: PROCEDURE (VAR piececount: SIGNED32;
+VAR srcchunk: tBuf;      VAR srcloc: SIGNED32;
+VAR destchunk: tBuf;      VAR destloc: SIGNED32));
 	(*= Iterate an action through all pieces of two vectors. Vectors must be of same size *)
-	VAR  srcchunk, destchunk:  tBuf;      oldcount, piececount, count, offs, srcoffs, destoffs: LONGINT;
+	VAR  srcchunk, destchunk:  tBuf;      oldcount, piececount, count, offs, srcoffs, destoffs: SIGNED32;
 BEGIN WITH src: tVector DO WITH dest: tVector DO
 			ASSERT(src.nrData = dest.nrData, 100);       offs := 0;      count := dest.nrData;
 			WHILE count > 0 DO oldcount := count;
@@ -1714,7 +1714,7 @@ BEGIN WITH src: tVector DO WITH dest: tVector DO
 END DoToAllPieces;
 
 PROCEDURE ApndChunks* (chunk: tBuf;      o: tVector);
-	VAR temp: tBuf;       count: LONGINT;
+	VAR temp: tBuf;       count: SIGNED32;
 BEGIN 	count := 0;       temp := chunk;
 	WHILE temp # NIL DO count := count + temp.usedentries;       temp := temp.next   END;
 	IF o.buf = NIL THEN o.buf := chunk;      o.nrData := count
@@ -1780,7 +1780,7 @@ BEGIN
 	INCL(arg1.status, cNotYetImplemented)
 END HandletOp3;
 
-PROCEDURE GenericCatBuf* (ch: tBuf;       len: LONGINT;       VAR size: LONGINT;        VAR first, last: tBuf);
+PROCEDURE GenericCatBuf* (ch: tBuf;       len: SIGNED32;       VAR size: SIGNED32;        VAR first, last: tBuf);
 BEGIN
 	ch.usedentries := 0;        ch.len := len;        ch.next := NIL;        size := size - len;
 	IF first = NIL THEN first := ch;        last := ch ELSE last.next := ch;        last := ch END
@@ -1791,18 +1791,18 @@ BEGIN
 	IF c = NIL THEN RETURN NIL ELSE RETURN c.next END
 END NextBuf;
 
-PROCEDURE GetUsedEntries* (c: tBuf): LONGINT ;
-	VAR len: LONGINT;
+PROCEDURE GetUsedEntries* (c: tBuf): SIGNED32 ;
+	VAR len: SIGNED32;
 BEGIN len := 0;        WHILE(c # NIL) DO INC(len, c.usedentries);        c := NextBuf(c)   END;        RETURN len
 END GetUsedEntries;
 
-PROCEDURE MatrixLayout* (rows, columns: LONGINT): tArray;
+PROCEDURE MatrixLayout* (rows, columns: SIGNED32): tArray;
 	VAR l: tArray;
 BEGIN NEW(l);       l.dim := 2;       l.transposed := FALSE;       l.lens[0] := rows;       l.lens[1] := columns;        RETURN l
 END MatrixLayout;
 
-PROCEDURE SetArrayLayout* (sizes: ARRAY OF LONGINT;       v: tVector;       VAR total: LONGINT);
-	VAR l: tArray;       i, dim: INTEGER;
+PROCEDURE SetArrayLayout* (sizes: ARRAY OF SIGNED32;       v: tVector;       VAR total: SIGNED32);
+	VAR l: tArray;       i, dim: SIGNED16;
 BEGIN
 	NEW(l);       i := 0;        WHILE ( i < LEN(sizes)) & (sizes[i] # 0) DO INC(i) END;
 	(*ASSERT(i <= vyHost.maxdims);*)
@@ -1823,8 +1823,8 @@ BEGIN
 	END
 END Clear;
 (*
-PROCEDURE HexToStr (pre:ARRAY OF CHAR;i: LONGINT; VAR s: ARRAY OF CHAR);
-VAR k, j, c: INTEGER; a: ARRAY 10 OF CHAR;
+PROCEDURE HexToStr (pre:ARRAY OF CHAR;i: SIGNED32; VAR s: ARRAY OF CHAR);
+VAR k, j, c: SIGNED16; a: ARRAY 10 OF CHAR;
 BEGIN
 j := 0;
 WHILE pre[j]#0X DO s[j]:=pre[j]; INC(j) END;
@@ -1835,8 +1835,8 @@ WHILE k>=j DO  s[k] := '0'; DEC(k);END
 END HexToStr;
 
 *)
-PROCEDURE HexToStr (pre: ARRAY OF CHAR;     i: LONGINT;      VAR s: ARRAY OF CHAR);
-	VAR k, j, c: INTEGER;      a: ARRAY 10 OF CHAR;
+PROCEDURE HexToStr (pre: ARRAY OF CHAR;     i: SIGNED32;      VAR s: ARRAY OF CHAR);
+	VAR k, j, c: SIGNED16;      a: ARRAY 10 OF CHAR;
 BEGIN
 	j := 0;
 	WHILE pre[j] # 0X DO s[j] := pre[j];      INC(j) END;
@@ -1844,8 +1844,8 @@ BEGIN
 	REPEAT DEC(k);      s[j] := a[k];      INC(j)  UNTIL k = 0;      s[j] := "H";      s[j + 1] := 0X
 END HexToStr;
 
-PROCEDURE StringSize (s: ARRAY OF CHAR;      VAR w, h: INTEGER);
-	VAR r: Objects.Object;      p: INTEGER;
+PROCEDURE StringSize (s: ARRAY OF CHAR;      VAR w, h: SIGNED16);
+	VAR r: Objects.Object;      p: SIGNED16;
 BEGIN
 	w := 6;      h := 0;
 	p := 0;
@@ -1859,7 +1859,7 @@ END StringSize;
 (*
 (** Icons *)
 PROCEDURE IconHandler* (F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR objadr:LONGINT;VAR w, h: INTEGER;
+VAR objadr:SIGNED32;VAR w, h: SIGNED16;
 BEGIN WITH F:Icons.Icon DO
 IF M IS Objects.LinkMsg THEN WITH M: Objects.LinkMsg DO
 IF (M.id = Objects.set) & (M.name = "Model") & (M.obj#NIL) THEN
@@ -1894,7 +1894,7 @@ END NewIcon;
 *)
 (** Buttons *)
 PROCEDURE ButtonHandler* (F: Objects.Object;      VAR M: Objects.ObjMsg);
-	VAR objadr: ADDRESS;     VAR w, h: INTEGER;
+	VAR objadr: ADDRESS;     VAR w, h: SIGNED16;
 BEGIN WITH F: BasicGadgets.Button DO
 		IF M IS Objects.LinkMsg THEN WITH M: Objects.LinkMsg DO
 				IF (M.id = Objects.set) & (M.name = "Model") & (M.obj # NIL) THEN
@@ -1904,7 +1904,7 @@ BEGIN WITH F: BasicGadgets.Button DO
 						F.ledcol := Display3.blue
 					END;
 					objadr := ADDRESSOF(F.obj);
-					HexToStr('@ ', LONGINT(objadr), F.caption);
+					HexToStr('@ ', SIGNED32(objadr), F.caption);
 					StringSize(F.caption, w, h);
 					IF w + 2 > F.W THEN F.W := w + 2 END;
 					M.res := 0
@@ -1937,7 +1937,7 @@ BEGIN	Oberon.Remove(countTask);      countTask := NIL
 END Stop;
 
 PROCEDURE Step*;
-	VAR M: TickMsg;     t: LONGINT;      pq: ProcQPtr;
+	VAR M: TickMsg;     t: SIGNED32;      pq: ProcQPtr;
 BEGIN
 	IF countTask = NIL THEN Stop END;
 
@@ -1955,7 +1955,7 @@ BEGIN
 
 END Step;
 
-PROCEDURE ActionRegister* (p: TickProc;     delta: LONGINT);      (*vs 0.1d0 gs *)
+PROCEDURE ActionRegister* (p: TickProc;     delta: SIGNED32);      (*vs 0.1d0 gs *)
 	(*! avoid double entries *)
 	VAR pq: ProcQPtr;
 BEGIN
@@ -1978,8 +1978,8 @@ END ActionDeRegister;
 
 PROCEDURE Tick (me: Oberon.Task);     	(* vs S3 *)(* Installed as an Oberon Task *)
 
-VAR t: LONGINT;      pq: ProcQPtr;      mintime: LONGINT;
-BEGIN	t := Oberon.Time();      pq := ProcToCall;       mintime := MAX(LONGINT);      (*? wrap around *)
+VAR t: SIGNED32;      pq: ProcQPtr;      mintime: SIGNED32;
+BEGIN	t := Oberon.Time();      pq := ProcToCall;       mintime := MAX(SIGNED32);      (*? wrap around *)
 	IF pq # NIL THEN
 		WHILE pq # NIL DO
 			IF pq.NextTime <= t THEN pq.Proc;      pq.NextTime := t + pq.TickDelta * slow;
@@ -2031,13 +2031,13 @@ BEGIN Oberon.Remove(action)
 END Suspend;
 
 PROCEDURE Resume* (action: tAction);
-	VAR t: LONGINT;
+	VAR t: SIGNED32;
 BEGIN t := Oberon.Time();     action.time := t;     Oberon.Install(action)
 END Resume;
 
 PROCEDURE DoRunAction (action: Oberon.Task);
 (*= Internal version of DoAction, to be used with timer. *)
-VAR t: LONGINT;
+VAR t: SIGNED32;
 BEGIN
 	WITH action: tAction DO
 		action.failed := FALSE;
@@ -2051,11 +2051,11 @@ BEGIN
 		END
 	END;
 END DoRunAction;
-PROCEDURE RunAction* (action: tAction;      requcount: LONGINT;      delay: LONGINT;      termination: tAction);
+PROCEDURE RunAction* (action: tAction;      requcount: SIGNED32;      delay: SIGNED32;      termination: tAction);
 	(*= Install an action as background task, and run it repeatedly. If reqcount>0, stop after reqcount runs and call termination.
 	Use delay between successive calls. Update events must be supported by the Do action if required.
 	*)
-	VAR t: LONGINT;
+	VAR t: SIGNED32;
 BEGIN 	t := Oberon.Time();         (*? wrap around *)
 	IF action = NIL THEN RETURN  END;
 	IF requcount < 1 THEN action.todoCount := - 1 ELSE action.todoCount := requcount END;
@@ -2070,70 +2070,70 @@ END RunAction;
 (*= tentatively fail safe and efficient copy routines. *)
 
 
-PROCEDURE COPYB* (VAR src: ARRAY OF BOOLEAN;      srcoffs, len: LONGINT;
-VAR dest: ARRAY OF BOOLEAN;     destoffs: LONGINT);
+PROCEDURE COPYB* (VAR src: ARRAY OF BOOLEAN;      srcoffs, len: SIGNED32;
+VAR dest: ARRAY OF BOOLEAN;     destoffs: SIGNED32);
 CONST sz = SIZEOF(BOOLEAN);
 BEGIN	ASSERT(LEN(src) >= len, 100);     	ASSERT(LEN(dest) >= len, 101);
-	ASSERT((len >= 0) & (len < (MAX(LONGINT) DIV sz)), 102);
+	ASSERT((len >= 0) & (len < (MAX(SIGNED32) DIV sz)), 102);
 	SYSTEM.MOVE(ADDRESSOF(src[srcoffs]), ADDRESSOF(dest[destoffs]), len * sz)
 END COPYB;
 
-PROCEDURE COPYCHAR* (VAR src: ARRAY OF CHAR;      srcoffs, len: LONGINT;
-VAR dest: ARRAY OF CHAR;     destoffs: LONGINT);
+PROCEDURE COPYCHAR* (VAR src: ARRAY OF CHAR;      srcoffs, len: SIGNED32;
+VAR dest: ARRAY OF CHAR;     destoffs: SIGNED32);
 CONST sz = SIZEOF(CHAR);
 BEGIN	ASSERT(LEN(src) >= len, 100);     	ASSERT(LEN(dest) >= len, 101);
-	ASSERT((len >= 0) & (len < (MAX(LONGINT) DIV sz)), 102);
+	ASSERT((len >= 0) & (len < (MAX(SIGNED32) DIV sz)), 102);
 	SYSTEM.MOVE(ADDRESSOF(src[srcoffs]), ADDRESSOF(dest[destoffs]), len * sz)
 END COPYCHAR;
 
-PROCEDURE COPYSHORT* (VAR src: ARRAY OF SHORTINT;      srcoffs, len: LONGINT;
-VAR dest: ARRAY OF SHORTINT;     destoffs: LONGINT);
-CONST sz = SIZEOF(SHORTINT);
+PROCEDURE COPYSHORT* (VAR src: ARRAY OF SIGNED8;      srcoffs, len: SIGNED32;
+VAR dest: ARRAY OF SIGNED8;     destoffs: SIGNED32);
+CONST sz = SIZEOF(SIGNED8);
 BEGIN	ASSERT(LEN(src) >= len, 100);     	ASSERT(LEN(dest) >= len, 101);
-	ASSERT((len >= 0) & (len < (MAX(LONGINT) DIV sz)), 102);
+	ASSERT((len >= 0) & (len < (MAX(SIGNED32) DIV sz)), 102);
 	SYSTEM.MOVE(ADDRESSOF(src[srcoffs]), ADDRESSOF(dest[destoffs]), len * sz)
 END COPYSHORT;
 
-PROCEDURE COPYI* (VAR src: ARRAY OF INTEGER;      srcoffs, len: LONGINT;
-VAR dest: ARRAY OF INTEGER;     destoffs: LONGINT);
-CONST sz = SIZEOF(INTEGER);
+PROCEDURE COPYI* (VAR src: ARRAY OF SIGNED16;      srcoffs, len: SIGNED32;
+VAR dest: ARRAY OF SIGNED16;     destoffs: SIGNED32);
+CONST sz = SIZEOF(SIGNED16);
 BEGIN	ASSERT(LEN(src) >= len, 100);     	ASSERT(LEN(dest) >= len, 101);
-	ASSERT((len >= 0) & (len < (MAX(LONGINT) DIV sz)), 102);
+	ASSERT((len >= 0) & (len < (MAX(SIGNED32) DIV sz)), 102);
 	SYSTEM.MOVE(ADDRESSOF(src[srcoffs]), ADDRESSOF(dest[destoffs]), len * sz)
 END COPYI;
 
-PROCEDURE COPYL* (VAR src: ARRAY OF LONGINT;      srcoffs, len: LONGINT;
-VAR dest: ARRAY OF LONGINT;     destoffs: LONGINT);
-CONST sz = SIZEOF(LONGINT);
+PROCEDURE COPYL* (VAR src: ARRAY OF SIGNED32;      srcoffs, len: SIGNED32;
+VAR dest: ARRAY OF SIGNED32;     destoffs: SIGNED32);
+CONST sz = SIZEOF(SIGNED32);
 BEGIN	ASSERT(LEN(src) >= len, 100);     	ASSERT(LEN(dest) >= len, 101);
-	ASSERT((len >= 0) & (len < (MAX(LONGINT) DIV sz)), 102);
+	ASSERT((len >= 0) & (len < (MAX(SIGNED32) DIV sz)), 102);
 	SYSTEM.MOVE(ADDRESSOF(src[srcoffs]), ADDRESSOF(dest[destoffs]), len * sz)
 END COPYL;
 
-PROCEDURE COPYR* (VAR src: ARRAY OF REAL;      srcoffs, len: LONGINT;
-VAR dest: ARRAY OF REAL;     destoffs: LONGINT);
-CONST sz = SIZEOF(REAL);
+PROCEDURE COPYR* (VAR src: ARRAY OF FLOAT32;      srcoffs, len: SIGNED32;
+VAR dest: ARRAY OF FLOAT32;     destoffs: SIGNED32);
+CONST sz = SIZEOF(FLOAT32);
 BEGIN	ASSERT(LEN(src) >= len, 100);     	ASSERT(LEN(dest) >= len, 101);
-	ASSERT((len >= 0) & (len < (MAX(LONGINT) DIV sz)), 102);
+	ASSERT((len >= 0) & (len < (MAX(SIGNED32) DIV sz)), 102);
 	SYSTEM.MOVE(ADDRESSOF(src[srcoffs]), ADDRESSOF(dest[destoffs]), len * sz)
 END COPYR;
 
-PROCEDURE COPYX* (VAR src: ARRAY OF LONGREAL;      srcoffs, len: LONGINT;
-VAR dest: ARRAY OF LONGREAL;     destoffs: LONGINT);
-CONST sz = SIZEOF(LONGREAL);
+PROCEDURE COPYX* (VAR src: ARRAY OF FLOAT64;      srcoffs, len: SIGNED32;
+VAR dest: ARRAY OF FLOAT64;     destoffs: SIGNED32);
+CONST sz = SIZEOF(FLOAT64);
 BEGIN	ASSERT(LEN(src) >= len, 100);     	ASSERT(LEN(dest) >= len, 101);
-	ASSERT((len >= 0) & (len < (MAX(LONGINT) DIV sz)), 102);
+	ASSERT((len >= 0) & (len < (MAX(SIGNED32) DIV sz)), 102);
 	SYSTEM.MOVE(ADDRESSOF(src[srcoffs]), ADDRESSOF(dest[destoffs]), len * sz)
 END COPYX;
 
-PROCEDURE COPYSET* (VAR src: ARRAY OF SET;      srcoffs, len: LONGINT;
-VAR dest: ARRAY OF SET;     destoffs: LONGINT);
+PROCEDURE COPYSET* (VAR src: ARRAY OF SET;      srcoffs, len: SIGNED32;
+VAR dest: ARRAY OF SET;     destoffs: SIGNED32);
 CONST sz = SIZEOF(SET);
 BEGIN	ASSERT(LEN(src) >= len, 100);     	ASSERT(LEN(dest) >= len, 101);
-	ASSERT((len >= 0) & (len < (MAX(LONGINT) DIV sz)), 102);
+	ASSERT((len >= 0) & (len < (MAX(SIGNED32) DIV sz)), 102);
 	SYSTEM.MOVE(ADDRESSOF(src[srcoffs]), ADDRESSOF(dest[destoffs]), len * sz)
 END COPYSET;
-PROCEDURE CallWString* (caller, name, pars: ARRAY OF CHAR;    new: BOOLEAN;    VAR res: INTEGER);
+PROCEDURE CallWString* (caller, name, pars: ARRAY OF CHAR;    new: BOOLEAN;    VAR res: SIGNED16);
 BEGIN
 	(*IF pre[0]=0X THEN vyHost.CallWString(name,pars,new, res);
 	ELSE*)	 vyHost.CallWStringX(name, vy, pars, new, res);
@@ -2160,9 +2160,9 @@ BEGIN  IF obj = NIL THEN RETURN NIL END;
 END GetVFromObj;
 
 
-PROCEDURE Show* (list: vyLinks.Link;    obCount: INTEGER;    as: ARRAY OF CHAR);
+PROCEDURE Show* (list: vyLinks.Link;    obCount: SIGNED16;    as: ARRAY OF CHAR);
 	(*vs 0.0a1	md  05.07.94 *)
-	VAR res: INTEGER;    asCmd: ARRAY 255 OF CHAR;
+	VAR res: SIGNED16;    asCmd: ARRAY 255 OF CHAR;
 BEGIN
 	showParameter := list;    parameterCount := obCount;
 	(*debug $IF debug THEN *)

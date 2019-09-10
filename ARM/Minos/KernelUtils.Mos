@@ -7,10 +7,10 @@ MODULE KernelUtils;
 IMPORT SYSTEM, Bit, Clocks;
 
 VAR
-	tickDivisor : REAL;
+	tickDivisor : FLOAT32;
 
 
-PROCEDURE IsValidSetParameter*( CONST value : LONGINT ) : BOOLEAN;
+PROCEDURE IsValidSetParameter*( CONST value : SIGNED32 ) : BOOLEAN;
 VAR
 	res : BOOLEAN;
 BEGIN
@@ -21,16 +21,16 @@ BEGIN
 	RETURN res
 END IsValidSetParameter;
 
-PROCEDURE GetSetAsInteger*( CONST value : SET ): LONGINT;
+PROCEDURE GetSetAsInteger*( CONST value : SET ): SIGNED32;
 VAR
-	res : LONGINT;
+	res : SIGNED32;
 BEGIN
 	res:=0;
-	res:=SYSTEM.VAL( LONGINT, value );
+	res:=SYSTEM.VAL( SIGNED32, value );
 	RETURN res
 END GetSetAsInteger;
 
-PROCEDURE GetIntegerAsSet*( CONST value : LONGINT ): SET;
+PROCEDURE GetIntegerAsSet*( CONST value : SIGNED32 ): SET;
 VAR
 	res : SET;
 BEGIN
@@ -39,7 +39,7 @@ BEGIN
 	RETURN res
 END GetIntegerAsSet;
 
-PROCEDURE GetIntegerAsChar*( CONST value : LONGINT ): CHAR;
+PROCEDURE GetIntegerAsChar*( CONST value : SIGNED32 ): CHAR;
 VAR 
 	c : CHAR;
 BEGIN
@@ -67,7 +67,7 @@ BEGIN
 END GetSetAsChar;
 
 
-PROCEDURE GetOsTimer*() : LONGINT;
+PROCEDURE GetOsTimer*() : SIGNED32;
 BEGIN
 (*
 
@@ -77,14 +77,14 @@ TODO
 	RETURN  0;
 END GetOsTimer;
 
-PROCEDURE Ticks2Micros*( CONST ticks : LONGINT )  : LONGINT;
+PROCEDURE Ticks2Micros*( CONST ticks : SIGNED32 )  : SIGNED32;
 VAR
-	res : LONGINT;
+	res : SIGNED32;
 BEGIN
 	RETURN ENTIER( ticks/tickDivisor );
 END Ticks2Micros;
 
-PROCEDURE GetTime*() : LONGINT;
+PROCEDURE GetTime*() : SIGNED32;
 BEGIN
 (*
 	TODO
@@ -92,28 +92,28 @@ BEGIN
 	RETURN 0;
 END GetTime;
 
-PROCEDURE GetMem32*( CONST adr : LONGINT; VAR mem : LONGINT );
+PROCEDURE GetMem32*( CONST adr : SIGNED32; VAR mem : SIGNED32 );
 BEGIN
 	SYSTEM.GET( adr, mem );
 END GetMem32;
 
-PROCEDURE GetSetMem32*( CONST adr : LONGINT; VAR mem : SET );
+PROCEDURE GetSetMem32*( CONST adr : SIGNED32; VAR mem : SET );
 BEGIN
 	SYSTEM.GET( adr, mem );
 END GetSetMem32;
 
-PROCEDURE PutMem32*( CONST adr : LONGINT; CONST mem : LONGINT );
+PROCEDURE PutMem32*( CONST adr : SIGNED32; CONST mem : SIGNED32 );
 BEGIN
 	SYSTEM.PUT( adr, mem );
 END PutMem32;
 
-PROCEDURE GetIntAsReal*( CONST i : LONGINT ): REAL;
+PROCEDURE GetIntAsReal*( CONST i : SIGNED32 ): FLOAT32;
 BEGIN
-	RETURN SYSTEM.VAL(REAL,i)
+	RETURN SYSTEM.VAL(FLOAT32,i)
 END GetIntAsReal;
 
-PROCEDURE GetIntLittleEndian*( CONST input : LONGINT; VAR output : ARRAY OF CHAR; VAR result : LONGINT );
-VAR i, tmpdata: LONGINT;
+PROCEDURE GetIntLittleEndian*( CONST input : SIGNED32; VAR output : ARRAY OF CHAR; VAR result : SIGNED32 );
+VAR i, tmpdata: SIGNED32;
 BEGIN
 	tmpdata:=input;
 	IF ( LEN(output) = 4 ) THEN

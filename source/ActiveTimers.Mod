@@ -17,7 +17,7 @@ TYPE
 			running := TRUE;
 		END Init;
 
-		PROCEDURE SetTimeout*(h: Objects.EventHandler; ms: LONGINT);
+		PROCEDURE SetTimeout*(h: Objects.EventHandler; ms: SIGNED32);
 		BEGIN
 			handler := h;
 			Objects.SetTimeout(timer, HandleTimeout, ms)

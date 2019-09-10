@@ -30,7 +30,7 @@ IMPORT vyPort, Objects, vyBase, vyLinks, Files, Gadgets, vyName, antsCommands, a
 	antsToolbox, aM := antsMessages, Strings, Types, vyCommandMenus, vyEvents;
 
 TYPE
-	Index* = LONGINT;
+	Index* = SIGNED32;
 
 	tObject* = POINTER TO tObjectDesc;
 	tObjectDesc* = RECORD (vyBase.ObjDesc)
@@ -50,9 +50,9 @@ TYPE
 
 	UpdateTask = POINTER TO UpdateTaskDesc;
 	UpdateTaskDesc = RECORD (Oberon.TaskDesc)
-		nexttime: LONGINT;
+		nexttime: SIGNED32;
 		t: Texts.Text;
-		pos: LONGINT;
+		pos: SIGNED32;
 		D: Documents.Document;
 		l: vyLinks.Link
 	END;
@@ -61,7 +61,7 @@ CONST
 	classBoolean* = "Boolean";  classInteger* = "Integer";  classReal* = "Real";  classString* = "String";  classUnknown* = "Unknown";
 
 VAR
-	obj-: tObject;  antsObjects: vyLinks.Link;  currobj: Objects.Object;  currcount: LONGINT;
+	obj-: tObject;  antsObjects: vyLinks.Link;  currobj: Objects.Object;  currcount: SIGNED32;
 	currName: ARRAY 64 OF ARRAY 32 OF CHAR;
 	(* gen-: vyRanBase.tRandom; *)
 	linklist*, curlinklist: tlinkList;  found: BOOLEAN;
@@ -114,14 +114,14 @@ VAR
 	END StoreF;
 
 	PROCEDURE LoadF( VAR R: Files.Rider;  o: tObject );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version )
 	END LoadF;
 
 	PROCEDURE HandleLinkMsg( l: vyLinks.Link;  name: ARRAY OF CHAR;  VAR M: Objects.LinkMsg );
 	VAR lname: ARRAY 256 OF CHAR;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		IF M.id = Objects.enum THEN
 			i := 1;
@@ -249,10 +249,10 @@ VAR
 	PROCEDURE SetAttribute*;
 	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  obj1: Objects.Object;
 		attribute, name, class: ARRAY 32 OF CHAR;
-		model: Objects.Object;  num: LONGINT;  real: LONGREAL;
+		model: Objects.Object;  num: SIGNED32;  real: FLOAT64;
 		string: ARRAY 256 OF CHAR;
 	BEGIN
-		l := antsCommands.ScanFromPar( "[obj=OBJ | obj=NAME] attr=NAME val=(INT|REAL|STR) ~#use obj=LAYER or obj=PICTURE for last opened graphics" );
+		l := antsCommands.ScanFromPar( "[obj=OBJ | obj=NAME] attr=NAME val=(INT|FLOAT32|STR) ~#use obj=LAYER or obj=PICTURE for last opened graphics" );
 		IF ~antsCommands.GetObjectFromKeyword( l, "obj", obj ) THEN
 			l.spos := 1;  aM.vS( "antsObjects: no object" );
 			IF antsCommands.ExpectNameFromKeyword( l, "obj", name ) THEN
@@ -268,10 +268,10 @@ VAR
 		IF antsCommands.ExpectStringFromKeyword( l, "attr", attribute ) THEN
 			model := BasicModel( obj, attribute, class );
 			IF class = classInteger THEN
-				aM.vS( "antsObjects: Attribute IS INTEGER" );  l.spos := 3;
+				aM.vS( "antsObjects: Attribute IS SIGNED16" );  l.spos := 3;
 				IF antsCommands.ExpectNumberFromKeyword( l, "val", num ) THEN Attributes.SetInt( obj1, attribute, num ) END
 			ELSIF class = classReal THEN
-				aM.vS( "antsObjects: Attribute IS REAL" );  l.spos := 3;
+				aM.vS( "antsObjects: Attribute IS FLOAT32" );  l.spos := 3;
 				IF antsCommands.ExpectRealFromKeyword( l, "val", real ) THEN Attributes.SetLongReal( obj1, attribute, real ) END
 			ELSIF class = classString THEN
 				aM.vS( "antsObjects: Attribute IS String" );  l.spos := 3;
@@ -297,7 +297,7 @@ VAR
 
 	PROCEDURE EnumInsertGadget( CONST A: ARRAY OF CHAR );
 	VAR class: ARRAY 32 OF CHAR;
-		model: Objects.Object;  i: LONGINT;
+		model: Objects.Object;  i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO currcount - 1 DO
 			IF A = currName[i] THEN RETURN END
@@ -398,7 +398,7 @@ END SetGen;
 	END ListAttributes;
 
 	PROCEDURE ListList*;
-	VAR l: vyCommandMenus.List;  keys: SET;  x, y: INTEGER;  event: vyEvents.EventMsg;
+	VAR l: vyCommandMenus.List;  keys: SET;  x, y: SIGNED16;  event: vyEvents.EventMsg;
 	BEGIN
 		vyCommandMenus.Add( l, ListInspect, "Inspect" );  vyCommandMenus.Add( l, ListAttributes, "View Attributes" );
 		vyCommandMenus.Add( l, ListView, "View as ... " );  Input.Mouse( keys, x, y );
@@ -461,7 +461,7 @@ END SetGen;
 	PROCEDURE WriteObject( VAR w: Texts.Writer;  o: Objects.Object );
 	VAR obj, TF, model: Objects.Object;
 		name, gen, timestamp: ARRAY 64 OF CHAR;
-		id: LONGINT;
+		id: SIGNED32;
 		class: ARRAY 64 OF CHAR;
 		t: Types.Type;
 	BEGIN
@@ -490,7 +490,7 @@ END SetGen;
 	END WriteObject;
 
 	PROCEDURE UpdateT( t: Oberon.Task );
-	VAR time: LONGINT;  f: Display.Frame;  orighandle: Objects.Handler;  msg: Display.FrameMsg;  l: vyLinks.Link;  w: Texts.Writer;
+	VAR time: SIGNED32;  f: Display.Frame;  orighandle: Objects.Handler;  msg: Display.FrameMsg;  l: vyLinks.Link;  w: Texts.Writer;
 
 	BEGIN
 		WITH t: UpdateTask DO

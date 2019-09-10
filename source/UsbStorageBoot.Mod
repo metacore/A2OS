@@ -30,8 +30,8 @@ VAR
 
 PROCEDURE Probe(dev : Usbdi.UsbDevice; id : Usbdi.InterfaceDescriptor) : Usbdi.Driver;
 VAR
-	protocol, i : LONGINT;
-	bulkInEndpoint, bulkOutEndpoint  : LONGINT;
+	protocol, i : SIGNED32;
+	bulkInEndpoint, bulkOutEndpoint  : SIGNED32;
 	bot : BOT.BulkOnlyTransport;
 	description : Usbdi.Description;
 	driver : Base.StorageDriver;

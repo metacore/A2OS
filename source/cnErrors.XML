@@ -131,7 +131,7 @@
 	  <Error code="122">调用的变量参数变量不是变量 - actual VAR-parameter is not a variable</Error> 
 	  <Error code="123">调用参数与定义参数不一致 - type of actual parameter is not identical with that of formal VAR-parameter</Error> 
 	  <Error code="124">结果表达式类型不同于进程 - type of result expression differs from that of procedure</Error> 
-	  <Error code="125">CASE的表达式既不是整型也不是字符型 - type of case expression is neither INTEGER nor CHAR</Error> 
+	  <Error code="125">CASE的表达式既不是整型也不是字符型 - type of case expression is neither SIGNED16 nor CHAR</Error> 
 	  <Error code="126">此表达式不能是一个类型或进程 - this expression must not be a type or a procedure</Error> 
 	  <Error code="127">非法使用对象 - illegal use of object</Error> 
 	  <Error code="128">与前述标注不符 - unsatisfied forward reference</Error> 

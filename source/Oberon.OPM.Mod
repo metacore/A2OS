@@ -17,12 +17,12 @@ MODULE OPM IN Oberon;	(** non-portable *)
 		CharSize* = 1;	(* CHAR *)
 		BoolSize* = 1;	(* BOOLEAN *)
 		SetSize* = 4;	(* SET *)
-		SIntSize* = 1;	(* SHORTINT *)
-		IntSize* = 2;	(* INTEGER *)
-		LIntSize* = 4;	(* LONGINT *)
-		HIntSize* = 8;	(* HUGEINT *)
-		RealSize* = 4;	(* REAL *)
-		LRealSize* = 8;	(* LONGREAL *)
+		SIntSize* = 1;	(* SIGNED8 *)
+		IntSize* = 2;	(* SIGNED16 *)
+		LIntSize* = 4;	(* SIGNED32 *)
+		HIntSize* = 8;	(* SIGNED64 *)
+		RealSize* = 4;	(* FLOAT32 *)
+		LRealSize* = 8;	(* FLOAT64 *)
 		ProcSize* = 4;	(* PROCEDURE type *)
 		PointerSize* = 4;	(* POINTER type *)
 
@@ -32,19 +32,19 @@ MODULE OPM IN Oberon;	(** non-portable *)
 		(* target machine minimum values of basic types expressed in host machine format: *)
 		MinSInt* = -80H;
 		MinInt* = -8000H;
-		MinLInt* =  LONGINT(80000000H);	(* i386: -2147483648*)
-		MinRealPat = LONGINT(0FF7FFFFFH);	(* most  negative, 32-bit pattern *)
-		MinLRealPatL = LONGINT(0FFFFFFFFH);	(* most  negative, lower 32-bit pattern *)
-		MinLRealPatH = LONGINT(0FFEFFFFFH);	(* most  negative, higher 32-bit pattern *)
+		MinLInt* =  SIGNED32(80000000H);	(* i386: -2147483648*)
+		MinRealPat = SIGNED32(0FF7FFFFFH);	(* most  negative, 32-bit pattern *)
+		MinLRealPatL = SIGNED32(0FFFFFFFFH);	(* most  negative, lower 32-bit pattern *)
+		MinLRealPatH = SIGNED32(0FFEFFFFFH);	(* most  negative, higher 32-bit pattern *)
 
 		(* target machine maximum values of basic types expressed in host machine format: *)
 		MaxSInt* = 7FH;
 		MaxInt* = 7FFFH;
-		MaxLInt* = LONGINT(7FFFFFFFH);	(* i386: 2147483647*)
+		MaxLInt* = SIGNED32(7FFFFFFFH);	(* i386: 2147483647*)
 		MaxSet* = 31;	(* must be >= 15, else the bootstraped compiler cannot run (IN-tests) *)
-		MaxRealPat = LONGINT(7F7FFFFFH);	(* most positive, 32-bit pattern *)
-		MaxLRealPatL = LONGINT(0FFFFFFFFH);	(* most positive, lower 32-bit pattern *)
-		MaxLRealPatH = LONGINT(7FEFFFFFH);		(* most positive, higher 32-bit pattern *)
+		MaxRealPat = SIGNED32(7F7FFFFFH);	(* most positive, 32-bit pattern *)
+		MaxLRealPatL = SIGNED32(0FFFFFFFFH);	(* most positive, lower 32-bit pattern *)
+		MaxLRealPatH = SIGNED32(7FEFFFFFH);		(* most positive, higher 32-bit pattern *)
 
 		(* maximal index value for array declaration: *)
 		MaxIndex* = MaxLInt;
@@ -56,11 +56,11 @@ MODULE OPM IN Oberon;	(** non-portable *)
 
 		(* inclusive range of parameter of standard procedure HALT: *)
 		MinHaltNr* = 20;
-		MaxHaltNr* = MAX(LONGINT);
+		MaxHaltNr* = MAX(SIGNED32);
 
 		(* inclusive range of register number of procedures SYSTEM.GETREG and SYSTEM.PUTREG: *)
 		MinRegNr* = 0;	(* interpretation is left to the back-end, e.g. for i386: *)
-		MaxRegNr* = 31;	(* F0-F7 if second parameter is REAL or LONGREAL, R0-R7 else *)
+		MaxRegNr* = 31;	(* F0-F7 if second parameter is FLOAT32 or FLOAT64, R0-R7 else *)
 
 		(* maximal value of flag used to mark interface structures: *)
 		MaxSysFlag* = 0;	(* i386: only 0 is valid, not used *)
@@ -131,12 +131,12 @@ MODULE OPM IN Oberon;	(** non-portable *)
 		NewFileFormat* = FALSE;
 
 	VAR
-		MinReal*, MaxReal*: REAL;
-		MinLReal*, MaxLReal*: LONGREAL;
+		MinReal*, MaxReal*: FLOAT32;
+		MinLReal*, MaxLReal*: FLOAT64;
 		noerr*: BOOLEAN;	(* no error found until now *)
-		curpos*, errpos*: LONGINT;	(* character and error position in source file *)
-		breakpos*: LONGINT;	(* set by Mark *)
-		breakpc*: LONGINT;	(*set by OPV.Init*)
+		curpos*, errpos*: SIGNED32;	(* character and error position in source file *)
+		breakpos*: SIGNED32;	(* set by Mark *)
+		breakpc*: SIGNED32;	(*set by OPV.Init*)
 		errors: ARRAY NumErrors DIV SetLen OF SET;
 		outputPath*: ARRAY 256 OF CHAR;	(* for reading and writing obj files. must include any trailing "/" or ":" *)
 		outputPrefix*: ARRAY 32 OF CHAR;	(* for writing obj files (in addition to outputPath). *)
@@ -153,9 +153,9 @@ MODULE OPM IN Oberon;	(** non-portable *)
 		OFportable* = 088X;
 
 	VAR
-		LRealPat: RECORD L, H: LONGINT END ;
-		lastpos, pat: LONGINT;	(* last position error in source file *)
-		refpatch: LONGINT;	(* OM: last position error in source file *)
+		LRealPat: RECORD L, H: SIGNED32 END ;
+		lastpos, pat: SIGNED32;	(* last position error in source file *)
+		refpatch: SIGNED32;	(* OM: last position error in source file *)
 		inR: Texts.Reader;
 		Log: Texts.Text;
 		W: Texts.Writer;
@@ -163,7 +163,7 @@ MODULE OPM IN Oberon;	(** non-portable *)
 		RefFile, ObjFile, ModFile, oldSymFile, newSymFile: Files.File;
 
 	PROCEDURE Init*(codeOpt, parserOpt: SET; source: Texts.Reader; log: Texts.Text);
-		VAR i: SHORTINT;
+		VAR i: SIGNED8;
 	BEGIN inR := source; Log := log; codeOptions := codeOpt; parserOptions := parserOpt;
 		noerr := TRUE; curpos := Texts.Pos(inR); errpos := curpos; lastpos := curpos-10;
 		FOR i := 0 TO NumErrors DIV SetLen - 1 DO errors[i] := {} END;
@@ -185,7 +185,7 @@ MODULE OPM IN Oberon;	(** non-portable *)
 	END Get;
 
 	PROCEDURE MakeFileName(VAR path, prefix, modName, fileName: ARRAY OF CHAR; ext: ARRAY OF CHAR);
-		VAR i, j: INTEGER; ch: CHAR;
+		VAR i, j: SIGNED16; ch: CHAR;
 	BEGIN	i:=0; ch:=path[0];
 		WHILE	ch#0X	DO	fileName[i]:=ch; INC(i); ch:=path[i]	END;
 (*
@@ -200,20 +200,20 @@ MODULE OPM IN Oberon;	(** non-portable *)
 
 	(* ----- Fingerprint calculation ----- *)
 
-	PROCEDURE FPrint*(VAR fp: LONGINT; val: LONGINT);
-	BEGIN fp:=LONGINT(SET(ROT(fp, 7)) /SET(val))
+	PROCEDURE FPrint*(VAR fp: SIGNED32; val: SIGNED32);
+	BEGIN fp:=SIGNED32(SET(ROT(fp, 7)) /SET(val))
 	END FPrint;
 
-	PROCEDURE FPrintSet*(VAR fp: LONGINT; set: SET);
-	BEGIN FPrint(fp, LONGINT(set))
+	PROCEDURE FPrintSet*(VAR fp: SIGNED32; set: SET);
+	BEGIN FPrint(fp, SIGNED32(set))
 	END FPrintSet;
 
-	PROCEDURE FPrintReal*(VAR fp: LONGINT; real: REAL);
-	BEGIN FPrint(fp, SYSTEM.VAL(LONGINT, real))
+	PROCEDURE FPrintReal*(VAR fp: SIGNED32; real: FLOAT32);
+	BEGIN FPrint(fp, SYSTEM.VAL(SIGNED32, real))
 	END FPrintReal;
 
-	PROCEDURE FPrintLReal*(VAR fp: LONGINT; lr: LONGREAL);
-		VAR l, h: LONGINT;
+	PROCEDURE FPrintLReal*(VAR fp: SIGNED32; lr: FLOAT64);
+		VAR l, h: SIGNED32;
 	BEGIN
 		SYSTEM.GET(ADDRESSOF(lr)+4, l); SYSTEM.GET(ADDRESSOF(lr), h);
 		FPrint(fp, l); FPrint(fp, h);
@@ -223,7 +223,7 @@ MODULE OPM IN Oberon;	(** non-portable *)
 	(* zero compressed strings don't like UTF-8 encoding *)
 
 	PROCEDURE WString(VAR R: Files.Rider; VAR s: ARRAY OF CHAR);
-		VAR i: INTEGER; ch: CHAR;
+		VAR i: SIGNED16; ch: CHAR;
 	BEGIN
 		i:=0; ch:=s[i];
 		IF	ch=0X	THEN	Files.Write(R, 0X); RETURN	END;
@@ -245,12 +245,12 @@ MODULE OPM IN Oberon;	(** non-portable *)
 		Texts.WriteString(W, s); Texts.Append(Log, W.buf)
 	END LogWStr;
 
-	PROCEDURE LogWNum*(i, len: LONGINT);
+	PROCEDURE LogWNum*(i, len: SIGNED32);
 	BEGIN
 		Texts.WriteInt(W, i, len); Texts.Append(Log, W.buf)
 	END LogWNum;
 
-	PROCEDURE LogWHex*(i: LONGINT);
+	PROCEDURE LogWHex*(i: SIGNED32);
 	BEGIN	Texts.WriteHex(W, i); Texts.Write(W, "H"); Texts.Append(Log, W.buf)
 	END LogWHex;
 
@@ -259,8 +259,8 @@ MODULE OPM IN Oberon;	(** non-portable *)
 		Texts.WriteLn(W); Texts.Append(Log, W.buf)
 	END LogWLn;
 
-	PROCEDURE ErrorMsg(n: INTEGER);
-	VAR s: Texts.Scanner; ch: CHAR;  e: ARRAY 127 OF CHAR;  i: SHORTINT;
+	PROCEDURE ErrorMsg(n: SIGNED16);
+	VAR s: Texts.Scanner; ch: CHAR;  e: ARRAY 127 OF CHAR;  i: SIGNED8;
 	BEGIN
 		IF (n >= NumErrors) OR ~((n MOD SetLen) IN errors[n DIV SetLen]) THEN
 			IF (n < NumErrors) THEN INCL(errors[n DIV SetLen], n MOD SetLen) END;
@@ -281,7 +281,7 @@ MODULE OPM IN Oberon;	(** non-portable *)
 		END
 	END ErrorMsg;
 
-	PROCEDURE Mark*(n: INTEGER; pos: LONGINT);
+	PROCEDURE Mark*(n: SIGNED16; pos: SIGNED32);
 	BEGIN
 		IF n >= 0 THEN
 			noerr := FALSE;
@@ -306,7 +306,7 @@ MODULE OPM IN Oberon;	(** non-portable *)
 		END
 	END Mark;
 
-	PROCEDURE err*(n: INTEGER);
+	PROCEDURE err*(n: SIGNED16);
 	BEGIN Mark(n, errpos)
 	END err;
 
@@ -320,23 +320,23 @@ MODULE OPM IN Oberon;	(** non-portable *)
 	BEGIN Files.Write(newSymF, ch)
 	END SymWCh;
 
-	PROCEDURE SymWTag*(k: INTEGER);
+	PROCEDURE SymWTag*(k: SIGNED16);
 	BEGIN Files.Write(newSymF, CHR(k))
 	END SymWTag;
 
-	PROCEDURE SymWInt*(k: LONGINT);
+	PROCEDURE SymWInt*(k: SIGNED32);
 	BEGIN Files.WriteInt(newSymF, SHORT(k))
 	END SymWInt;
 
-	PROCEDURE SymWLInt*(k: LONGINT);
+	PROCEDURE SymWLInt*(k: SIGNED32);
 	BEGIN Files.WriteLInt(newSymF, k)
 	END SymWLInt;
 
-	PROCEDURE SymWNum*(i: LONGINT);
+	PROCEDURE SymWNum*(i: SIGNED32);
 	BEGIN	Files.WriteNum(newSymF, i)
 	END SymWNum;
 
-	PROCEDURE SymWPos*():LONGINT;
+	PROCEDURE SymWPos*():SIGNED32;
 	BEGIN RETURN Files.Pos(newSymF)+Files.Pos(ModF);
 	END SymWPos;
 
@@ -345,14 +345,14 @@ MODULE OPM IN Oberon;	(** non-portable *)
 	END SymWMod;
 
 	PROCEDURE SymWSet*(s: SET);
-	BEGIN	Files.WriteNum(newSymF, LONGINT(s))
+	BEGIN	Files.WriteNum(newSymF, SIGNED32(s))
 	END SymWSet;
 
-	PROCEDURE SymWReal*(r: REAL);
+	PROCEDURE SymWReal*(r: FLOAT32);
 	BEGIN Files.WriteReal(newSymF, r)
 	END SymWReal;
 
-	PROCEDURE SymWLReal*(lr: LONGREAL);
+	PROCEDURE SymWLReal*(lr: FLOAT64);
 	BEGIN Files.WriteLReal(newSymF, lr)
 	END SymWLReal;
 
@@ -366,7 +366,7 @@ MODULE OPM IN Oberon;	(** non-portable *)
 	BEGIN Files.Write(RefF, ch)
 	END RefW;
 
-	PROCEDURE RefWNum* (i: LONGINT);
+	PROCEDURE RefWNum* (i: SIGNED32);
 	BEGIN
 		Files.WriteNum (RefF, i)
 	END RefWNum;
@@ -375,19 +375,19 @@ MODULE OPM IN Oberon;	(** non-portable *)
 	BEGIN Files.Write(ObjF, ch)
 	END ObjW;
 
-	PROCEDURE ObjWInt*(i: INTEGER);
+	PROCEDURE ObjWInt*(i: SIGNED16);
 	BEGIN Files.WriteInt(ObjF, i)
 	END ObjWInt;
 
-	PROCEDURE ObjWLInt*(i: LONGINT);
+	PROCEDURE ObjWLInt*(i: SIGNED32);
 	BEGIN Files.WriteLInt(ObjF, i)
 	END ObjWLInt;
 
-	PROCEDURE ObjWBytes*(VAR bytes: ARRAY OF SYSTEM.BYTE; n: LONGINT);
+	PROCEDURE ObjWBytes*(VAR bytes: ARRAY OF SYSTEM.BYTE; n: SIGNED32);
 	BEGIN Files.WriteBytes(ObjF, bytes, n)
 	END ObjWBytes;
 
-	PROCEDURE ObjWNum*(i: LONGINT);
+	PROCEDURE ObjWNum*(i: SIGNED32);
 	BEGIN	Files.WriteNum(ObjF, i)
 	END ObjWNum;
 
@@ -395,14 +395,14 @@ MODULE OPM IN Oberon;	(** non-portable *)
 	BEGIN	WString(ObjF, s)
 	END ObjWString;
 
-	PROCEDURE ObjAllocInt*(): LONGINT;
-		VAR pos: LONGINT;
-	BEGIN	pos:=Files.Pos(ObjF); Files.WriteInt(ObjF, INTEGER(0));
+	PROCEDURE ObjAllocInt*(): SIGNED32;
+		VAR pos: SIGNED32;
+	BEGIN	pos:=Files.Pos(ObjF); Files.WriteInt(ObjF, SIGNED16(0));
 		RETURN pos;
 	END ObjAllocInt;
 
-	PROCEDURE ObjFillInt*(pos: LONGINT; int: INTEGER);
-		VAR savepos: LONGINT;
+	PROCEDURE ObjFillInt*(pos: SIGNED32; int: SIGNED16);
+		VAR savepos: SIGNED32;
 	BEGIN	savepos:=Files.Pos(ObjF);
 		Files.Set(ObjF, ObjFile, pos); Files.WriteBytes(ObjF, int, 2);
 		Files.Set(ObjF, ObjFile, savepos);
@@ -411,7 +411,7 @@ MODULE OPM IN Oberon;	(** non-portable *)
 	(* ----- files ----- *)
 
 	PROCEDURE OpenSym*(VAR R: Files.Rider; VAR name: ARRAY OF CHAR; self: BOOLEAN; VAR zeroCompress, done: BOOLEAN);
-		VAR  fileName: ARRAY 512 OF CHAR; ch, ch1: CHAR; symSize: LONGINT; F: Files.File; empty: ARRAY 1 OF CHAR; flags: SET;
+		VAR  fileName: ARRAY 512 OF CHAR; ch, ch1: CHAR; symSize: SIGNED32; F: Files.File; empty: ARRAY 1 OF CHAR; flags: SET;
 	BEGIN
 		zeroCompress := TRUE;
 		empty[0] := 0X;
@@ -462,7 +462,7 @@ MODULE OPM IN Oberon;	(** non-portable *)
 	END Commit;
 
 	PROCEDURE EndSym*;
-		VAR sfsize: LONGINT;
+		VAR sfsize: SIGNED32;
 	BEGIN	Files.Write(ModF, 0X);
 		IF NewFileFormat THEN
 			sfsize := 4 + Files.Length(newSymFile) + Files.Length(ModFile);
@@ -476,7 +476,7 @@ MODULE OPM IN Oberon;	(** non-portable *)
 	END EndSym;
 
 	PROCEDURE EndObj*;
-		VAR refsize: LONGINT;
+		VAR refsize: SIGNED32;
 	BEGIN
 		refsize:=Files.Length(RefFile); ObjW(8DX); Commit(RefFile);
 		Files.Set(ObjF, ObjFile, refpatch); ObjWBytes(refsize, 4);
@@ -484,7 +484,7 @@ MODULE OPM IN Oberon;	(** non-portable *)
 	END EndObj;
 
 	PROCEDURE CloseObj*;
-		VAR refsize: LONGINT; ch: CHAR; ref: Files.Rider;
+		VAR refsize: SIGNED32; ch: CHAR; ref: Files.Rider;
 	BEGIN (*ref block*)
 		refsize:=Files.Length(RefFile);
 		Files.Set(ref, RefFile, 0); Files.Read(ref, ch); WHILE ~ref.eof DO ObjW(ch); Files.Read(ref, ch) END;

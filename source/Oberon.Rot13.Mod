@@ -11,7 +11,7 @@ MODULE Rot13 IN Oberon;	(** portable *)	(** eos 24-Nov-95 **)
 
 	(** decode rot13 encrypted selection **)
 	PROCEDURE Decode*;
-		VAR text: Texts.Text; beg, end, time: LONGINT; r: Texts.Reader; ch: CHAR;
+		VAR text: Texts.Text; beg, end, time: SIGNED32; r: Texts.Reader; ch: CHAR;
 	BEGIN
 		Oberon.GetSelection(text, beg, end, time);
 		IF time >= 0 THEN

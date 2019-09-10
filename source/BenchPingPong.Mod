@@ -9,7 +9,7 @@ CONST
 
 TYPE
 	Yielder = OBJECT
-		VAR count: LONGINT; done: BOOLEAN;
+		VAR count: SIGNED32; done: BOOLEAN;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -31,7 +31,7 @@ VAR
 	wait, run: BOOLEAN;
 
 PROCEDURE Test1*(context : Commands.Context);	(* procs ms *)
-VAR n, t, i, total: LONGINT; timer: Kernel.Timer; p: ARRAY MaxProcs OF Yielder;
+VAR n, t, i, total: SIGNED32; timer: Kernel.Timer; p: ARRAY MaxProcs OF Yielder;
 BEGIN
 	IF context.arg.GetInteger(n, FALSE) & context.arg.GetInteger(t, FALSE) & (n >= 1) & (n <= LEN(p)) & (t > 0) THEN
 		context.out.String("Test1 "); context.out.Int(n, 1); context.out.Char(" "); context.out.Int(t, 1);

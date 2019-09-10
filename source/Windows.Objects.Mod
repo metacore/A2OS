@@ -42,7 +42,7 @@ CONST
 
 
 TYPE
-	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT;
+	CpuCyclesArray* = ARRAY Machine.MaxCPU OF SIGNED64;
 
 	ProtectedObject = POINTER TO RECORD END;   (* protected object (10000) *)
 
@@ -56,16 +56,16 @@ TYPE
 
 	Timer* = POINTER TO RECORD
 		next, prev : Timer;
-		trigger: LONGINT;
+		trigger: SIGNED32;
 		handler: EventHandler
 	END;
 
 	Clock = OBJECT
 		VAR h: Timer;
-			ticks: LONGINT;
+			ticks: SIGNED32;
 			hevent: Kernel32.HANDLE;
 			res: Kernel32.BOOL;
-			mode: LONGINT;
+			mode: SIGNED32;
 			process: Process;
 			exiting: BOOLEAN;
 
@@ -114,7 +114,7 @@ TYPE
 			process.mode := AwaitingEvent;
 			Machine.Release(Machine.Objects);
 			IF h = event THEN (* sentinel head of timer event queue: wait forever until a new event has been entered in queue *)
-				res := Kernel32.WaitForSingleObject(hevent, MAX(LONGINT));
+				res := Kernel32.WaitForSingleObject(hevent, MAX(SIGNED32));
 			ELSE
 				res := Kernel32.WaitForSingleObject(hevent, h.trigger - ticks);
 			END;
@@ -167,12 +167,12 @@ TYPE
 		state- {ALIGNED=16}: Kernel32.Context;
 		condition-: Condition;   (* awaited process' condition *)
 		condFP-: ADDRESS;   (* awaited process' condition's context *)
-		mode-: LONGINT;   (* process state *)  (* only changed inside Objects lock ??? *)
-		procID-: LONGINT;   (* processor ID where running,  exported for compatibilty , useless in WinAos *)
+		mode-: SIGNED32;   (* process state *)  (* only changed inside Objects lock ??? *)
+		procID-: SIGNED32;   (* processor ID where running,  exported for compatibilty , useless in WinAos *)
 		waitingOn-: ProtectedObject;   (* obj this process is waiting on (for lock or condition) *)
-		id-: WORD;   (* unique process ID for tracing *)
+		id-: INTEGER;   (* unique process ID for tracing *)
 		flags*: SET;   (* process flags *)
-		priority-: LONGINT;   (* process priority *)
+		priority-: SIGNED32;   (* process priority *)
 
 		stackBottom: ADDRESS;
 		handle-: Kernel32.HANDLE; (* handle to corresponding Windows thread *)
@@ -181,7 +181,7 @@ TYPE
 		restartPC-: ADDRESS;   (** entry point of body, for SAFE exception recovery *)
 		restartSP-: ADDRESS;   (** stack level at start of body, for SAFE exception recovery *)
 
-		lastThreadTimes: HUGEINT;   (*ALEX 2005.12.12*)
+		lastThreadTimes: SIGNED64;   (*ALEX 2005.12.12*)
 		gcContext: GCContext;
 		context: ANY; (* commands contect *)
 
@@ -269,7 +269,7 @@ TYPE
 		    the set of variables here must not be interrupted, i.e. atomic writing of the set of variables is absolutely necessary.  They system may hang
 		    if the lock is not taken. *)
 		PROCEDURE SetgcOngoing(value: BOOLEAN);
-		VAR time: LONGINT;
+		VAR time: SIGNED32;
 		BEGIN {UNTRACKED}
 			IF value THEN
 				time := Kernel32.GetTickCount();
@@ -315,7 +315,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Wait(): BOOLEAN;
-		VAR res: Kernel32.BOOL; mode: LONGINT;
+		VAR res: Kernel32.BOOL; mode: SIGNED32;
 		BEGIN
 			mode := process.mode;
 			process.mode := AwaitingEvent;
@@ -353,7 +353,7 @@ TYPE
 	END FinalizerCaller;
 
 VAR
-	awc-, awl-: LONGINT;
+	awc-, awl-: SIGNED32;
 	oberonLoop*: ANY;   (* Oberon Loop Process temporary workaround for Threads.oberonLoop *)
 	break: ARRAY 16 OF CHAR;
 	terminateProc: PROCEDURE;
@@ -361,19 +361,19 @@ VAR
 	startedMainProcess := FALSE: BOOLEAN;
 	gcProcess : Process;
 
-	numberOfProcessors: LONGINT; (* cached value of Machine.NumberOfProcessors() *)
+	numberOfProcessors: SIGNED32; (* cached value of Machine.NumberOfProcessors() *)
 	finalizerCaller: FinalizerCaller; (* active object for finalizer process, regarded as aprt of GC *)
 
 	event: Timer; (* list of events *)
 	clock: Clock;
-	tlsIndex: LONGINT;
-	nProcs: LONGINT;
+	tlsIndex: SIGNED32;
+	nProcs: SIGNED32;
 
 	excplock: Kernel32.CriticalSection;  exceptionhandler: ExceptionHandler;
 
 (* Set the current process' priority. *)
-PROCEDURE SetPriority*( priority: LONGINT );
-VAR r: Process; prio: LONGINT; res: Kernel32.BOOL;
+PROCEDURE SetPriority*( priority: SIGNED32 );
+VAR r: Process; prio: SIGNED32; res: Kernel32.BOOL;
 BEGIN
 	ASSERT((priority >= Low) & (priority <= Realtime));   (* priority in bounds *)
 	r := CurrentProcess();  r.priority := priority;
@@ -495,7 +495,7 @@ BEGIN
 END ActiveObject;
 
 (** Return the ID of the active currently executing process. *)
-PROCEDURE GetProcessID* (): WORD;
+PROCEDURE GetProcessID* (): INTEGER;
 VAR r: Process;
 BEGIN
 	r := SYSTEM.VAL (Process, Kernel32.TlsGetValue( tlsIndex ));
@@ -687,7 +687,7 @@ BEGIN
 END Remove;
 
 PROCEDURE WriteType(obj: ANY);
-VAR type: LONGINT;
+VAR type: SIGNED32;
 BEGIN
 	IF obj = NIL THEN Trace.String(" > NIL");
 	ELSE
@@ -738,7 +738,7 @@ BEGIN
 	END
 END terminate;
 
-PROCEDURE {WINAPI} Wrapper( lpParameter: ANY ): LONGINT;
+PROCEDURE {WINAPI} Wrapper( lpParameter: ANY ): SIGNED32;
 VAR t: Process;  obj: ProtectedObject; res: Kernel32.BOOL; bp,sp: ADDRESS;
 BEGIN
 	(* it may happen that the garbage collector runs right here and ignores this procedure.
@@ -819,7 +819,7 @@ BEGIN
 END TerminateProc;
 
 (* Allocate a new process associated with "obj". Must be outside lock region, because of potential GC. *)
-PROCEDURE NewProcess(body: Body; priority: LONGINT;  flags: SET; obj: ProtectedObject; VAR new: Process);
+PROCEDURE NewProcess(body: Body; priority: SIGNED32;  flags: SET; obj: ProtectedObject; VAR new: Process);
 VAR t,r: Process;  fn: Heaps.FinalizerNode;
 BEGIN
 	NEW(t);
@@ -867,7 +867,7 @@ BEGIN
 END NewProcess;
 
 (* Create the process associated with an active object (kernel call). *)
-PROCEDURE CreateProcess*(body: Body; priority: LONGINT; flags: SET; obj: ProtectedObject);
+PROCEDURE CreateProcess*(body: Body; priority: SIGNED32; flags: SET; obj: ProtectedObject);
 VAR t : Process; heapBlock {UNTRACED}: Heaps.HeapBlock;
 BEGIN
 	ASSERT(priority >= 0, 1000); ASSERT(priority <=Realtime, 1001);
@@ -885,7 +885,7 @@ END CreateProcess;
 (* The procedure Lock, Unlock and Await do not use header locks since it turned out that the header locks sometimes were finalized
      too early. *)
 PROCEDURE Lock*(obj: ProtectedObject; exclusive: BOOLEAN );
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r: Process; res: WORD;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r: Process; res: INTEGER;
 BEGIN  (* {called from user level} *)
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, hdr);
 	IF StrongChecks THEN
@@ -944,7 +944,7 @@ END FindCondition;
 (* The procedure Lock, Unlock and Await do not use header locks since it turned out that the header locks sometimes were finalized
      too early. *)
 PROCEDURE Unlock*( obj: ProtectedObject;  dummy: BOOLEAN );
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; t, c: Process; res: WORD;
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; t, c: Process; res: INTEGER;
 BEGIN
 	SYSTEM.GET(SYSTEM.VAL(ADDRESS, obj) + Heaps.HeapBlockOffset, hdr);
 	IF StrongChecks THEN
@@ -991,8 +991,8 @@ VAR globalRunning: Process;
 
 (* The procedure Lock, Unlock and Await do not use header locks since it turned out that the header locks sometimes were finalized
      too early. *)
-PROCEDURE Await*( cond: Condition;  slink: LONGINT;  obj: ProtectedObject;  flags: SET );
-VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r, c, t: Process;  res: WORD;
+PROCEDURE Await*( cond: Condition;  slink: SIGNED32;  obj: ProtectedObject;  flags: SET );
+VAR hdr {UNTRACED}: Heaps.ProtRecBlock; r, c, t: Process;  res: INTEGER;
 BEGIN
 	IF 1 IN flags THEN  (* compiler did not generate IF *)
 		IF cond(slink) THEN
@@ -1061,7 +1061,7 @@ END Await;
 
 	PROCEDURE Break*( t: Process );
 	CONST MaxTry = 50;
-	VAR mod: Modules.Module;  try: LONGINT;  retBOOL: Kernel32.BOOL;   (* Dan 09.11.05 *)
+	VAR mod: Modules.Module;  try: SIGNED32;  retBOOL: Kernel32.BOOL;   (* Dan 09.11.05 *)
 
 		PROCEDURE SafeForBreak( mod: Modules.Module ): BOOLEAN;
 		BEGIN
@@ -1181,8 +1181,8 @@ BEGIN
 END Init;
 
 (** Set (or reset) an event handler object's timeout value. *)
-PROCEDURE SetTimeout*(t: Timer; h: EventHandler;  ms: LONGINT );
-VAR e: Timer;  trigger: LONGINT;
+PROCEDURE SetTimeout*(t: Timer; h: EventHandler;  ms: SIGNED32 );
+VAR e: Timer;  trigger: SIGNED32;
 BEGIN
 	ASSERT(Machine.Second= 1000); (* assume milliseconds for now *)
 	ASSERT((t # NIL) & (h # NIL));
@@ -1201,8 +1201,8 @@ BEGIN
 END SetTimeout;
 
 (** Set (or reset) an event handler object's timeout value. Here ms is absolute *)
-PROCEDURE SetTimeoutAt*(t: Timer; h: EventHandler; ms: LONGINT);
-VAR e: Timer; trigger: LONGINT;
+PROCEDURE SetTimeoutAt*(t: Timer; h: EventHandler; ms: SIGNED32);
+VAR e: Timer; trigger: SIGNED32;
 BEGIN
 	ASSERT(Machine.Second= 1000);	(* assume milliseconds for now *)
 	ASSERT((t # NIL) & (h # NIL));
@@ -1266,8 +1266,8 @@ END UpdateProcessState;
 
 (*ALEX 2005.12.12 added for WMPerfMon needs*)
 
-PROCEDURE NumReady*( ): LONGINT;
-VAR n: LONGINT; p: Heaps.ProcessLink;
+PROCEDURE NumReady*( ): SIGNED32;
+VAR n: SIGNED32; p: Heaps.ProcessLink;
 BEGIN
 	n := 0;
 	Machine.Acquire( Machine.Objects );
@@ -1281,7 +1281,7 @@ END NumReady;
 	return the number of cycles since the process has been created. If FALSE, return the number of cycles
 	consumed since the last time asked. *)
 PROCEDURE GetCpuCycles*(process : Process; VAR cpuCycles : CpuCyclesArray; all : BOOLEAN);
-VAR res : Kernel32.BOOL; temp : HUGEINT;
+VAR res : Kernel32.BOOL; temp : SIGNED64;
 BEGIN
 	ASSERT(process # NIL);
 	IF (Kernel32.QueryThreadCycleTime # NIL) THEN
@@ -1299,7 +1299,7 @@ END GetCpuCycles;
 
 (* suspend and store state *)
 PROCEDURE Suspend(p: Process);
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN{UNTRACKED}
 	res := Kernel32.SuspendThread(p.handle);
 	ASSERT(res >= 0);
@@ -1308,7 +1308,7 @@ BEGIN{UNTRACKED}
 END Suspend;
 
 PROCEDURE Resume(p: Process);
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	res := Kernel32.ResumeThread(p.handle);
 	ASSERT(res >= 0);
@@ -1330,7 +1330,7 @@ BEGIN{UNTRACKED}
 END SuspendActivities;
 
 PROCEDURE ResumeActivities;
-VAR r,cur: Process; p: Heaps.ProcessLink; res: LONGINT;
+VAR r,cur: Process; p: Heaps.ProcessLink; res: SIGNED32;
 BEGIN{UNTRACKED}
 	r := CurrentProcess();
 	p := ready.head;
@@ -1346,8 +1346,8 @@ BEGIN{UNTRACKED}
 END ResumeActivities;
 
 
-PROCEDURE CurrentProcessTime*(): HUGEINT;
-VAR res: WORD; result: HUGEINT;
+PROCEDURE CurrentProcessTime*(): SIGNED64;
+VAR res: INTEGER; result: SIGNED64;
 BEGIN
 	IF (Kernel32.QueryThreadCycleTime # NIL) THEN
 		res := Kernel32.QueryThreadCycleTime(CurrentProcess().handle, result);
@@ -1357,7 +1357,7 @@ BEGIN
 	RETURN result;
 END CurrentProcessTime;
 
-PROCEDURE TimerFrequency*(): HUGEINT;
+PROCEDURE TimerFrequency*(): SIGNED64;
 BEGIN
 	RETURN 1000000000;
 END TimerFrequency;
@@ -1597,7 +1597,7 @@ VAR
 		p: Heaps.ProcessLink;
 		t: Process;
 		res: Kernel32.BOOL;
-		tick: LONGINT;
+		tick: SIGNED32;
 		numNonTerminated, numExternals: SIZE;
 	BEGIN
 		EnterA2;

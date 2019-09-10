@@ -179,7 +179,7 @@ VAR
 	(**
 		Send at datagram on a given socket to a specified destination
 	*)
-	PROCEDURE SendTo*(socket: Socket; CONST sendToIpAddr: EnetBase.IpAddr; sendToPort: LONGINT; CONST data: ARRAY OF CHAR; offset, length: Int; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
+	PROCEDURE SendTo*(socket: Socket; CONST sendToIpAddr: EnetBase.IpAddr; sendToPort: SIGNED32; CONST data: ARRAY OF CHAR; offset, length: Int; flags: SET; completionHandler: EnetBase.TaskHandler; VAR res: ResultCode): BOOLEAN;
 	VAR
 		packet: EnetBase.Packet;
 		intf: EnetBase.Interface;

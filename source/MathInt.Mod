@@ -6,9 +6,9 @@ MODULE MathInt;   (** AUTHOR "adf"; PURPOSE "Integer math functions"; *)
 IMPORT Modules, Files, AosRandom := Random, NbrInt, DataErrors;
 
 CONST
-	MaxFactorial* = 12; (* Assumes NbrInt.Integer = LONGINT *)
+	MaxFactorial* = 12; (* Assumes NbrInt.Integer = SIGNED32 *)
 VAR
-	rng: AosRandom.Sequence;  nbr: LONGINT;
+	rng: AosRandom.Sequence;  nbr: SIGNED32;
 
 	(** Computes  n! = n * (n - 1) * (n - 2) * ... * 1,  MaxFactorial 3 n 3 0. *)
 	PROCEDURE Factorial*( n: NbrInt.Integer ): NbrInt.Integer;

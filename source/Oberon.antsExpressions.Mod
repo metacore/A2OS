@@ -58,17 +58,17 @@ TYPE
 	Value* = RECORD
 		name*: OPS.String;
 
-		class*: SHORTINT;
+		class*: SIGNED8;
 		b*: BOOLEAN;   (* bool var *)
 		c*: CHAR;   (* char var *)
-		i*: LONGINT;   (* Sint,Int,LInt var *)
-		x*: REAL;   (* real var *)
-		y*: LONGREAL;   (* longreal var *)
+		i*: SIGNED32;   (* Sint,Int,LInt var *)
+		x*: FLOAT32;   (* real var *)
+		y*: FLOAT64;   (* longreal var *)
 		s*: OPS.String;   (* string var *)
-		ptr*: LONGINT;   (* Pointer var , if Pointer then referenced object, if basic type class then ptr to Basic type Object *)
+		ptr*: SIGNED32;   (* Pointer var , if Pointer then referenced object, if basic type class then ptr to Basic type Object *)
 		p*: ANY;   (* SYSTEM.VAL(ANY,ptr) *)
 
-		adr*: LONGINT;   (* adress of linked object to basic type if available *)
+		adr*: SIGNED32;   (* adress of linked object to basic type if available *)
 
 		obj*: OPT.Object (* if resulting value found as OPT.Object otherwise = NIL *)
 	END;
@@ -110,9 +110,9 @@ TYPE
 
 	CallStack = RECORD
 		code: ARRAY 128 OF CHAR;
-		i, pc: LONGINT;
-		resadr, npar: LONGINT;
-		class: SHORTINT;
+		i, pc: SIGNED32;
+		resadr, npar: SIGNED32;
+		class: SIGNED8;
 		obj: OPT.Object
 	END;
 
@@ -120,7 +120,7 @@ TYPE
 		top: Item
 	END;
 
-	PtrTable = POINTER TO ARRAY OF LONGINT;
+	PtrTable = POINTER TO ARRAY OF SIGNED32;
 
 	StringStack = POINTER TO StringStackDesc;
 	StringStackDesc = RECORD
@@ -131,11 +131,11 @@ TYPE
 VAR
 	oldHook, thisHook: Objects.Handler;
 	map: ARRAY 17 OF CHAR;
-	sym: SHORTINT;  W: Texts.Writer;
+	sym: SIGNED8;  W: Texts.Writer;
 	ptrTab: PtrTable;   (* pointer table *)
-	nofptrs: INTEGER;  foundSTRING: BOOLEAN;
+	nofptrs: SIGNED16;  foundSTRING: BOOLEAN;
 	strings: StringStack;   (* need this chain to keep objects consistent while evaluating *)
-	debug*, Note*: BOOLEAN;  enableCR*: BOOLEAN;  itnr: LONGINT;  WLog: PROCEDURE;
+	debug*, Note*: BOOLEAN;  enableCR*: BOOLEAN;  itnr: SIGNED32;  WLog: PROCEDURE;
 
 
 	(** output routines **)
@@ -158,7 +158,7 @@ VAR
 		vyHostTexts.InsertLog( W.buf )
 	END WLogToCaret;
 
-	PROCEDURE err( n: INTEGER );
+	PROCEDURE err( n: SIGNED16 );
 	BEGIN
 		WLog;  OPM.err( n )
 	END err;
@@ -184,7 +184,7 @@ VAR
 	END Nt;
 
 	PROCEDURE WChar( ch: CHAR );
-	VAR pat: Display.Pattern;  i, n, dx, x, y, w, h: INTEGER;
+	VAR pat: Display.Pattern;  i, n, dx, x, y, w, h: SIGNED16;
 		d: ARRAY 3 OF CHAR;
 	BEGIN
 		IF (~debug) & (~Note) THEN RETURN END;
@@ -205,22 +205,22 @@ VAR
 		IF debug OR Note THEN Str( "  " ) END
 	END Gap;
 
-	PROCEDURE WReal( x: REAL;  n: INTEGER );
+	PROCEDURE WReal( x: FLOAT32;  n: SIGNED16 );
 	BEGIN
 		IF debug OR Note THEN Texts.WriteReal( W, x, n ) END
 	END WReal;
 
-	PROCEDURE WLongReal*( x: LONGREAL;  n: INTEGER );
+	PROCEDURE WLongReal*( x: FLOAT64;  n: SIGNED16 );
 	BEGIN
 		IF debug OR Note THEN Texts.WriteLongReal( W, x, n ) END
 	END WLongReal;
 
-	PROCEDURE WInt( i, n: LONGINT );
+	PROCEDURE WInt( i, n: SIGNED32 );
 	BEGIN
 		IF debug OR Note THEN Texts.WriteInt( W, i, n ) END
 	END WInt;
 
-	PROCEDURE WClass( c: INTEGER );
+	PROCEDURE WClass( c: SIGNED16 );
 	BEGIN
 		CASE c OF
 		0:     Str( "Undef" );
@@ -251,7 +251,7 @@ VAR
 		END
 	END WClass;
 
-	PROCEDURE WMode( c: INTEGER );
+	PROCEDURE WMode( c: SIGNED16 );
 	BEGIN
 		CASE c OF
 		0:     Str( "Undef" );
@@ -282,7 +282,7 @@ VAR
 		END
 	END WMode;
 
-	PROCEDURE WComp( c: INTEGER );
+	PROCEDURE WComp( c: SIGNED16 );
 	BEGIN
 		CASE c OF
 		0:     Str( "Undef" );
@@ -297,10 +297,10 @@ VAR
 	END WComp;
 
 	PROCEDURE OutType*( p: ANY );
-	VAR t: Types.Type;  level: INTEGER;
+	VAR t: Types.Type;  level: SIGNED16;
 	BEGIN
 		IF p = NIL THEN Ln;  Str( "NIL" );  RETURN END;
-		t := Types.TypeOf( p );  Ln;  Str( "OutType of ptr: " );  WInt( SYSTEM.VAL( LONGINT, p ), 10 );  Str( " at adr " );  WInt( ADDRESSOF( p ), 10 );
+		t := Types.TypeOf( p );  Ln;  Str( "OutType of ptr: " );  WInt( SYSTEM.VAL( SIGNED32, p ), 10 );  Str( " at adr " );  WInt( ADDRESSOF( p ), 10 );
 		IF t # NIL THEN
 			level := Types.LevelOf( t );
 			WHILE (level >= 0) DO
@@ -412,7 +412,7 @@ VAR
 	END WObj;
 
 	PROCEDURE Dump( S: Stack );
-	VAR it: Item;  itc: LONGINT;
+	VAR it: Item;  itc: SIGNED32;
 	BEGIN
 		Ln;  Str( "Dumping stack:" );  Ln;  Str( "************" );  it := S.top;  itc := 0;
 		WHILE (it # NIL ) DO
@@ -436,7 +436,7 @@ VAR
 
 (** parser, create stack **)
 
-	PROCEDURE GetSym( VAR sym: SHORTINT );
+	PROCEDURE GetSym( VAR sym: SIGNED8 );
 	BEGIN
 		OPS.Get( sym )
 	END GetSym;
@@ -465,31 +465,31 @@ VAR
 		val := NewV( stack );  val.val.class := String;  val.val.s := str
 	END PushString;
 
-	PROCEDURE PushSInt*( VAR stack: Stack;  i: SHORTINT );
+	PROCEDURE PushSInt*( VAR stack: Stack;  i: SIGNED8 );
 	VAR val: ValueItem;
 	BEGIN
 		val := NewV( stack );  val.val.class := SInt;  val.val.i := i
 	END PushSInt;
 
-	PROCEDURE PushInt*( VAR stack: Stack;  i: INTEGER );
+	PROCEDURE PushInt*( VAR stack: Stack;  i: SIGNED16 );
 	VAR val: ValueItem;
 	BEGIN
 		val := NewV( stack );  val.val.class := Int;  val.val.i := i
 	END PushInt;
 
-	PROCEDURE PushLInt*( VAR stack: Stack;  i: LONGINT );
+	PROCEDURE PushLInt*( VAR stack: Stack;  i: SIGNED32 );
 	VAR val: ValueItem;
 	BEGIN
 		val := NewV( stack );  val.val.class := LInt;  val.val.i := i
 	END PushLInt;
 
-	PROCEDURE PushReal*( VAR stack: Stack;  x: REAL );
+	PROCEDURE PushReal*( VAR stack: Stack;  x: FLOAT32 );
 	VAR val: ValueItem;
 	BEGIN
 		val := NewV( stack );  val.val.class := Real;  val.val.x := x
 	END PushReal;
 
-	PROCEDURE PushLReal*( VAR stack: Stack;  y: LONGREAL );
+	PROCEDURE PushLReal*( VAR stack: Stack;  y: FLOAT64 );
 	VAR val: ValueItem;
 	BEGIN
 		val := NewV( stack );  val.val.class := LReal;  val.val.y := y
@@ -634,14 +634,14 @@ VAR
 
 	(** expression evaluation **)
 (** memo stack *)
-	PROCEDURE StringPtr( VAR s: OPS.String ): LONGINT;
+	PROCEDURE StringPtr( VAR s: OPS.String ): SIGNED32;
 	(* create a Pointer to String, must be hold in global objects since otherwise value cleared before proc call *)
 	VAR str: StringStack;
 	BEGIN
 		NEW( str );  str.next := strings;  strings := str;  str.s := s;  RETURN ADDRESSOF( str.s )
 	END StringPtr;
 
-	PROCEDURE Ptr( ptr: LONGINT ): ANY;
+	PROCEDURE Ptr( ptr: SIGNED32 ): ANY;
 	BEGIN
 		RETURN SYSTEM.VAL( ANY, ptr )
 	END Ptr;
@@ -650,7 +650,7 @@ VAR
 (* reading text *)
 
 
-	PROCEDURE AsPointer( a: Value;  VAR varadr: LONGINT ): ANY;
+	PROCEDURE AsPointer( a: Value;  VAR varadr: SIGNED32 ): ANY;
 	VAR p: ANY;
 	BEGIN
 		p := NIL;
@@ -667,11 +667,11 @@ VAR
 
 	PROCEDURE ValPointer( VAR val: Value;  p: ANY );
 	BEGIN
-		IF p # NIL THEN val.class := Pointer;  val.ptr := SYSTEM.VAL( LONGINT, p );   (* val.i := val.ptr; *) val.p := p END
+		IF p # NIL THEN val.class := Pointer;  val.ptr := SYSTEM.VAL( SIGNED32, p );   (* val.i := val.ptr; *) val.p := p END
 	END ValPointer;
 
 	PROCEDURE EvalOp( VAR stack: Stack;  op: OpItem;  VAR val: Value );
-	VAR a, b: Value;  p1, p2, res: ANY;  varadr: LONGINT;
+	VAR a, b: Value;  p1, p2, res: ANY;  varadr: SIGNED32;
 	BEGIN
 		val.class := Undef;
 		IF op.op = "+" THEN
@@ -992,16 +992,16 @@ VAR
 		IF val.class = Undef THEN err( 100 ) END
 	END EvalOp;
 
-	PROCEDURE GetRefNum( mod: Modules.Module;  VAR i, num: LONGINT );
-	VAR n, s: LONGINT;  x: CHAR;
+	PROCEDURE GetRefNum( mod: Modules.Module;  VAR i, num: SIGNED32 );
+	VAR n, s: SIGNED32;  x: CHAR;
 	BEGIN
 		s := 0;  n := 0;  x := mod.refs[i];  INC( i );
 		WHILE ORD( x ) >= 128 DO INC( n, ASH( ORD( x ) - 128, s ) );  INC( s, 7 );  x := mod.refs[i];  INC( i ) END;
 		num := n + ASH( ORD( x ) MOD 64 - ORD( x ) DIV 64 * 64, s )
 	END GetRefNum;
 
-	PROCEDURE FindAdr( mod: Modules.Module;  obj: OPT.Object ): LONGINT;
-	VAR i, j, m, t, ofs: LONGINT;  ch: CHAR;  found: BOOLEAN;
+	PROCEDURE FindAdr( mod: Modules.Module;  obj: OPT.Object ): SIGNED32;
+	VAR i, j, m, t, ofs: SIGNED32;  ch: CHAR;  found: BOOLEAN;
 	BEGIN
 		i := 0;  m := LEN( mod.refs^ );  ch := mod.refs[i];  INC( i );
 		WHILE (i < m) & ((ch = 0F8X) OR (ch = 0F9X)) DO  (* proc *)
@@ -1032,7 +1032,7 @@ VAR
 	END FindAdr;
 
 	PROCEDURE FindObj( mod: Modules.Module;  name: ARRAY OF CHAR ): OPT.Object;
-	VAR imp, self: OPS.Name;  obj: OPT.Object;  pos: LONGINT;
+	VAR imp, self: OPS.Name;  obj: OPT.Object;  pos: SIGNED32;
 	BEGIN
 		COPY( Modules.extension, OPM.extension );  OPM.outputPath := "";  pos := OPM.curpos;
 		(*	NEW(T);      Texts.Open(T, "");      Texts.OpenReader(R, T, 0);
@@ -1051,7 +1051,7 @@ VAR
 	END FindObj;
 
 	PROCEDURE SplitName( str: ARRAY OF CHAR;  VAR mod: Modules.Module;  VAR name: ARRAY OF CHAR );
-	VAR i, j: LONGINT;  done: BOOLEAN;
+	VAR i, j: SIGNED32;  done: BOOLEAN;
 	BEGIN
 		done := FALSE;  i := 0;  j := 0;
 		WHILE str[i] # 0X DO
@@ -1081,7 +1081,7 @@ VAR
 
 	PROCEDURE IsTypeOf*( t: Types.Type;  ref: ARRAY OF CHAR ): BOOLEAN;
 	VAR tname: ARRAY 128 OF CHAR;
-		mod: Modules.Module;  thistype: Types.Type;  level: INTEGER;
+		mod: Modules.Module;  thistype: Types.Type;  level: SIGNED16;
 	BEGIN
 		SplitName( ref, mod, tname );
 		IF mod # NIL THEN
@@ -1101,7 +1101,7 @@ VAR
 		RETURN IsTypeOf( Types.TypeOf( p ), ref )
 	END PointerIs;
 
-	PROCEDURE GetObjClass( obj: OPT.Object ): SHORTINT;
+	PROCEDURE GetObjClass( obj: OPT.Object ): SIGNED8;
 	BEGIN
 		WObj( obj );
 		IF obj.typ.form IN {Bool, Char, SInt, Int, LInt, Real, LReal, NoTyp, Pointer, String, Comp, ProcTyp} THEN
@@ -1130,10 +1130,10 @@ VAR
 		END
 	END EvalConObj;
 
-	PROCEDURE FindPtrs( typ: OPT.Struct;  adr: LONGINT );
-	VAR fld: OPT.Object;  i, n, s: LONGINT;  btyp: OPT.Struct;
+	PROCEDURE FindPtrs( typ: OPT.Struct;  adr: SIGNED32 );
+	VAR fld: OPT.Object;  i, n, s: SIGNED32;  btyp: OPT.Struct;
 
-		PROCEDURE Add( adr: LONGINT );
+		PROCEDURE Add( adr: SIGNED32 );
 		VAR table: PtrTable;
 		BEGIN
 			Ln;  Str( "Adding Pointer: " );  WInt( adr, 10 );
@@ -1172,7 +1172,7 @@ VAR
 	END FindPtrs;
 
 	PROCEDURE EvalVarObj( obj: OPT.Object;  VAR val: Value );
-	VAR ch: CHAR;  i: LONGINT;  adr: LONGINT;
+	VAR ch: CHAR;  i: SIGNED32;  adr: SIGNED32;
 	BEGIN
 		IF (obj.adr # 0) & (obj.vis IN {external, externalR}) THEN
 			val.class := GetObjClass( obj );
@@ -1241,14 +1241,14 @@ VAR
 
 	PROCEDURE ShortInt( VAR val: Value );
 	BEGIN
-		IF (val.i >= MIN( SHORTINT )) & (val.i <= MAX( SHORTINT )) THEN val.class := SInt
-		ELSIF (val.i >= MIN( INTEGER )) & (val.i <= MAX( INTEGER )) THEN val.class := Int
+		IF (val.i >= MIN( SIGNED8 )) & (val.i <= MAX( SIGNED8 )) THEN val.class := SInt
+		ELSIF (val.i >= MIN( SIGNED16 )) & (val.i <= MAX( SIGNED16 )) THEN val.class := Int
 		ELSE val.class := LInt
 		END
 	END ShortInt;
 
 	PROCEDURE AssignObj*( this, res: Objects.Object ): BOOLEAN;
-	VAR t: Types.Type;  o: OPT.Object;  a2, a1: LONGINT;
+	VAR t: Types.Type;  o: OPT.Object;  a2, a1: SIGNED32;
 	BEGIN
 		(* if same type then copy else new object *)
 		IF antsExpressionsObjects.Assign( this, res ) THEN Ln;  Str( "Assign in anteEO" );  OutType( this );  OutType( res );  RETURN TRUE END;
@@ -1269,9 +1269,9 @@ VAR
 	END AssignObj;
 
 	PROCEDURE OutFile( VAR stack: Stack;  VAR res: Value;  append: BOOLEAN );
-	VAR ptr1, ptr2: ANY;  file: Value;  f: Files.File;  R: Files.Rider;  len: LONGINT;  l: Objects.Library;  M: Objects.BindMsg;
+	VAR ptr1, ptr2: ANY;  file: Value;  f: Files.File;  R: Files.Rider;  len: SIGNED32;  l: Objects.Library;  M: Objects.BindMsg;
 		gen: ARRAY 64 OF CHAR;
-		fM: Objects.FileMsg;  n: vyName.tNameArray;  pos: LONGINT;  varadr: LONGINT;
+		fM: Objects.FileMsg;  n: vyName.tNameArray;  pos: SIGNED32;  varadr: SIGNED32;
 	BEGIN
 		Eval( stack, file );  Eval( stack, res );  Ln;  Str( "OutVal: " );  OutVal( res );  Ln;  Str( "To File" );  OutVal( file );
 		IF file.class = String THEN
@@ -1279,7 +1279,7 @@ VAR
 				IF res.adr # 0 THEN res.ptr := res.adr;  res.p := Ptr( res.adr );  res.class := Pointer;  Ln;  Str( "res.adr # 0 in Outfile" );  WLog;  OutVal( res )
 				ELSE
 					ptr2 := AsPointer( res, varadr );
-					IF ptr2 # NIL THEN res.p := ptr2;  res.ptr := SYSTEM.VAL( LONGINT, ptr2 );  res.class := Pointer END
+					IF ptr2 # NIL THEN res.p := ptr2;  res.ptr := SYSTEM.VAL( SIGNED32, ptr2 );  res.class := Pointer END
 				END  (* IS global object *)
 			END;
 			IF res.class = Pointer THEN
@@ -1322,10 +1322,10 @@ VAR
 	END OutFile;
 
 	PROCEDURE InFile( VAR stack: Stack;  VAR res: Value );
-	VAR class: SHORTINT;  adr: LONGINT;  ch: CHAR;  global: BOOLEAN;  ptr1: ANY;  f: Files.File;  R: Files.Rider;  file: Value;  obj: Objects.Object;
-		l: Objects.Library;  len: LONGINT;
+	VAR class: SIGNED8;  adr: SIGNED32;  ch: CHAR;  global: BOOLEAN;  ptr1: ANY;  f: Files.File;  R: Files.Rider;  file: Value;  obj: Objects.Object;
+		l: Objects.Library;  len: SIGNED32;
 		gen: ARRAY 64 OF CHAR;
-		obj1: OPT.Object;  n: vyName.tNameArray;  fM: Objects.FileMsg;  nil: BOOLEAN;  isfirstitem: BOOLEAN;  pos: LONGINT;
+		obj1: OPT.Object;  n: vyName.tNameArray;  fM: Objects.FileMsg;  nil: BOOLEAN;  isfirstitem: BOOLEAN;  pos: SIGNED32;
 	BEGIN
 		isfirstitem := (itnr = 1);  Eval( stack, file );  global := TRUE;  obj1 := PopWrVar( stack, global, nil );  Ln;  Str( "To File" );
 		OutVal( file );
@@ -1362,9 +1362,9 @@ VAR
 						END;
 					ELSE
 						IF n # "" THEN
-							res.class := Pointer;  ptr1 := SYSTEM.VAL( ANY, obj );  res.p := ptr1;  res.ptr := SYSTEM.VAL( LONGINT, ptr1 );
-							res.adr := SYSTEM.VAL( LONGINT, ptr1 );
-							IF antsExpressionsObjects.AssignPointer( SYSTEM.VAL( LONGINT, ptr1 ), 0, n ) THEN
+							res.class := Pointer;  ptr1 := SYSTEM.VAL( ANY, obj );  res.p := ptr1;  res.ptr := SYSTEM.VAL( SIGNED32, ptr1 );
+							res.adr := SYSTEM.VAL( SIGNED32, ptr1 );
+							IF antsExpressionsObjects.AssignPointer( SYSTEM.VAL( SIGNED32, ptr1 ), 0, n ) THEN
 								Note := TRUE;  Ln;  Green;  Str( "registered: " );  Str( n );  Str( " " );  Black;  Note := FALSE
 							ELSE Nt;  Ln;  Red;  Str( "Could not assign Pointer to " );  Str( n );  Black;  Nt
 							END
@@ -1378,7 +1378,7 @@ VAR
 			Files.Close( f );  res.class := Undef;
 			IF obj = NIL THEN Note := TRUE;  Ln;  Red;  Str( "No Obj loaded" );  Black;  Note := FALSE;  WLog;  RETURN END;
 			ptr1 := obj;  Ln;  Str( "Found object: " );  OutType( ptr1 );  res.class := Pointer;  ptr1 := SYSTEM.VAL( ANY, obj );  res.p := ptr1;
-			res.ptr := SYSTEM.VAL( LONGINT, ptr1 );  res.adr := SYSTEM.VAL( LONGINT, ptr1 );  adr := SYSTEM.VAL( LONGINT, ptr1 );
+			res.ptr := SYSTEM.VAL( SIGNED32, ptr1 );  res.adr := SYSTEM.VAL( SIGNED32, ptr1 );  adr := SYSTEM.VAL( SIGNED32, ptr1 );
 			IF obj IS vyBase.Object THEN
 				WITH obj: vyBase.Object DO
 					IF obj1 # NIL THEN vyName.RegisterNamed( obj, obj1.name ) END
@@ -1397,7 +1397,7 @@ VAR
 	END InFile;
 
 	PROCEDURE Assign( VAR stack: Stack;  VAR res: Value );
-	VAR obj: OPT.Object;  class: SHORTINT;  i, adr: LONGINT;  ch: CHAR;  global: BOOLEAN;  ptr1, ptr2: ANY;  nil: BOOLEAN;  varadr: LONGINT;
+	VAR obj: OPT.Object;  class: SIGNED8;  i, adr: SIGNED32;  ch: CHAR;  global: BOOLEAN;  ptr1, ptr2: ANY;  nil: BOOLEAN;  varadr: SIGNED32;
 	BEGIN
 		Eval( stack, res );  global := TRUE;  obj := PopWrVar( stack, global, nil );  Ln;  Str( "Trying to assign: " );  OutVal( res );
 		IF obj # NIL THEN
@@ -1458,7 +1458,7 @@ VAR
 															vyName.RegisterNamed( ptr2, obj.name );  Ln;  Str( "Registered new Object: " );  Str( obj.name )
 														END;
 													ELSE
-														IF antsExpressionsObjects.AssignPointer( SYSTEM.VAL( LONGINT, ptr2 ), 0, obj.name ) THEN
+														IF antsExpressionsObjects.AssignPointer( SYSTEM.VAL( SIGNED32, ptr2 ), 0, obj.name ) THEN
 															Ln;  Str( "Assign Pointer 1" )
 														ELSE Ln;  Str( "Assign Pointer 1 failed" )
 														END
@@ -1477,7 +1477,7 @@ VAR
 									WITH ptr2: vyBase.Object DO vyName.RegisterNamed( ptr2, obj.name );  Ln;  Str( "Registered new Object: " );  Str( obj.name )
 									END;
 								ELSE
-									IF antsExpressionsObjects.AssignPointer( SYSTEM.VAL( LONGINT, ptr2 ), 0, obj.name ) THEN Ln;  Str( "AssignPointer 2" )
+									IF antsExpressionsObjects.AssignPointer( SYSTEM.VAL( SIGNED32, ptr2 ), 0, obj.name ) THEN Ln;  Str( "AssignPointer 2" )
 									ELSE Ln;  Str( "Assign Pointer 2 failed" )
 									END
 								END
@@ -1509,19 +1509,19 @@ VAR
 		Ln;  Str( "Assignment failed" );  res.class := Undef;  err( 113 )
 	END Assign;
 
-	PROCEDURE PushLIntPar( VAR call: CallStack;  val: LONGINT );
+	PROCEDURE PushLIntPar( VAR call: CallStack;  val: SIGNED32 );
 	BEGIN
 		DEC( call.i, 5 );  Ln;  Str( "call.i: " );  WInt( call.i, 2 );
 		call.code[call.i] := 068X;   (* PUSH *)
 		SYSTEM.PUT32( ADDRESSOF( call.code[call.i + 1] ), val )
 	END PushLIntPar;
 
-	PROCEDURE PushStringPar( VAR call: CallStack;  VAR s: ARRAY OF CHAR;  len: LONGINT ): BOOLEAN;
-	VAR i, slen, long: LONGINT;  j: INTEGER;  ord: LONGINT;
+	PROCEDURE PushStringPar( VAR call: CallStack;  VAR s: ARRAY OF CHAR;  len: SIGNED32 ): BOOLEAN;
+	VAR i, slen, long: SIGNED32;  j: SIGNED16;  ord: SIGNED32;
 
-		PROCEDURE StringSize( s: ARRAY OF CHAR ): LONGINT;
+		PROCEDURE StringSize( s: ARRAY OF CHAR ): SIGNED32;
 		(* returns string size of s INCLUDING the terminator 0X *)
-		VAR i, l: LONGINT;
+		VAR i, l: SIGNED32;
 		BEGIN
 			i := 0;  l := LEN( s ) - 1;
 			WHILE (s[i] # 0X) & (i < l) DO INC( i ) END;
@@ -1550,21 +1550,21 @@ VAR
 		END
 	END PushStringPar;
 
-	PROCEDURE PushRealPar( VAR call: CallStack;  val: REAL );
+	PROCEDURE PushRealPar( VAR call: CallStack;  val: FLOAT32 );
 	BEGIN
 		PushLIntPar( call, Reals.Int( val ) )
 	END PushRealPar;
 
-	PROCEDURE PushLRealPar( VAR call: CallStack;  val: LONGREAL );
-	VAR l, h: LONGINT;
+	PROCEDURE PushLRealPar( VAR call: CallStack;  val: FLOAT64 );
+	VAR l, h: SIGNED32;
 	BEGIN
 		Reals.IntL( val, l, h );  PushLIntPar( call, h );  PushLIntPar( call, l )
 	END PushLRealPar;
 
 	PROCEDURE PopCallPar( VAR stack: Stack;  VAR call: CallStack;  fpar: OPT.Object ): BOOLEAN;
-	VAR apar: Value;  obj: OPT.Object;  class: SHORTINT;
+	VAR apar: Value;  obj: OPT.Object;  class: SIGNED8;
 		s: ARRAY 256 OF CHAR;
-		adr: LONGINT;  global: BOOLEAN;  nil: BOOLEAN;
+		adr: SIGNED32;  global: BOOLEAN;  nil: BOOLEAN;
 
 		PROCEDURE PopString( ): BOOLEAN;
 		BEGIN
@@ -1779,7 +1779,7 @@ VAR
 
 (*
 PROCEDURE EvalProcObj (VAR stack: Stack;           obj: OPT.Object;           VAR res: Value);
-VAR fpar, prev, next: OPT.Object;          call: CallStack;           resadr, npar: LONGINT;
+VAR fpar, prev, next: OPT.Object;          call: CallStack;           resadr, npar: SIGNED32;
 cmd: Modules.Command;           done: BOOLEAN;
 BEGIN
 IF (obj.adr # 0) & (obj.vis IN {external, externalR}) THEN
@@ -1951,7 +1951,7 @@ END EvalProcObj;
 				END;
 			ELSE
 				Str( "unknown: " );  Ln;  Str( "EvalGlobalObj found obj at: " );  WInt( ADDRESSOF( obj ), 10 );  val.class := Pointer;  COPY( name, val.name );
-				(*val.i :=   SYSTEM.GET32(ADDRESSOF(obj));   *)  (* = SYSTEM.VAL(LONGINT,obj) *)
+				(*val.i :=   SYSTEM.GET32(ADDRESSOF(obj));   *)  (* = SYSTEM.VAL(SIGNED32,obj) *)
 				val.adr := SYSTEM.GET32( ADDRESSOF( obj ) );
 				(*val.ptr := PtrPtr(val.adr);*)
 				val.ptr := val.adr;  val.p := SYSTEM.VAL( ANY, val.adr );
@@ -2027,7 +2027,7 @@ END EvalProcObj;
 	END CleanUp;
 
 	PROCEDURE Exec*( T: Texts.Text );
-	VAR R: Texts.Reader;  stack: Stack;  val: Value;  t: LONGINT;
+	VAR R: Texts.Reader;  stack: Stack;  val: Value;  t: SIGNED32;
 	BEGIN
 		IF ~enableCR THEN WLog := WLogLog ELSE WLog := WLogToCaret END;
 		t := Oberon.Time();  Ln;  Str( "time 0: " );  WInt( Oberon.Time() - t, 10 );
@@ -2064,10 +2064,10 @@ END EvalProcObj;
 (** Keyboard handler **)
 
 	PROCEDURE Key( frame: TextGadgets.Frame;  ch: CHAR;  VAR handled: BOOLEAN );
-	VAR pos, pos0, pos1, beg: LONGINT;  ch1: CHAR;  T: Texts.Text;  keys: SET;  R: Texts.Reader;  w: Texts.Writer;  res: INTEGER;  SelT: Texts.Text;
-		end, time: LONGINT;  sc: Texts.Scanner;
+	VAR pos, pos0, pos1, beg: SIGNED32;  ch1: CHAR;  T: Texts.Text;  keys: SET;  R: Texts.Reader;  w: Texts.Writer;  res: SIGNED16;  SelT: Texts.Text;
+		end, time: SIGNED32;  sc: Texts.Scanner;
 		proc: ARRAY 128 OF CHAR;
-		Mod: Modules.Module;  Proc: Modules.Command;  i: LONGINT;  cmsg: Oberon.CaretMsg;
+		Mod: Modules.Module;  Proc: Modules.Command;  i: SIGNED32;  cmsg: Oberon.CaretMsg;
 	BEGIN
 		Input.KeyState( keys );  handled := TRUE;
 		IF (ch = 0DX) & (0 IN keys) THEN
@@ -2161,7 +2161,7 @@ END EvalProcObj;
 		Ln;  WLog
 	END GetKeyCode;
 
-	PROCEDURE TestAdr*( adr: LONGINT );
+	PROCEDURE TestAdr*( adr: SIGNED32 );
 	VAR p: ANY;
 	BEGIN
 		Nt;

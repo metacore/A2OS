@@ -48,7 +48,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR read, written, nofReads, nofWrites, nofTot, nofErrors : HUGEINT; total : REAL;
+		VAR read, written, nofReads, nofWrites, nofTot, nofErrors : SIGNED64; total : FLOAT32;
 		BEGIN
 			read := dev.NbytesRead; nofReads := dev.NnofReads;
 			written := dev.NbytesWritten; nofWrites := dev.NnofWrites;
@@ -80,7 +80,7 @@ BEGIN {EXCLUSIVE}
 	WMPerfMonPlugins.updater.RemoveByName(PluginName, devicename);
 END RemovePlugin;
 
-PROCEDURE EventHandler(event : WORD; plugin : Plugins.Plugin);
+PROCEDURE EventHandler(event : INTEGER; plugin : Plugins.Plugin);
 BEGIN
 	IF event = Plugins.EventAdd THEN
 		AddPlugin(plugin (Disks.Device))
@@ -90,7 +90,7 @@ BEGIN
 END EventHandler;
 
 PROCEDURE InitPlugins;
-VAR table : Plugins.Table; i : SIZE; res: WORD;
+VAR table : Plugins.Table; i : SIZE; res: INTEGER;
 BEGIN
 	IF Disks.Stats THEN
 		Disks.registry.AddEventHandler(EventHandler, res); (* ignore res *)
@@ -104,7 +104,7 @@ PROCEDURE Install*;
 END Install;
 
 PROCEDURE Cleanup;
-VAR res : WORD;
+VAR res : INTEGER;
 BEGIN
 	IF Disks.Stats THEN
 		Disks.registry.RemoveEventHandler(EventHandler, res);

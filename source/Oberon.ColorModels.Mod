@@ -12,20 +12,20 @@ TYPE
 	ColorSym = POINTER TO ColorSymDesc;
 	ColorSymDesc = RECORD
 		name: Objects.Name;	(* color name *)
-		x,y,z: REAL;	(* color parameters, RGB, HSV or CMY *)
+		x,y,z: FLOAT32;	(* color parameters, RGB, HSV or CMY *)
 		next: ColorSym;	(* next color symbol *)
 	END;
 VAR
 	RGBcolor,HSVcolor,CMYcolor: ColorSym;	(* supported color symbols *)
-	depth: INTEGER;	(* current color depth *)
-	dr,dg,db: ARRAY RGBtop+1 OF INTEGER;	(* current color tables *)
+	depth: SIGNED16;	(* current color depth *)
+	dr,dg,db: ARRAY RGBtop+1 OF SIGNED16;	(* current color tables *)
 
-PROCEDURE LoadPalette(VAR d: INTEGER; VAR r,g,b: ARRAY OF INTEGER);
+PROCEDURE LoadPalette(VAR d: SIGNED16; VAR r,g,b: ARRAY OF SIGNED16);
 	(* scan the currently loaded RGB values of the palette *)
 VAR
-	i: INTEGER;
+	i: SIGNED16;
 BEGIN
-	d:= INTEGER(ASH(1,Display.Depth(0))-1);
+	d:= SIGNED16(ASH(1,Display.Depth(0))-1);
 	FOR i:= 0 TO d DO Display.GetColor(i,dr[i],dg[i],db[i]); END;
 END LoadPalette;
 
@@ -36,7 +36,7 @@ VAR
 	system: Objects.Name;
 	col,last: ColorSym;
 	S: Texts.Scanner;
-	x,y,z: REAL;
+	x,y,z: FLOAT32;
 BEGIN
 	sym:= NIL; last:= NIL;
 	COPY("ColorSystem.", system); Strings.Append(system,model);
@@ -66,7 +66,7 @@ END FindColorSymbol;
 
 (** Searches in ColorSymbols.RGB of Oberon.Text for color S and returns the associated RGB values.
 ok is set to TRUE if S has been found and to FALSE otherwise. r, g and b are left unchanged if ok is FALSE. *)
-PROCEDURE StrToRGB*(S: ARRAY OF CHAR; VAR r,g,b: REAL; VAR ok: BOOLEAN);
+PROCEDURE StrToRGB*(S: ARRAY OF CHAR; VAR r,g,b: FLOAT32; VAR ok: BOOLEAN);
 VAR
 	sym: ColorSym;
 BEGIN
@@ -78,7 +78,7 @@ END StrToRGB;
 
 (** Searches in ColorSymbols.HSV of Oberon.Text for color S and returns the associated HSV values.
 ok is set to TRUE if S has been found and to FALSE otherwise. h, s and v are left unchanged if ok is FALSE. *)
-PROCEDURE StrToHSV*(S: ARRAY OF CHAR; VAR h,s,v: REAL; VAR ok: BOOLEAN);
+PROCEDURE StrToHSV*(S: ARRAY OF CHAR; VAR h,s,v: FLOAT32; VAR ok: BOOLEAN);
 VAR
 	sym: ColorSym;
 BEGIN
@@ -90,7 +90,7 @@ END StrToHSV;
 
 (** Searches in ColorSymbols.CMY of Oberon.Text for color S and returns the associated CMY values.
 ok is set to TRUE if S has been found and to FALSE otherwise. c, m and y are left unchanged if ok is FALSE. *)
-PROCEDURE StrToCMY*(S: ARRAY OF CHAR; VAR c,m,y: REAL; VAR ok: BOOLEAN);
+PROCEDURE StrToCMY*(S: ARRAY OF CHAR; VAR c,m,y: FLOAT32; VAR ok: BOOLEAN);
 VAR
 	sym: ColorSym;
 BEGIN
@@ -101,9 +101,9 @@ BEGIN
 END StrToCMY;
 
 (** convert a RedGreenBlue color specification to HueSaturationValue *)
-PROCEDURE RGBToHSV*(r,g,b: REAL; VAR h,s,v: REAL);
+PROCEDURE RGBToHSV*(r,g,b: FLOAT32; VAR h,s,v: FLOAT32);
 VAR
-	m,rl,gl,bl: REAL;
+	m,rl,gl,bl: FLOAT32;
 BEGIN
 	IF (g > b) THEN	(* set v *)
 		IF (r > g) THEN v:= r; ELSE v:= g; END;
@@ -135,10 +135,10 @@ BEGIN
 END RGBToHSV;
 
 (** convert a HueSaturationValue color specification to RedGreenBlue *)
-PROCEDURE HSVToRGB*(h,s,v: REAL; VAR r,g,b: REAL);
+PROCEDURE HSVToRGB*(h,s,v: FLOAT32; VAR r,g,b: FLOAT32);
 VAR
-	i: LONGINT;
-	f,p1,p2,p3: REAL;
+	i: SIGNED32;
+	f,p1,p2,p3: FLOAT32;
 BEGIN
 	IF h = 360.0 THEN h:= 0.0; ELSE h:= h / 60.0; END;	(* convert h to be in [0,6] *)
 	i:= ENTIER(h); f:= h - i;
@@ -154,20 +154,20 @@ BEGIN
 END HSVToRGB;
 
 (** convert a RedGreenBlue color specification to CyanMagentaYellow *)
-PROCEDURE RGBToCMY*(r,g,b: REAL; VAR c,m,y: REAL);
+PROCEDURE RGBToCMY*(r,g,b: FLOAT32; VAR c,m,y: FLOAT32);
 BEGIN
 	c:= 1.0 - r; m:= 1.0 - g; y:= 1.0 - b;
 END RGBToCMY;
 
 (** convert a CyanMagentaYellow color specification to RedGreenBlue *)
-PROCEDURE CMYToRGB*(c,m,y: REAL; VAR r,g,b: REAL);
+PROCEDURE CMYToRGB*(c,m,y: FLOAT32; VAR r,g,b: FLOAT32);
 BEGIN
 	r:= 1.0 - c; g:= 1.0 - m; b:= 1.0 - y;
 END CMYToRGB;
 
 (** transform a RedGreenBlue color specification to Display values,
 no color transformation is done. *)
-PROCEDURE RGBToColor*(r,g,b: REAL; VAR R,G,B: INTEGER);
+PROCEDURE RGBToColor*(r,g,b: FLOAT32; VAR R,G,B: SIGNED16);
 BEGIN
 	R:= SHORT(ENTIER(r * RGBtop));
 	G:= SHORT(ENTIER(g * RGBtop));
@@ -178,12 +178,12 @@ END RGBToColor;
 Color transformation is performed by using the euclidic distance.
 If scanpal is TRUE, the currently active palette is rescanned, otherwise the latest loaded values are used.
 With C the index of the best fitting palette entry is returned, R,G and B hold the RGB values of C *)
-PROCEDURE RGBToPalette*(r,g,b: REAL; VAR C,R,G,B: INTEGER; scanpal: BOOLEAN);
+PROCEDURE RGBToPalette*(r,g,b: FLOAT32; VAR C,R,G,B: SIGNED16; scanpal: BOOLEAN);
 VAR
-	i: INTEGER;
-	d,m,x,y,z: REAL;
+	i: SIGNED16;
+	d,m,x,y,z: FLOAT32;
 BEGIN
-	C:= -1; R:= -1; G:= -1; B:= -1; m:= MAX(REAL);
+	C:= -1; R:= -1; G:= -1; B:= -1; m:= MAX(FLOAT32);
 	IF scanpal OR (depth = -1) THEN LoadPalette(depth,dr,dg,db); END;
 	FOR i:= 0 TO depth DO
 		x:= ABS(r - (dr[i]/RGBtop)); y:= ABS(g - (dg[i]/RGBtop)); z:= ABS(b - (db[i]/RGBtop));

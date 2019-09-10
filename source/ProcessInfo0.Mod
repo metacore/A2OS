@@ -47,7 +47,7 @@ BEGIN
 	Machine.Release(Machine.Heaps);
 END GetProcesses;
 
-PROCEDURE GetProcess*(id : WORD) : Objects.Process;
+PROCEDURE GetProcess*(id : INTEGER) : Objects.Process;
 VAR
 	memBlock {UNTRACED}: Machine.MemoryBlock;
 	heapBlock {UNTRACED}: Heaps.HeapBlock;

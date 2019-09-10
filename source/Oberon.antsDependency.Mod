@@ -29,13 +29,13 @@ IMPORT Display, vyBase, vyName, vyGraphBase, vyDisplay2d, vyPort, vyEvents, vyLi
 	vyTracking, Files, vyHighlight, Gadgets, vyGraph := antsGraph, Objects, antsCommands, vyCommandMenus;
 
 TYPE
-	Real = LONGREAL;
+	Real = FLOAT64;
 
 	tNode = POINTER TO tNodeDesc;
 	tNodeDesc = RECORD (vyGraph.tNodeDesc)
 		o: Objects.Object;
-		dir: INTEGER;
-		level, levelpos: INTEGER
+		dir: SIGNED16;
+		level, levelpos: SIGNED16
 	END;
 
 	tLayer* = POINTER TO tLayerDesc;
@@ -49,10 +49,10 @@ CONST
 
 VAR
 	gNode: tNode;  gObject: Objects.Object;
-	minlevel, maxlevel: INTEGER;
-	currange: POINTER TO ARRAY OF INTEGER;
+	minlevel, maxlevel: SIGNED16;
+	currange: POINTER TO ARRAY OF SIGNED16;
 	graph: vyGraph.tGraph;   (* temp *)
-	min, max: INTEGER;  rangex: LONGREAL;  tempLayer: tLayer;  vvv: tNode;
+	min, max: SIGNED16;  rangex: FLOAT64;  tempLayer: tLayer;  vvv: tNode;
 
 	PROCEDURE StoreNode( VAR R: Files.Rider;  n: tNode );
 	BEGIN
@@ -100,10 +100,10 @@ VAR
 	END GenN;
 
 	PROCEDURE Select( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR x0, y0, x1O, y1O, x1N, y1N: INTEGER;  X0, Y0, X1O, Y1O, X1N, Y1N: Real;  node: vyGraph.tNode;  link: vyLinks.Link;
+	VAR x0, y0, x1O, y1O, x1N, y1N: SIGNED16;  X0, Y0, X1O, Y1O, X1N, Y1N: Real;  node: vyGraph.tNode;  link: vyLinks.Link;
 
-		PROCEDURE Frame( x, y, u, v: INTEGER );
-		VAR w, h, r: INTEGER;
+		PROCEDURE Frame( x, y, u, v: SIGNED16 );
+		VAR w, h, r: SIGNED16;
 		BEGIN
 			vyGraphBase.SetDisplayMode( vyGraphBase.invert );
 			IF u < x THEN r := u;  u := x;  x := r END;
@@ -188,7 +188,7 @@ VAR
 	END ThereIsEdge;
 
 	PROCEDURE InstallGraph*( level: tLayer;  debug: BOOLEAN );
-	VAR graph: vyGraph.tGraph;  i: INTEGER;  ref2: tNode;  vtroot: tNode;  e: vyGraph.tEdge;  name: vyName.tNameArray;  count: LONGINT;
+	VAR graph: vyGraph.tGraph;  i: SIGNED16;  ref2: tNode;  vtroot: tNode;  e: vyGraph.tEdge;  name: vyName.tNameArray;  count: SIGNED32;
 
 		PROCEDURE AlreadyInstalled( rt: Objects.Object ): BOOLEAN;
 		BEGIN
@@ -282,14 +282,14 @@ VAR
 	END rangepos;
 
 	PROCEDURE posit( n: vyGraph.tNode );
-	VAR x, y: LONGREAL;
+	VAR x, y: FLOAT64;
 	BEGIN
 		y := -n( tNode ).level;  x := ((n( tNode ).levelpos) + 1) / (currange[n( tNode ).level - minlevel] + 1);
 		vyGraph.PlaceNode( graph, n, x, y )
 	END posit;
 
 	PROCEDURE minlevel1( n: vyGraph.tNode );
-	VAR name: vyName.tNameArray;  old: INTEGER;
+	VAR name: vyName.tNameArray;  old: SIGNED16;
 	BEGIN
 		IF n( tNode ).o # NIL THEN
 			vyName.GetObjId( n( tNode ).o( vyBase.Object ), name );
@@ -304,7 +304,7 @@ VAR
 	END minlevel1;
 
 	PROCEDURE maxlevel1( n: vyGraph.tNode );
-	VAR name: vyName.tNameArray;  old: INTEGER;
+	VAR name: vyName.tNameArray;  old: SIGNED16;
 	BEGIN
 		IF n( tNode ).o # NIL THEN
 			vyName.GetObjId( n( tNode ).o( vyBase.Object ), name );
@@ -322,7 +322,7 @@ VAR
 PROCEDURE RefineGraph (g: vyGraph.tGraph);
 BEGIN
 	graph := g;
-	minlevel := MAX(INTEGER);   maxlevel := MIN(INTEGER);
+	minlevel := MAX(SIGNED16);   maxlevel := MIN(SIGNED16);
 	min := 1;  max := - 1;
 	vyGraph.ForEachFollowNodeDo(vvv, minlevel1);
 	vyGraph.ForEachPrevNodeDo(vvv, maxlevel1);
@@ -373,7 +373,7 @@ END RefineGraph;
 
 	PROCEDURE RefineGraph( g: vyGraph.tGraph );
 	BEGIN
-		graph := g;  minlevel := MAX( INTEGER );  maxlevel := MIN( INTEGER );  min := 1;  max := -1;  vyGraph.ForEachNodeDo( g, init0 );
+		graph := g;  minlevel := MAX( SIGNED16 );  maxlevel := MIN( SIGNED16 );  min := 1;  max := -1;  vyGraph.ForEachNodeDo( g, init0 );
 		vyGraph.ForEachNodeDo( g, startup );
 		(*
 	vyGraph.ForEachFollowNodeDo(vvv, minlevel1);
@@ -387,7 +387,7 @@ END RefineGraph;
 	END RefineGraph;
 
 	PROCEDURE checkSelection( n: vyGraph.tNode );
-	VAR nx, ny: LONGREAL;  sel: vyDisplay2d.Selection;
+	VAR nx, ny: FLOAT64;  sel: vyDisplay2d.Selection;
 	BEGIN
 
 		vyGraph.GetNodePlace( graph, n, nx, ny );  sel := vyDisplay2d.currentsel;
@@ -395,7 +395,7 @@ END RefineGraph;
 	END checkSelection;
 
 	PROCEDURE Recall( layer: tLayer;  msg: Display.DisplayMsg );
-	VAR x, y, w, h: INTEGER;  hp: vyPort.Picture;
+	VAR x, y, w, h: SIGNED16;  hp: vyPort.Picture;
 	BEGIN
 		(*
 	IF vyDisplay2d.currentsel # NIL THEN
@@ -408,7 +408,7 @@ END RefineGraph;
 	END Recall;
 
 	PROCEDURE Respond( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR v: vyGraph.tNode;  x2d, y2d: Real;  x, y, w, h, dx, dy, dsr: INTEGER;  g: vyGraph.tGraph;
+	VAR v: vyGraph.tNode;  x2d, y2d: Real;  x, y, w, h, dx, dy, dsr: SIGNED16;  g: vyGraph.tGraph;
 	BEGIN
 		vyGraphBase.PointToPoint2d( event.x, event.y, x2d, y2d );  v := vyGraph.ThisNode( layer.graph, x2d, y2d );
 		IF v # NIL THEN
@@ -421,7 +421,7 @@ END RefineGraph;
 	END Respond;
 
 	PROCEDURE Responsible( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF (event.gesture = vyEvents.EvtSelect) OR (event.gesture = vyEvents.EvtIdent) THEN priority := vyEvents.PrioHigh END;
@@ -434,7 +434,7 @@ END RefineGraph;
 	END StoreL;
 
 	PROCEDURE LoadL( VAR R: Files.Rider;  n: tLayer );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Gadgets.ReadRef( R, n.lib, objsub );
 		ASSERT ( objsub # NIL );
@@ -444,7 +444,7 @@ END RefineGraph;
 	END LoadL;
 
 	PROCEDURE updwonsel( n: vyGraph.tNode );
-	VAR x, y: LONGREAL;
+	VAR x, y: FLOAT64;
 	BEGIN
 		IF vyGraph.Selected( n ) THEN
 			vyGraph.GetNodePlace( graph, n, x, y );

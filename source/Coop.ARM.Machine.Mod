@@ -32,10 +32,10 @@ CONST
 
 TYPE
 	Vendor* = ARRAY 13 OF CHAR;
-	IDMap* = ARRAY 16 OF SHORTINT;
+	IDMap* = ARRAY 16 OF SIGNED8;
 
 	Range* = RECORD
-		adr*, size*: LONGINT
+		adr*, size*: SIGNED32
 	END;
 
 	MemoryBlock* = POINTER TO MemoryBlockDesc;
@@ -53,7 +53,7 @@ TYPE
 		high*: ADDRESS;	(* next virtual address after stack *)	(* exported for Objects only *)
 	END;
 
-	Address32* = LONGINT;
+	Address32* = SIGNED32;
 
 VAR
 
@@ -72,8 +72,8 @@ VAR
 	version*: ARRAY 64 OF CHAR;   (** Aos version *)
 	features*,features2*: SET;   (** processor features *)
 	fcr*: SET;   (** default floating-point control register value (default rounding mode is towards -infinity, for ENTIER) *)
-	mhz*: HUGEINT;   (** clock rate of GetTimer() in MHz, or 0 if not known *)
-	boottime-: HUGEINT; (** in timer units *)
+	mhz*: SIGNED64;   (** clock rate of GetTimer() in MHz, or 0 if not known *)
+	boottime-: SIGNED64; (** in timer units *)
 
 VAR
 	lock-: ARRAY MaxLocks OF CHAR;  (* not implemented as SET because of shared access *)
@@ -84,8 +84,8 @@ VAR
 
 	(** Convert a string to an integer.  Parameter i specifies where in the string scanning should begin (usually 0 in the first call).  Scanning stops at the first non-valid character, and i returns the updated position.  Parameter s is the string to be scanned.  The value is returned as result, or 0 if not valid.  Syntax: number = ["-"] digit {digit} ["H" | "h"] .  digit = "0" | ... "9" | "A" .. "F" | "a" .. "f" .  If the number contains any hexdecimal letter, or if it ends in "H" or "h", it is interpreted as hexadecimal. *)
 
-	PROCEDURE StrToInt*( VAR i: SIZE;  CONST s: ARRAY OF CHAR ): LONGINT;
-	VAR vd, vh, sgn, d: LONGINT;  hex: BOOLEAN;
+	PROCEDURE StrToInt*( VAR i: SIZE;  CONST s: ARRAY OF CHAR ): SIGNED32;
+	VAR vd, vh, sgn, d: SIGNED32;  hex: BOOLEAN;
 	BEGIN
 		vd := 0;  vh := 0;  hex := FALSE;
 		IF s[i] = "-" THEN sgn := -1;  INC( i ) ELSE sgn := 1 END;
@@ -124,7 +124,7 @@ PROCEDURE UnmapPhysical*(virtAdr: ADDRESS; size: SIZE);
 END UnmapPhysical;
 
 (** Translate a virtual address range to num ranges of physical address. num returns 0 on error. *)
-PROCEDURE TranslateVirtual*(virtAdr: ADDRESS; size: SIZE;  VAR num: LONGINT; VAR physAdr: ARRAY OF Range);
+PROCEDURE TranslateVirtual*(virtAdr: ADDRESS; size: SIZE;  VAR num: SIGNED32; VAR physAdr: ARRAY OF Range);
 CONST PS = 4096;
 VAR ofs, phys1: ADDRESS; size1: SIZE;
 BEGIN
@@ -145,7 +145,7 @@ END TranslateVirtual;
 
 (** Fill "size" bytes at "destAdr" with "filler".  "size" must be multiple of 4. *)
 
-	PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: SIGNED32);
 	CODE
 		LDR R0, [FP, #filler]
 		LDR R1, [FP, #size]
@@ -188,23 +188,23 @@ BEGIN HALT (1234);
 END Sti;
 
 (* Dan: from new Machine *)
-PROCEDURE GetTimer*(): HUGEINT;
+PROCEDURE GetTimer*(): SIGNED64;
 BEGIN RETURN Timer.GetCounter ();
 END GetTimer;
 
-PROCEDURE ID*(): LONGINT;
+PROCEDURE ID*(): SIGNED32;
 BEGIN
 	RETURN Processors.GetCurrentIndex ();
 END ID;
 
 (** Acquire a spin-lock. *)
-	PROCEDURE Acquire*( level: LONGINT );   (* non reentrant lock  (non reentrance "ensured" by ASSERT statement ), CriticalSections are reentrant *)
+	PROCEDURE Acquire*( level: SIGNED32 );   (* non reentrant lock  (non reentrance "ensured" by ASSERT statement ), CriticalSections are reentrant *)
 	BEGIN
 		Mutexes.Acquire (mutex[level]);
 	END Acquire;
 
 (** Release a spin-lock. *)
-	PROCEDURE Release*( level: LONGINT );   (* release lock *)
+	PROCEDURE Release*( level: SIGNED32 );   (* release lock *)
 	BEGIN
 		Mutexes.Release (mutex[level]);
 	END Release;
@@ -228,7 +228,7 @@ END PhysicalAdr;
 
 (** Atomic INC(x). *)
 
-	PROCEDURE -AtomicInc*( VAR x: LONGINT );
+	PROCEDURE -AtomicInc*( VAR x: SIGNED32 );
 	CODE
 		LDR	R0, [SP], #4
 	loop:
@@ -241,7 +241,7 @@ END PhysicalAdr;
 
 (** Atomic DEC(x). *)
 
-	PROCEDURE -AtomicDec*( VAR x: LONGINT );
+	PROCEDURE -AtomicDec*( VAR x: SIGNED32 );
 	CODE
 		LDR	R0, [SP], #4
 	loop:
@@ -254,7 +254,7 @@ END PhysicalAdr;
 
 (** Atomic INC(x, y). *)
 
-	PROCEDURE -AtomicAdd*( VAR x: LONGINT;  y: LONGINT );
+	PROCEDURE -AtomicAdd*( VAR x: SIGNED32;  y: SIGNED32 );
 	CODE
 		LDR R3, [SP], #4	; R3 := y
 		LDR R0, [SP], #4	; R0 := ADR(x)
@@ -287,7 +287,7 @@ END PhysicalAdr;
 
 (* Atomic compare-and-swap. Set x = new if x = old and return old value of x *)
 
-	PROCEDURE -AtomicCAS* (VAR x: LONGINT; old, new: LONGINT): LONGINT;
+	PROCEDURE -AtomicCAS* (VAR x: SIGNED32; old, new: SIGNED32): SIGNED32;
 	CODE
 		LDR	R2, [SP], #4			; R2 := new
 		LDR	R1, [SP], #4			; R1 := old
@@ -305,7 +305,7 @@ END PhysicalAdr;
 	END AtomicCAS;
 
 (* function returning the number of processors that are available to Aos *)
-PROCEDURE NumberOfProcessors*( ): LONGINT;
+PROCEDURE NumberOfProcessors*( ): SIGNED32;
 BEGIN
 	RETURN Processors.count;
 END NumberOfProcessors;

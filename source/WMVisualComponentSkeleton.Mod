@@ -11,7 +11,7 @@ TYPE
 
 		(* values of properties can be cached to enabled lock-free access in code block that hold the hierarchy lock anyway *)
 		propertyCached- : WMProperties.Int32Property;
-		propertyCachedI : LONGINT;
+		propertyCachedI : SIGNED32;
 
 		PROCEDURE &Init;
 		BEGIN

@@ -8,7 +8,7 @@ PROCEDURE Open*(context : Commands.Context); (** filename ~ *)
 VAR
 	fn, name : Files.FileName;
 	pw : WM.BufferWindow;
-	res: WORD; w, h : SIZE; x : LONGINT;
+	res: INTEGER; w, h : SIZE; x : SIGNED32;
 	dec : Codecs.ImageDecoder;
 	rdr : Streams.Reader;
 	ext : ARRAY 16 OF CHAR;
@@ -52,7 +52,7 @@ END Open;
 PROCEDURE Convert*(context : Commands.Context);
 VAR fni, fno,
 	inName, outName : Files.FileName;
-	res : WORD;
+	res : INTEGER;
 	dec : Codecs.ImageDecoder;
 	enc : Codecs.ImageEncoder;
 	img : Raster.Image;

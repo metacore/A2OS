@@ -27,8 +27,8 @@ CONST
 
 TYPE
 	IME* = OBJECT(WMInputMethods.IME)
-		VAR cons,vow: LONGINT; (* count the consonants and vowels to detect specific keycodes*)
-			ucs0: SIZE; geez:LONGINT;
+		VAR cons,vow: SIGNED32; (* count the consonants and vowels to detect specific keycodes*)
+			ucs0: SIZE; geez:SIGNED32;
 
 		PROCEDURE GetName*() : Strings.String;
 		BEGIN
@@ -40,8 +40,8 @@ TYPE
 			cons:=0; vow:=0; geez:=0; ucs0:=0H;
 		END Reset;
 
-		PROCEDURE Remap(ucs1:LONGINT):LONGINT;
-		VAR ucs2:LONGINT;
+		PROCEDURE Remap(ucs1:SIGNED32):SIGNED32;
+		VAR ucs2:SIGNED32;
 		BEGIN
 			CASE ucs1 OF
 				| 01201H: ucs2:=1288H; (*hu*)	(*remap unicode to other character block*)
@@ -190,7 +190,7 @@ END Install;
 PROCEDURE SelectedCharToUCS*;
 VAR r : Texts.TextReader;
 	selectionText: Texts.Text;
-	ucs : LONGINT;
+	ucs : SIGNED32;
 	from, to : Texts.TextPosition;
 BEGIN
 	IF Texts.GetLastSelection(selectionText, from, to) THEN
@@ -206,7 +206,7 @@ END SelectedCharToUCS;
 (* helper procedure for development : write an UTF8 character *)
 PROCEDURE UCSToChar*(context:Commands.Context);
 VAR
-	ucs : LONGINT;
+	ucs : SIGNED32;
 	res:BOOLEAN;
 BEGIN
 	res:=context.arg.GetInteger(ucs,TRUE);
@@ -214,7 +214,7 @@ BEGIN
 	KernelLog.String("SetChar("); KernelLog.Hex(ucs, 0); KernelLog.String("H; (**)"); KernelLog.Ln;
 END UCSToChar;
 
-VAR i:LONGINT; done:BOOLEAN;
+VAR i:SIGNED32; done:BOOLEAN;
 
 BEGIN
 	i:=0;

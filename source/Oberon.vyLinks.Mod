@@ -58,7 +58,7 @@ TYPE
 
 	LinkL* = POINTER TO  LinkLDesc;
 	LinkLDesc* = RECORD (LinkDesc)
-		val-: LONGINT
+		val-: SIGNED32
 	END;
 
 	Queue*	 = POINTER TO QueueDesc;
@@ -67,11 +67,11 @@ TYPE
 		qlink*: Link; 	(* free for queue user, eg. to allow back links *)
 		first-: Link;
 		last-: Link;
-		count-: LONGINT
+		count-: SIGNED32
 	END;
 
 	VAR caching-: BOOLEAN;  (*= TRUE if errors are cached. ErrCache must be checked by user of caching *)
-	ErrCache-: LinkL;  lasterr: LinkL;  errcode-: LONGINT;
+	ErrCache-: LinkL;  lasterr: LinkL;  errcode-: SIGNED32;
 	NoObject-: Objects.Object;  (* place holder to allow NIL objects in linked lists *)
 	NoObjectHandler*: Objects.Handler;
 
@@ -86,7 +86,7 @@ BEGIN caching := TRUE;  ResetErr END CacheErrors;
 PROCEDURE HaltErrors*;
 BEGIN caching := FALSE;  ResetErr END HaltErrors;
 
-PROCEDURE AddErr* (ob: Objects.Object; code: LONGINT);
+PROCEDURE AddErr* (ob: Objects.Object; code: SIGNED32);
 	VAR LL: LinkL;
 BEGIN
 	NEW(LL);
@@ -96,8 +96,8 @@ BEGIN
 	IF (~caching) & (code # 0) THEN errcode := code;  HALT(ErrBase) END
 END AddErr;
 
-PROCEDURE Atom (lib: Objects.Library;   name: ARRAY OF CHAR): INTEGER;
-	VAR ref: INTEGER;
+PROCEDURE Atom (lib: Objects.Library;   name: ARRAY OF CHAR): SIGNED16;
+	VAR ref: SIGNED16;
 BEGIN
 	Objects.GetKey(lib.dict, name, ref);   RETURN ref
 END Atom;
@@ -125,7 +125,7 @@ BEGIN
 END WriteRef;
 
 PROCEDURE ReadRef (VAR r: Files.Rider;   lib: Objects.Library;   VAR obj: Objects.Object);
-	VAR i, l: INTEGER;   F: Objects.Library;   name: ARRAY 32 OF CHAR;
+	VAR i, l: SIGNED16;   F: Objects.Library;   name: ARRAY 32 OF CHAR;
 BEGIN
 	Files.ReadInt(r, i);
 	IF i = - 1 THEN obj := NIL
@@ -549,9 +549,9 @@ BEGIN
 END IsEmptyQueue;
 
 (** Support routines, to avoid import of Strings *)
-PROCEDURE SeqName* (stub: ARRAY OF CHAR; sep: CHAR; seqnr: LONGINT; VAR res: ARRAY OF CHAR);
+PROCEDURE SeqName* (stub: ARRAY OF CHAR; sep: CHAR; seqnr: SIGNED32; VAR res: ARRAY OF CHAR);
 CONST cseqlen = 4;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	ASSERT(LEN(stub) + 1 + cseqlen < LEN(res), 100);
 	ASSERT((seqnr < 10000) & (seqnr >= 0), 101);
@@ -564,8 +564,8 @@ BEGIN
 	res[i] := CHR((seqnr MOD 10) + 30H)
 END SeqName;
 
-PROCEDURE NameToSeq* (name: ARRAY OF CHAR;  sep: CHAR; VAR stub: ARRAY OF CHAR; VAR seqnr: LONGINT);
-	VAR i: INTEGER; xname: ARRAY 32 OF CHAR;  xch: CHAR;
+PROCEDURE NameToSeq* (name: ARRAY OF CHAR;  sep: CHAR; VAR stub: ARRAY OF CHAR; VAR seqnr: SIGNED32);
+	VAR i: SIGNED16; xname: ARRAY 32 OF CHAR;  xch: CHAR;
 BEGIN
 	COPY(name, xname);
 	seqnr := 0;
@@ -582,8 +582,8 @@ BEGIN
 	END
 END NameToSeq;
 
-PROCEDURE LinkCount* (link: Link): LONGINT;
-	VAR count: LONGINT;
+PROCEDURE LinkCount* (link: Link): SIGNED32;
+	VAR count: SIGNED32;
 BEGIN
 	count := 0;
 	WHILE link # NIL DO INC(count);  link := link.link END;
@@ -593,7 +593,7 @@ END LinkCount;
 (** Iterators *)
 PROCEDURE DoHandleLinks* (VAR p: Link;  NameStub: ARRAY OF CHAR;  VAR M: Objects.LinkMsg);
 	(*= set w. M.obj=NIL: remove*)
-	VAR i, seqnr: LONGINT; stub, picname: ARRAY 32 OF CHAR; ploc, pprev: Link;
+	VAR i, seqnr: SIGNED32; stub, picname: ARRAY 32 OF CHAR; ploc, pprev: Link;
 BEGIN
 	ploc := p;
 	IF M.id = Objects.enum THEN

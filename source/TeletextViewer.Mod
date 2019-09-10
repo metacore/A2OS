@@ -31,30 +31,30 @@ TYPE
 	Browser = OBJECT(TeletextBrowser.TeletextBrowser)
 		VAR
 			content: TeletextPage;
-			colors : ARRAY 8 OF LONGINT;
+			colors : ARRAY 8 OF SIGNED32;
 
 		PROCEDURE &Init*(suite: TeletextDecoder.TeletextSuite);
 		BEGIN
 			Init^(suite);
 			NEW(content);
 			loadProc := LoadPage;
-			colors[0] := LONGINT(0FF0000FFH);	(* Red *)
+			colors[0] := SIGNED32(0FF0000FFH);	(* Red *)
 			colors[1] := 0FF00FFH;		(* Green *)
 			colors[2] := 0FFFFH;			(* Blue *)
-			colors[3] := LONGINT(0FFFF00FFH);	(*Yellow *)
-			colors[4] := LONGINT(0FF00FFFFH);	(* Magenta *)
+			colors[3] := SIGNED32(0FFFF00FFH);	(*Yellow *)
+			colors[4] := SIGNED32(0FF00FFFFH);	(* Magenta *)
 			colors[5] := 0FFFFFFH;		(* Cyan *)
-			colors[6] := LONGINT(0FFFFFFFFH);	(* White *)
+			colors[6] := SIGNED32(0FFFFFFFFH);	(* White *)
 			colors[7] := 0FFH			   (* Black *)
 		END Init;
 
 		(** Create an Texts.Text instance with colored text *)
 		PROCEDURE LoadPage() : TeletextBrowser.TeletextPage;
 		VAR
-			attr, fg, bg : SHORTINT;
+			attr, fg, bg : SIGNED8;
 			boxed : BOOLEAN;
 			i, begin, pos : SIZE;
-			nl: ARRAY 3 OF LONGINT;
+			nl: ARRAY 3 OF SIGNED32;
 			attributes: Texts.Attributes;
 			text : Texts.Text;
 		BEGIN
@@ -71,7 +71,7 @@ TYPE
 				TextUtilities.StrToText(text, 0, "The requested page is not available.");
 				(* Yellow text *)
 				NEW(attributes);
-				attributes.color := LONGINT(0FFFF00FFH);
+				attributes.color := SIGNED32(0FFFF00FFH);
 				attributes.bgcolor := 0FFH;
 				pos := text.GetLength();
 				text.SetAttributes(0, pos, attributes);
@@ -83,7 +83,7 @@ TYPE
 				TextUtilities.StrToText(text, pos, "Try another page number.");
 				(* White text *)
 				NEW(attributes);
-				attributes.color := LONGINT(0FFFFFFFFH);
+				attributes.color := SIGNED32(0FFFFFFFFH);
 				attributes.bgcolor := 0FFH;
 				text.SetAttributes(pos, 24, attributes);
 				text.ReleaseWrite;
@@ -163,9 +163,9 @@ TYPE
 			NEW (panel);
 			panel.fillColor.Set(0FFH);
 			IF nofChannels MOD ButtonsPerRow = 0 THEN
-				panel.bounds.SetHeight ((nofChannels DIV ButtonsPerRow)(LONGINT) * ButtonHeight)
+				panel.bounds.SetHeight ((nofChannels DIV ButtonsPerRow)(SIGNED32) * ButtonHeight)
 			ELSE
-				panel.bounds.SetHeight ((nofChannels DIV ButtonsPerRow+1)(LONGINT) * ButtonHeight)
+				panel.bounds.SetHeight ((nofChannels DIV ButtonsPerRow+1)(SIGNED32) * ButtonHeight)
 			END;
 
 			(* Create columns for the buttons *)
@@ -181,7 +181,7 @@ TYPE
 			IF ButtonsPerRow < 3 THEN
 				panel.bounds.SetWidth (Width)
 			ELSE
-				panel.bounds.SetWidth (LEN(panels)(LONGINT) * ButtonWidth)
+				panel.bounds.SetWidth (LEN(panels)(SIGNED32) * ButtonWidth)
 			END;
 
 			(* Create buttons for channel selection *)
@@ -258,12 +258,12 @@ TYPE
 		nrEditor, teleText: Editor.Editor;
 		browser-: Browser;
 		channelSwitcher : ChannelSwitcher;
-		l, t : SIZE; refrMode : LONGINT;
+		l, t : SIZE; refrMode : SIGNED32;
 		next: TeletextViewer;
 
 		PROCEDURE &New*;
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 			magCaption : ARRAY 4 OF CHAR;
 			ch : TVChannels.TVChannel;
 			suite : TeletextDecoder.TeletextSuite;
@@ -439,7 +439,7 @@ TYPE
 		END Close;
 
 		(** Switch to the given TV frequency *)
-		PROCEDURE Switch*(tvFreq: LONGINT);
+		PROCEDURE Switch*(tvFreq: SIGNED32);
 		BEGIN
 			browser.SetSuiteFromFreq(tvFreq);
 			ShowPage(browser.GetPage(100))
@@ -459,8 +459,8 @@ TYPE
 		END OnMagClick;
 
 		(** Find magazine button for correct action *)
-		PROCEDURE FindButton (button: Standard.Button): LONGINT;
-		VAR i: LONGINT;
+		PROCEDURE FindButton (button: Standard.Button): SIGNED32;
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < 8) & (mag[i] # button) DO
@@ -517,7 +517,7 @@ TYPE
 		(** Toggle window transparency mode *)
 		PROCEDURE OnTransp (sender, data : ANY);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			browser.transparent := ~browser.transparent;
 			IF browser.transparent THEN
@@ -551,7 +551,7 @@ TYPE
 		(** Load the page number which has been entered in the input field *)
 		PROCEDURE OnLoad (sender, data : ANY);
 		VAR
-			pageNo: LONGINT;
+			pageNo: SIGNED32;
 			nr : ARRAY 10 OF CHAR;
 		BEGIN
 			ResetTimer();
@@ -649,7 +649,7 @@ TYPE
 
 		(** Overwrite standard 'Draw' routine: Move the channel selector window
 			   together with the viewer window. *)
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : WORD);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : INTEGER);
 		BEGIN
 			Draw^(canvas, w, h, q);
 			IF (channelSwitcher # NIL) & ((bounds.l # l) OR (bounds.t # t)) THEN
@@ -701,7 +701,7 @@ VAR
 	manager: WM.WindowManager;
 	xml: XML.Element;
 	s: Strings.String;
-	freq, page: LONGINT;
+	freq, page: SIGNED32;
 	suite: TeletextDecoder.TeletextSuite;
 BEGIN
 	NEW(w);

@@ -4,7 +4,7 @@ IMPORT KernelLog := Trace, Kernel, Plugins, Network, IP, IPv4;
 
 VAR
 	interface: IPv4.Interface;
-	res: LONGINT;
+	res: SIGNED32;
 	local, gateway, mask: IP.Adr;
 	p: Plugins.Plugin;
 	(*l4header, data: ARRAY 32 OF CHAR;

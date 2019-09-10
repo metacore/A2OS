@@ -6,10 +6,10 @@ IMPORT Display;
 
 TYPE
 	ColorMsg* = RECORD (Display.FrameMsg)
-		col*: INTEGER
+		col*: SIGNED16
 	END;
 
-VAR Color: INTEGER;
+VAR Color: SIGNED16;
 
 PROCEDURE NextCol*;
 VAR M: ColorMsg;
@@ -29,9 +29,9 @@ MODULE ColorDriver;
 IMPORT Display, Input, Modules, Oberon;
 TYPE
 	ColorMsg* = RECORD (Display.FrameMsg)
-		col*: INTEGER
+		col*: SIGNED16
 	END;
-VAR Color: INTEGER; task : Oberon.Task;
+VAR Color: SIGNED16; task : Oberon.Task;
 
 PROCEDURE ColorTask(me: Oberon.Task);
 VAR M: ColorMsg;

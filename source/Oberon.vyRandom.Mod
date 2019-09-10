@@ -26,25 +26,25 @@ Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
 
 (** Random number Generation *)
 (*= Includes support on array level *)
-(* warning: this module will be changed to LONGREAL as a base type*)
+(* warning: this module will be changed to FLOAT64 as a base type*)
 (*!  support fully parametrized versions  *)
 (*! support bernoulli variates *)
 (* fixed: vector support needs VAR parameters *)
 IMPORT	MathL IN A2, vyRanBase, vyRanParksMiller;
 CONST
 	idversion* = "Random v0.1d4";
-	VAR  twopi: LONGREAL;
+	VAR  twopi: FLOAT64;
 
-PROCEDURE Uniform* (): LONGREAL;
+PROCEDURE Uniform* (): FLOAT64;
 BEGIN RETURN (vyRanBase.RandomU()) END Uniform;
 
-PROCEDURE UniformV* (count: LONGINT; VAR x: ARRAY OF LONGREAL;  start: LONGINT);
+PROCEDURE UniformV* (count: SIGNED32; VAR x: ARRAY OF FLOAT64;  start: SIGNED32);
 BEGIN vyRanBase.RandomUVX(count, x, start)  END UniformV;
 
-PROCEDURE Exp* (mu: LONGREAL): LONGREAL;
+PROCEDURE Exp* (mu: FLOAT64): FLOAT64;
 BEGIN RETURN (- MathL.ln(Uniform()) / mu) END Exp;
 
-PROCEDURE ExpV* (mu: LONGREAL; count: LONGINT; VAR  x: ARRAY OF LONGREAL;  start: LONGINT);
+PROCEDURE ExpV* (mu: FLOAT64; count: SIGNED32; VAR  x: ARRAY OF FLOAT64;  start: SIGNED32);
 BEGIN
 	vyRanBase.RandomUVX(count, x, start);
 	count := count + start;
@@ -57,15 +57,15 @@ see B.D.Ripley: Computer Generation of Random Variables:
 A tutorial. Int. Stat. Review 51(1983) 301-319
 *)
 
-PROCEDURE Cauchy* (): LONGREAL;
-	VAR x: LONGREAL;
+PROCEDURE Cauchy* (): FLOAT64;
+	VAR x: FLOAT64;
 BEGIN
 	x := MathL.pi * ( Uniform() - 0.5);
 	RETURN (MathL.sin(x) / MathL.cos(x))
 END Cauchy;
 
-PROCEDURE CauchyV* (count: LONGINT; VAR x: ARRAY OF LONGREAL;  start: LONGINT);
-	VAR temp: LONGREAL;
+PROCEDURE CauchyV* (count: SIGNED32; VAR x: ARRAY OF FLOAT64;  start: SIGNED32);
+	VAR temp: FLOAT64;
 BEGIN
 	vyRanBase.RandomUVX(count, x, start);
 	count := count + start;
@@ -80,18 +80,18 @@ For a warning, see H.R. Naeve's note 'On Using the
 Box-Muller transformation with multiplicative congruential
 pseudo-random number generators, Appl. Statist. 22 (1973) 92-97
 *)
-PROCEDURE Gauss* (mu, sigmasq: LONGREAL): LONGREAL;
+PROCEDURE Gauss* (mu, sigmasq: FLOAT64): FLOAT64;
 	(*= Gaussian random variate, mean mu, Var sigmasq *)
-	VAR u1, u2: LONGREAL;
+	VAR u1, u2: FLOAT64;
 BEGIN
 	u1 := Uniform();
 	u2 := Uniform();
 	RETURN ((MathL.sqrt(  - 2 * MathL.ln(u1)) * MathL.cos(twopi * u2))) * MathL.sqrt(sigmasq) + mu
 END Gauss;
 
-PROCEDURE GaussV* (mu, sigmasq: LONGREAL; count: LONGINT; VAR x: ARRAY OF LONGREAL;  start: LONGINT);
+PROCEDURE GaussV* (mu, sigmasq: FLOAT64; count: SIGNED32; VAR x: ARRAY OF FLOAT64;  start: SIGNED32);
 	(*= Gaussian random variates, mean mu, Var sigmasq *)
-	VAR u1, u2: LONGREAL; stddev: LONGREAL;
+	VAR u1, u2: FLOAT64; stddev: FLOAT64;
 BEGIN stddev := MathL.sqrt(sigmasq);
 	IF ODD(count) THEN x[start] := Gauss(mu, sigmasq);  INC(start); DEC(count) END;
 	vyRanBase.RandomUVX(count, x, start);
@@ -109,9 +109,9 @@ END GaussV;
 RandomGausM: Standard normal distribution
 The Marsaglia transformation is used
 *)
-PROCEDURE GaussM* (mu, sigmasq: LONGREAL): LONGREAL;
+PROCEDURE GaussM* (mu, sigmasq: FLOAT64): FLOAT64;
 VAR
-	v1, v2, w, c, x: LONGREAL;
+	v1, v2, w, c, x: FLOAT64;
 BEGIN
 	REPEAT
 		v1 := 2 * Uniform() - 1;
@@ -125,9 +125,9 @@ BEGIN
 	(*       {another independent variate} *)
 END GaussM;
 
-PROCEDURE GaussMV* (mu, sigmasq: LONGREAL; count: LONGINT; VAR gauss: ARRAY OF LONGREAL;  start: LONGINT);
+PROCEDURE GaussMV* (mu, sigmasq: FLOAT64; count: SIGNED32; VAR gauss: ARRAY OF FLOAT64;  start: SIGNED32);
 VAR
-	v1, v2, w, c: LONGREAL; stddev: LONGREAL;
+	v1, v2, w, c: FLOAT64; stddev: FLOAT64;
 BEGIN stddev := MathL.sqrt(sigmasq);
 	count := count + start;
 	WHILE start < count DO
@@ -145,12 +145,12 @@ END GaussMV;
 
 (*=    RandomWeibull: Weibulll distribution *)
 
-PROCEDURE Weibull* (beta : LONGREAL) : LONGREAL;
+PROCEDURE Weibull* (beta : FLOAT64) : FLOAT64;
 BEGIN
 	RETURN (MathL.exp(MathL.ln(  - MathL.ln(Uniform()) / beta)));
 END Weibull;
 
-PROCEDURE WeibullV* (beta : LONGREAL; count: LONGINT; VAR x: ARRAY OF LONGREAL;  start: LONGINT);
+PROCEDURE WeibullV* (beta : FLOAT64; count: SIGNED32; VAR x: ARRAY OF FLOAT64;  start: SIGNED32);
 BEGIN
 	vyRanBase.RandomUVX(count, x, start);
 	count := count + start;
@@ -161,12 +161,12 @@ END WeibullV;
 
 (*=   RandomGumbel: Gumbel distribution *)
 
-PROCEDURE Gumbel* (): LONGREAL;
+PROCEDURE Gumbel* (): FLOAT64;
 BEGIN
 	RETURN  (- MathL.ln(  - MathL.ln(Uniform())));
 END Gumbel;
 
-PROCEDURE GumbelV* (count: LONGINT; VAR x: ARRAY OF LONGREAL;  start: LONGINT);
+PROCEDURE GumbelV* (count: SIGNED32; VAR x: ARRAY OF FLOAT64;  start: SIGNED32);
 BEGIN
 	vyRanBase.RandomUVX(count, x, start);
 	count := count + start;
@@ -175,8 +175,8 @@ BEGIN
 	END;
 END GumbelV;
 
-PROCEDURE VonMises* (Kappa : LONGREAL) : LONGREAL;
-	VAR        y: LONGREAL;
+PROCEDURE VonMises* (Kappa : FLOAT64) : FLOAT64;
+	VAR        y: FLOAT64;
 BEGIN
 	REPEAT
 		y := 2 * MathL.pi * Uniform();
@@ -184,8 +184,8 @@ BEGIN
 	RETURN (y);
 END VonMises;
 
-PROCEDURE VonMisesV* (Kappa : LONGREAL; count: LONGINT; VAR x: ARRAY OF LONGREAL;  start: LONGINT);
-	VAR        y: LONGREAL;
+PROCEDURE VonMisesV* (Kappa : FLOAT64; count: SIGNED32; VAR x: ARRAY OF FLOAT64;  start: SIGNED32);
+	VAR        y: FLOAT64;
 BEGIN
 	count := count + start;
 	WHILE start < count DO

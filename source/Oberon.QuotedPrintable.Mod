@@ -7,7 +7,7 @@ MODULE QuotedPrintable IN Oberon; (* ejz,  *)
 	VAR
 		W: Texts.Writer;
 
-	PROCEDURE HexVal(ch: CHAR): LONGINT;
+	PROCEDURE HexVal(ch: CHAR): SIGNED32;
 	BEGIN
 		IF (ch >= "0") & (ch <= "9") THEN
 			RETURN ORD(ch)-ORD("0")
@@ -18,7 +18,7 @@ MODULE QuotedPrintable IN Oberon; (* ejz,  *)
 		END
 	END HexVal;
 
-	PROCEDURE decodeText*(T: Texts.Text; beg: LONGINT; F: Files.File; binary: BOOLEAN): BOOLEAN;
+	PROCEDURE decodeText*(T: Texts.Text; beg: SIGNED32; F: Files.File; binary: BOOLEAN): BOOLEAN;
 		VAR
 			R: Texts.Reader;
 			Ri: Files.Rider;
@@ -64,7 +64,7 @@ MODULE QuotedPrintable IN Oberon; (* ejz,  *)
 			S: Texts.Scanner;
 			F: Files.File;
 			T: Texts.Text;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 	BEGIN
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 		Texts.Scan(S);

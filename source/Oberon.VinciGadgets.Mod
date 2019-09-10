@@ -17,8 +17,8 @@ MODULE VinciGadgets IN Oberon; (** portable *)	(* eos  *)
 		FrameDesc* = RECORD (Gadgets.FrameDesc)
 			(* obj is Texts.Text containing the current description *)
 			body*: Scheme.Object;	(** parsed description **)
-			ox*, oy*: INTEGER;	(** vector from upper left corner of frame to origin in screen space **)
-			scale*: REAL;	(** viewport scale factor **)
+			ox*, oy*: SIGNED16;	(** vector from upper left corner of frame to origin in screen space **)
+			scale*: FLOAT32;	(** viewport scale factor **)
 		END;
 
 
@@ -30,7 +30,7 @@ MODULE VinciGadgets IN Oberon; (** portable *)	(* eos  *)
 
 	(**--- Parsing and Evaluation ---**)
 
-	PROCEDURE Parse* (text: Texts.Text; pos: LONGINT; VAR body: Scheme.Object);
+	PROCEDURE Parse* (text: Texts.Text; pos: SIGNED32; VAR body: Scheme.Object);
 		VAR ctxt: Vinci.Context;
 	BEGIN
 		NEW(ctxt); Vinci.MakeContext(ctxt, Scheme.NewTextInput(text, pos), NIL);
@@ -59,12 +59,12 @@ MODULE VinciGadgets IN Oberon; (** portable *)	(* eos  *)
 
 	(*--- Rendering ---*)
 
-	PROCEDURE AddMaskRect (x, y, w, h: INTEGER);
+	PROCEDURE AddMaskRect (x, y, w, h: SIGNED16);
 	BEGIN
 		GfxRegions.AddRect(ClipReg, x, y, x + w, y + h)
 	END AddMaskRect;
 
-	PROCEDURE RestoreFrame (frame: Frame; x, y, w, h, fx, fy: INTEGER; mask: Display3.Mask);
+	PROCEDURE RestoreFrame (frame: Frame; x, y, w, h, fx, fy: SIGNED16; mask: Display3.Mask);
 	BEGIN
 		INC(x, fx); INC(y, fy);
 		Oberon.RemoveMarks(x, y, w, h);
@@ -82,7 +82,7 @@ MODULE VinciGadgets IN Oberon; (** portable *)	(* eos  *)
 	END RestoreFrame;
 
 	PROCEDURE DisplayFrame (frame: Frame; VAR msg: Display.DisplayMsg);
-		VAR fx, fy: INTEGER; mask: Display3.Mask; pc: GfxPrinter.Context; scale: REAL;
+		VAR fx, fy: SIGNED16; mask: Display3.Mask; pc: GfxPrinter.Context; scale: FLOAT32;
 	BEGIN
 		IF msg.device = Display.screen THEN
 			fx := msg.x + frame.X; fy := msg.y + frame.Y;
@@ -120,7 +120,7 @@ MODULE VinciGadgets IN Oberon; (** portable *)	(* eos  *)
 
 	(*--- Mouse Tracking ---*)
 
-	PROCEDURE TrackRect (frame: Frame; mx, my: INTEGER; keys: SET; VAR x, y, w, h: INTEGER; VAR keysum: SET);
+	PROCEDURE TrackRect (frame: Frame; mx, my: SIGNED16; keys: SET; VAR x, y, w, h: SIGNED16; VAR keysum: SET);
 	BEGIN
 		x := mx; y := my; w := 0; h := 0;
 		Effects.SizeRect(NIL, keysum, mx, my, x, y, w, h, NIL);
@@ -134,7 +134,7 @@ MODULE VinciGadgets IN Oberon; (** portable *)	(* eos  *)
 	END TrackRect;
 
 	PROCEDURE TrackZoomIn (frame: Frame; VAR msg: Oberon.InputMsg);
-		VAR x, y, w, h: INTEGER; keysum: SET; scale: REAL;
+		VAR x, y, w, h: SIGNED16; keysum: SET; scale: FLOAT32;
 	BEGIN
 		TrackRect(frame, msg.X, msg.Y, msg.keys, x, y, w, h, keysum);
 		IF keysum = msg.keys THEN
@@ -149,7 +149,7 @@ MODULE VinciGadgets IN Oberon; (** portable *)	(* eos  *)
 	END TrackZoomIn;
 
 	PROCEDURE TrackZoomOut (frame: Frame; VAR msg: Oberon.InputMsg);
-		VAR x, y, w, h: INTEGER; keysum: SET; scale: REAL;
+		VAR x, y, w, h: SIGNED16; keysum: SET; scale: FLOAT32;
 	BEGIN
 		TrackRect(frame, msg.X, msg.Y, msg.keys, x, y, w, h, keysum);
 		IF keysum = msg.keys THEN
@@ -164,7 +164,7 @@ MODULE VinciGadgets IN Oberon; (** portable *)	(* eos  *)
 	END TrackZoomOut;
 
 	PROCEDURE TrackMove (frame: Frame; VAR msg: Oberon.InputMsg);
-		VAR mx, my, x, y, w, h: INTEGER; keysum: SET;
+		VAR mx, my, x, y, w, h: SIGNED16; keysum: SET;
 	BEGIN
 		mx := msg.X; my := msg.Y;
 		x := msg.x + frame.X; y := msg.y + frame.Y; w := frame.W; h := frame.H;
@@ -181,7 +181,7 @@ MODULE VinciGadgets IN Oberon; (** portable *)	(* eos  *)
 	(*--- Handler ---*)
 
 	PROCEDURE Handle (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR frame, copy: Frame; ver: LONGINT;
+		VAR frame, copy: Frame; ver: SIGNED32;
 	BEGIN
 		frame := obj(Frame);
 		IF msg IS Display.FrameMsg THEN
@@ -299,7 +299,7 @@ MODULE VinciGadgets IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Insert*;
 		VAR
-			s: Texts.Scanner; text: Texts.Text; beg, end, time: LONGINT; buf: Texts.Buffer;
+			s: Texts.Scanner; text: Texts.Text; beg, end, time: SIGNED32; buf: Texts.Buffer;
 			frame: Frame; cm: Display.ConsumeMsg;
 	BEGIN
 		Texts.OpenScanner(s, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(s);

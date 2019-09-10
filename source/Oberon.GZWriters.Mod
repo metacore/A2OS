@@ -24,16 +24,16 @@ TYPE
 	(** structure for writing to a .gz file **)
 	Writer* = RECORD
 		file-: Files.File;	(** underlying Oberon file **)
-		res-: LONGINT;	(** current stream state **)
-		start: LONGINT;	(* start of compressed data in file (after header) *)
-		pos: LONGINT;	(* logical position in uncompressed input stream *)
+		res-: SIGNED32;	(** current stream state **)
+		start: SIGNED32;	(* start of compressed data in file (after header) *)
+		pos: SIGNED32;	(* logical position in uncompressed input stream *)
 		zw: ZlibWriters.Writer;
 	END;
 
 
 PROCEDURE WriteHeader(VAR w: Writer; VAR r: Files.Rider);
 VAR
-	i: INTEGER;
+	i: SIGNED16;
 BEGIN
 	Files.Write(r, 1FX); INC(w.start);	(* ID1 *)
 	Files.Write(r, 8BX); INC(w.start);	(* ID2 *)
@@ -42,14 +42,14 @@ BEGIN
 END WriteHeader;
 
 (** change deflate parameters within the writer **)
-PROCEDURE SetParams*(VAR w: Writer; level, strategy: SHORTINT);
+PROCEDURE SetParams*(VAR w: Writer; level, strategy: SIGNED8);
 BEGIN
 	ZlibWriters.SetParams(w.zw, level, strategy, ZlibWriters.NoFlush);
 	w.res := w.zw.res;
 END SetParams;
 
 (** open writer on .gz-file **)
-PROCEDURE Open*(VAR w: Writer; level, strategy: SHORTINT; file: Files.File);
+PROCEDURE Open*(VAR w: Writer; level, strategy: SIGNED8; file: Files.File);
 VAR
 	r: Files.Rider;
 BEGIN
@@ -65,7 +65,7 @@ BEGIN
 END Open;
 
 (** write specified number of bytes from buffer into .gz-file and return number of bytes actually written **)
-PROCEDURE WriteBytes*(VAR w: Writer; VAR buf: ARRAY OF CHAR; offset, len: LONGINT; VAR written: LONGINT);
+PROCEDURE WriteBytes*(VAR w: Writer; VAR buf: ARRAY OF CHAR; offset, len: SIGNED32; VAR written: SIGNED32);
 BEGIN
 	ZlibWriters.WriteBytes(w.zw, buf, offset, len, written);
 	INC(w.pos, written);
@@ -96,8 +96,8 @@ BEGIN
 END Close;
 
 (** get position of reader within uncompressed output stream **)
-PROCEDURE Pos* (VAR w: Writer): LONGINT;
-	VAR pos: LONGINT;
+PROCEDURE Pos* (VAR w: Writer): SIGNED32;
+	VAR pos: SIGNED32;
 BEGIN
 	IF (w.file = NIL) THEN
 		w.res := StreamError; pos := 0

@@ -30,7 +30,7 @@ TYPE
 		table: HashIntArray;
 		size: SIZE;
 		used-: SIZE;
-		maxLoadFactor: REAL;
+		maxLoadFactor: FLOAT32;
 
 		(* Interface *)
 
@@ -112,7 +112,7 @@ TYPE
 		table: HashIntAnyArray;
 		size: SIZE;
 		used-: SIZE;
-		maxLoadFactor: REAL;
+		maxLoadFactor: FLOAT32;
 
 		(* Interface *)
 
@@ -330,12 +330,12 @@ TYPE
 		END ExportBlock;
 
 		PROCEDURE ImportBlock*(CONST fixup: ObjectFile.Fixup): GenericLinker.Block;
-		VAR name: Modules.Name; res: WORD;
+		VAR name: Modules.Name; res: INTEGER;
 			msg: ARRAY 128 OF CHAR; module: Modules.Module; adr: ADDRESS; m: HashTableInt;
 			s: ObjectFile.SectionName; isModule: BOOLEAN; identifier: ObjectFile.Identifier;
-			fp: HUGEINT;
+			fp: SIGNED64;
 
-			PROCEDURE CheckName(n: StringPool.Index;  name {UNTRACED}: Modules.DynamicName): WORD;
+			PROCEDURE CheckName(n: StringPool.Index;  name {UNTRACED}: Modules.DynamicName): INTEGER;
 			VAR s: ObjectFile.SectionName; i: SIZE;
 			BEGIN
 				IF name = NIL THEN RETURN -1 END;
@@ -453,7 +453,7 @@ VAR
 		RETURN address
 	END DoAllocate;
 
-	PROCEDURE LoadObj*(CONST name, fileName: ARRAY OF CHAR;  VAR res: WORD; VAR msg: ARRAY OF CHAR): Modules.Module;
+	PROCEDURE LoadObj*(CONST name, fileName: ARRAY OF CHAR;  VAR res: INTEGER; VAR msg: ARRAY OF CHAR): Modules.Module;
 	VAR
 		file: Files.File; reader: Files.Reader; linker: Linker;
 		arrangement: Arrangement; diagnostics: Diagnostics.StreamDiagnostics; stringWriter: Streams.StringWriter;

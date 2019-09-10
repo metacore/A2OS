@@ -37,12 +37,12 @@ TYPE
 		bus: Bus;						(* bus this device is on *)
 		sibling: Device;					(* next device on this bus *)
 		next, prev: Device;				(* chain of all devices *)
-		devfn: LONGINT;				(* dev = top 5 bits, fn = lower 3 bits *)
-		device: LONGINT;				(* device id *)
-		vendor: LONGINT;				(* vendor id *)
-		class: LONGINT;					(* base, sub, prog-if bytes *)
-		revision : LONGINT;				(* device revision *)
-		irq, pin: LONGINT
+		devfn: SIGNED32;				(* dev = top 5 bits, fn = lower 3 bits *)
+		device: SIGNED32;				(* device id *)
+		vendor: SIGNED32;				(* vendor id *)
+		class: SIGNED32;					(* base, sub, prog-if bytes *)
+		revision : SIGNED32;				(* device revision *)
+		irq, pin: SIGNED32
 	END;
 
 	Bus = POINTER TO RECORD
@@ -51,13 +51,13 @@ TYPE
 		next : Bus;						(* chain of all PCI buses *)
 		self: Device;						(* bridge device as seen by parent *)
 		devices: Device;					(* devices behind this bridge *)
-		number: LONGINT;				(* bus number *)
-		primary, secondary: LONGINT;	(* bridge numbers *)
-		subordinate: LONGINT			(* max number of subordinate buses *)
+		number: SIGNED32;				(* bus number *)
+		primary, secondary: SIGNED32;	(* bridge numbers *)
+		subordinate: SIGNED32			(* max number of subordinate buses *)
 	END;
 
-PROCEDURE ScanBus(VAR bus: Bus; VAR devices : Device): LONGINT;
-VAR devfn, max, x, hdrtype, ht, buses: LONGINT;  ismulti: BOOLEAN;  dev: Device;  child: Bus;
+PROCEDURE ScanBus(VAR bus: Bus; VAR devices : Device): SIGNED32;
+VAR devfn, max, x, hdrtype, ht, buses: SIGNED32;  ismulti: BOOLEAN;  dev: Device;  child: Bus;
 BEGIN (* Only call from within EXCLUSIVE regions *)
 	max := bus.secondary;  ismulti := FALSE;
 	FOR devfn := 0 TO 0FEH DO
@@ -115,15 +115,15 @@ BEGIN (* Only call from within EXCLUSIVE regions *)
 	RETURN max
 END ScanBus;
 
-PROCEDURE Extract(classcode : LONGINT; VAR class, subclass, protocol : LONGINT);
+PROCEDURE Extract(classcode : SIGNED32; VAR class, subclass, protocol : SIGNED32);
 BEGIN
-	class := LSH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, classcode) * {16..23}), -16);
-	subclass := LSH(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, classcode) * {8..15}), -8);
-	protocol := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, classcode) * {0..7});
+	class := LSH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, classcode) * {16..23}), -16);
+	subclass := LSH(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, classcode) * {8..15}), -8);
+	protocol := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, classcode) * {0..7});
 END Extract;
 
 PROCEDURE InstallPCIDrivers;
-VAR root : Bus; device : Device; nbrOfDevices : LONGINT; class, subclass, protocol : LONGINT;
+VAR root : Bus; device : Device; nbrOfDevices : SIGNED32; class, subclass, protocol : SIGNED32;
 BEGIN {EXCLUSIVE}
 	KernelLog.String("Looking for PCI devices..."); KernelLog.Ln;
 	NEW(root);
@@ -155,8 +155,8 @@ BEGIN
 	IF ch = Streams.EOT THEN ch := 0X ELSE r.Char(ch) END
 END Read;
 
-PROCEDURE WriteDevice(w: Streams.Writer; class: BOOLEAN; p1, p2, p3: LONGINT; CONST l1, l2, l3: ARRAY OF CHAR; pciids : Files.File);
-VAR r: Files.Reader; ch: CHAR; level, value: LONGINT;
+PROCEDURE WriteDevice(w: Streams.Writer; class: BOOLEAN; p1, p2, p3: SIGNED32; CONST l1, l2, l3: ARRAY OF CHAR; pciids : Files.File);
+VAR r: Files.Reader; ch: CHAR; level, value: SIGNED32;
 
 	PROCEDURE SkipLine(write: BOOLEAN);
 	BEGIN
@@ -167,7 +167,7 @@ VAR r: Files.Reader; ch: CHAR; level, value: LONGINT;
 		REPEAT Read(r, ch) UNTIL (ch # 0DX) & (ch # 0AX)
 	END SkipLine;
 
-	PROCEDURE ReadHex(VAR x: LONGINT);
+	PROCEDURE ReadHex(VAR x: SIGNED32);
 	BEGIN
 		x := 0;
 		LOOP
@@ -182,7 +182,7 @@ VAR r: Files.Reader; ch: CHAR; level, value: LONGINT;
 		END
 	END ReadHex;
 
-	PROCEDURE GetLine(VAR level, value: LONGINT);
+	PROCEDURE GetLine(VAR level, value: SIGNED32);
 	BEGIN
 		IF class THEN
 			IF ch = "C" THEN Read(r, ch); Read(r, ch) END
@@ -239,7 +239,7 @@ BEGIN
 	END;
 END WriteDevice;
 
-PROCEDURE WriteB(w: Streams.Writer; x: LONGINT);
+PROCEDURE WriteB(w: Streams.Writer; x: SIGNED32);
 CONST K = 1024; M = K*K; G = K*M;
 VAR mult: CHAR;
 BEGIN
@@ -255,8 +255,8 @@ BEGIN
 	w.String("B")
 END WriteB;
 
-PROCEDURE WriteBase(w: Streams.Writer; bus, devfn, reg: LONGINT; VAR double: BOOLEAN);
-VAR base, basehi, type, size: LONGINT; mask: SET;
+PROCEDURE WriteBase(w: Streams.Writer; bus, devfn, reg: SIGNED32; VAR double: BOOLEAN);
+VAR base, basehi, type, size: SIGNED32; mask: SET;
 BEGIN
 	double := FALSE; basehi := 0; size := 0;
 	ReadConfigDword(bus, devfn, reg, base);
@@ -270,8 +270,8 @@ BEGIN
 		ELSE (* memory *)
 			mask := {4..31}; type := base MOD 10H
 		END;
-		size := SYSTEM.VAL(LONGINT, -(SYSTEM.VAL(SET, size) * mask))+1;
-		size := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, size) * mask);
+		size := SYSTEM.VAL(SIGNED32, -(SYSTEM.VAL(SET, size) * mask))+1;
+		size := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, size) * mask);
 		IF type MOD 8 = 4 THEN	(* 64-bit *)
 			ReadConfigDword(bus, devfn, reg+4, basehi); double := TRUE
 		END;
@@ -296,7 +296,7 @@ BEGIN
 END WriteBase;
 
 PROCEDURE WriteDriver(w : Streams.Writer; dev : Device);
-VAR d, c : DriverDatabase.Driver; class, subclass, progintf : LONGINT;
+VAR d, c : DriverDatabase.Driver; class, subclass, progintf : SIGNED32;
 BEGIN
 	w.String("Driver: ");
 	d := DriverDatabase.GetDeviceSpecific(DriverDatabase.PCI, dev.vendor, dev.device, dev.revision);
@@ -311,7 +311,7 @@ BEGIN
 END WriteDriver;
 
 PROCEDURE WriteDev(w: Streams.Writer;  dev: Device; pciids : Files.File; details : BOOLEAN);
-VAR bus, devfn, hdrtype, classrev, vendor, device, cmd, status, lastreg, reg, base: LONGINT; double: BOOLEAN;
+VAR bus, devfn, hdrtype, classrev, vendor, device, cmd, status, lastreg, reg, base: SIGNED32; double: BOOLEAN;
 BEGIN
 	bus := dev.bus.number;  devfn := dev.devfn;
 	ReadConfigByte(bus, devfn, HdrType, hdrtype);
@@ -369,7 +369,7 @@ END WriteDev;
 
 (* Dump PCI configuration space *)
 PROCEDURE WriteRegs(w : Streams.Writer; dev : Device);
-VAR value, offset : LONGINT;
+VAR value, offset : SIGNED32;
 BEGIN
 	w.Char(9X); w.String("PCI Configuration Space Registers: "); w.Ln;
 	w.Char(0EX); (* KernelLog: non-proportional font *)
@@ -383,7 +383,7 @@ END WriteRegs;
 
 (* Decode & display the command and the status register *)
 PROCEDURE WriteCmdSts(w : Streams.Writer; dev : Device);
-VAR value : LONGINT; dword : SET;
+VAR value : SIGNED32; dword : SET;
 BEGIN
 	ReadConfigDword(dev.bus.number, dev.devfn, PCI.CmdReg, value); dword := SYSTEM.VAL(SET, value);
 	w.Char(9X); w.String("Command Register: "); w.Ln;
@@ -425,29 +425,29 @@ BEGIN
 	w.Ln;
 END WriteCmdSts;
 
-PROCEDURE ReadConfigByte(bus, devfn, ofs: LONGINT;  VAR val: LONGINT);
-VAR res: WORD;
+PROCEDURE ReadConfigByte(bus, devfn, ofs: SIGNED32;  VAR val: SIGNED32);
+VAR res: INTEGER;
 BEGIN
 	res := PCI.ReadConfigByte(bus, ASH(devfn, -3) MOD 20H, devfn MOD 8, ofs, val);
 	ASSERT(res = PCI.Done)
 END ReadConfigByte;
 
-PROCEDURE ReadConfigWord(bus, devfn, ofs: LONGINT;  VAR val: LONGINT);
-VAR res: WORD;
+PROCEDURE ReadConfigWord(bus, devfn, ofs: SIGNED32;  VAR val: SIGNED32);
+VAR res: INTEGER;
 BEGIN
 	res := PCI.ReadConfigWord(bus, ASH(devfn, -3) MOD 20H, devfn MOD 8, ofs, val);
 	ASSERT(res = PCI.Done)
 END ReadConfigWord;
 
-PROCEDURE ReadConfigDword(bus, devfn, ofs: LONGINT;  VAR val: LONGINT);
-VAR res: WORD;
+PROCEDURE ReadConfigDword(bus, devfn, ofs: SIGNED32;  VAR val: SIGNED32);
+VAR res: INTEGER;
 BEGIN
 	res := PCI.ReadConfigDword(bus, ASH(devfn, -3) MOD 20H, devfn MOD 8, ofs, val);
 	ASSERT(res = PCI.Done)
 END ReadConfigDword;
 
-PROCEDURE WriteConfigDword(bus, devfn, ofs, val: LONGINT);
-VAR res: WORD;
+PROCEDURE WriteConfigDword(bus, devfn, ofs, val: SIGNED32);
+VAR res: INTEGER;
 BEGIN
 	res := PCI.WriteConfigDword(bus, ASH(devfn, -3) MOD 20H, devfn MOD 8, ofs, val);
 	ASSERT(res = PCI.Done)
@@ -460,7 +460,7 @@ PROCEDURE Scan*(context : Commands.Context); (** ["-d"|"--details"] ~ *)
 VAR
 	options : Options.Options;
 	root : Bus; dev, prev: Device;
-	version, lastPCIBus, hw, count: LONGINT;
+	version, lastPCIBus, hw, count: SIGNED32;
 	pciids : Files.File;
 BEGIN {EXCLUSIVE}
 	NEW(options);
@@ -492,7 +492,7 @@ END Scan;
 
 (** Perform bus enumeration and install appropriate device drivers if available *)
 PROCEDURE DetectHardware*(context : Commands.Context);
-VAR ver, last, hw : LONGINT;
+VAR ver, last, hw : SIGNED32;
 BEGIN
 	IF DriverDatabase.enabled THEN
 		IF (PCI.PCIPresent(ver, last, hw) = PCI.Done) THEN

@@ -48,24 +48,24 @@ TYPE
 		handle*,	(** connection handle *)
 		PB*, 	(** packet boundary flag *)
 		BC*, 	(** broadcast flag *)
-		len*: LONGINT;	(** length of data, in bytes *)
+		len*: SIGNED32;	(** length of data, in bytes *)
 		data*: ARRAY MaxACLDataLen OF CHAR	(** data *)
 	END;
 
 	SCOPacket* = POINTER TO RECORD(Packet)	(** SCO packet, see specs chapter 4.4.3 *)
 		handle*,	(** connection handle *)
-		len*: LONGINT;	(** length of data, in bytes *)
+		len*: SIGNED32;	(** length of data, in bytes *)
 		data*: ARRAY MaxSCODataLen OF CHAR	(** data *)
 	END;
 
 	EventPacket* = POINTER TO RECORD(Packet)	(** HCI event packet, see specs chapter 4.4.2 *)
 		code*: CHAR;	(** event code *)
-		paramLen*: LONGINT;	(** parameter length, in bytes *)
+		paramLen*: SIGNED32;	(** parameter length, in bytes *)
 		params*: ARRAY MaxEventParamLen OF CHAR	(** parameter values *)
 	END;
 
 	UnknownPacket* = POINTER TO RECORD(Packet) (** unknown packet...should not happen ;-) *)
-		len*: LONGINT;	(** length of data, in bytes *)
+		len*: SIGNED32;	(** length of data, in bytes *)
 		data*: ARRAY MaxUnknownDataLen OF CHAR	(** data *)
 	END;
 
@@ -86,7 +86,7 @@ TYPE
 			t: Objects.Timer;
 			handler: IDTimerHandler;
 
-		PROCEDURE &Init*(handler: IDTimerHandler; timeout: LONGINT);
+		PROCEDURE &Init*(handler: IDTimerHandler; timeout: SIGNED32);
 		BEGIN
 			SELF.handler := handler; NEW(t);
 			Objects.SetTimeout(t, TimeoutHandler, timeout)
@@ -111,7 +111,7 @@ TYPE
 			dead: BOOLEAN;
 			expired: IDTimer;
 			getNext: Packet;
-			inGetNext: LONGINT;
+			inGetNext: SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -148,7 +148,7 @@ TYPE
 		END HandleTimeout;
 
 		(** blocks until a HCI packet is available or a timeout occurs. Packet filters are priorized over the Get request *)
-		PROCEDURE Get*(VAR p: Packet; timeout: LONGINT; VAR res: WORD);
+		PROCEDURE Get*(VAR p: Packet; timeout: SIGNED32; VAR res: INTEGER);
 		VAR timer: IDTimer;
 		BEGIN {EXCLUSIVE}
 			IF (head = NIL) THEN
@@ -179,7 +179,7 @@ TYPE
 		END GetNextHandler;
 
 		(* naaa...won't work. besser: filter rein, der alles frisst, dann wieder rausnehmen *)
-		PROCEDURE GetNext*(VAR p: Packet; timeout: LONGINT; VAR res: WORD);
+		PROCEDURE GetNext*(VAR p: Packet; timeout: SIGNED32; VAR res: INTEGER);
 		VAR f: Filter; timer: IDTimer;
 		BEGIN {EXCLUSIVE}
 			(* lock *)
@@ -265,31 +265,31 @@ TYPE
 		END Close;
 
 		(** install a queue for certain HCI packet types *)
-		PROCEDURE SetSink*(type: LONGINT; queue: Queue);
+		PROCEDURE SetSink*(type: SIGNED32; queue: Queue);
 		BEGIN {EXCLUSIVE}
 			sink[type] := queue
 		END SetSink;
 
 		(** get the queue for certain HCI packet types *)
-		PROCEDURE GetSink*(type: LONGINT): Queue;
+		PROCEDURE GetSink*(type: SIGNED32): Queue;
 		BEGIN {EXCLUSIVE}
 			RETURN sink[type]
 		END GetSink;
 
 		(** send a HCI packet *)
-		PROCEDURE Send*(type: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
+		PROCEDURE Send*(type: SIGNED32; VAR data: ARRAY OF CHAR; ofs, len: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			HALT(301)
 		END Send;
 
-		PROCEDURE Send1H*(type: LONGINT; VAR hdr: ARRAY OF CHAR; hdrlen: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
+		PROCEDURE Send1H*(type: SIGNED32; VAR hdr: ARRAY OF CHAR; hdrlen: SIGNED32; VAR data: ARRAY OF CHAR; ofs, len: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			HALT(301)
 		END Send1H;
 
-		PROCEDURE Send2H*(type: LONGINT; VAR hdr1: ARRAY OF CHAR; hdr1len: LONGINT;
-								VAR hdr2: ARRAY OF CHAR; hdr2len: LONGINT;
-								VAR data: ARRAY OF CHAR; ofs, len: LONGINT; VAR res: WORD);
+		PROCEDURE Send2H*(type: SIGNED32; VAR hdr1: ARRAY OF CHAR; hdr1len: SIGNED32;
+								VAR hdr2: ARRAY OF CHAR; hdr2len: SIGNED32;
+								VAR data: ARRAY OF CHAR; ofs, len: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			HALT(301)
 		END Send2H;
@@ -300,10 +300,10 @@ TYPE
 	char = hexdigit hexdigit.
 	hexdigit = "0"|..|"9"|"A"|..|"F".
 *)
-PROCEDURE StringToParam*(string: ARRAY OF CHAR; VAR param: ARRAY OF CHAR; VAR len: LONGINT);
-VAR i, h, l: LONGINT; error: BOOLEAN;
+PROCEDURE StringToParam*(string: ARRAY OF CHAR; VAR param: ARRAY OF CHAR; VAR len: SIGNED32);
+VAR i, h, l: SIGNED32; error: BOOLEAN;
 
-	PROCEDURE Value(c: CHAR): LONGINT;
+	PROCEDURE Value(c: CHAR): SIGNED32;
 	BEGIN
 		IF ("0" <= c) & (c <= "9") THEN RETURN ORD(c)-ORD("0")
 		ELSE
@@ -332,10 +332,10 @@ BEGIN
 END StringToParam;
 
 
-PROCEDURE CharArrayToString*(buf: ARRAY OF CHAR; ofs, len: LONGINT; VAR string: ARRAY OF CHAR);
+PROCEDURE CharArrayToString*(buf: ARRAY OF CHAR; ofs, len: SIGNED32; VAR string: ARRAY OF CHAR);
 VAR i, pos, maxLen: SIZE; c: CHAR;
 
-	PROCEDURE Char(v: LONGINT): CHAR;
+	PROCEDURE Char(v: SIGNED32): CHAR;
 	BEGIN
 		ASSERT((0 <= v) & (v < 10H));
 		IF (v < 10) THEN RETURN CHR(ORD("0") + v)

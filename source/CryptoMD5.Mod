@@ -4,14 +4,14 @@ IMPORT
 	S := SYSTEM,  Hashes := CryptoHashes, U := CryptoUtils;
 
 TYPE
-	Buffer = ARRAY 16 OF LONGINT;
+	Buffer = ARRAY 16 OF SIGNED32;
 
 	Hash* = OBJECT (Hashes.Hash)
 		VAR
-			A, B, C, D: LONGINT;	(* state *)
-			N: LONGINT;	(* total no of chars written *)
+			A, B, C, D: SIGNED32;	(* state *)
+			N: SIGNED32;	(* total no of chars written *)
 			X: Buffer;
-			cb: ARRAY 4 OF LONGINT;
+			cb: ARRAY 4 OF SIGNED32;
 
 		PROCEDURE & Init*;
 		BEGIN
@@ -23,15 +23,15 @@ TYPE
 		BEGIN
 			N := 0;
 			(* Initialize chaining values *)
-			A := LONGINT( 067452301H );
-			B := LONGINT( 0EFCDAB89H );
-			C := LONGINT( 098BADCFEH );
-			D := LONGINT( 010325476H );
+			A := SIGNED32( 067452301H );
+			B := SIGNED32( 0EFCDAB89H );
+			C := SIGNED32( 098BADCFEH );
+			D := SIGNED32( 010325476H );
 			initialized := TRUE
 		END Initialize;
 
 		PROCEDURE Write( ch: CHAR );
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			i := N MOD 4;  cb[i] := ORD( ch );
 			IF i = 3 THEN
@@ -59,7 +59,7 @@ TYPE
 
 		(** get the hashvalue of length SELF.size *)
 		PROCEDURE GetHash*( VAR buf: ARRAY OF CHAR;  pos: SIZE );
-		VAR n: LONGINT;
+		VAR n: SIGNED32;
 		BEGIN
 			(* Append padding *)
 			n := N*8;
@@ -83,7 +83,7 @@ TYPE
 (*-----------------------------------------------------------------------------------*)
 
 VAR
-	T: ARRAY 65 OF LONGINT;
+	T: ARRAY 65 OF SIGNED32;
 
 	(** get an instance of MD5 *)
 	PROCEDURE NewHash*( ) : Hashes.Hash;
@@ -94,34 +94,34 @@ VAR
 
 
 
-	PROCEDURE MD5( CONST X: Buffer; VAR A, B, C, D: LONGINT );
-	VAR  a, b, c, d: LONGINT;
+	PROCEDURE MD5( CONST X: Buffer; VAR A, B, C, D: SIGNED32 );
+	VAR  a, b, c, d: SIGNED32;
 
-		PROCEDURE -F1( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
-		VAR f: LONGINT;
+		PROCEDURE -F1( VAR a: SIGNED32;  b, c, d, x, s, t: SIGNED32 );
+		VAR f: SIGNED32;
 		BEGIN
-			f := S.VAL( LONGINT, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((-S.VAL( SET32, b )) * S.VAL( SET32, d )) );
+			f := S.VAL( SIGNED32, (S.VAL( SET32, b ) * S.VAL( SET32, c )) + ((-S.VAL( SET32, b )) * S.VAL( SET32, d )) );
 			a := ROT( a + f + x + t, s ) + b
 		END F1;
 
-		PROCEDURE -F2( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
-		VAR f: LONGINT;
+		PROCEDURE -F2( VAR a: SIGNED32;  b, c, d, x, s, t: SIGNED32 );
+		VAR f: SIGNED32;
 		BEGIN
-			f := S.VAL( LONGINT, (S.VAL( SET32, b ) * S.VAL( SET32, d )) + (S.VAL( SET32, c ) * (-S.VAL( SET32, d ))) );
+			f := S.VAL( SIGNED32, (S.VAL( SET32, b ) * S.VAL( SET32, d )) + (S.VAL( SET32, c ) * (-S.VAL( SET32, d ))) );
 			a := ROT( a + f + x + t, s ) + b
 		END F2;
 
-		PROCEDURE -F3( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
-		VAR f: LONGINT;
+		PROCEDURE -F3( VAR a: SIGNED32;  b, c, d, x, s, t: SIGNED32 );
+		VAR f: SIGNED32;
 		BEGIN
-			f := S.VAL( LONGINT, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
+			f := S.VAL( SIGNED32, S.VAL( SET32, b ) / S.VAL( SET32, c ) / S.VAL( SET32, d ) );
 			a := ROT( a + f + x + t, s ) + b
 		END F3;
 
-		PROCEDURE -F4( VAR a: LONGINT;  b, c, d, x, s, t: LONGINT );
-		VAR f: LONGINT;
+		PROCEDURE -F4( VAR a: SIGNED32;  b, c, d, x, s, t: SIGNED32 );
+		VAR f: SIGNED32;
 		BEGIN
-			f := S.VAL( LONGINT, S.VAL( SET32, c ) / (S.VAL( SET32, b ) + (-S.VAL( SET32, d ))) );
+			f := S.VAL( SIGNED32, S.VAL( SET32, c ) / (S.VAL( SET32, b ) + (-S.VAL( SET32, d ))) );
 			a := ROT( a + f + x + t, s ) + b
 		END F4;
 
@@ -169,7 +169,7 @@ VAR
 
 	PROCEDURE Initialize;
 	VAR
-		buf: U.InitBuffer;  i: LONGINT;
+		buf: U.InitBuffer;  i: SIGNED32;
 	BEGIN
 		NEW( buf, 1024 );
 		buf.Add( "D76AA478 E8C7B756 242070DB C1BDCEEE F57C0FAF 4787C62A A8304613 FD469501");

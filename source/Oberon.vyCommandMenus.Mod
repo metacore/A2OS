@@ -41,16 +41,16 @@ TYPE
 	enumMsg* = RECORD (Objects.ObjMsg)
 		Enum*: enumProc;
 		EnumSender*: enumProc;
-		mode*: INTEGER;
-		x*, y*: INTEGER
+		mode*: SIGNED16;
+		x*, y*: SIGNED16
 	END;
 
 CONST
 	emptyLine* = "______________________________";  click* = 0;  select* = 1;
 
 VAR
-	dynamic*: List;  msg*: enumMsg;  res*: vyTracking.List;  recentx*, recenty*: INTEGER;  noWait*: BOOLEAN;  current*: List;
-	currentmode*: INTEGER;
+	dynamic*: List;  msg*: enumMsg;  res*: vyTracking.List;  recentx*, recenty*: SIGNED16;  noWait*: BOOLEAN;  current*: List;
+	currentmode*: SIGNED16;
 
 	PROCEDURE GetCopy( l: List ): List;
 	VAR new, temp, t: List;
@@ -102,7 +102,7 @@ VAR
 		Prev( dynamic, cmd, objname )
 	END AddSender;
 
-	PROCEDURE Init*( VAR l: List;  atx, aty: INTEGER );
+	PROCEDURE Init*( VAR l: List;  atx, aty: SIGNED16 );
 	BEGIN
 		msg.Enum := AddGeneric;  msg.EnumSender := AddSender;
 		IF l # NIL THEN dynamic := GetCopy( l ) ELSE dynamic := NIL END;
@@ -118,7 +118,7 @@ VAR
 	END Ask;
 
 	PROCEDURE Wait*;
-	VAR keys: SET;  x, y: INTEGER;
+	VAR keys: SET;  x, y: SIGNED16;
 	BEGIN
 		IF noWait THEN RETURN END;
 		Input.Mouse( keys, x, y );
@@ -129,7 +129,7 @@ VAR
 
 	END Wait;
 
-	PROCEDURE ExecuteListedCommand*( atx, aty: INTEGER;  VAR event: vyEvents.EventMsg;  from: List );
+	PROCEDURE ExecuteListedCommand*( atx, aty: SIGNED16;  VAR event: vyEvents.EventMsg;  from: List );
 	BEGIN
 		noWait := FALSE;
 		IF from = NIL THEN RETURN END;
@@ -141,7 +141,7 @@ VAR
 		END
 	END ExecuteListedCommand;
 
-	PROCEDURE Execute*( atx, aty: INTEGER );
+	PROCEDURE Execute*( atx, aty: SIGNED16 );
 	VAR event: vyEvents.EventMsg;
 	BEGIN
 		ExecuteListedCommand( atx, aty, event, dynamic )

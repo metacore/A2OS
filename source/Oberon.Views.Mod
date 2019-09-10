@@ -33,36 +33,36 @@ TYPE
 	View* = POINTER TO ViewDesc;
 	ViewDesc* = RECORD (Gadgets.ViewDesc)
 		(** Relative viewpoint of viewer object. Vector from top-left camera-view corner to top-left of contents. *)
-		vx*, vy*: INTEGER;
-		time*: LONGINT; (** Selection time of viewed gadget. *)
+		vx*, vy*: SIGNED16;
+		time*: SIGNED32; (** Selection time of viewed gadget. *)
 	END;
 
 	(** Structure to "store" an area on the display *)
 	Block* = RECORD
 		mask*: Display3.Mask;	(** Mask bounding the area to be drawn in. *)
-		x, y, w, h: INTEGER;
+		x, y, w, h: SIGNED16;
 		view: Display.Frame;
 	END;
 
 VAR
-	background*: INTEGER;	(** Background color of camera-views *)
+	background*: SIGNED16;	(** Background color of camera-views *)
 	last: View;
 	W: Texts.Writer;
 
 PROCEDURE Log;
 BEGIN Texts.Append(Oberon.Log, W.buf) END Log;
 
-PROCEDURE Max(x, y: INTEGER): INTEGER;
+PROCEDURE Max(x, y: SIGNED16): SIGNED16;
 BEGIN IF x > y THEN RETURN x; ELSE RETURN y; END;
 END Max;
 
-PROCEDURE Min(x, y: INTEGER): INTEGER;
+PROCEDURE Min(x, y: SIGNED16): SIGNED16;
 BEGIN IF x < y THEN RETURN x; ELSE RETURN y; END;
 END Min;
 
 (* background drawing procedure *)
-PROCEDURE ReplConst(F: View; X, Y: INTEGER; M: Display3.Mask; col, x, y, w, h: INTEGER);
-VAR cx, cy, cw, ch, t: INTEGER;
+PROCEDURE ReplConst(F: View; X, Y: SIGNED16; M: Display3.Mask; col, x, y, w, h: SIGNED16);
+VAR cx, cy, cw, ch, t: SIGNED16;
 BEGIN
 	(* Display3.ReplConst(M, col, x, y, w, h, Display.replace) *)
 	cx := M.X; cy := M.Y; cw := M.W; ch := M.H;
@@ -82,8 +82,8 @@ END ReplConst;
 
 (* --- stack ops --- *)
 
-PROCEDURE ToFrame(F: View; u, v: INTEGER; VAR M: Display.FrameMsg);
-VAR y: INTEGER; B: Display3.UpdateMaskMsg;
+PROCEDURE ToFrame(F: View; u, v: SIGNED16; VAR M: Display.FrameMsg);
+VAR y: SIGNED16; B: Display3.UpdateMaskMsg;
 BEGIN
 	IF (F.obj # NIL) & (F.obj IS Display.Frame) THEN
 		IF F.mask = NIL THEN
@@ -100,8 +100,8 @@ BEGIN
 	END;
 END ToFrame;
 
-PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-VAR r, t, r1, t1: INTEGER;
+PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+VAR r, t, r1, t1: SIGNED16;
 BEGIN
 	r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 	IF x < x1 THEN x := x1 END;
@@ -111,10 +111,10 @@ BEGIN
 	w := r - x + 1; h := t - y + 1;
 END ClipAgainst;
 
-PROCEDURE CutoutBack(F: View; R: Display3.Mask; x, y, w, h, X, Y, W, H: INTEGER);
-VAR B, T, nH: INTEGER;
+PROCEDURE CutoutBack(F: View; R: Display3.Mask; x, y, w, h, X, Y, W, H: SIGNED16);
+VAR B, T, nH: SIGNED16;
 
-	PROCEDURE Enum(x1, y1, w1, h1: INTEGER);
+	PROCEDURE Enum(x1, y1, w1, h1: SIGNED16);
 	BEGIN IF (w1 > 0) & (h1 > 0) THEN ReplConst(F, X, Y , R, background, x1, y1, w1, h1) END;
 	END Enum;
 
@@ -128,8 +128,8 @@ BEGIN
 	IF x + w < X + W THEN (* right block *) Enum(x + w, B, Min(W, X + W - (x + w)), nH) END;
 END CutoutBack;
 
-PROCEDURE RestoreView(F: View; x, y: INTEGER; dlink: Objects.Object);
-VAR M: Display.DisplayMsg; w, h, col, cx, cy, cw, ch: INTEGER; R: Display3.Mask; f: Display.Frame;
+PROCEDURE RestoreView(F: View; x, y: SIGNED16; dlink: Objects.Object);
+VAR M: Display.DisplayMsg; w, h, col, cx, cy, cw, ch: SIGNED16; R: Display3.Mask; f: Display.Frame;
 BEGIN
 	w := F.W; h := F.H;
 	Oberon.RemoveMarks(x, y, w, h);
@@ -155,8 +155,8 @@ BEGIN
 	END
 END RestoreView;
 
-PROCEDURE RestoreViewArea(F: View; x, y, u, v, w1, h1: INTEGER; dlink: Objects.Object);
-VAR M: Display.DisplayMsg; w, h, col, cx, cy, cw, ch: INTEGER; R: Display3.Mask; f: Display.Frame;
+PROCEDURE RestoreViewArea(F: View; x, y, u, v, w1, h1: SIGNED16; dlink: Objects.Object);
+VAR M: Display.DisplayMsg; w, h, col, cx, cy, cw, ch: SIGNED16; R: Display3.Mask; f: Display.Frame;
 BEGIN
 	w := F.W; h := F.H;
 	Gadgets.MakeMask(F, x, y, dlink, R);
@@ -183,8 +183,8 @@ BEGIN
 	IF Gadgets.selected IN F.state THEN Display3.FillPattern(R, Display3.white, Display3.selectpat, x, y, x, y, w, h, Display.paint) END;
 END RestoreViewArea;
 
-PROCEDURE AdjustToFrame(F: View; u, v: INTEGER; VAR M: Display.ModifyMsg);
-VAR y: INTEGER; B: Display3.UpdateMaskMsg;
+PROCEDURE AdjustToFrame(F: View; u, v: SIGNED16; VAR M: Display.ModifyMsg);
+VAR y: SIGNED16; B: Display3.UpdateMaskMsg;
 BEGIN
 	IF F.obj # NIL THEN
 		IF F.mask = NIL THEN B.F := F; Display.Broadcast(B) END;
@@ -194,8 +194,8 @@ BEGIN
 	END;
 END AdjustToFrame;
 
-PROCEDURE AdjustChild(F: View; x, y, w, h: INTEGER; VAR M: Display.ModifyMsg);
-VAR RM, R: Display3.Mask; cx, cy: INTEGER;
+PROCEDURE AdjustChild(F: View; x, y, w, h: SIGNED16; VAR M: Display.ModifyMsg);
+VAR RM, R: Display3.Mask; cx, cy: SIGNED16;
 BEGIN
 	IF (M.F = F.obj) THEN
 		IF last = F THEN (* moved or resized in this view *)
@@ -257,7 +257,7 @@ BEGIN
 END StoreView;
 
 PROCEDURE LoadView(F: View; VAR M: Objects.FileMsg);
-VAR x: LONGINT; dummy: INTEGER;
+VAR x: SIGNED32; dummy: SIGNED16;
 BEGIN
 	Files.ReadNum(M.R, x);
 	IF x # VersionNo THEN
@@ -331,8 +331,8 @@ BEGIN
 	END
 END Absolute;
 
-PROCEDURE CleverAdjust(F: View; VAR M: Display.ModifyMsg; VAR stamp: LONGINT; borderW: INTEGER);
-VAR x, y, w, h, x0, y0, w0, h0, x1, y1, w1, h1: INTEGER; D: Display.DisplayMsg; abs: BOOLEAN;
+PROCEDURE CleverAdjust(F: View; VAR M: Display.ModifyMsg; VAR stamp: SIGNED32; borderW: SIGNED16);
+VAR x, y, w, h, x0, y0, w0, h0, x1, y1, w1, h1: SIGNED16; D: Display.DisplayMsg; abs: BOOLEAN;
 BEGIN
 	(* calculate old position *)
 	abs := Absolute(M.dlink);
@@ -395,9 +395,9 @@ BEGIN
 END CleverAdjust;
 
 PROCEDURE PrintView(F: View; VAR M: Display.DisplayMsg);
-VAR R: Display3.Mask; f: Display.Frame; P: Display.DisplayMsg; X, Y: INTEGER;
+VAR R: Display3.Mask; f: Display.Frame; P: Display.DisplayMsg; X, Y: SIGNED16;
 
-	PROCEDURE PP(x: INTEGER): INTEGER;
+	PROCEDURE PP(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END PP;
 
@@ -419,7 +419,7 @@ BEGIN
 		F.absX := X; F.absY := Y
 END PrintView;
 
-PROCEDURE Neutralize(F: View; x, y, w, h: INTEGER; VAR M: Oberon.ControlMsg);
+PROCEDURE Neutralize(F: View; x, y, w, h: SIGNED16; VAR M: Oberon.ControlMsg);
 VAR S: Display.SelectMsg;
 BEGIN
 	F.stamp := M.stamp;
@@ -433,8 +433,8 @@ BEGIN
 	F.time := -1
 END Neutralize;
 
-PROCEDURE Locate(F: View; x, y, w,h :INTEGER; VAR M: Display.LocateMsg);
-VAR cx: INTEGER; L: Display.LocateMsg;
+PROCEDURE Locate(F: View; x, y, w,h :SIGNED16; VAR M: Display.LocateMsg);
+VAR cx: SIGNED16; L: Display.LocateMsg;
 BEGIN
 	IF (M.loc = NIL) & Effects.Inside(M.X, M.Y, x, y, w, h) THEN
 		L.dlink := M.dlink; L.X := M.X; L.Y := M.Y; L.F := NIL; L.loc := NIL; L.res := -1;
@@ -451,7 +451,7 @@ BEGIN
 	END
 END Locate;
 
-PROCEDURE Select(F: View; x, y, w, h: INTEGER; VAR M: Display.SelectMsg);
+PROCEDURE Select(F: View; x, y, w, h: SIGNED16; VAR M: Display.SelectMsg);
 BEGIN
 	IF M.id = Display.get THEN
 		IF (((M.time-F.time) < 0) OR (M.time = -1)) & (F.obj # NIL) & (Gadgets.selected IN F.obj(Gadgets.Frame).state) THEN
@@ -467,7 +467,7 @@ BEGIN
 	END
 END Select;
 
-PROCEDURE UpdateMask(F: View; x, y, w, h: INTEGER; VAR M: Display3.UpdateMaskMsg);
+PROCEDURE UpdateMask(F: View; x, y, w, h: SIGNED16; VAR M: Display3.UpdateMaskMsg);
 VAR R: Display3.Mask; O: Display3.OverlapMsg;
 BEGIN
 	IF M.F = F.obj THEN (* mychild *)
@@ -483,7 +483,7 @@ BEGIN
 	END
 END UpdateMask;
 
-PROCEDURE Consume(F: View; x, y, w, h: INTEGER; VAR M: Display.ConsumeMsg);
+PROCEDURE Consume(F: View; x, y, w, h: SIGNED16; VAR M: Display.ConsumeMsg);
 VAR f: Display.Frame; C: Display.ControlMsg; B: Objects.BindMsg;
 BEGIN
 	IF (M.id = Display.drop) & (M.F = F) THEN
@@ -510,11 +510,11 @@ BEGIN
 	END
 END Consume;
 
-PROCEDURE InHotspot(X, Y, x, y, w, h: INTEGER): BOOLEAN;
+PROCEDURE InHotspot(X, Y, x, y, w, h: SIGNED16): BOOLEAN;
 CONST size = 10; GravQ = 4; MinGrav = 2;
 
-	PROCEDURE InBorder(mx, my, X, Y, W, H: INTEGER): BOOLEAN;
-	VAR hg, vg: INTEGER;
+	PROCEDURE InBorder(mx, my, X, Y, W, H: SIGNED16): BOOLEAN;
+	VAR hg, vg: SIGNED16;
 	BEGIN
 		IF (W <= Effects.gravity*3) OR (H <= Effects.gravity*3) THEN
 			hg := Min(Effects.gravity, Max(W DIV GravQ, MinGrav));
@@ -534,7 +534,7 @@ CONST size = 10; GravQ = 4; MinGrav = 2;
 BEGIN RETURN Effects.Inside(X, Y, x, y + h - size, size, size) OR InBorder(X, Y, x, y, w, h);
 END InHotspot;
 
-PROCEDURE TrackMouse(F: View; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg);
+PROCEDURE TrackMouse(F: View; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg);
 VAR keysum: SET; Fdlink, Mdlink: Objects.Object; last0: View; f: Display.Frame; L: Display.LocateMsg;
 		S: Display.SelectMsg; D: Display.DisplayMsg; C: Objects.CopyMsg;
 BEGIN
@@ -599,7 +599,7 @@ BEGIN
 END TrackMouse;
 
 PROCEDURE ViewHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h, u, v: INTEGER; F0: View;
+VAR x, y, w, h, u, v: SIGNED16; F0: View;
 BEGIN
 	WITH F: View DO
 		IF M IS Objects.AttrMsg THEN ViewAttr(F, M(Objects.AttrMsg))
@@ -701,7 +701,7 @@ BEGIN
 END ViewOf;
 
 (** Save a description of a rectangular area on the display. RestoreBlock will issue a DisplayMsg to redraw this part of the display. Note that the mask of the Block must be used to draw in the area X, Y, W, H as the camera-view might be clipping parts away. These two procedures provide a portable, safe and memory efficient way of "storing" parts of the display while drawing temporarily. A low level way of saving and restoring areas on the display is provided by Effects, or by module Bitmaps. *)
-PROCEDURE GetBlock*(X, Y, W, H: INTEGER; dlink: Objects.Object; VAR b: Block);
+PROCEDURE GetBlock*(X, Y, W, H: SIGNED16; dlink: Objects.Object; VAR b: Block);
 VAR obj: Objects.Object; F: Gadgets.Frame;
 BEGIN
 	b.view := NIL; b.mask := NIL;

@@ -56,7 +56,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR module : Modules.Module; variable : Reflection.Variable; i : SIZE; value : LONGREAL;
+		VAR module : Modules.Module; variable : Reflection.Variable; i : SIZE; value : FLOAT64;
 		BEGIN
 			FOR i := 0 TO LEN(vd)-1 DO
 				module := Modules.ModuleByName(vd[i].moduleName);
@@ -75,8 +75,8 @@ TYPE
 
 	END ModVar;
 
-PROCEDURE GetValueOf(v: Reflection.Variable; VAR value : LONGREAL) : BOOLEAN;
-VAR short : SHORTINT; int : INTEGER; long : LONGINT; ch : CHAR; real : REAL;
+PROCEDURE GetValueOf(v: Reflection.Variable; VAR value : FLOAT64) : BOOLEAN;
+VAR short : SIGNED8; int : SIGNED16; long : SIGNED32; ch : CHAR; real : FLOAT32;
 BEGIN
 	IF (v.n = 1) THEN (* arrays not supported *)
 		CASE v.type OF

@@ -43,7 +43,7 @@ TYPE
 			grid.SetColSpacings(colWidths);
 			grid.nofCols.Set(3);
 			grid.SetDrawCellProc(DrawCell);
-			grid.nofRows.Set(font.glyphList.GetCount()(LONGINT));
+			grid.nofRows.Set(font.glyphList.GetCount()(SIGNED32));
 			grid.defaultRowHeight.Set(50);
 			grid.defaultColWidth.Set(50);
 			grid.onSelect.Add(GlyphSelected);
@@ -131,9 +131,9 @@ TYPE
 			END;
 		END DrawCell;
 
-(*		PROCEDURE RenderGlyph(canvas : WMGraphics.Canvas; glyph : Glyph; x, y, w, h, level : LONGINT; trace : BOOLEAN);
-		VAR i, tx, ty, cx, cy, dx, dy : LONGINT; ctrl : BOOLEAN; g : Glyph; r, bb : WMRectangles.Rectangle;
-			dtx, dty, dtw, dth : LONGINT;
+(*		PROCEDURE RenderGlyph(canvas : WMGraphics.Canvas; glyph : Glyph; x, y, w, h, level : SIGNED32; trace : BOOLEAN);
+		VAR i, tx, ty, cx, cy, dx, dy : SIGNED32; ctrl : BOOLEAN; g : Glyph; r, bb : WMRectangles.Rectangle;
+			dtx, dty, dtw, dth : SIGNED32;
 		BEGIN
 			IF level > 0 THEN (* then we must fit the bounding box in x, y, w, h *)
 				bb := CalcBB(glyph);
@@ -212,9 +212,9 @@ TYPE
 		END RenderGlyph; *)
 
 		(* floating point version *)
-		PROCEDURE RenderGlyphReal(canvas : WMGraphics.Canvas; glyph : Glyph; x, y, w, h : REAL; level : LONGINT; trace : BOOLEAN);
-		VAR i : LONGINT;  tx, ty, cx, cy, dx, dy : REAL; ctrl : BOOLEAN; g : Glyph; r, bb : WMRectangles.Rectangle;
-			dtx, dty, dtw, dth : REAL;
+		PROCEDURE RenderGlyphReal(canvas : WMGraphics.Canvas; glyph : Glyph; x, y, w, h : FLOAT32; level : SIGNED32; trace : BOOLEAN);
+		VAR i : SIGNED32;  tx, ty, cx, cy, dx, dy : FLOAT32; ctrl : BOOLEAN; g : Glyph; r, bb : WMRectangles.Rectangle;
+			dtx, dty, dtw, dth : FLOAT32;
 		BEGIN
 			IF level > 0 THEN (* then we must fit the bounding box in x, y, w, h *)
 				bb := CalcBB(glyph);
@@ -261,7 +261,7 @@ TYPE
 		END RenderGlyphReal;
 
 		PROCEDURE CalcBB(glyph : Glyph) : WMRectangles.Rectangle;
-		VAR result, t : WMRectangles.Rectangle; i : LONGINT;
+		VAR result, t : WMRectangles.Rectangle; i : SIGNED32;
 		BEGIN
 			result := WMRectangles.MakeRect(256, 256, 0, 0);
 			IF glyph.nofSubComponents > 0 THEN
@@ -286,13 +286,13 @@ TYPE
 	END TestWindow;
 
 	StrokeElement = RECORD
-		cmd : LONGINT;
-		x, y : LONGINT;
+		cmd : SIGNED32;
+		x, y : SIGNED32;
 	END;
 
 	GlyphRef = RECORD
-		 x, y, w, h : LONGINT;
-		 refucs, refvariant : LONGINT;
+		 x, y, w, h : SIGNED32;
+		 refucs, refvariant : SIGNED32;
 		 refPtr : Glyph;
 	END;
 
@@ -300,16 +300,16 @@ TYPE
 	GlyphRefArray = POINTER TO ARRAY OF GlyphRef;
 
 	GlyphRange = RECORD
-		firstCode, lastCode  : LONGINT;
-		filePos : LONGINT;
+		firstCode, lastCode  : SIGNED32;
+		filePos : SIGNED32;
 		glyphs : POINTER TO ARRAY OF Glyph;
 	END;
 
 	RangeArray = POINTER TO ARRAY OF GlyphRange;
 
 	Glyph = POINTER TO RECORD
-		ucs, variant : LONGINT;
-		nofStrokes, nofSubComponents : LONGINT;
+		ucs, variant : SIGNED32;
+		nofStrokes, nofSubComponents : SIGNED32;
 		strokes : StrokeArray;
 		subComponents : GlyphRefArray;
 		nextVariant : Glyph;
@@ -319,7 +319,7 @@ TYPE
 	RawCCGFont = OBJECT
 	VAR workStrokes : StrokeArray;
 		workGlyphRef : GlyphRefArray;
-		nofStrokes, nofGlyphRefs : LONGINT;
+		nofStrokes, nofGlyphRefs : SIGNED32;
 		glyphList : Classes.List;
 (* BEGIN variables for native font *)
 		glyphRanges : RangeArray;
@@ -335,7 +335,7 @@ TYPE
 
 (* BEGIN optimized routines for native font *)
 		(* find the range where a glyph is inside *)
-		PROCEDURE FindGlyphRange(code : LONGINT; VAR glyphRangeIndex : SIZE) : BOOLEAN;
+		PROCEDURE FindGlyphRange(code : SIGNED32; VAR glyphRangeIndex : SIZE) : BOOLEAN;
 		VAR a, b, m : SIZE;
 		BEGIN
 			glyphRangeIndex := 0;
@@ -352,7 +352,7 @@ TYPE
 		END FindGlyphRange;
 
 		PROCEDURE WritePackedGlyph(w : Streams.Writer; g : Glyph);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			REPEAT
 				(* has more variants *)
@@ -389,7 +389,7 @@ TYPE
 		PROCEDURE ReadPackedGlyph(r : Streams.Reader; VAR glyph : Glyph);
 		VAR g : Glyph;
 			hasMoreVariants : BOOLEAN;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			NEW(g); glyph := g;
 			REPEAT
@@ -425,7 +425,7 @@ TYPE
 		END ReadPackedGlyph;
 
 		PROCEDURE StoreRange(w : Streams.Writer; VAR range : GlyphRange);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			(* sanity check *)
 			KernelLog.String("Store range: ");
@@ -437,7 +437,7 @@ TYPE
 
 		PROCEDURE LoadRange(f : Files.File; rangeIndex : SIZE);
 		VAR r : Files.Reader;
-			size, i : LONGINT;
+			size, i : SIGNED32;
 			range : GlyphRange; (* because of too complex expression otherwise ;-) *)
 		BEGIN
 			range := glyphRanges[rangeIndex];
@@ -453,7 +453,7 @@ TYPE
 			FOR i := 0 TO size DO ReadPackedGlyph(r, glyphRanges[rangeIndex].glyphs[i]) END
 		END LoadRange;
 
-		PROCEDURE GetGlyph(ucs, variant : LONGINT) : Glyph;
+		PROCEDURE GetGlyph(ucs, variant : SIGNED32) : Glyph;
 		VAR rangeIndex : SIZE; glyph : Glyph;
 		BEGIN
 			IF FindGlyphRange(ucs, rangeIndex) THEN
@@ -483,7 +483,7 @@ TYPE
 			Files.Register(f);
 			Files.OpenWriter(w, f, 0);
 			(* number of ranges *)
-			w.Net32(LEN(glyphRanges)(LONGINT));
+			w.Net32(LEN(glyphRanges)(SIGNED32));
 			(* reserve space for ranges *)
 			FOR i := 0 TO LEN(glyphRanges) - 1 DO
 				w.Net32(0); w.Net32(0); w.Net32(0)
@@ -493,7 +493,7 @@ TYPE
 				KernelLog.String("Writing range "); KernelLog.Int(i, 4); KernelLog.String(" of "); KernelLog.Int(LEN(glyphRanges), 4);
 				KernelLog.Ln;
 				w.Update();
-				glyphRanges[i].filePos := w.sent(LONGINT);
+				glyphRanges[i].filePos := w.sent(SIGNED32);
 				StoreRange(w, glyphRanges[i]);
 			END;
 			w.Update();
@@ -533,7 +533,7 @@ TYPE
 		END Load;
 
 		PROCEDURE DumpRange(VAR r : GlyphRange);
-		VAR i : LONGINT; tg : Glyph;
+		VAR i : SIGNED32; tg : Glyph;
 		BEGIN
 			KernelLog.String("Range: "); KernelLog.Hex(r.firstCode, 0); KernelLog.String(" .. "); KernelLog.Hex(r.lastCode, 0); KernelLog.Ln;
 			IF r.glyphs # NIL THEN
@@ -552,7 +552,7 @@ TYPE
 
 		PROCEDURE CreateRanges;
 		VAR i, j, firstIndex: SIZE;
-			nofRanges, code, lastCode, rangeStart, range, rangeSize : LONGINT;
+			nofRanges, code, lastCode, rangeStart, range, rangeSize : SIGNED32;
 			glyph, tg : Glyph; ptr : ANY;
 			bimboSortArray : GlyphArray;
 
@@ -695,7 +695,7 @@ TYPE
 
 (* END optimized routines for native font *)
 
-		PROCEDURE FindGlyph(ucs, variant : LONGINT) : Glyph;
+		PROCEDURE FindGlyph(ucs, variant : SIGNED32) : Glyph;
 		VAR g, tg : Glyph; i : SIZE; ptr : ANY;
 		BEGIN
 			g := NIL;
@@ -717,8 +717,8 @@ TYPE
 			RETURN ref.refPtr
 		END FindGlyphSubComponent;
 
-		PROCEDURE GetNCharHex(r : Streams.Reader; nofChars : LONGINT) : LONGINT;
-		VAR c : CHAR; i, res : LONGINT;
+		PROCEDURE GetNCharHex(r : Streams.Reader; nofChars : SIGNED32) : SIGNED32;
+		VAR c : CHAR; i, res : SIGNED32;
 		BEGIN
 			res := 0;
 			FOR i := 0 TO nofChars - 1 DO
@@ -737,8 +737,8 @@ TYPE
 			NN variable sized UTF-8 encoded UCS32 value,
 			VV VV
 			= fix separator *)
-		PROCEDURE ReadUCSVariant(r : Streams.Reader; VAR ucs, variant : LONGINT);
-		VAR c : CHAR; tucs, tv : LONGINT;
+		PROCEDURE ReadUCSVariant(r : Streams.Reader; VAR ucs, variant : SIGNED32);
+		VAR c : CHAR; tucs, tv : SIGNED32;
 		BEGIN
 			ucs := GetNCharHex(r, 6);
 			variant := GetNCharHex(r, 2);
@@ -750,7 +750,7 @@ TYPE
 		END ReadUCSVariant;
 
 		PROCEDURE ReadStrokes(r : Streams.Reader; g : Glyph);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 			PROCEDURE ReadStrokeElement;
 			VAR c : CHAR;
 			BEGIN
@@ -780,7 +780,7 @@ TYPE
 		END ReadBasicGlyph;
 
 		PROCEDURE ReadGlyphComponents(r: Streams.Reader; g : Glyph);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 			PROCEDURE ReadComponent;
 			BEGIN
 				workGlyphRef[nofGlyphRefs].x := GetNCharHex(r, 2);
@@ -865,7 +865,7 @@ BEGIN
 END Export;
 
 (* read a UTF8 character form a stream *)
-PROCEDURE GetUTF8Char(r : Streams.Reader; VAR u : LONGINT) : BOOLEAN;
+PROCEDURE GetUTF8Char(r : Streams.Reader; VAR u : SIGNED32) : BOOLEAN;
 VAR ch : ARRAY 8 OF CHAR; i : SIZE;
 BEGIN
 	ch[0] := r.Get();
@@ -875,9 +875,9 @@ BEGIN
 END GetUTF8Char;
 
 (*
-PROCEDURE Spline(canvas : WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h, color, mode : LONGINT);
-VAR i, tx, ty, nx, ny : LONGINT;
-	t, onet, dt : REAL; (* CHECK : possible fixed-point implementation*)
+PROCEDURE Spline(canvas : WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h, color, mode : SIGNED32);
+VAR i, tx, ty, nx, ny : SIGNED32;
+	t, onet, dt : FLOAT32; (* CHECK : possible fixed-point implementation*)
 BEGIN
 	tx := x0; ty := y0;
 	dt := 1 / MaxSplineSeg; t := 0; onet := 1;
@@ -890,9 +890,9 @@ BEGIN
 END Spline;
 *)
 
-PROCEDURE SplineReal(canvas : WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h : REAL; color, mode : LONGINT);
-VAR i: LONGINT;  tx, ty, nx, ny : REAL;
-	t, onet, dt : REAL;
+PROCEDURE SplineReal(canvas : WMGraphics.Canvas; x0, y0, x1, y1, x2, y2, x, y, w, h : FLOAT32; color, mode : SIGNED32);
+VAR i: SIGNED32;  tx, ty, nx, ny : FLOAT32;
+	t, onet, dt : FLOAT32;
 BEGIN
 	tx := x0; ty := y0;
 	dt := 1 / MaxSplineSeg; t := 0; onet := 1;

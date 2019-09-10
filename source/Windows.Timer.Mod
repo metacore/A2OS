@@ -7,7 +7,7 @@ MODULE Timer;
 
 IMPORT Kernel32;
 
-TYPE Counter* = LONGINT;
+TYPE Counter* = SIGNED32;
 
 PROCEDURE GetCounter- (): Counter;
 VAR counter: Kernel32.LargeInteger;

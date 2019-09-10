@@ -8,7 +8,7 @@ IMPORT Files, Objects, Gadgets, Strings, ListRiders;
 
 CONST
 	VersionNo = 1;
-	NoKey = MIN(LONGINT);
+	NoKey = MIN(SIGNED32);
 
 	(* states *)
 	sorted = 0; unique = 1; linear = 2;
@@ -17,7 +17,7 @@ TYPE
 	Node = POINTER TO NodeDesc;
 	NodeDesc = RECORD
 		prev, next, dsc: Node;	(* prev, next: doubly linked list / dsc: node's desc. or parent for tails *)
-		key, stamp, state, pos: LONGINT;
+		key, stamp, state, pos: SIGNED32;
 		d: ListRiders.Data;
 		s: ARRAY 256 OF CHAR	(* Data value *)
 	END;
@@ -25,7 +25,7 @@ TYPE
 	List* = POINTER TO ListDesc;
 	ListDesc* = RECORD (Gadgets.ObjDesc)
 		tail: Node;	(* tail of list (sentinel) *)
-		key: LONGINT;	(* next free unique-key *)
+		key: SIGNED32;	(* next free unique-key *)
 		state0: SET	(* diff. settings *)
 	END;
 
@@ -38,8 +38,8 @@ VAR
 	method*: ListRiders.Method;
 
 (* Key generator *)
-PROCEDURE GetKey (obj: List): LONGINT;
-VAR key: LONGINT;
+PROCEDURE GetKey (obj: List): SIGNED32;
+VAR key: SIGNED32;
 BEGIN
 	key := obj.key; INC(obj.key);
 	RETURN key
@@ -47,7 +47,7 @@ END GetKey;
 
 (*========== Node handling ==========*)
 (* Allocate new node *)
-PROCEDURE NewNode (val: ListRiders.Data; key: LONGINT): Node;
+PROCEDURE NewNode (val: ListRiders.Data; key: SIGNED32): Node;
 VAR n: Node;
 BEGIN
 	NEW(n);
@@ -101,14 +101,14 @@ END IsUnique;
 
 (*========== Rider handling ==========*)
 (* Get the current item's key *)
-PROCEDURE Key (R: ListRiders.Rider): LONGINT;
+PROCEDURE Key (R: ListRiders.Rider): SIGNED32;
 BEGIN RETURN R(Rider).node.key
 END Key;
 
 (* Position rider R on the item having the given key *)
-PROCEDURE Seek (R: ListRiders.Rider; key: LONGINT);
+PROCEDURE Seek (R: ListRiders.Rider; key: SIGNED32);
 
-	PROCEDURE Traverse (tail: Node; key: LONGINT): Node;
+	PROCEDURE Traverse (tail: Node; key: SIGNED32): Node;
 	VAR n, found: Node;
 	BEGIN
 		n := tail.next;
@@ -127,12 +127,12 @@ BEGIN
 END Seek;
 
 (* Get current position of the rider *)
-PROCEDURE Pos (R: ListRiders.Rider): LONGINT;
+PROCEDURE Pos (R: ListRiders.Rider): SIGNED32;
 BEGIN RETURN R(Rider).node.pos
 END Pos;
 
 (* Position rider R on the item having the given pos *)
-PROCEDURE Set (R: ListRiders.Rider; pos: LONGINT);
+PROCEDURE Set (R: ListRiders.Rider; pos: SIGNED32);
 VAR n: Node;
 BEGIN
 	WITH R: Rider DO
@@ -219,22 +219,22 @@ BEGIN
 END DeleteLink;
 
 (* Get stamp value of the node at the current position of R *)
-PROCEDURE GetStamp (R: ListRiders.Rider): LONGINT;
+PROCEDURE GetStamp (R: ListRiders.Rider): SIGNED32;
 BEGIN RETURN R(Rider).node.stamp
 END GetStamp;
 
 (* Set stamp value of the item at the current position of R *)
-PROCEDURE SetStamp (R: ListRiders.Rider; stamp: LONGINT);
+PROCEDURE SetStamp (R: ListRiders.Rider; stamp: SIGNED32);
 BEGIN R(Rider).node.stamp := stamp
 END SetStamp;
 
 (* Get the state of the current item *)
-PROCEDURE State (R: ListRiders.Rider): LONGINT;
+PROCEDURE State (R: ListRiders.Rider): SIGNED32;
 BEGIN RETURN R(Rider).node.state
 END State;
 
 (* Set the state of the current item *)
-PROCEDURE SetState (R: ListRiders.Rider; s: LONGINT);
+PROCEDURE SetState (R: ListRiders.Rider; s: SIGNED32);
 BEGIN R(Rider).node.state := s
 END SetState;
 
@@ -270,7 +270,7 @@ END ConnectRider;
 
 (* =================== list model =================== *)
 PROCEDURE Sort (VAR tail: Node);	(* sorts entries in one level *)
-VAR n, m, next, ntail: Node; pos: LONGINT;
+VAR n, m, next, ntail: Node; pos: SIGNED32;
 BEGIN
 	IF tail.next # tail THEN
 		ntail := NewNode(NIL, NoKey); ntail.pos := -1;
@@ -289,7 +289,7 @@ BEGIN
 END Sort;
 
 PROCEDURE Unify (tail: Node);	(* removes entries with same data in one level *)
-VAR n: Node; nr: LONGINT;
+VAR n: Node; nr: SIGNED32;
 BEGIN
 	n := tail.prev;
 	WHILE n # tail DO
@@ -350,10 +350,10 @@ BEGIN
 END WriteList;
 
 PROCEDURE ReadList (obj: List; VAR M: Objects.FileMsg);
-VAR ver: LONGINT;
+VAR ver: SIGNED32;
 
 	PROCEDURE ReadNodes (tail: Node);
-	VAR n: Node; key: LONGINT; str: ListRiders.String; ch: CHAR;
+	VAR n: Node; key: SIGNED32; str: ListRiders.String; ch: CHAR;
 	BEGIN
 		n := tail;
 		Files.ReadLInt(M.R, key);

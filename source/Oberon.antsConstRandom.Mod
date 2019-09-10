@@ -30,17 +30,17 @@ IMPORT vyRanBase, Objects, Files, aM := antsMessages;
 CONST
 	idversion* = 'constRandom';
 TYPE
-	Bits = LONGINT;
+	Bits = SIGNED32;
 	tRandom = POINTER TO tRandomDesc;
 	tRandomDesc = RECORD (vyRanBase.tRandomNumberDesc)
-		constval: LONGINT;
-		max: LONGINT
+		constval: SIGNED32;
+		max: SIGNED32
 	END;
 
 	PROCEDURE Next( r: vyRanBase.tRandom );
 	END Next;
 
-	PROCEDURE Max( r: vyRanBase.tRandom ): LONGINT;
+	PROCEDURE Max( r: vyRanBase.tRandom ): SIGNED32;
 	BEGIN
 		WITH r: tRandom DO RETURN r.max
 		END
@@ -52,37 +52,37 @@ TYPE
 		END
 	END Get;
 
-	PROCEDURE GetUniform( r: vyRanBase.tRandom ): LONGREAL;
+	PROCEDURE GetUniform( r: vyRanBase.tRandom ): FLOAT64;
 	BEGIN
 		WITH r: tRandom DO RETURN r.constval / r.max
 		END
 	END GetUniform;
 
-	PROCEDURE RandomUVX( r: vyRanBase.tRandom;  count: LONGINT;  VAR nrs: ARRAY OF LONGREAL;  start: LONGINT );
-	VAR i: LONGINT;
+	PROCEDURE RandomUVX( r: vyRanBase.tRandom;  count: SIGNED32;  VAR nrs: ARRAY OF FLOAT64;  start: SIGNED32 );
+	VAR i: SIGNED32;
 	BEGIN
 		WITH r: tRandom DO
 			FOR i := start TO start + count - 1 DO nrs[i] := r.constval / r.max END
 		END
 	END RandomUVX;
 
-	PROCEDURE RandomUV( r: vyRanBase.tRandom;  count: LONGINT;  VAR nrs: ARRAY OF REAL;  start: LONGINT );
-	VAR i: LONGINT;
+	PROCEDURE RandomUV( r: vyRanBase.tRandom;  count: SIGNED32;  VAR nrs: ARRAY OF FLOAT32;  start: SIGNED32 );
+	VAR i: SIGNED32;
 	BEGIN
 		WITH r: tRandom DO
 			FOR i := start TO start + count - 1 DO nrs[i] := r.constval / r.max END
 		END
 	END RandomUV;
 
-	PROCEDURE GetL( r: vyRanBase.tRandom;  top: LONGINT ): LONGINT;
+	PROCEDURE GetL( r: vyRanBase.tRandom;  top: SIGNED32 ): SIGNED32;
 	CONST  (*a = 16807;	m = 2147483647; 	q = m DIV a;	r = m MOD a; scalefact=1.0D0/m;*)
 	BEGIN
 		WITH r: tRandom DO RETURN (top - 1) * r.constval DIV r.max
 		END
 	END GetL;
 
-	PROCEDURE RandomLV( r: vyRanBase.tRandom;  top, count: LONGINT;  VAR nrs: ARRAY OF LONGINT;  start: LONGINT );
-	VAR i: LONGINT;
+	PROCEDURE RandomLV( r: vyRanBase.tRandom;  top, count: SIGNED32;  VAR nrs: ARRAY OF SIGNED32;  start: SIGNED32 );
+	VAR i: SIGNED32;
 	BEGIN
 		WITH r: tRandom DO
 			FOR i := start TO start + count - 1 DO nrs[i] := (top - 1) * r.constval DIV r.max END
@@ -107,7 +107,7 @@ TYPE
 	END HandleAttributes;
 
 	PROCEDURE HandleFileMsg( obj: tRandom;  VAR msg: Objects.FileMsg );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		IF msg.id = Objects.load THEN
 			Files.ReadInt( msg.R, version );  vyRanBase.Handler( obj, msg );  Files.ReadLInt( msg.R, obj.max );
@@ -166,7 +166,7 @@ TYPE
 		NEW( r );  InitBasic( r );  Objects.NewObj := r
 	END Alloc;
 
-	PROCEDURE New*( val, max: LONGINT ): tRandom;
+	PROCEDURE New*( val, max: SIGNED32 ): tRandom;
 	VAR r: tRandom;
 	BEGIN
 		NEW( r );  Init( r );  r.Reset( r );  r.max := max;  r.constval := val;  Objects.NewObj := r;  RETURN r

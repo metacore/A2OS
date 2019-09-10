@@ -99,8 +99,8 @@ CONST Trace = FALSE;
 			BEGIN RETURN current.token = token
 			END IsCurrent;
 
-			PROCEDURE SkipSpace(): LONGINT;
-			VAR num: LONGINT;
+			PROCEDURE SkipSpace(): SIGNED32;
+			VAR num: SIGNED32;
 			BEGIN
 				num := 0;
 				WHILE current.token = Token.NewLine DO Next; INC(num) END;
@@ -123,7 +123,7 @@ CONST Trace = FALSE;
 			END Get;
 
 			PROCEDURE ParseDocument*(document: Tree.Document);
-			VAR num: LONGINT;
+			VAR num: SIGNED32;
 			BEGIN
 				num := SkipSpace();
 				IF current.token # Token.Section THEN
@@ -133,7 +133,7 @@ CONST Trace = FALSE;
 			END ParseDocument;
 
 			PROCEDURE ParseSections(sections: Tree.Sections);
-			VAR section: Tree.Section; num: LONGINT;
+			VAR section: Tree.Section; num: SIGNED32;
 			BEGIN
 				num := SkipSpace();
 				WHILE current.token # Token.EndOfText DO
@@ -190,7 +190,7 @@ CONST Trace = FALSE;
 			(* insert whitespace, if present *)
 
 			PROCEDURE ParseText(text: Tree.Text; sentinel: Token);
-			VAR element: Tree.TextElement; pos: LONGINT;
+			VAR element: Tree.TextElement; pos: SIGNED32;
 				PROCEDURE Whitespace;
 				BEGIN
 					IF whitespace THEN text.WriteWhitespace() END
@@ -251,7 +251,7 @@ CONST Trace = FALSE;
 			END ParseText;
 
 			PROCEDURE ParseParagraphs(paragraphs: Tree.Paragraphs);
-			VAR paragraph: Tree.Paragraph; element: Tree.TextElement; nl: LONGINT;
+			VAR paragraph: Tree.Paragraph; element: Tree.TextElement; nl: SIGNED32;
 			BEGIN
 				nl := SkipSpace();
 				WHILE (current.token # Token.EndOfText) & (current.token # Token.Section)  DO

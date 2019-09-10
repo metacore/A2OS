@@ -29,7 +29,7 @@ TYPE
 TYPE
 
 	Entry* = POINTER TO RECORD
-		type*: WORD;
+		type*: INTEGER;
 		source*: ARRAY 128 OF CHAR;
 		position*: Streams.Position;
 		message*: ARRAY 256 OF CHAR;
@@ -115,7 +115,7 @@ TYPE
 			RETURN result;
 		END GetEntries;
 
-		PROCEDURE InsertSorted(type: WORD; CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR; VAR counter: SIZE);
+		PROCEDURE InsertSorted(type: INTEGER; CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR; VAR counter: SIZE);
 		VAR prev, entry : Entry;
 		BEGIN
 			entry := entries; prev := NIL;
@@ -127,7 +127,7 @@ TYPE
 			END
 		END InsertSorted;
 
-		PROCEDURE NewEntry*(type: WORD; CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR; next: Entry) : Entry;
+		PROCEDURE NewEntry*(type: INTEGER; CONST source : ARRAY OF CHAR; position : Streams.Position; CONST message : ARRAY OF CHAR; next: Entry) : Entry;
 		VAR entry : Entry;
 		BEGIN
 			NEW(entry);
@@ -167,7 +167,7 @@ TYPE
 
 	END StreamDiagnostics;
 
-PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position: Streams.Position; type: WORD; CONST message: ARRAY OF CHAR);
+PROCEDURE Print (w: Streams.Writer; CONST source : ARRAY OF CHAR; position: Streams.Position; type: INTEGER; CONST message: ARRAY OF CHAR);
 BEGIN
 	w.Char(9X);
 	IF (source # "") THEN w.String (source); END;

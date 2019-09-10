@@ -12,7 +12,7 @@ TYPE
 	RunnerDHCP = OBJECT
 		VAR
 			int: IP.Interface;
-			res: WORD;
+			res: INTEGER;
 
 		PROCEDURE &Constr*(int: IP.Interface);
 		BEGIN
@@ -30,7 +30,7 @@ TYPE
 
 VAR
 	(* temporary variables used in module body *)
-	res: WORD;
+	res: INTEGER;
 
 
 PROCEDURE Added(dev: Network.LinkDevice);
@@ -139,7 +139,7 @@ END Removed;
 
 
 (* Handle events of installed/removed devices *)
-PROCEDURE EventHandler(event: WORD; plugin: Plugins.Plugin);
+PROCEDURE EventHandler(event: INTEGER; plugin: Plugins.Plugin);
 BEGIN
 	IF event = Plugins.EventAdd THEN
 		Added(plugin(Network.LinkDevice));

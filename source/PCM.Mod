@@ -14,7 +14,7 @@ IMPORT
 		(* target machine minimum values of basic types expressed in host machine format: *)
 		MinSInt* = -80H;
 		MinInt* = -8000H;
-		MinLInt* =  LONGINT(80000000H);	(* i386: -2147483648*)
+		MinLInt* =  SIGNED32(80000000H);	(* i386: -2147483648*)
 
 		(* target machine maximum values of basic types expressed in host machine format: *)
 		MaxSInt* = 7FH;
@@ -113,12 +113,12 @@ IMPORT
 			(** status *)
 		codeOptions*, parserOptions*: SET;
 		error*: BOOLEAN;		(** actual compilation status *)
-		errors, warnings: LONGINT;	(* number of errors and warnings *)
+		errors, warnings: SIGNED32;	(* number of errors and warnings *)
 		errMsg: ErrorMsgs;	(*error messages*)
 
 			(** input *)
-		breakpc*: LONGINT;	(** code offset to be found or MAX(LONGINT) *)
-		breakpos*: LONGINT;	(** text pos corresponding to breakpc (err 400 pos) *)
+		breakpc*: SIGNED32;	(** code offset to be found or MAX(SIGNED32) *)
+		breakpos*: SIGNED32;	(** text pos corresponding to breakpc (err 400 pos) *)
 
 			(** output *)
 		prefix*, suffix*: ARRAY 128 OF CHAR;
@@ -140,7 +140,7 @@ IMPORT
 (** ---------- file IO functions --------------------- *)
 
 	PROCEDURE MakeFileName(VAR file: ARRAY OF CHAR; CONST name, prefix, suffix: ARRAY OF CHAR);
-		VAR i, j: LONGINT;
+		VAR i, j: SIGNED32;
 	BEGIN
 		i := 0; WHILE prefix[i] # 0X DO  file[i] := prefix[i];  INC(i)  END;
 		j := 0; WHILE name[j] # 0X DO  file[i+j] := name[j];  INC(j)  END;
@@ -150,7 +150,7 @@ IMPORT
 	END MakeFileName;
 
 	PROCEDURE WriteString(w: Streams.Writer; CONST s: ARRAY OF CHAR);
-		VAR i: INTEGER; ch: CHAR;
+		VAR i: SIGNED16; ch: CHAR;
 	BEGIN
 		i:=0; ch:=s[0];
 		WHILE ch # 0X DO
@@ -162,7 +162,7 @@ IMPORT
 	(** OpenSymFile - Open a symfile for reading *)
 
 	PROCEDURE OpenSymFile*(CONST name: ARRAY OF CHAR;  VAR r: SymReader;  VAR version: CHAR; VAR zeroCompress: BOOLEAN): BOOLEAN;
-		VAR res: BOOLEAN;  file: Files.FileName;  f: Files.File; dummy: LONGINT; ch: CHAR;
+		VAR res: BOOLEAN;  file: Files.FileName;  f: Files.File; dummy: SIGNED32; ch: CHAR;
 	BEGIN
 		res := FALSE; zeroCompress := TRUE;
 		MakeFileName(file, name, prefix, suffix);
@@ -190,11 +190,11 @@ IMPORT
 	PROCEDURE SymW*(VAR R: Rider; ch: CHAR);
 	BEGIN  R.sym.Char(ch)  END SymW;
 
-	PROCEDURE SymWNum*(VAR R: Rider; i: LONGINT);
+	PROCEDURE SymWNum*(VAR R: Rider; i: SIGNED32);
 	BEGIN  R.sym.RawNum(i)  END SymWNum;
 
 	PROCEDURE SymWSet*(VAR R: Rider; s: SET);
-	BEGIN  R.sym.RawNum(LONGINT( s))  END SymWSet;
+	BEGIN  R.sym.RawNum(SIGNED32( s))  END SymWSet;
 
 	PROCEDURE SymWString*(VAR R: Rider; CONST str: ARRAY OF CHAR);
 	BEGIN  WriteString(R.sym, str)  END SymWString;
@@ -202,10 +202,10 @@ IMPORT
 	PROCEDURE SymWMod*(VAR R: Rider; CONST str: ARRAY OF CHAR);
 	BEGIN  WriteString(R.symmod, str) END SymWMod;
 
-	PROCEDURE SymWReal*(VAR R: Rider; r: REAL);
+	PROCEDURE SymWReal*(VAR R: Rider; r: FLOAT32);
 	BEGIN  R.sym.RawReal(r)  END SymWReal;
 
-	PROCEDURE SymWLReal*(VAR R: Rider; r: LONGREAL);
+	PROCEDURE SymWLReal*(VAR R: Rider; r: FLOAT64);
 	BEGIN  R.sym.RawLReal(r)  END SymWLReal;
 
 
@@ -217,15 +217,15 @@ IMPORT
 	BEGIN  R.obj.Char(ch)
 	END ObjW;
 
-	PROCEDURE ObjWNum*(VAR R: Rider; i: LONGINT);
+	PROCEDURE ObjWNum*(VAR R: Rider; i: SIGNED32);
 	BEGIN R.obj.RawNum(i)
 	END ObjWNum;
 
-	PROCEDURE ObjWInt*(VAR R: Rider; i: INTEGER);
+	PROCEDURE ObjWInt*(VAR R: Rider; i: SIGNED16);
 	BEGIN R.obj.RawInt(i)
 	END ObjWInt;
 
-	PROCEDURE ObjWIntAt*(VAR R: Rider; pos: LONGINT; i: INTEGER);
+	PROCEDURE ObjWIntAt*(VAR R: Rider; pos: SIGNED32; i: SIGNED16);
 		VAR w: Files.Writer;
 	BEGIN
 		R.obj.Update;
@@ -234,11 +234,11 @@ IMPORT
 		w.Update
 	END ObjWIntAt;
 
-	PROCEDURE ObjWLInt*(VAR R: Rider; i: LONGINT);
+	PROCEDURE ObjWLInt*(VAR R: Rider; i: SIGNED32);
 	BEGIN R.obj.RawLInt(i)
 	END ObjWLInt;
 
-	PROCEDURE ObjWLIntAt*(VAR R: Rider; pos: Files.Position; i: LONGINT);
+	PROCEDURE ObjWLIntAt*(VAR R: Rider; pos: Files.Position; i: SIGNED32);
 		VAR w: Files.Writer;
 	BEGIN
 		R.obj.Update;
@@ -255,7 +255,7 @@ IMPORT
 	BEGIN R.ref.Char(ch)
 	END RefW;
 
-	PROCEDURE RefWNum*(VAR R: Rider; i: LONGINT);
+	PROCEDURE RefWNum*(VAR R: Rider; i: SIGNED32);
 	BEGIN R.ref.RawNum(i)
 	END RefWNum;
 
@@ -315,14 +315,14 @@ IMPORT
 		Files.Register(R.objF)
 	END CloseObj;
 
-	PROCEDURE RefSize*(VAR R: Rider): LONGINT;
-	BEGIN  RETURN R.ref.Pos()(LONGINT);
+	PROCEDURE RefSize*(VAR R: Rider): SIGNED32;
+	BEGIN  RETURN R.ref.Pos()(SIGNED32);
 	END RefSize;
 
 
 (** ---------- text output functions --------------------- *)
 
-	PROCEDURE GetMessage (err: WORD; CONST msg: ARRAY OF CHAR; VAR res: ARRAY OF CHAR);
+	PROCEDURE GetMessage (err: INTEGER; CONST msg: ARRAY OF CHAR; VAR res: ARRAY OF CHAR);
 	VAR str: ARRAY 128 OF CHAR;
 	BEGIN
 		COPY (msg, res);
@@ -347,7 +347,7 @@ IMPORT
 		TraceBackThis( Machine.CurrentPC(), SYSTEM.GetFramePointer() );
 	END TraceBack;
 
-	PROCEDURE Error* (err: WORD; pos: LONGINT;  CONST msg: ARRAY OF CHAR);
+	PROCEDURE Error* (err: INTEGER; pos: SIGNED32;  CONST msg: ARRAY OF CHAR);
 		VAR str: ARRAY 128 OF CHAR;
 	BEGIN {EXCLUSIVE}
 		(** fof >> *)
@@ -373,14 +373,14 @@ IMPORT
 		END;
 	END Error;
 
-	PROCEDURE ErrorN* (err: WORD; pos: LONGINT; msg: StringPool.Index);
+	PROCEDURE ErrorN* (err: INTEGER; pos: SIGNED32; msg: StringPool.Index);
 		VAR str: ARRAY 256 OF CHAR;
 	BEGIN
 		StringPool.GetString(msg, str);
 		Error(err, pos, str)
 	END ErrorN;
 
-	PROCEDURE Warning* (err, pos: LONGINT;  CONST msg: ARRAY OF CHAR);
+	PROCEDURE Warning* (err, pos: SIGNED32;  CONST msg: ARRAY OF CHAR);
 		VAR str: ARRAY 128 OF CHAR;
 	BEGIN {EXCLUSIVE}
 		IF ~(Warnings IN parserOptions) THEN RETURN END;
@@ -411,11 +411,11 @@ IMPORT
 		StringPool.GetString(str, str0); LogWStr(str0)
 	END LogWStr0;
 
-	PROCEDURE LogWHex* (i: LONGINT);
+	PROCEDURE LogWHex* (i: SIGNED32);
 	BEGIN log.Hex(i, 0)
 	END LogWHex;
 
-	PROCEDURE LogWNum* (i: HUGEINT);
+	PROCEDURE LogWNum* (i: SIGNED64);
 	BEGIN log.Int(i, 0)
 	END LogWNum;
 
@@ -462,7 +462,7 @@ IMPORT
 
 	(** SetErrorMsg - Set message for error n *)
 
-	PROCEDURE SetErrorMsg*(n: LONGINT; CONST msg: ARRAY OF CHAR);
+	PROCEDURE SetErrorMsg*(n: SIGNED32; CONST msg: ARRAY OF CHAR);
 	BEGIN
 		IF errMsg = NIL THEN NEW(errMsg, InitErrMsgSize) END;
 		WHILE LEN(errMsg^) < n DO Expand(errMsg) END;
@@ -488,8 +488,8 @@ IMPORT
 		PCDebug.ResetToDo
 	END InitMod;
 
-PROCEDURE SwapBytes*(VAR p: ARRAY OF SYSTEM.BYTE; offset, len: LONGINT);
-VAR i: LONGINT;
+PROCEDURE SwapBytes*(VAR p: ARRAY OF SYSTEM.BYTE; offset, len: SIGNED32);
+VAR i: SIGNED32;
 	tmp: SYSTEM.BYTE;
 BEGIN
 	FOR i := 0 TO (len-1) DIV 2 DO
@@ -501,7 +501,7 @@ END SwapBytes;
 
 	PROCEDURE MakeErrorFile*;
 	VAR f: Files.File; w: Files.Writer;
-		msg, code: ARRAY 256 OF CHAR; i: LONGINT;
+		msg, code: ARRAY 256 OF CHAR; i: SIGNED32;
 	BEGIN
 		f := Files.New("Errors2.XML");
 		IF f # NIL THEN

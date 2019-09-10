@@ -14,26 +14,26 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 		Part = POINTER TO PartDesc;
 		PartDesc = RECORD
 			bootind, head, sector, cyl, type, head2, sector2, cyl2: CHAR;
-			start, num: LONGINT
+			start, num: SIGNED32
 		END;
 
 	Device = OBJECT (Disks.Device)
-	VAR drive: LONGINT;
+	VAR drive: SIGNED32;
 
-		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+		PROCEDURE Transfer*(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER);
 		BEGIN
 			IF op = Disks.Read THEN res := ReadBlocks(drive, block, num, ADDRESSOF(data[ofs]), 0)
 			ELSIF op = Disks.Write THEN res := WriteBlocks(drive, block, num, ADDRESSOF(data[ofs]), 0)
 			END
 		END Transfer;
 
-		PROCEDURE GetSize*(VAR size: LONGINT; VAR res: WORD);
+		PROCEDURE GetSize*(VAR size: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			size := devs[drive].capacity;
 			res := Disks.Ok
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg: Disks.Message;  VAR res: WORD);
+		PROCEDURE Handle*(VAR msg: Disks.Message;  VAR res: INTEGER);
 		BEGIN
 			IF msg IS Disks.GetGeometryMsg THEN
 				WITH msg: Disks.GetGeometryMsg DO
@@ -49,23 +49,23 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 
 		DeviceDesc = RECORD
 			ha, target, lun: CHAR;
-			cylinders, cylinders0: LONGINT;	(* number of cylinders *)
-			heads, heads0: LONGINT;	(* number of heads *)
-			sectrack: LONGINT;	(* sectors/track *)
-			writePreComp: LONGINT;
-			capacity, blocksize: LONGINT;
-			obstart, obend: LONGINT;
+			cylinders, cylinders0: SIGNED32;	(* number of cylinders *)
+			heads, heads0: SIGNED32;	(* number of heads *)
+			sectrack: SIGNED32;	(* sectors/track *)
+			writePreComp: SIGNED32;
+			capacity, blocksize: SIGNED32;
+			obstart, obend: SIGNED32;
 			dev: Device
 		END;
 
 	VAR
 		devs: ARRAY MaxDevices OF DeviceDesc;
-		numdevs: LONGINT;	(* number of physical devices *)
+		numdevs: SIGNED32;	(* number of physical devices *)
 
 (* ReadBlocks - Read disk blocks *)
 
-	PROCEDURE ReadBlocks(drive, sec, num: LONGINT; adr: ADDRESS; offset: LONGINT): LONGINT;
-	VAR srb: ASPI.ExecIOCmdSRB; err: LONGINT;
+	PROCEDURE ReadBlocks(drive, sec, num: SIGNED32; adr: ADDRESS; offset: SIGNED32): SIGNED32;
+	VAR srb: ASPI.ExecIOCmdSRB; err: SIGNED32;
 	BEGIN
 		err := 0;
 		NEW(srb);
@@ -98,8 +98,8 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 
 (* WriteBlocks - Write disk blocks *)
 
-	PROCEDURE WriteBlocks(drive, sec, num: LONGINT; adr: ADDRESS; offset: LONGINT): LONGINT;
-	VAR srb: ASPI.ExecIOCmdSRB; err: LONGINT;
+	PROCEDURE WriteBlocks(drive, sec, num: SIGNED32; adr: ADDRESS; offset: SIGNED32): SIGNED32;
+	VAR srb: ASPI.ExecIOCmdSRB; err: SIGNED32;
 	BEGIN
 		err := 0;
 		NEW(srb);
@@ -132,9 +132,9 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 
 (* ---- Calculate disk geometry ---- *)
 
-	PROCEDURE Partsize(drive: LONGINT; VAR res: WORD);
+	PROCEDURE Partsize(drive: SIGNED32; VAR res: INTEGER);
 	VAR
-		p, cyl, lcyl, cyl2, sector2, head2, extpend, extcyl, lend, pend, i: LONGINT;
+		p, cyl, lcyl, cyl2, sector2, head2, extpend, extcyl, lend, pend, i: SIGNED32;
 		pp, lpp: Part;
 		pd: ARRAY 512 OF CHAR;
 	BEGIN
@@ -203,8 +203,8 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 		END
 	END Partsize;
 
-	PROCEDURE Setsize(drive: LONGINT; VAR res: WORD);
-	VAR cylinders, temp, heads, sectors, capacity: LONGINT;
+	PROCEDURE Setsize(drive: SIGNED32; VAR res: INTEGER);
+	VAR cylinders, temp, heads, sectors, capacity: SIGNED32;
 	BEGIN
 		cylinders := 1024; sectors := 62;
 		temp := cylinders*sectors;
@@ -233,8 +233,8 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 		END
 	END Setsize;
 
-	PROCEDURE GetGeo(drive: LONGINT);
-	VAR res: WORD;
+	PROCEDURE GetGeo(drive: SIGNED32);
+	VAR res: INTEGER;
 	BEGIN
 		devs[drive].heads := 0; devs[drive].heads0 := 0;
 		devs[drive].cylinders := 0; devs[drive].cylinders0 := 0;
@@ -248,8 +248,8 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 
 (* ---- Get disk capacity and block size ---- *)
 
-	PROCEDURE GetCapacity(drive: LONGINT);
-	VAR srb: ASPI.ExecIOCmdSRB; buf: ARRAY 8 OF CHAR; i: LONGINT;
+	PROCEDURE GetCapacity(drive: SIGNED32);
+	VAR srb: ASPI.ExecIOCmdSRB; buf: ARRAY 8 OF CHAR; i: SIGNED32;
 	BEGIN
 		NEW(srb);
 		srb.HaId := devs[drive].ha;
@@ -275,7 +275,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 	END GetCapacity;
 
 	PROCEDURE Init;
-	VAR res, ha, targ, lun: LONGINT; srb: ASPI.GetDevTypeSRB;
+	VAR res, ha, targ, lun: SIGNED32; srb: ASPI.GetDevTypeSRB;
 	BEGIN
 		numdevs := 0;
 		res := ASPI.GetASPISupportInfo();
@@ -315,7 +315,7 @@ IMPORT SYSTEM, Machine, KernelLog, ASPI := SymbiosASPI, Disks, Plugins;
 	END Init;
 
 	PROCEDURE Register;
-	VAR i: LONGINT; res: WORD; dev: Device; name : ARRAY 12 OF CHAR;
+	VAR i: SIGNED32; res: INTEGER; dev: Device; name : ARRAY 12 OF CHAR;
 	BEGIN
 		FOR i := 0 TO numdevs-1 DO
 			NEW(dev); devs[i].dev := dev;

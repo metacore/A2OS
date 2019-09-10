@@ -9,7 +9,7 @@ CONST border = 4;
 TYPE
   Portrait = POINTER TO PortraitDesc;
   PortraitDesc = RECORD (Gadgets.FrameDesc)
-    time*: LONGINT	(* time of selection *)
+    time*: SIGNED32	(* time of selection *)
   END;
 
 PROCEDURE SetMask (F: Display.Frame; Q: Display3.Mask);
@@ -29,8 +29,8 @@ BEGIN
   END
 END SetContentMask;
 
-PROCEDURE ToContent (F: Portrait; x, y: INTEGER; VAR M: Display.FrameMsg);
-  VAR Mdlink, Fdlink: Objects.Object; tx, ty: INTEGER;
+PROCEDURE ToContent (F: Portrait; x, y: SIGNED16; VAR M: Display.FrameMsg);
+  VAR Mdlink, Fdlink: Objects.Object; tx, ty: SIGNED16;
 BEGIN
   tx := M.x; ty := M.y;
   M.x := x; M.y := y + F.H - 1;
@@ -66,11 +66,11 @@ BEGIN
   END
 END ModifyContent;
 
-PROCEDURE Restore (F: Portrait; Q: Display3.Mask; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg);
+PROCEDURE Restore (F: Portrait; Q: Display3.Mask; x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg);
   VAR N: Display.DisplayMsg;
 
-  PROCEDURE ClipAgainst (VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-    VAR r, t, r1, t1: INTEGER;
+  PROCEDURE ClipAgainst (VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+    VAR r, t, r1, t1: SIGNED16;
   BEGIN
     r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
     IF x < x1 THEN x := x1 END; IF y < y1 THEN y := y1 END;
@@ -154,7 +154,7 @@ BEGIN
 END TrackSelectChild;
 
 PROCEDURE Handle* (F: Objects.Object; VAR M: Objects.ObjMsg);
-  VAR x, y, w, h: INTEGER; F1: Portrait; Q: Display3.Mask; obj: Objects.Object; SM: Display.SelectMsg;
+  VAR x, y, w, h: SIGNED16; F1: Portrait; Q: Display3.Mask; obj: Objects.Object; SM: Display.SelectMsg;
 BEGIN
   WITH F: Portrait DO
     IF M IS Display.FrameMsg THEN

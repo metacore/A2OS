@@ -21,7 +21,7 @@ TYPE
 			RETURN num
 		END Available;
 
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate : BOOLEAN; VAR res: WORD);
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate : BOOLEAN; VAR res: INTEGER);
 		BEGIN
 			ASSERT(len >= 0);
 			BEGIN {EXCLUSIVE}
@@ -38,7 +38,7 @@ TYPE
 			END
 		END Send;
 
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		BEGIN
 			ASSERT((size > 0) & (min <= size) & (min >= 0));
 			len := 0;
@@ -74,7 +74,7 @@ TYPE
 	END Pipe;
 
 (** Any stream input procedure or method. Identical to the definition in Streams.Mod, but I don't want to import that here*)
-TYPE	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
+TYPE	Receiver* = PROCEDURE {DELEGATE} ( VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER );
 (*makes a decoupled copy of a receiver*)
 (*internally it's a pipe that automatically reads the input in a continuous loop*)
 TYPE ReadDecoupler*= OBJECT
@@ -83,7 +83,7 @@ TYPE ReadDecoupler*= OBJECT
 		inputReceiver: Receiver;
 		smallbuf: ARRAY[128] OF CHAR;
 		len: SIZE;
-		res: WORD;
+		res: INTEGER;
 
 	PROCEDURE &InitReadDecoupler*(inputReceiver: Receiver);
 	BEGIN
@@ -91,7 +91,7 @@ TYPE ReadDecoupler*= OBJECT
 		SELF.inputReceiver:=inputReceiver;
 	END InitReadDecoupler;
 
-	PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+	PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 	BEGIN
 		pipe.Receive(buf,ofs,size,min,len,res);
 	END Receive;

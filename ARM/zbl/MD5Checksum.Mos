@@ -13,7 +13,7 @@ CONST
 	DigestLength = 33;
 
 TYPE
-	Writer = PROCEDURE(context: MD5.Context; size: LONGINT; start: ADDRESS; len: LONGINT);
+	Writer = PROCEDURE(context: MD5.Context; size: SIGNED32; start: ADDRESS; len: SIGNED32);
 
 VAR
 	write: Writer;
@@ -21,7 +21,7 @@ VAR
 	digest: MD5.Digest;
 	value: ARRAY DigestLength OF CHAR;
 
-	PROCEDURE Md5Checksum (start, size: LONGINT; CONST reference: ARRAY OF CHAR): LONGINT;
+	PROCEDURE Md5Checksum (start, size: SIGNED32; CONST reference: ARRAY OF CHAR): SIGNED32;
 	BEGIN
 		MD5.Init(context);
 		write(context, size, ADDRESS(start), size);

@@ -132,20 +132,20 @@ TYPE
 	Settings = OBJECT
 	VAR
 		(* General *)
-		backupOnStore : LONGINT; (* No | Yes | Always *)
+		backupOnStore : SIGNED32; (* No | Yes | Always *)
 		backupOnCompile : BOOLEAN;
 		showPathInTabs : BOOLEAN;
-		scratchPanelHeight : LONGINT;
+		scratchPanelHeight : SIGNED32;
 		enableWhitespaceWarnings : BOOLEAN;
 		showLineNumbers : BOOLEAN;
 		indicateTabs : BOOLEAN;
-		currentLineColor : LONGINT;
+		currentLineColor : SIGNED32;
 
 		(* Compiler *)
 		defaultCompilerOptions : CompilerOptions;
 		defaultCompilerSettings : CompilerSettings;
 		compilers : ARRAY MaxNbrOfCompilers OF CompilerSettings;
-		nofCompilers : LONGINT;
+		nofCompilers : SIGNED32;
 
 		(* Diff *)
 		diffCommand, diffPrefix, diffSuffix : String;
@@ -182,7 +182,7 @@ TYPE
 		END Init;
 
 		PROCEDURE GetCompilerSettings(CONST filename : ARRAY OF CHAR) : CompilerSettings;
-		VAR settings : CompilerSettings; i : LONGINT; extension : ARRAY 16 OF CHAR;
+		VAR settings : CompilerSettings; i : SIGNED32; extension : ARRAY 16 OF CHAR;
 		BEGIN
 			settings := defaultCompilerSettings;
 			i := 0;
@@ -289,7 +289,7 @@ TYPE
 
 		(* Load settings from system configuration database *)
 		PROCEDURE Load;
-		VAR string : String; temp: LONGINT; res: WORD;
+		VAR string : String; temp: SIGNED32; res: INTEGER;
 		BEGIN
 			(* General *)
 			Configuration.Get("Applications.PET.General.BackupOnStore", string, res);
@@ -450,7 +450,7 @@ TYPE
 			SELF.win := win
 		END New;
 
-		PROCEDURE GetInterface*(type : LONGINT) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : SIGNED32) : WMDropTarget.DropInterface;
 		VAR di : DropURL;
 		BEGIN
 			IF type = WMDropTarget.TypeURL THEN
@@ -469,7 +469,7 @@ TYPE
 			SELF.win := win;
 		END New;
 
-		PROCEDURE URL*(CONST url : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE URL*(CONST url : ARRAY OF CHAR; VAR res : INTEGER);
 		BEGIN
 			win.Load(url, "AUTO");
 			res := 0
@@ -494,7 +494,7 @@ TYPE
 		tree : PETTrees.Tree;
 
 		modified, splitted, wrap: BOOLEAN;
-		focus : LONGINT;
+		focus : SIGNED32;
 
 		codecFormat: ARRAY 128 OF CHAR;
 		autoCodecFormat: ARRAY 128 OF CHAR;
@@ -734,7 +734,7 @@ TYPE
 		VAR
 			compiler : CompilerInterface.Compiler; tw : TextUtilities.TextWriter; errors : BOOLEAN;
 			positions : ARRAY 2 OF SIZE;
-			type : LONGINT;
+			type : SIGNED32;
 		BEGIN
 			ClearLog;
 			IF findPC THEN Strings.Append(options, " /f") END;
@@ -784,7 +784,7 @@ TYPE
 		VAR
 			focusEditor: WMEditors.Editor;
 			entry : WMDiagnostics.ViewEntry;
-			index: LONGINT;
+			index: SIGNED32;
 		BEGIN
 			IF (data # NIL) & (data IS WMDiagnostics.CellInfo) & (data(WMDiagnostics.CellInfo).entryValid) THEN
 				IF (focus = EditorFocus) THEN focusEditor := editor; index := 0;
@@ -897,7 +897,7 @@ TYPE
 
 			PROCEDURE HandleDiff;
 			VAR
-				filename, string : Filename; context : Commands.Context; res : WORD;
+				filename, string : Filename; context : Commands.Context; res : INTEGER;
 				arg : Streams.StringReader;
 			BEGIN
 				IF (settings.diffCommand = "") THEN
@@ -1032,7 +1032,7 @@ TYPE
 		pages : ARRAY MaxNbrOfTabs OF PETPanel;
 		tabList : ARRAY MaxNbrOfTabs OF WMTabComponents.Tab;
 		currentPage : PETPanel;
-		currentPageNr : LONGINT;
+		currentPageNr : SIGNED32;
 		page : WMStandardComponents.Panel;
 
 		xmlHasErrors : BOOLEAN;
@@ -1262,7 +1262,7 @@ TYPE
 		END CreateForm;
 
 		PROCEDURE ButtonHandler(sender, data : ANY);
-		VAR options : CompilerOptions; searchString : SearchString; res : WORD;
+		VAR options : CompilerOptions; searchString : SearchString; res : INTEGER;
 		BEGIN
 			IF sender = undoBtn THEN
 				currentPage.editor.Undo;
@@ -1487,7 +1487,7 @@ TYPE
 		END BrowseForward;
 
 		PROCEDURE GotoFile(CONST filename : ARRAY OF CHAR; pos : SIZE);
-		VAR page : PETPanel; i : LONGINT;
+		VAR page : PETPanel; i : SIGNED32;
 		BEGIN
 			IF browseTOS = browseBase THEN RecordCurrentPos END;
 			i := 0;
@@ -1515,7 +1515,7 @@ TYPE
 		END GotoFile;
 
 		PROCEDURE GotoDefinition(info : PETTrees.ExternalDefinitionInfo);
-		VAR page : PETPanel; i : LONGINT;
+		VAR page : PETPanel; i : SIGNED32;
 		BEGIN
 			IF info.filename = "" THEN RETURN END;
 			IF browseTOS = browseBase THEN RecordCurrentPos END;
@@ -1545,8 +1545,8 @@ TYPE
 		END GotoDefinition;
 
 
-		PROCEDURE GetNrFromPage(page : PETPanel): LONGINT;
-		VAR i : LONGINT; found : BOOLEAN;
+		PROCEDURE GetNrFromPage(page : PETPanel): SIGNED32;
+		VAR i : SIGNED32; found : BOOLEAN;
 		BEGIN
 			i := 0; found := FALSE;
 			WHILE (~found & (i < MaxNbrOfTabs)) DO
@@ -1581,7 +1581,7 @@ TYPE
 		END TabSelected;
 
 		PROCEDURE UpdatePages;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 			tab : WMTabComponents.Tab;
 			s : Strings.String;
 			foundModifiedPage : BOOLEAN;
@@ -1634,7 +1634,7 @@ TYPE
 		END UpdatePages;
 
 		PROCEDURE UpdateInfo;
-		VAR i, j : LONGINT;
+		VAR i, j : SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(windowInfo.openDocuments)-1 DO windowInfo.openDocuments[i].name := ""; END;
 			windowInfo.handleDocumentInfo := HandleDocumentInfo;
@@ -1653,7 +1653,7 @@ TYPE
 			SetInfo(windowInfo);
 		END UpdateInfo;
 
-		PROCEDURE HandleDocumentInfo(CONST info : WMWindowManager.DocumentInfo; new : BOOLEAN; VAR res : WORD);
+		PROCEDURE HandleDocumentInfo(CONST info : WMWindowManager.DocumentInfo; new : BOOLEAN; VAR res : INTEGER);
 		BEGIN
 			IF (pages[info.id] # NIL) THEN SelectTab(info.id); END;
 		END HandleDocumentInfo;
@@ -1730,7 +1730,7 @@ TYPE
 
 		PROCEDURE PositionHandler(sender, data : ANY);
 		VAR tempString : ARRAY 16 OF CHAR;
-			tempInt : LONGINT;
+			tempInt : SIGNED32;
 		BEGIN
 			IF (currentPage # NIL) THEN
 				positionEdit.GetAsString(tempString);
@@ -1762,7 +1762,7 @@ TYPE
 			formatBtn.caption.SetAOC(caption);
 		END SetFormatCaption;
 
-		PROCEDURE SetCursorPosition (position: LONGINT);
+		PROCEDURE SetCursorPosition (position: SIGNED32);
 		VAR string : ARRAY 16 OF CHAR;
 		BEGIN
 			IF (currentPage # NIL) THEN
@@ -1819,7 +1819,7 @@ TYPE
 		END FilenameEditEscapeHandler;
 
 		PROCEDURE LoadHandler(sender, data : ANY);
-		VAR filename : Filename; command : ARRAY 1024 OF CHAR; msg : ARRAY 64 OF CHAR; ignoreRes : WORD;
+		VAR filename : Filename; command : ARRAY 1024 OF CHAR; msg : ARRAY 64 OF CHAR; ignoreRes : INTEGER;
 		BEGIN
 			filenameEdit.GetAsString(filename);
 			Strings.TrimWS(filename);
@@ -1843,7 +1843,7 @@ TYPE
 
 		PROCEDURE Load(CONST filename,  format : ARRAY OF CHAR);
 		VAR
-			text : Texts.Text; res : WORD;
+			text : Texts.Text; res : INTEGER;
 			decoder : Codecs.TextDecoder;
 			msg : ARRAY 512 OF CHAR;
 			readonly : BOOLEAN;
@@ -1993,14 +1993,14 @@ TYPE
 
 		PROCEDURE Store(CONST filename, format  : ARRAY OF CHAR);
 		VAR
-			res : WORD;
+			res : INTEGER;
 			msg : ARRAY 512 OF CHAR;
 			name, backName, fullname, archiveName, entryName, path: Filename;
 			syntaxHighlighterName : ARRAY 32 OF CHAR;
 			backExt, t, ext: ARRAY 12 OF CHAR;
 			options : CompilerOptions;
 			encoder : Codecs.TextEncoder;
-			w : Streams.Writer; i : LONGINT;
+			w : Streams.Writer; i : SIGNED32;
 			file, oldFile : Files.File;
 
 			PROCEDURE FileExists(CONST filename : ARRAY OF CHAR) : BOOLEAN;
@@ -2150,7 +2150,7 @@ TYPE
 
 		PROCEDURE NewTab;
 		VAR pet : PETPanel;
-			i : LONGINT;
+			i : SIGNED32;
 			found : BOOLEAN;
 		BEGIN
 			found := FALSE;
@@ -2173,7 +2173,7 @@ TYPE
 
 		(** Returns TRUE if at least one page has been modified, FALSE otherwise *)
 		PROCEDURE HasModifiedPage() : BOOLEAN;
-		VAR modified : BOOLEAN; i : LONGINT;
+		VAR modified : BOOLEAN; i : SIGNED32;
 		BEGIN
 			modified := FALSE;
 			i := 0;
@@ -2188,7 +2188,7 @@ TYPE
 
 		(* Returns FALSE if the user declines to close all tabs *)
 		PROCEDURE CloseAllTabs() : BOOLEAN;
-		VAR res, i : LONGINT;
+		VAR res, i : SIGNED32;
 		BEGIN
 			(* First check whether all pages are saved to disk *)
 			i := 0;
@@ -2216,7 +2216,7 @@ TYPE
 		END CloseAllTabs;
 
 		PROCEDURE CloseHandler(sender, data: ANY);
-		VAR found : BOOLEAN; i : LONGINT;
+		VAR found : BOOLEAN; i : SIGNED32;
 		BEGIN
 			(* close current tab, warn user if not saved *)
 			IF (currentPage = NIL) OR (currentPage.modified) & (
@@ -2283,7 +2283,7 @@ TYPE
 		VAR
 			path, filename : Files.FileName;
 			name, extension, msg : ARRAY 128 OF CHAR;
-			tw : TextUtilities.TextWriter; res : WORD;
+			tw : TextUtilities.TextWriter; res : INTEGER;
 		BEGIN
 			ASSERT(currentPage # NIL);
 			Files.SplitPath(currentPage.filename, path, filename);
@@ -2302,7 +2302,7 @@ TYPE
 		END UnloadModule;
 
 		PROCEDURE Close*;
-		VAR page : LONGINT;
+		VAR page : SIGNED32;
 		BEGIN
 			Close^;
 			FOR page := 0 TO LEN(pages)-1 DO
@@ -2382,7 +2382,7 @@ TYPE
 		PROCEDURE LoadPages(pages : XML.Element);
 		VAR
 			elem : XML.Element; enum : XMLObjects.Enumerator; ptr : ANY; s : XML.String;
-			selectedPageNr : LONGINT;
+			selectedPageNr : SIGNED32;
 		BEGIN
 			selectedPageNr := -1;
 			enum := pages.GetContents(); enum.Reset;
@@ -2410,7 +2410,7 @@ TYPE
 		END LoadPages;
 
 		PROCEDURE StorePages() : XML.Element;
-		VAR data, elem : WMRestorable.XmlElement; i : LONGINT;
+		VAR data, elem : WMRestorable.XmlElement; i : SIGNED32;
 		BEGIN
 			NEW(data); data.SetName("PETData");
 			NEW(elem); elem.SetName("General");
@@ -2624,7 +2624,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 	scratchText : Texts.Text;
 	scratchModified : BOOLEAN;
 	settings : Settings;
@@ -2634,7 +2634,7 @@ VAR
 (** Open document *)
 PROCEDURE Open*(context : Commands.Context); (** [Options] {filename['@'position]} ~ *)
 VAR
-	window : Window; count, index, temp : SIZE; position : LONGINT;
+	window : Window; count, index, temp : SIZE; position : SIGNED32;
 	filename : Filename; format : ARRAY 32 OF CHAR;
 	options: Options.Options;
 BEGIN
@@ -2762,7 +2762,7 @@ BEGIN
 END Uncomment;
 
 PROCEDURE GetSyntaxHighlighterName*(fullname : ARRAY OF CHAR; VAR name : ARRAY OF CHAR);
-VAR filename, extension, config : Files.FileName; res : WORD;
+VAR filename, extension, config : Files.FileName; res : INTEGER;
 BEGIN
 	name := "";
 	Strings.UpperCase(fullname);
@@ -2812,7 +2812,7 @@ BEGIN (* caller holds module lock *)
 END LoadScratchText;
 
 PROCEDURE StoreText(CONST filename : ARRAY OF CHAR; text : Texts.Text);
-VAR res : WORD;
+VAR res : INTEGER;
 BEGIN
 	text.AcquireRead;
 	TextUtilities.StoreOberonText(text, filename, res);
@@ -2820,7 +2820,7 @@ BEGIN
 END StoreText;
 
 PROCEDURE LoadText(CONST filename : ARRAY OF CHAR) : Texts.Text;
-VAR text : Texts.Text; res : WORD;
+VAR text : Texts.Text; res : INTEGER;
 BEGIN
 	NEW(text);
 	text.AcquireWrite;
@@ -2860,7 +2860,7 @@ BEGIN {EXCLUSIVE}
 END Cleanup;
 
 PROCEDURE LoadModule(CONST moduleName : ARRAY OF CHAR);
-VAR module : Modules.Module; msg : ARRAY 128 OF CHAR; res : WORD;
+VAR module : Modules.Module; msg : ARRAY 128 OF CHAR; res : INTEGER;
 BEGIN
 	module := Modules.ThisModule(moduleName, res, msg);
 END LoadModule;

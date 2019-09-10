@@ -25,8 +25,8 @@ VAR
 	Digit: ARRAY 17 OF CHAR;
 
 
-PROCEDURE BitPatternToStr (val: LONGINT; VAR str: ARRAY OF CHAR; base: LONGINT);
-	VAR i, j,shift, size: SHORTINT;
+PROCEDURE BitPatternToStr (val: SIGNED32; VAR str: ARRAY OF CHAR; base: SIGNED32);
+	VAR i, j,shift, size: SIGNED8;
 BEGIN
 	ASSERT ((base=2) OR (base=8) OR (base=16));
 	IF	base = 2	THEN shift := 1; size := 32
@@ -45,12 +45,12 @@ BEGIN
 END BitPatternToStr;
 
 (** IntToStr -- convert a longint to a representation in a given base (2..16) *)
-PROCEDURE IntToStr* (val: LONGINT; VAR str: ARRAY OF CHAR; base: LONGINT);
-	VAR i, j: LONGINT;	digits: ARRAY 32 OF LONGINT;
+PROCEDURE IntToStr* (val: SIGNED32; VAR str: ARRAY OF CHAR; base: SIGNED32);
+	VAR i, j: SIGNED32;	digits: ARRAY 32 OF SIGNED32;
 BEGIN
 	IF (base <= 1) OR (base > 16) THEN COPY("???", str); RETURN END;
 	IF (base = 2) OR (base = 16) THEN BitPatternToStr (val, str, base); RETURN END;
-	IF val = MIN(LONGINT) THEN
+	IF val = MIN(SIGNED32) THEN
 		COPY (Min[base-1], str); RETURN
 	END;
 	IF val < 0 THEN val := -val; str[0] := "-"; j := 1	ELSE	j := 0	END;
@@ -67,8 +67,8 @@ END IntToStr;
 
 
 (** RealToStr -- convert a longreal to a representation in a given base (2..16) *)
-PROCEDURE RealToStr*(x: LONGREAL; VAR s: ARRAY OF CHAR; base: LONGINT);
-VAR h, l: LONGINT; d: ARRAY 16 OF CHAR;
+PROCEDURE RealToStr*(x: FLOAT64; VAR s: ARRAY OF CHAR; base: SIGNED32);
+VAR h, l: SIGNED32; d: ARRAY 16 OF CHAR;
 
 BEGIN
 	IF (base # 2) & (base # 10) & (base # 16) THEN COPY("???", s); RETURN END;
@@ -82,10 +82,10 @@ BEGIN
 END RealToStr;
 
 (* ============================================================= *)
-PROCEDURE StrToInt* (s: ARRAY OF CHAR; VAR val: LONGINT; base: LONGINT);
-	VAR j: LONGINT; neg: BOOLEAN;
+PROCEDURE StrToInt* (s: ARRAY OF CHAR; VAR val: SIGNED32; base: SIGNED32);
+	VAR j: SIGNED32; neg: BOOLEAN;
 
-	PROCEDURE IsOK (ch: CHAR; base: LONGINT): BOOLEAN;
+	PROCEDURE IsOK (ch: CHAR; base: SIGNED32): BOOLEAN;
 	BEGIN
 		IF Strings.UpperCh(ch) >= "A" THEN
 			base := base - ORD(Strings.UpperCh(ch)) + ORD ("A") + 10

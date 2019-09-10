@@ -136,14 +136,15 @@
 				</Group>
 				<Group style="Bold">
 					BOOLEAN
-					SHORTINT INTEGER LONGINT HUGEINT
-					REAL LONGREAL
-					COMPLEX LONGCOMPLEX
-					SET
+					ADDRESS SIZE INTEGER LONGINTEGER
+					SIGNED8 SIGNED16 SIGNED32 SIGNED64
+					UNSIGNED8 UNSIGNED16 UNSIGNED32 UNSIGNED64
+					REAL FLOAT32 FLOAT64
+					COMPLEX COMPLEX32 COMPLEX64
+					SET SET8 SET16 SET32 SET64 INTEGERSET
 					CHAR
 					ANY
 					RANGE
-					ADDRESS SIZE WORD LONGWORD
 				</Group>
 				<Group style="Dangerous">
 					SYSTEM.GET SYSTEM.GET8 SYSTEM.GET16 SYSTEM.GET32 SYSTEM.GET64
@@ -311,14 +312,15 @@
 				</Group>
 				<Group style="Bold">
 					boolean
-					shortint integer longint hugeint
-					real longreal
-					complex longcomplex
-					set
+					address size integer longinteger
+					signed8 signed16 signed32 signed64
+					unsigned8 unsigned16 unsigned32 unsigned64
+					real float32 float64
+					complex complex32 complex64
+					set set8 set16 set32 set64 integerset
 					char
 					any
 					range
-					address size word longword
 				</Group>
 				<Group style="Dangerous">
 					system.get system.get8 system.get16 system.get32 system.get64
@@ -468,8 +470,8 @@
 				</Group>
 				<Group style="Bold">
 					BOOLEAN
-					SHORTINT INTEGER LONGINT HUGEINT
-					REAL LONGREAL
+					SIGNED8 SIGNED16 SIGNED32 SIGNED64
+					FLOAT32 FLOAT64
 					SET
 					CHAR
 					ANY
@@ -588,8 +590,8 @@
 				</Group>
 				<Group style="Bold">
 					BOOLEAN
-					SHORTINT INTEGER LONGINT HUGEINT
-					REAL LONGREAL
+					SIGNED8 SIGNED16 SIGNED32 SIGNED64
+					FLOAT32 FLOAT64
 					SET
 					CHAR
 					ANY

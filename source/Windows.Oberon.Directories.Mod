@@ -19,13 +19,13 @@ CONST
 TYPE
 	Data = POINTER TO DataDesc;
 	DataDesc = RECORD (ListRiders.StringDesc)
-		pictNr: LONGINT
+		pictNr: SIGNED32
 	END;
 
 	Item = POINTER TO ItemDesc;
 	ItemDesc = RECORD
 		s: ARRAY 64 OF CHAR;	(* Data value *)
-		key, pos, stamp, state: LONGINT;
+		key, pos, stamp, state: SIGNED32;
 		dsc, asc, next, prev: Item	(* asc: parent; dsc: first child (sentinel); next, prev: brothers *)
 	END;
 
@@ -34,7 +34,7 @@ TYPE
 		tail: Item;	(* top of tree (sentinel) *)
 		mask: ARRAY 32 OF CHAR;	(* filename mask *)
 		rootDir: FileDir.FileName;	(* root Directory *)
-		key: LONGINT	(* Next unique-key *)
+		key: SIGNED32	(* Next unique-key *)
 	END;
 
 	Rider* = POINTER TO RiderDesc;
@@ -51,7 +51,7 @@ VAR
 	mMethod: ListRiders.Method;
 	vMethod: ListGadgets.Method;
 	drvPicts: ARRAY Picts OF Pictures.Picture;
-	maxW: INTEGER;
+	maxW: SIGNED16;
 
 	drv: Objects.Object;
 	StringHandler: Objects.Handler;
@@ -80,7 +80,7 @@ BEGIN
 END IsDirectory;
 
 PROCEDURE CheckPath (VAR path: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	IF (path[0] # 0X) & (path[1] = ":") THEN	(* path with dirve *)
 		path[0] := CAP(path[0]);
@@ -93,13 +93,13 @@ BEGIN
 	END
 END CheckPath;
 
-PROCEDURE GetKey (obj: Model): LONGINT;
+PROCEDURE GetKey (obj: Model): SIGNED32;
 BEGIN INC(obj.key); RETURN obj.key - 1
 END GetKey;
 
 (*========== Item handling ==========*)
 (* creates a new item *)
-PROCEDURE NewItem (name: ARRAY OF CHAR; key: LONGINT): Item;
+PROCEDURE NewItem (name: ARRAY OF CHAR; key: SIGNED32): Item;
 VAR n: Item;
 BEGIN
 	NEW(n); COPY(name, n.s); n.key := key; n.stamp := -1;
@@ -116,11 +116,11 @@ BEGIN
 END InsertItem;
 
 (* FileDir.FileEnumerator. Global variable "model" has to be preset. *)
-PROCEDURE Enum (path, name: ARRAY OF CHAR; time, date, size: LONGINT; attrs: SET);
+PROCEDURE Enum (path, name: ARRAY OF CHAR; time, date, size: SIGNED32; attrs: SET);
 VAR new, cur: Item;
 
-	PROCEDURE CAPCompare (VAR s1, s2: ARRAY OF CHAR): INTEGER;
-	VAR i: LONGINT;
+	PROCEDURE CAPCompare (VAR s1, s2: ARRAY OF CHAR): SIGNED16;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (s1[i] # 0X) & (s2[i] # 0X) & (CAP(s1[i]) = CAP(s2[i])) DO INC(i) END;
@@ -148,7 +148,7 @@ END BuildList;
 
 (*========== Rider handling ==========*)
 PROCEDURE SetItem (R: Rider; item: Item);
-VAR d: Data; res: WORD;
+VAR d: Data; res: INTEGER;
 BEGIN
 	R.item := item; R.eol := item.key < 0; R.dsc := item.dsc # NIL;
 	IF (R.d = NIL) OR ~(R.d IS Data) THEN NEW(d); R.d := d ELSE d := R.d(Data) END;
@@ -167,14 +167,14 @@ BEGIN
 END SetItem;
 
 (* Get the current item's key *)
-PROCEDURE Key (R: ListRiders.Rider): LONGINT;
+PROCEDURE Key (R: ListRiders.Rider): SIGNED32;
 BEGIN RETURN R(Rider).item.key
 END Key;
 
 (* Position rider R on the item having the given key *)
-PROCEDURE Seek (R: ListRiders.Rider; key: LONGINT);
+PROCEDURE Seek (R: ListRiders.Rider; key: SIGNED32);
 
-	PROCEDURE Traverse (this: Item; key: LONGINT): Item;
+	PROCEDURE Traverse (this: Item; key: SIGNED32): Item;
 	VAR found: Item;
 	BEGIN
 		this := this.next;
@@ -193,12 +193,12 @@ BEGIN
 END Seek;
 
 (* Get current position of the rider *)
-PROCEDURE Pos (R: ListRiders.Rider): LONGINT;
+PROCEDURE Pos (R: ListRiders.Rider): SIGNED32;
 BEGIN RETURN R(Rider).item.pos
 END Pos;
 
 (* Position rider R on the item having the given pos *)
-PROCEDURE Set (R: ListRiders.Rider; pos: LONGINT);
+PROCEDURE Set (R: ListRiders.Rider; pos: SIGNED32);
 VAR n : Item;
 BEGIN
 	WITH R: Rider DO
@@ -226,10 +226,10 @@ END DeleteLink;
 (* Get a rider working on the descendants of the item on the position of R. If old is NIL, then a new rider
 	is allocated. old is recycled if not NIL *)
 PROCEDURE Desc (R, old: ListRiders.Rider): ListRiders.Rider;
-VAR new: Rider; base: Model; item: Item; path: FileDir.FileName; pos: LONGINT;
+VAR new: Rider; base: Model; item: Item; path: FileDir.FileName; pos: SIGNED32;
 
-	PROCEDURE MakePath (item: Item; VAR path: ARRAY OF CHAR; VAR pos: LONGINT);
-	VAR i: LONGINT;
+	PROCEDURE MakePath (item: Item; VAR path: ARRAY OF CHAR; VAR pos: SIGNED32);
+	VAR i: SIGNED32;
 	BEGIN
 		IF item.asc # NIL THEN MakePath(item.asc, path, pos) END;
 		i:= 0;
@@ -258,22 +258,22 @@ BEGIN
 END Desc;
 
 (* Get stamp value of the item at the current position of R *)
-PROCEDURE GetStamp (R: ListRiders.Rider): LONGINT;
+PROCEDURE GetStamp (R: ListRiders.Rider): SIGNED32;
 BEGIN RETURN R(Rider).item.stamp
 END GetStamp;
 
 (* Set stamp value of the item at the current position of R *)
-PROCEDURE SetStamp (R: ListRiders.Rider; stamp: LONGINT);
+PROCEDURE SetStamp (R: ListRiders.Rider; stamp: SIGNED32);
 BEGIN R(Rider).item.stamp := stamp
 END SetStamp;
 
 (* Get the state of the current item *)
-PROCEDURE State (R: ListRiders.Rider): LONGINT;
+PROCEDURE State (R: ListRiders.Rider): SIGNED32;
 BEGIN RETURN R(Rider).item.state
 END State;
 
 (* Set the state of the current item *)
-PROCEDURE SetState (R: ListRiders.Rider; s: LONGINT);
+PROCEDURE SetState (R: ListRiders.Rider; s: SIGNED32);
 BEGIN R(Rider).item.state := SHORT(s)
 END SetState;
 
@@ -350,7 +350,7 @@ END ModelHandler;
 
 (** Initialize a directory model *)
 PROCEDURE InitModel* (obj: Model; rootDir, mask: ARRAY OF CHAR);
-VAR tail: Item; i: LONGINT; drvName: ARRAY 4 OF CHAR;
+VAR tail: Item; i: SIGNED32; drvName: ARRAY 4 OF CHAR;
 
 	PROCEDURE NewDrv (name: ARRAY OF CHAR);
 	VAR drv, dsc: Item;
@@ -400,7 +400,7 @@ BEGIN
 	L.dx := maxW + 2 + L.lev*F.tab
 END FormatLine;
 
-PROCEDURE DisplayLine (F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: INTEGER; R: ListRiders.Rider; L: ListGadgets.Line);
+PROCEDURE DisplayLine (F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; R: ListRiders.Rider; L: ListGadgets.Line);
 VAR d: Data; pict: Pictures.Picture; str: ARRAY 64 OF CHAR;
 BEGIN
 	Display3.ReplConst(Q, F.backC, x, y, w, h, Display.replace);
@@ -419,7 +419,7 @@ BEGIN
 	Display3.String(Q, F.textC, x, y + L.dsr, F.fnt, str, Display.paint)
 END DisplayLine;
 
-PROCEDURE P (x: LONGINT): INTEGER;
+PROCEDURE P (x: SIGNED32): SIGNED16;
 BEGIN RETURN SHORT((x * Display.Unit) DIV Printer.Unit)
 END P;
 
@@ -439,7 +439,7 @@ BEGIN
 	L.dx := P(maxW + 2 + L.lev*F.tab)
 END PrintFormatLine;
 
-PROCEDURE PrintLine (F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: INTEGER; R: ListRiders.Rider; L: ListGadgets.Line);
+PROCEDURE PrintLine (F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; R: ListRiders.Rider; L: ListGadgets.Line);
 VAR d: Data; pict: Pictures.Picture; str: ARRAY 64 OF CHAR;
 BEGIN
 	Printer3.ReplConst(Q, F.backC, x, y, w, h, Display.replace);
@@ -513,8 +513,8 @@ BEGIN Objects.NewObj := drv
 END NewDrv;
 
 (* ------------ aux. Commands ------------ *)
-PROCEDURE EnumForList (path, name: ARRAY OF CHAR; time, date, size: LONGINT; attrs: SET);
-VAR d: ListRiders.String; full: ARRAY 256 OF CHAR; i, j: LONGINT;
+PROCEDURE EnumForList (path, name: ARRAY OF CHAR; time, date, size: SIGNED32; attrs: SET);
+VAR d: ListRiders.String; full: ARRAY 256 OF CHAR; i, j: SIGNED32;
 BEGIN
 	IF ~(FileDir.Directory IN attrs) THEN
 		NEW(d);
@@ -543,7 +543,7 @@ END EnumForList;
 	Usage: Directories.Directory [\p] "<pattern>" <Objname> ~
 *)
 PROCEDURE Directory*;
-VAR obj: Objects.Object; i, j: LONGINT; path, pattern: AosFS.FileName; C: ListRiders.ConnectMsg; S: Texts.Scanner;
+VAR obj: Objects.Object; i, j: SIGNED32; path, pattern: AosFS.FileName; C: ListRiders.ConnectMsg; S: Texts.Scanner;
 BEGIN
 	writePath := FALSE;
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
@@ -587,7 +587,7 @@ END Directory;
 (* ------------ aux. Porcs ------------ *)
 PROCEDURE GetPicts;
 
-	PROCEDURE Set (i: LONGINT; pict: Objects.Object);
+	PROCEDURE Set (i: SIGNED32; pict: Objects.Object);
 	BEGIN
 		DEC(i);
 		IF (pict = NIL) OR ~(pict IS Pictures.Picture) THEN drvPicts[i] := NIL

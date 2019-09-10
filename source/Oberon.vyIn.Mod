@@ -36,7 +36,7 @@ CONST idversion* = "vyIn v0r0a2";
 	BEGIN	vyScanners.Dump(w,S)	END Dump;
 	*)
 PROCEDURE Open*;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN 	vyScanners.NewSScanner(S); 	vyScanners.OpenParScanner(S);
 	i := vyScanners.NextToken(S);  Done := TRUE;  (*Dump;*)
 END Open;
@@ -45,22 +45,22 @@ PROCEDURE Char* (VAR ch: CHAR);
 BEGIN	IF Done THEN ch := S.ch;  Done := ~S.eot;  vyScanners.Ch(S) END
 END Char;
 
-PROCEDURE LongInt* (VAR i: LONGINT);
+PROCEDURE LongInt* (VAR i: SIGNED32);
 BEGIN	IF Done THEN Done := vyParser.Number(S, i) END
 END LongInt;
 
-PROCEDURE Int* (VAR i: INTEGER);
-	VAR l: LONGINT;
+PROCEDURE Int* (VAR i: SIGNED16);
+	VAR l: SIGNED32;
 BEGIN	IF Done THEN LongInt(l);  i := SHORT(l) END
 END Int;
 
-PROCEDURE Real* (VAR x: REAL);
+PROCEDURE Real* (VAR x: FLOAT32);
 BEGIN	IF Done THEN Done := vyParser.Real(S, x) END
 END Real;
 
-PROCEDURE LongReal* (VAR y: LONGREAL);
+PROCEDURE LongReal* (VAR y: FLOAT64);
 	(*! add proper LongReal support *)
-	VAR x: REAL;
+	VAR x: FLOAT32;
 BEGIN	IF Done THEN Real(x);  y := x END
 END LongReal;
 

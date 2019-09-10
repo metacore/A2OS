@@ -49,25 +49,25 @@ the number of function evaluations taken.
 
 CONST range = 30;
 TYPE
-	Function = PROCEDURE (a: ARRAY OF LONGREAL): LONGREAL;
-	Function2 =  PROCEDURE (beta, h: LONGREAL): LONGREAL;
+	Function = PROCEDURE (a: ARRAY OF FLOAT64): FLOAT64;
+	Function2 =  PROCEDURE (beta, h: FLOAT64): FLOAT64;
 	VAR exceeded*: BOOLEAN;
 
-	PROCEDURE AmoTry (		VAR P: 			ARRAY OF ARRAY OF LONGREAL;
-	VAR Y: 			ARRAY OF LONGREAL;
-	VAR sum: 		ARRAY OF LONGREAL;
+	PROCEDURE AmoTry (		VAR P: 			ARRAY OF ARRAY OF FLOAT64;
+	VAR Y: 			ARRAY OF FLOAT64;
+	VAR sum: 		ARRAY OF FLOAT64;
 	ndim,
-	ihi: 		LONGINT;
+	ihi: 		SIGNED32;
 	func: 	 Function;
-	VAR nfunc: 	LONGINT;
-fac: 		LONGREAL): 	 LONGREAL;
+	VAR nfunc: 	SIGNED32;
+fac: 		FLOAT64): 	 FLOAT64;
 	(*     Extrapolates by a factor FAC through the face of the simplex across from the high point, tries it, and replaces the high point
 	if the new point is better.   *)
 VAR
-	j : LONGINT;
-	fac1, fac2, ytry: LONGREAL;
-	(* PTRY: POINTER TO ARRAY OF LONGREAL; *)
-	PTRY: ARRAY 2 OF LONGREAL;
+	j : SIGNED32;
+	fac1, fac2, ytry: FLOAT64;
+	(* PTRY: POINTER TO ARRAY OF FLOAT64; *)
+	PTRY: ARRAY 2 OF FLOAT64;
 BEGIN
 	(* NEW(PTRY,ndim);  *)(* dim is assumed to be 2 *)
 	fac1 := (1.0 - fac) / ndim;
@@ -91,14 +91,14 @@ BEGIN
 	END;*)
 END AmoTry;
 
-PROCEDURE swap* (VAR y1, y2: LONGREAL);
-	VAR temp: LONGREAL;
+PROCEDURE swap* (VAR y1, y2: FLOAT64);
+	VAR temp: FLOAT64;
 BEGIN
 	temp := y1;     y1 := y2;     y2 := temp
 END swap;
 
-PROCEDURE swapv* (VAR y1, y2: ARRAY OF LONGREAL);
-	VAR i: LONGINT;
+PROCEDURE swapv* (VAR y1, y2: ARRAY OF FLOAT64);
+	VAR i: SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(y1) - 1 DO
 		swap(y1[i], y2[i])
@@ -106,12 +106,12 @@ BEGIN
 END swapv;
 
 
-PROCEDURE Amoeba* (		VAR P: 		 ARRAY OF ARRAY OF LONGREAL;
-VAR Y: 		 ARRAY OF LONGREAL;
-ndim: 	LONGINT;
-ftol: 	LONGREAL;
+PROCEDURE Amoeba* (		VAR P: 		 ARRAY OF ARRAY OF FLOAT64;
+VAR Y: 		 ARRAY OF FLOAT64;
+ndim: 	SIGNED32;
+ftol: 	FLOAT64;
 func: 	Function;
-VAR nfunc: LONGINT);
+VAR nfunc: SIGNED32);
 CONST
 	nfuncmax = 5000;      (* The maximum allowed
 	number of function evaluations, and three parameters
@@ -119,11 +119,11 @@ CONST
 	alpha = 1.0;
 	beta = 0.5;
 	gamma = 2.0;
-	VAR t1, t2: LONGREAL;
-	mpts, nY, j, inhi, ilo, ihi, i : LONGINT;
-	ytry, ysave, sum, rtol: LONGREAL;
-	(*  PSUM: POINTER TO ARRAY OF LONGREAL;*)
-	PSUM: ARRAY 2 OF LONGREAL;      (* dim assumed to be 2 *)
+	VAR t1, t2: FLOAT64;
+	mpts, nY, j, inhi, ilo, ihi, i : SIGNED32;
+	ytry, ysave, sum, rtol: FLOAT64;
+	(*  PSUM: POINTER TO ARRAY OF FLOAT64;*)
+	PSUM: ARRAY 2 OF FLOAT64;      (* dim assumed to be 2 *)
 
 BEGIN
 	exceeded := FALSE;
@@ -241,9 +241,9 @@ BEGIN
 	END      (* Go back for the test of doneness and the next iteration. *)
 END Amoeba;
 
-PROCEDURE Downhill* (func: Function2;   VAR beta, h: LONGREAL;   prec: LONGREAL  );
+PROCEDURE Downhill* (func: Function2;   VAR beta, h: FLOAT64;   prec: FLOAT64  );
 CONST initdist = 5;    fact = 0.5;
-	VAR sbeta, sh : LONGREAL;   nb, nh : ARRAY 8 OF  LONGREAL;   val, temp, dist: LONGREAL;   sf: BOOLEAN;   fval, i, count: LONGINT;
+	VAR sbeta, sh : FLOAT64;   nb, nh : ARRAY 8 OF  FLOAT64;   val, temp, dist: FLOAT64;   sf: BOOLEAN;   fval, i, count: SIGNED32;
 BEGIN
 	exceeded := FALSE;
 	count := 0;

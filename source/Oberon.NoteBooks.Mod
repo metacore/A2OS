@@ -19,7 +19,7 @@ TYPE
 	NoteBook* = POINTER TO NoteBookDesc;
 	NoteBookDesc* = RECORD (Gadgets.FrameDesc)
 		pages*: Display.Frame;	(* list of pages belonging to the notebook *)
-		time*: LONGINT	(* time of selection *)
+		time*: SIGNED32	(* time of selection *)
 	END;
 
 	(* Message to change the current page *)
@@ -48,8 +48,8 @@ BEGIN
 END SetMainMask;
 
 (* Forward a message to the current child *)
-PROCEDURE ToMain(F: NoteBook; x, y: INTEGER; VAR M: Display.FrameMsg);
-VAR Mdlink, Fdlink: Objects.Object; tx, ty: INTEGER;
+PROCEDURE ToMain(F: NoteBook; x, y: SIGNED16; VAR M: Display.FrameMsg);
+VAR Mdlink, Fdlink: Objects.Object; tx, ty: SIGNED16;
 BEGIN
 	IF F.dsc # NIL THEN tx := M.x; ty := M.y;
 		M.x := x; M.y := y + F.H - 1;
@@ -86,7 +86,7 @@ BEGIN
 END AdjustChild;
 
 (* Display the current page title *)
-PROCEDURE UpdateTitle(F: NoteBook; R: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE UpdateTitle(F: NoteBook; R: Display3.Mask; x, y, w, h: SIGNED16);
 VAR s: ARRAY 64 OF CHAR;
 BEGIN
 	Display3.ReplConst(R, Display3.textbackC, x + 20, y + h - topborder, w - 21, topborder - 1, Display.replace);
@@ -98,11 +98,11 @@ BEGIN
 	END;
 END UpdateTitle;
 
-PROCEDURE Restore(F: NoteBook; R: Display3.Mask; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg);
+PROCEDURE Restore(F: NoteBook; R: Display3.Mask; x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg);
 VAR D: Display.DisplayMsg; s: ARRAY 64 OF CHAR;
 
-	PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-	VAR r, t, r1, t1: INTEGER;
+	PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+	VAR r, t, r1, t1: SIGNED16;
 	BEGIN r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 		IF x < x1 THEN x := x1 END; IF y < y1 THEN y := y1 END;
 		IF r > r1 THEN r := r1 END; IF t > t1 THEN t := t1 END;
@@ -144,7 +144,7 @@ BEGIN
 	IF Gadgets.selected IN F.state THEN Display3.FillPattern(R, Display3.white, Display3.selectpat, x, y, x, y, w, h, Display.paint) END
 END Restore;
 
-PROCEDURE HandlePageMsg(F: NoteBook; x, y: INTEGER; VAR M: PageMsg);
+PROCEDURE HandlePageMsg(F: NoteBook; x, y: SIGNED16; VAR M: PageMsg);
 VAR C: Display.ControlMsg; A: Display.ModifyMsg; f: Display.Frame;
 	N: Oberon.ControlMsg; S: Display.SelectMsg;
 BEGIN
@@ -258,7 +258,7 @@ BEGIN
 	END
 END HandleSelect;
 
-PROCEDURE Edit(F: NoteBook; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg);
+PROCEDURE Edit(F: NoteBook; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg);
 VAR newpage: Display.Frame; s: ARRAY 2 OF CHAR; keysum: SET; R: Display3.Mask;
 BEGIN
 	IF M.keys = {1} THEN
@@ -374,8 +374,8 @@ BEGIN
 END Attr;
 
 PROCEDURE Handler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: NoteBook; R: Display3.Mask;
-	f: Display.Frame; ver: LONGINT; obj: Objects.Object;
+VAR x, y, w, h: SIGNED16; F0: NoteBook; R: Display3.Mask;
+	f: Display.Frame; ver: SIGNED32; obj: Objects.Object;
 BEGIN
 	WITH F: NoteBook DO
 		IF M IS Display.FrameMsg THEN

@@ -53,28 +53,28 @@ TYPE
 
 	PanelDesc* = RECORD (Gadgets.FrameDesc)
 		focused*: BOOLEAN;	(** Has the caret ? *)
-		focusx*, focusy*: INTEGER;	(** Relative coordinates of caret. *)
-		time*: LONGINT;	(** Time of selection. *)
+		focusx*, focusy*: SIGNED16;	(** Relative coordinates of caret. *)
+		time*: SIGNED32;	(** Time of selection. *)
 		back*: Display3.Mask;	(** Background mask of the panel, in relative coordinates. *)
-		rx*, ry*, rr*, rt*: INTEGER;	(** Current hull to be redrawn (damage region). *)
-		borderW*: INTEGER;	(** Size in pixels of the border area to which children are clipped. *)
+		rx*, ry*, rr*, rt*: SIGNED16;	(** Current hull to be redrawn (damage region). *)
+		borderW*: SIGNED16;	(** Size in pixels of the border area to which children are clipped. *)
 		do*: Methods;	(** Method block. *)
 		state0*: SET;
-		grid*: INTEGER;	(** Grid snap size. *)
-		col*: INTEGER;	(** Panel background color. *)
+		grid*: SIGNED16;	(** Grid snap size. *)
+		col*: SIGNED16;	(** Panel background color. *)
 		pict*: Pictures.Picture;	(** Background picture, NIL if none is used. *)
 	END;
 
 	(** In the following methods x, y is the absolute position of the panel on the display. *)
 	MethodsDesc* = RECORD
 		(** Draw panel background. *)
-		RestoreBackGround*: PROCEDURE (F: Panel; x, y: INTEGER; R: Display3.Mask);
+		RestoreBackGround*: PROCEDURE (F: Panel; x, y: SIGNED16; R: Display3.Mask);
 
 		(** Directly draw caret shape. *)
-		RestoreCaret*: PROCEDURE (F: Panel; x, y: INTEGER; R: Display3.Mask);
+		RestoreCaret*: PROCEDURE (F: Panel; x, y: SIGNED16; R: Display3.Mask);
 
 		(** Directly display an area of a panel. *)
-		RestoreArea*: PROCEDURE (F: Panel; x, y, u, v, w, h: INTEGER; R: Display3.Mask; dlink: Objects.Object);
+		RestoreArea*: PROCEDURE (F: Panel; x, y, u, v, w, h: SIGNED16; R: Display3.Mask; dlink: Objects.Object);
 
 		(** Update the caret. Calls GrowHull followed by DrawHull for the caret area. *)
 		UpdateCaret*: PROCEDURE (F: Panel);
@@ -109,11 +109,11 @@ TYPE
 		AcceptChild*: PROCEDURE (F: Panel; VAR obj: Objects.Object): BOOLEAN;
 
 		(** Insert child into panel. Calls GrowHull. Directly sends a Display.ModifyMsg. *)
-		InsertChild*: PROCEDURE (F: Panel; f: Display.Frame; u, v: INTEGER);
+		InsertChild*: PROCEDURE (F: Panel; f: Display.Frame; u, v: SIGNED16);
 
 		(** Insert several frames into the panel at u, v. Calls BoundingBox, ResetHull, InsertChild, InvalidateMasks,
 		UpdateMasks, DrawHull. *)
-		InsertFrames*: PROCEDURE (F: Panel; u, v: INTEGER; list: Objects.Object);
+		InsertFrames*: PROCEDURE (F: Panel; u, v: SIGNED16; list: Objects.Object);
 
 		(** Removes a child from a panel. Calls GrowHull. *)
 		RemoveChild*: PROCEDURE (F: Panel; f: Display.Frame);
@@ -124,31 +124,31 @@ TYPE
 
 VAR
 	methods*: Methods;	(** Default method block. *)
-	defaultgrid*: INTEGER;	(** Default grid snap for new panels. *)
-	newfocusX*, newfocusY*: INTEGER;	(** Set by InsertFrames to indicate the caret position after child consumption. *)
+	defaultgrid*: SIGNED16;	(** Default grid snap for new panels. *)
+	newfocusX*, newfocusY*: SIGNED16;	(** Set by InsertFrames to indicate the caret position after child consumption. *)
 	recall*: Objects.Object;	(** Last deleted children *)
 
 	W: Texts.Writer;
 
 	(* for invalidating masks *)
-	sx, sy, sw, sh: INTEGER; (* also for tracking the selection *)
+	sx, sy, sw, sh: SIGNED16; (* also for tracking the selection *)
 	tmpR: Display3.Mask;
 
 	(* for restoreRegion *)
-	tmpP: Panel; px, py: INTEGER;
+	tmpP: Panel; px, py: SIGNED16;
 	tmpdlink: Objects.Object;
 	tmpM: Display3.Mask;
 
-PROCEDURE Min(x, y: INTEGER): INTEGER;
+PROCEDURE Min(x, y: SIGNED16): SIGNED16;
 BEGIN IF x < y THEN RETURN x; ELSE RETURN y; END;
 END Min;
 
-PROCEDURE Max(x, y: INTEGER): INTEGER;
+PROCEDURE Max(x, y: SIGNED16): SIGNED16;
 BEGIN IF x > y THEN RETURN x; ELSE RETURN y; END;
 END Max;
 
-PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-VAR r, t, r1, t1: INTEGER;
+PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+VAR r, t, r1, t1: SIGNED16;
 BEGIN
 	r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 	IF x < x1 THEN x := x1 END;
@@ -159,8 +159,8 @@ BEGIN
 END ClipAgainst;
 
 (** Calculate the bounding box and count of a list of frames. *)
-PROCEDURE BoundingBox*(list: Display.Frame; VAR x, y, w, h, count: INTEGER);
-VAR f: Display.Frame; r, t: INTEGER;
+PROCEDURE BoundingBox*(list: Display.Frame; VAR x, y, w, h, count: SIGNED16);
+VAR f: Display.Frame; r, t: SIGNED16;
 BEGIN
 	x := 32000; y := 32000; r := -32000; t := -32000;
 	f := list;  count := 0;
@@ -183,8 +183,8 @@ BEGIN
 END IsChild;
 
 (** Forward a message M from F to child f. x, y is the display coordinates of F. *)
-PROCEDURE ToChild*(F: Panel; f: Display.Frame; x, y: INTEGER; VAR M: Display.FrameMsg);
-VAR u, v: INTEGER; Mdlink, Fdlink: Objects.Object;
+PROCEDURE ToChild*(F: Panel; f: Display.Frame; x, y: SIGNED16; VAR M: Display.FrameMsg);
+VAR u, v: SIGNED16; Mdlink, Fdlink: Objects.Object;
 BEGIN
 	IF M.res < 0 THEN
 		u := M.x; v := M.y; M.x := x; M.y := y + F.H - 1;
@@ -198,7 +198,7 @@ END ToChild;
 
 (** Forward message to all children of F. *)
 PROCEDURE ToChildren*(F: Panel; VAR M: Objects.ObjMsg);
-VAR n, f: Display.Frame; u, v: INTEGER; Mdlink, Fdlink: Objects.Object;
+VAR n, f: Display.Frame; u, v: SIGNED16; Mdlink, Fdlink: Objects.Object;
 BEGIN
 	IF M IS Display.FrameMsg THEN
 		WITH M: Display.FrameMsg DO
@@ -219,8 +219,8 @@ BEGIN
 END ToChildren;
 
 (** What child is located at absolute X, Y? x, y is the absolute position of F. *)
-PROCEDURE ThisChild*(F: Panel; x, y, X, Y: INTEGER): Display.Frame;
-VAR f, T: Display.Frame; childu, childv: INTEGER; M: Display.LocateMsg;
+PROCEDURE ThisChild*(F: Panel; x, y, X, Y: SIGNED16): Display.Frame;
+VAR f, T: Display.Frame; childu, childv: SIGNED16; M: Display.LocateMsg;
 BEGIN
 	childu := x; childv := y + F.H - 1;
 	M.X := X; M.Y := Y;
@@ -255,7 +255,7 @@ END GetPanelSelection;
 
 (** Default store mechanism. *)
 PROCEDURE StorePanel*(F: Panel; VAR M: Objects.FileMsg);
-VAR t: Display.Frame; u: INTEGER;
+VAR t: Display.Frame; u: SIGNED16;
 BEGIN
 	Files.WriteNum(M.R, 7);
 	Files.WriteSet(M.R, F.state0); Files.WriteNum(M.R, F.borderW); Files.WriteNum(M.R, F.grid);
@@ -276,7 +276,7 @@ END Explain;
 
 (** Default load mechanism. *)
 PROCEDURE LoadPanel*(F: Panel; VAR M: Objects.FileMsg);
-VAR ver, x: LONGINT; u: INTEGER; t: Display.Frame; obj: Objects.Object;
+VAR ver, x: SIGNED32; u: SIGNED16; t: Display.Frame; obj: Objects.Object;
 BEGIN
 	Files.ReadNum(M.R, ver);
 	IF (ver = 5) OR (ver = 6) OR (ver = 7) THEN
@@ -355,7 +355,7 @@ BEGIN
 		t := t.next; t0 := t0.next
 	END;
 
-	to.focused := FALSE; to.time := Input.Time()-MAX(INTEGER); to.grid := from.grid;
+	to.focused := FALSE; to.time := Input.Time()-MAX(SIGNED16); to.grid := from.grid;
 	to.borderW := from.borderW; to.state0 := from.state0;
 	to.do := from.do;
 	IF (from.pict # NIL) & (M.id = Objects.deep) THEN
@@ -435,7 +435,7 @@ BEGIN
 	END;
 END PanelAttr;
 
-PROCEDURE Adjust(F: Panel; x, y: INTEGER; VAR M: Display.ModifyMsg);	(* ps - 23.5.96 *)
+PROCEDURE Adjust(F: Panel; x, y: SIGNED16; VAR M: Display.ModifyMsg);	(* ps - 23.5.96 *)
 VAR f: Display.Frame; A: Display.ModifyMsg;
 BEGIN
 	IF (M.dH # 0) & ((M.Y + M.H) # (F.Y + F.H)) OR (M.dW # 0) & (M.X # F.X) THEN
@@ -474,8 +474,8 @@ BEGIN
 END FindObj;
 
 (** Default method implementation. x, y is the panel coordinates. u, v, w, h the relative coordinates of the area to be restored. *)
-PROCEDURE RestoreArea*(F: Panel; x, y, u, v, w, h: INTEGER; M: Display3.Mask; dlink: Objects.Object);
-VAR D: Display.DisplayMsg; B: Display3.Mask; f: Display.Frame; X, Y, W, H: INTEGER;
+PROCEDURE RestoreArea*(F: Panel; x, y, u, v, w, h: SIGNED16; M: Display3.Mask; dlink: Objects.Object);
+VAR D: Display.DisplayMsg; B: Display3.Mask; f: Display.Frame; X, Y, W, H: SIGNED16;
 BEGIN
 	Oberon.RemoveMarks(x + u, y + F.H - 1 + v, w, h);
 	X := M.X; Y := M.Y; W := M.W; H := M.H;
@@ -512,7 +512,7 @@ PROCEDURE ResetHull*(F: Panel);
 BEGIN F.rx := 32000; F.ry := 32000; F.rr := -32000; F.rt := -32000;
 END ResetHull;
 
-PROCEDURE GetHull*(F: Panel; VAR u, v, w, h: INTEGER);
+PROCEDURE GetHull*(F: Panel; VAR u, v, w, h: SIGNED16);
 BEGIN
 	IF (F.rr > F.rx) & (F.rt > F.ry) THEN u := F.rx; v := F.ry; w := F.rr - F.rx + 1; h := F.rt - F.ry + 1;
 	ELSE u := 0; v := 0; w := 0; h := 0;
@@ -520,7 +520,7 @@ BEGIN
 END GetHull;
 
 (** Increase the size of the hull with the area u, v, w, h.. *)
-PROCEDURE GrowHull*(F: Panel; u, v, w, h: INTEGER);
+PROCEDURE GrowHull*(F: Panel; u, v, w, h: SIGNED16);
 BEGIN
 	F.rx := Min(F.rx, u); F.ry := Min(F.ry, v);
 	F.rr := Max(F.rr, u + w - 1); F.rt := Max(F.rt, v + h - 1);
@@ -528,7 +528,7 @@ END GrowHull;
 
 (** Draw the hull area. Hull is reset. *)
 PROCEDURE DrawHull*(F: Panel);
-VAR D: Display.DisplayMsg; x, y, w, h: INTEGER;
+VAR D: Display.DisplayMsg; x, y, w, h: SIGNED16;
 BEGIN
 	GetHull(F, x, y, w, h);
 	IF (w > 0) & (h > 0) THEN
@@ -540,7 +540,7 @@ END DrawHull;
 (** Recalculate and update all invalid (NIL) masks of children. partialupdate modifies the existing backgound mask to reflect the current situation. buildback recreates the whole background mask from scratch. Both options are normally used mutual exclusive. Partial update is faster if few masks were invalidated, otherwise use buildback.  Partial update requires the use of InvalidateMasks to keep the background mask valid. When in doubt simply use buildback. *)
 PROCEDURE UpdateMasks*(F: Panel; partialupdate, buildback: BOOLEAN);
 VAR f, o: Display.Frame; O: Display3.OverlapMsg; allTransp: BOOLEAN; R: Display3.Mask;
-	fx, fy, fw, fh: INTEGER;
+	fx, fy, fw, fh: SIGNED16;
 BEGIN
 	IF F.mask = NIL THEN (* clear everything *)
 		F.back := NIL;
@@ -595,15 +595,15 @@ BEGIN
 	END
 END UpdateMasks;
 
-PROCEDURE Out0(x, y, w, h: INTEGER);
+PROCEDURE Out0(x, y, w, h: SIGNED16);
 BEGIN
 	ClipAgainst(x, y, w, h, sx, sy, sw, sh);
 	IF (w > 0) & (h > 0) THEN Display3.Subtract(tmpR, x, y, w, h); END;
 END Out0;
 
 (** Invalidate all masks of the children in the specified rectangle except the exception. Background is updated so that the rectangle becomes part of the panel background. *)
-PROCEDURE InvalidateMasks*(F: Panel; except: Display.Frame; x, y, w, h: INTEGER);
-VAR f: Display.Frame; x0, y0, w0, h0: INTEGER; O: Display3.OverlapMsg;
+PROCEDURE InvalidateMasks*(F: Panel; except: Display.Frame; x, y, w, h: SIGNED16);
+VAR f: Display.Frame; x0, y0, w0, h0: SIGNED16; O: Display3.OverlapMsg;
 BEGIN
 	IF F.back # NIL THEN
 		(* add background in *)
@@ -633,7 +633,7 @@ BEGIN
 END InvalidateMasks;
 
 (** Set the selection state of children to Display.reset or Display.set. *)
-PROCEDURE SetChildren*(F: Panel; x, y, state: INTEGER);
+PROCEDURE SetChildren*(F: Panel; x, y, state: SIGNED16);
 VAR M: Display.SelectMsg; f: Display.Frame;
 BEGIN
 	M.id := state;
@@ -655,7 +655,7 @@ END SetChildren;
 
 (** Method implementations. *)
 PROCEDURE TrackMouse*(F: Panel; VAR M: Oberon.InputMsg);
-VAR T: Display.Frame; x, y, t, u, v: INTEGER; Fdlink, Mdlink: Objects.Object;
+VAR T: Display.Frame; x, y, t, u, v: SIGNED16; Fdlink, Mdlink: Objects.Object;
 BEGIN
 	x := M.x + F.X; y := M.y + F.Y; t := y + F.H - 1;
 	T := ThisChild(F, x, y, M.X, M.Y);
@@ -692,7 +692,7 @@ END TrackMouse;
 
 (** Default handling of the LocateMsg. *)
 PROCEDURE Locate*(F: Display.Frame; VAR M: Display.LocateMsg);
-VAR f, T: Display.Frame; childu, childv, x, y, tx, ty, tu, tv, X, Y, u, v: INTEGER;
+VAR f, T: Display.Frame; childu, childv, x, y, tx, ty, tu, tv, X, Y, u, v: SIGNED16;
 BEGIN
 	u := M.x; v := M.y; childu := u + F.X; childv := v + F.Y + F.H - 1; X := M.X; Y := M.Y;
 	f := F.dsc; T := NIL;
@@ -711,7 +711,7 @@ BEGIN
 END Locate;
 
 (* restore all the transparent objects above a certain rectangle *)
-PROCEDURE RestoreAboveArea(F: Panel; above: Display.Frame; x, y, u, v, w, h: INTEGER; dlink: Objects.Object; M: Display3.Mask);
+PROCEDURE RestoreAboveArea(F: Panel; above: Display.Frame; x, y, u, v, w, h: SIGNED16; dlink: Objects.Object; M: Display3.Mask);
 VAR D: Display.DisplayMsg; f: Display.Frame;
 BEGIN
 	Oberon.RemoveMarks(x + u, y + F.H - 1 + v, w, h);
@@ -731,14 +731,14 @@ BEGIN
 	IF Gadgets.selected IN F.state THEN Display3.FillPattern(M, Display3.white, Display3.selectpat, x, y, x, y, F.W, F.H, Display.paint); END;
 END RestoreAboveArea;
 
-PROCEDURE RestoreRegion0(x, y, w, h: INTEGER);
+PROCEDURE RestoreRegion0(x, y, w, h: SIGNED16);
 BEGIN
 	tmpP.do.RestoreArea(tmpP, px, py, x, y, w, h, tmpM, tmpdlink);
 END RestoreRegion0;
 
 (** Redraw region M of panel. Mask M is in relative coordinates.*)
-PROCEDURE RestoreRegion*(F: Panel; x, y: INTEGER; dlink: Objects.Object; M: Display3.Mask);
-VAR P: Panel; tpx, tpy: INTEGER;
+PROCEDURE RestoreRegion*(F: Panel; x, y: SIGNED16; dlink: Objects.Object; M: Display3.Mask);
+VAR P: Panel; tpx, tpy: SIGNED16;
 BEGIN
 	Gadgets.MakeMask(F, x, y, dlink, tmpM);
 	P := tmpP; tpx := px; tpy := py; (* save *)
@@ -749,10 +749,10 @@ BEGIN
 END RestoreRegion;
 
 PROCEDURE HandleChildAdjust(F: Panel; VAR M: Display.ModifyMsg);
-VAR u, v, x, y, ox, oy, ow, oh, oldmode: INTEGER; second: BOOLEAN; R: Display3.Mask;
+VAR u, v, x, y, ox, oy, ow, oh, oldmode: SIGNED16; second: BOOLEAN; R: Display3.Mask;
 
 	PROCEDURE Forward;
-	VAR f, next: Display.Frame; p, q: INTEGER;
+	VAR f, next: Display.Frame; p, q: SIGNED16;
 	BEGIN
 		f := F.dsc; p := u + F.X; q := v + F.Y;
 		WHILE f # NIL DO
@@ -839,7 +839,7 @@ BEGIN
 END HandleChildAdjust;
 
 (** Get the latest object selection. *)
-PROCEDURE GetSelection*(VAR obj: Objects.Object; VAR parent: Display.Frame; VAR time: LONGINT);
+PROCEDURE GetSelection*(VAR obj: Objects.Object; VAR parent: Display.Frame; VAR time: SIGNED32);
 VAR S: Display.SelectMsg;
 BEGIN
 	obj := NIL; parent := NIL;
@@ -847,10 +847,10 @@ BEGIN
 	IF S.time # -1 THEN obj := S.obj; parent := S.sel; time := S.time ELSE time := -1 END
 END GetSelection;
 
-PROCEDURE PrintPanel(F: Panel; x, y: INTEGER; dlink: Objects.Object);
+PROCEDURE PrintPanel(F: Panel; x, y: SIGNED16; dlink: Objects.Object);
 VAR P: Display.DisplayMsg; f: Display.Frame; R: Display3.Mask;
 
-	PROCEDURE Pr(x: INTEGER): INTEGER;
+	PROCEDURE Pr(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit) END Pr;
 
 BEGIN
@@ -925,7 +925,7 @@ BEGIN
 	END;
 END DemoteChild;
 
-PROCEDURE Priority(F: Panel; f: Display.Frame; where: INTEGER; passon: BOOLEAN);
+PROCEDURE Priority(F: Panel; f: Display.Frame; where: SIGNED16; passon: BOOLEAN);
 VAR M: Gadgets.PriorityMsg; g: Display.Frame;
 BEGIN
 	IF where = Gadgets.top THEN
@@ -948,7 +948,7 @@ BEGIN
 	END;
 END Priority;
 
-PROCEDURE CopyOver(F: Panel; text: Texts.Text; beg, end: LONGINT);
+PROCEDURE CopyOver(F: Panel; text: Texts.Text; beg, end: SIGNED32);
 VAR T: Texts.Text; buf: Texts.Buffer;
 BEGIN
 	NEW(buf); Texts.OpenBuf(buf);
@@ -963,7 +963,7 @@ BEGIN
 END CopyOver;
 
 PROCEDURE PanelHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR F2: Panel; u, v, x, y, w, h: INTEGER; R: Display3.Mask; t: Display.Frame; obj: Objects.Object; U: Display3.UpdateMaskMsg;
+VAR F2: Panel; u, v, x, y, w, h: SIGNED16; R: Display3.Mask; t: Display.Frame; obj: Objects.Object; U: Display3.UpdateMaskMsg;
 BEGIN
 	WITH F: Panel DO
 		IF M IS Display.FrameMsg THEN
@@ -1037,7 +1037,7 @@ BEGIN
 					ELSIF M IS Oberon.ControlMsg THEN
 						WITH M: Oberon.ControlMsg DO
 							IF M.id = Oberon.neutralize THEN
-								SetChildren(F, x, y, Display.reset); F.time := Input.Time()-MAX(INTEGER);
+								SetChildren(F, x, y, Display.reset); F.time := Input.Time()-MAX(SIGNED16);
 								IF F.focused THEN F.focused := FALSE; F.do.UpdateCaret(F) END;
 							ELSIF M.id = Oberon.defocus THEN
 								IF F.focused THEN F.focused := FALSE; F.do.UpdateCaret(F) END;
@@ -1089,7 +1089,7 @@ BEGIN
 							WITH M: Display.SelectMsg DO
 								IF M.id = Display.set THEN F.time := Oberon.Time(); ToChildren(F, M)
 								ELSIF M.id = Display.reset THEN
-									GetPanelSelection(F, t); IF t = NIL THEN F.time := Input.Time()-MAX(INTEGER); END;
+									GetPanelSelection(F, t); IF t = NIL THEN F.time := Input.Time()-MAX(SIGNED16); END;
 									ToChildren(F, M)
 								END
 							END
@@ -1149,7 +1149,7 @@ END PanelHandler;
 
 PROCEDURE InitPanel*(P: Panel);
 BEGIN P.handle := PanelHandler; P.dsc := NIL; P.W := 128; P.H := 128; P.focused := FALSE;
-	P.time := Input.Time()-MAX(INTEGER); P.borderW := DefBorderWidth; P.grid := defaultgrid; ResetHull(P);
+	P.time := Input.Time()-MAX(SIGNED16); P.borderW := DefBorderWidth; P.grid := defaultgrid; ResetHull(P);
 	P.do := methods; P.col := Display3.groupC
 END InitPanel;
 
@@ -1233,10 +1233,10 @@ END ChangeBackdrop;
 
 (* Top, Bottom, Left, Right, Vertical, Horizontal, Width, Height, Size *)
 PROCEDURE Align0(type: ARRAY OF CHAR);
-VAR M: Display.SelectMsg; obj, n: Objects.Object; x, y, w, h, maxW, maxH, px , py, count: INTEGER; A: Display.ModifyMsg;
+VAR M: Display.SelectMsg; obj, n: Objects.Object; x, y, w, h, maxW, maxH, px , py, count: SIGNED16; A: Display.ModifyMsg;
 	L, p, q: Objects.Object; vertical: BOOLEAN;
 
-	PROCEDURE Score(F: Display.Frame): LONGINT;
+	PROCEDURE Score(F: Display.Frame): SIGNED32;
 	BEGIN
 		IF vertical THEN RETURN 16000 - F.Y ELSE RETURN F.X END
 	END Score;
@@ -1340,7 +1340,7 @@ BEGIN
 END NewChildrenOK;
 
 (** Copy a list of objects Objects.deep or Objects.shallow. *)
-PROCEDURE CopyObjList*(id: INTEGER; from: Objects.Object; VAR to: Objects.Object);
+PROCEDURE CopyObjList*(id: SIGNED16; from: Objects.Object; VAR to: Objects.Object);
 VAR t, t0: Objects.Object; C: Objects.CopyMsg;
 BEGIN
 	t := from; to := NIL; C.stamp := Oberon.Time();
@@ -1367,7 +1367,7 @@ END Recall;
 
 (* === Method implementations === *)
 
-PROCEDURE RestoreBackGround*(F: Panel; x, y: INTEGER; R: Display3.Mask);
+PROCEDURE RestoreBackGround*(F: Panel; x, y: SIGNED16; R: Display3.Mask);
 BEGIN
 	IF F.pict # NIL THEN
 
@@ -1386,7 +1386,7 @@ BEGIN
 	END
 END RestoreBackGround;
 
-PROCEDURE RestoreCaret*(F: Panel; x, y: INTEGER; R: Display3.Mask);
+PROCEDURE RestoreCaret*(F: Panel; x, y: SIGNED16; R: Display3.Mask);
 BEGIN
 	Display3.CopyPattern(R, Display3.textC, Display.cross, x + F.focusx - markW, y + F.H - 1 + F.focusy - markW,
 			Display3.paint)
@@ -1398,8 +1398,8 @@ BEGIN
 END UpdateCaret;
 
 PROCEDURE TrackCaret*(F: Panel; VAR M: Oberon.InputMsg);
-VAR x, y, w, h, LX, LY: INTEGER; keysum: SET;
-	obj, newobj: Objects.Object; parent: Display.Frame; objtime, texttime, beg, end: LONGINT; text: Texts.Text;
+VAR x, y, w, h, LX, LY: SIGNED16; keysum: SET;
+	obj, newobj: Objects.Object; parent: Display.Frame; objtime, texttime, beg, end: SIGNED32; text: Texts.Text;
 	buf: Texts.Buffer; T0: Texts.Text;
 BEGIN
 	x := M.x + F.X; y := M.y + F.Y; w := F.W; h := F.H;
@@ -1426,7 +1426,7 @@ BEGIN
 END TrackCaret;
 
 (** Select the gadgets in the area u, v, w, h of the panel. *)
-PROCEDURE SelectArea*(F: Panel; x, y, u, v, w, h: INTEGER);
+PROCEDURE SelectArea*(F: Panel; x, y, u, v, w, h: SIGNED16);
 VAR M: Display.SelectMsg; f: Display.Frame; b: BOOLEAN;
 
 	PROCEDURE Inside(F: Display.Frame): BOOLEAN;
@@ -1457,10 +1457,10 @@ BEGIN
 		 f := f.next;
 	END;
 	DrawHull(F);
-	IF b THEN F.time := Oberon.Time(); ELSE F.time := Input.Time()-MAX(INTEGER); END;
+	IF b THEN F.time := Oberon.Time(); ELSE F.time := Input.Time()-MAX(SIGNED16); END;
 END SelectArea;
 
-PROCEDURE SelectHandler(mx, my, x, y, w, h: INTEGER; keysum: SET);
+PROCEDURE SelectHandler(mx, my, x, y, w, h: SIGNED16; keysum: SET);
 BEGIN
 	SelectArea(tmpP, px, py, sx - px, y - (py  + tmpP.H - 1), sw, h);
 	SelectArea(tmpP, px, py, x - px, y - (py + tmpP.H - 1), w, h);
@@ -1472,7 +1472,7 @@ PROCEDURE KillChildren*(F: Panel; objlist: Objects.Object);
 VAR f: Objects.Object; A: Display.ControlMsg;
 BEGIN
 	IF objlist # NIL THEN
-		F.time := Input.Time()-MAX(INTEGER);
+		F.time := Input.Time()-MAX(SIGNED16);
 		A.id := Display.remove; A.F := objlist(Display.Frame); Display.Broadcast(A); (* <<< remove everything *)
 		recall := objlist; (* update recall list *)
 
@@ -1512,7 +1512,7 @@ BEGIN
 END TrackSelection;
 
 PROCEDURE TrackSelectChild*(F: Panel; VAR M: Oberon.InputMsg; child: Gadgets.Frame);
-VAR x, y, sx, sy: INTEGER; S: Display.SelectMsg; keysum: SET; t: Display.Frame; newobj: Objects.Object;
+VAR x, y, sx, sy: SIGNED16; S: Display.SelectMsg; keysum: SET; t: Display.Frame; newobj: Objects.Object;
 BEGIN
 	x := M.x + F.X; y := M.y + F.Y;
 
@@ -1520,7 +1520,7 @@ BEGIN
 	S.x := 0;  S.y := 0;
 	IF Gadgets.selected IN child.state THEN S.id := Display.reset; ToChild(F, child, x, y, S);
 		GetPanelSelection(F, t);
-		IF t = NIL THEN F.time := Input.Time()-MAX(INTEGER); END;
+		IF t = NIL THEN F.time := Input.Time()-MAX(SIGNED16); END;
 	ELSE S.id := Display.set; ToChild(F, child, x, y, S); F.time := Oberon.Time()
 	END;
 	GrowHull(F, child.X, child.Y, child.W, child.H); DrawHull(F);
@@ -1578,7 +1578,7 @@ PROCEDURE AcceptChild*(F: Panel; VAR obj: Objects.Object): BOOLEAN;
 BEGIN RETURN TRUE
 END AcceptChild;
 
-PROCEDURE InsertChild*(F: Panel; f: Display.Frame; u, v: INTEGER);
+PROCEDURE InsertChild*(F: Panel; f: Display.Frame; u, v: SIGNED16);
 VAR f0: Display.Frame; B: Objects.BindMsg; A: Display.ModifyMsg;
 BEGIN
 	IF (F.lib # NIL) & (F.lib.name # "") THEN B.lib := F.lib; f.handle(f, B) END;
@@ -1600,8 +1600,8 @@ BEGIN
 	END
 END InsertChild;
 
-PROCEDURE InsertFrames*(F: Panel; u, v: INTEGER; list: Objects.Object);
-VAR x, y, w, h, count: INTEGER; f, n: Display.Frame; O: Display3.OverlapMsg; A: Display.ControlMsg;
+PROCEDURE InsertFrames*(F: Panel; u, v: SIGNED16; list: Objects.Object);
+VAR x, y, w, h, count: SIGNED16; f, n: Display.Frame; O: Display3.OverlapMsg; A: Display.ControlMsg;
 BEGIN
 	newfocusX := F.focusx; newfocusY := F.focusy;
 	IF NewChildrenOK(F, list) & (list # NIL) THEN (* insert can proceed *)
@@ -1639,8 +1639,8 @@ BEGIN
 	UpdateMasks(F, FALSE, TRUE); DrawHull(F);
 END RemoveFrames;
 
-PROCEDURE NewLocateMsg(F: Display.Frame; u, v: INTEGER; VAR M: Display.LocateMsg);
-VAR f, T: Display.Frame; childu, childv, x, y, tu, tv, X, Y: INTEGER;
+PROCEDURE NewLocateMsg(F: Display.Frame; u, v: SIGNED16; VAR M: Display.LocateMsg);
+VAR f, T: Display.Frame; childu, childv, x, y, tu, tv, X, Y: SIGNED16;
 BEGIN
 	childu := u + F.X; childv := v + F.Y + F.H - 1; X := M.X; Y := M.Y;
 	f := F.dsc; T := NIL;
@@ -1660,7 +1660,7 @@ BEGIN
 END NewLocateMsg;
 
 PROCEDURE NewHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR u, v: INTEGER;
+VAR u, v: SIGNED16;
 BEGIN
 	WITH F: Display.Frame DO
 		IF M IS Display.LocateMsg THEN
@@ -1677,8 +1677,8 @@ BEGIN
 	END;
 END NewHandler;
 
-PROCEDURE TranslateChildren*(F: Panel; list: Display.Frame; count, dx, dy: INTEGER);
-VAR p: Display.Frame; A: Display.ModifyMsg; x0, y0: INTEGER;
+PROCEDURE TranslateChildren*(F: Panel; list: Display.Frame; count, dx, dy: SIGNED16);
+VAR p: Display.Frame; A: Display.ModifyMsg; x0, y0: SIGNED16;
 BEGIN
 	p := list;
 	WHILE p # NIL DO
@@ -1696,7 +1696,7 @@ BEGIN
 END TranslateChildren;
 
 PROCEDURE DragSelection*(F: Panel; VAR M: Oberon.InputMsg);
-VAR u, v, X, Y, x, y, w, h, nx, ny, nw, nh, u0, v0, count: INTEGER; f, q: Display.Frame; keys: SET;
+VAR u, v, X, Y, x, y, w, h, nx, ny, nw, nh, u0, v0, count: SIGNED16; f, q: Display.Frame; keys: SET;
 	C: Display.ConsumeMsg; old: Objects.Handler; nl: Objects.Object;
 BEGIN
 	GetPanelSelection(F, f);
@@ -1728,8 +1728,8 @@ END DragSelection;
 
 PROCEDURE ConsumeChar*(F: Panel; VAR M: Oberon.InputMsg);
 
-	PROCEDURE Shift(dx, dy: INTEGER);
-	VAR f: Display.Frame; x, y, w, h, count: INTEGER;
+	PROCEDURE Shift(dx, dy: SIGNED16);
+	VAR f: Display.Frame; x, y, w, h, count: SIGNED16;
 	BEGIN
 		GetPanelSelection(F, f);
 		IF f # NIL THEN

@@ -1,7 +1,7 @@
 (* CAPO - Computational Analysis Platform for Oberon - by Alan Freed and Felix Friedrich. *)
 (* Version 1, Update 2 *)
 
-MODULE NbrRe32;   (** AUTHOR "adf"; PURPOSE "Alias for type REAL."; *)
+MODULE NbrRe32;   (** AUTHOR "adf"; PURPOSE "Alias for type FLOAT32."; *)
 
 IMPORT Streams, Math, NbrInt8, NbrInt16, NbrInt32, NbrInt64;
 
@@ -9,7 +9,7 @@ CONST
 	E* = Math.e;  Pi* = Math.pi;
 
 TYPE
-	Real* = REAL;
+	Real* = FLOAT32;
 
 VAR
 	MinNbr-, MaxNbr-,
@@ -382,6 +382,6 @@ VAR
 	END EvalEpsilon;
 
 BEGIN
-	EvalEpsilon;  MaxNbr := MAX( REAL );  MinNbr := MIN( REAL );  reExp := MinNbr;  StdForm( reExp, minExp );  reExp := MaxNbr;
+	EvalEpsilon;  MaxNbr := MAX( FLOAT32 );  MinNbr := MIN( FLOAT32 );  reExp := MinNbr;  StdForm( reExp, minExp );  reExp := MaxNbr;
 	StdForm( reExp, maxExp )
 END NbrRe32.

@@ -53,9 +53,9 @@ TYPE
 
 	Event* = RECORD
 		originator* : Name;	(** name of module that generated event *)
-		type*, class*, subclass*, code* : SHORTINT;
+		type*, class*, subclass*, code* : SIGNED8;
 		message* : Message;
-		date*, time* : LONGINT; (* when enqueued in event queue *)
+		date*, time* : SIGNED32; (* when enqueued in event queue *)
 	END;
 
 TYPE
@@ -121,8 +121,8 @@ TYPE
 
 	EventQueue = OBJECT
 	VAR
-		size : LONGINT;
-		head, len: LONGINT;
+		size : SIGNED32;
+		head, len: SIGNED32;
 		ringbuffer : POINTER TO ARRAY OF Event;
 		running : BOOLEAN;
 
@@ -167,7 +167,7 @@ TYPE
 			running := FALSE;
 		END Stop;
 
-		PROCEDURE &Init*(size : LONGINT);
+		PROCEDURE &Init*(size : SIGNED32);
 		BEGIN
 			running := TRUE;
 			head := 0; len := 0;
@@ -181,7 +181,7 @@ TYPE
 
 	EventDispatcher = OBJECT
 	VAR
-		state : LONGINT;
+		state : SIGNED32;
 		queue : EventQueue;
 		sinks : Sink;
 
@@ -256,7 +256,7 @@ VAR
 	NnofEvents-, NnofDiscarded-, NnofEventsHandled-, NnofEventsNotHandled-,
 	NnofUnknown-, NnofUndefined-,
 	NnofInformation-, NnofWarning-, NnofError-, NnofCritical-, NnofFailure-,
-	NnofListeners- : LONGINT;
+	NnofListeners- : SIGNED32;
 
 (** Register an event sink at the event dispatcher *)
 PROCEDURE Register*(sink : Sink);
@@ -290,13 +290,13 @@ END Add;
 (** Generate an new event record and add it to the event queue. If showOnKernenLog is TRUE, a simplified representation
 	of the event (originator + ": " + message) is displayed on the kernel log.
 	This operation is non-blocking if showOnKernelLog is FALSE, blocking otherwise *)
-PROCEDURE AddEvent*(CONST originator : Name; type, class, subclass, code : SHORTINT; CONST message : Message; showOnKernelLog : BOOLEAN);
+PROCEDURE AddEvent*(CONST originator : Name; type, class, subclass, code : SIGNED8; CONST message : Message; showOnKernelLog : BOOLEAN);
 BEGIN
 	Add(NewEvent(originator, type, class, subclass, code, message), showOnKernelLog)
 END AddEvent;
 
 (** Generate an new event record *)
-PROCEDURE NewEvent*(CONST originator : Name; type, class, subclass, code : SHORTINT; CONST message : Message) : Event;
+PROCEDURE NewEvent*(CONST originator : Name; type, class, subclass, code : SIGNED8; CONST message : Message) : Event;
 VAR event : Event;
 BEGIN
 	event.originator := originator;

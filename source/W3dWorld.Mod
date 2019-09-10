@@ -19,16 +19,16 @@ TYPE
 	Object* = OBJECT (AbstractWorld.Object)
 		VAR
 			triangles : TriangleArray;
-			nofTriangles : LONGINT;
+			nofTriangles : SIGNED32;
 
 			vertices : VertexArray;
-			nofVertices : LONGINT;
+			nofVertices : SIGNED32;
 			aabb : AABB;
 			bsCenter : Vectors.TVector3d;
-			bsRadius : LONGREAL;
+			bsRadius : FLOAT64;
 			bsValid : BOOLEAN;
 			isAnimated : BOOLEAN;
-			index : LONGINT;
+			index : SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -38,7 +38,7 @@ TYPE
 			bsValid := FALSE
 		END Init;
 
-		PROCEDURE SetIndex*(idx : LONGINT);
+		PROCEDURE SetIndex*(idx : SIGNED32);
 		BEGIN
 			index := idx
 		END SetIndex;
@@ -52,7 +52,7 @@ TYPE
 		END AddTexture;
 
 		PROCEDURE AddVertex*(p : Vectors.TVector3d): AbstractWorld.Vertex;
-		VAR n : VertexArray; i : LONGINT;
+		VAR n : VertexArray; i : SIGNED32;
 			v: Vertex;
 		BEGIN
 			NEW(v); v.SetPos(p); GrowAABB(aabb, p); bsValid := FALSE;
@@ -71,9 +71,9 @@ TYPE
 			bsValid := TRUE
 		END CalcBS;
 
-		PROCEDURE AddTriangle*(a, b, c : AbstractWorld.Vertex; color : LONGINT; tex : AbstractWorld.Texture; mask0, culled: BOOLEAN);
-		VAR n : TriangleArray; i : LONGINT;
-				f : REAL;
+		PROCEDURE AddTriangle*(a, b, c : AbstractWorld.Vertex; color : SIGNED32; tex : AbstractWorld.Texture; mask0, culled: BOOLEAN);
+		VAR n : TriangleArray; i : SIGNED32;
+				f : FLOAT32;
 		BEGIN
 			IF nofTriangles = LEN(triangles) THEN
 				NEW(n, LEN(triangles) * 2);
@@ -99,7 +99,7 @@ TYPE
 		END AddTriangle;
 
 		PROCEDURE Clear*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := nofVertices - 1 TO 0 BY - 1 DO vertices[i] := NIL END;
 			nofTriangles := 0;
@@ -113,12 +113,12 @@ TYPE
 		objects, animated : Classes.List;
 		p, d, u : Vectors.TVector3d;
 		trans : Matrix.Matrix4x4;
-		distpp : LONGREAL;
+		distpp : FLOAT64;
 		rasterizer : Rasterizer.Rasterizer;
 		width, height : SIZE;
-		quality* 	: LONGINT;
+		quality* 	: SIGNED32;
 		frustum* : W3dGeometry.Frustum;
-		clearColor : LONGINT;
+		clearColor : SIGNED32;
 
 		tempTri : Triangle;
 		tempv0, tempv1 : Vertex;
@@ -127,7 +127,7 @@ TYPE
 		worldValid : BOOLEAN; (* is the non-animated part of the world valid ?
 						No if not rendered, trans matrix changed or isAnimated of an object is changed *)
 
-		PROCEDURE &Init*(w, h: SIZE; clearColor :LONGINT);
+		PROCEDURE &Init*(w, h: SIZE; clearColor :SIGNED32);
 		BEGIN
 			NEW(objects); NEW(animated); distpp := w/2; NEW(rasterizer); rasterizer.SetSize(w, h);
 			NEW(frustum);
@@ -171,8 +171,8 @@ TYPE
 			worldValid := FALSE
 		END SetCamera;
 
-		PROCEDURE ScreenPos(p : Vectors.TVector3d; VAR x, y: LONGREAL);
-		VAR inv : LONGREAL;
+		PROCEDURE ScreenPos(p : Vectors.TVector3d; VAR x, y: FLOAT64);
+		VAR inv : FLOAT64;
 		BEGIN
 			inv := distpp / p.z;
 			x := p.x * inv + (rasterizer.width DIV 2);
@@ -204,7 +204,7 @@ TYPE
 		END RasterTriangle;
 
 		PROCEDURE ClipDrawTriangle(VAR tri : Triangle);
-		VAR c : LONGINT; v0, v1, v2 : Vertex; d, m: LONGREAL;
+		VAR c : SIGNED32; v0, v1, v2 : Vertex; d, m: FLOAT64;
 		BEGIN
 			IF ~(tri.vert[0].behind OR tri.vert[1].behind OR tri.vert[2].behind) THEN
 				RasterTriangle(tri)
@@ -347,7 +347,7 @@ TYPE
 			RenderInternal(img, movingOnly)
 		END Render;
 
-		PROCEDURE GetOwnerIndex*(x, y : SIZE): LONGINT;
+		PROCEDURE GetOwnerIndex*(x, y : SIZE): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF ~changed THEN RETURN rasterizer.GetInvIdx(x, y) ELSE
 				invertable := TRUE;

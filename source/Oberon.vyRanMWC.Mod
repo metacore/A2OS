@@ -49,8 +49,8 @@ TYPE
 	tSeed = OBJECT  (* POINTER TO tSeedDesc;
 	tSeedDesc = RECORD (vyRanBase.tSeedDesc) *)
 	(vyRanBase.tSeed)
-	VAR x, c: LONGINT;
-		a: LONGINT;
+	VAR x, c: SIGNED32;
+		a: SIGNED32;
 		checkPeriod: BOOLEAN;
 
 		PROCEDURE  (*VAR seed: tSeedDesc*) Store*( VAR r: Files.Rider );
@@ -58,7 +58,7 @@ TYPE
 			Files.WriteLInt( r, SELF.x );  Files.WriteLInt( r, SELF.c );  Files.WriteLInt( r, SELF.a )
 		END Store;
 
-		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: INTEGER );
+		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: SIGNED16 );
 		BEGIN
 			IF seedVersion # cSeedVersion THEN HALT( 100 ) END;
 			Files.ReadLInt( r, SELF.x );  Files.ReadLInt( r, SELF.c );  Files.ReadLInt( r, SELF.a )
@@ -69,7 +69,7 @@ TYPE
 	tRandom = vyRanBase.tRandom;  Bits = vyRanBase.Bits;
 
 VAR
-	seedA: LONGINT;  seedCheckPeriod: BOOLEAN;  useParam: BOOLEAN;
+	seedA: SIGNED32;  seedCheckPeriod: BOOLEAN;  useParam: BOOLEAN;
 
 
 	(* added - jb 29.11.00 *)
@@ -89,19 +89,19 @@ END GetGenProc;
 
 (*
 (* unsigned comparison - copied from module Mac.Crypt.Mod *)
-PROCEDURE Less* (x, y: LONGINT): BOOLEAN;
+PROCEDURE Less* (x, y: SIGNED32): BOOLEAN;
 VAR
-a, b: LONGINT;
+a, b: SIGNED32;
 BEGIN
 a := LSH(x, - 1);    b := LSH(y, - 1);
 IF a - b = 0 THEN RETURN x MOD 2 < y MOD 2 ELSE RETURN a < b END
 END Less;
 
 (* multiplication - copied from module Mac.Crypt.Mod *)
-PROCEDURE LongMult* (VAR high, low: LONGINT;    b, c: LONGINT);
+PROCEDURE LongMult* (VAR high, low: SIGNED32;    b, c: SIGNED32);
 (* high | low := b * c *)
 VAR
-bh, bl, ch, cl, u, t: LONGINT;
+bh, bl, ch, cl, u, t: SIGNED32;
 BEGIN
 bh := LSH(b, - 16);    bl := b MOD 10000H;
 ch := LSH(c, - 16);    cl := c MOD 10000H;
@@ -114,24 +114,24 @@ INC(low, u);    IF Less(low, u) THEN INC(high) END;
 INC(high, LSH(t, - 16))
 END LongMult;
 
-PROCEDURE LongInc* (VAR high, low: LONGINT;    c: LONGINT);
+PROCEDURE LongInc* (VAR high, low: SIGNED32;    c: SIGNED32);
 (* INC (high / low, c) *)
 VAR
-tmp: LONGINT;
+tmp: SIGNED32;
 BEGIN
 tmp := low;
 INC (low, c);    IF Less (low, tmp) THEN INC (high) END
 END LongInc;
 *)
 
-	PROCEDURE LongMultAdd*( VAR high, low: LONGINT;  a, b, c: LONGINT );
+	PROCEDURE LongMultAdd*( VAR high, low: SIGNED32;  a, b, c: SIGNED32 );
 	(* high / low := a * b + c *)
 	(* see procedures LongMult and LongInc in module Mac.Crypt.Mod, most of the following
 	is simply copied from there *)
-	VAR ah, al, bh, bl, t, u, tmp, r: LONGINT;
+	VAR ah, al, bh, bl, t, u, tmp, r: SIGNED32;
 	BEGIN
-		ah := LSH( a, sysSHR * 16 );  al := S.VAL( LONGINT, S.VAL( SET, a ) * S.VAL( SET, vyRanBase.sysMaxUnsigned ) );
-		bh := LSH( b, sysSHR * 16 );  bl := S.VAL( LONGINT, S.VAL( SET, b ) * S.VAL( SET, vyRanBase.sysMaxUnsigned ) );
+		ah := LSH( a, sysSHR * 16 );  al := S.VAL( SIGNED32, S.VAL( SET, a ) * S.VAL( SET, vyRanBase.sysMaxUnsigned ) );
+		bh := LSH( b, sysSHR * 16 );  bl := S.VAL( SIGNED32, S.VAL( SET, b ) * S.VAL( SET, vyRanBase.sysMaxUnsigned ) );
 
 		low := al * bl;  t := ah * bl;  u := al * bh;  high := ah * bh;
 
@@ -152,7 +152,7 @@ END LongInc;
 		IF ((r = 0) & (low MOD 2 < tmp MOD 2)) OR (r < 0) THEN INC( high ) END
 	END LongMultAdd;
 
-	PROCEDURE MWC*( VAR x, c: LONGINT;  a: LONGINT );
+	PROCEDURE MWC*( VAR x, c: SIGNED32;  a: SIGNED32 );
 	BEGIN
 		LongMultAdd( c, x, a, x, c )
 	END MWC;
@@ -181,8 +181,8 @@ END LongInc;
 		END
 	END Get;
 
-	PROCEDURE GetV( r: tRandom;  count: LONGINT;  VAR nrs: ARRAY OF Bits;  start: LONGINT );
-	VAR seed: vyRanBase.tSeed;  i: LONGINT;  x, a, c: LONGINT;
+	PROCEDURE GetV( r: tRandom;  count: SIGNED32;  VAR nrs: ARRAY OF Bits;  start: SIGNED32 );
+	VAR seed: vyRanBase.tSeed;  i: SIGNED32;  x, a, c: SIGNED32;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
@@ -192,8 +192,8 @@ END LongInc;
 		END
 	END GetV;
 
-	PROCEDURE GetUniform( r: tRandom ): LONGREAL;
-	CONST posScalefact = 0.5 / MAX( LONGINT );  negScalefact = 0.5 / MIN( LONGINT );
+	PROCEDURE GetUniform( r: tRandom ): FLOAT64;
+	CONST posScalefact = 0.5 / MAX( SIGNED32 );  negScalefact = 0.5 / MIN( SIGNED32 );
 	VAR seed: vyRanBase.tSeed;
 	BEGIN
 		seed := r.seed;
@@ -203,20 +203,20 @@ END LongInc;
 		END
 	END GetUniform;
 
-	PROCEDURE GetL( r: tRandom;  top: LONGINT ): LONGINT;
-	VAR seed: vyRanBase.tSeed;  x: LONGINT;
+	PROCEDURE GetL( r: tRandom;  top: SIGNED32 ): SIGNED32;
+	VAR seed: vyRanBase.tSeed;  x: SIGNED32;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
 			LongMultAdd( seed.c, seed.x, seed.a, seed.x, seed.c );   (* MWC (seed.x, seed.c, seed.a) *)
 			x := seed.x;
-			IF x < 0 THEN DEC( x, MIN( LONGINT ) ) END;
+			IF x < 0 THEN DEC( x, MIN( SIGNED32 ) ) END;
 			IF top <= 0 THEN RETURN x ELSE RETURN x MOD top END
 		END
 	END GetL;
 
 	PROCEDURE Reset( r: tRandom );
-	VAR seed: vyRanBase.tSeed;  c, x: LONGINT;
+	VAR seed: vyRanBase.tSeed;  c, x: SIGNED32;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
@@ -324,13 +324,13 @@ END LongInc;
 		vyRanBase.Install( GetNew() )
 	END Install;
 
-	PROCEDURE SetParam*( a: LONGINT;  checkPeriod: BOOLEAN );
+	PROCEDURE SetParam*( a: SIGNED32;  checkPeriod: BOOLEAN );
 	BEGIN
 		seedA := a;  seedCheckPeriod := checkPeriod;  useParam := TRUE
 	END SetParam;
 
 BEGIN
-	ASSERT ( SIZEOF( LONGINT ) = 4, 100 );
+	ASSERT ( SIZEOF( SIGNED32 ) = 4, 100 );
 	useParam := FALSE
 END vyRanMWC.
 

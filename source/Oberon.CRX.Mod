@@ -13,9 +13,9 @@ CONST
 	EOL = 0DX;
 
 VAR
-	maxSS:    INTEGER;       (* number of symbol sets *)
-	errorNr:  INTEGER;       (* highest parser error number *)
-	curSy:    INTEGER;       (* symbol whose production is currently generated *)
+	maxSS:    SIGNED16;       (* number of symbol sets *)
+	errorNr:  SIGNED16;       (* highest parser error number *)
+	curSy:    SIGNED16;       (* symbol whose production is currently generated *)
 	err, w:   Texts.Writer;
 	fram:     Texts.Reader;
 	syn:      Texts.Writer;
@@ -23,7 +23,7 @@ VAR
 	symSet:   ARRAY symSetSize OF CRT.Set;
 
 
-PROCEDURE Restriction(n: INTEGER);
+PROCEDURE Restriction(n: SIGNED16);
 BEGIN
 	Texts.WriteLn(w); Texts.WriteString(w, "Restriction ");
 	Texts.WriteInt(w, n, 0); Texts.WriteLn(w); Texts.Append(Oberon.Log, w.buf);
@@ -31,7 +31,7 @@ BEGIN
 END Restriction;
 
 PROCEDURE PutS(s: ARRAY OF CHAR);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN i := 0;
 	WHILE (i < LEN(s)) & (s[i] # 0X) DO
 		IF s[i] = "$" THEN Texts.WriteLn(syn) ELSE Texts.Write(syn, s[i]) END ;
@@ -39,17 +39,17 @@ BEGIN i := 0;
 	END
 END PutS;
 
-PROCEDURE PutI(i: INTEGER);
+PROCEDURE PutI(i: SIGNED16);
 BEGIN Texts.WriteInt(syn, i, 0)
 END PutI;
 
-PROCEDURE Indent(n: INTEGER);
-	VAR i: INTEGER;
+PROCEDURE Indent(n: SIGNED16);
+	VAR i: SIGNED16;
 BEGIN i := 0; WHILE i < n DO Texts.Write(syn, " "); INC(i) END
 END Indent;
 
 PROCEDURE PutSet(s: SET);
-	VAR i: INTEGER; first: BOOLEAN;
+	VAR i: SIGNED16; first: BOOLEAN;
 BEGIN
 	i := 0; first := TRUE;
 	WHILE i < Sets.size DO
@@ -62,7 +62,7 @@ BEGIN
 END PutSet;
 
 PROCEDURE PutSet1(s: CRT.Set);
-	VAR i: INTEGER; first: BOOLEAN;
+	VAR i: SIGNED16; first: BOOLEAN;
 BEGIN
 	i := 0; first := TRUE;
 	WHILE i <= CRT.maxT DO
@@ -74,15 +74,15 @@ BEGIN
 	END
 END PutSet1;
 
-PROCEDURE Length*(s: ARRAY OF CHAR): INTEGER;
-	VAR i: INTEGER;
+PROCEDURE Length*(s: ARRAY OF CHAR): SIGNED16;
+	VAR i: SIGNED16;
 BEGIN
 	i:=0; WHILE (i < LEN(s)) & (s[i] # 0X) DO INC(i) END ;
 	RETURN i
 END Length;
 
-PROCEDURE Alternatives(gp: INTEGER): INTEGER;
-	VAR gn: CRT.GraphNode; n: INTEGER;
+PROCEDURE Alternatives(gp: SIGNED16): SIGNED16;
+	VAR gn: CRT.GraphNode; n: SIGNED16;
 BEGIN
 	n := 0;
 	WHILE gp > 0 DO
@@ -92,7 +92,7 @@ BEGIN
 END Alternatives;
 
 PROCEDURE CopyFramePart (stopStr: ARRAY OF CHAR); (*Copy from file <fram> to file <syn> until <stopStr>*)
-	VAR ch, startCh: CHAR; i, j, high: INTEGER;
+	VAR ch, startCh: CHAR; i, j, high: SIGNED16;
 BEGIN
 	startCh := stopStr[0]; high := Length(stopStr) - 1; Texts.Read (fram, ch);
 	WHILE ch # 0X DO
@@ -109,9 +109,9 @@ BEGIN
 	END
 END CopyFramePart;
 
-PROCEDURE CopySourcePart (pos: CRT.Position; indent: INTEGER);
+PROCEDURE CopySourcePart (pos: CRT.Position; indent: SIGNED16);
 (*Copy sequence <position> from <src> to <syn>*)
-	VAR ch: CHAR; i: INTEGER; nChars: LONGINT; r: Texts.Reader;
+	VAR ch: CHAR; i: SIGNED16; nChars: SIGNED32; r: Texts.Reader;
 BEGIN
 	IF (pos.beg >= 0) & (pos.len > 0) THEN
 		Texts.OpenReader(r, CRS.src, pos.beg); Texts.Read(r, ch);
@@ -155,8 +155,8 @@ BEGIN
 	END *)
 END CopySourcePart;
 
-PROCEDURE GenErrorMsg (errTyp, errSym: INTEGER; VAR errNr: INTEGER);
-	VAR i: INTEGER; name: ARRAY 32 OF CHAR; sn: CRT.SymbolNode;
+PROCEDURE GenErrorMsg (errTyp, errSym: SIGNED16; VAR errNr: SIGNED16);
+	VAR i: SIGNED16; name: ARRAY 32 OF CHAR; sn: CRT.SymbolNode;
 BEGIN
 	INC (errorNr); errNr := errorNr;
 	CRT.GetSym (errSym, sn); COPY(sn.name, name);
@@ -171,8 +171,8 @@ BEGIN
 	Texts.Write(err, CHR(34)); Texts.Write(err, ")"); Texts.WriteLn(err)
 END GenErrorMsg;
 
-PROCEDURE NewCondSet (set: CRT.Set): INTEGER;
-	VAR i: INTEGER;
+PROCEDURE NewCondSet (set: CRT.Set): SIGNED16;
+	VAR i: SIGNED16;
 BEGIN
 	i := 1; (*skip symSet[0]*)
 	WHILE i <= maxSS DO
@@ -185,7 +185,7 @@ BEGIN
 END NewCondSet;
 
 PROCEDURE GenCond (set: CRT.Set);
-	VAR i, n: INTEGER;
+	VAR i, n: SIGNED16;
 
 BEGIN
 	n := Sets.Elements(set, i);
@@ -218,9 +218,9 @@ BEGIN
 
 END GenCond;
 
-PROCEDURE GenCode (gp, indent: INTEGER; checked: CRT.Set);
-	VAR gn, gn2: CRT.GraphNode; sn: CRT.SymbolNode; gp2: INTEGER;
-			s1, s2: CRT.Set; errNr, alts: INTEGER; equal: BOOLEAN;
+PROCEDURE GenCode (gp, indent: SIGNED16; checked: CRT.Set);
+	VAR gn, gn2: CRT.GraphNode; sn: CRT.SymbolNode; gp2: SIGNED16;
+			s1, s2: CRT.Set; errNr, alts: SIGNED16; equal: BOOLEAN;
 BEGIN
 	WHILE gp > 0 DO
 		CRT.GetNode (gp, gn);
@@ -321,7 +321,7 @@ BEGIN
 END GenCode;
 
 PROCEDURE GenCodePragmas;
-	VAR i: INTEGER; sn: CRT.SymbolNode;
+	VAR i: SIGNED16; sn: CRT.SymbolNode;
 
 	PROCEDURE P(s1, s2: ARRAY OF CHAR);
 	BEGIN
@@ -350,7 +350,7 @@ BEGIN
 END GenProcedureHeading;
 
 PROCEDURE GenForwardRefs;
-	VAR sp: INTEGER; sn: CRT.SymbolNode;
+	VAR sp: SIGNED16; sn: CRT.SymbolNode;
 BEGIN
 	IF ~ CRT.ddt[5] THEN
 		sp := CRT.firstNt;
@@ -377,7 +377,7 @@ BEGIN
 END GenProductions;
 
 PROCEDURE InitSets;
-	VAR i, j: INTEGER;
+	VAR i, j: SIGNED16;
 BEGIN
 	i := 0; CRT.GetSet(0, symSet[0]);
 	WHILE i <= maxSS DO
@@ -392,10 +392,10 @@ BEGIN
 END InitSets;
 
 PROCEDURE GenCompiler*;
-	VAR errNr, i: INTEGER; checked: CRT.Set;
+	VAR errNr, i: SIGNED16; checked: CRT.Set;
 			gn: CRT.GraphNode; sn: CRT.SymbolNode;
 			parser: ARRAY 32 OF CHAR;
-			t: Texts.Text; pos: LONGINT;	f: Files.File;
+			t: Texts.Text; pos: SIGNED32;	f: Files.File;
 BEGIN
 	CRT.GetNode(CRT.root, gn); CRT.GetSym(gn.p1, sn);
 	COPY(sn.name, parser); i := Length(parser); parser[i] := "P"; parser[i+1] := 0X;

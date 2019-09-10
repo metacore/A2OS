@@ -216,7 +216,7 @@ BEGIN
 END IsLoaded;
 
 PROCEDURE ModuleState*(context: Commands.Context);
-VAR name: Modules.Name; module: Modules.Module; msg: ARRAY 256 OF CHAR; res: WORD;
+VAR name: Modules.Name; module: Modules.Module; msg: ARRAY 256 OF CHAR; res: INTEGER;
 BEGIN
 	context.arg.SkipWhitespace;
 	context.arg.String(name);
@@ -241,7 +241,7 @@ END ModuleState;
 
 (** Load the specified module *)
 PROCEDURE Load*(context : Commands.Context); (** modulename ~ *)
-VAR name : Modules.Name; module : Modules.Module; msg : ARRAY 256 OF CHAR; res : WORD;
+VAR name : Modules.Name; module : Modules.Module; msg : ARRAY 256 OF CHAR; res : INTEGER;
 BEGIN
 	context.arg.SkipWhitespace;
 	context.arg.String(name);
@@ -268,7 +268,7 @@ END Load;
 PROCEDURE FreeDownTo*(context : Commands.Context); (** basemodule ~ *)
 VAR
 	modulename : ARRAY 128 OF CHAR;
-	root, m: Module; res: WORD;
+	root, m: Module; res: INTEGER;
 	timer: Kernel.Timer; msg: ARRAY 64 OF CHAR;
 	nbrOfUnloadedModules : SIZE;
 BEGIN
@@ -300,7 +300,7 @@ END FreeDownTo;
 
 (** Unload modules from memory *)
 PROCEDURE Free*(context : Commands.Context); (** {modulename} ~ *)
-VAR name, msg : ARRAY 64 OF CHAR; res : WORD;
+VAR name, msg : ARRAY 64 OF CHAR; res : INTEGER;
 BEGIN
 	WHILE context.arg.GetString(name) DO
 		IF name # "" THEN
@@ -315,7 +315,7 @@ BEGIN
 END Free;
 
 PROCEDURE Kill*(context : Commands.Context); (** pid { pid } ~ *)
-VAR process : Objects.Process; pid : WORD;
+VAR process : Objects.Process; pid : INTEGER;
 BEGIN {EXCLUSIVE}
 	WHILE context.arg.GetInteger(pid, FALSE) DO
 		context.out.Int(pid, 0);
@@ -369,7 +369,7 @@ BEGIN
 END ShowStacks;
 
 PROCEDURE ShowStack*(context : Commands.Context); (** pid ~ *)
-VAR process : Objects.Process; pid : WORD;
+VAR process : Objects.Process; pid : INTEGER;
 BEGIN
 	context.arg.SkipWhitespace;
 	context.arg.Int(pid, FALSE);
@@ -399,7 +399,7 @@ PROCEDURE RenameExtension*(context : Commands.Context);
 VAR
 	enumerator : Files.Enumerator;
 	oe, ne, temp: ARRAY 16 OF CHAR;
-	name, file, ext : Files.FileName; flags : SET; time, date: LONGINT; size: Files.Size; res : WORD;
+	name, file, ext : Files.FileName; flags : SET; time, date: SIGNED32; size: Files.Size; res : INTEGER;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(oe);
 	context.arg.SkipWhitespace; context.arg.String(ne);
@@ -435,7 +435,7 @@ VAR
 	file: Files.File;
 	r: Streams.Reader;
 	filename: Files.FileName;
-	res: WORD;
+	res: INTEGER;
 	msg: ARRAY 256 OF CHAR;
 BEGIN
 	IF context.arg.GetString(filename) THEN
@@ -468,7 +468,7 @@ VAR
 	command, parameters, paramString : Strings.String;
 	temp : Strings.String;
 	msg : ARRAY 128 OF CHAR;
-	cur, available, i, j, k, length: SIZE; res: WORD;
+	cur, available, i, j, k, length: SIZE; res: INTEGER;
 
 	PROCEDURE CreateContext(paramString : Strings.String) : Commands.Context;
 	VAR c : Commands.Context; arg : Streams.StringReader; dummy : ARRAY 1 OF CHAR;
@@ -636,7 +636,7 @@ PROCEDURE Repeat*(context : Commands.Context); (* nofTimes command [command para
 VAR
 	command, msg : ARRAY 128 OF CHAR;
 	parameterPosition : Streams.Position;
-	nofTimes: WORD; res : WORD;
+	nofTimes: INTEGER; res : INTEGER;
 BEGIN
 	nofTimes := 0; command := "";
 	context.arg.SkipWhitespace;	context.arg.Int(nofTimes, FALSE);
@@ -664,7 +664,7 @@ END Repeat;
 	*)
 PROCEDURE Timer*(context : Commands.Context); (** [  ["start"["h"] [number]] | ["elapsed"["h"] [number]] | ["diff"["h"] number1 number2]  ] ~ *)
 VAR
-	string : ARRAY 128 OF CHAR; nbr1, nbr2 : WORD;
+	string : ARRAY 128 OF CHAR; nbr1, nbr2 : INTEGER;
 
 	PROCEDURE ShowUsage;
 	BEGIN
@@ -672,7 +672,7 @@ VAR
 		context.out.Ln;
 	END ShowUsage;
 
-	PROCEDURE Valid(number : WORD) : BOOLEAN;
+	PROCEDURE Valid(number : INTEGER) : BOOLEAN;
 	BEGIN
 		RETURN (0 <= number) & (number < MaxTimers);
 	END Valid;
@@ -745,7 +745,7 @@ END Ln;
 
 (** Block for ms milliseconds *)
 PROCEDURE Wait*(context : Commands.Context); (** ms ~ *)
-VAR timer : Kernel.Timer; milliseconds : LONGINT;
+VAR timer : Kernel.Timer; milliseconds : SIGNED32;
 BEGIN
 	IF context.arg.GetInteger(milliseconds, FALSE) & (milliseconds > 0) THEN
 		NEW(timer);

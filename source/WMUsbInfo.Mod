@@ -55,7 +55,7 @@ TYPE
 
 	(* View mode data for Tab's *)
 	Mode = POINTER TO RECORD;
-		mode : LONGINT;
+		mode : SIGNED32;
 	END;
 
 	Driver = POINTER TO RECORD;
@@ -84,18 +84,18 @@ TYPE
 
 		infoline : WMStandardComponents.Label;
 
-		viewmode : LONGINT;
+		viewmode : SIGNED32;
 
 		string : ARRAY WriterSize OF CHAR;
 
-		lastNbrOfDriverEvents, lastNbrOfTopologyEvents : LONGINT;
+		lastNbrOfDriverEvents, lastNbrOfTopologyEvents : SIGNED32;
 
 		(* Active object control *)
 		dead, alive  : BOOLEAN;
 		timer : Kernel.Timer;
 
 		PROCEDURE AddDeviceDescriptor(d : Usb.DeviceDescriptor; CONST nname: ARRAY OF CHAR; parent : WMTrees.TreeNode; isQualifier : BOOLEAN);
-		VAR dn, tn : WMTrees.TreeNode; w : Streams.StringWriter; i : LONGINT; vendor, class, subclass, protocol : Strings.String;
+		VAR dn, tn : WMTrees.TreeNode; w : Streams.StringWriter; i : SIGNED32; vendor, class, subclass, protocol : Strings.String;
 		BEGIN
 			NEW(dn); NEW(w, WriterSize);
 			AddUsbNode(dn, parent, nname);
@@ -217,7 +217,7 @@ TYPE
 		PROCEDURE AddHidClass(u : Usbdi.UnknownDescriptor; intf : Usbdi.InterfaceDescriptor; parent : WMTrees.TreeNode);
 		VAR w : Streams.StringWriter;  cl, n, dn : WMTrees.TreeNode; i : SIZE;
 
-			PROCEDURE AddDescriptorType(type : LONGINT; w : Streams.StringWriter);
+			PROCEDURE AddDescriptorType(type : SIGNED32; w : Streams.StringWriter);
 			BEGIN
 				CASE type OF
 					21H: 	w.String("(HID Descriptor)");
@@ -272,7 +272,7 @@ TYPE
 
 		(* Show USB Video Device Class-Specific descriptors *)
 		PROCEDURE AddVideoClass(u : Usbdi.UnknownDescriptor; intf : Usbdi.InterfaceDescriptor;  parent : WMTrees.TreeNode);
-		VAR subtype : LONGINT; v, w : Streams.StringWriter; tn, n : WMTrees.TreeNode;
+		VAR subtype : SIGNED32; v, w : Streams.StringWriter; tn, n : WMTrees.TreeNode;
 
 			PROCEDURE AddVCHeader(u : Usbdi.UnknownDescriptor; parent : WMTrees.TreeNode);
 			VAR n : WMTrees.TreeNode; i : SIZE; w : Streams.StringWriter;
@@ -300,7 +300,7 @@ TYPE
 			END AddVCHeader;
 
 			PROCEDURE AddTerminal(u : Usbdi.UnknownDescriptor; parent : WMTrees.TreeNode);
-			VAR n : WMTrees.TreeNode; i, subtype : LONGINT; w : Streams.StringWriter;
+			VAR n : WMTrees.TreeNode; i, subtype : SIGNED32; w : Streams.StringWriter;
 			BEGIN
 				NEW(w, WriterSize);
 				(* Common fields of all terminal descriptors *)
@@ -346,7 +346,7 @@ TYPE
 
 			(* Common fields of unit descriptors *)
 			PROCEDURE AddUnit(u : Usbdi.UnknownDescriptor; parent : WMTrees.TreeNode);
-			VAR n : WMTrees.TreeNode; i, j: SIZE; subtype : LONGINT; w : Streams.StringWriter;
+			VAR n : WMTrees.TreeNode; i, j: SIZE; subtype : SIGNED32; w : Streams.StringWriter;
 			BEGIN
 				NEW(n); NEW(w, WriterSize);
 				w.String("bUnitID: "); w.Int(ORD(u.descriptor[3]), 0);
@@ -392,7 +392,7 @@ TYPE
 			END AddUnit;
 
 			PROCEDURE AddOutputHeader(u : Usbdi.UnknownDescriptor; parent : WMTrees.TreeNode);
-			VAR n : WMTrees.TreeNode; i  : LONGINT; w : Streams.StringWriter;
+			VAR n : WMTrees.TreeNode; i  : SIGNED32; w : Streams.StringWriter;
 			BEGIN
 				NEW(w, WriterSize);
 				FOR i := 1 TO 4 DO
@@ -408,7 +408,7 @@ TYPE
 			END AddOutputHeader;
 
 			PROCEDURE AddInputHeader(u : Usbdi.UnknownDescriptor; parent : WMTrees.TreeNode);
-			VAR n : WMTrees.TreeNode; i: SIZE; temp : LONGINT; w : Streams.StringWriter;
+			VAR n : WMTrees.TreeNode; i: SIZE; temp : SIGNED32; w : Streams.StringWriter;
 			BEGIN
 				NEW(w, WriterSize);
 				FOR i := 1 TO 9 DO
@@ -449,7 +449,7 @@ TYPE
 			END AddInputHeader;
 
 			PROCEDURE AddVcInterruptEp(u : Usbdi.UnknownDescriptor; parent : WMTrees.TreeNode);
-			VAR wMaxTransferSize : LONGINT; n : WMTrees.TreeNode; w : Streams.StringWriter;
+			VAR wMaxTransferSize : SIGNED32; n : WMTrees.TreeNode; w : Streams.StringWriter;
 			BEGIN
 				NEW(n); NEW(w, WriterSize);
 				IF (LEN(u.descriptor) = 5) THEN
@@ -640,7 +640,7 @@ TYPE
 		END AddInterface;
 
 		PROCEDURE AddEndpoint(e : Usb.EndpointDescriptor;intf : Usbdi.InterfaceDescriptor;  nbr : SIZE; parent : WMTrees.TreeNode);
-		VAR dn  : WMTrees.TreeNode; w : Streams.StringWriter; i : LONGINT;
+		VAR dn  : WMTrees.TreeNode; w : Streams.StringWriter; i : SIGNED32;
 		BEGIN
 			NEW(dn); NEW(w, WriterSize);
 			FOR i := 0 TO 4 DO
@@ -651,7 +651,7 @@ TYPE
 							IF SYSTEM.VAL(SET, e.bEndpointAddress) * {7} = {} THEN w.String(" (OUT)"); ELSE w.String(" (IN)"); END;
 						END;
 					|1: w.String(", Type: ");
-						CASE SYSTEM.VAL(LONGINT, e.bmAttributes * {0..1}) OF
+						CASE SYSTEM.VAL(SIGNED32, e.bmAttributes * {0..1}) OF
 							0: w.String("Control");
 							|1: w.String("Isochronous");
 							|2: w.String("Bulk");
@@ -662,16 +662,16 @@ TYPE
 					|4: w.String(", Interval: "); w.Int(e.bInterval, 0); w.String("ms");
 				END;
 			END;
-			IF SYSTEM.VAL(LONGINT, e.bmAttributes * {0..1}) = 1 THEN (* Isochronous endpoint *)
+			IF SYSTEM.VAL(SIGNED32, e.bmAttributes * {0..1}) = 1 THEN (* Isochronous endpoint *)
 				w.String(" (Synchronization: ");
-				CASE SYSTEM.VAL(LONGINT, LSH(e.bmAttributes * {2..3}, -2)) OF
+				CASE SYSTEM.VAL(SIGNED32, LSH(e.bmAttributes * {2..3}, -2)) OF
 					0: w.String("None");
 					|1: w.String("Asynchronous");
 					|2: w.String("Adaptive");
 					|3: w.String("Synchronous");
 				END;
 				w.String(", Usage: ");
-				CASE SYSTEM.VAL(LONGINT, LSH(e.bmAttributes * {4..5}, -4)) OF
+				CASE SYSTEM.VAL(SIGNED32, LSH(e.bmAttributes * {4..5}, -4)) OF
 					0: w.String("Data");
 					|1: w.String("Feedback");
 					|2: w.String("Implicit Feedback Data");
@@ -1022,13 +1022,13 @@ TYPE
 			tab : WMTabComponents.Tab;
 			mode : Mode;
 			string : ARRAY 32 OF CHAR;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			NEW(timer);
 			dead := FALSE; alive := TRUE;
 
 			NEW(mainpanel);
-			mainpanel.bounds.SetExtents(WindowWidth, WindowHeight); mainpanel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			mainpanel.bounds.SetExtents(WindowWidth, WindowHeight); mainpanel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 
 			NEW(buttonpanel);
 			buttonpanel.fillColor.Set(0F0F0F0FH);
@@ -1136,17 +1136,17 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 (*
  * Return a string represenation of the idVendor field of the USB device descriptor. Returns "Unknown", if
  * no string available. A list of assigned vendor IDs can be found at www.usb.org.
  *)
-PROCEDURE GetVendorString(vendorId : LONGINT) : Strings.String;
+PROCEDURE GetVendorString(vendorId : SIGNED32) : Strings.String;
 CONST Trace = FALSE;
 VAR
 	in : Streams.Reader;
-	line, vendor : LONGINT; char : CHAR;
+	line, vendor : SIGNED32; char : CHAR;
 	vendorStr : ARRAY 128 OF CHAR;
 BEGIN
 	in := Codecs.OpenInputStream(VendorIdFile);
@@ -1211,7 +1211,7 @@ END GetImage;
  * Return a string description of Device Class, Device Subclass and Interface Protocol according
  * to the Device Class Code Definition 1.0.
  *)
-PROCEDURE GetDeviceDescription(class, subclass, protocol : LONGINT; VAR c, s, p : Strings.String);
+PROCEDURE GetDeviceDescription(class, subclass, protocol : SIGNED32; VAR c, s, p : Strings.String);
 BEGIN
 	c := NIL; s := NIL; p := NIL;
 	IF class = 0 THEN
@@ -1251,7 +1251,7 @@ END GetDeviceDescription;
  * - USB Video Device Class 1.0
  * - USB HID Device Class 1.0
  *)
-PROCEDURE GetInterfaceDescription(class, subclass, protocol : LONGINT; VAR c, s, p: Strings.String);
+PROCEDURE GetInterfaceDescription(class, subclass, protocol : SIGNED32; VAR c, s, p: Strings.String);
 BEGIN
 	c := NIL; s := NIL; p := NIL;
 	IF class = 1 THEN
@@ -1343,7 +1343,7 @@ END GetInterfaceDescription;
  * to:
  *
  *)
-PROCEDURE GetIadDescription(class, subclass, protocol : LONGINT; VAR c, s, p : Strings.String);
+PROCEDURE GetIadDescription(class, subclass, protocol : SIGNED32; VAR c, s, p : Strings.String);
 BEGIN
 	c := NIL; s := NIL; p := NIL;
 	IF class = 0EH THEN

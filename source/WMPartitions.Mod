@@ -78,7 +78,7 @@ TYPE
 
 		(** This procedure is called everytime when the selection has been updated *)
 		(** Return values: SelectionValid, SelectionInvalid, SelectionMaybe or SelectionNotSupported *)
-		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection) : LONGINT; (* abstract *)
+		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection) : SIGNED32; (* abstract *)
 		END SelectionUpdated;
 
 		(** Returns TRUE if the selection is valid *)
@@ -247,13 +247,13 @@ TYPE
 			info.bounds.SetExtents(bounds.GetWidth(), ButtonHeight);
 		END Resized;
 
-		PROCEDURE SelectionUpdated(selection:  WMPartitionsComponents.Selection): LONGINT;
+		PROCEDURE SelectionUpdated(selection:  WMPartitionsComponents.Selection): SIGNED32;
 		VAR
 			caption, temp : ARRAY 128 OF CHAR;
 			fs : Files.FileSystem;
-			fstype : LONGINT;
+			fstype : SIGNED32;
 			doClose : BOOLEAN;
-			result, res : WORD;
+			result, res : INTEGER;
 		BEGIN
 			SELF.selection := selection;
 			IF IsValid(selection) THEN
@@ -337,7 +337,7 @@ TYPE
 		END SelectionUpdated;
 
 		(* TBD *)
-		PROCEDURE WriteK(k: LONGINT; VAR string : ARRAY OF CHAR);
+		PROCEDURE WriteK(k: SIGNED32; VAR string : ARRAY OF CHAR);
 		VAR suffix: ARRAY 3 OF CHAR; temp : ARRAY 32 OF CHAR;
 		BEGIN
 			IF k < 10*1024 THEN COPY("Ki", suffix)
@@ -349,7 +349,7 @@ TYPE
 
 		(* Generate a mount prefix by appending a number to the string represented by the constant DefaultPrefix. *)
 		PROCEDURE GenPrefix() : Files.Prefix;
-		VAR prefix : Files.Prefix; temp : ARRAY 12 OF CHAR; i : LONGINT;
+		VAR prefix : Files.Prefix; temp : ARRAY 12 OF CHAR; i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			WHILE prefixUsed[i] & (i < LEN(prefixUsed)-1) DO INC(i); END;
 			ASSERT(i < LEN(prefixUsed));
@@ -358,18 +358,18 @@ TYPE
 		END GenPrefix;
 
 		PROCEDURE SetPrefixUsed(CONST prefix : ARRAY OF CHAR);
-		VAR nbr : LONGINT;
+		VAR nbr : SIGNED32;
 		BEGIN (* will not be concurrently called with GenPrefix *)
 			nbr := GetPrefixNbr(prefix);
 			IF nbr#-1 THEN prefixUsed[nbr] := TRUE; END;
 		END SetPrefixUsed;
 
-		PROCEDURE GetPrefixNbr(CONST iprefix : ARRAY OF CHAR) : LONGINT;
+		PROCEDURE GetPrefixNbr(CONST iprefix : ARRAY OF CHAR) : SIGNED32;
 		VAR
 			match : BOOLEAN;
 			temp : ARRAY 32 OF CHAR;
 			default, prefix : Strings.String;
-			i, j: SIZE; result : LONGINT;
+			i, j: SIZE; result : SIGNED32;
 		BEGIN
 			prefix := Strings.NewString(iprefix);
 			default := Strings.NewString(DefaultPrefix);
@@ -391,7 +391,7 @@ TYPE
 
 		(* Appends FatFS specific parameters to command string *)
 		PROCEDURE GetFATspecific(VAR volPar : ARRAY OF CHAR);
-		VAR string : ARRAY 128 OF CHAR; cachesize : LONGINT;
+		VAR string : ARRAY 128 OF CHAR; cachesize : SIGNED32;
 		BEGIN
 			volPar := "";
 			IF parForceRW THEN Strings.Append(volPar, " ,X"); END;
@@ -465,10 +465,10 @@ TYPE
 			volOld : OldDiskVolumes.Volume;
 			volFAT: FATVolumes.Volume;
 			volISO : ISO9660Volumes.Volume;
-			fsStart : LONGINT;
+			fsStart : SIGNED32;
 			found : BOOLEAN;
 			result  : Strings.String;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			NEW(result, 128);
 			IF IsValid(selection) & (selection.disk.device.table # NIL) & (selection.partition < LEN(selection.disk.device.table)) THEN
@@ -529,11 +529,11 @@ TYPE
 
 		(* Check if an Oberon or FAT  file system is present on a partition. Returns 0 if no Oberon or FAT file system found,
 		1 for a Native file system, 2 for an old Aos file system and 3 for a new Aos file system, 4 for FAT file system (from Partitions.Mod) *)
-		PROCEDURE DetectFS(dev: Disks.Device; part: LONGINT): LONGINT;
+		PROCEDURE DetectFS(dev: Disks.Device; part: SIGNED32): SIGNED32;
 		VAR
 			block: POINTER TO ARRAY  OF CHAR;
-			type : LONGINT;
-			res: WORD; fs: LONGINT;
+			type : SIGNED32;
+			res: INTEGER; fs: SIGNED32;
 		BEGIN
 			IF (dev.table=NIL) OR (part >= LEN(dev.table)) THEN RETURN 0; END;
 			type := dev.table[part].type;
@@ -583,7 +583,7 @@ TYPE
 		set, get : WMStandardComponents.Button;
 		toFile, toPartition : WMStandardComponents.Button; (* check boxes *)
 		editorFile, editorPartition : WMEditors.Editor;
-		target : LONGINT; (* ToFile | ToPartition *)
+		target : SIGNED32; (* ToFile | ToPartition *)
 		fileLeft : SIZE; (* left offset from editorFile *)
 
 		statusLabel : WMStandardComponents.Label;
@@ -595,7 +595,7 @@ TYPE
 			getConfig : PartitionsLib.GetConfig;
 			selection : PartitionsLib.Selection;
 			caption : ARRAY 128 OF CHAR;
-			fs : LONGINT;
+			fs : SIGNED32;
 		BEGIN
 			IF PartitionsLib.diskModel.GetDisk(devpart, selection, FALSE) THEN
 				fs := PartitionsLib.DetectFS(selection.disk.device, selection.partition);
@@ -634,7 +634,7 @@ TYPE
 			caption : ARRAY 128 OF CHAR;
 			params : Parameters;
 			string : Strings.String;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF PartitionsLib.diskModel.GetDisk(devpart, selection, FALSE) THEN
 				string := configTable.GetAsString();
@@ -664,7 +664,7 @@ TYPE
 		END StoreToPartition;
 
 		PROCEDURE LoadFromFile(CONST filename : ARRAY OF CHAR);
-		VAR caption, msg : ARRAY 256 OF CHAR; res : WORD;
+		VAR caption, msg : ARRAY 256 OF CHAR; res : INTEGER;
 		BEGIN
 			configTable.LoadFromFile(filename, msg, res);
 			IF (res = PartitionsLib.Ok) THEN
@@ -678,7 +678,7 @@ TYPE
 		END LoadFromFile;
 
 		PROCEDURE StoreToFile(CONST filename : ARRAY OF CHAR);
-		VAR caption, msg : ARRAY 256 OF CHAR; res : WORD;
+		VAR caption, msg : ARRAY 256 OF CHAR; res : INTEGER;
 		BEGIN
 			configTable.StoreToFile(filename, msg, res);
 			IF (res = PartitionsLib.Ok) THEN
@@ -690,7 +690,7 @@ TYPE
 		END StoreToFile;
 
 		PROCEDURE SetSelection(selection : WMPartitionsComponents.Selection) : BOOLEAN;
-		VAR string, diskpartStr : ARRAY 128 OF CHAR; temp : ARRAY 4 OF CHAR; res : WORD;
+		VAR string, diskpartStr : ARRAY 128 OF CHAR; temp : ARRAY 4 OF CHAR; res : INTEGER;
 		BEGIN
 			diskpartStr := "";
 			Strings.Append(diskpartStr, selection.disk.device.name);
@@ -823,14 +823,14 @@ TYPE
 			IF table # NIL THEN
 				grid.Acquire;
 				grid.model.Acquire;
-				grid.model.SetNofRows(LEN(table)(LONGINT));
-				FOR row := 0 TO LEN(table)(LONGINT)-1 DO
+				grid.model.SetNofRows(LEN(table)(SIGNED32));
+				FOR row := 0 TO LEN(table)(SIGNED32)-1 DO
 					grid.model.SetCellText(0, row, table[row].key);
 					grid.model.SetCellText(1, row, table[row].value);
 					height := height + cellHeight + CeCellHeightMinSpacer + 1;
 				END;
-				NEW(spacings, LEN(table)(LONGINT));
-				FOR row := 0 TO LEN(table)(LONGINT)-1 DO spacings[row] := cellHeight + CeCellHeightMinSpacer; END;
+				NEW(spacings, LEN(table)(SIGNED32));
+				FOR row := 0 TO LEN(table)(SIGNED32)-1 DO spacings[row] := cellHeight + CeCellHeightMinSpacer; END;
 				grid.SetRowSpacings(spacings);
 				grid.model.Release;
 				grid.Release;
@@ -859,7 +859,7 @@ TYPE
 			gridContainer.bounds.SetExtents(gridPanel.bounds.GetWidth() - 2*MarginH, gridPanel.bounds.GetHeight() - 2*MarginV);
 			table := configTable.GetEntries();
 			IF table # NIL THEN
-				gridHeight := LEN(table)(LONGINT)*(cellHeight + CeCellHeightMinSpacer + 1);
+				gridHeight := LEN(table)(SIGNED32)*(cellHeight + CeCellHeightMinSpacer + 1);
 			END;
 			scrollbarY.bounds.SetLeft(gridContainer.bounds.GetWidth() - scrollbarY.bounds.GetWidth());
 			scrollbarY.bounds.SetHeight(gridContainer.bounds.GetHeight());
@@ -1087,7 +1087,7 @@ TYPE
 		delete, create, partitionToFile, fileToPartition, writeMBR, editPBR : WMStandardComponents.Button;
 
 		PROCEDURE &Init*;
-		VAR left : LONGINT;
+		VAR left : SIGNED32;
 		BEGIN
 			Init^;
 
@@ -1156,8 +1156,8 @@ TYPE
 
 		(** This procedure is called everytime when the selection has been updated *)
 		(** Return value: SelectionValid, SelectionInvalid, SelectionMaybe *)
-		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection) : LONGINT;
-		VAR result : LONGINT;
+		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection) : SIGNED32;
+		VAR result : SIGNED32;
 		BEGIN
 			SELF.selection := selection;
 			IF IsValid(selection) THEN
@@ -1178,7 +1178,7 @@ TYPE
 		VAR
 			create : PartitionsLib.CreatePartition;
 			popup : PopupWindow; param : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) & ~selection.disk.isDiskette THEN
 				NEW(param, 2);
@@ -1206,7 +1206,7 @@ TYPE
 		VAR
 			delete : PartitionsLib.DeletePartition;
 			popup : PopupWindow; param : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF  ~selection.disk.isDiskette & IsValid(selection) &
 			    (selection.disk.device # NIL) & (selection.partition < LEN(selection.disk.device.table))
@@ -1231,7 +1231,7 @@ TYPE
 		VAR
 			writeMBR : PartitionsLib.WriteMBR;
 			popup : PopupWindow; param : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF (selection.disk.device # NIL) & (selection.partition = 0) & (selection.disk.table # NIL) & ~selection.disk.isDiskette THEN
 				NEW(popup, 250, 180, FALSE);
@@ -1256,7 +1256,7 @@ TYPE
 		END WriteMBR;
 
 		PROCEDURE EditPBR(sender, data : ANY);
-		VAR cmd, msg : ARRAY 512 OF CHAR; nbr : ARRAY 16 OF CHAR; res : WORD;
+		VAR cmd, msg : ARRAY 512 OF CHAR; nbr : ARRAY 16 OF CHAR; res : INTEGER;
 		BEGIN
 			IF (selection.disk.device # NIL) & (selection.disk.table # NIL) & (selection.partition < LEN(selection.disk.table)) & ~selection.disk.isDiskette THEN
 				cmd := "PartitionEditor.Open ";
@@ -1281,8 +1281,8 @@ TYPE
 			volumelabel : Strings.String;
 			popup : PopupWindow; params : Parameters;
 			cancel, doClose : BOOLEAN;
-			fs : LONGINT;
-			res : WORD;
+			fs : SIGNED32;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) & ((selection.disk.table[selection.partition].flags * {Disks.Valid} # {}) OR selection.disk.isDiskette) THEN
 
@@ -1389,10 +1389,10 @@ TYPE
 		PROCEDURE ChangeType(sender, data : ANY);
 		VAR
 			changeType : PartitionsLib.ChangePartType;
-			oldtype, newtype : LONGINT;
+			oldtype, newtype : SIGNED32;
 			popup : PopupWindow;
 			param : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) & (selection.disk.table[selection.partition].flags * {Disks.Valid} # {}) THEN
 				NEW(param, 1);
@@ -1421,7 +1421,7 @@ TYPE
 			popup : PopupWindow; param : Parameters;
 			string : ARRAY 64 OF CHAR;
 			on : BOOLEAN;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) & (Disks.Valid IN selection.disk.table[selection.partition].flags) & ~selection.disk.isDiskette THEN
 				on := Disks.Boot IN selection.disk.table[selection.partition].flags;
@@ -1448,7 +1448,7 @@ TYPE
 		VAR
 			fileToPartition : PartitionsLib.FileToPartition;
 			popup : PopupWindow; param : Parameters;
-			block, numblocks : LONGINT; res : WORD;
+			block, numblocks : SIGNED32; res : INTEGER;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 3);
@@ -1478,7 +1478,7 @@ TYPE
 		VAR
 			partitionToFile : PartitionsLib.PartitionToFile;
 			popup : PopupWindow; param : Parameters;
-			block, numblocks : LONGINT; res : WORD;
+			block, numblocks : SIGNED32; res : INTEGER;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 3);
@@ -1515,7 +1515,7 @@ TYPE
 		VAR
 			showBlocks : PartitionsLib.ShowBlocks;
 			popup : PopupWindow; param : Parameters;
-			block, numblocks : LONGINT; res : WORD;
+			block, numblocks : SIGNED32; res : INTEGER;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 2);
@@ -1545,7 +1545,7 @@ TYPE
 			result : ARRAY 128 OF CHAR;
 			popup : PopupWindow; param : Parameters;
 			eject : BOOLEAN;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF (selection.disk.device # NIL) & (~selection.disk.isDiskette) THEN
 				IF (Disks.Removable IN selection.disk.device.flags) THEN
@@ -1589,7 +1589,7 @@ TYPE
 		popup : PopupWindow;
 
 		PROCEDURE Config(sender, data : ANY);
-		VAR configEditor : ConfigEditor; doClose : BOOLEAN; fsType : LONGINT; res : WORD;
+		VAR configEditor : ConfigEditor; doClose : BOOLEAN; fsType : SIGNED32; res : INTEGER;
 		BEGIN
 			IF IsValid(selection) &
 			    ((Disks.Valid IN selection.disk.table[selection.partition].flags) OR (selection.disk.isDiskette)) THEN
@@ -1622,7 +1622,7 @@ TYPE
 		VAR
 			updateLoader : PartitionsLib.UpdateBootLoader;
 			param : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) &
 			    ((Disks.Valid IN selection.disk.table[selection.partition].flags) OR (selection.disk.isDiskette)) THEN
@@ -1646,7 +1646,7 @@ TYPE
 		VAR
 			updateBoot : PartitionsLib.UpdateBootFile;
 			param : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) &
 			    ((Disks.Valid IN selection.disk.table[selection.partition].flags) OR (selection.disk.isDiskette)) THEN
@@ -1670,7 +1670,7 @@ TYPE
 		VAR
 			installBootManager : PartitionsLib.InstallBootManager;
 			param : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) & ((Disks.Valid IN selection.disk.table[selection.partition].flags) OR (selection.disk.isDiskette)) THEN
 				NEW(popup, 300, 200, FALSE);
@@ -1699,7 +1699,7 @@ TYPE
 			text : Texts.Text; textWriter : TextUtilities.TextWriter;
 			reader : Streams.Reader;
 			params : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) & ((Disks.Valid IN selection.disk.table[selection.partition].flags) OR selection.disk.isDiskette) THEN
 				NEW(packages); NEW(errorWriter, LEN(errorString));
@@ -1748,8 +1748,8 @@ TYPE
 			IF popup # NIL THEN popup.Close; popup := NIL END;
 		END Finalize;
 
-		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection) : LONGINT;
-		VAR result : LONGINT;
+		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection) : SIGNED32;
+		VAR result : SIGNED32;
 		BEGIN
 			SELF.selection := selection;
 			IF IsValid(selection) & (Disks.Valid IN selection.disk.table[selection.partition].flags) OR selection.disk.isDiskette THEN
@@ -1761,7 +1761,7 @@ TYPE
 		END SelectionUpdated;
 
 		PROCEDURE &Init*;
-		VAR  left : LONGINT;
+		VAR  left : SIGNED32;
 		BEGIN
 			Init^;
 
@@ -1810,7 +1810,7 @@ TYPE
 		surfaceScan, compareFats, lostClusters, write : BOOLEAN;
 
 		PROCEDURE &Init*;
-		VAR label : WMStandardComponents.Label; left : LONGINT;
+		VAR label : WMStandardComponents.Label; left : SIGNED32;
 		BEGIN
 			Init^;
 			surfaceScan := FALSE; compareFats := TRUE; lostClusters := TRUE; write := FALSE;
@@ -1870,8 +1870,8 @@ TYPE
 			AddInternalComponent(label);
 		END Init;
 
-		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection) : LONGINT;
-		VAR result : LONGINT;
+		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection) : SIGNED32;
+		VAR result : SIGNED32;
 		BEGIN
 			SELF.selection := selection;
 			IF IsValid(selection) & (Disks.Valid IN selection.disk.table[selection.partition].flags) THEN
@@ -1927,8 +1927,8 @@ TYPE
 	VAR
 		writeDataBtn, testPartitionBtn, verifyDataBtn, writeZerosBtn, benchmarkBtn  : WMStandardComponents.Button;
 
-		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection) : LONGINT;
-		VAR result : LONGINT;
+		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection) : SIGNED32;
+		VAR result : SIGNED32;
 		BEGIN
 			SELF.selection := selection;
 			IF IsValid(selection) THEN result := SelectionValid;
@@ -1941,7 +1941,7 @@ TYPE
 		VAR
 			testDataWriter : DiskTests.TestDataWriter;
 			popup : PopupWindow; param : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 1);
@@ -1966,7 +1966,7 @@ TYPE
 		VAR
 			zeroWriter : DiskTests.ZeroWriter;
 			popup : PopupWindow; param : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 1);
@@ -1991,7 +1991,7 @@ TYPE
 		VAR
 			diskTest : DiskTests.DiskTest;
 			popup : PopupWindow; param : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 4);
@@ -2021,7 +2021,7 @@ TYPE
 		VAR
 			testDataChecker : DiskTests.TestDataChecker;
 			popup : PopupWindow; param : Parameters;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			IF IsValid(selection) THEN
 				NEW(param, 1);
@@ -2042,7 +2042,7 @@ TYPE
 			END;
 		END VerifyTestData;
 
-		PROCEDURE WriteK(k: LONGINT; VAR string: ARRAY OF CHAR);
+		PROCEDURE WriteK(k: SIGNED32; VAR string: ARRAY OF CHAR);
 		VAR suffix: ARRAY 3 OF CHAR;
 		BEGIN
 			IF k < 1024 THEN suffix := "B";
@@ -2056,7 +2056,7 @@ TYPE
 			benchPartition : DiskBenchmark.DiskBench;
 			popup : PopupWindow; param : Parameters;
 			blocksizes : SET;
-			i, blocksize : LONGINT; res : WORD;
+			i, blocksize : SIGNED32; res : INTEGER;
 			string : ARRAY 128 OF CHAR;
 		BEGIN
 			IF IsValid(selection) & (selection.disk.device # NIL) THEN
@@ -2105,7 +2105,7 @@ TYPE
 		END BenchPartition;
 
 		PROCEDURE &Init*;
-		VAR left : LONGINT;
+		VAR left : SIGNED32;
 		BEGIN
 			Init^;
 			(* upper row of buttons *)
@@ -2153,7 +2153,7 @@ TYPE
 			SetTitle(WMWindowManager.NewString("  Operation Status Report"));
 		END Show;
 
-		PROCEDURE &New*(text : Texts.Text;  width, height : LONGINT; visible : BOOLEAN);
+		PROCEDURE &New*(text : Texts.Text;  width, height : SIGNED32; visible : BOOLEAN);
 		VAR panel : WMStandardComponents.Panel;
 		BEGIN
 			Init(width, height, visible); scaling := FALSE;
@@ -2177,11 +2177,11 @@ TYPE
 	(** Specifies a single parameter for the PopupWindow *)
 	Parameter = RECORD
 		description : ARRAY 32 OF CHAR;
-		type : LONGINT; (* ParInteger, ParString *)
-		resInteger : LONGINT;
+		type : SIGNED32; (* ParInteger, ParString *)
+		resInteger : SIGNED32;
 		resString : ARRAY 32 OF CHAR;
 		resBoolean : BOOLEAN;
-		width : LONGINT; (* width of editor field *)
+		width : SIGNED32; (* width of editor field *)
 		valid : BOOLEAN; (* is the resInteger/resString value valid *)
 		optional : BOOLEAN; (* Ok possible width filling this parameter *)
 		default : BOOLEAN; (* if default is TRUE, the values of ResInteger/ResString is used as default value *)
@@ -2207,7 +2207,7 @@ TYPE
 		text : Texts.Text;
 		attr : Texts.Attributes;
 
-		result : LONGINT;
+		result : SIGNED32;
 
 		width, height : SIZE; (* of this popup window *)
 
@@ -2278,7 +2278,7 @@ TYPE
 		END SetParameters;
 
 		(** Show popup window at position (x,y); call is blocking; res = ResNone | ResCancel | ResOk *)
-		PROCEDURE Popup(x, y : LONGINT;  VAR res : WORD);
+		PROCEDURE Popup(x, y : SIGNED32;  VAR res : INTEGER);
 		BEGIN
 			BuildLayout;
 			WMWindowManager.AddWindow (SELF, x, y);
@@ -2583,7 +2583,7 @@ TYPE
 			tests : TestsPlugin;
 			operations : OperationsPlugin;
 			caption : ARRAY 32 OF CHAR;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			NEW(panel); panel.alignment.Set(WMComponents.AlignClient);
 			IF ~UseSkinColors THEN panel.fillColor.Set(MarginColor); END;
@@ -2762,7 +2762,7 @@ TYPE
 		END UpdateContent;
 
 		PROCEDURE UpdateSelection(selection : WMPartitionsComponents.Selection);
-		VAR caption, temp : ARRAY 128 OF CHAR; res : WORD;
+		VAR caption, temp : ARRAY 128 OF CHAR; res : INTEGER;
 		BEGIN
 			caption := "";
 
@@ -2812,13 +2812,13 @@ TYPE
 	VAR
 		abort, remove, showerrors : WMStandardComponents.Button;
 		finished, all, selected : WMStandardComponents.Button; (* check boxes *)
-		removeMode : LONGINT; (* RemoveSelected | RemoveFinished | RemoveAll *)
+		removeMode : SIGNED32; (* RemoveSelected | RemoveFinished | RemoveAll *)
 		info : WMStandardComponents.Label;
 
 		selector : WMPartitionsComponents.OperationSelector;
 
 		PROCEDURE &Init*;
-		VAR left : LONGINT; label : WMStandardComponents.Label;
+		VAR left : SIGNED32; label : WMStandardComponents.Label;
 		BEGIN
 			Init^;
 
@@ -2956,7 +2956,7 @@ TYPE
 		END Resized;
 
 		(* we don't care about which disk is currently selected *)
-		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection): LONGINT;
+		PROCEDURE SelectionUpdated(selection : WMPartitionsComponents.Selection): SIGNED32;
 		VAR selector : WMPartitionsComponents.OperationSelector; operation : WMPartitionsComponents.Operation;
 		BEGIN
 			selector := SELF.selector;
@@ -2985,7 +2985,7 @@ TYPE
 		END Abort;
 
 		PROCEDURE Remove(sender, data : ANY);
-		VAR selectedOperation : WMPartitionsComponents.Operation; result : ARRAY 256 OF CHAR; temp : ARRAY 10 OF CHAR; num : LONGINT;
+		VAR selectedOperation : WMPartitionsComponents.Operation; result : ARRAY 256 OF CHAR; temp : ARRAY 10 OF CHAR; num : SIGNED32;
 		BEGIN
 			ASSERT(PartitionsLib.operations # NIL);
 			selectedOperation := GetSelectedOperation();

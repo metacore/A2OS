@@ -21,7 +21,7 @@ CONST
 
 (** Erhöht den Zoomfaktor *)
 PROCEDURE Inc*;
-VAR doc: Documents.Document; F: Rembrandt.Frame; zoom: INTEGER;
+VAR doc: Documents.Document; F: Rembrandt.Frame; zoom: SIGNED16;
 BEGIN
 	doc := Desktops.CurDoc(Gadgets.context);
 	IF (doc # NIL) & (doc.dsc IS Rembrandt.Frame) THEN
@@ -35,7 +35,7 @@ END Inc;
 
 (** Verkleinert den Zoomfaktor *)
 PROCEDURE Dec*;
-VAR doc: Documents.Document; F: Rembrandt.Frame; zoom: INTEGER;
+VAR doc: Documents.Document; F: Rembrandt.Frame; zoom: SIGNED16;
 BEGIN
 	doc := Desktops.CurDoc(Gadgets.context);
 	IF (doc # NIL) & (doc.dsc IS Rembrandt.Frame) THEN
@@ -85,7 +85,7 @@ BEGIN
 END Load;
 
 PROCEDURE Store(D: Documents.Document);
-VAR obj:Rembrandt .Frame; F: Files.File; R: Files.Rider; len: LONGINT;
+VAR obj:Rembrandt .Frame; F: Files.File; R: Files.Rider; len: SIGNED32;
 BEGIN
 	obj := D.dsc(Rembrandt.Frame);
 	IF D.name # "" THEN
@@ -105,7 +105,7 @@ END Store;
 PROCEDURE Handler(D: Objects.Object; VAR M: Objects.ObjMsg);
 VAR P: Pictures.Picture; R: D3.Mask;
 
-	PROCEDURE PP(x: INTEGER): INTEGER;
+	PROCEDURE PP(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END PP;
 
@@ -172,7 +172,7 @@ END NewDoc;
 
 (** Öffnet ein leeres RembrandtDocument mit Breite und Höhe als Parameter *)
 PROCEDURE Open*;
-VAR S: Texts.Scanner; x, y, pw, ph, r, g, b: INTEGER;
+VAR S: Texts.Scanner; x, y, pw, ph, r, g, b: SIGNED16;
 		doc: Documents.Document;
 		P: Pictures.Picture;
 BEGIN
@@ -184,7 +184,7 @@ BEGIN
 		Texts.Scan(S);
 		IF S.class = Texts.Int THEN ph:= ABS(SHORT(S.i)) ELSE ph:= 200 END;
 		NEW(P); Rembrandt0.AllocatePictureMem(P, pw, ph, Display.Depth(0));  (* tk *)
-		FOR x := 0 TO INTEGER(ASH(1, Display.Depth(0))-1) DO Display.GetColor(x, r, g, b); Pictures.SetColor(P, x, r, g, b) END
+		FOR x := 0 TO SIGNED16(ASH(1, Display.Depth(0))-1) DO Display.GetColor(x, r, g, b); Pictures.SetColor(P, x, r, g, b) END
 	END;
 	IF P # NIL THEN
 		NEW(doc); doc.Load:= Load; doc.Store:= Store; doc.handle:= Handler;

@@ -92,7 +92,7 @@ TYPE
 		END ForwardTo;
 
 		PROCEDURE Dump*;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 			p : HistoryItem;
 		BEGIN
 			i := 0;

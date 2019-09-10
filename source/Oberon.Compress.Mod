@@ -50,14 +50,14 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 
 	TYPE
 		Node = RECORD
-			parent, smallerChild, largerChild: INTEGER
+			parent, smallerChild, largerChild: SIGNED16
 		END;
 		Name* = ARRAY 32 OF CHAR;
 		Header* = RECORD
 			name*: Name;
-			length*, check: LONGINT;
-			date*, time*: LONGINT;
-			ratio*: REAL;
+			length*, check: SIGNED32;
+			date*, time*: SIGNED32;
+			ratio*: FLOAT32;
 			extensions*: SET (* encryption *)
 		END;
 		List = POINTER TO ListDesc;
@@ -71,22 +71,22 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 			next: HeaderList
 		END;
 		EnumProc* = PROCEDURE (h: Header; VAR stop: BOOLEAN);
-		CryptProc* = PROCEDURE (VAR Rin: Files.Rider; nIn: LONGINT; VAR Rout: Files.Rider; key: ARRAY OF CHAR; VAR res: INTEGER);
+		CryptProc* = PROCEDURE (VAR Rin: Files.Rider; nIn: SIGNED32; VAR Rout: Files.Rider; key: ARRAY OF CHAR; VAR res: SIGNED16);
 
 	VAR
 		W: Texts.Writer;
 		Buffer: ARRAY BufferSize OF CHAR;
-		BufferPtr, CurBitNr, CurByte, Len, maxLen: LONGINT;
+		BufferPtr, CurBitNr, CurByte, Len, maxLen: SIGNED32;
 		Window: ARRAY WindowSize+RawLookAheadSize+1 OF CHAR;
 		Tree: ARRAY WindowSize+1 OF Node;
 		Err, verbose, sorted: BOOLEAN;
-		cmdSource: LONGINT;
+		cmdSource: SIGNED32;
 		headerList: HeaderList;
 		Decrypt*, Encrypt*: CryptProc;
 		curKey: ARRAY 64 OF CHAR;
 
 	PROCEDURE ReadHeader(VAR R: Files.Rider; VAR h: Header; VAR err: BOOLEAN);
-		VAR chk, pos: LONGINT; i: INTEGER;
+		VAR chk, pos: SIGNED32; i: SIGNED16;
 	BEGIN
 		pos := Files.Pos(R);
 		Files.ReadBytes(R, h.name, 32);
@@ -126,7 +126,7 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 	END ReadHeader;
 
 	PROCEDURE WriteHeader(VAR R: Files.Rider; VAR h: Header);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		IF curKey # "" THEN
 			INCL(h.extensions, encryption)
@@ -155,8 +155,8 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 		END
 	END WriteHeader;
 
-	PROCEDURE CopyFrom(VAR Ri, Ro: Files.Rider; len: LONGINT);
-		VAR i: LONGINT;
+	PROCEDURE CopyFrom(VAR Ri, Ro: Files.Rider; len: SIGNED32);
+		VAR i: SIGNED32;
 	BEGIN
 		Files.ReadBytes(Ri, Buffer, BufferSize);
 		i := BufferSize;
@@ -178,8 +178,8 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 		Files.WriteBytes(Ro, Buffer, BufferSize-Ri.res)
 	END CopyTo;
 
-	PROCEDURE InputBit(VAR R: Files.Rider): LONGINT;
-		VAR h: LONGINT;
+	PROCEDURE InputBit(VAR R: Files.Rider): SIGNED32;
+		VAR h: SIGNED32;
 	BEGIN
 		IF CurBitNr = 7 THEN
 			IF BufferPtr = BufferSize THEN
@@ -194,8 +194,8 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 		RETURN h
 	END InputBit;
 
-	PROCEDURE InputBits(VAR R: Files.Rider; count: LONGINT): LONGINT;
-		VAR i, h: LONGINT;
+	PROCEDURE InputBits(VAR R: Files.Rider; count: SIGNED32): SIGNED32;
+		VAR i, h: SIGNED32;
 	BEGIN
 		h := 0;
 		i := count-1;
@@ -227,7 +227,7 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 		END
 	END FlushBits;
 
-	PROCEDURE OutputBit(VAR R: Files.Rider; bit: LONGINT);
+	PROCEDURE OutputBit(VAR R: Files.Rider; bit: SIGNED32);
 	BEGIN
 		IF bit = 1 THEN
 			CurByte := CurByte+ASH(1, CurBitNr)
@@ -243,8 +243,8 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 		END
 	END OutputBit;
 
-	PROCEDURE OutputBits(VAR R: Files.Rider; bits, count: LONGINT);
-		VAR i, h: LONGINT;
+	PROCEDURE OutputBits(VAR R: Files.Rider; bits, count: SIGNED32);
+		VAR i, h: SIGNED32;
 	BEGIN
 		h := bits; i := count-1;
 		WHILE i >= 0 DO
@@ -265,7 +265,7 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 	END OutputBits;
 
 	PROCEDURE Init;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE i <= WindowSize DO
@@ -279,7 +279,7 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 		END
 	END Init;
 
-	PROCEDURE InitTree(r: LONGINT);
+	PROCEDURE InitTree(r: SIGNED32);
 	BEGIN
 		Tree[TreeRoot].largerChild := SHORT(r);
 		Tree[r].parent := TreeRoot;
@@ -287,8 +287,8 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 		Tree[r].smallerChild := Unused
 	END InitTree;
 
-	PROCEDURE ContractNode(oldNode, newNode: LONGINT);
-		VAR help: LONGINT;
+	PROCEDURE ContractNode(oldNode, newNode: SIGNED32);
+		VAR help: SIGNED32;
 	BEGIN
 		help := Tree[oldNode].parent;
 		Tree[newNode].parent := SHORT(help);
@@ -300,8 +300,8 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 		Tree[oldNode].parent := Unused
 	END ContractNode;
 
-	PROCEDURE ReplaceNode(oldNode, newNode: LONGINT);
-		VAR help, parent: LONGINT;
+	PROCEDURE ReplaceNode(oldNode, newNode: SIGNED32);
+		VAR help, parent: SIGNED32;
 	BEGIN
 		parent := Tree[oldNode].parent;
 		IF Tree[parent].smallerChild = oldNode THEN
@@ -317,8 +317,8 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 		Tree[oldNode].parent := Unused
 	END ReplaceNode;
 
-	PROCEDURE DeleteString(p: LONGINT);
-		VAR replacement, larger, smaller, next: LONGINT;
+	PROCEDURE DeleteString(p: SIGNED32);
+		VAR replacement, larger, smaller, next: SIGNED32;
 	BEGIN
 		IF Tree[p].parent = Unused THEN RETURN END;
 		larger := Tree[p].largerChild;
@@ -339,8 +339,8 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 		END
 	END DeleteString;
 
-	PROCEDURE AddString(newNode: LONGINT; VAR matchPosition: LONGINT): LONGINT;
-		VAR i, n, t, testNode, delta, matchLength, child: LONGINT;
+	PROCEDURE AddString(newNode: SIGNED32; VAR matchPosition: SIGNED32): SIGNED32;
+		VAR i, n, t, testNode, delta, matchLength, child: SIGNED32;
 	BEGIN
 		IF newNode = EndOfStream THEN
 			RETURN 0
@@ -381,11 +381,11 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 		END
 	END AddString;
 
-	PROCEDURE Compress(VAR Input, Output: Files.Rider; maxbytes: LONGINT);
+	PROCEDURE Compress(VAR Input, Output: Files.Rider; maxbytes: SIGNED32);
 		VAR
-			i, lookAheadBytes, currentPosition, replaceCount, matchLength, matchPosition: LONGINT;
-			currentLookAheadPos, bytesread: LONGINT;
-			buf: ARRAY BufferSize OF CHAR; bufpos, buflen: LONGINT; bufend: BOOLEAN; ch: CHAR;
+			i, lookAheadBytes, currentPosition, replaceCount, matchLength, matchPosition: SIGNED32;
+			currentLookAheadPos, bytesread: SIGNED32;
+			buf: ARRAY BufferSize OF CHAR; bufpos, buflen: SIGNED32; bufend: BOOLEAN; ch: CHAR;
 		PROCEDURE Read;
 		BEGIN
 			IF bufpos < buflen THEN
@@ -457,8 +457,8 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 
 	PROCEDURE Expand(VAR Input, Output: Files.Rider);
 		VAR
-			i, currentPosition, matchLength, matchPosition: LONGINT;
-			buf: ARRAY BufferSize OF CHAR; bufpos: LONGINT; ch: CHAR;
+			i, currentPosition, matchLength, matchPosition: SIGNED32;
+			buf: ARRAY BufferSize OF CHAR; bufpos: SIGNED32; ch: CHAR;
 		PROCEDURE Write;
 		BEGIN
 			IF bufpos < BufferSize THEN
@@ -501,10 +501,10 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 	END Expand;
 
 (** Compress len Bytes form Ri to Ro. *)
-	PROCEDURE CopyToArc*(VAR Ri, Ro: Files.Rider; len: LONGINT; VAR h: Header);
+	PROCEDURE CopyToArc*(VAR Ri, Ro: Files.Rider; len: SIGNED32; VAR h: Header);
 		VAR
 			F: Files.File; R: Files.Rider;
-			len0: LONGINT; res: INTEGER;
+			len0: SIGNED32; res: SIGNED16;
 	BEGIN
 		len0 := len; INC(len); Len := 0;
 		BufferPtr := 0; CurBitNr := 7; CurByte := 0;
@@ -527,7 +527,7 @@ MODULE Compress IN Oberon; (** portable *)	(* ejz  *)
 	res:
 		Done
 		ErrorInArchive: error in compressed data *)
-	PROCEDURE CopyFromArc*(VAR Ri, Ro: Files.Rider; VAR h: Header; VAR res: INTEGER);
+	PROCEDURE CopyFromArc*(VAR Ri, Ro: Files.Rider; VAR h: Header; VAR res: SIGNED16);
 		VAR F: Files.File; R: Files.Rider;
 	BEGIN
 		Len := 0;
@@ -619,7 +619,7 @@ TextFrames *)
 		VAR
 			mod: Modules.Module;
 			cmd: Modules.Command;
-			i, j: LONGINT;
+			i, j: SIGNED32;
 	BEGIN
 		ClearCrypt();
 		i := 0;
@@ -651,7 +651,7 @@ TextFrames *)
 			mn: FileDir.FileName;
 			arrow: BOOLEAN;
 			T: Texts.Text;
-			beg, end, time, pos: LONGINT;
+			beg, end, time, pos: SIGNED32;
 	BEGIN
 		ClearCrypt();
 		verbose := FALSE; sorted := FALSE;
@@ -721,7 +721,7 @@ TextFrames *)
 	END GetArgs;
 
 	PROCEDURE Trimm(VAR name: ARRAY OF CHAR);
-		VAR i, j: LONGINT; ch: CHAR;
+		VAR i, j: SIGNED32; ch: CHAR;
 	BEGIN
 		i := 0; j := 0; ch := name[0];
 		WHILE ch # 0X DO
@@ -736,7 +736,7 @@ TextFrames *)
 	END Trimm;
 
 	PROCEDURE NextName(VAR name: ARRAY OF CHAR);
-		VAR i: LONGINT; ch: CHAR;
+		VAR i: SIGNED32; ch: CHAR;
 	BEGIN
 		i := 0; WHILE name[i] # 0X DO INC(i) END;
 		ch := name[i-1];
@@ -764,7 +764,7 @@ TextFrames *)
 			Done
 			ArchiveNotFound: archive-file not found
 			ErrorInArchive: internal error in archive-file *)
-	PROCEDURE Enumerate*(archive: ARRAY OF CHAR; enumProc: EnumProc; sorted: BOOLEAN; VAR res: INTEGER);
+	PROCEDURE Enumerate*(archive: ARRAY OF CHAR; enumProc: EnumProc; sorted: BOOLEAN; VAR res: SIGNED16);
 		VAR
 			F: Files.File; R: Files.Rider;
 			h: Header; err, stop: BOOLEAN;
@@ -808,12 +808,12 @@ TextFrames *)
 			Done
 			ArchiveNotFound: archive-file not found
 			ErrorInArchive: internal error in archive-file *)
-	PROCEDURE AddFile*(archive: ARRAY OF CHAR; VAR file: ARRAY OF CHAR; VAR R: Files.Rider; len: LONGINT; VAR res: INTEGER);
+	PROCEDURE AddFile*(archive: ARRAY OF CHAR; VAR file: ARRAY OF CHAR; VAR R: Files.Rider; len: SIGNED32; VAR res: SIGNED16);
 		VAR
 			ArcF: Files.File;
 			Ra: Files.Rider;
 			h: Header;
-			pos: LONGINT;
+			pos: SIGNED32;
 			addL, ha: List;
 			err: BOOLEAN;
 	BEGIN
@@ -876,13 +876,13 @@ TextFrames *)
 			ArchiveNotFound: archive-file not found
 			ErrorInArchive: internal error in archive-file
 			EntryNotFound: no such entry (entry) found *)
-	PROCEDURE DeleteFile*(archive, file: ARRAY OF CHAR; VAR res: INTEGER);
+	PROCEDURE DeleteFile*(archive, file: ARRAY OF CHAR; VAR res: SIGNED16);
 		VAR
 			ArcF, TmpF: Files.File;
 			Ra, Rt: Files.Rider;
 			h: Header;
 			err, del: BOOLEAN;
-			pos: LONGINT;
+			pos: SIGNED32;
 	BEGIN
 		ArcF := Files.Old(archive);
 		IF ArcF # NIL THEN
@@ -927,13 +927,13 @@ TextFrames *)
 			ArchiveNotFound: archive-file not found
 			ErrorInArchive: internal error in archive-file
 			EntryNotFound no such entry (entry) found *)
-	PROCEDURE ExtractFile*(archive, file: ARRAY OF CHAR; VAR R: Files.Rider; VAR res: INTEGER);
+	PROCEDURE ExtractFile*(archive, file: ARRAY OF CHAR; VAR R: Files.Rider; VAR res: SIGNED16);
 		VAR
 			ArcF: Files.File;
 			Ra: Files.Rider;
 			h: Header;
 			err, found: BOOLEAN;
-			pos: LONGINT;
+			pos: SIGNED32;
 	BEGIN
 		ArcF := Files.Old(archive);
 		IF ArcF # NIL THEN
@@ -966,13 +966,13 @@ TextFrames *)
 			ArchiveNotFound: archive-file not found
 			ErrorInArchive: internal error in archive-file
 			FileError: an entry file could not be created *)
-	PROCEDURE ExtractAllFiles*(archive: ARRAY OF CHAR; VAR res: INTEGER);
+	PROCEDURE ExtractAllFiles*(archive: ARRAY OF CHAR; VAR res: SIGNED16);
 		VAR
 			ArcF, AddF: Files.File;
 			Ra, RF: Files.Rider;
 			h: Header;
 			err: BOOLEAN;
-			pos: LONGINT;
+			pos: SIGNED32;
 	BEGIN
 		ArcF := Files.Old(archive);
 		IF ArcF # NIL THEN
@@ -1011,7 +1011,7 @@ TextFrames *)
 			Done
 			ArchiveExists: archive allready existed
 			FileError: archive-file could not be created *)
-	PROCEDURE CreateArchive*(archive: ARRAY OF CHAR; VAR res: INTEGER);
+	PROCEDURE CreateArchive*(archive: ARRAY OF CHAR; VAR res: SIGNED16);
 		VAR
 			ArcF: Files.File;
 			R: Files.Rider;
@@ -1098,7 +1098,7 @@ TextFrames *)
 
 	PROCEDURE LoadDoc(D: Documents.Document);
 		VAR
-			res: INTEGER;
+			res: SIGNED16;
 			T: Texts.Text;
 			L: Objects.LinkMsg;
 			A: Objects.AttrMsg;
@@ -1202,7 +1202,7 @@ TextFrames *)
 	PROCEDURE Directory*;
 		VAR
 			nameList: List;
-			res, x, y: INTEGER;
+			res, x, y: SIGNED16;
 			T: Texts.Text;
 			V: MenuViewers.Viewer;
 	BEGIN
@@ -1258,7 +1258,7 @@ TextFrames *)
 			ArcF, AddF: Files.File;
 			R, RF: Files.Rider;
 			h: Header;
-			pos: LONGINT;
+			pos: SIGNED32;
 	BEGIN
 		GetArgs(nameList);
 		IF (nameList = NIL) OR (nameList.next = NIL) THEN
@@ -1366,7 +1366,7 @@ TextFrames *)
 		TYPE
 			DelList = POINTER TO DelListDesc;
 			DelListDesc = RECORD
-				start, end: LONGINT;
+				start, end: SIGNED32;
 				next: DelList
 			END;
 		VAR
@@ -1375,8 +1375,8 @@ TextFrames *)
 			ArcF, TmpF: Files.File;
 			R, Rt: Files.Rider;
 			h: Header;
-			pos, beg: LONGINT;
-			res: INTEGER;
+			pos, beg: SIGNED32;
+			res: SIGNED16;
 			err, changed: BOOLEAN;
 	BEGIN
 		GetArgs(nameList);
@@ -1478,16 +1478,16 @@ TextFrames *)
 			ArcF, AddF: Files.File;
 			R, RF: Files.Rider;
 			h: Header;
-			pos: LONGINT;
+			pos: SIGNED32;
 			err: BOOLEAN;
-			dot, j: LONGINT;
-			res: INTEGER;
+			dot, j: SIGNED32;
+			res: SIGNED16;
 			temp: ARRAY 32 OF CHAR;
 			(* TextDocs *)
 			D: Documents.Document;
 			(* TextDocs *)
 			(* TextFrames
-			x, y: INTEGER;
+			x, y: SIGNED16;
 			T: Texts.Text;
 			V: MenuViewers.Viewer;
 			TextFrames *)
@@ -1605,8 +1605,8 @@ TextFrames *)
 			ArcF, AddF: Files.File;
 			R, RF: Files.Rider;
 			h: Header;
-			pos: LONGINT;
-			res: INTEGER;
+			pos: SIGNED32;
+			res: SIGNED16;
 			err: BOOLEAN;
 	BEGIN
 		GetArgs(nameList);
@@ -1681,8 +1681,8 @@ TextFrames *)
 			h, hn: HeaderList;
 			he: Header;
 			name: Name;
-			pos: LONGINT;
-			res: INTEGER;
+			pos: SIGNED32;
+			res: SIGNED16;
 			err: BOOLEAN;
 	BEGIN
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
@@ -1764,8 +1764,8 @@ TextFrames *)
 			ArcF, AddF: Files.File;
 			R, RF: Files.Rider;
 			h: Header;
-			pos: LONGINT;
-			res: INTEGER;
+			pos: SIGNED32;
+			res: SIGNED16;
 			err: BOOLEAN;
 	BEGIN
 		GetArgs(nameList); err := FALSE;

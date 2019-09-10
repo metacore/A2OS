@@ -5,7 +5,7 @@ IMPORT InstructionSet := FoxTRMInstructionSet, FoxAssembler, D := Debugging, Sca
 CONST Trace=FoxAssembler.Trace;
 
 TYPE
-	Register* = LONGINT; (* index for InstructionSet.registers *)
+	Register* = SIGNED32; (* index for InstructionSet.registers *)
 	Operand* = InstructionSet.Operand;
 
 TYPE
@@ -21,14 +21,14 @@ TYPE
 		END Init2;
 
 		PROCEDURE Instruction*(CONST mnemonic: ARRAY OF CHAR);
-		VAR i,numberOperands,mnem: LONGINT; VAR operands: ARRAY 3 OF Operand; instruction: InstructionSet.Instruction;
+		VAR i,numberOperands,mnem: SIGNED32; VAR operands: ARRAY 3 OF Operand; instruction: InstructionSet.Instruction;
 			pos: Basic.Position;
 
 			PROCEDURE ParseOperand;
 			(* stub, must be overwritten by implementation *)
 			VAR operand: InstructionSet.Operand;
 				result: FoxAssembler.Result;
-				register1,register2: SHORTINT;
+				register1,register2: SIGNED8;
 				stop,memory: BOOLEAN;
 			BEGIN
 				stop := FALSE;
@@ -56,11 +56,11 @@ TYPE
 						END;
 					END;
 					IF memory & ExpectSymbol(Scanner.RightBracket) THEN
-						instructionSet.InitMemory(operand,register1,LONGINT(result.value));
+						instructionSet.InitMemory(operand,register1,SIGNED32(result.value));
 					ELSIF register1 # -1 THEN
 						instructionSet.InitRegister(operand,register1);
 					ELSE
-						instructionSet.InitImmediate(operand,result.sizeInBits(LONGINT),LONGINT(result.value));
+						instructionSet.InitImmediate(operand,result.sizeInBits(SIGNED32),SIGNED32(result.value));
 					END;
 					IF result.fixup # NIL THEN
 						instructionSet.AddFixup(operand,result.fixup);
@@ -104,7 +104,7 @@ TYPE
 			END
 		END Instruction;
 
-		PROCEDURE GetRegister(CONST ident: ARRAY OF CHAR; VAR register: SHORTINT): BOOLEAN;
+		PROCEDURE GetRegister(CONST ident: ARRAY OF CHAR; VAR register: SIGNED8): BOOLEAN;
 		BEGIN
 			register := instructionSet.FindRegister(ident);
 			RETURN register # InstructionSet.None

@@ -72,7 +72,7 @@ TYPE
 		END MixerChangeListener;
 
 		PROCEDURE MixerChangeEvent(sender, data : ANY);
-		VAR vol : LONGINT; m : BOOLEAN;
+		VAR vol : SIGNED32; m : BOOLEAN;
 		BEGIN
 			IF (data = channel) & (channel # NIL) THEN
 				vol := channel.GetVolume();
@@ -87,12 +87,12 @@ TYPE
 		PROCEDURE VolChanged(sender, data : ANY);
 		BEGIN
 			IF channel # NIL THEN
-				channel.SetVolume(WORD (255 - value.pos.Get()))
+				channel.SetVolume(INTEGER (255 - value.pos.Get()))
 			END
 		END VolChanged;
 
 		PROCEDURE FindChannel(deviceName, channelName : ARRAY OF CHAR; VAR dev : SoundDevices.Driver; VAR channel : SoundDevices.MixerChannel);
-		VAR i : LONGINT; ch : SoundDevices.MixerChannel; name : ARRAY 128 OF CHAR;
+		VAR i : SIGNED32; ch : SoundDevices.MixerChannel; name : ARRAY 128 OF CHAR;
 			p : Plugins.Plugin;
 		BEGIN
 			p := SoundDevices.devices.Get(deviceName);
@@ -137,7 +137,7 @@ TYPE
 		PROCEDURE CreateForm(): WMComponents.VisualComponent;
 		VAR panel : WMStandardComponents.Panel;
 			dev : SoundDevices.Driver;
-			i : LONGINT;
+			i : SIGNED32;
 			ch : SoundDevices.MixerChannel;
 			name : ARRAY 128 OF CHAR;
 			m : Mixer;
@@ -145,7 +145,7 @@ TYPE
 		BEGIN
 			dev := SoundDevices.GetDefaultDevice();
 
-			NEW(panel); panel.bounds.SetExtents(MWidth * dev.GetNofMixerChannels(), 200); panel.fillColor.Set(LONGINT(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
+			NEW(panel); panel.bounds.SetExtents(MWidth * dev.GetNofMixerChannels(), 200); panel.fillColor.Set(SIGNED32(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
 
 			IF dev # NIL THEN
 				FOR i := 0 TO dev.GetNofMixerChannels() - 1 DO
@@ -176,7 +176,7 @@ TYPE
 
 VAR
 	PrototypedeviceName, PrototypechannelName: WMProperties.StringProperty;
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*;
 VAR inst : Window;

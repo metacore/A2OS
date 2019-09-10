@@ -68,7 +68,7 @@ CONST
 
 	(* Default parameters *)
 	IntfMacAddr				= "00:0A:35:00:01:03";		(** Board MAC address *)
-	Guid						= HUGEINT(0);
+	Guid						= SIGNED64(0);
 	CommandPort				= 5999;						(** Port used for UDP command channel *)
 	InitializationScript			= 'init.txt';					(** Name of the initialization script *)
 	AutoScript					= 'auto.txt';				(** Name of the automatic execution script *)
@@ -109,7 +109,7 @@ VAR
 	last,												(** position of last read character on current command line *)
 	current,											(** index of resource index currently being deployed *)
 	inputType,											(** current command input type *)
-	timeout: LONGINT;								(** Current timeout value *)
+	timeout: SIGNED32;								(** Current timeout value *)
 	input *: POINTER TO StreamReaders.Reader;	(** Command input stream *)
 	output *: POINTER TO StreamWriters.Writer;	(** Command output stream *)
 	reply,												(** Acknowledge message. If '', then a default message is used *)
@@ -125,7 +125,7 @@ VAR
 	reset: BOOLEAN;									(** Does ProgrammingDone state reset bootloader? *)
 
 	(* Network parameters *)
-	netState: LONGINT;								(** Network state *)
+	netState: SIGNED32;								(** Network state *)
 	netAddress,										(** IP address *)
 	netMask,											(** Subnetwork mask *)
 	netGateway: EnetBase.IpAddr;						(** Network gateway *)
@@ -134,7 +134,7 @@ VAR
 
 	(* Additional file systems *)
 	fs: ARRAY 32 OF ARRAY 32 OF CHAR;			(** Array of all additional FS prefixes *)
-	fsNb: LONGINT;									(** Number of additional FS used *)
+	fsNb: SIGNED32;									(** Number of additional FS used *)
 
 	(* Command parameters *)
 	doLog: BOOLEAN;								(** Do we setup a log file when switching to file input? *)
@@ -147,7 +147,7 @@ VAR
 	(* Resource management *)
 	resources: ARRAY MaxResources OF Programmer.Resource;			(** Active resources descriptors *)
 	destinations: ARRAY MaxResources OF Programmer.Destination;	(** Device descriptors for each resource *)
-	resourceNb: LONGINT;												(** Number of active resources *)
+	resourceNb: SIGNED32;												(** Number of active resources *)
 
 	(** Debug and command UART *)
 	uart -: Uart.UartController;
@@ -187,7 +187,7 @@ VAR
 	VAR
 		cmd, arg, ip: ARRAY 32 OF CHAR;
 		prefix: ARRAY 16 OF CHAR;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		error := Ok;
 		StreamReaders.SetString(cmdReader, line);
@@ -578,7 +578,7 @@ VAR
 	PROCEDURE Run;
 	VAR
 		esc: ARRAY EscapeLength + 1 OF CHAR;
-		len: SIZE; res: LONGINT;
+		len: SIZE; res: SIGNED32;
 		ignore: BOOLEAN;
 	BEGIN
 		StreamReaders.Init(cmdReader, StreamReaders.StringReaderReceive, LEN(line));
@@ -686,9 +686,9 @@ VAR
 		it will be loaded from file.
 		This procedure returns -1 if the resource was not found.
 	*)
-	PROCEDURE ThisResource (CONST name: ARRAY OF CHAR; loadPersistent: BOOLEAN): LONGINT;
+	PROCEDURE ThisResource (CONST name: ARRAY OF CHAR; loadPersistent: BOOLEAN): SIGNED32;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (i < resourceNb) & (resources[i].name # name) DO INC(i) END;
@@ -709,7 +709,7 @@ VAR
 	*)
 	PROCEDURE AddResource (CONST name: ARRAY OF CHAR; start, size: ADDRESS);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		i := ThisResource(name, FALSE);
 		IF i = -1 THEN
@@ -729,12 +729,12 @@ VAR
 	*)
 	PROCEDURE LoadResource (CONST name: ARRAY OF CHAR): BOOLEAN;
 	TYPE
-		Reader = PROCEDURE (VAR r: OFS.Rider; size, start: ADDRESS; len: LONGINT);
+		Reader = PROCEDURE (VAR r: OFS.Rider; size, start: ADDRESS; len: SIGNED32);
 	VAR
 		r: OFS.Rider;
 		f: OFS.File;
 		read: Reader;
-		len: LONGINT;
+		len: SIGNED32;
 	BEGIN
 		Loader.startAddress := Loader.endAddress;
 		IF Loader.startAddress MOD 4 # 0 THEN INC(Loader.startAddress, 4 - Loader.startAddress MOD 4) END;
@@ -757,9 +757,9 @@ VAR
 	(**
 		Save an active resource to persistent storage.
 	*)
-	PROCEDURE SaveResource (i: LONGINT): BOOLEAN;
+	PROCEDURE SaveResource (i: SIGNED32): BOOLEAN;
 	TYPE
-		Writer = PROCEDURE (VAR r: OFS.Rider; size, start: ADDRESS; n: LONGINT);
+		Writer = PROCEDURE (VAR r: OFS.Rider; size, start: ADDRESS; n: SIGNED32);
 	VAR
 		r: OFS.Rider;
 		f: OFS.File;
@@ -778,9 +778,9 @@ VAR
 	END SaveResource;
 
 	(** Print a resource, as textual content or binary content *)
-	PROCEDURE PrintResource (i: LONGINT; textual: BOOLEAN);
+	PROCEDURE PrintResource (i: SIGNED32; textual: BOOLEAN);
 	VAR
-		c: LONGINT;
+		c: SIGNED32;
 		char: CHAR;
 	BEGIN
 		ASSERT(i >= 0);
@@ -797,7 +797,7 @@ VAR
 	END PrintResource;
 
 	(** Mount a filesystem *)
-	PROCEDURE Mount (CONST prefix: ARRAY 16 OF CHAR; CONST disk: ARRAY OF CHAR; parition: LONGINT): LONGINT;
+	PROCEDURE Mount (CONST prefix: ARRAY 16 OF CHAR; CONST disk: ARRAY OF CHAR; parition: SIGNED32): SIGNED32;
 	VAR
 		v: OFSDiskVolumes.Volume;
 	BEGIN
@@ -814,7 +814,7 @@ VAR
 	(** Unmount all additional file systems *)
 	PROCEDURE UnmountAll;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO fsNb - 1 DO
 			OFS.Remove(OFS.This(fs[i]))
@@ -824,7 +824,7 @@ VAR
 	(** Start initialization. *)
 	PROCEDURE StartNetwork (): BOOLEAN;
 	VAR
-		res: LONGINT;
+		res: SIGNED32;
 		dev: EnetBase.LinkDevice;
 		macAddr: EnetBase.MacAddr;
 		intf: Enet.Interface;
@@ -856,13 +856,13 @@ VAR
 	END StartNetwork;
 
 	(** UART receiver *)
-	PROCEDURE Receive ( VAR reader: StreamReaders.Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD);
+	PROCEDURE Receive ( VAR reader: StreamReaders.Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER);
 	BEGIN
 		Uart.Receive(uart, buf, ofs, size, min, len, NIL, res)
 	END Receive;
 
 	(** UART sender *)
-	PROCEDURE Send (VAR writer: StreamWriters.Writer; CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD);
+	PROCEDURE Send (VAR writer: StreamWriters.Writer; CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: INTEGER);
 	BEGIN
 		Uart.Send(uart, buf, ofs, len, propagate, NIL, res)
 	END Send;
@@ -882,7 +882,7 @@ VAR
 	VAR
 		in: EnetStreams.Reader;
 		out: EnetStreams.Writer;
-		ignore: LONGINT;
+		ignore: SIGNED32;
 		channel: EnetUdpChannels.Channel;
 	BEGIN
 		NEW(in);
@@ -957,7 +957,7 @@ VAR
 	PROCEDURE Broadcast (CONST message: ARRAY OF CHAR);
 	VAR
 		msg: ARRAY 128 OF CHAR;
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		msg := BcastHeader;
 		Strings.Append(msg, message);
@@ -1068,8 +1068,8 @@ VAR
 	PROCEDURE HandleUDP (task: EnetBase.TaskHandler);
 	END HandleUDP;
 
-	PROCEDURE TrapHandler (type, adr, fp: LONGINT; VAR resFP: LONGINT);
-		VAR op: ADDRESS; nextFP, dataAdr: LONGINT; m, main: Modules.Module;
+	PROCEDURE TrapHandler (type, adr, fp: SIGNED32; VAR resFP: SIGNED32);
+		VAR op: ADDRESS; nextFP, dataAdr: SIGNED32; m, main: Modules.Module;
 	BEGIN
 		(* Display type of the trap *)
 		IF type = Platform.SWI THEN

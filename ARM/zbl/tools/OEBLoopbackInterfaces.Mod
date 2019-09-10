@@ -17,10 +17,10 @@ TYPE
 	VAR
 		cmd: ARRAY 128 OF CHAR;
 		timer: Kernel.Timer;
-		guid: LONGINT;
+		guid: SIGNED32;
 		connected, doReply: BOOLEAN;
 
-		PROCEDURE & Init * (guid: LONGINT);
+		PROCEDURE & Init * (guid: SIGNED32);
 		VAR
 			name: ARRAY 128 OF CHAR;
 		BEGIN
@@ -105,7 +105,7 @@ TYPE
 		PROCEDURE NewInterface (CONST param: ARRAY OF CHAR): OEBInterfaces.Interface;
 		VAR
 			itf: Interface;
-			guid: LONGINT;
+			guid: SIGNED32;
 		BEGIN
 			Strings.StrToInt(param, guid);
 			NEW(itf, guid);
@@ -115,7 +115,7 @@ TYPE
 
 VAR
 	factory: Factory;
-	nextId: LONGINT;
+	nextId: SIGNED32;
 
 	PROCEDURE Cleanup;
 	BEGIN

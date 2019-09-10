@@ -38,9 +38,9 @@ VAR W: Texts.Writer;
 	line: ARRAY NetTools.MaxLine OF CHAR;
 
 (** Parsing of a finger url. *)
-	PROCEDURE Split*(VAR url, host, request: ARRAY OF CHAR; VAR port: INTEGER): LONGINT;
+	PROCEDURE Split*(VAR url, host, request: ARRAY OF CHAR; VAR port: SIGNED16): SIGNED32;
 		VAR
-			key: LONGINT; i, j, l: SIZE;
+			key: SIGNED32; i, j, l: SIZE;
 			iskey: BOOLEAN;
 			portS: ARRAY 8 OF CHAR;
 		PROCEDURE Blanks;
@@ -144,9 +144,9 @@ VAR W: Texts.Writer;
 		RETURN key
 	END Split;
 
-PROCEDURE finger0(VAR host, request: ARRAY OF CHAR; port: INTEGER; VAR F: Files.File);
+PROCEDURE finger0(VAR host, request: ARRAY OF CHAR; port: SIGNED16; VAR F: Files.File);
 VAR C: NetSystem.Connection;
-	len, rlen, i, pos, count, coded: LONGINT; buf, cache: ARRAY 256 OF CHAR; ch: CHAR;
+	len, rlen, i, pos, count, coded: SIGNED32; buf, cache: ARRAY 256 OF CHAR; ch: CHAR;
 	ok: BOOLEAN; T: Texts.Text;
 
 	PROCEDURE Cache(ch: CHAR);
@@ -202,10 +202,10 @@ END finger0;
 
 (** Send the finger request to host. Most finger servers use port = Finger.DefPort.
 		If the request failed for any reason, T is set to NIL otherwise T contains the response. *)
-	PROCEDURE finger*(VAR host, request: ARRAY OF CHAR; port: INTEGER; VAR T: Texts.Text);
+	PROCEDURE finger*(VAR host, request: ARRAY OF CHAR; port: SIGNED16; VAR T: Texts.Text);
 		VAR
 			F: Files.File;
-			res: INTEGER;
+			res: SIGNED16;
 	BEGIN
 		finger0( host, request, port, F);
 		NEW(T);
@@ -226,12 +226,12 @@ END finger0;
 		VAR
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			request: ARRAY NetTools.PathStrLen OF CHAR;
-			len: LONGINT;
+			len: SIGNED32;
 			T: Texts.Text;
 			F: Files.File;
 			R: Files.Rider;
 			ch: CHAR;
-			port, res: INTEGER;
+			port, res: SIGNED16;
 	BEGIN
 		WITH L: HyperDocs.LinkScheme DO
 			IF M IS HyperDocs.RegisterLinkMsg THEN
@@ -308,8 +308,8 @@ END finger0;
 		VAR
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			request: ARRAY NetTools.PathStrLen OF CHAR;
-			port: INTEGER;
-			key: LONGINT;
+			port: SIGNED16;
+			key: SIGNED32;
 			T: Texts.Text;
 	BEGIN
 		D.dsc := NIL;
@@ -343,7 +343,7 @@ END finger0;
 			S: Attributes.Scanner;
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			request: ARRAY NetTools.PathStrLen OF CHAR;
-			i, j: INTEGER;
+			i, j: SIGNED16;
 			T: Texts.Text;
 	BEGIN
 		Attributes.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);

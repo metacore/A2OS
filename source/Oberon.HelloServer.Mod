@@ -14,7 +14,7 @@ MODULE HelloServer IN Oberon;
 	PROCEDURE Handle(C: NetSystem.Connection);
 		VAR
 			newC: NetSystem.Connection;
-			res, remPort: INTEGER;
+			res, remPort: SIGNED16;
 			remIP: NetSystem.IPAdr;
 			name: ARRAY 128 OF CHAR;
 	BEGIN
@@ -40,7 +40,7 @@ MODULE HelloServer IN Oberon;
 
 	PROCEDURE Start*;
 		VAR
-			res: INTEGER;
+			res: SIGNED16;
 	BEGIN
 		IF task = NIL THEN
 			NetSystem.OpenConnection(C, TimePort, NetSystem.anyIP, NetSystem.anyport, res);

@@ -17,9 +17,9 @@ TYPE
 	Downloader = OBJECT
 
 		PROCEDURE &New*;
-		VAR res : WORD; temp : ARRAY 16 OF CHAR;
+		VAR res : INTEGER; temp : ARRAY 16 OF CHAR;
 			r : Streams.Reader; w : Files.Writer;
-			buf: ARRAY BufSize OF CHAR; size : LONGINT;
+			buf: ARRAY BufSize OF CHAR; size : SIGNED32;
 			msg, s : ARRAY 256 OF CHAR; len, i, j : SIZE;
 			ftpConnection : FTPClient.FTPClient;
 			errorStr : ARRAY 512 OF CHAR;
@@ -108,15 +108,15 @@ TYPE
 
 	StatusWindow = OBJECT(WMComponents.FormWindow)
 	VAR
-		nofFiles* : LONGINT;
-		currentFile* : LONGINT;
-		fileSize* : LONGINT;
-		transferred* : LONGINT;
+		nofFiles* : SIGNED32;
+		currentFile* : SIGNED32;
+		fileSize* : SIGNED32;
+		transferred* : SIGNED32;
 		currentFilename* : ARRAY 256 OF CHAR;
 
 		shown : BOOLEAN;
-		windowWidth, windowHeight : LONGINT;
-		px, py : LONGINT;
+		windowWidth, windowHeight : SIGNED32;
+		px, py : SIGNED32;
 		bar : WMStandardComponents.Panel;
 
 		PROCEDURE &New*;
@@ -195,7 +195,7 @@ TYPE
 
 	BevelPanel* = OBJECT(WMStandardComponents.Panel);
 	VAR
-		bevelWidth* : LONGINT;
+		bevelWidth* : SIGNED32;
 		bevelColor* : WMGraphics.Color;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);

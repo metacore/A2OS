@@ -55,7 +55,7 @@ VAR
 	(** List of programmers (i.e. destination types) *)
 	programmers: ARRAY MaxProgrammers OF RECORD type: ARRAY 256 OF CHAR; program: Programmer; accept: Predicate; get: Factory END;
 	(** Number of registered programmers *)
-	programmerNb: LONGINT;
+	programmerNb: SIGNED32;
 
 	(* CPU start management *)
 	cpuStart: SET;								(** Each CPU that need explicit starting is included here *)
@@ -67,7 +67,7 @@ VAR
 	VAR
 		module: ARRAY 64 OF CHAR;
 		m: Modules.Module;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		IF (type # "memory") & (type # "file") THEN
 			COPY(type, module);
@@ -86,7 +86,7 @@ VAR
 	(** Program resource 'resource' to destination 'destination' *)
 	PROCEDURE Program * (VAR resource: Resource; CONST destination: Destination);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		IF resource.deployed THEN RETURN END;
 		error := TRUE;
@@ -154,7 +154,7 @@ VAR
 	(** Memory programmer implementation. *)
 	PROCEDURE MemoryProgrammer (CONST resource: Resource; destination: Destination);
 	VAR
-		cpu: LONGINT;
+		cpu: SIGNED32;
 	BEGIN
 		WITH destination: Memory DO
 			IF resource.start # destination.address THEN
@@ -184,7 +184,7 @@ VAR
 	PROCEDURE MemoryFactory (VAR args: StreamReaders.Reader): Destination;
 	VAR
 		dest: Memory;
-		i, address: LONGINT;
+		i, address: SIGNED32;
 	BEGIN
 		StreamReaders.SkipWhitespace(args);
 		IF StreamReaders.GetInteger(args, address, TRUE) THEN
@@ -199,7 +199,7 @@ VAR
 
 	PROCEDURE FileProgrammer (CONST resource: Resource; destination: Destination);
 	TYPE
-		Writer = PROCEDURE (VAR r: OFS.Rider; size, start: ADDRESS; n: LONGINT);
+		Writer = PROCEDURE (VAR r: OFS.Rider; size, start: ADDRESS; n: SIGNED32);
 	VAR
 		file: OFS.File;
 		rider: OFS.Rider;
@@ -225,7 +225,7 @@ VAR
 	VAR
 		file: File;
 		prefix: ARRAY 32 OF CHAR;
-		i, len: LONGINT;
+		i, len: SIGNED32;
 	BEGIN
 		NEW(file);
 		IF StreamReaders.GetString(args, file.name) THEN

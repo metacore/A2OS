@@ -47,7 +47,7 @@ TYPE
 
 		PROCEDURE Translate(value: Strings.String): Strings.String;
 		VAR
-			res : WORD;
+			res : INTEGER;
 			temp, word : Strings.String;
 			dictionary : Repositories.Dictionary;
 		BEGIN
@@ -260,7 +260,7 @@ TYPE
 		END Init;
 
 		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
-		VAR r, g, b, a: WORD; i, j: SIZE; cColor: WMGraphics.Color;
+		VAR r, g, b, a: INTEGER; i, j: SIZE; cColor: WMGraphics.Color;
 		BEGIN
 			i := y DIV 10; j := x DIV 10;
 			IF (i>= 0) & (i<=2) THEN
@@ -282,7 +282,7 @@ TYPE
 		END PointerDown;
 
 		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
-		VAR r, g, b, a: WORD; i, j: SIZE; color: WMGraphics.Color;
+		VAR r, g, b, a: INTEGER; i, j: SIZE; color: WMGraphics.Color;
 		BEGIN
 			DrawBackground^(canvas);
 
@@ -312,12 +312,12 @@ TYPE
 
 		PROCEDURE BuildPalette;
 		BEGIN
-			colors[0] := LONGINT(0FF0000FFH);							(* red *)
-			colors[1] := LONGINT(0FF5500FFH);
-			colors[2] := LONGINT(0FFAA00FFH);
-			colors[3] := LONGINT(0FFFF00FFH);							(* yellow *)
-			colors[4] := LONGINT(0AAFF00FFH);
-			colors[5] := LONGINT(055FF00FFH);
+			colors[0] := SIGNED32(0FF0000FFH);							(* red *)
+			colors[1] := SIGNED32(0FF5500FFH);
+			colors[2] := SIGNED32(0FFAA00FFH);
+			colors[3] := SIGNED32(0FFFF00FFH);							(* yellow *)
+			colors[4] := SIGNED32(0AAFF00FFH);
+			colors[5] := SIGNED32(055FF00FFH);
 			colors[6] := 000FF00FFH;							(* green *)
 			colors[7] := 000FF55FFH;
 			colors[8] := 000FFAAFFH;
@@ -326,11 +326,11 @@ TYPE
 			colors[11] := 00055FFFFH;
 			colors[12] := 00000FFFFH;						(* blue *)
 			colors[13] := 05500FFFFH;
-			colors[14] :=LONGINT( 0AA00FFFFH);
-			colors[15] :=LONGINT( 0FF00FFFFH);						(* magenta *)
-			colors[16] :=LONGINT( 0FF00AAFFH);
-			colors[17] :=LONGINT( 0FF0055FFH);
-			colors[18] :=LONGINT( 0888888FFH);						(* grey *)
+			colors[14] :=SIGNED32( 0AA00FFFFH);
+			colors[15] :=SIGNED32( 0FF00FFFFH);						(* magenta *)
+			colors[16] :=SIGNED32( 0FF00AAFFH);
+			colors[17] :=SIGNED32( 0FF0055FFH);
+			colors[18] :=SIGNED32( 0888888FFH);						(* grey *)
 		END BuildPalette;
 
 	END ColorSwatchPanel;

@@ -10,7 +10,7 @@ VAR
 	r: Streams.StringReader;
 	w: Streams.Writer;
 	params: ARRAY 1024 OF CHAR;
-	res: LONGINT;
+	res: SIGNED32;
 	msg: ARRAY 1024 OF CHAR;
 
 BEGIN

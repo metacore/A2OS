@@ -37,7 +37,7 @@ TYPE
 	END;
 
 VAR
-	newlayer-: tLayer;  maxw, maxh: INTEGER;  texture: BOOLEAN;
+	newlayer-: tLayer;  maxw, maxh: SIGNED16;  texture: BOOLEAN;
 
 	PROCEDURE Copy( msg: Objects.CopyMsg;  source, dest: tLayer );
 	BEGIN
@@ -46,7 +46,7 @@ VAR
 	END Copy;
 
 	PROCEDURE Recall( layer: tLayer );
-	VAR pw, ph: INTEGER;  vx, vy, vpx, vpy, vpw, vph: INTEGER;  c: antsPictCoordinate.tCoordinate;  pict: Pictures.Picture;  i: INTEGER;  r, g, b: INTEGER;
+	VAR pw, ph: SIGNED16;  vx, vy, vpx, vpy, vpw, vph: SIGNED16;  c: antsPictCoordinate.tCoordinate;  pict: Pictures.Picture;  i: SIGNED16;  r, g, b: SIGNED16;
 	BEGIN
 		IF layer.E.A # NIL THEN  (* use colors of pal *)  (*! only when sync ? *)
 			antsViews.CheckColors( layer, layer.E.depth )
@@ -88,7 +88,7 @@ VAR
 	END Recall;
 
 	PROCEDURE Responsible( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF ((event.gesture = vyEvents.EvtIdent)) THEN priority := vyEvents.PrioNormal END;
@@ -103,7 +103,7 @@ VAR
 	END Center;
 
 	PROCEDURE HandleFileMsg( obj: tLayer;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		IF msg.id = Objects.load THEN
 			Files.ReadInt( msg.R, version );  antsViews.Handler( obj, msg );  Gadgets.ReadRef( msg.R, obj.lib, objsub );
@@ -167,8 +167,8 @@ VAR
 	END StoreAsGIF;
 
 	PROCEDURE SendPictTo;
-	VAR tempLayer: tLayer;  obj: antsArrayPictures.tObject;  msg: antsArrayPictures.setPictMsg;  keys: SET;  dx, dy: INTEGER;
-		pict: Pictures.Picture;  i, r, g, b: INTEGER;  copy: antsArrayObjects.tINTEGERArray;  orig: Objects.Object;
+	VAR tempLayer: tLayer;  obj: antsArrayPictures.tObject;  msg: antsArrayPictures.setPictMsg;  keys: SET;  dx, dy: SIGNED16;
+		pict: Pictures.Picture;  i, r, g, b: SIGNED16;  copy: antsArrayObjects.tINTEGERArray;  orig: Objects.Object;
 	BEGIN
 		vyCommandMenus.Wait();  tempLayer := antsViews.tempLayer( tLayer );  obj := tempLayer.E;  NEW( pict );
 		Pictures.Create( pict, obj.pict.width, obj.pict.height, obj.pict.depth );
@@ -292,7 +292,7 @@ VAR
 	END New;
 
 	PROCEDURE DoShow*( E: antsArrayPictures.tObject;  add: BOOLEAN;  VAR c: antsPictCoordinate.tCoordinate ): vyPort.tLayer;
-	VAR port: vyPort.Frame;  p: vyPort.Picture;  layer: tLayer;  w, h: INTEGER;
+	VAR port: vyPort.Frame;  p: vyPort.Picture;  layer: tLayer;  w, h: SIGNED16;
 		name: ARRAY 256 OF CHAR;
 	BEGIN
 		NEW( layer );  Open( layer, E );  name := "View of ";  vyName.AppendObjId( E, name );
@@ -317,7 +317,7 @@ VAR
 
 	PROCEDURE Show*;
 	VAR l: antsCommands.tScanList;  obj, o: vyBase.Object;  la: vyPort.tLayer;  name: vyName.tNameArray;  add: BOOLEAN;
-		c: antsPictCoordinate.tCoordinate;  dx: LONGINT;  pobj: antsArrayPictures.tObject;
+		c: antsPictCoordinate.tCoordinate;  dx: SIGNED32;  pobj: antsArrayPictures.tObject;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name= NAME [>add] [>texture] [gridsize=INT]" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) THEN

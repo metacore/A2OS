@@ -84,12 +84,12 @@ MODULE SymbiosASPI;	(** non-portable *)
 		PageSize = 4096;
 
 	TYPE
-		Time* = HUGEINT;
+		Time* = SIGNED64;
 
 		(* Data structure for measuring *)
 		Measure* = POINTER TO MeasureDesc;
 		MeasureDesc* = RECORD
-			started*: LONGINT;
+			started*: SIGNED32;
 			IssueTime*, DeadLineTime*: Time;
 			EnterTime*, LeaveTime*, ReenterTime*: Time
 		END;
@@ -115,7 +115,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 		ExecIOCmdSRB* = POINTER TO ExecIOCmdSRBDesc;
 		ExecIOCmdSRBDesc* = RECORD (SRBDesc)
 			Target*, Lun*, SenseLen*, CDBLen*, HaStat*, TargStat*: CHAR;
-			BufLen*, BufPointer*: LONGINT;	(* virtual address *)
+			BufLen*, BufPointer*: SIGNED32;	(* virtual address *)
 			CDB*: ARRAY 16 OF CHAR;
 			SenseArea*: ARRAY 257 OF CHAR;
 			next*: ExecIOCmdSRB;
@@ -147,8 +147,8 @@ MODULE SymbiosASPI;	(** non-portable *)
 		TargetPtr = POINTER TO TargetDescc;
 		TargetDescc = RECORD
 			first, last: ExecIOCmdSRB;
-			id: LONGINT;	(* target id *)
-			luns: LONGINT;	(* available LUN's for this target *)
+			id: SIGNED32;	(* target id *)
+			luns: SIGNED32;	(* available LUN's for this target *)
 			lun: ARRAY MaxLun OF LunDesc;
 			bufTab: NCRScript.BufferTable
 		END;
@@ -158,13 +158,13 @@ MODULE SymbiosASPI;	(** non-portable *)
 			VAR
 				devId, vendId, cmd, status, revId, classCode, CLS, latTimer, hdrType,
 				baseAdr0, baseAdr1, baseAdr2, baseAdr3, baseAdr4, baseAdr5,
-				CIS, subId, subVenId, baseAdrROM, intL, intP, minGnt, maxLat: LONGINT;
-				devIdx, busNr, devNr, fktNr: LONGINT;
-				ioport, memadr: LONGINT;
+				CIS, subId, subVenId, baseAdrROM, intL, intP, minGnt, maxLat: SIGNED32;
+				devIdx, busNr, devNr, fktNr: SIGNED32;
+				ioport, memadr: SIGNED32;
 				memaccess: BOOLEAN;
 				(* SCSI target support *)
 				targetReady: SET;
-				dnad, dbc, dfifo, sstat0, sstat1, sstat2, ctest2, msgInPtr, identLen, targetNum: LONGINT;
+				dnad, dbc, dfifo, sstat0, sstat1, sstat2, ctest2, msgInPtr, identLen, targetNum: SIGNED32;
 				msgIn, msgOut: CHAR;
 				target: ARRAY MaxTarget OF TargetPtr;
 				curTarget: TargetPtr;
@@ -179,22 +179,22 @@ MODULE SymbiosASPI;	(** non-portable *)
 		END DevicePtr;
 
 	VAR
-		IDs: ARRAY DevIDs OF LONGINT;
-		DevNum, Initres: LONGINT;
+		IDs: ARRAY DevIDs OF SIGNED32;
+		DevNum, Initres: SIGNED32;
 		Devs: ARRAY DevIDs OF DevicePtr;
 
-		disconnected: LONGINT;
+		disconnected: SIGNED32;
 
 	PROCEDURE GetTime(VAR time: Time);
 	BEGIN time := Machine.GetTimer ();
 	END GetTime;
 
-	PROCEDURE LogInt(i: LONGINT);
+	PROCEDURE LogInt(i: SIGNED32);
 	BEGIN
 		KernelLog.Int(i, 1)
 	END LogInt;
 
-	PROCEDURE LogHex(i: LONGINT);
+	PROCEDURE LogHex(i: SIGNED32);
 	BEGIN
 		KernelLog.Hex(i, 8)
 	END LogHex;
@@ -206,14 +206,14 @@ MODULE SymbiosASPI;	(** non-portable *)
 		RETURN (adr MOD 4 = 0) & (adr DIV PageSize = (adr+SIZEOF(NCRScript.BufferTable)-1) DIV PageSize)
 	END CheckAlign;
 
-	PROCEDURE Wait(t: LONGINT);
+	PROCEDURE Wait(t: SIGNED32);
 	BEGIN
 		t := t*100000;
 		WHILE t > 0 DO DEC(t) END
 	END Wait;
 
 	PROCEDURE PhysAdr(adr: ADDRESS; size: SIZE): Machine.Address32;
-	VAR n, i: LONGINT; size0: ADDRESS; phys: ARRAY MaxRanges OF Machine.Range;
+	VAR n, i: SIGNED32; size0: ADDRESS; phys: ARRAY MaxRanges OF Machine.Range;
 	BEGIN
 		ASSERT(size <= PageSize, 100);
 		Machine.TranslateVirtual(adr, size, n, phys);
@@ -225,13 +225,13 @@ MODULE SymbiosASPI;	(** non-portable *)
 		RETURN phys[0].adr(Machine.Address32);
 	END PhysAdr;
 
-	PROCEDURE SetTableEntry(VAR t: NCRScript.TableEntry; adr: ADDRESS; count: LONGINT);
+	PROCEDURE SetTableEntry(VAR t: NCRScript.TableEntry; adr: ADDRESS; count: SIGNED32);
 	BEGIN
 		t.count := count;
 		t.address := PhysAdr(adr, count)
 	END SetTableEntry;
 
-	PROCEDURE Read8(Dev: DevicePtr; adr: LONGINT; VAR val: CHAR);
+	PROCEDURE Read8(Dev: DevicePtr; adr: SIGNED32; VAR val: CHAR);
 	BEGIN
 		IF Dev.memaccess THEN	(* Memory mapped access *)
 			adr := adr + Dev.memadr;
@@ -242,7 +242,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 		END
 	END Read8;
 
-	PROCEDURE Read32(Dev: DevicePtr; adr: LONGINT; VAR val: LONGINT);
+	PROCEDURE Read32(Dev: DevicePtr; adr: SIGNED32; VAR val: SIGNED32);
 	BEGIN
 		IF Dev.memaccess THEN	(* Memory mapped access *)
 		(*	adr := adr + Dev.memadr; *)
@@ -253,7 +253,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 		END
 	END Read32;
 
-	PROCEDURE Write8(Dev: DevicePtr; adr: LONGINT; val: CHAR);
+	PROCEDURE Write8(Dev: DevicePtr; adr: SIGNED32; val: CHAR);
 	BEGIN
 		IF Dev.memaccess THEN	(* Memory mapped access *)
 			adr := adr + Dev.memadr;
@@ -264,7 +264,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 		END
 	END Write8;
 
-	PROCEDURE Write32(Dev: DevicePtr; adr, val: LONGINT);
+	PROCEDURE Write32(Dev: DevicePtr; adr, val: SIGNED32);
 	BEGIN
 		IF Dev.memaccess THEN	(* Memory mapped access *)
 			adr := adr + Dev.memadr;
@@ -281,8 +281,8 @@ MODULE SymbiosASPI;	(** non-portable *)
 		IDs[4] := C825DevId; IDs[5] := C860DevId; IDs[6] := C875DevId; IDs[7] := C896DevId
 	END InitIDs;
 
-	PROCEDURE PCIFindSYMDevice(Dev: DevicePtr): WORD;
-	VAR res, res1: WORD; regVal: LONGINT;
+	PROCEDURE PCIFindSYMDevice(Dev: DevicePtr): INTEGER;
+	VAR res, res1: INTEGER; regVal: SIGNED32;
 	BEGIN
 		res := PCI.FindPCIDevice(Dev.devId, NCRVendorId, Dev.devIdx, Dev.busNr, Dev.devNr, Dev.fktNr);
 (*
@@ -328,8 +328,8 @@ MODULE SymbiosASPI;	(** non-portable *)
 		RETURN res
 	END PCIFindSYMDevice;
 
-	PROCEDURE BuildDeviceList(VAR Devices: ARRAY OF DevicePtr; MaxDev: LONGINT): LONGINT;
-	VAR i, NumDev: LONGINT;
+	PROCEDURE BuildDeviceList(VAR Devices: ARRAY OF DevicePtr; MaxDev: SIGNED32): SIGNED32;
+	VAR i, NumDev: SIGNED32;
 	BEGIN
 		i := 0; NumDev := 0; NEW(Devices[0]);
 		WHILE i < DevIDs DO
@@ -345,8 +345,8 @@ MODULE SymbiosASPI;	(** non-portable *)
 		RETURN NumDev
 	END BuildDeviceList;
 
-	PROCEDURE ShowDeviceList(VAR Devices: ARRAY OF DevicePtr; MaxDev: LONGINT);
-	VAR i: LONGINT; d: DevicePtr;
+	PROCEDURE ShowDeviceList(VAR Devices: ARRAY OF DevicePtr; MaxDev: SIGNED32);
+	VAR i: SIGNED32; d: DevicePtr;
 	BEGIN
 		i := 0;
 		WHILE i < MaxDev DO
@@ -383,8 +383,8 @@ MODULE SymbiosASPI;	(** non-portable *)
 		END;
 	END ShowDeviceList;
 
-	PROCEDURE dsaEntryOut(Dev: DevicePtr; i: LONGINT);
-	VAR adr, nr: LONGINT; val: CHAR;
+	PROCEDURE dsaEntryOut(Dev: DevicePtr; i: SIGNED32);
+	VAR adr, nr: SIGNED32; val: CHAR;
 	BEGIN
 		nr := Dev.curTarget.bufTab[i].count;
 		adr := Dev.curTarget.bufTab[i].address;
@@ -454,7 +454,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 
 
 	PROCEDURE SetSynchParameters(Dev: DevicePtr; tp, offs: CHAR);
-	VAR xferp: LONGINT;
+	VAR xferp: SIGNED32;
 	BEGIN
 		ASSERT(tp >= 19X, 100);
 		ASSERT(offs <= 8X, 101);
@@ -467,8 +467,8 @@ MODULE SymbiosASPI;	(** non-portable *)
 	END SetSynchParameters;
 
 (* --- Interrupt Handler --- *)
-	PROCEDURE StartNextCommand(Dev: DevicePtr; VAR nextdsp: LONGINT);
-	VAR targ: LONGINT; srb: ExecIOCmdSRB; val: CHAR; vals: SET;
+	PROCEDURE StartNextCommand(Dev: DevicePtr; VAR nextdsp: SIGNED32);
+	VAR targ: SIGNED32; srb: ExecIOCmdSRB; val: CHAR; vals: SET;
 	BEGIN
 		Read8(Dev, ISTAT, val);
 		vals := SYSTEM.VAL(SET, val); EXCL(vals, 5); val := SYSTEM.VAL(CHAR, vals);
@@ -508,7 +508,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 		END
 	END StartNextCommand;
 
-	PROCEDURE FinishCommand(Dev: DevicePtr; VAR nextdsp: LONGINT);
+	PROCEDURE FinishCommand(Dev: DevicePtr; VAR nextdsp: SIGNED32);
 	VAR srb: ExecIOCmdSRB;
 	BEGIN
 		IF Dev.curTarget # NIL THEN
@@ -524,7 +524,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 	END FinishCommand;
 
 	PROCEDURE ReloadDSA(Dev: DevicePtr);
-	VAR val, xferp: CHAR; targ: LONGINT;
+	VAR val, xferp: CHAR; targ: SIGNED32;
 	BEGIN
 		Read8(Dev, SFBR, val);
 		targ := ORD(val); ASSERT(targ DIV 80H = 1, 100);
@@ -538,7 +538,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 		Write32(Dev, DSA, PhysAdr(ADDRESSOF(Dev.curTarget.bufTab[0].count), SIZEOF(NCRScript.BufferTable)))
 	END ReloadDSA;
 
-	PROCEDURE abnormFinished(Dev: DevicePtr; code: LONGINT; VAR nextdsp: LONGINT);
+	PROCEDURE abnormFinished(Dev: DevicePtr; code: SIGNED32; VAR nextdsp: SIGNED32);
 	BEGIN
 		IF TRUE (* intdebug *) THEN
 			KernelLog.Enter;
@@ -556,8 +556,8 @@ MODULE SymbiosASPI;	(** non-portable *)
 		FinishCommand(Dev, nextdsp);
 	END abnormFinished;
 
-	PROCEDURE PhaseMismatch(Dev: DevicePtr; istats, dstats, sist0s, sist1s: SET; VAR nextdsp: LONGINT);
-	VAR sbcl: CHAR; sbcls, sstat0s: SET; val: CHAR; dfifo: LONGINT;
+	PROCEDURE PhaseMismatch(Dev: DevicePtr; istats, dstats, sist0s, sist1s: SET; VAR nextdsp: SIGNED32);
+	VAR sbcl: CHAR; sbcls, sstat0s: SET; val: CHAR; dfifo: SIGNED32;
 	BEGIN
 		Read8(Dev, SBCL, sbcl);
 		sbcls := SYSTEM.VAL(SET, sbcl);
@@ -594,7 +594,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 		END
 	END PhaseMismatch;
 
-	PROCEDURE SCSIInterrupt(Dev: DevicePtr; istats, dstats, sist0s, sist1s: SET; VAR nextdsp: LONGINT);
+	PROCEDURE SCSIInterrupt(Dev: DevicePtr; istats, dstats, sist0s, sist1s: SET; VAR nextdsp: SIGNED32);
 	VAR fatal: BOOLEAN; ch: CHAR;
 	BEGIN
 		fatal := FALSE;
@@ -635,8 +635,8 @@ MODULE SymbiosASPI;	(** non-portable *)
 		END;
 	END SCSIInterrupt;
 
-	PROCEDURE DMAInterrupt(Dev: DevicePtr; istats, dstats, sist0s, sist1s: SET; VAR nextdsp: LONGINT);
-	VAR i, interrupt: LONGINT; ch: CHAR;
+	PROCEDURE DMAInterrupt(Dev: DevicePtr; istats, dstats, sist0s, sist1s: SET; VAR nextdsp: SIGNED32);
+	VAR i, interrupt: SIGNED32; ch: CHAR;
 	BEGIN
 		IF 2 IN dstats THEN (* Scripts interrupt instruction *)
 			Read32(Dev, DSPS, interrupt);
@@ -746,7 +746,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 	END DMAInterrupt;
 
 	PROCEDURE InterruptHandler(Dev: DevicePtr);
-	VAR istat: CHAR; nextdsp, dspval, nr: LONGINT; istats, dstats, sist0s, sist1s: SET; cursrb: ExecIOCmdSRB;
+	VAR istat: CHAR; nextdsp, dspval, nr: SIGNED32; istats, dstats, sist0s, sist1s: SET; cursrb: ExecIOCmdSRB;
 	BEGIN {EXCLUSIVE}
 		IF intdebug THEN KernelLog.String("Entering InterruptHandler"); KernelLog.Ln; END;
 		nr := 0;
@@ -783,7 +783,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 (* --- End of Interrupt Handler --- *)
 
 	PROCEDURE HaInquiry(srb: HaInquirySRB);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		srb.HaCount := CHR(DevNum);
 		srb.HaManagerId := ManagerId;
@@ -809,7 +809,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 	END HaInquiry;
 
 	PROCEDURE GetDevType(srb: GetDevTypeSRB);
-	VAR dev, targ, lun: LONGINT;
+	VAR dev, targ, lun: SIGNED32;
 	BEGIN
 		dev := ORD(srb.HaId); targ := ORD(srb.Target); lun := ORD(srb.Lun);
 		IF dev >= DevNum THEN srb.Status := SSInvalidHa
@@ -825,7 +825,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 		END
 	END GetDevType;
 
-	PROCEDURE Insert(srb: ExecIOCmdSRB; dev, targ, lun: LONGINT);
+	PROCEDURE Insert(srb: ExecIOCmdSRB; dev, targ, lun: SIGNED32);
 	VAR val: CHAR; vals: SET;
 	BEGIN
 		Machine.Cli();
@@ -843,7 +843,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 	END Insert;
 
 	PROCEDURE ExecIOCmd(srb: ExecIOCmdSRB);
-	VAR dev, targ, lun: LONGINT;
+	VAR dev, targ, lun: SIGNED32;
 	BEGIN
 		dev := ORD(srb.HaId); targ := ORD(srb.Target); lun := ORD(srb.Lun);
 		IF (dev >= DevNum) OR (targ >= MaxTarget) OR (lun >= MaxLun) THEN srb.Status := SSInvalidSRB
@@ -886,7 +886,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 
 	PROCEDURE InitTargets(Dev: DevicePtr);
 	VAR
-		targ, lun: LONGINT;
+		targ, lun: SIGNED32;
 		srb: ExecIOCmdSRB;
 		data: ARRAY 0FFH OF CHAR;
 	BEGIN
@@ -931,7 +931,7 @@ MODULE SymbiosASPI;	(** non-portable *)
 	END InitTargets;
 
 	PROCEDURE InitASPI;
-	VAR res: CHAR; res1: WORD; version, lastPCIbus, hwMech, dev: LONGINT;
+	VAR res: CHAR; res1: INTEGER; version, lastPCIbus, hwMech, dev: SIGNED32;
 	BEGIN
 		res := SSFailedInit; DevNum := 0;
 		res1 := PCI.PCIPresent(version, lastPCIbus, hwMech);
@@ -949,13 +949,13 @@ MODULE SymbiosASPI;	(** non-portable *)
 		Initres := ORD(res)
 	END InitASPI;
 
-	PROCEDURE GetASPISupportInfo*(): LONGINT;
+	PROCEDURE GetASPISupportInfo*(): SIGNED32;
 	BEGIN
 		RETURN LSH(Initres, 8) + DevNum
 	END GetASPISupportInfo;
 
 	PROCEDURE Stop;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		IF Modules.shutdown = Modules.None THEN
 			FOR i := 0 TO DevNum-1 DO

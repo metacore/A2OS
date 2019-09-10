@@ -48,7 +48,7 @@ TYPE
 	VAR
 		commandName : Strings.String; (* name of command procedure if node represent an executable command *)
 		modulename : Name;
-		sortHint : WORD;
+		sortHint : INTEGER;
 		flags : SET;
 		position : Streams.Position;
 
@@ -233,7 +233,7 @@ TYPE
 		END ClickNode;
 
 		PROCEDURE MiddleClickNode*(sender, data : ANY);
-		VAR commandStr, ignoreMsg : ARRAY 128 OF CHAR; len: SIZE; ignore: WORD;
+		VAR commandStr, ignoreMsg : ARRAY 128 OF CHAR; len: SIZE; ignore: INTEGER;
 		BEGIN
 			IF (data # NIL) & (data IS TreeNode) & (data(TreeNode).commandName # NIL) & (data(TreeNode).modulename # "") THEN
 				COPY(data(TreeNode).modulename, commandStr);
@@ -245,7 +245,7 @@ TYPE
 			END;
 		END MiddleClickNode;
 
-		PROCEDURE SetNodeInfo(node : TreeNode; mnode : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortHint: WORD; color: WMGraphics.Color; style: SET);
+		PROCEDURE SetNodeInfo(node : TreeNode; mnode : ModuleParser.Node; infoItem: ModuleParser.InfoItem; isPublic : BOOLEAN; sortHint: INTEGER; color: WMGraphics.Color; style: SET);
 		VAR moduleNode : ModuleParser.Module; font: WMGraphics.Font;
 		BEGIN
 			node.flags := {};
@@ -356,8 +356,8 @@ TYPE
 			END;
 		END GetModuleNode;
 
-		PROCEDURE GetProcedureType(procHead : ModuleParser.ProcHead) : WORD;
-		VAR type : WORD;
+		PROCEDURE GetProcedureType(procHead : ModuleParser.ProcHead) : INTEGER;
+		VAR type : INTEGER;
 
 			PROCEDURE InModuleScope(procHead : ModuleParser.ProcHead) : BOOLEAN;
 			VAR module : ModuleParser.Module;
@@ -523,7 +523,7 @@ TYPE
 		PROCEDURE AddProcHead(treeNode: WMTrees.TreeNode; procHead: ModuleParser.ProcHead): WMTrees.TreeNode;
 		VAR
 			newNode: TreeNode; caption: Strings.String;
-			color : WMGraphics.Color; image : WMGraphics.Image; type : WORD;
+			color : WMGraphics.Color; image : WMGraphics.Image; type : INTEGER;
 		BEGIN
 			IF (procHead # NIL) THEN
 				color := GetColor(procHead.modifiers, ColorProcedure);
@@ -943,7 +943,7 @@ TYPE
 		PROCEDURE AddIdentDef(
 			parent: WMTrees.TreeNode;
 			node : ModuleParser.Node; identDef: ModuleParser.IdentDef;
-			sortHint: WORD; color: WMGraphics.Color; style: SET) : TreeNode;
+			sortHint: INTEGER; color: WMGraphics.Color; style: SET) : TreeNode;
 		VAR
 			newNode: TreeNode;
 		BEGIN
@@ -963,7 +963,7 @@ TYPE
 		PROCEDURE AddInfoItem(
 			parent: WMTrees.TreeNode;
 			node : ModuleParser.Node; infoItem: ModuleParser.InfoItem;
-			isPublic : BOOLEAN; sortHint: WORD; color: WMGraphics.Color; style: SET) : TreeNode;
+			isPublic : BOOLEAN; sortHint: INTEGER; color: WMGraphics.Color; style: SET) : TreeNode;
 		VAR
 			newNode: TreeNode;
 		BEGIN

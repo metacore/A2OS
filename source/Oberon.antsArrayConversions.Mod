@@ -33,7 +33,7 @@ IMPORT antsArrayImages, antsArrayPictures, Files, antsCommands, antsToolbox, Str
 	antsSecurity, vyBase, vyName, vyTracking, Effects, Pictures, Display, antsArrayObjects, antsArrayPictures16;
 
 	PROCEDURE getSuffix( name: ARRAY OF CHAR;  VAR suffix: ARRAY OF CHAR );
-	VAR lastptpos, end: LONGINT;  i: LONGINT;
+	VAR lastptpos, end: SIGNED32;  i: SIGNED32;
 	BEGIN
 		suffix[0] := 0X;  i := 0;  lastptpos := -1;
 		WHILE (name[i] # 0X) DO
@@ -70,7 +70,7 @@ IMPORT antsArrayImages, antsArrayPictures, Files, antsCommands, antsToolbox, Str
 	END LoadDialoged;
 
 	PROCEDURE Grey*;
-	VAR obj: vyBase.Object;  name: vyName.tNameArray;  depth: LONGINT;
+	VAR obj: vyBase.Object;  name: vyName.tNameArray;  depth: SIGNED32;
 	BEGIN
 		antsCommands.InitScan( "from=OBJ to=NAME depth=INT ~# Attach Array  with name <to> to Image or Picture  <from> " );
 		IF antsCommands.ExpectObject( "from", obj ) & antsCommands.ExpectName( "to", name ) &
@@ -87,7 +87,7 @@ IMPORT antsArrayImages, antsArrayPictures, Files, antsCommands, antsToolbox, Str
 	END Grey;
 
 	PROCEDURE Put*;
-	VAR msg: antsArrayPictures.setPictMsg;  obj: vyBase.Object;  keys: SET;  dx, dy: INTEGER;  pict: Pictures.Picture;  i, r, g, b: INTEGER;
+	VAR msg: antsArrayPictures.setPictMsg;  obj: vyBase.Object;  keys: SET;  dx, dy: SIGNED16;  pict: Pictures.Picture;  i, r, g, b: SIGNED16;
 		copy: antsArrayObjects.tINTEGERArray;  orig: Objects.Object;
 	BEGIN
 		antsCommands.InitScan( "from=OBJ ~# Interactively put obj <from> to some Port" );

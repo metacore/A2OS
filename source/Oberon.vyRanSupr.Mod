@@ -43,16 +43,16 @@ TYPE
 	tSeed = OBJECT  (* POINTER TO tSeedDesc;
 	tSeedDesc = RECORD (vyRanBase.tSeedDesc)*)
 	(vyRanBase.tSeed)
-	VAR x, y: LONGINT;
+	VAR x, y: SIGNED32;
 		add: BOOLEAN;
-		n: LONGINT;
+		n: SIGNED32;
 
 		PROCEDURE  (*VAR seed: tSeedDesc*) Store*( VAR r: Files.Rider );
 		BEGIN
 			Files.WriteLInt( r, SELF.x );  Files.WriteLInt( r, SELF.y );  Files.WriteBool( r, SELF.add );  Files.WriteLInt( r, SELF.n )
 		END Store;
 
-		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: INTEGER );
+		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: SIGNED16 );
 		BEGIN
 			IF seedVersion # cSeedVersion THEN HALT( 100 ) END;
 			Files.ReadLInt( r, SELF.x );  Files.ReadLInt( r, SELF.y );  Files.ReadBool( r, SELF.add );  Files.ReadLInt( r, SELF.n )
@@ -74,14 +74,14 @@ VAR
 
 	PROCEDURE NextSeed( seed: tSeed );
 	CONST c5 = 20H;  c13 = 2000H;  c17 = 20000H;
-	VAR x, y: LONGINT;
+	VAR x, y: SIGNED32;
 	BEGIN
 		x := seed.x;  y := seed.y;
 
 		x := 69069 * x + 1;
-		y := S.VAL( LONGINT, S.VAL( SET, y ) / S.VAL( SET, y * c13 ) );   (* y := xor (y, lshift (y, 13)) *)
-		y := S.VAL( LONGINT, S.VAL( SET, y ) / S.VAL( SET, y * c17 ) );  y := S.VAL( LONGINT, S.VAL( SET, y ) / S.VAL( SET, y * c5 ) );
-		IF seed.add THEN seed.n := x + y ELSE seed.n := S.VAL( LONGINT, S.VAL( SET, x ) / S.VAL( SET, y ) ) END;
+		y := S.VAL( SIGNED32, S.VAL( SET, y ) / S.VAL( SET, y * c13 ) );   (* y := xor (y, lshift (y, 13)) *)
+		y := S.VAL( SIGNED32, S.VAL( SET, y ) / S.VAL( SET, y * c17 ) );  y := S.VAL( SIGNED32, S.VAL( SET, y ) / S.VAL( SET, y * c5 ) );
+		IF seed.add THEN seed.n := x + y ELSE seed.n := S.VAL( SIGNED32, S.VAL( SET, x ) / S.VAL( SET, y ) ) END;
 
 		seed.x := x;  seed.y := y
 	END NextSeed;
@@ -107,8 +107,8 @@ VAR
 		END
 	END Get;
 
-	PROCEDURE GetUniform( r: tRandom ): LONGREAL;
-	CONST posScalefact = 0.5 / MAX( LONGINT );  negScalefact = 0.5 / MIN( LONGINT );
+	PROCEDURE GetUniform( r: tRandom ): FLOAT64;
+	CONST posScalefact = 0.5 / MAX( SIGNED32 );  negScalefact = 0.5 / MIN( SIGNED32 );
 	VAR seed: vyRanBase.tSeed;
 	BEGIN
 		seed := r.seed;
@@ -118,25 +118,25 @@ VAR
 		END
 	END GetUniform;
 
-	PROCEDURE GetL( r: tRandom;  top: LONGINT ): LONGINT;
-	VAR seed: vyRanBase.tSeed;  z: LONGINT;
+	PROCEDURE GetL( r: tRandom;  top: SIGNED32 ): SIGNED32;
+	VAR seed: vyRanBase.tSeed;  z: SIGNED32;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
 			NextSeed( seed );  z := seed.n;
-			IF z < 0 THEN DEC( z, MIN( LONGINT ) ) END;
+			IF z < 0 THEN DEC( z, MIN( SIGNED32 ) ) END;
 			IF top <= 0 THEN RETURN z ELSE RETURN z MOD top END
 		END
 	END GetL;
 
 	PROCEDURE Reset( r: tRandom );
-	VAR x, y: LONGINT;  seed: vyRanBase.tSeed;
+	VAR x, y: SIGNED32;  seed: vyRanBase.tSeed;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
 			x := vyRanBase.DefaultLongSeed();  y := vyRanBase.DefaultLongSeed();
 			IF y = 0 THEN y := 1 END;
-			IF seed.add THEN seed.n := x + y ELSE seed.n := S.VAL( LONGINT, S.VAL( SET, x ) / S.VAL( SET, y ) ) END;
+			IF seed.add THEN seed.n := x + y ELSE seed.n := S.VAL( SIGNED32, S.VAL( SET, x ) / S.VAL( SET, y ) ) END;
 			seed.x := x;  seed.y := y
 		END
 	END Reset;
@@ -227,6 +227,6 @@ VAR
 	END Install;
 
 BEGIN
-	ASSERT ( SIZEOF( SET ) >= SIZEOF( LONGINT ), 101 );
+	ASSERT ( SIZEOF( SET ) >= SIZEOF( SIGNED32 ), 101 );
 	seedAdd := TRUE
 END vyRanSupr.

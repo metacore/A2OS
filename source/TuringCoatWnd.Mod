@@ -17,14 +17,14 @@ TYPE
 
 	TCW* =  OBJECT(WM.BufferWindow)
 	VAR
-		mesh1, mesh2, n1 : ARRAY m, m OF REAL;
+		mesh1, mesh2, n1 : ARRAY m, m OF FLOAT32;
 		random : Random.Generator;
 		alive, dead, alpha, delay : BOOLEAN;
-		t0 : LONGINT;
+		t0 : SIGNED32;
 		timer : Kernel.Timer;
 
 		PROCEDURE &New*(alpha, delay : BOOLEAN);
-		VAR i, j : LONGINT;
+		VAR i, j : SIGNED32;
 		BEGIN
 			Init(WindowWidth, WindowHeight, alpha);
 			SELF.alpha :=alpha;
@@ -62,7 +62,7 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : LONGINT);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : SIGNED32);
 		BEGIN
 			Draw^(canvas, w, h, 0)
 		END Draw;
@@ -76,7 +76,7 @@ TYPE
 		END Close;
 
 		PROCEDURE Delay;
-		VAR t: LONGINT;
+		VAR t: SIGNED32;
 		BEGIN
 			t := Kernel.GetTicks( ) - t0;
 			IF t < 8 THEN
@@ -86,7 +86,7 @@ TYPE
 		END Delay;
 
 		PROCEDURE Generation;
-		VAR i, j : LONGINT;
+		VAR i, j : SIGNED32;
 		BEGIN
 			FOR i := 1 TO m - 2 DO
 				n1[i, 0] := mesh1[i - 1, 0] + mesh1[i + 1, 0] + mesh1[i, m - 1] + mesh1[i, 1]
@@ -121,7 +121,7 @@ TYPE
 		END Generation;
 
 		PROCEDURE DrawIt;
-		VAR i, j, ix, jy : LONGINT;
+		VAR i, j, ix, jy : SIGNED32;
 			pix : Raster.Pixel;
 			mode : Raster.Mode;
 		BEGIN
@@ -154,7 +154,7 @@ TYPE
 	END TCW;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*(context: Commands.Context);
 VAR window : TCW; options: Options.Options;

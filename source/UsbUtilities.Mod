@@ -10,7 +10,7 @@ VAR
 TYPE
 
 	AsciiString* = POINTER TO ARRAY OF CHAR;
-	UnicodeString*	= POINTER TO ARRAY OF LONGINT;
+	UnicodeString*	= POINTER TO ARRAY OF SIGNED32;
 
 PROCEDURE Unicode2Ascii*(unicode : UnicodeString) : AsciiString;
 VAR utf8, ascii : AsciiString; res : SIZE;
@@ -25,8 +25,8 @@ BEGIN
 	RETURN ascii;
 END Unicode2Ascii;
 
-PROCEDURE DecodeChar(CONST str: ARRAY OF CHAR; VAR i: SIZE; VAR ucs: LONGINT): BOOLEAN;
-VAR len, ch, min: LONGINT;
+PROCEDURE DecodeChar(CONST str: ARRAY OF CHAR; VAR i: SIZE; VAR ucs: SIGNED32): BOOLEAN;
+VAR len, ch, min: SIGNED32;
 BEGIN
 	IF i < LEN(str) THEN
 		ch := LONG(ORD(str[i]));
@@ -55,8 +55,8 @@ BEGIN
 	RETURN FALSE
 END DecodeChar;
 
-PROCEDURE EncodeChar(ucs: LONGINT; VAR str: ARRAY OF CHAR; VAR i: SIZE): BOOLEAN;
-VAR len, j: SIZE; byte, mask, max: INTEGER; buf: ARRAY 6 OF CHAR;
+PROCEDURE EncodeChar(ucs: SIGNED32; VAR str: ARRAY OF CHAR; VAR i: SIZE): BOOLEAN;
+VAR len, j: SIZE; byte, mask, max: SIGNED16; buf: ARRAY 6 OF CHAR;
 BEGIN
 	len := LEN(str);
 
@@ -87,7 +87,7 @@ BEGIN
 	RETURN TRUE
 END EncodeChar;
 
-PROCEDURE UnicodetoUTF8(CONST ucs: ARRAY OF LONGINT; VAR utf8: ARRAY OF CHAR);
+PROCEDURE UnicodetoUTF8(CONST ucs: ARRAY OF SIGNED32; VAR utf8: ARRAY OF CHAR);
 VAR b: BOOLEAN; i, p, l: SIZE;
 BEGIN
 	b := TRUE; i := 0; p := 0; l := LEN(ucs);
@@ -98,7 +98,7 @@ BEGIN
 END UnicodetoUTF8;
 
 PROCEDURE UTF8toASCII(CONST src:  ARRAY OF CHAR; substitute: CHAR; VAR dst: ARRAY OF CHAR): SIZE;
-VAR count, i, len, pos: SIZE; ucs: LONGINT;
+VAR count, i, len, pos: SIZE; ucs: SIGNED32;
 BEGIN
 	len := LEN(dst); ucs := -1;
 	WHILE (ucs # 0) & DecodeChar(src, pos, ucs) & (i < len) DO
@@ -110,7 +110,7 @@ BEGIN
 END UTF8toASCII;
 
 PROCEDURE InitUTFCodeLength;
-VAR init : LONGINT;
+VAR init : SIGNED32;
 BEGIN
 	(* 0000 0000-0000 007F  0xxxxxxx *)
 	FOR init := 0 TO 7FH DO CodeLength[init] := 1X END;
@@ -129,7 +129,7 @@ BEGIN
 END InitUTFCodeLength;
 
 PROCEDURE NewString*(CONST str : ARRAY OF CHAR) : AsciiString;
-VAR l : LONGINT; s : AsciiString;
+VAR l : SIGNED32; s : AsciiString;
 BEGIN
 	l := Length(str) + 1;
 	NEW(s, l);
@@ -138,8 +138,8 @@ BEGIN
 END NewString;
 
 (* Returns the length of a string (from Strings.Mod) *)
-PROCEDURE Length*(CONST string: ARRAY OF CHAR) : LONGINT;
-VAR len: LONGINT;
+PROCEDURE Length*(CONST string: ARRAY OF CHAR) : SIGNED32;
+VAR len: SIGNED32;
 BEGIN
 	len := 0; WHILE (string[len] # 0X) DO INC(len) END;
 	RETURN len
@@ -147,7 +147,7 @@ END Length;
 
 (* Omitts leading and trailing whitespace of string s (from Strings.Mod) *)
 PROCEDURE TrimWS*(VAR s : ARRAY OF CHAR);
-VAR len, start, i : LONGINT;
+VAR len, start, i : SIGNED32;
 BEGIN
 	len := Length(s);
 	start := 0;

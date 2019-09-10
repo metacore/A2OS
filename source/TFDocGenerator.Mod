@@ -5,10 +5,10 @@ IMPORT
 
 VAR w* : Streams.Writer;
 	ml : MultiLogger.LogWindow;
-	indent : LONGINT;
+	indent : SIGNED32;
 
 PROCEDURE Indent;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO indent - 1 DO w.Char(09X) END
 END Indent;
@@ -278,7 +278,7 @@ END DumpStatementSequence;
 
 PROCEDURE DumpProcDecl(p : TS.ProcDecl);
 VAR s : TS.Statement;
-	cur : TS.NamedObject; i : LONGINT;
+	cur : TS.NamedObject; i : SIGNED32;
 BEGIN
 	IF p.preComment # NIL THEN
 		DumpComments(p.preComment);
@@ -304,7 +304,7 @@ BEGIN
 END DumpProcDecl;
 
 PROCEDURE DumpDeclarations(d : TS.Scope);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 	last, cur : TS.NamedObject;
 BEGIN
 	IF d = NIL THEN RETURN END;
@@ -339,7 +339,7 @@ END DumpDeclarations;
 
 
 PROCEDURE DumpConsts(d : TS.Scope);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 	last, cur : TS.NamedObject;
 BEGIN
 	IF d = NIL THEN RETURN END;
@@ -357,7 +357,7 @@ BEGIN
 END DumpConsts;
 
 PROCEDURE DocumentModule*(m : TS.Module);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 	comment : TS.Comment;
 BEGIN
 	NEW(ml, m.name^, w);

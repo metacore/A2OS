@@ -11,11 +11,11 @@ CONST
 
 TYPE
 	Service* = OBJECT	(** TCP service object - handles opening and closing of connections *)
-		VAR res: LONGINT; service, client: TCP.Connection; root, agent: Agent; new: NewAgent;
+		VAR res: SIGNED32; service, client: TCP.Connection; root, agent: Agent; new: NewAgent;
 
 		(** Start is called indirectly by OpenService. *)
 
-		PROCEDURE &Start*(port: LONGINT; new: NewAgent; VAR res: LONGINT);
+		PROCEDURE &Start*(port: SIGNED32; new: NewAgent; VAR res: SIGNED32);
 		BEGIN
 			NEW(service); service.Open(port, IP.NilAdr, TCP.NilPort, res);
 			IF res = Ok THEN
@@ -127,7 +127,7 @@ The following agent implements the TCP discard service.  This service accepts co
 
 TYPE
 	DiscardAgent = OBJECT (TCPServices.Agent)
-		VAR len, res: LONGINT; buf: ARRAY 4096 OF CHAR;
+		VAR len, res: SIGNED32; buf: ARRAY 4096 OF CHAR;
 
 	BEGIN {ACTIVE}
 		REPEAT

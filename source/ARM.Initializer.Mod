@@ -19,12 +19,12 @@ VAR
 		Wakup id for secondary processors: when executing SEV, all CPUs wakup. Only the CPU with id matching this field
 		will read and jump to "secondaryBootProc".
 	*)
-	secondaryProcId *: LONGINT;
+	secondaryProcId *: SIGNED32;
 
 	(** Configuration string base address *)
 	configBase *: ADDRESS;
 	(** Configuration string size *)
-	configSize *: LONGINT;
+	configSize *: SIGNED32;
 
 	(**
 		Initial kernel code: this code is placed at the beginning of the kernel image and is executed by all CPUs.

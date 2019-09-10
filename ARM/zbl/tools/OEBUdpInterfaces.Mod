@@ -15,7 +15,7 @@ TYPE
 
 		PROCEDURE & Init * (CONST param: ARRAY OF CHAR);
 		VAR
-			res: LONGINT;
+			res: SIGNED32;
 		BEGIN
 			InitInterface("UDP0", "UDP interface");
 			NEW(socket, Port, res);
@@ -35,7 +35,7 @@ TYPE
 		PROCEDURE Send * (session: OEBInterfaces.Session; CONST cmd: ARRAY OF CHAR): BOOLEAN;
 		VAR
 			c: ARRAY 128 OF CHAR;
-			res: LONGINT;
+			res: SIGNED32;
 		BEGIN
 			COPY(cmd, c);
 			Strings.AppendChar(c, OEBInterfaces.CR);
@@ -47,7 +47,7 @@ TYPE
 		PROCEDURE Receive * (VAR session: OEBInterfaces.Session; VAR msg: ARRAY OF CHAR): BOOLEAN;
 		VAR
 			ip: IP.Adr;
-			i, len, port, res: LONGINT;
+			i, len, port, res: SIGNED32;
 			new: Session;
 			adr: ARRAY 128 OF CHAR;
 		BEGIN
@@ -79,7 +79,7 @@ TYPE
 		PROCEDURE Start *;
 		VAR
 			cmd: ARRAY 32 OF CHAR;
-			res: LONGINT;
+			res: SIGNED32;
 		BEGIN
 			Start^;
 

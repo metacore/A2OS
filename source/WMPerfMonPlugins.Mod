@@ -92,7 +92,7 @@ TYPE
 
 		(** Minimum and maximum value the UpdateCounter procedure will return					*)
 		(** Defaults: min = 0; max = 0 (no max)														*)
-		min*, max* : LONGINT;
+		min*, max* : SIGNED32;
 
 		(** Should the diagram panel automatically detect a min/max value? 						*)
 		(** Defaults: autoMin = FALSE; autoMax = FALSE												*)
@@ -109,11 +109,11 @@ TYPE
 
 		(** The stats value will be computed as UpdateCounter() * scale								*)
 		(** Default: 0.0 (is interpreted as 1.0 -> don't scale) 											*)
-		scale* : REAL;
+		scale* : FLOAT32;
 
 		(** Minimum number of digits, number of fraction digits										*)
 		(** Defaults: minDigits = 0; fraction = 0;														*)
-		minDigits*, fraction* : LONGINT;
+		minDigits*, fraction* : SIGNED32;
 
 		(** Unit of the statistics values ("/s" will be appended automatically if 'perSecond' is TRUE)	*)
 		(** Default: "" (None)																		*)
@@ -149,10 +149,10 @@ TYPE
 
 		active : BOOLEAN; (* Update counter / display? *)
 
-		nbrOfClients : LONGINT;
+		nbrOfClients : SIGNED32;
 
 		currentDataset : Dataset; (* Most recent  averaged values *)
-		sample, nbrOfSamples, nbrOfValidSamples : LONGINT;
+		sample, nbrOfSamples, nbrOfValidSamples : SIGNED32;
 		samples : POINTER TO ARRAY OF Dataset;
 
 		milliTimer : Kernel.MilliTimer;
@@ -227,8 +227,8 @@ TYPE
 			datamodel.Acquire; datamodel.Reset; datamodel.Release;
 		END Reset;
 
-		PROCEDURE SetSampleBufferSize*(size : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE SetSampleBufferSize*(size : SIGNED32);
+		VAR i : SIGNED32;
 		BEGIN (* no concurrency allowed, Plugin.Update may not called at the same time *)
 			IF p.noSuperSampling THEN size := 1; END;
 			sample := 0; nbrOfValidSamples := 0;
@@ -243,7 +243,7 @@ TYPE
 		END Finalize;
 
 		PROCEDURE Update;
-		VAR i, dim: SIZE; dTime : LONGINT; sum: REAL;
+		VAR i, dim: SIZE; dTime : SIGNED32; sum: FLOAT32;
 		BEGIN
 			dTime := Kernel.Elapsed(milliTimer);
 			Kernel.SetTimer(milliTimer, 0);
@@ -294,7 +294,7 @@ TYPE
 
 		PROCEDURE EvaluateParameter(p : Parameter);
 		CONST Decrement = 35;
-		VAR r, g, b, a, round : LONGINT; i : SIZE;
+		VAR r, g, b, a, round : SIGNED32; i : SIZE;
 		BEGIN
 			IF (p.scale = 0) & (p.statsUnit = "")  THEN COPY(p.unit, p.statsUnit); END;
 			IF p.scale = 0 THEN p.scale := 1.0; END;
@@ -370,7 +370,7 @@ TYPE
 TYPE
 
 	(* Notifies listener about current CPU time usage of updater thread and changes of the plugin list *)
-	Notifier = PROCEDURE {DELEGATE} (events : SET; perf : REAL);
+	Notifier = PROCEDURE {DELEGATE} (events : SET; perf : FLOAT32);
 
 	Notifiers = POINTER TO RECORD
 		events : SET;
@@ -387,20 +387,20 @@ TYPE
 	 *)
 	 Updater = OBJECT
 	 VAR
-	 	sampleInterval- : LONGINT; (* ms *)
-	 	sampleBufferSize- : LONGINT; (* samples *)
-	 	screenInterval- : LONGINT; (* ms *)
+	 	sampleInterval- : SIGNED32; (* ms *)
+	 	sampleBufferSize- : SIGNED32; (* samples *)
+	 	screenInterval- : SIGNED32; (* ms *)
 
 	 	plugins : Plugin;
 	 	notifiers : Notifiers;
 
 	 	(* Fields related to CPU time consumption calculation of the Updater obj *)
-	 	lastCycles, lastTimestamp : HUGEINT;
-	 	sample : LONGINT; sampleBuffer : POINTER TO ARRAY OF REAL;
+	 	lastCycles, lastTimestamp : SIGNED64;
+	 	sample : SIGNED32; sampleBuffer : POINTER TO ARRAY OF FLOAT32;
 	 	me : Objects.Process; (* Process associated to this active object *)
 
 	 	milliTimer : Kernel.MilliTimer;
-		left, samplingLeft : LONGINT;
+		left, samplingLeft : SIGNED32;
 		screenTimer : Kernel.MilliTimer;
 		alive, dead : BOOLEAN;
 		timer : Kernel.Timer;
@@ -426,7 +426,7 @@ TYPE
 			END;
 		END RemoveListener;
 
-		PROCEDURE NotifyListeners*(events : SET; perf : REAL);
+		PROCEDURE NotifyListeners*(events : SET; perf : FLOAT32);
 		VAR n : Notifiers;
 		BEGIN
 			n := notifiers.next;
@@ -438,8 +438,8 @@ TYPE
 			END;
 		END NotifyListeners;
 
-		PROCEDURE GetByFullname*(CONST fullname : ARRAY OF CHAR; VAR index : LONGINT; VAR msg : ARRAY OF CHAR) : Plugin;
-		VAR plugin : Plugin; sa : Strings.StringArray; name : Name; i : LONGINT;
+		PROCEDURE GetByFullname*(CONST fullname : ARRAY OF CHAR; VAR index : SIGNED32; VAR msg : ARRAY OF CHAR) : Plugin;
+		VAR plugin : Plugin; sa : Strings.StringArray; name : Name; i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			msg := "";
 			sa := Strings.Split(fullname, ".");
@@ -536,7 +536,7 @@ TYPE
 
 		(** Will not return hidden plugins *)
 		PROCEDURE GetPlugins*() : PluginArray;
-		VAR p : Plugin; nbrOfPlugins, i : LONGINT; ca : PluginArray;
+		VAR p : Plugin; nbrOfPlugins, i : SIGNED32; ca : PluginArray;
 		BEGIN {EXCLUSIVE}
 			IF plugins # NIL THEN
 				(* determine size of array *)
@@ -575,7 +575,7 @@ TYPE
 			END;
 		END Show;
 
-		PROCEDURE SetIntervals*(VAR sampleInterval, sampleBufferSize, screenInterval : LONGINT);
+		PROCEDURE SetIntervals*(VAR sampleInterval, sampleBufferSize, screenInterval : SIGNED32);
 		VAR p : Plugin;
 		BEGIN {EXCLUSIVE}
 			IF sampleInterval < 1 THEN sampleInterval := 1; END;
@@ -672,13 +672,13 @@ TYPE
 
 		(* Calculates % CPU time consumed by this process. Updates field perf *)
 		PROCEDURE UpdatePerf;
-		VAR timestamp, cycles : HUGEINT; cpuCycles : Objects.CpuCyclesArray; i : LONGINT; value, sum : REAL;
+		VAR timestamp, cycles : SIGNED64; cpuCycles : Objects.CpuCyclesArray; i : SIGNED32; value, sum : FLOAT32;
 		BEGIN {EXCLUSIVE}
 			timestamp := Machine.GetTimer();
 			IF lastTimestamp # 0 THEN
 				Objects.GetCpuCycles(me, cpuCycles, TRUE);
 				FOR i := 0 TO LEN(cpuCycles)-1 DO INC (cycles , cpuCycles[i]); END;
-				value := SHORT(100.0 * LONGREAL(cycles - lastCycles) / LONGREAL(timestamp - lastTimestamp));
+				value := SHORT(100.0 * FLOAT64(cycles - lastCycles) / FLOAT64(timestamp - lastTimestamp));
 				sampleBuffer[sample MOD sampleBufferSize] := value; INC(sample);
 				lastCycles := cycles;
 				FOR i := 0 TO sampleBufferSize-1 DO sum := sum + sampleBuffer[i]; END;
@@ -747,10 +747,10 @@ VAR
 	@param clockrate: Estimated clockrate in MHz
 	@return: TRUE, if the estimation can be considered accurate, FALSE otherwise
 *)
-PROCEDURE EstimateCpuClockrate*(VAR clockrate : LONGINT) : BOOLEAN;
+PROCEDURE EstimateCpuClockrate*(VAR clockrate : SIGNED32) : BOOLEAN;
 VAR
 	timer : Kernel.Timer; milliTimer : Kernel.MilliTimer;
-	startTime, endTime, timeDiff : HUGEINT;
+	startTime, endTime, timeDiff : SIGNED64;
 	nbrOfGcRuns : SIZE;
 BEGIN
 	NEW(timer); nbrOfGcRuns := Heaps.Ngc;
@@ -772,17 +772,17 @@ END EstimateCpuClockrate;
 	@param mhz: CPU clockrate in MHz
 	@return: Number of milliseconds
 *)
-PROCEDURE CyclesToMs*(cycles : HUGEINT; mhz : LONGINT) : LONGINT;
+PROCEDURE CyclesToMs*(cycles : SIGNED64; mhz : SIGNED32) : SIGNED32;
 BEGIN
 	RETURN SHORT (ABS(cycles) DIV (1000*ABS(mhz)));
 END CyclesToMs;
 
 (** Convert number of milliseconds into string of the form d:h:m:s if m >= 1 or x.xxxs if m < 1*)
-PROCEDURE MsToString*(ms : LONGINT; VAR string : ARRAY OF CHAR);
+PROCEDURE MsToString*(ms : SIGNED32; VAR string : ARRAY OF CHAR);
 CONST Day=24*60*60*1000; Hour = 60*60*1000; Minute = 60*1000; Second = 1000; Millisecond = 1;
 
-	PROCEDURE Append(divisor : LONGINT; CONST unit : ARRAY OF CHAR);
-	VAR nbr : ARRAY 16 OF CHAR; val : LONGINT;
+	PROCEDURE Append(divisor : SIGNED32; CONST unit : ARRAY OF CHAR);
+	VAR nbr : ARRAY 16 OF CHAR; val : SIGNED32;
 	BEGIN
 		val := ms DIV divisor; ms := ms MOD divisor;
 		Strings.IntToStr(val, nbr); Strings.Append(string, nbr); Strings.Append(string, unit);

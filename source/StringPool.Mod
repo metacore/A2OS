@@ -164,7 +164,7 @@ VAR
 		CompareString > 0 <==> Str(index1) > Str(index2)
 	*)
 
-	PROCEDURE CompareString*(index1, index2: Index): WORD;
+	PROCEDURE CompareString*(index1, index2: Index): INTEGER;
 		VAR  ch: CHAR;
 	BEGIN
 		INC(ACompareString);
@@ -179,7 +179,7 @@ VAR
 		RETURN ORD(ch) - ORD(pool[index2])
 	END CompareString;
 
-	PROCEDURE CompareString0*(index: Index;  CONST str: ARRAY OF CHAR): WORD;
+	PROCEDURE CompareString0*(index: Index;  CONST str: ARRAY OF CHAR): INTEGER;
 		VAR  ch1, ch2: CHAR; i: SIZE;
 	BEGIN
 		INC(ACompareString0); i := 0;
@@ -194,7 +194,7 @@ VAR
 (*
 	optimized version (no index checks)
 
-	PROCEDURE CompareString0*(index: Index;  CONST str: ARRAY OF CHAR): WORD;
+	PROCEDURE CompareString0*(index: Index;  CONST str: ARRAY OF CHAR): INTEGER;
 		VAR  ch1, ch2: CHAR; adr1, adr2: ADDRESS; i: SIZE;
 	BEGIN
 		INC(ACompareString0);

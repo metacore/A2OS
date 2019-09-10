@@ -27,9 +27,9 @@ TYPE
 	END KillerMsg;
 
 	ContextMenuData = OBJECT
-	VAR val: LONGINT;
+	VAR val: SIGNED32;
 
-		PROCEDURE &New*(val: LONGINT);
+		PROCEDURE &New*(val: SIGNED32);
 		BEGIN
 			SELF.val := val;
 		END New;
@@ -41,9 +41,9 @@ TYPE
 	VAR
 		fields : SET; (* which fields should be changed *)
 		name : ARRAY 128 OF CHAR;
-		deltaSizeMode : LONGINT; (* Interpretation of deltasize field: Absolute, IncrementBy, DecrementBy *)
-		deltaSize : LONGINT;
-		fgColor, bgColor : LONGINT;
+		deltaSizeMode : SIGNED32; (* Interpretation of deltasize field: Absolute, IncrementBy, DecrementBy *)
+		deltaSize : SIGNED32;
+		fgColor, bgColor : SIGNED32;
 		style : SET;
 
 		PROCEDURE &Init*;
@@ -224,7 +224,7 @@ TYPE
 
 		PROCEDURE BuildList;
 		VAR styles : Texts.CharacterStyleArray;
-		i : LONGINT;
+		i : SIGNED32;
 		BEGIN
 			styles := Texts.GetCharacterStyleArray();
 			cList.model.Acquire;
@@ -456,7 +456,7 @@ TYPE
 		PROCEDURE GetStyle(sender, data : ANY);
 		VAR text : Texts.Text; from, to : Texts.TextPosition;
 			utilreader : Texts.TextReader; tempString : ARRAY 256 OF CHAR;
-			a, b: SIZE; ch, temp : LONGINT;
+			a, b: SIZE; ch, temp : SIGNED32;
 		BEGIN
 			IF Texts.GetLastSelection(text, from, to) THEN
 				text.AcquireWrite;
@@ -522,9 +522,9 @@ TYPE
 			cStyle : Texts.CharacterStyle;
 			a, b: SIZE;
 			style : SET;
-			fgColor, bgColor : LONGINT;
+			fgColor, bgColor : SIGNED32;
 			name, tempString: ARRAY 256 OF CHAR;
-			res: WORD; size : LONGINT;
+			res: INTEGER; size : SIGNED32;
 		BEGIN
 			IF Texts.GetLastSelection(text, from, to) THEN
 				(* create new AdHoc Style *)
@@ -645,7 +645,7 @@ TYPE
 	VAR
 		shown : BOOLEAN; popup: WMPopups.Popup;
 		oldPStyleName, oldCStyleName: ARRAY 256 OF CHAR;
-		tabColor, tabSelectedColor : LONGINT;
+		tabColor, tabSelectedColor : SIGNED32;
 		previewLabel, fontNotFound : WMStandardComponents.Label;
 		tabPanel, buttonPanel, pstylePanel, cstylePanel : WMStandardComponents.Panel;
 		pstyleButton, cstyleButton, button : WMStandardComponents.Button;
@@ -666,7 +666,7 @@ TYPE
 		VAR panel, mainPanel, gridPanel, propertyPanel : WMStandardComponents.Panel;
 			groupPanel : WMStandardComponents.GroupPanel;
 			label : WMStandardComponents.Label;
-			labelWidth : LONGINT;
+			labelWidth : SIGNED32;
 			resizerH: WMStandardComponents.Resizer;
 			manager : WM.WindowManager;
 			windowStyle : WM.WindowStyle;
@@ -937,7 +937,7 @@ TYPE
 			cStyles := Texts.GetCharacterStyleArray();
 		END New;
 
-		PROCEDURE Show*(x, y: LONGINT);
+		PROCEDURE Show*(x, y: SIGNED32);
 		BEGIN
 			LoadStyleList;
 			IF ~shown THEN	shown := TRUE;
@@ -965,7 +965,7 @@ TYPE
 		END Close;
 
 		PROCEDURE LoadStyleList;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			vc.Acquire;
 			pList.model.Acquire;
@@ -1081,8 +1081,8 @@ TYPE
 
 		PROCEDURE UpdateValueHandler(sender, data: ANY);
 		VAR tempString : ARRAY 64 OF CHAR;
-			tempLReal : LONGREAL;
-			tempInt : LONGINT; res : WORD;
+			tempLReal : FLOAT64;
+			tempInt : SIGNED32; res : INTEGER;
 			tempCharStyle : Texts.CharacterStyle;
 			tempFont : WMGraphics.Font;
 			tempEditor : WMEditors.Editor;
@@ -1222,7 +1222,7 @@ TYPE
 		END UpdateValueHandler;
 
 		PROCEDURE UpdateList;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			pList.model.Acquire;
 			i := 0;
@@ -1290,7 +1290,7 @@ TYPE
 
 		PROCEDURE ImportParagraphStyles(CONST filename: ARRAY OF CHAR);
 		VAR tempString : ARRAY 256 OF CHAR;
-			tempReal : LONGREAL;
+			tempReal : FLOAT64;
 			reader : Files.Reader;
 			parser : XMLParser.Parser;
 			scanner : XMLScanner.Scanner;
@@ -1348,7 +1348,7 @@ TYPE
 
 		PROCEDURE ApplyPHandler(sender, data: ANY);
 		VAR tempString : ARRAY 256 OF CHAR;
-			tempLReal: LONGREAL;
+			tempLReal: FLOAT64;
 			tempCharStyle : Texts.CharacterStyle;
 		BEGIN
 			(* retrieve tempvalues first.. *)
@@ -1431,7 +1431,7 @@ TYPE
 				newCStyle.scaleHorizontal := FP1616.FloatToFixp(100.0);
 				newCStyle.scaleVertical := FP1616.FloatToFixp(100.0);
 				newCStyle.color := 0000000FFH;
-				newCStyle.bgColor := LONGINT(0FFFFFF00H);
+				newCStyle.bgColor := SIGNED32(0FFFFFF00H);
 			ELSE
 				(* copy selected style *)
 				COPY(currentCStyle.family, newCStyle.family);
@@ -1460,7 +1460,7 @@ TYPE
 		END ExportCHandler;
 
 		PROCEDURE ExportCharacterStyles(CONST filename: ARRAY OF CHAR);
-		VAR i : LONGINT; style : SET;
+		VAR i : SIGNED32; style : SET;
 			tempString : ARRAY 256 OF CHAR;
 			w : Files.Writer; f : Files.File;
 			cStyle : Texts.CharacterStyle;
@@ -1519,8 +1519,8 @@ TYPE
 
 		PROCEDURE ImportCharacterStyles(CONST filename: ARRAY OF CHAR);
 		VAR tempString : ARRAY 256 OF CHAR;
-			tempReal: LONGREAL;
-			tempInt: LONGINT; res: WORD;
+			tempReal: FLOAT64;
+			tempInt: SIGNED32; res: INTEGER;
 			reader : Files.Reader;
 			parser : XMLParser.Parser;
 			scanner : XMLScanner.Scanner;
@@ -1578,7 +1578,7 @@ TYPE
 		END ImportCharacterStyles;
 
 		PROCEDURE RemoveCHandler(sender, data: ANY);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			Texts.RemoveCharacterStyle(currentCStyle);
 			cList.model.Acquire;
@@ -1598,8 +1598,8 @@ TYPE
 
 		PROCEDURE ApplyCHandler(sender, data: ANY);
 		VAR tempString : ARRAY 256 OF CHAR;
-			tempLReal: LONGREAL;
-			tempInt : LONGINT; res: WORD;
+			tempLReal: FLOAT64;
+			tempInt : SIGNED32; res: INTEGER;
 			tempFont : WMGraphics.Font;
 		BEGIN
 			(* retrieve tempvalues first for those who didn't press enter after changing a value... *)
@@ -1789,12 +1789,12 @@ TYPE
 	END StyleEditor;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 	ctxAlignLeft, ctxAlignCenter, ctxAlignRight, ctxAlignJustified : ContextMenuData;
 	ctxRegular, ctxBold, ctxItalic, ctxBoldItalic : ContextMenuData;
 
-PROCEDURE CreateStyleName(CONST fontname : ARRAY OF CHAR; style : SET; size : SIZE; fgColor, bgColor : LONGINT; VAR name : ARRAY OF CHAR);
-VAR string : ARRAY 32 OF CHAR; styleInt : LONGINT;
+PROCEDURE CreateStyleName(CONST fontname : ARRAY OF CHAR; style : SET; size : SIZE; fgColor, bgColor : SIGNED32; VAR name : ARRAY OF CHAR);
+VAR string : ARRAY 32 OF CHAR; styleInt : SIGNED32;
 BEGIN
 	(* create AdHoc Name *)
 	COPY("AdHoc", name); Strings.Append(name, " ");
@@ -1822,7 +1822,7 @@ BEGIN
 END EnsureAttribute;
 
 (* Actually, this is a hack... but for now, do it.  *)
-PROCEDURE GetNewSize(CONST fontname : ARRAY OF CHAR; mode, value: LONGINT; currentSize : SIZE; VAR newSize : SIZE);
+PROCEDURE GetNewSize(CONST fontname : ARRAY OF CHAR; mode, value: SIGNED32; currentSize : SIZE; VAR newSize : SIZE);
 BEGIN
 	ASSERT((mode = Absolute) OR (mode = IncrementBy) OR (mode = DecrementBy));
 	IF (mode = Absolute) THEN
@@ -1955,7 +1955,7 @@ END Change;
 
 (* Set the font size of the currently selected text either relativ or absolute *)
 PROCEDURE SetFontSize*(context : Commands.Context); (** ("Absolute"|"IncrementBy" |"DecrementBy") [value] ~*)
-VAR changeInfo : ChangeInfo; modeStr : ARRAY 16 OF CHAR; mode, value : LONGINT;
+VAR changeInfo : ChangeInfo; modeStr : ARRAY 16 OF CHAR; mode, value : SIGNED32;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(modeStr);
 	context.arg.SkipWhitespace; context.arg.Int(value, FALSE);
@@ -1996,7 +1996,7 @@ END SetFontStyle;
 
 (** Set the font color of the currently selected text. If not parameter is specified, fgColor is black, bgColor is unchanged *)
 PROCEDURE SetFontColor*(context : Commands.Context); (** [fgColor] [bgColor] ~ *)
-VAR fgColor, bgColor : LONGINT; changeInfo : ChangeInfo;
+VAR fgColor, bgColor : SIGNED32; changeInfo : ChangeInfo;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.Int(fgColor, TRUE);
 	context.arg.SkipWhitespace; context.arg.Int(bgColor, TRUE);

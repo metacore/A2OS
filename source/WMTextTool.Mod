@@ -29,8 +29,8 @@ TYPE
 	VAR
 		name : ARRAY 128 OF CHAR; 	(* font name *)
 		fgColor, bgColor : WMGraphics.Color;		(* foreground and background color *)
-		deltaSize : LONGINT;			(* new font size, interpretation depends on deltaSizeMode field *)
-		deltaSizeMode : LONGINT;		(* Absolute, IncrementBy or DecrementBy *)
+		deltaSize : SIGNED32;			(* new font size, interpretation depends on deltaSizeMode field *)
+		deltaSizeMode : SIGNED32;		(* Absolute, IncrementBy or DecrementBy *)
 		style : SET;						(* font style *)
 		fields : SET;						(* What should be changed? *)
 	END ChangeInfo;
@@ -219,7 +219,7 @@ TYPE
 		VAR
 			text : Texts.Text; from, to : Texts.TextPosition;
 			utilreader : Texts.TextReader; tempString : ARRAY 256 OF CHAR;
-			a, b: SIZE; ch : LONGINT;
+			a, b: SIZE; ch : SIGNED32;
 		BEGIN
 			IF Texts.GetLastSelection(text, from, to) THEN
 				text.AcquireWrite;
@@ -313,7 +313,7 @@ TYPE
 		VAR
 			changeInfo : ChangeInfo;
 			string: ARRAY 32 OF CHAR;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			NEW(changeInfo);
 			IF (famCheck.state.Get() = 1) THEN
@@ -418,7 +418,7 @@ TYPE
 		END BGColorPopupHandler;
 
 		PROCEDURE UpdateColors(sender, data : ANY);
-		VAR colorString : ARRAY 16 OF CHAR; caption : ARRAY 2 OF CHAR;  color: LONGINT; res: WORD;
+		VAR colorString : ARRAY 16 OF CHAR; caption : ARRAY 2 OF CHAR;  color: SIGNED32; res: INTEGER;
 		BEGIN
 			colorEdit.GetAsString(colorString);
 			Strings.HexStrToInt(colorString, color, res);
@@ -441,7 +441,7 @@ TYPE
 		END Close;
 
 		PROCEDURE LoadData(elem: XML.Element);
-		VAR i: LONGINT; str: ARRAY 128 OF CHAR;
+		VAR i: SIGNED32; str: ARRAY 128 OF CHAR;
 		BEGIN
 			WMRestorable.LoadLongint(elem, "famCheck", i); famCheck.state.Set(i);
 			WMRestorable.LoadLongint(elem, "sizeCheck", i); sizeCheck.state.Set(i);
@@ -500,10 +500,10 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 (* Actually, this is a hack... but for now, do it.  *)
-PROCEDURE GetNewSize(CONST fontname : ARRAY OF CHAR; mode, value : LONGINT; currentSize : SIZE; VAR newSize : SIZE);
+PROCEDURE GetNewSize(CONST fontname : ARRAY OF CHAR; mode, value : SIGNED32; currentSize : SIZE; VAR newSize : SIZE);
 BEGIN
 	ASSERT((mode = Absolute) OR (mode = IncrementBy) OR (mode = DecrementBy));
 	IF (mode = Absolute) THEN
@@ -608,7 +608,7 @@ END ApplyChange;
 
 (* Set the font size of the currently selected text either relativ or absolute *)
 PROCEDURE SetFontSize*(context : Commands.Context); (** ("Absolute"|"IncrementBy" |"DecrementBy") [value] ~*)
-VAR changeInfo : ChangeInfo; modeStr : ARRAY 16 OF CHAR; mode, value : LONGINT;
+VAR changeInfo : ChangeInfo; modeStr : ARRAY 16 OF CHAR; mode, value : SIGNED32;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(modeStr);
 	context.arg.SkipWhitespace; context.arg.Int(value, FALSE);
@@ -649,7 +649,7 @@ END SetFontStyle;
 
 (** Set the font color of the currently selected text. If not parameter is specified, fgColor is black, bgColor is unchanged *)
 PROCEDURE SetFontColor*(context : Commands.Context); (** [fgColor] [bgColor] ~ *)
-VAR fgColor, bgColor : LONGINT; changeInfo : ChangeInfo;
+VAR fgColor, bgColor : SIGNED32; changeInfo : ChangeInfo;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.Int(fgColor, TRUE);
 	context.arg.SkipWhitespace; context.arg.Int(bgColor, TRUE);
@@ -675,7 +675,7 @@ BEGIN
 END SetFontName;
 
 PROCEDURE CountWords*(context : Commands.Context);
-VAR wordCount : LONGINT; ch : CHAR;
+VAR wordCount : SIGNED32; ch : CHAR;
 
 	PROCEDURE SkipWord(r : Streams.Reader);
 	VAR ch : CHAR;
@@ -699,7 +699,7 @@ BEGIN
 END CountWords;
 
 PROCEDURE CountLines*(context : Commands.Context);
-VAR nofLines : LONGINT; ch : CHAR;
+VAR nofLines : SIGNED32; ch : CHAR;
 BEGIN
 	nofLines := 1;
 	REPEAT
@@ -710,7 +710,7 @@ BEGIN
 END CountLines;
 
 PROCEDURE CountCharacters*(context : Commands.Context);
-VAR nofCharacters : LONGINT; ch : CHAR;
+VAR nofCharacters : SIGNED32; ch : CHAR;
 BEGIN
 	nofCharacters := 0;
 	REPEAT

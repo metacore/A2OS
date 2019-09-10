@@ -17,7 +17,7 @@ CONST
 									paranoid = false expects correct metadata and correct settings of untraced variables
 									moreover, it should improve GC mark speed *)
 
-	DebugValue = LONGINT(0DEADDEADH);	(* set non-0 to clear free storage to this value *)
+	DebugValue = SIGNED32(0DEADDEADH);	(* set non-0 to clear free storage to this value *)
 
 	Stats* = TRUE;					(* maintain statistical counters *)
 
@@ -108,11 +108,11 @@ TYPE
 	ProtRecBlock* = POINTER TO ProtRecBlockDesc;
 	ProtRecBlockU = POINTER {UNSAFE,UNTRACED} TO ProtRecBlockDesc;
 	ProtRecBlockDesc* = RECORD  (RecordBlockDesc)
-		count*: LONGINT;
+		count*: SIGNED32;
 		locked*: BOOLEAN;
 		awaitingLock*, awaitingCond*: ProcessQueue;
 		lockedBy*: ANY;
-		waitingPriorities*: ARRAY NumPriorities OF LONGINT;
+		waitingPriorities*: ARRAY NumPriorities OF SIGNED32;
 		lock*: ANY; (* generic implementation slot -- used by LinuxAos *)
 	END;
 
@@ -208,19 +208,19 @@ VAR
 
 	(** Memory allocation statistics *)
 	Nnew- : SIZE;			(** Number of times NewBlock has been called since system startup *)
-	NnewBytes- : HUGEINT;		(** Number of bytes allocated by NewBlock since system startup *)
+	NnewBytes- : SIGNED64;		(** Number of bytes allocated by NewBlock since system startup *)
 
 	(** Garbage collection statistics *)
 	Ngc- : SIZE; 			(** Number of GC cycles since system startup *)
 
 	(** Statistics considering the last GC cyle *)
 	Nmark-, Nmarked-, NfinalizeAlive-, NfinalizeDead-: SIZE;
-	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns- : HUGEINT;
-	NgcSweeps-, NgcSweepTime-, NgcSweepMax-: HUGEINT;
+	NgcCyclesMark-, NgcCyclesLastRun-, NgcCyclesMax-, NgcCyclesAllRuns- : SIGNED64;
+	NgcSweeps-, NgcSweepTime-, NgcSweepMax-: SIGNED64;
 
 	gcStatus*: GCStatus;
 
-	GCType*: WORD;
+	GCType*: INTEGER;
 	trace-: BOOLEAN;
 
 	allocationLogger-: PROCEDURE(p: ANY);
@@ -402,7 +402,7 @@ VAR
 	lastFreeBlockSize: ADDRESS;
 	block : HeapBlockU ; freeBlock, lastFreeBlock: FreeBlockU;
 	blockMark: SIZE; blockSize: SIZE;
-	time1, time2: HUGEINT;
+	time1, time2: SIGNED64;
 CONST FreeBlockHeaderSize = SIZEOF(FreeBlockDesc) + BlockHeaderSize;
 CONST StrongChecks = FALSE;
 BEGIN{UNCHECKED}
@@ -763,7 +763,7 @@ END CleanupModuleFinalizers;
 (* interruptible garbage collector for native A2 *)
 PROCEDURE CollectGarbage*(root : RootObject);
 VAR
-	time1, time2: HUGEINT;
+	time1, time2: SIGNED64;
 BEGIN
 	(* do never use any low level locks as the garbage collector process has a very high priority and may thus be blocked by lower level processes -> potential deadlock *)
 	(*! Do not use windows functionality such as  trace here in general -- can lead to deadlock when stopped processes are in writing to a file *)
@@ -840,7 +840,7 @@ VAR throughput* := 0 : SIZE;
 
 (* NewBlock - Allocate a heap block. {(size MOD BlockSize = 0)}. Caller must hold Heap lock. *)
 PROCEDURE NewBlock(size: SIZE): ADDRESS;
-VAR try: WORD; p: FreeBlock; freeBlock : FreeBlockU; memBlock {UNTRACED}: Machine.MemoryBlock;
+VAR try: INTEGER; p: FreeBlock; freeBlock : FreeBlockU; memBlock {UNTRACED}: Machine.MemoryBlock;
 	beginHeapBlockAdr, endHeapBlockAdr: ADDRESS;
 BEGIN
 	try := 1;

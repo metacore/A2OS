@@ -147,21 +147,21 @@ TYPE
 		wDelay *,
 		dwMaxVideoFrameSize *,
 		dwMaxPayloadTransferSize *,
-		dwClockFrequency *: LONGINT;
+		dwClockFrequency *: SIGNED32;
 		bmFramingInfo *: SET;
 		bPreferedVersion *,
 		bMinVersion *,
 		bMaxVersion *,
 		bUsage *,
-		bBitDepthLuma *: LONGINT;
+		bBitDepthLuma *: SIGNED32;
 		bmSettings *: SET;
-		bMaxNumberOfRefFramesPlus1 *: LONGINT;
+		bMaxNumberOfRefFramesPlus1 *: SIGNED32;
 		bmRateControlModes *: SET;
 		bmLayoutPerStream *: ARRAY 2 OF SET;
 	END;
 
 	Header = RECORD
-		pt, scr: LONGINT;
+		pt, scr: SIGNED32;
 		id, eof, psb, still, error, eoh: BOOLEAN;
 		ptPresent, scrPresent: BOOLEAN;
 	END;
@@ -187,10 +187,10 @@ TYPE
 
 		(* Send a control request to 'unit' (interface if unit = 0) to do a 'type' operationon the control seclector 'selector'. It uses buffer and len
 		 * to do the transfer. *)
-		PROCEDURE ControlRequest * (type, selector, unit: LONGINT; VAR buffer: ARRAY OF CHAR; len: LONGINT);
+		PROCEDURE ControlRequest * (type, selector, unit: SIGNED32; VAR buffer: ARRAY OF CHAR; len: SIGNED32);
 		VAR
 			requestType: SET;
-			request, value, index: LONGINT;
+			request, value, index: SIGNED32;
 			error: ARRAY 1 OF CHAR;
 		BEGIN
 			IF unit = 0 THEN
@@ -246,7 +246,7 @@ TYPE
 		inputHeader -: UsbVideoDesc.VSInputHeaderDesc;
 		formats -: POINTER TO ARRAY OF UsbVideoDesc.VSFormatDesc;
 		samples: Sample;
-		status: LONGINT;
+		status: SIGNED32;
 		stream: BOOLEAN;
 		params: POINTER TO ProbeCommitCtl;
 
@@ -297,9 +297,9 @@ TYPE
 		PROCEDURE Disconnect *;
 		END Disconnect;
 
-		PROCEDURE Probe (type: LONGINT; set: BOOLEAN; VAR params: ARRAY 48 OF CHAR);
+		PROCEDURE Probe (type: SIGNED32; set: BOOLEAN; VAR params: ARRAY 48 OF CHAR);
 			VAR
-				request: LONGINT;
+				request: SIGNED32;
 		BEGIN
 			IF set THEN
 				request := SetCur
@@ -310,7 +310,7 @@ TYPE
 			KernelLog.String("Probe:	"); KernelLog.Int(status, 0); KernelLog.String("	"); KernelLog.Int(controlDriver.status, 0); KernelLog.Ln
 		END Probe;
 
-		PROCEDURE Commit (type: LONGINT; VAR params: ARRAY 48 OF CHAR);
+		PROCEDURE Commit (type: SIGNED32; VAR params: ARRAY 48 OF CHAR);
 		BEGIN
 			ControlRequest(SetCur, type, params, 34(*48*));
 			KernelLog.String("Commit:	"); KernelLog.Int(status, 0); KernelLog.String("	"); KernelLog.Int(controlDriver.status, 0); KernelLog.Ln
@@ -354,10 +354,10 @@ TYPE
 		END NegotiateStill;
 
 		(** Send a control request to the streaming interface. *)
-		PROCEDURE ControlRequest * (type, selector: LONGINT; VAR buffer: ARRAY OF CHAR; len: LONGINT);
+		PROCEDURE ControlRequest * (type, selector: SIGNED32; VAR buffer: ARRAY OF CHAR; len: SIGNED32);
 		VAR
 			requestType: SET;
-			request, value, index: LONGINT;
+			request, value, index: SIGNED32;
 			error: ARRAY 1 OF CHAR;
 		BEGIN
 			(* Interface request *)
@@ -382,9 +382,9 @@ TYPE
 		END ControlRequest;
 
 		(** Provides a stream for reading video or still images in the selected format *)
-		PROCEDURE Receive * (VAR buf: ARRAY OF CHAR;  ofs, size, min: LONGINT;  VAR len, res: LONGINT);
+		PROCEDURE Receive * (VAR buf: ARRAY OF CHAR;  ofs, size, min: SIGNED32;  VAR len, res: SIGNED32);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			len := 0;
 			WHILE (samples # NIL) & (len < size) DO
@@ -420,11 +420,11 @@ VAR
 	frame: POINTER TO ARRAY OF CHAR;
 	buf: ARRAY Size + 13 * 12 OF CHAR;
 	headers: ARRAY 20 OF RECORD
-		pos, size: LONGINT
+		pos, size: SIGNED32
 	END;
 	t: Kernel.MilliTimer;
 
-	PROCEDURE ReadProbeCommitCtl (CONST buffer: ARRAY OF CHAR; pos: LONGINT; VAR ctl: ProbeCommitCtl);
+	PROCEDURE ReadProbeCommitCtl (CONST buffer: ARRAY OF CHAR; pos: SIGNED32; VAR ctl: ProbeCommitCtl);
 	BEGIN
 		ASSERT(LEN(buffer) - pos >= 48);
 		ctl.bmHint := SYSTEM.VAL(SET, ORD(buffer[pos])); INC(pos);
@@ -451,10 +451,10 @@ VAR
 		ctl.bmLayoutPerStream[1] := SYSTEM.VAL(SET, ORD(buffer[pos]) + ORD(buffer[pos + 1]) * 100H + ORD(buffer[pos + 2]) * 10000H + ORD(buffer[pos + 3]) * 1000000H); INC(pos, 4);
 	END ReadProbeCommitCtl;
 
-	PROCEDURE WriteProbeCommitCtl (VAR buffer: ARRAY OF CHAR; pos: LONGINT; CONST ctl: ProbeCommitCtl);
+	PROCEDURE WriteProbeCommitCtl (VAR buffer: ARRAY OF CHAR; pos: SIGNED32; CONST ctl: ProbeCommitCtl);
 	BEGIN
 		ASSERT(LEN(buffer) - pos >= 48);
-		buffer[pos] := CHR(SYSTEM.VAL(LONGINT, ctl.bmHint) MOD 100H); INC(pos);
+		buffer[pos] := CHR(SYSTEM.VAL(SIGNED32, ctl.bmHint) MOD 100H); INC(pos);
 		buffer[pos] := CHR(ctl.bFormatIndex MOD 100H); INC(pos);
 		buffer[pos] := CHR(ctl.bFrameIndex MOD 100H); INC(pos);
 		buffer[pos] := CHR(ctl.dwFrameInterval MOD 100H);
@@ -479,24 +479,24 @@ VAR
 		buffer[pos + 1] := CHR((ctl.dwMaxPayloadTransferSize DIV 100H) MOD 100H);
 		buffer[pos + 2] := CHR((ctl.dwMaxPayloadTransferSize DIV 10000H) MOD 100H);
 		buffer[pos + 3] := CHR((ctl.dwMaxPayloadTransferSize  DIV 1000000H) MOD 100H); INC(pos, 4);
-		buffer[pos] := CHR(SYSTEM.VAL(LONGINT, ctl.bmFramingInfo) MOD 100H); INC(pos);
+		buffer[pos] := CHR(SYSTEM.VAL(SIGNED32, ctl.bmFramingInfo) MOD 100H); INC(pos);
 		buffer[pos] := CHR(ctl.bPreferedVersion MOD 100H); INC(pos);
 		buffer[pos] := CHR(ctl.bMinVersion MOD 100H); INC(pos);
 		buffer[pos] := CHR(ctl.bMaxVersion MOD 100H); INC(pos);
 		buffer[pos] := CHR(ctl.bUsage MOD 100H); INC(pos);
 		buffer[pos] := CHR(ctl.bBitDepthLuma MOD 100H); INC(pos);
-		buffer[pos] := CHR(SYSTEM.VAL(LONGINT, ctl.bmSettings) MOD 100H); INC(pos);
+		buffer[pos] := CHR(SYSTEM.VAL(SIGNED32, ctl.bmSettings) MOD 100H); INC(pos);
 		buffer[pos] := CHR(ctl.bMaxNumberOfRefFramesPlus1 MOD 100H); INC(pos);
-		buffer[pos] := CHR(SYSTEM.VAL(LONGINT, ctl.bmRateControlModes) MOD 100H);
-		buffer[pos + 1] := CHR((SYSTEM.VAL(LONGINT, ctl.bmRateControlModes) DIV 100H) MOD 100H); INC(pos, 2);
-		buffer[pos] := CHR(SYSTEM.VAL(LONGINT, ctl.bmLayoutPerStream[0]) MOD 100H);
-		buffer[pos + 1] := CHR((SYSTEM.VAL(LONGINT, ctl.bmLayoutPerStream[0]) DIV 100H) MOD 100H);
-		buffer[pos + 2] := CHR((SYSTEM.VAL(LONGINT, ctl.bmLayoutPerStream[0]) DIV 10000H) MOD 100H);
-		buffer[pos + 3] := CHR((SYSTEM.VAL(LONGINT, ctl.bmLayoutPerStream[0]) DIV 1000000H) MOD 100H); INC(pos, 4);
-		buffer[pos] := CHR(SYSTEM.VAL(LONGINT, ctl.bmLayoutPerStream[1]) MOD 100H);
-		buffer[pos + 1] := CHR((SYSTEM.VAL(LONGINT, ctl.bmLayoutPerStream[1]) DIV 100H) MOD 100H);
-		buffer[pos + 2] := CHR((SYSTEM.VAL(LONGINT, ctl.bmLayoutPerStream[1]) DIV 10000H) MOD 100H);
-		buffer[pos + 3] := CHR((SYSTEM.VAL(LONGINT, ctl.bmLayoutPerStream[1]) DIV 1000000H) MOD 100H); INC(pos, 4);
+		buffer[pos] := CHR(SYSTEM.VAL(SIGNED32, ctl.bmRateControlModes) MOD 100H);
+		buffer[pos + 1] := CHR((SYSTEM.VAL(SIGNED32, ctl.bmRateControlModes) DIV 100H) MOD 100H); INC(pos, 2);
+		buffer[pos] := CHR(SYSTEM.VAL(SIGNED32, ctl.bmLayoutPerStream[0]) MOD 100H);
+		buffer[pos + 1] := CHR((SYSTEM.VAL(SIGNED32, ctl.bmLayoutPerStream[0]) DIV 100H) MOD 100H);
+		buffer[pos + 2] := CHR((SYSTEM.VAL(SIGNED32, ctl.bmLayoutPerStream[0]) DIV 10000H) MOD 100H);
+		buffer[pos + 3] := CHR((SYSTEM.VAL(SIGNED32, ctl.bmLayoutPerStream[0]) DIV 1000000H) MOD 100H); INC(pos, 4);
+		buffer[pos] := CHR(SYSTEM.VAL(SIGNED32, ctl.bmLayoutPerStream[1]) MOD 100H);
+		buffer[pos + 1] := CHR((SYSTEM.VAL(SIGNED32, ctl.bmLayoutPerStream[1]) DIV 100H) MOD 100H);
+		buffer[pos + 2] := CHR((SYSTEM.VAL(SIGNED32, ctl.bmLayoutPerStream[1]) DIV 10000H) MOD 100H);
+		buffer[pos + 3] := CHR((SYSTEM.VAL(SIGNED32, ctl.bmLayoutPerStream[1]) DIV 1000000H) MOD 100H); INC(pos, 4);
 	END WriteProbeCommitCtl;
 
 	PROCEDURE PrintParams (CONST p: ProbeCommitCtl);
@@ -527,7 +527,7 @@ VAR
 		KernelLog.String("	layout/stream (l):	"); KernelLog.Set(p.bmLayoutPerStream[1]); KernelLog.Ln;
 	END PrintParams;
 
-	PROCEDURE GetHeader (CONST hdr: ARRAY OF CHAR; pos: LONGINT; VAR h: Header);
+	PROCEDURE GetHeader (CONST hdr: ARRAY OF CHAR; pos: SIGNED32; VAR h: Header);
 	VAR
 		set: SET;
 	BEGIN
@@ -553,7 +553,7 @@ VAR
 		END
 	END GetHeader;
 
-	PROCEDURE PrintHeader (CONST hdr: ARRAY OF CHAR; pos: LONGINT; w: Streams.Writer);
+	PROCEDURE PrintHeader (CONST hdr: ARRAY OF CHAR; pos: SIGNED32; w: Streams.Writer);
 	VAR
 		set: SET;
 	BEGIN
@@ -593,7 +593,7 @@ VAR
 
 	PROCEDURE Probe(dev : Usbdi.UsbDevice; id : Usbdi.InterfaceDescriptor) : Usbdi.Driver;
 	VAR
-		i, j, count: LONGINT;
+		i, j, count: SIGNED32;
 		curr: Usbdi.UnknownDescriptor;
 		vc: UsbVideoDesc.VideoControlDesc;
 		ep: UsbVideoDesc.InterruptEndpointDesc;
@@ -700,7 +700,7 @@ VAR
 					FOR j := 0 TO id.alternateInterfaces[i].bNumEndpoints - 1 DO
 						KernelLog.String("	= Endpoint "); KernelLog.Int(j, 0); KernelLog.Ln;
 						KernelLog.String("		adr:				"); KernelLog.Int(id.alternateInterfaces[i].endpoints[j].bEndpointAddress, 0); KernelLog.Ln;
-						KernelLog.String("		attr:				"); KernelLog.Hex(SYSTEM.VAL(LONGINT, id.alternateInterfaces[i].endpoints[j].bmAttributes), -2); KernelLog.Ln;
+						KernelLog.String("		attr:				"); KernelLog.Hex(SYSTEM.VAL(SIGNED32, id.alternateInterfaces[i].endpoints[j].bmAttributes), -2); KernelLog.Ln;
 						KernelLog.String("		type:				"); KernelLog.Int(id.alternateInterfaces[i].endpoints[j].type, 0); KernelLog.Ln;
 						KernelLog.String("		max pkt size:	"); KernelLog.Int(id.alternateInterfaces[i].endpoints[j].wMaxPacketSize, 0); KernelLog.Ln;
 						KernelLog.String("		length:			"); KernelLog.Int(id.alternateInterfaces[i].endpoints[j](Usb.EndpointDescriptor).bLength, 0); KernelLog.Ln;
@@ -837,8 +837,8 @@ VAR
 	PROCEDURE Transfer *;
 	VAR
 		desc: ARRAY 9 OF CHAR;
-		i, j, count, max: LONGINT;
-		size: LONGINT;
+		i, j, count, max: SIGNED32;
+		size: SIGNED32;
 		t: Kernel.Timer;
 		f: Files.File;
 		w: Files.Writer;
@@ -899,8 +899,8 @@ VAR
 		desc: ARRAY 9 OF CHAR;
 		params: POINTER TO ProbeCommitCtl;
 		frame: POINTER TO ARRAY OF CHAR;
-		i, j, count, max: LONGINT;
-		size: LONGINT;
+		i, j, count, max: SIGNED32;
+		size: SIGNED32;
 		t: Kernel.Timer;
 		f: Files.File;
 		w: Files.Writer;
@@ -970,7 +970,7 @@ VAR
 
 	PROCEDURE FindHeaders * (context: Commands.Context);
 	VAR
-		i, j, n, l: LONGINT;
+		i, j, n, l: SIGNED32;
 		finished: BOOLEAN;
 	BEGIN
 		n := 0;
@@ -1025,7 +1025,7 @@ VAR
 
 	PROCEDURE Record * (context: Commands.Context);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		f: Files.File;
 		w: Files.Writer;
 	BEGIN
@@ -1070,7 +1070,7 @@ VAR
 		f: Files.File;
 		w: Files.Writer;
 		buf: POINTER TO ARRAY OF CHAR;
-		actual, i, j, n, ofs, size, status, tx: LONGINT;
+		actual, i, j, n, ofs, size, status, tx: SIGNED32;
 		id, start, stop, record: BOOLEAN;
 	BEGIN
 		size := 640 * 480 * 2;
@@ -1147,7 +1147,7 @@ VAR
 		f: Files.File;
 		w: Files.Writer;
 		buf: POINTER TO ARRAY OF CHAR;
-		actual, i, j, n, ofs, size, status, tx: LONGINT;
+		actual, i, j, n, ofs, size, status, tx: SIGNED32;
 		id, start, stop, record: BOOLEAN;
 	BEGIN
 		size := 640 * 480 * 2;
@@ -1246,7 +1246,7 @@ VAR
 		t: Kernel.MilliTimer;
 		f: Files.File;
 		w: Files.Writer;
-		actual, el, i, j, n, ofs, size, status, tx: LONGINT;
+		actual, el, i, j, n, ofs, size, status, tx: SIGNED32;
 		id, start, stop, record: BOOLEAN;
 		buf: POINTER TO ARRAY OF CHAR;
 	BEGIN
@@ -1355,7 +1355,7 @@ VAR
 	VAR
 		hdr: Header;
 		buf: POINTER TO ARRAY OF CHAR;
-		actual, i, j, n, ofs, size, status, tx: LONGINT;
+		actual, i, j, n, ofs, size, status, tx: SIGNED32;
 		id, start, stop, record: BOOLEAN;
 	BEGIN
 		tx := sdr.videoPipe.maxPacketSize * sdr.videoPipe(UsbHcdi.Pipe).mult;
@@ -1394,7 +1394,7 @@ VAR
 		f: Files.File;
 		w: Files.Writer;
 		buf: POINTER TO ARRAY OF CHAR;
-		actual, i, j, n, ofs, size, status, tx: LONGINT;
+		actual, i, j, n, ofs, size, status, tx: SIGNED32;
 		id, start, stop, record: BOOLEAN;
 	BEGIN
 		size := 120 * 160 * 2;
@@ -1458,7 +1458,7 @@ VAR
 
 	PROCEDURE Photo * (context: Commands.Context);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		t: Kernel.MilliTimer;
 	BEGIN
 		FOR i := 1 TO 60 DO
@@ -1498,7 +1498,7 @@ VAR
 
 BEGIN
 	KernelLog.String("UsbVideo@Body"); KernelLog.Ln;
-	TRACE(SIZEOF(ProbeCommitCtl), SIZEOF(SHORTINT), SIZEOF(INTEGER), SIZEOF(LONGINT), SIZEOF(HUGEINT));
+	TRACE(SIZEOF(ProbeCommitCtl), SIZEOF(SIGNED8), SIZEOF(SIGNED16), SIZEOF(SIGNED32), SIZEOF(SIGNED64));
 	Modules.InstallTermHandler(Cleanup);
 	Usbdi.drivers.Add(Probe, Name, Description, Priority);
 	NEW(frame, Size)

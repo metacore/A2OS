@@ -48,7 +48,7 @@ END hexize;
 
 PROCEDURE hexize2*(x,y: SREAL):SREAL;
 VAR
-	ix,jy: LONGINT;
+	ix,jy: SIGNED32;
 BEGIN
 	x := ABS(x); y := ABS(y);
 	ix := ENTIER(x); jy := ENTIER(y);

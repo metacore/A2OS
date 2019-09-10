@@ -47,7 +47,7 @@ TYPE
 	but using naive read-out functions. This is a skeleton only. If you want to use the
 	Parks and Miller, use vyRandParksMiller. *)
 
-PROCEDURE ParksMiller* (VAR s: LONGINT);
+PROCEDURE ParksMiller* (VAR s: SIGNED32);
 	(*= One step of Parks & Miller portable random number generator.
 	This is considered the minimal standard random number generator. *)
 CONST
@@ -70,12 +70,12 @@ BEGIN	Next(r);    RETURN r.seed(vyRanBase.tLongintSeed).val
 	(* better shift adjust: give preference to higher order bits *)
 END Get;
 
-PROCEDURE GetUniform (r: vyRanBase.tRandom): LONGREAL;
+PROCEDURE GetUniform (r: vyRanBase.tRandom): FLOAT64;
 CONST (*a = 16807;*)	m = 2147483647;      	(*q = m DIV a;	r = m MOD a; *)scalefact = 1.0D0 / m;
 BEGIN	 Next(r);   	RETURN r.seed(vyRanBase.tLongintSeed).val * scalefact
 END GetUniform;
 
-PROCEDURE GetL (r: vyRanBase.tRandom;      top: LONGINT): LONGINT;
+PROCEDURE GetL (r: vyRanBase.tRandom;      top: SIGNED32): SIGNED32;
 CONST (*a = 16807;	m = 2147483647; 	q = m DIV a;	r = m MOD a; scalefact=1.0D0/m;*)
 	m = 2147483647;    (*= = 2^31 -1 *)
 BEGIN	 (* better break if top is out of range *)
@@ -87,20 +87,20 @@ PROCEDURE Reset (r: vyRanBase.tRandom);  	(* jb 6.3.01 *)
 CONST
 	m = 2147483647;    (*= = 2^31 -1 *)
 VAR
-	v: LONGINT;
+	v: SIGNED32;
 BEGIN
 	v := vyRanBase.DefaultLongSeed ();
-	IF v < 0 THEN DEC (v, MIN (LONGINT)) END;
+	IF v < 0 THEN DEC (v, MIN (SIGNED32)) END;
 	v := v MOD m;   IF v = 0 THEN v := 1 END;
 	r.seed (vyRanBase.tLongintSeed).val := v
 END Reset;
 
-PROCEDURE SumPSqr* (gen: vyRanBase.tRandom;   top: LONGINT): LONGREAL;
+PROCEDURE SumPSqr* (gen: vyRanBase.tRandom;   top: SIGNED32): FLOAT64;
 CONST
 	m = 2147483647;    (*= = 2^31 -1 *)
 	N = m - 1;
 VAR
-	k, t: LONGREAL;
+	k, t: FLOAT64;
 BEGIN
 	IF (top <= 0) OR (top >= m - 1) THEN RETURN 1 / top END;
 

@@ -95,7 +95,7 @@ CONST
 	PROCEDURE Random*( ): NbrRat.Rational;
 	VAR n, d: NbrInt64.Integer;  r: NbrRat.Rational;
 	BEGIN
-		n := NbrInt64.Long( MathInt.Random() );  d := NbrInt64.Long( MAX( LONGINT ) );
+		n := NbrInt64.Long( MathInt.Random() );  d := NbrInt64.Long( MAX( SIGNED32 ) );
 		NbrRat.Set( n, d, r );  RETURN r
 	END Random;
 

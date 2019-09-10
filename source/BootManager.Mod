@@ -11,7 +11,7 @@ IMPORT Commands, Files;
 PROCEDURE Split* (context: Commands.Context);
 VAR fileName: Files.FileName;
 	fi, fo, fo2 : Files.File; r : Files.Reader; w : Files.Writer;
-	count,i : LONGINT; ch : CHAR;
+	count,i : SIGNED32; ch : CHAR;
 
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String (fileName);

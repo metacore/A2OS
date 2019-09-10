@@ -17,12 +17,12 @@ CONST
 	Trace = FALSE;
 
 VAR
-	minX, minY, maxX, maxY: LONGINT;
+	minX, minY, maxX, maxY: SIGNED32;
 	input: Inputs.OberonInput;
 
 (** Returns the number of keystrokes in the keyboard input buffer. *)
-PROCEDURE Available*(): INTEGER;
-VAR num: INTEGER; break: BOOLEAN;
+PROCEDURE Available*(): SIGNED16;
+VAR num: SIGNED16; break: BOOLEAN;
 BEGIN
 	input.Available(num, break);
 	IF break THEN Display.Update; SYSTEM.HALT(13) END;
@@ -32,7 +32,7 @@ END Available;
 
 (** Reads the current mouse position x, y and the key state of the mouse buttons (also called keys). The mouse buttons are numbered from the right to the left as 0, 1, 2 (i.e. 1 is the middle mouse button). For example, when the left and middle
 buttons are pressed, keys will be set to {1, 2}. *)
-PROCEDURE Mouse*(VAR keys: SET; VAR x, y: INTEGER);
+PROCEDURE Mouse*(VAR keys: SET; VAR x, y: SIGNED16);
 BEGIN
 	IF Trace THEN KernelLog.String("Mouse") END;
 	IF x < minX THEN x := SHORT(minX) ELSIF x > maxX THEN x := SHORT(maxX) END;
@@ -59,7 +59,7 @@ BEGIN
 END Read;
 
 (** Returns the elapsed number of ticks since Oberon startup. *)
-PROCEDURE Time*(): LONGINT;
+PROCEDURE Time*(): SIGNED32;
 BEGIN
 	RETURN Kernel.GetTicks()
 END  Time;
@@ -73,7 +73,7 @@ END KeyState;
 
 (** Await - Wait delay TimeUnits or until next input event. *)
 
-PROCEDURE Await*(delay: LONGINT);
+PROCEDURE Await*(delay: SIGNED32);
 BEGIN
 	IF Trace THEN KernelLog.String("Await") END;
 	input.timer.Sleep(delay);
@@ -81,13 +81,13 @@ BEGIN
 END Await;
 
 (** Restricts the extent of the mouse coordinates returned by Mouse. *)
-PROCEDURE SetMouseLimits*(x, y, w, h: INTEGER);	(** non-portable *)
+PROCEDURE SetMouseLimits*(x, y, w, h: SIGNED16);	(** non-portable *)
 BEGIN
 	y := Display.Height-1 - y;
 	minX := x; minY := y; maxX := x+w; maxY := y+h
 END SetMouseLimits;
 
-PROCEDURE Init*(x: LONGINT);
+PROCEDURE Init*(x: SIGNED32);
 VAR p: Plugins.Plugin;
 BEGIN
 	IF x = 0BEH THEN	(* magic re-initialization *)

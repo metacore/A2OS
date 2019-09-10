@@ -8,13 +8,13 @@ IMPORT Int := NbrInt, Nbr := NbrRe, Vec := VecRe, Mtx := MtxRe, Errors := DataEr
 TYPE
 	(** For solving moderate sized linear systems of equations, even if the rank is less than the dimension. *)
 	Solver* = OBJECT (LinEq.Solver)
-	VAR rank, dim: LONGINT;
+	VAR rank, dim: SIGNED32;
 		mtxMag: Nbr.Real;
-		colPivot, rowPivot: POINTER TO ARRAY OF LONGINT;
+		colPivot, rowPivot: POINTER TO ARRAY OF SIGNED32;
 		lu: Mtx.Matrix;
 
 		PROCEDURE Decompose;
-		VAR i, j, k: LONGINT;  abs, adjustment, factor, maxCell, ratio: Nbr.Real;
+		VAR i, j, k: SIGNED32;  abs, adjustment, factor, maxCell, ratio: Nbr.Real;
 		BEGIN
 			dim := lu.rows;  NEW( colPivot, dim - 1 );  NEW( rowPivot, dim - 1 );
 			(* Perform total pivoting. *)
@@ -58,7 +58,7 @@ TYPE
 
 	(** Solves  Ax = b  for  x  given  b. *)
 		PROCEDURE Solve*( VAR b: Vec.Vector ): Vec.Vector;
-		VAR i, k: LONGINT;  adjustment, factor, mag, ratio, zero: Nbr.Real;  x: Vec.Vector;
+		VAR i, k: SIGNED32;  adjustment, factor, mag, ratio, zero: Nbr.Real;  x: Vec.Vector;
 		BEGIN
 			IF b # NIL THEN
 				IF dim = b.lenx THEN
@@ -108,7 +108,7 @@ TYPE
 
 	(** Computes the inverse of a square matrix A and returns A-1 if it exists; otherwise, it returns NIL. *)
 	PROCEDURE Invert*( VAR A: Mtx.Matrix ): Mtx.Matrix;
-	VAR i, k: LONGINT;  zero, one: Nbr.Real;  unit, soln: Vec.Vector;  inverse: Mtx.Matrix;  vecArray: Vec.Array;
+	VAR i, k: SIGNED32;  zero, one: Nbr.Real;  unit, soln: Vec.Vector;  inverse: Mtx.Matrix;  vecArray: Vec.Array;
 		mtxArray: Mtx.Array;  lu: Solver;
 	BEGIN
 		inverse := NIL;

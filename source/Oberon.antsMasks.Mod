@@ -29,32 +29,32 @@ IMPORT vyBase, antsArrayObjects,aM := antsMessages;
 
 	(* increase shift speed for masks *)
 
-	(* new idea: enum visible areas by INTEGER values. *)
+	(* new idea: enum visible areas by SIGNED16 values. *)
 
 CONST MAXSIZE = 256;
 TYPE
 	Mask* = OBJECT (* POINTER TO MaskDesc;
 	MaskDesc* = RECORD (vyBase.ObjDesc) *) (vyBase.Object)
 		(* probably not needed:
-		matrix = POINTER TO ARRAY OF ARRAY OF INTEGER;
+		matrix = POINTER TO ARRAY OF ARRAY OF SIGNED16;
 		*)
 		VAR
-		enum-: ARRAY MAXSIZE OF ARRAY 2 OF INTEGER;
+		enum-: ARRAY MAXSIZE OF ARRAY 2 OF SIGNED16;
 		contained: ARRAY MAXSIZE OF BOOLEAN;
 
 		(* that increases computing time, better avoid, ASSERT all numbers contained when checking consistency ! *)
-		enumsize-: INTEGER;
-		posy-, posx-: INTEGER;  (* mask position *)
+		enumsize-: SIGNED16;
+		posy-, posx-: SIGNED16;  (* mask position *)
 		on-: antsArrayObjects.tINTEGERObject;
-		Ax*, Ay*, Aw*, Ah*: LONGINT;
+		Ax*, Ay*, Aw*, Ah*: SIGNED32;
 		onA: antsArrayObjects.tINTEGERArray;
 
 		(* visible: POINTER TO ARRAY OF ARRAY OF BOOLEAN;
-		visx,visy: POINTER TO ARRAY OF INTEGER; vislen-: INTEGER;
+		visx,visy: POINTER TO ARRAY OF SIGNED16; vislen-: SIGNED16;
 		A: antsArrayObjects.tArray; wrong idea: Arrays do not belong to masks but masks belong to arrays -> define slot in Array ?
 		*)
-		(* size: INTEGER; limit: INTEGER;  *)
-		(* aw,ah,cx,cy: INTEGER; *)(* array characteristics , not needed*)
+		(* size: SIGNED16; limit: SIGNED16;  *)
+		(* aw,ah,cx,cy: SIGNED16; *)(* array characteristics , not needed*)
 
 PROCEDURE (*m: Mask*) mask* (A: vyBase.Object);
 BEGIN
@@ -63,8 +63,8 @@ BEGIN
 	SELF.Ax := 0;  SELF.Ay := 0;  SELF.Aw := SELF.on.w;  SELF.Ah := SELF.on.h
 END mask;
 
-PROCEDURE (*m: Mask*) vals* (VAR val: ARRAY OF INTEGER;  offset: LONGINT );
-	VAR i: LONGINT;
+PROCEDURE (*m: Mask*) vals* (VAR val: ARRAY OF SIGNED16;  offset: SIGNED32 );
+	VAR i: SIGNED32;
 BEGIN
 	FOR i := 0 TO SELF.enumsize - 1 DO
 		val[offset + i] := SELF.onA[(SELF.enum[i, 0] + SELF.posy) MOD SELF.Ah, (SELF.enum[i, 1] + SELF.posx) MOD SELF.Aw]
@@ -72,8 +72,8 @@ BEGIN
 END vals;
 
 
-PROCEDURE (*m: Mask*) vis* (y, x: INTEGER): BOOLEAN;
-	VAR i: INTEGER;
+PROCEDURE (*m: Mask*) vis* (y, x: SIGNED16): BOOLEAN;
+	VAR i: SIGNED16;
 BEGIN
 	FOR i := 0 TO SELF.enumsize - 1 DO
 		IF (SELF.contained[i]) & (SELF.enum[i, 0] = y) & (SELF.enum[i, 1] = x) THEN RETURN TRUE END
@@ -82,20 +82,20 @@ BEGIN
 END vis;
 
 (*
-PROCEDURE addvis (m: Mask; y,x: INTEGER);
+PROCEDURE addvis (m: Mask; y,x: SIGNED16);
 BEGIN
 SELF.visy[SELF.vislen] := y; SELF.visx[SELF.vislen] := x; INC(SELF.vislen);
 END addvis;
 *)
 
 
-PROCEDURE (*m: Mask*) add* ( y, x: INTEGER;  pos: INTEGER);
+PROCEDURE (*m: Mask*) add* ( y, x: SIGNED16;  pos: SIGNED16);
 BEGIN
 	Doadd(SELF, y, x, pos)
 END add;
 
 (*
-PROCEDURE  (*m: Mask*) val* (VAR y,x: INTEGER): INTEGER; (* replace by val procedure in Array ?? *)
+PROCEDURE  (*m: Mask*) val* (VAR y,x: SIGNED16): SIGNED16; (* replace by val procedure in Array ?? *)
 BEGIN
 HALT (101);
 (*
@@ -103,8 +103,8 @@ RETURN SELF.A[(SELF.cy+y) MOD SELF.ah,(SELF.cx+x) MOD SELF.aw];
 *)
 END val;
 
-PROCEDURE  (*m: Mask*) baseNPos* (VAR base,offset: LONGINT);
-VAR i:INTEGER; size: LONGINT;
+PROCEDURE  (*m: Mask*) baseNPos* (VAR base,offset: SIGNED32);
+VAR i:SIGNED16; size: SIGNED32;
 BEGIN
 (*
 i := 1;  size := 1;
@@ -118,7 +118,7 @@ END;
 END baseNPos;
 
 
-PROCEDURE  (*m: Mask*) setval* (val: INTEGER;  y,x: INTEGER);
+PROCEDURE  (*m: Mask*) setval* (val: SIGNED16;  y,x: SIGNED16);
 BEGIN
 HALT(102);
 (*
@@ -127,8 +127,8 @@ SELF.A[(SELF.cy+y) MOD SELF.ah,(SELF.cx+x) MOD SELF.aw]:= val;
 *)
 END setval;
 
-PROCEDURE (*m: Mask*) setvals* (VAR A: ARRAY OF INTEGER);
-VAR i: INTEGER;
+PROCEDURE (*m: Mask*) setvals* (VAR A: ARRAY OF SIGNED16);
+VAR i: SIGNED16;
 BEGIN
 HALT(103);
 (*
@@ -137,15 +137,15 @@ i := 0; WHILE i < SELF.vislen DO SELF.setval(A[i],SELF.visy[i],SELF.visx[i]);  I
 END setvals;
 
 
-PROCEDURE (*m: Mask*) vals* (VAR A: ARRAY OF INTEGER);
-VAR i: LONGINT;
+PROCEDURE (*m: Mask*) vals* (VAR A: ARRAY OF SIGNED16);
+VAR i: SIGNED32;
 BEGIN
 i := 0; WHILE i < SELF.vislen DO A[i] := SELF.val(SELF.visy[i],SELF.visx[i]); INC(i); END;
 END vals;
 *)
 
 PROCEDURE (*m: Mask*) init*;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	SELF.enumsize := 0;
 	FOR i := 0 TO MAXSIZE - 1 DO
@@ -177,12 +177,12 @@ SELF.ah := SHORT(o(antsArrayObjects.tObject).h);
 *)
 END applyTo;
 *)
-PROCEDURE (*m: Mask*) moveTo* (VAR y, x: INTEGER);
+PROCEDURE (*m: Mask*) moveTo* (VAR y, x: SIGNED16);
 BEGIN	SELF.posy := y;  SELF.posx := x
 END moveTo;
 
-PROCEDURE (*m: Mask*) valsAt* (VAR y, x: INTEGER;  VAR val: ARRAY OF INTEGER;  offset: LONGINT );
-	VAR i: LONGINT;
+PROCEDURE (*m: Mask*) valsAt* (VAR y, x: SIGNED16;  VAR val: ARRAY OF SIGNED16;  offset: SIGNED32 );
+	VAR i: SIGNED32;
 BEGIN
 	FOR i := 0 TO SELF.enumsize - 1 DO
 		val[offset + i] := SELF.onA[(SELF.enum[i, 0] + y) MOD SELF.Ah, (SELF.enum[i, 1] + x) MOD SELF.Aw]
@@ -190,7 +190,7 @@ BEGIN
 END valsAt;
 	END Mask;
 
-PROCEDURE Doadd (m: Mask;  y, x: INTEGER;  pos: INTEGER);
+PROCEDURE Doadd (m: Mask;  y, x: SIGNED16;  pos: SIGNED16);
 BEGIN
 	IF m.contained[pos] THEN HALT(101)
 	ELSIF m.vis(y, x) THEN HALT(102)

@@ -18,11 +18,11 @@ TYPE
 		alive : BOOLEAN;
 		timer : Kernel.Timer;
 		random : Random.Generator;
-		nofFrames, frame, step : LONGINT;
+		nofFrames, frame, step : SIGNED32;
 		movie : Raster.Image;
 		keyPressed : SET;
 
-		PROCEDURE &New*(movie : Raster.Image; frames, step : LONGINT);
+		PROCEDURE &New*(movie : Raster.Image; frames, step : SIGNED32);
 		BEGIN
 			bounds := Rectangles.MakeRect(0, 0, movie.width DIV frames, movie.height);
 			useAlpha := TRUE;
@@ -31,7 +31,7 @@ TYPE
 			nofFrames := frames; frame := 0; SELF.movie := movie; SELF.step := step;
 			NEW(timer);
 			posX := (posX+ step) MOD (Width * 2 + movie.width);
-			posY := random.Dice((Height - movie.height)(LONGINT) DIV 2);
+			posY := random.Dice((Height - movie.height)(SIGNED32) DIV 2);
 			manager := WM.GetDefaultManager();
 			manager.Add(posX, posY, SELF, {});
 		END New;
@@ -42,7 +42,7 @@ TYPE
 			opx := posX;
 			posX := (posX+ step) MOD (Width * 2 + movie.width);
 			IF ((step < 0) & (posX > opx)) OR ((step > 0) & (posX < opx)) THEN
-				posY := random.Dice((Height - movie.height)(LONGINT))
+				posY := random.Dice((Height - movie.height)(SIGNED32))
 			END;
 			frame := (frame + 1) MOD nofFrames;
 			manager.SetWindowPos(SELF, posX - movie.width, posY)
@@ -64,7 +64,7 @@ TYPE
 			END
 		END PointerUp;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : WORD);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : INTEGER);
 		BEGIN
 			IF movie # NIL THEN
 				IF (w = GetWidth()) & (h = GetHeight()) THEN
@@ -102,7 +102,7 @@ TYPE
 	END Bunny;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE IncCount;
 BEGIN {EXCLUSIVE}
@@ -127,7 +127,7 @@ BEGIN {EXCLUSIVE}
 	AWAIT(nofWindows = 0);
 END Free;
 
-PROCEDURE InternalInsert(CONST fname : ARRAY OF CHAR; frames, step : LONGINT);
+PROCEDURE InternalInsert(CONST fname : ARRAY OF CHAR; frames, step : SIGNED32);
 VAR b : Bunny;
 	img : Raster.Image;
 BEGIN {EXCLUSIVE}
@@ -144,8 +144,8 @@ VAR fn : ARRAY 65 OF CHAR;	(* a filename equivalent to Files.FileName - do not i
 
 	(* Assign an integer value to a variable: extracted from the command parameter if present or
 		else a default one *)
-	PROCEDURE SetVal(def : LONGINT) : LONGINT;
-	VAR int : LONGINT;
+	PROCEDURE SetVal(def : SIGNED32) : SIGNED32;
+	VAR int : SIGNED32;
 	BEGIN
 		int := def;
 		context.arg.SkipWhitespace;

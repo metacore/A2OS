@@ -22,22 +22,22 @@ type
 		cfg-: port out; (** configuration port *)
 		enabled-: boolean; (** TRUE if the PWM output is enabled *)
 
-		pixelClock-: real; (** pixel clock in Hz *)
+		pixelClock-: float32; (** pixel clock in Hz *)
 
-		horizActiveSize-: longint;
-		horizFrontPorch-: longint;
-		horizSyncWidth-: longint;
-		horizBackPorch-: longint;
+		horizActiveSize-: signed32;
+		horizFrontPorch-: signed32;
+		horizSyncWidth-: signed32;
+		horizBackPorch-: signed32;
 		horizSyncPolarity-: boolean;
 
-		vertActiveSize-: longint;
-		vertFrontPorch-: longint;
-		vertSyncWidth-: longint;
-		vertBackPorch-: longint;
+		vertActiveSize-: signed32;
+		vertFrontPorch-: signed32;
+		vertSyncWidth-: signed32;
+		vertBackPorch-: signed32;
 		vertSyncPolarity-: boolean;
 	end;
 
-	procedure InitController*(var ctl: Controller; cfg: port out; pixelClock: real);
+	procedure InitController*(var ctl: Controller; cfg: port out; pixelClock: float32);
 	begin
 		ctl.cfg := cfg;
 		ctl.pixelClock := pixelClock;
@@ -71,64 +71,64 @@ type
 		ctl.enabled := enable;
 	end Enable;
 
-	procedure SetHorizActiveSize*(var ctl: Controller; n: longint);
+	procedure SetHorizActiveSize*(var ctl: Controller; n: signed32);
 	begin
 		ctl.cfg << CmdSetHorizActiveSize + lsh(n-1,4);
 		ctl.horizActiveSize := n;
 	end SetHorizActiveSize;
 
-	procedure SetHorizFrontPorch*(var ctl: Controller; n: longint);
+	procedure SetHorizFrontPorch*(var ctl: Controller; n: signed32);
 	begin
 		ctl.cfg << CmdSetHorizFrontPorch + lsh(n-1,4);
 		ctl.horizFrontPorch := n;
 	end SetHorizFrontPorch;
 
-	procedure SetHorizSyncWidth*(var ctl: Controller; n: longint);
+	procedure SetHorizSyncWidth*(var ctl: Controller; n: signed32);
 	begin
 		ctl.cfg << CmdSetHorizSyncWidth + lsh(n-1,4);
 		ctl.horizSyncWidth := n;
 	end SetHorizSyncWidth;
 
-	procedure SetHorizBackPorch*(var ctl: Controller; n: longint);
+	procedure SetHorizBackPorch*(var ctl: Controller; n: signed32);
 	begin
 		ctl.cfg << CmdSetHorizBackPorch + lsh(n-1,4);
 		ctl.horizBackPorch := n;
 	end SetHorizBackPorch;
 
 	procedure SetHorizSyncPolarity*(var ctl: Controller; polarity: boolean);
-	var n: longint;
+	var n: signed32;
 	begin
 		if polarity then n := 1; else n := 0; end;
 		ctl.cfg << CmdSetHorizSyncPolarity + lsh(n,4);
 		ctl.horizSyncPolarity := polarity;
 	end SetHorizSyncPolarity;
 
-	procedure SetVertActiveSize*(var ctl: Controller; n: longint);
+	procedure SetVertActiveSize*(var ctl: Controller; n: signed32);
 	begin
 		ctl.cfg << CmdSetVertActiveSize + lsh(n-1,4);
 		ctl.vertActiveSize := n;
 	end SetVertActiveSize;
 
-	procedure SetVertFrontPorch*(var ctl: Controller; n: longint);
+	procedure SetVertFrontPorch*(var ctl: Controller; n: signed32);
 	begin
 		ctl.cfg << CmdSetVertFrontPorch + lsh(n-1,4);
 		ctl.vertFrontPorch := n;
 	end SetVertFrontPorch;
 
-	procedure SetVertSyncWidth*(var ctl: Controller; n: longint);
+	procedure SetVertSyncWidth*(var ctl: Controller; n: signed32);
 	begin
 		ctl.cfg << CmdSetVertSyncWidth + lsh(n-1,4);
 		ctl.vertSyncWidth := n;
 	end SetVertSyncWidth;
 
-	procedure SetVertBackPorch*(var ctl: Controller; n: longint);
+	procedure SetVertBackPorch*(var ctl: Controller; n: signed32);
 	begin
 		ctl.cfg << CmdSetVertBackPorch + lsh(n-1,4);
 		ctl.vertBackPorch := n;
 	end SetVertBackPorch;
 
 	procedure SetVertSyncPolarity*(var ctl: Controller; polarity: boolean);
-	var n: longint;
+	var n: signed32;
 	begin
 		if polarity then n := 1; else n := 0; end;
 		ctl.cfg << CmdSetVertSyncPolarity + lsh(n,4);

@@ -37,17 +37,17 @@ TYPE
 		n-: antsNeighbourhoods.Neighbours;
 		r-: antsRegions.tRegion;
 		mapping: antsFunctions.Function;
-		maxx, maxy: LONGINT;
-		dim: INTEGER;
+		maxx, maxy: SIGNED32;
+		dim: SIGNED16;
 		Correlations: POINTER TO ARRAY OF antsArrayObjects.tLONGINTArray;
 		isotropic: BOOLEAN
 	END;
 VAR
 
 	PROCEDURE Recall( layer: tLayer );
-	VAR cells: LONGINT;  cellsize: LONGREAL;  i, j: LONGINT;  A: antsArrayObjects.tINTEGERObject;  x, y: LONGINT;  ry, rx: LONGINT;  vx, vn: LONGINT;  rx1, ry1, rx2, ry2: LONGINT;
+	VAR cells: SIGNED32;  cellsize: FLOAT64;  i, j: SIGNED32;  A: antsArrayObjects.tINTEGERObject;  x, y: SIGNED32;  ry, rx: SIGNED32;  vx, vn: SIGNED32;  rx1, ry1, rx2, ry2: SIGNED32;
 
-		PROCEDURE PaintCell( x, y: LONGINT );
+		PROCEDURE PaintCell( x, y: SIGNED32 );
 		VAR
 		BEGIN
 			vyGraphBase.SetBackColor( layer.style.fillcol );
@@ -56,8 +56,8 @@ VAR
 			vyGraphBase.FrameRect2d( x * cellsize - cellsize / 2, y * cellsize - cellsize / 2, cellsize, cellsize )
 		END PaintCell;
 
-		PROCEDURE PaintCell2( x, y: LONGINT;  C: antsArrayObjects.tLONGINTArray );
-		VAR yi, xi: LONGINT;  y0r, x0r, yr, xr, wr, hr: LONGREAL;  maxr: LONGREAL;  col: LONGINT;  index: LONGINT;
+		PROCEDURE PaintCell2( x, y: SIGNED32;  C: antsArrayObjects.tLONGINTArray );
+		VAR yi, xi: SIGNED32;  y0r, x0r, yr, xr, wr, hr: FLOAT64;  maxr: FLOAT64;  col: SIGNED32;  index: SIGNED32;
 		BEGIN
 			maxr := 0;
 			FOR yi := 0 TO A.depth - 1 DO
@@ -141,7 +141,7 @@ VAR
 	END Recall;
 
 	PROCEDURE Responsible( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF ((event.gesture = vyEvents.EvtSelect)) THEN priority := vyEvents.PrioNormal END;
@@ -154,11 +154,11 @@ VAR
 	END Copy;
 
 	PROCEDURE Select( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	(*	VAR         cells: LONGINT;   cellsize : LONGREAL;   i, j: LONGINT;
-	origx, origy: INTEGER;
+	(*	VAR         cells: SIGNED32;   cellsize : FLOAT64;   i, j: SIGNED32;
+	origx, origy: SIGNED16;
 
-	PROCEDURE InCell (x, y: LONGINT;   cx, cy: INTEGER ): BOOLEAN;
-	VAR rx, ry, rw, rh: INTEGER;
+	PROCEDURE InCell (x, y: SIGNED32;   cx, cy: SIGNED16 ): BOOLEAN;
+	VAR rx, ry, rw, rh: SIGNED16;
 	BEGIN
 	vyGraphBase.Rect2dToRect(x * cellsize - cellsize / 2, y * cellsize - cellsize / 2, cellsize, cellsize, rx, ry, rw, rh);
 	IF vyRectangles.PointInRect(cx, cy, rx, ry, rw, rh) THEN RETURN TRUE ELSE RETURN FALSE END
@@ -194,7 +194,7 @@ VAR
 	END Select;
 
 	PROCEDURE HandleFileMsg( obj: tLayer;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 
 	BEGIN
 		IF msg.id = Objects.load THEN
@@ -310,7 +310,7 @@ END ViewNum;
 	END Init;
 
 	PROCEDURE AdjustXY( layer: tLayer );
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 	BEGIN
 		layer.maxx := 0;  layer.maxy := 0;
 		FOR i := 0 TO layer.n.dim - 1 DO

@@ -24,7 +24,7 @@ TYPE
 		pgData*: TeletextDecoder.TeletextPage;
 		content*: TeletextPage;
 		channel-: ARRAY 33 OF CHAR;
-		refreshInterval*: LONGINT;
+		refreshInterval*: SIGNED32;
 		rotating*: BOOLEAN;
 		transparent*: BOOLEAN;
 		loadProc*: LoadProc;
@@ -61,7 +61,7 @@ TYPE
 		END SetSuite;
 
 		(** Select another teletext suite for browsing according to the given TV frequency *)
-		PROCEDURE SetSuiteFromFreq*(freq: LONGINT);
+		PROCEDURE SetSuiteFromFreq*(freq: SIGNED32);
 		BEGIN
 			Init(TeletextDecoder.SelectTeletextSuite(freq))
 		END SetSuiteFromFreq;

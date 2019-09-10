@@ -15,9 +15,9 @@ TYPE
 
 	ContextMenuPar = OBJECT
 	VAR
-		mode : LONGINT;
+		mode : SIGNED32;
 
-		PROCEDURE &New*(mode : LONGINT);
+		PROCEDURE &New*(mode : SIGNED32);
 		BEGIN
 			SELF.mode := mode;
 		END New;
@@ -37,7 +37,7 @@ TYPE
 		contextMenu : WMPopups.Popup;
 
 		PROCEDURE &New*(c : WMRestorable.Context; flags : SET);
-		VAR configuration : WMRestorable.XmlElement; color : LONGINT; string : Strings.String;
+		VAR configuration : WMRestorable.XmlElement; color : SIGNED32; string : Strings.String;
 		BEGIN
 			IncCount;
 			dragging := FALSE; resizing := FALSE;
@@ -117,7 +117,7 @@ TYPE
 		END PointerUp;
 
 		PROCEDURE ExecuteCommand;
-		VAR cmdString : Strings.String; msg : ARRAY 128 OF CHAR; res : WORD;
+		VAR cmdString : Strings.String; msg : ARRAY 128 OF CHAR; res : INTEGER;
 		BEGIN
 			cmdString := iconComponent.commandString.Get();
 			IF (cmdString # NIL) THEN
@@ -126,7 +126,7 @@ TYPE
 		END ExecuteCommand;
 
 		PROCEDURE HandleContextMenu(sender, data : ANY);
-		VAR string : ARRAY 256 OF CHAR; mode, res : LONGINT;
+		VAR string : ARRAY 256 OF CHAR; mode, res : SIGNED32;
 		BEGIN
 			IF (data # NIL) & (data IS ContextMenuPar) THEN
 				mode := data(ContextMenuPar).mode;
@@ -195,7 +195,7 @@ TYPE
 
 		image : WMGraphics.Image;
 		hover : BOOLEAN;
-		borderI : LONGINT;
+		borderI : SIGNED32;
 
 		PROCEDURE & Init*;
 		BEGIN
@@ -293,7 +293,7 @@ TYPE
 	END IconComponent;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 	prototypeCommandString, prototypeImageName, prototypeCaption : WMProperties.StringProperty;
 	prototypeColor, prototypeBorder : WMProperties.Int32Property;

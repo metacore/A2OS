@@ -39,7 +39,7 @@ CONST
 TYPE
 	(* wrapper integer object to use it for TFClasses.List *)
 	IntObj = OBJECT
-		VAR number: LONGINT;
+		VAR number: SIGNED32;
 	END IntObj;
 
 	(* wrapper integer list using TFClasses.List *)
@@ -57,7 +57,7 @@ TYPE
 		END GetCount;
 
 		(* returns 0 if item is not in the list *)
-		PROCEDURE GetItem(pos: SIZE) : LONGINT;
+		PROCEDURE GetItem(pos: SIZE) : SIGNED32;
 		VAR intObj: IntObj;
 		BEGIN
 			intObj := GetIntObj(pos);
@@ -86,7 +86,7 @@ TYPE
 			RETURN NIL
 		END GetIntObj;
 
-		PROCEDURE Exchange(pos: SIZE; newNumber: LONGINT);
+		PROCEDURE Exchange(pos: SIZE; newNumber: SIGNED32);
 		VAR intObj: IntObj;
 		BEGIN
 			intObj := GetIntObj(pos);
@@ -95,7 +95,7 @@ TYPE
 			END;
 		END Exchange;
 
-		PROCEDURE Add(newNumber: LONGINT);
+		PROCEDURE Add(newNumber: SIGNED32);
 		VAR intObj: IntObj;
 		BEGIN
 			Lock;
@@ -136,7 +136,7 @@ TYPE
 
 		PROCEDURE Internalize*(input: XML.Content);
 		VAR container: XML.Container; elem, subElem: XML.Element; p: ANY; enum: XMLObjects.Enumerator;
-			str: Strings.String; number: LONGINT;
+			str: Strings.String; number: SIGNED32;
 		BEGIN
 			container := input(XML.Container);
 			firstname := WebStd.InternalizeString(container, "FirstName");
@@ -163,7 +163,7 @@ TYPE
 		END Internalize;
 
 		PROCEDURE Externalize*() : XML.Content;
-		VAR container: XML.Container; elem, subElem: XML.Element; str: ARRAY 14 OF CHAR; i: SIZE; number: LONGINT;
+		VAR container: XML.Container; elem, subElem: XML.Element; str: ARRAY 14 OF CHAR; i: SIZE; number: SIGNED32;
 		BEGIN
 			NEW(container);
 			WebStd.ExternalizeString(firstname, container, "FirstName");
@@ -236,7 +236,7 @@ TYPE
 		END DetailView;
 
 		PROCEDURE GetGradesDetailView() : XML.Content;
-		VAR table, tr, td: XML.Element; i: SIZE; number: LONGINT; str: ARRAY 14 OF CHAR;
+		VAR table, tr, td: XML.Element; i: SIZE; number: SIGNED32; str: ARRAY 14 OF CHAR;
 		BEGIN
 			table := NIL;
 			IF (grades # NIL) THEN
@@ -605,7 +605,7 @@ TYPE
 
 		PROCEDURE Internalize*(input: XML.Content);
 		VAR container: XML.Container; elem: XML.Element; oidStr: Strings.String;
-			persObj: PrevalenceSystem.PersistentObject; oidNr: LONGINT;
+			persObj: PrevalenceSystem.PersistentObject; oidNr: SIGNED32;
 		BEGIN
 			container := input(XML.Container);
 
@@ -666,8 +666,8 @@ TYPE
 			RETURN list
 		END GetReferrencedObjects;
 
-		PROCEDURE UpdateGrade(personOid, exerciseNo, newGrade: LONGINT);
-		VAR list: WebStd.PersistentDataObjectList; person: Person; i: SIZE; oldGrade: LONGINT;
+		PROCEDURE UpdateGrade(personOid, exerciseNo, newGrade: SIGNED32);
+		VAR list: WebStd.PersistentDataObjectList; person: Person; i: SIZE; oldGrade: SIGNED32;
 		BEGIN
 			IF (members # NIL) THEN
 				list := members.GetElementList(WebStd.DefaultPersistentDataFilter, NIL);
@@ -1074,7 +1074,7 @@ TYPE
 			RETURN table
 		END GetInsertView;
 
-		PROCEDURE OnDetailViewActivated*(entryOid: LONGINT; request: HTTPSupport.HTTPRequest);
+		PROCEDURE OnDetailViewActivated*(entryOid: SIGNED32; request: HTTPSupport.HTTPRequest);
 		BEGIN reInitializeSubContainer := TRUE (* the sub container has to showed in the default mode *)
 		END OnDetailViewActivated;
 
@@ -1261,7 +1261,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
-		VAR groupOid: LONGINT; groupOidStr, prevSysName: Strings.String; persObj: PrevalenceSystem.PersistentObject;
+		VAR groupOid: SIGNED32; groupOidStr, prevSysName: Strings.String; persObj: PrevalenceSystem.PersistentObject;
 			prevSys: PrevalenceSystem.PrevalenceSystem;
 		BEGIN
 			groupOidStr := input.GetAttributeValue("groupoid");
@@ -1406,8 +1406,8 @@ TYPE
 
 		(* get a edit view row for a persons exercise grades, if the person has not nofCols exercise grades then insert new ones *)
 		PROCEDURE GetPersonGradesEditRow(nofCols: SIZE; person: Person) : XML.Element;
-		VAR tr, td: XML.Element; number: LONGINT; i: SIZE;
-			PROCEDURE GetInputName(oid: LONGINT; exerciseNo: SIZE) : Strings.String;
+		VAR tr, td: XML.Element; number: SIGNED32; i: SIZE;
+			PROCEDURE GetInputName(oid: SIGNED32; exerciseNo: SIZE) : Strings.String;
 			VAR nameStr: Strings.String; oidStr, exerciseNoStr: ARRAY 14 OF CHAR;
 			BEGIN
 				Strings.IntToStr(oid, oidStr); Strings.IntToStr(exerciseNo, exerciseNoStr);
@@ -1417,7 +1417,7 @@ TYPE
 				RETURN nameStr
 			END GetInputName;
 
-			PROCEDURE GetInputField(exerciseNo: SIZE; grade: LONGINT) : XML.Element;
+			PROCEDURE GetInputField(exerciseNo: SIZE; grade: SIGNED32) : XML.Element;
 			VAR td, input: XML.Element; numberStr: ARRAY 14 OF CHAR; name: Strings.String;
 			BEGIN
 				Strings.IntToStr(grade, numberStr);
@@ -1467,7 +1467,7 @@ TYPE
 		END GetPersonGradesEditRow;
 
 		PROCEDURE GetNotification(person: Person) : XML.Content;
-		VAR aTag: XML.Element; dynStr: DynamicStrings.DynamicString; i: SIZE; number: LONGINT;
+		VAR aTag: XML.Element; dynStr: DynamicStrings.DynamicString; i: SIZE; number: SIGNED32;
 			numberStr, iStr: ARRAY 14 OF CHAR; str: Strings.String;
 			PROCEDURE Append(text: ARRAY OF CHAR);
 			VAR str: Strings.String;
@@ -1513,7 +1513,7 @@ TYPE
 
 		PROCEDURE UpdateList(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList);
 		VAR tempStr, personOidStr, exerciseNoStr: Strings.String;
-			i, length, sepIdx: SIZE; personOid, exerciseNo, newGrade: LONGINT; par: DynamicWebpage.Parameter;
+			i, length, sepIdx: SIZE; personOid, exerciseNo, newGrade: SIGNED32; par: DynamicWebpage.Parameter;
 			(* params: the grades for all group members *)
 		BEGIN
 			(* if this event handler is manually invoked on this active element such that the active element was not previously
@@ -1548,7 +1548,7 @@ TYPE
 		END AddNewExercise;
 
 		PROCEDURE DeleteExercise(request: HTTPSupport.HTTPRequest; params: DynamicWebpage.ParameterList);
-		VAR exerciseNoStr: Strings.String; exerciseNo: LONGINT;
+		VAR exerciseNoStr: Strings.String; exerciseNo: SIGNED32;
 			(* parameters: "exerciseno" *)
 		BEGIN
 			exerciseNoStr := params.GetParameterValueByName("exerciseno");

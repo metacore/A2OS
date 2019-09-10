@@ -39,7 +39,7 @@ CONST
 TYPE
 	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc = RECORD (vyPort.tLayerDesc)
-		yLoc, height: REAL;
+		yLoc, height: FLOAT32;
 		(*! location of the greatest box as region for interactive features *)
 	END;
 
@@ -51,7 +51,7 @@ VAR
 	PROCEDURE Recall( boxWhisker: tLayer );
 	(*vs 0.0a1	md  10.08.94 *)
 	(* converted from the box and whisker plot in Shorty (c) G. Sawitzki *)
-	VAR count: LONGINT;  I: LONGINT;  minVal, maxVal, range, minRange: REAL;  Q1, med, Q3, WH1, WH3, FO1, FO3: REAL;
+	VAR count: SIGNED32;  I: SIGNED32;  minVal, maxVal, range, minRange: FLOAT32;  Q1, med, Q3, WH1, WH3, FO1, FO3: FLOAT32;
 	BEGIN
 		IF boxWhisker.x # NIL THEN
 			count := boxWhisker.x.nrData;
@@ -105,7 +105,7 @@ VAR
 	END Copy;
 
 	PROCEDURE Consume( o: tLayer;  msg: Display.ConsumeMsg );
-	VAR v: vyBase.tVector;  minX, maxX: REAL;  p: vyPort.Picture;  nans: LONGINT;
+	VAR v: vyBase.tVector;  minX, maxX: FLOAT32;  p: vyPort.Picture;  nans: SIGNED32;
 	BEGIN
 		p := msg.dlink( vyPort.Picture );  v := vyBase.GetVFromObj( msg.obj );
 		IF v # NIL THEN
@@ -129,7 +129,7 @@ VAR
 	END HandleAttributes;
 
 	PROCEDURE AdjustCoord( pict: vyPort.Picture;  obj: tLayer );
-	VAR minX, maxX: REAL;  nans: LONGINT;
+	VAR minX, maxX: FLOAT32;  nans: SIGNED32;
 	BEGIN
 		IF pict # NIL THEN
 			IF obj.x # NIL THEN vyTypes.VGetMinMaxR( obj.x, minX, maxX, nans ) ELSE minX := 0;  maxX := 1 END;
@@ -185,7 +185,7 @@ VAR
 
 	PROCEDURE Handler*( obj: Objects.Object;  VAR msg: Objects.ObjMsg );
 	(*vs 0.0a1	md  20.07.94 *)
-	VAR pict: vyPort.Picture;  minX, maxX: REAL;  nans: LONGINT;
+	VAR pict: vyPort.Picture;  minX, maxX: FLOAT32;  nans: SIGNED32;
 	BEGIN
 		WITH obj: tLayer DO
 			IF msg IS Display.DisplayMsg THEN

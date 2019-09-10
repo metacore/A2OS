@@ -52,7 +52,7 @@ TYPE
 
 VAR
 	watcher: Watcher;
-	i: LONGINT;
+	i: SIGNED32;
 
 BEGIN
 	NEW(watcher)

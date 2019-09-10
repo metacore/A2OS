@@ -5,15 +5,15 @@ MODULE RandomNumbers IN Oberon;	(** portable *)
 (* Random Number Generator, page 12 *)
 IMPORT SYSTEM, Math IN A2, Oberon;
 
-VAR Z, t, d: LONGINT;
+VAR Z, t, d: SIGNED32;
 
 (** Return a uniform random number r, with 0 < r < 1. *)
 
-PROCEDURE Uniform*(): REAL;
+PROCEDURE Uniform*(): FLOAT32;
 CONST
 a = 16807;	m = 2147483647;
 q = m DIV a;	r = m MOD a;
-VAR g: LONGINT;
+VAR g: SIGNED32;
 BEGIN
 	g := a*(Z MOD q) - r*(Z DIV q);
 	IF g > 0 THEN Z := g ELSE Z := g + m END;
@@ -22,19 +22,19 @@ END Uniform;
 
 (** Return an exponentially distributed random number r. *)
 
-PROCEDURE Exp*(mu: REAL): REAL;
+PROCEDURE Exp*(mu: FLOAT32): FLOAT32;
 BEGIN
 	RETURN -Math.ln(Uniform())/mu
 END Exp;
 
 (** Initialize the random number seed. *)
 
-PROCEDURE InitSeed*(seed: LONGINT);
+PROCEDURE InitSeed*(seed: SIGNED32);
 BEGIN
 	Z := seed
 END InitSeed;
 
 BEGIN
 	Oberon.GetClock(t, d);
-	Z := LONGINT(SET(t) / SET(d))
+	Z := SIGNED32(SET(t) / SET(d))
 END RandomNumbers.	(* Copyright M. Reiser, 1992 *)

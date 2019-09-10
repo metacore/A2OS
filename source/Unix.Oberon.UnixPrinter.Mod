@@ -16,7 +16,7 @@ VAR
 	prcmd, prsel: ARRAY 128 OF CHAR;
 
 	PROCEDURE Append( VAR s1: ARRAY OF CHAR;  s2: ARRAY OF CHAR );
-	VAR i, j: INTEGER;  ch: CHAR;
+	VAR i, j: SIGNED16;  ch: CHAR;
 	BEGIN
 		i := 0;  j := 0;
 		WHILE s1[i] # 0X DO INC( i ) END;
@@ -31,7 +31,7 @@ VAR
 
 	PROCEDURE Close*( P: Printer.Printer );
 	VAR cmd, name: ARRAY 256 OF CHAR;
-		res: INTEGER;
+		res: SIGNED16;
 	BEGIN
 		WITH P: UnixPrinter DO
 			COPY( P.printerName, name );  COPY( prcmd, cmd );
@@ -67,7 +67,7 @@ VAR
 	END Install;
 
 	PROCEDURE Init;
-	VAR S: Texts.Scanner;  i, j: INTEGER;  c: CHAR;
+	VAR S: Texts.Scanner;  i, j: SIGNED16;  c: CHAR;
 		cmd: ARRAY 16 OF CHAR;
 		W: Texts.Writer;
 	BEGIN

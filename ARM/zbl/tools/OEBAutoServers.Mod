@@ -22,13 +22,13 @@ CONST
 
 TYPE
 	Event * = RECORD
-		event: LONGINT;
+		event: SIGNED32;
 		session: OEBInterfaces.Session;
 		interface: OEBInterfaces.Interface;
 	END;
 
 	Plan = POINTER TO RECORD
-		guid: LONGINT;
+		guid: SIGNED32;
 		cmds: Command;
 		next: Plan;
 	END;
@@ -95,7 +95,7 @@ TYPE
 			BEGIN {EXCLUSIVE} handle := FALSE END;
 		END DoHandle;
 
-		PROCEDURE FindPlan (guid: LONGINT): Plan;
+		PROCEDURE FindPlan (guid: SIGNED32): Plan;
 		VAR
 			plan: Plan;
 		BEGIN
@@ -160,7 +160,7 @@ TYPE
 	VAR
 		plans: Plan;										(** plan for a specific GUID *)
 		default: Plan;										(** default plan *)
-		state: LONGINT;									(** server state *)
+		state: SIGNED32;									(** server state *)
 		handlers: ARRAY MaxEvents OF SessionHandler;	(** Pool of handlers *)
 
 		(**
@@ -174,7 +174,7 @@ TYPE
 		PROCEDURE & Init * (reader: Streams.Reader);
 		VAR
 			name: ARRAY 128 OF CHAR;
-			i: LONGINT;
+			i: SIGNED32;
 			plan: Plan;
 		BEGIN
 			name := Name;
@@ -210,10 +210,10 @@ TYPE
 		END Init;
 
 		(** Event handling: notifies the server process *)
-		PROCEDURE Handle * (event: LONGINT; interface: OEBInterfaces.Interface; session: OEBInterfaces.Session);
+		PROCEDURE Handle * (event: SIGNED32; interface: OEBInterfaces.Interface; session: OEBInterfaces.Session);
 		VAR
 			e: Event;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			e.event := event;
 			e.session := session;
@@ -241,7 +241,7 @@ TYPE
 
 		PROCEDURE Kill *;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			BEGIN {EXCLUSIVE}
 				state := StateKilled
@@ -253,7 +253,7 @@ TYPE
 			ExitTrace
 		END Kill;
 
-		PROCEDURE State * (): LONGINT;
+		PROCEDURE State * (): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN state
 		END State;
@@ -275,14 +275,14 @@ TYPE
 
 VAR
 	factory: Factory;
-	next: LONGINT;
+	next: SIGNED32;
 
 	PROCEDURE ParsePlan (reader: Streams.Reader): Plan;
 	VAR
 		plan: Plan;
 		token: ARRAY 1024 OF CHAR;
 		cmd: Command;
-		guid: LONGINT;
+		guid: SIGNED32;
 	BEGIN
 		IF ~reader.GetString(token) THEN RETURN NIL END;
 		TRACE(token);

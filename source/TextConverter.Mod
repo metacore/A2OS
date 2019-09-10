@@ -2,10 +2,10 @@ MODULE TextConverter; (** AUTHOR "negelef"; PURPOSE "automated text format conve
 
 IMPORT Commands, Streams, Diagnostics, Files, Texts, TextUtilities;
 
-TYPE Converter = PROCEDURE (text : Texts.Text; CONST filename : ARRAY OF CHAR; VAR res : WORD);
+TYPE Converter = PROCEDURE (text : Texts.Text; CONST filename : ARRAY OF CHAR; VAR res : INTEGER);
 
 PROCEDURE Convert (diagnostics: Diagnostics.Diagnostics; list: Streams.Reader; converter: Converter);
-VAR text: Texts.Text; filename: Files.FileName; format: LONGINT; res: WORD;
+VAR text: Texts.Text; filename: Files.FileName; format: SIGNED32; res: INTEGER;
 BEGIN
 	WHILE list.GetString (filename) DO
 		NEW (text);

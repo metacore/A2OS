@@ -52,7 +52,7 @@ CONST
 	VertSyncPolarity* = TRUE;
 *)
 
-	DefaultColor* = LONGINT(0FFFFFFFFH); (** the color of the booting screen  *)
+	DefaultColor* = SIGNED32(0FFFFFFFFH); (** the color of the booting screen  *)
 
 TYPE
 
@@ -61,7 +61,7 @@ TYPE
 		Format = 4;
 
 		(** Transfer a block of pixels in "raw" display format to (op = set) or from (op = get) the display.  Pixels in the rectangular area are transferred from left to right and top to bottom.  The pixels are transferred to or from "buf", starting at "ofs".  The line byte increment is "stride", which may be positive, negative or zero. *)
-		PROCEDURE Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: WORD);
+		PROCEDURE Transfer*(VAR buf: ARRAY OF CHAR; ofs, stride, x, y, w, h: SIZE; op: INTEGER);
 		VAR bufadr, buflow, bufhigh, dispadr,w0,b,d: ADDRESS;
 		BEGIN
 
@@ -132,7 +132,7 @@ VAR
 	display: Display;
 	vout: Video.Controller;
 
-	pixelClock: REAL; (* pixel clock in Hz *)
+	pixelClock: FLOAT32; (* pixel clock in Hz *)
 
 	buf: POINTER TO ARRAY OF CHAR;
 	bufAddr: ADDRESS;
@@ -148,7 +148,7 @@ VAR
 		polarity: reset signal polarity, TRUE for active high and FALSE for active low
 	*)
 	PROCEDURE ResetPl(polarity: BOOLEAN);
-	VAR res, t: LONGINT;
+	VAR res, t: SIGNED32;
 	BEGIN
 		IF polarity THEN (* active high *)
 			ASSERT(PsConfig.SetPlResets({},res));
@@ -168,8 +168,8 @@ VAR
 	*)
 	PROCEDURE SetupClocks;
 	VAR
-		res: LONGINT;
-		freq: HUGEINT;
+		res: SIGNED32;
+		freq: SIGNED64;
 	BEGIN
 		(*
 			Setup DMA frequency
@@ -186,7 +186,7 @@ VAR
 			Setup display clocks
 		*)
 		(* pixel clock *)
-		pixelClock := REAL(freq)/PlClkDiv1;
+		pixelClock := FLOAT32(freq)/PlClkDiv1;
 		IF PsConfig.SetPlClock(1,PsConfig.IoPll,PlClkDiv1,1,res) THEN
 			Trace.String("FPGA clock 1 frequency has been changed to "); Trace.Int(PsConfig.GetPlClockFrequency(1,res),0); Trace.String(" Hz"); Trace.Ln;
 		ELSE Trace.String("Error while setting FPGA clock 1 frequency, res="); Trace.Int(res,0); Trace.Ln;
@@ -200,8 +200,8 @@ VAR
 
 	PROCEDURE Init;
 	VAR
-		res: WORD;
-		d: LONGINT;
+		res: INTEGER;
+		d: SIGNED32;
 	BEGIN
 		SetupClocks;
 
@@ -298,7 +298,7 @@ VAR
 		END;
 	END Install;
 
-	PROCEDURE -Copy32(sadr: ADDRESS; dadr: ADDRESS; len: LONGINT);
+	PROCEDURE -Copy32(sadr: ADDRESS; dadr: ADDRESS; len: SIGNED32);
 	CODE
 		LDR	R0, [SP, #dadr]
 		LDR	R1, [SP, #len]

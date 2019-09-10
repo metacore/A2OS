@@ -44,14 +44,14 @@ TYPE
 
 	RealPropertyEntry* = OBJECT(PropertyEntry)
 	VAR name: ARRAY 16 OF CHAR;
-		value: REAL;
+		value: FLOAT32;
 		onClick: WMEvents.EventSource;
 
 	END RealPropertyEntry;
 
 	IntPropertyEntry* = OBJECT(PropertyEntry)
 	VAR name: ARRAY 16 OF CHAR;
-		value: LONGINT;
+		value: SIGNED32;
 		onClick: WMEvents.EventSource;
 
 	END IntPropertyEntry;
@@ -96,7 +96,7 @@ TYPE
 		label : WMStandardComponents.Label;
 		panel : WMStandardComponents.Panel;
 		button : WMStandardComponents.Button;
-		result: WORD; chosenColor* : WMGraphics.Color;
+		result: INTEGER; chosenColor* : WMGraphics.Color;
 		shown : BOOLEAN;
 
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
@@ -160,7 +160,7 @@ TYPE
 			Hide;
 		END OKHandler;
 
-		PROCEDURE SetResult(res: WORD);
+		PROCEDURE SetResult(res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			result := res;
 		END SetResult;
@@ -173,7 +173,7 @@ TYPE
 
 	ColorChooser* = OBJECT(WMComponents.VisualComponent)
 	VAR
-		colors : ARRAY 19 OF LONGINT;
+		colors : ARRAY 19 OF SIGNED32;
 		theCaller: ColorChooserWindow;
 
 		PROCEDURE &Init*;
@@ -188,7 +188,7 @@ TYPE
 		END SetCaller;
 
 		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
-		VAR r, g, b, a: LONGINT; i, j: SIZE; cColor: WMGraphics.Color;
+		VAR r, g, b, a: SIGNED32; i, j: SIZE; cColor: WMGraphics.Color;
 		BEGIN
 			i := y DIV 10; j := x DIV 10;
 			IF (i>= 0) & (i<=2) THEN
@@ -219,7 +219,7 @@ TYPE
 		END FocusLost;
 *)
 		PROCEDURE Draw*(canvas: WMGraphics.Canvas);
-		VAR r, g, b, a, i, j: LONGINT; color: WMGraphics.Color;
+		VAR r, g, b, a, i, j: SIGNED32; color: WMGraphics.Color;
 		BEGIN
 			Draw^(canvas);
 
@@ -252,11 +252,11 @@ TYPE
 
 		PROCEDURE BuildPalette;
 		BEGIN
-			colors[0] := LONGINT(0FF0000FFH);							(* red *)
-			colors[1] := LONGINT(0FF5500FFH);
-			colors[2] := LONGINT(0FFAA00FFH);
-			colors[3] := LONGINT(0FFFF00FFH);							(* yellow *)
-			colors[4] := LONGINT(0AAFF00FFH);
+			colors[0] := SIGNED32(0FF0000FFH);							(* red *)
+			colors[1] := SIGNED32(0FF5500FFH);
+			colors[2] := SIGNED32(0FFAA00FFH);
+			colors[3] := SIGNED32(0FFFF00FFH);							(* yellow *)
+			colors[4] := SIGNED32(0AAFF00FFH);
 			colors[5] := 055FF00FFH;
 			colors[6] := 000FF00FFH;							(* green *)
 			colors[7] := 000FF55FFH;
@@ -266,11 +266,11 @@ TYPE
 			colors[11] := 00055FFFFH;
 			colors[12] := 00000FFFFH;						(* blue *)
 			colors[13] := 05500FFFFH;
-			colors[14] :=LONGINT( 0AA00FFFFH);
-			colors[15] :=LONGINT( 0FF00FFFFH);						(* magenta *)
-			colors[16] :=LONGINT( 0FF00AAFFH);
-			colors[17] :=LONGINT( 0FF0055FFH);
-			colors[18] :=LONGINT( 0888888FFH);						(* grey *)
+			colors[14] :=SIGNED32( 0AA00FFFFH);
+			colors[15] :=SIGNED32( 0FF00FFFFH);						(* magenta *)
+			colors[16] :=SIGNED32( 0FF00AAFFH);
+			colors[17] :=SIGNED32( 0FF0055FFH);
+			colors[18] :=SIGNED32( 0888888FFH);						(* grey *)
 
 		END BuildPalette;
 
@@ -283,8 +283,8 @@ CONST
 
 TYPE
 	ContextMenuData = OBJECT
-	VAR val: LONGINT;
-		PROCEDURE &New*(val: LONGINT);
+	VAR val: SIGNED32;
+		PROCEDURE &New*(val: SIGNED32);
 		BEGIN
 			SELF.val := val;
 		END New;
@@ -302,21 +302,21 @@ TYPE
 		oldPStyleName, oldCStyleName, oldGStyleName, oldCustomStyleName: ARRAY 256 OF CHAR;
 		previewLabel: PreviewPanel; fontNotFound : WMStandardComponents.Label;
 		tabPanel, buttonPanel : WMStandardComponents.Panel;
-		tabColor, tabSelectedColor : LONGINT;
+		tabColor, tabSelectedColor : SIGNED32;
 		UpdateProc* : PROCEDURE {DELEGATE};
 		pstylePanel, cstylePanel, gstylePanel, customPanel : WMStandardComponents.Panel;
 		pList, cList, gList, customList : WMStringGrids.StringGrid;
 		pName, pAlign, pFirstIndent, pLeftIndent, pRightIndent, pSpaceBefore, pSpaceAfter, pDefCharStyle: WMEditors.Editor;
 		cName, cFont, cSize, cStyle, cBaselineShift, cLeading, cColor, cBackColor, cTracking, cKerning, cStretchH, cStretchV: WMEditors.Editor;
 		(* other Style EditorFields *)
-		styleCounter : LONGINT;
+		styleCounter : SIGNED32;
 
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
 		VAR panel, mainPanel, gridPanel, propertyPanel : WMStandardComponents.Panel;
 			borderPanel : CustomPanel;
 			groupPanel : GroupPanel;
 			label : WMStandardComponents.Label;
-			labelWidth : LONGINT;
+			labelWidth : SIGNED32;
 			lineP: LinePanel;
 			manager : WMWindowManager.WindowManager;
 			windowStyle : WMWindowManager.WindowStyle;
@@ -334,7 +334,7 @@ TYPE
 			mainPanel.takesFocus.Set(TRUE);
 
 			(* -- tabs -- *)
-			NEW(tabPanel); tabPanel.bounds.SetHeight(20); tabPanel.fillColor.Set(LONGINT(0CCCCCCFFH));
+			NEW(tabPanel); tabPanel.bounds.SetHeight(20); tabPanel.fillColor.Set(SIGNED32(0CCCCCCFFH));
 			tabPanel.alignment.Set(WMComponents.AlignTop);
 			NEW(pstyleButton); pstyleButton.caption.SetAOC("Paragraph"); pstyleButton.alignment.Set(WMComponents.AlignLeft);
 			(* pstyleButton.SetExtPointerDownHandler(TabHandler); *)
@@ -351,7 +351,7 @@ TYPE
 			NEW(borderPanel); borderPanel.bounds.SetWidth(200); borderPanel.alignment.Set(WMComponents.AlignLeft);
 			borderPanel.hasInnerBevel := TRUE; borderPanel.innerBevelDown := TRUE; borderPanel.SetBorder(8,8,8,8);
 			NEW(gridPanel); gridPanel.alignment.Set(WMComponents.AlignClient);
-			gridPanel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			gridPanel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			NEW(pList); pList.alignment.Set(WMComponents.AlignClient);
 			pList.onClick.Add(PClickSelected);
 			pList.model.Acquire;
@@ -373,7 +373,7 @@ TYPE
 			NEW(label); label.bounds.SetWidth(labelWidth); label.caption.SetAOC(" Paragraph Style Name:");
 			label.alignment.Set(WMComponents.AlignLeft);
 			NEW(pName); pName.alignment.Set(WMComponents.AlignClient);
-			pName.multiLine.Set(FALSE); pName.fillColor.Set(LONGINT(0FFFFFFFFH)); pName.tv.showBorder.Set(TRUE);
+			pName.multiLine.Set(FALSE); pName.fillColor.Set(SIGNED32(0FFFFFFFFH)); pName.tv.showBorder.Set(TRUE);
 			pName.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			pName.tv.borders.Set(WMRectangles.MakeRect(3,3,1,1)); pName.onEnter.Add(UpdateValueHandler);
 			panel.AddContent(label);
@@ -386,7 +386,7 @@ TYPE
 			NEW(button1); button1.caption.SetAOC("+"); button1.alignment.Set(WMComponents.AlignRight);
 			button1.SetExtPointerDownHandler(AlignHandler); button1.bounds.SetWidth(20);
 			NEW(pAlign); pAlign.alignment.Set(WMComponents.AlignClient);
-			pAlign.multiLine.Set(FALSE); pAlign.fillColor.Set(LONGINT(0FFFFFFFFH)); pAlign.tv.showBorder.Set(TRUE);
+			pAlign.multiLine.Set(FALSE); pAlign.fillColor.Set(SIGNED32(0FFFFFFFFH)); pAlign.tv.showBorder.Set(TRUE);
 			pAlign.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			pAlign.tv.borders.Set(WMRectangles.MakeRect(3,3,1,1)); pAlign.onEnter.Add(UpdateValueHandler);
 			panel.AddContent(label); panel.AddContent(button1);
@@ -397,7 +397,7 @@ TYPE
 			NEW(label); label.bounds.SetWidth(labelWidth); label.caption.SetAOC(" First Line Indent:");
 			label.alignment.Set(WMComponents.AlignLeft);
 			NEW(pFirstIndent); pFirstIndent.alignment.Set(WMComponents.AlignClient);
-			pFirstIndent.multiLine.Set(FALSE); pFirstIndent.fillColor.Set(LONGINT(0FFFFFFFFH)); pFirstIndent.tv.showBorder.Set(TRUE);
+			pFirstIndent.multiLine.Set(FALSE); pFirstIndent.fillColor.Set(SIGNED32(0FFFFFFFFH)); pFirstIndent.tv.showBorder.Set(TRUE);
 			pFirstIndent.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			pFirstIndent.tv.borders.Set(WMRectangles.MakeRect(3,3,1,1)); pFirstIndent.onEnter.Add(UpdateValueHandler);
 			panel.AddContent(label);
@@ -488,7 +488,7 @@ TYPE
 			NEW(borderPanel); borderPanel.bounds.SetWidth(200); borderPanel.alignment.Set(WMComponents.AlignLeft);
 			borderPanel.hasInnerBevel := TRUE; borderPanel.innerBevelDown := TRUE; borderPanel.SetBorder(8,8,8,8);
 			NEW(gridPanel); gridPanel.bounds.SetWidth(200); gridPanel.alignment.Set(WMComponents.AlignClient);
-			gridPanel.fillColor.Set(LONGINT(0FFFFFFFFH));
+			gridPanel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 			NEW(cList); cList.alignment.Set(WMComponents.AlignClient);
 			cList.onClick.Add(CClickSelected);
 			cList.model.Acquire;
@@ -616,13 +616,13 @@ TYPE
 			propertyPanel.AddContent(panel);
 			NEW(groupPanel); groupPanel.alignment.Set(WMComponents.AlignTop);
 			groupPanel.SetCaption("Preview:"); groupPanel.bounds.SetHeight(80);
-			NEW(previewLabel); previewLabel.fillColor.Set(LONGINT(0FFFFFFFFH)); previewLabel.alignment.Set(WMComponents.AlignClient);
+			NEW(previewLabel); previewLabel.fillColor.Set(SIGNED32(0FFFFFFFFH)); previewLabel.alignment.Set(WMComponents.AlignClient);
 			previewLabel.caption.SetAOC("The quick brown Fox jumped over the lazy Dog"); previewLabel.alignH.Set(1); previewLabel.alignV.Set(1);
 			groupPanel.AddContent(previewLabel);
 			propertyPanel.AddContent(groupPanel);
 			NEW(fontNotFound); fontNotFound.bounds.SetHeight(20); fontNotFound.alignment.Set(WMComponents.AlignTop);
 			fontNotFound.caption.SetAOC("  ERROR: Font not found! - using DefaultFont"); fontNotFound.visible.Set(FALSE);
-			propertyPanel.AddContent(fontNotFound); fontNotFound.textColor.Set(LONGINT(0FF0000FFH));
+			propertyPanel.AddContent(fontNotFound); fontNotFound.textColor.Set(SIGNED32(0FF0000FFH));
 
 			(* -- character style buttons -- *)
 			NEW(buttonPanel); buttonPanel.bounds.SetHeight(30); buttonPanel.fillColor.Set(panelColor);
@@ -653,7 +653,7 @@ TYPE
 		VAR newEditor: WMEditors.Editor;
 		BEGIN
 			NEW(newEditor); newEditor.alignment.Set(WMComponents.AlignClient);
-			newEditor.multiLine.Set(FALSE); newEditor.fillColor.Set(LONGINT(0FFFFFFFFH)); newEditor.tv.showBorder.Set(TRUE);
+			newEditor.multiLine.Set(FALSE); newEditor.fillColor.Set(SIGNED32(0FFFFFFFFH)); newEditor.tv.showBorder.Set(TRUE);
 			newEditor.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			newEditor.tv.borders.Set(WMRectangles.MakeRect(3,3,1,1)); newEditor.onEnter.Add(UpdateValueHandler);
 			newEditor.SetExtFocusHandler(FocusHandler);
@@ -694,7 +694,7 @@ TYPE
 		END Close;
 
 		PROCEDURE LoadStyleList*(VAR doc: DTPData.Document);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			document := doc;
 			pList.model.Acquire;
@@ -828,8 +828,8 @@ TYPE
 
 		PROCEDURE UpdateValueHandler(sender, data: ANY);
 		VAR tempString : ARRAY 64 OF CHAR;
-			tempLReal : LONGREAL;
-			tempInt : LONGINT; res: WORD;
+			tempLReal : FLOAT64;
+			tempInt : SIGNED32; res: INTEGER;
 			tempCharStyle: DTPData.CharacterStyleObject;
 			tempFont: WMGraphics.Font;
 		BEGIN
@@ -1008,7 +1008,7 @@ TYPE
 		END UpdateValueHandler;
 
 		PROCEDURE UpdateList;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			pList.model.Acquire;
 			i := 0;
@@ -1069,7 +1069,7 @@ TYPE
 
 		PROCEDURE ImportParagraphStyles(filename: ARRAY OF CHAR);
 		VAR tempString : ARRAY 256 OF CHAR;
-			tempReal : LONGREAL;
+			tempReal : FLOAT64;
 			reader : Files.Reader;
 			parser : XMLParser.Parser;
 			scanner : XMLScanner.Scanner;
@@ -1127,7 +1127,7 @@ TYPE
 
 		PROCEDURE ApplyPHandler(sender, data: ANY);
 		VAR tempString : ARRAY 256 OF CHAR;
-			tempLReal: LONGREAL;
+			tempLReal: FLOAT64;
 			tempCharStyle : DTPData.CharacterStyleObject;
 		BEGIN
 			(* retrieve tempvalues first.. *)
@@ -1251,7 +1251,7 @@ TYPE
 			newCStyle.scaleHorizontal := 100;
 			newCStyle.scaleVertical := 100;
 			newCStyle.color := 0000000FFH;
-			newCStyle.bgColor := LONGINT(0FFFFFF00H);
+			newCStyle.bgColor := SIGNED32(0FFFFFF00H);
 
 			INC(styleCounter);
 			document.AddStyle(newCStyle);
@@ -1270,8 +1270,8 @@ TYPE
 
 		PROCEDURE ImportCharacterStyles(filename: ARRAY OF CHAR);
 		VAR tempString : ARRAY 256 OF CHAR;
-			tempReal: LONGREAL;
-			tempInt: LONGINT; res: WORD;
+			tempReal: FLOAT64;
+			tempInt: SIGNED32; res: INTEGER;
 			reader : Files.Reader;
 			parser : XMLParser.Parser;
 			scanner : XMLScanner.Scanner;
@@ -1337,8 +1337,8 @@ TYPE
 
 		PROCEDURE ApplyCHandler(sender, data: ANY);
 		VAR tempString : ARRAY 256 OF CHAR;
-			tempLReal: LONGREAL;
-			tempInt: LONGINT; res: WORD;
+			tempLReal: FLOAT64;
+			tempInt: SIGNED32; res: INTEGER;
 			tempFont : WMGraphics.Font;
 		BEGIN
 			(* retrieve tempvalues first for those who didn't press enter after changing a value... *)
@@ -1581,7 +1581,7 @@ TYPE
 		END Init;
 
 (*		PROCEDURE Draw(canvas : WMGraphics.Canvas);
-		VAR mode, ul, mid, borderWidth, lr, xpos, ypos : LONGINT;
+		VAR mode, ul, mid, borderWidth, lr, xpos, ypos : SIGNED32;
 			 tc : WMGraphics.Color; img : WMGraphics.Image; r, rect : WMGraphics.Rectangle; down : BOOLEAN;
 			 str : Strings.String;
 		BEGIN
@@ -1646,7 +1646,7 @@ TYPE
 
 	Checkbox* = OBJECT(WMComponents.VisualComponent)
 	VAR caption* : ARRAY 64 OF CHAR;
-		leftBorder*: LONGINT;
+		leftBorder*: SIGNED32;
 		font : WMGraphics.Font;
 		checked*, default*, hasThreeStates*, inactive*: BOOLEAN;
 		imgChecked, imgUnchecked, imgCheckedDefault, imgCheckedInactive, imgUncheckedInactive: WMGraphics.Image;
@@ -1730,7 +1730,7 @@ TYPE
 		BEGIN
 			Init^;
 			fontColor := 0000000FFH;
-			fontBackColor := LONGINT(0FFFFFFFFH);
+			fontBackColor := SIGNED32(0FFFFFFFFH);
 			SetFont(WMGraphics.GetFont("Oberon", 16, {})); (* WMGraphics.FontBold *)
 		END Init;
 
@@ -1751,7 +1751,7 @@ TYPE
 	LinePanel* = OBJECT(WMStandardComponents.Panel)
 	VAR isHorizontal: BOOLEAN;
 		caption* : ARRAY 64 OF CHAR;
-		captionColor*: LONGINT;
+		captionColor*: SIGNED32;
 		captionFont : WMGraphics.Font;
 
 		PROCEDURE &Init*;
@@ -1765,9 +1765,9 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR rect: WMRectangles.Rectangle;
-			highlight, shadow: LONGINT; w, h, dist : SIZE;
+			highlight, shadow: SIGNED32; w, h, dist : SIZE;
 		BEGIN
-			highlight := LONGINT(0FFFFFF80H);
+			highlight := SIGNED32(0FFFFFF80H);
 			shadow := 000000080H;
 			rect := GetClientRect();
 			dist := (rect.b-rect.t) DIV 2;
@@ -1822,10 +1822,10 @@ TYPE
 
 		PROCEDURE DrawBackground*(canvas: WMGraphics.Canvas);
 		VAR rect: WMRectangles.Rectangle;
-			highlight, shadow: LONGINT; w, h : SIZE;
+			highlight, shadow: SIGNED32; w, h : SIZE;
 
 		BEGIN
-			highlight := LONGINT(0FFFFFF80H);
+			highlight := SIGNED32(0FFFFFF80H);
 			shadow := 000000080H;
 			rect := GetClientRect();
 			(* canvas.Fill(rect, 0FF0000FFH, WMGraphics.ModeSrcOverDst); *)
@@ -1906,7 +1906,7 @@ TYPE
 			Invalidate;
 		END UpdateBorder;
 
-		PROCEDURE SetBorder*(left, top, right, bottom: LONGINT);
+		PROCEDURE SetBorder*(left, top, right, bottom: SIGNED32);
 		BEGIN
 			border := WMRectangles.MakeRect(left, top, right, bottom);
 			UpdateBorder;
@@ -1933,28 +1933,28 @@ TYPE
 		caption* : ARRAY 128 OF CHAR;
 		textColor* : WMGraphics.Color;
 		font*: WMGraphics.Font;
-		alignH*, alignV* : LONGINT;			(*	0:	AlignLeft/AlignTop				*)
+		alignH*, alignV* : SIGNED32;			(*	0:	AlignLeft/AlignTop				*)
 											(*	1:	AlignCenter						*)
 		 									(*	2:	AlignRight/Bottom				*)
 		hasBevel* : BOOLEAN;
-		bevelWidth* : LONGINT;
+		bevelWidth* : SIGNED32;
 		bevelColor* : WMGraphics.Color;
 		bevelDown* : BOOLEAN;
 
 		hasInnerBevel* : BOOLEAN;
-		innerBevelWidth* : LONGINT;
+		innerBevelWidth* : SIGNED32;
 		innerBevelColor* : WMGraphics.Color;
 		innerBevelDown* : BOOLEAN;
 
 		hasGlass* : BOOLEAN;
-		glassWidth* : LONGINT;
+		glassWidth* : SIGNED32;
 		glassDown* : BOOLEAN;
 		glassOpenSides* : SET;
 
 		img* : Raster.Image;
-		imgBorderWidth* : LONGINT;
+		imgBorderWidth* : SIGNED32;
 		altFillColor* : WMGraphics.Color;
-		fillMode* : LONGINT;				(*	0:	Solid							*)
+		fillMode* : SIGNED32;				(*	0:	Solid							*)
 											(*	1:	Gradient Horizontal				*)
 											(*	2:	Gradient Vertical				*)
 											(*	3:	Gradient Reflected Horizontal	*)
@@ -1969,8 +1969,8 @@ TYPE
 			Init^;
 			border := WMRectangles.MakeRect(0,0,0,0);
 			caption := ""; textColor := 0000000FFH; alignH := 0; alignV := 0;
-			hasBevel := FALSE; bevelWidth := 5; bevelColor := LONGINT(088888888H); bevelDown := FALSE;
-			hasInnerBevel := FALSE; innerBevelWidth := 5; innerBevelColor := LONGINT(088888888H); innerBevelDown := TRUE;
+			hasBevel := FALSE; bevelWidth := 5; bevelColor := SIGNED32(088888888H); bevelDown := FALSE;
+			hasInnerBevel := FALSE; innerBevelWidth := 5; innerBevelColor := SIGNED32(088888888H); innerBevelDown := TRUE;
 			hasGlass := FALSE; glassWidth := 5; glassDown := TRUE; glassOpenSides := {};
 			altFillColor := fillColor.Get(); fillMode := 0;
 			CreateComponent;
@@ -1983,7 +1983,7 @@ TYPE
 			NEW(spacerTop); spacerTop.bounds.SetHeight(border.t); spacerTop.alignment.Set(WMComponents.AlignTop);
 			NEW(spacerRight); spacerRight.bounds.SetWidth(border.r); spacerRight.alignment.Set(WMComponents.AlignRight);
 			NEW(spacerBottom); spacerBottom.bounds.SetHeight(border.b); spacerBottom.alignment.Set(WMComponents.AlignBottom);
-			NEW(centerContent); centerContent.alignment.Set(WMComponents.AlignClient); centerContent.fillColor.Set(LONGINT(0FF8800FFH));
+			NEW(centerContent); centerContent.alignment.Set(WMComponents.AlignClient); centerContent.fillColor.Set(SIGNED32(0FF8800FFH));
 			AddContent^(spacerTop);
 			AddContent^(spacerBottom);
 			NEW(panel); panel.alignment.Set(WMComponents.AlignClient);
@@ -1999,7 +1999,7 @@ TYPE
 			Invalidate;
 		END UpdateBorder;
 
-		PROCEDURE SetBorder*(left, top, right, bottom: LONGINT);
+		PROCEDURE SetBorder*(left, top, right, bottom: SIGNED32);
 		BEGIN
 			border := WMRectangles.MakeRect(left, top,right, bottom);
 			UpdateBorder;
@@ -2017,7 +2017,7 @@ TYPE
 
 		PROCEDURE Draw*(canvas: WMGraphics.Canvas);
 		VAR rect, rect1, rect2: WMRectangles.Rectangle;
-			color: WMGraphics.Color; mode: LONGINT;
+			color: WMGraphics.Color; mode: SIGNED32;
 		BEGIN
 			(* DrawBackground(canvas); *)
 			rect := GetClientRect(); color := fillColor.Get(); mode := WMGraphics.ModeSrcOverDst;
@@ -2068,7 +2068,7 @@ TYPE
 			DrawForeground(canvas);
 		END Draw;
 
-		PROCEDURE DrawRepeating(canvas: WMGraphics.Canvas; rectangle: WMRectangles.Rectangle; image: Raster.Image; mode: LONGINT);
+		PROCEDURE DrawRepeating(canvas: WMGraphics.Canvas; rectangle: WMRectangles.Rectangle; image: Raster.Image; mode: SIGNED32);
 
 		END DrawRepeating;
 
@@ -2082,48 +2082,48 @@ VAR
 	ctxRegular, ctxBold, ctxItalic, ctxBoldItalic: ContextMenuData;
 
 
-PROCEDURE Inc*(VAR a, b: REAL);
+PROCEDURE Inc*(VAR a, b: FLOAT32);
 BEGIN
 	a := a + b;
 END Inc;
 
-PROCEDURE Dec*(VAR a, b: REAL);
+PROCEDURE Dec*(VAR a, b: FLOAT32);
 BEGIN
 	a := a - b;
 END Dec;
 
 (* converts a 16.16 fixpoint integer to float *)
-PROCEDURE FixpToFloat*(x: SIZE): REAL;
+PROCEDURE FixpToFloat*(x: SIZE): FLOAT32;
 BEGIN
 	RETURN (x / 65536);
 END FixpToFloat;
 
 (* converts a float into a 16.16 fixpoint integer *)
-PROCEDURE FloatToFixp*(x: REAL): LONGINT;
+PROCEDURE FloatToFixp*(x: FLOAT32): SIGNED32;
 BEGIN
 	IF x > 65536 THEN x := 65536; RETURN ENTIER(x);
 	ELSE RETURN ENTIER(x * (65536));
 	END;
 END FloatToFixp;
 
-PROCEDURE OutReal*(input: REAL; digits: LONGINT);
+PROCEDURE OutReal*(input: FLOAT32; digits: SIGNED32);
 VAR tempString: ARRAY 64 OF CHAR;
 BEGIN
 	Strings.FloatToStr(input, 0, digits, 0, tempString);
 	KernelLog.String(tempString);
 END OutReal;
 
-PROCEDURE ROUND*(input: REAL): LONGINT;
-VAR output: LONGINT;
+PROCEDURE ROUND*(input: FLOAT32): SIGNED32;
+VAR output: SIGNED32;
 BEGIN
 	output := ENTIER(input+0.5);
 	RETURN output;
 END ROUND;
 
-PROCEDURE RANDOM*(upperBound, lowerBound: LONGINT): LONGINT;
+PROCEDURE RANDOM*(upperBound, lowerBound: SIGNED32): SIGNED32;
 CONST
 	a = 16807; m = 2147483647; q = m DIV a; r = m MOD a;
-VAR random, seed, unused, gamma: LONGINT;
+VAR random, seed, unused, gamma: SIGNED32;
 BEGIN
 	(* get a seed *)
 	Dates.DateTimeToOberon(Dates.Now(), unused, seed);

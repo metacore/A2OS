@@ -6,10 +6,10 @@ VAR
 	w: DMA.Writer;
 	r: DMA.Reader;
 	src, dst: POINTER TO ARRAY 2048 + 16 OF CHAR;
-	len, size, burst, i, srcOfs, dstOfs: LONGINT;
+	len, size, burst, i, srcOfs, dstOfs: SIGNED32;
 	errors, ovf1, ovf2: BOOLEAN;
 
-	PROCEDURE Align (address: ADDRESS; align: LONGINT): LONGINT;
+	PROCEDURE Align (address: ADDRESS; align: SIGNED32): SIGNED32;
 	VAR
 	BEGIN
 		IF align = 8 THEN

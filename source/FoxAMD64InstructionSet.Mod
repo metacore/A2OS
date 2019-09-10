@@ -916,7 +916,7 @@ VAR
 	opXLATB*,
 	opXOR*,
 	opXORPD*,
-	opXORPS*: LONGINT;
+	opXORPS*: SIGNED32;
 (* AVX 2 Media instructions *)
 	opVAESKEYGENASSIST*,
 	opVPMADCSWD*,
@@ -1343,7 +1343,7 @@ VAR
 	opVZEROALL*,
 	opVZEROUPPER*
 
-	: LONGINT
+	: SIGNED32
 
 	(*
 		FoxProgTools.Enum -l=8 -e
@@ -1368,7 +1368,7 @@ CONST
 
 TYPE
 	Name = ARRAY 20 OF CHAR;
-	OperandType* = WORD;
+	OperandType* = INTEGER;
 	CPUOptions*= SET;
 	Code*=CHAR; (* should be unsigned -- for emitter *)
 
@@ -1383,7 +1383,7 @@ TYPE
 
 	Mnemonic* = RECORD
 		name-: ARRAY maxMnemonicNameLength OF CHAR;
-		firstInstruction-, lastInstruction-: LONGINT;
+		firstInstruction-, lastInstruction-: SIGNED32;
 	END;
 
 	CPUType* = RECORD
@@ -1395,27 +1395,27 @@ TYPE
 		name-: Name; (* name for debug output and for an assembler *)
 		type-: OperandType; (* can be one of reg8, reg16, reg32, reg64, CRn, DRn, segReg, mmx, xmm, sti
 								the particular value of reg8 ... sti does not have a meaning *)
-		index-: SHORTINT; (* this index has a meaning for instruction encoding, it is the register index used in the instruction *)
-		sizeInBytes-: SHORTINT; (* size in bytes *)
+		index-: SIGNED8; (* this index has a meaning for instruction encoding, it is the register index used in the instruction *)
+		sizeInBytes-: SIGNED8; (* size in bytes *)
 	END;
 
 VAR
 	(* repository *)
 	mnemonics-: ARRAY maxNumberMnemonics OF Mnemonic;
-	numberMnemonics: LONGINT;
+	numberMnemonics: SIGNED32;
 
 	instructions-: ARRAY maxNumberInstructions OF Instruction;
-	numberInstructions: LONGINT;
+	numberInstructions: SIGNED32;
 
 	registers-: ARRAY numberRegisters OF Register;
-	registersByClass-: ARRAY sti+1 OF ARRAY 17 OF LONGINT;
+	registersByClass-: ARRAY sti+1 OF ARRAY 17 OF SIGNED32;
 
 	cpus-: ARRAY maxCPUs OF CPUType;
-	cpuCount: LONGINT;
+	cpuCount: SIGNED32;
 
 	(* perform a binary search for the index of the specified mnemonic *)
-	PROCEDURE FindMnemonic* (CONST mnem: ARRAY OF CHAR): LONGINT;
-	VAR l, r, m: LONGINT;
+	PROCEDURE FindMnemonic* (CONST mnem: ARRAY OF CHAR): SIGNED32;
+	VAR l, r, m: SIGNED32;
 	BEGIN
 		l := 0;
 		r := numberMnemonics;
@@ -1430,8 +1430,8 @@ VAR
 	END FindMnemonic;
 
 	(* search for the register name and return it's index *)
-	PROCEDURE FindRegister* (CONST reg: ARRAY OF CHAR): LONGINT;
-	VAR i: LONGINT;
+	PROCEDURE FindRegister* (CONST reg: ARRAY OF CHAR): SIGNED32;
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO numberRegisters - 1 DO
 			IF registers[i].name = reg THEN RETURN i END;
@@ -1439,17 +1439,17 @@ VAR
 		RETURN none;
 	END FindRegister;
 
-	PROCEDURE RegisterType*(regNumber: LONGINT): OperandType;
+	PROCEDURE RegisterType*(regNumber: SIGNED32): OperandType;
 	BEGIN IF regNumber = none THEN RETURN none ELSE RETURN registers[regNumber].type END
 	END RegisterType;
 
-	PROCEDURE RegisterIndex*(regNumber: LONGINT): SHORTINT;
+	PROCEDURE RegisterIndex*(regNumber: SIGNED32): SIGNED8;
 	BEGIN IF regNumber = none THEN RETURN none ELSE RETURN registers[regNumber].index END
 	END RegisterIndex;
 
 	(* search for the CPU name and return it's index *)
-	PROCEDURE FindCPU* (CONST cpu: ARRAY OF CHAR): LONGINT;
-	VAR i: LONGINT;
+	PROCEDURE FindCPU* (CONST cpu: ARRAY OF CHAR): SIGNED32;
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO cpuCount - 1 DO
 			IF cpus[i].name = cpu THEN RETURN i END;
@@ -1457,7 +1457,7 @@ VAR
 		RETURN none;
 	END FindCPU;
 
-				PROCEDURE StringToOperand(CONST name: ARRAY OF CHAR): SHORTINT;
+				PROCEDURE StringToOperand(CONST name: ARRAY OF CHAR): SIGNED8;
 				BEGIN
 					IF name = "" THEN RETURN none
 					ELSIF name = "1" THEN RETURN one;
@@ -1599,8 +1599,8 @@ VAR
 					END;
 				END StringToOperand;
 
-			PROCEDURE ParseOperand(CONST op: ARRAY OF CHAR; VAR at: LONGINT): SHORTINT;
-			VAR name: ARRAY 32 OF CHAR; i: LONGINT;
+			PROCEDURE ParseOperand(CONST op: ARRAY OF CHAR; VAR at: SIGNED32): SIGNED8;
+			VAR name: ARRAY 32 OF CHAR; i: SIGNED32;
 			BEGIN
 				i := 0;
 				WHILE(op[at] # 0X) & (op[at] # ",") DO
@@ -1616,7 +1616,7 @@ VAR
 	PROCEDURE InitInstructions;
 	VAR
 
-		PROCEDURE AddMnemonic(VAR op: LONGINT; CONST name: ARRAY OF CHAR);
+		PROCEDURE AddMnemonic(VAR op: SIGNED32; CONST name: ARRAY OF CHAR);
 		BEGIN
 			op := numberMnemonics;
 			COPY (name, mnemonics[op].name);
@@ -1624,7 +1624,7 @@ VAR
 			INC(numberMnemonics);
 		END AddMnemonic;
 
-		PROCEDURE HexOrd (ch: CHAR): WORD;
+		PROCEDURE HexOrd (ch: CHAR): INTEGER;
 		BEGIN
 			IF ("0" <= ch) & (ch <= "9") THEN RETURN ORD (ch) - ORD ("0")
 			ELSIF ("A" <= ch) & (ch <= "F") THEN RETURN ORD (CAP (ch)) - ORD ("A") + 10
@@ -1652,7 +1652,7 @@ VAR
 
 			all symbols 8 bit wide, numbers also 8 bits wide
 		*)
-		VAR i,k,length: SHORTINT; ch1,ch2: CHAR;
+		VAR i,k,length: SIGNED8; ch1,ch2: CHAR;
 		BEGIN
 			i := 0; k := 0;
 			WHILE(charcode[2*i] # 0X) DO
@@ -1739,8 +1739,8 @@ VAR
 			all symbols 8 bit wide, numbers also 8 bits wide
 		*)
 
-			PROCEDURE GetCode(CONST charcode: ARRAY OF CHAR; VAR at: LONGINT; VAR cd: ARRAY OF CHAR): BOOLEAN;
-			VAR i: LONGINT;
+			PROCEDURE GetCode(CONST charcode: ARRAY OF CHAR; VAR at: SIGNED32; VAR cd: ARRAY OF CHAR): BOOLEAN;
+			VAR i: SIGNED32;
 			BEGIN
 				WHILE(charcode[at] = " ") DO INC(at) END;
 				IF charcode[at] = 0X THEN RETURN FALSE END;
@@ -1753,7 +1753,7 @@ VAR
 				RETURN TRUE;
 			END GetCode;
 
-		VAR i,k,length: SHORTINT; ch1,ch2: CHAR; cdc: ARRAY 32 OF CHAR; at,mul,val: LONGINT;
+		VAR i,k,length: SIGNED8; ch1,ch2: CHAR; cdc: ARRAY 32 OF CHAR; at,mul,val: SIGNED32;
 		BEGIN
 			i := 0; k := 0; at := 0;
 			WHILE(GetCode(charcode,at,cdc)) DO
@@ -1895,8 +1895,8 @@ VAR
 			END;
 		END EncodeV;
 
-		PROCEDURE AddInstructionV(mnemonic: LONGINT; CONST operands, code: ARRAY OF CHAR);
-		VAR i, at: LONGINT; name: ARRAY 32 OF CHAR;
+		PROCEDURE AddInstructionV(mnemonic: SIGNED32; CONST operands, code: ARRAY OF CHAR);
+		VAR i, at: SIGNED32; name: ARRAY 32 OF CHAR;
 		BEGIN
 			i := 0; at := 0;
 			WHILE (i<maxNumberOperands) DO
@@ -1918,8 +1918,8 @@ VAR
 			INC(numberInstructions);
 		END AddInstructionV;
 
-		PROCEDURE AddInstruction(mnemonic: LONGINT; CONST op,code: ARRAY OF CHAR; bitwidthOptions, cpuOptions: SET);
-		VAR i: SHORTINT; at: LONGINT;
+		PROCEDURE AddInstruction(mnemonic: SIGNED32; CONST op,code: ARRAY OF CHAR; bitwidthOptions, cpuOptions: SET);
+		VAR i: SIGNED8; at: SIGNED32;
 
 		BEGIN
 			i := 0; at := 0;
@@ -5156,7 +5156,7 @@ VAR
 	(** setup register tables **)
 	PROCEDURE InitRegisters;
 		(* insert an new register *)
-		PROCEDURE AddRegister (number: LONGINT; CONST name: ARRAY OF CHAR; type: OperandType; sizeInBytes: SHORTINT; index: SHORTINT);
+		PROCEDURE AddRegister (number: SIGNED32; CONST name: ARRAY OF CHAR; type: OperandType; sizeInBytes: SIGNED8; index: SIGNED8);
 		BEGIN
 			COPY (name, registers[number].name);
 			registers[number].type := type;
@@ -5166,7 +5166,7 @@ VAR
 		END AddRegister;
 
 		PROCEDURE InitRegisters;
-		VAR i,j: LONGINT;
+		VAR i,j: SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(registersByClass)-1 DO
 				FOR j := 0 TO LEN(registersByClass[i])-1 DO
@@ -5388,7 +5388,7 @@ VAR
 	END InitCPUs;
 
 	PROCEDURE Trace*;
-	VAR instr,mnem: LONGINT; i: LONGINT;
+	VAR instr,mnem: SIGNED32; i: SIGNED32;
 	BEGIN
 		FOR mnem := 0 TO numberMnemonics-1 DO
 			KernelLog.String(mnemonics[mnem].name); KernelLog.Ln;
@@ -5446,21 +5446,21 @@ System.FreeDownTo FoxAMD64InstructionSet ~
 		cpuoptions-: CnUOptions; (* necessary CPU options for the instruction to be available *)
 
 		prefixFlags-: SET;
-		numerLegacyPrefixes-: SHORTINT;
+		numerLegacyPrefixes-: SIGNED8;
 		legacyPrefixes-: ARRAY MaxLegacyPrefixes OF CHAR; (* legacy prefixes *)
 
 		usedREXPrefix-:BOOLEAN;
 		REXPrefix-:CHAR; (* REX prefix *)
 
 		opcodeFlags-: SET;
-		numberOpcodes-: SHORTINT; (* 1..MaxOpCodes *)
+		numberOpcodes-: SIGNED8; (* 1..MaxOpCodes *)
 		opcode-: ARRAY MaxOpCodes OF CHAR;
 		usedModRM-: BOOLEAN;
 		ModRM: CHAR; (* mode-register-memory *)
 		usedSIB_: BOOLEAN;
 		SIB-: CHAR; (* scale-index-base *)
 
-		numberOperands-: SHORTINT; (* 0.. MaxOperands *)
+		numberOperands-: SIGNED8; (* 0.. MaxOperands *)
 		operand-: ARRAY MaxOperands OF Operand;
 	END;
 

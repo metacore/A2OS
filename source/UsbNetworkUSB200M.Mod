@@ -144,7 +144,7 @@ CONST
 	RX = 0;
 	TX = 1;
 
-	TxPadBytes = LONGINT(0FFFF0000H);
+	TxPadBytes = SIGNED32(0FFFF0000H);
 
 	UsbHeaderSize = 4;
 
@@ -182,7 +182,7 @@ TYPE
 			RETURN ownership;
 		END HasPhyOwnership;
 
-		PROCEDURE ReadRegister16*(register: LONGINT; VAR value : SET; VAR res : WORD);
+		PROCEDURE ReadRegister16*(register: SIGNED32; VAR value : SET; VAR res : INTEGER);
 		VAR status : Usbdi.Status;
 		BEGIN
 			status := device.Request(ReadCommand, ReadPhyRegister, phyId, register, 2, buffer^);
@@ -194,11 +194,11 @@ TYPE
 			END;
 		END ReadRegister16;
 
-		PROCEDURE WriteRegister16*(register : LONGINT; value : SET; VAR res : WORD);
+		PROCEDURE WriteRegister16*(register : SIGNED32; value : SET; VAR res : INTEGER);
 		VAR status : Usbdi.Status;
 		BEGIN
-			buffer[0] := CHR(SYSTEM.VAL(LONGINT, value));
-			buffer[1] := CHR(SYSTEM.VAL(LONGINT, LSH(value, -8)));
+			buffer[0] := CHR(SYSTEM.VAL(SIGNED32, value));
+			buffer[1] := CHR(SYSTEM.VAL(SIGNED32, LSH(value, -8)));
 			status := device.Request(WriteCommand, WritePhyRegister, phyId, register, 2, buffer^);
 			IF status = Usbdi.Ok THEN
 				res := Mii.Ok;
@@ -207,7 +207,7 @@ TYPE
 			END;
 		END WriteRegister16;
 
-		PROCEDURE &New*(device : Usbdi.UsbDevice; phyId : LONGINT);
+		PROCEDURE &New*(device : Usbdi.UsbDevice; phyId : SIGNED32);
 		BEGIN
 			Init(phyId);
 			SELF.device := device;
@@ -240,13 +240,13 @@ TYPE
 
 		mii : MII;
 
-		primaryPhyId, primaryPhyType : LONGINT;
-		secondaryPhyId, secondaryPhyType : LONGINT;
+		primaryPhyId, primaryPhyType : SIGNED32;
+		secondaryPhyId, secondaryPhyType : SIGNED32;
 
 		gpioConfiguration : SET;
 
-		PROCEDURE SendFrame*(dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: LONGINT);
-		VAR status : Usbdi.Status; i, packetSize, padLength : LONGINT;
+		PROCEDURE SendFrame*(dst: Network.LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR;  h3len, h4len, dofs, dlen: SIGNED32);
+		VAR status : Usbdi.Status; i, packetSize, padLength : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			(* 4 Byte USB header *)
 			packetSize := UsbNetwork.EthernetHeaderSize + h3len + h4len + dlen;
@@ -257,12 +257,12 @@ TYPE
 			END;
 
 			SYSTEM.PUT16(txBufferAdr, packetSize);
-			SYSTEM.PUT16(txBufferAdr + 2, SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, packetSize) / {0..15})); (* Checksum *)
+			SYSTEM.PUT16(txBufferAdr + 2, SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, packetSize) / {0..15})); (* Checksum *)
 
 			(* 14 Byte Ethernet Frame Header (destination address - source address - Frame type *)
 			SYSTEM.MOVE(ADDRESSOF(dst[0]), txBufferAdr + 4, 6);
 			SYSTEM.MOVE(ADDRESSOF(linkDevice.local[0]), txBufferAdr + 10, 6);
-			SYSTEM.PUT16(txBufferAdr + 16, ROT(SYSTEM.VAL(INTEGER, LONGINT(type)), 8));
+			SYSTEM.PUT16(txBufferAdr + 16, ROT(SYSTEM.VAL(SIGNED16, SIGNED32(type)), 8));
 
 			i := UsbNetwork.EthernetHeaderSize + UsbHeaderSize;
 			(* Network Layer Header *)
@@ -305,12 +305,12 @@ TYPE
 		PROCEDURE SoftwareReset(value : SET) : BOOLEAN;
 		VAR status : Usbdi.Status;
 		BEGIN
-			status := device.Request(WriteCommand, WriteSoftwareReset, SYSTEM.VAL(LONGINT, value), 0, 0, Usbdi.NoData);
+			status := device.Request(WriteCommand, WriteSoftwareReset, SYSTEM.VAL(SIGNED32, value), 0, 0, Usbdi.NoData);
 			RETURN status = Usbdi.Ok;
 		END SoftwareReset;
 
-		PROCEDURE GetLinkAddress(VAR linkAddress : Network.LinkAdr; VAR res : WORD);
-		VAR buffer : Usbdi.BufferPtr; status : Usbdi.Status; i : LONGINT;
+		PROCEDURE GetLinkAddress(VAR linkAddress : Network.LinkAdr; VAR res : INTEGER);
+		VAR buffer : Usbdi.BufferPtr; status : Usbdi.Status; i : SIGNED32;
 		BEGIN
 			NEW(buffer, 6);
 			status := device.Request(ReadCommand, ReadNodeId, 0, 0, 6, buffer^);
@@ -322,8 +322,8 @@ TYPE
 			END;
 		END GetLinkAddress;
 
-		PROCEDURE SetLinkAddress(linkAddress : Network.LinkAdr; VAR res : WORD);
-		VAR buffer : Usbdi.BufferPtr; status : Usbdi.Status; i : LONGINT;
+		PROCEDURE SetLinkAddress(linkAddress : Network.LinkAdr; VAR res : INTEGER);
+		VAR buffer : Usbdi.BufferPtr; status : Usbdi.Status; i : SIGNED32;
 		BEGIN
 			NEW(buffer, 6);
 			FOR i := 0 TO 5 DO buffer[i] := linkAddress[i]; END;
@@ -337,8 +337,8 @@ TYPE
 			END;
 		END SetLinkAddress;
 
-		PROCEDURE LinkReset(verbose : BOOLEAN; VAR res : WORD);
-		VAR mediumMode : SET; fullDuplex : BOOLEAN; linkSpeed : LONGINT;
+		PROCEDURE LinkReset(verbose : BOOLEAN; VAR res : INTEGER);
+		VAR mediumMode : SET; fullDuplex : BOOLEAN; linkSpeed : SIGNED32;
 		BEGIN
 			mediumMode := MSR_Default;
 			mii.Acquire;
@@ -379,7 +379,7 @@ TYPE
 		PROCEDURE WriteRxControl(rxControl16Bit : SET) : BOOLEAN;
 		VAR status : Usbdi.Status;
 		BEGIN
-			status := device.Request(WriteCommand, WriteRxControlRegister, SYSTEM.VAL(LONGINT, rxControl16Bit), 0, 0, Usbdi.NoData);
+			status := device.Request(WriteCommand, WriteRxControlRegister, SYSTEM.VAL(SIGNED32, rxControl16Bit), 0, 0, Usbdi.NoData);
 			RETURN status = Usbdi.Ok;
 		END WriteRxControl;
 
@@ -399,13 +399,13 @@ TYPE
 		PROCEDURE WriteMediumMode*(mediumMode16bit : SET) : BOOLEAN;
 		VAR status : Usbdi.Status;
 		BEGIN
-			status := device.Request(WriteCommand, WriteMediumModeRegister, SYSTEM.VAL(LONGINT, mediumMode16bit), 0, 0, Usbdi.NoData);
+			status := device.Request(WriteCommand, WriteMediumModeRegister, SYSTEM.VAL(SIGNED32, mediumMode16bit), 0, 0, Usbdi.NoData);
 			RETURN status = Usbdi.Ok;
 		END WriteMediumMode;
 
 		PROCEDURE ScanRxBuffer;
 		VAR
-			packetSize, packetSizeChecksum, packetSizeEven, type : LONGINT; res : WORD;
+			packetSize, packetSizeChecksum, packetSizeEven, type : SIGNED32; res : INTEGER;
 			index, packetStart, contiguousLength, bytesCopied : SIZE;
 			error : BOOLEAN;
 			buffer : Network.Buffer;
@@ -445,10 +445,10 @@ TYPE
 
 				packetSize := Network.Get2(rxBuffer^, index);
 				packetSizeChecksum := Network.Get2(rxBuffer^, index + 2);
-				packetSizeEven := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, packetSize + 1) * {1..31});
+				packetSizeEven := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, packetSize + 1) * {1..31});
 				packetStart := index + 4;
 
-				IF packetSize # SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, packetSizeChecksum) / {0..15}) THEN
+				IF packetSize # SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, packetSizeChecksum) / {0..15}) THEN
 					error := TRUE;
 					Show("Packet size checksum error"); KernelLog.Ln;
 					EXIT;
@@ -591,7 +591,7 @@ TYPE
 		END HandleBulkIn;
 
 		PROCEDURE HandleInterrupt*(status : Usbdi.Status; actLen : SIZE);
-		VAR s, register1, register2 : SET; oldLinkStatus : LONGINT; res : WORD;
+		VAR s, register1, register2 : SET; oldLinkStatus : SIGNED32; res : INTEGER;
 		BEGIN
 			IF (status = Usbdi.Ok) OR ((status = Usbdi.ShortPacket) & (actLen >=8)) THEN
 				s := SYSTEM.VAL(SET, ORD(interruptInBuffer[2]));
@@ -649,7 +649,7 @@ TYPE
 		PROCEDURE InitController*(VAR rxBuffer : Usbdi.BufferPtr) : BOOLEAN;
 		VAR
 			rxControl : SET;
-			res : WORD; timer : Kernel.Timer;
+			res : INTEGER; timer : Kernel.Timer;
 			customLinkAdr : Network.LinkAdr;
 		BEGIN
 			GetPhyId(primaryPhyId, primaryPhyType, secondaryPhyId, secondaryPhyType, res);
@@ -795,15 +795,15 @@ TYPE
 		END ReadIPGRegisters;
 
 		PROCEDURE WriteIPGRegisters(ipg, ipg1, ipg2 : CHAR) : BOOLEAN;
-		VAR wValue, wIndex : LONGINT; status : Usbdi.Status;
+		VAR wValue, wIndex : SIGNED32; status : Usbdi.Status;
 		BEGIN
-			wValue := ORD(ipg) + 100H* SYSTEM.VAL(LONGINT, ORD(ipg1));
-			wIndex := SYSTEM.VAL(LONGINT, ORD(ipg2));
+			wValue := ORD(ipg) + 100H* SYSTEM.VAL(SIGNED32, ORD(ipg1));
+			wIndex := SYSTEM.VAL(SIGNED32, ORD(ipg2));
 			status := device.Request(WriteCommand, WriteIpgControlRegister, wValue, wIndex, 0, Usbdi.NoData);
 			RETURN status = Usbdi.Ok;
 		END WriteIPGRegisters;
 
-		PROCEDURE ReadMonitorMode(VAR monitorMode, wakeupOnLinkup, wakeupOnMagicPacket : BOOLEAN; VAR usbSpeed : LONGINT) : BOOLEAN;
+		PROCEDURE ReadMonitorMode(VAR monitorMode, wakeupOnLinkup, wakeupOnMagicPacket : BOOLEAN; VAR usbSpeed : SIGNED32) : BOOLEAN;
 		VAR s : SET; buffer : Usbdi.BufferPtr; status : Usbdi.Status;
 		BEGIN
 			NEW(buffer, 1);
@@ -824,22 +824,22 @@ TYPE
 			IF monitorMode THEN INCL(set, MMR_MonitorMode); END;
 			IF wakeupOnLinkup THEN INCL(set, MMR_WakeupOnLinkup); END;
 			IF wakeupOnMagicPacket THEN INCL(set, MMR_WakeupOnMagicPacket); END;
-			status := device.Request(WriteCommand, WriteMonitorModeRegister, SYSTEM.VAL(LONGINT, set), 0, 0, Usbdi.NoData);
+			status := device.Request(WriteCommand, WriteMonitorModeRegister, SYSTEM.VAL(SIGNED32, set), 0, 0, Usbdi.NoData);
 			RETURN status = Usbdi.Ok;
 		END WriteMonitorMode;
 
-		PROCEDURE GetPhyId(VAR primaryPhyId, primaryPhyType, secondaryPhyId, secondaryPhyType: LONGINT; VAR res : WORD);
+		PROCEDURE GetPhyId(VAR primaryPhyId, primaryPhyType, secondaryPhyId, secondaryPhyType: SIGNED32; VAR res : INTEGER);
 		VAR set : SET; buffer : Usbdi.BufferPtr; status : Usbdi.Status;
 		BEGIN
 			NEW(buffer, 2);
 			status := device.Request(ReadCommand, ReadPhyAddressRegister, 0, 0, 2, buffer^);
 			IF status = Usbdi.Ok THEN
 				set := SYSTEM.VAL(SET, ORD(buffer[0]));
-				secondaryPhyId := SYSTEM.VAL(LONGINT, set * {0..4});
-				secondaryPhyType := SYSTEM.VAL(LONGINT, LSH(set * {5..7}, -5));
+				secondaryPhyId := SYSTEM.VAL(SIGNED32, set * {0..4});
+				secondaryPhyType := SYSTEM.VAL(SIGNED32, LSH(set * {5..7}, -5));
 				set := SYSTEM.VAL(SET, ORD(buffer[1]));
-				primaryPhyId := SYSTEM.VAL(LONGINT, set * {0..4});
-				primaryPhyType := SYSTEM.VAL(LONGINT, LSH(set * {5..7}, -5));
+				primaryPhyId := SYSTEM.VAL(SIGNED32, set * {0..4});
+				primaryPhyType := SYSTEM.VAL(SIGNED32, LSH(set * {5..7}, -5));
 				res := UsbNetwork.Ok;
 			ELSE
 				res := UsbNetwork.Error;
@@ -852,7 +852,7 @@ TYPE
 			@autoSelect: If TRUE, Automatically selected on link status of embedded PHY; If FALSE: Manually selected PHY
 			@res: UsbNetwork.Ok if command succeeded
 		*)
-		PROCEDURE GetPhySelectStatus(VAR embedded, autoSelect : BOOLEAN; VAR res : WORD);
+		PROCEDURE GetPhySelectStatus(VAR embedded, autoSelect : BOOLEAN; VAR res : INTEGER);
 		VAR buffer : Usbdi.BufferPtr; status : Usbdi.Status;
 		BEGIN
 			NEW(buffer, 1);
@@ -866,12 +866,12 @@ TYPE
 			END;
 		END GetPhySelectStatus;
 
-		PROCEDURE SetPhySelect(embedded, autoSelect : BOOLEAN; VAR res : WORD);
+		PROCEDURE SetPhySelect(embedded, autoSelect : BOOLEAN; VAR res : INTEGER);
 		VAR set : SET; status : Usbdi.Status;
 		BEGIN
 			IF embedded THEN INCL(set, 0); END;
 			IF autoSelect THEN INCL(set, 1); END;
-			status := device.Request(WriteCommand, WritePhySelectRegister, SYSTEM.VAL(LONGINT, set), 0, 0, Usbdi.NoData);
+			status := device.Request(WriteCommand, WritePhySelectRegister, SYSTEM.VAL(SIGNED32, set), 0, 0, Usbdi.NoData);
 			IF status = Usbdi.Ok THEN
 				res := UsbNetwork.Ok;
 			ELSE
@@ -879,7 +879,7 @@ TYPE
 			END;
 		END SetPhySelect;
 
-		PROCEDURE ReadGpioRegister(VAR gpio8bit : SET; VAR res : WORD);
+		PROCEDURE ReadGpioRegister(VAR gpio8bit : SET; VAR res : INTEGER);
 		VAR buffer : Usbdi.BufferPtr; status : Usbdi.Status;
 		BEGIN
 			NEW(buffer, 1);
@@ -895,7 +895,7 @@ TYPE
 		PROCEDURE WriteGpioRegister(gpio8bit : SET) : BOOLEAN;
 		VAR status : Usbdi.Status;
 		BEGIN
-			status := device.Request(WriteCommand, WriteGPIORegister, SYSTEM.VAL(LONGINT, gpio8bit), 0, 0, Usbdi.NoData);
+			status := device.Request(WriteCommand, WriteGPIORegister, SYSTEM.VAL(SIGNED32, gpio8bit), 0, 0, Usbdi.NoData);
 			RETURN status = Usbdi.Ok;
 		END WriteGpioRegister;
 
@@ -913,14 +913,14 @@ TYPE
 		END SromWriteEnable;
 
 		(* Read register from 2-byte addressed SROM *)
-		PROCEDURE SromRead16(address : LONGINT; VAR word : LONGINT;  VAR res : WORD);
+		PROCEDURE SromRead16(address : SIGNED32; VAR word : SIGNED32;  VAR res : INTEGER);
 		VAR buffer : Usbdi.BufferPtr; status : Usbdi.Status;
 		BEGIN
 			ASSERT(address < 256);
 			NEW(buffer, 2);
 			status := device.Request(ReadCommand, ReadSromRegister, address, 0, 2, buffer^);
 			IF status = Usbdi.Ok THEN
-				word := SYSTEM.VAL(LONGINT, ORD(buffer[0])) + 100H*SYSTEM.VAL(LONGINT, ORD(buffer[1]));
+				word := SYSTEM.VAL(SIGNED32, ORD(buffer[0])) + 100H*SYSTEM.VAL(SIGNED32, ORD(buffer[1]));
 				res := UsbNetwork.Ok;
 			ELSE
 				res := UsbNetwork.Error;
@@ -928,7 +928,7 @@ TYPE
 		END SromRead16;
 
 		(* Write register to 2-byte addressed SROM *)
-		PROCEDURE SromWrite16(address : LONGINT; word : LONGINT;  VAR res : WORD);
+		PROCEDURE SromWrite16(address : SIGNED32; word : SIGNED32;  VAR res : INTEGER);
 		VAR status : Usbdi.Status;
 		BEGIN
 			ASSERT(sRomWriteEnabled);
@@ -943,21 +943,21 @@ TYPE
 
 		(** SRAM buffer access *)
 
-		PROCEDURE WriteSRAM(ram, address : LONGINT; buffer : Usbdi.BufferPtr) : BOOLEAN;
-		VAR a : SET; wValue, wIndex : LONGINT; status : Usbdi.Status;
+		PROCEDURE WriteSRAM(ram, address : SIGNED32; buffer : Usbdi.BufferPtr) : BOOLEAN;
+		VAR a : SET; wValue, wIndex : SIGNED32; status : Usbdi.Status;
 		BEGIN (* UNTESTED *)
 			a := SYSTEM.VAL(SET, address);
-			wValue := SYSTEM.VAL(LONGINT, LSH(a * {0..7}, 8) + LSH(a * {8..10}, -8));
+			wValue := SYSTEM.VAL(SIGNED32, LSH(a * {0..7}, 8) + LSH(a * {8..10}, -8));
 			wIndex := LSH(ram, 8);
 			status := device.Request(WriteCommand, WriteRxTxRegister, wValue, wIndex, 8, buffer^);
 			RETURN status = Usbdi.Ok;
 		END WriteSRAM;
 
-		PROCEDURE ReadSRAM(ram, address : LONGINT; buffer : Usbdi.BufferPtr) : BOOLEAN;
-		VAR a : SET; wValue, wIndex : LONGINT; status : Usbdi.Status;
+		PROCEDURE ReadSRAM(ram, address : SIGNED32; buffer : Usbdi.BufferPtr) : BOOLEAN;
+		VAR a : SET; wValue, wIndex : SIGNED32; status : Usbdi.Status;
 		BEGIN (* UNTESTED *)
 			a := SYSTEM.VAL(SET, address);
-			wValue := SYSTEM.VAL(LONGINT, LSH(a * {0..7}, 8) + LSH(a * {8..10}, -8));
+			wValue := SYSTEM.VAL(SIGNED32, LSH(a * {0..7}, 8) + LSH(a * {8..10}, -8));
 			wIndex := LSH(ram, 8);
 			status := device.Request(ReadCommand, ReadRxTxRegister, wValue, wIndex, 8, buffer^);
 			RETURN status = Usbdi.Ok;
@@ -971,10 +971,10 @@ TYPE
 		VAR
 			linkAdr : Network.LinkAdr;
 			embeddedPhy, autoSelect : BOOLEAN;
-			monitorMode, wakeupOnLinkup, wakeupOnMagicPacket : BOOLEAN; usbSpeed : LONGINT;
-			priId, priType, secId, secType : LONGINT;
+			monitorMode, wakeupOnLinkup, wakeupOnMagicPacket : BOOLEAN; usbSpeed : SIGNED32;
+			priId, priType, secId, secType : SIGNED32;
 			set : SET;
-			i, word : LONGINT; res : WORD;
+			i, word : SIGNED32; res : INTEGER;
 		BEGIN
 			Diag^;
 			GetLinkAddress(linkAdr, res);
@@ -1037,7 +1037,7 @@ TYPE
 
 (* Converts a string formatted as AA:BB:CC:DD:EE:FF:GG into a Network link address *)
 PROCEDURE StringToLinkAdr(CONST string : ARRAY OF CHAR; VAR linkAdr : Network.LinkAdr) : BOOLEAN;
-VAR stringArray : Strings.StringArray; value : LONGINT; i : SIZE; res : WORD;
+VAR stringArray : Strings.StringArray; value : SIGNED32; i : SIZE; res : INTEGER;
 BEGIN
 	stringArray := Strings.Split(string, ":");
 	IF LEN(stringArray) = 6 THEN
@@ -1054,7 +1054,7 @@ BEGIN
 	RETURN FALSE;
 END StringToLinkAdr;
 
-PROCEDURE ShowMonitorMode(monitorMode, wakeupOnLinkup, wakeupOnMagicPacket : BOOLEAN;  usbSpeed : LONGINT);
+PROCEDURE ShowMonitorMode(monitorMode, wakeupOnLinkup, wakeupOnMagicPacket : BOOLEAN;  usbSpeed : SIGNED32);
 BEGIN
 	KernelLog.String("Monitor Mode Status:"); KernelLog.Ln;
 	KernelLog.String("   Monitor Mode: "); KernelLog.Boolean(monitorMode); KernelLog.Ln;
@@ -1098,7 +1098,7 @@ BEGIN
 END ShowMediumModeRegister;
 
 PROCEDURE ShowRxControlRegister(s : SET);
-VAR value : LONGINT;
+VAR value : SIGNED32;
 BEGIN
 	KernelLog.String("RX Control:"); KernelLog.Ln;
 	KernelLog.String("   Promiscuous mode: "); KernelLog.Boolean(RXCR_PromiscuousMode IN s); KernelLog.Ln;
@@ -1109,7 +1109,7 @@ BEGIN
 	KernelLog.String("      Unicasts whos DA match multicast address list: "); KernelLog.Boolean(RXCR_AcceptPhysical IN s); KernelLog.Ln;
 	KernelLog.String("   Ethernet MAC start operating: "); KernelLog.Boolean(RXCR_StartOperation IN s); KernelLog.Ln;
 	KernelLog.String("   Maximum frame burst transfer on USB: ");
-	value := SYSTEM.VAL(LONGINT, LSH(s * RXCR_Msb, -8));
+	value := SYSTEM.VAL(SIGNED32, LSH(s * RXCR_Msb, -8));
 	CASE value OF
 		|0: KernelLog.String("2048 Bytes");
 		|1: KernelLog.String("4096 Bytes");

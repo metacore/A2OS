@@ -4,25 +4,25 @@ IMPORT Streams, Commands, Files, KernelLog;
 
 TYPE
 	Name = ARRAY 32 OF CHAR;
-	Command = RECORD name: Name; offset: LONGINT END;
+	Command = RECORD name: Name; offset: SIGNED32 END;
 	Module = POINTER TO RECORD
 		name: Name;
-		key:  LONGINT;
-		dbase, pbase: LONGINT;
-		size, refcnt: LONGINT;
+		key:  SIGNED32;
+		dbase, pbase: SIGNED32;
+		size, refcnt: SIGNED32;
 		next: Module;
-		entries: LONGINT;
-		entry: ARRAY 256 OF LONGINT;
+		entries: SIGNED32;
+		entry: ARRAY 256 OF SIGNED32;
 		command: ARRAY 64 OF Command;
 	END ;
 
 	Linker* = OBJECT
 	VAR
 		first, last: Module;
-		base, heap, descriptorBase, bodyBase: LONGINT;
+		base, heap, descriptorBase, bodyBase: SIGNED32;
 		W: Streams.Writer;
 		Out: Files.File; Rout: Files.Writer;
-		code: ARRAY 256*1024 OF LONGINT;		(* tt: increased image size to one megabyte *)
+		code: ARRAY 256*1024 OF SIGNED32;		(* tt: increased image size to one megabyte *)
 		plain, descriptors: BOOLEAN;
 
 		PROCEDURE &InitLinker* (w: Streams.Writer; plain, descriptors: BOOLEAN);
@@ -40,16 +40,16 @@ TYPE
 			END;
 		END SetPos;
 
-		PROCEDURE WriteCodeBlock(len, adr: LONGINT);
-		VAR i: LONGINT;
+		PROCEDURE WriteCodeBlock(len, adr: SIGNED32);
+		VAR i: SIGNED32;
 		BEGIN
 			IF plain THEN SetPos (adr - base) ELSE Rout.RawLInt (len); Rout.RawLInt (adr) END;
 			WHILE i < len DO Rout.RawLInt( code[i]); INC(i) END;
 			IF ~plain & (len # 0) THEN Rout.RawLInt( 0) END
 		END WriteCodeBlock;
 
-		PROCEDURE Fixup(fixloc, offset, base: LONGINT; VAR entry: ARRAY OF LONGINT);
-			VAR instr, next, pno: LONGINT;
+		PROCEDURE Fixup(fixloc, offset, base: SIGNED32; VAR entry: ARRAY OF SIGNED32);
+			VAR instr, next, pno: SIGNED32;
 		BEGIN
 			WHILE fixloc # 0 DO
 				instr := code[fixloc]; next := instr MOD 10000H;
@@ -62,8 +62,8 @@ TYPE
 			END
 		END Fixup;
 
-		PROCEDURE FixSelf(fixloc, base: LONGINT);
-			VAR instr, next: LONGINT;
+		PROCEDURE FixSelf(fixloc, base: SIGNED32);
+			VAR instr, next: SIGNED32;
 		BEGIN
 			WHILE fixloc # 0 DO
 				instr := code[fixloc]; next := instr MOD 10000H;
@@ -73,12 +73,12 @@ TYPE
 
 		PROCEDURE ThisMod(VAR modname: ARRAY OF CHAR; VAR success: BOOLEAN): Module;
 			VAR mod, imp: Module;
-				nofimp, nofentries, codelen, fix, fixself, i: LONGINT;
+				nofimp, nofentries, codelen, fix, fixself, i: SIGNED32;
 				R: Files.Reader; F: Files.File;
 				name: Name;
-				key, datasize: LONGINT;
+				key, datasize: SIGNED32;
 				import: ARRAY 256 OF Module;			(* tt: Increased from 16 to 256 *)
-				fixroot: ARRAY 256 OF LONGINT;		(* tt: Increased from 16 to 256 *)
+				fixroot: ARRAY 256 OF SIGNED32;		(* tt: Increased from 16 to 256 *)
 
 		BEGIN
 			success := TRUE;
@@ -150,7 +150,7 @@ TYPE
 		END ThisMod;
 
 		PROCEDURE Bodies;
-		VAR len, base: LONGINT; mod: Module;
+		VAR len, base: SIGNED32; mod: Module;
 		BEGIN
 			len := 0; base := heap; mod := first;
 			WHILE mod # NIL DO
@@ -161,8 +161,8 @@ TYPE
 			WriteCodeBlock (len, base);
 		END Bodies;
 
-		PROCEDURE String (VAR str: ARRAY OF CHAR; VAR index: LONGINT);
-		VAR i, len: LONGINT;
+		PROCEDURE String (VAR str: ARRAY OF CHAR; VAR index: SIGNED32);
+		VAR i, len: SIGNED32;
 		BEGIN
 			len := 0; WHILE str[len] # 0X DO INC (len) END; i := 0;
 			WHILE i <= len DO
@@ -172,7 +172,7 @@ TYPE
 		END String;
 
 		PROCEDURE ModuleDescriptors;
-		VAR mod: Module; len, prevmod, prevcmd, i, cfix, efix: LONGINT;
+		VAR mod: Module; len, prevmod, prevcmd, i, cfix, efix: SIGNED32;
 		BEGIN
 			mod := first; len := 0; prevmod := 0;
 			WHILE mod # NIL DO
@@ -216,7 +216,7 @@ TYPE
 		VAR
 			header: Files.File;
 			in: Files.Reader;
-			data, i: LONGINT;
+			data, i: SIGNED32;
 		BEGIN
 			i := 0;
 			IF fileHeader # "" THEN
@@ -235,7 +235,7 @@ TYPE
 			END;
 		END AddHeader;
 
-		PROCEDURE Begin* (base: LONGINT; fileOut, fileHeader: ARRAY OF CHAR; VAR success: BOOLEAN);
+		PROCEDURE Begin* (base: SIGNED32; fileOut, fileHeader: ARRAY OF CHAR; VAR success: BOOLEAN);
 		BEGIN SELF.base := base; heap := base;
 			first := NIL; last := NIL;
 			Out := Files.New(fileOut);  Files.OpenWriter(Rout, Out, 0);
@@ -253,7 +253,7 @@ TYPE
 		END Link;
 
 		PROCEDURE End*;
-		VAR link: LONGINT;
+		VAR link: SIGNED32;
 			fileName: Files.FileName;
 		BEGIN
 			IF first = NIL THEN
@@ -273,20 +273,20 @@ TYPE
 
 	END Linker;
 
-	PROCEDURE Branch (dest, pc: LONGINT): LONGINT;
-	BEGIN RETURN LONGINT(0EA000000H) + ((dest - pc) DIV 4 - 2) MOD 1000000H
+	PROCEDURE Branch (dest, pc: SIGNED32): SIGNED32;
+	BEGIN RETURN SIGNED32(0EA000000H) + ((dest - pc) DIV 4 - 2) MOD 1000000H
 	END Branch;
 
-	PROCEDURE BranchLink (dest, pc: LONGINT): LONGINT;
-	BEGIN RETURN LONGINT(0EB000000H) + ((dest - pc) DIV 4 - 2) MOD 1000000H
+	PROCEDURE BranchLink (dest, pc: SIGNED32): SIGNED32;
+	BEGIN RETURN SIGNED32(0EB000000H) + ((dest - pc) DIV 4 - 2) MOD 1000000H
 	END BranchLink;
 
-	PROCEDURE BodyBranch (m: Module; pc: LONGINT): LONGINT;
+	PROCEDURE BodyBranch (m: Module; pc: SIGNED32): SIGNED32;
 	BEGIN RETURN BranchLink (m.pbase + m.entry[0] * 4, pc);
 	END BodyBranch;
 
 	PROCEDURE ThisFile(name: ARRAY OF CHAR): Files.File;
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN i := 0;
 		WHILE name[i] # 0X DO INC(i) END ;
 		name[i] := "."; name[i+1] := "a"; name[i+2] := "r"; name[i+3] := "m"; name[i+4] := 0X;
@@ -297,8 +297,8 @@ VAR
 	log: Streams.Writer;   (* logger to KernelLog *)
 
 	PROCEDURE DoLink( linker: Linker; addHeaderFile: BOOLEAN; context: Commands.Context );
-	VAR S: Streams.Reader;  fileOut,fileIn, fileHeader: ARRAY 256 OF CHAR; base: LONGINT;
-		success: BOOLEAN; intRes: LONGINT;
+	VAR S: Streams.Reader;  fileOut,fileIn, fileHeader: ARRAY 256 OF CHAR; base: SIGNED32;
+		success: BOOLEAN; intRes: SIGNED32;
 	BEGIN
 		success := TRUE;
 		S := context.arg;

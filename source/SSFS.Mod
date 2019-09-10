@@ -33,7 +33,7 @@ CONST
 	PartitionTooSmall* = 5000;
 
 	(* Magic number used to identify our file system *)
-	SSFS_MagicNumber = LONGINT(99887766H);
+	SSFS_MagicNumber = SIGNED32(99887766H);
 	SSFS_Version = 01H;
 
 	BlockSize = 4096; (* must be multiple of device.blockSize *)
@@ -60,13 +60,13 @@ TYPE
 	(* simplification in this simple file system: any blocks are file system blocks  *)
 	Volume = OBJECT
 	VAR
-		device : Disks.Device; partition : LONGINT;
-		nofBlocks : LONGINT;
+		device : Disks.Device; partition : SIGNED32;
+		nofBlocks : SIGNED32;
 
-		sectorsPerBlock : LONGINT;
+		sectorsPerBlock : SIGNED32;
 
 		(* read a block as array of character *)
-		PROCEDURE ReadBlock(blockNumber : LONGINT; VAR block : Block; VAR res : WORD);
+		PROCEDURE ReadBlock(blockNumber : SIGNED32; VAR block : Block; VAR res : INTEGER);
 		BEGIN
 			IF (0 <= blockNumber) & (blockNumber < nofBlocks) THEN
 				device.Transfer(Disks.Read, device.table[partition].start + blockNumber * sectorsPerBlock, sectorsPerBlock, block, 0, res);
@@ -76,7 +76,7 @@ TYPE
 		END ReadBlock;
 
 		(* write a block to disk *)
-		PROCEDURE WriteBlock(blockNumber : LONGINT; VAR block : Block; VAR res : WORD);
+		PROCEDURE WriteBlock(blockNumber : SIGNED32; VAR block : Block; VAR res : INTEGER);
 		BEGIN
 			IF (0 <= blockNumber) & (blockNumber < nofBlocks) THEN
 				device.Transfer(Disks.Write, device.table[partition].start + blockNumber * sectorsPerBlock, sectorsPerBlock, block, 0, res);
@@ -87,13 +87,13 @@ TYPE
 
 		(* finalizer: called when the filesystem goes down. As we do not make use of caches, this only closes the device for the time being *)
 		PROCEDURE Finalize;
-		VAR ignore : LONGINT;
+		VAR ignore : SIGNED32;
 		BEGIN
 			device.Close(ignore);
 		END Finalize;
 
 		(* constructor of Volume: set variables for device, partition and geometry plus some sanity checks *)
-		PROCEDURE &Init*(device : Disks.Device; partition : LONGINT; VAR res : WORD);
+		PROCEDURE &Init*(device : Disks.Device; partition : SIGNED32; VAR res : INTEGER);
 		BEGIN
 			ASSERT((device # NIL) & (device.table # NIL) & (partition < LEN(device.table)));
 			SELF.device := device; SELF.partition := partition;
@@ -127,12 +127,12 @@ TYPE
 		bitmap : POINTER TO ARRAY OF SET;
 
 		(* Block number of next free block. May be out-of-date *)
-		hint : LONGINT;
+		hint : SIGNED32;
 
 		fileSystem : FileSystem;
 
 		(** Mark the specified block as free *)
-		PROCEDURE FreeBlock(blockNumber : LONGINT; VAR res : WORD);
+		PROCEDURE FreeBlock(blockNumber : SIGNED32; VAR res : INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF (0 <= blockNumber) & (blockNumber < fileSystem.volume.nofBlocks) THEN
 				SetUsed(blockNumber, FALSE);
@@ -144,8 +144,8 @@ TYPE
 		END FreeBlock;
 
 		(** Get the address of the next free block and mark it as used *)
-		PROCEDURE AllocateBlock(VAR res : WORD) : LONGINT;
-		VAR blockNumber : LONGINT;
+		PROCEDURE AllocateBlock(VAR res : INTEGER) : SIGNED32;
+		VAR blockNumber : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			blockNumber := FindFreeBlock(res, TRUE);
 			IF (res = Ok) THEN
@@ -157,8 +157,8 @@ TYPE
 		END AllocateBlock;
 
 		(* Find a free block and return its block number. *)
-		PROCEDURE FindFreeBlock(VAR res : WORD; useHint : BOOLEAN) : LONGINT; (* private *)
-		VAR blockNumber : LONGINT;
+		PROCEDURE FindFreeBlock(VAR res : INTEGER; useHint : BOOLEAN) : SIGNED32; (* private *)
+		VAR blockNumber : SIGNED32;
 		BEGIN
 			IF useHint & (hint >= fileSystem.superBlock.firstDataBlock) THEN
 				blockNumber := hint;
@@ -181,14 +181,14 @@ TYPE
 		END FindFreeBlock;
 
 		(** Is the block <blockNumber> in use? *)
-		PROCEDURE IsUsed(blockNumber : LONGINT) : BOOLEAN; (* private *)
+		PROCEDURE IsUsed(blockNumber : SIGNED32) : BOOLEAN; (* private *)
 		BEGIN
 			ASSERT((0 <= blockNumber) & (blockNumber < fileSystem.volume.nofBlocks));
 			RETURN (blockNumber MOD BitsPerSET) IN bitmap[blockNumber DIV BitsPerSET];
 		END IsUsed;
 
 		(* in- or exclude a used bit in the block-bitmap *)
-		PROCEDURE SetUsed(blockNumber : LONGINT; used : BOOLEAN);  (* private *)
+		PROCEDURE SetUsed(blockNumber : SIGNED32; used : BOOLEAN);  (* private *)
 		BEGIN
 			ASSERT((0 <= blockNumber) & (blockNumber < fileSystem.volume.nofBlocks));
 			IF used THEN
@@ -201,8 +201,8 @@ TYPE
 		END SetUsed;
 
 		(* Writes the block of the block bitmap that has changed back to disk *)
-		PROCEDURE WriteBack(blockNumber : LONGINT; VAR res : WORD); (* private *)
-		VAR data : Block; blockIdx, index : LONGINT;
+		PROCEDURE WriteBack(blockNumber : SIGNED32; VAR res : INTEGER); (* private *)
+		VAR data : Block; blockIdx, index : SIGNED32;
 		BEGIN
 			ClearBlock(data);
 			blockIdx := 0;
@@ -220,8 +220,8 @@ TYPE
 		END WriteBack;
 
 		(* load all bitmap-blocks from the disk *)
-		PROCEDURE LoadFromDisk(VAR res : WORD); (* Called only once by FileSystem.Init *)
-		VAR data : Block; blockNumber, blockIdx, index : LONGINT;
+		PROCEDURE LoadFromDisk(VAR res : INTEGER); (* Called only once by FileSystem.Init *)
+		VAR data : Block; blockNumber, blockIdx, index : SIGNED32;
 		BEGIN
 			ASSERT(fileSystem.superBlock.freeBlockBitmapSize # 0); (* volume formatted? *)
 			index := 0;
@@ -245,7 +245,7 @@ TYPE
 
 		(* Displays the bitmap's first 256 entries (debugging) *)
 		PROCEDURE Show;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO 7 DO
 				IF (i MOD 2 = 0) THEN KernelLog.Ln; END;
@@ -255,7 +255,7 @@ TYPE
 		END Show;
 
 		PROCEDURE &Init*(fileSystem : FileSystem);
-		VAR bitmapSize : LONGINT; i : SIZE;
+		VAR bitmapSize : SIGNED32; i : SIZE;
 		BEGIN
 			ASSERT((fileSystem # NIL) & (fileSystem.volume # NIL));
 			ASSERT(BlockSize MOD BitsPerSET = 0); (* entries of bitmap must not cross block boundaries *)
@@ -280,27 +280,27 @@ TYPE
 
 	DirectoryEntry = RECORD
 		name : ARRAY 252 OF CHAR;
-		inode : LONGINT;
+		inode : SIGNED32;
 	END;
 
 	DirectoryBlock = ARRAY DirectoryEntriesPerBlock OF DirectoryEntry;
 
 	SuperBlock = RECORD
-		magicNumber : LONGINT; (* magic number of the file system *)
-		version : LONGINT; (* SSFS Version *)
-		rootDirectory : LONGINT; (* cluster that is reserved for the root directory *)
-		freeBlockBitmapFirst : LONGINT; (* first cluster that is reserved for the bitmap *)
-		freeBlockBitmapSize  : LONGINT; (* number of clusters that are reserved for the bitmap *)
-		firstDataBlock : LONGINT; (* number of block where the data start *)
+		magicNumber : SIGNED32; (* magic number of the file system *)
+		version : SIGNED32; (* SSFS Version *)
+		rootDirectory : SIGNED32; (* cluster that is reserved for the root directory *)
+		freeBlockBitmapFirst : SIGNED32; (* first cluster that is reserved for the bitmap *)
+		freeBlockBitmapSize  : SIGNED32; (* number of clusters that are reserved for the bitmap *)
+		firstDataBlock : SIGNED32; (* number of block where the data start *)
 		filler : ARRAY BlockSize - 6 * 4 OF CHAR; (* unused remainder *)
 	END;
 
 	Inode = RECORD
-		size : LONGINT; (* file size in bytes *)
+		size : SIGNED32; (* file size in bytes *)
 		attributes : SET; (* attributes, to be defined *)
-		date, time : LONGINT; (* time and date of modification *)
-		unused : LONGINT; (* currently unused *)
-		direct : ARRAY (BlockSize - 5 * 4) DIV 4 OF LONGINT; (* direct links to dnodes *)
+		date, time : SIGNED32; (* time and date of modification *)
+		unused : SIGNED32; (* currently unused *)
+		direct : ARRAY (BlockSize - 5 * 4) DIV 4 OF SIGNED32; (* direct links to dnodes *)
 	END;
 
 	Dnode = Block;
@@ -316,7 +316,7 @@ TYPE
 		bitmap : BlockBitmap; (* free blocks bitmap *)
 
 		(* constructor: set variables and read super block, check if file system is formatted, res = Ok indicates success  *)
-		PROCEDURE &Init*(volume : Volume; VAR res : WORD);
+		PROCEDURE &Init*(volume : Volume; VAR res : INTEGER);
 		VAR block : Block;
 		BEGIN
 			ASSERT(volume # NIL);
@@ -349,7 +349,7 @@ TYPE
 		PROCEDURE New0*(CONST name: ARRAY OF CHAR): Files.File;
 		VAR
 			file : File; filename : Files.FileName; fileExists : BOOLEAN;
-			inodeAdr, index, i, res : LONGINT; dateTime : Dates.DateTime;
+			inodeAdr, index, i, res : SIGNED32; dateTime : Dates.DateTime;
 			inode : Inode; block : Block;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN KernelLog.String("New: "); KernelLog.String(name); KernelLog.Ln; END;
@@ -407,7 +407,7 @@ TYPE
 
 		(** Open an existing file. The same file descriptor is returned if a file is opened multiple times.  End users use Files.Old instead. *)
 		PROCEDURE Old0*(CONST name: ARRAY OF CHAR): Files.File;
-		VAR file : File; filename : Files.FileName; block : Block; inode : Inode;  index, res : LONGINT;
+		VAR file : File; filename : Files.FileName; block : Block; inode : Inode;  index, res : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN KernelLog.String("Old: "); KernelLog.String(name); KernelLog.Ln; END;
 			file := NIL;
@@ -431,8 +431,8 @@ TYPE
 		END Old0;
 
 		(* Called by File.Update. We write back the Inode here since we want the file system to be locked while doing that *)
-		PROCEDURE UpdateInode(inode : Inode; inodeAdr : LONGINT);
-		VAR res : WORD;
+		PROCEDURE UpdateInode(inode : Inode; inodeAdr : SIGNED32);
+		VAR res : INTEGER;
 		BEGIN {EXCLUSIVE}
 			ASSERT(inodeAdr >= superBlock.firstDataBlock);
 			volume.WriteBlock(inodeAdr, SYSTEM.VAL(Block, inode), res);
@@ -443,7 +443,7 @@ TYPE
 
 		(* For now, this just removes a path delimiter character at the beginning of the filename *)
 		PROCEDURE GetFilename(name : ARRAY OF CHAR; VAR filename : ARRAY OF CHAR) : BOOLEAN;
-		VAR ch : CHAR; i, j : LONGINT;
+		VAR ch : CHAR; i, j : SIGNED32;
 		BEGIN
 			Strings.TrimWS(name);
 			ch := name[0];
@@ -460,8 +460,8 @@ TYPE
 		END GetFilename;
 
 		(** Returns the index of the filename entry in the root directory or -1 if not found *)
-		PROCEDURE FindEntry(CONST name : ARRAY OF CHAR) : LONGINT;
-		VAR index : LONGINT;
+		PROCEDURE FindEntry(CONST name : ARRAY OF CHAR) : SIGNED32;
+		VAR index : SIGNED32;
 		BEGIN
 			index := 0;
 			WHILE (index < LEN(rootDirectory)) & (rootDirectory[index].name # name) DO INC(index); END;
@@ -471,8 +471,8 @@ TYPE
 		END FindEntry;
 
 		(** Delete a file. res = 0 indicates success.  End users use Files.Delete instead. *)
-		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key, res: LONGINT);
-		VAR filename : Files.FileName; index : LONGINT; block : Block;
+		PROCEDURE Delete0*(CONST name: ARRAY OF CHAR; VAR key, res: SIGNED32);
+		VAR filename : Files.FileName; index : SIGNED32; block : Block;
 		BEGIN {EXCLUSIVE}
 			IF Trace THEN KernelLog.String("Delete: "); KernelLog.String(name); KernelLog.Ln; END;
 			IF GetFilename(name, filename) THEN
@@ -499,14 +499,14 @@ TYPE
 			END;
 		END Delete0;
 
-		PROCEDURE DeleteFile(inode : Inode; inodeAdr : LONGINT; VAR res : WORD);
+		PROCEDURE DeleteFile(inode : Inode; inodeAdr : SIGNED32; VAR res : INTEGER);
 		BEGIN
 			DeleteDnodes(inode, res);
 			bitmap.FreeBlock(inodeAdr, res);
 		END DeleteFile;
 
-		PROCEDURE DeleteDnodes(inode : Inode; VAR res : WORD);
-		VAR i : LONGINT; finished : BOOLEAN;
+		PROCEDURE DeleteDnodes(inode : Inode; VAR res : INTEGER);
+		VAR i : SIGNED32; finished : BOOLEAN;
 		BEGIN
 			finished := FALSE;
 			(* mark direct linked blocks as free *)
@@ -523,14 +523,14 @@ TYPE
 		END DeleteDnodes;
 
 		(** Rename a file. res = 0 indicates success.  End users use Files.Rename instead. *)
-		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: WORD);
+		PROCEDURE Rename0*(CONST old, new: ARRAY OF CHAR; f: Files.File; VAR res: INTEGER);
 		BEGIN  {EXCLUSIVE}
 			res := -1; (* not supported *)
 		END Rename0;
 
 		(** Enumerate canonical file names. mask may contain * wildcards.  For internal use only.  End users use Enumerator instead. *)
 		PROCEDURE Enumerate0*(CONST mask: ARRAY OF CHAR; flags: SET; enum: Files.Enumerator);
-		VAR i : LONGINT; block : Block; inode : Inode; name : Files.FileName; attributes : SET; time, date, size, res : LONGINT;
+		VAR i : SIGNED32; block : Block; inode : Inode; name : Files.FileName; attributes : SET; time, date, size, res : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF( mask # "") THEN
 				FOR i := 0 TO LEN(rootDirectory)-1 DO
@@ -560,8 +560,8 @@ TYPE
 		END Enumerate0;
 
 		(** Return the unique non-zero key of the named file, if it exists. *)
-		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): LONGINT;
-		VAR key, index : LONGINT;
+		PROCEDURE FileKey*(CONST name: ARRAY OF CHAR): SIGNED32;
+		VAR key, index : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			key := 0;
 			IF (name # "") THEN
@@ -575,21 +575,21 @@ TYPE
 
 		(** Create a new directory structure. May not be supported by the actual implementation.
 			End users use Files.CreateDirectory instead.*)
-		PROCEDURE CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: WORD);
+		PROCEDURE CreateDirectory0*(CONST name: ARRAY OF CHAR; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			res := -1; (* not supported *)
 		END CreateDirectory0;
 
 		(** Remove a directory. If force=TRUE, any subdirectories and files should be automatically deleted.
 			End users use Files.RemoveDirectory instead. *)
-		PROCEDURE RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: LONGINT);
+		PROCEDURE RemoveDirectory0*(CONST name: ARRAY OF CHAR; force: BOOLEAN; VAR key, res: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			res := -1; (* not supported *)
 		END RemoveDirectory0;
 
 		(* format a volume for using this file system *)
-		PROCEDURE Format(VAR res : WORD);
-		VAR block : Block; i : LONGINT;
+		PROCEDURE Format(VAR res : INTEGER);
+		VAR block : Block; i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			(* Volume layout - SuperBlock is block 0 *)
 			superBlock.magicNumber := SSFS_MagicNumber;
@@ -646,7 +646,7 @@ TYPE
 		fileSystem : FileSystem;
 		name : Files.FileName;
 
-		PROCEDURE &Init*(CONST name : ARRAY OF CHAR; inode : Inode; inodeAddress : LONGINT; fileSystem : FileSystem);
+		PROCEDURE &Init*(CONST name : ARRAY OF CHAR; inode : Inode; inodeAddress : SIGNED32; fileSystem : FileSystem);
 		BEGIN
 			ASSERT((name # "")  & (fileSystem # NIL) & (fileSystem.volume # NIL));
 			COPY(name, SELF.name);
@@ -664,7 +664,7 @@ TYPE
 			IF (pos < 0) THEN
 				pos := 0;
 			ELSIF (pos < inode.size) THEN
-				r.apos := LONGINT(pos) MOD BlockSize; r.bpos := LONGINT(pos) DIV BlockSize;
+				r.apos := SIGNED32(pos) MOD BlockSize; r.bpos := SIGNED32(pos) DIV BlockSize;
 			ELSE (* position beyond end of file -> set to end of file *)
 				r.apos := inode.size MOD BlockSize; r.bpos := inode.size DIV BlockSize;
 			END;
@@ -689,7 +689,7 @@ TYPE
 		Less bytes will be read when reading over the end of the file.
 		r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
 		PROCEDURE ReadBytes*(VAR r:  Files.Rider; VAR x: ARRAY OF CHAR; ofs, len: SIZE);
-		VAR dnode : Dnode; dataLeft, nofBytes, pos, res : LONGINT; eof : BOOLEAN;
+		VAR dnode : Dnode; dataLeft, nofBytes, pos, res : SIGNED32; eof : BOOLEAN;
 		BEGIN {EXCLUSIVE}
 			ASSERT(r.file = SELF);
 			ASSERT(LEN(x) >= ofs + len); (* buffer big enough *)
@@ -701,15 +701,15 @@ TYPE
 					fileSystem.volume.ReadBlock(inode.direct[r.bpos], dnode, res);
 					IF (res = Ok) THEN
 						(* determine the number of bytes to be read from this dnode *)
-						dataLeft := BlockSize - LONGINT(r.apos); (* data in this dnode starting at offset r.apos *)
+						dataLeft := BlockSize - SIGNED32(r.apos); (* data in this dnode starting at offset r.apos *)
 						IF (len < dataLeft) THEN
-							nofBytes := LONGINT(len);
+							nofBytes := SIGNED32(len);
 						ELSE
 							nofBytes := dataLeft;
 						END;
 
 						(* check against file length *)
-						pos := LONGINT(r.bpos) * BlockSize + LONGINT(r.apos);
+						pos := SIGNED32(r.bpos) * BlockSize + SIGNED32(r.apos);
 						IF (pos + nofBytes > inode.size) THEN
 							nofBytes := inode.size - pos;
 							IF (nofBytes < 0) THEN nofBytes := 0; END;
@@ -720,7 +720,7 @@ TYPE
 
 						len := len - nofBytes;
 						ofs := ofs + len;
-						r.apos := (LONGINT(r.apos) + nofBytes) MOD BlockSize;
+						r.apos := (SIGNED32(r.apos) + nofBytes) MOD BlockSize;
 						IF (nofBytes = dataLeft) THEN
 							r.bpos := r.bpos + 1; (* rider positioned at next dnode now *)
 						END;
@@ -749,7 +749,7 @@ TYPE
 
 		(** Write the buffer x containing len bytes (starting at offset ofs) into a file at the Rider position. *)
 		PROCEDURE WriteBytes*(VAR r: Files.Rider; CONST x: ARRAY OF CHAR; ofs, len: SIZE);
-		VAR dnode : Dnode; blockNumber, spaceLeft, nofBytes, pos, res : LONGINT;
+		VAR dnode : Dnode; blockNumber, spaceLeft, nofBytes, pos, res : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			ASSERT(r.file = SELF);
 			ASSERT(r.bpos * BlockSize + r.apos <= inode.size); (* rider not positioned beyond end of file *)
@@ -781,9 +781,9 @@ TYPE
 					ASSERT(blockNumber >= fileSystem.superBlock.firstDataBlock);
 
 					(* determine how much bytes we write to this dnode *)
-					spaceLeft := BlockSize - LONGINT(r.apos);
+					spaceLeft := BlockSize - SIGNED32(r.apos);
 					IF (len < spaceLeft) THEN
-						nofBytes := LONGINT(len);
+						nofBytes := SIGNED32(len);
 					ELSE
 						nofBytes := spaceLeft;
 					END;
@@ -794,8 +794,8 @@ TYPE
 					IF (res = Ok) THEN
 						len := len - nofBytes;
 						ofs := ofs + nofBytes;
-						r.apos := (LONGINT(r.apos) + nofBytes) MOD BlockSize;
-						IF (LONGINT(r.apos) = 0) THEN
+						r.apos := (SIGNED32(r.apos) + nofBytes) MOD BlockSize;
+						IF (SIGNED32(r.apos) = 0) THEN
 							INC(r.bpos);
 							IF (r.bpos >= LEN(inode.direct)) THEN (* maximum file size reached *)
 								DEC(r.bpos);
@@ -810,7 +810,7 @@ TYPE
 					END;
 				END;
 			END;
-			pos := LONGINT(r.bpos) * BlockSize + LONGINT(r.apos);
+			pos := SIGNED32(r.bpos) * BlockSize + SIGNED32(r.apos);
 			IF (pos > inode.size) THEN
 				inode.size := pos;
 				inodeModified := TRUE;
@@ -825,13 +825,13 @@ TYPE
 		END Length;
 
 		(** Return the time (t) and date (d) when a file was last modified. *)
-		PROCEDURE GetDate*(VAR t, d: LONGINT);
+		PROCEDURE GetDate*(VAR t, d: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			t := inode.time; d := inode.date;
 		END GetDate;
 
 		(** Set the modification time (t) and date (d) of a file. *)
-		PROCEDURE SetDate*(t, d: LONGINT);
+		PROCEDURE SetDate*(t, d: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			inode.time := t; inode.date := d;
 			inodeModified := TRUE;
@@ -845,7 +845,7 @@ TYPE
 
 		(** Register a file created with New in the directory, replacing the previous file in the directory with the same name.
 		The file is automatically updated.  End users use Files.Register instead. *)
-		PROCEDURE Register0*(VAR res: WORD);
+		PROCEDURE Register0*(VAR res: INTEGER);
 		BEGIN
 			Update;
 		END Register0;
@@ -862,7 +862,7 @@ TYPE
 	END File;
 
 PROCEDURE ClearBlock(VAR block : Block);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(block)-1 DO
 		block[i] := 0X;
@@ -870,7 +870,7 @@ BEGIN
 END ClearBlock;
 
 PROCEDURE ClearInode(VAR inode : Inode);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	inode.size := 0;
 	inode.attributes := {};
@@ -878,16 +878,16 @@ BEGIN
 	FOR i := 0 TO LEN(inode.direct)-1 DO inode.direct[i] := 0; END;
 END ClearInode;
 
-PROCEDURE GetFileSystem(context : Commands.Context; VAR res : WORD) : FileSystem;
+PROCEDURE GetFileSystem(context : Commands.Context; VAR res : INTEGER) : FileSystem;
 VAR
-	devPart, devicename : ARRAY 64 OF CHAR; partition : LONGINT;
+	devPart, devicename : ARRAY 64 OF CHAR; partition : SIGNED32;
 	device : Disks.Device;
 	plugin : Plugins.Plugin;
 	volume : Volume;
 	fileSystem : FileSystem;
 
 	(* Splits up string device#partition into devicename string and partition number *)
-	PROCEDURE ParseDevPart(CONST devPart : ARRAY OF CHAR; VAR devicename : ARRAY OF CHAR; VAR partition : LONGINT) : BOOLEAN;
+	PROCEDURE ParseDevPart(CONST devPart : ARRAY OF CHAR; VAR devicename : ARRAY OF CHAR; VAR partition : SIGNED32) : BOOLEAN;
 	VAR stringArray : Strings.StringArray;
 	BEGIN
 		stringArray := Strings.Split(devPart, "#");
@@ -949,7 +949,7 @@ END GetFileSystem;
 
 (** Format the specified disk or partition with the SSFS file system *)
 PROCEDURE Format*(context : Commands.Context); (** device#partition ~ *)
-VAR fileSystem : FileSystem; res : WORD;
+VAR fileSystem : FileSystem; res : INTEGER;
 BEGIN
 	fileSystem := GetFileSystem(context, res);
 	IF (res = Ok) OR (res = NotFormatted) THEN
@@ -965,7 +965,7 @@ END Format;
 
 (** Mount the specified SSFS file system *)
 PROCEDURE Mount*(context : Commands.Context); (** prefix device#partition ~*)
-VAR prefix : Files.Prefix; fileSystem : FileSystem; res : WORD;
+VAR prefix : Files.Prefix; fileSystem : FileSystem; res : INTEGER;
 BEGIN
 	IF context.arg.GetString(prefix) THEN
 		IF (Files.This(prefix) = NIL) THEN

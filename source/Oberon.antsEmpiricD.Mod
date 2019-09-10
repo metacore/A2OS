@@ -38,7 +38,7 @@ TYPE
 		CEDo*: EmpiricalDistribution;    (*= empirical distribution on coding(+) set (called "odd")*)
 		CEDe*: EmpiricalDistribution;   (*= empirical distribution on coding (-) set (called "even") *)
 		A*: antsArrayObjects.tINTEGERObject;    (*= passed through Array*)
-		x*, y*, w*, h*: LONGINT;   (*= empirical distribution referres to this region *)
+		x*, y*, w*, h*: SIGNED32;   (*= empirical distribution referres to this region *)
 	END;
 
 

@@ -17,18 +17,18 @@ CONST
 TYPE
 	Picture* = POINTER TO PictureDesc;
 	UpdateMsg* = RECORD (Display.FrameMsg)
-		id*, u*, v*, w*, h*: INTEGER;
+		id*, u*, v*, w*, h*: SIGNED16;
 		pict*: Picture;
 	END;
 
 	Addr = POINTER TO RECORD END;
 
 	ColorTable = POINTER TO ColorTableDesc;
-	ColorTableDesc = ARRAY 256 OF RECORD red, green, blue: INTEGER END;
+	ColorTableDesc = ARRAY 256 OF RECORD red, green, blue: SIGNED16 END;
 
 	PictureDesc* = RECORD(Objects.ObjDesc)
-		width*, height*, depth*: INTEGER;	(** Width, height in pixels, and depth in bits per pixel (1, 4, or 8). *)
-		wth: LONGINT;
+		width*, height*, depth*: SIGNED16;	(** Width, height in pixels, and depth in bits per pixel (1, 4, or 8). *)
+		wth: SIGNED32;
 		bitmap: Bitmaps.Bitmap;
 		address*: ADDRESS;	(** Pointer to bitmap data. *)
 		ct: ColorTable;
@@ -37,31 +37,31 @@ TYPE
 
 VAR
 	dots*: Display.Pattern;
-	colorD*: INTEGER;	(** Default bitmap color depth. *)
+	colorD*: SIGNED16;	(** Default bitmap color depth. *)
 	grey: ARRAY 4 OF Display.Pattern;
-	greyPat: ARRAY 4 OF ARRAY 5 OF LONGINT;
+	greyPat: ARRAY 4 OF ARRAY 5 OF SIGNED32;
 	handler: Objects.Handler;
-	cRes: INTEGER; cName: ARRAY 128 OF CHAR; cP: Picture;
+	cRes: SIGNED16; cName: ARRAY 128 OF CHAR; cP: Picture;
 	first: BOOLEAN;
 
-PROCEDURE InBoundaries(x, y, w, h: INTEGER): BOOLEAN;
+PROCEDURE InBoundaries(x, y, w, h: SIGNED16): BOOLEAN;
 BEGIN RETURN (x >= 0) & (y >= 0) & (x < w) & (y < h)
 END InBoundaries;
 
 (** Get the color index of the bitmap pixel at X, Y. *)
-PROCEDURE Get*(P:Picture;X,Y:INTEGER):INTEGER;
+PROCEDURE Get*(P:Picture;X,Y:SIGNED16):SIGNED16;
 BEGIN
 	IF InBoundaries(X, Y, P.width, P.height) THEN RETURN Bitmaps.Get(P.bitmap,X,Y) ELSE RETURN Display.BG END
 END Get;
 
 (** Put a pixel of color col at x, y using mode. *)
-PROCEDURE Dot*(P:Picture; col:INTEGER;X,Y,mode:INTEGER);
+PROCEDURE Dot*(P:Picture; col:SIGNED16;X,Y,mode:SIGNED16);
 BEGIN
 	IF InBoundaries(X, Y, P.width, P.height) THEN Bitmaps.Dot(P.bitmap,col,X,Y, mode) END
 END Dot;
 
 (** Starting at position x, y, determine the longest run of the same colored pixels (col) on the same scanline. Afterwards x indicates the first pixel of a different color thatn col. *)
-PROCEDURE GetRun*(P:Picture;VAR col:INTEGER; VAR X:INTEGER; Y:INTEGER);
+PROCEDURE GetRun*(P:Picture;VAR col:SIGNED16; VAR X:SIGNED16; Y:SIGNED16);
 BEGIN
 	IF InBoundaries(X, Y, P.width, P.height) THEN
 		col := Get(P,X,Y); INC(X);
@@ -70,7 +70,7 @@ BEGIN
 END GetRun;
 
 (** Copy a the block sx, sy, w, h from picture sP to position dx, dy in destination picture dP. Source and destination picture may be the same. *)
-PROCEDURE CopyBlock* (sP,dP: Picture; SX, SY, W, H, DX, DY, mode: INTEGER);
+PROCEDURE CopyBlock* (sP,dP: Picture; SX, SY, W, H, DX, DY, mode: SIGNED16);
 BEGIN
 	IF InBoundaries(SX, SY, sP.width, sP.height) THEN
 		ASSERT((W >= 0) & (H >= 0));
@@ -85,8 +85,8 @@ BEGIN
 END CopyBlock;
 
 (** Copy the pattern pat in color col to position x, y using mode. *)
-PROCEDURE CopyPattern* (P:Picture;col:INTEGER;pat:Display.Pattern;X,Y,mode: INTEGER);
-VAR w, h: INTEGER; c: CHAR;
+PROCEDURE CopyPattern* (P:Picture;col:SIGNED16;pat:Display.Pattern;X,Y,mode: SIGNED16);
+VAR w, h: SIGNED16; c: CHAR;
 BEGIN
 	IF InBoundaries(X, Y, P.width, P.height) THEN
 		w := 0;  h := 0;  
@@ -101,7 +101,7 @@ BEGIN
 END CopyPattern;
 
 (** Block fill area x, y, w, h in color col using mode. *)
-PROCEDURE ReplConst* (P:Picture; col,X,Y,W,H,mode:INTEGER);
+PROCEDURE ReplConst* (P:Picture; col,X,Y,W,H,mode:SIGNED16);
 BEGIN
 	IF InBoundaries(X, Y, P.width, P.height) THEN
 		ASSERT((W >= 0) & (H >= 0));
@@ -112,7 +112,7 @@ BEGIN
 END ReplConst;
 
 (** Pattern fill pattern pat in the area x, y, w, h in color col using mode. *)
-PROCEDURE ReplPattern* (P:Picture;col:INTEGER;pat:LONGINT;X,Y,W,H,mode: INTEGER);
+PROCEDURE ReplPattern* (P:Picture;col:SIGNED16;pat:SIGNED32;X,Y,W,H,mode: SIGNED16);
 BEGIN
 	IF InBoundaries(X, Y, P.width, P.height) THEN
 		ASSERT((W >= 0) & (H >= 0));
@@ -123,14 +123,14 @@ BEGIN
 END ReplPattern;
 
 (** Copy area SX, SY, SW, SH of source picture sP to area DX, DY, DW, DH of destination picture dP. Appropriate scaling is done. *)
-PROCEDURE Copy*(sP,dP:Picture;SX,SY,SW,SH,DX,DY,DW,DH,mode:INTEGER);
+PROCEDURE Copy*(sP,dP:Picture;SX,SY,SW,SH,DX,DY,DW,DH,mode:SIGNED16);
 BEGIN
 	Bitmaps.Copy(sP.bitmap, dP.bitmap, SX, SY, SW, SH, DX, DY, DW, DH, mode)
 END Copy;
 (*
-PROCEDURE Copy*(sP,dP:Picture;SX,SY,SW,SH,DX,DY,DW,DH,mode:INTEGER);
-VAR hx, hy,DW2,SW2: LONGINT;
-		dx, dy, SXo, DXo: INTEGER;
+PROCEDURE Copy*(sP,dP:Picture;SX,SY,SW,SH,DX,DY,DW,DH,mode:SIGNED16);
+VAR hx, hy,DW2,SW2: SIGNED32;
+		dx, dy, SXo, DXo: SIGNED16;
 BEGIN
 	IF (SW> 0) &(SH >0) &(DW >0 ) &(DH > 0) THEN
 		dy := DY + DH; dx := DX + DW; SXo := SX; DXo := DX; DW2 := 2 * DW; SW2 := 2 * SW;
@@ -152,19 +152,19 @@ END Copy;
 (* ==================================================================================*)
 
 (** Define the color palette for color index col. *)
-PROCEDURE SetColor* (P: Picture; col, red, green, blue: INTEGER);
+PROCEDURE SetColor* (P: Picture; col, red, green, blue: SIGNED16);
 BEGIN
 	P.ct[col].red := red; P.ct[col].green := green; P.ct[col].blue := blue
 END SetColor;
 
 (** Retrieve the color palette entry for color index col. *)
-PROCEDURE GetColor* (P: Picture; col: INTEGER; VAR red, green, blue: INTEGER);
+PROCEDURE GetColor* (P: Picture; col: SIGNED16; VAR red, green, blue: SIGNED16);
 BEGIN
 	red := P.ct[col].red; green := P.ct[col].green; blue := P.ct[col].blue
 END GetColor;
 
-PROCEDURE StoreCT(VAR R: Files.Rider; ct: ColorTable; depth: INTEGER);
-VAR i: INTEGER;
+PROCEDURE StoreCT(VAR R: Files.Rider; ct: ColorTable; depth: SIGNED16);
+VAR i: SIGNED16;
 BEGIN
 	Files.WriteBytes(R,depth,2); depth := ABS(depth);
 	i := 0;
@@ -174,8 +174,8 @@ BEGIN
 	END
 END StoreCT;
 
-PROCEDURE LoadCT(VAR R: Files.Rider; ct: ColorTable; depth: INTEGER);
-VAR i: INTEGER;
+PROCEDURE LoadCT(VAR R: Files.Rider; ct: ColorTable; depth: SIGNED16);
+VAR i: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE i < ASH(1,depth) DO
@@ -186,7 +186,7 @@ BEGIN
 END LoadCT;
 
 (** Indicate that a change has been made to the area X, Y, W, H of P. This results in an UpdateMsg with id = redraw to be broadcasted into the display space. *)
-PROCEDURE Update*(P: Picture; X, Y , W, H: INTEGER);
+PROCEDURE Update*(P: Picture; X, Y , W, H: SIGNED16);
 VAR msg: UpdateMsg;
 BEGIN
 	msg.u := X; msg.v := Y; msg.w := W; msg.h := H;
@@ -195,9 +195,9 @@ BEGIN
 END Update;
 
 (** Copy the area x, y, w, h of picture P to position dx, dy on the display. *)
-PROCEDURE DisplayBlock*(P: Picture; X, Y, W, H, DX, DY, mode: INTEGER);
-VAR L, B, R, T, cw, ch: INTEGER;
-	colortable: ARRAY 256 OF LONGINT; i: LONGINT; (* fof *)
+PROCEDURE DisplayBlock*(P: Picture; X, Y, W, H, DX, DY, mode: SIGNED16);
+VAR L, B, R, T, cw, ch: SIGNED16;
+	colortable: ARRAY 256 OF SIGNED32; i: SIGNED32; (* fof *)
 BEGIN
 	FOR i := 0 TO 255 DO  (* fof *)
 		colortable[i] := ASH(ASH(P.ct[i].red, 8) + P.ct[i].green, 8) + P.ct[i].blue
@@ -215,8 +215,8 @@ BEGIN
 	END
 END DisplayBlock;
 
-PROCEDURE New(VAR P: Picture; width, height, depth: INTEGER; addr: LONGINT);
-VAR H: LONGINT;
+PROCEDURE New(VAR P: Picture; width, height, depth: SIGNED16; addr: SIGNED32);
+VAR H: SIGNED32;
 BEGIN
 	P.handle := handler;
 	P.depth := 8; P.width := width; P.height := height; P.wth := width;
@@ -236,8 +236,8 @@ BEGIN
 END Clear;
 
 (** Create a picture of size width x height with depth bits per pixel. The picture palette is initialized to a default state. If not enough memory is available to allocate the bitmap data, the width, height, and depth of the picture is set to zero. *)
-PROCEDURE Create*(P: Picture; width, height, depth: INTEGER);
-VAR i, r, g, b: INTEGER;
+PROCEDURE Create*(P: Picture; width, height, depth: SIGNED16);
+VAR i, r, g, b: SIGNED16;
 BEGIN
 	IF depth > 8 THEN HALT(99) END; (* number too large *)
 	New(P,width,height,depth,0);
@@ -248,13 +248,13 @@ END Create;
 
 (** Like Dot, for a line of pixels. *)
 
-PROCEDURE PutLine*(P: Picture; VAR data: ARRAY OF INTEGER; x, y, w: INTEGER);
+PROCEDURE PutLine*(P: Picture; VAR data: ARRAY OF SIGNED16; x, y, w: SIGNED16);
 BEGIN
 	Bitmaps.PutLine(P.bitmap, data, x, y, w)
 END PutLine;
 (*
-PROCEDURE PutLine*(P: Picture; VAR data: ARRAY OF INTEGER; x, y, w: INTEGER);
-VAR i: INTEGER;
+PROCEDURE PutLine*(P: Picture; VAR data: ARRAY OF SIGNED16; x, y, w: SIGNED16);
+VAR i: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE i < w DO
@@ -266,13 +266,13 @@ END PutLine;
 
 (** Like Get, for a line of pixels. *)
 
-PROCEDURE GetLine*(P: Picture; VAR data: ARRAY OF INTEGER; x, y, w: INTEGER);
+PROCEDURE GetLine*(P: Picture; VAR data: ARRAY OF SIGNED16; x, y, w: SIGNED16);
 BEGIN
 	Bitmaps.GetLine(P.bitmap, data, x, y, w)
 END GetLine;
 (*
-PROCEDURE GetLine*(P: Picture; VAR data: ARRAY OF INTEGER; x, y, w: INTEGER);
-VAR i: INTEGER;
+PROCEDURE GetLine*(P: Picture; VAR data: ARRAY OF SIGNED16; x, y, w: SIGNED16);
+VAR i: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE i < w DO
@@ -283,10 +283,10 @@ END GetLine;
 *)
 
 (** Stores picture run length encoded to file F (including tag). *)
-PROCEDURE Store* (P: Picture; F : Files.File; pos: LONGINT; VAR len: LONGINT);
+PROCEDURE Store* (P: Picture; F : Files.File; pos: SIGNED32; VAR len: SIGNED32);
 (* stores picture to run length encoded file F  (including tag *)
-	VAR j, i,a,b,d,wth: INTEGER; adr, OldAdr: ADDRESS; size: LONGINT; h: SHORTINT;
-			buf: ARRAY 129 OF SHORTINT; R: Files.Rider;
+	VAR j, i,a,b,d,wth: SIGNED16; adr, OldAdr: ADDRESS; size: SIGNED32; h: SIGNED8;
+			buf: ARRAY 129 OF SIGNED8; R: Files.Rider;
 			help: BOOLEAN;
 BEGIN
 	Files.Set(R, F, pos);
@@ -326,7 +326,7 @@ END Store;
 
 PROCEDURE LoadRLE(P: Picture; VAR R: Files.Rider; rv: BOOLEAN);
 	(* load run length encoded picture *)
-	VAR ch: CHAR; k,d: INTEGER; a, b,c,ce: ADDRESS;
+	VAR ch: CHAR; k,d: SIGNED16; a, b,c,ce: ADDRESS;
 BEGIN
 	a := P.address;
 	c := P.wth;
@@ -359,10 +359,10 @@ BEGIN
 END LoadRLE;
 
 (** Load a run length encoded picture from position pos from file F. Pos should be AFTER the two byte picture identification of a picture file. *)
-PROCEDURE Load*(P: Picture; F : Files.File; pos: LONGINT; VAR len: LONGINT);
-	VAR R: Files.Rider; id: INTEGER;
+PROCEDURE Load*(P: Picture; F : Files.File; pos: SIGNED32; VAR len: SIGNED32);
+	VAR R: Files.Rider; id: SIGNED16;
 			(* buf: ARRAY MaxWth OF CHAR; *) err: ARRAY 32 OF CHAR;
-			size: LONGINT;
+			size: SIGNED32;
 BEGIN
 	Files.Set(R,F,pos-2); Files.ReadBytes(R,id,2);
 	IF id = PictFileId THEN
@@ -384,7 +384,7 @@ BEGIN
 END Load;
 
 PROCEDURE SplitName (VAR name, MName, PName: ARRAY OF CHAR);
-	VAR i, j: INTEGER;
+	VAR i, j: SIGNED16;
 BEGIN i := 0;
 	WHILE name[i] # "." DO MName[i] := name[i]; INC(i) END;
 	MName[i] := 0X; INC(i); j := 0;
@@ -393,7 +393,7 @@ BEGIN i := 0;
 END SplitName;
 
 PROCEDURE GetExt(VAR name, ext: ARRAY OF CHAR);
-	VAR i, j: INTEGER;
+	VAR i, j: SIGNED16;
 BEGIN
 	i := 0; j := 0; WHILE name[i] # 0X DO IF name[i] = "." THEN j := i+1 END; INC(i) END;
 	i := 0; WHILE name[j] # 0X DO ext[i] := name[j]; INC(i); INC(j) END; ext[i] := 0X;
@@ -451,8 +451,8 @@ END ConverterOpen;
 
 (** Open the picture file with name from disk. Any graphic file format listed in the PictureConverters section of Oberon.Text can be loaded (e.g. GIF, JPEG, XBM, BMP). *)
 PROCEDURE Open*(P: Picture; name: ARRAY OF CHAR; color: BOOLEAN);
-	VAR F :Files.File; R: Files.Rider; len: LONGINT; x,depth: INTEGER; P2: Picture;
-	dname: ARRAY 64 OF CHAR; d: INTEGER; (* << jm *)
+	VAR F :Files.File; R: Files.Rider; len: SIGNED32; x,depth: SIGNED16; P2: Picture;
+	dname: ARRAY 64 OF CHAR; d: SIGNED16; (* << jm *)
 BEGIN
 	F := Files.Old(name);
 	IF color THEN depth := 8 ELSE depth := 1 END;
@@ -478,7 +478,7 @@ BEGIN
 END Open;
 
 (** Returns the address of the bitmap data of a picture. *)
-PROCEDURE Address*(P: Picture): LONGINT;	(** non-portable *)
+PROCEDURE Address*(P: Picture): SIGNED32;	(** non-portable *)
 BEGIN
 	HALT(99);	(* should not be used *)
 	RETURN 0
@@ -487,7 +487,7 @@ END Address;
 (** Default picture object handler. *)
 
 PROCEDURE Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg);
-	VAR len: LONGINT; P2: Picture; ref: INTEGER;
+	VAR len: SIGNED32; P2: Picture; ref: SIGNED16;
 BEGIN
 	WITH obj: Picture DO
 		IF msg IS Objects.AttrMsg THEN
@@ -549,9 +549,9 @@ BEGIN
 	s[6] := s[1];
 	s[7] := s[1];
 	dots := Display.NewPattern(32,8, s);
-	greyPat[0,0] := 02100000H; greyPat[0,1] :=  LONGINT(0AAAAAAAAH); greyPat[0,2] := 0;
+	greyPat[0,0] := 02100000H; greyPat[0,1] :=  SIGNED32(0AAAAAAAAH); greyPat[0,2] := 0;
 	greyPat[1,0] := 04100000H; greyPat[1,1] :=  011111111H; greyPat[1,2] := 0; greyPat[1,3] := 0; greyPat[1,4] := 0;
-	greyPat[2,0] := 02100000H; greyPat[2,1] :=  LONGINT(0AAAAAAAAH); greyPat[2,2] := LONGINT(0FFFFFFFFH);
+	greyPat[2,0] := 02100000H; greyPat[2,1] :=  SIGNED32(0AAAAAAAAH); greyPat[2,2] := SIGNED32(0FFFFFFFFH);
 	greyPat[3,0] := 04100000H; greyPat[3,1] :=  011111111H; greyPat[3,2] := 0; greyPat[3,3] := 044444444H; greyPat[3,4] := 0;
 
 	grey[0] := ADDRESSOF(greyPat[1]) +2;

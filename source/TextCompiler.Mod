@@ -86,7 +86,7 @@ CONST
 	END UTF8Size;
 
 
-	PROCEDURE CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: LONGINT; CONST pc,opt: ARRAY OF CHAR; log: Streams.Writer;
+	PROCEDURE CompileText*(t: Texts.Text; CONST source: ARRAY OF CHAR; pos: SIGNED32; CONST pc,opt: ARRAY OF CHAR; log: Streams.Writer;
 	diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 	VAR stringReader: Streams.StringReader;
 		reader: Streams.Reader;

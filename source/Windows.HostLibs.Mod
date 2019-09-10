@@ -22,7 +22,7 @@ CONST
 		Return: TRUE in case of success
 	*)
 	PROCEDURE LoadLibrary*(CONST fileName: ARRAY OF CHAR; VAR lib: LibHandle): BOOLEAN;
-	VAR err: LONGINT;
+	VAR err: SIGNED32;
 	BEGIN
 		lib := Kernel32.LoadLibrary(fileName);
 		IF lib # NilLibHandle THEN

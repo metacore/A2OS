@@ -39,8 +39,8 @@ Implementation 1.0; ur
 Implementation 1.1  NaN ,parametercontrol;ur
 *)
 IMPORT MathL IN A2;
-CONST INF = MAX(LONGREAL);
-TYPE extended = LONGREAL;   integer = LONGINT;
+CONST INF = MAX(FLOAT64);
+TYPE extended = FLOAT64;   integer = SIGNED32;
 
 PROCEDURE SChiSq* (n: integer;  x: extended): extended;
 	(* upper tail probaility *)
@@ -172,10 +172,10 @@ PROCEDURE PFChiSq* (n: integer;  x: extended): extended;
 BEGIN RETURN 1 - SChiSq(n, x)
 END PFChiSq;
 
-PROCEDURE chs1* (bins: ARRAY OF LONGINT;  ebins: ARRAY OF LONGREAL;  nbins: LONGINT;
-knstrn : LONGINT;  VAR df, chsq, prob: LONGREAL);
+PROCEDURE chs1* (bins: ARRAY OF SIGNED32;  ebins: ARRAY OF FLOAT64;  nbins: SIGNED32;
+knstrn : SIGNED32;  VAR df, chsq, prob: FLOAT64);
 	(* routine ksone from Numerical Recipes*)
-	VAR j: LONGINT;  temp: LONGREAL;
+	VAR j: SIGNED32;  temp: FLOAT64;
 BEGIN
 	df := nbins - 1 - knstrn;
 	chsq := 0;

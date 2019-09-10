@@ -16,11 +16,11 @@ TYPE
 		bus: Bus;	(* bus this device is on *)
 		sibling: Device;	(* next device on this bus *)
 		next, prev: Device;	(* chain of all devices *)
-		devfn: LONGINT;	(* dev = top 5 bits, fn = lower 3 bits *)
-		device: LONGINT;	(* device id *)
-		vendor: LONGINT;	(* vendor id *)
-		class: LONGINT;	(* base, sub, prog-if bytes *)
-		irq, pin: LONGINT
+		devfn: SIGNED32;	(* dev = top 5 bits, fn = lower 3 bits *)
+		device: SIGNED32;	(* device id *)
+		vendor: SIGNED32;	(* vendor id *)
+		class: SIGNED32;	(* base, sub, prog-if bytes *)
+		irq, pin: SIGNED32
 	END;
 
 	Bus = POINTER TO RECORD
@@ -29,9 +29,9 @@ TYPE
 		next: Bus;	(* chain of all PCI buses *)
 		self: Device;	(* bridge device as seen by parent *)
 		devices: Device;	(* devices behind this bridge *)
-		number: LONGINT;	(* bus number *)
-		primary, secondary: LONGINT;	(* bridge numbers *)
-		subordinate: LONGINT	(* max number of subordinate buses *)
+		number: SIGNED32;	(* bus number *)
+		primary, secondary: SIGNED32;	(* bridge numbers *)
+		subordinate: SIGNED32	(* max number of subordinate buses *)
 	END;
 
 VAR
@@ -40,36 +40,36 @@ VAR
 	root: Bus;
 	data: Texts.Text;
 
-PROCEDURE ReadConfigByte(bus, devfn, ofs: LONGINT;  VAR val: LONGINT);
-VAR res: WORD;
+PROCEDURE ReadConfigByte(bus, devfn, ofs: SIGNED32;  VAR val: SIGNED32);
+VAR res: INTEGER;
 BEGIN
 	res := PCI.ReadConfigByte(bus, ASH(devfn, -3) MOD 20H, devfn MOD 8, ofs, val);
 	ASSERT(res = PCI.Done)
 END ReadConfigByte;
 
-PROCEDURE ReadConfigWord(bus, devfn, ofs: LONGINT;  VAR val: LONGINT);
-VAR res: WORD;
+PROCEDURE ReadConfigWord(bus, devfn, ofs: SIGNED32;  VAR val: SIGNED32);
+VAR res: INTEGER;
 BEGIN
 	res := PCI.ReadConfigWord(bus, ASH(devfn, -3) MOD 20H, devfn MOD 8, ofs, val);
 	ASSERT(res = PCI.Done)
 END ReadConfigWord;
 
-PROCEDURE ReadConfigDword(bus, devfn, ofs: LONGINT;  VAR val: LONGINT);
-VAR res: WORD;
+PROCEDURE ReadConfigDword(bus, devfn, ofs: SIGNED32;  VAR val: SIGNED32);
+VAR res: INTEGER;
 BEGIN
 	res := PCI.ReadConfigDword(bus, ASH(devfn, -3) MOD 20H, devfn MOD 8, ofs, val);
 	ASSERT(res = PCI.Done)
 END ReadConfigDword;
 
-PROCEDURE WriteConfigDword(bus, devfn, ofs, val: LONGINT);
-VAR res: WORD;
+PROCEDURE WriteConfigDword(bus, devfn, ofs, val: SIGNED32);
+VAR res: INTEGER;
 BEGIN
 	res := PCI.WriteConfigDword(bus, ASH(devfn, -3) MOD 20H, devfn MOD 8, ofs, val);
 	ASSERT(res = PCI.Done)
 END WriteConfigDword;
 
-PROCEDURE ScanBus(VAR bus: Bus): LONGINT;
-VAR devfn, max, x, hdrtype, ht, buses: LONGINT;  ismulti: BOOLEAN;  dev: Device;  child: Bus;
+PROCEDURE ScanBus(VAR bus: Bus): SIGNED32;
+VAR devfn, max, x, hdrtype, ht, buses: SIGNED32;  ismulti: BOOLEAN;  dev: Device;  child: Bus;
 BEGIN
 	max := bus.secondary;  ismulti := FALSE;
 	FOR devfn := 0 TO 0FEH DO
@@ -139,8 +139,8 @@ BEGIN
 	IF r.eot THEN ch := 0X ELSE Texts.Read(r, ch) END
 END Read;
 
-PROCEDURE WriteDevice(VAR w: Texts.Writer; class: BOOLEAN; p1, p2, p3: LONGINT; l1, l2, l3: ARRAY OF CHAR);
-VAR r: Texts.Reader; ch: CHAR; level, value: LONGINT;
+PROCEDURE WriteDevice(VAR w: Texts.Writer; class: BOOLEAN; p1, p2, p3: SIGNED32; l1, l2, l3: ARRAY OF CHAR);
+VAR r: Texts.Reader; ch: CHAR; level, value: SIGNED32;
 
 	PROCEDURE SkipLine(write: BOOLEAN);
 	BEGIN
@@ -151,7 +151,7 @@ VAR r: Texts.Reader; ch: CHAR; level, value: LONGINT;
 		REPEAT Read(r, ch) UNTIL (ch # 0DX) & (ch # 0AX)
 	END SkipLine;
 
-	PROCEDURE ReadHex(VAR x: LONGINT);
+	PROCEDURE ReadHex(VAR x: SIGNED32);
 	BEGIN
 		x := 0;
 		LOOP
@@ -166,7 +166,7 @@ VAR r: Texts.Reader; ch: CHAR; level, value: LONGINT;
 		END
 	END ReadHex;
 
-	PROCEDURE GetLine(VAR level, value: LONGINT);
+	PROCEDURE GetLine(VAR level, value: SIGNED32);
 	BEGIN
 		IF class THEN
 			IF ch = "C" THEN Read(r, ch); Read(r, ch) END
@@ -219,7 +219,7 @@ BEGIN
 	END
 END WriteDevice;
 
-PROCEDURE WriteB(VAR w: Texts.Writer; x: LONGINT);
+PROCEDURE WriteB(VAR w: Texts.Writer; x: SIGNED32);
 CONST K = 1024; M = K*K; G = K*M;
 VAR mult: CHAR;
 BEGIN
@@ -235,8 +235,8 @@ BEGIN
 	Texts.Write(w, "B")
 END WriteB;
 
-PROCEDURE WriteBase(VAR w: Texts.Writer; bus, devfn, reg: LONGINT; VAR double: BOOLEAN);
-VAR base, basehi, type, size: LONGINT; mask: SET;
+PROCEDURE WriteBase(VAR w: Texts.Writer; bus, devfn, reg: SIGNED32; VAR double: BOOLEAN);
+VAR base, basehi, type, size: SIGNED32; mask: SET;
 BEGIN
 	double := FALSE; basehi := 0; size := 0;
 	ReadConfigDword(bus, devfn, reg, base);
@@ -250,8 +250,8 @@ BEGIN
 		ELSE	(* memory *)
 			mask := {4..31}; type := base MOD 10H
 		END;
-		size := SYSTEM.VAL(LONGINT, -(SYSTEM.VAL(SET, size) * mask))+1;
-		size := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, size) * mask);
+		size := SYSTEM.VAL(SIGNED32, -(SYSTEM.VAL(SET, size) * mask))+1;
+		size := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, size) * mask);
 		IF type MOD 8 = 4 THEN	(* 64-bit *)
 			ReadConfigDword(bus, devfn, reg+4, basehi); double := TRUE
 		END;
@@ -276,7 +276,7 @@ BEGIN
 END WriteBase;
 
 PROCEDURE WriteDev(VAR w: Texts.Writer;  dev: Device);
-VAR bus, devfn, hdrtype, classrev, vendor, device, cmd, status, lastreg, reg, base: LONGINT; double: BOOLEAN;
+VAR bus, devfn, hdrtype, classrev, vendor, device, cmd, status, lastreg, reg, base: SIGNED32; double: BOOLEAN;
 BEGIN
 	bus := dev.bus.number;  devfn := dev.devfn;
 	ReadConfigByte(bus, devfn, HdrType, hdrtype);
@@ -332,7 +332,7 @@ END WriteDev;
 
 (*
 PROCEDURE ShowInterrupts;
-VAR bus, dev, fkt, res, val, val1, piix, i, m, iobase: LONGINT;
+VAR bus, dev, fkt, res, val, val1, piix, i, m, iobase: SIGNED32;
 BEGIN
 	Texts.WriteString(w, "Interrupt routing:");  Texts.WriteLn(w);
 	IF PCI.FindPCIClassCode(60100H, 0, bus, dev, fkt) = PCI.Done THEN
@@ -417,7 +417,7 @@ END ShowInterrupts;
 *)
 
 PROCEDURE Scan*;
-VAR dev, prev: Device;  t: Texts.Text;  ver, last, hw, count: LONGINT;
+VAR dev, prev: Device;  t: Texts.Text;  ver, last, hw, count: SIGNED32;
 BEGIN
 	IF PCI.PCIPresent(ver, last, hw) = PCI.Done THEN
 		devices := NIL;  NEW(root);	(* initialized to all NIL *)

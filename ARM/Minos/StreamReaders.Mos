@@ -16,21 +16,21 @@ CONST
 
 TYPE
 
-	Float = REAL;
+	Float = FLOAT32;
 	
 	Bytes2 = ARRAY 2 OF CHAR;
 	Bytes4 = ARRAY 4 OF CHAR;
 	Bytes8 = ARRAY 8 OF CHAR;
 	
-	Position* = LONGINT; (* position in the stream *)
+	Position* = SIGNED32; (* position in the stream *)
 	
 	(** Any stream input procedure. *)
-	Receiver* = PROCEDURE( VAR reader: Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD);
+	Receiver* = PROCEDURE( VAR reader: Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER);
 
 	Reader* = RECORD
 		head, tail: SIZE;
 		buf: POINTER TO ARRAY OF CHAR;
-		res*: WORD;   (** result of last input operation. *)
+		res*: INTEGER;   (** result of last input operation. *)
 		receive: Receiver;
 		received*: Position;   (** count of received bytes *)
 	END;
@@ -133,48 +133,48 @@ TYPE
 		WHILE n > 0 DO ch := Get(r);  DEC( n ) END
 	END SkipBytes;
 
-	(** Read a SHORTINT. *)
-	PROCEDURE RawSInt*(VAR r: Reader; VAR x: SHORTINT );
+	(** Read a SIGNED8. *)
+	PROCEDURE RawSInt*(VAR r: Reader; VAR x: SIGNED8 );
 	BEGIN
-		x := SYSTEM.VAL( SHORTINT, Get(r) )
+		x := SYSTEM.VAL( SIGNED8, Get(r) )
 	END RawSInt;
 
-	(** Read an INTEGER. *)
-	PROCEDURE RawInt*(VAR r: Reader; VAR x: INTEGER );
+	(** Read an SIGNED16. *)
+	PROCEDURE RawInt*(VAR r: Reader; VAR x: SIGNED16 );
 	VAR x0, x1: CHAR;
 	BEGIN
 		x0 := Get(r);  x1 := Get(r);   (* defined order *)
 		x := ORD( x1 ) * 100H + ORD( x0 )
 	END RawInt;
 
-	(** Read a LONGINT. *)
-	PROCEDURE RawLInt*(VAR r: Reader; VAR x: LONGINT );
+	(** Read a SIGNED32. *)
+	PROCEDURE RawLInt*(VAR r: Reader; VAR x: SIGNED32 );
 	VAR ignore: SIZE;
 	BEGIN
 		Bytes(r,SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 	END RawLInt;
 
-	(** Read a HUGEINT. *)
-	PROCEDURE RawHInt*(VAR r: Reader; VAR x: HUGEINT );
+	(** Read a SIGNED64. *)
+	PROCEDURE RawHInt*(VAR r: Reader; VAR x: SIGNED64 );
 	VAR ignore: SIZE;
 	BEGIN
 		Bytes(r,SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
 	END RawHInt;
 
 	(** Read a 32 bit value in network byte order (most significant byte first) *)
-	PROCEDURE Net32*(VAR r: Reader): LONGINT;
+	PROCEDURE Net32*(VAR r: Reader): SIGNED32;
 	BEGIN
 		RETURN LONG( ORD( Get(r) ) ) * 1000000H + LONG( ORD( Get(r) ) ) * 10000H + LONG( ORD( Get(r) ) ) * 100H + LONG( ORD( Get(r) ) )
 	END Net32;
 
 	(** Read an unsigned 16bit value in network byte order (most significant byte first) *)
-	PROCEDURE Net16*(VAR r: Reader): LONGINT;
+	PROCEDURE Net16*(VAR r: Reader): SIGNED32;
 	BEGIN
 		RETURN LONG( ORD( Get(r) ) ) * 100H + LONG( ORD( Get(r) ) )
 	END Net16;
 
 	(** Read an unsigned byte *)
-	PROCEDURE Net8*(VAR r: Reader): LONGINT;
+	PROCEDURE Net8*(VAR r: Reader): SIGNED32;
 	BEGIN
 		RETURN LONG( ORD( Get(r) ) )
 	END Net8;
@@ -192,15 +192,15 @@ TYPE
 		x := (Get(r) # 0X)
 	END RawBool;
 
-	(** Read a REAL. *)
-	PROCEDURE RawReal*(VAR r: Reader; VAR x: REAL );
+	(** Read a FLOAT32. *)
+	PROCEDURE RawReal*(VAR r: Reader; VAR x: FLOAT32 );
 	VAR ignore: SIZE;
 	BEGIN
 		Bytes(r,SYSTEM.VAL( Bytes4, x ), 0, 4, ignore )
 	END RawReal;
 
-	(** Read a LONGREAL. *)
-	PROCEDURE RawLReal*(VAR r: Reader; VAR x: LONGREAL );
+	(** Read a FLOAT64. *)
+	PROCEDURE RawLReal*(VAR r: Reader; VAR x: FLOAT64 );
 	VAR ignore: SIZE;
 	BEGIN
 		Bytes(r,SYSTEM.VAL( Bytes8, x ), 0, 8, ignore )
@@ -220,8 +220,8 @@ TYPE
 	END RawString;
 	
 	(** Read a number in a compressed format. *)
-	PROCEDURE RawNum*(VAR r: Reader; VAR x: LONGINT );
-	VAR ch: CHAR;  n, y: LONGINT;
+	PROCEDURE RawNum*(VAR r: Reader; VAR x: SIGNED32 );
+	VAR ch: CHAR;  n, y: SIGNED32;
 	BEGIN
 		n := 0;  y := 0;  ch := Get(r);
 		WHILE ch >= 80X DO INC( y, LSH( LONG( ORD( ch ) ) - 128, n ) );  INC( n, 7 );  ch := Get(r) END;
@@ -232,8 +232,8 @@ TYPE
 
 	 (** Read an integer value in decimal or hexadecimal.  If hex = TRUE, recognize the "H" postfix for hexadecimal numbers. *)
 
-	PROCEDURE Int*(VAR r: Reader; VAR x: LONGINT;  hex: BOOLEAN );
-	VAR vd, vh: LONGINT; sgn, d: WORD;  ch: CHAR;  ok: BOOLEAN;
+	PROCEDURE Int*(VAR r: Reader; VAR x: SIGNED32;  hex: BOOLEAN );
+	VAR vd, vh: SIGNED32; sgn, d: INTEGER;  ch: CHAR;  ok: BOOLEAN;
 	BEGIN
 		vd := 0;  vh := 0;  sgn := 1;  ok := FALSE;
 		IF Peek(r) = "-" THEN sgn := -1;  ch := Get(r) END;
@@ -369,7 +369,7 @@ TYPE
 	END GetString;
 
 	(** First skip whitespace, then read integer *)
-	PROCEDURE GetInteger*(VAR r: Reader; VAR integer : LONGINT; isHexadecimal : BOOLEAN): BOOLEAN;
+	PROCEDURE GetInteger*(VAR r: Reader; VAR integer : SIGNED32; isHexadecimal : BOOLEAN): BOOLEAN;
 	BEGIN
 		SkipWhitespace(r);
 		Int(r,integer, isHexadecimal);
@@ -398,7 +398,7 @@ TYPE
 	(** converts a string to a real value *)
 	(* adopted from Strings.Mod *)
 	PROCEDURE StrToFloat*(CONST s: ARRAY OF CHAR; VAR r: Float);
-	VAR p, e: LONGINT; y, g: Float; neg, negE: BOOLEAN;
+	VAR p, e: SIGNED32; y, g: Float; neg, negE: BOOLEAN;
 	BEGIN
 		p := 0;
 		WHILE (s[p] = " ") OR (s[p] = "0") DO INC(p) END;
@@ -464,7 +464,7 @@ TYPE
 		SYSTEM.MOVE(ADDRESSOF(buf[ofs]), ADDRESSOF(r.buf[0]), len)
 	END SetRawString;
 
-	PROCEDURE StringReaderReceive * (VAR reader: Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD);
+	PROCEDURE StringReaderReceive * (VAR reader: Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER);
 	BEGIN
 		IF min = 0 THEN res := Ok ELSE res := EOF END;
 		len := 0

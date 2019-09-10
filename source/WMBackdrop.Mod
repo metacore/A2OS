@@ -21,13 +21,13 @@ TYPE
 		img : WMGraphics.Image;
 		picname : ARRAY 256 OF CHAR;
 		changeable, stop: BOOLEAN;
-		interval: LONGINT; (* in seconds *)
+		interval: SIGNED32; (* in seconds *)
 		timer : Kernel.Timer;
 
-		currentImg: LONGINT;
+		currentImg: SIGNED32;
 
 		fullscreen : BOOLEAN;
-		fullscreenX, fullscreenY, fullscreenW, fullscreenH : LONGINT;
+		fullscreenX, fullscreenY, fullscreenW, fullscreenH : SIGNED32;
 
 		PROCEDURE & New*;
 		BEGIN
@@ -41,7 +41,7 @@ TYPE
 			SetTitle(Strings.NewString("Backdrop"));
 		END New;
 
-		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : LONGINT);
+		PROCEDURE Draw*(canvas : WMGraphics.Canvas; w, h : SIZE; q : SIGNED32);
 		BEGIN
 			IF img # NIL THEN
 				canvas.ScaleImage(img,
@@ -52,7 +52,7 @@ TYPE
 
 		PROCEDURE PointerDown*(x, y : SIZE; keys : SET);
 		VAR view : WMWindowManager.ViewPort;
-			w, h : REAL; originator : ANY;
+			w, h : FLOAT32; originator : ANY;
 			contextMenu : WMPopups.Popup;
 		BEGIN
 			originator := sequencer.GetOriginator();
@@ -85,7 +85,7 @@ TYPE
 		END SetChangeable;
 
 		PROCEDURE HandleChangeable(sender, data: ANY);
-		VAR str: ARRAY 32 OF CHAR; value, res: LONGINT;
+		VAR str: ARRAY 32 OF CHAR; value, res: SIGNED32;
 		BEGIN
 			IF changeable THEN
 				SetChangeable(FALSE);
@@ -109,7 +109,7 @@ TYPE
 		END HandleChangeable;
 
 		PROCEDURE HandleFullScreen(sender, par: ANY);
-		VAR view : WMWindowManager.ViewPort; w, h : REAL; originator : ANY;
+		VAR view : WMWindowManager.ViewPort; w, h : FLOAT32; originator : ANY;
 		BEGIN
 			manager.SetFocus(SELF);
 			originator := sender(WMComponents.Component).sequencer.GetOriginator();
@@ -129,7 +129,7 @@ TYPE
 		END HandleRemove;
 
 		PROCEDURE Handle*(VAR x: WMMessages.Message);
-		VAR configuration : XML.Element; value : LONGINT;
+		VAR configuration : XML.Element; value : SIGNED32;
 		BEGIN
 			IF (x.msgType = WMMessages.MsgExt) & (x.ext # NIL) THEN
 				IF (x.ext IS WMRestorable.Storage) THEN
@@ -261,8 +261,8 @@ BEGIN
 END GetResizedImage;
 
 (* Return index of img *)
-PROCEDURE FindIndex(CONST imageName : ARRAY OF CHAR) : LONGINT;
-VAR index : LONGINT;
+PROCEDURE FindIndex(CONST imageName : ARRAY OF CHAR) : SIGNED32;
+VAR index : SIGNED32;
 BEGIN
 	index := -1;
 	IF (imageName # "") & (imgList # NIL) THEN
@@ -311,7 +311,7 @@ VAR
 	bw : Window;
 	img : WMGraphics.Image;
 	x, y, tx, ty, tw, th : SIZE;
-	fx, fy, fw, fh : LONGINT;
+	fx, fy, fw, fh : SIGNED32;
 	width, height : SIZE;
 	name : Files.FileName;
 BEGIN {EXCLUSIVE}
@@ -469,10 +469,10 @@ PROCEDURE ChangeList;
 VAR
 	f: Files.File;
 	r: Files.Reader;
-	i, nr: LONGINT;
+	i, nr: SIGNED32;
 
-	PROCEDURE NumberImg(): LONGINT;
-	VAR line: Files.FileName; r: Files.Reader; nr: LONGINT;
+	PROCEDURE NumberImg(): SIGNED32;
+	VAR line: Files.FileName; r: Files.Reader; nr: SIGNED32;
 	BEGIN
 		Files.OpenReader(r, f, 0);
 		WHILE (r.res = Streams.Ok) DO

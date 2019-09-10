@@ -8,7 +8,7 @@ CONST
 TYPE
 	Counter = OBJECT
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 
 		PROCEDURE Inc;
 		BEGIN {EXCLUSIVE}
@@ -29,9 +29,9 @@ TYPE
 	Thread = OBJECT
 	VAR
 		c: Counter;
-		i, n: LONGINT;
+		i, n: SIGNED32;
 
-		PROCEDURE & Init (counter: Counter; iterations: LONGINT);
+		PROCEDURE & Init (counter: Counter; iterations: SIGNED32);
 		BEGIN
 			c := counter;
 			n := iterations

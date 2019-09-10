@@ -8,7 +8,7 @@ IMPORT
 	EnetEnvironment;
 	
 TYPE
-	Time* = HUGEINT;
+	Time* = SIGNED64;
 
 	(**
 		Timer descriptor

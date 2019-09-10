@@ -39,7 +39,7 @@ TYPE
 
 	tObject* = POINTER TO tObjectDesc;
 	tObjectDesc* = RECORD (vyBase.ObjDesc);
-		w*, depth*: LONGINT;
+		w*, depth*: SIGNED32;
 		A*: tArray;
 		ACache*: tArray
 	END;
@@ -50,31 +50,31 @@ CONST
 VAR
 	newobject-: tObject;  RandomR-: tRArray;  RandomL-: tLArray;
 
-	PROCEDURE RandomRC( w: LONGINT );
+	PROCEDURE RandomRC( w: SIGNED32 );
 	BEGIN
 		IF (RandomR = NIL ) OR (LEN( RandomR^ ) < w) THEN NEW( RandomR, w );  aM.dS( "New RandomR" );  END
 	END RandomRC;
 
-	PROCEDURE RandomLC( w: LONGINT );
+	PROCEDURE RandomLC( w: SIGNED32 );
 	BEGIN
 		IF (RandomL = NIL ) OR (LEN( RandomL^ ) < w) THEN NEW( RandomL, w );  aM.dS( "New RandomR" );  END
 	END RandomLC;
 
-	PROCEDURE UniformR*( w: LONGINT );
+	PROCEDURE UniformR*( w: SIGNED32 );
 	VAR gen: vyRanBase.tRandom;
 	BEGIN
 		RandomRC( w );  gen := vyRanBase.RandomGenerator;  gen.GetRandomUVX( gen, w, RandomR^, 0 )
 	END UniformR;
 
-	PROCEDURE UniformL*( w, top: LONGINT );
+	PROCEDURE UniformL*( w, top: SIGNED32 );
 	VAR gen: vyRanBase.tRandom;
 	BEGIN
 		RandomLC( w );  gen := vyRanBase.RandomGenerator;  gen.GetRandomLV( gen, top, w, RandomL^, 0 )
 	END UniformL;
 
-	PROCEDURE UniformA*( A: tArray;  top: LONGINT;  x, w: LONGINT );
-	VAR adri, adrl, adrw: LONGINT;  val: LONGINT;
-	CONST stepi = SIZEOF( INTEGER );  stepl = SIZEOF( LONGINT );
+	PROCEDURE UniformA*( A: tArray;  top: SIGNED32;  x, w: SIGNED32 );
+	VAR adri, adrl, adrw: SIGNED32;  val: SIGNED32;
+	CONST stepi = SIZEOF( SIGNED16 );  stepl = SIZEOF( SIGNED32 );
 	BEGIN
 		UniformL( w, top );  adri := ADDRESSOF( A[x] );  adrl := ADDRESSOF( RandomL[0] );  adrw := adri + w * stepi;
 		WHILE (adri < adrw) DO SYSTEM.GET( adrl, val );  SYSTEM.PUT( adri, SHORT( val ) );  INC( adri, stepi );  INC( adrl, stepl ) END
@@ -85,15 +85,15 @@ VAR
 		IF o # NIL THEN UniformA( o.A, o.depth, 0, o.w ) END
 	END UniformO;
 
-	PROCEDURE FillA*( A: tArray;  val: INTEGER;  x, w: LONGINT );
-	VAR adr, adrw: LONGINT;
-	CONST step = SIZEOF( INTEGER );
+	PROCEDURE FillA*( A: tArray;  val: SIGNED16;  x, w: SIGNED32 );
+	VAR adr, adrw: SIGNED32;
+	CONST step = SIZEOF( SIGNED16 );
 	BEGIN
 		adr := ADDRESSOF( A[x] );  adrw := adr + w * step;
 		WHILE (adr < adrw) DO SYSTEM.PUT( adr, val );  INC( adr, step ) END
 	END FillA;
 
-	PROCEDURE FillO*( o: tObject;  val: INTEGER );
+	PROCEDURE FillO*( o: tObject;  val: SIGNED16 );
 	BEGIN
 		FillA( o.A, val, 0, o.w )
 	END FillO;
@@ -116,10 +116,10 @@ VAR
 		obj.handle( obj, msg )
 	END Refresh;
 
-	PROCEDURE SetDepth*( obj: tObject;  depth: LONGINT );
+	PROCEDURE SetDepth*( obj: tObject;  depth: SIGNED32 );
 	(*= Set depth of an object. While any connected objects become consistent with respect to their depth, you will have to
 	call Update(obj) to get a consistent array - picture connection. *)
-	VAR olddepth: LONGINT;  x: LONGINT;
+	VAR olddepth: SIGNED32;  x: SIGNED32;
 	BEGIN
 		ASSERT ( obj # NIL , 100 );
 		ASSERT ( depth > 1, 101 );
@@ -139,27 +139,27 @@ VAR
 		o.A := A;  o.w := LEN( A^ );  Refresh( o )
 	END EmbedArray;
 
-	PROCEDURE NewArray*( w: LONGINT ): tArray;
+	PROCEDURE NewArray*( w: SIGNED32 ): tArray;
 	VAR a: tArray;
 	BEGIN
 		ASSERT ( w > 0, 100 );
 		NEW( a, w );  FillA( a, 0, 0, w );  RETURN a
 	END NewArray;
 
-	PROCEDURE NewObject*( w, d: LONGINT ): tObject;
+	PROCEDURE NewObject*( w, d: SIGNED32 ): tObject;
 	(*= create a new instance of an array within an array object *)
 	VAR a: tArray;  A: tObject;
 	BEGIN
 		a := NewArray( w );  Gen;  A := newobject;  Init( A );  A.depth := d;  EmbedArray( a, A );  RETURN A
 	END NewObject;
 
-	PROCEDURE Min( x, y: LONGINT ): LONGINT;
+	PROCEDURE Min( x, y: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF x < y THEN RETURN x ELSE RETURN y END
 	END Min;
 
-	PROCEDURE ChangeSize( o: tObject;  w: LONGINT );
-	VAR oldarray: tArray;  oldw: INTEGER;
+	PROCEDURE ChangeSize( o: tObject;  w: SIGNED32 );
+	VAR oldarray: tArray;  oldw: SIGNED16;
 	BEGIN
 		oldw := SHORT( o.w );
 		IF (w # o.w) THEN  (* ? preserve pict / array when shrinked ? *)
@@ -205,7 +205,7 @@ VAR
 	END FrameLinks;
 
 	PROCEDURE StoreA( VAR R: Files.Rider;  A: tArray );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		IF A = NIL THEN Files.WriteBool( R, FALSE )
 		ELSE
@@ -215,7 +215,7 @@ VAR
 	END StoreA;
 
 	PROCEDURE LoadA( VAR R: Files.Rider ): tArray;
-	VAR bool: BOOLEAN;  i: LONGINT;  maxi: LONGINT;  A: tArray;
+	VAR bool: BOOLEAN;  i: SIGNED32;  maxi: SIGNED32;  A: tArray;
 	BEGIN
 		Files.ReadBool( R, bool );
 		IF bool = FALSE THEN RETURN NIL END;
@@ -225,7 +225,7 @@ VAR
 	END LoadA;
 
 	PROCEDURE HandleFileMsg( obj: tObject;  VAR msg: Objects.FileMsg );
-	VAR w, depth: LONGINT;  version: INTEGER;
+	VAR w, depth: SIGNED32;  version: SIGNED16;
 		(*! store Picts as GIF for color preserving or store colors *)
 	BEGIN
 		IF msg.id = Objects.load THEN
@@ -305,7 +305,7 @@ VAR
 	END Copy;
 
 	PROCEDURE New*;
-	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  w, d: LONGINT;  obj: tObject;
+	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  w, d: SIGNED32;  obj: tObject;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=NAME w=INT depth=INT ~# create new instance of <name> with len <w>" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectNumberFromKeyword( l, "w", w ) &
@@ -315,18 +315,18 @@ VAR
 	END New;
 
 	PROCEDURE FromVec*;
-	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  depth, i: LONGINT;  obj: tObject;  aobj, bobj: vyBase.Object;
+	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  depth, i: SIGNED32;  obj: tObject;  aobj, bobj: vyBase.Object;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=NAME from=OBJ [depth=INT] # copy vec to new object  <name>" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectObjectFromKeyword( l, "from", bobj ) THEN
-			IF ~antsCommands.GetNumberFromKeyword( l, "depth", depth ) THEN depth := MAX( INTEGER ) END;
+			IF ~antsCommands.GetNumberFromKeyword( l, "depth", depth ) THEN depth := MAX( SIGNED16 ) END;
 			WITH bobj: vyLongrealVec.tVector DO
 				aobj := vyName.FindObj( name );
 				IF aobj = NIL THEN obj := NewObject( vyLongrealVec.Len( bobj ), depth );  vyName.RegisterNamed( obj, name )
 				ELSE
 					obj := aobj( tObject );
 					IF obj( tObject ).w # vyLongrealVec.Len( bobj ) THEN ChangeSize( obj( tObject ), vyLongrealVec.Len( bobj ) ) END;
-					IF depth # MAX( INTEGER ) THEN SetDepth( obj( tObject ), depth ) END
+					IF depth # MAX( SIGNED16 ) THEN SetDepth( obj( tObject ), depth ) END
 				END;
 				FOR i := 0 TO vyLongrealVec.Len( bobj ) - 1 DO obj( tObject ).A[i] := SHORT( ENTIER( vyLongrealVec.Get( bobj, i ) + 0.5 ) ) END;
 				vyBase.Update( obj )
@@ -348,9 +348,9 @@ VAR
 	END Uniform;
 
 	PROCEDURE Channel*;
-	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  p: LONGREAL;  x: LONGINT;
+	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  p: FLOAT64;  x: SIGNED32;
 	BEGIN
-		l := antsCommands.ScanFromPar( "name=OBJ p=REAL ~# Add channel noise to data <name> with prob. p " );
+		l := antsCommands.ScanFromPar( "name=OBJ p=FLOAT32 ~# Add channel noise to data <name> with prob. p " );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) & antsCommands.ExpectRealFromKeyword( l, "p", p ) THEN
 			IF obj IS tObject THEN
 				WITH obj: tObject DO
@@ -366,9 +366,9 @@ VAR
 	END Channel;
 
 	PROCEDURE AddNoise*;
-	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  p: LONGREAL;  x: LONGINT;
+	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  p: FLOAT64;  x: SIGNED32;
 	BEGIN
-		l := antsCommands.ScanFromPar( "name=OBJECT p=REAL # Add (rounded) gaussian noise with var. <p> to data <name>" );
+		l := antsCommands.ScanFromPar( "name=OBJECT p=FLOAT32 # Add (rounded) gaussian noise with var. <p> to data <name>" );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) & antsCommands.ExpectRealFromKeyword( l, "p", p ) THEN
 			IF obj IS tObject THEN
 				WITH obj: tObject DO

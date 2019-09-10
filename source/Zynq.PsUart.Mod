@@ -36,7 +36,7 @@ TYPE
 		id-: UartId; (** UART controller ID *)
 		regs-: PsUartMin.UartRegisters; (** controller registers *)
 		inputClock-: ClockFrequency; (** controller input clock in Hz *)
-		bps-, data-, parity-, stop-: LONGINT; (** current parameter values *)
+		bps-, data-, parity-, stop-: SIGNED32; (** current parameter values *)
 
 		open-: BOOLEAN; (** TRUE if the controller is open *)
 
@@ -122,7 +122,7 @@ VAR
 		inputClock: controller input clock in Hz
 		res: returned error code, 0 in case of success
 	*)
-	PROCEDURE Install* (uart: UartId; base: ADDRESS; inputClock: ClockFrequency; VAR res: WORD);
+	PROCEDURE Install* (uart: UartId; base: ADDRESS; inputClock: ClockFrequency; VAR res: INTEGER);
 	VAR ctl: UartController;
 	BEGIN
 		PsUartMin.Install(uart, base, inputClock, res);
@@ -170,7 +170,7 @@ VAR
 		stop: number of stop bits
 		res: returned error code, 0 in case of success
 	*)
-	PROCEDURE Open*(uart: UartController; bps, data, parity, stop: LONGINT; VAR res: WORD);
+	PROCEDURE Open*(uart: UartController; bps, data, parity, stop: SIGNED32; VAR res: INTEGER);
 	VAR n: SIZE;
 	BEGIN
 		IF uart.open THEN res := PsUartMin.PortInUse; RETURN; END;
@@ -192,7 +192,7 @@ VAR
 		uart.rxBufRdPos := 0;
 
 		(* configure receive timeout to be as close as possible to ReceiveTimeoutInUs *)
-		n := ENTIER((ReceiveTimeoutInUs*REAL(bps)+1000000) / 4000000 + 0.5);
+		n := ENTIER((ReceiveTimeoutInUs*FLOAT32(bps)+1000000) / 4000000 + 0.5);
 		n := MAX(1,MIN(255,n-1));
 		uart.regs.rxtout := n;
 
@@ -263,7 +263,7 @@ VAR
 		propagate: TRUE for flushing the TX FIFO buffer
 		res: error code, 0 in case of success
 	*)
-	PROCEDURE SendChar*(uart: UartController; ch: CHAR; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
+	PROCEDURE SendChar*(uart: UartController; ch: CHAR; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: INTEGER);
 	BEGIN
 		PsUartMin.SendChar(uart.regs,ch,propagate,onBusy,res);
 	END SendChar;
@@ -271,7 +271,7 @@ VAR
 	(**
 		Send data to the UART
 	*)
-	PROCEDURE Send*(uart: UartController; CONST buf: ARRAY OF CHAR; offs, len: SIZE; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
+	PROCEDURE Send*(uart: UartController; CONST buf: ARRAY OF CHAR; offs, len: SIZE; propagate: BOOLEAN; onBusy: PsUartMin.BusyLoopCallback; VAR res: INTEGER);
 	BEGIN
 		WHILE uart.open & (len > 0) DO
 			IF ~(PsUartMin.XUARTPS_SR_TNFUL IN uart.regs.sr) THEN
@@ -302,7 +302,7 @@ VAR
 
 		Remarks: blocks until a character is available
 	*)
-	PROCEDURE ReceiveChar*(uart: UartController; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD): CHAR;
+	PROCEDURE ReceiveChar*(uart: UartController; onBusy: PsUartMin.BusyLoopCallback; VAR res: INTEGER): CHAR;
 	VAR
 		buf: ARRAY 1 OF CHAR;
 		len: SIZE;
@@ -314,7 +314,7 @@ VAR
 	(**
 		Receive data from the UART
 	*)
-	PROCEDURE Receive*(uart: UartController; VAR buf: ARRAY OF CHAR; offs, size, min: SIZE; VAR len: SIZE; onBusy: PsUartMin.BusyLoopCallback; VAR res: WORD);
+	PROCEDURE Receive*(uart: UartController; VAR buf: ARRAY OF CHAR; offs, size, min: SIZE; VAR len: SIZE; onBusy: PsUartMin.BusyLoopCallback; VAR res: INTEGER);
 	VAR
 		bufRdPos, bufWrPos, n: SIZE;
 	BEGIN

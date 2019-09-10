@@ -12,7 +12,7 @@ TYPE
 		END Init2;
 
 		(** parse a register name **)
-		PROCEDURE GetRegister*(VAR registerNumber: LONGINT): BOOLEAN;
+		PROCEDURE GetRegister*(VAR registerNumber: SIGNED32): BOOLEAN;
 		VAR
 			result: BOOLEAN;
 		BEGIN
@@ -29,7 +29,7 @@ TYPE
 		END GetRegister;
 
 		PROCEDURE GetRegisterList(VAR registerList: SET): BOOLEAN;
-		VAR num: LONGINT;
+		VAR num: SIGNED32;
 		BEGIN
 			registerList := {};
 			IF token.symbol = Scanner.LeftBrace THEN
@@ -53,7 +53,7 @@ TYPE
 		END GetRegisterList;
 
 		(** parse a special register name, along with fields **)
-		PROCEDURE GetSpecialRegisterWithFields(VAR registerNumber: LONGINT; VAR fields: SET): BOOLEAN;
+		PROCEDURE GetSpecialRegisterWithFields(VAR registerNumber: SIGNED32; VAR fields: SET): BOOLEAN;
 		VAR
 			result: BOOLEAN;
 			i: SIZE;
@@ -90,7 +90,7 @@ TYPE
 		END GetSpecialRegisterWithFields;
 
 		(** parse a shift mode name **)
-		PROCEDURE GetShiftMode*(VAR shiftModeNumber: LONGINT): BOOLEAN;
+		PROCEDURE GetShiftMode*(VAR shiftModeNumber: SIGNED32): BOOLEAN;
 		VAR
 			result: BOOLEAN;
 		BEGIN
@@ -107,7 +107,7 @@ TYPE
 		END GetShiftMode;
 
 		(** parse a coprocessor name **)
-		PROCEDURE GetCoprocessor*(VAR coprocessorNumber: LONGINT): BOOLEAN;
+		PROCEDURE GetCoprocessor*(VAR coprocessorNumber: SIGNED32): BOOLEAN;
 		VAR
 			result: BOOLEAN;
 		BEGIN
@@ -126,12 +126,12 @@ TYPE
 		END GetCoprocessor;
 
 		(* parse coprocessor opcode *)
-		PROCEDURE GetCoprocessorOpcode*(VAR coprocessorOpcode: LONGINT): BOOLEAN;
+		PROCEDURE GetCoprocessorOpcode*(VAR coprocessorOpcode: SIGNED32): BOOLEAN;
 		VAR
 			result: BOOLEAN;
 		BEGIN
 			IF (token.symbol = Scanner.Number) & (token.numberType = Scanner.Integer) & (token.integer >= 0) & (token.integer <= 7) THEN
-				coprocessorOpcode := LONGINT(token.integer);
+				coprocessorOpcode := SIGNED32(token.integer);
 				result := TRUE;
 				NextToken
 			ELSE
@@ -142,13 +142,13 @@ TYPE
 		END GetCoprocessorOpcode;
 
 		(** parse any expression that evaluates to a constant value **)
-		PROCEDURE GetPlainValue*(VAR value: LONGINT): BOOLEAN;
+		PROCEDURE GetPlainValue*(VAR value: SIGNED32): BOOLEAN;
 		VAR
 			assemblerResult: FoxAssembler.Result;
 			result: BOOLEAN;
 		BEGIN
 			IF Expression(assemblerResult, FALSE) & ((assemblerResult.type = FoxAssembler.ConstantInteger) OR (assemblerResult.type = FoxAssembler.Offset)) THEN
-				value := LONGINT(assemblerResult.value);
+				value := SIGNED32(assemblerResult.value);
 				result := TRUE
 			ELSE
 				value := 0;
@@ -160,7 +160,7 @@ TYPE
 		(** parse an ARM immediate value
 			i.e., the '#'-sign followed by any expression that evaluates to a constant value
 		**)
-		PROCEDURE GetImmediateValue*(VAR immediateValue: LONGINT): BOOLEAN;
+		PROCEDURE GetImmediateValue*(VAR immediateValue: SIGNED32): BOOLEAN;
 		BEGIN RETURN ThisSymbol(Scanner.Unequal) & GetPlainValue(immediateValue)
 		END GetImmediateValue;
 
@@ -169,7 +169,7 @@ TYPE
 			instruction: InstructionSet.Instruction;
 			operands: ARRAY InstructionSet.MaxOperands OF InstructionSet.Operand;
 			position: Basic.Position;
-			opCode, condition, i, operandNumber: LONGINT;
+			opCode, condition, i, operandNumber: SIGNED32;
 			flags: SET;
 			newOperandExpected: BOOLEAN;
 			result: FoxAssembler.Result;
@@ -182,7 +182,7 @@ TYPE
 			VAR
 				operand: InstructionSet.Operand;
 				indexingMode, fields: SET;
-				registerNumber, offsetRegisterNumber, shiftModeNumber, shiftRegisterNumber, shiftImmediateValue, offsetImmediateValue, value: LONGINT;
+				registerNumber, offsetRegisterNumber, shiftModeNumber, shiftRegisterNumber, shiftImmediateValue, offsetImmediateValue, value: SIGNED32;
 				position: Basic.Position;
 				isImmediateOffset, bracketIsOpen: BOOLEAN;
 				registerList: SET;
@@ -265,7 +265,7 @@ TYPE
 							registerNumber := InstructionSet.PC;
 							isImmediateOffset := TRUE;
 							DEC(offsetImmediateValue, 8);
-							DEC(offsetImmediateValue, code.pc(LONGINT));
+							DEC(offsetImmediateValue, code.pc(SIGNED32));
 							IF ABS(offsetImmediateValue) < InstructionSet.Bits12 THEN
 								IF offsetImmediateValue >= 0 THEN
 									INCL(indexingMode, InstructionSet.Increment)
@@ -338,7 +338,7 @@ TYPE
 						InstructionSet.InitImmediate(operand, value)
 
 					ELSIF GetNonConstant(errorPosition,token.identifierString, result) THEN
-						InstructionSet.InitImmediate(operand,LONGINT(result.value));
+						InstructionSet.InitImmediate(operand,SIGNED32(result.value));
 						IF result.fixup # NIL THEN
 							InstructionSet.AddFixup(operand,result.fixup);
 						END;

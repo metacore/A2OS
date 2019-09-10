@@ -37,7 +37,7 @@ BEGIN
 	airblack :=  BL/5;
 END SetColor;
 
-PROCEDURE bounds* (i, j, k: LONGINT; VAR out: BOOLEAN);
+PROCEDURE bounds* (i, j, k: SIGNED32; VAR out: BOOLEAN);
 BEGIN
 	IF (i < 0) OR (i > 4) OR (j < 0) OR (j > 4) OR (k < 0) OR (k > 4) THEN
 		out := TRUE
@@ -48,7 +48,7 @@ END bounds;
 
 PROCEDURE fill*(v: Voxel);
 VAR
-	i,j,k: INTEGER;
+	i,j,k: SIGNED16;
 BEGIN
 	FOR i := 0 TO 4 DO FOR j := 0 TO 4 DO FOR k:= 0 TO 4 DO
 		blox[i,j,k] := v
@@ -57,7 +57,7 @@ END fill;
 
 PROCEDURE erase*;
 VAR
-	i,j,k: INTEGER;
+	i,j,k: SIGNED16;
 BEGIN
 	FOR i := 0 TO 4 DO FOR j := 0 TO 4 DO FOR k:= 0 TO 4 DO
 		blox[i,j,k] := NIL; nblox[i,j,k].filled := FALSE; fiveblox[i,j,k] := NIL;
@@ -67,7 +67,7 @@ END erase;
 
 PROCEDURE fillwithprobability*(v: Voxel; p: SREAL);
 VAR
-	i,j,k: INTEGER;
+	i,j,k: SIGNED16;
 BEGIN
 	FOR i := 0 TO 4 DO FOR j := 0 TO 4 DO FOR k:= 0 TO 4 DO
 		IF srBase.rand.Uniform()<p THEN blox[i,j,k] := v END
@@ -76,7 +76,7 @@ END fillwithprobability;
 
 PROCEDURE fillchequer*(v,w: Voxel);
 VAR
-	i,j,k: INTEGER;
+	i,j,k: SIGNED16;
 BEGIN
 	FOR i := 0 TO 4 DO FOR j := 0 TO 4 DO FOR k:= 0 TO 4 DO
 		IF ODD(i+j+k) THEN blox[i,j,k] := v ELSE blox[i,j,k] := w END
@@ -86,7 +86,7 @@ END fillchequer;
 PROCEDURE color(VAR ray: Ray; cube:NCUBE);
 VAR
 	dot: SREAL;
-	nx, ny, nz: INTEGER;
+	nx, ny, nz: SIGNED16;
 	inside: BOOLEAN;
 BEGIN
 (*	dot := ABS(cube.normal.x*ray.dxyz.x + cube.normal.y*ray.dxyz.y+ cube.normal.z*ray.dxyz.z);
@@ -121,7 +121,7 @@ VAR
 	oldxyz: srBase.PT;
 	ijk: srBase.IPT;
 	drx, dry, drz, dr,rr,gr,br,bl: SREAL;
-	di, dj, dk: INTEGER;
+	di, dj, dk: SIGNED16;
 	out: BOOLEAN;
 	v: Voxel;
 BEGIN
@@ -255,7 +255,7 @@ END Shade;
 PROCEDURE probe*(x,y,z: SREAL):Voxel;
 VAR
 	X,Y,Z: SREAL;
-	i,j,k: LONGINT;
+	i,j,k: SIGNED32;
 BEGIN
 	srBase.clamp3(x,y,z);
 	X := x*5; Y := y*5; Z := z*5;
@@ -295,7 +295,7 @@ VAR
 	oldxyz: srBase.PT;
 	ijk: srBase.IPT;
 	drx, dry, drz: SREAL;
-	di, dj, dk: INTEGER;
+	di, dj, dk: SIGNED16;
 	out: BOOLEAN;
 	v: Voxel;
 	killed: BOOLEAN;
@@ -405,9 +405,9 @@ BEGIN
 	Out.Ln;
 END deathray;
 
-PROCEDURE stroke*(p:PT; level: LONGINT; normal:PT; color: COLOR; mirror:BOOLEAN);
+PROCEDURE stroke*(p:PT; level: SIGNED32; normal:PT; color: COLOR; mirror:BOOLEAN);
 VAR
-	i,j,k: LONGINT;
+	i,j,k: SIGNED32;
 BEGIN
 	IF level>=1 THEN
 		(* top mcell is 1x1x1 by definition *) (*root only*)
@@ -429,9 +429,9 @@ BEGIN
 	END
 END stroke;
 
-PROCEDURE strokevoxel*(p:PT; level: LONGINT; voxel:Voxel);
+PROCEDURE strokevoxel*(p:PT; level: SIGNED32; voxel:Voxel);
 VAR
-	i,j,k: LONGINT;
+	i,j,k: SIGNED32;
 BEGIN
 	IF level>=1 THEN
 		(* top mcell is 1x1x1 by definition *) (*root only*)
@@ -451,12 +451,12 @@ BEGIN
 	END
 END strokevoxel;
 
-PROCEDURE line*(a,b: PT; level: LONGINT; v: Voxel);
+PROCEDURE line*(a,b: PT; level: SIGNED32; v: Voxel);
 VAR
 	tx,ty,tz, dxdt, dydt, dzdt: SREAL;
-	t: LONGINT;
+	t: SIGNED32;
 	delta: SREAL;
-	n: LONGINT;
+	n: SIGNED32;
 	p: PT;
 BEGIN
 	CASE level OF

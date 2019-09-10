@@ -75,7 +75,7 @@ CONST Global_Timer_Counter_Register1* = 0F8F00204H;
 CONST WDOG_MODE* = 0F8005000H; WDEN* = 0; RSTEN* = 1; ZKEY* = 12;
 CONST WDOG_CONTROL* = 0F8005004H; CLKSEL* = 0; CRV* = 2; CKEY* = 14;
 
-PROCEDURE ReadWord- (register: ADDRESS): WORD;
+PROCEDURE ReadWord- (register: ADDRESS): INTEGER;
 CODE
 	LDR	R2, [FP, #register]
 	LDR	R0, [R2, #0]

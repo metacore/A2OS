@@ -39,7 +39,7 @@ CONST
 (* print out the decoded usage for usage page Generic Desktop
  * 	param 	pos, usage of the usage page Generic Desktop
  *)
-PROCEDURE PrintGenericDesktop(pos: LONGINT);
+PROCEDURE PrintGenericDesktop(pos: SIGNED32);
 BEGIN
 	(*Generic Desktop Page (0x01)*)
 	CASE pos OF
@@ -126,7 +126,7 @@ END PrintGenericDesktop;
 (* Print out the decoded usage for usage page Keyboard
  * 	param 	pos, usage of the usage page Keyboard
  *)
-PROCEDURE PrintKeyboardPage(pos: LONGINT);
+PROCEDURE PrintKeyboardPage(pos: SIGNED32);
 BEGIN
 	(*Keyboard/Keypad Page (0x07)*)
 	CASE pos OF
@@ -358,7 +358,7 @@ END PrintKeyboardPage;
 (* print out the decoded usage for usage page Led
  * 	param 	pos, usage of the usage page Led
  *)
-PROCEDURE PrintLedPage(pos: LONGINT);
+PROCEDURE PrintLedPage(pos: SIGNED32);
 BEGIN
 	(*LEDPage (0x08)*)
 	CASE pos OF
@@ -448,7 +448,7 @@ END PrintLedPage;
 (* print out the decoded usage for usage page Button
  *	param 	pos, usage of the usage page Button
  *)
-PROCEDURE PrintButtonPage(pos: LONGINT);
+PROCEDURE PrintButtonPage(pos: SIGNED32);
 BEGIN
 	(*Button Page (0x09)*)
 	CASE pos OF
@@ -466,7 +466,7 @@ END PrintButtonPage;
 (* print out the decoded usage for usage page Consumer
  *	param 	pos, usage of the usage page Consumer
  *)
-PROCEDURE PrintConsumerPage(pos: LONGINT);
+PROCEDURE PrintConsumerPage(pos: SIGNED32);
 BEGIN
 	(*Consumer Page (0x0C)*)
 	CASE pos OF
@@ -859,7 +859,7 @@ END PrintConsumerPage;
  *	param	page,	usage page
  *		 	pos, 	usage of the usage page [page]
  *)
-PROCEDURE PrintUsagePage*(page, pos: LONGINT);
+PROCEDURE PrintUsagePage*(page, pos: SIGNED32);
 BEGIN
 	CASE page OF
 		|GenericDesktopPage: 	PrintGenericDesktop(pos);
@@ -873,7 +873,7 @@ BEGIN
 	END;
 END PrintUsagePage;
 
-PROCEDURE PrintUsagePageName*(page: LONGINT);
+PROCEDURE PrintUsagePageName*(page: SIGNED32);
 BEGIN
 	CASE page OF
 		|GenericDesktopPage: 	KernelLog.String("GenericDesktop");

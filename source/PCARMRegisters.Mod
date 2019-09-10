@@ -29,9 +29,9 @@ TYPE
 
 	MemoryContent* = OBJECT(Content)
 		VAR
-			baseReg-,offset-, size-: LONGINT;
+			baseReg-,offset-, size-: SIGNED32;
 
-		PROCEDURE &Init*(baseReg, offset, size: LONGINT);
+		PROCEDURE &Init*(baseReg, offset, size: SIGNED32);
 		BEGIN SELF.baseReg := baseReg; SELF.offset := offset; SELF.size := size
 		END Init;
 
@@ -65,9 +65,9 @@ TYPE
 
 	PCRelMemContent* = OBJECT(MemoryContent)
 		VAR
-			pc-: LONGINT;
+			pc-: SIGNED32;
 
-		PROCEDURE &Init*(pc, offset, size: LONGINT);
+		PROCEDURE &Init*(pc, offset, size: SIGNED32);
 		BEGIN Init^(PC, offset, size); SELF.pc := pc
 		END Init;
 
@@ -89,9 +89,9 @@ TYPE
 	Address* = OBJECT(Content)
 		VAR
 			adr: PCM.Attribute;
-			offset: LONGINT;
+			offset: SIGNED32;
 
-		PROCEDURE &Init*(adr: PCM.Attribute; offset: LONGINT);
+		PROCEDURE &Init*(adr: PCM.Attribute; offset: SIGNED32);
 		BEGIN SELF.adr := adr; SELF.offset := offset
 		END Init;
 
@@ -124,9 +124,9 @@ TYPE
 
 	IntConstant* = OBJECT(ConstantContent)
 		VAR
-			v-: LONGINT;
+			v-: SIGNED32;
 
-		PROCEDURE &Init*(value: LONGINT);
+		PROCEDURE &Init*(value: SIGNED32);
 		BEGIN v := value
 		END Init;
 
@@ -138,9 +138,9 @@ TYPE
 
 	RealConstant* = OBJECT(ConstantContent)
 		VAR
-			v-: REAL;
+			v-: FLOAT32;
 
-		PROCEDURE &Init*(value: REAL);
+		PROCEDURE &Init*(value: FLOAT32);
 		BEGIN v := value
 		END Init;
 
@@ -152,9 +152,9 @@ TYPE
 
 	LongRealConstant* = OBJECT(ConstantContent)
 		VAR
-			v-: LONGREAL;
+			v-: FLOAT64;
 
-		PROCEDURE &Init*(value: LONGREAL);
+		PROCEDURE &Init*(value: FLOAT64);
 		BEGIN v := value
 		END Init;
 
@@ -166,13 +166,13 @@ TYPE
 
 	Register* = OBJECT
 		VAR
-			id-: LONGINT; (** register number *)
-			free-: LONGINT;
+			id-: SIGNED32; (** register number *)
+			free-: SIGNED32;
 			value: Content;
 			memory: Content;
 			prevLRU, nextLRU: Register;
 
-		PROCEDURE &Init*(ID: LONGINT);
+		PROCEDURE &Init*(ID: SIGNED32);
 		BEGIN id := ID
 		END Init;
 
@@ -254,12 +254,12 @@ TYPE
 	ARMRegisters* = OBJECT
 		VAR
 			registers: POINTER TO ARRAY OF Register;
-			nofRegs: LONGINT;
+			nofRegs: SIGNED32;
 			reuse: SET;
 			lru: Register;
 
-		PROCEDURE &Init*(nofRegs: LONGINT; reuseFlags: SET);
-		VAR i: LONGINT;
+		PROCEDURE &Init*(nofRegs: SIGNED32; reuseFlags: SET);
+		VAR i: SIGNED32;
 		BEGIN
 			ASSERT(nofRegs < MAX(SET));
 			NEW(registers, nofRegs); SELF.nofRegs := nofRegs;
@@ -282,13 +282,13 @@ TYPE
 				((c IS Address) & (MemoryAbsolute IN reuse)))
 		END ReuseType;
 
-		PROCEDURE AllocDestReg*(useCount: LONGINT): LONGINT;
+		PROCEDURE AllocDestReg*(useCount: SIGNED32): SIGNED32;
 		VAR dummy: BOOLEAN;
 		BEGIN RETURN AllocReg(NIL, dummy, useCount)
 		END AllocDestReg;
 
-		PROCEDURE AllocReg*(content: Content; VAR contentValid: BOOLEAN; useCount: LONGINT): LONGINT;
-		VAR reg, i: LONGINT; r: Register;
+		PROCEDURE AllocReg*(content: Content; VAR contentValid: BOOLEAN; useCount: SIGNED32): SIGNED32;
+		VAR reg, i: SIGNED32; r: Register;
 		BEGIN
 			contentValid := FALSE;
 			reg := -1;
@@ -308,7 +308,7 @@ TYPE
 				IF (r.free = 0) THEN reg := r.id
 				ELSE (* not enough registers *)
 					PCM.Error(215, PCM.InvalidPosition, "Not enough registers.");
-					HALT(MAX(INTEGER));
+					HALT(MAX(SIGNED16));
 					HALT(INTERNALERROR)
 				END;
 				IF (content # NIL) THEN Invalidate(content); r.AddContent(content)
@@ -319,7 +319,7 @@ TYPE
 			RETURN reg
 		END AllocReg;
 
-		PROCEDURE AllocSpecialReg*(reg: LONGINT; content: Content; useCount: LONGINT);
+		PROCEDURE AllocSpecialReg*(reg: SIGNED32; content: Content; useCount: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			ASSERT((0 <= reg) & (reg < nofRegs));
 			IF (registers[reg].free # 0) THEN
@@ -334,7 +334,7 @@ TYPE
 			InAllocReg(reg, useCount)
 		END AllocSpecialReg;
 
-		PROCEDURE InAllocReg(reg, useCount: LONGINT);
+		PROCEDURE InAllocReg(reg, useCount: SIGNED32);
 		VAR r: Register;
 		BEGIN
 			ASSERT(registers[reg].free = 0);
@@ -346,13 +346,13 @@ TYPE
 			r.nextLRU := lru; lru.prevLRU := r
 		END InAllocReg;
 
-		PROCEDURE FixRegisterUse*(reg, deltaUse: LONGINT);
+		PROCEDURE FixRegisterUse*(reg, deltaUse: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			ASSERT((0 <= reg) & (reg < nofRegs) & (registers[reg].free + deltaUse >= 0));
 			INC(registers[reg].free, deltaUse)
 		END FixRegisterUse;
 
-		PROCEDURE FreeReg*(reg: LONGINT);
+		PROCEDURE FreeReg*(reg: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF ~SpecialReg(reg) THEN
 				ASSERT((0 <= reg) & (reg < nofRegs) & (registers[reg].free > 0));
@@ -361,12 +361,12 @@ TYPE
 		END FreeReg;
 
 		PROCEDURE FreeAll*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			FOR i := 0 TO nofRegs-1 DO registers[i].free := 0 END
 		END FreeAll;
 
-		PROCEDURE SetRegisterContent*(reg: LONGINT; content: Content);
+		PROCEDURE SetRegisterContent*(reg: SIGNED32; content: Content);
 		VAR r: Register;
 		BEGIN { EXCLUSIVE }
 			IF (0 <= reg) & (reg < nofRegs) THEN	(* ignore invalid registerers (CG may want to set the register content of the SP register) *)
@@ -380,7 +380,7 @@ TYPE
 			END
 		END SetRegisterContent;
 
-		PROCEDURE AddRegisterContent*(reg: LONGINT; content: Content);
+		PROCEDURE AddRegisterContent*(reg: SIGNED32; content: Content);
 		VAR r: Register;
 		BEGIN { EXCLUSIVE }
 			IF (content # NIL) THEN
@@ -395,7 +395,7 @@ TYPE
 		END AddRegisterContent;
 
 		PROCEDURE Invalidate*(content: Content);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			IF (content # NIL) & (content IS MemoryContent) THEN
 				FOR i := 0 TO nofRegs-1 DO
@@ -405,19 +405,19 @@ TYPE
 		END Invalidate;
 
 		PROCEDURE InvalidateAll*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO nofRegs-1 DO registers[i].RemoveContent(NIL) END
 		END InvalidateAll;
 
-		PROCEDURE GetReg*(reg: LONGINT): Register;
+		PROCEDURE GetReg*(reg: SIGNED32): Register;
 		BEGIN
 			ASSERT((0 <= reg) & (reg < nofRegs));
 			RETURN registers[reg]
 		END GetReg;
 
 		PROCEDURE GetUsedRegisterSet*(): SET;
-		VAR r: SET; i: LONGINT;
+		VAR r: SET; i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO nofRegs-1 DO
 				IF (registers[i].free > 0) THEN INCL(r, i) END
@@ -425,13 +425,13 @@ TYPE
 			RETURN r
 		END GetUsedRegisterSet;
 
-		PROCEDURE IsRegisterFree*(reg: LONGINT): BOOLEAN;
+		PROCEDURE IsRegisterFree*(reg: SIGNED32): BOOLEAN;
 		BEGIN
 			ASSERT((0 <= reg) & (reg < nofRegs));
 			RETURN registers[reg].free = 0
 		END IsRegisterFree;
 
-		PROCEDURE GetRegisterUseCount*(reg: LONGINT): LONGINT;
+		PROCEDURE GetRegisterUseCount*(reg: SIGNED32): SIGNED32;
 		BEGIN
 			ASSERT((0 <= reg) & (reg < nofRegs));
 			RETURN registers[reg].free
@@ -441,41 +441,41 @@ TYPE
 
 VAR bimboTrace*: BOOLEAN;
 
-PROCEDURE SpecialReg(r: LONGINT): BOOLEAN;
+PROCEDURE SpecialReg(r: SIGNED32): BOOLEAN;
 BEGIN RETURN (r = PCOARM.SP) OR (r = PCOARM.FP) OR (r = PCOARM.LR) OR (r = PCOARM.PC)
 END SpecialReg;
 
-PROCEDURE NewMemContent*(pc, rBase, offset, size: LONGINT): MemoryContent;
+PROCEDURE NewMemContent*(pc, rBase, offset, size: SIGNED32): MemoryContent;
 VAR c: MemoryContent;
 BEGIN
-	IF (size = 0) THEN HALT(MAX(INTEGER)) END;
+	IF (size = 0) THEN HALT(MAX(SIGNED16)) END;
 	IF (rBase = PC) THEN RETURN NewPCRelMemContent(pc, offset, size)
 	ELSE NEW(c, rBase, offset, size); RETURN c
 	END
 END NewMemContent;
 
-PROCEDURE NewPCRelMemContent*(pc, offset, size: LONGINT): PCRelMemContent;
+PROCEDURE NewPCRelMemContent*(pc, offset, size: SIGNED32): PCRelMemContent;
 VAR c: PCRelMemContent;
-BEGIN 	IF (size = 0) THEN HALT(MAX(INTEGER)) END;
+BEGIN 	IF (size = 0) THEN HALT(MAX(SIGNED16)) END;
 NEW(c, pc, offset, size); RETURN c
 END NewPCRelMemContent;
 
-PROCEDURE NewMemAddress*(adr: PCM.Attribute; offset: LONGINT): Address;
+PROCEDURE NewMemAddress*(adr: PCM.Attribute; offset: SIGNED32): Address;
 VAR c: Address;
 BEGIN NEW(c, adr, offset); RETURN c
 END NewMemAddress;
 
-PROCEDURE NewIntConst*(v: LONGINT): IntConstant;
+PROCEDURE NewIntConst*(v: SIGNED32): IntConstant;
 VAR c: IntConstant;
 BEGIN NEW(c, v); RETURN c
 END NewIntConst;
 
-PROCEDURE NewRealConst*(v: REAL): RealConstant;
+PROCEDURE NewRealConst*(v: FLOAT32): RealConstant;
 VAR c: RealConstant;
 BEGIN NEW(c, v); RETURN c
 END NewRealConst;
 
-PROCEDURE NewLongRealConst*(v: LONGREAL): LongRealConstant;
+PROCEDURE NewLongRealConst*(v: FLOAT64): LongRealConstant;
 VAR c: LongRealConstant;
 BEGIN NEW(c, v); RETURN c
 END NewLongRealConst;

@@ -12,14 +12,14 @@ MODULE TGA IN Oberon;	(** portable *)
 IMPORT Display, Files, Objects, Out, Pictures;
 
 TYPE
-	Color = ARRAY 3 OF INTEGER;
+	Color = ARRAY 3 OF SIGNED16;
 	Header = RECORD
 		IDlength: CHAR;
-		cmap, type: SHORTINT;
-		cmaporigin, cmaplength: INTEGER;
-		csize: SHORTINT;
-		xorigin, yorigin, width, height: INTEGER;
-		depth, descriptor: SHORTINT;
+		cmap, type: SIGNED8;
+		cmaporigin, cmaplength: SIGNED16;
+		csize: SIGNED8;
+		xorigin, yorigin, width, height: SIGNED16;
+		depth, descriptor: SIGNED8;
 	END;
 
 PROCEDURE GetTgaHeader( VAR R: Files.Rider; VAR H: Header): BOOLEAN;
@@ -73,7 +73,7 @@ END DataFieldError;
 PROCEDURE GetPalette( VAR R: Files.Rider; P: Pictures.Picture; H: Header): BOOLEAN;
 VAR
 	color: ARRAY 3 OF CHAR;
-	count: INTEGER;
+	count: SIGNED16;
 BEGIN
 	CASE H.type OF
 	1, 9:
@@ -96,13 +96,13 @@ END GetPalette;
 PROCEDURE LoadTga(VAR R: Files.Rider; colorConversion: BOOLEAN; P: Pictures.Picture);
 VAR
 	H: Header;
-	countx, county, count, count2, count3: INTEGER;
+	countx, county, count, count2, count3: SIGNED16;
 	temp, temp2: CHAR;
 	error, done, good: BOOLEAN;
 	color, hold: Color;
 	colora: ARRAY 3 OF CHAR;
-	len: LONGINT; f: Files.File;
-	pos: LONGINT;
+	len: SIGNED32; f: Files.File;
+	pos: SIGNED32;
 BEGIN
 	pos := Files.Pos(R);
 	IF GetTgaHeader( R, H) THEN
@@ -313,7 +313,7 @@ END LoadTga;
 
 PROCEDURE Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg);
 VAR
-	pos: LONGINT;
+	pos: SIGNED32;
 BEGIN
 	WITH obj: Pictures.Picture DO
 		IF msg IS Objects.AttrMsg THEN

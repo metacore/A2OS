@@ -27,7 +27,7 @@ Report any problems as soon as possible to ants@AntsInFields.de
 
 IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyTypes, vyName, SYSTEM, vyPointerVec;
 
-	PROCEDURE ToVec1( VAR v: vyBase.tData;  len: LONGINT ): vyBase.tData;
+	PROCEDURE ToVec1( VAR v: vyBase.tData;  len: SIGNED32 ): vyBase.tData;
 	VAR res: vyBase.tVector;
 	BEGIN
 		IF v IS vyLongrealVec.tLONGREAL THEN
@@ -67,7 +67,7 @@ IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyType
 	END ToVec;
 
 	PROCEDURE ConvertSize( fixed: vyBase.tData;  VAR var: vyBase.tData;  new: BOOLEAN );
-	VAR len: LONGINT;  dest: vyBase.tData;
+	VAR len: SIGNED32;  dest: vyBase.tData;
 	BEGIN
 		IF fixed IS vyBase.tVector THEN
 			WITH fixed: vyBase.tVector DO
@@ -106,7 +106,7 @@ IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyType
 
 	PROCEDURE Convert( from, to: vyBase.tData;  VAR res: vyBase.tData );
 	(* Copy Data of from to res with type of to *)
-	VAR i: LONGINT;  len: LONGINT;
+	VAR i: SIGNED32;  len: SIGNED32;
 	BEGIN
 		IF from IS vyBase.tVector THEN
 			WITH from: vyBase.tVector DO len := from.nrData
@@ -242,7 +242,7 @@ IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyType
 	END SortByTyp;
 
 	PROCEDURE vyLongintVecAdd( VAR res: vyLongintVec.tVector;  x, y: vyBase.tData );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		WITH x: vyLongintVec.tVector DO
 			WITH y: vyLongintVec.tVector DO
@@ -253,7 +253,7 @@ IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyType
 	END vyLongintVecAdd;
 
 	PROCEDURE vyIntVecAdd( VAR res: vyIntVec.tVector;  x, y: vyBase.tData );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		WITH x: vyIntVec.tVector DO
 			WITH y: vyIntVec.tVector DO
@@ -436,22 +436,22 @@ IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyType
 		END
 	END DivPtr;
 
-	PROCEDURE NegLR( x: LONGREAL ): LONGREAL;
+	PROCEDURE NegLR( x: FLOAT64 ): FLOAT64;
 	BEGIN
 		RETURN -x
 	END NegLR;
 
-	PROCEDURE NegR( x: REAL ): REAL;
+	PROCEDURE NegR( x: FLOAT32 ): FLOAT32;
 	BEGIN
 		RETURN -x
 	END NegR;
 
-	PROCEDURE NegL( x: LONGINT ): LONGINT;
+	PROCEDURE NegL( x: SIGNED32 ): SIGNED32;
 	BEGIN
 		RETURN -x
 	END NegL;
 
-	PROCEDURE NegI( x: INTEGER ): INTEGER;
+	PROCEDURE NegI( x: SIGNED16 ): SIGNED16;
 	BEGIN
 		RETURN -x
 	END NegI;
@@ -485,7 +485,7 @@ IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyType
 
 	END NegPtr;
 
-	PROCEDURE AssignPointer*( x: LONGINT;  adr: LONGINT;  name: ARRAY OF CHAR ): BOOLEAN;
+	PROCEDURE AssignPointer*( x: SIGNED32;  adr: SIGNED32;  name: ARRAY OF CHAR ): BOOLEAN;
 	VAR xx: vyPointerVec.tLONGINT;  p: ANY;
 	BEGIN
 		IF adr = 0 THEN xx := vyPointerVec.NewLongintObject( x );  vyName.RegisterNamed( xx, name );  RETURN TRUE
@@ -536,7 +536,7 @@ IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyType
 		RETURN FALSE
 	END Assign;
 
-	PROCEDURE AssignLReal*( x: LONGREAL;  adr: LONGINT;  name: ARRAY OF CHAR ): BOOLEAN;
+	PROCEDURE AssignLReal*( x: FLOAT64;  adr: SIGNED32;  name: ARRAY OF CHAR ): BOOLEAN;
 	VAR xx: vyLongrealVec.tLONGREAL;  p: ANY;
 	BEGIN
 		IF adr = 0 THEN xx := vyLongrealVec.NewLongrealObject( x );  vyName.RegisterNamed( xx, name );  RETURN TRUE
@@ -551,7 +551,7 @@ IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyType
 		RETURN FALSE
 	END AssignLReal;
 
-	PROCEDURE AssignReal*( x: REAL;  adr: LONGINT;  name: ARRAY OF CHAR ): BOOLEAN;
+	PROCEDURE AssignReal*( x: FLOAT32;  adr: SIGNED32;  name: ARRAY OF CHAR ): BOOLEAN;
 	VAR xx: vyRealVec.tREAL;  p: ANY;
 	BEGIN
 		IF adr = 0 THEN xx := vyRealVec.NewRealObject( x );  vyName.RegisterNamed( xx, name );  RETURN TRUE
@@ -566,7 +566,7 @@ IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyType
 		RETURN FALSE
 	END AssignReal;
 
-	PROCEDURE AssignLongint*( x: LONGINT;  adr: LONGINT;  name: ARRAY OF CHAR ): BOOLEAN;
+	PROCEDURE AssignLongint*( x: SIGNED32;  adr: SIGNED32;  name: ARRAY OF CHAR ): BOOLEAN;
 	VAR xx: vyLongintVec.tLONGINT;  p: ANY;
 	BEGIN
 		IF adr = 0 THEN xx := vyLongintVec.NewLongintObject( x );  vyName.RegisterNamed( xx, name );  RETURN TRUE
@@ -581,7 +581,7 @@ IMPORT vyBase, vyLongrealVec, vyRealVec, Objects, vyIntVec, vyLongintVec, vyType
 		RETURN FALSE
 	END AssignLongint;
 
-	PROCEDURE AssignInt*( x: INTEGER;  adr: LONGINT;  name: ARRAY OF CHAR ): BOOLEAN;
+	PROCEDURE AssignInt*( x: SIGNED16;  adr: SIGNED32;  name: ARRAY OF CHAR ): BOOLEAN;
 	VAR xx: vyIntVec.tINTEGER;  p: ANY;
 	BEGIN
 		IF adr = 0 THEN xx := vyIntVec.NewIntegerObject( x );  vyName.RegisterNamed( xx, name );  RETURN TRUE

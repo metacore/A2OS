@@ -38,7 +38,7 @@ TYPE
 		VAR
 			serialSession: Session;
 			port: Serials.Port;
-			p: LONGINT;
+			p: SIGNED32;
 			c: CHAR;
 		BEGIN
 			LOOP
@@ -74,9 +74,9 @@ TYPE
 
 	Session * = OBJECT (OEBInterfaces.Session)
 	VAR
-		port: LONGINT;
+		port: SIGNED32;
 
-		PROCEDURE & Init (port: LONGINT);
+		PROCEDURE & Init (port: SIGNED32);
 		VAR
 			name: ARRAY 128 OF CHAR;
 		BEGIN
@@ -99,7 +99,7 @@ TYPE
 
 	Line = RECORD
 		buffer: ARRAY MaxLineSize OF CHAR;
-		tail: LONGINT;
+		tail: SIGNED32;
 		complete: BOOLEAN;
 	END;
 

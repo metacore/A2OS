@@ -21,7 +21,7 @@ MODULE LeoImages IN Oberon; (** portable **)	(* eos  *)
 			img*: Images.Image;
 			mat*: GfxMatrix.Matrix;
 			quick*: BOOLEAN;
-			filter*: INTEGER;
+			filter*: SIGNED16;
 			color*: Gfx.Color;
 		END;
 
@@ -85,7 +85,7 @@ MODULE LeoImages IN Oberon; (** portable **)	(* eos  *)
 	END Render;
 
 	PROCEDURE Locate (img: Image; VAR msg: Leonardo.LocateMsg);
-		VAR lgm, glm: GfxMatrix.Matrix; llx, lly, urx, ury: REAL;
+		VAR lgm, glm: GfxMatrix.Matrix; llx, lly, urx, ury: FLOAT32;
 	BEGIN
 		IF (msg.id = Leonardo.inside) & (msg.llx <= img.llx) & (img.urx <= msg.urx) & (msg.lly <= img.lly) & (img.ury <= msg.ury) THEN
 			img.slink := msg.res; msg.res := img
@@ -204,7 +204,7 @@ MODULE LeoImages IN Oberon; (** portable **)	(* eos  *)
 	END Copy;
 
 	PROCEDURE Handle* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR img, copy: Image; ver: LONGINT; ch: CHAR;
+		VAR img, copy: Image; ver: SIGNED32; ch: CHAR;
 	BEGIN
 		img := obj(Image);
 		IF msg IS Leonardo.ShapeMsg THEN
@@ -263,7 +263,7 @@ MODULE LeoImages IN Oberon; (** portable **)	(* eos  *)
 		END
 	END Handle;
 
-	PROCEDURE Init* (img: Image; x, y: REAL; obj: Images.Image);
+	PROCEDURE Init* (img: Image; x, y: FLOAT32; obj: Images.Image);
 	BEGIN
 		Leonardo.InitShape(img, Handle);
 		GfxMatrix.Init(img.mat, 1, 0, 0, 1, x, y);

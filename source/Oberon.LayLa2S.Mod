@@ -30,21 +30,21 @@ VAR  reader : Texts.Reader;
 
 		error* : BOOLEAN;
 		eot* : BOOLEAN;
-		errpos : LONGINT;
+		errpos : SIGNED32;
 
 		s* : ARRAY strlen OF CHAR;
 		ident* : ARRAY idlen OF CHAR;
-		int* : LONGINT;
-		real* : REAL;
+		int* : SIGNED32;
+		real* : FLOAT32;
 		char* : CHAR;
 		bool* : BOOLEAN;
 
-PROCEDURE Pos* () : LONGINT;
+PROCEDURE Pos* () : SIGNED32;
 BEGIN	RETURN Texts.Pos(reader)
 END Pos;
 
-PROCEDURE Mark* (pos : LONGINT; t : ARRAY OF CHAR);
-VAR p : LONGINT;
+PROCEDURE Mark* (pos : SIGNED32; t : ARRAY OF CHAR);
+VAR p : SIGNED32;
 BEGIN	p := Pos ();
 	IF p > errpos THEN
 		Texts.WriteString (W, "  pos "); Texts.WriteInt(W, pos, 1);
@@ -60,7 +60,7 @@ BEGIN	IF ~reader.eot THEN Texts.Read (reader, ch) ELSE ch := 0X; eot := TRUE END
 END ReadChar;
 
 PROCEDURE Comment;
-VAR p : LONGINT;
+VAR p : SIGNED32;
 BEGIN	p := Pos ();
 	REPEAT ReadChar;
 		IF ch = '{' THEN Comment END;
@@ -69,10 +69,10 @@ BEGIN	p := Pos ();
 	ReadChar;
 END Comment;
 
-PROCEDURE ReadString (VAR sym : INTEGER);
-VAR i : INTEGER;
+PROCEDURE ReadString (VAR sym : SIGNED16);
+VAR i : SIGNED16;
 		quot : CHAR;
-		pos : LONGINT;
+		pos : SIGNED32;
 BEGIN	quot := ch;
 	ReadChar; sym := String; pos := Pos ();
 	i := 0;
@@ -87,17 +87,17 @@ BEGIN	quot := ch;
 	ReadChar;
 END ReadString;
 
-PROCEDURE ReadNumber (VAR sym : INTEGER);
+PROCEDURE ReadNumber (VAR sym : SIGNED16);
 VAR  intE, realE : BOOLEAN;
-		n : INTEGER;
-		quotient : REAL;
+		n : SIGNED16;
+		quotient : FLOAT32;
 BEGIN	sym := Int;
 	int := 0;	real := 0;	intE := FALSE;	realE := FALSE;
 	WHILE (ch >= '0') & (ch <= '9') DO
 		n := ORD(ch)-ORD('0');
-		IF (MAX(LONGINT)-n) DIV 10 >= int THEN
+		IF (MAX(SIGNED32)-n) DIV 10 >= int THEN
 			int := int*10 + n;	real := int
-		ELSIF (MAX(REAL)-n)/10 >= real THEN
+		ELSIF (MAX(FLOAT32)-n)/10 >= real THEN
 			intE := TRUE;
 			real := real*10 + ORD(ch)-ORD('0')
 		ELSE realE := TRUE
@@ -117,8 +117,8 @@ BEGIN	sym := Int;
 	END
 END ReadNumber;
 
-PROCEDURE ReadIdent (VAR sym : INTEGER);
-VAR i : INTEGER;
+PROCEDURE ReadIdent (VAR sym : SIGNED16);
+VAR i : SIGNED16;
 BEGIN	sym := Ident;
 	i := 0;
 	WHILE ((CAP(ch) >= 'A') & (CAP(ch) <= 'Z')) OR ((ch >= '0') & (ch <= '9')) DO
@@ -136,7 +136,7 @@ BEGIN	sym := Ident;
 	IF i = idlen THEN Mark (Pos (), "Identifier too long"); ident[i-1] := 0X ELSE ident[i] := 0X END;
 END ReadIdent;
 
-PROCEDURE Get* (VAR sym : INTEGER);
+PROCEDURE Get* (VAR sym : SIGNED16);
 BEGIN
 	IF eot THEN Mark (Pos (), "end of text") END;
 	WHILE (ch <= ' ') & (~eot) DO ReadChar END;
@@ -187,7 +187,7 @@ BEGIN
 	END
 END Get;
 
-PROCEDURE OpenText* (text : Texts.Text; pos : LONGINT);
+PROCEDURE OpenText* (text : Texts.Text; pos : SIGNED32);
 BEGIN
 	Texts.OpenReader (reader, text, pos);
 	ch := ' ';

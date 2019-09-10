@@ -18,7 +18,7 @@ under a public-key cryptosystem such as RSA. *)
 	TYPE
 		Context*  = POINTER TO ContextDesc;
 		ContextDesc = RECORD
-			buf: ARRAY 4 OF LONGINT;
+			buf: ARRAY 4 OF SIGNED32;
 			bits: SIZE;
 			in: ARRAY 64 OF CHAR
 		END;
@@ -36,15 +36,15 @@ under a public-key cryptosystem such as RSA. *)
 	PROCEDURE Init * (cont: Context);
 	BEGIN
 		cont.buf[0] := 067452301H;
-		cont.buf[1] := LONGINT(0EFCDAB89H);
-		cont.buf[2] := LONGINT(098BADCFEH);
+		cont.buf[1] := SIGNED32(0EFCDAB89H);
+		cont.buf[2] := SIGNED32(098BADCFEH);
 		cont.buf[3] := 010325476H;
 		cont.bits := 0;
 	END Init;
 
-	PROCEDURE ByteReverse(VAR in: ARRAY OF SYSTEM.BYTE; VAR out: ARRAY OF LONGINT; longs: LONGINT);
+	PROCEDURE ByteReverse(VAR in: ARRAY OF SYSTEM.BYTE; VAR out: ARRAY OF SIGNED32; longs: SIGNED32);
 		VAR
-			adr: ADDRESS; t, i: LONGINT;
+			adr: ADDRESS; t, i: SIGNED32;
 			bytes: ARRAY 4 OF CHAR;
 	BEGIN
 		adr := ADDRESSOF(in[0]); i := 0;
@@ -59,56 +59,56 @@ under a public-key cryptosystem such as RSA. *)
 		END
 	END ByteReverse;
 
-	PROCEDURE F1(x, y, z: LONGINT): LONGINT;
+	PROCEDURE F1(x, y, z: SIGNED32): SIGNED32;
 	BEGIN
-		RETURN LONGINT( (SET( x)*SET( y)) + ((-SET( x))*SET( z)))
+		RETURN SIGNED32( (SET( x)*SET( y)) + ((-SET( x))*SET( z)))
 	END F1;
 
-	PROCEDURE F2(x, y, z: LONGINT): LONGINT;
+	PROCEDURE F2(x, y, z: SIGNED32): SIGNED32;
 	BEGIN
-		RETURN LONGINT( (SET( x)*SET( z)) + (SET( y)*(-SET( z))))
+		RETURN SIGNED32( (SET( x)*SET( z)) + (SET( y)*(-SET( z))))
 	END F2;
 
-	PROCEDURE F3(x, y, z: LONGINT): LONGINT;
+	PROCEDURE F3(x, y, z: SIGNED32): SIGNED32;
 	BEGIN
-		RETURN LONGINT( SET( x) / SET( y) / SET( z))
+		RETURN SIGNED32( SET( x) / SET( y) / SET( z))
 	END F3;
 
-	PROCEDURE F4(x, y, z: LONGINT): LONGINT;
+	PROCEDURE F4(x, y, z: SIGNED32): SIGNED32;
 	BEGIN
-		RETURN LONGINT( SET( y) / (SET( x)+(-SET( z))))
+		RETURN SIGNED32( SET( y) / (SET( x)+(-SET( z))))
 	END F4;
 
-	PROCEDURE STEP1(VAR w: LONGINT; x, y, z, data: LONGINT; add: HUGEINT;  s: LONGINT);
+	PROCEDURE STEP1(VAR w: SIGNED32; x, y, z, data: SIGNED32; add: SIGNED64;  s: SIGNED32);
 	BEGIN
 		w := w+F1(x, y, z)+data+SHORT(add);
 		w := ROT(w, s);
 		INC(w, x)
 	END STEP1;
 
-	PROCEDURE STEP2(VAR w: LONGINT; x, y, z, data: LONGINT; add: HUGEINT; s: LONGINT);
+	PROCEDURE STEP2(VAR w: SIGNED32; x, y, z, data: SIGNED32; add: SIGNED64; s: SIGNED32);
 	BEGIN
 		w := w+F2(x, y, z)+data+SHORT(add);
 		w := ROT(w, s);
 		INC(w, x)
 	END STEP2;
 
-	PROCEDURE STEP3(VAR w: LONGINT; x, y, z, data: LONGINT; add: HUGEINT; s: LONGINT);
+	PROCEDURE STEP3(VAR w: SIGNED32; x, y, z, data: SIGNED32; add: SIGNED64; s: SIGNED32);
 	BEGIN
 		w := w+F3(x, y, z)+data+SHORT(add);
 		w := ROT(w, s);
 		INC(w, x)
 	END STEP3;
 
-	PROCEDURE STEP4(VAR w: LONGINT; x, y, z, data: LONGINT; add: HUGEINT; s: LONGINT);
+	PROCEDURE STEP4(VAR w: SIGNED32; x, y, z, data: SIGNED32; add: SIGNED64; s: SIGNED32);
 	BEGIN
 		w := w+F4(x, y, z)+data+SHORT(add);
 		w := ROT(w, s);
 		INC(w, x)
 	END STEP4;
 
-	PROCEDURE Transform(VAR buf, in: ARRAY OF LONGINT);
-		VAR a, b, c, d: LONGINT;
+	PROCEDURE Transform(VAR buf, in: ARRAY OF SIGNED32);
+		VAR a, b, c, d: SIGNED32;
 	BEGIN
 		a := buf[0]; b := buf[1]; c := buf[2]; d := buf[3];
 
@@ -188,7 +188,7 @@ under a public-key cryptosystem such as RSA. *)
 	message block, and updating the context. *)
 	PROCEDURE Write*(context: Context; ch: CHAR);
 		VAR
-			in: ARRAY 16 OF LONGINT;
+			in: ARRAY 16 OF SIGNED32;
 			t, len: SIZE;
 	BEGIN
 		t := context.bits; len := 1;
@@ -215,7 +215,7 @@ under a public-key cryptosystem such as RSA. *)
 	message block, and updating the context. *)
 	PROCEDURE WriteBytes*(context: Context; CONST buf: ARRAY OF CHAR; len: SIZE);
 		VAR
-			in: ARRAY 16 OF LONGINT;
+			in: ARRAY 16 OF SIGNED32;
 			beg, t: SIZE;
 	BEGIN
 		beg := 0; t := context.bits;
@@ -246,7 +246,7 @@ under a public-key cryptosystem such as RSA. *)
 (** Ends an MD5 message-digest operation, writing the message digest. *)
 	PROCEDURE Close*(context: Context; VAR digest: Digest);
 		VAR
-			in: ARRAY 16 OF LONGINT;
+			in: ARRAY 16 OF SIGNED32;
 			beg, i, count: SIZE;
 	BEGIN
 		count := (context.bits DIV 8) MOD 64;
@@ -271,13 +271,13 @@ under a public-key cryptosystem such as RSA. *)
 			END
 		END;
 		ByteReverse(context.in, in, 14);
-		in[14] := context.bits(LONGINT); in[15] := 0;
+		in[14] := context.bits(SIGNED32); in[15] := 0;
 		Transform(context.buf, in);
 		ByteReverse(context.buf, in, 4);
 		SYSTEM.MOVE(ADDRESSOF(in[0]), ADDRESSOF(digest[0]), 16)
 	END Close;
 
-	PROCEDURE HexDigit(i: LONGINT): CHAR;
+	PROCEDURE HexDigit(i: SIGNED32): CHAR;
 	BEGIN
 		IF i < 10 THEN
 			RETURN CHR(ORD("0")+i)
@@ -288,7 +288,7 @@ under a public-key cryptosystem such as RSA. *)
 
 (** Convert the digest into an hexadecimal string. *)
 	PROCEDURE ToString*(digest: Digest; VAR str: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 15 DO
 			str[2*i] := HexDigit(ORD(digest[i]) DIV 16);

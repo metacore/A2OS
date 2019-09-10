@@ -21,7 +21,7 @@ CONST
 TYPE
 	FileName = ARRAY Kernel32.MaxPath OF CHAR;
 	PFileName = POINTER TO FileName;
-	NotificationProc* = PROCEDURE ( type: LONGINT;  drives: SET );
+	NotificationProc* = PROCEDURE ( type: SIGNED32;  drives: SET );
 	Notification = POINTER TO RECORD
 		p: NotificationProc;
 		next: Notification
@@ -60,14 +60,14 @@ TYPE
 	Collection = OBJECT  (* methods in Collection shared by objects Filesystem and File *)
 	VAR oldFiles, newFiles: Kernel.FinalizedCollection;
 		search: SearchByName;
-		fileKey: LONGINT;
+		fileKey: SIGNED32;
 
 		PROCEDURE & Init*;
 		BEGIN
 			NEW( oldFiles );  NEW( newFiles );  NEW( search );  fileKey := -1;
 		END Init;
 
-		PROCEDURE GetNextFileKey( ): LONGINT;
+		PROCEDURE GetNextFileKey( ): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			DEC( fileKey );  RETURN fileKey
 		END GetNextFileKey;
@@ -150,13 +150,13 @@ TYPE
 			Prefix( name, fname );  f :=  fs.Old0( fname ); IF f # NIL THEN  f.fs := SELF; END; RETURN f;
 		END Old0;
 
-		PROCEDURE Delete0*( name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD );
+		PROCEDURE Delete0*( name: ARRAY OF CHAR;  VAR key: SIGNED32; VAR res: INTEGER );
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.Delete0( fname, key, res );
 		END Delete0;
 
-		PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: WORD );
+		PROCEDURE Rename0*( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: INTEGER );
 		VAR old0, new0: FileName;
 		BEGIN
 			Prefix( old, old0 );  Prefix( new, new0 );  fs.Rename0( old0, new0, fold, res );
@@ -168,19 +168,19 @@ TYPE
 			Prefix( mask, fmask );  fs.Enumerate1( fmask, flags, enum, useprefix );
 		END Enumerate0;
 
-		PROCEDURE FileKey*( name: ARRAY OF CHAR ): LONGINT;
+		PROCEDURE FileKey*( name: ARRAY OF CHAR ): SIGNED32;
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  RETURN fs.FileKey( fname );
 		END FileKey;
 
-		PROCEDURE CreateDirectory0*( name: ARRAY OF CHAR;  VAR res: WORD );
+		PROCEDURE CreateDirectory0*( name: ARRAY OF CHAR;  VAR res: INTEGER );
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.CreateDirectory0( fname, res );
 		END CreateDirectory0;
 
-		PROCEDURE RemoveDirectory0*( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
+		PROCEDURE RemoveDirectory0*( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: SIGNED32; VAR res: INTEGER );
 		VAR fname: FileName;
 		BEGIN
 			Prefix( name, fname );  fs.RemoveDirectory0( fname, force, key, res );
@@ -232,7 +232,7 @@ TYPE
 			RETURN NIL
 		END Old0;
 
-		PROCEDURE Delete0( name: ARRAY OF CHAR;  VAR key: LONGINT; VAR res: WORD );
+		PROCEDURE Delete0( name: ARRAY OF CHAR;  VAR key: SIGNED32; VAR res: INTEGER );
 		VAR fname: FileName;  F: File;  ret: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			ConvertChar( name, Files.PathDelimiter, PathDelimiter );  key := 0;  res := 1;
@@ -248,7 +248,7 @@ TYPE
 			END
 		END Delete0;
 
-		PROCEDURE Rename0( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: WORD );
+		PROCEDURE Rename0( old, new: ARRAY OF CHAR;  fold: Files.File;  VAR res: INTEGER );
 		VAR fnold, fnnew: FileName;  Fo, Fn: File;  ret: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			IF TraceFileSystem IN Trace THEN KernelLog.String( "Rename " );  KernelLog.String( old );  KernelLog.String( " -> " );  KernelLog.String( new );  KernelLog.Ln;  END;
@@ -275,7 +275,7 @@ TYPE
 			attr: SET;  curPath, longname: FileName;
 
 			PROCEDURE EnumeratePath;
-			VAR h: Kernel32.HANDLE;  FD: Kernel32.FindData;  ft: Kernel32.FileTime;  st: Kernel32.SystemTime;  i, j: SIZE; t, d: LONGINT;
+			VAR h: Kernel32.HANDLE;  FD: Kernel32.FindData;  ft: Kernel32.FileTime;  st: Kernel32.SystemTime;  i, j: SIZE; t, d: SIGNED32;
 			BEGIN
 				i := 0;
 				WHILE curPath[i] # 0X DO INC( i ) END;
@@ -296,9 +296,9 @@ TYPE
 						END;
 						Join( curPath, "/", FD.cFileName, longname );
 						IF ~(Kernel32.FileAttributeDirectory IN FD.dwFileAttributes) THEN
-							enum.PutEntry( longname, {}, t, d, HUGEINT(UNSIGNED64( FD.nFileSizeHigh ) * UNSIGNED64( 0x100000000 ) + UNSIGNED64( FD.nFileSizeLow )))
+							enum.PutEntry( longname, {}, t, d, SIGNED64(UNSIGNED64( FD.nFileSizeHigh ) * UNSIGNED64( 0x100000000 ) + UNSIGNED64( FD.nFileSizeLow )))
 						ELSIF (FD.cFileName # ".") & (FD.cFileName # "..") THEN
-							enum.PutEntry( longname, {Files.Directory}, t, d, HUGEINT(UNSIGNED64( FD.nFileSizeHigh ) * UNSIGNED64( 0x100000000 ) + UNSIGNED64( FD.nFileSizeLow )))
+							enum.PutEntry( longname, {Files.Directory}, t, d, SIGNED64(UNSIGNED64( FD.nFileSizeHigh ) * UNSIGNED64( 0x100000000 ) + UNSIGNED64( FD.nFileSizeLow )))
 						END;
 					UNTIL Kernel32.FindNextFile( h, FD ) = Kernel32.False;
 					IGNORE Kernel32.FindClose( h )
@@ -356,7 +356,7 @@ TYPE
 			END;
 		END Enumerate1;
 
-		PROCEDURE FileKey( name: ARRAY OF CHAR ): LONGINT;
+		PROCEDURE FileKey( name: ARRAY OF CHAR ): SIGNED32;
 		VAR fname: FileName;  F: File;
 		BEGIN {EXCLUSIVE}
 			(*RETURN 0;  (* Finalizers may steal file *) *)
@@ -376,7 +376,7 @@ TYPE
 
 		END FileKey;
 
-		PROCEDURE CreateDirectory0( name: ARRAY OF CHAR;  VAR res: WORD );
+		PROCEDURE CreateDirectory0( name: ARRAY OF CHAR;  VAR res: INTEGER );
 		VAR ret: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			ConvertChar( name, Files.PathDelimiter, PathDelimiter );  ret := Kernel32.CreateDirectory( name, NIL );
@@ -389,7 +389,7 @@ TYPE
 			END
 		END CreateDirectory0;
 
-		PROCEDURE RemoveDirectory0( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: LONGINT; VAR res: WORD );
+		PROCEDURE RemoveDirectory0( name: ARRAY OF CHAR;  force: BOOLEAN;  VAR key: SIGNED32; VAR res: INTEGER );
 		VAR ret: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			ConvertChar( name, Files.PathDelimiter, PathDelimiter );  key := 0;  res := 1;
@@ -424,7 +424,7 @@ TYPE
 	Buffer = POINTER TO RECORD
 		data: ARRAY BufferSize OF CHAR;
 		apos: Files.Position;
-		len: LONGINT;
+		len: SIGNED32;
 		dirty: BOOLEAN
 	END;
 
@@ -436,8 +436,8 @@ TYPE
 		fsize, fpos: Files.Position;
 		fileSystem: WinFileSystem;
 
-		PROCEDURE & Init*( VAR name: ARRAY OF CHAR;  hfile: Kernel32.HANDLE;  key: LONGINT ; fs: WinFileSystem);
-		VAR s: WORDSET;  res: Kernel32.BOOL;
+		PROCEDURE & Init*( VAR name: ARRAY OF CHAR;  hfile: Kernel32.HANDLE;  key: SIGNED32 ; fs: WinFileSystem);
+		VAR s: INTEGERSET;  res: Kernel32.BOOL;
 		BEGIN
 			IF TraceFile IN Trace THEN KernelLog.String( "Init: " );  KernelLog.String( name );  KernelLog.String( " (" );  KernelLog.Int( key, 1 );  KernelLog.String( ")" );  KernelLog.Ln;  END;
 			SELF.key := key;  fpos := 0;  SELF.hfile := hfile;  COPY( name, SELF.fname );  tfname := NIL;
@@ -473,7 +473,7 @@ TYPE
 		END Pos;
 
 		PROCEDURE WriteBuffer;
-		VAR pos: Files.Position; n: LONGINT; res, b: Kernel32.BOOL;
+		VAR pos: Files.Position; n: SIGNED32; res, b: Kernel32.BOOL;
 		BEGIN
 			ASSERT( buffer.dirty );  ASSERT( buffer.len > 0 );
 			pos := buffer.apos * BufferSize;
@@ -498,7 +498,7 @@ TYPE
 		END WriteBuffer;
 
 		PROCEDURE ReadBuffer( apos: Files.Position );
-		VAR pos: Files.Position; n: LONGINT;  res, b: Kernel32.BOOL;
+		VAR pos: Files.Position; n: SIGNED32;  res, b: Kernel32.BOOL;
 		BEGIN
 			IF buffer.dirty THEN WriteBuffer() END;
 			pos := apos * BufferSize;
@@ -579,7 +579,7 @@ TYPE
 			RETURN fsize
 		END Length;
 
-		PROCEDURE GetDate*( VAR t, d: LONGINT );
+		PROCEDURE GetDate*( VAR t, d: SIGNED32 );
 		VAR ft, lft: Kernel32.FileTime;  st: Kernel32.SystemTime;  res: Kernel32.BOOL;
 		BEGIN {EXCLUSIVE}
 			res := Kernel32.GetFileTime( hfile, NIL , NIL , ft );
@@ -590,8 +590,8 @@ TYPE
 			t := LONG( st.wHour ) * 1000H + LONG( st.wMinute ) * 40H + LONG( st.wSecond )
 		END GetDate;
 
-		PROCEDURE SetDate*( t, d: LONGINT );
-		VAR ft, lft: Kernel32.FileTime;  st: Kernel32.SystemTime;  res: Kernel32.BOOL; err: LONGINT;
+		PROCEDURE SetDate*( t, d: SIGNED32 );
+		VAR ft, lft: Kernel32.FileTime;  st: Kernel32.SystemTime;  res: Kernel32.BOOL; err: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			st.wDay := SHORT( d MOD 20H );  d := ASH( d, -5 );  st.wMonth := SHORT( d MOD 10H );  d := ASH( d, -4 );  st.wYear := SHORT( d MOD 80H ) + 1900;  st.wMilliseconds := 0;
 			st.wSecond := SHORT( t MOD 40H );  t := ASH( t, -6 );  st.wMinute := SHORT( t MOD 40H );  t := ASH( t, -6 );  st.wHour := SHORT( t MOD 20H );  res := Kernel32.SystemTimeToFileTime( st, lft );
@@ -601,21 +601,21 @@ TYPE
 		END SetDate;
 
 		PROCEDURE GetAttributes*(): SET;
-		VAR s: WORDSET;
+		VAR s: INTEGERSET;
 		BEGIN
 			s := Kernel32.GetFileAttributes( fname );
 			RETURN FileFlags(s);
 		END GetAttributes;
 
 		PROCEDURE SetAttributes*(a: SET);
-		VAR s: WORDSET;
+		VAR s: INTEGERSET;
 		BEGIN
 			s:= WindowsFlags(a);
 			SetFileAttributes(fname,s);
 		END SetAttributes;
 
 		PROCEDURE GetName*( VAR name: ARRAY OF CHAR );
-		VAR i: LONGINT;  ch: CHAR;
+		VAR i: SIGNED32;  ch: CHAR;
 		BEGIN {EXCLUSIVE}
 			COPY( fname, name );  i := 0;  ch := name[0];
 			WHILE ch # 0X DO
@@ -660,7 +660,7 @@ TYPE
 			RETURN TRUE;
 		END ToTemp;
 
-		PROCEDURE Register0*( VAR res: WORD );
+		PROCEDURE Register0*( VAR res: INTEGER );
 		VAR F: File;  ret: Kernel32.BOOL;
 			from, to: ARRAY 256 OF CHAR;
 		BEGIN {EXCLUSIVE}
@@ -773,7 +773,7 @@ VAR
 	END MoveFile;
 
 	PROCEDURE UpperCase( VAR src, dst: ARRAY OF CHAR );
-	VAR i: LONGINT;  ch: CHAR;
+	VAR i: SIGNED32;  ch: CHAR;
 	BEGIN
 		i := 0;  ch := src[0];
 		WHILE ch # 0X DO
@@ -786,20 +786,20 @@ VAR
 	PROCEDURE TempName( VAR name: ARRAY OF CHAR );
 	VAR temp: FileName;
 		pref: ARRAY 4 OF CHAR;
-		ret: LONGINT;
+		ret: SIGNED32;
 	BEGIN
 		ret := Kernel32.GetTempPath( LEN( temp ), temp );  ASSERT( ret > 0 );  pref := "Aos";  ret := Kernel32.GetTempFileName( temp, pref, 0, name ); FixDriveLetter (name); ASSERT( ret # 0 )
 	END TempName;
 
 	PROCEDURE FullPathName( name: ARRAY OF CHAR;  VAR fname: ARRAY OF CHAR ): BOOLEAN;
-	VAR i, fp: LONGINT;
+	VAR i, fp: SIGNED32;
 	BEGIN
 		i := Kernel32.GetFullPathName( name, Kernel32.MaxPath, fname, fp );
 		FixDriveLetter (fname); RETURN i > 0
 	END FullPathName;
 
 	(* convert flags from windows file flags to A2 file flags *)
-	PROCEDURE FileFlags( flags: WORDSET ): SET;
+	PROCEDURE FileFlags( flags: INTEGERSET ): SET;
 	VAR s: SET;
 	BEGIN
 		s := {};
@@ -813,8 +813,8 @@ VAR
 	END FileFlags;
 
 	(* convert flags from A2 file flags to windows file flags *)
-	PROCEDURE WindowsFlags(flags: SET): WORDSET;
-	VAR s: WORDSET;
+	PROCEDURE WindowsFlags(flags: SET): INTEGERSET;
+	VAR s: INTEGERSET;
 	BEGIN
 		s := {};
 		IF  Directory IN flags THEN INCL( s,  Kernel32.FileAttributeDirectory) END;
@@ -840,7 +840,7 @@ VAR
 	END NewFS;
 
 	PROCEDURE Join( a1, a2, a3: ARRAY OF CHAR;  VAR res: ARRAY OF CHAR );
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (a1[i] # 0X) DO res[j] := a1[i];  INC( i );  INC( j ) END;
@@ -854,8 +854,8 @@ VAR
 (*ALEX 2005.02.10, fof 071008*)
 	PROCEDURE MountDrive(CONST drive: ARRAY OF CHAR; context : Commands.Context);
 	VAR
-		p: Files.Parameters; namebuf1, namebuf2: FileName;  size, snum, mlen, sysfl: LONGINT;
-		res: WORD; prefix: ARRAY 256 OF CHAR;
+		p: Files.Parameters; namebuf1, namebuf2: FileName;  size, snum, mlen, sysfl: SIGNED32;
+		res: INTEGER; prefix: ARRAY 256 OF CHAR;
 	BEGIN
 		COPY(drive,prefix);
 		size := LEN( namebuf1 );  res := Kernel32.GetVolumeInformation( prefix, namebuf1, size, snum, mlen, sysfl, namebuf2, size );
@@ -889,7 +889,7 @@ VAR
 	*)
 	VAR
 		AutoMountObject: OBJECT
-		VAR prefix: ARRAY 4 OF CHAR;  i: LONGINT; drives: SET;
+		VAR prefix: ARRAY 4 OF CHAR;  i: SIGNED32; drives: SET;
 		PROCEDURE & Init(drives:SET);
 		BEGIN
 			SELF.drives := drives
@@ -923,7 +923,7 @@ VAR
 	END UnmountDrive;
 
 	PROCEDURE AutoUnmountLogicalDrives( drives: SET );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 		prefix: ARRAY 4 OF CHAR;
 	BEGIN
 		FOR i := 0 TO MAX( SET ) - 1 DO
@@ -947,7 +947,7 @@ VAR
 	END Finalization;
 
 	PROCEDURE FindFile*( name: ARRAY OF CHAR;  VAR fullname: ARRAY OF CHAR ): BOOLEAN;
-	VAR ret: LONGINT;  fileName: Kernel32.LPSTR;
+	VAR ret: SIGNED32;  fileName: Kernel32.LPSTR;
 	BEGIN
 		ret := Kernel32.SearchPath( workPath, name, NIL , LEN( fullname ), fullname, fileName );
 		IF (ret <= 0) THEN ret := Kernel32.SearchPath( searchPath, name, NIL , LEN( fullname ), fullname, fileName ) END;
@@ -956,7 +956,7 @@ VAR
 	END FindFile;
 
 	PROCEDURE ConvertChar*( VAR name: ARRAY OF CHAR;  from, to: CHAR );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE name[i] # 0X DO
@@ -966,13 +966,13 @@ VAR
 	END ConvertChar;
 
 	PROCEDURE SetPaths;
-	VAR ret, i, j, k: LONGINT;
+	VAR ret, i, j, k: SIGNED32;
 		work, files, temp: ARRAY Kernel32.MaxPath OF CHAR;
 		directories, dirs: ARRAY 4 * Kernel32.MaxPath OF CHAR;
 		dir, sysPath: FileName;
 
 		PROCEDURE SetSysPath(VAR dir: ARRAY OF CHAR);
-		VAR ch: CHAR; i: LONGINT;
+		VAR ch: CHAR; i: SIGNED32;
 		BEGIN
 			IF (dir[0] = "~") & (dir[1] = PathDelimiter) THEN
 				IGNORE Kernel32.SetCurrentDirectory( sysPath );
@@ -1050,7 +1050,7 @@ VAR
 	END SetPaths;
 
 	PROCEDURE SameName*( VAR a, b: ARRAY OF CHAR ): BOOLEAN;   (** non-portable *)
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 	BEGIN
 		i := 0;  j := 0;
 		WHILE (a[i] # 0X) & (b[j] # 0X) & (CAP( a[i] ) = CAP( b[j] )) DO INC( i );  INC( j ) END;
@@ -1058,7 +1058,7 @@ VAR
 	END SameName;
 
 	PROCEDURE CheckPath(fullName: ARRAY OF CHAR ): BOOLEAN;
-	VAR i, j: LONGINT;  done: BOOLEAN;
+	VAR i, j: SIGNED32;  done: BOOLEAN;
 	BEGIN
 		i := 0;  j := -1;
 		WHILE fullName[i] # 0X DO
@@ -1092,20 +1092,20 @@ VAR
 		RETURN ok
 	END CheckName;
 
-	PROCEDURE GetAttributes*( file: ARRAY OF CHAR ): WORDSET;   (** non-portable *)
-	VAR attrs: WORDSET;
+	PROCEDURE GetAttributes*( file: ARRAY OF CHAR ): INTEGERSET;   (** non-portable *)
+	VAR attrs: INTEGERSET;
 	BEGIN
 		ConvertChar( file, Files.PathDelimiter, PathDelimiter );  attrs := Kernel32.GetFileAttributes( file );
 		IF attrs = {0..31} THEN RETURN {} ELSE RETURN attrs END
 	END GetAttributes;
 
-	PROCEDURE SetAttributes*( file: ARRAY OF CHAR;  attrs: WORDSET );   (** non-portable *)
+	PROCEDURE SetAttributes*( file: ARRAY OF CHAR;  attrs: INTEGERSET );   (** non-portable *)
 	BEGIN
 		ConvertChar( file, Files.PathDelimiter, PathDelimiter );
 		IGNORE Kernel32.SetFileAttributes( file, attrs )
 	END SetAttributes;
 
-	PROCEDURE SetFileAttributes*( file: ARRAY OF CHAR;  attrs: WORDSET );   (** non-portable *)
+	PROCEDURE SetFileAttributes*( file: ARRAY OF CHAR;  attrs: INTEGERSET );   (** non-portable *)
 	BEGIN
 		ConvertChar( file, Files.PathDelimiter, PathDelimiter );
 		IGNORE Kernel32.SetFileAttributes( file, attrs )
@@ -1132,7 +1132,7 @@ VAR
 
 (** Compute the relative filename (relative to the working directory). *)
 	PROCEDURE RelFileName*( fileName: ARRAY OF CHAR;  VAR relFileName: ARRAY OF CHAR );
-	VAR i, j, k, p: LONGINT;  fullName: FileName;  fileNamePart: Kernel32.LPSTR;
+	VAR i, j, k, p: SIGNED32;  fullName: FileName;  fileNamePart: Kernel32.LPSTR;
 	BEGIN
 		IF ~FindFile( fileName, fullName ) THEN  (* file does not exist -> would be created in the current dir *)
 			ConvertChar( fileName, Files.PathDelimiter, PathDelimiter );
@@ -1171,7 +1171,7 @@ VAR
 		ConvertChar( relFileName, PathDelimiter, Files.PathDelimiter )
 	END RelFileName;
 
-	PROCEDURE DeviceNotification*( type: LONGINT;  drives: SET );
+	PROCEDURE DeviceNotification*( type: SIGNED32;  drives: SET );
 	VAR n: Notification;
 	BEGIN
 		IF type = deviceArrival THEN AutoMountWindowsLogicalDrives( drives );
@@ -1194,7 +1194,7 @@ VAR
 
 	PROCEDURE Init;
 	VAR
-		i, j: LONGINT;  sysPath: FileName;  p: Files.Parameters;  drives: SET;  fs : Files.FileSystem;
+		i, j: SIGNED32;  sysPath: FileName;  p: Files.Parameters;  drives: SET;  fs : Files.FileSystem;
 	BEGIN
 		NEW( winFS );
 
@@ -1230,7 +1230,7 @@ VAR
 	END Init;
 
 	PROCEDURE AddSearchPath*(context: Commands.Context);
-	VAR name,fullName: FileName; i,j: LONGINT; ch : CHAR; ret: LONGINT; fileNamePart: Kernel32.LPSTR;
+	VAR name,fullName: FileName; i,j: SIGNED32; ch : CHAR; ret: SIGNED32; fileNamePart: Kernel32.LPSTR;
 	BEGIN
 		IF context.arg.GetString(name) THEN
 			i := 0; j := 0;

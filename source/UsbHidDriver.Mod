@@ -56,25 +56,25 @@ TYPE
 		(* mouse msg can hold up to 32 buttons *)
 		buttons:			ARRAY 32 OF UsbHidReport.UsageTuple;
 		(* identifies the last available button *)
-		buttonCount:	LONGINT;
+		buttonCount:	SIGNED32;
 		buttonReport:	UsbHidReport.HidReport;
 		x:				UsbHidReport.UsageTuple;
 		y:				UsbHidReport.UsageTuple;
 		axisReport:		UsbHidReport.HidReport;
 		wheel:			UsbHidReport.UsageTuple;
 		wheelReport:	UsbHidReport.HidReport;
-		lastDx, lastDy: 	LONGINT;
+		lastDx, lastDy: 	SIGNED32;
 	END;
 
 	TouchscreenState = POINTER TO RECORD
 		x,y: UsbHidReport.UsageTuple;
-		minX, maxX, minY, maxY: LONGINT;
+		minX, maxX, minY, maxY: SIGNED32;
 		tipSwitch, inRange, confidence: UsbHidReport.UsageTuple;
 		prev: BOOLEAN;
-		prevx, prevy: LONGINT;
+		prevx, prevy: SIGNED32;
 		prevkeys: SET;
 		prevTip: BOOLEAN;
-		tipTime: LONGINT;
+		tipTime: SIGNED32;
 	END;
 
 	(*Handling keyboard devices*)
@@ -126,7 +126,7 @@ TYPE
 		 *)
 		PROCEDURE HandleKeyboardEvent;
 		VAR
-			i, j : LONGINT;
+			i, j : SIGNED32;
 			c : CHAR;
 			flags : SET;
 			found, kill : BOOLEAN;
@@ -222,8 +222,8 @@ TYPE
 
 	(* When user presses button, the system has to store the pressed keys in this linked list *)
 	ConsumerKey = POINTER TO RECORD
-		key: LONGINT;
-		usagePage: LONGINT;
+		key: SIGNED32;
+		usagePage: SIGNED32;
 		alive: BOOLEAN;
 		next: ConsumerKey;
 	END;
@@ -242,7 +242,7 @@ TYPE
 		 * @param usagePage: normally 0, for detected consumer devices; 9, if consumer send consumer keys as buttons
 		 * @return TRUE, if found, FALSE otherwise
 		 *)
-		PROCEDURE IsSet(usageID, usagePage: LONGINT): BOOLEAN;
+		PROCEDURE IsSet(usageID, usagePage: SIGNED32): BOOLEAN;
 		VAR cursor:	ConsumerKey;
 		BEGIN
 			cursor := first;
@@ -303,7 +303,7 @@ TYPE
 		 * @param usage: the id of the keysym
 		 * @param usagePage: 0: normally, 9: if key is sent as button
 		 *)
-		PROCEDURE SendKeySym(usage, usagePage:LONGINT; pressed:BOOLEAN);
+		PROCEDURE SendKeySym(usage, usagePage:SIGNED32; pressed:BOOLEAN);
 		VAR keyMsg : Inputs.KeyboardMsg;
 		BEGIN
 			IF Debug THEN
@@ -387,7 +387,7 @@ TYPE
 		(*mouse msg can hold up to 32 buttons*)
 		buttons:			ARRAY 32 OF UsbHidReport.UsageTuple;
 		(*identifies the last available button*)
-		buttonCount:	LONGINT;
+		buttonCount:	SIGNED32;
 		buttonReport:	UsbHidReport.HidReport;
 		x:				UsbHidReport.UsageTuple;
 		y:				UsbHidReport.UsageTuple;
@@ -415,7 +415,7 @@ TYPE
 	VAR
 		(*itemParser is responsible for parsing the usb hid report descriptor*)
 		itemParser 	: HidParser.ItemParser;
-		endpoint	: LONGINT;
+		endpoint	: SIGNED32;
 		pipe 		: Usbdi.Pipe;
 
 		(*where the report interrupt in report is stored*)
@@ -438,7 +438,7 @@ TYPE
 		PROCEDURE Connect() : BOOLEAN;
 		VAR
 			hidDescriptor 		: UsbHid.HidDescriptor;
-			i					: LONGINT;
+			i					: SIGNED32;
 			reportDescBuffer 	: Usbdi.BufferPtr;
 			status 				: Usbdi.Status;
 			canManage			: BOOLEAN;
@@ -480,7 +480,7 @@ TYPE
 			LOOP
 				IF i >= LEN(interface.endpoints) THEN EXIT; END;
 				IF (interface.endpoints[i].type = Usbdi.InterruptIn)  THEN
-					endpoint := SHORT(SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, interface.endpoints[0].bEndpointAddress) * {0,1,2,3,7}));
+					endpoint := SHORT(SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, interface.endpoints[0].bEndpointAddress) * {0,1,2,3,7}));
 					EXIT;
 				END;
 				INC(i);
@@ -553,8 +553,8 @@ TYPE
 		PROCEDURE HandleHidEvent(status : Usbdi.Status; actLen : SIZE);
 		VAR
 			ri			: UsbHidReport.ReportItem;
-			i, bitIndex	: LONGINT;
-			reportID	: LONGINT;
+			i, bitIndex	: SIGNED32;
+			reportID	: SIGNED32;
 			res			: BOOLEAN;
 			usageTuple	: UsbHidReport.UsageTuple;
 
@@ -702,8 +702,8 @@ TYPE
 		PROCEDURE HandleMouseDriver;
 		VAR
 			mm : 			Inputs.MouseMsg;
-			dx, dy,i :		LONGINT;
-			accelX, accelY : 	REAL;
+			dx, dy,i :		SIGNED32;
+			accelX, accelY : 	FLOAT32;
 		BEGIN
 			dx := TwosComplement(mouseState.x.usageValue, mouseState.axisReport.reportSize);
 			dy := TwosComplement(mouseState.y.usageValue, mouseState.axisReport.reportSize);
@@ -743,8 +743,8 @@ TYPE
 		PROCEDURE HandleTouchscreenDriver;
 		VAR
 			mm : 			Inputs.AbsMouseMsg;
-			x,y: LONGINT;
-			displayWidth, displayHeight: LONGINT;
+			x,y: SIGNED32;
+			displayWidth, displayHeight: SIGNED32;
 		BEGIN
 			IF (touchscreenState.x = NIL) OR (touchscreenState.y = NIL) OR (touchscreenState.tipSwitch = NIL) THEN
 				RETURN;
@@ -838,8 +838,8 @@ TYPE
 		VAR
 			temp: 		UsbHidReport.HidReport;
 			usageTuple:	UsbHidReport.UsageTuple;
-			i: 			LONGINT;
-			dictUsage:	LONGINT;
+			i: 			SIGNED32;
+			dictUsage:	SIGNED32;
 		BEGIN
 			temp := consumerState.consumerReport;
 			WHILE(temp#NIL) DO
@@ -903,7 +903,7 @@ TYPE
 		 PROCEDURE HandleJoystickDriver;
 		VAR
 			msg : 		Joystick.JoystickDataMessage;
-			i:			LONGINT;
+			i:			SIGNED32;
 		BEGIN
 			FOR i:=0 TO joystickState.buttonCount-1 DO
 				IF (joystickState.buttons[i].usageValue#0) THEN
@@ -992,7 +992,7 @@ TYPE
 		VAR
 			mouseCollection	: UsbHidReport.HidCollection;
 			temp			: UsbHidReport.HidReport;
-			i				: LONGINT;
+			i				: SIGNED32;
 			isReportProtocol: BOOLEAN;
 		BEGIN
 			(*get mouse collection: mouse collection uses UsagePage(Generic Desktop Controlsl)->1 and Usage(Mouse)->2*)
@@ -1010,7 +1010,7 @@ TYPE
 						mouseState.buttonCount := i;
 					END;
 					(*KernelLog.String("mouseState.buttons ["); KernelLog.Int(i,0); KernelLog.String("] is ");
-					KernelLog.Int(SYSTEM.VAL(LONGINT, mouseState.buttons[i]),0); KernelLog.Ln;*)
+					KernelLog.Int(SYSTEM.VAL(SIGNED32, mouseState.buttons[i]),0); KernelLog.Ln;*)
 				END;
 				mouseState.x := reportManager.GetUsage(UsagePage.GenericDesktopPage, 30H, mouseCollection,mouseState.axisReport);
 				IF(mouseState.x=NIL) THEN
@@ -1110,7 +1110,7 @@ TYPE
 		VAR
 			consumerColl	: UsbHidReport.HidCollection;
 			temp			: UsbHidReport.HidReport;
-			usageCounter	: LONGINT;
+			usageCounter	: SIGNED32;
 		BEGIN
 			consumerColl := reportManager.GetCollection(UsagePage.ConsumerPage, 1H);
 			IF consumerColl # NIL THEN
@@ -1138,8 +1138,8 @@ TYPE
 		VAR
 			joystickColl		: UsbHidReport.HidCollection;
 			temp			: UsbHidReport.HidReport;
-			res			: WORD;
-			i:				LONGINT;
+			res			: INTEGER;
+			i:				SIGNED32;
 		BEGIN
 			(*get joystick collection: joystick collection uses UsagePage(Generic Desktop Controlsl)->1 and Usage(Joystick)->4*)
 			joystickColl := reportManager.GetCollection(UsagePage.GenericDesktopPage,4);
@@ -1291,8 +1291,8 @@ TYPE
 		 * @param bitLen: the amount of bits to read
 		 * @return value
 		 *)
-		 PROCEDURE ReadBits(index, bitLen: LONGINT):LONGINT;
-		VAR rv : LONGINT;
+		 PROCEDURE ReadBits(index, bitLen: SIGNED32):SIGNED32;
+		VAR rv : SIGNED32;
 		BEGIN
 			rv := ReadBitsBuffer(index,bitLen,reportBuffer);
 			RETURN rv;
@@ -1305,13 +1305,13 @@ TYPE
 		 * @param localBuf: the buffer to read from
 		 * @return value
 		 *)
-		PROCEDURE ReadBitsBuffer(index, bitLen: LONGINT; localBuf: Usbdi.BufferPtr):LONGINT;
+		PROCEDURE ReadBitsBuffer(index, bitLen: SIGNED32; localBuf: Usbdi.BufferPtr):SIGNED32;
 		VAR
-			endIndex	: LONGINT;
-			rv			: LONGINT;
-			temp		: LONGINT;
-			indexEightAligned : LONGINT;
-			bitsToShift	: LONGINT;
+			endIndex	: SIGNED32;
+			rv			: SIGNED32;
+			temp		: SIGNED32;
+			indexEightAligned : SIGNED32;
+			bitsToShift	: SIGNED32;
 			set			: SET;
 		BEGIN
 			endIndex := index + bitLen-1;
@@ -1339,7 +1339,7 @@ TYPE
 			IF ((index DIV 8) = (endIndex DIV 8)) THEN
 				(*detect reading simple byte*)
 
-				temp := SYSTEM.VAL(LONGINT, ORD(localBuf[index DIV 8]));
+				temp := SYSTEM.VAL(SIGNED32, ORD(localBuf[index DIV 8]));
 
 				IF (bitLen=8) THEN
 					rv:= temp;
@@ -1357,7 +1357,7 @@ TYPE
 						KernelLog.Int(endIndex MOD 8,0); KernelLog.String(")"); KernelLog.Ln;
 					END;
 
-					temp := SYSTEM.VAL(LONGINT,(SYSTEM.VAL(SET, temp) * {(index MOD 8)..(endIndex MOD 8)}));
+					temp := SYSTEM.VAL(SIGNED32,(SYSTEM.VAL(SET, temp) * {(index MOD 8)..(endIndex MOD 8)}));
 					IF Debug THEN
 						KernelLog.String("        the value of the byte after masking: "); KernelLog.Bits(SYSTEM.VAL(SET, temp),0,8); KernelLog.Ln;
 					END;
@@ -1367,7 +1367,7 @@ TYPE
 						KernelLog.String("        bits to shift: "); KernelLog.Int(bitsToShift,0); KernelLog.Ln;
 					END;
 
-					rv := SYSTEM.VAL(LONGINT,LSH(SYSTEM.VAL(CHAR,temp),-bitsToShift));
+					rv := SYSTEM.VAL(SIGNED32,LSH(SYSTEM.VAL(CHAR,temp),-bitsToShift));
 
 					IF Debug THEN
 						KernelLog.String("        the value of the byte after shifting: "); KernelLog.Bits(SYSTEM.VAL(SET, rv),0,8); KernelLog.Ln;
@@ -1387,7 +1387,7 @@ TYPE
 							eb := 3 * 8 + 7= 31
 
 				*)
-				indexEightAligned := SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,index)+{0..2});
+				indexEightAligned := SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,index)+{0..2});
 
 				IF Debug THEN
 					KernelLog.String("index, indexEightAligned, endIndex");
@@ -1407,7 +1407,7 @@ TYPE
 		PROCEDURE TestReader;
 		VAR
 			myBuf:	Usbdi.BufferPtr;
-			test:	LONGINT;
+			test:	SIGNED32;
 		BEGIN
 			NEW(myBuf,8);
 
@@ -1424,14 +1424,14 @@ TYPE
 			KernelLog.Ln;
 			KernelLog.String("Initialize TestReader"); KernelLog.Ln;
 
-			KernelLog.String("myBuf[0]: "); KernelLog.Int(SYSTEM.VAL(LONGINT,ORD(myBuf[0])),0); KernelLog.Ln;
-			KernelLog.String("myBuf[1]: "); KernelLog.Int(SYSTEM.VAL(LONGINT,ORD(myBuf[1])),0); KernelLog.Ln;
-			KernelLog.String("myBuf[2]: "); KernelLog.Int(SYSTEM.VAL(LONGINT,ORD(myBuf[2])),0); KernelLog.Ln;
-			KernelLog.String("myBuf[3]: "); KernelLog.Int(SYSTEM.VAL(LONGINT,ORD(myBuf[3])),0); KernelLog.Ln;
-			KernelLog.String("myBuf[4]: "); KernelLog.Int(SYSTEM.VAL(LONGINT,ORD(myBuf[4])),0); KernelLog.Ln;
-			KernelLog.String("myBuf[5]: "); KernelLog.Int(SYSTEM.VAL(LONGINT,ORD(myBuf[5])),0); KernelLog.Ln;
-			KernelLog.String("myBuf[6]: "); KernelLog.Int(SYSTEM.VAL(LONGINT,ORD(myBuf[6])),0); KernelLog.Ln;
-			KernelLog.String("myBuf[7]: "); KernelLog.Int(SYSTEM.VAL(LONGINT,ORD(myBuf[7])),0); KernelLog.Ln;
+			KernelLog.String("myBuf[0]: "); KernelLog.Int(SYSTEM.VAL(SIGNED32,ORD(myBuf[0])),0); KernelLog.Ln;
+			KernelLog.String("myBuf[1]: "); KernelLog.Int(SYSTEM.VAL(SIGNED32,ORD(myBuf[1])),0); KernelLog.Ln;
+			KernelLog.String("myBuf[2]: "); KernelLog.Int(SYSTEM.VAL(SIGNED32,ORD(myBuf[2])),0); KernelLog.Ln;
+			KernelLog.String("myBuf[3]: "); KernelLog.Int(SYSTEM.VAL(SIGNED32,ORD(myBuf[3])),0); KernelLog.Ln;
+			KernelLog.String("myBuf[4]: "); KernelLog.Int(SYSTEM.VAL(SIGNED32,ORD(myBuf[4])),0); KernelLog.Ln;
+			KernelLog.String("myBuf[5]: "); KernelLog.Int(SYSTEM.VAL(SIGNED32,ORD(myBuf[5])),0); KernelLog.Ln;
+			KernelLog.String("myBuf[6]: "); KernelLog.Int(SYSTEM.VAL(SIGNED32,ORD(myBuf[6])),0); KernelLog.Ln;
+			KernelLog.String("myBuf[7]: "); KernelLog.Int(SYSTEM.VAL(SIGNED32,ORD(myBuf[7])),0); KernelLog.Ln;
 
 			IF FALSE THEN
 			KernelLog.Ln;
@@ -1538,12 +1538,12 @@ TYPE
 		 * @param bitLen: the bit length of the value it can have
 		 * @return twos complement of value
 		 *)
-		PROCEDURE TwosComplement(value: LONGINT; bitLen: LONGINT) : LONGINT;
-		VAR toMuch : LONGINT;
+		PROCEDURE TwosComplement(value: SIGNED32; bitLen: SIGNED32) : SIGNED32;
+		VAR toMuch : SIGNED32;
 		BEGIN
 			IF(bitLen<32) & (bitLen>0) THEN
 				IF ((bitLen-1) IN SYSTEM.VAL(SET,value)) THEN
-					toMuch:= SYSTEM.VAL(LONGINT,{bitLen});
+					toMuch:= SYSTEM.VAL(SIGNED32,{bitLen});
 					value := value - toMuch;
 				END;
 			END;
@@ -1556,7 +1556,7 @@ TYPE
 		PROCEDURE SetReportProtocol():BOOLEAN;
 		VAR
 			(*0: if boot protocol, 1: if report protocol*)
-			bootFlag:	LONGINT;
+			bootFlag:	SIGNED32;
 		BEGIN
 			IF (GetProtocol(bootFlag)) THEN
 				IF(bootFlag=0) THEN
@@ -1619,12 +1619,12 @@ PROCEDURE Install*;
 END Install;
 
 TYPE
-	DimensionGetter= PROCEDURE {DELEGATE} (VAR w,h: LONGINT);
+	DimensionGetter= PROCEDURE {DELEGATE} (VAR w,h: SIGNED32);
 VAR
 	getDisplayDimensions: DimensionGetter;
-	touchConfidenceDelay: LONGINT;
+	touchConfidenceDelay: SIGNED32;
 
-PROCEDURE DefaultDisplayDimensions(VAR w,h: LONGINT);
+PROCEDURE DefaultDisplayDimensions(VAR w,h: SIGNED32);
 BEGIN
 	w := 1024; h := 768;
 END DefaultDisplayDimensions;

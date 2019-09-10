@@ -23,7 +23,7 @@ TYPE
 	Canvas* = OBJECT(WMGraphics.BufferCanvas)
 	VAR
 		lineWidth-: Real; (** line width in pixels *)
-		capType-: LONGINT; (** line cap type *)
+		capType-: SIGNED32; (** line cap type *)
 
 		rasterMode: Raster.Mode;
 		drawColor: WMGraphics.Color;
@@ -52,9 +52,9 @@ TYPE
 
 		PROCEDURE SetDrawColor(color: WMGraphics.Color);
 		VAR
-			i: LONGINT;
-			s: LONGINT;
-			r, g, b, a: LONGINT;
+			i: SIGNED32;
+			s: SIGNED32;
+			r, g, b, a: SIGNED32;
 		BEGIN
 			WMGraphics.ColorToRGBA(color,r,g,b,a);
 			s := (256 * a) DIV 255;
@@ -82,7 +82,7 @@ TYPE
 		(**
 			Setup line cap type
 		*)
-		PROCEDURE SetLineCap*(lineCap: LONGINT);
+		PROCEDURE SetLineCap*(lineCap: SIGNED32);
 		BEGIN
 			capType := MIN(CapSquare,MAX(CapButt,lineCap));
 		END SetLineCap;
@@ -90,7 +90,7 @@ TYPE
 		(**
 			Draw an antialiased line represented by real-valued coordinates of the starting and end points
 		*)
-		PROCEDURE LineReal*(x0, y0, x1, y1: Real; color: WMGraphics.Color; mode: LONGINT);
+		PROCEDURE LineReal*(x0, y0, x1, y1: Real; color: WMGraphics.Color; mode: SIGNED32);
 		BEGIN
 
 			(*! do not do anything in case of an invalid line specification *)
@@ -128,7 +128,7 @@ TYPE
 			END;
 		END LineReal;
 
-		PROCEDURE Disk*(x0, y0: Real; radius: Real; color: WMGraphics.Color; mode: LONGINT);
+		PROCEDURE Disk*(x0, y0: Real; radius: Real; color: WMGraphics.Color; mode: SIGNED32);
 		BEGIN
 			(*! do not do anything in case of an invalid disk specification *)
 			IF Reals.IsNaN(x0) OR Reals.IsNaN(y0) OR Reals.IsNaN(radius) OR (radius <= 0) THEN
@@ -141,7 +141,7 @@ TYPE
 
 		PROCEDURE DrawDisk(x0, y0, radius: Real);
 		VAR
-			yend, w: LONGINT;
+			yend, w: SIGNED32;
 			err: Real;
 			inner, outer: WMRectangles.Rectangle;
 			d, radiusSqr, s: Real;
@@ -255,8 +255,8 @@ TYPE
 
 		END DrawDisk;
 
-		PROCEDURE PutPixel(x, y: LONGINT; drawColorMapIndex: LONGINT);
-		VAR bit: LONGINT; adr: ADDRESS;
+		PROCEDURE PutPixel(x, y: SIGNED32; drawColorMapIndex: SIGNED32);
+		VAR bit: SIGNED32; adr: ADDRESS;
 		BEGIN
 			(*
 				Implements Raster.Put(img,x,y,drawColorMap[drawColorMapIndex],rasterMode);
@@ -267,8 +267,8 @@ TYPE
 			rasterMode.transfer(rasterMode, ADDRESSOF(drawColorMap[drawColorMapIndex]), 0, adr, bit, 1)
 		END PutPixel;
 
-		PROCEDURE PutPixelSwapped(x, y: LONGINT; drawColorMapIndex: LONGINT);
-		VAR bit: LONGINT; adr: ADDRESS;
+		PROCEDURE PutPixelSwapped(x, y: SIGNED32; drawColorMapIndex: SIGNED32);
+		VAR bit: SIGNED32; adr: ADDRESS;
 		BEGIN
 			(*
 				Implements Raster.Put(img,y,x,drawColorMap[drawColorMapIndex],rasterMode);
@@ -281,10 +281,10 @@ TYPE
 
 		PROCEDURE DrawThinLine(x0, y0, x1, y1: Real);
 		VAR
-			incx, incy, x, y, yy, xend, xendCapStart, xendCapNone, xendCapEnd: LONGINT;
+			incx, incy, x, y, yy, xend, xendCapStart, xendCapNone, xendCapEnd: SIGNED32;
 			dx, dy, sdx, sdy, dc, dm, dd, d0, d1, dr0, dr1, v, v0, v1, w: Real;
 
-			putPixel: PROCEDURE{DELEGATE}(x, y: LONGINT; drawColorMapIndex: LONGINT);
+			putPixel: PROCEDURE{DELEGATE}(x, y: SIGNED32; drawColorMapIndex: SIGNED32);
 
 			PROCEDURE DrawCapNone;
 			BEGIN
@@ -603,10 +603,10 @@ TYPE
 
 		PROCEDURE DrawThickLine(x0, y0, x1, y1: Real);
 		VAR
-			incx, incy, x, y, yy, xend, xendCapStart, xendCapNone, xendCapEnd: LONGINT;
+			incx, incy, x, y, yy, xend, xendCapStart, xendCapNone, xendCapEnd: SIGNED32;
 			dx, dy, sdx, sdy, dc, dm, dd, d0, d1, dr0, dr1, v, v0, v1, w: Real;
 
-			putPixel: PROCEDURE{DELEGATE}(x, y: LONGINT; drawColorMapIndex: LONGINT);
+			putPixel: PROCEDURE{DELEGATE}(x, y: SIGNED32; drawColorMapIndex: SIGNED32);
 
 			PROCEDURE DrawCapNone;
 			BEGIN
@@ -904,10 +904,10 @@ TYPE
 
 		Based on the "0x5f3759df" algorithm described in Wikipedia ( https://en.wikipedia.org/wiki/Fast_inverse_square_root )
 	*)
-	PROCEDURE InvSqrt(x: REAL): REAL;
+	PROCEDURE InvSqrt(x: FLOAT32): FLOAT32;
 	VAR y: Real;
 	BEGIN
-		y := SYSTEM.VAL(REAL,0x5f3759df - SYSTEM.VAL(LONGINT,x) DIV 2); (* ~4% of error *)
+		y := SYSTEM.VAL(FLOAT32,0x5f3759df - SYSTEM.VAL(SIGNED32,x) DIV 2); (* ~4% of error *)
 		RETURN y * ( 1.5E0 - y * y * (x * 0.5E0) ); (* ~0.15% of error *)
 	END InvSqrt;
 

@@ -23,29 +23,29 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 	TYPE
 		DocURL* = POINTER TO DocURLDesc;
 		DocURLDesc* = RECORD (HyperDocs.DefURLDesc)
-			dockey*: LONGINT
+			dockey*: SIGNED32
 		END;
 		TextAttrs = POINTER TO TextAttrsDesc;
 		TextAttrsDesc = RECORD
 			lib: Objects.Library;
 			style: TextGadgets.Style;
-			col, voff: SHORTINT;
+			col, voff: SIGNED8;
 			next: TextAttrs
 		END;
 		Page* = POINTER TO PageDesc;
 		Scanner* = RECORD
 			page*: Page;
 			S*: Streams.Stream;
-			class*, state*: INTEGER;
+			class*, state*: SIGNED16;
 			value*: ARRAY 1024 OF CHAR;
 			pre*, end*: BOOLEAN;
 			ch*, next*, char*: CHAR;
-			avail: LONGINT
+			avail: SIGNED32
 		END;
 		List = POINTER TO ListDesc;
 		ListDesc = RECORD
 			style: TextGadgets.Style;
-			kind, nesting, itemNr: INTEGER;
+			kind, nesting, itemNr: SIGNED16;
 			dtok: BOOLEAN;
 			next: List
 		END;
@@ -63,10 +63,10 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 			base*: DocURL;
 			orgLabel: ARRAY 64 OF CHAR;
 			lists: List;
-			orgPos, linkkey*, headerLen, docKey*: LONGINT;
+			orgPos, linkkey*, headerLen, docKey*: SIGNED32;
 			next*: Page;
 			task: Oberon.Task;
-			textC*, linkC*, oldLinkC*, textbackC*, lines*: INTEGER;
+			textC*, linkC*, oldLinkC*, textbackC*, lines*: SIGNED16;
 			left*, blank*, head, cacheSource*: BOOLEAN
 		END;
 		Item* = POINTER TO ItemDesc;
@@ -108,7 +108,7 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 		searchAttr: ARRAY 32 OF CHAR;
 		mono: Fonts.Font;
 		found: BOOLEAN;
-		dispW: INTEGER;
+		dispW: SIGNED16;
 		GreekTab: ARRAY 128 OF CHAR;
 
 	PROCEDURE WriteLn*(P: Page);
@@ -139,7 +139,7 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 	END WriteObj;
 
 	PROCEDURE InitTabs(style: TextGadgets.Style);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		style.W := ((dispW DIV 8) * 5)-24; style.width := style.W;
 		style.noTabs := 32;
@@ -157,7 +157,7 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 		RETURN style
 	END NewStyle;
 
-	PROCEDURE Syntax(size: INTEGER; attr: CHAR): Fonts.Font;
+	PROCEDURE Syntax(size: SIGNED16; attr: CHAR): Fonts.Font;
 		VAR
 			name: ARRAY 32 OF CHAR;
 			sizeS: ARRAY 4 OF CHAR;
@@ -219,10 +219,10 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 		END
 	END PopTextAttrs;
 
-	PROCEDURE SplitFontName(f: Fonts.Font; VAR family: ARRAY OF CHAR; VAR size: INTEGER; VAR attr: CHAR);
+	PROCEDURE SplitFontName(f: Fonts.Font; VAR family: ARRAY OF CHAR; VAR size: SIGNED16; VAR attr: CHAR);
 		VAR
-			val: LONGINT;
-			i: INTEGER;
+			val: SIGNED32;
+			i: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE (f.name[i] # 0X) & ~Strings.IsDigit(f.name[i]) DO
@@ -237,7 +237,7 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 		END
 	END SplitFontName;
 
-	PROCEDURE FontSize(f: Fonts.Font; VAR size: INTEGER);
+	PROCEDURE FontSize(f: Fonts.Font; VAR size: SIGNED16);
 		VAR
 			family: ARRAY 64 OF CHAR;
 			attr: CHAR;
@@ -245,8 +245,8 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 		SplitFontName(f, family, size, attr)
 	END FontSize;
 
-	PROCEDURE GetFontSize*(P: Page): INTEGER;
-		VAR size: INTEGER;
+	PROCEDURE GetFontSize*(P: Page): SIGNED16;
+		VAR size: SIGNED16;
 	BEGIN
 		FontSize(P.W.lib(Fonts.Font), size);
 		IF dispW < 800 THEN
@@ -274,7 +274,7 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 		VAR
 			family: ARRAY 64 OF CHAR;
 			str: ARRAY 4 OF CHAR;
-			size: INTEGER;
+			size: SIGNED16;
 			oldattr: CHAR;
 	BEGIN
 		IF attr = "m" THEN attr := "b" END;
@@ -291,11 +291,11 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 		END
 	END ChangeFontAttr;
 
-	PROCEDURE ChangeFontSize(f: Fonts.Font; size: INTEGER): Fonts.Font;
+	PROCEDURE ChangeFontSize(f: Fonts.Font; size: SIGNED16): Fonts.Font;
 		VAR
 			family: ARRAY 64 OF CHAR;
 			str: ARRAY 4 OF CHAR;
-			oldsize: INTEGER;
+			oldsize: SIGNED16;
 			attr: CHAR;
 	BEGIN
 		IF dispW < 800 THEN
@@ -314,7 +314,7 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 		END
 	END ChangeFontSize;
 
-	PROCEDURE SetFontSize*(P: Page; size: INTEGER);
+	PROCEDURE SetFontSize*(P: Page; size: SIGNED16);
 		VAR fnt: Fonts.Font;
 	BEGIN
 		fnt := P.W.lib(Fonts.Font);
@@ -339,7 +339,7 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 		END
 	END SetFontSize;
 
-	PROCEDURE HorzRule*(P: Page; w, h: INTEGER);
+	PROCEDURE HorzRule*(P: Page; w, h: SIGNED16);
 		VAR obj: Objects.Object;
 	BEGIN
 		IF P.lines <= 0 THEN
@@ -387,7 +387,7 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 		END
 	END CloseA;
 
-	PROCEDURE OpenList(P: Page; kind: INTEGER);
+	PROCEDURE OpenList(P: Page; kind: SIGNED16);
 		VAR list: List;
 	BEGIN
 		PushTextAttrs(P);
@@ -537,7 +537,7 @@ MODULE HTMLDocs IN Oberon; (** portable *) (* ejz, Greek & Math support by afi *
 		VAR
 			S: Attributes.Scanner;
 			F: Texts.Finder;
-			pos: LONGINT;
+			pos: SIGNED32;
 			obj: Objects.Object;
 			name: ARRAY 32 OF CHAR;
 			curDoc: Documents.Document;
@@ -643,7 +643,7 @@ to.elems := from.elems
 		VAR
 			ol: HTTPDocs0.ObjList;
 			obj, action: Objects.Object;
-			key: LONGINT;
+			key: SIGNED32;
 			F1: Form;
 	BEGIN
 		WITH F: Form DO
@@ -723,7 +723,7 @@ to.elems := from.elems
 		Objects.NewObj := form
 	END NewForm;
 
-	PROCEDURE HexDigit(i: INTEGER): CHAR;
+	PROCEDURE HexDigit(i: SIGNED16): CHAR;
 	BEGIN
 		IF i < 10 THEN
 			RETURN CHR(i+ORD("0"))
@@ -732,7 +732,7 @@ to.elems := from.elems
 		END
 	END HexDigit;
 
-	PROCEDURE MapCoord(obj: Objects.Object; VAR x, y: INTEGER);
+	PROCEDURE MapCoord(obj: Objects.Object; VAR x, y: SIGNED16);
 		VAR M: Display.LocateMsg;
 	BEGIN
 		M.F := NIL; M.loc := NIL; M.res := -1;
@@ -748,7 +748,7 @@ to.elems := from.elems
 	PROCEDURE ComposeQuery(form: Form; exec: Objects.Object; VAR query: Texts.Text);
 		VAR
 			ol: HTTPDocs0.ObjList;
-			x, y: INTEGER;
+			x, y: SIGNED16;
 			obj: Objects.Object;
 			text: Texts.Text;
 			name: Objects.Name;
@@ -776,7 +776,7 @@ to.elems := from.elems
 				Texts.Write(Wr, ch)
 			END
 		END WriteEscCh;
-		PROCEDURE IntAttr(i: LONGINT);
+		PROCEDURE IntAttr(i: SIGNED32);
 		BEGIN
 			Texts.WriteString(Wr, name);
 			Texts.Write(Wr, "=");
@@ -784,7 +784,7 @@ to.elems := from.elems
 			Texts.Write(Wr, "&")
 		END IntAttr;
 		PROCEDURE StrAttr(CONST s: ARRAY OF CHAR);
-			VAR i: INTEGER;
+			VAR i: SIGNED16;
 		BEGIN
 			Texts.WriteString(Wr, name);
 			Texts.Write(Wr, "=");
@@ -795,7 +795,7 @@ to.elems := from.elems
 			END;
 			Texts.Write(Wr, "&")
 		END StrAttr;
-		PROCEDURE RealAttr(y: LONGREAL; l: INTEGER);
+		PROCEDURE RealAttr(y: FLOAT64; l: SIGNED16);
 		BEGIN
 			Texts.WriteString(Wr, name);
 			Texts.Write(Wr, "=");
@@ -916,11 +916,11 @@ to.elems := from.elems
 		VAR
 			exec, obj: Objects.Object;
 			attr, qury: ARRAY 32 OF CHAR;
-			key, mkey: LONGINT;
+			key, mkey: SIGNED32;
 			docname: ARRAY 1024 OF CHAR;
 			query: Texts.Text;
 			form: Form;
-			x, y: INTEGER;
+			x, y: SIGNED16;
 			cont: HTTPDocs0.Context;
 			doc: Documents.Document;
 			clearCache: BOOLEAN;
@@ -1019,8 +1019,8 @@ to.elems := from.elems
 		END
 	END SubmitQuery;
 
-	PROCEDURE HREF(P: Page; VAR href, cmd: ARRAY OF CHAR; VAR key: LONGINT);
-		VAR i, j: LONGINT;
+	PROCEDURE HREF(P: Page; VAR href, cmd: ARRAY OF CHAR; VAR key: SIGNED32);
+		VAR i, j: SIGNED32;
 	BEGIN
 		key := -1; COPY("", cmd); i := 0;
 		WHILE (href[i] # 0X) & (href[i] <= " ") DO
@@ -1094,7 +1094,7 @@ to.elems := from.elems
 		VAR
 			family: ARRAY 64 OF CHAR;
 			str: ARRAY 4 OF CHAR;
-			size: INTEGER;
+			size: SIGNED16;
 			attr: CHAR;
 	BEGIN
 		SplitFontName(f, family, size, attr);
@@ -1113,12 +1113,12 @@ to.elems := from.elems
 
 	PROCEDURE WriteCharRef*(P: Page; VAR S: Scanner);
 		VAR
-			i, j, k: LONGINT;
+			i, j, k: SIGNED32;
 			entity: ARRAY 64 OF CHAR; istr: ARRAY 4 OF CHAR;
 			lib: Objects.Library;
 			obj: Objects.Object;
 			fnt: Fonts.Font;
-			ref: INTEGER;
+			ref: SIGNED16;
 	BEGIN
 		IF S.ch = "#" THEN
 			Read(S);
@@ -1326,7 +1326,7 @@ to.elems := from.elems
 
 	PROCEDURE CharRefStr*(P: Page; VAR S: Scanner; VAR str: ARRAY OF CHAR);
 		VAR
-			i, j: LONGINT;
+			i, j: SIGNED32;
 			entity: ARRAY 64 OF CHAR;
 	BEGIN
 		COPY("", str);
@@ -1394,7 +1394,7 @@ to.elems := from.elems
 	END CharRefStr;
 
 	PROCEDURE Next*(VAR S: Scanner);
-		VAR i, l: LONGINT;
+		VAR i, l: SIGNED32;
 	BEGIN
 		CASE S.state OF
 			TextHtml: IF S.ch = "<" THEN
@@ -1641,10 +1641,10 @@ END
 		END
 	END B;
 
-	PROCEDURE SplitHostPort*(VAR url, host: ARRAY OF CHAR; VAR port: INTEGER);
+	PROCEDURE SplitHostPort*(VAR url, host: ARRAY OF CHAR; VAR port: SIGNED16);
 		VAR
-			i, j: INTEGER;
-			val: LONGINT;
+			i, j: SIGNED16;
+			val: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (url[i] # 0X) & (url[i] # "/") DO
@@ -1678,8 +1678,8 @@ END
 			P: Page;
 			attr, label: ARRAY 64 OF CHAR;
 			s: HyperDocs.LinkScheme;
-			key: LONGINT;
-			port: INTEGER;
+			key: SIGNED32;
+			port: SIGNED16;
 	BEGIN
 		IF on THEN
 			P := S.page;
@@ -1706,7 +1706,7 @@ END
 		END
 	END BASE;
 
-	PROCEDURE HexVal(ch: CHAR): INTEGER;
+	PROCEDURE HexVal(ch: CHAR): SIGNED16;
 	BEGIN
 		IF (ch >= "0") & (ch <= "9") THEN
 			RETURN ORD(ch)-ORD("0")
@@ -1719,10 +1719,10 @@ END
 		END
 	END HexVal;
 
-	PROCEDURE Color(CONST val: ARRAY OF CHAR; VAR col: INTEGER);
+	PROCEDURE Color(CONST val: ARRAY OF CHAR; VAR col: SIGNED16);
 		VAR
-			r, g, b, rr, gg, bb, i, bestC: INTEGER;
-			diff, mdiff: REAL;
+			r, g, b, rr, gg, bb, i, bestC: SIGNED16;
+			diff, mdiff: FLOAT32;
 	BEGIN
 		IF val = "white" THEN
 			col := 0; RETURN
@@ -1746,7 +1746,7 @@ END
 		IF (r > 255) OR (g > 255) OR (b > 255) THEN
 			RETURN
 		END;
-		mdiff := MAX(REAL); bestC := 0;
+		mdiff := MAX(FLOAT32); bestC := 0;
 		i := 0;
 		WHILE (i < 256) & (mdiff > 0.0) DO
 			Display.GetColor(i, rr, gg, bb);
@@ -1765,8 +1765,8 @@ END
 		VAR
 			P: Page;
 			attr: ARRAY 64 OF CHAR;
-			val: LONGINT;
-			size, i: INTEGER;
+			val: SIGNED32;
+			size, i: SIGNED16;
 			col: BOOLEAN;
 	BEGIN
 		P := S.page;
@@ -1837,7 +1837,7 @@ END
 		(*S.skipWS := TRUE*)
 	END BLOCKQUOTE;
 
-	PROCEDURE ChangeColors(P: Page; from, to: SHORTINT);
+	PROCEDURE ChangeColors(P: Page; from, to: SIGNED8);
 		VAR tattr: TextAttrs;
 	BEGIN
 		IF P.W.col = from THEN
@@ -1856,10 +1856,10 @@ END
 		VAR
 			P: Page;
 			attr: ARRAY 64 OF CHAR;
-			key: LONGINT;
+			key: SIGNED32;
 			doc: Documents.Document;
 			BackE: HTTPDocs0.Entry;
-			col: INTEGER;
+			col: SIGNED16;
 	BEGIN
 		P := S.page;
 		IF on THEN
@@ -1905,7 +1905,7 @@ END
 		VAR
 			exec, cont: Objects.Object;
 			name, nr: ARRAY 32 OF CHAR;
-			i: LONGINT;
+			i: SIGNED32;
 	BEGIN
 		cont := Gadgets.context; exec := Gadgets.executorObj;
 		IF exec # NIL THEN
@@ -1926,7 +1926,7 @@ END
 		VAR
 			P: Page;
 			name, attr: ARRAY 32 OF CHAR;
-			i: LONGINT;
+			i: SIGNED32;
 	BEGIN
 		P := S.page; CloseA(P);
 		IF on THEN
@@ -2138,8 +2138,8 @@ END
 		VAR
 			P: Page;
 			attr: ARRAY 64 OF CHAR;
-			val: LONGINT;
-			size, i, textC: INTEGER;
+			val: SIGNED32;
+			size, i, textC: SIGNED16;
 			col: BOOLEAN;
 	BEGIN
 		P := S.page;
@@ -2239,8 +2239,8 @@ END
 		VAR
 			attr: ARRAY 64 OF CHAR;
 			P: Page;
-			l: LONGINT;
-			w, h, pos: INTEGER;
+			l: SIGNED32;
+			w, h, pos: SIGNED16;
 	BEGIN
 		IF on THEN
 			P := S.page; CloseA(P);
@@ -2301,7 +2301,7 @@ END
 	PROCEDURE LI(VAR S: Scanner; on: BOOLEAN);
 		VAR
 			P: Page;
-			i: INTEGER;
+			i: SIGNED16;
 	BEGIN
 		P := S.page;
 		IF on THEN
@@ -2339,7 +2339,7 @@ END
 (*		VAR
 			P: Page;
 			attr, cmd, caption: ARRAY 64 OF CHAR;
-			key: LONGINT;
+			key: SIGNED32;
 			obj: Objects.Object;
 	BEGIN
 		IF on THEN
@@ -2394,7 +2394,7 @@ END
 			form: Form;
 			attr: ARRAY 64 OF CHAR;
 			prompt: ARRAY 512 OF CHAR;
-			key: LONGINT;
+			key: SIGNED32;
 	BEGIN
 		IF on THEN
 			P := S.page;
@@ -2715,7 +2715,7 @@ ELSIF ~on THEN
 			Ss: Texts.Scanner;
 			gen: ARRAY 64 OF CHAR;
 			e: ExtTag;
-			i: INTEGER;
+			i: SIGNED16;
 			found, on: BOOLEAN;
 			prev: CHAR;
 	BEGIN
@@ -3028,8 +3028,8 @@ ELSIF ~on THEN
 		END
 	END DocHandler;
 
-	PROCEDURE TextColor(col: INTEGER): SHORTINT;
-		VAR r, g, b: INTEGER;
+	PROCEDURE TextColor(col: SIGNED16): SIGNED8;
+		VAR r, g, b: SIGNED16;
 	BEGIN
 		Display.GetColor(col, r, g, b);
 		IF (0.3*r+0.59*g+0.11*b) > 0.35 THEN
@@ -3088,7 +3088,7 @@ ELSIF ~on THEN
 		VAR
 			P: Page;
 			St: Streams.Stream;
-			i, minSize, timeOut: LONGINT;
+			i, minSize, timeOut: SIGNED32;
 			app: BOOLEAN;
 	BEGIN
 		WITH me: Task DO
@@ -3179,12 +3179,12 @@ ELSIF ~on THEN
 		END
 	END QueryBool;
 
-	PROCEDURE Parse*(D: Documents.Document; basekey: LONGINT; S: Streams.Stream; head, cache, blocking: BOOLEAN);
+	PROCEDURE Parse*(D: Documents.Document; basekey: SIGNED32; S: Streams.Stream; head, cache, blocking: BOOLEAN);
 		VAR
 			me: Task;
 			s: HyperDocs.LinkScheme;
 			e: ExtTag;
-			i, j: LONGINT;
+			i, j: SIGNED32;
 	BEGIN
 		imgs := QueryBool("HTMLImages");
 		NEW(me);
@@ -3337,7 +3337,7 @@ ELSIF ~on THEN
 
 	PROCEDURE LoadDoc(D: Documents.Document);
 		VAR
-			key: LONGINT;
+			key: SIGNED32;
 			s, so: HyperDocs.LinkScheme;
 			T: Texts.Text;
 			path, label: ARRAY 64 OF CHAR;
@@ -3474,7 +3474,7 @@ PROCEDURE ShowHTML*;
 		D: Documents.Document;
 		node: HyperDocs.Node;
 		P: Page;
-		key, pos: LONGINT;
+		key, pos: SIGNED32;
 		T: Texts.Text;
 		R: Texts.Reader;
 		ch: CHAR;

@@ -23,9 +23,9 @@ TYPE
 	TestDataBase = OBJECT(Lib.Operation);
 	VAR
 		buffer : POINTER TO ARRAY OF CHAR;
-		sectorsPerTransfer : LONGINT;
+		sectorsPerTransfer : SIGNED32;
 
-		PROCEDURE SetParameters*(sectorsPerTransfer : LONGINT);
+		PROCEDURE SetParameters*(sectorsPerTransfer : SIGNED32);
 		BEGIN
 			SELF.sectorsPerTransfer := sectorsPerTransfer;
 		END SetParameters;
@@ -51,7 +51,7 @@ TYPE
 		END FillWithTestData;
 
 		PROCEDURE DoOperation*;
-		VAR pos, num, nbrOfBlocks, blocksWritten : LONGINT; res : WORD; temp : ARRAY 256 OF CHAR;
+		VAR pos, num, nbrOfBlocks, blocksWritten : SIGNED32; res : INTEGER; temp : ARRAY 256 OF CHAR;
 		BEGIN
 			SetStatus(state.status, "Writing test data...", 0, 0, disk.table[partition].size, TRUE);
 			NEW(buffer, disk.device.blockSize * sectorsPerTransfer);
@@ -72,7 +72,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk :Lib.Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk :Lib.Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "WriteTestData"; desc := "Write test data to partition"; locktype := Lib.WriterLock;
@@ -87,8 +87,8 @@ TYPE
 
 		PROCEDURE DoOperation*;
 		VAR
-			pos, num, nbrOfBlocks, blocksRead : LONGINT; res : WORD; string, nbr : ARRAY 128 OF CHAR;
-			expected, found, foundAt : LONGINT;
+			pos, num, nbrOfBlocks, blocksRead : SIGNED32; res : INTEGER; string, nbr : ARRAY 128 OF CHAR;
+			expected, found, foundAt : SIGNED32;
 		BEGIN
 			SetStatus(state.status, "Verifying test data...", 0, 0, disk.table[partition].size, TRUE);
 			NEW(buffer, disk.device.blockSize * sectorsPerTransfer);
@@ -116,7 +116,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk :Lib.Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk :Lib.Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "CheckTestData"; desc := "Verify test data on partition"; locktype := Lib.ReaderLock;
@@ -134,7 +134,7 @@ TYPE
 			FOR i := 0 TO LEN(buffer) - 1 DO buffer[i] := 0X; END;
 		END FillWithTestData;
 
-		PROCEDURE & Init*(disk : Lib.Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE & Init*(disk : Lib.Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "ZeroWriter"; desc := "Fill with zeros partition"; locktype := Lib.WriterLock;
@@ -151,21 +151,21 @@ TYPE
 	VAR
 		(* parameters *)
 		doRead, doWrite, testData : BOOLEAN;
-		nbrOfTests, maxNbrOfSectors, maxOffset : LONGINT;
+		nbrOfTests, maxNbrOfSectors, maxOffset : SIGNED32;
 
-		start, size : LONGINT; (* First block of partition and size of the partition *)
-		offset : LONGINT; (* currently used offset into client buffer *)
+		start, size : SIGNED32; (* First block of partition and size of the partition *)
+		offset : SIGNED32; (* currently used offset into client buffer *)
 
 		(* Coverage information *)
-		testCount : LONGINT;
+		testCount : SIGNED32;
 		testedOffsets : POINTER TO ARRAY OF BOOLEAN;
 		testedSectors : POINTER TO ARRAY OF BOOLEAN;
-		blocksRead : HUGEINT;
+		blocksRead : SIGNED64;
 
 		buffer : POINTER TO ARRAY OF CHAR;
 		random : Random.Generator;
 
-		PROCEDURE SetParameters*(doRead, doWrite,  testData : BOOLEAN; nbrOfTests, maxNbrOfSectors, maxOffset : LONGINT);
+		PROCEDURE SetParameters*(doRead, doWrite,  testData : BOOLEAN; nbrOfTests, maxNbrOfSectors, maxOffset : SIGNED32);
 		BEGIN
 			SELF.doRead := doRead; SELF.doWrite := doWrite; SELF.testData := testData;
 			SELF.nbrOfTests := nbrOfTests; SELF.maxNbrOfSectors := maxNbrOfSectors; SELF.maxOffset := maxOffset;
@@ -194,7 +194,7 @@ TYPE
 		PROCEDURE WriteSummary;
 		VAR i, val : SIZE;
 
-			PROCEDURE WriteB(b: HUGEINT; w : Streams.Writer);
+			PROCEDURE WriteB(b: SIGNED64; w : Streams.Writer);
 			VAR suffix: ARRAY 3 OF CHAR;
 			BEGIN
 				IF b > 1024*1024*1024 THEN suffix := "GB"; b := b DIV (1024*1024*1024);
@@ -220,7 +220,7 @@ TYPE
 		END WriteSummary;
 
 		PROCEDURE PerformStep;
-		VAR pos, num, expected, found, foundAt : LONGINT; res : WORD; string, nbr : ARRAY 128 OF CHAR;
+		VAR pos, num, expected, found, foundAt : SIGNED32; res : INTEGER; string, nbr : ARRAY 128 OF CHAR;
 		BEGIN
 			num := random.Dice(maxNbrOfSectors) + 1;
 			IF maxNbrOfSectors > 1 THEN testedSectors[num - 1] := TRUE; END;
@@ -273,7 +273,7 @@ TYPE
 			END;
 		END DoOperation;
 
-		PROCEDURE &Init*(disk :Lib.Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk :Lib.Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "DiskTester"; desc := "Perform disk test on partition"; locktype := Lib.ReaderLock;
@@ -282,8 +282,8 @@ TYPE
 
 	END DiskTest;
 
-PROCEDURE TestDataIsCorrect*(offset, numblocks, blocksize : LONGINT; CONST buffer : ARRAY OF CHAR; VAR expected, found, foundAt : LONGINT) : BOOLEAN;
-VAR i : LONGINT;
+PROCEDURE TestDataIsCorrect*(offset, numblocks, blocksize : SIGNED32; CONST buffer : ARRAY OF CHAR; VAR expected, found, foundAt : SIGNED32) : BOOLEAN;
+VAR i : SIGNED32;
 BEGIN
 	ASSERT(LEN(buffer) >= numblocks * blocksize + offset);
 	ASSERT(blocksize MOD 256 = 0); (* Otherwise test data used will not work *)
@@ -349,7 +349,7 @@ PROCEDURE TransferBlocks*(context : Commands.Context); (** dev#part "READ"|"WRIT
 VAR
 	selection : Lib.Selection;
 	string : ARRAY 32 OF CHAR; dev : Disks.Device;
-	op, block, numblocks : LONGINT; res : WORD;
+	op, block, numblocks : SIGNED32; res : INTEGER;
 	buffer : POINTER TO ARRAY OF CHAR;
 BEGIN
 	IF Partitions.GetSelection(context, FALSE, selection) THEN
@@ -388,7 +388,7 @@ BEGIN
 	END;
 END TransferBlocks;
 
-PROCEDURE ShowDiskres(res : WORD; out : Streams.Writer);
+PROCEDURE ShowDiskres(res : INTEGER; out : Streams.Writer);
 BEGIN
 	IF res = Disks.Ok THEN out.String("Ok");
 	ELSIF res = Disks.MediaChanged THEN out.String("MediaChanged");

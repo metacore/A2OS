@@ -12,13 +12,13 @@ BEGIN
 	RETURN GetArg().GetChar(ch);
 END Char;
 
-PROCEDURE Int*(VAR i: WORD; hex = TRUE: BOOLEAN): BOOLEAN;
+PROCEDURE Int*(VAR i: INTEGER; hex = TRUE: BOOLEAN): BOOLEAN;
 (* hex = TRUE means that hex numbers are allowed. A hex number must have the "H" postfix *)
 BEGIN
 	RETURN GetArg().GetInteger(i, hex);
 END Int;
 
-PROCEDURE Real*(VAR f: LONGREAL): BOOLEAN;
+PROCEDURE Real*(VAR f: FLOAT64): BOOLEAN;
 BEGIN
 	RETURN GetArg().GetReal(f);
 END Real;

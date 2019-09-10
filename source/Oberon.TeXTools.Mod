@@ -21,7 +21,7 @@ END IsVerbatim;
 (** Convert selected text in-place from readable text to LaTeX tabbing environment syntax. *)
 
 PROCEDURE Tabbing*;	(** ^ *)
-VAR text: Texts.Text; beg, end, time: LONGINT; r: Texts.Reader; ch: CHAR;
+VAR text: Texts.Text; beg, end, time: SIGNED32; r: Texts.Reader; ch: CHAR;
 BEGIN
 	Oberon.GetSelection(text, beg, end, time);
 	IF time # -1 THEN
@@ -46,7 +46,7 @@ END Tabbing;
 (** Convert selected text in-place from LaTeX tabbing environment syntax to readable text. *)
 
 PROCEDURE Tabs*;
-VAR text: Texts.Text; beg, end, time, i: LONGINT; r: Texts.Reader; ch: CHAR; s: ARRAY 10 OF CHAR;
+VAR text: Texts.Text; beg, end, time, i: SIGNED32; r: Texts.Reader; ch: CHAR; s: ARRAY 10 OF CHAR;
 BEGIN
 	Oberon.GetSelection(text, beg, end, time);
 	IF time # -1 THEN

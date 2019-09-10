@@ -227,7 +227,7 @@ TYPE
 
 VAR
 	bufferPool: ARRAY BufferPoolSize OF digits;
-	nextFreeBuffer: LONGINT;
+	nextFreeBuffer: SIGNED32;
 
 	randomgenerator: Random.Generator;
 
@@ -255,7 +255,7 @@ VAR
 
 
 	(** random number with len 'bits' *)
-	PROCEDURE NewRand*( bits: SIZE;  top, bottom: SHORTINT ): BigNumber;
+	PROCEDURE NewRand*( bits: SIZE;  top, bottom: SIGNED8 ): BigNumber;
 	VAR n, len, i, topbit: SIZE;  topword: SET32;  b: BigNumber;
 	BEGIN
 		len := bits;  INC( len, (-len) MOD 32 );
@@ -268,7 +268,7 @@ VAR
 		topbit := (bits - 1)  MOD 32;
 		topword := SET32( S.VAL( SET32, b.d[b.len - 1] ) * {0..topbit} );
 		IF top > 0 THEN INCL( topword, topbit ) END;
-		b.d[b.len - 1] := S.VAL( LONGINT, topword );
+		b.d[b.len - 1] := S.VAL( SIGNED32, topword );
 		IF (bottom > 0) & ~ODD( b.d[0] ) THEN  INC( b.d[0] )  END;
 		RETURN b
 	END NewRand;
@@ -286,8 +286,8 @@ VAR
 		WHILE (len > 0) & (d[len - 1] = 0) DO  DEC( len )  END;
 	END fixlen;
 
-	PROCEDURE h2i( c: CHAR ): LONGINT;
-	VAR v: LONGINT;
+	PROCEDURE h2i( c: CHAR ): SIGNED32;
+	VAR v: SIGNED32;
 	BEGIN
 		CASE c OF
 		| '0'..'9':  v := ORD( c ) - ORD( '0' )
@@ -340,14 +340,14 @@ VAR
 		END
 	END GetBinaryValue;
 
-	PROCEDURE AssignInt*( VAR b: BigNumber;  val: LONGINT );
+	PROCEDURE AssignInt*( VAR b: BigNumber;  val: SIGNED32 );
 	BEGIN
 		NEW( b, 64 );
 		IF val < 0 THEN  b.neg := TRUE;  val := ABS( val ) END;
 		IF val # 0 THEN  b.len := 1;  b.d[0] := val  ELSE  b.len := 0   END
 	END AssignInt;
 
-	PROCEDURE cmpd( VAR a, b: digits;  len: SIZE ): SHORTINT;
+	PROCEDURE cmpd( VAR a, b: digits;  len: SIZE ): SIGNED8;
 	VAR i: SIZE;
 	BEGIN
 		i := len - 1;
@@ -358,7 +358,7 @@ VAR
 		END
 	END cmpd;
 
-	PROCEDURE ucmp( VAR a, b: BigNumber ): SHORTINT;   (* 1: |a| > |b|;  0: a = b;  -1:  |a| < |b| *)
+	PROCEDURE ucmp( VAR a, b: BigNumber ): SIGNED8;   (* 1: |a| > |b|;  0: a = b;  -1:  |a| < |b| *)
 	BEGIN
 		IF a.len > b.len THEN  RETURN 1
 		ELSIF a.len < b.len THEN  RETURN -1
@@ -366,7 +366,7 @@ VAR
 		END
 	END ucmp;
 
-	PROCEDURE Cmp*( a, b: BigNumber ): SHORTINT;   (** 1: a > b;  0: a = b;  -1:  a < b *)
+	PROCEDURE Cmp*( a, b: BigNumber ): SIGNED8;   (** 1: a > b;  0: a = b;  -1:  a < b *)
 	BEGIN
 		IF a.neg # b.neg THEN
 			IF a.neg THEN  RETURN -1  ELSE  RETURN 1  END
@@ -518,11 +518,11 @@ VAR
 		RETURN c
 	END Mul;
 
-	PROCEDURE div64( CONST a: dig2;  VAR b: BNdigit ): LONGINT;   (* a div b *)
-	VAR bit, q: LONGINT;  r: BNdigit;  overflow: BOOLEAN;
+	PROCEDURE div64( CONST a: dig2;  VAR b: BNdigit ): SIGNED32;   (* a div b *)
+	VAR bit, q: SIGNED32;  r: BNdigit;  overflow: BOOLEAN;
 	BEGIN
 		IF a[1] = 0 THEN
-			IF (a[0] < 80000000H) & (b < 80000000H ) THEN  RETURN LONGINT( a[0] DIV b )
+			IF (a[0] < 80000000H) & (b < 80000000H ) THEN  RETURN SIGNED32( a[0] DIV b )
 			ELSIF a[0] < b THEN  RETURN 0
 			ELSIF a[0] = b THEN  RETURN 1
 			END;
@@ -543,8 +543,8 @@ VAR
 		RETURN q
 	END div64;
 
-	PROCEDURE div96( CONST a: dig3;  CONST b: dig2 ): LONGINT;   (* a div b *)
-	VAR bit: LONGINT;  r: dig2;  q: LONGINT;  overflow, borrow: BOOLEAN;
+	PROCEDURE div96( CONST a: dig3;  CONST b: dig2 ): SIGNED32;   (* a div b *)
+	VAR bit: SIGNED32;  r: dig2;  q: SIGNED32;  overflow, borrow: BOOLEAN;
 
 		PROCEDURE ge( CONST a, b: dig2 ): BOOLEAN;
 		BEGIN
@@ -582,7 +582,7 @@ VAR
 	END div96;
 
 	PROCEDURE Div2*( a, b: BigNumber;  VAR q, r: BigNumber );   (** q = a div b;  r = a mod b *)
-	VAR td, sd, bd, qd: digits;  x: LONGINT; i, tail, bl, tl, sl, ql, qi: SIZE;
+	VAR td, sd, bd, qd: digits;  x: SIGNED32; i, tail, bl, tl, sl, ql, qi: SIZE;
 		t3: dig3;  t2, d0: dig2;
 		aq, ar: ADDRESS;
 	BEGIN
@@ -861,7 +861,7 @@ VAR
 	(*--------------------------- File I/O ---------------------------------*)
 
 	PROCEDURE FileRead*( r: Streams.Reader;  VAR b: BigNumber );
-	VAR i, j, v: LONGINT;
+	VAR i, j, v: SIGNED32;
 	BEGIN
 		r.RawLInt( j );
 		NEW( b, 32 * j );
@@ -870,9 +870,9 @@ VAR
 	END FileRead;
 
 	PROCEDURE FileWrite*( w: Streams.Writer;  b: BigNumber );
-	VAR i, j, v: LONGINT;
+	VAR i, j, v: SIGNED32;
 	BEGIN
-		j := b.len(LONGINT);
+		j := b.len(SIGNED32);
 		w.RawLInt( j );
 		FOR i := 0 TO j - 1 DO  w.RawLInt( v ); b.d[ i ] := v  END
 	END FileWrite;
@@ -907,7 +907,7 @@ VAR
 	END InitRandomgenerator;
 
 BEGIN
-	ASSERT( LONGINT({0}) = 1 );		(* little endian SETs! *)
+	ASSERT( SIGNED32({0}) = 1 );		(* little endian SETs! *)
 	FOR nextFreeBuffer := 0 TO BufferPoolSize - 1 DO
 		NEW( bufferPool[nextFreeBuffer], 256 )
 	END;

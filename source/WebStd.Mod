@@ -230,7 +230,7 @@ TYPE
 	 * the event "SetState" with parameter "pos" can be used to set the actual state position for a sequence *)
 	Sequence* = OBJECT (DynamicWebpage.StateFullActiveElement)
 		VAR
-			stateCounter: LONGINT;
+			stateCounter: SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN stateCounter := 0
@@ -241,7 +241,7 @@ TYPE
 		END Transform;
 
 		PROCEDURE PreTransform*(elem: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
-		VAR p: ANY; enum: XMLObjects.Enumerator; counter: LONGINT; state, actState: XML.Element;
+		VAR p: ANY; enum: XMLObjects.Enumerator; counter: SIGNED32; state, actState: XML.Element;
 			stateName: Strings.String; container: XML.Container; content: XML.Content; circularVal: Strings.String;
 		BEGIN
 			actState:= NIL; counter := 0;
@@ -963,7 +963,7 @@ TYPE
 		END SetName;
 
 		(** returns NIL iff not present in this container *)
-		PROCEDURE GetObjectByOid*(objectId: LONGINT) : PersistentDataObject;
+		PROCEDURE GetObjectByOid*(objectId: SIGNED32) : PersistentDataObject;
 		VAR i: SIZE; p: ANY; obj: PersistentDataObject;
 		BEGIN
 			dataObjList.Lock;
@@ -1128,7 +1128,7 @@ TYPE
 		END Internalize;
 
 		PROCEDURE InternalizeElem(elem: XML.Element);
-		VAR elemLabel, refStr: Strings.String; ref: LONGINT; persObj: PrevalenceSystem.PersistentObject;
+		VAR elemLabel, refStr: Strings.String; ref: SIGNED32; persObj: PrevalenceSystem.PersistentObject;
 		BEGIN
 			elemLabel := elem.GetName();
 			IF (elemLabel^ = "name") THEN
@@ -1260,7 +1260,7 @@ TYPE
 
 	(** abstract web displayable object with session bounded lifetime *)
 	SessionDataObject* = OBJECT
-		VAR oid*: LONGINT; (** unique object id *)
+		VAR oid*: SIGNED32; (** unique object id *)
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -1297,7 +1297,7 @@ TYPE
 		END GetName;
 
 		(** returns NIL iff not present in this container *)
-		PROCEDURE GetObjectByOid*(objectId: LONGINT) : SessionDataObject;
+		PROCEDURE GetObjectByOid*(objectId: SIGNED32) : SessionDataObject;
 		VAR i: SIZE; p: ANY; obj: SessionDataObject;
 		BEGIN
 			dataObjList.Lock;
@@ -1498,7 +1498,7 @@ TYPE
 	 *)
 	Datagrid* = OBJECT (DynamicWebpage.StateFullActiveElement)
 		VAR
-			pos: LONGINT; (* statefull instance variable: start position for paging *)
+			pos: SIGNED32; (* statefull instance variable: start position for paging *)
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -1508,7 +1508,7 @@ TYPE
 		PROCEDURE Transform*(input: XML.Element; request: HTTPSupport.HTTPRequest) : XML.Content;
 		VAR table, tr, td, tdHeader, data, header, footer, elem, paging, subElem, eventButton, eventParam: XML.Element; p, pElem: ANY;
 			content: XML.Content; gridEnum, elemEnum, enum: XMLObjects.Enumerator; elemName, pagingSizeStr,
-			subElemName, labelName, objectId: Strings.String; columns, pagingSize, counter, k: LONGINT;
+			subElemName, labelName, objectId: Strings.String; columns, pagingSize, counter, k: SIGNED32;
 			colString, posString: ARRAY 14 OF CHAR;
 		BEGIN
 			objectId := input.GetAttributeValue(DynamicWebpage.XMLAttributeObjectIdName);
@@ -1547,7 +1547,7 @@ TYPE
 				IF (pagingSizeStr # NIL) THEN
 					Strings.StrToInt(pagingSizeStr^, pagingSize)
 				ELSE
-					pagingSize := MAX(LONGINT)
+					pagingSize := MAX(SIGNED32)
 				END
 			END;
 
@@ -1780,7 +1780,7 @@ TYPE
 	PersistentCounter = OBJECT(PrevalenceSystem.PersistentObject)
 		VAR
 			name: Strings.String;
-			counter: LONGINT;
+			counter: SIGNED32;
 
 		PROCEDURE &Initialize*;
 		BEGIN
@@ -1899,7 +1899,7 @@ TYPE
 		persistentCounterDesc: PrevalenceSystem.PersistentObjectDescriptor; (** descriptor for PersistentCounter *)
 		tempContainerName: Strings.String;  (* used temporary for the prevalence system filter predicate FilterPersistentDataContainer *)
 		qlock: BOOLEAN; (* locking for persistent object querying becuase of tempContainerName *)
-		oidCounter: LONGINT; (* counter for unique oid among all SessionDataObject *)
+		oidCounter: SIGNED32; (* counter for unique oid among all SessionDataObject *)
 
 	(** usefull XML-DOM operations *)
 
@@ -1910,8 +1910,8 @@ TYPE
 	END GetXMLSubElement;
 
 	(** returns the number of XML subelements with name 'name' as child of 'parent' *)
-	PROCEDURE NofXMLSubElements*(parent: XML.Container; name: ARRAY OF CHAR) : LONGINT;
-	VAR enum: XMLObjects.Enumerator; p: ANY; elem: XML.Element; elemName: Strings.String; counter: LONGINT;
+	PROCEDURE NofXMLSubElements*(parent: XML.Container; name: ARRAY OF CHAR) : SIGNED32;
+	VAR enum: XMLObjects.Enumerator; p: ANY; elem: XML.Element; elemName: Strings.String; counter: SIGNED32;
 	BEGIN
 		counter := 0;
 		IF (parent # NIL) THEN
@@ -1930,8 +1930,8 @@ TYPE
 	END NofXMLSubElements;
 
 	(** returns the 'index'.th XML subelement with name 'name' as child of 'parent' *)
-	PROCEDURE GetXMLSubElementByIndex*(parent: XML.Container; name: ARRAY OF CHAR; index: LONGINT) : XML.Element;
-	VAR enum: XMLObjects.Enumerator; p: ANY; elem: XML.Element; elemName: Strings.String; counter: LONGINT;
+	PROCEDURE GetXMLSubElementByIndex*(parent: XML.Container; name: ARRAY OF CHAR; index: SIGNED32) : XML.Element;
+	VAR enum: XMLObjects.Enumerator; p: ANY; elem: XML.Element; elemName: Strings.String; counter: SIGNED32;
 	BEGIN
 		counter := 0;
 		IF (parent # NIL) THEN
@@ -2018,7 +2018,7 @@ TYPE
 
 	(** create an xml text as XML.ArrayChars and XML.EntityRef *)
 	PROCEDURE CreateXMLText*(text: ARRAY OF CHAR) : XML.Container;
-	VAR cont: XML.Container; chars: XML.ArrayChars; ent: XML.EntityRef; charRef: XML.CharReference; pos, at: LONGINT;
+	VAR cont: XML.Container; chars: XML.ArrayChars; ent: XML.EntityRef; charRef: XML.CharReference; pos, at: SIGNED32;
 		dynStr: DynamicStrings.DynamicString; str: Strings.String;ch: ARRAY 6 OF CHAR;
 	BEGIN
 		NEW(cont);
@@ -2069,7 +2069,7 @@ TYPE
 
 	(** create xml text with <br/> tags for CR *)
 	PROCEDURE CreateXMLTextWithBR*(text: ARRAY OF CHAR) : XML.Container;
-	VAR cont: XML.Container; chars: XML.ArrayChars; ent: XML.EntityRef; charRef: XML.CharReference; pos, at: LONGINT;
+	VAR cont: XML.Container; chars: XML.ArrayChars; ent: XML.EntityRef; charRef: XML.CharReference; pos, at: SIGNED32;
 		dynStr: DynamicStrings.DynamicString; str: Strings.String;ch: ARRAY 6 OF CHAR;
 		br: XML.Element;
 	BEGIN
@@ -2227,9 +2227,9 @@ TYPE
 		RETURN dateTime
 	END InternalizeDateTime;
 
-	(** return the internalized LONGINT in XML element named 'elementName' from 'container', result is 0 if not present *)
-	PROCEDURE InternalizeInteger*(container: XML.Container; elementName: ARRAY OF CHAR) : LONGINT;
-	VAR elem: XML.Element; intStr: Strings.String; number: LONGINT;
+	(** return the internalized SIGNED32 in XML element named 'elementName' from 'container', result is 0 if not present *)
+	PROCEDURE InternalizeInteger*(container: XML.Container; elementName: ARRAY OF CHAR) : SIGNED32;
+	VAR elem: XML.Element; intStr: Strings.String; number: SIGNED32;
 	BEGIN
 		number := 0;
 		elem := GetXMLSubElement(container, elementName);
@@ -2280,8 +2280,8 @@ TYPE
 		END;
 	END ExternalizeDateTime;
 
-	(** externalize LONGINT 'number' to 'container' with XML element named 'elementName'. *)
-	PROCEDURE ExternalizeInteger*(number: HUGEINT; container: XML.Container; elementName: ARRAY OF CHAR);
+	(** externalize SIGNED32 'number' to 'container' with XML element named 'elementName'. *)
+	PROCEDURE ExternalizeInteger*(number: SIGNED64; container: XML.Container; elementName: ARRAY OF CHAR);
 	VAR elem: XML.Element; intStr: ARRAY 14 OF CHAR;
 	BEGIN
 		Strings.IntToStr(number, intStr);
@@ -2441,7 +2441,7 @@ TYPE
 		qlock := FALSE
 	END QueryUnlock;
 
-	PROCEDURE GetNewOid(): LONGINT;
+	PROCEDURE GetNewOid(): SIGNED32;
 	BEGIN  INC(oidCounter); RETURN oidCounter
 	END GetNewOid;
 

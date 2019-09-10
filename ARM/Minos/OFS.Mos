@@ -42,9 +42,9 @@ CONST
 
 	SF = 29;	(* SectorFactor *)
 
-	DirMark* 		= LONGINT(9B1EA38DH);			(* The main directory *)
-	HeaderMark 	= LONGINT(9BA71D86H);			(* a data file *)
-	MapMark 		= LONGINT(9C2F977FH);			(* a bitmap block *)
+	DirMark* 		= SIGNED32(9B1EA38DH);			(* The main directory *)
+	HeaderMark 	= SIGNED32(9BA71D86H);			(* a data file *)
+	MapMark 		= SIGNED32(9C2F977FH);			(* a bitmap block *)
 	
 	DirRootAdr = 1*SF;
 
@@ -79,9 +79,9 @@ CONST
 	MapSize = SS DIV 4;	(* {MapSize MOD 32 = 0} *)
 
 TYPE
-	Array = ARRAY 2000 OF LONGINT;
+	Array = ARRAY 2000 OF SIGNED32;
 	(* A callback function which is used in Enumerate *)
-	EntryHandler* = PROCEDURE(CONST name: ARRAY OF CHAR; time, date, size: LONGINT; VAR flags: SET);
+	EntryHandler* = PROCEDURE(CONST name: ARRAY OF CHAR; time, date, size: SIGNED32; VAR flags: SET);
 	(* The basic disc sector, all "real" used disksector types are derived from this *)
 	DiskSector*  = RECORD END;	
 
@@ -90,22 +90,22 @@ TYPE
 	Volume* = POINTER TO VolumeDesc;
 	VolumeDesc* = RECORD
 		name*: ARRAY 32 OF CHAR;		(* descriptive name - e.g. for matching with Partitions.Show *)
-		blockSize*: LONGINT;			(* block size in bytes *)
-		size*: LONGINT;					(* size in blocks *)
+		blockSize*: SIGNED32;			(* block size in bytes *)
+		size*: SIGNED32;					(* size in blocks *)
 		flags*: SET;						(* ReadOnly, Removable, Boot *)
 
-		AllocBlock*: PROCEDURE (vol: Volume; hint: LONGINT; VAR adr: LONGINT; VAR res: LONGINT);
-		FreeBlock*, MarkBlock*: PROCEDURE (vol: Volume; adr: LONGINT; VAR res: LONGINT);
+		AllocBlock*: PROCEDURE (vol: Volume; hint: SIGNED32; VAR adr: SIGNED32; VAR res: SIGNED32);
+		FreeBlock*, MarkBlock*: PROCEDURE (vol: Volume; adr: SIGNED32; VAR res: SIGNED32);
 
 		(* A the block with number "adr" as used *)
-		Marked*: PROCEDURE (vol: Volume; adr: LONGINT; VAR res: LONGINT): BOOLEAN;
+		Marked*: PROCEDURE (vol: Volume; adr: SIGNED32; VAR res: SIGNED32): BOOLEAN;
 		(* Returns the number of available blocks *)
-		Available*: PROCEDURE (vol: Volume): LONGINT;
-		GetBlock*, PutBlock*: PROCEDURE (vol: Volume; adr: LONGINT; VAR blk: ARRAY OF SYSTEM.BYTE; ofs: LONGINT; VAR res: LONGINT);
+		Available*: PROCEDURE (vol: Volume): SIGNED32;
+		GetBlock*, PutBlock*: PROCEDURE (vol: Volume; adr: SIGNED32; VAR blk: ARRAY OF SYSTEM.BYTE; ofs: SIGNED32; VAR res: SIGNED32);
 		Finalize*: PROCEDURE (vol: Volume);
 		Sync*: PROCEDURE(vol: Volume);
 		(* used blocks *)
-		used: LONGINT;
+		used: SIGNED32;
 		(* This bitmap is used to mark in memory if a block is used or not. Currently static allocated... todo: change this *)
 		map: POINTER TO ARRAY (*BitmapSize*) OF SET
 	END;
@@ -123,9 +123,9 @@ TYPE
 	
 	Rider* = RECORD
 		eof*: BOOLEAN;	(** has end of file been passed *)
-		res*: LONGINT;	(** leftover byte count for ReadBytes/WriteBytes *)
+		res*: SIGNED32;	(** leftover byte count for ReadBytes/WriteBytes *)
 			(** private fields for implementors *)
-		apos*, bpos*: LONGINT;	(* apos: The sectornumber, bpos: The offset in the sector *)
+		apos*, bpos*: SIGNED32;	(* apos: The sectornumber, bpos: The offset in the sector *)
 		hint*: Buffer;			(* used as a hint for new block allocation. This is basically the current data block *)
 		file*: File;				(* The file this filesystem is working on *)
 		fs*: FileSystem			(* The mounted filesystem, this file is working on *)
@@ -140,7 +140,7 @@ TYPE
 	
 	(* A disk sector buffer, used in RAM *)
 	BufferRecord* = RECORD
-		apos*, lim*: LONGINT;			(* apos: sectornumber, lin: current pos in buffer *)
+		apos*, lim*: SIGNED32;			(* apos: sectornumber, lin: current pos in buffer *)
 		mod*: BOOLEAN;
 		next*: Buffer;
 		data*: DataSector
@@ -148,23 +148,23 @@ TYPE
 
 	(* A physical Index sector *)
 	IndexSector = RECORD (DiskSector)
-		x: ARRAY XS OF LONGINT
+		x: ARRAY XS OF SIGNED32
 	END;
 	
-	SectorTable = ARRAY STS OF LONGINT;
+	SectorTable = ARRAY STS OF SIGNED32;
 	
 	FileDesc* = RECORD
-		key*: LONGINT;	(* unique id for registered file, never 0, basically the blocknumber of the file header *)
+		key*: SIGNED32;	(* unique id for registered file, never 0, basically the blocknumber of the file header *)
 		fs*: FileSystem;	(* file system containing file *)
 		next*: File;
 
-		aleng, bleng: LONGINT;		(* aleng: number of used sectors, blen: pos in last used sector *)
-		nofbufs: LONGINT;			(* number of data buffers *)
+		aleng, bleng: SIGNED32;		(* aleng: number of used sectors, blen: pos in last used sector *)
+		nofbufs: SIGNED32;			(* number of data buffers *)
 		modH, registered: BOOLEAN;	(* modH: File header modified flag, registered: This file has already been registered *)
-		sechint: LONGINT;			(* the number of the last block allocated to this file *)
+		sechint: SIGNED32;			(* the number of the last block allocated to this file *)
 		name: FileName;			(* The filename *)
-		time: LONGINT;				(* The last access time *)
-		ext: LONGINT;				(* number of sector representing the superIndex *)
+		time: SIGNED32;				(* The last access time *)
+		ext: SIGNED32;				(* number of sector representing the superIndex *)
 		firstbuf*: Buffer;				(* the one and only data buffer *)
 		sec: SectorTable				(* table that contains the addresses of the directly addressable sectors *)
 	END;
@@ -178,25 +178,25 @@ TYPE
 	END;
 	
 	FileHeader = RECORD (DiskSector)   (* allocated in the first page of each file on disk *)
-		mark: LONGINT;					(* The mark distinguishes the type of the sector. In this case always a file *)
+		mark: SIGNED32;					(* The mark distinguishes the type of the sector. In this case always a file *)
 		name: LocalName;
-		aleng, bleng: LONGINT;
-		date, time: LONGINT;
+		aleng, bleng: SIGNED32;
+		date, time: SIGNED32;
 		sec: SectorTable;				(* direct addressable sectors *)
-		ext: LONGINT;					(* number of sector that contains the indirect addressable sectors *)
+		ext: SIGNED32;					(* number of sector that contains the indirect addressable sectors *)
 		data: ARRAY SS - HS OF CHAR	(* File data to fill the FileHeader *)
 	END;
 
 	DirEntry = RECORD		(*B-tree node*)	(* a directory entry *)
 		name: LocalName;
-		adr: LONGINT; 		(*sec no of file header*)
-		p: LONGINT  		(*sec no of left descendant (DirPage) in directory, used if the name is *)
+		adr: SIGNED32; 		(*sec no of file header*)
+		p: SIGNED32  		(*sec no of left descendant (DirPage) in directory, used if the name is *)
 	END;
 
 	DirPage = RECORD (DiskSector)			(* A disk sector that contains Directory entries *)
-		mark: LONGINT;						(* The mark distinguishes the type of the sector. In this case a directory *)
-		m: LONGINT;						(* number of stored elements *)
-		p0: LONGINT; 						(* sec no of left descendant (DirPage) in directory. Contains the files with names 
+		mark: SIGNED32;						(* The mark distinguishes the type of the sector. In this case a directory *)
+		m: SIGNED32;						(* number of stored elements *)
+		p0: SIGNED32; 						(* sec no of left descendant (DirPage) in directory. Contains the files with names 
 											   "smaller" than e[0] *)
 		fill: ARRAY FillerSize OF CHAR;
 		e: ARRAY DirPgSize OF DirEntry
@@ -205,8 +205,8 @@ TYPE
 	(* Header of the bitmap which is stored to disk. *)
 	(* The bitmap is always indirectly addressed *)
 	MapIndex = RECORD (DiskSector)
-		mark: LONGINT;
-		index: ARRAY MapIndexSize OF LONGINT
+		mark: SIGNED32;
+		index: ARRAY MapIndexSize OF SIGNED32
 	END;
 	
 	(* a sector which actually contains a part of the bitmap *)
@@ -236,7 +236,7 @@ END First;
 (* Join prefix and name to fullname = ( prefix ":" name ) *)
 PROCEDURE JoinName*(CONST prefix, name: ARRAY OF CHAR; VAR fullname: ARRAY OF CHAR);
  VAR 
-	i, j: LONGINT;
+	i, j: SIGNED32;
 BEGIN
 	i := 0; WHILE prefix[i] # 0X DO fullname[i] := prefix[i]; INC(i) END;
 	fullname[i] := ':'; INC(i);
@@ -244,9 +244,9 @@ BEGIN
 	fullname[i] := 0X
 END JoinName;
 
-PROCEDURE FSGetSector(vol: Volume; src: LONGINT;  VAR dest: DiskSector);
+PROCEDURE FSGetSector(vol: Volume; src: SIGNED32;  VAR dest: DiskSector);
 VAR
-	res: LONGINT;
+	res: SIGNED32;
 BEGIN
 	(*
 	IF src MOD SF # 0 THEN
@@ -256,9 +256,9 @@ BEGIN
 	vol.GetBlock(vol, src DIV SF, dest, 0, res);
 END FSGetSector;
 
-PROCEDURE FSPutSector(vol: Volume;  dest: LONGINT;  VAR src: DiskSector);
+PROCEDURE FSPutSector(vol: Volume;  dest: SIGNED32;  VAR src: DiskSector);
 VAR
-	res: LONGINT;
+	res: SIGNED32;
 BEGIN
 	(*
 	ASSERT(~(ReadOnly IN vol.flags));
@@ -269,48 +269,48 @@ BEGIN
 	vol.PutBlock(vol, dest DIV SF, src, 0, res);
 END FSPutSector;
 
-PROCEDURE FSAllocSector(vol: Volume;  hint: LONGINT;  VAR sec: LONGINT);
+PROCEDURE FSAllocSector(vol: Volume;  hint: SIGNED32;  VAR sec: SIGNED32);
 VAR 
-	res: LONGINT;
+	res: SIGNED32;
 BEGIN
 	ASSERT(~(ReadOnly IN vol.flags));
 	vol.AllocBlock(vol, hint DIV SF, sec, res);
 	sec := sec * SF
 END FSAllocSector;
 
-PROCEDURE FSMarkSector(vol: Volume;  sec: LONGINT);
+PROCEDURE FSMarkSector(vol: Volume;  sec: SIGNED32);
 VAR 
-	res: LONGINT;
+	res: SIGNED32;
 BEGIN
 	ASSERT(~(ReadOnly IN vol.flags));
 	vol.MarkBlock(vol, sec DIV SF, res)
 END FSMarkSector;
 
-PROCEDURE FSFreeSector(vol: Volume;  sec: LONGINT);
+PROCEDURE FSFreeSector(vol: Volume;  sec: SIGNED32);
 VAR 
-	res: LONGINT;
+	res: SIGNED32;
 BEGIN
 	ASSERT(~(ReadOnly IN vol.flags));
 	vol.FreeBlock(vol, sec DIV SF, res)
 END FSFreeSector;
 
-PROCEDURE FSMarked(vol: Volume;  sec: LONGINT): BOOLEAN;
+PROCEDURE FSMarked(vol: Volume;  sec: SIGNED32): BOOLEAN;
 VAR 
-	res: LONGINT;
+	res: SIGNED32;
 BEGIN
 	ASSERT(~(ReadOnly IN vol.flags));
 	RETURN vol.Marked(vol, sec DIV SF, res)
 END FSMarked;
 
-PROCEDURE FSSize(vol: Volume): LONGINT;
+PROCEDURE FSSize(vol: Volume): SIGNED32;
 BEGIN
 	ASSERT(vol.size >= MinVolSize);
 	RETURN vol.size
 END FSSize;
 
 (* Search a file in a specific volume, A contains the address of the file. 0 if not found *)
-PROCEDURE Search(vol: Volume; CONST name: FileName; VAR A: LONGINT);
-VAR i, L, R: LONGINT; dadr: LONGINT; a: DirPage;
+PROCEDURE Search(vol: Volume; CONST name: FileName; VAR A: SIGNED32);
+VAR i, L, R: SIGNED32; dadr: SIGNED32; a: DirPage;
 BEGIN
 	A := -1;
 	dadr := DirRootAdr;
@@ -340,10 +340,10 @@ BEGIN
 	dest.p := src.p;
 END CopyDirEntry;
 
-PROCEDURE insert(vol: Volume; CONST name: FileName; dpg0:  LONGINT; 
-								VAR h: BOOLEAN; VAR v: DirEntry; fad: LONGINT; VAR replacedFad: LONGINT (*gc*));
+PROCEDURE insert(vol: Volume; CONST name: FileName; dpg0:  SIGNED32; 
+								VAR h: BOOLEAN; VAR v: DirEntry; fad: SIGNED32; VAR replacedFad: SIGNED32 (*gc*));
 (*h = "tree has become higher and v is ascending element"*)
-VAR ch: CHAR; i, j, L, R: LONGINT; dpg1: LONGINT; u: DirEntry; a: DirPage;
+VAR ch: CHAR; i, j, L, R: SIGNED32; dpg1: SIGNED32; u: DirEntry; a: DirPage;
 BEGIN (*~h*)
 	FSGetSector(vol, dpg0, a);
 	L := 0; R := a.m; (*binary search*)
@@ -395,8 +395,8 @@ BEGIN (*~h*)
 	END
 END insert;
 
-PROCEDURE Insert(vol: Volume; CONST name: FileName; fad: LONGINT; VAR replacedFad: LONGINT);
-VAR oldroot: LONGINT; h: BOOLEAN; U: DirEntry; a: DirPage;
+PROCEDURE Insert(vol: Volume; CONST name: FileName; fad: SIGNED32; VAR replacedFad: SIGNED32);
+VAR oldroot: SIGNED32; h: BOOLEAN; U: DirEntry; a: DirPage;
 BEGIN
 	h := FALSE;
 	insert(vol, name, DirRootAdr, h, U, fad, replacedFad); (*gc*)
@@ -408,9 +408,9 @@ BEGIN
 	END
 END Insert;
 
-PROCEDURE underflow(vol: Volume; VAR c: DirPage; (*ancestor page*) dpg0:  LONGINT;
-		s: LONGINT; (*insertion point in c*) VAR h: BOOLEAN); (*c undersize*)
-VAR i, k: LONGINT; dpg1: LONGINT; a, b: DirPage; (*a := underflowing page, b := neighbouring page*)
+PROCEDURE underflow(vol: Volume; VAR c: DirPage; (*ancestor page*) dpg0:  SIGNED32;
+		s: SIGNED32; (*insertion point in c*) VAR h: BOOLEAN); (*c undersize*)
+VAR i, k: SIGNED32; dpg1: SIGNED32; a, b: DirPage; (*a := underflowing page, b := neighbouring page*)
 BEGIN
 	FSGetSector(vol, dpg0, a);
 	(*h & a.m = N-1 & dpg0 = c.e[s-1].p*)
@@ -457,8 +457,8 @@ BEGIN
 	END
 END underflow;
 
-PROCEDURE del(vol: Volume; dpg1: LONGINT; VAR h: BOOLEAN; VAR a: DirPage; VAR R: LONGINT);
-	VAR dpg2: LONGINT; (*global: a, R*) b: DirPage;
+PROCEDURE del(vol: Volume; dpg1: SIGNED32; VAR h: BOOLEAN; VAR a: DirPage; VAR R: SIGNED32);
+	VAR dpg2: SIGNED32; (*global: a, R*) b: DirPage;
 BEGIN
 	FSGetSector(vol, dpg1, b); dpg2 := b.e[b.m-1].p;
 	IF dpg2 # 0 THEN del(vol, dpg2, h, a, R);
@@ -470,10 +470,10 @@ BEGIN
 END del;
 
 
-PROCEDURE delete(vol: Volume; CONST name: FileName; dpg0: LONGINT; VAR h: BOOLEAN; VAR fad: LONGINT);
+PROCEDURE delete(vol: Volume; CONST name: FileName; dpg0: SIGNED32; VAR h: BOOLEAN; VAR fad: SIGNED32);
 (*search and delete entry with key name; if a page underflow arises,
 	balance with adjacent page or merge; h := "page dpg0 is undersize"*)
-VAR i, L, R: LONGINT; dpg1: LONGINT; a: DirPage;
+VAR i, L, R: SIGNED32; dpg1: SIGNED32; a: DirPage;
 BEGIN (*~h*)
 	FSGetSector(vol, dpg0, a);
 	L := 0; R := a.m; (*binary search*)
@@ -500,8 +500,8 @@ END delete;
 
 (* Remove the file "name" from the volume "vol". "fad" contains the address
 	of the found file header block or 0 if the file was not found *)
-PROCEDURE DirDelete(vol: Volume; CONST name: FileName; VAR fad: LONGINT);
-VAR h: BOOLEAN; newroot: LONGINT; a: DirPage;
+PROCEDURE DirDelete(vol: Volume; CONST name: FileName; VAR fad: SIGNED32);
+VAR h: BOOLEAN; newroot: SIGNED32; a: DirPage;
 BEGIN
 	h := FALSE;
 	delete(vol, name, DirRootAdr, h, fad);
@@ -515,7 +515,7 @@ BEGIN
 	END
 END DirDelete;
 
-PROCEDURE MatchPrefix(CONST mask, name: ARRAY OF CHAR; VAR pos, diff: LONGINT);
+PROCEDURE MatchPrefix(CONST mask, name: ARRAY OF CHAR; VAR pos, diff: SIGNED32);
 VAR
 	done: BOOLEAN;
 BEGIN
@@ -538,8 +538,8 @@ BEGIN
 END MatchPrefix;
 
 (* This is procedure is ugly... Should be rewritten some time ... *)
-PROCEDURE Match(pos: LONGINT; CONST pat, name: ARRAY OF CHAR): BOOLEAN;
-VAR i0, i1, j0, j1: LONGINT; f, done: BOOLEAN;
+PROCEDURE Match(pos: SIGNED32; CONST pat, name: ARRAY OF CHAR): BOOLEAN;
+VAR i0, i1, j0, j1: SIGNED32; f, done: BOOLEAN;
 BEGIN
 	f := TRUE;
 	done := FALSE;
@@ -576,8 +576,8 @@ BEGIN
 	RETURN f & (name[0] # 0X)
 END Match;
 
-PROCEDURE enumerate(fs: FileSystem; CONST mask: ARRAY OF CHAR; dpg: LONGINT; VAR flags: SET; proc: EntryHandler);
-VAR i, pos, diff: LONGINT; dpg1: LONGINT; a: DirPage; time, date, size: LONGINT;
+PROCEDURE enumerate(fs: FileSystem; CONST mask: ARRAY OF CHAR; dpg: SIGNED32; VAR flags: SET; proc: EntryHandler);
+VAR i, pos, diff: SIGNED32; dpg1: SIGNED32; a: DirPage; time, date, size: SIGNED32;
 BEGIN
 	FSGetSector(fs.vol, dpg, a); i := 0;
 	WHILE (i < a.m) & ~(EnumStop IN flags) DO
@@ -592,7 +592,7 @@ BEGIN
 						time := hp.time;  date := hp.date;
 						size := hp.aleng*SS + hp.bleng - HS
 					ELSE
-						time := 0; date := 0; size := MIN(LONGINT)
+						time := 0; date := 0; size := MIN(SIGNED32)
 					END;
 					IF fs = fsroot THEN
 						proc(a.e[i].name, time, date, size, flags)
@@ -611,8 +611,8 @@ BEGIN
 	END
 END enumerate;
 
-PROCEDURE sift(L, R: LONGINT; VAR A: Array);
-	VAR i, j: LONGINT; x: LONGINT; exit: BOOLEAN;
+PROCEDURE sift(L, R: SIGNED32; VAR A: Array);
+	VAR i, j: SIGNED32; x: SIGNED32; exit: BOOLEAN;
 BEGIN 
 	j := L; x := A[j];
 	exit := FALSE;
@@ -625,8 +625,8 @@ BEGIN
 	A[i] := x
 END sift;
 
-PROCEDURE MarkSectors( vol: Volume; VAR k: LONGINT; VAR A: Array; VAR bad: BOOLEAN; VAR files: LONGINT );
-VAR L, R, i, j, n: LONGINT; x: LONGINT; hd: FileHeader; sup, sub: IndexSector;
+PROCEDURE MarkSectors( vol: Volume; VAR k: SIGNED32; VAR A: Array; VAR bad: BOOLEAN; VAR files: SIGNED32 );
+VAR L, R, i, j, n: SIGNED32; x: SIGNED32; hd: FileHeader; sup, sub: IndexSector;
 BEGIN
 	Log.vS(" marking");
 	L := k DIV 2; R := k; (*heapsort*)
@@ -688,8 +688,8 @@ BEGIN
 	END
 END MarkSectors;
 
-PROCEDURE TraverseDir(vol: Volume; dpg: LONGINT; VAR A: Array; VAR k: LONGINT; VAR bad: BOOLEAN; VAR files: LONGINT);
-	VAR i: LONGINT; a: DirPage;
+PROCEDURE TraverseDir(vol: Volume; dpg: SIGNED32; VAR A: Array; VAR k: SIGNED32; VAR bad: BOOLEAN; VAR files: SIGNED32);
+	VAR i: SIGNED32; a: DirPage;
 BEGIN
 	FSGetSector(vol, dpg, a); FSMarkSector(vol, dpg); i := 0;
 	WHILE i < a.m DO
@@ -706,7 +706,7 @@ END TraverseDir;
 
 PROCEDURE DirStartup(vol: Volume; VAR init: BOOLEAN);
 VAR
-	j, sec, size, q, free, thres: LONGINT; mi: MapIndex; ms: MapSector;
+	j, sec, size, q, free, thres: SIGNED32; mi: MapIndex; ms: MapSector;
 	found, done: BOOLEAN;
 BEGIN
 	size := FSSize(vol); init := FALSE; found := FALSE;
@@ -770,7 +770,7 @@ BEGIN
 END DirStartup;
 
 PROCEDURE DirInit(vol: Volume; VAR init: BOOLEAN);
-VAR k: LONGINT; A: ARRAY 2000 OF LONGINT; files: LONGINT; bad: BOOLEAN;
+VAR k: SIGNED32; A: ARRAY 2000 OF SIGNED32; files: SIGNED32; bad: BOOLEAN;
 BEGIN
 	IF ~(ReadOnly IN vol.flags) THEN
 		k := 0;  init := FALSE;
@@ -791,7 +791,7 @@ BEGIN
 END DirInit;
 
 PROCEDURE DirCleanup(vol: Volume);
-VAR i, j, p, q, sec, size: LONGINT; mi: MapIndex; ms: MapSector;
+VAR i, j, p, q, sec, size: SIGNED32; mi: MapIndex; ms: MapSector;
 	abort, exit: BOOLEAN;
 BEGIN
 	abort := FALSE; exit := FALSE;
@@ -833,8 +833,8 @@ BEGIN
 END DirCleanup;
 
 (* Check a file name. *)
-PROCEDURE Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: LONGINT);
-	VAR i: LONGINT; ch: CHAR; exit: BOOLEAN;
+PROCEDURE Check(CONST s: ARRAY OF CHAR; VAR name: FileName; VAR res: SIGNED32);
+	VAR i: SIGNED32; ch: CHAR; exit: BOOLEAN;
 BEGIN
 	ch := s[0]; i := 0;
 	IF ('A' <= CAP(ch)) & (CAP(ch) <= 'Z') THEN
@@ -860,7 +860,7 @@ END Check;
 
 (* Creates a new file with the specified name. *)
 PROCEDURE FSNew(fs: FileSystem; CONST name: ARRAY OF CHAR): File;
-VAR i, res: LONGINT; f: File; head: FileHd; namebuf: FileName; buf: Buffer;
+VAR i, res: SIGNED32; f: File; head: FileHd; namebuf: FileName; buf: Buffer;
 BEGIN
 	f := NIL; Check(name, namebuf, res);
 	IF (res <= 0) & (filePool # NIL) THEN
@@ -892,9 +892,9 @@ BEGIN
 	RETURN f
 END FSNew;
 
-PROCEDURE CopySectorTable(CONST src: ARRAY OF LONGINT; VAR dest: ARRAY OF LONGINT );
+PROCEDURE CopySectorTable(CONST src: ARRAY OF SIGNED32; VAR dest: ARRAY OF SIGNED32 );
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 BEGIN
 	FOR i := 0 TO STS -1 DO
 		dest[i] := src[i];
@@ -910,8 +910,8 @@ BEGIN
 	h.time := f.time
 END UpdateHeader;
 
-PROCEDURE ReadBuf(f: File; buf: Buffer; pos: LONGINT);
-VAR sec: LONGINT; xpos: LONGINT;
+PROCEDURE ReadBuf(f: File; buf: Buffer; pos: SIGNED32);
+VAR sec: SIGNED32; xpos: SIGNED32;
 	index: IndexSector;
 BEGIN
 	IF pos < STS THEN
@@ -930,7 +930,7 @@ BEGIN
 END ReadBuf;
 
 PROCEDURE NewSuper(f: File);
-VAR i: LONGINT; super: LONGINT; sec: IndexSector;
+VAR i: SIGNED32; super: SIGNED32; sec: IndexSector;
 BEGIN
 	FSAllocSector(f.fs.vol, f.key, super);
 	f.ext := super; 
@@ -941,8 +941,8 @@ BEGIN
 END NewSuper;
 
 PROCEDURE WriteBuf(f: File; buf: Buffer);
-VAR i, j, k, xpos: LONGINT; secadr: LONGINT; super, sub: LONGINT; vol: Volume;
-	ptr: FileHd; src, dst: LONGINT; tempFileHeader: FileHeader;
+VAR i, j, k, xpos: SIGNED32; secadr: SIGNED32; super, sub: SIGNED32; vol: Volume;
+	ptr: FileHd; src, dst: SIGNED32; tempFileHeader: FileHeader;
 	superSec, subSec: IndexSector;
 BEGIN
 	vol := f.fs.vol;
@@ -986,7 +986,7 @@ BEGIN
 END WriteBuf;
 
 (* Search and get the buffer with number pos if file f. NIL if not found *)
-PROCEDURE SearchBuf(f: File; pos: LONGINT): Buffer;
+PROCEDURE SearchBuf(f: File; pos: SIGNED32): Buffer;
 VAR buf: Buffer;
 BEGIN
 	buf := f.firstbuf;
@@ -998,7 +998,7 @@ BEGIN
 END SearchBuf;
 
 (* Get the buffer at position pos. Never returns NIL*)
-PROCEDURE GetBuf(f: File; pos: LONGINT): Buffer;
+PROCEDURE GetBuf(f: File; pos: SIGNED32): Buffer;
 VAR buf: Buffer;
 BEGIN
 	buf := f.firstbuf;
@@ -1016,8 +1016,8 @@ BEGIN
 END GetBuf;
 
 (* Return unique id for file, or 0 if it does not exist. *)
-PROCEDURE FileKey(fs: FileSystem; CONST name: ARRAY OF CHAR): LONGINT;
-	VAR res: LONGINT; namebuf: FileName; header: LONGINT;
+PROCEDURE FileKey(fs: FileSystem; CONST name: ARRAY OF CHAR): SIGNED32;
+	VAR res: SIGNED32; namebuf: FileName; header: SIGNED32;
 BEGIN
 	header := 0;
 	Check(name, namebuf, res);
@@ -1030,8 +1030,8 @@ END FileKey;
 (* Open an existing file. *)
 PROCEDURE FSOld(fs: FileSystem; CONST name: ARRAY OF CHAR): File;
 VAR
-	i, k, res: LONGINT; f: File; header: LONGINT; buf: Buffer; head: FileHd;
-	namebuf: FileName; super: LONGINT; sub: LONGINT; sec: IndexSector; vol: Volume;
+	i, k, res: SIGNED32; f: File; header: SIGNED32; buf: Buffer; head: FileHd;
+	namebuf: FileName; super: SIGNED32; sub: SIGNED32; sec: IndexSector; vol: Volume;
 BEGIN
 	f := NIL; Check(name, namebuf, res);
 	IF res = 0 THEN
@@ -1063,7 +1063,7 @@ END FSOld;
 
 PROCEDURE Unbuffer(f: File); (* f.sec*)
 VAR
-	i, k: LONGINT; buf: Buffer; head: FileHeader;
+	i, k: SIGNED32; buf: Buffer; head: FileHeader;
 	sec: IndexSector; vol: Volume;
 BEGIN
 	vol := f.fs.vol;
@@ -1087,7 +1087,7 @@ BEGIN
 END Unbuffer;
 
 (** Find an open file.  Can also be used to see if a given file is open.  If it is not, then it is safe to purge its sectors when it is deleted or replaced (through rename). *)
-PROCEDURE FindOpenFile*(fs: FileSystem; key: LONGINT): File;
+PROCEDURE FindOpenFile*(fs: FileSystem; key: SIGNED32): File;
 VAR f: File;
 BEGIN
 	f := froot;
@@ -1107,14 +1107,14 @@ BEGIN
 	Log.vL;
 END LogGC;
 
-PROCEDURE Free(vol: Volume; adr: LONGINT);
+PROCEDURE Free(vol: Volume; adr: SIGNED32);
 BEGIN 
 	IF (adr # 0) & FSMarked(vol, adr) THEN FSFreeSector(vol, adr) END
 END Free;
 
-PROCEDURE PurgeOnDisk(fs: FileSystem; hdadr: LONGINT); (*bsm*)
-	VAR hd: FileHeader; supi, subi: IndexSector; aleng, i, k: LONGINT;
-		secCount, subAdr: LONGINT; vol: Volume;
+PROCEDURE PurgeOnDisk(fs: FileSystem; hdadr: SIGNED32); (*bsm*)
+	VAR hd: FileHeader; supi, subi: IndexSector; aleng, i, k: SIGNED32;
+		secCount, subAdr: SIGNED32; vol: Volume;
 BEGIN 
 	ASSERT(fs.vol # NIL); 
 	vol := fs.vol;
@@ -1142,8 +1142,8 @@ BEGIN
 	END;
 END PurgeOnDisk;
 
-PROCEDURE FSRegister(f: File; VAR res: LONGINT);
-	VAR repAdr: LONGINT; (* address of the file replaced through register, 0 if no such file *)
+PROCEDURE FSRegister(f: File; VAR res: SIGNED32);
+	VAR repAdr: SIGNED32; (* address of the file replaced through register, 0 if no such file *)
 		repFile: File;
 BEGIN
 	Unbuffer(f);
@@ -1217,26 +1217,26 @@ BEGIN
 END FileCleanup;
 
 (* Returns the current length of a file. *)
-PROCEDURE Length*(f: File): LONGINT;
+PROCEDURE Length*(f: File): SIGNED32;
 BEGIN
 	RETURN f.aleng*SS + f.bleng - HS
 END Length;
 
 (* Returns the time (t) and date (d) when a file was last modified. *)
-PROCEDURE GetTime*(f: File; VAR t: LONGINT);
+PROCEDURE GetTime*(f: File; VAR t: SIGNED32);
 BEGIN
 	t := f.time;
 END GetTime;
 
 (* Sets the modification time (t) of a file. *)
-PROCEDURE SetTime*(f: File; t: LONGINT);
+PROCEDURE SetTime*(f: File; t: SIGNED32);
 BEGIN
 	f.modH := TRUE; f.time := t;
 END SetTime;
 
 (* Positions a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
-PROCEDURE Set*(VAR r: Rider; f: File; pos: LONGINT);
-VAR a, b: LONGINT;
+PROCEDURE Set*(VAR r: Rider; f: File; pos: SIGNED32);
+VAR a, b: SIGNED32;
 BEGIN
 	r.eof := FALSE; r.res := 0; r.file := f; r.fs := f.fs;
 	IF pos < 0 THEN
@@ -1250,7 +1250,7 @@ BEGIN
 END Set;
 
 (* Returns the offset of a Rider positioned on a file. *)
-PROCEDURE Pos*(VAR r: Rider): LONGINT;
+PROCEDURE Pos*(VAR r: Rider): SIGNED32;
 BEGIN
 	RETURN r.apos*SS + r.bpos - HS
 END Pos;
@@ -1280,8 +1280,8 @@ BEGIN
 END Read;
 
 (* Reads a sequence of length n bytes into the buffer x, advancing the Rider. Less bytes will be read when reading over the end of the file. r.res indicates the number of unread bytes. x must be big enough to hold all the bytes. *)
-PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; n: LONGINT);
-VAR src, dst, m: LONGINT; buf: Buffer; f: File;
+PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED32);
+VAR src, dst, m: SIGNED32; buf: Buffer; f: File;
 BEGIN
 	IF LEN(x) < n THEN HALT(19) END ;
 	IF n > 0 THEN
@@ -1319,7 +1319,7 @@ BEGIN
 	END
 END ReadBytes;
 
-PROCEDURE ReadInt*(VAR r: Rider; VAR x: LONGINT);
+PROCEDURE ReadInt*(VAR r: Rider; VAR x: SIGNED32);
 BEGIN
 	ReadBytes(r, x, 4);
 END ReadInt;
@@ -1329,13 +1329,13 @@ BEGIN
 	ReadBytes(r, x, 4);
 END ReadSet;
 
-PROCEDURE ReadReal*(VAR r: Rider; VAR x: REAL);
+PROCEDURE ReadReal*(VAR r: Rider; VAR x: FLOAT32);
 BEGIN
 	ReadBytes(r, x, 4);
 END ReadReal;
 
 PROCEDURE NewSub(f: File);
-VAR i, k: LONGINT; sub: LONGINT; sec: IndexSector;
+VAR i, k: SIGNED32; sub: SIGNED32; sec: IndexSector;
 	vol: Volume;
 BEGIN
 	IF f.ext = 0 THEN NewSuper(f) END;
@@ -1381,8 +1381,8 @@ BEGIN
 END Write;
 
 (* Writes the buffer x containing n bytes into a file at the Rider position. *)
-PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF SYSTEM.BYTE; n: LONGINT);
-VAR src, dst, m: LONGINT; f: File; buf: Buffer;
+PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF SYSTEM.BYTE; n: SIGNED32);
+VAR src, dst, m: SIGNED32; f: File; buf: Buffer;
 BEGIN
 	IF LEN(x) < n THEN HALT(19) END;
 	IF n > 0 THEN
@@ -1415,7 +1415,7 @@ BEGIN
 	END
 END WriteBytes;
 
-PROCEDURE WriteInt*(VAR r: Rider; VAR x: LONGINT);
+PROCEDURE WriteInt*(VAR r: Rider; VAR x: SIGNED32);
 BEGIN
 	WriteBytes(r, x, 4);
 END WriteInt;
@@ -1425,14 +1425,14 @@ BEGIN
 	WriteBytes(r, x, 4);
 END WriteSet;
 
-PROCEDURE WriteReal*(VAR r: Rider; VAR x: REAL);
+PROCEDURE WriteReal*(VAR r: Rider; VAR x: FLOAT32);
 BEGIN
 	WriteBytes(r, x, 4);
 END WriteReal;
 
 PROCEDURE Purge(fs: FileSystem; f: File); (*bsm*)
 VAR 
-	k, i, j, aleng, secCount, super, sub: LONGINT;
+	k, i, j, aleng, secCount, super, sub: SIGNED32;
 	superSec, subSec: IndexSector;
 	vol: Volume;
 BEGIN
@@ -1468,9 +1468,9 @@ BEGIN
 END Registered;
 
 (* Deletes a file. res = 0 indicates success. *)
-PROCEDURE FSDelete(fs: FileSystem; CONST name: ARRAY OF CHAR; VAR key: LONGINT; VAR res: LONGINT);
+PROCEDURE FSDelete(fs: FileSystem; CONST name: ARRAY OF CHAR; VAR key: SIGNED32; VAR res: SIGNED32);
 VAR 
-	adr: LONGINT; namebuf: FileName; head: FileHeader; vol: Volume;  r: LONGINT; 
+	adr: SIGNED32; namebuf: FileName; head: FileHeader; vol: Volume;  r: SIGNED32; 
 	delFile: File; (*bsm*)
 BEGIN
 	Check(name, namebuf, r);  res := r;
@@ -1497,12 +1497,12 @@ BEGIN
 END FSDelete; 
 
 (* Renames a file. res = 0 indicates success. *)
-PROCEDURE FSRename(fs: FileSystem; CONST old, new: ARRAY OF CHAR; VAR res: LONGINT);
+PROCEDURE FSRename(fs: FileSystem; CONST old, new: ARRAY OF CHAR; VAR res: SIGNED32);
 VAR 
-	adr: LONGINT; oldbuf, newbuf: FileName;  head: FileHeader; 
-	vol: Volume; f: File; r: LONGINT;
+	adr: SIGNED32; oldbuf, newbuf: FileName;  head: FileHeader; 
+	vol: Volume; f: File; r: SIGNED32;
 	repFile: File;
-	repAdr: LONGINT; (* address of the file replaced through the rename, 0 if no such file *)
+	repAdr: SIGNED32; (* address of the file replaced through the rename, 0 if no such file *)
 BEGIN
 	Check(old, oldbuf, r);  res := r;
 	IF res = 0 THEN
@@ -1575,7 +1575,7 @@ END Add;
 
 PROCEDURE Format(vol: Volume);
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 	block: DataSector;
 BEGIN
 	IF (vol#NIL) & (vol.blockSize = SS) & (vol.size >= MinVolSize) THEN
@@ -1607,7 +1607,7 @@ BEGIN
 				
 				IF hp.mark = DirMark THEN	(* assume it is an Aos filesystem *)
 					NEW(fs);  fs.vol := vol;
-					ASSERT(vol.size < MAX(LONGINT) DIV SF);
+					ASSERT(vol.size < MAX(SIGNED32) DIV SF);
 					Strings.Copy( "GCAosFS", fs.desc);
 					DirInit(vol, init);
 					ASSERT(init);	(* will have to undo changes to vol before continuing *)
@@ -1651,7 +1651,7 @@ END Cleanup;
 
 *)
 
-PROCEDURE DefaultAllocBlock*(vol: Volume; hint: LONGINT; VAR adr: LONGINT; VAR res: LONGINT);
+PROCEDURE DefaultAllocBlock*(vol: Volume; hint: SIGNED32; VAR adr: SIGNED32; VAR res: SIGNED32);
 VAR
 	found: BOOLEAN;
 BEGIN
@@ -1677,7 +1677,7 @@ BEGIN
 	res := Ok;
 END DefaultAllocBlock;
 
-PROCEDURE DefaultFreeBlock*(vol: Volume; adr: LONGINT; VAR res: LONGINT);
+PROCEDURE DefaultFreeBlock*(vol: Volume; adr: SIGNED32; VAR res: SIGNED32);
 BEGIN
 	IF (adr < 1) OR (adr > vol.size) THEN HALT(15) END;
 	IF ReadOnly IN vol.flags THEN HALT(21) END;
@@ -1686,7 +1686,7 @@ BEGIN
 	res := Ok;
 END DefaultFreeBlock;
 
-PROCEDURE DefaultMarkBlock*(vol: Volume; adr: LONGINT; VAR res: LONGINT);
+PROCEDURE DefaultMarkBlock*(vol: Volume; adr: SIGNED32; VAR res: SIGNED32);
 BEGIN
 	IF (adr < 1) OR (adr > vol.size) THEN HALT(15) END;
 	IF ReadOnly IN vol.flags THEN HALT(21) END;
@@ -1695,7 +1695,7 @@ BEGIN
 	res := Ok;
 END DefaultMarkBlock;
 
-PROCEDURE DefaultMarked*(vol: Volume; adr: LONGINT; VAR res: LONGINT): BOOLEAN;
+PROCEDURE DefaultMarked*(vol: Volume; adr: SIGNED32; VAR res: SIGNED32): BOOLEAN;
 BEGIN
 	IF (adr < 1) OR (adr > vol.size) THEN HALT(15) END;
 	IF ReadOnly IN vol.flags THEN HALT(21) END;
@@ -1703,7 +1703,7 @@ BEGIN
 	RETURN (adr MOD 32) IN vol.map[adr DIV 32]
 END DefaultMarked;
 
-PROCEDURE DefaultAvailable*(vol: Volume): LONGINT;
+PROCEDURE DefaultAvailable*(vol: Volume): SIGNED32;
 BEGIN
 	RETURN vol.size-vol.used
 END DefaultAvailable;
@@ -1714,7 +1714,7 @@ END DefaultSync;
 
 (** Init procedure for private data of above methods only.  vol.flags and vol.size must be set before. *)
 PROCEDURE InitVol*(vol: Volume);
-VAR maplen: LONGINT;
+VAR maplen: SIGNED32;
 BEGIN
 	IF ~(ReadOnly IN vol.flags) THEN
 		maplen := (vol.size+1+31) DIV 32;
@@ -1741,7 +1741,7 @@ END DefaultFinalizeVol;
 
 (** Split fullname = ( prefix ":" name ) into prefix and name *)
 PROCEDURE SplitName(CONST fullname: ARRAY OF CHAR; VAR prefix, name: ARRAY OF CHAR);
-VAR i, j: LONGINT;
+VAR i, j: SIGNED32;
 BEGIN
 	i := 0; WHILE (fullname[i] # ':') & (fullname[i] # 0X) DO INC(i) END;
 	IF (fullname[i] # ':') OR (i >= LEN(prefix)) THEN
@@ -1791,7 +1791,7 @@ END Close;
 
 (** Remove the file system and finalize it. *)
 PROCEDURE Remove*(fs: FileSystem);
-VAR f: File; count: LONGINT; p, c: FileSystem;
+VAR f: File; count: SIGNED32; p, c: FileSystem;
 BEGIN
 	Log.vS("OFS: Removing ");  LogFS(fs);  Log.vL;
 	f := froot.next; count := 0;
@@ -1822,7 +1822,7 @@ END Next;
 
 (* Find file in open file list, or open and add it. *)
 PROCEDURE Open(fs: FileSystem; CONST fname: ARRAY OF CHAR): File;
-VAR f: File; key: LONGINT;
+VAR f: File; key: SIGNED32;
 BEGIN
 	f := NIL;
 	IF (fs # NIL) & (fname # "") THEN
@@ -1891,8 +1891,8 @@ BEGIN
 END New;
 
 (** Delete a file. res = 0 indicates success. *)
-PROCEDURE Delete*(VAR name: ARRAY OF CHAR; VAR res: LONGINT);
-VAR fs: FileSystem; p, c, temp: File; key: LONGINT; prefix: Prefix; fname: LocalName;
+PROCEDURE Delete*(VAR name: ARRAY OF CHAR; VAR res: SIGNED32);
+VAR fs: FileSystem; p, c, temp: File; key: SIGNED32; prefix: Prefix; fname: LocalName;
 BEGIN
 	SplitName(name, prefix, fname);
 	IF prefix = "" THEN fs := fsroot ELSE fs := This(prefix) END;
@@ -1922,7 +1922,7 @@ BEGIN
 END Delete;
 
 (** Rename a file. res = 0 indicates success. *)
-PROCEDURE Rename*(CONST old, new: ARRAY OF CHAR; VAR res: LONGINT);
+PROCEDURE Rename*(CONST old, new: ARRAY OF CHAR; VAR res: SIGNED32);
 VAR ofs, nfs: FileSystem; pold, pnew: Prefix; fold, fnew: LocalName;
 BEGIN
 	SplitName(old, pold, fold);
@@ -1942,7 +1942,7 @@ END Rename;
 
 (** Register a file created with New in the directory, replacing the previous file in the directory with the same name. The file is automatically closed. *)
 PROCEDURE Register*(f: File);
-VAR res: LONGINT;
+VAR res: SIGNED32;
 	c,p: File;
 BEGIN
 	IF f # NIL THEN
@@ -1971,11 +1971,11 @@ BEGIN
 	END;
 END Register;
 
-PROCEDURE Available*(CONST name: ARRAY OF CHAR ): LONGINT;
+PROCEDURE Available*(CONST name: ARRAY OF CHAR ): SIGNED32;
 VAR
 	fs: FileSystem;
-	avail: LONGINT;
-	temp: PROCEDURE (vol: Volume): LONGINT;
+	avail: SIGNED32;
+	temp: PROCEDURE (vol: Volume): SIGNED32;
 BEGIN
 	IF name = "" THEN fs := fsroot ELSE fs := This(name) END;
 	
@@ -2025,7 +2025,7 @@ END FSCleanup;
 
 PROCEDURE InitFilePool;
 VAR
-	i, j: LONGINT;
+	i, j: SIGNED32;
 	f: File;
 	buf: Buffer;
 BEGIN

@@ -16,7 +16,7 @@ BEGIN
 END Hello;
 
 PROCEDURE Number*;
-VAR r: LONGREAL; name: ARRAY 32 OF CHAR;
+VAR r: FLOAT64; name: ARRAY 32 OF CHAR;
 BEGIN
 	IF In.String(name) & In.Real(r) THEN
 		Out.String(name); Out.String(" = "); Out.Float(r); Out.Ln;

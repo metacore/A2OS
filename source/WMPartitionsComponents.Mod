@@ -62,7 +62,7 @@ TYPE
 		panel : BevelPanel; (* disk panel: contains all other fields *)
 		label : WMStandardComponents.Label;
 		buttons : POINTER TO ARRAY OF WMStandardComponents.Button; (* references to the partition buttons; *)
-		mapping : POINTER TO ARRAY OF LONGINT; (* maps buttons[i] to correctly ordered partition number *)
+		mapping : POINTER TO ARRAY OF SIGNED32; (* maps buttons[i] to correctly ordered partition number *)
 		vtable : AosDisks.PartitionTable; (* virtual partition table (order different to disk.table, only used for graphical representation *)
 		grid, titlegrid : NoWheelGrid; (* reference to grid (table); *)
 	END;
@@ -161,7 +161,7 @@ TYPE
 		diskOverviewPanel : WMStandardComponents.Panel;
 
 		scrollbarX, scrollbarY : WMStandardComponents.Scrollbar;
-		scrollX, scrollY : LONGINT; (* current position of scrollbars *)
+		scrollX, scrollY : SIGNED32; (* current position of scrollbars *)
 
 		titleGrid : NoWheelGrid; (* prototype; for layouting only *)
 		maxWidths : ARRAY DiskOverviewTableColumns OF SIZE; (* maximum cell widths per column*)
@@ -425,13 +425,13 @@ TYPE
 
 		(* changes the order of the partition of disk.table so that it's sequential *)
 		PROCEDURE BuildVTable(VAR disk : Disk);
-		VAR part: LONGINT; i : SIZE; isIncluded : POINTER TO ARRAY OF BOOLEAN;
+		VAR part: SIGNED32; i : SIZE; isIncluded : POINTER TO ARRAY OF BOOLEAN;
 
-			PROCEDURE GetNext(lastStart : LONGINT) : LONGINT;
-			VAR i, min, next : LONGINT;
+			PROCEDURE GetNext(lastStart : SIGNED32) : SIGNED32;
+			VAR i, min, next : SIGNED32;
 			BEGIN
-				min := MAX(LONGINT);
-				FOR i := 1 TO LEN(disk.table)(LONGINT)-1 DO
+				min := MAX(SIGNED32);
+				FOR i := 1 TO LEN(disk.table)(SIGNED32)-1 DO
 					(* Note: Extended partitions that do not contain logical drives will be found twice: The extended partition and a pseudo *)
 					(* partition (free) with the same boundaries -> Therefor, isIncluded is used *)
 					IF ~isIncluded[i] & (disk.table[i].start >= lastStart) & (disk.table[i].start < min) THEN min := disk.table[i].start; next := i; END;
@@ -461,10 +461,10 @@ TYPE
 		PROCEDURE BuildDiskPanel(VAR disk  : Disk): WMStandardComponents.Panel;
 		VAR
 			diskSelected : BOOLEAN;
-			fillColor : LONGINT;
+			fillColor : SIGNED32;
 			text : ARRAY 32 OF CHAR;
-			logical : LONGINT; (* nbr of logical partitions on disk *)
-			i, k : LONGINT;
+			logical : SIGNED32; (* nbr of logical partitions on disk *)
+			i, k : SIGNED32;
 		BEGIN
 			ASSERT(model.IsLocked());
 			BuildVTable(disk);
@@ -543,9 +543,9 @@ TYPE
 		PROCEDURE UpdateDiskPanel(disk  : Disk);
 		VAR
 			width, offset, extWidth, extOffset, totalWidth, extTotalWidth : SIZE;
-			fillColor : LONGINT;
+			fillColor : SIGNED32;
 			text : ARRAY 32 OF CHAR;
-			primary, logical : LONGINT; (* nbr of primary/logical partitions on disk *)
+			primary, logical : SIGNED32; (* nbr of primary/logical partitions on disk *)
 			i, k : SIZE;
 		BEGIN
 			ASSERT(model.IsLocked());
@@ -670,7 +670,7 @@ TYPE
 		PROCEDURE DiskPanelHandler(owner, par : ANY);
 		VAR
 			found : BOOLEAN;
-			disk, partition : LONGINT;
+			disk, partition : SIGNED32;
 			button : WMStandardComponents.Button;
 		BEGIN
 			button := owner (WMStandardComponents.Button); found := FALSE;
@@ -774,11 +774,11 @@ TYPE
 		END RebuildDiskOverview;
 
 		PROCEDURE BuildSkeleton;
-		VAR grid : WMStringGrids.StringGrid; i, j : LONGINT;
+		VAR grid : WMStringGrids.StringGrid; i, j : SIGNED32;
 		BEGIN
 			ASSERT(model.IsLocked());
 			ASSERT(model.disks # NIL);
-			FOR i := 0 TO LEN(model.disks)(LONGINT)-1 DO
+			FOR i := 0 TO LEN(model.disks)(SIGNED32)-1 DO
 				(* build skeleton for graphical representation of the disk models data *)
 				NEW(model.disks[i].label);
 				model.disks[i].label.fillColor.Set(clBackground.Get()); model.disks[i].label.textColor.Set(LabelTxtColor);
@@ -796,9 +796,9 @@ TYPE
 					grid.Acquire;
 					grid.model.Acquire;
 					grid.model.SetNofCols(DiskOverviewTableColumns);
-					grid.model.SetNofRows(LEN(model.disks[i].table)(LONGINT));
+					grid.model.SetNofRows(LEN(model.disks[i].table)(SIGNED32));
 					grid.allowColResize.Set(FALSE); grid.allowRowResize.Set(FALSE);
-					FOR j := 0 TO LEN(model.disks[i].table)(LONGINT) -1 DO
+					FOR j := 0 TO LEN(model.disks[i].table)(SIGNED32) -1 DO
 						grid.model.SetTextAlign(0, j, WMGraphics.AlignLeft);
 						grid.model.SetTextAlign(1, j, WMGraphics.AlignRight);
 						grid.model.SetTextAlign(2, j,  WMGraphics.AlignRight);
@@ -809,8 +809,8 @@ TYPE
 					grid.model.Release;
 					grid.Release;
 					model.disks[i].titlegrid := BuildTitleGrid(); model.disks[i].panel.AddInternalComponent(model.disks[i].titlegrid);
-					NEW(model.disks[i].buttons, LEN(model.disks[i].table)(LONGINT));
-					FOR j := 0 TO LEN(model.disks[i].table)(LONGINT)-1 DO
+					NEW(model.disks[i].buttons, LEN(model.disks[i].table)(SIGNED32));
+					FOR j := 0 TO LEN(model.disks[i].table)(SIGNED32)-1 DO
 						NEW(model.disks[i].buttons[j]);
 						model.disks[i].buttons[j].isToggle.Set(TRUE);
 						model.disks[i].buttons[j].indicateToggle.Set(FALSE);
@@ -823,8 +823,8 @@ TYPE
 			END;
 		END BuildSkeleton;
 
-		PROCEDURE GetSizeString(nbrOfBlocks, blockSize : LONGINT) : Strings.String;
-		VAR sizeKB : HUGEINT; caption : ARRAY 128 OF CHAR;
+		PROCEDURE GetSizeString(nbrOfBlocks, blockSize : SIGNED32) : Strings.String;
+		VAR sizeKB : SIGNED64; caption : ARRAY 128 OF CHAR;
 		BEGIN
 			sizeKB := (LONG(nbrOfBlocks) * LONG(blockSize)) DIV  1024;
 			IF sizeKB > 4*1024 THEN
@@ -841,11 +841,11 @@ TYPE
 		VAR
 			table : AosDisks.PartitionTable;
 			caption, temp : ARRAY 128 OF CHAR;
-			fillColor : LONGINT;
+			fillColor : SIGNED32;
 			grid : NoWheelGrid;
-			disk: SIZE; partition : LONGINT;
+			disk: SIZE; partition : SIGNED32;
 			width, height : SIZE;
-			minHeights : POINTER TO ARRAY OF LONGINT; (* minimum heights of each grid *)
+			minHeights : POINTER TO ARRAY OF SIGNED32; (* minimum heights of each grid *)
 			col, row : SIZE;
 			string : Strings.String;
 			font : WMGraphics.Font;
@@ -855,7 +855,7 @@ TYPE
 			FOR disk := 0 TO LEN(model.disks)-1 DO
 				table := model.disks[disk].table;	grid := model.disks[disk].grid;
 				IF (table # NIL) & (grid # NIL) THEN
-					FOR partition := 0 TO LEN(table)(LONGINT)-1 DO
+					FOR partition := 0 TO LEN(table)(SIGNED32)-1 DO
 						grid.Acquire;
 						grid.model.Acquire;
 						(* Column 1: Partition : dev#part *)
@@ -1100,12 +1100,12 @@ TYPE
 		PROCEDURE UpdateSelection(disk, partition : SIZE);
 		VAR
 			caption, temp : ARRAY 128 OF CHAR;
-			selectionNone : LONGINT;
+			selectionNone : SIGNED32;
 			wrapper : SelectionWrapper;
 			i, j : SIZE;
 		BEGIN
 			ASSERT(model.IsLocked());
-			selection.partition := partition(LONGINT);
+			selection.partition := partition(SIGNED32);
 
 			caption := "Selection: ";
 			IF (disk = -1) & (partition = -1) THEN (* selection: none *)
@@ -1127,7 +1127,7 @@ TYPE
 						IF i = disk THEN
 							model.disks[i].grid.SetSelection(disk,partition,disk,partition);
 						ELSE
-							selectionNone := LEN(model.disks[i].table)(LONGINT); (* not visible *)
+							selectionNone := LEN(model.disks[i].table)(SIGNED32); (* not visible *)
 							model.disks[i].grid.SetSelection(selectionNone,selectionNone,selectionNone,selectionNone);
 						END;
 					END;
@@ -1187,7 +1187,7 @@ TYPE
 		onSelection- : WMEvents.EventSource;
 
 		grid, titleGrid : NoWheelGrid;
-		spacings : WMGrids.Spacings; noOfCols : LONGINT;
+		spacings : WMGrids.Spacings; noOfCols : SIGNED32;
 
 		operations : PartitionsLib.AllOperations;
 
@@ -1195,9 +1195,9 @@ TYPE
 
 		scrollbarY : WMStandardComponents.Scrollbar;
 		scrollPanel : WMStandardComponents.Panel;
-		scrollY : LONGINT; (* current position of scrollbar *)
+		scrollY : SIGNED32; (* current position of scrollbar *)
 
-		state : LONGINT;
+		state : SIGNED32;
 		timer : Kernel.Timer;
 
 		PROCEDURE &Init*;
@@ -1332,11 +1332,11 @@ TYPE
 					grid.Acquire;
 					grid.model.Acquire;
 					grid.SetSelectionMode(WMGrids.GridSelectSingleRow);
-					grid.model.SetNofCols(noOfCols); grid.model.SetNofRows(LEN(operations)(LONGINT));
+					grid.model.SetNofCols(noOfCols); grid.model.SetNofRows(LEN(operations)(SIGNED32));
 
-					FOR row := 0 TO LEN(operations)(LONGINT)-1 DO
+					FOR row := 0 TO LEN(operations)(SIGNED32)-1 DO
 						operation := operations[row];
-						FOR i := 0 TO LEN(operations)(LONGINT) -1 DO
+						FOR i := 0 TO LEN(operations)(SIGNED32) -1 DO
 							grid.model.SetTextAlign(0, i, WMGraphics.AlignCenter); (* uid *)
 							grid.model.SetTextAlign(1, i, WMGraphics.AlignLeft); (* operation *)
 							grid.model.SetTextAlign(2, i,  WMGraphics.AlignCenter); (* device *)
@@ -1480,12 +1480,12 @@ TYPE
 			operation : PartitionsLib.Operation;
 			state : PartitionsLib.OperationState;
 			caption : ARRAY 32 OF CHAR;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN {EXCLUSIVE} (* lock operations *)
 			IF operations # NIL THEN
 				grid.Acquire;
 				grid.model.Acquire;
-				FOR i := 0 TO LEN(operations)(LONGINT)-1 DO
+				FOR i := 0 TO LEN(operations)(SIGNED32)-1 DO
 					operation := operations[i];
 					state := operation.GetState();
 					(* Column 4: Status *)
@@ -1648,7 +1648,7 @@ BEGIN
 	NEW(PrototypeClSelected, NIL, Strings.NewString("clSelected"), Strings.NewString("Color of selected partition"));
 	PrototypeClSelected.Set(WMGraphics.Yellow);
 	NEW(PrototypeClBackground, NIL, Strings.NewString("clBackground"), Strings.NewString("Background color of disk panels"));
-	PrototypeClBackground.Set(LONGINT(0999999FFH));
+	PrototypeClBackground.Set(SIGNED32(0999999FFH));
 END InitPrototypes;
 
 BEGIN

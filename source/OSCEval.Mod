@@ -26,13 +26,13 @@ TYPE
 			s: UDP.Socket;
 			buffer: POINTER TO ARRAY OF CHAR;
 			receivefip: IP.Adr;
-			receivefport: LONGINT;
+			receivefport: SIGNED32;
 			got: SIZE;
-			res: WORD;
+			res: INTEGER;
 			fip: IP.Adr;
 		PROCEDURE &Init*;
 		VAR
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			stopping := FALSE;
 			NEW(buffer, 10000H);
@@ -58,11 +58,11 @@ TYPE
 	tcpagent = OBJECT(TCPServices.Agent);
 		VAR
 			newpacket: OSC.OSCPacket;
-			res: WORD;
+			res: INTEGER;
 			len: SIZE;
 			buffer: POINTER TO ARRAY OF CHAR;
 			sizebuf: ARRAY 4 OF CHAR;
-			packetsize: LONGINT;
+			packetsize: SIGNED32;
 
 		PROCEDURE &StartOSCAgent*(c: TCP.Connection; s: TCPServices.Service);
 		BEGIN
@@ -93,7 +93,7 @@ TYPE
 		(* starts the server: registers the OSCService s and creates the TCPServices.Service, which listens for connections *)
 		PROCEDURE &InitTCPServer*;
 		VAR
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			NEW(tcpservice, ServerPort, newAgent, res);
 		END InitTCPServer;
@@ -142,7 +142,7 @@ END StopTCPRead;
 
 PROCEDURE MessageTest1(m: OSC.OSCMessage);
 VAR
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	(* This Test should receive an empty OSC message *)
 	IF (m.argumentcount = 0) & (~ m.noTypeTagString) THEN
@@ -157,7 +157,7 @@ END MessageTest1;
 PROCEDURE SendMsg1*;
 VAR
 	m: OSC.OSCMessage;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(m, Strings.NewString('/tests/M1'));
 	IF udpclient # NIL THEN res := udpclient.Send(m); END;
@@ -167,7 +167,7 @@ END SendMsg1;
 
 PROCEDURE MessageTest2(m: OSC.OSCMessage);
 VAR
-	res: WORD;
+	res: INTEGER;
 	param: OSC.OSCParamObject;
 BEGIN
 	(* This Test should receive an OSC message with one Integer (47) *)
@@ -191,7 +191,7 @@ PROCEDURE SendMsg2*;
 VAR
 	m: OSC.OSCMessage;
 	i: OSC.OSCParamInteger;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(m, Strings.NewString('/tests/M2'));
 	NEW(i, 47); m.AddArgument(i);
@@ -202,7 +202,7 @@ END SendMsg2;
 
 PROCEDURE MessageTest3(m: OSC.OSCMessage);
 VAR
-	res: WORD;
+	res: INTEGER;
 	param: OSC.OSCParamObject;
 BEGIN
 	(* This Test should receive an OSC message with one Float (8.25) *)
@@ -226,7 +226,7 @@ PROCEDURE SendMsg3*;
 VAR
 	m: OSC.OSCMessage;
 	p: OSC.OSCParamFloat;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(m, Strings.NewString('/tests/M3'));
 	NEW(p, 8.25); m.AddArgument(p);
@@ -237,9 +237,9 @@ END SendMsg3;
 
 PROCEDURE MessageTest4(m: OSC.OSCMessage);
 VAR
-	res: WORD;
+	res: INTEGER;
 	param: OSC.OSCParamObject;
-	ok: BOOLEAN; i: LONGINT;
+	ok: BOOLEAN; i: SIGNED32;
 BEGIN
 	(* This Test should receive an OSC message with one Blob (01 02 03 ... 20) *)
 	IF (m.argumentcount = 1) & (~ m.noTypeTagString) THEN
@@ -268,8 +268,8 @@ PROCEDURE SendMsg4*;
 VAR
 	m: OSC.OSCMessage;
 	p: OSC.OSCParamBlob;
-	data: OSC.Blob; i: LONGINT;
-	res: WORD;
+	data: OSC.Blob; i: SIGNED32;
+	res: INTEGER;
 BEGIN
 	NEW(data, 32);
 	FOR i:=0 TO 31 DO data[i] := CHR(i+1); END;
@@ -283,7 +283,7 @@ END SendMsg4;
 
 PROCEDURE MessageTest5(m: OSC.OSCMessage);
 VAR
-	res: WORD;
+	res: INTEGER;
 	param: OSC.OSCParamObject;
 BEGIN
 	(* This Test should receive an OSC message with one String (TEST5)^5 *)
@@ -307,7 +307,7 @@ PROCEDURE SendMsg5*;
 VAR
 	m: OSC.OSCMessage;
 	p: OSC.OSCParamString;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(m, Strings.NewString('/tests/M5'));
 	NEW(p, Strings.NewString('TEST5TEST5TEST5TEST5TEST5')); m.AddArgument(p);
@@ -321,7 +321,7 @@ PROCEDURE SendBundle1*;
 VAR
 	b: OSC.OSCBundle;
 	tt: OSC.OSCTimeTag;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(tt); tt.SetImmediately;
 	NEW(b, tt, NIL, 0);
@@ -336,7 +336,7 @@ VAR
 	b: OSC.OSCBundle;
 	tt: OSC.OSCTimeTag;
 	i: OSC.OSCParamInteger;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(tt); tt.SetImmediately;
 	NEW(m, Strings.NewString('/tests/M2'));
@@ -353,7 +353,7 @@ VAR
 	b: OSC.OSCBundle;
 	tt: OSC.OSCTimeTag;
 	i: OSC.OSCParamInteger;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(tt); tt.SetImmediately;
 	NEW(m, Strings.NewString('/tests/M2'));
@@ -369,7 +369,7 @@ END SendBundle3;
 
 PROCEDURE Echo(m: OSC.OSCMessage);
 VAR
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	IF ~ m.noTypeTagString THEN
 		res := m.Return(ackmessage);
@@ -380,7 +380,7 @@ END Echo;
 
 PROCEDURE Ret(m: OSC.OSCMessage);
 VAR
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	IF ~ m.noTypeTagString THEN
 		res := m.Return(m);
@@ -392,7 +392,7 @@ END Ret;
 
 PROCEDURE StartEvalService*;
 VAR
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(registry);
 	registry.AddMethod(Strings.NewString('/tests/M1'), MessageTest1);
@@ -420,7 +420,7 @@ END StopEvalService;
 
 PROCEDURE StartUDPClient*;
 VAR
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(udpclient, IP.StrToAdr(ServerIP), ServerPort, UDP.NilPort, res);
 	IF res # UDP.Ok THEN
@@ -442,7 +442,7 @@ END StopUDPClient;
 
 PROCEDURE StartTCPClient*;
 VAR
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(tcpclient, IP.StrToAdr(ServerIP), ServerPort, TCP.NilPort, res);
 	IF res # TCP.Ok THEN

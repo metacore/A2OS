@@ -55,7 +55,7 @@ TYPE
 		END CreateForm;
 
 		PROCEDURE SetMailbox(mb : MailStorage.Storage);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 			hFrom, hTo, hSubject, hDate : ARRAY 128 OF CHAR;
 		BEGIN
 			currentMailbox := mb;
@@ -80,7 +80,7 @@ TYPE
 		VAR vc : WMComponents.VisualComponent;
 			mb : MailStorage.Storage;
 			colWidths : WMGrids.Spacings;
-			i : LONGINT;
+			i : SIGNED32;
 			str : ARRAY 32 OF CHAR;
 		BEGIN
 			IncCount;
@@ -116,7 +116,7 @@ TYPE
 			SetMailbox(mb);
 		END New;
 
-		PROCEDURE GetTitleStr(col: LONGINT; VAR x : ARRAY OF CHAR);
+		PROCEDURE GetTitleStr(col: SIGNED32; VAR x : ARRAY OF CHAR);
 		BEGIN
 			CASE col OF
 				| 0 : COPY("From", x)
@@ -139,8 +139,8 @@ TYPE
 			END
 		END Handle;
 
-		(*PROCEDURE DrawCell(canvas : WMGraphics.Canvas; w, h : LONGINT; state : SET; x, y : LONGINT);
-		VAR color: LONGINT; str, hFrom, hTo, hSubject, hDate : ARRAY 128 OF CHAR;
+		(*PROCEDURE DrawCell(canvas : WMGraphics.Canvas; w, h : SIGNED32; state : SET; x, y : SIGNED32);
+		VAR color: SIGNED32; str, hFrom, hTo, hSubject, hDate : ARRAY 128 OF CHAR;
 		BEGIN
 			color := WMGraphics.RGBAToColor(255, 255, 255, 255);
 			IF state * {WMGrids.CellFixed, WMGrids.CellSelected} = {WMGrids.CellFixed, WMGrids.CellSelected} THEN
@@ -182,7 +182,7 @@ TYPE
 		END DrawCell; *)
 
 		PROCEDURE MessageClick(sender, data : ANY);
-		VAR scol, srow, ecol, erow, y : SIZE; res: WORD; text : Texts.Text;
+		VAR scol, srow, ecol, erow, y : SIZE; res: INTEGER; text : Texts.Text;
 		BEGIN
 			messageList.GetSelection(scol, srow, ecol, erow);
 			y := srow - 1;
@@ -201,7 +201,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*;
 VAR winstance : Window;

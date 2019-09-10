@@ -14,20 +14,20 @@ CONST
 VAR
 	modes: ARRAY 25 OF CHAR;
 	flags: ARRAY 13 OF CHAR;
-	trapState: LONGINT;
+	trapState: SIGNED32;
 	check: Objects.Process;
 
 	(** Display trap state. *)
 	PROCEDURE Show*( p: Objects.Process;  VAR int: Kernel32.Context;  VAR exc: Kernel32.ExceptionRecord;  long: BOOLEAN );
 	VAR  overflow: BOOLEAN;
 		desc: ARRAY 128 OF CHAR;
-		code: LONGINT;
+		code: SIGNED32;
 		pc: ADDRESS;
 		w: Streams.Writer;
 
 		(* Write flag values. *)
 		PROCEDURE Flags( w: Streams.Writer;  s: SET );
-		VAR i: SHORTINT;  ch: CHAR;
+		VAR i: SIGNED8;  ch: CHAR;
 		BEGIN
 			FOR i := 0 TO 11 DO
 				ch := flags[i];
@@ -36,7 +36,7 @@ VAR
 					w.Char( ch )
 				END
 			END;
-			w.String( " iopl" );  w.Int( ASH( LONGINT(s * {12, 13} ), -12 ), 1 )
+			w.String( " iopl" );  w.Int( ASH( SIGNED32(s * {12, 13} ), -12 ), 1 )
 		END Flags;
 
 		PROCEDURE Val( CONST s: ARRAY OF CHAR;  val:ADDRESS );
@@ -56,11 +56,11 @@ VAR
 		END StrAppend;
 
 		(** Convert an integer into a string. *)
-		PROCEDURE StrIntToStr( val: LONGINT;  VAR str: ARRAY OF CHAR );
+		PROCEDURE StrIntToStr( val: SIGNED32;  VAR str: ARRAY OF CHAR );
 		VAR i, j: SIZE;
-			digits: ARRAY 16 OF LONGINT;
+			digits: ARRAY 16 OF SIGNED32;
 		BEGIN
-			IF val = MIN( LONGINT ) THEN COPY( "-2147483648", str );  RETURN END;
+			IF val = MIN( SIGNED32 ) THEN COPY( "-2147483648", str );  RETURN END;
 			IF val < 0 THEN val := -val;  str[0] := "-";  j := 1 ELSE j := 0 END;
 			i := 0;
 			REPEAT digits[i] := val MOD 10;  INC( i );  val := val DIV 10 UNTIL val = 0;
@@ -70,7 +70,7 @@ VAR
 		END StrIntToStr;
 
 		PROCEDURE GetDescription;
-		VAR	code : LONGINT; arg: ARRAY 16 OF CHAR;
+		VAR	code : SIGNED32; arg: ARRAY 16 OF CHAR;
 		BEGIN
 			IF exc.ExceptionCode = Kernel32.ExceptionGuardPage THEN COPY( "guard page violation", desc )
 			ELSIF exc.ExceptionCode = Kernel32.ExceptionBreakPoint THEN
@@ -273,7 +273,7 @@ VAR
 
 	(* General exception handler. *)
 	PROCEDURE Exception( VAR int: Kernel32.Context;  VAR exc: Kernel32.ExceptionRecord;  VAR handled: BOOLEAN );
-	VAR t: Objects.Process;  user, traceTrap: BOOLEAN;   exchalt: LONGINT;
+	VAR t: Objects.Process;  user, traceTrap: BOOLEAN;   exchalt: SIGNED32;
 	BEGIN  (* interrupts off *)
 		t := Objects.CurrentProcess();
 		check := t;
@@ -282,7 +282,7 @@ VAR
 
 		traceTrap := FALSE;
 
-		Show( t, int, exc,  (* exc.halt # MAX(INTEGER)+1*) TRUE );   (* Always show the trap info!*)
+		Show( t, int, exc,  (* exc.halt # MAX(SIGNED16)+1*) TRUE );   (* Always show the trap info!*)
 
 		IF exchalt = haltUnbreakable THEN Unbreakable( t, int, exc, handled )
 		ELSIF ~traceTrap THEN HandleException( int, exc, handled )

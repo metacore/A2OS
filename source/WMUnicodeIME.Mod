@@ -47,7 +47,7 @@ TYPE
 			sb.AddContent(gb);
 
 			(* edit panel *)
-			NEW(ep); ep.alignment.Set(WMComponents.AlignClient); ep.fillColor.Set(LONGINT(0DDDD00EEH));
+			NEW(ep); ep.alignment.Set(WMComponents.AlignClient); ep.fillColor.Set(SIGNED32(0DDDD00EEH));
 			panel.AddContent(ep);
 
 			NEW(edit); edit.bounds.SetHeight(20); edit.alignment.Set(WMComponents.AlignTop); edit.tv.showBorder.Set(TRUE);
@@ -142,7 +142,7 @@ TYPE
 		END Ok;
 
 		PROCEDURE TextChanged*(sender, data:ANY);
-		VAR ch : LONGINT; no : SIZE; charString : ARRAY 16 OF CHAR;
+		VAR ch : SIGNED32; no : SIZE; charString : ARRAY 16 OF CHAR;
 
 		BEGIN
 			(* avoid recursion *)
@@ -212,7 +212,7 @@ TYPE
 		BEGIN
 			IF (ucs >= 48) & (ucs <= 57) THEN
 				GetCursorScreenPosition(x, y);
-				pos := 0; IF UTF8Strings.EncodeChar(ucs(LONGINT), str, pos) THEN END;
+				pos := 0; IF UTF8Strings.EncodeChar(ucs(SIGNED32), str, pos) THEN END;
 				NEW(w, SELF, x, y, str);
 			ELSE InsertChar(ucs)
 			END

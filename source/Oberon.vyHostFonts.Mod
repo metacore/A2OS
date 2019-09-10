@@ -30,7 +30,7 @@ CONST MAXCHARS = ORD(MAX(CHAR)) + 1;  maxW = 80;  maxH = 80;
 TYPE
 	Char* = POINTER TO CharDesc;
 	CharDesc* = RECORD(Fonts.CharDesc)
-		dy*: INTEGER
+		dy*: SIGNED16
 	END;
 
 	TheChars = ARRAY MAXCHARS OF Char;
@@ -47,8 +47,8 @@ VAR
 	Anchor: Font;
 	bP: Pictures.Picture;
 
-PROCEDURE GetChar* (F: Font;  ch: CHAR;  VAR dy, x, y, w, h: INTEGER;  VAR pat: Display.Pattern);
-	VAR nr: INTEGER;
+PROCEDURE GetChar* (F: Font;  ch: CHAR;  VAR dy, x, y, w, h: SIGNED16;  VAR pat: Display.Pattern);
+	VAR nr: SIGNED16;
 BEGIN	ASSERT(F # NIL);
 	nr := ORD(ch); 	dy := F.c[nr] .dy;
 	x := F.c[nr] .y;  y := F.c[nr] .x;  w := F.c[nr] .h;  h := F.c[nr] .w;
@@ -56,7 +56,7 @@ BEGIN	ASSERT(F # NIL);
 END GetChar;
 
 PROCEDURE NewVerticalFont (vertical: Font;  orig: Fonts.Font);
-	VAR i: INTEGER;  ch: CHAR;  dx, x, y, w, h, hx: INTEGER;  pat: Display.Pattern;  c: Char;  image: POINTER TO ARRAY OF SET;
+	VAR i: SIGNED16;  ch: CHAR;  dx, x, y, w, h, hx: SIGNED16;  pat: Display.Pattern;  c: Char;  image: POINTER TO ARRAY OF SET;
 	temp: SET;
 BEGIN	vertical.f := orig; 	vertical.height := orig.height;
 	vertical.minX := orig.minY;  vertical.minY := orig.minX;  vertical.maxY := orig.maxX;  vertical.maxX := orig.maxY;

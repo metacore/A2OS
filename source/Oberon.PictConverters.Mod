@@ -9,17 +9,17 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 
 	TYPE
 		CodePages = RECORD
-			code, ref: INTEGER
+			code, ref: SIGNED16
 		END;
 		CodeBook = ARRAY 4096 OF CodePages;
 
 	VAR
 		W: Texts.Writer;
 		CB: CodeBook;
-		LastBlock: ARRAY 4096 OF INTEGER;
+		LastBlock: ARRAY 4096 OF SIGNED16;
 
 	PROCEDURE WriteScrDesc(VAR R: Files.Rider; P: Pictures.Picture);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		Files.WriteInt(R, P.width); Files.WriteInt(R, P.height);
 		i := ASH(7+P.depth, 4); i := i+P.depth-1;
@@ -29,9 +29,9 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 	END WriteScrDesc;
 
 	PROCEDURE WriteColMap(VAR R: Files.Rider; P: Pictures.Picture);
-		VAR i, cols, red, green, blue: INTEGER;
+		VAR i, cols, red, green, blue: SIGNED16;
 	BEGIN
-		cols := INTEGER(ASH(1, P.depth)); i := 0;
+		cols := SIGNED16(ASH(1, P.depth)); i := 0;
 		WHILE i < cols DO
 			Pictures.GetColor(P, i, red, green, blue);
 			Files.Write(R, CHR(red)); Files.Write(R, CHR(green)); Files.Write(R, CHR(blue));
@@ -53,10 +53,10 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 		Files.Write(R, CHR(P.depth-1))
 	END WriteImageDesc;
 
-	PROCEDURE InitCodeBook(codeLen: INTEGER);
-		VAR i, to: INTEGER;
+	PROCEDURE InitCodeBook(codeLen: SIGNED16);
+		VAR i, to: SIGNED16;
 	BEGIN
-		i:=0; to:=INTEGER(ASH(1, codeLen));
+		i:=0; to:=SIGNED16(ASH(1, codeLen));
 		WHILE i<to DO
 			CB[i].code:=i; CB[i].ref:=dummy; LastBlock[i]:=dummy; INC(i)
 		END;
@@ -67,28 +67,28 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 	PROCEDURE WriteData(VAR r: Files.Rider; pict: Pictures.Picture);
 		CONST byteLen=8;
 		VAR
-			last, in, clearCode, endCode, codept, startSize, prefix, bufpos, bitsfree, codelen: INTEGER;
+			last, in, clearCode, endCode, codept, startSize, prefix, bufpos, bitsfree, codelen: SIGNED16;
 			buffer: ARRAY 256 OF CHAR;
-			i2, len: INTEGER;
+			i2, len: SIGNED16;
 			page: CodePages;
-			dots: POINTER TO ARRAY OF INTEGER;
-			x, y, w: INTEGER;
+			dots: POINTER TO ARRAY OF SIGNED16;
+			x, y, w: SIGNED16;
 
-		PROCEDURE WriteCode(code: INTEGER);
-			VAR temp, bitsleft: INTEGER;
+		PROCEDURE WriteCode(code: SIGNED16);
+			VAR temp, bitsleft: SIGNED16;
 		BEGIN
 			bitsleft:=codelen;
 			WHILE bitsleft>0 DO
 				IF bitsleft<=bitsfree THEN
-					temp:=INTEGER(ASH(code, byteLen-bitsfree));
+					temp:=SIGNED16(ASH(code, byteLen-bitsfree));
 					buffer[bufpos]:=CHR(ORD(buffer[bufpos])+temp);
 					bitsfree:=bitsfree-bitsleft; bitsleft:=0;
 					IF bitsfree=0 THEN INC(bufpos); buffer[bufpos]:=0X; bitsfree:=byteLen END
 				ELSE
-					temp:=INTEGER(ASH(code, byteLen-bitsfree)) MOD 256;
+					temp:=SIGNED16(ASH(code, byteLen-bitsfree)) MOD 256;
 					buffer[bufpos]:=CHR(ORD(buffer[bufpos]) + temp);
 					INC(bufpos); buffer[bufpos]:=0X;
-					code:=INTEGER(ASH(code, -bitsfree));
+					code:=SIGNED16(ASH(code, -bitsfree));
 					bitsleft:=bitsleft-bitsfree; bitsfree:=byteLen
 				END;
 				IF bufpos=255 THEN
@@ -101,7 +101,7 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 	BEGIN
 		codelen:=pict.depth; IF codelen<2 THEN codelen:=2 END;
 		Files.Write(r, CHR(codelen));
-		clearCode:=INTEGER(ASH(1, codelen)); endCode:=clearCode+1;
+		clearCode:=SIGNED16(ASH(1, codelen)); endCode:=clearCode+1;
 		codept:=endCode+1; LastBlock[codept]:=dummy;
 
 		startSize:=codelen;
@@ -109,7 +109,7 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 		x:=0; y:=pict.height-1; w:=pict.width; NEW(dots, w);
 		Pictures.GetLine(pict, dots^, x, y, w);
 		prefix:=dots[0]; INC(x); bufpos:=0; buffer[0]:=0X; bitsfree:=8;
-		len:=INTEGER(ASH(1, codelen));
+		len:=SIGNED16(ASH(1, codelen));
 
 		WriteCode(clearCode);
 		LOOP
@@ -123,11 +123,11 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 				IF (i2=dummy) OR ((page.ref=dummy)&(page.code#in)) THEN
 					WriteCode(prefix);
 					IF codept=len THEN
-						INC(codelen); len:=INTEGER(ASH(1, codelen))
+						INC(codelen); len:=SIGNED16(ASH(1, codelen))
 					END;
 					IF codept>=4095 THEN
 							WriteCode(clearCode);
-							codelen:=startSize; InitCodeBook(codelen); INC(codelen); len:=INTEGER(ASH(1, codelen));
+							codelen:=startSize; InitCodeBook(codelen); INC(codelen); len:=SIGNED16(ASH(1, codelen));
 							codept:=endCode+1
 					ELSE
 						CB[codept].ref:=LastBlock[prefix]; CB[codept].code:=in; LastBlock[prefix]:=codept;
@@ -172,12 +172,12 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 		VAR
 			S: Texts.Scanner;
 			T: Texts.Text;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 			Fi, Fo: Files.File;
 			R: Files.Rider;
 			name: ARRAY 64 OF CHAR;
 			P: Pictures.Picture;
-			tag: INTEGER;
+			tag: SIGNED16;
 	BEGIN
 		Texts.WriteString(W, "PictConverters.PictToGif"); Texts.WriteLn(W);
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
@@ -233,7 +233,7 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 		VAR
 			S: Texts.Scanner;
 			T: Texts.Text;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 			Fi, Fo: Files.File;
 			R: Files.Rider;
 			P: Pictures.Picture;
@@ -286,7 +286,7 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 		VAR
 			S: Texts.Scanner;
 			T: Texts.Text;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 			Fi, Fo: Files.File;
 			R: Files.Rider;
 			P: Pictures.Picture;
@@ -335,7 +335,7 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 		VAR
 			S: Texts.Scanner;
 			T: Texts.Text;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 			Fi, Fo: Files.File;
 			R: Files.Rider;
 			P: Pictures.Picture;
@@ -384,7 +384,7 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 		VAR
 			S: Texts.Scanner;
 			T: Texts.Text;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 			Fi, Fo: Files.File;
 			R: Files.Rider;
 			P: Pictures.Picture;
@@ -439,7 +439,7 @@ MODULE PictConverters IN Oberon;	(** portable *) (* rm 1.9.1996, ejz 8.12.96, af
 		VAR
 			S: Texts.Scanner;
 			T: Texts.Text;
-			beg, end, time: LONGINT;
+			beg, end, time: SIGNED32;
 			Fi, Fo: Files.File;
 			R: Files.Rider;
 			P: Pictures.Picture;

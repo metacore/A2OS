@@ -15,7 +15,7 @@ TYPE
 VAR
 	w: Texts.Writer;
 
-PROCEDURE WriteInfo(flag: CHAR; size: LONGINT; VAR buf, fname: ARRAY OF CHAR; f: Files.File);
+PROCEDURE WriteInfo(flag: CHAR; size: SIGNED32; VAR buf, fname: ARRAY OF CHAR; f: Files.File);
 VAR name: FileName;
 BEGIN
 	Texts.Write(w, flag); Texts.Write(w, " "); Texts.WriteInt(w, size, 1);
@@ -30,15 +30,15 @@ BEGIN
 END WriteInfo;
 
 PROCEDURE GenName(VAR prefix, buf, fname: ARRAY OF CHAR);
-VAR i, j: LONGINT;
+VAR i, j: SIGNED32;
 BEGIN
 	i := 0; WHILE prefix[i] # 0X DO fname[i] := prefix[i]; INC(i) END;
 	j := 0; WHILE buf[j] # 0X DO fname[i] := buf[j]; INC(i); INC(j) END;
 	fname[i] := 0X
 END GenName;
 
-PROCEDURE GetNum(VAR buf: ARRAY OF CHAR; ofs, max: LONGINT): LONGINT;
-VAR x: LONGINT;
+PROCEDURE GetNum(VAR buf: ARRAY OF CHAR; ofs, max: SIGNED32): SIGNED32;
+VAR x: SIGNED32;
 BEGIN
 	x := 0;
 	WHILE (max # 0) & (buf[ofs] = " ") DO INC(ofs); DEC(max) END;
@@ -49,11 +49,11 @@ BEGIN
 	RETURN x
 END GetNum;
 
-PROCEDURE UnpackTGZ(tgzname, prefix: ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE UnpackTGZ(tgzname, prefix: ARRAY OF CHAR; VAR res: INTEGER);
 CONST
 	RS = 512;
 VAR
-	in: GZReaders.Reader; buf: ARRAY RS OF CHAR; read, size: LONGINT; flag: CHAR;
+	in: GZReaders.Reader; buf: ARRAY RS OF CHAR; read, size: SIGNED32; flag: CHAR;
 	f: Files.File; r: Files.Rider; fname: FileName;
 BEGIN
 	GZReaders.Open(in, Files.Old(tgzname));
@@ -101,7 +101,7 @@ BEGIN
 END UnpackTGZ;
 
 PROCEDURE Extract*;	(** file.tgz dstprefix *)
-VAR res: WORD; name, prefix: FileName;
+VAR res: INTEGER; name, prefix: FileName;
 BEGIN
 	In.Open; In.String(name); In.String(prefix);
 	IF In.Done THEN

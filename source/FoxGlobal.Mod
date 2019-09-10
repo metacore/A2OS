@@ -202,17 +202,17 @@ VAR
 	identifiers: ARRAY 2 OF ARRAY end OF SyntaxTree.Identifier;
 
 	(* some handy type variables for backend / checker implementers *)
-	Integer8-, Integer16-, Integer32-, Integer64-: SyntaxTree.IntegerType;
+	Signed8-, Signed16-, Signed32-, Signed64-: SyntaxTree.IntegerType;
 	Unsigned8-, Unsigned16-, Unsigned32-, Unsigned64-: SyntaxTree.IntegerType;
 	Set8-, Set16-, Set32-, Set64-: SyntaxTree.SetType;
 	Float32-, Float64-: SyntaxTree.FloatType;
-	Complex64-, Complex128-: SyntaxTree.ComplexType;
+	Complex32-, Complex64-: SyntaxTree.ComplexType;
 
 TYPE
 	Position = SyntaxTree.Position;
 
 	Alignment* = RECORD
-		min, max: LONGINT; (* alignments in bits *)
+		min, max: SIGNED32; (* alignments in bits *)
 	END;
 
 	PassInRegisterProc = PROCEDURE {DELEGATE} (type: SyntaxTree.Type): BOOLEAN;
@@ -225,28 +225,23 @@ TYPE
 		activeCellsCapabilities-: SyntaxTree.Symbol; (* list of supported capabilities, filled by ActiveCells specification *)
 
 		(* addressing granularity in code and data memory *)
-		codeUnit-: LONGINT;
-		dataUnit-: LONGINT;
+		codeUnit-: SIGNED32;
+		dataUnit-: SIGNED32;
 		(* alignment (variables, record entries) *)
 		(* alignment (parameters & stack frames) *)
 		variableAlignment-, parameterAlignment-: Alignment;
 		(* offset of first parameter *)
-		offsetFirstParameter-: LONGINT;
-		offsetFirstVariable-: LONGINT;
+		offsetFirstParameter-: SIGNED32;
+		offsetFirstVariable-: SIGNED32;
 		(* to determine if a builtin-procedure can be operator-overloaded *)
 		operatorDefined-: ARRAY end OF BOOLEAN;
 
 		(* type sizes defined by backend *)
-		addressSize-: LONGINT;
+		addressSize-: SIGNED32;
 
-		(* system type mapping, in a later version only the global (unisgned) types should be used
-			the following two types are only there for compatibility with the system as is
-			problematic are mainly the conversions between (signed) Oberon types and (unsigned) addressType.
-			A good concept has to be derived.
-		*)
-
-		addressType-, sizeType-, shortintType-, integerType-, longintType-, hugeintType-, wordType-, longWordType-, wordSetType-, characterType-, setType-, booleanType-, anyType-,byteType-,
-		realType-, longrealType-, complexType-, longcomplexType-, objectType-, nilType-, rangeType-: SyntaxTree.Type;
+		(* system type mapping *)
+		addressType-, sizeType-, integerType-, longIntegerType-, integerSetType-, characterType-, setType-, booleanType-, anyType-, byteType-,
+		realType-, objectType-, nilType-, rangeType-: SyntaxTree.Type;
 
 		CanPassInRegister-: PassInRegisterProc;
 		cellsAreObjects-: BOOLEAN;
@@ -255,8 +250,8 @@ TYPE
 		(* MAX values of commonly-used types *)
 		maxSize-, maxSet-: Basic.Integer;
 
-		PROCEDURE &InitSystem*(codeUnit, dataUnit: LONGINT; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar, offsetFirstVar: LONGINT; cooperative: BOOLEAN);
-		VAR i: LONGINT;
+		PROCEDURE &InitSystem*(codeUnit, dataUnit: SIGNED32; addressSize, minVarAlign, maxVarAlign, minParAlign, maxParAlign, offsetFirstPar, offsetFirstVar: SIGNED32; cooperative: BOOLEAN);
+		VAR i: SIGNED32;
 		BEGIN
 			ASSERT(dataUnit > 0);
 			ASSERT(minVarAlign > 0);
@@ -778,7 +773,7 @@ TYPE
 	END System;
 
 	PROCEDURE BuildScopes(system: System);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO end-1 DO
 			system.operatorDefined[i] := FALSE
@@ -796,36 +791,17 @@ TYPE
 	PROCEDURE SetDefaultDeclarations*(system: System; minBits: SIZE);
 	VAR now: Dates.DateTime; date, time: ARRAY 20 OF CHAR;
 	BEGIN
-		(* types *)
-		system.longintType := SyntaxTree.NewIntegerType(32, TRUE);
-		system.hugeintType := SyntaxTree.NewIntegerType(64, TRUE);
-		system.wordType := SyntaxTree.NewIntegerType(MIN(system.addressSize,32),TRUE);
-		system.longWordType := SyntaxTree.NewIntegerType(system.addressSize,TRUE);
-		system.wordSetType := SyntaxTree.NewSetType(system.wordType.sizeInBits);
-		system.realType := SyntaxTree.NewFloatType(32);
-		system.longrealType := SyntaxTree.NewFloatType(64);
-		(*
-		system.longintType := Integer32;
-		system.hugeintType := Integer64;
-		system.realType := Float32;
-		system.longrealType := Float64;
-		*)
+		ASSERT (minBits = 8);
 
-		IF minBits = 8 THEN
-			system.shortintType := SyntaxTree.NewIntegerType(8, TRUE);
-			system.integerType := SyntaxTree.NewIntegerType(16, TRUE);
-			system.booleanType := SyntaxTree.NewBooleanType(8);
-			system.byteType := SyntaxTree.NewByteType(8);
-			system.characterType := SyntaxTree.NewCharacterType(8);
-		ELSIF minBits = 32 THEN
-			system.shortintType := SyntaxTree.NewIntegerType(32, TRUE);
-			system.integerType := SyntaxTree.NewIntegerType(32, TRUE);
-			system.booleanType := SyntaxTree.NewBooleanType(32);
-			system.byteType := SyntaxTree.NewByteType(32);
-			system.characterType := SyntaxTree.NewCharacterType(32);
-		ELSE
-			HALT (3214); (* nothing else is currently implemented *)
-		END;
+		(* types *)
+		system.integerType := SyntaxTree.NewIntegerType(MIN(system.addressSize,32),TRUE);
+		system.longIntegerType := SyntaxTree.NewIntegerType(system.addressSize,TRUE);
+		system.integerSetType := SyntaxTree.NewSetType(system.integerType.sizeInBits);
+		system.realType := SyntaxTree.NewFloatType(64);
+
+		system.booleanType := SyntaxTree.NewBooleanType(8);
+		system.byteType := SyntaxTree.NewByteType(8);
+		system.characterType := SyntaxTree.NewCharacterType(8);
 
 		system.anyType := SyntaxTree.NewAnyType(system.addressSize);
 		system.objectType := SyntaxTree.NewObjectType(system.addressSize);
@@ -835,8 +811,6 @@ TYPE
 
 		system.rangeType := SyntaxTree.NewRangeType(3 * system.SizeOf(system.sizeType));
 
-		system.complexType := Complex64;
-		system.longcomplexType := Complex128;
 		system.setType := SyntaxTree.NewSetType(system.addressSize);
 
 		system.maxSize := MaxInteger(system, system.sizeType(SyntaxTree.BasicType), TRUE);
@@ -887,28 +861,27 @@ TYPE
 		(* Set up system types *)
 		DeclareType(system.characterType,"CHAR",system.globalScope);
 		DeclareType(system.rangeType,"RANGE",system.globalScope);
-		DeclareType(system.shortintType,"SHORTINT",system.globalScope);
 		DeclareType(system.integerType,"INTEGER",system.globalScope);
-		DeclareType(system.longintType,"LONGINT",system.globalScope);
-		DeclareType(system.hugeintType,"HUGEINT",system.globalScope);
-		DeclareType(system.wordType,"WORD",system.globalScope);
-		DeclareType(system.longWordType,"LONGWORD",system.globalScope);
-		DeclareType(system.wordSetType,"WORDSET",system.globalScope);
+		DeclareType(system.longIntegerType,"LONGINTEGER",system.globalScope);
+		DeclareType(system.integerSetType,"INTEGERSET",system.globalScope);
 
-		DeclareType(Integer8, "SIGNED8", system.globalScope);
-		DeclareType(Integer16, "SIGNED16", system.globalScope);
-		DeclareType(Integer32, "SIGNED32", system.globalScope);
-		DeclareType(Integer64, "SIGNED64", system.globalScope);
+		DeclareType(Signed8, "SIGNED8", system.globalScope);
+		DeclareType(Signed16, "SIGNED16", system.globalScope);
+		DeclareType(Signed32, "SIGNED32", system.globalScope);
+		DeclareType(Signed64, "SIGNED64", system.globalScope);
 
 		DeclareType(Unsigned8, "UNSIGNED8", system.globalScope);
 		DeclareType(Unsigned16, "UNSIGNED16", system.globalScope);
 		DeclareType(Unsigned32, "UNSIGNED32", system.globalScope);
 		DeclareType(Unsigned64, "UNSIGNED64", system.globalScope);
 
+		DeclareType(Float32, "FLOAT32", system.globalScope);
+		DeclareType(Float64, "FLOAT64", system.globalScope);
+
+		DeclareType(Complex32, "COMPLEX32", system.globalScope);
+		DeclareType(Complex64, "COMPLEX64", system.globalScope);
+
 		DeclareType(system.realType,"REAL",system.globalScope);
-		DeclareType(system.longrealType,"LONGREAL",system.globalScope);
-		DeclareType(system.complexType,"COMPLEX",system.globalScope);
-		DeclareType(system.longcomplexType,"LONGCOMPLEX",system.globalScope);
 		DeclareType(system.booleanType,"BOOLEAN",system.globalScope);
 		DeclareType(system.setType,"SET",system.globalScope);
 		DeclareType(system.anyType,"ANY",system.globalScope);
@@ -992,12 +965,6 @@ TYPE
 
         (* LYNX builtin types *)
         DeclareLynxType(system.characterType, LynxChar, system.globalScope);
-        DeclareLynxType(system.shortintType, LynxSbyte, system.globalScope);
-        DeclareLynxType(system.integerType, LynxShort, system.globalScope);
-        DeclareLynxType(system.longintType, LynxInt, system.globalScope);
-        DeclareLynxType(system.hugeintType, LynxLong, system.globalScope);
-        DeclareLynxType(system.realType, LynxFloat, system.globalScope);
-        DeclareLynxType(system.longrealType, LynxDouble, system.globalScope);
         DeclareLynxType(system.booleanType, LynxBool, system.globalScope);
         (* TODO: object, string *)
 
@@ -1024,13 +991,13 @@ TYPE
 
 	END SetDefaultDeclarations;
 
-	PROCEDURE OperatorDefined*(system: System; op: LONGINT; defined: BOOLEAN);
+	PROCEDURE OperatorDefined*(system: System; op: SIGNED32; defined: BOOLEAN);
 	BEGIN
 		system.operatorDefined[op] := defined;
 	END OperatorDefined;
 
 	PROCEDURE SetDefaultOperators*(system: System);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := Scanner.Equal TO Scanner.Not DO
 			OperatorDefined(system,i,TRUE);
@@ -1137,7 +1104,7 @@ TYPE
     END DeclareLynxType;
     (* -LYNX *)
 
-	PROCEDURE NewConstant0(CONST name: ARRAY OF CHAR; int: LONGINT; type: SyntaxTree.Type; in: SyntaxTree.Scope);
+	PROCEDURE NewConstant0(CONST name: ARRAY OF CHAR; int: SIGNED32; type: SyntaxTree.Type; in: SyntaxTree.Scope);
 	VAR constant: SyntaxTree.Constant; value: SyntaxTree.IntegerValue;duplicate: BOOLEAN;
 	BEGIN
 		value := SyntaxTree.NewIntegerValue(SyntaxTree.invalidPosition,int);
@@ -1152,7 +1119,7 @@ TYPE
 		ASSERT(~duplicate);
 	END NewConstant0;
 
-	PROCEDURE NewConstant*(CONST name: ARRAY OF CHAR; int: LONGINT; type: SyntaxTree.Type; CONST scope: ARRAY OF SyntaxTree.ModuleScope);
+	PROCEDURE NewConstant*(CONST name: ARRAY OF CHAR; int: SIGNED32; type: SyntaxTree.Type; CONST scope: ARRAY OF SyntaxTree.ModuleScope);
 	VAR nameL,nameU: Scanner.IdentifierString;
 	BEGIN
 		Basic.Lowercase(name,nameL);
@@ -1191,7 +1158,7 @@ TYPE
 		NewStringConstant0(name,string,type,scope[Scanner.Lowercase]);
 	END NewStringConstantCamelCase;
 
-	PROCEDURE NewBuiltin0( id: LONGINT; CONST name: ARRAY OF CHAR; in:  SyntaxTree.ModuleScope; realtime: BOOLEAN);
+	PROCEDURE NewBuiltin0( id: SIGNED32; CONST name: ARRAY OF CHAR; in:  SyntaxTree.ModuleScope; realtime: BOOLEAN);
 	VAR basic: SyntaxTree.Builtin; duplicate: BOOLEAN; type: SyntaxTree.ProcedureType;
 	BEGIN
 		basic := SyntaxTree.NewBuiltin(SyntaxTree.invalidPosition,SyntaxTree.NewIdentifier(name),id);
@@ -1206,7 +1173,7 @@ TYPE
 		ASSERT(~duplicate);
 	END NewBuiltin0;
 
-	PROCEDURE NewBuiltin*(id: LONGINT; CONST name: ARRAY OF CHAR; CONST scope: ARRAY OF SyntaxTree.ModuleScope; realtime: BOOLEAN);
+	PROCEDURE NewBuiltin*(id: SIGNED32; CONST name: ARRAY OF CHAR; CONST scope: ARRAY OF SyntaxTree.ModuleScope; realtime: BOOLEAN);
 	VAR nameL,nameU: Scanner.IdentifierString;
 	BEGIN
 		Basic.Lowercase(name,nameL);
@@ -1215,13 +1182,13 @@ TYPE
 		NewBuiltin0(id,nameL,scope[Scanner.Lowercase],realtime);
 	END NewBuiltin;
 
-	PROCEDURE NewBuiltinCamelCase*(id: LONGINT; CONST name: ARRAY OF CHAR; CONST scope: ARRAY OF SyntaxTree.ModuleScope; realtime: BOOLEAN);
+	PROCEDURE NewBuiltinCamelCase*(id: SIGNED32; CONST name: ARRAY OF CHAR; CONST scope: ARRAY OF SyntaxTree.ModuleScope; realtime: BOOLEAN);
 	BEGIN
 		NewBuiltin0(id,name,scope[Scanner.Uppercase],realtime);
 		NewBuiltin0(id,name,scope[Scanner.Lowercase],realtime);
 	END NewBuiltinCamelCase;
 
-	PROCEDURE NewCustomBuiltin0(CONST name: ARRAY OF CHAR; scope: SyntaxTree.ModuleScope; subType: SHORTINT; procedureType: SyntaxTree.ProcedureType);
+	PROCEDURE NewCustomBuiltin0(CONST name: ARRAY OF CHAR; scope: SyntaxTree.ModuleScope; subType: SIGNED8; procedureType: SyntaxTree.ProcedureType);
 	VAR
 		isDuplicate: BOOLEAN;
 		customBuiltin: SyntaxTree.CustomBuiltin;
@@ -1236,7 +1203,7 @@ TYPE
 		ASSERT(~isDuplicate)
 	END NewCustomBuiltin0;
 
-	PROCEDURE NewCustomBuiltin*(CONST name: ARRAY OF CHAR; CONST scope: ARRAY OF SyntaxTree.ModuleScope; subType: SHORTINT; procedureType: SyntaxTree.ProcedureType);
+	PROCEDURE NewCustomBuiltin*(CONST name: ARRAY OF CHAR; CONST scope: ARRAY OF SyntaxTree.ModuleScope; subType: SIGNED8; procedureType: SyntaxTree.ProcedureType);
 	VAR
 		nameL, nameU: Scanner.IdentifierString;
 	BEGIN
@@ -1283,7 +1250,7 @@ TYPE
 	END ModuleSectionIdentifier;
 
 	PROCEDURE ContextFromName*(CONST fileName: ARRAY OF CHAR; VAR module,context: SyntaxTree.Identifier);
-	VAR moduleName, contextName: Scanner.IdentifierString; i,j: LONGINT;
+	VAR moduleName, contextName: Scanner.IdentifierString; i,j: SIGNED32;
 	BEGIN
 		i := 0; j := 0;
 		WHILE (fileName[i] # 0X) & (fileName[i] # ".") DO
@@ -1318,7 +1285,7 @@ TYPE
 	END GetModuleSegmentedName;
 
 	PROCEDURE FindSymbol*(CONST name: Basic.SegmentedName; scope: SyntaxTree.Scope): SyntaxTree.Symbol;
-	VAR s: LONGINT;  symbol : SyntaxTree.Symbol;
+	VAR s: SIGNED32;  symbol : SyntaxTree.Symbol;
 
 		PROCEDURE GetSymbolScope;
 		VAR type: SyntaxTree.Type;
@@ -1416,7 +1383,7 @@ TYPE
 	END GetSymbolName;
 
 	PROCEDURE GetSymbolSegmentedNameInScope*(symbol: SyntaxTree.Symbol; inScope: SyntaxTree.Scope; VAR pooledName: Basic.SegmentedName);
-	VAR td: SyntaxTree.TypeDeclaration; i: LONGINT;
+	VAR td: SyntaxTree.TypeDeclaration; i: SIGNED32;
 
 		PROCEDURE Scope(scope: SyntaxTree.Scope);
 		BEGIN
@@ -1455,8 +1422,8 @@ TYPE
 		GetSymbolSegmentedNameInScope(symbol,NIL,pooledName);
 	END GetSymbolSegmentedName;
 
-	PROCEDURE Level*(t: SyntaxTree.Type): LONGINT;
-	VAR level: LONGINT;
+	PROCEDURE Level*(t: SyntaxTree.Type): SIGNED32;
+	VAR level: SIGNED32;
 	BEGIN
 		IF t IS SyntaxTree.IntegerType THEN
 			CASE t.sizeInBits OF
@@ -1475,45 +1442,45 @@ TYPE
 		RETURN level
 	END Level;
 
-	PROCEDURE ConvertSigned*(this: HUGEINT; bits: SIZE): HUGEINT;
+	PROCEDURE ConvertSigned*(this: SIGNED64; bits: SIZE): SIGNED64;
 	BEGIN
 		bits := 64-bits;
 		RETURN ASH (ASH (this, bits), -bits);
 	END ConvertSigned;
 
-	PROCEDURE ConvertUnsigned*(this: HUGEINT; bits: SIZE): HUGEINT;
+	PROCEDURE ConvertUnsigned*(this: SIGNED64; bits: SIZE): SIGNED64;
 	BEGIN
 		bits := 64-bits;
 		RETURN LSH (LSH (this, bits), -bits);
 	END ConvertUnsigned;
 
-	PROCEDURE MaxInteger*(system: System; type: SyntaxTree.BasicType; signed: BOOLEAN): HUGEINT;
+	PROCEDURE MaxInteger*(system: System; type: SyntaxTree.BasicType; signed: BOOLEAN): SIGNED64;
 	BEGIN
 		IF signed THEN
-			RETURN ASH (HUGEINT(1), system.SizeOf (type) - 1) - 1;
+			RETURN ASH (SIGNED64(1), system.SizeOf (type) - 1) - 1;
 		ELSE
-			RETURN LSH (HUGEINT(-1), system.SizeOf (type) - 64);
+			RETURN LSH (SIGNED64(-1), system.SizeOf (type) - 64);
 		END;
 	END MaxInteger;
 
-	PROCEDURE MinInteger*(system: System; type: SyntaxTree.BasicType; signed: BOOLEAN): HUGEINT;
+	PROCEDURE MinInteger*(system: System; type: SyntaxTree.BasicType; signed: BOOLEAN): SIGNED64;
 	BEGIN
 		IF signed THEN
-			RETURN -ASH (HUGEINT(1), system.SizeOf (type) - 1);
+			RETURN -ASH (SIGNED64(1), system.SizeOf (type) - 1);
 		ELSE
 			RETURN 0
 		END;
 	END MinInteger;
 
 	(*! make architecture  independent ! *)
-	PROCEDURE MaxFloat*(system: System; type: SyntaxTree.FloatType): LONGREAL;
+	PROCEDURE MaxFloat*(system: System; type: SyntaxTree.FloatType): FLOAT64;
 	BEGIN
-		IF system.SizeOf(type) = 32 THEN RETURN MAX(REAL) ELSE RETURN MAX(LONGREAL) END;
+		IF system.SizeOf(type) = 32 THEN RETURN MAX(FLOAT32) ELSE RETURN MAX(FLOAT64) END;
 	END MaxFloat;
 
-	PROCEDURE MinFloat*(system: System; type: SyntaxTree.FloatType): LONGREAL;
+	PROCEDURE MinFloat*(system: System; type: SyntaxTree.FloatType): FLOAT64;
 	BEGIN
-		IF system.SizeOf(type) = 32 THEN RETURN MIN(REAL) ELSE RETURN MIN(LONGREAL) END;
+		IF system.SizeOf(type) = 32 THEN RETURN MIN(FLOAT32) ELSE RETURN MIN(FLOAT64) END;
 	END MinFloat;
 
 	PROCEDURE ConvertSet*(this: Basic.Set; bits: SIZE): Basic.Set;
@@ -1522,21 +1489,21 @@ TYPE
 		RETURN this;
 	END ConvertSet;
 
-	PROCEDURE IsUnsignedInteger*(this: HUGEINT; sizeInBits: SIZE): BOOLEAN;
-	VAR m: HUGEINT;
+	PROCEDURE IsUnsignedInteger*(this: SIGNED64; sizeInBits: SIZE): BOOLEAN;
+	VAR m: SIGNED64;
 	BEGIN
-		m := ASH(HUGEINT(1),sizeInBits);
+		m := ASH(SIGNED64(1),sizeInBits);
 		RETURN (this >= 0) & (this < m)
 	END IsUnsignedInteger;
 
-	PROCEDURE IsSignedInteger*(this: HUGEINT; sizeInBits: SIZE): BOOLEAN;
-	VAR m: HUGEINT;
+	PROCEDURE IsSignedInteger*(this: SIGNED64; sizeInBits: SIZE): BOOLEAN;
+	VAR m: SIGNED64;
 	BEGIN
-			m := ASH(HUGEINT(1),sizeInBits-1);
+			m := ASH(SIGNED64(1),sizeInBits-1);
 			RETURN (this < m) & (-this <= m)
 	END IsSignedInteger;
 
-	PROCEDURE GetSignedIntegerType*(system: System; this: HUGEINT): SyntaxTree.IntegerType;
+	PROCEDURE GetSignedIntegerType*(system: System; this: SIGNED64): SyntaxTree.IntegerType;
 
 		(* code snippets for unsigned
 		ELSE
@@ -1544,12 +1511,12 @@ TYPE
 			RETURN (this >= 0) & (this < m)
 		END;
 
-		PROCEDURE Bits(x: HUGEINT): BOOLEAN;
+		PROCEDURE Bits(x: SIGNED64): BOOLEAN;
 		BEGIN
 			WHILE x > 0 DO INC(bits); x := x DIV 2 END;
 		END Bits;
 
-		IF a = MIN(HUGEINT) THEN (* -a does not work on lowest possible number, ~a+1 would overflow *)
+		IF a = MIN(SIGNED64) THEN (* -a does not work on lowest possible number, ~a+1 would overflow *)
 			RETURN Integer[64]
 		ELSIF a < 0 THEN
 			RETURN Integer[Bits(-a-1)+1]
@@ -1559,27 +1526,27 @@ TYPE
 		*)
 
 	BEGIN
-		IF IsSignedInteger(this,8) THEN RETURN Integer8
-		ELSIF IsSignedInteger(this, 16) THEN RETURN Integer16
-		ELSIF IsSignedInteger(this, 32) THEN RETURN Integer32
-		ELSE RETURN Integer64
+		IF IsSignedInteger(this,8) THEN RETURN Signed8
+		ELSIF IsSignedInteger(this, 16) THEN RETURN Signed16
+		ELSIF IsSignedInteger(this, 32) THEN RETURN Signed32
+		ELSE RETURN Signed64
 		END;
 	END GetSignedIntegerType;
 
-	PROCEDURE GetIntegerType*(system: System; this: HUGEINT): SyntaxTree.IntegerType;
+	PROCEDURE GetIntegerType*(system: System; this: SIGNED64): SyntaxTree.IntegerType;
 	BEGIN
-		IF IsSignedInteger(this,8) THEN RETURN Integer8
+		IF IsSignedInteger(this,8) THEN RETURN Signed8
 				(* system.SizeOf(...) = 8 : detect special backends with no sizes smaller than 32 *)
 		ELSIF (system.SizeOf(Unsigned8) =  8) & IsUnsignedInteger(this,8) THEN RETURN Unsigned8
-		ELSIF IsSignedInteger(this, 16) THEN RETURN Integer16
+		ELSIF IsSignedInteger(this, 16) THEN RETURN Signed16
 		ELSIF (system.SizeOf(Unsigned16) = 16) & IsUnsignedInteger(this,16) THEN RETURN Unsigned16
-		ELSIF IsSignedInteger(this, 32) THEN RETURN Integer32
+		ELSIF IsSignedInteger(this, 32) THEN RETURN Signed32
 		ELSIF IsUnsignedInteger(this,32) THEN RETURN Unsigned32
-		ELSE RETURN Integer64
+		ELSE RETURN Signed64
 		END;
 	END GetIntegerType;
 
-	PROCEDURE NewIntegerValue*(system: System; position: Position; hugeint: HUGEINT): SyntaxTree.Value;
+	PROCEDURE NewIntegerValue*(system: System; position: Position; hugeint: SIGNED64): SyntaxTree.Value;
 	VAR value: SyntaxTree.IntegerValue;
 	BEGIN
 		value := SyntaxTree.NewIntegerValue(position,hugeint);
@@ -1683,7 +1650,7 @@ TYPE
 		RETURN distance
 	END BasicTypeDistance;
 
-	PROCEDURE GetIdentifier*(symbol: LONGINT; case: LONGINT): SyntaxTree.Identifier;
+	PROCEDURE GetIdentifier*(symbol: SIGNED32; case: SIGNED32): SyntaxTree.Identifier;
 	BEGIN
 		IF (symbol >= 0) & (symbol < LEN(identifiers,1)) THEN
 			RETURN identifiers[case,symbol]
@@ -1692,8 +1659,8 @@ TYPE
 		END;
 	END GetIdentifier;
 
-	PROCEDURE GetSymbol*(case: LONGINT; id: SyntaxTree.Identifier): LONGINT;
-	VAR i: LONGINT;
+	PROCEDURE GetSymbol*(case: SIGNED32; id: SyntaxTree.Identifier): SIGNED32;
+	VAR i: SIGNED32;
 	BEGIN
 		(*! quick and dirty implementation, optimize ! *)
 		FOR i := 0 TO LEN(identifiers,1)-1 DO
@@ -1703,9 +1670,9 @@ TYPE
 	END GetSymbol;
 
 	PROCEDURE InitIdentifiers;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 
-		PROCEDURE NewKeywordIdentifier(op: LONGINT);
+		PROCEDURE NewKeywordIdentifier(op: SIGNED32);
 		VAR id: Scanner.IdentifierType;
 		BEGIN
 			Scanner.GetKeyword(Scanner.Uppercase,op,id);
@@ -1714,7 +1681,7 @@ TYPE
 			identifiers[Scanner.Lowercase,op] := id;
 		END NewKeywordIdentifier;
 
-		PROCEDURE NewBuiltinIdentifier(op: LONGINT; CONST name: ARRAY OF CHAR);
+		PROCEDURE NewBuiltinIdentifier(op: SIGNED32; CONST name: ARRAY OF CHAR);
 		VAR nameL,nameU: Scanner.IdentifierString;
 		BEGIN
 			ASSERT(op < LEN(identifiers[0]));
@@ -1853,18 +1820,18 @@ TYPE
 
 
 		(* types *)
-		Integer8 := SyntaxTree.NewIntegerType(8, TRUE);
-		Integer16 := SyntaxTree.NewIntegerType(16, TRUE);
-		Integer32 := SyntaxTree.NewIntegerType(32, TRUE);
-		Integer64 := SyntaxTree.NewIntegerType(64, TRUE);
+		Signed8 := SyntaxTree.NewIntegerType(8, TRUE);
+		Signed16 := SyntaxTree.NewIntegerType(16, TRUE);
+		Signed32 := SyntaxTree.NewIntegerType(32, TRUE);
+		Signed64 := SyntaxTree.NewIntegerType(64, TRUE);
 		Unsigned8 := SyntaxTree.NewIntegerType(8, FALSE);
 		Unsigned16 := SyntaxTree.NewIntegerType(16, FALSE);
 		Unsigned32 := SyntaxTree.NewIntegerType(32, FALSE);
 		Unsigned64 := SyntaxTree.NewIntegerType(64, FALSE);
 		Float32 := SyntaxTree.NewFloatType(32);
 		Float64 := SyntaxTree.NewFloatType(64);
-		Complex64 := SyntaxTree.NewComplexType(Float32);
-		Complex128 := SyntaxTree.NewComplexType(Float64);
+		Complex32 := SyntaxTree.NewComplexType(Float32);
+		Complex64 := SyntaxTree.NewComplexType(Float64);
 		Set8 := SyntaxTree.NewSetType(8);
 		Set16 := SyntaxTree.NewSetType(16);
 		Set32 := SyntaxTree.NewSetType(32);

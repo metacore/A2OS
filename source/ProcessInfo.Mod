@@ -47,7 +47,7 @@ BEGIN
 	END;
 END Sort;
 
-PROCEDURE Find*(CONST processes : ProcessArray; id : WORD) : Objects.Process;
+PROCEDURE Find*(CONST processes : ProcessArray; id : INTEGER) : Objects.Process;
 VAR process : Objects.Process; i : SIZE;
 BEGIN
 	i := 0;
@@ -83,12 +83,12 @@ BEGIN
 	ProcessInfo0.GetProcesses(processes, nofProcesses);
 END GetProcesses;
 
-PROCEDURE GetProcess*(pid : WORD) : Objects.Process;
+PROCEDURE GetProcess*(pid : INTEGER) : Objects.Process;
 BEGIN
 	RETURN ProcessInfo0.GetProcess(pid);
 END GetProcess;
 
-PROCEDURE WriteMode*(mode : WORD; out : Streams.Writer);
+PROCEDURE WriteMode*(mode : INTEGER; out : Streams.Writer);
 BEGIN
 	CASE mode OF
 		|Objects.Ready : out.String("rdy");

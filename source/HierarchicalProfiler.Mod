@@ -42,7 +42,7 @@ TYPE
 	Samples = POINTER TO ARRAY OF Sample; (* HUGE!! *)
 
 	SampleInfo = RECORD
-		processorID : LONGINT;
+		processorID : SIGNED32;
 		process : Objects.Process;
 	END;
 
@@ -56,9 +56,9 @@ TYPE
 		parent- : Node;
 		child- : Node;
 		sibling- : Node;
-		count- : LONGINT;
-		percent- : REAL;
-		nofChildren- : LONGINT; (* number of direct descendants *)
+		count- : SIGNED32;
+		percent- : FLOAT32;
+		nofChildren- : SIGNED32; (* number of direct descendants *)
 		name- : Name;
 
 		(* for external profile processing *)
@@ -79,8 +79,8 @@ TYPE
 			RETURN Strings.NewString(string);
 		END GetCaption;
 
-		PROCEDURE Show(out : Streams.Writer; indent : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE Show(out : Streams.Writer; indent : SIGNED32);
+		VAR i : SIGNED32;
 		BEGIN
 			ASSERT(out # NIL);
 			FOR i := 0 TO indent-1 DO out.Char(" "); END;
@@ -107,14 +107,14 @@ TYPE
 	VAR
 		nodes- : Node;
 
-		nofSamples- : LONGINT;
+		nofSamples- : SIGNED32;
 		nofProcessors- : SIZE;
-		nofRunsTooDeep- : LONGINT;
-		nofUnwindingFaults- : LONGINT;
-		nofSamplesNotStored- : LONGINT;
+		nofRunsTooDeep- : SIGNED32;
+		nofUnwindingFaults- : SIGNED32;
+		nofSamplesNotStored- : SIGNED32;
 
 		pattern : ARRAY 64 OF CHAR;
-		minPercent : LONGINT;
+		minPercent : SIGNED32;
 
 		PROCEDURE FindNode(CONST name : Name; list : Node) : Node;
 		BEGIN
@@ -184,7 +184,7 @@ TYPE
 			node.marked := FALSE;
 		END VisitorClearMark;
 
-		PROCEDURE Mark*(CONST pattern : ARRAY OF CHAR; minPercent : LONGINT);
+		PROCEDURE Mark*(CONST pattern : ARRAY OF CHAR; minPercent : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			COPY(pattern, SELF.pattern);
 			SELF.minPercent := minPercent;
@@ -243,17 +243,17 @@ VAR
 	maxNofSamples : SIZE;
 
 	(* statistics *)
-	nofRunsTooDeep : LONGINT;
-	nofUnwindingFaults : LONGINT;
-	nofSamplesNotStored : LONGINT;
-	nofSamples : LONGINT;
+	nofRunsTooDeep : SIGNED32;
+	nofUnwindingFaults : SIGNED32;
+	nofSamplesNotStored : SIGNED32;
+	nofSamples : SIGNED32;
 
 	(* current index into 'samples' array *)
-	currentIndex : LONGINT;
+	currentIndex : SIGNED32;
 	locked : BOOLEAN; (* protect 'currentIndex' *)
 
 	(* Profiler state *)
-	state : LONGINT;
+	state : SIGNED32;
 
 (* Find a node with name 'name' within the children of 'parent'. Returns NIL if no such node found *)
 PROCEDURE FindChildNode(CONST name : Name; parent : Node) : Node;
@@ -294,8 +294,8 @@ BEGIN
 END MergeChildNode;
 
 (* Add 'sample' to 'profile' *)
-PROCEDURE AddSample(profile : Node; type, info : LONGINT; CONST sampleInfo : SampleInfo; CONST sample : Sample);
-VAR node : Node; module : Modules.Module; pc,startpc : ADDRESS; nodeName, name : Name; i : LONGINT;
+PROCEDURE AddSample(profile : Node; type, info : SIGNED32; CONST sampleInfo : SampleInfo; CONST sample : Sample);
+VAR node : Node; module : Modules.Module; pc,startpc : ADDRESS; nodeName, name : Name; i : SIGNED32;
 
 	PROCEDURE GenerateNodeName(module : Modules.Module; CONST procedureName : ARRAY OF CHAR) : Name;
 	VAR name : Name;
@@ -306,7 +306,7 @@ VAR node : Node; module : Modules.Module; pc,startpc : ADDRESS; nodeName, name :
 		RETURN name;
 	END GenerateNodeName;
 
-	PROCEDURE GenerateProcessorName(processorID : LONGINT) : Name;
+	PROCEDURE GenerateProcessorName(processorID : SIGNED32) : Name;
 	VAR name : Name; nbr : ARRAY 16 OF CHAR;
 	BEGIN
 		name := "Processor P";
@@ -388,8 +388,8 @@ BEGIN
 	END;
 END AddSample;
 
-PROCEDURE HandleTimer(id: LONGINT; process : Objects.Process;  pc, bp, lowAdr, highAdr : ADDRESS);
-VAR index, depth : LONGINT; n: ADDRESS;
+PROCEDURE HandleTimer(id: SIGNED32; process : Objects.Process;  pc, bp, lowAdr, highAdr : ADDRESS);
+VAR index, depth : SIGNED32; n: ADDRESS;
 BEGIN
 	(* acquire lock that protects currentIndex *)
 	WHILE Machine.AtomicTestSet(locked) DO Machine.SpinHint; (* busy wait *) END;
@@ -431,7 +431,7 @@ BEGIN
 END HandleTimer;
 
 PROCEDURE InvalidateSample(VAR sample : Sample);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO MaxUnwindingDepth-1 DO
 		sample[i] := Invalid;
@@ -491,8 +491,8 @@ BEGIN
 	PostProcessNode(profile, profile.nodes);
 END PostProcessProfile;
 
-PROCEDURE CreateProfile(type : LONGINT; info : LONGINT) : Profile;
-VAR profile : Profile; index : LONGINT;
+PROCEDURE CreateProfile(type : SIGNED32; info : SIGNED32) : Profile;
+VAR profile : Profile; index : SIGNED32;
 BEGIN (* {Caller holds module lock} *)
 	ASSERT(samples # NIL);
 	NEW(profile);
@@ -511,13 +511,13 @@ BEGIN (* {Caller holds module lock} *)
 END CreateProfile;
 
 (** Returns the size of the sampling buffer in bytes for a given maximum sampling time in seconds *)
-PROCEDURE GetBufferSize*(time : LONGINT) : SIZE;
+PROCEDURE GetBufferSize*(time : SIGNED32) : SIZE;
 BEGIN
 	RETURN time * Kernel.Second * Machine.NumberOfProcessors() * MaxUnwindingDepth * SIZEOF(ADDRESS);
 END GetBufferSize;
 
 (**	Generate hierarchical profile of the last profiler run's data. Returns NIL if no data available *)
-PROCEDURE GetProfile*(type, info : LONGINT; VAR profile : Profile; VAR res : WORD);
+PROCEDURE GetProfile*(type, info : SIGNED32; VAR profile : Profile; VAR res : INTEGER);
 BEGIN {EXCLUSIVE}
 	profile := NIL;
 	IF (state # Running) THEN
@@ -534,7 +534,7 @@ END GetProfile;
 
 (** Start profiling. If the profiler is already running, it is stopped and the sample data is discarded before re-starting it *)
 PROCEDURE Start*(context : Commands.Context); (** [options] ~ *)
-VAR options : Options.Options; unit : ARRAY 4 OF CHAR; maxTime: LONGINT; bufferSize: SIZE; res: WORD;
+VAR options : Options.Options; unit : ARRAY 4 OF CHAR; maxTime: SIGNED32; bufferSize: SIZE; res: INTEGER;
 BEGIN
 	NEW(options);
 	options.Add("t", "time", Options.Integer); (* in seconds *)
@@ -563,7 +563,7 @@ BEGIN
 END Start;
 
 (** Start profiling. If the profiler is already running, it is stopped and the sample data is discarded before re-starting it *)
-PROCEDURE StartProfiling*(maxTime : LONGINT; VAR res : WORD);
+PROCEDURE StartProfiling*(maxTime : SIGNED32; VAR res : INTEGER);
 BEGIN {EXCLUSIVE}
 	ASSERT(maxTime > 0);
 	IF (state # Running) THEN
@@ -586,7 +586,7 @@ END StartProfiling;
 
 (** Stop profiling. The profile data is not discarded. It can be retrieved using the procedure 'GetProfile' *)
 PROCEDURE Stop*(context : Commands.Context);
-VAR res : WORD;
+VAR res : INTEGER;
 BEGIN
 	StopProfiling(res);
 	IF (res = Ok) THEN
@@ -599,7 +599,7 @@ BEGIN
 END Stop;
 
 (** Stop profiling. The profile data is not discarded. It can be retrieved using the procedure 'GetProfile' *)
-PROCEDURE StopProfiling*(VAR res : WORD);
+PROCEDURE StopProfiling*(VAR res : INTEGER);
 BEGIN {EXCLUSIVE}
 	IF (state = Running) THEN
 		HierarchicalProfiler0.Disable;
@@ -611,7 +611,7 @@ BEGIN {EXCLUSIVE}
 END StopProfiling;
 
 PROCEDURE Continue*(context : Commands.Context); (** ~ *)
-VAR res : WORD;
+VAR res : INTEGER;
 BEGIN
 	ContinueProfiling(res);
 	IF (res = Ok) THEN
@@ -622,7 +622,7 @@ BEGIN
 	context.out.Ln;
 END Continue;
 
-PROCEDURE ContinueProfiling*(VAR res : WORD);
+PROCEDURE ContinueProfiling*(VAR res : INTEGER);
 BEGIN {EXCLUSIVE}
 	IF (state # Running) THEN
 		IF (samples # NIL) THEN
@@ -639,7 +639,7 @@ BEGIN {EXCLUSIVE}
 END ContinueProfiling;
 
 (** Returns TRUE if the profiler is currently running, FALSE otherwise *)
-PROCEDURE GetState*(VAR currentSamples, maxSamples : SIZE) : WORD;
+PROCEDURE GetState*(VAR currentSamples, maxSamples : SIZE) : INTEGER;
 BEGIN {EXCLUSIVE}
 	IF (state = Running) THEN
 		currentSamples := currentIndex;
@@ -650,9 +650,9 @@ END GetState;
 
 (**	Show the profile *)
 PROCEDURE Show*(context : Commands.Context);
-VAR profile : Profile; indent : LONGINT;
+VAR profile : Profile; indent : SIGNED32;
 
-	PROCEDURE ShowNodes(parent : Node; indent : LONGINT; out : Streams.Writer);
+	PROCEDURE ShowNodes(parent : Node; indent : SIGNED32; out : Streams.Writer);
 	BEGIN
 		WHILE (parent # NIL) DO
 			parent.Show(out, indent);
@@ -677,7 +677,7 @@ BEGIN {EXCLUSIVE}
 END Show;
 
 PROCEDURE Cleanup;
-VAR ignore : WORD;
+VAR ignore : INTEGER;
 BEGIN
 	StopProfiling(ignore);
 END Cleanup;

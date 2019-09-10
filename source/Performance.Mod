@@ -15,16 +15,16 @@ CONST
 TYPE
 	Monitor = OBJECT
 		VAR
-			period: LONGINT; rand: Random.Generator; timer: Kernel.Timer;
-			loops: LONGINT; state: SHORTINT;
+			period: SIGNED32; rand: Random.Generator; timer: Kernel.Timer;
+			loops: SIGNED32; state: SIGNED8;
 
-		PROCEDURE &Init*(period: LONGINT; randomized: BOOLEAN);
+		PROCEDURE &Init*(period: SIGNED32; randomized: BOOLEAN);
 		BEGIN
 			SELF.period := period; state := 0;
 			IF randomized THEN NEW(rand) ELSE rand := NIL END
 		END Init;
 
-		PROCEDURE Compute(loops: LONGINT);	(* abstract *)
+		PROCEDURE Compute(loops: SIGNED32);	(* abstract *)
 		END Compute;
 
 		PROCEDURE Stop;
@@ -49,9 +49,9 @@ TYPE
 
 TYPE
 	LoadMonitor = OBJECT (Monitor)	(* singleton *)
-		VAR exp: ARRAY 3 OF REAL;
+		VAR exp: ARRAY 3 OF FLOAT32;
 
-		PROCEDURE &Init*(period: LONGINT; randomized: BOOLEAN);
+		PROCEDURE &Init*(period: SIGNED32; randomized: BOOLEAN);
 		BEGIN
 			Init^(period, randomized);
 			load[0] := 0; load[1] := 0; load[2] := 0;
@@ -60,8 +60,8 @@ TYPE
 			exp[2] := 1/Math.exp(period/(Time2*60))
 		END Init;
 
-		PROCEDURE Compute(loops: LONGINT);
-		VAR n: LONGINT;
+		PROCEDURE Compute(loops: SIGNED32);
+		VAR n: SIGNED32;
 		BEGIN
 			n := Objects.NumReady() - 1;	(* subtract one for fridge light *)
 			UpdateLoad(load[0], exp[0], n);
@@ -78,10 +78,10 @@ TYPE
 
 TYPE
 	IdleMonitor = OBJECT (Monitor)	(* singleton *)
-		VAR milliTimer: Kernel.MilliTimer; idlecount: ARRAY Machine.MaxCPU OF LONGINT;
+		VAR milliTimer: Kernel.MilliTimer; idlecount: ARRAY Machine.MaxCPU OF SIGNED32;
 
-		PROCEDURE &Init*(period: LONGINT; randomized: BOOLEAN);
-		VAR i: LONGINT;
+		PROCEDURE &Init*(period: SIGNED32; randomized: BOOLEAN);
+		VAR i: SIGNED32;
 		BEGIN
 			Init^(period, randomized);
 			FOR i := 0 TO Machine.MaxCPU-1 DO
@@ -90,8 +90,8 @@ TYPE
 			Kernel.SetTimer(milliTimer, 0);
 		END Init;
 
-		PROCEDURE Compute(loops: LONGINT);
-		VAR i, ic, id, td: LONGINT;
+		PROCEDURE Compute(loops: SIGNED32);
+		VAR i, ic, id, td: SIGNED32;
 		BEGIN
 			td := Kernel.Elapsed(milliTimer); Kernel.SetTimer(milliTimer, 0);
 			IF td = 0 THEN td := 1 END;	(* avoid divide by 0 *)
@@ -99,7 +99,7 @@ TYPE
 				ic := Objects.idlecount[i];
 				id := ic - idlecount[i]; idlecount[i] := ic;
 				IF ic # 0 THEN	(* processor alive, ignore wrap *)
-					idle[i] := id*100 DIV td	(* LONGINT assignments are atomic *)
+					idle[i] := id*100 DIV td	(* SIGNED32 assignments are atomic *)
 				END
 			END;
 			IF Trace THEN
@@ -112,18 +112,18 @@ TYPE
 	END IdleMonitor;
 
 VAR
-	load*: ARRAY 3 OF REAL;	(** load estimates *)
-	idle*: ARRAY Machine.MaxCPU OF LONGINT;	(** idle percentage estimates *)
+	load*: ARRAY 3 OF FLOAT32;	(** load estimates *)
+	idle*: ARRAY Machine.MaxCPU OF SIGNED32;	(** idle percentage estimates *)
 	loadmon: LoadMonitor;
 	idlemon: IdleMonitor;
 
-PROCEDURE UpdateLoad(VAR load: REAL; exp: REAL; n: LONGINT);
+PROCEDURE UpdateLoad(VAR load: FLOAT32; exp: FLOAT32; n: SIGNED32);
 BEGIN
-	load := load*exp + (1-exp)*n	(* REAL assigments are atomic *)
+	load := load*exp + (1-exp)*n	(* FLOAT32 assigments are atomic *)
 END UpdateLoad;
 
-PROCEDURE WriteLoad(load: REAL);
-VAR x: LONGINT;
+PROCEDURE WriteLoad(load: FLOAT32);
+VAR x: SIGNED32;
 BEGIN
 	IF Trace THEN
 		x := ENTIER(load*100 + 0.5);

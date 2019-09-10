@@ -13,18 +13,18 @@ CONST
 VAR
 	Sin,Cos: ARRAY R OF SREAL;
 	Norm: ARRAY N,N OF srBase.PT;
-	i, j: LONGINT;
+	i, j: SIGNED32;
 	x, theta, phi: SREAL;
 
 PROCEDURE sin*(x: SREAL): SREAL;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	i := ENTIER(x/dx) MOD R;
 	RETURN Sin[i];
 END sin;
 
 PROCEDURE cos*(x: SREAL): SREAL;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	i := ENTIER(x/dx) MOD R;
 	RETURN Cos[i];

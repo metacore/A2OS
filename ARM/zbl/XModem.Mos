@@ -44,20 +44,20 @@ CONST
 	NAK = 15X;
 
 TYPE
-	Callback * = PROCEDURE (CONST buffer: ARRAY OF CHAR; ofs, len: LONGINT);
+	Callback * = PROCEDURE (CONST buffer: ARRAY OF CHAR; ofs, len: SIGNED32);
 
 VAR
 	state: CHAR;	(* current state *)
 	crc: BOOLEAN;	(* TRUE iff in CRC mode, FALSE iff in checksum mode *)
-	packetSize: LONGINT;	(* size of a packet, including header & checksum/CRC. Initialized by SendInit/ReceiveInit *)
-	retries: LONGINT;	(* # of retries *)
-	blockIndex: LONGINT;	(* # of block *)
+	packetSize: SIGNED32;	(* size of a packet, including header & checksum/CRC. Initialized by SendInit/ReceiveInit *)
+	retries: SIGNED32;	(* # of retries *)
+	blockIndex: SIGNED32;	(* # of block *)
 	msg: ARRAY 256 OF CHAR;	(* error message *)
-	crcThreshold: LONGINT;
+	crcThreshold: SIGNED32;
 	buf: ARRAY MaxPacketSize OF CHAR; 
 
 	(** Receive a file from XModem in buffer. Returns 0 if error, received length otherwise *)
-	PROCEDURE Receive * (VAR in: StreamReaders.Reader; VAR out: StreamWriters.Writer; callback: Callback): LONGINT;
+	PROCEDURE Receive * (VAR in: StreamReaders.Reader; VAR out: StreamWriters.Writer; callback: Callback): SIGNED32;
 	BEGIN
 		state := RInitCRC;
 		blockIndex := 1; retries := 0; crcThreshold := 0;
@@ -76,7 +76,7 @@ VAR
 	END Receive;
 
 	PROCEDURE ReceiveInitCRC(VAR in: StreamReaders.Reader; VAR out: StreamWriters.Writer);
-	VAR res: LONGINT; ch: CHAR;
+	VAR res: SIGNED32; ch: CHAR;
 	BEGIN
 		IF DebugR THEN
 			Trace.String("ReceiveInitCRC:"); Trace.Ln; Trace.String("  sending 'C'..."); Trace.Ln
@@ -111,7 +111,7 @@ VAR
 	END ReceiveInitCRC;
 
 	PROCEDURE ReceiveInitChecksum(VAR in: StreamReaders.Reader;  VAR out: StreamWriters.Writer);
-	VAR res: LONGINT; ch: CHAR;
+	VAR res: SIGNED32; ch: CHAR;
 	BEGIN
 		packetSize := PacketSizeChksum;
 		(* send NAK *)
@@ -128,7 +128,7 @@ VAR
 	END ReceiveInitChecksum;
 
 	PROCEDURE ReceiveData (VAR in: StreamReaders.Reader; VAR out: StreamWriters.Writer; callback: Callback);
-	VAR ch: CHAR; res, i, idx, c, cc, blk, pkt: LONGINT; ok: BOOLEAN;
+	VAR ch: CHAR; res, i, idx, c, cc, blk, pkt: SIGNED32; ok: BOOLEAN;
 	BEGIN
 		IF DebugR THEN
 			Trace.String("ReceiveData:"); Trace.Ln; Trace.String("  waiting for first byte...")
@@ -215,7 +215,7 @@ VAR
 		END
 	END ReceiveData;
 
-	PROCEDURE Get(VAR in: StreamReaders.Reader; timeout: LONGINT; VAR ch: CHAR): LONGINT;
+	PROCEDURE Get(VAR in: StreamReaders.Reader; timeout: SIGNED32; VAR ch: CHAR): SIGNED32;
 	VAR milliTimer : EnetTiming.Timer;
 	BEGIN
 		IF (StreamReaders.Available(in) = 0) THEN
@@ -231,7 +231,7 @@ VAR
 		RETURN Ok
 	END Get;
 
-	PROCEDURE Peek(VAR in: StreamReaders.Reader; timeout: LONGINT; VAR ch: CHAR): LONGINT;
+	PROCEDURE Peek(VAR in: StreamReaders.Reader; timeout: SIGNED32; VAR ch: CHAR): SIGNED32;
 	VAR milliTimer : EnetTiming.Timer;
 	BEGIN
 		IF (StreamReaders.Available(in) = 0) THEN
@@ -253,23 +253,23 @@ VAR
 		REPEAT UNTIL Get(r, PurgeTimeout, ch) = Timeout
 	END Purge;
 
-	PROCEDURE CalcCheckSum(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT): CHAR;
-	VAR i, chksum: LONGINT;
+	PROCEDURE CalcCheckSum(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32): CHAR;
+	VAR i, chksum: SIGNED32;
 	BEGIN
 		chksum := 0;
 		FOR i := 0 TO len-1 DO chksum := chksum + ORD(buffer[ofs+i]) END;
 		RETURN CHR(chksum MOD 100H)
 	END CalcCheckSum;
 
-	PROCEDURE CalcCRC(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT): LONGINT;
-	VAR i, k, crc: LONGINT;
+	PROCEDURE CalcCRC(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32): SIGNED32;
+	VAR i, k, crc: SIGNED32;
 	BEGIN
 		crc := 0;
 		FOR i := 0 TO len-1 DO
-			crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, crc) / SYSTEM.VAL(SET, ORD(buffer[ofs+i])*100H));
+			crc := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, crc) / SYSTEM.VAL(SET, ORD(buffer[ofs+i])*100H));
 			FOR k := 0 TO 7 DO
 				IF (15 IN SYSTEM.VAL(SET, crc)) THEN
-					crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, crc*2) / SYSTEM.VAL(SET, 1021H))
+					crc := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, crc*2) / SYSTEM.VAL(SET, 1021H))
 				ELSE
 					crc := crc*2
 				END
@@ -283,13 +283,13 @@ VAR
 		COPY(msg, string)
 	END GetErrorMessage;
 
-	PROCEDURE PutData(VAR tmp: ARRAY OF CHAR; ofs, len: LONGINT; callback: Callback);
+	PROCEDURE PutData(VAR tmp: ARRAY OF CHAR; ofs, len: SIGNED32; callback: Callback);
 	BEGIN
 		callback(tmp, ofs, len)
 	END PutData;
 
-	PROCEDURE GetHeader(VAR buf: ARRAY OF CHAR): LONGINT;
-	VAR index: LONGINT;
+	PROCEDURE GetHeader(VAR buf: ARRAY OF CHAR): SIGNED32;
+	VAR index: SIGNED32;
 	BEGIN
 		IF (buf[0] = SOH) OR (buf[0] = STX) THEN
 			index := ORD(buf[1]);

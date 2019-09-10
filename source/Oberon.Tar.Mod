@@ -12,7 +12,7 @@ MODULE Tar IN Oberon; (** portable *)	(* Copyright (c) Jacques Supcik, 1995 / js
 		Entry = POINTER TO EntryDesc;
 		EntryDesc = RECORD
 			name: ARRAY 256 OF CHAR;
-			pos, size: LONGINT;
+			pos, size: SIGNED32;
 			next: Entry;
 		END;
 
@@ -23,7 +23,7 @@ MODULE Tar IN Oberon; (** portable *)	(* Copyright (c) Jacques Supcik, 1995 / js
 		END;
 
 	PROCEDURE ExtractFileName(CONST buf: ARRAY OF CHAR; VAR name: ARRAY OF CHAR);
-		VAR i, j, k: INTEGER; ch: CHAR; lastDot: BOOLEAN;
+		VAR i, j, k: SIGNED16; ch: CHAR; lastDot: BOOLEAN;
 	BEGIN
 		i := 0; j := 345; lastDot := FALSE;
 		WHILE buf[j] # 0X DO
@@ -47,8 +47,8 @@ MODULE Tar IN Oberon; (** portable *)	(* Copyright (c) Jacques Supcik, 1995 / js
 		name[i] := 0X;
 	END ExtractFileName;
 
-	PROCEDURE ExtractSize(CONST buf: ARRAY OF CHAR; VAR size: LONGINT);
-		VAR i: LONGINT;
+	PROCEDURE ExtractSize(CONST buf: ARRAY OF CHAR; VAR size: SIGNED32);
+		VAR i: SIGNED32;
 	BEGIN
 		i := 124; size := 0;
 		REPEAT
@@ -60,7 +60,7 @@ MODULE Tar IN Oberon; (** portable *)	(* Copyright (c) Jacques Supcik, 1995 / js
 	END ExtractSize;
 
 	PROCEDURE ReadEntries(CONST fileName: ARRAY OF CHAR; VAR F: Files.File; VAR entries: Entry);
-		VAR R: Files.Rider; p: Entry; buf: ARRAY 512 OF CHAR; pos, size: LONGINT;
+		VAR R: Files.Rider; p: Entry; buf: ARRAY 512 OF CHAR; pos, size: SIGNED32;
 	BEGIN
 		F := Files.Old(fileName);
 		IF F = NIL THEN entries := NIL; RETURN END;
@@ -79,7 +79,7 @@ MODULE Tar IN Oberon; (** portable *)	(* Copyright (c) Jacques Supcik, 1995 / js
 	END ReadEntries;
 
 	PROCEDURE DisplayEntries(T: Texts.Text; e: Entry);
-		VAR W: Texts.Writer; i: LONGINT;
+		VAR W: Texts.Writer; i: SIGNED32;
 	BEGIN
 		Texts.Delete(T, 0, T.len); Texts.OpenWriter(W);
 		i := 0;
@@ -92,7 +92,7 @@ MODULE Tar IN Oberon; (** portable *)	(* Copyright (c) Jacques Supcik, 1995 / js
 	END DisplayEntries;
 
 	PROCEDURE GetFile(e: Entry; F: Files.File);
-		VAR dest: Files.File; W, R: Files.Rider; buf: ARRAY 512 OF CHAR; size: LONGINT;
+		VAR dest: Files.File; W, R: Files.Rider; buf: ARRAY 512 OF CHAR; size: SIGNED32;
 	BEGIN
 		Out.String ("Extracting "); Out.String(e.name);
 		dest := Files.New(e.name);
@@ -173,7 +173,7 @@ BEGIN
 END NewDoc;
 
 	PROCEDURE Extract*;
-		VAR F: Display.Frame; S: Texts.Scanner; e: Entry; i: LONGINT; ch: CHAR; D: Documents.Document;
+		VAR F: Display.Frame; S: Texts.Scanner; e: Entry; i: SIGNED32; ch: CHAR; D: Documents.Document;
 	BEGIN
 		D := Desktops.CurDoc(Gadgets.context);
 		F := D.dsc;

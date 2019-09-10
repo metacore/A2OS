@@ -18,8 +18,8 @@ TYPE
 
 	Gradient*=OBJECT
 		VAR first, last: GradientStop;
-			gradientUnits*: SHORTINT;
-			spreadMethod*: SHORTINT;
+			gradientUnits*: SIGNED8;
+			spreadMethod*: SIGNED8;
 			transform*: SVG.Transform;
 
 		PROCEDURE &New*;
@@ -60,7 +60,7 @@ TYPE
 
 		(* Add a stop *)
 		PROCEDURE AddStop*(offset: SVG.Length; color:  SVG.Color);
-		VAR r,g,b,a: INTEGER;
+		VAR r,g,b,a: SIGNED16;
 			p: Raster.Pixel;
 		BEGIN
 			SVGColors.Split(color, r, g, b, a);
@@ -231,7 +231,7 @@ TYPE
 			gradient: Gradient;
 			img: Raster.Image;
 			mode: Raster.Mode;
-			x, y, minx, miny, maxx, maxy, imgWidth, imgHeight: LONGINT;
+			x, y, minx, miny, maxx, maxy, imgWidth, imgHeight: SIGNED32;
 			p, patternStart: SVG.Coordinate;
 			transform: SVG.Transform;
 		BEGIN
@@ -296,7 +296,7 @@ TYPE
 	END GradientDict;
 
 (* Parse some spreadMethod attribute *)
-PROCEDURE ParseSpreadMethod*(value: SVG.String; VAR spreadMethod: SHORTINT);
+PROCEDURE ParseSpreadMethod*(value: SVG.String; VAR spreadMethod: SIGNED8);
 BEGIN
 	IF value^ = "pad" THEN spreadMethod := SpreadMethodPad
 	ELSIF value^ = "reflect" THEN spreadMethod := SpreadMethodReflect

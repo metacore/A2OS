@@ -33,7 +33,7 @@ TYPE
 	Point* = POINTER TO PointDesc;
 	PointDesc* = RECORD
 		prev*, next*: Point;	(** Control point list. *)
-		x*, y*: INTEGER; (* Point position relative to the bottom left corner of the figure bounding box. *)
+		x*, y*: SIGNED16; (* Point position relative to the bottom left corner of the figure bounding box. *)
 	END;
 
 	Figure* = POINTER TO FigureDesc;
@@ -41,25 +41,25 @@ TYPE
 	Methods* = POINTER TO MethodDesc;
 	MethodDesc* = RECORD
 		(** Request to redraw figure. Hint indicates a control point that has moved (useful for optimizing redraws). *)
-		Draw*: PROCEDURE (F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER);
-		Print*: PROCEDURE (F: Figure; M: Display3.Mask; x, y: INTEGER);
+		Draw*: PROCEDURE (F: Figure; M: Display3.Mask; x, y: SIGNED16; hint: Point; mode: SIGNED16);
+		Print*: PROCEDURE (F: Figure; M: Display3.Mask; x, y: SIGNED16);
 
 		(* Because the control points might be moved outside of the figure bounding box, we have to normalize the coordinate system of the control points and adjust the bounding box. *)
-		Normalize*: PROCEDURE (F: Figure; VAR x, y, w, h: INTEGER);
+		Normalize*: PROCEDURE (F: Figure; VAR x, y, w, h: SIGNED16);
 
 		(* Adjust points in figure after resizing *)
-		Modify*: PROCEDURE (F: Figure; nw, nh: INTEGER);
+		Modify*: PROCEDURE (F: Figure; nw, nh: SIGNED16);
 
 		(* Is point mx, my part of the figure ? *)
-		HitTest*: PROCEDURE (F: Figure; x, y, mx, my: INTEGER): BOOLEAN;
+		HitTest*: PROCEDURE (F: Figure; x, y, mx, my: SIGNED16): BOOLEAN;
 	END;
 
 	FigureDesc* = RECORD (Gadgets.FrameDesc)
 		p*: Point;	(** List of control points. *)
-		width*: INTEGER;	(** Line width. *)
+		width*: SIGNED16;	(** Line width. *)
 		state0*: SET;	(** filled, closed, editpoints *)
-		col*: INTEGER;	(** Color index. *)
-		patno*: INTEGER;	(** Drawing pattern. *)
+		col*: SIGNED16;	(** Color index. *)
+		patno*: SIGNED16;	(** Drawing pattern. *)
 		do*: Methods;	(** Method block. *)
 	END;
 
@@ -71,37 +71,37 @@ VAR
 	Rect3DMethods*,
 	SplineMethods*: Methods;
 
-	u, v: ARRAY 2048 OF INTEGER; (* used for spline to polygon conversion + scratch area for drawing polygons *)
+	u, v: ARRAY 2048 OF SIGNED16; (* used for spline to polygon conversion + scratch area for drawing polygons *)
 
-PROCEDURE Distance(x, y, x0, y0: INTEGER): INTEGER;
-VAR dx, dy: LONGINT;
+PROCEDURE Distance(x, y, x0, y0: SIGNED16): SIGNED16;
+VAR dx, dy: SIGNED32;
 BEGIN dx := x - x0; dy := y - y0;
 	RETURN SHORT(ENTIER(Math.sqrt(dx * dx + dy * dy)))
 END Distance;
 
-PROCEDURE Min(x, y: INTEGER): INTEGER;
+PROCEDURE Min(x, y: SIGNED16): SIGNED16;
 BEGIN IF x < y THEN RETURN x ELSE RETURN y END
 END Min;
 
-PROCEDURE Max(x, y: INTEGER): INTEGER;
+PROCEDURE Max(x, y: SIGNED16): SIGNED16;
 BEGIN IF x > y THEN RETURN x ELSE RETURN y END
 END Max;
 
 (* convert display coordinates to printer coordinates *)
-PROCEDURE Dev(x: INTEGER): INTEGER;
+PROCEDURE Dev(x: SIGNED16): SIGNED16;
 BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 END Dev;
 
-PROCEDURE GetPat(no: INTEGER): Display.Pattern;
+PROCEDURE GetPat(no: SIGNED16): Display.Pattern;
 BEGIN
 	IF (no > 0) & (no < 9) THEN RETURN Printer3.Pattern[no] ELSE RETURN Display.solid END
 END GetPat;
 
 (* Is X, Y somewhere inside the polygon defined by p ? *)
-PROCEDURE Inside(p: Point; x, y: INTEGER; X, Y: LONGINT): BOOLEAN;
-VAR c: INTEGER; q: Point;
+PROCEDURE Inside(p: Point; x, y: SIGNED16; X, Y: SIGNED32): BOOLEAN;
+VAR c: SIGNED16; q: Point;
 
-	PROCEDURE Intersect(x0,y0,x1,y1 : INTEGER) : BOOLEAN;
+	PROCEDURE Intersect(x0,y0,x1,y1 : SIGNED16) : BOOLEAN;
 	BEGIN
 		IF ((Y >= y0) & (Y < y1)) OR ((Y >= y1) & (Y < y0)) THEN
 			IF y1 > y0 THEN RETURN x0 + (Y - y0) * (x1 -x0) DIV (y1 - y0) - X >= 0
@@ -177,7 +177,7 @@ BEGIN
 	END
 END FigureAttr;
 
-PROCEDURE RestoreFigure(F: Figure; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE RestoreFigure(F: Figure; M: Display3.Mask; x, y, w, h: SIGNED16);
 VAR p: Point;
 BEGIN
 	F.do.Draw(F, M, x, y, NIL, Display.replace);
@@ -216,7 +216,7 @@ BEGIN
 END CopyFigure;
 
 (** Return point located at mouse position mx. my (NIL if no point at location). *)
-PROCEDURE ThisPoint*(F: Figure; x, y, mx, my: INTEGER): Point;
+PROCEDURE ThisPoint*(F: Figure; x, y, mx, my: SIGNED16): Point;
 VAR p: Point;
 BEGIN
 	p := F.p;
@@ -230,7 +230,7 @@ END ThisPoint;
 PROCEDURE EmptyHandler(obj: Objects.Object; VAR M: Objects.ObjMsg);
 END EmptyHandler;
 
-PROCEDURE ThisFrame(not: Display.Frame; X, Y: INTEGER; VAR F: Display.Frame; VAR u, v: INTEGER);
+PROCEDURE ThisFrame(not: Display.Frame; X, Y: SIGNED16; VAR F: Display.Frame; VAR u, v: SIGNED16);
 VAR old: Objects.Handler;
 BEGIN
 	old := not.handle; not.handle := EmptyHandler;
@@ -247,9 +247,9 @@ BEGIN
 END HasCmdAttr;
 
 (** Standard Tracking behavior. *)
-PROCEDURE Track*(F: Figure; x, y: INTEGER; VAR M: Oberon.InputMsg);
-VAR p, q: Point; mx, my, px, py, ox, oy: INTEGER; A: Display.ModifyMsg; lastkeys, keysum: SET;
-	f: Display.Frame; u0, v0: INTEGER; C: Display.ConsumeMsg; CM: Objects.CopyMsg;
+PROCEDURE Track*(F: Figure; x, y: SIGNED16; VAR M: Oberon.InputMsg);
+VAR p, q: Point; mx, my, px, py, ox, oy: SIGNED16; A: Display.ModifyMsg; lastkeys, keysum: SET;
+	f: Display.Frame; u0, v0: SIGNED16; C: Display.ConsumeMsg; CM: Objects.CopyMsg;
 	R: Display3.Mask;
 BEGIN
 	IF M.keys = {1} THEN
@@ -373,7 +373,7 @@ BEGIN
 END ModifyFigure;
 
 PROCEDURE FigureHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: Figure; R: Display3.Mask; p, p0: Point;
+VAR x, y, w, h: SIGNED16; F0: Figure; R: Display3.Mask; p, p0: Point;
 BEGIN
 	WITH F: Figure DO
 		IF M IS Display.FrameMsg THEN
@@ -454,7 +454,7 @@ BEGIN
 END FigureHandler;
 
 (** Append a point with relative coordinates x, y to the control point list of F. *)
-PROCEDURE AddPoint*(F: Figure; x, y: INTEGER);
+PROCEDURE AddPoint*(F: Figure; x, y: SIGNED16);
 VAR p, q: Point;
 BEGIN
 	NEW(p); p.x := x; p.y := y;
@@ -467,8 +467,8 @@ END AddPoint;
 
 (** === Lines === *)
 
-PROCEDURE DrawLine*(F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER);
-VAR p, q: Point; n, w, md: INTEGER; pat: Display.Pattern;
+PROCEDURE DrawLine*(F: Figure; M: Display3.Mask; x, y: SIGNED16; hint: Point; mode: SIGNED16);
+VAR p, q: Point; n, w, md: SIGNED16; pat: Display.Pattern;
 
 	PROCEDURE Prev(q: Point): Point;
 	VAR p: Point;
@@ -512,8 +512,8 @@ BEGIN
 	END
 END DrawLine;
 
-PROCEDURE PrintLine*(F: Figure; M: Display3.Mask; x, y: INTEGER);
-VAR p: Point; n: INTEGER; pat: Display.Pattern;
+PROCEDURE PrintLine*(F: Figure; M: Display3.Mask; x, y: SIGNED16);
+VAR p: Point; n: SIGNED16; pat: Display.Pattern;
 BEGIN pat := GetPat(F.patno);
 	n := 0; p := F.p;
 	WHILE p # NIL DO
@@ -527,7 +527,7 @@ BEGIN pat := GetPat(F.patno);
 	END
 END PrintLine;
 
-PROCEDURE HitTestLine*(F: Figure; x, y, mx, my: INTEGER): BOOLEAN;
+PROCEDURE HitTestLine*(F: Figure; x, y, mx, my: SIGNED16): BOOLEAN;
 VAR p, q: Point;
 BEGIN
 	IF filled IN F.state0 THEN
@@ -544,10 +544,10 @@ BEGIN
 	RETURN FALSE
 END HitTestLine;
 
-PROCEDURE NormalizeLine*(F: Figure; VAR x, y, w, h: INTEGER);
-VAR p: Point; r, t, n: INTEGER;
+PROCEDURE NormalizeLine*(F: Figure; VAR x, y, w, h: SIGNED16);
+VAR p: Point; r, t, n: SIGNED16;
 BEGIN
-	x := MAX(INTEGER); r := MIN(INTEGER); t := MIN(INTEGER); y := MAX(INTEGER);
+	x := MAX(SIGNED16); r := MIN(SIGNED16); t := MIN(SIGNED16); y := MAX(SIGNED16);
 	p := F.p;
 	WHILE p # NIL DO
 		IF p.x < x THEN x := p.x END;
@@ -563,10 +563,10 @@ BEGIN
 	x := F.X + x; y := F.Y + y;
 END NormalizeLine;
 
-PROCEDURE ModifyLine* (F: Figure; nw, nh: INTEGER);
-VAR p: Point; x, y, r, t, n, ow, oh: INTEGER;
+PROCEDURE ModifyLine* (F: Figure; nw, nh: SIGNED16);
+VAR p: Point; x, y, r, t, n, ow, oh: SIGNED16;
 BEGIN
-	x := MAX(INTEGER); r := MIN(INTEGER); t := MIN(INTEGER); y := MAX(INTEGER);
+	x := MAX(SIGNED16); r := MIN(SIGNED16); t := MIN(SIGNED16); y := MAX(SIGNED16);
 	p := F.p;
 	WHILE p # NIL DO
 		IF p.x < x THEN x := p.x END;
@@ -598,7 +598,7 @@ BEGIN
 	END
 END LineHandler;
 
-PROCEDURE InitLine*(F: Figure; x, y, x0, y0: INTEGER);
+PROCEDURE InitLine*(F: Figure; x, y, x0, y0: SIGNED16);
 BEGIN
 	F.handle := LineHandler; F.col := Display.FG; F.width := 1; F.patno := 0;
 	INCL(F.state, Gadgets.transparent); INCL(F.state0, editpoints);
@@ -614,8 +614,8 @@ END NewLine;
 
 (** === Circles === *)
 
-PROCEDURE DrawCircle*(F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER);
-VAR p, q: Point; w, md: INTEGER; pat: Display.Pattern;
+PROCEDURE DrawCircle*(F: Figure; M: Display3.Mask; x, y: SIGNED16; hint: Point; mode: SIGNED16);
+VAR p, q: Point; w, md: SIGNED16; pat: Display.Pattern;
 BEGIN
 	IF mode = trackmode THEN w := 1; pat := Display.solid; md := Display.invert
 	ELSE w := F.width; pat := GetPat(F.patno); md := mode
@@ -628,7 +628,7 @@ BEGIN
 	END
 END DrawCircle;
 
-PROCEDURE PrintCircle*(F: Figure; M: Display3.Mask; x, y: INTEGER);
+PROCEDURE PrintCircle*(F: Figure; M: Display3.Mask; x, y: SIGNED16);
 VAR p, q: Point; pat: Display.Pattern;
 BEGIN pat := GetPat(F.patno);
 	p := F.p; q := F.p.next;
@@ -640,8 +640,8 @@ BEGIN pat := GetPat(F.patno);
 	END
 END PrintCircle;
 
-PROCEDURE NormalizeCircle*(F: Figure; VAR x, y, w, h: INTEGER);
-VAR p, q: Point; r, n: INTEGER;
+PROCEDURE NormalizeCircle*(F: Figure; VAR x, y, w, h: SIGNED16);
+VAR p, q: Point; r, n: SIGNED16;
 BEGIN
 	p := F.p; q := F.p.next; r := Distance(p.x, p.y, q.x, q.y);
 	n := r + PointSize DIV 2 + F.width DIV 2 + 1;
@@ -650,8 +650,8 @@ BEGIN
 	x := F.X + x; y := F.Y + y;
 END NormalizeCircle;
 
-PROCEDURE ModifyCircle* (F: Figure; nw, nh: INTEGER);
-VAR p, q: Point; nr, dr, n: INTEGER;
+PROCEDURE ModifyCircle* (F: Figure; nw, nh: SIGNED16);
+VAR p, q: Point; nr, dr, n: SIGNED16;
 BEGIN
 	p := F.p; q := p.next;
 	n := PointSize DIV 2 + F.width DIV 2 + 1;
@@ -661,8 +661,8 @@ BEGIN
 	q.y := p.y; q.x := p.x + nr
 END ModifyCircle;
 
-PROCEDURE HitTestCircle*(F: Figure; x, y, mx, my: INTEGER): BOOLEAN;
-VAR p, q: Point; r, r2: INTEGER;
+PROCEDURE HitTestCircle*(F: Figure; x, y, mx, my: SIGNED16): BOOLEAN;
+VAR p, q: Point; r, r2: SIGNED16;
 BEGIN
 	p := F.p; q := F.p.next; r := Distance(p.x, p.y, q.x, q.y);
 	IF (Gadgets.selected IN F.state) & Effects.Invicinity(mx, my, x + p.x, y + p.y) THEN RETURN TRUE
@@ -689,7 +689,7 @@ BEGIN
 	END
 END CircleHandler;
 
-PROCEDURE InitCircle*(F: Figure; r: INTEGER);
+PROCEDURE InitCircle*(F: Figure; r: SIGNED16);
 BEGIN
 	F.handle := CircleHandler; F.col := Display.FG; F.width := 1; F.patno := 0;
 	INCL(F.state, Gadgets.transparent);
@@ -705,8 +705,8 @@ END NewCircle;
 
 (** === Rectangles === *)
 
-PROCEDURE DrawRect*(F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER);
-VAR p, q: Point; w, md: INTEGER; pat: Display.Pattern;
+PROCEDURE DrawRect*(F: Figure; M: Display3.Mask; x, y: SIGNED16; hint: Point; mode: SIGNED16);
+VAR p, q: Point; w, md: SIGNED16; pat: Display.Pattern;
 BEGIN
 	IF mode = trackmode THEN w := 1; pat := Display.solid; md := Display.invert
 	ELSE w := F.width; pat := GetPat(F.patno); md := mode
@@ -721,7 +721,7 @@ BEGIN
 	END
 END DrawRect;
 
-PROCEDURE PrintRect*(F: Figure; M: Display3.Mask; x, y: INTEGER);
+PROCEDURE PrintRect*(F: Figure; M: Display3.Mask; x, y: SIGNED16);
 VAR p, q: Point; pat: Display.Pattern;
 BEGIN pat := GetPat(F.patno);
 	p := F.p; q := F.p.next;
@@ -734,7 +734,7 @@ BEGIN pat := GetPat(F.patno);
 	END
 END PrintRect;
 
-PROCEDURE NormalizeRect*(F: Figure; VAR x, y, w, h: INTEGER);
+PROCEDURE NormalizeRect*(F: Figure; VAR x, y, w, h: SIGNED16);
 VAR p, q: Point;
 BEGIN
 	p := F.p; q := F.p.next;
@@ -744,7 +744,7 @@ BEGIN
 	x := F.X + x; y := F.Y + y;
 END NormalizeRect;
 
-PROCEDURE ModifyRect* (F: Figure; nw, nh: INTEGER);
+PROCEDURE ModifyRect* (F: Figure; nw, nh: SIGNED16);
 VAR p, q: Point;
 BEGIN
 	p := F.p; q := p.next;
@@ -753,7 +753,7 @@ BEGIN
 	IF p.y > q.y THEN p.y := q.y + nh ELSE q.y := p.y + nh END
 END ModifyRect;
 
-PROCEDURE HitTestRect*(F: Figure; x, y, mx, my: INTEGER): BOOLEAN;
+PROCEDURE HitTestRect*(F: Figure; x, y, mx, my: SIGNED16): BOOLEAN;
 BEGIN
 	IF filled IN F.state0 THEN
 		RETURN Effects.Inside(mx, my, x - PointOffset, y - PointOffset, F.W + PointOffset * 2, F.H + PointOffset * 2)
@@ -776,7 +776,7 @@ BEGIN
 	END
 END RectHandler;
 
-PROCEDURE InitRect*(F: Figure; w, h: INTEGER);
+PROCEDURE InitRect*(F: Figure; w, h: SIGNED16);
 BEGIN F.handle := RectHandler; F.col := Display.FG; F.width := 1; F.patno := 0;
 	INCL(F.state, Gadgets.transparent);
 	AddPoint(F, 0, h); AddPoint(F, w, 0);
@@ -791,8 +791,8 @@ END NewRect;
 
 (** === 3D-Rectangles === *)
 
-PROCEDURE DrawRect3D*(F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER);
-VAR p, q: Point; w, h, wid: INTEGER;
+PROCEDURE DrawRect3D*(F: Figure; M: Display3.Mask; x, y: SIGNED16; hint: Point; mode: SIGNED16);
+VAR p, q: Point; w, h, wid: SIGNED16;
 BEGIN
 	p := F.p; q := F.p.next;
 	x := x + Min(p.x, q.x); y := y + Min(p.y, q.y); w := ABS(p.x - q.x) + 1; h := ABS(p.y - q.y) + 1;
@@ -808,8 +808,8 @@ BEGIN
 	END
 END DrawRect3D;
 
-PROCEDURE PrintRect3D*(F: Figure; M: Display3.Mask; x, y: INTEGER);
-VAR p, q: Point; pat: Display.Pattern; wid, w, h: INTEGER;
+PROCEDURE PrintRect3D*(F: Figure; M: Display3.Mask; x, y: SIGNED16);
+VAR p, q: Point; pat: Display.Pattern; wid, w, h: SIGNED16;
 BEGIN pat := GetPat(F.patno);
 	p := F.p; q := F.p.next;
 	x := x + Dev(Min(p.x, q.x)); y := y + Dev(Min(p.y, q.y)); w := Dev(ABS(p.x - q.x) + 1); h := Dev(ABS(p.y - q.y) + 1);
@@ -842,7 +842,7 @@ BEGIN
 	END
 END Rect3DHandler;
 
-PROCEDURE InitRect3D*(F: Figure; w, h: INTEGER);
+PROCEDURE InitRect3D*(F: Figure; w, h: SIGNED16);
 BEGIN F.handle := Rect3DHandler; F.col := Display.FG; F.width := 1; F.patno := 0;
 	INCL(F.state, Gadgets.transparent);
 	AddPoint(F, 0, h); AddPoint(F, w, 0);
@@ -859,15 +859,15 @@ END NewRect3D;
 
 (* start of Rege code *)
 
-		PROCEDURE MakePoly(VAR RX, RY, RXstrich, RYstrich, RS: ARRAY OF REAL; n: INTEGER;
-									VAR X, Y: ARRAY OF INTEGER; VAR k: INTEGER);
+		PROCEDURE MakePoly(VAR RX, RY, RXstrich, RYstrich, RS: ARRAY OF FLOAT32; n: SIGNED16;
+									VAR X, Y: ARRAY OF SIGNED16; VAR k: SIGNED16);
 
-			 TYPE Polynom = RECORD A, B, C, D: REAL END;
-			 VAR i, cs, smax, k1: INTEGER; px, py: Polynom;
-					 x, dx1, dx2, dx3, y, dy1, dy2, dy3: REAL; L, B, R, T,dW  : INTEGER;
+			 TYPE Polynom = RECORD A, B, C, D: FLOAT32 END;
+			 VAR i, cs, smax, k1: SIGNED16; px, py: Polynom;
+					 x, dx1, dx2, dx3, y, dy1, dy2, dy3: FLOAT32; L, B, R, T,dW  : SIGNED16;
 
-				PROCEDURE GetPolynom((* VAR *) y1, y2, y1s, y2s: REAL; VAR p: Polynom);
-					VAR dx1, dyx: REAL;
+				PROCEDURE GetPolynom((* VAR *) y1, y2, y1s, y2s: FLOAT32; VAR p: Polynom);
+					VAR dx1, dyx: FLOAT32;
 				BEGIN
 					IF RS[i] # RS[i+1] THEN dx1 := 1.0/(RS[i + 1] - RS[i]) ELSE dx1 := 1.0 END;
 					dyx := (y2 - y1)*dx1;
@@ -879,7 +879,7 @@ END NewRect3D;
 
 		BEGIN
 			X[0] := SHORT(ENTIER(RX[1])); Y[0] := SHORT(ENTIER(RY[1]));
-			L := MAX(INTEGER);  B := MAX(INTEGER); R := MIN(INTEGER); T := MIN(INTEGER);
+			L := MAX(SIGNED16);  B := MAX(SIGNED16); R := MIN(SIGNED16); T := MIN(SIGNED16);
 			i := 1; WHILE i <= n DO
 				L := Min(L,SHORT(ENTIER(RX[i]))); B := Min(B,SHORT(ENTIER(RY[i])));
 				R := Max(R,SHORT(ENTIER(RX[i]))); T := Max(T,SHORT(ENTIER(RY[i])));
@@ -915,16 +915,16 @@ END NewRect3D;
 			X[k] := SHORT(ENTIER(RX[n])); Y[k] := SHORT(ENTIER(RY[n])); INC(k);
 		END MakePoly;
 
-	PROCEDURE SplineToPoly(c: Point; closed: BOOLEAN; VAR X, Y: ARRAY OF INTEGER; VAR k: INTEGER);
-		TYPE RealVect = ARRAY 256 OF REAL;
-		VAR   n, i: INTEGER; RS, RX, RY ,RXstrich, RYstrich : RealVect; dx, dy: REAL;
-			helpR: REAL;
+	PROCEDURE SplineToPoly(c: Point; closed: BOOLEAN; VAR X, Y: ARRAY OF SIGNED16; VAR k: SIGNED16);
+		TYPE RealVect = ARRAY 256 OF FLOAT32;
+		VAR   n, i: SIGNED16; RS, RX, RY ,RXstrich, RYstrich : RealVect; dx, dy: FLOAT32;
+			helpR: FLOAT32;
 
-		PROCEDURE NatSplineDerivates(VAR x, y, d: ARRAY OF REAL; n: INTEGER);
-			VAR i: INTEGER; d1, d2: REAL; a, b, c: RealVect;
+		PROCEDURE NatSplineDerivates(VAR x, y, d: ARRAY OF FLOAT32; n: SIGNED16);
+			VAR i: SIGNED16; d1, d2: FLOAT32; a, b, c: RealVect;
 
-			PROCEDURE SolveTriDiag(VAR a, b, c: ARRAY OF REAL; n: INTEGER; VAR y: ARRAY OF REAL);
-				VAR i: INTEGER; t: REAL;
+			PROCEDURE SolveTriDiag(VAR a, b, c: ARRAY OF FLOAT32; n: SIGNED16; VAR y: ARRAY OF FLOAT32);
+				VAR i: SIGNED16; t: FLOAT32;
 			BEGIN i := 1;
 				WHILE i < n DO t := a[i]; c[i] := c[i]/t; helpR := c[i]*b[i]; a[i+1] := a[i+1] -  helpR; INC(i); END;
 				i := 2;
@@ -950,11 +950,11 @@ END NewRect3D;
 				SolveTriDiag(a, b, c, n, d)
 			END NatSplineDerivates;
 
-		PROCEDURE ClSplineDerivates(VAR x, y, d: ARRAY OF REAL; n: INTEGER);
-			VAR i: INTEGER; hn1, dn1, d1, d2: REAL; a, b, c, u: RealVect;
+		PROCEDURE ClSplineDerivates(VAR x, y, d: ARRAY OF FLOAT32; n: SIGNED16);
+			VAR i: SIGNED16; hn1, dn1, d1, d2: FLOAT32; a, b, c, u: RealVect;
 
-			PROCEDURE SolveTriDiag2(VAR a, b, c: ARRAY OF REAL; n:INTEGER; VAR y1, y2: ARRAY OF REAL);
-			VAR i: INTEGER; t: REAL;
+			PROCEDURE SolveTriDiag2(VAR a, b, c: ARRAY OF FLOAT32; n:SIGNED16; VAR y1, y2: ARRAY OF FLOAT32);
+			VAR i: SIGNED16; t: FLOAT32;
 			BEGIN
 				i := 1;
 				WHILE i < n DO
@@ -1036,8 +1036,8 @@ END NewRect3D;
 
 (* end of Rege code *)
 
-PROCEDURE DrawSpline*(F: Figure; M: Display3.Mask; x, y: INTEGER; hint: Point; mode: INTEGER);
-VAR n, i, w, md: INTEGER; pat: Display.Pattern;
+PROCEDURE DrawSpline*(F: Figure; M: Display3.Mask; x, y: SIGNED16; hint: Point; mode: SIGNED16);
+VAR n, i, w, md: SIGNED16; pat: Display.Pattern;
 BEGIN
 	IF mode = trackmode THEN w := 1; pat := Display.solid; md := Display.invert
 	ELSE w := F.width; pat := GetPat(F.patno); md := mode
@@ -1055,8 +1055,8 @@ BEGIN
 	END
 END DrawSpline;
 
-PROCEDURE PrintSpline*(F: Figure; M: Display3.Mask; x, y: INTEGER);
-VAR n, i: INTEGER; pat: Display.Pattern; p, q, lq, to: Point;
+PROCEDURE PrintSpline*(F: Figure; M: Display3.Mask; x, y: SIGNED16);
+VAR n, i: SIGNED16; pat: Display.Pattern; p, q, lq, to: Point;
 BEGIN
 	lq := NIL; p := F.p; to := NIL;
 	WHILE p # NIL DO
@@ -1080,11 +1080,11 @@ BEGIN
 	END
 END PrintSpline;
 
-PROCEDURE NormalizeSpline*(F: Figure; VAR x, y, w, h: INTEGER);
-VAR n, i, r, t: INTEGER; p: Point;
+PROCEDURE NormalizeSpline*(F: Figure; VAR x, y, w, h: SIGNED16);
+VAR n, i, r, t: SIGNED16; p: Point;
 BEGIN
 	SplineToPoly(F.p, closed IN F.state0, u, v, n);
-	x := MAX(INTEGER); r := MIN(INTEGER); t := MIN(INTEGER); y := MAX(INTEGER);
+	x := MAX(SIGNED16); r := MIN(SIGNED16); t := MIN(SIGNED16); y := MAX(SIGNED16);
 	i := 0;
 	WHILE i < n DO
 		IF u[i] < x THEN x := u[i] END;
@@ -1100,11 +1100,11 @@ BEGIN
 	x := F.X + x; y := F.Y + y
 END NormalizeSpline;
 
-PROCEDURE ModifySpline* (F: Figure; nw, nh: INTEGER);
-VAR p: Point; i, x, y, r, t, n, ow, oh: INTEGER;
+PROCEDURE ModifySpline* (F: Figure; nw, nh: SIGNED16);
+VAR p: Point; i, x, y, r, t, n, ow, oh: SIGNED16;
 BEGIN
 	SplineToPoly(F.p, closed IN F.state0, u, v, n);
-	x := MAX(INTEGER); r := MIN(INTEGER); t := MIN(INTEGER); y := MAX(INTEGER);
+	x := MAX(SIGNED16); r := MIN(SIGNED16); t := MIN(SIGNED16); y := MAX(SIGNED16);
 	i := 0;
 	WHILE i < n DO
 		IF u[i] < x THEN x := u[i] END;
@@ -1122,8 +1122,8 @@ BEGIN
 	END
 END ModifySpline;
 
-PROCEDURE HitTestSpline*(F: Figure; x, y, mx, my: INTEGER): BOOLEAN;
-VAR n, i: INTEGER;
+PROCEDURE HitTestSpline*(F: Figure; x, y, mx, my: SIGNED16): BOOLEAN;
+VAR n, i: SIGNED16;
 BEGIN
 	IF filled IN F.state0 THEN
 		IF Inside(F.p, x, y, mx, my) THEN RETURN TRUE END

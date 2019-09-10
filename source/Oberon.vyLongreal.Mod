@@ -33,7 +33,7 @@ Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
 (*! all procedures should include gentle support for NaNs, eg. report nr of NaNs *)
 
 (*base model.  Including  BLAS machar.
-Generate INTEGER, LONGINT, LONGREAL, BOOLEAN from this module
+Generate SIGNED16, SIGNED32, FLOAT64, BOOLEAN from this module
 Automatic.Do
 Edit.Open 	:vy:vyBoolean.v0r0a2.Mod
 Edit.Open 	:vy:vyBits.v0r0a2.Mod
@@ -80,10 +80,10 @@ CONST idversion* = ' v0r0a3x';
 	(*> BLAS machar interface >*)
 TYPE
 
-	real = LONGREAL;  	(* Or use these for REAL: TYPE real=REAL; *)
+	real = FLOAT64;  	(* Or use these for FLOAT32: TYPE real=FLOAT32; *)
 
 
-	index = LONGINT;
+	index = SIGNED32;
 	tOp1* = PROCEDURE (VAR arg: real);
 	tOp2* = PROCEDURE (VAR arg1: real;  arg2: real);
 	tOp3* = PROCEDURE (VAR arg1: real;  arg2, arg3: real);
@@ -182,31 +182,31 @@ TYPE
 	-----------------------------------------------------------------------*)
 	VAR IBETA-, IEXP-, IRND-, IT-
 	, MACHEP-, MAXEXP-,
-	MINEXP-, NEGEP-, NGRD-: INTEGER;
-	(*S    REAL D    DOUBLE PRECISION*)
+	MINEXP-, NEGEP-, NGRD-: SIGNED16;
+	(*S    FLOAT32 D    DOUBLE PRECISION*)
 	(*CONV,*)EPS-,
 	EPSNEG-, XMAX-, XMIN-: real;
 
 
 PROCEDURE Machar;
 	VAR I, J, K, ITEMP, IZ,
-	MX, NXRES: INTEGER;
-	(*S    REAL D    DOUBLE PRECISION*)
+	MX, NXRES: SIGNED16;
+	(*S    FLOAT32 D    DOUBLE PRECISION*)
 	A, B, BETA, BETAIN, BETAH, ONE, T, TEMP, TEMPA,
 	TEMP1, TWO, Y, Z, ZERO: real;
 	(*-----------------------------------------------------------------------
-	S    CONV(I) = REAL(I)
+	S    CONV(I) = FLOAT32(I)
 	D    CONV(I) = DBLE(I)*)
 	(*-----------------------------------------------------------------------
-	S    CONV(I) = REAL(I)
+	S    CONV(I) = FLOAT32(I)
 	D    CONV(I) = DBLE(I)*)
 
-PROCEDURE CONV (i: INTEGER): real;
+PROCEDURE CONV (i: SIGNED16): real;
 BEGIN
 	RETURN i
 END CONV;
 
-PROCEDURE INT (r: real): INTEGER;
+PROCEDURE INT (r: real): SIGNED16;
 BEGIN
 	RETURN SHORT(ENTIER(r));  (*! check FORTRAN INT. Watfor uses INT(r)=0 for |r|<1 *)
 END INT;
@@ -421,11 +421,11 @@ BEGIN
 		(*= Formatted write, eg. packed, sparse... *)
 		(*! add implementations *)
 		(*= file is a series of packages of structure
-		<formatkey>: LONGINT
+		<formatkey>: SIGNED32
 		0: terminate. No further information in this record
 		1: plain
 		2: repeat packing
-		<start><count> : LONGINT
+		<start><count> : SIGNED32
 		<privat packing data>
 		*)
 		(*= packed format.
@@ -435,7 +435,7 @@ BEGIN
 		[<packcount>   <packstart>	<packval> ] terminates on packcount 0
 		*)
 		(*! check add implementations *)
-	PROCEDURE WriteFmt* (prefform: LONGINT; VAR R: Files.Rider;  count: index;  VAR x: ARRAY OF real;  start: index);
+	PROCEDURE WriteFmt* (prefform: SIGNED32; VAR R: Files.Rider;  count: index;  VAR x: ARRAY OF real;  start: index);
 		(*= prefform is the preferred storage format, but the internal algorithm may choose a different one *)
 	BEGIN
 		(*! add implementations for non plain. form ignored so far *)
@@ -446,8 +446,8 @@ BEGIN
 		Files.WriteLInt(R, fmtend)
 	END WriteFmt;
 
-PROCEDURE ReadFmt* (VAR form: LONGINT; VAR R: Files.Rider;  count: index;  VAR x: ARRAY OF real;  start: index);
-	VAR stop: LONGINT;
+PROCEDURE ReadFmt* (VAR form: SIGNED32; VAR R: Files.Rider;  count: index;  VAR x: ARRAY OF real;  start: index);
+	VAR stop: SIGNED32;
 BEGIN
 	(*! add implementations for non plain. form ignored so far *)
 	Files.ReadLInt(R, form);
@@ -796,10 +796,10 @@ BEGIN
 	RETURN LocSort(start, start + count - 1, ith)
 END Order;
 
-PROCEDURE Summary* (len: index;  VAR x: ARRAY OF real;  start: index;  VAR min, max, mean, ssq: LONGREAL);  (* vs 0.1d0 gs *)
+PROCEDURE Summary* (len: index;  VAR x: ARRAY OF real;  start: index;  VAR min, max, mean, ssq: FLOAT64);  (* vs 0.1d0 gs *)
 	(* One pass summary *)
 	(*! unroll to use pairs *)
-	VAR i, top: index;  Xdiff: LONGREAL;  xx: real;
+	VAR i, top: index;  Xdiff: FLOAT64;  xx: real;
 BEGIN
 	min := MAX(real);  max := MIN(real);  mean := 0;  ssq := 0;
 	i := start;  top := start + len;
@@ -813,8 +813,8 @@ BEGIN
 	INC(i) END
 END Summary;
 
-PROCEDURE MeanSSq* (len: index;  VAR x: ARRAY OF real;  start: index;  VAR mean, ssq: LONGREAL; VAR nans: index);
-	VAR i, top: index;  Xdiff: LONGREAL;  xx: real;
+PROCEDURE MeanSSq* (len: index;  VAR x: ARRAY OF real;  start: index;  VAR mean, ssq: FLOAT64; VAR nans: index);
+	VAR i, top: index;  Xdiff: FLOAT64;  xx: real;
 BEGIN
 	nans := 0;  (*! not yet supported *)
 	mean := 0;  ssq := 0;
@@ -958,9 +958,9 @@ BEGIN
 END Div;
 
 PROCEDURE SSQxy* (VAR (*IN*)x, (*IN*)y: ARRAY OF real;
-	mx, my: LONGREAL;
-	len: index): LONGREAL;  (* vs 0.1d0 gs *)
-	VAR i: index;  s: LONGREAL;
+	mx, my: FLOAT64;
+	len: index): FLOAT64;  (* vs 0.1d0 gs *)
+	VAR i: index;  s: FLOAT64;
 BEGIN
 	s := 0;  i := 0;  WHILE i < len DO s := s + (x[i] - mx) * (y[i] - my);  INC(i) END;
 	RETURN s
@@ -1015,10 +1015,10 @@ BEGIN
 END Set2dF;
 
 (*PROCEDURE SkalProd* (len: index; VAR (*IN*) x: ARRAY OF real; xstart: index;
-VAR (*IN*) y: ARRAY OF real; ystart: index): LONGREAL;
+VAR (*IN*) y: ARRAY OF real; ystart: index): FLOAT64;
 (*! replace by BLAS1.SDOT*)
 (*=  scalar product <x,y> *)
-VAR prod: LONGREAL;
+VAR prod: FLOAT64;
 BEGIN
 ASSERT(xstart >= 0, 100); ASSERT(ystart >= 0, 101); ASSERT(len >= 0, 102);
 ASSERT(xstart + len <= LEN(x), 103); ASSERT(ystart + len <= LEN(y), 104);
@@ -1028,7 +1028,7 @@ RETURN prod
 END SkalProd;
 *)
 PROCEDURE SkalProd* (len: index;  VAR (* IN *)x: ARRAY OF real;  xstart: index;
-	VAR (* IN *)y: ARRAY OF real;  ystart: index): LONGREAL;
+	VAR (* IN *)y: ARRAY OF real;  ystart: index): FLOAT64;
 
 	(* cw 23.8.98 algorithm taken from BLAS1D and split up into
 	SkalProd and SkalProdPat; xstart, ystart added
@@ -1042,7 +1042,7 @@ PROCEDURE SkalProd* (len: index;  VAR (* IN *)x: ARRAY OF real;  xstart: index;
 	jack dongarra, linpack, 3/11/78.
 	modified 12/3/93, array(1) declarations changed to array( * )*)
 
-	VAR temp: LONGREAL; 	i, m: index;
+	VAR temp: FLOAT64; 	i, m: index;
 BEGIN
 	ASSERT(xstart >= 0, 100); 	ASSERT(ystart >= 0, 101); 	ASSERT(len >= 0, 102);
 	ASSERT(xstart + len <= LEN(x), 103); 	ASSERT(ystart + len <= LEN(y), 104);
@@ -1065,7 +1065,7 @@ BEGIN
 END SkalProd;
 
 PROCEDURE SkalProdPat* (count: index; VAR x: ARRAY OF real;  xstart, xstep: index;
-VAR y: ARRAY OF real;  ystart, ystep: index): LONGREAL;
+VAR y: ARRAY OF real;  ystart, ystep: index): FLOAT64;
 
 	(* cw 23.8.98 algorithm taken from BLAS1D and split up into
 	SkalProd and SkalProdPat; xstart, ystart added
@@ -1080,7 +1080,7 @@ VAR y: ARRAY OF real;  ystart, ystep: index): LONGREAL;
 	jack dongarra, linpack, 3/11/78.
 	modified 12/3/93, array(1) declarations changed to array( * )*)
 
-	VAR temp: LONGREAL;
+	VAR temp: FLOAT64;
 	VAR i: index;
 
 BEGIN
@@ -1099,10 +1099,10 @@ BEGIN
 	RETURN temp
 END SkalProdPat;
 (*
-PROCEDURE Norm2Sq* (len: index; VAR (*IN*) x: ARRAY OF real; xstart: index): LONGREAL;
+PROCEDURE Norm2Sq* (len: index; VAR (*IN*) x: ARRAY OF real; xstart: index): FLOAT64;
 (*! replace by BLAS1.SNORM2*)
 (*= Square of L2-Norm of x *)
-VAR prod: LONGREAL;
+VAR prod: FLOAT64;
 BEGIN
 ASSERT(xstart >= 0, 100); ASSERT(len >= 0, 101);
 ASSERT(xstart + len <= LEN(x), 102);
@@ -1111,10 +1111,10 @@ WHILE len > 0 DO prod := prod + x[xstart] * x[xstart]; INC(xstart); DEC(len) END
 RETURN prod
 END Norm2Sq;
 
-PROCEDURE Dist2Sq* (len: index; VAR (*IN*) x: ARRAY OF real; xstart: index; VAR (*IN*) y: ARRAY OF real; ystart: index): LONGREAL;
+PROCEDURE Dist2Sq* (len: index; VAR (*IN*) x: ARRAY OF real; xstart: index; VAR (*IN*) y: ARRAY OF real; ystart: index): FLOAT64;
 (*! replace by BLAS1.SNORM2 modified*)
 (*= Square of L2-Norm of x-y *)
-VAR prod, delta: LONGREAL;
+VAR prod, delta: FLOAT64;
 BEGIN
 ASSERT(xstart >= 0, 100); ASSERT(ystart >= 0, 101); ASSERT(len >= 0, 102);
 ASSERT(xstart + len <= LEN(x), 103); ASSERT(ystart + len <= LEN(y), 104);
@@ -1124,7 +1124,7 @@ prod := prod + delta * delta; INC(xstart); INC(ystart); DEC(len) END;
 RETURN prod
 END Dist2Sq;
 *)
-PROCEDURE Norm2Sq* (len: index;  VAR (* IN *)x: ARRAY OF real;  xstart: index): LONGREAL;
+PROCEDURE Norm2Sq* (len: index;  VAR (* IN *)x: ARRAY OF real;  xstart: index): FLOAT64;
 
 	(* cw 24.8.98 algorithm DNRM2 taken from BLAS1D
 	changes:	increment = 1 and #1 -> two distinct procedures
@@ -1141,7 +1141,7 @@ PROCEDURE Norm2Sq* (len: index;  VAR (* IN *)x: ARRAY OF real;  xstart: index): 
 CONST ONE = 1.0D0;
 	ZERO = 0.0D0;
 	(*     .. Local Scalars ..*)
-	VAR absx, end, scale, ssq, temp: LONGREAL;
+	VAR absx, end, scale, ssq, temp: FLOAT64;
 	(*     ..    Executable Statements ..*)
 BEGIN
 	ASSERT(xstart >= 0, 100); 	ASSERT(len >= 0, 101); 	end :=  xstart + len ; 	ASSERT(end <= LEN(x), 102);
@@ -1174,7 +1174,7 @@ BEGIN
 	(*     End of DNRM2.*)
 END Norm2Sq;
 
-PROCEDURE Norm2SqPat* (count: index;  VAR (* IN *)x: ARRAY OF real;  xstart, xstep: index): LONGREAL;
+PROCEDURE Norm2SqPat* (count: index;  VAR (* IN *)x: ARRAY OF real;  xstart, xstep: index): FLOAT64;
 
 	(* cw 25.8.98 algorithm DNRM2 taken from BLAS1D and separated into a
 	"normal" and a pattern version
@@ -1191,7 +1191,7 @@ PROCEDURE Norm2SqPat* (count: index;  VAR (* IN *)x: ARRAY OF real;  xstart, xst
 CONST ONE = 1.0D0;
 	ZERO = 0.0D0;
 	(*     .. Local Scalars ..*)
-	VAR absx, end, scale, ssq, temp: LONGREAL;
+	VAR absx, end, scale, ssq, temp: FLOAT64;
 	(*     ..
 	.. Executable Statements ..*)
 BEGIN
@@ -1225,7 +1225,7 @@ BEGIN
 END Norm2SqPat;
 
 PROCEDURE Dist2Sq* (len: index;  VAR (* IN *)x: ARRAY OF real;  xstart: index;
-	VAR (* IN *)y: ARRAY OF real;  ystart: index): LONGREAL;
+	VAR (* IN *)y: ARRAY OF real;  ystart: index): FLOAT64;
 
 	(* cw 28.8.98 algorithm DNRM2 taken from BLAS1D and modified for euclidean distance
 	changes:	increment = 1 and #1 -> two distinct procedures
@@ -1244,7 +1244,7 @@ PROCEDURE Dist2Sq* (len: index;  VAR (* IN *)x: ARRAY OF real;  xstart: index;
 CONST ONE = 1.0D0;
 	ZERO = 0.0D0;
 	(*     .. Local Scalars ..*)
-	VAR absx, end, scale, ssq, temp, temp1: LONGREAL;
+	VAR absx, end, scale, ssq, temp, temp1: FLOAT64;
 	(*     ..
 	.. Executable Statements ..*)
 BEGIN
@@ -1281,7 +1281,7 @@ BEGIN
 END Dist2Sq;
 
 PROCEDURE Dist2SqPat* (count: index;  VAR (* IN *)x: ARRAY OF real;  xstart, xstep: index;
-	VAR (* IN *)y: ARRAY OF real;  ystart, ystep: index): LONGREAL;
+	VAR (* IN *)y: ARRAY OF real;  ystart, ystep: index): FLOAT64;
 
 	(* cw 28.8.98 algorithm DNRM2 taken from BLAS1D and separated into
 	a "INCX=INCY=1" (i. e. xstep=ystep=1) and a "Pat" (i. e. Pattern) version
@@ -1299,7 +1299,7 @@ PROCEDURE Dist2SqPat* (count: index;  VAR (* IN *)x: ARRAY OF real;  xstart, xst
 CONST ONE = 1.0D0;
 	ZERO = 0.0D0;
 	(*     .. Local Scalars ..*)
-	VAR absx, end, scale, ssq, temp, temp1: LONGREAL;
+	VAR absx, end, scale, ssq, temp, temp1: FLOAT64;
 	(*     ..
 	.. Executable Statements ..*)
 BEGIN
@@ -1334,9 +1334,9 @@ BEGIN
 	(*     End of DNRM2.*)
 END Dist2SqPat;
 
-PROCEDURE Norm1* (len: index;  VAR (*IN*)x: ARRAY OF real;  xstart: index): LONGREAL;
+PROCEDURE Norm1* (len: index;  VAR (*IN*)x: ARRAY OF real;  xstart: index): FLOAT64;
 	(*= L1-Norm of x *)
-	VAR prod: LONGREAL; 	top: 	index;
+	VAR prod: FLOAT64; 	top: 	index;
 BEGIN
 	ASSERT(xstart >= 0, 100);  ASSERT(len >= 0, 101);
 	top := xstart + len;
@@ -1345,9 +1345,9 @@ BEGIN
 	WHILE top > xstart DO prod := prod + ABS(x[xstart]);  INC(xstart) END;
 	RETURN prod
 END Norm1;
-PROCEDURE Norm1Pat* (count: index;  VAR (*IN*)x: ARRAY OF real;  xstart, xstep: index): LONGREAL;
+PROCEDURE Norm1Pat* (count: index;  VAR (*IN*)x: ARRAY OF real;  xstart, xstep: index): FLOAT64;
 	(*= L1-Norm of x *)
-	VAR prod: LONGREAL;
+	VAR prod: FLOAT64;
 	top: 	index;
 BEGIN
 	ASSERT(xstart >= 0, 100); 	ASSERT(count >= 0, 101); 	ASSERT(xstep > 0, 102);
@@ -1358,9 +1358,9 @@ BEGIN
 	RETURN prod
 END Norm1Pat;
 
-PROCEDURE Dist1* (len: index;  VAR (*IN*)x: ARRAY OF real;  xstart: index;  VAR (*IN*)y: ARRAY OF real;  ystart: index): LONGREAL;
+PROCEDURE Dist1* (len: index;  VAR (*IN*)x: ARRAY OF real;  xstart: index;  VAR (*IN*)y: ARRAY OF real;  ystart: index): FLOAT64;
 	(*= L1-Norm of x-y *)
-	VAR dist: LONGREAL; 	top: 	index;
+	VAR dist: FLOAT64; 	top: 	index;
 BEGIN
 	ASSERT(xstart >= 0, 100);  ASSERT(ystart >= 0, 101);  ASSERT(len >= 0, 102); top := xstart + len;
 	ASSERT(top <= LEN(x), 103);  ASSERT(ystart + len <= LEN(y), 104);
@@ -1385,17 +1385,17 @@ BEGIN
 	RETURN dist
 END Dist1Pat;
 
-PROCEDURE NormSup* (len: index;  VAR (*IN*)x: ARRAY OF real;  xstart: index;  VAR mindist: LONGREAL): LONGREAL;
+PROCEDURE NormSup* (len: index;  VAR (*IN*)x: ARRAY OF real;  xstart: index;  VAR mindist: FLOAT64): FLOAT64;
 	(*! Find out, if ASSERT- trap codes may be changed (102 -> 101; 103 -> 102)*)
 	(*= supNorm of x; min absolute dist is reported as additional result *)
 
-	VAR dist, maxdist: LONGREAL;
+	VAR dist, maxdist: FLOAT64;
 	top: 	index;
 BEGIN
 	ASSERT(xstart >= 0, 100); 	ASSERT(len >= 0, 102);
 	top := xstart + len;
 	ASSERT(top <= LEN(x), 103);
-	maxdist := 0; 	mindist := MAX(LONGREAL);
+	maxdist := 0; 	mindist := MAX(FLOAT64);
 	WHILE top > xstart DO
 		dist := ABS(x[xstart]);
 		IF dist < mindist THEN mindist := dist END;  IF dist > maxdist THEN maxdist := dist END;
@@ -1423,14 +1423,14 @@ BEGIN
 END NormSupPat;
 
 PROCEDURE DistSup* (len: index;  VAR (*IN*)x: ARRAY OF real;  xstart: index;  VAR (*IN*)y: ARRAY OF real;  ystart: index;
-	VAR mindist: LONGREAL): LONGREAL;
+	VAR mindist: FLOAT64): FLOAT64;
 	(*= supNorm of x-y; min absolute dist is reported as additional result *)
-	VAR dist, maxdist: LONGREAL; 	top: 	index;
+	VAR dist, maxdist: FLOAT64; 	top: 	index;
 BEGIN
 	ASSERT(xstart >= 0, 100);  ASSERT(ystart >= 0, 101);  ASSERT(len >= 0, 102);
 	top := xstart + len;
 	ASSERT(top <= LEN(x), 103);  ASSERT(ystart + len <= LEN(y), 104);
-	maxdist := 0; mindist := MAX(LONGREAL);
+	maxdist := 0; mindist := MAX(FLOAT64);
 	WHILE top > xstart  DO
 		dist := ABS(x[xstart] - y[ystart]);
 		IF dist < mindist THEN mindist := dist END;  IF dist > maxdist THEN maxdist := dist END;
@@ -1440,16 +1440,16 @@ BEGIN
 END DistSup;
 PROCEDURE DistSupPat* (count: index;  VAR (*IN*)x: ARRAY OF real;  xstart, xstep: index;
 	VAR (*IN*)y: ARRAY OF real;  ystart, ystep: index;
-	VAR mindist: LONGREAL): LONGREAL;
+	VAR mindist: FLOAT64): FLOAT64;
 	(*= supNorm of x-y; min absolute dist is reported as additional result *)
 	(* cw 2.9.98 *)
-	VAR dist, maxdist: LONGREAL;
+	VAR dist, maxdist: FLOAT64;
 	top: 	index;
 BEGIN
 	ASSERT(xstart >= 0, 100);  ASSERT(ystart >= 0, 101);  ASSERT(count >= 0, 102);
 	ASSERT(xstep > 0, 103); 	ASSERT(ystep > 0, 104); 	top := xstart + (count - 1) * xstep + 1;
 	ASSERT(top <= LEN(x), 105); 	ASSERT(ystart + (count - 1) * ystep + 1 <= LEN(y), 104);
-	maxdist := 0; 	mindist := MAX(LONGREAL);
+	maxdist := 0; 	mindist := MAX(FLOAT64);
 	WHILE top > xstart DO
 		dist := ABS(x[xstart] - y[ystart]);
 		IF dist < mindist THEN mindist := dist END;  IF dist > maxdist THEN maxdist := dist END;
@@ -1475,7 +1475,7 @@ BEGIN
 END Entier;
 
 
-PROCEDURE Short* (len: index;  VAR x: ARRAY OF real;  start: index;  VAR result: ARRAY OF REAL);
+PROCEDURE Short* (len: index;  VAR x: ARRAY OF real;  start: index;  VAR result: ARRAY OF FLOAT32);
 	(*=  result[ ]:=SHORT(x[ ]) *)
 	VAR end: index;
 BEGIN
@@ -1486,7 +1486,7 @@ BEGIN
 END Short;
 
 
-PROCEDURE Long* (len: index;  VAR x: ARRAY OF REAL;  start: index;  VAR result: ARRAY OF real);
+PROCEDURE Long* (len: index;  VAR x: ARRAY OF FLOAT32;  start: index;  VAR result: ARRAY OF real);
 	(*=  result[ ]:=LONG(x[ ]) *)
 	VAR end: index;
 BEGIN

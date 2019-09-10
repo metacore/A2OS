@@ -29,7 +29,7 @@ TYPE
 VAR
 	loaders: ARRAY MaxLoadProtocols OF Loader;
 	startAddress *, endAddress *: ADDRESS;
-	loaderNb, res: LONGINT;
+	loaderNb, res: SIGNED32;
 	done -, error -: BOOLEAN;
 
 	(** Load image 'name' from remote host 'host' using protocol 'protocol' *)
@@ -37,7 +37,7 @@ VAR
 	VAR
 		module: ARRAY 256 OF CHAR;
 		m: Modules.Module;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		done := FALSE;
 		error := FALSE;
@@ -79,7 +79,7 @@ VAR
 		END;
 	END Load;
 
-	PROCEDURE NotifyDone * (result: LONGINT);
+	PROCEDURE NotifyDone * (result: SIGNED32);
 	BEGIN
 		done := TRUE;
 		error := result # 0;
@@ -104,7 +104,7 @@ VAR
 	END RegisterLoader;
 
 	(** Copy buffer to the load address. Should be used by protocol-specific loaders *)
-	PROCEDURE CopyToRam * (CONST buf: ARRAY OF CHAR; ofs, len: LONGINT);
+	PROCEDURE CopyToRam * (CONST buf: ARRAY OF CHAR; ofs, len: SIGNED32);
 	BEGIN
 		IF endAddress + len > LoadAddressMax THEN NotifyDone(ImageTooLarge) END;
 		SYSTEM.MOVE(ADDRESSOF(buf[ofs]), endAddress, len);

@@ -91,7 +91,7 @@ CONST
 TYPE
 	SecurityParameters = OBJECT
 		VAR
-			cipherSuite, cipherKeySize: LONGINT;	(* size in bytes *)
+			cipherSuite, cipherKeySize: SIGNED32;	(* size in bytes *)
 			clientRandom, serverRandom: ARRAY 32 OF CHAR;
 			PRFAlgorithm: ARRAY 32 OF CHAR;
 	END SecurityParameters;
@@ -113,7 +113,7 @@ TYPE
 
 	(*
 	DoubleLong = OBJECT	(* 64-bit number, the initial value is -1 *)
-		VAR num -: ARRAY 2 OF LONGINT;	(* 64 bits, msb: num[ 0 ] *)
+		VAR num -: ARRAY 2 OF SIGNED32;	(* 64 bits, msb: num[ 0 ] *)
 
 		PROCEDURE & Init*;
 		BEGIN
@@ -122,8 +122,8 @@ TYPE
 
 		PROCEDURE Inc;
 		BEGIN
-			ASSERT( ( num[ 0 ] < MAX( LONGINT ) ) OR ( num[ 1 ] < MAX( LONGINT ) ) );
-			IF num[ 1 ] < MAX( LONGINT ) THEN
+			ASSERT( ( num[ 0 ] < MAX( SIGNED32 ) ) OR ( num[ 1 ] < MAX( SIGNED32 ) ) );
+			IF num[ 1 ] < MAX( SIGNED32 ) THEN
 				INC( num[ 1 ] );
 				RETURN
 			ELSE
@@ -151,7 +151,7 @@ TYPE
 
 	DoubleLong = OBJECT	(* 64-bit counter, the initial value is -1 *)
 		VAR
-			numH, numL: LONGINT;
+			numH, numL: SIGNED32;
 
 		PROCEDURE &Init;
 		BEGIN
@@ -168,7 +168,7 @@ TYPE
 
 		(* write the current value of num in big-endian to buf starting at ofs *)
 		PROCEDURE GetBytes( VAR buf: ARRAY OF CHAR;  ofs: SIZE );
-		VAR p: SIZE; val: LONGINT;
+		VAR p: SIZE; val: SIGNED32;
 		BEGIN
 			p := ofs + 7;  val := numL;
 			REPEAT
@@ -261,10 +261,10 @@ TYPE
 
 	Policy* = OBJECT
 		VAR
-			cipherSuites -: ARRAY Suites OF LONGINT;
+			cipherSuites -: ARRAY Suites OF SIGNED32;
 			nofCipherSuites -: SIZE;	(** number of enabled cipher-suites *)
 			sessionResumptionEnabled -: BOOLEAN;
-			sessionLifetime -: LONGINT; (** seconds *)
+			sessionLifetime -: SIGNED32; (** seconds *)
 			version-: ARRAY 2 OF CHAR;
 
 		PROCEDURE &Init*;
@@ -275,7 +275,7 @@ TYPE
 		END Init;
 
 		(** set n negotiable cipher suites in order of preference*)
-		PROCEDURE SetCipherSuites*( VAR s: ARRAY OF LONGINT; n: SIZE );
+		PROCEDURE SetCipherSuites*( VAR s: ARRAY OF SIGNED32; n: SIZE );
 			VAR i: SIZE;
 		BEGIN
 			ASSERT( n <= Suites );
@@ -284,7 +284,7 @@ TYPE
 		END SetCipherSuites;
 
 		(** Returns TRUE if the cipher-suite s is supported by this policy *)
-		PROCEDURE IsSupported*( s: LONGINT ): BOOLEAN;
+		PROCEDURE IsSupported*( s: SIGNED32 ): BOOLEAN;
 			VAR i: SIZE;
 		BEGIN
 			FOR i := 0 TO nofCipherSuites - 1 DO
@@ -299,14 +299,14 @@ TYPE
 		END EnableSessionResumption;
 
 		(** lifetime of a session in seconds; default: 3600s *)
-		PROCEDURE SetSessionLifetime*( t: LONGINT );
+		PROCEDURE SetSessionLifetime*( t: SIGNED32 );
 		BEGIN
 			ASSERT( t >= 0 );
 			sessionLifetime := t
 		END SetSessionLifetime;
 
 		(** set TLS version to use *)
-		PROCEDURE SetVersion*(major, minor: LONGINT);
+		PROCEDURE SetVersion*(major, minor: SIGNED32);
 		BEGIN
 			ASSERT(major = 1);
 			ASSERT(minor >= 0);
@@ -322,9 +322,9 @@ TYPE
 			id : ARRAY 32 OF CHAR;
 			idLength : SIZE;
 			resumable : BOOLEAN;
-			cipherSuite : LONGINT;
+			cipherSuite : SIGNED32;
 			preMasterSecret, masterSecret -: ARRAY 48 OF CHAR;
-			lifetime: LONGINT;	(* seconds *)
+			lifetime: SIGNED32;	(* seconds *)
 			timer: Kernel.Timer;
 			next: Session;
 
@@ -332,7 +332,7 @@ TYPE
 			If caching is FALSE, no session-id will associated with the new session.
 			if cache is TRUE and len is zero, a session id will be randomly generated.
 			if cache is TRUE and len is non-zero, a session-id will be read from data *)
-		PROCEDURE & Init*( caching: BOOLEAN; VAR data: ARRAY OF CHAR; ofs, len: SIZE; lifetime: LONGINT );
+		PROCEDURE & Init*( caching: BOOLEAN; VAR data: ARRAY OF CHAR; ofs, len: SIZE; lifetime: SIGNED32 );
 			VAR i: SIZE;
 		BEGIN
 			ASSERT( ofs > -1 );	ASSERT( len > -1 );	ASSERT( ofs + len <= LEN( data ) );	ASSERT( lifetime > 0 );
@@ -395,7 +395,7 @@ TYPE
 		END Dispose;
 
 		(** Loads the rsa-certificate specified with filename. The certificate must be DER-formatted *)
-		PROCEDURE LoadRsaCertificate*( filename: ARRAY OF CHAR ): LONGINT;
+		PROCEDURE LoadRsaCertificate*( filename: ARRAY OF CHAR ): SIGNED32;
 			VAR
 				f: Files.File;
 				r: Files.Reader;
@@ -429,7 +429,7 @@ TYPE
 		(** Loads the material needed to establish an rsa private key. Parameters p and q are two big prime numbers,
 			e is the public exponent of the public key of the rsa certificate to be used. p, q and e have to be hexadecimal strings.
 			pLen, qLen and eLen are the lengths of the hex strings *)
-		PROCEDURE LoadRsaPrivateKey*( pHex, qHex, eHex: ARRAY OF CHAR; pLen, qLen, eLen: INTEGER );
+		PROCEDURE LoadRsaPrivateKey*( pHex, qHex, eHex: ARRAY OF CHAR; pLen, qLen, eLen: SIGNED16 );
 			VAR
 				p, q, e: CryptoBigNumbers.BigNumber;
 				dummy: CryptoRSA.Key;
@@ -524,7 +524,7 @@ TYPE
 
 		(* stores a given Session-object in the session-cache *)
 		PROCEDURE StoreSession( s: Session );
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 		BEGIN
 			ASSERT( s.resumable );
 			i := ORD( s.id[ 0 ] ) + 256 * ORD( s.id[ 1 ] );
@@ -557,7 +557,7 @@ TYPE
 
 		(* delete unresumable sessions *)
 		PROCEDURE CleanUpSessionCache;
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO SessionHashtableSize - 1 DO
 				sessionCache[ i ] := DeleteUnresumableSessions( sessionCache[ i ] )
@@ -581,8 +581,8 @@ TYPE
 			applicationDataPipe: Pipes.Pipe;
 			context: Context;
 			session: Session;
-			tlsErrorCause -: LONGINT;	(** alert type that lead to failure *)
-			handshakeState: LONGINT;
+			tlsErrorCause -: SIGNED32;	(** alert type that lead to failure *)
+			handshakeState: SIGNED32;
 			outbuf, inbuf: ARRAY Buflen OF CHAR; (* buffers for outgoing and incoming messages *)
 			hsMD5send, hsMD5verify: CryptoMD5.Hash;	(* handshake hash functions; to be used in the Finished messages *)
 			hsSHAsend, hsSHAverify: CryptoSHA1.Hash;	(* handshake hash functions; to be used in the Finished messages *)
@@ -612,17 +612,17 @@ TYPE
 
 
 
-		PROCEDURE AwaitStateNotEqual*(s : LONGINT);
+		PROCEDURE AwaitStateNotEqual*(s : SIGNED32);
 		BEGIN { EXCLUSIVE}
 			AWAIT(state # s);
 		END AwaitStateNotEqual;
 
-		PROCEDURE AwaitStateEqual*(s : LONGINT);
+		PROCEDURE AwaitStateEqual*(s : SIGNED32);
 		BEGIN { EXCLUSIVE}
 			AWAIT(state = s);
 		END AwaitStateEqual;
 
-		PROCEDURE SetState*(s : SHORTINT);
+		PROCEDURE SetState*(s : SIGNED8);
 		BEGIN { EXCLUSIVE}
 			state := s;
 		END SetState;
@@ -650,7 +650,7 @@ TYPE
 
 		(** open a TLS connection (only use once per Connection instance). Use IP.NilPort for lport to automatically assign
 		an unused local port. Use IP.NilAdr for fip to open a passive connection. *)
-		PROCEDURE Open*(  lport: LONGINT; fip: IP.Adr; fport: LONGINT; VAR res: WORD );
+		PROCEDURE Open*(  lport: SIGNED32; fip: IP.Adr; fport: SIGNED32; VAR res: INTEGER );
 		BEGIN
 			(*ASSERT( IP.IsNilAdr(fip) );	(* only server-side is implemented *)*)
 			(*ASSERT( context # NIL );*)	(* context must be set before calling Open *)
@@ -692,7 +692,7 @@ TYPE
 		END SetConnection;
 
 		(** Call this method only on a passive (listenig server-side) TLS.Connection. Non blocking *)
-		PROCEDURE Accept*( VAR client: TCP.Connection; VAR res: WORD );
+		PROCEDURE Accept*( VAR client: TCP.Connection; VAR res: INTEGER );
 			VAR
 				newTLSConn: Connection;
 				newTCPConn: TCP.Connection;
@@ -732,7 +732,7 @@ TYPE
 		END Close;
 
 		(** Send secured data *)
-		PROCEDURE Send*( CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD );
+		PROCEDURE Send*( CONST data: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER );
 			VAR i, size: SIZE;
 		BEGIN {EXCLUSIVE}
 			AWAIT((state = TCP.Established) OR (state = TCP.Closed));
@@ -754,7 +754,7 @@ TYPE
 		END Send;
 
 		(** Receive secured data *)
-		PROCEDURE Receive*( VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive*( VAR data: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		BEGIN
 			applicationDataPipe.Receive(data, ofs, size, min, len ,res);
 		END Receive;
@@ -851,7 +851,7 @@ TYPE
 			END
 		END InitializeConnectionState;
 
-		PROCEDURE PrepareConnectionState( state: ConnectionState; cipherSuite: LONGINT ; VAR res : WORD);
+		PROCEDURE PrepareConnectionState( state: ConnectionState; cipherSuite: SIGNED32 ; VAR res : INTEGER);
 		BEGIN
 			ASSERT( cipherSuite # 0 );
 			res := Ok;
@@ -885,7 +885,7 @@ TYPE
 			END;
 		END PrepareConnectionState;
 
-		PROCEDURE PrepareSecurityParameters( sp: SecurityParameters; cipherSuite: LONGINT ; VAR res : WORD);
+		PROCEDURE PrepareSecurityParameters( sp: SecurityParameters; cipherSuite: SIGNED32 ; VAR res : INTEGER);
 		BEGIN
 			ASSERT( cipherSuite # 0 );
 			res := Ok;
@@ -1130,7 +1130,7 @@ TYPE
 		HANDSHAKE PROTOCOL
 		********************************************************************************** *)
 
-		PROCEDURE SendHandshake( VAR data: ARRAY OF CHAR; hsType: LONGINT; ofs, len: SIZE );
+		PROCEDURE SendHandshake( VAR data: ARRAY OF CHAR; hsType: SIGNED32; ofs, len: SIZE );
 			VAR l: SIZE;
 		BEGIN
 			ASSERT( len < 256 * 256 * 256 );
@@ -1153,7 +1153,7 @@ TYPE
 
 		(* receives one or more handshake messages *)
 		PROCEDURE ReceiveHandshake( VAR data: ARRAY OF CHAR; ofs, len: SIZE );
-			VAR msgLen, hsType: LONGINT; ptr: SIZE;
+			VAR msgLen, hsType: SIGNED32; ptr: SIZE;
 		BEGIN
 			ASSERT( LEN( data ) >= ofs + len );
 			ptr := ofs;
@@ -1195,9 +1195,9 @@ TYPE
 			Transition(outbuf, Handshake, 0, 0, 0)
 		END StartHandshake;
 
-		PROCEDURE ReceiveClientHello( VAR data: ARRAY OF CHAR; ofs, len: SIZE ): LONGINT;
+		PROCEDURE ReceiveClientHello( VAR data: ARRAY OF CHAR; ofs, len: SIZE ): SIGNED32;
 			VAR
-				nofSuites, i, idLen, cipherSuite, major, minor: LONGINT; idPos, pos: SIZE; res: WORD;
+				nofSuites, i, idLen, cipherSuite, major, minor: SIGNED32; idPos, pos: SIZE; res: INTEGER;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("ClientHello");KernelLog.Ln END;
 			pos := ofs;
@@ -1276,7 +1276,7 @@ TYPE
 			RETURN GenerateServerHello
 		END ReceiveClientHello;
 
-		PROCEDURE SendClientHello(VAR data: ARRAY OF CHAR; ofs: LONGINT);
+		PROCEDURE SendClientHello(VAR data: ARRAY OF CHAR; ofs: SIGNED32);
 		VAR
 			pos, i: SIZE;
 		BEGIN
@@ -1325,8 +1325,8 @@ TYPE
 			SendHandshake( data, ClientHello, ofs - 4, pos - ofs)
 		END SendClientHello;
 
-		PROCEDURE ReceiveV2ClientHello( VAR data: ARRAY OF CHAR; ofs, len: SIZE ): LONGINT;
-			VAR nofSuites, idLen, challengeLen, i, cipherSuite: LONGINT; res: WORD;
+		PROCEDURE ReceiveV2ClientHello( VAR data: ARRAY OF CHAR; ofs, len: SIZE ): SIGNED32;
+			VAR nofSuites, idLen, challengeLen, i, cipherSuite: SIGNED32; res: INTEGER;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("SSLv2.0 ClientHello");KernelLog.Ln END;
 			nofSuites := ( 256 * ORD(data[ofs+3]) + ORD(data[ofs+4]) ) DIV 3;
@@ -1380,9 +1380,9 @@ TYPE
 			RETURN GenerateServerHello
 		END ReceiveV2ClientHello;
 
-		PROCEDURE ReceiveServerHello(VAR data: ARRAY OF CHAR; ofs, len: SIZE): LONGINT;
+		PROCEDURE ReceiveServerHello(VAR data: ARRAY OF CHAR; ofs, len: SIZE): SIGNED32;
 		VAR
-			major, minor, i, idLen, cipherSuite: LONGINT; idPos, pos: SIZE; res: WORD;
+			major, minor, i, idLen, cipherSuite: SIGNED32; idPos, pos: SIZE; res: INTEGER;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("ServerHello");KernelLog.Ln END;
 			pos := ofs;
@@ -1464,7 +1464,7 @@ TYPE
 			SendHandshake( data, ServerHello, ofs-4, pos-ofs )
 		END SendServerHello;
 
-		PROCEDURE SendClientKeyExchange(VAR data: ARRAY OF CHAR; ofs: SIZE): LONGINT;
+		PROCEDURE SendClientKeyExchange(VAR data: ARRAY OF CHAR; ofs: SIZE): SIGNED32;
 		VAR
 			length: SIZE;
 		BEGIN
@@ -1537,9 +1537,9 @@ TYPE
 			InitializeConnectionState( SELF.pendingReadState, SELF.pendingSecurityParameters )
 		END ReceiveClientKeyExchange;
 
-		PROCEDURE ReceiveCertificate( VAR data: ARRAY OF CHAR; ofs, len: SIZE ): LONGINT;
+		PROCEDURE ReceiveCertificate( VAR data: ARRAY OF CHAR; ofs, len: SIZE ): SIGNED32;
 		VAR
-			pos, length, lengthP3: LONGINT;
+			pos, length, lengthP3: SIGNED32;
 		BEGIN
 			IF Trace THEN
 				PrintDirection(FALSE);
@@ -1579,7 +1579,7 @@ TYPE
 			SendHandshake( data, ServerHelloDone, ofs-4, 0 )
 		END SendServerHelloDone;
 
-		PROCEDURE ReceiveServerHelloDone(CONST data: ARRAY OF CHAR; ofs, len: SIZE): LONGINT;
+		PROCEDURE ReceiveServerHelloDone(CONST data: ARRAY OF CHAR; ofs, len: SIZE): SIGNED32;
 		BEGIN
 			IF Trace THEN PrintDirection(FALSE); KernelLog.String("ServerHelloDone"); KernelLog.Ln END;
 			RETURN GenerateClientKeyExchange
@@ -1637,7 +1637,7 @@ TYPE
 		********************************************************************************** *)
 
 		PROCEDURE ReceiveAlert( VAR data: ARRAY OF CHAR; ofs, len: SIZE );
-			VAR level, description: LONGINT; ptr: SIZE;
+			VAR level, description: SIGNED32; ptr: SIZE;
 		BEGIN
 			ptr := ofs;
 			WHILE ptr < ofs + len DO	(* for each Alert-message *)
@@ -1654,14 +1654,14 @@ TYPE
 			END
 		END ReceiveAlert;
 
-		PROCEDURE ReceiveWarning( desc: LONGINT);
+		PROCEDURE ReceiveWarning( desc: SIGNED32);
 		BEGIN
 			(* always send an error; this could be more sophisticated *)
 			tlsErrorCause := desc;
 			SendError( CloseNotify )
 		END ReceiveWarning;
 
-		PROCEDURE ReceiveError( alertType: LONGINT);
+		PROCEDURE ReceiveError( alertType: SIGNED32);
 		BEGIN
 			IF Trace THEN
 				PrintDirection(FALSE);
@@ -1674,7 +1674,7 @@ TYPE
 			SetState(TCP.Closed);
 		END ReceiveError;
 
-		PROCEDURE SendWarning( alertType: LONGINT );
+		PROCEDURE SendWarning( alertType: SIGNED32 );
 		BEGIN
 			IF Trace THEN
 				PrintDirection(TRUE);
@@ -1686,7 +1686,7 @@ TYPE
 			SendRecord( outbuf, Alert, 0, 2 );
 		END SendWarning;
 
-		PROCEDURE SendError( alertType: LONGINT );
+		PROCEDURE SendError( alertType: SIGNED32 );
 		BEGIN
 			IF Trace THEN
 				PrintDirection(TRUE);
@@ -1706,9 +1706,9 @@ TYPE
 		FINITE STATE MACHINE
 		********************************************************************************** *)
 
-		PROCEDURE Transition( VAR data: ARRAY OF CHAR; action, subAction: LONGINT; ofs, len: SIZE );
+		PROCEDURE Transition( VAR data: ARRAY OF CHAR; action, subAction: SIGNED32; ofs, len: SIZE );
 			VAR dummy: ARRAY 1 OF CHAR;
-				res : WORD;
+				res : INTEGER;
 		BEGIN
 			IF action = ChangeCipherSpec THEN
 				CASE handshakeState OF
@@ -1837,7 +1837,7 @@ TYPE
 		********************************************************************************** *)
 
 		PROCEDURE Create32RandomBytes( VAR data: ARRAY OF CHAR );
-			VAR i, time, date, timestamp, d, h, m, s: LONGINT; unixEpoch: Dates.DateTime;
+			VAR i, time, date, timestamp, d, h, m, s: SIGNED32; unixEpoch: Dates.DateTime;
 		BEGIN
 			ASSERT( LEN( data ) >  31 );
 			(* 28 random bytes *)
@@ -1912,14 +1912,14 @@ VAR
 		RETURN con
 	END GetConnection;
 
-	PROCEDURE GetServerConnection * (CONST certificate, pHex, qHex, eHex: ARRAY OF CHAR; pLen, qLen, eLen: LONGINT): Connection;
+	PROCEDURE GetServerConnection * (CONST certificate, pHex, qHex, eHex: ARRAY OF CHAR; pLen, qLen, eLen: SIGNED32): Connection;
 	VAR
 		con: Connection;
 		ctx: Context;
 	BEGIN
 		NEW(ctx, defaultCipherPolicy);
 		IF ctx.LoadRsaCertificate(certificate) # Ok THEN RETURN NIL END;
-		ctx.LoadRsaPrivateKey(pHex, qHex, eHex, INTEGER(pLen), INTEGER(qLen), INTEGER(eLen));
+		ctx.LoadRsaPrivateKey(pHex, qHex, eHex, SIGNED16(pLen), SIGNED16(qLen), SIGNED16(eLen));
 		NEW(con);
 		con.SetContext(ctx);
 		RETURN con
@@ -1928,7 +1928,7 @@ VAR
 	(** Prepares default ciphers for TLS v1.2 *)
 	PROCEDURE InitDefaults;
 	VAR
-		defaultSuites:ARRAY DefaultSuitesNbr OF LONGINT;
+		defaultSuites:ARRAY DefaultSuitesNbr OF SIGNED32;
 	BEGIN
 		defaultSuites[0] := TlsRsaWithAes256CbcSha;
 		defaultSuites[1] := TlsRsaWithAes128CbcSha;

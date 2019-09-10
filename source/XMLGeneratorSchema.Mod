@@ -8,7 +8,7 @@ PROCEDURE OpenGeneratorSchema*(CONST xgsName: ARRAY OF CHAR): XML.ElementRegistr
 VAR xgsFile: Files.File; scanner: XMLScanner.Scanner; parser: XMLParser.Parser; doc: XML.Document;
 	root: XML.Element; name, moduleName, procedureName, generator, elementName: XML.String; contents: XMLObjects.Enumerator; content: ANY;
 	module: Modules.Module; generatorProc : XML.GeneratorProcedure;
-	res: WORD; i: LONGINT; msg: ARRAY 1024 OF CHAR; er: XML.ElementRegistry;
+	res: INTEGER; i: SIGNED32; msg: ARRAY 1024 OF CHAR; er: XML.ElementRegistry;
 	reader: Files.Reader;
 BEGIN
 	xgsFile := Files.Old(xgsName);

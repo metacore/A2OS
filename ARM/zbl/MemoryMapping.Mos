@@ -22,7 +22,7 @@ CONST
 
 	PROCEDURE SetupPageTable ;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		(* Reset all entries to 0 *)
 		FOR i := 0 TO Memory.PageTableLength DO

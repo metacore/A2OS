@@ -190,7 +190,7 @@ TYPE
 
 (** Persistence: file IO *)
 	PROCEDURE Load*( R: Streams.Reader;  VAR x: String );
-	VAR len: LONGINT;
+	VAR len: SIGNED32;
 	BEGIN
 		R.RawNum( len );
 		IF len < 0 THEN x := NIL
@@ -200,11 +200,11 @@ TYPE
 	END Load;
 
 	PROCEDURE Store*( W: Streams.Writer;  x: String );
-	VAR len: LONGINT;
+	VAR len: SIGNED32;
 	BEGIN
 		IF x = NIL THEN W.RawNum( -1 )
 		ELSE
-			len := LEN( x^ )(LONGINT);  W.RawNum( len );
+			len := LEN( x^ )(SIGNED32);  W.RawNum( len );
 			IF len > 0 THEN W.RawString( x^ ) END
 		END
 	END Store;

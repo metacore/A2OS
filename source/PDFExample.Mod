@@ -14,7 +14,7 @@ BEGIN
 	r[1].x := 200 * 100; r[1].y := 100 * 100;
 	r[2].x := 200 * 100; r[2].y := 200 * 100;
 	r[3].x := 100 * 100; r[3].y := 200 * 100;
-	c.PolyLine(r, 4, TRUE, LONGINT(0FF0000FFH), WMGraphics.ModeCopy);
+	c.PolyLine(r, 4, TRUE, SIGNED32(0FF0000FFH), WMGraphics.ModeCopy);
 	pdfDoc.Store("Test.pdf");
 END PolyLine;
 

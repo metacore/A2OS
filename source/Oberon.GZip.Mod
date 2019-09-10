@@ -26,9 +26,9 @@ MODULE GZip IN Oberon;	(** eos  **)
 
 
 	(** uncompress (".gz"-) file in to file out **)
-	PROCEDURE UnzipFile*(in, out: Files.File; VAR res: WORD);
+	PROCEDURE UnzipFile*(in, out: Files.File; VAR res: INTEGER);
 	VAR
-		gzr: GZReaders.Reader; r: Files.Rider; buf: ARRAY BufSize OF CHAR; read: LONGINT;
+		gzr: GZReaders.Reader; r: Files.Rider; buf: ARRAY BufSize OF CHAR; read: SIGNED32;
 	BEGIN
 		IF (in = NIL) OR (out = NIL) THEN
 			res := FileError
@@ -59,8 +59,8 @@ MODULE GZip IN Oberon;	(** eos  **)
 		\o: If set, files with the same name are overwritten, otherwise they are renamed to filename.Bak **)
 	PROCEDURE Unzip*;
 		VAR
-			S: Texts.Scanner; T: Texts.Text; beg, end, time: LONGINT; overwrite, oldfilefound: BOOLEAN;
-			suffix, infile, outfile, newname: ARRAY 256 OF CHAR; in, out: Files.File; res: WORD; res2: INTEGER;
+			S: Texts.Scanner; T: Texts.Text; beg, end, time: SIGNED32; overwrite, oldfilefound: BOOLEAN;
+			suffix, infile, outfile, newname: ARRAY 256 OF CHAR; in, out: Files.File; res: INTEGER; res2: SIGNED16;
 	BEGIN
 		T := Oberon.Par.text;
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
@@ -128,9 +128,9 @@ MODULE GZip IN Oberon;	(** eos  **)
 	END Unzip;
 
 	(** compress file in into file out **)
-	PROCEDURE ZipFile*(in, out: Files.File; level, strategy: SHORTINT; VAR res: WORD);
+	PROCEDURE ZipFile*(in, out: Files.File; level, strategy: SIGNED8; VAR res: INTEGER);
 	VAR
-		gzw: GZWriters.Writer; r: Files.Rider; buf: ARRAY BufSize OF CHAR; len, written, totWritten: LONGINT;
+		gzw: GZWriters.Writer; r: Files.Rider; buf: ARRAY BufSize OF CHAR; len, written, totWritten: SIGNED32;
 	BEGIN
 		IF (in = NIL) OR (out = NIL) THEN
 				res := FileError
@@ -166,8 +166,8 @@ MODULE GZip IN Oberon;	(** eos  **)
 		\strategy: specifies the compression strategy (from 0 - 2) **)
 	PROCEDURE Zip*;
 	VAR
-		S: Texts.Scanner; T: Texts.Text; beg, end, time: LONGINT;
-		level, strategy: SHORTINT; res: WORD;
+		S: Texts.Scanner; T: Texts.Text; beg, end, time: SIGNED32;
+		level, strategy: SIGNED8; res: INTEGER;
 		suffix, outfile: ARRAY 256 OF CHAR; in, out: Files.File;
 	BEGIN
 		T := Oberon.Par.text;

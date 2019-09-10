@@ -18,14 +18,14 @@ MODULE Strings;
 	CONST 
 		(* The Ascii value of char "0" *)
 		ToLowerCaseDiff = 30H; 
-		(* MAX(LONGINT)*)
+		(* MAX(SIGNED32)*)
 		(*MAXLONGINT = 7FFFFFFFH; *)
-		(* MIN(LONGINT)*)
+		(* MIN(SIGNED32)*)
 		(*MINLONGINT = 80000000H; *)
 	
 	(* Get the length of a string including terminating 0X *)
-	PROCEDURE Length*(CONST s: ARRAY OF CHAR): LONGINT; 
-		VAR length: LONGINT; 
+	PROCEDURE Length*(CONST s: ARRAY OF CHAR): SIGNED32; 
+		VAR length: SIGNED32; 
 	BEGIN 
 		length := 0; 
 		REPEAT INC(length)
@@ -45,7 +45,7 @@ MODULE Strings;
 	*)
 	
 	(* Return the minumum vaule of two given integers *)
-	PROCEDURE Min(a, b: LONGINT): LONGINT; 
+	PROCEDURE Min(a, b: SIGNED32): SIGNED32; 
 	BEGIN 
 		IF b < a THEN a := b END; 
 		RETURN a
@@ -55,8 +55,8 @@ MODULE Strings;
 		0: The two Strings are equal
 		<0: The first unequal character in the first string of the two strings is smaller (ascii value)
 		>0: The first unequal character in the first string of the two strings is larger (ascii value) *)
-	PROCEDURE Compare*(CONST s1, s2: ARRAY OF CHAR): LONGINT; 
-		VAR i, len: LONGINT; 
+	PROCEDURE Compare*(CONST s1, s2: ARRAY OF CHAR): SIGNED32; 
+		VAR i, len: SIGNED32; 
 	BEGIN 
 		i := 0; 
 		len := Min(LEN(s1) - 1, LEN(s2) - 1);
@@ -66,7 +66,7 @@ MODULE Strings;
 
 	(* Returns TRUE if s1 and s2 are equal. The case of all characters is ignored *)
 	PROCEDURE EqualIgnoreCase*(CONST s1, s2: ARRAY OF CHAR): BOOLEAN; 
-		VAR i, len: LONGINT; 
+		VAR i, len: SIGNED32; 
 	BEGIN 
 		i := 0; len := Min(LEN(s1) - 1, LEN(s2) - 1); 
 		WHILE (i < len) & (CAP(s1[i]) = CAP(s2[i])) & (s1[i] # 0X) & (s2[i] # 0X) DO INC(i); END; 
@@ -74,8 +74,8 @@ MODULE Strings;
 	END EqualIgnoreCase; 
 
 	(* Convert a string (ascii reoresentation of a number) to an integer *)
-	PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR; VAR val: LONGINT; res: BOOLEAN); 
-		VAR i, d: LONGINT; neg: BOOLEAN; ch: CHAR; 
+	PROCEDURE StrToInt*(CONST str: ARRAY OF CHAR; VAR val: SIGNED32; res: BOOLEAN); 
+		VAR i, d: SIGNED32; neg: BOOLEAN; ch: CHAR; 
 	BEGIN 
 		res := TRUE;
 		i := 0; ch := str[0]; 
@@ -87,10 +87,10 @@ MODULE Strings;
 		val := 0; 
 		WHILE (ch >= '0') & (ch <= '9') DO 
 			d := ORD(ch) - ORD('0'); INC(i); ch := str[i]; 
-			IF val <= ((MAX(LONGINT) - d) DIV 10) THEN 
+			IF val <= ((MAX(SIGNED32) - d) DIV 10) THEN 
 				val := 10 * val + d
 			ELSIF neg & (val = 214748364) & (d = 8) & ((ch < '0') OR (ch > '9')) THEN 
-				val := MIN(LONGINT); neg := FALSE 
+				val := MIN(SIGNED32); neg := FALSE 
 			ELSE 
 				(* Invalid number found -> set res to FALSE and abort loop *)
 				res := FALSE;
@@ -102,8 +102,8 @@ MODULE Strings;
 
 	(* Finds the first occurrence of character ch in string s starting at pos start in s and returns the
 		index. Returns -1 if ch cannot be found *)
-	PROCEDURE Find*(ch: CHAR; CONST s: ARRAY OF CHAR; start: LONGINT): LONGINT; 
-		VAR found, i: LONGINT; 
+	PROCEDURE Find*(ch: CHAR; CONST s: ARRAY OF CHAR; start: SIGNED32): SIGNED32; 
+		VAR found, i: SIGNED32; 
 	BEGIN 
 		found := -1; 
 		WHILE (start < LEN(s)) & (s[start] # 0X) & (s[start] # ch) DO INC(start); END; 
@@ -113,8 +113,8 @@ MODULE Strings;
 
 	(* Find in s the string stored in pat and start searching in s at location start.
 		Returns -1 if not found, otherwise the index of the first found character in s *)
-	PROCEDURE FindString*(CONST pat, s: ARRAY OF CHAR; start: LONGINT): LONGINT; 
-		VAR found, i, patLen, sLen: LONGINT;
+	PROCEDURE FindString*(CONST pat, s: ARRAY OF CHAR; start: SIGNED32): SIGNED32; 
+		VAR found, i, patLen, sLen: SIGNED32;
 	BEGIN 
 		found := -1; patLen := LEN(pat); sLen := LEN(s); 
 		WHILE (start < sLen) & (s[start] # 0X) & (found = -1) DO 
@@ -132,7 +132,7 @@ MODULE Strings;
 		In contrast to the assignment dest := source, only the 0X terminated
 		part of source is copied to dest. *)
 	PROCEDURE Copy*(CONST source: ARRAY OF CHAR; VAR dest: ARRAY OF CHAR); 
-		VAR i: LONGINT; 
+		VAR i: SIGNED32; 
 	BEGIN 
 		i := 0; 
 		REPEAT dest[i] := source[i]; INC(i) 
@@ -141,10 +141,10 @@ MODULE Strings;
 	END Copy; 
 
 	(* Convert integer val to a 0X terminated string and store it in str. *)
-	PROCEDURE IntToStr*(val: LONGINT; VAR str: ARRAY OF CHAR); 
-	VAR i, j: LONGINT; digits: ARRAY 16 OF LONGINT; 
+	PROCEDURE IntToStr*(val: SIGNED32; VAR str: ARRAY OF CHAR); 
+	VAR i, j: SIGNED32; digits: ARRAY 16 OF SIGNED32; 
 	BEGIN 
-		IF val = MIN(LONGINT) THEN 
+		IF val = MIN(SIGNED32) THEN 
 			str := "-2147483648"; 
 		ELSE 
 			i := 0; 
@@ -195,24 +195,24 @@ MODULE Strings;
 	END StrToBool;
 
 	(* Returns the shifted binary exponent of a real (0 <= e < 256 *)
-	PROCEDURE Expo*(x: REAL): LONGINT; 
-		VAR e: LONGINT;
+	PROCEDURE Expo*(x: FLOAT32): SIGNED32; 
+		VAR e: SIGNED32;
 	BEGIN 
 		(* Replaced the following code with safe variant *)
-		(* RETURN ASR(SYSTEM.VAL(LONGINT, x), 23) MOD 256 *)
+		(* RETURN ASR(SYSTEM.VAL(SIGNED32, x), 23) MOD 256 *)
 		Utils.UNPK(x, e);
 		RETURN (e + 127) MOD 256
 	END Expo; 
 
 	(* Returns 10^e (e <= 308, 308 < e delivers IEEE-code +INF). *)
-	PROCEDURE Ten(e: LONGINT): REAL; 
-		VAR res: REAL; 
+	PROCEDURE Ten(e: SIGNED32): FLOAT32; 
+		VAR res: FLOAT32; 
 	BEGIN 
 		(* hack! *)
 		IF e < -38 THEN 
 			res := 0.0; 
 		ELSIF e > 38 THEN 
-			res := MAX(REAL); 
+			res := MAX(FLOAT32); 
 		ELSE 
 			res := 1.0; 
 			WHILE (e > 0) DO res := res * 10.0; DEC(e); END; 
@@ -222,11 +222,11 @@ MODULE Strings;
 	END Ten; 
 
 	(* Returns the NaN code (0 <= c < 8399608) or -1 if not NaN/Infinite. *)
-	PROCEDURE NaNCode(x: REAL): LONGINT; 
-		VAR l: LONGINT; 
+	PROCEDURE NaNCode(x: FLOAT32): SIGNED32; 
+		VAR l: SIGNED32; 
 	BEGIN 
  		IF Expo(x) = 255 THEN (* Infinite or NaN *)
-			l := SYSTEM.VAL(LONGINT, x) MOD 800000H;
+			l := SYSTEM.VAL(SIGNED32, x) MOD 800000H;
 		ELSE 
 			l := -1; 
 		END; 
@@ -234,13 +234,13 @@ MODULE Strings;
 	END NaNCode;
 
 	(** truncates string to length *)
-	PROCEDURE Truncate* (VAR string: ARRAY OF CHAR; length: LONGINT);
+	PROCEDURE Truncate* (VAR string: ARRAY OF CHAR; length: SIGNED32);
 	BEGIN
 		IF LEN(string) > length THEN string[length] := 0X END;
 	END Truncate;
 
 	(** copies src[soff ... soff + len - 1] to dst[doff ... doff + len - 1] *)
-	PROCEDURE Move* (CONST src: ARRAY OF CHAR; soff, len: LONGINT; VAR dst: ARRAY OF CHAR; doff: LONGINT);
+	PROCEDURE Move* (CONST src: ARRAY OF CHAR; soff, len: SIGNED32; VAR dst: ARRAY OF CHAR; doff: SIGNED32);
 	BEGIN
 		(* reverse copy direction in case src and dst denote the same string *)
 		IF soff < doff THEN
@@ -253,7 +253,7 @@ MODULE Strings;
 
 	(** concatenates s1 and s2: s := s1 || s2 *)
 	PROCEDURE Concat* (CONST s1, s2: ARRAY OF CHAR; VAR s: ARRAY OF CHAR);
-	VAR len1, len2 : LONGINT;
+	VAR len1, len2 : SIGNED32;
 	BEGIN
 		len1 := Length (s1); len2 := Length (s2);
 		Move(s2, 0, len2, s, len1);
@@ -263,7 +263,7 @@ MODULE Strings;
 
 	(** concatenates s1 and s2: s := s1 || s2. The resulting string is truncated to the length of s if necessary *)
 	PROCEDURE ConcatX*(CONST s1, s2 : ARRAY OF CHAR; VAR s : ARRAY OF CHAR);
-	VAR len1, len2 : LONGINT;
+	VAR len1, len2 : SIGNED32;
 	BEGIN
 		len1 := Length (s1); len2 := Length (s2);
 		IF (len1 + 1 >= LEN(s)) THEN
@@ -280,7 +280,7 @@ MODULE Strings;
 
 	(* Append "this" to "to". Copies as much as is possible to "to" (0X terminated) *)
 	PROCEDURE Append*(VAR to: ARRAY OF CHAR; CONST this: ARRAY OF CHAR); 
-		VAR i, j: LONGINT; 
+		VAR i, j: SIGNED32; 
 	BEGIN 
 		i := 0; j := 0; 
 
@@ -311,10 +311,10 @@ MODULE Strings;
 	END AppendChar; 
 
 	(** Write real x to buffer str as ascii text *)
-	PROCEDURE AppendReal*(VAR str: ARRAY OF CHAR; x: REAL); 
+	PROCEDURE AppendReal*(VAR str: ARRAY OF CHAR; x: FLOAT32); 
 		VAR 
-			e, h, i, n: LONGINT; 
-			y, z, temp05: REAL;
+			e, h, i, n: SIGNED32; 
+			y, z, temp05: FLOAT32;
 			d: ARRAY 8 OF CHAR;  
 	BEGIN 
 		n := 14;  (* larger number of n do not really make sense *)
@@ -360,7 +360,7 @@ MODULE Strings;
 	END AppendReal; 
 
 	(* Append an integer to a string *)
-	PROCEDURE AppendInt*(VAR to: ARRAY OF CHAR; i: LONGINT); 
+	PROCEDURE AppendInt*(VAR to: ARRAY OF CHAR; i: SIGNED32); 
 		VAR str: ARRAY 64 OF CHAR; 
 	BEGIN 
 		IntToStr(i, str); Append(to, str); 
@@ -368,7 +368,7 @@ MODULE Strings;
 
 	(* Append a set to a string *)
 	PROCEDURE AppendSet*(VAR to: ARRAY OF CHAR; s: SET); 
-		VAR first: BOOLEAN; i: LONGINT; 
+		VAR first: BOOLEAN; i: SIGNED32; 
 	BEGIN 
 		first := TRUE; AppendChar(to, '{'); 
 		FOR i := 0 TO 31 DO 
@@ -387,7 +387,7 @@ MODULE Strings;
 	END AppendBool; 
 
 	(* Convert a real to a string *)
-	PROCEDURE RealToStr*(r: REAL; VAR str: ARRAY OF CHAR); 
+	PROCEDURE RealToStr*(r: FLOAT32; VAR str: ARRAY OF CHAR); 
 	BEGIN 
 		str[0] := 0X; AppendReal(str, r); 
 	END RealToStr; 

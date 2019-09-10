@@ -86,19 +86,19 @@ TYPE
 
 	(*as defined in device class definition for HID Version 1.11, p. 26, 6.2.2 ShortItems*)
 	Item = RECORD
-		bSize : LONGINT;	(*bit 0,1: size of data*)
-		bType : LONGINT;	(*bit 2,3: Main, Global, Local or Reserved(Longitem) Type*)
-		bTag : LONGINT;	(*bit 4-7: index in the main, global or local tag table*)
-		data : LONGINT;		(*data to read after byte 0 depending on bSize*)
+		bSize : SIGNED32;	(*bit 0,1: size of data*)
+		bType : SIGNED32;	(*bit 2,3: Main, Global, Local or Reserved(Longitem) Type*)
+		bTag : SIGNED32;	(*bit 4-7: index in the main, global or local tag table*)
+		data : SIGNED32;		(*data to read after byte 0 depending on bSize*)
 	END;
 
 	(*holding the main state*)
-	MainState  =  LONGINT;
+	MainState  =  SIGNED32;
 
 	(*holding the state of all possible global states*)
 	GlobalState = POINTER TO RECORD
 		(*UsagePage, Logical Min, Logical Max, Physical Min, Physical Max, Unit Exp, Unit, ReportSize, ReportID, ReportCount*)
-		state : ARRAY LengthGlobalState OF LONGINT;
+		state : ARRAY LengthGlobalState OF SIGNED32;
 		(*for detecting erros in the hid descriptor*)
 		isReadByMain : ARRAY LengthGlobalState OF BOOLEAN;
 		(*used when Push or Pop item is found. Push puts the actual global state at the beginning of the list; pop gets the first list item*)
@@ -107,15 +107,15 @@ TYPE
 
 	LocalState = POINTER TO RECORD
 		(*Usage, Usage Min, Usage Max, Designator Index, Designator Maximum, String Index, String Minimum, String Maximum, Delimiter*)
-		state : ARRAY LengthLocalState 	OF LONGINT;
+		state : ARRAY LengthLocalState 	OF SIGNED32;
 		(*for detecting errors in the hid descriptor; usage Min and usage Max can have extensions*)
-		ext 	: ARRAY LengthExtLocalState OF LONGINT;
+		ext 	: ARRAY LengthExtLocalState OF SIGNED32;
 	END;
 
 	UsageQueueItem = POINTER TO RECORD
-		usage : LONGINT;
-		usagePage : LONGINT;
-		arrLen : LONGINT;
+		usage : SIGNED32;
+		usagePage : SIGNED32;
+		arrLen : SIGNED32;
 		next : UsageQueueItem;
 	END;
 
@@ -125,14 +125,14 @@ TYPE
 	UsageQueue=OBJECT
 	VAR
 		first, last : UsageQueueItem;
-		totalLen : LONGINT;
+		totalLen : SIGNED32;
 
 		(*adds the usage[0..arrLen-1] to the end of HIDUsageQueue
 		* 	param:	usage	the usage to add
 		*			arrLen	if more usages, the total number of usages
 		*			usageExt	the usagePage
 		*)
-		PROCEDURE Add*(usage,  arrLen, usageExt: LONGINT);
+		PROCEDURE Add*(usage,  arrLen, usageExt: SIGNED32);
 		BEGIN
 			(*empty list*)
 			IF (last = NIL) THEN
@@ -155,7 +155,7 @@ TYPE
 		PROCEDURE CreateUsageDictionary():UsbHidReport.UsageDictionary;
 		VAR
 			cursor:					UsageQueueItem;
-			usageQueueCounter, i:	LONGINT;
+			usageQueueCounter, i:	SIGNED32;
 			dict:					UsbHidReport.UsageDictionary;
 		BEGIN
 			(*first count the length of usageQueue*)
@@ -183,9 +183,9 @@ TYPE
 		*	param: the number of elements wanted in the array
 		* 	return: pointer to the usage tuple array
 		*)
-		PROCEDURE CreateUsageTupleArray(reportCount: LONGINT; isArrayFlagSet:BOOLEAN): PtrToUsageTupleArr ;
+		PROCEDURE CreateUsageTupleArray(reportCount: SIGNED32; isArrayFlagSet:BOOLEAN): PtrToUsageTupleArr ;
 		VAR
-			i,index:		LONGINT;
+			i,index:		SIGNED32;
 			cursor:		UsageQueueItem;
 			usageArr : 	PtrToUsageTupleArr ;
 		BEGIN
@@ -264,7 +264,7 @@ TYPE
 		* 	param: i	the i th globalState, f.e. 0 means UsagePage
 		* 	return: globalState [i]
 		*)
-		PROCEDURE State(i:SHORTINT):LONGINT;
+		PROCEDURE State(i:SIGNED8):SIGNED32;
 		BEGIN
 			IF ((i>=0) & (i < LengthGlobalState)) THEN
 				RETURN globalState.state[i];
@@ -275,7 +275,7 @@ TYPE
 
 		(*push globalState on the stack, the new globalState is empty *)
 		PROCEDURE Push;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			NEW(globalState.next);
 			(*assign all values from globalState to globalState.next*)
@@ -340,7 +340,7 @@ TYPE
 		*			newValue			the value to insert at position globalStateField in the globalState
 		*			itemNr				used for errorList; to store information at which item an error detected, when found
 		*)
-		PROCEDURE SetState( VAR errorList: UsbHidErrors.ErrorList; globalStateField: LONGINT; newValue, itemNr:LONGINT);
+		PROCEDURE SetState( VAR errorList: UsbHidErrors.ErrorList; globalStateField: SIGNED32; newValue, itemNr:SIGNED32);
 		BEGIN
 			IF((globalStateField<0) OR (globalStateField>LengthGlobalState)) THEN
 				RETURN;
@@ -356,7 +356,7 @@ TYPE
 
 		(*resets all states in the global state*)
 		PROCEDURE ResetGlobalStateFlags;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i:=0 TO LengthGlobalState-1 DO
 				globalState.isReadByMain[i]:=FALSE;
@@ -369,9 +369,9 @@ TYPE
 		* 	return: 				FALSE,	if system can not continue because of fatal errors
 		*						TRUE,	otherwise
 		*)
-		PROCEDURE VerifyGlobalState( VAR errorList: UsbHidErrors.ErrorList; itemNr: LONGINT):BOOLEAN;
+		PROCEDURE VerifyGlobalState( VAR errorList: UsbHidErrors.ErrorList; itemNr: SIGNED32):BOOLEAN;
 		VAR
-			minReportSize, maxReportSize: 	LONGINT;
+			minReportSize, maxReportSize: 	SIGNED32;
 			mustStop:						BOOLEAN;
 		BEGIN
 			mustStop:= FALSE;
@@ -442,7 +442,7 @@ TYPE
 		* 	param: i	the i th localState, f.e. 0 means Usage
 		* 	return: localState [i]
 		*)
-		PROCEDURE State(i:LONGINT):LONGINT;
+		PROCEDURE State(i:SIGNED32):SIGNED32;
 		BEGIN
 			IF ((i>=0) & (i < LengthLocalState)) THEN
 				RETURN localState.state[i];
@@ -464,7 +464,7 @@ TYPE
 		*	param: reportCount	the number of usages to create totally
 		* 	return: pointer to array of usageTuple
 		*)
-		PROCEDURE CreateUsageArray(reportCount: LONGINT;isArrayFlagSet:BOOLEAN): PtrToUsageTupleArr ;
+		PROCEDURE CreateUsageArray(reportCount: SIGNED32;isArrayFlagSet:BOOLEAN): PtrToUsageTupleArr ;
 		BEGIN
 			RETURN usageQueue.CreateUsageTupleArray(reportCount,isArrayFlagSet);
 		END CreateUsageArray;
@@ -480,8 +480,8 @@ TYPE
 		*)
 		PROCEDURE AppendUsageMinMaxArray(mainState: MainState; globalState: GlobalStateObject);
 		VAR
-			usageMin, usageMax:	LONGINT;
-			usageExt:				LONGINT;
+			usageMin, usageMax:	SIGNED32;
+			usageExt:				SIGNED32;
 			set:						SET;
 		BEGIN
 			(*depending on mainState[IDMainIsVariable] we do not have to allocate usageTuple for all usageMinimum to usageMaximum:
@@ -517,7 +517,7 @@ TYPE
 		* 	param: 	i		the i th localState, f.e. 0 means Usage
 					value 	the value to store at localState[i], the higher 16bits are stored as usagePage, if i is set to Usage/UsageMin or UsageMax
 		*)
-		PROCEDURE SetState(i, value:LONGINT);
+		PROCEDURE SetState(i, value:SIGNED32);
 		BEGIN
 			IF ((i>=0) & (i < LengthLocalState)) THEN
 				(*as described at page 41 32bit values for Usage only the lower 16bits identify the usage, the higher 16bits define the usage page*)
@@ -547,7 +547,7 @@ TYPE
 		(*get extention i of localState
 		* 	param: 	i		index of extention
 		*)
-		PROCEDURE Ext(i:LONGINT):LONGINT;
+		PROCEDURE Ext(i:SIGNED32):SIGNED32;
 		BEGIN
 			IF ((i>=0) & (i < LengthExtLocalState)) THEN
 				RETURN localState.ext[i];
@@ -560,7 +560,7 @@ TYPE
 		* 	param: 	i		index of extention
 		*			value	value to store at ext[i]
 		*)
-		PROCEDURE SetExt(i, value:LONGINT);
+		PROCEDURE SetExt(i, value:SIGNED32);
 		BEGIN
 			IF ((i>=0) & (i < LengthExtLocalState)) THEN
 				localState.ext[i] := value;
@@ -611,7 +611,7 @@ TYPE
 		* 	param: 	errorList		where to send errors
 		*			itemNr			for errorList; the current item number parsed
 		*)
-		PROCEDURE VerifyLocalState(VAR errorList: UsbHidErrors.ErrorList; itemNr: LONGINT);
+		PROCEDURE VerifyLocalState(VAR errorList: UsbHidErrors.ErrorList; itemNr: SIGNED32);
 		BEGIN
 			IF(localState.state[IDLocalUsage]=UndefinedState) THEN
 				(*check first if usageMinimum and usageMaximum is set*)
@@ -683,15 +683,15 @@ TYPE
 		localState 								: LocalStateObj;
 		errorList*								: UsbHidErrors.ErrorList;
 		inputOutputFeatureParsed				: BOOLEAN;
-		depth									: LONGINT;
+		depth									: SIGNED32;
 		reportManager							: UsbHidReport.HidReportManager;
 
 		(*	converts an unsigned long to a signed long, depending on the nofBytes used
 		* 	param: 	nofBytes		the number of bytes used
 		*			data			the long int to convert
 		*)
-		PROCEDURE ToSignedLong*(nofBytes, data : LONGINT): LONGINT;
-		VAR returnValue : LONGINT;
+		PROCEDURE ToSignedLong*(nofBytes, data : SIGNED32): SIGNED32;
+		VAR returnValue : SIGNED32;
 		BEGIN
 			returnValue := data;
 			CASE nofBytes OF
@@ -706,7 +706,7 @@ TYPE
 				|4:
 					IF(data>=80000000H) THEN
 						(*unhappy with that expression but could not write data - 100000000H*)
-						returnValue := data- LONGINT(0FFFFFFFFH) - LONGINT(0FFFFFFFFH) - 2;
+						returnValue := data- SIGNED32(0FFFFFFFFH) - SIGNED32(0FFFFFFFFH) - 2;
 					END;
 				ELSE
 				returnValue := 0;
@@ -718,11 +718,11 @@ TYPE
 		* 	param: 	reportType		IDMainItemInput, IDMainItemOutput or IDMainItemFeature
 		*	return:	hidReport		new created HidReport
 		*)
-		PROCEDURE CreateHidReport(reportType, itemNr: LONGINT):UsbHidReport.HidReport;
+		PROCEDURE CreateHidReport(reportType, itemNr: SIGNED32):UsbHidReport.HidReport;
 		VAR
 			hidReport:		UsbHidReport.HidReport;
 			isArrayFlagSet:	BOOLEAN;
-			diff, maxVal:	LONGINT;
+			diff, maxVal:	SIGNED32;
 		BEGIN
 			ASSERT((reportType=IDMainItemInput) OR (reportType = IDMainItemFeature));
 			NEW(hidReport);
@@ -754,7 +754,7 @@ TYPE
 			(*reportSize too small*)
 			IF hidReport.reportSize<32 THEN
 				diff:=hidReport.logicalMaximum-hidReport.logicalMinimum;
-				maxVal := SYSTEM.VAL(LONGINT,SYSTEM.VAL(SET,{hidReport.reportSize}));
+				maxVal := SYSTEM.VAL(SIGNED32,SYSTEM.VAL(SET,{hidReport.reportSize}));
 				IF diff>maxVal THEN
 					errorList.Add(itemNr, UsbHidErrors.GlobalItemLogicalMinimum,0H);
 					errorList.Add(itemNr, UsbHidErrors.GlobalItemLogicalMaximum,0H);
@@ -792,7 +792,7 @@ TYPE
 		* 	param: 	si			to get bTag, bSize and data params
 		*			itemNr		used for errorList
 		*)
-		PROCEDURE ParseMainItem*(si: Item; itemNr: LONGINT);
+		PROCEDURE ParseMainItem*(si: Item; itemNr: SIGNED32);
 		VAR
 			checkLocalState : 	BOOLEAN;
 			aReport:			UsbHidReport.HidReport;
@@ -919,8 +919,8 @@ TYPE
 		* 	param: 	si			to get bTag, bSize and data params
 		*			itemNr		used for errorList
 		*)
-		PROCEDURE ParseGlobalItem*( si: Item; itemNr: LONGINT);
-		VAR temp : LONGINT;
+		PROCEDURE ParseGlobalItem*( si: Item; itemNr: SIGNED32);
+		VAR temp : SIGNED32;
 		BEGIN
 			IF (Trace OR Debug) THEN
 				IF((si.bTag=1H) OR (si.bTag=2H)) THEN
@@ -1060,7 +1060,7 @@ TYPE
 		* 	param: 	si			to get bTag, bSize and data params
 		*			itemNr		used for errorList
 		*)
-		PROCEDURE ParseLocalItem*(si: Item; itemNr: LONGINT);
+		PROCEDURE ParseLocalItem*(si: Item; itemNr: SIGNED32);
 		BEGIN
 			IF (Trace OR Debug) THEN
 				HidParserExt.ParseLocalItem(si.bTag, si.bSize, si.data,  itemNr, depth, globalState.State(IDUsagePage));
@@ -1119,7 +1119,7 @@ TYPE
 		*			startIndex		position where to begin read on reportBuffer
 		*			itemNr			used for errorList
 		*)
-		PROCEDURE ParseLongItem*(li: Item; reportBuffer: Usbdi.BufferPtr; len, startIndex, itemNr : LONGINT);
+		PROCEDURE ParseLongItem*(li: Item; reportBuffer: Usbdi.BufferPtr; len, startIndex, itemNr : SIGNED32);
 		BEGIN
 			errorList.Add(itemNr, UsbHidErrors.UnknownItem, 003EH);
 		END ParseLongItem;
@@ -1132,8 +1132,8 @@ TYPE
 		*)
 		PROCEDURE ParseReportDescriptor*(hidDescriptor : UsbHid.HidDescriptor; reportBuffer : Usbdi.BufferPtr): BOOLEAN;
 		VAR
-			itemCounter :	LONGINT;
-			cur : 			LONGINT;
+			itemCounter :	SIGNED32;
+			cur : 			SIGNED32;
 			item :			POINTER TO Item;
 			hidCollection:	UsbHidReport.HidCollection;
 		BEGIN

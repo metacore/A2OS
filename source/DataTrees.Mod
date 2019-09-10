@@ -412,7 +412,7 @@ TYPE
 (* The procedures needed to register type Tree so that its instances can be made persistent. *)
 
 	PROCEDURE LoadObj( R: DataIO.Reader;  VAR obj: OBJECT );
-	VAR version: SHORTINT;  ver: NbrInt.Integer;  new: Tree;
+	VAR version: SIGNED8;  ver: NbrInt.Integer;  new: Tree;
 	BEGIN
 		R.RawSInt( version );
 		IF version = -1 THEN

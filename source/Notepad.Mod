@@ -60,7 +60,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 (** Open document *)
 PROCEDURE Open*(context : Commands.Context); (** [Options] [filename] ~ *)

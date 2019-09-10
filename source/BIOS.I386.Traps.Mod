@@ -14,11 +14,11 @@ CONST
 TYPE
 	Variable* = RECORD	(** variable descriptor *)
 		adr-: ADDRESS;
-		type-, size-, n-, tdadr-: LONGINT
+		type-, size-, n-, tdadr-: SIGNED32
 	END;
 
 VAR
-	trapState: ARRAY Machine.MaxCPU OF LONGINT;	(* indexed by Machine.ID() *)
+	trapState: ARRAY Machine.MaxCPU OF SIGNED32;	(* indexed by Machine.ID() *)
 	modes: ARRAY 25 OF CHAR;
 	flags: ARRAY 13 OF CHAR;
 
@@ -26,7 +26,7 @@ VAR
 
 	(* Write flag values. *)
 	PROCEDURE Flags(w: Streams.Writer; s: SET);
-	VAR i: SHORTINT; ch: CHAR;
+	VAR i: SIGNED8; ch: CHAR;
 	BEGIN
 		FOR i := 0 TO 11 DO
 			ch := flags[i];
@@ -35,14 +35,14 @@ VAR
 				w.Char(ch)
 			END
 		END;
-		w.String(" iopl"); w.Int(ASH(SYSTEM.VAL(LONGINT, s * {12,13}), -12), 1)
+		w.String(" iopl"); w.Int(ASH(SYSTEM.VAL(SIGNED32, s * {12,13}), -12), 1)
 	END Flags;
 
 	(** Display trap state. *)
 	PROCEDURE  Show*(p: Objects.Process; VAR int: Machine.State; VAR exc: Machine.ExceptionState; long: BOOLEAN);
-	VAR id: LONGINT; overflow: BOOLEAN; w: Streams.Writer;
+	VAR id: SIGNED32; overflow: BOOLEAN; w: Streams.Writer;
 
-		PROCEDURE Val(CONST s: ARRAY OF CHAR; val: LONGINT);
+		PROCEDURE Val(CONST s: ARRAY OF CHAR; val: SIGNED32);
 		BEGIN
 			w.Char(" "); w.String(s); w.Char("="); w.Hex(val, -8)
 		END Val;
@@ -82,7 +82,7 @@ VAR
 				|16: w.String("procedure returned")
 				|17: w.String("nil pointer access")
 				ELSE
-					IF (exc.halt > MAX(INTEGER)+1) OR (exc.halt < MIN(INTEGER)) THEN
+					IF (exc.halt > MAX(SIGNED16)+1) OR (exc.halt < MIN(SIGNED16)) THEN
 						w.String("module freed?")
 					END
 			END;
@@ -96,11 +96,11 @@ VAR
 				w.String("Processor:");
 				(* output values *)
 				Val("CS", int.CS); Val("DS", exc.DS); Val("ES", exc.ES); Val("SS", exc.SS); Val("CR0", exc.CR[0]);
-				Val("FPU", SYSTEM.VAL(LONGINT, exc.FPU[1] * {0..15} + LSH(exc.FPU[2], 16)));
+				Val("FPU", SYSTEM.VAL(SIGNED32, exc.FPU[1] * {0..15} + LSH(exc.FPU[2], 16)));
 				Val("PC", int.PC); Val("ESI", int.ESI); Val("EDI", int.EDI); Val("SP", exc.SP); Val("CR2", exc.CR[2]);
 				Val("PID", id);
 				Val("EAX", int.EAX); Val("EBX", int.EBX); Val("ECX", int.ECX); Val("EDX", int.EDX); Val("CR3", exc.CR[3]);
-				Val("LCK", SYSTEM.VAL(LONGINT, exc.locks));
+				Val("LCK", SYSTEM.VAL(SIGNED32, exc.locks));
 				Val("BP", int.BP); Val("FS", exc.FS); Val("GS", exc.GS); Val("ERR", int.ERR); Val("CR4", exc.CR[4]);
 				Val("TMR", Kernel.GetTicks()); w.Ln;
 				IF SYSTEM.VAL(CHAR, exc.DR[7]) # 0X THEN	(* some breakpoints enabled *)
@@ -119,7 +119,7 @@ VAR
 			(*IF exc.halt = 1301 THEN	(* lock timeout - see Machine *)
 				KernelLog.Memory(ADDRESSOF(Machine.trapState[0]), LEN(Machine.trapState) *
 					(ADDRESSOF(Machine.trapState[1]) - ADDRESSOF(Machine.trapState[0])));
-				w.Hex(SYSTEM.VAL(LONGINT, Machine.trapLocksBusy), 8); w.Ln
+				w.Hex(SYSTEM.VAL(SIGNED32, Machine.trapLocksBusy), 8); w.Ln
 			END;
 			IF (int.INT = Machine.PF) & (ABS(int.PC-exc.CR[2]) < 100H) THEN	(* PF close to PC *)
 				KernelLog.Memory(int.ESP-16, 64)	(* show stack *)
@@ -135,7 +135,7 @@ VAR
 	END Show;
 
 	PROCEDURE SetLastExceptionState(ex: Machine.ExceptionState);
-	VAR id: LONGINT;
+	VAR id: SIGNED32;
 	BEGIN
 		id := Machine.AcquirePreemption();
 		Objects.running[id].exp := ex;
@@ -144,7 +144,7 @@ VAR
 
 	PROCEDURE GetLastExceptionState*(): Machine.ExceptionState;
 	VAR
-		id: LONGINT;
+		id: SIGNED32;
 		ex: Machine.ExceptionState;
 	BEGIN
 		id := Machine.AcquirePreemption();
@@ -273,9 +273,9 @@ VAR
 		handled := FALSE;
 		Machine.GetExceptionState(int, exc);
 		user := (int.CS MOD 4 > Machine.KernelLevel);
-		traceTrap := (exc.locks = {}) & (exc.halt >= MAX(INTEGER)) & (exc.halt <= MAX(INTEGER)+1);
+		traceTrap := (exc.locks = {}) & (exc.halt >= MAX(SIGNED16)) & (exc.halt <= MAX(SIGNED16)+1);
 
-		Show(t, int, exc, exc.halt # MAX(INTEGER)+1);	(* Always show the trap info!*)
+		Show(t, int, exc, exc.halt # MAX(SIGNED16)+1);	(* Always show the trap info!*)
 
 		IF exc.halt = haltUnbreakable THEN
 			Unbreakable(t, int, exc, handled)
@@ -344,7 +344,7 @@ VAR
 	END PageFault;
 
 	PROCEDURE Init;
-	VAR i: LONGINT; s: ARRAY 8 OF CHAR;
+	VAR i: SIGNED32; s: ARRAY 8 OF CHAR;
 	BEGIN
 		IF TestTrap THEN
 			Machine.GetConfig("TestTrap", s);

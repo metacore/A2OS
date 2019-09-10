@@ -37,32 +37,32 @@ TYPE
 	tLayerDesc* = RECORD (antsViews.tLayerDesc)
 		E-: ants3dArrayObjects.tObject;
 		img: Pictures.Picture;
-		type: INTEGER;
+		type: SIGNED16;
 		on: BOOLEAN
 	END;
 
 	Pattern = RECORD
-		w, h, d: INTEGER;
-		vals: POINTER TO ARRAY OF ARRAY OF INTEGER
+		w, h, d: SIGNED16;
+		vals: POINTER TO ARRAY OF ARRAY OF SIGNED16
 	END;
 
 VAR
-	newlayer-: tLayer;  maxw, maxh: INTEGER;  texture: BOOLEAN;
+	newlayer-: tLayer;  maxw, maxh: SIGNED16;  texture: BOOLEAN;
 
 	PROCEDURE Copy( source, dest: tLayer );
 	BEGIN
 		dest^ := source^
 	END Copy;
 
-	PROCEDURE MakePattern( layer: tLayer;  w, h: INTEGER ): Pattern;
-	VAR p: Pattern;  y, x: LONGINT;  d: INTEGER;
+	PROCEDURE MakePattern( layer: tLayer;  w, h: SIGNED16 ): Pattern;
+	VAR p: Pattern;  y, x: SIGNED32;  d: SIGNED16;
 	CONST fac = 3;  div = 8;
 	BEGIN
 		d := fac * w DIV div;  NEW( p.vals, h + d + 1, w + d + 1 );  p.w := w;  p.h := h;  p.d := d;
 		(* rechteck *)
 		FOR y := 0 TO (h + d) DO
 			FOR x := 0 TO (w + d) DO
-				p.vals[y, x] := MIN( INTEGER );
+				p.vals[y, x] := MIN( SIGNED16 );
 
 				IF (y > 0) & (x > 0) & (y < h) & (x < w) THEN  (* rechteck *)
 					p.vals[y, x] := 1
@@ -92,13 +92,13 @@ VAR
 
 	END MakePattern;
 
-	PROCEDURE Max( a, b: INTEGER ): INTEGER;
+	PROCEDURE Max( a, b: SIGNED16 ): SIGNED16;
 	BEGIN
 		IF a > b THEN RETURN a ELSE RETURN b END
 	END Max;
 
-	PROCEDURE Line( p: Pictures.Picture;  fx, fy, tx, ty: INTEGER;  col: INTEGER );
-	VAR x, y, steps, pos: LONGINT;
+	PROCEDURE Line( p: Pictures.Picture;  fx, fy, tx, ty: SIGNED16;  col: SIGNED16 );
+	VAR x, y, steps, pos: SIGNED32;
 	BEGIN
 		steps := Max( ty - fy, tx - fx );
 		IF steps <= 0 THEN RETURN END;
@@ -111,16 +111,16 @@ VAR
 	END Line;
 
 	PROCEDURE Recall( layer: tLayer );
-	VAR pw, ph: INTEGER;  l, j, i: INTEGER;
-		xx, yy: ARRAY 7 OF INTEGER;
-		px, py, X, Y, W, H, dX, dY, dXl, dYl: INTEGER;  height, depth, width: INTEGER;  ox, oy: INTEGER;  p: Pattern;  r, g, b: INTEGER;
-		data: POINTER TO ARRAY OF INTEGER;
+	VAR pw, ph: SIGNED16;  l, j, i: SIGNED16;
+		xx, yy: ARRAY 7 OF SIGNED16;
+		px, py, X, Y, W, H, dX, dY, dXl, dYl: SIGNED16;  height, depth, width: SIGNED16;  ox, oy: SIGNED16;  p: Pattern;  r, g, b: SIGNED16;
+		data: POINTER TO ARRAY OF SIGNED16;
 
-		boxw, boxh, boxd: INTEGER;
+		boxw, boxh, boxd: SIGNED16;
 	CONST fac = 2;  div = 5;
 
-		PROCEDURE PaintPattern( p: Pattern;  pict: Pictures.Picture;  atx, aty, atz: INTEGER );
-		VAR y, x, color: INTEGER;
+		PROCEDURE PaintPattern( p: Pattern;  pict: Pictures.Picture;  atx, aty, atz: SIGNED16 );
+		VAR y, x, color: SIGNED16;
 		BEGIN
 			IF (data = NIL ) OR (LEN( data ) # p.w + p.d + 1) THEN NEW( data, p.w + p.d + 1 ) END;
 
@@ -128,7 +128,7 @@ VAR
 				Pictures.GetLine( pict, data^, atx * p.w + atz * p.d, y + aty * p.h + atz * p.d, p.w + p.d + 1 );
 				FOR x := 0 TO (p.w + p.d) DO
 					color := p.vals[y, x];
-					IF color # MIN( INTEGER ) THEN data[x] := color END
+					IF color # MIN( SIGNED16 ) THEN data[x] := color END
 					(* Pictures.Dot(pict,color,x+atx*p.w+atz*p.d,y+aty*p.h+atz*p.d,Display.paint); *)
 				END;
 				Pictures.PutLine( pict, data^, atx * p.w + atz * p.d, y + aty * p.h + atz * p.d, p.w + p.d + 1 )
@@ -246,7 +246,7 @@ VAR
 	END Recall;
 
 	PROCEDURE Responsible( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF ((event.gesture = vyEvents.EvtIdent)) THEN priority := vyEvents.PrioNormal END;
@@ -254,7 +254,7 @@ VAR
 	END Responsible;
 
 	PROCEDURE HandleFileMsg( obj: tLayer;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		IF msg.id = Objects.load THEN
 			Files.ReadInt( msg.R, version );  antsViews.Handler( obj, msg );  Gadgets.ReadRef( msg.R, obj.lib, objsub );
@@ -356,7 +356,7 @@ VAR
 		antsViews.Init( layer );  layer.handle := Handler;  layer.on := TRUE;  vyCommandMenus.Add( layer.commands, OnOff, "OnOff" );
 	END Init;
 
-	PROCEDURE Open*( layer: tLayer;  E: ants3dArrayObjects.tObject;  type: INTEGER );
+	PROCEDURE Open*( layer: tLayer;  E: ants3dArrayObjects.tObject;  type: SIGNED16 );
 	VAR id: vyName.tNameArray;
 	BEGIN
 		Init( layer );  id := "ViewI:";  vyName.AppendObjId( E, id );  vyPort.OpenLayer( layer, id );  layer.E := E;  layer.pal.first := 0;
@@ -370,8 +370,8 @@ VAR
 		aM.cmd;  NEW( newlayer );  Init( newlayer );  Objects.NewObj := newlayer
 	END New;
 
-	PROCEDURE DoShow*( E: ants3dArrayObjects.tObject;  type: INTEGER;  add: BOOLEAN;  VAR c: vyDisplay2d.tCoordinate2d ): tLayer;
-	VAR port: vyPort.Frame;  picture: vyPort.Picture;  layer: tLayer;  w, h: INTEGER;
+	PROCEDURE DoShow*( E: ants3dArrayObjects.tObject;  type: SIGNED16;  add: BOOLEAN;  VAR c: vyDisplay2d.tCoordinate2d ): tLayer;
+	VAR port: vyPort.Frame;  picture: vyPort.Picture;  layer: tLayer;  w, h: SIGNED16;
 	BEGIN
 		NEW( layer );  Open( layer, E, type );
 		IF c = NIL THEN NEW( c );  vyDisplay2d.OpenC2d( c, 0, 0, E.w + E.h / 2, E.d + E.h / 2 ) END;
@@ -394,7 +394,7 @@ VAR
 
 	PROCEDURE Show*;
 	VAR l: antsCommands.tScanList;  obj, o: vyBase.Object;  la: tLayer;  name: vyName.tNameArray;  hor, ver, add: BOOLEAN;
-		c: vyDisplay2d.tCoordinate2d;  type: INTEGER;
+		c: vyDisplay2d.tCoordinate2d;  type: SIGNED16;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=NAME [>hEdges][>vEdges][>Vertices][>add][>texture]" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) THEN

@@ -86,17 +86,17 @@ CONST
 	noSym = 13;
 (* Types for the Scanner *)
 TYPE
-	ErrorProc* = PROCEDURE (n: INTEGER);
-	StartTable = ARRAY 128 OF INTEGER;
+	ErrorProc* = PROCEDURE (n: SIGNED16);
+	StartTable = ARRAY 128 OF SIGNED16;
 (* Variables for the Scanner *)
 VAR
-	errors*: INTEGER;	(*number of errors detected*)
-	lasterror* : INTEGER;
-	charcount : LONGINT;
-	getCalls : LONGINT;
+	errors*: SIGNED16;	(*number of errors detected*)
+	lasterror* : SIGNED16;
+	charcount : SIGNED32;
+	getCalls : SIGNED32;
 	start: StartTable;	(*start state for every character*)
 	Pattern, Ack : ARRAY 6 OF CHAR;
-	active : LONGINT;
+	active : SIGNED32;
 
 CONST
 	maxP				= 13;
@@ -142,15 +142,15 @@ TYPE
 	SmtpAgent* = OBJECT (TCPServices.Agent)
 	VAR
 			ch: CHAR;				(*current input character*)
-			res: WORD;
+			res: INTEGER;
 			out: Streams.Writer; in: Streams.Reader;
 			log : Files.Writer;
 			env : Envelope;
 			thisName, verbSy : String;
 			finished : BOOLEAN;
-			sym: INTEGER;	 (* current input symbol *)
-			state : INTEGER;
-			badTokens : LONGINT;
+			sym: SIGNED16;	 (* current input symbol *)
+			state : SIGNED16;
+			badTokens : SIGNED32;
 			auxString : String;
 
 	(* Support procedures *)
@@ -249,7 +249,7 @@ TYPE
 		Get
 	END PutStatus1;
 
-	PROCEDURE ChangeStatus1* (newsym : INTEGER; msg : ARRAY OF CHAR);
+	PROCEDURE ChangeStatus1* (newsym : SIGNED16; msg : ARRAY OF CHAR);
 	BEGIN
 		Confirm(SyEol);
 		sym := newsym;
@@ -268,7 +268,7 @@ TYPE
 		Get
 	END PutStatus2;
 
-	PROCEDURE ChangeStatus2* (newsym : INTEGER; msg0, msg1 : ARRAY OF CHAR);
+	PROCEDURE ChangeStatus2* (newsym : SIGNED16; msg0, msg1 : ARRAY OF CHAR);
 	BEGIN
 		Confirm(SyEol);
 		sym := newsym;
@@ -279,7 +279,7 @@ TYPE
 	END ChangeStatus2;
 
 	PROCEDURE AddExt* ( VAR name : String; ext : ARRAY OF CHAR);
-		VAR i, j, skipped : INTEGER;
+		VAR i, j, skipped : SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE ( i < LEN(name)-1 ) & ~(name[i] < " ")
@@ -301,7 +301,7 @@ TYPE
 	END AddExt;
 
 	PROCEDURE PutBareName ( name : String; VAR wr : Files.Writer );
-		VAR ix : LONGINT; ch : CHAR;
+		VAR ix : SIGNED32; ch : CHAR;
 	BEGIN
 		ix := 0;
 		WHILE (ix<LEN(name)) & (name[ix]#0X)
@@ -361,7 +361,7 @@ TYPE
 	END PutEnvelope;
 
 	PROCEDURE UpdateName (VAR s : String);
-	VAR i : INTEGER; ch : CHAR; carry : INTEGER;
+	VAR i : SIGNED16; ch : CHAR; carry : SIGNED16;
 	BEGIN
 		i := 10; (* 10 digits significant in name *)
 		carry := 1;
@@ -382,7 +382,7 @@ TYPE
 
 	(* Begin Parser Productions *)
 	PROCEDURE HELO*;
-		VAR res : WORD;
+		VAR res : INTEGER;
 	BEGIN
 		Confirm(SyHelo);
 		sym := SyCopy; ToMemory (env.mta);
@@ -433,11 +433,11 @@ TYPE
 	VAR
 		msg: Files.File;
 		msgWr : Files.Writer;
-		ix, testIx : LONGINT;
+		ix, testIx : SIGNED32;
 		receiveTime, remoteIP : String;
 
 		PROCEDURE WriteIPNr( ip : IP.Adr );
-			VAR result : WORD; str : ARRAY 128 OF CHAR;
+			VAR result : INTEGER; str : ARRAY 128 OF CHAR;
 		BEGIN
 					IP.AdrToStr(ip, remoteIP);
 					msgWr.String (" (");
@@ -542,7 +542,7 @@ TYPE
 
 	PROCEDURE AddUserToName (VAR thisName : String);
 	VAR
-		pos : INTEGER;
+		pos : SIGNED16;
 	BEGIN
 			IF RcptInFileName
 			THEN
@@ -564,7 +564,7 @@ TYPE
 	VAR
 		to : TokenPtr;
 		pathName : String;
-		localSym : INTEGER;	(*to debug*)
+		localSym : SIGNED16;	(*to debug*)
 	BEGIN
 		Expect(SyMail);
 		env.from := ""; env.to := NIL;
@@ -778,7 +778,7 @@ TYPE
 		KernelLog.String (msg);
 	END ErrMsg;
 
-	PROCEDURE Error1(n: INTEGER);
+	PROCEDURE Error1(n: SIGNED16);
 	BEGIN
 		INC(errors);
 		lasterror := n;
@@ -792,7 +792,7 @@ TYPE
 		 KernelLog.Exit
 		END Error1;
 
-	PROCEDURE Error2 (n, sym: INTEGER);
+	PROCEDURE Error2 (n, sym: SIGNED16);
 	BEGIN
 		INC(errors);
 		lasterror := n;
@@ -830,15 +830,15 @@ TYPE
 		 KernelLog.Exit;
 		END Error2;
 
-	PROCEDURE Confirm(n: INTEGER);
+	PROCEDURE Confirm(n: SIGNED16);
 	BEGIN IF sym = n THEN (* Nothing *) ELSE Error2(n, sym) END
 	END Confirm;
 
-	PROCEDURE Expect(n: INTEGER);
+	PROCEDURE Expect(n: SIGNED16);
 	BEGIN IF sym = n THEN Get ELSE Error2(n, sym) END
 	END Expect;
 
-	PROCEDURE StartOf(s: INTEGER): BOOLEAN;
+	PROCEDURE StartOf(s: SIGNED16): BOOLEAN;
 		BEGIN RETURN (sym MOD setSize) IN symSet[s, sym DIV setSize]
 	END StartOf;
 
@@ -850,7 +850,7 @@ TYPE
 	END Who;
 
 	PROCEDURE BackStagePass (pass : String) : BOOLEAN;
-		VAR ipStr : String; ix: LONGINT;
+		VAR ipStr : String; ix: SIGNED32;
 	BEGIN
 		IP.AdrToStr (SELF.client.fip, ipStr);
 		ix := 0;
@@ -1027,7 +1027,7 @@ BEGIN
 END Announce;
 
 PROCEDURE Open*;
-VAR res : WORD;
+VAR res : INTEGER;
 BEGIN
 	IF smtp = NIL THEN
 		NEW(smtp, AlmSmtpReceiverPort, NewSmtpAgent, res);

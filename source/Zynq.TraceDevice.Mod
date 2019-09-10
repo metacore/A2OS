@@ -10,7 +10,7 @@ VAR
 	uart: PsUartMin.UartRegisters;
 
 	PROCEDURE TraceChar(ch: CHAR);
-	VAR res: WORD;
+	VAR res: INTEGER;
 	BEGIN
 		PsUartMin.SendChar(uart, ch, TRUE, NIL, res);
 	END TraceChar;
@@ -18,7 +18,7 @@ VAR
 	PROCEDURE Install *;
 	VAR
 		uartId: PsUartMin.UartId;
-		res: WORD;
+		res: INTEGER;
 	BEGIN
 		Trace.Init;
 		uartId := BootConfig.GetIntValue("TracePort")-1;

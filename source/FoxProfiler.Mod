@@ -16,20 +16,20 @@ TYPE
 	Modules= ARRAY MaxModules OF Procedures;
 
 	ProcedureTime= RECORD
-		calls:LONGINT;
-		time,brut: HUGEINT;
+		calls:SIGNED32;
+		time,brut: SIGNED64;
 	END;
 	ProcedureTimes= ARRAY MaxProcedures OF ProcedureTime;
 
 	Process= OBJECT
 	VAR
-		stackPosition: LONGINT;
-		startTime, correcture: ARRAY MaxStackSize OF HUGEINT; (* correcture: time taken for calls to other profiled procedures *)
-		module, procedure: ARRAY MaxStackSize OF LONGINT;
+		stackPosition: SIGNED32;
+		startTime, correcture: ARRAY MaxStackSize OF SIGNED64; (* correcture: time taken for calls to other profiled procedures *)
+		module, procedure: ARRAY MaxStackSize OF SIGNED32;
 		modules: ARRAY MaxModules OF ProcedureTimes;
 
 		PROCEDURE &Init;
-		VAR i,j: LONGINT;
+		VAR i,j: SIGNED32;
 		BEGIN
 			stackPosition := 0;
 			FOR i := 0 TO LEN(modules)-1 DO
@@ -40,7 +40,7 @@ TYPE
 			END;
 		END Init;
 
-		PROCEDURE Enter(moduleId, procedureId: LONGINT; enterTime: HUGEINT);
+		PROCEDURE Enter(moduleId, procedureId: SIGNED32; enterTime: SIGNED64);
 		BEGIN
 			IF TraceEnter THEN log.String("stack position "); log.Int(stackPosition,1); log.Ln; END;
 			IF (moduleId < MaxModules) & (procedureId < MaxProcedures) THEN
@@ -63,7 +63,7 @@ TYPE
 			INC(stackPosition);
 		END Enter;
 
-		PROCEDURE Exit(moduleId, procedureId: LONGINT; enterTime: HUGEINT);
+		PROCEDURE Exit(moduleId, procedureId: SIGNED32; enterTime: SIGNED64);
 		BEGIN
 			DEC(stackPosition);
 			IF stackPosition < MaxStackSize THEN
@@ -92,15 +92,15 @@ TYPE
 VAR
 	(* modules *)
 	modules:Modules;
-	numberModules: LONGINT;
+	numberModules: SIGNED32;
 	(* process hash table *)
 	table: HashIntArray;
-	numberProcesses: LONGINT;
+	numberProcesses: SIGNED32;
 	processes: ARRAY MaxProcesses OF Process;
 	(* logging *)
 	log: Streams.Writer;
 	(* timing *)
-	frequency: LONGREAL;
+	frequency: FLOAT64;
 
 	PROCEDURE Put*(key, value: SIZE);
 	VAR hash: SIZE;
@@ -157,7 +157,7 @@ VAR
 		RETURN processes[value]
 	END GetProcess;
 
-	PROCEDURE AddModule*(VAR moduleId: LONGINT; procedures: LONGINT; CONST name: ARRAY OF CHAR);
+	PROCEDURE AddModule*(VAR moduleId: SIGNED32; procedures: SIGNED32; CONST name: ARRAY OF CHAR);
 	BEGIN{EXCLUSIVE}
 		IF TraceAdd THEN
 			log.String("Add Module: "); log.String(name); log.String(", #procs: "); log.Int(procedures,1);
@@ -167,7 +167,7 @@ VAR
 		INC(numberModules);
 	END AddModule;
 
-	PROCEDURE AddProcedure*(moduleId, procedureId: LONGINT; CONST name: ARRAY OF CHAR);
+	PROCEDURE AddProcedure*(moduleId, procedureId: SIGNED32; CONST name: ARRAY OF CHAR);
 	BEGIN
 		IF TraceAdd THEN
 			log.String("Add procedure: "); log.String(name); log.String(": "); log.Int(moduleId,1); log.String(","); log.Int(procedureId,1); log.Ln; log.Update;
@@ -175,13 +175,13 @@ VAR
 		COPY(name,modules[moduleId,procedureId]);
 	END AddProcedure;
 
-	PROCEDURE GetTimer(): HUGEINT;
+	PROCEDURE GetTimer(): SIGNED64;
 	BEGIN
 		RETURN Objects.CurrentProcessTime();
 	END GetTimer;
 
-	PROCEDURE EnterProcedure*(moduleId, procedureId: LONGINT);
-	VAR time: HUGEINT; p: Process;
+	PROCEDURE EnterProcedure*(moduleId, procedureId: SIGNED32);
+	VAR time: SIGNED64; p: Process;
 	BEGIN
 		time:= GetTimer();
 		IF TraceEnter THEN log.String("Enter procedure: "); log.Int(moduleId,1); log.String(", "); log.Int(procedureId,1); log.Ln; log.Update END;
@@ -189,8 +189,8 @@ VAR
 		p.Enter(moduleId,procedureId,time);
 	END EnterProcedure;
 
-	PROCEDURE ExitProcedure*(moduleId, procedureId: LONGINT);
-	VAR time: HUGEINT; p: Process;
+	PROCEDURE ExitProcedure*(moduleId, procedureId: SIGNED32);
+	VAR time: SIGNED64; p: Process;
 	BEGIN
 		time:= GetTimer();
 		IF TraceEnter THEN log.String("Exit procedure: "); log.Int(moduleId,1); log.String(", "); log.Int(procedureId,1); log.Ln; log.Update END;
@@ -199,7 +199,7 @@ VAR
 	END ExitProcedure;
 
 	PROCEDURE Initialize*;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO LEN(table)-1 DO table[i].used := FALSE END;
 		numberProcesses := 0;
@@ -209,17 +209,17 @@ VAR
 	TYPE
 		Record=RECORD
 			name: ARRAY 256 OF CHAR;
-			calls:LONGINT; time,brut: HUGEINT
+			calls:SIGNED32; time,brut: SIGNED64
 		END;
 		Records=POINTER TO ARRAY OF Record;
 
 	VAR
-		i,j,k: SIZE; records: Records; time,brut: HUGEINT; calls: LONGINT; recordNumber: SIZE;
+		i,j,k: SIZE; records: Records; time,brut: SIGNED64; calls: SIGNED32; recordNumber: SIZE;
 		option: ARRAY 32 OF CHAR;
 		log: Streams.Writer;
-		all,done: BOOLEAN; sort: LONGINT;
+		all,done: BOOLEAN; sort: SIGNED32;
 
-		PROCEDURE Sort(id: LONGINT);
+		PROCEDURE Sort(id: SIGNED32);
 		VAR i,j: SIZE;
 		(* stupid bubblesort *)
 			PROCEDURE Swap(VAR l,r: Record);
@@ -241,8 +241,8 @@ VAR
 			END;
 		END Sort;
 
-		PROCEDURE String(chars: LONGINT; CONST string: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		PROCEDURE String(chars: SIGNED32; CONST string: ARRAY OF CHAR);
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i<LEN(string)) & (i<chars) & (string[i] # 0X) DO
@@ -254,7 +254,7 @@ VAR
 			(*log.Update;*)
 		END String;
 
-		PROCEDURE Percent(x: LONGREAL);
+		PROCEDURE Percent(x: FLOAT64);
 		BEGIN
 			log.String("["); log.Int(ENTIER(x*100),2); log.String("."); log.Int(ENTIER(x*1000 +0.5) MOD 10, 1); log.String("]");
 		END Percent;
@@ -364,7 +364,7 @@ VAR
 	END CalibrateProc;
 
 	PROCEDURE Calibrate;
-	VAR cal: LONGINT; i: SIZE; process: Process;
+	VAR cal: SIGNED32; i: SIZE; process: Process;
 	BEGIN
 		frequency := Objects.TimerFrequency();
 		log.Ln;  log.String( "Timer reported Frequency: " ); log.FloatFix( frequency, 5, 1,0 );

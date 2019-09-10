@@ -24,8 +24,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	TYPE
 		Image* = Images.Image;
 
-		ShiftProc* = PROCEDURE (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; t: REAL);
-		ScaleProc* = PROCEDURE (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; xy, dxy: REAL);
+		ShiftProc* = PROCEDURE (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; t: FLOAT32);
+		ScaleProc* = PROCEDURE (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; xy, dxy: FLOAT32);
 
 		(** transformation filter **)
 		Filter* = RECORD (Images.Mode)
@@ -44,7 +44,7 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 
 	(** predefined filter procedures using box filter (i.e. no filtering): fast and ugly **)
 
-	PROCEDURE HShift* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; tx: REAL);
+	PROCEDURE HShift* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; tx: FLOAT32);
 	BEGIN
 		IF tx >= 0.5 THEN
 			dbit := dbit + dst.fmt.bpp; INC(dadr, dbit DIV 8); dbit := dbit MOD 8;
@@ -54,7 +54,7 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 		filter.transfer(filter, sadr, sbit, dadr, dbit, len)
 	END HShift;
 
-	PROCEDURE VShift* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; ty: REAL);
+	PROCEDURE VShift* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; ty: FLOAT32);
 	BEGIN
 		IF ty >= 0.5 THEN
 			INC(dadr, dst.bpr);
@@ -68,8 +68,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END VShift;
 
-	PROCEDURE HScale* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, dlen: LONGINT; x, dx: REAL);
-		VAR i0, i1: INTEGER;
+	PROCEDURE HScale* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, dlen: SIGNED32; x, dx: FLOAT32);
+		VAR i0, i1: SIGNED16;
 	BEGIN
 		Images.Bind(filter, src.fmt, dst.fmt);
 		i0 := 0;
@@ -86,8 +86,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END HScale;
 
-	PROCEDURE VScale* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, dlen: LONGINT; y, dy: REAL);
-		VAR j0, j1: INTEGER;
+	PROCEDURE VScale* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, dlen: SIGNED32; y, dy: FLOAT32);
+		VAR j0, j1: SIGNED16;
 	BEGIN
 		Images.Bind(filter, src.fmt, dst.fmt);
 		j0 := 0;
@@ -106,9 +106,9 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 
 	(** predefined filter procedures for linearly filtered transformations: slow and less ugly **)
 
-	PROCEDURE LinearHShift* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; tx: REAL);
+	PROCEDURE LinearHShift* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; tx: FLOAT32);
 		CONST r = Images.r; g = Images.g; b = Images.b; a = Images.a;
-		VAR w0, w1, sinc, dinc, i, red, green, blue, alpha: LONGINT; spix, dpix: Images.Pixel; da: ADDRESS;
+		VAR w0, w1, sinc, dinc, i, red, green, blue, alpha: SIGNED32; spix, dpix: Images.Pixel; da: ADDRESS;
 	BEGIN
 		w0 := ENTIER(1000H*tx + 0.5); w1 := 1000H-w0;
 		IF (w0 < 10H) OR (w1 < 10H) THEN
@@ -140,9 +140,9 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END LinearHShift;
 
-	PROCEDURE LinearVShift* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT; ty: REAL);
+	PROCEDURE LinearVShift* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32; ty: FLOAT32);
 		CONST r = Images.r; g = Images.g; b = Images.b; a = Images.a;
-		VAR w0, w1, i, red, green, blue, alpha: LONGINT; spix, dpix: Images.Pixel;
+		VAR w0, w1, i, red, green, blue, alpha: SIGNED32; spix, dpix: Images.Pixel;
 	BEGIN
 		w0 := ENTIER(1000H*ty + 0.5); w1 := 1000H-w0;
 		IF (w0 < 10H) OR (w1 < 10H) THEN
@@ -173,8 +173,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END LinearVShift;
 
-	PROCEDURE LinearHScale* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, dlen: LONGINT; x, dx: REAL);
-		VAR i0, i1: INTEGER; spix: ARRAY 2 OF Images.Pixel; dpix: Images.Pixel; w1, w0, j: LONGINT;
+	PROCEDURE LinearHScale* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, dlen: SIGNED32; x, dx: FLOAT32);
+		VAR i0, i1: SIGNED16; spix: ARRAY 2 OF Images.Pixel; dpix: Images.Pixel; w1, w0, j: SIGNED32;
 	BEGIN
 		Images.Bind(filter, Images.PixelFormat, dst.fmt);
 		x := x+0.5;	(* displace sample position to midpoint between candidate pixels *)
@@ -211,8 +211,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END LinearHScale;
 
-	PROCEDURE LinearVScale* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, dlen: LONGINT; y, dy: REAL);
-		VAR j0, j1: INTEGER; spix: ARRAY 2 OF Images.Pixel; dpix: Images.Pixel; w1, w0, j: LONGINT;
+	PROCEDURE LinearVScale* (VAR filter: Images.Mode; src, dst: Image; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, dlen: SIGNED32; y, dy: FLOAT32);
+		VAR j0, j1: SIGNED16; spix: ARRAY 2 OF Images.Pixel; dpix: Images.Pixel; w1, w0, j: SIGNED32;
 	BEGIN
 		Images.Bind(filter, Images.PixelFormat, dst.fmt);
 		y := y+0.5;	(* displace sample position to midpoint between candidate pixels *)
@@ -250,7 +250,7 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	END LinearVScale;
 
 	(** initialize filter with compositing operation and transformation procedures **)
-	PROCEDURE InitFilter* (VAR filter: Filter; op: SHORTINT; hshift, vshift: ShiftProc; hscale, vscale: ScaleProc);
+	PROCEDURE InitFilter* (VAR filter: Filter; op: SIGNED8; hshift, vshift: ShiftProc; hscale, vscale: ScaleProc);
 	BEGIN
 		Images.InitMode(filter, op);
 		filter.hshift := hshift; filter.vshift := vshift;
@@ -258,8 +258,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	END InitFilter;
 
 	(* get temporary pixel format image for storing intermediate images *)
-	PROCEDURE GetTempImage (VAR img, cache: Images.Image; w, h: INTEGER);
-		VAR size: LONGINT;
+	PROCEDURE GetTempImage (VAR img, cache: Images.Image; w, h: SIGNED16);
+		VAR size: SIGNED32;
 	BEGIN
 		size := LONG(w) * LONG(h);
 		IF (size >= 10000H) OR (cache = NIL) THEN
@@ -282,8 +282,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 		CONST
 			r = Images.r; g = Images.g; b = Images.b;
 		VAR
-			dst: Images.Image; mode: Images.Mode; dadr, sadr, sa, da: ADDRESS; dinc, sinc, sbit: LONGINT; h, w: INTEGER;
-			mat: GfxMatrix.Matrix; t: REAL;
+			dst: Images.Image; mode: Images.Mode; dadr, sadr, sa, da: ADDRESS; dinc, sinc, sbit: SIGNED32; h, w: SIGNED16;
+			mat: GfxMatrix.Matrix; t: FLOAT32;
 	BEGIN
 		IF ABS(m[0, 0] * m[1, 1]) >= ABS(m[0, 1] * m[1, 0]) THEN	(* no need to swap rows and columns *)
 			IF (m[0, 0] <= 0) OR (m[1, 1] <= 0) THEN
@@ -353,8 +353,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	END Preprocess;
 
 	(* shift source row by fractional amount *)
-	PROCEDURE SkewRow (src, dst: Image; si, sj, w, di, dj: INTEGER; tx: REAL; VAR filter: Filter);
-		VAR sbit, dbit: LONGINT; sadr, dadr: ADDRESS;
+	PROCEDURE SkewRow (src, dst: Image; si, sj, w, di, dj: SIGNED16; tx: FLOAT32; VAR filter: Filter);
+		VAR sbit, dbit: SIGNED32; sadr, dadr: ADDRESS;
 	BEGIN
 		ASSERT((0.0 <= tx) & (tx <= 1.0), 100);	(* rounding problem if using tx < 1.0 *)
 		IF si < 0 THEN INC(w, si); DEC(di, si); si := 0 END;
@@ -367,8 +367,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	END SkewRow;
 
 	(* shear rectangle in source image horizontally; clip to destination boundary *)
-	PROCEDURE SkewRows (src, dst: Image; si, sj, w, h, dj: INTEGER; x, dx: REAL; VAR filter: Filter);
-		VAR j, di, n: INTEGER;
+	PROCEDURE SkewRows (src, dst: Image; si, sj, w, h, dj: SIGNED16; x, dx: FLOAT32; VAR filter: Filter);
+		VAR j, di, n: SIGNED16;
 	BEGIN
 		j := 0;
 		IF dj < 0 THEN
@@ -463,8 +463,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	END SkewRows;
 
 	(* shift source column by fractional amount *)
-	PROCEDURE SkewCol (src, dst: Image; si, sj, h, di, dj: INTEGER; ty: REAL; VAR filter: Filter);
-		VAR sbit, dbit: LONGINT; sadr, dadr: ADDRESS;
+	PROCEDURE SkewCol (src, dst: Image; si, sj, h, di, dj: SIGNED16; ty: FLOAT32; VAR filter: Filter);
+		VAR sbit, dbit: SIGNED32; sadr, dadr: ADDRESS;
 	BEGIN
 		ASSERT((0.0 <= ty) & (ty <= 1.0), 100);	(* rounding problem with ty < 1.0 *)
 		IF sj < 0 THEN INC(h, sj); DEC(dj, sj); sj := 0 END;
@@ -477,8 +477,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	END SkewCol;
 
 	(* shear rectangle in source image vertically; clip to destination boundary *)
-	PROCEDURE SkewCols (src, dst: Image; si, sj, w, h, di: INTEGER; y, dy: REAL; VAR filter: Filter);
-		VAR i, dj, n: INTEGER;
+	PROCEDURE SkewCols (src, dst: Image; si, sj, w, h, di: SIGNED16; y, dy: FLOAT32; VAR filter: Filter);
+		VAR i, dj, n: SIGNED16;
 	BEGIN
 		i := 0;
 		IF di < 0 THEN
@@ -573,8 +573,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	END SkewCols;
 
 	(** render translated image on destination **)
-	PROCEDURE Translate* (src, dst: Image; tx, ty: REAL; VAR filter: Filter);
-		VAR ti, tj, i, j, w, h: INTEGER; tmp: Image;
+	PROCEDURE Translate* (src, dst: Image; tx, ty: FLOAT32; VAR filter: Filter);
+		VAR ti, tj, i, j, w, h: SIGNED16; tmp: Image;
 	BEGIN
 		ti := SHORT(ENTIER(tx)); tx := tx - ti;
 		tj := SHORT(ENTIER(ty)); ty := ty - tj;
@@ -596,8 +596,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	END Translate;
 
 	(** render scaled image on destination **)
-	PROCEDURE Scale* (src, dst: Image; sx, sy, tx, ty: REAL; VAR filter: Filter);
-		VAR xl, xr, yb, yt, w, h, i: INTEGER; dy, y, dx, x: REAL; sadr, dadr: ADDRESS; sbit, dbit: LONGINT; tmp: Image;
+	PROCEDURE Scale* (src, dst: Image; sx, sy, tx, ty: FLOAT32; VAR filter: Filter);
+		VAR xl, xr, yb, yt, w, h, i: SIGNED16; dy, y, dx, x: FLOAT32; sadr, dadr: ADDRESS; sbit, dbit: SIGNED32; tmp: Image;
 	BEGIN
 		ASSERT((sx > 0) & (sy > 0), 100);
 		xl := SHORT(ENTIER(tx)); xr := -SHORT(ENTIER(-(tx + sx * src.width)));
@@ -662,8 +662,8 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	END Scale;
 
 	(** render rotated image on destination **)
-	PROCEDURE Rotate* (src, dst: Image; sin, cos, tx, ty: REAL; VAR filter: Filter);
-		VAR m: GfxMatrix.Matrix; tan, htan, wsin, hcos, x, y: REAL; wmax, h, iy, sw, sh: INTEGER; tmp: Image;
+	PROCEDURE Rotate* (src, dst: Image; sin, cos, tx, ty: FLOAT32; VAR filter: Filter);
+		VAR m: GfxMatrix.Matrix; tan, htan, wsin, hcos, x, y: FLOAT32; wmax, h, iy, sw, sh: SIGNED16; tmp: Image;
 	BEGIN
 		ASSERT(ABS(sin * sin + cos * cos - 1) < 0.0001, 100);
 		m[0, 0] := cos; m[0, 1] := sin; m[1, 0] := -sin; m[1, 1] := cos; m[2, 0] := tx; m[2, 1] := ty;
@@ -690,13 +690,13 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	END Rotate;
 
 	(** render horizontally sheared image on destination **)
-	PROCEDURE ShearRows* (src, dst: Image; sx, tx: REAL; VAR filter: Filter);
+	PROCEDURE ShearRows* (src, dst: Image; sx, tx: FLOAT32; VAR filter: Filter);
 	BEGIN
 		SkewRows(src, dst, 0, 0, src.width, src.height, 0, tx, sx, filter)
 	END ShearRows;
 
 	(** render vertically sheared image on destination **)
-	PROCEDURE ShearCols* (src, dst: Image; sy, ty: REAL; VAR filter: Filter);
+	PROCEDURE ShearCols* (src, dst: Image; sy, ty: FLOAT32; VAR filter: Filter);
 	BEGIN
 		SkewCols(src, dst, 0, 0, src.width, src.height, 0, ty, sy, filter)
 	END ShearCols;
@@ -704,7 +704,7 @@ MODULE GfxImages IN Oberon; (** non-portable *)	(* eos  **)
 	(** render affinely transformed image on destination **)
 	PROCEDURE Transform* (src, dst: Image; m: GfxMatrix.Matrix; VAR filter: Filter);
 		CONST eps = 0.003;
-		VAR det, s, dx, x: REAL; iy, w, h, ix: INTEGER; tmp: Image;
+		VAR det, s, dx, x: FLOAT32; iy, w, h, ix: SIGNED16; tmp: Image;
 	BEGIN
 		Preprocess(src, m, filter);
 		IF (ABS(m[0, 0]) >= eps) & (ABS(m[1, 1]) >= eps) THEN	(* matrix isn't singular *)

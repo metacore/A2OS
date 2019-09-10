@@ -38,45 +38,45 @@ MODULE Diskette IN Oberon;	(** non-portable *) (*JG 11.8.94/pjm *)
   TYPE
     FileDesc = RECORD (*image of dir entry*)
       name: ARRAY 22 OF CHAR;
-      time, date, start: INTEGER;
-      size: LONGINT
+      time, date, start: SIGNED16;
+      size: SIGNED32
     END;
 
     File = POINTER TO FileHandle;
     FileHandle = RECORD
       prev, next: File;
       attributes: CHAR;
-      start: INTEGER;
-      time, date, size: LONGINT;
+      start: SIGNED16;
+      time, date, size: SIGNED32;
       name: ARRAY 32 OF CHAR
     END;
 
     Volume = POINTER TO VolDesc;
     VolDesc = RECORD
       code, mediaDesc: CHAR;
-      secSize, secPerTrack, nofSecs, nofHeads: INTEGER;
-      resSecs, nofFATs, FATStart, secPerFAT: INTEGER;
-      dirStart, nofEntries, entriesPerSec, secPerDir: INTEGER;
-      dataStart, secPerBlock, blockSize, nofBlocks: INTEGER;
-      freeEntries, freeBlocks: INTEGER;
+      secSize, secPerTrack, nofSecs, nofHeads: SIGNED16;
+      resSecs, nofFATs, FATStart, secPerFAT: SIGNED16;
+      dirStart, nofEntries, entriesPerSec, secPerDir: SIGNED16;
+      dataStart, secPerBlock, blockSize, nofBlocks: SIGNED16;
+      freeEntries, freeBlocks: SIGNED16;
       dir: File; modified: BOOLEAN;
       name: ARRAY 32 OF CHAR;
-      FAT: ARRAY maxBlocks OF INTEGER
+      FAT: ARRAY maxBlocks OF SIGNED16
     END;
 
-    EntryHandler* = PROCEDURE (name: ARRAY OF CHAR; date, time, size: LONGINT);
+    EntryHandler* = PROCEDURE (name: ARRAY OF CHAR; date, time, size: SIGNED32);
 
-    DiskBuffer = ARRAY MAX(LONGINT) OF CHAR;
+    DiskBuffer = ARRAY MAX(SIGNED32) OF CHAR;
 
 VAR
-	res*: INTEGER;
-	drive*: SHORTINT;
+	res*: SIGNED16;
+	drive*: SIGNED8;
 	open: BOOLEAN;
 	vol: Volume;
 	device: Disks.Device;
 
 PROCEDURE OpenDiskette;
-VAR dev: Disks.DeviceTable; name: Disks.Name; i, res: LONGINT;
+VAR dev: Disks.DeviceTable; name: Disks.Name; i, res: SIGNED32;
 BEGIN
 	ASSERT(~open);
 	Disks.GetRegistered(dev);
@@ -95,7 +95,7 @@ BEGIN
 END OpenDiskette;
 
 PROCEDURE CloseDiskette;
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	ASSERT(open);
 	EXCL(device.table[0].flags, Disks.Mounted);
@@ -103,16 +103,16 @@ BEGIN
 	device := NIL; open := FALSE
 END CloseDiskette;
 
-PROCEDURE GetSectors(start, num: INTEGER;  VAR buf: ARRAY OF SYSTEM.BYTE;  ofs: LONGINT);
-VAR r: LONGINT;
+PROCEDURE GetSectors(start, num: SIGNED16;  VAR buf: ARRAY OF SYSTEM.BYTE;  ofs: SIGNED32);
+VAR r: SIGNED32;
 BEGIN
 	(*Diskette0.GetSectors(drive, start, num, buf, ofs)*)
 	device.transfer(device, Disks.Read, start, num, SYSTEM.VAL(DiskBuffer, buf), ofs, r);
 	ASSERT(r = Disks.Ok)
 END GetSectors;
 
-PROCEDURE PutSectors(start, num: INTEGER;  VAR buf: ARRAY OF SYSTEM.BYTE;  ofs: LONGINT);
-VAR r: LONGINT;
+PROCEDURE PutSectors(start, num: SIGNED16;  VAR buf: ARRAY OF SYSTEM.BYTE;  ofs: SIGNED32);
+VAR r: SIGNED32;
 BEGIN
 	(*Diskette0.PutSectors(drive, start, num, buf, ofs)*)
 	device.transfer(device, Disks.Write, start, num, SYSTEM.VAL(DiskBuffer, buf), ofs, r);
@@ -122,7 +122,7 @@ END PutSectors;
 (* -- driver end -- *)
 
 (*
-  PROCEDURE Open (secPerTrack, nofHeads: INTEGER);
+  PROCEDURE Open (secPerTrack, nofHeads: SIGNED16);
   BEGIN vol.secPerTrack := secPerTrack; vol.nofHeads := nofHeads
   END Open;
 *)
@@ -162,7 +162,7 @@ END PutSectors;
     IF vol.secSize # 512 THEN HALT(54) END
   END GetVolDesc;
 
-  PROCEDURE Blocks (size: LONGINT): INTEGER;
+  PROCEDURE Blocks (size: SIGNED32): SIGNED16;
   BEGIN RETURN SHORT((size + vol.blockSize - 1) DIV vol.blockSize)
   END Blocks;
 
@@ -172,7 +172,7 @@ END PutSectors;
   END Locate;
 
   PROCEDURE ReadFAT;
-    VAR n: LONGINT; i, j, n0, n1: INTEGER;
+    VAR n: SIGNED32; i, j, n0, n1: SIGNED16;
       buf: ARRAY maxFATSize OF CHAR;
   BEGIN
     GetSectors(vol.FATStart, vol.secPerFAT, buf, 0);
@@ -189,7 +189,7 @@ END PutSectors;
   END ReadFAT;
 
   PROCEDURE WriteFAT;
-    VAR n: LONGINT; i, j, n0, n1: INTEGER;
+    VAR n: SIGNED32; i, j, n0, n1: SIGNED16;
       buf: ARRAY maxFATSize OF CHAR;
   BEGIN
     buf[0] := vol.mediaDesc; buf[1] := 0FFX; buf[2] := 0FFX;
@@ -224,7 +224,7 @@ END PutSectors;
   END OutEntry;
 
   PROCEDURE ReadOberonDir (VAR buf: ARRAY OF FileDesc);
-    VAR f, g: File; s, i: INTEGER;
+    VAR f, g: File; s, i: SIGNED16;
   BEGIN (*buf[0] ready*)
     s := vol.dirStart; i := 0;
     NEW(vol.dir); InEntry(buf[0], vol.dir);
@@ -245,7 +245,7 @@ END PutSectors;
   END ReadOberonDir;
 
   PROCEDURE WriteOberonDir;
-    VAR f: File; s, i: INTEGER;
+    VAR f: File; s, i: SIGNED16;
       buf: ARRAY maxEntries OF FileDesc;
   BEGIN s := vol.dirStart;
     COPY(vol.name, vol.dir.name);
@@ -262,7 +262,7 @@ END PutSectors;
   END WriteOberonDir;
 
   PROCEDURE InitOberonVol* (name: ARRAY OF CHAR);
-    VAR i: INTEGER;
+    VAR i: SIGNED16;
   BEGIN OpenDiskette; GetVolDesc;
     COPY(name, vol.name); vol.code := "o";
     NEW(vol.dir); vol.dir.name[0] := 0X;
@@ -277,7 +277,7 @@ END PutSectors;
   (*DOS format support*)
 
   PROCEDURE InDOSEntry (VAR f: FileDesc; VAR g: File);
-    VAR i, j: INTEGER; ch: CHAR;
+    VAR i, j: SIGNED16; ch: CHAR;
   BEGIN i := 0;
     WHILE (i # 8) & (f.name[i] # " ") DO ch := f.name[i];
       IF ("A" <= ch) & (ch <= "Z") OR ("0" <= ch) & (ch <= "9") THEN g.name[i] := ch
@@ -297,7 +297,7 @@ END PutSectors;
   END InDOSEntry;
 
   PROCEDURE OutDOSEntry (VAR f: File; VAR g: FileDesc);
-    VAR i, j: INTEGER;
+    VAR i, j: SIGNED16;
   BEGIN i := 0;
     WHILE (f.name[i] # ".") & (f.name[i] # 0X) DO g.name[i] := f.name[i]; INC(i) END;
     j := i;
@@ -312,7 +312,7 @@ END PutSectors;
   END OutDOSEntry;
 
   PROCEDURE ReadDOSDir (VAR buf: ARRAY OF FileDesc);
-    VAR f, g: File; s, i: INTEGER;
+    VAR f, g: File; s, i: SIGNED16;
   BEGIN (*buf[0] ready*)
     NEW(vol.dir); vol.dir.name[0] := 0X;
     vol.dir.next := vol.dir; vol.dir.prev := vol.dir;
@@ -339,7 +339,7 @@ END PutSectors;
   END ReadDOSDir;
 
   PROCEDURE WriteDOSDir;
-    VAR f: File; s, i: INTEGER;
+    VAR f: File; s, i: SIGNED16;
       buf: ARRAY maxEntries OF FileDesc;
   BEGIN
     s := vol.dirStart; i := 0;
@@ -358,7 +358,7 @@ END PutSectors;
   END WriteDOSDir;
 
   PROCEDURE InitDOSVol* (name: ARRAY OF CHAR);
-    VAR i: INTEGER;
+    VAR i: SIGNED16;
   BEGIN OpenDiskette; GetVolDesc;
     COPY(name, vol.name); vol.code := 0X;
     NEW(vol.dir); vol.dir.name[0] := 0X; vol.dir.attributes := 28X; (*archive & volume*)
@@ -370,7 +370,7 @@ END PutSectors;
     vol := NIL; CloseDiskette
   END InitDOSVol;
 
-  PROCEDURE OpenVol* (VAR freeEntries, freeSpace: INTEGER);
+  PROCEDURE OpenVol* (VAR freeEntries, freeSpace: SIGNED16);
     VAR buf: ARRAY maxEntries OF FileDesc;
   BEGIN OpenDiskette;
     GetVolDesc;
@@ -401,7 +401,7 @@ END PutSectors;
   (*File management*)
 
   PROCEDURE NormName (VAR name, nname: ARRAY OF CHAR);
-    VAR i, j, j1: INTEGER; ch: CHAR;
+    VAR i, j, j1: SIGNED16; ch: CHAR;
   BEGIN
     IF vol.code = "o" THEN i := 0;
       WHILE i # 20 DO nname[i] := name[i]; INC(i) END;
@@ -428,7 +428,7 @@ END PutSectors;
 	CONST
 		Size = 30*maxBlockSize DIV 512;
 	VAR
-		Wg: Files.Rider;  size: LONGINT;  i, inbuf, start: INTEGER;
+		Wg: Files.Rider;  size: SIGNED32;  i, inbuf, start: SIGNED16;
 		buf: ARRAY Size*512 OF CHAR;
 	BEGIN
 		Files.Set(Wg, g, 0);  size := f.size;
@@ -450,7 +450,7 @@ END PutSectors;
 	END readFile;
 
   PROCEDURE deleteFile (f: File);
-    VAR i, j: INTEGER;
+    VAR i, j: SIGNED16;
   BEGIN
     f.prev.next := f.next; f.next.prev := f.prev;
     i := f.start;
@@ -458,7 +458,7 @@ END PutSectors;
   END deleteFile;
 
   PROCEDURE addFile (f: Files.File; g, h: File);
-    VAR Rf: Files.Rider; remSize: LONGINT; i, j: INTEGER;
+    VAR Rf: Files.Rider; remSize: SIGNED32; i, j: SIGNED16;
       buf: ARRAY maxBlockSize OF CHAR;
   BEGIN
     IF h.size # 0 THEN remSize := h.size;
@@ -490,7 +490,7 @@ END PutSectors;
   END ReadFile;
 
   PROCEDURE WriteFile* (oname, name: ARRAY OF CHAR);
-    VAR f: Files.File; g, h: File; size: LONGINT; need: INTEGER;
+    VAR f: Files.File; g, h: File; size: SIGNED32; need: SIGNED16;
       nname: ARRAY 32 OF CHAR;
   BEGIN ASSERT(open);
     res := 0; f := Files.Old(oname);

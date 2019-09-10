@@ -64,7 +64,7 @@ MODULE VinciEditors IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Track (frame: LeoFrames.Frame; VAR msg: Oberon.InputMsg);
 		VAR
-			tool: LeoTools.Tool; fx, fy, hx, hy, len, mx, my, l, x, y: INTEGER; x0, y0, x1, y1: REAL; s: ARRAY 128 OF CHAR;
+			tool: LeoTools.Tool; fx, fy, hx, hy, len, mx, my, l, x, y: SIGNED16; x0, y0, x1, y1: FLOAT32; s: ARRAY 128 OF CHAR;
 			mask: Display3.Mask; state, keysum, keys: SET; fig: Leonardo.Figure; shape: VinciShapes.Shape;
 			m: GfxMatrix.Matrix;
 	BEGIN
@@ -164,8 +164,8 @@ MODULE VinciEditors IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Revert (e: LeoPanels.Editor);
 		VAR
-			obj, link: Objects.Object; vs: VinciShapes.Shape; par: VinciShapes.Parameter; b: BOOLEAN; i: LONGINT;
-			r: REAL; s: ARRAY 64 OF CHAR;
+			obj, link: Objects.Object; vs: VinciShapes.Shape; par: VinciShapes.Parameter; b: BOOLEAN; i: SIGNED32;
+			r: FLOAT32; s: ARRAY 64 OF CHAR;
 	BEGIN
 		Links.GetLink(e, "Model", obj);
 		IF (obj # NIL) & (obj IS VinciShapes.Shape) THEN
@@ -187,8 +187,8 @@ MODULE VinciEditors IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE Apply (e: LeoPanels.Editor);
 		VAR
-			obj, link: Objects.Object; vs: VinciShapes.Shape; par: VinciShapes.Parameter; b: BOOLEAN; i: LONGINT;
-			r: REAL; s: ARRAY 64 OF CHAR;
+			obj, link: Objects.Object; vs: VinciShapes.Shape; par: VinciShapes.Parameter; b: BOOLEAN; i: SIGNED32;
+			r: FLOAT32; s: ARRAY 64 OF CHAR;
 	BEGIN
 		Links.GetLink(e, "Model", obj);
 		IF (obj # NIL) & (obj IS VinciShapes.Shape) THEN
@@ -211,7 +211,7 @@ MODULE VinciEditors IN Oberon; (** portable *)	(* eos  *)
 
 	PROCEDURE BuildPanel (e: LeoPanels.Editor);
 		VAR
-			obj: Objects.Object; vs: VinciShapes.Shape; list, f: Gadgets.Frame; y: INTEGER;
+			obj: Objects.Object; vs: VinciShapes.Shape; list, f: Gadgets.Frame; y: SIGNED16;
 			s, cmd: ARRAY 64 OF CHAR;par: VinciShapes.Parameter;
 	BEGIN
 		Links.GetLink(e, "Model", obj);

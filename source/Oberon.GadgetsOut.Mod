@@ -18,7 +18,7 @@ VAR
 	sent to the model.  If gadget = "", output is sent to Oberon.Log. *)
 
 PROCEDURE Open*(gadget: ARRAY OF CHAR);
-VAR obj: Objects.Object;  m: Objects.LinkMsg;  a: Objects.AttrMsg;  i, j: INTEGER;
+VAR obj: Objects.Object;  m: Objects.LinkMsg;  a: Objects.AttrMsg;  i, j: SIGNED16;
 BEGIN
 	IF gadget = "" THEN
 		text := Oberon.Log;  outobj := NIL
@@ -63,7 +63,7 @@ END Clear;
 	of output to a string attribute, the string is always overwritten. *)
 
 PROCEDURE Append*;
-VAR a: Objects.AttrMsg;  r: Texts.Reader;  i, pos: LONGINT;
+VAR a: Objects.AttrMsg;  r: Texts.Reader;  i, pos: SIGNED32;
 BEGIN
 	IF text = NIL THEN
 		ASSERT(outobj # NIL);
@@ -87,47 +87,47 @@ BEGIN
 	Texts.Write(w, x)
 END Char;
 
-PROCEDURE Date*(t, d: LONGINT);
+PROCEDURE Date*(t, d: SIGNED32);
 BEGIN
 	Texts.WriteDate(w, t, d)
 END Date;
 
-PROCEDURE Int*(x, n: LONGINT);
+PROCEDURE Int*(x, n: SIGNED32);
 BEGIN
 	Texts.WriteInt(w, x, n)
 END Int;
 
-PROCEDURE IntHex*(x: LONGINT);
+PROCEDURE IntHex*(x: SIGNED32);
 BEGIN
 	Texts.WriteHex(w, x)
 END IntHex;
 
-PROCEDURE Real*(x: REAL;  n: LONGINT);
+PROCEDURE Real*(x: FLOAT32;  n: SIGNED32);
 BEGIN
 	Texts.WriteReal(w, x, n)
 END Real;
 
-PROCEDURE RealFix*(x: REAL;  n, f, E: LONGINT);
+PROCEDURE RealFix*(x: FLOAT32;  n, f, E: SIGNED32);
 BEGIN
 	Texts.WriteRealFix(w, x, n, f, E)
 END RealFix;
 
-PROCEDURE RealHex*(x: REAL);
+PROCEDURE RealHex*(x: FLOAT32);
 BEGIN
 	Texts.WriteRealHex(w, x)
 END RealHex;
 
-PROCEDURE LongReal*(x: LONGREAL;  n: LONGINT);
+PROCEDURE LongReal*(x: FLOAT64;  n: SIGNED32);
 BEGIN
 	Texts.WriteLongReal(w, x, n)
 END LongReal;
 
-PROCEDURE LongRealFix*(x: LONGREAL;  n, f, E: LONGINT);
+PROCEDURE LongRealFix*(x: FLOAT64;  n, f, E: SIGNED32);
 BEGIN
 	Texts.WriteLongRealFix(w, x, n, f, E)
 END LongRealFix;
 
-PROCEDURE LongRealHex*(x: LONGREAL);
+PROCEDURE LongRealHex*(x: FLOAT64);
 BEGIN
 	Texts.WriteLongRealHex(w, x)
 END LongRealHex;

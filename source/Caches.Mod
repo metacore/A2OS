@@ -18,11 +18,11 @@ TYPE
 		VAR
 			data*: POINTER TO ARRAY OF CHAR;
 			dev*: Disks.Device;
-			block*: LONGINT;
+			block*: SIGNED32;
 			state: SET;
 			nextHash, prevHash, nextLRU, prevLRU, nextDirty: Buffer;
 
-		PROCEDURE &Init*(size: LONGINT);
+		PROCEDURE &Init*(size: SIGNED32);
 		BEGIN
 			NEW(data, size)
 		END Init;
@@ -31,10 +31,10 @@ TYPE
 
 	Cache* = OBJECT	(** all fields read-only *)
 		VAR
-			blockSize*: LONGINT;
+			blockSize*: SIGNED32;
 			hashTable: POINTER TO ARRAY OF Buffer;
 			lru: Buffer;	(* LRU list of released buffers (only dirty buffers may be locked) *)
-			lruClean: LONGINT;	(* number of non-dirty buffers in lru *)
+			lruClean: SIGNED32;	(* number of non-dirty buffers in lru *)
 			syncNow: BOOLEAN;
 			timer: Objects.Timer;
 
@@ -44,8 +44,8 @@ TYPE
 			returned with valid = TRUE, otherwise an unlocked non-dirty buffer is waited for, locked and returned
 			with valid = FALSE. *)
 
-		PROCEDURE Acquire*(dev: Disks.Device;  block: LONGINT;  VAR buffer: Buffer;  VAR valid: BOOLEAN);
-		VAR done: BOOLEAN;  buf: Buffer;  n, m: LONGINT;
+		PROCEDURE Acquire*(dev: Disks.Device;  block: SIGNED32;  VAR buffer: Buffer;  VAR valid: BOOLEAN);
+		VAR done: BOOLEAN;  buf: Buffer;  n, m: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			ASSERT(dev # NIL);	(* NIL device is used for initialization *)
 			REPEAT
@@ -93,7 +93,7 @@ TYPE
 		(** Synchronize all momentarily dirty buffers that are not locked. *)
 
 		PROCEDURE Synchronize*;
-		VAR list, buf: Buffer; res: WORD; num, count: LONGINT;
+		VAR list, buf: Buffer; res: INTEGER; num, count: SIGNED32;
 		BEGIN
 			AcquireDirty(list); count := 0;
 			WHILE list # NIL DO
@@ -151,14 +151,14 @@ TYPE
 
 		(* Hash function. *)
 
-		PROCEDURE Hash(dev: Disks.Device;  block: LONGINT): LONGINT;
+		PROCEDURE Hash(dev: Disks.Device;  block: SIGNED32): SIGNED32;
 		BEGIN
-			RETURN block MOD LEN(hashTable)(LONGINT)	(* good candidate for inlining *)
+			RETURN block MOD LEN(hashTable)(SIGNED32)	(* good candidate for inlining *)
 		END Hash;
 
 		(* Move buffer from one hash list to another. *)
 
-		PROCEDURE MoveBuffer(buf: Buffer;  from, to: LONGINT);
+		PROCEDURE MoveBuffer(buf: Buffer;  from, to: SIGNED32);
 		BEGIN
 				(* remove *)
 			IF buf.prevHash # NIL THEN
@@ -180,8 +180,8 @@ TYPE
 
 		(* Initialize the cache with specified size and hash size. *)
 
-		PROCEDURE &Init*(blockSize, hashSize, cacheSize: LONGINT);
-		VAR buf: Buffer;  i, n: LONGINT;
+		PROCEDURE &Init*(blockSize, hashSize, cacheSize: SIGNED32);
+		VAR buf: Buffer;  i, n: SIGNED32;
 		BEGIN
 			ASSERT(hashSize <= cacheSize);
 			NEW(hashTable, hashSize);
@@ -210,7 +210,7 @@ TYPE
 
 (* Report an error during asynchronous disk access. *)
 
-PROCEDURE ReportError(dev: Disks.Device; block, num: LONGINT; res: WORD);
+PROCEDURE ReportError(dev: Disks.Device; block, num: SIGNED32; res: INTEGER);
 BEGIN
 	KernelLog.Enter; KernelLog.String("Caches: Error "); KernelLog.Int(res, 1);
 	KernelLog.String(" on disk "); KernelLog.String(dev.name); KernelLog.Int(num, 1);

@@ -18,8 +18,8 @@ MODULE UDPExample IN Oberon;	(** portable *)
 		W: Texts.Writer;
 
 (* Write str to buf using the DNS encoding scheme. *)
-	PROCEDURE PutString(VAR buf: ARRAY OF CHAR; VAR pos: INTEGER; str: ARRAY OF CHAR);
-		VAR p, i, j: INTEGER;
+	PROCEDURE PutString(VAR buf: ARRAY OF CHAR; VAR pos: SIGNED16; str: ARRAY OF CHAR);
+		VAR p, i, j: SIGNED16;
 	BEGIN
 		i := 0; j := 0;
 		WHILE str[j] # 0X DO
@@ -35,10 +35,10 @@ MODULE UDPExample IN Oberon;	(** portable *)
 	END PutString;
 
 (* Read a str from buf and decode it. *)
-	PROCEDURE GetString(VAR buf: ARRAY OF CHAR; VAR pos: INTEGER; VAR str: ARRAY OF CHAR);
+	PROCEDURE GetString(VAR buf: ARRAY OF CHAR; VAR pos: SIGNED16; VAR str: ARRAY OF CHAR);
 		VAR
 			s: ARRAY 1024 OF CHAR;
-			n, n0, i, ptr: INTEGER;
+			n, n0, i, ptr: SIGNED16;
 	BEGIN
 		i := 0;
 		n := ORD(buf[pos]); INC(pos);
@@ -68,8 +68,8 @@ MODULE UDPExample IN Oberon;	(** portable *)
 			S: NetSystem.Socket;
 			IP, remIP: NetSystem.IPAdr;
 			buf, name, num: ARRAY 1024 OF CHAR;
-			len, ttl: LONGINT;
-			pos, res, res2, remPort, i, type, class, rLen: INTEGER;
+			len, ttl: SIGNED32;
+			pos, res, res2, remPort, i, type, class, rLen: SIGNED16;
 	BEGIN
 		Texts.OpenScanner(Sc, Oberon.Par.text, Oberon.Par.pos);
 		Texts.Scan(Sc);

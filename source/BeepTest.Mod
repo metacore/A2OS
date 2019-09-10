@@ -5,7 +5,7 @@ IMPORT Beep, Kernel, KernelLog;
 VAR busy : BOOLEAN; timer : Kernel.Timer;
 
 PROCEDURE Go*;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	IF ~busy THEN
 		busy := TRUE;

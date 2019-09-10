@@ -18,15 +18,15 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 
 	TYPE
 		CLUT* = RECORD
-			col*: ARRAY colors OF LONGINT;	(** blue: bit 0..7; green: bit 8..15; red: bit 16..23 **)
-			size*: INTEGER;	(** number of valid colors **)
-			bits: INTEGER;	(* number of bits per component in color cube *)
+			col*: ARRAY colors OF SIGNED32;	(** blue: bit 0..7; green: bit 8..15; red: bit 16..23 **)
+			size*: SIGNED16;	(** number of valid colors **)
+			bits: SIGNED16;	(* number of bits per component in color cube *)
 			cube: POINTER TO ARRAY OF CHAR;	(* maps RGB triples to indices, size is (2^bits)^3 *)
 		END;
 
 
 	(** set CLUT entry to specific color (invalidates existing reverse lookup structure) **)
-	PROCEDURE Set* (VAR clut: CLUT; n: SIZE; col: LONGINT);
+	PROCEDURE Set* (VAR clut: CLUT; n: SIZE; col: SIGNED32);
 	BEGIN
 		ASSERT((0 <= n) & (n < colors), 100);
 		clut.col[n] := col MOD 1000000H;
@@ -34,24 +34,24 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 	END Set;
 
 	(** get CLUT entry **)
-	PROCEDURE Get* (VAR clut: CLUT; n: SIZE; VAR col: LONGINT);
+	PROCEDURE Get* (VAR clut: CLUT; n: SIZE; VAR col: SIGNED32);
 	BEGIN
 		ASSERT((0 <= n) & (n < colors), 100);
 		col := clut.col[n]
 	END Get;
 
 	(** initialize CLUT with number of valid colors and number of bits per component for reverse lookup table **)
-	PROCEDURE Init* (VAR clut: CLUT; size, bits: LONGINT);
+	PROCEDURE Init* (VAR clut: CLUT; size, bits: SIGNED32);
 		VAR
-			nbits, x, colormax, cur, rcol, gcol, bcol, col: LONGINT;
-			xsqr, txsqr, rstride, gstride, bsize, i, rdist, gdist, bdist, cdist: LONGINT;
-			dbuf: POINTER TO ARRAY OF LONGINT;
-			rcenter, gcenter, bcenter, ghere, bhere, gmin, bmin, gmax, bmax: LONGINT;
-			incr, incg, incb, p, rp, gp: LONGINT;
-			ginc, binc: LONGINT;
+			nbits, x, colormax, cur, rcol, gcol, bcol, col: SIGNED32;
+			xsqr, txsqr, rstride, gstride, bsize, i, rdist, gdist, bdist, cdist: SIGNED32;
+			dbuf: POINTER TO ARRAY OF SIGNED32;
+			rcenter, gcenter, bcenter, ghere, bhere, gmin, bmin, gmax, bmax: SIGNED32;
+			incr, incg, incb, p, rp, gp: SIGNED32;
+			ginc, binc: SIGNED32;
 
 		PROCEDURE blueloop(): BOOLEAN;
-			VAR detect: BOOLEAN; blue, bp, bdist, bxx: LONGINT;
+			VAR detect: BOOLEAN; blue, bp, bdist, bxx: SIGNED32;
 		BEGIN
 			detect := FALSE;
 			blue := bhere; bp := gp; bdist := gdist; bxx := binc;
@@ -87,7 +87,7 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 		END blueloop;
 
 		PROCEDURE greenloop(): BOOLEAN;
-			VAR detect: BOOLEAN; green, ggp, ggdist, gxx: LONGINT;
+			VAR detect: BOOLEAN; green, ggp, ggdist, gxx: SIGNED32;
 		BEGIN
 			detect := FALSE;
 			bhere := bcenter; bmin := 0; bmax := colormax; binc := incb;	(* restart blueloop *)
@@ -127,7 +127,7 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 		END greenloop;
 
 		PROCEDURE redloop;
-			VAR detect: BOOLEAN; red, rxx: LONGINT;
+			VAR detect: BOOLEAN; red, rxx: SIGNED32;
 		BEGIN
 			(* red up loop *)
 			detect := FALSE;
@@ -158,12 +158,12 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 		IF bits <= 0 THEN RETURN END;	(* no reverse lookup table *)
 
 		IF bits > 6 THEN bits := 6 END;	(* (2^6)^3 = 262144! *)
-		nbits := 8-bits; x := INTEGER(ASH(1, nbits)); xsqr := ASH(1, 2*nbits); txsqr := 2*xsqr;
-		colormax := INTEGER(ASH(1, bits)); rstride := ASH(1, 2*bits); gstride := colormax;
+		nbits := 8-bits; x := SIGNED16(ASH(1, nbits)); xsqr := ASH(1, 2*nbits); txsqr := 2*xsqr;
+		colormax := SIGNED16(ASH(1, bits)); rstride := ASH(1, 2*bits); gstride := colormax;
 
 		(* fill buffer with maximal distance *)
 		bsize := ASH(1, 3*bits); NEW(dbuf, bsize);
-		i := 0; WHILE i < bsize DO dbuf[i] := MAX(LONGINT); INC(i) END;
+		i := 0; WHILE i < bsize DO dbuf[i] := MAX(SIGNED32); INC(i) END;
 		IF (clut.cube = NIL) OR (LEN(clut.cube^) < bsize) THEN NEW(clut.cube, bsize) END;
 		clut.bits := SHORT(bits);
 
@@ -171,9 +171,9 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 		WHILE cur < size DO
 			col := clut.col[cur];
 			rcol := ASH(col, -16) MOD 100H; gcol := ASH(col, -8) MOD 100H; bcol := col MOD 100H;
-			rcenter := INTEGER(ASH(rcol, -nbits)); rdist := rcol - (rcenter * x + x DIV 2);
-			gcenter := INTEGER(ASH(gcol, -nbits)); gdist := gcol - (gcenter * x + x DIV 2);
-			bcenter := INTEGER(ASH(bcol, -nbits)); bdist := bcol - (bcenter * x + x DIV 2);
+			rcenter := SIGNED16(ASH(rcol, -nbits)); rdist := rcol - (rcenter * x + x DIV 2);
+			gcenter := SIGNED16(ASH(gcol, -nbits)); gdist := gcol - (gcenter * x + x DIV 2);
+			bcenter := SIGNED16(ASH(bcol, -nbits)); bdist := bcol - (bcenter * x + x DIV 2);
 			cdist := rdist * rdist + gdist * gdist + bdist * bdist;
 			incr := 2*((rcenter+1) * xsqr - rcol * x); incg := 2*((gcenter+1) * xsqr - gcol * x); incb := 2*((bcenter+1) * xsqr - bcol * x);
 			p := rcenter * rstride + gcenter * gstride + bcenter;
@@ -183,8 +183,8 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 	END Init;
 
 	(** return index of color that best matches the given RGB triple **)
-	PROCEDURE Match* (VAR clut: CLUT; col: LONGINT): LONGINT;
-		VAR shift, red, green, blue, n, best, err, r, g, b, e: LONGINT;
+	PROCEDURE Match* (VAR clut: CLUT; col: SIGNED32): SIGNED32;
+		VAR shift, red, green, blue, n, best, err, r, g, b, e: SIGNED32;
 	BEGIN
 		IF clut.bits # 0 THEN	(* can do reverse lookup *)
 			shift := clut.bits-8;
@@ -196,7 +196,7 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 
 		(* linear search *)
 		red := ASH(col, -16) MOD 100H; green := ASH(col, -8) MOD 100H; blue := col MOD 100H;
-		n := 0; best := 0; err := MAX(LONGINT);
+		n := 0; best := 0; err := MAX(SIGNED32);
 		WHILE n < clut.size DO
 			e := clut.col[n];
 			IF e = col THEN RETURN n END;
@@ -230,7 +230,7 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 
 	(** write colors to file (only the color values themselves are written) **)
 	PROCEDURE Write* (VAR w: Streams.Writer; VAR clut: CLUT);
-		VAR n, col: LONGINT;
+		VAR n, col: SIGNED32;
 	BEGIN
 		FOR n := 0 TO clut.size-1 DO
 			col := clut.col[n];
@@ -242,8 +242,8 @@ MODULE CLUTs; (** portable *)	(* eos  **)
 	END Write;
 
 	(** read up to size colors from file **)
-	PROCEDURE Read* (r: Streams.Reader; VAR clut: CLUT; size: LONGINT);
-		VAR n: LONGINT; red, green, blue: CHAR;
+	PROCEDURE Read* (r: Streams.Reader; VAR clut: CLUT; size: SIGNED32);
+		VAR n: SIGNED32; red, green, blue: CHAR;
 	BEGIN
 		FOR n := 0 TO size-1 DO
 			r.Char(red); 	r.Char(green); 	r.Char(blue);

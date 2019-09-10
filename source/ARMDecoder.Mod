@@ -147,8 +147,8 @@ TYPE
 
 	ARMArgImm = OBJECT (ARMArg)
 		VAR
-			imm, rep : LONGINT;
-		PROCEDURE &New *(imm, rep : LONGINT);
+			imm, rep : SIGNED32;
+		PROCEDURE &New *(imm, rep : SIGNED32);
 		BEGIN
 			SELF.imm := imm;
 			SELF.rep := rep
@@ -157,10 +157,10 @@ TYPE
 
 	ARMArgReg = OBJECT (ARMArg)
 		VAR
-			reg : LONGINT;
+			reg : SIGNED32;
 			isCReg : BOOLEAN; (* coprocessor register? *)
 			sregMask : SET; (* for CPSR, SPSR registers *)
-		PROCEDURE &New *(reg : LONGINT);
+		PROCEDURE &New *(reg : SIGNED32);
 		BEGIN
 			SELF.reg := reg;
 			isCReg := FALSE
@@ -170,7 +170,7 @@ TYPE
 	ARMArgRList = OBJECT (ARMArg)
 		VAR
 			regs : SET;
-			addrMode : LONGINT;
+			addrMode : SIGNED32;
 		PROCEDURE &New *(regs : SET);
 		BEGIN
 			SELF.regs := regs;
@@ -179,11 +179,11 @@ TYPE
 
 	ARMArgMem = OBJECT (ARMArg)
 		VAR
-			addrMode, reg, regOffs, regScale, shift, immOffs : LONGINT;
-			width : LONGINT;
+			addrMode, reg, regOffs, regScale, shift, immOffs : SIGNED32;
+			width : SIGNED32;
 			signed, translation : BOOLEAN;
-			regUpdate : LONGINT;
-		PROCEDURE &New *(adrMode, reg : LONGINT);
+			regUpdate : SIGNED32;
+		PROCEDURE &New *(adrMode, reg : SIGNED32);
 		BEGIN
 			SELF.addrMode := adrMode;
 			SELF.reg := reg;
@@ -196,9 +196,9 @@ TYPE
 
 	ARMArgShift = OBJECT (ARMArg)
 		VAR
-			shiftImmOrReg, operation : LONGINT;
+			shiftImmOrReg, operation : SIGNED32;
 			reg : BOOLEAN;
-		PROCEDURE &New *(operation, shiftImmOrReg : LONGINT; reg : BOOLEAN);
+		PROCEDURE &New *(operation, shiftImmOrReg : SIGNED32; reg : BOOLEAN);
 		BEGIN
 			SELF.operation := operation;
 			SELF.shiftImmOrReg := shiftImmOrReg;
@@ -208,8 +208,8 @@ TYPE
 
 	ARMArgCProc = OBJECT (ARMArg)
 		VAR
-			cproc : LONGINT;
-		PROCEDURE &New *(cproc : LONGINT);
+			cproc : SIGNED32;
+		PROCEDURE &New *(cproc : SIGNED32);
 		BEGIN
 			SELF.cproc := cproc
 		END New;
@@ -218,8 +218,8 @@ TYPE
 
 	ARMOpcode = OBJECT (Decoder.Opcode)
 	VAR
-		argStructure : LONGINT;
-		op, cond : LONGINT;
+		argStructure : SIGNED32;
+		op, cond : SIGNED32;
 		ccUpdate : BOOLEAN;
 		arg1, arg2, arg3, arg4, arg5, arg6 : ARMArg;
 
@@ -391,12 +391,12 @@ TYPE
 
 		PROCEDURE WriteImm (immArg : ARMArgImm; w :  Streams.Writer);
 			PROCEDURE WriteHex;
-			VAR absImm : LONGINT;
+			VAR absImm : SIGNED32;
 			BEGIN
 				absImm := immArg.imm;
 				IF immArg.rep = RepRelJmp THEN
 					(* add opcode position and length of full opcode to immediate argument value *)
-					INC(absImm, LONGINT(offset + 4))
+					INC(absImm, SIGNED32(offset + 4))
 				END;
 				Hex(absImm, w)
 			END WriteHex;
@@ -429,7 +429,7 @@ TYPE
 			END
 		END WriteReg;
 
-		PROCEDURE WriteRegSymbol (reg : LONGINT; w : Streams.Writer);
+		PROCEDURE WriteRegSymbol (reg : SIGNED32; w : Streams.Writer);
 		BEGIN
 			CASE reg OF
 				FP : w.String("FP")
@@ -443,7 +443,7 @@ TYPE
 			END
 		END WriteRegSymbol;
 
-		PROCEDURE WriteShiftSymbol (op : LONGINT; w : Streams.Writer);
+		PROCEDURE WriteShiftSymbol (op : SIGNED32; w : Streams.Writer);
 		BEGIN
 			CASE op OF
 				Lsl : w.String("LSL ")
@@ -495,9 +495,9 @@ TYPE
 		END WriteMem;
 
 		PROCEDURE WriteRegRList (regArg : ARMArgReg; rListArg : ARMArgRList; w : Streams.Writer);
-		VAR i, lastStart : LONGINT; notFirst : BOOLEAN;
+		VAR i, lastStart : SIGNED32; notFirst : BOOLEAN;
 
-			PROCEDURE PrintRegs (start, end : LONGINT);
+			PROCEDURE PrintRegs (start, end : SIGNED32);
 			BEGIN
 				IF start >= 0 THEN
 					IF notFirst THEN w.String(", ") END;
@@ -534,7 +534,7 @@ TYPE
 
 	ARMDecoder = OBJECT (Decoder.Decoder)
 	VAR
-		bit24To27, bit20To23, bit16To19, bit12To15, bit8To11, bit4To7, bit0To3 : LONGINT;
+		bit24To27, bit20To23, bit16To19, bit12To15, bit8To11, bit4To7, bit0To3 : SIGNED32;
 
 		PROCEDURE NewOpcode*() : Decoder.Opcode;
 		VAR
@@ -548,7 +548,7 @@ TYPE
 		VAR
 			armOpcode : ARMOpcode;
 			opSet : SET;
-			code, category : LONGINT;
+			code, category : SIGNED32;
 		BEGIN
 			armOpcode := opcode(ARMOpcode);
 			armOpcode.op := ReadLInt();
@@ -611,9 +611,9 @@ TYPE
 			END
 		END DecodeThis;
 
-		PROCEDURE DecodeShifterOperand(op : LONGINT; VAR argStructure : LONGINT; VAR arg1, arg2 : ARMArg);
+		PROCEDURE DecodeShifterOperand(op : SIGNED32; VAR argStructure : SIGNED32; VAR arg1, arg2 : ARMArg);
 		VAR
-			Rm, shiftImmOrReg, operation, mode : LONGINT;
+			Rm, shiftImmOrReg, operation, mode : SIGNED32;
 			regOp : BOOLEAN;
 			regArg : ARMArgReg;
 			immArg : ARMArgImm;
@@ -655,9 +655,9 @@ TYPE
 		END DecodeShifterOperand;
 
 		PROCEDURE DataProcessing (opcode : ARMOpcode);
-		VAR SBit : BOOLEAN; Rn, Rd, type : LONGINT;
+		VAR SBit : BOOLEAN; Rn, Rd, type : SIGNED32;
 			regArg : ARMArgReg; argSh1, argSh2 : ARMArg;
-			shStruct : LONGINT;
+			shStruct : SIGNED32;
 		BEGIN
 			CASE (opcode.op MOD 2000000H) DIV 200000H OF (* opcode *)
 				0 : opcode.instr := opAND; type := 3
@@ -721,10 +721,10 @@ TYPE
 		END Miscellaneous;
 
 		PROCEDURE MultipliesExtraLS (opcode : ARMOpcode);
-		VAR op1: LONGINT;
+		VAR op1: SIGNED32;
 			regA, regB, regC, regD : ARMArgReg;  memArg : ARMArgMem;
 			argSh1, argSh2 : ARMArg;
-			shStruct : LONGINT;
+			shStruct : SIGNED32;
 		BEGIN
 			op1 := bit20To23 DIV 2;
 			opcode.ccUpdate := (bit20To23 MOD 2) = 1; (* S bit set? *)
@@ -776,7 +776,7 @@ TYPE
 		PROCEDURE LoadStore (opcode : ARMOpcode);
 		VAR regArg : ARMArgReg; memArg : ARMArgMem;
 			P, L, W, B, U : BOOLEAN;
-			offset12 : LONGINT;
+			offset12 : SIGNED32;
 		BEGIN
 			opcode.argStructure := ArgRegMem;
 			NEW(regArg, bit12To15); opcode.arg1 := regArg;
@@ -851,8 +851,8 @@ TYPE
 			opcode.arg1 := immArg
 		END Branch;
 
-		PROCEDURE BranchToThumb (opcode : ARMOpcode; op : LONGINT);
-		VAR sImmed24, targetAddr : LONGINT; immArg : ARMArgImm; regArg : ARMArgReg;
+		PROCEDURE BranchToThumb (opcode : ARMOpcode; op : SIGNED32);
+		VAR sImmed24, targetAddr : SIGNED32; immArg : ARMArgImm; regArg : ARMArgReg;
 		BEGIN
 			opcode.instr := opBLX;
 			IF opcode.cond = 15 THEN
@@ -925,7 +925,7 @@ TYPE
 			opcode.arg1 := immArg
 		END SoftwareInterrupt;
 
-		PROCEDURE SignExtension (VAR x : LONGINT; length : LONGINT);
+		PROCEDURE SignExtension (VAR x : SIGNED32; length : SIGNED32);
 		BEGIN
 			ASSERT((length > 0) & (length <= 32));
 			x := LSH(x, 32-length);
@@ -946,8 +946,8 @@ BEGIN
 	bigEndian := FALSE;
 END SetLittleEndian;
 
-PROCEDURE Hex(n: LONGINT; w : Streams.Writer); (* procedure from PCARMDecoder.Mod *)
-	VAR i, j: INTEGER; s, t : ARRAY 10 OF CHAR;
+PROCEDURE Hex(n: SIGNED32; w : Streams.Writer); (* procedure from PCARMDecoder.Mod *)
+	VAR i, j: SIGNED16; s, t : ARRAY 10 OF CHAR;
 BEGIN
 	i := 0;
 	REPEAT
@@ -959,7 +959,7 @@ BEGIN
 	w.String(t)
 END Hex;
 
-PROCEDURE SwapBytes(VAR code: LONGINT);
+PROCEDURE SwapBytes(VAR code: SIGNED32);
 TYPE Opcode = ARRAY 4 OF CHAR;
 VAR opcode: Opcode;
 	tmp: CHAR;
@@ -967,7 +967,7 @@ BEGIN
 	opcode := SYSTEM.VAL(Opcode, code);
 	tmp := opcode[0]; opcode[0] := opcode[3]; opcode[3] := tmp;
 	tmp := opcode[1]; opcode[1] := opcode[2]; opcode[2] := tmp;
-	code := SYSTEM.VAL(LONGINT, opcode);
+	code := SYSTEM.VAL(SIGNED32, opcode);
 END SwapBytes;
 
 PROCEDURE ARMDecoderFactory (reader : Streams.Reader) : Decoder.Decoder;

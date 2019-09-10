@@ -7,7 +7,7 @@ IMPORT X11, Displays, XDisplay, Plugins, Machine;
 VAR
 	disp: XDisplay.Display;
 
-	PROCEDURE Beep*( hz: WORD );
+	PROCEDURE Beep*( hz: INTEGER );
 	BEGIN
 		Machine.Acquire(Machine.X11);
 		X11.Bell( disp.xdisp, 100 );

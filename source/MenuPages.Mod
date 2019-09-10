@@ -17,7 +17,7 @@ BEGIN
 	RETURN column;
 END GetColumn;
 
-PROCEDURE GetButton(CONST caption, command : ARRAY OF CHAR; color, colorHover : LONGINT) : WMStandardComponents.Button;
+PROCEDURE GetButton(CONST caption, command : ARRAY OF CHAR; color, colorHover : SIGNED32) : WMStandardComponents.Button;
 VAR button : WMStandardComponents.Button; syscmd : WMStandardComponents.SystemCommand;
 BEGIN
 	NEW(button);
@@ -36,8 +36,8 @@ BEGIN
 	RETURN button;
 END GetButton;
 
-PROCEDURE GetColor(in : Streams.Reader) : LONGINT;
-VAR ch : CHAR; color : LONGINT;
+PROCEDURE GetColor(in : Streams.Reader) : SIGNED32;
+VAR ch : CHAR; color : SIGNED32;
 BEGIN
 	in.SkipWhitespace;
 	ch := in.Peek();
@@ -49,7 +49,7 @@ BEGIN
 	RETURN color;
 END GetColor;
 
-PROCEDURE GetEntry(in : Streams.Reader; VAR name, command : ARRAY OF CHAR; VAR color, colorHover : LONGINT);
+PROCEDURE GetEntry(in : Streams.Reader; VAR name, command : ARRAY OF CHAR; VAR color, colorHover : SIGNED32);
 BEGIN
 	name := ""; command := "";
 	color := 0; colorHover := 0;
@@ -61,10 +61,10 @@ END GetEntry;
 
 PROCEDURE AddEntries(menuPage : WMStandardComponents.Panel; in : Streams.Reader);
 VAR
-	column : WMStandardComponents.Panel; nofColumns : LONGINT;
+	column : WMStandardComponents.Panel; nofColumns : SIGNED32;
 	entryName : ARRAY 64 OF CHAR;
 	commandStr : ARRAY 512 OF CHAR;
-	color, colorHover : LONGINT;
+	color, colorHover : SIGNED32;
 BEGIN
 	nofColumns := 0;
 	WHILE ((in.res = Streams.Ok) & (in.Peek() # 0X)) OR (nofColumns < MinNofColumns) DO

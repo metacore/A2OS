@@ -12,7 +12,7 @@ TYPE
 	DWord* = ARRAY 4 OF SYSTEM.BYTE;
 	QWord* = ARRAY 8 OF SYSTEM.BYTE;
 
-	PROCEDURE -AdrCheck*( adr, lower, size: LONGINT );
+	PROCEDURE -AdrCheck*( adr, lower, size: SIGNED32 );
 	(** Check if lower <= adr < upper *)
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  upper
@@ -32,7 +32,7 @@ TYPE
 		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
 	END AdrCheck;
 
-	PROCEDURE -RangeCheck*( offset, len, upper: LONGINT );
+	PROCEDURE -RangeCheck*( offset, len, upper: SIGNED32 );
 	(** Check if  0<=offset<=offset+len<upper
 		If not then  INT 3 is invoked with 7 (TRAP 7=index check fault). *)
 	CODE {SYSTEM.i386}
@@ -58,7 +58,7 @@ TYPE
 		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
 	END RangeCheck;
 
-	PROCEDURE -RangeCheck2*( x, y, w, h, width, height: LONGINT );
+	PROCEDURE -RangeCheck2*( x, y, w, h, width, height: SIGNED32 );
 	(** Range checks in 2d fields *)
 	CODE {SYSTEM.i386}
 		MOV	ECX, [ESP]	;  upper = height
@@ -102,7 +102,7 @@ TYPE
 		ADD	ESP, 24	;  adjust stack pointer(inline procedure!)
 	END RangeCheck2;
 
-	PROCEDURE -PatRangeCheck*( offset, step, piecelen, pieces, upper: LONGINT );
+	PROCEDURE -PatRangeCheck*( offset, step, piecelen, pieces, upper: SIGNED32 );
 	(** Range check for patterned procedures *)
 	CODE {SYSTEM.i386}
 		MOV	EDI, [ESP]	;  upper
@@ -145,7 +145,7 @@ TYPE
 		ADD	ESP, 20	;  adjust stack pointer(inline procedure!)
 	END PatRangeCheck;
 
-	PROCEDURE -MoveB*( srcadr, destadr, len: LONGINT );
+	PROCEDURE -MoveB*( srcadr, destadr, len: SIGNED32 );
 	(** Correct move if overlap, might be important for some array operations,
 		do not use SYSTEM.MOVE *)
 	CODE {SYSTEM.i386}
@@ -180,13 +180,13 @@ TYPE
 		ADD	ESP, 12	;  adjust stack pointer(inline procedure!)
 	END MoveB;
 
-	PROCEDURE MoveBPat*( srcadr, destadr, srcstep, deststep, piecelen, pieces: LONGINT );
+	PROCEDURE MoveBPat*( srcadr, destadr, srcstep, deststep, piecelen, pieces: SIGNED32 );
 	(** Patterned move *)
 	BEGIN
 		WHILE (pieces > 0) DO MoveB( srcadr, destadr, piecelen );  INC( srcadr, srcstep );  INC( destadr, deststep );  DEC( pieces );  END;
 	END MoveBPat;
 
-	PROCEDURE FillB*( adr: LONGINT;  byte: SYSTEM.BYTE;  count: LONGINT );
+	PROCEDURE FillB*( adr: SIGNED32;  byte: SYSTEM.BYTE;  count: SIGNED32 );
 	(** Memory filling for 8 bit types *)
 	CODE {SYSTEM.i386}
 		MOV	EDI, [EBP+adr]	;  address of dest index
@@ -197,7 +197,7 @@ TYPE
 		STOSB
 	END FillB;
 
-	PROCEDURE FillBPat*( adr: LONGINT;  byte: SYSTEM.BYTE;  step, piecelen, pieces: LONGINT );
+	PROCEDURE FillBPat*( adr: SIGNED32;  byte: SYSTEM.BYTE;  step, piecelen, pieces: SIGNED32 );
 	(** Patterned filling for 8 bit types *)
 	CODE {SYSTEM.i386}
 		MOV	ESI, [EBP+adr]	;  address of dest index
@@ -217,7 +217,7 @@ TYPE
 		JNLE	repeat
 	END FillBPat;
 
-	PROCEDURE FillW*( adr: LONGINT;  word: Word;  count: LONGINT );
+	PROCEDURE FillW*( adr: SIGNED32;  word: Word;  count: SIGNED32 );
 	(** For 16 bit types *)
 	CODE {SYSTEM.i386}
 		MOV	EDI, [EBP+adr]	;  address of dest index
@@ -228,7 +228,7 @@ TYPE
 		STOSW
 	END FillW;
 
-	PROCEDURE FillWPat*( adr: LONGINT;  word: Word;  step, piecelen, pieces: LONGINT );
+	PROCEDURE FillWPat*( adr: SIGNED32;  word: Word;  step, piecelen, pieces: SIGNED32 );
 	(** For 16 bit types *)
 	CODE {SYSTEM.i386}
 		MOV	ESI, [EBP+adr]	;  address of dest index
@@ -248,7 +248,7 @@ TYPE
 		JNLE	repeat
 	END FillWPat;
 
-	PROCEDURE FillD*( adr: LONGINT;  dword: DWord;  count: LONGINT );
+	PROCEDURE FillD*( adr: SIGNED32;  dword: DWord;  count: SIGNED32 );
 	(** For 32 bit types *)
 	CODE {SYSTEM.i386}
 		MOV	EDI, [EBP+adr]	;  address of dest index
@@ -259,7 +259,7 @@ TYPE
 		STOSD
 	END FillD;
 
-	PROCEDURE FillDPat*( adr: LONGINT;  dword: DWord;  step, piecelen, pieces: LONGINT );
+	PROCEDURE FillDPat*( adr: SIGNED32;  dword: DWord;  step, piecelen, pieces: SIGNED32 );
 	(** For 32 bit types *)
 	CODE {SYSTEM.i386}
 		MOV	ESI, [EBP+adr]	;  address of dest index
@@ -279,7 +279,7 @@ TYPE
 		JNLE	repeat
 	END FillDPat;
 
-	PROCEDURE FillQ*( adr: LONGINT;  qword: QWord;  count: LONGINT );
+	PROCEDURE FillQ*( adr: SIGNED32;  qword: QWord;  count: SIGNED32 );
 	(** For 64 bit types  *)
 	CODE {SYSTEM.i386, SYSTEM.FPU, SYSTEM.Pentium, SYSTEM.MMX}
 		MOV	EAX, 1
@@ -319,7 +319,7 @@ TYPE
 		end:
 	END FillQ;
 
-	PROCEDURE FillG*( adr: LONGINT;  VAR data: ARRAY OF SYSTEM.BYTE;  count: LONGINT );
+	PROCEDURE FillG*( adr: SIGNED32;  VAR data: ARRAY OF SYSTEM.BYTE;  count: SIGNED32 );
 	(** For geneirc types, slower than Fill[B|W|D|Q] *)
 	CODE {SYSTEM.i386}
 		MOV	EDI, [EBP+adr]
@@ -338,7 +338,7 @@ TYPE
 		JA	repeat
 	END FillG;
 
-	PROCEDURE FillGPat*( adr: LONGINT;  VAR data: ARRAY OF SYSTEM.BYTE;  step, piecelen, pieces: LONGINT );
+	PROCEDURE FillGPat*( adr: SIGNED32;  VAR data: ARRAY OF SYSTEM.BYTE;  step, piecelen, pieces: SIGNED32 );
 	(** for generic types, slower than Fill[B|W|D|Q]Pat *)
 	CODE {SYSTEM.i386}
 		MOV	EBX, [EBP+adr]
@@ -362,7 +362,7 @@ TYPE
 		JA	repeatpieces	;  end
 	END FillGPat;
 
-	PROCEDURE Fill*( adr: LONGINT;  VAR data: ARRAY OF SYSTEM.BYTE;  len: LONGINT );
+	PROCEDURE Fill*( adr: SIGNED32;  VAR data: ARRAY OF SYSTEM.BYTE;  len: SIGNED32 );
 	(** Fill memory [adr, adr+len LEN(data)] with data *)
 	BEGIN
 		IF LEN( data ) = 1 THEN FillB( adr, data[0], len )
@@ -373,7 +373,7 @@ TYPE
 		END;
 	END Fill;
 
-	PROCEDURE FillPat*( adr: LONGINT;  VAR data: ARRAY OF SYSTEM.BYTE;  step, piecelen, pieces: LONGINT );
+	PROCEDURE FillPat*( adr: SIGNED32;  VAR data: ARRAY OF SYSTEM.BYTE;  step, piecelen, pieces: SIGNED32 );
 	(** Fill memory [adr, adr+step pieces] with data,  patterned *)
 	BEGIN
 		IF LEN( data ) = 1 THEN FillBPat( adr, data[0], step, piecelen, pieces )
@@ -401,8 +401,8 @@ Array1dBytes.Test ~
 
 (**************************** testing ********************************)
 
-	PROCEDURE FillCharPat*( VAR a: ARRAY OF CHAR;  c: CHAR;  offset, step, piecelen, pieces: LONGINT );
-	VAR i, j: LONGINT;
+	PROCEDURE FillCharPat*( VAR a: ARRAY OF CHAR;  c: CHAR;  offset, step, piecelen, pieces: SIGNED32 );
+	VAR i, j: SIGNED32;
 	BEGIN
 		WHILE (pieces > 0) DO
 			i := offset;  j := offset + piecelen;
@@ -411,7 +411,7 @@ Array1dBytes.Test ~
 		END;
 	END FillCharPat;
 
-	PROCEDURE FillInt( VAR a: ARRAY OF INTEGER;  i: INTEGER );
+	PROCEDURE FillInt( VAR a: ARRAY OF SIGNED16;  i: SIGNED16 );
 	CODE {SYSTEM.i386}
 
 		MOV	EDI, a[EBP] (* address of array in destination index*)
@@ -423,19 +423,19 @@ Array1dBytes.Test ~
 		STOSW (* store word in ax to destination *)
 	END FillInt;
 
-	PROCEDURE FillInt2( VAR a: ARRAY OF INTEGER;  i: INTEGER );   (* nearly same speed as FillInt *)
+	PROCEDURE FillInt2( VAR a: ARRAY OF SIGNED16;  i: SIGNED16 );   (* nearly same speed as FillInt *)
 	BEGIN
 		FillW( ADDRESSOF( a ), SYSTEM.VAL( Word, i ), LEN( a ) );
 	END FillInt2;
 
 	PROCEDURE Test1( a: QWord );
-	VAR adr: LONGINT;
+	VAR adr: SIGNED32;
 	BEGIN
 		adr := ADDRESSOF( a );
 	END Test1;
 
-	PROCEDURE Test2( a: LONGREAL );
-	VAR adr: LONGINT;
+	PROCEDURE Test2( a: FLOAT64 );
+	VAR adr: SIGNED32;
 	BEGIN
 		adr := ADDRESSOF( a );
 	END Test2;
@@ -443,19 +443,19 @@ Array1dBytes.Test ~
 (* Operator procedures *)
 
 	PROCEDURE NegateR;
-	VAR x: REAL;
+	VAR x: FLOAT32;
 	BEGIN
 		x := -x;
 	END NegateR;
 
 	PROCEDURE NegateL;
-	VAR x: LONGINT;
+	VAR x: SIGNED32;
 	BEGIN
 		x := -x;
 	END NegateL;
 
 
-	PROCEDURE Do1( op: PROCEDURE;  adr: LONGINT;  len, size: LONGINT );
+	PROCEDURE Do1( op: PROCEDURE;  adr: SIGNED32;  len, size: SIGNED32 );
 	CODE {SYSTEM.i386}
 		MOV	EDI, adr[EBP]
 		MOV	ECX, op[EBP]
@@ -478,19 +478,19 @@ TYPE
 	END;
 
 	PROCEDURE Test3( a: QRec );
-	VAR adr: LONGINT;
+	VAR adr: SIGNED32;
 	BEGIN
 		adr := ADDRESSOF( a );
 	END Test3;
 
 	PROCEDURE Test4( VAR a: ARRAY OF SYSTEM.BYTE );
-	VAR adr: LONGINT;
+	VAR adr: SIGNED32;
 	BEGIN
 		adr := ADDRESSOF( a );
 	END Test4;
 
 	PROCEDURE CallTest*;
-	VAR a: QWord;  b: LONGREAL;  c: QRec;  time, i: LONGINT;
+	VAR a: QWord;  b: FLOAT64;  c: QRec;  time, i: SIGNED32;
 	BEGIN
 		time := Oberon.Time();
 		FOR i := 0 TO 10000000 DO Test1( a );  END;
@@ -519,8 +519,8 @@ TYPE
 	END CallFIllQ;
 
 	PROCEDURE Test*;
-	VAR a, b, c: Bytes;  len, i, time, low, high, overlap: LONGINT;  word: Word;  longreal: LONGREAL;
-		longreals: POINTER TO ARRAY OF LONGREAL;
+	VAR a, b, c: Bytes;  len, i, time, low, high, overlap: SIGNED32;  word: Word;  longreal: FLOAT64;
+		longreals: POINTER TO ARRAY OF FLOAT64;
 
 		PROCEDURE TMove;
 		CONST maxlen = 1000000;  maxtries = 100000;  minlen = 100;
@@ -556,17 +556,17 @@ TYPE
 			END;
 		END TMove;
 
-		PROCEDURE FillArray( VAR a: ARRAY OF LONGREAL;  val: LONGREAL;  len: LONGINT );
+		PROCEDURE FillArray( VAR a: ARRAY OF FLOAT64;  val: FLOAT64;  len: SIGNED32 );
 		BEGIN
 			WHILE (len > 0) DO DEC( len );  a[len] := val;  END;
 		END FillArray;
 
 		PROCEDURE TFill;
 		CONST maxtries = 1000;  maxlen = 100000;
-		VAR ints: POINTER TO ARRAY OF INTEGER;
-			longreals: POINTER TO ARRAY OF LONGREAL;
+		VAR ints: POINTER TO ARRAY OF SIGNED16;
+			longreals: POINTER TO ARRAY OF FLOAT64;
 			chars: POINTER TO ARRAY OF CHAR;
-			int: INTEGER;  r: LONGREAL;
+			int: SIGNED16;  r: FLOAT64;
 		BEGIN
 			(*
 			NEW( longreals, 256 );  longreal := 1.23456789E-20;

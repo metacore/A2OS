@@ -14,7 +14,7 @@ CONST
 TYPE
 	Window=OBJECT (WMComponents.FormWindow);
 	VAR
-		nofLooks : LONGINT;
+		nofLooks : SIGNED32;
 		nextINchain : Window;
 		buttonArr : POINTER TO ARRAY OF WMStandardComponents.Button;
 		lookList : Looks.LookList;
@@ -22,7 +22,7 @@ TYPE
 		PROCEDURE &New *(lookList : Looks.LookList);
 		VAR
 			panel : WMStandardComponents.Panel;
-			i : LONGINT;
+			i : SIGNED32;
 			look : Looks.Look;
 		BEGIN
 			ASSERT((lookList # NIL) & (lookList.GetCount() > 0));
@@ -54,8 +54,8 @@ TYPE
 			windows := SELF
 		END New;
 
-		PROCEDURE FindSender(sender : WMStandardComponents.Button; VAR index : LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE FindSender(sender : WMStandardComponents.Button; VAR index : SIGNED32);
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < nofLooks) & (buttonArr[i] # sender) DO INC(i) END;
@@ -65,7 +65,7 @@ TYPE
 		PROCEDURE LoadSkin(sender, data : ANY);
 		VAR look : Looks.Look;
 			cmd, s, msg : ARRAY 128 OF CHAR;
-			index : LONGINT; res : WORD;
+			index : SIGNED32; res : INTEGER;
 		BEGIN
 			IF sender IS WMStandardComponents.Button THEN
 				FindSender(sender(WMStandardComponents.Button), index);

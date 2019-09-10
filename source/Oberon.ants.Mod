@@ -32,7 +32,7 @@ IMPORT antsCommands, vyLinks, vyBase, Modules, Strings, aM := antsMessages, ants
 	RR: antsReadWrite.Rider;
 
 PROCEDURE Show*;
-	VAR link: vyLinks.Link;  obj: vyBase.Object;  plotname, temp: ARRAY 256 OF CHAR;  objcount: INTEGER;  plotmod: Modules.Module;  b: BOOLEAN;
+	VAR link: vyLinks.Link;  obj: vyBase.Object;  plotname, temp: ARRAY 256 OF CHAR;  objcount: SIGNED16;  plotmod: Modules.Module;  b: BOOLEAN;
 BEGIN
 	antsCommands.InitScan("obj=OBJ [plot=NAME| as NAME]");
 	objcount := 0;
@@ -56,8 +56,8 @@ BEGIN
 	END
 END Show;
 
-PROCEDURE getTimeSeries (x, y: LONGINT;  o: Objects.Object;  link: Objects.Object);
-	VAR data: Objects.Object;   row: LONGINT;   msg: vyPort.AdjustCoordMsg;  pos: LONGINT;
+PROCEDURE getTimeSeries (x, y: SIGNED32;  o: Objects.Object;  link: Objects.Object);
+	VAR data: Objects.Object;   row: SIGNED32;   msg: vyPort.AdjustCoordMsg;  pos: SIGNED32;
 BEGIN
 	Links.GetLink(link, "data", data);
 	WITH o: antsArrayObjects.tObject DO

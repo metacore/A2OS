@@ -32,8 +32,8 @@ TYPE
 	tModel* = POINTER TO tModelDesc;
 	tModelDesc* = RECORD (antsModels.tModelDesc)
 	(*Pars*)
-		alpha: LONGREAL;
-		lambda: LONGREAL
+		alpha: FLOAT64;
+		lambda: FLOAT64
 	END;
 
 CONST
@@ -48,7 +48,7 @@ VAR
 	END StoreM;
 
 	PROCEDURE LoadM( VAR R: Files.Rider;  o: tModel );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );
 		(*Load*)
@@ -56,21 +56,21 @@ VAR
 	END LoadM;
 
 	PROCEDURE OneSweep( s: antsKernel.Kernel;  metropolis: BOOLEAN );
-	VAR o: tModel;  O: vyBase.Object;  v, ov: vyLongrealVec.tVector;  orig: Objects.Object;  last, this, next, thiso, new: LONGREAL;
-		i, j, len: LONGINT;  alpha, lambda: LONGREAL;  gen: vyRanBase.tRandom;
+	VAR o: tModel;  O: vyBase.Object;  v, ov: vyLongrealVec.tVector;  orig: Objects.Object;  last, this, next, thiso, new: FLOAT64;
+		i, j, len: SIGNED32;  alpha, lambda: FLOAT64;  gen: vyRanBase.tRandom;
 
 		(*
 	AO: antsArrayObjects.tObject;
 	A: antsArrayObjects.tArray
 	*)
 
-		PROCEDURE min( a, b: LONGREAL ): LONGREAL;
+		PROCEDURE min( a, b: FLOAT64 ): FLOAT64;
 		BEGIN
 			IF a < b THEN RETURN a ELSE RETURN b END
 		END min;
 
 		PROCEDURE Sample;
-		VAR ran, h1, h2: LONGREAL;
+		VAR ran, h1, h2: FLOAT64;
 		BEGIN
 			ran := this + vyRandom.Gauss( 0, 1 / (o.coolingTemp + 1) );
 			h1 :=
@@ -86,7 +86,7 @@ VAR
 
 		PROCEDURE GibbsSample;
 		CONST from = -0.5;  to = 1.5;  steps = 200;
-		VAR stepsize: LONGREAL;  cur, sum, val, ran: LONGREAL;
+		VAR stepsize: FLOAT64;  cur, sum, val, ran: FLOAT64;
 		BEGIN
 			stepsize := (to - from) / steps;  cur := from;  sum := 0;
 
@@ -145,7 +145,7 @@ VAR
 	END Init;
 
 	PROCEDURE HandleAttributes( o: tModel;  VAR msg: Objects.AttrMsg );
-	VAR width: LONGREAL;  b: BOOLEAN;
+	VAR width: FLOAT64;  b: BOOLEAN;
 	BEGIN
 		IF msg.id = Objects.enum THEN
 			(*AttrEnum*)

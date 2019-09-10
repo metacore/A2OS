@@ -66,13 +66,13 @@ TYPE
 
 	Configuration* = OBJECT
 	VAR
-		steps : ARRAY NofSteps OF LONGINT;
+		steps : ARRAY NofSteps OF SIGNED32;
 
 		(* WriteMBR: MBR filename *)
 		mbrFile* : Files.FileName;
 
 		(* CreatePartition: partition size *)
-		size* : LONGINT;
+		size* : SIGNED32;
 
 		(* Format: Boot loader and Boot file filenames *)
 		bootloader* : Files.FileName;
@@ -91,7 +91,7 @@ TYPE
 		packages : Packages;
 
 		disk : PartitionsLib.Disk;
-		partition : LONGINT;
+		partition : SIGNED32;
 		diskpartString : PartitionsLib.String;
 
 		PROCEDURE SetInstallStep*(step : SIZE; doStep : BOOLEAN; VAR msg : ARRAY OF CHAR) : BOOLEAN;
@@ -142,8 +142,8 @@ TYPE
 				(Strings.Match("PhysicalDrive*", diskpartString) & (disk.device # NIL) & (Disks.Removable IN disk.device.flags));
 		END IsUsbDisk;
 
-		PROCEDURE SpaceAvailable*() : LONGINT;
-		VAR spaceAvailable : LONGINT;
+		PROCEDURE SpaceAvailable*() : SIGNED32;
+		VAR spaceAvailable : SIGNED32;
 		BEGIN
 			spaceAvailable := (disk.table[partition].size DIV 1024) * disk.device.blockSize;
 			spaceAvailable := spaceAvailable - 640; (* 640KB for boot file *)
@@ -151,7 +151,7 @@ TYPE
 		END SpaceAvailable;
 
 		PROCEDURE CheckConfiguration*(w : Streams.Writer) : BOOLEAN;
-		VAR errors : LONGINT; installSize, installSizeOnDisk, nofEntries : LONGINT;
+		VAR errors : SIGNED32; installSize, installSizeOnDisk, nofEntries : SIGNED32;
 
 			PROCEDURE ShowError(CONST string : ARRAY OF CHAR);
 			BEGIN
@@ -197,7 +197,7 @@ TYPE
 		END CheckConfiguration;
 
 		PROCEDURE ToStream*(w : Streams.Writer);
-		VAR step : LONGINT;
+		VAR step : SIGNED32;
 
 			PROCEDURE ShowStep(CONST string : ARRAY OF CHAR);
 			BEGIN
@@ -247,7 +247,7 @@ TYPE
 		END ToStream;
 
 		PROCEDURE DisallowAllSteps;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			FOR i := 0 TO LEN(steps)-1 DO
 				steps[i] := NotAllowed;
@@ -341,7 +341,7 @@ TYPE
 		END DetectInstallSettings;
 
 		PROCEDURE Clone*() : Configuration;
-		VAR c : Configuration; i : LONGINT;
+		VAR c : Configuration; i : SIGNED32;
 		BEGIN
 			NEW(c, disk, partition);
 			FOR i := 0 TO LEN(c.steps)-1 DO c.steps[i] := steps[i]; END;
@@ -367,7 +367,7 @@ TYPE
 			END;
 		END SetPackages;
 
-		PROCEDURE &Init*(disk : PartitionsLib.Disk; partition : LONGINT);
+		PROCEDURE &Init*(disk : PartitionsLib.Disk; partition : SIGNED32);
 		VAR nbr : ARRAY 8 OF CHAR;
 		BEGIN
 			ASSERT(disk.device # NIL);
@@ -390,7 +390,7 @@ TYPE
 		config : Configuration;
 
 		currentStep, nofSteps : SIZE;
-		nofFiles : LONGINT;
+		nofFiles : SIGNED32;
 
 		installLog : Streams.Writer;
 
@@ -456,7 +456,7 @@ TYPE
 		END PackagesProgress;
 
 		PROCEDURE DoOperation*;
-		VAR i : SIZE; res : WORD;
+		VAR i : SIZE; res : INTEGER;
 		BEGIN
 			ASSERT((config.disk.device = disk.device) & (config.partition = partition));
 			installLog.String("Starting installation on partition "); installLog.String(diskpartString); installLog.String("..."); installLog.Ln; installLog.Update;
@@ -573,7 +573,7 @@ TYPE
 		END DoOperation;
 
 		PROCEDURE DoInstallPackages() : BOOLEAN;
-		VAR path : Files.FileName; ignore : LONGINT;
+		VAR path : Files.FileName; ignore : SIGNED32;
 		BEGIN
 			ASSERT(config.packages # NIL);
 			installLog.String("Installing packages to "); installLog.String(config.mountPrefix); installLog.String(" ... "); installLog.Ln; installLog.Update;
@@ -608,7 +608,7 @@ TYPE
 			RETURN OperationDone(operation);
 		END DoCreatePartition;
 
-		PROCEDURE DoChangePartitionTypeTo(oldType, newType : LONGINT) : BOOLEAN;
+		PROCEDURE DoChangePartitionTypeTo(oldType, newType : SIGNED32) : BOOLEAN;
 		VAR operation : PartitionsLib.ChangePartType;
 		BEGIN
 			installLog.String("Change partition type from "); installLog.Hex(oldType, 2); installLog.String("h to "); installLog.Hex(newType, 2);
@@ -697,7 +697,7 @@ TYPE
 		END DoMountPartition;
 
 		PROCEDURE DoUnmount;
-		VAR context : Commands.Context; arg : Streams.StringReader;  msg : ARRAY 128 OF CHAR; res : WORD;
+		VAR context : Commands.Context; arg : Streams.StringReader;  msg : ARRAY 128 OF CHAR; res : INTEGER;
 		BEGIN
 			installLog.String("Unmounting "); installLog.String(diskpartString); installLog.String("... "); installLog.Update;
 			NEW(arg, LEN(config.mountPrefix)); arg.SetRaw(config.mountPrefix, 0, LEN(config.mountPrefix));
@@ -734,7 +734,7 @@ TYPE
 			installLog.String("Installation aborted by user."); installLog.Ln; installLog.Update;
 		END ReportAbort;
 
-		PROCEDURE &Init*(disk :PartitionsLib.Disk; partition : LONGINT; out : Streams.Writer);
+		PROCEDURE &Init*(disk :PartitionsLib.Disk; partition : SIGNED32; out : Streams.Writer);
 		BEGIN
 			Init^(disk, partition, out);
 			name := "Installer"; desc := "Install A2 on partition"; locktype := PartitionsLib.WriterLock;
@@ -751,11 +751,11 @@ TYPE
 
 	Package* = OBJECT
 	VAR
-		number- : LONGINT;
+		number- : SIGNED32;
 
 		(** Shall this package be installed? *)
 		install- : BOOLEAN;
-		installType- : LONGINT; (* Mandatory, OptionalYes, OptionalNo, NotAllowed *)
+		installType- : SIGNED32; (* Mandatory, OptionalYes, OptionalNo, NotAllowed *)
 
 		filename- : XML.String;
 		file- : Files.File;
@@ -763,13 +763,13 @@ TYPE
 		name-, description- : XML.String;
 
 		(* Number of files contained in the package *)
-		nofEntries- : LONGINT;
+		nofEntries- : SIGNED32;
 
 		(* Size of all files in package  in bytes when extracted *)
-		size- : LONGINT;
+		size- : SIGNED32;
 
 		(* size plus overhead introduced with Files file system (conservative approximation) *)
-		sizeOnDisk- : LONGINT;
+		sizeOnDisk- : SIGNED32;
 
 		user* : ANY;
 
@@ -798,7 +798,7 @@ TYPE
 		END SetInstall;
 
 		PROCEDURE Parse(p : XML.Element; error : Streams.Writer) : BOOLEAN;
-		VAR nofErrors : LONGINT;
+		VAR nofErrors : SIGNED32;
 		BEGIN
 			nofErrors := 0;
 
@@ -875,13 +875,13 @@ TYPE
 		info : Streams.Writer;
 		path : Files.FileName;
 
-		nofFilesExtracted : LONGINT;
+		nofFilesExtracted : SIGNED32;
 
 		reportProgress : ReportProgressProc;
 		Aborted : AbortedProc;
 
-		PROCEDURE GetNofPackages() : LONGINT;
-		VAR nofPackages : LONGINT; package : Package;
+		PROCEDURE GetNofPackages() : SIGNED32;
+		VAR nofPackages : SIGNED32; package : Package;
 		BEGIN
 			nofPackages := 0;
 			package := head;
@@ -890,7 +890,7 @@ TYPE
 		END GetNofPackages;
 
 		PROCEDURE GetPackages*() : PackageArray;
-		VAR result : PackageArray; package : Package; nofPackages, i : LONGINT;
+		VAR result : PackageArray; package : Package; nofPackages, i : SIGNED32;
 		BEGIN
 			result := NIL;
 			nofPackages := GetNofPackages();
@@ -906,12 +906,12 @@ TYPE
 			RETURN result;
 		END GetPackages;
 
-		PROCEDURE ReportProgress(nofFilesExtracted : LONGINT);
+		PROCEDURE ReportProgress(nofFilesExtracted : SIGNED32);
 		BEGIN
 			IF (reportProgress # NIL) THEN reportProgress(nofFilesExtracted); END;
 		END ReportProgress;
 
-		PROCEDURE ExtractEntry(zip: AosUnzip.ZipFile; entry: AosUnzip.Entry; CONST name: ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE ExtractEntry(zip: AosUnzip.ZipFile; entry: AosUnzip.Entry; CONST name: ARRAY OF CHAR; VAR res : INTEGER);
 		VAR file: Files.File; w : Files.Writer; string : ARRAY 256 OF CHAR;
 		BEGIN
 			res := 0;
@@ -932,7 +932,7 @@ TYPE
 		END ExtractEntry;
 
 		PROCEDURE Unzip(zipFile : AosUnzip.ZipFile) : BOOLEAN;
-		VAR e : AosUnzip.Entry; res : WORD; name : Files.FileName;
+		VAR e : AosUnzip.Entry; res : INTEGER; name : Files.FileName;
 		BEGIN
 			res := 0;
 			e := zipFile.GetFirst();
@@ -953,7 +953,7 @@ TYPE
 		END Unzip;
 
 		PROCEDURE OpenZipFile(CONST filename : ARRAY OF CHAR; reportErrors : BOOLEAN) : AosUnzip.ZipFile;
-		VAR file : Files.File; res : WORD; string : ARRAY 256 OF CHAR; zipFile : AosUnzip.ZipFile;
+		VAR file : Files.File; res : INTEGER; string : ARRAY 256 OF CHAR; zipFile : AosUnzip.ZipFile;
 		BEGIN
 			zipFile := NIL;
 			file := Files.Old(filename);
@@ -974,7 +974,7 @@ TYPE
 		PROCEDURE GetPackageSizes*;
 		VAR package : Package; zipFile : AosUnzip.ZipFile;
 
-			PROCEDURE GetSizes(zipFile : AosUnzip.ZipFile; VAR size, sizeOnDisk : LONGINT);
+			PROCEDURE GetSizes(zipFile : AosUnzip.ZipFile; VAR size, sizeOnDisk : SIGNED32);
 			VAR e : AosUnzip.Entry;
 			BEGIN
 				size := 0; sizeOnDisk := 0;
@@ -999,7 +999,7 @@ TYPE
 			END;
 		END GetPackageSizes;
 
-		PROCEDURE GetInstallSize*(VAR size, sizeOnDisk, nofEntries : LONGINT);
+		PROCEDURE GetInstallSize*(VAR size, sizeOnDisk, nofEntries : SIGNED32);
 		VAR package : Package;
 		BEGIN
 			size := 0; sizeOnDisk := 0; nofEntries := 0;
@@ -1016,7 +1016,7 @@ TYPE
 		END GetInstallSize;
 
 		PROCEDURE InstallPackages*(CONST targetPath : ARRAY OF CHAR);
-		VAR package : Package; zipFile : AosUnzip.ZipFile; oldNofFilesExtracted : LONGINT;
+		VAR package : Package; zipFile : AosUnzip.ZipFile; oldNofFilesExtracted : SIGNED32;
 		BEGIN
 			nofFilesExtracted := 0;
 			COPY(targetPath, path);
@@ -1135,7 +1135,7 @@ TYPE
 		END ParsePackages;
 
 		PROCEDURE CheckPackages() : BOOLEAN;
-		VAR package : Package; errors : LONGINT;
+		VAR package : Package; errors : SIGNED32;
 
 			PROCEDURE Error(packagename : XML.String; CONST msg1, msg2 : ARRAY OF CHAR);
 			VAR string : ARRAY 256 OF CHAR;
@@ -1192,7 +1192,7 @@ TYPE
 	END Packages;
 
 VAR
-	suffix : LONGINT;
+	suffix : SIGNED32;
 
 PROCEDURE FileExists(CONST filename : ARRAY OF CHAR) : BOOLEAN;
 VAR file : Files.File;
@@ -1201,8 +1201,8 @@ BEGIN
 	RETURN file # NIL;
 END FileExists;
 
-PROCEDURE GetInstallType(p : XML.Element) : LONGINT;
-VAR installType : LONGINT; string : XML.String;
+PROCEDURE GetInstallType(p : XML.Element) : SIGNED32;
+VAR installType : SIGNED32; string : XML.String;
 BEGIN
 	ASSERT(p # NIL);
 	installType := OptionalYes;
@@ -1218,8 +1218,8 @@ BEGIN
 END GetInstallType;
 
 (* Returns -1 in case that the attribute has not been found *)
-PROCEDURE GetXmlNumber(p : XML.Element; CONST attributeName : ARRAY OF CHAR) : LONGINT;
-VAR number : LONGINT; string : XML.String;
+PROCEDURE GetXmlNumber(p : XML.Element; CONST attributeName : ARRAY OF CHAR) : SIGNED32;
+VAR number : SIGNED32; string : XML.String;
 BEGIN
 	ASSERT(p # NIL);
 	number := -1;

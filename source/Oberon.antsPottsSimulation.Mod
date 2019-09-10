@@ -84,7 +84,7 @@ VAR
 
 	PROCEDURE UpdatePanel*;
 
-	VAR i: LONGINT;  R: ListRiders.Rider;  M: ListRiders.ConnectMsg;  list: Objects.Object;  textf: Objects.Object;  d: ListRiders.String;
+	VAR i: SIGNED32;  R: ListRiders.Rider;  M: ListRiders.ConnectMsg;  list: Objects.Object;  textf: Objects.Object;  d: ListRiders.String;
 		name: ARRAY 1024 OF CHAR;
 
 	BEGIN
@@ -244,10 +244,10 @@ VAR
 	PROCEDURE DataRekoLoop*;
 
 	VAR rekotype, gammatype, datarekoname: ARRAY 1024 OF CHAR;
-		gamma: LONGREAL;  datareko, dataresults: antsArrays.X1d;  datarekovec: vyBase.Object;
+		gamma: FLOAT64;  datareko, dataresults: antsArrays.X1d;  datarekovec: vyBase.Object;
 
 	BEGIN
-		antsCommands.InitScan( "rekotype=STRING gammatype=STRING gamma=LONGREAL datarekovec=OBJ" );
+		antsCommands.InitScan( "rekotype=STRING gammatype=STRING gamma=FLOAT64 datarekovec=OBJ" );
 
 		IF antsCommands.ExpectString( "rekotype", rekotype ) & antsCommands.ExpectString( "gammatype", gammatype ) &
 		    antsCommands.ExpectReal( "gamma", gamma ) & antsCommands.ExpectObject( "datarekovec", datarekovec ) THEN
@@ -268,12 +268,12 @@ VAR
 
 	PROCEDURE CreateData*;
 
-	VAR function: vyName.tNameArray;  fct, datavec, datarekovec, monotonevec, degradedvec, rekovec: vyBase.Object;  datanumber: LONGINT;
+	VAR function: vyName.tNameArray;  fct, datavec, datarekovec, monotonevec, degradedvec, rekovec: vyBase.Object;  datanumber: SIGNED32;
 		data, monotone, dummy: antsArrays.X1d;
 		dataname, monotonename: ARRAY 1024 OF CHAR;
 
 	BEGIN
-		antsCommands.InitScan( "function=STRING datanumber=LONGINT datavec=OBJ fct=OBJ monotonevec=OBJ" );
+		antsCommands.InitScan( "function=STRING datanumber=SIGNED32 datavec=OBJ fct=OBJ monotonevec=OBJ" );
 
 		IF antsCommands.ExpectString( "function", function ) & antsCommands.ExpectNumber( "datanumber", datanumber ) &
 		    antsCommands.ExpectObject( "datavec", datavec ) & antsCommands.ExpectObject( "fct", fct ) &
@@ -470,7 +470,7 @@ VAR
 														 VAR rekovec: vyBase.Object );
 
 	VAR rekoname: ARRAY 1024 OF CHAR;
-		degraded, dummy: antsArrays.X1d;  var: LONGREAL;
+		degraded, dummy: antsArrays.X1d;  var: FLOAT64;
 
 	BEGIN
 		IF antsPottsSimDataStructure.ExistDegraded( set, datasetname, dataname, monotonename, degradedname ) THEN
@@ -525,7 +525,7 @@ VAR
 
 	VAR meanM, medianM, hampelM, saegezahnM, huberM: ARRAY 1024 OF CHAR;
 		gaussN, laplaceN, expN, uniformN, rekotype, gammatype, estimateNoise: ARRAY 1024 OF CHAR;
-		noiseParameter, gamma, var: LONGREAL;  noiseNumber: LONGINT;  datarekovec, degradedvec, rekovec: vyBase.Object;
+		noiseParameter, gamma, var: FLOAT64;  noiseNumber: SIGNED32;  datarekovec, degradedvec, rekovec: vyBase.Object;
 		datareko, dataresults, degraded, reko, results, dummy: antsArrays.X1d;
 		datarekoname, degradedname, rekoname: ARRAY 1024 OF CHAR;
 
@@ -610,7 +610,7 @@ VAR
 	PROCEDURE RekoLoop*;
 
 	VAR rekotype, gammatype, rekoname, datarekoname: ARRAY 1024 OF CHAR;
-		gamma: LONGREAL;  rekovec, datarekovec: vyBase.Object;  reko, results, dummy, datareko, dataresults: antsArrays.X1d;
+		gamma: FLOAT64;  rekovec, datarekovec: vyBase.Object;  reko, results, dummy, datareko, dataresults: antsArrays.X1d;
 
 	BEGIN
 		antsCommands.InitScan( "" );
@@ -711,7 +711,7 @@ VAR
 		END;
 	END SetRekoFields;
 
-	PROCEDURE SetNoiseField*( var: LONGREAL );
+	PROCEDURE SetNoiseField*( var: FLOAT64 );
 
 	VAR textf: Objects.Object;
 
@@ -752,7 +752,7 @@ VAR
 											   VAR rekovec: vyBase.Object );
 
 	VAR dataChainname, dataname, datarekoname, monotonename, degradedname, rekoname: ARRAY 1024 OF CHAR;
-		data, datareko, monotone, degraded, reko, dummy, dataresults, results: antsArrays.X1d;  var: LONGREAL;
+		data, datareko, monotone, degraded, reko, dummy, dataresults, results: antsArrays.X1d;  var: FLOAT64;
 
 	BEGIN
 		IF ~antsPottsSimDataStructure.DeleteDataset( set, actualDataSet ) THEN antsSecurity.Halt( "Error in deleting actual dataset !!!!" );  END;
@@ -841,7 +841,7 @@ VAR
 
 	PROCEDURE DelAllDegraded*;
 
-	VAR len, i: LONGINT;
+	VAR len, i: SIGNED32;
 		dataname: ARRAY 1024 OF CHAR;
 		datavec, datarekovec, monotonevec, degradedvec, rekovec: vyBase.Object;
 
@@ -868,7 +868,7 @@ VAR
 
 	PROCEDURE DelAllReko*;
 
-	VAR len, i: LONGINT;
+	VAR len, i: SIGNED32;
 		degradedname: ARRAY 1024 OF CHAR;
 		datavec, datarekovec, monotonevec, degradedvec, rekovec: vyBase.Object;
 
@@ -897,7 +897,7 @@ VAR
 
 	VAR dataname, datarekoname, monotonename, degradedname, rekoname: ARRAY 1024 OF CHAR;
 		data, datareko, degraded, reko, dataresults, results, diffs, estimatedNoises, meanM, medianM, hampelM, saegezahnM, huberM: antsArrays.X1d;
-		i, j, k: LONGINT;  parameter: LONGREAL;
+		i, j, k: SIGNED32;  parameter: FLOAT64;
 
 	BEGIN
 		IF (set = NIL ) OR (actualDataSet = "") OR (actualData = "") THEN antsSecurity.Halt( "No data to copy !!!" );  ELSE
@@ -968,7 +968,7 @@ END Output; **)
 
 	PROCEDURE ShowAllDataRekoResults*;
 
-	VAR RR: antsFiles.Rider;  i, k, l, j: LONGINT;
+	VAR RR: antsFiles.Rider;  i, k, l, j: SIGNED32;
 		outfile: ARRAY 1024 OF CHAR;
 		actualData, actualDataSet: ARRAY 1024 OF CHAR;
 		u, v, w, x, y, z: vyRealVec.tVector;  dataresults, data: antsArrays.X1d;
@@ -1013,10 +1013,10 @@ END Output; **)
 
 	PROCEDURE ShowAllRekoResults*;
 
-	VAR RR: antsFiles.Rider;  i, j, k, l, m, n: LONGINT;
+	VAR RR: antsFiles.Rider;  i, j, k, l, m, n: SIGNED32;
 		outfile: ARRAY 1024 OF CHAR;
 		appendedName, actualData, actualDataSet: ARRAY 1024 OF CHAR;
-		noiseVariance: LONGREAL;  x, y: vyRealVec.tVector;  dataresults, data: antsArrays.X1d;
+		noiseVariance: FLOAT64;  x, y: vyRealVec.tVector;  dataresults, data: antsArrays.X1d;
 		monotoneName, degradedName, rekoName: ARRAY 1024 OF CHAR;
 		s, t, u: antsArrays.X1d;
 

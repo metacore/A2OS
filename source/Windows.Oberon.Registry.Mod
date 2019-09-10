@@ -18,12 +18,12 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 	VAR
 		oberonRoot*, (** root path for all Oberon settings *)
 		oberonSystem*: ARRAY Kernel32.MaxPath OF CHAR; (** path for System settings *)
-		res*: LONGINT; (** Done, Failed, NotFound *)
-		stamp*: LONGINT; (** Time stamp of last modification to the registry. *)
+		res*: SIGNED32; (** Done, Failed, NotFound *)
+		stamp*: SIGNED32; (** Time stamp of last modification to the registry. *)
 		hFile: Kernel32.HANDLE; logfile: BOOLEAN;
 
 	PROCEDURE Append(VAR to: ARRAY OF CHAR; this: ARRAY OF CHAR);
-		VAR i, j, l: LONGINT;
+		VAR i, j, l: SIGNED32;
 	BEGIN
 		i := 0; WHILE to[i] # 0X DO INC(i) END;
 		l := LEN(to)-1; j := 0;
@@ -34,7 +34,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 	END Append;
 
 	PROCEDURE AppendCh(VAR to: ARRAY OF CHAR; this: CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		i := 0; WHILE to[i] # 0X DO INC(i) END;
 		IF i < (LEN(to)-1) THEN
@@ -51,7 +51,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 
 	(** Set a key/value pair, key = "" sets the default value for path. *)
 	PROCEDURE SetKeyValue*(root: ADVAPI32.HKEY; path, key, value: ARRAY OF CHAR);
-		VAR hKey: ADVAPI32.HKEY; i: LONGINT;
+		VAR hKey: ADVAPI32.HKEY; i: SIGNED32;
 	BEGIN
 		IF ADVAPI32.RegCreateKeyEx(root, path, 0, NIL, ADVAPI32.RegOptionNonVolatile, {ADVAPI32.KeySetValue, ADVAPI32.KeyCreateSubKey}, NIL, hKey, NIL) # ADVAPI32.Success THEN
 			res := NotFound; RETURN
@@ -67,7 +67,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 
 	(** Retrieve the value stored under key. use key = "" to retrieve the default value for path. *)
 	PROCEDURE GetKeyValue*(root: ADVAPI32.HKEY; path, key: ARRAY OF CHAR; VAR value: ARRAY OF CHAR);
-		VAR hKey: ADVAPI32.HKEY; type, len, ret: LONGINT; buf: POINTER TO ARRAY OF CHAR;
+		VAR hKey: ADVAPI32.HKEY; type, len, ret: SIGNED32; buf: POINTER TO ARRAY OF CHAR;
 	BEGIN
 		IF ADVAPI32.RegOpenKeyEx(root, path, 0, {ADVAPI32.KeyQueryValue}, hKey) # ADVAPI32.Success THEN
 			res := NotFound; RETURN
@@ -106,7 +106,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 	(** Recursive delete all sub-paths, keys and values in path.
 		Note: be very careful when using this procedure!!! *)
 	PROCEDURE DeletePath*(root: ADVAPI32.HKEY; path: ARRAY OF CHAR);
-		VAR buffer: ARRAY Kernel32.MaxPath OF CHAR; hKey: ADVAPI32.HKEY; size: LONGINT;
+		VAR buffer: ARRAY Kernel32.MaxPath OF CHAR; hKey: ADVAPI32.HKEY; size: SIGNED32;
 	BEGIN
 		IF ADVAPI32.RegOpenKeyEx(root, path, 0, ADVAPI32.KeyAllAccess, hKey) # ADVAPI32.Success THEN
 			res := NotFound; RETURN
@@ -129,7 +129,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 
 	(** Enumerate all sub-paths in path. *)
 	PROCEDURE EnumeratePath*(root: ADVAPI32.HKEY; path: ARRAY OF CHAR; enum: PathEnumerator);
-		VAR subPath: ARRAY Kernel32.MaxPath OF CHAR; hKey: ADVAPI32.HKEY; ret, i, size: LONGINT;
+		VAR subPath: ARRAY Kernel32.MaxPath OF CHAR; hKey: ADVAPI32.HKEY; ret, i, size: SIGNED32;
 	BEGIN
 		ret := ADVAPI32.RegOpenKeyEx(root, path, 0, {ADVAPI32.KeyEnumerateSubKeys}, hKey);
 		IF ret # ADVAPI32.Success THEN
@@ -149,7 +149,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 	PROCEDURE EnumerateKeyValue*(root: ADVAPI32.HKEY; path: ARRAY OF CHAR; enum: KeyValueEnumerator);
 		VAR
 			key, value: ARRAY Kernel32.MaxPath OF CHAR; hKey: ADVAPI32.HKEY;
-			ret, i, type, kLen, vLen: LONGINT;
+			ret, i, type, kLen, vLen: SIGNED32;
 	BEGIN
 		ret := ADVAPI32.RegOpenKeyEx(root, path, 0, {ADVAPI32.KeyQueryValue}, hKey);
 		IF ret # ADVAPI32.Success THEN
@@ -166,7 +166,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 	END EnumerateKeyValue;
 
 	PROCEDURE OutputFileString(VAR str: ARRAY OF CHAR);
-		VAR n: LONGINT; b: Kernel32.BOOL;
+		VAR n: SIGNED32; b: Kernel32.BOOL;
 	BEGIN
 		n := 0; WHILE str[n] # 0X DO INC(n) END;
 		b := Kernel32.WriteFile(hFile, str, n, n, NIL);
@@ -175,7 +175,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 
 	(*
 	PROCEDURE InitConsole();
-		VAR rect: Kernel32.SmallRect; file: ARRAY 260 OF CHAR; con: ARRAY 64 OF CHAR; i, j: LONGINT;
+		VAR rect: Kernel32.SmallRect; file: ARRAY 260 OF CHAR; con: ARRAY 64 OF CHAR; i, j: SIGNED32;
 	BEGIN
 		 Kernel32.OutputString := NIL;   logfile := FALSE; hFile := Kernel32.InvalidHandleValue;
 		GetKeyValue(CurrentUser, oberonSystem, "Console", con);
@@ -234,7 +234,7 @@ MODULE Registry IN Oberon; (** non-portable / source: Win32.Registry.Mod *)	(* e
 	PROCEDURE Init;
 		VAR
 			file, name, value, software, version: ARRAY Kernel32.MaxPath OF CHAR;
-			buf: POINTER TO ARRAY OF SYSTEM.BYTE; adr: ADDRESS; len, i: LONGINT; ch: CHAR;
+			buf: POINTER TO ARRAY OF SYSTEM.BYTE; adr: ADDRESS; len, i: SIGNED32; ch: CHAR;
 	BEGIN
 		res := Done; stamp := 0;
 		IGNORE Kernel32.GetModuleFileName(Kernel32.hInstance, file, Kernel32.MaxPath);

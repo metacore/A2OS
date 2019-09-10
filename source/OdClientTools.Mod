@@ -35,10 +35,10 @@ END GetCharData;
 
 (* Get Clusterball games. *)
 PROCEDURE GetCbGames*; (* from to *)
-VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url, target: ARRAY 128 OF CHAR;
 	f: AosFS.File;
-	num, from, to: INTEGER;
+	num, from, to: SIGNED16;
 BEGIN
 	In.Open; In.Int(from); In.Int(to);
 	IF In.Done THEN
@@ -51,8 +51,8 @@ BEGIN
 END GetCbGames;
 
 (* Get Clusterball games. *)
-PROCEDURE GetCbGame * (num: LONGINT);
-VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+PROCEDURE GetCbGame * (num: SIGNED32);
+VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; numStr, url, target: ARRAY 128 OF CHAR;
 	f: AosFS.File;
 BEGIN { EXCLUSIVE } (* Perhaps EXCLUSIVE helps to avoid hanging with Configuration.DoCommands. *)
@@ -65,7 +65,7 @@ BEGIN { EXCLUSIVE } (* Perhaps EXCLUSIVE helps to avoid hanging with Configurati
 END GetCbGame;
 
 PROCEDURE Get*;
-VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url, target: ARRAY 128 OF CHAR;
 	f: AosFS.File;
 BEGIN { EXCLUSIVE } (* Perhaps EXCLUSIVE helps to avoid hanging with Configuration.DoCommands. *)
@@ -77,8 +77,8 @@ BEGIN { EXCLUSIVE } (* Perhaps EXCLUSIVE helps to avoid hanging with Configurati
 END Get;
 
 PROCEDURE Put*;
-VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
-	out : AosIO.Reader; in: AosFS.Reader; i, avail: LONGINT; url, name: ARRAY 128 OF CHAR;
+VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
+	out : AosIO.Reader; in: AosFS.Reader; i, avail: SIGNED32; url, name: ARRAY 128 OF CHAR;
 	f: AosFS.File; doc: XML.Document;	lenStr: ARRAY 16 OF CHAR;
 	root: XML.Element; info: ARRAY 128 OF CHAR; s: XML.String;
 BEGIN { EXCLUSIVE }
@@ -113,7 +113,7 @@ BEGIN { EXCLUSIVE }
 END Put;
 
 PROCEDURE Copy*;
-VAR resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; org, copy: ARRAY 128 OF CHAR;
 BEGIN { EXCLUSIVE } (* Perhaps EXCLUSIVE helps to avoid hanging with Configuration.DoCommands. *)
 	In.Open; In.String(org); In.String(copy);
@@ -128,7 +128,7 @@ BEGIN { EXCLUSIVE } (* Perhaps EXCLUSIVE helps to avoid hanging with Configurati
 END Copy;
 
 PROCEDURE Move*;
-VAR resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; old, new: ARRAY 128 OF CHAR;
 BEGIN { EXCLUSIVE } (* Perhaps EXCLUSIVE helps to avoid hanging with Configuration.DoCommands. *)
 	In.Open; In.String(old); In.String(new);
@@ -143,7 +143,7 @@ BEGIN { EXCLUSIVE } (* Perhaps EXCLUSIVE helps to avoid hanging with Configurati
 END Move;
 
 PROCEDURE VersionControlFreeze*; (* " url " [ " author " " description " ] *)
-VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url, author, desc: ARRAY 128 OF CHAR; doc: XML.Document;
 	ok: BOOLEAN; props: WebHTTP.AdditionalField;
 BEGIN { EXCLUSIVE }
@@ -181,7 +181,7 @@ BEGIN { EXCLUSIVE }
 END VersionControlFreeze;
 
 PROCEDURE BaselineControlFreeze*; (* " url " [ " author " " description " ] *)
-VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url, author, desc: ARRAY 128 OF CHAR; doc: XML.Document;
 	root: XML.Element; info: ARRAY 128 OF CHAR; s: XML.String;
 	ok: BOOLEAN; props: WebHTTP.AdditionalField;
@@ -254,7 +254,7 @@ END RemSubbaseline;
 (* Add subbaselines to a configuration: AddSubaseline 1{ subbaseline-string }
 	Data is sent as a PROPPATCH. *)
 PROCEDURE Subbaseline(mode: ARRAY OF CHAR);
-VAR resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url: ARRAY 128 OF CHAR; doc: XML.Document;
 	root: XML.Element; info: ARRAY 128 OF CHAR; s: XML.String;
 	props: WebHTTP.AdditionalField; line: OdUtil.Line; found: BOOLEAN;
@@ -298,7 +298,7 @@ BEGIN { EXCLUSIVE }
 END Subbaseline;
 
 PROCEDURE VersionControlSelect * ;
-VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url, versionResource: ARRAY 128 OF CHAR; doc: XML.Document;
 	root: XML.Element; info: ARRAY 128 OF CHAR; s: XML.String;
 	errorList: XMLObjects.Enumerator; p: ANY; error: XML.Element; errorName: OdUtil.Line;
@@ -323,7 +323,7 @@ BEGIN { EXCLUSIVE }
 END VersionControlSelect;
 
 PROCEDURE BaselineControlSelect*;
-VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url, baselineResource: ARRAY 128 OF CHAR; doc: XML.Document;
 BEGIN { EXCLUSIVE }
 	In.Open; In.String(url); In.String(baselineResource);
@@ -341,7 +341,7 @@ BEGIN { EXCLUSIVE }
 END BaselineControlSelect;
 
 PROCEDURE ReportVersionTree*;
-VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader;
 	doc: XML.Document; root, response, href, props: XML.Element; responses: XMLObjects.Enumerator; p: ANY;
 	hrefStr, s1, s2, s3, s4, s5, stateStr: ARRAY 128 OF CHAR;
@@ -381,7 +381,7 @@ BEGIN { EXCLUSIVE }
 END ReportVersionTree;
 
 PROCEDURE ReportCompareBaseline*;
-VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; compareBaseline: ARRAY 128 OF CHAR; doc: XML.Document;
 	versions, hrefs: XMLObjects.Enumerator; p: ANY; root, version, href: XML.Element;
 	hrefStr: ARRAY 128 OF CHAR; elName: OdUtil.Line;
@@ -476,7 +476,7 @@ END RemProp;
 
 (* Proppatch a resource. *)
 PROCEDURE Proppatch(mode: ARRAY OF CHAR);
-VAR resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url: ARRAY 128 OF CHAR; doc: XML.Document;
 	root: XML.Element; info: ARRAY 128 OF CHAR; s: XML.String;
 	props: WebHTTP.AdditionalField; name, value: OdUtil.Line; ch: CHAR;
@@ -529,7 +529,7 @@ END Proppatch;
 
 (** Propfind can have a optionally a depth and property list. No property lists means no body. *)
 PROCEDURE Propfind*; (* [ ("0"|"1") { ["] prop ["] } "~" ] ] *)
-VAR resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url: ARRAY 128 OF CHAR;
 	doc: XML.Document;
 	root, response, href, prop, dataProp, property: XML.Element; s: XML.String; attr: XML.Attribute;
@@ -648,7 +648,7 @@ VAR
 	url: ARRAY 128 OF CHAR; depth: ARRAY 16 OF CHAR;
 	propList, list: WebHTTP.AdditionalField;
 	propertyName, line: OdUtil.Line;
-	con : AosTCP.Connection; out : AosIO.Reader; res: WORD;
+	con : AosTCP.Connection; out : AosIO.Reader; res: INTEGER;
 	resHeader: WebHTTP.ResponseHeader; doc: XML.Document;
 BEGIN  { EXCLUSIVE }
 	In.Open; In.String(url);
@@ -691,7 +691,7 @@ END Propparse;
 
 PROCEDURE Checkout * ; (* <file> | <collection> *)
 VAR
-	resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+	resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url: ARRAY 128 OF CHAR; doc: XML.Document;
 	root: XML.Element; info: ARRAY 128 OF CHAR; s: XML.String;
 BEGIN { EXCLUSIVE }
@@ -723,7 +723,7 @@ END Checkout;
 (** Merge: implemented for SVN. *)
 PROCEDURE Merge * ; (* (<file> | <collection>) <source> *)
 VAR
-	resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+	resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url, source: ARRAY 128 OF CHAR; doc: XML.Document;
 	root: XML.Element; info: ARRAY 128 OF CHAR; s: XML.String;
 BEGIN { EXCLUSIVE }
@@ -754,7 +754,7 @@ END Merge;
 
 PROCEDURE Checkin * ; (* <file> | <collection>) <author> <description> *)
 VAR
-	resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+	resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url, author, desc: ARRAY 128 OF CHAR; doc: XML.Document;
 	root, el: XML.Element; info, elData: ARRAY 128 OF CHAR; s: XML.String;
 	ok: BOOLEAN; props: WebHTTP.AdditionalField;
@@ -829,7 +829,7 @@ END Checkin;
 
 PROCEDURE Uncheckout*;
 VAR
-	reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+	reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url: ARRAY 128 OF CHAR;
 	doc: XML.Document;
 	root: XML.Element; info: ARRAY 128 OF CHAR; rootName: OdUtil.Line;
@@ -860,7 +860,7 @@ BEGIN { EXCLUSIVE }
 END Uncheckout;
 
 PROCEDURE Update*;
-VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url, versionName: ARRAY 128 OF CHAR; doc: XML.Document;
 BEGIN { EXCLUSIVE }
 	In.Open; In.String(url); In.String(versionName);
@@ -880,7 +880,7 @@ END Update;
 (*  OdClientTools.Delete OdClient.Delete WebDAVPlugin.Delete DAVDeltavBase.Delete *)
 PROCEDURE Delete * ; (* <file> | <collection>) *)
 VAR
-	resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection;
+	resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection;
 	out : AosIO.Reader; url, author, desc: ARRAY 128 OF CHAR; doc: XML.Document;
 	root: XML.Element; info: ARRAY 128 OF CHAR; elName: OdUtil.Line;
 BEGIN { EXCLUSIVE }
@@ -912,7 +912,7 @@ END Delete;
 (*  OdClientTools.Mkcol OdClient.Mkcol WebDAVPlugin.Mkcol DAVDeltavBase.Mkcol *)
 PROCEDURE Mkcol * ; (* <collection>) *)
 VAR
-	resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection; doc: XML.Document;
+	resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection; doc: XML.Document;
 	out : AosIO.Reader; url, author, desc: ARRAY 128 OF CHAR;
 	root: XML.Element; info: ARRAY 128 OF CHAR; s: XML.String;
 BEGIN { EXCLUSIVE }
@@ -944,7 +944,7 @@ END Mkcol;
 (*  OdClientTools.Mkcol OdClient.Mkcol WebDAVPlugin.Mkcol DAVDeltavBase.Mkcol *)
 PROCEDURE Mkactivity * ; (* <activity url>) *)
 VAR
-	resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection; doc: XML.Document;
+	resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection; doc: XML.Document;
 	out : AosIO.Reader; url, author, desc: ARRAY 128 OF CHAR;
 	root: XML.Element; info: ARRAY 128 OF CHAR; s: XML.String;
 BEGIN { EXCLUSIVE }
@@ -976,7 +976,7 @@ END Mkactivity;
 (*  OdClientTools.Options OdClient.Options WebDAVPlugin.Options DAVDeltavBase.Options *)
 PROCEDURE Options * ; (* <collection> | <resource> *)
 VAR
-	resHeader: WebHTTP.ResponseHeader; res: WORD; con : AosTCP.Connection; doc: XML.Document;
+	resHeader: WebHTTP.ResponseHeader; res: INTEGER; con : AosTCP.Connection; doc: XML.Document;
 	out : AosIO.Reader; url, author, desc: ARRAY 128 OF CHAR;
 	root: XML.Element; info: ARRAY 128 OF CHAR; s: XML.String;
 	log: Log.Log;

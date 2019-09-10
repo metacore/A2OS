@@ -41,15 +41,15 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 			next: PictList;
 		END;
 
-		RealVector = ARRAY N OF REAL;
-		Poly = RECORD a, b, c, d, t: REAL END ;
+		RealVector = ARRAY N OF FLOAT32;
+		Poly = RECORD a, b, c, d, t: FLOAT32 END ;
 		PolyVector = ARRAY N OF Poly;
 
 	(* used for printing pictures *)
 	RunP = POINTER TO RunDscP;
 	RunDscP = RECORD
 		next, prev: RunP;
-		x, y, w, h, col: INTEGER
+		x, y, w, h, col: SIGNED16
 	END;
 	SpoolList = POINTER TO SpoolListDesc;
 	SpoolListDesc = RECORD
@@ -58,25 +58,25 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		file, spoolFile: Files.File;
 		pictList: PictList;
 		readR, spoolr: Files.Rider;
-		actPos, actPict, lastActPict: LONGINT;
+		actPos, actPict, lastActPict: SIGNED32;
 		color: BOOLEAN;
 	END;
 
 	VAR
-		Width*, Height*, Depth*, planes, Planes: INTEGER;
-		FrameX*, FrameY*, FrameW*, FrameH*: INTEGER;
-		Unit*: LONGINT;
-		nofonts, nopage: INTEGER;
+		Width*, Height*, Depth*, planes, Planes: SIGNED16;
+		FrameX*, FrameY*, FrameW*, FrameH*: SIGNED16;
+		Unit*: SIGNED32;
+		nofonts, nopage: SIGNED16;
 		font: ARRAY maxfonts OF ARRAY 32 OF CHAR;
 		printerfile: Files.Rider;
-		cY, cT  : INTEGER;
-		sX, sY: INTEGER; (* actual string coordinates *)
+		cY, cT  : SIGNED16;
+		sX, sY: SIGNED16; (* actual string coordinates *)
 		rev: ARRAY 256 OF CHAR; (* bit reverse table *)
 		Cmap, Ymap, Mmap, Kmap : Bitmap; (* color planes *)
-		empty: INTEGER;
+		empty: SIGNED16;
 		pattern: ARRAY 10 OF Pattern;
 		intens : ARRAY 17 OF Pattern;
-		yellow, magenta, cyan, black : INTEGER;
+		yellow, magenta, cyan, black : SIGNED16;
 		Default  : Font;
 		spool: SpoolList;
 		task : Oberon.Task;
@@ -85,7 +85,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 
 	(* V2/V3 ======================================= *)
 
-	PROCEDURE DisplayGetChar (F: Font; ch: CHAR; VAR dx, x, y, w, h: INTEGER; VAR pat: Display.Pattern);
+	PROCEDURE DisplayGetChar (F: Font; ch: CHAR; VAR dx, x, y, w, h: SIGNED16; VAR pat: Display.Pattern);
 		VAR obj: Objects.Object; c: Fonts.Char;
 	BEGIN
 		F.GetObj(F, ORD(ch), obj);
@@ -103,36 +103,36 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 
 	(* ======================================= *)
 
-	PROCEDURE XShift(x : INTEGER) : INTEGER;
+	PROCEDURE XShift(x : SIGNED16) : SIGNED16;
 	BEGIN RETURN x - FrameX
 	END XShift;
 
-	PROCEDURE YShift(y : INTEGER) : INTEGER;
+	PROCEDURE YShift(y : SIGNED16) : SIGNED16;
 	BEGIN RETURN y - FrameY
 	END YShift;
 
 	PROCEDURE Write(x: SYSTEM.BYTE);
 	BEGIN Files.Write(printerfile,x) END Write;
 
-	PROCEDURE WriteInt(k: INTEGER);
+	PROCEDURE WriteInt(k: SIGNED16);
 	BEGIN Write(SHORT(k MOD 100H)); Write(SHORT(k DIV 100H)) END WriteInt;
 
-	PROCEDURE WriteBytes(VAR x: ARRAY OF SYSTEM.BYTE; n: INTEGER);
-		VAR i: INTEGER;
+	PROCEDURE WriteBytes(VAR x: ARRAY OF SYSTEM.BYTE; n: SIGNED16);
+		VAR i: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE i < n DO Write(x[i]); INC(i) END;
 	END WriteBytes;
 
 	PROCEDURE WriteString(VAR s: ARRAY OF CHAR);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN i := 0;
 		WHILE s[i] > 0X DO Write(s[i]); INC(i) END ;
 		Write(0)
 	END WriteString;
 
-	PROCEDURE GetDim(label: ARRAY OF CHAR;  def: INTEGER;  VAR val: INTEGER);
-	VAR v: REAL; S: Texts.Scanner;
+	PROCEDURE GetDim(label: ARRAY OF CHAR;  def: SIGNED16;  VAR val: SIGNED16);
+	VAR v: FLOAT32; S: Texts.Scanner;
 	BEGIN
 		Oberon.OpenScanner(S, label);
 		IF (S.class = Texts.Int) OR (S.class = Texts.Real) THEN
@@ -192,7 +192,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END InitMetrics;
 
 	PROCEDURE Open*(P: Printer.Printer;  printer, options: ARRAY OF CHAR);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		WITH P: HPPrinter DO
 			P.pictList := NIL;
@@ -205,13 +205,13 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		END;
 	END Open;
 
-	PROCEDURE ReplConst*(P: Printer.Printer; x, y, w, h: INTEGER);
+	PROCEDURE ReplConst*(P: Printer.Printer; x, y, w, h: SIGNED16);
 	BEGIN Write(2); Write(0);
 		WriteInt(x); WriteInt(y); WriteInt(w); WriteInt(h)
 	END ReplConst;
 
-	PROCEDURE fontno(name: ARRAY OF CHAR): SHORTINT;
-		VAR i, j: INTEGER;
+	PROCEDURE fontno(name: ARRAY OF CHAR): SIGNED8;
+		VAR i, j: SIGNED16;
 	BEGIN i := 0;
 		WHILE (i < nofonts) & (font[i] # name) DO INC(i) END ;
 		IF i = nofonts THEN
@@ -227,7 +227,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END fontno;
 
 	PROCEDURE UseListFont*(P: Printer.Printer; name: ARRAY OF CHAR);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 			listfont: ARRAY 10 OF CHAR;
 	BEGIN listfont := "Gacha10l"; i := 0;
 		WHILE (i < nofonts) & (font[i] # name) DO INC(i) END ;
@@ -238,7 +238,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END UseListFont;
 
 	PROCEDURE GetMetric* (P: Printer.Printer;  fnt: Fonts.Font): Fonts.Font;
-	VAR name: ARRAY 32 OF CHAR; i: INTEGER; metric: Fonts.Font;
+	VAR name: ARRAY 32 OF CHAR; i: SIGNED16; metric: Fonts.Font;
 	BEGIN
 		COPY(fnt.name, name);
 		i := 0; WHILE (name[i] # ".") & (name[i] # 0X) DO INC(i) END;
@@ -251,39 +251,39 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		RETURN metric
 	END GetMetric;
 
-	PROCEDURE String*(P: Printer.Printer; x, y: INTEGER; s: ARRAY OF CHAR; fnt: Fonts.Font);
-		VAR fno: SHORTINT;
+	PROCEDURE String*(P: Printer.Printer; x, y: SIGNED16; s: ARRAY OF CHAR; fnt: Fonts.Font);
+		VAR fno: SIGNED8;
 	BEGIN fno := fontno(fnt.name); Write(1); Write(fno); WriteInt(x); WriteInt(y); WriteString(s)
 	END String;
 
 	PROCEDURE ContString*(P: Printer.Printer; s: ARRAY OF CHAR; fnt: Fonts.Font);
-		VAR fno: SHORTINT;
+		VAR fno: SIGNED8;
 	BEGIN fno := fontno(fnt.name); Write(0); Write(fno); WriteString(s)
 	END ContString;
 
-	PROCEDURE ReplPattern*(P: Printer.Printer; x, y, w, h, col: INTEGER);
+	PROCEDURE ReplPattern*(P: Printer.Printer; x, y, w, h, col: SIGNED16);
 	BEGIN Write(5); Write(SHORT(col)); WriteInt(x); WriteInt(y); WriteInt(w); WriteInt(h)
 	END ReplPattern;
 
-	PROCEDURE Line*(P: Printer.Printer; x0, y0, x1, y1: INTEGER);
+	PROCEDURE Line*(P: Printer.Printer; x0, y0, x1, y1: SIGNED16);
 	BEGIN Write(6); Write(0); WriteInt(x0); WriteInt(y0); WriteInt(x1); WriteInt(y1)
 	END Line;
 
-	PROCEDURE Circle*(P: Printer.Printer; x0, y0, r: INTEGER);
+	PROCEDURE Circle*(P: Printer.Printer; x0, y0, r: SIGNED16);
 	BEGIN Write(9); Write(0); WriteInt(x0); WriteInt(y0); WriteInt(r)
 	END Circle;
 
-	PROCEDURE Ellipse*(P: Printer.Printer; x0, y0, a, b: INTEGER);
+	PROCEDURE Ellipse*(P: Printer.Printer; x0, y0, a, b: SIGNED16);
 	BEGIN Write(7); Write(0); WriteInt(x0); WriteInt(y0); WriteInt(a); WriteInt(b)
 	END Ellipse;
 
-	PROCEDURE Spline*(P: Printer.Printer; x0, y0, n, open: INTEGER; VAR X, Y: ARRAY OF INTEGER);
-		VAR i: INTEGER;
+	PROCEDURE Spline*(P: Printer.Printer; x0, y0, n, open: SIGNED16; VAR X, Y: ARRAY OF SIGNED16);
+		VAR i: SIGNED16;
 	BEGIN Write(10); Write(SHORT(open)); WriteInt(x0); WriteInt(y0); WriteInt(n); i := 0;
 		WHILE i < n DO WriteInt(X[i]); WriteInt(Y[i]); INC(i) END
 	END Spline;
 
-	PROCEDURE Picture*(print: Printer.Printer; P: Pictures.Picture; px, py, pw, ph, x, y, w, h, mode: INTEGER);
+	PROCEDURE Picture*(print: Printer.Printer; P: Pictures.Picture; px, py, pw, ph, x, y, w, h, mode: SIGNED16);
 	VAR pl, plh, prev: PictList;
 	BEGIN
 		IF Planes # 1 THEN print(HPPrinter).color := TRUE END;
@@ -297,13 +297,13 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		IF prev = NIL THEN print(HPPrinter).pictList := pl ELSE prev.next := pl END;
 	END Picture;
 
-	PROCEDURE Page*(P: Printer.Printer; nofcopies: INTEGER);
+	PROCEDURE Page*(P: Printer.Printer; nofcopies: SIGNED16);
 	BEGIN Write(4); Write(SHORT(nofcopies)); INC(nopage);
 	END Page;
 
 
 	(*== HP Printer =================================================================== *)
-	PROCEDURE SendNum(n: INTEGER);
+	PROCEDURE SendNum(n: SIGNED16);
 	BEGIN
 		IF n > 9 THEN SendNum(n DIV 10) END;
 		PrinterSend(CHR(n MOD 10 + ORD("0")))
@@ -330,16 +330,16 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		empty := 0
 	END OpenPage;
 
-	PROCEDURE Last(VAR line: ARRAY OF CHAR) : INTEGER;
-		VAR last: INTEGER;
+	PROCEDURE Last(VAR line: ARRAY OF CHAR) : SIGNED16;
+		VAR last: SIGNED16;
 	BEGIN
 		last := PL*4 - 1;
 		WHILE (last >= 0) & (line[last] = 0X) DO DEC(last) END;
 		RETURN last;
 	END Last;
 
-	PROCEDURE Compress(VAR line: ARRAY OF CHAR; com: CHAR; last : INTEGER; VAR max: INTEGER);
-		VAR i, j, k, n: INTEGER; ch: CHAR; comp: ARRAY 512 OF CHAR;
+	PROCEDURE Compress(VAR line: ARRAY OF CHAR; com: CHAR; last : SIGNED16; VAR max: SIGNED16);
+		VAR i, j, k, n: SIGNED16; ch: CHAR; comp: ARRAY 512 OF CHAR;
 	BEGIN
 		IF last > max THEN max := last END;
 		IF last >= 0 THEN
@@ -375,7 +375,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END SendEmpty;
 
 	PROCEDURE PrintLine(VAR c, y, m, k: ARRAY OF CHAR);
-		VAR max, lc, lm, ly, lk: INTEGER;
+		VAR max, lc, lm, ly, lk: SIGNED16;
 	BEGIN
 		max := -1;
 		lk := Last(k);
@@ -409,8 +409,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 
 	(* ---------- Raster Operations ---------- *)
 
-	PROCEDURE Block(x,  y, w, h : LONGINT);
-		VAR lx, rx, t, b  : LONGINT; lm, rm, s, p, help, m: SET;
+	PROCEDURE Block(x,  y, w, h : SIGNED32);
+		VAR lx, rx, t, b  : SIGNED32; lm, rm, s, p, help, m: SET;
 	BEGIN
 		IF x < 0 THEN w := w + x; x := 0 END; IF x + w > PW THEN w := PW - x END;
 		t := y + h; IF y < cY THEN y := cY  END; IF t >= cT THEN t := cT  END; h := t - y;
@@ -451,8 +451,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		END
 	END Block;
 
-	PROCEDURE PatternBlock(x,  y, w, h : LONGINT; pat : INTEGER);
-		VAR lx, rx, t, b   : LONGINT; lm, rm, s, p, help, m : SET;
+	PROCEDURE PatternBlock(x,  y, w, h : SIGNED32; pat : SIGNED16);
+		VAR lx, rx, t, b   : SIGNED32; lm, rm, s, p, help, m : SET;
 	BEGIN
 		IF x < 0 THEN w := w + x; x := 0 END; IF x + w > PW THEN w := PW - x END;
 		t := y + h; IF y < cY THEN y := cY  END; IF t >= cT THEN t := cT  END; h := t - y;
@@ -494,8 +494,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		END
 	END PatternBlock;
 
-	PROCEDURE Character(p: Display.Pattern; x, y, w, h: INTEGER);
-		VAR n, c, x0,b: INTEGER; s, t, m, help, h2: SET;
+	PROCEDURE Character(p: Display.Pattern; x, y, w, h: SIGNED16);
+		VAR n, c, x0,b: SIGNED16; s, t, m, help, h2: SET;
 	BEGIN
 		IF (x >= 0) & (x + w <= PW) THEN
 			c := x MOD 32; x0 := x DIV 32; m := {c .. 31};
@@ -554,8 +554,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		END
 	END Character;
 
-	PROCEDURE Dot(x, y: LONGINT);
-		VAR p : SET; b : LONGINT;
+	PROCEDURE Dot(x, y: SIGNED32);
+		VAR p : SET; b : SIGNED32;
 	BEGIN
 		IF (x >= 0) & (x < PW) & (y >= cY) & (y < cT) THEN
 			y := (CH-1) - (y - cY);
@@ -577,13 +577,13 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		END
 	END Dot;
 
-	PROCEDURE GetLine(y: INTEGER; map: Bitmap; VAR line: ARRAY OF CHAR);
-		VAR i, j: INTEGER; x: LONGINT;
+	PROCEDURE GetLine(y: SIGNED16; map: Bitmap; VAR line: ARRAY OF CHAR);
+		VAR i, j: SIGNED16; x: SIGNED32;
 	BEGIN
 		IF map # NIL THEN
 			i := 0; j := 0;
 			WHILE j < PL DO
-				x := LONGINT(map[y, j]);
+				x := SIGNED32(map[y, j]);
 				line[i] := CHR(x); x := x DIV 256; INC(i);
 				line[i] := CHR(x); x := x DIV 256; INC(i);
 				line[i] := CHR(x); x := x DIV 256; INC(i);
@@ -594,7 +594,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END GetLine;
 
 	PROCEDURE Clear(map: Bitmap);
-		VAR i, j: INTEGER;
+		VAR i, j: SIGNED16;
 	BEGIN
 		IF map # NIL THEN
 			i := 0;
@@ -621,11 +621,11 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		Clear(Kmap);
 	END PrinterOpen;
 
-	PROCEDURE PrinterReplConst(x, y, w, h: INTEGER);
+	PROCEDURE PrinterReplConst(x, y, w, h: SIGNED16);
 	BEGIN Block( x, y, w, h) END PrinterReplConst;
 
 	PROCEDURE PrinterFont(name: ARRAY OF CHAR): Font;
-		VAR i, j: INTEGER; app : ARRAY 32 OF CHAR; font: Fonts.Font;
+		VAR i, j: SIGNED16; app : ARRAY 32 OF CHAR; font: Fonts.Font;
 	BEGIN
 		app := ".Pr3.Fnt";
 		i := 0;
@@ -637,8 +637,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		RETURN font
 	END PrinterFont;
 
-	PROCEDURE PrinterString(x, y: INTEGER; VAR s, fname: ARRAY OF CHAR);
-		VAR f: Font; i, dx, w, h: INTEGER; p: Display.Pattern;
+	PROCEDURE PrinterString(x, y: SIGNED16; VAR s, fname: ARRAY OF CHAR);
+		VAR f: Font; i, dx, w, h: SIGNED16; p: Display.Pattern;
 	BEGIN
 		sX := x; sY := y;
 		f := PrinterFont(fname); i := 0;
@@ -650,7 +650,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END PrinterString;
 
 	PROCEDURE PrinterContString(VAR s, fname: ARRAY OF CHAR);
-		VAR f: Font; i, dx, x, y, w, h: INTEGER; p: Display.Pattern;
+		VAR f: Font; i, dx, x, y, w, h: SIGNED16; p: Display.Pattern;
 	BEGIN
 		f := PrinterFont(fname); i := 0;
 		WHILE s[i] # 0X DO
@@ -660,11 +660,11 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		END
 	END PrinterContString;
 
-	PROCEDURE PrinterReplPattern(x, y, w, h, pat: INTEGER);
+	PROCEDURE PrinterReplPattern(x, y, w, h, pat: SIGNED16);
 	BEGIN PatternBlock(x, y, w, h, pat) END PrinterReplPattern;
 
-	PROCEDURE PrinterLine(x0, y0, x1, y1: INTEGER);
-		VAR x, y, dx, dy, d, inc: INTEGER;
+	PROCEDURE PrinterLine(x0, y0, x1, y1: SIGNED16);
+		VAR x, y, dx, dy, d, inc: SIGNED16;
 	BEGIN
 		IF y1 - y0 < x0 - x1 THEN x := x0; x0 := x1; x1 := x; y := y0; y0 := y1; y1 := y END;
 		dx := 2 * (x1 - x0);
@@ -689,8 +689,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		END
 	END PrinterLine;
 
-	PROCEDURE PrinterCircle(x0, y0, r: INTEGER);
-		VAR x, y, q: INTEGER;
+	PROCEDURE PrinterCircle(x0, y0, r: SIGNED16);
+		VAR x, y, q: SIGNED16;
 	BEGIN
 		x := 0; y := r; q := r;
 		WHILE x <= y DO
@@ -703,8 +703,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		END
 	END PrinterCircle;
 
-	PROCEDURE PrinterEllipse(x0, y0, a, b: INTEGER);
-		VAR a2, b2, ex, ey, q: LONGINT; x, y: INTEGER;
+	PROCEDURE PrinterEllipse(x0, y0, a, b: SIGNED16);
+		VAR a2, b2, ex, ey, q: SIGNED32; x, y: SIGNED16;
 	BEGIN
 		IF (a <= 800) & (b <= 800) THEN (* longint range guard *)
 			a2 := LONG(a) * a; b2 := LONG(b) * b;
@@ -727,8 +727,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END PrinterEllipse;
 
 	(*
-	PROCEDURE Bezier(col, x0, y0, xd0, yd0, x1, y1, xd1, yd1: INTEGER);
-		VAR t, dt, dx, dy, ax, bx, ay, by: REAL;
+	PROCEDURE Bezier(col, x0, y0, xd0, yd0, x1, y1, xd1, yd1: SIGNED16);
+		VAR t, dt, dx, dy, ax, bx, ay, by: FLOAT32;
 	BEGIN
 		dx := x1 - x0; ax := xd0 + xd1 - 2.0*dx; bx := 3.0*dx - 2.0*xd0 - xd1;
 		dy := y1 - y0; ay := yd0 + yd1 - 2.0*dy; by := 3.0*dy - 2.0*yd0 - yd1;
@@ -741,8 +741,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END Bezier;
 	*)
 
-	PROCEDURE PrintPoly(x0, y0: INTEGER; VAR p, q: Poly; lim: REAL);
-		VAR t: REAL;
+	PROCEDURE PrintPoly(x0, y0: SIGNED16; VAR p, q: Poly; lim: FLOAT32);
+		VAR t: FLOAT32;
 	BEGIN t := 0;
 		REPEAT
 			Dot(SHORT(ENTIER(((p.a * t + p.b) * t + p.c) * t + p.d) + x0),SHORT(ENTIER(((q.a * t + q.b) * t + q.c) * t + q.d) + y0));
@@ -750,8 +750,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		UNTIL t >= lim
 	END PrintPoly;
 
-	PROCEDURE SolveTriDiag(VAR a, b, c, y: RealVector; n: INTEGER);
-		VAR i: INTEGER;  t: REAL;
+	PROCEDURE SolveTriDiag(VAR a, b, c, y: RealVector; n: SIGNED16);
+		VAR i: SIGNED16;  t: FLOAT32;
 	BEGIN (*a, b, c of tri-diag matrix T; solve Ty' = y for y', assign y' to y*)
 		i := 1;
 		WHILE i < n DO
@@ -763,8 +763,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		END
 	END SolveTriDiag;
 
-	PROCEDURE OpenSpline(VAR x, y, d: RealVector; n: INTEGER);
-		VAR i: INTEGER; d1, d2: REAL;
+	PROCEDURE OpenSpline(VAR x, y, d: RealVector; n: SIGNED16);
+		VAR i: SIGNED16; d1, d2: FLOAT32;
 			a, b, c: RealVector;
 	BEGIN (*from x, y compute d = y'*)
 		b[0] := 1.0/(x[1] - x[0]); a[0] := 2.0*b[0]; c[0] := b[0];
@@ -781,8 +781,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		SolveTriDiag(a, b, c, d, n)
 	END OpenSpline;
 
-	PROCEDURE ClosedSpline(VAR x, y, d: RealVector; n: INTEGER);
-		VAR i: INTEGER; d1, d2, hn, dn: REAL;
+	PROCEDURE ClosedSpline(VAR x, y, d: RealVector; n: SIGNED16);
+		VAR i: SIGNED16; d1, d2, hn, dn: FLOAT32;
 			a, b, c, w: RealVector;
 	BEGIN (*from x, y compute d = y'*)
 		hn := 1.0/(x[n-1] - x[n-2]);
@@ -808,8 +808,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		d[i] := d[0]
 	END ClosedSpline;
 
-	PROCEDURE PrinterSpline(x0, y0, n, open : INTEGER; u,v : ARRAY OF INTEGER);
-		VAR i : INTEGER; dx, dy, ds: REAL;
+	PROCEDURE PrinterSpline(x0, y0, n, open : SIGNED16; u,v : ARRAY OF SIGNED16);
+		VAR i : SIGNED16; dx, dy, ds: FLOAT32;
 			x, xd, y, yd, s: RealVector;
 			p, q: PolyVector;
 	BEGIN (*from u, v compute x, y, s*)
@@ -845,8 +845,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END PrinterSpline;
 
 (*
-	PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-	VAR r, t, r1, t1: INTEGER;
+	PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+	VAR r, t, r1, t1: SIGNED16;
 	BEGIN
 		r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 		IF x < x1 THEN x := x1 END;
@@ -857,7 +857,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END ClipAgainst;
 *)
 
-	PROCEDURE RGBToPatNr(red, green, blue: INTEGER; VAR pNr: INTEGER);
+	PROCEDURE RGBToPatNr(red, green, blue: SIGNED16; VAR pNr: SIGNED16);
 	(* pNr: 0..ColSubdiv-1  [white, light ...dark, black] *)
 		CONST ColNrRange = 2550 DIV ColSubDiv;
 	BEGIN
@@ -867,18 +867,18 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END RGBToPatNr;
 
 	(* DOS/Native-Oberon *)
-	PROCEDURE PrinterPicture(P: Pictures.Picture; px, py, pw, ph, (* picture *) X, Y, W, H: INTEGER(* printer *));
-		CONST Shift = 100000;	(* max device distance: MAX(LONGINT) DIV Shift *)
-		VAR scaleX, scaleY: LONGINT;
-			trailer, run: RunP;	x0, x, y, col: INTEGER;	colored: BOOLEAN;
+	PROCEDURE PrinterPicture(P: Pictures.Picture; px, py, pw, ph, (* picture *) X, Y, W, H: SIGNED16(* printer *));
+		CONST Shift = 100000;	(* max device distance: MAX(SIGNED32) DIV Shift *)
+		VAR scaleX, scaleY: SIGNED32;
+			trailer, run: RunP;	x0, x, y, col: SIGNED16;	colored: BOOLEAN;
 
-		PROCEDURE Scale(pixel, scale: LONGINT): INTEGER;
+		PROCEDURE Scale(pixel, scale: SIGNED32): SIGNED16;
 		BEGIN
 			RETURN SHORT(pixel * scale DIV Shift)
 		END Scale;
 
 		PROCEDURE PrintRun(VAR run: RunP);
-			VAR red, green, blue, pNr: INTEGER;
+			VAR red, green, blue, pNr: SIGNED16;
 		BEGIN
 			run.w := Scale(run.x + run.w, scaleX); run.x := Scale(run.x, scaleX);	(* scale right and left *)
 			run.h := Scale(run.y + run.h, scaleY); run.y := Scale(run.y, scaleY);	(* scale top and bottom *)
@@ -905,7 +905,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 			run := run.next; freeP.next := NIL		(* advance in run list *)
 		END PrintRun;
 
-		PROCEDURE InsertRun(run: RunP; x, y, w, col: INTEGER);
+		PROCEDURE InsertRun(run: RunP; x, y, w, col: SIGNED16);
 		(* inserts a new run before run *)
 			VAR r: RunP;
 		BEGIN	(* x + w <= run.x *)
@@ -914,7 +914,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 			r.next := run; r.prev := run.prev; run.prev.next := r; run.prev := r	(* add r to run list *)
 		END InsertRun;
 
-		PROCEDURE EnlargeRun(trailer: RunP; VAR run: RunP; x, y, w, col: INTEGER);
+		PROCEDURE EnlargeRun(trailer: RunP; VAR run: RunP; x, y, w, col: SIGNED16);
 		BEGIN
 			WHILE (run # trailer) & (run.x < x) DO PrintRun(run) END;	(* print runs before x *)
 			IF run = trailer THEN InsertRun(run, x, y, w, col)
@@ -951,8 +951,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END PrinterPicture;
 	(**)
 
-	PROCEDURE PrinterStripe(nofcopies: INTEGER);
-		VAR i: INTEGER; c, y, m, k: ARRAY PL*4 OF CHAR;
+	PROCEDURE PrinterStripe(nofcopies: SIGNED16);
+		VAR i: SIGNED16; c, y, m, k: ARRAY PL*4 OF CHAR;
 	BEGIN
 		WHILE nofcopies > 0 DO
 			i := 0;
@@ -971,7 +971,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		Clear(Kmap);
 	END PrinterStripe;
 
-	PROCEDURE PrinterUseColor(r,g,b : INTEGER);
+	PROCEDURE PrinterUseColor(r,g,b : SIGNED16);
 	BEGIN
 	cyan  := (255 - r) * 17 DIV 256; magenta := (255 - g) * 17 DIV 256; yellow := (255  -  b) *  17 DIV 256;
 		IF Planes # 1 THEN
@@ -997,7 +997,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END PrinterClose;
 
 	PROCEDURE InitR;
-		VAR i, j, a, b: INTEGER;
+		VAR i, j, a, b: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE i < 256 DO
@@ -1007,8 +1007,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		END
 	END InitR;
 
-	PROCEDURE InitP(p, a, b, c: INTEGER);
-		VAR i, j, k: INTEGER; s: SET;
+	PROCEDURE InitP(p, a, b, c: SIGNED16);
+		VAR i, j, k: SIGNED16; s: SET;
 	BEGIN
 		i := 0; k := 0;
 		WHILE i < 16 DO
@@ -1022,8 +1022,8 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	PROCEDURE InitIntens;
 		VAR s : ARRAY 4 OF SET;
 
-		PROCEDURE Init(i : INTEGER);
-			VAR j,k : INTEGER;
+		PROCEDURE Init(i : SIGNED16);
+			VAR j,k : SIGNED16;
 		BEGIN
 			intens[i,0] :=s[0]; intens[i,1] :=s[1]; intens[i,2] :=s[2]; intens[i,3] := s[3];
 			j := 0;
@@ -1065,19 +1065,19 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		Texts.WriteLn(W); Texts.Append(Oberon.Log,W.buf);
 	END Log;
 
-	PROCEDURE Shift(VAR x,y,w,h : INTEGER);
-		VAR r, t : INTEGER;
+	PROCEDURE Shift(VAR x,y,w,h : SIGNED16);
+		VAR r, t : SIGNED16;
 	BEGIN
 		r := x + w; t := y + h; x := XShift(x); y := YShift(y);
 		w := XShift(r) - x; h :=  YShift(t) - y;
 	END Shift;
 
 	PROCEDURE Spool(me: Oberon.Task);
-		VAR x, y, w, h, px, py, pw, ph, i, n, r, g, b, y0: INTEGER;  T, ip: LONGINT; pl: PictList;
-		string : ARRAY 400 OF CHAR; ch : CHAR; col, open, fno, mode : SHORTINT; X, Y : ARRAY 200 OF INTEGER;
+		VAR x, y, w, h, px, py, pw, ph, i, n, r, g, b, y0: SIGNED16;  T, ip: SIGNED32; pl: PictList;
+		string : ARRAY 400 OF CHAR; ch : CHAR; col, open, fno, mode : SIGNED8; X, Y : ARRAY 200 OF SIGNED16;
 
-	PROCEDURE Clip(VAR  y, h : INTEGER) : BOOLEAN;
-		VAR  t : INTEGER;
+	PROCEDURE Clip(VAR  y, h : SIGNED16) : BOOLEAN;
+		VAR  t : SIGNED16;
 	BEGIN
 		t := y + h;
 		IF y < cY THEN y := cY ELSIF t > cT THEN t := cT END; h := t - y;
@@ -1186,7 +1186,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 	END Spool;
 
 	PROCEDURE StartSpool(P: HPPrinter);
-		VAR i : INTEGER; ch : CHAR; p, n: SpoolList;
+		VAR i : SIGNED16; ch : CHAR; p, n: SpoolList;
 	BEGIN
 		i := 0; WHILE i < maxfonts DO font[i] := ""; INC(i) END; (*?*)
 		NEW(n); n.next := NIL; n.readR := printerfile; Files.Set(printerfile, NIL, 0); n.P := P; n.file := P.file; P.file := NIL;
@@ -1226,7 +1226,7 @@ MODULE HPPCL IN Oberon;  (*bh, ard 27.11.92  /  kr 23.12. 92 / 03.08.93 - js 4.8
 		END;
 	END Close;
 
-	PROCEDURE UseColor*(P: Printer.Printer; red,green,blue : INTEGER);
+	PROCEDURE UseColor*(P: Printer.Printer; red,green,blue : SIGNED16);
 	BEGIN
 		IF Planes # 1 THEN P(HPPrinter).color := P(HPPrinter).color OR (red # blue) OR (green # blue) END;
 		IF (red < 0) OR (red > 255) OR (green < 0) OR (green > 255) OR (blue< 0) OR (blue> 255) THEN HALT(99) END;
@@ -1265,13 +1265,13 @@ BEGIN
 	IF task # NIL THEN spool := NIL; task := NIL END;
 END Cleanup;
 
-PROCEDURE SetPlanes0*(n: INTEGER);
+PROCEDURE SetPlanes0*(n: SIGNED16);
 BEGIN
 	planes := n;
 END SetPlanes0;
 
 PROCEDURE SetPlanes*;
-VAR planes: INTEGER;
+VAR planes: SIGNED16;
 BEGIN
 	In.Open; In.Int(planes);
 	IF In.Done THEN SetPlanes0(planes) END;

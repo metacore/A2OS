@@ -24,13 +24,13 @@ MODULE LPR; (* AUTHOR "ejz"; PURPOSE "RFC 1179" *)
 
 
 	VAR
-		jobNr: INTEGER;
+		jobNr: SIGNED16;
 
 
 
 
 
-	PROCEDURE Print*(CONST host, queue, docName, email: ARRAY OF CHAR; banner, mail: BOOLEAN; data : Streams.Reader;  size: Streams.Position;  VAR res : WORD);
+	PROCEDURE Print*(CONST host, queue, docName, email: ARRAY OF CHAR; banner, mail: BOOLEAN; data : Streams.Reader;  size: Streams.Position;  VAR res : INTEGER);
 		VAR
 			dataFile, controlFile: ARRAY 64 OF CHAR;
 			nrStr: ARRAY 8 OF CHAR;
@@ -40,8 +40,8 @@ MODULE LPR; (* AUTHOR "ejz"; PURPOSE "RFC 1179" *)
 			reader: Streams.Reader;
 			writer: Streams.Writer;
 			fadr: IP.Adr;
-			locport: INTEGER;
-			connres: WORD; len : SIZE;
+			locport: SIGNED16;
+			connres: INTEGER; len : SIZE;
 			conn: TCP.Connection;
 			buf : ARRAY 10000 OF CHAR;
 	BEGIN
@@ -154,15 +154,15 @@ MODULE LPR; (* AUTHOR "ejz"; PURPOSE "RFC 1179" *)
 
 
 (** LPRPrinter.ShowJobs queue@host  Display a list of the waiting jobs in the given queue. *)
-PROCEDURE ShowJobs*(out: Streams.Writer; CONST host, queue : ARRAY OF CHAR; VAR res: WORD);
+PROCEDURE ShowJobs*(out: Streams.Writer; CONST host, queue : ARRAY OF CHAR; VAR res: INTEGER);
 		VAR
 			job: ARRAY 64 OF CHAR;
-			connres: WORD;
+			connres: INTEGER;
 			conn: TCP.Connection;
 			reader: Streams.Reader;
 			writer: Streams.Writer;
 			fadr: IP.Adr;
-			locport: INTEGER;
+			locport: SIGNED16;
 	BEGIN
 		DNS.HostByName(host, fadr, connres);
 		IF connres = DNS.Ok THEN
@@ -193,14 +193,14 @@ PROCEDURE ShowJobs*(out: Streams.Writer; CONST host, queue : ARRAY OF CHAR; VAR 
 
 (** LPRPrinter.RemoveJob queue@host [ job-nr ]
 		Remove the specified job or all jobs from queue. *)
-	PROCEDURE RemoveJob*(CONST host, queue,  email, job: ARRAY OF CHAR; VAR res : WORD);
+	PROCEDURE RemoveJob*(CONST host, queue,  email, job: ARRAY OF CHAR; VAR res : INTEGER);
 	VAR
-		connres: WORD;
+		connres: INTEGER;
 		conn: TCP.Connection;
 		reader: Streams.Reader;
 		writer : Streams.Writer;
 		fadr: IP.Adr;
-		locport: INTEGER;
+		locport: SIGNED16;
 	BEGIN
 		DNS.HostByName(host, fadr, connres);
 		IF connres = DNS.Ok THEN
@@ -230,7 +230,7 @@ PROCEDURE ShowJobs*(out: Streams.Writer; CONST host, queue : ARRAY OF CHAR; VAR 
 	END RemoveJob;
 
 
-	PROCEDURE PrintFile*(CONST fn : ARRAY OF CHAR; VAR res : WORD);
+	PROCEDURE PrintFile*(CONST fn : ARRAY OF CHAR; VAR res : INTEGER);
 	VAR
 		file : Files.File;
 		fileReader : Files.Reader;
@@ -260,7 +260,7 @@ Usage:
 
 PROCEDURE PrintTest*;
 VAR
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	KernelLog.String("Printing....");
 	LPR.PrintFile("test.ps", res);
@@ -273,7 +273,7 @@ VAR
 	fileReader : Files.Reader;
 	host, queue, email: ARRAY 100 OF CHAR;
 	banner, mail : BOOLEAN;
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	file := Files.Old("test.ps");
 	IF (file # NIL) THEN
@@ -294,7 +294,7 @@ PROCEDURE ShowJobTest*;
 VAR
 	out : Streams.Writer;
 	host, queue: ARRAY 100 OF CHAR;
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	Streams.OpenWriter(out, KernelLog.Send);
 	Configuration.Get("LPR.host", host);

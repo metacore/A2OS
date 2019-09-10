@@ -18,7 +18,7 @@ VAR W*: Texts.Writer;
 	BEGIN Texts.WriteString(W, s)
 	END Str;
 
-	PROCEDURE Int(i: LONGINT);
+	PROCEDURE Int(i: SIGNED32);
 	BEGIN Texts.WriteInt(W, i, 0)
 	END Int;
 
@@ -30,13 +30,13 @@ VAR W*: Texts.Writer;
 	BEGIN Texts.WriteLn(W)
 	END Ln;
 
-	PROCEDURE FixHex(n: LONGINT);
+	PROCEDURE FixHex(n: SIGNED32);
 	BEGIN
 		Texts.WriteHex(W, n)
 	END FixHex;
 
-	PROCEDURE Hex(n: LONGINT);
-		VAR i, j: INTEGER; s, t : ARRAY 10 OF CHAR;
+	PROCEDURE Hex(n: SIGNED32);
+		VAR i, j: SIGNED16; s, t : ARRAY 10 OF CHAR;
 	BEGIN
 		i := 0;
 		REPEAT
@@ -49,25 +49,25 @@ VAR W*: Texts.Writer;
 		Texts.WriteString(W, t)
 	END Hex;
 
-	PROCEDURE word(VAR n: ARRAY OF CHAR; p: LONGINT);
+	PROCEDURE word(VAR n: ARRAY OF CHAR; p: SIGNED32);
 	BEGIN
 		p := p*4;
 		Texts.Write(W, n[p]); Texts.Write(W, n[p+1]); Texts.Write(W, n[p+2]);
 	END word;
 
-	PROCEDURE word2(VAR n: ARRAY OF CHAR; p : LONGINT);
+	PROCEDURE word2(VAR n: ARRAY OF CHAR; p : SIGNED32);
 	BEGIN
 		p := p*4;
 		Texts.Write(W, n[p]); Texts.Write(W, n[p+1]); Texts.Write(W, n[p+2]); Texts.Write(W, n[p+3]);
 	END word2;
 
-	PROCEDURE word3(VAR n : ARRAY OF CHAR; p : LONGINT);
+	PROCEDURE word3(VAR n : ARRAY OF CHAR; p : SIGNED32);
 	BEGIN
 		p:=p*2;
 		Texts.Write(W, n[p]); Texts.Write(W, n[p+1])
 	END word3;
 
-	PROCEDURE cond(cc: LONGINT);
+	PROCEDURE cond(cc: SIGNED32);
 	BEGIN
 		cc:= cc*3;
 		Texts.Write(W, CC[cc]); Texts.Write(W, CC[cc+1])
@@ -85,35 +85,35 @@ VAR W*: Texts.Writer;
 	BEGIN Texts.Write(W, "B");
 	END byte;
 
-	PROCEDURE copr(n: LONGINT);
+	PROCEDURE copr(n: SIGNED32);
 	BEGIN
 		n:= n*3;
 		Texts.Write(W, Copr[n]); Texts.Write(W, Copr[n + 1]); IF (Copr[n+2] # " ") THEN Texts.Write(W, Copr[n+2]) END
 	END copr;
 
-	PROCEDURE reg(n: LONGINT);
+	PROCEDURE reg(n: SIGNED32);
 	BEGIN
 		n:= n*3;
 		Texts.Write(W, Reg[n]); Texts.Write(W, Reg[n + 1]); IF (Reg[n+2] # " ") THEN Texts.Write(W, Reg[n+2]) END
 	END reg;
 
 (*
-	PROCEDURE freg(n: LONGINT);
+	PROCEDURE freg(n: SIGNED32);
 	BEGIN
 		n:= n*3;
 		Texts.Write(W, FReg[n]); Texts.Write(W, FReg[n + 1]); Texts.Write(W, FReg[n + 2]);
 	END freg;
 *)
 
-	PROCEDURE creg(n: LONGINT);
+	PROCEDURE creg(n: SIGNED32);
 	BEGIN
 		n := n * 4;
 		Texts.Write(W, CReg[n]); Texts.Write(W, CReg[n+1]); Texts.Write(W, CReg[n+2]);
 		IF (CReg[n+3] # " ") THEN Texts.Write(W, CReg[n+3]) END
 	END creg;
 
-	PROCEDURE psr(s, a: LONGINT);
-		VAR i: LONGINT;
+	PROCEDURE psr(s, a: SIGNED32);
+		VAR i: SIGNED32;
 	BEGIN a := (a MOD 2 + a DIV 4)*8 - 8 + s*24 ;
 		IF (a >= 0) & (a<48) THEN
 			FOR i:= a TO a + 7 DO
@@ -122,8 +122,8 @@ VAR W*: Texts.Writer;
 		END
 	END psr;
 
-	PROCEDURE rot(t, c: LONGINT);
-		VAR n: LONGINT;
+	PROCEDURE rot(t, c: SIGNED32);
+		VAR n: SIGNED32;
 	BEGIN
 		IF ODD(t) THEN (* register form*)
 			DEC(t); (* t MOD 8 isn't needed, since t.3=0 *)
@@ -146,17 +146,17 @@ VAR W*: Texts.Writer;
 		END
 	END rot;
 
-	PROCEDURE imm(i, r: LONGINT);
+	PROCEDURE imm(i, r: SIGNED32);
 	BEGIN Hex(ROT(i, -2*r))
 	END imm;
 
-	PROCEDURE PCRelAddr(adr, sign, ofs : LONGINT);
+	PROCEDURE PCRelAddr(adr, sign, ofs : SIGNED32);
 	BEGIN
 		tab; tab; Str("( = "); Int((adr+8)+sign*ofs); Str(" (");  FixHex((adr+8)+sign*ofs); Str("H)  )");
 	END PCRelAddr;
 
-	PROCEDURE decode(adr, code: LONGINT);
-		VAR cc, a, b, c, d, e, f, g, i: LONGINT; regset: SET; sign : LONGINT;
+	PROCEDURE decode(adr, code: SIGNED32);
+		VAR cc, a, b, c, d, e, f, g, i: SIGNED32; regset: SET; sign : SIGNED32;
 	BEGIN
 		g := code MOD 10H; code := code DIV 10H;	(* split instruction *)
 		f := code MOD 10H; code := code DIV 10H;
@@ -338,7 +338,7 @@ BEGIN
 	Texts.SetFont(W, Fonts.This("Courier10.Scn.Fnt"));
 END Init;
 
-PROCEDURE Decode*(pc, code: LONGINT; raw: BOOLEAN);
+PROCEDURE Decode*(pc, code: SIGNED32; raw: BOOLEAN);
 BEGIN
 	IF bigEndian THEN SwapBytes(code); END;
 	FixHex(pc); FixHex(code); Str("    ");
@@ -349,7 +349,7 @@ BEGIN
 END Decode;
 
 PROCEDURE DecodeManual*;
-VAR S: Texts.Scanner; T: Texts.Text; beg, end, time: LONGINT;
+VAR S: Texts.Scanner; T: Texts.Text; beg, end, time: SIGNED32;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	Texts.OpenWriter(W);
@@ -365,8 +365,8 @@ BEGIN
 	Texts.Append(Oberon.Log, W.buf)
 END DecodeManual;
 
-PROCEDURE DecoderPlugin(VAR pc: LONGINT; VAR r: Files.Rider; VAR w: Texts.Writer);
-VAR opcode: LONGINT;
+PROCEDURE DecoderPlugin(VAR pc: SIGNED32; VAR r: Files.Rider; VAR w: Texts.Writer);
+VAR opcode: SIGNED32;
 BEGIN
 	W := w;
 	Files.ReadLInt(r, opcode);
@@ -376,13 +376,13 @@ BEGIN
 	INC(pc, 4)
 END DecoderPlugin;
 
-PROCEDURE HeaderCallback(VAR dataSize, constSize, codeSize: LONGINT);
+PROCEDURE HeaderCallback(VAR dataSize, constSize, codeSize: SIGNED32);
 BEGIN
 	codeSize := codeSize * 4
 END HeaderCallback;
 
 PROCEDURE DecodeRaw*; (** [base address] ("^" | filename) *)
-VAR S: Texts.Scanner; w: Texts.Writer; T: Texts.Text; beg, end, time, pc, opcode: LONGINT; f: Files.File; R: Files.Rider;
+VAR S: Texts.Scanner; w: Texts.Writer; T: Texts.Text; beg, end, time, pc, opcode: SIGNED32; f: Files.File; R: Files.Rider;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	Texts.OpenWriter(w);
@@ -476,7 +476,7 @@ BEGIN
 	bigEndian := FALSE;
 END SetLittleEndian;
 
-PROCEDURE SwapBytes(VAR code: LONGINT);
+PROCEDURE SwapBytes(VAR code: SIGNED32);
 TYPE Opcode = ARRAY 4 OF CHAR;
 VAR opcode: Opcode;
 	tmp: CHAR;
@@ -484,7 +484,7 @@ BEGIN
 	opcode := SYSTEM.VAL(Opcode, code);
 	tmp := opcode[0]; opcode[0] := opcode[3]; opcode[3] := tmp;
 	tmp := opcode[1]; opcode[1] := opcode[2]; opcode[2] := tmp;
-	code := SYSTEM.VAL(LONGINT, opcode);
+	code := SYSTEM.VAL(SIGNED32, opcode);
 END SwapBytes;
 
 BEGIN Initialize;

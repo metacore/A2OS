@@ -34,8 +34,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		any code.
 
 		Assumptions:
-			* CHR(l) = CHR(l MOD 100H) for all l: LONGINT
-			* SIZEOF(LONGINT)=4
+			* CHR(l) = CHR(l MOD 100H) for all l: SIGNED32
+			* SIZEOF(SIGNED32)=4
 	*)
 
 
@@ -61,22 +61,22 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		(** palette structure for indexed formats **)
 		Palette* = OBJECT
 			VAR col*: POINTER TO ARRAY OF Pixel;	(** color table **)
-			used*: LONGINT;	(** number of valid entries in color table **)
-			bits: INTEGER;	(* number of bits used for each component in index *)
+			used*: SIGNED32;	(** number of valid entries in color table **)
+			bits: SIGNED16;	(* number of bits used for each component in index *)
 			index: Colors.Index;	(* inverse color mapping for palette *)
 			PROCEDURE &New*; BEGIN NEW(col,256) END New;
 		END Palette;
 
 		(** image format **)
 		Format0* = RECORD
-			code*: SHORTINT;	(** format code for quick format checks **)
-			bpp*: SHORTINT;	(** number of bits per pixel **)
-			align*: SHORTINT;	(** bytes per row must be multiple of this **)
+			code*: SIGNED8;	(** format code for quick format checks **)
+			bpp*: SIGNED8;	(** number of bits per pixel **)
+			align*: SIGNED8;	(** bytes per row must be multiple of this **)
 			components*: SET;	(** components that are stored in a pixel **)
 			pal*: Palette;	(** optional palette for indexed formats **)
 		END;
 
-		PackProc* = PROCEDURE (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+		PackProc* = PROCEDURE (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 
 		Format* = RECORD (Format0)
 			pack*: PackProc;	(** store supported pixel components at given address **)
@@ -86,9 +86,9 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		(** raster image **)
 		Image* = POINTER TO ImageDesc;
 		ImageDesc* = RECORD (Objects.ObjDesc)
-			width*, height*: INTEGER;	(** image dimensions **)
+			width*, height*: SIGNED16;	(** image dimensions **)
 			fmt*: Format;	(** pixel format **)
-			bpr*: LONGINT;	(** number of bytes per row (may be negative) **)
+			bpr*: SIGNED32;	(** number of bytes per row (may be negative) **)
 			adr*: ADDRESS;	(** address of lower left pixel **)
 			mem*: POINTER TO ARRAY OF CHAR;	(** block where pixels are stored; mem#NIL implies adr=ADR(mem[0]) **)
 		END;
@@ -96,13 +96,13 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		(** transfer mode **)
 		Mode0* = RECORD
 			src*, dst*: Format;	(** source and destination format **)
-			op*: INTEGER;	(** compositing operation **)
+			op*: SIGNED16;	(** compositing operation **)
 			col*: Pixel;	(** substitute color used when transfering from pure alpha formats to colored ones **)
 			buf: Pixel;	(* constant area for special-case moving *)
 			map: POINTER TO ARRAY  OF CHAR;	(* color map for transfer between indexed formats; implementation limit to 256 colors *)
 		END;
 
-		TransferProc* = PROCEDURE (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+		TransferProc* = PROCEDURE (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 
 		Mode* = RECORD (Mode0)
 			transfer*: TransferProc;	(** procedure transfering pixels from source to destination **)
@@ -111,7 +111,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		(** message for updating map rectangle **)
 		UpdateMsg* = RECORD (Display.FrameMsg)
 			img*: Image;	(** affected image **)
-			llx*, lly*, urx*, ury*: INTEGER;	(** area to update within image **)
+			llx*, lly*, urx*, ury*: SIGNED16;	(** area to update within image **)
 		END;
 
 
@@ -132,13 +132,13 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	(**--- Color/Pixel conversions ---**)
 
 	(** set pixel to opaque RGB value **)
-	PROCEDURE SetRGB* (VAR pix: Pixel; red, green, blue: INTEGER);
+	PROCEDURE SetRGB* (VAR pix: Pixel; red, green, blue: SIGNED16);
 	BEGIN
 		pix[b] := CHR(blue); pix[g] := CHR(green); pix[r] := CHR(red); pix[a] := 0FFX
 	END SetRGB;
 
 	(** set pixel to partly transparent RGB value **)
-	PROCEDURE SetRGBA* (VAR pix: Pixel; red, green, blue, alpha: INTEGER);
+	PROCEDURE SetRGBA* (VAR pix: Pixel; red, green, blue, alpha: SIGNED16);
 	BEGIN
 		pix[b] := CHR(LONG(blue) * alpha DIV 255);
 		pix[g] := CHR(LONG(green) * alpha DIV 255);
@@ -147,7 +147,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END SetRGBA;
 
 	(** retrieve RGB and alpha values from pixel **)
-	PROCEDURE GetRGBA* (pix: Pixel; VAR red, green, blue, alpha: INTEGER);
+	PROCEDURE GetRGBA* (pix: Pixel; VAR red, green, blue, alpha: SIGNED16);
 	BEGIN
 		alpha := ORD(pix[a]);
 		IF alpha = 0 THEN	(* color has disappeared *)
@@ -155,9 +155,9 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		ELSE
 			red := ORD(pix[r]); green := ORD(pix[g]); blue := ORD(pix[b]);
 			IF alpha # 255 THEN	(* un-multiply alpha *)
-				red := SHORT(LONGINT(255) * red DIV alpha); IF red > 255 THEN red := 255 END;
-				green := SHORT(LONGINT(255) * green DIV alpha); IF green > 255 THEN green := 255 END;
-				blue := SHORT(LONGINT(255) * blue DIV alpha); IF blue > 255 THEN blue := 255 END
+				red := SHORT(SIGNED32(255) * red DIV alpha); IF red > 255 THEN red := 255 END;
+				green := SHORT(SIGNED32(255) * green DIV alpha); IF green > 255 THEN green := 255 END;
+				blue := SHORT(SIGNED32(255) * blue DIV alpha); IF blue > 255 THEN blue := 255 END
 			END
 		END
 	END GetRGBA;
@@ -166,14 +166,14 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	(**--- Palettes ---**)
 
 	(** return index of color in palette which approximates the requested color reasonably well **)
-	PROCEDURE PaletteIndex* (pal: Palette; red, green, blue: INTEGER): LONGINT;
+	PROCEDURE PaletteIndex* (pal: Palette; red, green, blue: SIGNED16): SIGNED32;
 	BEGIN
 		RETURN Colors.Match(pal.index, pal.bits, red, green, blue)
 	END PaletteIndex;
 
 	(** compute internal palette structures whenever palette colors have been modified **)
-	PROCEDURE InitPalette* (pal: Palette; used: LONGINT; bits: INTEGER);
-		VAR n: LONGINT; alpha: INTEGER; red, green, blue: POINTER TO ARRAY OF INTEGER;
+	PROCEDURE InitPalette* (pal: Palette; used: SIGNED32; bits: SIGNED16);
+		VAR n: SIGNED32; alpha: SIGNED16; red, green, blue: POINTER TO ARRAY OF SIGNED16;
 	BEGIN
 		IF (pal.col = NIL) OR (LEN(pal.col) < used) THEN NEW(pal.col, used) END;
 		NEW(red, used); NEW(green, used); NEW(blue, used);
@@ -187,7 +187,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END InitPalette;
 
 	(** compute and initialize a pseudo-optimal palette for an image (in hi-color or true-color format) **)
-	PROCEDURE ComputePalette* (img: Image; pal: Palette; reservedcols, maxcols: LONGINT; bits: INTEGER);
+	PROCEDURE ComputePalette* (img: Image; pal: Palette; reservedcols, maxcols: SIGNED32; bits: SIGNED16);
 		(*
 			uses octree-quantization
 		*)
@@ -197,16 +197,16 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 				dsc: ARRAY 8 OF Node;	(* descendants *)
 				link: Node;	(* next reducible node on same level *)
 				leaf: BOOLEAN;
-				weight: LONGINT;	(* accumulated number of pixels represented by this node *)
-				r, g, b: LONGINT;	(* accumulated color values *)
+				weight: SIGNED32;	(* accumulated number of pixels represented by this node *)
+				r, g, b: SIGNED32;	(* accumulated color values *)
 			END;
 
 		VAR
-			sent, root: Node; reducible: ARRAY 8 OF Node; colors, maxDepth, y, x: INTEGER; used: LONGINT;
-			adr, aa: ADDRESS; bb: LONGINT; pix: Pixel;
+			sent, root: Node; reducible: ARRAY 8 OF Node; colors, maxDepth, y, x: SIGNED16; used: SIGNED32;
+			adr, aa: ADDRESS; bb: SIGNED32; pix: Pixel;
 
-		PROCEDURE insert (VAR node: Node; depth: INTEGER; pix: Pixel);
-			VAR idx, bit: INTEGER;
+		PROCEDURE insert (VAR node: Node; depth: SIGNED16; pix: Pixel);
+			VAR idx, bit: SIGNED16;
 		BEGIN
 			IF node = NIL THEN
 				NEW(node);
@@ -233,14 +233,14 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END insert;
 
 		PROCEDURE reduce;
-			VAR d, n, i: INTEGER; node, prev, dsc: Node; min: LONGINT;
+			VAR d, n, i: SIGNED16; node, prev, dsc: Node; min: SIGNED32;
 		BEGIN
 			d := maxDepth-1;
 			WHILE reducible[d] = NIL DO
 				DEC(d); DEC(maxDepth)
 			END;
 			sent.link := reducible[d];
-			node := sent; min := MAX(LONGINT);
+			node := sent; min := MAX(SIGNED32);
 			WHILE node.link # NIL DO
 				IF node.link.weight < min THEN
 					min := node.link.weight; prev := node
@@ -263,7 +263,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END reduce;
 
 		PROCEDURE traverse (node: Node);
-			VAR i: INTEGER;
+			VAR i: SIGNED16;
 		BEGIN
 			IF node # NIL THEN
 				IF node.leaf THEN
@@ -318,7 +318,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	(**--- Formats ---**)
 
 	(* A1 - one bit alpha, MSB leftmost *)
-	PROCEDURE PackA1 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE PackA1 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 		VAR b: CHAR;
 	BEGIN
 		SYSTEM.GET(adr, b);
@@ -327,7 +327,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END PackA1;
 
-	PROCEDURE UnpackA1 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE UnpackA1 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 		VAR b: CHAR;
 	BEGIN
 		SYSTEM.GET(adr, b);
@@ -337,13 +337,13 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END UnpackA1;
 
 	(* A8 - 8 bit alpha *)
-	PROCEDURE PackA8 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE PackA8 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 	BEGIN
 		SYSTEM.PUT(adr, pix[a])
 	END PackA8;
 
-	PROCEDURE UnpackA8 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
-		VAR alpha: LONGINT;
+	PROCEDURE UnpackA8 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
+		VAR alpha: SIGNED32;
 	BEGIN
 		SYSTEM.GET(adr, pix[a]);
 		IF pix[a] = 0X THEN
@@ -357,49 +357,49 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END UnpackA8;
 
 	(* P8 - 8 bit indexed format with custom palette *)
-	PROCEDURE PackP8 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE PackP8 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 	BEGIN
 		IF pix[a] # 0X THEN	(* model alpha as brightness *)
 			SYSTEM.PUT(adr, CHR(PaletteIndex(fmt.pal, ORD(pix[r]), ORD(pix[g]), ORD(pix[b]))))
 		END
 	END PackP8;
 
-	PROCEDURE UnpackP8 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE UnpackP8 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 		VAR idx: CHAR;
 	BEGIN
 		SYSTEM.GET(adr, idx); pix := fmt.pal.col[ORD(idx)]
 	END UnpackP8;
 
 	(* D8 - 8 bit indexed format with display palette *)
-	PROCEDURE PackD8 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE PackD8 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 	BEGIN
 		IF pix[a] # 0X THEN	(* model alpha as brightness *)
 			SYSTEM.PUT(adr, CHR(Colors.Match(Colors.DisplayIndex, Colors.DisplayBits, ORD(pix[r]), ORD(pix[g]), ORD(pix[b]))))
 		END
 	END PackD8;
 
-	PROCEDURE UnpackD8 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE UnpackD8 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 		VAR idx: CHAR;
 	BEGIN
 		SYSTEM.GET(adr, idx); SetRGB(pix, Colors.Red[ORD(idx)], Colors.Green[ORD(idx)], Colors.Blue[ORD(idx)])
 	END UnpackD8;
 
 	(* P16 - 16 bit indexed format with custom palette *)
-	PROCEDURE PackP16 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE PackP16 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 	BEGIN
 		IF pix[a] # 0X THEN	(* model alpha as brightness *)
-			SYSTEM.PUT16(adr, PaletteIndex(fmt.pal, ORD(pix[r]), ORD(pix[g]), ORD(pix[b])))	(*INTEGER*)
+			SYSTEM.PUT16(adr, PaletteIndex(fmt.pal, ORD(pix[r]), ORD(pix[g]), ORD(pix[b])))	(*SIGNED16*)
 		END
 	END PackP16;
 
-	PROCEDURE UnpackP16 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE UnpackP16 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 	BEGIN
 		pix := fmt.pal.col[LONG(SYSTEM.GET16(adr)) MOD 1000H] 	(*unsigned 16 bit entity*)
 	END UnpackP16;
 
 	(* BGR555 - 16 hi-color with 5 bit blue, 5 bit green and 5 bit red in ascending order *)
-	PROCEDURE PackBGR555 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
-		VAR int: LONGINT;
+	PROCEDURE PackBGR555 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
+		VAR int: SIGNED32;
 	BEGIN
 		IF pix[a] # 0X THEN	(* model alpha as brightness *)
 			int := ASH(ORD(pix[b]), -3) + ASH(ASH(ORD(pix[g]), -3), 5) + ASH(ASH(ORD(pix[r]), -3), 10);
@@ -407,8 +407,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END PackBGR555;
 
-	PROCEDURE UnpackBGR555 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
-		VAR lo, hi: CHAR; int: LONGINT;
+	PROCEDURE UnpackBGR555 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
+		VAR lo, hi: CHAR; int: SIGNED32;
 	BEGIN
 		SYSTEM.GET(adr, lo); SYSTEM.GET(adr+1, hi); int := ASH(ORD(hi), 8) + ORD(lo);
 		pix[b] := CHR(ASH(int MOD 20H, 3) + 4);
@@ -418,8 +418,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END UnpackBGR555;
 
 	(* BGR565 - 16 hi-color with 5 bit blue, 6 bit green and 5 bit red in ascending order *)
-	PROCEDURE PackBGR565 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
-		VAR int: LONGINT;
+	PROCEDURE PackBGR565 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
+		VAR int: SIGNED32;
 	BEGIN
 		IF pix[a] # 0X THEN	(* model alpha as brightness *)
 			int := ASH(ORD(pix[b]), -3) + ASH(ASH(ORD(pix[g]), -2), 5) + ASH(ASH(ORD(pix[r]), -3), 11);
@@ -427,8 +427,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END PackBGR565;
 
-	PROCEDURE UnpackBGR565 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
-		VAR lo, hi: CHAR; int: LONGINT;
+	PROCEDURE UnpackBGR565 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
+		VAR lo, hi: CHAR; int: SIGNED32;
 	BEGIN
 		SYSTEM.GET(adr, lo); SYSTEM.GET(adr+1, hi); int := ASH(ORD(hi), 8) + ORD(lo);
 		pix[b] := CHR(ASH(int MOD 20H, 3) + 4);
@@ -438,8 +438,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END UnpackBGR565;
 
 	(* BGR466 - 16 hi-color with 4 bit blue, 6 bit green and 6 bit red in ascending order *)
-	PROCEDURE PackBGR466 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
-		VAR int: LONGINT;
+	PROCEDURE PackBGR466 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
+		VAR int: SIGNED32;
 	BEGIN
 		IF pix[a] # 0X THEN	(* model alpha as brightness *)
 			int := ASH(ORD(pix[b]), -4) + ASH(ASH(ORD(pix[g]), -2), 4) + ASH(ASH(ORD(pix[r]), -2), 10);
@@ -447,8 +447,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END PackBGR466;
 
-	PROCEDURE UnpackBGR466 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
-		VAR lo, hi: CHAR; int: LONGINT;
+	PROCEDURE UnpackBGR466 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
+		VAR lo, hi: CHAR; int: SIGNED32;
 	BEGIN
 		SYSTEM.GET(adr, lo); SYSTEM.GET(adr+1, hi); int := ASH(ORD(hi), 8) + ORD(lo);
 		pix[b] := CHR(ASH(int MOD 10H, 4) + 8);
@@ -458,31 +458,31 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END UnpackBGR466;
 
 	(* BGR888 - 24 bit true color with blue in lower, green in middle, and red in upper byte *)
-	PROCEDURE PackBGR888 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE PackBGR888 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 	BEGIN
 		IF pix[a] # 0X THEN	(* model alpha as brightness *)
 			SYSTEM.MOVE(ADDRESSOF(pix[0]), adr, 3)
 		END
 	END PackBGR888;
 
-	PROCEDURE UnpackBGR888 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE UnpackBGR888 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 	BEGIN
 		SYSTEM.MOVE(adr, ADDRESSOF(pix[0]), 3); pix[a] := 0FFX
 	END UnpackBGR888;
 
 	(* BGRA8888 - 32 bit true color with blue in lowest, green in lower middle, red in upper middle, and alpha in top byte *)
-	PROCEDURE PackBGRA8888 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE PackBGRA8888 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 	BEGIN
 		SYSTEM.MOVE(ADDRESSOF(pix[0]), adr, 4)
 	END PackBGRA8888;
 
-	PROCEDURE UnpackBGRA8888 (VAR fmt: Format0; adr: ADDRESS; bit: LONGINT; VAR pix: Pixel);
+	PROCEDURE UnpackBGRA8888 (VAR fmt: Format0; adr: ADDRESS; bit: SIGNED32; VAR pix: Pixel);
 	BEGIN
 		SYSTEM.MOVE(adr, ADDRESSOF(pix[0]), 4)
 	END UnpackBGRA8888;
 
 	(** initialize format **)
-	PROCEDURE InitFormat* (VAR fmt: Format; code, bpp, align: SHORTINT; comps: SET; pal: Palette; pack, unpack: PackProc);
+	PROCEDURE InitFormat* (VAR fmt: Format; code, bpp, align: SIGNED8; comps: SET; pal: Palette; pack, unpack: PackProc);
 	BEGIN
 		fmt.code := code; fmt.bpp := bpp; fmt.align := align; fmt.components := comps; fmt.pal := pal;
 		fmt.pack := pack; fmt.unpack := unpack
@@ -516,14 +516,14 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	(**--- Images ---**)
 
 	(** initialize custom image **)
-	PROCEDURE Init* (img: Image; width, height: INTEGER; VAR fmt: Format; bpr: LONGINT; adr: ADDRESS);
+	PROCEDURE Init* (img: Image; width, height: SIGNED16; VAR fmt: Format; bpr: SIGNED32; adr: ADDRESS);
 	BEGIN
 		ASSERT((width > 0) & (height > 0), 100);
 		img.handle := Handle; img.width := width; img.height := height; img.fmt := fmt; img.bpr := bpr; img.adr := adr
 	END Init;
 
 	(** initialize custom image on byte buffer **)
-	PROCEDURE InitBuf* (img: Image; width, height: INTEGER; VAR fmt: Format; bpr, offset: LONGINT; VAR buf: ARRAY OF CHAR);
+	PROCEDURE InitBuf* (img: Image; width, height: SIGNED16; VAR fmt: Format; bpr, offset: SIGNED32; VAR buf: ARRAY OF CHAR);
 	BEGIN
 		ASSERT((0 <= offset) & (offset + height * ABS(bpr) <= LEN(buf)), 100);
 		IF bpr >= 0 THEN Init(img, width, height, fmt, bpr, ADDRESSOF(buf[0]))
@@ -532,7 +532,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END InitBuf;
 
 	(** initialize image on rectangular area within existing image (lower left corner must fall on byte boundary) **)
-	PROCEDURE InitRect* (img, base: Image; x, y, w, h: INTEGER);
+	PROCEDURE InitRect* (img, base: Image; x, y, w, h: SIGNED16);
 	BEGIN
 		ASSERT((0 <= x) & (x + w <= base.width) & (0 <= y) & (y + h <= base.height), 100);
 		ASSERT(x * base.fmt.bpp MOD 8 = 0, 101);
@@ -540,8 +540,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END InitRect;
 
 	(** create image in requested format (allocating or reusing necessary memory) **)
-	PROCEDURE Create* (img: Image; width, height: INTEGER; VAR fmt: Format);
-		VAR size: LONGINT; a0, a1: ADDRESS;
+	PROCEDURE Create* (img: Image; width, height: SIGNED16; VAR fmt: Format);
+		VAR size: SIGNED32; a0, a1: ADDRESS;
 	BEGIN
 		ASSERT((width > 0) & (height > 0), 100);
 		img.handle := Handle;
@@ -557,14 +557,14 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		ELSE
 			a0 := ADDRESSOF(img.mem[0]); a1 := a0 + size;
 			WHILE a0 # a1 DO
-				SYSTEM.PUT(a0, LONG(LONG(0))); INC(a0, SIZEOF(LONGINT))
+				SYSTEM.PUT(a0, LONG(LONG(0))); INC(a0, SIZEOF(SIGNED32))
 			END
 		END;
 		img.adr := ADDRESSOF(img.mem[0])
 	END Create;
 
 	PROCEDURE GetExtension (VAR name, ext: ARRAY OF CHAR);
-		VAR i, j: LONGINT; ch: CHAR;
+		VAR i, j: SIGNED32; ch: CHAR;
 	BEGIN
 		i := 0; j := 0;
 		WHILE name[i] # 0X DO
@@ -578,7 +578,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END GetExtension;
 
 	PROCEDURE Install (VAR s: Texts.Scanner; VAR ext: ARRAY OF CHAR);
-		VAR str: ARRAY 64 OF CHAR; res: INTEGER;
+		VAR str: ARRAY 64 OF CHAR; res: SIGNED16;
 	BEGIN
 		ASSERT(s.class IN {Texts.Name, Texts.String});
 		COPY(s.s, str); Texts.Scan(s);
@@ -649,7 +649,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	(**--- Transfer Modes ---**)
 
 	(** initialize transfer mode **)
-	PROCEDURE InitMode* (VAR mode: Mode; op: INTEGER);
+	PROCEDURE InitMode* (VAR mode: Mode; op: SIGNED16);
 	BEGIN
 		mode.op := op;
 		SetRGB(mode.col, 255, 255, 255);
@@ -660,7 +660,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END InitMode;
 
 	(** initialize transfer mode with color components for pure alpha sources **)
-	PROCEDURE InitModeColor* (VAR mode: Mode; op, red, green, blue: INTEGER);
+	PROCEDURE InitModeColor* (VAR mode: Mode; op, red, green, blue: SIGNED16);
 	BEGIN
 		mode.op := op;
 		SetRGB(mode.col, red, green, blue);
@@ -671,7 +671,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END InitModeColor;
 
 	(** set new source color for transfer mode **)
-	PROCEDURE SetModeColor* (VAR mode: Mode; red, green, blue: INTEGER);
+	PROCEDURE SetModeColor* (VAR mode: Mode; red, green, blue: SIGNED16);
 	BEGIN
 		SetRGB(mode.col, red, green, blue);
 		IF (mode.src.pal # NIL) & ((mode.map = NIL) OR (LEN(mode.map^) # mode.src.pal.used)) THEN
@@ -681,8 +681,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END SetModeColor;
 
 	(** blend source pixel into destination pixel according to compositing operation **)
-	PROCEDURE Blend* (op: INTEGER; VAR src, dst: Pixel);
-		VAR fs, fd, i: LONGINT;
+	PROCEDURE Blend* (op: SIGNED16; VAR src, dst: Pixel);
+		VAR fs, fd, i: SIGNED32;
 	BEGIN
 		CASE op OF
 		| clear: fs := 0; fd := 0
@@ -725,7 +725,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 	(*--- General Transfer ---*)
 
-	PROCEDURE AnyBlendAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyBlendAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR spix, dpix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -742,8 +742,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 	(*--- clear ---*)
 
-	PROCEDURE ClearAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
-		VAR inc: LONGINT;
+	PROCEDURE ClearAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
+		VAR inc: SIGNED32;
 	BEGIN
 		IF mode.dst.bpp MOD 8 = 0 THEN
 			inc := mode.dst.bpp DIV 8;
@@ -760,7 +760,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END ClearAny;
 
-	PROCEDURE Clear1 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Clear1 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR out: CHAR;
 	BEGIN
 		IF (dbit > 0) OR (len < 8) THEN
@@ -787,7 +787,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END Clear1;
 
-	PROCEDURE ClearBytes (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE ClearBytes (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		len := len * mode.dst.bpp DIV 8;
 		WHILE len >= 4 DO
@@ -802,7 +802,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	(*--- srcCopy Transfer ---*)
 
 	(* constant values *)
-	PROCEDURE Set1 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Set1 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR out: CHAR;
 	BEGIN
 		IF (dbit > 0) OR (len < 8) THEN
@@ -827,21 +827,21 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END Set1;
 
-	PROCEDURE ConstCopy8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE ConstCopy8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		WHILE len > 0 DO
 			SYSTEM.PUT(dadr, mode.buf[0]); INC(dadr); DEC(len)
 		END
 	END ConstCopy8;
 
-	PROCEDURE ConstCopy16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE ConstCopy16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		WHILE len > 0 DO
 			SYSTEM.MOVE(ADDRESSOF(mode.buf[0]), dadr, 2); INC(dadr, 2); DEC(len)
 		END
 	END ConstCopy16;
 
-	PROCEDURE ConstCopy24 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE ConstCopy24 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		WHILE len > 0 DO
 			SYSTEM.MOVE(ADDRESSOF(mode.buf[0]), dadr, 3); INC(dadr, 3); DEC(len)
@@ -850,7 +850,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 
 	(* identical formats *)
-	PROCEDURE Copy1 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Copy1 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in, out: CHAR;
 	BEGIN
 		SYSTEM.GET(sadr, in);
@@ -884,12 +884,12 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END Copy1;
 
-	PROCEDURE Copy8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Copy8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		SYSTEM.MOVE(sadr, dadr, len)
 	END Copy8;
 
-	PROCEDURE I8CopyI8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE I8CopyI8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR byte: CHAR;
 	BEGIN
 		WHILE len > 0 DO
@@ -898,24 +898,24 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END I8CopyI8;
 
-	PROCEDURE Copy16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Copy16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		SYSTEM.MOVE(sadr, dadr, 2*len)
 	END Copy16;
 
-	PROCEDURE Copy24 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Copy24 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		SYSTEM.MOVE(sadr, dadr, 3*len)
 	END Copy24;
 
-	PROCEDURE Copy32 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Copy32 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		SYSTEM.MOVE(sadr, dadr, 4*len)
 	END Copy32;
 
 
 	(* general methods *)
-	PROCEDURE AnyCopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyCopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -928,8 +928,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END AnyCopyAny;
 
-	PROCEDURE AnyBytesCopyAnyBytes (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
-		VAR sinc, dinc: LONGINT; pix: Pixel;
+	PROCEDURE AnyBytesCopyAnyBytes (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
+		VAR sinc, dinc: SIGNED32; pix: Pixel;
 	BEGIN
 		sinc := mode.src.bpp DIV 8; dinc := mode.dst.bpp DIV 8;
 		WHILE len > 0 DO
@@ -942,7 +942,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 
 	(* A1 *)
-	PROCEDURE AnyCopyA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyCopyA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR out: CHAR; pix: Pixel;
 	BEGIN
 		SYSTEM.GET(dadr, out); pix[a] := 0FFX;
@@ -960,7 +960,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		SYSTEM.PUT(dadr, out)
 	END AnyCopyA1;
 
-	PROCEDURE A8CopyA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A8CopyA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR out, in: CHAR;
 	BEGIN
 		IF (dbit > 0) OR (len < 8) THEN
@@ -985,7 +985,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END A8CopyA1;
 
-	PROCEDURE BGRA8888CopyA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGRA8888CopyA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR out, in: CHAR;
 	BEGIN
 		INC(sadr, a);	(* only look at alpha component *)
@@ -1011,7 +1011,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGRA8888CopyA1;
 
-	PROCEDURE A1CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A1CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in: CHAR;
 	BEGIN
 		SYSTEM.GET(sadr, in);
@@ -1027,7 +1027,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END A1CopyAny;
 
-	PROCEDURE A1CopyA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A1CopyA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in: CHAR;
 	BEGIN
 		SYSTEM.GET(sadr, in);
@@ -1043,7 +1043,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END A1CopyA8;
 
-	PROCEDURE A1CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A1CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel; in: CHAR;
 	BEGIN
 		pix := mode.buf;
@@ -1063,7 +1063,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 
 	(* A8 *)
-	PROCEDURE AnyCopyA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyCopyA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		pix[a] := 0FFX;
@@ -1074,7 +1074,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END AnyCopyA8;
 
-	PROCEDURE BGRA8888CopyA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGRA8888CopyA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR byte: CHAR;
 	BEGIN
 		INC(sadr, 3);
@@ -1085,7 +1085,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGRA8888CopyA8;
 
-	PROCEDURE A8CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A8CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		pix := mode.buf;
@@ -1098,7 +1098,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 
 	(* P8 *)
-	PROCEDURE AnyCopyP8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyCopyP8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1109,7 +1109,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END AnyCopyP8;
 
-	PROCEDURE Any16CopyP8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Any16CopyP8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1119,7 +1119,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END Any16CopyP8;
 
-	PROCEDURE BGR888CopyP8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGR888CopyP8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1129,7 +1129,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGR888CopyP8;
 
-	PROCEDURE BGRA8888CopyP8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGRA8888CopyP8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1139,7 +1139,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGRA8888CopyP8;
 
-	PROCEDURE P8CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE P8CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR b: CHAR;
 	BEGIN
 		WHILE len > 0 DO
@@ -1149,7 +1149,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END P8CopyAny;
 
-	PROCEDURE P8CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE P8CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR b: CHAR;
 	BEGIN
 		WHILE len > 0 DO
@@ -1159,7 +1159,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END P8CopyAny16;
 
-	PROCEDURE P8CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE P8CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR b: CHAR;
 	BEGIN
 		WHILE len > 0 DO
@@ -1169,7 +1169,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END P8CopyBGR888;
 
-	PROCEDURE P8CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE P8CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR b: CHAR;
 	BEGIN
 		WHILE len > 0 DO
@@ -1181,7 +1181,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 
 	(* D8 *)
-	PROCEDURE AnyCopyD8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyCopyD8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1192,7 +1192,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END AnyCopyD8;
 
-	PROCEDURE Any16CopyD8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Any16CopyD8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1202,7 +1202,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END Any16CopyD8;
 
-	PROCEDURE BGR888CopyD8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGR888CopyD8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1212,7 +1212,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGR888CopyD8;
 
-	PROCEDURE BGRA8888CopyD8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGRA8888CopyD8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1222,7 +1222,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGRA8888CopyD8;
 
-	PROCEDURE D8CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE D8CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel; byte: CHAR;
 	BEGIN
 		pix[a] := 0FFX;
@@ -1234,7 +1234,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END D8CopyAny;
 
-	PROCEDURE D8CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE D8CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel; byte: CHAR;
 	BEGIN
 		pix[a] := 0FFX;
@@ -1246,7 +1246,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END D8CopyAny16;
 
-	PROCEDURE D8CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE D8CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR byte: CHAR; pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1257,7 +1257,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END D8CopyBGR888;
 
-	PROCEDURE D8CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE D8CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel; byte: CHAR;
 	BEGIN
 		pix[a] := 0FFX;
@@ -1271,7 +1271,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 (*
 	(* P816*)
-	PROCEDURE AnyCopyP16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyCopyP16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1282,7 +1282,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END AnyCopyP16;
 
-	PROCEDURE Any16CopyP16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Any16CopyP16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1292,7 +1292,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END Any16CopyP16;
 
-	PROCEDURE BGR888CopyP16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGR888CopyP16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1302,7 +1302,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGR888CopyP16;
 
-	PROCEDURE BGRA8888CopyP16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGRA8888CopyP16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1312,7 +1312,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGRA8888CopyP16;
 
-	PROCEDURE P16CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE P16CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		WHILE len > 0 DO
 			mode.dst.pack(mode.dst, dadr, dbit, mode.src.pal.col[LONG(SYSTEM.GET16(sadr)) MOD 10000H]);
@@ -1320,7 +1320,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END P16CopyAny;
 
-	PROCEDURE P16CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE P16CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		WHILE len > 0 DO
 			mode.dst.pack(mode.dst, dadr, 0, mode.src.pal.col[LONG(SYSTEM.GET16(sadr)) MOD 10000H]);
@@ -1328,7 +1328,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END P16CopyAny16;
 
-	PROCEDURE P16CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE P16CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		WHILE len > 0 DO
 			SYSTEM.MOVE(ADDRESSOF(mode.src.pal.col[LONG(SYSTEM.GET16(sadr)) MOD 10000H]), dadr, 3);
@@ -1336,7 +1336,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END P16CopyBGR888;
 
-	PROCEDURE P16CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE P16CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		WHILE len > 0 DO
 			SYSTEM.MOVE(ADDRESSOF(mode.src.pal.col[LONG(SYSTEM.GET16(sadr)) MOD 10000H]), dadr, 4);
@@ -1346,7 +1346,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 *)
 
 	(* BGR555, BGR565, BGR466 *)
-	PROCEDURE AnyCopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyCopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1357,7 +1357,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END AnyCopyAny16;
 
-	PROCEDURE Any16CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Any16CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1367,7 +1367,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END Any16CopyAny16;
 
-	PROCEDURE BGR888CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGR888CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		pix[a] := 0FFX;
@@ -1378,7 +1378,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGR888CopyAny16;
 
-	PROCEDURE BGRA8888CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGRA8888CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1388,7 +1388,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGRA8888CopyAny16;
 
-	PROCEDURE Any16CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Any16CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1398,7 +1398,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END Any16CopyAny;
 
-	PROCEDURE Any16CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Any16CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1408,7 +1408,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END Any16CopyBGR888;
 
-	PROCEDURE Any16CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE Any16CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1420,7 +1420,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 
 	(* BGR888 *)
-	PROCEDURE AnyCopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyCopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1431,7 +1431,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END AnyCopyBGR888;
 
-	PROCEDURE BGRA8888CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGRA8888CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		WHILE len > 0 DO
 			SYSTEM.MOVE(sadr, dadr, 3);
@@ -1439,7 +1439,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGRA8888CopyBGR888;
 
-	PROCEDURE BGR888CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGR888CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		pix[a] := 0FFX;
@@ -1450,7 +1450,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGR888CopyAny;
 
-	PROCEDURE BGR888CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGR888CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	BEGIN
 		WHILE len > 0 DO
 			SYSTEM.MOVE(sadr, dadr, 3); SYSTEM.PUT(dadr+3, 0FFX);
@@ -1460,7 +1460,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 
 	(* BGRA8888 *)
-	PROCEDURE AnyCopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyCopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1471,7 +1471,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END AnyCopyBGRA8888;
 
-	PROCEDURE BGRA8888CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGRA8888CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1484,14 +1484,14 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 	(*--- dstCopy Transfer ---*)
 
-	PROCEDURE EmptyTransfer (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE EmptyTransfer (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 	END EmptyTransfer;
 
 
 	(*--- srcOverDst Transfer ---*)
 
 	(* A1 *)
-	PROCEDURE AnyOverA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyOverA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR out: CHAR; pix: Pixel;
 	BEGIN
 		SYSTEM.GET(dadr, out);
@@ -1510,7 +1510,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		SYSTEM.PUT(dadr, out)
 	END AnyOverA1;
 
-	PROCEDURE A1OverA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A1OverA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in, out: CHAR;
 	BEGIN
 		SYSTEM.GET(sadr, in); SYSTEM.GET(dadr, out);
@@ -1532,7 +1532,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		SYSTEM.PUT(dadr, out)
 	END A1OverA1;
 
-	PROCEDURE A8OverA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A8OverA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in, out: CHAR;
 	BEGIN
 		SYSTEM.GET(dadr, out);
@@ -1551,7 +1551,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		SYSTEM.PUT(dadr, out)
 	END A8OverA1;
 
-	PROCEDURE BGRA8888OverA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGRA8888OverA1 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in, out: CHAR;
 	BEGIN
 		SYSTEM.GET(dadr, out);
@@ -1570,7 +1570,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		SYSTEM.PUT(dadr, out)
 	END BGRA8888OverA1;
 
-	PROCEDURE A1OverAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A1OverAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in: CHAR;
 	BEGIN
 		SYSTEM.GET(sadr, in);
@@ -1586,7 +1586,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END A1OverAny;
 
-	PROCEDURE A1OverConst8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A1OverConst8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in: CHAR;
 	BEGIN
 		SYSTEM.GET(sadr, in);
@@ -1602,7 +1602,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END A1OverConst8;
 
-	PROCEDURE A1OverConst16 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A1OverConst16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in: CHAR;
 	BEGIN
 		SYSTEM.GET(sadr, in);
@@ -1618,7 +1618,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END A1OverConst16;
 
-	PROCEDURE A1OverConst24 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A1OverConst24 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in: CHAR;
 	BEGIN
 		SYSTEM.GET(sadr, in);
@@ -1634,7 +1634,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END A1OverConst24;
 
-	PROCEDURE A1OverConst32 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A1OverConst32 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in: CHAR;
 	BEGIN
 		SYSTEM.GET(sadr, in);
@@ -1652,7 +1652,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 
 	(* A8 *)
-	PROCEDURE AnyOverA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyOverA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR pix: Pixel; b: CHAR;
 	BEGIN
 		WHILE len > 0 DO
@@ -1667,7 +1667,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END AnyOverA8;
 
-	PROCEDURE A8OverAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A8OverAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR dpix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1684,7 +1684,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END A8OverAny;
 
-	PROCEDURE A8OverA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE A8OverA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in, out: CHAR;
 	BEGIN
 		WHILE len > 0 DO
@@ -1701,7 +1701,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 
 	(* BGRA8888 *)
-	PROCEDURE AnyOverBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE AnyOverBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR spix, dpix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1718,7 +1718,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END AnyOverBGRA8888;
 
-	PROCEDURE BGRA8888OverAny (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGRA8888OverAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR spix, dpix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
@@ -1735,7 +1735,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 		END
 	END BGRA8888OverAny;
 
-	PROCEDURE BGRA8888OverA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: LONGINT; dadr: ADDRESS; dbit, len: LONGINT);
+	PROCEDURE BGRA8888OverA8 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIGNED32; dadr: ADDRESS; dbit, len: SIGNED32);
 		VAR in, out: CHAR;
 	BEGIN
 		WHILE len > 0 DO
@@ -1753,7 +1753,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 	(** find (optimized) pixel transfer procedure for transfer mode and given source and destination formats **)
 	PROCEDURE Bind* (VAR mode: Mode; VAR src, dst: Format);
-		VAR op: INTEGER; i: LONGINT;
+		VAR op: SIGNED16; i: SIGNED32;
 	BEGIN
 		IF Same(src, mode.src) & Same(dst, mode.dst) THEN
 			ASSERT(mode.transfer # NIL, 120);
@@ -1983,8 +1983,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	(**--- Image Operations ---**)
 
 	(** get pixel from image **)
-	PROCEDURE Get* (img: Image; x, y: INTEGER; VAR pix: Pixel; VAR mode: Mode);
-		VAR bit: LONGINT; adr: ADDRESS;
+	PROCEDURE Get* (img: Image; x, y: SIGNED16; VAR pix: Pixel; VAR mode: Mode);
+		VAR bit: SIGNED32; adr: ADDRESS;
 	BEGIN
 		ASSERT((0 <= x) & (x < img.width) & (0 <= y) & (y < img.height), 100);
 		bit := LONG(x) * img.fmt.bpp; adr := img.adr + y * img.bpr + bit DIV 8; bit := bit MOD 8;
@@ -1993,8 +1993,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END Get;
 
 	(** put pixel into image **)
-	PROCEDURE Put* (img: Image; x, y: INTEGER; pix: Pixel; VAR mode: Mode);
-		VAR bit: LONGINT; adr: ADDRESS;
+	PROCEDURE Put* (img: Image; x, y: SIGNED16; pix: Pixel; VAR mode: Mode);
+		VAR bit: SIGNED32; adr: ADDRESS;
 	BEGIN
 		ASSERT((0 <= x) & (x < img.width) & (0 <= y) & (y < img.height), 100);
 		bit := LONG(x) * img.fmt.bpp; adr := img.adr + y * img.bpr + bit DIV 8; bit := bit MOD 8;
@@ -2003,8 +2003,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END Put;
 
 	(** fill rectangular area **)
-	PROCEDURE Fill* (img: Image; llx, lly, urx, ury: INTEGER; pix: Pixel; VAR mode: Mode);
-		VAR bit, bb: LONGINT; adr, aa: ADDRESS; m: Mode; x: INTEGER;
+	PROCEDURE Fill* (img: Image; llx, lly, urx, ury: SIGNED16; pix: Pixel; VAR mode: Mode);
+		VAR bit, bb: SIGNED32; adr, aa: ADDRESS; m: Mode; x: SIGNED16;
 	BEGIN
 		ASSERT((0 <= llx) & (llx < urx) & (urx <= img.width) & (0 <= lly) & (lly < ury) & (ury <= img.height), 100);
 		bit := LONG(llx) * img.fmt.bpp; adr := img.adr + lly * img.bpr + bit DIV 8; bit := bit MOD 8;
@@ -2058,8 +2058,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END Clear;
 
 	(** get several pixels and store them in array in requested format **)
-	PROCEDURE GetPixels* (img: Image; x, y, w: INTEGER; VAR fmt: Format; VAR buf: ARRAY OF CHAR; VAR mode: Mode);
-		VAR sbit: LONGINT; sadr: ADDRESS;
+	PROCEDURE GetPixels* (img: Image; x, y, w: SIGNED16; VAR fmt: Format; VAR buf: ARRAY OF CHAR; VAR mode: Mode);
+		VAR sbit: SIGNED32; sadr: ADDRESS;
 	BEGIN
 		ASSERT((0 <= x) & (x + w <= img.width) & (0 <= y) & (y <= img.height), 100);
 		ASSERT(LONG(w) * fmt.bpp DIV 8 <= LEN(buf), 101);
@@ -2069,8 +2069,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END GetPixels;
 
 	(** put several pixels from array in given format into image **)
-	PROCEDURE PutPixels* (img: Image; x, y, w: INTEGER; VAR fmt: Format; VAR buf: ARRAY OF CHAR; VAR mode: Mode);
-		VAR dbit: LONGINT; dadr: ADDRESS;
+	PROCEDURE PutPixels* (img: Image; x, y, w: SIGNED16; VAR fmt: Format; VAR buf: ARRAY OF CHAR; VAR mode: Mode);
+		VAR dbit: SIGNED32; dadr: ADDRESS;
 	BEGIN
 		ASSERT((0 <= x) & (x + w <= img.width) & (0 <= y) & (y <= img.height), 100);
 		ASSERT(LONG(w) * fmt.bpp DIV 8 <= LEN(buf), 101);
@@ -2080,8 +2080,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END PutPixels;
 
 	(** copy rectangular area to the same or another image in specified mode **)
-	PROCEDURE Copy* (src, dst: Image; llx, lly, urx, ury, dx, dy: INTEGER; VAR mode: Mode);
-		VAR w, h: INTEGER; sbit, dbit, slen, sb, db, len, l: LONGINT; sadr, dadr, sa, da: ADDRESS;
+	PROCEDURE Copy* (src, dst: Image; llx, lly, urx, ury, dx, dy: SIGNED16; VAR mode: Mode);
+		VAR w, h: SIGNED16; sbit, dbit, slen, sb, db, len, l: SIGNED32; sadr, dadr, sa, da: ADDRESS;
 	BEGIN
 		ASSERT((0 <= llx) & (llx <= urx) & (urx <= src.width) & (0 <= lly) & (lly <= ury) & (ury <= src.height), 100);
 		ASSERT((0 <= dx) & (dx + urx - llx <= dst.width) & (0 <= dy) & (dy + ury - lly <= dst.height), 101);
@@ -2121,8 +2121,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END Copy;
 
 	(** replicate pattern within rectangular area of image using given mode **)
-	PROCEDURE FillPattern* (pat, dst: Image; llx, lly, urx, ury, px, py: INTEGER; VAR mode: Mode);
-		VAR pw, ph, olx, oby, ilx, olw, irw, dy, sy, dx, sx, ty: INTEGER;
+	PROCEDURE FillPattern* (pat, dst: Image; llx, lly, urx, ury, px, py: SIGNED16; VAR mode: Mode);
+		VAR pw, ph, olx, oby, ilx, olw, irw, dy, sy, dx, sx, ty: SIGNED16;
 	BEGIN
 		ASSERT((0 <= llx) & (llx <= urx) & (urx <= dst.width) & (0 <= lly) & (lly <= ury) & (ury <= dst.height), 100);
 		pw := pat.width; ph := pat.height;
@@ -2180,8 +2180,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END FillPattern;
 
 	(** darken image while maintaining coverage **)
-	PROCEDURE Darken* (img: Image; factor: REAL);
-		VAR s, i, j, k, bit: LONGINT; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; y, x: INTEGER; pix: Pixel;
+	PROCEDURE Darken* (img: Image; factor: FLOAT32);
+		VAR s, i, j, k, bit: SIGNED32; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; y, x: SIGNED16; pix: Pixel;
 	BEGIN
 		s := ABS(ENTIER(255*factor + 0.5));
 		IF (s # 255) & (img.fmt.components # {alpha}) THEN
@@ -2206,8 +2206,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END Darken;
 
 	(** fade image **)
-	PROCEDURE Fade* (img: Image; factor: REAL);
-		VAR s, i, j, k, bit: LONGINT; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; y, x: INTEGER; pix: Pixel;
+	PROCEDURE Fade* (img: Image; factor: FLOAT32);
+		VAR s, i, j, k, bit: SIGNED32; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; y, x: SIGNED16; pix: Pixel;
 	BEGIN
 		s := ABS(ENTIER(255*factor + 0.5));
 		IF s = 0 THEN
@@ -2235,8 +2235,8 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END Fade;
 
 	(** make image brighter and more transparent; Opaque(I, f) = Darken(Fade(I, f), 1/f) **)
-	PROCEDURE Opaque* (img: Image; factor: REAL);
-		VAR s, i, j, k, bit: LONGINT; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; y, x: INTEGER; pix: Pixel;
+	PROCEDURE Opaque* (img: Image; factor: FLOAT32);
+		VAR s, i, j, k, bit: SIGNED32; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; y, x: SIGNED16; pix: Pixel;
 	BEGIN
 		s := ABS(ENTIER(255*factor + 0.5));
 		IF s = 0 THEN
@@ -2264,7 +2264,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 	(** add components of two (faded) images **)
 	PROCEDURE Add* (i, j, res: Image);
-		VAR y, x: INTEGER; iadr, jadr, radr: ADDRESS; ibit, jbit, rbit, k: LONGINT; ipix, jpix, rpix: Pixel;
+		VAR y, x: SIGNED16; iadr, jadr, radr: ADDRESS; ibit, jbit, rbit, k: SIGNED32; ipix, jpix, rpix: Pixel;
 	BEGIN
 		ASSERT((i.width = j.width) & (i.height = j.height) & (i.width <= res.width) & (i.height <= res.height), 100);
 		y := 0;
@@ -2288,10 +2288,10 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	(** copy image to another using error diffusion dithering (Floyd-Steinberg) **)
 	PROCEDURE Dither* (src, dst: Image);
 		TYPE
-			error = RECORD r, g, b: INTEGER END;
+			error = RECORD r, g, b: SIGNED16 END;
 		VAR
-			e351: POINTER TO ARRAY OF error; y, x, ex, e, e3, e5: INTEGER;
-			sadr, dadr, sa, da: ADDRESS; sb, db: LONGINT; e7, e51, e1: error; spix, dpix: Pixel;
+			e351: POINTER TO ARRAY OF error; y, x, ex, e, e3, e5: SIGNED16;
+			sadr, dadr, sa, da: ADDRESS; sb, db: SIGNED32; e7, e51, e1: error; spix, dpix: Pixel;
 	BEGIN
 		ASSERT((src.width <= dst.width) & (src.height <= dst.height), 100);
 		NEW(e351, src.width+2);	(* accumulated error for next row *)
@@ -2355,7 +2355,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 	(** write image to file rider **)
 	PROCEDURE Write* (VAR fr: Files.Rider; img: Image);
-		VAR m: Image; h, w, len: LONGINT; adr, aa: ADDRESS; buf: ARRAY 256 OF CHAR;
+		VAR m: Image; h, w, len: SIGNED32; adr, aa: ADDRESS; buf: ARRAY 256 OF CHAR;
 	BEGIN
 		IF ~(img.fmt.code IN {a1..bgra8888, p16}) THEN
 			NEW(m);
@@ -2397,7 +2397,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 	(** read image from file rider **)
 	PROCEDURE Read* (VAR fr: Files.Rider; img: Image);
-		VAR ver, code, w, h, bpr, len: LONGINT; adr, aa: ADDRESS; fmt: Format; buf: ARRAY 256 OF CHAR; used8 : INTEGER; used: LONGINT;
+		VAR ver, code, w, h, bpr, len: SIGNED32; adr, aa: ADDRESS; fmt: Format; buf: ARRAY 256 OF CHAR; used8 : SIGNED16; used: SIGNED32;
 	BEGIN
 		ASSERT(img#NIL,100);
 		Files.ReadNum(fr, ver);	(* only know version 1 & 2, check below *)
@@ -2449,7 +2449,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 
 	(** image handler **)
 	PROCEDURE Handle* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR img, copy: Image; lib: Objects.Library; ref: INTEGER;
+		VAR img, copy: Image; lib: Objects.Library; ref: SIGNED16;
 	BEGIN
 		img := obj(Image);
 		IF msg IS Objects.AttrMsg THEN
@@ -2506,7 +2506,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END New;
 
 	(** update part of an image **)
-	PROCEDURE Update* (img: Image; llx, lly, urx, ury: INTEGER);
+	PROCEDURE Update* (img: Image; llx, lly, urx, ury: SIGNED16);
 		VAR um: UpdateMsg;
 	BEGIN
 		um.F := NIL; um.img := img; um.llx := llx; um.lly := lly; um.urx := urx; um.ury := ury;
@@ -2517,7 +2517,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	(*--- Initialization ---*)
 
 	PROCEDURE InitBitTables;
-		VAR b, i: LONGINT;
+		VAR b, i: SIGNED32;
 	BEGIN
 		FOR b := 0 TO 0FFH DO
 			FOR i := 0 TO 7 DO
@@ -2531,7 +2531,7 @@ MODULE Images IN Oberon; (** non-portable *)	(* eos  **)
 	END InitBitTables;
 
 	PROCEDURE InitClamp;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 1FFH DO Clamp[i] := 0X END;
 		FOR i := 0 TO 0FFH DO Clamp[200H+i] := CHR(i) END;

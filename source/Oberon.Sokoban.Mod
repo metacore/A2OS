@@ -45,26 +45,26 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 			F: Frame
 		END;
 		FrameDesc* = RECORD (Gadgets.FrameDesc)
-			level: INTEGER;
-			world: ARRAY MaxN+2, MaxM+2 OF SHORTINT;
-			mani, manj, oldmani, oldmanj, n, m, moves: INTEGER;
+			level: SIGNED16;
+			world: ARRAY MaxN+2, MaxM+2 OF SIGNED8;
+			mani, manj, oldmani, oldmanj, n, m, moves: SIGNED16;
 			backPictName, wallPictName, parkPictName, userName: ARRAY 32 OF CHAR;
 			backPict, wallPict, parkPict: Pictures.Picture;
 			focus, nameFocus, done, movedCan: BOOLEAN;
-			startTime, time: LONGINT;
+			startTime, time: SIGNED32;
 			task: Task
 		END;
 		UpdateMsg = RECORD (Display.FrameMsg)
 			name, moves, time: BOOLEAN;
-			points: INTEGER;
-			new: ARRAY 4 OF RECORD x, y: INTEGER END
+			points: SIGNED16;
+			new: ARRAY 4 OF RECORD x, y: SIGNED16 END
 		END;
 
 	VAR
-		statusBarH: INTEGER;
+		statusBarH: SIGNED16;
 		W: Texts.Writer;
 
-	PROCEDURE RestoreField(F: Frame; field: SHORTINT; Q: Display3.Mask; x, y, w, h: INTEGER);
+	PROCEDURE RestoreField(F: Frame; field: SIGNED8; Q: Display3.Mask; x, y, w, h: SIGNED16);
 	BEGIN
 		Oberon.RemoveMarks(x, y, w, h);
 		CASE field OF
@@ -89,7 +89,7 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 		END
 	END RestoreField;
 
-	PROCEDURE CalcSize(F: Frame; x, y: INTEGER; VAR xo, yo, dx, dy: INTEGER);
+	PROCEDURE CalcSize(F: Frame; x, y: SIGNED16; VAR xo, yo, dx, dy: SIGNED16);
 	BEGIN
 		dx := (F.W-2*border) DIV F.n;
 		xo := x+border+((F.W-2*border) MOD F.n) DIV 2;
@@ -97,7 +97,7 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 		yo := y+border+statusBarH+((F.H-2*border-statusBarH) MOD F.m) DIV 2
 	END CalcSize;
 
-	PROCEDURE ShowStatus(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER; level, moves, time, name: BOOLEAN);
+	PROCEDURE ShowStatus(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; level, moves, time, name: BOOLEAN);
 		VAR
 			str: ARRAY 8 OF CHAR;
 			Q2: Display3.Mask;
@@ -134,8 +134,8 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 		END
 	END ShowStatus;
 
-	PROCEDURE Restore(F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER);
-		VAR i, j, dx, dy, xo, yo, xi, yj: INTEGER;
+	PROCEDURE Restore(F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16);
+		VAR i, j, dx, dy, xo, yo, xi, yj: SIGNED16;
 	BEGIN
 		IF F.focus & ~F.done THEN
 			CalcSize(F, x, y, xo, yo, dx, dy);
@@ -169,7 +169,7 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 	END Restore;
 
 	PROCEDURE CheckDone(F: Frame);
-		VAR i, j: INTEGER;
+		VAR i, j: SIGNED16;
 	BEGIN
 		FOR i := 1 TO F.n DO
 			FOR j := 1 TO F.m DO
@@ -192,8 +192,8 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 
 	PROCEDURE LoadLevel(F: Frame);
 		VAR
-			i, j, levels: INTEGER;
-			offs: LONGINT;
+			i, j, levels: SIGNED16;
+			offs: SIGNED32;
 			file: Files.File;
 			R: Files.Rider;
 	BEGIN
@@ -251,8 +251,8 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 			W: Texts.Writer;
 			file: Files.File;
 			R: Files.Rider;
-			level, moves: INTEGER;
-			time: LONGINT;
+			level, moves: SIGNED16;
+			time: SIGNED32;
 			name: ARRAY 32 OF CHAR;
 	BEGIN
 		file := Files.Old(HighScores);
@@ -298,8 +298,8 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 			file: Files.File;
 			new: BOOLEAN;
 			R: Files.Rider;
-			level, moves: INTEGER;
-			time, pos: LONGINT;
+			level, moves: SIGNED16;
+			time, pos: SIGNED32;
 			name: ARRAY 32 OF CHAR;
 	BEGIN
 		file := Files.Old(HighScores);
@@ -310,8 +310,8 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 			new := FALSE
 		END;
 		Files.Set(R, file, 0);
-		level := MIN(INTEGER);
-		moves := MIN(INTEGER);
+		level := MIN(SIGNED16);
+		moves := MIN(SIGNED16);
 		pos := 0;
 		WHILE ~R.eof & (level # F.level) DO
 			pos := Files.Pos(R);
@@ -321,7 +321,7 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 				Files.ReadLInt(R, time);
 				Files.ReadBytes(R, name, 32)
 			ELSE
-				level := MIN(INTEGER)
+				level := MIN(SIGNED16)
 			END
 		END;
 		IF new THEN
@@ -376,7 +376,7 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 
 	PROCEDURE MoveMan(F: Frame; ch: CHAR);
 		VAR
-			i, j, ci, cj: INTEGER;
+			i, j, ci, cj: SIGNED16;
 			U: UpdateMsg;
 			movedCan: BOOLEAN;
 	BEGIN
@@ -517,7 +517,7 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 	END MoveMan;
 
 	PROCEDURE Consume(F: Frame; ch: CHAR);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE F.userName[i] # 0X DO
@@ -532,7 +532,7 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 	END Consume;
 
 	PROCEDURE CopyFrame(VAR M: Objects.CopyMsg; F, F1: Frame);
-		VAR i, j: INTEGER;
+		VAR i, j: SIGNED16;
 	BEGIN
 		Gadgets.CopyFrame(M, F, F1);
 		F1.level := F.level;
@@ -577,7 +577,7 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 
 	PROCEDURE Handle*(F: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
-			x, y, w, h, xo, yo, ver, i: INTEGER;
+			x, y, w, h, xo, yo, ver, i: SIGNED16;
 			Q: Display3.Mask;
 			keysum: SET;
 			copy: Frame;
@@ -851,7 +851,7 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 			F: Frame;
 			C: Oberon.CaretMsg;
 			S: Texts.Scanner;
-			level: INTEGER;
+			level: SIGNED16;
 		PROCEDURE Do;
 		BEGIN
 			IF level > 0 THEN
@@ -903,10 +903,10 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 			F: Files.File;
 			R: Files.Rider;
 			main: Frame;
-			tag, x, y, w, h, ref: INTEGER;
+			tag, x, y, w, h, ref: SIGNED16;
 			gen: ARRAY 64 OF CHAR;
 			lib: Objects.Library;
-			len: LONGINT;
+			len: SIGNED32;
 			obj: Objects.Object;
 	BEGIN
 		main := NIL;
@@ -946,7 +946,7 @@ MODULE Sokoban IN Oberon; (** portable *)	(* ejz  *)
 			F: Files.File;
 			R: Files.Rider;
 			B: Objects.BindMsg;
-			len: LONGINT;
+			len: SIGNED32;
 	BEGIN
 		F := Files.New(D.name);
 		IF F # NIL THEN

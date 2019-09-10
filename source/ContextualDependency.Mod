@@ -50,13 +50,13 @@ TYPE
 		leftNode, rightNode : RangeNode;
 
 		(* the left descendants boundaries *)
-		leftOuterBound, leftInnerBound : LONGINT;
+		leftOuterBound, leftInnerBound : SIGNED32;
 
 		(* the right descendants boundaries *)
-		rightInnerBound, rightOuterBound : LONGINT;
+		rightInnerBound, rightOuterBound : SIGNED32;
 
 		(* depth of the subtree this node's the root of *)
-		depth : LONGINT;
+		depth : SIGNED32;
 
 		(* the value of the node: a context analyzer of the node's range. NIL if the node's an inner node. *)
 		target : RangedContextAnalyzer;
@@ -74,7 +74,7 @@ TYPE
 		PROCEDURE AddRange(target : RangedContextAnalyzer);
 		VAR
 			newNode : RangeNode;
-			dummyLeft, dummyRight : LONGINT;
+			dummyLeft, dummyRight : SIGNED32;
 		BEGIN
 			NEW(newNode);
 			newNode.leftInnerBound := target.rangeLow;
@@ -89,7 +89,7 @@ TYPE
 		END AddRange;
 
 		(* Recursively traverses the tree top-down and looks for an appropriate place to insert the new node *)
-		PROCEDURE RecursiveAdd(newNode : RangeNode; VAR thisNode : RangeNode; VAR left, right : LONGINT);
+		PROCEDURE RecursiveAdd(newNode : RangeNode; VAR thisNode : RangeNode; VAR left, right : SIGNED32);
 		VAR
 			newIntermediateNode : RangeNode;
 		BEGIN
@@ -159,7 +159,7 @@ TYPE
 		END RecursiveAdd;
 
 		(* Searches the range tree for a range that includes this position *)
-		PROCEDURE Search(position : LONGINT) : RangedContextAnalyzer;
+		PROCEDURE Search(position : SIGNED32) : RangedContextAnalyzer;
 		BEGIN
 			(* Check out the last accessed node first to avoid traversing the whole tree if possible *)
 			IF last # NIL THEN
@@ -173,7 +173,7 @@ TYPE
 		END Search;
 
 		(* Recursively searches the tree for a range that fits this position *)
-		PROCEDURE RecursiveSearch(position : LONGINT; thisNode : RangeNode) : RangedContextAnalyzer;
+		PROCEDURE RecursiveSearch(position : SIGNED32; thisNode : RangeNode) : RangedContextAnalyzer;
 		BEGIN
 
 			(* if thisNode is NIL a fitting range wont be found in this tree *)
@@ -213,15 +213,15 @@ TYPE
 		(* Balances the tree AVL-style. This means that the depth of the two subtrees of one node differ by 1 at most. *)
 		PROCEDURE CompleteBalancing;
 		VAR
-			dummyInt : LONGINT;
+			dummyInt : SIGNED32;
 		BEGIN
 			dummyInt := RecursiveBalancing(root);
 		END CompleteBalancing;
 
 		(* Balances a subtree and returns the subtrees depth after balancing *)
-		PROCEDURE RecursiveBalancing(VAR thisNode : RangeNode) : LONGINT;
+		PROCEDURE RecursiveBalancing(VAR thisNode : RangeNode) : SIGNED32;
 		VAR
-			leftDepth, rightDepth : LONGINT;
+			leftDepth, rightDepth : SIGNED32;
 		BEGIN
 			(* the tree is empty *)
 			IF thisNode = NIL THEN
@@ -292,7 +292,7 @@ TYPE
 		END RotateLeft;
 
 		(* Auxiliary procedure that returns the node's depth while checking for the node's existence *)
-		PROCEDURE GetNodeDepth(thisNode : RangeNode) : LONGINT;
+		PROCEDURE GetNodeDepth(thisNode : RangeNode) : SIGNED32;
 		BEGIN
 			IF thisNode = NIL THEN
 				RETURN 0;
@@ -307,8 +307,8 @@ TYPE
 		in the specified range *)
 	Range = OBJECT
 	VAR
-		lowerBound : LONGINT;
-		upperBound : LONGINT;
+		lowerBound : SIGNED32;
+		upperBound : SIGNED32;
 		valid : BOOLEAN;
 
 		PROCEDURE &Init*;
@@ -356,11 +356,11 @@ TYPE
 	ContextCache = OBJECT
 	VAR
 		internalCache: POINTER TO ARRAY OF ContextCacheElement;
-		cacheSize : LONGINT;
+		cacheSize : SIGNED32;
 		nextElement : ContextCacheElement;
 
 		(* creates an internal storage of a certain size *)
-		PROCEDURE &Init*(hashMapSize : LONGINT);
+		PROCEDURE &Init*(hashMapSize : SIGNED32);
 		BEGIN
 			cacheSize := hashMapSize;
 			NEW(internalCache,cacheSize);
@@ -369,7 +369,7 @@ TYPE
 		(* Searches the cache for a specific key and returns the corresponding entry *)
 		PROCEDURE Lookup(char : Texts.Char32; VAR done : BOOLEAN) : GenericContext;
 		VAR
-			bucket : LONGINT;
+			bucket : SIGNED32;
 			currentElement : ContextCacheElement;
 		BEGIN
 			(* if there could be more entries of the last looked up element, the last search is continued *)
@@ -409,7 +409,7 @@ TYPE
 		PROCEDURE Insert(char : Texts.Char32; value : GenericContext);
 		VAR
 			newElement : ContextCacheElement;
-			bucket : LONGINT;
+			bucket : SIGNED32;
 		BEGIN
 			NEW(newElement,char,value);
 
@@ -426,13 +426,13 @@ TYPE
 	RangedContextAnalyzer = OBJECT
 	VAR
 		language : XML.String;
-		rangeLow, rangeHigh : LONGINT;
+		rangeLow, rangeHigh : SIGNED32;
 		closeContext, wideContext, wholeContext : BOOLEAN;
 		contextCache : ContextCache;
 		contextFile : XML.Document;
 
 		(* Initializes the context analyzer for a certain range and a certain mode *)
-		PROCEDURE &Init*(context : XML.Document; rangeLow, rangeHigh : LONGINT; language, mode : Strings.String);
+		PROCEDURE &Init*(context : XML.Document; rangeLow, rangeHigh : SIGNED32; language, mode : Strings.String);
 		BEGIN
 			NEW(contextCache,rangeHigh-rangeLow);
 			contextFile := context;
@@ -698,7 +698,7 @@ TYPE
 		(* Check if the given character is part of at least one of the passed ranges *)
 		PROCEDURE RangeOK(thisChar : Texts.Char32; ranges : Ranges) : BOOLEAN;
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 			rangeOK : BOOLEAN;
 		BEGIN
 			(* If no ranges have been passed, there's no restriction for this character, so the rule is defined to apply *)
@@ -762,9 +762,9 @@ TYPE
 			contextFound, validContext, charFound : BOOLEAN;
 			charString : XML.String;
 			charCode : Texts.Char32;
-			res : WORD;
+			res : INTEGER;
 			base16, neg : BOOLEAN;
-			genericRangeSize, offset : LONGINT;
+			genericRangeSize, offset : SIGNED32;
 
 		BEGIN
 			res := 0;
@@ -999,7 +999,7 @@ TYPE
 		(* Parses a range string and puts the ranges into a range array *)
 		PROCEDURE ParseRangeString(rangeString : XML.String; base16, neg : BOOLEAN; VAR ranges : Ranges);
 		VAR
-			numberOfRanges, i, j, k: SIZE; res : WORD;
+			numberOfRanges, i, j, k: SIZE; res : INTEGER;
 			tempString : XML.String;
 			range : Range;
 			theseRanges, oldRanges : RangeArray;
@@ -1285,7 +1285,7 @@ VAR
 	tagName, languageAttribute, baseAttribute : XML.String;
 	base16, propertyFound : BOOLEAN;
 
-	rangeLow, rangeHigh: LONGINT; res: WORD;
+	rangeLow, rangeHigh: SIGNED32; res: INTEGER;
 	mode, tempRangeLow, tempRangeHigh : Strings.String;
 BEGIN
 	propertyFound := FALSE;
@@ -1347,7 +1347,7 @@ END RegisterRangedAnalyzer;
 
 
 (* Entry point for the outside world to analyze a line of text for context dependency *)
-PROCEDURE AnalyzeLine*(line : Texts.TextReader; start, end : LONGINT) : Texts.TextReader;
+PROCEDURE AnalyzeLine*(line : Texts.TextReader; start, end : SIGNED32) : Texts.TextReader;
 BEGIN
 	RETURN contextAnalyzer.AnalyzeLine(line,start,end);
 END AnalyzeLine;

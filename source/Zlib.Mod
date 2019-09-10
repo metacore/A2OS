@@ -64,15 +64,15 @@ CONST
 	DeflateMethod* = 8;
 
 VAR
-	CRCTable: ARRAY 256 OF LONGINT;
+	CRCTable: ARRAY 256 OF SIGNED32;
 
 
-PROCEDURE Adler32*(adler: LONGINT; CONST buf: ARRAY OF CHAR; offset, len: SIZE): LONGINT;
+PROCEDURE Adler32*(adler: SIGNED32; CONST buf: ARRAY OF CHAR; offset, len: SIZE): SIGNED32;
 CONST
 	base = 65521;	(* largest prim smaller than 65536 *)
 	nmax = 5552;	(* largest n such that 255n(n + 1) / 2 + (n + 1)(base - 1) <= 2^32 - 1 *)
 VAR
-	s1, s2: LONGINT; k, offset0, len0: SIZE;
+	s1, s2: SIGNED32; k, offset0, len0: SIZE;
 BEGIN
 	offset0 := offset; len0 := len;
 	IF len < 0 THEN
@@ -122,14 +122,14 @@ END Adler32;
 
 PROCEDURE InitCRCTable*;
 CONST
-	poly = LONGINT(0EDB88320H);
+	poly = SIGNED32(0EDB88320H);
 VAR
-	n, c, k: LONGINT;
+	n, c, k: SIGNED32;
 BEGIN
 	FOR n := 0 TO 255 DO
 		c := n;
 		FOR k := 0 TO 7 DO
-			IF ODD(c) THEN c := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET32, poly)/SYSTEM.VAL(SET32, LSH(c, -1)))
+			IF ODD(c) THEN c := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET32, poly)/SYSTEM.VAL(SET32, LSH(c, -1)))
 			ELSE c := LSH(c, -1)
 			END
 		END;
@@ -138,19 +138,19 @@ BEGIN
 END InitCRCTable;
 
 
-PROCEDURE CRC32*(crc: LONGINT; CONST buf: ARRAY OF CHAR; offset, len: SIZE): LONGINT;
-VAR idx: LONGINT;
+PROCEDURE CRC32*(crc: SIGNED32; CONST buf: ARRAY OF CHAR; offset, len: SIZE): SIGNED32;
+VAR idx: SIGNED32;
 BEGIN
 	IF offset < 0 THEN
 		crc := 0
 	ELSE
-		crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET32, crc)/{0..31});
+		crc := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET32, crc)/{0..31});
 		WHILE len > 0 DO
-			idx := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET32, crc)/SYSTEM.VAL(SET32, LONG(ORD(buf[offset])))) MOD 100H;
-			crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET32, CRCTable[idx])/SYSTEM.VAL(SET32, LSH(crc, -8)));
+			idx := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET32, crc)/SYSTEM.VAL(SET32, LONG(ORD(buf[offset])))) MOD 100H;
+			crc := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET32, CRCTable[idx])/SYSTEM.VAL(SET32, LSH(crc, -8)));
 			DEC(len); INC(offset)
 		END;
-		crc := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET32, crc)/{0..31})
+		crc := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET32, crc)/{0..31})
 	END;
 	RETURN crc
 END CRC32;

@@ -51,14 +51,14 @@ TYPE
 	tSeed = OBJECT  (* POINTER TO tSeedDesc;
 	tSeedDesc = RECORD (vyRanBase.tSeedDesc)*)
 	(vyRanBase.tSeed)
-	VAR x, y, z: LONGINT;
+	VAR x, y, z: SIGNED32;
 
 		PROCEDURE  (*VAR seed: tSeedDesc*) Store*( VAR r: Files.Rider );
 		BEGIN
 			Files.WriteLInt( r, SELF.x );  Files.WriteLInt( r, SELF.y );  Files.WriteLInt( r, SELF.z )
 		END Store;
 
-		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: INTEGER );
+		PROCEDURE  (*VAR seed: tSeedDesc*) Load*( VAR r: Files.Rider;  seedVersion: SIGNED16 );
 		BEGIN
 			IF seedVersion # cSeedVersion THEN HALT( 100 ) END;
 			Files.ReadLInt( r, SELF.x );  Files.ReadLInt( r, SELF.y );  Files.ReadLInt( r, SELF.z )
@@ -75,8 +75,8 @@ TYPE
 		NEW( seed );  RETURN seed
 	END AllocSeed;
 
-	PROCEDURE Combo*( VAR x, y, z: LONGINT ): LONGINT;
-	VAR v: LONGINT;
+	PROCEDURE Combo*( VAR x, y, z: SIGNED32 ): SIGNED32;
+	VAR v: SIGNED32;
 	BEGIN
 		v := x * y;  x := y;  y := v;
 		z := mwcParam * S.VAL( Bits, S.VAL( SET, z ) * SET(sysMaskSecondHalf ) ) + LSH( z, sysBitsTypeSize DIV 2 * sysSHR );
@@ -84,7 +84,7 @@ TYPE
 	END Combo;
 
 	PROCEDURE Next( r: tRandom );
-	VAR seed: vyRanBase.tSeed;  dummy: LONGINT;
+	VAR seed: vyRanBase.tSeed;  dummy: SIGNED32;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO dummy := Combo( seed.x, seed.y, seed.z )
@@ -104,9 +104,9 @@ TYPE
 		END
 	END Get;
 
-	PROCEDURE GetUniform( r: tRandom ): LONGREAL;
-	CONST posScalefact = 0.5 / MAX( LONGINT );  negScalefact = 0.5 / MIN( LONGINT );
-	VAR seed: vyRanBase.tSeed;  n: LONGINT;
+	PROCEDURE GetUniform( r: tRandom ): FLOAT64;
+	CONST posScalefact = 0.5 / MAX( SIGNED32 );  negScalefact = 0.5 / MIN( SIGNED32 );
+	VAR seed: vyRanBase.tSeed;  n: SIGNED32;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
@@ -115,19 +115,19 @@ TYPE
 		END
 	END GetUniform;
 
-	PROCEDURE GetL( r: tRandom;  top: LONGINT ): LONGINT;
-	VAR seed: vyRanBase.tSeed;  n: LONGINT;
+	PROCEDURE GetL( r: tRandom;  top: SIGNED32 ): SIGNED32;
+	VAR seed: vyRanBase.tSeed;  n: SIGNED32;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
 			n := Combo( seed.x, seed.y, seed.z );
-			IF n < 0 THEN DEC( n, MIN( LONGINT ) ) END;
+			IF n < 0 THEN DEC( n, MIN( SIGNED32 ) ) END;
 			IF top <= 0 THEN RETURN n ELSE RETURN n MOD top END
 		END
 	END GetL;
 
 	PROCEDURE Reset( r: tRandom );
-	VAR seed: vyRanBase.tSeed;  tmp: LONGINT;
+	VAR seed: vyRanBase.tSeed;  tmp: SIGNED32;
 	BEGIN
 		seed := r.seed;
 		WITH seed: tSeed DO
@@ -228,7 +228,7 @@ TYPE
 	END Install;
 
 	PROCEDURE DoAsserts;
-	VAR tmp: LONGINT;
+	VAR tmp: SIGNED32;
 	BEGIN
 		ASSERT ( SIZEOF( SET ) = sysBitsTypeSize, 100 );
 		tmp := -1;

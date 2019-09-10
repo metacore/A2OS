@@ -25,7 +25,7 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 	VAR
 		W: Texts.Writer;
 		proxyHost: ARRAY NetTools.ServerStrLen OF CHAR;
-		proxyPort: INTEGER;
+		proxyPort: SIGNED16;
 		proxy: BOOLEAN;
 
 	PROCEDURE TextDoc(D: Documents.Document; C: NetSystem.Connection);
@@ -34,7 +34,7 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 	BEGIN
 		Texts.Append(Oberon.Log, W.buf);
 		NEW(T); Texts.Open(T, "");
-		MIME.textCont.len := MAX(LONGINT);
+		MIME.textCont.len := MAX(SIGNED32);
 		MIME.ReadText(NetTools.OpenStream(C), W, MIME.textCont, TRUE);
 		Texts.Append(T, W.buf);
 		TextDocs.InitDoc(D);
@@ -46,8 +46,8 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 		VAR
 			T: Texts.Text;
 			line: ARRAY NetTools.MaxLine OF CHAR;
-			res, val: LONGINT;
-			i: INTEGER;
+			res, val: SIGNED32;
+			i: SIGNED16;
 	BEGIN
 		Texts.Append(Oberon.Log, W.buf);
 		NEW(T);
@@ -108,11 +108,11 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 		line[i] := 0X
 	END ReadLine;
 
-	PROCEDURE RegisterGopherAdr(host, selector, search: ARRAY OF CHAR; type: CHAR; port: INTEGER): LONGINT;
+	PROCEDURE RegisterGopherAdr(host, selector, search: ARRAY OF CHAR; type: CHAR; port: SIGNED16): SIGNED32;
 		VAR
 			url: ARRAY NetTools.MaxLine OF CHAR;
 			portS: ARRAY 8 OF CHAR;
-			key: LONGINT;
+			key: SIGNED32;
 	BEGIN
 		COPY("gopher://", url);
 		Strings.Lower(host, host);
@@ -137,10 +137,10 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 		RETURN key
 	END RegisterGopherAdr;
 
-	PROCEDURE SplitMenuLine(VAR line: ARRAY OF CHAR; desc: BOOLEAN; VAR type: CHAR; VAR selector, host: ARRAY OF CHAR; VAR port: LONGINT; VAR login, plus: BOOLEAN);
+	PROCEDURE SplitMenuLine(VAR line: ARRAY OF CHAR; desc: BOOLEAN; VAR type: CHAR; VAR selector, host: ARRAY OF CHAR; VAR port: SIGNED32; VAR login, plus: BOOLEAN);
 		VAR
 			str: ARRAY 12 OF CHAR;
-			i, j: LONGINT;
+			i, j: SIGNED32;
 	BEGIN
 		type := line[0];
 		i := 1;
@@ -192,12 +192,12 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 		Strings.StrToInt(str, port)
 	END SplitMenuLine;
 
-	PROCEDURE WriteMenuLink(T: Texts.Text; type: CHAR; VAR selector, host: ARRAY OF CHAR; port: LONGINT; login, plus: BOOLEAN): LONGINT;
+	PROCEDURE WriteMenuLink(T: Texts.Text; type: CHAR; VAR selector, host: ARRAY OF CHAR; port: SIGNED32; login, plus: BOOLEAN): SIGNED32;
 		VAR
 			line: ARRAY 128 OF CHAR;
 			str: ARRAY 12 OF CHAR;
 			link: Objects.Object;
-			key, beg: LONGINT;
+			key, beg: SIGNED32;
 	BEGIN
 		key := HyperDocs.UndefKey; beg := T.len;
 		IF type # "-" THEN
@@ -248,7 +248,7 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 		RETURN obj
 	END HorzRule;
 
-	PROCEDURE MenuDoc(D: Documents.Document; C: NetSystem.Connection; mkey: LONGINT);
+	PROCEDURE MenuDoc(D: Documents.Document; C: NetSystem.Connection; mkey: SIGNED32);
 		VAR
 			T, T2: Texts.Text;
 			R: Texts.Reader;
@@ -257,14 +257,14 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 			selector: ARRAY NetTools.PathStrLen OF CHAR;
 			type: CHAR;
 			search, login, plus: BOOLEAN;
-			beg, port: LONGINT;
+			beg, port: SIGNED32;
 			link: Objects.Object;
 			style: TextGadgets.Style;
 	BEGIN
 		Texts.Append(Oberon.Log, W.buf);
 		NEW(T);
 		Texts.Open(T, "");
-		MIME.textCont.len := MAX(LONGINT);
+		MIME.textCont.len := MAX(SIGNED32);
 		MIME.ReadText(NetTools.OpenStream(C), W, MIME.textCont, TRUE);
 		Texts.Append(T, W.buf);
 		style := TextGadgets.newStyle();
@@ -345,7 +345,7 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 		F := Files.New(fname);
 		Files.Set(R, F, 0);
 		NetTools.curLen := 0;
-		NetTools.ReadData(C, R, MAX(LONGINT));
+		NetTools.ReadData(C, R, MAX(SIGNED32));
 		Files.Register(F);
 		IF (typ = "g") OR (typ = "h") OR (typ = "I") THEN
 			D2 := Documents.Open(fname);
@@ -360,17 +360,17 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 		Texts.Append(Oberon.Log, W.buf)
 	END BinDoc;
 
-	PROCEDURE GopherPlusAns(C: NetSystem.Connection; VAR maxLen: LONGINT; VAR mail: BOOLEAN): BOOLEAN;
+	PROCEDURE GopherPlusAns(C: NetSystem.Connection; VAR maxLen: SIGNED32; VAR mail: BOOLEAN): BOOLEAN;
 		VAR
-			len: LONGINT;
+			len: SIGNED32;
 			ch: CHAR;
 			error: BOOLEAN;
 			status: ARRAY 16 OF CHAR;
-			i: INTEGER;
+			i: SIGNED16;
 	BEGIN
 		error := TRUE;
 		i := -1;
-		maxLen := MAX(LONGINT);
+		maxLen := MAX(SIGNED32);
 		mail := FALSE;
 		ch := 0X;
 		len := NetSystem.Available(C);
@@ -406,7 +406,7 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 	PROCEDURE MimeDoc(D: Documents.Document; C: NetSystem.Connection; VAR selector: ARRAY OF CHAR);
 		VAR
 			D2: Documents.Document;
-			maxLen, i, j: LONGINT;
+			maxLen, i, j: SIGNED32;
 			mime, temp: ARRAY 32 OF CHAR;
 			err, mail: BOOLEAN;
 			T: Texts.Text;
@@ -460,7 +460,7 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END MimeDoc;
 
-	PROCEDURE Connect(VAR C: NetSystem.Connection; host, selector: ARRAY OF CHAR; port: INTEGER; plus: CHAR; crlf: BOOLEAN): BOOLEAN;
+	PROCEDURE Connect(VAR C: NetSystem.Connection; host, selector: ARRAY OF CHAR; port: SIGNED16; plus: CHAR; crlf: BOOLEAN): BOOLEAN;
 	BEGIN
 		IF NetTools.Connect(C, port, host, FALSE) THEN
 			NetTools.SendString(C, selector);
@@ -510,7 +510,7 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END DocHandler;
 
-	PROCEDURE Request(D: Documents.Document; key: LONGINT; VAR host, selector, search: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER);
+	PROCEDURE Request(D: Documents.Document; key: SIGNED32; VAR host, selector, search: ARRAY OF CHAR; VAR type: CHAR; VAR port: SIGNED16);
 		VAR
 			C: NetSystem.Connection;
 			obj: Objects.Object;
@@ -589,9 +589,9 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 		END
 	END Request;
 
-	PROCEDURE SplitGopherAdr(VAR url, host, selector, search: ARRAY OF CHAR; VAR type: CHAR; VAR port: INTEGER): LONGINT;
+	PROCEDURE SplitGopherAdr(VAR url, host, selector, search: ARRAY OF CHAR; VAR type: CHAR; VAR port: SIGNED16): SIGNED32;
 		VAR
-			key: LONGINT;
+			key: SIGNED32;
 			i, j, l: SIZE;
 			iskey: BOOLEAN;
 		PROCEDURE Blanks;
@@ -711,13 +711,13 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 			R: Texts.Reader;
 			line: ARRAY NetTools.MaxLine OF CHAR;
 			attr, mime: ARRAY 32 OF CHAR;
-			i: INTEGER;
+			i: SIGNED16;
 			ch, old: CHAR;
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			selector: ARRAY NetTools.PathStrLen OF CHAR;
 			type: CHAR;
 			login, plus: BOOLEAN;
-			port, key, beg: LONGINT;
+			port, key, beg: SIGNED32;
 			link: Objects.Object;
 			cont: MIME.Content;
 	BEGIN
@@ -855,12 +855,12 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 	PROCEDURE Info*;
 		VAR
 			F: Texts.Finder;
-			pos, len: LONGINT;
+			pos, len: SIGNED32;
 			obj, tobj: Objects.Object;
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			selector: ARRAY NetTools.PathStrLen OF CHAR;
 			C: NetSystem.Connection;
-			port: INTEGER;
+			port: SIGNED16;
 			mail, err: BOOLEAN;
 			T, OutT: Texts.Text;
 	BEGIN
@@ -908,7 +908,7 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 (** The gopher protocol object. *)
 	PROCEDURE LinkSchemeHandler(L: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
-			port: INTEGER;
+			port: SIGNED16;
 			line: ARRAY NetTools.MaxLine OF CHAR;
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			selector, search: ARRAY NetTools.PathStrLen OF CHAR;
@@ -945,7 +945,7 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 							IF Connect(C, host, selector, port, 0X, TRUE) THEN
 								M.res := 0;
 								NetTools.curLen := 0;
-								NetTools.ReadData(C, M.R, MAX(LONGINT));
+								NetTools.ReadData(C, M.R, MAX(SIGNED32));
 								NetTools.Disconnect(C);
 								Texts.WriteString(W, " done");
 								Texts.WriteLn(W)
@@ -984,11 +984,11 @@ MODULE Gopher IN Oberon;	(** portable *) (* ejz,  *)
 		VAR
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			selector, search: ARRAY NetTools.PathStrLen OF CHAR;
-			key: LONGINT;
+			key: SIGNED32;
 			P: NetTools.ProxyMsg;
 			S: HyperDocs.LinkScheme;
 			D2: Documents.Document;
-			port: INTEGER;
+			port: SIGNED16;
 			type: CHAR;
 	BEGIN
 		D.dsc := NIL;

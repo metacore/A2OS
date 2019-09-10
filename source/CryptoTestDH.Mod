@@ -6,7 +6,7 @@ IMPORT D := CryptoDiffieHellman, B := CryptoBigNumbers, Kernel, Out := KernelLog
 
 
 	PROCEDURE Do( CONST nprime: ARRAY OF CHAR );
-	VAR t: LONGINT;
+	VAR t: SIGNED32;
 		dh1, dh2: D.DH;
 		pub1, pub2: B.BigNumber;
 		k1, k2: B.BigNumber;

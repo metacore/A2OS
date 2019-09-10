@@ -3,7 +3,7 @@ MODULE Reboot; (** AUTHOR ""; PURPOSE ""; *)
 IMPORT Kernel, Files, FileTrapWriter, Machine, Commands;
 
 PROCEDURE Do*(context: Commands.Context);
-VAR timer: Kernel.Timer; file: Files.File; filename, name: Files.FileName; time: LONGINT;
+VAR timer: Kernel.Timer; file: Files.File; filename, name: Files.FileName; time: SIGNED32;
 BEGIN
 	IF ~context.arg.GetInteger(time, FALSE) THEN time := 0 END;
 	IF context.arg.GetString(filename) THEN

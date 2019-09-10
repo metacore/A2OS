@@ -7,10 +7,10 @@ TYPE
 
 		VAR port: Serials.Port;
 		VAR next: LinkDevice;
-		VAR status: LONGINT;
+		VAR status: SIGNED32;
 
 		PROCEDURE & Init (port: Serials.Port; next: LinkDevice);
-		VAR name: ARRAY 20 OF CHAR; result: LONGINT;
+		VAR name: ARRAY 20 OF CHAR; result: SIGNED32;
 		BEGIN
 			Constr (Network.TypePointToPoint, Network.MaxPacketSize, 0);
 			SELF.port := port; SELF.next := next; SELF.status := Network.LinkLinked;
@@ -19,12 +19,12 @@ TYPE
 			ASSERT (result = Plugins.Ok);
 		END Init;
 
-		PROCEDURE Linked*(): LONGINT;
+		PROCEDURE Linked*(): SIGNED32;
 		BEGIN RETURN status;
 		END Linked;
 
-		PROCEDURE DoSend*(dst: Network.LinkAdr; type: LONGINT; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
-		VAR result: LONGINT;
+		PROCEDURE DoSend*(dst: Network.LinkAdr; type: SIGNED32; VAR l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32);
+		VAR result: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			port.Send (l3hdr, 0, h3len, FALSE, result);
 			port.Send (l4hdr, 0, h4len, FALSE, result);
@@ -32,7 +32,7 @@ TYPE
 		END DoSend;
 
 		PROCEDURE Receive;
-		VAR length, result: LONGINT; data: ARRAY Network.MaxPacketSize OF CHAR; buffer: Network.Buffer;
+		VAR length, result: SIGNED32; data: ARRAY Network.MaxPacketSize OF CHAR; buffer: Network.Buffer;
 		BEGIN
 			LOOP
 				port.Receive (data, 0, LEN (data), 1, length, result);
@@ -60,7 +60,7 @@ VAR device: LinkDevice;
 
 (* SerialNetwork.Install portnr bps data parity *)
 PROCEDURE Install* (context: Commands.Context);
-VAR portNr, bps, data, stop, parity, result: LONGINT; parityChar: CHAR; port: Serials.Port;
+VAR portNr, bps, data, stop, parity, result: SIGNED32; parityChar: CHAR; port: Serials.Port;
 BEGIN
 	IF context.arg.GetInteger (portNr, FALSE) & context.arg.GetInteger (bps, FALSE) &
 		context.arg.GetInteger (data, FALSE) & context.arg.GetInteger (stop, FALSE) & context.arg.GetChar (parityChar) THEN

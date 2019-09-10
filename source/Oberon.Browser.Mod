@@ -28,13 +28,13 @@ MODULE Browser IN Oberon;	(** portable, except where noted *)
 	PROCEDURE Str(s: ARRAY OF CHAR); BEGIN Texts.WriteString(W, s) END Str;
 	PROCEDURE Ch(ch: CHAR); BEGIN Texts.Write(W, ch) END Ch;
 	PROCEDURE Ln; BEGIN Texts.WriteLn(W) END Ln;
-	PROCEDURE Ht(i: INTEGER); BEGIN WHILE i > 0 DO Ch(9X); DEC(i) END END Ht;
-	PROCEDURE Dec(i: LONGINT); BEGIN Texts.WriteInt(W, i, 0) END Dec;
-	PROCEDURE Hd(i: LONGINT); BEGIN IF i > 9 THEN Ch(CHR(55+i)) ELSE Ch(CHR(48+i)) END END Hd;
-	PROCEDURE Hex(i: LONGINT); BEGIN IF i > 9FH THEN Ch("0") END; Hd(i DIV 16); Hd(i MOD 16) END Hex;
-	PROCEDURE Adr(i: LONGINT); BEGIN IF show THEN Ch("["); Dec(i); Str("] ") END END Adr;
-	PROCEDURE Mrk(vis: INTEGER); BEGIN IF vis=external THEN Ch("*") ELSIF vis=externalR THEN Ch("-") END END Mrk;
-	PROCEDURE SFlg(flg: INTEGER); BEGIN IF flg#0 THEN Ch("-") END END SFlg;
+	PROCEDURE Ht(i: SIGNED16); BEGIN WHILE i > 0 DO Ch(9X); DEC(i) END END Ht;
+	PROCEDURE Dec(i: SIGNED32); BEGIN Texts.WriteInt(W, i, 0) END Dec;
+	PROCEDURE Hd(i: SIGNED32); BEGIN IF i > 9 THEN Ch(CHR(55+i)) ELSE Ch(CHR(48+i)) END END Hd;
+	PROCEDURE Hex(i: SIGNED32); BEGIN IF i > 9FH THEN Ch("0") END; Hd(i DIV 16); Hd(i MOD 16) END Hex;
+	PROCEDURE Adr(i: SIGNED32); BEGIN IF show THEN Ch("["); Dec(i); Str("] ") END END Adr;
+	PROCEDURE Mrk(vis: SIGNED16); BEGIN IF vis=external THEN Ch("*") ELSIF vis=externalR THEN Ch("-") END END Mrk;
+	PROCEDURE SFlg(flg: SIGNED16); BEGIN IF flg#0 THEN Ch("-") END END SFlg;
 	PROCEDURE Title; BEGIN Texts.SetFont (W, TitleFont); END Title;
 	PROCEDURE Normal; BEGIN Texts.SetFont (W, NormalFont); END Normal;
 
@@ -128,7 +128,7 @@ MODULE Browser IN Oberon;	(** portable, except where noted *)
 	END Structure;
 
 	PROCEDURE Objects(obj: OPT.Object);
-		VAR i: LONGINT; vis: INTEGER; s: SET; con: OPT.Const;
+		VAR i: SIGNED32; vis: SIGNED16; s: SET; con: OPT.Const;
 	BEGIN
 		IF	obj#NIL	THEN	Objects(obj.left); vis:=obj.vis;
 			IF	(obj.mode IN mode) & ((vis#internal) OR show)	THEN
@@ -194,7 +194,7 @@ MODULE Browser IN Oberon;	(** portable, except where noted *)
 	END PutSection;
 
 	PROCEDURE Scope;
-		VAR i: INTEGER; first: BOOLEAN; scope: OPT.Object;
+		VAR i: SIGNED16; first: BOOLEAN; scope: OPT.Object;
 	BEGIN	i:=2; first:=TRUE; scope:=theMod;
 		WHILE	i < OPT.nofmod	DO
 			IF	first	THEN	first:=FALSE; Ht(2)	ELSE	Str(", ")	END;
@@ -208,7 +208,7 @@ MODULE Browser IN Oberon;	(** portable, except where noted *)
 	END Scope;
 
 	PROCEDURE GetArgs(VAR S: Texts.Scanner);
-		VAR text: Texts.Text; beg, end, time: LONGINT;
+		VAR text: Texts.Text; beg, end, time: SIGNED32;
 	BEGIN	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 		IF	(S.line#0) OR (S.class#Texts.Name)	THEN	Oberon.GetSelection(text, beg, end, time);
 			IF	time>=0	THEN	Texts.OpenScanner(S, text, beg); Texts.Scan(S)	END
@@ -216,7 +216,7 @@ MODULE Browser IN Oberon;	(** portable, except where noted *)
 	END GetArgs;
 
 	PROCEDURE QualIdent(VAR name, first, second: ARRAY OF CHAR);
-		VAR i, j: INTEGER; ch: CHAR;
+		VAR i, j: SIGNED16; ch: CHAR;
 	BEGIN	i:=0; ch:=name[0];
 		WHILE	(ch#".") & (ch#0X)	DO	first[i]:=ch; INC(i); ch:=name[i]	END;
 		first[i]:=0X; INC(i); j:=0; ch:=name[i];
@@ -225,14 +225,14 @@ MODULE Browser IN Oberon;	(** portable, except where noted *)
 	END QualIdent;
 
 	PROCEDURE Append(VAR d: ARRAY OF CHAR; s: ARRAY OF CHAR);
-		VAR i, j: INTEGER; ch: CHAR;
+		VAR i, j: SIGNED16; ch: CHAR;
 	BEGIN
 		i:=0; WHILE	d[i]#0X	DO	INC(i)	END;
 		j:=0; REPEAT	ch:=s[j]; d[i]:=ch; INC(i); INC(j)	UNTIL	ch=0X
 	END Append;
 
 	PROCEDURE GetModule(name: OPS.Name): OPT.Object;
-	VAR  found: BOOLEAN; i, j: LONGINT; ch0, ch1: CHAR; F: Files.File; R: Files.Rider;
+	VAR  found: BOOLEAN; i, j: SIGNED32; ch0, ch1: CHAR; F: Files.File; R: Files.Rider;
 			iname: ARRAY 256 OF CHAR;
 	BEGIN
 		COPY(Modules.extension, OPM.extension);
@@ -272,7 +272,7 @@ MODULE Browser IN Oberon;	(** portable, except where noted *)
 	END GetModule;
 
 	PROCEDURE ShowDef*;
-		VAR S: Texts.Scanner; vname, name: OPS.Name; i: INTEGER;
+		VAR S: Texts.Scanner; vname, name: OPS.Name; i: SIGNED16;
 	BEGIN	GetArgs(S); SignOn; show := FALSE; extend := FALSE; hidden := FALSE;
 		IF	S.class=Texts.Name	THEN	QualIdent(S.s, name, vname); Texts.Scan(S);
 			IF (S.class=Texts.Char) & (S.c = Oberon.OptionChar) THEN

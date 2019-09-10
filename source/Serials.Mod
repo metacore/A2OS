@@ -64,17 +64,17 @@ TYPE
 		(** Characters sent/read since port has been opened. Consider these fields read-only! *)
 		charactersSent*, charactersReceived* : Streams.Position;
 
-		PROCEDURE Open* (bps, data, parity, stop : LONGINT; VAR res: WORD);
+		PROCEDURE Open* (bps, data, parity, stop : SIGNED32; VAR res: INTEGER);
 		END Open;
 
 		PROCEDURE Close* ;
 		END Close;
 
-		PROCEDURE SendChar* (ch: CHAR; VAR res : WORD);
+		PROCEDURE SendChar* (ch: CHAR; VAR res : INTEGER);
 		END SendChar;
 
 		(** Send len characters from buf to output, starting at ofs. res is non-zero on error. *)
-		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR i : SIZE;
 		BEGIN
 			i := 0;
@@ -85,12 +85,12 @@ TYPE
 			END
 		END Send;
 
-		PROCEDURE ReceiveChar* (VAR ch: CHAR; VAR res: WORD);
+		PROCEDURE ReceiveChar* (VAR ch: CHAR; VAR res: INTEGER);
 		END ReceiveChar;
 
 		(** Receive size characters into buf, starting at ofs and return the effective number of bytes read in len.
 			Wait until at least min bytes (possibly zero) are available. res is non-zero on error. *)
-		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive*(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		VAR ch: CHAR;
 		BEGIN
 			len := 0;
@@ -113,7 +113,7 @@ TYPE
 		END Available;
 
 		(** Get the port state: state (open, closed), speed in bps, no. of data bits, parity, stop bit length. *)
-		PROCEDURE GetPortState*(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : LONGINT);
+		PROCEDURE GetPortState*(VAR openstat : BOOLEAN; VAR bps, data, parity, stop : SIGNED32);
 		END GetPortState;
 
 		(** Clear the specified modem control lines.  s may contain DTR, RTS & Break. *)
@@ -131,7 +131,7 @@ TYPE
 
 		(** Setup receive timeout (maximum time allowed to elapse before arrival of the next data byte) in ms.
 			Use timeout <= 0 to disable receive timeout handling  *)
-		PROCEDURE SetReceiveTimeout*(timeout: LONGINT);
+		PROCEDURE SetReceiveTimeout*(timeout: SIGNED32);
 		END SetReceiveTimeout;
 
 		PROCEDURE Show*;
@@ -151,7 +151,7 @@ VAR
 
 (** At the disposal of the USB driver modules for hot plug-in of a device. *)
 PROCEDURE RegisterPort* (port : Port; CONST description : ARRAY OF CHAR);
-VAR name : ARRAY 6 OF CHAR; portNumber : LONGINT;
+VAR name : ARRAY 6 OF CHAR; portNumber : SIGNED32;
 BEGIN {EXCLUSIVE}
 	ASSERT(port # NIL);
 	portNumber := 9;
@@ -175,7 +175,7 @@ END RegisterPort;
 
 (** At the disposal of the USB driver modules for hot plug-in of a device. *)
 PROCEDURE UnRegisterPort* (port : Port);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN {EXCLUSIVE}
 	i := 0; WHILE (i < LEN(ports)) & (ports[i] # port) DO INC(i); END;
 	IF i < LEN(ports) THEN
@@ -189,7 +189,7 @@ END UnRegisterPort;
 
 (**	COM1 to COM8 are reserved for RS-232 / V24 communication ports. Other ports will be named COM9, COM9 and so on as needed.
 	The idea is that the onboard COM ports get the same port numbers as in the BIOS *)
-PROCEDURE RegisterOnboardPort*(portNumber : LONGINT; port : Port; CONST name, description : ARRAY OF CHAR);
+PROCEDURE RegisterOnboardPort*(portNumber : SIGNED32; port : Port; CONST name, description : ARRAY OF CHAR);
 BEGIN {EXCLUSIVE}
 	IF (portNumber >= 1) & (portNumber <= LEN(ports)) & (ports[portNumber-1] = NIL) THEN
 		ports[portNumber-1] := port;
@@ -201,7 +201,7 @@ BEGIN {EXCLUSIVE}
 	END;
 END RegisterOnboardPort;
 
-PROCEDURE GetPort* (portNumber : LONGINT) : Port;
+PROCEDURE GetPort* (portNumber : SIGNED32) : Port;
 VAR port : Port;
 BEGIN {EXCLUSIVE}
 	IF (portNumber >= 1) & (portNumber <= LEN(ports)) & (ports[portNumber-1] # NIL) THEN
@@ -211,7 +211,7 @@ BEGIN {EXCLUSIVE}
 END GetPort;
 
 PROCEDURE TraceChar(ch: CHAR);
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	IF tracePort # NIL THEN
 		tracePort.SendChar(ch, res);
@@ -224,11 +224,11 @@ END TraceChar;
 	portNumber: serial port number, or 0 to disable trace output, or a negative value for rolling back to the initial trace output configuration
 	bps, data, parity, stop: serial port settings
 *)
-PROCEDURE SetTracePort*(portNumber: LONGINT; bps, data, parity, stop: LONGINT; VAR res: WORD);
+PROCEDURE SetTracePort*(portNumber: SIGNED32; bps, data, parity, stop: SIGNED32; VAR res: INTEGER);
 VAR
 	isOpen0: BOOLEAN;
-	bps0, data0, parity0, stop0 : LONGINT;
-	res1: WORD;
+	bps0, data0, parity0, stop0 : SIGNED32;
+	res1: INTEGER;
 	port: Port;
 BEGIN{EXCLUSIVE}
 	res := 0;
@@ -293,10 +293,10 @@ END IsTracePort;
 	params: set of parameters specified by the user (0-bps, 1-data, 2-parity, 3-stop)
 	res: error code, 0 in case of success
 *)
-PROCEDURE GetPortParameters*(r: Streams.Reader; VAR portNumber, bps, data, parity, stop: LONGINT; VAR params: SET; VAR res: WORD);
+PROCEDURE GetPortParameters*(r: Streams.Reader; VAR portNumber, bps, data, parity, stop: SIGNED32; VAR params: SET; VAR res: INTEGER);
 VAR
 	str : ARRAY 32 OF CHAR;
-	d: LONGINT;
+	d: SIGNED32;
 BEGIN
 	res := 0;
 
@@ -362,7 +362,7 @@ END GetPortParameters;
 *)
 PROCEDURE SetTrace*(context: Commands.Context);
 VAR
-	portNumber, bps, data, parity, stop: LONGINT; res: WORD; params: SET;
+	portNumber, bps, data, parity, stop: SIGNED32; res: INTEGER; params: SET;
 BEGIN
 	GetPortParameters(context.arg, portNumber, bps, data, parity, stop, params, res);
 	IF (portNumber > 0) & (res # 0) THEN
@@ -379,7 +379,7 @@ BEGIN
 END SetTrace;
 
 PROCEDURE Show*(context : Commands.Context);
-VAR port : Port; noPortsAvailable : BOOLEAN; i : LONGINT;
+VAR port : Port; noPortsAvailable : BOOLEAN; i : SIGNED32;
 BEGIN {EXCLUSIVE}
 	noPortsAvailable := TRUE;
 	context.out.String("Serials: "); context.out.Ln;
@@ -397,7 +397,7 @@ END Show;
 (** Test serial ports COM1 and if present COM2 with the generic driver *)
 PROCEDURE Test*(context : Commands.Context);
 VAR
-	result : WORD;
+	result : INTEGER;
 	portgotten : Port;
 BEGIN
 	context.out.String ("Testing availability of COM1 and COM2."); context.out.Ln;
@@ -424,7 +424,7 @@ END Test;
 
 (** Close all serial ports *)
 PROCEDURE CloseAllPorts*(context : Commands.Context);
-VAR portNbr : LONGINT;
+VAR portNbr : SIGNED32;
 BEGIN {EXCLUSIVE}
 	FOR portNbr := 0 TO LEN(ports)-1 DO
 		IF ports[portNbr] # NIL THEN

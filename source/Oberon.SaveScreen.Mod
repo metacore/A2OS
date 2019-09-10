@@ -62,15 +62,15 @@ MODULE SaveScreen IN Oberon;
 
 	VAR
 		W: Texts.Writer;
-		seed: LONGINT;	(* for the random number generator *)
+		seed: SIGNED32;	(* for the random number generator *)
 
 		Start, Step, Stop: FaderProc;
 
-		waitLimit: LONGINT;	(* time at which the fader kicks in, unit: Input.TimeUnit *)
-		waitTime, waitPeriod, drawPeriod: LONGINT;	(* unit Input.TimeUnit *)
-		oldMouseX, oldMouseY: INTEGER;
+		waitLimit: SIGNED32;	(* time at which the fader kicks in, unit: Input.TimeUnit *)
+		waitTime, waitPeriod, drawPeriod: SIGNED32;	(* unit Input.TimeUnit *)
+		oldMouseX, oldMouseY: SIGNED16;
 
-		state: INTEGER;
+		state: SIGNED16;
 		task: Oberon.Task;
 		filler: Viewers.Viewer;
 
@@ -90,16 +90,16 @@ MODULE SaveScreen IN Oberon;
 		Texts.Append(Oberon.Log, W.buf);
 	END Msg;
 
-	PROCEDURE Rand*(range: INTEGER): INTEGER;
+	PROCEDURE Rand*(range: SIGNED16): SIGNED16;
 		CONST a = 16807; m = 2147483647; q = m DIV a; r = m MOD a;
-		VAR g: LONGINT;
+		VAR g: SIGNED32;
 	BEGIN
 		g := a * (seed MOD q) - r * (seed DIV q);
 		IF g > 0 THEN seed := g ELSE seed := g + m END;
 		RETURN SHORT(seed MOD range);
 	END Rand;
 
-	PROCEDURE Limit*(min, val, max: INTEGER): INTEGER;
+	PROCEDURE Limit*(min, val, max: SIGNED16): SIGNED16;
 	BEGIN
 		IF val < min THEN RETURN min
 		ELSIF val > max THEN RETURN max
@@ -145,12 +145,12 @@ MODULE SaveScreen IN Oberon;
 
 
 	PROCEDURE TaskHandler(task: Oberon.Task);
-		VAR x, y: INTEGER; keys: SET; now: LONGINT;
+		VAR x, y: SIGNED16; keys: SET; now: SIGNED32;
 	BEGIN
 		now := Input.Time();
 		CASE state OF
 		| dormant:
-			task.time := MAX(LONGINT);
+			task.time := MAX(SIGNED32);
 		| waiting:
 			Input.Mouse(keys, x, y);
 			IF (ABS(x - oldMouseX) > mouseTolerance) OR (ABS(y - oldMouseY) > mouseTolerance) THEN
@@ -175,7 +175,7 @@ MODULE SaveScreen IN Oberon;
 	END TaskHandler;
 
 
-	PROCEDURE ChangeState(newState: INTEGER);
+	PROCEDURE ChangeState(newState: SIGNED16);
 		VAR
 			(* filler: Viewers.Viewer; *)
 			keys: SET;
@@ -186,7 +186,7 @@ MODULE SaveScreen IN Oberon;
 				Stop;
 				IF (filler.state = 1) & (Viewers.Next(filler) = filler) THEN Viewers.CloseTrack(filler.X) END;
 			END;
-			task.time := MAX(LONGINT);
+			task.time := MAX(SIGNED32);
 		| waiting: ASSERT(state IN {drawingW, dormant}, 112);
 			IF state = drawingW THEN
 				Stop;
@@ -226,7 +226,7 @@ MODULE SaveScreen IN Oberon;
 
 (* Screen saver configuration calls & Commands *)
 
-	PROCEDURE SetWaitTime* (seconds: LONGINT);
+	PROCEDURE SetWaitTime* (seconds: SIGNED32);
 		CONST day = 60 * 60 * 24;
 	BEGIN
 		IF seconds < 15 THEN seconds := 15
@@ -235,7 +235,7 @@ MODULE SaveScreen IN Oberon;
 		waitTime := seconds * Input.TimeUnit;
 	END SetWaitTime;
 
-	PROCEDURE SetFrameRate* (framesPerSecond: INTEGER);
+	PROCEDURE SetFrameRate* (framesPerSecond: SIGNED16);
 	BEGIN
 		IF framesPerSecond < 1 THEN framesPerSecond := 1
 		ELSIF framesPerSecond > 30 THEN framesPerSecond := 30
@@ -303,8 +303,8 @@ MODULE SaveScreen IN Oberon;
 		END;
 	END Deactivate;
 
-	PROCEDURE Activate*;	(** minutesToWait:INTEGER *)
-		VAR wait: INTEGER;
+	PROCEDURE Activate*;	(** minutesToWait:SIGNED16 *)
+		VAR wait: SIGNED16;
 	BEGIN
 		InstallTask;	(* just in case our task has been killed by a TRAP *)
 		In.Open; In.Int(wait);

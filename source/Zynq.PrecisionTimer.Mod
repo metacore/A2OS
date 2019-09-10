@@ -8,7 +8,7 @@ IMPORT
 	Machine, BootConfig;
 
 TYPE
-	Counter* = HUGEINT;
+	Counter* = SIGNED64;
 
 	(**
 		Query timer counter in ticks

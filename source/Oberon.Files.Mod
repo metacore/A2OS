@@ -14,22 +14,22 @@ CONST
 TYPE
 	File* = POINTER TO RECORD
 		buf: Buffer;	(* circular list of buffers *)
-		bufs: LONGINT;	(* number of buffers allocated *)
-		alen, blen: LONGINT;	(* file size = alen*BufSize + blen, 0 <= blen <= BufSize *)
+		bufs: SIGNED32;	(* number of buffers allocated *)
+		alen, blen: SIGNED32;	(* file size = alen*BufSize + blen, 0 <= blen <= BufSize *)
 		r: Files.Rider;	(* rider on underlying Aos file *)
-		checktime, checkdate, checklen: LONGINT
+		checktime, checkdate, checklen: SIGNED32
 	END;
 
 	Rider* = RECORD
 		buf: Buffer;	(* buffer hint *)
-		apos, bpos: LONGINT;
+		apos, bpos: SIGNED32;
 		eof*: BOOLEAN;	(** has end of file been passed *)
-		res*: LONGINT;	(** leftover byte count for ReadBytes/WriteBytes *)
+		res*: SIGNED32;	(** leftover byte count for ReadBytes/WriteBytes *)
 		f: File
 	END;
 
 	Buffer = POINTER TO RECORD
-		apos, lim: LONGINT;
+		apos, lim: SIGNED32;
 		mod: BOOLEAN;
 		next: Buffer;
 		data: ARRAY BufSize OF CHAR
@@ -47,13 +47,13 @@ VAR
 
 PROCEDURE UpdateFile(f: File);
 BEGIN
-	f.r.file.GetDate(f.checktime, f.checkdate); f.checklen := f.r.file.Length()(LONGINT);
+	f.r.file.GetDate(f.checktime, f.checkdate); f.checklen := f.r.file.Length()(SIGNED32);
 END UpdateFile;
 
 (* Check if our copy of the underlying file's time and length match the reality. *)
 
 PROCEDURE FileChanged(f: File): BOOLEAN;
-VAR time, date: LONGINT;
+VAR time, date: SIGNED32;
 BEGIN
 	f.r.file.GetDate(time, date);
 	RETURN (time # f.checktime) OR (date # f.checkdate) OR (f.r.file.Length() # f.checklen)
@@ -90,7 +90,7 @@ END New;
 
 (** Open an existing file. The same file descriptor is returned if a file is opened multiple times. *)
 PROCEDURE Old*(CONST name: ARRAY OF CHAR): File;
-VAR f: File; file: Files.File; len: LONGINT;
+VAR f: File; file: Files.File; len: SIGNED32;
 BEGIN
 	Kernel.CheckOberonLock;	(* can only be called from Oberon *)
 	file := Files.Old(name);
@@ -105,7 +105,7 @@ BEGIN
 			files.Remove(f); f := NIL	(* throw away old record (even though user may still have a copy; that is his fault) *)
 		END;
 		IF f = NIL THEN	(* none found, create new handle *)
-			len := file.Length()(LONGINT);
+			len := file.Length()(SIGNED32);
 			NEW(f); f.bufs := 1; f.alen := len DIV BufSize; f.blen := len MOD BufSize;
 			NEW(f.buf); f.buf.apos := 0; f.buf.next := f.buf; f.buf.mod := FALSE;
 			file.Set(f.r, 0); file.ReadBytes(f.r, f.buf.data, 0, BufSize);
@@ -134,26 +134,26 @@ BEGIN
 END Close;
 
 (** Returns the current length of a file. *)
-PROCEDURE Length*(f: File): LONGINT;
+PROCEDURE Length*(f: File): SIGNED32;
 BEGIN
 	RETURN f.alen*BufSize + f.blen
 END Length;
 
 (** Returns the time (t) and date (d) when a file was last modified. *)
-PROCEDURE GetDate*(f: File; VAR t, d: LONGINT);
+PROCEDURE GetDate*(f: File; VAR t, d: SIGNED32);
 BEGIN
 	f.r.file.GetDate(t, d)
 END GetDate;
 
 (** Sets the modification time (t) and date (d) of a file. *)
-PROCEDURE SetDate*(f: File; t, d: LONGINT);
+PROCEDURE SetDate*(f: File; t, d: SIGNED32);
 BEGIN
 	Update(f);	(* otherwise later updating will modify time/date again *)
 	f.r.file.SetDate(t, d)
 END SetDate;
 
 (** Positions a Rider at a certain position in a file. Multiple Riders can be positioned at different locations in a file. A Rider cannot be positioned beyond the end of a file. *)
-PROCEDURE Set*(VAR r: Rider; f: File; pos: LONGINT);
+PROCEDURE Set*(VAR r: Rider; f: File; pos: SIGNED32);
 BEGIN
 	IF f # NIL THEN
 		r.eof := FALSE; r.res := 0; r.buf := f.buf; r.f := f;
@@ -170,7 +170,7 @@ BEGIN
 END Set;
 
 (** Returns the offset of a Rider positioned on a file. *)
-PROCEDURE Pos*(VAR r: Rider): LONGINT;
+PROCEDURE Pos*(VAR r: Rider): SIGNED32;
 BEGIN
 	RETURN r.apos*BufSize + r.bpos
 END Pos;
@@ -210,8 +210,8 @@ BEGIN
 END Read;
 
 (** Reads a sequence of length n bytes into the buffer x, advancing the Rider. Less bytes will be read when reading over the length of the file. r.res indicates the number of unread bytes. x must be big enough to hold n bytes. *)
-PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; len: LONGINT);
-VAR src, dst: ADDRESS; m: LONGINT; buf: Buffer; ch: CHAR;
+PROCEDURE ReadBytes*(VAR r: Rider; VAR x: ARRAY OF SYSTEM.BYTE; len: SIGNED32);
+VAR src, dst: ADDRESS; m: SIGNED32; buf: Buffer; ch: CHAR;
 BEGIN
 	IF LEN(x) < len THEN SYSTEM.HALT(19) END;
 	IF Slow THEN
@@ -263,14 +263,14 @@ END ReadBytes;
 Portable routines to read the standard Oberon types.
 *)
 
-PROCEDURE ReadInt*(VAR r: Rider; VAR x: INTEGER);
-VAR x0, x1: SHORTINT;
+PROCEDURE ReadInt*(VAR r: Rider; VAR x: SIGNED16);
+VAR x0, x1: SIGNED8;
 BEGIN
 	Read(r, x0); Read(r, x1);
 	x := LONG(x1) * 100H + LONG(x0) MOD 100H
 END ReadInt;
 
-PROCEDURE ReadLInt*(VAR r: Rider; VAR x: LONGINT);
+PROCEDURE ReadLInt*(VAR r: Rider; VAR x: SIGNED32);
 BEGIN
 	ReadBytes(r, SYSTEM.VAL(Bytes4, x), 4)
 END ReadLInt;
@@ -283,23 +283,23 @@ BEGIN
 END ReadSet;
 
 PROCEDURE ReadBool*(VAR r: Rider; VAR x: BOOLEAN);
-VAR s: SHORTINT;
+VAR s: SIGNED8;
 BEGIN
 	Read(r, s); x := s # 0
 END ReadBool;
 
-PROCEDURE ReadReal*(VAR r: Rider; VAR x: REAL);
+PROCEDURE ReadReal*(VAR r: Rider; VAR x: FLOAT32);
 BEGIN
 	ReadBytes(r, SYSTEM.VAL(Bytes4, x), 4)
 END ReadReal;
 
-PROCEDURE ReadLReal*(VAR r: Rider; VAR x: LONGREAL);
+PROCEDURE ReadLReal*(VAR r: Rider; VAR x: FLOAT64);
 BEGIN
 	ReadBytes(r, SYSTEM.VAL(Bytes8, x), 8)
 END ReadLReal;
 
 PROCEDURE ReadString*(VAR r: Rider; VAR x: ARRAY OF CHAR);
-VAR i: INTEGER; ch: CHAR;
+VAR i: SIGNED16; ch: CHAR;
 BEGIN i := 0;
 	LOOP
 		Read(r, ch); x[i] := ch; INC(i);
@@ -312,8 +312,8 @@ BEGIN i := 0;
 END ReadString;
 
 (** Reads a number in compressed variable length notation using the minimum amount of bytes. *)
-PROCEDURE ReadNum*(VAR r: Rider; VAR x: LONGINT);
-VAR ch: CHAR; n: INTEGER; y: LONGINT;
+PROCEDURE ReadNum*(VAR r: Rider; VAR x: SIGNED32);
+VAR ch: CHAR; n: SIGNED16; y: SIGNED32;
 BEGIN
 	n := 0; y := 0; Read(r, ch);
 	WHILE ch >= 80X DO INC(y, LSH(LONG(ORD(ch)) - 128, n)); INC(n, 7); Read(r, ch) END;
@@ -349,8 +349,8 @@ BEGIN
 END Write;
 
 (** Writes the buffer x containing n bytes into a file at the Rider position. *)
-PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF SYSTEM.BYTE; len: LONGINT);
-VAR src, dst: ADDRESS; m: LONGINT; buf: Buffer;
+PROCEDURE WriteBytes*(VAR r: Rider; CONST x: ARRAY OF SYSTEM.BYTE; len: SIGNED32);
+VAR src, dst: ADDRESS; m: SIGNED32; buf: Buffer;
 BEGIN
 	IF LEN(x) < len THEN SYSTEM.HALT(19) END;
 	IF Slow THEN
@@ -397,12 +397,12 @@ END WriteBytes;
 Portable routines to write the standard Oberon types.
 *)
 
-PROCEDURE WriteInt*(VAR r: Rider; x: INTEGER);
+PROCEDURE WriteInt*(VAR r: Rider; x: SIGNED16);
 BEGIN
 	Write(r, SHORT(x)); Write(r, SHORT(x DIV 100H))
 END WriteInt;
 
-PROCEDURE WriteLInt*(VAR r: Rider; x: LONGINT);
+PROCEDURE WriteLInt*(VAR r: Rider; x: SIGNED32);
 BEGIN
 	WriteBytes(r, SYSTEM.VAL(Bytes4, x), 4)
 END WriteLInt;
@@ -419,18 +419,18 @@ BEGIN
 	IF x THEN Write(r, 1) ELSE Write(r, 0) END
 END WriteBool;
 
-PROCEDURE WriteReal*(VAR r: Rider; x: REAL);
+PROCEDURE WriteReal*(VAR r: Rider; x: FLOAT32);
 BEGIN
 	WriteBytes(r, SYSTEM.VAL(Bytes4, x), 4)
 END WriteReal;
 
-PROCEDURE WriteLReal*(VAR r: Rider; x: LONGREAL);
+PROCEDURE WriteLReal*(VAR r: Rider; x: FLOAT64);
 BEGIN
 	WriteBytes(r, SYSTEM.VAL(Bytes8, x), 8)
 END WriteLReal;
 
 PROCEDURE WriteString*(VAR r: Rider; CONST x: ARRAY OF CHAR);
-VAR i: INTEGER; ch: CHAR;
+VAR i: SIGNED16; ch: CHAR;
 BEGIN
 	i := 0;
 	LOOP ch := x[i]; Write(r, ch); INC(i);
@@ -440,26 +440,26 @@ BEGIN
 END WriteString;
 
 (** Writes a number in a compressed format. *)
-PROCEDURE WriteNum*(VAR r: Rider; x: LONGINT);
+PROCEDURE WriteNum*(VAR r: Rider; x: SIGNED32);
 BEGIN
 	WHILE (x < - 64) OR (x > 63) DO Write(r, CHR(x MOD 128 + 128)); x := x DIV 128 END;
 	Write(r, CHR(x MOD 128))
 END WriteNum;
 
 (** Deletes a file. res = 0 indicates success. *)
-PROCEDURE Delete*(name: ARRAY OF CHAR; VAR res: INTEGER);
-VAR r: LONGINT;
+PROCEDURE Delete*(name: ARRAY OF CHAR; VAR res: SIGNED16);
+VAR r: SIGNED32;
 BEGIN
 	Files.Delete(name, r);
-	IF (r >= MIN(INTEGER)) & (r <= MAX(INTEGER)) THEN res := SHORT(r) ELSE res := -1 END
+	IF (r >= MIN(SIGNED16)) & (r <= MAX(SIGNED16)) THEN res := SHORT(r) ELSE res := -1 END
 END Delete;
 
 (** Renames a file. res = 0 indicates success. *)
-PROCEDURE Rename*(CONST old, new: ARRAY OF CHAR; VAR res: INTEGER);
-VAR r: LONGINT;
+PROCEDURE Rename*(CONST old, new: ARRAY OF CHAR; VAR res: SIGNED16);
+VAR r: SIGNED32;
 BEGIN
 	Files.Rename(old, new, r);
-	IF (r >= MIN(INTEGER)) & (r <= MAX(INTEGER)) THEN res := SHORT(r) ELSE res := -1 END
+	IF (r >= MIN(SIGNED16)) & (r <= MAX(SIGNED16)) THEN res := SHORT(r) ELSE res := -1 END
 END Rename;
 
 (** Returns the full name of a file. *)
@@ -468,7 +468,7 @@ BEGIN
 	f.r.file.GetName(name)
 END GetName;
 
-PROCEDURE ReadBuf(f: File; buf: Buffer; pos: LONGINT);
+PROCEDURE ReadBuf(f: File; buf: Buffer; pos: SIGNED32);
 VAR file: Files.File;
 BEGIN
 	file := f.r.file;
@@ -480,11 +480,11 @@ BEGIN
 END ReadBuf;
 
 PROCEDURE WriteBuf(f: File; buf: Buffer);
-VAR pos, n: LONGINT; file: Files.File;
+VAR pos, n: SIGNED32; file: Files.File;
 BEGIN
 	file := f.r.file;
 	pos := buf.apos*BufSize;
-	n := pos - file.Length()(LONGINT);
+	n := pos - file.Length()(SIGNED32);
 	IF n > 0 THEN	(* pos is past current eof, extend file *)
 		file.Set(f.r, file.Length());
 		WHILE n > 0 DO file.Write(f.r, 0X); DEC(n) END
@@ -496,7 +496,7 @@ BEGIN
 	buf.mod := FALSE
 END WriteBuf;
 
-PROCEDURE SearchBuf(f: File; pos: LONGINT): Buffer;
+PROCEDURE SearchBuf(f: File; pos: SIGNED32): Buffer;
 VAR buf: Buffer;
 BEGIN
 	buf := f.buf;
@@ -508,7 +508,7 @@ BEGIN
 	RETURN buf
 END SearchBuf;
 
-PROCEDURE GetBuf(f: File; pos: LONGINT): Buffer;
+PROCEDURE GetBuf(f: File; pos: SIGNED32): Buffer;
 VAR buf: Buffer;
 BEGIN
 	buf := f.buf;
@@ -562,7 +562,7 @@ END WriteFile;
 PROCEDURE ShowList*;
 VAR
 	enum: OBJECT
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 
 		PROCEDURE EnumFile(f: ANY; VAR cont: BOOLEAN);
 		BEGIN

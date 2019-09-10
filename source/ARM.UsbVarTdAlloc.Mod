@@ -14,12 +14,12 @@ TYPE
 	VAR
 		buffer: POINTER TO ARRAY OF CHAR;
 		used: POINTER TO ARRAY OF SET;
-		ofs: LONGINT;
+		ofs: SIGNED32;
 		next: TdBuffer;
 
-		PROCEDURE & Init (block: LONGINT);
+		PROCEDURE & Init (block: SIGNED32);
 		VAR
-			bitmaskSize: LONGINT;
+			bitmaskSize: SIGNED32;
 		BEGIN
 			NEW(buffer, AllocSize + AllocAlign);
 			ofs := AllocAlign - ADDRESSOF(buffer[0]) MOD AllocAlign;
@@ -27,19 +27,19 @@ TYPE
 			NEW(used, bitmaskSize)
 		END Init;
 
-		PROCEDURE Used(block: LONGINT): BOOLEAN;
+		PROCEDURE Used(block: SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN (block MOD SetSize) IN used[block DIV SetSize];
 		END Used;
 
-		PROCEDURE SetUsed(block: LONGINT);
+		PROCEDURE SetUsed(block: SIGNED32);
 		BEGIN
 			INCL(used[block DIV SetSize], block MOD SetSize);
 		END SetUsed;
 
 		(* faster version of SetUsed for blocks
-		PROCEDURE SetUsedR(from, to: LONGINT);
-		VAR startSet, stopSet, startBit, stopBit: LONGINT;
+		PROCEDURE SetUsedR(from, to: SIGNED32);
+		VAR startSet, stopSet, startBit, stopBit: SIGNED32;
 		BEGIN
 			IF to < from THEN RETURN END;
 			startBit := from MOD SetSize;
@@ -60,14 +60,14 @@ TYPE
 		END SetUsedR;
 		*)
 
-		PROCEDURE SetFree(block: LONGINT);
+		PROCEDURE SetFree(block: SIGNED32);
 		BEGIN
 			EXCL(used[block DIV SetSize], block MOD SetSize);
 		END SetFree;
 
 		(* faster version of SetFree for blocks
-		PROCEDURE SetFreeR(from, to: LONGINT);
-		VAR startSet, stopSet, startBit, stopBit: LONGINT;
+		PROCEDURE SetFreeR(from, to: SIGNED32);
+		VAR startSet, stopSet, startBit, stopBit: SIGNED32;
 		BEGIN
 			IF to < from THEN RETURN END;
 			startBit := from MOD SetSize;
@@ -104,9 +104,9 @@ TYPE
 	TYPE Allocator * = OBJECT
 	VAR
 		tdBuffers: TdBuffer;
-		pageSize, blockSize, bitmaskSize: LONGINT;
+		pageSize, blockSize, bitmaskSize: SIGNED32;
 
-		PROCEDURE & Setup * (pageSize, blockSize: LONGINT);
+		PROCEDURE & Setup * (pageSize, blockSize: SIGNED32);
 		BEGIN
 			ASSERT(SetSize = 32);
 			ASSERT((AllocSize MOD blockSize) MOD SetSize = 0);
@@ -119,14 +119,14 @@ TYPE
 		PROCEDURE Allocate * (size: SIZE): ADDRESS;
 		VAR
 			buf: TdBuffer;
-			start, pos, count: LONGINT;
+			start, pos, count: SIGNED32;
 			adr: ADDRESS;
 
 			(** Allocate a new TD buffer and mark as used the last 32-byte block before a 4kB page boundary. *)
 			PROCEDURE AllocateBuffer;
 			VAR
 				buf: TdBuffer;
-				count, mod: LONGINT;
+				count, mod: SIGNED32;
 			BEGIN
 				(* No buffer found: allocate a new one *)
 				NEW(buf, blockSize);
@@ -203,7 +203,7 @@ TYPE
 		VAR
 			buf: TdBuffer;
 			adr: ADDRESS;
-			slot: LONGINT;
+			slot: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			ASSERT(size MOD blockSize = 0);
 			size := size DIV blockSize;
@@ -233,9 +233,9 @@ TYPE
 	StaticAllocator * = OBJECT
 	VAR
 		buffers: TdBuffer;
-		size: LONGINT;
+		size: SIGNED32;
 
-		PROCEDURE & Setup * (allocSize: LONGINT);
+		PROCEDURE & Setup * (allocSize: SIGNED32);
 		BEGIN
 			size := allocSize
 		END Setup;
@@ -262,7 +262,7 @@ IMPORT UsbVarTdAlloc, Random;
 
 PROCEDURE Test*;
 VAR allocator: UsbVarTdAlloc.Allocator; adr: POINTER TO ARRAY OF ADDRESS;
-gen: Random.Generator; i,j, k: LONGINT; size: POINTER TO ARRAY OF SIZE;
+gen: Random.Generator; i,j, k: SIGNED32; size: POINTER TO ARRAY OF SIZE;
 BEGIN
 	NEW(allocator, 4096, 32);
 	NEW(gen);

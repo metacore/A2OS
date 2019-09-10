@@ -35,18 +35,18 @@ TYPE
 	Statistic* = POINTER TO StatisticDesc;
 	StatisticDesc* = RECORD (vyBase.ObjDesc)
 		data*, reko*: aA.X1d;
-		n*: LONGINT;
+		n*: SIGNED32;
 	END;
 
-	PROCEDURE tautstring( VAR fdist: ARRAY OF LONGREAL;  VAR t: ARRAY OF LONGREAL;  VAR lower: ARRAY OF LONGREAL;  VAR upper: ARRAY OF LONGREAL;
-									   VAR y1: LONGREAL;  VAR yn: LONGREAL;  n: LONGINT;  VAR string: ARRAY OF LONGREAL;  VAR knotsind: ARRAY OF LONGINT;
-									   VAR knotst: ARRAY OF LONGREAL;  VAR knotsy: ARRAY OF LONGREAL;  VAR nknots: LONGINT );
+	PROCEDURE tautstring( VAR fdist: ARRAY OF FLOAT64;  VAR t: ARRAY OF FLOAT64;  VAR lower: ARRAY OF FLOAT64;  VAR upper: ARRAY OF FLOAT64;
+									   VAR y1: FLOAT64;  VAR yn: FLOAT64;  n: SIGNED32;  VAR string: ARRAY OF FLOAT64;  VAR knotsind: ARRAY OF SIGNED32;
+									   VAR knotst: ARRAY OF FLOAT64;  VAR knotsy: ARRAY OF FLOAT64;  VAR nknots: SIGNED32 );
 
-	VAR newmaxderiv, newminderiv, maxderiv, minderiv, usualvalue: LONGREAL;  actind, minind, maxind, i, j, lastbound, lastsign, nmax: LONGINT;  knotssign: aA.L1d;
+	VAR newmaxderiv, newminderiv, maxderiv, minderiv, usualvalue: FLOAT64;  actind, minind, maxind, i, j, lastbound, lastsign, nmax: SIGNED32;  knotssign: aA.L1d;
 
 	BEGIN
 		NEW( knotssign, n );  nmax := 0;  lastbound := 0;  knotssign[0] := lastbound;  knotsind[0] := 1;  knotsy[0] := y1;  knotst[0] := t[0];  nknots := 1;  actind := 2;
-		maxind := 1;  minind := 1;  maxderiv := MAX( LONGREAL );  minderiv := MIN( LONGREAL );
+		maxind := 1;  minind := 1;  maxderiv := MAX( FLOAT64 );  minderiv := MIN( FLOAT64 );
 
 		WHILE (actind <= n) DO
 			IF (actind < n) THEN
@@ -68,7 +68,7 @@ TYPE
 					knotssign[nknots] := 1;  knotsind[nknots] := maxind;  knotsy[nknots] := upper[maxind - 1];  knotst[nknots] := t[maxind - 1];  INC( nknots );
 				END;
 
-				actind := maxind;  lastbound := 1;  maxderiv := MAX( LONGREAL );  minderiv := MIN( LONGREAL );
+				actind := maxind;  lastbound := 1;  maxderiv := MAX( FLOAT64 );  minderiv := MIN( FLOAT64 );
 			ELSE
 				IF (newmaxderiv < minderiv) THEN
 					IF (lastbound = 0) THEN knotsind[0] := 1;  knotssign[0] := -1;  knotsy[0] := lower[0];  knotst[0] := t[0];  minind := 1;  maxind := 1;  ELSE
@@ -77,7 +77,7 @@ TYPE
 						knotsind[nknots] := minind;  knotssign[nknots] := -1;  knotsy[nknots] := lower[minind - 1];  knotst[nknots] := t[minind - 1];  INC( nknots )
 					END;
 
-					actind := minind;  lastbound := -1;  maxderiv := MAX( LONGREAL );  minderiv := MIN( LONGREAL );
+					actind := minind;  lastbound := -1;  maxderiv := MAX( FLOAT64 );  minderiv := MIN( FLOAT64 );
 				ELSE
 					IF (newmaxderiv < maxderiv) THEN maxderiv := newmaxderiv;  maxind := actind;  END;
 
@@ -107,7 +107,7 @@ TYPE
 
 	END tautstring;
 
-	PROCEDURE multiwdwr( y: ARRAY OF LONGREAL;  n: LONGINT;  thresh: LONGREAL;  squeezing: ARRAY OF CHAR ): aA.L1d;
+	PROCEDURE multiwdwr( y: ARRAY OF FLOAT64;  n: SIGNED32;  thresh: FLOAT64;  squeezing: ARRAY OF CHAR ): aA.L1d;
 
 	VAR z: aA.L1d;
 
@@ -125,10 +125,10 @@ TYPE
 
 	VAR statistic: Statistic;  degraded, vec: vyBase.Object;
 		statisticName, name, squeezing: ARRAY 64 OF CHAR;
-		thr, squfac: LONGREAL;
+		thr, squfac: FLOAT64;
 
 	BEGIN
-		aC.InitScan( "data=OBJ statisticName=STRING vec=STRING thr=LONGREAL squeezingfactor=LONGREAL squeezing=STRING" );
+		aC.InitScan( "data=OBJ statisticName=STRING vec=STRING thr=FLOAT64 squeezingfactor=FLOAT64 squeezing=STRING" );
 
 		IF aC.ExpectObject( "data", degraded ) & aC.ExpectName( "statisticName", statisticName ) & aC.GetName( "vec", name ) & aC.ExpectReal( "thr", thr ) &
 		    aC.ExpectReal( "squeezingfactor", squfac ) & aC.ExpectString( "squeezing", squeezing ) THEN
@@ -142,10 +142,10 @@ TYPE
 		END;
 	END MakeStatistic;
 
-	PROCEDURE CreateTautString*( VAR s: Statistic;  degraded: vyBase.Object;  thr: LONGREAL;  squfac: LONGREAL;  squeezing: ARRAY OF CHAR );
+	PROCEDURE CreateTautString*( VAR s: Statistic;  degraded: vyBase.Object;  thr: FLOAT64;  squfac: FLOAT64;  squeezing: ARRAY OF CHAR );
 	(* Mit dieser Methode wird die Berechnung gestartet, die Felder des Objekts Statistic werden initialisiert. *)
 
-	VAR n, i: LONGINT;
+	VAR n, i: SIGNED32;
 
 	BEGIN
 		n := vyLongrealVec.Len( degraded( vyLongrealVec.tVector ) );  NEW( s.data, n );  NEW( s.reko, n );  s.n := n;
@@ -153,11 +153,11 @@ TYPE
 		GetTautString( s.reko^, s, thr, squfac, squeezing );
 	END CreateTautString;
 
-	PROCEDURE GetTautString*( data: ARRAY OF LONGREAL;  VAR s: Statistic;  thr: LONGREAL;  squfac: LONGREAL;  squeezing: ARRAY OF CHAR );
+	PROCEDURE GetTautString*( data: ARRAY OF FLOAT64;  VAR s: Statistic;  thr: FLOAT64;  squfac: FLOAT64;  squeezing: ARRAY OF CHAR );
 	(* Eigentliche Methode zur Berechnung des TautString. *)
 
-	VAR dataSum, dataSumX, eps, upper, lower, residuals, string, knotst, knotsy: aA.X1d;  ind, ind2, knotsind: aA.L1d;  dist, sigma, mean, sum, sqthr: LONGREAL;
-		i, nknots: LONGINT;
+	VAR dataSum, dataSumX, eps, upper, lower, residuals, string, knotst, knotsy: aA.X1d;  ind, ind2, knotsind: aA.L1d;  dist, sigma, mean, sum, sqthr: FLOAT64;
+		i, nknots: SIGNED32;
 
 	BEGIN
 		NEW( dataSum, s.n + 1 );  dataSum := cumsum( data );  NEW( dataSumX, s.n + 1 );  dataSumX := MakeXInterval( LEN( dataSum ) );
@@ -197,14 +197,14 @@ TYPE
 		vyLongreal.Copy( LEN( string^ ), string^, 0, s.reko^, 0 );
 	END GetTautString;
 
-	PROCEDURE DoGetTautString( VAR fdistx: ARRAY OF LONGREAL;  VAR fdist: ARRAY OF LONGREAL;  VAR lower: ARRAY OF LONGREAL;  VAR upper: ARRAY OF LONGREAL;
-												   start: LONGREAL;  ende: LONGREAL;  VAR string: ARRAY OF LONGREAL;  VAR knotsind: ARRAY OF LONGINT;
-												   VAR knotst: ARRAY OF LONGREAL;  VAR knotsy: ARRAY OF LONGREAL;  VAR nknots: LONGINT;  VAR s: Statistic );
+	PROCEDURE DoGetTautString( VAR fdistx: ARRAY OF FLOAT64;  VAR fdist: ARRAY OF FLOAT64;  VAR lower: ARRAY OF FLOAT64;  VAR upper: ARRAY OF FLOAT64;
+												   start: FLOAT64;  ende: FLOAT64;  VAR string: ARRAY OF FLOAT64;  VAR knotsind: ARRAY OF SIGNED32;
+												   VAR knotst: ARRAY OF FLOAT64;  VAR knotsy: ARRAY OF FLOAT64;  VAR nknots: SIGNED32;  VAR s: Statistic );
 	(* Methode zur Neuberechnung des TautStrings. Wird in der Schleife von GetTautString aufgerufen.
 	Falls das Minimum der oberen Schranke noch zu weit von Maximum der unteren Schranke entfernt ist,
 	wird der TautString neu berechnet. *)
 
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 
 	BEGIN
 		IF (ABS( Min( upper ) - Max( lower ) ) < (1 / 100000000)) THEN
@@ -214,10 +214,10 @@ TYPE
 
 	END DoGetTautString;
 
-	PROCEDURE Mad*( y: ARRAY OF LONGREAL ): LONGREAL;
+	PROCEDURE Mad*( y: ARRAY OF FLOAT64 ): FLOAT64;
 	(* Berechnung des MAD der Zahlen in y. *)
 
-	VAR i, len: LONGINT;  med, mad: LONGREAL;  z: aA.X1d;
+	VAR i, len: SIGNED32;  med, mad: FLOAT64;  z: aA.X1d;
 
 	BEGIN
 		len := LEN( y ) - 1;  NEW( z, len );
@@ -233,19 +233,19 @@ TYPE
 		RETURN mad;
 	END Mad;
 
-	PROCEDURE Median( y: ARRAY OF LONGREAL ): LONGREAL;
+	PROCEDURE Median( y: ARRAY OF FLOAT64 ): FLOAT64;
 	(* Berechnung des Medians der Zahlen in y. *)
 
-	VAR len: LONGINT;
+	VAR len: SIGNED32;
 
 	BEGIN
 		len := LEN( y );  RETURN aA.Median1dX( y, len );
 	END Median;
 
-	PROCEDURE Mean( y: ARRAY OF LONGREAL ): LONGREAL;
+	PROCEDURE Mean( y: ARRAY OF FLOAT64 ): FLOAT64;
 	(* Berechnung des Durchschnitts der Zahlen in y. *)
 
-	VAR len, i, length: LONGINT;  x, diff, mean: LONGREAL;
+	VAR len, i, length: SIGNED32;  x, diff, mean: FLOAT64;
 
 	BEGIN
 		len := LEN( y );  length := 1;  mean := 0;
@@ -255,11 +255,11 @@ TYPE
 		RETURN mean;
 	END Mean;
 
-	PROCEDURE cumsum( y: ARRAY OF LONGREAL ): aA.X1d;
+	PROCEDURE cumsum( y: ARRAY OF FLOAT64 ): aA.X1d;
 	(* Berechnet eine kumulierte Summe.
 	In z[n] steht der Ausdruck Summe von 0 bis n-1 über y geteilt durch Länge von y. *)
 
-	VAR len, i: LONGINT;  z: aA.X1d;
+	VAR len, i: SIGNED32;  z: aA.X1d;
 
 	BEGIN
 		len := LEN( y );  NEW( z, len + 1 );  z[0] := 0;
@@ -269,10 +269,10 @@ TYPE
 		RETURN z;
 	END cumsum;
 
-	PROCEDURE MakeXInterval( len: LONGINT ): aA.X1d;
+	PROCEDURE MakeXInterval( len: SIGNED32 ): aA.X1d;
 	(* Erzeugung von äquidistanten Abständen der Anzahl len auf dem Intervall [0;1]. *)
 
-	VAR ret: aA.X1d;  i: LONGINT;
+	VAR ret: aA.X1d;  i: SIGNED32;
 
 	BEGIN
 		NEW( ret, len );
@@ -282,13 +282,13 @@ TYPE
 		RETURN ret;
 	END MakeXInterval;
 
-	PROCEDURE Min*( x: ARRAY OF LONGREAL ): LONGREAL;
+	PROCEDURE Min*( x: ARRAY OF FLOAT64 ): FLOAT64;
 	(* Berechnet das Minimum der Einträge in x. *)
 
-	VAR min: LONGREAL;  i, len: LONGINT;
+	VAR min: FLOAT64;  i, len: SIGNED32;
 
 	BEGIN
-		min := MAX( LONGREAL );  len := LEN( x ) - 1;
+		min := MAX( FLOAT64 );  len := LEN( x ) - 1;
 
 		FOR i := 0 TO len DO
 			IF x[i] < min THEN min := x[i];  END;
@@ -297,13 +297,13 @@ TYPE
 		RETURN min;
 	END Min;
 
-	PROCEDURE Max*( x: ARRAY OF LONGREAL ): LONGREAL;
+	PROCEDURE Max*( x: ARRAY OF FLOAT64 ): FLOAT64;
 	(* Berechnet das Maximum der Einträge in x. *)
 
-	VAR max: LONGREAL;  i, len: LONGINT;
+	VAR max: FLOAT64;  i, len: SIGNED32;
 
 	BEGIN
-		max := MIN( LONGREAL );  len := LEN( x ) - 1;
+		max := MIN( FLOAT64 );  len := LEN( x ) - 1;
 
 		FOR i := 0 TO len DO
 			IF x[i] > max THEN max := x[i];  END;

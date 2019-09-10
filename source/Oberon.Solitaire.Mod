@@ -37,7 +37,7 @@ TYPE
 	END;
 
 	SetDrawMsg = RECORD (Display.FrameMsg)
-		drawNum: INTEGER;
+		drawNum: SIGNED16;
 	END;
 
 	FlipMove = POINTER TO FlipMoveDesc;
@@ -46,16 +46,16 @@ TYPE
 
 	SwapMove = POINTER TO SwapMoveDesc;
 	SwapMoveDesc = RECORD (Cards.MoveDesc)
-		nrVis: ARRAY CARDS OF SHORTINT;
-		curSwap: INTEGER;
+		nrVis: ARRAY CARDS OF SIGNED8;
+		curSwap: SIGNED16;
 	END;
 
 	Talon = POINTER TO TalonDesc;
 	TalonDesc = RECORD (Cards.StackDesc)
 		visTail: Cards.Card;	(* cards that are visible *)
-		nrVis: ARRAY CARDS OF SHORTINT;	(* nr. of cards that are visible on top *)
-		curSwap: INTEGER;	(* index into nr.Vis-array *)
-		nrDraw: INTEGER;	(* nr. of cards to move from tail to visTail when clicked *)
+		nrVis: ARRAY CARDS OF SIGNED8;	(* nr. of cards that are visible on top *)
+		curSwap: SIGNED16;	(* index into nr.Vis-array *)
+		nrDraw: SIGNED16;	(* nr. of cards to move from tail to visTail when clicked *)
 	END;
 
 	Depot = POINTER TO DepotDesc;
@@ -64,8 +64,8 @@ TYPE
 
 	Column = POINTER TO ColumnDesc;
 	ColumnDesc = RECORD (Cards.StackDesc)
-		topY: INTEGER;	(* left, top corner of top card *)
-		nrCards: INTEGER;	(* nr of cards at beginning *)
+		topY: SIGNED16;	(* left, top corner of top card *)
+		nrCards: SIGNED16;	(* nr of cards at beginning *)
 	END;
 
 VAR
@@ -84,7 +84,7 @@ BEGIN C.res:= -1; T.res:= -1; D.res:= -1;
 	T.tail:= D.tail; F.handle(F, T)
 END StartGame;
 
-PROCEDURE DrawRect(x, y: INTEGER; card: Cards.Card);
+PROCEDURE DrawRect(x, y: SIGNED16; card: Cards.Card);
 CONST MaxH = CardH+12*DeltaH;
 BEGIN
 	Oberon.RemoveMarks(x, y, CardW, MaxH);
@@ -134,7 +134,7 @@ BEGIN
 END TalonAttr;
 
 PROCEDURE CopyTalon(VAR M: Objects.CopyMsg; from, to: Talon);
-VAR c: Cards.Card; i: INTEGER;
+VAR c: Cards.Card; i: SIGNED16;
 BEGIN
 	to.nrDraw:= from.nrDraw;
 	to.curSwap:= from.curSwap;
@@ -146,8 +146,8 @@ BEGIN
 	Cards.CopyStack(M, from, to);
 END CopyTalon;
 
-PROCEDURE DrawTalon(T: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER);
-VAR c: Cards.Card; i: INTEGER;
+PROCEDURE DrawTalon(T: Cards.Stack; M: Display3.Mask; x, y, w, h: SIGNED16);
+VAR c: Cards.Card; i: SIGNED16;
 BEGIN
 	WITH T: Talon DO
 		Oberon.RemoveMarks(x, y, w, h);
@@ -198,7 +198,7 @@ BEGIN
 END TalonMove;
 
 PROCEDURE TalonUndoMove(T: Cards.Stack; M: Cards.Move);
-VAR c: Cards.Card; i: INTEGER;
+VAR c: Cards.Card; i: SIGNED16;
 BEGIN
 	WITH T: Talon DO
 		IF M IS SwapMove THEN
@@ -223,7 +223,7 @@ BEGIN
 END TalonUndoMove;
 
 PROCEDURE TrackTalon(T: Cards.Stack; VAR M: Oberon.InputMsg);
-VAR c: Cards.Card; SM: SwapMove; x, y, i: INTEGER;
+VAR c: Cards.Card; SM: SwapMove; x, y, i: SIGNED16;
 BEGIN
 	WITH T: Talon DO
 		x:= T.X+M.x; y:= T.Y+M.y;
@@ -263,7 +263,7 @@ BEGIN
 END TrackTalon;
 
 PROCEDURE TalonHandler(T: Objects.Object; VAR M: Objects.ObjMsg);
-VAR T0: Talon; c: Cards.Card; i, val: INTEGER;
+VAR T0: Talon; c: Cards.Card; i, val: SIGNED16;
 BEGIN
 	WITH T: Talon DO
 		IF (M IS SetDrawMsg) & (M.stamp # T.stamp) THEN
@@ -405,7 +405,7 @@ BEGIN
 	END
 END ColumnUndoMove;
 
-PROCEDURE DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: SIGNED16);
 VAR c: Cards.Card;
 BEGIN
 	WITH C: Column DO
@@ -432,7 +432,7 @@ BEGIN
 END DrawColumn;
 
 PROCEDURE TrackColumn(C: Cards.Stack; VAR M: Oberon.InputMsg);
-VAR c: Cards.Card; FM: FlipMove; x, y, dH: INTEGER;
+VAR c: Cards.Card; FM: FlipMove; x, y, dH: SIGNED16;
 BEGIN
 	WITH C: Column DO
 		x:= C.X+M.x; y:= C.Y+M.y;
@@ -457,7 +457,7 @@ BEGIN
 END TrackColumn;
 
 PROCEDURE ColumnHandler*(C: Objects.Object; VAR M: Objects.ObjMsg);
-VAR C0: Column; c: Cards.Card; i: INTEGER;
+VAR C0: Column; c: Cards.Card; i: SIGNED16;
 BEGIN
 	WITH C: Column DO
 		IF M IS DistributeMsg THEN
@@ -497,8 +497,8 @@ END NewColumn;
 
 PROCEDURE LoadDocument(D: Documents.Document);
 VAR obj: Objects.Object; main: Gadgets.Frame; talon, stack: Cards.Stack; c: Cards.Card;
-	F: Files.File; R: Files.Rider; name: ARRAY 64 OF CHAR; ch: CHAR; len: LONGINT;
-	lib: Objects.Library; tag, i, k, Y: INTEGER; A: Objects.AttrMsg; C: Display.ConsumeMsg;
+	F: Files.File; R: Files.Rider; name: ARRAY 64 OF CHAR; ch: CHAR; len: SIGNED32;
+	lib: Objects.Library; tag, i, k, Y: SIGNED16; A: Objects.AttrMsg; C: Display.ConsumeMsg;
 BEGIN
 	main:= NIL;
 
@@ -557,7 +557,7 @@ BEGIN
 END LoadDocument;
 
 PROCEDURE StoreDocument(D: Documents.Document);
-VAR F: Files.File; len: LONGINT; R: Files.Rider; B: Objects.BindMsg; obj: Objects.Object;
+VAR F: Files.File; len: SIGNED32; R: Files.Rider; B: Objects.BindMsg; obj: Objects.Object;
 BEGIN
 	IF D.name # "" THEN
 		obj:= D.dsc;

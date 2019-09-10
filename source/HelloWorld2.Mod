@@ -4,7 +4,7 @@ IMPORT
 	Commands;
 
 PROCEDURE HelloStream*(context : Commands.Context);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	context.out.String("Hello World");
 	FOR i := 0 TO 9 DO

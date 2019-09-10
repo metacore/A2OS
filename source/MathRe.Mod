@@ -426,7 +426,7 @@ TYPE
 	END ArcTanh;
 
 BEGIN
-	IF NbrRe.MaxNbr = MAX( REAL ) THEN MaxFactorial := 34 ELSE MaxFactorial := 171 END;
+	IF NbrRe.MaxNbr = MAX( FLOAT32 ) THEN MaxFactorial := 34 ELSE MaxFactorial := 171 END;
 	maxIterations := 1000;  expZero := Ln( 1/NbrRe.MaxNbr );  expInfinity := Ln( NbrRe.MaxNbr );
 	expNegligible := -Ln( NbrRe.Epsilon ) / 2;  sqrtInfinity := Sqrt( NbrRe.MaxNbr ) / 2;  delta := 0.1;
 	ln10 := NbrRe.Ln( 10 );  ln10Inv := 1 / ln10;  ln2 := NbrRe.Ln( 2 );  ln2Inv := 1 / ln2

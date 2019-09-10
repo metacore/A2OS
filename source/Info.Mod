@@ -27,22 +27,22 @@ TYPE
 
 	Type = RECORD
 		ptag : ADDRESS;
-		count : LONGINT;
+		count : SIGNED32;
 		size : SIZE;
-		type : SHORTINT;
+		type : SIGNED8;
 		pc: ADDRESS;
 	END;
 
 	Analyzer = OBJECT
 	VAR
 		types : POINTER TO ARRAY OF Type;
-		nofElements : LONGINT;
+		nofElements : SIGNED32;
 
 		(* global statistics *)
-		nofHeapBlocks, nofFreeBlocks, nofSystemBlocks, nofRecordBlocks, nofProtRecBlocks, nofArrayBlocks: LONGINT;
+		nofHeapBlocks, nofFreeBlocks, nofSystemBlocks, nofRecordBlocks, nofProtRecBlocks, nofArrayBlocks: SIGNED32;
 		sizeHeapBlocks, sizeFreeBlocks, sizeSystemBlocks, sizeRecordBlocks, sizeProtRecBlocks, sizeArrayBlocks: SIZE;
 
-		PROCEDURE &Init(size : LONGINT);
+		PROCEDURE &Init(size : SIGNED32);
 		BEGIN
 			ASSERT(size > 0);
 			NEW(types, size);
@@ -68,10 +68,10 @@ TYPE
 			nofArrayBlocks := 0; sizeArrayBlocks := 0;
 		END Reset;
 
-		PROCEDURE SortBy(mode : LONGINT);
-		VAR i, j : LONGINT; temp : Type;
+		PROCEDURE SortBy(mode : SIGNED32);
+		VAR i, j : SIGNED32; temp : Type;
 
-			PROCEDURE IsGreaterThan(CONST entry1, entry2 : Type; mode : LONGINT) : BOOLEAN;
+			PROCEDURE IsGreaterThan(CONST entry1, entry2 : Type; mode : SIGNED32) : BOOLEAN;
 			VAR name1, name2: ARRAY 256 OF CHAR; count1,count2, size1, size2: SIZE;
 			BEGIN
 				IF mode = SortByName THEN
@@ -110,11 +110,11 @@ TYPE
 		END SortBy;
 
 		PROCEDURE Add(CONST block : Heaps.HeapBlock; byPC: BOOLEAN);
-		VAR type: SHORTINT;
+		VAR type: SIGNED8;
 
 
-			PROCEDURE AddByType(type: SHORTINT);
-			VAR tag: ADDRESS; i: LONGINT;
+			PROCEDURE AddByType(type: SIGNED8);
+			VAR tag: ADDRESS; i: SIGNED32;
 			BEGIN
 				SYSTEM.GET(block.dataAdr + Heaps.TypeDescOffset, tag);
 				i := 0; WHILE (i < LEN(types)) & (i < nofElements) & (types[i].ptag # tag) DO INC(i) END;
@@ -131,8 +131,8 @@ TYPE
 				END;
 			END AddByType;
 
-			PROCEDURE AddByPC(type: SHORTINT);
-			VAR pc: ADDRESS; i: LONGINT;
+			PROCEDURE AddByPC(type: SIGNED8);
+			VAR pc: ADDRESS; i: SIGNED32;
 			BEGIN
 				SYSTEM.GET(block.dataAdr + Heaps.HeapBlockOffset, pc);
 				SYSTEM.GET(pc + Heaps.HeapBlockOffset, pc);
@@ -189,7 +189,7 @@ TYPE
 			module : Modules.Module; typedesc : Modules.TypeDesc;
 			size, totalSize: SIZE;
 			startpc: ADDRESS;
-			i, selected, total : LONGINT;
+			i, selected, total : SIGNED32;
 			string : ARRAY 256 OF CHAR; copy: ARRAY 256 OF CHAR;
 		BEGIN
 			ASSERT(out # NIL);
@@ -219,7 +219,7 @@ TYPE
 						Reflection.GetProcedureName(types[i].pc, copy,startpc);
 						Strings.AppendX(string, copy);
 						Strings.Append(string,":");
-						Strings.IntToStr(LONGINT(types[i].pc - startpc), copy);
+						Strings.IntToStr(SIGNED32(types[i].pc - startpc), copy);
 						Strings.Append(string,copy);
 					END;
 
@@ -258,7 +258,7 @@ TYPE
 			END;
 		END ShowBlocks;
 
-		PROCEDURE Show(out : Streams.Writer; CONST mask : ARRAY OF CHAR; sortMode : LONGINT; byPC: BOOLEAN);
+		PROCEDURE Show(out : Streams.Writer; CONST mask : ARRAY OF CHAR; sortMode : SIGNED32; byPC: BOOLEAN);
 		VAR nofUsedBlocks, sizeUsedBlocks :SIZE;
 
 			PROCEDURE ShowBlock(CONST name : ARRAY OF CHAR; nofBlocks: SIZE; size: SIZE; totalNofBlocks: SIZE; totalSize : SIZE; out : Streams.Writer);
@@ -270,7 +270,7 @@ TYPE
 			END ShowBlock;
 
 			PROCEDURE ShowPercent(cur, max : SIZE; out : Streams.Writer);
-			VAR percent : LONGINT;
+			VAR percent : SIGNED32;
 			BEGIN
 				IF (max > 0) THEN
 					percent := ENTIER(100 * (cur / max) + 0.5);
@@ -312,11 +312,11 @@ TYPE
 
 VAR
 	currentMarkValueAddress : ADDRESS;
-	recentAllocators*: ARRAY AllocatorHistorySize OF RECORD pc*: ARRAY 3 OF ADDRESS; time*: HUGEINT END;
-	numRecentAllocators*: LONGINT;
+	recentAllocators*: ARRAY AllocatorHistorySize OF RECORD pc*: ARRAY 3 OF ADDRESS; time*: SIGNED64 END;
+	numRecentAllocators*: SIGNED32;
 
 PROCEDURE LogAlloc(p: ANY);
-VAR time: HUGEINT; bp: ADDRESS; i: LONGINT;pc: ADDRESS;
+VAR time: SIGNED64; bp: ADDRESS; i: SIGNED32;pc: ADDRESS;
 BEGIN
 	time := Machine.GetTimer();
 
@@ -338,7 +338,7 @@ END LogAlloc;
 
 
 PROCEDURE WriteB(b : SIZE; out : Streams.Writer);
-VAR shift : LONGINT; suffix : ARRAY 2 OF CHAR;
+VAR shift : SIGNED32; suffix : ARRAY 2 OF CHAR;
 BEGIN
 	IF b < 100*1024 THEN suffix := ""; shift := 0
 	ELSIF b < 100*1024*1024 THEN suffix := "K"; shift := -10
@@ -359,7 +359,7 @@ END WriteB;
 
 PROCEDURE ModuleDetails*(context : Commands.Context); (** [Options] module ~ *)
 VAR
-	m : Modules.Module; i: SIZE; j, k: LONGINT;
+	m : Modules.Module; i: SIZE; j, k: SIGNED32;
 	p, procAdr: ADDRESS;
 	adr : ADDRESS;
 	modn : ARRAY 33 OF CHAR;
@@ -439,7 +439,7 @@ END ModuleDetails;
 (** Find a procedure, given the absolute PC address. *)
 
 PROCEDURE ModulePC*(context : Commands.Context);	(** pc *)
-VAR pc : LONGINT;
+VAR pc : SIGNED32;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.Int(pc, FALSE);
 	IF Modules.ThisModuleByAdr(pc) # NIL THEN
@@ -452,7 +452,7 @@ END ModulePC;
 
 PROCEDURE AllObjects*(context : Commands.Context); (** [Options] mask ~ *)
 VAR
-	options : Options.Options; sortMode : LONGINT;
+	options : Options.Options; sortMode : SIGNED32;
 	analyzer : Analyzer;
 	memBlock {UNTRACED}: Machine.MemoryBlock;
 	heapBlock : Heaps.HeapBlock;
@@ -485,12 +485,12 @@ BEGIN
 	END;
 END AllObjects;
 
-PROCEDURE ShowRecentAllocators*(out: Streams.Writer; scale: HUGEINT);
+PROCEDURE ShowRecentAllocators*(out: Streams.Writer; scale: SIGNED64);
 VAR
-	i,from,to,num, pcs: LONGINT;
+	i,from,to,num, pcs: SIGNED32;
 	pc,startpc: ADDRESS;
 	module: Modules.Module; name: ARRAY 256 OF CHAR;
-	time: HUGEINT;
+	time: SIGNED64;
 	timer: Kernel.MilliTimer;
 BEGIN
 	time := Machine.GetTimer();
@@ -544,7 +544,7 @@ BEGIN
 END ShowRecentAllocators;
 
 PROCEDURE ClearRecentAllocators*;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	Machine.Acquire(Machine.Heaps);
 	i := (numRecentAllocators - 1) MOD LEN(recentAllocators);
@@ -561,8 +561,8 @@ END AddAllocatorLogger;
 PROCEDURE RecentAllocators*(context : Commands.Context); (** [Options] mask ~ *)
 VAR
 	options : Options.Options;
-	scale: HUGEINT;
-	num: LONGINT;
+	scale: SIGNED64;
+	num: SIGNED32;
 BEGIN
 	NEW(options);
 	options.Add("c", "clear", Options.Flag);
@@ -580,7 +580,7 @@ END RecentAllocators;
 
 PROCEDURE TraceModule*(context : Commands.Context); (** moduleName mask ~ *)
 VAR
-	options : Options.Options; sortMode : LONGINT;
+	options : Options.Options; sortMode : SIGNED32;
 	analyzer : Analyzer;
 	mask : ARRAY 128 OF CHAR;
 	moduleName : Modules.Name; module : Modules.Module;
@@ -610,7 +610,7 @@ END TraceModule;
 
 PROCEDURE TraceReference*(context : Commands.Context); (** ModuleName.VariableName mask ~ *)
 VAR
-	options : Options.Options; sortMode : LONGINT;
+	options : Options.Options; sortMode : SIGNED32;
 	analyzer : Analyzer; address : ADDRESS;
 	module : Modules.Module; variable : Reflection.Variable;
 	mask, modVar : ARRAY 256 OF CHAR; array : Strings.StringArray;
@@ -666,10 +666,10 @@ END MarkReference;
 
 PROCEDURE TraceProcessID*(context : Commands.Context); (** ProcessID mask ~ *)
 VAR
-	options : Options.Options; sortMode : LONGINT;
+	options : Options.Options; sortMode : SIGNED32;
 	analyzer : Analyzer;
 	process : Objects.Process;
-	processID : LONGINT; mask : ARRAY 256 OF CHAR;
+	processID : SIGNED32; mask : ARRAY 256 OF CHAR;
 BEGIN
 	NEW(options);
 	options.Add("s", "sort", Options.Integer);
@@ -699,13 +699,13 @@ BEGIN
 	END;
 END TraceProcessID;
 
-PROCEDURE FindProcessByID(id : LONGINT) : Objects.Process;
+PROCEDURE FindProcessByID(id : SIGNED32) : Objects.Process;
 VAR
 	memBlock {UNTRACED}: Machine.MemoryBlock;
 	heapBlock {UNTRACED}: Heaps.HeapBlock;
 	blockAdr, tag : ADDRESS;
 	process : Objects.Process;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN
 	i := 0;
 	Machine.Acquire(Machine.Heaps);
@@ -735,9 +735,9 @@ PROCEDURE AnalyzeMarkedBlocks(analyzer : Analyzer);
 VAR
 	memBlock {UNTRACED}: Machine.MemoryBlock;
 	heapBlock : Heaps.HeapBlock;
-	currentMarkValue : LONGINT;
+	currentMarkValue : SIGNED32;
 	blockAdr : ADDRESS;
-	mark : LONGINT;
+	mark : SIGNED32;
 BEGIN
 	ASSERT(analyzer # NIL);
 	currentMarkValue := GetCurrentMarkValue();
@@ -758,7 +758,7 @@ BEGIN
 	SetCurrentMarkValue(currentMarkValue - 1); (* restore Heaps.currentMarkValue *)
 END AnalyzeMarkedBlocks;
 
-PROCEDURE WriteType(adr : LONGINT; out : Streams.Writer);
+PROCEDURE WriteType(adr : SIGNED32; out : Streams.Writer);
 VAR m : Modules.Module;  t : Modules.TypeDesc; name: ARRAY 256 OF CHAR;
 BEGIN
 	Modules.ThisTypeByAdr(adr, m, t);
@@ -792,12 +792,12 @@ END GetName;
 
 (* Access to private field Heaps.currentMarkValue *)
 
-PROCEDURE GetCurrentMarkValue() : LONGINT;
+PROCEDURE GetCurrentMarkValue() : SIGNED32;
 BEGIN
 	RETURN SYSTEM.GET32(currentMarkValueAddress);
 END GetCurrentMarkValue;
 
-PROCEDURE SetCurrentMarkValue(value : LONGINT);
+PROCEDURE SetCurrentMarkValue(value : SIGNED32);
 BEGIN
 	SYSTEM.PUT32(currentMarkValueAddress, value);
 END SetCurrentMarkValue;
@@ -817,7 +817,7 @@ BEGIN
 		IF Reflection.FindVar(module, "currentMarkValue", variable) THEN
 			(*
 			ASSERT(variable.n = 1); (* currentMarkValue is not an array *)
-			ASSERT(variable.type = 6); (*? type is LONGINT, currently no support for 64-bit addresses *)
+			ASSERT(variable.type = 6); (*? type is SIGNED32, currently no support for 64-bit addresses *)
 			*)
 			address := variable.adr;
 		ELSE HALT(100);

@@ -10,7 +10,7 @@ positive: test scalar SHORTREAL operators
 	CONST NumRetries = 100000;
 	VAR
 		rnd: Random.Generator;
-		t, x0, y0, z0: REAL;
+		t, x0, y0, z0: FLOAT32;
 		x, y, z: Shortreal.SHORTREAL;
 		i: SIZE;
 	BEGIN

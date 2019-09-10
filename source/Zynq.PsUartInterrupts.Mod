@@ -34,7 +34,7 @@ VAR
 
 		Return: FALSE in case of a wrong value of UART ID or if interruptHandler is NIL
 	*)
-	PROCEDURE InstallInterruptHandler*(uart: LONGINT; interruptHandler: UartInterruptHandler; interruptHandlerParam: ANY): BOOLEAN;
+	PROCEDURE InstallInterruptHandler*(uart: SIGNED32; interruptHandler: UartInterruptHandler; interruptHandlerParam: ANY): BOOLEAN;
 	BEGIN
 		IF interruptHandler = NIL THEN
 			RETURN FALSE;

@@ -7,7 +7,7 @@ MODULE RAMVolumes; (** AUTHOR "pjm"; PURPOSE "RAM-based volume"; *)
 IMPORT SYSTEM, Files;
 
 CONST
-	DirMark = LONGINT(9B1EA38DH);	(* for NatFS and AosFS *)
+	DirMark = SIGNED32(9B1EA38DH);	(* for NatFS and AosFS *)
 
 TYPE
 	Volume* = OBJECT (Files.Volume)
@@ -15,8 +15,8 @@ TYPE
 			data: POINTER TO ARRAY OF POINTER TO ARRAY OF CHAR;
 
 		(** Get block from adr [1..size] of volume vol *)
-		PROCEDURE GetBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		PROCEDURE GetBlock*(adr: SIGNED32; VAR blk: ARRAY OF CHAR);
+		VAR i: SIGNED32;
 		BEGIN
 			IF (adr < 1) OR (adr > size) THEN SYSTEM.HALT(15) END;
 			ASSERT(LEN(blk) >= blockSize);	(* index check *)
@@ -28,7 +28,7 @@ TYPE
 		END GetBlock;
 
 		(** Put block to adr [1..size] of volume vol *)
-		PROCEDURE PutBlock*(adr: LONGINT; VAR blk: ARRAY OF CHAR);
+		PROCEDURE PutBlock*(adr: SIGNED32; VAR blk: ARRAY OF CHAR);
 		BEGIN
 			IF (adr < 1) OR (adr > size) THEN SYSTEM.HALT(15) END;
 			ASSERT(LEN(blk) >= blockSize);	(* index check *)
@@ -45,16 +45,16 @@ TYPE
 	END Volume;
 
 VAR
-	count: LONGINT;
+	count: SIGNED32;
 
-PROCEDURE GetCount(): LONGINT;
+PROCEDURE GetCount(): SIGNED32;
 BEGIN {EXCLUSIVE}
 	INC(count); RETURN count
 END GetCount;
 
 (** Generate a new ram volume object. Files.Par: size blocksize .  If size < 0, use as percentage of free memory. *)
 PROCEDURE New*(context : Files.Parameters);
-VAR vol: Volume; size, vbs : LONGINT;
+VAR vol: Volume; size, vbs : SIGNED32;
 BEGIN
 	context.vol := NIL;
 	IF context.arg.GetInteger(size, FALSE) & context.arg.GetInteger(vbs, FALSE) & (size # 0) & (vbs > 0) THEN

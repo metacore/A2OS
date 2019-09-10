@@ -17,26 +17,26 @@ TYPE
 	Trigger = OBJECT
 	VAR
 		timer: Kernel.Timer;
-		timeout: LONGINT;
-		status *: LONGINT;
+		timeout: SIGNED32;
+		status *: SIGNED32;
 
 		PROCEDURE & InitTrigger;
 		BEGIN
 			NEW(timer)
 		END InitTrigger;
 
-		PROCEDURE Start * (timeout: LONGINT);
+		PROCEDURE Start * (timeout: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			SELF.timeout := timeout;
 			status := Busy
 		END Start;
 
-		PROCEDURE SetStatus * (status: LONGINT);
+		PROCEDURE SetStatus * (status: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			SELF.status := status
 		END SetStatus;
 
-		PROCEDURE Trigger * (): LONGINT;
+		PROCEDURE Trigger * (): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			AWAIT(status # Busy);
 			RETURN status
@@ -56,14 +56,14 @@ TYPE
 
 	Tester = OBJECT (Trigger)
 	VAR
-		test: LONGINT;
+		test: SIGNED32;
 
 		PROCEDURE Execute;
 		BEGIN
 			FOR test := 0 TO testNb - 1 DO ExecuteTest(30000) END
 		END Execute;
 
-		PROCEDURE ExecuteTest(timeout: LONGINT);
+		PROCEDURE ExecuteTest(timeout: SIGNED32);
 		BEGIN
 			KernelLog.String("========== Begin test "); KernelLog.String(names[test]); KernelLog.String(" =========="); KernelLog.Ln;
 			(*Start(timeout);*)
@@ -93,9 +93,9 @@ TYPE
 	Notifier = OBJECT
 	VAR
 		params: ANY;
-		count, result: LONGINT;
+		count, result: SIGNED32;
 
-		PROCEDURE Await(param: ANY): LONGINT;
+		PROCEDURE Await(param: ANY): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			AWAIT((count = 1)); (* & ((param = NIL) OR (param = params)));*)
 			(*TRACE('notified', count);*)
@@ -103,7 +103,7 @@ TYPE
 			RETURN result
 		END Await;
 
-		PROCEDURE Notify (status: LONGINT; param: ANY);
+		PROCEDURE Notify (status: SIGNED32; param: ANY);
 		BEGIN {EXCLUSIVE}
 			result := status;
 			params := param;
@@ -120,30 +120,30 @@ TYPE
 		END*)
 	END Notifier;
 
-	ChannelId = POINTER TO RECORD channel: LONGINT END;
+	ChannelId = POINTER TO RECORD channel: SIGNED32 END;
 	MemToMemParams = POINTER TO MemToMemDesc;
 	MemToMemDesc = RECORD
-		size, alignment: LONGINT;
+		size, alignment: SIGNED32;
 	END;
 
 VAR
 	tests: ARRAY MaxTests OF Test;
 	params: ARRAY MaxTests OF ANY;
 	names: ARRAY MaxTests, 128 OF CHAR;
-	results: ARRAY MaxTests OF LONGINT;
-	testNb: LONGINT;
+	results: ARRAY MaxTests OF SIGNED32;
+	testNb: SIGNED32;
 	notifier: Notifier;
 	rng: Random.Generator;
 	parameter: MemToMemParams;
 	output: AcAxisIo.Output;
 	input: AcAxisIo.Input;
-	freq: HUGEINT;
-	res: LONGINT;
+	freq: SIGNED64;
+	res: SIGNED32;
 
 	PROCEDURE Execute *;
 	VAR
 		tester: Tester;
-		i, len, total, passed, failed, errors, test: LONGINT;
+		i, len, total, passed, failed, errors, test: SIGNED32;
 	BEGIN
 		(* display width *)
 		len := 80;
@@ -195,9 +195,9 @@ VAR
 		INC(testNb)
 	END AddTest;
 
-	PROCEDURE CheckMemToMem (CONST src: ARRAY OF CHAR; srcOfs: LONGINT; CONST dst: ARRAY OF CHAR; dstOfs, len: LONGINT): BOOLEAN;
+	PROCEDURE CheckMemToMem (CONST src: ARRAY OF CHAR; srcOfs: SIGNED32; CONST dst: ARRAY OF CHAR; dstOfs, len: SIGNED32): BOOLEAN;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 		result: BOOLEAN;
 	BEGIN
 		result := TRUE;
@@ -215,12 +215,12 @@ VAR
 
 	PROCEDURE TestHeapToHeap (param: ANY): BOOLEAN;
 	VAR
-		tstart, tstop: HUGEINT;
+		tstart, tstop: SIGNED64;
 		program: DMA330ProgramWriter.Program;
 		txParams: MemToMemParams;
 		src, dst: POINTER TO ARRAY OF CHAR;
 		srcOfs, dstOfs: ADDRESS;
-		i, status: LONGINT;
+		i, status: SIGNED32;
 	BEGIN
 		txParams := param(MemToMemParams);
 
@@ -273,7 +273,7 @@ VAR
 		txParams: MemToMemParams;
 		src, dst: ARRAY MaxTxSize + MaxAlign OF CHAR;
 		srcOfs, dstOfs: ADDRESS;
-		i, status: LONGINT;
+		i, status: SIGNED32;
 	BEGIN
 		txParams := param(MemToMemParams);
 
@@ -318,7 +318,7 @@ VAR
 		txParams: MemToMemParams;
 		src1, src2, dst1, dst2: POINTER TO ARRAY OF CHAR;
 		srcOfs1, srcOfs2, dstOfs1, dstOfs2: ADDRESS;
-		i, status: LONGINT;
+		i, status: SIGNED32;
 	BEGIN
 		txParams := param(MemToMemParams);
 		NEW(src1, txParams.size + txParams.alignment);
@@ -411,7 +411,7 @@ VAR
 		txParams: MemToMemParams;
 		src, dst: POINTER TO ARRAY OF CHAR;
 		srcOfs, dstOfs: ADDRESS;
-		i, status: LONGINT;
+		i, status: SIGNED32;
 	BEGIN
 		txParams := param(MemToMemParams);
 		NEW(src, txParams.size + txParams.alignment);
@@ -487,13 +487,13 @@ VAR
 
 	PROCEDURE TestPlFifoSimultaneous (param: ANY): BOOLEAN;
 	VAR
-		tstart, tstop: HUGEINT;
+		tstart, tstop: SIGNED64;
 		programWr, programRd: DMA330ProgramWriter.Program;
 		channelWr, channelRd: ChannelId;
 		txParams: MemToMemParams;
 		src, dst: POINTER TO ARRAY OF CHAR;
 		srcOfs, dstOfs: ADDRESS;
-		i, status: LONGINT;
+		i, status: SIGNED32;
 	BEGIN
 		txParams := param(MemToMemParams);
 		NEW(src, txParams.size + txParams.alignment);
@@ -583,7 +583,7 @@ VAR
 		program: DMA330ProgramWriter.Program;
 		src: POINTER TO ARRAY OF CHAR;
 		srcOfs: ADDRESS;
-		i, status: LONGINT;
+		i, status: SIGNED32;
 	BEGIN
 		NEW(src, size + alignment);
 		srcOfs := alignment - ADDRESSOF(src[0]) MOD alignment;
@@ -633,7 +633,7 @@ VAR
 		program: DMA330ProgramWriter.Program;
 		dst: POINTER TO ARRAY OF CHAR;
 		dstOfs: ADDRESS;
-		i, status: LONGINT;
+		i, status: SIGNED32;
 	BEGIN
 		NEW(dst, size + alignment);
 		dstOfs := alignment - ADDRESSOF(dst[0]) MOD alignment;
@@ -682,11 +682,11 @@ VAR
 		size = 4 * 32 * 1024;
 		alignment = 8;
 	VAR
-		tstart, tstop: HUGEINT;
+		tstart, tstop: SIGNED64;
 		program: DMA330ProgramWriter.Program;
 		dst: POINTER TO ARRAY OF CHAR;
 		dstOfs: ADDRESS;
-		i, status: LONGINT;
+		i, status: SIGNED32;
 	BEGIN
 		NEW(dst, size + alignment);
 		dstOfs := alignment - ADDRESSOF(dst[0]) MOD alignment;
@@ -731,7 +731,7 @@ VAR
 
 	PROCEDURE InitPl;
 	VAR
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		freq := PsConfig.GetPllClockFrequency(PsConfig.IoPll,res);
 		Trace.String("IO PLL frequency is "); Trace.Int(freq,0); Trace.StringLn(" Hz");
@@ -750,8 +750,8 @@ VAR
 
 	PROCEDURE ResetPl;
 	VAR
-		t: HUGEINT;
-		res: LONGINT;
+		t: SIGNED64;
+		res: SIGNED32;
 	BEGIN
 		(* Reset PL *)
 		ASSERT(PsConfig.SetPlResets({0,1,2,3},res));
@@ -761,7 +761,7 @@ VAR
 	END ResetPl;
 
 	PROCEDURE CpuTest (ignored: ANY): BOOLEAN;
-	VAR k: LONGINT;
+	VAR k: SIGNED32;
 	BEGIN
 		FOR k := 1 TO 32768+1 DO
 			output.data := k;

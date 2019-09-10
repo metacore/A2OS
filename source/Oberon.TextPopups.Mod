@@ -66,15 +66,15 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 
 		(* procedure name marker *)
 		PMarkerMenuItem = POINTER TO PMarkerMenuItemDesc;
-		PMarkerMenuItemDesc = RECORD	(MenuItemDesc) pos: LONGINT	END;
+		PMarkerMenuItemDesc = RECORD	(MenuItemDesc) pos: SIGNED32	END;
 
 		(* type name marker *)
 		TMarkerMenuItem = POINTER TO TMarkerMenuItemDesc;
-		TMarkerMenuItemDesc = RECORD	(MenuItemDesc) pos: LONGINT	END;
+		TMarkerMenuItemDesc = RECORD	(MenuItemDesc) pos: SIGNED32	END;
 
 		(* LaTeX section marker *)
 		LMarkerMenuItem = POINTER TO LMarkerMenuItemDesc;
-		LMarkerMenuItemDesc = RECORD	(MenuItemDesc) pos: LONGINT	END;
+		LMarkerMenuItemDesc = RECORD	(MenuItemDesc) pos: SIGNED32	END;
 
 		(* file name marker *)
 		FileMenuItem = POINTER TO FileMenuItemDesc;
@@ -85,15 +85,15 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 		FileHistoryDesc = RECORD	filename: ARRAY 128 OF CHAR; link: FileHistory	END;
 
 	VAR
-		W: Texts.Writer; nofLines, width: INTEGER;
+		W: Texts.Writer; nofLines, width: SIGNED16;
 		itemList, lastItem: MenuItem; doItem: MenuItem; called: BOOLEAN;
 		fileHistory: FileHistory;
 		sections: ARRAY 7 OF ARRAY 14 OF CHAR;
 
 (* execute a command *)
 
-	PROCEDURE Call(F: TextGadgets.Frame; T: Texts.Text; x, y: INTEGER);
-		VAR text: Texts.Text; R: Texts.Reader; res: INTEGER; cmd: ARRAY 64 OF CHAR;
+	PROCEDURE Call(F: TextGadgets.Frame; T: Texts.Text; x, y: SIGNED16);
+		VAR text: Texts.Text; R: Texts.Reader; res: SIGNED16; cmd: ARRAY 64 OF CHAR;
 			d: Documents.Document; C: Oberon.ControlMsg;
 	BEGIN
 		IF doItem=NIL THEN RETURN END;
@@ -132,7 +132,7 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 	END Call;
 
 	PROCEDURE Do*;
-		VAR S: Texts.Scanner; p: MenuItem; i: INTEGER;
+		VAR S: Texts.Scanner; p: MenuItem; i: SIGNED16;
 	BEGIN	called:=TRUE;
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 		IF (S.class=Texts.String) OR (S.class=Texts.Name) THEN
@@ -146,7 +146,7 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 		ELSE doItem:=NIL END
 	END Do;
 
-	PROCEDURE AppendToTypeList(VAR list, last: MenuItem; CONST context, name: ARRAY OF CHAR; pos: LONGINT);
+	PROCEDURE AppendToTypeList(VAR list, last: MenuItem; CONST context, name: ARRAY OF CHAR; pos: SIGNED32);
 		VAR t: TMarkerMenuItem; q: MenuItem;
 	BEGIN
 		NEW(t); COPY(context, t.val); Strings.Append(t.val, name); t.pos := pos;
@@ -157,8 +157,8 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 (* build item list *)
 	PROCEDURE ExtractProcTypeNames(T: Texts.Text; VAR lastProc, lastType: MenuItem);
 		CONST	rec = 0; proc = 1; mod = 2;
-		VAR R: Texts.Reader; isType, init: BOOLEAN; sym, prevsym: SHORTINT;
-			Stack: ARRAY 16 OF SHORTINT; ST, i: LONGINT; j: SIZE;
+		VAR R: Texts.Reader; isType, init: BOOLEAN; sym, prevsym: SIGNED8;
+			Stack: ARRAY 16 OF SIGNED8; ST, i: SIGNED32; j: SIZE;
 			Context, name: ARRAY 128 OF CHAR;startP, startT, q: MenuItem; p: PMarkerMenuItem;
 	BEGIN
 		Texts.OpenReader(R, T, 0);
@@ -236,7 +236,7 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 		OPM.Close;  OPS.Init
 	END ExtractProcTypeNames;
 
-	PROCEDURE ExtractHistory(nof: INTEGER);
+	PROCEDURE ExtractHistory(nof: SIGNED16);
 		VAR h: FileHistory; q: FileMenuItem;
 	BEGIN
 		h:=fileHistory; WHILE (h#NIL) & (nof>0) DO
@@ -248,7 +248,7 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 	(* Extract LaTeX sections *)
 
 	PROCEDURE ExtractSections(t: Texts.Text);
-	VAR r: Texts.Reader; i, j: LONGINT; q: LMarkerMenuItem; s: ARRAY 1024 OF CHAR; ch: CHAR;
+	VAR r: Texts.Reader; i, j: SIGNED32; q: LMarkerMenuItem; s: ARRAY 1024 OF CHAR; ch: CHAR;
 	BEGIN
 		Texts.OpenReader(r, t, 0); Texts.Read(r, ch);
 		WHILE ~r.eot DO
@@ -292,7 +292,7 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 	(* Extract BibTeX entries *)
 
 	PROCEDURE ExtractBibtex(t: Texts.Text);
-	VAR r: Texts.Reader; i, j: LONGINT; first, p: MenuItem; q: LMarkerMenuItem; s, e: ARRAY 64 OF CHAR; ch: CHAR;
+	VAR r: Texts.Reader; i, j: SIGNED32; first, p: MenuItem; q: LMarkerMenuItem; s, e: ARRAY 64 OF CHAR; ch: CHAR;
 	BEGIN
 		first := lastItem;
 		Texts.OpenReader(r, t, 0); Texts.Read(r, ch);
@@ -339,12 +339,12 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 	END ExtractBibtex;
 
 	PROCEDURE CreateMenuItems(listR: ListRiders.Rider; T: Texts.Text; CONST ext: ARRAY OF CHAR): BOOLEAN;
-		VAR p: MenuItem; w, h, dsr: INTEGER; R: Texts.Reader; cmd: CmdMenuItem; text: Texts.Text;
+		VAR p: MenuItem; w, h, dsr: SIGNED16; R: Texts.Reader; cmd: CmdMenuItem; text: Texts.Text;
 			s: ARRAY 128 OF CHAR; ch: CHAR; d: ListRiders.String;
 			plist, tlist, plast, tlast: MenuItem; parsed: BOOLEAN;
 
 		PROCEDURE Scan;
-			VAR i: INTEGER;
+			VAR i: SIGNED16;
 		BEGIN i:=0; s[0]:=0X; Texts.Read(R, ch);
 			WHILE ~R.eot & (ch#"[") & (ch#"]") & (ch#CR) & (ch#LF) DO s[i]:=ch; INC(i); Texts.Read(R, ch) END; s[i]:=0X;
 		END Scan;
@@ -392,7 +392,7 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 	END CreateMenuItems;
 
 	PROCEDURE GetFileExtension(CONST name: ARRAY OF CHAR; VAR ext: ARRAY OF CHAR);
-		VAR i, j, l: INTEGER;
+		VAR i, j, l: SIGNED16;
 	BEGIN	i:=0; l:=0;
 		WHILE name[i]#0X DO
 			IF name[i]="." THEN l:=i+1 END;
@@ -430,8 +430,8 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 		RETURN L
 	END NewList;
 
-	PROCEDURE CalcPlace(VAR x, y, px, py, w, h: INTEGER);
-		VAR cx, cy, cw, ch: INTEGER;
+	PROCEDURE CalcPlace(VAR x, y, px, py, w, h: SIGNED16);
+		VAR cx, cy, cw, ch: SIGNED16;
 	BEGIN
 		cx := 10; cy := 10; cw := Display.Width - 10; ch := Display.Height - 10;
 		px := x - w DIV 2; py := y - h DIV 2;
@@ -441,8 +441,8 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 		IF py + h >= cy + ch THEN py := cy + ch - 1 - h END;
 	END CalcPlace;
 
-	PROCEDURE Popup(F: TextGadgets.Frame; x, y: INTEGER; VAR M: Oberon.InputMsg);
-		VAR block: Views.Block; of: Gadgets.Frame; R: Display3.Mask; px, py: INTEGER;
+	PROCEDURE Popup(F: TextGadgets.Frame; x, y: SIGNED16; VAR M: Oberon.InputMsg);
+		VAR block: Views.Block; of: Gadgets.Frame; R: Display3.Mask; px, py: SIGNED16;
 				CM: Display.ControlMsg; D: Display.DisplayMsg; O: Display3.OverlapMsg;
 	BEGIN
 		of:=NewList(F, M.dlink(Documents.Document));
@@ -473,7 +473,7 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 (* file history *)
 
 	PROCEDURE InsertIntoHistory(VAR D: Documents.Document);
-		VAR h: FileHistory; i: INTEGER;
+		VAR h: FileHistory; i: SIGNED16;
 	BEGIN	IF D=NIL THEN RETURN END;
 		h:=fileHistory; WHILE (h#NIL) & (h.filename#D.name) DO h:=h.link END;
 		IF h=NIL THEN
@@ -486,7 +486,7 @@ MODULE TextPopups IN Oberon;	(** portable *)	(* tk 6.12.95 *)
 (* doc and text handler *)
 
 	PROCEDURE PopupHandler(F: Objects.Object; VAR M: Objects.ObjMsg);
-		VAR x, y, X, Y: INTEGER; R: Texts.Reader; l: TextGadgets0.Loc; ch: CHAR; keys: SET;
+		VAR x, y, X, Y: SIGNED16; R: Texts.Reader; l: TextGadgets0.Loc; ch: CHAR; keys: SET;
 	BEGIN
 		WITH F: TextGadgets.Frame DO
 			IF M IS Oberon.InputMsg THEN

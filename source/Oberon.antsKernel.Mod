@@ -37,7 +37,7 @@ TYPE
 	Msg* = antsMC.Msg;  Init* = antsMC.InitMsg;
 
 	samplingMsg* = RECORD (Msg)
-	(* cacheSize*: LONGINT;  (* move that to kernel, editable (change on exchange of definition) *)  *)
+	(* cacheSize*: SIGNED32;  (* move that to kernel, editable (change on exchange of definition) *)  *)
 		action*: vyName.tNameArray
 	END;
 
@@ -48,15 +48,15 @@ TYPE
 	metropolis*=RECORD(samplingMsg)  END;
 
 
-	annealing*= RECORD(gibbs); (* temp*: LONGREAL *) END;
-	metropolisanneal*= RECORD(metropolis); (*  temp*: LONGREAL *) END;
+	annealing*= RECORD(gibbs); (* temp*: FLOAT64 *) END;
+	metropolisanneal*= RECORD(metropolis); (*  temp*: FLOAT64 *) END;
 	*)
 
 
 
 	Kernel* = POINTER TO KernelDesc;
-	temperatureScheme* = PROCEDURE ( k: Kernel;  pos: LONGINT );
-	visitingScheme* = PROCEDURE ( x, w: LONGINT ): LONGINT;
+	temperatureScheme* = PROCEDURE ( k: Kernel;  pos: SIGNED32 );
+	visitingScheme* = PROCEDURE ( x, w: SIGNED32 ): SIGNED32;
 
 	KernelDesc* = RECORD (vyBase.ObjDesc)
 		A*: vyBase.Object;
@@ -66,10 +66,10 @@ TYPE
 		visit-: visitingScheme;
 		parallel-: BOOLEAN;
 		ModelClass*: vyLinks.Link;
-		ModelClassCount*: INTEGER;
+		ModelClassCount*: SIGNED16;
 		makeTemperature*: temperatureScheme;
-		cacheSize*: LONGINT;
-		temperature*: LONGREAL;
+		cacheSize*: SIGNED32;
+		temperature*: FLOAT64;
 		samplerType*: vyName.tNameArray
 	END;
 
@@ -86,19 +86,19 @@ CONST
 	staticCacheSize = 1000000;  dynamicCacheSize = 10000;  gibbsSampler* = "gibbsSampler";  metropolisSampler* = "metropolisSampler";
 	exchangeAlgorithm* = "exchangeAlgorithm";
 
-	PROCEDURE linearVisit*( x, w: LONGINT ): LONGINT;
+	PROCEDURE linearVisit*( x, w: SIGNED32 ): SIGNED32;
 	BEGIN
 		RETURN x
 	END linearVisit;
 
-	PROCEDURE checkerBoardVisit*( x, w: LONGINT ): LONGINT;
-	VAR y: LONGINT;
+	PROCEDURE checkerBoardVisit*( x, w: SIGNED32 ): SIGNED32;
+	VAR y: SIGNED32;
 	BEGIN
 		y := 2 * x;
 		IF y >= w THEN RETURN (y + 1 - w) ELSE RETURN y END
 	END checkerBoardVisit;
 
-	PROCEDURE randomVisit*( x, w: LONGINT ): LONGINT;
+	PROCEDURE randomVisit*( x, w: SIGNED32 ): SIGNED32;
 	BEGIN
 		RETURN vyRanBase.RandomGenerator.GetRandomL( vyRanBase.RandomGenerator, w )
 	END randomVisit;
@@ -121,7 +121,7 @@ CONST
 		omsg.error := msg.error;  omsg.errormsg := msg.errormsg
 	END Finish;
 
-	PROCEDURE LogAnneal( s: Kernel;  pos: LONGINT );
+	PROCEDURE LogAnneal( s: Kernel;  pos: SIGNED32 );
 	VAR A: vyBase.Object;
 	BEGIN
 	(* Prepare(s,omsg,msg); *)
@@ -134,7 +134,7 @@ CONST
 		END
 	END LogAnneal;
 
-	PROCEDURE LinAnneal( s: Kernel;  pos: LONGINT );
+	PROCEDURE LinAnneal( s: Kernel;  pos: SIGNED32 );
 	VAR A: vyBase.Object;
 	BEGIN
 		(* s.cacheSize := dynamicCacheSize; *)
@@ -146,7 +146,7 @@ CONST
 		END
 	END LinAnneal;
 
-	PROCEDURE ExpAnneal( s: Kernel;  pos: LONGINT );
+	PROCEDURE ExpAnneal( s: Kernel;  pos: SIGNED32 );
 	VAR A: vyBase.Object;
 	BEGIN
 		(*  s.cacheSize := dynamicCacheSize; *)
@@ -158,7 +158,7 @@ CONST
 		END
 	END ExpAnneal;
 
-	PROCEDURE Const( s: Kernel;  pos: LONGINT );
+	PROCEDURE Const( s: Kernel;  pos: SIGNED32 );
 	(* BEGIN s.cacheSize := staticCacheSize;*)
 	END Const;
 
@@ -206,7 +206,7 @@ END ExpMetrAnneal;
 PROCEDURE Metropolis (s: Kernel; VAR omsg:antsMC.Msg);
 VAR msg: metropolis;
 BEGIN
-Prepare(s,omsg,msg); msg.cacheSize := staticCacheSize; msg.temp := MIN(LONGREAL);
+Prepare(s,omsg,msg); msg.cacheSize := staticCacheSize; msg.temp := MIN(FLOAT64);
 s.par.handle(s.par,msg);
 END Metropolis;
 *)
@@ -243,7 +243,7 @@ END Metropolis;
 	END Store;
 
 	PROCEDURE Load( VAR R: Files.Rider;  s: Kernel );
-	VAR objsub: Objects.Object;  coolint: INTEGER;  version: INTEGER;
+	VAR objsub: Objects.Object;  coolint: SIGNED16;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Gadgets.ReadRef( R, s.lib, objsub );
 		IF objsub # NIL THEN s.A := objsub( vyBase.Object ) END;

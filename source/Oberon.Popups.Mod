@@ -21,14 +21,14 @@ IMPORT
 	Attributes, Display, Gadgets, Icons, Oberon, Objects, Panels,
 	TextFields, TextGadgets, Texts;
 
-PROCEDURE InsertFrame (F, f: Display.Frame; u, v: INTEGER);
+PROCEDURE InsertFrame (F, f: Display.Frame; u, v: SIGNED16);
 VAR C: Display.ConsumeMsg;
 BEGIN
 	C.id := Display.drop; C.F := F; C.obj := f; C.u := u; C.v := v; C.res := -1; C.dlink := NIL;
 	F.handle(F, C)
 END InsertFrame;
 
-PROCEDURE Build* (desc: ARRAY OF CHAR; T: Texts.Text; W, H: INTEGER): Objects.Object;
+PROCEDURE Build* (desc: ARRAY OF CHAR; T: Texts.Text; W, H: SIGNED16): Objects.Object;
 VAR F: Icons.Iconizer; close: Panels.Panel; open: TextGadgets.Frame;
 	caption: TextFields.Caption; t: Texts.Text;
 BEGIN

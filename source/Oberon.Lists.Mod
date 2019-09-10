@@ -26,8 +26,8 @@ CONST
 
 TYPE
 	Bar = RECORD
-		bg, box: INTEGER;
-		range, size, pos: LONGINT;
+		bg, box: SIGNED16;
+		range, size, pos: SIGNED32;
 	END;
 
 	Item* = POINTER TO ItemDesc;
@@ -42,10 +42,10 @@ TYPE
 		items*, last*: Item;	(** First and last element of list of items. *)
 		beg*: Item;	(** First item displayed in list. *)
 		pointed*: Item;	(** Item pointed at last with the middle mouse button. *)
-		time*: LONGINT;	(** Selection time. *)
+		time*: SIGNED32;	(** Selection time. *)
 		focus*: BOOLEAN;	(** Is the list focused ? *)
 		sorted*: BOOLEAN;	(** Are list entries sorted ? *)
-		noitems*: INTEGER;	(** Number of entries in the list. *)
+		noitems*: SIGNED16;	(** Number of entries in the list. *)
 		cmd*: ARRAY 256 OF CHAR;	(** Cmd command attribute. *)
 		scrollbar*: BOOLEAN;	(** Does the list have a scrollbar ? *)
 		bar: Bar;
@@ -53,16 +53,16 @@ TYPE
 
 VAR
 	W: Texts.Writer;
-	mayscroll, waittime: LONGINT;
+	mayscroll, waittime: SIGNED32;
 	pat, ss: ARRAY 256 OF CHAR;
-	pos: INTEGER;
+	pos: SIGNED16;
 
 (* ---------------------- SLIDER ------------------------- *)
 
-PROCEDURE Dot(R: Display3.Mask; x, y: INTEGER);
-VAR c: INTEGER;
+PROCEDURE Dot(R: Display3.Mask; x, y: SIGNED16);
+VAR c: SIGNED16;
 
-	PROCEDURE D(col: INTEGER);
+	PROCEDURE D(col: SIGNED16);
 	BEGIN Display3.Dot(R, col, x, y, Display.replace);
 		INC(c); INC(x); IF c MOD 4 = 0 THEN INC(y); DEC(x, 4); END;
 	END D;
@@ -75,14 +75,14 @@ BEGIN
 	D(13); D(0); D(14); D(14);
 END Dot;
 
-PROCEDURE Knob(M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE Knob(M: Display3.Mask; x, y, w, h: SIGNED16);
 BEGIN
 	Display3.FilledRect3D(M, Display3.topC, Display3.bottomC, Display3.groupC, x, y, w, h, 1, Display.replace);
 	Dot(M, x + w DIV 2 - 2, y + h DIV 2 - 2)
 END Knob;
 
-PROCEDURE DrawSlider(M: Display3.Mask; VAR bar: Bar; x, y, w, h: INTEGER);
-VAR barlen, min, max, pos: LONGINT; i: INTEGER;
+PROCEDURE DrawSlider(M: Display3.Mask; VAR bar: Bar; x, y, w, h: SIGNED16);
+VAR barlen, min, max, pos: SIGNED32; i: SIGNED16;
 BEGIN
 	(* border *)
 	Oberon.RemoveMarks(x, y, w, h);
@@ -148,10 +148,10 @@ BEGIN
 	END
 END DrawSlider;
 
-PROCEDURE TrackSlider(M: Display3.Mask; VAR bar: Bar; x, y, w, h: INTEGER);
-VAR keys: SET; X, Y: INTEGER; barlen, min, max, pos, npos, oldpos: LONGINT; keysum: SET;
+PROCEDURE TrackSlider(M: Display3.Mask; VAR bar: Bar; x, y, w, h: SIGNED16);
+VAR keys: SET; X, Y: SIGNED16; barlen, min, max, pos, npos, oldpos: SIGNED32; keysum: SET;
 
-	PROCEDURE Pushed(x, y, w, h: INTEGER): BOOLEAN;
+	PROCEDURE Pushed(x, y, w, h: SIGNED16): BOOLEAN;
 	VAR on, newstate: BOOLEAN;
 
 		PROCEDURE On(): BOOLEAN;
@@ -269,8 +269,8 @@ END TrackSlider;
 
 (* --------------------- CHOOSER ------------------- *)
 
-PROCEDURE Updatebar(F: List; H: INTEGER);
-VAR space: LONGINT;
+PROCEDURE Updatebar(F: List; H: SIGNED16);
+VAR space: SIGNED32;
 BEGIN
 	space := H DIV (Fonts.Default.height + 2);
 	IF F.noitems <= space THEN
@@ -335,7 +335,7 @@ BEGIN
 END InsertItem;
 
 (** Inserts the stretch [beg, end) of text T into the list as entries. *)
-PROCEDURE InsertItems*(F: List; T: Texts.Text; beg, end: LONGINT);
+PROCEDURE InsertItems*(F: List; T: Texts.Text; beg, end: SIGNED32);
 VAR S: Attributes.Scanner;
 BEGIN
 	Attributes.OpenScanner(S, T, beg);
@@ -352,7 +352,7 @@ BEGIN
 END InsertItems;
 
 PROCEDURE Sort(F: List);
-VAR new, i, j, p, n: Item; items: INTEGER;
+VAR new, i, j, p, n: Item; items: SIGNED16;
 BEGIN
 	items := 0;
 	new := NIL;
@@ -445,8 +445,8 @@ BEGIN
 	END
 END ListAttr;
 
-PROCEDURE RestoreList(F: List; M: Display3.Mask; x, y, w, h: INTEGER);
-VAR Y: INTEGER; item: Item; cx, cy, cw, ch, barW: INTEGER;
+PROCEDURE RestoreList(F: List; M: Display3.Mask; x, y, w, h: SIGNED16);
+VAR Y: SIGNED16; item: Item; cx, cy, cw, ch, barW: SIGNED16;
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
 	IF F.scrollbar THEN barW := barw ELSE barW := 0 END;
@@ -488,19 +488,19 @@ BEGIN
 END RestoreList;
 
 PROCEDURE PrintList(F: List; VAR M: Display.DisplayMsg);
-VAR R: Display3.Mask; x, y, w, h, cx, cy, cw, ch, Y, barW: INTEGER; item: Item;
+VAR R: Display3.Mask; x, y, w, h, cx, cy, cw, ch, Y, barW: SIGNED16; item: Item;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
-	PROCEDURE PrintSlider(M: Display3.Mask; VAR bar: Bar; x, y, w, h: INTEGER);
-	VAR barlen, min, max, pos: LONGINT; i: INTEGER;
+	PROCEDURE PrintSlider(M: Display3.Mask; VAR bar: Bar; x, y, w, h: SIGNED16);
+	VAR barlen, min, max, pos: SIGNED32; i: SIGNED16;
 
-		PROCEDURE Dot(R: Display3.Mask; x, y: INTEGER);
-		VAR c: INTEGER;
+		PROCEDURE Dot(R: Display3.Mask; x, y: SIGNED16);
+		VAR c: SIGNED16;
 
-			PROCEDURE D(col: INTEGER);
+			PROCEDURE D(col: SIGNED16);
 			BEGIN Printer3.ReplConst(R, col, x, y, P(1), P(1), Display.replace);
 				INC(c); INC(x, P(1)); IF c MOD 4 = 0 THEN INC(y, P(1)); DEC(x, P(4)); END;
 			END D;
@@ -513,7 +513,7 @@ VAR R: Display3.Mask; x, y, w, h, cx, cy, cw, ch, Y, barW: INTEGER; item: Item;
 			D(13); D(0); D(14); D(14);
 		END Dot;
 
-		PROCEDURE Knob(M: Display3.Mask; x, y, w, h: INTEGER);
+		PROCEDURE Knob(M: Display3.Mask; x, y, w, h: SIGNED16);
 		BEGIN
 			Printer3.FilledRect3D(M, Display3.topC, Display3.bottomC, Display3.groupC, x, y, w, h, 1, Display.replace);
 			Dot(M, x + w DIV 2 - 2, y + h DIV 2 - 2)
@@ -585,7 +585,7 @@ BEGIN
 END PrintList;
 
 PROCEDURE Update(F: List);
-VAR item: Item; i: INTEGER;
+VAR item: Item; i: SIGNED16;
 BEGIN
 	item := F.items; i := 0;
 	WHILE (item # NIL) & (i # F.bar.pos) DO INC(i); item := item.next END;
@@ -604,7 +604,7 @@ BEGIN
 	Gadgets.CopyFrame(M, from, to);
 END CopyList;
 
-PROCEDURE LocateItem(F: List; x, y, MX, MY: INTEGER; VAR item: Item; VAR Y: INTEGER);
+PROCEDURE LocateItem(F: List; x, y, MX, MY: SIGNED16; VAR item: Item; VAR Y: SIGNED16);
 VAR i: Item;
 BEGIN
 	item := NIL;
@@ -620,8 +620,8 @@ BEGIN
 	END
 END LocateItem;
 
-PROCEDURE InvertItem(F: List; M: Display3.Mask; x, y: INTEGER; VAR item: Item; VAR Y: INTEGER);
-VAR barW: INTEGER;
+PROCEDURE InvertItem(F: List; M: Display3.Mask; x, y: SIGNED16; VAR item: Item; VAR Y: SIGNED16);
+VAR barW: SIGNED16;
 BEGIN
 	IF item # NIL THEN
 		Oberon.FadeCursor(Oberon.Mouse);
@@ -630,8 +630,8 @@ BEGIN
 	END
 END InvertItem;
 
-PROCEDURE SelectItem(F: List; M: Display3.Mask; x, y: INTEGER; VAR item: Item; VAR Y: INTEGER);
-VAR cx, cy, cw, ch, barW: INTEGER;
+PROCEDURE SelectItem(F: List; M: Display3.Mask; x, y: SIGNED16; VAR item: Item; VAR Y: SIGNED16);
+VAR cx, cy, cw, ch, barW: SIGNED16;
 BEGIN
 	IF (item # NIL) & ~item.sel THEN
 		IF F.scrollbar THEN barW := barw ELSE barW := 0 END;
@@ -655,8 +655,8 @@ BEGIN
 	END
 END TimeOk;
 
-PROCEDURE Check(F: List; R: Display3.Mask; x, y, w, h: INTEGER; item: Item; Y: INTEGER; VAR scroll: BOOLEAN);
-VAR t, lineh: INTEGER; i: Item;
+PROCEDURE Check(F: List; R: Display3.Mask; x, y, w, h: SIGNED16; item: Item; Y: SIGNED16; VAR scroll: BOOLEAN);
+VAR t, lineh: SIGNED16; i: Item;
 BEGIN
 	scroll := FALSE;
 	IF (item = NIL) & (F.beg # NIL) THEN
@@ -679,8 +679,8 @@ BEGIN
 END Check;
 
 (* during selection *)
-PROCEDURE Check2(F: List; R: Display3.Mask; x, y, w, h: INTEGER; item: Item; Y: INTEGER; VAR scroll: BOOLEAN);
-VAR t, lineh: INTEGER; i: Item;
+PROCEDURE Check2(F: List; R: Display3.Mask; x, y, w, h: SIGNED16; item: Item; Y: SIGNED16; VAR scroll: BOOLEAN);
+VAR t, lineh: SIGNED16; i: Item;
 BEGIN
 	scroll := FALSE;
 	IF (item = NIL) & (F.beg # NIL) THEN
@@ -730,16 +730,16 @@ END DeleteSelection;
 
 (** Returns all selected entries as a text. Entries that contain spaces are quoted. *)
 PROCEDURE GetSelection*(F: List; VAR T: Texts.Text);
-VAR W: Texts.Writer; i: Item; count: INTEGER;
+VAR W: Texts.Writer; i: Item; count: SIGNED16;
 
   PROCEDURE WriteString(VAR W: Texts.Writer; s: ARRAY OF CHAR);
-  VAR i: INTEGER;
+  VAR i: SIGNED16;
   BEGIN i := 0;
   	WHILE (s[i] >= " ") OR (s[i] = 9X) DO Texts.Write(W, s[i]); INC(i) END	(* << jm *)
   END WriteString;
 
 	PROCEDURE Space(VAR s: ARRAY OF CHAR): BOOLEAN;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE s[i] # 0X DO
@@ -767,9 +767,9 @@ BEGIN
 	Texts.Append(T, W.buf)
 END GetSelection;
 
-PROCEDURE TrackList(F: List; R: Display3.Mask; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg);
-VAR item, i: Item; Y, nY: INTEGER; keysum: SET; pos: LONGINT; redraw, scroll, scrolled: BOOLEAN; C: Oberon.ConsumeMsg;
-	T: Texts.Text; beg, end, time: LONGINT;
+PROCEDURE TrackList(F: List; R: Display3.Mask; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg);
+VAR item, i: Item; Y, nY: SIGNED16; keysum: SET; pos: SIGNED32; redraw, scroll, scrolled: BOOLEAN; C: Oberon.ConsumeMsg;
+	T: Texts.Text; beg, end, time: SIGNED32;
 BEGIN
 	keysum := M.keys;
 	IF ((M.keys = {1}) OR (Oberon.New & (keysum = {2}))) & F.scrollbar & (M.X > x + w - barw) THEN
@@ -872,7 +872,7 @@ BEGIN
 END TrackList;
 
 PROCEDURE Search(F: List; ch: CHAR);
-VAR i: Item; j: INTEGER; pos: LONGINT;
+VAR i: Item; j: SIGNED16; pos: SIGNED32;
 BEGIN
 	IF ch = 0X THEN
 		ss[0] := 0X;
@@ -890,8 +890,8 @@ BEGIN
 END Search;
 
 PROCEDURE ListHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F0: List; R: Display3.Mask; redraw: BOOLEAN; T: Texts.Text;
-	ver, noitems: LONGINT; l, new: Item;
+VAR x, y, w, h: SIGNED16; F0: List; R: Display3.Mask; redraw: BOOLEAN; T: Texts.Text;
+	ver, noitems: SIGNED32; l, new: Item;
 BEGIN
 	WITH F: List DO
 		IF M IS Display.FrameMsg THEN
@@ -1051,8 +1051,8 @@ END NewList;
 (* --- tools for lists --- *)
 
 (* Native-Oberon version *)
-PROCEDURE ListFiles(name: ARRAY OF CHAR; time, date, size: LONGINT; VAR cont: BOOLEAN);
-VAR i0, i1, j0, j1: INTEGER; f: BOOLEAN;
+PROCEDURE ListFiles(name: ARRAY OF CHAR; time, date, size: SIGNED32; VAR cont: BOOLEAN);
+VAR i0, i1, j0, j1: SIGNED16; f: BOOLEAN;
 BEGIN i0 := pos; j0 := pos; f := TRUE;
 	LOOP
 		IF pat[i0] = "*" THEN INC(i0); IF pat[i0] = 0X THEN EXIT END
@@ -1079,7 +1079,7 @@ BEGIN i0 := pos; j0 := pos; f := TRUE;
 END ListFiles;
 
 PROCEDURE GetDir(mask : ARRAY OF CHAR; text : Texts.Text);
-	VAR pre : ARRAY 256 OF CHAR; i : INTEGER;
+	VAR pre : ARRAY 256 OF CHAR; i : SIGNED16;
 BEGIN
 	i := 0;
 	WHILE (mask[i] > " ") & (mask[i] # "/") DO pat[i] := mask[i]; INC(i) END;
@@ -1092,7 +1092,7 @@ BEGIN
 END GetDir;
 
 PROCEDURE Copy(source : ARRAY OF CHAR; VAR dest : ARRAY OF CHAR);
-	VAR i,j : INTEGER;
+	VAR i,j : SIGNED16;
 BEGIN
 	j := 0; WHILE (source[j] = " ") DO INC(j); END;
 	i := 0; dest[i] := source[j]; WHILE (source[j] # 0X) & (source[j] # " ")  DO INC(i); INC(j); dest[i] := source[j] END;
@@ -1126,7 +1126,7 @@ END Directory;
 
 (*
 PROCEDURE Match(name,pat : ARRAY OF CHAR): BOOLEAN;
-	CONST  VAR i0, i1, j0, j1,pos: INTEGER; f: BOOLEAN;
+	CONST  VAR i0, i1, j0, j1,pos: SIGNED16; f: BOOLEAN;
 BEGIN pos := 0;
 	pos := 0; WHILE (pat[pos] # "*") & (pat[pos] # 0X) & (pat[pos] = name[pos]) DO INC(pos) END;
 	IF name[pos] = 0X THEN RETURN TRUE END;
@@ -1155,13 +1155,13 @@ BEGIN pos := 0;
 	RETURN f
 END Match;
 
-PROCEDURE EntryHandler(name: ARRAY OF CHAR; date, time, size: LONGINT);
+PROCEDURE EntryHandler(name: ARRAY OF CHAR; date, time, size: SIGNED32);
 BEGIN
 	IF (name[0] > " ") & (name[0] < CHR(127)) & Match(name,pat) THEN Texts.WriteString(W,name); Texts.WriteLn(W) END
 END EntryHandler;
 
 PROCEDURE GetDiskette(mask: ARRAY OF CHAR; text: Texts.Text);
-	VAR i, a, b: INTEGER;
+	VAR i, a, b: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE (mask[i] > " ") & (mask[i] # "/") DO pat[i] := mask[i]; INC(i);  END;
@@ -1175,7 +1175,7 @@ END GetDiskette;
 
 (* Windows version
 PROCEDURE GetDiskette(mask: ARRAY OF CHAR; text: Texts.Text);
-	VAR  i : INTEGER;
+	VAR  i : SIGNED16;
 BEGIN
 	i := 0;
 	WHILE (mask[i] > " ") & (mask[i] # "/") DO pat[i] := mask[i]; INC(i);  END;
@@ -1208,7 +1208,7 @@ END Diskette;
 *)
 
 PROCEDURE LibDir(name: ARRAY OF CHAR; text: Texts.Text);
-VAR  L: Objects.Library; ref, i: INTEGER; libName, objName: ARRAY 256 OF CHAR;
+VAR  L: Objects.Library; ref, i: SIGNED16; libName, objName: ARRAY 256 OF CHAR;
 BEGIN
 	i := 0; WHILE (name[i] # 0X) & (name[i] # ".") DO INC(i) END;
 	name[i] := 0X; COPY(name, libName);
@@ -1272,7 +1272,7 @@ END Lists.
 
 1. Here is some code that illustrates how to insert items into a list. Note that you have to update F.beg to the start of the items you want to show. F.bar.pos says where the scroll bar must be positioned.
 
-	PROCEDURE InsertItems(F: List; T: Texts.Text; beg, end: LONGINT);
+	PROCEDURE InsertItems(F: List; T: Texts.Text; beg, end: SIGNED32);
 	VAR S: Attributes.Scanner;
 	BEGIN
 		Attributes.OpenScanner(S, T, beg);

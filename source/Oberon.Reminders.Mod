@@ -70,7 +70,7 @@ END New;
 (** Attach a reminder to a document. *)
 PROCEDURE Attach*;
 	VAR D: Documents.Document; R: Attributes.Reader; ch: CHAR; obj: Reminder;
-			s: ARRAY 128 OF CHAR; i: INTEGER; M: Objects.LinkMsg;
+			s: ARRAY 128 OF CHAR; i: SIGNED16; M: Objects.LinkMsg;
 BEGIN
 	D := Documents.MarkedDoc();
 	IF D # NIL THEN

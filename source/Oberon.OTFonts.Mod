@@ -23,8 +23,8 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 	TYPE
 		RasterData = RECORD (OType.RasterData)
 			adr: ADDRESS;	(* base address of pattern *)
-			bpr: LONGINT;	(* number of bytes per row *)
-			len: LONGINT;	(* pattern length *)
+			bpr: SIGNED32;	(* number of bytes per row *)
+			len: SIGNED32;	(* pattern length *)
 		END;
 
 		Font = POINTER TO FontDesc;
@@ -44,8 +44,8 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 
 
 	(* fill rectangle in pattern *)
-	PROCEDURE FillRect (llx, lly, urx, ury, opacity: INTEGER; VAR data: OType.RasterData0);
-		VAR x0, x1, h, n: INTEGER; adr, a: ADDRESS; mask: SET; byte: CHAR;
+	PROCEDURE FillRect (llx, lly, urx, ury, opacity: SIGNED16; VAR data: OType.RasterData0);
+		VAR x0, x1, h, n: SIGNED16; adr, a: ADDRESS; mask: SET; byte: CHAR;
 	BEGIN
 		WITH data: RasterData DO
 			x0 := llx DIV 8; x1 := urx DIV 8;
@@ -60,7 +60,7 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 			WHILE n > 0 DO
 				ASSERT((data.adr <= a) & (a < data.adr + data.len), 110);
 				SYSTEM.GET(a, byte);
-				SYSTEM.PUT(a, CHR(LONGINT(SET(ORD(byte)) + mask)));
+				SYSTEM.PUT(a, CHR(SIGNED32(SET(ORD(byte)) + mask)));
 				DEC(n); INC(a, data.bpr)
 			END;
 			IF x0 < x1 THEN
@@ -80,7 +80,7 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 					WHILE n > 0 DO
 						ASSERT((data.adr <= a) & (a < data.adr + data.len), 112);
 						SYSTEM.GET(a, byte);
-						SYSTEM.PUT(a, CHR(LONGINT(SET(ORD(byte)) + mask)));
+						SYSTEM.PUT(a, CHR(SIGNED32(SET(ORD(byte)) + mask)));
 						DEC(n); INC(a, data.bpr)
 					END
 				END
@@ -92,8 +92,8 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 		CONST
 			mode = {OType.Hinted, OType.Width, OType.Raster};
 		VAR
-			file: Files.File; r, m: Files.Rider; font: OType.Font; i, chars, ranges, xmin, ymin, xmax, ymax, j, no: INTEGER;
-			beg, end: ARRAY 64 OF INTEGER; data: RasterData; bytes, k: LONGINT;
+			file: Files.File; r, m: Files.Rider; font: OType.Font; i, chars, ranges, xmin, ymin, xmax, ymax, j, no: SIGNED16;
+			beg, end: ARRAY 64 OF SIGNED16; data: RasterData; bytes, k: SIGNED32;
 	BEGIN
 		file := Files.New(name);
 		ASSERT(file # NIL);
@@ -131,7 +131,7 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 			INC(i)
 		END;
 
-		xmin := MAX(INTEGER); ymin := MAX(INTEGER); xmax := MIN(INTEGER); ymax := MIN(INTEGER);
+		xmin := MAX(SIGNED16); ymin := MAX(SIGNED16); xmax := MIN(SIGNED16); ymax := MIN(SIGNED16);
 		i := 0;
 		WHILE i < ranges DO
 			j := beg[i];
@@ -171,8 +171,8 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 		Files.Register(file)
 	END MakeFont;
 
-	PROCEDURE GetChar (font: Font; no: INTEGER; VAR pat: Display.Pattern);
-		VAR glyph: OType.Glyph; p: Display.Pattern; bytes: LONGINT; data: RasterData;
+	PROCEDURE GetChar (font: Font; no: SIGNED16; VAR pat: Display.Pattern);
+		VAR glyph: OType.Glyph; p: Display.Pattern; bytes: SIGNED32; data: RasterData;
 	BEGIN
 		glyph := font.glyph;
 		OType.LoadGlyph(font.inst, glyph, no, {OType.Hinted, OType.Width, OType.Raster});
@@ -192,8 +192,8 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 		font.pattern := p
 	END GetChar;
 
-	PROCEDURE GetCharObj (lib: Objects.Library; ref: INTEGER; VAR obj: Objects.Object);
-		VAR font: Font; adr: ADDRESS; pat: Display.Pattern; no: INTEGER; ch: CHAR; s: SHORTINT;
+	PROCEDURE GetCharObj (lib: Objects.Library; ref: SIGNED16; VAR obj: Objects.Object);
+		VAR font: Font; adr: ADDRESS; pat: Display.Pattern; no: SIGNED16; ch: CHAR; s: SIGNED8;
 	BEGIN
 		font := lib(Font);
 		adr := ADDRESSOF(font.mem[0]);
@@ -225,7 +225,7 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 	END GetCharObj;
 
 	PROCEDURE LoadFont (font: Font);
-		VAR i, size, n, upm: LONGINT; adr: ADDRESS; ch: CHAR; name: ARRAY 32 OF CHAR; dpi, h: INTEGER; otfont: OType.Font;
+		VAR i, size, n, upm: SIGNED32; adr: ADDRESS; ch: CHAR; name: ARRAY 32 OF CHAR; dpi, h: SIGNED16; otfont: OType.Font;
 	BEGIN
 		(* extract name, size and resolution from font name *)
 		i := 0; ch := font.name[0];
@@ -293,7 +293,7 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 	END LoadFont;
 
 	PROCEDURE Load (lib: Objects.Library);
-		VAR font: Font; i: LONGINT; ch: CHAR; name: ARRAY 64 OF CHAR;
+		VAR font: Font; i: SIGNED32; ch: CHAR; name: ARRAY 64 OF CHAR;
 	BEGIN
 		font := lib(Font);
 		IF Files.Old(font.name) # NIL THEN	(* raster font file exists *)
@@ -339,8 +339,8 @@ MODULE OTFonts IN Oberon;	(** eos  **)
 	**)
 	PROCEDURE Make*;
 		VAR
-			s: Texts.Scanner; font: OType.Font; name, fname, str: ARRAY 32 OF CHAR; style: CHAR; sizes, i: LONGINT;
-			size: ARRAY 16 OF INTEGER; res: INTEGER; inst: OType.Instance;
+			s: Texts.Scanner; font: OType.Font; name, fname, str: ARRAY 32 OF CHAR; style: CHAR; sizes, i: SIGNED32;
+			size: ARRAY 16 OF SIGNED16; res: SIGNED16; inst: OType.Instance;
 	BEGIN
 		Texts.OpenScanner(s, Oberon.Par.text, Oberon.Par.pos);
 		Texts.Scan(s);

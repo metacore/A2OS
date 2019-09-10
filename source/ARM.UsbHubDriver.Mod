@@ -147,7 +147,7 @@ TYPE
 		 * @param buffer: Buffer where to put the descriptor in (at offset 0)
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		 *)
-		PROCEDURE GetHubDescriptor(type, index, length : LONGINT; VAR buffer : Usbdi.Buffer) : BOOLEAN;
+		PROCEDURE GetHubDescriptor(type, index, length : SIGNED32; VAR buffer : Usbdi.Buffer) : BOOLEAN;
 		BEGIN HALT(301); RETURN FALSE; END GetHubDescriptor; (* abstract *)
 
 		(*
@@ -158,7 +158,7 @@ TYPE
 		 * @param index: Descriptor index
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		 *)
-		 PROCEDURE SetHubDescriptor(type, index : LONGINT; buffer : Usbdi.Buffer) : BOOLEAN;
+		 PROCEDURE SetHubDescriptor(type, index : SIGNED32; buffer : Usbdi.Buffer) : BOOLEAN;
 		 BEGIN HALT(301); RETURN FALSE; END SetHubDescriptor; (* abstract *)
 
 		(*
@@ -166,7 +166,7 @@ TYPE
 		 * @param feature: Feature selector (HubLocalPower or HubOvercurrent)
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		 *)
-		PROCEDURE ClearHubFeature(feature : LONGINT) : BOOLEAN;
+		PROCEDURE ClearHubFeature(feature : SIGNED32) : BOOLEAN;
 		BEGIN HALT(301); RETURN FALSE; END ClearHubFeature; (* abstract *)
 
 		(*
@@ -174,7 +174,7 @@ TYPE
 		 * @param feature: Feature selector (HubLocalPowerChange or HubOvercurrentChange)
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		 *)
-		PROCEDURE SetHubFeature(feature : LONGINT) : BOOLEAN;
+		PROCEDURE SetHubFeature(feature : SIGNED32) : BOOLEAN;
 		BEGIN HALT(301); RETURN FALSE; END SetHubFeature; (* abstract *)
 
 		(*
@@ -183,7 +183,7 @@ TYPE
 		 * @port: Port number
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		 *)
-		PROCEDURE ClearPortFeature(feature, port,  selector : LONGINT) : BOOLEAN;
+		PROCEDURE ClearPortFeature(feature, port,  selector : SIGNED32) : BOOLEAN;
 		BEGIN HALT(301); RETURN FALSE; END ClearPortFeature; (* abstract *)
 
 		(*
@@ -193,7 +193,7 @@ TYPE
 		 * @param selector
 		 * @return Status of the control transfer
 		 *)
-		PROCEDURE SetPortFeature(feature, port, selector : LONGINT) : BOOLEAN;
+		PROCEDURE SetPortFeature(feature, port, selector : SIGNED32) : BOOLEAN;
 		BEGIN HALT(301); RETURN FALSE; END SetPortFeature; (* abstract *)
 
 		(*
@@ -212,7 +212,7 @@ TYPE
 		 * @param ack Acknowledge status change bits
 		 * @return Status of the specified port
 		 *)
-		PROCEDURE GetPortStatus(port : LONGINT; ack : BOOLEAN) : SET;
+		PROCEDURE GetPortStatus(port : SIGNED32; ack : BOOLEAN) : SET;
 		BEGIN HALT(301); RETURN {}; END GetPortStatus; (* abstract *)
 
 		(*
@@ -232,7 +232,7 @@ TYPE
 		 * @param port: If the hub supports a TT per port, this is the port number of the TT that encountered the high-speed errors.
 		 * @return TRUE, if request succeeded, FALSE otherwiese
 		 *)
-		PROCEDURE ClearTTBuffer(dev : Usb.UsbDevice; endpoint, port : LONGINT) : BOOLEAN;
+		PROCEDURE ClearTTBuffer(dev : Usb.UsbDevice; endpoint, port : SIGNED32) : BOOLEAN;
 		BEGIN
 			RETURN FALSE;
 		END ClearTTBuffer;
@@ -244,7 +244,7 @@ TYPE
 		 * @port If the hub supports multiple TTs, specify the port number of the TT that will return TT_State. Must be one for single-TT hubs.
 		 * @return TRUE, if the request succeeded, FALSE otherwise
 		 *)
-		PROCEDURE GetTTState(flags, port, len : LONGINT; VAR buffer : Usbdi.Buffer) : BOOLEAN;
+		PROCEDURE GetTTState(flags, port, len : SIGNED32; VAR buffer : Usbdi.Buffer) : BOOLEAN;
 		BEGIN
 			RETURN FALSE;
 		END GetTTState;
@@ -255,7 +255,7 @@ TYPE
 		 * @param port: If the hub supports multiple TTs, specify the port number of the TT that is to be reset (Must be 1 for single-TT hubs).
 		 * @return TRUE, if the request succeeded, FALSE otherwise
 		 *)
-		 PROCEDURE ResetTT(port : LONGINT) : BOOLEAN;
+		 PROCEDURE ResetTT(port : SIGNED32) : BOOLEAN;
 		 BEGIN
 			RETURN FALSE;
 		 END ResetTT;
@@ -266,7 +266,7 @@ TYPE
 		 * @param port: If the hub supports multiple TTs, the port number of the TT that is being stopped must be specified (1 for single-TT hubs).
 		 * @return TRUE, if request succeeded, FALSE otherwise
 		 *)
-		PROCEDURE StopTT(port : LONGINT) : BOOLEAN;
+		PROCEDURE StopTT(port : SIGNED32) : BOOLEAN;
 		BEGIN
 			RETURN FALSE;
 		END StopTT;
@@ -289,21 +289,21 @@ TYPE
 	 	hub : Usb.UsbDevice;
 
 		(* Information from hub descriptor *)
-		nbrOfPorts : LONGINT;			(* Number of downstream ports *)
-	 	pwrOn2pwrGood : LONGINT;	(* Power on to power good wait time [ms] *)
-	 	powerSwitching : LONGINT;		(* Supported power switching modes (NotAvailable, Global or PerPort) *)
+		nbrOfPorts : SIGNED32;			(* Number of downstream ports *)
+	 	pwrOn2pwrGood : SIGNED32;	(* Power on to power good wait time [ms] *)
+	 	powerSwitching : SIGNED32;		(* Supported power switching modes (NotAvailable, Global or PerPort) *)
 	 	isCompound : BOOLEAN; 		(* Is this hub part of a compound device? *)
-	 	ocProtection : LONGINT; 		(* Supported overcurrent protection (NotAvailable, Global or PerPort) *)
-	 	thinkTime : LONGINT; 			(* 0..4 *)
+	 	ocProtection : SIGNED32; 		(* Supported overcurrent protection (NotAvailable, Global or PerPort) *)
+	 	thinkTime : SIGNED32; 			(* 0..4 *)
 	 	portIndicators : BOOLEAN; 		(* Is port indicator control support available? *)
-	 	ctrlCurrent : LONGINT;
+	 	ctrlCurrent : SIGNED32;
 	 	deviceRemovable : POINTER TO ARRAY OF BOOLEAN;
 
 		timer : Kernel.Timer;
 
 		(* Enable power on the specified port (or on all ports if AllPorts is used as parameter) *)
-		PROCEDURE EnablePortPower(port : LONGINT) : BOOLEAN;
-		VAR i : LONGINT;
+		PROCEDURE EnablePortPower(port : SIGNED32) : BOOLEAN;
+		VAR i : SIGNED32;
 		BEGIN
 			IF port = AllPorts THEN (* Only wait for power on to power good once *)
 				IF Debug.Trace & Debug.traceHubRequests THEN Show("Enable power on all ports"); KernelLog.Ln; END;
@@ -326,14 +326,14 @@ TYPE
 		END EnablePortPower;
 
 		(* Disable power on the specified port *)
-		PROCEDURE DisablePortPower(port : LONGINT) : BOOLEAN;
+		PROCEDURE DisablePortPower(port : SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.Trace & Debug.traceHubRequests THEN Show("Disable power on port "); KernelLog.Int(port+1, 0); KernelLog.Ln; END;
 			RETURN ClearPortFeature(PortPower, port, 0);
 		END DisablePortPower;
 
 		(* Enable the specified port *)
-		PROCEDURE ResetAndEnablePort(port :LONGINT) : BOOLEAN;
+		PROCEDURE ResetAndEnablePort(port :SIGNED32) : BOOLEAN;
 		VAR status : SET; timer : Kernel.Timer;
 		BEGIN
 			IF Debug.Trace & Debug.traceHubRequests THEN Show("Enable port "); KernelLog.Int(port+1, 0); KernelLog.Ln; END;
@@ -357,14 +357,14 @@ TYPE
 		END ResetAndEnablePort;
 
 		(* Disable the specified port *)
-		PROCEDURE DisablePort(port : LONGINT) : BOOLEAN;
+		PROCEDURE DisablePort(port : SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.Trace & Debug.traceHubRequests THEN Show("Disable port "); KernelLog.Int(port+1, 0); KernelLog.Ln; END;
 			RETURN ClearPortFeature(PortEnable, port, 0);
 		END DisablePort;
 
 		(* Selectively suspend the specified port *)
-		PROCEDURE SuspendPort(port : LONGINT) : BOOLEAN;
+		PROCEDURE SuspendPort(port : SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.Trace & (Debug.traceHubRequests OR Debug.traceSuspend) THEN Show("Suspend port "); KernelLog.Int(port+1, 0); KernelLog.Ln; END;
 			IF SetPortFeature(PortSuspend, port, 0) THEN
@@ -376,7 +376,7 @@ TYPE
 		END SuspendPort;
 
 		(* Resume a selectively suspended port *)
-		PROCEDURE ResumePort(port : LONGINT) : BOOLEAN;
+		PROCEDURE ResumePort(port : SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.Trace & (Debug.traceHubRequests OR Debug.traceSuspend) THEN Show("Resume port "); KernelLog.Int(port+1, 0); KernelLog.Ln; END;
 			IF ClearPortFeature(PortSuspend, port, 0) THEN
@@ -389,7 +389,7 @@ TYPE
 
 		(* Are there any device drivers associated to the specified device? *)
 		PROCEDURE DriversInstalled(dev : Usb.UsbDevice) : BOOLEAN;
-		VAR intf : Usb.InterfaceDescriptor; i : LONGINT;
+		VAR intf : Usb.InterfaceDescriptor; i : SIGNED32;
 		BEGIN (* locking? *)
 			FOR i := 0 TO LEN(dev.actConfiguration.interfaces)-1 DO
 				intf := dev.actConfiguration.interfaces[i] (Usb.InterfaceDescriptor);
@@ -399,7 +399,7 @@ TYPE
 		END DriversInstalled;
 
 		(* If the hub supports port indicator control, set the port indcator to Automatic, Green, Amber or Off. *)
-		PROCEDURE Indicate(port, ledstatus : LONGINT);
+		PROCEDURE Indicate(port, ledstatus : SIGNED32);
 		BEGIN
 			IF Debug.StrongChecks THEN
 				ASSERT((ledstatus = UsbHcdi.Automatic) OR (ledstatus =UsbHcdi. Green) OR (ledstatus = UsbHcdi.Amber) OR (ledstatus = UsbHcdi.Off));
@@ -415,8 +415,8 @@ TYPE
 		END Indicate;
 
 		(* How much current (mA) is available for this hub. *)
-		PROCEDURE AvailableCurrent() : LONGINT;
-		VAR hubstatus : SET; current : LONGINT;
+		PROCEDURE AvailableCurrent() : SIGNED32;
+		VAR hubstatus : SET; current : SIGNED32;
 		BEGIN
 			current := 0;
 			IF GetHubStatus(hubstatus) THEN
@@ -452,7 +452,7 @@ TYPE
 		END HandleHubStatusChange;
 
 		PROCEDURE LookForDevices;
-		VAR i : LONGINT; trap : BOOLEAN;
+		VAR i : SIGNED32; trap : BOOLEAN;
 		BEGIN
 			IF nbrOfPorts > 0 THEN
 				FOR i := 0 TO nbrOfPorts-1 DO (* Check and handle status of all ports *)
@@ -464,7 +464,7 @@ TYPE
 		END LookForDevices;
 
 		(* Remove device and its driver instance from the specified port *)
-		PROCEDURE RemoveDeviceFromPort(port : LONGINT);
+		PROCEDURE RemoveDeviceFromPort(port : SIGNED32);
 		BEGIN
 			IF hub.deviceAtPort[port] # NIL THEN (* remove device and its driver instance from port *)
 				hub.deviceAtPort[port].SetState(Usb.StateDisconnected);
@@ -475,9 +475,9 @@ TYPE
 
 		(*	Poll the status of this hub and look for connect changes. If a connect change occured, i.e. a USB device
 			has been attached or detached to/from a port, call FindNewDevice or remove the device dependent data structures *)
-		PROCEDURE HandlePortStatusChange(port : LONGINT);
+		PROCEDURE HandlePortStatusChange(port : SIGNED32);
 		CONST MaxPortStatusErrors = 10;
-		VAR dev : Usb.UsbDevice; status : SET; i : LONGINT; res : BOOLEAN;
+		VAR dev : Usb.UsbDevice; status : SET; i : SIGNED32; res : BOOLEAN;
 		BEGIN
 			IF Debug.Trace & Debug.traceHubRequests THEN Show("Handling port status change for port "); KernelLog.Int(port + 1, 0); KernelLog.Ln; END;
 			status := GetPortStatus(port, TRUE);
@@ -648,11 +648,11 @@ TYPE
 		 * @param port where the USB device is attached to
 		 * @return USB device in addressed state
 		 *)
-		PROCEDURE GetAddressedDevice(port : LONGINT) : Usb.UsbDevice;
+		PROCEDURE GetAddressedDevice(port : SIGNED32) : Usb.UsbDevice;
 		VAR
 			dev : Usb.UsbDevice; defaultpipe : UsbHcdi.Pipe;
 			descriptor : Usb.DeviceDescriptor;
-			adr : LONGINT;
+			adr : SIGNED32;
 			status : SET;
 		BEGIN
 			IF Debug.Trace & Debug.traceConnects THEN Show("Assign address to device at port "); KernelLog.Int(port+1, 0); KernelLog.Ln; END;
@@ -858,11 +858,11 @@ TYPE
 		END InquiryDevice;
 
 		PROCEDURE ParseHubDescriptor(buffer : Usbdi.Buffer) : BOOLEAN;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			IF (LEN(buffer) < 2) OR (ORD(buffer[0]) < 7) OR (ORD(buffer[1]) # DescriptorHub) THEN RETURN FALSE; END;
 			nbrOfPorts := ORD(buffer[2]);
-			i := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, ORD(buffer[3])) * {0..1});
+			i := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, ORD(buffer[3])) * {0..1});
 			CASE i OF
 				0 : powerSwitching := Global;
 				|1 : powerSwitching := PerPort;
@@ -873,7 +873,7 @@ TYPE
 			IF SYSTEM.VAL(SET, ORD(buffer[3])) * {2} # {} THEN isCompound := TRUE; END;
 			IF SYSTEM.VAL(SET, ORD(buffer[3])) * {7} # {} THEN portIndicators := TRUE; END;
 
-			i := SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, ORD(buffer[3])) * {3..4}, -3));
+			i := SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, ORD(buffer[3])) * {3..4}, -3));
 			CASE i OF
 				0 : ocProtection := Global;
 				|1 : ocProtection := PerPort;
@@ -881,7 +881,7 @@ TYPE
 				ocProtection := NotAvailable;
 			END;
 
-		 	thinkTime := SYSTEM.VAL(LONGINT, LSH(SYSTEM.VAL(SET, ORD(buffer[3])) * {3..4}, -3));
+		 	thinkTime := SYSTEM.VAL(SIGNED32, LSH(SYSTEM.VAL(SET, ORD(buffer[3])) * {3..4}, -3));
 			pwrOn2pwrGood := ORD(buffer[5]) * 2; (* PowerOn 2 PowerGood measured in 2ms steps *)
 		 	ctrlCurrent := ORD(buffer[6]);
 
@@ -898,7 +898,7 @@ TYPE
 
 		(* Load and parse the hub descriptor, power on all ports *)
 		PROCEDURE Connect() : BOOLEAN;
-		VAR buffer : Usbdi.BufferPtr; len : LONGINT;
+		VAR buffer : Usbdi.BufferPtr; len : SIGNED32;
 		BEGIN
 			hub := device (Usb.UsbDevice);
 
@@ -910,7 +910,7 @@ TYPE
 			END;
 
 			len := ORD(buffer[0]); NEW(buffer, len);
-		 	IF ~GetHubDescriptor(DescriptorHub, 0, SYSTEM.VAL(LONGINT, len), buffer) THEN
+		 	IF ~GetHubDescriptor(DescriptorHub, 0, SYSTEM.VAL(SIGNED32, len), buffer) THEN
 				IF Debug.Level >= Debug.Errors THEN KernelLog.String("UsbHubDriver: Could not get hub descriptor."); KernelLog.Ln; END;
 				RETURN FALSE;
 			END;
@@ -938,7 +938,7 @@ TYPE
 		END Connect;
 
 		PROCEDURE ValidTopology(dev, parent : Usb.UsbDevice) : BOOLEAN;
-		VAR segments : LONGINT; temp : Usb.UsbDevice;
+		VAR segments : SIGNED32; temp : Usb.UsbDevice;
 		BEGIN (* Should lock topology !! *)
 			IF dev.hubFlag THEN
 				(* Count cable segments between dev and the host *)
@@ -980,7 +980,7 @@ TYPE
 			IF Debug.Verbose THEN Show(" disconnected."); KernelLog.Ln;END;
 		END Disconnect;
 
-		PROCEDURE Wait(ms : LONGINT);
+		PROCEDURE Wait(ms : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			timer.Sleep(ms)
 		END Wait;
@@ -990,7 +990,7 @@ TYPE
 			NEW(timer); (* Used by Wait *)
 		END New;
 
-		PROCEDURE ShowDevice(mode, port : LONGINT; dev : Usb.UsbDevice);
+		PROCEDURE ShowDevice(mode, port : SIGNED32; dev : Usb.UsbDevice);
 		BEGIN
 			IF Debug.StrongChecks THEN ASSERT((dev # NIL) & ((mode = DeviceAttached) OR (mode = DeviceRemoved))); END;
 			KernelLog.String("UsbHubDriver: ");	dev.ShowName;
@@ -1003,7 +1003,7 @@ TYPE
 		END ShowDevice;
 
 		PROCEDURE ShowInfo;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			IF Debug.Trace THEN
 			Show(" Capabilities:"); KernelLog.Ln;
@@ -1054,10 +1054,10 @@ TYPE
 		(* Hub device status pipe for status notifications *)
 		statusPipe : Usbdi.Pipe;
 		statusBuffer : Usbdi.BufferPtr;
-		statusPipeRetries : LONGINT;
+		statusPipeRetries : SIGNED32;
 
 		(* This hub class specific request returns the hub descriptor. *)
-		PROCEDURE GetHubDescriptor(type, index, length : LONGINT; VAR buffer : Usbdi.Buffer) : BOOLEAN;
+		PROCEDURE GetHubDescriptor(type, index, length : SIGNED32; VAR buffer : Usbdi.Buffer) : BOOLEAN;
 		BEGIN
 			ASSERT(length >= 2);
 			RETURN (hub.defaultpipe.Request(ToHost + Class + Device, GetDescriptor, index + type*100H, 0, length, buffer) = Usbdi.Ok) &
@@ -1065,14 +1065,14 @@ TYPE
 		END GetHubDescriptor;
 
 		(* This hub class specific request overrides the hub descriptor. *)
-		 PROCEDURE SetHubDescriptor(type, index : LONGINT; buffer : Usbdi.Buffer) : BOOLEAN;
+		 PROCEDURE SetHubDescriptor(type, index : SIGNED32; buffer : Usbdi.Buffer) : BOOLEAN;
 		 BEGIN
 			ASSERT((LEN(buffer) >= 2) & (ORD(buffer[0]) = LEN(buffer)) & (ORD(buffer[1]) = type));
 		 	RETURN hub.defaultpipe.Request(ToDevice + Class + Device, SetDescriptor, index + type*100H, 0, LEN(buffer), buffer) = Usbdi.Ok;
 		 END SetHubDescriptor;
 
 		(* This hub class request resets a value reported in the hub status. *)
-		PROCEDURE ClearHubFeature(feature : LONGINT) : BOOLEAN;
+		PROCEDURE ClearHubFeature(feature : SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.StrongChecks THEN ASSERT((feature = HubLocalPowerChange) OR (feature = HubOverCurrentChange)); END; (* Valid feature selector *)
 			IF Debug.Trace & Debug.traceHubRequests THEN Show("Clear hub feature "); KernelLog.Int(feature, 0); KernelLog.Ln; END;
@@ -1080,7 +1080,7 @@ TYPE
 		END ClearHubFeature;
 
 		(* This hub class request sets a value reported in the hub status. *)
-		PROCEDURE SetHubFeature(feature : LONGINT) : BOOLEAN;
+		PROCEDURE SetHubFeature(feature : SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.StrongChecks THEN ASSERT((feature = HubLocalPowerChange) OR (feature = HubOverCurrentChange)); END; (* Valid feature selector *)
 			IF Debug.Trace & Debug.traceHubRequests THEN Show("Set hub feature "); KernelLog.Int(feature, 0); KernelLog.Ln; END;
@@ -1088,7 +1088,7 @@ TYPE
 		END SetHubFeature;
 
 		(* This hub class request resets a value reported in the port status. *)
-		PROCEDURE ClearPortFeature(feature, port,  selector : LONGINT) : BOOLEAN;
+		PROCEDURE ClearPortFeature(feature, port,  selector : SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.StrongChecks THEN
 				ASSERT(((feature # PortTest) & (feature # PortIndicator)) OR (selector = 0));
@@ -1099,7 +1099,7 @@ TYPE
 		END ClearPortFeature;
 
 		(* This hub class request sets a value reported in the hub status. *)
-		PROCEDURE SetPortFeature(feature, port, selector : LONGINT) : BOOLEAN;
+		PROCEDURE SetPortFeature(feature, port, selector : SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.StrongChecks THEN
 				ASSERT(((feature = PortTest) OR (feature = PortIndicator)) OR (selector = 0));
@@ -1123,7 +1123,7 @@ TYPE
 		END GetHubStatus;
 
 		(* This hub class request returns the current port status and the current value of the port status change bits.  *)
-		PROCEDURE GetPortStatus(port : LONGINT; ack : BOOLEAN) : SET;
+		PROCEDURE GetPortStatus(port : SIGNED32; ack : BOOLEAN) : SET;
 		VAR buffer : Usbdi.BufferPtr; s, portstatus : SET;
 		BEGIN
 			IF Debug.StrongChecks THEN ASSERT(port >= 0); END;
@@ -1201,8 +1201,8 @@ TYPE
 		 * This handler is called when the hub's interrupt IN status pipe reports a change of either
 		 * the hub status or the status of a hub port.
 		 *)
-		PROCEDURE HandleStatusChange(status : Usbdi.Status; actLen : LONGINT);
-		VAR ignore : Usbdi.Status; i, port : LONGINT;
+		PROCEDURE HandleStatusChange(status : Usbdi.Status; actLen : SIGNED32);
+		VAR ignore : Usbdi.Status; i, port : SIGNED32;
 		BEGIN
 			IF Debug.Trace & Debug.traceConnects THEN
 				Show("Hub reports status change: "); FOR i := 0 TO LEN(statusBuffer)-1 DO KernelLog.Hex(ORD(statusBuffer[i]), -2); END; KernelLog.Ln;
@@ -1266,8 +1266,8 @@ TYPE
 		 * This hub class specific request clears the state of the Transaction Translator (TT) bulk/control transfer after
 		 * it has been left in a busy state due to high-speed errors. This request is only defined for non-periodic endpoints.
 		 *)
-		PROCEDURE ClearTTBuffer(dev : Usb.UsbDevice; endpoint, port : LONGINT) : BOOLEAN;
-		VAR intf : Usb.InterfaceDescriptor; endp : Usb.EndpointDescriptor; wValue : SET; i, e : LONGINT;
+		PROCEDURE ClearTTBuffer(dev : Usb.UsbDevice; endpoint, port : SIGNED32) : BOOLEAN;
+		VAR intf : Usb.InterfaceDescriptor; endp : Usb.EndpointDescriptor; wValue : SET; i, e : SIGNED32;
 		BEGIN
 			IF Debug.StrongChecks THEN ASSERT((dev.speed # Usb.HighSpeed) & (dev.parent.speed = Usb.HighSpeed)); END;
 			(* Get the endpoint *)
@@ -1290,14 +1290,14 @@ TYPE
 			(* wValue: {0..3}: Endpoint Number, {4..10}: Device Address, {11..12}: Endpoint Type, {13..13}: Reserved, {15}: Endpoint Direction *)
 			wValue := SYSTEM.VAL(SET, endp.bEndpointAddress) * {0..3} + LSH(SYSTEM.VAL(SET, dev.address), 4) * {4..10};
 			wValue := wValue + LSH(endp.bmAttributes ,11) * {11..12} + LSH(SYSTEM.VAL(SET, endp.bEndpointAddress) * {7}, 8);
-			RETURN hub.defaultpipe.Request(ToDevice + Class + Other, ClearTtBuffer, SYSTEM.VAL(LONGINT, wValue), (port + 1), 0, Usbdi.NoData) = Usbdi.Ok;
+			RETURN hub.defaultpipe.Request(ToDevice + Class + Other, ClearTtBuffer, SYSTEM.VAL(SIGNED32, wValue), (port + 1), 0, Usbdi.NoData) = Usbdi.Ok;
 		END ClearTTBuffer;
 
 		(*
 		 * This hub class specific request returns the internal state of the Transaction Translator (TT) in a vendor specific format.
 		 * A TT receiving this request must have first been stopped using the StopTTRequest.
 		 *)
-		PROCEDURE GetTTState(flags, port, len : LONGINT; VAR buffer : Usbdi.Buffer) : BOOLEAN;
+		PROCEDURE GetTTState(flags, port, len : SIGNED32; VAR buffer : Usbdi.Buffer) : BOOLEAN;
 		BEGIN
 			RETURN hub.defaultpipe.Request(ToDevice + Class + Other, GetTtState, flags, (port + 1), len, buffer) = Usbdi.Ok;
 		END GetTTState;
@@ -1306,7 +1306,7 @@ TYPE
 		 * This hub class specific request returns the Transaction Translator (TT) in a hub to a known state.
 		 * After the reset is completed, the TT can resume its normal operation.
 		 *)
-		 PROCEDURE ResetTT(port : LONGINT) : BOOLEAN;
+		 PROCEDURE ResetTT(port : SIGNED32) : BOOLEAN;
 		 BEGIN
 		 	RETURN hub.defaultpipe.Request(ToDevice + Class + Other, ResetTt, 0, (port + 1), 0, Usbdi.NoData) = Usbdi.Ok;
 		 END ResetTT;
@@ -1315,7 +1315,7 @@ TYPE
 		 * This hub class specific request stops the normal execution of the Transaction Translator (TT) so that the internal
 		 * state can be retrieved via GetTTState. This request is provided for debugging purposes.
 		 *)
-		PROCEDURE StopTT(port : LONGINT) : BOOLEAN;
+		PROCEDURE StopTT(port : SIGNED32) : BOOLEAN;
 		BEGIN
 			RETURN hub.defaultpipe.Request(ToDevice + Class + Other, StopTt, 0, (port + 1), 0, Usbdi.NoData) = Usbdi.Ok;
 		END StopTT;
@@ -1333,14 +1333,14 @@ TYPE
 		(* Active object handling *)
 		timerRH : Kernel.Timer;
 		alive, dead, statusChange : BOOLEAN;
-		pollingInterval : LONGINT;
+		pollingInterval : SIGNED32;
 
 		(* Will be true when Connect() returns. Used to synchronize active body *)
 		initialized : BOOLEAN;
 
 		(* Get the emulated hub descriptor. Ignore type and index parameters. *)
-		PROCEDURE GetHubDescriptor(type, index, length : LONGINT;  VAR buffer : Usbdi.Buffer) : BOOLEAN;
-		VAR i : LONGINT; hd : UsbHcdi.HubDescriptor;
+		PROCEDURE GetHubDescriptor(type, index, length : SIGNED32;  VAR buffer : Usbdi.Buffer) : BOOLEAN;
+		VAR i : SIGNED32; hd : UsbHcdi.HubDescriptor;
 		BEGIN
 			IF Debug.StrongChecks THEN ASSERT(LEN(buffer) <= length); END;
 			hd := device(Usb.UsbDevice).controller.GetHubDescriptor();
@@ -1351,8 +1351,8 @@ TYPE
 		END GetHubDescriptor;
 
 		(* Overwrites the emulated hub descriptor. Ignore type and index paramters. *)
-		 PROCEDURE SetHubDescriptor(type, index : LONGINT; buffer : Usbdi.Buffer) : BOOLEAN;
-		 VAR i : LONGINT; hd : UsbHcdi.HubDescriptor;
+		 PROCEDURE SetHubDescriptor(type, index : SIGNED32; buffer : Usbdi.Buffer) : BOOLEAN;
+		 VAR i : SIGNED32; hd : UsbHcdi.HubDescriptor;
 		 BEGIN
 		 	IF Debug.StrongChecks THEN ASSERT((LEN(buffer)>=8) & (ORD(buffer[0])=LEN(buffer)) & (ORD(buffer[1])=type)); END;
 		 	NEW(hd, LEN(buffer));
@@ -1362,7 +1362,7 @@ TYPE
 		 END SetHubDescriptor;
 
 		(* Clear a root hub feature. *)
-		PROCEDURE ClearHubFeature(feature : LONGINT) : BOOLEAN;
+		PROCEDURE ClearHubFeature(feature : SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.StrongChecks THEN ASSERT((feature = HubLocalPowerChange) OR (feature = HubOverCurrentChange)); END; (* Valid feature selector *)
 			(* TODO: Do nothing? *)
@@ -1370,7 +1370,7 @@ TYPE
 		END ClearHubFeature;
 
 		(* Set a root hub feature *)
-		PROCEDURE SetHubFeature(feature : LONGINT) : BOOLEAN;
+		PROCEDURE SetHubFeature(feature : SIGNED32) : BOOLEAN;
 		BEGIN
 			IF Debug.StrongChecks THEN ASSERT((feature = HubLocalPowerChange) OR (feature = HubOverCurrentChange)); END; (* Valid feature selector *)
 			(* TODO: Do nothing? *)
@@ -1378,7 +1378,7 @@ TYPE
 		END SetHubFeature;
 
 		(* Clear a root hub port feature. *)
-		PROCEDURE ClearPortFeature(feature, port, selector : LONGINT) : BOOLEAN;
+		PROCEDURE ClearPortFeature(feature, port, selector : SIGNED32) : BOOLEAN;
 		VAR res : BOOLEAN;
 		BEGIN
 			IF Debug.StrongChecks THEN
@@ -1404,7 +1404,7 @@ TYPE
 		END ClearPortFeature;
 
 		(* Set a root hub port feature *)
-		PROCEDURE SetPortFeature(feature, port, selector : LONGINT) : BOOLEAN;
+		PROCEDURE SetPortFeature(feature, port, selector : SIGNED32) : BOOLEAN;
 		VAR res : BOOLEAN;
 		BEGIN
 			IF Debug.StrongChecks THEN
@@ -1441,7 +1441,7 @@ TYPE
 		END GetHubStatus;
 
 		(* Get the status of the specifed root hub port. Note that the HCD is responsible for acknowledging changes. *)
-		PROCEDURE GetPortStatus(port : LONGINT; ack : BOOLEAN) : SET;
+		PROCEDURE GetPortStatus(port : SIGNED32; ack : BOOLEAN) : SET;
 		BEGIN
 			IF Debug.StrongChecks THEN ASSERT((port >= 0) & (port < nbrOfPorts)); END;
 			RETURN hub.controller.GetPortStatus(port, ack);
@@ -1449,13 +1449,13 @@ TYPE
 
 		(* Root hubs that support interrupt notification for port status changes will call this
 		handler when a corresponding interrupt occurs. The parameters are ignored. *)
-		PROCEDURE HandleStatusChange(status : Usbdi.Status; actLen : LONGINT);
+		PROCEDURE HandleStatusChange(status : Usbdi.Status; actLen : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			statusChange := TRUE;
 		END HandleStatusChange;
 
 		(* How much current (mA) is available for this hub? *)
-		PROCEDURE AvailableCurrent() : LONGINT;
+		PROCEDURE AvailableCurrent() : SIGNED32;
 		BEGIN
 			RETURN 500; (* High power port delivers 500mA *)
 		END AvailableCurrent;

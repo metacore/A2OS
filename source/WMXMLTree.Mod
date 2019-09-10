@@ -79,7 +79,7 @@ TYPE
 			text := e.text;
 			editor := e;
 			highlight := editor.tv.CreateHighlight();
-			highlight.SetColor(LONGINT(0DDDD0060H));
+			highlight.SetColor(SIGNED32(0DDDD0060H));
 			highlight.SetKind(WMTextView.HLOver)
 		END SetEditor;
 

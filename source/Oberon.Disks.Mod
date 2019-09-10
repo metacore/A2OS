@@ -43,9 +43,9 @@ TYPE
 	Partition* = Disks.Partition;
 	PartitionTable* = Disks.PartitionTable;
 
-	TransferProc* = PROCEDURE (dev: Device; op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
-	GetSizeProc* = PROCEDURE (dev: Device; VAR size, res: LONGINT);
-	HandleProc* = PROCEDURE (dev: Device; VAR msg: Message; VAR res: WORD);
+	TransferProc* = PROCEDURE (dev: Device; op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIGNED32; VAR res: INTEGER);
+	GetSizeProc* = PROCEDURE (dev: Device; VAR size, res: SIGNED32);
+	HandleProc* = PROCEDURE (dev: Device; VAR msg: Message; VAR res: INTEGER);
 
 (** The base for block devices. It provides operations on an abstract array of disk blocks of blockSize bytes,
 numbered from 0 to size-1. If applicable, a PC-format partition table starts at block 0, and can be read into
@@ -54,13 +54,13 @@ the table field with Open or UpdatePartitionTable. *)
 	DeviceDesc* = RECORD	(** fields read-only, initialized by extender *)
 		name*: Name;	(** unique device name *)
 		desc*: Description;	(** device description for Partition.Show etc. *)
-		blockSize*: LONGINT;	(** in bytes - unit of block, num & size parameters *)
+		blockSize*: SIGNED32;	(** in bytes - unit of block, num & size parameters *)
 		flags*: SET;	(** ReadOnly, Removable *)
 		transfer*: TransferProc;	(** read or write blocks *)
 		getSize*: GetSizeProc;	(** get total size of device *)
 		handle*: HandleProc;	(** handle optional messages *)
 		table*: PartitionTable;	(** cache for partition table *)
-		openCount*: LONGINT;	(** number of times device has been opened *)
+		openCount*: SIGNED32;	(** number of times device has been opened *)
 		real: Disks.Device;	(* underlying device *)
 	END;
 
@@ -79,19 +79,19 @@ BEGIN
 	dev.table := dev.real.table; dev.openCount := dev.real.openCount
 END Update;
 
-PROCEDURE Transfer(dev: Device; op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: LONGINT; VAR res: WORD);
+PROCEDURE Transfer(dev: Device; op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIGNED32; VAR res: INTEGER);
 BEGIN
 	dev.real.Transfer(op, block, num, data, ofs, res);
 	Update(dev)
 END Transfer;
 
-PROCEDURE GetSize(dev: Device; VAR size, res: LONGINT);
+PROCEDURE GetSize(dev: Device; VAR size, res: SIGNED32);
 BEGIN
 	dev.real.GetSize(size, res);
 	Update(dev)
 END GetSize;
 
-PROCEDURE Handle(dev: Device; VAR msg: Message; VAR res: WORD);
+PROCEDURE Handle(dev: Device; VAR msg: Message; VAR res: INTEGER);
 BEGIN
 	dev.real.Handle(msg, res);
 	Update(dev)
@@ -122,7 +122,7 @@ END GetRegistered;
 partition spanning the entire device, with type = 256. If the device has been opened before, do nothing and
 return DeviceInUse, otherwise return Ok. On any other error dev.table is set NIL. *)
 
-PROCEDURE UpdatePartitionTable*(dev: Device; VAR res: WORD);
+PROCEDURE UpdatePartitionTable*(dev: Device; VAR res: INTEGER);
 BEGIN
 	Disks.UpdatePartitionTable(dev.real, res);
 	Update(dev)
@@ -130,14 +130,14 @@ END UpdatePartitionTable;
 
 (** Open the device and increment its open count if successful. If the device is opened for the first time,
 lock it and update its partition table. *)
-PROCEDURE Open*(dev: Device; VAR res: WORD);
+PROCEDURE Open*(dev: Device; VAR res: INTEGER);
 BEGIN
 	dev.real.Open(res);
 	Update(dev)
 END Open;
 
 (** Close the device and decrement its open count. Unlock it if the open count has reached 0. *)
-PROCEDURE Close*(dev: Device; VAR res: WORD);
+PROCEDURE Close*(dev: Device; VAR res: INTEGER);
 BEGIN
 	dev.real.Close(res);
 	Update(dev)
@@ -148,7 +148,7 @@ END Disks.
 (**
 o Further Transfer op numbers may be added in future, therefore devices should check explicitly for op = Read or op = Write.
 o Positive res numbers are device-specific. Negative res numbers are reserved.
-o Block size 512 and LONGINT block number limit us to 1Tb = 1024Gb.
+o Block size 512 and SIGNED32 block number limit us to 1Tb = 1024Gb.
 o When the media is changed in a removable device, the next operation (transfer, getSize, handle) will fail
 with res = MediaChanged. After that the new media can be accessed as usual.  [RFC: Perhaps the MediaChanged flag should be sticky until the next LockMsg].
 o The ReadOnly flag and blockSize may depend on the current media and is only valid after a successful access

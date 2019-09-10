@@ -79,7 +79,7 @@ TYPE
 
 	Position* = RECORD
 		valid* : BOOLEAN;
-		a*, b* : LONGINT;
+		a*, b* : SIGNED32;
 	END;
 
 	Comment* = POINTER TO RECORD
@@ -93,8 +93,8 @@ TYPE
 	END;
 
 	Expression* = POINTER TO RECORD
-		kind*, op*, basicType* : LONGINT;
-		intValue* : HUGEINT;
+		kind*, op*, basicType* : SIGNED32;
+		intValue* : SIGNED64;
 		strValue* : Strings.String;
 		setValue* : Set;
 		a*, b* : Expression;
@@ -222,7 +222,7 @@ TYPE
 	Array* = POINTER TO RECORD
 		container* : Scope; (* containing scope *)
 		open*: BOOLEAN;
-		len*: LONGINT;
+		len*: SIGNED32;
 		expression* : Expression;
 		base*: Type;
 	END;
@@ -243,7 +243,7 @@ TYPE
 
 	Type* = POINTER TO RECORD
 		container* : Scope; (* containing scope *)
-		kind*, basicType* : LONGINT;
+		kind*, basicType* : SIGNED32;
 		qualident*: Designator;
 		type* : TypeDecl;
 		array*: Array;
@@ -276,7 +276,7 @@ TYPE
 
 	Var* = POINTER TO RECORD(NamedObject)
 		type* : Type;
-		varNr* : LONGINT;
+		varNr* : SIGNED32;
 		parameterType* : SET;
 	END;
 
@@ -284,7 +284,7 @@ TYPE
 
 	ObjectList*= OBJECT
 	VAR objs- : NamedObjectArray;
-		nofObjs- : LONGINT;
+		nofObjs- : SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -292,7 +292,7 @@ TYPE
 		END Init;
 
 		PROCEDURE Add*(m : NamedObject);
-		VAR n : NamedObjectArray; i : LONGINT;
+		VAR n : NamedObjectArray; i : SIGNED32;
 		BEGIN
 			ASSERT(m.name # NIL);
 			IF nofObjs >= LEN(objs) - 1 THEN
@@ -305,7 +305,7 @@ TYPE
 		END Add;
 
 		PROCEDURE AddReplace*(m : NamedObject);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			ASSERT(m.name # NIL);
 			i := 0; WHILE (i < nofObjs) & (objs[i].name^ # m.name^) DO INC(i) END;
@@ -315,7 +315,7 @@ TYPE
 		END AddReplace;
 
 		PROCEDURE Get*(CONST name : ARRAY OF CHAR) : NamedObject;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0; WHILE (i < nofObjs) & (objs[i].name^ # name) DO INC(i) END;
 			IF i < nofObjs THEN RETURN objs[i]
@@ -324,7 +324,7 @@ TYPE
 		END Get;
 
 		PROCEDURE GetWithPrefix*(CONST prefix : ARRAY OF CHAR; candidates : ObjectList; onlyPublic : BOOLEAN);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < nofObjs) DO
@@ -515,14 +515,14 @@ BEGIN
 	RETURN no(TypeDecl).type
 END FindType;
 
-PROCEDURE PrimitiveExpressionInt*(value : HUGEINT) : Expression;
+PROCEDURE PrimitiveExpressionInt*(value : SIGNED64) : Expression;
 VAR expression : Expression;
 BEGIN
 	NEW(expression);
 	expression.kind := ExpressionPrimitive;
 	IF (value >= -128) & (value <= 127) THEN expression.basicType:= BasicInt8
-	ELSIF (value >= MIN(INTEGER)) & (value <= MAX(INTEGER)) THEN expression.basicType := BasicInt16
-	ELSIF (value >= MIN(LONGINT)) & (value <= MAX(LONGINT)) THEN expression.basicType := BasicInt32
+	ELSIF (value >= MIN(SIGNED16)) & (value <= MAX(SIGNED16)) THEN expression.basicType := BasicInt16
+	ELSIF (value >= MIN(SIGNED32)) & (value <= MAX(SIGNED32)) THEN expression.basicType := BasicInt32
 	ELSE expression.basicType := BasicInt64
 	END;
 	expression.intValue := value;
@@ -583,7 +583,7 @@ BEGIN
 	RETURN expression
 END IllegalExpression;
 
-PROCEDURE UnaryExpression*(op : INTEGER; exp : Expression) : Expression;
+PROCEDURE UnaryExpression*(op : SIGNED16; exp : Expression) : Expression;
 VAR expression : Expression;
 BEGIN
 	NEW(expression);
@@ -594,7 +594,7 @@ BEGIN
 	RETURN expression
 END UnaryExpression;
 
-PROCEDURE BinaryExpression*(op : LONGINT; expa, expb : Expression) : Expression;
+PROCEDURE BinaryExpression*(op : SIGNED32; expa, expb : Expression) : Expression;
 VAR expression : Expression;
 BEGIN
 	IF expa = NIL THEN expa := IllegalExpression() END;
@@ -734,7 +734,7 @@ END NewEmptyStatement;
 
 (* a qualident that can only comprise ident{.ident} *)
 PROCEDURE ExportQualident(w : Streams.Writer; ident : Designator; scope : Scope);
-VAR i : LONGINT; q : Designator; str : ARRAY 128 OF CHAR; no : NamedObject;
+VAR i : SIGNED32; q : Designator; str : ARRAY 128 OF CHAR; no : NamedObject;
 BEGIN
 	i := 0; q := ident; WHILE q # NIL DO ASSERT(q IS Ident); q := q.next; INC(i) END;
 	w.Net32(i);
@@ -753,7 +753,7 @@ BEGIN
 END ExportQualident;
 
 PROCEDURE ExportSignature(w : Streams.Writer; signature : ProcedureSignature; scope : Scope);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 	no : NamedObject;
 BEGIN
 	IF signature = NIL THEN ExportType(w, NIL, 0, scope)
@@ -774,7 +774,7 @@ BEGIN
 	END;
 END ExportSignature;
 
-PROCEDURE ExportType(w : Streams.Writer; t : Type; level : LONGINT; scope : Scope);
+PROCEDURE ExportType(w : Streams.Writer; t : Type; level : SIGNED32; scope : Scope);
 BEGIN
 	IF t = NIL THEN w.Net32(TNone); RETURN END;
 	w.Net32(t.kind);
@@ -789,9 +789,9 @@ BEGIN
 	END
 END ExportType;
 
-PROCEDURE ExportScope(w : Streams.Writer; scope : Scope; level : LONGINT);
+PROCEDURE ExportScope(w : Streams.Writer; scope : Scope; level : SIGNED32);
 VAR no : NamedObject;
-	nofTypes, nofProcs, nofImports, nofConst, nofVar, i, t : LONGINT;
+	nofTypes, nofProcs, nofImports, nofConst, nofVar, i, t : SIGNED32;
 BEGIN
 	(* Count element types in scope *)
 	FOR i := 0 TO scope.elements.nofObjs - 1 DO
@@ -900,7 +900,7 @@ END WriteSymbolFile;
 
 (* a qualident that can only comprise ident{.ident} *)
 PROCEDURE ImportQualident(r : Streams.Reader) : Designator;
-VAR nof, i : LONGINT; f, n : Designator; ident : Ident; str : ARRAY 128 OF CHAR;
+VAR nof, i : SIGNED32; f, n : Designator; ident : Ident; str : ARRAY 128 OF CHAR;
 BEGIN
 	nof := r.Net32(); f := NIL;
 	FOR i := 0 TO nof - 1 DO
@@ -912,9 +912,9 @@ BEGIN
 END ImportQualident;
 
 PROCEDURE ImportSignature(r : Streams.Reader; scope : Scope; owner : NamedObject) : ProcedureSignature;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 	signature : ProcedureSignature;
-	n : LONGINT;
+	n : SIGNED32;
 	var : Var;
 	str : ARRAY 128 OF CHAR;
 BEGIN
@@ -952,7 +952,7 @@ BEGIN
 END ImportType;
 
 PROCEDURE ImportScope(r : Streams.Reader; scope : Scope; owner : NamedObject) : Scope;
-VAR i, nofImports, nofVar, nofTypes, nofConst, nofProcs : LONGINT;
+VAR i, nofImports, nofVar, nofTypes, nofConst, nofProcs : SIGNED32;
 	imp : Import; typeDecl : TypeDecl; var : Var; const : Const; procDecl : ProcDecl;
 	str : ARRAY 128 OF CHAR;
 	s : Scope;
@@ -1012,7 +1012,7 @@ PROCEDURE ReadSymbolFile*(CONST modname : ARRAY OF CHAR) : Module;
 VAR r : Streams.Reader;
 	receiver : Streams.Receiver;
 	fn, name, ofn : ARRAY 128 OF CHAR;
-	m : Module; version : LONGINT;
+	m : Module; version : SIGNED32;
 	f : Files.File;
 	fr : Files.Reader;
 BEGIN

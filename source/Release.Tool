@@ -286,7 +286,7 @@ PACKAGE Kernel ARCHIVE "Kernel.zip" SOURCE "KernelSrc.zip" DESCRIPTION "A2 Kerne
 
 # Active Oberon run-time
 
-	# Runtime support for HUGEINT and strings
+	# Runtime support for SIGNED64 and strings
 	I386 { I386.Builtins.Mod }
 	AMD64 { AMD64.Builtins.Mod }
 	ARM { ARM.FPE64.Mod ARM.Builtins.Mod }

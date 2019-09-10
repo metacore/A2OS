@@ -26,10 +26,10 @@ VAR
 	ptrsize, procsize, delegsize: PCBT.Size;	(*used by TypeSize*)
 
 	AAllocPar, AAllocParSize,	(*allocated parameters, parameters that required TypeSize*)
-	AfieldAllocated: LONGINT;	(*allocating an already allocated field*)
+	AfieldAllocated: SIGNED32;	(*allocating an already allocated field*)
 
-PROCEDURE VarOffset(VAR offset, varOffset: LONGINT;  var: PCT.Variable);
-VAR size: LONGINT;
+PROCEDURE VarOffset(VAR offset, varOffset: SIGNED32;  var: PCT.Variable);
+VAR size: SIGNED32;
 BEGIN
 	size := var.type.size(PCBT.Size).size;
 	INC(offset, size);
@@ -39,8 +39,8 @@ BEGIN
 	varOffset := -offset
 END VarOffset;
 
-PROCEDURE ParOffset(VAR offset, varOffset: LONGINT; type: PCT.Struct; isRef: BOOLEAN; flags: SET);  (* ug *)
-VAR size: LONGINT; open: BOOLEAN;enhopen: BOOLEAN; (* fof *)
+PROCEDURE ParOffset(VAR offset, varOffset: SIGNED32; type: PCT.Struct; isRef: BOOLEAN; flags: SET);  (* ug *)
+VAR size: SIGNED32; open: BOOLEAN;enhopen: BOOLEAN; (* fof *)
 BEGIN
 	IF (type IS PCT.Array) & ({PCT.WinAPIParam,PCT.CParam}*flags #{} (* fof for linux *) ) THEN DEC(type.size(PCBT.Size).size, PCLIR.CG.ParamAlign) END; (* Notag *)
 	size := type.size(PCBT.Size).size;
@@ -70,7 +70,7 @@ BEGIN
 	varOffset := offset
 END ParOffset;
 
-PROCEDURE FieldOffset(VAR offset: LONGINT;  size, align: LONGINT;  p: PCT.Symbol);
+PROCEDURE FieldOffset(VAR offset: SIGNED32;  size, align: SIGNED32;  p: PCT.Symbol);
 VAR  adr: PCBT.Variable;
 BEGIN
 	IF p.adr # NIL THEN
@@ -103,7 +103,7 @@ TYPE
 
 	B=OBJECT
 	VAR a: (any Data structure containing a variable of type A)
-	(example:  a: RECORD c,d,e: LONGINT; a: A; END;
+	(example:  a: RECORD c,d,e: SIGNED32; a: A; END;
 	END B;
 
 	The deadlock prevention is based on the allocation of size descriptors for a type X
@@ -319,7 +319,7 @@ BEGIN
 END TypeSize;
 
 PROCEDURE AllocateParameters(p: PCT.Proc);
-VAR  adr: PCBT.Variable;  offset: LONGINT;  par: PCT.Parameter;rp: PCT.ReturnParameter;(* fof *)
+VAR  adr: PCBT.Variable;  offset: SIGNED32;  par: PCT.Parameter;rp: PCT.ReturnParameter;(* fof *)
 BEGIN
 	par := p.scope.firstPar;
 	offset := 0;
@@ -363,8 +363,8 @@ BEGIN
 	END;
 END AllocateTypes;
 
-PROCEDURE AllocateLocals(var: PCT.Variable; VAR size: LONGINT);
-	VAR offset: LONGINT; ladr: PCBT.Variable;
+PROCEDURE AllocateLocals(var: PCT.Variable; VAR size: SIGNED32);
+	VAR offset: SIGNED32; ladr: PCBT.Variable;
 BEGIN
 	offset := size;
 	WHILE var # NIL DO
@@ -377,8 +377,8 @@ BEGIN
 	size := offset;
 END AllocateLocals;
 
-PROCEDURE AllocateGlobals(var: PCT.Variable; mod: PCBT.Module; setOffset: BOOLEAN; VAR size: LONGINT);
-	VAR offset: LONGINT; gadr: PCBT.GlobalVariable;
+PROCEDURE AllocateGlobals(var: PCT.Variable; mod: PCBT.Module; setOffset: BOOLEAN; VAR size: SIGNED32);
+	VAR offset: SIGNED32; gadr: PCBT.GlobalVariable;
 BEGIN
 	offset := size;
 	WHILE var # NIL DO
@@ -395,7 +395,7 @@ END AllocateGlobals;
 
 PROCEDURE PreAllocate*(context, scope: PCT.Scope);
 VAR proc: PCT.Proc; adr: PCBT.Procedure; madr: PCBT.Method;
-	gadr: PCBT.GlobalVariable; zero: HUGEINT; imported, visible: BOOLEAN;
+	gadr: PCBT.GlobalVariable; zero: SIGNED64; imported, visible: BOOLEAN;
 	mod: PCBT.Module;
 BEGIN
 	IF (scope IS PCT.ProcScope) THEN
@@ -500,7 +500,7 @@ BEGIN
 	END
 END PostAllocate;
 
-PROCEDURE BasicSize(type: PCT.Struct; size, align: LONGINT; BEsize: PCLIR.Size; signed: BOOLEAN);
+PROCEDURE BasicSize(type: PCT.Struct; size, align: SIGNED32; BEsize: PCLIR.Size; signed: BOOLEAN);
 VAR adr: PCBT.Size;
 BEGIN
 	NEW(adr); type.size := adr; adr.size := size; adr.align := align; adr.type := BEsize; adr.signed := signed;
@@ -516,7 +516,7 @@ END Install;
 
 PROCEDURE SetBasicSizes*;
 
-	PROCEDURE GetSize (size: PCLIR.Size): LONGINT;
+	PROCEDURE GetSize (size: PCLIR.Size): SIGNED32;
 	BEGIN
 		CASE size OF
 		PCLIR.Int8: RETURN 1;
@@ -526,7 +526,7 @@ PROCEDURE SetBasicSizes*;
 		END;
 	END GetSize;
 
-	PROCEDURE GetAlign (size: PCLIR.Size): LONGINT;
+	PROCEDURE GetAlign (size: PCLIR.Size): SIGNED32;
 	BEGIN
 		CASE size OF
 		PCLIR.Int8: RETURN 1;
@@ -623,6 +623,6 @@ END PCV.
 	06.06.01	prk	use string pool for object names
 	17.05.01	prk	Delegates
 	07.05.01	be	register sign information added in the back-end
-	25.03.01	prk	limited HUGEINT implementation (as abstract type)
+	25.03.01	prk	limited SIGNED64 implementation (as abstract type)
 	22.02.01	prk	delegates
 *)

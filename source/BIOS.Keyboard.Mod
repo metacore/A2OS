@@ -22,7 +22,7 @@ TYPE
 		VAR last: Inputs.KeyboardMsg;
 
 		PROCEDURE HandleInterrupt;
-		VAR m: SET; i, k: WORD; msg: Inputs.KeyboardMsg; c: CHAR;
+		VAR m: SET; i, k: INTEGER; msg: Inputs.KeyboardMsg; c: CHAR;
 		BEGIN {EXCLUSIVE}
 			Machine.Portin8(060H, c);	(* get scan code *)
 			Machine.Portin8(061H, SYSTEM.VAL(CHAR, m));
@@ -62,15 +62,15 @@ TYPE
 	END Keyboard;
 
 VAR
-	dkey: WORD;
-	lastport: WORD;
+	dkey: INTEGER;
+	lastport: INTEGER;
 	lastvalue: SYSTEM.BYTE;
-	keyval: WORD;
+	keyval: INTEGER;
 	table: ADDRESS;
 	flags: SET;
 	keytable: POINTER TO ARRAY OF CHAR;
 	keyboard: Keyboard;
-	mapflag: ARRAY RShift+1 OF SHORTINT;
+	mapflag: ARRAY RShift+1 OF SIGNED8;
 
 (* ---- Keyboard Driver ---- *)
 
@@ -254,10 +254,10 @@ END TableFromFile;
 
 (* Translate - Translate scan code "c" to key. *)
 
-PROCEDURE Translate(flags: SET; c: CHAR): WORD;
+PROCEDURE Translate(flags: SET; c: CHAR): INTEGER;
 CONST
 	Alt = {LAlt, RAlt}; Ctrl = {LCtrl, RCtrl}; Shift = {LShift, RShift};
-VAR a: ADDRESS; s1: CHAR; s: SET; k, dkn: WORD;
+VAR a: ADDRESS; s1: CHAR; s: SET; k, dkn: INTEGER;
 BEGIN {EXCLUSIVE}
 	IF (c = 46X) & (flags * Ctrl # {}) THEN RETURN -2 END;	(* Ctrl-Break - break *)
 	IF (c = 44X) & (flags * Ctrl # {}) THEN RETURN 0FFH END;	(* Ctrl-F10 - exit *)
@@ -270,7 +270,7 @@ BEGIN {EXCLUSIVE}
 			k := -1; dkey := 0; EXIT
 		ELSIF s1 = c THEN	(* found scan code in table *)
 			SYSTEM.GET(a+3, SYSTEM.VAL(CHAR, s));	(* flags from table *)
-			dkn := SYSTEM.VAL(WORD, s) DIV 32 MOD 8;
+			dkn := SYSTEM.VAL(INTEGER, s) DIV 32 MOD 8;
 			s := s * {DeadKey, NumLock, CapsLock, LAlt, RAlt, LCtrl, RCtrl}; k := 0;
 			IF ((s * Alt = flags * Alt) OR (NumLock IN s) OR (s1 > 03BX)) & (dkn = dkey) THEN	(* Alt & dead keys match exactly *)
 				IF flags * Shift # {} THEN INCL(s, LShift) END;	(* check if shift pressed *)
@@ -327,7 +327,7 @@ END Wait;
 
 (* SendByte - Send a byte to the keyboard. *)
 
-PROCEDURE SendByte(port: WORD; value: SYSTEM.BYTE);
+PROCEDURE SendByte(port: INTEGER; value: SYSTEM.BYTE);
 BEGIN
 	Wait; Machine.Portout8(port, SYSTEM.VAL(CHAR, value));
 	lastport := port; lastvalue := value
@@ -335,7 +335,7 @@ END SendByte;
 
 (* ShiftKey - Handle shift keys. *)
 
-PROCEDURE ShiftKey(left, right: WORD; in: BOOLEAN);
+PROCEDURE ShiftKey(left, right: INTEGER; in: BOOLEAN);
 BEGIN
 	IF in THEN
 		IF GreyEsc IN flags THEN INCL(flags, right)
@@ -350,8 +350,8 @@ END ShiftKey;
 
 (* LedKey - Handle "lock" keys. *)
 
-PROCEDURE LedKey(VAR flags: SET; lock: SHORTINT; c: CHAR;
-		VAR k: WORD);
+PROCEDURE LedKey(VAR flags: SET; lock: SIGNED8; c: CHAR;
+		VAR k: INTEGER);
 BEGIN
 	IF flags * {LAlt, RAlt, LCtrl, RCtrl, LShift, RShift} = {} THEN
 		flags := flags / {lock}
@@ -362,8 +362,8 @@ END LedKey;
 
 (* MapScanCode - Map a scan code "c" to a key code. *)
 
-PROCEDURE MapScanCode(c: CHAR; VAR keysym: WORD): WORD;
-VAR k: WORD; oldleds: SET;
+PROCEDURE MapScanCode(c: CHAR; VAR keysym: INTEGER): INTEGER;
+VAR k: INTEGER; oldleds: SET;
 BEGIN
 	SendByte(64H, 0ADX); Wait;	(* disable keyboard *)
 	k := -1; oldleds := flags * {ScrollLock, NumLock, CapsLock};
@@ -454,8 +454,8 @@ END MapScanCode;
 
 (* Map Oberon character code to X11 keysym (/usr/include/X11/keysymdef.h). *)
 
-PROCEDURE KeySym(ch: CHAR): WORD;
-VAR x: WORD;
+PROCEDURE KeySym(ch: CHAR): INTEGER;
+VAR x: INTEGER;
 BEGIN
 	IF (ch >= 1X) & (ch <= 7EX) THEN x := ORD(ch)	(* ascii *)
 	ELSIF ch = 0A0X THEN x := Inputs.KsInsert	(* insert *)
@@ -488,7 +488,7 @@ END KeySym;
 (* InitKeyboard - Initialise the keyboard. *)
 
 PROCEDURE InitKeyboard;
-VAR s: SET; c: CHAR; i: SHORTINT; k: ARRAY 32 OF CHAR;
+VAR s: SET; c: CHAR; i: SIGNED8; k: ARRAY 32 OF CHAR;
 BEGIN
 	keyval := -1; dkey := 0;
 	mapflag[LAlt] := Inputs.LeftAlt; mapflag[RAlt] := Inputs.RightAlt;

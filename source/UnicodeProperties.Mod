@@ -191,7 +191,7 @@ TYPE
 		fullname : ARRAY 256 OF CHAR;
 		file : Files.File;
 		in: Streams.Reader;
-		decoderRes : WORD;
+		decoderRes : INTEGER;
 
 		(* loads a file into a local Text and creates an associated TextReader *)
 		PROCEDURE LoadTxtFile;
@@ -351,8 +351,8 @@ TYPE
 		PROCEDURE GetProperty*(char : Texts.Char32; pos : SIZE; VAR res : ARRAY OF CHAR);
 		VAR
 			thisChar, thisInt : Texts.Char32;
-			i,j : INTEGER;
-			dummyVal : WORD;
+			i,j : SIGNED16;
+			dummyVal : INTEGER;
 		BEGIN
 			text.AcquireRead;
 			textReader.SetPosition(startPos);
@@ -447,7 +447,7 @@ TYPE
 		so the scanner needs to be set to the first line of interest. *)
 		PROCEDURE FindStartPos;
 		VAR
-			thisChar : LONGINT;
+			thisChar : SIGNED32;
 		BEGIN
 			thisChar := 0;
 			text.AcquireRead;
@@ -471,8 +471,8 @@ TYPE
 		VAR
 			sourceString : ARRAY 7 OF CHAR;
 			sourceInt, tempChar : Texts.Char32;
-			i : INTEGER;
-			res : WORD;
+			i : SIGNED16;
+			res : INTEGER;
 		BEGIN
 			sourceInt := -1;
 			i := -1;
@@ -500,8 +500,8 @@ TYPE
 		VAR
 			targetString : ARRAY 7 OF CHAR;
 			targetInt, tempChar : Texts.Char32;
-			i : INTEGER;
-			res : WORD;
+			i : SIGNED16;
+			res : INTEGER;
 		BEGIN
 			targetInt := -1;
 			i := -1;

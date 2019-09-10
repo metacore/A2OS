@@ -126,7 +126,7 @@ VAR
 	proc : RestoreContextProc;
 	moduleName, procedureName : Modules.Name;
 	msg : ARRAY 128 OF CHAR;
-	res : WORD;
+	res : INTEGER;
 	loader : Loader;
 	context : Context;
 	c : XML.Content;
@@ -208,7 +208,7 @@ VAR
 	strings : Strings.StringArray;
 	string : String;
 	elem : XML.Element;
-	idx : LONGINT;
+	idx : SIGNED32;
 BEGIN
 	IF (c # NIL) & (c.appData # NIL) THEN
 		elem := c.appData (XML.Element);
@@ -248,7 +248,7 @@ BEGIN
 	elem.AddAttribute(a);
 END StoreBoolean;
 
-PROCEDURE LoadLongint*(elem : XML.Element; CONST name : ARRAY OF CHAR; VAR value : LONGINT);
+PROCEDURE LoadLongint*(elem : XML.Element; CONST name : ARRAY OF CHAR; VAR value : SIGNED32);
 VAR string : String;
 BEGIN
 	string := elem.GetAttributeValue(name);
@@ -270,7 +270,7 @@ BEGIN
 	END;
 END LoadSize;
 
-PROCEDURE StoreLongint*(elem : XML.Element; CONST name : ARRAY OF CHAR; value : LONGINT);
+PROCEDURE StoreLongint*(elem : XML.Element; CONST name : ARRAY OF CHAR; value : SIGNED32);
 VAR a : XML.Attribute; string : ARRAY 32 OF CHAR;
 BEGIN
 	NEW(a); a.SetName(name); Strings.IntToStr(value, string); a.SetValue(string);

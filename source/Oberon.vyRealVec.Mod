@@ -29,10 +29,10 @@ IMPORT Files, Objects, Texts, vyBase, vyName, vyHostTexts, vyreal := vyReal, vyL
 CONST
 	idversion* = "vyRealVec 0.0a4";   (* may be maintained or changed by tools *)
 TYPE
-	index* = LONGINT;
+	index* = SIGNED32;
 
-	(* REAL *)  (* preferred chunk sizes: 128, 1024, 8192 *)
-	real* = REAL;   (* technical convenience, to avoid duplicate code for REAL and LONGREAL *)
+	(* FLOAT32 *)  (* preferred chunk sizes: 128, 1024, 8192 *)
+	real* = FLOAT32;   (* technical convenience, to avoid duplicate code for FLOAT32 and FLOAT64 *)
 
 	Real = vyBase.Real;
 
@@ -47,13 +47,13 @@ TYPE
 	tMinMaxCache* = POINTER TO tMinMaxCacheDesc;
 	tMinMaxCacheDesc* = RECORD (vyBase.tCacheDesc)
 		min-, max-: real;
-		minpos, maxpos, nans: LONGINT;   (*convenience. Valid if nans>=0 *)
+		minpos, maxpos, nans: SIGNED32;   (*convenience. Valid if nans>=0 *)
 	END;
 
 	tMeanCache* = POINTER TO tMeanCacheDesc;
 	tMeanCacheDesc* = RECORD (vyBase.tCacheDesc)
-		mean-, ssq-: LONGREAL;   (* Valid if nans>=0 & ssq>=0 *)
-		nans-: LONGINT
+		mean-, ssq-: FLOAT64;   (* Valid if nans>=0 & ssq>=0 *)
+		nans-: SIGNED32
 	END;
 
 	tBuf* = POINTER TO tBufDesc;
@@ -77,7 +77,7 @@ TYPE
 	END;
 
 VAR
-	globallongreal: LONGREAL;   (* sneak global. handle with care! *)
+	globallongreal: FLOAT64;   (* sneak global. handle with care! *)
 
 	(** Defs from vyTypes2 *)
 	(*= vyTypes is defunct. Migrate to OPT type system *)
@@ -122,7 +122,7 @@ END NewBufs;
 	PROCEDURE NewBufs( size: index ): tBuf;
 	VAR first, last: vyBase.tBuf;  chunk: tBuf;
 
-		PROCEDURE generic( ch: tBuf;  len: LONGINT );
+		PROCEDURE generic( ch: tBuf;  len: SIGNED32 );
 		BEGIN
 			NEW( ch.data, len );  ch.str := vyBase.dynlrlarray;  ch.cache := NIL;  vyBase.GenericCatBuf( ch, len, size, first, last )
 		END generic;
@@ -225,7 +225,7 @@ END
 END FillBufMinCache;
 
 PROCEDURE FillBufMeanCache (buf: vyBase.tBuf);
-VAR nans: LONGINT;
+VAR nans: SIGNED32;
 BEGIN (* propagate nan handling *)
 IF buf # NIL THEN WITH buf: tBuf DO
 vyreal.MeanSSq(buf.usedentries, buf(tBuf).data^, 0, buf.mean, buf.ssq, nans)
@@ -268,7 +268,7 @@ END FillBufMeanCache;
 	END Store0ChunkedMatrix;
 
 	PROCEDURE Load0( VAR R: Files.Rider;  o: tVector );
-	VAR b: tBuf;  i: index;  c: LONGINT;
+	VAR b: tBuf;  i: index;  c: SIGNED32;
 	BEGIN
 		Files.ReadLInt( R, c );  o.nrData := c;  Files.ReadLInt( R, c );
 		WHILE c # 0 DO
@@ -443,7 +443,7 @@ END FillBufMeanCache;
 	(*=  allocate memory for a vector. Do not change information.
 	To reduce size, use SetLen first to trim length
 	*)
-	VAR l, freetrail: LONGINT;
+	VAR l, freetrail: SIGNED32;
 	VAR firstfree: vyBase.tBuf;
 	BEGIN
 		ASSERT ( size >= vec.nrData );
@@ -458,7 +458,7 @@ END FillBufMeanCache;
 		vyBase.MarkUsed( size, vec );  FlushVecCaches( vec )
 	END SetLen;
 
-	PROCEDURE Len*( vec: vyBase.tVector ): LONGINT;
+	PROCEDURE Len*( vec: vyBase.tVector ): SIGNED32;
 	(*= get total vector length *)
 	BEGIN
 		IF vec = NIL THEN RETURN 0 ELSE RETURN vec.nrData END
@@ -490,10 +490,10 @@ END FillBufMeanCache;
 		new := New( model.nrData );  new.Layout := vyBase.CloneLayout( model );  RETURN new
 	END NewAlikeVector;
 
-	PROCEDURE Append*( xx: LONGREAL;  v: vyBase.tVector );
+	PROCEDURE Append*( xx: FLOAT64;  v: vyBase.tVector );
 	(*= Add a data point to a chunk. Append new chunk if necessary *)
 	(*! defensive programming *)
-	VAR l: index;  chunk: tBuf;  x: REAL;
+	VAR l: index;  chunk: tBuf;  x: FLOAT32;
 	BEGIN  (* find entry which is not full *)
 		ASSERT ( (xx >= MIN( real )) & (xx <= MAX( real )), 100 );
 		x := SHORT( xx );
@@ -518,7 +518,7 @@ END FillBufMeanCache;
 		RETURN chunk( tBuf ).data[loc]
 	END Get;
 
-	PROCEDURE Set*( xval: LONGREAL;  v: vyBase.tVector;  pos: index );
+	PROCEDURE Set*( xval: FLOAT64;  v: vyBase.tVector;  pos: index );
 	VAR chunk: vyBase.tBuf;  loc: index;
 	BEGIN
 		ASSERT ( pos < v.nrData, 102 );
@@ -547,7 +547,7 @@ END FillBufMeanCache;
 		END
 	END GetIndexed;
 
-	PROCEDURE SetIndexed*( xval: LONGREAL;  v: vyBase.tVector;  indexvec: vyBase.tVector;  pos: index );
+	PROCEDURE SetIndexed*( xval: FLOAT64;  v: vyBase.tVector;  indexvec: vyBase.tVector;  pos: index );
 	VAR chunk: vyBase.tBuf;  loc: index;  val: real;
 	BEGIN
 		WITH v: tVector DO
@@ -570,7 +570,7 @@ END FillBufMeanCache;
 (** Copy *)
 	PROCEDURE CopyData*( (*IN*) src,  (*OUT*) dest: vyBase.tVector );
 	(*= copy the data section of a vector. Force dest to same len as src *)
-	VAR srcchunk, destchunk: vyBase.tBuf;  oldcount, piececount, count, offs, srcoffs, destoffs: LONGINT;
+	VAR srcchunk, destchunk: vyBase.tBuf;  oldcount, piececount, count, offs, srcoffs, destoffs: SIGNED32;
 
 	BEGIN
 		offs := 0;  count := src.nrData;
@@ -593,9 +593,9 @@ END FillBufMeanCache;
 	END CopyData;
 
 (** Enquiry routines *)
-	PROCEDURE GetMinMax*( v: vyBase.tVector;  VAR min, max: LONGREAL;  VAR nrNaNs: LONGINT );
+	PROCEDURE GetMinMax*( v: vyBase.tVector;  VAR min, max: FLOAT64;  VAR nrNaNs: SIGNED32 );
 	(*! check handling of 0 len vectors! *)
-	(*? should this return MIN/MAX(LONGREAL) on eror? *)
+	(*? should this return MIN/MAX(FLOAT64) on eror? *)
 	VAR buf: vyBase.tBuf;  mmCache: tMinMaxCache;
 	BEGIN
 		min := MAX( real );  max := MIN( real );  buf := v.buf;  nrNaNs := 0;
@@ -619,9 +619,9 @@ END FillBufMeanCache;
 		END
 	END GetMinMax;
 
-	PROCEDURE GetMeanSsq*( v: vyBase.tVector;  VAR Mean, Ssq: LONGREAL;  VAR nrNaNs: LONGINT );
+	PROCEDURE GetMeanSsq*( v: vyBase.tVector;  VAR Mean, Ssq: FLOAT64;  VAR nrNaNs: SIGNED32 );
 	(*! check handling of 0 len vectors! *)
-	VAR buf: vyBase.tBuf;  mmCache: tMeanCache;  Sum, temp, temp1: LONGREAL;  SsqAdd, MeanAdd, SumAdd: LONGREAL;  Count, CountAdd: LONGINT;
+	VAR buf: vyBase.tBuf;  mmCache: tMeanCache;  Sum, temp, temp1: FLOAT64;  SsqAdd, MeanAdd, SumAdd: FLOAT64;  Count, CountAdd: SIGNED32;
 	BEGIN
 		buf := v.buf;  nrNaNs := 0;  Ssq := 0.0;  Mean := 0.0;  Count := 0;  Sum := 0.0;
 		WITH v: tVector DO
@@ -691,7 +691,7 @@ END FillBufMeanCache;
 
 	PROCEDURE DoArrayOp1*( v: vyBase.tVector;  op1: ArrayOp1Function );
 	VAR v1: tVector;
-		a: POINTER TO ARRAY OF REAL;
+		a: POINTER TO ARRAY OF FLOAT32;
 	BEGIN
 		ASSERT ( v IS tVector, 100 );
 		IF v.buf.next = NIL THEN v1 := v( tVector );  op1( v1.buf( tBuf ).data^ )
@@ -702,7 +702,7 @@ END FillBufMeanCache;
 
 	PROCEDURE DoArrayOp2*( v1, v2: vyBase.tVector;  op2: ArrayOp2Function );
 	(*!Hack*)
-	VAR a, b: POINTER TO ARRAY OF REAL;
+	VAR a, b: POINTER TO ARRAY OF FLOAT32;
 	BEGIN
 		ASSERT ( v1 IS tVector, 100 );
 		ASSERT ( v2 IS tVector, 101 );
@@ -1308,17 +1308,17 @@ END SortBufWId;
 		FOR i := offs TO offs + count - 1 DO Set( val, v, i ) END
 	END Fill;
 
-	PROCEDURE NewFilledNamed*( count: LONGINT;  val: real;  name: ARRAY OF CHAR ): tVector;
+	PROCEDURE NewFilledNamed*( count: SIGNED32;  val: real;  name: ARRAY OF CHAR ): tVector;
 	VAR v: tVector;
 	BEGIN
 		v := New( count );  Fill( v, val, 0, count );  vyName.Register( vyName.NameBase, v, name );  RETURN v
 	END NewFilledNamed;
 
 (*
-PROCEDURE SSQ* (x, y: vyBase.tVector): LONGREAL;
+PROCEDURE SSQ* (x, y: vyBase.tVector): FLOAT64;
 (*= Return centered sum of squares *)
 (*! add error handling *)
-VAR xcr, ycr: tBuf;         s, mx, my : LONGREAL;
+VAR xcr, ycr: tBuf;         s, mx, my : FLOAT64;
 i, cur: index;
 BEGIN s := 0;     i := 0;     cur := 0;     mx := 0;     my := 0;     vyBase.GC(0, x, 0);     vyBase.GC(0, y, 0);
 WITH
@@ -1344,10 +1344,10 @@ END;
 RETURN s
 END SSQ;
 *)
-	PROCEDURE SSQ*( x, y: vyBase.tVector ): LONGREAL;
+	PROCEDURE SSQ*( x, y: vyBase.tVector ): FLOAT64;
 	(*= Return centered sum of squares *)
 	(*! add error handling *)
-	VAR xcx, ycx: tBuf;  s, mx, my: LONGREAL;  i, cur: index;  xcxmean, ycxmean: tMeanCache;
+	VAR xcx, ycx: tBuf;  s, mx, my: FLOAT64;  i, cur: index;  xcxmean, ycxmean: tMeanCache;
 	BEGIN
 		s := 0;  i := 0;  cur := 0;  mx := 0;  my := 0;  vyBase.GC( 0, x, 0 );  vyBase.GC( 0, y, 0 );
 		WITH x: tVector DO xcx := x.buf( tBuf );  ycx := y.buf( tBuf );
@@ -1544,8 +1544,8 @@ END SSQ;
 	END Div;
 
 (** Norms and  distances *)
-	PROCEDURE Norm1*( v: vyBase.tVector ): LONGREAL;
-	VAR chunk: tBuf;  norm: LONGREAL;
+	PROCEDURE Norm1*( v: vyBase.tVector ): FLOAT64;
+	VAR chunk: tBuf;  norm: FLOAT64;
 	BEGIN
 		IF v = NIL THEN RETURN 0 END;
 		ASSERT ( v IS tVector, 100 );
@@ -1556,8 +1556,8 @@ END SSQ;
 		END
 	END Norm1;
 
-	PROCEDURE Norm2Sq*( v: vyBase.tVector ): LONGREAL;
-	VAR norm: LONGREAL;  chunk: tBuf;
+	PROCEDURE Norm2Sq*( v: vyBase.tVector ): FLOAT64;
+	VAR norm: FLOAT64;  chunk: tBuf;
 	BEGIN
 		IF v = NIL THEN RETURN 0 END;
 		ASSERT ( v IS tVector, 100 );
@@ -1568,8 +1568,8 @@ END SSQ;
 		END
 	END Norm2Sq;
 
-	PROCEDURE NormSup*( v: vyBase.tVector ): LONGREAL;
-	VAR min, max: LONGREAL;  nrNaNs: LONGINT;
+	PROCEDURE NormSup*( v: vyBase.tVector ): FLOAT64;
+	VAR min, max: FLOAT64;  nrNaNs: SIGNED32;
 	BEGIN
 		IF v = NIL THEN RETURN 0 END;
 		ASSERT ( v IS tVector, 100 );
@@ -1577,41 +1577,41 @@ END SSQ;
 		IF min < -max THEN RETURN -min ELSE RETURN max END
 	END NormSup;
 
-	PROCEDURE adddist1( VAR piececount: LONGINT;  VAR srcchunk: vyBase.tBuf;  VAR srcloc: LONGINT;  VAR destchunk: vyBase.tBuf;  VAR destloc: LONGINT );
+	PROCEDURE adddist1( VAR piececount: SIGNED32;  VAR srcchunk: vyBase.tBuf;  VAR srcloc: SIGNED32;  VAR destchunk: vyBase.tBuf;  VAR destloc: SIGNED32 );
 	BEGIN
 		globallongreal :=
 			globallongreal + vyreal.Dist1( piececount, srcchunk( tBuf ).data^, srcloc, destchunk( tBuf ).data^, destloc )
 	END adddist1;
 
-	PROCEDURE Dist1*( v, w: vyBase.tVector ): LONGREAL;
+	PROCEDURE Dist1*( v, w: vyBase.tVector ): FLOAT64;
 	BEGIN
 		IF (v = NIL ) & (w = NIL ) THEN RETURN 0 END;
 		ASSERT ( (v IS tVector) & (w IS tVector), 100 );
 		globallongreal := 0;  vyBase.DoToAllPieces( v, w, adddist1 );  RETURN globallongreal
 	END Dist1;
 
-	PROCEDURE adddist2( VAR piececount: LONGINT;  VAR srcchunk: vyBase.tBuf;  VAR srcloc: LONGINT;  VAR destchunk: vyBase.tBuf;  VAR destloc: LONGINT );
+	PROCEDURE adddist2( VAR piececount: SIGNED32;  VAR srcchunk: vyBase.tBuf;  VAR srcloc: SIGNED32;  VAR destchunk: vyBase.tBuf;  VAR destloc: SIGNED32 );
 	BEGIN
 		globallongreal :=
 			globallongreal + vyreal.Dist2Sq( piececount, srcchunk( tBuf ).data^, srcloc, destchunk( tBuf ).data^, destloc )
 	END adddist2;
 
-	PROCEDURE Dist2Sq*( v, w: vyBase.tVector ): LONGREAL;
+	PROCEDURE Dist2Sq*( v, w: vyBase.tVector ): FLOAT64;
 	BEGIN
 		IF (v = NIL ) & (w = NIL ) THEN RETURN 0 END;
 		ASSERT ( (v IS tVector) & (w IS tVector), 100 );
 		globallongreal := 0;  vyBase.DoToAllPieces( v, w, adddist2 );  RETURN globallongreal
 	END Dist2Sq;
 
-	PROCEDURE adddistsup( VAR piececount: LONGINT;  VAR srcchunk: vyBase.tBuf;  VAR srcloc: LONGINT;  VAR destchunk: vyBase.tBuf;
-										  VAR destloc: LONGINT );
-	VAR temp: LONGREAL;
+	PROCEDURE adddistsup( VAR piececount: SIGNED32;  VAR srcchunk: vyBase.tBuf;  VAR srcloc: SIGNED32;  VAR destchunk: vyBase.tBuf;
+										  VAR destloc: SIGNED32 );
+	VAR temp: FLOAT64;
 	BEGIN
 		temp := vyreal.Dist1( piececount, srcchunk( tBuf ).data^, srcloc, destchunk( tBuf ).data^, destloc );
 		IF temp > globallongreal THEN globallongreal := temp END
 	END adddistsup;
 
-	PROCEDURE DistSup*( v, w: vyBase.tVector ): LONGREAL;
+	PROCEDURE DistSup*( v, w: vyBase.tVector ): FLOAT64;
 	BEGIN
 		IF (v = NIL ) & (w = NIL ) THEN RETURN 0 END;
 		ASSERT ( (v IS tVector) & (w IS tVector), 100 );

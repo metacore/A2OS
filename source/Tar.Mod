@@ -34,9 +34,9 @@ TYPE
 	EntryInfo*= OBJECT(Archives.EntryInfo)
 	VAR
 		name : ARRAY EntryNameSize OF CHAR;
-		size : LONGINT;
+		size : SIGNED32;
 
-		PROCEDURE & Init*(CONST name : ARRAY OF CHAR; size : LONGINT);
+		PROCEDURE & Init*(CONST name : ARRAY OF CHAR; size : SIGNED32);
 		BEGIN
 			COPY(name, SELF.name); SELF.size := size
 		END Init;
@@ -48,7 +48,7 @@ TYPE
 			RETURN n
 		END GetName;
 
-		PROCEDURE GetSize*() : LONGINT;
+		PROCEDURE GetSize*() : SIGNED32;
 		BEGIN
 			RETURN size
 		END GetSize;
@@ -88,13 +88,13 @@ TYPE
 			FOR i := 0 TO LEN(name)-1 DO header.name[i] := name[i] END
 		END SetName;
 
-		PROCEDURE SetSize(size : LONGINT);
+		PROCEDURE SetSize(size : SIGNED32);
 		BEGIN
 			IntToOctStr(size, SELF.header.size)
 		END SetSize;
 
-		PROCEDURE GetSize() : LONGINT;
-		VAR i : LONGINT;
+		PROCEDURE GetSize() : SIGNED32;
+		VAR i : SIGNED32;
 		BEGIN
 			OctStrToInt(header.size, i); RETURN i
 		END GetSize;
@@ -112,12 +112,12 @@ TYPE
 		max : SIZE;
 		archive : Archive;
 
-		PROCEDURE &Init*(input: Streams.Reader; size: LONGINT; archive : Archive);
+		PROCEDURE &Init*(input: Streams.Reader; size: SIGNED32; archive : Archive);
 		BEGIN
 			SELF.input := input; SELF.max := size; SELF.archive := archive
 		END Init;
 
-		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: WORD);
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
 		BEGIN
 			IF max = 0 THEN
 				res := -1;
@@ -136,7 +136,7 @@ TYPE
 	(* for internal use only. abstract buffer class *)
 	Buffer = OBJECT
 
-		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : SIZE; propagate : BOOLEAN; VAR res : WORD);
+		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : SIZE; propagate : BOOLEAN; VAR res : INTEGER);
 		BEGIN HALT(301)
 		END Send;
 
@@ -152,7 +152,7 @@ TYPE
 	MemoryBuffer = OBJECT(Buffer)
 	VAR
 		first, current : BufferSegment;
-		segmentCount, currentIndex : LONGINT;
+		segmentCount, currentIndex : SIGNED32;
 		archive : Archive;
 		name : ARRAY NamSiz OF CHAR;
 		closed : BOOLEAN;
@@ -170,7 +170,7 @@ TYPE
 		END Init;
 
 		(* buffer any data until propagate is TRUE *)
-		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : SIZE; propagate : BOOLEAN; VAR res : WORD);
+		PROCEDURE Send(CONST data : ARRAY OF CHAR; ofs, len : SIZE; propagate : BOOLEAN; VAR res : INTEGER);
 		VAR i : SIZE;
 		BEGIN
 			IF closed THEN res := StreamClosed; RETURN END;
@@ -197,7 +197,7 @@ TYPE
 		(* lock archive for exclusive access and append header::buffer at the end *)
 		PROCEDURE WriteBuffer;
 		VAR w : Files.Writer;
-			size : LONGINT;
+			size : SIGNED32;
 			e : Entry;
 			c : BufferSegment;
 		BEGIN
@@ -255,7 +255,7 @@ TYPE
 
 		(** return list of archive entries *)
 		PROCEDURE GetIndex*() : Archives.Index;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 			e : Entry;
 			result : Archives.Index;
 			ei : EntryInfo;
@@ -293,7 +293,7 @@ TYPE
 			in : Files.Reader;
 			out : Files.Writer;
 			hdr : Header;
-			pos, size: LONGINT;
+			pos, size: SIGNED32;
 		BEGIN
 			ASSERT(lock.HasLock());
 			newFile := Files.New(SELF.name);
@@ -350,7 +350,7 @@ TYPE
 		PROCEDURE OpenReceiver*(CONST name : ARRAY OF CHAR) : Streams.Receiver;
 		VAR r : Files.Reader;
 			s : SizeReader;
-			size : LONGINT;
+			size : SIGNED32;
 			entry : Entry;
 		BEGIN
 			ASSERT(lock.HasLock());
@@ -381,7 +381,7 @@ TYPE
 		PROCEDURE BuildIndex;
 		VAR in : Files.Reader;
 			hdr : Header;
-			pos, size : LONGINT;
+			pos, size : SIGNED32;
 			e : Entry;
 		BEGIN
 			index := NIL;
@@ -427,8 +427,8 @@ TYPE
 
 	(* ----- helpers ---------------------------------------------------------------------- *)
 
-	PROCEDURE ReadHeaderBytes(R: Streams.Reader; VAR buf: ARRAY OF CHAR; len: LONGINT; VAR chksum: LONGINT);
-	VAR i: LONGINT; ch: CHAR;
+	PROCEDURE ReadHeaderBytes(R: Streams.Reader; VAR buf: ARRAY OF CHAR; len: SIGNED32; VAR chksum: SIGNED32);
+	VAR i: SIGNED32; ch: CHAR;
 	BEGIN
 		i := 0;
 		WHILE i < len DO
@@ -438,7 +438,7 @@ TYPE
 	END ReadHeaderBytes;
 
 	PROCEDURE ReadHeader(R: Streams.Reader; VAR hdr: Header): BOOLEAN;
-	VAR chksum, chksum2: LONGINT; len: SIZE;
+	VAR chksum, chksum2: SIGNED32; len: SIZE;
 	BEGIN
 		ASSERT(hdr # NIL);
 		chksum := 0;
@@ -460,8 +460,8 @@ TYPE
 		RETURN chksum = chksum2
 	END ReadHeader;
 
-	PROCEDURE Empty(VAR buf: ARRAY OF CHAR; len: LONGINT);
-	VAR i: LONGINT;
+	PROCEDURE Empty(VAR buf: ARRAY OF CHAR; len: SIGNED32);
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0; WHILE i < len DO buf[i] := 0X; INC(i) END
 	END Empty;
@@ -485,14 +485,14 @@ TYPE
 		Empty(hdr.devminor, 8)
 	END EmptyHeader;
 
-	PROCEDURE CheckHeaderBytes(CONST buf: ARRAY OF CHAR; len: LONGINT; VAR chksum: LONGINT);
-	VAR i: LONGINT;
+	PROCEDURE CheckHeaderBytes(CONST buf: ARRAY OF CHAR; len: SIGNED32; VAR chksum: SIGNED32);
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0; WHILE i < len DO INC(chksum, ORD(buf[i])); INC(i) END
 	END CheckHeaderBytes;
 
 	PROCEDURE CalcCheckSum(VAR hdr: Header);
-	VAR chksum: LONGINT;
+	VAR chksum: SIGNED32;
 	BEGIN
 		ASSERT(hdr # NIL);
 		CheckHeaderBytes(hdr.name, NamSiz, chksum);
@@ -513,7 +513,7 @@ TYPE
 	END CalcCheckSum;
 
 	PROCEDURE WriteHeader(W: Streams.Writer; VAR hdr: Header);
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		ASSERT(hdr # NIL);
 		W.Bytes(hdr.name, 0, NamSiz);
@@ -536,8 +536,8 @@ TYPE
 		END
 	END WriteHeader;
 
-	PROCEDURE OctStrToInt(CONST  str: ARRAY OF CHAR; VAR val: LONGINT);
-		VAR i, d: LONGINT; ch: CHAR;
+	PROCEDURE OctStrToInt(CONST  str: ARRAY OF CHAR; VAR val: SIGNED32);
+		VAR i, d: SIGNED32; ch: CHAR;
 	BEGIN
 		i := 0; ch := str[0]; val := 0;
 		WHILE (ch = " ") DO
@@ -546,7 +546,7 @@ TYPE
 		WHILE (ch >= "0") & (ch <= "7")  DO
 			d := ORD(ch) - ORD("0");
 			INC(i); ch := str[i];
-			IF val <= ((MAX(LONGINT)-d) DIV 8) THEN
+			IF val <= ((MAX(SIGNED32)-d) DIV 8) THEN
 				val := 8*val+d
 			ELSE
 				HALT(99)
@@ -554,7 +554,7 @@ TYPE
 		END
 	END OctStrToInt;
 
-	PROCEDURE IntToOctStr(val: HUGEINT; VAR str: ARRAY OF CHAR);
+	PROCEDURE IntToOctStr(val: SIGNED64; VAR str: ARRAY OF CHAR);
 		VAR i: SIZE;
 	BEGIN
 		i := LEN(str)-1; str[i] := 0X;
@@ -573,7 +573,7 @@ TYPE
 	END CopyArchiveName;
 
 	PROCEDURE Backup(f: Files.File);
-	VAR old, new: Files.FileName; res: WORD;
+	VAR old, new: Files.FileName; res: INTEGER;
 	BEGIN
 		f.GetName(old); COPY(old, new);
 		Strings.Append(new, ".Bak");
@@ -636,7 +636,7 @@ TYPE
 	PROCEDURE List*(context : Commands.Context);
 	VAR
 		fn: Files.FileName; F: Files.File; R: Files.Reader;
-		hdr: Header; pos, size: LONGINT;
+		hdr: Header; pos, size: SIGNED32;
 	BEGIN
 		context.arg.SkipWhitespace; context.arg.String(fn);
 		F := Files.Old(fn);
@@ -658,7 +658,7 @@ TYPE
 	PROCEDURE Extract*(context : Commands.Context);
 	VAR
 		fn: Files.FileName; F, f: Files.File; R: Files.Reader; w: Files.Writer;
-		hdr: Header; pos, size, i: LONGINT; ch: CHAR;
+		hdr: Header; pos, size, i: SIGNED32; ch: CHAR;
 	BEGIN
 		context.arg.SkipWhitespace; context.arg.String(fn);
 		F := Files.Old(fn);
@@ -690,7 +690,7 @@ TYPE
 	VAR
 		fn, archivename: Files.FileName; F, f: Files.File; W: Files.Writer; r: Files.Reader;
 		hdr: Header; size, i: Files.Position; ch: CHAR;
-		nofAdded, nofErrors : LONGINT;
+		nofAdded, nofErrors : SIGNED32;
 	BEGIN
 		context.arg.SkipWhitespace; context.arg.String(archivename);
 		context.out.String("Creating "); context.out.String(archivename); context.out.Ln;

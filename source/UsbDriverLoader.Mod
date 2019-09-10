@@ -15,8 +15,8 @@ CONST
 	USB = 1; (* MUST be the same as DriverDatabase.USB *)
 
 TYPE
-	InstallDeviceDriver* = PROCEDURE {DELEGATE} (type, vendorID, deviceID, revision : LONGINT) : BOOLEAN;
-	InstallClassDriver* = PROCEDURE {DELEGATE} (type, class, subclass, protocol, revision : LONGINT) : BOOLEAN;
+	InstallDeviceDriver* = PROCEDURE {DELEGATE} (type, vendorID, deviceID, revision : SIGNED32) : BOOLEAN;
+	InstallClassDriver* = PROCEDURE {DELEGATE} (type, class, subclass, protocol, revision : SIGNED32) : BOOLEAN;
 
 	Listener* = PROCEDURE {DELEGATE};
 
@@ -27,7 +27,7 @@ VAR
 	listener : Listener;
 
 (** Look for a device driver for the specified device and load it if available *)
-PROCEDURE LoadDeviceDriver*(vendorID, deviceID, revision : LONGINT) : BOOLEAN;
+PROCEDURE LoadDeviceDriver*(vendorID, deviceID, revision : SIGNED32) : BOOLEAN;
 BEGIN {EXCLUSIVE}
 	IF installDeviceDriver # NIL THEN
 		RETURN installDeviceDriver(USB, vendorID, deviceID, revision);
@@ -36,7 +36,7 @@ BEGIN {EXCLUSIVE}
 END LoadDeviceDriver;
 
 (** Look for a class driver for the specified device and load it if available *)
-PROCEDURE LoadClassDriver*(class, subclass, protocol, revision : LONGINT) : BOOLEAN;
+PROCEDURE LoadClassDriver*(class, subclass, protocol, revision : SIGNED32) : BOOLEAN;
 BEGIN {EXCLUSIVE}
 	IF installClassDriver # NIL THEN
 		RETURN installClassDriver(USB, class, subclass, protocol, revision);

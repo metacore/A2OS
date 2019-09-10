@@ -24,13 +24,13 @@ IMPORT NbrRe, DataErrors, MathRe, MathGamma, CalcFn, CalcD1;
 
 TYPE
 	Romberg = OBJECT
-	VAR index: LONGINT;
+	VAR index: SIGNED32;
 		error, soln: NbrRe.Real;
 		factors: POINTER TO ARRAY OF NbrRe.Real;
 		tableau: ARRAY 8 OF POINTER TO ARRAY OF NbrRe.Real;
 
 		PROCEDURE & Initialize*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			index := -1;  error := 0;  soln := 0;  NEW( factors, 8 );
 			FOR i := 0 TO 7 DO NEW( tableau[i], i + 1 ) END
@@ -40,10 +40,10 @@ TYPE
 		(* Insert a new row into the Romberg tableau and perform Richardson extrapolation on that row.
 			If the tableau is full, then ratchet the first column up one row, throwing away the first entry,
 			insert the newSolution into the last row, and perform Richardon extrapolation over the entire tablueau.  *)
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 
 			PROCEDURE RichardsonExtrapolation;
-			VAR k: LONGINT;  term: NbrRe.Real;
+			VAR k: SIGNED32;  term: NbrRe.Real;
 			BEGIN
 				FOR k := 1 TO index DO
 					term := tableau[index - 1, k - 1];  term := term - factors[k - 1] * tableau[index, k - 1];

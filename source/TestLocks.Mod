@@ -7,7 +7,7 @@ IMPORT SYSTEM, Machine, KernelLog;
 (* Display locking state. *)
 
 PROCEDURE ShowState(msg: ARRAY OF CHAR);
-VAR id: LONGINT; ints: BOOLEAN;
+VAR id: SIGNED32; ints: BOOLEAN;
 BEGIN
 	ints := Machine.InterruptsEnabled();
 	KernelLog.String(msg); KernelLog.String(": ");
@@ -41,7 +41,7 @@ END SingleInt;
 (** Hold a lock for a long time, to test interrupt interaction. *)
 
 PROCEDURE Long*;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	Machine.Acquire(Machine.KernelLog);
 	FOR i := 0 TO 100000000 DO END;
@@ -52,7 +52,7 @@ END Long;
 (** Same as Long, but switch on interrupts. *)
 
 PROCEDURE LongInt*;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	Machine.Acquire(Machine.KernelLog);
 	Machine.Sti;

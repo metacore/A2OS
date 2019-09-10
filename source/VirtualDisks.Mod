@@ -28,12 +28,12 @@ TYPE
 
 	VirtualDisk = OBJECT(Disks.Device)
 	VAR
-		size : LONGINT;
+		size : SIGNED32;
 
 		(* virtual disk geometry CHS *)
-		cyls, hds, spt : LONGINT;
+		cyls, hds, spt : SIGNED32;
 
-		PROCEDURE Transfer*(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+		PROCEDURE Transfer*(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF (block < 0) OR (num < 1) OR (block + num > size) THEN res := BlockNumberInvalid; RETURN; END;
 			ASSERT((ofs >= 0) & (ofs + num * blockSize <= LEN(data)));
@@ -58,17 +58,17 @@ TYPE
 			END;
 		END Transfer;
 
-		PROCEDURE TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+		PROCEDURE TransferOperation(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER);
 		BEGIN
 			HALT(301); (* abstract *)
 		END TransferOperation;
 
-		PROCEDURE GetSize*(VAR size: LONGINT; VAR res: WORD);
+		PROCEDURE GetSize*(VAR size: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			size := SELF.size;	res := Disks.Ok;
 		END GetSize;
 
-		PROCEDURE Handle*(VAR msg : Disks.Message; VAR res : WORD);
+		PROCEDURE Handle*(VAR msg : Disks.Message; VAR res : INTEGER);
 		BEGIN
 			IF (msg IS Disks.GetGeometryMsg) & (cyls > 0) THEN
 				WITH msg: Disks.GetGeometryMsg DO
@@ -79,7 +79,7 @@ TYPE
 			END
 		END Handle;
 
-		PROCEDURE &Init(CONST name : ARRAY OF CHAR; blockSize, cyls, hds, spt : LONGINT);
+		PROCEDURE &Init(CONST name : ARRAY OF CHAR; blockSize, cyls, hds, spt : SIGNED32);
 		BEGIN
 			SELF.blockSize := blockSize;
 			SELF.cyls := cyls; SELF.hds := hds; SELF.spt := spt;
@@ -96,9 +96,9 @@ TYPE
 		file : Files.File;
 		rider : Files.Rider;
 
-		PROCEDURE TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+		PROCEDURE TransferOperation(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER);
 		BEGIN
-			file.Set(rider, SYSTEM.VAL (LONGINT, block * blockSize));
+			file.Set(rider, SYSTEM.VAL (SIGNED32, block * blockSize));
 			IF rider.res # Files.Ok THEN res := BlockNumberInvalid; RETURN; END;
 
 			IF op = Disks.Read THEN
@@ -113,13 +113,13 @@ TYPE
 			END;
 		END TransferOperation;
 
-		PROCEDURE &New*(file : Files.File; CONST name, filename : ARRAY OF CHAR; blockSize, cyls, hds, spt : LONGINT);
+		PROCEDURE &New*(file : Files.File; CONST name, filename : ARRAY OF CHAR; blockSize, cyls, hds, spt : SIGNED32);
 		BEGIN
 			ASSERT(file # NIL);
 			ASSERT(file.Length() MOD blockSize = 0);
 			Init(name, blockSize, cyls, hds, spt);
 			SELF.file := file;
-			SELF.size := file.Length()(LONGINT) DIV blockSize;
+			SELF.size := file.Length()(SIGNED32) DIV blockSize;
 			desc := "Virtual Disk for file "; Strings.Append(desc, filename);
 		END New;
 
@@ -133,7 +133,7 @@ TYPE
 	VAR
 		memory : MemoryBlock;
 
-		PROCEDURE TransferOperation(op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+		PROCEDURE TransferOperation(op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER);
 		BEGIN
 			IF op = Disks.Read THEN
 				ASSERT((block  + num) * blockSize <= LEN(memory));
@@ -148,13 +148,13 @@ TYPE
 			END;
 		END TransferOperation;
 
-		PROCEDURE &New*(memory : MemoryBlock;  CONST name : ARRAY OF CHAR; blockSize, cyls, hds, spt : LONGINT);
+		PROCEDURE &New*(memory : MemoryBlock;  CONST name : ARRAY OF CHAR; blockSize, cyls, hds, spt : SIGNED32);
 		BEGIN
 			ASSERT(memory # NIL);
 			ASSERT(LEN(memory) MOD blockSize = 0);
 			Init(name, blockSize, cyls, hds, spt);
 			SELF.memory := memory;
-			SELF.size := LEN(memory)(LONGINT) DIV blockSize;
+			SELF.size := LEN(memory)(SIGNED32) DIV blockSize;
 			desc := "Ramdisk";
 		END New;
 
@@ -164,10 +164,10 @@ TYPE
 PROCEDURE Create*(context : Commands.Context); (** [Options] filename nbrOfBlocks ~ *)
 VAR
 	options : Options.Options;
-	filename : ARRAY 256 OF CHAR; nbrOfBlocks, blocksize : LONGINT;
+	filename : ARRAY 256 OF CHAR; nbrOfBlocks, blocksize : SIGNED32;
 	file : Files.File; rider : Files.Rider;
 	buffer : POINTER TO ARRAY OF CHAR;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN
 	NEW(options);
 	options.Add("b", "blocksize", Options.Integer);
@@ -210,7 +210,7 @@ BEGIN
 	END;
 END Create;
 
-PROCEDURE GetOptions(context : Commands.Context; VAR blocksize, cylinders, heads, sectors : LONGINT) : BOOLEAN;
+PROCEDURE GetOptions(context : Commands.Context; VAR blocksize, cylinders, heads, sectors : SIGNED32) : BOOLEAN;
 VAR options : Options.Options;
 BEGIN
 	NEW(options);
@@ -234,7 +234,7 @@ END GetOptions;
 PROCEDURE Install*(context : Commands.Context); (** [Options] diskname filename ~ *)
 VAR
 	diskname, filename : ARRAY 256 OF CHAR;
-	blocksize, c, h, s: LONGINT; res: WORD;
+	blocksize, c, h, s: SIGNED32; res: INTEGER;
 	file : Files.File;
 	disk : FileDisk;
 
@@ -284,7 +284,7 @@ END Install;
 PROCEDURE InstallRamdisk*(context : Commands.Context); (** [Options] diskname size  ~ *)
 VAR
 	diskname  : ARRAY 256 OF CHAR;
-	size, blocksize, c, h, s: LONGINT; res: WORD;
+	size, blocksize, c, h, s: SIGNED32; res: INTEGER;
 	memory : MemoryBlock;
 	disk : RamDisk;
 

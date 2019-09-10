@@ -9,36 +9,36 @@ CONST size* = 32;
 
 
 PROCEDURE Clear*(VAR s: ARRAY OF SET);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	i := 0; WHILE i < LEN(s) DO s[i] := {}; INC(i) END
 END Clear;
 
 
 PROCEDURE Fill*(VAR s: ARRAY OF SET);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	i := 0; WHILE i < LEN(s) DO s[i] := {0 .. size-1}; INC(i) END
 END Fill;
 
 
-PROCEDURE Incl*(VAR s: ARRAY OF SET; x: INTEGER);
+PROCEDURE Incl*(VAR s: ARRAY OF SET; x: SIGNED16);
 BEGIN INCL(s[x DIV size], x MOD size)
 END Incl;
 
 
-PROCEDURE Excl*(VAR s: ARRAY OF SET; x: INTEGER);
+PROCEDURE Excl*(VAR s: ARRAY OF SET; x: SIGNED16);
 BEGIN EXCL(s[x DIV size], x MOD size)
 END Excl;
 
 
-PROCEDURE In*(CONST s: ARRAY OF SET; x: INTEGER): BOOLEAN;
+PROCEDURE In*(CONST s: ARRAY OF SET; x: SIGNED16): BOOLEAN;
 BEGIN RETURN x MOD size IN s[x DIV size]
 END In;
 
 
 PROCEDURE Includes*(CONST s1, s2: ARRAY OF SET): BOOLEAN;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE i < LEN(s1) DO
@@ -49,10 +49,10 @@ BEGIN
 END Includes;
 
 
-PROCEDURE Elements*(CONST s: ARRAY OF SET; VAR lastElem: INTEGER): INTEGER;
-	VAR i, n, max: INTEGER;
+PROCEDURE Elements*(CONST s: ARRAY OF SET; VAR lastElem: SIGNED16): SIGNED16;
+	VAR i, n, max: SIGNED16;
 BEGIN
-	i := 0; n := 0; max := INTEGER(LEN(s)) * size;
+	i := 0; n := 0; max := SIGNED16(LEN(s)) * size;
 	WHILE i < max DO
 		IF (i MOD size) IN s[i DIV size] THEN INC(n); lastElem := i END ;
 		INC(i)
@@ -62,7 +62,7 @@ END Elements;
 
 
 PROCEDURE Empty*(CONST s: ARRAY OF SET): BOOLEAN;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE i < LEN(s) DO
@@ -74,7 +74,7 @@ END Empty;
 
 
 PROCEDURE Equal*(CONST s1, s2: ARRAY OF SET): BOOLEAN;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE i < LEN(s1) DO
@@ -86,7 +86,7 @@ END Equal;
 
 
 PROCEDURE Different*(CONST s1, s2: ARRAY OF SET): BOOLEAN;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	i := 0;
 	WHILE i < LEN(s1) DO
@@ -98,30 +98,30 @@ END Different;
 
 
 PROCEDURE Unite*(VAR s1: ARRAY OF SET; CONST s2: ARRAY OF SET);
-	VAR i: INTEGER; s: SET;
+	VAR i: SIGNED16; s: SET;
 BEGIN
 	i := 0; WHILE i < LEN(s1) DO s := s1[i] + s2[i]; s1[i] := s; INC(i) END
 END Unite;
 
 
 PROCEDURE Differ*(VAR s1: ARRAY OF SET; CONST s2: ARRAY OF SET);
-	VAR i: INTEGER; s: SET;
+	VAR i: SIGNED16; s: SET;
 BEGIN
 	i := 0; WHILE i < LEN(s1) DO s := s1[i] - s2[i]; s1[i] := s; INC(i) END
 END Differ;
 
 
 PROCEDURE Intersect*(CONST s1, s2: ARRAY OF SET; VAR s3: ARRAY OF SET);
-	VAR i: INTEGER; s: SET;
+	VAR i: SIGNED16; s: SET;
 BEGIN
 	i := 0; WHILE i < LEN(s1) DO s := s1[i] * s2[i]; s3[i] := s; INC(i) END
 END Intersect;
 
 
-PROCEDURE Print*(VAR f: Texts.Writer; CONST s: ARRAY OF SET; w, indent: INTEGER);
-	VAR col, i, max: INTEGER;
+PROCEDURE Print*(VAR f: Texts.Writer; CONST s: ARRAY OF SET; w, indent: SIGNED16);
+	VAR col, i, max: SIGNED16;
 BEGIN
-	i := 0; col := indent; max := INTEGER(LEN(s)) * size;
+	i := 0; col := indent; max := SIGNED16(LEN(s)) * size;
 	Texts.Write(f, "{");
 	WHILE i < max DO
 		IF In(s, i) THEN

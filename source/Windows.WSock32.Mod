@@ -42,7 +42,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 		SOSndBuf* = 01001H; (** send buffer size *)
 		SORcvBuf* = 01002H; (** receive buffer size *)
 		SOSndTimeo* = 01005H; SORcvTimeo* = 01006H;
-		SIORcvAll* = LONGINT(98000001H);
+		SIORcvAll* = SIGNED32(98000001H);
 
 		SDReceive*=0; SDSend*=1; SDboth* = 2; (* graceful shutdown modes *)
 
@@ -53,22 +53,22 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 
 		TimeVal* = POINTER TO TimeValDesc;
 		TimeValDesc* = RECORD
-			sec*,musec*: LONGINT; (* seconds and microseconds *)
+			sec*,musec*: SIGNED32; (* seconds and microseconds *)
 		END;
 
 		WSAData* = RECORD
-			wVersion*, wHighVersion*: INTEGER;
+			wVersion*, wHighVersion*: SIGNED16;
 			szDescription*: ARRAY WSADescriptionLen+1 OF CHAR;
 			szSystemStatus*: ARRAY WSASysStatusLen+1 OF CHAR;
-			iMaxSockets*, iMaxUdpDg*: INTEGER;
+			iMaxSockets*, iMaxUdpDg*: SIGNED16;
 			lpVendorInfo*: ADDRESS
 		END;
 
-		inAddr* = LONGINT;
+		inAddr* = SIGNED32;
 
 		PsockaddrIn* = POINTER TO sockaddrIn;
 		sockaddrIn* = RECORD
-			sinFamily*, sinPort*: INTEGER;
+			sinFamily*, sinPort*: SIGNED16;
 			sinAddr*: inAddr;
 			inZero: ARRAY 8 OF CHAR
 		END;
@@ -76,8 +76,8 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 		Paddrinfo* = POINTER TO addrinfo;
 		addrinfo* = RECORD
 			aiFlags*: SET;
-			aiFamily*, aiSocktype*, aiProtocol*: LONGINT;
-			aiAddrlen*: LONGINT;
+			aiFamily*, aiSocktype*, aiProtocol*: SIGNED32;
+			aiAddrlen*: SIGNED32;
 			aiCanonname*: ADDRESS;
 			aiAddr*{UNTRACED}: PsockaddrIn;
 			aiNext*{UNTRACED}: Paddrinfo
@@ -85,11 +85,11 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 
 		Socket* = Kernel32.HANDLE;
 
-		Group* = LONGINT;
+		Group* = SIGNED32;
 
 		FDSet*=RECORD
-			fdcount*: LONGINT;
-			socket*: ARRAY 64 OF Socket (*LONGINT*);
+			fdcount*: SIGNED32;
+			socket*: ARRAY 64 OF Socket (*SIGNED32*);
 		END;
 
 		(** The Windows Sockets WSAPROTOCOL_INFO structure is used to store or retrieve complete information for
@@ -105,13 +105,13 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 		Hostent* = RECORD
 			hName*:ADDRESS; (* pointer to array of char *)
 			hAliases*: ADDRESS; (* pointer to array of pointer to array of char *)
-			hAddrtype*, hLength*: INTEGER;
+			hAddrtype*, hLength*: SIGNED16;
 			hAddrList*: ADDRESS;(* pointer to array of pointer of address (with len hLength) *)
 		END;
 
 		Error = OBJECT
 		VAR
-		nr: LONGINT;
+		nr: SIGNED32;
 		name: ARRAY 64 OF CHAR;
 		msg: ARRAY 256 OF CHAR;
 		left, right: Error;
@@ -124,105 +124,105 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 		errors: Error;
 
 		(** The Windows Sockets WSACleanup function terminates use of the Ws2_32.dll. *)
-		WSACleanup-: PROCEDURE {WINAPI} (): WORD;
+		WSACleanup-: PROCEDURE {WINAPI} (): INTEGER;
 
 		(** The Windows Sockets WSAAsyncGetHostByAddr function asynchronously retrieves host information that
 			corresponds to an address. *)
-		WSAAsyncGetHostByAddr-: PROCEDURE {WINAPI} (hWnd: User32.HWND; wMsg: LONGINT; VAR addr: ARRAY   OF SYSTEM.BYTE; len: WORD; type: WORD; VAR buf: ARRAY   OF SYSTEM.BYTE; buflen: WORD): Kernel32.HANDLE;
+		WSAAsyncGetHostByAddr-: PROCEDURE {WINAPI} (hWnd: User32.HWND; wMsg: SIGNED32; VAR addr: ARRAY   OF SYSTEM.BYTE; len: INTEGER; type: INTEGER; VAR buf: ARRAY   OF SYSTEM.BYTE; buflen: INTEGER): Kernel32.HANDLE;
 
 		(** The Windows Sockets WSAAsyncGetHostByName function asynchronously retrieves host information corresponding
 			to a host name. *)
-		WSAAsyncGetHostByName-: PROCEDURE {WINAPI} (hWnd: User32.HWND; wMsg: LONGINT; name: ARRAY   OF CHAR; VAR buf: ARRAY   OF SYSTEM.BYTE; buflen: WORD): Kernel32.HANDLE;
+		WSAAsyncGetHostByName-: PROCEDURE {WINAPI} (hWnd: User32.HWND; wMsg: SIGNED32; name: ARRAY   OF CHAR; VAR buf: ARRAY   OF SYSTEM.BYTE; buflen: INTEGER): Kernel32.HANDLE;
 
 		(** The Windows Sockets WSAAsyncSelect function requests Windows message-based notification of network events
 			for a socket. *)
-		WSAAsyncSelect-: PROCEDURE {WINAPI} (s: Socket; hWnd: User32.HWND; wMsg: LONGINT; lEvent: WORD): WORD;
+		WSAAsyncSelect-: PROCEDURE {WINAPI} (s: Socket; hWnd: User32.HWND; wMsg: SIGNED32; lEvent: INTEGER): INTEGER;
 
 		(** The Windows Sockets WSAGetLastError function gets the error status for the last operation that failed. *)
-		WSAGetLastError-: PROCEDURE {WINAPI} (): WORD;
+		WSAGetLastError-: PROCEDURE {WINAPI} (): INTEGER;
 
 		(** The Windows Sockets WSASocket function creates a socket that is bound to a specific transport-service provider. *)
-		WSASocket-: PROCEDURE {WINAPI} (af, type, protocol: WORD; VAR lpProtocolInfo: WSAProtocolInfo; g: Group; dwFlags: DWORD): Socket;
+		WSASocket-: PROCEDURE {WINAPI} (af, type, protocol: INTEGER; VAR lpProtocolInfo: WSAProtocolInfo; g: Group; dwFlags: DWORD): Socket;
 
 		(** The Windows Sockets WSAStartup function initiates use of Ws2_32.dll by a process. *)
-		WSAStartup-: PROCEDURE {WINAPI} (wVersionRequested: INTEGER; VAR lpWSAData: WSAData): WORD;
+		WSAStartup-: PROCEDURE {WINAPI} (wVersionRequested: SIGNED16; VAR lpWSAData: WSAData): INTEGER;
 
 		WSAIoctl-: PROCEDURE {WINAPI} (s: Socket; ioControlCode:DWORD; VAR in: DWORD; inSize:DWORD;
-				VAR outBuffer:ARRAY OF CHAR; outBufLen: DWORD; VAR lenReturned:DWORD;  Overlapped: ADDRESS; completionRoutine: ADDRESS): WORD;
+				VAR outBuffer:ARRAY OF CHAR; outBufLen: DWORD; VAR lenReturned:DWORD;  Overlapped: ADDRESS; completionRoutine: ADDRESS): INTEGER;
 
 		(** The Windows Sockets accept function permits an incoming connection attempt on a socket. *)
-		accept-: PROCEDURE {WINAPI} (s: Socket; VAR addr: ARRAY   OF SYSTEM.BYTE; VAR addrlen: WORD): Socket;
+		accept-: PROCEDURE {WINAPI} (s: Socket; VAR addr: ARRAY   OF SYSTEM.BYTE; VAR addrlen: INTEGER): Socket;
 
 		(** The Windows Sockets bind function associates a local address with a socket. *)
-		bind-: PROCEDURE {WINAPI} (s: Socket; VAR name: ARRAY   OF SYSTEM.BYTE; namelen: WORD): WORD;
+		bind-: PROCEDURE {WINAPI} (s: Socket; VAR name: ARRAY   OF SYSTEM.BYTE; namelen: INTEGER): INTEGER;
 
 		(** The Windows Sockets closesocket function closes an existing socket. *)
-		closesocket-: PROCEDURE {WINAPI} (s: Socket): WORD;
+		closesocket-: PROCEDURE {WINAPI} (s: Socket): INTEGER;
 
 		(** The Windows Sockets connect function establishes a connection to a specified socket. *)
-		connect-: PROCEDURE {WINAPI} (s: Socket; VAR name: ARRAY   OF SYSTEM.BYTE; namelen: WORD): WORD;
+		connect-: PROCEDURE {WINAPI} (s: Socket; VAR name: ARRAY   OF SYSTEM.BYTE; namelen: INTEGER): INTEGER;
 
 		freeaddrinfo-:PROCEDURE {WINAPI}(ai:Paddrinfo);
-		getaddrinfo-: PROCEDURE {WINAPI}(VAR nodename, servname: ARRAY   OF CHAR; VAR hints: ARRAY   OF SYSTEM.BYTE; VAR res: Paddrinfo): WORD;
+		getaddrinfo-: PROCEDURE {WINAPI}(VAR nodename, servname: ARRAY   OF CHAR; VAR hints: ARRAY   OF SYSTEM.BYTE; VAR res: Paddrinfo): INTEGER;
 
 		(** The Windows Sockets gethostbyname function retrieves host information corresponding to a host name from a
 			host database. *)
 		gethostbyname-: PROCEDURE {WINAPI} (VAR name: ARRAY   OF CHAR): PHostent;
 
 		(** The Windows Sockets gethostname function returns the standard host name for the local machine. *)
-		gethostname-: PROCEDURE {WINAPI} (VAR name: ARRAY   OF CHAR; namelen: WORD): WORD;
+		gethostname-: PROCEDURE {WINAPI} (VAR name: ARRAY   OF CHAR; namelen: INTEGER): INTEGER;
 
 		(** The Windows Sockets getpeername function retrieves the name of the peer to which a socket is connected. *)
-		getpeername-: PROCEDURE {WINAPI} (s: Socket; VAR name: ARRAY   OF SYSTEM.BYTE; VAR namelen: WORD): WORD;
+		getpeername-: PROCEDURE {WINAPI} (s: Socket; VAR name: ARRAY   OF SYSTEM.BYTE; VAR namelen: INTEGER): INTEGER;
 
 		  (*The getsockname function retrieves the local name for a socket.*)
-		getsockname-:PROCEDURE {WINAPI} (s: Socket; VAR name: ARRAY   OF SYSTEM.BYTE; VAR namelen: WORD): WORD;
+		getsockname-:PROCEDURE {WINAPI} (s: Socket; VAR name: ARRAY   OF SYSTEM.BYTE; VAR namelen: INTEGER): INTEGER;
 
 		(** The Windows Sockets htonl function converts a u_long from host to TCP/IP network byte order
 			(which is big-endian). *)
-		htonl-: PROCEDURE {WINAPI} (x: LONGINT): LONGINT;
+		htonl-: PROCEDURE {WINAPI} (x: SIGNED32): SIGNED32;
 
 		(** The Windows Sockets htons function converts a u_short from host to TCP/IP network byte order
 			(which is big-endian). *)
-		htons-: PROCEDURE {WINAPI} (x: INTEGER): INTEGER;
+		htons-: PROCEDURE {WINAPI} (x: SIGNED16): SIGNED16;
 
 		(** The Windows Sockets ioctlsocket function controls the I/O mode of a socket. *)
-		ioctlsocket-: PROCEDURE {WINAPI} (s: Socket; cmd: LONGWORD; VAR argp: LONGINT): WORD;
+		ioctlsocket-: PROCEDURE {WINAPI} (s: Socket; cmd: LONGINTEGER; VAR argp: SIGNED32): INTEGER;
 
 		(** The Windows Sockets listen function places a socket a state where it is listening for an incoming connection. *)
-		listen-: PROCEDURE {WINAPI} (s: Socket; backlog: WORD): WORD;
+		listen-: PROCEDURE {WINAPI} (s: Socket; backlog: INTEGER): INTEGER;
 
 		(** The Windows Sockets ntohl function converts a u_long from TCP/IP network order to host byte order
 			(which is little-endian on Intel processors). *)
-		ntohl-: PROCEDURE {WINAPI} (x: LONGINT): LONGINT;
+		ntohl-: PROCEDURE {WINAPI} (x: SIGNED32): SIGNED32;
 
 		(** The Windows Sockets ntohs function converts a u_short from TCP/IP network byte order to host byte order
 			(which is little-endian on Intel processors). *)
-		ntohs-: PROCEDURE {WINAPI} (x: INTEGER): INTEGER;
+		ntohs-: PROCEDURE {WINAPI} (x: SIGNED16): SIGNED16;
 
 		(** The Windows Sockets recv function receives data from a connected socket. *)
-		recv-: PROCEDURE {WINAPI} (s: Socket; VAR buf: ARRAY   OF SYSTEM.BYTE; len: WORD; flags: WORDSET): WORD;
+		recv-: PROCEDURE {WINAPI} (s: Socket; VAR buf: ARRAY   OF SYSTEM.BYTE; len: INTEGER; flags: INTEGERSET): INTEGER;
 
 		(** The Windows Sockets recvfrom function receives a datagram and stores the source address. *)
-		recvfrom-: PROCEDURE {WINAPI} (s: Socket; VAR buf: ARRAY   OF SYSTEM.BYTE; len: WORD; flags: WORDSET; VAR from: sockaddrIn (*VAR from: ARRAY   OF SYSTEM.BYTE*); VAR fromlen: WORD): WORD;
+		recvfrom-: PROCEDURE {WINAPI} (s: Socket; VAR buf: ARRAY   OF SYSTEM.BYTE; len: INTEGER; flags: INTEGERSET; VAR from: sockaddrIn (*VAR from: ARRAY   OF SYSTEM.BYTE*); VAR fromlen: INTEGER): INTEGER;
 
 		(**  The select function determines the status of one or more sockets, waiting if necessary, to perform synchronous I/O *)
-		select-: PROCEDURE {WINAPI} (nfds: WORD; VAR readfds,writefds,exceptfds: FDSet; timeout: TimeVal): WORD;
+		select-: PROCEDURE {WINAPI} (nfds: INTEGER; VAR readfds,writefds,exceptfds: FDSet; timeout: TimeVal): INTEGER;
 
 		(** The Windows Sockets send function sends data on a connected socket. *)
-		send-: PROCEDURE {WINAPI} (s: Socket; CONST buf: ARRAY   OF SYSTEM.BYTE; len: WORD; flags: WORDSET): WORD;
+		send-: PROCEDURE {WINAPI} (s: Socket; CONST buf: ARRAY   OF SYSTEM.BYTE; len: INTEGER; flags: INTEGERSET): INTEGER;
 
 		(** The Windows Sockets sendto function sends data to a specific destination. *)
-		sendto-: PROCEDURE {WINAPI} (s: Socket; CONST buf: ARRAY   OF SYSTEM.BYTE; len: WORD; flags: WORDSET; VAR to: ARRAY   OF SYSTEM.BYTE; tolen: WORD): WORD;
+		sendto-: PROCEDURE {WINAPI} (s: Socket; CONST buf: ARRAY   OF SYSTEM.BYTE; len: INTEGER; flags: INTEGERSET; VAR to: ARRAY   OF SYSTEM.BYTE; tolen: INTEGER): INTEGER;
 
 		(** The Windows Sockets setsockopt function sets a socket option. *)
-		setsockopt-: PROCEDURE {WINAPI} (s: Socket; level, optname: WORD; VAR optval: ARRAY   OF SYSTEM.BYTE; optlen: WORD): WORD;
-		getsockopt-: PROCEDURE {WINAPI} (s: Socket; level, optname: WORD; VAR optval: ARRAY   OF SYSTEM.BYTE; VAR optlen: WORD): WORD;
+		setsockopt-: PROCEDURE {WINAPI} (s: Socket; level, optname: INTEGER; VAR optval: ARRAY   OF SYSTEM.BYTE; optlen: INTEGER): INTEGER;
+		getsockopt-: PROCEDURE {WINAPI} (s: Socket; level, optname: INTEGER; VAR optval: ARRAY   OF SYSTEM.BYTE; VAR optlen: INTEGER): INTEGER;
 
 		(** The Windows Sockets socket function creates a socket that is bound to a specific service provider. *)
-		socket-: PROCEDURE {WINAPI} (af, type, protocol: WORD): Socket;
+		socket-: PROCEDURE {WINAPI} (af, type, protocol: INTEGER): Socket;
 
-		shutdown-:PROCEDURE{WINAPI} (s: Socket; how: WORD): WORD;
+		shutdown-:PROCEDURE{WINAPI} (s: Socket; how: INTEGER): INTEGER;
 
 	PROCEDURE TermMod;
 	BEGIN
@@ -295,7 +295,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 	END Init;
 
 	PROCEDURE Startup*;
-		VAR data: WSAData; res: WORD;
+		VAR data: WSAData; res: INTEGER;
 	BEGIN
 		KernelLog.String("WSAStartup ");
 		res := WSAStartup(2, data);
@@ -309,7 +309,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 	END Startup;
 
 	PROCEDURE CleanUp*;
-	VAR res: WORD;
+	VAR res: INTEGER;
 	BEGIN
 		IF wsaStarted THEN
 			res := WSACleanup();
@@ -320,7 +320,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 (*** debugging *)
 
 	PROCEDURE DispError*;
-	VAR err: Error;  nr: LONGINT;
+	VAR err: Error;  nr: SIGNED32;
 	BEGIN
 		nr := WSAGetLastError();
 		IF  (nr=0) THEN RETURN END;
@@ -341,7 +341,7 @@ MODULE WSock32; (* AUTHOR "ejz, additions Alex Popescu"; PURPOSE " Win32 WSock32
 
 	END DispError;
 
-	PROCEDURE Enter( nr: LONGINT;  short, desc: ARRAY OF CHAR );
+	PROCEDURE Enter( nr: SIGNED32;  short, desc: ARRAY OF CHAR );
 	VAR this: Error;
 
 		PROCEDURE InsertErr( VAR err: Error;  this: Error );

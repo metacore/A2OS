@@ -10,10 +10,10 @@ CONST
 
 TYPE
 	Service* = OBJECT	(** TCP service object - handles opening and closing of connections *)
-		VAR res: WORD; service, client: TCP.Connection; root, agent: Agent; new: NewAgent;
+		VAR res: INTEGER; service, client: TCP.Connection; root, agent: Agent; new: NewAgent;
 
 		(** Start is called indirectly by OpenService. *)
-		PROCEDURE &Start*(port: LONGINT; new: NewAgent; VAR res: WORD);
+		PROCEDURE &Start*(port: SIGNED32; new: NewAgent; VAR res: INTEGER);
 		BEGIN
 			NEW(service); service.Open(port, IP.NilAdr, TCP.NilPort, res);
 			IF res = Ok THEN
@@ -75,16 +75,16 @@ TYPE
 	TLSService* = OBJECT (Service)	(** TCP service object - handles opening and closing of connections *)
 		VAR
 		  policy: TLS.Policy;
-		  ctx: TLS.Context; cipherSuites: ARRAY TLS.Suites OF LONGINT;
+		  ctx: TLS.Context; cipherSuites: ARRAY TLS.Suites OF SIGNED32;
 
 		(** Start is called indirectly by OpenService. *)
-		PROCEDURE &Start*(port: LONGINT; new: NewAgent; VAR res: WORD);
+		PROCEDURE &Start*(port: SIGNED32; new: NewAgent; VAR res: INTEGER);
 			VAR
 				newService: TLS.Connection;
 		   certificate : ARRAY 500 OF CHAR;
 		   pHex, qHex, eHex : ARRAY 1000 OF CHAR;
 		   intstring : ARRAY 20 OF CHAR;
-		   pLen, qLen, eLen : LONGINT;
+		   pLen, qLen, eLen : SIGNED32;
 		BEGIN
 			(* Set the policy *)
 			NEW( policy );
@@ -178,7 +178,7 @@ The following agent implements the TCP discard service.  This service accepts co
 
 TYPE
 	DiscardAgent = OBJECT (TCPServices.Agent)
-		VAR len, res: LONGINT; buf: ARRAY 4096 OF CHAR;
+		VAR len, res: SIGNED32; buf: ARRAY 4096 OF CHAR;
 
 	BEGIN {ACTIVE}
 		REPEAT

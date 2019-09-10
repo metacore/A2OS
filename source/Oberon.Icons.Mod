@@ -42,8 +42,8 @@ TYPE
 	Icon* = POINTER TO IconDesc;
 	IconDesc* = RECORD (Gadgets.FrameDesc)
 		caption*: ARRAY 64 OF CHAR;	(** Caption text. *)
-		col: INTEGER;
-		h: INTEGER;
+		col: SIGNED16;
+		h: SIGNED16;
 	END;
 
 	Iconizer* = POINTER TO IconizerDesc;
@@ -55,7 +55,7 @@ TYPE
 		sel*: BOOLEAN;	(** Does it allow you to select an item when popping open ? *)
 		pos*: BOOLEAN;	(** Do the open and close positions differ ? *)
 		poping: BOOLEAN;	(* is poped open at the moment *)
-		px, py, oX, oY, cX, cY: INTEGER;
+		px, py, oX, oY, cX, cY: SIGNED16;
 	END;
 
 	(* Stack = POINTER TO StackDesc; *)
@@ -75,8 +75,8 @@ BEGIN
 	O.M := M; O.x := 0; O.y := 0; O.F := F; O.dlink := NIL; O.res := -1; F.handle(F, O);
 END SetMasks;
 
-PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-VAR r, t, r1, t1: INTEGER;
+PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+VAR r, t, r1, t1: SIGNED16;
 BEGIN
 	r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 	IF x < x1 THEN x := x1 END;
@@ -88,7 +88,7 @@ END ClipAgainst;
 
 (* ==================== Views ================== *)
 
-PROCEDURE RestoreView(F: View; R: Display3.Mask; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg);
+PROCEDURE RestoreView(F: View; R: Display3.Mask; x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg);
 VAR D: Display.DisplayMsg; f: Gadgets.Frame; state: SET;
 BEGIN
 	IF (F.obj # NIL) & (F.obj IS Gadgets.Frame) THEN
@@ -135,7 +135,7 @@ BEGIN C.id := Objects.shallow; C.stamp := M.stamp; Gadgets.CopyFrame(C, from, to
 END CopyView;
 
 PROCEDURE ViewHandle*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h, u, v, t: INTEGER; F0: View; A: Display.ModifyMsg; f: Display.Frame; R: Display3.Mask;
+VAR x, y, w, h, u, v, t: SIGNED16; F0: View; A: Display.ModifyMsg; f: Display.Frame; R: Display3.Mask;
 BEGIN
 	WITH F: View DO
 		IF M IS Objects.AttrMsg THEN
@@ -238,8 +238,8 @@ END NewView;
 
 (* ==================== end of Views ================== *)
 
-PROCEDURE ToIcon(F: Icon; x, y, w, h: INTEGER; VAR M: Display.FrameMsg);
-VAR caph0: INTEGER; obj: Display.Frame;
+PROCEDURE ToIcon(F: Icon; x, y, w, h: SIGNED16; VAR M: Display.FrameMsg);
+VAR caph0: SIGNED16; obj: Display.Frame;
 BEGIN
 	IF F.obj # NIL THEN
 		obj := F.obj(Display.Frame); caph0 := F.h + 2;
@@ -248,8 +248,8 @@ BEGIN
 	END
 END ToIcon;
 
-PROCEDURE StringSize(s: ARRAY OF CHAR; VAR w, h: INTEGER);
-VAR r: Objects.Object; p: INTEGER;
+PROCEDURE StringSize(s: ARRAY OF CHAR; VAR w, h: SIGNED16);
+VAR r: Objects.Object; p: SIGNED16;
 BEGIN
 	w := 6; h := 0;
 	p := 0;
@@ -261,8 +261,8 @@ BEGIN
 	h := Fonts.Default.height + 2;
 END StringSize;
 
-PROCEDURE IconSize(F: Icon; VAR w, h: INTEGER);
-VAR iw, ih, cw: INTEGER; obj: Objects.Object;
+PROCEDURE IconSize(F: Icon; VAR w, h: SIGNED16);
+VAR iw, ih, cw: SIGNED16; obj: Objects.Object;
 BEGIN
 	obj := F.obj;
 	IF obj = NIL THEN iw := 0; ih := 0
@@ -276,7 +276,7 @@ BEGIN
 END IconSize;
 
 PROCEDURE Change(F: Icon);
-VAR M: Display.ModifyMsg; w, h: INTEGER;
+VAR M: Display.ModifyMsg; w, h: SIGNED16;
 BEGIN
 	M.id := Display.extend; M.mode := Display.display; M.F := F;
 	IconSize(F, w, h);
@@ -358,8 +358,8 @@ BEGIN
 	END
 END IconLink;
 
-PROCEDURE RestoreIcon(R: Display3.Mask; F: Icon; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg);
-VAR obj: Objects.Object; D: Display.DisplayMsg; cx, cy, cw, ch, caph0: INTEGER;
+PROCEDURE RestoreIcon(R: Display3.Mask; F: Icon; x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg);
+VAR obj: Objects.Object; D: Display.DisplayMsg; cx, cy, cw, ch, caph0: SIGNED16;
 BEGIN
 	caph0 := F.h + 2;
 	obj := F.obj;
@@ -399,9 +399,9 @@ BEGIN
 END RestoreIcon;
 
 PROCEDURE PrintIcon(F: Icon; VAR M: Display.DisplayMsg);
-VAR R: Display3.Mask; caph0, w, h: INTEGER; obj: Objects.Object; PM: Display.DisplayMsg;
+VAR R: Display3.Mask; caph0, w, h: SIGNED16; obj: Objects.Object; PM: Display.DisplayMsg;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -421,8 +421,8 @@ BEGIN
 	Printer3.String(R, Display3.textC, M.x+P(3), M.y + P(ABS(Fonts.Default.minY) + 2), Fonts.Default, F.caption, Display3.textmode)
 END PrintIcon;
 
-PROCEDURE LocateMsg(F: Icon; x, y, w, h: INTEGER; VAR M: Display.LocateMsg);
-VAR caph: INTEGER; obj: Objects.Object;
+PROCEDURE LocateMsg(F: Icon; x, y, w, h: SIGNED16; VAR M: Display.LocateMsg);
+VAR caph: SIGNED16; obj: Objects.Object;
 BEGIN
 	IF (M.loc = NIL) & Effects.Inside(M.X, M.Y, x, y, w, h) THEN
 		IF F.obj = NIL THEN M.loc := F; M.u := M.X - x; M.v := M.Y - (y+h-1); M.res := 0; RETURN
@@ -442,13 +442,13 @@ BEGIN
 END LocateMsg;
 
 PROCEDURE CopyIcon*(VAR M: Objects.CopyMsg; from, to: Icon);
-VAR id: INTEGER;
+VAR id: SIGNED16;
 BEGIN
 	id := M.id; M.id := Objects.deep; Gadgets.CopyFrame(M, from, to); M.id := id;
 	COPY(from.caption, to.caption); to.h := from.h; to.col := from.col
 END CopyIcon;
 
-PROCEDURE Size(F: Icon; VAR x, y, w, h: INTEGER);
+PROCEDURE Size(F: Icon; VAR x, y, w, h: SIGNED16);
 VAR obj: Objects.Object;
 BEGIN
 	obj := F.obj;
@@ -459,8 +459,8 @@ BEGIN
 	END
 END Size;
 
-PROCEDURE TrackHighlight(R: Display3.Mask; VAR X, Y: INTEGER; x, y, w, h: INTEGER; VAR keysum: SET);
-VAR keys: SET; on: BOOLEAN; xx, yy: INTEGER;
+PROCEDURE TrackHighlight(R: Display3.Mask; VAR X, Y: SIGNED16; x, y, w, h: SIGNED16; VAR keysum: SET);
+VAR keys: SET; on: BOOLEAN; xx, yy: SIGNED16;
 
 	PROCEDURE High;
 	BEGIN
@@ -489,7 +489,7 @@ BEGIN
 END TrackHighlight;
 
 PROCEDURE IconTrack(F: Icon; R: Display3.Mask; VAR M: Oberon.InputMsg);
-VAR x, y, w, h: INTEGER; keysum: SET;
+VAR x, y, w, h: SIGNED16; keysum: SET;
 BEGIN
 	x := M.x + F.X; y := M.y + F.Y; w := F.W; h := F.H;
 	Size(F, x, y, w, h);
@@ -506,8 +506,8 @@ BEGIN
 END HasCmdAttr;
 
 PROCEDURE IconHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h, u, v, capw: INTEGER; F0: Icon; f: Display.Frame; B: Objects.BindMsg;
-	CM: Display.ControlMsg; C: Objects.CopyMsg; R: Display3.Mask;  ver: LONGINT;
+VAR x, y, w, h, u, v, capw: SIGNED16; F0: Icon; f: Display.Frame; B: Objects.BindMsg;
+	CM: Display.ControlMsg; C: Objects.CopyMsg; R: Display3.Mask;  ver: SIGNED32;
 BEGIN
 	WITH F: Icon DO
 		IF M IS Objects.AttrMsg THEN
@@ -669,8 +669,8 @@ PROCEDURE Top(): Iconizer;
 BEGIN RETURN top
 END Top;
 
-PROCEDURE To(F: Iconizer; childu, childv: INTEGER; VAR M: Display.FrameMsg);
-VAR d: Display.Frame; u, v: INTEGER; Fdlink, Mdlink: Objects.Object;
+PROCEDURE To(F: Iconizer; childu, childv: SIGNED16; VAR M: Display.FrameMsg);
+VAR d: Display.Frame; u, v: SIGNED16; Fdlink, Mdlink: Objects.Object;
 BEGIN
 	IF F.closed & ~F.poping THEN d := F.closedF ELSE d := F.openF END;
 	IF d # NIL THEN
@@ -958,8 +958,8 @@ BEGIN
 	END;
 END ConsumeIconizer;
 
-PROCEDURE TrackPopup(F: Iconizer; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg);
-VAR px, py: INTEGER; D: Display.DisplayMsg; block: Views.Block;
+PROCEDURE TrackPopup(F: Iconizer; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg);
+VAR px, py: SIGNED16; D: Display.DisplayMsg; block: Views.Block;
 	L: Display.LocateMsg; ls: Display.Frame; A: Objects.AttrMsg;
 	of: Gadgets.Frame; keysum, fstate: SET;
 	R, R0: Display3.Mask; CM: Display.ControlMsg;
@@ -985,8 +985,8 @@ VAR px, py: INTEGER; D: Display.DisplayMsg; block: Views.Block;
 		ls := f;
 	END DoSelect;
 
-	PROCEDURE CalcPlace(VAR px, py: INTEGER);
-	VAR cx, cy, cw, ch: INTEGER; (* clipping area *) f: Objects.Object;
+	PROCEDURE CalcPlace(VAR px, py: SIGNED16);
+	VAR cx, cy, cw, ch: SIGNED16; (* clipping area *) f: Objects.Object;
 	BEGIN
 		cx := 0; cy := 0; cw := Display.Width; ch := Display.Height;
 		f := M.dlink;
@@ -1085,9 +1085,9 @@ BEGIN
 END TrackPopup;
 
 PROCEDURE PrintIconizer(F: Iconizer; VAR M: Display.DisplayMsg);
-VAR R: Display3.Mask; d: Display.Frame; PM: Display.DisplayMsg; Fdlink, Mdlink: Objects.Object; x, y, w, h, a, b: INTEGER;
+VAR R: Display3.Mask; d: Display.Frame; PM: Display.DisplayMsg; Fdlink, Mdlink: Objects.Object; x, y, w, h, a, b: SIGNED16;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -1121,8 +1121,8 @@ BEGIN
 	END
 END PrintIconizer;
 
-PROCEDURE RestoreIconizer(R: Display3.Mask; F: Iconizer; x, y, w, h: INTEGER; dlink: Objects.Object);
-VAR d: Display.Frame; M: Display.DisplayMsg; a, b: INTEGER;
+PROCEDURE RestoreIconizer(R: Display3.Mask; F: Iconizer; x, y, w, h: SIGNED16; dlink: Objects.Object);
+VAR d: Display.Frame; M: Display.DisplayMsg; a, b: SIGNED16;
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
 	IF F.closed THEN d := F.closedF ELSE d := F.openF END;
@@ -1150,8 +1150,8 @@ BEGIN
 	END
 END RestoreIconizer;
 
-PROCEDURE RestoreIconizerArea(R: Display3.Mask; F: Iconizer; x, y, w, h: INTEGER; VAR M: Display.DisplayMsg);
-VAR d: Display.Frame; M0: Display.DisplayMsg; a, b: INTEGER;
+PROCEDURE RestoreIconizerArea(R: Display3.Mask; F: Iconizer; x, y, w, h: SIGNED16; VAR M: Display.DisplayMsg);
+VAR d: Display.Frame; M0: Display.DisplayMsg; a, b: SIGNED16;
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
 	IF F.closed THEN d := F.closedF ELSE d := F.openF END;
@@ -1210,7 +1210,7 @@ BEGIN
 END StoreIconizer;
 
 PROCEDURE LoadIconizer (F: Iconizer; VAR M: Objects.FileMsg);
-VAR ver, i: LONGINT; obj: Objects.Object;
+VAR ver, i: SIGNED32; obj: Objects.Object;
 BEGIN
 	Files.ReadNum(M.R, ver);
 	IF (ver = 2) OR (ver = 3) THEN
@@ -1243,7 +1243,7 @@ BEGIN
 	END
 END LoadIconizer;
 
-PROCEDURE UpdateMask (F: Iconizer; x, y, w, h: INTEGER; VAR M: Display3.UpdateMaskMsg);
+PROCEDURE UpdateMask (F: Iconizer; x, y, w, h: SIGNED16; VAR M: Display3.UpdateMaskMsg);
 VAR O: Display3.OverlapMsg; U: Display3.UpdateMaskMsg;
 BEGIN
 	IF M.F = F THEN
@@ -1270,7 +1270,7 @@ BEGIN
 	END
 END UpdateMask;
 
-PROCEDURE TrackIconizer (F: Iconizer; x, y, w, h: INTEGER; VAR M: Oberon.InputMsg);
+PROCEDURE TrackIconizer (F: Iconizer; x, y, w, h: SIGNED16; VAR M: Oberon.InputMsg);
 VAR R: Display3.Mask; stack: StackDesc;
 BEGIN
 	IF (M.id = Oberon.track) & ~(Gadgets.selected IN F.state) & Effects.Inside(M.X, M.Y, x, y, w, h) THEN
@@ -1301,7 +1301,7 @@ BEGIN
 END TrackIconizer;
 
 PROCEDURE IconizerHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h, u, v: INTEGER; d: Display.Frame; F0: Iconizer; R: Display3.Mask;
+VAR x, y, w, h, u, v: SIGNED16; d: Display.Frame; F0: Iconizer; R: Display3.Mask;
 	O: Display3.OverlapMsg; PM: Gadgets.PriorityMsg;
 BEGIN
 	WITH F: Iconizer DO
@@ -1447,7 +1447,7 @@ END NewIconizer;
 
 (** Takes the selected iconizer/icon apart and insert the constituents at the caret. *)
 PROCEDURE Break*;
-VAR M: Display.SelectMsg; t: Display.Frame; I: Icon; F: Iconizer; X: INTEGER;
+VAR M: Display.SelectMsg; t: Display.Frame; I: Icon; F: Iconizer; X: SIGNED16;
 BEGIN
 	M.F := NIL; M.id := Display.get; M.time := -1; M.obj := NIL; Display.Broadcast(M);
 	IF (M.time > 0) & (M.obj # NIL) THEN

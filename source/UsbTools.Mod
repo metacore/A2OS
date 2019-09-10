@@ -35,7 +35,7 @@ CONST
 
 (** Starts a thread that first waits until the device to be mounted becomes accessible and then mounts it *)
 PROCEDURE Mount*(context : Commands.Context); (** prefix alias [volpar] ["|" fspar] ~ *)
-VAR msg : ARRAY 8 OF CHAR; res : WORD;
+VAR msg : ARRAY 8 OF CHAR; res : INTEGER;
 BEGIN
 	Commands.Activate("UsbTools.BlockingMount", context, {}, res, msg); (* ignore result *)
 END Mount;
@@ -71,7 +71,7 @@ END BlockingMount;
 
 (** Waits for the specified disk device and then execute the commands *)
 PROCEDURE AwaitAndExecute*(context : Commands.Context); (** devicename commandlist ~ *)
-VAR msg : ARRAY 8 OF CHAR; res : WORD;
+VAR msg : ARRAY 8 OF CHAR; res : INTEGER;
 BEGIN
 	Commands.Activate("UsbTools.AwaitAndExecute0", context, {}, res, msg); (* ignore result *)
 END AwaitAndExecute;
@@ -82,7 +82,7 @@ VAR
 	devicename, msg : ARRAY 128 OF CHAR;
 	commandList : POINTER TO ARRAY OF CHAR;
 	plugin : Plugins.Plugin;
-	i, size, len : SIZE; res : WORD;
+	i, size, len : SIZE; res : INTEGER;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(devicename);
 

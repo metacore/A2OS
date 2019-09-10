@@ -40,13 +40,13 @@ TYPE
 	END StoreM;
 
 	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version )
 	END LoadM;
 
 	PROCEDURE OneSweep( s: antsKernel.Kernel );
-	VAR x, y, maxx, maxy: LONGINT;  A: antsArrayObjects.tINTEGERArray;  ym, yp, xm, xp, config: LONGINT;  model: tModel;
+	VAR x, y, maxx, maxy: SIGNED32;  A: antsArrayObjects.tINTEGERArray;  ym, yp, xm, xp, config: SIGNED32;  model: tModel;
 		AO: antsArrayObjects.tINTEGERObject;  tempA: antsArrayObjects.tINTEGERObject;  orig: Objects.Object;
 
 		PROCEDURE DistriFromLocalChar;
@@ -145,7 +145,7 @@ TYPE
 		END  (* tVector*)
 	END Handler;
 
-	PROCEDURE OpenModel*( M: tModel;  name: vyName.tNameArray;  beta, h: LONGREAL );
+	PROCEDURE OpenModel*( M: tModel;  name: vyName.tNameArray;  beta, h: FLOAT64 );
 	BEGIN
 		IF M.handle # NIL THEN M.handle := Handler END;
 		vyName.RegisterNamed( M, name )
@@ -158,7 +158,7 @@ TYPE
 	END Gen;
 
 	PROCEDURE NewModel*;
-	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  M: tModel;  beta, h: LONGREAL;
+	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  M: tModel;  beta, h: FLOAT64;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=NAME" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) THEN
@@ -240,14 +240,14 @@ TYPE
 
 tModel* = POINTER TO tModelDesc ;
 tModelDesc* = RECORD (antsGibbs.tParameterDesc);
-MA: POINTER TO ARRAY OF ARRAY OF INTEGER;
+MA: POINTER TO ARRAY OF ARRAY OF SIGNED16;
 END;
 
 
 
 PROCEDURE OneSweep* (s: antsGibbs.tSampler);
-VAR  x,y,maxx,maxy: LONGINT ;    A: antsPictArray.tArray;  model: tModel;
-xm,xp,ym,yp: LONGINT;  config: LONGINT;  AO: antsPictArray.tObject;
+VAR  x,y,maxx,maxy: SIGNED32 ;    A: antsPictArray.tArray;  model: tModel;
+xm,xp,ym,yp: SIGNED32;  config: SIGNED32;  AO: antsPictArray.tObject;
 
 PROCEDURE DistriFromLocalChar ();
 BEGIN

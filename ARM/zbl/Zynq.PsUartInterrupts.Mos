@@ -18,12 +18,12 @@ VAR
 	intrHandler0, intrHandler1: UartInterruptHandler;
 	intrHandlerParam0, intrHandlerParam1: ANY;
 
-	PROCEDURE IntrHandlerUart0(irq: LONGINT);
+	PROCEDURE IntrHandlerUart0(irq: SIGNED32);
 	BEGIN
 		intrHandler0(intrHandlerParam0);
 	END IntrHandlerUart0;
 
-	PROCEDURE IntrHandlerUart1(irq: LONGINT);
+	PROCEDURE IntrHandlerUart1(irq: SIGNED32);
 	BEGIN
 		intrHandler1(intrHandlerParam1);
 	END IntrHandlerUart1;
@@ -37,7 +37,7 @@ VAR
 
 		Return: FALSE in case of a wrong value of UART ID or if interruptHandler is NIL
 	*)
-	PROCEDURE InstallInterruptHandler*(uart: LONGINT; interruptHandler: UartInterruptHandler; interruptHandlerParam: ANY): BOOLEAN;
+	PROCEDURE InstallInterruptHandler*(uart: SIGNED32; interruptHandler: UartInterruptHandler; interruptHandlerParam: ANY): BOOLEAN;
 	BEGIN
 		IF interruptHandler = NIL THEN
 			RETURN FALSE;

@@ -17,10 +17,10 @@ CONST
 	XYZ* = 3;   (** col=x, row=y, value=z *)
 
 TYPE
-	Datatype = REAL;
+	Datatype = FLOAT32;
 	Matrix = ARRAY [*,*] OF Datatype;
 	Point = ARRAY [*] OF Datatype;
-	IntPoint = ARRAY [*] OF LONGINT;
+	IntPoint = ARRAY [*] OF SIGNED32;
 
 TYPE
 
@@ -34,7 +34,7 @@ TYPE
 		modelI : MatrixModels.MatrixModel;
 
 		projection : Matrix;
-		widthI, heightI : LONGINT;
+		widthI, heightI : SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -130,10 +130,10 @@ TYPE
 
 		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
 		VAR
-			depth, x, y, col : LONGINT;
-			x0, y0, z0 : REAL;
+			depth, x, y, col : SIGNED32;
+			x0, y0, z0 : FLOAT32;
 			p : Point; p0, p1 : IntPoint;
-			scale : REAL; zscale, zrange, minz: REAL;
+			scale : FLOAT32; zscale, zrange, minz: FLOAT32;
 		BEGIN
 			DrawBackground^(canvas);
 			IF (modelI = NIL) THEN RETURN; END;
@@ -181,9 +181,9 @@ TYPE
 
 	Curve= OBJECT
 	VAR
-		linecol*: LONGINT;
-		linestyle*: LONGINT;
-		beg*, end*: LONGINT;
+		linecol*: SIGNED32;
+		linestyle*: SIGNED32;
+		beg*, end*: SIGNED32;
 		next: Curve;
 	END Curve;
 
@@ -191,8 +191,8 @@ TYPE
 	VAR
 		(*matrix: Matrix;*)
 		curves* : Curve;
-		X0, Y0, W, H : LONGINT;
-		minx, miny, maxx, maxy, scalex, scaley : LONGREAL;
+		X0, Y0, W, H : SIGNED32;
+		minx, miny, maxx, maxy, scalex, scaley : FLOAT64;
 	END Graph;
 
 TYPE
@@ -203,7 +203,7 @@ TYPE
 		autoscaleXI, autoscaleYI : BOOLEAN;
 
 		dataOrder- : WMProperties.Int32Property;
-		dataOrderI : LONGINT;
+		dataOrderI : SIGNED32;
 
 		graph : Graph;
 
@@ -252,7 +252,7 @@ TYPE
 
 		PROCEDURE DrawBackground(canvas : WMGraphics.Canvas);
 		VAR
-			i,j:LONGINT;
+			i,j:SIGNED32;
 			c: Curve;
 		BEGIN
 			DrawBackground^(canvas);
@@ -313,7 +313,7 @@ VAR
 	PrototypeModel : WMProperties.ReferenceProperty;
 
 (* cyclic symmetry *)
-PROCEDURE Clamp(x0, x1 : LONGINT; VAR x : LONGINT);
+PROCEDURE Clamp(x0, x1 : SIGNED32; VAR x : SIGNED32);
 BEGIN
 	x := (x - x0) MOD (x1 + 1- x0) + x0;
 END Clamp;

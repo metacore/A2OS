@@ -28,17 +28,17 @@ Report any problems as soon as possible to ants@AntsInFields.de
 IMPORT vyBase, antsObjects, Objects, antsCommands, vyName, antsArrayObjects, Files, aM := antsMessages;
 
 TYPE
-	tMeanArray = POINTER TO ARRAY OF ARRAY OF LONGREAL;
+	tMeanArray = POINTER TO ARRAY OF ARRAY OF FLOAT64;
 	tArray* = antsArrayObjects.tINTEGERArray;
 
 	tMean* = POINTER TO tMeanDesc;
 	tMeanDesc = RECORD (vyBase.ObjDesc)
 		A: tMeanArray;
-		count: LONGINT
+		count: SIGNED32
 	END;
 
 	PROCEDURE Add*( A: tArray;  to: tMean );
-	VAR y, x: LONGINT;
+	VAR y, x: SIGNED32;
 	BEGIN
 		IF to.A = NIL THEN
 			NEW( to.A, LEN( A^ ), LEN( A[0] ) );
@@ -53,8 +53,8 @@ TYPE
 		INC( to.count )
 	END Add;
 
-	PROCEDURE Get*( from: tMean;  to: tArray;  depth: LONGINT );
-	VAR y, x: LONGINT;
+	PROCEDURE Get*( from: tMean;  to: tArray;  depth: SIGNED32 );
+	VAR y, x: SIGNED32;
 	BEGIN
 		FOR y := 0 TO LEN( to^ ) - 1 DO
 			FOR x := 0 TO LEN( to[0] ) - 1 DO to[y, x] := SHORT( ENTIER( (from.A[y, x] * (depth - 1)) / from.count + 0.5 ) ) END
@@ -94,7 +94,7 @@ TYPE
 	END FrameLinks;
 
 	PROCEDURE HandleFileMsg( obj: tMean;  VAR msg: Objects.FileMsg );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 		(*! store Picts as GIF for color preserving or store colors *)
 	BEGIN
 		IF msg.id = Objects.load THEN Files.ReadInt( msg.R, version );  vyBase.objecthandle( obj, msg )

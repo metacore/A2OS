@@ -44,16 +44,16 @@ TYPE
 VAR
 	W, LogW: Texts.Writer;
 	init: BOOLEAN;
-	count: LONGINT;
+	count: SIGNED32;
 	task: Oberon.Task;
 	fixed: Fonts.Font;
 	buf: POINTER TO ARRAY OF CHAR;
 	log: Texts.Text;
 	oberonRunner : OberonRunner;
-	time0, date0: LONGINT;
+	time0, date0: SIGNED32;
 
 PROCEDURE OpenText(title: ARRAY OF CHAR; T: Texts.Text; system: BOOLEAN);
-VAR W: INTEGER;
+VAR W: SIGNED16;
 BEGIN
 	IF system THEN W := Display.Width DIV 8*3 ELSE W := 400 END;
 	Oberon.OpenText(title, T, W, 240)
@@ -62,7 +62,7 @@ END OpenText;
 (* --- Toolbox for system control *)
 
 PROCEDURE SetFont*;
-VAR beg, end, time: LONGINT; T: Texts.Text; S: Texts.Scanner; f: Fonts.Font;
+VAR beg, end, time: SIGNED32; T: Texts.Text; S: Texts.Scanner; f: Fonts.Font;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	IF (S.class = Texts.Char) & (S.c = "^") THEN
@@ -81,7 +81,7 @@ BEGIN
 END SetFont;
 
 PROCEDURE SetColor*;
-VAR beg, end, time: LONGINT; T: Texts.Text; S: Texts.Scanner; ch: CHAR;
+VAR beg, end, time: SIGNED32; T: Texts.Text; S: Texts.Scanner; ch: CHAR;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	IF (S.class = Texts.Char) & (S.c = "^") THEN
@@ -94,7 +94,7 @@ BEGIN
 END SetColor;
 
 PROCEDURE SetOffset*;
-VAR beg, end, time: LONGINT; T: Texts.Text;S: Texts.Scanner; ch: CHAR;
+VAR beg, end, time: SIGNED32; T: Texts.Text;S: Texts.Scanner; ch: CHAR;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	IF (S.class = Texts.Char) & (S.c = "^") THEN
@@ -107,9 +107,9 @@ BEGIN
 END SetOffset;
 
 PROCEDURE Time*;
-VAR par: Oberon.ParList; S: Texts.Scanner; t, d, hr, min, sec, yr, mo, day: LONGINT;
+VAR par: Oberon.ParList; S: Texts.Scanner; t, d, hr, min, sec, yr, mo, day: SIGNED32;
 
-	PROCEDURE WritePair(ch: CHAR; x: LONGINT);
+	PROCEDURE WritePair(ch: CHAR; x: SIGNED32);
 	BEGIN Texts.Write(W, ch);
 		Texts.Write(W, CHR(x DIV 10 + 30H)); Texts.Write(W, CHR(x MOD 10 + 30H))
 	END WritePair;
@@ -160,7 +160,7 @@ END Collect;
 (* --- Toolbox for standard display *)
 
 PROCEDURE Open*;
-VAR par: Oberon.ParList; T: Texts.Text; S: Texts.Scanner; beg, end, time: LONGINT;
+VAR par: Oberon.ParList; T: Texts.Text; S: Texts.Scanner; beg, end, time: SIGNED32;
 BEGIN
 	par := Oberon.Par;
 	Texts.OpenScanner(S, par.text, par.pos); Texts.Scan(S);
@@ -243,7 +243,7 @@ BEGIN
 END Copy;
 
 PROCEDURE Grow*;
-VAR par: Oberon.ParList; V, V1: Viewers.Viewer; M: Objects.CopyMsg; N: Display.ControlMsg; DW, DH: INTEGER;
+VAR par: Oberon.ParList; V, V1: Viewers.Viewer; M: Objects.CopyMsg; N: Display.ControlMsg; DW, DH: SIGNED16;
 BEGIN
 	par := Oberon.Par;
 	IF par.frame = par.vwr.dsc THEN V := par.vwr
@@ -264,10 +264,10 @@ END Grow;
 (* --- Toolbox for module management *)
 
 PROCEDURE Free*;
-VAR par: Oberon.ParList; S: Texts.Scanner; F: TextFrames.Frame; time, beg, end, pos: LONGINT; T: Texts.Text;
+VAR par: Oberon.ParList; S: Texts.Scanner; F: TextFrames.Frame; time, beg, end, pos: SIGNED32; T: Texts.Text;
 
 	PROCEDURE FreeFile;
-	(*VAR i: LONGINT;*)
+	(*VAR i: SIGNED32;*)
 	BEGIN
 		(*IF S.nextCh # "*" THEN Modules.Free(S.s, FALSE)
 		ELSE Modules.Free(S.s, TRUE); Texts.Scan(S)
@@ -321,7 +321,7 @@ BEGIN
 	END
 END Free;
 
-PROCEDURE WriteK(VAR W: Texts.Writer;  k: LONGINT);
+PROCEDURE WriteK(VAR W: Texts.Writer;  k: SIGNED32);
 VAR suffix: CHAR;
 BEGIN
 	IF k < 100*1024 THEN suffix := "K"
@@ -332,17 +332,17 @@ BEGIN
 END WriteK;
 
 PROCEDURE ShowModules*;
-VAR T: Texts.Text; M: Modules.Module; n, t: LONGINT; size: SIZE; tag: ADDRESS;
+VAR T: Texts.Text; M: Modules.Module; n, t: SIGNED32; size: SIZE; tag: ADDRESS;
 BEGIN
 	T := TextFrames.Text("");
 	M := AosModules.root; n := 0; t := 0;
 	WHILE M # NIL DO
 		SYSTEM.GET(SYSTEM.VAL(ADDRESS, M.code)- SIZEOF (ADDRESS), tag);	(* indirect tag *)
 		SYSTEM.GET(tag, size);
-		Texts.WriteString(W, M.name); Texts.WriteInt(W, LONGINT (size), 8);
-		Texts.WriteInt(W, LONGINT (M.refcnt), 4);
+		Texts.WriteString(W, M.name); Texts.WriteInt(W, SIGNED32 (size), 8);
+		Texts.WriteInt(W, SIGNED32 (M.refcnt), 4);
 		Texts.WriteLn(W); M := M.next;
-		INC(n); INC(t, LONGINT (size))
+		INC(n); INC(t, SIGNED32 (size))
 	END;
 	IF n > 1 THEN
 		Texts.WriteLn(W); Texts.WriteInt(W, n, 1); Texts.WriteString(W, " modules use ");
@@ -379,7 +379,7 @@ BEGIN
 END ShowLibraries;
 
 PROCEDURE FreeLibraries*;
-VAR par: Oberon.ParList; T: Texts.Text; S: Texts.Scanner; beg, end, time: LONGINT;
+VAR par: Oberon.ParList; T: Texts.Text; S: Texts.Scanner; beg, end, time: SIGNED32;
 BEGIN
 	par := Oberon.Par;
 	Texts.WriteString(W, "System.FreeLibraries "); Texts.WriteLn(W);
@@ -389,7 +389,7 @@ BEGIN
 		IF time # -1 THEN Texts.OpenScanner(S, T, beg); Texts.Scan(S)
 		ELSE S.class := Texts.Inval
 		END
-	ELSE end := MAX(LONGINT)
+	ELSE end := MAX(SIGNED32)
 	END;
 	WHILE (S.class = Texts.Name) & (Texts.Pos(S) <= end) DO
 		Objects.FreeLibrary(S.s); Texts.WriteString(W,S.s); Texts.WriteLn(W);
@@ -402,7 +402,7 @@ END FreeLibraries;
 
 PROCEDURE Directory*;
 VAR
-	beg, end, time, date: LONGINT; size, total: AosFS.Size; count: SIZE; enum: AosFS.Enumerator;
+	beg, end, time, date: SIGNED32; size, total: AosFS.Size; count: SIZE; enum: AosFS.Enumerator;
 	par: Oberon.ParList; R: Texts.Reader; T, t: Texts.Text; flags, fileflags: SET;
 	diroption, ch: CHAR; pat: ARRAY 32 OF CHAR;
 	name: AosFS.FileName;
@@ -448,7 +448,7 @@ BEGIN
 		    Texts.Write(W, 9X); Texts.WriteDate(W, time, date)
 		END;
 		IF AosFS.EnumSize IN flags THEN
-			Texts.Write(W, 9X); Texts.WriteInt(W, size(LONGINT), 1);
+			Texts.Write(W, 9X); Texts.WriteInt(W, size(SIGNED32), 1);
 			INC(total, size)
 		END;
 		Texts.WriteLn(W)
@@ -456,9 +456,9 @@ BEGIN
 	enum.Close;
 	NEW(t); Texts.Open(t, "");
 	IF count > 1 THEN
-		Texts.WriteLn(W);  Texts.WriteInt(W, count(LONGINT), 1); Texts.WriteString(W, " files");
+		Texts.WriteLn(W);  Texts.WriteInt(W, count(SIGNED32), 1); Texts.WriteString(W, " files");
 		IF AosFS.EnumSize IN flags THEN
-			Texts.WriteString(W, " use "); WriteK(W, (total(LONGINT)+1023) DIV 1024)
+			Texts.WriteString(W, " use "); WriteK(W, (total(SIGNED32)+1023) DIV 1024)
 		END
 	END;
 	Texts.Append(t, W.buf);
@@ -467,7 +467,7 @@ END Directory;
 
 PROCEDURE CopyFile(name: ARRAY OF CHAR; VAR S: Texts.Scanner);
 CONST BufLen = 8192;
-VAR f, g: Files.File; Rf, Rg: Files.Rider; buf : ARRAY BufLen OF CHAR; i: LONGINT;
+VAR f, g: Files.File; Rf, Rg: Files.Rider; buf : ARRAY BufLen OF CHAR; i: SIGNED32;
 BEGIN
 	Texts.Scan(S);
 	IF (S.class = Texts.Char) & (S.c = "=") THEN
@@ -498,7 +498,7 @@ BEGIN
 END CopyFile;
 
 PROCEDURE CopyFiles*;
-VAR beg, end, time: LONGINT; T: Texts.Text; S: Texts.Scanner;
+VAR beg, end, time: SIGNED32; T: Texts.Text; S: Texts.Scanner;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	Texts.WriteString(W, "System.CopyFiles"); Texts.WriteLn(W);
@@ -517,7 +517,7 @@ BEGIN
 END CopyFiles;
 
 PROCEDURE RenameFile (name: ARRAY OF CHAR; VAR S: Texts.Scanner);
-VAR res: INTEGER;
+VAR res: SIGNED16;
 BEGIN
 	Texts.Scan(S);
 	IF (S.class = Texts.Char) & (S.c = "=") THEN
@@ -536,7 +536,7 @@ BEGIN
 END RenameFile;
 
 PROCEDURE RenameFiles*;
-VAR beg, end, time: LONGINT; T: Texts.Text; S: Texts.Scanner;
+VAR beg, end, time: SIGNED32; T: Texts.Text; S: Texts.Scanner;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	Texts.WriteString(W, "System.RenameFiles"); Texts.WriteLn(W);
@@ -555,7 +555,7 @@ BEGIN
 END RenameFiles;
 
 PROCEDURE DeleteFile(VAR name: ARRAY OF CHAR;  VAR S: Texts.Scanner);
-VAR res: INTEGER;
+VAR res: SIGNED16;
 BEGIN
 	Texts.WriteString(W, name); Texts.WriteString(W, " deleting");
 	Texts.Append(Oberon.Log, W.buf); Files.Delete(name, res);
@@ -564,7 +564,7 @@ BEGIN
 END DeleteFile;
 
 PROCEDURE DeleteFiles*;
-VAR beg, end, time: LONGINT; T: Texts.Text; S: Texts.Scanner;
+VAR beg, end, time: SIGNED32; T: Texts.Text; S: Texts.Scanner;
 BEGIN
 	Oberon.GetSelection(T, beg, end, time);
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
@@ -596,8 +596,8 @@ BEGIN
 			IF fs.vol # NIL THEN
 				free := ENTIER(fs.vol.Available()/1024.0D0 * fs.vol.blockSize);
 				total := ENTIER(fs.vol.size/1024.0D0 * fs.vol.blockSize);
-				WriteK(W, LONGINT(free));  Texts.WriteString(W, " of ");
-				WriteK(W, LONGINT(total));  Texts.WriteString(W, " free")
+				WriteK(W, SIGNED32(free));  Texts.WriteString(W, " of ");
+				WriteK(W, SIGNED32(total));  Texts.WriteString(W, " free")
 			ELSE
 				Texts.WriteString(W, fs.desc)
 			END;
@@ -614,14 +614,14 @@ BEGIN
 	IF high > largest THEN largest := high END;
 	IF low > largest THEN largest := low END;
 	Texts.Write(W, 9X); Texts.WriteString(W, "Heap has ");
-	WriteK(W, LONGINT(free)); Texts.WriteString(W, " of ");
-	WriteK(W, LONGINT(total)); Texts.WriteString(W, " free (");
-	WriteK(W, LONGINT(largest)); Texts.WriteString(W, " contiguous)");  Texts.WriteLn(W);
+	WriteK(W, SIGNED32(free)); Texts.WriteString(W, " of ");
+	WriteK(W, SIGNED32(total)); Texts.WriteString(W, " free (");
+	WriteK(W, SIGNED32(largest)); Texts.WriteString(W, " contiguous)");  Texts.WriteLn(W);
 	Texts.Append(Oberon.Log, W.buf)
 END Watch;
 
-PROCEDURE GetNum(refs: Bytes;  VAR i: SIZE; VAR num: LONGINT);
-VAR n, s: LONGINT;  x: CHAR;
+PROCEDURE GetNum(refs: Bytes;  VAR i: SIZE; VAR num: SIGNED32);
+VAR n, s: SIGNED32;  x: CHAR;
 BEGIN
 	s := 0;  n := 0;  x := refs[i];  INC(i);
 	WHILE ORD(x) >= 128 DO
@@ -646,8 +646,8 @@ END GetNum;
 
 (* FindProc - Find a procedure in the reference block.  Return index of name, or -1 if not found. *)
 
-PROCEDURE FindProc(refs: Bytes;  ofs: LONGINT): SIZE;
-VAR i, m, proc: SIZE; t: LONGINT;  ch: CHAR;
+PROCEDURE FindProc(refs: Bytes;  ofs: SIGNED32): SIZE;
+VAR i, m, proc: SIZE; t: SIGNED32;  ch: CHAR;
 BEGIN
 	proc := -1;  i := 0;  m := LEN(refs^);
 	ch := refs[i];  INC(i);
@@ -680,37 +680,37 @@ BEGIN
 	RETURN proc
 END FindProc;
 
-PROCEDURE WriteProc(mod: Modules.Module;  pc, fp: ADDRESS;  VAR refs: Bytes;  VAR refpos: SIZE; VAR base: LONGINT);
+PROCEDURE WriteProc(mod: Modules.Module;  pc, fp: ADDRESS;  VAR refs: Bytes;  VAR refpos: SIZE; VAR base: SIGNED32);
 VAR ch: CHAR;
 BEGIN
 	refpos := -1;
 	IF mod = NIL THEN
-		Texts.WriteString(W, "Unknown EIP =");  Texts.WriteHex(W, LONGINT(pc));  Texts.Write(W, "H");
+		Texts.WriteString(W, "Unknown EIP =");  Texts.WriteHex(W, SIGNED32(pc));  Texts.Write(W, "H");
 		IF fp # -1 THEN
-			Texts.WriteString(W, " EBP =");  Texts.WriteHex(W, LONGINT(fp));  Texts.Write(W, "H")
+			Texts.WriteString(W, " EBP =");  Texts.WriteHex(W, SIGNED32(fp));  Texts.Write(W, "H")
 		END
 	ELSE
 		Texts.WriteString(W, mod.name);
-		DEC(pc, LONGINT(ADDRESSOF(mod.code[0])));
+		DEC(pc, SIGNED32(ADDRESSOF(mod.code[0])));
 		refs := SYSTEM.VAL(Bytes, mod.refs);
 		IF (refs # NIL) & (LEN(mod.refs) # 0) THEN
-			refpos := FindProc(refs, LONGINT(pc));
+			refpos := FindProc(refs, SIGNED32(pc));
 			IF refpos # -1 THEN
 				Texts.Write(W, ".");
 				ch := refs[refpos];  INC(refpos);
-				IF ch = "$" THEN base := LONGINT(mod.sb) ELSE base := LONGINT(fp) END;	(* for variables *)
+				IF ch = "$" THEN base := SIGNED32(mod.sb) ELSE base := SIGNED32(fp) END;	(* for variables *)
 				WHILE ch # 0X DO Texts.Write(W, ch);  ch := refs[refpos];  INC(refpos) END
 			END
 		END;
-		Texts.WriteString(W, "  PC = "); Texts.WriteInt(W, LONGINT(pc), 1)
+		Texts.WriteString(W, "  PC = "); Texts.WriteInt(W, SIGNED32(pc), 1)
 	END
 END WriteProc;
 
-PROCEDURE Variables(refs: Bytes;  i: SIZE; base: LONGINT);
+PROCEDURE Variables(refs: Bytes;  i: SIZE; base: SIGNED32);
 VAR
-	mode, ch: CHAR;  m, tmp1: SIZE; adr, type, n, lval, size, tmp2, tdadr: LONGINT;  etc: BOOLEAN;
-	sval: SHORTINT;  ival: INTEGER;  tmp: Bytes;  set: SET;
-	rval: REAL;  lrval: LONGREAL;
+	mode, ch: CHAR;  m, tmp1: SIZE; adr, type, n, lval, size, tmp2, tdadr: SIGNED32;  etc: BOOLEAN;
+	sval: SIGNED8;  ival: SIGNED16;  tmp: Bytes;  set: SET;
+	rval: FLOAT32;  lrval: FLOAT64;
 BEGIN
 	m := LEN(refs^);  mode := refs[i];  INC(i);
 	WHILE (i < m) & (mode >= 1X) & (mode <= 3X) DO	(* var *)
@@ -772,15 +772,15 @@ BEGIN
 							ELSIF ch = 1X THEN Texts.WriteString(W, "TRUE")
 							ELSE Texts.WriteInt(W, ORD(ch), 1)
 							END
-						|4:	(* SHORTINT *)
+						|4:	(* SIGNED8 *)
 							SYSTEM.GET(adr, sval);  Texts.WriteInt(W, sval, 1)
-						|5:	(* INTEGER *)
+						|5:	(* SIGNED16 *)
 							SYSTEM.GET(adr, ival);  Texts.WriteInt(W, ival, 1)
-						|6:	(* LONGINT *)
+						|6:	(* SIGNED32 *)
 							SYSTEM.GET(adr, lval);  Texts.WriteInt(W, lval, 1)
-						|7:	(* REAL *)
+						|7:	(* FLOAT32 *)
 							SYSTEM.GET(adr, rval);  Texts.WriteReal(W, rval, 15)
-						|8:	(* LONGREAL *)
+						|8:	(* FLOAT64 *)
 							SYSTEM.GET(adr, lrval);  Texts.WriteLongReal(W, lrval, 24)
 						|9:	(* SET *)
 							SYSTEM.GET(adr, set);  Texts.WriteSet(W, set)
@@ -791,7 +791,7 @@ BEGIN
 							IF lval = 0 THEN Texts.WriteString(W, "NIL")
 							ELSE WriteProc(AosModules.ThisModuleByAdr(lval), lval, -1, tmp, tmp1, tmp2)
 							END
-						|16:	(* HUGEINT *)
+						|16:	(* SIGNED64 *)
 							Texts.WriteHex(W, SYSTEM.GET32(adr+4));
 							Texts.WriteHex(W, SYSTEM.GET32(adr))
 						|22:	(* RECORD *)
@@ -816,13 +816,13 @@ BEGIN
 	Texts.WriteString(W, name); mod := AosModules.root;
 	WHILE (mod # NIL) & (mod.name # name) DO mod := mod.next END;
 	IF mod # NIL THEN
-		Texts.WriteString(W, "  SB ="); Texts.WriteHex(W, LONGINT(mod.sb)); Texts.Write(W, "H");  Texts.WriteLn(W);
+		Texts.WriteString(W, "  SB ="); Texts.WriteHex(W, SIGNED32(mod.sb)); Texts.Write(W, "H");  Texts.WriteLn(W);
 		refs := SYSTEM.VAL(Bytes, mod.refs);
 		IF (refs # NIL) & (LEN(mod.refs) # 0) THEN
 			refpos := FindProc(refs, 0);	(* assume module body is at PC = 0 (not true for OMI) *)
 			IF refpos # -1 THEN
 				REPEAT ch := refs[refpos];  INC(refpos) UNTIL ch = 0X;
-				Variables(refs, refpos, LONGINT(mod.sb))
+				Variables(refs, refpos, SIGNED32(mod.sb))
 			END
 		END
 	ELSE
@@ -832,7 +832,7 @@ BEGIN
 END OutState;
 
 PROCEDURE State*;
-VAR T: Texts.Text; S: Texts.Scanner; beg, end, time: LONGINT;
+VAR T: Texts.Text; S: Texts.Scanner; beg, end, time: SIGNED32;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	IF (S.class = Texts.Char) & (S.c = "^") THEN
@@ -846,7 +846,7 @@ BEGIN
 END State;
 
 PROCEDURE ShowCommands*;
-VAR M: Modules.Module; beg, end, time: LONGINT; T: Texts.Text; S: Texts.Scanner; i: INTEGER;
+VAR M: Modules.Module; beg, end, time: SIGNED32; T: Texts.Text; S: Texts.Scanner; i: SIGNED16;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	IF (S.class = Texts.Char) & (S.c = "^") THEN
@@ -877,13 +877,13 @@ BEGIN
 END ShowCommands;
 
 PROCEDURE ShowTasks*;
-VAR T: Texts.Text;  n: Oberon.Task;  ofs: ADDRESS; t: LONGINT;  m: Modules.Module;
+VAR T: Texts.Text;  n: Oberon.Task;  ofs: ADDRESS; t: SIGNED32;  m: Modules.Module;
 BEGIN
 	n := Oberon.NextTask;  t := Input.Time();
 	REPEAT
 		ofs := SYSTEM.VAL(ADDRESS, n.handle);  m := AosModules.ThisModuleByAdr(ofs);
 		Texts.WriteString(W, m.name);  Texts.WriteString(W, "  PC = ");
-		Texts.WriteInt(W, LONGINT(ofs-ADDRESSOF(m.code[0])), 1);
+		Texts.WriteInt(W, SIGNED32(ofs-ADDRESSOF(m.code[0])), 1);
 		IF n.safe THEN Texts.WriteString(W, "  safe  ")
 		ELSE Texts.WriteString(W, "  unsafe  ")
 		END;
@@ -903,7 +903,7 @@ BEGIN
 END ShowTasks;
 
 (*
-PROCEDURE WriteTrap(VAR W: Texts.Writer;  error, page: LONGINT);
+PROCEDURE WriteTrap(VAR W: Texts.Writer;  error, page: SIGNED32);
 BEGIN
 	Texts.WriteString(W, "TRAP "); Texts.WriteInt(W, error, 1);
 	Texts.WriteString(W, "  ");
@@ -934,7 +934,7 @@ BEGIN
 			|26: Texts.WriteString(W, "Not a valid volume")
 			|27: Texts.WriteString(W, "Cannot contact server ")
 		ELSE
-			IF error = MAX(INTEGER) THEN Texts.WriteString(W, "Trace ");  Texts.WriteInt(W, trap, 1);  INC(trap)
+			IF error = MAX(SIGNED16) THEN Texts.WriteString(W, "Trace ");  Texts.WriteInt(W, trap, 1);  INC(trap)
 			ELSE Texts.WriteString(W, "HALT statement")
 			END
 		END
@@ -960,16 +960,16 @@ BEGIN
 	END
 END WriteTrap;
 
-PROCEDURE Trap*(error, fp, pc, page: LONGINT);	(** non-portable *)	(* exported for Debug debugger *)
+PROCEDURE Trap*(error, fp, pc, page: SIGNED32);	(** non-portable *)	(* exported for Debug debugger *)
 VAR
-	T: Texts.Text;  refpos: LONGINT;
-	mod: Modules.Module;  lastfp, base: LONGINT;  refs: Bytes;
+	T: Texts.Text;  refpos: SIGNED32;
+	mod: Modules.Module;  lastfp, base: SIGNED32;  refs: Bytes;
 BEGIN
 	IF trapped = 0 THEN
 		trapped := 1;
 		Display.ResetClip;
 		IF Kernel.copro THEN Reals.SetFCR(Reals.DefaultFCR) ELSE resetfp() END;
-		IF error # MAX(INTEGER) THEN Viewers.Close(NIL) END;	(* close offending viewer, if any *)
+		IF error # MAX(SIGNED16) THEN Viewers.Close(NIL) END;	(* close offending viewer, if any *)
 		T := TextFrames.Text("");
 		mod := AosModules.ThisModuleByAdr(pc);
 		WriteTrap(W, error, page); Texts.WriteLn(W);
@@ -1008,7 +1008,7 @@ BEGIN
 END Standalone;
 
 PROCEDURE FreeOberon;
-VAR context : Commands.Context; arg : Streams.StringReader; res: WORD; msg: ARRAY 128 OF CHAR;
+VAR context : Commands.Context; arg : Streams.StringReader; res: INTEGER; msg: ARRAY 128 OF CHAR;
 BEGIN
 	Oberon.OpenTrack(0, Display.Width);	(* inhibit display updates *)
 	COPY(OberonBaseModule, msg);
@@ -1038,7 +1038,7 @@ BEGIN
 END Reboot;
 
 PROCEDURE LogHandler(me: Oberon.Task);
-VAR i: LONGINT; t: Texts.Text; ch: CHAR; s: ARRAY 512 OF CHAR;
+VAR i: SIGNED32; t: Texts.Text; ch: CHAR; s: ARRAY 512 OF CHAR;
 BEGIN
 	t := log;
 	REPEAT
@@ -1131,7 +1131,7 @@ BEGIN
 	Texts.Append(Oberon.Log, W.buf)
 END Greetings;
 
-PROCEDURE WriteType(VAR W: Texts.Writer;  adr: LONGINT);
+PROCEDURE WriteType(VAR W: Texts.Writer;  adr: SIGNED32);
 VAR m: AosModules.Module;  t: AosModules.TypeDesc;
 BEGIN
 	AosModules.ThisTypeByAdr(adr, m, t);
@@ -1148,8 +1148,8 @@ END WriteType;
 PROCEDURE ShowActive*;	(** non-portable *)
 VAR
 	processes : ARRAY ProcessInfo.MaxNofProcesses OF AosActive.Process; nofProcesses : SIZE;
-	t: AosActive.Process;  i: SIZE; mode, adr: LONGINT;  T: Texts.Text;
-	tmp1: SIZE; pc, tmp2: LONGINT; refs: Bytes;
+	t: AosActive.Process;  i: SIZE; mode, adr: SIGNED32;  T: Texts.Text;
+	tmp1: SIZE; pc, tmp2: SIGNED32; refs: Bytes;
 BEGIN
 	ProcessInfo.GetProcesses(processes, nofProcesses);
 	ProcessInfo.Sort(processes, nofProcesses, ProcessInfo.SortByID);
@@ -1170,8 +1170,8 @@ BEGIN
 			ELSE Texts.WriteInt(W, mode, 3)
 		END;
 		Texts.WriteInt(W, t.procID, 2); Texts.WriteInt(W, t.priority, 2);
-		(*Texts.WriteHex(W, SYSTEM.VAL(LONGINT, t));  Texts.Write(W, "H");*)
-		adr := LONGINT(ADDRESS(t.obj));
+		(*Texts.WriteHex(W, SYSTEM.VAL(SIGNED32, t));  Texts.Write(W, "H");*)
+		adr := SIGNED32(ADDRESS(t.obj));
 		IF adr # 0 THEN
 			Texts.WriteHex(W, adr);  Texts.Write(W, "H");
 			SYSTEM.GET(adr-4, adr);  Texts.Write(W, ":");  WriteType(W, adr)
@@ -1180,16 +1180,16 @@ BEGIN
 		END;
 		(*Texts.WriteHex(W, t.state.EIP);  Texts.Write(W, "H");*)
 		IF mode = AosActive.AwaitingLock THEN
-			adr := LONGINT(ADDRESS(t.waitingOn));
+			adr := SIGNED32(ADDRESS(t.waitingOn));
 			Texts.WriteHex(W, adr);  Texts.Write(W, "H");
 			IF adr # 0 THEN
 				SYSTEM.GET(adr-4, adr);  Texts.Write(W, ":");  WriteType(W, adr)
 			END
 		ELSIF mode = AosActive.AwaitingCond THEN
 			Texts.Write(W, " ");
-			pc := LONGINT(ADDRESS(t.condition));
+			pc := SIGNED32(ADDRESS(t.condition));
 			WriteProc(AosModules.ThisModuleByAdr(pc), pc, t.condFP, refs, tmp1, tmp2);
-			(*Texts.WriteHex(W, SYSTEM.VAL(LONGINT, t.condition));  Texts.Write(W, "H");*)
+			(*Texts.WriteHex(W, SYSTEM.VAL(SIGNED32, t.condition));  Texts.Write(W, "H");*)
 			(*Texts.WriteHex(W, t.condFP);  Texts.Write(W, "H")*)
 		END;
 		IF AosActive.Restart IN t.flags THEN Texts.WriteString(W, " rst") END;
@@ -1209,7 +1209,7 @@ END ShowActive;
 
 PROCEDURE StopProcess(halt: BOOLEAN);
 VAR
-	s: Texts.Scanner;  text: Texts.Text;  beg, end, time: LONGINT;
+	s: Texts.Scanner;  text: Texts.Text;  beg, end, time: SIGNED32;
 	n : AosActive.Process;
 BEGIN
 	Oberon.GetSelection(text, beg, end, time);
@@ -1299,7 +1299,7 @@ END StopLog;
 (** Load the window manager and jump into it. *)
 
 	PROCEDURE LoadWM;
-	VAR res: WORD; s: ARRAY 128 OF CHAR;
+	VAR res: INTEGER; s: ARRAY 128 OF CHAR;
 	BEGIN
 		IF Standalone() THEN
 			Oberon.OpenTrack(0, Display.Width);	(* inhibit display updates *)

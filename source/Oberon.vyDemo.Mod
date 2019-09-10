@@ -34,7 +34,7 @@ CONST
 	idversion* = 	"vyDemo v0r0d3";
 
 PROCEDURE SetLevel*;
-	VAR x: REAL;
+	VAR x: FLOAT32;
 BEGIN
 	In.Open;  In.Real (x);
 	IF In.Done THEN vyRegress.level := x;

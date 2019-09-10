@@ -14,10 +14,10 @@ MODULE SaveDecay IN Oberon;
 		versionString = "SaveDecay 1999.11.05";
 
 	VAR
-		depth: ARRAY 1280 OF INTEGER;
+		depth: ARRAY 1280 OF SIGNED16;
 
 	PROCEDURE Start;
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		SaveScreen.SetFrameRate(30);
 		FOR i := 0 TO Display.Width - 1 DO
@@ -27,7 +27,7 @@ MODULE SaveDecay IN Oberon;
 
 	PROCEDURE Step;
 		VAR
-			i, x: INTEGER;
+			i, x: SIGNED16;
 	BEGIN
 		FOR i := 1 TO 128  DO
 			x := SaveScreen.Rand(Display.Width);

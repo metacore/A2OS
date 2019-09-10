@@ -22,12 +22,12 @@ MODULE LPRPrinter IN Oberon;	(** portable *)  (* ejz , LPR Version of PSPrinter,
 		W: Texts.Writer;
 		buffer: ARRAY BufLen OF CHAR;
 		opts: String;
-		jobNr: INTEGER;
+		jobNr: SIGNED16;
 		bannerPage, mailBack: BOOLEAN;
 		host, queue: ARRAY 64 OF CHAR;
 
 	PROCEDURE SendString(C: NetSystem.Connection; str: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE str[i] # 0X DO
@@ -36,10 +36,10 @@ MODULE LPRPrinter IN Oberon;	(** portable *)  (* ejz , LPR Version of PSPrinter,
 		NetSystem.WriteBytes(C, 0, i, str)
 	END SendString;
 
-	PROCEDURE Connect(VAR C: NetSystem.Connection; host: ARRAY OF CHAR; VAR res: INTEGER): BOOLEAN;
+	PROCEDURE Connect(VAR C: NetSystem.Connection; host: ARRAY OF CHAR; VAR res: SIGNED16): BOOLEAN;
 		VAR
 			adr: NetSystem.IPAdr;
-			locport: INTEGER;
+			locport: SIGNED16;
 	BEGIN
 		NetSystem.GetIP(host, adr);
 		IF IP.AdrsEqual(adr, NetSystem.anyIP) THEN
@@ -60,7 +60,7 @@ MODULE LPRPrinter IN Oberon;	(** portable *)  (* ejz , LPR Version of PSPrinter,
 	END Connect;
 
 	PROCEDURE ScanDest(VAR name, host, queue: ARRAY OF CHAR);
-		VAR i, j: INTEGER;
+		VAR i, j: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE (name[i] # 0X) & (name[i] # "@") DO
@@ -80,10 +80,10 @@ MODULE LPRPrinter IN Oberon;	(** portable *)  (* ejz , LPR Version of PSPrinter,
 		END
 	END ScanDest;
 
-	PROCEDURE IntToStr(val: LONGINT; VAR str: ARRAY OF CHAR);
+	PROCEDURE IntToStr(val: SIGNED32; VAR str: ARRAY OF CHAR);
 		VAR
-			i, j: LONGINT;
-			digits: ARRAY 16 OF LONGINT;
+			i, j: SIGNED32;
+			digits: ARRAY 16 OF SIGNED32;
 	BEGIN
 		IF val < 0 THEN
 			val := ABS(val);
@@ -108,7 +108,7 @@ MODULE LPRPrinter IN Oberon;	(** portable *)  (* ejz , LPR Version of PSPrinter,
 	END IntToStr;
 
 	PROCEDURE Concat(VAR str: ARRAY OF CHAR; str2: ARRAY OF CHAR);
-		VAR i, j, l: INTEGER;
+		VAR i, j, l: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE str[i] # 0X DO
@@ -125,7 +125,7 @@ MODULE LPRPrinter IN Oberon;	(** portable *)  (* ejz , LPR Version of PSPrinter,
 	END Concat;
 
 	PROCEDURE ConcatCh(VAR str: ARRAY OF CHAR; ch: CHAR);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE str[i] # 0X DO
@@ -142,7 +142,7 @@ MODULE LPRPrinter IN Oberon;	(** portable *)  (* ejz , LPR Version of PSPrinter,
 			email, dataFile, controlFile: ARRAY 64 OF CHAR;
 			docName: ARRAY 128 OF CHAR;
 			nrStr: ARRAY 8 OF CHAR;
-			i, j, k, res: INTEGER;
+			i, j, k, res: SIGNED16;
 			state: CHAR;
 			S: Texts.Scanner;
 	BEGIN
@@ -299,7 +299,7 @@ MODULE LPRPrinter IN Oberon;	(** portable *)  (* ejz , LPR Version of PSPrinter,
 			S: Texts.Scanner;
 			name, options: String;
 			F: Files.File;
-			i: INTEGER;
+			i: SIGNED16;
 			ch, open: CHAR;
 			host, queue: ARRAY 64 OF CHAR;
 	BEGIN
@@ -349,8 +349,8 @@ MODULE LPRPrinter IN Oberon;	(** portable *)  (* ejz , LPR Version of PSPrinter,
 
 	PROCEDURE ReadText(C: NetSystem.Connection; VAR W: Texts.Writer);
 		VAR
-			len, rlen: LONGINT;
-			state, i: INTEGER;
+			len, rlen: SIGNED32;
+			state, i: SIGNED16;
 	BEGIN
 		state := NetSystem.inout;
 		len := NetSystem.Available(C);
@@ -389,7 +389,7 @@ MODULE LPRPrinter IN Oberon;	(** portable *)  (* ejz , LPR Version of PSPrinter,
 			R: Texts.Reader;
 			C: NetSystem.Connection;
 			host, queue, name: ARRAY 64 OF CHAR;
-			i, res: INTEGER;
+			i, res: SIGNED16;
 			ch, open: CHAR;
 	BEGIN
 		Texts.OpenReader(R, Oberon.Par.text, Oberon.Par.pos);
@@ -438,7 +438,7 @@ MODULE LPRPrinter IN Oberon;	(** portable *)  (* ejz , LPR Version of PSPrinter,
 			C: NetSystem.Connection;
 			email: ARRAY 64 OF CHAR;
 			name, host, queue, job: ARRAY 64OF CHAR;
-			i, res: INTEGER;
+			i, res: SIGNED16;
 			ch, open: CHAR;
 	BEGIN
 		Oberon.OpenScanner(S, "NetSystem.EMail");

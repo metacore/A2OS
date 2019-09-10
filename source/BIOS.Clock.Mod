@@ -10,8 +10,8 @@ CONST
 TYPE
 	Clock = OBJECT
 		VAR
-			clockmode: LONGINT;
-			second, minute, hour, day, month, year: INTEGER;
+			clockmode: SIGNED32;
+			second, minute, hour, day, month, year: SIGNED16;
 
 		PROCEDURE ReadClock;
 		BEGIN
@@ -32,8 +32,8 @@ TYPE
 			END
 		END HandleInterrupt;
 
-		PROCEDURE Get(VAR time, date: LONGINT);
-		VAR y, o, d, h, m, s: LONGINT;
+		PROCEDURE Get(VAR time, date: SIGNED32);
+		VAR y, o, d, h, m, s: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF clockmode = 1 THEN	(* poll, ref p. 750 of undocumented pc *)
 				REPEAT	(* until same clock value read twice in a row *)
@@ -54,7 +54,7 @@ TYPE
 			date := y*512 + o*32 + d
 		END Get;
 
-		PROCEDURE Set(time, date: LONGINT);
+		PROCEDURE Set(time, date: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			Machine.PutNVByte(0BH, 82X);	(* disable clock & interrupt *)
 			second := IntToBCD(time MOD 64);
@@ -72,7 +72,7 @@ TYPE
 			Machine.PutNVByte(0BH, 12X)	(* 24 hour mode & 1 second interrupt *)
 		END Set;
 
-		PROCEDURE GetSecond(): LONGINT;
+		PROCEDURE GetSecond(): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN second
 		END GetSecond;
@@ -112,33 +112,33 @@ TYPE
 	END Clock;
 
 VAR
-	tz*: LONGINT;	(** system time zone offset in minutes (from -720 to 720) *)
-	starttime*, startdate*: LONGINT;	(** time this module was loaded (usually boot time) *)
+	tz*: SIGNED32;	(** system time zone offset in minutes (from -720 to 720) *)
+	starttime*, startdate*: SIGNED32;	(** time this module was loaded (usually boot time) *)
 	clock: Clock;
-	Nmissed, Nints: LONGINT;
+	Nmissed, Nints: SIGNED32;
 
 (* BCDToInt/IntToBCD - Decode/Encode 2 BCD digits *)
 
-PROCEDURE BCDToInt(x: LONGINT): LONGINT;
+PROCEDURE BCDToInt(x: SIGNED32): SIGNED32;
 BEGIN
 	RETURN (x DIV 16) * 10 + x MOD 16
 END BCDToInt;
 
-PROCEDURE IntToBCD(x: LONGINT): INTEGER;
+PROCEDURE IntToBCD(x: SIGNED32): SIGNED16;
 BEGIN
 	RETURN SHORT((x DIV 10) * 16 + x MOD 10)
 END IntToBCD;
 
 (** Return the current time and date in Oberon format. *)
 
-PROCEDURE Get*(VAR time, date: LONGINT);
+PROCEDURE Get*(VAR time, date: SIGNED32);
 BEGIN
 	clock.Get(time, date)
 END Get;
 
 (** Set the current time and date in Oberon format. *)
 
-PROCEDURE Set*(time, date: LONGINT);
+PROCEDURE Set*(time, date: SIGNED32);
 BEGIN
 	clock.Set(time, date)
 END Set;
@@ -167,7 +167,7 @@ The time and date are that of the real-time clock of the system, which may be se
 
 The tz variable indicates the system time zone offset from universal time in minutes.  It may be updated at any time due to daylight savings time.  E.g. MET DST is 2 * 60 = 120.
 
-The time and date are each represented in an encoded LONGINT.
+The time and date are each represented in an encoded SIGNED32.
 
 Converting from year, month, day, hour, minute, second to time, date:
 	time := hour*4096 + minute*64 + second;

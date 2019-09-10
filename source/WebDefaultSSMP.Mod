@@ -9,18 +9,18 @@ IMPORT
 CONST Samples = 60;
 
 TYPE
-	TimeSampleQueryMethod = PROCEDURE {DELEGATE} () : LONGINT;
+	TimeSampleQueryMethod = PROCEDURE {DELEGATE} () : SIGNED32;
 
 	TimeSampler = OBJECT
 	VAR
-		hits : POINTER TO ARRAY OF LONGINT;
-		pos : LONGINT;
+		hits : POINTER TO ARRAY OF SIGNED32;
+		pos : SIGNED32;
 		timer : Kernel.Timer;
 		query : TimeSampleQueryMethod;
-		interval, nofSamples : LONGINT;
+		interval, nofSamples : SIGNED32;
 		alive : BOOLEAN;
 
-		PROCEDURE &Init*(queryMethod : TimeSampleQueryMethod; interval, samples : LONGINT);
+		PROCEDURE &Init*(queryMethod : TimeSampleQueryMethod; interval, samples : SIGNED32);
 		BEGIN
 			NEW(timer); SELF.interval := interval; SELF.nofSamples := samples; SELF.query := queryMethod; NEW(hits, samples)
 		END Init;
@@ -31,8 +31,8 @@ TYPE
 			INC(pos); pos := pos MOD nofSamples
 		END Step;
 
-		PROCEDURE QuerySamples(VAR x : ARRAY OF LONGINT);
-		VAR i : LONGINT;
+		PROCEDURE QuerySamples(VAR x : ARRAY OF SIGNED32);
+		VAR i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			FOR i := 0 TO nofSamples - 1 DO
 				x[i] := hits[(pos + i) MOD nofSamples]
@@ -54,9 +54,9 @@ TYPE
 
 VAR hitSampler : TimeSampler;
 (** samples are values 0..100*)
-PROCEDURE HTMLBarChartVertical(VAR out : Streams.Writer; samples : ARRAY OF LONGINT; start, end : LONGINT;
-							chartheight, barwidth, border, color: LONGINT);
-VAR i, v : LONGINT;
+PROCEDURE HTMLBarChartVertical(VAR out : Streams.Writer; samples : ARRAY OF SIGNED32; start, end : SIGNED32;
+							chartheight, barwidth, border, color: SIGNED32);
+VAR i, v : SIGNED32;
 BEGIN
 	IF chartheight <= 0 THEN chartheight := 100 END;
 	IF barwidth <= 0 THEN barwidth := 20 END;
@@ -86,7 +86,7 @@ BEGIN
 END ServerNofRequests;
 
 PROCEDURE ServerRPMChart(VAR request : WebHTTP.RequestHeader; VAR in : Streams.Reader; VAR out : Streams.Writer);
-VAR values : ARRAY 60 OF LONGINT; max: LONGINT; i : LONGINT;
+VAR values : ARRAY 60 OF SIGNED32; max: SIGNED32; i : SIGNED32;
 BEGIN
 	hitSampler.QuerySamples(values);
 	FOR i := 0 TO 60 - 1 DO IF max < values[i] THEN max := values[i] END END;
@@ -101,7 +101,7 @@ BEGIN
 END ServerNofRequestsPerMinute;
 
 PROCEDURE SystemTime(VAR request : WebHTTP.RequestHeader; VAR in : Streams.Reader; VAR out : Streams.Writer);
-VAR time, date: LONGINT;
+VAR time, date: SIGNED32;
 BEGIN
 	Clock.Get(time, date); out.Date822(time, date, Clock.tz);
 END SystemTime;
@@ -112,7 +112,7 @@ BEGIN
 END SystemStartTime;
 
 PROCEDURE SystemLoad(VAR request : WebHTTP.RequestHeader; VAR in : Streams.Reader; VAR out : Streams.Writer);
-VAR x, i: LONGINT;
+VAR x, i: SIGNED32;
 BEGIN
 	FOR i := 0 TO 2 DO
 		x := ENTIER(Performance.load[i]*100 + 0.5);
@@ -122,7 +122,7 @@ BEGIN
 END SystemLoad;
 
 PROCEDURE SystemIdle(VAR request : WebHTTP.RequestHeader; VAR in : Streams.Reader; VAR out : Streams.Writer);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	i := 0;
 	WHILE (i < LEN(Performance.idle)) & (Performance.idle[i] > - 1) DO
@@ -159,7 +159,7 @@ BEGIN
 END SystemState;
 
 PROCEDURE SystemGet(VAR request : WebHTTP.RequestHeader; VAR in : Streams.Reader; VAR out : Streams.Writer);
-VAR v: Reflection.Variable; col: LONGINT; mod, var: ARRAY 32 OF CHAR;
+VAR v: Reflection.Variable; col: SIGNED32; mod, var: ARRAY 32 OF CHAR;
 BEGIN
 	in.SkipWhitespace;
 	ReadName(in, mod);
@@ -206,7 +206,7 @@ BEGIN
 	WebSSMPPlugin.UnregisterMethod("System.Get")
 END Cleanup;
 
-PROCEDURE QueryRPM():LONGINT;
+PROCEDURE QueryRPM():SIGNED32;
 BEGIN
 	RETURN WebHTTPServer.requestsPerMinute
 END QueryRPM;

@@ -24,7 +24,7 @@ MODULE TelnetGadgets IN Oberon; (** portable *)	(* ip/mh/mg 17.3.94 / 5.7.1994 /
 
 		TaskDesc = RECORD (Oberon.TaskDesc)
 			T: Terminal;
-			colon: INTEGER;
+			colon: SIGNED16;
 			user, passwd: ARRAY 32 OF CHAR
 		END;
 
@@ -34,14 +34,14 @@ VAR
 	W: Texts.Writer;
 
 	PROCEDURE Connected(C: NetSystem.Connection): BOOLEAN;
-		VAR state: INTEGER;
+		VAR state: SIGNED16;
 	BEGIN
 		state := NetSystem.State(C);
 		RETURN (state = NetSystem.inout)
 	END Connected;
 
 PROCEDURE Send0(T: Terminals.Terminal; ch: CHAR);
-	VAR len, l: LONGINT;
+	VAR len, l: SIGNED32;
 BEGIN
 	WITH T: Terminal DO
 		IF Connected(T.C) THEN
@@ -68,7 +68,7 @@ PROCEDURE Break0(T: Terminals.Terminal);
 END Break0;
 
 PROCEDURE WriteString(T: Terminals.Terminal; str: ARRAY OF CHAR);
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN i := 0;
 	WHILE str[i] # 0X DO Terminals.Receive(T,str[i]); INC(i); END;
 END WriteString;
@@ -78,7 +78,7 @@ BEGIN
 	Terminals.Receive(T,0DX); Terminals.Receive(T,0AX)
 END WriteLn;
 
-PROCEDURE Sb (C: NetSystem.Connection; VAR l: INTEGER);
+PROCEDURE Sb (C: NetSystem.Connection; VAR l: SIGNED16);
 	VAR ch, ch0, ch1: CHAR;
 		s: ARRAY 8 OF CHAR;
 BEGIN NetSystem.Read(C, ch); l := 1;
@@ -97,7 +97,7 @@ BEGIN NetSystem.Read(C, ch); l := 1;
 	END
 END Sb;
 
-PROCEDURE Will (C: NetSystem.Connection; VAR l: INTEGER);
+PROCEDURE Will (C: NetSystem.Connection; VAR l: SIGNED16);
 	VAR ch: CHAR;
 BEGIN NetSystem.Write(C, 0FFX);
 	NetSystem.Read(C, ch); l := 1;
@@ -107,13 +107,13 @@ BEGIN NetSystem.Write(C, 0FFX);
 	END
 END Will;
 
-PROCEDURE Wont (C: NetSystem.Connection; VAR l: INTEGER);
+PROCEDURE Wont (C: NetSystem.Connection; VAR l: SIGNED16);
 	VAR ch: CHAR;
 BEGIN NetSystem.Write(C, 0FFX); NetSystem.Write(C, 0FEX);
 	NetSystem.Read(C, ch); l := 1; NetSystem.Write(C, ch)
 END Wont;
 
-PROCEDURE Do (C: NetSystem.Connection; VAR l: INTEGER);
+PROCEDURE Do (C: NetSystem.Connection; VAR l: SIGNED16);
 	VAR ch: CHAR;
 BEGIN NetSystem.Write(C, 0FFX);
 	NetSystem.Read(C, ch); l := 1;
@@ -123,14 +123,14 @@ BEGIN NetSystem.Write(C, 0FFX);
 	END
 END Do;
 
-PROCEDURE Dont (C: NetSystem.Connection; VAR l: INTEGER);
+PROCEDURE Dont (C: NetSystem.Connection; VAR l: SIGNED16);
 	VAR ch: CHAR;
 BEGIN NetSystem.Write(C, 0FFX); NetSystem.Write(C, 0FCX);
 	NetSystem.Read(C, ch); l := 1; NetSystem.Write(C, ch)
 END Dont;
 
 PROCEDURE Receiver(me: Oberon.Task);
-	VAR l: LONGINT; k: INTEGER;
+	VAR l: SIGNED32; k: SIGNED16;
 		C: NetSystem.Connection;
 		ch: CHAR;
 BEGIN
@@ -206,7 +206,7 @@ END SetUp;
 		END
 	END CloseFrame;
 
-	PROCEDURE OpenConn(F: TerminalGadgets.Frame; host, user, passwd: ARRAY OF CHAR; port: INTEGER);
+	PROCEDURE OpenConn(F: TerminalGadgets.Frame; host, user, passwd: ARRAY OF CHAR; port: SIGNED16);
 		VAR task: Task;
 			C: NetSystem.Connection;
 			user0: ARRAY 32 OF CHAR;
@@ -234,9 +234,9 @@ END SetUp;
 		END
 	END OpenConn;
 
-	PROCEDURE SplitTelnetAdr(VAR url, host, user, passwd: ARRAY OF CHAR; VAR port: INTEGER; prefix: BOOLEAN): LONGINT;
+	PROCEDURE SplitTelnetAdr(VAR url, host, user, passwd: ARRAY OF CHAR; VAR port: SIGNED16; prefix: BOOLEAN): SIGNED32;
 		VAR
-			key: LONGINT;
+			key: SIGNED32;
 			i, j, l: SIZE;
 			iskey: BOOLEAN;
 			str: ARRAY 8 OF CHAR;
@@ -377,7 +377,7 @@ END SetUp;
 			F: TerminalGadgets.Frame;
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			user, passwd: ARRAY NetTools.PathStrLen OF CHAR;
-			port: INTEGER;
+			port: SIGNED16;
 	BEGIN
 		Texts.OpenScanner(S,Oberon.Par.text,Oberon.Par.pos); Texts.Scan(S);
 		IF S.class = Texts.Name THEN obj := Gadgets.FindObj(Gadgets.context, S.s);
@@ -460,7 +460,7 @@ END SetUp;
 *)
 
 	PROCEDURE SendString(T: Terminals.Terminal; VAR s: ARRAY OF CHAR);
-		VAR i: INTEGER; ch: CHAR;
+		VAR i: SIGNED16; ch: CHAR;
 	BEGIN i := 0;
 		WHILE s[i] # 0X DO
 			ch := s[i]; INC(i);
@@ -491,7 +491,7 @@ END SetUp;
 		VAR
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			user, passwd: ARRAY NetTools.PathStrLen OF CHAR;
-			port: INTEGER;
+			port: SIGNED16;
 	BEGIN
 		WITH F: TerminalGadgets.Frame DO
 			IF ((F.text(Terminal).C = NIL) OR ~Connected(F.text(Terminal).C))
@@ -529,7 +529,7 @@ END SetUp;
 
 	PROCEDURE SchemeHandler(L: Objects.Object; VAR M: Objects.ObjMsg);
 		VAR
-			port: INTEGER;
+			port: SIGNED16;
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			user, passwd: ARRAY NetTools.PathStrLen OF CHAR;
 	BEGIN
@@ -567,9 +567,9 @@ END SetUp;
 
 	PROCEDURE PrintCont(F: TerminalGadgets.Frame; VAR M: Display.DisplayMsg);
 		VAR
-			i, j: INTEGER;
+			i, j: SIGNED16;
 			print: ARRAY 2 OF CHAR;
-		PROCEDURE P(x: LONGINT): INTEGER;
+		PROCEDURE P(x: SIGNED32): SIGNED16;
 		BEGIN
 			RETURN SHORT((x * Display.Unit + Printer.Unit DIV 2) DIV Printer.Unit)
 		END P;
@@ -664,8 +664,8 @@ END SetUp;
 		VAR
 			host: ARRAY NetTools.ServerStrLen OF CHAR;
 			user, passwd: ARRAY NetTools.PathStrLen OF CHAR;
-			port: INTEGER;
-			key: LONGINT;
+			port: SIGNED16;
+			key: SIGNED32;
 			T: Terminal;
 			text: Texts.Text;
 			F: TerminalGadgets.Frame;

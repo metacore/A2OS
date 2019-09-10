@@ -35,15 +35,15 @@ TYPE
 	tFilterDesc* = RECORD (vyBase.ObjDesc);
 		weights: antsNeighbourhoods.Neighbours;
 		fct: antsFunctions.Function;
-		(* size: LONGINT; *)  (* is dim of Nieghbourhood *)
-		type: INTEGER (* mean or median *)
+		(* size: SIGNED32; *)  (* is dim of Nieghbourhood *)
+		type: SIGNED16 (* mean or median *)
 	END;
 
 CONST
 	mean = 0;  median = 1;  inf = 2;  sup = 3;
 
 	PROCEDURE HandleFileMsg( obj: tFilter;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		IF msg.id = Objects.load THEN
 			Files.ReadInt( msg.R, version );  vyBase.objecthandle( obj, msg );  Files.ReadInt( msg.R, obj.type );
@@ -142,12 +142,12 @@ CONST
 		END
 	END New;
 
-	PROCEDURE ksmallest( VAR a: ARRAY OF LONGREAL;  n, k: LONGINT ): LONGREAL;
+	PROCEDURE ksmallest( VAR a: ARRAY OF FLOAT64;  n, k: SIGNED32 ): FLOAT64;
 	(* algorithm of Nikolaus Wirth *)
-	VAR i, j, l, m: LONGINT;  x: LONGREAL;
+	VAR i, j, l, m: SIGNED32;  x: FLOAT64;
 
-		PROCEDURE swap( VAR x, y: LONGREAL );
-		VAR z: LONGREAL;
+		PROCEDURE swap( VAR x, y: FLOAT64 );
+		VAR z: FLOAT64;
 		BEGIN
 			z := x;  x := y;  y := z
 		END swap;
@@ -167,13 +167,13 @@ CONST
 		RETURN a[k]
 	END ksmallest;
 
-	PROCEDURE Median( VAR a: ARRAY OF LONGREAL;  n: LONGINT ): LONGREAL;
+	PROCEDURE Median( VAR a: ARRAY OF FLOAT64;  n: SIGNED32 ): FLOAT64;
 	BEGIN
 		RETURN ksmallest( a, n, n DIV 2 )
 	END Median;
 
 	PROCEDURE WeightsToMedian( filter: tFilter );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO (filter.weights.dim - 1) DO
 			IF filter.weights.par[i] > 0 THEN filter.weights.par[i] := 1 ELSE filter.weights.par[i] := 0 END
@@ -182,8 +182,8 @@ CONST
 	END WeightsToMedian;
 
 	PROCEDURE ApplyFilter( A: antsArrayObjects.tINTEGERArray;  VAR res: antsArrayObjects.tINTEGERArray;  filter: tFilter );
-	VAR W, H: LONGINT;  weight, weights, value: LONGREAL;  wx, wy, y, x, count, len: LONGINT;
-		a: POINTER TO ARRAY OF LONGREAL;
+	VAR W, H: SIGNED32;  weight, weights, value: FLOAT64;  wx, wy, y, x, count, len: SIGNED32;
+		a: POINTER TO ARRAY OF FLOAT64;
 	BEGIN
 		W := LEN( A[0] );  H := LEN( A );  NEW( res, H, W );
 		IF filter.type = mean THEN
@@ -233,10 +233,10 @@ CONST
 	END ApplyFilter;
 
 (*bestimmt den min und max Eintrag in der Matrix S (und deren Position)*)
-	PROCEDURE MinMax( VAR S: ARRAY OF ARRAY OF INTEGER;  VAR min, max: INTEGER );
-	VAR h, i, minpos, currentminpos, maxpos, currentmaxpos, na: LONGINT;  currentmax, currentmin: INTEGER;
+	PROCEDURE MinMax( VAR S: ARRAY OF ARRAY OF SIGNED16;  VAR min, max: SIGNED16 );
+	VAR h, i, minpos, currentminpos, maxpos, currentmaxpos, na: SIGNED32;  currentmax, currentmin: SIGNED16;
 	BEGIN
-		h := LEN( S );  min := MAX( INTEGER );  max := MIN( INTEGER );
+		h := LEN( S );  min := MAX( SIGNED16 );  max := MIN( SIGNED16 );
 		FOR i := 0 TO h - 1 DO
 			vyInteger.MinMax( LEN( S[i] ), S[i], 0, currentmin, currentminpos, currentmax, currentmaxpos, na );
 			IF currentmin < min THEN min := currentmin;  minpos := currentminpos END;
@@ -244,8 +244,8 @@ CONST
 		END
 	END MinMax;
 
-	PROCEDURE Rescale*( A: antsArrayObjects.tINTEGERArray;  VAR depth: LONGINT );
-	VAR min, max: INTEGER;  y, x: LONGINT;
+	PROCEDURE Rescale*( A: antsArrayObjects.tINTEGERArray;  VAR depth: SIGNED32 );
+	VAR min, max: SIGNED16;  y, x: SIGNED32;
 	BEGIN
 		MinMax( A^, min, max );
 		IF (min >= 0) & (max < depth) THEN RETURN END;
@@ -256,7 +256,7 @@ CONST
 	END Rescale;
 
 	PROCEDURE ApplyFilters( A: antsArrayObjects.tINTEGERArray;  VAR res: antsArrayObjects.tINTEGERArray;  filter: tFilter;
-										    VAR depth: LONGINT;  VAR name: ARRAY OF CHAR );
+										    VAR depth: SIGNED32;  VAR name: ARRAY OF CHAR );
 	VAR filtername: ARRAY 256 OF CHAR;
 	BEGIN
 		IF antsCommands.GetName( "", filtername ) THEN
@@ -276,7 +276,7 @@ CONST
 	PROCEDURE Apply*;
 	VAR obj, array: vyBase.Object;  A: antsArrayObjects.tLONGREALArray;  res: antsArrayObjects.tINTEGERArray;
 		name, type: ARRAY 256 OF CHAR;
-		depth: LONGINT;
+		depth: SIGNED32;
 	BEGIN
 		antsCommands.InitScan( "filter=OBJ [type=STR] [array=OBJ]" );
 		IF antsCommands.ExpectObject( "filter", obj ) THEN
@@ -308,7 +308,7 @@ CONST
 	END Apply;
 
 	PROCEDURE Constant*;
-	VAR obj: vyBase.Object;  weights: antsNeighbourhoods.Neighbours;  i: LONGINT;
+	VAR obj: vyBase.Object;  weights: antsNeighbourhoods.Neighbours;  i: SIGNED32;
 	BEGIN
 		IF antsCommands.ExpectObject( "weights", obj ) THEN
 			weights := obj( antsNeighbourhoods.Neighbours );
@@ -318,7 +318,7 @@ CONST
 	END Constant;
 
 	PROCEDURE DoApplyFunction( f: tFilter );
-	VAR xd, yd: LONGINT;  i: LONGINT;
+	VAR xd, yd: SIGNED32;  i: SIGNED32;
 	BEGIN
 		IF f.fct = NIL THEN antsSecurity.Halt( "No function defined" ) END;
 		FOR i := 0 TO f.weights.dim - 1 DO
@@ -340,13 +340,13 @@ CONST
 		END;
 	END ApplyFunction;
 
-	PROCEDURE dist( n: antsNeighbourhoods.Neighbours;  pos: LONGINT;  VAR xd, yd: LONGINT );
+	PROCEDURE dist( n: antsNeighbourhoods.Neighbours;  pos: SIGNED32;  VAR xd, yd: SIGNED32 );
 	BEGIN
 		xd := n.x[pos, 0];  yd := n.y[pos, 0];
 	END dist;
 
 	PROCEDURE Inverse*;
-	VAR obj: vyBase.Object;  weights: antsNeighbourhoods.Neighbours;  i: LONGINT;  xd, yd: LONGINT;
+	VAR obj: vyBase.Object;  weights: antsNeighbourhoods.Neighbours;  i: SIGNED32;  xd, yd: SIGNED32;
 	BEGIN
 		antsCommands.InitScan( "weights=OBJ # Set weights according to their inverse distance" );
 		IF antsCommands.ExpectObject( "weights", obj ) THEN
@@ -361,7 +361,7 @@ CONST
 
 (*
 PROCEDURE TestMedian*;
-	VAR i: LONGINT;   a: POINTER TO ARRAY OF LONGREAL;
+	VAR i: SIGNED32;   a: POINTER TO ARRAY OF FLOAT64;
 BEGIN
 	NEW(a, 1001);
 	FOR i := 0 TO 1000 DO

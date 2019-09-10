@@ -14,7 +14,7 @@ MODULE Copyright IN Oberon;	(* pjm *)
 		W: Texts.Writer;
 
 	PROCEDURE Check(T: Texts.Text);
-		VAR R: Texts.Reader; copy: ARRAY Len+1 OF CHAR; ch: CHAR; i: LONGINT;
+		VAR R: Texts.Reader; copy: ARRAY Len+1 OF CHAR; ch: CHAR; i: SIGNED32;
 	BEGIN
 		Texts.OpenReader(R, T, 0);
 		FOR i := 0 TO Len-1 DO Texts.Read(R, copy[i]) END;
@@ -45,7 +45,7 @@ MODULE Copyright IN Oberon;	(* pjm *)
 	END Scan;
 
 	PROCEDURE Add*;
-		VAR S: Texts.Scanner; C, T: Texts.Text; B: Texts.Buffer; F: Files.File; len: LONGINT;
+		VAR S: Texts.Scanner; C, T: Texts.Text; B: Texts.Buffer; F: Files.File; len: SIGNED32;
 	BEGIN
 		NEW(C); Texts.Open(C, CopyText); Check(C);
 		NEW(B); Texts.OpenBuf(B);
@@ -65,7 +65,7 @@ MODULE Copyright IN Oberon;	(* pjm *)
 	END Add;
 
 	PROCEDURE Remove*;
-		VAR S: Texts.Scanner; T: Texts.Text; F: Files.File; len, i: LONGINT; R: Texts.Reader;
+		VAR S: Texts.Scanner; T: Texts.Text; F: Files.File; len, i: SIGNED32; R: Texts.Reader;
 			copy: ARRAY Len+1 OF CHAR; ch: CHAR;
 	BEGIN
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
@@ -100,7 +100,7 @@ MODULE Copyright IN Oberon;	(* pjm *)
 	END Remove;
 
 	PROCEDURE Replace*;
-		VAR S: Texts.Scanner; C, T: Texts.Text; B: Texts.Buffer; F: Files.File; len, i: LONGINT; R: Texts.Reader;
+		VAR S: Texts.Scanner; C, T: Texts.Text; B: Texts.Buffer; F: Files.File; len, i: SIGNED32; R: Texts.Reader;
 			copy: ARRAY Len+1 OF CHAR; ch: CHAR;
 	BEGIN
 		Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);

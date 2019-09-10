@@ -72,13 +72,13 @@ TYPE
 
 	Picture* = POINTER TO PictureDesc;
 	PictureDesc* = RECORD (vyBase.FrameDesc)
-	(*	defunctx * , defuncty * : INTEGER;*)
-		Pictx, Picty, Pictw, Picth: REAL;   (* pictures location factors relative to the frame.
+	(*	defunctx * , defuncty * : SIGNED16;*)
+		Pictx, Picty, Pictw, Picth: FLOAT32;   (* pictures location factors relative to the frame.
 		See AdjustPict for semantics *)
 		(*= pictures absolute location, is updated by host frame's handler *)
 		needsRedraw*: BOOLEAN;   (*= set to force redraw if doublebuffering *)
 		(* Pict *)
-		hx, hy: INTEGER;   (* header location= layer list *)
+		hx, hy: SIGNED16;   (* header location= layer list *)
 		header: BOOLEAN;   (* show header *)
 		backGround*: Display.Color;
 		gcontext*: Objects.Object;   (*= graphic context. usually not shared - may be a cache of grafics state *)
@@ -86,8 +86,8 @@ TYPE
 		db: vyGraphBase.doubleBuffer;
 		(*= vylinks must be Layers. Layers usually are transparent. All layers of a picture share the same coordinate system, as defined by the Picture *)
 		(* entries from vyBase:
-		x,y: INTEGER; <- absolute location, cache variable
-		border:INTEGER;
+		x,y: SIGNED16; <- absolute location, cache variable
+		border:SIGNED16;
 		hotupdate: BOOLEAN;
 		vylinks: vyLinks.Link; <- Layers;
 		*)
@@ -114,7 +114,7 @@ TYPE
 	END;
 	*)
 	FindMsg = RECORD (Display.FrameMsg)
-		fx, fy: INTEGER
+		fx, fy: SIGNED16
 	END;
 
 	ExtractContentMsg = RECORD (Objects.ObjMsg)
@@ -140,20 +140,20 @@ VAR
 
 	newpicture-: Picture;   (*= exported for debugging only *)
 	newframe-: Frame;   (*= exported for debugging only *)
-	stdFrameCol: INTEGER;  setfrontmostcalled: BOOLEAN;
+	stdFrameCol: SIGNED16;  setfrontmostcalled: BOOLEAN;
 
 	(** Port Variables **)
-	DfltFramesPLine- (*=Default number of frames per line *) , defFramehwRelation (*? *) : REAL;  screenRatio*: REAL;
+	DfltFramesPLine- (*=Default number of frames per line *) , defFramehwRelation (*? *) : FLOAT32;  screenRatio*: FLOAT32;
 	updatesuspend: BOOLEAN;  BGPicture: Pictures.Picture;
 	(*	ftemp : Display.Frame;*)
 
 	(** Picture Variables **)
 
-	foreColor*, backGround: Display.Color;  PrintHeaders*: BOOLEAN;  undoPict: Picture;  undoLayer: tLayer;  undoAction: INTEGER;
+	foreColor*, backGround: Display.Color;  PrintHeaders*: BOOLEAN;  undoPict: Picture;  undoLayer: tLayer;  undoAction: SIGNED16;
 	onTheFly*: BOOLEAN;   (* = TRUE iff undo is restricted, e.g. we going to rotate *)
 	(*templayer : tLayer;*)
 
-	DefaultWidth: INTEGER;   (* substituted if Views returns 0 *)
+	DefaultWidth: SIGNED16;   (* substituted if Views returns 0 *)
 
 
 (*** support routines *)
@@ -195,7 +195,7 @@ VAR
 		IF w <= 0 THEN w := 1 END;
 		IF h <= 0 THEN h := 1 END;
 
-		IF (w > 1 / MAX( LONGINT )) & (h > 1 / MAX( LONGINT )) THEN
+		IF (w > 1 / MAX( SIGNED32 )) & (h > 1 / MAX( SIGNED32 )) THEN
 			cont := vyDisplay2d.NewC2d( x, y, w, h );
 			IF (p.gcontext = NIL ) OR (vyPortability.TypeOf( p.gcontext ) = vyPortability.TypeOf( cont )) THEN
 				IF (p.gcontext # NIL ) THEN vyBase.UnSubscribe( p.gcontext, p ) END;
@@ -211,22 +211,22 @@ VAR
 		ASSERT ( p.gcontext # NIL , 100 )
 	END SetNewC2d;
 
-	PROCEDURE SetC2d*( p: Picture;  x, y, w, h: LONGREAL );
+	PROCEDURE SetC2d*( p: Picture;  x, y, w, h: FLOAT64 );
 	BEGIN
 		Attributes.SetLongReal( p, "x2d", x );  Attributes.SetLongReal( p, "y2d", y );  Attributes.SetLongReal( p, "w2d", w );
 		Attributes.SetLongReal( p, "h2d", h )
 	END SetC2d;
 
-	PROCEDURE GetPictureScreenRegion*( picture: Picture;  VAR x, y, w, h: INTEGER );   (*! remove ! *)
+	PROCEDURE GetPictureScreenRegion*( picture: Picture;  VAR x, y, w, h: SIGNED16 );   (*! remove ! *)
 	VAR msg: FindMsg;
 	BEGIN
 		msg.F := picture;  Display.Broadcast( msg );  x := msg.fx;  y := msg.fy;  w := picture.W;  h := picture.H
 	END GetPictureScreenRegion;
 
-	PROCEDURE GetPictureXY*( frame: Frame;  X, Y: INTEGER ): Picture;
+	PROCEDURE GetPictureXY*( frame: Frame;  X, Y: SIGNED16 ): Picture;
 	(*! remove frame from procedure definition *)
 	(*= get picture at screen coordinates x,y. The frame parameter may be passed to speed up search. *)
-	VAR u, v: INTEGER;  frame1: Display.Frame;
+	VAR u, v: SIGNED16;  frame1: Display.Frame;
 	BEGIN
 		Gadgets.ThisFrame( X, Y, frame1, u, v );
 		IF (frame # NIL ) OR (frame1 = NIL ) OR ~(frame1 IS Picture) THEN RETURN NIL ELSE RETURN frame1( Picture ) END
@@ -278,7 +278,7 @@ END PictureCopy;
 	END PictureCopy;
 (*
 PROCEDURE AdjustPict (frame: Frame; ppict: Picture);
-VAR msg: Display.ModifyMsg; innerwidth, innerheight, lowx, lowy: INTEGER;
+VAR msg: Display.ModifyMsg; innerwidth, innerheight, lowx, lowy: SIGNED16;
 BEGIN
 innerwidth := frame.W - 2 * frame.borderW;
 innerheight := frame.H - 2 * frame.borderW;
@@ -307,7 +307,7 @@ ppict.mask := NIL
 END AdjustPict;
 *)
 	PROCEDURE AdjustPict( frame: Frame;  ppict: Picture );
-	VAR msg: Display.ModifyMsg;  innerwidth, innerheight, lowx, lowy: INTEGER;
+	VAR msg: Display.ModifyMsg;  innerwidth, innerheight, lowx, lowy: SIGNED16;
 	BEGIN
 		innerwidth := frame.W - 2 * frame.borderW;  innerheight := frame.H - 2 * frame.borderW - 1;
 		lowx := frame.borderW;  lowy := -frame.H + frame.borderW + 1;
@@ -336,7 +336,7 @@ END AdjustPict;
 	END FrameHandleAttributes;
 
 	PROCEDURE FrameHandler*( obj: Objects.Object;  VAR msg: Objects.ObjMsg );
-	VAR f: Display.Frame;  count: INTEGER;  rows, cols: LONGINT;  tr, tc: INTEGER;  x, y, w, h: INTEGER;
+	VAR f: Display.Frame;  count: SIGNED16;  rows, cols: SIGNED32;  tr, tc: SIGNED16;  x, y, w, h: SIGNED16;
 
 		PROCEDURE FrameDrawRect( PRINT: BOOLEAN );   (*! move to HostDisplay *)
 		(*! implement and call in a reliable way
@@ -443,7 +443,7 @@ END AdjustPict;
 	END FrameHandler;
 
 (** picture managment **)
-	PROCEDURE AddPicture*( frame: Frame;  picture: Picture;  x, y, w, h: REAL );
+	PROCEDURE AddPicture*( frame: Frame;  picture: Picture;  x, y, w, h: FLOAT32 );
 	BEGIN
 		picture.Pictx := x;  picture.Picty := y;  picture.Pictw := w;  picture.Picth := h;  picture.X := 0;  picture.Y := -picture.H;
 		Panels.InsertChild( frame, picture, 0, 0 );   (*! adjust w,h *)
@@ -456,14 +456,14 @@ END AdjustPict;
 	END RemovePicture;
 
 (** Frame generation **)
-	PROCEDURE SetDefaultFrameRatio*( framesPerLine, whRelation: REAL );
+	PROCEDURE SetDefaultFrameRatio*( framesPerLine, whRelation: FLOAT32 );
 	(*? should also work on the focus frame? *)
 	(*! Layla support *)
 	BEGIN
 		DfltFramesPLine := framesPerLine;  defFramehwRelation := whRelation
 	END SetDefaultFrameRatio;
 
-	PROCEDURE InitFrame( frame: Frame;  w, h: INTEGER );
+	PROCEDURE InitFrame( frame: Frame;  w, h: SIGNED16 );
 	BEGIN
 		frame.handle := FrameHandler;
 		IF (w <= 0) OR (h <= 0) THEN
@@ -488,7 +488,7 @@ END AdjustPict;
 		stdFrameCol := newframe.col;  focusFrame := NIL
 	END NewFrame;
 
-	PROCEDURE ResizeFrame*( f: Frame;  w, h: INTEGER );
+	PROCEDURE ResizeFrame*( f: Frame;  w, h: SIGNED16 );
 	VAR M: Display.ModifyMsg;
 	BEGIN
 		M.W := w;  M.H := h;  M.X := f.X;  M.Y := f.Y;  M.dW := f.W - w;  M.dH := f.H - h;  M.dX := 0;  M.dY := 0;
@@ -496,7 +496,7 @@ END AdjustPict;
 		f.W := M.W;  f.H := M.H;   (*if not in display space*)
 	END ResizeFrame;
 
-	PROCEDURE XNewFrame*( w, h: INTEGER ): Frame;   (*vs 0.0a2 md 1995 & fof 19.3.96 *)
+	PROCEDURE XNewFrame*( w, h: SIGNED16 ): Frame;   (*vs 0.0a2 md 1995 & fof 19.3.96 *)
 	(*= create a new frame *)
 	BEGIN
 		NewFrame;
@@ -504,7 +504,7 @@ END AdjustPict;
 		focusFrame := newframe;  RETURN newframe
 	END XNewFrame;
 
-	PROCEDURE InsertNewFrame*( w, h: INTEGER ): Frame;
+	PROCEDURE InsertNewFrame*( w, h: SIGNED16 ): Frame;
 	BEGIN
 		vyHostTexts.InsertGadget( XNewFrame( w, h ) );   (* ASSERT(newframe.lib # NIL); *)
 		RETURN newframe
@@ -690,7 +690,7 @@ END AddFocusLayer;
 *)
 
 	PROCEDURE PictureHandleSetPicture*( pict: Picture );
-	VAR x, y, w, h: INTEGER;  cRgnMsg: vyDisplay2d.CoordRgnMessage;  cSetMsg: vyDisplay2d.CoordSetMessage;
+	VAR x, y, w, h: SIGNED16;  cRgnMsg: vyDisplay2d.CoordRgnMessage;  cSetMsg: vyDisplay2d.CoordSetMessage;
 	BEGIN
 		(* changed by fof , 001205 , picture sets screen region, mask and coordinate system origin *)
 		GetPictureScreenRegion( pict, x, y, w, h );  vyGraphBase.UseClipMask( pict.mask );
@@ -704,8 +704,8 @@ END AddFocusLayer;
 	IF pict.gcontext.handle # NIL THEN pict.gcontext.handle (pict.gcontext, set) END*)
 	END PictureHandleSetPicture;
 
-	PROCEDURE GetHeaderRect( picture: Picture;  VAR x, y, w, h: INTEGER );
-	VAR header: vyName.tNameArray;  dsr: INTEGER;
+	PROCEDURE GetHeaderRect( picture: Picture;  VAR x, y, w, h: SIGNED16 );
+	VAR header: vyName.tNameArray;  dsr: SIGNED16;
 	BEGIN
 		GetHeader( picture, header );  GetPictureScreenRegion( picture, x, y, w, h );
 		vyGraphBase.SetStringJustification( vyGraphBase.left, vyGraphBase.top );
@@ -713,7 +713,7 @@ END AddFocusLayer;
 	END GetHeaderRect;
 
 	PROCEDURE CopyLayerOver( picture: Picture;  layer: tLayer;  list: vyTracking.List );
-	VAR dx, dy, x, y: INTEGER;  remoteP: Picture;  cloneMess: Objects.CopyMsg;
+	VAR dx, dy, x, y: SIGNED16;  remoteP: Picture;  cloneMess: Objects.CopyMsg;
 	BEGIN
 		antsEffects.Help( "Hold Buttons and shift to dest Port" );  focusLayer := NIL;  cloneMess.id := 1;
 
@@ -735,7 +735,7 @@ END AddFocusLayer;
 	END CopyLayerOver;
 
 	PROCEDURE HeaderEdit( picture: Picture;  VAR event: vyEvents.EventMsg );
-	VAR x, y, w, h: INTEGER;  selLayer: tLayer;  res, list: vyTracking.List;  selName: vyName.tNameArray;
+	VAR x, y, w, h: SIGNED16;  selLayer: tLayer;  res, list: vyTracking.List;  selName: vyName.tNameArray;
 		(*picture: vyPort.tPicture;*)
 		PROCEDURE GetList( ): vyTracking.List;
 		VAR list, e: vyTracking.List;  name: vyName.tNameArray;  layer: vyLinks.Link;
@@ -803,7 +803,7 @@ END AddFocusLayer;
 (* menu handling *)
 
 	PROCEDURE storepictasgif;
-	VAR res: INTEGER;
+	VAR res: SIGNED16;
 	BEGIN
 		antsCommandList.Wait();  Out.Ln;  Out.String( "Calling storepictasgif" );  antsCommandList.noWait := TRUE;
 		Oberon.Call( "antsToolbox.FocusPictToGIF", Oberon.Par, FALSE , res );
@@ -836,7 +836,7 @@ END AddFocusLayer;
 	END delfrontlayer;
 
 	PROCEDURE CopyLayerEasy( picture: Picture;  layer: tLayer );
-	VAR dx, dy, x, y: INTEGER;  remoteP: Picture;  cloneMess: Objects.CopyMsg;  keys: SET;
+	VAR dx, dy, x, y: SIGNED16;  remoteP: Picture;  cloneMess: Objects.CopyMsg;  keys: SET;
 	BEGIN
 		focusLayer := NIL;  cloneMess.id := 1;
 
@@ -866,7 +866,7 @@ END AddFocusLayer;
 	END copyfrontlayer;
 
 	PROCEDURE coordcopy*;
-	VAR dx, dy, x, y: INTEGER;  keys: SET;  remoteP: Picture;
+	VAR dx, dy, x, y: SIGNED16;  keys: SET;  remoteP: Picture;
 	BEGIN
 		antsCommandList.Wait();  Input.Mouse( keys, x, y );  dx := x;  dy := y;
 		antsEffects.TrackMouseCont( keys, x, y, Effects.CopyHand );  dx := dx - x;  dy := dy - y;
@@ -918,7 +918,7 @@ END AddFocusLayer;
 	VAR l: antsCommandList.List;  event: vyEvents.EventMsg;
 
 		PROCEDURE GetList( p: Picture ): antsCommandList.List;
-		VAR list, e, temp: antsCommandList.List;  name: vyName.tNameArray;  layer: vyLinks.Link;  pos: INTEGER;
+		VAR list, e, temp: antsCommandList.List;  name: vyName.tNameArray;  layer: vyLinks.Link;  pos: SIGNED16;
 		BEGIN
 			pos := 0;  layer := p.vylinks;
 			IF layer # NIL THEN NEW( list );  e := list END;
@@ -1019,7 +1019,7 @@ END AddFocusLayer;
 	END ContextResponding;
 
 	PROCEDURE PictureHandleEventMsg( picture: Picture;  VAR event: vyEvents.EventMsg );
-	VAR cRgnMsg: vyDisplay2d.CoordRgnMessage;  cSetMsg: vyDisplay2d.CoordSetMessage;  x, y, w, h: INTEGER;
+	VAR cRgnMsg: vyDisplay2d.CoordRgnMessage;  cSetMsg: vyDisplay2d.CoordSetMessage;  x, y, w, h: SIGNED16;
 		pictEvent: vyEvents.EventMsg;  copy: vyEvents.EventMsg;  dlink: Objects.Object;
 	BEGIN
 		SetFocusPicture( picture );  dlink := event.dlink;  event.dlink := picture;  pictEvent.dlink := picture;
@@ -1075,7 +1075,7 @@ END AddFocusLayer;
 		event.dlink := dlink
 	END PictureHandleEventMsg;
 
-	PROCEDURE PictureHandleInputMsg( obj: Picture;  VAR msg: Oberon.InputMsg;  x, y, w, h: INTEGER );
+	PROCEDURE PictureHandleInputMsg( obj: Picture;  VAR msg: Oberon.InputMsg;  x, y, w, h: SIGNED16 );
 	VAR event: vyEvents.EventMsg;  Q: Display3.Mask;
 	BEGIN
 		(*Out.String('vyPort.PictureHandleInputMsg'); Out.Ln;*)
@@ -1165,19 +1165,19 @@ END PictureReset;
 	END ToGContext;
 (*
 
-PROCEDURE PictureHandleDisplay (obj: Picture; VAR msg: Display.DisplayMsg; 	x, y, w, h: INTEGER
+PROCEDURE PictureHandleDisplay (obj: Picture; VAR msg: Display.DisplayMsg; 	x, y, w, h: SIGNED16
 );
 VAR 	Q: Display3.Mask;
 
-PROCEDURE PictureDraw ( (* obj:Picture; x,y,w,h:INTEGER; *) print: BOOLEAN; gif: BOOLEAN);
+PROCEDURE PictureDraw ( (* obj:Picture; x,y,w,h:SIGNED16; *) print: BOOLEAN; gif: BOOLEAN);
 (*! reduce *)
 VAR layerRef: vyLinks.Link; header: vyName.tNameArray;
 dmsg: Display.DisplayMsg; cMsg: vyDisplay2d.CoordRgnMessage; cSetMsg: vyDisplay2d.CoordSetMessage;
-i, r, g, b: INTEGER;
+i, r, g, b: SIGNED16;
 draw: BOOLEAN;
 
 PROCEDURE PictureDrawRect ; (*! move to HostDisplay *)
-VAR oldsize: INTEGER;
+VAR oldsize: SIGNED16;
 BEGIN 		vyGraphBase.SetDisplayMode (vyGraphBase.replace);
 IF print THEN vyGraphBase.SetForeColor(14) ELSE vyGraphBase.SetForeColor(0) END;
 vyGraphBase.SetBackColor(12);
@@ -1308,14 +1308,14 @@ END
 END PictureHandleDisplay;
 *)
 	PROCEDURE PictureHandleDisplay( obj: Picture;  VAR msg: Display.DisplayMsg );
-	VAR Q: Display3.Mask;  x, y, w, h: INTEGER;  bcr, bcg, bcb: INTEGER;
+	VAR Q: Display3.Mask;  x, y, w, h: SIGNED16;  bcr, bcg, bcb: SIGNED16;
 
 		PROCEDURE PictureDraw( print: BOOLEAN;  gif: BOOLEAN );
 		VAR layerRef: vyLinks.Link;  header: vyName.tNameArray;  dmsg: Display.DisplayMsg;
 			cMsg: vyDisplay2d.CoordRgnMessage;  cSetMsg: vyDisplay2d.CoordSetMessage;  db, tl: BOOLEAN;  draw: BOOLEAN;
 
 			PROCEDURE PictureDrawRect;
-			VAR oldsize: INTEGER;  bw: INTEGER;
+			VAR oldsize: SIGNED16;  bw: SIGNED16;
 			BEGIN
 				IF obj.borderW > 0 THEN
 					vyGraphBase.SetDisplayMode( vyGraphBase.replace );  vyGraphBase.SetForeColor( vyGraphBase.black );
@@ -1626,7 +1626,7 @@ END PictureHandleDisplay;
 
 	PROCEDURE PictureHandler*( obj: Objects.Object;  VAR msg: Objects.ObjMsg );
 	(* proper support for double buffering is needed. Set o.needsRedraw if redraw is needed *)
-	VAR copy: Picture;  x, y, w, h: INTEGER;  l: antsCommandList.List;
+	VAR copy: Picture;  x, y, w, h: SIGNED16;  l: antsCommandList.List;
 	BEGIN
 		ASSERT ( (obj # NIL ) & (obj IS Picture), 100 );
 
@@ -1791,7 +1791,7 @@ END LayerHandleAttributes;*)
 	END Bind;
 
 	PROCEDURE LayerHandler*( o: Objects.Object;  VAR M: Objects.ObjMsg );
-	VAR obj0: tLayer;  obsub: Objects.Object;  minX, minY, maxX, maxY, dy: Real;  nansX, nansY: LONGINT;  vx, vy: vyBase.tVector;
+	VAR obj0: tLayer;  obsub: Objects.Object;  minX, minY, maxX, maxY, dy: Real;  nansX, nansY: SIGNED32;  vx, vy: vyBase.tVector;
 		pmsg: Gadgets.PriorityMsg;  p: Picture;
 
 	BEGIN  (*vyHostTexts.Msg(' Enter LayerHandler');*)
@@ -1929,13 +1929,13 @@ END LayerHandleAttributes;*)
 		IF gc # NIL THEN vyBase.Subscribe( (*for messages from source*) gc, picture ) END
 	END PictureSetgcontext;
 
-	PROCEDURE InsertNewCPicture*( x, y, w, h: REAL;  gc: vyBase.Object ): Picture;
+	PROCEDURE InsertNewCPicture*( x, y, w, h: FLOAT32;  gc: vyBase.Object ): Picture;
 	BEGIN
 		NewPicture;  PictureSetgcontext( newpicture, gc );  AddPicture( InsertNewFrame( 0, 0 ), newpicture, x, y, w, h );
 		RETURN newpicture
 	END InsertNewCPicture;
 
-	PROCEDURE XNewCPicture*( x, y, w, h: REAL;  gc: vyBase.Object ): Picture;
+	PROCEDURE XNewCPicture*( x, y, w, h: FLOAT32;  gc: vyBase.Object ): Picture;
 	BEGIN
 		NewPicture;  PictureSetgcontext( newpicture, gc );  AddPicture( XNewFrame( 0, 0 ), newpicture, x, y, w, h );
 		RETURN newpicture
@@ -1947,7 +1947,7 @@ END LayerHandleAttributes;*)
 	END NewP;
 
 	PROCEDURE InsertNewVecPicture*( vx, vy: vyBase.tVector ): Picture;
-	VAR minX, minY, maxX, maxY: Real;  nansX, nansY: LONGINT;
+	VAR minX, minY, maxX, maxY: Real;  nansX, nansY: SIGNED32;
 	BEGIN
 		IF vx = NIL THEN minX := 0;  maxX := 1;  nansX := 0 ELSE vyTypes.VGetMinMax( vx, minX, maxX, nansX ) END;
 		IF vy = NIL THEN minY := 0;  maxY := 1;  nansY := 0 ELSE vyTypes.VGetMinMax( vy, minY, maxY, nansY ) END;
@@ -1988,7 +1988,7 @@ END LayerHandleAttributes;*)
 	END Undo;
 
 	PROCEDURE ZoomIn*;
-	VAR x, y, w, h: INTEGER;  pict: Picture;  event: vyEvents.EventMsg;  zoomMsg: vyDisplay2d.CoordZoomMessage;
+	VAR x, y, w, h: SIGNED16;  pict: Picture;  event: vyEvents.EventMsg;  zoomMsg: vyDisplay2d.CoordZoomMessage;
 	BEGIN  (* vyGraphBase.SetClipRect (0, 0, vyGraphBase.DisplayWidth, vyGraphBase.DisplayHeight);*)
 		vyEvents.GetEvent( event );  vyGraphBase.SetStringJustification( vyGraphBase.center, vyGraphBase.bottom );
 		vyTracking.FramedString( event.x, event.y, "", "Select ZoomRegion", w, h );  vyEvents.GetEvent( event );
@@ -2039,7 +2039,7 @@ END LayerHandleAttributes;*)
 	END TogglePrintHeaders;
 
 	PROCEDURE Init;
-	VAR temp: BOOLEAN;  res: INTEGER;
+	VAR temp: BOOLEAN;  res: SIGNED16;
 	BEGIN
 		NEW( BGPicture );  screenRatio := vyGraphBase.DisplayWidth / vyGraphBase.DisplayHeight;  DfltFramesPLine := framesize;
 		defFramehwRelation := gold;  updatesuspend := FALSE;  Pictures.Open( BGPicture, BGPictureName, temp );

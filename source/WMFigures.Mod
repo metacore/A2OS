@@ -30,7 +30,7 @@ TYPE
 		arrow-: WMProperties.BooleanProperty;
 
 		points- : Point;
-		nofPoints : LONGINT;
+		nofPoints : SIGNED32;
 
 		hover, selectedPoint:WMProperties.Property;
 		selectedLine:BOOLEAN;
@@ -117,7 +117,7 @@ TYPE
 		END ThisPoint;
 
 		(** Return point Nr 'index' .  Negative numbers are counted top-down.  *)
-		PROCEDURE IndexedPoint*(index : LONGINT): WMProperties.Property;
+		PROCEDURE IndexedPoint*(index : SIGNED32): WMProperties.Property;
 		VAR  i,j:SIZE;
 		BEGIN
 			i:=0; j:=0;
@@ -270,7 +270,7 @@ TYPE
 			Release;
 		END AddDisplayPoint;
 
-		PROCEDURE MoveDisplayPoints(dx, dy : LONGINT);
+		PROCEDURE MoveDisplayPoints(dx, dy : SIGNED32);
 		VAR p : Point;
 		BEGIN
 			Acquire;
@@ -381,8 +381,8 @@ TYPE
 
 		PROCEDURE DrawArrow*(canvas : WMGraphics.Canvas; p0,p1: Point);
 		CONST pi=3.1516;
-		VAR  alpha: REAL;
-			 head: LONGREAL;
+		VAR  alpha: FLOAT32;
+			 head: FLOAT64;
 			col: WMGraphics.Color;
 		BEGIN
 				alpha:=arctan2(p1.x-p0.x, p1.y-p0.y);
@@ -453,7 +453,7 @@ TYPE
 
 		(* Is X, Y somewhere inside the polygon defined by p ? *)
 		PROCEDURE Inside*(X, Y: SIZE): BOOLEAN;
-		VAR c: LONGINT; p, q: Point;
+		VAR c: SIGNED32; p, q: Point;
 		BEGIN
 			c := 0;
 			IF (points # NIL) THEN
@@ -468,7 +468,7 @@ TYPE
 		END Inside;
 
 		PROCEDURE IsHit*(mx, my: SIZE): BOOLEAN;
-		VAR p, q: Point; i : LONGINT;
+		VAR p, q: Point; i : SIGNED32;
 		BEGIN
 			IF (points = NIL) OR (points.next = NIL) THEN RETURN FALSE; END;
 			IF ~ (Reshape IN state) THEN RETURN FALSE
@@ -487,7 +487,7 @@ TYPE
 		END IsHit;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR p, plast : Point; i : LONGINT;
+		VAR p, plast : Point; i : SIGNED32;
 		BEGIN
 			canvas.SetLineWidth(width.Get());
 			DrawBackground^(canvas);
@@ -646,7 +646,7 @@ TYPE
 	Spline* = OBJECT(Figure)
 	VAR
 		pointArray : ARRAY 2048 OF WMGraphics.Point2d;
-		nSegments:LONGINT;
+		nSegments:SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -676,7 +676,7 @@ TYPE
 
 			(* Is X, Y somewhere inside the polygon defined by p ? *) (*! to be implemented for pointarray*)
 		PROCEDURE Inside*(X, Y: SIZE): BOOLEAN;
-		VAR c: LONGINT; p,q: Point;
+		VAR c: SIGNED32; p,q: Point;
 		BEGIN
 			c := 0;
 			IF (points # NIL) THEN
@@ -691,7 +691,7 @@ TYPE
 		END Inside;
 
 		PROCEDURE IsHit*(mx, my: SIZE): BOOLEAN;
-		VAR p, q: Point; i : LONGINT;
+		VAR p, q: Point; i : SIGNED32;
 		BEGIN
 			IF (points = NIL) OR (points.next = NIL) THEN RETURN FALSE; END;
 			IF Filled IN state THEN
@@ -747,7 +747,7 @@ TYPE
 			END PropertyChanged;
 
 		PROCEDURE Normalize;
-		VAR i:LONGINT; oldrect, rect:WMRectangles.Rectangle; p:Point;
+		VAR i:SIGNED32; oldrect, rect:WMRectangles.Rectangle; p:Point;
 		BEGIN
 			oldrect:=bounds.Get();
 			rect.l := MAX(SIZE); rect.t := MAX(SIZE); rect.r := MIN(SIZE); rect.b := MIN(SIZE);
@@ -768,7 +768,7 @@ TYPE
 		END Normalize;
 
 		PROCEDURE DrawBackground*(canvas : WMGraphics.Canvas);
-		VAR p,pa: Point; col: WMGraphics.Color; d:REAL;
+		VAR p,pa: Point; col: WMGraphics.Color; d:FLOAT32;
 		BEGIN
 			DrawBackground^(canvas);
 			IF mouseOver THEN col:=clHover.Get() ELSE col:=color.Get() END;
@@ -795,7 +795,7 @@ VAR
 	log: Streams.Writer;
 
 	(* Size of gravity spot used for "snapping" the cursor *)
-	gravity : LONGINT;
+	gravity : SIGNED32;
 
 	PrototypeWidth : WMProperties.Int32Property;
 	PrototypeColor, PrototypeclHover : WMProperties.ColorProperty;
@@ -806,7 +806,7 @@ VAR
 
 	StrFigure, StrLine, StrCircle, StrRectangle, StrSpline : Strings.String;
 
-PROCEDURE arctan2(x,y: REAL): REAL; (*arctan in range 0..2pi*)
+PROCEDURE arctan2(x,y: FLOAT32): FLOAT32; (*arctan in range 0..2pi*)
 	BEGIN
 		IF (x>0) & (y>=0) THEN RETURN Math.arctan(y/x)
 		ELSIF (x>0) & (y<0) THEN RETURN Math.arctan(y/x)+2*Math.pi
@@ -819,15 +819,15 @@ PROCEDURE arctan2(x,y: REAL): REAL; (*arctan in range 0..2pi*)
 
 (* start of Rege code *)
 
-PROCEDURE MakePoly(CONST RX, RY, RXstrich, RYstrich, RS: ARRAY OF REAL; n: LONGINT; VAR points : ARRAY OF WMGraphics.Point2d; VAR k: LONGINT);
+PROCEDURE MakePoly(CONST RX, RY, RXstrich, RYstrich, RS: ARRAY OF FLOAT32; n: SIGNED32; VAR points : ARRAY OF WMGraphics.Point2d; VAR k: SIGNED32);
  TYPE
-	Polynom = RECORD A, B, C, D: REAL END;
+	Polynom = RECORD A, B, C, D: FLOAT32 END;
  VAR
-	i, cs, smax, k1: LONGINT; px, py: Polynom;
-	x, dx1, dx2, dx3, y, dy1, dy2, dy3: REAL; L, B, R, T,dW  : SIZE;
+	i, cs, smax, k1: SIGNED32; px, py: Polynom;
+	x, dx1, dx2, dx3, y, dy1, dy2, dy3: FLOAT32; L, B, R, T,dW  : SIZE;
 
-	PROCEDURE GetPolynom((* VAR *) y1, y2, y1s, y2s: REAL; VAR p: Polynom);
-		VAR dx1, dyx: REAL;
+	PROCEDURE GetPolynom((* VAR *) y1, y2, y1s, y2s: FLOAT32; VAR p: Polynom);
+		VAR dx1, dyx: FLOAT32;
 	BEGIN
 		IF RS[i] # RS[i+1] THEN dx1 := 1.0/(RS[i + 1] - RS[i]) ELSE dx1 := 1.0 END;
 		dyx := (y2 - y1)*dx1;
@@ -875,18 +875,18 @@ BEGIN
 	points[k].x := SHORT(ENTIER(RX[n])); points[k].y := SHORT(ENTIER(RY[n])); INC(k);
 END MakePoly;
 
-PROCEDURE SplineToPoly(c: Point; closed: BOOLEAN; VAR points : ARRAY OF WMGraphics.Point2d; VAR k: LONGINT);
+PROCEDURE SplineToPoly(c: Point; closed: BOOLEAN; VAR points : ARRAY OF WMGraphics.Point2d; VAR k: SIGNED32);
 TYPE
-	RealVect = ARRAY 256 OF REAL;
+	RealVect = ARRAY 256 OF FLOAT32;
 VAR
-	n, i: LONGINT; RS, RX, RY ,RXstrich, RYstrich : RealVect; dx, dy: REAL;
-	helpR: REAL;
+	n, i: SIGNED32; RS, RX, RY ,RXstrich, RYstrich : RealVect; dx, dy: FLOAT32;
+	helpR: FLOAT32;
 
-	PROCEDURE NatSplineDerivates(VAR x, y, d: ARRAY OF REAL; n: LONGINT);
-	VAR i: LONGINT; d1, d2: REAL; a, b, c: RealVect;
+	PROCEDURE NatSplineDerivates(VAR x, y, d: ARRAY OF FLOAT32; n: SIGNED32);
+	VAR i: SIGNED32; d1, d2: FLOAT32; a, b, c: RealVect;
 
-		PROCEDURE SolveTriDiag(VAR a, b, c: ARRAY OF REAL; n: LONGINT; VAR y: ARRAY OF REAL);
-		VAR i: LONGINT; t: REAL;
+		PROCEDURE SolveTriDiag(VAR a, b, c: ARRAY OF FLOAT32; n: SIGNED32; VAR y: ARRAY OF FLOAT32);
+		VAR i: SIGNED32; t: FLOAT32;
 		BEGIN i := 1;
 			WHILE i < n DO t := a[i]; c[i] := c[i]/t; helpR := c[i]*b[i]; a[i+1] := a[i+1] -  helpR; INC(i); END;
 			i := 2;
@@ -912,11 +912,11 @@ VAR
 			SolveTriDiag(a, b, c, n, d)
 		END NatSplineDerivates;
 
-	PROCEDURE ClSplineDerivates(VAR x, y, d: ARRAY OF REAL; n: LONGINT);
-		VAR i: LONGINT; hn1, dn1, d1, d2: REAL; a, b, c, u: RealVect;
+	PROCEDURE ClSplineDerivates(VAR x, y, d: ARRAY OF FLOAT32; n: SIGNED32);
+		VAR i: SIGNED32; hn1, dn1, d1, d2: FLOAT32; a, b, c, u: RealVect;
 
-		PROCEDURE SolveTriDiag2(VAR a, b, c: ARRAY OF REAL; n:LONGINT; VAR y1, y2: ARRAY OF REAL);
-		VAR i: LONGINT; t: REAL;
+		PROCEDURE SolveTriDiag2(VAR a, b, c: ARRAY OF FLOAT32; n:SIGNED32; VAR y1, y2: ARRAY OF FLOAT32);
+		VAR i: SIGNED32; t: FLOAT32;
 		BEGIN
 			i := 1;
 			WHILE i < n DO

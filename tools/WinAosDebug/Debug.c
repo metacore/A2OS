@@ -22,7 +22,7 @@
 #define MaxString 64
 #define MaxArray 8
 
-#define LONGINT long int
+#define SIGNED32 long int
 #define OCHAR unsigned char
 
 static HANDLE hInst, hThread = INVALID_HANDLE_VALUE;
@@ -150,7 +150,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				hwnd = CreateWindow("RichEdit", NULL, WS_CHILD | WS_VISIBLE | WS_HSCROLL |
 					WS_VSCROLL | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE,
 					0, 0, 0, 0, hWnd,	(HMENU)ID_EDIT,	hInst, (LPVOID)NULL);
-				SetWindowWord(hWnd, GWW_HWNDEDIT, (WORD)hwnd);
+				SetWindowWord(hWnd, GWW_HWNDEDIT, (INTEGER)hwnd);
 			}
 			break;
 		}
@@ -185,11 +185,11 @@ BOOL CALLBACK AboutDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 	return FALSE;
 }
 
-OCHAR Get(LPVOID adr, LONGINT* i) {
+OCHAR Get(LPVOID adr, SIGNED32* i) {
 	DWORD read;
 	OCHAR ch;
 
-	ReadProcessMemory(proc.hProcess, (LPVOID)((LONGINT)adr+(*i)), &ch, 1, &read);
+	ReadProcessMemory(proc.hProcess, (LPVOID)((SIGNED32)adr+(*i)), &ch, 1, &read);
 	(*i)++;
 	if (read < 1) {
 		return (OCHAR)0;
@@ -199,10 +199,10 @@ OCHAR Get(LPVOID adr, LONGINT* i) {
 }
 
 
-short int GetInt(LPVOID adr, LONGINT* i) {
+short int GetInt(LPVOID adr, SIGNED32* i) {
 	DWORD read; short int x;
 
-	ReadProcessMemory(proc.hProcess, (LPVOID)((LONGINT)adr+(*i)), &x, 2, &read);
+	ReadProcessMemory(proc.hProcess, (LPVOID)((SIGNED32)adr+(*i)), &x, 2, &read);
 	(*i) += 2;
 	if (read < 2) {
 		return 0;
@@ -211,10 +211,10 @@ short int GetInt(LPVOID adr, LONGINT* i) {
 	}
 }
 
-LONGINT GetLInt(LPVOID adr, LONGINT* i) {
-	DWORD read; LONGINT x;
+SIGNED32 GetLInt(LPVOID adr, SIGNED32* i) {
+	DWORD read; SIGNED32 x;
 
-	ReadProcessMemory(proc.hProcess, (LPVOID)((LONGINT)adr+(*i)), &x, 4, &read);
+	ReadProcessMemory(proc.hProcess, (LPVOID)((SIGNED32)adr+(*i)), &x, 4, &read);
 	(*i) += 4;
 	if (read < 4) {
 		return 0;
@@ -223,8 +223,8 @@ LONGINT GetLInt(LPVOID adr, LONGINT* i) {
 	}
 }
 
-LONGINT GetNum(LPVOID adr, LONGINT* i) {
-	LONGINT n, s; OCHAR x;
+SIGNED32 GetNum(LPVOID adr, SIGNED32* i) {
+	SIGNED32 n, s; OCHAR x;
 		
 	return GetLInt(adr,i);
 
@@ -237,8 +237,8 @@ LONGINT GetNum(LPVOID adr, LONGINT* i) {
 	return (n + (( (x % 64) - (x / 64) * 64) << s));
 }
 
-LONGINT FindProc(LPVOID refs, LONGINT reflen, LONGINT ofs) {
-	LONGINT proc, i, t, start, end;
+SIGNED32 FindProc(LPVOID refs, SIGNED32 reflen, SIGNED32 ofs) {
+	SIGNED32 proc, i, t, start, end;
 	OCHAR ch;
 
 	proc = -1; i = 1;
@@ -272,9 +272,9 @@ LONGINT FindProc(LPVOID refs, LONGINT reflen, LONGINT ofs) {
 	return proc;
 }
 
-LPVOID GetMod(LONGINT pc) {
+LPVOID GetMod(SIGNED32 pc) {
 	LPVOID m;
-	LONGINT base, len, i;
+	SIGNED32 base, len, i;
 	//OCHAR msg[128];
 
 	i = 0; m = (LPVOID)GetLInt(modules, &i);
@@ -302,9 +302,9 @@ LPVOID GetMod(LONGINT pc) {
 	return NULL;
 }
 
-void WriteProc(HWND hWnd, LPVOID mod, LONGINT pc, LONGINT bp, LPVOID* refs, LONGINT* reflen, LONGINT* refpos, LONGINT* base) {
+void WriteProc(HWND hWnd, LPVOID mod, SIGNED32 pc, SIGNED32 bp, LPVOID* refs, SIGNED32* reflen, SIGNED32* refpos, SIGNED32* base) {
 	OCHAR msg[128];
-	LONGINT i, j;
+	SIGNED32 i, j;
 	DWORD read;
 	OCHAR ch;
 
@@ -398,10 +398,10 @@ void WriteType(HWND hWnd, LPVOID dynamictdadr, LPVOID statictdadr) {
 	*/
 }
 
-void Variables(HWND hWnd, LPVOID mod, LPVOID refs, LONGINT reflen, LONGINT i, LONGINT base, LONGINT sb) {
+void Variables(HWND hWnd, LPVOID mod, LPVOID refs, SIGNED32 reflen, SIGNED32 i, SIGNED32 base, SIGNED32 sb) {
 	OCHAR msg[MaxString+4];
 	LPVOID tmp, tdadr0, tdadr1;
-	LONGINT n, adr, size, j, k, t, t2, t3, vars;
+	SIGNED32 n, adr, size, j, k, t, t2, t3, vars;
 	DWORD read;
 	OCHAR mode, type, ch;
 	BOOLEAN writeType; 
@@ -502,23 +502,23 @@ void Variables(HWND hWnd, LPVOID mod, LPVOID refs, LONGINT reflen, LONGINT i, LO
 								wsprintf(msg, "%i", ch);
 							}
 							break;
-						case 4: // SHORTINT
+						case 4: // SIGNED8
 							ch = Get((LPVOID)adr, &k);
 							wsprintf(msg, "%i", ch);
 							break;
-						case 5: // INTEGER
+						case 5: // SIGNED16
 							si = GetInt((LPVOID)adr, &k);
 							wsprintf(msg, "%i", si);
 							break;
-						case 6: // LONGINT
+						case 6: // SIGNED32
 							j = GetLInt((LPVOID)adr, &k);
 							wsprintf(msg, "%i", j);
 							break;
-						case 7: // REAL
+						case 7: // FLOAT32
 							ReadProcessMemory(proc.hProcess, (LPVOID)adr, &x, 4, &read);
 							sprintf(msg, "%E", x);
 							break;
-						case 8: // LONGREAL
+						case 8: // FLOAT64
 							ReadProcessMemory(proc.hProcess, (LPVOID)adr, &y, 8, &read);
 							sprintf(msg, "%E", y);
 							break;
@@ -570,7 +570,7 @@ void Variables(HWND hWnd, LPVOID mod, LPVOID refs, LONGINT reflen, LONGINT i, LO
 
 void ShowState(OCHAR* module) {
 	LPVOID mod, refs;
-	LONGINT sb, reflen, refpos, i;
+	SIGNED32 sb, reflen, refpos, i;
 	DWORD read;
 	OCHAR modName[32] = "";
 	OCHAR msg[64];
@@ -618,7 +618,7 @@ void TrapMsg(EXCEPTION_POINTERS *exp, LPSTR msg, BOOL ln) {
 	if (excode == EXCEPTION_GUARD_PAGE) {
 		wsprintf(msg, form, "guard page violation");
 	} else if (excode == EXCEPTION_BREAKPOINT) {
-		LONGINT i, code;
+		SIGNED32 i, code;
 		i = 0; code = GetLInt((LPVOID)(exp->ContextRecord->Esp), &i);
 		if (ln) {
 			wsprintf(form, "%i  %s\n", code, "%s");
@@ -690,13 +690,13 @@ void TrapMsg(EXCEPTION_POINTERS *exp, LPSTR msg, BOOL ln) {
 }
 
 void ShowStack(EXCEPTION_POINTERS *exp, BOOL trap) {
-	LONGINT pc, bp, sp, reflen, refpos, base, sb, lastbp, frames, i;
+	SIGNED32 pc, bp, sp, reflen, refpos, base, sb, lastbp, frames, i;
 	LPVOID mod, refs;
 	OCHAR msg[128];
 
-	pc = (LONGINT)(exp->ExceptionRecord->ExceptionAddress);
+	pc = (SIGNED32)(exp->ExceptionRecord->ExceptionAddress);
 	bp = exp->ContextRecord->Ebp; sp = exp->ContextRecord->Esp;
-	if (pc == (LONGINT)NULL) {
+	if (pc == (SIGNED32)NULL) {
 		i = 0; pc = GetLInt((LPVOID)(sp), &i);
 	}
 	if (trap) {
@@ -939,7 +939,7 @@ BOOL CALLBACK StateDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam
 				HWND hwndCB;
 				LPVOID mod;
 				DWORD read;
-				LONGINT i;
+				SIGNED32 i;
 				OCHAR modName[32];
 
 				strcpy(module, ""); strcpy(workPath, "");

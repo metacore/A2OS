@@ -27,7 +27,7 @@ TYPE
 				f: Forwarder; (* this client belogs to *)
 				p: T.Packet;
 				buf: ARRAY 64 OF CHAR;
-				len: SIZE; res: WORD;
+				len: SIZE; res: INTEGER;
 
 
 
@@ -62,18 +62,18 @@ TYPE
 				active: BOOLEAN;
 				timer: Kernel.Timer;
 
-				localPort: LONGINT;
+				localPort: SIGNED32;
 				localConn: TCP.Connection;
 				clientConn: TCP.Connection;	(* connection to client at localport *)
 
-				destPort: LONGINT;
+				destPort: SIGNED32;
 				remConn: T.Connection;  (* encrypted connection to remote host *)
 				chan: Channel;  	(* encrypted channel to destport at remote host *)
 
 				buf: ARRAY 4096 OF CHAR;
 				type: CHAR;
 				len: SIZE;
-				res: WORD;
+				res: INTEGER;
 
 				clientHandlerRunning: BOOLEAN;
 				clientHandler: ClientHandler;
@@ -85,8 +85,8 @@ TYPE
 					buf: ARRAY 3000 OF CHAR;
 					len: SIZE;  p: T.Packet;
 					clientAddress: ARRAY 64 OF CHAR;
-					clientPort: LONGINT;
-					chanNo: LONGINT;
+					clientPort: SIGNED32;
+					chanNo: SIGNED32;
 					ptype: CHAR;
 				BEGIN
 					NEW( chan, remConn );
@@ -137,7 +137,7 @@ TYPE
 				END CloseAllConnections;
 
 
-				PROCEDURE & Init*( lConn: TCP.Connection; lPort: LONGINT; rConn: T.Connection; dPort: LONGINT );
+				PROCEDURE & Init*( lConn: TCP.Connection; lPort: SIGNED32; rConn: T.Connection; dPort: SIGNED32 );
 				BEGIN
 					localConn := lConn;
 					localPort := lPort;
@@ -197,19 +197,19 @@ VAR
 TYPE
 	Channel* = OBJECT (Streams.Connection)
 			VAR
-				state-: SHORTINT;
+				state-: SIGNED8;
 				conn-: T.Connection;
-				rchan: LONGINT;
+				rchan: SIGNED32;
 				wsize-: SIZE;
-				clchan: LONGINT;
-				clwsize: LONGINT;
-				pmax: LONGINT;   (* max packet size accepted by remote *)
+				clchan: SIGNED32;
+				clwsize: SIGNED32;
+				pmax: SIGNED32;   (* max packet size accepted by remote *)
 				noneblocking: BOOLEAN;
 				recBuffer: POINTER TO ARRAY OF CHAR;
-				rbstart, rbend: LONGINT;
+				rbstart, rbend: SIGNED32;
 				interactive: BOOLEAN;
 
-				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD );
+				PROCEDURE Send*( CONST data: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: INTEGER );
 				VAR p: T.Packet; l: SIZE; t: CHAR;
 					buf: ARRAY 512 OF CHAR;
 				BEGIN
@@ -227,9 +227,9 @@ TYPE
 					conn.SendPacket( p );  DEC( wsize, len );  res := Streams.Ok
 				END Send;
 
-				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD );
+				PROCEDURE Receive*( VAR data: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER );
 				VAR
-					plen: SIZE; dlen: LONGINT; pType, ch: CHAR;
+					plen: SIZE; dlen: SIGNED32; pType, ch: CHAR;
 				BEGIN
 					len := 0;
 					LOOP
@@ -303,7 +303,7 @@ TYPE
 				END SendChar;
 
 				PROCEDURE ReceivePacket*( VAR buf: ARRAY OF CHAR;  VAR len: SIZE ): CHAR;
-				VAR i, l, chan, newspace: LONGINT;  ptype: CHAR;
+				VAR i, l, chan, newspace: SIGNED32;  ptype: CHAR;
 					p: T.Packet;  done: BOOLEAN;
 					pos: SIZE;  req: ARRAY 64 OF CHAR;  wantreply: BOOLEAN;
 				BEGIN
@@ -372,8 +372,8 @@ TYPE
 				END ReceivePacket;
 
 
-				PROCEDURE ReceiveLine*( VAR line: ARRAY OF CHAR;  VAR len: LONGINT );
-				VAR bl: SIZE; i, e: LONGINT;  t, c, c2: CHAR;
+				PROCEDURE ReceiveLine*( VAR line: ARRAY OF CHAR;  VAR len: SIGNED32 );
+				VAR bl: SIZE; i, e: SIGNED32;  t, c, c2: CHAR;
 					buf: ARRAY 256 OF CHAR;
 				BEGIN
 					len := 0;
@@ -401,8 +401,8 @@ TYPE
 					p.AppInteger( rchan );
 					p.AppString( "window-change" );
 					p.AppChar( 0X );	(* false *)
-					p.AppInteger( width(LONGINT) );
-					p.AppInteger( height(LONGINT) );
+					p.AppInteger( width(SIGNED32) );
+					p.AppInteger( height(SIGNED32) );
 					p.AppInteger( 0 );	(* width, pixel *)
 					p.AppInteger( 0 );	(* height, pixel *)
 					SendPacket( p );
@@ -590,7 +590,7 @@ TYPE
 		Log.Ln
 	END ShowPacket;
 
-	PROCEDURE Pause( ms: LONGINT );
+	PROCEDURE Pause( ms: SIGNED32 );
 	VAR  t: Kernel.Timer;
 	BEGIN
 		NEW( t );  t.Sleep( ms )
@@ -740,7 +740,7 @@ TYPE
 
 	PROCEDURE ReceiveFile( chan: Channel; CONST name: ARRAY OF CHAR );
 	VAR buf: ARRAY 10000 OF CHAR;  type: CHAR;
-		plen: SIZE; dlen, p, i, flen, received: LONGINT;
+		plen: SIZE; dlen, p, i, flen, received: SIGNED32;
 		pr: ARRAY 256 OF CHAR;
 		f: Files.File;  w: Files.Writer;  error: BOOLEAN;
 	BEGIN
@@ -783,10 +783,10 @@ TYPE
 		remConn: A.Connection;
 		f: Forwarder;
 		token, user, remhost: ARRAY 64 OF CHAR;
-		locPort, destPort: LONGINT;
+		locPort, destPort: SIGNED32;
 		arg: Streams.Reader;
 		strings: Strings.StringArray;
-		res: WORD;
+		res: INTEGER;
 	BEGIN
 		arg := context.arg;
 		arg.SkipWhitespace; arg.String( token );
@@ -837,7 +837,7 @@ TYPE
 	(**  SSH.StopForwarding all | { portnumber }  ~ *)
 	PROCEDURE StopForwarding*( context: Commands.Context );
 	VAR
-		f: Forwarder;  port: LONGINT;
+		f: Forwarder;  port: SIGNED32;
 		arg: Streams.Reader;  str: ARRAY 32 OF CHAR;
 	BEGIN
 		arg := context.arg;

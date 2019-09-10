@@ -193,17 +193,17 @@ TYPE
 		VAR
 			next: Link;
 			hci : HCI;
-			state*: LONGINT;			(** link state *)
+			state*: SIGNED32;			(** link state *)
 			remote*: Bluetooth.BDAddr;	(** remote device *)
-			handle-: LONGINT;			(** connection handle *)
-			type*: LONGINT;			(** connection type *)
-			encryption*: LONGINT;		(** encryption mode *)
-			reason*: LONGINT;			(** error code (depends on state) *)
-			nofPackets-: LONGINT;		(** number of completed (transmitted or flushed) packets *)
+			handle-: SIGNED32;			(** connection handle *)
+			type*: SIGNED32;			(** connection type *)
+			encryption*: SIGNED32;		(** encryption mode *)
+			reason*: SIGNED32;			(** error code (depends on state) *)
+			nofPackets-: SIGNED32;		(** number of completed (transmitted or flushed) packets *)
 
 			OnReceiveACLData*: ReceiveACLDataEvent;
 
-		PROCEDURE &Init*(hci : HCI; remote: Bluetooth.BDAddr; handle: LONGINT);
+		PROCEDURE &Init*(hci : HCI; remote: Bluetooth.BDAddr; handle: SIGNED32);
 		BEGIN
 			ASSERT((0000H <= handle) & (handle <= 0EFFH));
 			SELF.hci := hci; SELF.remote := remote; SELF.handle := handle;
@@ -218,8 +218,8 @@ TYPE
 			PBF: packet boundary flag
 			BF: broadcast flag
 		*)
-		PROCEDURE SendACL*(PBF, BF: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT): WORD;
-		VAR v: LONGINT; res: WORD; aclhdr: ARRAY 4 OF CHAR;
+		PROCEDURE SendACL*(PBF, BF: SIGNED32; VAR data: ARRAY OF CHAR; ofs, len: SIGNED32): INTEGER;
+		VAR v: SIGNED32; res: INTEGER; aclhdr: ARRAY 4 OF CHAR;
 		BEGIN
 			ASSERT((pbfContinuing <= PBF) & (PBF <= pbfFirst));
 			ASSERT((bfPointToPoint <= BF) & (BF <= bfPiconet));
@@ -239,8 +239,8 @@ TYPE
 			RETURN res
 		END SendACL;
 
-		PROCEDURE SendACLH*(PBF, BF: LONGINT; VAR hdr: ARRAY OF CHAR; hdrlen: LONGINT; VAR data: ARRAY OF CHAR; ofs, len: LONGINT): WORD;
-		VAR v, totlen: LONGINT; res: WORD; aclhdr: ARRAY 4 OF CHAR;
+		PROCEDURE SendACLH*(PBF, BF: SIGNED32; VAR hdr: ARRAY OF CHAR; hdrlen: SIGNED32; VAR data: ARRAY OF CHAR; ofs, len: SIGNED32): INTEGER;
+		VAR v, totlen: SIGNED32; res: INTEGER; aclhdr: ARRAY 4 OF CHAR;
 		BEGIN
 			totlen := len + hdrlen;
 			ASSERT((pbfContinuing <= PBF) & (PBF <= pbfFirst));
@@ -276,7 +276,7 @@ TYPE
 	ReceiveACLDataEvent* = PROCEDURE {DELEGATE} (sender: Link; acl: Bluetooth.ACLPacket);
 
 	LinkEnumPar = POINTER TO RECORD
-		handle: LONGINT;
+		handle: SIGNED32;
 		remote: Bluetooth.BDAddr;
 		link: Link
 	END;
@@ -286,7 +286,7 @@ TYPE
 	LinkManager = OBJECT
 		VAR
 			links: Link;
-			numLinks: LONGINT;
+			numLinks: SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -314,7 +314,7 @@ TYPE
 			IF (p # NIL) THEN q.next := p.next; DEC(numLinks) END
 		END RemoveLink;
 
-		PROCEDURE FindLink*(handle: LONGINT): Link;
+		PROCEDURE FindLink*(handle: SIGNED32): Link;
 		VAR l: Link;
 		BEGIN {EXCLUSIVE}
 			l := links.next;
@@ -323,7 +323,7 @@ TYPE
 		END FindLink;
 
 		PROCEDURE Enumerate(callback: LinkEnumerator; par: ANY);
-		VAR l: Link; la: POINTER TO ARRAY OF Link; i: LONGINT;
+		VAR l: Link; la: POINTER TO ARRAY OF Link; i: SIGNED32;
 		BEGIN
 			NEW(la, numLinks);
 			BEGIN {EXCLUSIVE}
@@ -345,7 +345,7 @@ TYPE
 
 			(** info *)
 			bdAddr-: Bluetooth.BDAddr;	(* device address *)
-			aclMTU-, scoMTU-, aclNumPackets-, scoNumPackets-: LONGINT; (* MTUs and max. # of packets for ACL/SCO connections *)
+			aclMTU-, scoMTU-, aclNumPackets-, scoNumPackets-: SIGNED32; (* MTUs and max. # of packets for ACL/SCO connections *)
 
 			(** events *)
 			OnConnectionComplete* : ConnectionComplete;
@@ -389,8 +389,8 @@ TYPE
 		END Close;
 
 		(** initialize the module, get BDADDR, MTUs, etc *)
-		PROCEDURE Initialize*(): WORD;
-		VAR res: WORD;
+		PROCEDURE Initialize*(): INTEGER;
+		VAR res: INTEGER;
 		BEGIN
 			IF TraceHCI THEN
 				KernelLog.String(ModuleName);
@@ -439,7 +439,7 @@ TYPE
 			END
 		END FindLinkCallback;
 
-		PROCEDURE FindLink*(handle: LONGINT; remote: Bluetooth.BDAddr): Link;
+		PROCEDURE FindLink*(handle: SIGNED32; remote: Bluetooth.BDAddr): Link;
 		VAR lep: LinkEnumPar;
 		BEGIN
 			NEW(lep); lep.handle := handle; lep.remote := remote; lep.link := NIL;
@@ -452,20 +452,20 @@ TYPE
 				pending: TRUE if the command is pending
 				packet: reply packet from BT host (may be NIL)
 		*)
-		PROCEDURE SendCommand*(OGF, OCF: LONGINT; params: ARRAY OF CHAR; len: LONGINT;
+		PROCEDURE SendCommand*(OGF, OCF: SIGNED32; params: ARRAY OF CHAR; len: SIGNED32;
 										VAR packet: Bluetooth.EventPacket;
 										 VAR pending: BOOLEAN;
-										 VAR res: WORD);
+										 VAR res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			InSendCommand(OGF, OCF, params, len, packet, pending, res)
 		END SendCommand;
 
-		PROCEDURE InSendCommand(OGF, OCF: LONGINT; params: ARRAY OF CHAR; len: LONGINT;
+		PROCEDURE InSendCommand(OGF, OCF: SIGNED32; params: ARRAY OF CHAR; len: SIGNED32;
 										VAR packet: Bluetooth.EventPacket;
 										VAR pending: BOOLEAN;
-										VAR res: WORD);
+										VAR res: INTEGER);
 		VAR
-			cmd: POINTER TO ARRAY  OF CHAR; i: LONGINT;
+			cmd: POINTER TO ARRAY  OF CHAR; i: SIGNED32;
 		BEGIN (* EXCLUSIVE *)
 			NEW(cmd,3+len);
 			IF TraceHCI THEN
@@ -535,7 +535,7 @@ TYPE
 			END;
 		END InSendCommand;
 
-		PROCEDURE GetEvent*(timeout: LONGINT; VAR event: Bluetooth.EventPacket; VAR res: WORD);
+		PROCEDURE GetEvent*(timeout: SIGNED32; VAR event: Bluetooth.EventPacket; VAR res: INTEGER);
 		VAR p: Bluetooth.Packet;
 		BEGIN
 			IF TraceHCI THEN
@@ -573,12 +573,12 @@ TYPE
 
 		(* ------- link controller  commands -------- *)
 
-		PROCEDURE Inquiry*(lap : LONGINT;inquiryLength : LONGINT; numResponses : LONGINT) : WORD;
+		PROCEDURE Inquiry*(lap : SIGNED32;inquiryLength : SIGNED32; numResponses : SIGNED32) : INTEGER;
 		VAR
 			par: ARRAY 5 OF CHAR;
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			par[0] := CHR(lap MOD 100H);
 			par[1] := CHR((lap DIV 100H) MOD 100H);
@@ -589,13 +589,13 @@ TYPE
 			RETURN res;
 		END Inquiry;
 
-		PROCEDURE CreateConnection*(bdAddr: Bluetooth.BDAddr; clkofs: LONGINT): WORD;
+		PROCEDURE CreateConnection*(bdAddr: Bluetooth.BDAddr; clkofs: SIGNED32): INTEGER;
 		(* TODO: parameters!!! *)
 		VAR
 			par: ARRAY 13 OF CHAR;
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
-			i: LONGINT; res: WORD;
+			i: SIGNED32; res: INTEGER;
 		BEGIN
 			FOR i := 0 TO Bluetooth.BDAddrLen-1 DO par[i] := bdAddr[i] END;
 			par[6] := 08X; par[7] := 00X;	(* packet type: DM1 only *)
@@ -607,12 +607,12 @@ TYPE
 			RETURN res
 		END CreateConnection;
 
-		PROCEDURE Disconnect*(linkHandle,reason : LONGINT) : WORD;
+		PROCEDURE Disconnect*(linkHandle,reason : SIGNED32) : INTEGER;
 		VAR
 			par: ARRAY 3 OF CHAR;
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			par[0] := CHR(linkHandle MOD 100H);
 			par[1] := CHR(linkHandle DIV 100H);
@@ -623,10 +623,10 @@ TYPE
 
 		(* ------- host controller & bas band commands -------- *)
 
-		PROCEDURE SetEventMask*(eventMask : LONGINT) : WORD;
+		PROCEDURE SetEventMask*(eventMask : SIGNED32) : INTEGER;
 		VAR
 			par : ARRAY 8 OF CHAR;
-			res: WORD;
+			res: INTEGER;
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
 		BEGIN
@@ -641,11 +641,11 @@ TYPE
 		END SetEventMask;
 
 
-		PROCEDURE Reset*(): WORD;
+		PROCEDURE Reset*(): INTEGER;
 		VAR
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			IF TraceHCI THEN
 				KernelLog.String(ModuleName);
@@ -661,10 +661,10 @@ TYPE
 			RETURN res
 		END Reset;
 
-		PROCEDURE SetEventFilter*(type, conditionType: CHAR; condition: ARRAY OF CHAR): WORD;
+		PROCEDURE SetEventFilter*(type, conditionType: CHAR; condition: ARRAY OF CHAR): INTEGER;
 		VAR
 			par: ARRAY 9 OF CHAR;
-			i, len: LONGINT; res: WORD;
+			i, len: SIGNED32; res: INTEGER;
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
 		BEGIN
@@ -697,12 +697,12 @@ TYPE
 			RETURN res
 		END SetEventFilter;
 
-		PROCEDURE WriteScanEnable*(mode: CHAR): WORD;
+		PROCEDURE WriteScanEnable*(mode: CHAR): INTEGER;
 		VAR
 			par: ARRAY 1 OF CHAR;
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			par[0] := mode;
 			InSendCommand(ogfControl, ocfWriteScanEnable, par, 1, event, pending, res);
@@ -711,11 +711,11 @@ TYPE
 		END WriteScanEnable;
 
 
-		PROCEDURE ReadScanEnable*(VAR scanEnable : CHAR) : WORD;
+		PROCEDURE ReadScanEnable*(VAR scanEnable : CHAR) : INTEGER;
 		VAR
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			InSendCommand(ogfControl,ocfReadScanEnable,"",0,event,pending,res);
 			scanEnable := event.params[4];
@@ -723,13 +723,13 @@ TYPE
 			RETURN res;
 		END ReadScanEnable;
 
-		PROCEDURE WriteLinkSupervisionTimeout*(inHandle, linkTimeout : LONGINT) : WORD;
+		PROCEDURE WriteLinkSupervisionTimeout*(inHandle, linkTimeout : SIGNED32) : INTEGER;
 		VAR
 			par: ARRAY 4 OF CHAR;
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res : WORD;
-			outHandle : LONGINT;
+			res : INTEGER;
+			outHandle : SIGNED32;
 		BEGIN
 			par[0] := CHR(inHandle MOD 100H);
 			par[1] := CHR(inHandle DIV 100H);
@@ -753,13 +753,13 @@ TYPE
 			RETURN res;
 		END WriteLinkSupervisionTimeout;
 
-		PROCEDURE ReadLinkSupervisionTimeout*(inHandle : LONGINT; VAR linkTimeout : LONGINT) : WORD;
+		PROCEDURE ReadLinkSupervisionTimeout*(inHandle : SIGNED32; VAR linkTimeout : SIGNED32) : INTEGER;
 		VAR
 			par: ARRAY 2 OF CHAR;
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res : WORD;
-			outHandle : LONGINT;
+			res : INTEGER;
+			outHandle : SIGNED32;
 		BEGIN
 			par[0] := CHR(inHandle MOD 100H);
 			par[1] := CHR(inHandle DIV 100H);
@@ -785,12 +785,12 @@ TYPE
 
 		(* ------- Erricsson  paramters -------- *)
 
-		PROCEDURE EricssonSetUARTBaudRate*(baudRate : CHAR):WORD;
+		PROCEDURE EricssonSetUARTBaudRate*(baudRate : CHAR):INTEGER;
 		VAR
 			par: ARRAY 1 OF CHAR;
 			pending: BOOLEAN;
 			event: Bluetooth.EventPacket;
-			res : WORD;
+			res : INTEGER;
 		BEGIN
 			par[0] := baudRate;
 			InSendCommand(ogfEricsson,ocfSetUARTBaudRate,par,LEN(par),event,pending,res);
@@ -805,11 +805,11 @@ TYPE
 
 		(* ------- Informational paramters -------- *)
 
-		PROCEDURE ReadBDAddr*(VAR bdAddr: Bluetooth.BDAddr): WORD;
+		PROCEDURE ReadBDAddr*(VAR bdAddr: Bluetooth.BDAddr): INTEGER;
 		VAR
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
-			res: WORD; i: LONGINT;
+			res: INTEGER; i: SIGNED32;
 		BEGIN
 			IF TraceHCI THEN
 				KernelLog.String(ModuleName);
@@ -829,11 +829,11 @@ TYPE
 			RETURN res
 		END ReadBDAddr;
 
-		PROCEDURE ReadBufferSize*(VAR aclMaxLen, scoMaxLen, aclNumPackets, scoNumPackets: LONGINT): WORD;
+		PROCEDURE ReadBufferSize*(VAR aclMaxLen, scoMaxLen, aclNumPackets, scoNumPackets: SIGNED32): INTEGER;
 		VAR
 			event: Bluetooth.EventPacket;
 			pending: BOOLEAN;
-			res: WORD;
+			res: INTEGER;
 		BEGIN
 			InSendCommand(ogfInformational, ocfReadBufferSize, "", 0, event, pending, res);
 			IF pending THEN res := Bluetooth.ErrInvalidEvent
@@ -869,7 +869,7 @@ TYPE
 		PROCEDURE EventHandler(packet: Bluetooth.Packet);
 		VAR
 			event: Bluetooth.EventPacket;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			event := packet(Bluetooth.EventPacket);
 			IF TraceHCI THEN
@@ -911,7 +911,7 @@ TYPE
 
 		PROCEDURE EventInquiryComplete(event: Bluetooth.EventPacket);
 		VAR
-			status : LONGINT;
+			status : SIGNED32;
 		BEGIN
 			status := ORD(event.params[0]);
 			IF (OnInquiryComplete # NIL) THEN
@@ -921,10 +921,10 @@ TYPE
 
 		PROCEDURE EventInquiryResult(event: Bluetooth.EventPacket);
 		VAR
-			nr,psrm, pspm, psm, co: LONGINT;
+			nr,psrm, pspm, psm, co: SIGNED32;
 			bdAddr : Bluetooth.BDAddr;
 			class : Bluetooth.DeviceClass;
-			i,k,ofs : LONGINT;
+			i,k,ofs : SIGNED32;
 		BEGIN
 			IF (OnInquiry # NIL) THEN
 				i := 0; nr := ORD(event.params[0]);
@@ -949,10 +949,10 @@ TYPE
 
 		PROCEDURE EventConnectionComplete(event: Bluetooth.EventPacket);
 		VAR
-			status,handle : LONGINT;
+			status,handle : SIGNED32;
 			bdAddr : Bluetooth.BDAddr;
-			linkType ,encryMode: LONGINT;
-			i : LONGINT;
+			linkType ,encryMode: SIGNED32;
+			i : SIGNED32;
 		BEGIN
 			status := ORD(event.params[0]);
 			handle := (ORD(event.params[2])*100H + ORD(event.params[1])) MOD 1000H;
@@ -979,7 +979,7 @@ TYPE
 
 		PROCEDURE EventDisconnectionComplete(event: Bluetooth.EventPacket);
 		VAR
-			status,handle,reason : LONGINT;
+			status,handle,reason : SIGNED32;
 		BEGIN
 			status := ORD(event.params[0]);
 			handle := (ORD(event.params[2])*100H + ORD(event.params[1])) MOD 1000H;
@@ -998,7 +998,7 @@ TYPE
 
 		PROCEDURE EventConnectionCompleteOLD(event: Bluetooth.EventPacket);
 		VAR
-			status,handle,i : LONGINT;
+			status,handle,i : SIGNED32;
 			bdAddr : Bluetooth.BDAddr;
 			link : Link;
 		BEGIN
@@ -1042,7 +1042,7 @@ TYPE
 
 		PROCEDURE EventDisconnectionCompleteOLD(event: Bluetooth.EventPacket);
 		VAR
-			status,handle : LONGINT;
+			status,handle : SIGNED32;
 			link : Link;
 		BEGIN
 			status := ORD(event.params[0]);
@@ -1075,9 +1075,9 @@ TYPE
 
 		PROCEDURE EventNumOfCompletedPackets(event: Bluetooth.EventPacket);
 		VAR
-			numOfHandles,handle,numOfCompletedPackets : LONGINT;
+			numOfHandles,handle,numOfCompletedPackets : SIGNED32;
 			link : Link;
-			ofs,i : LONGINT;
+			ofs,i : SIGNED32;
 		BEGIN
 			i := 0; numOfHandles := ORD(event.params[0]);
 			WHILE (i < numOfHandles) DO
@@ -1094,7 +1094,7 @@ TYPE
 
 		PROCEDURE EventMaxSlotsChange(event: Bluetooth.EventPacket);
 		VAR
-			handle,maxSlots : LONGINT;
+			handle,maxSlots : SIGNED32;
 		BEGIN
 			handle := (ORD(event.params[1])*100H + ORD(event.params[0])) MOD 1000H;
 			maxSlots := ORD(event.params[2]);
@@ -1106,7 +1106,7 @@ TYPE
 
 		PROCEDURE EventPageScanRepModeChange(event: Bluetooth.EventPacket);
 		VAR
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			KernelLog.String(ModuleName);
 			KernelLog.String("EventPageScanRepititionModeChange:  bdAddr = ");
@@ -1123,7 +1123,7 @@ TYPE
 		END EricssonFilter;
 
 		PROCEDURE EricssonHandler(packet: Bluetooth.Packet);
-		VAR event: Bluetooth.EventPacket; i: LONGINT;
+		VAR event: Bluetooth.EventPacket; i: SIGNED32;
 		BEGIN
 			event := packet(Bluetooth.EventPacket);
 			KernelLog.Enter;
@@ -1170,22 +1170,22 @@ TYPE
 		END ErrorHandler;
 	END HCI;
 
-	ConnectionComplete* = PROCEDURE {DELEGATE} (sender: HCI; status, handle: LONGINT;
-														bdAddr: Bluetooth.BDAddr; linkType, encryMode: LONGINT);
-	DisconnectionComplete* = PROCEDURE {DELEGATE} (sender : HCI; status,handle,reason : LONGINT);
-	InquiryComplete* = PROCEDURE {DELEGATE} (sender: HCI; status: LONGINT);
+	ConnectionComplete* = PROCEDURE {DELEGATE} (sender: HCI; status, handle: SIGNED32;
+														bdAddr: Bluetooth.BDAddr; linkType, encryMode: SIGNED32);
+	DisconnectionComplete* = PROCEDURE {DELEGATE} (sender : HCI; status,handle,reason : SIGNED32);
+	InquiryComplete* = PROCEDURE {DELEGATE} (sender: HCI; status: SIGNED32);
 
-	ConnectionEvent* = PROCEDURE{DELEGATE} (sender: HCI; link: Link; res: WORD);
+	ConnectionEvent* = PROCEDURE{DELEGATE} (sender: HCI; link: Link; res: INTEGER);
 	(*OnReceiveACLDataEvent* = PROCEDURE{DELEGATE} (link: Link; acl: Bluetooth.ACLPacket); *)
-		(*handle, PB, PC, len: LONGINT; VAR data: ARRAY OF CHAR);*)
+		(*handle, PB, PC, len: SIGNED32; VAR data: ARRAY OF CHAR);*)
 	InquiryEvent* = PROCEDURE {DELEGATE} (sender: HCI; bdAddr: Bluetooth.BDAddr; deviceClass: Bluetooth.DeviceClass;
-		psRepMode, psPeriodMode, psMode, clockOffset: LONGINT);
+		psRepMode, psPeriodMode, psMode, clockOffset: SIGNED32);
 	GeneralEvent* = PROCEDURE {DELEGATE} (sender: HCI; event: Bluetooth.EventPacket);
 	ErrorEvent* = PROCEDURE{DELEGATE} (packet: Bluetooth.Packet);
 
 
 (** composes a HCI command packet header *)
-PROCEDURE ComposeCommandHeader*(OGF, OCF, paramLen: LONGINT; VAR command: ARRAY OF CHAR);
+PROCEDURE ComposeCommandHeader*(OGF, OCF, paramLen: SIGNED32; VAR command: ARRAY OF CHAR);
 BEGIN
 	ASSERT((0 <= OGF) & (OGF <= 03FH));
 	ASSERT((0 <= OCF) & (OCF <= 03FFH));

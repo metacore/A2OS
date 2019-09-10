@@ -9,13 +9,13 @@ VAR
 	w: DMA.Writer;
 	r: DMA.Reader;
 	src, dst: POINTER TO ARRAY Size + 8 OF CHAR;
-	(*src, dst: POINTER TO ARRAY Size OF LONGINT;*)
-	interm: ARRAY Size OF LONGINT;
+	(*src, dst: POINTER TO ARRAY Size OF SIGNED32;*)
+	interm: ARRAY Size OF SIGNED32;
 	t: Kernel.MilliTimer;
 	pOut, pIn: ADDRESS;
-	count, burst, i, len, time: LONGINT;
+	count, burst, i, len, time: SIGNED32;
 
-	PROCEDURE Align (address: ADDRESS; align: LONGINT): LONGINT;
+	PROCEDURE Align (address: ADDRESS; align: SIGNED32): SIGNED32;
 	VAR
 	BEGIN
 		IF align = 8 THEN

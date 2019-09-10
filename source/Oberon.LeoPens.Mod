@@ -37,7 +37,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 
 
 	TYPE
-		DistArray* = POINTER TO ARRAY OF REAL;
+		DistArray* = POINTER TO ARRAY OF FLOAT32;
 
 		Methods* = POINTER TO MethodBlock;
 
@@ -57,23 +57,23 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 			end*: PROCEDURE (pen: Pen);
 
 			(** enter and exit subpath **)
-			enter*: PROCEDURE (pen: Pen; x, y, dxi, dyi, bdist: REAL);
-			exit*: PROCEDURE (pen: Pen; dxo, dyo, edist: REAL);
+			enter*: PROCEDURE (pen: Pen; x, y, dxi, dyi, bdist: FLOAT32);
+			exit*: PROCEDURE (pen: Pen; dxo, dyo, edist: FLOAT32);
 
 			(** append curves to current subpath **)
-			line*: PROCEDURE (pen: Pen; x, y: REAL);
-			arc*: PROCEDURE (pen: Pen; x, y, x0, y0, x1, y1, x2, y2: REAL);
-			bezier*: PROCEDURE (pen: Pen; x, y, x1, y1, x2, y2: REAL);
+			line*: PROCEDURE (pen: Pen; x, y: FLOAT32);
+			arc*: PROCEDURE (pen: Pen; x, y, x0, y0, x1, y1, x2, y2: FLOAT32);
+			bezier*: PROCEDURE (pen: Pen; x, y, x1, y1, x2, y2: FLOAT32);
 
 			(** append path structure to current path **)
-			render*: PROCEDURE (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT);
+			render*: PROCEDURE (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32);
 		END;
 
 		(** pens dealing with different line widths (abstract) **)
 		WidePen* = POINTER TO WidePenDesc;
 		WidePenDesc* = RECORD (PenDesc)
-			width*: REAL;	(** pen width **)
-			limit*: REAL;	(** style limit as defined by Gfx **)
+			width*: FLOAT32;	(** pen width **)
+			limit*: FLOAT32;	(** style limit as defined by Gfx **)
 			capstyle*: Gfx.CapStyle;	(** line cap style to use **)
 			joinstyle*: Gfx.JoinStyle;	(** line join style to use **)
 		END;
@@ -89,7 +89,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		StrokerDesc* = RECORD (WidePenDesc)
 			col*: Gfx.Color;	(** stroke color **)
 			img*: Images.Image;	(** stroke pattern image **)
-			px*, py*: REAL;	(** stroke pattern pinpoint **)
+			px*, py*: FLOAT32;	(** stroke pattern pinpoint **)
 			pat: Gfx.Pattern;
 		END;
 
@@ -98,7 +98,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		FillerDesc* = RECORD (PenDesc)
 			col*: Gfx.Color;	(** fill color **)
 			img*: Images.Image;	(** fill pattern image **)
-			px*, py*: REAL;	(** fill pattern pinpoint **)
+			px*, py*: FLOAT32;	(** fill pattern pinpoint **)
 			pat: Gfx.Pattern;
 		END;
 
@@ -106,9 +106,9 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		Dasher* = POINTER TO DasherDesc;
 		DasherDesc* = RECORD (PenDesc)
 			base*: Pen;	(** pen for rendering dashes **)
-			on*, off*, onbak, offbak: ARRAY Gfx.MaxDashPatSize OF REAL;	(** dash pattern **)
-			len*, lenbak: LONGINT;	(** number of entries in the dash pattern **)
-			phase*, phasebak: REAL;	(** offset into pattern **)
+			on*, off*, onbak, offbak: ARRAY Gfx.MaxDashPatSize OF FLOAT32;	(** dash pattern **)
+			len*, lenbak: SIGNED32;	(** number of entries in the dash pattern **)
+			phase*, phasebak: FLOAT32;	(** offset into pattern **)
 			continuous*: BOOLEAN;	(** unless true, each dash is treated like an independent subpath **)
 		END;
 
@@ -117,7 +117,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		ForkerDesc* = RECORD (PenDesc)
 			lower*, upper*: Pen;	(** pens that the visited path is forwarded to **)
 			bdist, edist: DistArray;	(* distance offsets for each subpath *)
-			n: LONGINT;
+			n: SIGNED32;
 		END;
 
 		(** pen update notification (called by undoable action) **)
@@ -130,13 +130,13 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		Default*: Pen;	(** default pen **)
 		RecorderMethods, StrokerMethods, FillerMethods, DasherMethods, ForkerMethods: Methods;
 		Path: ARRAY CacheSize OF GfxPaths.Path;	(* temporary path structures *)
-		PathNo: LONGINT;	(* number of path to allocate next *)
+		PathNo: SIGNED32;	(* number of path to allocate next *)
 
 
 	(**--- Distance Arrays ---**)
 
-	PROCEDURE Append* (VAR d: DistArray; pos: LONGINT; val: REAL);
-		VAR t: DistArray; i: LONGINT;
+	PROCEDURE Append* (VAR d: DistArray; pos: SIGNED32; val: FLOAT32);
+		VAR t: DistArray; i: SIGNED32;
 	BEGIN
 		IF d = NIL THEN
 			NEW(d, (pos DIV 32 + 1) * 32)
@@ -194,27 +194,27 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		pen.ctxt := NIL
 	END End;
 
-	PROCEDURE Enter* (pen: Pen; x, y, dxi, dyi, bdist: REAL);
+	PROCEDURE Enter* (pen: Pen; x, y, dxi, dyi, bdist: FLOAT32);
 	BEGIN
 		Gfx.Enter(pen.ctxt, x, y, dxi, dyi)
 	END Enter;
 
-	PROCEDURE Exit* (pen: Pen; dxo, dyo, edist: REAL);
+	PROCEDURE Exit* (pen: Pen; dxo, dyo, edist: FLOAT32);
 	BEGIN
 		Gfx.Exit(pen.ctxt, dxo, dyo)
 	END Exit;
 
-	PROCEDURE Line* (pen: Pen; x, y: REAL);
+	PROCEDURE Line* (pen: Pen; x, y: FLOAT32);
 	BEGIN
 		Gfx.LineTo(pen.ctxt, x, y)
 	END Line;
 
-	PROCEDURE Arc* (pen: Pen; x, y, x0, y0, x1, y1, x2, y2: REAL);
+	PROCEDURE Arc* (pen: Pen; x, y, x0, y0, x1, y1, x2, y2: FLOAT32);
 	BEGIN
 		Gfx.ArcTo(pen.ctxt, x, y, x0, y0, x1, y1, x2, y2)
 	END Arc;
 
-	PROCEDURE Bezier* (pen: Pen; x, y, x1, y1, x2, y2: REAL);
+	PROCEDURE Bezier* (pen: Pen; x, y, x1, y1, x2, y2: FLOAT32);
 	BEGIN
 		Gfx.BezierTo(pen.ctxt, x, y, x1, y1, x2, y2)
 	END Bezier;
@@ -235,8 +235,8 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		IF path = Path[PathNo-1] THEN DEC(PathNo) END
 	END ReleaseTempPath;
 
-	PROCEDURE RenderPath* (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT);
-		VAR path: GfxPaths.Path; inv: GfxMatrix.Matrix; s: GfxPaths.Scanner; i: LONGINT;
+	PROCEDURE RenderPath* (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32);
+		VAR path: GfxPaths.Path; inv: GfxMatrix.Matrix; s: GfxPaths.Scanner; i: SIGNED32;
 	BEGIN
 		path := ctxt.path;
 		IF pen.destructive THEN
@@ -324,7 +324,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 	END WriteWidePen;
 
 	PROCEDURE ReadWidePen* (pen: WidePen; VAR r: Files.Rider);
-		VAR ver: LONGINT;
+		VAR ver: SIGNED32;
 	BEGIN
 		Files.ReadNum(r, ver);
 		Files.ReadReal(r, pen.width); Files.ReadReal(r, pen.limit);
@@ -335,7 +335,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 	(**--- Recorders ---**)
 
 	PROCEDURE HandleRecorder* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR pen, copy: Recorder; ver: LONGINT;
+		VAR pen, copy: Recorder; ver: SIGNED32;
 	BEGIN
 		pen := obj(Recorder);
 		IF msg IS Objects.AttrMsg THEN
@@ -390,32 +390,32 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		GfxPaths.Clear(rec.path)
 	END BeginRecorder;
 
-	PROCEDURE EnterRecorder (pen: Pen; x, y, dxi, dyi, bdist: REAL);
+	PROCEDURE EnterRecorder (pen: Pen; x, y, dxi, dyi, bdist: FLOAT32);
 	BEGIN
 		GfxPaths.AddEnter(pen(Recorder).path, x, y, dxi, dyi)
 	END EnterRecorder;
 
-	PROCEDURE ExitRecorder (pen: Pen; dxo, dyo, edist: REAL);
+	PROCEDURE ExitRecorder (pen: Pen; dxo, dyo, edist: FLOAT32);
 	BEGIN
 		GfxPaths.AddExit(pen(Recorder).path, dxo, dyo)
 	END ExitRecorder;
 
-	PROCEDURE RecordLine (pen: Pen; x, y: REAL);
+	PROCEDURE RecordLine (pen: Pen; x, y: FLOAT32);
 	BEGIN
 		GfxPaths.AddLine(pen(Recorder).path, x, y)
 	END RecordLine;
 
-	PROCEDURE RecordArc (pen: Pen; x, y, x0, y0, x1, y1, x2, y2: REAL);
+	PROCEDURE RecordArc (pen: Pen; x, y, x0, y0, x1, y1, x2, y2: FLOAT32);
 	BEGIN
 		GfxPaths.AddArc(pen(Recorder).path, x, y, x0, y0, x1, y1, x2, y2)
 	END RecordArc;
 
-	PROCEDURE RecordBezier (pen: Pen; x, y, x1, y1, x2, y2: REAL);
+	PROCEDURE RecordBezier (pen: Pen; x, y, x1, y1, x2, y2: FLOAT32);
 	BEGIN
 		GfxPaths.AddBezier(pen(Recorder).path, x, y, x1, y1, x2, y2)
 	END RecordBezier;
 
-	PROCEDURE RecordPath (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT);
+	PROCEDURE RecordPath (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32);
 	BEGIN
 		GfxPaths.Copy(ctxt.path, pen(Recorder).path)
 	END RecordPath;
@@ -433,7 +433,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 	(**--- Stroker ---**)
 
 	PROCEDURE HandleStroker* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR pen, copy: Stroker; ver: LONGINT; ch: CHAR;
+		VAR pen, copy: Stroker; ver: SIGNED32; ch: CHAR;
 	BEGIN
 		pen := obj(Stroker);
 		IF msg IS Objects.AttrMsg THEN
@@ -530,7 +530,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		END
 	END HandleStroker;
 
-	PROCEDURE InitStroker* (pen: Stroker; col: Gfx.Color; width: REAL);
+	PROCEDURE InitStroker* (pen: Stroker; col: Gfx.Color; width: FLOAT32);
 	BEGIN
 		pen.handle := HandleStroker; pen.do := StrokerMethods;
 		pen.destructive := FALSE; pen.needDist := FALSE; pen.zeroDistOnly := FALSE;
@@ -577,7 +577,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		End(pen)
 	END EndStroker;
 
-	PROCEDURE RenderStroker (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT);
+	PROCEDURE RenderStroker (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32);
 		VAR p: Stroker;
 	BEGIN
 		p := pen(Stroker);
@@ -598,7 +598,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 	(**--- Fillers ---**)
 
 	PROCEDURE HandleFiller* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR pen, copy: Filler; ver: LONGINT; ch: CHAR;
+		VAR pen, copy: Filler; ver: SIGNED32; ch: CHAR;
 	BEGIN
 		pen := obj(Filler);
 		IF msg IS Objects.AttrMsg THEN
@@ -736,7 +736,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		End(pen)
 	END EndFiller;
 
-	PROCEDURE RenderFiller (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT);
+	PROCEDURE RenderFiller (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32);
 		VAR p: Filler;
 	BEGIN
 		p := pen(Filler);
@@ -757,7 +757,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 	(**--- Dasher ---**)
 
 	PROCEDURE HandleDasher* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR pen, copy: Dasher; n, ver: LONGINT;
+		VAR pen, copy: Dasher; n, ver: SIGNED32;
 	BEGIN
 		pen := obj(Dasher);
 		IF msg IS UpdateMsg THEN
@@ -885,7 +885,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		END
 	END HandleDasher;
 
-	PROCEDURE InitDasher* (pen: Dasher; base: Pen; on, off: ARRAY OF REAL; len: LONGINT);
+	PROCEDURE InitDasher* (pen: Dasher; base: Pen; on, off: ARRAY OF FLOAT32; len: SIGNED32);
 	BEGIN
 		ASSERT(base # NIL, 100);
 		pen.handle := HandleDasher; pen.do := DasherMethods;
@@ -897,14 +897,14 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 	END InitDasher;
 
 	PROCEDURE NewDasher*;
-		VAR pen: Dasher; on: ARRAY 1 OF REAL;
+		VAR pen: Dasher; on: ARRAY 1 OF FLOAT32;
 	BEGIN
 		NEW(pen); on[0] := 10; InitDasher(pen, Default, on, on, 1);
 		Objects.NewObj := pen
 	END NewDasher;
 
 	PROCEDURE BeginDasher (pen: Pen; ctxt: Gfx.Context);
-		VAR p: Dasher; n: LONGINT;
+		VAR p: Dasher; n: SIGNED32;
 	BEGIN
 		p := pen(Dasher);
 		Begin(p, ctxt);
@@ -922,9 +922,9 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		End(p)
 	END EndDasher;
 
-	PROCEDURE DashSubpath (pen: Pen; bdist, edist: REAL);
+	PROCEDURE DashSubpath (pen: Pen; bdist, edist: FLOAT32);
 		VAR
-			p: Dasher; ctxt: Gfx.Context; base: Pen; width, len, beg, end, next: REAL; idx: LONGINT;
+			p: Dasher; ctxt: Gfx.Context; base: Pen; width, len, beg, end, next: FLOAT32; idx: SIGNED32;
 			inv: GfxMatrix.Matrix; path: GfxPaths.Path; s: GfxPaths.Scanner;
 	BEGIN
 		p := pen(Dasher); ctxt := p.ctxt; base := p.base;
@@ -990,7 +990,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		Gfx.SetLineWidth(ctxt, width)
 	END DashSubpath;
 
-	PROCEDURE EnterDasher (pen: Pen; x, y, dxi, dyi, bdist: REAL);
+	PROCEDURE EnterDasher (pen: Pen; x, y, dxi, dyi, bdist: FLOAT32);
 		VAR p: Dasher; base: Pen; ctxt: Gfx.Context;
 	BEGIN
 		p := pen(Dasher); base := p.base; ctxt := p.ctxt;
@@ -1001,7 +1001,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		Gfx.Enter(p.ctxt, x, y, dxi, dyi)
 	END EnterDasher;
 
-	PROCEDURE ExitDasher (pen: Pen; dxo, dyo, edist: REAL);
+	PROCEDURE ExitDasher (pen: Pen; dxo, dyo, edist: FLOAT32);
 		VAR p: Dasher; base: Pen;
 	BEGIN
 		p := pen(Dasher); base := p.base;
@@ -1014,8 +1014,8 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		END
 	END ExitDasher;
 
-	PROCEDURE RenderDasher (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT);
-		VAR p: Dasher; simple: BOOLEAN; i: LONGINT;
+	PROCEDURE RenderDasher (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32);
+		VAR p: Dasher; simple: BOOLEAN; i: SIGNED32;
 	BEGIN
 		p := pen(Dasher); simple := p.base IS Stroker;
 		IF n = 1 THEN
@@ -1052,7 +1052,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 	(**--- Forkers ---**)
 
 	PROCEDURE HandleForker* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR pen, copy: Forker; bw: REAL; ver: LONGINT;
+		VAR pen, copy: Forker; bw: FLOAT32; ver: SIGNED32;
 	BEGIN
 		pen := obj(Forker);
 		IF msg IS UpdateMsg THEN
@@ -1161,7 +1161,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		pen(Forker).n := 0
 	END BeginForker;
 
-	PROCEDURE ForkPath (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF REAL; n: LONGINT);
+	PROCEDURE ForkPath (pen: Pen; ctxt: Gfx.Context; VAR bdist, edist: ARRAY OF FLOAT32; n: SIGNED32);
 		VAR p: Forker; path: GfxPaths.Path;
 	BEGIN
 		p := pen(Forker);
@@ -1184,7 +1184,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		End(p)
 	END EndForker;
 
-	PROCEDURE EnterForker (pen: Pen; x, y, dx, dy, bdist: REAL);
+	PROCEDURE EnterForker (pen: Pen; x, y, dx, dy, bdist: FLOAT32);
 		VAR p: Forker;
 	BEGIN
 		p := pen(Forker);
@@ -1192,7 +1192,7 @@ MODULE LeoPens IN Oberon; (** portable **)	(* eos  *)
 		Append(p.bdist, p.n, bdist)
 	END EnterForker;
 
-	PROCEDURE ExitForker (pen: Pen; dx, dy, edist: REAL);
+	PROCEDURE ExitForker (pen: Pen; dx, dy, edist: FLOAT32);
 		VAR p: Forker;
 	BEGIN
 		p := pen(Forker);

@@ -11,7 +11,7 @@ MODULE GfxFonts0 IN Oberon; (** non-portable *)	(* eos  *)
 	**)
 
 	(*
-		16.2.99 - made unknown font types have ppm=MIN(LONGINT) (to avoid .Md?)
+		16.2.99 - made unknown font types have ppm=MIN(SIGNED32) (to avoid .Md?)
 		20.4.99 - merged Native and Windows version (using Builder preprocessor)
 		22.02.2000 - made name matching more robust to be compatible with device specifiers in Native
 		30.03.2000 - fixed dimensionless fonts not being recognized (Elektra)
@@ -23,13 +23,13 @@ MODULE GfxFonts0 IN Oberon; (** non-portable *)	(* eos  *)
 
 	VAR
 		Name, Style: ARRAY 32 OF CHAR;
-		PPM, FPPM, Error: INTEGER;
+		PPM, FPPM, Error: SIGNED16;
 
 
 
-	PROCEDURE EnumFile (name: ARRAY OF CHAR; time, date, size: LONGINT; VAR continue: BOOLEAN);
+	PROCEDURE EnumFile (name: ARRAY OF CHAR; time, date, size: SIGNED32; VAR continue: BOOLEAN);
 		CONST isdir = FALSE;
-		VAR i, ppm: INTEGER; s: ARRAY 4 OF CHAR;
+		VAR i, ppm: SIGNED16; s: ARRAY 4 OF CHAR;
 
 	BEGIN
 		IF ~isdir THEN
@@ -48,7 +48,7 @@ MODULE GfxFonts0 IN Oberon; (** non-portable *)	(* eos  *)
 				ELSIF s = "Pr2" THEN ppm := SHORT(200 * LONG(ppm) DIV 91)
 				ELSIF s = "Pr3" THEN ppm := SHORT(300 * LONG(ppm) DIV 91)
 				ELSIF s = "Pr6" THEN ppm := SHORT(600 * LONG(ppm) DIV 91)
-				ELSE ppm := MIN(INTEGER)
+				ELSE ppm := MIN(SIGNED16)
 				END;
 				IF ABS(PPM - ppm) < Error THEN
 					Error := ABS(PPM - ppm); COPY(name, Name); FPPM := ppm;
@@ -59,11 +59,11 @@ MODULE GfxFonts0 IN Oberon; (** non-portable *)	(* eos  *)
 	END EnumFile;
 
 	(** find raster font file that most closely matches the requested number of pixels per em **)
-	PROCEDURE Find* (VAR family, style: ARRAY OF CHAR; ppm: INTEGER; VAR name: ARRAY OF CHAR; VAR fppm: INTEGER);
+	PROCEDURE Find* (VAR family, style: ARRAY OF CHAR; ppm: SIGNED16; VAR name: ARRAY OF CHAR; VAR fppm: SIGNED16);
 		VAR pattern: ARRAY 64 OF CHAR;
 	BEGIN
 		Name := ""; FPPM := 0;
-		COPY(style, Style); PPM := ppm; Error := MAX(INTEGER);
+		COPY(style, Style); PPM := ppm; Error := MAX(SIGNED16);
 		COPY(family, pattern); Strings.AppendCh(pattern, "*");
 		IF style = "Bold" THEN Strings.AppendCh(pattern, "b")
 		ELSIF style = "Italic" THEN Strings.AppendCh(pattern, "i")

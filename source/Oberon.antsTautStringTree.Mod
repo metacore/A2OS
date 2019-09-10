@@ -41,11 +41,11 @@ TYPE
 	Node = POINTER TO NodeDesc;
 	NodeDesc = RECORD
 		left, right: Node;
-		value: LONGREAL;
-		start, ende: LONGINT;
+		value: FLOAT64;
+		start, ende: SIGNED32;
 	END;
 
-	PROCEDURE InitWithLength( t: Tree; n: LONGINT;  y: ARRAY OF LONGREAL );
+	PROCEDURE InitWithLength( t: Tree; n: SIGNED32;  y: ARRAY OF FLOAT64 );
 	(* Initialisierung des Baumes mit festgelegter Länge.
 	Die Werte in y werden als Werte in den Blättern des Baumes gespeichert.
 	Rekursiv werden dann alle weiteren Werte berchnet bis zur Wurzel des Baumes. *)
@@ -56,7 +56,7 @@ TYPE
 		NEW( this );  t.root := this;  Set( this, y, n, 0, n - 1 );  this := t.root;  this.value := SetValue( t.root );
 	END InitWithLength;
 
-	PROCEDURE Init*( VAR z: ARRAY OF LONGINT;  n: LONGINT;  y: ARRAY OF LONGREAL;  thr: LONGREAL;  squeezing: ARRAY OF CHAR );
+	PROCEDURE Init*( VAR z: ARRAY OF SIGNED32;  n: SIGNED32;  y: ARRAY OF FLOAT64;  thr: FLOAT64;  squeezing: ARRAY OF CHAR );
 	(* Initialisierung des Baumes. *)
 
 	VAR t: Tree;
@@ -66,10 +66,10 @@ TYPE
 	END Init;
 
 
-	PROCEDURE Set( VAR x: Node;  y: ARRAY OF LONGREAL;  n: LONGINT;  start: LONGINT;  ende: LONGINT );
+	PROCEDURE Set( VAR x: Node;  y: ARRAY OF FLOAT64;  n: SIGNED32;  start: SIGNED32;  ende: SIGNED32 );
 	(* Setzt die Werte in den Blättern des Baumes mit den Werten in y. *)
 
-	VAR left, right: Node;  j, k: LONGINT;
+	VAR left, right: Node;  j, k: SIGNED32;
 
 	BEGIN
 		x.start := start;  x.ende := ende;
@@ -81,7 +81,7 @@ TYPE
 		END;
 	END Set;
 
-	PROCEDURE SetValue( VAR x: Node ): LONGREAL;
+	PROCEDURE SetValue( VAR x: Node ): FLOAT64;
 	(* Setzt rekursiv die Werte der Knoten des Baumes aus den Kindern. *)
 
 	BEGIN
@@ -90,7 +90,7 @@ TYPE
 		RETURN x.value;
 	END SetValue;
 
-	PROCEDURE CheckThresh( t: Tree; VAR z: ARRAY OF LONGINT;  thr: LONGREAL;  squeezing: ARRAY OF CHAR );
+	PROCEDURE CheckThresh( t: Tree; VAR z: ARRAY OF SIGNED32;  thr: FLOAT64;  squeezing: ARRAY OF CHAR );
 	(* Überprüft, ob der aktuelle Wert in einem Knoten bereits einen bestimmten Wert überschreitet.
 	Ruft die rekursive Prozedur CheckNode auf. *)
 
@@ -101,11 +101,11 @@ TYPE
 	END CheckThresh;
 
 
-	PROCEDURE CheckNode( VAR z: ARRAY OF LONGINT;  VAR x: Node;  thr: LONGREAL;  squeezing: ARRAY OF CHAR );
+	PROCEDURE CheckNode( VAR z: ARRAY OF SIGNED32;  VAR x: Node;  thr: FLOAT64;  squeezing: ARRAY OF CHAR );
 	(* Überprüft rekursiv, ob ein Wert in einem Knoten einen bestimmten kritischen Wert überschreitet.
 	Wenn ja wird im Überprüfungsvektor z alle Blätter, die an diesem Knoten hängen mit 1 gekennzeichnet. *)
 
-	VAR check: LONGREAL;  i, n: LONGINT;
+	VAR check: FLOAT64;  i, n: SIGNED32;
 
 	BEGIN
 		n := x.ende - x.start + 1;  check := ABS( x.value / math.sqrt( n ) );

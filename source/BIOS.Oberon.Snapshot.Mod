@@ -24,20 +24,20 @@ IMPORT SYSTEM, Display, Display3, Effects, Objects, Oberon, Pictures, Gadgets,
 
 TYPE
 	PositionMsg = RECORD (Display.FrameMsg)
-		FX, FY, FW, FH: INTEGER;
+		FX, FY, FW, FH: SIGNED16;
 	END;
 
 VAR
-	GetPixel: PROCEDURE (x, y: LONGINT): LONGINT;
+	GetPixel: PROCEDURE (x, y: SIGNED32): SIGNED32;
 	handle: Objects.Handler;
-	base, maxy: LONGINT;
+	base, maxy: SIGNED32;
 	pal: ARRAY 256 OF RECORD
-		r, g, b: LONGINT
+		r, g, b: SIGNED32
 	END;
-	rm, gm, bm, rs, gs: LONGINT;
+	rm, gm, bm, rs, gs: SIGNED32;
 
-PROCEDURE CopyBlock(p: Pictures.Picture;  x, y, w, h: INTEGER);
-VAR xi, yi: INTEGER;
+PROCEDURE CopyBlock(p: Pictures.Picture;  x, y, w, h: SIGNED16);
+VAR xi, yi: SIGNED16;
 BEGIN
 	FOR xi := x TO x+w-1 DO
 		FOR yi := y TO y+h-1 DO
@@ -47,7 +47,7 @@ BEGIN
 END CopyBlock;
 
 PROCEDURE InitPal(p: Pictures.Picture);
-VAR i, r, g, b: INTEGER;
+VAR i, r, g, b: SIGNED16;
 BEGIN
 	FOR i := 0 TO 255 DO
 		Pictures.GetColor(p, i, r, g, b);
@@ -200,8 +200,8 @@ END InsertGadget;
 PROCEDURE Screen*;
 	VAR
 		P: Pictures.Picture;
-		x, y: LONGINT;
-		r, g, b, i: INTEGER;
+		x, y: SIGNED32;
+		r, g, b, i: SIGNED16;
 BEGIN
 	NEW(P); Pictures.Create(P, Display.Width, Display.Height, 8);
 	FOR i := 0 TO 255 DO
@@ -216,13 +216,13 @@ BEGIN
 	RembrandtDocs.OpenPict(P, "Snapshot.Pict")
 END Screen;
 
-PROCEDURE BankGetPixelPlane(x, y: LONGINT): LONGINT;	(* harry *)
-VAR offset, mask, col: LONGINT;  pg: SET;  byte: CHAR;
+PROCEDURE BankGetPixelPlane(x, y: SIGNED32): SIGNED32;	(* harry *)
+VAR offset, mask, col: SIGNED32;  pg: SET;  byte: CHAR;
 BEGIN
 	offset := y*80 + (x DIV 8);	(* Setup the video page *)
 	pg := SYSTEM.VAL(SET, offset DIV 10000H) * {0..3};
 	pg := pg + LSH(pg, 4);
-	Machine.Portout8(3CDH, CHR(SYSTEM.VAL(LONGINT, pg)));
+	Machine.Portout8(3CDH, CHR(SYSTEM.VAL(SIGNED32, pg)));
 	offset := offset MOD 10000H;
 	mask := LSH(80H, -(x MOD 8));
 	Machine.Portout8(3CEH, 8X);	(* Select bit *)
@@ -247,40 +247,40 @@ BEGIN
 	RETURN col
 END BankGetPixelPlane;
 
-PROCEDURE BankGetPixel(x, y: LONGINT): LONGINT;	(* harry *)
-VAR offset: LONGINT;  byte: CHAR;  pg: SET;
+PROCEDURE BankGetPixel(x, y: SIGNED32): SIGNED32;	(* harry *)
+VAR offset: SIGNED32;  byte: CHAR;  pg: SET;
 BEGIN
 	offset := y*Display.Width + x;
 	pg := SYSTEM.VAL(SET, offset DIV 10000H) * {0..3};
 	pg := pg + LSH(pg, 4);
-	Machine.Portout8(3CDH, CHR(SYSTEM.VAL(LONGINT, pg)));
+	Machine.Portout8(3CDH, CHR(SYSTEM.VAL(SIGNED32, pg)));
 	SYSTEM.GET(base + offset MOD 010000H, byte);
 	RETURN ORD(byte)
 END BankGetPixel;
 
-PROCEDURE LinearGetPixel(x, y: LONGINT): LONGINT;
+PROCEDURE LinearGetPixel(x, y: SIGNED32): SIGNED32;
 VAR ch: CHAR;
 BEGIN
 	SYSTEM.GET(base + (maxy-y) * Display.Width + x, ch);
 	RETURN ORD(ch)
 END LinearGetPixel;
 
-PROCEDURE TransferGetPixel8(x, y: LONGINT): LONGINT;
+PROCEDURE TransferGetPixel8(x, y: SIGNED32): SIGNED32;
 VAR buf: ARRAY 4 OF CHAR;
 BEGIN
 	Display.TransferBlock(buf, 0, 0, x, y, 1, 1, Display.get);
 	RETURN ORD(buf[0])
 END TransferGetPixel8;
 
-PROCEDURE TransferGetPixel(x, y: LONGINT): LONGINT;	(* very slow! *)
+PROCEDURE TransferGetPixel(x, y: SIGNED32): SIGNED32;	(* very slow! *)
 TYPE Arr4 = ARRAY 4 OF CHAR;
-VAR col, r, g, b, r1, g1, b1, i, j, d, m: LONGINT;
+VAR col, r, g, b, r1, g1, b1, i, j, d, m: SIGNED32;
 BEGIN
 	Display.TransferBlock(SYSTEM.VAL(Arr4, col), 0, 0, x, y, 1, 1, Display.get);
 	r := ASH(col, rs) MOD rm;
 	g := ASH(col, gs) MOD gm;
 	b := col MOD bm;
-	m := MAX(LONGINT);
+	m := MAX(SIGNED32);
 	FOR i := 0 TO 255 DO
 		r1 := pal[i].r - r;  g1 := pal[i].g - g;  b1 := pal[i].b - b;
 		d := r1*r1 + g1*g1 + b1*b1;
@@ -290,7 +290,7 @@ BEGIN
 END TransferGetPixel;
 
 PROCEDURE Init;
-VAR format: LONGINT;
+VAR format: SIGNED32;
 BEGIN
 	rm := 256;  gm := 256;  bm := 256;
 	maxy := Display.Height-1;

@@ -70,13 +70,13 @@ CONST
 TYPE
 	(* List of incoming fragmented packets which should be reassembled *)
 	FragmentList = POINTER TO RECORD
-		fragmentID: LONGINT;
-		nextHeader: LONGINT;
+		fragmentID: SIGNED32;
+		nextHeader: SIGNED32;
 		srcAdr: IP.Adr;
 		dstAdr: IP.Adr;
 		packets: PacketFragment;
 		startedAt: Kernel.MilliTimer;
-		fragmentCount: LONGINT;
+		fragmentCount: SIGNED32;
 		next: FragmentList;
 	END;
 
@@ -84,7 +84,7 @@ TYPE
 	(* List of a packet which was fragmented *)
 	PacketFragment = POINTER TO RECORD
 		buffer: Network.Buffer;
-		fragmentOffset: LONGINT;
+		fragmentOffset: SIGNED32;
 		moreFragments: BOOLEAN;
 		next: PacketFragment;
 		prev: PacketFragment;
@@ -105,11 +105,11 @@ TYPE
 		SendRouterAdvertisements*: BOOLEAN;
 		ManagedAddressConfig*: BOOLEAN;
 		OtherStatefulConfig*: BOOLEAN;
-		LinkMTU*: LONGINT;
-		ReachableTime*: LONGINT;	(* in seconds *)
-		RetransTimer*: LONGINT;		(* in seconds *)
-		CurrentHopLimit*: LONGINT;
-		Lifetime*: LONGINT;			(* in seconds *)
+		LinkMTU*: SIGNED32;
+		ReachableTime*: SIGNED32;	(* in seconds *)
+		RetransTimer*: SIGNED32;		(* in seconds *)
+		CurrentHopLimit*: SIGNED32;
+		Lifetime*: SIGNED32;			(* in seconds *)
 		Prefixes*: PrefixConfig;
 		next*: RouterConfig;
 	END;
@@ -119,9 +119,9 @@ TYPE
 	PrefixConfig* = POINTER TO RECORD
 		Prefix*: IP.Adr;
 		IsSitePrefix*: BOOLEAN;
-		ValidLifetime*: LONGINT;		(* in seconds *)
+		ValidLifetime*: SIGNED32;		(* in seconds *)
 		OnLink*: BOOLEAN;
-		PreferredLifetime*: LONGINT;(* in seconds *)
+		PreferredLifetime*: SIGNED32;(* in seconds *)
 		Autonomous*: BOOLEAN;
 		next*: PrefixConfig;
 	END;
@@ -132,10 +132,10 @@ TYPE
 		l3hdr: POINTER TO ARRAY OF CHAR;
 		l4hdr: POINTER TO ARRAY OF CHAR;
 		data: POINTER TO ARRAY OF CHAR;
-		h3len: LONGINT;
-		h4len: LONGINT;
-		dofs: LONGINT;
-		dlen: LONGINT;
+		h3len: SIGNED32;
+		h4len: SIGNED32;
+		dofs: SIGNED32;
+		dlen: SIGNED32;
 		next: PacketQueue;
 	END;
 
@@ -145,10 +145,10 @@ TYPE
 		next: NeighborCacheEntry;
 		neighborIP: IP.Adr;
 		linkAdr: Network.LinkAdr;
-		reachability: LONGINT; (* either 	Incomplete, Reachable, Stale, Delay or Probe *)
+		reachability: SIGNED32; (* either 	Incomplete, Reachable, Stale, Delay or Probe *)
 		isRouter: BOOLEAN;
 		queuedPackets: PacketQueue;
-		probes: LONGINT; (* number of unanswered probes *)
+		probes: SIGNED32; (* number of unanswered probes *)
 		lastConfirmation: Kernel.MilliTimer;
 	END;
 
@@ -158,7 +158,7 @@ TYPE
 		next: DestCacheEntry;
 		dest: IP.Adr;
 		nextHop: IP.Adr;
-		pmtu: LONGINT;
+		pmtu: SIGNED32;
 	END;
 
 
@@ -200,7 +200,7 @@ TYPE
 	(** Constructor: Initializes destinations array.*)
 	PROCEDURE &Constr*(int: Interface; prefixes: Prefixes);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 
 	BEGIN
 		FOR i := 0 TO 255 DO
@@ -272,7 +272,7 @@ TYPE
 
 
 	(* Changes a PMTU of a cache entry *)
-	PROCEDURE ChangePMTU(adr: IP.Adr; newPMTU: LONGINT);
+	PROCEDURE ChangePMTU(adr: IP.Adr; newPMTU: SIGNED32);
 	VAR
 		destItem: DestCacheEntry;
 
@@ -327,10 +327,10 @@ TYPE
 
 
 	(** Get PMTU of a address *)
-	PROCEDURE GetPMTU(adr: IP.Adr): LONGINT;
+	PROCEDURE GetPMTU(adr: IP.Adr): SIGNED32;
 	VAR
 		destItem: DestCacheEntry;
-		pmtu: LONGINT;
+		pmtu: SIGNED32;
 
 	BEGIN
 		destItem := destArray[ORD(adr.ipv6Adr[15])];
@@ -379,7 +379,7 @@ TYPE
 	PROCEDURE ChangeDests(fromAdr: IP.Adr; toAdr: IP.Adr);
 	VAR
 		destItem: DestCacheEntry;
-		i: LONGINT;
+		i: SIGNED32;
 
 	BEGIN
 		FOR i := 0 TO CacheSize DO
@@ -398,7 +398,7 @@ TYPE
 	(** Clears the destination cache *)
 	PROCEDURE Clear;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 
 	BEGIN
 		FOR i := 0 TO CacheSize - 1 DO
@@ -422,7 +422,7 @@ TYPE
 	(** Constructor: Initializes neighbor array.*)
 	PROCEDURE &Constr *(int: Interface);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 
 	BEGIN
 		interface := int;
@@ -499,7 +499,7 @@ TYPE
 	VAR
 		neighborItem: NeighborCacheEntry;
 		neighborItemPrev: NeighborCacheEntry;
-		i: LONGINT;
+		i: SIGNED32;
 
 	BEGIN {EXCLUSIVE}
 		FOR i := 0 TO CacheSize - 1 DO
@@ -569,7 +569,7 @@ TYPE
 
 
 	(* Initiate address resolution *)
-	PROCEDURE AddressResolution(neighborIP: IP.Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
+	PROCEDURE AddressResolution(neighborIP: IP.Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32);
 	VAR
 		neighborEntry: NeighborCacheEntry;
 		packetQueue: PacketQueue;
@@ -624,7 +624,7 @@ TYPE
 	PROCEDURE SendQueuedPackets(neighborCacheEntry: NeighborCacheEntry);
 	VAR
 		queuedPacket: PacketQueue;
-		pmtu: LONGINT;
+		pmtu: SIGNED32;
 		toFragment: BOOLEAN;
 
 	BEGIN {EXCLUSIVE}
@@ -684,7 +684,7 @@ TYPE
 
 
 	(* Add a prefix. Lifetime in seconds *)
-	PROCEDURE Add(prefix: IP.Adr; lifetime: LONGINT);
+	PROCEDURE Add(prefix: IP.Adr; lifetime: SIGNED32);
 	VAR
 		prefixItem: PrefixesEntry;
 
@@ -772,7 +772,7 @@ TYPE
 	VAR
 		prefixItem: PrefixesEntry;
 		longestPrefixItem: PrefixesEntry;
-		longestPrefix: LONGINT;
+		longestPrefix: SIGNED32;
 
 	BEGIN
 		prefixItem := prefixes;
@@ -817,7 +817,7 @@ TYPE
 
 
 	(* Add a default router *)
-	PROCEDURE Add(routerIP: IP.Adr; routerLinkAdr: Network.LinkAdr; lifetime: LONGINT): RoutersEntry;
+	PROCEDURE Add(routerIP: IP.Adr; routerLinkAdr: Network.LinkAdr; lifetime: SIGNED32): RoutersEntry;
 	VAR
 		router: RoutersEntry;
 		neighbor: NeighborCacheEntry;
@@ -1020,7 +1020,7 @@ TYPE
 
 	PROCEDURE &Constr*;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 
 	BEGIN
 		FOR i := 0 TO (CacheSize - 1) DO
@@ -1092,7 +1092,7 @@ TYPE
 	VAR
 		localAdrItem: LocalAdrCacheEntry;
 		localAdrItemPrev: LocalAdrCacheEntry;
-		i: LONGINT;
+		i: SIGNED32;
 
 	BEGIN {EXCLUSIVE}
 		FOR i := 0 TO CacheSize - 1 DO
@@ -1163,18 +1163,18 @@ TYPE
 		neighborCache: NeighborCache;
 		prefixes: Prefixes;
 		routers: Routers;
-		linkMTU: LONGINT;
-		curHopLimit*: LONGINT;
+		linkMTU: SIGNED32;
+		curHopLimit*: SIGNED32;
 
 		linkMulticastSolicited: Network.LinkAdr;
 		linkLocalSolicitedNodeAdr: IP.Adr;
 
 		(* Autoconfiguration *)
 		autoconfigurated*: BOOLEAN;
-		autoconfigState: LONGINT;
+		autoconfigState: SIGNED32;
 		createStatelessInterface*: BOOLEAN;
 		createStatefulInterface: BOOLEAN;
-		routerSolCount: LONGINT;
+		routerSolCount: SIGNED32;
 
 		(* Timers *)
 		shortTimer: Kernel.Timer;
@@ -1184,20 +1184,20 @@ TYPE
 		intName: IP.Name;
 		intv6: Interface;
 		int: IP.Interface;
-		res: WORD;
+		res: INTEGER;
 		fragmentList: FragmentList;
 
 		(* router *)
 		isRouter*: BOOLEAN;
 		routerConfig: RouterConfig;
-		nextRtrAdvertisement: LONGINT;	(* When should the next unsolicited router advertisement be sent; in numbers of shortTimer *)
+		nextRtrAdvertisement: SIGNED32;	(* When should the next unsolicited router advertisement be sent; in numbers of shortTimer *)
 
 
 		(** Constructor - Open an IPv6 interface and add it to the IP configuration.
 			"name" must be a unique name for this interface (tested in "AddInterface").
 			"dev" must be a Network.LinkDevice that can be used in other interfaces => multiple IP addresses on the
 			same interface. *)
-		PROCEDURE &Constr*(name: IP.Name; dev: Network.LinkDevice; VAR res: WORD);
+		PROCEDURE &Constr*(name: IP.Name; dev: Network.LinkDevice; VAR res: INTEGER);
 		VAR
 			devListItem: DeviceList;
 
@@ -1276,7 +1276,7 @@ TYPE
 		(** Close and deactivate the interface, i.e. remove it from the configuration. *)
 		PROCEDURE Close*;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 
 		BEGIN {EXCLUSIVE}
 			ASSERT(~closed);
@@ -1295,7 +1295,7 @@ TYPE
 
 		(** Set addresses. Is normally called just after instanciation, but can also be called later, e.g. by DHCP.
 			If "gatewayAdr" is not "NilAdr", it will be added to the default router list. *)
-		PROCEDURE SetAdrs*(localAdr, prefixAdr, defaultRouterAdr: IP.Adr; VAR res: WORD);
+		PROCEDURE SetAdrs*(localAdr, prefixAdr, defaultRouterAdr: IP.Adr; VAR res: INTEGER);
 		VAR
 			devListItem: DeviceList;
 
@@ -1360,10 +1360,10 @@ TYPE
 
 
 		(* Receive an IP packet *)
-		PROCEDURE IPInput*(dev: Network.LinkDevice; type: LONGINT; buffer: Network.Buffer);
+		PROCEDURE IPInput*(dev: Network.LinkDevice; type: SIGNED32; buffer: Network.Buffer);
 		VAR
-			payloadLength: LONGINT;
-			nextHeader: LONGINT;
+			payloadLength: SIGNED32;
+			nextHeader: SIGNED32;
 			srcAdr: IP.Adr;
 			dstAdr: IP.Adr;
 			forwardInt: IP.Interface;
@@ -1555,13 +1555,13 @@ TYPE
 
 		(** Send an IP packet on this interface. Send it directly without lookup of destination cache, etc... *)
 		PROCEDURE SendDirectly*(linkDst: Network.LinkAdr;
-								       nextHeader: LONGINT;
+								       nextHeader: SIGNED32;
 								       destAdr: IP.Adr;
 								        VAR l4hdr, data: ARRAY OF CHAR;
-								        h4len, dofs, dlen, hopLimit: LONGINT);
+								        h4len, dofs, dlen, hopLimit: SIGNED32);
 		VAR
 			l3hdr: ARRAY MaxIPHdrLen OF CHAR;
-			i: LONGINT;
+			i: SIGNED32;
 
 		BEGIN
 			IF DEBUG THEN
@@ -1598,7 +1598,7 @@ TYPE
 		PROCEDURE DoSendDirectly*(linkDst: Network.LinkAdr;
 									    destAdr: IP.Adr;
 									     VAR l3hdr, l4hdr, data: ARRAY OF CHAR;
-									     h3len, h4len, dofs, dlen: LONGINT) ;
+									     h3len, h4len, dofs, dlen: SIGNED32) ;
 		BEGIN
 			ASSERT (destAdr.usedProtocol = 6, 2345);
 			IF h3len+h4len+dlen <= dev.mtu THEN
@@ -1630,10 +1630,10 @@ TYPE
 
 
 		(** Send an IP packet on this interface. *)
-		PROCEDURE Send*(nextHeader: LONGINT; destAdr: IP.Adr; CONST l4hdr, data: ARRAY OF CHAR; h4len, dofs, dlen, hopLimit: LONGINT);
+		PROCEDURE Send*(nextHeader: SIGNED32; destAdr: IP.Adr; CONST l4hdr, data: ARRAY OF CHAR; h4len, dofs, dlen, hopLimit: SIGNED32);
 		VAR
 			l3hdr: ARRAY MaxIPHdrLen OF CHAR;
-			i: LONGINT;
+			i: SIGNED32;
 
 		BEGIN
 			IF DEBUG THEN
@@ -1664,11 +1664,11 @@ TYPE
 
 
 		(* Internal procedure to perform the rest of the send operation. Used by "Send" and for IP forwarding. *)
-		PROCEDURE DoSend*(destAdr: IP.Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT) ;
+		PROCEDURE DoSend*(destAdr: IP.Adr; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32) ;
 		VAR
 			linkDst: Network.LinkAdr;
 			nextHop: IP.Adr;
-			pmtu: LONGINT;
+			pmtu: SIGNED32;
 			toFragment: BOOLEAN;
 
 		BEGIN
@@ -1728,16 +1728,16 @@ TYPE
 
 
 		(** Fragment packets and send them *)
-		PROCEDURE DoFragAndSend(pmtu: LONGINT; linkDst: Network.LinkAdr; l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE DoFragAndSend(pmtu: SIGNED32; linkDst: Network.LinkAdr; l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32);
 		VAR
-			maxDataLen: LONGINT;
-			fragmentOffset: LONGINT;
-			oldNextHeader: LONGINT;
+			maxDataLen: SIGNED32;
+			fragmentOffset: SIGNED32;
+			oldNextHeader: SIGNED32;
 			l4hdrFragment: POINTER TO ARRAY OF CHAR;	(* fragment header *)
 			dataFragment: POINTER TO ARRAY OF CHAR;	(* fragment data *)
 			fragmentHdrSet: SET;
-			fragID: LONGINT;
-			i: LONGINT;
+			fragID: SIGNED32;
+			i: SIGNED32;
 
 		BEGIN
 			fragID := GetFragmentID();
@@ -1757,7 +1757,7 @@ TYPE
 
 			fragmentHdrSet := {};
 			fragmentHdrSet := fragmentHdrSet + {0};
-			Network.PutNet4(l4hdrFragment^, 0, SYSTEM.VAL(LONGINT, fragmentHdrSet));
+			Network.PutNet4(l4hdrFragment^, 0, SYSTEM.VAL(SIGNED32, fragmentHdrSet));
 			l4hdrFragment^[0] := CHR(oldNextHeader);
 			Network.PutNet4(l4hdrFragment^, 4, fragID);
 
@@ -1784,7 +1784,7 @@ TYPE
 					(* last fragment *)
 					fragmentHdrSet := SYSTEM.VAL(SET, LSH((fragmentOffset - dofs + h4len) DIV 8, 3));
 					fragmentHdrSet := fragmentHdrSet - {0, 1, 2};
-					Network.PutNet4(l4hdrFragment^, 0, SYSTEM.VAL(LONGINT, fragmentHdrSet));
+					Network.PutNet4(l4hdrFragment^, 0, SYSTEM.VAL(SIGNED32, fragmentHdrSet));
 					l4hdrFragment^[0] := CHR(oldNextHeader);
 					l4hdrFragment^[1] := 0X;
 					Network.PutNet4(l4hdrFragment^, 4, fragID);
@@ -1805,7 +1805,7 @@ TYPE
 					(* fragment in the middle *)
 					fragmentHdrSet := SYSTEM.VAL(SET, LSH((fragmentOffset - dofs + h4len) DIV 8, 3));
 					fragmentHdrSet := fragmentHdrSet + {0} - {1,2};
-					Network.PutNet4(l4hdrFragment^, 0, SYSTEM.VAL(LONGINT, fragmentHdrSet));
+					Network.PutNet4(l4hdrFragment^, 0, SYSTEM.VAL(SIGNED32, fragmentHdrSet));
 					l4hdrFragment^[0] := CHR(oldNextHeader);
 					l4hdrFragment^[1] := 0X;
 					Network.PutNet4(l4hdrFragment^, 4, fragID);
@@ -1831,7 +1831,7 @@ TYPE
 		(** Performs a check for Network if a packet is accepted by this interface *)
 		PROCEDURE IsPacketAccepted(buffer: Network.Buffer): BOOLEAN;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			isAccepted: BOOLEAN;
 
 		BEGIN
@@ -1913,7 +1913,7 @@ TYPE
 		(* Reads the source address of a IP packet buffer *)
 		PROCEDURE ReadSrcAdr* (buffer: Network.Buffer): IP.Adr;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			retAdr: IP.Adr;
 
 		BEGIN
@@ -1928,7 +1928,7 @@ TYPE
 		(* Reads the destination address of a IP packet buffer *)
 		PROCEDURE ReadDestAdr* (buffer: Network.Buffer):IP. Adr;
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			retAdr: IP.Adr;
 
 		BEGIN
@@ -1983,10 +1983,10 @@ TYPE
 		(** Creates a pseudo-header for checksum calculation (TCP/UDP) and returns the length of this header *)
 		PROCEDURE WritePseudoHeader*(VAR pseudoHdr: ARRAY OF CHAR;
 										     src, dst: IP.Adr;
-										     nextHeader, pktLengthUpperLayer: LONGINT): LONGINT;
+										     nextHeader, pktLengthUpperLayer: SIGNED32): SIGNED32;
 		VAR
-			i: LONGINT;
-			tmpAdr: ARRAY 4 OF LONGINT;
+			i: SIGNED32;
+			tmpAdr: ARRAY 4 OF SIGNED32;
 
 		BEGIN
 			(* UDP/TCP Pseudo-header (for checksum calculation)
@@ -2002,7 +2002,7 @@ TYPE
 				ASSERT (IP.IsNilAdr(dst) OR (dst.usedProtocol = IP.IPv6));
 			END;
 
-			(* cast src adr to LONGINT array *)
+			(* cast src adr to SIGNED32 array *)
 			FOR i := 0 TO 3 DO
 				tmpAdr[i] := ORD(src.ipv6Adr[i*4 + 0]);
 				tmpAdr[i] := (tmpAdr[i] * 256) + ORD(src.ipv6Adr[i*4 + 1]);
@@ -2011,7 +2011,7 @@ TYPE
 				Network.PutNet4(pseudoHdr, i*4, tmpAdr[i]); (* local IP address *)
 			END;
 
-			(* cast dst adr to LONGINT array *)
+			(* cast dst adr to SIGNED32 array *)
 			FOR i := 0 TO 3 DO
 				tmpAdr[i] := 0;
 				tmpAdr[i] := ORD(dst.ipv6Adr[i*4 + 0]);
@@ -2033,7 +2033,7 @@ TYPE
 		PROCEDURE ReceiveNeighborSolicitation*(srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
 		VAR
 			target: IP.Adr;
-			i: LONGINT;
+			i: SIGNED32;
 			int: IP.Interface;
 
 		BEGIN
@@ -2170,31 +2170,31 @@ TYPE
 			intv6: Interface;
 			intName: IP.Name;
 			newLocalAdr: IP.Adr;
-			hopLimit: LONGINT;
+			hopLimit: SIGNED32;
 			flags: SET;
 			managedFlag: BOOLEAN;
 			otherStatefulFlag: BOOLEAN;
 			homeAgentFlag: BOOLEAN;
-			routerLifetime: LONGINT;
-			reachableTime: LONGINT;
-			retransTimer: LONGINT;
+			routerLifetime: SIGNED32;
+			reachableTime: SIGNED32;
+			retransTimer: SIGNED32;
 			linkAdr: Network.LinkAdr;
-			mtu: LONGINT;
+			mtu: SIGNED32;
 			onLink: ARRAY MaxPrefixOptions OF BOOLEAN;
 			autonomous: ARRAY MaxPrefixOptions OF BOOLEAN;
 			routerAddress: ARRAY MaxPrefixOptions OF BOOLEAN;
 			sitePrefix: ARRAY MaxPrefixOptions OF BOOLEAN;
-			validLifetime: ARRAY MaxPrefixOptions OF LONGINT;
-			preferredLifetime: ARRAY MaxPrefixOptions OF LONGINT;
-			sitePrefixLength: ARRAY MaxPrefixOptions OF LONGINT;
+			validLifetime: ARRAY MaxPrefixOptions OF SIGNED32;
+			preferredLifetime: ARRAY MaxPrefixOptions OF SIGNED32;
+			sitePrefixLength: ARRAY MaxPrefixOptions OF SIGNED32;
 			localPrefix: ARRAY MaxPrefixOptions OF IP.Adr;
 			router: RoutersEntry;
 			hasSrcLinkLayerOption: BOOLEAN;
 			hasMTUOption: BOOLEAN;
 			prefixItem: PrefixesEntry;
-			nbrOfPrefixOpt: LONGINT;
-			i: LONGINT;
-			res: WORD;
+			nbrOfPrefixOpt: SIGNED32;
+			i: SIGNED32;
+			res: INTEGER;
 			tmpStr: ARRAY 8 OF CHAR;
 
 
@@ -2274,8 +2274,8 @@ TYPE
 			(* create IPv6-interfaces if necessary *)
 			PROCEDURE createInterfaces;
 			VAR
-				i: LONGINT;
-				currentPrefix: LONGINT;
+				i: SIGNED32;
+				currentPrefix: SIGNED32;
 
 			BEGIN
 				(* autoconfiguration of interfaces *)
@@ -2365,8 +2365,8 @@ TYPE
 			homeAgentFlag := 29 IN flags;
 
 			routerLifetime := Network.GetNet2(buffer.data, buffer.ofs + 2);
-			reachableTime := SYSTEM.VAL(LONGINT, Network.GetNet4(buffer.data, buffer.ofs + 4));
-			retransTimer := SYSTEM.VAL(LONGINT, Network.GetNet4(buffer.data, buffer.ofs + 8));
+			reachableTime := SYSTEM.VAL(SIGNED32, Network.GetNet4(buffer.data, buffer.ofs + 4));
+			retransTimer := SYSTEM.VAL(SIGNED32, Network.GetNet4(buffer.data, buffer.ofs + 8));
 
 			INC(buffer.ofs, RouterAdvHdrLen);
 			DEC(buffer.len, RouterAdvHdrLen);
@@ -2449,7 +2449,7 @@ TYPE
 		(* Receive a packet too big ICMP message *)
 		PROCEDURE ReceivePacketTooBig*(from: IP.Adr; buffer: Network.Buffer);
 		VAR
-			newPMTU: LONGINT;
+			newPMTU: SIGNED32;
 		BEGIN
 			(* ICMP Code field = 0 *)
 			IF buffer.data[buffer.ofs - 3] = 0X THEN
@@ -2466,11 +2466,11 @@ TYPE
 		VAR
 			prefixConfigItem: PrefixConfig;
 			intv6: Interface;
-			count: LONGINT;
+			count: SIGNED32;
 			tmpStr: ARRAY 8 OF CHAR;
 			newLocalAdr: IP.Adr;
-			res: WORD;
-			i: LONGINT;
+			res: INTEGER;
+			i: SIGNED32;
 
 		BEGIN
 			isRouter := TRUE;
@@ -2528,7 +2528,7 @@ TYPE
 			fragmentListItem: FragmentList;
 			newPacketFragmentItem: PacketFragment;
 			packetFragmentItem: PacketFragment;
-			fragmentID: LONGINT;
+			fragmentID: SIGNED32;
 
 
 			(** Ad new fragmentItem *)
@@ -2628,7 +2628,7 @@ TYPE
 		PROCEDURE ReassembleFragments(fragmentListItem: FragmentList);
 		VAR
 			packetFragmentItem: PacketFragment;
-			currentFragmentOffset: LONGINT;
+			currentFragmentOffset: SIGNED32;
 			lastPacketOk: BOOLEAN;
 			lastFragment: PacketFragment;
 
@@ -2706,7 +2706,7 @@ TYPE
 
 		(** Writes the configuration of this interface *)
 		PROCEDURE OutInterface*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 			str : ARRAY 32 OF CHAR;
 
 		BEGIN
@@ -2863,15 +2863,15 @@ TYPE
 	SendNeighborAdvertisement* = PROCEDURE {DELEGATE} (interface: Interface; linkDst: Network.LinkAdr; destAdr: IP.Adr; solicited: BOOLEAN);
 	SendRouterSolicitation* = PROCEDURE {DELEGATE} (interface: Interface);
 	SendRouterAdvertisement* = PROCEDURE {DELEGATE} (interface: Interface; dstAdr: IP.Adr; dstLinkAdr: Network.LinkAdr; routerConfig:RouterConfig);
-	SendICMPv6TimeExceeded* = PROCEDURE {DELEGATE} (interface: Interface; discardedPacket: Network.Buffer; srcAdr: IP.Adr; code: LONGINT);
-	SendICMPv6ParamProb* = PROCEDURE {DELEGATE} (interface: Interface; discardedPacket: Network.Buffer; srcAdr: IP.Adr; probPointer, code: LONGINT);
+	SendICMPv6TimeExceeded* = PROCEDURE {DELEGATE} (interface: Interface; discardedPacket: Network.Buffer; srcAdr: IP.Adr; code: SIGNED32);
+	SendICMPv6ParamProb* = PROCEDURE {DELEGATE} (interface: Interface; discardedPacket: Network.Buffer; srcAdr: IP.Adr; probPointer, code: SIGNED32);
 	ICMPLinkLayerAdrOption* = PROCEDURE {DELEGATE} (VAR buffer: Network.Buffer; VAR linkAdr: Network.LinkAdr);
 	ICMPPrefixInfoOption* = PROCEDURE {DELEGATE} (VAR buffer: Network.Buffer;
 													     VAR onLink, autonomous, routerAddress, sitePrefix: BOOLEAN;
-													     VAR validLifetime, preferredLifetime, sitePrefixLength: LONGINT;
+													     VAR validLifetime, preferredLifetime, sitePrefixLength: SIGNED32;
 													     VAR localPrefix: IP.Adr);
 	ICMPRedirectHdrOption* = PROCEDURE {DELEGATE} (VAR buffer: Network.Buffer);
-	ICMPMTUOption* = PROCEDURE {DELEGATE} (VAR buffer: Network.Buffer; VAR MTU: LONGINT);
+	ICMPMTUOption* = PROCEDURE {DELEGATE} (VAR buffer: Network.Buffer; VAR MTU: SIGNED32);
 	ICMPAdvIntervalOption* = PROCEDURE {DELEGATE} (VAR buffer: Network.Buffer);
 	ICMPHomeAgentInfoOption* = PROCEDURE {DELEGATE} (VAR buffer: Network.Buffer);
 	ICMPRouteInfoOption* = PROCEDURE {DELEGATE} (VAR buffer: Network.Buffer);
@@ -2913,17 +2913,17 @@ VAR
 	localAdrCache: LocalAdrCache;
 
 	(* fragmentation *)
-	fragmentationID: LONGINT;
+	fragmentationID: SIGNED32;
 	fragmentListItem: FragmentList;
 
 	(* random generator *)
-	randomZ: LONGINT;
+	randomZ: SIGNED32;
 
 
 (* Checks if a part of two addresses is equal *)
-PROCEDURE AdrsPartEqual(adr1, adr2: IP.Adr; from, to: LONGINT): BOOLEAN;
+PROCEDURE AdrsPartEqual(adr1, adr2: IP.Adr; from, to: SIGNED32): BOOLEAN;
 VAR
-	i: LONGINT;
+	i: SIGNED32;
 	isPartEqual: BOOLEAN;
 
 BEGIN
@@ -3011,12 +3011,12 @@ VAR
 	linkLocalInt: Interface;
 	neighborCacheItem: NeighborCacheEntry;
 	sleepTimer: Kernel.Timer;
-	sleepCounter: LONGINT;		(* 5 times 100 ms *)
+	sleepCounter: SIGNED32;		(* 5 times 100 ms *)
 	normalCase: BOOLEAN;
 	intItem: IP.Interface;
 	gw: IP.Interface;
 	linkDst: Network.LinkAdr;
-	devCount: LONGINT;
+	devCount: SIGNED32;
 
 BEGIN
 	(* Problem: When two network devices are available it is impossible to know on
@@ -3147,7 +3147,7 @@ END GetLinkLocalInterface;
 *)
 
 (** Deliver a ID for packet fragmentation *)
-PROCEDURE GetFragmentID(): LONGINT;
+PROCEDURE GetFragmentID(): SIGNED32;
 BEGIN {EXCLUSIVE}
 	INC(fragmentationID);
 	RETURN fragmentationID;
@@ -3155,14 +3155,14 @@ END GetFragmentID;
 
 
 (** Parses the routing header extension *)
-PROCEDURE RoutingExtHeader(int: IP.Interface; type: LONGINT; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
+PROCEDURE RoutingExtHeader(int: IP.Interface; type: SIGNED32; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
 VAR
-	segmentsLeft: LONGINT;
-	hdrExtLen: LONGINT;
+	segmentsLeft: SIGNED32;
+	hdrExtLen: SIGNED32;
 	receiver: IP.Receiver;
-	nextHeader: LONGINT;
-	nbrOfAdrs: LONGINT;
-	ithAddress: LONGINT;
+	nextHeader: SIGNED32;
+	nbrOfAdrs: SIGNED32;
+	ithAddress: SIGNED32;
 	tempAdr: ARRAY 16 OF CHAR;
 	intv6: Interface;
 
@@ -3225,11 +3225,11 @@ END RoutingExtHeader;
 
 
 (** Parses the hop-by-hop header extension, which is ignored up to now *)
-PROCEDURE HopByHopExtHeader(int: IP.Interface; type: LONGINT; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
+PROCEDURE HopByHopExtHeader(int: IP.Interface; type: SIGNED32; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
 VAR
 	receiver: IP.Receiver;
-	nextHeader: LONGINT;
-	hdrExtLen: LONGINT;
+	nextHeader: SIGNED32;
+	hdrExtLen: SIGNED32;
 	intv6: Interface;
 
 BEGIN
@@ -3257,11 +3257,11 @@ END HopByHopExtHeader;
 
 
 (** Parses the destination header extension, which is ignored up to now *)
-PROCEDURE DestinationExtHeader(int: IP.Interface; type: LONGINT; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
+PROCEDURE DestinationExtHeader(int: IP.Interface; type: SIGNED32; srcAdr, dstAdr: IP.Adr; buffer: Network.Buffer);
 VAR
 	receiver: IP.Receiver;
-	nextHeader: LONGINT;
-	hdrExtLen: LONGINT;
+	nextHeader: SIGNED32;
+	hdrExtLen: SIGNED32;
 	intv6: Interface;
 
 BEGIN
@@ -3289,7 +3289,7 @@ END DestinationExtHeader;
 
 
 (** Deliver a random number between 0 and limit *)
-PROCEDURE RandomNumber(limit: LONGINT): LONGINT;
+PROCEDURE RandomNumber(limit: SIGNED32): SIGNED32;
 CONST
 	a = 16807;
 	m = 2147483647;
@@ -3297,7 +3297,7 @@ CONST
 	r = m MOD a;
 
 VAR
-	g: LONGINT;
+	g: SIGNED32;
 
 BEGIN
 	g := a*(randomZ MOD q) - r*(randomZ DIV q);

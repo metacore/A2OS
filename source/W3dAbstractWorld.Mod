@@ -10,7 +10,7 @@ TYPE
 		END SetPos;
 
 		(** SetUV - set the relative texture position of this vertex (texture is defined in the triangle) *)
-		PROCEDURE SetUV*(u, v : LONGREAL);
+		PROCEDURE SetUV*(u, v : FLOAT64);
 		END SetUV;
 	END Vertex;
 
@@ -20,7 +20,7 @@ TYPE
 
 	Object* = OBJECT
 		(** SetIndex - index that will be reported by World.GetOwnerIndex(x, y) if the object is visible in the view at the pixel(x, y) *)
-		PROCEDURE SetIndex*(idx : LONGINT);
+		PROCEDURE SetIndex*(idx : SIGNED32);
 		END SetIndex;
 
 		(** convert an image to the internal texture format of the Object *)
@@ -31,7 +31,7 @@ TYPE
 		PROCEDURE AddVertex*(p : Vectors.TVector3d) : Vertex;
 		END AddVertex;
 
-		PROCEDURE AddTriangle*(a, b, c : Vertex; color : LONGINT; tex : Texture; mask0, culled: BOOLEAN);
+		PROCEDURE AddTriangle*(a, b, c : Vertex; color : SIGNED32; tex : Texture; mask0, culled: BOOLEAN);
 		END AddTriangle;
 
 		PROCEDURE Clear*;
@@ -64,7 +64,7 @@ TYPE
 		END Render;
 
 		(** currently not for animated objects :-( *)
-		PROCEDURE GetOwnerIndex*(x, y : SIZE): LONGINT;
+		PROCEDURE GetOwnerIndex*(x, y : SIZE): SIGNED32;
 		END GetOwnerIndex;
 	END World;
 

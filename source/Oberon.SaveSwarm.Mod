@@ -25,31 +25,31 @@ CONST
 
 TYPE
 	Bee = RECORD
-		x, y: ARRAY 3 OF INTEGER;	(* bee positions x[time], y[time] *)
-		vx, vy: INTEGER;	(* bee velocity *)
+		x, y: ARRAY 3 OF SIGNED16;	(* bee positions x[time], y[time] *)
+		vx, vy: SIGNED16;	(* bee velocity *)
 	END;
 	BeeSwarm = POINTER TO ARRAY OF Bee;
 
 	Swarm = RECORD
-		X, Y, W, H: INTEGER;
-		speed, time: INTEGER;	(* speed of swarm *)
-		size: INTEGER;	(* number of bees in swarm *)
-		mincol, maxcol, col, colstep: INTEGER;	(* display colors and update step for swarm *)
-		waspcol: INTEGER;	(* color of wasp *)
-		wacc, wvel: INTEGER;	(* maximum wasp acceleration and velocity *)
-		border: INTEGER;	(* minimum border for wasp *)
+		X, Y, W, H: SIGNED16;
+		speed, time: SIGNED16;	(* speed of swarm *)
+		size: SIGNED16;	(* number of bees in swarm *)
+		mincol, maxcol, col, colstep: SIGNED16;	(* display colors and update step for swarm *)
+		waspcol: SIGNED16;	(* color of wasp *)
+		wacc, wvel: SIGNED16;	(* maximum wasp acceleration and velocity *)
+		border: SIGNED16;	(* minimum border for wasp *)
 		wasp: Bee;	(* the wasp, special kind of bee *)
-		bacc, bvel: INTEGER;	(* maximum bee acceleration and velocity *)
+		bacc, bvel: SIGNED16;	(* maximum bee acceleration and velocity *)
 		bees: BeeSwarm;	(* the swarm of bees *)
 	END;
 
 VAR
 	swarm: Swarm;
 	mask: Display3.Mask;
-	speed, size, border, mincol, maxcol, waspcol, bacc, bvel, wacc, wvel: INTEGER;
+	speed, size, border, mincol, maxcol, waspcol, bacc, bvel, wacc, wvel: SIGNED16;
 
 PROCEDURE RandomizeSwarm(VAR s: Swarm);
-VAR i, startv: INTEGER;
+VAR i, startv: SIGNED16;
 BEGIN
 	s.wasp.x[0] := s.border+SHORT(ENTIER((s.W-(2*s.border))*RandomNumbers.Uniform())); s.wasp.x[1] := s.wasp.x[0];
 	s.wasp.y[0] := s.border+SHORT(ENTIER((s.H-(2*s.border))*RandomNumbers.Uniform())); s.wasp.y[1] := s.wasp.y[0];
@@ -63,7 +63,7 @@ BEGIN
 	END
 END RandomizeSwarm;
 
-PROCEDURE InitSwarm(VAR s: Swarm; speed, size, width, height, border, mincol, maxcol, waspcol, bacc, bvel, wacc, wvel: INTEGER);
+PROCEDURE InitSwarm(VAR s: Swarm; speed, size, width, height, border, mincol, maxcol, waspcol, bacc, bvel, wacc, wvel: SIGNED16);
 BEGIN
 	s.speed := speed; s.time := 0;
 	s.size := size; NEW(s.bees, s.size);
@@ -75,8 +75,8 @@ BEGIN
 	RandomizeSwarm(s)
 END InitSwarm;
 
-PROCEDURE AgeSwarm (VAR s: Swarm; m: Display3.Mask; x, y: INTEGER);
-VAR i, dx, dy, dist, acc: INTEGER; bees: BeeSwarm;
+PROCEDURE AgeSwarm (VAR s: Swarm; m: Display3.Mask; x, y: SIGNED16);
+VAR i, dx, dy, dist, acc: SIGNED16; bees: BeeSwarm;
 BEGIN
 	(* handle wasp *)
 	s.wasp.x[2] := s.wasp.x[1]; s.wasp.x[1] := s.wasp.x[0];  (* age coordinates... *)
@@ -149,7 +149,7 @@ PROCEDURE Stop;
 END Stop;
 
 PROCEDURE Install*;
-VAR name: ARRAY 32 OF CHAR; n: INTEGER;
+VAR name: ARRAY 32 OF CHAR; n: SIGNED16;
 BEGIN In.Open;
 	LOOP
 		In.Name(name); IF ~In.Done THEN EXIT END;

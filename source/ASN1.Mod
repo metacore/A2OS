@@ -114,20 +114,20 @@ TYPE CharString*=POINTER TO ARRAY OF CHAR;
 
 (* data element in DER encoded certificates: tag[class+type] - length[1..n bytes] - value[0..n bytes]  *)
 TYPE Triplet* = OBJECT (* todo: 1 Byte tags are sufficient for certificates, but in general, multiple byte tags may occur in other contexts  *)
-				VAR tag*:LONGINT;
-				class*:LONGINT;
-				length*:LONGINT;
-				unusedbits*:LONGINT;
+				VAR tag*:SIGNED32;
+				class*:SIGNED32;
+				length*:SIGNED32;
+				unusedbits*:SIGNED32;
 				constructed*:BOOLEAN;
 				definite*: BOOLEAN;
 
 				bvalue*:BOOLEAN;
-				ivalue*:LONGINT;
+				ivalue*:SIGNED32;
 				svalue*:POINTER TO ARRAY OF CHAR;
 
 				child*, curchild:Triplet;
 				next*:Triplet;
-				level*:LONGINT; (*pretty print*)
+				level*:SIGNED32; (*pretty print*)
 
 			PROCEDURE AppendChild*(t:Triplet);
 			BEGIN
@@ -135,7 +135,7 @@ TYPE Triplet* = OBJECT (* todo: 1 Byte tags are sufficient for certificates, but
 			END AppendChild;
 
 			PROCEDURE Print*(w: Streams.Writer);
-			VAR i:LONGINT;
+			VAR i:SIGNED32;
 			BEGIN
 				w.Char(09X);
 				FOR i:=0 TO level-1 DO w.String("- "); END;
@@ -190,7 +190,7 @@ BEGIN
 	END;
 END PrintString;
 
-PROCEDURE Decode*(reader:Streams.Reader; level:LONGINT; VAR len:SIZE): Triplet;
+PROCEDURE Decode*(reader:Streams.Reader; level:SIGNED32; VAR len:SIZE): Triplet;
 VAR t,t1:Triplet; lengthbytes,len0,hdrlen,i:SIZE; c:CHAR;
 BEGIN
 	NEW(t); t.level:=level;

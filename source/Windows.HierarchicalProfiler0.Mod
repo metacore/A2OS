@@ -13,9 +13,9 @@ CONST
 
 TYPE
 
-	ProcessTimeArray = POINTER TO ARRAY ProcessInfo.MaxNofProcesses OF HUGEINT;
+	ProcessTimeArray = POINTER TO ARRAY ProcessInfo.MaxNofProcesses OF SIGNED64;
 
-	Callback = PROCEDURE (id : LONGINT; process : Objects.Process; pc, bp, lowAdr, highAdr : ADDRESS);
+	Callback = PROCEDURE (id : SIGNED32; process : Objects.Process; pc, bp, lowAdr, highAdr : ADDRESS);
 
 	Poller = OBJECT
 	VAR
@@ -23,7 +23,7 @@ TYPE
 		nofProcesses, oldNofProcesses : SIZE;
 		times, oldTimes : ProcessTimeArray;
 		me : Objects.Process;
-		state : WORD;
+		state : INTEGER;
 
 		PROCEDURE &Init;
 		BEGIN
@@ -46,7 +46,7 @@ TYPE
 			FOR i := 0 TO LEN(array)-1 DO array[i] := 0; END;
 		END Clear;
 
-		PROCEDURE RanMeanwhile(process : Objects.Process; currentCycles : HUGEINT) : BOOLEAN;
+		PROCEDURE RanMeanwhile(process : Objects.Process; currentCycles : SIGNED64) : BOOLEAN;
 		VAR i : SIZE;
 		BEGIN
 
@@ -68,7 +68,7 @@ TYPE
 				times[i] := cycles[0];
 				(*
 				Kernel32.GetThreadTimes(process.handle, t0,t1,t2,t3);
-				times[i] := HUGEINT(t2.dwLowDateTime+t3.dwLowDateTime) + 10000000H * HUGEINT(t2.dwHighDateTime+t3.dwHighDateTime) ;
+				times[i] := SIGNED64(t2.dwLowDateTime+t3.dwLowDateTime) + 10000000H * SIGNED64(t2.dwHighDateTime+t3.dwHighDateTime) ;
 				*)
 				IF (process # me) & (cycles[0] # 0)  & (process.mode = Objects.Running) (* (process.mode # Objects.AwaitingEvent) & (process.mode # Objects.AwaitingCond)  & (process.mode < Objects.Suspended) & (process.mode >= Objects.Ready)  (*RanMeanwhile(process, times[i]) *) *) THEN
 					HandleProcess(process);
@@ -98,7 +98,7 @@ TYPE
 VAR
 	poller : Poller;
 	callback : Callback;
-	state : WORD;
+	state : INTEGER;
 
 PROCEDURE HandleProcess(process : Objects.Process);
 VAR context : Kernel32.Context; handle : Kernel32.HANDLE; res : Kernel32.BOOL; stackBottom, sp, bp: ADDRESS;

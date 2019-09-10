@@ -52,7 +52,7 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 
 
 	PROCEDURE InitContext (VAR ctxt: Context);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		ctxt.class[1] := "Graphics.NewLine";
 		ctxt.class[2] := "Graphics.NewCaption";
@@ -60,14 +60,14 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 		FOR i := 4 TO 9 DO ctxt.class[i] := "" END
 	END InitContext;
 
-	PROCEDURE GetColor (col: INTEGER; VAR color: Gfx.Color);
+	PROCEDURE GetColor (col: SIGNED16; VAR color: Gfx.Color);
 	BEGIN
 		color.r := Colors.Red[col]; color.g := Colors.Green[col]; color.b := Colors.Blue[col]
 	END GetColor;
 
 	PROCEDURE ThisLibrary (CONST name: ARRAY OF CHAR): Library;
 		VAR
-			lib: Library; i, j, w, h: INTEGER; lname, fname: ARRAY 32 OF CHAR; file: Files.File; r: Files.Rider; ch: CHAR;
+			lib: Library; i, j, w, h: SIGNED16; lname, fname: ARRAY 32 OF CHAR; file: Files.File; r: Files.Rider; ch: CHAR;
 			ctxt: Context; shapes, top, next: Leonardo.Shape; group: LeoBasic.Group; mh: MacroHead;
 	BEGIN
 		lib := NIL;
@@ -104,7 +104,7 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 		RETURN lib
 	END ThisLibrary;
 
-	PROCEDURE ThisStroker (col, width: INTEGER): LeoPens.Stroker;
+	PROCEDURE ThisStroker (col, width: SIGNED16): LeoPens.Stroker;
 		VAR color: Gfx.Color; pen: LeoPens.Stroker;
 	BEGIN
 		col := col MOD 16; DEC(width); IF width > 5 THEN width := 5 END;
@@ -116,7 +116,7 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 		RETURN Stroker[col, width]
 	END ThisStroker;
 
-	PROCEDURE ThisPattern (pat: INTEGER): Images.Image;
+	PROCEDURE ThisPattern (pat: SIGNED16): Images.Image;
 	BEGIN
 		ASSERT((1 <= pat) & (pat <= 8), 100);
 		IF Pattern[pat] = NIL THEN
@@ -125,7 +125,7 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 		RETURN Pattern[pat]
 	END ThisPattern;
 
-	PROCEDURE ThisFiller (col, pat: INTEGER): LeoPens.Filler;
+	PROCEDURE ThisFiller (col, pat: SIGNED16): LeoPens.Filler;
 		VAR color: Gfx.Color; pen: LeoPens.Filler;
 	BEGIN
 		IF pat = 0 THEN
@@ -141,7 +141,7 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 		END
 	END ThisFiller;
 
-	PROCEDURE CreateLine (x0, y0, x1, y1: REAL; col, width: INTEGER): Leonardo.Shape;
+	PROCEDURE CreateLine (x0, y0, x1, y1: FLOAT32; col, width: SIGNED16): Leonardo.Shape;
 		VAR p, q: LeoPaths.Point; line: LeoPaths.Segment;
 	BEGIN
 		NEW(p); LeoPaths.InitPoint(p, x0, y0);
@@ -151,14 +151,14 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 		RETURN line
 	END CreateLine;
 
-	PROCEDURE CreateEllipse (xc, yc, xr, yr: REAL; col, width: INTEGER): Leonardo.Shape;
+	PROCEDURE CreateEllipse (xc, yc, xr, yr: FLOAT32; col, width: SIGNED16): Leonardo.Shape;
 		VAR e: LeoBasic.Ellipse;
 	BEGIN
 		NEW(e); LeoBasic.InitEllipse(e, xc, yc, xr, yr, ThisStroker(col, width));
 		RETURN e
 	END CreateEllipse;
 
-	PROCEDURE CreateRectangle (x0, y0, x1, y1: REAL; col, width: INTEGER; fill: LeoPens.Pen): Leonardo.Shape;
+	PROCEDURE CreateRectangle (x0, y0, x1, y1: FLOAT32; col, width: SIGNED16; fill: LeoPens.Pen): Leonardo.Shape;
 		VAR pen: LeoPens.Pen; forker: LeoPens.Forker; rect: LeoBasic.Rectangle;
 	BEGIN
 		IF fill = NIL THEN
@@ -171,8 +171,8 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 		RETURN rect
 	END CreateRectangle;
 
-	PROCEDURE CreateSpline (closed: BOOLEAN; CONST u, v: ARRAY OF INTEGER; n, col, width: INTEGER): Leonardo.Shape;
-		VAR p, bot, top: LeoPaths.Point; i: LONGINT; spline: LeoSplines.Spline;
+	PROCEDURE CreateSpline (closed: BOOLEAN; CONST u, v: ARRAY OF SIGNED16; n, col, width: SIGNED16): Leonardo.Shape;
+		VAR p, bot, top: LeoPaths.Point; i: SIGNED32; spline: LeoSplines.Spline;
 	BEGIN
 		NEW(p); LeoPaths.InitPoint(p, u[0] + 0.5, v[0] + 0.5); bot := p; top := p;
 		i := 1;
@@ -185,8 +185,8 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 		RETURN spline
 	END CreateSpline;
 
-	PROCEDURE LoadCaption (VAR ctxt: Context; VAR r: Files.Rider; x, y, col: INTEGER): Leonardo.Shape;
-		VAR fno: SHORTINT; i: LONGINT; ch: CHAR; s: ARRAY 64 OF CHAR; color: Gfx.Color; cap: LeoCaptions.Caption;
+	PROCEDURE LoadCaption (VAR ctxt: Context; VAR r: Files.Rider; x, y, col: SIGNED16): Leonardo.Shape;
+		VAR fno: SIGNED8; i: SIGNED32; ch: CHAR; s: ARRAY 64 OF CHAR; color: Gfx.Color; cap: LeoCaptions.Caption;
 	BEGIN
 		Files.Read(r, fno); Files.Read(r, ch); i := 0;
 		WHILE ch > 0DX DO
@@ -199,8 +199,8 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 		RETURN cap
 	END LoadCaption;
 
-	PROCEDURE LoadMacro (VAR ctxt: Context; VAR r: Files.Rider; x, y, col: INTEGER): Leonardo.Shape;
-		VAR lno: SHORTINT; name: Name; mh: MacroHead; shape: Leonardo.Shape; mat: GfxMatrix.Matrix;
+	PROCEDURE LoadMacro (VAR ctxt: Context; VAR r: Files.Rider; x, y, col: SIGNED16): Leonardo.Shape;
+		VAR lno: SIGNED8; name: Name; mh: MacroHead; shape: Leonardo.Shape; mat: GfxMatrix.Matrix;
 	BEGIN
 		Files.Read(r, lno); Files.ReadString(r, name);
 		IF ctxt.lib[lno] # NIL THEN
@@ -217,8 +217,8 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 		END
 	END LoadMacro;
 
-	PROCEDURE LoadCurve (VAR r: Files.Rider; x, y, w, h, col: INTEGER): Leonardo.Shape;
-		VAR len, kind, lw: INTEGER; shape: Leonardo.Shape;
+	PROCEDURE LoadCurve (VAR r: Files.Rider; x, y, w, h, col: SIGNED16): Leonardo.Shape;
+		VAR len, kind, lw: SIGNED16; shape: Leonardo.Shape;
 	BEGIN
 		Files.ReadInt(r, len); Files.ReadInt(r, kind); Files.ReadInt(r, lw);
 		IF kind = 0 THEN	(* up_line *)
@@ -237,15 +237,15 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 		END
 	END LoadCurve;
 
-	PROCEDURE LoadRectangle (VAR r: Files.Rider; x, y, w, h, col: INTEGER): Leonardo.Shape;
-		VAR len: INTEGER; width, vers: SHORTINT;
+	PROCEDURE LoadRectangle (VAR r: Files.Rider; x, y, w, h, col: SIGNED16): Leonardo.Shape;
+		VAR len: SIGNED16; width, vers: SIGNED8;
 	BEGIN
 		Files.ReadInt(r, len); Files.Read(r, width); Files.Read(r, vers);
 		RETURN CreateRectangle(x + 0.5, y + 0.5, x + w - 0.5, y + h - 0.5, col, width, ThisFiller(col, vers))
 	END LoadRectangle;
 
-	PROCEDURE LoadSpline (VAR r: Files.Rider; x, y, col: INTEGER): Leonardo.Shape;
-		VAR len, n, i: INTEGER; open: SHORTINT; u, v: ARRAY 21 OF INTEGER;
+	PROCEDURE LoadSpline (VAR r: Files.Rider; x, y, col: SIGNED16): Leonardo.Shape;
+		VAR len, n, i: SIGNED16; open: SIGNED8; u, v: ARRAY 21 OF SIGNED16;
 	BEGIN
 		Files.ReadInt(r, len);
 		n := (len - 1) DIV 4;
@@ -256,7 +256,7 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 	END LoadSpline;
 
 	PROCEDURE LoadShape (VAR ctxt: Context; VAR r: Files.Rider; CONST gen: ARRAY OF CHAR): Leonardo.Shape;
-		VAR x, y, w, h, col: INTEGER; shape: Leonardo.Shape;
+		VAR x, y, w, h, col: SIGNED16; shape: Leonardo.Shape;
 	BEGIN
 		Files.ReadInt(r, x); Files.ReadInt(r, y);
 		Files.ReadInt(r, w); Files.ReadInt(r, h);
@@ -285,8 +285,8 @@ MODULE LeoDraw IN Oberon;	(** eos  **)
 
 	PROCEDURE LoadElems (VAR r: Files.Rider; VAR ctxt: Context): Leonardo.Shape;
 		VAR
-			shapes, last, new: Leonardo.Shape; cno, k: SHORTINT; name, font, cmd: ARRAY 32 OF CHAR;
-			i, j: LONGINT; size, len: INTEGER;
+			shapes, last, new: Leonardo.Shape; cno, k: SIGNED8; name, font, cmd: ARRAY 32 OF CHAR;
+			i, j: SIGNED32; size, len: SIGNED16;
 	BEGIN
 		shapes := NIL; last := NIL;
 		Files.Read(r, cno);

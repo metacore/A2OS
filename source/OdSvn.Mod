@@ -18,7 +18,7 @@ IMPORT OdClient, Log := TFLog, U := Strings, WebHTTP, Streams, XML, Files, OdUti
 VAR
 	log: Log.Log;
 	encTable: ARRAY 64 OF CHAR;
-	decTable: ARRAY 128 OF INTEGER;
+	decTable: ARRAY 128 OF SIGNED16;
 
 
 TYPE
@@ -34,7 +34,7 @@ TYPE
 
 TYPE
 	StringReader = OBJECT
-		VAR res, pos: LONGINT; s: U.String;
+		VAR res, pos: SIGNED32; s: U.String;
 		PROCEDURE &Init(s: U.String);
 		BEGIN SELF.s := s; res := Streams.Ok; pos := 0; END Init;
 		PROCEDURE Char(VAR ch: CHAR);
@@ -58,7 +58,7 @@ TYPE
 TYPE
 	Activity* = OBJECT
 	VAR url: U.String;
-		statuscode*: LONGINT;
+		statuscode*: SIGNED32;
 		log: Log.Log;
 		client : OdClient.OdClient;
 
@@ -77,7 +77,7 @@ TYPE
 		PROCEDURE make*;
 		VAR
 			resHeader: WebHTTP.ResponseHeader; doc: XML.Document;
-			out : Streams.Reader; res: WORD;
+			out : Streams.Reader; res: INTEGER;
 		BEGIN
 			OdClient.ShowMethodUrl(WebHTTP.MkactivityM, url^);
 			client.Mkactivity(url^, resHeader, out, res);
@@ -96,7 +96,7 @@ TYPE
 
 		PROCEDURE delete*;
 		VAR resHeader: WebHTTP.ResponseHeader; doc: XML.Document;
-			out : Streams.Reader; res: WORD;
+			out : Streams.Reader; res: INTEGER;
 		BEGIN
 			ASSERT ( url # NIL );
 
@@ -111,7 +111,7 @@ TYPE
 
 TYPE
 UpdateReq* = OBJECT(XML.Document);
-	PROCEDURE &InitUpdateReq*( client : OdClient.OdClient; svn : OdSvn; CONST pathName: ARRAY OF CHAR; headVersion, version: LONGINT ); (* Revision numbers: e.g. 18 *)
+	PROCEDURE &InitUpdateReq*( client : OdClient.OdClient; svn : OdSvn; CONST pathName: ARRAY OF CHAR; headVersion, version: SIGNED32 ); (* Revision numbers: e.g. 18 *)
 	VAR el1, el2: XML.Element; ac: XML.ArrayChars;
 		path,name: ARRAY 256 OF CHAR;
 		versionStr: ARRAY 32 OF CHAR;
@@ -162,7 +162,7 @@ LogReq = OBJECT(XML.Document);
 		<S:discover-changed-paths/>
 		<S:path></S:path>
 	</S:log-report>  *)
-	PROCEDURE &InitLogReq(start, end: LONGINT); (* Revision numbers: e.g. 18, 1 *)
+	PROCEDURE &InitLogReq(start, end: SIGNED32); (* Revision numbers: e.g. 18, 1 *)
 	VAR el1, el2: XML.Element; ac: XML.ArrayChars;
 		startStr, endStr: ARRAY 32 OF CHAR;
 	BEGIN Init();
@@ -184,7 +184,7 @@ TYPE
 	OdSvn* = OBJECT
 	VAR
 		useSvn : BOOLEAN;
-		globalVersion : LONGINT;
+		globalVersion : SIGNED32;
 		svnFileUpdate : BOOLEAN;
 		traverseDummy*, useUpdateTarget*, checkout* : BOOLEAN;
 
@@ -192,8 +192,8 @@ TYPE
 		xml : OdXml.OdXml;
 
 		wrk*, ver*, errorMsg, repositoryURL* : ARRAY 256 OF CHAR; (* wrk URL of PROPFIND/PATCH *)
-		pfStatus* : LONGINT;
-		countChanges* : LONGINT;
+		pfStatus* : SIGNED32;
+		countChanges* : SIGNED32;
 		repositoryPathLength* : SIZE;
 		removeDir*, svnUpdated* : BOOLEAN;
 		resultDoc* : XML.Document;
@@ -216,7 +216,7 @@ TYPE
 
 	PROCEDURE Get(CONST url: ARRAY OF CHAR; VAR f: Files.File);
 	VAR reqHeader: WebHTTP.RequestHeader; resHeader: WebHTTP.ResponseHeader;
-		res: WORD;
+		res: INTEGER;
 		out : Streams.Reader;
 	BEGIN
 		OdClient.ShowMethodUrl(WebHTTP.GetM, url);
@@ -272,8 +272,8 @@ TYPE
 
 	PROCEDURE DecodeIO(in: StringReader; out: Streams.Writer): BOOLEAN;
 	VAR
-		codes: ARRAY 4 OF INTEGER;
-		i: INTEGER;
+		codes: ARRAY 4 OF SIGNED16;
+		i: SIGNED16;
 		ch: CHAR;
 		ok, end: BOOLEAN;
 	BEGIN
@@ -339,11 +339,11 @@ TYPE
 		dl,   (* Data length.           *)
 		(* Support variables. *)
 		co, cl, (* Copy offset, length. *)
-		n: LONGINT;
+		n: SIGNED32;
 		tvo, (* Target view offset. *)
 		istart: Files.Position;
 		read: SIZE;
-		iord, op: INTEGER; ch: CHAR;
+		iord, op: SIGNED16; ch: CHAR;
 		sourceF, targetF: Files.File;
 	BEGIN
 		log.Enter;
@@ -437,7 +437,7 @@ TYPE
 	VAR splitter: OdXml.StringSplitter;
 		name: ARRAY 64 OF CHAR;
 		resHeader: WebHTTP.ResponseHeader; doc: XML.Document;
-		out : Streams.Reader; res: WORD;
+		out : Streams.Reader; res: INTEGER;
 		list: WebHTTP.AdditionalField;
 		repos : OdClient.Repos;
 	BEGIN
@@ -483,7 +483,7 @@ TYPE
 	PROCEDURE Versions* ( context: Commands.Context );
 	VAR url, err, vcc, ci, bc, pathName, path, name: ARRAY 256 OF CHAR;
 		props: WebHTTP.AdditionalField;
-		start, end: LONGINT;
+		start, end: SIGNED32;
 	BEGIN
 		log.Enter; log.String( "" );  log.Exit;
 		log.Enter; log.String( "" );  log.Exit;
@@ -545,11 +545,11 @@ TYPE
 
 	(* There must be already a version (e.g. the newest which can be checked out) to make a delta on it for an older. *)
 	PROCEDURE UpdateReport*(pathName, vcc: ARRAY OF CHAR; CONST workUrl: ARRAY OF CHAR;
-		headVersion, version: LONGINT; CONST workName: ARRAY OF CHAR; VAR res : WORD );
+		headVersion, version: SIGNED32; CONST workName: ARRAY OF CHAR; VAR res : INTEGER );
 	VAR resBody: XML.Document;
 		reqBody: UpdateReq;
 		resHeader: WebHTTP.ResponseHeader;
-		out : Streams.Reader; res2 : WORD;
+		out : Streams.Reader; res2 : INTEGER;
 		txDelta: Files.File;
 		repos : OdClient.Repos;
 	BEGIN
@@ -594,7 +594,7 @@ TYPE
 	VAR
 		pathName, path, collUrl, name, workName, workUrl, vcc, ver, err: ARRAY 256 OF CHAR;
 		resHeader: WebHTTP.ResponseHeader;
-		version,headVersion: LONGINT; pos: SIZE; res: WORD;
+		version,headVersion: SIGNED32; pos: SIZE; res: INTEGER;
 		props: WebHTTP.AdditionalField;
 		act: Activity;
 	BEGIN
@@ -740,11 +740,11 @@ TYPE
 	<S:log-item>
 
 	*)
-	PROCEDURE LogReport(CONST url:ARRAY OF CHAR; bc: ARRAY OF CHAR; start, end: LONGINT);
+	PROCEDURE LogReport(CONST url:ARRAY OF CHAR; bc: ARRAY OF CHAR; start, end: SIGNED32);
 	VAR resBody: XML.Document;
 		reqBody: LogReq;
 		resHeader: WebHTTP.ResponseHeader;
-		out : Streams.Reader; res : WORD;
+		out : Streams.Reader; res : INTEGER;
 		versions: OdUtil.Dict; logItem: LogItem;
 		repos : OdClient.Repos;
 	BEGIN
@@ -790,7 +790,7 @@ TYPE
 		logText: ARRAY 256 OF CHAR; lenStr: ARRAY 16 OF CHAR;
 		resHeader: WebHTTP.ResponseHeader; doc: XML.Document;
 		reqHeader: WebHTTP.RequestHeader;
-		in: Files.Reader; out : Streams.Reader; res: WORD;
+		in: Files.Reader; out : Streams.Reader; res: INTEGER;
 		props: WebHTTP.AdditionalField;
 		root: XML.Element; s: XML.String;
 		f: Files.File;
@@ -940,7 +940,7 @@ TYPE
 		lenStr: ARRAY 32 OF CHAR;
 		resHeader: WebHTTP.ResponseHeader; doc: XML.Document;
 		reqHeader: WebHTTP.RequestHeader;
-		out : Streams.Reader; res: WORD;
+		out : Streams.Reader; res: INTEGER;
 		props: WebHTTP.AdditionalField;
 		root: XML.Element; s: XML.String;
 		f: Files.File; in: Files.Reader;
@@ -1021,7 +1021,7 @@ TYPE
 	(* Hide checkout stuff in a procedure.  *)
 	PROCEDURE Checkout*(url: ARRAY OF CHAR; VAR resHeader: WebHTTP.ResponseHeader; CONST err: ARRAY OF CHAR);
 	VAR doc: XML.Document;
-		out : Streams.Reader; res: WORD;
+		out : Streams.Reader; res: INTEGER;
 		root: XML.Element; s: U.String;
 		s1, s2: ARRAY 256 OF CHAR;
 		repos : OdClient.Repos;
@@ -1055,7 +1055,7 @@ TYPE
 	PROCEDURE Proppatch*(url: ARRAY OF CHAR; VAR props: WebHTTP.AdditionalField;  CONST err: ARRAY OF CHAR);
 	VAR resHeader: WebHTTP.ResponseHeader;
 		doc: XML.Document;
-		out : Streams.Reader; res: WORD;
+		out : Streams.Reader; res: INTEGER;
 		root: XML.Element; s: U.String;
 		s1: ARRAY 256 OF CHAR;
 		repos : OdClient.Repos;
@@ -1093,7 +1093,7 @@ TYPE
 	(* Hide merge stuff.  *)
 	PROCEDURE Merge*(url: ARRAY OF CHAR; actUrl: U.String; VAR resHeader: WebHTTP.ResponseHeader; CONST err: ARRAY OF CHAR);
 	VAR doc: XML.Document;
-		out : Streams.Reader; res: WORD;
+		out : Streams.Reader; res: INTEGER;
 		root: XML.Element; s: U.String;
 		s1, s2: ARRAY 265 OF CHAR;
 		repos : OdClient.Repos;
@@ -1127,7 +1127,7 @@ TYPE
 		log.Enter; log.String( "" );  log.Exit;
 	END Merge;
 
-	PROCEDURE SvnWrite ( parent : XML.Element; CONST path, filename, version : ARRAY OF CHAR; added : BOOLEAN; VAR res : WORD );
+	PROCEDURE SvnWrite ( parent : XML.Element; CONST path, filename, version : ARRAY OF CHAR; added : BOOLEAN; VAR res : INTEGER );
 	VAR
 		enum: XMLObjects.Enumerator;
 		p: ANY;
@@ -1142,7 +1142,7 @@ TYPE
 		strRdr : StringReader;
 		wtr: Files.Writer;
 		f : Files.File;
-		res2 : WORD;
+		res2 : INTEGER;
 		str : U.String;
 		data : SVNAdmin.EntryEntity;
 		w : Files.Writer;
@@ -1370,7 +1370,7 @@ TYPE
 		END;
 	END SvnWrite;
 
-	PROCEDURE SvnParseUpdate(doc: XML.Document; CONST workUrl, workName : ARRAY OF CHAR; VAR res : WORD );
+	PROCEDURE SvnParseUpdate(doc: XML.Document; CONST workUrl, workName : ARRAY OF CHAR; VAR res : INTEGER );
 	VAR
 		s : XML.String;
 		root, e : XML.Element;
@@ -1419,7 +1419,7 @@ TYPE
 	PROCEDURE SvnWritePROPS ( CONST path, filename : ARRAY OF CHAR; props : SvnProps );
 	VAR
 		tmp,fstr,fstr2 : ARRAY 256 OF CHAR;
-		i: LONGINT; res: WORD;
+		i: SIGNED32; res: INTEGER;
 		len: SIZE;
 		fr, fw : Files.File;
 		r : Files.Reader;
@@ -1588,7 +1588,7 @@ TYPE
 END OdSvn;
 
 	PROCEDURE InitTables;
-		VAR i, max: INTEGER;
+		VAR i, max: SIGNED16;
 	BEGIN
 		max := ORD("Z")-ORD("A");
 		FOR i := 0 TO max DO
@@ -1631,7 +1631,7 @@ END OdSvn;
 
 
 
-PROCEDURE RawNum(VAR delta: Files.Reader; VAR li: LONGINT);
+PROCEDURE RawNum(VAR delta: Files.Reader; VAR li: SIGNED32);
 VAR ch: CHAR;
 BEGIN
 	li := 0;

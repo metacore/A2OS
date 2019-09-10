@@ -40,7 +40,7 @@ TYPE
 	PluginHandler* = PROCEDURE {DELEGATE} (p: Plugin);
 
 	(** Event handler (upcall) *)
-	EventHandler* = PROCEDURE {DELEGATE} (event: WORD; plugin: Plugin);
+	EventHandler* = PROCEDURE {DELEGATE} (event: INTEGER; plugin: Plugin);
 
 	(* List item of event handler list *)
 	EventHandlerList = POINTER TO RECORD
@@ -114,7 +114,7 @@ TYPE
 
 		(** Register a new plugin instance.  Called by plugins to advertise their availability.  If the plugin has an empty name, a unique name is assigned, otherwise the name must be unique already.  The res parameter returns Ok if successful, or a non-zero error code otherwise. *)
 
-		PROCEDURE Add*(p: Plugin; VAR res: WORD);
+		PROCEDURE Add*(p: Plugin; VAR res: INTEGER);
 		VAR c: Plugin; tail: Plugin; item: EventHandlerList;
 		BEGIN {EXCLUSIVE}
 			ASSERT(p # NIL);
@@ -166,7 +166,7 @@ TYPE
 
 		(** Add an event handler *)
 
-		PROCEDURE AddEventHandler*(h: EventHandler; VAR res: WORD);
+		PROCEDURE AddEventHandler*(h: EventHandler; VAR res: INTEGER);
 		VAR item: EventHandlerList;
 		BEGIN {EXCLUSIVE}
 			ASSERT(h # NIL);
@@ -187,7 +187,7 @@ TYPE
 
 		(** Remove an event handler *)
 
-		PROCEDURE RemoveEventHandler*(h: EventHandler; VAR res: WORD);
+		PROCEDURE RemoveEventHandler*(h: EventHandler; VAR res: INTEGER);
 		VAR item: EventHandlerList;
 		BEGIN {EXCLUSIVE}
 			ASSERT(h # NIL);
@@ -213,7 +213,7 @@ TYPE
 		(** Initialize the registry *)
 
 		PROCEDURE &Init*(CONST name, desc: ARRAY OF CHAR);
-		VAR res: WORD;
+		VAR res: INTEGER;
 		BEGIN
 			root := NIL;
 			added := 0;

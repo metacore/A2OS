@@ -32,7 +32,7 @@ IMPORT Files, Objects, antsObjects, vyBase, antsViews, antsCommands, vyName, vyT
 TYPE
 	tRegion* = POINTER TO tRegionDesc;
 	tRegionDesc* = RECORD (vyBase.ObjDesc)
-		x*, y*, w*, h*: INTEGER;
+		x*, y*, w*, h*: SIGNED16;
 		view*: antsViews.tLayer;
 		valid*: BOOLEAN
 	END;
@@ -47,7 +47,7 @@ VAR
 	A-: antsArrayObjects.tINTEGERObject;  current*: tRegion;
 
 	PROCEDURE Recall( layer: tLayer );
-	VAR x, y, w, h, pen: INTEGER;
+	VAR x, y, w, h, pen: SIGNED16;
 	BEGIN
 		IF layer.r.valid THEN
 			vyGraphBase.Rect2dToRect( layer.r.x, layer.r.y, layer.r.w, layer.r.h, x, y, w, h );  pen := layer.style.pensize;
@@ -62,7 +62,7 @@ VAR
 (*
 PROCEDURE Responsible (layer: tLayer;                VAR event: vyEvents.EventMsg);
 VAR
-	priority: INTEGER;
+	priority: SIGNED16;
 BEGIN
 	priority := vyEvents.PrioNone;
 	IF ( (event.gesture = vyEvents.EvtIdent) OR (event.gesture = vyEvents.EvtSelect)) THEN
@@ -75,7 +75,7 @@ END Responsible;
 *)
 
 	PROCEDURE LayerHandleFileMsg( obj: tLayer;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		IF msg.id = Objects.load THEN
 			Files.ReadInt( msg.R, version );  Gadgets.ReadRef( msg.R, obj.lib, objsub );
@@ -169,7 +169,7 @@ END LayerInit;
 	END InsertView;
 
 	PROCEDURE Handler*( o: Objects.Object;  VAR M: Objects.ObjMsg );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		WITH o: tRegion DO
 			IF M IS Objects.AttrMsg THEN
@@ -224,13 +224,13 @@ END LayerInit;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=NAME" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) THEN
-			Gen;  r := Objects.NewObj( tRegion );  r.x := 0;  r.y := 0;  r.w := MAX( INTEGER );  r.h := MAX( INTEGER );  vyName.RegisterNamed( r, name )
+			Gen;  r := Objects.NewObj( tRegion );  r.x := 0;  r.y := 0;  r.w := MAX( SIGNED16 );  r.h := MAX( SIGNED16 );  vyName.RegisterNamed( r, name )
 		END
 	END New;
 
-	PROCEDURE GrowRectangleRLFilled*( x, y, w, h: INTEGER;  VAR dx, dy: INTEGER );
+	PROCEDURE GrowRectangleRLFilled*( x, y, w, h: SIGNED16;  VAR dx, dy: SIGNED16 );
 	(*vs 0.0a1  md  29.05.95 *)
-	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld: INTEGER;  oldm: INTEGER;
+	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld: SIGNED16;  oldm: SIGNED16;
 	BEGIN
 		vyGraphBase.UseClipMask( NIL );  vyGraphBase.GetDisplayMode( oldm );
 		vyGraphBase.SetDisplayMode( vyGraphBase.invert );  vyGraphBase.SetForeColor( 1 );  Input.Mouse( keys0, x0, y0 );
@@ -251,7 +251,7 @@ END LayerInit;
 (*
 PROCEDURE DoSelectRegion* (r: tRegion);
 VAR   pict: vyPort.Picture;  event: vyEvents.EventMsg;
-x, y, w, h: INTEGER;  c: Objects.Object;   x0, y0, x1, y1: INTEGER;
+x, y, w, h: SIGNED16;  c: Objects.Object;   x0, y0, x1, y1: SIGNED16;
 getMsg: antsPictCoordinate.tCoordinate;  f: vyPort.tLayer;  o: Objects.Object;
 BEGIN
 r.view := NIL;
@@ -306,7 +306,7 @@ END DoSelectRegion;
 *)
 
 	PROCEDURE DoSelectRegion*( r: tRegion );
-	VAR pict: vyPort.Picture;  x, y, w, h: INTEGER;  c: Objects.Object;  x0, y0, x1, y1: INTEGER;  f: vyPort.tLayer;  mx, my: INTEGER;  keys: SET;
+	VAR pict: vyPort.Picture;  x, y, w, h: SIGNED16;  c: Objects.Object;  x0, y0, x1, y1: SIGNED16;  f: vyPort.tLayer;  mx, my: SIGNED16;  keys: SET;
 		cur: antsPortability.display;
 	BEGIN
 		antsSecurity.Block;  cur := antsPortability.GetCurrentDisplay();  r.view := NIL;  Input.Mouse( keys, mx, my );
@@ -354,7 +354,7 @@ END DoSelectRegion;
 	END DoSelectRegion;
 
 	PROCEDURE SelectRegion*;
-	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  r: tRegion;  x, y: INTEGER;  set: SET;
+	VAR l: antsCommands.tScanList;  obj: vyBase.Object;  r: tRegion;  x, y: SIGNED16;  set: SET;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=OBJ" );
 		IF antsCommands.ExpectObjectFromKeyword( l, "name", obj ) THEN
@@ -362,8 +362,8 @@ END DoSelectRegion;
 		END
 	END SelectRegion;
 
-	PROCEDURE Get*( r: tRegion;  A: antsArrayObjects.tObject;  VAR x, y, w, h: LONGINT );
-	VAR xi, yi, wi, hi: INTEGER;
+	PROCEDURE Get*( r: tRegion;  A: antsArrayObjects.tObject;  VAR x, y, w, h: SIGNED32 );
+	VAR xi, yi, wi, hi: SIGNED16;
 	BEGIN
 		xi := 0;  yi := 0;  wi := SHORT( A.w );  hi := SHORT( A.h );
 		IF r # NIL THEN vyRectangles.RectIntersection( xi, yi, wi, hi, r.x, r.y, r.w, r.h ) END;

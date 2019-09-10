@@ -11,9 +11,9 @@ TYPE MacroBlock *= OBJECT
 		mv: MotionCompensation;
 
 		(* Macroblock ModeMap *)
-		mbWidth*, mbHeight*: LONGINT;
+		mbWidth*, mbHeight*: SIGNED32;
 
-		DQTab: ARRAY 4 OF LONGINT;
+		DQTab: ARRAY 4 OF SIGNED32;
 		MCBPCTabIntra: ARRAY 32 OF DT.TabType;
 		MCBPCTabInter: ARRAY 256 OF DT.TabType;
 		CBPYTab: ARRAY 48 OF DT.TabType;
@@ -23,7 +23,7 @@ TYPE MacroBlock *= OBJECT
 
 		PROCEDURE &init*( state: DT.MP4State; VAR reader: DT.VideoBuffer; logWriter: Streams.Writer );
 		VAR
-		i: LONGINT;
+		i: SIGNED32;
 		BEGIN
 			log := logWriter;
 			mp4State := state;
@@ -171,7 +171,7 @@ TYPE MacroBlock *= OBJECT
 		(* Decode next macroblock *)
 		PROCEDURE Decode(VAR s: DT.VideoBuffer ): BOOLEAN;
 		VAR
-			j, temp: LONGINT;
+			j, temp: SIGNED32;
 			intraFlag,interFlag, res, coded: BOOLEAN;
 		BEGIN
 			IF mp4State.hdr.predictionType # DT.IVOP THEN
@@ -200,7 +200,7 @@ TYPE MacroBlock *= OBJECT
 
 				 IF mp4State.hdr.derivedMbType # DT.Stuffing THEN
 					mp4State.hdr.cbpy := GetCBPY(s); (* cbpy *)
-					mp4State.hdr.cbp := SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, ( mp4State.hdr.cbpy * 4 ) ) +
+					mp4State.hdr.cbp := SYSTEM.VAL( SIGNED32, SYSTEM.VAL( SET, ( mp4State.hdr.cbpy * 4 ) ) +
 						SYSTEM.VAL( SET, mp4State.hdr.cbpc ) );
 				ELSE
 					RETURN FALSE
@@ -269,9 +269,9 @@ TYPE MacroBlock *= OBJECT
 		END Decode;
 
 		(* Add an IntraBlock to the Picture *)
-		PROCEDURE AddBlockIntra( comp, bx, by: LONGINT );
+		PROCEDURE AddBlockIntra( comp, bx, by: SIGNED32 );
 		VAR
-			cc, iincr, offset: LONGINT;
+			cc, iincr, offset: SIGNED32;
 		BEGIN
 			(* color component index *)
 			IF comp < 4 THEN cc := 0
@@ -304,9 +304,9 @@ TYPE MacroBlock *= OBJECT
 		END AddBlockIntra;
 
 		(* Add an interblock to the current picture *)
-		PROCEDURE AddBlockInter( comp, bx, by: LONGINT );
+		PROCEDURE AddBlockInter( comp, bx, by: SIGNED32 );
 		VAR
-			cc, iincr, offset: LONGINT;
+			cc, iincr, offset: SIGNED32;
 		BEGIN
 			IF comp < 4 THEN cc := 0
 			ELSE cc := ( comp MOD 2 ) + 1
@@ -336,7 +336,7 @@ TYPE MacroBlock *= OBJECT
 			TransferIDCTAdd( ADDRESSOF(texture.dstBlock[4]), mp4State.frameRef, offset, iincr );
 		END AddBlockInter;
 
-		PROCEDURE TransferIDCTAdd( source: LONGINT; dest: DT.PointerToArrayOfCHAR; destOffset, stride: LONGINT );
+		PROCEDURE TransferIDCTAdd( source: SIGNED32; dest: DT.PointerToArrayOfCHAR; destOffset, stride: SIGNED32 );
 		BEGIN
 			IF DT.EnableMMX THEN
 				TransferIDCTAddMMX( source, ADDRESSOF( dest[destOffset] ), stride );
@@ -345,8 +345,8 @@ TYPE MacroBlock *= OBJECT
 			END;
 		END TransferIDCTAdd;
 
-		PROCEDURE TransferIDCTCopy( source: LONGINT; dest: DT.PointerToArrayOfCHAR;
-			destOffset, stride: LONGINT );
+		PROCEDURE TransferIDCTCopy( source: SIGNED32; dest: DT.PointerToArrayOfCHAR;
+			destOffset, stride: SIGNED32 );
 		BEGIN
 			IF DT.EnableMMX THEN
 				TransferIDCTCopyMMX( source, ADDRESSOF( dest[destOffset] ), stride );
@@ -356,10 +356,10 @@ TYPE MacroBlock *= OBJECT
 		END TransferIDCTCopy;
 
 		(* Add macroblock to a block in the actual picture *)
-		PROCEDURE TransferIDCTAddGeneric( source: LONGINT; dest: DT.PointerToArrayOfCHAR;
-			destOffset, stride: LONGINT );
+		PROCEDURE TransferIDCTAddGeneric( source: SIGNED32; dest: DT.PointerToArrayOfCHAR;
+			destOffset, stride: SIGNED32 );
 		VAR
-			x, y, s, d, sum: LONGINT;
+			x, y, s, d, sum: SIGNED32;
 		BEGIN
 			stride := stride -  8;
 			s := source;
@@ -380,7 +380,7 @@ TYPE MacroBlock *= OBJECT
 					ELSE
 						SYSTEM.PUT8( d, sum )
 					END;
-					s := s + SIZEOF( INTEGER);
+					s := s + SIZEOF( SIGNED16);
 					d := d + SIZEOF( CHAR );
 
 					IF DT.Debug THEN
@@ -396,7 +396,7 @@ TYPE MacroBlock *= OBJECT
 			END;
 		END TransferIDCTAddGeneric;
 
-		PROCEDURE TransferIDCTAddMMX( source, dest, stride: LONGINT );
+		PROCEDURE TransferIDCTAddMMX( source, dest, stride: SIGNED32 );
 		CODE{ SYSTEM.MMX, SYSTEM.PentiumPro }
 			MOV EAX, [EBP+source]		    		 ;  PARAMETER 1, *SOURCES32
 			MOV EBX, [EBP+dest]	      			 ;  PARAMETER 2, *DESTU8
@@ -425,9 +425,9 @@ TYPE MacroBlock *= OBJECT
 		END TransferIDCTAddMMX;
 
 		(* Copy a macroblock to the actual picture *)
-		PROCEDURE TransferIDCTCopyGeneric( source: LONGINT; dest: DT.PointerToArrayOfCHAR; destOffset, stride: LONGINT );
+		PROCEDURE TransferIDCTCopyGeneric( source: SIGNED32; dest: DT.PointerToArrayOfCHAR; destOffset, stride: SIGNED32 );
 		VAR
-			x, y, s, d, val: LONGINT;
+			x, y, s, d, val: SIGNED32;
 		BEGIN
 			stride := stride - 8;
 			s := source;
@@ -444,7 +444,7 @@ TYPE MacroBlock *= OBJECT
 					ELSIF val <  0 THEN SYSTEM.PUT8( d, 0 )
 					ELSE SYSTEM.PUT8( d, val )
 					END;
-					s := s + SIZEOF(INTEGER);
+					s := s + SIZEOF(SIGNED16);
 					d := d + SIZEOF( CHAR );
 
 					IF DT.Debug THEN
@@ -460,7 +460,7 @@ TYPE MacroBlock *= OBJECT
 			END;
 		END TransferIDCTCopyGeneric;
 
-		PROCEDURE TransferIDCTCopyMMX( source, dest, stride: LONGINT );
+		PROCEDURE TransferIDCTCopyMMX( source, dest, stride: SIGNED32 );
 		CODE{ SYSTEM.MMX, SYSTEM.PentiumPro }
 			MOV EAX, [EBP+source]          		; PARAMETER 1, *SOURCES32
 			MOV EBX, [EBP+dest]           			; PARAMETER 2, *DESTU8
@@ -468,11 +468,11 @@ TYPE MacroBlock *= OBJECT
 			MOV EDX, -8
 
 		loop:
-			MOVQ MMX0,  [EAX]					; eight bytes (four INTEGER) of source into mm0
-; 			PACKSSDW MMX0, 8[EAX]			; Pack next 8 bytes (two LONGINT) together with mm0
+			MOVQ MMX0,  [EAX]					; eight bytes (four SIGNED16) of source into mm0
+; 			PACKSSDW MMX0, 8[EAX]			; Pack next 8 bytes (two SIGNED32) together with mm0
 			MOVQ MMX1, [EAX+8]
 ;			PACKSSDW MMX1, 24[EAX]
-			PACKUSWB MMX0, MMX1				; Pack 4 INTEGER with another 4 INTEGER into mm0
+			PACKUSWB MMX0, MMX1				; Pack 4 SIGNED16 with another 4 SIGNED16 into mm0
 			MOVQ [EBX], MMX0					; Write mm0 to dest
 			ADD EBX, EDI						; Add stride to dest
 			ADD EAX, 16						; next source
@@ -483,10 +483,10 @@ TYPE MacroBlock *= OBJECT
 
 
 		(* Used to derive macroblock type and pattern for luminance  *)
-		PROCEDURE GetCBPY(VAR s: DT.VideoBuffer): LONGINT;
+		PROCEDURE GetCBPY(VAR s: DT.VideoBuffer): SIGNED32;
 		VAR
-			cbpy: LONGINT;
-			code: LONGINT;
+			cbpy: SIGNED32;
+			code: SIGNED32;
 		BEGIN
 			code := AVI.ShowBits( 6, s.data^, s.index );
 
@@ -510,9 +510,9 @@ TYPE MacroBlock *= OBJECT
 		END GetCBPY;
 
 		(* Used to derive macroblock type and pattern for chrominance *)
-		PROCEDURE GetMCBPC(VAR s: DT.VideoBuffer): LONGINT;
+		PROCEDURE GetMCBPC(VAR s: DT.VideoBuffer): SIGNED32;
 		VAR
-			code: LONGINT;
+			code: SIGNED32;
 		BEGIN
 			IF mp4State.hdr.predictionType = DT.IVOP THEN
 				code := AVI.ShowBits( 9, s.data^, s.index );
@@ -560,14 +560,14 @@ TYPE MotionCompensation = OBJECT
 		MVTab0: ARRAY 14 OF DT.TabType;
 		MVTab1: ARRAY 96 OF DT.TabType;
 		MVTab2: ARRAY 124 OF DT.TabType;
-		MV: ARRAY 2 OF ARRAY 6 OF ARRAY ( DT.DecMbr+1 ) OF ARRAY ( DT.DecMbc+2 ) OF LONGINT;
-		RoundTab: ARRAY 16 OF LONGINT;
+		MV: ARRAY 2 OF ARRAY 6 OF ARRAY ( DT.DecMbr+1 ) OF ARRAY ( DT.DecMbc+2 ) OF SIGNED32;
+		RoundTab: ARRAY 16 OF SIGNED32;
 		mp4State: DT.MP4State;
 		log: Streams.Writer;
 
 		PROCEDURE &init*( state: DT.MP4State; logWriter: Streams.Writer);
 		VAR
-			i, j, index: LONGINT;
+			i, j, index: SIGNED32;
 		BEGIN
 			log := logWriter;
 			mp4State := state;
@@ -659,9 +659,9 @@ TYPE MotionCompensation = OBJECT
 		END init;
 
 		(* compute motion vector prediction *)
-		PROCEDURE FindPMV ( block, comp: LONGINT ): LONGINT;
+		PROCEDURE FindPMV ( block, comp: SIGNED32 ): SIGNED32;
 		VAR
-			p1, p2, p3, xin1, xin2, xin3, yin1, yin2, yin3, vec1, vec2, vec3, x, y: LONGINT;
+			p1, p2, p3, xin1, xin2, xin3, yin1, yin2, yin3, vec1, vec2, vec3, x, y: SIGNED32;
 		BEGIN
 			x := mp4State.hdr.mbXPos;
 			y := mp4State.hdr.mbYPos;
@@ -706,27 +706,27 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END FindPMV;
 
-		PROCEDURE Mmin( a, b: LONGINT ): LONGINT;
+		PROCEDURE Mmin( a, b: SIGNED32 ): SIGNED32;
 		BEGIN
 			IF a < b THEN RETURN a ELSE RETURN b END;
 		END Mmin;
 
-		PROCEDURE Mmax( a, b: LONGINT ): LONGINT;
+		PROCEDURE Mmax( a, b: SIGNED32 ): SIGNED32;
 		BEGIN
 			IF a > b THEN RETURN a ELSE RETURN b END;
 		END Mmax;
 
 		(* Set current motion vector *)
-		PROCEDURE SetMV( blockNum: LONGINT; VAR s: DT.VideoBuffer ): BOOLEAN;
+		PROCEDURE SetMV( blockNum: SIGNED32; VAR s: DT.VideoBuffer ): BOOLEAN;
 		VAR
 			tempSet: SET;
-			horMvData, verMvData, horMvRes, verMvRes, i: LONGINT;
-			scaleFac, high, low, range: LONGINT;
-			mvdx, mvdy, pmvx, pmvy, mvx, mvy: LONGINT;
+			horMvData, verMvData, horMvRes, verMvRes, i: SIGNED32;
+			scaleFac, high, low, range: SIGNED32;
+			mvdx, mvdy, pmvx, pmvy, mvx, mvy: SIGNED32;
 
 		BEGIN
 			tempSet := { mp4State.hdr.fCodeFor - 1 };
-			scaleFac := SYSTEM.VAL( LONGINT, tempSet );
+			scaleFac := SYSTEM.VAL( SIGNED32, tempSet );
 			high := ( 32 * scaleFac ) - 1;
 			low := ( ( -32 ) * scaleFac );
 			range := ( 64 * scaleFac );
@@ -807,9 +807,9 @@ TYPE MotionCompensation = OBJECT
 		  	RETURN TRUE;
 		END SetMV;
 
-		PROCEDURE GetMVData(VAR s: DT.VideoBuffer ): LONGINT;
+		PROCEDURE GetMVData(VAR s: DT.VideoBuffer ): SIGNED32;
 		VAR
-			code: LONGINT;
+			code: SIGNED32;
 		BEGIN
 			IF AVI.GetBits( 1, s.data^, s.index ) > 0 THEN
 				RETURN 0; 	(*  hor_mv_data = 0 *)
@@ -837,9 +837,9 @@ TYPE MotionCompensation = OBJECT
 		END GetMVData;
 
 		(* Reset Intra motion vectors *)
-		PROCEDURE ResetIntraMV( yPos, xPos: LONGINT );
+		PROCEDURE ResetIntraMV( yPos, xPos: SIGNED32 );
 		VAR
-			j: LONGINT;
+			j: SIGNED32;
 		BEGIN
 			FOR j := 0 TO 3 DO
 				MV[0][j][yPos][xPos] := 0;
@@ -848,7 +848,7 @@ TYPE MotionCompensation = OBJECT
 		END ResetIntraMV;
 
 		(* Reset single MV *)
-		PROCEDURE ResetNotCodedMV( yPos, xPos: LONGINT );
+		PROCEDURE ResetNotCodedMV( yPos, xPos: SIGNED32 );
 		BEGIN
 				MV[0][0][yPos][xPos] := 0;
 				MV[0][1][yPos][xPos] := 0;
@@ -862,11 +862,11 @@ TYPE MotionCompensation = OBJECT
 		END ResetNotCodedMV;
 
 		(* Reconstruct the current picture ( apply prediction ) *)
-		PROCEDURE Reconstruct( bx, by, mode: LONGINT );
+		PROCEDURE Reconstruct( bx, by, mode: SIGNED32 );
 		VAR
-			w, h, lx, dx, dy, xp, yp, comp, sum, x, y, px, py: LONGINT;
+			w, h, lx, dx, dy, xp, yp, comp, sum, x, y, px, py: SIGNED32;
 			src: DT.PointerToArrayOfCHAR;
-			srcBaseOffset: ARRAY 3 OF LONGINT;
+			srcBaseOffset: ARRAY 3 OF SIGNED32;
 		BEGIN
 			x := bx + 1;
 			y := by + 1;
@@ -946,12 +946,12 @@ TYPE MotionCompensation = OBJECT
 				IF dx MOD 4 = 0 THEN
 					dx := dx DIV 2;
 				ELSE
-					dx := SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, dx DIV 2 ) + {0} )
+					dx := SYSTEM.VAL( SIGNED32, SYSTEM.VAL( SET, dx DIV 2 ) + {0} )
 				END;
 				IF dy MOD 4 = 0 THEN
 					dy := dy DIV 2;
 				ELSE
-					dy := SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, dy DIV 2 ) + {0} )
+					dy := SYSTEM.VAL( SIGNED32, SYSTEM.VAL( SET, dy DIV 2 ) + {0} )
 				END;
 			END;
 
@@ -975,12 +975,12 @@ TYPE MotionCompensation = OBJECT
 		END Reconstruct;
 
 		(* Copy block in old picture to actual picture *)
-		PROCEDURE ReconComp( s: DT.PointerToArrayOfCHAR; sBaseOffset: LONGINT; d: DT.PointerToArrayOfCHAR;
-				dBaseOffset, lx, w, h, x, y, dx, dy, chroma: LONGINT );
+		PROCEDURE ReconComp( s: DT.PointerToArrayOfCHAR; sBaseOffset: SIGNED32; d: DT.PointerToArrayOfCHAR;
+				dBaseOffset, lx, w, h, x, y, dx, dy, chroma: SIGNED32 );
 		VAR
-			xint, xh, yint, yh: LONGINT;
-			sIndex, dIndex: LONGINT;
-			mcDriver, i: LONGINT;
+			xint, xh, yint, yh: SIGNED32;
+			sIndex, dIndex: SIGNED32;
+			mcDriver, i: SIGNED32;
 		BEGIN
 			xint := dx DIV 2;
 			xh := dx MOD 2;
@@ -996,7 +996,7 @@ TYPE MotionCompensation = OBJECT
 			dIndex := dBaseOffset + lx * y + x;
 
 			(* mcDriver := ( ( w != 8 ) << 3 ) | ( mp4State.hdr.roundingType <<2 ) | ( yh << 1) | ( xh ); *)
-			mcDriver := SYSTEM.VAL( LONGINT, SYSTEM.VAL( SET, i )+ SYSTEM.VAL( SET, mp4State.hdr.roundingType*4 )
+			mcDriver := SYSTEM.VAL( SIGNED32, SYSTEM.VAL( SET, i )+ SYSTEM.VAL( SET, mp4State.hdr.roundingType*4 )
 			+ SYSTEM.VAL( SET, yh*2 ) + SYSTEM.VAL( SET, xh ) );
 
 			IF DT.Debug THEN
@@ -1030,9 +1030,9 @@ TYPE MotionCompensation = OBJECT
 		END ReconComp;
 
 		(* specialized basic motion compensation routines *)
-		PROCEDURE CopyBlock( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT );
+		PROCEDURE CopyBlock( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32 );
 		VAR
-			dy,d,s : LONGINT;
+			dy,d,s : SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1044,9 +1044,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyBlock;
 
-		PROCEDURE CopyBlockHor( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT );
+		PROCEDURE CopyBlockHor( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32 );
 		VAR
-			dx, dy, d, s, temp: LONGINT;
+			dx, dy, d, s, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1064,9 +1064,9 @@ TYPE MotionCompensation = OBJECT
 		END CopyBlockHor;
 
 
-		PROCEDURE CopyBlockVer( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT  );
+		PROCEDURE CopyBlockVer( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32  );
 		VAR
-			dy, dx, d, s, temp: LONGINT;
+			dy, dx, d, s, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1083,9 +1083,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyBlockVer;
 
-		PROCEDURE CopyBlockHorVer( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT );
+		PROCEDURE CopyBlockHorVer( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32 );
 		VAR
-			dy, dx, d, s, temp: LONGINT;
+			dy, dx, d, s, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1104,9 +1104,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyBlockHorVer;
 
-		PROCEDURE CopyBlockHorRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT );
+		PROCEDURE CopyBlockHorRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32 );
 		VAR
-			dy, dx, d, s, temp: LONGINT;
+			dy, dx, d, s, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1123,9 +1123,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyBlockHorRound;
 
-		PROCEDURE CopyBlockVerRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT );
+		PROCEDURE CopyBlockVerRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32 );
 		VAR
-			dy, dx, d, s, temp: LONGINT;
+			dy, dx, d, s, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1142,9 +1142,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyBlockVerRound;
 
-		PROCEDURE CopyBlockHorVerRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT );
+		PROCEDURE CopyBlockHorVerRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32 );
 		VAR
-			dy, dx, d, s, temp: LONGINT;
+			dy, dx, d, s, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1162,9 +1162,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyBlockHorVerRound;
 
-		PROCEDURE CopyMBlock( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT );
+		PROCEDURE CopyMBlock( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32 );
 		VAR
-			dy, s, d: LONGINT;
+			dy, s, d: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1176,9 +1176,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyMBlock;
 
-		PROCEDURE CopyMBlockHor(src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT);
+		PROCEDURE CopyMBlockHor(src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32);
 		VAR
-			dy, dx, s, d, temp: LONGINT;
+			dy, dx, s, d, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1195,9 +1195,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyMBlockHor;
 
-		PROCEDURE CopyMBlockVer(src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT);
+		PROCEDURE CopyMBlockVer(src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32);
 		VAR
-			dy, dx, s, d, temp: LONGINT;
+			dy, dx, s, d, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1214,9 +1214,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyMBlockVer;
 
-		PROCEDURE CopyMBlockHorVer(src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT);
+		PROCEDURE CopyMBlockHorVer(src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32);
 		VAR
-			dy, dx, s, d, temp: LONGINT;
+			dy, dx, s, d, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1233,9 +1233,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyMBlockHorVer;
 
-		PROCEDURE CopyMBlockHorRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT );
+		PROCEDURE CopyMBlockHorRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32 );
 		VAR
-			dy, dx, d, s, temp: LONGINT;
+			dy, dx, d, s, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1252,9 +1252,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyMBlockHorRound;
 
-		PROCEDURE CopyMBlockVerRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT );
+		PROCEDURE CopyMBlockVerRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32 );
 		VAR
-			dy, dx, d, s, temp: LONGINT;
+			dy, dx, d, s, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[sIndex] );
 			d := ADDRESSOF( dst[dIndex] );
@@ -1271,9 +1271,9 @@ TYPE MotionCompensation = OBJECT
 			END;
 		END CopyMBlockVerRound;
 
-		PROCEDURE CopyMBlockHorVerRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: LONGINT );
+		PROCEDURE CopyMBlockHorVerRound( src, dst: DT.PointerToArrayOfCHAR; sIndex, dIndex, stride: SIGNED32 );
 		VAR
-			dy, dx, d, s, temp: LONGINT;
+			dy, dx, d, s, temp: SIGNED32;
 		BEGIN
 			s := ADDRESSOF( src[0] ) + sIndex;
 			d := ADDRESSOF( dst[0] ) + dIndex;
@@ -1295,12 +1295,12 @@ TYPE MotionCompensation = OBJECT
 
 	TYPE MMXConsts = POINTER TO MMXConstsDesc;
 	TYPE MMXConstsDesc = RECORD
-		mmwMultY, mmwMultUG, mmwMultUB, mmwMultVR, mmwMultVG: HUGEINT;
+		mmwMultY, mmwMultUG, mmwMultUB, mmwMultVR, mmwMultVG: SIGNED64;
 
 		(* various masks and other constants *)
-		mmb10, mmw0080, mmw00ff, mmwCutRed, mmwCutGreen, mmwCutBlue: HUGEINT;
+		mmb10, mmw0080, mmw00ff, mmwCutRed, mmwCutGreen, mmwCutBlue: SIGNED64;
 
-		mask5, mask6, maskBlue: HUGEINT;
+		mask5, mask6, maskBlue: SIGNED64;
 	END;
 
 		(* Convert colorspace *)
@@ -1331,8 +1331,8 @@ TYPE ColorSpace = OBJECT
 		END Init;
 
 		(* Convert picture from one colorspace to an another *)
-		PROCEDURE Convert(src: DT.PointerToArrayOfCHAR; srcYBaseOffset: LONGINT; yStride: LONGINT;
-					srcUBaseOffset, srcVBaseOffset,uvStride: LONGINT; img: Raster.Image; width, height, dstStride: LONGINT );
+		PROCEDURE Convert(src: DT.PointerToArrayOfCHAR; srcYBaseOffset: SIGNED32; yStride: SIGNED32;
+					srcUBaseOffset, srcVBaseOffset,uvStride: SIGNED32; img: Raster.Image; width, height, dstStride: SIGNED32 );
 		BEGIN
 			IF img.fmt.code = Raster.BGR888.code THEN
 				ConvertYUVToRGB888( src, srcYBaseOffset,  yStride, srcUBaseOffset, srcVBaseOffset, uvStride, img, width, height,
@@ -1349,12 +1349,12 @@ TYPE ColorSpace = OBJECT
 		END Convert;
 
 		(* Convert picture from YUV -> RGB 565, mmx version *)
-		PROCEDURE ConvertYUVToRGB565MMX(puc: DT.PointerToArrayOfCHAR; pucYBaseOffset: LONGINT; strideY: LONGINT;
-			pucUBaseOffset, pucVBaseOffset, strideUV: LONGINT; pucOut: Raster.Image;
-			widthY, heightY, strideOut: LONGINT );
+		PROCEDURE ConvertYUVToRGB565MMX(puc: DT.PointerToArrayOfCHAR; pucYBaseOffset: SIGNED32; strideY: SIGNED32;
+			pucUBaseOffset, pucVBaseOffset, strideUV: SIGNED32; pucOut: Raster.Image;
+			widthY, heightY, strideOut: SIGNED32 );
 		VAR
-			y, horizCount: LONGINT;
-			pusOut: LONGINT;
+			y, horizCount: SIGNED32;
+			pusOut: SIGNED32;
 		BEGIN
 			 strideOut := widthY*2;
 
@@ -1388,7 +1388,7 @@ TYPE ColorSpace = OBJECT
 			END;
 		END ConvertYUVToRGB565MMX;
 
-		PROCEDURE ScanLine565MMX( horizCount, pucV, pucU, pucY, pucOut: LONGINT; mmxConsts: LONGINT);
+		PROCEDURE ScanLine565MMX( horizCount, pucV, pucU, pucY, pucOut: SIGNED32; mmxConsts: SIGNED32);
 		CODE { SYSTEM.MMX, SYSTEM.PentiumPro }
 
 			PUSH ECX
@@ -1513,16 +1513,16 @@ TYPE ColorSpace = OBJECT
 		END ScanLine565MMX;
 
 		(* Convert picture from YUV -> RGB 565 *)
-		PROCEDURE ConvertYUVToRGB565(puc: DT.PointerToArrayOfCHAR; pucYBaseOffset: LONGINT; strideY: LONGINT;
-			pucUBaseOffset, pucVBaseOffset, strideUV: LONGINT; pucOut: Raster.Image;
-			widthY, heightY, strideOut: LONGINT );
+		PROCEDURE ConvertYUVToRGB565(puc: DT.PointerToArrayOfCHAR; pucYBaseOffset: SIGNED32; strideY: SIGNED32;
+			pucUBaseOffset, pucVBaseOffset, strideUV: SIGNED32; pucOut: Raster.Image;
+			widthY, heightY, strideOut: SIGNED32 );
 		VAR
-			xCount, yCount, strideDiff: LONGINT;
-			pusOut: LONGINT;
-			r, g, b: LONGINT;
-			y, u, v: LONGINT;
+			xCount, yCount, strideDiff: SIGNED32;
+			pusOut: SIGNED32;
+			r, g, b: SIGNED32;
+			y, u, v: SIGNED32;
 		BEGIN
-			strideDiff := (strideOut - widthY)*SIZEOF(INTEGER); (* expressed in bytes *)
+			strideDiff := (strideOut - widthY)*SIZEOF(SIGNED16); (* expressed in bytes *)
 
 			IF heightY < 0 THEN
 				(* we are flipping our output upside-down *)
@@ -1555,16 +1555,16 @@ TYPE ColorSpace = OBJECT
 					IF g > 255 THEN g := 255; ELSIF g < 0 THEN g := 0 END;
 					IF b > 255 THEN b := 255; ELSIF b < 0 THEN b := 0 END;
 
-(*					SYSTEM.PUT16( pusOut, SYSTEM.VAL( INTEGER,
+(*					SYSTEM.PUT16( pusOut, SYSTEM.VAL( SIGNED16,
 						( SYSTEM.VAL( SET, LSH( b, 8 ) ) * SYSTEM.VAL( SET, 0F800H ) ) +
 						( SYSTEM.VAL( SET, LSH( g, 3 ) ) * SYSTEM.VAL( SET, 07E0H ) ) +
 						( SYSTEM.VAL( SET, LSH( r, -3 ) ) * SYSTEM.VAL( SET, 001FH ) ) ) );
 *)
 
-					SYSTEM.PUT16( pusOut,  INTEGER(SET(r DIV 8 ) + SET( ( g DIV 4 ) * 32 ) +
+					SYSTEM.PUT16( pusOut,  SIGNED16(SET(r DIV 8 ) + SET( ( g DIV 4 ) * 32 ) +
 																SET( (b DIV 8 ) * 2048 ) ));
 
-					pusOut := pusOut + SIZEOF( INTEGER );
+					pusOut := pusOut + SIZEOF( SIGNED16 );
 				END;
 
 				pucYBaseOffset := pucYBaseOffset + strideY;
@@ -1577,14 +1577,14 @@ TYPE ColorSpace = OBJECT
 	END ConvertYUVToRGB565;
 
 	(* Convert YUV -> RGB 888 *)
-		PROCEDURE ConvertYUVToRGB888(puc: DT.PointerToArrayOfCHAR; pucYBaseOffset: LONGINT; strideY: LONGINT;
-			pucUBaseOffset, pucVBaseOffset, strideUV: LONGINT; pucOut: Raster.Image;
-			widthY, heightY, strideOut: LONGINT );
+		PROCEDURE ConvertYUVToRGB888(puc: DT.PointerToArrayOfCHAR; pucYBaseOffset: SIGNED32; strideY: SIGNED32;
+			pucUBaseOffset, pucVBaseOffset, strideUV: SIGNED32; pucOut: Raster.Image;
+			widthY, heightY, strideOut: SIGNED32 );
 		VAR
-			xCount, yCount, strideDiff: LONGINT;
-			pusOut: LONGINT;
-			r, g, b: LONGINT;
-			y, u, v: LONGINT;
+			xCount, yCount, strideDiff: SIGNED32;
+			pusOut: SIGNED32;
+			r, g, b: SIGNED32;
+			y, u, v: SIGNED32;
 		BEGIN
 			strideDiff := (strideOut - widthY)*3; (* expressed in bytes *)
 
@@ -1647,17 +1647,17 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 		macroBlock: MacroBlock;
 		col: ColorSpace;
 		opt: DT.DecoderOptions;	(* Between 0 and 10 *)
-		stride: LONGINT;
+		stride: SIGNED32;
 		util: DT.MyUtils;
 		log: Files.Writer;
 		debugFile: Files.File;
 		img: Raster.Image;
-		frameCounter: LONGINT;	(* The absolut position in the file *)
+		frameCounter: SIGNED32;	(* The absolut position in the file *)
 		buffer: DT.VideoBuffer;
 
-		videoWidth: LONGINT;
-		videoHeight: LONGINT;
-		frameRate* : LONGINT;
+		videoWidth: SIGNED32;
+		videoHeight: SIGNED32;
+		frameRate* : SIGNED32;
 
 		init: BOOLEAN;
 		firstFrame: BOOLEAN;
@@ -1668,11 +1668,11 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 		VAR
 			ret: BOOLEAN;
 			done: BOOLEAN;
-			temp: LONGINT;
-			ofs, size: LONGINT;
+			temp: SIGNED32;
+			ofs, size: SIGNED32;
 			len: SIZE;
-			i: LONGINT;
-			tmp: LONGINT;
+			i: SIGNED32;
+			tmp: SIGNED32;
 			tmpPtr: DT.PointerToArrayOfCHAR;
 
 		BEGIN
@@ -1797,7 +1797,7 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 
 
 		(* Sets the the stream on which to read *)
-		PROCEDURE Open*(in: Streams.Reader; VAR res: WORD );
+		PROCEDURE Open*(in: Streams.Reader; VAR res: INTEGER );
 		BEGIN
 			SELF.s := in;
 			NEW( mp4State);
@@ -1814,7 +1814,7 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 		END Open;
 
 		(* Sets the necessary videoInfo, which is needed to decode frames *)
-		PROCEDURE  GetVideoInfo*(VAR width, height, milliSecondsPerFrame: LONGINT);
+		PROCEDURE  GetVideoInfo*(VAR width, height, milliSecondsPerFrame: SIGNED32);
 		VAR si : Codecs.AVStreamInfo;
 		BEGIN
 			height := SELF.videoHeight;
@@ -1833,15 +1833,15 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 			RETURN TRUE;
 		END CanSeek;
 
-		PROCEDURE GetCurrentFrame*() : LONGINT;
+		PROCEDURE GetCurrentFrame*() : SIGNED32;
 		BEGIN
 			RETURN frameCounter;
 		END GetCurrentFrame;
 
-		PROCEDURE SeekFrame*(frame : LONGINT; goKeyFrame : BOOLEAN; VAR res : WORD);
+		PROCEDURE SeekFrame*(frame : SIGNED32; goKeyFrame : BOOLEAN; VAR res : INTEGER);
 		VAR
-			seekType: LONGINT;
-			dummy: WORD;
+			seekType: SIGNED32;
+			dummy: INTEGER;
 		BEGIN
 			IF goKeyFrame THEN
 				seekType := Codecs.SeekKeyFrame;
@@ -1856,11 +1856,11 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 		END SeekFrame;
 
 		(* Seeks a position based on timevalue. If gokeyframe is set, the next following keyframe is searched *)
-		PROCEDURE SeekMillisecond*(millisecond: LONGINT; goKeyFrame : BOOLEAN; VAR res : WORD);
+		PROCEDURE SeekMillisecond*(millisecond: SIGNED32; goKeyFrame : BOOLEAN; VAR res : INTEGER);
 		VAR
-			frame: LONGINT;
-			dummy: WORD;
-			seekType: LONGINT;
+			frame: SIGNED32;
+			dummy: INTEGER;
+			seekType: SIGNED32;
 		BEGIN
 			(* Now, this is wrong: we cannot assume, that microsecsperframe is always 40000 *)
 			frame := millisecond DIV 40;
@@ -1876,12 +1876,12 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 
 
 		(* Add edges to the picture *)
-		PROCEDURE MakeEdge( framePic: DT.PointerToArrayOfCHAR; framePicBaseOffset, edgedWidth, edgedHeight, edge: LONGINT );
+		PROCEDURE MakeEdge( framePic: DT.PointerToArrayOfCHAR; framePicBaseOffset, edgedWidth, edgedHeight, edge: SIGNED32 );
 		VAR
-			j, width, height: LONGINT;
-			pBorder, pBorderTop, pBorderBottom, pBorderTopRef, pBorderBottomRef: LONGINT;
+			j, width, height: SIGNED32;
+			pBorder, pBorderTop, pBorderBottom, pBorderTopRef, pBorderBottomRef: SIGNED32;
 			borderLeft, borderRight: CHAR;
-			pLeftCornerTop, pRightCornerTop, pLeftCornerBottom, pRightCornerBottom: LONGINT;
+			pLeftCornerTop, pRightCornerTop, pLeftCornerBottom, pRightCornerBottom: SIGNED32;
 			leftCornerTop, rightCornerTop, leftCornerBottom, rightCornerBottom: CHAR;
 		BEGIN
 			width := edgedWidth - ( 2*edge );
@@ -1941,8 +1941,8 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 		(* Read Headers *)
 		PROCEDURE GetVisualObjectHeader(): BOOLEAN;
 		VAR
-				temp, i, k: LONGINT;
-				tempReal: REAL;
+				temp, i, k: SIGNED32;
+				tempReal: FLOAT32;
 		BEGIN
 
 			IF AVI.ShowBits(27, buffer.data^, buffer.index ) = DT.VideoObjectStartCode THEN
@@ -2138,7 +2138,7 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 
 		PROCEDURE GetGOPHeader(): BOOLEAN;
 		VAR
-			temp: LONGINT;
+			temp: SIGNED32;
 		BEGIN
 			IF AVI.ShowBits(32, buffer.data^, buffer.index) = DT.GroupOfVopStartCode THEN
 				temp := AVI.GetBits(32, buffer.data^, buffer.index);
@@ -2153,7 +2153,7 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 
 		PROCEDURE NextStartCode;
 		VAR
-			temp: LONGINT;
+			temp: SIGNED32;
 		BEGIN
 			IF AVI.IsAligned(buffer.index) = FALSE THEN
 				temp := AVI.GetBits( 1, buffer.data^, buffer.index );
@@ -2165,8 +2165,8 @@ TYPE DivXDecoder* = OBJECT(Codecs.VideoDecoder)
 
 		PROCEDURE GetVideoObjectPlaneHeader(): BOOLEAN;
 		VAR
-			temp: LONGINT;
-			tempReal: REAL;
+			temp: SIGNED32;
+			tempReal: FLOAT32;
 		BEGIN
 
 			IF AVI.GetBits(32, buffer.data^, buffer.index) # DT.VideoObjectPlaneStartCode THEN

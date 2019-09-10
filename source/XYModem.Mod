@@ -14,15 +14,15 @@ TYPE
 	VAR
 		W: Streams.Writer; R: Streams.Reader;
 		F: Files.File;
-		mode: LONGINT; (* XModem, XModem1K, YModem *)
-		timeout: LONGINT;
+		mode: SIGNED32; (* XModem, XModem1K, YModem *)
+		timeout: SIGNED32;
 		data: ARRAY 1024 OF CHAR;
 		error: ARRAY 64 OF CHAR;
 		done, fail: BOOLEAN;
 
 		bytesProcessed-, totalBytes- : SIZE;
 
-		PROCEDURE & Init*(W: Streams.Writer; R: Streams.Reader; F: Files.File; mode: LONGINT);
+		PROCEDURE & Init*(W: Streams.Writer; R: Streams.Reader; F: Files.File; mode: SIGNED32);
 		BEGIN
 			SELF.W := W; SELF.R := R;
 			SELF.F := F; SELF.mode := mode; error := ""; done := FALSE
@@ -95,10 +95,10 @@ TYPE
 		END YHeader;
 
 		PROCEDURE SendFile;
-		VAR fR: Files.Reader; len, length: SIZE; blkn, blk, i, retry: LONGINT; start, ch: CHAR;
+		VAR fR: Files.Reader; len, length: SIZE; blkn, blk, i, retry: SIGNED32; start, ch: CHAR;
 
 			PROCEDURE SendData;
-			VAR crc: LONGINT;
+			VAR crc: SIGNED32;
 			BEGIN
 				W.Char(start); W.Char(CHR(blk)); W.Char(CHR(255-blk));
 				W.Bytes(data, 0, blkn); crc := CRC16(data, blkn);
@@ -174,10 +174,10 @@ TYPE
 
 	Receiver* = OBJECT (Modem)
 
-		PROCEDURE YHeader(len: LONGINT; VAR name: ARRAY OF CHAR; VAR size: LONGINT);
-		VAR i, j: LONGINT; str: ARRAY 12 OF CHAR; ch: CHAR;
+		PROCEDURE YHeader(len: SIGNED32; VAR name: ARRAY OF CHAR; VAR size: SIGNED32);
+		VAR i, j: SIGNED32; str: ARRAY 12 OF CHAR; ch: CHAR;
 		BEGIN
-			size := MAX(LONGINT);
+			size := MAX(SIGNED32);
 			i := 0; j := 0; ch := data[0];
 			WHILE (i < len) & (ch # 0X) DO
 				name[j] := ch; INC(j); INC(i); ch := data[i]
@@ -193,10 +193,10 @@ TYPE
 		END YHeader;
 
 		PROCEDURE ReceiveFile;
-		VAR name: Files.FileName; fW: Files.Writer; len, blkn, i: LONGINT; ch, ch2: CHAR;
+		VAR name: Files.FileName; fW: Files.Writer; len, blkn, i: SIGNED32; ch, ch2: CHAR;
 
 			PROCEDURE ReceiveData(): BOOLEAN;
-			VAR len: SIZE; crc, crcr: LONGINT;
+			VAR len: SIZE; crc, crcr: SIGNED32;
 			BEGIN
 				R.Bytes(data, 0, blkn, len); fail := (R.res # Streams.Ok) OR (len # blkn);
 				IF ~fail THEN
@@ -221,7 +221,7 @@ TYPE
 		BEGIN
 			timeout := 5000;
 			i := 0; REPEAT W.Char(C); W.Update(); INC(i) UNTIL Read(ch) OR (i > 10);
-			IF ch # 0X THEN error := "" END; len := MAX(LONGINT);
+			IF ch # 0X THEN error := "" END; len := MAX(SIGNED32);
 			IF F # NIL THEN
 				Files.OpenWriter(fW, F, 0)
 			ELSIF mode # YModem THEN
@@ -300,7 +300,7 @@ TYPE
 
 		Return: TRUE if at least  minAvailable bytes is available
 	*)
-	PROCEDURE WaitForData(reader: Streams.Reader; minAvailable, timeout: LONGINT; yield: PROCEDURE{DELEGATE}(): BOOLEAN): BOOLEAN;
+	PROCEDURE WaitForData(reader: Streams.Reader; minAvailable, timeout: SIGNED32; yield: PROCEDURE{DELEGATE}(): BOOLEAN): BOOLEAN;
 	VAR milliTimer: Kernel.MilliTimer;
 	BEGIN
 		Kernel.SetTimer(milliTimer, timeout);
@@ -334,24 +334,24 @@ CONST
 	PROCEDURE InitReceiveTransfer(
 												modemReader: Streams.Reader;
 												modemWriter: Streams.Writer;
-												mode, initTimeout, dataTimeout: LONGINT;
+												mode, initTimeout, dataTimeout: SIGNED32;
 												yield: PROCEDURE{DELEGATE}(): BOOLEAN;
 												VAR fileName: ARRAY OF CHAR;
-												VAR fileLength: LONGINT;
-												VAR res: LONGINT
+												VAR fileLength: SIGNED32;
+												VAR res: SIGNED32
 												);
 	VAR
-		i, blockSize: LONGINT;
+		i, blockSize: SIGNED32;
 		n: SIZE;
 		ch: CHAR;
-		blockNum, blockNumCheck: LONGINT;
-		crc, crcr: LONGINT;
+		blockNum, blockNumCheck: SIGNED32;
+		crc, crcr: SIGNED32;
 		buf: ARRAY 1024 OF CHAR;
 
 		(* Process block 0 of an YMODEM transfer *)
 		PROCEDURE ProcessBlock0();
 		VAR
-			k, m: LONGINT;
+			k, m: SIGNED32;
 			str: ARRAY 16 OF CHAR;
 		BEGIN
 			TRACE(blockSize);
@@ -378,12 +378,12 @@ CONST
 				TRACE(str,fileLength);
 			END;
 
-			IF fileLength <= 0 THEN fileLength := MAX(LONGINT); END;
+			IF fileLength <= 0 THEN fileLength := MAX(SIGNED32); END;
 		END ProcessBlock0;
 
 	BEGIN
 		fileName := "";
-		fileLength := MAX(LONGINT);
+		fileLength := MAX(SIGNED32);
 		res := 0;
 
 		initTimeout := MAX(1,initTimeout DIV 10);
@@ -416,7 +416,7 @@ CONST
 
 			modemReader.Bytes(buf,0,blockSize,n); ASSERT(n = blockSize);
 
-			crcr := 256*LONGINT(ORD(modemReader.Get())) + LONGINT(ORD(modemReader.Get()));
+			crcr := 256*SIGNED32(ORD(modemReader.Get())) + SIGNED32(ORD(modemReader.Get()));
 			crc := CRC16(buf, blockSize);
 
 			IF crc = crcr THEN
@@ -436,25 +436,25 @@ CONST
 	PROCEDURE ReceiveFileData(
 												modemReader: Streams.Reader;
 												modemWriter, dataWriter: Streams.Writer;
-												mode, length, timeout: LONGINT;
+												mode, length, timeout: SIGNED32;
 												yield: PROCEDURE{DELEGATE}(): BOOLEAN;
-												VAR numBytesReceived: LONGINT;
-												VAR res: LONGINT
+												VAR numBytesReceived: SIGNED32;
+												VAR res: SIGNED32
 												);
 	VAR
 		ch: CHAR;
 		n: SIZE;
-		blockNum, blockSize, dataLen: LONGINT;
-		blockNum1, blockNum1Check: LONGINT;
+		blockNum, blockSize, dataLen: SIGNED32;
+		blockNum1, blockNum1Check: SIGNED32;
 
 		data: ARRAY 1024 OF CHAR;
 
-		crc, crcr: LONGINT;
-		nakCount: LONGINT;
+		crc, crcr: SIGNED32;
+		nakCount: SIGNED32;
 
 		PROCEDURE EndOfTransfer();
 		BEGIN
-			IF length = MAX(LONGINT) THEN
+			IF length = MAX(SIGNED32) THEN
 				(* remove EOF padding characters *)
 				WHILE (dataLen > 0) & (data[dataLen-1] = EOF) DO
 					DEC(dataLen);
@@ -494,7 +494,7 @@ CONST
 				END;
 
 				modemReader.SkipBytes(128);
-				crcr := 256*LONGINT(ORD(modemReader.Get())) + LONGINT(ORD(modemReader.Get()));
+				crcr := 256*SIGNED32(ORD(modemReader.Get())) + SIGNED32(ORD(modemReader.Get()));
 
 				TRACE(modemReader.Available());
 
@@ -556,13 +556,13 @@ CONST
 			END;
 			modemReader.Bytes(data,0,blockSize,n); ASSERT(n = blockSize);
 
-			crcr := 256*LONGINT(ORD(modemReader.Get())) + LONGINT(ORD(modemReader.Get()));
+			crcr := 256*SIGNED32(ORD(modemReader.Get())) + SIGNED32(ORD(modemReader.Get()));
 			crc := CRC16(data, blockSize);
 
 			IF crc = crcr THEN
 				modemWriter.Char(ACK); modemWriter.Update;
 				dataLen := blockSize;
-				IF length # MAX(LONGINT) THEN
+				IF length # MAX(SIGNED32) THEN
 					dataLen := MIN(length,dataLen);
 					DEC(length,dataLen);
 				END;
@@ -601,15 +601,15 @@ CONST
 									modemReader: Streams.Reader;
 									modemWriter: Streams.Writer;
 									VAR fileName: Files.FileName;
-									mode: LONGINT;
-									initTimeout, dataTimeout: LONGINT;
-									VAR numBytesReceived: LONGINT;
+									mode: SIGNED32;
+									initTimeout, dataTimeout: SIGNED32;
+									VAR numBytesReceived: SIGNED32;
 									yield: PROCEDURE{DELEGATE}(): BOOLEAN;
-									VAR res: LONGINT
+									VAR res: SIGNED32
 									);
 	VAR
 		file: Files.File;
-		length: LONGINT;
+		length: SIGNED32;
 		name: Files.FileName;
 		dataWriter: Files.Writer;
 	BEGIN
@@ -643,16 +643,16 @@ BEGIN
 	RETURN (ch >= "0") & (ch <= "9")
 END IsDigit;
 
-PROCEDURE CRC16(VAR buf: ARRAY OF CHAR; len: LONGINT): LONGINT;
-VAR i, k, crc: LONGINT;
+PROCEDURE CRC16(VAR buf: ARRAY OF CHAR; len: SIGNED32): SIGNED32;
+VAR i, k, crc: SIGNED32;
 BEGIN
 	crc := 0; i := 0;
 	WHILE i < len DO
-		crc := LONGINT(SET(crc) / SET(ORD(buf[i])*LONG(100H)));
+		crc := SIGNED32(SET(crc) / SET(ORD(buf[i])*LONG(100H)));
 		k := 0;
 		WHILE k < 8 DO
 			IF 15 IN SET(crc) THEN
-				crc := LONGINT(SET(crc*2) / SET(1021H))
+				crc := SIGNED32(SET(crc*2) / SET(1021H))
 			ELSE
 				crc := crc*2
 			END;
@@ -663,7 +663,7 @@ BEGIN
 	RETURN crc MOD 10000H
 END CRC16;
 
-PROCEDURE GetPars(context :Commands.Context; VAR name: ARRAY OF CHAR; VAR port, bps, parity, stop: LONGINT): BOOLEAN;
+PROCEDURE GetPars(context :Commands.Context; VAR name: ARRAY OF CHAR; VAR port, bps, parity, stop: SIGNED32): BOOLEAN;
 BEGIN
 	port := 0; bps := 115200; parity := Serials.ParNo; stop := Serials.Stop1;
 	IF context.arg.GetString(name) & IsDigit(name[0]) THEN
@@ -696,10 +696,10 @@ BEGIN
 	RETURN TRUE
 END GetPars;
 
-PROCEDURE xySend(context : Commands.Context; mode: LONGINT);
+PROCEDURE xySend(context : Commands.Context; mode: SIGNED32);
 VAR
 	name: Files.FileName; F: Files.File;
-	port: Serials.Port; portn, bps, parity, stop: LONGINT; res: WORD;
+	port: Serials.Port; portn, bps, parity, stop: SIGNED32; res: INTEGER;
 	send: Sender; error: ARRAY 64 OF CHAR;
 	W: Streams.Writer; R: Streams.Reader;
 BEGIN
@@ -744,10 +744,10 @@ BEGIN
 	xySend(context, YModem)
 END YSend;
 
-PROCEDURE xyReceive(context : Commands.Context; mode: LONGINT);
+PROCEDURE xyReceive(context : Commands.Context; mode: SIGNED32);
 VAR
 	name: Files.FileName; F: Files.File;
-	port: Serials.Port; portn, bps, parity, stop: LONGINT; res: WORD;
+	port: Serials.Port; portn, bps, parity, stop: SIGNED32; res: INTEGER;
 	recv: Receiver; error: ARRAY 64 OF CHAR; awaitF: BOOLEAN;
 	W: Streams.Writer; R: Streams.Reader;
 BEGIN

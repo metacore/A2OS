@@ -7,7 +7,7 @@ IMPORT
 	Math IN A2, Objects, Gadgets, BasicGadgets, Complex;
 
 (* Return the value of a input gadget *)
-PROCEDURE GetValue(name: ARRAY OF CHAR; default: REAL): REAL;
+PROCEDURE GetValue(name: ARRAY OF CHAR; default: FLOAT32): FLOAT32;
 VAR obj: Objects.Object;
 BEGIN
 	obj := Gadgets.FindObj(Gadgets.context, name);
@@ -18,7 +18,7 @@ BEGIN
 END GetValue;
 
 PROCEDURE Do*;
-VAR obj: Objects.Object; i: INTEGER; freqA, freqB: REAL;
+VAR obj: Objects.Object; i: SIGNED16; freqA, freqB: FLOAT32;
 BEGIN
 	obj := Gadgets.FindObj(Gadgets.context, "Controller");
 	IF (obj # NIL) & (obj IS Complex.Complex) THEN

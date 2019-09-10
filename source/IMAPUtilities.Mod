@@ -9,8 +9,8 @@ CONST
 	CR = 0DX; LF = 0AX; SP = 32;
 
 VAR
-	base64Table: ARRAY 128 OF LONGINT;
-	index: LONGINT;
+	base64Table: ARRAY 128 OF SIGNED32;
+	index: SIGNED32;
 
 TYPE
 
@@ -325,7 +325,7 @@ VAR
 	string: String;
 	w: Streams.Writer;
 	i: SIZE;
-	sum, value, factor: LONGINT;
+	sum, value, factor: SIGNED32;
 BEGIN
 	NEW(buf, 16);
 	w := buf.GetWriter();
@@ -385,7 +385,7 @@ VAR
 	string: String;
 	w: Streams.Writer;
 	i: SIZE;
-	value: LONGINT;
+	value: SIGNED32;
 BEGIN
 	NEW(buf, 16);
 	w := buf.GetWriter();
@@ -420,7 +420,7 @@ END decodeQuotedPrintable;
 PROCEDURE encodeQuotedPrintable*(VAR string: String);
 VAR
 	i, count: SIZE;
-	value: LONGINT;
+	value: SIGNED32;
 	c: CHAR;
 	chars: ARRAY 17 OF CHAR;
 	buf: Strings.Buffer;
@@ -582,7 +582,7 @@ VAR
 	buffer: Strings.Buffer;
 	w: Streams.Writer;
 	utf8: ARRAY 7 OF CHAR;
-	state, value: LONGINT;
+	state, value: SIGNED32;
 	pos: SIZE;
 	r: BOOLEAN;
 BEGIN
@@ -636,8 +636,8 @@ END replaceEncodedFolderName;
 (* This procedure returns a string that is a valid string for the date field in an RFC822 message header *)
 PROCEDURE getRFC822Date*():String;
 VAR
-	year, week : LONGINT;
-	dayOfWeek: LONGINT;
+	year, week : SIGNED32;
+	dayOfWeek: SIGNED32;
 	buffer: Strings.Buffer;
 	w: Streams.Writer;
 	answer: String;

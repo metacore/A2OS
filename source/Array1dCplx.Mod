@@ -11,7 +11,7 @@ TYPE
 	Value* = NbrCplx.Complex;  RealValue* = NbrRe.Real;
 
 	Array* = POINTER TO ARRAY OF Value;
-	Index* = LONGINT;
+	Index* = SIGNED32;
 
 CONST
 	assertSrcIndexCheck* = 1000;  assertDestIndexCheck* = 1001;  sz = SIZEOF( Value );
@@ -637,9 +637,9 @@ TYPE
 		Copy( temp^, x, 0, to, len );
 	END ShiftBlock;
 
-	PROCEDURE RemovePat*( VAR x: ARRAY OF Value;  offset, step, piecelen, pieces: LONGINT ): Array;
+	PROCEDURE RemovePat*( VAR x: ARRAY OF Value;  offset, step, piecelen, pieces: SIGNED32 ): Array;
 	(* for example: remove row or col from matrix *)
-	VAR srcidx, destidx: LONGINT;  res: Array;
+	VAR srcidx, destidx: SIGNED32;  res: Array;
 	BEGIN
 		Array1dBytes.PatRangeCheck( offset, step, piecelen, pieces, LEN( x ) );
 
@@ -659,15 +659,15 @@ TYPE
 		RETURN res;
 	END RemovePat;
 
-	PROCEDURE Remove*( VAR x: ARRAY OF Value;  offset, len: LONGINT ): Array;   (* optimize if necessary *)
+	PROCEDURE Remove*( VAR x: ARRAY OF Value;  offset, len: SIGNED32 ): Array;   (* optimize if necessary *)
 	BEGIN
 		RETURN RemovePat( x, offset, len, len, 1 );
 	END Remove;
 
-	PROCEDURE InsertPat*( VAR x: ARRAY OF Value;  offset, step, piecelen, pieces: LONGINT ): Array;
+	PROCEDURE InsertPat*( VAR x: ARRAY OF Value;  offset, step, piecelen, pieces: SIGNED32 ): Array;
 	(* for example: insert row or col in matrix *)
 
-	VAR srcidx, destidx: LONGINT;  res: Array;  null: Value;
+	VAR srcidx, destidx: SIGNED32;  res: Array;  null: Value;
 	BEGIN
 		Array1dBytes.PatRangeCheck( offset, step, piecelen, pieces, LEN( x ) + pieces * piecelen );
 
@@ -686,12 +686,12 @@ TYPE
 		RETURN res;
 	END InsertPat;
 
-	PROCEDURE Insert*( VAR x: ARRAY OF Value;  offset, len: LONGINT ): Array;   (* optimize if necessary *)
+	PROCEDURE Insert*( VAR x: ARRAY OF Value;  offset, len: SIGNED32 ): Array;   (* optimize if necessary *)
 	BEGIN
 		RETURN InsertPat( x, offset, len, len, 1 );
 	END Insert;
 
-	PROCEDURE GetPieces*( VAR a: ARRAY OF Value;  offset, step, piecelen: LONGINT ): LONGINT;
+	PROCEDURE GetPieces*( VAR a: ARRAY OF Value;  offset, step, piecelen: SIGNED32 ): SIGNED32;
 	BEGIN
 		IF (LEN( a ) - offset) MOD step >= piecelen THEN RETURN (LEN( a ) - offset) DIV step + 1 ELSE RETURN (LEN( a ) - offset) DIV step END;
 	END GetPieces;

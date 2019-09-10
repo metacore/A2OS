@@ -52,10 +52,10 @@ CONST
 	MinLoadSpecialOffset = -0FFH;
 	MaxLoadSpecialOffset = 0FFH;
 	MaxShifterOperand = 7F000000H;
-	MinShifterOperand = LONGINT(80000000H);
+	MinShifterOperand = SIGNED32(80000000H);
 
 VAR
-	MinMaxOffset: ARRAY NumLabelTypes OF RECORD min, max: LONGINT END;
+	MinMaxOffset: ARRAY NumLabelTypes OF RECORD min, max: SIGNED32 END;
 
 TYPE
 	AsmInline* = OBJECT(PCLIR.AsmInline)
@@ -80,12 +80,12 @@ TYPE
 	Symbol = OBJECT
 		VAR
 			name: Identifier;
-			type: LONGINT;
+			type: SIGNED32;
 			value: SET;
 			next: Symbol;
 			local: BOOLEAN;
 
-		PROCEDURE &Init*(name: Identifier; type: LONGINT; value: SET; local: BOOLEAN);
+		PROCEDURE &Init*(name: Identifier; type: SIGNED32; value: SET; local: BOOLEAN);
 		BEGIN SELF.name := name; SELF.type := type; SELF.value := value; SELF.local := local;
 		END Init;
 	END Symbol;
@@ -105,8 +105,8 @@ TYPE
 				the assembler language is neither prefix- nor postfix-free....(what moron designed it ?!?)
 				If the symbols are sorted by their length, the longer symbols are checked first & it works.
 		*)
-		PROCEDURE Enter(symbol: Identifier; type: LONGINT; value: SET; local: BOOLEAN);
-		VAR s, p, c: Symbol; idx, len: LONGINT;
+		PROCEDURE Enter(symbol: Identifier; type: SIGNED32; value: SET; local: BOOLEAN);
+		VAR s, p, c: Symbol; idx, len: SIGNED32;
 		BEGIN { EXCLUSIVE }
 			ASSERT(symbol # "");
 			NEW(s, symbol, type, value, local);
@@ -121,8 +121,8 @@ TYPE
 		END Enter;
 
 		(* Find - finds a symbol by its exact name and type *)
-		PROCEDURE Find(symbol: Identifier; type: LONGINT; VAR value: SET): BOOLEAN;
-		VAR idx: LONGINT; s: Symbol;
+		PROCEDURE Find(symbol: Identifier; type: SIGNED32; VAR value: SET): BOOLEAN;
+		VAR idx: SIGNED32; s: Symbol;
 		BEGIN
 			IF TraceSymbol THEN Write("  FindSymbol '"); Write(symbol) END;
 			IF (symbol # "") THEN
@@ -142,8 +142,8 @@ TYPE
 		END Find;
 
 		(* GetSymbol - finds a symbol by its exact name and type *)
-		PROCEDURE GetSymbol(symbol: Identifier; type: LONGINT): Symbol;
-		VAR idx: LONGINT; s: Symbol;
+		PROCEDURE GetSymbol(symbol: Identifier; type: SIGNED32): Symbol;
+		VAR idx: SIGNED32; s: Symbol;
 		BEGIN
 			IF (symbol # "") THEN
 				idx := ORD(Cap(symbol[0])) - ORD("A");
@@ -159,11 +159,11 @@ TYPE
 		(* Prefix - finds a symbol with a matching prefix and type. If a symbol is found,
 				matching part of the string is deleted from 'symbol'.
 		*)
-		PROCEDURE Prefix(VAR symbol: Identifier; type: LONGINT; VAR value: SET): BOOLEAN;
-		VAR idx: LONGINT; s: Symbol;
+		PROCEDURE Prefix(VAR symbol: Identifier; type: SIGNED32; VAR value: SET): BOOLEAN;
+		VAR idx: SIGNED32; s: Symbol;
 
 			PROCEDURE Match(s: Symbol; VAR str: Identifier): BOOLEAN;
-			VAR p, q: LONGINT;
+			VAR p, q: SIGNED32;
 			BEGIN p := 1;
 				WHILE (s.name[p] # 0X) & (s.name[p] = str[p]) DO INC(p) END;
 				IF (s.name[p] = 0X) THEN
@@ -193,7 +193,7 @@ TYPE
 
 		(* ClearLocalSymbols - removes all symbols from the symbol table *)
 		PROCEDURE ClearLocalSymbols;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO 26 DO symbols[i] := NIL END
 		END ClearLocalSymbols;
@@ -215,7 +215,7 @@ TYPE
 
 		(* Print - debug *)
 		PROCEDURE Print;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			Write("Mnemonic: "); WriteLn(SELF.name);
 			FOR i := 0 TO 5 DO
@@ -238,7 +238,7 @@ TYPE
 		*)
 		PROCEDURE Enter(mnemonic: ARRAY OF CHAR; opcode: SET; cond, suffix: IdentHandler;
 														h0, h1, h2, h3, h4, h5: Handler);
-		VAR m, p, c: Mnemonic; idx, len: LONGINT;
+		VAR m, p, c: Mnemonic; idx, len: SIGNED32;
 		BEGIN
 			NEW(m, mnemonic, opcode, cond, suffix, h0, h1, h2, h3, h4, h5);
 			idx := ORD(Cap(mnemonic[0])) - ORD("A");
@@ -255,10 +255,10 @@ TYPE
 			matching part of the string is deleted from 'mnemonic'
 		*)
 		PROCEDURE Find(VAR mnemonic: Identifier): Mnemonic;
-		VAR idx: LONGINT; m: Mnemonic;
+		VAR idx: SIGNED32; m: Mnemonic;
 
 			PROCEDURE Match(m: Mnemonic; VAR str: Identifier): BOOLEAN;
-			VAR p, q: LONGINT;
+			VAR p, q: SIGNED32;
 			BEGIN p := 1;
 				WHILE (m.name[p] # 0X) & (m.name[p] = str[p]) DO INC(p) END;
 				IF (m.name[p] = 0X) THEN
@@ -439,23 +439,23 @@ TYPE
 		VAR
 			sourcepos,			(* position in source code *)
 			pc,						(* pc of branch *)
-			mode: LONGINT; (* mode of use *)
+			mode: SIGNED32; (* mode of use *)
 			next: UseList;
 
-		PROCEDURE &Init*(sourcepos, pc, mode: LONGINT; next: UseList);
+		PROCEDURE &Init*(sourcepos, pc, mode: SIGNED32; next: UseList);
 		BEGIN SELF.sourcepos := sourcepos; SELF.pc := pc; SELF.mode := mode; SELF.next := next
 		END Init;
 	END UseList;
 
 	Label = OBJECT
 		VAR
-			pc: LONGINT; (* pc of location where the label is defined *)
+			pc: SIGNED32; (* pc of location where the label is defined *)
 			name: Identifier;
-			type: LONGINT;
+			type: SIGNED32;
 			uses: UseList;
 			next: Label;
 
-		PROCEDURE &Init*(pc: LONGINT; name: Identifier; type: LONGINT; next: Label);
+		PROCEDURE &Init*(pc: SIGNED32; name: Identifier; type: SIGNED32; next: Label);
 		BEGIN SELF.pc := pc; SELF.name := name; SELF.type := type; SELF.next := next
 		END Init;
 	END Label;
@@ -473,8 +473,8 @@ TYPE
 			If a label has been 'defined' already, all forward references are fixed and then deleted.
 			If a use is too far away, the error is reported to PCM.
 		*)
-		PROCEDURE AddDefinition(sourcepos, pc: LONGINT; label: Identifier; type: LONGINT);
-		VAR l: Label; use: UseList; offset: LONGINT;
+		PROCEDURE AddDefinition(sourcepos, pc: SIGNED32; label: Identifier; type: SIGNED32);
+		VAR l: Label; use: UseList; offset: SIGNED32;
 		BEGIN
 			IF TraceParse THEN Write("  label manager: adding definition for "); Write(label); Write("; type "); Int(type); Ln END;
 			l := Find(label, type);
@@ -510,7 +510,7 @@ TYPE
 		END AddDefinition;
 
 		(* Find - searches for a given label. Returns NIL if not found *)
-		PROCEDURE Find(label: Identifier; type: LONGINT): Label;
+		PROCEDURE Find(label: Identifier; type: SIGNED32): Label;
 		VAR l: Label;
 		BEGIN
 			l := labels;
@@ -522,8 +522,8 @@ TYPE
 			If the location of the label is already known, the correct branch offset is returned, {} otherwise.
 			If the branch offset is too big, the error is reported to PCM
 		*)
-		PROCEDURE AddUse(sourcepos, pc: LONGINT; label: Identifier; type, mode: LONGINT): SET;
-		VAR l: Label; use: UseList; offset: LONGINT; res: SET;
+		PROCEDURE AddUse(sourcepos, pc: SIGNED32; label: Identifier; type, mode: SIGNED32): SET;
+		VAR l: Label; use: UseList; offset: SIGNED32; res: SET;
 		BEGIN (* HEUREKA ! *)
 			IF TraceParse THEN Write("  label manager: adding use for "); Write(label); Write("; type "); Int(type); Ln END;
 			l := Find(label, type);
@@ -585,10 +585,10 @@ TYPE
 	Scanner = OBJECT
 		VAR
 			scanner: PCS.Scanner;
-			position, symbol: LONGINT; (* current position, current symbol *)
+			position, symbol: SIGNED32; (* current position, current symbol *)
 			eot: BOOLEAN; (* TRUE if the end has been reached (symbol = sEnd) *)
 			ident: Identifier; (* valid if symbol equals sIdent *)
-			number: LONGINT; (* valid if symbol equals sNumber *)
+			number: SIGNED32; (* valid if symbol equals sNumber *)
 			ch: CHAR; (* valid if symbol equals sCharacter *)
 			string: ARRAY 256 OF CHAR; (* valid if symbol equals sString *)
 
@@ -612,7 +612,7 @@ TYPE
 		END Character;
 
 		(* Digit - returns the value of a (hexadecimal) digit. If 'ch' is not a digit, -1 is returned *)
-		PROCEDURE Digit(ch: CHAR): LONGINT;
+		PROCEDURE Digit(ch: CHAR): SIGNED32;
 		BEGIN
 			IF (ch >= "0") & (ch <= "9") THEN RETURN ORD(ch) - ORD("0")
 			ELSIF (Cap(ch) >= "A") & (Cap(ch) <= "F") THEN RETURN ORD(Cap(ch)) - ORD("A") + 10
@@ -627,7 +627,7 @@ TYPE
 
 		(* GetIdent - returns an identifier *)
 		PROCEDURE GetIdent(VAR ident: Identifier);
-		VAR pos: LONGINT;
+		VAR pos: SIGNED32;
 		BEGIN
 			WHILE (pos < LEN(ident)-1) & ~Delimiter(scanner.ch) DO
 				ident[pos] := scanner.ch; INC(pos); scanner.NextChar
@@ -640,7 +640,7 @@ TYPE
 			Binary numbers are terminated by "B", decimal numbers as usual.
 		*)
 		PROCEDURE GetNumber(allowChars: BOOLEAN);
-		VAR str: ARRAY 33 OF CHAR; i, base, sign, value: LONGINT;
+		VAR str: ARRAY 33 OF CHAR; i, base, sign, value: SIGNED32;
 		BEGIN
 			symbol := sNumber;
 			IF (scanner.ch = "-") THEN sign := -1; scanner.NextChar
@@ -698,7 +698,7 @@ TYPE
 
 		(* Scan - scans the next symbol. Stops at "END" *)
 		PROCEDURE Scan;
-		VAR pos: LONGINT;
+		VAR pos: SIGNED32;
 		BEGIN
 			IF ~eot THEN
 				SkipWhiteSpace;
@@ -773,7 +773,7 @@ TYPE
 		END Scan;
 
 		(* Match - returns TRUE and scans the next symbol if the current symbol equals 'symbol'*)
-		PROCEDURE Match(symbol: LONGINT): BOOLEAN;
+		PROCEDURE Match(symbol: SIGNED32): BOOLEAN;
 		BEGIN
 			IF (SELF.symbol = symbol) THEN
 				Scan; RETURN TRUE
@@ -796,7 +796,7 @@ TYPE
 			asm: AsmInline;
 			code: PCLIR.AsmBlock;
 			ignore: BOOLEAN;
-			pc: LONGINT;
+			pc: SIGNED32;
 			opcode: SET;	(* opcode we have assembled so far *)
 
 		(*-------------------------------------- parser functions ----------------------------------------*)
@@ -807,7 +807,7 @@ TYPE
 				equal/if unsinged lower or same is BLT, BLE and BLS repectively...
 		*)
 		PROCEDURE Branch(VAR ident: Identifier): SET;
-		VAR link: SET; pos: LONGINT;
+		VAR link: SET; pos: SIGNED32;
 		BEGIN
 			(* the "B" is already gone. Now we have to check if it's a BL[cond] or a B[cond] *)
 			IF (ident[0] = "L") & (ident[1] # "S") & (ident[1] # "T") & ((ident[1] # "E") OR (ident[2] = "Q")) THEN
@@ -824,7 +824,7 @@ TYPE
 				returned and the condition code removed from 'ident'. Otherwise the unconditional execution opcode is returned.
 		*)
 		PROCEDURE Condition(VAR ident: Identifier): SET;
-		VAR cond: Identifier; value: SET; p: LONGINT;
+		VAR cond: Identifier; value: SET; p: SIGNED32;
 		BEGIN
 			IF TraceParse THEN Write("  condition: ident = '"); Write(ident); Write("': ") END;
 			cond[0] := ident[0]; cond[1] := ident[1]; cond[2] := 0X;
@@ -843,7 +843,7 @@ TYPE
 				the flag deleted from 'ident'.
 		*)
 		PROCEDURE SFlag(VAR ident: Identifier):SET;
-		VAR p: LONGINT;
+		VAR p: SIGNED32;
 		BEGIN
 			IF (Cap(ident[0]) = "S") THEN
 				p := 1; WHILE (ident[p] # 0X) DO ident[p-1] := ident[p]; INC(p) END; ident[p-1] := 0X;
@@ -856,7 +856,7 @@ TYPE
 				the flag deleted from 'ident'.
 		*)
 		PROCEDURE BFlag(VAR ident: Identifier):SET;
-		VAR p: LONGINT;
+		VAR p: SIGNED32;
 		BEGIN
 			IF (Cap(ident[0]) = "B") THEN
 				p := 1; WHILE (ident[p] # 0X) DO ident[p-1] := ident[p]; INC(p) END; ident[p-1] := 0X;
@@ -869,7 +869,7 @@ TYPE
 				the flag deleted from 'ident'.
 		*)
 		PROCEDURE LFlag(VAR ident: Identifier):SET;
-		VAR p: LONGINT;
+		VAR p: SIGNED32;
 		BEGIN
 			IF (Cap(ident[0]) = "L") THEN
 				p := 1; WHILE (ident[p] # 0X) DO ident[p-1] := ident[p]; INC(p) END; ident[p-1] := 0X;
@@ -879,7 +879,7 @@ TYPE
 		END LFlag;
 
 		(* Register - parses a register and returns its opcode shifted left by 'shift' *)
-		PROCEDURE Register(type, shift: LONGINT): SET;
+		PROCEDURE Register(type, shift: SIGNED32): SET;
 		VAR value: SET;
 		BEGIN
 			IF (scanner.symbol = sIdent) & symbols.Find(scanner.ident, type, value) THEN
@@ -930,8 +930,8 @@ TYPE
 			'Variable' only prepares the value (for value parameters) or the address (for reference parameters)
 			by loading the base register (SP or FP) and the offset into the return value (but not the addressing mode !)
 		*)
-		PROCEDURE Variable(mode: LONGINT): SET;
-		VAR var: SET; obj: PCT.Symbol; offset: LONGINT; idx: PCT.StringIndex;
+		PROCEDURE Variable(mode: SIGNED32): SET;
+		VAR var: SET; obj: PCT.Symbol; offset: SIGNED32; idx: PCT.StringIndex;
 		BEGIN
 			StringPool.GetIndex(scanner.ident, idx);
 			IF (scope # NIL) THEN obj := PCT.Find(scope, scope, idx, PCT.procdeclared, TRUE)
@@ -1015,7 +1015,7 @@ TYPE
 
 		(* RotateImmediate - try to split an immediate into 4 bit rotate and 8 bit immediate *)
 		PROCEDURE RotateImmediate(): SET;
-		VAR s: SET; rot: LONGINT;
+		VAR s: SET; rot: SIGNED32;
 		BEGIN
 			ASSERT(scanner.symbol = sNumber);
 			rot := 0; s := SYSTEM.VAL(SET32, scanner.number);
@@ -1154,7 +1154,7 @@ TYPE
 			#["+"|"-"]<offset8>
 		*)
 		PROCEDURE A3Offset8(): SET;
-		VAR offset: SET; v: LONGINT;
+		VAR offset: SET; v: SIGNED32;
 		BEGIN
 			ASSERT(scanner.symbol = sNumber);
 			IF (ABS(scanner.number) < 100H) THEN
@@ -1228,7 +1228,7 @@ TYPE
 		END AddressingMode3;
 
 		(* Special - returns either 'normalMode' or 'specialMode', depending on which symbol type 'ident' matches, or -1 on error *)
-		PROCEDURE Special(normalMode, specialMode: LONGINT; VAR ident: Identifier; VAR opcode: SET; opcode2: SET): LONGINT;
+		PROCEDURE Special(normalMode, specialMode: SIGNED32; VAR ident: Identifier; VAR opcode: SET; opcode2: SET): SIGNED32;
 		BEGIN
 			IF TraceParse THEN Write("  special: ident is '"); Write(ident); Write("': ") END;
 			IF (ident = "") OR symbols.Find(ident, normalMode, opcode) THEN
@@ -1250,8 +1250,8 @@ TYPE
 		(* LoadStore - parses load/store instructions
 			suffix <Rd> "," (AddressingMode2|AddressingMode3)
 		*)
-		PROCEDURE LoadStore(VAR ident: Identifier; normalMode, specialMode: LONGINT): SET;
-		VAR ls: SET; mode: LONGINT;
+		PROCEDURE LoadStore(VAR ident: Identifier; normalMode, specialMode: SIGNED32): SET;
+		VAR ls: SET; mode: SIGNED32;
 		BEGIN
 			ls := Register(stRegister, 12);
 			IF scanner.Match(sComma) THEN
@@ -1268,15 +1268,15 @@ TYPE
 		(*--------------------------- Load/Store Multiple --------------------------------*)
 
 		PROCEDURE RegisterList(mode: SET): SET;
-		VAR regList: SET; regOne, regTwo, i: LONGINT; continue: BOOLEAN;
+		VAR regList: SET; regOne, regTwo, i: SIGNED32; continue: BOOLEAN;
 		BEGIN
 			IF scanner.Match(sLBrace) THEN
 				continue := TRUE;
 				WHILE continue DO
 					continue := FALSE;
-					regOne := LONGINT(Register(stRegister, 0));
+					regOne := SIGNED32(Register(stRegister, 0));
 					IF scanner.Match(sMinus) THEN
-						regTwo := LONGINT(Register(stRegister, 0));
+						regTwo := SIGNED32(Register(stRegister, 0));
 						IF (regOne < regTwo) THEN
 							FOR i := regOne TO regTwo DO INCL(regList, i) END
 						ELSE Error(499) (* error, lower register must be the first one *)
@@ -1429,7 +1429,7 @@ TYPE
 		END BkptImmediate;
 
 		(* CPOpcode - parses a coprocessor opcode *)
-		PROCEDURE CPOpcode(shift, max: LONGINT): SET;
+		PROCEDURE CPOpcode(shift, max: SIGNED32): SET;
 		VAR opcode: SET;
 		BEGIN
 			IF (scanner.symbol = sNumber) THEN
@@ -1524,13 +1524,13 @@ TYPE
 
 		(* DCB - parses a DCB directive *)
 		PROCEDURE DCB(): SET;
-		VAR pos: LONGINT;
+		VAR pos: SIGNED32;
 		BEGIN
 			IF (scanner.symbol = sNumber) OR (scanner.symbol = sCharacter) OR (scanner.symbol = sString) THEN
 				REPEAT
 					IF (scanner.symbol = sNumber) THEN
 						WriteLn("   number");
-						IF (MIN(SHORTINT) > scanner.number) OR (scanner.number > 2*MAX(SHORTINT)+1) THEN
+						IF (MIN(SIGNED8) > scanner.number) OR (scanner.number > 2*MAX(SIGNED8)+1) THEN
 							Error(499) (* number too small/big *)
 						ELSE
 							PutData(scanner.number, 1)
@@ -1559,7 +1559,7 @@ TYPE
 		BEGIN
 			IF (scanner.symbol = sNumber) THEN
 				REPEAT
-					IF (MIN(INTEGER) > scanner.number) OR (scanner.number > 2*MAX(INTEGER)+1) THEN
+					IF (MIN(SIGNED16) > scanner.number) OR (scanner.number > 2*MAX(SIGNED16)+1) THEN
 						Error(499) (* number too small/big *)
 					ELSE
 						PutData(scanner.number, 2)
@@ -1591,7 +1591,7 @@ TYPE
 					NEW(fixup); fixup.offset := pc; fixup.adr := obj.adr;
 					fixup.next := asm.fixup; asm.fixup := fixup;
 					adr := SYSTEM.VAL(SET32, obj(PCT.GlobalVar).adr(PCBT.GlobalVariable).offset);
-					PutData(LONGINT(adr), 4)
+					PutData(SIGNED32(adr), 4)
 				ELSE Error(499) (* global var expected *)
 				END;
 				scanner.Scan
@@ -1616,10 +1616,10 @@ TYPE
 
 		(* ADR - parses the address part of an ADR instruction *)
 		PROCEDURE ADR(): SET;
-		VAR adr, imm, regPC: SET; offset: LONGINT;
+		VAR adr, imm, regPC: SET; offset: SIGNED32;
 		BEGIN
 			IF (scanner.symbol = sIdent) THEN
-				offset := LONGINT(labels.AddUse(scanner.position, pc, scanner.ident, ltAddress, lmShifterOperand));
+				offset := SIGNED32(labels.AddUse(scanner.position, pc, scanner.ident, ltAddress, lmShifterOperand));
 				IF (offset < 0) THEN adr := adr + PCOARM.opSUB; offset := -offset	(* offset known and negative *)
 				ELSE adr := adr + PCOARM.opADD													(* offset positive or unknown (0) *)
 				END;
@@ -1677,7 +1677,7 @@ TYPE
 
 		(* ParseInstruction - parses an instruction *)
 		PROCEDURE ParseInstruction;
-		VAR i: LONGINT; m: Mnemonic; comma: BOOLEAN; mnemonic: Identifier;
+		VAR i: SIGNED32; m: Mnemonic; comma: BOOLEAN; mnemonic: Identifier;
 		BEGIN (* wp: scanner.symbol = sIdent; scanner.ident = mnemonic *)
 			IF TraceParse THEN Write("  ParseInstruction: ident = "); WriteLn(scanner.ident) END;
 			UpperCase(scanner.ident);
@@ -1711,9 +1711,9 @@ TYPE
 		END ParseInstruction;
 
 		(* Error - reports an error to PCM *)
-		PROCEDURE Error(code: LONGINT);
+		PROCEDURE Error(code: SIGNED32);
 		BEGIN
-			IF (code = 499) THEN HALT(MAX(INTEGER)) END;
+			IF (code = 499) THEN HALT(MAX(SIGNED16)) END;
 			IF (scope # NIL) THEN PCM.Error(code, scanner.position, "")
 			ELSE
 				KernelLog.String("Error "); KernelLog.Int(code, 0); KernelLog.String(" at position "); KernelLog.Int(scanner.position, 0);
@@ -1733,7 +1733,7 @@ TYPE
 		(* PutCode - puts an opcode into the code array *)
 		PROCEDURE PutCode(opcode: SET);
 		TYPE Opcode = ARRAY 4 OF CHAR;
-		VAR i: LONGINT; oc: Opcode;
+		VAR i: SIGNED32; oc: Opcode;
 		BEGIN
 			IF (pc MOD 4 # 0) THEN PCM.Error(500, scanner.position, "Alignment fault.") END; (* alignment fault *)
 			IF (code.len = 256) THEN NEW(code.next); code:= code.next; code.len := 0 END;
@@ -1750,9 +1750,9 @@ TYPE
 		END PutCode;
 
 		(* PutData - puts data into the code array. 'size' = 1, 2 or 4 (bytes) *)
-		PROCEDURE PutData(value, size: LONGINT);
+		PROCEDURE PutData(value, size: SIGNED32);
 		TYPE Data = ARRAY 4 OF CHAR;
-		VAR data: Data; i: LONGINT;
+		VAR data: Data; i: SIGNED32;
 		BEGIN
 			IF (pc MOD size # 0) THEN PCM.Error(500, scanner.position, "Alignment fault.") END; (* alignment fault *)
 			data := SYSTEM.VAL(Data, value);
@@ -1769,14 +1769,14 @@ TYPE
 		END PutData;
 
 		(* FixBranch - fixes the branch offset of a forward branch. Called by the label manager *)
-		PROCEDURE FixBranch(pc: LONGINT; offset: SET);
-		VAR i, v: LONGINT; code: PCLIR.AsmBlock;
+		PROCEDURE FixBranch(pc: SIGNED32; offset: SET);
+		VAR i, v: SIGNED32; code: PCLIR.AsmBlock;
 		BEGIN
 			IF TraceParse THEN Write("Fixing forward branch reference at pc "); Hex(pc, 8); Ln END;
 			code := asm.code;
 			WHILE (pc >= 256) & (code # NIL) DO code := code.next; DEC(pc, 256) END;
 			ASSERT(code # NIL);
-			v := LONGINT(offset);
+			v := SIGNED32(offset);
 
 			IF PCM.bigEndian THEN
 				INC(pc);
@@ -1791,9 +1791,9 @@ TYPE
 		END FixBranch;
 
 		(* FixLoad - fixes the load offset of a forward load. Called by the label manager *)
-		PROCEDURE FixLoad(pc: LONGINT; mode, offset: LONGINT);
+		PROCEDURE FixLoad(pc: SIGNED32; mode, offset: SIGNED32);
 		TYPE Opcode = ARRAY 4 OF CHAR;
-		VAR i: LONGINT; code: PCLIR.AsmBlock; opcode: SET32; imm: SET; oc: Opcode;
+		VAR i: SIGNED32; code: PCLIR.AsmBlock; opcode: SET32; imm: SET; oc: Opcode;
 		BEGIN
 			IF TraceParse THEN Write("Fixing forward load reference at pc "); Hex(pc, 8); Ln END;
 			code := asm.code;
@@ -1841,7 +1841,7 @@ TYPE
 
 		(* Assemble - parses the input until an "END" symbol is found *)
 		PROCEDURE Assemble(s: PCS.Scanner; scope: PCT.Scope; exported, inlined: BOOLEAN): PCLIR.AsmInline;
-		VAR i, n: LONGINT; skip: BOOLEAN;
+		VAR i, n: SIGNED32; skip: BOOLEAN;
 		BEGIN
 			IF TraceParse THEN WriteLn("Assembling...") END;
 			IF (scope # NIL) & ~scope.module.sysImported THEN
@@ -1962,7 +1962,7 @@ END Assemble;
 PROCEDURE Initialize;
 VAR s: SymbolTable; m: Mnemonics;
 
-	PROCEDURE Set(v: LONGINT): SET;
+	PROCEDURE Set(v: SIGNED32): SET;
 	BEGIN RETURN SYSTEM.VAL(SET32,v)
 	END Set;
 
@@ -2163,7 +2163,7 @@ BEGIN
 END Initialize;
 
 PROCEDURE UpperCase(VAR s: ARRAY OF CHAR);
-VAR p: LONGINT;
+VAR p: SIGNED32;
 BEGIN WHILE (s[p] # 0X) DO s[p] := Cap(s[p]); INC(p) END
 END UpperCase;
 
@@ -2173,8 +2173,8 @@ BEGIN IF ("a" <= ch) & (ch <= "z") THEN RETURN CAP(ch) ELSE RETURN ch END
 END Cap;
 
 (* Length - returns the length of a string *)
-PROCEDURE Length(s: ARRAY OF CHAR): LONGINT;
-VAR p: LONGINT;
+PROCEDURE Length(s: ARRAY OF CHAR): SIGNED32;
+VAR p: SIGNED32;
 BEGIN WHILE(s[p] # 0X) DO INC(p) END; RETURN p
 END Length;
 
@@ -2191,11 +2191,11 @@ PROCEDURE WriteLn(s: ARRAY OF CHAR);
 BEGIN IF Trace THEN Write(s); KernelLog.Ln END
 END WriteLn;
 
-PROCEDURE Int(i: LONGINT);
+PROCEDURE Int(i: SIGNED32);
 BEGIN IF Trace THEN KernelLog.Int(i, 0) END
 END Int;
 
-PROCEDURE Hex(i, n: LONGINT);
+PROCEDURE Hex(i, n: SIGNED32);
 BEGIN IF Trace THEN KernelLog.Hex(i, n) END
 END Hex;
 

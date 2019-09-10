@@ -35,7 +35,7 @@ TYPE
 		END Init;
 
 		PROCEDURE UpdateDataset*;
-		VAR sentKB, receivedKB : REAL;
+		VAR sentKB, receivedKB : FLOAT32;
 		BEGIN
 			sentKB := l.sendCount / 1024;
 			receivedKB := l.recvCount / 1024;
@@ -59,7 +59,7 @@ BEGIN {EXCLUSIVE}
 	WMPerfMonPlugins.updater.RemoveByName(PluginName, devicename);
 END RemovePlugin;
 
-PROCEDURE EventHandler(event : WORD; plugin : Plugins.Plugin);
+PROCEDURE EventHandler(event : INTEGER; plugin : Plugins.Plugin);
 BEGIN
 	IF event = Plugins.EventAdd THEN
 		AddPlugin(plugin (Network.LinkDevice))
@@ -69,7 +69,7 @@ BEGIN
 END EventHandler;
 
 PROCEDURE InitPlugins;
-VAR table : Plugins.Table; i : SIZE; res: WORD;
+VAR table : Plugins.Table; i : SIZE; res: INTEGER;
 BEGIN
 	Network.registry.AddEventHandler(EventHandler, res);
 	Network.registry.GetAll(table);
@@ -80,7 +80,7 @@ PROCEDURE Install*;
 END Install;
 
 PROCEDURE Cleanup;
-VAR res : WORD;
+VAR res : INTEGER;
 BEGIN
 	Network.registry.RemoveEventHandler(EventHandler, res);
 	WMPerfMonPlugins.updater.RemoveByModuleName(ModuleName);

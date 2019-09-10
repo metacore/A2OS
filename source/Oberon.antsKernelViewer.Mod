@@ -35,7 +35,7 @@ TYPE
 		kernel: antsKernel.Kernel
 	END;
 
-	Real = LONGREAL;
+	Real = FLOAT64;
 
 	PROCEDURE Copy( source, dest: tLayer );
 	BEGIN
@@ -43,7 +43,7 @@ TYPE
 	END Copy;
 
 	PROCEDURE Recall( layer: tLayer;  msg: Display.DisplayMsg );
-	VAR y: INTEGER;  hp: vyPort.Picture;
+	VAR y: SIGNED16;  hp: vyPort.Picture;
 		name: ARRAY 64 OF CHAR;
 		kernel: antsKernel.Kernel;  l: vyLinks.Link;
 	BEGIN
@@ -71,7 +71,7 @@ TYPE
 	END StoreL;
 
 	PROCEDURE LoadL( VAR R: Files.Rider;  n: tLayer );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Gadgets.ReadRef( R, n.lib, objsub );
 		IF objsub # NIL THEN n.kernel := objsub( antsKernel.Kernel ) END
@@ -84,7 +84,7 @@ TYPE
 	END Respond;
 
 	PROCEDURE Select( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR x2d, y2d: Real;  yy, x, y, w, h, dsr: INTEGER;  l: vyLinks.Link;
+	VAR x2d, y2d: Real;  yy, x, y, w, h, dsr: SIGNED16;  l: vyLinks.Link;
 		name: ARRAY 64 OF CHAR;
 	BEGIN
 		vyGraphBase.PointToPoint2d( event.x, event.y, x2d, y2d );  yy := -3;  l := layer.kernel.ModelClass;
@@ -98,7 +98,7 @@ TYPE
 	END Select;
 
 	PROCEDURE Responsible( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF (event.gesture = vyEvents.EvtSelect) OR (event.gesture = vyEvents.EvtIdent) THEN priority := vyEvents.PrioHigh END;

@@ -47,22 +47,22 @@ CONST
 TYPE
 	Rider* = OBJECT
 	VAR R*: Files.Rider;
-		type*: INTEGER;
+		type*: SIGNED16;
 
 		reverse*: BOOLEAN;
 		ignoreNL*, noExponent*: BOOLEAN;   (** skip new line characters before reading a line *)
 		eot*, err*: BOOLEAN;
 		nextCh: CHAR;   (** Character immediately following the last symbol scanned. *)
-		line*: LONGINT;   (** # carriage returns scanned so far. *)
-		class: INTEGER;   (** Scan result: Int, Real, String etc. *)
-		i: LONGINT;
-		x: REAL;
-		y: LONGREAL;
+		line*: SIGNED32;   (** # carriage returns scanned so far. *)
+		class: SIGNED16;   (** Scan result: Int, Real, String etc. *)
+		i: SIGNED32;
+		x: FLOAT32;
+		y: FLOAT64;
 		c: CHAR;
-		len: SHORTINT;   (** Length of name or string scanned. *)
+		len: SIGNED8;   (** Length of name or string scanned. *)
 		s: ARRAY 64 OF CHAR;
 		scanneropen: BOOLEAN;
-		check: LONGINT;
+		check: SIGNED32;
 
 		PROCEDURE  (* VAR R: Rider*) WriteType*;
 		BEGIN
@@ -73,7 +73,7 @@ TYPE
 		END WriteType;
 
 		PROCEDURE  (* VAR R: Rider*) ReadType*;
-		VAR ch: CHAR;  pos: LONGINT;
+		VAR ch: CHAR;  pos: SIGNED32;
 		BEGIN
 			pos := SELF.Pos();  SELF.Read( ch );
 			IF ch # 0F1X THEN SELF.SetPos( pos );  SELF.SetAscii;  aM.SI( "Type: ASCII at pos ", pos );  RETURN END;
@@ -91,14 +91,14 @@ TYPE
 			DoRead( SELF, ch )
 		END Read;
 
-		PROCEDURE  (* VAR R: Rider*) ReadBytes*( VAR ch: ARRAY OF SYSTEM.BYTE;  num: LONGINT );
+		PROCEDURE  (* VAR R: Rider*) ReadBytes*( VAR ch: ARRAY OF SYSTEM.BYTE;  num: SIGNED32 );
 		BEGIN
 			Files.ReadBytes( SELF.R, ch, num );
 			IF SELF.reverse THEN Turn( ch, num ) END;
 			SELF.eot := SELF.R.eof
 		END ReadBytes;
 
-		PROCEDURE  (* VAR R: Rider*) ReadInt*( VAR x: INTEGER );
+		PROCEDURE  (* VAR R: Rider*) ReadInt*( VAR x: SIGNED16 );
 		BEGIN
 			CASE SELF.type OF
 			bin:  BinReadInt( SELF, x )
@@ -107,22 +107,22 @@ TYPE
 			END
 		END ReadInt;
 
-		PROCEDURE  (* VAR R: Rider*) ReadIntsFix*( VAR x: ARRAY OF INTEGER;  num: LONGINT );
-		VAR i: LONGINT;
+		PROCEDURE  (* VAR R: Rider*) ReadIntsFix*( VAR x: ARRAY OF SIGNED16;  num: SIGNED32 );
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < num) DO SELF.ReadInt( x[i] );  INC( i ) END
 		END ReadIntsFix;
 
 		PROCEDURE  (* VAR R: Rider*) ReadIntsLine*( VAR x: vyIntVec.tVector );
-		VAR num: LONGINT;  val: INTEGER;
+		VAR num: SIGNED32;  val: SIGNED16;
 		BEGIN
 			IF x = NIL THEN x := vyIntVec.New( 0 ) ELSE vyIntVec.SetLen( x, 0 ) END;
 			StartReading( SELF );  num := 0;
 			WHILE (~StopReading( SELF, num )) DO SELF.ReadInt( val );  vyIntVec.Append( val, x ) END
 		END ReadIntsLine;
 
-		PROCEDURE  (* VAR R: Rider*) ReadLInt*( VAR x: LONGINT );
+		PROCEDURE  (* VAR R: Rider*) ReadLInt*( VAR x: SIGNED32 );
 		BEGIN
 			CASE SELF.type OF
 			bin:  BinReadLInt( SELF, x )
@@ -131,22 +131,22 @@ TYPE
 			END
 		END ReadLInt;
 
-		PROCEDURE  (* VAR R: Rider*) ReadLIntsFix*( VAR x: ARRAY OF LONGINT;  num: LONGINT );
-		VAR i: LONGINT;
+		PROCEDURE  (* VAR R: Rider*) ReadLIntsFix*( VAR x: ARRAY OF SIGNED32;  num: SIGNED32 );
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < num) DO SELF.ReadLInt( x[i] );  INC( i ) END
 		END ReadLIntsFix;
 
 		PROCEDURE  (* VAR R: Rider*) ReadLIntsLine*( VAR x: vyLongintVec.tVector );
-		VAR num: LONGINT;  val: LONGINT;
+		VAR num: SIGNED32;  val: SIGNED32;
 		BEGIN
 			IF x = NIL THEN x := vyLongintVec.New( 0 ) ELSE vyLongintVec.SetLen( x, 0 ) END;
 			StartReading( SELF );  num := 0;
 			WHILE (~StopReading( SELF, num )) DO SELF.ReadLInt( val );  vyLongintVec.Append( val, x ) END
 		END ReadLIntsLine;
 
-		PROCEDURE  (* VAR R: Rider*) ReadReal*( VAR x: REAL );
+		PROCEDURE  (* VAR R: Rider*) ReadReal*( VAR x: FLOAT32 );
 		BEGIN
 			CASE SELF.type OF
 			bin:  BinReadReal( SELF, x )
@@ -155,22 +155,22 @@ TYPE
 			END
 		END ReadReal;
 
-		PROCEDURE  (* VAR R: Rider*) ReadRealsFix*( VAR x: ARRAY OF REAL;  num: LONGINT );
-		VAR i: LONGINT;
+		PROCEDURE  (* VAR R: Rider*) ReadRealsFix*( VAR x: ARRAY OF FLOAT32;  num: SIGNED32 );
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < num) DO SELF.ReadReal( x[i] );  INC( i ) END
 		END ReadRealsFix;
 
 		PROCEDURE  (* VAR R: Rider*) ReadRealsLine( VAR x: vyRealVec.tVector );
-		VAR num: LONGINT;  val: REAL;
+		VAR num: SIGNED32;  val: FLOAT32;
 		BEGIN
 			IF x = NIL THEN x := vyRealVec.New( 0 ) ELSE vyRealVec.SetLen( x, 0 ) END;
 			StartReading( SELF );  num := 0;
 			WHILE (~StopReading( SELF, num )) DO SELF.ReadReal( val );  vyRealVec.Append( val, x ) END
 		END ReadRealsLine;
 
-		PROCEDURE  (* VAR R: Rider*) ReadLReal*( VAR x: LONGREAL );
+		PROCEDURE  (* VAR R: Rider*) ReadLReal*( VAR x: FLOAT64 );
 		BEGIN
 			CASE SELF.type OF
 			bin:  BinReadLReal( SELF, x )
@@ -179,15 +179,15 @@ TYPE
 			END
 		END ReadLReal;
 
-		PROCEDURE  (* VAR R: Rider*) ReadLRealsFix*( VAR x: ARRAY OF LONGREAL;  num: LONGINT );
-		VAR i: LONGINT;
+		PROCEDURE  (* VAR R: Rider*) ReadLRealsFix*( VAR x: ARRAY OF FLOAT64;  num: SIGNED32 );
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < num) DO SELF.ReadLReal( x[i] );  INC( i ) END
 		END ReadLRealsFix;
 
 		PROCEDURE  (* VAR R: Rider*) ReadLRealsLine*( VAR x: vyLongrealVec.tVector );
-		VAR num: LONGINT;  val: LONGREAL;
+		VAR num: SIGNED32;  val: FLOAT64;
 		BEGIN
 			IF x = NIL THEN x := vyLongrealVec.New( 0 ) ELSE vyLongrealVec.SetLen( x, 0 ) END;
 			StartReading( SELF );  num := 0;
@@ -245,13 +245,13 @@ END ReadLn;
 			DoWrite( SELF, ch )
 		END Write;
 
-		PROCEDURE  (* VAR R: Rider*) WriteBytes*( VAR ch: ARRAY OF SYSTEM.BYTE;  num: LONGINT );
+		PROCEDURE  (* VAR R: Rider*) WriteBytes*( VAR ch: ARRAY OF SYSTEM.BYTE;  num: SIGNED32 );
 		BEGIN
 			IF SELF.reverse THEN Turn( ch, num ) END;
 			Files.WriteBytes( SELF.R, ch, num )
 		END WriteBytes;
 
-		PROCEDURE  (* VAR R: Rider*) WriteInt*( x: INTEGER );
+		PROCEDURE  (* VAR R: Rider*) WriteInt*( x: SIGNED16 );
 		BEGIN
 			CASE SELF.type OF
 			bin:  BinWriteInt( SELF, x )
@@ -269,8 +269,8 @@ END ReadLn;
 			END
 		END WriteEmptyLine;
 
-		PROCEDURE  (* VAR R: Rider*) WriteIntsFix*( VAR x: ARRAY OF INTEGER;  num: LONGINT );
-		VAR i: LONGINT;
+		PROCEDURE  (* VAR R: Rider*) WriteIntsFix*( VAR x: ARRAY OF SIGNED16;  num: SIGNED32 );
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < num) DO SELF.WriteInt( x[i] );  INC( i ) END;
@@ -278,7 +278,7 @@ END ReadLn;
 		END WriteIntsFix;
 
 		PROCEDURE  (* VAR R: Rider*) WriteIntsLine*( x: vyIntVec.tVector );
-		VAR i, num: LONGINT;
+		VAR i, num: SIGNED32;
 		BEGIN
 			IF x = NIL THEN num := 0 ELSE num := vyIntVec.Len( x );  END;
 			StartWriting( SELF, num );  i := 0;
@@ -286,7 +286,7 @@ END ReadLn;
 			StopWriting( SELF )
 		END WriteIntsLine;
 
-		PROCEDURE  (* VAR R: Rider*) WriteLInt*( x: LONGINT );
+		PROCEDURE  (* VAR R: Rider*) WriteLInt*( x: SIGNED32 );
 		BEGIN
 			CASE SELF.type OF
 			bin:  BinWriteLInt( SELF, x )
@@ -295,8 +295,8 @@ END ReadLn;
 			END
 		END WriteLInt;
 
-		PROCEDURE  (* VAR R: Rider*) WriteLIntsFix*( VAR x: ARRAY OF LONGINT;  num: LONGINT );
-		VAR i: LONGINT;
+		PROCEDURE  (* VAR R: Rider*) WriteLIntsFix*( VAR x: ARRAY OF SIGNED32;  num: SIGNED32 );
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < num) DO SELF.WriteLInt( x[i] );  INC( i ) END;
@@ -304,7 +304,7 @@ END ReadLn;
 		END WriteLIntsFix;
 
 		PROCEDURE  (* VAR R: Rider*) WriteLIntsLine*( x: vyLongintVec.tVector );
-		VAR i, num: LONGINT;
+		VAR i, num: SIGNED32;
 		BEGIN
 			IF x = NIL THEN num := 0 ELSE num := vyLongintVec.Len( x );  END;
 			StartWriting( SELF, num );  i := 0;
@@ -312,7 +312,7 @@ END ReadLn;
 			StopWriting( SELF )
 		END WriteLIntsLine;
 
-		PROCEDURE  (* VAR R: Rider*) WriteReal*( x: REAL );
+		PROCEDURE  (* VAR R: Rider*) WriteReal*( x: FLOAT32 );
 		BEGIN
 			CASE SELF.type OF
 			bin:  BinWriteReal( SELF, x )
@@ -321,8 +321,8 @@ END ReadLn;
 			END
 		END WriteReal;
 
-		PROCEDURE  (* VAR R: Rider*) WriteRealsFix*( VAR x: ARRAY OF REAL;  num: LONGINT );
-		VAR i: LONGINT;
+		PROCEDURE  (* VAR R: Rider*) WriteRealsFix*( VAR x: ARRAY OF FLOAT32;  num: SIGNED32 );
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < num) DO SELF.WriteReal( x[i] );  INC( i ) END;
@@ -330,7 +330,7 @@ END ReadLn;
 		END WriteRealsFix;
 
 		PROCEDURE  (* VAR R: Rider*) WriteRealsLine*( x: vyRealVec.tVector );
-		VAR i, num: LONGINT;
+		VAR i, num: SIGNED32;
 		BEGIN
 			IF x = NIL THEN num := 0 ELSE num := vyRealVec.Len( x );  END;
 			StartWriting( SELF, num );  i := 0;
@@ -338,7 +338,7 @@ END ReadLn;
 			StopWriting( SELF )
 		END WriteRealsLine;
 
-		PROCEDURE  (* VAR R: Rider*) WriteLReal*( x: LONGREAL );
+		PROCEDURE  (* VAR R: Rider*) WriteLReal*( x: FLOAT64 );
 		BEGIN
 			CASE SELF.type OF
 			bin:  BinWriteLongReal( SELF, x )
@@ -347,8 +347,8 @@ END ReadLn;
 			END
 		END WriteLReal;
 
-		PROCEDURE  (* VAR R: Rider*) WriteLRealsFix*( VAR x: ARRAY OF LONGREAL;  num: LONGINT );
-		VAR i: LONGINT;
+		PROCEDURE  (* VAR R: Rider*) WriteLRealsFix*( VAR x: ARRAY OF FLOAT64;  num: SIGNED32 );
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE (i < num) DO SELF.WriteLReal( x[i] );  INC( i ) END;
@@ -356,7 +356,7 @@ END ReadLn;
 		END WriteLRealsFix;
 
 		PROCEDURE  (* VAR R: Rider*) WriteLRealsLine*( x: vyLongrealVec.tVector );
-		VAR i, num: LONGINT;
+		VAR i, num: SIGNED32;
 		BEGIN
 			num := vyLongrealVec.Len( x );  StartWriting( SELF, num );  i := 0;
 			WHILE (i < num) DO SELF.WriteLReal( vyLongrealVec.Get( x, i ) );  INC( i ) END;
@@ -377,12 +377,12 @@ END ReadLn;
 			SELF.Write( CR )
 		END WriteLn;
 
-		PROCEDURE  (* VAR R: Rider*) SetPos*( pos: LONGINT );
+		PROCEDURE  (* VAR R: Rider*) SetPos*( pos: SIGNED32 );
 		BEGIN
 			Files.Set( SELF.R, Files.Base( SELF.R ), pos )
 		END SetPos;
 
-		PROCEDURE  (* VAR R: Rider*) Set*( type: INTEGER );
+		PROCEDURE  (* VAR R: Rider*) Set*( type: SIGNED16 );
 		BEGIN
 			aM.dSI( "antsFiles: SetRider to type", type );  SELF.type := type;  SELF.scanneropen := FALSE
 		END Set;
@@ -438,7 +438,7 @@ END ReadLn;
 			IF ~SELF.New( name ) THEN antsSecurity.Halt( "could not open file" ) END;
 		END ForceNew;
 
-		PROCEDURE  (* VAR R: Rider*) Pos*( ): LONGINT;
+		PROCEDURE  (* VAR R: Rider*) Pos*( ): SIGNED32;
 		BEGIN
 			RETURN Files.Pos( SELF.R )
 		END Pos;
@@ -467,7 +467,7 @@ VAR
 		END
 	END StartReading;
 
-	PROCEDURE StopReading( R: Rider;  VAR num: LONGINT ): BOOLEAN;
+	PROCEDURE StopReading( R: Rider;  VAR num: SIGNED32 ): BOOLEAN;
 	BEGIN
 		IF R.eot OR R.err THEN num := 0;  RETURN TRUE END;
 		CASE R.type OF
@@ -479,7 +479,7 @@ VAR
 		END
 	END StopReading;
 
-	PROCEDURE StartWriting( R: Rider;  num: LONGINT );
+	PROCEDURE StartWriting( R: Rider;  num: SIGNED32 );
 	BEGIN
 		CASE R.type OF
 		bin:  R.WriteLInt( num );
@@ -500,20 +500,20 @@ VAR
 
 (** Write string s to W's buffer. *)
 	PROCEDURE AsciiWriteString(W: Rider;  s: ARRAY OF CHAR );
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE s[i] # 0X DO W.Write( s[i] );  INC( i ) END
 	END AsciiWriteString;
 
 (** Write integer x to W's buffer. Spaces are padded to the left until the number field is at least n characters long. *)
-	PROCEDURE WriteInt( W: Rider;  x, n: LONGINT );
-	VAR i, x0: LONGINT;
+	PROCEDURE WriteInt( W: Rider;  x, n: SIGNED32 );
+	VAR i, x0: SIGNED32;
 		a: ARRAY 10 OF CHAR;
 	BEGIN
 		i := 0;
 		IF x < 0 THEN
-			IF x = MIN( LONGINT ) THEN AsciiWriteString( W, " -2147483648" );  RETURN ELSE DEC( n );  x0 := -x END
+			IF x = MIN( SIGNED32 ) THEN AsciiWriteString( W, " -2147483648" );  RETURN ELSE DEC( n );  x0 := -x END
 		ELSE x0 := x
 		END;
 		REPEAT a[i] := CHR( x0 MOD 10 + 30H );  x0 := x0 DIV 10;  INC( i ) UNTIL x0 = 0;
@@ -522,20 +522,20 @@ VAR
 		REPEAT DEC( i );  W.Write( a[i] ) UNTIL i = 0
 	END WriteInt;
 
-	PROCEDURE AsciiWriteInt( W: Rider;  x: INTEGER );
+	PROCEDURE AsciiWriteInt( W: Rider;  x: SIGNED16 );
 	BEGIN
 		WriteInt( W, x, 0 );  W.Write( TAB )
 	END AsciiWriteInt;
 
-	PROCEDURE AsciiWriteLInt( W: Rider;  x: LONGINT );
+	PROCEDURE AsciiWriteLInt( W: Rider;  x: SIGNED32 );
 	BEGIN
 		WriteInt( W, x, 0 );  W.Write( TAB )
 	END AsciiWriteLInt;
 
 (** Write real x to W's buffer using n character positions. *)
-	PROCEDURE WriteReal( W: Rider;  x: REAL;  n: LONGINT );
+	PROCEDURE WriteReal( W: Rider;  x: FLOAT32;  n: SIGNED32 );
 	(* BM 1993.4.22. Do not simplify rounding! *)
-	VAR e, h, i: LONGINT;  y: LONGREAL;  z: REAL;
+	VAR e, h, i: SIGNED32;  y: FLOAT64;  z: FLOAT32;
 		d: ARRAY 8 OF CHAR;
 	BEGIN
 		e := Reals.Expo( x );
@@ -575,9 +575,9 @@ VAR
 		END
 	END WriteReal;
 (** Write real x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point, E the fixed exponent (printed only when E # 0). *)
-	PROCEDURE WriteRealFix( W: Rider;  x: REAL;  n, f, E: LONGINT );
+	PROCEDURE WriteRealFix( W: Rider;  x: FLOAT32;  n, f, E: SIGNED32 );
 	(* BM 1993.4.22. Do not simplify rounding ! / JG formatting adjusted *)
-	VAR e, h, i: LONGINT;  r, y: LONGREAL;  z: REAL;  s: CHAR;
+	VAR e, h, i: SIGNED32;  r, y: FLOAT64;  z: FLOAT32;  s: CHAR;
 		d: ARRAY 8 OF CHAR;
 	BEGIN
 		e := Reals.Expo( x );
@@ -639,15 +639,15 @@ VAR
 		END
 	END WriteRealFix;
 
-	PROCEDURE AsciiWriteReal( W: Rider;  x: REAL );
+	PROCEDURE AsciiWriteReal( W: Rider;  x: FLOAT32 );
 	BEGIN
 		IF W.noExponent THEN WriteRealFix( W, x, 0, 15, 0 );  W.Write( TAB ) ELSE WriteReal( W, x, 20 );  W.Write( TAB ) END;
 	END AsciiWriteReal;
 
-(** Write LONGREAL x to W's buffer using n character positions. *)
-	PROCEDURE WriteLongReal(W: Rider;  x: LONGREAL;  n: LONGINT );
+(** Write FLOAT64 x to W's buffer using n character positions. *)
+	PROCEDURE WriteLongReal(W: Rider;  x: FLOAT64;  n: SIGNED32 );
 	(* BM 1993.4.22. Do not simplify rounding! *)
-	VAR e, h, l, i: LONGINT;  z: LONGREAL;
+	VAR e, h, l, i: SIGNED32;  z: FLOAT64;
 		d: ARRAY 16 OF CHAR;
 	BEGIN
 		e := Reals.ExpoL( x );
@@ -684,11 +684,11 @@ VAR
 			W.Write( CHR( e DIV 100 + ORD( "0" ) ) );  e := e MOD 100;  W.Write( CHR( e DIV 10 + ORD( "0" ) ) );  W.Write( CHR( e MOD 10 + ORD( "0" ) ) )
 		END
 	END WriteLongReal;
-(** Write LONGREAL x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point,
+(** Write FLOAT64 x in a fixed point notation. n is the overall minimal length for the output field, f the number of fraction digits following the decimal point,
 D the fixed exponent (printed only when D # 0). *)
-	PROCEDURE WriteLongRealFix( W: Rider;  x: LONGREAL;  n, f, D: LONGINT );
+	PROCEDURE WriteLongRealFix( W: Rider;  x: FLOAT64;  n, f, D: SIGNED32 );
 	(* BM 1993.4.22. Do not simplify rounding! / JG formatting adjusted *)
-	VAR e, h, l, i: LONGINT;  r, z: LONGREAL;
+	VAR e, h, l, i: SIGNED32;  r, z: FLOAT64;
 		d: ARRAY 16 OF CHAR;
 		s: CHAR;
 	BEGIN
@@ -751,7 +751,7 @@ D the fixed exponent (printed only when D # 0). *)
 		END
 	END WriteLongRealFix;
 
-	PROCEDURE AsciiWriteLongReal( W: Rider;  x: LONGREAL );
+	PROCEDURE AsciiWriteLongReal( W: Rider;  x: FLOAT64 );
 	BEGIN
 		IF W.noExponent THEN WriteLongRealFix( W, x, 0, 15, 0 );  W.Write( TAB )
 		ELSE WriteLongReal( W, x, 20 );  W.Write( TAB )
@@ -778,7 +778,7 @@ D the fixed exponent (printed only when D # 0). *)
 (** Read the next symbol. Whitespace is ignored. CR increments the line counter. *)
 	PROCEDURE Scan( VAR S: Rider );
 	CONST maxD = 32;   (* fixed size: maxD <= LEN(S.s)! *)
-	VAR ch, E: CHAR;  neg, negE, hex, sign: BOOLEAN;  i, j, h, e, k, k1, k2, k3: LONGINT;  y: LONGREAL;
+	VAR ch, E: CHAR;  neg, negE, hex, sign: BOOLEAN;  i, j, h, e, k, k1, k2, k3: SIGNED32;  y: FLOAT64;
 		d: ARRAY maxD OF CHAR;
 
 		PROCEDURE Read( VAR S: Rider;  VAR ch: CHAR );
@@ -864,18 +864,18 @@ D the fixed exponent (printed only when D # 0). *)
 					IF ABS( e + h ) < 308 THEN y := (y + k * Reals.Ten( -8 )) / Reals.Ten( -e - h )
 					ELSE
 						y := (y + k * Reals.Ten( -8 )) * Reals.Ten( h );
-						IF (e <= 308 - 32) OR (e <= 308) & (y < MAX( LONGREAL ) / Reals.Ten( e )) THEN y := y * Reals.Ten( e ) ELSE y := MAX( LONGREAL ) END
+						IF (e <= 308 - 32) OR (e <= 308) & (y < MAX( FLOAT64 ) / Reals.Ten( e )) THEN y := y * Reals.Ten( e ) ELSE y := MAX( FLOAT64 ) END
 					END;
 
 					IF E = "D" THEN
-						IF y = MAX( LONGREAL ) THEN
+						IF y = MAX( FLOAT64 ) THEN
 							S.class := Texts.Inval (* NaN *)
 						ELSE
 							S.class := Texts.LongReal;
 							IF neg THEN S.y := -y ELSE S.y := y END;
 							IF Reals.ExpoL( S.y ) = 0 THEN S.y := 0 END
 						END
-					ELSIF MAX( REAL ) < y THEN
+					ELSIF MAX( FLOAT32 ) < y THEN
 						S.class := Texts.Inval (* NaN *)
 					ELSE
 						S.class := Texts.Real;
@@ -886,8 +886,8 @@ D the fixed exponent (printed only when D # 0). *)
 					IF hex THEN S.class := Texts.Inval END
 				ELSE  (*decimal integer*)
 					S.class := Texts.Int;  k := 0;
-					WHILE (j # i) & ((k < MAX( LONGINT ) DIV 10) OR
-						(k = MAX( LONGINT ) DIV 10) & ((ORD( d[j] ) - 30H) <= MAX( LONGINT ) MOD 10)) DO  (*JG*)
+					WHILE (j # i) & ((k < MAX( SIGNED32 ) DIV 10) OR
+						(k = MAX( SIGNED32 ) DIV 10) & ((ORD( d[j] ) - 30H) <= MAX( SIGNED32 ) MOD 10)) DO  (*JG*)
 						k := k * 10 + (ORD( d[j] ) - 30H);  INC( j )
 					END;
 					IF j # i THEN S.class := Texts.Inval ELSE
@@ -908,7 +908,7 @@ D the fixed exponent (printed only when D # 0). *)
 	END Scan;
 
 	PROCEDURE InitScan;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 255 DO nameChars[i] := FALSE END;
 		FOR i := 80H TO 96H DO nameChars[i] := TRUE END;   (* german characters *)
@@ -930,40 +930,40 @@ D the fixed exponent (printed only when D # 0). *)
 		RETURN ((c = CR) OR (c = LF) OR (c = TAB) OR (c = " "))
 	END WhiteSpace;
 
-	PROCEDURE AsciiReadInt( R: Rider;  VAR x: INTEGER );   (* Read Integer Value ignoring Names *)
-	VAR pos: LONGINT;
+	PROCEDURE AsciiReadInt( R: Rider;  VAR x: SIGNED16 );   (* Read Integer Value ignoring Names *)
+	VAR pos: SIGNED32;
 	BEGIN
 		pos := R.Pos();  Scan( R );
 		WHILE (R.class = Texts.Name) & (~R.eot) DO Scan( R ) END;
 		IF R.class = Texts.Int THEN
-			IF R.i > MAX( INTEGER ) THEN HALT( 100 )
-			ELSIF R.i < MIN( INTEGER ) THEN HALT( 101 )
+			IF R.i > MAX( SIGNED16 ) THEN HALT( 100 )
+			ELSIF R.i < MIN( SIGNED16 ) THEN HALT( 101 )
 			END;
 			x := SHORT( R.i )
 		ELSE R.err := TRUE;  R.SetPos( pos )
 		END
 	END AsciiReadInt;
 
-	PROCEDURE BinReadInt( R: Rider;  VAR x: INTEGER );   (* Read Integer Value ignoring Names *)
+	PROCEDURE BinReadInt( R: Rider;  VAR x: SIGNED16 );   (* Read Integer Value ignoring Names *)
 	BEGIN
 		R.ReadBytes( x, 2 )
 	END BinReadInt;
 
-	PROCEDURE AsciiReadLInt( R: Rider;  VAR x: LONGINT );   (* Read Integer Value ignoring Names *)
-	VAR pos: LONGINT;
+	PROCEDURE AsciiReadLInt( R: Rider;  VAR x: SIGNED32 );   (* Read Integer Value ignoring Names *)
+	VAR pos: SIGNED32;
 	BEGIN
 		pos := R.Pos();  Scan( R );
 		WHILE (R.class = Texts.Name) & (~R.eot) DO Scan( R ) END;
 		IF R.class = Texts.Int THEN x := (R.i) ELSE R.err := TRUE;  R.SetPos( pos ) END
 	END AsciiReadLInt;
 
-	PROCEDURE BinReadLInt( R: Rider;  VAR x: LONGINT );   (* Read Integer Value ignoring Names *)
+	PROCEDURE BinReadLInt( R: Rider;  VAR x: SIGNED32 );   (* Read Integer Value ignoring Names *)
 	BEGIN
 		R.ReadBytes( x, 4 )
 	END BinReadLInt;
 
-	PROCEDURE AsciiReadReal( R: Rider;  VAR x: REAL );   (* Read Integer Value ignoring Names *)
-	VAR pos: LONGINT;
+	PROCEDURE AsciiReadReal( R: Rider;  VAR x: FLOAT32 );   (* Read Integer Value ignoring Names *)
+	VAR pos: SIGNED32;
 	BEGIN
 		pos := R.Pos();  Scan( R );
 		WHILE (R.class = Texts.Name) & (~R.eot) DO Scan( R ) END;
@@ -974,13 +974,13 @@ D the fixed exponent (printed only when D # 0). *)
 		END
 	END AsciiReadReal;
 
-	PROCEDURE BinReadReal( R: Rider;  VAR x: REAL );
+	PROCEDURE BinReadReal( R: Rider;  VAR x: FLOAT32 );
 	BEGIN
 		R.ReadBytes( x, 4 )
 	END BinReadReal;
 
-	PROCEDURE AsciiReadLReal( R: Rider;  VAR x: LONGREAL );   (* Read Integer Value ignoring Names *)
-	VAR pos: LONGINT;
+	PROCEDURE AsciiReadLReal( R: Rider;  VAR x: FLOAT64 );   (* Read Integer Value ignoring Names *)
+	VAR pos: SIGNED32;
 	BEGIN
 		pos := R.Pos();  Scan( R );
 		WHILE (R.class = Texts.Name) & (~R.eot) DO Scan( R ) END;
@@ -991,13 +991,13 @@ D the fixed exponent (printed only when D # 0). *)
 		END
 	END AsciiReadLReal;
 
-	PROCEDURE BinReadLReal( R: Rider;  VAR x: LONGREAL );
+	PROCEDURE BinReadLReal( R: Rider;  VAR x: FLOAT64 );
 	BEGIN
 		R.ReadBytes( x, 8 )
 	END BinReadLReal;
 
 	PROCEDURE AsciiReadString( R: Rider;  VAR x: ARRAY OF CHAR );
-	VAR pos: LONGINT;
+	VAR pos: SIGNED32;
 	BEGIN
 		pos := R.Pos();  Scan( R );
 		IF (R.class = Texts.Name) OR (R.class = Texts.String) THEN COPY( R.s, x ) ELSE R.err := TRUE;  R.SetPos( pos ) END
@@ -1023,28 +1023,28 @@ D the fixed exponent (printed only when D # 0). *)
 		Files.Write( R.R, ch )
 	END DoWrite;
 
-	PROCEDURE Turn( VAR ch: ARRAY OF SYSTEM.BYTE;  num: LONGINT );
-	VAR c: SYSTEM.BYTE;  i: LONGINT;
+	PROCEDURE Turn( VAR ch: ARRAY OF SYSTEM.BYTE;  num: SIGNED32 );
+	VAR c: SYSTEM.BYTE;  i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO ((num - 1) DIV 2) DO c := ch[i];  ch[i] := ch[num - 1 - i];  ch[num - 1 - i] := c END
 	END Turn;
 
-	PROCEDURE BinWriteInt( R: Rider;  x: INTEGER );
+	PROCEDURE BinWriteInt( R: Rider;  x: SIGNED16 );
 	BEGIN
 		R.WriteBytes( x, 2 )
 	END BinWriteInt;
 
-	PROCEDURE BinWriteLInt( R: Rider;  x: LONGINT );
+	PROCEDURE BinWriteLInt( R: Rider;  x: SIGNED32 );
 	BEGIN
 		R.WriteBytes( x, 4 )
 	END BinWriteLInt;
 
-	PROCEDURE BinWriteReal( R: Rider;  x: REAL );
+	PROCEDURE BinWriteReal( R: Rider;  x: FLOAT32 );
 	BEGIN
 		R.WriteBytes( x, 4 )
 	END BinWriteReal;
 
-	PROCEDURE BinWriteLongReal( R: Rider;  x: LONGREAL );
+	PROCEDURE BinWriteLongReal( R: Rider;  x: FLOAT64 );
 	BEGIN
 		R.WriteBytes( x, 8 )
 	END BinWriteLongReal;
@@ -1055,7 +1055,7 @@ D the fixed exponent (printed only when D # 0). *)
 	END BinWriteString;
 
 	PROCEDURE ReadDocHeader( VAR R: Files.Rider;  VAR ch: CHAR );
-	VAR len: LONGINT;  x, y, w, h: INTEGER;
+	VAR len: SIGNED32;  x, y, w, h: SIGNED16;
 		name: ARRAY 32 OF CHAR;
 	BEGIN
 		Files.Read( R, ch );
@@ -1077,7 +1077,7 @@ D the fixed exponent (printed only when D # 0). *)
 	END ToAscii;
 
 	PROCEDURE CheckIfText*( VAR R: Files.Rider );
-	VAR len: LONGINT;  ch: CHAR;  T: Texts.Text;
+	VAR len: SIGNED32;  ch: CHAR;  T: Texts.Text;
 	BEGIN
 		Files.Read( R, ch );
 		IF ch = DocBlockId THEN ReadDocHeader( R, ch ) END;
@@ -1088,7 +1088,7 @@ D the fixed exponent (printed only when D # 0). *)
 	END CheckIfText;
 
 	PROCEDURE Test*;
-	VAR RR: Rider;  i: LONGINT;
+	VAR RR: Rider;  i: SIGNED32;
 		test: ARRAY 256 OF CHAR;
 		v: vyRealVec.tVector;
 	BEGIN

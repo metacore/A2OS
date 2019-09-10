@@ -49,7 +49,7 @@ TYPE
 		RETURN OFS.Pos(writer.rider)
 	END WriterPos;
 
-	PROCEDURE Send (VAR writer: StreamWriters.Writer; CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: WORD);
+	PROCEDURE Send (VAR writer: StreamWriters.Writer; CONST buf: ARRAY OF CHAR;  ofs, len: SIZE;  propagate: BOOLEAN;  VAR res: INTEGER);
 	BEGIN
 		WHILE len > 0 DO
 			OFS.Write(writer(Writer).rider, buf[ofs]);
@@ -58,7 +58,7 @@ TYPE
 		END
 	END Send;
 
-	PROCEDURE Receive (VAR reader: StreamReaders.Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: WORD);
+	PROCEDURE Receive (VAR reader: StreamReaders.Reader; VAR buf: ARRAY OF CHAR;  ofs, size, min: SIZE;  VAR len: SIZE; VAR res: INTEGER);
 	BEGIN
 		len := 0;
 		WHILE ((min > 0) OR ~reader(Reader).rider.eof) & (size > 0) DO

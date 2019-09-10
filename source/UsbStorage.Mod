@@ -24,16 +24,16 @@ CONST
 
 PROCEDURE Probe(dev : Usbdi.UsbDevice; id : Usbdi.InterfaceDescriptor) : Usbdi.Driver;
 VAR
-	method, protocol : LONGINT;
-	bulkInEndpoint, bulkOutEndpoint, interruptEndpoint : LONGINT;
+	method, protocol : SIGNED32;
+	bulkInEndpoint, bulkOutEndpoint, interruptEndpoint : SIGNED32;
 	bulkOnlyTransport : BOT.BulkOnlyTransport;
 	cbiTransport : CBI.CBITransport;
 	scmTransport : SCM.SCMTransport;
 	description : Usbdi.Description;
 	driver : Base.StorageDriver;
-	i, j, k : LONGINT;
+	i, j, k : SIGNED32;
 	asciiString : Lib.AsciiString;
-	vendor, product, bcd : LONGINT;
+	vendor, product, bcd : SIGNED32;
 	specialInit : BOOLEAN;
 BEGIN
 	vendor := dev.descriptor.idVendor;

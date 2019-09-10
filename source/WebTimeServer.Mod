@@ -8,15 +8,15 @@ CONST
 TYPE
 	TimeAgent = OBJECT (TCPServices.Agent)
 		VAR
-			days,hours,minutes,seconds: LONGINT;
-			t: HUGEINT;
+			days,hours,minutes,seconds: SIGNED32;
+			t: SIGNED64;
 			w: Streams.Writer;
 
 	BEGIN {ACTIVE}
 		Streams.OpenWriter(w, client.Send);
 		Dates.TimeDifference(Dates.ZeroDateRFC868, Dates.Now(), days,hours,minutes,seconds);
-		t:=((HUGEINT(days)*24+hours)*60+minutes)*60+seconds; (* the leap seconds are handled implicitely: http://www.eecis.udel.edu/~mills/leap.html *)
-		w.Net32(LONGINT(t));
+		t:=((SIGNED64(days)*24+hours)*60+minutes)*60+seconds; (* the leap seconds are handled implicitely: http://www.eecis.udel.edu/~mills/leap.html *)
+		w.Net32(SIGNED32(t));
 		w.Update;
 		Terminate
 	END TimeAgent;
@@ -25,7 +25,7 @@ VAR
 	time: TCPServices.Service;
 
 PROCEDURE Open*;
-VAR res : WORD;
+VAR res : INTEGER;
 BEGIN
 	NEW(time, TimePort, NewTimeAgent, res);
 END Open;

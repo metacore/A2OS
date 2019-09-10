@@ -55,7 +55,7 @@ TYPE PosSet = ARRAY (mult) OF SET;
 		NodePtr = POINTER TO Node;
 
 		Node = RECORD
-			pos : INTEGER;
+			pos : SIGNED16;
 			ch : CHAR;
 			nullable : BOOLEAN;
 			first, last : PosSet;
@@ -72,36 +72,36 @@ TYPE PosSet = ARRAY (mult) OF SET;
 
 		SubExprDesc = RECORD
 			nodeptr : NodePtr;
-			spos, epos : INTEGER;
+			spos, epos : SIGNED16;
 			follow : PosSet
 		END;
 
 		DFASubExprDesc = RECORD
 			set : BOOLEAN;
-			beg, end : INTEGER
+			beg, end : SIGNED16
 		END;
 
 		TransDesc = RECORD
-			state : INTEGER;
+			state : SIGNED16;
 			subset : SET
 		END;
 
 		DFA* = POINTER TO DFADesc;
 
 		DFADesc = RECORD
-			nofst : INTEGER;
+			nofst : SIGNED16;
 			subdetect : BOOLEAN;
 			trans : ARRAY (nofstates),(nofchar+1) OF TransDesc;
 			accepted : ARRAY (nofstates) OF BOOLEAN;
 			sub : ARRAY (nofsubexpr) OF DFASubExprDesc
 		END;
 
-		Line = ARRAY MAX( INTEGER ) OF CHAR;
+		Line = ARRAY MAX( SIGNED16 ) OF CHAR;
 
 
 VAR
 	rxl : Line;	(* LinePtr *)
-	rxpos, tokenval, treepos, errorvar, countflag : INTEGER;
+	rxpos, tokenval, treepos, errorvar, countflag : SIGNED16;
 	lookahead : CHAR;
 	pd : POINTER TO PosArray;
 	subexpr : ARRAY (nofsubexpr) OF SubExprDesc;
@@ -110,37 +110,37 @@ VAR
 (* set operations for TYPE PosSet *)
 
  PROCEDURE PSEmpty( VAR set : PosSet );
-	VAR i : INTEGER;
+	VAR i : SIGNED16;
  BEGIN
 	i := 0; WHILE i < mult DO set[i] := {}; INC(i) END
  END PSEmpty;
 
  PROCEDURE PSIsEmpty( set : PosSet ) : BOOLEAN;
- VAR i : INTEGER;
+ VAR i : SIGNED16;
  BEGIN
 	i := 0; WHILE i < mult DO IF set[i] # {} THEN RETURN FALSE END; INC(i) END;
 	RETURN TRUE
  END PSIsEmpty;
 
  PROCEDURE PSIsEqual( set1, set2 : PosSet ) : BOOLEAN;
-	VAR i : INTEGER;
+	VAR i : SIGNED16;
  BEGIN
 	i := 0; WHILE i < mult DO IF set1[i] # set2[i] THEN RETURN FALSE END; INC(i) END;
 	RETURN TRUE
  END PSIsEqual;
 
- PROCEDURE PSIn( set : PosSet; v : INTEGER ) : BOOLEAN;
+ PROCEDURE PSIn( set : PosSet; v : SIGNED16 ) : BOOLEAN;
  BEGIN
 	RETURN ( v MOD nofSET ) IN set[v DIV nofSET]
  END PSIn;
 
- PROCEDURE PSIncl( VAR set : PosSet; v : INTEGER );
+ PROCEDURE PSIncl( VAR set : PosSet; v : SIGNED16 );
  BEGIN
 	INCL( set[v DIV nofSET], v MOD nofSET )
  END PSIncl;
 
  PROCEDURE PSUnion( set1, set2 : PosSet; VAR resset : PosSet );
-	VAR i : INTEGER;
+	VAR i : SIGNED16;
  BEGIN
 	i := 0; WHILE i < mult DO resset[i] := set1[i] + set2[i]; INC(i) END
  END PSUnion;
@@ -234,8 +234,8 @@ BEGIN
 	END;
 END Match;
 
-PROCEDURE InitSubExpr( ptr : NodePtr; spos : INTEGER; kleenef : BOOLEAN );
-	VAR ind : INTEGER;
+PROCEDURE InitSubExpr( ptr : NodePtr; spos : SIGNED16; kleenef : BOOLEAN );
+	VAR ind : SIGNED16;
 BEGIN
 	IF kleenef THEN
 		errorvar := subexprrest
@@ -264,7 +264,7 @@ BEGIN
 END RegExpr;
 
 PROCEDURE Term( VAR ptr : NodePtr );
-	VAR np : NodePtr; tv : INTEGER; lh : CHAR;
+	VAR np : NodePtr; tv : SIGNED16; lh : CHAR;
 BEGIN
 	Factor( ptr );
 	WHILE ( tokenval # msclosepar ) & ( tokenval # msclosequo ) & ( tokenval # msalternation ) & (errorvar = chrleft ) DO
@@ -280,7 +280,7 @@ BEGIN
 END Term;
 
 PROCEDURE Factor( VAR ptr : NodePtr );
-	VAR tpos : INTEGER;
+	VAR tpos : SIGNED16;
 		kleenef, not : BOOLEAN;
 BEGIN
 	kleenef := inkleene;
@@ -322,7 +322,7 @@ BEGIN
 END CalcFiLa;
 
 PROCEDURE CalcFollow( ptr : NodePtr );
-	VAR j : INTEGER;
+	VAR j : SIGNED16;
 BEGIN
 	IF ( ptr.nextl # NIL ) & (ptr.nextl.pos = metasymbol) THEN CalcFollow( ptr.nextl ) END;
 	IF ( ptr.nextr # NIL ) & (ptr.nextr.pos = metasymbol) THEN CalcFollow( ptr.nextr ) END;
@@ -344,7 +344,7 @@ BEGIN
 END CalcFollow;
 
 PROCEDURE CalcFollowSubExpr;
-	VAR i, j : INTEGER;
+	VAR i, j : SIGNED16;
 BEGIN
 	i := 0;
 	WHILE i < nofsubexpr DO
@@ -359,8 +359,8 @@ BEGIN
 	END; (* WHILE*)
 END CalcFollowSubExpr;
 
-PROCEDURE SetState( dfa : DFA; set : PosSet; VAR ind : INTEGER; VAR ps : ARRAY OF PosSet );
-	VAR i, k : INTEGER;
+PROCEDURE SetState( dfa : DFA; set : PosSet; VAR ind : SIGNED16; VAR ps : ARRAY OF PosSet );
+	VAR i, k : SIGNED16;
 BEGIN
 	ind := 0;
 	WHILE ind < dfa.nofst DO
@@ -385,7 +385,7 @@ BEGIN
 	END
 END SetState;
 
-PROCEDURE ChrIn( sid : CHAR; ch : INTEGER; short : BOOLEAN ) : BOOLEAN;
+PROCEDURE ChrIn( sid : CHAR; ch : SIGNED16; short : BOOLEAN ) : BOOLEAN;
 BEGIN
 	IF short THEN
 		CASE sid OF
@@ -407,7 +407,7 @@ BEGIN
 END ChrIn;
 
 PROCEDURE CalcStates(  dfa : DFA; anchor : NodePtr );
-	VAR j, k, ind, unmark, index : INTEGER;
+	VAR j, k, ind, unmark, index : SIGNED16;
 		ps : ARRAY (nofstates) OF PosSet;
 		compstates : ARRAY (nofchar) OF PosSet;
 		ch : CHAR;
@@ -415,10 +415,10 @@ PROCEDURE CalcStates(  dfa : DFA; anchor : NodePtr );
 		hset, set : SET;
 
 
-	PROCEDURE HandleSubExpr( pos : INTEGER ) : SET;
+	PROCEDURE HandleSubExpr( pos : SIGNED16 ) : SET;
 		VAR set : SET;
 			insub : BOOLEAN;
-			k : INTEGER;
+			k : SIGNED16;
 
 	BEGIN
 		set := {}; k := 0;
@@ -481,7 +481,7 @@ END CalcStates;
 PROCEDURE Dump*( dfa : DFA; VAR w : Texts.Writer );
 (* Druckt den zu dfa gehörigen Automaten im System.Log Viewer aus. *)
 
-	VAR i, j : INTEGER;
+	VAR i, j : SIGNED16;
 BEGIN
 	Texts.WriteLn( w ); Texts.WriteString(w, " D F A "); Texts.WriteLn( w ); Texts.WriteLn( w );
 	i := 0;
@@ -503,7 +503,7 @@ BEGIN
 	Texts.WriteString( w, "end of dump" ); Texts.WriteLn( w )
 END Dump;
 
-PROCEDURE New*( rx : ARRAY OF CHAR; VAR dfa : DFA; VAR error, pos : INTEGER);
+PROCEDURE New*( rx : ARRAY OF CHAR; VAR dfa : DFA; VAR error, pos : SIGNED16);
 (*
 		Konstruiert den passenden deterministischen endlichen Automaten dfa zum regulären Ausdruck rx.
 		error > 0	:	character ( CHR( error ) ) wird an der Position pos in rx verlangt.
@@ -513,7 +513,7 @@ PROCEDURE New*( rx : ARRAY OF CHAR; VAR dfa : DFA; VAR error, pos : INTEGER);
 *)
 
 	VAR
-		i : INTEGER;
+		i : SIGNED16;
 		anchor : NodePtr;
 BEGIN
 	NEW( dfa );
@@ -546,7 +546,7 @@ BEGIN
 	IF error # noerror THEN pos := rxpos; dfa := NIL; RETURN END
 END New;
 
-PROCEDURE Search*( dfa : DFA; line : ARRAY OF CHAR; VAR beg, end : INTEGER );
+PROCEDURE Search*( dfa : DFA; line : ARRAY OF CHAR; VAR beg, end : SIGNED16 );
 (*
 		Sucht in line ab der Position beg den durch dfa bestimmten regulären Ausdruck.
 		end >= 0	:	[beg, end[ ist der erste ( ab Suchposition beg ) und längste Bereich, der dem
@@ -554,12 +554,12 @@ PROCEDURE Search*( dfa : DFA; line : ARRAY OF CHAR; VAR beg, end : INTEGER );
 		end < 0	  :	Regulärer Ausdruck in line nicht gefunden.
 *)
 
-	VAR state, i, pos, ch : INTEGER;
+	VAR state, i, pos, ch : SIGNED16;
 		len : SIZE;
 		block : ARRAY( nofsubexpr ) OF BOOLEAN;
 
-	PROCEDURE SavePos( subset : SET; state : INTEGER );
-		VAR i : INTEGER;
+	PROCEDURE SavePos( subset : SET; state : SIGNED16 );
+		VAR i : SIGNED16;
 	BEGIN
 		i := 0;
 		WHILE i < nofsubexpr DO
@@ -613,7 +613,7 @@ BEGIN
 END Search;
 
 PROCEDURE Replace*( dfa : DFA; VAR line : ARRAY OF CHAR; replpat : ARRAY OF CHAR;
-										beg, end : INTEGER; VAR error, pos : INTEGER );
+										beg, end : SIGNED16; VAR error, pos : SIGNED16 );
 (*
 		Ersetzt das Stück [beg, end[ in line durch replpat. linecop muss eine Kopie von line sein.
 		error > 0	:	character ( CHR( error ) ) wird an der Position pos in replpat verlangt. line bleibt unverändert.
@@ -624,7 +624,7 @@ PROCEDURE Replace*( dfa : DFA; VAR line : ARRAY OF CHAR; replpat : ARRAY OF CHAR
 *)
 
 	CONST noofchar = 1024;
-	VAR lineind, replind, ind, spos : INTEGER;
+	VAR lineind, replind, ind, spos : SIGNED16;
 		ch : CHAR;
 		EORPL, linefull, first, inquotes : BOOLEAN;
 		linecop : ARRAY (noofchar) OF CHAR;

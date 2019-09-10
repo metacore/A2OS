@@ -51,7 +51,7 @@ BEGIN
 END WriteLn;
 
 (* GetSelFrame - get most recent selection and remove it *)
-PROCEDURE GetSelFrame(VAR F: Display.Frame; VAR T: Texts.Text; VAR beg, end: LONGINT);
+PROCEDURE GetSelFrame(VAR F: Display.Frame; VAR T: Texts.Text; VAR beg, end: SIGNED32);
 VAR M: Oberon.SelectMsg;
 BEGIN
 	M.id := Oberon.get; M.F := NIL; M.time := -1; M.text := NIL; M.sel := NIL; Display.Broadcast(M);
@@ -66,7 +66,7 @@ END GetSelFrame;
 (* Copy - copies 'src' to 'dst' *)
 PROCEDURE Copy(src, dst: ARRAY OF CHAR): BOOLEAN;
 CONST BufLen = 8192;
-VAR s, d: Files.File; rS, rD: Files.Rider; i, size, ts: LONGINT; buf: ARRAY BufLen OF CHAR;
+VAR s, d: Files.File; rS, rD: Files.Rider; i, size, ts: SIGNED32; buf: ARRAY BufLen OF CHAR;
 	res: BOOLEAN;
 BEGIN
 	res := FALSE;
@@ -118,7 +118,7 @@ END CopyFile;
 (** CopyFrom - used by interactive interface to copy the selected files to another file system *)
 PROCEDURE CopyFrom*;
 VAR F: Frame; F1, F2, dstF: Display.Frame;
-	T1, T2: Texts.Text; Src, Dst: Texts.Scanner; beg1, beg2, end1, end2, end: LONGINT;
+	T1, T2: Texts.Text; Src, Dst: Texts.Scanner; beg1, beg2, end1, end2, end: SIGNED32;
 	par: CopyFilePar; prefix: Files.Prefix; path: FATFiles.Filename;
 BEGIN
 	IF Desktops.IsInMenu(Gadgets.context) THEN
@@ -172,7 +172,7 @@ END CopyFrom;
 
 (** CopyTo - used by interactive interface to copy the selected files into the active directory *)
 PROCEDURE CopyTo*;
-VAR F: Frame; srcF: Display.Frame; T: Texts.Text; S: Texts.Scanner; beg, end: LONGINT;
+VAR F: Frame; srcF: Display.Frame; T: Texts.Text; S: Texts.Scanner; beg, end: SIGNED32;
 	dst, name: FATFiles.Filename; prefix: Files.Prefix; ok: BOOLEAN;
 BEGIN
 	IF Desktops.IsInMenu(Gadgets.context) THEN
@@ -204,7 +204,7 @@ END CopyTo;
 (** RenameFile - used by interactive interface to rename the marked file *)
 PROCEDURE RenameFile*;
 VAR F: Frame; F1, F2, dstF: Display.Frame;
-	T1, T2: Texts.Text; Src, Dst: Texts.Scanner; beg1, beg2, end1, end2, end, res: LONGINT;
+	T1, T2: Texts.Text; Src, Dst: Texts.Scanner; beg1, beg2, end1, end2, end, res: SIGNED32;
 	path, name, newname: FATFiles.Filename;
 BEGIN
 	IF Desktops.IsInMenu(Gadgets.context) THEN
@@ -265,7 +265,7 @@ END RenameFile;
 
 (* DeleteFile - deletes the file 'name' in the current directory of F. *)
 PROCEDURE DeleteFile(name: ARRAY OF CHAR; par: Parameter): BOOLEAN;
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	WITH par: DeletePar DO
 		IF (name # "") THEN
@@ -289,7 +289,7 @@ END DeleteFile;
 
 (** DeleteFiles - used by interactive interface to delete the marked files *)
 PROCEDURE DeleteFiles*;
-VAR F: Frame; S: Texts.Scanner; T: Texts.Text; beg, end, time: LONGINT; par: DeletePar;
+VAR F: Frame; S: Texts.Scanner; T: Texts.Text; beg, end, time: SIGNED32; par: DeletePar;
 BEGIN
 	IF Desktops.IsInMenu(Gadgets.context) THEN
 		GetContext(F);
@@ -314,7 +314,7 @@ END DeleteFiles;
 (** Create a new directory. *)
 PROCEDURE CreateDirectory*;
 VAR F: Frame; T: Texts.Text; S: Texts.Scanner;
-	beg, end, res, time: LONGINT; name: FATFiles.Filename;
+	beg, end, res, time: SIGNED32; name: FATFiles.Filename;
 BEGIN
 	GetContext(F);
 	IF (F # NIL) THEN
@@ -345,7 +345,7 @@ END CreateDirectory;
 
 (* RemoveDirectory - removes the directory 'name' in the current directory of F. *)
 PROCEDURE RemoveDirectory(name: ARRAY OF CHAR; par: Parameter): BOOLEAN;
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	WITH par: DeletePar DO
 		IF (name # "") THEN
@@ -369,7 +369,7 @@ END RemoveDirectory;
 
 (** Remove existing directories. *)
 PROCEDURE RemoveDirectories*;
-VAR F: Frame; S: Texts.Scanner; T: Texts.Text; beg, end, time: LONGINT; par: DeletePar;
+VAR F: Frame; S: Texts.Scanner; T: Texts.Text; beg, end, time: SIGNED32; par: DeletePar;
 BEGIN
 	IF Desktops.IsInMenu(Gadgets.context) THEN
 		GetContext(F);
@@ -423,7 +423,7 @@ END DocHandler;
 
 (* Parsing of an "fat url". *)
 PROCEDURE SplitFATAdr(VAR url, prefix, path: ARRAY OF CHAR): BOOLEAN;
-VAR i,k: LONGINT;
+VAR i,k: SIGNED32;
 BEGIN
 	prefix[0] := 0X; COPY(Files.PathDelimiter, path);
 
@@ -478,7 +478,7 @@ BEGIN
 END DirectoryRefresh;
 
 PROCEDURE Quote(str: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	result[0] := '"'; i := 0;
 	WHILE (str[i] # 0X) & (i < LEN(result)-3) DO result[i+1] := str[i]; INC(i) END;
@@ -487,7 +487,7 @@ BEGIN
 END Quote;
 
 PROCEDURE Unquote(str: ARRAY OF CHAR; VAR result: ARRAY OF CHAR);
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	IF (str[0] = '"') THEN
 		i := 1;
@@ -497,8 +497,8 @@ BEGIN
 	END
 END Unquote;
 
-PROCEDURE ListEntry(VAR name: ARRAY OF CHAR; flags: SET; time, date, size: LONGINT);
-VAR str: ARRAY 32 OF CHAR; i: LONGINT; c: CHAR;
+PROCEDURE ListEntry(VAR name: ARRAY OF CHAR; flags: SET; time, date, size: SIGNED32);
+VAR str: ARRAY 32 OF CHAR; i: SIGNED32; c: CHAR;
 BEGIN
 	Texts.SetColor(dirW, SHORT(Display3.textC));
 		(* write date & time *)
@@ -549,7 +549,7 @@ BEGIN
 	Files.JoinName(prefix, result, result)
 END GetFullName;
 
-PROCEDURE ScanNames(VAR S: Texts.Scanner; end: LONGINT; callback: ScanCallback; par: Parameter);
+PROCEDURE ScanNames(VAR S: Texts.Scanner; end: SIGNED32; callback: ScanCallback; par: Parameter);
 VAR name: FATFiles.Filename; continue: BOOLEAN;
 BEGIN
 	REPEAT
@@ -599,8 +599,8 @@ BEGIN
 END HorzRule;
 
 PROCEDURE EnumerateDirectory(F: Frame);
-VAR f: Objects.Object; pos: LONGINT; e: Files.Enumerator;
-	name, dummy: FATFiles.Filename; flags: SET; time, date, size: LONGINT;
+VAR f: Objects.Object; pos: SIGNED32; e: Files.Enumerator;
+	name, dummy: FATFiles.Filename; flags: SET; time, date, size: SIGNED32;
 BEGIN
 	Texts.Delete(F.text, 0, F.text.len);
 	Texts.WriteString(dirW, F.fs.prefix); Texts.Write(dirW, ":");

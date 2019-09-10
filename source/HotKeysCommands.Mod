@@ -38,7 +38,7 @@ TYPE
 		editor : WMEditors.Editor;
 
 		PROCEDURE HandleEnter(sender, data : ANY);
-		VAR commandString : ARRAY 4096 OF CHAR; msg : ARRAY 128 OF CHAR; res : WORD;
+		VAR commandString : ARRAY 4096 OF CHAR; msg : ARRAY 128 OF CHAR; res : INTEGER;
 		BEGIN
 			editor.GetAsString(commandString);
 			IF commandString # "" THEN
@@ -103,7 +103,7 @@ VAR
 (** Generate mouse message *)
 PROCEDURE SimulateMouse*(context : Commands.Context); (** MouseX|MouseY|MouseButtons|MouseWheel value ~ *)
 VAR
-	string : ARRAY 32 OF CHAR; value : LONGINT;
+	string : ARRAY 32 OF CHAR; value : SIGNED32;
 	msg : Inputs.MouseMsg;
 	doHandle : BOOLEAN;
 BEGIN

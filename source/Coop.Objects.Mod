@@ -31,7 +31,7 @@ CONST
 	haltUnbreakable* = 2223;
 
 TYPE
-	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT;
+	CpuCyclesArray* = ARRAY Machine.MaxCPU OF SIGNED64;
 
 	ProtectedObject = POINTER TO RECORD END;   (* protected object (10000) *)
 
@@ -43,7 +43,7 @@ TYPE
 
 	Timer* = POINTER TO RECORD
 		next, prev : Timer;
-		trigger: LONGINT;
+		trigger: SIGNED32;
 		handler: EventHandler
 	END;
 
@@ -73,16 +73,16 @@ TYPE
 		obj-: ProtectedObject;   (* associated active object *)
 		state-: RECORD PC-,BP-,SP-: ADDRESS END;
 		condition-: Condition;   (* awaited process' condition *)
-		condFP-: LONGINT;   (* awaited process' condition's context *)
-		mode-: LONGINT;   (* process state *)  (* only changed inside Objects lock ??? *)
-		procID-: LONGINT;   (* processor ID where running,  exported for compatibilty , useless in WinAos *)
+		condFP-: SIGNED32;   (* awaited process' condition's context *)
+		mode-: SIGNED32;   (* process state *)  (* only changed inside Objects lock ??? *)
+		procID-: SIGNED32;   (* processor ID where running,  exported for compatibilty , useless in WinAos *)
 		waitingOn-: ProtectedObject;   (* obj this process is waiting on (for lock or condition) *)
-		id-: WORD;   (* unique process ID for tracing *)
+		id-: INTEGER;   (* unique process ID for tracing *)
 		flags*: SET;   (* process flags *)
-		priority-: LONGINT;   (* process priority *)
-		stackBottom: LONGINT;
-		restartPC-: LONGINT;   (** entry point of body, for SAFE exception recovery *)
-		restartSP-: LONGINT;   (** stack level at start of body, for SAFE exception recovery *)
+		priority-: SIGNED32;   (* process priority *)
+		stackBottom: SIGNED32;
+		restartPC-: SIGNED32;   (** entry point of body, for SAFE exception recovery *)
+		restartSP-: SIGNED32;   (** stack level at start of body, for SAFE exception recovery *)
 		cpuCycles, lastCpuCycles : CpuCyclesArray;
 	END Process;
 
@@ -163,7 +163,7 @@ TYPE
 	END Interrupter;
 
 VAR
-	awc-, awl-: LONGINT;
+	awc-, awl-: SIGNED32;
 	oberonLoop*: ANY;   (* Oberon Loop Process temporary workaround for Threads.oberonLoop *)
 
 	event: Timer; (* list of events *)
@@ -174,7 +174,7 @@ VAR
 	TraceProcessHook* := NIL: PROCEDURE (prcoess: Process; pc, bp: ADDRESS; stacklow, stackhigh: ADDRESS);
 
 (* Set the current process' priority. *)
-PROCEDURE SetPriority*( priority: LONGINT );
+PROCEDURE SetPriority*( priority: SIGNED32 );
 BEGIN
 END SetPriority;
 
@@ -195,7 +195,7 @@ BEGIN
 	Activities.Switch;
 END Yield;
 
-PROCEDURE Sleep* (ms: LONGINT);
+PROCEDURE Sleep* (ms: SIGNED32);
 BEGIN
 	Environment.Sleep (ms);
 END Sleep;
@@ -248,9 +248,9 @@ END ActiveObject;
 
 
 (** Return the ID of the active currently executing process. *)
-PROCEDURE GetProcessID* (): WORD;
+PROCEDURE GetProcessID* (): INTEGER;
 BEGIN
-	RETURN SYSTEM.VAL (WORD, Activities.GetCurrentActivity ());
+	RETURN SYSTEM.VAL (INTEGER, Activities.GetCurrentActivity ());
 END GetProcessID;
 
 (* Attempt to terminate a specific process (mostly ignoring its locks). DEPRECATED *)
@@ -269,8 +269,8 @@ BEGIN
 END Terminate;
 
 (** Set (or reset) an event handler object's timeout value. *)
-PROCEDURE SetTimeout*(t: Timer; h: EventHandler;  ms: LONGINT );
-VAR e: Timer; trigger: LONGINT;
+PROCEDURE SetTimeout*(t: Timer; h: EventHandler;  ms: SIGNED32 );
+VAR e: Timer; trigger: SIGNED32;
 BEGIN
 	ASSERT((t # NIL) & (h # NIL));
 	IF ms < 1 THEN ms := 1 END;
@@ -287,8 +287,8 @@ BEGIN
 END SetTimeout;
 
 (** Set (or reset) an event handler object's timeout value. Here ms is absolute *)
-PROCEDURE SetTimeoutAt*(t: Timer; h: EventHandler; ms: LONGINT);
-VAR e: Timer; trigger: LONGINT;
+PROCEDURE SetTimeoutAt*(t: Timer; h: EventHandler; ms: SIGNED32);
+VAR e: Timer; trigger: SIGNED32;
 BEGIN
 	ASSERT((t # NIL) & (h # NIL));
 	Machine.Acquire(Machine.Objects);
@@ -327,7 +327,7 @@ BEGIN
 	NEW(clock)
 END InitEventHandling;
 
-PROCEDURE NumReady*( ): LONGINT;
+PROCEDURE NumReady*( ): SIGNED32;
 BEGIN
 	RETURN 0
 END NumReady;
@@ -336,7 +336,7 @@ END NumReady;
 	return the number of cycles since the process has been created. If FALSE, return the number of cycles
 	consumed since the last time asked. *)
 PROCEDURE GetCpuCycles*(process : Process; VAR cpuCycles : CpuCyclesArray; all : BOOLEAN);
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	ASSERT(process # NIL);
 	FOR i := 0 TO Machine.MaxCPU-1 DO cpuCycles[i] := process.cpuCycles[i]; END;
@@ -348,18 +348,18 @@ BEGIN
 	END;
 END GetCpuCycles;
 
-PROCEDURE CurrentProcessTime*(): HUGEINT;
+PROCEDURE CurrentProcessTime*(): SIGNED64;
 BEGIN
 	RETURN Activities.GetProcessTime();
 END CurrentProcessTime;
 
-PROCEDURE TimerFrequency*(): HUGEINT;
+PROCEDURE TimerFrequency*(): SIGNED64;
 BEGIN
 	RETURN TimerModule.GetFrequency();
 END TimerFrequency;
 
 (** Install interrupt handler. *)
-PROCEDURE InstallHandler*(h: EventHandler; int: LONGINT);
+PROCEDURE InstallHandler*(h: EventHandler; int: SIGNED32);
 VAR ih: Interrupter;
 BEGIN {EXCLUSIVE}
 	ASSERT((int >= 0) & (int < CPU.Interrupts));
@@ -372,7 +372,7 @@ BEGIN {EXCLUSIVE}
 END InstallHandler;
 
 (** Remove interrupt handler. *)
-PROCEDURE RemoveHandler*(h: EventHandler; int: LONGINT);
+PROCEDURE RemoveHandler*(h: EventHandler; int: SIGNED32);
 VAR ih: Interrupter;
 BEGIN {EXCLUSIVE}
 	ASSERT((int >= 0) & (int < CPU.Interrupts));

@@ -101,7 +101,7 @@ TYPE
 
 	END EventContainer;
 
-PROCEDURE LoadFromFile*(CONST filename : ARRAY OF CHAR; VAR events : EventContainer; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE LoadFromFile*(CONST filename : ARRAY OF CHAR; VAR events : EventContainer; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 VAR file : Files.File; r : Files.Reader; event : Events.Event; nofEvents : SIZE;
 BEGIN
 	file := Files.Old(filename);
@@ -131,7 +131,7 @@ BEGIN
 	END;
 END LoadFromFile;
 
-PROCEDURE StoreToFile*(CONST filename : ARRAY OF CHAR; events : EventContainer; VAR msg : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE StoreToFile*(CONST filename : ARRAY OF CHAR; events : EventContainer; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
 VAR
 	file : Files.File; w : Files.Writer; wrapper : EventWrapper;
 	nofEvents, lastCleared, i, idx : SIZE; full : BOOLEAN;
@@ -172,12 +172,12 @@ BEGIN
 	w.Update;
 END ToStream;
 
-PROCEDURE FromStream*(r : Streams.Reader; VAR event : Events.Event; VAR msg : ARRAY OF CHAR; VAR res : WORD);
-VAR dt : Dates.DateTime; str : Events.Message; ch : CHAR; class, subclass, code : LONGINT;
+PROCEDURE FromStream*(r : Streams.Reader; VAR event : Events.Event; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
+VAR dt : Dates.DateTime; str : Events.Message; ch : CHAR; class, subclass, code : SIGNED32;
 
-	PROCEDURE IsValid(value : LONGINT) : BOOLEAN;
+	PROCEDURE IsValid(value : SIGNED32) : BOOLEAN;
 	BEGIN
-		RETURN (0 <= value) & (value <= MAX(SHORTINT));
+		RETURN (0 <= value) & (value <= MAX(SIGNED8));
 	END IsValid;
 
 BEGIN
@@ -241,7 +241,7 @@ BEGIN
 	RETURN Dates.ValidDateTime(dt);
 END DateTimeFromStream;
 
-PROCEDURE GetTypeString*(type : LONGINT; VAR string: ARRAY OF CHAR);
+PROCEDURE GetTypeString*(type : SIGNED32; VAR string: ARRAY OF CHAR);
 VAR nbr : ARRAY 16 OF CHAR;
 BEGIN
 	CASE type OF
@@ -258,8 +258,8 @@ BEGIN
 	END;
 END GetTypeString;
 
-PROCEDURE GetType*(CONST string : ARRAY OF CHAR) : SHORTINT;
-VAR type : SHORTINT;
+PROCEDURE GetType*(CONST string : ARRAY OF CHAR) : SIGNED8;
+VAR type : SIGNED8;
 BEGIN
 	IF string = "Unknown" THEN type := Events.Unknown;
 	ELSIF string = "Undefined" THEN type := Events.Undefined;
@@ -276,7 +276,7 @@ BEGIN
 END GetType;
 
 PROCEDURE GenerateEvent*(context : Commands.Context); (** originator type class subclass code message ~ *)
-VAR event : Events.Event; value : LONGINT;
+VAR event : Events.Event; value : SIGNED32;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(event.originator);
 	context.arg.SkipWhitespace; context.arg.Int(value, FALSE); event.type := SHORT(SHORT(value));

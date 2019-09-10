@@ -8,15 +8,15 @@ IMPORT S := SYSTEM, Pictures;
 CONST Black* = 15; White* = 0;	(** black and white of the windows color table **)
 VAR
 	baseAdr: ADDRESS;
-	lineW, height: LONGINT;
+	lineW, height: SIGNED32;
 
 (** correct color table for Native version **)
-PROCEDURE CheckColorTab*(VAR R, G, B: ARRAY OF INTEGER);
+PROCEDURE CheckColorTab*(VAR R, G, B: ARRAY OF SIGNED16);
 	(* nothing to do *)
 END CheckColorTab;
 
 (** convert color number to Dim3 color palette **)
-PROCEDURE GetRealColor*(color: INTEGER):INTEGER;
+PROCEDURE GetRealColor*(color: SIGNED16):SIGNED16;
 BEGIN
 	RETURN color
 END GetRealColor;
@@ -29,13 +29,13 @@ BEGIN
 END SetPicture;
 
 (** get address of position X in current scanline Y of actual picture **)
-PROCEDURE GetAddress*(X, Y: INTEGER): ADDRESS;
+PROCEDURE GetAddress*(X, Y: SIGNED16): ADDRESS;
 BEGIN
 	RETURN baseAdr + lineW * Y + X;
 END GetAddress;
 
 (** ReplConst in previosly set picture with mode replace, H = 1 **)
-PROCEDURE ReplConst*(col, X, Y, W: INTEGER);
+PROCEDURE ReplConst*(col, X, Y, W: SIGNED16);
 VAR col4: SET32; color: CHAR; pictAdr: ADDRESS; color4: ARRAY 4 OF CHAR;
 BEGIN
 	color := CHR(col);

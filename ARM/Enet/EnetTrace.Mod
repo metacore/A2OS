@@ -15,7 +15,7 @@ CONST
 	LnType* = LnCRLF;
 
 TYPE
-	Int = LONGINT;
+	Int = SIGNED32;
 
 	StringType* = ARRAY OF CHAR;
 	LongString* = ARRAY 2048 OF CHAR;
@@ -53,7 +53,7 @@ TYPE
 
 		numDigits: number of used hexadecimal digits
 	*)
-	PROCEDURE Hx*(x: HUGEINT; numDigits: Int): LongString;
+	PROCEDURE Hx*(x: SIGNED64; numDigits: Int): LongString;
 	VAR
 		str: LongString;
 		ch: CHAR;
@@ -77,7 +77,7 @@ TYPE
 		RETURN str;
 	END "&";
 
-	OPERATOR "&"*(CONST x: StringType; y: HUGEINT): LongString;
+	OPERATOR "&"*(CONST x: StringType; y: SIGNED64): LongString;
 	VAR str: LongString;
 	BEGIN
 		Utils.IntToStr(y, str);
@@ -85,7 +85,7 @@ TYPE
 		RETURN str;
 	END "&";
 
-	OPERATOR "&"*(x: HUGEINT; CONST y: StringType): LongString;
+	OPERATOR "&"*(x: SIGNED64; CONST y: StringType): LongString;
 	VAR str: LongString;
 	BEGIN
 		Utils.IntToStr(x,str);

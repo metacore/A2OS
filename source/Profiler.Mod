@@ -17,17 +17,17 @@ CONST
 TYPE
 	Range = RECORD
 		lowAdr, highAdr: ADDRESS;
-		count: POINTER TO ARRAY OF LONGINT
+		count: POINTER TO ARRAY OF SIGNED32
 	END;
 
 	Bytes = Modules.Bytes;
 
 VAR
-	size: SIZE; outside, total: LONGINT;
+	size: SIZE; outside, total: SIGNED32;
 	range: ARRAY MaxRanges OF Range;
 	running: BOOLEAN;
 
-PROCEDURE HandleTimer(id: LONGINT; CONST state: Machine.State);
+PROCEDURE HandleTimer(id: SIGNED32; CONST state: Machine.State);
 VAR low, high, i: SIZE;
 BEGIN
 	Machine.AtomicInc(total);
@@ -125,8 +125,8 @@ BEGIN
 	END;
 END Continue;
 
-PROCEDURE GetNum(refs: Bytes;  VAR i: SIZE; VAR num: LONGINT);
-VAR n, s: LONGINT;  x: CHAR;
+PROCEDURE GetNum(refs: Bytes;  VAR i: SIZE; VAR num: SIGNED32);
+VAR n, s: SIGNED32;  x: CHAR;
 BEGIN
 	s := 0;  n := 0;  x := refs[i];  INC(i);
 	WHILE ORD(x) >= 128 DO
@@ -151,8 +151,8 @@ END GetNum;
 
 (* FindProc - Find a procedure in the reference block.  Return index of name, or -1 if not found. *)
 
-PROCEDURE FindProc(refs: Bytes;  ofs: LONGINT): SIZE;
-VAR i, m, proc: SIZE; t: LONGINT;  ch: CHAR;
+PROCEDURE FindProc(refs: Bytes;  ofs: SIGNED32): SIZE;
+VAR i, m, proc: SIZE; t: SIGNED32;  ch: CHAR;
 BEGIN
 	proc := -1;  i := 0;  m := LEN(refs^);
 	ch := refs[i];  INC(i);
@@ -192,7 +192,7 @@ BEGIN
 	DEC(pc, ADDRESSOF(mod.code[0]));
 	refs := SYSTEM.VAL(Bytes, mod.refs);
 	IF (refs # NIL) & (LEN(mod.refs) # 0) THEN
-		refpos := FindProc(refs, SYSTEM.VAL (LONGINT, pc));
+		refpos := FindProc(refs, SYSTEM.VAL (SIGNED32, pc));
 		IF refpos # -1 THEN
 			ch := refs[refpos];  INC(refpos);  i := 0;
 			WHILE ch # 0X DO
@@ -208,7 +208,7 @@ VAR sum, i: SIZE;
 BEGIN
 	sum := 0;
 	FOR i := 0 TO size-1 DO
-		INC(sum, LEN(range[i].count)*SIZEOF(LONGINT))
+		INC(sum, LEN(range[i].count)*SIZEOF(SIGNED32))
 	END;
 	out.Int(total, 1); out.String(" samples, ");
 	out.Int(outside, 1); out.String(" unknown, ");
@@ -220,7 +220,7 @@ BEGIN
 END ShowStats;
 
 PROCEDURE ShowDetail*(context : Commands.Context);
-VAR i, j: SIZE; per: LONGINT; pc: ADDRESS; m: Modules.Module; procname: ARRAY 64 OF CHAR;
+VAR i, j: SIZE; per: SIGNED32; pc: ADDRESS; m: Modules.Module; procname: ARRAY 64 OF CHAR;
 BEGIN
 	ShowStats(context.out);
 	FOR i := 0 TO size-1 DO
@@ -268,11 +268,11 @@ TYPE
 		next: List;
 		m: Modules.Module;
 		procname: ARRAY 64 OF CHAR;
-		count: LONGINT
+		count: SIGNED32
 	END;
 
 VAR
-	i, j: SIZE; sum, per: LONGINT; pc: ADDRESS; m, prev: Modules.Module; root: List;
+	i, j: SIZE; sum, per: SIGNED32; pc: ADDRESS; m, prev: Modules.Module; root: List;
 	procname, prevname: ARRAY 64 OF CHAR;
 
 	PROCEDURE Output;

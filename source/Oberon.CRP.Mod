@@ -15,7 +15,7 @@ TYPE
 	SymbolSet = ARRAY nSets OF SET;
 
 VAR
-	sym:     INTEGER;   (* current input symbol *)
+	sym:     SIGNED16;   (* current input symbol *)
 	symSet:  ARRAY nrSets OF SymbolSet;
 
 CONST
@@ -27,13 +27,13 @@ VAR
   genScanner: BOOLEAN;
 
 
-PROCEDURE SemErr(nr: INTEGER);
+PROCEDURE SemErr(nr: SIGNED16);
 BEGIN
   CRS.Error(200+nr, CRS.pos);
 END SemErr;
 
-PROCEDURE MatchLiteral(sp: INTEGER); (*store string either as token or as literal*)
-  VAR sn, sn1: CRT.SymbolNode; matchedSp: INTEGER;
+PROCEDURE MatchLiteral(sp: SIGNED16); (*store string either as token or as literal*)
+  VAR sn, sn1: CRT.SymbolNode; matchedSp: SIGNED16;
 BEGIN
   CRT.GetSym(sp, sn);
   CRA.MatchDFA(sn.name, sp, matchedSp);
@@ -45,7 +45,7 @@ BEGIN
   CRT.PutSym(sp, sn)
 END MatchLiteral;
 
-PROCEDURE SetCtx(gp: INTEGER); (*set transition code to CRT.contextTrans*)
+PROCEDURE SetCtx(gp: SIGNED16); (*set transition code to CRT.contextTrans*)
   VAR gn: CRT.GraphNode;
 BEGIN
   WHILE gp > 0 DO
@@ -60,7 +60,7 @@ BEGIN
 END SetCtx;
 
 PROCEDURE SetDDT(s: ARRAY OF CHAR);
-  VAR i: INTEGER; ch: CHAR;
+  VAR i: SIGNED16; ch: CHAR;
 BEGIN
   i := 1;
   WHILE s[i] # 0X DO
@@ -69,8 +69,8 @@ BEGIN
   END
 END SetDDT;
 
-PROCEDURE FixString (VAR s: ARRAY OF CHAR; len: INTEGER);
-	VAR double: BOOLEAN; i: INTEGER;
+PROCEDURE FixString (VAR s: ARRAY OF CHAR; len: SIGNED16);
+	VAR double: BOOLEAN; i: SIGNED16;
 BEGIN
 	double := FALSE;
 	FOR i := 0 TO len-2 DO
@@ -82,7 +82,7 @@ END FixString;
 (*-------------------------------------------------------------------------*)
 
 
-PROCEDURE Error (n: INTEGER);
+PROCEDURE Error (n: SIGNED16);
 BEGIN CRS.Error(n, CRS.nextPos)
 END Error;
 
@@ -103,23 +103,23 @@ END
 
 END Get;
 
-PROCEDURE Expect(n: INTEGER);
+PROCEDURE Expect(n: SIGNED16);
 BEGIN IF sym = n THEN Get ELSE Error(n) END
 END Expect;
 
-PROCEDURE StartOf(s: INTEGER): BOOLEAN;
+PROCEDURE StartOf(s: SIGNED16): BOOLEAN;
 BEGIN RETURN (sym MOD setSize) IN symSet[s, sym DIV setSize]
 END StartOf;
 
-PROCEDURE ExpectWeak(n, follow: INTEGER);
+PROCEDURE ExpectWeak(n, follow: SIGNED16);
 BEGIN
 	IF sym = n THEN Get
 	ELSE Error(n); WHILE ~ StartOf(follow) DO Get END
 	END
 END ExpectWeak;
 
-PROCEDURE WeakSeparator(n, syFol, repFol: INTEGER): BOOLEAN;
-	VAR s: SymbolSet; i: INTEGER;
+PROCEDURE WeakSeparator(n, syFol, repFol: SIGNED16): BOOLEAN;
+	VAR s: SymbolSet; i: SIGNED16;
 BEGIN
 	IF sym = n THEN Get; RETURN TRUE
 	ELSIF StartOf(repFol) THEN RETURN FALSE
@@ -130,8 +130,8 @@ BEGIN
 	END
 END WeakSeparator;
 
-PROCEDURE TokenFactor(VAR gL, gR: INTEGER);
-  VAR kind, c: INTEGER; set: CRT.Set; name: CRT.Name;
+PROCEDURE TokenFactor(VAR gL, gR: SIGNED16);
+  VAR kind, c: SIGNED16; set: CRT.Set; name: CRT.Name;
 BEGIN
   gL :=0; gR := 0 ;
   IF (sym = 1) OR (sym = 2) THEN
@@ -164,8 +164,8 @@ BEGIN
   END ;
 END TokenFactor;
 
-PROCEDURE TokenTerm(VAR gL, gR: INTEGER);
-  VAR gL2, gR2: INTEGER;
+PROCEDURE TokenTerm(VAR gL, gR: SIGNED16);
+  VAR gL2, gR2: SIGNED16;
 BEGIN
   TokenFactor(gL, gR);
   WHILE StartOf(1)  DO
@@ -181,8 +181,8 @@ BEGIN
   END ;
 END TokenTerm;
 
-PROCEDURE Factor(VAR gL, gR: INTEGER);
-  VAR sp, kind: INTEGER; name: CRT.Name;
+PROCEDURE Factor(VAR gL, gR: SIGNED16);
+  VAR sp, kind: SIGNED16; name: CRT.Name;
       gn: CRT.GraphNode; sn: CRT.SymbolNode;
       set: CRT.Set;
       undef, weak: BOOLEAN;
@@ -248,8 +248,8 @@ BEGIN
   END ;
 END Factor;
 
-PROCEDURE Term(VAR gL, gR: INTEGER);
-  VAR gL2, gR2: INTEGER;
+PROCEDURE Term(VAR gL, gR: SIGNED16);
+  VAR gL2, gR2: SIGNED16;
 BEGIN
   gL := 0; gR := 0 ;
   IF StartOf(3)  THEN
@@ -264,7 +264,7 @@ BEGIN
   END ;
 END Term;
 
-PROCEDURE Symbol(VAR name: CRT.Name; VAR kind: INTEGER);
+PROCEDURE Symbol(VAR name: CRT.Name; VAR kind: SIGNED16);
 BEGIN
   IF (sym = 1) THEN
     Get;
@@ -279,7 +279,7 @@ BEGIN
 END Symbol;
 
 PROCEDURE SimSet(VAR set: CRT.Set);
-  VAR c, n, i: INTEGER; name: CRT.Name; s: ARRAY 128 OF CHAR;
+  VAR c, n, i: SIGNED16; name: CRT.Name; s: ARRAY 128 OF CHAR;
 BEGIN
   IF (sym = 1) THEN
     Get;
@@ -331,8 +331,8 @@ BEGIN
   END ;
 END Set;
 
-PROCEDURE TokenExpr(VAR gL, gR: INTEGER);
-  VAR gL2, gR2: INTEGER; first: BOOLEAN;
+PROCEDURE TokenExpr(VAR gL, gR: SIGNED16);
+  VAR gL2, gR2: SIGNED16; first: BOOLEAN;
 BEGIN
   TokenTerm(gL, gR);
   first := TRUE ;
@@ -345,8 +345,8 @@ BEGIN
   END ;
 END TokenExpr;
 
-PROCEDURE TokenDecl(typ: INTEGER);
-  VAR sp, kind, gL, gR: INTEGER; sn: CRT.SymbolNode;
+PROCEDURE TokenDecl(typ: SIGNED16);
+  VAR sp, kind, gL, gR: SIGNED16; sn: CRT.SymbolNode;
       pos: CRT.Position; name: CRT.Name;
 BEGIN
   Symbol(name, kind);
@@ -378,7 +378,7 @@ BEGIN
 END TokenDecl;
 
 PROCEDURE SetDecl;
-  VAR c: INTEGER; set: CRT.Set; name: CRT.Name;
+  VAR c: SIGNED16; set: CRT.Set; name: CRT.Name;
 BEGIN
   Expect(1);
   CRS.GetName(CRS.pos, CRS.len, name);
@@ -389,8 +389,8 @@ BEGIN
   Expect(9);
 END SetDecl;
 
-PROCEDURE Expression(VAR gL, gR: INTEGER);
-  VAR gL2, gR2: INTEGER; first: BOOLEAN;
+PROCEDURE Expression(VAR gL, gR: SIGNED16);
+  VAR gL2, gR2: SIGNED16; first: BOOLEAN;
 BEGIN
   Term(gL, gR);
   first := TRUE ;
@@ -426,7 +426,7 @@ BEGIN
 END Attribs;
 
 PROCEDURE Declaration;
-  VAR gL1, gR1, gL2, gR2: INTEGER; nested: BOOLEAN;
+  VAR gL1, gR1, gL2, gR2: SIGNED16; nested: BOOLEAN;
 BEGIN
   IF (sym = 11) THEN
     Get;
@@ -471,8 +471,8 @@ BEGIN
 END Declaration;
 
 PROCEDURE CR;
-  VAR undef, hasAttrs, ok, ok1: BOOLEAN; eofSy, gR: INTEGER;
-      gramLine, sp: INTEGER;
+  VAR undef, hasAttrs, ok, ok1: BOOLEAN; eofSy, gR: SIGNED16;
+      gramLine, sp: SIGNED16;
       sn: CRT.SymbolNode;
       name, gramName: CRT.Name;
 BEGIN

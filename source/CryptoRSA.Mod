@@ -28,11 +28,11 @@ TYPE
 			size-: SIZE;
 			exponent-, modulus-: Number;
 			p, q, u: Number;   (* for chinese remainder theorem *)
-			time-, date-: LONGINT;
+			time-, date-: SIGNED32;
 			certificates*: Certificate;
 			next*: Key;
 
-			PROCEDURE Sign*( CONST digest: ARRAY OF CHAR;  dlen: LONGINT ): Number;
+			PROCEDURE Sign*( CONST digest: ARRAY OF CHAR;  dlen: SIGNED32 ): Number;
 			VAR msg: Number;
 			BEGIN
 				ASSERT( private );
@@ -45,7 +45,7 @@ TYPE
 			END Sign;
 
 
-			PROCEDURE Verify*( CONST digest: ARRAY OF CHAR;  dlen: LONGINT;  signature: Number ): BOOLEAN;
+			PROCEDURE Verify*( CONST digest: ARRAY OF CHAR;  dlen: SIGNED32;  signature: Number ): BOOLEAN;
 			VAR
 				msg: Number;
 				i, l: SIZE;
@@ -84,7 +84,7 @@ VAR
 	one, two: Number;	(* constants *)
 
 
-	(* converts LONGINT to ARRAY OF CHAR; big endian order *)
+	(* converts SIGNED32 to ARRAY OF CHAR; big endian order *)
 	PROCEDURE l2n( l: UNSIGNED32;  VAR buf: Buffer;  pos: SIZE );
 	VAR i: SIZE;
 	BEGIN
@@ -198,9 +198,9 @@ VAR
 
 		cipher: Ciphers.Cipher;
 		md5: MD5.Hash;
-		digest: ARRAY 16 OF CHAR; pl: LONGINT;
-		buf: ARRAY 4096 OF CHAR; magic: LONGINT;
-		bl, n: SIZE; size: LONGINT;
+		digest: ARRAY 16 OF CHAR; pl: SIGNED32;
+		buf: ARRAY 4096 OF CHAR; magic: SIGNED32;
+		bl, n: SIZE; size: SIGNED32;
 
 	BEGIN
 		NEW( k );
@@ -254,14 +254,14 @@ VAR
 
 		cipher: Ciphers.Cipher;
 		md5: MD5.Hash;
-		digest: ARRAY 16 OF CHAR; pl: LONGINT;
+		digest: ARRAY 16 OF CHAR; pl: SIGNED32;
 		buf: ARRAY 4096 OF CHAR; bl: SIZE;
 
 	BEGIN
 		ASSERT( k.private );
 		w.Char( '"' ); w.String( k.name ); w.Char( '"' );
 		w.RawBool( k.private );
-		w.RawLInt( k.size(LONGINT) );
+		w.RawLInt( k.size(SIGNED32) );
 		w.RawLInt( k.time );
 		w.RawLInt( k.date );
 
@@ -283,7 +283,7 @@ VAR
 		U.PutBigNumber( buf, bl, k.u );
 		INC( bl, (-bl) MOD 16 );
 		cipher.Encrypt( buf, 0, bl );
-		w.RawLInt( bl(LONGINT) );
+		w.RawLInt( bl(SIGNED32) );
 		w.Bytes( buf, 0, bl );
 
 		c := k.certificates;
@@ -319,7 +319,7 @@ VAR
 	END LoadPublicKey;
 
 	PROCEDURE ExtractPublicKey*( r: Streams.Reader ): Key;
-	VAR buf: ARRAY 4096 OF CHAR; len: LONGINT; pos: SIZE;
+	VAR buf: ARRAY 4096 OF CHAR; len: SIGNED32; pos: SIZE;
 		str: ARRAY 64 OF CHAR;
 		k: Key;
 	BEGIN

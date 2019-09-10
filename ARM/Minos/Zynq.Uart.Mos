@@ -145,14 +145,14 @@ TYPE
 	(** Configuration information about a controller used for initializing UartPs controller *)
 	UartPsCfg* = RECORD
 		baseAddr*: ADDRESS; (** base address *)
-		inputClockHz*: LONGINT; (** controller input clock rate in Hz *)
+		inputClockHz*: SIGNED32; (** controller input clock rate in Hz *)
 		modemPinsConnected*: BOOLEAN; (** TRUE if modem pins connected via MIO or EMIO *)
 	END;
 
 	(** UART controller descriptor *)
 	Uart* = RECORD
 		cfg-: UartPsCfg;
-		baudrate-: LONGINT; (** current baudrate value *)
+		baudrate-: SIGNED32; (** current baudrate value *)
 		intrEnabled-: BOOLEAN; (** TRUE if TX/RX interrupt handling is enabled, FALSE by default *)
 	END;
 
@@ -166,7 +166,7 @@ VAR
 	*)
 	PROCEDURE Init*(VAR uart: Uart; CONST cfg: UartPsCfg);
 	VAR
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		uart.cfg := cfg;
 
@@ -184,12 +184,12 @@ VAR
 
 		res: error code, 0 in case of success
 	*)
-	PROCEDURE SetBaudrate*(VAR uart: Uart; CONST baudrate: LONGINT; VAR res: LONGINT);
+	PROCEDURE SetBaudrate*(VAR uart: Uart; CONST baudrate: SIGNED32; VAR res: SIGNED32);
 	VAR
 		reg: SET;
-		inputClk: LONGINT;
-		valBAUDDIV, valBRGR, calcBaudrate, baudError: LONGINT;
-		bestError, bestBRGR, bestBAUDDIV: LONGINT;
+		inputClk: SIGNED32;
+		valBAUDDIV, valBRGR, calcBaudrate, baudError: SIGNED32;
+		bestError, bestBRGR, bestBAUDDIV: SIGNED32;
 	BEGIN
 		(*
 			Make sure the baud rate is not impossilby large.
@@ -207,7 +207,7 @@ VAR
 
 		(* Determine the Baud divider. It can be 4 to 254.
 			Loop through all possible combinations *)
-		bestError := MAX(LONGINT);
+		bestError := MAX(SIGNED32);
 		FOR valBAUDDIV := 4 TO 255 DO
 
 			(* Calculate the value for BRGR register *)
@@ -273,7 +273,7 @@ VAR
 	(**
 		Send data to the UART
 	*)
-	PROCEDURE Send*(CONST uart: Uart; CONST buf: ARRAY OF CHAR; offs, len: LONGINT; propagate: BOOLEAN; VAR res: LONGINT);
+	PROCEDURE Send*(CONST uart: Uart; CONST buf: ARRAY OF CHAR; offs, len: SIGNED32; propagate: BOOLEAN; VAR res: SIGNED32);
 	VAR csr: SET;
 	BEGIN
 
@@ -311,7 +311,7 @@ VAR
 	(**
 		Receive data from the UART
 	*)
-	PROCEDURE Receive*(CONST uart: Uart; VAR buf: ARRAY OF CHAR; offs, size, min: LONGINT; VAR len, res: LONGINT);
+	PROCEDURE Receive*(CONST uart: Uart; VAR buf: ARRAY OF CHAR; offs, size, min: SIGNED32; VAR len, res: SIGNED32);
 	BEGIN
 		res := 0;
 		len := 0;
@@ -329,7 +329,7 @@ VAR
 		Remarks:
 		blocks until the transmit buffer is not full
 	*)
-	PROCEDURE SendChar*(CONST uart: Uart; ch: CHAR; VAR res: LONGINT);
+	PROCEDURE SendChar*(CONST uart: Uart; ch: CHAR; VAR res: SIGNED32);
 	BEGIN
 
 		(* Wait until there is space in TX FIFO *)
@@ -345,7 +345,7 @@ VAR
 		Remarks:
 		blocks until a character is available
 	*)
-	PROCEDURE ReceiveChar*(CONST uart: Uart; VAR res: LONGINT): CHAR;
+	PROCEDURE ReceiveChar*(CONST uart: Uart; VAR res: SIGNED32): CHAR;
 	BEGIN
 
 		(* wait until data is available *)
@@ -356,7 +356,7 @@ VAR
 	END ReceiveChar;
 
 	(** Returns number of bytes available in the receive buffer *)
-	PROCEDURE Available*(CONST uart: Uart): LONGINT;
+	PROCEDURE Available*(CONST uart: Uart): SIGNED32;
 	BEGIN
 		IF uart.intrEnabled THEN
 			HALT(100); (*! Not yet implemented! *)
@@ -373,7 +373,7 @@ VAR
 	PROCEDURE Install*;
 	VAR
 		cfg: UartPsCfg;
-		i, res: LONGINT;
+		i, res: SIGNED32;
 	BEGIN
 		(*NEW(uarts,LEN(Platform.UartBaseAddr,0));*) (*! array allocation is not yet supported *)
 		FOR i := 0 TO LEN((*Platform.*)UartBaseAddr,0)-1 DO

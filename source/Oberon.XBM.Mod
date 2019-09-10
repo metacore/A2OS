@@ -21,13 +21,13 @@ MODULE XBM IN Oberon; (** portable *)	(* ejz  *)
 			id = 11;
 			unsigned = 12;
 		VAR
-			num: LONGINT;
+			num: SIGNED32;
 			ident: ARRAY 64 OF CHAR;
-			x, y, bits, i, sym: INTEGER;
+			x, y, bits, i, sym: SIGNED16;
 			error: BOOLEAN;
 			ch: CHAR;
 		PROCEDURE GetNumber;
-			PROCEDURE HexOrd(ch: CHAR): INTEGER;
+			PROCEDURE HexOrd(ch: CHAR): SIGNED16;
 			BEGIN
 				IF (ch >= "0") & (ch <= "9") THEN
 					RETURN ORD(ch)-ORD("0")
@@ -54,7 +54,7 @@ MODULE XBM IN Oberon; (** portable *)	(* ejz  *)
 			END
 		END GetNumber;
 		PROCEDURE GetIdent;
-			VAR i: INTEGER;
+			VAR i: SIGNED16;
 		BEGIN
 			i := 0;
 			WHILE ((ch >= "A") & (ch <= "Z")) OR ((ch >= "a") & (ch <= "z")) OR ((ch >= "0") & (ch <= "9")) OR (ch = "-") OR (ch = "_") OR (ch = ".") DO
@@ -114,7 +114,7 @@ MODULE XBM IN Oberon; (** portable *)	(* ejz  *)
 				sym := eof
 			END
 		END Next;
-		PROCEDURE Check(sy: INTEGER);
+		PROCEDURE Check(sy: SIGNED16);
 		BEGIN
 			IF sy = sym THEN
 				Next()
@@ -122,7 +122,7 @@ MODULE XBM IN Oberon; (** portable *)	(* ejz  *)
 				error := TRUE
 			END
 		END Check;
-		PROCEDURE IntDef(VAR i: INTEGER);
+		PROCEDURE IntDef(VAR i: SIGNED16);
 		BEGIN
 			Check(define); Check(id);
 			i := SHORT(num); Check(number)

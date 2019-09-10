@@ -27,15 +27,15 @@ IMPORT vyLongreal, vyLongrealVec, vyInteger, vyIntVec, vyLongint, vyLongintVec, 
 
 
 TYPE
-	I1d* = POINTER TO ARRAY OF INTEGER;
-	R1d* = POINTER TO ARRAY OF REAL;
-	X1d* = POINTER TO ARRAY OF LONGREAL;
-	L1d* = POINTER TO ARRAY OF LONGINT;
+	I1d* = POINTER TO ARRAY OF SIGNED16;
+	R1d* = POINTER TO ARRAY OF FLOAT32;
+	X1d* = POINTER TO ARRAY OF FLOAT64;
+	L1d* = POINTER TO ARRAY OF SIGNED32;
 
-	I2d* = POINTER TO ARRAY OF ARRAY OF INTEGER;
-	R2d* = POINTER TO ARRAY OF ARRAY OF REAL;
-	X2d* = POINTER TO ARRAY OF ARRAY OF LONGREAL;
-	L2d* = POINTER TO ARRAY OF ARRAY OF LONGINT;
+	I2d* = POINTER TO ARRAY OF ARRAY OF SIGNED16;
+	R2d* = POINTER TO ARRAY OF ARRAY OF FLOAT32;
+	X2d* = POINTER TO ARRAY OF ARRAY OF FLOAT64;
+	L2d* = POINTER TO ARRAY OF ARRAY OF SIGNED32;
 
 	I3d* = POINTER TO ARRAY OF I2d;
 	R3d* = POINTER TO ARRAY OF R2d;
@@ -54,12 +54,12 @@ VAR
 	la*: L1d;
 	ia*: I1d;
 
-PROCEDURE kSmallestX* (VAR a: ARRAY OF LONGREAL;   n, k: LONGINT): LONGREAL;
+PROCEDURE kSmallestX* (VAR a: ARRAY OF FLOAT64;   n, k: SIGNED32): FLOAT64;
 	(** caution: modifies a*)
 	(* algorithm of Nikolaus Wirth *)
-	VAR i, j, l, m: LONGINT;    x: LONGREAL;
-PROCEDURE swap (VAR x, y: LONGREAL);
-	VAR z : LONGREAL;
+	VAR i, j, l, m: SIGNED32;    x: FLOAT64;
+PROCEDURE swap (VAR x, y: FLOAT64);
+	VAR z : FLOAT64;
 BEGIN
 	z := x;   x := y;   y := z
 END swap;
@@ -79,12 +79,12 @@ BEGIN
 	RETURN a[k]
 END kSmallestX;
 
-PROCEDURE kSmallestL* (VAR a: ARRAY OF LONGINT;   n, k: LONGINT): LONGINT;
+PROCEDURE kSmallestL* (VAR a: ARRAY OF SIGNED32;   n, k: SIGNED32): SIGNED32;
 	(** caution: modifies a*)
 	(* algorithm of Nikolaus Wirth *)
-	VAR i, j, l, m: LONGINT;    x: LONGINT;
-PROCEDURE swap (VAR x, y: LONGINT);
-	VAR z : LONGINT;
+	VAR i, j, l, m: SIGNED32;    x: SIGNED32;
+PROCEDURE swap (VAR x, y: SIGNED32);
+	VAR z : SIGNED32;
 BEGIN
 	z := x;   x := y;   y := z
 END swap;
@@ -104,12 +104,12 @@ BEGIN
 	RETURN a[k]
 END kSmallestL;
 
-PROCEDURE kSmallestI* (VAR a: ARRAY OF INTEGER;   n, k: LONGINT): INTEGER;
+PROCEDURE kSmallestI* (VAR a: ARRAY OF SIGNED16;   n, k: SIGNED32): SIGNED16;
 	(** caution: modifies a*)
 	(* algorithm of Nikolaus Wirth *)
-	VAR i, j, l, m: LONGINT;    x: INTEGER;
-PROCEDURE swap (VAR x, y: INTEGER);
-	VAR z : INTEGER;
+	VAR i, j, l, m: SIGNED32;    x: SIGNED16;
+PROCEDURE swap (VAR x, y: SIGNED16);
+	VAR z : SIGNED16;
 BEGIN
 	z := x;   x := y;   y := z
 END swap;
@@ -129,25 +129,25 @@ BEGIN
 	RETURN a[k]
 END kSmallestI;
 
-PROCEDURE Use1dX (VAR a: ARRAY OF LONGREAL;  n: LONGINT);
+PROCEDURE Use1dX (VAR a: ARRAY OF FLOAT64;  n: SIGNED32);
 BEGIN
 	IF (ra = NIL) OR (LEN(ra) < n) THEN NEW(ra, n) END;
 	vyLongreal.Copy(n, a, 0, ra^, 0)
 END Use1dX;
 
-PROCEDURE Use1dI (VAR a: ARRAY OF INTEGER;  n: LONGINT);
+PROCEDURE Use1dI (VAR a: ARRAY OF SIGNED16;  n: SIGNED32);
 BEGIN
 	IF (ia = NIL) OR (LEN(ia) < n) THEN NEW(ia, n) END;
 	vyInteger.Copy(n, a, 0, ia^, 0)
 END Use1dI;
 
-PROCEDURE Use1dL (VAR a: ARRAY OF LONGINT;  n: LONGINT);
+PROCEDURE Use1dL (VAR a: ARRAY OF SIGNED32;  n: SIGNED32);
 BEGIN
 	IF (la = NIL) OR (LEN(la) < n) THEN NEW(la, n) END;
 	vyLongint.Copy(n, a, 0, la^, 0)
 END Use1dL;
 
-PROCEDURE Median1dX* (VAR a: ARRAY OF LONGREAL;   n: LONGINT): LONGREAL;
+PROCEDURE Median1dX* (VAR a: ARRAY OF FLOAT64;   n: SIGNED32): FLOAT64;
 BEGIN
 	Use1dX(a, n);
 	IF ODD(n) THEN
@@ -157,7 +157,7 @@ BEGIN
 	END
 END Median1dX;
 
-PROCEDURE Median1dL* (VAR a: ARRAY OF LONGINT;   n: LONGINT): LONGINT;
+PROCEDURE Median1dL* (VAR a: ARRAY OF SIGNED32;   n: SIGNED32): SIGNED32;
 BEGIN
 	Use1dL(a, n);
 	IF ODD(n) THEN
@@ -167,7 +167,7 @@ BEGIN
 	END
 END Median1dL;
 
-PROCEDURE Median1dI* (VAR a: ARRAY OF INTEGER;   n: LONGINT): INTEGER;
+PROCEDURE Median1dI* (VAR a: ARRAY OF SIGNED16;   n: SIGNED32): SIGNED16;
 BEGIN
 	Use1dI(a, n);
 	IF ODD(n) THEN
@@ -177,9 +177,9 @@ BEGIN
 	END
 END Median1dI;
 
-PROCEDURE Median2dX* (VAR S: ARRAY OF ARRAY OF LONGREAL): LONGREAL;
+PROCEDURE Median2dX* (VAR S: ARRAY OF ARRAY OF FLOAT64): FLOAT64;
 	(** does not modify S*)
-	VAR values: POINTER TO ARRAY OF LONGREAL;    w, h, i: LONGINT;
+	VAR values: POINTER TO ARRAY OF FLOAT64;    w, h, i: SIGNED32;
 BEGIN
 	h := LEN(S);           w := LEN(S[0]);
 	NEW(values, w * h);
@@ -189,11 +189,11 @@ BEGIN
 	RETURN kSmallestX(values^, w * h, w * h DIV 2)
 END Median2dX;
 
-PROCEDURE MinMax2dX* (VAR S: ARRAY OF ARRAY OF LONGREAL;    VAR min, max: LONGREAL);
-	VAR h, i, minpos, currentminpos, maxpos, currentmaxpos, na: LONGINT;       currentmax, currentmin: LONGREAL;
+PROCEDURE MinMax2dX* (VAR S: ARRAY OF ARRAY OF FLOAT64;    VAR min, max: FLOAT64);
+	VAR h, i, minpos, currentminpos, maxpos, currentmaxpos, na: SIGNED32;       currentmax, currentmin: FLOAT64;
 BEGIN
 	h := LEN(S);
-	min := MAX(LONGREAL);      	max := MIN(LONGREAL);
+	min := MAX(FLOAT64);      	max := MIN(FLOAT64);
 	FOR i := 0 TO h - 1 DO
 		vyLongreal.MinMax(LEN(S[i]), S[i], 0, currentmin, currentminpos, currentmax, currentmaxpos, na);
 		IF currentmin < min THEN  min := currentmin;               minpos := currentminpos END;
@@ -201,8 +201,8 @@ BEGIN
 	END
 END MinMax2dX;
 
-PROCEDURE Out2dX* (A: ARRAY OF ARRAY OF LONGREAL);
-	VAR i, j: LONGINT;
+PROCEDURE Out2dX* (A: ARRAY OF ARRAY OF FLOAT64);
+	VAR i, j: SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(A) - 1 DO
 		Out.Ln;
@@ -213,8 +213,8 @@ BEGIN
 	Out.Ln
 END Out2dX;
 
-PROCEDURE Transpose2dX* (VAR A: ARRAY OF ARRAY OF LONGREAL): X2d;
-	VAR h, w, i, j: LONGINT;        Atr: X2d;
+PROCEDURE Transpose2dX* (VAR A: ARRAY OF ARRAY OF FLOAT64): X2d;
+	VAR h, w, i, j: SIGNED32;        Atr: X2d;
 BEGIN
 	h := LEN(A);             	w := LEN(A[0]);
 	NEW(Atr, w, h);
@@ -226,8 +226,8 @@ BEGIN
 	RETURN Atr;
 END Transpose2dX;
 
-PROCEDURE Uniform1dX* (VAR a: ARRAY OF LONGREAL;  x, w: LONGINT;  top: LONGREAL);
-	VAR  xx: LONGINT;
+PROCEDURE Uniform1dX* (VAR a: ARRAY OF FLOAT64;  x, w: SIGNED32;  top: FLOAT64);
+	VAR  xx: SIGNED32;
 BEGIN
 	vyRanBase.RandomUVX(w, a, x);
 	IF top # 1 THEN
@@ -237,14 +237,14 @@ BEGIN
 	END
 END Uniform1dX;
 
-PROCEDURE Uniform1dL* (VAR a: ARRAY OF LONGINT;  x, w: LONGINT;  top: LONGINT);
+PROCEDURE Uniform1dL* (VAR a: ARRAY OF SIGNED32;  x, w: SIGNED32;  top: SIGNED32);
 BEGIN
 	vyRanBase.RandomLV(top, TRUE, LEN(a), a, 0);
 	(*antsRandom.gen.GetRandomLV(antsRandom.gen,top,LEN(a),a,0); *)
 END Uniform1dL;
 
-PROCEDURE Uniform1dI* (VAR a: ARRAY OF INTEGER;  x, w: LONGINT;  top: INTEGER);
-	VAR xx: LONGINT;
+PROCEDURE Uniform1dI* (VAR a: ARRAY OF SIGNED16;  x, w: SIGNED32;  top: SIGNED16);
+	VAR xx: SIGNED32;
 BEGIN
 	IF (la = NIL) OR (LEN(la^) # w) THEN NEW(la, w) END;
 	Uniform1dL(la^, 0, w, top);
@@ -253,72 +253,72 @@ BEGIN
 	END
 END Uniform1dI;
 
-PROCEDURE Uniform2dI* (VAR A: ARRAY OF ARRAY OF INTEGER ;  top: INTEGER;  x, y, w, h: LONGINT);
-	VAR  y0: LONGINT ;
+PROCEDURE Uniform2dI* (VAR A: ARRAY OF ARRAY OF SIGNED16 ;  top: SIGNED16;  x, y, w, h: SIGNED32);
+	VAR  y0: SIGNED32 ;
 BEGIN
 	FOR y0 := y TO y + h - 1 DO
 		Uniform1dI(A[y0], x, w, top)
 	END
 END Uniform2dI;
 
-PROCEDURE Uniform2dL* (VAR A: ARRAY OF ARRAY OF LONGINT;  top: LONGINT;  x, y, w, h: LONGINT);
-	VAR  y0: LONGINT ;
+PROCEDURE Uniform2dL* (VAR A: ARRAY OF ARRAY OF SIGNED32;  top: SIGNED32;  x, y, w, h: SIGNED32);
+	VAR  y0: SIGNED32 ;
 BEGIN
 	FOR y0 := y TO y + h - 1 DO
 		Uniform1dL(A[y0], x, w, top)
 	END
 END Uniform2dL;
 
-PROCEDURE Uniform2dX* (VAR A: ARRAY OF ARRAY OF LONGREAL;  top: LONGREAL;  x, y, w, h: LONGINT);
-	VAR  y0: LONGINT ;
+PROCEDURE Uniform2dX* (VAR A: ARRAY OF ARRAY OF FLOAT64;  top: FLOAT64;  x, y, w, h: SIGNED32);
+	VAR  y0: SIGNED32 ;
 BEGIN
 	FOR y0 := y TO y + h - 1 DO
 		Uniform1dX(A[y0], x, w, top)
 	END
 END Uniform2dX;
 
-PROCEDURE Uniform3dI* (VAR A: I3d;  top: INTEGER);
-	VAR l: LONGINT;
+PROCEDURE Uniform3dI* (VAR A: I3d;  top: SIGNED16);
+	VAR l: SIGNED32;
 BEGIN
 	FOR l := 0 TO LEN(A) - 1 DO
 		Uniform2dI(A[l]^, top, 0, 0, LEN(A[l, 0]), LEN(A[l]))
 	END
 END Uniform3dI;
 
-PROCEDURE Uniform4dI* (VAR A: I4d;  top: INTEGER);
-	VAR l: LONGINT;
+PROCEDURE Uniform4dI* (VAR A: I4d;  top: SIGNED16);
+	VAR l: SIGNED32;
 BEGIN
 	FOR l := 0 TO LEN(A) - 1 DO
 		Uniform3dI(A[l], top)
 	END
 END Uniform4dI;
 
-PROCEDURE FindFirstI* (VAR f: ARRAY OF INTEGER;  value: INTEGER): LONGINT;
-	VAR i: LONGINT;
+PROCEDURE FindFirstI* (VAR f: ARRAY OF SIGNED16;  value: SIGNED16): SIGNED32;
+	VAR i: SIGNED32;
 BEGIN
 	i := 0;
 	WHILE(f[i] # value) & (i < LEN(f)) DO INC(i) END;
 	RETURN i
 END FindFirstI;
 
-PROCEDURE FindFirstX* (VAR f: ARRAY OF LONGREAL;  value: LONGREAL): LONGINT;
-	VAR i: LONGINT;
+PROCEDURE FindFirstX* (VAR f: ARRAY OF FLOAT64;  value: FLOAT64): SIGNED32;
+	VAR i: SIGNED32;
 BEGIN
 	i := 0;
 	WHILE (i < LEN(f)) & (f[i] # value) DO INC(i) END;
 	RETURN i
 END FindFirstX;
 
-PROCEDURE FindMaxima1dX* (orig: ARRAY OF LONGREAL;                 		VAR maxima: ARRAY OF LONGREAL );
+PROCEDURE FindMaxima1dX* (orig: ARRAY OF FLOAT64;                 		VAR maxima: ARRAY OF FLOAT64 );
 	(* berechnet einen Vektor maxima mit Eintrag 1 fuer Max bei Vektor orig (sonst 0)
 	if i is a local maximum or orig then maxima[i] = 1 else maxima[i] = 0.
 	local maxima can also be at the beginning or end of the array, local maxima can have a with of more than 2
 	*)
-	VAR i, N, lastuppos: LONGINT;                 		lastv, thisv: LONGREAL;                 		up: BOOLEAN;
+	VAR i, N, lastuppos: SIGNED32;                 		lastv, thisv: FLOAT64;                 		up: BOOLEAN;
 BEGIN
 	N := LEN(orig);
 	vyLongreal.Fill(N, maxima, 0, 0);
-	lastv := MIN(LONGREAL);                 		up := TRUE;                 		lastuppos := 0;
+	lastv := MIN(FLOAT64);                 		up := TRUE;                 		lastuppos := 0;
 	FOR i := 0 TO N - 1 DO
 		thisv := orig[i];
 		IF thisv = lastv THEN
@@ -335,9 +335,9 @@ BEGIN
 	IF up THEN  vyLongreal.Fill(N - lastuppos, maxima, lastuppos, 1)          END
 END FindMaxima1dX;
 
-PROCEDURE FindMaxima2dXRows* (VAR Orig, Maxima: ARRAY OF ARRAY OF LONGREAL);
+PROCEDURE FindMaxima2dXRows* (VAR Orig, Maxima: ARRAY OF ARRAY OF FLOAT64);
 	(* applies FindMaxima1dX on all rows on Orig *)
-	VAR  i, h: LONGINT;
+	VAR  i, h: SIGNED32;
 BEGIN
 	h := LEN(Orig);
 	FOR i := 0 TO h - 1 DO
@@ -345,9 +345,9 @@ BEGIN
 	END
 END FindMaxima2dXRows;
 
-PROCEDURE AndMax* (VAR Max1, Max2, Result: ARRAY OF ARRAY OF LONGREAL);
+PROCEDURE AndMax* (VAR Max1, Max2, Result: ARRAY OF ARRAY OF FLOAT64);
 	(*berechnet eine Matrix Result, mit Eintrag 1 an den Stellen, an denen Max1 und Max2 ebenfalls Eintrag 1 haben*)
-	VAR  i, j, h, w: LONGINT;
+	VAR  i, j, h, w: SIGNED32;
 BEGIN
 	h := LEN(Max1);              		w := LEN(Max1[0]);
 	FOR i := 0 TO h - 1 DO
@@ -358,7 +358,7 @@ BEGIN
 	END
 END AndMax;
 
-PROCEDURE VecFromArrayX* (VAR a: ARRAY OF LONGREAL): vyLongrealVec.tVector;
+PROCEDURE VecFromArrayX* (VAR a: ARRAY OF FLOAT64): vyLongrealVec.tVector;
 	VAR v: vyLongrealVec.tVector;
 BEGIN
 	v := vyLongrealVec.New(LEN(a));
@@ -366,7 +366,7 @@ BEGIN
 	RETURN v
 END VecFromArrayX;
 
-PROCEDURE VecFromArrayL* (VAR a: ARRAY OF LONGINT): vyLongintVec.tVector;
+PROCEDURE VecFromArrayL* (VAR a: ARRAY OF SIGNED32): vyLongintVec.tVector;
 	VAR v: vyLongintVec.tVector;
 BEGIN
 	v := vyLongintVec.New(LEN(a));
@@ -374,7 +374,7 @@ BEGIN
 	RETURN v
 END VecFromArrayL;
 
-PROCEDURE VecFromArrayI* (VAR a: ARRAY OF INTEGER): vyIntVec.tVector;
+PROCEDURE VecFromArrayI* (VAR a: ARRAY OF SIGNED16): vyIntVec.tVector;
 	VAR v: vyIntVec.tVector;
 BEGIN
 	v := vyIntVec.New(LEN(a));
@@ -383,9 +383,9 @@ BEGIN
 END VecFromArrayI;
 
 (*count the number of local maxima*)
-PROCEDURE CountModi* ( x: vyLongrealVec.tVector;  minlen, maxlen: LONGINT): LONGINT;
-	VAR i: LONGINT;              N: LONGINT;              number: LONGINT;              last, this: LONGREAL;
-	len, startpoint: LONGINT;
+PROCEDURE CountModi* ( x: vyLongrealVec.tVector;  minlen, maxlen: SIGNED32): SIGNED32;
+	VAR i: SIGNED32;              N: SIGNED32;              number: SIGNED32;              last, this: FLOAT64;
+	len, startpoint: SIGNED32;
 CONST invalid = -1;                       (* original: from=4,to=14 *)
 BEGIN
 	N := vyLongrealVec.Len( x( vyLongrealVec.tVector ) );
@@ -433,7 +433,7 @@ BEGIN
 END CountModi;
 
 PROCEDURE TestMedian*;
-	VAR a: ARRAY 4 OF LONGREAL;
+	VAR a: ARRAY 4 OF FLOAT64;
 BEGIN
 
 	a[0] := 1;  a[1] := 10;  a[2] := 100;  a[3] := 1000;

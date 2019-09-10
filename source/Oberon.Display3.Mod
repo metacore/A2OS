@@ -54,54 +54,54 @@ TYPE
 
 	Run = POINTER TO RunDesc;
 	RunDesc = RECORD
-		x, w, right: INTEGER;
-		value: INTEGER;
+		x, w, right: SIGNED16;
+		value: SIGNED16;
 		next, prev: Run;
 	END;
 
 	ScanLine = POINTER TO ScanLineDesc;
 	ScanLineDesc = RECORD
-		y, h, top: INTEGER;
+		y, h, top: SIGNED16;
 		maymerge: BOOLEAN;
 		run: Run;
 		next,prev: ScanLine;
 	END;
 
 	MaskDesc* = RECORD	(** Clipping mask descriptor. *)
-		x*, y*: INTEGER;		(** Relative mask origin or offset. *)
-		X*, Y*, W*, H*: INTEGER;		(** Current clipping port in absolute coordinates. *)
-		sX, sY, sW, sH: INTEGER;
+		x*, y*: SIGNED16;		(** Relative mask origin or offset. *)
+		X*, Y*, W*, H*: SIGNED16;		(** Current clipping port in absolute coordinates. *)
+		sX, sY, sW, sH: SIGNED16;
 		simple: BOOLEAN;
 		scanline: ScanLine;
 	END;
 
 	(** Enumerate the set of rectangles in a mask. The clipping port is not enumerated. *)
-	EnumProc* = PROCEDURE (X, Y, W, H: INTEGER);
+	EnumProc* = PROCEDURE (X, Y, W, H: SIGNED16);
 
 VAR
 	selectpat*: Display.Pattern; (** Pattern used to draw gadgets when in a selected state. **)
 
 	(** Colors *)
-	FG*, BG*: INTEGER;		(** Foreground (black) and background (white) color indexes. *)
-	red*, green*, blue*: INTEGER;	(** Primary color indexes. *)
+	FG*, BG*: SIGNED16;		(** Foreground (black) and background (white) color indexes. *)
+	red*, green*, blue*: SIGNED16;	(** Primary color indexes. *)
 
-	black*, white*: INTEGER;	(** True black and white. **)
-	topC*: INTEGER;	(** Top shadow color. *)
-	bottomC*: INTEGER;	(** Bottom shadow color. *)
-	upC*: INTEGER;	(** Color of a button. *)
-	downC*: INTEGER;	(** Color of the pushed  button *)
-	groupC*: INTEGER;	(** Color of containers, i.e. gadgets that have a grouping function like panels. *)
-	invertC*: INTEGER;	(** Best color for doing inverts.. *)
-	textC*: INTEGER;	(** Default text color. *)
-	textbackC*: INTEGER;	(** Default text background. *)
-	textmode*: INTEGER;	(** Best CopyPattern mode for this display card. *)
+	black*, white*: SIGNED16;	(** True black and white. **)
+	topC*: SIGNED16;	(** Top shadow color. *)
+	bottomC*: SIGNED16;	(** Bottom shadow color. *)
+	upC*: SIGNED16;	(** Color of a button. *)
+	downC*: SIGNED16;	(** Color of the pushed  button *)
+	groupC*: SIGNED16;	(** Color of containers, i.e. gadgets that have a grouping function like panels. *)
+	invertC*: SIGNED16;	(** Best color for doing inverts.. *)
+	textC*: SIGNED16;	(** Default text color. *)
+	textbackC*: SIGNED16;	(** Default text background. *)
+	textmode*: SIGNED16;	(** Best CopyPattern mode for this display card. *)
 
-	typ: INTEGER;
+	typ: SIGNED16;
 	aM, bM: Mask; (* for enums *)
 
 	(* tmp variables for picture enumerator *)
 	tmpP: Pictures.Picture;
-	tmpM, dX, dY: INTEGER;
+	tmpM, dX, dY: SIGNED16;
 
 	compactionflag: BOOLEAN;
 
@@ -111,10 +111,10 @@ CONST BrushSize = 100; (* maximum width of the brush *)
 
 TYPE
 	Brush = RECORD
-		brul, brur: ARRAY BrushSize OF INTEGER;
-		bufl, bufr: ARRAY BrushSize OF INTEGER;
-		bufh, brushr: INTEGER;
-		x, y, mode: INTEGER;
+		brul, brur: ARRAY BrushSize OF SIGNED16;
+		bufl, bufr: ARRAY BrushSize OF SIGNED16;
+		bufh, brushr: SIGNED16;
+		x, y, mode: SIGNED16;
 		col: Display.Color;
 		M: Mask;
 		pat: Display.Pattern
@@ -124,17 +124,17 @@ VAR
 	drawingPolygon: BOOLEAN;
 	brush: Brush; (* global Bursh *)
 
-PROCEDURE Min(x, y: INTEGER): INTEGER;
+PROCEDURE Min(x, y: SIGNED16): SIGNED16;
 BEGIN
 	IF x < y THEN RETURN x ELSE RETURN y END
 END Min;
 
-PROCEDURE Max(x, y: INTEGER): INTEGER;
+PROCEDURE Max(x, y: SIGNED16): SIGNED16;
 BEGIN IF x > y THEN RETURN x ELSE RETURN y END
 END Max;
 
-PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-VAR r, t, r1, t1: INTEGER;
+PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+VAR r, t, r1, t1: SIGNED16;
 BEGIN
 	r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 	IF x < x1 THEN x := x1 END;
@@ -144,8 +144,8 @@ BEGIN
 	w := r - x + 1; h := t - y + 1;
 END ClipAgainst;
 
-PROCEDURE Clip(M: Mask; VAR x, y, w, h : INTEGER);
-VAR l, b, t, r, tmp : INTEGER;
+PROCEDURE Clip(M: Mask; VAR x, y, w, h : SIGNED16);
+VAR l, b, t, r, tmp : SIGNED16;
 BEGIN
     l := x; b := y; r := x+w-1; t := y +h-1;
 	IF (l < M.sX) THEN l := M.sX; END;
@@ -196,7 +196,7 @@ END Enum;
 
 (** Enumerate all the invisible areas of a mask. The clipping port is not enumerated. Note that you might obtain coordinates outside of the normal screen area, bounded by approximately -/+ 8192. The mask translation vector is taken into account.**)
 PROCEDURE EnumInvert*(M: Mask; enum: EnumProc);
-VAR s: ScanLine; r: Run; X, Y, W, H: INTEGER;
+VAR s: ScanLine; r: Run; X, Y, W, H: SIGNED16;
 BEGIN
 	IF M.simple THEN
 		X := M.x + M.sX; Y := M.y + M.sY; W := M.sW; H := M.sH;
@@ -218,8 +218,8 @@ BEGIN
 END EnumInvert;
 
 (** Enumerate all the visible areas in the given rectangular region. The clipping port is not taken into account. *)
-PROCEDURE EnumRect*(M: Mask; X, Y, W, H: INTEGER; enum: EnumProc);
-	VAR hleft, wleft, nw, nh, x, y, X0: INTEGER; s: ScanLine; r: Run;
+PROCEDURE EnumRect*(M: Mask; X, Y, W, H: SIGNED16; enum: EnumProc);
+	VAR hleft, wleft, nw, nh, x, y, X0: SIGNED16; s: ScanLine; r: Run;
 BEGIN
 	IF M.simple THEN
 		ClipAgainst(X, Y, W, H, M.x + M.sX, M.y + M.sY, M.sW, M.sH); (* enum(M.x + M.sX, M.y + M.sY, M.sW, M.sH); *)
@@ -249,7 +249,7 @@ BEGIN
 	END
 END EnumRect;
 
-PROCEDURE SplitScan(s: ScanLine; y: INTEGER); (* s.y < y < s.top *)
+PROCEDURE SplitScan(s: ScanLine; y: SIGNED16); (* s.y < y < s.top *)
 VAR ns: ScanLine; nr, r, tmp: Run;
 BEGIN
 	NEW(ns); ns.y := y; ns.top := s.top; ns.h := s.top - y + 1;
@@ -286,7 +286,7 @@ END MergeScanLine;
 PROCEDURE Compact(M: Mask);
 VAR r, rt, thesinglerect: Run;
 	bs, st, thesinglescanline: ScanLine;
-	noofrects: INTEGER; merge, noinc: BOOLEAN;
+	noofrects: SIGNED16; merge, noinc: BOOLEAN;
 BEGIN
 	IF ~compactionflag THEN RETURN END;
 	bs := M.scanline;
@@ -332,8 +332,8 @@ BEGIN
 	END
 END Compact;
 
-PROCEDURE DoLine(s: ScanLine; x, y, w, h: INTEGER);
-VAR splittop, splitbottom: BOOLEAN; r, rt: Run; wleft, nw: INTEGER;
+PROCEDURE DoLine(s: ScanLine; x, y, w, h: SIGNED16);
+VAR splittop, splitbottom: BOOLEAN; r, rt: Run; wleft, nw: SIGNED16;
 BEGIN
 	splitbottom := (y > s.y); splittop := (y+h-1) < s.top;
 	r := s.run;
@@ -376,9 +376,9 @@ BEGIN
 	END
 END DoLine;
 
-PROCEDURE ExclLine(s: ScanLine; x, y, w, h: INTEGER);
+PROCEDURE ExclLine(s: ScanLine; x, y, w, h: SIGNED16);
 VAR splittop, splitbottom: BOOLEAN;
-	r, rt: Run; wleft, nw: INTEGER;
+	r, rt: Run; wleft, nw: SIGNED16;
 BEGIN
 	splitbottom := (y > s.y); splittop := (y+h-1) < s.top;
 	r := s.run;
@@ -453,8 +453,8 @@ BEGIN
 END Copy;
 
 (** Add the rectangle X, Y, W, H as a visible/drawable area to the mask. *)
-PROCEDURE Add*(M: Mask; X, Y, W, H: INTEGER);
-VAR hleft, nh: INTEGER; s: ScanLine;
+PROCEDURE Add*(M: Mask; X, Y, W, H: SIGNED16);
+VAR hleft, nh: SIGNED16; s: ScanLine;
 BEGIN
 	X := X - M.x; Y := Y - M.y; (* adjust for offset *)
 	IF M.simple THEN
@@ -483,15 +483,15 @@ BEGIN
 END Add;
 
 (** Clip the current clipping port of the mask to the rectangle X, Y, W, H. The result is an updated clipping port. *)
-PROCEDURE AdjustMask*(M: Mask; X, Y, W, H: INTEGER);
+PROCEDURE AdjustMask*(M: Mask; X, Y, W, H: SIGNED16);
 BEGIN
 	ClipAgainst(X, Y, W, H, M.X, M.Y, M.W, M.H);
 	M.X := X; M.Y := Y; M.W := W; M.H := H
 END AdjustMask;
 
 (** Remove area X, Y, W, H from the mask i.e. make area undrawable.  *)
-PROCEDURE Subtract*(M: Mask; X, Y, W, H: INTEGER);
-VAR hleft, nh: INTEGER;s: ScanLine;
+PROCEDURE Subtract*(M: Mask; X, Y, W, H: SIGNED16);
+VAR hleft, nh: SIGNED16;s: ScanLine;
 BEGIN
 	IF M.simple THEN
 		M.simple := FALSE; Open0(M);
@@ -515,7 +515,7 @@ BEGIN
 END Subtract;
 
 (** Interset the mask with the rectangle X, Y, W, H. The visible areas are restricted to this rectangle. *)
-PROCEDURE Intersect*(M: Mask; X, Y, W, H: INTEGER);
+PROCEDURE Intersect*(M: Mask; X, Y, W, H: SIGNED16);
 BEGIN
 	IF M.simple THEN
 		X := X - M.x; Y := Y - M.y;
@@ -528,12 +528,12 @@ BEGIN
 	END
 END Intersect;
 
-PROCEDURE IntersectMasks1(x, y, w, h: INTEGER);
+PROCEDURE IntersectMasks1(x, y, w, h: SIGNED16);
 BEGIN
 	IF typ = add THEN Add(bM, x, y, w, h) ELSIF typ = subtract THEN Subtract(bM, x, y, w, h) END;
 END IntersectMasks1;
 
-PROCEDURE IntersectMasks0(X, Y, W, H: INTEGER);
+PROCEDURE IntersectMasks0(X, Y, W, H: SIGNED16);
 BEGIN EnumRect(aM, X, Y, W, H, IntersectMasks1);
 END IntersectMasks0;
 
@@ -583,7 +583,7 @@ BEGIN
 END Shift;
 
 (** Returns TRUE if the visible areas of the mask form a single rectangle. The result, when TRUE, is returned. The clipping port is not taken into account. *)
-PROCEDURE Rectangular*(M: Mask; VAR X, Y, W, H: INTEGER): BOOLEAN;
+PROCEDURE Rectangular*(M: Mask; VAR X, Y, W, H: SIGNED16): BOOLEAN;
 BEGIN
 	X := M.x + M.sX; Y := M.y + M.sY; W := M.sW; H := M.sH;
 	RETURN M.simple
@@ -592,7 +592,7 @@ END Rectangular;
 (* --------- CopyMask ---- *)
 
 (** Using Display.CopyBlock, copy the area M to position X, Y. The point M.x, M.y is copied to screen coordinates X, Y. *)
-PROCEDURE CopyMask*(M: Mask; X, Y: INTEGER; mode: INTEGER);
+PROCEDURE CopyMask*(M: Mask; X, Y: SIGNED16; mode: SIGNED16);
 VAR s, sp: ScanLine; r, rp: Run; rruns, rscans: BOOLEAN;
 BEGIN
 	IF M.simple THEN
@@ -635,8 +635,8 @@ BEGIN
 END CopyMask;
 
 (** Display.ReplConst through a mask. *)
-PROCEDURE ReplConst*(M: Mask; col: Display.Color; X, Y, W, H, mode: INTEGER);
-VAR hleft, wleft, nw, nh, x, y, X0  : INTEGER; s : ScanLine; r : Run;
+PROCEDURE ReplConst*(M: Mask; col: Display.Color; X, Y, W, H, mode: SIGNED16);
+VAR hleft, wleft, nw, nh, x, y, X0  : SIGNED16; s : ScanLine; r : Run;
 BEGIN
 	IF M = NIL THEN Display.ReplConst(col, X, Y, W, H, mode);
 	ELSIF M.simple THEN
@@ -669,8 +669,8 @@ BEGIN
 END ReplConst;
 
 (** Is this rectangle completely visible? The clipping port is taken into acount. **)
-PROCEDURE Visible*(M: Mask; X, Y, W, H : INTEGER) : BOOLEAN;
-VAR x, y, X0, hleft, wleft, nh, nw: INTEGER; s: ScanLine; r: Run;
+PROCEDURE Visible*(M: Mask; X, Y, W, H : SIGNED16) : BOOLEAN;
+VAR x, y, X0, hleft, wleft, nh, nw: SIGNED16; s: ScanLine; r: Run;
 BEGIN
 	IF M = NIL THEN RETURN TRUE
 	ELSIF (X < M.X) OR (Y < M.Y) OR  (X + W > M.X + M.W) OR (Y + H >  M.Y + M.H ) THEN RETURN FALSE
@@ -703,8 +703,8 @@ BEGIN
 END Visible;
 
 (** Display.Dot through a clipping mask. *)
-PROCEDURE Dot*(M: Mask; col: Display.Color; X, Y, mode: INTEGER);
-VAR x, y: INTEGER; s: ScanLine; r: Run;
+PROCEDURE Dot*(M: Mask; col: Display.Color; X, Y, mode: SIGNED16);
+VAR x, y: SIGNED16; s: ScanLine; r: Run;
 BEGIN
 	IF M = NIL THEN Display.Dot(col, X, Y, mode)
 	ELSIF M.simple THEN
@@ -727,8 +727,8 @@ BEGIN
 END Dot;
 
 (** Display.FillPattern through a clipping mask. pX, pY is the pattern pin-point. *)
-PROCEDURE FillPattern*(M: Mask; col: Display.Color; pat: Display.Pattern; pX, pY, X, Y, W, H, mode: INTEGER);
-VAR hleft, nh, wleft, nw, x, y, X0 : INTEGER; s: ScanLine;  r : Run;
+PROCEDURE FillPattern*(M: Mask; col: Display.Color; pat: Display.Pattern; pX, pY, X, Y, W, H, mode: SIGNED16);
+VAR hleft, nh, wleft, nw, x, y, X0 : SIGNED16; s: ScanLine;  r : Run;
 BEGIN
 	IF pat = Display.solid THEN ReplConst(M, col, X, Y, W, H, mode); RETURN END;
 
@@ -762,8 +762,8 @@ BEGIN
 END FillPattern;
 
 (** Same as Display.CopyPattern, but through a clipping mask. *)
-PROCEDURE CopyPattern*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, mode: INTEGER);
-VAR  W, H, X0, hleft, wleft, nw, nh, ax, ay, cx, cy, cw, ch, x, y : INTEGER; s: ScanLine; r: Run;
+PROCEDURE CopyPattern*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, mode: SIGNED16);
+VAR  W, H, X0, hleft, wleft, nw, nh, ax, ay, cx, cy, cw, ch, x, y : SIGNED16; s: ScanLine; r: Run;
 BEGIN
 	Display.GetDim(pat,W,H);
 	IF (M = NIL) OR Visible(M,X,Y,W,H) THEN Display.CopyPattern(col, pat, X, Y, mode)
@@ -807,8 +807,8 @@ END CopyPattern;
 (* ---------- Extra output primitives -------- *)
 
 (** Draw rectangle outline in the specified size, line width and pattern. *)
-PROCEDURE Rect*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, W, H, width, mode: INTEGER);
-	VAR mX,mW : INTEGER;
+PROCEDURE Rect*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, W, H, width, mode: SIGNED16);
+	VAR mX,mW : SIGNED16;
 BEGIN
 	width := Min(width, Min(H DIV 2, W DIV 2));
 	FillPattern(M, col, pat, X, Y, X, Y, width, H, mode);
@@ -829,7 +829,7 @@ BEGIN
 END Rect;
 
 (** Draw rectangle outline in width using top and bottom shadow (3D effects ).*)
-PROCEDURE Rect3D*(M: Mask; topcol, botcol: Display.Color; X, Y, W, H, width, mode: INTEGER);
+PROCEDURE Rect3D*(M: Mask; topcol, botcol: Display.Color; X, Y, W, H, width, mode: SIGNED16);
 BEGIN
 	width := Min(width, Min(H DIV 2, W DIV 2));
 	WHILE width > 0 DO
@@ -842,7 +842,7 @@ BEGIN
 END Rect3D;
 
 (** Fill rectangle with 3D shadow effects. incol specifies the "inside" color. *)
-PROCEDURE FilledRect3D*(M: Mask; topcol, botcol, incol: Display.Color; X, Y, W, H, width, mode: INTEGER);
+PROCEDURE FilledRect3D*(M: Mask; topcol, botcol, incol: Display.Color; X, Y, W, H, width, mode: SIGNED16);
 BEGIN
 	width := Min(width, Min(H DIV 2, W DIV 2));
 	WHILE width > 0 DO
@@ -857,8 +857,8 @@ END FilledRect3D;
 
 (* BRUSHES *)
 
-PROCEDURE BrushJump(VAR b: Brush; x, y: INTEGER);
-VAR i: INTEGER;
+PROCEDURE BrushJump(VAR b: Brush; x, y: SIGNED16);
+VAR i: SIGNED16;
 BEGIN
 	IF (b.x # x) OR (b.y # y) THEN
 		b.x := x; b.y := y;
@@ -866,8 +866,8 @@ BEGIN
 	END
 END BrushJump;
 
-PROCEDURE BrushWalk(VAR b: Brush; x, y: INTEGER);
-VAR i, dx, dy, t: INTEGER;
+PROCEDURE BrushWalk(VAR b: Brush; x, y: SIGNED16);
+VAR i, dx, dy, t: SIGNED16;
 BEGIN
 	dx := x - b.x; dy := y - b.y; t := b.bufh - 1;
 	IF dy = 0 THEN (* horizontal move *)
@@ -895,7 +895,7 @@ BEGIN
 END BrushWalk;
 
 PROCEDURE BrushFlush(VAR b: Brush);
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN
 	FOR i := 0 TO b.bufh - 1 DO
 		FillPattern(b.M, b.col, b.pat, 0, 0,
@@ -903,10 +903,10 @@ BEGIN
 	END
 END BrushFlush;
 
-PROCEDURE InitBrush(VAR b: Brush; M: Mask; pat: Display.Pattern; col: Display.Color; w, mode: INTEGER);
-VAR r, x, y, d, dx, dy: INTEGER;
+PROCEDURE InitBrush(VAR b: Brush; M: Mask; pat: Display.Pattern; col: Display.Color; w, mode: SIGNED16);
+VAR r, x, y, d, dx, dy: SIGNED16;
 
-	PROCEDURE Set(x, y: INTEGER);
+	PROCEDURE Set(x, y: SIGNED16);
 	BEGIN
 		b.brul[y + r] := -x+1; b.brur[y + r] := x; b.brul[-y + r] := -x+1; b.brur[-y + r] := x;
 		IF y + r > b.bufh THEN b.bufh := y + r END
@@ -916,7 +916,7 @@ BEGIN b.bufh := 0;
 	b.M := M; b.col := col; b.mode := mode; b.pat := pat;
 	IF w >= BrushSize THEN w := BrushSize - 1 END;
 
-	b.x := MIN(INTEGER); b.y := MIN(INTEGER);
+	b.x := MIN(SIGNED16); b.y := MIN(SIGNED16);
 	r := w DIV 2; (* radius *)
 	IF r < 0 THEN r := 1 END;
 	x := r; y := 0; d := 2 * r; dx := 4 * r; dy := 0;
@@ -931,8 +931,8 @@ END InitBrush;
 (* --------------------- Scan line based primitives --------------------- *)
 
 (** Draw a line in the specified pattern and width. Round brushes are used to draw thick lines. *)
-PROCEDURE Line*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, X1, Y1, width, mode: INTEGER);
-VAR x, y, dx, dy, inx, iny, d, dy2, dx2: INTEGER;
+PROCEDURE Line*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, X1, Y1, width, mode: SIGNED16);
+VAR x, y, dx, dy, inx, iny, d, dy2, dx2: SIGNED16;
 BEGIN
 	dx := width DIV 2; dx2 := width + 1;
 	IF Visible(M, Min(X, X1)-dx, Min(Y, Y1)-dx, ABS(X1-X)+dx2, ABS(Y1-Y)+dx2) THEN M := NIL END;
@@ -992,13 +992,13 @@ BEGIN
 	END
 END Line;
 
-PROCEDURE FilledPoly(M: Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y: ARRAY OF INTEGER; n, mode: INTEGER);
+PROCEDURE FilledPoly(M: Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y: ARRAY OF SIGNED16; n, mode: SIGNED16);
 	TYPE
 		Run = POINTER TO RunDesc0;
-		RunDesc0 = RECORD next: Run; x: INTEGER END;
+		RunDesc0 = RECORD next: Run; x: SIGNED16 END;
 	VAR
 		scan: ARRAY 2000 OF Run; free, s: Run;
-		i, miny, maxy, x0, x1: INTEGER;
+		i, miny, maxy, x0, x1: SIGNED16;
 
 	PROCEDURE New(VAR s: Run);
 	BEGIN IF free = NIL THEN NEW(s) ELSE s := free; free := free.next; s.next := NIL END
@@ -1013,7 +1013,7 @@ PROCEDURE FilledPoly(M: Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y
 		END
 	END Free;
 
-	PROCEDURE Insert(VAR s: Run; x: INTEGER);
+	PROCEDURE Insert(VAR s: Run; x: SIGNED16);
 	VAR t, t0: Run;
 	BEGIN
 		IF s = NIL THEN New(s); s.x := x
@@ -1029,8 +1029,8 @@ PROCEDURE FilledPoly(M: Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y
 		END
 	END Insert;
 
-	PROCEDURE line(x1, y1, x2, y2: INTEGER); (* standard bresenham *)
-	VAR x, y, d, dx, dy, incx, incy: INTEGER;
+	PROCEDURE line(x1, y1, x2, y2: SIGNED16); (* standard bresenham *)
+	VAR x, y, d, dx, dy, incx, incy: SIGNED16;
 	BEGIN
 		(* Seg(x1,y1); *)
 		x := x1; y := y1; dx := (x2 - x1) * 2; dy := (y2 - y1) * 2;
@@ -1049,7 +1049,7 @@ PROCEDURE FilledPoly(M: Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y
 	END line;
 
 BEGIN free := NIL;
-	miny := MAX(INTEGER); maxy := MIN(INTEGER);
+	miny := MAX(SIGNED16); maxy := MIN(SIGNED16);
 	i := 0; WHILE i < n DO IF Y[i] < miny THEN miny := Y[i] END; IF Y[i] > maxy THEN maxy := Y[i]; END; INC(i) END;
 	i := 0; WHILE i <= maxy - miny DO scan[i] := NIL; INC(i) END;
 	i := 1;
@@ -1072,8 +1072,8 @@ BEGIN free := NIL;
 END FilledPoly;
 
 (** Draw a polygon in pattern pat. n specifies the number of vertices listed in the arrays X and Y. Style may be {filled}. *)
-PROCEDURE Poly*(M: Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y: ARRAY OF INTEGER; n, width: INTEGER; style: SET; mode: INTEGER);
-VAR i: INTEGER;
+PROCEDURE Poly*(M: Mask; col: Display.Color; pat: Display.Pattern; VAR X, Y: ARRAY OF SIGNED16; n, width: SIGNED16; style: SET; mode: SIGNED16);
+VAR i: SIGNED16;
 BEGIN
 	IF filled IN style THEN FilledPoly(M, col, pat, X, Y, n, mode)
 	ELSE
@@ -1089,10 +1089,10 @@ BEGIN
 END Poly;
 
 (** Draw an ellipse. Implementation restriction: cannot fill an ellipse or draw an ellipse with line width > 1 *)
-PROCEDURE Ellipse*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, a, b, width: INTEGER; style: SET; mode: INTEGER);
-VAR x1, y1: INTEGER;  d, dx, dy, x2, y2, a1, a2, a8, b1, b2, b8: LONGINT;
+PROCEDURE Ellipse*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, a, b, width: SIGNED16; style: SET; mode: SIGNED16);
+VAR x1, y1: SIGNED16;  d, dx, dy, x2, y2, a1, a2, a8, b1, b2, b8: SIGNED32;
 
-	PROCEDURE Dot4(x1, x2, y1, y2: INTEGER);
+	PROCEDURE Dot4(x1, x2, y1, y2: SIGNED16);
 	BEGIN
 		IF pat = Display.solid THEN
 			Dot(M, col, x1, y1, mode); Dot(M, col, x1, y2, mode);
@@ -1123,8 +1123,8 @@ BEGIN
 END Ellipse;
 
 (** Draw a circle in radius r using pattern pat at position X, Y. Thick line widths are allowed. *)
-PROCEDURE Circle*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, r, width: INTEGER; style: SET; mode: INTEGER);
-VAR x, y, dx, dy, d, e: INTEGER;
+PROCEDURE Circle*(M: Mask; col: Display.Color; pat: Display.Pattern; X, Y, r, width: SIGNED16; style: SET; mode: SIGNED16);
+VAR x, y, dx, dy, d, e: SIGNED16;
 BEGIN
 	IF filled IN style THEN
 		IF Visible(M, X - r, Y - r, 2 * r + 1, 2 * r + 1) THEN M := NIL END;
@@ -1180,8 +1180,8 @@ END Circle;
 (* ---- end of scanline primitives ---- *)
 
 (** Draw string s in font fnt and color col at position X, Y. *)
-PROCEDURE String*(M: Mask; col: Display.Color; X, Y: INTEGER; fnt: Fonts.Font; s: ARRAY OF CHAR; mode: INTEGER);
-VAR r: Objects.Object; p: INTEGER;
+PROCEDURE String*(M: Mask; col: Display.Color; X, Y: SIGNED16; fnt: Fonts.Font; s: ARRAY OF CHAR; mode: SIGNED16);
+VAR r: Objects.Object; p: SIGNED16;
 BEGIN
 	p := 0;
 	WHILE s[p] # 0X DO
@@ -1194,8 +1194,8 @@ BEGIN
 END String;
 
 (** Draw a string s in font fnt centered in the rectangle X, Y, W, H. Line breaks will be inserted as needed. *)
-PROCEDURE CenterString*(M: Mask; col: Display.Color; X, Y, W, H: INTEGER; fnt: Fonts.Font; s: ARRAY OF CHAR; mode: INTEGER);
-VAR len, p, h, lspc, i, y: INTEGER; r: Objects.Object; s0: ARRAY 64 OF CHAR;
+PROCEDURE CenterString*(M: Mask; col: Display.Color; X, Y, W, H: SIGNED16; fnt: Fonts.Font; s: ARRAY OF CHAR; mode: SIGNED16);
+VAR len, p, h, lspc, i, y: SIGNED16; r: Objects.Object; s0: ARRAY 64 OF CHAR;
 BEGIN
 	len := 0; p := 0;
 	WHILE (s[p] # 0X) DO
@@ -1242,8 +1242,8 @@ BEGIN
 END CenterString;
 
 (** Return the size of a string in width w and height h. dsr returns the baseline offset as a positive value. *)
-PROCEDURE StringSize*(s: ARRAY OF CHAR; fnt: Fonts.Font; VAR w, h, dsr: INTEGER);
-VAR p: INTEGER; r: Objects.Object;
+PROCEDURE StringSize*(s: ARRAY OF CHAR; fnt: Fonts.Font; VAR w, h, dsr: SIGNED16);
+VAR p: SIGNED16; r: Objects.Object;
 BEGIN
 	w := 0; h := fnt.height; dsr := ABS(fnt.minY);
 	p := 0;
@@ -1253,12 +1253,12 @@ BEGIN
 	END
 END StringSize;
 
-PROCEDURE EnumPict(X, Y, W, H: INTEGER);
+PROCEDURE EnumPict(X, Y, W, H: SIGNED16);
 BEGIN Pictures.DisplayBlock(tmpP, X + dX, Y + dY, W, H, X, Y, tmpM);
 END EnumPict;
 
 (** Draw the area X, Y, W, H of picture P at position DX, DY on the display. *)
-PROCEDURE Pict*(M: Mask; P: Pictures.Picture; X, Y, W, H, DX, DY, mode: INTEGER);
+PROCEDURE Pict*(M: Mask; P: Pictures.Picture; X, Y, W, H, DX, DY, mode: SIGNED16);
 BEGIN
 	dX := X - DX; dY :=Y - DY;
 	ClipAgainst(DX, DY, W, H, M.X, M.Y, M.W, M.H);
@@ -1268,8 +1268,8 @@ BEGIN
 END Pict;
 
 (** Replicate a picture filling area X, Y, W, H on the display. px, py is the picture pin-point. *)
-PROCEDURE ReplPict*(M: Mask; P: Pictures.Picture; px, py, X, Y, W, H, mode: INTEGER);
-VAR x, y, w, h, pw, ph, w0, x0: INTEGER;
+PROCEDURE ReplPict*(M: Mask; P: Pictures.Picture; px, py, X, Y, W, H, mode: SIGNED16);
+VAR x, y, w, h, pw, ph, w0, x0: SIGNED16;
 BEGIN
 	pw := P.width; ph := P.height; w0 := W; x0 := X;
 

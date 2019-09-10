@@ -317,7 +317,7 @@ TYPE
 			NEW(imports, 1024); importsWriter := imports.GetWriter();
 		END Init;
 
-		PROCEDURE Transform(component, parent : WMComponents.Component;  VAR res : WORD);
+		PROCEDURE Transform(component, parent : WMComponents.Component;  VAR res : INTEGER);
 		VAR
 			thisIdent : Identifier;
 			enum : XMLObjects.Enumerator;
@@ -418,7 +418,7 @@ TYPE
 				END WriteRectangleProperty;
 
 				PROCEDURE WriteAlignmentAndBounds(CONST identifier : Identifier; vc : WMComponents.VisualComponent; forceBounds : BOOLEAN);
-				VAR alignment : LONGINT; r : WMRectangles.Rectangle;
+				VAR alignment : SIGNED32; r : WMRectangles.Rectangle;
 				BEGIN
 					alignment := vc.alignment.Get();
 					IF ~vc.alignment.GetIsDefault() THEN
@@ -537,8 +537,8 @@ TYPE
 			END;
 		END Transform;
 
-		PROCEDURE GenerateCode(CONST targetName, templateName, skeletonName,  moduleName : ARRAY OF CHAR; VAR res : WORD);
-		VAR base, skeleton : Texts.Text; format : LONGINT; fileName : Files.FileName;
+		PROCEDURE GenerateCode(CONST targetName, templateName, skeletonName,  moduleName : ARRAY OF CHAR; VAR res : INTEGER);
+		VAR base, skeleton : Texts.Text; format : SIGNED32; fileName : Files.FileName;
 		BEGIN
 			NEW(base); TextUtilities.LoadAuto(base, templateName, format, res);
 			IF (res = 0) THEN
@@ -563,7 +563,7 @@ TYPE
 			END;
 		END GenerateCode;
 
-		PROCEDURE ApplyBase(text : Texts.Text;  CONST moduleName : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE ApplyBase(text : Texts.Text;  CONST moduleName : ARRAY OF CHAR; VAR res : INTEGER);
 		VAR error : BOOLEAN;
 		BEGIN
 			ASSERT(text # NIL);
@@ -575,7 +575,7 @@ TYPE
 			Replace("[CREATEFORM]", createForm, text, error);
 		END ApplyBase;
 
-		PROCEDURE ApplySkeleton(text : Texts.Text;  CONST moduleName : ARRAY OF CHAR; VAR res : WORD);
+		PROCEDURE ApplySkeleton(text : Texts.Text;  CONST moduleName : ARRAY OF CHAR; VAR res : INTEGER);
 		VAR error : BOOLEAN; name : ARRAY 64 OF CHAR;
 		BEGIN
 			ASSERT(text # NIL);
@@ -630,7 +630,7 @@ BEGIN
 	error := nofReplacements # 1;
 END ReplaceString;
 
-PROCEDURE AlignmentToStream(alignment : LONGINT; w : Streams.Writer);
+PROCEDURE AlignmentToStream(alignment : SIGNED32; w : Streams.Writer);
 BEGIN
 	CASE alignment OF
 		|WMComponents.AlignNone: w.String("WMComponents.AlignNone");
@@ -677,7 +677,7 @@ BEGIN
 	END;
 END GetPropertyNameAsString;
 
-PROCEDURE Indent(writer : Streams.Writer; level : LONGINT);
+PROCEDURE Indent(writer : Streams.Writer; level : SIGNED32);
 BEGIN
 	WHILE (level > 0) DO writer.Char(TAB); DEC(level); END;
 END Indent;
@@ -707,7 +707,7 @@ BEGIN
 	END;
 END GetTypeAsString;
 
-PROCEDURE TransformComponent*(component : WMComponents.Component; CONST base, skeleton, fileName, moduleName : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE TransformComponent*(component : WMComponents.Component; CONST base, skeleton, fileName, moduleName : ARRAY OF CHAR; VAR res : INTEGER);
 VAR transformer : Transformer;
 BEGIN
 	ASSERT(component # NIL);
@@ -723,7 +723,7 @@ VAR
 	options : Options.Options;
 	componentName, baseName, skeletonName, moduleName, fileName : Files.FileName;
 	content : XML.Content; component : Repositories.Component;
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	NEW(options);
 	options.Add("b", "base", Options.String);

@@ -32,7 +32,7 @@ CODE
 #END
 END GetCR3;
 
-PROCEDURE -DoSoftInt(eax: LONGINT);
+PROCEDURE -DoSoftInt(eax: SIGNED32);
 CODE
 #IF I386 THEN
 	POP EAX
@@ -48,7 +48,7 @@ END DoSoftInt;
 (* Display mapped ranges. *)
 
 PROCEDURE DisplayMap*;
-VAR i, j: LONGINT; pt: LONGINT; virt, phys, virt0, phys0, size: LONGINT;
+VAR i, j: SIGNED32; pt: SIGNED32; virt, phys, virt0, phys0, size: SIGNED32;
 
 	PROCEDURE Page;
 	BEGIN
@@ -93,16 +93,16 @@ END DisplayMap;
 PROCEDURE Write64(s: ARRAY OF CHAR; low, high: SET);
 BEGIN
 	KernelLog.String(s);  KernelLog.Char("=");
-	KernelLog.Hex(SYSTEM.VAL(LONGINT, high), 8);
-	KernelLog.Hex(SYSTEM.VAL(LONGINT, low), 9)
+	KernelLog.Hex(SYSTEM.VAL(SIGNED32, high), 8);
+	KernelLog.Hex(SYSTEM.VAL(SIGNED32, low), 9)
 END Write64;
 
-PROCEDURE Bits(s: ARRAY OF CHAR; x: SET; ofs, n: LONGINT);
+PROCEDURE Bits(s: ARRAY OF CHAR; x: SET; ofs, n: SIGNED32);
 BEGIN
 	KernelLog.String(s); KernelLog.Char("="); KernelLog.Bits(x, ofs, n)
 END Bits;
 
-PROCEDURE -RealReadMSR(msr: LONGWORD; VAR low, high: SET);
+PROCEDURE -RealReadMSR(msr: LONGINTEGER; VAR low, high: SET);
 CODE
 #IF I386 THEN
 	POP EDI
@@ -134,7 +134,7 @@ BEGIN
 #END
 END IntReadMSR;
 
-PROCEDURE ReadMSR(msr: LONGINT; VAR low, high: SET);
+PROCEDURE ReadMSR(msr: SIGNED32; VAR low, high: SET);
 BEGIN
 	Machine.InstallHandler(IntReadMSR, SoftInt);	(* ignore race *)
 	DoSoftInt(msr);
@@ -143,7 +143,7 @@ BEGIN
 END ReadMSR;
 
 PROCEDURE DisplayMTTR*;
-VAR version, i, j, k, vcnt: LONGINT; features, low, high, mask: SET; vendor: Machine.Vendor;
+VAR version, i, j, k, vcnt: SIGNED32; features, low, high, mask: SET; vendor: Machine.Vendor;
 BEGIN
 	KernelLog.Enter;
 (*	Machine.CPUID(vendor, version, features);
@@ -157,7 +157,7 @@ BEGIN
 	IF 5 IN features THEN	(* MSR supported *)
 		IF 12 IN features THEN	(* MTTR supported *)
 			ReadMSR(0FEH, low, high);
-			vcnt := SYSTEM.VAL(LONGINT, low) MOD 256;
+			vcnt := SYSTEM.VAL(SIGNED32, low) MOD 256;
 			KernelLog.String("VCNT="); KernelLog.Int(vcnt, 1);
 			Bits(", FIX", low, 8, 1); Bits(", WC", low, 10, 1);
 			KernelLog.Ln;
@@ -186,9 +186,9 @@ BEGIN
 						j := 0;  WHILE (j # 32) & ~(j IN mask) DO INC(j) END;
 						k := 31;  WHILE (k # -1) & ~(k IN mask) DO DEC(k) END;
 						IF (k = 23) & (k >= j) & (mask = {j..k}) THEN
-							KernelLog.String(", ");  KernelLog.IntSuffix(SYSTEM.VAL(LONGINT, {j})*4*1024, 1, "B")
+							KernelLog.String(", ");  KernelLog.IntSuffix(SYSTEM.VAL(SIGNED32, {j})*4*1024, 1, "B")
 						ELSE
-							KernelLog.String(" discon=");  KernelLog.Hex(SYSTEM.VAL(LONGINT, mask), 8)
+							KernelLog.String(" discon=");  KernelLog.Hex(SYSTEM.VAL(SIGNED32, mask), 8)
 						END
 					END;
 					KernelLog.Ln
@@ -207,7 +207,7 @@ END DisplayMTTR;
 
 (*
 PROCEDURE IntSetCache(VAR state: Machine.State);
-VAR res: WORD;
+VAR res: INTEGER;
 BEGIN
 	Machine.SetLocalCacheProperties(0FA800000H, 800000H, Machine.WC, res);
 	KernelLog.Enter; KernelLog.String("SetCache "); KernelLog.Int(res, 1); KernelLog.Exit
@@ -220,7 +220,7 @@ BEGIN
 	Machine.RemoveHandler(IntSetCache, SoftInt)
 END Test;
 
-PROCEDURE -SetMTTRphysBase(n: LONGINT; high, low: LONGINT);
+PROCEDURE -SetMTTRphysBase(n: SIGNED32; high, low: SIGNED32);
 CODE {SYSTEM.Pentium, SYSTEM.Privileged}
 	POP EAX
 	POP EDX
@@ -230,7 +230,7 @@ CODE {SYSTEM.Pentium, SYSTEM.Privileged}
 	WRMSR
 END SetMTTRphysBase;
 
-PROCEDURE -SetMTTRphysMask(n: LONGINT; high, low: LONGINT);
+PROCEDURE -SetMTTRphysMask(n: SIGNED32; high, low: SIGNED32);
 CODE {SYSTEM.Pentium, SYSTEM.Privileged}
 	POP EAX
 	POP EDX
@@ -274,7 +274,7 @@ BEGIN
 END Test2;
 
 PROCEDURE Test3*;
-VAR res: LONGINT;
+VAR res: SIGNED32;
 BEGIN
 	Processors.GlobalSetCacheProperties(0FA800000H, 800000H, Machine.WC, res);
 	KernelLog.Enter; KernelLog.String("SetCache "); KernelLog.Int(res, 1); KernelLog.Exit

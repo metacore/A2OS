@@ -24,13 +24,13 @@ TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
 			TYPE
 				Block = ARRAY 4 OF SET32;
-				Ind4 = RECORD a, b, c, d: LONGINT END;
+				Ind4 = RECORD a, b, c, d: SIGNED32 END;
 			VAR
-				rounds: SHORTINT;
+				rounds: SIGNED8;
 				key, dkey: RKeys;
 				iv: Block;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: LONGINT );
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32 );
 				BEGIN
 					InitKey^( src, keybits );
 					IF keybits = 128 THEN  rounds := Init128( src )
@@ -40,19 +40,19 @@ TYPE
 					InvertKeys
 				END InitKey;
 
-				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SHORTINT );
+				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SIGNED8 );
 				BEGIN
 					SetIV^( src, mode );   (* set mode *)
 					U.BufferToBlockBE( src, 0, iv );
 				END SetIV;
 
 				PROCEDURE IncIV;
-				VAR i, x: LONGINT;
+				VAR i, x: SIGNED32;
 				BEGIN
 					i := 4;
 					REPEAT
 						DEC( i );
-						x := S.VAL( LONGINT, iv[i] ) + 1;  iv[i] := S.VAL( SET32, x )
+						x := S.VAL( SIGNED32, iv[i] ) + 1;  iv[i] := S.VAL( SET32, x )
 					UNTIL (x # 0) OR (i = 0)
 				END IncIV;
 
@@ -113,7 +113,7 @@ TYPE
 
 
 				PROCEDURE RoundE( VAR b: Block );
-				VAR p, r: LONGINT;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
+				VAR p, r: SIGNED32;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
 				BEGIN
 					split( b[0], s0 );  split( b[1], s1 );  split( b[2], s2 );  split( b[3], s3 );
 					r := rounds DIV 2;  p := 0;
@@ -136,7 +136,7 @@ TYPE
 				END RoundE;
 
 				PROCEDURE RoundD( VAR b: Block );
-				VAR p, r: LONGINT;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
+				VAR p, r: SIGNED32;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
 				BEGIN
 					split( b[0], s0 );  split( b[1], s1 );  split( b[2], s2 );  split( b[3], s3 );
 					r := rounds DIV 2;  p := 0;
@@ -160,15 +160,15 @@ TYPE
 
 				PROCEDURE -split( s: SET32;  VAR b: Ind4 );   (* split set into 4 indexes *)
 				BEGIN
-					b.a := S.VAL( LONGINT, s ) MOD 100H;
-					b.b := S.VAL( LONGINT, s ) DIV 100H MOD 100H;
-					b.c := S.VAL( LONGINT, s ) DIV 10000H MOD 100H;
-					b.d := S.VAL( LONGINT, s ) DIV 1000000H MOD 100H;
+					b.a := S.VAL( SIGNED32, s ) MOD 100H;
+					b.b := S.VAL( SIGNED32, s ) DIV 100H MOD 100H;
+					b.c := S.VAL( SIGNED32, s ) DIV 10000H MOD 100H;
+					b.d := S.VAL( SIGNED32, s ) DIV 1000000H MOD 100H;
 				END split;
 
 
-				PROCEDURE Init128( CONST src: ARRAY OF CHAR ): SHORTINT;
-				VAR i, p: LONGINT;  ib: Ind4;
+				PROCEDURE Init128( CONST src: ARRAY OF CHAR ): SIGNED8;
+				VAR i, p: SIGNED32;  ib: Ind4;
 				BEGIN
 					FOR i := 0 TO 3 DO  key[i] := U.SetFromBufferBE( src, 4*i )  END;
 					p := 0;  i := 0;
@@ -185,8 +185,8 @@ TYPE
 					RETURN 10
 				END Init128;
 
-				PROCEDURE Init192( CONST src: ARRAY OF CHAR ): SHORTINT;
-				VAR i, p: LONGINT;  ib: Ind4;
+				PROCEDURE Init192( CONST src: ARRAY OF CHAR ): SIGNED8;
+				VAR i, p: SIGNED32;  ib: Ind4;
 				BEGIN
 					FOR i := 0 TO 5 DO  key[i] := U.SetFromBufferBE( src, 4*i )  END;
 					p := 0;  i := 0;
@@ -205,8 +205,8 @@ TYPE
 					RETURN 12
 				END Init192;
 
-				PROCEDURE Init256( CONST src: ARRAY OF CHAR ): SHORTINT;
-				VAR i, p: LONGINT;  ib: Ind4;
+				PROCEDURE Init256( CONST src: ARRAY OF CHAR ): SIGNED8;
+				VAR i, p: SIGNED32;  ib: Ind4;
 				BEGIN
 					FOR i := 0 TO 7 DO  key[i] := U.SetFromBufferBE( src, 4*i )  END;
 					p := 0;  i := 0;
@@ -230,11 +230,11 @@ TYPE
 
 
 				PROCEDURE InvertKeys;
-				VAR i, j, k, p: LONGINT;  t: SET32;  ib: Ind4;
+				VAR i, j, k, p: SIGNED32;  t: SET32;  ib: Ind4;
 
-					PROCEDURE ind( s: SET32 ): LONGINT;   (* extract index byte 0 *)
+					PROCEDURE ind( s: SET32 ): SIGNED32;   (* extract index byte 0 *)
 					BEGIN
-						RETURN S.VAL( LONGINT, s ) MOD 100H
+						RETURN S.VAL( SIGNED32, s ) MOD 100H
 					END ind;
 
 				BEGIN
@@ -277,16 +277,16 @@ TYPE
 
 	PROCEDURE Initialize;
 	VAR
-		i1, i2, i4, i8, i9, ib, id, ie, v1, v2, v3, t: LONGINT;
+		i1, i2, i4, i8, i9, ib, id, ie, v1, v2, v3, t: SIGNED32;
 		buf: U.InitBuffer;
 
-		PROCEDURE xor( a, b: LONGINT ): LONGINT;
+		PROCEDURE xor( a, b: SIGNED32 ): SIGNED32;
 		BEGIN
-			RETURN S.VAL( LONGINT, S.VAL( SET32, a ) / S.VAL( SET32, b ) )
+			RETURN S.VAL( SIGNED32, S.VAL( SET32, a ) / S.VAL( SET32, b ) )
 		END xor;
 
-		PROCEDURE f1( x: LONGINT ): LONGINT;
-		VAR y: LONGINT;
+		PROCEDURE f1( x: SIGNED32 ): SIGNED32;
+		VAR y: SIGNED32;
 		BEGIN
 			y := 2*x;
 			IF y < 256 THEN  RETURN y  ELSE  RETURN xor( y, 11BH )  END

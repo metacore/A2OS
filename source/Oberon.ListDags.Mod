@@ -8,7 +8,7 @@ IMPORT Files, Objects, Gadgets, Strings, ListRiders;
 
 CONST
 	VersionNo = 1;
-	NoKey = MIN(LONGINT);
+	NoKey = MIN(SIGNED32);
 
 	(* states *)
 	unique = 0;
@@ -20,19 +20,19 @@ TYPE
 	RefDesc = RECORD
 		prev, next: Ref;
 		node: Node;	(* is acs for tails *)
-		key, pos: LONGINT
+		key, pos: SIGNED32
 	END;
 
 	NodeDesc = RECORD
 		dsc: Ref;	(* list of children *)
-		stamp, state: LONGINT;	(* nodes state and stamp *)
-		nr: LONGINT;	(* used to load, store and copy nodes *)
+		stamp, state: SIGNED32;	(* nodes state and stamp *)
+		nr: SIGNED32;	(* used to load, store and copy nodes *)
 		s: ARRAY 32 OF CHAR;
 	END;
 
 	Dag* = POINTER TO DagDesc;
 	DagDesc* = RECORD (Gadgets.ObjDesc)
-		key: LONGINT;	(* next free unique-key *)
+		key: SIGNED32;	(* next free unique-key *)
 		tail: Ref;
 		state0: SET
 	END;
@@ -46,8 +46,8 @@ VAR
 	method: ListRiders.Method;
 
 (* Key generator *)
-PROCEDURE GetKey (obj: Dag): LONGINT;
-VAR key: LONGINT;
+PROCEDURE GetKey (obj: Dag): SIGNED32;
+VAR key: SIGNED32;
 BEGIN
 	key := obj.key; INC(obj.key);
 	RETURN key
@@ -71,7 +71,7 @@ PROCEDURE MakeNode (d: ListRiders.Data): Node;
 VAR new: Node;
 BEGIN
 	NEW(new);
-	new.stamp := MIN(LONGINT); new.state := 0; new.dsc := NIL;
+	new.stamp := MIN(SIGNED32); new.state := 0; new.dsc := NIL;
 	IF d = NIL THEN new.s := ""
 	ELSE
 		IF d IS ListRiders.String THEN COPY(d(ListRiders.String).s, new.s)
@@ -102,14 +102,14 @@ END IsUnique;
 
 (*========== Rider handling ==========*)
 (* Get the current item's key *)
-PROCEDURE Key (R: ListRiders.Rider): LONGINT;
+PROCEDURE Key (R: ListRiders.Rider): SIGNED32;
 BEGIN RETURN R(Rider).ref.key
 END Key;
 
 (* Position rider R on the item having the given key *)
-PROCEDURE Seek (R: ListRiders.Rider; key: LONGINT);
+PROCEDURE Seek (R: ListRiders.Rider; key: SIGNED32);
 
-	PROCEDURE Traverse (tail: Ref; key: LONGINT): Ref;
+	PROCEDURE Traverse (tail: Ref; key: SIGNED32): Ref;
 	VAR n, found: Ref;
 	BEGIN
 		n := tail.next;
@@ -128,12 +128,12 @@ BEGIN
 END Seek;
 
 (* Get current position of the rider *)
-PROCEDURE Pos (R: ListRiders.Rider): LONGINT;
+PROCEDURE Pos (R: ListRiders.Rider): SIGNED32;
 BEGIN RETURN R(Rider).ref.pos
 END Pos;
 
 (* Position rider R on the item having the given pos *)
-PROCEDURE Set (R: ListRiders.Rider; pos: LONGINT);
+PROCEDURE Set (R: ListRiders.Rider; pos: SIGNED32);
 VAR n: Ref;
 BEGIN
 	WITH R: Rider DO
@@ -166,7 +166,7 @@ END Write;
 PROCEDURE WriteLink (R, linkR: ListRiders.Rider);
 VAR node: Node; ref, new: Ref; base: Dag;
 
-	PROCEDURE IsCycle (n: Ref; node: Node; stamp: LONGINT): BOOLEAN;
+	PROCEDURE IsCycle (n: Ref; node: Node; stamp: SIGNED32): BOOLEAN;
 	BEGIN
 		IF n # NIL THEN
 			n := n.next;
@@ -233,17 +233,17 @@ BEGIN
 END DeleteLink;
 
 (* Get stamp value of the node at the current position of R *)
-PROCEDURE GetStamp (R: ListRiders.Rider): LONGINT;
+PROCEDURE GetStamp (R: ListRiders.Rider): SIGNED32;
 BEGIN
 	WITH R: Rider DO
 		IF R.ref.node # NIL THEN RETURN R.ref.node.stamp
-		ELSE RETURN MIN(LONGINT)
+		ELSE RETURN MIN(SIGNED32)
 		END
 	END
 END GetStamp;
 
 (* Set stamp value of the item at the current position of R *)
-PROCEDURE SetStamp (R: ListRiders.Rider; stamp: LONGINT);
+PROCEDURE SetStamp (R: ListRiders.Rider; stamp: SIGNED32);
 BEGIN
 	WITH R: Rider DO
 		IF R.ref.node # NIL THEN R.ref.node.stamp := stamp END
@@ -251,7 +251,7 @@ BEGIN
 END SetStamp;
 
 (* Get the state of the current item *)
-PROCEDURE State (R: ListRiders.Rider): LONGINT;
+PROCEDURE State (R: ListRiders.Rider): SIGNED32;
 BEGIN
 	WITH R: Rider DO
 		IF R.ref.node # NIL THEN RETURN R.ref.node.state
@@ -261,7 +261,7 @@ BEGIN
 END State;
 
 (* Set the state of the current item *)
-PROCEDURE SetState (R: ListRiders.Rider; s: LONGINT);
+PROCEDURE SetState (R: ListRiders.Rider; s: SIGNED32);
 BEGIN
 	WITH R: Rider DO
 		IF R.ref.node # NIL THEN R.ref.node.state := s END
@@ -296,7 +296,7 @@ END ConnectRider;
 
 (* =================== dag model =================== *)
 PROCEDURE Unify (tail: Ref);
-VAR n: Ref; nr: LONGINT;
+VAR n: Ref; nr: SIGNED32;
 BEGIN
 	n := tail.prev;
 	WHILE n # tail DO
@@ -310,7 +310,7 @@ BEGIN
 	WHILE n # tail DO n.pos := nr; INC(nr); n := n.next END
 END Unify;
 
-PROCEDURE FindNode (nodes: Ref; nr: LONGINT): Node;
+PROCEDURE FindNode (nodes: Ref; nr: SIGNED32): Node;
 VAR n: Ref;
 BEGIN
 	n := nodes;
@@ -326,7 +326,7 @@ BEGIN
 END InsertNode;
 
 PROCEDURE CopyDag* (VAR M: Objects.CopyMsg; from, to: Dag);
-VAR lastNr, stamp: LONGINT; nodes: Ref;
+VAR lastNr, stamp: SIGNED32; nodes: Ref;
 
 	PROCEDURE CopyLevel (n, n0: Ref);
 	VAR tail: Ref; node, node0: Node;
@@ -339,7 +339,7 @@ VAR lastNr, stamp: LONGINT; nodes: Ref;
 			IF node.stamp # stamp THEN
 				node.stamp := stamp; node.nr := lastNr; INC(lastNr);
 				NEW(node0);
-				node0.state := node.state; node0.stamp := MIN(LONGINT);
+				node0.state := node.state; node0.stamp := MIN(SIGNED32);
 				COPY(node.s, node0.s);
 				InsertNode(nodes, node0);
 				IF node.dsc # NIL THEN
@@ -362,7 +362,7 @@ BEGIN
 END CopyDag;
 
 PROCEDURE WriteDag (obj: Dag; VAR M: Objects.FileMsg);
-VAR lastNr, stamp: LONGINT;
+VAR lastNr, stamp: SIGNED32;
 
 	PROCEDURE WriteLevel (n: Ref);
 	VAR node: Node;
@@ -395,10 +395,10 @@ BEGIN
 END WriteDag;
 
 PROCEDURE ReadDag (obj: Dag; VAR M: Objects.FileMsg);
-VAR ver, lastNr: LONGINT; nodes: Ref;
+VAR ver, lastNr: SIGNED32; nodes: Ref;
 
 	PROCEDURE ReadLevel (tail: Ref);
-	VAR n: Ref; node: Node; key, nr: LONGINT; ch: CHAR;
+	VAR n: Ref; node: Node; key, nr: SIGNED32; ch: CHAR;
 	BEGIN
 		n := tail;
 		Files.ReadLInt(M.R, key);
@@ -409,7 +409,7 @@ VAR ver, lastNr: LONGINT; nodes: Ref;
 			IF nr > lastNr THEN
 				INC(lastNr);
 				NEW(node); InsertNode(nodes, node);
-				node.stamp := MIN(LONGINT);
+				node.stamp := MIN(SIGNED32);
 				Files.ReadLInt(M.R, node.state);
 				Files.ReadString(M.R, node.s);
 				Files.Read(M.R, ch);

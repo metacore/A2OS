@@ -41,7 +41,7 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 		FindMsg = RECORD (Display.FrameMsg)
 			desk: Desktops.DocViewer;
 			finder: Frame;
-			cnt: INTEGER
+			cnt: SIGNED16
 		END;
 
 	VAR
@@ -64,8 +64,8 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 		END
 	END FormatLine;
 
-	PROCEDURE DisplayLine (F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: INTEGER; R: ListRiders.Rider; L: ListGadgets.Line);
-	VAR e: Entry; obj, D: Objects.Object; Y: INTEGER; A: Objects.AttrMsg; LM: Objects.LinkMsg;
+	PROCEDURE DisplayLine (F: ListGadgets.Frame; Q: Display3.Mask; x, y, w, h: SIGNED16; R: ListRiders.Rider; L: ListGadgets.Line);
+	VAR e: Entry; obj, D: Objects.Object; Y: SIGNED16; A: Objects.AttrMsg; LM: Objects.LinkMsg;
 	BEGIN
 		IF R.d IS Entry THEN
 			e := R.d(Entry);
@@ -117,7 +117,7 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 	BEGIN C.F := F; C.id := Display.remove; Display.Broadcast(C)
 	END RemoveFrame;
 
-	PROCEDURE InsertFrame (this, context: Display.Frame; u, v: INTEGER);
+	PROCEDURE InsertFrame (this, context: Display.Frame; u, v: SIGNED16);
 	VAR C: Display.ControlMsg; D: Display.ConsumeMsg;
 	BEGIN
 		C.id := Display.restore; C.x := 0; C.y := 0; C.dlink := NIL; C.res := -1; C.F := this;
@@ -133,7 +133,7 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 			e: Entry; s: Separator;
 			t: Template;
 			W, R: ListRiders.Rider;
-			maxW, addW, strW, strH, strDsr: INTEGER;
+			maxW, addW, strW, strH, strDsr: SIGNED16;
 			inserted: BOOLEAN;
 			A: Objects.AttrMsg;
 			L: Objects.LinkMsg;
@@ -195,8 +195,8 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 		RETURN list
 	END ListDocs;
 
-	PROCEDURE CalcPlace (x, y: INTEGER; VAR px, py, w, h: INTEGER);
-		VAR cx, cy, cw, ch: INTEGER;
+	PROCEDURE CalcPlace (x, y: SIGNED16; VAR px, py, w, h: SIGNED16);
+		VAR cx, cy, cw, ch: SIGNED16;
 	BEGIN
 		cx := 10; cy := 10; cw := Display.Width - 10; ch := Display.Height - 10;
 		px := x; py := y - h;
@@ -207,7 +207,7 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 	END CalcPlace;
 
 	PROCEDURE PopupList (F: Frame; VAR M: Oberon.InputMsg);
-	VAR dlink: Objects.Object; list: Display.Frame; block: Views.Block; keysum: SET; px, py: INTEGER;
+	VAR dlink: Objects.Object; list: Display.Frame; block: Views.Block; keysum: SET; px, py: SIGNED16;
 		C: Display.ControlMsg; D: Display.DisplayMsg; O: Display3.OverlapMsg;
 	BEGIN
 		list := ListDocs(F, M.dlink(Display.Frame));
@@ -257,8 +257,8 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 		END
 	END Consume;
 
-	PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER);
-	VAR X, Y: INTEGER;
+	PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16);
+	VAR X, Y: SIGNED16;
 	BEGIN
 		IF ~F.open THEN
 			Display3.Rect3D(Q, Display3.bottomC, Display3.topC, x, y, w, h, 1, Display.replace);
@@ -276,9 +276,9 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 	END Restore;
 
 	PROCEDURE Print (F: Frame; VAR M:Display.DisplayMsg);
-		VAR w, h: INTEGER; Q: Display3.Mask;
+		VAR w, h: SIGNED16; Q: Display3.Mask;
 
-		PROCEDURE P(X: INTEGER): INTEGER;
+		PROCEDURE P(X: SIGNED16): SIGNED16;
 		BEGIN RETURN SHORT(Display.Unit*X DIV Printer.Unit)
 		END P;
 
@@ -298,7 +298,7 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 	END CopyFrame;
 
 	PROCEDURE FrameHandler* (F: Objects.Object; VAR M: Objects.ObjMsg);
-	VAR Q: Display3.Mask; dlink: Objects.Object; F1: Frame; x, y, w, h, cnt: INTEGER;
+	VAR Q: Display3.Mask; dlink: Objects.Object; F1: Frame; x, y, w, h, cnt: SIGNED16;
 	BEGIN
 		WITH F: Frame DO
 			IF M IS Display.FrameMsg THEN
@@ -403,7 +403,7 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 
 	(** Internal command, used to bring a document to front. *)
 	PROCEDURE BringToFront*;
-	VAR obj, list: Objects.Object; par: Oberon.ParList; e: Entry; t: Template; R: ListRiders.Rider; res: INTEGER;
+	VAR obj, list: Objects.Object; par: Oberon.ParList; e: Entry; t: Template; R: ListRiders.Rider; res: SIGNED16;
 			P: Gadgets.PriorityMsg; A: Objects.AttrMsg; L: Objects.LinkMsg; C: ListRiders.ConnectMsg;
 	BEGIN
 		list := Gadgets.executorObj;
@@ -458,7 +458,7 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 		as possible. In the desktop, the document is removed and an entry (green color) is added to
 		the desktops finder. *)
 	PROCEDURE Minimize*;
-	VAR obj: Objects.Object; V: Viewers.Viewer; Y, cnt: INTEGER; e: Entry; R: ListRiders.Rider;
+	VAR obj: Objects.Object; V: Viewers.Viewer; Y, cnt: SIGNED16; e: Entry; R: ListRiders.Rider;
 			N: Display.ControlMsg; F: FindMsg;
 	BEGIN
 		obj := Gadgets.executorObj;
@@ -481,7 +481,7 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 				END
 			ELSIF (Oberon.Par.vwr # NIL) & (Oberon.Par.vwr IS Desktops.DocViewer) THEN
 				F.desk := Oberon.Par.vwr(Desktops.DocViewer);
-				F.finder := NIL; F.cnt := MAX(INTEGER); Display.Broadcast(F);
+				F.finder := NIL; F.cnt := MAX(SIGNED16); Display.Broadcast(F);
 				IF F.finder # NIL THEN	(* minimize and append to finders list *)
 					R := F.finder.R;
 					NEW(e);
@@ -519,7 +519,7 @@ MODULE Finder IN Oberon;	(** portable *) (* ejz 3.1.95 / jm - adapted for ver 1.
 	(**
 		Reads the Gadgets.FinderTemplates section *)
 	PROCEDURE UpdateTemplates*;
-	VAR s: Texts.Scanner;  i: LONGINT;  name: ARRAY 64 OF CHAR;
+	VAR s: Texts.Scanner;  i: SIGNED32;  name: ARRAY 64 OF CHAR;
 	BEGIN
 		templates := NIL;
 		Oberon.OpenScanner(s, "Gadgets.FinderTemplates");

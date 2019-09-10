@@ -6,7 +6,7 @@ TYPE
 	CharProc*= PROCEDURE (c:CHAR);
 VAR
 	Char*: CharProc;
-	Color*: PROCEDURE (c: SHORTINT);
+	Color*: PROCEDURE (c: SIGNED8);
 
 PROCEDURE Enter*;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -17,7 +17,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED} Ln;
 END Exit;
 
 (** Send the specified characters to the trace output (cf. Streams.Sender). *)
-PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+PROCEDURE Send*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 BEGIN {UNCOOPERATIVE, UNCHECKED} INC (len, ofs); ASSERT (len <= LEN (buf)); WHILE ofs # len DO Char (buf[ofs]); INC (ofs); END; res := 0;
 END Send;
 
@@ -38,11 +38,11 @@ BEGIN {UNCOOPERATIVE, UNCHECKED} String (s); Ln;
 END StringLn;
 
 (** Write a character. *)
-PROCEDURE Int* (x: HUGEINT; w: SIZE);
-VAR i: SIZE; x0: HUGEINT; a: ARRAY 21 OF CHAR;
+PROCEDURE Int* (x: SIGNED64; w: SIZE);
+VAR i: SIZE; x0: SIGNED64; a: ARRAY 21 OF CHAR;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF x < 0 THEN
-		IF x = MIN (HUGEINT) THEN
+		IF x = MIN (SIGNED64) THEN
 			DEC (w, 20);
 			WHILE w > 0 DO Char (' '); DEC (w) END;
 			String ("-9223372036854775808");
@@ -67,7 +67,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED} IF x THEN String ("TRUE") ELSE String ("FALSE")
 END Boolean;
 
 (** Write "x" as a decimal number with a power-of-two multiplier (K, M or G), followed by "suffix". "w" is the field width, excluding "suffix". *)
-PROCEDURE IntSuffix* (x: HUGEINT; w: SIZE; CONST suffix: ARRAY OF CHAR);
+PROCEDURE IntSuffix* (x: SIGNED64; w: SIZE; CONST suffix: ARRAY OF CHAR);
 CONST K = 1024; M = K*K; G = K*M;
 VAR mult: CHAR;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -87,11 +87,11 @@ END IntSuffix;
 	Write an integer in hexadecimal right-justified in a field of at least ABS(w) characters.
 	If w < 0 THEN w least significant hex digits of x are written (possibly including leading zeros)
 *)
-PROCEDURE Hex*(x: HUGEINT; w: SIZE );
+PROCEDURE Hex*(x: SIGNED64; w: SIZE );
 VAR i: SIZE;
-	buf: ARRAY 2*SIZEOF(HUGEINT)+2 OF CHAR;
+	buf: ARRAY 2*SIZEOF(SIGNED64)+2 OF CHAR;
 	neg: BOOLEAN;
-	c: HUGEINT;
+	c: SIGNED64;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	IF w >= 0 THEN
 		i:= 0;
@@ -102,14 +102,14 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 			IF c < 10 THEN buf[i] := CHR(c+ORD("0")) ELSE buf[i] := CHR(c-10+ORD("A")) END;
 			x := x DIV 10H;
 			INC(i);
-		UNTIL (i = 2 * SIZEOF(HUGEINT)) OR (x=0);
+		UNTIL (i = 2 * SIZEOF(SIGNED64)) OR (x=0);
 		IF c > 9 THEN buf[i] := "0"; INC(i) END;
 		IF neg THEN buf[i] := "-"; INC(i) END;
 		WHILE(w > i) DO Char(" "); DEC(w); END;
 		REPEAT DEC(i); Char(buf[i]); UNTIL i=0;
 	ELSE
 		w := -w;
-		WHILE(w>2*SIZEOF(HUGEINT)) DO
+		WHILE(w>2*SIZEOF(SIGNED64)) DO
 			Char(" "); DEC(w);
 		END;
 		buf[w] := 0X;
@@ -137,7 +137,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END Size;
 
 (** Write "x" as a hexadecimal number. "w" is the field width. Always prints 16 digits. *)
-PROCEDURE HIntHex* (x: HUGEINT; w: SIZE);
+PROCEDURE HIntHex* (x: SIGNED64; w: SIZE);
 BEGIN {UNCOOPERATIVE, UNCHECKED} Hex (x, w);
 END HIntHex;
 
@@ -249,7 +249,7 @@ PROCEDURE NullChar(c: CHAR);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 END NullChar;
 
-PROCEDURE NullColor(c: SHORTINT);
+PROCEDURE NullColor(c: SIGNED8);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 END NullColor;
 

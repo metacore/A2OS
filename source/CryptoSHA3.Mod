@@ -11,7 +11,7 @@ TYPE
 	Hash* = OBJECT (Hashes.Hash)
 		VAR
 			sponge: Sponge.Instance;
-			capacity: LONGINT;
+			capacity: SIGNED32;
 
 		PROCEDURE &Init*;	(* sha3-256 (default) *)
 		BEGIN
@@ -37,7 +37,7 @@ TYPE
 			initialized := TRUE
 		END Initialize;
 
-		PROCEDURE SetNameAndSize*( CONST name: ARRAY OF CHAR; bytesize: LONGINT );
+		PROCEDURE SetNameAndSize*( CONST name: ARRAY OF CHAR; bytesize: SIGNED32 );
 		(* valid bytesize values: 28, 32(default), 48, 64 *)
 		BEGIN
 			capacity := 2*8*bytesize;  Initialize;

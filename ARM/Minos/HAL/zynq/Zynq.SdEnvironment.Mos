@@ -13,8 +13,8 @@ CONST
 VAR
 	Char *: PROCEDURE (c: CHAR);
 	String *: PROCEDURE (CONST str: ARRAY OF CHAR);
-	Int *: PROCEDURE (i: HUGEINT; w: LONGINT);
-	Hex *: PROCEDURE (i: LONGINT; w: LONGINT);
+	Int *: PROCEDURE (i: SIGNED64; w: SIGNED32);
+	Hex *: PROCEDURE (i: SIGNED32; w: SIGNED32);
 	Address *: PROCEDURE (a: ADDRESS);
 	Set *: PROCEDURE (s: SET);
 	Boolean *: PROCEDURE (b: BOOLEAN);
@@ -23,14 +23,14 @@ VAR
 	InvalidateDCacheRange *: PROCEDURE (adr: ADDRESS; size: SIZE);
 	GetTimeCounter *: PROCEDURE (): Time;
 
-	handlers: ARRAY MaxHandlers OF RECORD irq: LONGINT; handle: PROCEDURE END;
+	handlers: ARRAY MaxHandlers OF RECORD irq: SIGNED32; handle: PROCEDURE END;
 
 TYPE
-	Time * = HUGEINT;
+	Time * = SIGNED64;
 
-	PROCEDURE InstallHandler * (handler: PROCEDURE; irq: LONGINT);
+	PROCEDURE InstallHandler * (handler: PROCEDURE; irq: SIGNED32);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (i < MaxHandlers) & (handlers[i].handle # NIL) DO INC(i) END;
@@ -40,7 +40,7 @@ TYPE
 		Interrupts.InstallHandler(InterruptHandler, irq)
 	END InstallHandler;
 
-	PROCEDURE Enable * (sd: LONGINT): BOOLEAN;
+	PROCEDURE Enable * (sd: SIGNED32): BOOLEAN;
 	VAR
 		enable: BOOLEAN;
 	BEGIN
@@ -51,9 +51,9 @@ TYPE
 		RETURN enable
 	END Enable;
 
-	PROCEDURE HcClock * (sd: LONGINT): LONGINT;
+	PROCEDURE HcClock * (sd: SIGNED32): SIGNED32;
 	VAR
-		reg, div, base: LONGINT;
+		reg, div, base: SIGNED32;
 	BEGIN
 		div := LSH(Platform.slcr.SDIO_CLK_CTRL, -8) MOD 40H;
 		CASE LSH(Platform.slcr.SDIO_CLK_CTRL, -4) MOD 4 OF
@@ -80,7 +80,7 @@ TYPE
 	(** Convert time counts to microseconds *)
 	PROCEDURE ToMicro*(time: Time): Time;
 	BEGIN
-		RETURN ENTIERH((0.5D0 + time) / (LONGREAL(Board.CpuClockHz)) * 2.0D6)
+		RETURN ENTIERH((0.5D0 + time) / (FLOAT64(Board.CpuClockHz)) * 2.0D6)
 	END ToMicro;
 
 	(** Convert milliseconds to time counts *)
@@ -92,15 +92,15 @@ TYPE
 	(** Convert time counts to milliseconds *)
 	PROCEDURE ToMilli*(time: Time): Time;
 	BEGIN
-		RETURN ENTIERH((0.5D0 + time) / (LONGREAL(Board.CpuClockHz)) * 2.0D3)
+		RETURN ENTIERH((0.5D0 + time) / (FLOAT64(Board.CpuClockHz)) * 2.0D3)
 	END ToMilli;
 
 	PROCEDURE GetLock * (VAR acq, rel: PROCEDURE {DELEGATE});
 	END GetLock;
 
-	PROCEDURE InterruptHandler (irq: LONGINT);
+	PROCEDURE InterruptHandler (irq: SIGNED32);
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO MaxHandlers - 1 DO
 			IF handlers[i].irq = irq THEN

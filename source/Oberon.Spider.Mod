@@ -42,7 +42,7 @@ TYPE
 	DistributeMsg = RECORD (Display.FrameMsg)
 		tail: Cards.Card;
 		to: ARRAY COLUMN OF Cards.Stack;
-		index: INTEGER;
+		index: SIGNED16;
 	END;
 
 	FitMsg = RECORD (Display.FrameMsg)
@@ -60,8 +60,8 @@ TYPE
 
 	Column = POINTER TO ColumnDesc;
 	ColumnDesc = RECORD (Cards.StackDesc)
-		topY: INTEGER;	(* left, top corner of top card *)
-		nrCards: INTEGER;	(* nr of cards at beginning *)
+		topY: SIGNED16;	(* left, top corner of top card *)
+		nrCards: SIGNED16;	(* nr of cards at beginning *)
 		first: BOOLEAN;
 	END;
 
@@ -82,7 +82,7 @@ BEGIN C.res:= -1; T.res:= -1; D.res:= -1;
 	T.tail:= C.tail; F.handle(F, T)
 END StartGame;
 
-PROCEDURE DrawRect(x, y: INTEGER; card: Cards.Card);
+PROCEDURE DrawRect(x, y: SIGNED16; card: Cards.Card);
 CONST MaxH = CardH+12*DeltaH;
 BEGIN
 	Oberon.RemoveMarks(x, y, CardW, MaxH);
@@ -127,7 +127,7 @@ BEGIN Cards.CopyStack(M, from, to);
 END CopyTalon;
 
 PROCEDURE TalonUndoMove(T: Cards.Stack; M: Cards.Move);
-VAR S: Cards.Stack; i: INTEGER;
+VAR S: Cards.Stack; i: SIGNED16;
 BEGIN
 	WITH M: DistribMove DO
 		FOR i:= COLUMN-1 TO 0 BY -1 DO
@@ -138,7 +138,7 @@ BEGIN
 END TalonUndoMove;
 
 PROCEDURE TrackTalon(T: Cards.Stack; VAR M: Oberon.InputMsg);
-VAR DM: DistribMove; x, y, i: INTEGER; CD: CanDistrMsg; D: DistributeMsg;
+VAR DM: DistribMove; x, y, i: SIGNED16; CD: CanDistrMsg; D: DistributeMsg;
 BEGIN
 	WITH T: Talon DO
 		x:= T.X+M.x; y:= T.Y+M.y;
@@ -286,7 +286,7 @@ BEGIN
 	Cards.methods.undoMove(C, M)
 END ColumnUndoMove;
 
-PROCEDURE DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: SIGNED16);
 VAR c: Cards.Card;
 BEGIN
 	WITH C: Column DO
@@ -313,7 +313,7 @@ BEGIN
 END DrawColumn;
 
 PROCEDURE TrackColumn(C: Cards.Stack; VAR M: Oberon.InputMsg);
-VAR c, cc: Cards.Card; x, y, dH: INTEGER;
+VAR c, cc: Cards.Card; x, y, dH: SIGNED16;
 BEGIN
 	WITH C: Column DO
 		x:= C.X+M.x; y:= C.Y+M.y;
@@ -338,7 +338,7 @@ BEGIN
 END TrackColumn;
 
 PROCEDURE ColumnHandler*(C: Objects.Object; VAR M: Objects.ObjMsg);
-VAR C0: Column; c: Cards.Card; i: INTEGER;
+VAR C0: Column; c: Cards.Card; i: SIGNED16;
 BEGIN
 	WITH C: Column DO
 		IF M IS FitMsg THEN
@@ -406,8 +406,8 @@ END NewColumn;
 
 PROCEDURE LoadDocument(D: Documents.Document);
 VAR obj: Objects.Object; main: Gadgets.Frame; talon, stack: Cards.Stack; c: Cards.Card;
-	F: Files.File; R: Files.Rider; name: ARRAY 64 OF CHAR; ch: CHAR; len: LONGINT;
-	lib: Objects.Library; tag, i, k, Y: INTEGER; A: Objects.AttrMsg; C: Display.ConsumeMsg;
+	F: Files.File; R: Files.Rider; name: ARRAY 64 OF CHAR; ch: CHAR; len: SIGNED32;
+	lib: Objects.Library; tag, i, k, Y: SIGNED16; A: Objects.AttrMsg; C: Display.ConsumeMsg;
 BEGIN
 	main:= NIL;
 
@@ -467,7 +467,7 @@ BEGIN
 END LoadDocument;
 
 PROCEDURE StoreDocument(D: Documents.Document);
-VAR F: Files.File; len: LONGINT; R: Files.Rider; B: Objects.BindMsg; obj: Objects.Object;
+VAR F: Files.File; len: SIGNED32; R: Files.Rider; B: Objects.BindMsg; obj: Objects.Object;
 BEGIN
 	IF D.name # "" THEN
 		obj:= D.dsc;

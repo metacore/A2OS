@@ -13,7 +13,7 @@ of the Oberon system. Each track of the Oberon system consists of a number of vi
     TYPE
 	   Viewer* = POINTER TO ViewerDesc;
 	   ViewerDesc* = RECORD (Display.FrameDesc)
-	       state*: INTEGER;
+	       state*: SIGNED16;
 	        (** state > 1: displayed
 	  	  state = 1: filler
 	  	  state = 0: closed
@@ -26,17 +26,17 @@ of the Oberon system. Each track of the Oberon system consists of a number of vi
   	 END;
 
     VAR
-      curW*: INTEGER;	(** Current width of the logical display. *)
-      minH*: INTEGER;	(** Minimum viewer height. *)
-      DH: INTEGER;
+      curW*: SIGNED16;	(** Current width of the logical display. *)
+      minH*: SIGNED16;	(** Minimum viewer height. *)
+      DH: SIGNED16;
       FillerTrack: Track; FillerViewer, buf: Viewer; (*for closed viewers*)
-      bcF: Display.Frame;  bcLev: LONGINT;
+      bcF: Display.Frame;  bcLev: SIGNED32;
 
 	(** Open a new viewer V with top at Y in track X. *)
-    PROCEDURE Open* (V: Viewer; X, Y: INTEGER);
+    PROCEDURE Open* (V: Viewer; X, Y: SIGNED16);
 	    VAR T, u, v: Display.Frame; M: Display.ControlMsg; N: Display.ModifyMsg;
     BEGIN
-	    IF (V.state = 0) & (X < MAX(INTEGER)) THEN
+	    IF (V.state = 0) & (X < MAX(SIGNED16)) THEN
           IF Y > DH THEN Y := DH END;
 		  T := FillerTrack.next;
 		  WHILE X >= T.X + T.W DO T := T.next END;
@@ -63,7 +63,7 @@ of the Oberon system. Each track of the Oberon system consists of a number of vi
     END Open;
 
 	(** Expand or shrink a viewer vertically to new top Y. *)
-    PROCEDURE Change* (V: Viewer; Y: INTEGER);
+    PROCEDURE Change* (V: Viewer; Y: SIGNED16);
 	    VAR v: Display.Frame; M: Display.ModifyMsg;
     BEGIN
 	    IF V.state > 1 THEN
@@ -149,10 +149,10 @@ of the Oberon system. Each track of the Oberon system consists of a number of vi
     END Recall;
 
 	(** Return viewer located at display coordinates X, Y. *)
-    PROCEDURE This* (X, Y: INTEGER): Viewer;
+    PROCEDURE This* (X, Y: SIGNED16): Viewer;
 	    VAR T, V: Display.Frame;
     BEGIN
-	    IF (X < MAX(INTEGER)) & (Y < DH) THEN
+	    IF (X < MAX(SIGNED16)) & (Y < DH) THEN
 	  	  T := FillerTrack;
 		    REPEAT T := T.next UNTIL X < T.X + T.W;
 		    V := T.dsc;
@@ -169,10 +169,10 @@ of the Oberon system. Each track of the Oberon system consists of a number of vi
 
 	(** In the track at X locate the following viewers: filler fil, bottom-most viewer, an
 	alternative viewer alt of height >= H, and the viewer with the maximum height. *)
-    PROCEDURE Locate* (X, H: INTEGER; VAR fil, bot, alt, max: Display.Frame);
+    PROCEDURE Locate* (X, H: SIGNED16; VAR fil, bot, alt, max: Display.Frame);
 	    VAR T, V: Display.Frame;
     BEGIN
-	    IF X < MAX(INTEGER) THEN
+	    IF X < MAX(SIGNED16) THEN
 		    T := FillerTrack;
 		    REPEAT T := T.next UNTIL X < T.X + T.W;
 		    fil := T.dsc; bot := fil.next;
@@ -191,7 +191,7 @@ of the Oberon system. Each track of the Oberon system consists of a number of vi
     END Locate;
 
 	(** Append to the current logical display and init track of width W and height H, and install filler. *)
-    PROCEDURE InitTrack* (W, H: INTEGER; Filler: Viewer);
+    PROCEDURE InitTrack* (W, H: SIGNED16; Filler: Viewer);
 	    VAR S: Display.Frame; T: Track;
 	BEGIN
         IF Filler.state = 0 THEN
@@ -201,7 +201,7 @@ of the Oberon system. Each track of the Oberon system consists of a number of vi
 	    	NEW(T);
 		    T.X := curW; T.W := W; T.Y := 0; T.H := H;
 		    T.dsc := Filler; T.under := NIL;
-	        FillerViewer.X := curW + W; FillerViewer.W := MAX(INTEGER) - FillerViewer.X;
+	        FillerViewer.X := curW + W; FillerViewer.W := MAX(SIGNED16) - FillerViewer.X;
 		    FillerTrack.X := FillerViewer.X; FillerTrack.W := FillerViewer.W;
 	        S := FillerTrack;
             WHILE S.next # FillerTrack DO S := S.next END;
@@ -211,10 +211,10 @@ of the Oberon system. Each track of the Oberon system consists of a number of vi
     END InitTrack;
 
 	(** Open new track overlaying span of [X, X +W[. *)
-    PROCEDURE OpenTrack* (X, W: INTEGER; Filler: Viewer);
+    PROCEDURE OpenTrack* (X, W: SIGNED16; Filler: Viewer);
 	    VAR newT: Track; S, T, t, v: Display.Frame; M: Display.ControlMsg;
     BEGIN
-	    IF (X < MAX(INTEGER)) & (Filler.state = 0) THEN
+	    IF (X < MAX(SIGNED16)) & (Filler.state = 0) THEN
 		    S := FillerTrack; T := S.next;
 		    WHILE X >= T.X + T.W DO S := T; T := S.next END;
 		    WHILE X + W > T.X + T.W DO T := T.next END;
@@ -236,10 +236,10 @@ of the Oberon system. Each track of the Oberon system consists of a number of vi
     END OpenTrack;
 
 	(** Close track at X and restore overlaid tracks. *)
-    PROCEDURE CloseTrack* (X: INTEGER);
+    PROCEDURE CloseTrack* (X: SIGNED16);
 	    VAR T, V: Display.Frame; M: Display.ControlMsg;
     BEGIN
-	    IF X < MAX(INTEGER) THEN
+	    IF X < MAX(SIGNED16) THEN
 		    T := FillerTrack;
 		    REPEAT T := T.next UNTIL X < T.X + T.W;
 		    IF T(Track).under # NIL THEN
@@ -252,7 +252,7 @@ of the Oberon system. Each track of the Oberon system consists of a number of vi
 
 	PROCEDURE Broadcast (VAR M: Display.FrameMsg);
 	    VAR F, V: Display.Frame;
-	BEGIN M.res := MIN(INTEGER); Objects.Stamp(M);
+	BEGIN M.res := MIN(SIGNED16); Objects.Stamp(M);
         Display.ResetClip; F := FillerTrack.next;
 	    WHILE (F # FillerTrack) & (M.res < 0) DO V := F.dsc;
 		   REPEAT V := V.next; M.dlink := NIL; M.x := 0; M.y := 0;
@@ -268,10 +268,10 @@ of the Oberon system. Each track of the Oberon system consists of a number of vi
 BEGIN
     DH := Display.Height;
     NEW(FillerViewer);
-    FillerViewer.X := 0; FillerViewer.W := MAX(INTEGER); FillerViewer.Y := 0; FillerViewer.H := DH;
+    FillerViewer.X := 0; FillerViewer.W := MAX(SIGNED16); FillerViewer.Y := 0; FillerViewer.H := DH;
     FillerViewer.next := FillerViewer;
     NEW(FillerTrack);
-    FillerTrack.X := 0; FillerTrack.W := MAX(INTEGER); FillerTrack.Y := 0; FillerTrack.H := DH;
+    FillerTrack.X := 0; FillerTrack.W := MAX(SIGNED16); FillerTrack.Y := 0; FillerTrack.H := DH;
     FillerTrack.dsc := FillerViewer;
     FillerTrack.next := FillerTrack;
     buf := NIL; curW := 0; minH := 1;

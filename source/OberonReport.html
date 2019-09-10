@@ -98,8 +98,8 @@ representation.
 <P>A real number always contains a decimal point. Optionally it may also
 contain
 a decimal scale factor. The letter E (or D) is pronounced as  "times ten to
-the power of". A real number is of type REAL, unless it has a scale factor
-containing the letter D; in this case it is of type LONGREAL.
+the power of". A real number is of type FLOAT32, unless it has a scale factor
+containing the letter D; in this case it is of type FLOAT64.
 <PRE><STRONG>
 $  number  =  integer | real.
 $  integer  =  digit {digit} | digit {hexDigit} "H" .
@@ -216,19 +216,19 @@ the indicated sections:
 <PRE>
   ABS       (10.2)   LEN       (10.2)
   ASH       (10.2)   LONG      (10.2)
-  BOOLEAN   (6.1)    LONGINT   (6.1)
-  CAP       (10.2)   LONGREAL  (10.2)
+  BOOLEAN   (6.1)    SIGNED32   (6.1)
+  CAP       (10.2)   FLOAT64  (10.2)
   CHAR      (6.1)    MAX       (10.2)
   CHR       (10.2)   MIN       (10.2)
   COPY      (10.2)   NEW       (6.4)
   DEC       (10.2)   ODD       (10.2)
   ENTIER    (10.2)   ORD       (10.2)
-  EXCL      (10.2)   REAL      (6.1)
+  EXCL      (10.2)   FLOAT32      (6.1)
   FALSE     (6.1)    SET       (6.1)
   HALT      (10.2)   SHORT     (10.2)
-  INC       (10.2)   SHORTINT  (6.1)
+  INC       (10.2)   SIGNED8  (6.1)
   INCL      (10.2)   SIZE      (10.2)
-  INTEGER   (6.1)    TRUE      (6.1)
+  SIGNED16   (6.1)    TRUE      (6.1)
 </PRE>
 
 <H2>5. Constant declarations</H2>
@@ -268,9 +268,9 @@ ProcedureType.
 </STRONG></PRE>
 <P><STRONG>Examples:</STRONG>
 <PRE>
-  Table  =  ARRAY N OF REAL
+  Table  =  ARRAY N OF FLOAT32
   Tree  =  POINTER TO Node
-  Node  =  RECORD key: INTEGER;
+  Node  =  RECORD key: SIGNED16;
       left, right: Tree
     END
 
@@ -279,7 +279,7 @@ ProcedureType.
       subnode: Tree
     END
 
-  Function*  =  PROCEDURE (x: INTEGER): INTEGER
+  Function*  =  PROCEDURE (x: SIGNED16): SIGNED16
 </PRE>
 
 <H3>6.1. Basic types</H3>
@@ -291,18 +291,18 @@ The values of a given basic type are the following:
 <OL>
 <LI>BOOLEAN the truth values TRUE and FALSE.
 <LI>CHAR the characters of the extended ASCII set  (0X ... 0FFX).
-<LI>SHORTINT the integers between MIN(SHORTINT) and MAX(SHORTINT).
-<LI>INTEGER the integers between MIN(INTEGER) and MAX(INTEGER).
-<LI>LONGINT the integers between MIN(LONGINT) and MAX(LONGINT).
-<LI>REAL real numbers between MIN(REAL) and MAX(REAL).
-<LI>LONGREAL real numbers between MIN(LONGREAL) and MAX(LONGREAL).
+<LI>SIGNED8 the integers between MIN(SIGNED8) and MAX(SIGNED8).
+<LI>SIGNED16 the integers between MIN(SIGNED16) and MAX(SIGNED16).
+<LI>SIGNED32 the integers between MIN(SIGNED32) and MAX(SIGNED32).
+<LI>FLOAT32 real numbers between MIN(FLOAT32) and MAX(FLOAT32).
+<LI>FLOAT64 real numbers between MIN(FLOAT64) and MAX(FLOAT64).
 <LI>SET the sets of integers between 0 and MAX(SET).
 </OL>
 Types 3 to 5 are <EM>integer</EM> types, 6 and 7 are <EM>real</EM> types,
 and together they are called <EM>numeric</EM> types. They form a hierarchy;
 the larger type <EM>includes</EM> (the values of) the smaller type:
 <P>
-&nbsp; &nbsp; LONGREAL  &gt;=  REAL  &gt;=  LONGINT  &gt;=  INTEGER  &gt;=  SHORTINT
+&nbsp; &nbsp; FLOAT64  &gt;=  FLOAT32  &gt;=  SIGNED32  &gt;=  SIGNED16  &gt;=  SIGNED8
 <P>Note: &gt;= stands here for "is superset of or equal to".
 
 <H3>6.2. Array types</H3>
@@ -324,8 +324,8 @@ is understood as an abbreviation of the declaration
   ARRAY Nk OF T</PRE>
 <P><STRONG>Examples of array types:</STRONG>
 <PRE>
-ARRAY N OF INTEGER
-ARRAY 10, 20 OF REAL
+ARRAY N OF SIGNED16
+ARRAY 10, 20 OF FLOAT32
 </PRE>
 
 <H3>6.3. Record types</H3>
@@ -359,13 +359,13 @@ a <EM>base type</EM> of T0, if it equals T0, or if it is the direct base
 type of a base type of T0.
 <P><STRONG>Examples of record types:</STRONG>
 <PRE>
-  RECORD day, month, year: INTEGER
+  RECORD day, month, year: SIGNED16
   END
 
   RECORD
     name, firstname: ARRAY 32 OF CHAR;
-    age: INTEGER;
-    salary: REAL
+    age: SIGNED16;
+    salary: FLOAT32
   END
 </PRE>
 
@@ -417,15 +417,15 @@ type.
 <P><STRONG>Examples of variable declarations</STRONG> (refer to examples in
 Section 6):
 <PRE>
-  i, j, k:  INTEGER
-  x, y:     REAL
+  i, j, k:  SIGNED16
+  x, y:     FLOAT32
   p, q:     BOOLEAN
   s:        SET
   f:        Function
-  a:        ARRAY 100 OF REAL
+  a:        ARRAY 100 OF FLOAT32
   w:        ARRAY 16 OF
               RECORD ch: CHAR;
-                count: INTEGER
+                count: SIGNED16
               END
   t:        Tree
 </PRE>
@@ -492,10 +492,10 @@ to the formal parameters as specified in the procedure's declaration (see
 Section 10).
 <P><STRONG>Examples of designators</STRONG> (see examples in Section 7):
 <PRE>
-  i                      (INTEGER)
-  a[i]                   (REAL)
+  i                      (SIGNED16)
+  a[i]                   (FLOAT32)
   w[3].ch                (CHAR)
-  t.key                  (INTEGER)
+  t.key                  (SIGNED16)
   t.left.right           (Tree)
   t(CenterNode).subnode  (Tree)
 </PRE>
@@ -611,13 +611,13 @@ the actually designated variable is (not only a T0, but also) a T. The value
 of NIL IS T is undefined.
 <P><STRONG>Examples of expression</STRONG>s (refer to examples in Section 7):
 <PRE>
-  1987               (INTEGER)
-  i DIV 3            (INTEGER)
+  1987               (SIGNED16)
+  i DIV 3            (SIGNED16)
   ~p OR q            (BOOLEAN)
-  (i+j) * (i-j)      (INTEGER)
+  (i+j) * (i-j)      (SIGNED16)
   s - {8, 9, 13}     (SET)
-  i + x              (REAL)
-  a[i+j] * a[i-j]    (REAL)
+  i + x              (FLOAT32)
+  a[i+j] * a[i-j]    (FLOAT32)
   (0&lt;=i) & (i&lt;100)   (BOOLEAN)
   t.key = 0          (BOOLEAN)
   k IN {i .. j-1}    (BOOLEAN)
@@ -964,8 +964,8 @@ of that procedure type. It cannot be a predefined procedure. The result type
 of a procedure can be neither a record nor an array.
 <P><STRONG>Examples of procedure declarations:</STRONG>
 <PRE>
-PROCEDURE ReadInt(VAR x: INTEGER);
-   VAR i : INTEGER; ch: CHAR;
+PROCEDURE ReadInt(VAR x: SIGNED16);
+   VAR i : SIGNED16; ch: CHAR;
 BEGIN i := 0; Read(ch);
    WHILE ("0" &lt;= ch) & (ch &lt;= "9") DO
        i := 10*i + (ORD(ch)-ORD("0")); Read(ch)
@@ -973,16 +973,16 @@ BEGIN i := 0; Read(ch);
    x := i
 END ReadInt
 
-PROCEDURE WriteInt(x: INTEGER);  (* 0 &lt;= x &lt; 10.0E5 *)
-   VAR i: INTEGER;
-       buf: ARRAY 5 OF INTEGER;
+PROCEDURE WriteInt(x: SIGNED16);  (* 0 &lt;= x &lt; 10.0E5 *)
+   VAR i: SIGNED16;
+       buf: ARRAY 5 OF SIGNED16;
 BEGIN i := 0;
    REPEAT buf[i] := x MOD 10;  x := x DIV 10;  INC(i) UNTIL x = 0;
    REPEAT DEC(i); Write(CHR(buf[i] + ORD("0"))) UNTIL i = 0
 END WriteInt
 
-PROCEDURE log2(x: INTEGER): INTEGER;
-   VAR y: INTEGER;  (*assume x &gt; 0*)
+PROCEDURE log2(x: SIGNED16): SIGNED16;
+   VAR y: SIGNED16;  (*assume x &gt; 0*)
 BEGIN y := 0;
    WHILE x &gt; 1 DO x := x DIV 2; INC(y) END ;
    RETURN y
@@ -1008,16 +1008,16 @@ value</TD></TR>
 1</TD></TR>
 <TR><TD>CAP(x)</TD><TD>CHAR</TD><TD>CHAR</TD><TD>corresponding capital
 letter</TD></TR>
-<TR><TD>ASH(x, n)</TD><TD>x, n: integer type</TD><TD>LONGINT</TD><TD>x * 2n,
+<TR><TD>ASH(x, n)</TD><TD>x, n: integer type</TD><TD>SIGNED32</TD><TD>x * 2n,
 arithmetic
 shift</TD></TR>
 <TR><TD>LEN(v, n)</TD><TD>v: array<BR>n: integer
-type</TD><TD>LONGINT</TD><TD>length
+type</TD><TD>SIGNED32</TD><TD>length
 of v in dimension n</TD></TR>
-<TR><TD>LEN(v)</TD><TD>array type</TD><TD>LONGINT</TD><TD>LEN(v, 0)</TD></TR>
-<TR><TD>MAX(T)</TD><TD>T = basic type<BR>T = SET</TD><TD>T<BR>INTEGER</TD>
+<TR><TD>LEN(v)</TD><TD>array type</TD><TD>SIGNED32</TD><TD>LEN(v, 0)</TD></TR>
+<TR><TD>MAX(T)</TD><TD>T = basic type<BR>T = SET</TD><TD>T<BR>SIGNED16</TD>
 <TD>maximum value of type T<BR>maximum element of sets</TD></TR>
-<TR><TD>MIN(T)</TD><TD>T = basic type<BR>T = SET</TD><TD>T<BR>INTEGER</TD>
+<TR><TD>MIN(T)</TD><TD>T = basic type<BR>T = SET</TD><TD>T<BR>SIGNED16</TD>
 <TD>minimum value of type T<BR>0</TD></TR>
 <TR><TD>SIZE(T)</TD><TD>T = any type</TD><TD>integer type</TD><TD>no. of
 bytes
@@ -1027,17 +1027,17 @@ required by T</TD></TR></TABLE>
 type</B></TD>
 <TD><B>Result type</B></TD>
 <TD><B>Function</B></TD></TR>
-<TR><TD>ORD(x)</TD><TD>CHAR</TD><TD>INTEGER</TD><TD>ordinal number of
+<TR><TD>ORD(x)</TD><TD>CHAR</TD><TD>SIGNED16</TD><TD>ordinal number of
 x</TD></TR>
 <TR><TD>CHR(x)</TD><TD>integer type</TD><TD>CHAR</TD><TD>character with
 ordinal
 number x</TD></TR>
-<TR><TD>SHORT(x)</TD><TD>LONGINT<BR>INTEGER<BR>LONGREAL</TD>
-<TD>INTEGER<BR>SHORTINT<BR>REAL</TD><TD>identity (truncation
+<TR><TD>SHORT(x)</TD><TD>SIGNED32<BR>SIGNED16<BR>FLOAT64</TD>
+<TD>SIGNED16<BR>SIGNED8<BR>FLOAT32</TD><TD>identity (truncation
 possible)</TD></TR>
-<TR><TD>LONG(x)</TD><TD>SHORTINT<BR>INTEGER<BR>REAL</TD>
-<TD>INTEGER<BR>LONGINT<BR>LONGREAL</TD><TD>identity</TD></TR>
-<TR><TD>ENTIER(x)</TD><TD>real type</TD><TD>LONGINT</TD><TD>largest integer
+<TR><TD>LONG(x)</TD><TD>SIGNED8<BR>SIGNED16<BR>FLOAT32</TD>
+<TD>SIGNED16<BR>SIGNED32<BR>FLOAT64</TD><TD>identity</TD></TR>
+<TR><TD>ENTIER(x)</TD><TD>real type</TD><TD>SIGNED32</TD><TD>largest integer
 not greater than x.<BR>Note that  ENTIER(i/j)  =  i DIV j</TD></TR></TABLE>
 
 <H4>Proper procedures</H4>
@@ -1097,8 +1097,8 @@ MODULE Out;
   PROCEDURE Write*(ch: CHAR);
   BEGIN Texts.Write(W, ch)
   END ;
-  PROCEDURE WriteInt*(x, n: LONGINT);
-    VAR i: INTEGER; a: ARRAY 16 OF CHAR;
+  PROCEDURE WriteInt*(x, n: SIGNED32);
+    VAR i: SIGNED16; a: ARRAY 16 OF CHAR;
   BEGIN i := 0;
     IF x &lt; 0 THEN Texts.Write(W, "-"); x := -x END ;
     REPEAT a[i] := CHR(x MOD 10 + ORD("0")); x := x DIV 10; INC(i) UNTIL x =
@@ -1136,7 +1136,7 @@ are particular to the specific, underlying computer.
 <P>Module SYSTEM exports the data type BYTE. No representation of values is
 specified. Instead, certain compatibility rules with other types are given:
 <OL>
-<LI>The type BYTE is compatible with CHAR and SHORTINT.
+<LI>The type BYTE is compatible with CHAR and SIGNED8.
 <LI>If a formal parameter is of type ARRAY OF BYTE, then the corresponding
 actual parameter may be
 of any type.
@@ -1152,9 +1152,9 @@ x, y, a, and n for expressions, and T for a type.
 types</B></TD>
 <TD><B>Result type</B></TD>
 <TD><B>Function</B></TD></TR>
-<TR><TD>ADR(v)</TD><TD>any</TD><TD>LONGINT</TD><TD>address of variable
+<TR><TD>ADR(v)</TD><TD>any</TD><TD>SIGNED32</TD><TD>address of variable
 v</TD></TR>
-<TR><TD>BIT(a, n)</TD><TD>a: LONGINT<BR>n: integer type</TD><TD>BOOLEAN</TD>
+<TR><TD>BIT(a, n)</TD><TD>a: SIGNED32<BR>n: integer type</TD><TD>BOOLEAN</TD>
 <TD>bit n of Mem[a]</TD></TR>
 <TR><TD>CC(n)</TD><TD>integer constant</TD><TD>BOOLEAN</TD><TD>Condition n
 (0 &lt;= n &lt; 16)</TD></TR>
@@ -1168,11 +1168,11 @@ as of type T</TD></TR></TABLE>
 <TABLE BORDER CELLPADDING=3><TR><TD><B>Name</B></TD><TD><B>Argument
 types</B></TD>
 <TD><B>Function</B></TD></TR>
-<TR><TD>GET(a, v)</TD><TD>a: LONGINT<BR>v: any basic type</TD><TD>v :=
+<TR><TD>GET(a, v)</TD><TD>a: SIGNED32<BR>v: any basic type</TD><TD>v :=
 Mem[a]</TD></TR>
-<TR><TD>PUT(a, x)</TD><TD>a: LONGINT<BR>x: any basic type</TD><TD>Mem[a] :=
+<TR><TD>PUT(a, x)</TD><TD>a: SIGNED32<BR>x: any basic type</TD><TD>Mem[a] :=
 x</TD></TR>
-<TR><TD>MOVE(s, d, n)</TD><TD>s, d: LONGINT<BR>n: integer
+<TR><TD>MOVE(s, d, n)</TD><TD>s, d: SIGNED32<BR>n: integer
 type</TD><TD>Mem[d]
 ... Mem[d+n-1]<BR>
 := Mem[s] ... Mem[s+n-1]</TD></TR>

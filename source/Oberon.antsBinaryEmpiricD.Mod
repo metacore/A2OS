@@ -30,8 +30,8 @@ CONST
 	Neighbours = 4;
 	MaxSum = (StateSpaceCard*Neighbours + 1);
 TYPE
-	Index = LONGINT;
-	States = LONGINT;
+	Index = SIGNED32;
+	States = SIGNED32;
 	Sums = ARRAY  (MaxSum + 1) OF States;
 	StatesAndSums = ARRAY StateSpaceCard OF Sums;
 
@@ -53,7 +53,7 @@ TYPE
 
 
 PROCEDURE InitED (E: EmpiricalDistribution);
-	VAR i, j: LONGINT;
+	VAR i, j: SIGNED32;
 BEGIN
 	FOR i := 0 TO MaxSum DO
 		E.v[i] := 0;
@@ -73,7 +73,7 @@ BEGIN
 	RETURN E.v[v + 4];
 END M;
 
-PROCEDURE F* (E: EmpiricalDistribution;    x, v: Index): LONGREAL;
+PROCEDURE F* (E: EmpiricalDistribution;    x, v: Index): FLOAT64;
 	VAR nv: States;
 BEGIN
 	nv := M(E, v);
@@ -81,8 +81,8 @@ BEGIN
 END F;
 
 
-PROCEDURE EmpiricalDistribute (VAR E: EmpiricalDistribution;    A: antsArrayObjects.tINTEGERArray;    Sx, Sy, Sw, Sh: LONGINT);
-	VAR x, y: LONGINT ;    xt, vt: Index;
+PROCEDURE EmpiricalDistribute (VAR E: EmpiricalDistribution;    A: antsArrayObjects.tINTEGERArray;    Sx, Sy, Sw, Sh: SIGNED32);
+	VAR x, y: SIGNED32 ;    xt, vt: Index;
 BEGIN
 	IF E = NIL THEN NEW(E) END;
 	InitED(E);
@@ -95,8 +95,8 @@ BEGIN
 	END;
 END EmpiricalDistribute;
 
-PROCEDURE EmpiricalDistributeC (Eo, Ee: EmpiricalDistribution;    A: antsArrayObjects.tINTEGERArray;    Sx, Sy, Sw, Sh: LONGINT);
-	VAR x, y: LONGINT ;    xt, vt: Index;
+PROCEDURE EmpiricalDistributeC (Eo, Ee: EmpiricalDistribution;    A: antsArrayObjects.tINTEGERArray;    Sx, Sy, Sw, Sh: SIGNED32);
+	VAR x, y: SIGNED32 ;    xt, vt: Index;
 BEGIN
 	IF Eo = NIL THEN NEW(Eo) END;
 	IF Ee = NIL THEN NEW(Ee) END;

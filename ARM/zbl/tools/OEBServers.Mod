@@ -23,7 +23,7 @@ TYPE
 		interfaces -: OEBInterfaces.Interface;	(** List of interfaces managed by the server *)
 
 		(** Server event handler. Is called each time an interface triggers an event. *)
-		PROCEDURE Handle * (event: LONGINT; interface: OEBInterfaces.Interface; session: OEBInterfaces.Session);
+		PROCEDURE Handle * (event: SIGNED32; interface: OEBInterfaces.Interface; session: OEBInterfaces.Session);
 		BEGIN
 			HALT(506); (*! ABSTRACT *)
 		END Handle;
@@ -62,7 +62,7 @@ TYPE
 			RETURN
 		END RemoveInterface;
 
-		PROCEDURE GetInterface * (id: LONGINT): OEBInterfaces.Interface;
+		PROCEDURE GetInterface * (id: SIGNED32): OEBInterfaces.Interface;
 		BEGIN {EXCLUSIVE}
 		END GetInterface;
 
@@ -125,7 +125,7 @@ VAR
 		factory: Factory;
 		m: Modules.Module;
 		name, msg: ARRAY 128 OF CHAR;
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		name := "OEB";
 		Strings.Append(name, type);
@@ -144,7 +144,7 @@ VAR
 
 	PROCEDURE Register * (CONST type: ARRAY OF CHAR; factory: Factory);
 	VAR
-		ignore: LONGINT;
+		ignore: SIGNED32;
 	BEGIN
 		factory.SetName(type);
 		factories.Add(factory, ignore)

@@ -7,7 +7,7 @@ IMPORT NbrInt8, NbrInt32, Streams;
 
 TYPE
 	(** A 64-bit integer type. *)
-	Integer* =HUGEINT;
+	Integer* =SIGNED64;
 
 VAR
 	MinNbr-, MaxNbr-, One, Two: Integer;

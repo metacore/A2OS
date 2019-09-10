@@ -16,7 +16,7 @@ command, start input from the marked viewer.  Otherwise, start input from
 the text following the command. *)
 
 PROCEDURE OpenPar;
-VAR t: Texts.Text;  beg, end, time: LONGINT;
+VAR t: Texts.Text;  beg, end, time: SIGNED32;
 BEGIN
 	Texts.OpenScanner(s, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(s);
@@ -41,7 +41,7 @@ The default attr is "Value". *)
 
 PROCEDURE OpenGadget(gadgetlist: ARRAY OF CHAR);
 VAR
-	t: Texts.Text;  i, j: LONGINT;  str: ARRAY 128 OF CHAR;
+	t: Texts.Text;  i, j: SIGNED32;  str: ARRAY 128 OF CHAR;
 	a: Objects.AttrMsg;  field: Objects.Object;
 BEGIN
 	i := 0;
@@ -123,7 +123,7 @@ END Char;
 
 (** Int - Input an integer. *)
 
-PROCEDURE Int*(VAR x: LONGINT);
+PROCEDURE Int*(VAR x: SIGNED32);
 BEGIN
 	IF done THEN
 		Texts.Scan(s);
@@ -136,7 +136,7 @@ END Int;
 
 (** Real - Input a real number. *)
 
-PROCEDURE Real*(VAR x: REAL);
+PROCEDURE Real*(VAR x: FLOAT32);
 BEGIN
 	IF done THEN
 		Texts.Scan(s);
@@ -150,7 +150,7 @@ END Real;
 
 (** LongReal - Input a long real number. *)
 
-PROCEDURE LongReal*(VAR x: LONGREAL);
+PROCEDURE LongReal*(VAR x: FLOAT64);
 BEGIN
 	IF done THEN
 		Texts.Scan(s);

@@ -22,7 +22,7 @@ BEGIN
 	END;
 END GetProcesses;
 
-PROCEDURE GetProcess*(id : WORD) : Objects.Process;
+PROCEDURE GetProcess*(id : INTEGER) : Objects.Process;
 VAR process, thread : Objects.Process;
 BEGIN
 	process := NIL;

@@ -5,7 +5,7 @@ IMPORT
 
 VAR
 	stop : BOOLEAN;
-	nofRunningTests : LONGINT;
+	nofRunningTests : SIGNED32;
 
 PROCEDURE AddYear(VAR time : Dates.DateTime);
 BEGIN
@@ -57,7 +57,7 @@ BEGIN
 	END;
 END AddSecond;
 
-PROCEDURE ToSeconds(days, hours, minutes, seconds : LONGINT) : LONGINT;
+PROCEDURE ToSeconds(days, hours, minutes, seconds : SIGNED32) : SIGNED32;
 BEGIN
 	RETURN days * 86400 + hours * 3600 + minutes * 60 + seconds;
 END ToSeconds;
@@ -70,15 +70,15 @@ BEGIN
 END Show;
 
 PROCEDURE TestTimeDifference*(context : Commands.Context);
-VAR t1, t2 : Dates.DateTime; diff, days, hours, minutes, seconds, i : LONGINT;
+VAR t1, t2 : Dates.DateTime; diff, days, hours, minutes, seconds, i : SIGNED32;
 BEGIN
 	IncNofRunningTests;
 	t1 := Dates.Now();
 	t2 := t1;
 	diff := 0;
-	FOR i := 0 TO MAX(LONGINT)-1 DO
+	FOR i := 0 TO MAX(SIGNED32)-1 DO
 		IF (i MOD 10000000 = 0) THEN
-			context.out.Int(ENTIER(100 *  (i / MAX(LONGINT)) ), 0); context.out.String("%, delta = ");
+			context.out.Int(ENTIER(100 *  (i / MAX(SIGNED32)) ), 0); context.out.String("%, delta = ");
 			Strings.ShowTimeDifference(t1, t2, context.out);
 			context.out.String(" (T1="); Show(t1, context.out); context.out.String(", T2="); Show(t2, context.out); context.out.String(")");
 			context.out.Ln; context.out.Update;
@@ -104,10 +104,10 @@ PROCEDURE TestAddX*(context : Commands.Context);
 CONST MaxDelta = 1000;
 VAR
 	dtRef, dt : Dates.DateTime;
-	days, hours, minutes, seconds : LONGINT;
+	days, hours, minutes, seconds : SIGNED32;
 	random : Random.Generator;
-	expectedDifference : LONGINT;
-	value, i : LONGINT;
+	expectedDifference : SIGNED32;
+	value, i : SIGNED32;
 BEGIN
 	IncNofRunningTests;
 	dtRef := Dates.Now();
@@ -142,14 +142,14 @@ BEGIN
 			context.out.Ln; context.out.Update;
 		END;
 		INC(i);
-		IF (i = MAX(LONGINT)) OR stop THEN EXIT; END;
+		IF (i = MAX(SIGNED32)) OR stop THEN EXIT; END;
 	END;
 	DecNofRunningTests;
 END TestAddX;
 
 PROCEDURE TestToday*(context:Commands.Context);
 VAR dt: Dates.DateTime;
-	year, week, weekday:LONGINT;
+	year, week, weekday:SIGNED32;
 	dayTable: ARRAY 25 OF CHAR;
 BEGIN
 	dt:=Dates.Now();

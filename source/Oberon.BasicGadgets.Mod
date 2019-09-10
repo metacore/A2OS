@@ -40,7 +40,7 @@ CONST
 	outofboundsmodify = 4;
 
 	MaxLen = 256;
-	CONST	DontCare = MAX(LONGINT); DontCareR = MAX(LONGREAL);
+	CONST	DontCare = MAX(SIGNED32); DontCareR = MAX(FLOAT64);
 
 
 TYPE
@@ -58,12 +58,12 @@ TYPE
 
 	Integer* = POINTER TO IntegerDesc;
 	IntegerDesc* = RECORD (Gadgets.ObjDesc)
-		val*: LONGINT;
+		val*: SIGNED32;
 	END;
 
 	Real* = POINTER TO RealDesc;
 	RealDesc* = RECORD (Gadgets.ObjDesc)
-		val*: LONGREAL;
+		val*: FLOAT64;
 	END;
 
 	(* --- Gadgets --- *)
@@ -73,24 +73,24 @@ TYPE
 		caption*: ARRAY 32 OF CHAR;	(** Caption shown inside the button. *)
 		val*: BOOLEAN;	(** Pushed/popped out. *)
 		popout*: BOOLEAN;	(** Button should pop out immediately after pressed. *)
-		setval*: INTEGER;	(** Button is pressed should the button model have this value. *)
+		setval*: SIGNED16;	(** Button is pressed should the button model have this value. *)
 		look*: Objects.Object;	(** Object dropped inside of button, used as button representation instead of caption. *)
 		led*: BOOLEAN;	(** visibility of a led if Button is pressed *)
-		ledcol*: INTEGER;	(** Color of LED when Button is pressed *)
+		ledcol*: SIGNED16;	(** Color of LED when Button is pressed *)
 		inM, outM: Display3.Mask;
-		topC, bottomC, upC, downC: INTEGER;
+		topC, bottomC, upC, downC: SIGNED16;
 	END;
 
 	CheckBox* = POINTER TO CheckBoxDesc;
 	CheckBoxDesc* = RECORD (Gadgets.FrameDesc)
 		val*: BOOLEAN;	(** State. *)
-		setval*: INTEGER;	(** checkbox is ticked should the checkbox model have this value. *)
+		setval*: SIGNED16;	(** checkbox is ticked should the checkbox model have this value. *)
 	END;
 
 	Slider* = POINTER TO SliderDesc;
 	SliderDesc* = RECORD (Gadgets.FrameDesc)
-		min*, max*, val*: LONGINT;	(** Minimum, maximum and current value *)
-		B, BW: INTEGER;
+		min*, max*, val*: SIGNED32;	(** Minimum, maximum and current value *)
+		B, BW: SIGNED16;
 	END;
 
 VAR W: Texts.Writer;
@@ -98,7 +98,7 @@ VAR W: Texts.Writer;
 PROCEDURE Log;
 BEGIN Texts.Append(Oberon.Log, W.buf) END Log;
 
-PROCEDURE Min(x, y: INTEGER): INTEGER;
+PROCEDURE Min(x, y: SIGNED16): SIGNED16;
 BEGIN IF x < y THEN RETURN x; ELSE RETURN y; END;
 END Min;
 
@@ -115,7 +115,7 @@ BEGIN Files.WriteNum(R, VersionNo);
 END WriteVersion;
 
 PROCEDURE ReadVersion(VAR R: Files.Rider);
-VAR x: LONGINT;
+VAR x: SIGNED32;
 BEGIN Files.ReadNum(R, x);
 	IF x # VersionNo THEN
 		Texts.WriteString(W, "Version "); Texts.WriteInt(W, VersionNo, 3);
@@ -132,7 +132,7 @@ BEGIN
 END CopyBoolean;
 
 PROCEDURE BooleanHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg);
-VAR obj2: Boolean; x: INTEGER; ver: LONGINT;
+VAR obj2: Boolean; x: SIGNED16; ver: SIGNED32;
 BEGIN
 	WITH obj: Boolean DO
 		IF M IS Objects.AttrMsg THEN
@@ -196,7 +196,7 @@ BEGIN Gadgets.CopyObject(M, from, to); COPY(from.val, to.val);
 END CopyString;
 
 PROCEDURE StringHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg);
-VAR obj2: String; ver: LONGINT;
+VAR obj2: String; ver: SIGNED32;
 BEGIN
 	WITH obj: String DO
 		IF M IS Objects.AttrMsg THEN
@@ -263,7 +263,7 @@ BEGIN Gadgets.CopyObject(M, from, to); to.val := from.val;
 END CopyInteger;
 
 PROCEDURE IntegerHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg);
-VAR obj2: Integer; ver: LONGINT;
+VAR obj2: Integer; ver: SIGNED32;
 BEGIN
 	WITH obj: Integer DO
 		IF M IS Objects.AttrMsg THEN
@@ -332,7 +332,7 @@ BEGIN Gadgets.CopyObject(M, from, to); to.val := from.val;
 END CopyReal;
 
 PROCEDURE RealHandler*(obj: Objects.Object; VAR M: Objects.ObjMsg);
-VAR obj2: Real; ver: LONGINT;
+VAR obj2: Real; ver: SIGNED32;
 BEGIN
 	WITH obj: Real DO
 		IF M IS Objects.AttrMsg THEN
@@ -468,7 +468,7 @@ END ButtonSetLook;
 (** Goes through the list of selected gadgets (must be buttons and checkboxes) and assigns to each of
 them a different SetValue attribute numbered from 0. This is useful to create mutual exclusive radio-buttons *)
 PROCEDURE SetValues*;
-VAR M: Display.SelectMsg; b, c: Objects.Object; val: INTEGER;
+VAR M: Display.SelectMsg; b, c: Objects.Object; val: SIGNED16;
 BEGIN
 	M.id := Display.get; M.F := NIL; M.time := -1; M.obj := NIL; Display.Broadcast(M);
 	IF M.time # -1 THEN
@@ -563,8 +563,8 @@ BEGIN
 	END
 END ButtonAttr;
 
-PROCEDURE RestoreButton(R: Display3.Mask; F: Button; x, y, w, h, u, v, w1, h1: INTEGER; dlink: Objects.Object);
-VAR D: Display.DisplayMsg; L: Gadgets.Frame; O: Display3.OverlapMsg; A: Objects.AttrMsg; ll, lr, lb, lt: INTEGER;
+PROCEDURE RestoreButton(R: Display3.Mask; F: Button; x, y, w, h, u, v, w1, h1: SIGNED16; dlink: Objects.Object);
+VAR D: Display.DisplayMsg; L: Gadgets.Frame; O: Display3.OverlapMsg; A: Objects.AttrMsg; ll, lr, lb, lt: SIGNED16;
 	col: Display.Color;
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
@@ -628,9 +628,9 @@ END RestoreButton;
 
 
 PROCEDURE PrintButton(F: Button; VAR M: Display.DisplayMsg);
-VAR R: Display3.Mask; x, y, w, h: INTEGER; D: Display.DisplayMsg; L: Gadgets.Frame; O: Display3.OverlapMsg;
+VAR R: Display3.Mask; x, y, w, h: SIGNED16; D: Display.DisplayMsg; L: Gadgets.Frame; O: Display3.OverlapMsg;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -681,10 +681,10 @@ BEGIN
 	to.downC:=from.downC; to.upC:=from.upC; to.bottomC:=from.bottomC; to.topC:=from.topC;
 END CopyButton;
 
-PROCEDURE ParseConstraints(CONST s: ARRAY OF CHAR; VAR l, t, r, b: LONGINT; VAR lrel,trel,rrel,brel:LONGREAL);
-VAR p: ARRAY 64 OF CHAR; i, j: INTEGER;
+PROCEDURE ParseConstraints(CONST s: ARRAY OF CHAR; VAR l, t, r, b: SIGNED32; VAR lrel,trel,rrel,brel:FLOAT64);
+VAR p: ARRAY 64 OF CHAR; i, j: SIGNED16;
 
-	PROCEDURE ReadNum(VAR x:LONGINT; VAR y:LONGREAL);
+	PROCEDURE ReadNum(VAR x:SIGNED32; VAR y:FLOAT64);
 	VAR isReal:BOOLEAN;
 	BEGIN
 		isReal:=FALSE;
@@ -705,7 +705,7 @@ BEGIN
 	ReadNum(l,lrel); ReadNum(t,trel); ReadNum(r,rrel); ReadNum(b,brel);
 END ParseConstraints;
 
-PROCEDURE Constraints(f: Display.Frame; VAR l, t, r, b: LONGINT; VAR lrel,trel,rrel,brel:LONGREAL): BOOLEAN;
+PROCEDURE Constraints(f: Display.Frame; VAR l, t, r, b: SIGNED32; VAR lrel,trel,rrel,brel:FLOAT64): BOOLEAN;
 VAR A: Objects.AttrMsg;
 BEGIN
 	A.id := Objects.get; A.name := "Constraints"; A.res := -1; Gadgets.framehandle(f, A);
@@ -717,7 +717,7 @@ BEGIN
 END Constraints;
 
 PROCEDURE Constrain(F:Button):BOOLEAN;
-VAR l,r,t,b:LONGINT; lrel,rrel,trel,brel:LONGREAL;
+VAR l,r,t,b:SIGNED32; lrel,rrel,trel,brel:FLOAT64;
 BEGIN
 	IF (F.look#NIL) &Constraints(F.look(Display.Frame),l,t,r,b,lrel,trel,rrel,brel) THEN (*constraints must be positive*)
 		IF (l#DontCare) & (r#DontCare) THEN
@@ -739,8 +739,8 @@ BEGIN
 	END;
 END Constrain;
 
-PROCEDURE ComputeColors(F:Button; col:LONGINT);	(*adapt shade of button border to button color *)
-VAR r,g,b:REAL; f:INTEGER;
+PROCEDURE ComputeColors(F:Button; col:SIGNED32);	(*adapt shade of button border to button color *)
+VAR r,g,b:FLOAT32; f:SIGNED16;
 BEGIN
 	F.upC:=SHORT(col);
 	IF F.upC=Display3.upC THEN F.topC:=Display3.topC; F.downC:=Display3.downC; F.bottomC:=Display3.bottomC; (*default*)
@@ -758,8 +758,8 @@ BEGIN
 END ComputeColors;
 
 PROCEDURE ButtonHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR F2: Button; x, y, w, h: INTEGER;
-	keysum: SET; ver: LONGINT; f: Gadgets.Frame; R: Display3.Mask;
+VAR F2: Button; x, y, w, h: SIGNED16;
+	keysum: SET; ver: SIGNED32; f: Gadgets.Frame; R: Display3.Mask;
 	A: Display.ModifyMsg;
 BEGIN
 	WITH F: Button DO
@@ -1083,7 +1083,7 @@ BEGIN
 	END;
 END CheckBoxAttr;
 
-PROCEDURE RestoreCheckBox(R: Display3.Mask; F: CheckBox; x, y, w, h: INTEGER);
+PROCEDURE RestoreCheckBox(R: Display3.Mask; F: CheckBox; x, y, w, h: SIGNED16);
 VAR A: Objects.AttrMsg; col: Display.Color;
 BEGIN
 	Oberon.RemoveMarks(x, y, w, h);
@@ -1112,9 +1112,9 @@ BEGIN
 END RestoreCheckBox;
 
 PROCEDURE PrintCheckBox(F: CheckBox; VAR M: Display.DisplayMsg);
-VAR A: Objects.AttrMsg; R: Display3.Mask; x, y, w, h: INTEGER; col: Display.Color;
+VAR A: Objects.AttrMsg; R: Display3.Mask; x, y, w, h: SIGNED16; col: Display.Color;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -1144,7 +1144,7 @@ BEGIN Gadgets.CopyFrame(M, from, to); to.val := from.val; to.setval := from.setv
 END CopyCheckBox;
 
 PROCEDURE CheckBoxHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h, u, v: INTEGER; ver: LONGINT; F0: CheckBox; R: Display3.Mask; keysum: SET;
+VAR x, y, w, h, u, v: SIGNED16; ver: SIGNED32; F0: CheckBox; R: Display3.Mask; keysum: SET;
 BEGIN
 	WITH F: CheckBox DO
 		IF M IS Objects.AttrMsg THEN
@@ -1315,7 +1315,7 @@ BEGIN
 	END
 END SliderAttr;
 
-PROCEDURE RestoreSlider(R: Display3.Mask; F: Slider; x, y, w, h: INTEGER);
+PROCEDURE RestoreSlider(R: Display3.Mask; F: Slider; x, y, w, h: SIGNED16);
 BEGIN
 	IF F.min = F.max THEN F.max := F.min + 1 END;
 	F.BW := Min(w, h);
@@ -1331,9 +1331,9 @@ BEGIN
 END CopySlider;
 
 PROCEDURE PrintSlider(F: Slider; VAR M: Display.DisplayMsg);
-VAR R: Display3.Mask; x, y, w, h, X0, Y0, B, BW: INTEGER;
+VAR R: Display3.Mask; x, y, w, h, X0, Y0, B, BW: SIGNED16;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -1363,7 +1363,7 @@ BEGIN
 END PrintSlider;
 
 PROCEDURE SliderHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; F2: Slider;
+VAR x, y, w, h: SIGNED16; F2: Slider;
 	R: Display3.Mask;
 BEGIN
 	WITH F: Slider DO

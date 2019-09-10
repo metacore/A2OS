@@ -73,7 +73,7 @@ TYPE
 	Fixup*=OBJECT
 	VAR
 		nextFixup-: Fixup;
-		mode-: WORD; (* fixup mode: relative or absolute *)
+		mode-: INTEGER; (* fixup mode: relative or absolute *)
 		displacement-: Unit; (* displacement of the fixup ('source') *)
 		scale-: ObjectFile.Bits; (* exponent of scale factor (factor=2^scale) *)
 		patterns-: SIZE;
@@ -84,7 +84,7 @@ TYPE
 		symbolOffset-: SIZE; (* offset in intermediate section, must be patched (resolved and added to displacement) to destination section displacement *)
 		resolved*: Sections.Section; (* cache ! *)
 
-		PROCEDURE & InitFixup*(mode: WORD; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns);
+		PROCEDURE & InitFixup*(mode: INTEGER; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns);
 		BEGIN
 			ASSERT((mode = Relative) OR (mode = Absolute));
 			ASSERT(symbol.name # "");
@@ -202,7 +202,7 @@ TYPE
 			RETURN pc;
 		END GetPC;
 
-		PROCEDURE & InitBinarySection*(type: WORD; unit: Bits; CONST name:Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN);
+		PROCEDURE & InitBinarySection*(type: INTEGER; unit: Bits; CONST name:Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN);
 		BEGIN
 			ASSERT(unit > 0);
 			ASSERT(unit <= 32); (* implementation restriction *)
@@ -283,7 +283,7 @@ TYPE
 			INC(pc,len DIV os.unit);
 		END CopyBits;
 
-		PROCEDURE PutBits*(d: HUGEINT; size: Bits);
+		PROCEDURE PutBits*(d: SIGNED64; size: Bits);
 		BEGIN
 			(*ASSERT(size MOD unit = 0);*)
 			CheckSize(size);
@@ -291,7 +291,7 @@ TYPE
 			INC(pc,size DIV os.unit);
 		END PutBits;
 
-		PROCEDURE PutBitsAt*(at: Unit; d: HUGEINT; size: Bits);
+		PROCEDURE PutBitsAt*(at: Unit; d: SIGNED64; size: Bits);
 		VAR oldpc: Unit;
 		BEGIN
 			oldpc := pc;
@@ -300,13 +300,13 @@ TYPE
 			pc := oldpc;
 		END PutBitsAt;
 
-		PROCEDURE PutByte* (b: WORD);
+		PROCEDURE PutByte* (b: INTEGER);
 		BEGIN
 			PutBits(b,Byte);
 		END PutByte;
 
-		PROCEDURE PutWord*(w: WORD);
-		VAR c1,c2: WORD;
+		PROCEDURE PutWord*(w: INTEGER);
+		VAR c1,c2: INTEGER;
 		BEGIN
 			ASSERT((2*Byte) MOD os.unit = 0);
 			CheckSize(2*Byte);
@@ -322,8 +322,8 @@ TYPE
 			INC(pc,(2*Byte) DIV os.unit);
 		END PutWord;
 
-		PROCEDURE PutDWord*(d: WORD);
-		VAR c1,c2,c3,c4: WORD;
+		PROCEDURE PutDWord*(d: INTEGER);
+		VAR c1,c2,c3,c4: INTEGER;
 		BEGIN
 			ASSERT((4*Byte) MOD os.unit = 0);
 			CheckSize(4*Byte);
@@ -345,8 +345,8 @@ TYPE
 			INC(pc,(4*Byte) DIV os.unit);
 		END PutDWord;
 
-		PROCEDURE PutQWord* (q: HUGEINT);
-		VAR c: ARRAY 8 OF WORD; i: WORD;
+		PROCEDURE PutQWord* (q: SIGNED64);
+		VAR c: ARRAY 8 OF INTEGER; i: INTEGER;
 		BEGIN
 			ASSERT((8*Byte) MOD os.unit = 0);
 			CheckSize(8*Byte);
@@ -366,17 +366,17 @@ TYPE
 			INC(pc,(8*Byte) DIV os.unit);
 		END PutQWord;
 
-		PROCEDURE PutReal*(f: REAL);
+		PROCEDURE PutReal*(f: FLOAT32);
 		BEGIN
 			PutDWord(ConvertReal(f))
 		END PutReal;
 
-		PROCEDURE PutLongreal*(f: LONGREAL);
+		PROCEDURE PutLongreal*(f: FLOAT64);
 		BEGIN
 			PutQWord(ConvertLongreal(f))
 		END PutLongreal;
 
-		PROCEDURE PutByteAt*(at: Unit; d: WORD);
+		PROCEDURE PutByteAt*(at: Unit; d: INTEGER);
 		VAR oldpc: Unit;
 		BEGIN
 			oldpc := pc;
@@ -385,7 +385,7 @@ TYPE
 			pc := oldpc;
 		END PutByteAt;
 
-		PROCEDURE PutWordAt*(at: Unit; d: WORD);
+		PROCEDURE PutWordAt*(at: Unit; d: INTEGER);
 		VAR oldpc: Unit;
 		BEGIN
 			oldpc := pc;
@@ -394,7 +394,7 @@ TYPE
 			pc := oldpc;
 		END PutWordAt;
 
-		PROCEDURE PutDWordAt*(at: Unit; d: WORD);
+		PROCEDURE PutDWordAt*(at: Unit; d: INTEGER);
 		VAR oldpc: Unit;
 		BEGIN
 			oldpc := pc;
@@ -403,7 +403,7 @@ TYPE
 			pc := oldpc;
 		END PutDWordAt;
 
-		PROCEDURE PutQWordAt*(at: Unit; d: HUGEINT);
+		PROCEDURE PutQWordAt*(at: Unit; d: SIGNED64);
 		VAR oldpc: Unit;
 		BEGIN
 			oldpc := pc;
@@ -412,7 +412,7 @@ TYPE
 			pc := oldpc;
 		END PutQWordAt;
 
-		PROCEDURE PutBytes* (data: HUGEINT; bytes: WORD);
+		PROCEDURE PutBytes* (data: SIGNED64; bytes: INTEGER);
 		BEGIN
 			CASE bytes OF
 			1: PutByte (SHORT(data));
@@ -427,8 +427,8 @@ TYPE
 			RETURN CHR(os.bits.GetBits(pc*os.unit,8));
 		END GetByte;
 
-		PROCEDURE GetWord*(pc: Unit): WORD;
-		VAR c1,c2: WORD;
+		PROCEDURE GetWord*(pc: Unit): INTEGER;
+		VAR c1,c2: INTEGER;
 		BEGIN
 			c1 := os.bits.GetBits(pc*os.unit,8);
 			c2 := os.bits.GetBits(pc*os.unit+8,8);
@@ -439,8 +439,8 @@ TYPE
 			END
 		END GetWord;
 
-		PROCEDURE GetDWord*(pc: Unit): WORD;
-		VAR c1,c2,c3,c4: WORD;
+		PROCEDURE GetDWord*(pc: Unit): INTEGER;
+		VAR c1,c2,c3,c4: INTEGER;
 		BEGIN
 			c1 := os.bits.GetBits(pc*os.unit+0*Byte,Byte);
 			c2 := os.bits.GetBits(pc*os.unit+1*Byte,Byte);
@@ -453,8 +453,8 @@ TYPE
 			END
 		END GetDWord;
 
-		PROCEDURE GetQWord*(pc: Unit): HUGEINT;
-		VAR i: WORD; h: HUGEINT;
+		PROCEDURE GetQWord*(pc: Unit): SIGNED64;
+		VAR i: INTEGER; h: SIGNED64;
 		BEGIN
 			h := 0;
 			IF bigEndian THEN
@@ -471,17 +471,17 @@ TYPE
 			RETURN h
 		END GetQWord;
 
-		PROCEDURE GetReal*(pc: Unit): REAL;
+		PROCEDURE GetReal*(pc: Unit): FLOAT32;
 		BEGIN
 			RETURN ConvertToReal(GetDWord(pc))
 		END GetReal;
 
-		PROCEDURE GetLongreal*(pc: Unit): LONGREAL;
+		PROCEDURE GetLongreal*(pc: Unit): FLOAT64;
 		BEGIN
 			RETURN ConvertToLongreal(GetDWord(pc))
 		END GetLongreal;
 
-		PROCEDURE GetBits*(pc: Unit; size: Bits): WORD;
+		PROCEDURE GetBits*(pc: Unit; size: Bits): INTEGER;
 		BEGIN
 			RETURN os.bits.GetBits(pc*os.unit,size)
 		END GetBits;
@@ -529,7 +529,7 @@ TYPE
 		PROCEDURE DumpCode*(w: Streams.Writer; from,to: Unit);
 		VAR i: Unit; c: Sections.Comment; nextpos: Unit;
 
-			PROCEDURE Hex(i: WORD): CHAR;
+			PROCEDURE Hex(i: INTEGER): CHAR;
 			BEGIN
 				ASSERT(i>=0);
 				ASSERT(i<16);
@@ -541,7 +541,7 @@ TYPE
 			END Hex;
 
 			PROCEDURE DumpUnit(at: Unit);
-			VAR val: WORD; a: ARRAY 9 OF CHAR; bits: Bits;
+			VAR val: INTEGER; a: ARRAY 9 OF CHAR; bits: Bits;
 			BEGIN
 				val := GetBits(at,os.unit);
 				bits := os.unit;
@@ -555,7 +555,7 @@ TYPE
 			END DumpUnit;
 
 			PROCEDURE DumpBlock(from,to: Unit);
-			VAR i: Unit; nr: WORD;
+			VAR i: Unit; nr: INTEGER;
 			BEGIN
 				i := from; nr := 0;
 				IF to >= pc THEN to := pc-1 END;
@@ -619,9 +619,9 @@ TYPE
 
 	END Section;
 
-	PROCEDURE ConvertReal* (value: REAL): LONGINT;
+	PROCEDURE ConvertReal* (value: FLOAT32): SIGNED32;
 	CONST Exponent = 8; Significant = 23;
-	VAR result: LONGINT; VAR exponent, i: WORD;
+	VAR result: SIGNED32; VAR exponent, i: INTEGER;
 	BEGIN
 		(*! NaN code missing, we need an extra - machine specific - functionality for that  / cf. Streams.NaNCode *)
 		IF value = 0 THEN RETURN 0 END;
@@ -637,9 +637,9 @@ TYPE
 		RETURN result;
 	END ConvertReal;
 
-	PROCEDURE ConvertLongreal*(value: LONGREAL): HUGEINT;
+	PROCEDURE ConvertLongreal*(value: FLOAT64): SIGNED64;
 	CONST Exponent = 11; Significant = 52;
-	VAR result: HUGEINT; VAR exponent, i: WORD;
+	VAR result: SIGNED64; VAR exponent, i: INTEGER;
 	BEGIN
 		(*! NaN code missing, we need an extra - machine specific - functionality for that  / cf. Streams.NaNCode *)
 		IF value = 0 THEN RETURN 0 END;
@@ -655,10 +655,10 @@ TYPE
 		RETURN result;
 	END ConvertLongreal;
 
-	PROCEDURE ConvertToReal*(x: LONGINT): REAL;
-	VAR result: REAL; e,i: LONGINT;
+	PROCEDURE ConvertToReal*(x: SIGNED32): FLOAT32;
+	VAR result: FLOAT32; e,i: SIGNED32;
 
-		PROCEDURE Bit(bit: LONGINT): BOOLEAN;
+		PROCEDURE Bit(bit: SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN ODD(ASH(x,-bit))
 		END Bit;
@@ -683,10 +683,10 @@ TYPE
 		RETURN result
 	END ConvertToReal;
 
-	PROCEDURE ConvertToLongreal*(x: HUGEINT): LONGREAL;
-	VAR result: LONGREAL; e,i: LONGINT;
+	PROCEDURE ConvertToLongreal*(x: SIGNED64): FLOAT64;
+	VAR result: FLOAT64; e,i: SIGNED32;
 
-		PROCEDURE Bit(bit: LONGINT): BOOLEAN;
+		PROCEDURE Bit(bit: SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN ODD(ASH(x,-bit))
 		END Bit;
@@ -711,13 +711,13 @@ TYPE
 		RETURN result
 	END ConvertToLongreal;
 
-	PROCEDURE NewFixup*(mode: WORD; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns): Fixup;
+	PROCEDURE NewFixup*(mode: INTEGER; fixupOffset: Unit; symbol: ObjectFile.Identifier; symbolOffset: SIZE; displacement: Unit; scale: Bits; fixupPattern: ObjectFile.FixupPatterns): Fixup;
 	VAR fixup: Fixup;
 	BEGIN
 		NEW(fixup,mode,fixupOffset,symbol,symbolOffset,displacement,scale,fixupPattern); RETURN fixup
 	END NewFixup;
 
-	PROCEDURE NewBinarySection*(type: WORD; unit: Bits; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN): Section;
+	PROCEDURE NewBinarySection*(type: INTEGER; unit: Bits; CONST name: Basic.SegmentedName; dump: BOOLEAN; bigEndian: BOOLEAN): Section;
 	VAR binarySection: Section;
 	BEGIN
 		NEW(binarySection,type,unit,name,dump,bigEndian); RETURN binarySection

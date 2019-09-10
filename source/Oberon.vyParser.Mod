@@ -70,13 +70,13 @@ TYPE
 	END;
 
 	VAR w: vyBase.TextsWriter;
-	class-: INTEGER;  (*= recent class - reported for test and debugging *)
+	class-: SIGNED16;  (*= recent class - reported for test and debugging *)
 	copy: Scanner; 	(*cw990927*)
 	(*=
 	Note: scanner may be switched during read process. Always use scanner as VAR parameter.
 	*)
-PROCEDURE NextSyntaxItem (syntaxString: ARRAY OF CHAR;  VAR pos: INTEGER;  VAR sit: tSyntaxItem);
-	VAR i: INTEGER;
+PROCEDURE NextSyntaxItem (syntaxString: ARRAY OF CHAR;  VAR pos: SIGNED16;  VAR sit: tSyntaxItem);
+	VAR i: SIGNED16;
 BEGIN
 	IF syntaxString[pos] = 0X THEN  sit := NIL;  RETURN END;
 	IF sit = NIL THEN NEW(sit) END;
@@ -98,7 +98,7 @@ BEGIN
 END NextSyntaxItem;
 
 PROCEDURE MsgSyntax* (caller: ARRAY OF CHAR;  syntaxString: ARRAY OF CHAR);
-	VAR sit: tSyntaxItem;  pos: INTEGER;
+	VAR sit: tSyntaxItem;  pos: SIGNED16;
 PROCEDURE WriteId (sit: tSyntaxItem);
 BEGIN
 	Texts.WriteString(w, '<');
@@ -142,14 +142,14 @@ END MsgSyntax;
 
 (*	Based on EasyScanner by fof *)
 PROCEDURE OpenParScanner* (VAR sc: Scanner);
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN
 	vyScanners.NewSScanner(sc); 	vyScanners.OpenParScanner(sc);
 	i := vyScanners.NextToken(sc)
 END OpenParScanner;
 
 PROCEDURE Name* (VAR sc: Scanner;  VAR name: ARRAY OF CHAR): BOOLEAN; 	(*cw990927*)
-	VAR done: BOOLEAN;  j: INTEGER;
+	VAR done: BOOLEAN;  j: SIGNED16;
 BEGIN
 	copy^ := sc^;
 	LOOP
@@ -173,7 +173,7 @@ PROCEDURE linkedobject (
 VAR sc: Scanner;  linkof: Objects.Object;  VAR ob: Objects.Object;  verbose: BOOLEAN
 ): BOOLEAN;
 VAR
-	class: INTEGER;
+	class: SIGNED16;
 	obj, objlink: Objects.Object;
 	done: BOOLEAN;
 	name: vyName.tNameArray;
@@ -226,7 +226,7 @@ VAR sc: Scanner;  context: Objects.Object;  VAR ob: Objects.Object;  verbose: BO
 ): BOOLEAN;
 	(*= read a qualified name, and try to find named Voyager object or named Gadgets object or named Link *)
 	VAR  name: vyName.tNameArray;
-	class: INTEGER;
+	class: SIGNED16;
 	searchInContext, done: BOOLEAN;
 	obj: Objects.Object;
 BEGIN
@@ -273,9 +273,9 @@ BEGIN
 	ELSE RETURN TRUE END
 END QNamedObject;
 
-PROCEDURE Real* (VAR sc: Scanner;  VAR x: REAL): BOOLEAN; 	(*cw990927*)
+PROCEDURE Real* (VAR sc: Scanner;  VAR x: FLOAT32): BOOLEAN; 	(*cw990927*)
 	(*=read input, and try to evaluate as real number *)
-	VAR done: BOOLEAN;  neg: BOOLEAN;  j: INTEGER;
+	VAR done: BOOLEAN;  neg: BOOLEAN;  j: SIGNED16;
 BEGIN neg := FALSE;
 	copy^ := sc^;
 
@@ -294,9 +294,9 @@ END Real;
 (*! add read procedures for other basic types *)
 (*! add read procedures to fill complete chunks, eg. Reals *)
 
-PROCEDURE Number* (VAR sc: Scanner;  VAR i: LONGINT): BOOLEAN; 	(*cw990927*)
-	(*= read input, and try to evaluate as LONGINT number *)
-	VAR done, neg: BOOLEAN;  j: INTEGER;
+PROCEDURE Number* (VAR sc: Scanner;  VAR i: SIGNED32): BOOLEAN; 	(*cw990927*)
+	(*= read input, and try to evaluate as SIGNED32 number *)
+	VAR done, neg: BOOLEAN;  j: SIGNED16;
 BEGIN
 	neg := FALSE;
 	copy^ := sc^;
@@ -311,7 +311,7 @@ BEGIN
 END Number;
 
 PROCEDURE Symbol* (VAR sc: Scanner;  VAR sym: ARRAY OF CHAR): BOOLEAN; 	(*cw990927*)
-	VAR done: BOOLEAN;  j: INTEGER;
+	VAR done: BOOLEAN;  j: SIGNED16;
 BEGIN	LOOP
 		copy^ := sc^;
 		CASE sc.class OF
@@ -382,20 +382,20 @@ BEGIN
 	ELSE RETURN TRUE END
 END ExpectQNamedObject;
 
-PROCEDURE ExpectReal* (VAR sc: Scanner;  VAR x: REAL): BOOLEAN;
+PROCEDURE ExpectReal* (VAR sc: Scanner;  VAR x: FLOAT32): BOOLEAN;
 	VAR temp: BOOLEAN;
 BEGIN	temp := Real(sc, x);
 	IF ~temp THEN 	PosMsg(sc);
-		Texts.WriteString(w, 'a REAL number was expected');  Texts.WriteLn(w);
+		Texts.WriteString(w, 'a FLOAT32 number was expected');  Texts.WriteLn(w);
 		vyHostTexts.InsertErrW(vyHostTexts.cNotify, w)
 	END;  	RETURN temp
 END ExpectReal;
 
-PROCEDURE ExpectNumber* (VAR sc: Scanner;  VAR i: LONGINT): BOOLEAN;
+PROCEDURE ExpectNumber* (VAR sc: Scanner;  VAR i: SIGNED32): BOOLEAN;
 	VAR temp: BOOLEAN;
 BEGIN	temp := Number(sc, i);
 	IF ~temp THEN 	PosMsg(sc);
-		Texts.WriteString(w, 'an INTEGER number was expected');  Texts.WriteLn(w);
+		Texts.WriteString(w, 'an SIGNED16 number was expected');  Texts.WriteLn(w);
 		vyHostTexts.InsertErrW(vyHostTexts.cNotify, w)
 	END;  	RETURN temp
 END ExpectNumber;

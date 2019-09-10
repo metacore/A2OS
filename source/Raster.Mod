@@ -37,8 +37,8 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		any code.
 
 		Assumptions:
-			* CHR(l) = CHR(l MOD 100H) for all l: LONGINT
-			* SIZEOF(LONGINT)=4
+			* CHR(l) = CHR(l MOD 100H) for all l: SIGNED32
+			* SIZEOF(SIGNED32)=4
 	*)
 
 
@@ -66,17 +66,17 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		Palette* = OBJECT
 			VAR
 			col*: POINTER TO ARRAY OF Pixel;	(** color table **)
-			used*: LONGINT;	(** number of valid entries in color table **)
+			used*: SIGNED32;	(** number of valid entries in color table **)
 			clut: CLUTs.CLUT;	(* reverse color lookup structure *)
 			PROCEDURE &New*; BEGIN NEW(col,256); used:=256 END New; (*initialized to 256 colors; for backwards compatibility*)
-			PROCEDURE Init*(used:LONGINT); BEGIN SELF.used:=used; IF LEN(col,0)#used THEN NEW(col,used) END END Init; (*initialize to size # 256*) (*bugfix PH090122*)
+			PROCEDURE Init*(used:SIGNED32); BEGIN SELF.used:=used; IF LEN(col,0)#used THEN NEW(col,used) END END Init; (*initialize to size # 256*) (*bugfix PH090122*)
 		END Palette;
 
 		(** image format **)
 		Format0* = RECORD
-			code*: SHORTINT;	(** format code for quick format checks **)
-			bpp*: SHORTINT;	(** number of bits per pixel **)
-			align*: SHORTINT;	(** bytes per row must be multiple of this **)
+			code*: SIGNED8;	(** format code for quick format checks **)
+			bpp*: SIGNED8;	(** number of bits per pixel **)
+			align*: SIGNED8;	(** bytes per row must be multiple of this **)
 			components*: SET;	(** components that are stored in a pixel **)
 			pal*: Palette;	(** optional palette for indexed formats **)
 		END;
@@ -102,10 +102,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		(** transfer mode **)
 		Mode0* = RECORD
 			src*, dst*: Format;	(** source and destination format **)
-			op*: WORD;	(** compositing operation **)
+			op*: INTEGER;	(** compositing operation **)
 			col*: Pixel;	(** substitute color used when transfering from pure alpha formats to colored ones **)
 			buf: Pixel;	(* constant area for special-case moving *)
-			map: POINTER TO ARRAY OF INTEGER;	(* color map for transfer between indexed formats *)
+			map: POINTER TO ARRAY OF SIGNED16;	(* color map for transfer between indexed formats *)
 		END;
 
 		TransferProc* = PROCEDURE (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
@@ -140,7 +140,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 #IF ARM THEN
 
 	(** set pixel to opaque RGB value **)
-	PROCEDURE SetRGB* (VAR pix: Pixel; red, green, blue: WORD);
+	PROCEDURE SetRGB* (VAR pix: Pixel; red, green, blue: INTEGER);
 	CODE
 		LDR R0, [FP, #pix] ; ADDRESSOF(pix[0])
 		LDRB R1, [FP, #blue]
@@ -169,7 +169,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 #ELSE
 
 	(** set pixel to opaque RGB value **)
-	PROCEDURE SetRGB* (VAR pix: Pixel; red, green, blue: WORD);
+	PROCEDURE SetRGB* (VAR pix: Pixel; red, green, blue: INTEGER);
 	BEGIN
 		pix[b] := CHR(blue); pix[g] := CHR(green); pix[r] := CHR(red); pix[a] := 0FFX
 	END SetRGB;
@@ -179,7 +179,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 #IF ARM THEN
 
 	(** set pixel to partly transparent RGB value **)
-	PROCEDURE SetRGBA* (VAR pix: Pixel; red, green, blue, alpha: WORD);
+	PROCEDURE SetRGBA* (VAR pix: Pixel; red, green, blue, alpha: INTEGER);
 	CODE
 		LDR R0, [FP, #pix] ; ADDRESSOF(pix[0])
 		LDRB R1, [FP, #blue]
@@ -220,7 +220,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 #ELSE
 
 	(** set pixel to partly transparent RGB value **)
-	PROCEDURE SetRGBA* (VAR pix: Pixel; red, green, blue, alpha: WORD);
+	PROCEDURE SetRGBA* (VAR pix: Pixel; red, green, blue, alpha: INTEGER);
 	BEGIN
 		pix[b] := CHR(blue * alpha DIV 255);
 		pix[g] := CHR(green * alpha DIV 255);
@@ -231,7 +231,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 #END
 
 	(** retrieve RGB and alpha values from pixel **)
-	PROCEDURE GetRGBA* (pix: Pixel; VAR red, green, blue, alpha: WORD);
+	PROCEDURE GetRGBA* (pix: Pixel; VAR red, green, blue, alpha: INTEGER);
 	BEGIN
 		alpha := ORD(pix[a]);
 		IF alpha = 0 THEN	(* color has disappeared *)
@@ -250,7 +250,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	(**--- Palettes ---**)
 
 	(** return index of color in palette which approximates the requested color reasonably well **)
-	PROCEDURE PaletteIndex* (pal: Palette; red, green, blue: WORD): LONGINT;
+	PROCEDURE PaletteIndex* (pal: Palette; red, green, blue: INTEGER): SIGNED32;
 	BEGIN
 		IF pal.used>256 THEN
 			RETURN CLUTs.Match(pal.clut, ASH(red, 16) + ASH(green, 8) +  blue) *pal.used DIV 256 (*PH090122*)
@@ -259,8 +259,8 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END PaletteIndex;
 
 	(** compute internal palette structures whenever palette colors have been modified **)
-	PROCEDURE InitPalette* (pal: Palette; used, bits: LONGINT);
-		VAR n: SIZE; red, green, blue, alpha: WORD;
+	PROCEDURE InitPalette* (pal: Palette; used, bits: SIGNED32);
+		VAR n: SIZE; red, green, blue, alpha: INTEGER;
 	BEGIN
 		n := 0;
 		IF used>pal.used THEN NEW(pal.col,used);END;
@@ -274,8 +274,8 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END InitPalette;
 
 	(** (re)compute grayscale palette, typically used for pictures with >256 gray scale values**)
-	PROCEDURE InitGrayPalette* (pal: Palette; used, bits: LONGINT);
-		VAR n, gray: LONGINT;
+	PROCEDURE InitGrayPalette* (pal: Palette; used, bits: SIGNED32);
+		VAR n, gray: SIGNED32;
 	BEGIN
 		n := 0;
 		IF used>pal.used THEN NEW(pal.col,used); END;
@@ -291,7 +291,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	(** copy palette contents **)
 	PROCEDURE CopyPalette* (from, to: Palette);
-		VAR n: LONGINT;
+		VAR n: SIGNED32;
 	BEGIN
 		n := 0;
 		IF to.used<from.used THEN NEW(to.col,from.used) END;
@@ -303,7 +303,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END CopyPalette;
 
 	(** compute and initialize a pseudo-optimal palette for an image (in hi-color or true-color format) **)
-	PROCEDURE ComputePalette* (img: Image; pal: Palette; reservedcols, maxcols, bits: LONGINT);
+	PROCEDURE ComputePalette* (img: Image; pal: Palette; reservedcols, maxcols, bits: SIGNED32);
 		(*
 			uses octree-quantization
 		*)
@@ -313,15 +313,15 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 				dsc: ARRAY 8 OF Node;	(* descendants *)
 				link: Node;	(* next reducible node on same level *)
 				leaf: BOOLEAN;
-				weight: LONGINT;	(* accumulated number of pixels represented by this node *)
-				r, g, b: LONGINT;	(* accumulated color values *)
+				weight: SIGNED32;	(* accumulated number of pixels represented by this node *)
+				r, g, b: SIGNED32;	(* accumulated color values *)
 			END;
 
 		VAR
-			sent, root: Node; reducible: ARRAY 8 OF Node; colors, maxDepth, y, x, bb, used: LONGINT; adr, aa: ADDRESS; pix: Pixel;
+			sent, root: Node; reducible: ARRAY 8 OF Node; colors, maxDepth, y, x, bb, used: SIGNED32; adr, aa: ADDRESS; pix: Pixel;
 
-		PROCEDURE insert (VAR node: Node; depth: LONGINT; pix: Pixel);
-			VAR idx, bit: LONGINT;
+		PROCEDURE insert (VAR node: Node; depth: SIGNED32; pix: Pixel);
+			VAR idx, bit: SIGNED32;
 		BEGIN
 			IF node = NIL THEN
 				NEW(node);
@@ -348,14 +348,14 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		END insert;
 
 		PROCEDURE reduce;
-			VAR d, min, n, i: LONGINT; node, prev, dsc: Node;
+			VAR d, min, n, i: SIGNED32; node, prev, dsc: Node;
 		BEGIN
 			d := maxDepth-1;
 			WHILE reducible[d] = NIL DO
 				DEC(d); DEC(maxDepth)
 			END;
 			sent.link := reducible[d];
-			node := sent; min := MAX(LONGINT);
+			node := sent; min := MAX(SIGNED32);
 			WHILE node.link # NIL DO
 				IF node.link.weight < min THEN
 					min := node.link.weight; prev := node
@@ -378,7 +378,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		END reduce;
 
 		PROCEDURE traverse (node: Node);
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 		BEGIN
 			IF node # NIL THEN
 				IF node.leaf THEN
@@ -458,7 +458,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END PackA8;
 
 	PROCEDURE UnpackA8 (VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel);
-		VAR alpha: WORD;
+		VAR alpha: INTEGER;
 	BEGIN
 		SYSTEM.GET(adr, pix[a]);
 		IF pix[a] = 0X THEN
@@ -494,7 +494,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END PackD8;
 
 	PROCEDURE UnpackD8 (VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel);
-		VAR idx: CHAR; col: LONGINT;
+		VAR idx: CHAR; col: SIGNED32;
 	BEGIN
 		SYSTEM.GET(adr, idx); col := IndexToColor(ORD(idx));
 		pix[b] := CHR(col MOD 100H); pix[g] := CHR(ASH(col, -8) MOD 100H); pix[r] := CHR(ASH(col, -16) MOD 100H)
@@ -502,7 +502,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 		(* P16 - 16 bit indexed format with custom palette *)
 	PROCEDURE PackP16 (VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel);
-	VAR val:LONGINT;
+	VAR val:SIGNED32;
 	BEGIN
 		IF pix[a] # 0X THEN	(* model alpha as brightness *)
 			(*SYSTEM.PUT16(adr, PaletteIndex(fmt.pal, ORD(pix[r]), ORD(pix[g]), ORD(pix[b])))*)
@@ -520,7 +520,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	(* BGR555 - 16 hi-color with 5 bit blue, 5 bit green and 5 bit red in ascending order *)
 	PROCEDURE PackBGR555 (VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel);
-		VAR int: LONGINT;
+		VAR int: SIGNED32;
 	BEGIN
 		IF pix[a] # 0X THEN	(* model alpha as brightness *)
 			int := ASH(ORD(pix[b]), -3) + ASH(ASH(ORD(pix[g]), -3), 5) + ASH(ASH(ORD(pix[r]), -3), 10);
@@ -529,7 +529,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END PackBGR555;
 
 	PROCEDURE UnpackBGR555 (VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel);
-		VAR lo, hi: CHAR; int: LONGINT;
+		VAR lo, hi: CHAR; int: SIGNED32;
 	BEGIN
 		SYSTEM.GET(adr, lo); SYSTEM.GET(adr+1, hi); int := ASH(ORD(hi), 8) + ORD(lo);
 		pix[b] := CHR(ASH(int MOD 20H, 3) + 4);
@@ -540,7 +540,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	(* BGR565 - 16 hi-color with 5 bit blue, 6 bit green and 5 bit red in ascending order *)
 	PROCEDURE PackBGR565 (VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel);
-		VAR int: LONGINT;
+		VAR int: SIGNED32;
 	BEGIN
 		IF pix[a] # 0X THEN	(* model alpha as brightness *)
 			int := ASH(ORD(pix[b]), -3) + ASH(ASH(ORD(pix[g]), -2), 5) + ASH(ASH(ORD(pix[r]), -3), 11);
@@ -549,7 +549,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END PackBGR565;
 
 	PROCEDURE UnpackBGR565 (VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel);
-		VAR lo, hi: CHAR; int: LONGINT;
+		VAR lo, hi: CHAR; int: SIGNED32;
 	BEGIN
 		SYSTEM.GET(adr, lo); SYSTEM.GET(adr+1, hi); int := ASH(ORD(hi), 8) + ORD(lo);
 		pix[b] := CHR(ASH(int MOD 20H, 3) + 4);
@@ -560,7 +560,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	(* BGR466 - 16 hi-color with 4 bit blue, 6 bit green and 6 bit red in ascending order *)
 	PROCEDURE PackBGR466 (VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel);
-		VAR int: LONGINT;
+		VAR int: SIGNED32;
 	BEGIN
 		IF pix[a] # 0X THEN	(* model alpha as brightness *)
 			int := ASH(ORD(pix[b]), -4) + ASH(ASH(ORD(pix[g]), -2), 4) + ASH(ASH(ORD(pix[r]), -2), 10);
@@ -569,7 +569,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END PackBGR466;
 
 	PROCEDURE UnpackBGR466 (VAR fmt: Format0; adr: ADDRESS; bit: SIZE; VAR pix: Pixel);
-		VAR lo, hi: CHAR; int: LONGINT;
+		VAR lo, hi: CHAR; int: SIGNED32;
 	BEGIN
 		SYSTEM.GET(adr, lo); SYSTEM.GET(adr+1, hi); int := ASH(ORD(hi), 8) + ORD(lo);
 		pix[b] := CHR(ASH(int MOD 10H, 4) + 8);
@@ -603,7 +603,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END UnpackBGRA8888;
 
 	(** return image format for given Displays transfer format **)
-	PROCEDURE DisplayFormat* (format: LONGINT): Format;
+	PROCEDURE DisplayFormat* (format: SIGNED32): Format;
 	BEGIN
 		CASE format OF
 		| Displays.index8: RETURN D8
@@ -614,7 +614,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END DisplayFormat;
 
 	(** initialize format **)
-	PROCEDURE InitFormat* (VAR fmt: Format; code, bpp, align: SHORTINT; comps: SET; pal: Palette; pack, unpack: PackProc);
+	PROCEDURE InitFormat* (VAR fmt: Format; code, bpp, align: SIGNED8; comps: SET; pal: Palette; pack, unpack: PackProc);
 	BEGIN
 		fmt.code := code; fmt.bpp := bpp; fmt.align := align; fmt.components := comps; fmt.pal := pal;
 		fmt.pack := pack; fmt.unpack := unpack
@@ -688,7 +688,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		ELSE
 			a0 := ADDRESSOF(img.mem[0]); a1 := a0 + size;
 			WHILE a0 # a1 DO
-				SYSTEM.PUT32(a0,0); INC(a0, SIZEOF(LONGINT))
+				SYSTEM.PUT32(a0,0); INC(a0, SIZEOF(SIGNED32))
 			END
 		END;
 		img.adr := ADDRESSOF(img.mem[0])
@@ -709,7 +709,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 		ASSERT(ADDRESSOF(mem[0]) <= a0);
 		ASSERT(a1 <= ADDRESSOF(mem[LEN(mem)-1]));
 		WHILE a0 # a1 DO
-			SYSTEM.PUT32(a0,0); INC(a0, SIZEOF(LONGINT))
+			SYSTEM.PUT32(a0,0); INC(a0, SIZEOF(SIGNED32))
 		END;
 		img.adr := adr;
 		img.mem := mem;
@@ -719,7 +719,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	(**--- Transfer Modes ---**)
 
 	(** initialize transfer mode **)
-	PROCEDURE InitMode* (VAR mode: Mode; op: SHORTINT);
+	PROCEDURE InitMode* (VAR mode: Mode; op: SIGNED8);
 	BEGIN
 		mode.op := op;
 		IF (mode.src.pal # NIL) & ((mode.map = NIL) OR (LEN(mode.map^) # mode.src.pal.used)) THEN
@@ -733,7 +733,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END InitMode;
 
 	(** initialize transfer mode with color components for pure alpha sources **)
-	PROCEDURE InitModeColor* (VAR mode: Mode; op: SHORTINT; red, green, blue: WORD);
+	PROCEDURE InitModeColor* (VAR mode: Mode; op: SIGNED8; red, green, blue: INTEGER);
 	BEGIN
 		mode.op := op;
 		IF (mode.src.pal # NIL) & ((mode.map = NIL) OR (LEN(mode.map^) # mode.src.pal.used)) THEN
@@ -744,7 +744,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END InitModeColor;
 
 	(** set new source color for transfer mode **)
-	PROCEDURE SetModeColor* (VAR mode: Mode; red, green, blue: WORD);
+	PROCEDURE SetModeColor* (VAR mode: Mode; red, green, blue: INTEGER);
 	BEGIN
 		SetRGB(mode.col, red, green, blue);
 		IF (mode.src.pal # NIL) & ((mode.map = NIL) OR (LEN(mode.map^) # mode.src.pal.used)) THEN
@@ -754,8 +754,8 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END SetModeColor;
 
 	(** blend source pixel into destination pixel according to compositing operation **)
-	PROCEDURE Blend* (op: LONGINT; VAR src, dst: Pixel);
-		VAR fs, fd: LONGINT;
+	PROCEDURE Blend* (op: SIGNED32; VAR src, dst: Pixel);
+		VAR fs, fd: SIGNED32;
 	BEGIN
 		CASE op OF
 		| clear: fs := 0; fd := 0
@@ -856,7 +856,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	(*--- clear ---*)
 
 	PROCEDURE ClearAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
-		VAR inc: LONGINT;
+		VAR inc: SIGNED32;
 	BEGIN
 		IF mode.dst.bpp MOD 8 = 0 THEN
 			inc := mode.dst.bpp DIV 8;
@@ -983,7 +983,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END Clear32;
 
 	(*---- fill --------------*)
-	PROCEDURE Fill8(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	PROCEDURE Fill8(destAdr: ADDRESS; size: SIZE; filler: SIGNED32);
 	CODE
 	#IF I386 THEN
 		PUSH ECX
@@ -1018,7 +1018,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END Fill8;
 
 	(* size in 16bit words*)
-	PROCEDURE Fill16(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	PROCEDURE Fill16(destAdr: ADDRESS; size: SIZE; filler: SIGNED32);
 	CODE
 	#IF I386 THEN
 		PUSH ECX
@@ -1053,7 +1053,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END Fill16;
 
 	(* size in 24bit entities*)
-	PROCEDURE Fill24(destAdr: ADDRESS; size: SIZE; filler: LONGINT);
+	PROCEDURE Fill24(destAdr: ADDRESS; size: SIZE; filler: SIGNED32);
 	CODE
 	#IF I386 THEN
 		PUSH ECX
@@ -1092,7 +1092,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END Fill24;
 
 	(* size in DWords*)
-	PROCEDURE Fill32(destAdr: ADDRESS; size: SIZE; filler: LONGINT); (*! to do: change interface, introduce in Blend()*)
+	PROCEDURE Fill32(destAdr: ADDRESS; size: SIZE; filler: SIGNED32); (*! to do: change interface, introduce in Blend()*)
 	CODE
 	#IF I386 THEN
 		PUSH ECX
@@ -1227,7 +1227,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END Copy16;
 
 	PROCEDURE I16CopyI16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
-		VAR val: INTEGER;
+		VAR val: SIGNED16;
 	BEGIN
 		WHILE len > 0 DO
 			val:=SYSTEM.GET16(sadr); SYSTEM.PUT16(dadr, mode.map[val MOD 10000H]);
@@ -1579,7 +1579,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END BGRA8888CopyD8;
 
 	PROCEDURE D8CopyAny (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
-		VAR pix: Pixel; byte: CHAR; col: LONGINT;
+		VAR pix: Pixel; byte: CHAR; col: SIGNED32;
 	BEGIN
 		pix[a] := 0FFX;
 		WHILE len > 0 DO
@@ -1591,7 +1591,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END D8CopyAny;
 
 	PROCEDURE D8CopyAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
-		VAR pix: Pixel; byte: CHAR; col: LONGINT;
+		VAR pix: Pixel; byte: CHAR; col: SIGNED32;
 	BEGIN
 		pix[a] := 0FFX;
 		WHILE len > 0 DO
@@ -1603,7 +1603,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END D8CopyAny16;
 
 	PROCEDURE D8CopyBGR888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
-		VAR byte: CHAR; col: LONGINT; pix: Pixel;
+		VAR byte: CHAR; col: SIGNED32; pix: Pixel;
 	BEGIN
 		WHILE len > 0 DO
 			SYSTEM.GET(sadr, byte); col := IndexToColor(ORD(byte));
@@ -1614,7 +1614,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END D8CopyBGR888;
 
 	PROCEDURE D8CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
-		VAR pix: Pixel; byte: CHAR; col: LONGINT;
+		VAR pix: Pixel; byte: CHAR; col: SIGNED32;
 	BEGIN
 		pix[a] := 0FFX;
 		WHILE len > 0 DO
@@ -1694,7 +1694,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END P16CopyBGR888;
 
 	PROCEDURE P16CopyBGRA8888 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
-	VAR val:LONGINT;
+	VAR val:SIGNED32;
 	BEGIN
 		WHILE len > 0 DO
 			val:=LONG(SYSTEM.GET16(sadr)) MOD 10000H;
@@ -2468,7 +2468,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 #ELSE
 
 	PROCEDURE A8OverBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
-	VAR src , dst: Pixel; rc,gc,bc,ac, fd, fs: LONGINT;
+	VAR src , dst: Pixel; rc,gc,bc,ac, fd, fs: SIGNED32;
 	BEGIN
 		rc := ORD(mode.col[r]);
 		gc := ORD(mode.col[g]);
@@ -2609,7 +2609,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 #ELSE
 
 	PROCEDURE BGRA8888OverBGRA8888(VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
-	VAR src, dst: Pixel; fd,t: LONGINT;
+	VAR src, dst: Pixel; fd,t: SIGNED32;
 	BEGIN
 		WHILE len > 0 DO
 			SYSTEM.MOVE(sadr, ADDRESSOF(src), 4);
@@ -2680,7 +2680,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END BGRA8888OverA8;
 
 	PROCEDURE BGRA8888OverAny16 (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
-		VAR src, dst: Pixel; fd, t: LONGINT;
+		VAR src, dst: Pixel; fd, t: SIGNED32;
 	BEGIN
 		WHILE len > 0 DO
 			SYSTEM.MOVE(sadr,ADDRESSOF(src),4);
@@ -2706,7 +2706,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END BGRA8888OverAny16;
 
 	PROCEDURE BGRA8888Over565* (VAR mode: Mode0; sadr: ADDRESS; sbit: SIZE; dadr: ADDRESS; dbit, len: SIZE);
-		VAR src, dst: Pixel; fd, t: LONGINT;
+		VAR src, dst: Pixel; fd, t: SIGNED32;
 	BEGIN
 		WHILE len > 0 DO
 			SYSTEM.MOVE(sadr,ADDRESSOF(src),4);
@@ -3817,7 +3817,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	(** find (optimized) pixel transfer procedure for transfer mode and given source and destination formats **)
 	PROCEDURE Bind* (VAR mode: Mode; VAR src, dst: Format);
-		VAR op: LONGINT; val,i: LONGINT;
+		VAR op: SIGNED32; val,i: SIGNED32;
 	BEGIN
 		IF Same(src, mode.src) & Same(dst, mode.dst) THEN
 			ASSERT(mode.transfer # NIL, 120);
@@ -4145,7 +4145,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	(** fill rectangular area **)
 	PROCEDURE Fill* (img: Image; llx, lly, urx, ury: SIZE; CONST pix: Pixel; VAR mode: Mode);
-		VAR bit, bb, x, t: SIZE; c: LONGINT; m: Mode; adr, aa: ADDRESS;
+		VAR bit, bb, x, t: SIZE; c: SIGNED32; m: Mode; adr, aa: ADDRESS;
 	BEGIN
 		ASSERT((0 <= llx) & (llx < urx) & (urx <= img.width) & (0 <= lly) & (lly < ury) & (ury <= img.height), 100);
 		bit := llx * img.fmt.bpp; adr := img.adr + lly * img.bpr + bit DIV 8; bit := bit MOD 8;
@@ -4332,8 +4332,8 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END FillPattern;
 
 	(** darken image while maintaining coverage **)
-	PROCEDURE Darken* (img: Image; factor: REAL);
-		VAR s, i, j, k, y, x, bit: LONGINT; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; pix: Pixel;
+	PROCEDURE Darken* (img: Image; factor: FLOAT32);
+		VAR s, i, j, k, y, x, bit: SIGNED32; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; pix: Pixel;
 	BEGIN
 		s := ABS(ENTIER(255*factor + 0.5));
 		IF (s # 255) & (img.fmt.components # {alpha}) THEN
@@ -4358,8 +4358,8 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END Darken;
 
 	(** fade image **)
-	PROCEDURE Fade* (img: Image; factor: REAL);
-		VAR s, i, j, k, y, x, bit: LONGINT; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; pix: Pixel;
+	PROCEDURE Fade* (img: Image; factor: FLOAT32);
+		VAR s, i, j, k, y, x, bit: SIGNED32; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; pix: Pixel;
 	BEGIN
 		s := ABS(ENTIER(255*factor + 0.5));
 		IF s = 0 THEN
@@ -4387,8 +4387,8 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END Fade;
 
 	(** make image brighter and more transparent; Opaque(I, f) = Darken(Fade(I, f), 1/f) **)
-	PROCEDURE Opaque* (img: Image; factor: REAL);
-		VAR s, i, j, k, y, x, bit: LONGINT; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; pix: Pixel;
+	PROCEDURE Opaque* (img: Image; factor: FLOAT32);
+		VAR s, i, j, k, y, x, bit: SIGNED32; adr: ADDRESS; clamp: ARRAY 256 OF CHAR; pix: Pixel;
 	BEGIN
 		s := ABS(ENTIER(255*factor + 0.5));
 		IF s = 0 THEN
@@ -4416,7 +4416,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	(** add components of two (faded) images **)
 	PROCEDURE Add* (i, j, res: Image);
-		VAR y, x, ibit, jbit, rbit: LONGINT; iadr, jadr, radr: ADDRESS; ipix, jpix, rpix: Pixel;
+		VAR y, x, ibit, jbit, rbit: SIGNED32; iadr, jadr, radr: ADDRESS; ipix, jpix, rpix: Pixel;
 	BEGIN
 		ASSERT((i.width = j.width) & (i.height = j.height) & (i.width <= res.width) & (i.height <= res.height), 100);
 		y := 0;
@@ -4443,10 +4443,10 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	(** copy image to another using error diffusion dithering (Floyd-Steinberg) **)
 	PROCEDURE Dither* (src, dst: Image);
 		TYPE
-			error = RECORD r, g, b: LONGINT END;
+			error = RECORD r, g, b: SIGNED32 END;
 		VAR
 			e351: POINTER TO ARRAY OF error;
-			y, x, sb, db, ex, e, e3, e5: LONGINT;
+			y, x, sb, db, ex, e, e3, e5: SIGNED32;
 			sadr, dadr, sa, da: ADDRESS;
 			e7, e51, e1: error;
 			spix, dpix: Pixel;
@@ -4558,7 +4558,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 
 	(** read image from file rider **)
 	PROCEDURE Read* (VAR fr: Streams.Reader; img: Image);
-		VAR ver, code, w, h, bpr, len: LONGINT; bytesRead: SIZE; adr, aa: ADDRESS; fmt: Format; buf: ARRAY 256 OF CHAR; used: LONGINT;
+		VAR ver, code, w, h, bpr, len: SIGNED32; bytesRead: SIZE; adr, aa: ADDRESS; fmt: Format; buf: ARRAY 256 OF CHAR; used: SIGNED32;
 	BEGIN
 		ASSERT(img#NIL,100);
 		fr.RawNum(ver);	(* know version 1&2*)
@@ -4610,7 +4610,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	(*--- Initialization ---*)
 
 	PROCEDURE InitBitTables;
-		VAR b, i: LONGINT;
+		VAR b, i: SIGNED32;
 	BEGIN
 		FOR b := 0 TO 0FFH DO
 			FOR i := 0 TO 7 DO
@@ -4624,7 +4624,7 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END InitBitTables;
 
 	PROCEDURE InitClamp;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO 1FFH DO Clamp[i] := 0X END;
 		FOR i := 0 TO 0FFH DO Clamp[200H+i] := CHR(i) END;
@@ -4643,23 +4643,23 @@ MODULE Raster; (** non-portable *)	(* eos, TF  **)
 	END ToggleSSE2;
 
 	(** Map a color value to an 8-bit CLUT index.  Only used if format = index8. *)
-	PROCEDURE ColorToIndex*(col: LONGINT): LONGINT;
+	PROCEDURE ColorToIndex*(col: SIGNED32): SIGNED32;
 	BEGIN
 			(* default implementation is not very useful and should be overridden. *)
-		RETURN LONGINT(
+		RETURN SIGNED32(
 				SET32(ASH(col, 7-23)) * {5..7} +
 				SET32(ASH(col, 4-15)) * {2..4} +
 				SET32(ASH(col, 1-7)) * {0..1})
 	END ColorToIndex;
 
 	(** Map an 8-bit CLUT index to a color value.  Only used if format = index8. *)
-	PROCEDURE IndexToColor*(index: LONGINT): LONGINT;
+	PROCEDURE IndexToColor*(index: SIGNED32): SIGNED32;
 	BEGIN
 			(* default implementation is not very useful and should be overridden. *)
 		RETURN
-				ASH(LONGINT(SET32(index) * {5..7}), 23-7) +
-				ASH(LONGINT(SET32(index) * {2..4}), 15-4) +
-				ASH(LONGINT(SET32(index) * {0..1}), 7-1)
+				ASH(SIGNED32(SET32(index) * {5..7}), 23-7) +
+				ASH(SIGNED32(SET32(index) * {2..4}), 15-4) +
+				ASH(SIGNED32(SET32(index) * {0..1}), 7-1)
 	END IndexToColor;
 
 BEGIN

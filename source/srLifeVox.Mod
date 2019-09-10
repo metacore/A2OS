@@ -21,9 +21,9 @@ TYPE Voxel = srBase.Voxel;
 TYPE LifeVox*= OBJECT(Voxel);
 VAR
 	m : ARRAY M,N OF BOOLEAN;
-	n: ARRAY M,N OF INTEGER;
-	gen: INTEGER;
-	i:LONGINT;
+	n: ARRAY M,N OF SIGNED16;
+	gen: SIGNED16;
+	i:SIGNED32;
 
 PROCEDURE &init*;
 BEGIN
@@ -33,7 +33,7 @@ END init;
 
 PROCEDURE seed*;
 VAR
-	i,j:LONGINT;
+	i,j:SIGNED32;
 BEGIN
 	FOR i := 1 TO M - 2 DO
 		FOR j := 1 TO N - 2 DO
@@ -44,7 +44,7 @@ END seed;
 
 PROCEDURE tick*;
 VAR
-	i, j: LONGINT;
+	i, j: SIGNED32;
 BEGIN
 	IF random.Dice(100) = 0 THEN seed END;
 	FOR i := 1 TO M - 2 DO
@@ -70,9 +70,9 @@ END tick;
 
 PROCEDURE Shade*(VAR ray: srBase.Ray);
 VAR
-	x,y: LONGINT;
+	x,y: SIGNED32;
 	lx, ly: SREAL;
-	nx, ny, nz: INTEGER;
+	nx, ny, nz: SIGNED16;
 	dot: SREAL;
 	inside: BOOLEAN;
 BEGIN
@@ -144,9 +144,9 @@ END LifeVox;
 
 TYPE RDVox*= OBJECT(Voxel);
 VAR
-		m1,m2,n1,n2 : ARRAY M,N OF REAL;
-		gen: INTEGER;
-		i:LONGINT;
+		m1,m2,n1,n2 : ARRAY M,N OF FLOAT32;
+		gen: SIGNED16;
+		i:SIGNED32;
 		BLUE, RED: Voxel;
 		Cell: srM5Space.cell;
 
@@ -159,7 +159,7 @@ PROCEDURE Shade*(VAR ray: srBase.Ray);
 VAR
 	lx, ly: SREAL;
 	color: srBase.COLOR;
-	nx, ny, nz: INTEGER;
+	nx, ny, nz: SIGNED16;
 	dot: SREAL;
 	inside: BOOLEAN;
 BEGIN
@@ -197,7 +197,7 @@ END RDVox;
 TYPE RDMirror*=OBJECT(RDVox);
 PROCEDURE Shade*(VAR ray: srBase.Ray);
 VAR
-	i, j: LONGINT;
+	i, j: SIGNED32;
 	lx, ly: SREAL;
 	inside: BOOLEAN;
 	nx, ny, nz: SREAL;
@@ -233,15 +233,15 @@ END RDMirror;
 
 TYPE RDVolVox*=OBJECT(Voxel);
 VAR
-	m1*,m2,n1,n2: ARRAY V,V,V OF REAL;
-	gen: INTEGER;
-	i:LONGINT;
-	tock*: INTEGER;
+	m1*,m2,n1,n2: ARRAY V,V,V OF FLOAT32;
+	gen: SIGNED16;
+	i:SIGNED32;
+	tock*: SIGNED16;
 	BLUE: Voxel;
 	RED: Voxel;
 	YELLOW: Voxel;
 	timer: Kernel.Timer;
-	frame: LONGINT;
+	frame: SIGNED32;
 
 PROCEDURE &init*(red,blue,yellow: Voxel);
 BEGIN
@@ -256,7 +256,7 @@ END init;
 
 PROCEDURE clear*;
 VAR
-	i,j,k:LONGINT;
+	i,j,k:SIGNED32;
 BEGIN
 	FOR i := 0 TO V - 1 DO
 		FOR j := 0 TO V - 1 DO
@@ -273,7 +273,7 @@ END clear;
 
 PROCEDURE seed*;
 VAR
-	i,j,k:LONGINT;
+	i,j,k:SIGNED32;
 BEGIN
 	FOR i := 0 TO V - 1 DO
 		FOR j := 0 TO V - 1 DO
@@ -285,7 +285,7 @@ BEGIN
 	END;
 END seed;
 
-PROCEDURE bounds (i, j, k: LONGINT; VAR out: BOOLEAN);
+PROCEDURE bounds (i, j, k: SIGNED32; VAR out: BOOLEAN);
 BEGIN
 	IF (i < 0) OR (i > V-1) OR (j < 0) OR (j > V-1) OR (k < 0) OR (k > V-1) THEN
 		out := TRUE
@@ -296,8 +296,8 @@ END bounds;
 
 PROCEDURE tick*;
 VAR
-		i, j,k: LONGINT;
-		A1, B1, C1, D1: REAL;
+		i, j,k: SIGNED32;
+		A1, B1, C1, D1: FLOAT32;
 BEGIN
 	INC(frame);
 	IF TRUE OR (frame MOD tock = 0) THEN
@@ -336,8 +336,8 @@ BEGIN
 PROCEDURE probe*(x,y,z: SREAL):Voxel;
 VAR
 	X,Y,Z: SREAL;
-	i,j,k: LONGINT;
-	color: LONGINT;
+	i,j,k: SIGNED32;
+	color: SIGNED32;
 BEGIN
 	srBase.clamp3(x,y,z);
 	X := x*V; Y := y*V; Z := z*V;
@@ -356,10 +356,10 @@ PROCEDURE Shade*(VAR ray: srBase.Ray);
 VAR
 	oldxyz: srBase.PT;
 	drx, dry, drz: SREAL;
-	di, dj, dk: INTEGER;
+	di, dj, dk: SIGNED16;
 	out: BOOLEAN;
 	ijk: srBase.IPT;
-	color: LONGINT;
+	color: SIGNED32;
 BEGIN
 		INC(ray.recursion);
 		oldxyz := ray.xyz;
@@ -486,8 +486,8 @@ TYPE RDCloud*=OBJECT(RDVolVox);
 
 PROCEDURE tick*;
 VAR
-		i, j,k: LONGINT;
-		A1, B1, C1, D1: REAL;
+		i, j,k: SIGNED32;
+		A1, B1, C1, D1: FLOAT32;
 BEGIN
 	FOR i := 1 TO V - 2 DO
 		FOR j := 1 TO V - 2 DO

@@ -29,18 +29,18 @@ IMPORT antsObjects, Objects, Files, vyHostTexts, antsArrayObjects, Math := MathL
 	antsCommands, vyName, vyBase, Gadgets, antsArrays, Links, aM := antsMessages;
 
 TYPE
-	ProbVec = ARRAY 5 OF LONGINT;
-	RandomArray = POINTER TO ARRAY OF LONGINT;
+	ProbVec = ARRAY 5 OF SIGNED32;
+	RandomArray = POINTER TO ARRAY OF SIGNED32;
 
 	tModel* = POINTER TO tModelDesc;
 	tModelDesc* = RECORD (antsModels.tModelDesc);
-		h-, beta-: LONGREAL;
+		h-, beta-: FLOAT64;
 		Prob-: ProbVec;
 		ran: RandomArray
 	END;
 
-	PROCEDURE Open*( M: tModel;  beta, h: LONGREAL;  cool: LONGREAL );
-	VAR i: LONGINT;
+	PROCEDURE Open*( M: tModel;  beta, h: FLOAT64;  cool: FLOAT64 );
+	VAR i: SIGNED32;
 	BEGIN
 		M.h := h;  M.beta := beta;
 		FOR i := 0 TO 4 DO
@@ -57,18 +57,18 @@ TYPE
 	END StoreM;
 
 	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Files.ReadLReal( R, s.h );  Files.ReadLReal( R, s.beta );  Open( s, s.beta, s.h, s.coolingTemp )
 	END LoadM;
 
 	PROCEDURE OneSweep( s: antsKernel.Kernel );
-	VAR x, y, w, h, maxx, maxy: LONGINT;  A: antsArrayObjects.tINTEGERArray;  model: tModel;
+	VAR x, y, w, h, maxx, maxy: SIGNED32;  A: antsArrayObjects.tINTEGERArray;  model: tModel;
 		AO: antsArrayObjects.tINTEGERObject;  nsums: antsArrayObjects.tINTEGERArray;  prob: ProbVec;
-		Random: RandomArray;  ran: LONGINT;
+		Random: RandomArray;  ran: SIGNED32;
 
 		PROCEDURE Cache( ): antsArrayObjects.tINTEGERArray;
-		VAR x, y: LONGINT;
+		VAR x, y: SIGNED32;
 		BEGIN
 			IF AO.Cache = NIL THEN
 				AO.Cache := antsArrayObjects.NewINTEGERArray( AO.w, AO.h );  nsums := AO.Cache;
@@ -209,7 +209,7 @@ TYPE
 		END  (* tVector*)
 	END Handler;
 
-	PROCEDURE OpenModel*( M: tModel;  name: vyName.tNameArray;  beta, h: LONGREAL );
+	PROCEDURE OpenModel*( M: tModel;  name: vyName.tNameArray;  beta, h: FLOAT64 );
 	BEGIN
 		Open( M, beta, h, 1 );
 		IF M.handle # NIL THEN M.handle := Handler END;
@@ -223,9 +223,9 @@ TYPE
 	END Gen;
 
 	PROCEDURE NewModel*;
-	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  M: tModel;  beta, h: LONGREAL;
+	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  M: tModel;  beta, h: FLOAT64;
 	BEGIN
-		l := antsCommands.ScanFromPar( "name=NAME beta=REAL h=REAL" );
+		l := antsCommands.ScanFromPar( "name=NAME beta=FLOAT32 h=FLOAT32" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectRealFromKeyword( l, "beta", beta ) &
 		    antsCommands.ExpectRealFromKeyword( l, "h", h ) THEN
 			Gen;  M := Objects.NewObj( tModel );  antsModels.Open( M );  OpenModel( M, name, beta, h )

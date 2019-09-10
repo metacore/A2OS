@@ -52,24 +52,24 @@ IMPORT Math := MathL IN A2;
 	Must accompany LinMin.
 	*)
 
-TYPE VectorFunction* = PROCEDURE (VAR A: ARRAY OF LONGREAL): LONGREAL;
-	Func = PROCEDURE (x: LONGREAL): LONGREAL;
+TYPE VectorFunction* = PROCEDURE (VAR A: ARRAY OF FLOAT64): FLOAT64;
+	Func = PROCEDURE (x: FLOAT64): FLOAT64;
 
-	(* Vector*= POINTER TO ARRAY OF LONGREAL;
-	Matrix*= POINTER TO ARRAY OF ARRAY OF LONGREAL; *)
-	(* Vector*= ARRAY dim OF LONGREAL;
-	Matrix*=ARRAY dim OF ARRAY dim OF LONGREAL;
+	(* Vector*= POINTER TO ARRAY OF FLOAT64;
+	Matrix*= POINTER TO ARRAY OF ARRAY OF FLOAT64; *)
+	(* Vector*= ARRAY dim OF FLOAT64;
+	Matrix*=ARRAY dim OF ARRAY dim OF FLOAT64;
 	PtrToReals=  Vector;
 	PtrToLines = Matrix;  *)
 VAR
-	tempXI: POINTER TO ARRAY OF ARRAY OF LONGREAL;
-	PT, PTT, XIT: POINTER TO ARRAY OF LONGREAL;  (* Vector *)
-	XT: POINTER TO ARRAY OF LONGREAL;  (* Vector *)
+	tempXI: POINTER TO ARRAY OF ARRAY OF FLOAT64;
+	PT, PTT, XIT: POINTER TO ARRAY OF FLOAT64;  (* Vector *)
+	XT: POINTER TO ARRAY OF FLOAT64;  (* Vector *)
 
 
-	LinMinPCom, LinMinXCom: POINTER TO ARRAY OF LONGREAL;
+	LinMinPCom, LinMinXCom: POINTER TO ARRAY OF FLOAT64;
 	rcheck*: BOOLEAN;
-	(*	linMinPCom, linMinXCom: ARRAY dim OF LONGREAL; *)
+	(*	linMinPCom, linMinXCom: ARRAY dim OF FLOAT64; *)
 	VFunc: VectorFunction;
 	(* ---------- Brent ----------*)
 
@@ -83,10 +83,10 @@ VAR
 	*)
 
 
-	PROCEDURE Brent* (		ax, bx, cx: 	LONGREAL;
+	PROCEDURE Brent* (		ax, bx, cx: 	FLOAT64;
 	func: 				Func;
-	tol: 				 LONGREAL;
-VAR xmin: LONGREAL): LONGREAL;
+	tol: 				 FLOAT64;
+VAR xmin: FLOAT64): FLOAT64;
 CONST
 	itmax = 100;  (* Maximum allowed number of iterations; golden ratio; and
 	a small number which protects against trying to achieve
@@ -95,13 +95,13 @@ CONST
 	cgold = 0.3819660;
 	zeps = 1.0E-10;
 VAR
-	a, b, d, e, etemp: LONGREAL;
-	fu, fv, fw, fx: LONGREAL;
-	iter: INTEGER;
-	p, q, r, tol1, tol2: LONGREAL;
-	u, v, w, x, xm: LONGREAL;
+	a, b, d, e, etemp: FLOAT64;
+	fu, fv, fw, fx: FLOAT64;
+	iter: SIGNED16;
+	p, q, r, tol1, tol2: FLOAT64;
+	u, v, w, x, xm: FLOAT64;
 
-PROCEDURE sign (a, b: LONGREAL): LONGREAL;
+PROCEDURE sign (a, b: FLOAT64): FLOAT64;
 BEGIN
 	IF b >= 0.0 THEN RETURN ABS(a)
 	ELSE RETURN - ABS(a)
@@ -232,15 +232,15 @@ the function values at the three points, fa, fb, and fc.
 
 
 
-PROCEDURE Golden* (		ax, bx, cx: LONGREAL;
+PROCEDURE Golden* (		ax, bx, cx: FLOAT64;
 func: 			 Func;
-tol: 				LONGREAL;
-VAR xmin: 			 LONGREAL): LONGREAL;
+tol: 				FLOAT64;
+VAR xmin: 			 FLOAT64): FLOAT64;
 CONST
 	r = 0.61803399;
 VAR
-	f1, f2, c: LONGREAL;
-	x0, x1, x2, x3, golden: LONGREAL;
+	f1, f2, c: FLOAT64;
+	x0, x1, x2, x3, golden: FLOAT64;
 BEGIN
 	c := 1.0 - r;
 	x0 := ax;  (* At any given time we will keep track of
@@ -306,7 +306,7 @@ BEGIN
 	RETURN golden
 END Golden;
 
-PROCEDURE MnBrak* (VAR ax, bx, cx, fa, fb, fc: LONGREAL;
+PROCEDURE MnBrak* (VAR ax, bx, cx, fa, fb, fc: FLOAT64;
 func: Func);
 CONST
 	gold = 1.618034;  maxit = 1000;
@@ -319,8 +319,8 @@ CONST
 	*)
 	tiny = 1.0E-20;
 VAR
-	ulim, u, r, q, fu, dum: LONGREAL;
-	count: LONGINT;
+	ulim, u, r, q, fu, dum: FLOAT64;
+	count: SIGNED32;
 BEGIN
 	fa := func(ax);  IF rcheck THEN RETURN END;
 	fb := func(bx);  IF rcheck THEN RETURN END;
@@ -403,27 +403,27 @@ BEGIN
 END MnBrak;
 
 
-(* PROCEDURE GetVectorAttr (P: Vector;VAR n: LONGINT; VAR p: PtrToReals);
+(* PROCEDURE GetVectorAttr (P: Vector;VAR n: SIGNED32; VAR p: PtrToReals);
 BEGIN
 p := P; n := LEN(P^);
 END GetVectorAttr;
 
-PROCEDURE GetMatrixAttr (P: Matrix; VAR n,m: LONGINT; VAR p:PtrToLines );
+PROCEDURE GetMatrixAttr (P: Matrix; VAR n,m: SIGNED32; VAR p:PtrToLines );
 BEGIN
 p := P; n := LEN(P^); m:= LEN(P[0]);
 END GetMatrixAttr;
 
-PROCEDURE CreateVector ( n: LONGINT; VAR P: Vector; VAR p: PtrToReals);
+PROCEDURE CreateVector ( n: SIGNED32; VAR P: Vector; VAR p: PtrToReals);
 BEGIN
 NEW(P,n); p := P;
 END CreateVector; *)(* for n dimension *)
 
-PROCEDURE F1Dim* (x: LONGREAL;   VAR  LinMinPCom,
-LinMinXCom: ARRAY OF LONGREAL ;   fnc: VectorFunction): LONGREAL;
+PROCEDURE F1Dim* (x: FLOAT64;   VAR  LinMinPCom,
+LinMinXCom: ARRAY OF FLOAT64 ;   fnc: VectorFunction): FLOAT64;
 VAR
-	j, linMinNCom: LONGINT;
+	j, linMinNCom: SIGNED32;
 	(* Define the global variables. *)
-	f1dim: LONGREAL;
+	f1dim: FLOAT64;
 BEGIN
 	(* GetVectorAttr(LinMinPCom, linMinNCom, linMinPCom);*)
 	linMinNCom := LEN(LinMinXCom);
@@ -445,7 +445,7 @@ BEGIN
 	END;*)
 END F1Dim;
 
-PROCEDURE func (x: LONGREAL): LONGREAL;
+PROCEDURE func (x: FLOAT64): FLOAT64;
 BEGIN
 	(*
 	Called by Brent and MnBrak.
@@ -453,12 +453,12 @@ BEGIN
 	RETURN F1Dim(x, LinMinPCom^, LinMinXCom^, VFunc);
 END func;
 
-PROCEDURE LinMin* (VAR P, XI: ARRAY OF LONGREAL;   VAR fret: LONGREAL;   vf: VectorFunction);
+PROCEDURE LinMin* (VAR P, XI: ARRAY OF FLOAT64;   VAR fret: FLOAT64;   vf: VectorFunction);
 CONST
 	tol = 1.0E-4;   (* tol is passed to Brent. *)
 VAR
-	j, n, nXI: LONGINT;
-	xx, xmin, fx, fb, fa, bx, ax: LONGREAL;   t1, t2: LONGREAL;
+	j, n, nXI: SIGNED32;
+	xx, xmin, fx, fb, fa, bx, ax: FLOAT64;   t1, t2: FLOAT64;
 	(* p, xi: PtrToReals;*)
 BEGIN
 	(* GetVectorAttr(P, n, p);*)
@@ -499,17 +499,17 @@ BEGIN
 	IF LinMinXCom # NilVector THEN DisposeVector(LinMinXCom) END;*)
 END LinMin;
 
-PROCEDURE Powell* (	VAR	P: 		ARRAY OF LONGREAL;
-VAR  XI: 	ARRAY OF ARRAY OF LONGREAL ;
-ftol: LONGREAL;
-VAR iter: LONGINT;
-VAR fret: LONGREAL;
-fncP: VectorFunction;  range: LONGREAL);
+PROCEDURE Powell* (	VAR	P: 		ARRAY OF FLOAT64;
+VAR  XI: 	ARRAY OF ARRAY OF FLOAT64 ;
+ftol: FLOAT64;
+VAR iter: SIGNED32;
+VAR fret: FLOAT64;
+fncP: VectorFunction;  range: FLOAT64);
 CONST
 	itmax = 200;   (* Maximum allowed iterations. *)
 VAR
-	j, ibig, i, n : LONGINT;
-	t, fptt, fp, del: LONGREAL;
+	j, ibig, i, n : SIGNED32;
+	t, fptt, fp, del: FLOAT64;
 	(* p, pt, ptt, xit: PtrToReals;  *)
 	(* xi: PtrToLines; *)
 BEGIN
@@ -567,9 +567,9 @@ BEGIN
 	IF PT # NilVector THEN DisposeVector(PT); END;*)
 END Powell;
 
-PROCEDURE EasyMinimize* (VAR P: ARRAY OF LONGREAL;  VAR fret: LONGREAL;  ftol: LONGREAL;   fncP: VectorFunction;  init: BOOLEAN);
+PROCEDURE EasyMinimize* (VAR P: ARRAY OF FLOAT64;  VAR fret: FLOAT64;  ftol: FLOAT64;   fncP: VectorFunction;  init: BOOLEAN);
 CONST range = 100000;
-	VAR n: LONGINT;  iter: LONGINT;  i, j: LONGINT;   tol: LONGREAL;
+	VAR n: SIGNED32;  iter: SIGNED32;  i, j: SIGNED32;   tol: FLOAT64;
 BEGIN
 	n := LEN(P);
 	IF (tempXI = NIL) OR (LEN(tempXI^) # n)
@@ -596,8 +596,8 @@ END EasyMinimize;
 
 
 
-PROCEDURE mfncP ( VAR P: ARRAY OF LONGREAL): LONGREAL;
-	VAR ret: LONGREAL; i: LONGINT;
+PROCEDURE mfncP ( VAR P: ARRAY OF FLOAT64): FLOAT64;
+	VAR ret: FLOAT64; i: SIGNED32;
 BEGIN
 	ret := 1;
 	FOR i := 0 TO LEN(P) - 1 DO
@@ -608,7 +608,7 @@ END mfncP;
 
 (*
 PROCEDURE Test*;
-	VAR P: ARRAY 10 OF LONGREAL;  f: LONGREAL;  i: LONGINT;
+	VAR P: ARRAY 10 OF FLOAT64;  f: FLOAT64;  i: SIGNED32;
 BEGIN
 	EasyMinimize(P, f, 0.00001, mfncP, TRUE);
 	vyOut.LongReal(f, 10);

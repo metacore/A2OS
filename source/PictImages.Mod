@@ -60,7 +60,7 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 	END UnpackP1;
 
 	PROCEDURE PackP4 (VAR fmt: Raster.Format0; adr: ADDRESS; bit: SIZE; VAR pix: Raster.Pixel);
-		VAR b: CHAR; i: LONGINT;
+		VAR b: CHAR; i: SIGNED32;
 	BEGIN
 		SYSTEM.GET(adr, b);
 		i := Raster.PaletteIndex(fmt.pal, ORD(pix[R]), ORD(pix[G]), ORD(pix[B])) MOD 10H;
@@ -78,7 +78,7 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 	(* load Oberon picture from file *)
 	PROCEDURE LoadPict (img: Raster.Image; VAR fname: ARRAY OF CHAR; VAR done: BOOLEAN);
 		VAR
-			file: Files.File; r: Files.Reader; id, w, h, depth: INTEGER; gen: ARRAY 64 OF CHAR; i, n: LONGINT;
+			file: Files.File; r: Files.Reader; id, w, h, depth: SIGNED16; gen: ARRAY 64 OF CHAR; i, n: SIGNED32;
 			adr, a: ADDRESS; pal: Raster.Palette; red, green, blue, byte: CHAR; fmt: Raster.Format;
 	BEGIN
 		file := Files.Old(fname);
@@ -148,8 +148,8 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 	PROCEDURE StorePict (img: Raster.Image; VAR fname: ARRAY OF CHAR; VAR done: BOOLEAN);
 		TYPE Bytes129 = ARRAY 129 OF CHAR;
 		VAR
-			file: Files.File; w: Files.Writer; pal: Raster.Palette; i, y, inc, x: SIZE; fmt: Raster.Format; depth: INTEGER;
-			pix: POINTER TO ARRAY OF CHAR; buf: ARRAY 129 OF SHORTINT;
+			file: Files.File; w: Files.Writer; pal: Raster.Palette; i, y, inc, x: SIZE; fmt: Raster.Format; depth: SIGNED16;
+			pix: POINTER TO ARRAY OF CHAR; buf: ARRAY 129 OF SIGNED8;
 			SrcCopy: Raster.Mode;
 	BEGIN
 		file := Files.New(fname);
@@ -157,7 +157,7 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 			Raster.InitMode(SrcCopy, Raster.srcCopy);
 			Files.OpenWriter(w, file, 0);
 			w.RawInt(-4093);	(* Pictures.PictFileId *)
-			w.RawInt(INTEGER(img.width)); w.RawInt(INTEGER(img.height));
+			w.RawInt(SIGNED16(img.width)); w.RawInt(SIGNED16(img.height));
 
 			(* find out which format to use *)
 			pal := img.fmt.pal;
@@ -258,7 +258,7 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 
 	(** create image from Oberon pattern (format=A1) **)
 	PROCEDURE PatternToImage* (pat: ADDRESS): Raster.Image;
-		VAR w, h: INTEGER; byte: CHAR; img: Raster.Image;
+		VAR w, h: SIGNED16; byte: CHAR; img: Raster.Image;
 	BEGIN
 		ASSERT(pat # 0, 100);
 		IF (1 <= pat) & (pat <= 8) THEN RETURN PrntPat[pat] END;
@@ -269,8 +269,8 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 	END PatternToImage;
 
 	(** initialize pattern from sets **)
-	PROCEDURE NewPattern* (w, h: LONGINT; VAR image: ARRAY OF SET): Raster.Image;
-		VAR bpr, y: LONGINT; sa, da: ADDRESS; img: Raster.Image;
+	PROCEDURE NewPattern* (w, h: SIGNED32; VAR image: ARRAY OF SET): Raster.Image;
+		VAR bpr, y: SIGNED32; sa, da: ADDRESS; img: Raster.Image;
 	BEGIN
 		bpr := (w+7) DIV 8;
 		NEW(img); Raster.Create(img, w, h, Raster.A1);
@@ -282,7 +282,7 @@ MODULE PictImages; (** non-portable *)	(* eos  **)
 	END NewPattern;
 
 	PROCEDURE InitPatterns;
-		VAR pat: ARRAY 8 OF SET; i: LONGINT;
+		VAR pat: ARRAY 8 OF SET; i: SIGNED32;
 	BEGIN
 		(* adapted from Printer3 *)
 		pat[0] := {}; pat[1] := {}; pat[2] := {}; pat[3] := {0,4,8,12,16,20,24,28};

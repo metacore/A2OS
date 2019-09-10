@@ -27,7 +27,7 @@ Report any problems as soon as possible to voyager@statlab.uni-heidelberg.de
 IMPORT vyParser, vyRandom, vyLongrealVec, vyBase, vyName;
 
 PROCEDURE Test3*;
-	VAR i, len: LONGINT;  sc: vyParser.Scanner;  l1, l2, l3: vyBase.tVector;
+	VAR i, len: SIGNED32;  sc: vyParser.Scanner;  l1, l2, l3: vyBase.tVector;
 BEGIN
 	NEW(sc);  vyParser.OpenParScanner(sc);
 	IF vyParser.ExpectNumber(sc, len) THEN

@@ -61,8 +61,8 @@ CONST
 (* print out eight empty spaces
  * 	param: 	level		the number of times to print out 8 empty spaces
  *)
-PROCEDURE PrintLevel(level:LONGINT);
-VAR i : LONGINT;
+PROCEDURE PrintLevel(level:SIGNED32);
+VAR i : SIGNED32;
 BEGIN
 	IF(level > 0) THEN
 		FOR i:=0 TO (level - 1) DO
@@ -78,7 +78,7 @@ END PrintLevel;
  *			itemNr		number of items already parsed + 1
  *			depth		the depth's subcollection (recursively)
  *)
-PROCEDURE ParseMainItem*(bTag, bSize, data, itemNr, depth: LONGINT);
+PROCEDURE ParseMainItem*(bTag, bSize, data, itemNr, depth: SIGNED32);
 VAR dataAsSet : SET;
 BEGIN
 	(*hack for better layout; detect the end collection bTag*)
@@ -160,7 +160,7 @@ END ParseMainItem;
 *			itemNr		number of items already parsed + 1
 *			depth		the depth's subcollection (recursively)
 *)
-PROCEDURE ParseGlobalItem*( bTag, bSize, data, itemNr, depth: LONGINT);
+PROCEDURE ParseGlobalItem*( bTag, bSize, data, itemNr, depth: SIGNED32);
 VAR
 BEGIN
 	PrintLevel(depth);
@@ -247,7 +247,7 @@ END ParseGlobalItem;
  *			itemNr		number of items already parsed + 1
  *			depth		the depth's subcollection (recursively)
  *)
-PROCEDURE ParseLocalItem*(bTag, bSize, data,  itemNr, depth, usagePage: LONGINT);
+PROCEDURE ParseLocalItem*(bTag, bSize, data,  itemNr, depth, usagePage: SIGNED32);
 BEGIN
 	PrintLevel(depth);
 	CASE bTag OF

@@ -22,7 +22,7 @@ TYPE
 	StringType* = Strings.String;
 	IdentifierType* = StringPool.Index;
 	IdentifierString*= ARRAY MaxIdentifierLength+1 OF CHAR;
-	SubType*= SHORTINT;
+	SubType*= SIGNED8;
 
 CONST
 
@@ -168,7 +168,7 @@ TYPE
 	END KeywordTable;
 TYPE
 
-	Symbol*=LONGINT;
+	Symbol*=SIGNED32;
 	Position*= Basic.Position;
 
 	(**
@@ -182,9 +182,9 @@ TYPE
 		string*: StringType;  (* string or identifier *)
 		stringLength*: SIZE; (* length of string, if stringLength = 2 then this may be interpreted as character and integer = ORD(ch) *)
 		numberType*: SubType;  (* Integer, HugeInteger, Real or Longreal *)
-		integer*: HUGEINT;
+		integer*: SIGNED64;
 		character*: CHAR;
-		real*: LONGREAL;
+		real*: FLOAT64;
 	END;
 
 	StringMaker* = OBJECT (* taken from TF's scanner *)
@@ -197,7 +197,7 @@ TYPE
 			NEW(data, initialSize); length := 0;
 		END Init;
 
-		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: WORD);
+		PROCEDURE Add*(CONST buf: ARRAY OF CHAR; ofs, len: SIZE; propagate: BOOLEAN; VAR res: INTEGER);
 		VAR i : SIZE; n: StringType;
 		BEGIN
 			IF length + len + 1 >= LEN(data) THEN
@@ -288,7 +288,7 @@ TYPE
 		error-: BOOLEAN;   (* if error occured during scanning *)
 
 		firstIdentifier: BOOLEAN;   (* support of lower vs. upper case keywords  *)
-		case-: LONGINT;
+		case-: SIGNED32;
 		stringWriter: Streams.Writer;
 		stringMaker: StringMaker;
 
@@ -325,7 +325,7 @@ TYPE
 			firstIdentifier := TRUE; case := Unknown;
 		END ResetCase;
 
-		PROCEDURE SetCase*(c: LONGINT);
+		PROCEDURE SetCase*(c: SIGNED32);
 		BEGIN
 			case := c;
 		END SetCase;
@@ -338,7 +338,7 @@ TYPE
 		END ErrorS;
 
 		(** report an error occured during scanning **)
-		PROCEDURE Error( code: INTEGER );
+		PROCEDURE Error( code: SIGNED16 );
 		BEGIN
 			Basic.ErrorC(diagnostics, source^, position, code, "");
 			error := TRUE;
@@ -361,8 +361,8 @@ TYPE
 	I found the code useful and keep it here for the time being....
 
 	(* generate a table to be able to quickly search for string containing overlaps - KMP algorithm *)
-	PROCEDURE MakeOverlapTable*(CONST pattern: ARRAY OF CHAR; VAR table: ARRAY OF LONGINT);
-	VAR i, cnd: LONGINT;
+	PROCEDURE MakeOverlapTable*(CONST pattern: ARRAY OF CHAR; VAR table: ARRAY OF SIGNED32);
+	VAR i, cnd: SIGNED32;
 	BEGIN
 		ASSERT(pattern[0] # 0X);
 		(* if first character did not match: reset search *)
@@ -387,8 +387,8 @@ TYPE
 
 	(* using KMP substring search algorithm consume and reproduce all characters of a string until endString *)
 	PROCEDURE GetString(CONST endString: ARRAY OF CHAR);
-	VAR escapePos: LONGINT; ech: CHAR; i: LONGINT; table: ARRAY 16 OF LONGINT;
-		next: LONGINT;
+	VAR escapePos: SIGNED32; ech: CHAR; i: SIGNED32; table: ARRAY 16 OF SIGNED32;
+		next: SIGNED32;
 
 			PROCEDURE Append(ch :CHAR);
 			BEGIN
@@ -437,7 +437,7 @@ TYPE
 
 		(* simple case can be utilized when endString does not contain first character, which is the case for our string convention *)
 		PROCEDURE ConsumeStringUntil(CONST endString: ARRAY OF CHAR; useControl: BOOLEAN);
-		VAR escapePos: LONGINT; ech: CHAR; i: LONGINT; startPosition: Streams.Position;
+		VAR escapePos: SIGNED32; ech: CHAR; i: SIGNED32; startPosition: Streams.Position;
 		CONST
 			Control = '\';
 			Delimiter = '"';
@@ -576,7 +576,7 @@ TYPE
 			'_' is the underscore character
 		**)
 		PROCEDURE GetIdentifier( VAR token: Token );
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			i := 0;
 			REPEAT token.identifierString[i] := ch; INC( i );  GetNextCharacter UNTIL reservedCharacter[ORD( ch )] OR (i = MaxIdentifierLength);
@@ -594,16 +594,16 @@ TYPE
 		Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' .
 		**)
 		PROCEDURE GetNumber(VAR token: Token): Symbol;
-		VAR i, m, n, d, e, si: LONGINT;
+		VAR i, m, n, d, e, si: SIGNED32;
 			dig: ARRAY 24 OF CHAR;
-			f: LONGREAL;  expCh: CHAR;  neg, long: BOOLEAN;
+			f: FLOAT64;  expCh: CHAR;  neg, long: BOOLEAN;
 			result: Symbol;
-			hugeint, tenh, number, nextInt: HUGEINT;
-			digits: LONGINT;
+			hugeint, tenh, number, nextInt: SIGNED64;
+			digits: SIGNED32;
 
 			(** 10^e **)
-			PROCEDURE Ten( e: LONGINT ): LONGREAL;
-			VAR x, p: LONGREAL;
+			PROCEDURE Ten( e: SIGNED32 ): FLOAT64;
+			VAR x, p: FLOAT64;
 			BEGIN
 				x := 1;  p := 10;
 				WHILE e > 0 DO
@@ -615,13 +615,13 @@ TYPE
 			END Ten;
 
 			(** return decimal number associated to character ch , error if none **)
-			PROCEDURE Decimal( ch: CHAR ): LONGINT;
+			PROCEDURE Decimal( ch: CHAR ): SIGNED32;
 			BEGIN  (* ("0" <= ch) & (ch <= "9") OR ("A" <= ch) & (ch <= "F") *)
 				IF ch <= "9" THEN RETURN ORD( ch ) - ORD( "0" ) ELSE Error( Basic.NumberIllegalCharacter );  RETURN 0 END
 			END Decimal;
 
 			(** return hexadecimal number associated to character ch, error if none **)
-			PROCEDURE Hexadecimal( ch: CHAR ): LONGINT;
+			PROCEDURE Hexadecimal( ch: CHAR ): SIGNED32;
 			BEGIN
 				IF ch <= "9" THEN RETURN ORD( ch ) - ORD( "0" )
 				ELSIF ch <= "F" THEN RETURN ORD( ch ) - ORD( "A" ) + 10
@@ -656,7 +656,7 @@ TYPE
 						IF (ch = "'") & IsHexDigit(reader.Peek()) THEN GetNextCharacter END;
 					END;
 					token.integer := number;
-					IF (digits > MaxHexDigits) OR (digits = MaxHexDigits) & (number > MAX(LONGINT)) THEN
+					IF (digits > MaxHexDigits) OR (digits = MaxHexDigits) & (number > MAX(SIGNED32)) THEN
 						token.numberType := Hugeint
 					ELSE
 						token.numberType := Integer
@@ -728,7 +728,7 @@ TYPE
 						token.numberType := Integer;
 						WHILE (i < n) & ~long  DO
 							d := Decimal( dig[i] );  INC( i );
-							IF token.integer >= MAX(LONGINT) DIV 10 THEN (* multiplication overflow *)long := TRUE END;
+							IF token.integer >= MAX(SIGNED32) DIV 10 THEN (* multiplication overflow *)long := TRUE END;
 							nextInt := token.integer*10+d;
 							IF nextInt >=0 THEN token.integer := nextInt ELSE (* overflow *) long := TRUE END;
 						END;
@@ -739,7 +739,7 @@ TYPE
 							token.numberType := Hugeint;
 							WHILE i < n DO
 								d := Decimal( dig[i] );  INC( i );
-								IF hugeint > MAX(HUGEINT) DIV 10 THEN Error( Basic.NumberTooLarge) END;
+								IF hugeint > MAX(SIGNED64) DIV 10 THEN Error( Basic.NumberTooLarge) END;
 								hugeint := hugeint * tenh + d;
 								IF hugeint < 0 THEN Error( Basic.NumberTooLarge ) END
 							END;
@@ -761,7 +761,7 @@ TYPE
 					IF ("0" <= ch) & (ch <= "9") THEN
 						REPEAT
 							n := Decimal( ch );  token.identifierString[si] := ch;  INC( si );  GetNextCharacter;
-							IF e <= (MAX( INTEGER ) - n) DIV 10 THEN e := e * 10 + n ELSE Error( Basic.NumberTooLarge ) END
+							IF e <= (MAX( SIGNED16 ) - n) DIV 10 THEN e := e * 10 + n ELSE Error( Basic.NumberTooLarge ) END
 						UNTIL (ch < "0") OR ("9" < ch);
 						IF neg THEN e := -e END
 					ELSE Error( Basic.NumberIllegalCharacter )
@@ -772,7 +772,7 @@ TYPE
 					token.numberType := Real;
 					IF (1 - MaxRealExponent < e) & (e <= MaxRealExponent) THEN
 						IF e < 0 THEN token.real :=  f / Ten( -e ) ELSE token.real := f * Ten( e )  END;
-						token.real := REAL (token.real);
+						token.real := FLOAT32 (token.real);
 					ELSE Error( Basic.NumberTooLarge )
 					END
 				ELSE
@@ -789,7 +789,7 @@ TYPE
 
 		(** read / skip a comment **)
 		PROCEDURE ReadComment(VAR token: Token);
-		VAR level: LONGINT;
+		VAR level: SIGNED32;
 		BEGIN
 			stringMaker.Clear;
 			level := 1;
@@ -820,7 +820,7 @@ TYPE
 		END ReadComment;
 
 		PROCEDURE SkipToEndOfCode*(VAR startPos,endPos: Streams.Position; VAR token: Token): Symbol;
-		VAR s: LONGINT; newline: BOOLEAN;
+		VAR s: SIGNED32; newline: BOOLEAN;
 		BEGIN
 			ASSERT(case # Unknown);
 			stringMaker.Clear;
@@ -1065,7 +1065,7 @@ TYPE
 		**)
 		PROCEDURE GetIdentifier( VAR token: Token );
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 
 			PROCEDURE CharacterIsAllowed(character: CHAR): BOOLEAN;
 			BEGIN
@@ -1086,7 +1086,7 @@ TYPE
 
 		(** get next token **)
 		PROCEDURE GetNextToken*(VAR token: Token ): BOOLEAN;
-		VAR s: LONGINT;
+		VAR s: SIGNED32;
 
 			PROCEDURE SkipBlanks;
 			BEGIN
@@ -1179,7 +1179,7 @@ TYPE
 		NEW( s, source, reader, pos, diagnostics );  RETURN s;
 	END NewAssemblerScanner;
 
-	PROCEDURE TokenToString*(CONST token: Token; case: LONGINT; VAR str: ARRAY OF CHAR);
+	PROCEDURE TokenToString*(CONST token: Token; case: SIGNED32; VAR str: ARRAY OF CHAR);
 	VAR id: StringPool.Index;
 	BEGIN
 		CASE token.symbol OF
@@ -1216,7 +1216,7 @@ TYPE
 
 	(** reserved characters are the characters that may not occur within an identifier **)
 	PROCEDURE InitReservedCharacters;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO LEN( reservedCharacter ) - 1 DO
 			CASE CHR(i) OF
@@ -1230,7 +1230,7 @@ TYPE
 	END InitReservedCharacters;
 
 	(* get keyword by symbol *)
-	PROCEDURE GetKeyword*(case:WORD; symbol: Symbol; VAR identifier: IdentifierType);
+	PROCEDURE GetKeyword*(case:INTEGER; symbol: Symbol; VAR identifier: IdentifierType);
 	BEGIN
 		IF case = Uppercase THEN
 			keywordsUpper.IdentifierBySymbol(symbol,identifier);
@@ -1240,7 +1240,7 @@ TYPE
 	END GetKeyword;
 
 	PROCEDURE InitSymbols;
-	VAR i: LONGINT;
+	VAR i: SIGNED32;
 	BEGIN
 		symbols[None] := "None";
 		symbols[Equal] := "Equal";
@@ -1367,7 +1367,7 @@ TYPE
 	PROCEDURE InitKeywords;
 
 		PROCEDURE Upper(CONST source: ARRAY OF CHAR; VAR dest: ARRAY OF CHAR);
-		VAR c: CHAR; i: LONGINT;
+		VAR c: CHAR; i: SIGNED32;
 		BEGIN
 			i := 0;
 			REPEAT
@@ -1377,14 +1377,14 @@ TYPE
 			UNTIL c = 0X;
 		END Upper;
 
-		PROCEDURE Enter1(CONST name: ARRAY OF CHAR; symbol: LONGINT; case: SET);
+		PROCEDURE Enter1(CONST name: ARRAY OF CHAR; symbol: SIGNED32; case: SET);
 		BEGIN
 			IF Lowercase IN case THEN keywordsLower.PutString(name,symbol) END;
 			IF Uppercase IN case THEN keywordsUpper.PutString(name,symbol) END;
 			Basic.SetErrorExpected(symbol,name);
 		END Enter1;
 
-		PROCEDURE Enter(CONST name: ARRAY OF CHAR; symbol: LONGINT);
+		PROCEDURE Enter(CONST name: ARRAY OF CHAR; symbol: SIGNED32);
 		VAR upper: Keyword;
 		BEGIN
 			Enter1(name,symbol,{Lowercase});
@@ -1392,7 +1392,7 @@ TYPE
 			Enter1(upper,symbol,{Uppercase});
 		END Enter;
 
-		PROCEDURE EnterSymbol(CONST name: ARRAY OF CHAR; symbol: LONGINT);
+		PROCEDURE EnterSymbol(CONST name: ARRAY OF CHAR; symbol: SIGNED32);
 		BEGIN
 			Enter1(name,symbol,{Lowercase,Uppercase});
 		END EnterSymbol;

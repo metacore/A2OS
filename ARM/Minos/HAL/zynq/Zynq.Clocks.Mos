@@ -5,42 +5,42 @@ IMPORT Platform, SYSTEM, Bit, Trace;
 CONST
 	COFF = 26;
 	
-	PLLINPUTFRE	= LONGINT( 50000000 );
+	PLLINPUTFRE	= SIGNED32( 50000000 );
 	
 TYPE	
 	ClockValueType = RECORD
 		six21 : BOOLEAN;
-		fdiv : LONGINT;
-		divisor : LONGINT;
-		pllclk : LONGINT;
-		cpu6x4x : REAL;
-		cpu3x2x : REAL;
-		cpu2x : REAL;
-		cpu1x : REAL;
+		fdiv : SIGNED32;
+		divisor : SIGNED32;
+		pllclk : SIGNED32;
+		cpu6x4x : FLOAT32;
+		cpu3x2x : FLOAT32;
+		cpu2x : FLOAT32;
+		cpu1x : FLOAT32;
 	END;
 
 VAR
 	me : ClockValueType;
 	
-PROCEDURE GetPllDiv( reg : LONGINT ) : LONGINT;
+PROCEDURE GetPllDiv( reg : SIGNED32 ) : SIGNED32;
 VAR 
-	res : LONGINT;
+	res : SIGNED32;
 BEGIN
 	res := reg DIV 1000H;
 	res := Bit.AND( res, 07FH );
 	RETURN res;
 END GetPllDiv;
 
-PROCEDURE GetDivisor( reg : LONGINT ) : LONGINT;
+PROCEDURE GetDivisor( reg : SIGNED32 ) : SIGNED32;
 VAR
-	res : LONGINT;
+	res : SIGNED32;
 BEGIN
 	res := reg DIV 100H;
-	res := Bit.AND( res, LONGINT( 03FH ));
+	res := Bit.AND( res, SIGNED32( 03FH ));
 	RETURN res;
 END GetDivisor;
 
-PROCEDURE GetTimerClock*() : LONGINT;
+PROCEDURE GetTimerClock*() : SIGNED32;
 BEGIN
 	RETURN ENTIER( me.cpu3x2x );
 END GetTimerClock;
@@ -48,7 +48,7 @@ END GetTimerClock;
 (*
 PROCEDURE ShowPllSettings( VAR sreg : SET );
 VAR	
-	reg : LONGINT;
+	reg : SIGNED32;
 BEGIN
 
 	(* show the boolean flags of the PLL *)
@@ -81,7 +81,7 @@ BEGIN
 	END;
 	
 	(* extract the divider used for the counter *)
-	reg := GetPllDiv( SYSTEM.VAL(LONGINT, sreg ));
+	reg := GetPllDiv( SYSTEM.VAL(SIGNED32, sreg ));
 	Trace.StringA("PLL FDIV Value", COFF, TRUE );
 	Trace.String("0x"); Trace.Hex( reg, -8 ); Trace.Ln;
 	
@@ -91,7 +91,7 @@ END ShowPllSettings;
 PROCEDURE ShowArmClock();
 VAR
 	sreg : SET;
-	reg : LONGINT;
+	reg : SIGNED32;
 BEGIN
 
 	Trace.StringLn("* ARM PLL Configuration *");
@@ -111,7 +111,7 @@ BEGIN
 	(*SYSTEM.GET( Platform.SLCRARMCLKCONTROL, sreg );*)
 	sreg := SYSTEM.VAL(SET, Platform.slcr.ARM_CLK_CTRL);
 	Trace.StringA("Raw Register", COFF, TRUE ); 
-	reg := SYSTEM.VAL( LONGINT, sreg );
+	reg := SYSTEM.VAL( SIGNED32, sreg );
 	Trace.Hex( reg, -8 ); Trace.Ln;
 	
 	reg := reg DIV 10H;
@@ -127,7 +127,7 @@ BEGIN
 	END;
 	
 	(* extract the clock divisor value *)
-	reg := GetDivisor( SYSTEM.VAL( LONGINT, sreg ) );
+	reg := GetDivisor( SYSTEM.VAL( SIGNED32, sreg ) );
 	
 	Trace.StringA("Clock Divider", COFF, TRUE );
 	Trace.String("0x"); Trace.Hex( reg, -4 ); Trace.Ln;
@@ -228,8 +228,8 @@ PROCEDURE InitClocks*();
 CONST
 	OFFS = 12;
 VAR
-	reg : LONGINT;
-	f : LONGREAL;
+	reg : SIGNED32;
+	f : FLOAT64;
 BEGIN
 	reg := Platform.slcr.ARM_PLL_CTRL;
 	(*SYSTEM.GET( Platform.SLCRARMPLL, reg );*)

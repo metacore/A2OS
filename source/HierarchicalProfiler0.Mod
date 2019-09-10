@@ -12,18 +12,18 @@ CONST
 	WaitTime = 100;	(* ms *)
 
 TYPE
-	Callback = PROCEDURE (id : LONGINT; process : Objects.Process; pc, bp, lowAdr, highAdr : ADDRESS);
+	Callback = PROCEDURE (id : SIGNED32; process : Objects.Process; pc, bp, lowAdr, highAdr : ADDRESS);
 
 VAR
 	callback : Callback;
-	state : LONGINT;
+	state : SIGNED32;
 
 (* First level interrupt handler. Called 1000 times per second by each processor *)
-PROCEDURE HandleTimer(id: LONGINT; CONST state: Machine.State);
+PROCEDURE HandleTimer(id: SIGNED32; CONST state: Machine.State);
 VAR process : Objects.Process;
 BEGIN
 	process := Objects.running[id];
-	callback(id, process, state.PC, state.BP, state.SP, LONGINT(0FFFFFFFFH));
+	callback(id, process, state.PC, state.BP, state.SP, SIGNED32(0FFFFFFFFH));
 END HandleTimer;
 
 (** Start profiling. If the profiler is already running, it is stopped and the sample data is discarded before re-starting it *)

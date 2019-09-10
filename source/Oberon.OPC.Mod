@@ -116,10 +116,10 @@ MODULE OPC IN Oberon;	(** non-portable *)
 
 	TYPE
 		Item* = RECORD
-			mode*, scale*: SHORTINT;
-			mnolev* : LONGINT; (* mnolev < 0 -> mno (module number) = -mnolev *)
+			mode*, scale*: SIGNED8;
+			mnolev* : SIGNED32; (* mnolev < 0 -> mno (module number) = -mnolev *)
 			typ*: OPT.Struct; node*: OPT.Node;
-			adr*, offs*, inx*, descReg*, descOffs*: LONGINT
+			adr*, offs*, inx*, descReg*, descOffs*: SIGNED32
 		END;
 (*
 	mode:	item mode
@@ -158,20 +158,20 @@ Intel i386 :
 18 Coc   | CC     Tjmp     Fjmp
 *)
 
-		Label* = LONGINT;
+		Label* = SIGNED32;
 
 	CONST
 		Nil* = -1;	  (* label nil *)
 		BUG = 40;      (* Trap code for Bugs in OP2 *)
 
 	VAR
-	level*: SHORTINT; 	(* nesting level *)
-	pc*: INTEGER; 	(* pc of pseudo RISC machine *)
+	level*: SIGNED8; 	(* nesting level *)
+	pc*: SIGNED16; 	(* pc of pseudo RISC machine *)
 	True, False, Stack: Item; 	(* constant items True, False and Stack *)
 	ebp: Item; 	(* base pointer item *)
-	formTab: ARRAY 16 OF SHORTINT;
-	CCtab: ARRAY 2, (geq-eql+1) OF INTEGER;	(* condition code table, CCtab[0] = integer; CCtab[1] = char *)
-	InvCCtab: ARRAY (CC-EQ) DIV 32 + 1 OF INTEGER; (* inverted conditon code table*)
+	formTab: ARRAY 16 OF SIGNED8;
+	CCtab: ARRAY 2, (geq-eql+1) OF SIGNED16;	(* condition code table, CCtab[0] = integer; CCtab[1] = char *)
+	InvCCtab: ARRAY (CC-EQ) DIV 32 + 1 OF SIGNED16; (* inverted conditon code table*)
 	lastTD: Item;	(*optimizing the method call: TD of the self parameter. Set by Parameter ParRecord, used by call. only set whe a AVR Record is pushed*)
 	delegateType: OPT.Struct;	(*delegate type*)
 
@@ -194,13 +194,13 @@ Intel i386 :
 		pc := 0; level := 0
 	END Init;
 
-	PROCEDURE IncReg (pReg: LONGINT);
+	PROCEDURE IncReg (pReg: SIGNED32);
 	(* increments field used in the pseudo code where reg was first used *)
 	BEGIN
 		IF pReg >= 0 THEN INC (OPL.Instr[pReg].used) END (* pReg < 0: special registers  *)
 	END IncReg;
 
-	PROCEDURE InitInstr (op: INTEGER; mode, form: SHORTINT; node: OPT.Node);
+	PROCEDURE InitInstr (op: SIGNED16; mode, form: SIGNED8; node: OPT.Node);
 	(* initialize the pseudo instruction at position pc *)
 	VAR i: SIZE;  instr: OPL.InstructionTable;
 	BEGIN
@@ -217,7 +217,7 @@ Intel i386 :
 		OPL.Instr [pc].pc := OPL.Nil; OPL.Instr [pc].reg := OPL.Nil; OPL.Instr [pc].abs := FALSE
 	END InitInstr;
 
-	PROCEDURE NewStat* (textPos: LONGINT);
+	PROCEDURE NewStat* (textPos: SIGNED32);
 	BEGIN
 		InitInstr (newStat, 0, 0, NIL);
 		OPL.Instr [pc].src1 := textPos;
@@ -225,7 +225,7 @@ Intel i386 :
 		INC (pc)
 	END NewStat;
 
-	PROCEDURE GenLoad (op: INTEGER; VAR z, x: Item);
+	PROCEDURE GenLoad (op: SIGNED16; VAR z, x: Item);
 	(* loads x into register; used for: ld, ldbdw, ldwdw, ldbw, lea, fload, fild, ldbdwu, ldwdwu, lbdwu *)
 	BEGIN
 		CASE x.mode OF
@@ -282,7 +282,7 @@ Intel i386 :
 		GenLoad (pop, dummy, x);
 	END GenPop;
 
-	PROCEDURE GenLoadProc (op: INTEGER; VAR z: Item; val: LONGINT; node: OPT.Node);
+	PROCEDURE GenLoadProc (op: SIGNED16; VAR z: Item; val: SIGNED32; node: OPT.Node);
 	(* ldProc, ldXProc *)
 	BEGIN
 		InitInstr (op, OPO.ImmReg, LInt, node);
@@ -291,7 +291,7 @@ Intel i386 :
 		INC (pc)
 	END GenLoadProc;
 
-	PROCEDURE GenStore (op: INTEGER; VAR z, x: Item);
+	PROCEDURE GenStore (op: SIGNED16; VAR z, x: Item);
 	(* z := x; used for: store, fstore, fist *)
 	BEGIN
 		ASSERT (x.mode = Reg);
@@ -317,7 +317,7 @@ Intel i386 :
 		INC (pc)
 	END GenStore;
 
-	PROCEDURE GenPopReg (hint, form: SHORTINT);
+	PROCEDURE GenPopReg (hint, form: SIGNED8);
 	(* popReg *)
 	BEGIN
 		IF hint = OPL.noHint THEN InitInstr (popReg, 0, 0, NIL)
@@ -328,14 +328,14 @@ Intel i386 :
 		INC (pc)
 	END GenPopReg;
 
-	PROCEDURE Gen0 (op: INTEGER);
+	PROCEDURE Gen0 (op: SIGNED16);
 	(* used for: cld, pushReg, label *)
 	BEGIN
 		InitInstr (op, 0, 0, NIL);
 		INC (pc)
 	END Gen0;
 
-	PROCEDURE Gen1 (op: INTEGER; adr: LONGINT; node: OPT.Node);
+	PROCEDURE Gen1 (op: SIGNED16; adr: SIGNED32; node: OPT.Node);
 	(* used for: je, jne, jl, jle, jg, jge, ja, jae, jb, jbe, jc, jnc, jmp, jmpReg, trap, te, tne, ta, tae, to, ret, enter, leave *)
 	BEGIN
 		IF op = jmpReg THEN
@@ -346,7 +346,7 @@ Intel i386 :
 		INC (pc)
 	END Gen1;
 
-	PROCEDURE Gen2 (op: INTEGER; VAR z, x: Item);
+	PROCEDURE Gen2 (op: SIGNED16; VAR z, x: Item);
 	(* z := op (x); used for: neg, not, abs, fabs, fchs, short, entier *)
 	BEGIN
 		ASSERT (x.mode = Reg);
@@ -357,7 +357,7 @@ Intel i386 :
 		INC (pc)
 	END Gen2;
 
-	PROCEDURE Gen3 (op: INTEGER; VAR z, x, y: Item);
+	PROCEDURE Gen3 (op: SIGNED16; VAR z, x, y: Item);
 	(* z := op (x, y); used for: add, sub, mul, div, mod, or, xor, and, btr, bts, sal,sar, shr, rol, fadd, fsub, fmul, fdiv *)
 	BEGIN
 		IF y.mode = Con THEN InitInstr (op, OPO.ImmReg, x.typ.form, x.node)
@@ -380,7 +380,7 @@ Intel i386 :
 		Gen0 (pushReg);
 	END PushRegs;
 
-	PROCEDURE GenCall (op: INTEGER; adr, parSize: LONGINT; node: OPT.Node);
+	PROCEDURE GenCall (op: SIGNED16; adr, parSize: SIGNED32; node: OPT.Node);
 	(* used for call, xcall, callReg *)
 	BEGIN
 		IF op = callReg THEN
@@ -392,7 +392,7 @@ Intel i386 :
 		INC (pc)
 	END GenCall;
 
-	PROCEDURE GenFlags (op: INTEGER; VAR x, y: Item);
+	PROCEDURE GenFlags (op: SIGNED16; VAR x, y: Item);
 	(* x op y; used for: cmp, bt, fcmp, cmpString *)
 	BEGIN
 		ASSERT((x.mode=Reg)&(y.mode IN {Reg, Con}), 100);
@@ -405,7 +405,7 @@ Intel i386 :
 		INC (pc)
 	END GenFlags;
 
-	PROCEDURE GenSetC (op: INTEGER; VAR z: Item); (* set condition *)
+	PROCEDURE GenSetC (op: SIGNED16; VAR z: Item); (* set condition *)
 	(* used for: sete, setne, setl, setle, setg, setge, seta, setae, setb, setbe, setc, setne *)
 	BEGIN
 		InitInstr (op, OPO.RegReg, SInt, z.node);
@@ -413,7 +413,7 @@ Intel i386 :
 		INC (pc)
 	END GenSetC;
 
-	PROCEDURE GenRepMovs (VAR z, x, nofElem: Item; moveSize: SHORTINT;  reverse: BOOLEAN); (* z := x; block copy *)
+	PROCEDURE GenRepMovs (VAR z, x, nofElem: Item; moveSize: SIGNED8;  reverse: BOOLEAN); (* z := x; block copy *)
 	(* used for: repMovs *)
 	BEGIN
 		InitInstr (repMovs, 0, 0, NIL);
@@ -425,7 +425,7 @@ Intel i386 :
 		INC (pc)
 	END GenRepMovs;
 
-	PROCEDURE GenPhi (reg0, reg1: LONGINT);
+	PROCEDURE GenPhi (reg0, reg1: SIGNED32);
 	(* phi *)
 	BEGIN
 		InitInstr (phi, 0, 0, NIL);
@@ -434,13 +434,13 @@ Intel i386 :
 		INC (pc)
 	END GenPhi;
 
-	PROCEDURE  MakeCon* (VAR cons: Item; typ: OPT.Struct; val: LONGINT);
+	PROCEDURE  MakeCon* (VAR cons: Item; typ: OPT.Struct; val: SIGNED32);
 	(* makes a constant item cons *)
 	BEGIN
 		cons.mode := Con; cons.adr := val; cons.offs := 0; cons.typ := typ; cons.node := NIL
 	END MakeCon;
 
-	PROCEDURE SetCC (VAR x: Item; cc: LONGINT);
+	PROCEDURE SetCC (VAR x: Item; cc: SIGNED32);
 	(* set condition code *)
 	BEGIN
 		x.typ := OPT.booltyp; x.mode := Coc; x.adr := cc; x.offs := Nil; x.inx := Nil; x.node := NIL
@@ -539,7 +539,7 @@ Intel i386 :
 
 	PROCEDURE Jncc* (VAR x: Item; VAR loc: Label; node: OPT.Node);
 	(* conditional jump on false *)
-		VAR j: INTEGER;
+		VAR j: SIGNED16;
 	BEGIN
 		IF x.mode # Coc THEN
 			ASSERT (x.typ.form = Bool);
@@ -562,7 +562,7 @@ Intel i386 :
 
 	PROCEDURE CompleteSL (VAR x: Item);
 	(* complete static link *)
-		VAR n: LONGINT; sl: Item;
+		VAR n: SIGNED32; sl: Item;
 	BEGIN
 		IF x.mnolev > 0 THEN
 			n := level - x.mnolev;
@@ -713,7 +713,7 @@ Intel i386 :
 	END TypeTest;
 
 	PROCEDURE Procedure* (VAR proc: Item; n: OPT.Node);
-		VAR obj: OPT.Object; index: LONGINT;
+		VAR obj: OPT.Object; index: SIGNED32;
 	BEGIN
 		obj := n.obj;
 		proc.mode := obj.mode; proc.node := n; proc.mnolev := obj.mnolev; proc.inx := none;
@@ -734,10 +734,10 @@ Intel i386 :
 		IF (OPM.ovflchk IN OPM.codeOptions) THEN Gen1 (to, OPL.OverflowTrap, NIL) END
 	END CheckOverflow;
 
-	PROCEDURE CheckIntRange (VAR x: Item; form: SHORTINT);
+	PROCEDURE CheckIntRange (VAR x: Item; form: SIGNED8);
 	END CheckIntRange;
 
-	PROCEDURE CheckRealRange (VAR x: Item; form: SHORTINT);
+	PROCEDURE CheckRealRange (VAR x: Item; form: SIGNED8);
 	END CheckRealRange;
 
 	PROCEDURE CheckIndex (VAR index, len: Item);
@@ -754,7 +754,7 @@ Intel i386 :
 		END;
 	END CheckIndex;
 
-	PROCEDURE ChangeType (VAR item: Item; form: SHORTINT);
+	PROCEDURE ChangeType (VAR item: Item; form: SIGNED8);
 	BEGIN
 		CASE form OF
 			Byte: item.typ:= OPT.bytetyp
@@ -782,12 +782,12 @@ Intel i386 :
 		Gen3 (bts, z, z, x)
 	END SetElem;
 
-	PROCEDURE Convert* (VAR x: Item; form: SHORTINT);
+	PROCEDURE Convert* (VAR x: Item; form: SIGNED8);
 		VAR
 			t: Item;
-			xform: SHORTINT;
+			xform: SIGNED8;
 
-		PROCEDURE IntToInt (VAR z, x: Item; xform, zform: SHORTINT);
+		PROCEDURE IntToInt (VAR z, x: Item; xform, zform: SIGNED8);
 		(* integer to integer convertion *)
 		BEGIN
 			ASSERT ((xform IN intSet) & (zform IN intSet) & (x.typ.form IN intSet) & (z.typ.form IN intSet));
@@ -814,7 +814,7 @@ Intel i386 :
 			(* z.typ will be changed by Convert *)
 		END IntToInt;
 
-		PROCEDURE IntToReal (VAR z, x: Item; xform, zform: SHORTINT);
+		PROCEDURE IntToReal (VAR z, x: Item; xform, zform: SIGNED8);
 		(* integer to real convertion *)
 			VAR  temp, cons: Item;
 		BEGIN
@@ -838,7 +838,7 @@ Intel i386 :
 			(* z.typ will be changed by Convert *)
 		END IntToReal;
 
-		PROCEDURE IntToCharByte (VAR z, x: Item; form: SHORTINT);
+		PROCEDURE IntToCharByte (VAR z, x: Item; form: SIGNED8);
 		BEGIN
 			IF (x.typ.form # SInt) & (x.mode = Reg) THEN
 				ChangeType (x, form);
@@ -848,7 +848,7 @@ Intel i386 :
 			(* z.typ will be changed by Convert *)
 		END IntToCharByte;
 
-		PROCEDURE RealToReal (VAR z, x: Item; xform, zform: SHORTINT);
+		PROCEDURE RealToReal (VAR z, x: Item; xform, zform: SIGNED8);
 		(* real to real convertion *)
 		BEGIN
 			IF xform < zform THEN (* smaller to bigger *)
@@ -860,7 +860,7 @@ Intel i386 :
 			(* z.typ will be changed by Convert *)
 		END RealToReal;
 
-		PROCEDURE RealToInt (VAR z, x: Item; xform, zform: SHORTINT);
+		PROCEDURE RealToInt (VAR z, x: Item; xform, zform: SIGNED8);
 		(* real to integer convertion *)
 		BEGIN
 			loadf (x); ChangeType (x, LInt);
@@ -868,7 +868,7 @@ Intel i386 :
 			(* z.typ will be changed by Convert *)
 		END RealToInt;
 
-		PROCEDURE CharToInt (VAR z, x: Item; zform: SHORTINT);
+		PROCEDURE CharToInt (VAR z, x: Item; zform: SIGNED8);
 		(* character to integer convertion *)
 		BEGIN
 			IF x.mode = VarPar THEN
@@ -883,7 +883,7 @@ Intel i386 :
 			(* z.typ will be changed by Convert *)
 		END CharToInt;
 
-		PROCEDURE ByteToInt (VAR z, x: Item; zform: SHORTINT);
+		PROCEDURE ByteToInt (VAR z, x: Item; zform: SIGNED8);
 		(* byte to integer convertion *)
 		BEGIN
 			IF x.mode = VarPar THEN
@@ -938,9 +938,9 @@ Intel i386 :
 	PROCEDURE Include* (VAR z, x: Item; incl: BOOLEAN); (* INCL / EXCL (z, x) *)
 		VAR y,  v: Item;
 
-		PROCEDURE exp2 (x: LONGINT): LONGINT;
+		PROCEDURE exp2 (x: SIGNED32): SIGNED32;
 		(* returns 2^x *)
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 		BEGIN
 			ASSERT (x >= 0);
 			i := 1;
@@ -1011,8 +1011,8 @@ Intel i386 :
 		END
 	END Relation;
 
-	PROCEDURE Cmp* (VAR z, x, y: Item; rel: INTEGER); (* z := cmp (x, y) *)
-		VAR xform: INTEGER; s, t: Item;
+	PROCEDURE Cmp* (VAR z, x, y: Item; rel: SIGNED16); (* z := cmp (x, y) *)
+		VAR xform: SIGNED16; s, t: Item;
 	BEGIN
 		xform := x.typ.form;
 		IF (xform = ProcTyp) & (x.typ.sysflag = delegate) OR (y.typ.form = ProcTyp) & (y.typ.sysflag = delegate) THEN
@@ -1077,14 +1077,14 @@ Intel i386 :
 			GenFlags (bt, y, x);
 			SetCC (z, CS)
 		ELSE
-			x.adr := LSH(LONGINT(1), x.adr);  x.typ := OPT.linttyp;
+			x.adr := LSH(SIGNED32(1), x.adr);  x.typ := OPT.linttyp;
 			GenFlags (test, y, x);
 			SetCC (z, NE)	(*jump on ZF flag*)
 		END
 	END In;
 
 	PROCEDURE SetRange* (VAR z, x, y: Item); (* z := {x..y} *)
-		VAR t, xShifted, yShifted, maxSet, fullSet: Item; val: LONGINT;
+		VAR t, xShifted, yShifted, maxSet, fullSet: Item; val: SIGNED32;
 	BEGIN
 		z.typ := OPT.settyp;
 		MakeCon (fullSet, OPT.linttyp, -1);
@@ -1097,7 +1097,7 @@ Intel i386 :
 			load (fullSet);
 			Gen3 (shr, z, fullSet,  y);
 			IF x.adr # 0 THEN
-				IF x.adr = OPM.MaxSet THEN x.adr := MIN (LONGINT)
+				IF x.adr = OPM.MaxSet THEN x.adr := MIN (SIGNED32)
 				ELSE
 					val := 2;
 					WHILE x.adr > 1 DO
@@ -1113,7 +1113,7 @@ Intel i386 :
 			load (fullSet);
 			Gen3 (sal, z, fullSet, x);
 			IF y.adr # OPM.MaxSet THEN
-				IF y.adr = OPM.MaxSet-1 THEN y.adr := MAX (LONGINT)
+				IF y.adr = OPM.MaxSet-1 THEN y.adr := MAX (SIGNED32)
 				ELSE
 					val := 2;
 					WHILE y.adr > 0 DO
@@ -1140,7 +1140,7 @@ Intel i386 :
 	END SetRange;
 
 	PROCEDURE Not* (VAR z, x: Item); (* z := NOT (x) *)
-		VAR temp: LONGINT;
+		VAR temp: SIGNED32;
 	BEGIN
 		IF x.mode = Coc THEN
 			z := x; z.adr := InvCCtab [(z.adr - EQ) DIV 32];
@@ -1221,7 +1221,7 @@ Intel i386 :
 		END
 	END Ash;
 
-	PROCEDURE Add* (VAR z, x, y: Item; f: INTEGER); (* z := x + y *)
+	PROCEDURE Add* (VAR z, x, y: Item; f: SIGNED16); (* z := x + y *)
 	BEGIN
 		ASSERT ( (f IN realSet) OR (f = Set) OR (f IN intSet) );
 		IF f IN realSet THEN
@@ -1246,7 +1246,7 @@ Intel i386 :
 		END
 	END Add;
 
-	PROCEDURE Sub* (VAR z, x, y: Item; f: INTEGER); (* z := x - y *)
+	PROCEDURE Sub* (VAR z, x, y: Item; f: SIGNED16); (* z := x - y *)
 		VAR t: Item;
 	BEGIN
 		ASSERT ( (f IN realSet) OR (f = Set) OR (f IN intSet) );
@@ -1268,8 +1268,8 @@ Intel i386 :
 		END
 	END Sub;
 
-	PROCEDURE Mul* (VAR z, x, y: Item; f: INTEGER); (* z := x * y *)
-		VAR val, exp: LONGINT; shift: Item;
+	PROCEDURE Mul* (VAR z, x, y: Item; f: SIGNED16); (* z := x * y *)
+		VAR val, exp: SIGNED32; shift: Item;
 	BEGIN
 		ASSERT ( (f = Set) OR (f IN intSet) OR (f IN realSet) );
 		IF f IN realSet THEN
@@ -1323,7 +1323,7 @@ Intel i386 :
 		END
 	END Mul;
 
-	PROCEDURE Div* (VAR z, x, y: Item; f: INTEGER); (* z := x DIV y; z := x / y *)
+	PROCEDURE Div* (VAR z, x, y: Item; f: SIGNED16); (* z := x DIV y; z := x / y *)
 	BEGIN
 		ASSERT ( (f IN realSet) OR (f = Set) OR (f IN intSet) );
 		IF f IN realSet THEN
@@ -1353,7 +1353,7 @@ Intel i386 :
 	END Mod;
 
 	PROCEDURE CondAnd* (VAR x: Item); (* prepares conditional and *)
-		VAR jcc: INTEGER;
+		VAR jcc: SIGNED16;
 	BEGIN
 		IF x.mode = Coc THEN jcc := InvCCtab [(x.adr - EQ) DIV 32]
 		ELSE (* form = Bool, mode # Con *)
@@ -1385,7 +1385,7 @@ Intel i386 :
 	END And;
 
 	PROCEDURE CondOr* (VAR x: Item); (* prepares conditional or *)
-		VAR jcc: INTEGER;
+		VAR jcc: SIGNED16;
 	BEGIN
 		IF x.mode = Coc THEN jcc := SHORT (x.adr)
 		ELSE (* form = Bool, mode # Con *)
@@ -1416,10 +1416,10 @@ Intel i386 :
 		z.adr := y.adr; z.inx := y.inx (* Fjmp *)
 	END Or;
 
-	PROCEDURE SYSmop* (VAR z, x: Item; subcl: SHORTINT; typ: OPT.Struct);
+	PROCEDURE SYSmop* (VAR z, x: Item; subcl: SIGNED8; typ: OPT.Struct);
 	(* implementation of ADDRESSOF, CC, VAL *)
 		VAR
-			xform, typform: SHORTINT;
+			xform, typform: SIGNED8;
 			t, const: Item;
 	BEGIN
 		CASE subcl OF
@@ -1464,7 +1464,7 @@ Intel i386 :
 		END
 	END Mem;
 
-	PROCEDURE SYSdop* (VAR z, x, y: Item; subcl: SHORTINT);	(* implementation of BIT, LSH, ROT *)
+	PROCEDURE SYSdop* (VAR z, x, y: Item; subcl: SIGNED8);	(* implementation of BIT, LSH, ROT *)
 		VAR t, phiItem: Item; L, Lc: Label; absAccess: BOOLEAN;
 	BEGIN
 		CASE subcl OF
@@ -1505,9 +1505,9 @@ Intel i386 :
 						MakeCon (z, x.typ, 0);
 						CASE x.typ.form OF
 							Byte, Char, SInt:
-								z.adr := ROT (SHORTINT(x.adr), SHORT (y.adr))
+								z.adr := ROT (SIGNED8(x.adr), SHORT (y.adr))
 						  | Int:
-								z.adr := ROT (INTEGER(x.adr), SHORT (y.adr))
+								z.adr := ROT (SIGNED16(x.adr), SHORT (y.adr))
 						  | LInt:
 								z.adr := ROT ( x.adr, SHORT (y.adr))
 						END
@@ -1522,7 +1522,7 @@ Intel i386 :
 	END SYSdop;
 
 	PROCEDURE SYSgetput* (VAR z, x: Item; getfn: BOOLEAN);	(* SYSTEM.GET, SYSTEM.PUT *)
-		VAR form: SHORTINT; constAddr: BOOLEAN;					(* GetPut *)
+		VAR form: SIGNED8; constAddr: BOOLEAN;					(* GetPut *)
 	BEGIN
 		IF getfn THEN
 			constAddr := x.mode = Con;					(* GetPut *)
@@ -1587,9 +1587,9 @@ Intel i386 :
 	0	EAX/AX/AL	1	ECX/CX/CL	2	EDX/DX/DL	3	EBX/BX/BL
 	4	ESP/SP/AH	5	EBP/BP/CH	6	ESI/SI/DH	7	EDI/DI/DL
 	registers size is depending on the type of the variable (2nd argument in PUTREG/GETREG).
-	SHORTINT 	= 8 bit values 	(AL, CL, DL, BL, AH, CH, DH, DL)
-	INTEGER  	= 16 bit values 	(AX, CX, DX, BX, SP, BP, SI, DI)
-	LONGINT 	= 32 bit values 	(EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI)
+	SIGNED8 	= 8 bit values 	(AL, CL, DL, BL, AH, CH, DH, DL)
+	SIGNED16  	= 16 bit values 	(AX, CX, DX, BX, SP, BP, SI, DI)
+	SIGNED32 	= 32 bit values 	(EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI)
 	SYTEM.PUTREG (const, const) always access 32 bit register. 	*)
 		VAR reg: Item;
 	BEGIN
@@ -1629,7 +1629,7 @@ Intel i386 :
 		Gen3 (and, z, x, y)
 	END Msk;
 
-	PROCEDURE Field* (VAR x: Item; offset: LONGINT); (* Record.field *)
+	PROCEDURE Field* (VAR x: Item; offset: SIGNED32); (* Record.field *)
 	BEGIN
 		ASSERT (x.mode IN {Var, VarPar, Abs, RegRel});
 		IF x.mode IN {Var, Abs} THEN INC (x.adr, offset)
@@ -1642,7 +1642,7 @@ Intel i386 :
 
 	PROCEDURE Method* (VAR x: Item;  obj: OPT.Object);	(* self.Meth *)
 			(* x is self, obj is the method *)
-	VAR  reg: LONGINT;
+	VAR  reg: SIGNED32;
 	BEGIN
 		(* x.typ is the record, because self has been dereferenced to access it *)
 		ASSERT(obj.mode = TProc, 201);
@@ -1667,9 +1667,9 @@ Intel i386 :
 		END;
 	END MakeVar;
 
-	PROCEDURE ArrayLen(VAR len: Item; arr: Item; n: LONGINT);
+	PROCEDURE ArrayLen(VAR len: Item; arr: Item; n: SIGNED32);
 	(* return n-th dimension of arr.typ *)
-	VAR  typ: OPT.Struct; i: LONGINT;
+	VAR  typ: OPT.Struct; i: SIGNED32;
 	BEGIN
 		IF arr.typ.sysflag = notag THEN
 			OPM.err(200)
@@ -1707,7 +1707,7 @@ Intel i386 :
 	END Len;
 
 	PROCEDURE ArrayBaseSize(VAR len: Item; arr: Item);
-	VAR  typ: OPT.Struct; dim: LONGINT; t, tt: Item;
+	VAR  typ: OPT.Struct; dim: SIGNED32; t, tt: Item;
 	BEGIN
 		ASSERT(arr.typ.comp IN ArraySet, 100);
 		typ := arr.typ.BaseTyp;  dim := 1;
@@ -1721,8 +1721,8 @@ Intel i386 :
 		IF (t.mode=Con)&(len.mode=Con) THEN  len.adr:=len.adr*t.adr  ELSE  tt := len;  Mul(len, t, tt, LInt)  END;
 	END ArrayBaseSize;
 
-	PROCEDURE TypeSize(x: Item; VAR size: Item; VAR step, scale: SHORTINT);	(*used for moves, returns the scale*)
-	VAR  typ: OPT.Struct; dim, rest: LONGINT; t, tt: Item;
+	PROCEDURE TypeSize(x: Item; VAR size: Item; VAR step, scale: SIGNED8);	(*used for moves, returns the scale*)
+	VAR  typ: OPT.Struct; dim, rest: SIGNED32; t, tt: Item;
 	BEGIN
 		typ := x.typ; dim := 0;
 		MakeCon(size, OPT.linttyp, 1);
@@ -1766,7 +1766,7 @@ Intel i386 :
 	PROCEDURE Index* (VAR z, index: Item); (* z := z[index] *)
 		VAR
 			t, len, size: Item;  typ: OPT.Struct;
-			scale, comp, check: LONGINT;
+			scale, comp, check: SIGNED32;
 	BEGIN
 		check := z.mode;  ASSERT(check IN {Var, VarPar, Abs, RegRel}, 100);
 		typ := z.typ;  comp := typ.comp;  ASSERT(comp IN ArraySet, 101);
@@ -1829,9 +1829,9 @@ Intel i386 :
 		z.typ := typ.BaseTyp; DEC(z.descOffs, OPM.LIntSize);
 	END Index;
 
-	PROCEDURE MoveBlock (VAR z, x, size: Item; moveSize: SHORTINT);
+	PROCEDURE MoveBlock (VAR z, x, size: Item; moveSize: SIGNED8);
 	(* move 'size' element from x to z, where 'element' has the size 'moveSize' (byte, word, dword *)
-	VAR type: OPT.Struct;  src: Item; oldSize: LONGINT;
+	VAR type: OPT.Struct;  src: Item; oldSize: SIGNED32;
 	BEGIN
 		ASSERT (moveSize IN {OPO.Bit8, OPO.Bit16, OPO.Bit32});
 		IF (size.mode = Con) & (moveSize IN {OPO.Bit16, OPO.Bit8})  THEN (* try to optimize *)
@@ -1899,9 +1899,9 @@ Intel i386 :
 		END
 	END MoveBlock;
 
-	PROCEDURE MoveBlockReversed (VAR z, x, size: Item; moveSize: SHORTINT);
+	PROCEDURE MoveBlockReversed (VAR z, x, size: Item; moveSize: SIGNED8);
 	(* same as MoveBlock, but reversed! *)
-	VAR	scale: SHORTINT; t: LONGINT;
+	VAR	scale: SIGNED8; t: SIGNED32;
 	BEGIN
 		ASSERT (moveSize IN {OPO.Bit8, OPO.Bit16, OPO.Bit32});
 		IF (size.mode = Con) & (moveSize IN {OPO.Bit16, OPO.Bit8})  THEN (* try to optimize *)
@@ -2067,7 +2067,7 @@ Intel i386 :
 
 	PROCEDURE Assign* (VAR z, x: Item);	(* z  := x *)
 		VAR
-			zform, xform, step, scale : SHORTINT;
+			zform, xform, step, scale : SIGNED8;
 			temp, zero, sizeItem: Item;
 			proc: OPT.Object;
 	BEGIN
@@ -2213,11 +2213,11 @@ Intel i386 :
 		GenCall (xcall, OPL.NewSysLinkIndex * 10000H + OPL.NewSysEntryNr, 8, NIL);
 	END NewSys;
 
-	PROCEDURE NewArray* (VAR z, nofelem: Item; nofdim: LONGINT; typ: OPT.Struct; dimUsed: BOOLEAN);
+	PROCEDURE NewArray* (VAR z, nofelem: Item; nofdim: SIGNED32; typ: OPT.Struct; dimUsed: BOOLEAN);
 	(* NEW (dynArr, dim0, dim1, ...) *)
 		VAR
 			cons, tdesc, t: Item;
-			nofArrElems: LONGINT;
+			nofArrElems: SIGNED32;
 			o: OPT.Object;
 	BEGIN
 		nofArrElems:=1;
@@ -2261,7 +2261,7 @@ Intel i386 :
 	END NewArray;
 
 	PROCEDURE NewRec* (VAR z: Item; typ: OPT.Struct); (* NEW (record), NEW (POINTER TO Static ARRAY) *)
-		VAR	tag, size: Item; btyp: OPT.Struct; len: LONGINT; o: OPT.Object;
+		VAR	tag, size: Item; btyp: OPT.Struct; len: SIGNED32; o: OPT.Object;
 	BEGIN
 		IF typ.comp=StaticArr THEN
 			len := typ.n; btyp := typ.BaseTyp;
@@ -2282,7 +2282,7 @@ Intel i386 :
 
 	PROCEDURE CallRecBody*(VAR self, body: Item; typ: OPT.Struct);		(* Active only *)
 		VAR con: Item;
-			type: LONGINT;
+			type: SIGNED32;
 			tag, t0, t1: Item;
 
 		PROCEDURE GetBody(curtype, bodytype: OPT.Struct;  VAR body: Item);
@@ -2330,7 +2330,7 @@ Intel i386 :
 	END CallRecBody;
 
 	PROCEDURE PushArrLen(fp: OPT.Object; VAR ap, dest: Item; useDest: BOOLEAN);
-	VAR  atyp, ftyp: OPT.Struct; depth: LONGINT; len, size, t: Item;
+	VAR  atyp, ftyp: OPT.Struct; depth: SIGNED32; len, size, t: Item;
 	BEGIN
 		atyp := ap.typ; ftyp := fp.typ; depth := 0;
 		WHILE ftyp.comp IN {OpenArr, SDynArr} DO
@@ -2373,7 +2373,7 @@ Intel i386 :
 	END PushArrLen;
 
 	PROCEDURE PushComp(fp: OPT.Object; VAR ap: Item);
-		VAR sizeItem, t: Item; size: LONGINT;
+		VAR sizeItem, t: Item; size: SIGNED32;
 	BEGIN
 		IF ap.typ.form = String THEN
 			size := fp.typ.size; INC(size, (-size) MOD 4);
@@ -2431,7 +2431,7 @@ Intel i386 :
 	END ParRecord;
 
 	PROCEDURE Parameter* (VAR ap: Item; fp: OPT.Object; apIsDeref, alwaysRef: BOOLEAN);
-		VAR form, apMode: SHORTINT; temp, cons, stack, tag: Item;
+		VAR form, apMode: SIGNED8; temp, cons, stack, tag: Item;
 			proc: OPT.Object; apTyp, fpTyp: OPT.Struct;  pushtag: BOOLEAN;
 	BEGIN
 		fpTyp := fp.typ; apTyp := ap.typ;
@@ -2530,8 +2530,8 @@ Intel i386 :
 		END
 	END Parameter;
 
-	PROCEDURE PrepRetDest*(z: Item): LONGINT;
-		VAR t, from: Item; size: LONGINT;
+	PROCEDURE PrepRetDest*(z: Item): SIGNED32;
+		VAR t, from: Item; size: SIGNED32;
 	BEGIN
 		ASSERT(z.typ.form = Comp);
 		size := 4;
@@ -2567,8 +2567,8 @@ Intel i386 :
 		loadAdr(x); GenPush(x); INC(tos.offs, 4)
 	END PushRetDesc;
 
-	PROCEDURE CorrectStackAdr*(VAR x: Item; size, dynblocks: LONGINT);
-	VAR oldoff: LONGINT; typ: OPT.Struct;
+	PROCEDURE CorrectStackAdr*(VAR x: Item; size, dynblocks: SIGNED32);
+	VAR oldoff: SIGNED32; typ: OPT.Struct;
 	BEGIN
 		typ := x.typ; x.typ := OPT.linttyp;	(*to ensure that load works fine*)
 		IF (dynblocks#0)&(x.mode=RegRel)&(x.adr=ESP) THEN
@@ -2585,7 +2585,7 @@ Intel i386 :
 		x.typ := typ
 	END CorrectStackAdr;
 
-	PROCEDURE ResetStack*(dynblocks: LONGINT);
+	PROCEDURE ResetStack*(dynblocks: SIGNED32);
 	VAR t: Item;
 	BEGIN
 		t := Stack;
@@ -2595,7 +2595,7 @@ Intel i386 :
 		END
 	END ResetStack;
 
-	PROCEDURE AllocateStatic*(VAR tos: Item; size: LONGINT);
+	PROCEDURE AllocateStatic*(VAR tos: Item; size: SIGNED32);
 	VAR	t, con: Item;
 	BEGIN
 		ASSERT(size >= 0, 100);
@@ -2607,7 +2607,7 @@ Intel i386 :
 		tos.mode := RegRel; tos.adr := ESP; tos.offs := 0; tos.inx := none; tos.typ := OPT.linttyp;
 	END AllocateStatic;
 
-	PROCEDURE RemoveStatic*(size: LONGINT);
+	PROCEDURE RemoveStatic*(size: SIGNED32);
 	VAR	t, con: Item;
 	BEGIN
 		ASSERT(size >= 0, 100);
@@ -2618,7 +2618,7 @@ Intel i386 :
 	END RemoveStatic;
 
 	PROCEDURE CopyDynArr(VAR x, y: Item);
-	VAR	dim: LONGINT; yy, xx, size, t: Item; typ: OPT.Struct; step, scale: SHORTINT;
+	VAR	dim: SIGNED32; yy, xx, size, t: Item; typ: OPT.Struct; step, scale: SIGNED8;
 	BEGIN
 			(*dimensions of y*)
 		IF ~(y.mode IN {Var, VarPar, Abs}) THEN  load(y); GenPush(y)  END;
@@ -2650,8 +2650,8 @@ Intel i386 :
 		END
 	END CopyDynArr;
 
-	PROCEDURE ArgSize(par: OPT.Object): LONGINT; (* ejz *)
-		VAR typ: OPT.Struct; size: LONGINT;
+	PROCEDURE ArgSize(par: OPT.Object): SIGNED32; (* ejz *)
+		VAR typ: OPT.Struct; size: SIGNED32;
 	BEGIN
 		size := 0;
 		WHILE par # NIL DO
@@ -2691,7 +2691,7 @@ Intel i386 :
 	END EndCall;
 
 	PROCEDURE Call* (VAR x: Item; proc: OPT.Object; node: OPT.Node);
-		VAR n: LONGINT; sl: Item; param: OPT.Object; tag, t0, t1, self, y, z: Item; label: Label;
+		VAR n: SIGNED32; sl: Item; param: OPT.Object; tag, t0, t1, self, y, z: Item; label: Label;
 	BEGIN
 		IF (x.mode IN {LProc, CProc}) OR ((x.mode IN {XProc}) & (x.mnolev >= 0)) THEN (* local procedure *)	(* was active only *)
 			IF slNeeded IN proc.conval.setval THEN
@@ -2830,8 +2830,8 @@ Intel i386 :
 		END
 	END AllocSDynArr;
 
-	PROCEDURE Enter* (proc: OPT.Object; dataSize: LONGINT; node: OPT.Node);
-		VAR par: OPT.Object; x, z, t0, t1, size: Item; step, scale: SHORTINT;  useRef: BOOLEAN;
+	PROCEDURE Enter* (proc: OPT.Object; dataSize: SIGNED32; node: OPT.Node);
+		VAR par: OPT.Object; x, z, t0, t1, size: Item; step, scale: SIGNED8;  useRef: BOOLEAN;
 	BEGIN (* !!later due to a bug this procedure looks no longer very nice *)
 		useRef := (proc # NIL) & (proc.sysflag # 0);
 		IF proc # NIL THEN
@@ -2877,8 +2877,8 @@ Intel i386 :
 	END Enter;
 
 	PROCEDURE Return* (VAR res: Item; proc: OPT.Object); (* RETURN res *)
-		VAR res1, t, size, negsize: Item; pReg: LONGINT; procform: SHORTINT; typ: OPT.Struct;
-			sp, ref, t1: Item; step, scale: SHORTINT;
+		VAR res1, t, size, negsize: Item; pReg: SIGNED32; procform: SIGNED8; typ: OPT.Struct;
+			sp, ref, t1: Item; step, scale: SIGNED8;
 			savedPC, savedFP, callerTOS: Item;
 	BEGIN
 		typ := proc.typ;  procform:=typ.form;
@@ -3007,7 +3007,7 @@ Intel i386 :
 	END Return;
 
 	PROCEDURE Exit* (proc: OPT.Object);
-		VAR size: LONGINT; ebp: Item;
+		VAR size: SIGNED32; ebp: Item;
 	BEGIN
 		IF proc = NIL THEN (* from module *)
 			Gen1 (leave, 0, NIL);
@@ -3064,7 +3064,7 @@ Intel i386 :
 		GenCall(xcall, OPL.AwaitIndex * 10000H + OPL.AwaitEntryNr, 8, NIL);
 	END Await;
 
-	PROCEDURE Trap* (n: LONGINT; node: OPT.Node); (* HALT (n) *)
+	PROCEDURE Trap* (n: SIGNED32; node: OPT.Node); (* HALT (n) *)
 	BEGIN
 		Gen1 (trap, n, node)
 	END Trap;
@@ -3085,7 +3085,7 @@ Intel i386 :
 		END
 	END GenDimTrap;
 
-	PROCEDURE Case* (VAR x: Item; low, high: LONGINT; VAR tab: LONGINT; VAR L: Label; node: OPT.Node);
+	PROCEDURE Case* (VAR x: Item; low, high: SIGNED32; VAR tab: SIGNED32; VAR L: Label; node: OPT.Node);
 	(* optimize the case where CASE expr and expr is constant! *)
 		VAR c, y: Item;
 	BEGIN
@@ -3110,7 +3110,7 @@ Intel i386 :
 		Gen1 (jmpReg, y.adr, node)
 	END Case;
 
-	PROCEDURE CaseFixup* (tab: LONGINT; elseLabel: Label; len: LONGINT); (* case *)
+	PROCEDURE CaseFixup* (tab: SIGNED32; elseLabel: Label; len: SIGNED32); (* case *)
 	BEGIN
 		InitInstr (case, 0, 0, NIL);
 		OPL.Instr [pc].src1 := tab; OPL.Instr [pc].src2 := elseLabel; OPL.Instr [pc].inx := len * 4;

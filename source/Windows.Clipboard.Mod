@@ -11,7 +11,7 @@ VAR
 	hMem: Kernel32.HGLOBAL; adr: ADDRESS;
 	hBool: Kernel32.BOOL;
 	ch : CHAR;
-	chUnicode: ARRAY 2 OF LONGINT;
+	chUnicode: ARRAY 2 OF SIGNED32;
 BEGIN
 	ASSERT((text # NIL) & (text.HasWriteLock()));
 	IF User32.OpenClipboard(Kernel32.NULL) # Kernel32.False THEN

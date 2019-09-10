@@ -25,7 +25,7 @@ PROCEDURE Send*(context : Commands.Context);
 VAR
 	message: IMAPClient.Message;
 	server, thisHost: ARRAY 1024 OF CHAR;
-	ret: LONGINT;
+	ret: SIGNED32;
 BEGIN
 	(* parse the message from the input string *)
 	context.arg.SkipWhitespace; context.arg.String(server);
@@ -38,12 +38,12 @@ BEGIN
 	ret := SendMessage(message, server, thisHost);
 END Send;
 
-PROCEDURE SendMessage*(message: IMAPClient.Message; CONST server, thisHost: ARRAY OF CHAR): LONGINT;
+PROCEDURE SendMessage*(message: IMAPClient.Message; CONST server, thisHost: ARRAY OF CHAR): SIGNED32;
 VAR
 	smtp: SMTPClient.SMTPSession;
-	i: LONGINT;
-	res: WORD;
-	returnValue: LONGINT;
+	i: SIGNED32;
+	res: INTEGER;
+	returnValue: SIGNED32;
 	w: Streams.Writer;
 	p: ANY;
 	s: String;

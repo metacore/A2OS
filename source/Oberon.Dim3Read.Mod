@@ -18,7 +18,7 @@ TYPE
 	ShapeSym = POINTER TO ShapeSymDesc;
 	ShapeSymDesc = RECORD
 		name: ARRAY 32 OF CHAR;
-		startpos: LONGINT;
+		startpos: SIGNED32;
 		next: ShapeSym;
 	END;
 
@@ -27,8 +27,8 @@ TYPE
 		next: Attributes;
 		T: Dim3Engine.Matrix;	(* current transformation matrix *)
 		color, fontColor: Dim3Engine.Color;
-		diffuse, speccoef: REAL;
-		specexpo: INTEGER;
+		diffuse, speccoef: FLOAT32;
+		specexpo: SIGNED16;
 		smooth, dither, gouraud, specular: BOOLEAN;
 		font: ARRAY 64 OF CHAR;
 	END;
@@ -37,16 +37,16 @@ TYPE
 VAR
 	S: Texts.Scanner;
 	src: Texts.Text;
-	sym: INTEGER;
+	sym: SIGNED16;
 	W: Texts.Writer;
-	lastErrPos: LONGINT;
+	lastErrPos: SIGNED32;
 	shapes: ShapeSym;
 	cur: Attributes;
 
 
 (* print error message *)
 PROCEDURE Error (msg: ARRAY OF CHAR);
-VAR pos: LONGINT;
+VAR pos: SIGNED32;
 BEGIN
 	pos := Texts.Pos(S);
 	IF pos - lastErrPos > 6 THEN
@@ -155,12 +155,12 @@ BEGIN
 	END
 END Get;
 
-PROCEDURE Expect (s: INTEGER; msg: ARRAY OF CHAR);
+PROCEDURE Expect (s: SIGNED16; msg: ARRAY OF CHAR);
 BEGIN
 	IF sym = s THEN Get ELSE Error(msg) END
 END Expect;
 
-PROCEDURE Number (VAR x: REAL);
+PROCEDURE Number (VAR x: FLOAT32);
 BEGIN
 	IF sym = number THEN
 		x := S.x;
@@ -171,7 +171,7 @@ BEGIN
 	END
 END Number;
 
-PROCEDURE Vector (VAR vec: ARRAY OF REAL);
+PROCEDURE Vector (VAR vec: ARRAY OF FLOAT32);
 BEGIN
 	Expect(lpar, "'(' expected");
 	Number(vec[0]);
@@ -183,7 +183,7 @@ END Vector;
 
 (*--- Parser ---*)
 
-PROCEDURE Points (shape: Dim3Engine.Shape; VAR N: INTEGER);
+PROCEDURE Points (shape: Dim3Engine.Shape; VAR N: SIGNED16);
 VAR vec: Dim3Engine.Vector; p: Dim3Engine.Point;
 BEGIN
 	Get;
@@ -196,8 +196,8 @@ BEGIN
 	UNTIL sym # lpar
 END Points;
 
-PROCEDURE Texture (shape: Dim3Engine.Shape; poly: Dim3Engine.Polygon; N: INTEGER);
-VAR n, cnt: INTEGER; x, u, v: REAL; trans: BOOLEAN;
+PROCEDURE Texture (shape: Dim3Engine.Shape; poly: Dim3Engine.Polygon; N: SIGNED16);
+VAR n, cnt: SIGNED16; x, u, v: FLOAT32; trans: BOOLEAN;
      textName: ARRAY 32 OF CHAR; p: Dim3Engine.Point;
 BEGIN
 	Get;
@@ -242,8 +242,8 @@ BEGIN
 	Dim3Engine.InitTexture(poly, textName, trans);
 END Texture;
 
-PROCEDURE Text (shape: Dim3Engine.Shape; poly: Dim3Engine.Polygon; N: INTEGER);
-VAR n, cnt: INTEGER; x, u, v: REAL; trans: BOOLEAN;
+PROCEDURE Text (shape: Dim3Engine.Shape; poly: Dim3Engine.Polygon; N: SIGNED16);
+VAR n, cnt: SIGNED16; x, u, v: FLOAT32; trans: BOOLEAN;
      textName: ARRAY 32 OF CHAR; p: Dim3Engine.Point;
 BEGIN
 	Get;
@@ -288,8 +288,8 @@ BEGIN
 	Dim3Engine.InitStringTexture(poly, textName, cur.font, cur.fontColor, cur.color, trans);
 END Text;
 
-PROCEDURE Polygon (shape: Dim3Engine.Shape; N: INTEGER);
-VAR poly: Dim3Engine.Polygon; p: Dim3Engine.Point; x: REAL; n, cnt: INTEGER;
+PROCEDURE Polygon (shape: Dim3Engine.Shape; N: SIGNED16);
+VAR poly: Dim3Engine.Polygon; p: Dim3Engine.Point; x: FLOAT32; n, cnt: SIGNED16;
 BEGIN
 	Get;
 	Dim3Engine.NewPolygon(poly);
@@ -325,7 +325,7 @@ BEGIN
 END Polygon;
 
 PROCEDURE Transformation;
-VAR angle: REAL; v: Dim3Engine.Vector; j: INTEGER;
+VAR angle: FLOAT32; v: Dim3Engine.Vector; j: SIGNED16;
 BEGIN
 	CASE sym OF
 	| translate:
@@ -354,7 +354,7 @@ BEGIN
 END Transformation;
 
 PROCEDURE Attribute;
-VAR r, g, b: REAL;
+VAR r, g, b: FLOAT32;
 BEGIN
 	CASE sym OF
 	| color:
@@ -463,7 +463,7 @@ BEGIN
 END Font;
 
 PROCEDURE Light (shape: Dim3Engine.Shape);
-VAR l: Dim3Engine.Light; v, dir: Dim3Engine.Vector; inten: REAL; type: INTEGER;
+VAR l: Dim3Engine.Light; v, dir: Dim3Engine.Vector; inten: FLOAT32; type: SIGNED16;
 BEGIN
 	type := Dim3Engine.DirectLight;
 	Get;
@@ -479,7 +479,7 @@ BEGIN
 END Light;
 
 PROCEDURE Shape (s: Dim3Engine.Shape);
-VAR sub: Dim3Engine.Shape; N: INTEGER;
+VAR sub: Dim3Engine.Shape; N: SIGNED16;
 BEGIN
 	Get;
 	N := 0;
@@ -536,7 +536,7 @@ BEGIN
 END ShapeDef;
 
 PROCEDURE Add (shape: Dim3Engine.Shape);
-VAR s: ShapeSym; pos: LONGINT;
+VAR s: ShapeSym; pos: SIGNED32;
 BEGIN
 	pos := Texts.Pos(S);	(* remember where to continue *)
 	Get;

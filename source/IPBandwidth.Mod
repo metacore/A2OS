@@ -10,7 +10,7 @@ TYPE Link = OBJECT
 	VAR context: Commands.Context;
 	VAR diagnostics: Diagnostics.StreamDiagnostics;
 	VAR hostname: DNS.Name;
-	VAR port, result: WORD;
+	VAR port, result: INTEGER;
 	VAR address: IP.Adr;
 	VAR buffer: ARRAY 65000 OF CHAR;
 
@@ -57,7 +57,7 @@ TYPE Link = OBJECT
 	END Send;
 
 	PROCEDURE Receive;
-	VAR duration, ticks: WORD; received: SIZE;
+	VAR duration, ticks: INTEGER; received: SIZE;
 	BEGIN
 		hostname := "server";
 		IF ~context.arg.GetInteger (duration, FALSE) THEN
@@ -183,7 +183,7 @@ TYPE UDPLink = OBJECT (Link)
 	END SendBytes;
 
 	PROCEDURE ReceiveBytes (): SIZE;
-	VAR address: IP.Adr; port: WORD; received: SIZE;
+	VAR address: IP.Adr; port: INTEGER; received: SIZE;
 	BEGIN
 		socket.Receive (buffer, 0, LEN (buffer), 0, address, port, received, result);
 		IF result = UDP.Ok THEN RETURN received END;

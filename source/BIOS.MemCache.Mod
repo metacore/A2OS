@@ -15,8 +15,8 @@ CONST
 
 TYPE
 	SetCacheMessage = POINTER TO RECORD (Machine.Message)
-		physAdr: ADDRESS; size, type: LONGINT;
-		res: ARRAY Machine.MaxCPU OF WORD
+		physAdr: ADDRESS; size, type: SIGNED32;
+		res: ARRAY Machine.MaxCPU OF INTEGER
 	END;
 
 (* Return the value of the MTTRcap register. *)
@@ -141,8 +141,8 @@ END SetMTTRphysMask;
 
 (** Set the cache properties of the specified physical memory area on the current processor. {physAdr, size MOD PS = 0}  Must be called from supervisor mode. *)
 
-PROCEDURE LocalSetCacheProperties*(physAdr: ADDRESS; size, type: LONGINT; VAR res: WORD);
-VAR i, n, f: LONGINT; mask, base: SET; j, k: ADDRESS;
+PROCEDURE LocalSetCacheProperties*(physAdr: ADDRESS; size, type: SIGNED32; VAR res: INTEGER);
+VAR i, n, f: SIGNED32; mask, base: SET; j, k: ADDRESS;
 BEGIN
 	ASSERT((physAdr MOD PS = 0) & (size MOD PS = 0) & (size # 0));
 	IF (physAdr >= M) OR (physAdr < 0) THEN
@@ -153,7 +153,7 @@ BEGIN
 				IF Machine.MTTR IN Machine.features THEN	(* MTTRs supported *)
 					mask := GetMTTRcapLow();
 					IF (type # WC) OR (10 IN mask) THEN
-						n := SYSTEM.VAL(LONGINT, mask * {0..7});
+						n := SYSTEM.VAL(SIGNED32, mask * {0..7});
 						i := 0; f := -1; res := Ok;
 						WHILE (i # n) & (res = Ok) DO
 							mask := GetMTTRphysMaskLow(i);
@@ -196,7 +196,7 @@ BEGIN
 	END
 END LocalSetCacheProperties;
 
-PROCEDURE HandleSetCacheProperties(id: LONGINT; CONST state: Machine.State; msg: Machine.Message);
+PROCEDURE HandleSetCacheProperties(id: SIGNED32; CONST state: Machine.State; msg: Machine.Message);
 BEGIN
 	WITH msg: SetCacheMessage DO
 		(* to do: page 11-25 *)
@@ -206,8 +206,8 @@ END HandleSetCacheProperties;
 
 (** Broadcast a LocalSetCacheProperties operation to all processors. *)
 
-PROCEDURE GlobalSetCacheProperties*(physAdr: ADDRESS; size, type: LONGINT; VAR res: WORD);
-VAR i: LONGINT; msg: SetCacheMessage;
+PROCEDURE GlobalSetCacheProperties*(physAdr: ADDRESS; size, type: SIGNED32; VAR res: INTEGER);
+VAR i: SIGNED32; msg: SetCacheMessage;
 BEGIN
 	NEW(msg); msg.physAdr := physAdr; msg.size := size; msg.type := type;
 	FOR i := 0 TO Machine.MaxCPU-1 DO msg.res[i] := 2304 END;	(* default result *)
@@ -256,7 +256,7 @@ CODE {SYSTEM.Pentium, SYSTEM.Privileged}
 	POPFD
 END LocalDisableCaching;
 
-PROCEDURE HandleDisableCaching(id: LONGINT; CONST state: Machine.State; msg: Machine.Message);
+PROCEDURE HandleDisableCaching(id: SIGNED32; CONST state: Machine.State; msg: Machine.Message);
 BEGIN
 	LocalDisableCaching
 END HandleDisableCaching;

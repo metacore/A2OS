@@ -15,11 +15,11 @@ CONST
 	InvalidChecksum *			= 7;	(** Computed and reference checksums do not match *)
 
 TYPE
-	Checksum * = PROCEDURE (start, size: LONGINT; CONST value: ARRAY OF CHAR): LONGINT;
+	Checksum * = PROCEDURE (start, size: SIGNED32; CONST value: ARRAY OF CHAR): SIGNED32;
 
 VAR
 	checksums: ARRAY MaxChecksums OF RECORD type: ARRAY 32 OF CHAR; check: Checksum END;
-	checksumNb: LONGINT;
+	checksumNb: SIGNED32;
 
 	PROCEDURE Register * (CONST type: ARRAY OF CHAR; check: Checksum);
 	BEGIN
@@ -28,11 +28,11 @@ VAR
 		INC(checksumNb)
 	END Register;
 
-	PROCEDURE Check * (CONST type, reference: ARRAY OF CHAR; start, size: ADDRESS): LONGINT;
+	PROCEDURE Check * (CONST type, reference: ARRAY OF CHAR; start, size: ADDRESS): SIGNED32;
 	VAR
 		m: Modules.Module;
 		name: ARRAY 64 OF CHAR;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		COPY(type, name);
 		Strings.Append(name, 'Checksum');

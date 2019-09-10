@@ -11,7 +11,7 @@ CONST
 	Failure* = 2;
 
 TYPE
-	TestType* = WORD;
+	TestType* = INTEGER;
 	TestName = ARRAY 100 OF CHAR;
 
 	TestResult* = POINTER TO RECORD
@@ -74,7 +74,7 @@ TYPE
 		RETURN TRUE;
 	END Process;
 
-	PROCEDURE Handle* (r: Streams.Reader; pos: Streams.Position; CONST name: ARRAY OF CHAR; type: TestType): WORD;
+	PROCEDURE Handle* (r: Streams.Reader; pos: Streams.Position; CONST name: ARRAY OF CHAR; type: TestType): INTEGER;
 	END Handle;
 
 	PROCEDURE Print* (report: Report);
@@ -113,11 +113,11 @@ TYPE
 		END Green;
 
 		PROCEDURE Red;
-		BEGIN IF tw # NIL THEN tw.SetFontColor (LONGINT(0FF0000FFH)); tw.SetFontStyle ({0}) END;
+		BEGIN IF tw # NIL THEN tw.SetFontColor (SIGNED32(0FF0000FFH)); tw.SetFontStyle ({0}) END;
 		END Red;
 
 		PROCEDURE Orange;
-		BEGIN IF tw # NIL THEN tw.SetFontColor (LONGINT (0FFC000FFH)); tw.SetFontStyle ({0}) END;
+		BEGIN IF tw # NIL THEN tw.SetFontColor (SIGNED32 (0FFC000FFH)); tw.SetFontStyle ({0}) END;
 		END Orange;
 
 		PROCEDURE Default;
@@ -190,7 +190,7 @@ BEGIN RETURN (r.Peek () = 09X) & (r.Get () = 09X)
 END Tabulator;
 
 PROCEDURE ReadBoolean (r: Streams.Reader; VAR boolean: BOOLEAN): BOOLEAN;
-VAR value: WORD;
+VAR value: INTEGER;
 BEGIN r.Int (value, FALSE); boolean := value = 1; RETURN r.res = Streams.Ok
 END ReadBoolean;
 

@@ -20,12 +20,12 @@ MODULE SymbiosDisks;	(** non-portable *)
 		Device = OBJECT (Disks.Device)
 			VAR
 				ha, target, lun: CHAR;
-				writePreComp: LONGINT;
-				capacity: LONGINT;
+				writePreComp: SIGNED32;
+				capacity: SIGNED32;
 
-			PROCEDURE Transfer* (op, block, num: LONGINT; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: WORD);
+			PROCEDURE Transfer* (op, block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER);
 			VAR
-				srb: ASPI.ExecIOCmdSRB; size, n, i, copyAdr, orgadr, orgsize: LONGINT; phys: ARRAY MaxRanges OF Machine.Range;
+				srb: ASPI.ExecIOCmdSRB; size, n, i, copyAdr, orgadr, orgsize: SIGNED32; phys: ARRAY MaxRanges OF Machine.Range;
 			BEGIN
 				orgsize := num*BS;
 				orgadr := ADDRESSOF(data[ofs])(Machine.Address32);
@@ -122,7 +122,7 @@ MODULE SymbiosDisks;	(** non-portable *)
 *)
 			END Transfer;
 
-			PROCEDURE GetSize* (VAR size: LONGINT; VAR res: WORD);
+			PROCEDURE GetSize* (VAR size: SIGNED32; VAR res: INTEGER);
 			BEGIN
 				size := capacity; res := Disks.Ok;
 				IF TraceVerbose THEN
@@ -135,12 +135,12 @@ MODULE SymbiosDisks;	(** non-portable *)
 		END Device;
 
 VAR
-	fallbackBufAdr: LONGINT;
+	fallbackBufAdr: SIGNED32;
 	fallbackBuf: POINTER TO ARRAY OF CHAR;
-	Ncopies: LONGINT;
+	Ncopies: SIGNED32;
 	freeSRB: ASPI.ExecIOCmdSRB;
 
-	PROCEDURE AcquireBuffer(VAR adr: LONGINT);
+	PROCEDURE AcquireBuffer(VAR adr: SIGNED32);
 	BEGIN {EXCLUSIVE}
 		INC(Ncopies);
 		AWAIT(fallbackBufAdr # 0);
@@ -148,7 +148,7 @@ VAR
 		fallbackBufAdr := 0
 	END AcquireBuffer;
 
-	PROCEDURE ReleaseBuffer(adr: LONGINT);
+	PROCEDURE ReleaseBuffer(adr: SIGNED32);
 	BEGIN {EXCLUSIVE}
 		fallbackBufAdr := adr
 	END ReleaseBuffer;
@@ -169,8 +169,8 @@ VAR
 
 (* ---- Get disk capacity and block size ---- *)
 
-	PROCEDURE GetCapacity(ha, target, lun: CHAR; VAR capacity, blocksize: LONGINT);
-	VAR srb: ASPI.ExecIOCmdSRB; buf: ARRAY 8 OF CHAR; i: LONGINT;
+	PROCEDURE GetCapacity(ha, target, lun: CHAR; VAR capacity, blocksize: SIGNED32);
+	VAR srb: ASPI.ExecIOCmdSRB; buf: ARRAY 8 OF CHAR; i: SIGNED32;
 	BEGIN
 		NEW(srb);
 		srb.HaId := ha; srb.Flags := {ASPI.FlagsDirIn}; srb.Target := target; srb.Lun := lun;
@@ -192,7 +192,7 @@ VAR
 	END GetCapacity;
 
 	PROCEDURE Init;
-	VAR res, ha, targ, lun, num: LONGINT; regres: WORD; srb: ASPI.GetDevTypeSRB; dev: Device; name: Plugins.Name;
+	VAR res, ha, targ, lun, num: SIGNED32; regres: INTEGER; srb: ASPI.GetDevTypeSRB; dev: Device; name: Plugins.Name;
 	BEGIN
 		freeSRB := NIL;
 		NEW(fallbackBuf, 2*BS);

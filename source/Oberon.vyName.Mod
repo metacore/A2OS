@@ -77,7 +77,7 @@ TYPE
 	tNQueueDesc = RECORD
 	(Gadgets.ObjDesc)
 	Object*: vyBase.Object;
-	id: LONGINT;
+	id: SIGNED32;
 	prev: tNQueue
 	END;
 	*)
@@ -88,8 +88,8 @@ TYPE
 		(Gadgets.ObjDesc)
 		Object*: vyBase.Object;
 		Name: tNameArray;
-		id: LONGINT;
-		highid: LONGINT;  (* do not re-use id numbers*)
+		id: SIGNED32;
+		highid: SIGNED32;  (* do not re-use id numbers*)
 		(* multi: tNQueue; (* if name is re-used *) *)(* fof 010410, binary tree sorted by < and >= now *)
 		prev, next: tName
 	END;
@@ -431,7 +431,7 @@ BEGIN
 	END
 END GetName;
 
-PROCEDURE ExtName* (stub: tNameArray;  ext: tNameArray;  extnum: LONGINT;  VAR name: tNameArray);  (*vs 0.0d0 gs *)
+PROCEDURE ExtName* (stub: tNameArray;  ext: tNameArray;  extnum: SIGNED32;  VAR name: tNameArray);  (*vs 0.0d0 gs *)
 	(* generate a generic name based on ext. Format: <stub><ext><extnum>
 	where extnum is numeric and positive  *)
 BEGIN
@@ -458,10 +458,10 @@ RegisterMult(NameBase, ob);
 END
 END FixupObj;
 *)
-PROCEDURE IsExtName* (VAR name: tNameArray;  ext: tNameArray;  VAR stub: tNameArray;  VAR extnum: LONGINT): BOOLEAN;  (*vs 0.0d0 gs *)
+PROCEDURE IsExtName* (VAR name: tNameArray;  ext: tNameArray;  VAR stub: tNameArray;  VAR extnum: SIGNED32): BOOLEAN;  (*vs 0.0d0 gs *)
 	(* test  whether name is a generic name based on ext. Format: <stub><ext><extnum>
 	where extnum is numeric or empty. Empty is interpreted as 0  *)
-	VAR pos, l: LONGINT;
+	VAR pos, l: SIGNED32;
 BEGIN
 	pos := vyHostStrings.Pos(ext, name, 0);
 	IF pos < 0 THEN stub := name;  extnum := 0;  RETURN FALSE
@@ -482,7 +482,7 @@ END IsExtName;
 
 PROCEDURE UniqueExtName* (NameBase: tName;  stub: tNameArray;  ext: tNameArray;  VAR newname: tNameArray);  (*vs 0.0d0 gs *)
 	(* generate a unique new name based on stub and ext. Additional extension should be numeric *)
-	VAR extnum: LONGINT;
+	VAR extnum: SIGNED32;
 BEGIN
 	extnum := 0;
 	REPEAT

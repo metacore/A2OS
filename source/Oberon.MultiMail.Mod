@@ -8,17 +8,17 @@ MODULE MultiMail IN Oberon;	(** portable *) (* ejz,  *)
 	VAR
 		W: Texts.Writer;
 
-	PROCEDURE SearchText(text: Texts.Text; CONST pat: ARRAY OF CHAR; VAR pos: LONGINT): BOOLEAN;
+	PROCEDURE SearchText(text: Texts.Text; CONST pat: ARRAY OF CHAR; VAR pos: SIGNED32): BOOLEAN;
 		CONST
 			MaxPatLen = 128;
 		VAR
 			i, l, sPatLen: SIZE;
 			R: Texts.Reader;
 			sPat: ARRAY MaxPatLen OF CHAR;
-			sDv: ARRAY MaxPatLen + 1 OF INTEGER;
+			sDv: ARRAY MaxPatLen + 1 OF SIGNED16;
 			ch: CHAR;
 		PROCEDURE CalcDispVec;
-			VAR i, j, d: LONGINT;
+			VAR i, j, d: SIGNED32;
 		BEGIN
 			i := 1; d := 1;
 			WHILE i <= sPatLen DO
@@ -72,7 +72,7 @@ MODULE MultiMail IN Oberon;	(** portable *) (* ejz,  *)
 			item: Lists.Item;
 			boundary: ARRAY 128 OF CHAR;
 			magStr, val: ARRAY 16 OF CHAR;
-			pos, magic: LONGINT;
+			pos, magic: SIGNED32;
 			F: Files.File;
 			h: MIME.Header;
 			R: Texts.Reader;

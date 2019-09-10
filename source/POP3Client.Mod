@@ -22,10 +22,10 @@ TYPE POP3Client* = OBJECT
 	VAR connection : TCP.Connection;
 		w : Streams.Writer; (* writer on the control connection *)
 		r : Streams.Reader; (* reader on the control connection *)
-		state : LONGINT;
+		state : SIGNED32;
 		message : ARRAY 513 OF CHAR;
 
-		PROCEDURE Connect*(CONST host: ARRAY OF CHAR; port : LONGINT; CONST user, password: ARRAY OF CHAR;  VAR res : WORD);
+		PROCEDURE Connect*(CONST host: ARRAY OF CHAR; port : SIGNED32; CONST user, password: ARRAY OF CHAR;  VAR res : INTEGER);
 		VAR fadr : IP.Adr;
 		BEGIN {EXCLUSIVE}
 			res := 0;
@@ -73,7 +73,7 @@ TYPE POP3Client* = OBJECT
 		END Quit;
 
 		PROCEDURE List*;
-		VAR nr, len : LONGINT;
+		VAR nr, len : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			w.String("LIST"); w.Ln; w.Update;
 			IF ReadResponse(message) THEN
@@ -85,7 +85,7 @@ TYPE POP3Client* = OBJECT
 			END;
 		END List;
 
-		PROCEDURE GetMessage*(nr : LONGINT; CONST filename : ARRAY OF CHAR) : BOOLEAN;
+		PROCEDURE GetMessage*(nr : SIGNED32; CONST filename : ARRAY OF CHAR) : BOOLEAN;
 		VAR str : ARRAY 1024 OF CHAR; f : Files.File; fw : Files.Writer;
 		BEGIN {EXCLUSIVE}
 			f := Files.New(filename);
@@ -128,7 +128,7 @@ TYPE POP3Client* = OBJECT
 	END POP3Client;
 
 PROCEDURE Test*;
-VAR client : POP3Client; res : WORD;
+VAR client : POP3Client; res : INTEGER;
 BEGIN
 	NEW(client);
 	client.Connect("lillian.ethz.ch", 110, "user", "password", res);

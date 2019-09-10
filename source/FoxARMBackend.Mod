@@ -114,8 +114,8 @@ TYPE
 	Citation = OBJECT
 	VAR
 		pc: SIZE; (* program counter of the ARM instruction *)
-		bits: LONGINT;
-		shift: LONGINT; (* fixup shift ! *)
+		bits: SIGNED32;
+		shift: SIGNED32; (* fixup shift ! *)
 		next: Citation;
 	END Citation;
 
@@ -124,9 +124,9 @@ TYPE
 	VAR
 		firstCitation, lastCitation: Citation; (* linked list of citations *)
 		next: Reference;
-		size: LONGINT; (* storage size of this reference *)
+		size: SIGNED32; (* storage size of this reference *)
 
-		PROCEDURE & Init(size: LONGINT);
+		PROCEDURE & Init(size: SIGNED32);
 		BEGIN
 			firstCitation := NIL; lastCitation := NIL; next := NIL; SELF.size := size;
 		END Init;
@@ -136,7 +136,7 @@ TYPE
 			HALT(100);
 		END Emit;
 
-		PROCEDURE AddCitation(pc: SIZE; bits: LONGINT; shift: LONGINT);
+		PROCEDURE AddCitation(pc: SIZE; bits: SIGNED32; shift: SIGNED32);
 		VAR
 			citation: Citation;
 		BEGIN
@@ -148,9 +148,9 @@ TYPE
 	END Reference;
 
 	ImmediateReference = OBJECT (Reference)
-	VAR value: LONGINT;
+	VAR value: SIGNED32;
 
-		PROCEDURE & InitImm(v: LONGINT);
+		PROCEDURE & InitImm(v: SIGNED32);
 		BEGIN
 			Init(4);
 			SELF.value := v;
@@ -168,9 +168,9 @@ TYPE
 	END ImmediateReference;
 
 	ImmediateHReference = OBJECT (Reference)
-	VAR value: HUGEINT;
+	VAR value: SIGNED64;
 
-		PROCEDURE & InitImm(v: HUGEINT);
+		PROCEDURE & InitImm(v: SIGNED64);
 		BEGIN
 			Init(8);
 			SELF.value := v;
@@ -223,17 +223,17 @@ TYPE
 	ListOfReferences = OBJECT
 	VAR
 		firstReference, lastReference: Reference; (* linked list of all symbol references *)
-		size: LONGINT; (* length of the required fixup block *)
+		size: SIGNED32; (* length of the required fixup block *)
 		due: SIZE; (* the PC at which the reference block has to be written (the latest) *)
 
 		PROCEDURE & Init;
 		BEGIN
 			firstReference := NIL; lastReference := NIL;
 			size := 0;
-			due := MAX(LONGINT);
+			due := MAX(SIGNED32);
 		END Init;
 
-		PROCEDURE UpdateDue(pc: SIZE; bits: LONGINT; shift: LONGINT);
+		PROCEDURE UpdateDue(pc: SIZE; bits: SIGNED32; shift: SIGNED32);
 		VAR max: SIZE;
 		BEGIN
 			(* bits determine the address size in words *)
@@ -243,7 +243,7 @@ TYPE
 			END;
 		END UpdateDue;
 
-		PROCEDURE AddCitation(reference: Reference; pc: SIZE; bits: LONGINT; shift: LONGINT);
+		PROCEDURE AddCitation(reference: Reference; pc: SIZE; bits: SIGNED32; shift: SIGNED32);
 		BEGIN
 			reference.AddCitation(pc, bits, shift);
 			UpdateDue(pc, bits, shift);
@@ -257,7 +257,7 @@ TYPE
 			RETURN reference;
 		END AddReference;
 
-		PROCEDURE AddSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset: SIZE; pc: SIZE; bits: LONGINT);
+		PROCEDURE AddSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; symbolOffset: SIZE; pc: SIZE; bits: SIGNED32);
 		VAR
 			reference, foundReference: Reference; symbolReference: SymbolReference;
 		BEGIN
@@ -285,7 +285,7 @@ TYPE
 			AddCitation(reference, pc, bits, 0);
 		END AddSymbol;
 
-		PROCEDURE AddImmediate(value: LONGINT; pc: SIZE; bits: LONGINT);
+		PROCEDURE AddImmediate(value: SIGNED32; pc: SIZE; bits: SIGNED32);
 		VAR
 			reference, foundReference: Reference; immediateReference: ImmediateReference;
 		BEGIN
@@ -313,7 +313,7 @@ TYPE
 			AddCitation(reference, pc, bits, 0);
 		END AddImmediate;
 
-		PROCEDURE AddHImmediate(value: HUGEINT; pc: SIZE; bits: LONGINT);
+		PROCEDURE AddHImmediate(value: SIGNED64; pc: SIZE; bits: SIGNED32);
 		VAR
 			reference, foundReference: Reference;  immediateHReference: ImmediateHReference;
 		BEGIN
@@ -349,13 +349,13 @@ TYPE
 		reserved: ARRAY InstructionSet.NumberRegisters OF BOOLEAN;
 		unusable: Ticket;
 		blocked: Ticket;
-		hint: LONGINT;
+		hint: SIGNED32;
 		useFPU32:BOOLEAN;
 		useFPU64:BOOLEAN;
 
 		PROCEDURE & InitPhysicalRegisters(supportFramePointer, useFPU32, useFPU64, cooperative: BOOLEAN);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			unusable: Ticket;
 		BEGIN
 			SELF.useFPU32 := useFPU32;
@@ -400,13 +400,13 @@ TYPE
 		END InitPhysicalRegisters;
 
 		(** the number of physical registers **)
-		PROCEDURE NumberRegisters*(): LONGINT;
+		PROCEDURE NumberRegisters*(): SIGNED32;
 		BEGIN RETURN InstructionSet.NumberRegisters
 		END NumberRegisters;
 
 		(** allocate, i.e., map, a physical register to a ticket **)
-		PROCEDURE Allocate*(physicalRegisterNumber: LONGINT; ticket: Ticket);
-		VAR index: LONGINT;
+		PROCEDURE Allocate*(physicalRegisterNumber: SIGNED32; ticket: Ticket);
+		VAR index: SIGNED32;
 		BEGIN
 			ASSERT(~ticket.spilled);
 			Assert(toVirtual[physicalRegisterNumber] = NIL,"register already allocated");
@@ -425,18 +425,18 @@ TYPE
 		END Allocate;
 
 		(** set whether a certain physical register is reserved or not **)
-		PROCEDURE SetReserved*(physicalRegisterNumber: LONGINT; isReserved: BOOLEAN);
+		PROCEDURE SetReserved*(physicalRegisterNumber: SIGNED32; isReserved: BOOLEAN);
 		BEGIN reserved[physicalRegisterNumber] := isReserved
 		END SetReserved;
 
 		(** whether a certain physical register is reserved **)
-		PROCEDURE Reserved*(physicalRegisterNumber: LONGINT): BOOLEAN;
+		PROCEDURE Reserved*(physicalRegisterNumber: SIGNED32): BOOLEAN;
 		BEGIN RETURN (physicalRegisterNumber > 0) & reserved[physicalRegisterNumber]
 		END Reserved;
 
 		(** free a certain physical register **)
-		PROCEDURE Free*(physicalRegisterNumber: LONGINT);
-		VAR index: LONGINT;
+		PROCEDURE Free*(physicalRegisterNumber: SIGNED32);
+		VAR index: SIGNED32;
 		BEGIN
 			Assert((toVirtual[physicalRegisterNumber] # NIL), "register not reserved");
 			toVirtual[physicalRegisterNumber] := NIL;
@@ -462,9 +462,9 @@ TYPE
 		(** get the number of the next free physical register for a certain data type
 		- if a register hint has been set, it is respected if possible
 		**)
-		PROCEDURE NextFree*(CONST type: IntermediateCode.Type): LONGINT;
+		PROCEDURE NextFree*(CONST type: IntermediateCode.Type): SIGNED32;
 		VAR
-			result, i: LONGINT;
+			result, i: SIGNED32;
 		BEGIN
 			result := None;
 
@@ -502,18 +502,18 @@ TYPE
 		END NextFree;
 
 		(** give the register allocator a hint on what physical register to use next **)
-		PROCEDURE AllocationHint*(physicalRegisterNumber: LONGINT);
+		PROCEDURE AllocationHint*(physicalRegisterNumber: SIGNED32);
 		BEGIN hint := physicalRegisterNumber
 		END AllocationHint;
 
 		(** get the ticket that is currently mapped to a certain physical register **)
-		PROCEDURE Mapped*(physicalRegisterNumber: LONGINT): Ticket;
+		PROCEDURE Mapped*(physicalRegisterNumber: SIGNED32): Ticket;
 		BEGIN RETURN toVirtual[physicalRegisterNumber]
 		END Mapped;
 
 		(** dump the current register mapping to a stream **)
 		PROCEDURE Dump*(w: Streams.Writer);
-		VAR i: LONGINT; virtual: Ticket;
+		VAR i: SIGNED32; virtual: Ticket;
 		BEGIN
 			w.String("---- registers ----"); w.Ln;
 			FOR i := 0 TO LEN(toVirtual)-1 DO
@@ -584,7 +584,7 @@ TYPE
 		(* TODO: revise this *)
 		PROCEDURE Section*(in: IntermediateCode.Section; out: BinaryCode.Section);
 		VAR
-			oldSpillStackSize: LONGINT;
+			oldSpillStackSize: SIGNED32;
 
 			PROCEDURE CheckEmptySpillStack(): BOOLEAN;
 			BEGIN
@@ -632,7 +632,7 @@ TYPE
 		if not, the location of a runtime is returned **)
 		PROCEDURE Supported*(CONST irInstruction: IntermediateCode.Instruction; VAR moduleName, procedureName: ARRAY OF CHAR): BOOLEAN;
 		VAR
-			result: BOOLEAN; value: HUGEINT; exp: LONGINT;
+			result: BOOLEAN; value: SIGNED64; exp: SIGNED32;
 		BEGIN
 			CASE irInstruction.opcode OF
 			| IntermediateCode.add, IntermediateCode.sub, IntermediateCode.mul, IntermediateCode.abs, IntermediateCode.neg:
@@ -646,9 +646,9 @@ TYPE
 				result := result OR IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp)
 
 			| IntermediateCode.conv:
-				IF IsInteger64(irInstruction.op1) & IsFloat(irInstruction.op2) THEN  (* ENTIERH: REAL/LONGREAL --> HUGEINT*)
+				IF IsInteger64(irInstruction.op1) & IsFloat(irInstruction.op2) THEN  (* ENTIERH: FLOAT32/FLOAT64 --> SIGNED64*)
 					result := FALSE
-				ELSIF IsInteger64(irInstruction.op2) & IsFloat(irInstruction.op1) THEN (* HUGEINT --> REAL / HUGEINT --> LONGREAL *)
+				ELSIF IsInteger64(irInstruction.op2) & IsFloat(irInstruction.op1) THEN (* SIGNED64 --> FLOAT32 / SIGNED64 --> FLOAT64 *)
 					result := FALSE;
 				ELSE
 					result := ~IsFloat(irInstruction.op1) & ~IsFloat(irInstruction.op2)
@@ -718,7 +718,7 @@ TYPE
 		END CheckStackPointer;
 
 		(** emit an ARM instruction with an arbitrary amount of operands **)
-		PROCEDURE Emit(opCode, condition: LONGINT; flags: SET; CONST operands: ARRAY InstructionSet.MaxOperands OF Operand);
+		PROCEDURE Emit(opCode, condition: SIGNED32; flags: SET; CONST operands: ARRAY InstructionSet.MaxOperands OF Operand);
 		VAR
 		BEGIN
 			(* check whether the instruction modifies the stack pointer *)
@@ -747,7 +747,7 @@ TYPE
 		END Emit;
 
 		(** emit an ARM instruction with no operand **)
-		PROCEDURE Emit0(opCode: LONGINT);
+		PROCEDURE Emit0(opCode: SIGNED32);
 		VAR
 			operands: ARRAY InstructionSet.MaxOperands OF Operand;
 		BEGIN
@@ -762,7 +762,7 @@ TYPE
 		END Emit0;
 
 		(** emit an ARM instruction with 1 operand **)
-		PROCEDURE Emit1(opCode: LONGINT; op: Operand);
+		PROCEDURE Emit1(opCode: SIGNED32; op: Operand);
 		VAR
 			operands: ARRAY InstructionSet.MaxOperands OF Operand;
 		BEGIN
@@ -777,7 +777,7 @@ TYPE
 		END Emit1;
 
 		(** emit an ARM instruction with 2 operands **)
-		PROCEDURE Emit2(opCode: LONGINT; op1, op2: Operand);
+		PROCEDURE Emit2(opCode: SIGNED32; op1, op2: Operand);
 		VAR
 			operands: ARRAY InstructionSet.MaxOperands OF Operand;
 		BEGIN
@@ -792,7 +792,7 @@ TYPE
 		END Emit2;
 
 		(** emit an ARM instruction with 3 operands **)
-		PROCEDURE Emit3(opCode: LONGINT; op1, op2, op3: Operand);
+		PROCEDURE Emit3(opCode: SIGNED32; op1, op2, op3: Operand);
 		VAR
 			operands: ARRAY InstructionSet.MaxOperands OF Operand;
 		BEGIN
@@ -807,7 +807,7 @@ TYPE
 		END Emit3;
 
 		(** emit an ARM instruction with 4 operands **)
-		PROCEDURE Emit4(opCode: LONGINT; op1, op2, op3, op4: Operand);
+		PROCEDURE Emit4(opCode: SIGNED32; op1, op2, op3, op4: Operand);
 		VAR
 			operands: ARRAY InstructionSet.MaxOperands OF Operand;
 		BEGIN
@@ -822,7 +822,7 @@ TYPE
 		END Emit4;
 
 		(** emit an ARM instruction with 6 operands **)
-		PROCEDURE Emit6(opCode: LONGINT; op1, op2, op3, op4, op5, op6: Operand);
+		PROCEDURE Emit6(opCode: SIGNED32; op1, op2, op3, op4, op5, op6: Operand);
 		VAR
 			operands: ARRAY InstructionSet.MaxOperands OF Operand;
 		BEGIN
@@ -837,7 +837,7 @@ TYPE
 		END Emit6;
 
 		(** emit an ARM instruction with 2 operands and certain flags **)
-		PROCEDURE Emit2WithFlags(opCode: LONGINT; op1, op2: Operand; flags: SET);
+		PROCEDURE Emit2WithFlags(opCode: SIGNED32; op1, op2: Operand; flags: SET);
 		VAR
 			operands: ARRAY InstructionSet.MaxOperands OF Operand;
 		BEGIN
@@ -853,7 +853,7 @@ TYPE
 		END Emit2WithFlags;
 
 		(** emit an ARM instruction with 3 operands and certain flags **)
-		PROCEDURE Emit3WithFlags(opCode: LONGINT; op1, op2, op3: Operand; flags: SET);
+		PROCEDURE Emit3WithFlags(opCode: SIGNED32; op1, op2, op3: Operand; flags: SET);
 		VAR
 			operands: ARRAY InstructionSet.MaxOperands OF Operand;
 		BEGIN
@@ -868,7 +868,7 @@ TYPE
 		END Emit3WithFlags;
 
 		(** emit an ARM instruction with 1 operand and a condition **)
-		PROCEDURE Emit1WithCondition(opCode: LONGINT; op1: Operand; condition: LONGINT);
+		PROCEDURE Emit1WithCondition(opCode: SIGNED32; op1: Operand; condition: SIGNED32);
 		VAR
 			operands: ARRAY InstructionSet.MaxOperands OF Operand;
 		BEGIN
@@ -883,7 +883,7 @@ TYPE
 		END Emit1WithCondition;
 
 		(** emit an ARM instruction with 2 operands and a condition **)
-		PROCEDURE Emit2WithCondition(opCode: LONGINT; op1, op2: Operand; condition: LONGINT);
+		PROCEDURE Emit2WithCondition(opCode: SIGNED32; op1, op2: Operand; condition: SIGNED32);
 		VAR
 			operands: ARRAY InstructionSet.MaxOperands OF Operand;
 		BEGIN
@@ -898,7 +898,7 @@ TYPE
 		END Emit2WithCondition;
 
 		(** emit an ARM instruction with 3 operands and a condition **)
-		PROCEDURE Emit3WithCondition(opCode: LONGINT; op1, op2, op3: Operand; condition: LONGINT);
+		PROCEDURE Emit3WithCondition(opCode: SIGNED32; op1, op2, op3: Operand; condition: SIGNED32);
 		VAR
 			operands: ARRAY InstructionSet.MaxOperands OF Operand;
 		BEGIN
@@ -917,9 +917,9 @@ TYPE
 		- return the number of instructions required
 		- if 'doEmit' is TRUE, emit the instructions
 		**)
-		PROCEDURE ValueComposition(value: LONGINT; doEmit: BOOLEAN; CONST targetRegister: Operand): LONGINT;
+		PROCEDURE ValueComposition(value: SIGNED32; doEmit: BOOLEAN; CONST targetRegister: Operand): SIGNED32;
 		VAR
-			result: LONGINT;
+			result: SIGNED32;
 		BEGIN
 			IF doEmit THEN ASSERT(targetRegister.mode = InstructionSet.modeRegister) END;
 
@@ -941,10 +941,10 @@ TYPE
 		END ValueComposition;
 
 		(* note: used by 'ValueComposition'. do not call directly *)
-		PROCEDURE ValueComposition2(value: Basic.Integer; doEmit: BOOLEAN; CONST targetRegister: Operand): LONGINT;
+		PROCEDURE ValueComposition2(value: Basic.Integer; doEmit: BOOLEAN; CONST targetRegister: Operand): SIGNED32;
 		VAR
 			immediateOperand: Operand;
-			result, position, partialValue, i: LONGINT;
+			result, position, partialValue, i: SIGNED32;
 			valueAsSet: SET;
 			isFirst: BOOLEAN;
 		BEGIN
@@ -1008,10 +1008,10 @@ TYPE
 		END ValueComposition2;
 
 		(** get the physical register number that corresponds to a virtual register number and part **)
-		PROCEDURE PhysicalRegisterNumber(virtualRegisterNumber: SIZE; part: LONGINT): LONGINT;
+		PROCEDURE PhysicalRegisterNumber(virtualRegisterNumber: SIZE; part: SIGNED32): SIGNED32;
 		VAR
 			ticket: Ticket;
-			result: LONGINT;
+			result: SIGNED32;
 		BEGIN
 			IF virtualRegisterNumber = IntermediateCode.FP THEN
 				result := InstructionSet.FP
@@ -1043,7 +1043,7 @@ TYPE
 			offset := spillStackStart + ticket.offset + 1; (* TODO: check this *)
 			ASSERT((0 <= offset) & (offset < InstructionSet.Bits12));
 
-			result := InstructionSet.NewImmediateOffsetMemory(PhysicalRegisterNumber(IntermediateCode.FP, Low), LONGINT(offset), {InstructionSet.Decrement});
+			result := InstructionSet.NewImmediateOffsetMemory(PhysicalRegisterNumber(IntermediateCode.FP, Low), SIGNED32(offset), {InstructionSet.Decrement});
 
 			ASSERT(result.mode = InstructionSet.modeMemory);
 			RETURN result
@@ -1092,9 +1092,9 @@ TYPE
 		END GetFreeRegisterOrHint;
 
 		(** whether a register can hold data of a certain IR type **)
-		PROCEDURE IsRegisterForType(registerNumber: LONGINT; CONST type: IntermediateCode.Type): BOOLEAN;
+		PROCEDURE IsRegisterForType(registerNumber: SIGNED32; CONST type: IntermediateCode.Type): BOOLEAN;
 		VAR
-			result: BOOLEAN; form:LONGINT;
+			result: BOOLEAN; form:SIGNED32;
 		BEGIN
 			result := FALSE;
 			form := type.form;
@@ -1123,7 +1123,7 @@ TYPE
 				result := register
 			ELSE
 				result := GetFreeRegisterOrHint(IntermediateCode.UnsignedIntegerType(32), registerHint);
-				offsetOperand := OperandFromValue(ABS(offset(LONGINT)), result); (* might be immediate operand or register (tempRegister is given as a register hint) *)
+				offsetOperand := OperandFromValue(ABS(offset(SIGNED32)), result); (* might be immediate operand or register (tempRegister is given as a register hint) *)
 				IF offset > 0 THEN
 					Emit3(opADD, result, register, offsetOperand)
 				ELSE
@@ -1136,7 +1136,7 @@ TYPE
 		(** get an ARM register from an IR register
 		- use register hint if provided
 		**)
-		PROCEDURE RegisterFromIrRegister(CONST irRegisterOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand;
+		PROCEDURE RegisterFromIrRegister(CONST irRegisterOperand: IntermediateCode.Operand; part: SIGNED32; registerHint: Operand): Operand;
 		VAR
 			result: Operand;
 		BEGIN
@@ -1206,7 +1206,7 @@ TYPE
 		- use register hint if provided **)
 		PROCEDURE RegisterFromSymbol(symbol: Sections.SectionName; fingerprint: Basic.Fingerprint; resolved: Sections.Section; symbolOffset: SIZE; CONST registerHint: Operand): Operand;
 		VAR
-			address: LONGINT;
+			address: SIGNED32;
 			result: Operand;
 			irSection: IntermediateCode.Section;
 		BEGIN
@@ -1216,7 +1216,7 @@ TYPE
 
 			IF (irSection # NIL) & (irSection.resolved # NIL) & (irSection.resolved.os.fixed) THEN
 				(* optimization: if the IR section is already resolved and positioned at a fixed location, no fixup is required *)
-				address := (irSection.resolved.os.alignment + irSection.instructions[symbolOffset].pc)(LONGINT);
+				address := (irSection.resolved.os.alignment + irSection.instructions[symbolOffset].pc)(SIGNED32);
 				result := RegisterFromValue(address, registerHint)
 			ELSE
 				result := GetFreeRegisterOrHint(IntermediateCode.UnsignedIntegerType(32), registerHint);
@@ -1231,9 +1231,9 @@ TYPE
 		(** get an ARM memory operand from an IR memory operand
 		- note that the constraints on memory operands depend on the type of data (e.g., the allowed offset range is more restricted for memory operands on floating point values)
 		**)
-		PROCEDURE MemoryOperandFromIrMemoryOperand(VAR irMemoryOperand: IntermediateCode.Operand; part: LONGINT; CONST registerHint: Operand): Operand;
+		PROCEDURE MemoryOperandFromIrMemoryOperand(VAR irMemoryOperand: IntermediateCode.Operand; part: SIGNED32; CONST registerHint: Operand): Operand;
 		VAR
-			baseAddressRegisterNumber, offset: LONGINT;
+			baseAddressRegisterNumber, offset: SIGNED32;
 			indexingMode: SET;
 			result, baseAddressRegister, offsetRegister, tempRegister: Operand;
 		BEGIN
@@ -1255,13 +1255,13 @@ TYPE
 			ELSE
 				(* case 3: [123456] *)
 				ASSERT(irMemoryOperand.offset = 0);
-				baseAddressRegister := RegisterFromValue(LONGINT(irMemoryOperand.intValue), registerHint);
+				baseAddressRegister := RegisterFromValue(SIGNED32(irMemoryOperand.intValue), registerHint);
 				baseAddressRegisterNumber := baseAddressRegister.register
 			END;
 			ASSERT(baseAddressRegisterNumber # None);
 
 			(* get offset of part in question *)
-			offset := (irMemoryOperand.offset + part * 4)(LONGINT);
+			offset := (irMemoryOperand.offset + part * 4)(SIGNED32);
 
 			(* determine indexing mode *)
 			IF offset >= 0 THEN indexingMode := {InstructionSet.Increment} ELSE indexingMode := {InstructionSet.Decrement} END;
@@ -1306,7 +1306,7 @@ TYPE
 		- if possible, the an immediate is returned
 		- if needed, use register hint if provided
 		**)
-		PROCEDURE RegisterOrImmediateFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand;
+		PROCEDURE RegisterOrImmediateFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: SIGNED32; registerHint: Operand): Operand;
 		VAR
 			result: Operand;
 		BEGIN
@@ -1321,7 +1321,7 @@ TYPE
 		(** get an ARM register operand from any IR operand
 		- use register hint if provided
 		**)
-		PROCEDURE RegisterFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand;
+		PROCEDURE RegisterFromIrOperand(VAR irOperand: IntermediateCode.Operand; part: SIGNED32; registerHint: Operand): Operand;
 		VAR
 			result: Operand;
 		BEGIN
@@ -1343,7 +1343,7 @@ TYPE
 				ELSE
 					ASSERT(irOperand.offset = 0);
 					IF IsInteger(irOperand) THEN result := RegisterFromValue(ValueOfPart(irOperand.intValue, part), registerHint)
-					ELSIF IsSinglePrecisionFloat(irOperand) & backend.useFPU32 THEN result := SinglePrecisionFloatRegisterFromValue(REAL(irOperand.floatValue), registerHint)
+					ELSIF IsSinglePrecisionFloat(irOperand) & backend.useFPU32 THEN result := SinglePrecisionFloatRegisterFromValue(FLOAT32(irOperand.floatValue), registerHint)
 					ELSIF IsDoublePrecisionFloat(irOperand) & backend.useFPU64 THEN result := DoublePrecisionFloatRegisterFromValue(irOperand.floatValue, registerHint)
 					ELSE
 						IF IsSinglePrecisionFloat(irOperand) THEN
@@ -1408,7 +1408,7 @@ TYPE
 		BEGIN RETURN (irOperand.type.form IN IntermediateCode.Integer) & (irOperand.type.sizeInBits = 64)
 		END IsInteger64;
 
-		PROCEDURE PartType(CONST type: IntermediateCode.Type; part: LONGINT): IntermediateCode.Type;
+		PROCEDURE PartType(CONST type: IntermediateCode.Type; part: SIGNED32): IntermediateCode.Type;
 		VAR
 			result: IntermediateCode.Type;
 		BEGIN
@@ -1418,7 +1418,7 @@ TYPE
 
 		(* the intermediate code type of a part
 		- a part type is by definition directly representable in a register *)
-		PROCEDURE GetPartType*(CONST type: IntermediateCode.Type; part: LONGINT; VAR partType: IntermediateCode.Type);
+		PROCEDURE GetPartType*(CONST type: IntermediateCode.Type; part: SIGNED32; VAR partType: IntermediateCode.Type);
 		BEGIN
 			ASSERT((part = Low) OR (part = High));
 			IF (type.sizeInBits <= 32) OR (type.form = IntermediateCode.Float) & backend.useFPU64 THEN
@@ -1444,14 +1444,14 @@ TYPE
 		END GetPartType;
 
 		(** the value of a 32 bit part **)
-		PROCEDURE ValueOfPart(value: HUGEINT; part: LONGINT): LONGINT;
+		PROCEDURE ValueOfPart(value: SIGNED64; part: SIGNED32): SIGNED32;
 		VAR
-			result: LONGINT;
+			result: SIGNED32;
 		BEGIN
 			IF part = Low THEN
-				result := LONGINT(value) (* get the 32 least significant bits *)
+				result := SIGNED32(value) (* get the 32 least significant bits *)
 			ELSIF part = High THEN
-				result := LONGINT(ASH(value, -32)) (* get the 32 most significant bits *)
+				result := SIGNED32(ASH(value, -32)) (* get the 32 most significant bits *)
 			ELSE
 				HALT(100)
 			END;
@@ -1459,9 +1459,9 @@ TYPE
 		END ValueOfPart;
 
 		(** whether a 32 bit value can be directly encoded as an ARM immediate (using a 8-bit base value and 4-bit half rotation) **)
-		PROCEDURE ValueIsDirectlyEncodable(value: LONGINT): BOOLEAN;
+		PROCEDURE ValueIsDirectlyEncodable(value: SIGNED32): BOOLEAN;
 		VAR
-			baseValue, halfRotation: LONGINT;
+			baseValue, halfRotation: SIGNED32;
 			result: BOOLEAN;
 		BEGIN
 			result := InstructionSet.EncodeImmediate(value, baseValue, halfRotation);
@@ -1469,7 +1469,7 @@ TYPE
 		END ValueIsDirectlyEncodable;
 
 		(* whether an IR operand (or part thereof) can be directly encoded as an ARM immediate *)
-		PROCEDURE IrOperandIsDirectlyEncodable(irOperand: IntermediateCode.Operand; part: LONGINT): BOOLEAN;
+		PROCEDURE IrOperandIsDirectlyEncodable(irOperand: IntermediateCode.Operand; part: SIGNED32): BOOLEAN;
 		BEGIN RETURN
 				(irOperand.mode = IntermediateCode.ModeImmediate) &
 				(irOperand.symbol.name = "") &
@@ -1478,7 +1478,7 @@ TYPE
 		END IrOperandIsDirectlyEncodable;
 
 		(* whether the negation of an IR operand (or part thereof) can be directly encoded as an ARM immediate *)
-		PROCEDURE NegatedIrOperandIsDirectlyEncodable(irOperand: IntermediateCode.Operand; part: LONGINT): BOOLEAN;
+		PROCEDURE NegatedIrOperandIsDirectlyEncodable(irOperand: IntermediateCode.Operand; part: SIGNED32): BOOLEAN;
 		BEGIN RETURN
 				(irOperand.mode = IntermediateCode.ModeImmediate) &
 				(irOperand.symbol.name = "") &
@@ -1580,7 +1580,7 @@ TYPE
 		PROCEDURE EmitFixupBlockIfNeeded;
 		BEGIN
 			IF out.pc >= listOfReferences.due THEN
-				listOfReferences.due := MAX(LONGINT);
+				listOfReferences.due := MAX(SIGNED32);
 				Emit1(opB, InstructionSet.NewImmediate(4 + listOfReferences.size - 8 )); (* emit branch instruction that skips the fixup block *)
 				EmitFixupBlock; (* emit the fixup block *)
 				listOfReferences.Init (* clear the list *)
@@ -1592,7 +1592,7 @@ TYPE
 		VAR
 			reference: Reference;
 			citation: Citation;
-			patchValue: LONGINT;
+			patchValue: SIGNED32;
 		BEGIN
 			IF listOfReferences.size > 0 THEN
 				IF out.comments # NIL THEN
@@ -1606,7 +1606,7 @@ TYPE
 					(* 1. patch all of the citations, i.e., the LDR instructions that use the symbol reference *)
 					citation := reference.firstCitation;
 					WHILE citation # NIL DO
-						patchValue := (out.pc - 8 - citation.pc)(LONGINT);
+						patchValue := (out.pc - 8 - citation.pc)(SIGNED32);
 						patchValue := ASH(patchValue, -citation.shift); (* FLDS/VLDR reference counts number of words *)
 						ASSERT((0 <= patchValue) & (patchValue < ASH(1, citation.bits)));
 						out.PutBitsAt(citation.pc, patchValue, citation.bits);
@@ -1621,7 +1621,7 @@ TYPE
 		(** get an ARM operand that hold a certain value
 		- if possible the value is returned as an ARM immediate operand
 		- otherwise a register is returned instead (if a register hint is present, it is used) **)
-		PROCEDURE OperandFromValue(value: LONGINT; registerHint: Operand): Operand;
+		PROCEDURE OperandFromValue(value: SIGNED32; registerHint: Operand): Operand;
 		VAR
 			result: Operand;
 		BEGIN
@@ -1634,12 +1634,12 @@ TYPE
 		END OperandFromValue;
 
 		(** get a single precision VFP register that holds a certain floating point value **)
-		PROCEDURE SinglePrecisionFloatRegisterFromValue(value: REAL; registerHint: Operand): Operand;
+		PROCEDURE SinglePrecisionFloatRegisterFromValue(value: FLOAT32; registerHint: Operand): Operand;
 		VAR
-			intValue, dummy: LONGINT;
+			intValue, dummy: SIGNED32;
 			result, temp: Operand;
 		BEGIN
-			intValue := SYSTEM.VAL(LONGINT, value);
+			intValue := SYSTEM.VAL(SIGNED32, value);
 			(* alternative: integerValue := BinaryCode.ConvertReal(value) *)
 			temp := RegisterFromValue(intValue, registerHint);
 			result := GetFreeRegisterOrHint(IntermediateCode.FloatType(32), registerHint);
@@ -1651,12 +1651,12 @@ TYPE
 		END SinglePrecisionFloatRegisterFromValue;
 
 		(** get a single precision VFP register that holds a certain floating point value **)
-		PROCEDURE DoublePrecisionFloatRegisterFromValue(value: LONGREAL; registerHint: Operand): Operand;
+		PROCEDURE DoublePrecisionFloatRegisterFromValue(value: FLOAT64; registerHint: Operand): Operand;
 		VAR
-			intValue: HUGEINT; dummy: LONGINT;
+			intValue: SIGNED64; dummy: SIGNED32;
 			result, temp: Operand;
 		BEGIN
-			intValue := SYSTEM.VAL(HUGEINT, value);
+			intValue := SYSTEM.VAL(SIGNED64, value);
 			(* alternative: integerValue := BinaryCode.ConvertReal(value) *)
 			result := GetFreeRegisterOrHint(IntermediateCode.FloatType(64), registerHint);
 			listOfReferences.AddHImmediate(intValue, out.pc, 8);
@@ -1668,9 +1668,9 @@ TYPE
 
 		(** get an ARM register that holds a certain integer value
 		- if a register hint is present, it is used **)
-		PROCEDURE RegisterFromValue(value: LONGINT; registerHint: Operand): Operand;
+		PROCEDURE RegisterFromValue(value: SIGNED32; registerHint: Operand): Operand;
 		VAR
-			dummy: LONGINT;
+			dummy: SIGNED32;
 			result: Operand;
 		BEGIN
 			result := GetFreeRegisterOrHint(IntermediateCode.SignedIntegerType(32), registerHint);
@@ -1695,7 +1695,7 @@ TYPE
 			operand, zero, count: InstructionSet.Operand; i: SIZE;
 		BEGIN
 			inStackAllocation := TRUE;
-			operand := OperandFromValue(ABS(allocationSize(LONGINT)), emptyOperand);
+			operand := OperandFromValue(ABS(allocationSize(SIGNED32)), emptyOperand);
 			IF allocationSize > 0 THEN
 				IF clear THEN
 					zero := InstructionSet.NewRegister(0, None, None, 0);
@@ -1732,7 +1732,7 @@ TYPE
 		(** emit a MOV instruction if the two operands do not represent the same register
 		- for moves involving floating point registers special VFP instructions opFCPYS, opFMSR and opFMRS are used
 		**)
-		PROCEDURE MovIfDifferent(CONST a, b: Operand; part = Low: LONGINT);
+		PROCEDURE MovIfDifferent(CONST a, b: Operand; part = Low: SIGNED32);
 		BEGIN
 			IF ~IsSameRegister(a, b) THEN
 				ASSERT(a.mode = InstructionSet.modeRegister);
@@ -1787,7 +1787,7 @@ TYPE
 			- if IR operand is a memory location, get a temporary register (if provided the hinted register is used)
 			- if IR operand is an IR register, get the ARM register that is mapped to the corresponding part
 		**)
-		PROCEDURE AcquireDestinationRegister(CONST irDestinationOperand: IntermediateCode.Operand; part: LONGINT; registerHint: Operand): Operand;
+		PROCEDURE AcquireDestinationRegister(CONST irDestinationOperand: IntermediateCode.Operand; part: SIGNED32; registerHint: Operand): Operand;
 		VAR
 			result: Operand;
 		BEGIN
@@ -1808,7 +1808,7 @@ TYPE
 		(** write the content of an ARM register to an IR destination operand (memory location or IR register)
 			- afterwards, try to release the register
 		**)
-		PROCEDURE WriteBack(VAR irDestinationOperand: IntermediateCode.Operand; part: LONGINT; register: Operand);
+		PROCEDURE WriteBack(VAR irDestinationOperand: IntermediateCode.Operand; part: SIGNED32; register: Operand);
 		VAR
 			mappedArmRegister: Operand;
 		BEGIN
@@ -1831,7 +1831,7 @@ TYPE
 			ReleaseHint(register.register)
 		END WriteBack;
 
-		PROCEDURE ZeroExtendOperand(operand: Operand; sizeInBits: LONGINT);
+		PROCEDURE ZeroExtendOperand(operand: Operand; sizeInBits: SIGNED32);
 		BEGIN
 			ASSERT(sizeInBits <= 32);
 			IF operand.mode = InstructionSet.modeRegister THEN
@@ -1848,7 +1848,7 @@ TYPE
 			END
 		END ZeroExtendOperand;
 
-		PROCEDURE SignExtendOperand(operand: Operand; sizeInBits: LONGINT);
+		PROCEDURE SignExtendOperand(operand: Operand; sizeInBits: SIGNED32);
 		BEGIN
 			ASSERT(sizeInBits <= 32);
 			IF operand.mode = InstructionSet.modeRegister THEN
@@ -1874,11 +1874,11 @@ TYPE
 
 		(* ACTUAL CODE GENERATION *)
 
-		PROCEDURE EmitPush(VAR irOperand: IntermediateCode.Operand; part: LONGINT);
+		PROCEDURE EmitPush(VAR irOperand: IntermediateCode.Operand; part: SIGNED32);
 		VAR
 			register: Operand;
 			partType: IntermediateCode.Type;
-			(*pc: LONGINT;*)
+			(*pc: SIGNED32;*)
 		BEGIN
 			register := RegisterFromIrOperand(irOperand, part, emptyOperand);
 			IF ~IsRegisterForType(register.register, IntermediateCode.FloatType(32)) & ~IsRegisterForType(register.register, IntermediateCode.FloatType(64)) THEN
@@ -1911,7 +1911,7 @@ TYPE
 
 		END EmitPush;
 
-		PROCEDURE EmitPop(VAR irOperand: IntermediateCode.Operand; part: LONGINT);
+		PROCEDURE EmitPop(VAR irOperand: IntermediateCode.Operand; part: SIGNED32);
 		VAR
 			register: Operand; partType: IntermediateCode.Type;
 		BEGIN
@@ -1966,7 +1966,7 @@ TYPE
 				Emit1(opBLX, RegisterFromIrOperand(irInstruction.op1, Low, emptyOperand));
 
 				(* remove parameters on stack *)
-				AllocateStack(-LONGINT(irInstruction.op2.intValue), TRUE, FALSE)
+				AllocateStack(-SIGNED32(irInstruction.op2.intValue), TRUE, FALSE)
 			END
 		END EmitCall;
 
@@ -1982,7 +1982,7 @@ TYPE
 			END;
 			stackSize := 0;
 			(* allocate space on stack for local variables *)
-			allocationSize := LONGINT(irInstruction.op2.intValue);
+			allocationSize := SIGNED32(irInstruction.op2.intValue);
 			Basic.Align(allocationSize, 4); (* 4 byte alignment *)
 			AllocateStack(allocationSize, TRUE, backend.initLocals);
 			(* allocate space on stack for register spills *)
@@ -2012,10 +2012,10 @@ TYPE
 				Emit1(opBX, opLR) (* recommended for better interoperability between ARM and Thumb *)
 			ELSE
 				IF (irInstruction.op2.intValue = SyntaxTree.InterruptCallingConvention) THEN
-					Emit3WithFlags(opSUB, opPC, opLR, InstructionSet.NewImmediate(LONGINT(irInstruction.op1.intValue)),{InstructionSet.flagS})
+					Emit3WithFlags(opSUB, opPC, opLR, InstructionSet.NewImmediate(SIGNED32(irInstruction.op1.intValue)),{InstructionSet.flagS})
 				ELSE
 				(* exit from an ARM interrupt procedure that has a PC offset *)
-					Emit3(opSUB, opPC, opLR, InstructionSet.NewImmediate(LONGINT(irInstruction.op1.intValue)))
+					Emit3(opSUB, opPC, opLR, InstructionSet.NewImmediate(SIGNED32(irInstruction.op1.intValue)))
 				END;
 			END
 		END EmitExit;
@@ -2076,7 +2076,7 @@ TYPE
 
 		(* BITWISE LOGICAL OPERATIONS *)
 
-		PROCEDURE EmitNot(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitNot(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32);
 		VAR
 			destination, source: Operand;
 		BEGIN
@@ -2085,7 +2085,7 @@ TYPE
 			WriteBack(irInstruction.op1, part, destination)
 		END EmitNot;
 
-		PROCEDURE EmitAndP(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitAndP(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32);
 		VAR
 			dummy: BOOLEAN;
 			destination, left, right: Operand;
@@ -2101,7 +2101,7 @@ TYPE
 			IF IsComplex(irInstruction.op1) THEN EmitAndP(irInstruction, High) END
 		END EmitAnd;
 
-		PROCEDURE EmitOr(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitOr(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32);
 		VAR
 			dummy: BOOLEAN;
 			destination, left, right: Operand;
@@ -2111,7 +2111,7 @@ TYPE
 			WriteBack(irInstruction.op1, part, destination)
 		END EmitOr;
 
-		PROCEDURE EmitXor(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitXor(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32);
 		VAR
 			dummy: BOOLEAN;
 			destination, left, right: Operand;
@@ -2163,11 +2163,11 @@ TYPE
 			END
 		END EmitAddOrSub;
 
-		PROCEDURE EmitPartialAddOrSub(CONST irInstruction: IntermediateCode.Instruction; part: LONGINT; doUpdateFlags: BOOLEAN);
+		PROCEDURE EmitPartialAddOrSub(CONST irInstruction: IntermediateCode.Instruction; part: SIGNED32; doUpdateFlags: BOOLEAN);
 		VAR
 			destination, left, right, hint: Operand;
 			irDestination, irLeft, irRight: IntermediateCode.Operand;
-			operation: LONGINT;
+			operation: SIGNED32;
 			doSwap, doNegateRight: BOOLEAN;
 		BEGIN
 			irDestination := irInstruction.op1; irLeft := irInstruction.op2; irRight := irInstruction.op3;
@@ -2248,7 +2248,7 @@ TYPE
 		PROCEDURE EmitMul(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
 			destination, left, right: ARRAY 2 OF Operand; inst: IntermediateCode.Instruction;
-			value: HUGEINT;exp: LONGINT; op3:IntermediateCode.Operand;
+			value: SIGNED64;exp: SIGNED32; op3:IntermediateCode.Operand;
 			temp: Operand;
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
@@ -2295,7 +2295,7 @@ TYPE
 		PROCEDURE EmitDiv(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
 			destination, left, right, float, leftd, rightd, fpstatus: Operand;
-			value: HUGEINT; exp: LONGINT; op3: IntermediateCode.Operand;
+			value: SIGNED64; exp: SIGNED32; op3: IntermediateCode.Operand;
 			inst: IntermediateCode.Instruction;
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
@@ -2353,7 +2353,7 @@ TYPE
 
 		PROCEDURE EmitMod(CONST irInstruction: IntermediateCode.Instruction);
 		VAR
-			value: HUGEINT;exp: LONGINT; op3:IntermediateCode.Operand; inst: IntermediateCode.Instruction;
+			value: SIGNED64;exp: SIGNED32; op3:IntermediateCode.Operand; inst: IntermediateCode.Instruction;
 		BEGIN
 			IF IntermediateCode.IsConstantInteger(irInstruction.op3,value) & IntermediateBackend.PowerOf2(value,exp) THEN
 				IntermediateCode.InitImmediate(op3, irInstruction.op3.type, value-1);
@@ -2455,7 +2455,7 @@ TYPE
 		*)
 		PROCEDURE EmitShiftOrRotation(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
-			shiftAmountImmediate, shiftMode: LONGINT;
+			shiftAmountImmediate, shiftMode: SIGNED32;
 			destination, source: ARRAY 2 OF Operand;
 			irShiftOperand: IntermediateCode.Operand;
 			temp, shiftAmountRegister: Operand;
@@ -2473,7 +2473,7 @@ TYPE
 
 			(* use ARM register or shift immediate to represent IR shift operand *)
 			IF (irShiftOperand.mode = IntermediateCode.ModeImmediate) & (irShiftOperand.symbol.name = "") THEN
-				shiftAmountImmediate := LONGINT(irShiftOperand.intValue); (* note that at this point the shift amount could also be >= 32 *)
+				shiftAmountImmediate := SIGNED32(irShiftOperand.intValue); (* note that at this point the shift amount could also be >= 32 *)
 				shiftAmountRegister := emptyOperand;
 				ASSERT(shiftAmountImmediate >= 0);
 			ELSE
@@ -2692,7 +2692,7 @@ TYPE
 
 		PROCEDURE EmitSpecial(VAR instruction: IntermediateCode.Instruction);
 		VAR
-			psrNumber, code, a, b, c, d: LONGINT;
+			psrNumber, code, a, b, c, d: SIGNED32;
 			register, register2, register3, register4, temp, cpOperand, cpRegister1, cpRegister2, opCode1Operand, opCode2Operand: Operand;
 		BEGIN
 			CASE instruction.subtype OF
@@ -2734,7 +2734,7 @@ TYPE
 				ELSIF (instruction.op2.intValue < 0) OR (instruction.op2.intValue > 15) THEN
 					Error(instruction.textPosition,"second operand must be between 0 or 15")
 				ELSE
-					code := LONGINT(instruction.op1.intValue); (* code = a00bcdH *)
+					code := SIGNED32(instruction.op1.intValue); (* code = a00bcdH *)
 					a := (code DIV 100000H) MOD 10H; (* opcode1 * 2 *)
 					b := (code DIV 100H) MOD 10H; (* coprocessor number *)
 					c := (code DIV 10H) MOD 10H; (* opcode2 * 2 *)
@@ -2743,7 +2743,7 @@ TYPE
 					InstructionSet.InitCoprocessor(cpOperand, InstructionSet.CP0 + b);
 					InstructionSet.InitOpcode(opCode1Operand, a DIV 2);
 					register := RegisterFromIrOperand(instruction.op3, Low, emptyOperand);
-					InstructionSet.InitRegister(cpRegister1, InstructionSet.CR0 + LONGINT(instruction.op2.intValue), None, None, 0);
+					InstructionSet.InitRegister(cpRegister1, InstructionSet.CR0 + SIGNED32(instruction.op2.intValue), None, None, 0);
 					InstructionSet.InitRegister(cpRegister2, InstructionSet.CR0 + d, None, None, 0);
 					InstructionSet.InitOpcode(opCode2Operand, c DIV 2);
 
@@ -2762,7 +2762,7 @@ TYPE
 				ELSIF (instruction.op1.intValue < 0) OR (instruction.op2.intValue > 0FFH) THEN
 					Error(instruction.textPosition,"first operand must be between 0 and 255")
 				ELSE
-					code := LONGINT(instruction.op1.intValue); (* code = aaa1bbbbB *)
+					code := SIGNED32(instruction.op1.intValue); (* code = aaa1bbbbB *)
 					a := (code DIV 20H) MOD 8; (* coprocessor opcode 2 *)
 					b := (code MOD 10H); (* coprocessor register2 number  *)
 
@@ -2787,7 +2787,7 @@ TYPE
 
 			| NULL:
 				register := RegisterFromIrOperand(instruction.op1, Low, emptyOperand);
-				Emit3(opBIC, register, register, InstructionSet.NewImmediate(LONGINT(80000000H)));
+				Emit3(opBIC, register, register, InstructionSet.NewImmediate(SIGNED32(80000000H)));
 				Emit2(opCMP, register, InstructionSet.NewImmediate(0));
 				Emit2WithCondition(opMOV, opRES, InstructionSet.NewImmediate(1), InstructionSet.conditionEQ);
 				Emit2WithCondition(opMOV, opRES, InstructionSet.NewImmediate(0), InstructionSet.conditionNE);
@@ -2819,7 +2819,7 @@ TYPE
 				register := RegisterFromIrOperand(instruction.op1, Low, emptyOperand); (*  register = address of x *)
 				register2 := RegisterFromIrOperand(instruction.op2, Low, emptyOperand); (*  register2 = value of y *)
 
-				register3 := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32)); (* a temporary INTEGER (!) register that is used to store a float *)
+				register3 := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32)); (* a temporary SIGNED16 (!) register that is used to store a float *)
 				Emit2(opLDR, register3, InstructionSet.NewImmediateOffsetMemory(register.register, 0, {InstructionSet.Increment})); (* register3 = value of x *)
 				Emit3(opADD, register3, register3, InstructionSet.NewRegister(register2.register, InstructionSet.shiftLSL, None, 23)); (* increase the (biased) exponent of x by y*)
 				Emit2(opSTR, register3, InstructionSet.NewImmediateOffsetMemory(register.register, 0, {InstructionSet.Increment})) (* store new value of x *)
@@ -2830,7 +2830,7 @@ TYPE
 				*)
 				register := RegisterFromIrOperand(instruction.op1, Low, emptyOperand); (*  register = address of x *)
 				register2 := RegisterFromIrOperand(instruction.op2, Low, emptyOperand); (*  register2 = address of y *)
-				register3 := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32)); (* a temporary INTEGER (!) register that is used to store a float *)
+				register3 := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32)); (* a temporary SIGNED16 (!) register that is used to store a float *)
 				Emit2(opLDR, register3, InstructionSet.NewImmediateOffsetMemory(register.register, 0, {InstructionSet.Increment})); (* register3 = value of x *)
 				register4 := GetFreeRegister(IntermediateCode.UnsignedIntegerType(32));
 				Emit2(opMOV, register4, InstructionSet.NewRegister(register3.register, InstructionSet.shiftLSR, None, 23)); (* register4 = biased exponent (and sign) of x *)
@@ -2846,7 +2846,7 @@ TYPE
 
 		PROCEDURE EmitBr(VAR irInstruction: IntermediateCode.Instruction);
 		VAR
-			branchDistance: LONGINT;
+			branchDistance: SIGNED32;
 			isSwapped: BOOLEAN;
 			left, right: ARRAY 2 OF Operand;
 			temp: Operand;
@@ -2854,10 +2854,10 @@ TYPE
 			fixup,failFixup: BinaryCode.Fixup;
 			fixupPatternList: ObjectFile.FixupPatterns;
 			identifier: ObjectFile.Identifier;
-			hiHit, hiFail, lowHit: LONGINT;
+			hiHit, hiFail, lowHit: SIGNED32;
 			unsigned: BOOLEAN;
 
-			PROCEDURE JmpDest(branchConditionCode: LONGINT);
+			PROCEDURE JmpDest(branchConditionCode: SIGNED32);
 			BEGIN
 				IF (irInstruction.op1.mode = IntermediateCode.ModeImmediate) & (irInstruction.op1.symbol.name = in.name) & (irInstruction.op1.offset = 0) THEN
 				(* branch within same section at a certain IR offset *)
@@ -2870,7 +2870,7 @@ TYPE
 
 				IF irInstruction.op1.symbolOffset <= inPC THEN
 					(* backward branch: calculate the branch distance *)
-					branchDistance := (in.instructions[irInstruction.op1.symbolOffset].pc - out.pc - 8)(LONGINT);
+					branchDistance := (in.instructions[irInstruction.op1.symbolOffset].pc - out.pc - 8)(SIGNED32);
 					ASSERT((-33554432 <= branchDistance) & (branchDistance <= 0) & ((ABS(branchDistance) MOD 4) = 0), 200);
 				ELSE
 					(* forward branch: the distance is not yet known, use some placeholder and add a relative fixup *)
@@ -3205,7 +3205,7 @@ TYPE
 						SignOrZeroExtendOperand(source[Low], partType);
 						MovIfDifferent(destination[Low], source[Low])
 					ELSIF IsSinglePrecisionFloat(irSource) THEN
-						(* REAL --> INTEGER *)
+						(* FLOAT32 --> SIGNED16 *)
 						ASSERT(backend.useFPU32);
 						(* single precision float to non-complex integer: *)
 						temp := GetFreeRegister(IntermediateCode.FloatType(32));
@@ -3221,7 +3221,7 @@ TYPE
 						ResetRounding(fpstatus);
 						Emit2(opFMRS, destination[Low], temp)
 					ELSIF IsDoublePrecisionFloat(irSource) THEN
-						(* LONGREAL --> INTEGER *)
+						(* FLOAT64 --> SIGNED16 *)
 						ASSERT(backend.useFPU64);
 						(* single precision float to non-complex integer: *)
 						temp := GetFreeRegister(IntermediateCode.FloatType(32));
@@ -3258,7 +3258,7 @@ TYPE
 					(* single precision float to single precision float: *)
 					MovIfDifferent(destination[Low], source[Low])
 				ELSIF IsDoublePrecisionFloat(irSource) THEN
-					(* LONGREAL --> REAL *)
+					(* FLOAT64 --> FLOAT32 *)
 					Emit2(opFCVTSD, destination[Low], source[Low])
 				ELSE
 					(* anything else to single precision float: *)
@@ -3279,7 +3279,7 @@ TYPE
 						Emit2(opFSITOD, destination[Low], temp)
 					END
 				ELSIF IsSinglePrecisionFloat(irSource) THEN
-					(* REAL --> LONGREAL *)
+					(* FLOAT32 --> FLOAT64 *)
 					Emit2(opFCVTDS, destination[Low], source[Low])
 				ELSIF IsDoublePrecisionFloat(irSource) THEN
 					(* single precision float to single precision float: *)
@@ -3298,7 +3298,7 @@ TYPE
 		END EmitConv;
 
 		(** get the register that is dedicated to store a return value of a function **)
-		PROCEDURE ResultRegister(part: LONGINT; type: IntermediateCode.Type): InstructionSet.Operand;
+		PROCEDURE ResultRegister(part: SIGNED32; type: IntermediateCode.Type): InstructionSet.Operand;
 		VAR
 			result: Operand;
 		BEGIN
@@ -3328,7 +3328,7 @@ TYPE
 			RETURN result
 		END ResultRegister;
 
-		PROCEDURE EmitReturn(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitReturn(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32);
 		VAR
 			source: Operand;
 		BEGIN
@@ -3336,7 +3336,7 @@ TYPE
 			MovIfDifferent(ResultRegister(part, irInstruction.op1.type), source)
 		END EmitReturn;
 
-		PROCEDURE EmitResult(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT);
+		PROCEDURE EmitResult(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32);
 		VAR
 			destinationRegister: Operand;
 		BEGIN
@@ -3349,7 +3349,7 @@ TYPE
 		BEGIN
 			ASSERT(irInstruction.op1.mode = IntermediateCode.ModeNumber);
 
-			Emit1(opSWI, InstructionSet.NewImmediate(LONGINT(irInstruction.op1.intValue))) (* software interrupt *)
+			Emit1(opSWI, InstructionSet.NewImmediate(SIGNED32(irInstruction.op1.intValue))) (* software interrupt *)
 		END EmitTrap;
 
 		PROCEDURE EmitCas(VAR irInstruction: IntermediateCode.Instruction);
@@ -3425,19 +3425,19 @@ TYPE
 			right := temp
 		END SwapIrOperands;
 
-		PROCEDURE PrepareSingleSourceOp(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT; VAR destinationRegister, sourceOperand: Operand);
+		PROCEDURE PrepareSingleSourceOp(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32; VAR destinationRegister, sourceOperand: Operand);
 		BEGIN
 			destinationRegister := AcquireDestinationRegister(irInstruction.op1, part, emptyOperand);
 			sourceOperand := RegisterFromIrOperand(irInstruction.op2, part, destinationRegister); (* note that the destination register is used as hint *)
 		END PrepareSingleSourceOp;
 
-		PROCEDURE PrepareSingleSourceOpWithImmediate(VAR irInstruction: IntermediateCode.Instruction; part: LONGINT; VAR destinationRegister, sourceOperand: Operand);
+		PROCEDURE PrepareSingleSourceOpWithImmediate(VAR irInstruction: IntermediateCode.Instruction; part: SIGNED32; VAR destinationRegister, sourceOperand: Operand);
 		BEGIN
 			destinationRegister := AcquireDestinationRegister(irInstruction.op1, part, emptyOperand);
 			sourceOperand := RegisterOrImmediateFromIrOperand(irInstruction.op2, part, destinationRegister); (* note that the destination register is used as hint *)
 		END PrepareSingleSourceOpWithImmediate;
 
-		PROCEDURE PrepareDoubleSourceOpWithImmediate(CONST irInstruction: IntermediateCode.Instruction; part: LONGINT; VAR destinationRegister, leftSourceOperand, rightSourceOperand: Operand; VAR isSwapped: BOOLEAN);
+		PROCEDURE PrepareDoubleSourceOpWithImmediate(CONST irInstruction: IntermediateCode.Instruction; part: SIGNED32; VAR destinationRegister, leftSourceOperand, rightSourceOperand: Operand; VAR isSwapped: BOOLEAN);
 		VAR
 			irDestination, irLeft, irRight: IntermediateCode.Operand;
 		BEGIN
@@ -3466,7 +3466,7 @@ TYPE
 			END
 		END PrepareDoubleSourceOpWithImmediate;
 
-		PROCEDURE PrepareDoubleSourceOp(CONST irInstruction: IntermediateCode.Instruction; part: LONGINT; VAR destinationRegister, leftSourceOperand, rightSourceOperand: Operand);
+		PROCEDURE PrepareDoubleSourceOp(CONST irInstruction: IntermediateCode.Instruction; part: SIGNED32; VAR destinationRegister, leftSourceOperand, rightSourceOperand: Operand);
 		VAR
 			irDestination, irLeft, irRight: IntermediateCode.Operand;
 		BEGIN
@@ -3529,13 +3529,13 @@ TYPE
 			END BoolRet;
 
 			PROCEDURE IntRet;
-			BEGIN procedureType.SetReturnType(Global.Integer32)
+			BEGIN procedureType.SetReturnType(Global.Signed32)
 			END IntRet;
 
 			PROCEDURE IntPar;
 			BEGIN
 				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.ValueParameter);
-				parameter.SetType(Global.Integer32); procedureType.AddParameter(parameter)
+				parameter.SetType(Global.Signed32); procedureType.AddParameter(parameter)
 			END IntPar;
 
 			PROCEDURE AddressPar;
@@ -3547,7 +3547,7 @@ TYPE
 			PROCEDURE IntVarPar;
 			BEGIN
 				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);
-				parameter.SetType(Global.Integer32); procedureType.AddParameter(parameter)
+				parameter.SetType(Global.Signed32); procedureType.AddParameter(parameter)
 			END IntVarPar;
 
 			PROCEDURE RealVarPar;
@@ -3556,7 +3556,7 @@ TYPE
 				parameter.SetType(Global.Float32); procedureType.AddParameter(parameter)
 			END RealVarPar;
 
-			PROCEDURE Finish(CONST name: ARRAY OF CHAR; number: SHORTINT);
+			PROCEDURE Finish(CONST name: ARRAY OF CHAR; number: SIGNED8);
 			BEGIN Global.NewCustomBuiltin(name, system.systemScope, number, procedureType);
 			END Finish;
 
@@ -3583,7 +3583,7 @@ TYPE
 		END EnterCustomBuiltins;
 
 		PROCEDURE GetSystem*(): Global.System;
-		VAR variableOffset: WORD;
+		VAR variableOffset: INTEGER;
 		BEGIN
 			(* create system object if not yet existing *)
 			IF system = NIL THEN
@@ -3618,10 +3618,10 @@ TYPE
 
 				IF oberon07 THEN
 					IF Trace THEN D.String("Oberon07"); D.Ln END;
-					Global.SetDefaultDeclarations(system, 32) (* each basic type uses at least 32 bits -> INTEGER will be 32 bits long *)
+					Global.SetDefaultDeclarations(system, 32) (* each basic type uses at least 32 bits -> SIGNED16 will be 32 bits long *)
 				ELSE
 					IF Trace THEN D.String("not Oberon07"); D.Ln END;
-					Global.SetDefaultDeclarations(system, 8) (* INTEGER will be 16 bits long *)
+					Global.SetDefaultDeclarations(system, 8) (* SIGNED16 will be 16 bits long *)
 				END;
 
 				Global.SetDefaultOperators(system);
@@ -3651,10 +3651,10 @@ TYPE
 			result := FALSE;
 			IF (irImmediateOperand.type.form IN IntermediateCode.Integer) & (irImmediateOperand.type.sizeInBits <= 32) THEN
 				(* 32 bit integers *)
-				IF cg.ValueIsDirectlyEncodable(LONGINT(irImmediateOperand.intValue)) THEN
+				IF cg.ValueIsDirectlyEncodable(SIGNED32(irImmediateOperand.intValue)) THEN
 					(* the value can be directly encoded as an ARM immediate operand *)
 					result := TRUE
-				ELSIF cg.ValueComposition(LONGINT(irImmediateOperand.intValue), FALSE, emptyOperand) <= 2 THEN (* TODO: find reasonable limit *)
+				ELSIF cg.ValueComposition(SIGNED32(irImmediateOperand.intValue), FALSE, emptyOperand) <= 2 THEN (* TODO: find reasonable limit *)
 					(* the value can be generated using a limited amount of intructions *)
 					result := TRUE
 				END
@@ -3704,7 +3704,7 @@ TYPE
 
 			(* recompute fixup positions and assign binary sections *)
 			PROCEDURE PatchFixups(section: BinaryCode.Section);
-			VAR resolved: BinaryCode.Section; fixup: BinaryCode.Fixup; symbolOffset, offsetWithinSection: LONGINT; in: IntermediateCode.Section;
+			VAR resolved: BinaryCode.Section; fixup: BinaryCode.Fixup; symbolOffset, offsetWithinSection: SIGNED32; in: IntermediateCode.Section;
 			BEGIN
 				fixup := section.fixupList.firstFixup;
 				WHILE fixup # NIL DO
@@ -3849,10 +3849,10 @@ TYPE
 		BEGIN instructionSet := "ARM"
 		END GetDescription;
 
-		PROCEDURE FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: LONGINT);
+		PROCEDURE FindPC*(x: SyntaxTree.Module; CONST sectionName: ARRAY OF CHAR; sectionOffset: SIGNED32);
 		VAR
 			section: Sections.Section; binarySection: BinaryCode.Section; label: BinaryCode.LabelList; module: Formats.GeneratedModule;
-			i: LONGINT; pooledName: Basic.SegmentedName;
+			i: SIGNED32; pooledName: Basic.SegmentedName;
 		BEGIN
 			module := ProcessSyntaxTreeModule(x);
 			Basic.ToSegmentedName(sectionName, pooledName);
@@ -3937,7 +3937,7 @@ VAR
 	PROCEDURE Test*;
 	VAR
 		codeGenerator: CodeGeneratorARM;
-		value, count: LONGINT;
+		value, count: SIGNED32;
 	BEGIN
 		NEW(codeGenerator, "", NIL, NIL);
 		FOR value := 0 TO 300 BY 1 DO
@@ -3952,11 +3952,11 @@ VAR
 	(** write an integer in binary right-justified in a field of at least ABS(w) characters.
 		If w < 0 THEN ABS(w) least significant hex digits of 'value' are written (potentially including leading zeros or ones)
 	**)
-	PROCEDURE DBin*(value: HUGEINT; numberDigits: LONGINT);
+	PROCEDURE DBin*(value: SIGNED64; numberDigits: SIGNED32);
 	CONST
-		MaxBitSize = SIZEOF(HUGEINT) * 8;
+		MaxBitSize = SIZEOF(SIGNED64) * 8;
 	VAR
-		i, firstRelevantPos: LONGINT;
+		i, firstRelevantPos: SIGNED32;
 		prefixWithSpaces: BOOLEAN;
 		chars: ARRAY MaxBitSize OF CHAR;
 		prefixChar: CHAR;

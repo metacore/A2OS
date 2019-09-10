@@ -60,7 +60,7 @@ VAR
 	(*	VAR  dlink: Objects.Object;*)
 
 	PROCEDURE Recall( layer: tLayer );
-	VAR i, nrData: LONGINT;  r: Real;  sel: vyBase.tVector;  b, lastb: BOOLEAN;  lastx: Real;
+	VAR i, nrData: SIGNED32;  r: Real;  sel: vyBase.tVector;  b, lastb: BOOLEAN;  lastx: Real;
 	BEGIN
 		IF layer.x # NIL THEN
 			lastb := FALSE;  lastx := MAX( Real );  nrData := layer.x.nrData;
@@ -96,7 +96,7 @@ VAR
 
 	PROCEDURE Actor( layer: vyPort.tLayer;  sel: vyBase.tVector;  x0O, y0O, x1O, y1O, x0N, y0N, x1N, y1N: Real;
 								VAR changed: BOOLEAN );
-	VAR scatter: tLayer;  r: Real;  nrData, i: LONGINT;  new: BOOLEAN;
+	VAR scatter: tLayer;  r: Real;  nrData, i: SIGNED32;  new: BOOLEAN;
 	BEGIN
 		scatter := layer( tLayer );  nrData := scatter.x.nrData;
 		FOR i := 0 TO nrData - 1 DO
@@ -118,7 +118,7 @@ VAR
 	PROCEDURE Prompt( layer: tLayer;  VAR event: vyEvents.EventMsg );
 	(*? should be supported as the selections *)
 	CONST toleranz = 2;
-	VAR found, i, nrData: LONGINT;  r: Real;  lx, ly, x0, y0: Coordinate;  id, val: vyName.tNameArray;
+	VAR found, i, nrData: SIGNED32;  r: Real;  lx, ly, x0, y0: Coordinate;  id, val: vyName.tNameArray;
 	BEGIN
 		found := -1;  nrData := layer.x.nrData;  id := "";
 		WHILE event.gesture = vyEvents.EvtIdent DO
@@ -147,10 +147,10 @@ VAR
 	END Prompt;
 
 	PROCEDURE Responsible( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 
 		PROCEDURE InScatter( X, Y: Coordinate ): BOOLEAN;
-		VAR xMin, xMax, yMin, yMax: Coordinate;  min, max: Real;  nans: LONGINT;
+		VAR xMin, xMax, yMin, yMax: Coordinate;  min, max: Real;  nans: SIGNED32;
 
 		BEGIN
 			vyTypes.VGetMinMax( layer.x, min, max, nans );  vyGraphBase.Point2dToPoint( min, cSelBottom, xMin, yMin );
@@ -171,7 +171,7 @@ VAR
 	END Responsible;
 
 	PROCEDURE AdjustCoord( pict: vyPort.Picture;  obj: tLayer );
-	VAR minX, maxX: REAL;  nans: LONGINT;
+	VAR minX, maxX: FLOAT32;  nans: SIGNED32;
 	BEGIN
 		(*Out.String('vyScatter1.AdjustCoord'); OutHex(pict);Out.Ln;*)
 		IF pict # NIL THEN  (*Out.String('vyScatter1.AdjustCoord pict#NIL'); Out.Ln;*)
@@ -217,7 +217,7 @@ VAR
 	END Init;
 
 	PROCEDURE Consume( o: tLayer;  msg: Display.ConsumeMsg );
-	VAR v: vyBase.tVector;  minX, maxX: REAL;  pict: vyPort.Picture;  nans: LONGINT;
+	VAR v: vyBase.tVector;  minX, maxX: FLOAT32;  pict: vyPort.Picture;  nans: SIGNED32;
 	BEGIN
 		pict := msg.dlink( vyPort.Picture );  v := vyBase.GetVFromObj( msg.obj );
 		IF v # NIL THEN
@@ -263,7 +263,7 @@ VAR
 (*
 PROCEDURE HandleFileMsg (obj: tLayer;        VAR msg: Objects.FileMsg);
 VAR pict: vyPort.Picture;
-VAR   minX, maxX: REAL;    	nans: LONGINT;
+VAR   minX, maxX: FLOAT32;    	nans: SIGNED32;
 VAR     objsub: Objects.Object;
 
 BEGIN
@@ -384,7 +384,7 @@ END HandleFileMsg;
 	END NewFrame;
 
 	PROCEDURE ShowO*( obj: Objects.Object );
-	VAR minX, maxX: REAL;  nans: LONGINT;  pict: vyPort.Picture;
+	VAR minX, maxX: FLOAT32;  nans: SIGNED32;  pict: vyPort.Picture;
 	BEGIN
 		New;  Init( newlayer, obj );  vyTypes.VGetMinMaxR( newlayer.x, minX, maxX, nans );
 		pict := vyPort.InsertNewCPicture( 0, 0, 1, 1, vyDisplay2d.NewC2d( minX, cMin, maxX - minX, cMax - cMin ) );

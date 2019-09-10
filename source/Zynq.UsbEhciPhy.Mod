@@ -85,9 +85,9 @@ CONST
 	 * 'viewport' is the address of the viewport register. 'reset' is the GPIO
 	 * pin to which the full ULPI reset is wired (negative if not available).
 	 *)
-	PROCEDURE Init * (viewport: ADDRESS; reset: LONGINT): BOOLEAN;
+	PROCEDURE Init * (viewport: ADDRESS; reset: SIGNED32): BOOLEAN;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		IF reset >= 0 THEN
 			Gpio.SetDirection(reset, Gpio.Output);

@@ -9,7 +9,7 @@ BEGIN
 	status := EFI.table.ConOut.OutputString (EFI.table.ConOut, text);
 END Char;
 
-PROCEDURE Color (color: SHORTINT);
+PROCEDURE Color (color: SIGNED8);
 VAR status: EFI.Status;
 BEGIN status := EFI.table.ConOut.SetAttribute (EFI.table.ConOut, color);
 END Color;

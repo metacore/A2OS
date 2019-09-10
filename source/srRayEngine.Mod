@@ -7,11 +7,11 @@ CONST
 
 TYPE Tile=OBJECT
 VAR
-	G,H,I,J,i,j: INTEGER;
+	G,H,I,J,i,j: SIGNED16;
 	GO: BOOLEAN;
 	large: BOOLEAN;
 
-PROCEDURE & init*(i,j,g,h: INTEGER; l: BOOLEAN);
+PROCEDURE & init*(i,j,g,h: SIGNED16; l: BOOLEAN);
 BEGIN
 	I:=i; J:=j; G:=g; H:=h; large:=l;
 END init;
@@ -78,8 +78,8 @@ VAR
 	block: srBase.Voxel;
 	image: Raster.Image;
 	tiles, ltiles: ARRAY srBase.TILEi, srBase.TILEj OF Tile;
-	i,j,G,H,LG,LH: INTEGER;
-	tilesdone:INTEGER;
+	i,j,G,H,LG,LH: SIGNED16;
+	tilesdone:SIGNED16;
 	mode: Raster.Mode;
 	fast*: BOOLEAN;
 
@@ -95,7 +95,7 @@ END zeroTD;
 
 PROCEDURE goyethreads;
 VAR
-	i,j: INTEGER;
+	i,j: SIGNED16;
 BEGIN{EXCLUSIVE}
 	FOR i:= 0 TO srBase.TILEi-1  DO
 		FOR j:= 0 TO srBase.TILEj-1 DO
@@ -106,7 +106,7 @@ END goyethreads;
 
 PROCEDURE lgoyethreads;
 VAR
-	i,j: INTEGER;
+	i,j: SIGNED16;
 BEGIN{EXCLUSIVE}
 	FOR i:= 0 TO srBase.TILEi-1  DO
 		FOR j:= 0 TO srBase.TILEj-1 DO

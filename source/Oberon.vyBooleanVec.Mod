@@ -30,7 +30,7 @@ IMPORT Files, Objects, vyBase, vyBoolean, vyHostTexts, vyLongintVec, vyName;
 CONST
 	idversion* = "vyBooleanVec 0.0a3";   (* may be maintained or changed by tools *)
 TYPE
-	index* = LONGINT;
+	index* = SIGNED32;
 
 	(* BOOLEAN *)
 	tVector* = POINTER TO tVectorDesc;
@@ -53,10 +53,10 @@ TYPE
 	tBOOL8192Chunk = POINTER TO tBOOL8192ChunkDesc;
 	tBOOL8192ChunkDesc = RECORD (tBufDesc) data: tBOOL8192 END;
 	*)
-	PROCEDURE NewBufs( size: LONGINT ): tBuf;
+	PROCEDURE NewBufs( size: SIGNED32 ): tBuf;
 	VAR first, last: vyBase.tBuf;  chunk: tBuf;
 
-		PROCEDURE generic( ch: tBuf;  len: LONGINT );
+		PROCEDURE generic( ch: tBuf;  len: SIGNED32 );
 		BEGIN
 			NEW( ch.data, len );  ch.str := vyBase.dynboolarray;  vyBase.GenericCatBuf( ch, len, size, first, last )
 		END generic;
@@ -189,7 +189,7 @@ TYPE
 		NEW( v );  v.handle := Handler;  Objects.NewObj := v
 	END Gen;
 
-	PROCEDURE New*( size: LONGINT ): tVector;
+	PROCEDURE New*( size: SIGNED32 ): tVector;
 
 	VAR v: tVector;
 
@@ -210,15 +210,15 @@ TYPE
 		o.storagetype := vyBase.booltyp;  RETURN o
 	END NewBooleanObject;
 
-	PROCEDURE NewBooleanMatrix*( rows, columns: LONGINT ): vyBase.tVector;
+	PROCEDURE NewBooleanMatrix*( rows, columns: SIGNED32 ): vyBase.tVector;
 	VAR v: tVector;
 	BEGIN
 		Gen;  v := Objects.NewObj( tVector );  vyBase.ApndChunks( NewBufs( rows * columns ), v );
 		v.Layout := vyBase.MatrixLayout( rows, columns );  RETURN v (* fof: gs 2.7.96*)
 	END NewBooleanMatrix;
 
-	PROCEDURE NewBooleanArray*( sizes: ARRAY OF LONGINT ): vyBase.tVector;
-	VAR v: tVector;  size: LONGINT;
+	PROCEDURE NewBooleanArray*( sizes: ARRAY OF SIGNED32 ): vyBase.tVector;
+	VAR v: tVector;  size: SIGNED32;
 	BEGIN
 		Gen;  v := Objects.NewObj( tVector );  vyBase.SetArrayLayout( sizes, v, size );
 		vyBase.ApndChunks( NewBufs( size ), v );  RETURN v
@@ -240,7 +240,7 @@ TYPE
 	(*=  allocate memory for a vector. Do not change information.
 	To reduce size, use SetLen first to trim length
 	*)
-	VAR l, freetrail: LONGINT;
+	VAR l, freetrail: SIGNED32;
 	VAR firstfree: vyBase.tBuf;
 	BEGIN
 		ASSERT ( size >= vec.nrData );
@@ -255,12 +255,12 @@ TYPE
 		vyBase.MarkUsed( size, vec )
 	END SetLen;
 
-	PROCEDURE Len*( vec: tVector ): LONGINT;
+	PROCEDURE Len*( vec: tVector ): SIGNED32;
 	BEGIN
 		IF vec = NIL THEN RETURN 0 ELSE RETURN vec.nrData END
 	END Len;
 
-	PROCEDURE NewConstVector*( size: LONGINT;  val: BOOLEAN ): vyBase.tVector;
+	PROCEDURE NewConstVector*( size: SIGNED32;  val: BOOLEAN ): vyBase.tVector;
 	VAR v: tVector;  buf: vyBase.tBuf;
 	BEGIN
 		Gen;  v := Objects.NewObj( tVector );  vyBase.ApndChunks( NewBufs( size ), v );  vyBase.MarkUsed( size, v );
@@ -275,7 +275,7 @@ TYPE
 	PROCEDURE Append*( x: BOOLEAN;  v: vyBase.tVector );
 	(*= Add a data point to a chunk. Append new chunk if necessary *)
 	(*! defensive programming *)
-	VAR l: LONGINT;  chunk: tBuf;
+	VAR l: SIGNED32;  chunk: tBuf;
 	BEGIN  (* find entry which is not full *)
 		IF v.buf = NIL THEN v.buf := NewBufs( 1 ) END;
 		chunk := v.buf( tBuf );
@@ -289,8 +289,8 @@ TYPE
 		INC( v.nrData )
 	END Append;
 
-	PROCEDURE Get*( v: vyBase.tVector;  i: LONGINT ): BOOLEAN;
-	VAR chunk: vyBase.tBuf;  loc: LONGINT;
+	PROCEDURE Get*( v: vyBase.tVector;  i: SIGNED32 ): BOOLEAN;
+	VAR chunk: vyBase.tBuf;  loc: SIGNED32;
 	BEGIN
 		vyBase.Loc( i, v, chunk, loc );
 		ASSERT ( loc >= 0, 100 );
@@ -298,8 +298,8 @@ TYPE
 		RETURN chunk( tBuf ).data[loc]
 	END Get;
 
-	PROCEDURE Set*( val: BOOLEAN;  v: vyBase.tVector;  pos: LONGINT );
-	VAR chunk: vyBase.tBuf;  loc: LONGINT;
+	PROCEDURE Set*( val: BOOLEAN;  v: vyBase.tVector;  pos: SIGNED32 );
+	VAR chunk: vyBase.tBuf;  loc: SIGNED32;
 	BEGIN
 		IF pos >= v.nrData THEN vyBase.MarkUsed( pos + 1, v ) END;
 		vyBase.Loc( pos, v, chunk, loc );
@@ -339,7 +339,7 @@ TYPE
 	END SetIndexed;
 
 	PROCEDURE CopyToArray*( v: vyBase.tVector;  VAR A: ARRAY OF BOOLEAN );
-	VAR offs: LONGINT;  buf: vyBase.tBuf;
+	VAR offs: SIGNED32;  buf: vyBase.tBuf;
 	BEGIN
 		offs := 0;
 		ASSERT ( v # NIL , 101 );
@@ -354,7 +354,7 @@ TYPE
 (** Copy *)
 	PROCEDURE CopyData*( (*IN*) src,  (*OUT*) dest: vyBase.tVector );
 	(*= copy the data section of a vector. Force dest to same len as src *)
-	VAR srcchunk, destchunk: vyBase.tBuf;  oldcount, piececount, count, offs, srcoffs, destoffs: LONGINT;
+	VAR srcchunk, destchunk: vyBase.tBuf;  oldcount, piececount, count, offs, srcoffs, destoffs: SIGNED32;
 
 	BEGIN
 		offs := 0;  count := src.nrData;
@@ -377,8 +377,8 @@ TYPE
 		(*FlushVecCaches(dest);   *)  (*! remove. keep consistent on per buffer basis *)
 	END CopyData;
 
-	PROCEDURE CopyToVec*( VAR A: ARRAY OF BOOLEAN;  v: vyBase.tVector;  len: LONGINT;  srcoffs, destoffs: LONGINT );
-	VAR buf, bufold: tBuf;  i, j, lim: LONGINT;
+	PROCEDURE CopyToVec*( VAR A: ARRAY OF BOOLEAN;  v: vyBase.tVector;  len: SIGNED32;  srcoffs, destoffs: SIGNED32 );
+	VAR buf, bufold: tBuf;  i, j, lim: SIGNED32;
 	BEGIN
 		ASSERT ( LEN( A ) >= v.nrData );
 		buf := v.buf( tBuf );
@@ -393,13 +393,13 @@ TYPE
 		(*	FOR i:=0 TO LEN(A)-1 DO Set(A[i],v,i) END; *)  (*! use SYSTEM.COPYB to speed up *)
 	END CopyToVec;
 
-	PROCEDURE Fill*( v: vyBase.tVector;  val: BOOLEAN;  offs, count: LONGINT );
-	VAR i: LONGINT;
+	PROCEDURE Fill*( v: vyBase.tVector;  val: BOOLEAN;  offs, count: SIGNED32 );
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := offs TO offs + count - 1 DO Set( val, v, i ) END
 	END Fill;
 
-	PROCEDURE NewFilledNamed*( count: LONGINT;  val: BOOLEAN;  name: ARRAY OF CHAR ): tVector;
+	PROCEDURE NewFilledNamed*( count: SIGNED32;  val: BOOLEAN;  name: ARRAY OF CHAR ): tVector;
 	VAR v: tVector;
 	BEGIN
 		v := New( count );  Fill( v, val, 0, count );  vyName.Register( vyName.NameBase, v, name );  RETURN v

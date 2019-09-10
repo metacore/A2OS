@@ -153,7 +153,7 @@ TYPE
     KeywordTable* = FoxScanner.KeywordTable;
 
 TYPE
-    Symbol* = LONGINT;
+    Symbol* = SIGNED32;
 	Position* = Basic.Position;
     (**
         token: data structure for the data transfer of
@@ -167,9 +167,9 @@ TYPE
         string*: StringType;
         stringLength*: SIZE;
         numberType*: FoxScanner.SubType;
-        integer*: HUGEINT;
+        integer*: SIGNED64;
         character*: CHAR;
-        real*: LONGREAL;
+        real*: FLOAT64;
     END;
 
     StringMaker* = FoxScanner.StringMaker;
@@ -194,7 +194,7 @@ TYPE
         PROCEDURE & InitializeScanner*(
                 CONST source: ARRAY OF CHAR;
                 reader: Streams.Reader;
-                position: LONGINT;
+                position: SIGNED32;
                 diagnostics: Diagnostics.Diagnostics);
         BEGIN
             NEW(stringMaker,1024);
@@ -226,7 +226,7 @@ TYPE
         END ErrorS;
 
         (** report an error occured during scanning **)
-        PROCEDURE Error(code: INTEGER);
+        PROCEDURE Error(code: SIGNED16);
         BEGIN
             Basic.ErrorC(diagnostics, source^, position, code, "");
             error := TRUE;
@@ -263,9 +263,9 @@ TYPE
                 '\x' HexDigit {HexDigit}.
         **)
         PROCEDURE GetEscapeSequence(VAR esc: CHAR);
-            VAR i, k, n: LONGINT;
+            VAR i, k, n: SIGNED32;
 
-            PROCEDURE HexDigit(ch: CHAR; VAR dig: LONGINT): BOOLEAN;
+            PROCEDURE HexDigit(ch: CHAR; VAR dig: SIGNED32): BOOLEAN;
             BEGIN
                 IF (ch >= '0') & (ch <= '9') THEN
                     dig := ORD(ch) - ORD('0');
@@ -414,7 +414,7 @@ TYPE
                 'A' | 'B' | .. |  'Z' | 'a' | 'b' |  .. | 'z' .
         **)
         PROCEDURE GetIdentifier(VAR token: Token);
-            VAR i: LONGINT;
+            VAR i: SIGNED32;
         BEGIN
             i := 0;
             REPEAT
@@ -460,11 +460,11 @@ TYPE
                 'a' | 'b' | 'c' | 'd' | 'e' | 'f'.
         **)
         PROCEDURE GetNumber(VAR token: Token; frac: BOOLEAN): Symbol;
-            VAR i, m, n, d, e, si: LONGINT;
+            VAR i, m, n, d, e, si: SIGNED32;
                 dig: ARRAY 24 OF CHAR;
-                f: LONGREAL;
+                f: FLOAT64;
                 hex, neg, long: BOOLEAN;
-                hugeint, tenh, nextInt: HUGEINT;
+                hugeint, tenh, nextInt: SIGNED64;
                 result: Symbol;
 
             PROCEDURE Append(ch: CHAR);
@@ -473,12 +473,12 @@ TYPE
                 INC(si);
             END Append;
 
-            PROCEDURE Digit(ch: CHAR): LONGINT;
+            PROCEDURE Digit(ch: CHAR): SIGNED32;
             BEGIN
                 RETURN ORD(ch) - ORD('0')
             END Digit;
 
-            PROCEDURE HexDigit(ch: CHAR): LONGINT;
+            PROCEDURE HexDigit(ch: CHAR): SIGNED32;
             BEGIN
                 IF (ch >= '0') & (ch <= '9') THEN
                     RETURN ORD(ch) - ORD('0')
@@ -494,8 +494,8 @@ TYPE
                 RETURN 0
             END HexDigit;
 
-            PROCEDURE Ten(e: LONGINT): LONGREAL;
-                VAR x, p: LONGREAL;
+            PROCEDURE Ten(e: SIGNED32): FLOAT64;
+                VAR x, p: FLOAT64;
             BEGIN
                 x := 1;
                 p := 10;
@@ -621,9 +621,9 @@ TYPE
                             (* restart computation *)
                             (*
                                 ACHTUNG: Reportedly, Fox has or had certain limitations
-                                    working with HUGEINT that affected the original code.
-                                    Furthermore, at present Ronin supports HUGEINT as
-                                    a mere alias to LONGINT, therefore the following code
+                                    working with SIGNED64 that affected the original code.
+                                    Furthermore, at present Ronin supports SIGNED64 as
+                                    a mere alias to SIGNED32, therefore the following code
                                     is just reserved for the future and long integer
                                     constants are not yet supported.
                             *)
@@ -685,7 +685,7 @@ TYPE
                             n := Digit(ch);
                             Append(ch);
                             GetNextCharacter;
-                            IF e <= (MAX(INTEGER) - n) DIV 10 THEN
+                            IF e <= (MAX(SIGNED16) - n) DIV 10 THEN
                                 e := e * 10 + n
                             ELSE
                                 Error(Basic.NumberTooLarge)
@@ -817,7 +817,7 @@ TYPE
 
         (** get next token **)
         PROCEDURE GetNextToken*(VAR token: Token): BOOLEAN;
-            VAR s, symbol: LONGINT;
+            VAR s, symbol: SIGNED32;
         BEGIN
             SkipBlanks;
             token.position := position;
@@ -1066,7 +1066,7 @@ KernelLog.Ln();
     PROCEDURE NewScanner*(
             CONST source: ARRAY OF CHAR;
             reader: Streams.Reader;
-            position: LONGINT;
+            position: SIGNED32;
             diagnostics: Diagnostics.Diagnostics): Scanner;
         VAR s: Scanner;
     BEGIN
@@ -1100,7 +1100,7 @@ KernelLog.Ln();
     (** debugging output **)
     PROCEDURE OutToken*(w: Streams.Writer; CONST token: Token);
         VAR str: ARRAY 256 OF CHAR;
-            i: LONGINT;
+            i: SIGNED32;
 
         PROCEDURE OutChar(ch: CHAR);
         BEGIN
@@ -1157,7 +1157,7 @@ KernelLog.Ln();
 
     (** reserved characters are the characters that may not occur within an identifier **)
     PROCEDURE InitReservedCharacters;
-        VAR i: LONGINT;
+        VAR i: SIGNED32;
     BEGIN
         FOR i := 0 TO LEN(reservedCharacter) - 1 DO
             CASE CHR(i) OF
@@ -1174,13 +1174,13 @@ KernelLog.Ln();
     END InitReservedCharacters;
 
     (* get keyword by symbol *)
-    PROCEDURE GetKeyword*(symbol: LONGINT; VAR identifier: IdentifierType);
+    PROCEDURE GetKeyword*(symbol: SIGNED32; VAR identifier: IdentifierType);
     BEGIN
         keywords.IdentifierBySymbol(symbol, identifier);
     END GetKeyword;
 
     PROCEDURE InitSymbols;
-    VAR i: LONGINT;
+    VAR i: SIGNED32;
     BEGIN
         symbols[None] := "None";
 
@@ -1297,7 +1297,7 @@ KernelLog.Ln();
     (** enter keywords in the list of keywords **)
     PROCEDURE InitKeywords;
 
-        PROCEDURE Enter(CONST name: ARRAY OF CHAR; symbol: LONGINT);
+        PROCEDURE Enter(CONST name: ARRAY OF CHAR; symbol: SIGNED32);
         BEGIN
             keywords.PutString(name, symbol);
             Basic.SetErrorExpected(symbol, name);

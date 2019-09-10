@@ -29,7 +29,7 @@ IMPORT antsObjects, vyName, antsCommands, vyBase, vyLongrealVec, Files, Objects,
 	Texts, Links, aM := antsMessages;
 
 TYPE
-	Array* = POINTER TO ARRAY OF LONGREAL;
+	Array* = POINTER TO ARRAY OF FLOAT64;
 
 	Function* = POINTER TO FunctionDesc;
 
@@ -39,23 +39,23 @@ TYPE
 		f1d: antsOnTheFly.Function1d;   (* if f1d set then set f values , point get procedure on f1d *)
 		(* if no f1d then point get procedure on interpolation *)
 		Mapping-: ARRAY 1024 OF CHAR;
-		set*: PROCEDURE ( f: Function;  at, val: LONGREAL );
-		get*: PROCEDURE ( f: Function;  at: LONGREAL ): LONGREAL;
+		set*: PROCEDURE ( f: Function;  at, val: FLOAT64 );
+		get*: PROCEDURE ( f: Function;  at: FLOAT64 ): FLOAT64;
 		editable-: BOOLEAN
 	END;
 
 	FunctionXd* = POINTER TO FunctionXdDesc;
 	FunctionXdDesc* = RECORD (vyBase.ObjDesc)
 		Mapping-: ARRAY 1024 OF CHAR;
-		get*: PROCEDURE ( f: FunctionXd;  at: ARRAY OF LONGREAL ): LONGREAL;
+		get*: PROCEDURE ( f: FunctionXd;  at: ARRAY OF FLOAT64 ): FLOAT64;
 		fxd: antsOnTheFly.FunctionXd
 	END;
 
 	(**** Set & Get Management *****)
 
 	(*
-	PROCEDURE GetPosition( at: LONGREAL;  v: vyBase.tVector;  VAR pos: LONGINT ): BOOLEAN;
-	VAR lx, mx, ux: LONGREAL;  lp, mp, up, len: LONGINT;
+	PROCEDURE GetPosition( at: FLOAT64;  v: vyBase.tVector;  VAR pos: SIGNED32 ): BOOLEAN;
+	VAR lx, mx, ux: FLOAT64;  lp, mp, up, len: SIGNED32;
 	BEGIN
 		len := vyLongrealVec.Len( v );
 		IF len = 0 THEN pos := 0;  RETURN FALSE END;
@@ -77,11 +77,11 @@ TYPE
 	END GetPosition;
 	*)
 
-	PROCEDURE GetInterpolated( f: Function;  at: LONGREAL ): LONGREAL;
-	VAR len, lp, up, mp: LONGINT;  lx, ux, mx: LONGREAL;
+	PROCEDURE GetInterpolated( f: Function;  at: FLOAT64 ): FLOAT64;
+	VAR len, lp, up, mp: SIGNED32;  lx, ux, mx: FLOAT64;
 	BEGIN
 		(*
-		mind := MAX( LONGREAL );
+		mind := MAX( FLOAT64 );
 		FOR i := 0 TO vyLongrealVec.Len( f.x ) - 1 DO
 			d := ABS( vyLongrealVec.Get( f.x, i ) - at );
 			IF d < mind THEN mind := d;  min := i END
@@ -127,18 +127,18 @@ TYPE
 		*)
 	END GetInterpolated;
 
-	PROCEDURE GetDefault( f: Function;  at: LONGREAL ): LONGREAL;
+	PROCEDURE GetDefault( f: Function;  at: FLOAT64 ): FLOAT64;
 	BEGIN
 		RETURN 0
 	END GetDefault;
 
-	PROCEDURE GetDefaultXd( f: FunctionXd;  at: ARRAY OF LONGREAL ): LONGREAL;
+	PROCEDURE GetDefaultXd( f: FunctionXd;  at: ARRAY OF FLOAT64 ): FLOAT64;
 	BEGIN
 		RETURN 0
 	END GetDefaultXd;
 
-	PROCEDURE SetValue( f: Function;  at, val: LONGREAL );
-	VAR i, len, pos: LONGINT;  lp, mp, up: LONGINT;  lx, ux, mx: LONGREAL;
+	PROCEDURE SetValue( f: Function;  at, val: FLOAT64 );
+	VAR i, len, pos: SIGNED32;  lp, mp, up: SIGNED32;  lx, ux, mx: FLOAT64;
 	BEGIN
 		len := vyLongrealVec.Len( f.x );
 		IF len = 0 THEN vyLongrealVec.Append( val, f.val );  vyLongrealVec.Append( at, f.x );  RETURN END;
@@ -229,26 +229,26 @@ TYPE
 		END;  *)
 	END SetValue;
 
-	PROCEDURE SetCreate( f: Function;  at, val: LONGREAL );
+	PROCEDURE SetCreate( f: Function;  at, val: FLOAT64 );
 	BEGIN
 		f.x := vyLongrealVec.New( 0 );  f.val := vyLongrealVec.New( 0 );  f.set := SetValue;  f.set( f, at, val );
 		f.get := GetInterpolated
 	END SetCreate;
 
-	PROCEDURE NoopSet( f: Function;  at, val: LONGREAL );
+	PROCEDURE NoopSet( f: Function;  at, val: FLOAT64 );
 	END NoopSet;
 
-	PROCEDURE GetF1d( f: Function;  at: LONGREAL ): LONGREAL;
+	PROCEDURE GetF1d( f: Function;  at: FLOAT64 ): FLOAT64;
 	BEGIN
 		RETURN f.f1d( at )
 	END GetF1d;
 
-	PROCEDURE GetFxd( f: FunctionXd;  at: ARRAY OF LONGREAL ): LONGREAL;
+	PROCEDURE GetFxd( f: FunctionXd;  at: ARRAY OF FLOAT64 ): FLOAT64;
 	BEGIN
 		RETURN f.fxd( at )
 	END GetFxd;
 
-	PROCEDURE Get1dOf( f: Function;  at: LONGREAL ): LONGREAL;
+	PROCEDURE Get1dOf( f: Function;  at: FLOAT64 ): FLOAT64;
 	BEGIN
 		RETURN f.f1d( f.of.get( f.of, at ) )
 	END Get1dOf;
@@ -264,16 +264,16 @@ TYPE
 		END
 	END SetProcedures;
 
-	PROCEDURE GetCache*( f: Function;  from, to, by: LONGREAL;  VAR a: Array );
-	VAR x: LONGREAL;  i: LONGINT;
+	PROCEDURE GetCache*( f: Function;  from, to, by: FLOAT64;  VAR a: Array );
+	VAR x: FLOAT64;  i: SIGNED32;
 	BEGIN
 		IF (a = NIL ) OR (LEN( a^ ) # ENTIER( (to - from) / by + 1.5 (*2*) )) THEN NEW( a, ENTIER( (to - from) / by + 1.5 (*2*) ) ) END;
 		x := from;  i := 0;
 		WHILE (i < LEN( a^ )) DO a[i] := f.get( f, x );  x := x + by;  INC( i ) END
 	END GetCache;
 
-	PROCEDURE SetCache*( f: Function;  from, to, by: LONGREAL;  a: Array );
-	VAR x: LONGREAL;  i: LONGINT;
+	PROCEDURE SetCache*( f: Function;  from, to, by: FLOAT64;  a: Array );
+	VAR x: FLOAT64;  i: SIGNED32;
 	BEGIN
 		f.set := SetCreate;   (* recreate the values, SetCache fills whole function values *)
 		IF (a # NIL ) & (LEN( a^ ) >= ENTIER( (to - from) / by + 1.5 (*2 *) )) THEN
@@ -289,7 +289,7 @@ TYPE
 	END StoreFXd;
 
 	PROCEDURE LoadFXd( VAR R: Files.Rider;  s: FunctionXd );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Files.ReadString( R, s.Mapping );
 		IF antsOnTheFly.SetXd( "", s.Mapping ) THEN
@@ -304,7 +304,7 @@ TYPE
 	END StoreF;
 
 	PROCEDURE LoadF( VAR R: Files.Rider;  s: Function );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Gadgets.ReadRef( R, s.lib, objsub );
 		IF objsub # NIL THEN s.of := objsub( Function ) END;
@@ -645,7 +645,7 @@ END SetXd;
 	END DoSetXd;
 
 	PROCEDURE CompileText*;
-	VAR obj: Objects.Object;  obj1: Objects.Object;  pos: LONGINT;  t: Texts.Text;
+	VAR obj: Objects.Object;  obj1: Objects.Object;  pos: SIGNED32;  t: Texts.Text;
 		function: ARRAY 1024 OF CHAR;
 		r: Texts.Reader;  l: antsCommands.tScanList;  f: FunctionXd;  bobj: vyBase.Object;
 	BEGIN
@@ -655,7 +655,7 @@ END SetXd;
 	END CompileText;
 
 	PROCEDURE DoCompileText*( VAR bobj: vyBase.Object );
-	VAR obj: Objects.Object;  obj1: Objects.Object;  pos: LONGINT;  t: Texts.Text;
+	VAR obj: Objects.Object;  obj1: Objects.Object;  pos: SIGNED32;  t: Texts.Text;
 		function: ARRAY 1024 OF CHAR;
 		r: Texts.Reader;  l: antsCommands.tScanList;  f: FunctionXd;
 	BEGIN
@@ -678,7 +678,7 @@ END SetXd;
 (*
 
 PROCEDURE CompileText*;
-VAR obj: Objects.Object; obj1: Objects.Object; pos: LONGINT; t: Texts.Text;
+VAR obj: Objects.Object; obj1: Objects.Object; pos: SIGNED32; t: Texts.Text;
 function: ARRAY 1024 OF CHAR; r: Texts.Reader; l: antsCommands.tScanList;    f: FunctionXd; bobj: vyBase.Object;
 BEGIN
 l := antsCommands.ScanFromPar("name=OBJ; # 'CompileText' expected in context");
@@ -717,7 +717,7 @@ END CompileText;
 
 *)
 	PROCEDURE CompileText2*;
-	VAR obj: Objects.Object;  obj1: Objects.Object;  pos: LONGINT;  t: Texts.Text;
+	VAR obj: Objects.Object;  obj1: Objects.Object;  pos: SIGNED32;  t: Texts.Text;
 		function: ARRAY 1024 OF CHAR;
 		r: Texts.Reader;  l: antsCommands.tScanList;  f: FunctionXd;  bobj: vyBase.Object;
 	BEGIN

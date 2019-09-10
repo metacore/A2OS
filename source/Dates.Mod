@@ -22,25 +22,25 @@ TYPE
 
 	DateTime* = RECORD
 		year*, month*, day*,
-		hour*, minute*, second*: LONGINT
+		hour*, minute*, second*: SIGNED32
 	END;
 
 VAR
 	Months-: ARRAY 12 OF ARRAY 10 OF CHAR;	(** month's names (January = 0....December=11) *)
 	Days-: ARRAY 7 OF ARRAY 10 OF CHAR;	(** day's names (Moday = 0, .... Sunday = 6) *)
-	NoDays: ARRAY 12 OF INTEGER;
+	NoDays: ARRAY 12 OF SIGNED16;
 	ZeroDateUnix-, ZeroDateRFC868-, ZeroDateNTP-: DateTime;
 
 (** Date and Time functions *)
 
 (** returns TRUE if 'year' is a leap year *)
-PROCEDURE LeapYear*(year: LONGINT): BOOLEAN;
+PROCEDURE LeapYear*(year: SIGNED32): BOOLEAN;
 BEGIN
 	RETURN (year > 0) & (year MOD 4 = 0) & (~(year MOD 100 = 0) OR (year MOD 400 = 0))
 END LeapYear;
 
 (** returns the number of days in that month *)
-PROCEDURE NofDays*(year, month: LONGINT): LONGINT;
+PROCEDURE NofDays*(year, month: SIGNED32): SIGNED32;
 BEGIN
 	DEC(month);
 	ASSERT((month >= 0) & (month < 12));
@@ -57,7 +57,7 @@ BEGIN
 END ValidDateTime;
 
 (** convert an Oberon date/time to a DateTime structure *)
-PROCEDURE OberonToDateTime*(Date, Time: LONGINT): DateTime;
+PROCEDURE OberonToDateTime*(Date, Time: SIGNED32): DateTime;
 VAR dt: DateTime;
 BEGIN
 	dt.second := Time MOD 64; Time := Time DIV 64;
@@ -70,7 +70,7 @@ BEGIN
 END OberonToDateTime;
 
 (** convert a DateTime structure to an Oberon date/time *)
-PROCEDURE DateTimeToOberon*(dt: DateTime; VAR date, time: LONGINT);
+PROCEDURE DateTimeToOberon*(dt: DateTime; VAR date, time: SIGNED32);
 BEGIN
 	ASSERT(ValidDateTime(dt));
 	date := (dt.year-1900)*512 + dt.month*32 + dt.day;
@@ -79,7 +79,7 @@ END DateTimeToOberon;
 
 (** returns the current date and time *)
 PROCEDURE Now*(): DateTime;
-VAR d, t: LONGINT;
+VAR d, t: SIGNED32;
 BEGIN
 	Clock.Get(t, d);
 	RETURN OberonToDateTime(d, t)
@@ -87,8 +87,8 @@ END Now;
 
 (** returns the ISO 8601 year number, week number & week day (Monday=1, ....Sunday=7) *)
 (* algorithm by Rick McCarty, http://personal.ecu.edu/mccartyr/ISOwdALG.txt *)
-PROCEDURE WeekDate*(Date: DateTime; VAR year, week, weekday: LONGINT);
-VAR doy, i, yy, c, g, jan1: LONGINT; leap: BOOLEAN;
+PROCEDURE WeekDate*(Date: DateTime; VAR year, week, weekday: SIGNED32);
+VAR doy, i, yy, c, g, jan1: SIGNED32; leap: BOOLEAN;
 BEGIN
 	IF ValidDateTime(Date) THEN
 		leap := LeapYear(Date.year);
@@ -130,11 +130,11 @@ BEGIN
 END Equal;
 
 (** Returns -1 if (t1 < t2), 0 if (t1 = t2) or 1 if (t1 >  t2) *)
-PROCEDURE CompareDateTime*(t1, t2 : DateTime) : LONGINT;
-VAR result : LONGINT;
+PROCEDURE CompareDateTime*(t1, t2 : DateTime) : SIGNED32;
+VAR result : SIGNED32;
 
-	PROCEDURE Compare(t1, t2 : LONGINT) : LONGINT;
-	VAR result : LONGINT;
+	PROCEDURE Compare(t1, t2 : SIGNED32) : SIGNED32;
+	VAR result : SIGNED32;
 	BEGIN
 		IF (t1 < t2) THEN result := -1;
 		ELSIF (t1 > t2) THEN result := 1;
@@ -166,9 +166,9 @@ END CompareDateTime;
 
 (** Absolute time difference between t1 and t2.
 Note that leap seconds are not counted, see http://www.eecis.udel.edu/~mills/leap.html *)
-PROCEDURE TimeDifference*(t1, t2 : DateTime; VAR days, hours, minutes, seconds : LONGINT);
+PROCEDURE TimeDifference*(t1, t2 : DateTime; VAR days, hours, minutes, seconds : SIGNED32);
 CONST SecondsPerMinute = 60; SecondsPerHour = 3600; SecondsPerDay = 86400;
-VAR start, end : DateTime; year, month, second : LONGINT;
+VAR start, end : DateTime; year, month, second : SIGNED32;
 BEGIN
 	IF (CompareDateTime(t1, t2) = -1) THEN start := t1; end := t2; ELSE start := t2; end := t1; END;
 	IF (start.year = end.year) & (start.month = end.month) & (start.day = end.day) THEN
@@ -214,7 +214,7 @@ BEGIN
 END TimeDifference;
 
 (** Add/Subtract a number of years to/from dt *)
-PROCEDURE AddYears*(VAR dt : DateTime; years : LONGINT);
+PROCEDURE AddYears*(VAR dt : DateTime; years : SIGNED32);
 BEGIN
 	ASSERT(ValidDateTime(dt));
 	dt.year := dt.year + years;
@@ -222,8 +222,8 @@ BEGIN
 END AddYears;
 
 (** Add/Subtract a number of months to/from dt. This will adjust dt.year if necessary *)
-PROCEDURE AddMonths*(VAR dt : DateTime; months : LONGINT);
-VAR years : LONGINT;
+PROCEDURE AddMonths*(VAR dt : DateTime; months : SIGNED32);
+VAR years : SIGNED32;
 BEGIN
 	ASSERT(ValidDateTime(dt));
 	years := months DIV 12;
@@ -240,8 +240,8 @@ BEGIN
 END AddMonths;
 
 (** Add/Subtract a number of days to/from dt. This will adjust dt.month and dt.year if necessary *)
-PROCEDURE AddDays*(VAR dt : DateTime; days : LONGINT);
-VAR nofDaysLeft : LONGINT;
+PROCEDURE AddDays*(VAR dt : DateTime; days : SIGNED32);
+VAR nofDaysLeft : SIGNED32;
 BEGIN
 	ASSERT(ValidDateTime(dt));
 	IF (days > 0) THEN
@@ -275,8 +275,8 @@ BEGIN
 END AddDays;
 
 (** Add/Subtract a number of hours to/from dt. This will adjust dt.day, dt.month and dt.year if necessary *)
-PROCEDURE AddHours*(VAR dt : DateTime; hours : LONGINT);
-VAR days : LONGINT;
+PROCEDURE AddHours*(VAR dt : DateTime; hours : SIGNED32);
+VAR days : SIGNED32;
 BEGIN
 	ASSERT(ValidDateTime(dt));
 	dt.hour := dt.hour + hours;
@@ -291,8 +291,8 @@ BEGIN
 END AddHours;
 
 (** Add/Subtract a number of minutes to/from dt. This will adjust dt.hour, dt.day, dt.month and dt.year if necessary *)
-PROCEDURE AddMinutes*(VAR dt : DateTime; minutes : LONGINT);
-VAR hours : LONGINT;
+PROCEDURE AddMinutes*(VAR dt : DateTime; minutes : SIGNED32);
+VAR hours : SIGNED32;
 BEGIN
 	ASSERT(ValidDateTime(dt));
 	dt.minute := dt.minute + minutes;
@@ -307,8 +307,8 @@ BEGIN
 END AddMinutes;
 
 (** Add/Subtract a number of seconds to/from dt. This will adjust dt.minute, dt.hour, dt.day, dt.month and dt.year if necessary *)
-PROCEDURE AddSeconds*(VAR dt : DateTime; seconds : LONGINT);
-VAR minutes : LONGINT;
+PROCEDURE AddSeconds*(VAR dt : DateTime; seconds : SIGNED32);
+VAR minutes : SIGNED32;
 BEGIN
 	ASSERT(ValidDateTime(dt));
 	dt.second := dt.second + seconds;

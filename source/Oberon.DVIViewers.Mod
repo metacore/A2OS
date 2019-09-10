@@ -19,12 +19,12 @@ CONST
    MaxZoom = 20.0; (* maximum zoom factor *)
 TYPE
    Frame* = POINTER TO FrameDesc;
-   DrawCharHook = PROCEDURE (c: CHAR; x,y,dviWidth: LONGREAL; F: Frame);
+   DrawCharHook = PROCEDURE (c: CHAR; x,y,dviWidth: FLOAT64; F: Frame);
    FrameDesc* = RECORD(Gadgets.FrameDesc)
-      pageNo: LONGINT;
-      zoom: REAL; conv: LONGREAL;
-      hOffset,vOffset: LONGREAL;
-      b,l,h,w: INTEGER;
+      pageNo: SIGNED32;
+      zoom: FLOAT32; conv: FLOAT64;
+      hOffset,vOffset: FLOAT64;
+      b,l,h,w: SIGNED16;
       M: Display3.Mask; clipReg: GfxRegions.Region;
       context: Gfx.Context;
 
@@ -34,15 +34,15 @@ TYPE
    StackElement = POINTER TO StackElementDesc;
    StackElementDesc = RECORD
       next: StackElement;
-      h,v,w,x,y,z: LONGREAL
+      h,v,w,x,y,z: FLOAT64
    END;
 
    PSFileSpecial = POINTER TO PSFileSpecialDesc;
    PSFileSpecialDesc = RECORD(DVIFiles.SpecialDesc)
       name: POINTER TO ARRAY OF CHAR; (* file's name *)
-      llx,lly,urx,ury: LONGREAL; (* bounding box in dvi-coords
+      llx,lly,urx,ury: FLOAT64; (* bounding box in dvi-coords
          relative to the current dvi-point *)
-      angle: REAL; (* angle in degrees counterclockwise *)
+      angle: FLOAT32; (* angle in degrees counterclockwise *)
       image: Images.Image;
    END;
 
@@ -57,47 +57,47 @@ VAR
       END
    END Assert;
 
-   PROCEDURE DVIToScreenX(F: Frame; x: LONGREAL): LONGREAL;
+   PROCEDURE DVIToScreenX(F: Frame; x: FLOAT64): FLOAT64;
    BEGIN
       RETURN F.l+(x-F.hOffset)*F.zoom*F.conv;
    END DVIToScreenX;
 
-   PROCEDURE DVIToScreenY(F: Frame; y: LONGREAL): LONGREAL;
+   PROCEDURE DVIToScreenY(F: Frame; y: FLOAT64): FLOAT64;
    BEGIN
       RETURN F.b+F.h-(y-F.vOffset)*F.zoom*F.conv;
    END DVIToScreenY;
 
-   PROCEDURE ScreenToDVIX(F: Frame; x: INTEGER): LONGREAL;
+   PROCEDURE ScreenToDVIX(F: Frame; x: SIGNED16): FLOAT64;
    BEGIN
       RETURN F.hOffset + (x-F.l)/F.zoom/F.conv;
    END ScreenToDVIX;
 
-   PROCEDURE ScreenToDVIY(F: Frame; y: INTEGER): LONGREAL;
+   PROCEDURE ScreenToDVIY(F: Frame; y: SIGNED16): FLOAT64;
    BEGIN
       RETURN F.vOffset + (F.b+F.h-y)/F.zoom/F.conv;
    END ScreenToDVIY;
 
-   PROCEDURE Push(VAR s: StackElement; h,v,w,x,y,z: LONGREAL);
+   PROCEDURE Push(VAR s: StackElement; h,v,w,x,y,z: FLOAT64);
    VAR e: StackElement;
    BEGIN
       NEW(e); e.h:= h; e.v:= v; e.w:= w; e.x:= x; e.y:= y; e.z:= z;
       e.next:= s; s:= e
    END Push;
 
-   PROCEDURE Pop(VAR s: StackElement; VAR h,v,w,x,y,z: LONGREAL);
+   PROCEDURE Pop(VAR s: StackElement; VAR h,v,w,x,y,z: FLOAT64);
    BEGIN
       Assert(s#NIL,"More Pops than Push's in this page of the dvi-file.");
       h:= s.h; v:= s.v; w:= s.w; x:= s.x; y:= s.y; z:= s.z;
       s:= s.next;
    END Pop;
 
-   PROCEDURE GetResolution() : LONGREAL;
+   PROCEDURE GetResolution() : FLOAT64;
    BEGIN
       RETURN 91.44;
    END GetResolution;
 
-   PROCEDURE DrawCharImage(c: CHAR; x,y,dviWidth: LONGREAL; F: Frame);
-   VAR cx, cy, dx, dy, llx, lly, urx, ury: REAL; img: GfxImages.Image;
+   PROCEDURE DrawCharImage(c: CHAR; x,y,dviWidth: FLOAT64; F: Frame);
+   VAR cx, cy, dx, dy, llx, lly, urx, ury: FLOAT32; img: GfxImages.Image;
    BEGIN
       GfxFonts.GetMap(F.context.font,c,cx,cy,dx,dy,img);
       cx:= SHORT(DVIToScreenX(F,x)+cx); cy:= SHORT(DVIToScreenY(F,y)+cy);
@@ -108,7 +108,7 @@ VAR
       END
    END DrawCharImage;
 
-   PROCEDURE DrawChar(c: CHAR; x,y,dviWidth: LONGREAL; F: Frame);
+   PROCEDURE DrawChar(c: CHAR; x,y,dviWidth: FLOAT64; F: Frame);
    VAR str: ARRAY 2 OF CHAR;
    BEGIN
       str[0]:= c; str[1]:= CHR(0);
@@ -116,8 +116,8 @@ VAR
         SHORT(DVIToScreenY(F,y)),str)
    END DrawChar;
 
-   PROCEDURE DrawRule(x,y,h,w: LONGREAL; F: Frame);
-   VAR llx, lly, urx, ury, lw, tmp: REAL;
+   PROCEDURE DrawRule(x,y,h,w: FLOAT64; F: Frame);
+   VAR llx, lly, urx, ury, lw, tmp: FLOAT32;
    BEGIN
       llx := SHORT(DVIToScreenX(F,x)); lly := SHORT(DVIToScreenY(F,y-h));
       urx := SHORT(DVIToScreenX(F,x+w)); ury := SHORT(DVIToScreenY(F,y));
@@ -139,8 +139,8 @@ VAR
    VAR
       f: GfxFonts.Font;
       m: GfxMatrix.Matrix;
-      PROCEDURE DesignSize(VAR n: ARRAY OF CHAR): INTEGER;
-      VAR ds,i: INTEGER;
+      PROCEDURE DesignSize(VAR n: ARRAY OF CHAR): SIGNED16;
+      VAR ds,i: SIGNED16;
       BEGIN
          i:= 0;
          WHILE (n[i]#CHR(0)) & ((n[i]<"0") OR (n[i]>"9")) DO
@@ -173,11 +173,11 @@ VAR
          i (i>1) means we're waiting for Tag[i+1]) *)
    VAR f: Files.File; r: Files.Rider;
       ch: CHAR; (* char to process *)
-      state: INTEGER;
-      w,h,depth,lines: INTEGER;
+      state: SIGNED16;
+      w,h,depth,lines: SIGNED16;
       str: ARRAY End+2 OF CHAR;
-      hex: INTEGER; (* hex=-1 means that we're waiting for the first digit *)
-      val: INTEGER; base,bytesPerColumn,i: LONGINT;
+      hex: SIGNED16; (* hex=-1 means that we're waiting for the first digit *)
+      val: SIGNED16; base,bytesPerColumn,i: SIGNED32;
 
       PROCEDURE EatWhiteSpace(): BOOLEAN;
       (* returns true iff eof is not readched *)
@@ -189,7 +189,7 @@ VAR
          RETURN TRUE
       END EatWhiteSpace;
 
-      PROCEDURE ParseInt(VAR n: INTEGER): BOOLEAN;
+      PROCEDURE ParseInt(VAR n: SIGNED16): BOOLEAN;
       (* returns true iff eof is not readched *)
       BEGIN
          IF ~EatWhiteSpace() THEN RETURN FALSE END;
@@ -269,7 +269,7 @@ VAR
    END ReadPSPreview;
 
    PROCEDURE ParseSpecial(M: DVIFiles.File; VAR r: Files.Rider;
-      pageNo,len: LONGINT): DVIFiles.Special;
+      pageNo,len: SIGNED32): DVIFiles.Special;
    CONST
       PSMsg = "Error parsing 'PSfile' special.";
       (* tokens we expect in a general special: *)
@@ -279,19 +279,19 @@ VAR
       hscale = 4; vscale = 5; angle = 6; llx = 7;
       lly = 8; urx = 9; ury = 10; rwi = 11; rhi = 12; clip = 13; none = 14;
    VAR
-      tok: INTEGER; (* current token *)
+      tok: SIGNED16; (* current token *)
       str: POINTER TO ARRAY OF CHAR; (* string used in GetToken below *)
-      n: LONGINT; (* integer used in GetToken below *)
+      n: SIGNED32; (* integer used in GetToken below *)
       seen: SET; (* whether we have seen any of the 'PSfile' identifiers *)
-      vals: ARRAY rhi+1 OF REAL; (* values of 'PSfile' identifiers *)
+      vals: ARRAY rhi+1 OF FLOAT32; (* values of 'PSfile' identifiers *)
       s: PSFileSpecial;
-      i: INTEGER;
-      c: LONGREAL; (* one 1/72 inch represents c dvi-units *)
+      i: SIGNED16;
+      c: FLOAT64; (* one 1/72 inch represents c dvi-units *)
 
-      PROCEDURE GetToken(): INTEGER;
+      PROCEDURE GetToken(): SIGNED16;
       (* Uses the variables r, len, n, str^.
          Preconditon: len >= 0 & LEN(str) > len. *)
-      VAR i: INTEGER;
+      VAR i: SIGNED16;
       BEGIN
          REPEAT (* skip white-space *)
             IF len = 0 THEN RETURN EOS END;
@@ -411,11 +411,11 @@ VAR
       ELSE DVIFiles.SkipBytes(r,len); RETURN NIL END;
    END ParseSpecial;
 
-   PROCEDURE DoSpecial(F: Frame; M: DVIFiles.File; h,v: LONGREAL;
-      VAR r: Files.Rider; len: LONGINT);
+   PROCEDURE DoSpecial(F: Frame; M: DVIFiles.File; h,v: FLOAT64;
+      VAR r: Files.Rider; len: SIGNED32);
    VAR
-      tmp: DVIFiles.Special; s: PSFileSpecial; pos: LONGINT;
-      ctm: GfxMatrix.Matrix; sc,phi: REAL;
+      tmp: DVIFiles.Special; s: PSFileSpecial; pos: SIGNED32;
+      ctm: GfxMatrix.Matrix; sc,phi: FLOAT32;
    BEGIN
       pos:= Files.Pos(r);
       IF ~DVIFiles.IsSpecialCacheComplete(M,F.pageNo) THEN
@@ -474,11 +474,11 @@ VAR
 
    VAR
       r: Files.Rider;
-      cmd: LONGINT;
-      h,v,w,x,y,z: LONGREAL;
-      fontNo: LONGINT; font: DVIFiles.FontInfo;
+      cmd: SIGNED32;
+      h,v,w,x,y,z: FLOAT64;
+      fontNo: SIGNED32; font: DVIFiles.FontInfo;
       stack: StackElement;
-      a,b,c: LONGINT;
+      a,b,c: SIGNED32;
    BEGIN
       IF ~DVIFiles.GetPage(M,F.pageNo,r) THEN RETURN END;
       F.conv:= GetResolution()/2.54D8*M.mag*M.num/M.den;
@@ -640,14 +640,14 @@ VAR
    END DoLoad;
 
    (* Routines to Draw & Print the Gadget: *)
-   PROCEDURE AddMaskRect(x,y,w,h: INTEGER);
+   PROCEDURE AddMaskRect(x,y,w,h: SIGNED16);
    BEGIN
       GfxRegions.AddRect(tmpRgn,x,y,x+w,y+h)
    END AddMaskRect;
 
    PROCEDURE DoRestore(F: Frame);
-   VAR f: DVIFiles.File; inch: LONGREAL;
-      PROCEDURE PrinterToDVIUnits(x:LONGREAL): LONGREAL;
+   VAR f: DVIFiles.File; inch: FLOAT64;
+      PROCEDURE PrinterToDVIUnits(x:FLOAT64): FLOAT64;
       BEGIN
          RETURN 1.0D7/f.num/f.mag*f.den*x*Printer.Unit/36000.0;
       END PrinterToDVIUnits;
@@ -687,7 +687,7 @@ VAR
    PROCEDURE DoPrint(F: Frame; VAR M: Display.DisplayMsg);
    (* following is old:
    VAR Q: Display3.Mask;
-      PROCEDURE P(x: INTEGER): INTEGER;
+      PROCEDURE P(x: SIGNED16): SIGNED16;
       BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
       END P;
    BEGIN
@@ -699,7 +699,7 @@ VAR
 
    (* Routines for Mouse-Handling: *)
    PROCEDURE MoveViewToMouse(F: Frame;
-      dviX,dviY: LONGREAL; mX,mY: INTEGER);
+      dviX,dviY: FLOAT64; mX,mY: SIGNED16);
    (* Moves the view so that the DVI-point (dviX,dviY) lies under
       the point (mX,mY) (normally the mouse-coordinates) in Oberon
       coordinates. *)
@@ -712,8 +712,8 @@ VAR
    CONST right = 0; middle = 1; left = 2;
    VAR
       keysum: SET; (* accumulates key-buttons during interclicks *)
-      X,Y,W,H: INTEGER; (* dummy variables *)
-      dviX,dviY: LONGREAL;  (* mouse-loc in dvi-coords *)
+      X,Y,W,H: SIGNED16; (* dummy variables *)
+      dviX,dviY: FLOAT64;  (* mouse-loc in dvi-coords *)
 
       PROCEDURE DoZoomIn;
       BEGIN
@@ -738,7 +738,7 @@ VAR
       END DoZoomIn;
 
       PROCEDURE DoPanning;
-      VAR mX,mY,dX,dY: INTEGER; n,copy: Display3.Mask;
+      VAR mX,mY,dX,dY: SIGNED16; n,copy: Display3.Mask;
       BEGIN
          Input.Mouse(M.keys,mX,mY); (* mask out clicks to bring window
                                        to the front *)
@@ -797,7 +797,7 @@ VAR
    (* Message- Handler: *)
    PROCEDURE CheckModels(M: Gadgets.UpdateMsg; F: Frame);
    (* Check whether the zoom- and page-number models changed. *)
-   VAR z,p: Objects.Object; r: REAL; n: LONGINT;
+   VAR z,p: Objects.Object; r: FLOAT32; n: SIGNED32;
    BEGIN
       Links.GetLink(F,"PageNumber",p);
       IF M.obj = p THEN
@@ -954,10 +954,10 @@ VAR
    VAR
      v: Frame; f: DVIFiles.File;
      c: GfxPS.Context; oldc: Gfx.Context;
-     w,h,oldZoom: REAL; oldHOff,oldVOff: LONGREAL;
+     w,h,oldZoom: FLOAT32; oldHOff,oldVOff: FLOAT64;
      name: ARRAY 64 OF CHAR;
      oldDrawChar: DrawCharHook;
-     oldPageNo,i: LONGINT;
+     oldPageNo,i: SIGNED32;
    BEGIN
      v:= CurrentDVIViewer();
      IF v = NIL THEN RETURN END; f:= v.obj(DVIFiles.File);

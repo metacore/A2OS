@@ -29,12 +29,12 @@ IMPORT antsObjects, Objects, Files, antsArrayObjects, Math := MathL IN A2, antsK
 	Gadgets, antsCaches, Links, Attributes, antsArrays, aM := antsMessages;
 
 TYPE
-	RandomArray = POINTER TO ARRAY OF LONGREAL;
+	RandomArray = POINTER TO ARRAY OF FLOAT64;
 
 	tModel* = POINTER TO tModelDesc;
 	tModelDesc* = RECORD (antsModels.tModelDesc);
-	(* h-, beta-,penalty-: LONGREAL; *)
-		ccool: LONGREAL;
+	(* h-, beta-,penalty-: FLOAT64; *)
+		ccool: FLOAT64;
 		ran: RandomArray
 	END;
 
@@ -52,15 +52,15 @@ TYPE
 	END StoreM;
 
 	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );
-	VAR version: INTEGER;
+	VAR version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );
 		IF version < 1 THEN Files.ReadLReal( R, s.par[0] );  Files.ReadLReal( R, s.par[1] );  Files.ReadLReal( R, s.par[2] ) END;
 		Open( s )
 	END LoadM;
 
-	PROCEDURE U( m: tModel;  a: ARRAY OF INTEGER ): LONGREAL;
-	VAR theta: LONGREAL;  sum: LONGREAL;
+	PROCEDURE U( m: tModel;  a: ARRAY OF SIGNED16 ): FLOAT64;
+	VAR theta: FLOAT64;  sum: FLOAT64;
 	BEGIN
 		theta := 0;
 		IF m.par[2] > 0 THEN
@@ -75,8 +75,8 @@ TYPE
 	END U;
 
 	PROCEDURE Cache( m: tModel );
-	VAR cv: ARRAY 6 OF INTEGER;
-		c: antsCaches.FullCache;  offset: LONGINT;  s: LONGREAL;  i: INTEGER;
+	VAR cv: ARRAY 6 OF SIGNED16;
+		c: antsCaches.FullCache;  offset: SIGNED32;  s: FLOAT64;  i: SIGNED16;
 	BEGIN
 		m.MCache := antsCaches.Cube( 6, 2, m.maxCacheSize );  m.ccool := m.coolingTemp;  c := m.MCache;  offset := -1;
 		WHILE (c.NextPoint( offset, cv, 1 )) DO
@@ -92,10 +92,10 @@ TYPE
 	END Cache;
 
 	PROCEDURE OneSweep( s: antsKernel.Kernel );
-	VAR x, y, w, h, maxx, maxy: LONGINT;  A, AOrig: antsArrayObjects.tINTEGERArray;  model: tModel;
-		AO: antsArrayObjects.tINTEGERObject;  Random: RandomArray;  ran: LONGREAL;  cpos: LONGINT;  u: LONGREAL;  orig: Objects.Object;
+	VAR x, y, w, h, maxx, maxy: SIGNED32;  A, AOrig: antsArrayObjects.tINTEGERArray;  model: tModel;
+		AO: antsArrayObjects.tINTEGERObject;  Random: RandomArray;  ran: FLOAT64;  cpos: SIGNED32;  u: FLOAT64;  orig: Objects.Object;
 		checkerboard: BOOLEAN;
-		a: ARRAY 6 OF INTEGER;
+		a: ARRAY 6 OF SIGNED16;
 	BEGIN
 		model := s.par( tModel );
 		IF model.ccool # model.coolingTemp THEN model.synced := FALSE END;
@@ -186,7 +186,7 @@ END Uniform;
 		END;   (* tVector*)
 	END Handler;
 
-	PROCEDURE OpenModel*( M: tModel;  name: vyName.tNameArray;  beta, h, penalty: LONGREAL );
+	PROCEDURE OpenModel*( M: tModel;  name: vyName.tNameArray;  beta, h, penalty: FLOAT64 );
 	BEGIN
 		M.par[0] := h;  M.par[1] := beta;  M.par[2] := penalty;  Open( M );
 		IF M.handle # NIL THEN M.handle := Handler END;
@@ -202,9 +202,9 @@ END Uniform;
 	END Gen;
 
 	PROCEDURE NewModel*;
-	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  M: tModel;  beta, h, pen: LONGREAL;
+	VAR l: antsCommands.tScanList;  name: vyName.tNameArray;  M: tModel;  beta, h, pen: FLOAT64;
 	BEGIN
-		l := antsCommands.ScanFromPar( "name=NAME beta=REAL h=REAL penalty=REAL" );
+		l := antsCommands.ScanFromPar( "name=NAME beta=FLOAT32 h=FLOAT32 penalty=FLOAT32" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) & antsCommands.ExpectRealFromKeyword( l, "beta", beta ) &
 		    antsCommands.ExpectRealFromKeyword( l, "h", h ) & antsCommands.ExpectRealFromKeyword( l, "penalty", pen ) THEN
 			Gen;  M := Objects.NewObj( tModel );  antsModels.Open( M );  OpenModel( M, name, beta, h, pen )

@@ -80,7 +80,7 @@ TYPE
 		END CreateFile;
 
 		PROCEDURE DeleteFile(CONST filename : ARRAY OF CHAR; VAR error : BOOLEAN);
-		VAR fullname : Files.FileName; res : WORD;
+		VAR fullname : Files.FileName; res : INTEGER;
 		BEGIN
 			COPY(path, fullname); Strings.Append(fullname, filename);
 			log.String("DELETE '"); log.String(fullname); log.String("' ... "); log.Update;
@@ -115,7 +115,7 @@ TYPE
 			RETURN ~error;
 		END CheckOpen;
 
-		PROCEDURE FileSet(position : LONGINT; VAR error : BOOLEAN);
+		PROCEDURE FileSet(position : SIGNED32; VAR error : BOOLEAN);
 		BEGIN
 			log.String("File.Pos := "); log.Int(position, 0); log.String(" ... "); log.Update;
 			IF CheckOpen(error) THEN
@@ -124,7 +124,7 @@ TYPE
 			END;
 		END FileSet;
 
-		PROCEDURE GetInteger(r : Streams.Reader; VAR integer : LONGINT) : BOOLEAN;
+		PROCEDURE GetInteger(r : Streams.Reader; VAR integer : SIGNED32) : BOOLEAN;
 		BEGIN
 			r.SkipWhitespace; r.Int(integer, FALSE);
 			IF (r.res # Streams.Ok) THEN
@@ -167,7 +167,7 @@ TYPE
 			RETURN (r.res = Streams.Ok);
 		END GetChar;
 
-		PROCEDURE GetIndex(CONST string : ARRAY OF CHAR; VAR index : LONGINT) : BOOLEAN;
+		PROCEDURE GetIndex(CONST string : ARRAY OF CHAR; VAR index : SIGNED32) : BOOLEAN;
 		VAR variable : ARRAY 64 OF CHAR;
 		BEGIN
 			ASSERT(Strings.Match("buffer*", string));
@@ -189,10 +189,10 @@ TYPE
 		END GetIndex;
 
 		PROCEDURE Assert(r : Streams.Reader; VAR error, parseError : BOOLEAN);
-		VAR variable : ARRAY 32 OF CHAR; index : LONGINT;
+		VAR variable : ARRAY 32 OF CHAR; index : SIGNED32;
 
-			PROCEDURE CheckInteger(CONST name : ARRAY OF CHAR;  variable : HUGEINT; r : Streams.Reader; VAR error, parseError : BOOLEAN);
-			VAR operator : ARRAY 4 OF CHAR; value : LONGINT;
+			PROCEDURE CheckInteger(CONST name : ARRAY OF CHAR;  variable : SIGNED64; r : Streams.Reader; VAR error, parseError : BOOLEAN);
+			VAR operator : ARRAY 4 OF CHAR; value : SIGNED32;
 			BEGIN
 				r.SkipWhitespace; r.String(operator);
 				IF GetInteger(r, value) THEN
@@ -262,7 +262,7 @@ TYPE
 			END CheckChar;
 
 			PROCEDURE CheckString(CONST name : ARRAY OF CHAR; CONST variable : Strings.String; r : Streams.Reader; VAR error, parseError : BOOLEAN);
-			VAR operator : ARRAY 4 OF CHAR; value : Strings.String; i : LONGINT;
+			VAR operator : ARRAY 4 OF CHAR; value : Strings.String; i : SIGNED32;
 			BEGIN
 				r.SkipWhitespace; r.String(operator);
 				IF GetString(r, value) THEN
@@ -335,8 +335,8 @@ TYPE
 		PROCEDURE Set(r : Streams.Reader; VAR error, parseError : BOOLEAN);
 		VAR
 			variable, to : ARRAY 32 OF CHAR;
-			charValue : CHAR; integerValue : LONGINT;  booleanValue : BOOLEAN; stringValue : Strings.String;
-			set, index : LONGINT; i: SIZE;
+			charValue : CHAR; integerValue : SIGNED32;  booleanValue : BOOLEAN; stringValue : Strings.String;
+			set, index : SIGNED32; i: SIZE;
 
 		BEGIN
 			r.SkipWhitespace; r.String(variable);
@@ -439,7 +439,7 @@ TYPE
 			END;
 		END FileWriteByte;
 
-		PROCEDURE FileReadBytes(offset, length : LONGINT; VAR error : BOOLEAN);
+		PROCEDURE FileReadBytes(offset, length : SIGNED32; VAR error : BOOLEAN);
 		BEGIN
 			IF CheckOpen(error) THEN
 				log.String("File.ReadBytes "); log.Int(offset, 0); log.String(" "); log.Int(length, 0); log.String(" ... "); log.Update;
@@ -448,7 +448,7 @@ TYPE
 			END;
 		END FileReadBytes;
 
-		PROCEDURE FileWriteBytes(offset, length : LONGINT; VAR error : BOOLEAN);
+		PROCEDURE FileWriteBytes(offset, length : SIGNED32; VAR error : BOOLEAN);
 		BEGIN
 			IF CheckOpen(error) THEN
 				log.String("File.WriteBytes "); log.Int(offset, 0); log.String(" "); log.Int(length, 0); log.String(" ... "); log.Update;
@@ -466,7 +466,7 @@ TYPE
 			END;
 		END ReaderGet;
 
-		PROCEDURE ReaderBytes(offset, length : LONGINT; VAR error : BOOLEAN);
+		PROCEDURE ReaderBytes(offset, length : SIGNED32; VAR error : BOOLEAN);
 		BEGIN
 			IF CheckOpen(error) THEN
 				log.String("Reader.Bytes "); log.Int(offset, 0); log.String(" "); log.Int(length, 0); log.String("... "); log.Update;
@@ -475,7 +475,7 @@ TYPE
 			END;
 		END ReaderBytes;
 
-		PROCEDURE ReaderSetPos(position : LONGINT; VAR error : BOOLEAN);
+		PROCEDURE ReaderSetPos(position : SIGNED32; VAR error : BOOLEAN);
 		BEGIN
 			IF CheckOpen(error) THEN
 				log.String("Reader.SetPos "); log.Int(position, 0); log.String(" ... "); log.Update;
@@ -484,7 +484,7 @@ TYPE
 			END;
 		END ReaderSetPos;
 
-		PROCEDURE InitBuffer(length : LONGINT);
+		PROCEDURE InitBuffer(length : SIGNED32);
 
 			PROCEDURE Clear;
 			VAR i : SIZE;
@@ -513,7 +513,7 @@ TYPE
 			arg : Streams.StringReader;
 			commandStr : ARRAY 128 OF CHAR; parameterStr : Strings.String;
 			msg : ARRAY 128 OF CHAR;
-			pos : SIZE; res : WORD;
+			pos : SIZE; res : INTEGER;
 		BEGIN
 			NEW(parameterStr, 4096); Strings.Truncate(parameterStr^, 0);
 			r.SkipWhitespace; r.String(commandStr);
@@ -548,7 +548,7 @@ TYPE
 		VAR
 			filename : Files.FileName;
 			string : ARRAY 64 OF CHAR;
-			offset, length, position : LONGINT;
+			offset, length, position : SIGNED32;
 		BEGIN
 			error := FALSE; parseError := FALSE;
 			IF ~r.GetString(string) THEN finished := TRUE; RETURN; ELSE finished := FALSE; END;
@@ -598,8 +598,8 @@ TYPE
 			IF ~parseError & (string[0] # "#") THEN log.Ln; log.Update; END;
 		END ProcessCommand;
 
-		PROCEDURE Handle*(r: Streams.Reader; pos : Streams.Position; CONST name: ARRAY OF CHAR; testType: TestSuite.TestType): WORD;
-		VAR result: INTEGER; error, parseError, finished, trapped: BOOLEAN;
+		PROCEDURE Handle*(r: Streams.Reader; pos : Streams.Position; CONST name: ARRAY OF CHAR; testType: TestSuite.TestType): INTEGER;
+		VAR result: SIGNED16; error, parseError, finished, trapped: BOOLEAN;
 		BEGIN
 			trapped := TRUE;
 			Reset;
@@ -626,7 +626,7 @@ TYPE
 
 (* string is 0X terminated, buffer is NOT 0X terminated *)
 PROCEDURE StringsAreEqual(string, buffer : Strings.String) : BOOLEAN;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	IF (string # NIL) & (buffer # NIL) & (string[LEN(string)-1] = 0X) & (LEN(string) = LEN(buffer) + 1) THEN
 		i := 0;
@@ -667,7 +667,7 @@ END Test;
 PROCEDURE RandomReadWrite*(context : Commands.Context); (** path filename seed nofRuns ~ *)
 VAR
 	path, filename, fullname : Files.FileName;
-	seed, run, nofRuns, position, lastPosition, temp, lastPercent : LONGINT;
+	seed, run, nofRuns, position, lastPosition, temp, lastPercent : SIGNED32;
 	length0: Files.Size;
 	char, lastChar, ch : CHAR;
 	file : Files.File; rider : Files.Rider;
@@ -694,7 +694,7 @@ BEGIN
 				lastPercent := lastPercent + 10;
 				context.out.Int(lastPercent, 0); context.out.String("% "); context.out.Update;
 			END;
-			position := random.Dice(LONGINT(length0));
+			position := random.Dice(SIGNED32(length0));
 			temp := random.Dice(255) + 1;
 			char := CHR(temp);
 			file.Set(rider, position);
@@ -724,9 +724,9 @@ BEGIN
 END RandomReadWrite;
 
 PROCEDURE CreateTestFiles*(context : Commands.Context); (** [path] ~ *)
-VAR path : Files.FileName; i : LONGINT;
+VAR path : Files.FileName; i : SIGNED32;
 
-	PROCEDURE CreateFile(CONST path, filename : ARRAY OF CHAR; size : LONGINT);
+	PROCEDURE CreateFile(CONST path, filename : ARRAY OF CHAR; size : SIGNED32);
 	VAR file : Files.File; rider : Files.Rider; fullname : Files.FileName;
 	BEGIN
 		COPY(path, fullname); Strings.Append(fullname, filename);

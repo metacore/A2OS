@@ -14,10 +14,10 @@ CONST
 TYPE
 	TP = ARRAY N + 2 OF SET32;
 	TS = RECORD
-			a	: ARRAY 256 OF LONGINT;
-			b	: ARRAY 256 OF LONGINT;
+			a	: ARRAY 256 OF SIGNED32;
+			b	: ARRAY 256 OF SIGNED32;
 			c	: ARRAY 256 OF SET32;
-			d	: ARRAY 256 OF LONGINT;
+			d	: ARRAY 256 OF SIGNED32;
 		END;
 
 VAR
@@ -30,8 +30,8 @@ TYPE
 				s: TS;
 				ivl, ivr: SET32;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: LONGINT );
-				VAR i, m: LONGINT;  xl, xr: SET32;
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32 );
+				VAR i, m: SIGNED32;  xl, xr: SET32;
 				BEGIN
 					InitKey^( src, keybits );  m := keybits DIV 8;  s := s0;
 					FOR i := 0 TO N + 1 DO
@@ -41,11 +41,11 @@ TYPE
 					FOR i := 0 TO N BY 2 DO  encrypt0( xl, xr, xl, xr );  p[i] := xl;  p[i + 1] := xr  END;
 					FOR i := 0 TO 254 BY 2 DO
 						encrypt0( xl, xr, xl, xr );
-						s.a[i] := S.VAL( LONGINT, xl );  s.a[i + 1] := S.VAL( LONGINT, xr );
+						s.a[i] := S.VAL( SIGNED32, xl );  s.a[i + 1] := S.VAL( SIGNED32, xr );
 					END;
 					FOR i := 0 TO 254 BY 2 DO
 						encrypt0( xl, xr, xl, xr );
-						s.b[i] := S.VAL( LONGINT, xl );  s.b[i + 1] := S.VAL( LONGINT, xr );
+						s.b[i] := S.VAL( SIGNED32, xl );  s.b[i + 1] := S.VAL( SIGNED32, xr );
 					END;
 					FOR i := 0 TO 254 BY 2 DO
 						encrypt0( xl, xr, xl, xr );
@@ -53,11 +53,11 @@ TYPE
 					END;
 					FOR i := 0 TO 254 BY 2 DO
 						encrypt0( xl, xr, xl, xr );
-						s.d[i] := S.VAL( LONGINT, xl );  s.d[i + 1] := S.VAL( LONGINT, xr );
+						s.d[i] := S.VAL( SIGNED32, xl );  s.d[i + 1] := S.VAL( SIGNED32, xr );
 					END
 				END InitKey;
 
-				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SHORTINT );
+				PROCEDURE SetIV*( CONST src: ARRAY OF CHAR; mode: SIGNED8 );
 				BEGIN
 					SetIV^( src, mode );
 					ivl := U.SetFromBufferBE( src, 0 );  ivr := U.SetFromBufferBE( src, 4 );
@@ -101,21 +101,21 @@ TYPE
 				END DecryptBlock;
 
 
-				PROCEDURE F( x: LONGINT ): SET32;
+				PROCEDURE F( x: SIGNED32 ): SET32;
 				VAR
-					ab, c: SET32; d: LONGINT;
+					ab, c: SET32; d: SIGNED32;
 				BEGIN
 					ab := S.VAL( SET32, s.a[x DIV 1000000H MOD 100H] + s.b[x DIV 10000H MOD 100H] );
 					c := s.c[x DIV 100H MOD 100H];
 					d := s.d[x MOD 100H];
-					RETURN S.VAL( SET32, S.VAL( LONGINT, ab/c ) + d );
+					RETURN S.VAL( SET32, S.VAL( SIGNED32, ab/c ) + d );
 				END F;
 
 				PROCEDURE encrypt0( xl, xr: SET32;  VAR yl, yr: SET32 );
-				VAR t: SET32;  i: INTEGER;
+				VAR t: SET32;  i: SIGNED16;
 				BEGIN
 					FOR i := 0 TO N - 1 DO
-						xl := xl/p[i];  xr := F( S.VAL( LONGINT, xl ) )/xr;
+						xl := xl/p[i];  xr := F( S.VAL( SIGNED32, xl ) )/xr;
 						t := xl;  xl := xr;  xr := t
 					 END;
 					t := xl;  xl := xr;  xr := t;
@@ -123,10 +123,10 @@ TYPE
 				END encrypt0;
 
 				PROCEDURE decrypt0( xl, xr: SET32;  VAR yl, yr: SET32 );
-				VAR t: SET32;  i: INTEGER;
+				VAR t: SET32;  i: SIGNED16;
 				BEGIN
 					FOR i := N + 1 TO 2 BY -1 DO
-						xl := xl/p[i];  xr := F( S.VAL( LONGINT, xl ) )/xr;
+						xl := xl/p[i];  xr := F( S.VAL( SIGNED32, xl ) )/xr;
 						t := xl;  xl := xr;  xr := t
 					END;
 					t := xl;  xl := xr;  xr := t;
@@ -153,7 +153,7 @@ TYPE
 	PROCEDURE Init0;
 	VAR
 		buf: U.InitBuffer;
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		NEW( buf, 256 );
 		buf.Add( "243F6A88 85A308D3 13198A2E 03707344 A4093822 299F31D0 082EFA98 EC4E6C89" );

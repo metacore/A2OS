@@ -17,7 +17,7 @@ CONST
 
 PROCEDURE ReplaceString(text : Text; search : ARRAY OF CHAR; replace : Text; sfrom, slen : SIZE);
 VAR pos, len : SIZE;
-	xs : ARRAY 128 OF LONGINT;
+	xs : ARRAY 128 OF SIGNED32;
 BEGIN
 	text.AcquireWrite;
 	pos := 0; UTF8Strings.UTF8toUnicode(search, xs, pos);
@@ -29,14 +29,14 @@ BEGIN
 	text.ReleaseWrite
 END ReplaceString;
 
-PROCEDURE UTFUCS(src : ARRAY OF CHAR; VAR dst : ARRAY OF LONGINT);
+PROCEDURE UTFUCS(src : ARRAY OF CHAR; VAR dst : ARRAY OF SIGNED32);
 VAR pos : SIZE;
 BEGIN
 	pos := 0; UTF8Strings.UTF8toUnicode(src, dst, pos)
 END UTFUCS;
 
 PROCEDURE MergeWithTemplate(template, src, date : Text; VAR dst : Text);
-VAR tb, te, cb, ce: SIZE; str : ARRAY 32 OF LONGINT;
+VAR tb, te, cb, ce: SIZE; str : ARRAY 32 OF SIGNED32;
 BEGIN
 	NEW(dst);
 	template.AcquireRead; src.AcquireRead; dst.AcquireWrite;
@@ -62,7 +62,7 @@ END MergeWithTemplate;
 PROCEDURE Replace*(context : Commands.Context);
 VAR srcdir, dstdir, src, dst, name, template, tdate : ARRAY 128 OF CHAR;
 	templateT, srcT, dstT, dateT : Text;
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	context.arg.Token(template); context.arg.SkipWhitespace; context.arg.Token(srcdir); context.arg.SkipWhitespace;
 	context.arg.Token(dstdir); context.arg.SkipWhitespace;

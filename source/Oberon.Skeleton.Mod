@@ -10,7 +10,7 @@ CONST red = 1; middle = 1;
 TYPE
 	Frame* = POINTER TO FrameDesc;
 	FrameDesc* = RECORD (Gadgets.FrameDesc)
-		col*: INTEGER
+		col*: SIGNED16
 	END;
 
 (*
@@ -43,7 +43,7 @@ BEGIN
 	END
 END Attributes;
 
-PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE Restore (F: Frame; Q: Display3.Mask; x, y, w, h: SIGNED16);
 BEGIN
 	Display3.ReplConst(Q, F.col, x, y, w, h, Display.replace);
 	IF Gadgets.selected IN F.state THEN
@@ -55,7 +55,7 @@ END Restore;
 PROCEDURE Print (F: Frame; VAR M: Display.DisplayMsg);
 	VAR Q: Display3.Mask;
 
-	PROCEDURE P(x: INTEGER): INTEGER;
+	PROCEDURE P(x: SIGNED16): SIGNED16;
 	BEGIN RETURN SHORT(x * Display.Unit DIV Printer.Unit)
 	END P;
 
@@ -69,7 +69,7 @@ BEGIN to.col := from.col; Gadgets.CopyFrame(M, from, to)
 END Copy;
 
 PROCEDURE Handle* (F: Objects.Object; VAR M: Objects.ObjMsg);
-	VAR x, y, w, h: INTEGER; F1: Frame; Q: Display3.Mask; keysum: SET;
+	VAR x, y, w, h: SIGNED16; F1: Frame; Q: Display3.Mask; keysum: SET;
 BEGIN
 	WITH F: Frame DO
 		IF M IS Display.FrameMsg THEN

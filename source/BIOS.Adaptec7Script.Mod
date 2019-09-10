@@ -22,19 +22,19 @@ IMPORT
 		SYSTEM;
 
 TYPE
-	Patch = RECORD f, begin, skipinstr, skippatch: LONGINT END;
+	Patch = RECORD f, begin, skipinstr, skippatch: SIGNED32 END;
 
 VAR
 	Patches: ARRAY 77 OF Patch;
 	F: ARRAY 14 OF BOOLEAN;
 
 	Base: ADDRESS;		(* pointer to the program *)
-	pc, patch: LONGINT;
+	pc, patch: SIGNED32;
 
 PROCEDURE CorrectAddr(VAR line: SET);
-VAR i, addr, Max: LONGINT;
+VAR i, addr, Max: SIGNED32;
 BEGIN
-	addr := SYSTEM.VAL(LONGINT, LSH(line*{17..26}, -17));
+	addr := SYSTEM.VAL(SIGNED32, LSH(line*{17..26}, -17));
 	i := 0; Max := addr;
 	WHILE Patches[i].begin < Max DO
 		IF ~F[Patches[i].f] THEN	(*patch not active*)
@@ -48,8 +48,8 @@ BEGIN
 END CorrectAddr;
 
 PROCEDURE LoadPatches;
-VAR i: LONGINT;
-	PROCEDURE SetPatch(func, line, skipadr, skippatch: LONGINT);
+VAR i: SIGNED32;
+	PROCEDURE SetPatch(func, line, skipadr, skippatch: SIGNED32);
 	BEGIN
 		Patches[i].f := func;
 		Patches[i].begin := line;
@@ -78,7 +78,7 @@ BEGIN
 	SetPatch(2 , 485, 4, 2); SetPatch(0 , 489, 6, 1); SetPatch(2 , 495, 4, 2); SetPatch(0 , 499, 3, 1);
 	SetPatch(12 , 509, 10, 1); SetPatch(2 , 528, 17, 4); SetPatch(13 , 536, 4, 2); SetPatch(0 , 540, 2, 1);
 	SetPatch(0 , 545, 33, 1); SetPatch(12 , 578, 4, 1); SetPatch(6 , 582, 2, 1); SetPatch(6 , 585, 9, 1);
-	SetPatch(0, MAX(LONGINT), -1, -1);
+	SetPatch(0, MAX(SIGNED32), -1, -1);
 END LoadPatches;
 
 PROCEDURE SeqProgram(): ADDRESS;
@@ -255,7 +255,7 @@ L2:
 END SeqProgram;
 
 PROCEDURE GetNext*(VAR line: SET): BOOLEAN;
-VAR  opcode, c: LONGINT; parity: BOOLEAN;
+VAR  opcode, c: SIGNED32; parity: BOOLEAN;
 BEGIN
 (*
 	WHILE Patches[patch].begin < pc DO INC(patch) END;
@@ -277,7 +277,7 @@ BEGIN
 
 	SYSTEM.GET(Base+pc*4, line);
 	IF line # {} THEN
-		opcode := SYSTEM.VAL(LONGINT, LSH(line*{27..30}, -27));
+		opcode := SYSTEM.VAL(SIGNED32, LSH(line*{27..30}, -27));
 		IF (8<=opcode) & (opcode<=0FH) THEN	(*patch jump addr*)
 			CorrectAddr(line)
 		END;
@@ -339,7 +339,7 @@ END Init;
 
 (*
 PROCEDURE Test*;
-VAR i: LONGINT; line: SET;
+VAR i: SIGNED32; line: SET;
 BEGIN
 		(*test for AIC7890*)
 	Init(TRUE, FALSE, TRUE, FALSE, TRUE, TRUE, TRUE, FALSE, FALSE);

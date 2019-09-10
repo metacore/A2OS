@@ -16,28 +16,28 @@ TYPE
 	FrameDesc* = RECORD(Gadgets.FrameDesc)
 		text*: Terminals.Terminal;
 		fnt*: Fonts.Font;
-		cursorState*, charW*, lineH*, textcol*, profile*: INTEGER;
+		cursorState*, charW*, lineH*, textcol*, profile*: SIGNED16;
 		hasSel*: BOOLEAN;
-		selTime*: LONGINT;
+		selTime*: SIGNED32;
 		selFrom*, selTo*: Terminals.Location;
-		col: INTEGER
+		col: SIGNED16
 	END;
 
 	UpdateMsg* = RECORD(Display.FrameMsg)
 		text: Terminals.Terminal;
-		op, fromLine, fromCol, toLine, toCol: INTEGER;
+		op, fromLine, fromCol, toLine, toCol: SIGNED16;
 		oldCur: Terminals.Location
 	END;
 
 	MarksMsg = RECORD(Display.FrameMsg)
-		id: INTEGER
+		id: SIGNED16
 	END;
 
 VAR
 	w: Texts.Writer;
 
 
-PROCEDURE InvC(F: Frame) : INTEGER;
+PROCEDURE InvC(F: Frame) : SIGNED16;
 BEGIN
 	IF F.col = Display3.textbackC THEN RETURN 1
 	ELSIF (F.col = Display.BG) OR (F.col = Display3.white) THEN RETURN Display3.FG
@@ -47,7 +47,7 @@ BEGIN
 END InvC;
 
 
-PROCEDURE NotifyDisplay*(t: Terminals.Terminal; op, fromLine, fromCol, toLine, toCol: INTEGER; oldCur: Terminals.Location);
+PROCEDURE NotifyDisplay*(t: Terminals.Terminal; op, fromLine, fromCol, toLine, toCol: SIGNED16; oldCur: Terminals.Location);
 VAR
 	msg: UpdateMsg;
 BEGIN
@@ -99,9 +99,9 @@ END Copy;
 
 
 
-PROCEDURE DrawCursor(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask; line, col: INTEGER; mode: INTEGER);
+PROCEDURE DrawCursor(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask; line, col: SIGNED16; mode: SIGNED16);
 VAR
-	x, y, w, h: INTEGER;
+	x, y, w, h: SIGNED16;
 BEGIN	(*white->InvC(f)*)
 	w := f.charW;
 	h := f.lineH;
@@ -124,7 +124,7 @@ END DrawCursor;
 
 
 
-PROCEDURE SetCursor(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask; state: INTEGER);
+PROCEDURE SetCursor(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask; state: SIGNED16);
 VAR
 	loc: Terminals.Location;
 BEGIN
@@ -136,9 +136,9 @@ END SetCursor;
 
 
 
-PROCEDURE DrawSelection(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask; fromLine, fromCol, toLine, toCol: INTEGER);
+PROCEDURE DrawSelection(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask; fromLine, fromCol, toLine, toCol: SIGNED16);
 VAR
-	x, y, w, h, top, left, right, cw, tw: INTEGER;
+	x, y, w, h, top, left, right, cw, tw: SIGNED16;
 BEGIN	(*white->InvC(f)*)
 	top := frameY + f.H - VSpace;
 	left := frameX + HSpace;
@@ -180,7 +180,7 @@ END DrawSelection;
 
 
 
-PROCEDURE RemoveSelection(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask);
+PROCEDURE RemoveSelection(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask);
 VAR
 	from, to: Terminals.Location;
 BEGIN
@@ -196,7 +196,7 @@ END RemoveSelection;
 
 PROCEDURE TextOf(f: Frame): Texts.Text;
 VAR
-	i, j, len: INTEGER;
+	i, j, len: SIGNED16;
 	line: Terminals.Line;
 	text: Texts.Text;
 BEGIN
@@ -220,9 +220,9 @@ END TextOf;
 
 
 
-PROCEDURE TextPos(f: Frame; line, col: INTEGER): INTEGER;
+PROCEDURE TextPos(f: Frame; line, col: SIGNED16): SIGNED16;
 VAR
-	i, l, len: INTEGER;
+	i, l, len: SIGNED16;
 	text: Terminals.Terminal;
 BEGIN
 	i := 1;
@@ -246,7 +246,7 @@ END TextPos;
 
 
 
-PROCEDURE GetSelection*(f: Frame; VAR text: Texts.Text; VAR beg, end, time: LONGINT);
+PROCEDURE GetSelection*(f: Frame; VAR text: Texts.Text; VAR beg, end, time: SIGNED32);
 BEGIN
 	IF f.hasSel THEN
 		time := f.selTime;
@@ -262,7 +262,7 @@ END GetSelection;
 
 
 
-PROCEDURE Neutralize*(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask);
+PROCEDURE Neutralize*(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask);
 BEGIN
 	Oberon.RemoveMarks(frameX, frameY, f.W, f.H);
 	SetCursor(f, frameX, frameY, R, FadedCursor);
@@ -271,9 +271,9 @@ END Neutralize;
 
 
 
-PROCEDURE DrawChar(f: Frame; xPos, yPos: INTEGER; R: Display3.Mask; char: Terminals.Char);
+PROCEDURE DrawChar(f: Frame; xPos, yPos: SIGNED16; R: Display3.Mask; char: Terminals.Char);
 VAR
-	dx, cx, cy, cw, ch: INTEGER;
+	dx, cx, cy, cw, ch: SIGNED16;
 	p: Display.Pattern;
 	fnt: Fonts.Font;
 BEGIN	(*white -> f.textcol*)
@@ -293,9 +293,9 @@ END DrawChar;
 
 
 
-PROCEDURE DisplayLine(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask; line, fromCol, toCol: INTEGER);
+PROCEDURE DisplayLine(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask; line, fromCol, toCol: SIGNED16);
 VAR
-	x, y, w, h, w2: INTEGER;
+	x, y, w, h, w2: SIGNED16;
 	l: Terminals.Line;
 	text: Terminals.Terminal;
 BEGIN
@@ -324,8 +324,8 @@ BEGIN
 	END
 END DisplayLine;
 
-	PROCEDURE Shift(F: Frame; x, y: INTEGER; msk: Display3.Mask; Y, H, dY, top, bot: INTEGER);
-		VAR Y0, H0: INTEGER;
+	PROCEDURE Shift(F: Frame; x, y: SIGNED16; msk: Display3.Mask; Y, H, dY, top, bot: SIGNED16);
+		VAR Y0, H0: SIGNED16;
 	BEGIN
 		Y0 := Y+dY; IF Y < Y0 THEN Y0 := Y END;
 		IF dY > 0 THEN H0 := H+dY ELSE H0 := H-dY END;
@@ -339,9 +339,9 @@ END DisplayLine;
 	END Shift;
 
 
-PROCEDURE UpdateScrolling(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask; top, bot, dH: INTEGER);
+PROCEDURE UpdateScrolling(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask; top, bot, dH: SIGNED16);
 VAR
-	y, lh, h, diff, w: INTEGER;
+	y, lh, h, diff, w: SIGNED16;
 BEGIN
 	lh := f.lineH;
 	y := frameY + f.H - VSpace - bot * lh;
@@ -391,8 +391,8 @@ END UpdateScrolling;
 
 
 
-PROCEDURE Update*(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask; op: INTEGER;
-										fromLine, fromCol, toLine, toCol: INTEGER; oldCur: Terminals.Location);
+PROCEDURE Update*(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask; op: SIGNED16;
+										fromLine, fromCol, toLine, toCol: SIGNED16; oldCur: Terminals.Location);
 VAR
 	cursor: Terminals.Location;
 BEGIN
@@ -425,10 +425,10 @@ END Update;
 
 
 
-PROCEDURE TrackSelection*(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask; VAR keySum: SET; x, y: INTEGER);
+PROCEDURE TrackSelection*(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask; VAR keySum: SET; x, y: SIGNED16);
 VAR
 	keys: SET;
-	top, bot, h, left, w, len, tw: INTEGER;
+	top, bot, h, left, w, len, tw: SIGNED16;
 	from, to, oldTo: Terminals.Location;
 BEGIN
 	top := frameY + f.H - VSpace;
@@ -506,9 +506,9 @@ END TrackSelection;
 
 
 
-PROCEDURE Call*(f: Frame; cmdLine, cmdCol: INTEGER; new: BOOLEAN);
+PROCEDURE Call*(f: Frame; cmdLine, cmdCol: SIGNED16; new: BOOLEAN);
 VAR
-	i, len: INTEGER;
+	i, len: SIGNED16;
 	line: Terminals.Line;
 	ch: CHAR;
 	name: ARRAY Terminals.MaxWidth OF CHAR;
@@ -540,10 +540,10 @@ END Call;
 
 
 
-PROCEDURE DrawLine(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask; from: Terminals.Location);
+PROCEDURE DrawLine(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask; from: Terminals.Location);
 VAR
 	line: Terminals.Line;
-	x1, x2, y, tocol, len: INTEGER;
+	x1, x2, y, tocol, len: SIGNED16;
 BEGIN
 	IF from.col > 0 THEN
 		line := f.text.line[from.line];
@@ -564,10 +564,10 @@ END DrawLine;
 
 
 
-PROCEDURE TrackWord*(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask; x, y: INTEGER; VAR cmdLine, cmdCol: INTEGER; VAR keySum: SET);
+PROCEDURE TrackWord*(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask; x, y: SIGNED16; VAR cmdLine, cmdCol: SIGNED16; VAR keySum: SET);
 VAR
 	keys: SET;
-	top, bot, h, left, w, len: INTEGER;
+	top, bot, h, left, w, len: SIGNED16;
 	pos, oldPos: Terminals.Location;
 	line: Terminals.Line;
 BEGIN
@@ -622,12 +622,12 @@ END TrackWord;
 
 
 
-PROCEDURE Edit*(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask; keys: SET; mouseX, mouseY: INTEGER);
+PROCEDURE Edit*(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask; keys: SET; mouseX, mouseY: SIGNED16);
 VAR
 	keySum: SET;
 	text: Texts.Text;
-	beg, end, time: LONGINT;
-	cmdLine, cmdCol: INTEGER;
+	beg, end, time: SIGNED32;
+	cmdLine, cmdCol: SIGNED16;
 	msg: Oberon.ConsumeMsg;
 BEGIN
 	IF Left IN keys THEN
@@ -665,9 +665,9 @@ END Edit;
 
 
 
-PROCEDURE Modify*(f: Frame; frameX, frameY: INTEGER; R: Display3.Mask; id, Y, H, dY: INTEGER);
+PROCEDURE Modify*(f: Frame; frameX, frameY: SIGNED16; R: Display3.Mask; id, Y, H, dY: SIGNED16);
 VAR
-	h, l1, l2, w: INTEGER;
+	h, l1, l2, w: SIGNED16;
 	cursor: Terminals.Location;
 BEGIN
 	HALT(66);
@@ -771,8 +771,8 @@ BEGIN
 	END
 END FrameAttr;
 
-PROCEDURE RestoreFrame(F: Frame; frameX, frameY: INTEGER; R: Display3.Mask);
-	VAR b, t: INTEGER;
+PROCEDURE RestoreFrame(F: Frame; frameX, frameY: SIGNED16; R: Display3.Mask);
+	VAR b, t: SIGNED16;
 BEGIN
 	IF F.profile = 0 THEN Display3.ReplConst(R, F.col, frameX, frameY, F.W, F.H, Display.replace)	(*flat*)
 	ELSE
@@ -790,9 +790,9 @@ END RestoreFrame;
 	PROCEDURE Print(F: Frame; VAR M: Display.DisplayMsg);
 		VAR
 			R: Display3.Mask;
-			b, t, i, j: INTEGER;
+			b, t, i, j: SIGNED16;
 			print: ARRAY 2 OF CHAR;
-		PROCEDURE P(x: LONGINT): INTEGER;
+		PROCEDURE P(x: SIGNED32): SIGNED16;
 		BEGIN
 			RETURN SHORT((x * Display.Unit + Printer.Unit DIV 2) DIV Printer.Unit)
 		END P;
@@ -832,7 +832,7 @@ BEGIN
 END CopyFrame;
 
 
-	PROCEDURE RemoveMarks(F: Frame; x, y: INTEGER; VAR M: MarksMsg);
+	PROCEDURE RemoveMarks(F: Frame; x, y: SIGNED16; VAR M: MarksMsg);
 		VAR R: Display3.Mask;
 	BEGIN
 		IF M.F = F THEN
@@ -848,7 +848,7 @@ END CopyFrame;
 
 PROCEDURE Handle*(F: Objects.Object; VAR M: Objects.ObjMsg);
 VAR
-	frameX, frameY: INTEGER;
+	frameX, frameY: SIGNED16;
 	F0: Frame;
 	R: Display3.Mask;
 	m: MarksMsg;

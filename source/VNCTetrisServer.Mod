@@ -15,28 +15,28 @@ CONST
 
 VAR colors : ARRAY NofBlocks + 1 OF Raster.Pixel;
 
-	gamesRunning, gamesTotal, maxConcurrent, highScore : LONGINT;
+	gamesRunning, gamesTotal, maxConcurrent, highScore : SIGNED32;
 	shuttingDown : BOOLEAN;
 
 	server: VNCServer.Server;
 
 TYPE
 	Block = ARRAY BlockSize, BlockSize OF CHAR;
-	TimeDate = RECORD h, m, s, day,month,year: LONGINT END;
+	TimeDate = RECORD h, m, s, day,month,year: SIGNED32 END;
 
 	TT = OBJECT
 	VAR
 		alive, dropped : BOOLEAN;
 		field : ARRAY Width OF ARRAY Height OF CHAR;
 		block : Block;
-		posX, posY : LONGINT;
+		posX, posY : SIGNED32;
 		timer : Kernel.Timer;
 		mode : Raster.Mode;
 		random : Random.Generator;
-		lines, blocks, delay, delayDec: LONGINT;
+		lines, blocks, delay, delayDec: SIGNED32;
 		img : Raster.Image;
 		paused, run: BOOLEAN;
-		cheated: LONGINT;
+		cheated: SIGNED32;
 
 		time : TimeDate;
 		adrStr, timeStr:ARRAY 32 OF CHAR;
@@ -68,7 +68,7 @@ TYPE
 			Bound(x.t, 0, img.height);Bound(x.b, 0, img.height)
 		END ClipAtImage;
 
-		PROCEDURE AddDirty(l, t, r, b:LONGINT);
+		PROCEDURE AddDirty(l, t, r, b:SIGNED32);
 		VAR x: WMRectangles.Rectangle;
 		BEGIN
 			WMRectangles.SetRect(x, l, t, r, b);
@@ -82,13 +82,13 @@ TYPE
 		END Close;
 
 		PROCEDURE RotateBlock(VAR block:Block):Block;
-		VAR i, j : INTEGER; temp : Block;
+		VAR i, j : SIGNED16; temp : Block;
 		BEGIN
 			FOR i := 0 TO BlockSize - 1 DO FOR j := 0 TO BlockSize - 1 DO temp[j, i] := block[(BlockSize - 1) - i, j] END END;
 			RETURN temp
 		END RotateBlock;
 
-		PROCEDURE DrawBox(x, y: LONGINT; color: CHAR);
+		PROCEDURE DrawBox(x, y: SIGNED32; color: CHAR);
 		VAR pix : Raster.Pixel;
 		BEGIN
 			pix := colors [ORD(color)];
@@ -97,8 +97,8 @@ TYPE
 			END;
 		END DrawBox;
 
-		PROCEDURE SetBlock(x, y : LONGINT; clear : BOOLEAN);
-		VAR i, j : LONGINT;
+		PROCEDURE SetBlock(x, y : SIGNED32; clear : BOOLEAN);
+		VAR i, j : SIGNED32;
 		BEGIN
 			FOR i := 0 TO BlockSize - 1 DO FOR j := 0 TO BlockSize - 1 DO
 				IF block[i, j] # 0X THEN
@@ -114,8 +114,8 @@ TYPE
 			END END
 		END SetBlock;
 
-		PROCEDURE HasDownCollision(x, y: LONGINT) : BOOLEAN;
-		VAR i, j : LONGINT;
+		PROCEDURE HasDownCollision(x, y: SIGNED32) : BOOLEAN;
+		VAR i, j : SIGNED32;
 		BEGIN
 			FOR i := 0 TO BlockSize - 1 DO FOR j := 0 TO BlockSize - 1 DO
 				IF block[i, j] # 0X THEN
@@ -131,8 +131,8 @@ TYPE
 			RETURN FALSE
 		END HasDownCollision;
 
-		PROCEDURE HasCollision(VAR bl: Block; x, y: LONGINT) : BOOLEAN;
-		VAR i, j : LONGINT;
+		PROCEDURE HasCollision(VAR bl: Block; x, y: SIGNED32) : BOOLEAN;
+		VAR i, j : SIGNED32;
 		BEGIN
 			FOR i := 0 TO BlockSize - 1 DO FOR j := 0 TO BlockSize - 1 DO
 				IF bl[i, j] # 0X THEN
@@ -142,8 +142,8 @@ TYPE
 			RETURN FALSE
 		END HasCollision;
 
-		PROCEDURE Move(dir: LONGINT):BOOLEAN;
-		VAR newX, newY: LONGINT; result : BOOLEAN;
+		PROCEDURE Move(dir: SIGNED32):BOOLEAN;
+		VAR newX, newY: SIGNED32; result : BOOLEAN;
 		BEGIN
 			newX := posX; newY := posY;
 			IF dir = 0 THEN INC(newX)
@@ -161,7 +161,7 @@ TYPE
 			RETURN result
 		END Move;
 
-		PROCEDURE KeyPressed(ucs : LONGINT; flags: SET; keysym: LONGINT);
+		PROCEDURE KeyPressed(ucs : SIGNED32; flags: SET; keysym: SIGNED32);
 		VAR ignore : BOOLEAN;
 			rotBlock : Block;
 		BEGIN {EXCLUSIVE}
@@ -184,10 +184,10 @@ TYPE
 		END KeyPressed;
 
 		PROCEDURE NewBlock;
-		VAR i, j: LONGINT; kind : LONGINT;
+		VAR i, j: SIGNED32; kind : SIGNED32;
 				color : CHAR;
 
-			PROCEDURE Set(x, y: LONGINT);
+			PROCEDURE Set(x, y: SIGNED32);
 			BEGIN block[x, y] := color
 			END Set;
 
@@ -214,8 +214,8 @@ TYPE
 			IF HasCollision(block, posX, posY) THEN alive := FALSE; END
 		END NewBlock;
 
-		PROCEDURE RemoveLine(y: LONGINT);
-		VAR i, j: LONGINT;
+		PROCEDURE RemoveLine(y: SIGNED32);
+		VAR i, j: SIGNED32;
 		BEGIN
 			FOR i := 0 TO Width - 1 DO
 				FOR j := y TO 1 BY - 1 DO
@@ -233,7 +233,7 @@ TYPE
 		END RemoveLine;
 
 		PROCEDURE ClearLines;
-		VAR y, x, c: LONGINT;
+		VAR y, x, c: SIGNED32;
 		BEGIN
 			y := Height - 1;
 			WHILE y > 0 DO
@@ -258,7 +258,7 @@ TYPE
 		END DropStep;
 
 		PROCEDURE UpdateScore(eog: BOOLEAN);
-		VAR pix : Raster.Pixel; str : ARRAY 16 OF CHAR; ypos : LONGINT;
+		VAR pix : Raster.Pixel; str : ARRAY 16 OF CHAR; ypos : SIGNED32;
 		BEGIN
 			Raster.SetRGB(pix, 255, 255, 255);
 			Raster.Fill(img, 0, Height * BoxSize, Width * BoxSize, Height * BoxSize + ScoreHeight, pix, mode);
@@ -340,27 +340,27 @@ BEGIN {EXCLUSIVE}
 	maxConcurrent := MAX(gamesRunning, maxConcurrent)
 END AddGame;
 
-PROCEDURE ReportScore(score:LONGINT);
+PROCEDURE ReportScore(score:SIGNED32);
 BEGIN {EXCLUSIVE}
 	highScore := MAX(score, highScore)
 END ReportScore;
 
-PROCEDURE GetGamesTotal():LONGINT;
+PROCEDURE GetGamesTotal():SIGNED32;
 BEGIN {EXCLUSIVE}
 	RETURN gamesTotal
 END GetGamesTotal;
 
-PROCEDURE GetMaxConcurrent():LONGINT;
+PROCEDURE GetMaxConcurrent():SIGNED32;
 BEGIN {EXCLUSIVE}
 	RETURN maxConcurrent
 END GetMaxConcurrent;
 
-PROCEDURE GetHighscore():LONGINT;
+PROCEDURE GetHighscore():SIGNED32;
 BEGIN {EXCLUSIVE}
 	RETURN highScore
 END GetHighscore;
 
-PROCEDURE GetGamesRunning():LONGINT;
+PROCEDURE GetGamesRunning():SIGNED32;
 BEGIN {EXCLUSIVE}
 	RETURN gamesRunning
 END GetGamesRunning;

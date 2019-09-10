@@ -22,8 +22,8 @@ TYPE
 VAR
 	methods*: Panels.Methods;	(** Default method block. *)
 
-PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-VAR r, t, r1, t1: INTEGER;
+PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+VAR r, t, r1, t1: SIGNED16;
 BEGIN
 	r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 	IF x < x1 THEN x := x1 END;
@@ -35,14 +35,14 @@ END ClipAgainst;
 
 (* --- load and store procedures --- *)
 PROCEDURE StoreText (T: Texts.Text; VAR R: Files.Rider);
-	VAR len: LONGINT;
+	VAR len: SIGNED32;
 BEGIN
 	Texts.Store(T, Files.Base(R), Files.Pos(R), len);
 	Files.Set(R, Files.Base(R), Files.Pos(R) + len)
 END StoreText;
 
 PROCEDURE LoadText (T: Texts.Text; VAR R: Files.Rider);
-	VAR len: LONGINT; ch: CHAR;
+	VAR len: SIGNED32; ch: CHAR;
 BEGIN
 	Files.Read(R, ch);
 	Texts.Load(T, Files.Base(R), Files.Pos(R), len);
@@ -65,7 +65,7 @@ END StorePanel;
 
 (** Default load mechanism. *)
 PROCEDURE LoadPanel*(F: Panel; VAR M: Objects.FileMsg);
-VAR ver: LONGINT; e: LP0.Element;
+VAR ver: SIGNED32; e: LP0.Element;
 BEGIN
 	Files.ReadNum(M.R, ver);
 	IF (ver = 1) THEN LoadText(F.layout, M.R)
@@ -120,7 +120,7 @@ BEGIN
 	END
 END PanelLink;
 
-PROCEDURE Adjust(F: Panel; x, y: INTEGER; VAR M: Display.ModifyMsg);	(* ps - 23.5.96 *)
+PROCEDURE Adjust(F: Panel; x, y: SIGNED16; VAR M: Display.ModifyMsg);	(* ps - 23.5.96 *)
 VAR f: Display.Frame; A: Display.ModifyMsg;
 BEGIN
 	IF (M.dH # 0) & (M.Y + M.H # F.Y + F.H) OR (M.dW # 0) & (M.X # F.X) THEN
@@ -138,8 +138,8 @@ BEGIN
 END Adjust;
 
 (** Default method implementation. x, y is the panel coordinates. u, v, w, h the relative coordinates of the area to be restored. *)
-PROCEDURE RestoreArea*(F: Panels.Panel; x, y, u, v, w, h: INTEGER; M: Display3.Mask; dlink: Objects.Object);
-VAR D: Display.DisplayMsg; B: Display3.Mask; f: Display.Frame; X, Y, W, H: INTEGER; e: LP0.Element;
+PROCEDURE RestoreArea*(F: Panels.Panel; x, y, u, v, w, h: SIGNED16; M: Display3.Mask; dlink: Objects.Object);
+VAR D: Display.DisplayMsg; B: Display3.Mask; f: Display.Frame; X, Y, W, H: SIGNED16; e: LP0.Element;
 BEGIN
 	Oberon.RemoveMarks(x + u, y + F.H - 1 + v, w, h);
 
@@ -224,7 +224,7 @@ are normally used mutual exclusive. Partial update is faster if few masks were i
 Partial update requires the use of InvalidateMasks to keep the background mask valid. When in doubt simply use buildback. *)
 PROCEDURE UpdateMasks*(F: Panels.Panel; partialupdate, buildback: BOOLEAN);
 VAR f, o: Display.Frame; O: Display3.OverlapMsg; allTransp: BOOLEAN; R: Display3.Mask;
-	fx, fy, fw, fh: INTEGER;
+	fx, fy, fw, fh: SIGNED16;
 BEGIN
 	IF F.mask = NIL THEN (* clear everything *)
 		F.back := NIL;
@@ -309,8 +309,8 @@ END ResetElements;
 
 (** Method implementations. *)
 PROCEDURE TrackMouse*(F: Panels.Panel; VAR M: Oberon.InputMsg);
-VAR T: Display.Frame; x, y, t, u, v: INTEGER; Fdlink, Mdlink: Objects.Object; c: LP0.Container;
-	X, Y, W, H, MX, MY: INTEGER; A: Objects.AttrMsg;
+VAR T: Display.Frame; x, y, t, u, v: SIGNED16; Fdlink, Mdlink: Objects.Object; c: LP0.Container;
+	X, Y, W, H, MX, MY: SIGNED16; A: Objects.AttrMsg;
 BEGIN
 	x := M.x + F.X; y := M.y + F.Y; t := y + F.H - 1; u := M.X - x; v := M.Y - t;
 	T := LP0.Select(F.obj(LP0.Element), u, v, FALSE);
@@ -380,8 +380,8 @@ BEGIN
 	END
 END TrackMouse;
 
-PROCEDURE BuildLayoutNewSize(F: Panel; w, h: INTEGER);
-	VAR diff: INTEGER; e: LP0.Element;
+PROCEDURE BuildLayoutNewSize(F: Panel; w, h: SIGNED16);
+	VAR diff: SIGNED16; e: LP0.Element;
 BEGIN
 	e := F.obj(LP0.Element);
 	e.size(e);
@@ -424,7 +424,7 @@ BEGIN
 END InsertInTable;
 
 (* F # NIL, c # NIL, new # NIL *)
-PROCEDURE InsertInContainer (F: Panel; c: LP0.Container; new: Objects.Object; x, y: INTEGER);
+PROCEDURE InsertInContainer (F: Panel; c: LP0.Container; new: Objects.Object; x, y: SIGNED16);
 	VAR objlist: Display.Frame; e: LP0.Element; slink: Objects.Object;
 BEGIN
 	IF new IS LP0.Element THEN
@@ -452,7 +452,7 @@ BEGIN
 	END
 END InsertInContainer;
 
-PROCEDURE ConsumeElement* (F: Panel; top: LP0.Element; new: Objects.Object; x, y: INTEGER);
+PROCEDURE ConsumeElement* (F: Panel; top: LP0.Element; new: Objects.Object; x, y: SIGNED16);
 	VAR c: LP0.Container; e: Display.Frame;
 BEGIN
 	e := LP0.Select(top, x, y, FALSE);
@@ -474,7 +474,7 @@ BEGIN
 END ConsumeElement;
 
 PROCEDURE PanelHandler*(F: Objects.Object; VAR M: Objects.ObjMsg);
-	VAR F2: Panel; u, v, x, y, w, h: INTEGER; R: Display3.Mask; t: Display.Frame; e: LP0.Element;
+	VAR F2: Panel; u, v, x, y, w, h: SIGNED16; R: Display3.Mask; t: Display.Frame; e: LP0.Element;
 			U: Display3.UpdateMaskMsg;
 BEGIN
 	WITH F: Panel DO
@@ -639,8 +639,8 @@ END NewPanel;
 (* === Method implementations === *)
 
 PROCEDURE TrackCaret*(F: Panels.Panel; VAR M: Oberon.InputMsg);
-VAR x, y, w, h, LX, LY: INTEGER; keysum: SET;
-	obj, newobj: Objects.Object; parent: Display.Frame; objtime, texttime, beg, end: LONGINT; text: Texts.Text;
+VAR x, y, w, h, LX, LY: SIGNED16; keysum: SET;
+	obj, newobj: Objects.Object; parent: Display.Frame; objtime, texttime, beg, end: SIGNED32; text: Texts.Text;
 	buf: Texts.Buffer; T0: Texts.Text;
 BEGIN
 	x := M.x + F.X; y := M.y + F.Y; w := F.W; h := F.H;
@@ -674,7 +674,7 @@ BEGIN
 END TrackCaret;
 
 PROCEDURE TrackSelectChild*(F: Panels.Panel; VAR M: Oberon.InputMsg; child: Gadgets.Frame);
-VAR x, y, sx, sy: INTEGER; S: Display.SelectMsg; keysum: SET; t, t1: Display.Frame; newobj: Objects.Object;
+VAR x, y, sx, sy: SIGNED16; S: Display.SelectMsg; keysum: SET; t, t1: Display.Frame; newobj: Objects.Object;
 BEGIN
 	x := M.x + F.X; y := M.y + F.Y;
 
@@ -715,8 +715,8 @@ BEGIN
 	END
 END TrackSelectChild;
 
-PROCEDURE InsertFrames*(F: Panels.Panel; u, v: INTEGER; list: Objects.Object);
-VAR x, y, w, h, count: INTEGER; f, n: Display.Frame; O: Display3.OverlapMsg; A: Display.ControlMsg;
+PROCEDURE InsertFrames*(F: Panels.Panel; u, v: SIGNED16; list: Objects.Object);
+VAR x, y, w, h, count: SIGNED16; f, n: Display.Frame; O: Display3.OverlapMsg; A: Display.ControlMsg;
 BEGIN
 	IF Panels.NewChildrenOK(F, list) & (list # NIL) THEN (* insert can proceed *)
 		Panels.BoundingBox(list(Gadgets.Frame), x, y, w, h, count);
@@ -749,8 +749,8 @@ BEGIN
 	UpdateMasks(F, FALSE, TRUE); Panels.DrawHull(F)
 END RemoveFrames;
 
-PROCEDURE TranslateChildren*(F: Panels.Panel; list: Display.Frame; count, dx, dy: INTEGER);
-VAR p: Display.Frame; A: Display.ModifyMsg; x0, y0: INTEGER;
+PROCEDURE TranslateChildren*(F: Panels.Panel; list: Display.Frame; count, dx, dy: SIGNED16);
+VAR p: Display.Frame; A: Display.ModifyMsg; x0, y0: SIGNED16;
 BEGIN
 	p := list;
 	WHILE p # NIL DO
@@ -768,7 +768,7 @@ BEGIN
 END TranslateChildren;
 
 PROCEDURE DragSelection*(F: Panels.Panel; VAR M: Oberon.InputMsg);
-VAR u, v, X, Y, x, y, w, h, nx, ny, nw, nh, u0, v0, count: INTEGER; f, q: Display.Frame; keys: SET;
+VAR u, v, X, Y, x, y, w, h, nx, ny, nw, nh, u0, v0, count: SIGNED16; f, q: Display.Frame; keys: SET;
 	C: LP0.ConsumeMsg(* Display.ConsumeMsg *); old: Objects.Handler; nl: Objects.Object;
 BEGIN
 	f := LP0.GetSelection(F.obj(LP0.Element));
@@ -801,8 +801,8 @@ END DragSelection;
 
 PROCEDURE ConsumeChar*(F: Panels.Panel; VAR M: Oberon.InputMsg);
 
-	PROCEDURE Shift(dx, dy: INTEGER);
-	VAR f: Display.Frame; x, y, w, h, count: INTEGER;
+	PROCEDURE Shift(dx, dy: SIGNED16);
+	VAR f: Display.Frame; x, y, w, h, count: SIGNED16;
 	BEGIN
 		Panels.GetPanelSelection(F, f);
 		IF f # NIL THEN
@@ -845,7 +845,7 @@ BEGIN
 	END
 END DocHandle;
 
-PROCEDURE InitDoc*(D: Documents.Document; W, H: INTEGER);
+PROCEDURE InitDoc*(D: Documents.Document; W, H: SIGNED16);
 VAR main: Panel;
 BEGIN
 	D.Store := PanelDocs.StorePanel; D.Load := PanelDocs.LoadPanel; D.handle := DocHandle; D.name := "";
@@ -868,7 +868,7 @@ END NewDoc;
 	AddCol "@" "left"|"right"
 *)
 PROCEDURE AddCol*;
-VAR obj: Objects.Object; time: LONGINT; e: LP0.Element; tab: LP0.Table; pos: INTEGER; S: Texts.Scanner;
+VAR obj: Objects.Object; time: SIGNED32; e: LP0.Element; tab: LP0.Table; pos: SIGNED16; S: Texts.Scanner;
 BEGIN
 	Gadgets.GetSelection(obj, time);
 	IF (time # -1) & (obj # NIL) & (obj IS LP0.Element) THEN
@@ -899,7 +899,7 @@ END AddCol;
 	AddRow "@" "lower"|"upper"
 *)
 PROCEDURE AddRow*;
-VAR obj: Objects.Object; time: LONGINT; e: LP0.Element; tab: LP0.Table; pos: INTEGER; S: Texts.Scanner;
+VAR obj: Objects.Object; time: SIGNED32; e: LP0.Element; tab: LP0.Table; pos: SIGNED16; S: Texts.Scanner;
 BEGIN
 	Gadgets.GetSelection(obj, time);
 	IF (time # -1) & (obj # NIL) & (obj IS LP0.Element) THEN
@@ -930,7 +930,7 @@ END AddRow;
 	DelCol "@"
 *)
 PROCEDURE DelCol*;
-VAR obj: Objects.Object; time: LONGINT; e: LP0.Element; tab: LP0.Table; pos: INTEGER; S: Texts.Scanner;
+VAR obj: Objects.Object; time: SIGNED32; e: LP0.Element; tab: LP0.Table; pos: SIGNED16; S: Texts.Scanner;
 BEGIN
 	Gadgets.GetSelection(obj, time);
 	IF (time # -1) & (obj # NIL) & (obj IS LP0.Element) THEN
@@ -960,7 +960,7 @@ END DelCol;
 	DelRow "@"
 *)
 PROCEDURE DelRow*;
-VAR obj: Objects.Object; time: LONGINT; e: LP0.Element; tab: LP0.Table; pos: INTEGER; S: Texts.Scanner;
+VAR obj: Objects.Object; time: SIGNED32; e: LP0.Element; tab: LP0.Table; pos: SIGNED16; S: Texts.Scanner;
 BEGIN
 	Gadgets.GetSelection(obj, time);
 	IF (time # -1) & (obj # NIL) & (obj IS LP0.Element) THEN
@@ -989,7 +989,7 @@ END DelRow;
 	InsertTable ^ <rows> <cols>
 *)
 PROCEDURE InsertTable*;
-VAR obj: Objects.Object; time: LONGINT; c: LP0.Container; cols, rows: INTEGER; S: Texts.Scanner;
+VAR obj: Objects.Object; time: SIGNED32; c: LP0.Container; cols, rows: SIGNED16; S: Texts.Scanner;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	IF (S.class = Texts.Char) & (S.c = "^") THEN
@@ -1010,7 +1010,7 @@ END InsertTable;
 	Syntax: InsertPlace ^
 *)
 PROCEDURE InsertPlace*;
-VAR obj: Objects.Object; time: LONGINT; c: LP0.Container; new: LP0.Element; S: Texts.Scanner;
+VAR obj: Objects.Object; time: SIGNED32; c: LP0.Container; new: LP0.Element; S: Texts.Scanner;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
 	IF (S.class = Texts.Char) & (S.c = "^") THEN
@@ -1027,7 +1027,7 @@ END InsertPlace;
 
 (**  Minimize "^" *)
 PROCEDURE Minimize*;
-VAR F: Objects.Object; time: LONGINT; e: LP0.Element; M: Display.ModifyMsg;
+VAR F: Objects.Object; time: SIGNED32; e: LP0.Element; M: Display.ModifyMsg;
 BEGIN
 	Gadgets.GetSelection(F, time);
 	IF (time # -1) & (F # NIL) & (F IS Panel) THEN

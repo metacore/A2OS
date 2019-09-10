@@ -293,7 +293,7 @@ END DisableIRQ;
 
 #IF I386 THEN
 
-VAR idt-: ARRAY Interrupts OF ARRAY 4 OF INTEGER;
+VAR idt-: ARRAY Interrupts OF ARRAY 4 OF SIGNED16;
 VAR wrapper: ARRAY Interrupts OF ARRAY 16 OF CHAR;
 
 PROCEDURE Initialize-;
@@ -322,10 +322,10 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 
 	FOR i := 0 TO Interrupts - 1 DO
 		IF (i # 9) & (i # 15) & ((i < 20) OR (i > 29)) & (i # 31) THEN
-			idt[i][0] := INTEGER (ADDRESS OF wrapper[i] MOD 10000H);
-			idt[i][1] := INTEGER(8H);
-			idt[i][2] := INTEGER(8E00H);
-			idt[i][3] := INTEGER(ADDRESS OF wrapper[i] DIV 10000H);
+			idt[i][0] := SIGNED16 (ADDRESS OF wrapper[i] MOD 10000H);
+			idt[i][1] := SIGNED16(8H);
+			idt[i][2] := SIGNED16(8E00H);
+			idt[i][3] := SIGNED16(ADDRESS OF wrapper[i] DIV 10000H);
 
 			c := 0;
 			IF i # 2 THEN
@@ -367,7 +367,7 @@ END Initialize;
 
 #ELSIF AMD64 THEN
 
-VAR idt-: ARRAY Interrupts OF ARRAY 8 OF INTEGER;
+VAR idt-: ARRAY Interrupts OF ARRAY 8 OF SIGNED16;
 VAR wrapper: ARRAY Interrupts OF ARRAY 20 OF CHAR;
 
 PROCEDURE Initialize-;
@@ -396,10 +396,10 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 
 	FOR i := 0 TO Interrupts - 1 DO
 		IF (i # 9) & (i # 15) & ((i < 20) OR (i > 29)) & (i # 31) THEN
-			idt[i][0] := INTEGER (ADDRESS OF wrapper[i] MOD 10000H);
-			idt[i][1] := INTEGER(8H);
-			idt[i][2] := INTEGER(8E00H);
-			idt[i][3] := INTEGER(ADDRESS OF wrapper[i] DIV 10000H);
+			idt[i][0] := SIGNED16 (ADDRESS OF wrapper[i] MOD 10000H);
+			idt[i][1] := SIGNED16(8H);
+			idt[i][2] := SIGNED16(8E00H);
+			idt[i][3] := SIGNED16(ADDRESS OF wrapper[i] DIV 10000H);
 
 			c := 0;
 			IF i # 2 THEN

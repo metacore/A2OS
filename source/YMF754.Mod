@@ -76,10 +76,10 @@ TYPE
 
 	(* Native frequencies table *)
 	NativeFreqTable = ARRAY NofNativeFreq OF RECORD
-		hz: LONGINT; (* frequency in Hz *)
-		valRec: LONGINT; (* corresponding value to write to record register *)
-		valLpfK: LONGINT; (* corresponding value to write to LpfK registers *)
-		valLpfQ: LONGINT; (* corresponding value to write to LpfQ registers *)
+		hz: SIGNED32; (* frequency in Hz *)
+		valRec: SIGNED32; (* corresponding value to write to record register *)
+		valLpfK: SIGNED32; (* corresponding value to write to LpfK registers *)
+		valLpfQ: SIGNED32; (* corresponding value to write to LpfQ registers *)
 	END;
 
 	(* Mixer channel listener list type *)
@@ -109,8 +109,8 @@ TYPE
 
 	(* PCI Audio play control data table *)
 	PlayCtrlDataTable = RECORD
-		numOfPlay: LONGINT;
-		playSlotBase: ARRAY NofPlaySlots OF LONGINT;
+		numOfPlay: SIGNED32;
+		playSlotBase: ARRAY NofPlaySlots OF SIGNED32;
 	END;
 
 	(* PCI Audio record slot control data *)
@@ -125,7 +125,7 @@ TYPE
 		pgBase,
 		pgLoopEndAdr,
 		pgStartAdr,
-		numOfLoops: LONGINT;
+		numOfLoops: SIGNED32;
 	END;
 
 	(* Bank for play slot control data
@@ -135,7 +135,7 @@ TYPE
 		pgDeltaEnd, lpfKEnd, egGainEnd, lchGainEnd, rchGainEnd, effect1GainEnd,
 		effect2GainEnd, effect3GainEnd, lpfQ, status, numOfFrames, loopCount,
 		pgStart, pgStartFrac, pgDelta, lpfK, egGain, lchGain,
-		rchGain, effect1Gain, effect2Gain, effect3Gain, lpfD1, lpfD2: LONGINT;
+		rchGain, effect1Gain, effect2Gain, effect3Gain, lpfD1, lpfD2: SIGNED32;
 	END;
 
 	(* PCI Audio play slot control data *)
@@ -229,32 +229,32 @@ TYPE
 
 		(* Routines for reading and writing PCI Audio registers *)
 
-		PROCEDURE RegRead8(offset: LONGINT): LONGINT;
+		PROCEDURE RegRead8(offset: SIGNED32): SIGNED32;
 		BEGIN
 			RETURN SYSTEM.GET8(base + offset);
 		END RegRead8;
 
-		PROCEDURE RegRead16(offset: LONGINT): LONGINT;
+		PROCEDURE RegRead16(offset: SIGNED32): SIGNED32;
 		BEGIN
 			RETURN SYSTEM.GET16(base + offset);
 		END RegRead16;
 
-		PROCEDURE RegRead32(offset: LONGINT): LONGINT;
+		PROCEDURE RegRead32(offset: SIGNED32): SIGNED32;
 		BEGIN
 			RETURN SYSTEM.GET32(base + offset);
 		END RegRead32;
 
-		PROCEDURE RegWrite8(offset: LONGINT; val: LONGINT);
+		PROCEDURE RegWrite8(offset: SIGNED32; val: SIGNED32);
 		BEGIN
 			SYSTEM.PUT8(base + offset, val);
 		END RegWrite8;
 
-		PROCEDURE RegWrite16(offset: LONGINT; val: LONGINT);
+		PROCEDURE RegWrite16(offset: SIGNED32; val: SIGNED32);
 		BEGIN
 			SYSTEM.PUT16(base + offset, val);
 		END RegWrite16;
 
-		PROCEDURE RegWrite32(offset: LONGINT; val: LONGINT);
+		PROCEDURE RegWrite32(offset: SIGNED32; val: SIGNED32);
 		BEGIN
 			SYSTEM.PUT32(base + offset, val);
 		END RegWrite32;
@@ -262,7 +262,7 @@ TYPE
 		(* Initialize PCI Audio device *)
 		PROCEDURE Initialize;
 		VAR
-			cnt: LONGINT;
+			cnt: SIGNED32;
 			t: Kernel.Timer;
 		BEGIN {EXCLUSIVE}
 			(* Mute DAC volume before resetting *)
@@ -322,7 +322,7 @@ TYPE
 
 		(* Uninitialize PCI Audio device *)
 		PROCEDURE UnInitialize;
-		VAR cnt: LONGINT;
+		VAR cnt: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			(* Mute volumes *)
 			RegWrite32(PCCRegVolDACOut, 0);
@@ -350,7 +350,7 @@ TYPE
 		VAR
 			f: Files.File;
 			r: Files.Reader;
-			offset, data: LONGINT;
+			offset, data: SIGNED32;
 		BEGIN
 			f := Files.Old(FNameInstRAM);
 			ASSERT(f # NIL); (* assert existance of file *)
@@ -360,7 +360,7 @@ TYPE
 			WHILE offset < (PCCRegCtrlInstRAM + SizeCtrlInstRAM) DO
 				r.RawLInt(data);
 				RegWrite32(offset, data);
-				INC(offset, SIZEOF(LONGINT));
+				INC(offset, SIZEOF(SIGNED32));
 				IF offset = PCCRegDSPInstRAM + SizeDSPInstRAM THEN
 					(* Switch to controller instruction code *)
 					offset := PCCRegCtrlInstRAM;
@@ -386,14 +386,14 @@ TYPE
 
 		(* Routines for reading and writing AC97 registers (always 16 Bit) *)
 
-		PROCEDURE RegRead16(offset: LONGINT): LONGINT;
+		PROCEDURE RegRead16(offset: SIGNED32): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			PCC.RegWrite16(PCCRegAC97CmdAddress, offset + 8000H);
 			ASSERT(BusyWait());
 			RETURN PCC.RegRead16(PCCRegAC97StatusData);
 		END RegRead16;
 
-		PROCEDURE RegWrite16(offset: LONGINT; val: LONGINT);
+		PROCEDURE RegWrite16(offset: SIGNED32; val: SIGNED32);
 		BEGIN {EXCLUSIVE}
 			PCC.RegWrite16(PCCRegAC97CmdAddress, offset);
 			PCC.RegWrite16(PCCRegAC97CmdData, val);
@@ -427,15 +427,15 @@ TYPE
 			drv: Driver; (*  driver object *)
 			name: NameStr; (* name of mixer channel *)
 			desc: DescStr; (* description of mixer channel *)
-			regVol: LONGINT; (* volume register offset *)
+			regVol: SIGNED32; (* volume register offset *)
 			inverted: BOOLEAN; (* is maximum register value = maximum volume or inverted? *)
-			volBits: LONGINT; (* number of bits for volume range *)
-			volume: LONGINT; (* current volume *)
+			volBits: SIGNED32; (* number of bits for volume range *)
+			volume: SIGNED32; (* current volume *)
 			mute: BOOLEAN; (* current mute state *)
 
 		(* Constructor *)
-		PROCEDURE &Constr*(drv: Driver; regVol: LONGINT; inverted, mute: BOOLEAN; name: NameStr; desc: DescStr);
-		VAR tmpVol: LONGINT;
+		PROCEDURE &Constr*(drv: Driver; regVol: SIGNED32; inverted, mute: BOOLEAN; name: NameStr; desc: DescStr);
+		VAR tmpVol: SIGNED32;
 		BEGIN
 			SELF.drv := drv;
 			SELF.regVol := regVol;
@@ -480,7 +480,7 @@ TYPE
 		END GetDesc;
 
 		(** Set the volume of the channel (0-255) *)
-		PROCEDURE SetVolume*(volume : LONGINT);
+		PROCEDURE SetVolume*(volume : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			ASSERT((volume >= 0) & (volume <= 255));
 			SELF.volume := volume;
@@ -490,14 +490,14 @@ TYPE
 			volume := LSH(volume, volBits - 8); (* adapt volume resolution *)
 			volume := volume + LSH(volume, 8); (* set L and R (also works for mono) *)
 			IF SELF.mute THEN
-				volume := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, volume) + {15});
+				volume := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, volume) + {15});
 			END;
 			drv.ACC.RegWrite16(regVol, volume);
 			CallListeners;
 		END SetVolume;
 
 		(** Get the volume of the channel (0-255) *)
-		PROCEDURE GetVolume*() : LONGINT;
+		PROCEDURE GetVolume*() : SIGNED32;
 		BEGIN
 			RETURN SELF.volume;
 		END GetVolume;
@@ -513,7 +513,7 @@ TYPE
 			ELSE
 				volume := volume - {15};
 			END;
-			drv.ACC.RegWrite16(regVol, SYSTEM.VAL(LONGINT, volume));
+			drv.ACC.RegWrite16(regVol, SYSTEM.VAL(SIGNED32, volume));
 			CallListeners;
 		END SetMute;
 
@@ -534,14 +534,14 @@ TYPE
 			buffFirst, buffLast: ListBuffer; (* buffer queue (FIFO) *)
 			buffFirstPos: SIZE; (* position in currently used buffer *)
 			playRecBuff: PlayRecBuffer; (* ring buffer for playing/recording *)
-			playRecBuffSize: LONGINT; (* size of ring buffer for playing/recording *)
-			playRecBuffPhys: LONGINT; (* physical address of ring buffer *)
+			playRecBuffSize: SIGNED32; (* size of ring buffer for playing/recording *)
+			playRecBuffPhys: SIGNED32; (* physical address of ring buffer *)
 			playRecBuffPos: SIZE; (* position marker in ring buffer in bytes *)
 			samplePosition: SIZE; (* current absolute position in samples *)
-			bytesPerSampleExp: LONGINT; (* bytesPerSampleExp^2 = bytes per sample *)
+			bytesPerSampleExp: SIGNED32; (* bytesPerSampleExp^2 = bytes per sample *)
 			running: BOOLEAN; (* is channel currently playing/recording? *)
 			closed: BOOLEAN; (* has channel been closed? *)
-			volume: LONGINT; (* current volume *)
+			volume: SIGNED32; (* current volume *)
 
 		(* Constructor *)
 		PROCEDURE &Constr*(drv: Driver);
@@ -620,13 +620,13 @@ TYPE
 		END Deactivate;
 
 		(* Set volume for play or record channel (0-255) *)
-		PROCEDURE SetPlayRecVol(volume: LONGINT);
+		PROCEDURE SetPlayRecVol(volume: SIGNED32);
 		BEGIN
 			HALT(99); (* abstract *)
 		END SetPlayRecVol;
 
 		(** Set the current volume of the channel (8.8 bit fixed point value) *)
-		PROCEDURE SetVolume*(volume : LONGINT);
+		PROCEDURE SetVolume*(volume : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			ASSERT(~closed);
 			ASSERT(volume >= 0);
@@ -638,17 +638,17 @@ TYPE
 		END SetVolume;
 
 		(** Get the current volume of the channel (8.8 bit fixed point value) *)
-		PROCEDURE GetVolume*() : LONGINT;
+		PROCEDURE GetVolume*() : SIGNED32;
 		BEGIN
 			ASSERT(~closed);
 			RETURN SELF.volume;
 		END GetVolume;
 
-		(** GetPosition returns the current position in samples. MAY CHANGE TO HUGEINT*)
-		PROCEDURE GetPosition*() : LONGINT;
+		(** GetPosition returns the current position in samples. MAY CHANGE TO SIGNED64*)
+		PROCEDURE GetPosition*() : SIGNED32;
 		BEGIN
 			ASSERT(~closed);
-			RETURN samplePosition(LONGINT);
+			RETURN samplePosition(SIGNED32);
 		END GetPosition;
 
 		(** Start playing / recording *)
@@ -700,17 +700,17 @@ TYPE
 	(** Player channel *)
 	PlayerChannel* = OBJECT(Channel)
 		VAR
-			playSlotPair: LONGINT; (* play slot pair this channel is using *)
+			playSlotPair: SIGNED32; (* play slot pair this channel is using *)
 			playSlot: ARRAY 2 OF POINTER TO PlaySlotCtrlData; (* play slot control data *)
-			playSlotPhys: ARRAY 2 OF LONGINT; (* physical address *)
-			nofSubCh: LONGINT; (* number of sub channels *)
+			playSlotPhys: ARRAY 2 OF SIGNED32; (* physical address *)
+			nofSubCh: SIGNED32; (* number of sub channels *)
 			silentData: CHAR; (* silent data byte *)
 
 		(* Constructor *)
-		PROCEDURE &ConstrPlay*(drv: Driver; sRate, sRes, nofSubCh, playslotpair: LONGINT);
+		PROCEDURE &ConstrPlay*(drv: Driver; sRate, sRes, nofSubCh, playslotpair: SIGNED32);
 		VAR
-			i, j: LONGINT;
-			pgDelta, lpfK, lpfQ: LONGINT;
+			i, j: SIGNED32;
+			pgDelta, lpfK, lpfQ: SIGNED32;
 		BEGIN
 			Constr(drv); (* call parent constructor *)
 			SELF.bytesPerSampleExp := nofSubCh - sRes;
@@ -860,7 +860,7 @@ TYPE
 
 		(* Stop playback/record *)
 		PROCEDURE Deactivate;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			IF Logging THEN
 				KernelLog.String("YMF754 - Stopping/Pausing PlayerChannel number ");
@@ -873,8 +873,8 @@ TYPE
 		END Deactivate;
 
 		(* Set volume for play or record channel (0-255) *)
-		PROCEDURE SetPlayRecVol(volume: LONGINT);
-		VAR i, j: LONGINT;
+		PROCEDURE SetPlayRecVol(volume: SIGNED32);
+		VAR i, j: SIGNED32;
 		BEGIN
 			volume := LSH(volume, 22);
 			FOR i := 0 TO nofSubCh - 1 DO
@@ -890,7 +890,7 @@ TYPE
 		END SetPlayRecVol;
 
 		(** Get kind of channel *)
-		PROCEDURE GetChannelKind*(): LONGINT;
+		PROCEDURE GetChannelKind*(): SIGNED32;
 		BEGIN
 			ASSERT(~closed);
 			RETURN SoundDevices.ChannelPlay;
@@ -922,11 +922,11 @@ TYPE
 	RecordChannel* = OBJECT(Channel)
 		VAR
 			recSlot: POINTER TO RecSlotCtrlData; (* record slot control data *)
-			recSlotPhys: LONGINT; (* physical address of it *)
+			recSlotPhys: SIGNED32; (* physical address of it *)
 
 		(* Constructor *)
-		PROCEDURE &ConstrRec*(drv: Driver; sRate, sRes, nofSubCh: LONGINT);
-		VAR i: LONGINT;
+		PROCEDURE &ConstrRec*(drv: Driver; sRate, sRes, nofSubCh: SIGNED32);
+		VAR i: SIGNED32;
 		BEGIN
 			Constr(drv); (* call parent constructor *)
 			bytesPerSampleExp := nofSubCh - sRes;
@@ -995,7 +995,7 @@ TYPE
 
 		(* Init banks and start playback/record *)
 		PROCEDURE Activate;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			IF Logging THEN
 				KernelLog.String("YMF754 - Starting RecordChannel"); KernelLog.Ln;
@@ -1017,14 +1017,14 @@ TYPE
 		END Deactivate;
 
 		(* Set volume for play or record channel (0-255) *)
-		PROCEDURE SetPlayRecVol(volume: LONGINT);
+		PROCEDURE SetPlayRecVol(volume: SIGNED32);
 		BEGIN
 			volume := LSH(volume, 6);
 			drv.PCC.RegWrite32(PCCRegVolADCIn, volume + LSH(volume, 16));
 		END SetPlayRecVol;
 
 		(** Get kind of channel *)
-		PROCEDURE GetChannelKind*(): LONGINT;
+		PROCEDURE GetChannelKind*(): SIGNED32;
 		BEGIN
 			ASSERT(~closed);
 			RETURN SoundDevices.ChannelRecord;
@@ -1054,7 +1054,7 @@ TYPE
 	Driver* = OBJECT (SoundDevices.Driver)
 		VAR
 			base: ADDRESS; (* virtual PCI Audio register base address *)
-			irq: LONGINT; (* IRQ number *)
+			irq: SIGNED32; (* IRQ number *)
 			ACC: AC97Control; (* AC97 controller object *)
 			PCC: PCIAudioControl; (* PCI Audio controller object *)
 			PCD: POINTER TO PlayCtrlDataTable; (* PCI Audio play control data table *)
@@ -1063,13 +1063,13 @@ TYPE
 			playChannels: ListPlayerChannel; (* list of currently active player channels *)
 			playSlotPairsUsed: SET; (* set of currently used PlaySlotPairs *)
 			recSlot: RecordChannel; (* record channel currently using record slot *)
-			inactiveBank: LONGINT; (* bank that is currently not used by PCI Audio *)
+			inactiveBank: SIGNED32; (* bank that is currently not used by PCI Audio *)
 
 		(* Constructor *)
-		PROCEDURE &Constr*(name: ARRAY OF CHAR; physbase, irq: LONGINT; CntrlInst1E: BOOLEAN);
+		PROCEDURE &Constr*(name: ARRAY OF CHAR; physbase, irq: SIGNED32; CntrlInst1E: BOOLEAN);
 		VAR
-			i: LONGINT; res: WORD;
-			PCDbase: LONGINT; (* physical base address of PCI Audio play control data table *)
+			i: SIGNED32; res: INTEGER;
+			PCDbase: SIGNED32; (* physical base address of PCI Audio play control data table *)
 		BEGIN
 			SELF.irq := irq;
 
@@ -1201,7 +1201,7 @@ TYPE
 			IF ~(31 IN SYSTEM.VAL(SET, PCC.RegRead32(PCCRegStatus))) THEN RETURN END;
 
 			(* Handle PCI Audio interrupt *)
-			PCC.RegWrite32(PCCRegStatus, SYSTEM.VAL(LONGINT, {31})); (* deassert INTA# *)
+			PCC.RegWrite32(PCCRegStatus, SYSTEM.VAL(SIGNED32, {31})); (* deassert INTA# *)
 			inactiveBank := PCC.RegRead32(PCCRegControlSelect) MOD 2; (* get inactive bank *)
 
 			(* Prepare data in channels *)
@@ -1221,7 +1221,7 @@ TYPE
 				(* Notify PCI Audio that interrupt has been finished *)
 				regMode := SYSTEM.VAL(SET, PCC.RegRead32(PCCRegMode));
 				INCL(regMode, 1);
-				PCC.RegWrite32(PCCRegMode, SYSTEM.VAL(LONGINT, regMode));
+				PCC.RegWrite32(PCCRegMode, SYSTEM.VAL(SIGNED32, regMode));
 			END;
 		END HandleInterrupt;
 
@@ -1239,22 +1239,22 @@ TYPE
 		END Disable;
 
 		(** Capabilities *)
-		PROCEDURE NofNativeFrequencies*():LONGINT;
+		PROCEDURE NofNativeFrequencies*():SIGNED32;
 		BEGIN
 			RETURN NofNativeFreq;
 		END NofNativeFrequencies;
 
-		PROCEDURE GetNativeFrequeny*(nr : LONGINT):LONGINT;
+		PROCEDURE GetNativeFrequeny*(nr : SIGNED32):SIGNED32;
 		BEGIN
 			RETURN NativeFreqTab[nr].hz;
 		END GetNativeFrequeny;
 
-		PROCEDURE NofSamplingResolutions*():LONGINT;
+		PROCEDURE NofSamplingResolutions*():SIGNED32;
 		BEGIN
 			RETURN 2; (* 16 Bit and 8 Bit *)
 		END NofSamplingResolutions;
 
-		PROCEDURE GetSamplingResolution*(nr : LONGINT):LONGINT;
+		PROCEDURE GetSamplingResolution*(nr : SIGNED32):SIGNED32;
 		BEGIN
 			ASSERT((nr >= 0) & (nr < 2));
 			IF nr = 0 THEN
@@ -1265,13 +1265,13 @@ TYPE
 		END GetSamplingResolution;
 
 		(** How many different sub channel settings are possible *)
-		PROCEDURE NofSubChannelSettings*():LONGINT;
+		PROCEDURE NofSubChannelSettings*():SIGNED32;
 		BEGIN
 			RETURN 2; (* mono and stereo *)
 		END NofSubChannelSettings;
 
 		(** Get sub channel setting nr. *)
-		PROCEDURE GetSubChannelSetting*(nr : LONGINT):LONGINT;
+		PROCEDURE GetSubChannelSetting*(nr : SIGNED32):SIGNED32;
 		BEGIN
 			ASSERT((nr >= 0) & (nr < 2));
 			IF nr = 0 THEN
@@ -1282,13 +1282,13 @@ TYPE
 		END GetSubChannelSetting;
 
 		(** How many different wave formats are possible *)
-		PROCEDURE NofWaveFormats*():LONGINT;
+		PROCEDURE NofWaveFormats*():SIGNED32;
 		BEGIN
 			RETURN 1; (* only PCM *)
 		END NofWaveFormats;
 
 		(** Get wave format nr. *)
-		PROCEDURE GetWaveFormat*(nr : LONGINT):LONGINT;
+		PROCEDURE GetWaveFormat*(nr : SIGNED32):SIGNED32;
 		BEGIN
 			ASSERT(nr = 0);
 			RETURN SoundDevices.FormatPCM; (* PCM *)
@@ -1304,9 +1304,9 @@ TYPE
 			nofSubChannes = 1 for Mono, 2 for Stereo
 			format is the wave format
 		*)
-		PROCEDURE OpenPlayChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : WORD);
+		PROCEDURE OpenPlayChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution, nofSubChannels, format : SIGNED32; VAR res : INTEGER);
 		VAR
-			playSlotPair: LONGINT;
+			playSlotPair: SIGNED32;
 			playChannel: PlayerChannel;
 		BEGIN {EXCLUSIVE}
 			(* Searching for free play slot pair *)
@@ -1355,7 +1355,7 @@ TYPE
 			nofSubChannes = 1 for Mono, 2 for Stereo
 			format is the wave format
 		*)
-		PROCEDURE OpenRecordChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution, nofSubChannels, format : LONGINT; VAR res : WORD);
+		PROCEDURE OpenRecordChannel*(VAR channel : SoundDevices.Channel; samplingRate, samplingResolution, nofSubChannels, format : SIGNED32; VAR res : INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF Logging THEN
 				KernelLog.String("YMF754 - Opening RecordChannel");
@@ -1396,8 +1396,8 @@ TYPE
 		END StartPCIAudio;
 
 		(* Check channel parameters and convert the values for internal use *)
-		PROCEDURE CheckChannelParam(onlyNativeFreq: BOOLEAN; VAR sRate, sResolution, nofSubCh, format: LONGINT; VAR res: WORD);
-		VAR i: LONGINT;
+		PROCEDURE CheckChannelParam(onlyNativeFreq: BOOLEAN; VAR sRate, sResolution, nofSubCh, format: SIGNED32; VAR res: INTEGER);
+		VAR i: SIGNED32;
 		BEGIN
 			res := SoundDevices.ResOK;
 
@@ -1535,7 +1535,7 @@ TYPE
 			Drivers may ignore channel 0 or 1 but need to return a generic "Channel" object for these channel numbers
 			GetMixerChannel returns NIL if the channelNr is invalid
 		*)
-		PROCEDURE GetMixerChannel*(channelNr : LONGINT; VAR channel : SoundDevices.MixerChannel);
+		PROCEDURE GetMixerChannel*(channelNr : SIGNED32; VAR channel : SoundDevices.MixerChannel);
 		VAR name: NameStr;
 		BEGIN
 			IF (channelNr >= 0) & (channelNr < NofMixerChannels) THEN
@@ -1553,7 +1553,7 @@ TYPE
 		END GetMixerChannel;
 
 		(** Returns the number of mixer channels available, at least 2 *)
-		PROCEDURE GetNofMixerChannels*() : LONGINT;
+		PROCEDURE GetNofMixerChannels*() : SIGNED32;
 		BEGIN
 			RETURN NofMixerChannels;
 		END GetNofMixerChannels;
@@ -1614,11 +1614,11 @@ BEGIN
 END GetPhysicalAdr;
 
 (* Scan the PCI bus for the specified card *)
-PROCEDURE ScanPCI(vendor, device: LONGINT; name: Plugins.Name; CntrlInst1E: BOOLEAN);
+PROCEDURE ScanPCI(vendor, device: SIGNED32; name: Plugins.Name; CntrlInst1E: BOOLEAN);
 VAR
-	reg, index: LONGINT; res: WORD;
-	bus, dev, fct: LONGINT;
-	base, irq: LONGINT;
+	reg, index: SIGNED32; res: INTEGER;
+	bus, dev, fct: SIGNED32;
+	base, irq: SIGNED32;
 	len: SIZE;
 	d: Driver;
 BEGIN

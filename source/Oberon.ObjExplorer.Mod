@@ -23,7 +23,7 @@ MODULE ObjExplorer IN Oberon; (* ejz,  *)
 		VAR
 			C: ListRiders.ConnectMsg;
 			R: ListRiders.Rider;
-			pos: LONGINT;
+			pos: SIGNED32;
 	BEGIN
 		C.R := NIL; Objects.Stamp(C); curList.handle(curList, C);
 		R := C.R; pos := 0;
@@ -53,7 +53,7 @@ MODULE ObjExplorer IN Oberon; (* ejz,  *)
 		END
 	END AddObj;
 
-	PROCEDURE WriteObj(R: ListRiders.Rider; obj: Objects.Object; pos: LONGINT);
+	PROCEDURE WriteObj(R: ListRiders.Rider; obj: Objects.Object; pos: SIGNED32);
 		VAR
 			item: Item;
 			gen, name: Objects.Name;
@@ -91,7 +91,7 @@ MODULE ObjExplorer IN Oberon; (* ejz,  *)
 		END
 	END EnumObjs;
 
-	PROCEDURE Object(R: ListRiders.Rider; obj: Objects.Object; pos: LONGINT);
+	PROCEDURE Object(R: ListRiders.Rider; obj: Objects.Object; pos: SIGNED32);
 		VAR
 			linkR: ListRiders.Rider;
 			L: Objects.LinkMsg;
@@ -99,7 +99,7 @@ MODULE ObjExplorer IN Oberon; (* ejz,  *)
 			F: Display.Frame;
 			bakObj, bakDlink, o: Objects.Object;
 			bakList, list: ObjList;
-			n: LONGINT;
+			n: SIGNED32;
 	BEGIN
 		linkR := NIL; n := 0;
 		WriteObj(R, obj, pos);

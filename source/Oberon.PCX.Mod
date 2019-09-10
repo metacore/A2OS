@@ -18,14 +18,14 @@ TYPE
 		encoding,	(* 1=Runlength Encoding *)
 		bits: CHAR;	(* Bits/Pixel *)
 		xMin,yMin,xMax,yMax,	(* logical Picture Coordinates *)
-		hRes,vRes: INTEGER;	(* Resolution of the origin device *)
-		palPos,picPos: LONGINT;	(* File positon of palette and picture data *)
+		hRes,vRes: SIGNED16;	(* Resolution of the origin device *)
+		palPos,picPos: SIGNED32;	(* File positon of palette and picture data *)
 		vMode,planes: CHAR;	(* not used *)
 		bytesPerLine,	(* Bytes per Scan-Line *)
-		paletteInfo: INTEGER;	(* Colorinfo: 1=Color, 2=Grayscale *)
+		paletteInfo: SIGNED16;	(* Colorinfo: 1=Color, 2=Grayscale *)
 	END;
 VAR
-	colorMap: ARRAY 256 OF INTEGER;
+	colorMap: ARRAY 256 OF SIGNED16;
 
 PROCEDURE ReadPCXHeader(VAR R: Files.Rider; VAR pcxh: PCXHeader): BOOLEAN;
 	(* Scan the PCX File Header *)
@@ -55,9 +55,9 @@ BEGIN
 	END;
 END ReadPCXHeader;
 
-PROCEDURE ScanCol (VAR R: Files.Rider; pict: Pictures.Picture; nrColor: LONGINT; conversion: BOOLEAN);
+PROCEDURE ScanCol (VAR R: Files.Rider; pict: Pictures.Picture; nrColor: SIGNED32; conversion: BOOLEAN);
 	(* copied from BMP.Mod *)
-VAR Red, Green, Blue: CHAR; C, min, d, x, y, z: LONGINT; i, j, minj: INTEGER; r, g, b: ARRAY 256 OF INTEGER;
+VAR Red, Green, Blue: CHAR; C, min, d, x, y, z: SIGNED32; i, j, minj: SIGNED16; r, g, b: ARRAY 256 OF SIGNED16;
 BEGIN
 	C := ASH(1, Display.Depth(0)) - 1;
 	IF nrColor > C THEN nrColor := C ELSE DEC(nrColor) END;
@@ -65,7 +65,7 @@ BEGIN
 		FOR i := 0 TO SHORT(C) DO Display.GetColor(i, r[i], g[i], b[i]) END;
 		FOR i := 0 TO SHORT(nrColor) DO
 			Files.Read(R, Red); Files.Read(R, Green); Files.Read(R, Blue);
-			min := MAX(LONGINT);
+			min := MAX(SIGNED32);
 			FOR j := 0 TO SHORT(C) DO
 				x := ABS(ORD(Red) - r[j]); y := ABS(ORD(Green) - g[j]); z := ABS(ORD(Blue) - b[j]);
 				d := x;
@@ -86,13 +86,13 @@ BEGIN
 	END
 END ScanCol;
 
-PROCEDURE LoadPCX(VAR R: Files.Rider; transparentCol: INTEGER; colorConversion: BOOLEAN; pict: Pictures.Picture);
+PROCEDURE LoadPCX(VAR R: Files.Rider; transparentCol: SIGNED16; colorConversion: BOOLEAN; pict: Pictures.Picture);
 	(* Load the PCX picture information into an Oberon Pictures.Picture *)
 VAR
 	pcxh: PCXHeader;
 	line: POINTER TO ARRAY OF CHAR;
-	x,y,z,w,h,rep: INTEGER;
-	k,p: SHORTINT;
+	x,y,z,w,h,rep: SIGNED16;
+	k,p: SIGNED8;
 	c: CHAR;
 BEGIN
 	IF ReadPCXHeader(R,pcxh) THEN
@@ -149,7 +149,7 @@ END LoadPCX;
 
 PROCEDURE Handle*(obj: Objects.Object; VAR msg: Objects.ObjMsg);
 VAR
-	pos: LONGINT;
+	pos: SIGNED32;
 BEGIN
 	WITH obj: Pictures.Picture DO
 		IF msg IS Objects.AttrMsg THEN

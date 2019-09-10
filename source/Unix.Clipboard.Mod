@@ -85,7 +85,7 @@ VAR
 	END A2ToUnix;
 
 	PROCEDURE UnixToA2;
-	VAR i, d, utflen: SIZE; tag: WORD; unicode: UNSIGNED32;
+	VAR i, d, utflen: SIZE; tag: INTEGER; unicode: UNSIGNED32;
 	BEGIN
 		i := 0;  ulen := 0;
 		WHILE (i < rlen) & (ulen < BufferSize - 5) DO
@@ -124,7 +124,7 @@ VAR
 	END ScanHexDigits;
 
 	PROCEDURE Utf8ToUnicode( CONST buf: ARRAY OF CHAR;  VAR pos: SIZE ): UNSIGNED32;
-	VAR unicode: UNSIGNED32; next: SIZE; tag, ch: WORD;
+	VAR unicode: UNSIGNED32; next: SIZE; tag, ch: INTEGER;
 	BEGIN
 		ch := ORD( buf[pos] );  INC( pos );
 		IF ch < 128 THEN  unicode := ch
@@ -175,7 +175,7 @@ VAR
 			ev.property := event.property;
 			Machine.Acquire( Machine.X11 );
 			X11.ChangeProperty( xdisp, ev.requestor, ev.property, ev.target, 8, X11.PropModeReplace,
-								ADDRESSOF( sendBuffer[0] ), WORD (slen) );
+								ADDRESSOF( sendBuffer[0] ), INTEGER (slen) );
 			Machine.Release( Machine.X11 );
 		ELSE
 			ev.property := X11.None
@@ -204,7 +204,7 @@ VAR
 	END GetX11Selection;
 
 	PROCEDURE ReceiveSelection( VAR event: X11.SelectionEvent );
-	VAR type: X11.Atom;  format: WORD; len, after: LONGWORD;  prop, adr: ADDRESS; ch: CHAR;
+	VAR type: X11.Atom;  format: INTEGER; len, after: LONGINTEGER;  prop, adr: ADDRESS; ch: CHAR;
 	BEGIN {EXCLUSIVE}
 		rlen := 0; recBuffer[0] := 0X;
 		IF (event.selection = X11.XAPRIMARY) & (event.property = myProperty) THEN

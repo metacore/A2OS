@@ -27,21 +27,21 @@ Report any problems as soon as possible to ants@AntsInFields.de
 IMPORT vyBase, antsArrayObjects, antsEmpiricD , Objects, aM := antsMessages;
 CONST
 TYPE
-	Index = LONGINT;
+	Index = SIGNED32;
 
-	txv = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGINT;
-	tv = POINTER TO  ARRAY OF ARRAY OF ARRAY OF ARRAY OF LONGINT ;
+	txv = POINTER TO ARRAY OF ARRAY OF ARRAY OF ARRAY OF ARRAY OF SIGNED32;
+	tv = POINTER TO  ARRAY OF ARRAY OF ARRAY OF ARRAY OF SIGNED32 ;
 
 	EmpiricalDistribution* = POINTER TO EDDesc;   (* empirical Distribution of an binary state space model *)
 	EDDesc = RECORD (antsEmpiricD.EDDesc)
-		card-: LONGINT;
+		card-: SIGNED32;
 		xv: txv;
 		v: tv
 	END;
 
 	tParameter* = POINTER TO tParameterDesc;
 	tParameterDesc* = RECORD (antsEmpiricD.tParameterDesc)
-		card: LONGINT
+		card: SIGNED32
 	END;
 
 	tEDGenerator* = POINTER TO tEDGeneratorDesc;
@@ -53,7 +53,7 @@ TYPE
 	VAR debug: BOOLEAN;
 
 PROCEDURE InitED (E: EmpiricalDistribution);
-	VAR card: LONGINT;  x, v1, v2, v3, v4: LONGINT;
+	VAR card: SIGNED32;  x, v1, v2, v3, v4: SIGNED32;
 BEGIN
 	card := E.card;  DEC(card);
 	FOR v1 := 0 TO card DO
@@ -70,27 +70,27 @@ BEGIN
 	END
 END InitED;
 
-PROCEDURE R* (E: EmpiricalDistribution;   x, v1, v2, v3, v4: LONGINT): LONGINT;
+PROCEDURE R* (E: EmpiricalDistribution;   x, v1, v2, v3, v4: SIGNED32): SIGNED32;
 BEGIN
 	(* INC(x); x := x DIV 2;INC(v,4);*)
 	RETURN E.xv[x, v1, v2, v3, v4]
 END R;
 
-PROCEDURE M* (E: EmpiricalDistribution;   v1, v2, v3, v4: Index): LONGINT;
+PROCEDURE M* (E: EmpiricalDistribution;   v1, v2, v3, v4: Index): SIGNED32;
 BEGIN
 	(* INC(v,4); *)
 	RETURN E.v[v1, v2, v3, v4]
 END M;
 
-PROCEDURE F* (E: EmpiricalDistribution;   x, v1, v2, v3, v4: Index): LONGREAL;
-	VAR nv: LONGINT;
+PROCEDURE F* (E: EmpiricalDistribution;   x, v1, v2, v3, v4: Index): FLOAT64;
+	VAR nv: SIGNED32;
 BEGIN
 	nv := M(E, v1, v2, v3, v4);
 	IF nv # 0 THEN RETURN R(E, x, v1, v2, v3, v4) / nv ELSE RETURN 0 END
 END F;
 
 
-PROCEDURE Sort4 (v1, v2, v3, v4: LONGINT;  VAR e1, e2, e3, e4: LONGINT);
+PROCEDURE Sort4 (v1, v2, v3, v4: SIGNED32;  VAR e1, e2, e3, e4: SIGNED32);
 BEGIN
 	IF v1 < v2 THEN e1 := v1;  e2 := v2
 	ELSE e1 := v2;  e2 := v1
@@ -106,8 +106,8 @@ BEGIN
 	END
 END Sort4;
 
-PROCEDURE EmpiricalDistributeS (VAR E: EmpiricalDistribution;   A: antsArrayObjects.tINTEGERArray;   Sx, Sy, Sw, Sh: LONGINT);
-	VAR x, y: LONGINT ;     e1, e2, e3, e4: LONGINT;
+PROCEDURE EmpiricalDistributeS (VAR E: EmpiricalDistribution;   A: antsArrayObjects.tINTEGERArray;   Sx, Sy, Sw, Sh: SIGNED32);
+	VAR x, y: SIGNED32 ;     e1, e2, e3, e4: SIGNED32;
 	(* stores permuted v1,v2,v3,v4 in a sorted way *)
 BEGIN
 	IF E = NIL THEN NEW(E) END;
@@ -121,8 +121,8 @@ BEGIN
 	END
 END EmpiricalDistributeS;
 
-PROCEDURE EmpiricalDistributeCS (Eo, Ee: EmpiricalDistribution;    A: antsArrayObjects.tINTEGERArray;   Sx, Sy, Sw, Sh: LONGINT);
-	VAR x, y: LONGINT ;      e1, e2, e3, e4: LONGINT;
+PROCEDURE EmpiricalDistributeCS (Eo, Ee: EmpiricalDistribution;    A: antsArrayObjects.tINTEGERArray;   Sx, Sy, Sw, Sh: SIGNED32);
+	VAR x, y: SIGNED32 ;      e1, e2, e3, e4: SIGNED32;
 	(* stores permuted v1,v2,v3,v4 in a sorted way *)
 BEGIN
 	IF Eo = NIL THEN NEW(Eo) END;

@@ -14,18 +14,18 @@ TYPE
 		bufferPool : SoundDevices.BufferPool;
 		buffer : SoundDevices.Buffer;
 		in : Streams.Reader;
-		channels, rate, bits : LONGINT;
+		channels, rate, bits : SIGNED32;
 
 		ready, paused, finished : BOOLEAN;
-		pos, oldPos : LONGINT;
+		pos, oldPos : SIGNED32;
 
-		setup* : PROCEDURE {DELEGATE} (canSeek: BOOLEAN; totTime, totSamp : LONGINT);
-		update* : PROCEDURE {DELEGATE} (status: BOOLEAN; pos, displayTime: LONGINT);
+		setup* : PROCEDURE {DELEGATE} (canSeek: BOOLEAN; totTime, totSamp : SIGNED32);
+		update* : PROCEDURE {DELEGATE} (status: BOOLEAN; pos, displayTime: SIGNED32);
 		eof* : PROCEDURE {DELEGATE} (sender, data: ANY);
 
 		(* Initialize Player with the given File *)
-		PROCEDURE &Init*(in : Streams.Reader; length: LONGINT);
-		VAR i: LONGINT; res: WORD;
+		PROCEDURE &Init*(in : Streams.Reader; length: SIGNED32);
+		VAR i: SIGNED32; res: INTEGER;
 		BEGIN
 			ready := FALSE; finished := FALSE; paused := FALSE; oldPos := 0;
 			SELF.in := in;
@@ -70,7 +70,7 @@ TYPE
 		END Play;
 
 		PROCEDURE Stop*;
-		VAR res : WORD;
+		VAR res : INTEGER;
 		BEGIN {EXCLUSIVE}
 			(* playChannel.Stop *)
 			playChannel.Pause;
@@ -86,8 +86,8 @@ TYPE
 		END Pause;
 
 		(* set in 1/10 sec *)
-		PROCEDURE SetPos*(pos: LONGINT);
-		VAR res : WORD;
+		PROCEDURE SetPos*(pos: SIGNED32);
+		VAR res : INTEGER;
 		BEGIN {EXCLUSIVE}
 			pos := ENTIER(pos / 10 * rate);
 			decoder.SeekSample(pos, FALSE, res);
@@ -96,7 +96,7 @@ TYPE
 		END SetPos;
 
 		(* get in  1/10 sec *)
-		PROCEDURE GetPos*(): LONGINT;
+		PROCEDURE GetPos*(): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN decoder.GetCurrentTime()
 		END GetPos;
@@ -141,7 +141,7 @@ BEGIN
 	END;
 
 	file := Files.Old(filename);
-	NEW(player, in, file.Length()(LONGINT));
+	NEW(player, in, file.Length()(SIGNED32));
 	player.Play;
 END Open;
 

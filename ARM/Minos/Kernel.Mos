@@ -24,21 +24,21 @@ MODULE Kernel;
 
 		(* The prototype of a trap handler
 			As soon as the systen is up and running, a custom trap handler can be install *)
-		TrapHandler* = PROCEDURE(type, adr, fp: LONGINT; VAR resFP: LONGINT);
+		TrapHandler* = PROCEDURE(type, adr, fp: SIGNED32; VAR resFP: SIGNED32);
 
 		(* The prototype of a undefined instruction trap handler
 			Can be used to decode custom instructions *)
-		UDFHandler* = PROCEDURE(adr: LONGINT);
+		UDFHandler* = PROCEDURE(adr: SIGNED32);
 
 	VAR
 		(* Consists of the delay used to call MicroWait(0)
 			Is used to make MicroWait as accurate as possible *)
-		delayCompensation: LONGINT;
-		DelayDivisor: LONGINT;
+		delayCompensation: SIGNED32;
+		DelayDivisor: SIGNED32;
 
 		(* not necessary on ARM Cortex 9: we have an autoreset
 		(* the time, when the next timer interrupt shall occur *)
-		nextTimerInterrupt: LONGINT;
+		nextTimerInterrupt: SIGNED32;
 		*)
 
 		(* main irq handlers *)
@@ -49,7 +49,7 @@ MODULE Kernel;
 
 		(* The system time in milliseconds. Is updated by the primary timer interrupt
 			handler *)
-		timer: LONGINT;
+		timer: SIGNED32;
 
 		(* User installable handlers for timer, traps and Udefinded instruction traps *)
 		timerHandler: TimerHandler; trapHandler: TrapHandler;
@@ -58,15 +58,15 @@ MODULE Kernel;
 		(* Temporary variable that stores the lnk register. Must be a global variable to be
 			accessible in all processor modes *)
 		lnk: PROCEDURE;
-		cnt: LONGINT;
-		snoop: LONGINT;
+		cnt: SIGNED32;
+		snoop: SIGNED32;
 		lr: ADDRESS;
 		
 		toggle : BOOLEAN;
 
-	(* Copy procedure like SYSTEM.MOVE. src and dst must be Aligned to LONGINT *)
-	PROCEDURE Move*(src, dst, len: LONGINT);
-		VAR i, word: LONGINT; chr: CHAR;
+	(* Copy procedure like SYSTEM.MOVE. src and dst must be Aligned to SIGNED32 *)
+	PROCEDURE Move*(src, dst, len: SIGNED32);
+		VAR i, word: SIGNED32; chr: CHAR;
 	BEGIN
 		IF len > 0 THEN
 			(* Copy Integerwise if possible *)
@@ -99,19 +99,19 @@ MODULE Kernel;
 
 
 	PROCEDURE EnableIRQs*;
-	VAR cpsr: LONGINT;
+	VAR cpsr: SIGNED32;
 	BEGIN
 		SYSTEM.STPSR(0, cpsr);
-		cpsr := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, cpsr) - {7, 8});
+		cpsr := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, cpsr) - {7, 8});
 		SYSTEM.LDPSR(0, cpsr);
 	END EnableIRQs;
 
 	(* Taken from Minos/Kernel.Mos *)
 	PROCEDURE DisableIRQs*;
-	VAR cpsr: LONGINT;
+	VAR cpsr: SIGNED32;
 	BEGIN
 		SYSTEM.STPSR(0, cpsr);
-		cpsr := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, cpsr) + {7, 8});
+		cpsr := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, cpsr) + {7, 8});
 		SYSTEM.LDPSR( 0, cpsr);
 	END DisableIRQs;
 
@@ -126,7 +126,7 @@ MODULE Kernel;
 	END EnableIOCLK;
 
 	(* Enable/Disable the system clock to a specific device *)
-	PROCEDURE EnableClock*(num: LONGINT; enable: BOOLEAN);
+	PROCEDURE EnableClock*(num: SIGNED32; enable: BOOLEAN);
 		VAR reg: SET;
 	BEGIN
 		IF(num >= Platform.MinValidClock) & (num <= Platform.MaxValidClock) THEN
@@ -159,8 +159,8 @@ MODULE Kernel;
 	*)
 	
 	(* Get the internal hardware clock cycle counter *)
-	PROCEDURE GetOSTimer*(): LONGINT;
-		VAR i: LONGINT;
+	PROCEDURE GetOSTimer*(): SIGNED32;
+		VAR i: SIGNED32;
 	BEGIN
 		RETURN GlobalTimer.GetTimerLowValue();
 	END GetOSTimer;
@@ -172,7 +172,7 @@ MODULE Kernel;
 	(* the main interrupt timer routine. Used for doing the timecritical work in the main scheduler *)
 	(*
 	PROCEDURE Timer0IrqHandler;
-	VAR lr, lirq, cpsr, fp: LONGINT;
+	VAR lr, lirq, cpsr, fp: SIGNED32;
 	BEGIN
 
 		(*
@@ -274,7 +274,7 @@ MODULE Kernel;
 	(*
 	(* Reset the watchdog. Do this periodically, otherwise the system will reboot *)
 	PROCEDURE ResetWatchdog;
-		VAR reg: LONGINT;
+		VAR reg: SIGNED32;
 	BEGIN
 		SYSTEM.GET(Platform.OSCR, reg);
 		reg := reg + Platform.WatchdogTimerIntervall;
@@ -290,8 +290,8 @@ MODULE Kernel;
 	END EnableWatchdog;
 
 	(* Get the internal hardware clock cycle counter *)
-	PROCEDURE GetOSTimer*(): LONGINT;
-		VAR i: LONGINT;
+	PROCEDURE GetOSTimer*(): SIGNED32;
+		VAR i: SIGNED32;
 	BEGIN
 		SYSTEM.GET(Platform.OSCR, i); RETURN i
 	END GetOSTimer;
@@ -300,8 +300,8 @@ MODULE Kernel;
 	(* Wait uSec microseconds, max allowed is 429000 uSecs *)
 	(* min @ 100Mhz is 2.1 usec *)
 	(*
-	PROCEDURE MicroWait*(uSec: LONGINT);
-		VAR current, wait: LONGINT;
+	PROCEDURE MicroWait*(uSec: SIGNED32);
+		VAR current, wait: SIGNED32;
 	BEGIN
 		SYSTEM.GET(Platform.OSCR, current);
 		wait := current +((uSec * DelayDivisor) DIV 1000H) - delayCompensation;
@@ -310,17 +310,17 @@ MODULE Kernel;
 	END MicroWait;
 
 	(* Wait mSec milliseconds *)
-	PROCEDURE MilliWait*(mSec: LONGINT);
+	PROCEDURE MilliWait*(mSec: SIGNED32);
 	BEGIN
 		WHILE mSec > 0 DO MicroWait(1000); DEC(mSec); END;
 	END MilliWait;
 
 	(* Calculate the overhead of calling MicroWait(0) *)
 	PROCEDURE SetDelayCompensation*;
-		VAR startTime, stopTime: LONGINT;
+		VAR startTime, stopTime: SIGNED32;
 	BEGIN
 		delayCompensation := 0;
-		DelayDivisor := ENTIER(REAL(Platform.CLOCKDIVISOR) / 2.44140625);
+		DelayDivisor := ENTIER(FLOAT32(Platform.CLOCKDIVISOR) / 2.44140625);
 
 		DisableIRQs; SYSTEM.GET(Platform.OSCR, startTime); MicroWait(0);
 		SYSTEM.GET(Platform.OSCR, stopTime); (*EnableIRQs; *)
@@ -331,12 +331,12 @@ MODULE Kernel;
 	END SetDelayCompensation;
 	*)
 	(* Get the system time in milliseconds, driven by the timer interrupt, rel to system boot up *)
-	PROCEDURE GetTime*(): LONGINT;
+	PROCEDURE GetTime*(): SIGNED32;
 	BEGIN
 		RETURN timer
 	END GetTime;
 	
-	PROCEDURE UpdateTime*( irq: LONGINT );
+	PROCEDURE UpdateTime*( irq: SIGNED32 );
 	BEGIN
 		INC( timer );
 		(*
@@ -400,7 +400,7 @@ MODULE Kernel;
 		PageTableBaseAddress = 10000000H - 100000H; (* 1 MB below highest address *);
 
 	(* 1 MB page table entry *)
-	PROCEDURE MapPage*(virtual, physical: LONGINT; flags: LONGINT);
+	PROCEDURE MapPage*(virtual, physical: SIGNED32; flags: SIGNED32);
 	CONST
 		PageSize = 100000H; (* 1 MB pages *)
 	BEGIN

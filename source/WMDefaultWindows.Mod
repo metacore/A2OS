@@ -23,18 +23,18 @@ TYPE
 		lastX, lastY : SIZE;
 		useBitmaps*, dragging : BOOLEAN;
 		resized : BOOLEAN;
-		mode* : LONGINT;
-		corner : LONGINT;
+		mode* : SIGNED32;
+		corner : SIGNED32;
 		mode0Move : BOOLEAN; (* Move window in mode 0 or resize it? *)
 		hasFocus : BOOLEAN;
 		picAa*, picBa*, picCa*,
 		picAb*, picBb*, picCb* : Graphics.Image;
-		distXY* : LONGINT;
+		distXY* : SIGNED32;
 		vertical* : BOOLEAN;
-		focusthreshold*, threshold* : LONGINT;
+		focusthreshold*, threshold* : SIGNED32;
 		draggingWidth, draggingHeight : SIZE;
-		draggingSnapRange : LONGINT;
-		sac, sic, basw, bisw : LONGINT;
+		draggingSnapRange : SIGNED32;
+		sac, sic, basw, bisw : SIGNED32;
 		modKeys : SET;
 
 		PROCEDURE SetMasterFocus*(hasFocus : BOOLEAN);
@@ -53,7 +53,7 @@ TYPE
 		END GetActivePics;
 
 		PROCEDURE CheckHorizontal*(x, y : SIZE) : BOOLEAN;
-		VAR t : SIZE; th : LONGINT; a, b, c: Graphics.Image;
+		VAR t : SIZE; th : SIGNED32; a, b, c: Graphics.Image;
 		BEGIN
 			GetActivePics(a, b, c);
 			IF hasFocus THEN th := focusthreshold ELSE th := threshold END;
@@ -69,7 +69,7 @@ TYPE
 		END CheckHorizontal;
 
 		PROCEDURE CheckVertical*(x, y : SIZE) : BOOLEAN;
-		VAR t : SIZE; th : LONGINT; a, b, c: Graphics.Image;
+		VAR t : SIZE; th : SIGNED32; a, b, c: Graphics.Image;
 		BEGIN
 			GetActivePics(a, b, c);
 			IF hasFocus THEN th := focusthreshold ELSE th := threshold END;
@@ -205,10 +205,10 @@ TYPE
 		VAR
 			ow, oh, snapWidth, snapHeight : SIZE;
 
-			PROCEDURE Pow2(x : INTEGER) : LONGINT;
+			PROCEDURE Pow2(x : SIGNED16) : SIGNED32;
 			VAR
-				r : LONGINT;
-				i : INTEGER;
+				r : SIGNED32;
+				i : SIGNED16;
 			BEGIN
 				r := 1;
 				FOR i := 1 TO x DO
@@ -217,8 +217,8 @@ TYPE
 				RETURN r;
 			END Pow2;
 
-			PROCEDURE FindNearestPow2 (value: REAL): LONGINT;
-			VAR result: LONGINT;
+			PROCEDURE FindNearestPow2 (value: FLOAT32): SIGNED32;
+			VAR result: SIGNED32;
 			BEGIN
 				result := 1;
 				WHILE result < value DO INC (result, result) END;
@@ -294,12 +294,12 @@ TYPE
 	VAR
 		closeInactive*, closeActive*, closeSelected*, closeHover*,
 		minimizeInactive*, minimizeActive*, minimizeHover*,  titleImg : Graphics.Image;
-		minimizeOffset : LONGINT;
+		minimizeOffset : SIGNED32;
 		titleCanvas : Graphics.BufferCanvas;
-		down, hover : LONGINT;
-		tac, tic, tax, tix, tay, tiy : LONGINT;
+		down, hover : SIGNED32;
+		tac, tic, tax, tix, tay, tiy : SIGNED32;
 
-		PROCEDURE CheckButtons(x, y : SIZE; VAR button : LONGINT);
+		PROCEDURE CheckButtons(x, y : SIZE; VAR button : SIGNED32);
 		VAR img : Graphics.Image; closeImageWidth : SIZE;
 		BEGIN
 			button := NoButton;
@@ -324,7 +324,7 @@ TYPE
 		END CheckButtons;
 
 		PROCEDURE PointerMove*(x, y : SIZE; keys : SET);
-		VAR oldHover : LONGINT;
+		VAR oldHover : SIGNED32;
 		BEGIN
 			IF ~dragging THEN
 				oldHover := hover;
@@ -354,7 +354,7 @@ TYPE
 		END PointerDown;
 
 		PROCEDURE PointerUp*(x, y:SIZE; keys:SET);
-		VAR temp : LONGINT;
+		VAR temp : SIGNED32;
 		BEGIN
 			IF (down # NoButton) THEN
 				CheckButtons(x, y, temp);
@@ -380,10 +380,10 @@ TYPE
 			END;
 		END PointerLeave;
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : SIGNED32);
 		CONST IconBorder  = 5;
 		VAR
-			color, tc, sw : LONGINT; tx, ty, dx, dy : SIZE; fw, fh : REAL; a, b, c, img : Graphics.Image; title : String;
+			color, tc, sw : SIGNED32; tx, ty, dx, dy : SIZE; fw, fh : FLOAT32; a, b, c, img : Graphics.Image; title : String;
 			f : Graphics.Font;
 			iconSize, closeImageWidth : SIZE;
 		BEGIN
@@ -410,7 +410,7 @@ TYPE
 						WMRectangles.MakeRect(w - ENTIER(img.width * fw), 0, w, ENTIER(img.height * fh)), Graphics.ModeSrcOverDst, q);
 					closeImageWidth := img.width;
 				ELSE
-					canvas.Fill(WMRectangles.MakeRect(w - ENTIER(20 * fw), ENTIER(2 * fh), w, h), LONGINT(0FF0000C0H), Graphics.ModeSrcOverDst);
+					canvas.Fill(WMRectangles.MakeRect(w - ENTIER(20 * fw), ENTIER(2 * fh), w, h), SIGNED32(0FF0000C0H), Graphics.ModeSrcOverDst);
 					closeImageWidth := 20;
 				END;
 			END;
@@ -424,7 +424,7 @@ TYPE
 					canvas.ScaleImage(img, WMRectangles.MakeRect(0, 0, img.width, img.height),
 						WMRectangles.MakeRect(w - ENTIER((img.width + closeImageWidth - minimizeOffset) * fw), 0, w - ENTIER((closeImageWidth - minimizeOffset) * fw), ENTIER(img.height * fh)), Graphics.ModeSrcOverDst, q)
 				ELSE
-				(*	canvas.Fill(WMRectangles.MakeRect(w - ENTIER(20 * fw), ENTIER(2 * fh), w, h), LONGINT(0FF0000C0H), Graphics.ModeSrcOverDst);  *)
+				(*	canvas.Fill(WMRectangles.MakeRect(w - ENTIER(20 * fw), ENTIER(2 * fh), w, h), SIGNED32(0FF0000C0H), Graphics.ModeSrcOverDst);  *)
 				END;
 			END;
 
@@ -504,8 +504,8 @@ TYPE
 
 	LeftWindow* = OBJECT(DecorWindow)
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : LONGINT);
-		VAR color, sw : LONGINT; a, b, c : Graphics.Image;
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : SIGNED32);
+		VAR color, sw : SIGNED32; a, b, c : Graphics.Image;
 		BEGIN
 			IF hasFocus THEN color := sac; sw := basw ELSE color := sic; sw := bisw END;
 			IF useBitmaps THEN
@@ -549,8 +549,8 @@ TYPE
 
 	RightWindow* = OBJECT(DecorWindow)
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : LONGINT);
-		VAR color, sw : LONGINT; a, b, c : Graphics.Image;
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : SIGNED32);
+		VAR color, sw : SIGNED32; a, b, c : Graphics.Image;
 		BEGIN
 			IF hasFocus THEN color := sac; sw := basw ELSE color := sic; sw := bisw END;
 			IF useBitmaps THEN
@@ -593,8 +593,8 @@ TYPE
 
 	BottomWindow* = OBJECT(DecorWindow)
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : LONGINT);
-		VAR color, sw : LONGINT; a, b, c : Graphics.Image;
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : SIGNED32);
+		VAR color, sw : SIGNED32; a, b, c : Graphics.Image;
 		BEGIN
 			IF hasFocus THEN color := sac; sw := basw ELSE color := sic; sw := bisw END;
 			IF useBitmaps THEN
@@ -639,7 +639,7 @@ TYPE
 	BackWindow* = OBJECT(WM.Window)
 	VAR color : Graphics.Color;
 
-		PROCEDURE &New*(bgColor: LONGINT);
+		PROCEDURE &New*(bgColor: SIGNED32);
 		BEGIN
 			color := bgColor;
 			isVisible := TRUE;
@@ -658,7 +658,7 @@ TYPE
 			END;
 		END StyleChanged;
 
-		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : LONGINT);
+		PROCEDURE Draw*(canvas : Graphics.Canvas; w, h : SIZE; q : SIGNED32);
 		VAR rect : WMRectangles.Rectangle;
 		BEGIN
 			canvas.GetClipRect(rect);
@@ -668,8 +668,8 @@ TYPE
 
 (** GRAPHIC TOOLS *)
 (** Fill a rectangle vertically with images, repeating the middle if needed *)
-PROCEDURE RepeatMiddleVertical*(canvas : Graphics.Canvas; csw, csh, w, h : SIZE; q : WORD; top, middle, bottom : Graphics.Image);
-VAR fh : REAL; y, t : SIZE;
+PROCEDURE RepeatMiddleVertical*(canvas : Graphics.Canvas; csw, csh, w, h : SIZE; q : INTEGER; top, middle, bottom : Graphics.Image);
+VAR fh : FLOAT32; y, t : SIZE;
 BEGIN
 	IF (csw = 0) OR (csh = 0) OR (w = 0) OR (h = 0) THEN RETURN END;
 	fh := h / csh;
@@ -700,8 +700,8 @@ BEGIN
 END RepeatMiddleVertical;
 
 (** Fill a rectangle vertically with images, repeating the middle if needed *)
-PROCEDURE RepeatMiddleHorizontal*(canvas : Graphics.Canvas; csw, csh, w, h : SIZE; q : WORD; left, middle, right : Graphics.Image);
-VAR fw : REAL; x, t : SIZE;
+PROCEDURE RepeatMiddleHorizontal*(canvas : Graphics.Canvas; csw, csh, w, h : SIZE; q : INTEGER; left, middle, right : Graphics.Image);
+VAR fw : FLOAT32; x, t : SIZE;
 BEGIN
 	IF (csw = 0) OR (csh = 0) OR (w = 0) OR (h = 0) THEN RETURN END;
 	fw := w / csw;

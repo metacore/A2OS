@@ -55,7 +55,7 @@ VAR
 	PROCEDURE Recall( layer: tLayer;  msg: Display.DisplayMsg );
 	(*vs 0.0a1   md  03.07.95 *)
 	VAR method: ARRAY 64 OF CHAR;
-		res: INTEGER;
+		res: SIGNED16;
 	BEGIN
 		COPY( sourceModule, method );  vyHostStrings.Append( method, "." );
 		vyHostStrings.Append( method, layer.recallProcedure );  x := layer.x;
@@ -97,9 +97,9 @@ VAR
 	END Open;
 
 	PROCEDURE Show*;
-	VAR data: Objects.Object;  layer: tLayer;  minX, maxX: REAL;
+	VAR data: Objects.Object;  layer: tLayer;  minX, maxX: FLOAT32;
 		recallProc: ARRAY 32 OF CHAR;
-		s: vyParser.Scanner;  nans: LONGINT;
+		s: vyParser.Scanner;  nans: SIGNED32;
 	BEGIN
 		vyParser.OpenParScanner( s );
 		IF ~vyParser.Name( s, recallProc ) THEN vyHostTexts.NoteSS( vyHostTexts.cAlert, idversion, "recall procedure expected" );  RETURN END;

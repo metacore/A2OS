@@ -50,7 +50,7 @@ TYPE
 		defaultpipe, bulkInPipe, bulkOutPipe : Usbdi.Pipe;
 
 		(* Printer info *)
-		interfaceType : LONGINT;
+		interfaceType : SIGNED32;
 		deviceId : ARRAY 256 OF CHAR;
 
 		PROCEDURE Connect() : BOOLEAN;
@@ -95,10 +95,10 @@ TYPE
 		 * @param intf Zero-based USB device interface index
 		 * @param alt Zero-based USB device alternate interface index
 		 *)
-		PROCEDURE GetDeviceId(VAR deviceId : ARRAY OF CHAR; config, intf, alt : LONGINT) : BOOLEAN;
+		PROCEDURE GetDeviceId(VAR deviceId : ARRAY OF CHAR; config, intf, alt : SIGNED32) : BOOLEAN;
 		VAR
 			buffer : Usbdi.BufferPtr;
-			wValue, wIndex, len, i : LONGINT;
+			wValue, wIndex, len, i : SIGNED32;
 			string : POINTER TO ARRAY OF CHAR;
 		BEGIN
 			wValue := config;
@@ -107,7 +107,7 @@ TYPE
 			(* First we get the length of the device ID string (first 2 bytes) *)
 			IF device.Request(Usbdi.ToHost + Usbdi.Class + Usbdi.Interface, PrGetDeviceId, wValue, wIndex, 2, buffer^) = Usbdi.Ok THEN
 				(* Length is encoded in big endian *)
-				len := SYSTEM.VAL(LONGINT, ORD(buffer[0]))*100H + SYSTEM.VAL(LONGINT, ORD(buffer[1]));
+				len := SYSTEM.VAL(SIGNED32, ORD(buffer[0]))*100H + SYSTEM.VAL(SIGNED32, ORD(buffer[1]));
 				NEW(buffer, len);
 				IF device.Request(Usbdi.ToHost + Usbdi.Class + Usbdi.Interface, PrGetDeviceId, wValue, wIndex, len, buffer^) = Usbdi.Ok THEN
 					NEW(string, len-2);

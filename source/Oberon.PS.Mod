@@ -10,11 +10,11 @@ CONST
 	PW = 580; PH = 820;	(*dia*)
 	EOL = 0DX;
 
-	PROCEDURE FadeUp(P: Pictures.Picture; max: INTEGER);	(*fade picture colors to maximum*)
-	VAR i, r, g, b, mr, mg, mb, n: INTEGER;
-		f: REAL;
+	PROCEDURE FadeUp(P: Pictures.Picture; max: SIGNED16);	(*fade picture colors to maximum*)
+	VAR i, r, g, b, mr, mg, mb, n: SIGNED16;
+		f: FLOAT32;
 	BEGIN
-		n := INTEGER(ASH(1, P.depth));
+		n := SIGNED16(ASH(1, P.depth));
 		i := 0; mr := 0; mg := 0; mb := 0;
 		WHILE i < n DO
 			Pictures.GetColor(P, i, r, g, b);
@@ -35,7 +35,7 @@ CONST
 	END FadeUp;
 
 		PROCEDURE ChName(VAR t: ARRAY OF CHAR);
-		VAR i, k: INTEGER;
+		VAR i, k: SIGNED16;
 		BEGIN i := 0; k := i;
 			WHILE t[i] # 0X DO	(*find last "."*)
 				IF t[i] = "." THEN k := i END; INC(i)
@@ -52,16 +52,16 @@ CONST
 		F: Files.File;
 		R: Files.Rider;
 		ch: CHAR;
-		x, y, k, i, h0, h1, n: INTEGER;
-		tx, ty, dw: REAL;
-		h: ARRAY 128 OF INTEGER;
+		x, y, k, i, h0, h1, n: SIGNED16;
+		tx, ty, dw: FLOAT32;
+		h: ARRAY 128 OF SIGNED16;
 		rle, a3, rot, eps: BOOLEAN;
 		name: ARRAY 32 OF CHAR;
-		adjust: REAL;
-		linew: LONGINT;
+		adjust: FLOAT32;
+		linew: SIGNED32;
 
-		PROCEDURE Int(n: INTEGER);
-		VAR d: ARRAY 8 OF CHAR; i: INTEGER;
+		PROCEDURE Int(n: SIGNED16);
+		VAR d: ARRAY 8 OF CHAR; i: SIGNED16;
 		BEGIN Files.Write(R, " ");
 			i := 0;
 			REPEAT
@@ -70,8 +70,8 @@ CONST
 			WHILE i > 0 DO DEC(i); Files.Write(R, d[i]) END
 		END Int;
 
-		PROCEDURE H(n: INTEGER);
-		VAR d0, d1: INTEGER;
+		PROCEDURE H(n: SIGNED16);
+		VAR d0, d1: SIGNED16;
 		BEGIN
 			d0 := n MOD 16; IF d0 > 9 THEN INC(d0, 7) END;
 			d1 := n DIV 16; IF d1 > 9 THEN INC(d1, 7) END;
@@ -83,14 +83,14 @@ CONST
 		END H;
 
 		PROCEDURE Str(s: ARRAY OF CHAR);
-		VAR i: INTEGER;
+		VAR i: SIGNED16;
 		BEGIN
 			i := 0; WHILE s[i] # 0X DO Files.Write(R, s[i]); INC(i) END;
 		END Str;
 
-		PROCEDURE Real(x: REAL);
+		PROCEDURE Real(x: FLOAT32);
 		VAR
-			n, i, xi: INTEGER;
+			n, i, xi: SIGNED16;
 			d: ARRAY 4 OF CHAR;
 		BEGIN
 			xi := SHORT(ENTIER(x));
@@ -105,9 +105,9 @@ CONST
 			WHILE i > 0 DO DEC(i); Files.Write(R, d[i]) END
 		END Real;
 
-		PROCEDURE ScaleTo(w, h, W, H: INTEGER; adjust: REAL; VAR tx, ty, dw: REAL; rot: BOOLEAN);
+		PROCEDURE ScaleTo(w, h, W, H: SIGNED16; adjust: FLOAT32; VAR tx, ty, dw: FLOAT32; rot: BOOLEAN);
 		(*compute translation vector (tx, ty) scaling factor dx in order to fit [w, h] optimally into [W, H]*)
-		VAR d0, d1: REAL;
+		VAR d0, d1: FLOAT32;
 		BEGIN
 			IF rot THEN d0 := H/w; d1 := W/h ELSE d0 := W/w; d1 := H/h END;
 			IF d0 < d1 THEN dw := d0*adjust ELSE dw := d1*adjust END;
@@ -116,18 +116,18 @@ CONST
 			END
 		END ScaleTo;
 
-		PROCEDURE Transform(tx, ty, dw: REAL; rot: BOOLEAN);
+		PROCEDURE Transform(tx, ty, dw: FLOAT32; rot: BOOLEAN);
 		BEGIN
 			Real(tx); Real(ty); Str(" translate");
 			Real(dw); Real(dw); Str(" scale");
 			IF rot THEN Str(" 90 rotate") END; Files.Write(R, EOL)
 		END Transform;
 
-		PROCEDURE WColTab(n: INTEGER);
+		PROCEDURE WColTab(n: SIGNED16);
 		VAR
-			r, g, b: ARRAY 256 OF INTEGER;
-			i, d: INTEGER;
-		BEGIN d := INTEGER(ASH(1, P.depth));
+			r, g, b: ARRAY 256 OF SIGNED16;
+			i, d: SIGNED16;
+		BEGIN d := SIGNED16(ASH(1, P.depth));
 			i := 0; WHILE i < d DO Pictures.GetColor(P, i, r[i], g[i], b[i]); INC(i) END;
 			WHILE i < n DO r[i] := 0; g[i] := 0; b[i] := 0; INC(i) END;
 			i := 0; WHILE i < n DO H(r[i]); INC(i) END; Files.Write(R, EOL);
@@ -149,8 +149,8 @@ CONST
 		END Out;
 
 		PROCEDURE DateTime;
-		VAR t, d: LONGINT;
-			PROCEDURE Pair(ch: CHAR; n: LONGINT);
+		VAR t, d: SIGNED32;
+			PROCEDURE Pair(ch: CHAR; n: SIGNED32);
 			BEGIN Files.Write(R, ch); Files.Write(R, CHR(n DIV 10 MOD 10+30H)); Files.Write(R, CHR(n MOD 10 +30H))
 			END Pair;
 		BEGIN Oberon.GetClock(t, d);
@@ -158,14 +158,14 @@ CONST
 			Pair(" ", (t DIV (64*64)) MOD 32); Pair(":", (t DIV 64) MOD 64); Pair(":", t MOD 64);	(*time*)
 		END DateTime;
 
-		PROCEDURE BoundingBox(w, h: INTEGER; tx, ty, dw: REAL; rot: BOOLEAN);
+		PROCEDURE BoundingBox(w, h: SIGNED16; tx, ty, dw: FLOAT32; rot: BOOLEAN);
 		BEGIN Str("%%BoundingBox: ");
 			IF rot THEN Real(tx-h*dw); Real(ty); Real(tx); Real(ty+w*dw)
 			ELSE Real(tx); Real(ty); Real(tx+w*dw); Real(ty+h*dw)
 			END
 		END BoundingBox;
 
-		PROCEDURE EPSHeader(P: Pictures.Picture; tx, ty, dw: REAL; rot: BOOLEAN);
+		PROCEDURE EPSHeader(P: Pictures.Picture; tx, ty, dw: FLOAT32; rot: BOOLEAN);
 		BEGIN
 			Str("%!PS-Adobe-1.0"); Files.Write(R, EOL);
 			BoundingBox(P.width, P.height, tx, ty, dw, rot); Files.Write(R, EOL);

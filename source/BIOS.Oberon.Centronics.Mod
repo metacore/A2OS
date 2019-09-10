@@ -14,8 +14,8 @@ CONST
 	Timeout = 0;	(* in seconds *)
 
 VAR
-	adr: ARRAY 3 OF INTEGER;
-	num: INTEGER;
+	adr: ARRAY 3 OF SIGNED16;
+	num: SIGNED16;
 
 PROCEDURE Halt(msg: ARRAY OF CHAR);
 VAR error: ARRAY 32 OF CHAR;
@@ -33,15 +33,15 @@ END Wait;
 
 (** Start - Open parallel port. *)
 
-PROCEDURE Start*(port: INTEGER);
+PROCEDURE Start*(port: SIGNED16);
 BEGIN
 	IF (port < 0) OR (port >= num) THEN Halt("Invalid parallel port") END
 END Start;
 
 (** Reset - Reset parallel port. *)
 
-PROCEDURE Reset*(port: INTEGER);
-VAR p: INTEGER;
+PROCEDURE Reset*(port: SIGNED16);
+VAR p: SIGNED16;
 BEGIN
 	IF port >= num THEN HALT(99) END;
 	p := adr[port];
@@ -51,14 +51,14 @@ END Reset;
 
 (** Stop - Close parallel port. *)
 
-PROCEDURE Stop*(port: INTEGER);
+PROCEDURE Stop*(port: SIGNED16);
 (* nop in current implementation *)
 END Stop;
 
 (** Send - Send byte to parallel port, waiting until it is ready. *)
 
-PROCEDURE Send*(port: INTEGER; x: CHAR);
-VAR p: INTEGER;  s: SET;  t: Kernel.MilliTimer;
+PROCEDURE Send*(port: SIGNED16; x: CHAR);
+VAR p: SIGNED16;  s: SET;  t: Kernel.MilliTimer;
 BEGIN
 	IF port >= num THEN Halt("Invalid parallel port") END;
 	p := adr[port]+1;
@@ -94,8 +94,8 @@ END Send;
 
 (** SendPoll - Send byte to parallel port.  done indicates success or failure. *)
 
-PROCEDURE SendPoll*(port: INTEGER;  x: CHAR;  VAR done: BOOLEAN);
-VAR p: INTEGER;  s: SET;
+PROCEDURE SendPoll*(port: SIGNED16;  x: CHAR;  VAR done: BOOLEAN);
+VAR p: SIGNED16;  s: SET;
 BEGIN
 	IF port >= num THEN Halt("Invalid parallel port") END;
 	p := adr[port]+1;
@@ -113,7 +113,7 @@ END SendPoll;
 
 (** Available - Returns number of bytes available for reading (implementation optional). *)
 
-PROCEDURE Available*(port: INTEGER): LONGINT;
+PROCEDURE Available*(port: SIGNED16): SIGNED32;
 BEGIN
 	Halt("Not implemented");
 	RETURN 0
@@ -121,13 +121,13 @@ END Available;
 
 (** Receive - Read a byte from the parallel port (implementation optional). *)
 
-PROCEDURE Receive*(port: INTEGER; VAR x: CHAR);
+PROCEDURE Receive*(port: SIGNED16; VAR x: CHAR);
 BEGIN
 	Halt("Not implemented")
 END Receive;
 
-PROCEDURE Detected(adr: INTEGER): BOOLEAN;
-VAR p: INTEGER; ch: CHAR;
+PROCEDURE Detected(adr: SIGNED16): BOOLEAN;
+VAR p: SIGNED16; ch: CHAR;
 BEGIN
 	p := adr+2;  Machine.Portout8(p, 0CX);
 	p := adr;  Machine.Portout8(p, 55X);
@@ -141,7 +141,7 @@ BEGIN
 END Detected;
 
 PROCEDURE Init;
-VAR i: SHORTINT;  p: INTEGER;
+VAR i: SIGNED8;  p: SIGNED16;
 BEGIN
 	num := 0;
 	FOR i := 0 TO 2 DO

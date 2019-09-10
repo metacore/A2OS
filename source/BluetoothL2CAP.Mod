@@ -38,7 +38,7 @@ CONST
 TYPE
 
 	(** event types *)
-	Event* = LONGINT;
+	Event* = SIGNED32;
 
 CONST
 
@@ -68,19 +68,19 @@ TYPE
 
 	ConnectInd* = POINTER TO RECORD(Indication)	(** parameter for connection indication events *)
 		bdAddr*: Bluetooth.BDAddr;	(** Bluetooth device address *)
-		cid*: LONGINT;				(** channel ID *)
-		psm*: LONGINT;				(** protocol/service multiplexor *)
+		cid*: SIGNED32;				(** channel ID *)
+		psm*: SIGNED32;				(** protocol/service multiplexor *)
 	END;
 
 	ConfigInd* = POINTER TO RECORD(Indication)	(** parameter for configuration indication events *)
-		cid*: LONGINT;			(** channel ID *)
-		outMTU*: LONGINT;		(** outgoing MTU information *)
-		inFlow*: LONGINT;		(** incoming flow information *)
-		inFlushTO*: LONGINT	(** incoming flush timeout *)
+		cid*: SIGNED32;			(** channel ID *)
+		outMTU*: SIGNED32;		(** outgoing MTU information *)
+		inFlow*: SIGNED32;		(** incoming flow information *)
+		inFlushTO*: SIGNED32	(** incoming flush timeout *)
 	END;
 
 	DisconnectInd* = POINTER TO RECORD(Indication)	(** parameter for desconnection indication events *)
-		cid*: LONGINT	(** channel ID *)
+		cid*: SIGNED32	(** channel ID *)
 	END;
 
 	QoSViolationInd* = POINTER TO RECORD(Indication)	(** parameter for QoS violation indication events *)
@@ -145,7 +145,7 @@ TYPE
 	Packet = POINTER TO RECORD
 		next: Packet;
 		link: HCI.Link;			(* packet comes from this link *)
-		cid, len: LONGINT;
+		cid, len: SIGNED32;
 		data: PChar;
 	END;
 
@@ -194,19 +194,19 @@ TYPE
 			next: Channel;
 			l2cap: L2CAP;
 			link: HCI.Link;
-			psm-, mtu: LONGINT;
-			sid-, did-: LONGINT;	(** CIDs (local & remote) (channel identifier, range: 00040H..0FFFFH) *)
-			state-: LONGINT;		(* channel state (Closed...W2L2CADisconnectRsp) *)
+			psm-, mtu: SIGNED32;
+			sid-, did-: SIGNED32;	(** CIDs (local & remote) (channel identifier, range: 00040H..0FFFFH) *)
+			state-: SIGNED32;		(* channel state (Closed...W2L2CADisconnectRsp) *)
 
 			t: Objects.Timer;
 			reply, timeout: BOOLEAN;
 			(*
-			readers: LONGINT;
+			readers: SIGNED32;
 			readerData: Packet;
 			*)
 			packetBuffer: PacketBuffer;
 
-		PROCEDURE &Init*(l2cap: L2CAP; link: HCI.Link; cid: LONGINT);
+		PROCEDURE &Init*(l2cap: L2CAP; link: HCI.Link; cid: SIGNED32);
 		BEGIN
 			IF TraceChannel THEN
 				KernelLog.String(ModuleName);
@@ -245,16 +245,16 @@ TYPE
 			timeout := TRUE
 		END Timeout;
 
-		PROCEDURE SetRTXTimer(ms: LONGINT);
+		PROCEDURE SetRTXTimer(ms: SIGNED32);
 		BEGIN
 			Objects.SetTimeout(t, Timeout, ms)
 		END SetRTXTimer;
 
-		PROCEDURE Connect(psm: LONGINT; VAR status: LONGINT): WORD;
+		PROCEDURE Connect(psm: SIGNED32; VAR status: SIGNED32): INTEGER;
 		VAR
 			cmd: ARRAY 8 OF CHAR;
-			ofs, n: LONGINT; res: WORD;
-			tmp: LONGINT;
+			ofs, n: SIGNED32; res: INTEGER;
+			tmp: SIGNED32;
 			sc: SignallingChannel;
 			identifier: CHAR;
 			response: Response;
@@ -336,8 +336,8 @@ TYPE
 
 		END Connect;
 
-		PROCEDURE ConnectResponse(identifier: CHAR; response, status: LONGINT): WORD;
-		VAR cmd: ARRAY 12 OF CHAR; res: WORD; sc: SignallingChannel;
+		PROCEDURE ConnectResponse(identifier: CHAR; response, status: SIGNED32): INTEGER;
+		VAR cmd: ARRAY 12 OF CHAR; res: INTEGER; sc: SignallingChannel;
 		BEGIN {EXCLUSIVE}
 			ASSERT(state = W4L2CAConnectRsp);
 			IF TraceChannel THEN
@@ -364,13 +364,13 @@ TYPE
 			RETURN res
 		END ConnectResponse;
 
-		PROCEDURE Configure(VAR inMTU, outFlow, outFlushTO: LONGINT; linkTO: LONGINT): WORD;
+		PROCEDURE Configure(VAR inMTU, outFlow, outFlushTO: SIGNED32; linkTO: SIGNED32): INTEGER;
 		(* linkTO is not used!! mazda *)
 		VAR
 
 			cmd: ARRAY 48 OF CHAR;
-			ofs, pos, n, value: LONGINT; res: WORD;
-			tmp: LONGINT;
+			ofs, pos, n, value: SIGNED32; res: INTEGER;
+			tmp: SIGNED32;
 			sc: SignallingChannel; identifier, type: CHAR;
 			response: Response;
 
@@ -464,11 +464,11 @@ TYPE
 			END
 		END Configure;
 
-		PROCEDURE ConfigurationResponse(identifier: CHAR; outMTU, inFlow: LONGINT): WORD;
+		PROCEDURE ConfigurationResponse(identifier: CHAR; outMTU, inFlow: SIGNED32): INTEGER;
 
 		VAR
 			cmd: ARRAY 48 OF CHAR;
-			pos: LONGINT; res: WORD;
+			pos: SIGNED32; res: INTEGER;
 			sc: SignallingChannel;
 
 		BEGIN
@@ -520,14 +520,14 @@ TYPE
 
 		END ConfigurationResponse;
 
-		PROCEDURE Disconnect(): LONGINT;
+		PROCEDURE Disconnect(): SIGNED32;
 
 		VAR
 			sc: SignallingChannel;
 			cmd: ARRAY 8 OF CHAR;
 			identifier: CHAR;
 			response: Response;
-			ofs, rsid, rdid: LONGINT; res: WORD;
+			ofs, rsid, rdid: SIGNED32; res: INTEGER;
 
 		BEGIN
 			IF state = Closed THEN
@@ -588,11 +588,11 @@ TYPE
 		END Disconnect;
 
 		(** sends an L2CAP packet over ACL *)
-		PROCEDURE Send(VAR data: ARRAY OF CHAR; ofs, len: LONGINT): WORD;
+		PROCEDURE Send(VAR data: ARRAY OF CHAR; ofs, len: SIGNED32): INTEGER;
 
 		VAR
 			hdr: ARRAY 4 OF CHAR;
-			count: LONGINT; res: WORD;
+			count: SIGNED32; res: INTEGER;
 
 		BEGIN {EXCLUSIVE}
 
@@ -668,10 +668,10 @@ TYPE
 			END;
 		END Receive;
 
-		PROCEDURE Write*(VAR buffer: ARRAY OF CHAR; ofs, len: LONGINT; VAR size: LONGINT): WORD;
+		PROCEDURE Write*(VAR buffer: ARRAY OF CHAR; ofs, len: SIGNED32; VAR size: SIGNED32): INTEGER;
 
 		VAR
-			res: WORD;
+			res: INTEGER;
 
 		BEGIN
 
@@ -704,8 +704,8 @@ TYPE
 			RETURN res
 		END Write;
 
-		PROCEDURE Read*(VAR buffer: ARRAY OF CHAR; min: LONGINT; VAR size: LONGINT): LONGINT;
-		VAR i: LONGINT;
+		PROCEDURE Read*(VAR buffer: ARRAY OF CHAR; min: SIGNED32; VAR size: SIGNED32): SIGNED32;
+		VAR i: SIGNED32;
 			p: Packet;
 		BEGIN (*{EXCLUSIVE}*)
 			(*INC(readers);*)
@@ -769,9 +769,9 @@ TYPE
 		link: HCI.Link;	(* signal comes from this link *)
 		code: CHAR;
 		identifier: CHAR;
-		length: LONGINT;
+		length: SIGNED32;
 		data: PChar;
-		ofs: LONGINT;
+		ofs: SIGNED32;
 	END;
 
 	Request = POINTER TO RECORD(SignalPacket) (* code one of sig*Req *)
@@ -791,7 +791,7 @@ TYPE
 			response: Response;
 			firstReq, lastReq: Request;
 
-		PROCEDURE &Init*(l2cap: L2CAP; link: HCI.Link; cid: LONGINT);
+		PROCEDURE &Init*(l2cap: L2CAP; link: HCI.Link; cid: SIGNED32);
 		BEGIN
 			IF TraceSignallingChannel THEN
 				KernelLog.String(ModuleName);
@@ -832,10 +832,10 @@ TYPE
 
 		(* signal an remote L2CAP entity using link *)
 		(* LEN(command) must be >= 4 and the first 4 bytes of command MUST be left free *)
-		PROCEDURE Signal(link: HCI.Link; code, identifier: CHAR; command: ARRAY OF CHAR; len: LONGINT): WORD;
+		PROCEDURE Signal(link: HCI.Link; code, identifier: CHAR; command: ARRAY OF CHAR; len: SIGNED32): INTEGER;
 
 		VAR
-				res : WORD;
+				res : INTEGER;
 
 		BEGIN (* {EXCLUSIVE} TODO *)
 
@@ -880,7 +880,7 @@ TYPE
 		(* receive and parse a signalling packet *)
 		PROCEDURE Receive(p: Packet);
 		VAR
-			pos: LONGINT; res: WORD;
+			pos: SIGNED32; res: INTEGER;
 			c: CHAR;
 			s: SignalPacket;
 			request: Request;
@@ -1024,7 +1024,7 @@ TYPE
 		END TimeoutHandler;
 
 		(* wait for a reply to a signalling packet with identifier from a remote L2CAP entity *)
-		PROCEDURE WaitForReply(identifier: CHAR; wait: LONGINT; VAR r: Response);
+		PROCEDURE WaitForReply(identifier: CHAR; wait: SIGNED32; VAR r: Response);
 		VAR
 			idTimer: Bluetooth.IDTimer;
 		BEGIN {EXCLUSIVE}
@@ -1096,10 +1096,10 @@ TYPE
 			l2cap: L2CAP;
 			packet: Packet;
 			tail:Packet;
-			pos: LONGINT;
+			pos: SIGNED32;
 			packetList: Packet;
 			dead: BOOLEAN;
-			packetListLength : LONGINT;
+			packetListLength : SIGNED32;
 
 		PROCEDURE &Init*(l2cap: L2CAP);
 		BEGIN
@@ -1134,7 +1134,7 @@ TYPE
 
 		(* called by the HCI layer upon reception of an ACL data packet *)
 		PROCEDURE ReceiveData(link: HCI.Link; acl: Bluetooth.ACLPacket);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 
 			IF TraceReassembler THEN
@@ -1318,9 +1318,9 @@ TYPE
 		VAR
 			l2cap: L2CAP;
 			channels: Channel;
-			numChannels: LONGINT;
+			numChannels: SIGNED32;
 			cidPool: ARRAY (MaxCIDs DIV 32) OF SET;
-			nextCID: LONGINT;
+			nextCID: SIGNED32;
 
 		PROCEDURE &Init*(l2cap: L2CAP);
 		VAR sc: SignallingChannel;
@@ -1347,8 +1347,8 @@ TYPE
 		END Init;
 
 		(* get the next CID *)
-		PROCEDURE AllocCID(): LONGINT;
-		VAR oldCID: LONGINT;
+		PROCEDURE AllocCID(): SIGNED32;
+		VAR oldCID: SIGNED32;
 		BEGIN (* [EXCLUSIVE] *)
 			oldCID := nextCID;
 			WHILE ((nextCID MOD 32) IN cidPool[nextCID DIV 32]) DO
@@ -1361,7 +1361,7 @@ TYPE
 		END AllocCID;
 
 		(* free a CID *)
-		PROCEDURE FreeCID(cid: LONGINT);
+		PROCEDURE FreeCID(cid: SIGNED32);
 		BEGIN (* [EXCLUSIVE] *)
 			ASSERT((cid MOD 32) IN cidPool[cid DIV 32]);
 			EXCL(cidPool[cid DIV 32], cid MOD 32)
@@ -1369,7 +1369,7 @@ TYPE
 
 		(* reset everything *)
 		PROCEDURE Reset;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF TraceChannelManager THEN
 				KernelLog.String(ModuleName);
@@ -1387,7 +1387,7 @@ TYPE
 
 		VAR
 
-			c: Channel; cid: LONGINT;
+			c: Channel; cid: SIGNED32;
 
 		BEGIN {EXCLUSIVE}
 
@@ -1429,7 +1429,7 @@ TYPE
 		END RemoveChannel;
 
 		(* find a channel with a specific CID *)
-		PROCEDURE FindChannel(cid: LONGINT): Channel;
+		PROCEDURE FindChannel(cid: SIGNED32): Channel;
 		VAR c: Channel;
 		BEGIN {EXCLUSIVE}
 			c := channels;
@@ -1478,7 +1478,7 @@ TYPE
 			END;
 		END Init;
 
-		PROCEDURE CreateACLConnection*(l2cap : L2CAP;bdAddr : Bluetooth.BDAddr;VAR result : WORD);
+		PROCEDURE CreateACLConnection*(l2cap : L2CAP;bdAddr : Bluetooth.BDAddr;VAR result : INTEGER);
 		VAR link : HCI.Link;
 		BEGIN
 			result := hci.CreateConnection(bdAddr, 0);
@@ -1504,7 +1504,7 @@ TYPE
 
 		END CreateACLConnection;
 
-		PROCEDURE ReleaseACLConnection*(link:HCI.Link;VAR result:WORD);
+		PROCEDURE ReleaseACLConnection*(link:HCI.Link;VAR result:INTEGER);
 		BEGIN
 			ASSERT(link # NIL);
 			result := hci.Disconnect(link.handle,013H);
@@ -1517,7 +1517,7 @@ TYPE
 			END;
 		END ReleaseACLConnection;
 
-		PROCEDURE AcceptACLConnection*(l2cap : L2CAP;bdAddr : Bluetooth.BDAddr;VAR result : WORD);
+		PROCEDURE AcceptACLConnection*(l2cap : L2CAP;bdAddr : Bluetooth.BDAddr;VAR result : INTEGER);
 		VAR link : HCI.Link;
 		BEGIN
 			link := AwaitACLConnection(bdAddr);
@@ -1533,7 +1533,7 @@ TYPE
 		END AcceptACLConnection;
 
 		(*----- lower layer events -----*)
-		PROCEDURE Connect(sender: HCI.HCI; link: HCI.Link; res: WORD);
+		PROCEDURE Connect(sender: HCI.HCI; link: HCI.Link; res: INTEGER);
 		BEGIN {EXCLUSIVE}
 			IF (res = 0) THEN
 				IF TraceHCIManager THEN
@@ -1551,7 +1551,7 @@ TYPE
 			END;
 		END Connect;
 
-		PROCEDURE Disconnect(sender: HCI.HCI; link: HCI.Link; res: WORD);
+		PROCEDURE Disconnect(sender: HCI.HCI; link: HCI.Link; res: INTEGER);
 		VAR p,q : L2CAP;
 		BEGIN {EXCLUSIVE}
 			IF TraceHCIManager THEN
@@ -1591,7 +1591,7 @@ TYPE
 		VAR
 			idTimer: Bluetooth.IDTimer;
 			l : HCI.Link;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			NEW(idTimer, TimeoutHandler, ConnectTimeout);
 			AWAIT(((newLink # NIL) & (newLink.remote = bdAddr)) OR (expiredTimer = idTimer));
@@ -1620,7 +1620,7 @@ TYPE
 	L2CAP* = OBJECT
 		VAR
 			bdAddr-: Bluetooth.BDAddr;		(** BD Addr of local device *)
-			aclMTU, scoMTU, aclNumPackets, scoNumPackets: LONGINT;	(* limitations of local device *)
+			aclMTU, scoMTU, aclNumPackets, scoNumPackets: SIGNED32;	(* limitations of local device *)
 			indications: ARRAY MaxEventIndication-MinEventIndication+1 OF EventIndicationCallback;
 			reassembler: Reassembler;
 			channelManager-: ChannelManager;
@@ -1631,7 +1631,7 @@ TYPE
 			linkDisconnectHandler* : OnACLLinkDisconnect;
 
 		PROCEDURE &Init*;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			IF TraceL2CAP THEN
 				KernelLog.String(ModuleName);
@@ -1661,7 +1661,7 @@ TYPE
 		(*----- L2CAP interface -----*)
 
 		(** request a callback when the selected indication event occurs *)
-		PROCEDURE EventIndication*(event: Event; callback: EventIndicationCallback; VAR result: WORD);
+		PROCEDURE EventIndication*(event: Event; callback: EventIndicationCallback; VAR result: INTEGER);
 		BEGIN
 			IF (MinEventIndication <= event) & (event <= MaxEventIndication) THEN
 				indications[event-MinEventIndication] := callback;
@@ -1674,7 +1674,7 @@ TYPE
 		(** initiates the sending of a L2CAP_ConnectReq message and blocks until a corresponding L2CA_ConnectCfm(Neg)
 			or L2CA_TimeoutInd event is received.
 		*)
-		PROCEDURE Connect*(psm: LONGINT; bdAddr: Bluetooth.BDAddr; VAR lcid: LONGINT; VAR result: WORD; VAR status: LONGINT);
+		PROCEDURE Connect*(psm: SIGNED32; bdAddr: Bluetooth.BDAddr; VAR lcid: SIGNED32; VAR result: INTEGER; VAR status: SIGNED32);
 		VAR
 			c: Channel;
 		BEGIN
@@ -1732,7 +1732,7 @@ TYPE
 		END Connect;
 
 		(** issues a response to a connection request event indication *)
-		PROCEDURE ConnectResponse*(bdAddr: Bluetooth.BDAddr; identifier : CHAR; lcid, response, status: LONGINT; VAR result: WORD);
+		PROCEDURE ConnectResponse*(bdAddr: Bluetooth.BDAddr; identifier : CHAR; lcid, response, status: SIGNED32; VAR result: INTEGER);
 		VAR c: Channel;
 		BEGIN
 			c := channelManager.FindChannel(lcid);
@@ -1749,7 +1749,7 @@ TYPE
 			or L2CA_Timeout event is received.
 			inMTU, outFlow and outFlushTO: input/output parameters
 		*)
-		PROCEDURE Configure*(cid: LONGINT; VAR inMTU, outFlow, outFlushTO: LONGINT; linkTO: LONGINT; VAR result: WORD);
+		PROCEDURE Configure*(cid: SIGNED32; VAR inMTU, outFlow, outFlushTO: SIGNED32; linkTO: SIGNED32; VAR result: INTEGER);
 		VAR c: Channel;
 		BEGIN
 			IF TraceL2CAP THEN
@@ -1777,7 +1777,7 @@ TYPE
 		END Configure;
 
 		(** issues a response to a configuration request event indication *)
-		PROCEDURE ConfigurationResponse*(cid: LONGINT; identifier: CHAR; outMTU, inFlow: LONGINT; VAR result: WORD);
+		PROCEDURE ConfigurationResponse*(cid: SIGNED32; identifier: CHAR; outMTU, inFlow: SIGNED32; VAR result: INTEGER);
 		VAR c: Channel;
 		BEGIN
 			IF TraceL2CAP THEN
@@ -1801,7 +1801,7 @@ TYPE
 		(** initiates the sending of a L2CAP_DisconnectReq message and blocks until a corresponding L2CA_DisconnectRsp
 			or L2CA_TimeoutInd event is received.
 		*)
-		PROCEDURE Disconnect*(cid: LONGINT; VAR result: LONGINT);
+		PROCEDURE Disconnect*(cid: SIGNED32; VAR result: SIGNED32);
 		VAR
 			chan : Channel;
 		BEGIN
@@ -1825,7 +1825,7 @@ TYPE
 			 END;
 		END Disconnect;
 
-		PROCEDURE DisconnectResponse*(identifier : CHAR; lcid, response, status: LONGINT; VAR result: LONGINT);
+		PROCEDURE DisconnectResponse*(identifier : CHAR; lcid, response, status: SIGNED32; VAR result: SIGNED32);
 		VAR c: Channel;
 		BEGIN
 			c := channelManager.FindChannel(lcid);
@@ -1841,7 +1841,7 @@ TYPE
 		(** requests the transfer of data across the channel. If the length of the data exceeds the outMTU then only the first
 			outMTU bytes are sent.
 		*)
-		PROCEDURE Write*(cid, ofs, length: LONGINT; VAR buffer: ARRAY OF CHAR; VAR size: LONGINT; VAR result: WORD);
+		PROCEDURE Write*(cid, ofs, length: SIGNED32; VAR buffer: ARRAY OF CHAR; VAR size: SIGNED32; VAR result: INTEGER);
 		VAR c: Channel;
 		BEGIN
 
@@ -1869,7 +1869,7 @@ TYPE
 		(** reqests for reception of data. This reqest returns when data is available or the link is terminated. The data returned
 			represents a single L2CAP payload. If the payload is bigger than the buffer, the remainder of the payload will be discarded.
 		*)
-		PROCEDURE Read*(cid, length: LONGINT; VAR buffer: ARRAY OF CHAR; VAR result, N: LONGINT);
+		PROCEDURE Read*(cid, length: SIGNED32; VAR buffer: ARRAY OF CHAR; VAR result, N: SIGNED32);
 		VAR c: Channel;
 		BEGIN
 			IF TraceL2CAP THEN
@@ -1891,31 +1891,31 @@ TYPE
 		END Read;
 
 		(** requests the creation of a cid to represent a logical connection to multiple devices. *)
-		PROCEDURE GroupCreate*(psm: LONGINT; VAR cid: LONGINT);
+		PROCEDURE GroupCreate*(psm: SIGNED32; VAR cid: SIGNED32);
 		END GroupCreate;
 
 		(** closes a group. *)
-		PROCEDURE GroupClose*(cid: LONGINT; VAR result: LONGINT);
+		PROCEDURE GroupClose*(cid: SIGNED32; VAR result: SIGNED32);
 		END GroupClose;
 
 		(** request the addiction of a member to a group. *)
-		PROCEDURE GroupAddMember*(cid: LONGINT; bdAddr: Bluetooth.BDAddr; VAR result: LONGINT);
+		PROCEDURE GroupAddMember*(cid: SIGNED32; bdAddr: Bluetooth.BDAddr; VAR result: SIGNED32);
 		END GroupAddMember;
 
 		(** reqest the removal of a member from a group. *)
-		PROCEDURE GroupRemoveMember*(cid: LONGINT; bdAddr: Bluetooth.BDAddr; VAR result: LONGINT);
+		PROCEDURE GroupRemoveMember*(cid: SIGNED32; bdAddr: Bluetooth.BDAddr; VAR result: SIGNED32);
 		END GroupRemoveMember;
 
 		(** request a report of the members of a group *)
-		PROCEDURE GetGroupMembership*(cid: LONGINT; VAR result: LONGINT; VAR bdAddrList: GroupMembers);
+		PROCEDURE GetGroupMembership*(cid: SIGNED32; VAR result: SIGNED32; VAR bdAddrList: GroupMembers);
 		END GetGroupMembership;
 
 		(** initiates a L2CA_EchoReq message and receives the corresponding L2CAP_EchoRsp message.
 			echoData and length are input/output parameters
 		*)
-		PROCEDURE Ping*(bdAddr: Bluetooth.BDAddr; VAR echoData: ARRAY OF CHAR; VAR length, result: LONGINT);
+		PROCEDURE Ping*(bdAddr: Bluetooth.BDAddr; VAR echoData: ARRAY OF CHAR; VAR length, result: SIGNED32);
 (*
-		VAR l: HCI.Link; data: ARRAY 4 OF CHAR; i: LONGINT; id: CHAR; response: Response;
+		VAR l: HCI.Link; data: ARRAY 4 OF CHAR; i: SIGNED32; id: CHAR; response: Response;
 		BEGIN
 			IF TraceL2CAP THEN KernelLog.String("L2CAP.Ping"); KernelLog.Ln END;
 
@@ -1941,9 +1941,9 @@ TYPE
 		END Ping;
 
 		(** initiates a L2CA_InfoReq message and receives the corresponding L2CAP_InfoRsp message. *)
-		PROCEDURE GetInfo*(bdAddr: Bluetooth.BDAddr; infoType: LONGINT; VAR result, size: LONGINT; VAR infoData: ARRAY OF CHAR);
+		PROCEDURE GetInfo*(bdAddr: Bluetooth.BDAddr; infoType: SIGNED32; VAR result, size: SIGNED32; VAR infoData: ARRAY OF CHAR);
 (*
-		VAR l: HCI.Link; data: ARRAY 6 OF CHAR; i, it: LONGINT; id: CHAR; response: Response;
+		VAR l: HCI.Link; data: ARRAY 6 OF CHAR; i, it: SIGNED32; id: CHAR; response: Response;
 		BEGIN
 			ASSERT((0 <= infoType) & (infoType < 10000H));
 			IF TraceL2CAP THEN KernelLog.String("L2CAP.GetInfo"); KernelLog.Ln END;
@@ -1976,17 +1976,17 @@ TYPE
 		END GetInfo;
 
 		(** general request to disable the reception of connectionless packets. *)
-		PROCEDURE DisableConnectionlessTraffic*(psm: LONGINT; VAR result: LONGINT);
+		PROCEDURE DisableConnectionlessTraffic*(psm: SIGNED32; VAR result: SIGNED32);
 		END DisableConnectionlessTraffic;
 
 		(** general request to enable the reception of connectionless packets. *)
-		PROCEDURE EnableConnectionlessTraffic*(psm: LONGINT; VAR result: WORD);
+		PROCEDURE EnableConnectionlessTraffic*(psm: SIGNED32; VAR result: INTEGER);
 		END EnableConnectionlessTraffic;
 
 		PROCEDURE Close*;
 		VAR
 			c: Channel;
-			result: WORD; i: LONGINT;
+			result: INTEGER; i: SIGNED32;
 		BEGIN {EXCLUSIVE}
 			IF TraceL2CAP THEN
 				KernelLog.String(ModuleName);
@@ -2021,7 +2021,7 @@ TYPE
 			END;
 		END Close;
 
-		PROCEDURE GetLinkHandle*() : LONGINT;
+		PROCEDURE GetLinkHandle*() : SIGNED32;
 		BEGIN
 			RETURN link.handle;
 		END GetLinkHandle;
@@ -2064,7 +2064,7 @@ TYPE
 		VAR
 			indication: EventIndicationCallback;
 			configureInd: ConfigInd;
-			pos, value: LONGINT;
+			pos, value: SIGNED32;
 			option: CHAR;
 			bdStr: ARRAY 32 OF CHAR;
 		BEGIN
@@ -2182,8 +2182,8 @@ VAR
 	hciManager : HCIManager;
 
 
-PROCEDURE PutOption(option: CHAR; value: LONGINT; VAR data: ARRAY OF CHAR; VAR pos: LONGINT);
-VAR i: LONGINT;
+PROCEDURE PutOption(option: CHAR; value: SIGNED32; VAR data: ARRAY OF CHAR; VAR pos: SIGNED32);
+VAR i: SIGNED32;
 BEGIN
 	data[pos] := option; INC(pos);
 	CASE option OF
@@ -2205,7 +2205,7 @@ BEGIN
 	END
 END PutOption;
 
-PROCEDURE GetOption(VAR data: ARRAY OF CHAR; VAR pos: LONGINT; VAR option: CHAR; VAR value: LONGINT);
+PROCEDURE GetOption(VAR data: ARRAY OF CHAR; VAR pos: SIGNED32; VAR option: CHAR; VAR value: SIGNED32);
 BEGIN
 	option := data[pos]; INC(pos, 2);	(* skip length field *)
 	CASE option OF
@@ -2218,14 +2218,14 @@ BEGIN
 	END
 END GetOption;
 
-PROCEDURE GetL2CAPHeader(VAR data: ARRAY OF CHAR; VAR cid, len: LONGINT);
+PROCEDURE GetL2CAPHeader(VAR data: ARRAY OF CHAR; VAR cid, len: SIGNED32);
 BEGIN
 	len := LONG(ORD(data[1]))*100H + ORD(data[0]);
 	cid := LONG(ORD(data[3]))*100H + ORD(data[2])
 END GetL2CAPHeader;
 
 (*
-PROCEDURE SetL2CAPHeader(cid, len: LONGINT; VAR data: ARRAY OF CHAR);
+PROCEDURE SetL2CAPHeader(cid, len: SIGNED32; VAR data: ARRAY OF CHAR);
 BEGIN
 	ASSERT((0 <= len) & (len < 10000H));
 	ASSERT((0 <= cid) & (cid < 10000H));

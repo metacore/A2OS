@@ -74,7 +74,7 @@ TYPE
 
 	(* tools *)
 
-	PROCEDURE SizeInBlocks*(sizeInUnits, blockSize: LONGINT): LONGINT;
+	PROCEDURE SizeInBlocks*(sizeInUnits, blockSize: SIGNED32): SIGNED32;
 	BEGIN
 		RETURN (sizeInUnits-1) DIV blockSize +1
 	END SizeInBlocks;

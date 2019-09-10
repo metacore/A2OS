@@ -14,12 +14,12 @@ TYPE
 		index: SIZE;
 	END;
 
-	Int1 = SHORTINT;
-	Int2 = INTEGER;
-	Int4 = LONGINT;
-	Int8 = HUGEINT;
-	Float4 = REAL;
-	Float8 = LONGREAL;
+	Int1 = SIGNED8;
+	Int2 = SIGNED16;
+	Int4 = SIGNED32;
+	Int8 = SIGNED64;
+	Float4 = FLOAT32;
+	Float8 = FLOAT64;
 
 	Value = RECORD
 		int1: Int1;
@@ -133,7 +133,7 @@ TYPE
 		trace: Streams.Writer;
 		module: Sections.Module;
 
-		PROCEDURE &InitInterpreter (backend: InterpreterBackend; addressSize: SHORTINT; m: Sections.Module);
+		PROCEDURE &InitInterpreter (backend: InterpreterBackend; addressSize: SIGNED8; m: Sections.Module);
 		BEGIN SELF.backend := backend; pc.section := NIL; pc.index := 0; sp := backend.heap.Allocate (StackSize) + StackSize; fp := sp;
 			addressType := Intermediate.NewType (Intermediate.UnsignedInteger, addressSize);
 			NEW (trace, Trace.Send, 1);
@@ -367,7 +367,7 @@ TYPE
 	InterpreterBackend = OBJECT (IntermediateBackend.IntermediateBackend)
 	VAR
 		heap: Heap;
-		addressSize, setSize: LONGINT;
+		addressSize, setSize: SIGNED32;
 
 		PROCEDURE &InitInterpreterBackend;
 		BEGIN InitBackend;
@@ -449,7 +449,7 @@ TYPE
 	END SetFloat;
 
 	PROCEDURE Convert (VAR value: Value; CONST from, to: Intermediate.Type);
-	VAR val: LONGREAL;
+	VAR val: FLOAT64;
 	BEGIN
 		IF from.form = Intermediate.Float THEN
 			IF from.sizeInBits= 8 THEN val := value.float8; ELSE val := value.float4; END;
@@ -709,7 +709,7 @@ Compiler.Compile -b=Interpreter Test.Mod ~
 TextCompiler.CompileSelection -b=Interpreter ~
 
 	MODULE Test;
-	VAR a: INTEGER;
+	VAR a: SIGNED16;
 	BEGIN
 		a := 0;
 		ASSERT(a = 0);

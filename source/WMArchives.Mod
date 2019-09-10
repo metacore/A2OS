@@ -33,7 +33,7 @@ TYPE
 			at := t; parent := n
 		END New;
 
-		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : WORD);
+		PROCEDURE OpenPut*(CONST remoteName : ARRAY OF CHAR; VAR outw : Streams.Writer; VAR res : INTEGER);
 		BEGIN
 			res := -1;
 			caption := Strings.NewString(remoteName);
@@ -50,7 +50,7 @@ TYPE
 			outw := out;
 		END OpenPut;
 
-		PROCEDURE ClosePut*(VAR res : WORD);
+		PROCEDURE ClosePut*(VAR res : INTEGER);
 		VAR ei : EntryInfo;
 		BEGIN
 			IF out # NIL THEN out.Update END;
@@ -70,7 +70,7 @@ TYPE
 			tree := t; node := n
 		END New;
 
-		PROCEDURE GetInterface*(type : WORD) : WMDropTarget.DropInterface;
+		PROCEDURE GetInterface*(type : INTEGER) : WMDropTarget.DropInterface;
 		VAR di : ArchiveDropInterface;
 		BEGIN
 			IF type = WMDropTarget.TypeFiles THEN
@@ -176,7 +176,7 @@ TYPE
 				length := Strings.Length(draggedString^) * 7;
 				IF length > 400 THEN w := 400 ELSE w := length END;
 				NEW(img); Raster.Create(img, w, 25, Raster.BGRA8888);
-				NEW(c, img); c.SetColor(LONGINT(0FFFF00FFH));
+				NEW(c, img); c.SetColor(SIGNED32(0FFFF00FFH));
 				c.Fill(WMRectangles.MakeRect(0, 0, w, 25), 0FF80H, WMGraphics.ModeCopy);
 				c.DrawString(3, 20, draggedString^);
 				IF treeView.StartDrag(a, img, 0,0, DragArrived, NIL) THEN KernelLog.String("DraggingStarted"); KernelLog.Ln
@@ -190,7 +190,7 @@ TYPE
 		VAR di : WM.DragInfo;
 			dt : WMDropTarget.DropTarget;
 			itf : WMDropTarget.DropInterface;
-			res : WORD;
+			res : INTEGER;
 			text : Texts.Text;
 			textPos : Texts.TextPosition;
 			caption, entryName : Strings.String;
@@ -869,7 +869,7 @@ TYPE
 		PROCEDURE DeleteEntries(sender, data : ANY);
 		VAR parent : WMTrees.TreeNode;
 			entry : NodeEntry; entryInfo : ANY; s : Strings.String;
-			dr : WORD; i : SIZE; name : ARRAY 128 OF CHAR;
+			dr : INTEGER; i : SIZE; name : ARRAY 128 OF CHAR;
 			delete, always, never : BOOLEAN;
 		BEGIN
 			IF (data # NIL) & (data IS SelectionWrapper) THEN
@@ -966,7 +966,7 @@ TYPE
 			(* render to bitmap *)
 			NEW(img);	Raster.Create(img, 100, 200, Raster.BGRA8888);
 			NEW(c, img);
-			c.SetColor(LONGINT(0FFFF00FFH));
+			c.SetColor(SIGNED32(0FFFF00FFH));
 			top := 0;
 			FOR i := 0 TO LEN(selection) - 1 DO
 				IF selection[i] # NIL THEN
@@ -985,7 +985,7 @@ TYPE
 		VAR di : WM.DragInfo;
 			dt : WMDropTarget.DropTarget;
 			itf : WMDropTarget.DropInterface;
-			i : SIZE; res : WORD;
+			i : SIZE; res : INTEGER;
 			sel : NodeList;
 			url, caption : ARRAY 1024 OF CHAR;
 			text : Texts.Text;
@@ -1110,7 +1110,7 @@ BEGIN
 END RemovePartitionLabel;
 
 (* transfer data from rec to target *)
-PROCEDURE CopyFile(rec : Streams.Receiver; target : WMDropTarget.DropFiles; CONST remote : ARRAY OF CHAR; VAR res : WORD);
+PROCEDURE CopyFile(rec : Streams.Receiver; target : WMDropTarget.DropFiles; CONST remote : ARRAY OF CHAR; VAR res : INTEGER);
 VAR w : Streams.Writer; r : Streams.Reader; buf: ARRAY BufSize OF CHAR; len: SIZE;
 BEGIN
 	res := -1;

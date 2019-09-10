@@ -15,7 +15,7 @@ MODULE V24Gadgets IN Oberon;	(** portable *)	(* ip/mh/mg 17.3.94 / 5.7.1994 / 05
 		Terminal = POINTER TO TerminalDesc;
 		TerminalDesc = RECORD (Terminals.TerminalDesc)
 			localecho, stop: BOOLEAN;
-			port, bps, data, stopb, parity: LONGINT
+			port, bps, data, stopb, parity: SIGNED32
 		END;
 
 		TaskDesc = RECORD (Oberon.TaskDesc)
@@ -27,7 +27,7 @@ VAR
 	fixed: Fonts.Font;
 
 PROCEDURE Send0(T: Terminals.Terminal; ch: CHAR);
-	VAR t: LONGINT;
+	VAR t: SIGNED32;
 BEGIN
 	WITH T: Terminal DO
 		IF T.port # -1 THEN
@@ -46,7 +46,7 @@ PROCEDURE Break0(T: Terminals.Terminal);
 END Break0;
 
 PROCEDURE WriteString(T: Terminals.Terminal; str: ARRAY OF CHAR);
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN i := 0;
 	WHILE str[i] # 0X DO Terminals.Receive(T,str[i]); INC(i); END;
 END WriteString;
@@ -57,7 +57,7 @@ BEGIN
 END WriteLn;
 
 PROCEDURE Receiver(me: Oberon.Task);
-	VAR ch: CHAR;  port, t: LONGINT; l: SIZE;
+	VAR ch: CHAR;  port, t: SIGNED32; l: SIZE;
 BEGIN
 	WITH me: Task DO
 		IF me.T.stop THEN
@@ -96,8 +96,8 @@ BEGIN
 	END
 END Cleanup;
 
-	PROCEDURE OpenConn(F: TerminalGadgets.Frame; port, bps, data, stop, parity: LONGINT);
-		VAR task: Task; t: LONGINT;
+	PROCEDURE OpenConn(F: TerminalGadgets.Frame; port, bps, data, stop, parity: SIGNED32);
+		VAR task: Task; t: SIGNED32;
 	BEGIN
 		NEW(task); task.safe := FALSE; task.handle := Receiver; task.T := F.text(Terminal);
 		V24.Start(port, bps, data, parity, stop, t);
@@ -120,7 +120,7 @@ END Cleanup;
 		VAR S: Texts.Scanner;
 			obj: Objects.Object;
 			F: TerminalGadgets.Frame;
-			port, bps, data, stop, parity: LONGINT;
+			port, bps, data, stop, parity: SIGNED32;
 			ok: BOOLEAN;
 	BEGIN
 		port := V24.COM1; data := 8;  stop := V24.Stop1;  parity := V24.ParNo;  ok := FALSE;
@@ -240,7 +240,7 @@ END Cleanup;
 *)
 
 	PROCEDURE SendString(T: Terminals.Terminal; VAR s: ARRAY OF CHAR);
-		VAR i: INTEGER; ch: CHAR;
+		VAR i: SIGNED16; ch: CHAR;
 	BEGIN i := 0;
 		WHILE s[i] # 0X DO
 			ch := s[i]; INC(i);
@@ -269,16 +269,16 @@ END Cleanup;
 
 	PROCEDURE SendS(VAR br: Files.Rider;  T: Terminals.Terminal);
 	VAR
-		adr, size, x: LONGINT;
-		buf: ARRAY 8 OF LONGINT;
-		i, sum: INTEGER;
+		adr, size, x: SIGNED32;
+		buf: ARRAY 8 OF SIGNED32;
+		i, sum: SIGNED16;
 
 		PROCEDURE Write(ch: CHAR);
 		BEGIN
 			Terminals.Send(T, ch)
 		END Write;
 
-		PROCEDURE WriteHexByte(x: INTEGER);
+		PROCEDURE WriteHexByte(x: SIGNED16);
 		BEGIN
 			IF x DIV 16 > 9 THEN Write(CHR((x DIV 16) MOD 16 - 10 + 65))
 			ELSE Write(CHR(x DIV 16 + 48))
@@ -289,16 +289,16 @@ END Cleanup;
 			sum := (sum + x) MOD 100H
 		END WriteHexByte;
 
-		PROCEDURE WriteHex(x: LONGINT);
+		PROCEDURE WriteHex(x: SIGNED32);
 		BEGIN
-			WriteHexByte(INTEGER(ASH(x, -24) MOD 100H));
-			WriteHexByte(INTEGER(ASH(x, -16) MOD 100H));
-			WriteHexByte(INTEGER(ASH(x, -8) MOD 100H));
+			WriteHexByte(SIGNED16(ASH(x, -24) MOD 100H));
+			WriteHexByte(SIGNED16(ASH(x, -16) MOD 100H));
+			WriteHexByte(SIGNED16(ASH(x, -8) MOD 100H));
 			WriteHexByte(SHORT(x MOD 100H))
 		END WriteHex;
 
 		PROCEDURE Flush(ch: CHAR);
-		VAR j: INTEGER;
+		VAR j: SIGNED16;
 		BEGIN
 			j := 0;  sum := 0;  Write("S");  Write(ch);
 			WriteHexByte(4+i*4+1);  WriteHex(adr);

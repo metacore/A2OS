@@ -29,8 +29,8 @@ TYPE
 	END;
 
 	FreeMsg = RECORD (Display.FrameMsg)
-		tempCnt: INTEGER;
-		columnCnt: INTEGER
+		tempCnt: SIGNED16;
+		columnCnt: SIGNED16
 	END;
 
 	FitMsg = RECORD (Display.FrameMsg)
@@ -50,15 +50,15 @@ TYPE
 
 	Column = POINTER TO ColumnDesc;
 	ColumnDesc = RECORD (Cards.StackDesc)
-		topY: INTEGER;	(* left, top corner of top card *)
-		nrCards: INTEGER;	(* nr of cards at beginning *)
+		topY: SIGNED16;	(* left, top corner of top card *)
+		nrCards: SIGNED16;	(* nr of cards at beginning *)
 		sel: BOOLEAN
 	END;
 
 	Panel = POINTER TO PanelDesc;
 	PanelDesc = RECORD (Panels.PanelDesc)
 		stack: Cards.Stack;
-		count: INTEGER;
+		count: SIGNED16;
 		card: Cards.CardDesc
 	END;
 
@@ -66,7 +66,7 @@ VAR
 	tempMethods: Cards.Methods;
 	depotMethods: Cards.Methods;
 	columnMethods: Cards.Methods;
-	rowSize: ARRAY 5, 5 OF INTEGER;		(* nr of cards allowed to move *)
+	rowSize: ARRAY 5, 5 OF SIGNED16;		(* nr of cards allowed to move *)
 
 (*	-----------------------------	aux procedures	-----------------------------	*)
 
@@ -85,7 +85,7 @@ BEGIN
 	M.res:= 0
 END WaitMouseRelease;
 
-PROCEDURE GetRowSize(col, temp: INTEGER) : INTEGER;
+PROCEDURE GetRowSize(col, temp: SIGNED16) : SIGNED16;
 BEGIN
 	IF col > 4 THEN RETURN 13
 	ELSE RETURN rowSize[col, temp]
@@ -115,7 +115,7 @@ BEGIN
 	Display.Broadcast(S)
 END TempMoveCard;
 
-PROCEDURE DrawTemp(T: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE DrawTemp(T: Cards.Stack; M: Display3.Mask; x, y, w, h: SIGNED16);
 BEGIN
 	WITH T: Temp DO
 		Oberon.RemoveMarks(x, y, w, h);
@@ -207,7 +207,7 @@ BEGIN Cards.CopyStack(M, from, to);
 END CopyDepot;
 
 PROCEDURE TrackDepot(D: Cards.Stack; VAR M: Oberon.InputMsg);
-VAR P: Panel; card: Cards.Card; x, y: INTEGER; fit: BOOLEAN;
+VAR P: Panel; card: Cards.Card; x, y: SIGNED16; fit: BOOLEAN;
 BEGIN
 	WITH D: Depot DO
 		IF (M.dlink IS Panel) THEN
@@ -285,7 +285,7 @@ BEGIN
 	Display.Broadcast(S)
 END ColumnMoveCard;
 
-PROCEDURE DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: INTEGER);
+PROCEDURE DrawColumn(C: Cards.Stack; M: Display3.Mask; x, y, w, h: SIGNED16);
 VAR c: Cards.Card;
 BEGIN
 	WITH C: Column DO
@@ -311,7 +311,7 @@ BEGIN
 END DrawColumn;
 
 PROCEDURE TrackColumn(C: Cards.Stack; VAR M: Oberon.InputMsg);
-VAR P: Panel; c, cc: Cards.Card; x, i, diff: INTEGER; dcol: BOOLEAN; F: FreeMsg; Fit: FitMsg;
+VAR P: Panel; c, cc: Cards.Card; x, i, diff: SIGNED16; dcol: BOOLEAN; F: FreeMsg; Fit: FitMsg;
 BEGIN
 	WITH C: Column DO
 		x:= C.X+M.x;
@@ -381,7 +381,7 @@ BEGIN
 END TrackColumn;
 
 PROCEDURE ColumnHandler*(C: Objects.Object; VAR M: Objects.ObjMsg);
-VAR C0: Column; c: Cards.Card; i: INTEGER;
+VAR C0: Column; c: Cards.Card; i: SIGNED16;
 BEGIN
 	WITH C: Column DO
 		IF M IS DistributeMsg THEN
@@ -481,8 +481,8 @@ END NewPanel;
 
 PROCEDURE LoadDocument(D: Documents.Document);
 VAR obj: Objects.Object; main: Gadgets.Frame; talon, stack: Cards.Stack; c: Cards.Card;
-	F: Files.File; R: Files.Rider; name: ARRAY 64 OF CHAR; ch: CHAR; len: LONGINT;
-	lib: Objects.Library; tag, i, k, Y: INTEGER; A: Objects.AttrMsg; C: Display.ConsumeMsg;
+	F: Files.File; R: Files.Rider; name: ARRAY 64 OF CHAR; ch: CHAR; len: SIGNED32;
+	lib: Objects.Library; tag, i, k, Y: SIGNED16; A: Objects.AttrMsg; C: Display.ConsumeMsg;
 BEGIN
 	main:= NIL;
 
@@ -552,7 +552,7 @@ BEGIN
 END LoadDocument;
 
 PROCEDURE StoreDocument(D: Documents.Document);
-VAR F: Files.File; len: LONGINT; R: Files.Rider; B: Objects.BindMsg; obj: Objects.Object;
+VAR F: Files.File; len: SIGNED32; R: Files.Rider; B: Objects.BindMsg; obj: Objects.Object;
 BEGIN
 	IF D.name # "" THEN
 		obj:= D.dsc;

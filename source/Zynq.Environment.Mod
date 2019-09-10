@@ -10,7 +10,7 @@ CONST Running* = 0; ShuttingDown* = 1; Rebooting* = 2;
 VAR memory: SIZE;
 VAR heap: HeapManager.Heap;
 VAR frequency: Timer.Counter;
-VAR status* := Running: WORD;
+VAR status* := Running: INTEGER;
 
 PROCEDURE {NORETURN} Abort-;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
@@ -48,11 +48,11 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	result[0] := 0X
 END GetString;
 
-PROCEDURE Clock- (): LONGINT;
+PROCEDURE Clock- (): SIGNED32;
 BEGIN RETURN Timer.GetCounter () DIV frequency;
 END Clock;
 
-PROCEDURE Sleep- (milliseconds: LONGINT);
+PROCEDURE Sleep- (milliseconds: SIGNED32);
 VAR clock: Timer.Counter;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (milliseconds >= 0);
@@ -72,7 +72,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (CAS (status, ShuttingDown, Rebooting) = ShuttingDown);
 END Reboot;
 
-PROCEDURE {NORETURN} Exit- (status: WORD);
+PROCEDURE {NORETURN} Exit- (status: INTEGER);
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Trace.String ("system: ");
 	IF status = Rebooting THEN Trace.StringLn ("rebooting..."); CPU.Reset END;

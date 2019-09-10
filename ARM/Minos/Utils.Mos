@@ -4,7 +4,7 @@ IMPORT SYSTEM;
 	(* note that the biased exponent (exponent + 127) of an IEEE 32bit float starts at bit 23 *)
 	
 	(* add y to the binary exponent of y. PACK(x, y) is equivalent to  x := x * 2^y. *)
-	PROCEDURE PACK*(VAR x: REAL; y: LONGINT);
+	PROCEDURE PACK*(VAR x: FLOAT32; y: SIGNED32);
 	CODE
 		LDR R2, [FP, #x] ; R2 := address of x
 		LDR R3, [FP, #y] ; R3 := y
@@ -16,7 +16,7 @@ IMPORT SYSTEM;
 	END PACK;
 	
 	(* remove the binary exponent on x and put it into y. UNPK is the reverse operation of PACK. The resulting x is normalized, i.e. 1.0 <= x < 2.0. *)
-	PROCEDURE UNPK*(VAR x: REAL; VAR y: LONGINT);
+	PROCEDURE UNPK*(VAR x: FLOAT32; VAR y: SIGNED32);
 	CODE
 		LDR R2, [FP, #x] ; R2 := address of x
 		LDR R3, [FP, #y] ; R3 := address of y

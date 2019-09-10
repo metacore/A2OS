@@ -5,8 +5,8 @@ IMPORT Network, Modules, Plugins;
 TYPE
 	LinkDevice =  OBJECT(Network.LinkDevice)
 
-		PROCEDURE &Constr*(type, mtu, adrSize: LONGINT);
-		VAR res: WORD;
+		PROCEDURE &Constr*(type, mtu, adrSize: SIGNED32);
+		VAR res: INTEGER;
 		BEGIN
 			Constr^(type, mtu, adrSize); (* call inherited constructor first *)
 
@@ -18,7 +18,7 @@ TYPE
 			ASSERT(res = Plugins.Ok);
 		END Constr;
 
-		PROCEDURE Linked*(): LONGINT;
+		PROCEDURE Linked*(): SIGNED32;
 		BEGIN
 			RETURN Network.LinkLinked;
 		END Linked;
@@ -30,7 +30,7 @@ TYPE
 			Finalize^(connected);
 		END Finalize;
 
-		PROCEDURE DoSend(dst: Network.LinkAdr; type: LONGINT;  CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE DoSend(dst: Network.LinkAdr; type: SIGNED32;  CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32);
 			(* do nothing, discard packet *)
 		END DoSend;
 

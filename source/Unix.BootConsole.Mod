@@ -26,7 +26,7 @@ VAR
 
 	PROCEDURE LoadModule( CONST name: Modules.Name );
 	VAR
-		m: Module;  res: WORD;  msg: ARRAY 256 OF CHAR;
+		m: Module;  res: INTEGER;  msg: ARRAY 256 OF CHAR;
 	BEGIN
 		m := Modules.ThisModule( name, res, msg );
 		IF m = NIL THEN
@@ -36,7 +36,7 @@ VAR
 
 	PROCEDURE Command( CONST cmd: Modules.Name );
 	VAR
-		res: WORD;
+		res: INTEGER;
 		s: ARRAY 256 OF CHAR;
 	BEGIN
 		Commands.Call( cmd, {}, res, s );
@@ -46,7 +46,7 @@ VAR
 
 	(** Return the named command. *)
 	PROCEDURE ThisCommand( m: Module;  CONST name: Modules.Name ): CommandProc;
-	VAR cmd: Modules.Command; i: LONGINT;  found: BOOLEAN;
+	VAR cmd: Modules.Command; i: SIGNED32;  found: BOOLEAN;
 	BEGIN
 		i := 0;  found := FALSE;
 		WHILE ~found & (i # LEN( m.command^ )) DO
@@ -60,7 +60,7 @@ VAR
 	END ThisCommand;
 
 	PROCEDURE Execute( CONST modName, procName: Modules.Name );
-	VAR m: Module;  cmd: PROCEDURE;  res: WORD;
+	VAR m: Module;  cmd: PROCEDURE;  res: INTEGER;
 		msg: ARRAY 256 OF CHAR;
 	BEGIN
 		m := Modules.ThisModule( modName, res, msg );
@@ -89,7 +89,7 @@ VAR
 
 	PROCEDURE TryCommand( ): BOOLEAN;
 	VAR
-		cmd: ARRAY 128 OF CHAR; ci: INTEGER;
+		cmd: ARRAY 128 OF CHAR; ci: SIGNED16;
 		modName, cmdName: Modules.Name;
 
 		PROCEDURE IsCharacter( c: CHAR ): BOOLEAN;
@@ -101,7 +101,7 @@ VAR
 		END IsCharOrDigit;
 
 		PROCEDURE GetName( VAR name: ARRAY OF CHAR ): BOOLEAN;
-		VAR j: LONGINT;  c: CHAR;
+		VAR j: SIGNED32;  c: CHAR;
 		BEGIN
 			j := -1;
 			IF IsCharacter( cmd[ci] ) THEN

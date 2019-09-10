@@ -9,8 +9,8 @@ TYPE
 	ElementType= Tree.ElementType;
 	Printer*= OBJECT
 	VAR writer: Streams.Writer;
-		chars: ARRAY MaxLevel OF CHAR; listLevel: LONGINT;
-		currentLevel: LONGINT; printLabels: BOOLEAN;
+		chars: ARRAY MaxLevel OF CHAR; listLevel: SIGNED32;
+		currentLevel: SIGNED32; printLabels: BOOLEAN;
 
 		PROCEDURE &InitPrinter*(writer: Streams.Writer);
 		BEGIN SELF.writer := writer; listLevel := 0; currentLevel := 0; printLabels := FALSE;
@@ -44,7 +44,7 @@ TYPE
 			END;
 		END SectionList;
 
-		PROCEDURE EndItem*(level: LONGINT);
+		PROCEDURE EndItem*(level: SIGNED32);
 		BEGIN
 			WHILE listLevel > level DO
 				ASSERT(chars[listLevel] # 0X);
@@ -54,7 +54,7 @@ TYPE
 			END;
 		END EndItem;
 
-		PROCEDURE BeginItem*(level: LONGINT; c: CHAR);
+		PROCEDURE BeginItem*(level: SIGNED32; c: CHAR);
 		BEGIN
 			IF (c # chars[level]) & (level > 0) THEN (* change from bullet to numbers or vice versa *)
 				EndItem(level-1)
@@ -122,7 +122,7 @@ TYPE
 		END ParagraphList;
 
 		PROCEDURE WriteString(writer: Streams.Writer; string: Strings.String);
-		VAR i: LONGINT; c: CHAR;
+		VAR i: SIGNED32; c: CHAR;
 		BEGIN
 			IF string = NIL THEN RETURN END;
 			i := 0;

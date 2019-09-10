@@ -34,7 +34,7 @@ Example:
 VAR
 	client: OSCTCPClient (or OSCUDPClient);
 	p, newp: OSCPacket;
-	res: WORD;
+	res: INTEGER;
 BEGIN
 	NEW(client, fip, fport, TCP.NilPort, res);
 	...
@@ -68,10 +68,10 @@ CONST
 TYPE
 	(* abstract class of all network clients *)
 	OSCClient = OBJECT
-		PROCEDURE Send*(p: OSC.OSCPacket): WORD;
+		PROCEDURE Send*(p: OSC.OSCPacket): INTEGER;
 		BEGIN HALT(NotImplemented); END Send;
 
-		PROCEDURE Receive*(VAR p: OSC.OSCPacket): WORD;
+		PROCEDURE Receive*(VAR p: OSC.OSCPacket): INTEGER;
 		BEGIN HALT(NotImplemented); END Receive;
 
 		PROCEDURE Close*;
@@ -83,7 +83,7 @@ TYPE
 	OSCUDPData = OBJECT
 		VAR
 			fip*: IP.Adr;
-			fport*: LONGINT;
+			fport*: SIGNED32;
 	END OSCUDPData;
 
 	(* UDP Client *)
@@ -91,13 +91,13 @@ TYPE
 		VAR
 			s: UDP.Socket;
 			fip: IP.Adr;
-			fport: LONGINT;
+			fport: SIGNED32;
 
 		(* Creates a new UDPClient which sends packets to fip:fport.
 			Supply UDP.NilPort for lport, if you don't want to specify a fixed local port for communication.
 			In res the returnvalue of the UDP.Socket's creations is returned. If res doesn't equal to UDP.Ok, the
 			client shouldn't be used *)
-		PROCEDURE &InitUDP*(fip: IP.Adr; fport, lport: LONGINT; VAR res: WORD);
+		PROCEDURE &InitUDP*(fip: IP.Adr; fport, lport: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			SELF.fip := fip;
 			SELF.fport := fport;
@@ -105,7 +105,7 @@ TYPE
 		END InitUDP;
 
 		(* sends an OSCMessage or an OSCBundle to fip:fport. Returns the statuscode of UDP.Socket.Send *)
-		PROCEDURE Send*(p: OSC.OSCPacket): WORD;
+		PROCEDURE Send*(p: OSC.OSCPacket): INTEGER;
 		BEGIN
 			RETURN SendUDP(s, fip, fport, p);
 		END Send;
@@ -113,14 +113,14 @@ TYPE
 		(* receives a packet from the network. Only UDP packets from our partner are considered.
 			You can also supply a timeout in miliseconds. Use -1 for a infinite wait.
 			Returns Ok, ParseError or an UDP returncode (eg:. UDP.Timeout) *)
-		PROCEDURE Recieve*(VAR p: OSC.OSCPacket; timeout (* in ms *): LONGINT): WORD;
+		PROCEDURE Recieve*(VAR p: OSC.OSCPacket; timeout (* in ms *): SIGNED32): INTEGER;
 		VAR
-			fip2: IP.Adr; fport2: LONGINT;
+			fip2: IP.Adr; fport2: SIGNED32;
 			size: SIZE;
 			buffer: Strings.String;
 			got: SIZE;
-			res: WORD;
-			endticks: LONGINT;
+			res: INTEGER;
+			endticks: SIGNED32;
 			istimeout: BOOLEAN;
 		BEGIN
 			IF timeout # -1 THEN
@@ -162,9 +162,9 @@ TYPE
 			newPacket: OSC.OSCPacket;
 			newUDPData: OSCUDPData;
 			buffer: OSC.String; (* ARRAY MaxUDPPacketLength OF CHAR; *)
-			receivefip: IP.Adr; receivefport: LONGINT;
+			receivefip: IP.Adr; receivefport: SIGNED32;
 			got: SIZE;
-			res: WORD;
+			res: INTEGER;
 
 		(* Sets the signal to stop the service *)
 		PROCEDURE Stop*;
@@ -174,7 +174,7 @@ TYPE
 
 		(* Creates a new UDPServer listening on UDP port lport.. Sends received packets to service.
 			If res is not UDP.Ok, then the server will immediately quit *)
-		PROCEDURE &InitUDPServer*(service: OSCService.OSCService; lport: LONGINT; VAR res: WORD);
+		PROCEDURE &InitUDPServer*(service: OSCService.OSCService; lport: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			ASSERT(service # NIL);
 			oscservice := service;
@@ -185,7 +185,7 @@ TYPE
 		END InitUDPServer;
 
 		(* Returns an OSCMessage or an OSCBundle to the sender specified by data, which is indeed an instance of OSCUDPData *)
-		PROCEDURE return(p: OSC.OSCPacket; data: OBJECT): WORD;
+		PROCEDURE return(p: OSC.OSCPacket; data: OBJECT): INTEGER;
 		BEGIN
 			IF data IS OSCUDPData THEN
 				WITH data: OSCUDPData DO
@@ -244,7 +244,7 @@ TYPE
 		(* creates a new OSCTCPClient and connects to fip:fport. The user can also specify a local port to use for the outgoing
 			connection. If TCP.NilPort is used, the operating system assigns a free local port number. If res doesn't euqal to
 			TCP.Ok then this client shouldn't be used. *)
-		PROCEDURE &InitTCP*(fip: IP.Adr; fport, lport: LONGINT; VAR res: WORD);
+		PROCEDURE &InitTCP*(fip: IP.Adr; fport, lport: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			NEW(connection);
 			connection.Open(lport, fip, fport, res);
@@ -257,13 +257,13 @@ TYPE
 
 		(* sends a packet to the connected OSCServer. Returns TCP.Ok if sent successfully, otherwise an TCP.* errorcode is
 			returned. *)
-		PROCEDURE Send*(p: OSC.OSCPacket): WORD;
+		PROCEDURE Send*(p: OSC.OSCPacket): INTEGER;
 		BEGIN
 			RETURN SendTCP(connection, p);
 		END Send;
 
 		(* receives a packet from the OSC Server. *)
-		PROCEDURE Receive*(VAR p: OSC.OSCPacket): WORD;
+		PROCEDURE Receive*(VAR p: OSC.OSCPacket): INTEGER;
 		BEGIN
 			RETURN ReceiveTCP(connection, p);
 		END Receive;
@@ -279,7 +279,7 @@ TYPE
 		VAR
 			oscservice: OSCService.OSCService;
 			newpacket: OSC.OSCPacket;
-			res: WORD;
+			res: INTEGER;
 
 		PROCEDURE &StartOSCAgent*(oscs: OSCService.OSCService; c: TCP.Connection; s: TCPServices.Service);
 		BEGIN
@@ -289,7 +289,7 @@ TYPE
 		END StartOSCAgent;
 
 		(* returns a packet to the current client. data is ignored *)
-		PROCEDURE return*(p: OSC.OSCPacket; data: OBJECT): WORD;
+		PROCEDURE return*(p: OSC.OSCPacket; data: OBJECT): INTEGER;
 		BEGIN
 			IF Trace THEN KernelLog.String('TCPServer.Return called IP: ');
 				IP.OutAdr(client.fip); KernelLog.String(' Port: '); KernelLog.Int(client.fport, 10);
@@ -316,7 +316,7 @@ TYPE
 			service: OSCService.OSCService;
 
 		(* starts the server: registers the OSCService s and creates the TCPServices.Service, which listens for connections *)
-		PROCEDURE &InitTCPServer*(s: OSCService.OSCService; lport: LONGINT; VAR res: WORD);
+		PROCEDURE &InitTCPServer*(s: OSCService.OSCService; lport: SIGNED32; VAR res: INTEGER);
 		BEGIN
 			ASSERT(s # NIL);
 			service := s;
@@ -341,29 +341,29 @@ TYPE
 
 
 
-	PROCEDURE SendTCP(client: TCP.Connection; p: OSC.OSCPacket): WORD;
+	PROCEDURE SendTCP(client: TCP.Connection; p: OSC.OSCPacket): INTEGER;
 	VAR
 		buffer: OSC.String;
 		size: ARRAY 4 OF CHAR;
-		res: WORD;
+		res: INTEGER;
 	BEGIN
 		ASSERT(p # NIL);
 		buffer := p.GetBytes();
 		ASSERT(buffer # NIL);
 		(* TCP: <size || packet> *)
-		Network.PutNet4(size, 0, p.GetSize()(LONGINT));
+		Network.PutNet4(size, 0, p.GetSize()(SIGNED32));
 		client.Send(size, 0, 4, FALSE, res);
 		IF(res # TCP.Ok) THEN RETURN res; END;
 		client.Send(buffer^, 0, LEN(buffer^), FALSE, res);
 		RETURN res;
 	END SendTCP;
 
-	PROCEDURE ReceiveTCP(client: TCP.Connection; VAR p: OSC.OSCPacket): WORD;
+	PROCEDURE ReceiveTCP(client: TCP.Connection; VAR p: OSC.OSCPacket): INTEGER;
 	VAR
-		res: WORD; len: SIZE;
+		res: INTEGER; len: SIZE;
 		buffer: POINTER TO ARRAY OF CHAR;
 		sizebuf: ARRAY 4 OF CHAR;
-		packetsize: LONGINT;
+		packetsize: SIGNED32;
 	BEGIN
 		client.Receive(sizebuf, 0, LEN(sizebuf), 4, len, res);
 		IF res # TCP.Ok THEN RETURN res END;
@@ -383,10 +383,10 @@ TYPE
 		RETURN Ok;
 	END ReceiveTCP;
 
-	PROCEDURE SendUDP(s: UDP.Socket; fip: IP.Adr; fport: LONGINT; p: OSC.OSCPacket): WORD;
+	PROCEDURE SendUDP(s: UDP.Socket; fip: IP.Adr; fport: SIGNED32; p: OSC.OSCPacket): INTEGER;
 	VAR
 		buffer: OSC.String;
-		res: WORD;
+		res: INTEGER;
 	BEGIN
 		ASSERT(p # NIL);
 		buffer := p.GetBytes();
@@ -397,13 +397,13 @@ TYPE
 		RETURN res;
 	END SendUDP;
 	(*
-	PROCEDURE RecieveUDP(s: UDP.Socket; timeout (* in ms *): LONGINT;
-								VAR fip: IP.Adr; VAR fport: LONGINT; VAR p: OSC.OSCPacket): LONGINT;
+	PROCEDURE RecieveUDP(s: UDP.Socket; timeout (* in ms *): SIGNED32;
+								VAR fip: IP.Adr; VAR fport: SIGNED32; VAR p: OSC.OSCPacket): SIGNED32;
 		VAR
-			fip2: IP.Adr; fport2: LONGINT;
-			size: LONGINT;
+			fip2: IP.Adr; fport2: SIGNED32;
+			size: SIGNED32;
 			buffer: Strings.String;
-			got, res: LONGINT;
+			got, res: SIGNED32;
 		BEGIN
 			NEW(buffer, MaxUDPPacketLength);
 			ASSERT(buffer # NIL);
@@ -435,7 +435,7 @@ TYPE
 			b: OSC.OSCBundle;
 			tt: OSC.OSCTimeTag;
 			ip: IP.Adr;
-			res: WORD;
+			res: INTEGER;
 	BEGIN
 		ip := IP.StrToAdr('192.168.150.1'); KernelLog.Int(res, 4);
 		NEW(socket, ip, 57110, 57110, res); KernelLog.Int(res, 4);
@@ -462,7 +462,7 @@ TYPE
 			b: OSC.OSCBundle;
 			tt: OSC.OSCTimeTag;
 			ip: IP.Adr;
-			res: WORD;
+			res: INTEGER;
 	BEGIN
 		ip := IP.StrToAdr('192.168.150.1'); KernelLog.Int(res, 4);
 		NEW(c, ip, 2009, TCP.NilPort, res); KernelLog.Int(res, 4);

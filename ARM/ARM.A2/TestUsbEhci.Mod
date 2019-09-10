@@ -101,9 +101,9 @@ CONST
 
 VAR
 	reg: SET;
-	i: LONGINT;
+	i: SIGNED32;
 	t: Kernel.Timer;
-	irqCounter: LONGINT;
+	irqCounter: SIGNED32;
 
 	(** Reports USB Interrupts *)
 	PROCEDURE InterruptHandler;

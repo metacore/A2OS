@@ -78,7 +78,7 @@ TYPE
 		END DisassembleInstruction;
 
 		PROCEDURE DisassembleBlock(from, to: Unit);
-		VAR adr, prevadr, max: Unit; value: WORD; string: ARRAY 256 OF CHAR;
+		VAR adr, prevadr, max: Unit; value: INTEGER; string: ARRAY 256 OF CHAR;
 		BEGIN
 			IF code = NIL THEN RETURN END;
 			adr := from;
@@ -103,7 +103,7 @@ TYPE
 		END DisassembleBlock;
 
 		PROCEDURE DataBlock(from, to: Unit);
-		VAR adr,width,max: Unit; value: WORD;
+		VAR adr,width,max: Unit; value: INTEGER;
 		BEGIN
 			IF data = NIL THEN RETURN END;
 			adr := from;
@@ -203,10 +203,10 @@ TYPE
 			first := ParseLogFile(logFile); block := first;
 			IF block = NIL THEN
 				w.String("------ code ------"); w.Ln;
-				DisassembleBlock(0, MAX(LONGINT)-1);
+				DisassembleBlock(0, MAX(SIGNED32)-1);
 				IF code # data THEN
 					w.String("------ data ------"); w.Ln;
-					DataBlock(0, MAX(LONGINT)-1);
+					DataBlock(0, MAX(SIGNED32)-1);
 				END;
 			ELSE
 				WHILE block # NIL DO

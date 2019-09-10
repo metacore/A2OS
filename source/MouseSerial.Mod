@@ -70,13 +70,13 @@ TYPE
 
 	Mouse = OBJECT
 	VAR
-		type: LONGINT; (* mouse type *)
-		mbufp, numb: SHORTINT; (* buffer pointer & protocol bytes *)
+		type: SIGNED32; (* mouse type *)
+		mbufp, numb: SIGNED8; (* buffer pointer & protocol bytes *)
 		mbuf: ARRAY 5 OF SET; (* protocol buffer *)
 		mask0, val0, mask1, val1, lastkeys: SET; (* protocol parameters *)
 
-		errors : LONGINT;
-		res : WORD;
+		errors : SIGNED32;
+		res : INTEGER;
 
 		port : Serials.Port;
 		m : Inputs.MouseMsg; keys: SET;
@@ -84,8 +84,8 @@ TYPE
 		dead : BOOLEAN;
 
 		(* Read a mouse event *)
-		PROCEDURE GetMouseEvent(VAR keys: SET;  VAR dx, dy: LONGINT): WORD;
-		VAR ch : CHAR; b : SET; res : WORD;
+		PROCEDURE GetMouseEvent(VAR keys: SET;  VAR dx, dy: SIGNED32): INTEGER;
+		VAR ch : CHAR; b : SET; res : INTEGER;
 		BEGIN
 			b := {};
 
@@ -113,17 +113,17 @@ TYPE
 							keys := lastkeys * {1};
 							IF 5 IN mbuf[0] THEN INCL(keys, 2) END;
 							IF 4 IN mbuf[0] THEN INCL(keys, 0) END;
-							dx := LONG(SYSTEM.VAL(SHORTINT, LSH(mbuf[0] * {0,1}, 6) + mbuf[1] * {0..5}));
-							dy := LONG(SYSTEM.VAL(SHORTINT, LSH(mbuf[0] * {2,3}, 4) + mbuf[2] * {0..5}));
+							dx := LONG(SYSTEM.VAL(SIGNED8, LSH(mbuf[0] * {0,1}, 6) + mbuf[1] * {0..5}));
+							dy := LONG(SYSTEM.VAL(SIGNED8, LSH(mbuf[0] * {2,3}, 4) + mbuf[2] * {0..5}));
 						|MSC1, MSC2, MSC3, MSC4:
 							keys := {0..2} - (mbuf[0] * {0..2});
-							dx := LONG(SYSTEM.VAL(SHORTINT, mbuf[1])) + LONG(SYSTEM.VAL(SHORTINT, mbuf[3]));
-							dy := -(LONG(SYSTEM.VAL(SHORTINT, mbuf[2])) + LONG(SYSTEM.VAL(SHORTINT, mbuf[4])));
+							dx := LONG(SYSTEM.VAL(SIGNED8, mbuf[1])) + LONG(SYSTEM.VAL(SIGNED8, mbuf[3]));
+							dy := -(LONG(SYSTEM.VAL(SIGNED8, mbuf[2])) + LONG(SYSTEM.VAL(SIGNED8, mbuf[4])));
 						|MM, Logi:
 							keys := mbuf[0] * {0..2};
-							dx := SYSTEM.VAL(INTEGER, mbuf[1]);
+							dx := SYSTEM.VAL(SIGNED16, mbuf[1]);
 							IF ~(4 IN mbuf[0]) THEN dx := -dx END;
-							dy := SYSTEM.VAL(INTEGER, mbuf[2]);
+							dy := SYSTEM.VAL(SIGNED16, mbuf[2]);
 							IF 3 IN mbuf[0] THEN dy := -dy END;
 						|MSI:
 							keys := {};
@@ -132,8 +132,8 @@ TYPE
 							IF 3 IN mbuf[3] THEN INCL(keys, 3) END;
 							IF 4 IN mbuf[3] THEN INCL(keys, 1) END;
 							IF ~(3 IN mbuf[3]) & (mbuf[3] * {0..2} # {}) THEN INCL(keys, 4) END;
-							dx := LONG(SYSTEM.VAL(SHORTINT, LSH(mbuf[0] * {0,1}, 6) + mbuf[1] * {0..7}));
-							dy := LONG(SYSTEM.VAL(SHORTINT, LSH(mbuf[0] * {2,3}, 4) + mbuf[2] * {0..7}));
+							dx := LONG(SYSTEM.VAL(SIGNED8, LSH(mbuf[0] * {0,1}, 6) + mbuf[1] * {0..7}));
+							dy := LONG(SYSTEM.VAL(SIGNED8, LSH(mbuf[0] * {2,3}, 4) + mbuf[2] * {0..7}));
 					ELSE
 						(* ignore *)
 					END;
@@ -156,8 +156,8 @@ TYPE
 			"port" - V24.COM[12]
 			"bps" - V24.BPS*
 			"rate" - sample rate (not all mice support this) *)
-		PROCEDURE &Init*(port : Serials.Port; type : LONGINT);
-		VAR c: CHAR; res: WORD; n: LONGINT;
+		PROCEDURE &Init*(port : Serials.Port; type : SIGNED32);
+		VAR c: CHAR; res: INTEGER; n: SIGNED32;
 		BEGIN
 			(* ASSERT: Port is already open *)
 			ASSERT(port # NIL);
@@ -247,8 +247,8 @@ VAR
 	timer : Kernel.Timer;
 
 (* Set mouse speed *)
-PROCEDURE SetSpeed(port : Serials.Port; mouseType, oldBPS, newBPS: LONGINT);
-VAR word, stop, par : INTEGER; c : CHAR;  res : WORD;
+PROCEDURE SetSpeed(port : Serials.Port; mouseType, oldBPS, newBPS: SIGNED32);
+VAR word, stop, par : SIGNED16; c : CHAR;  res : INTEGER;
 BEGIN
 	ASSERT(port # NIL);
 	port.Close();
@@ -282,8 +282,8 @@ BEGIN
 	END;
 END SetSpeed;
 
-PROCEDURE GetMouseType(CONST s : ARRAY OF CHAR) : LONGINT;
-VAR type : LONGINT;
+PROCEDURE GetMouseType(CONST s : ARRAY OF CHAR) : SIGNED32;
+VAR type : SIGNED32;
 BEGIN
 	type := MinType-1;
 	IF (s[0] >= "0") & (s[0] <= "9") THEN (* old style config *)
@@ -321,8 +321,8 @@ BEGIN
 	RETURN type;
 END GetMouseType;
 
-PROCEDURE Detect(port : Serials.Port; VAR mouseType : LONGINT): BOOLEAN;
-VAR ch: CHAR; i : LONGINT; res : WORD; mouseIdent : ARRAY DetectMaxIdent OF CHAR;
+PROCEDURE Detect(port : Serials.Port; VAR mouseType : SIGNED32): BOOLEAN;
+VAR ch: CHAR; i : SIGNED32; res : INTEGER; mouseIdent : ARRAY DetectMaxIdent OF CHAR;
 BEGIN
 	ASSERT(port # NIL);
 	port.Open(BPS, 7,  Serials.ParNo, Serials.Stop1, res);
@@ -362,7 +362,7 @@ PROCEDURE Init;
 VAR
 	value: ARRAY DetectMaxIdent OF CHAR;
 	port : Serials.Port;
-	mouseType, portNbr : LONGINT;
+	mouseType, portNbr : SIGNED32;
 BEGIN
 	Machine.GetConfig("MT", value);
 	IF value[0] # 0X THEN (* manual config *)
@@ -406,14 +406,14 @@ BEGIN
 	END;
 END Init;
 
-PROCEDURE Wait(milliseconds : LONGINT);
+PROCEDURE Wait(milliseconds : SIGNED32);
 BEGIN {EXCLUSIVE}
 	ASSERT(milliseconds > 0);
 	timer.Sleep(milliseconds);
 END Wait;
 
 PROCEDURE LoadSerialPortDriver;
-VAR msg : ARRAY 64 OF CHAR; res : WORD;
+VAR msg : ARRAY 64 OF CHAR; res : INTEGER;
 BEGIN
 	KernelLog.String("MouseSerial: Loading serial port driver..."); KernelLog.Ln;
 	Commands.Call("V24.Install", {Commands.Wait}, res, msg);
@@ -430,7 +430,7 @@ END Install;
 
 (** Manually set the mouse type *)
 PROCEDURE ToggleMouseType*(context : Commands.Context); (** PortNumber  ~ *)
-VAR portNbr, type : LONGINT; m : Mouse;
+VAR portNbr, type : SIGNED32; m : Mouse;
 BEGIN
 	IF context.arg.GetInteger(portNbr, FALSE) & (1 <= portNbr) & (portNbr <= Serials.MaxPorts) THEN
 		m := mouse[portNbr];
@@ -448,7 +448,7 @@ BEGIN
 END ToggleMouseType;
 
 PROCEDURE Cleanup;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO LEN(mouse)-1 DO
 		IF mouse[i] # NIL THEN

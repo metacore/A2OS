@@ -18,8 +18,8 @@ CONST
 
 TYPE
 
-	Address* = LONGINT;
-	Size* = LONGINT;
+	Address* = SIGNED32;
+	Size* = SIGNED32;
 
 	(**
 		ActiveCells AXI DMA component controller
@@ -30,14 +30,14 @@ TYPE
 		cfgData: PORT OUT;
 		status: PORT IN;
 
-		dataSize-: WORD; (** size of one data element in bytes *)
+		dataSize-: INTEGER; (** size of one data element in bytes *)
 		addr-: Address; (** DMA transfer starting address *)
 		count-: Size; (** DMA transfer size in number of elements *)
-		maxBurstLen-: WORD; (** maximal burst length in number of elements *)
-		burstLen-: WORD; (** current burst length in number of elements *)
+		maxBurstLen-: INTEGER; (** maximal burst length in number of elements *)
+		burstLen-: INTEGER; (** current burst length in number of elements *)
 		wrap-: BOOLEAN; (** TRUE in case of a recurrent transfer *)
 
-		PROCEDURE &InitController*(cfgCmdOut, cfgDataOut: PORT OUT; statusInp: PORT IN; dataSize, maxBurstLen: WORD);
+		PROCEDURE &InitController*(cfgCmdOut, cfgDataOut: PORT OUT; statusInp: PORT IN; dataSize, maxBurstLen: INTEGER);
 		BEGIN
 			ASSERT(dataSize > 0);
 			ASSERT(maxBurstLen > 0);
@@ -68,10 +68,10 @@ TYPE
 			count := transferCount;
 		END SetCount;
 
-		PROCEDURE SetBurstLen*(len: WORD);
-		VAR d: LONGINT;
+		PROCEDURE SetBurstLen*(len: INTEGER);
+		VAR d: SIGNED32;
 		BEGIN{EXCLUSIVE}
-			d := (burstLen-1) + LSH(LONGINT(burstLen)*dataSize,4);
+			d := (burstLen-1) + LSH(SIGNED32(burstLen)*dataSize,4);
 			cfgCmd << CmdSetBurstLen;
 			cfgData << d;
 			burstLen := len;
@@ -119,7 +119,7 @@ TYPE
 		END GetCurrentCount;
 
 		PROCEDURE IsTransferPending*(): BOOLEAN;
-		VAR d: LONGINT;
+		VAR d: SIGNED32;
 		BEGIN{EXCLUSIVE}
 			cfgCmd << CmdGetPendingFlag;
 			cfgData << 0;

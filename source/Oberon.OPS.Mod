@@ -15,13 +15,13 @@ MODULE OPS IN Oberon;	(** non-portable *)
 		Name* = ARRAY MaxIdLen OF CHAR;
 		String* = ARRAY MaxStrLen OF CHAR;
 
-		GetProc* = PROCEDURE (VAR sym: SHORTINT);
+		GetProc* = PROCEDURE (VAR sym: SIGNED8);
 
-		Token = POINTER TO RECORD	pos: LONGINT; sym: SHORTINT; next: Token	END;
-		IntToken = POINTER TO RECORD (Token)	intval: LONGINT; typ: INTEGER	END;
-		RealToken = POINTER TO RECORD (Token)	realval: REAL	END;
-		LRealToken = POINTER TO RECORD (Token)	lrlval: LONGREAL	END;
-		StrToken = POINTER TO RECORD (Token)	str: String; len: LONGINT	END;
+		Token = POINTER TO RECORD	pos: SIGNED32; sym: SIGNED8; next: Token	END;
+		IntToken = POINTER TO RECORD (Token)	intval: SIGNED32; typ: SIGNED16	END;
+		RealToken = POINTER TO RECORD (Token)	realval: FLOAT32	END;
+		LRealToken = POINTER TO RECORD (Token)	lrlval: FLOAT64	END;
+		StrToken = POINTER TO RECORD (Token)	str: String; len: SIGNED32	END;
 		NameToken = POINTER TO RECORD (Token)	name: Name	END;
 
 		TokenStream* = Token;
@@ -31,10 +31,10 @@ MODULE OPS IN Oberon;	(** non-portable *)
 	VAR
 		name*: Name;
 		str*: String;
-		numtyp*: INTEGER; (* 1 = char, 2 = integer, 3 = real, 4 = longreal *)
-		intval*: LONGINT;	(* integer value or string length *)
-		realval*: REAL;
-		lrlval*: LONGREAL;
+		numtyp*: SIGNED16; (* 1 = char, 2 = integer, 3 = real, 4 = longreal *)
+		intval*: SIGNED32;	(* integer value or string length *)
+		realval*: FLOAT32;
+		lrlval*: FLOAT64;
 		Get*: GetProc;
 		ch*: CHAR;     (*current character*)
 		stream, last: TokenStream;
@@ -77,11 +77,11 @@ MODULE OPS IN Oberon;	(** non-portable *)
 		begin* =  60; code* =  61; const* =  62; type* =  63; var* =  64;
 		procedure* =  65; import* =  66; module* =  67; finally*=68; eof* =  69;
 
-	PROCEDURE err(n: INTEGER);
+	PROCEDURE err(n: SIGNED16);
 	BEGIN OPM.err(n)
 	END err;
 
-	PROCEDURE StreamGet (VAR sym: SHORTINT);
+	PROCEDURE StreamGet (VAR sym: SIGNED8);
 	BEGIN
 		IF (stream # NIL) & (stream.next # NIL) THEN
 			stream := stream.next;
@@ -98,7 +98,7 @@ MODULE OPS IN Oberon;	(** non-portable *)
 		END
 	END StreamGet;
 
-	PROCEDURE RecToken (sym: SHORTINT);
+	PROCEDURE RecToken (sym: SIGNED8);
 		VAR s: Token; r: RealToken; lr: LRealToken; i: IntToken; st: StrToken; nam: NameToken;
 	BEGIN
 		IF sym = number THEN
@@ -115,7 +115,7 @@ MODULE OPS IN Oberon;	(** non-portable *)
 		s.pos := OPM.errpos; s.sym := sym; s.next := last.next; last.next := s; last := s
 	END RecToken;
 
-	PROCEDURE StartRecording* (sym: SHORTINT);
+	PROCEDURE StartRecording* (sym: SIGNED8);
 	BEGIN NEW (stream); last := stream; RecToken (sym)
 	END StartRecording;
 
@@ -127,8 +127,8 @@ MODULE OPS IN Oberon;	(** non-portable *)
 	BEGIN stream := s; Get := StreamGet
 	END StartPlaying;
 
-	PROCEDURE Str(VAR sym: SHORTINT);
-		VAR i: INTEGER; och: CHAR;
+	PROCEDURE Str(VAR sym: SIGNED8);
+		VAR i: SIGNED16; och: CHAR;
 	BEGIN i := 0; och := ch;
 		LOOP OPM.Get(ch);
 			IF ch = och THEN EXIT END ;
@@ -143,8 +143,8 @@ MODULE OPS IN Oberon;	(** non-portable *)
 		END
 	END Str;
 
-	PROCEDURE Identifier(VAR sym: SHORTINT);
-		VAR i: INTEGER;
+	PROCEDURE Identifier(VAR sym: SIGNED8);
+		VAR i: SIGNED16;
 	BEGIN i := 0;
 		REPEAT
 			name[i] := ch; INC(i); OPM.Get(ch)
@@ -153,7 +153,7 @@ MODULE OPS IN Oberon;	(** non-portable *)
 		name[i] := 0X; sym := ident
 	END Identifier;
 
-	PROCEDURE CheckCardinality*(VAR name: Name; nofp: SHORTINT): BOOLEAN;
+	PROCEDURE CheckCardinality*(VAR name: Name; nofp: SIGNED8): BOOLEAN;
 	BEGIN
 		CASE name[0] OF
 		| "+", "-": RETURN (nofp=1) OR (nofp=2)
@@ -162,7 +162,7 @@ MODULE OPS IN Oberon;	(** non-portable *)
 		END
 	END CheckCardinality;
 
-	PROCEDURE CheckOperator*(VAR id: SHORTINT);
+	PROCEDURE CheckOperator*(VAR id: SIGNED8);
 		VAR ch0, ch1, ch2: CHAR;
 	BEGIN id:=126; COPY(str, name);
 		ch0:=str[0]; ch1:=str[1]; ch2:=str[2];
@@ -182,10 +182,10 @@ MODULE OPS IN Oberon;	(** non-portable *)
 	END CheckOperator;
 
 		PROCEDURE Number*;
-		VAR i, m, n, d, e: INTEGER; dig: ARRAY 24 OF CHAR; f: LONGREAL; expCh: CHAR; neg: BOOLEAN;
+		VAR i, m, n, d, e: SIGNED16; dig: ARRAY 24 OF CHAR; f: FLOAT64; expCh: CHAR; neg: BOOLEAN;
 
-		PROCEDURE Ten(e: INTEGER): LONGREAL;
-			VAR x, p: LONGREAL;
+		PROCEDURE Ten(e: SIGNED16): FLOAT64;
+			VAR x, p: FLOAT64;
 		BEGIN x := 1; p := 10;
 			WHILE e > 0 DO
 				IF ODD(e) THEN x := x*p END;
@@ -195,7 +195,7 @@ MODULE OPS IN Oberon;	(** non-portable *)
 			RETURN x
 		END Ten;
 
-		PROCEDURE Ord(ch: CHAR; hex: BOOLEAN): INTEGER;
+		PROCEDURE Ord(ch: CHAR; hex: BOOLEAN): SIGNED16;
 		BEGIN (* ("0" <= ch) & (ch <= "9") OR ("A" <= ch) & (ch <= "F") *)
 			IF ch <= "9" THEN RETURN ORD(ch) - ORD("0")
 			ELSIF hex THEN RETURN ORD(ch) - ORD("A") + 10
@@ -235,7 +235,7 @@ MODULE OPS IN Oberon;	(** non-portable *)
 					END
 				ELSE (* decimal *) numtyp := integer;
 					WHILE i < n DO d := Ord(dig[i], FALSE); INC(i);
-						IF intval <= (MAX(LONGINT) - d) DIV 10 THEN intval := intval*10 + d
+						IF intval <= (MAX(SIGNED32) - d) DIV 10 THEN intval := intval*10 + d
 						ELSE err(203)
 						END
 					END
@@ -251,7 +251,7 @@ MODULE OPS IN Oberon;	(** non-portable *)
 				END;
 				IF ("0" <= ch) & (ch <= "9") THEN
 					REPEAT n := Ord(ch, FALSE); OPM.Get(ch);
-						IF e <= (MAX(INTEGER) - n) DIV 10 THEN e := e*10 + n
+						IF e <= (MAX(SIGNED16) - n) DIV 10 THEN e := e*10 + n
 						ELSE err(203)
 						END
 					UNTIL (ch < "0") OR ("9" < ch);
@@ -278,8 +278,8 @@ MODULE OPS IN Oberon;	(** non-portable *)
 		END
 	END Number;
 
-	PROCEDURE DefaultGet(VAR sym: SHORTINT);
-		VAR s: SHORTINT;
+	PROCEDURE DefaultGet(VAR sym: SIGNED8);
+		VAR s: SIGNED8;
 
 		PROCEDURE Comment;	(* do not read after end of file *)
 			VAR dump: BOOLEAN;

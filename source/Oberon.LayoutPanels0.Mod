@@ -18,20 +18,20 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 		Element* = POINTER TO ElementDesc;
 		ElementDesc* = RECORD (Gadgets.FrameDesc)
 			format*: SET;
-			hfactor*, vfactor*, row*, col*, minx*, miny*, minw*, minh*: INTEGER;
+			hfactor*, vfactor*, row*, col*, minx*, miny*, minw*, minh*: SIGNED16;
 			size*: PROCEDURE (e: Element);
-			make*: PROCEDURE (e: Element; x, y, w, h: INTEGER)
+			make*: PROCEDURE (e: Element; x, y, w, h: SIGNED16)
 		END;
 
 		Container* = POINTER TO ContainerDesc;
 		ContainerDesc* = RECORD (ElementDesc)
-			hborder*, vborder*: INTEGER
+			hborder*, vborder*: SIGNED16
 		END;
 
-		IntArray = POINTER TO ARRAY OF INTEGER;
+		IntArray = POINTER TO ARRAY OF SIGNED16;
 		Table* = POINTER TO TableDesc;
 		TableDesc* = RECORD (ContainerDesc)
-			cols*, rows*, hdist*, vdist*, hfill*, vfill*: INTEGER;
+			cols*, rows*, hdist*, vdist*, hfill*, vfill*: SIGNED16;
 			gmaxw*, gmaxh*, hexpand*, vexpand*, hoffset*, voffset*: IntArray
 		END;
 
@@ -48,7 +48,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	(* --- *)
 
 	(* send Display.DisplayMsg with area (u, v, w, h) to receiver *)
-	PROCEDURE DisplayArea (receiver: Display.Frame; u, v, w, h: INTEGER);
+	PROCEDURE DisplayArea (receiver: Display.Frame; u, v, w, h: SIGNED16);
 		VAR M: Display.DisplayMsg;
 	BEGIN
 		M.F := receiver; (* x, y, res set by Broadcast *)
@@ -58,8 +58,8 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END DisplayArea;
 
 	(* see LayoutPanels.Mod *)
-	PROCEDURE ClipAgainst(VAR x, y, w, h: INTEGER; x1, y1, w1, h1: INTEGER);
-	VAR r, t, r1, t1: INTEGER;
+	PROCEDURE ClipAgainst(VAR x, y, w, h: SIGNED16; x1, y1, w1, h1: SIGNED16);
+	VAR r, t, r1, t1: SIGNED16;
 	BEGIN
 		r := x + w - 1; r1 := x1 + w1 - 1; t := y + h - 1; t1 := y1 + h1 - 1;
 		IF x < x1 THEN x := x1 END;
@@ -103,7 +103,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	PROCEDURE DummyHandler (obj: Objects.Object; VAR M: Objects.ObjMsg);
 	END DummyHandler;
 
-	PROCEDURE Drop* (obj: Objects.Object; dest: Display.Frame; u, v: INTEGER);
+	PROCEDURE Drop* (obj: Objects.Object; dest: Display.Frame; u, v: SIGNED16);
 		VAR C: ConsumeMsg; C0: Display.ConsumeMsg; dummy: Objects.Object;
 	BEGIN
 		IF obj # NIL THEN
@@ -191,7 +191,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 
 	(* renumbers Elements of Table t *)
 	PROCEDURE SetRowCol (t: Table);
-		VAR i, j: INTEGER; f: Display.Frame;
+		VAR i, j: SIGNED16; f: Display.Frame;
 	BEGIN f := t.dsc;
 		FOR i := 0 TO t.rows - 1 DO
 			FOR j := 0 TO t.cols - 1 DO
@@ -206,8 +206,8 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END InsertElementAfter;
 
 	(** inserts a row at position y in Table tab *)
-	PROCEDURE InsertRow* (tab: Table; y: INTEGER; recalc: BOOLEAN);
-		VAR i: INTEGER; f: Display.Frame;
+	PROCEDURE InsertRow* (tab: Table; y: SIGNED16; recalc: BOOLEAN);
+		VAR i: SIGNED16; f: Display.Frame;
 	BEGIN
 		head.next := tab.dsc; (* dummy head *)
 		f := head;
@@ -227,8 +227,8 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END InsertRow;
 
 	(** inserts col at position x in Table tab *)
-	PROCEDURE InsertCol* (tab: Table; x: INTEGER; recalc: BOOLEAN);
-	VAR i, j: INTEGER; f: Display.Frame;
+	PROCEDURE InsertCol* (tab: Table; x: SIGNED16; recalc: BOOLEAN);
+	VAR i, j: SIGNED16; f: Display.Frame;
 	BEGIN
 		head.next := tab.dsc; (* dummy head *)
 		f := head;
@@ -247,8 +247,8 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END InsertCol;
 
 	(** removes row at position y in Table tab *)
-	PROCEDURE RemoveRow* (tab: Table; y: INTEGER; recalc: BOOLEAN);
-		VAR i: INTEGER; f, objlist: Display.Frame; p: Objects.Object; CM: CalcMsg;
+	PROCEDURE RemoveRow* (tab: Table; y: SIGNED16; recalc: BOOLEAN);
+		VAR i: SIGNED16; f, objlist: Display.Frame; p: Objects.Object; CM: CalcMsg;
 	BEGIN
 		IF tab.rows > 1 THEN head.next := tab.dsc; f := head; (* dummy head *)
 			objlist := NIL;
@@ -271,8 +271,8 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END RemoveRow;
 
 	(** removes col at position x in Table tab *)
-	PROCEDURE RemoveCol* (tab: Table; x: INTEGER; recalc: BOOLEAN);
-		VAR i, j: INTEGER; f, objlist: Display.Frame; p: Objects.Object; CM: CalcMsg;
+	PROCEDURE RemoveCol* (tab: Table; x: SIGNED16; recalc: BOOLEAN);
+		VAR i, j: SIGNED16; f, objlist: Display.Frame; p: Objects.Object; CM: CalcMsg;
 	BEGIN
 		IF tab.cols > 1 THEN head.next := tab.dsc; f := head; (* dummy head *)
 			objlist := NIL;
@@ -364,7 +364,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	(** get top most selection (if any) or leaf Element, following u, v
 	border check if border IS TRUE
 	*)
-	PROCEDURE Select* (e: Element; u, v: INTEGER; border: BOOLEAN): Display.Frame;
+	PROCEDURE Select* (e: Element; u, v: SIGNED16; border: BOOLEAN): Display.Frame;
 		VAR f, e1: Display.Frame; c: Container;
 	BEGIN
 		IF ~Effects.Inside(u, v, e.X, e.Y, e.W, e.H) THEN RETURN NIL
@@ -380,7 +380,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END Select;
 
 	(** returns closest Element in Table t for coordinates x, y *)
-	PROCEDURE ClosestTableElement* (t: Table; x, y: INTEGER): Element;
+	PROCEDURE ClosestTableElement* (t: Table; x, y: SIGNED16): Element;
 		VAR f: Display.Frame; min: Element;
 	BEGIN
 		f := t.dsc; min := f(Element); (* table has at least one component *)
@@ -396,7 +396,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	(* --- Handlers --- *)
 
 	PROCEDURE ElementHandler (obj: Objects.Object; VAR M: Objects.ObjMsg);
-		VAR mask: Display3.Mask; changed: BOOLEAN; A: Objects.AttrMsg; new: Element;  x, y: INTEGER;
+		VAR mask: Display3.Mask; changed: BOOLEAN; A: Objects.AttrMsg; new: Element;  x, y: SIGNED16;
 	BEGIN
 		WITH obj: Element DO
 			IF M IS PanelMsg THEN
@@ -545,7 +545,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END ElementHandler;
 
 	PROCEDURE ContainerHandler (obj: Objects.Object; VAR M: Objects.ObjMsg);
-		VAR f, fn, head: Display.Frame; changed: BOOLEAN; mask: Display3.Mask; D: Display.DisplayMsg; new: Container; x, y: INTEGER;
+		VAR f, fn, head: Display.Frame; changed: BOOLEAN; mask: Display3.Mask; D: Display.DisplayMsg; new: Container; x, y: SIGNED16;
 	BEGIN
 		WITH obj: Container DO
 			IF M IS PanelMsg THEN
@@ -656,7 +656,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END ContainerHandler;
 
 	PROCEDURE TableHandler (obj: Objects.Object; VAR M: Objects.ObjMsg);
-		VAR f, fn, head: Display.Frame; i: INTEGER; changed: BOOLEAN; mask: Display3.Mask; D: Display.DisplayMsg; new: Table; x, y: INTEGER;
+		VAR f, fn, head: Display.Frame; i: SIGNED16; changed: BOOLEAN; mask: Display3.Mask; D: Display.DisplayMsg; new: Table; x, y: SIGNED16;
 	BEGIN
 		WITH obj: Table DO
 			IF M IS Objects.AttrMsg THEN
@@ -793,7 +793,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 		VAR hset, vset: SET;
 
 		(* get minw, minh if attributes exist, otherwise set to zero *)
-		PROCEDURE MinSize (obj: Display.Frame; VAR w, h: INTEGER);
+		PROCEDURE MinSize (obj: Display.Frame; VAR w, h: SIGNED16);
 			VAR M: Objects.AttrMsg;
 		BEGIN
 			M.id := Objects.get; M.name := "minw"; M.res := -1; obj.handle(obj, M);
@@ -850,7 +850,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END SizeContainer;
 
 	PROCEDURE SizeTable (t: Element);
-		VAR f: Display.Frame; i: INTEGER; set: SET;
+		VAR f: Display.Frame; i: SIGNED16; set: SET;
 	BEGIN
 		WITH t: Table DO
 			FOR i := 0 TO t.cols - 1 DO t.gmaxw[i] := 0; t.hexpand[i] := 0 END;
@@ -889,9 +889,9 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	(* --- *)
 
 	(* aligns e according to e.format and propagates (if it exists) to Gadget *)
-	PROCEDURE MakeElement (e: Element; x, y, w, h: INTEGER);
+	PROCEDURE MakeElement (e: Element; x, y, w, h: SIGNED16);
 
-		PROCEDURE SetSize (F: Display.Frame; x, y, w, h: INTEGER);
+		PROCEDURE SetSize (F: Display.Frame; x, y, w, h: SIGNED16);
 			VAR M: Display.ModifyMsg;
 		BEGIN
 			M.id := Display.extend; M.mode := Display.state; M.F := F;
@@ -934,7 +934,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 		END
 	END MakeElement;
 
-	PROCEDURE MakePlace (c: Element; x, y, w, h: INTEGER);
+	PROCEDURE MakePlace (c: Element; x, y, w, h: SIGNED16);
 		VAR f: Display.Frame;
 	BEGIN
 		WITH c: Container DO
@@ -951,8 +951,8 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END MakePlace;
 
 	(* FillCols calculates column widths and row heights according to max, expand. result in max *)
-	PROCEDURE FillCols (space, cols, fills: INTEGER; expand, max: IntArray; sameSize: BOOLEAN);
-		VAR d, m, i: INTEGER; fillList: IntArray;
+	PROCEDURE FillCols (space, cols, fills: SIGNED16; expand, max: IntArray; sameSize: BOOLEAN);
+		VAR d, m, i: SIGNED16; fillList: IntArray;
 	BEGIN
 		IF sameSize THEN
 			d := space DIV cols; m := space MOD cols;
@@ -974,14 +974,14 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 		END
 	END FillCols;
 
-	PROCEDURE SetOffset (cols, border, dist: INTEGER; max, offset: IntArray);
-		VAR i: INTEGER;
+	PROCEDURE SetOffset (cols, border, dist: SIGNED16; max, offset: IntArray);
+		VAR i: SIGNED16;
 	BEGIN offset[0] := border;
 		FOR i := 1 TO cols DO offset[i] := offset[i - 1]; INC(offset[i], max[i - 1] + dist) END	(* simplified expression *)
 	END SetOffset;
 
-	PROCEDURE MakeTable (t: Element; x, y, w, h: INTEGER);
-		VAR f: Display.Frame; x1, y1, w1, h1: INTEGER;
+	PROCEDURE MakeTable (t: Element; x, y, w, h: SIGNED16);
+		VAR f: Display.Frame; x1, y1, w1, h1: SIGNED16;
 	BEGIN
 		WITH t: Table DO
 			MakeElement(t, x, y, w, h);
@@ -1049,8 +1049,8 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END NewTable;
 
 	(** creates an empty Table with rows*cols Elements *)
-	PROCEDURE EmptyTable* (rows, cols: INTEGER): Table;
-		VAR t: Table; f: Display.Frame; t0: Element; i, j: INTEGER;
+	PROCEDURE EmptyTable* (rows, cols: SIGNED16): Table;
+		VAR t: Table; f: Display.Frame; t0: Element; i, j: SIGNED16;
 	BEGIN
 		t := NewTable(); t.cols := cols; t.rows := rows; t.hfactor := 1; t.vfactor := 1;
 		head.next := NIL; f := head;
@@ -1111,7 +1111,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 		BEGIN REPEAT Texts.Read(R, ch) UNTIL (ch = 0X) OR (ch > " ")
 		END Get;
 
-		PROCEDURE Int (VAR x: INTEGER);
+		PROCEDURE Int (VAR x: SIGNED16);
 			VAR neg: BOOLEAN;
 		BEGIN
 			neg := ch = "-"; IF neg THEN Get(ch) END;
@@ -1122,9 +1122,9 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 
 		PROCEDURE ObjBody(obj: Element);
 		VAR
-			key, val: INTEGER; t: Objects.Object;
+			key, val: SIGNED16; t: Objects.Object;
 
-			PROCEDURE Ident (): SHORTINT;
+			PROCEDURE Ident (): SIGNED8;
 				VAR ch1: CHAR;
 			BEGIN ch1 := ch; Get(ch);
 				CASE ch1 OF
@@ -1254,7 +1254,7 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 		END ObjBody;
 
 		PROCEDURE Object (VAR obj: Element);
-			VAR head, f: Display.Frame; t: Element; i, j: INTEGER;
+			VAR head, f: Display.Frame; t: Element; i, j: SIGNED16;
 		BEGIN NEW(head); (* new head for each recursion *)
 			CASE ch OF
 			   "O":	(* Element *)
@@ -1318,11 +1318,11 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 		PROCEDURE Put (ch: CHAR); BEGIN Texts.Write(W, ch) END Put;
 		PROCEDURE PutStr (str: ARRAY OF CHAR); BEGIN Texts.WriteString(W, str) END PutStr;
 
-		PROCEDURE PutInt (x: LONGINT);
-			VAR a: ARRAY 11 OF CHAR; i: INTEGER;
+		PROCEDURE PutInt (x: SIGNED32);
+			VAR a: ARRAY 11 OF CHAR; i: SIGNED16;
 		BEGIN
 			IF x < 0 THEN
-				IF x = MIN(LONGINT) THEN PutStr("-2147483648"); RETURN
+				IF x = MIN(SIGNED32) THEN PutStr("-2147483648"); RETURN
 				ELSE Put("-"); x := -x
 				END
 			END;
@@ -1483,8 +1483,8 @@ MODULE LayoutPanels0 IN Oberon;	(** portable *)
 	END Info;
 
 	(** call with depth = 0 *)
-	PROCEDURE DebugElements* (e: Element; depth: INTEGER);
-		VAR i: INTEGER; f: Display.Frame;
+	PROCEDURE DebugElements* (e: Element; depth: SIGNED16);
+		VAR i: SIGNED16; f: Display.Frame;
 	BEGIN
 		FOR i := 0 TO depth - 1 DO Texts.Write(W, 9X) END;
 		Texts.WriteString(W, "x = "); Texts.WriteInt(W, e.X, 5);

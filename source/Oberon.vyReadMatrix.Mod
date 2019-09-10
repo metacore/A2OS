@@ -46,16 +46,16 @@ TYPE
 
 	ListItem* = POINTER TO ListItemDesc;      						(*?move to vyBase?*)
 	ListItemDesc = RECORD (vyLinks.LinkDesc);
-		row-, col- : INTEGER;
+		row-, col- : SIGNED16;
 		cname-, rname- : StringVec
 	END;
 
 	(*VAR
 	debug : BOOLEAN;*)
 
-PROCEDURE InitList (row, col: INTEGER;  rowheader, colheader : BOOLEAN) : ListItem;
+PROCEDURE InitList (row, col: SIGNED16;  rowheader, colheader : BOOLEAN) : ListItem;
 VAR
-	i: INTEGER;
+	i: SIGNED16;
 	tempvec: Vec;
 	templist, templistold : ListItem;
 	name : String;
@@ -109,7 +109,7 @@ BEGIN
 	RETURN List
 END InitList;
 
-PROCEDURE Adjustcr (VAR check : BOOLEAN;    VAR cr : INTEGER);
+PROCEDURE Adjustcr (VAR check : BOOLEAN;    VAR cr : SIGNED16);
 BEGIN
 	IF check THEN
 		check := FALSE;
@@ -118,11 +118,11 @@ BEGIN
 	END
 END Adjustcr;
 
-PROCEDURE readMatrix (VAR List: ListItem;     pos : LONGINT;  selend: LONGINT;  text: Texts.Text );
+PROCEDURE readMatrix (VAR List: ListItem;     pos : SIGNED32;  selend: SIGNED32;  text: Texts.Text );
 VAR
 	s : vyScanners.Scanner;
-	cr, cc: INTEGER;      		(*cr=checkrow; cc=checkcolumn; variables in use to detect deviations from the structure of the table; i.e. wrong nr of rows or columns*)
-	l : LONGINT;       r: REAL;       lr : LONGREAL;
+	cr, cc: SIGNED16;      		(*cr=checkrow; cc=checkcolumn; variables in use to detect deviations from the structure of the table; i.e. wrong nr of rows or columns*)
+	l : SIGNED32;       r: FLOAT32;       lr : FLOAT64;
 	temp : ListItem;
 	neg, negold, check : BOOLEAN;      				(*check is set to TRUE after reading a newlinesymbol(vyScanners.ctNL) - if check is TRUE and anything is being read, cr is being increased*)
 	string : String;
@@ -199,12 +199,12 @@ BEGIN
 	UNTIL s.class = vyScanners.ctEOT
 END readMatrix;
 
-PROCEDURE readMatrixwrownames (VAR List: ListItem;     pos : LONGINT;  selend: LONGINT;  text: Texts.Text );
+PROCEDURE readMatrixwrownames (VAR List: ListItem;     pos : SIGNED32;  selend: SIGNED32;  text: Texts.Text );
 	(*for commentaries look at procedure readMatrix*)
 VAR
 	s : vyScanners.Scanner;
-	cr, cc, i, j : INTEGER;
-	l : LONGINT;       r: REAL;       lr : LONGREAL;
+	cr, cc, i, j : SIGNED16;
+	l : SIGNED32;       r: FLOAT32;       lr : FLOAT64;
 	temp : ListItem;
 	neg, negold, check, check2 : BOOLEAN;      					(*check2 is set to FALSE after reading a rowname*)
 	string, string2: String;
@@ -296,11 +296,11 @@ BEGIN
 	(*List.rname[i + 1] := 0X; *)
 END readMatrixwrownames;
 
-PROCEDURE Countrows  ( pos : LONGINT;  selend: LONGINT;  text: Texts.Text )
-: INTEGER;
+PROCEDURE Countrows  ( pos : SIGNED32;  selend: SIGNED32;  text: Texts.Text )
+: SIGNED16;
 VAR
 	s : vyScanners.Scanner;
-	row: INTEGER;
+	row: SIGNED16;
 	check : BOOLEAN;      			(*counts rows that contain at least one Token*)
 BEGIN
 	row := 0;      check := TRUE;
@@ -333,11 +333,11 @@ BEGIN
 	END
 END Countrows;
 
-PROCEDURE ReadColumnHeader* (VAR M: ListItem;     VAR pos: LONGINT;  selend: LONGINT;  text: Texts.Text);
+PROCEDURE ReadColumnHeader* (VAR M: ListItem;     VAR pos: SIGNED32;  selend: SIGNED32;  text: Texts.Text);
 VAR
 	scanner: vyScanners.Scanner;
-	i, c: INTEGER;
-	posold : LONGINT;
+	i, c: SIGNED16;
+	posold : SIGNED32;
 	string : String;
 	name : vyStringVec.nameptr;
 BEGIN
@@ -368,10 +368,10 @@ BEGIN
 END ReadColumnHeader;
 
 
-PROCEDURE Countcolumn ( pos : LONGINT;  selend: LONGINT;  text: Texts.Text): INTEGER;
+PROCEDURE Countcolumn ( pos : SIGNED32;  selend: SIGNED32;  text: Texts.Text): SIGNED16;
 VAR
 	s : vyScanners.Scanner;
-	col, c : INTEGER;
+	col, c : SIGNED16;
 BEGIN
 	col := 0;
 	vyScanners.NewSScanner(s);
@@ -392,9 +392,9 @@ BEGIN
 	RETURN (col)
 END Countcolumn;
 
-PROCEDURE ReadMatrix* (VAR C: ListItem;     colheader, rowheader : BOOLEAN;  text: Texts.Text;  pos, end: LONGINT);
+PROCEDURE ReadMatrix* (VAR C: ListItem;     colheader, rowheader : BOOLEAN;  text: Texts.Text;  pos, end: SIGNED32);
 VAR
-	row, col : INTEGER;
+	row, col : SIGNED16;
 BEGIN
 	col := Countcolumn(pos, end, text);
 	row := Countrows(pos, end, text);

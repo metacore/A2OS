@@ -35,7 +35,7 @@ CONST
 
 	ArrayModuleName = "ArrayBase";
 
-	anydim=MAX(LONGINT);
+	anydim=MAX(SIGNED32);
 	scalar = 0;   (* scalar *)
 	none = -1;   (* no entry *)
 	any = -2;   (* no restriction on dimension *)
@@ -46,7 +46,7 @@ VAR
 	ArrayModuleIdx-: StringPool.Index;  ArrayModule-: PCT.Module;   (* needed by PCP  to add to import list *)
 	NoProc-: StringPool.Index;  modscope: PCT.ModScope;  Any: PCT.Struct;
 TYPE
-	Operator = LONGINT;
+	Operator = SIGNED32;
 
 	BaseTypes = POINTER TO RECORD
 		left, right, res: PCT.Struct;
@@ -57,7 +57,7 @@ TYPE
 	OperatorEntry = OBJECT
 	VAR op: Operator;
 		pname: ARRAY 256 OF CHAR;
-		lshape, rshape, resshape: LONGINT;
+		lshape, rshape, resshape: SIGNED32;
 		next: OperatorEntry;
 
 		first, last: BaseTypes;
@@ -65,7 +65,7 @@ TYPE
 		(* Create new operator entry and subscribe it to the list of operators, lshape, rshape and resshape stand for the geometries of the left, right and
 		result parameter.  *)
 		PROCEDURE & Init*( op: Operator;  CONST name: ARRAY OF CHAR;
-									    lshape, rshape, resshape: LONGINT );
+									    lshape, rshape, resshape: SIGNED32 );
 		BEGIN
 			SELF.op := op;  COPY( name, SELF.pname );  SELF.lshape := lshape;
 			SELF.rshape := rshape;  SELF.resshape := resshape;
@@ -91,7 +91,7 @@ TYPE
 	(* create a default suffix and enter left,right, res with this suffix *)
 		PROCEDURE Enter3( left, right, res: PCT.Struct );
 		VAR suffix: ARRAY 32 OF CHAR;
-			i: LONGINT;
+			i: SIGNED32;
 
 			PROCEDURE Append( c: CHAR );
 			BEGIN
@@ -163,9 +163,9 @@ TYPE
 
 	(* find matching basetypes record *)
 		PROCEDURE Match( l, r: PCT.Struct;  VAR type: PCT.Struct ): StringPool.Index;
-		VAR ldim, rdim, dim: LONGINT;  lbase, rbase, res: PCT.Struct;  e: BaseTypes;
+		VAR ldim, rdim, dim: SIGNED32;  lbase, rbase, res: PCT.Struct;  e: BaseTypes;
 
-			PROCEDURE Max( l, r: LONGINT ): LONGINT;
+			PROCEDURE Max( l, r: SIGNED32 ): SIGNED32;
 			BEGIN
 				IF l > r THEN RETURN l ELSE RETURN r END;
 			END Max;
@@ -253,7 +253,7 @@ TYPE
 				END;
 			END ReportType;
 
-			PROCEDURE ReportShape( shape: LONGINT );
+			PROCEDURE ReportShape( shape: SIGNED32 );
 			BEGIN
 				IF shape = scalar THEN PCM.LogWStr( "[scalar]" );
 				ELSIF shape = any THEN PCM.LogWStr( "[any dim array]" );
@@ -312,7 +312,7 @@ VAR
 	END FindArrayOp;
 
 (* find the procedure named idx in the ArrayBase Module *)
-	PROCEDURE FindProcedure*( pos: LONGINT;  idx: StringPool.Index ): PCT.Proc;
+	PROCEDURE FindProcedure*( pos: SIGNED32;  idx: StringPool.Index ): PCT.Proc;
 	VAR sym: PCT.Symbol;
 	BEGIN
 		BEGIN {EXCLUSIVE}

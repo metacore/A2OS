@@ -4,8 +4,8 @@ MODULE WinApplications;  (* ll, fof : call windows applications from within WinA
 
 IMPORT Kernel32, KernelLog, Commands, Strings, SYSTEM, Options;
 
-	PROCEDURE CallProcess( par: ARRAY OF CHAR; visible: BOOLEAN ): LONGINT;
-	VAR bool: LONGINT;  start: Kernel32.StartupInfo;  pi: Kernel32.ProcessInformation;  result: LONGINT;
+	PROCEDURE CallProcess( par: ARRAY OF CHAR; visible: BOOLEAN ): SIGNED32;
+	VAR bool: SIGNED32;  start: Kernel32.StartupInfo;  pi: Kernel32.ProcessInformation;  result: SIGNED32;
 	BEGIN
 		result := -1;
 		start.cb := SIZEOF( Kernel32.StartupInfo );
@@ -21,7 +21,7 @@ IMPORT Kernel32, KernelLog, Commands, Strings, SYSTEM, Options;
 		RETURN result
 	END CallProcess;
 
-	PROCEDURE Call*( CONST proc, par: ARRAY OF CHAR): LONGINT;
+	PROCEDURE Call*( CONST proc, par: ARRAY OF CHAR): SIGNED32;
 	VAR call: ARRAY 1024 OF CHAR;
 	BEGIN
 		call := '"'; Strings.Append (call, proc); Strings.Append (call, '" '); Strings.Append (call, par);
@@ -29,7 +29,7 @@ IMPORT Kernel32, KernelLog, Commands, Strings, SYSTEM, Options;
 	END Call;
 
 	PROCEDURE Run*(context : Commands.Context);
-	VAR options: Options.Options; visible: BOOLEAN; cmdpar: ARRAY 256 OF CHAR;  res: WORD;
+	VAR options: Options.Options; visible: BOOLEAN; cmdpar: ARRAY 256 OF CHAR;  res: INTEGER;
 	BEGIN
 		NEW (options);
 		options.Add("h", "hide", Options.Flag);

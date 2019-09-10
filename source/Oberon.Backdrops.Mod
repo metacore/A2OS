@@ -13,19 +13,19 @@ IMPORT
 
 TYPE ptr = POINTER TO complex;
 		complex = RECORD							(* Komplexe Zahl fuer Backdrop Fractal *)
-							r,i : REAL
+							r,i : FLOAT32
 						END;
 
-VAR seed: LONGINT;									(* fuer Zufallszahlenberechnung *)
-		noisetable : ARRAY 99, 99 OF INTEGER;	(* Zufallszahlenfeld *)
-		maxnoise, px, py : INTEGER;
-		r0, r1, g0, g1, b0, b1 : INTEGER;	(* Farbwerte fuer Rampe *)
+VAR seed: SIGNED32;									(* fuer Zufallszahlenberechnung *)
+		noisetable : ARRAY 99, 99 OF SIGNED16;	(* Zufallszahlenfeld *)
+		maxnoise, px, py : SIGNED16;
+		r0, r1, g0, g1, b0, b1 : SIGNED16;	(* Farbwerte fuer Rampe *)
 
 PROCEDURE SetColorRamp;
 (* Erstellt eine Farbrampe von RGB(r0, g0, b0) nach RGB(r1, g1, b1) mit BD.noc Farbabstufungen *)
 VAR
-		i : INTEGER;
-		dr, dg, db : REAL;
+		i : SIGNED16;
+		dr, dg, db : FLOAT32;
 BEGIN
 	IF r0>255 THEN r0:=255 ELSIF r0<0 THEN r0:=0 END;
 	IF r1>255 THEN r1:=255 ELSIF r1<0 THEN r1:=0 END;
@@ -52,7 +52,7 @@ END SetColorRamp;
 (** Liest die Werte der Slider in die globalen Variablen r0 bis b1 *)
 PROCEDURE SetVal*;
 VAR S : Texts.Scanner;
-		n : INTEGER;
+		n : SIGNED16;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -73,7 +73,7 @@ END SetVal;
 
 (** Setzt Farben für Wolkenstruktur *)
 PROCEDURE SetSkyColor*;
-VAR i : INTEGER;
+VAR i : SIGNED16;
 BEGIN
 	Rembrandt0.noc:= 6;
 	FOR i:= 1 TO 5 DO
@@ -85,7 +85,7 @@ END SetSkyColor;
 
 (** Setzt Farben für Marmorstruktur *)
 PROCEDURE SetMarbleColor*;
-VAR i, h : INTEGER;
+VAR i, h : SIGNED16;
 BEGIN
 	Rembrandt0.noc:= 5;
 	FOR i:= 1 TO 5 DO
@@ -111,7 +111,7 @@ END SetBackground;
 (** Eine einzelne Farbe kann geändert werden; Farbnummer colno mit RGB(r, g, b); wird zur Zeit nicht verwendet *)
 PROCEDURE SetColor*;
 VAR S : Texts.Scanner;
-		colno, r, g, b : INTEGER;
+		colno, r, g, b : SIGNED16;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -141,10 +141,10 @@ BEGIN
 	SetColorRamp
 END SetNoColor;
 
-PROCEDURE Random(): LONGINT;
+PROCEDURE Random(): SIGNED32;
 (* Liefert eine Zufallszahl vom Typ Longint *)
 CONST a = 16807; m = 2147483647; q = m DIV a; r = m MOD a;
-VAR i: LONGINT;
+VAR i: SIGNED32;
 BEGIN
 	seed := ABS(Oberon.Time()-seed);
 	i := a * (seed MOD q) - r * (seed DIV q);
@@ -157,7 +157,7 @@ PROCEDURE CheckKeyboard(): BOOLEAN;
 	Taste gedrückt wurde oder eine Mousetaste*)
 CONST Quit=27;	(* ESC_Taste *)
 VAR ch: CHAR;
-		x, y : INTEGER;
+		x, y : SIGNED16;
 		keys : SET;
 BEGIN
 	IF Input.Available()#0 THEN
@@ -174,14 +174,14 @@ END CheckKeyboard;
 
 PROCEDURE Initcolor(P : Pictures.Picture);
 (* Weist dem Picture die Farben zu *)
-VAR i : INTEGER;
+VAR i : SIGNED16;
 BEGIN
 	FOR i:= 0 TO Rembrandt0.noc-1 DO
 		Pictures.SetColor(P, i, Rembrandt0.coltable[i].r, Rembrandt0.coltable[i].g, Rembrandt0.coltable[i].b)
 	END;
 END Initcolor;
 
-PROCEDURE Integer(CONST name : ARRAY OF CHAR): INTEGER;
+PROCEDURE Integer(CONST name : ARRAY OF CHAR): SIGNED16;
 (* Liefert aktuelle Zahl des gesuchten Modells zurück *)
 VAR obj, cont : Objects.Object;
 BEGIN
@@ -197,7 +197,7 @@ BEGIN
 	END
 END Integer;
 
-PROCEDURE Real(CONST name : ARRAY OF CHAR): REAL;
+PROCEDURE Real(CONST name : ARRAY OF CHAR): FLOAT32;
 (* Liefert aktuelle Zahl des gesuchten Modells zurück *)
 VAR obj, cont : Objects.Object;
 BEGIN
@@ -217,7 +217,7 @@ END Real;
 PROCEDURE LoadPalette*;
 VAR F: Files.File;
 		R: Files.Rider;
-		r, g, b : CHAR; i: INTEGER;
+		r, g, b : CHAR; i: SIGNED16;
 BEGIN
 	F:= Files.Old("Default.Pal");
 	Files.Set(R, F, 0);
@@ -253,7 +253,7 @@ END EmptyPicture;
 (** Dithert ein markiertes Picture mit zusätzlicher Angabe der Helligkeit und Sättigung als Parameter *)
 PROCEDURE Reduce*;
 VAR D: Pictures.Picture;
-		ds, dv, r, g, b: INTEGER;
+		ds, dv, r, g, b: SIGNED16;
 		S: Texts.Scanner;
 		F: Rembrandt.Frame;
 BEGIN
@@ -271,7 +271,7 @@ BEGIN
 	END
 END Reduce;
 
-PROCEDURE WraplConst(P: Pictures.Picture; col, x, y, w, h: INTEGER);
+PROCEDURE WraplConst(P: Pictures.Picture; col, x, y, w, h: SIGNED16);
 (* Zeichnet ein gefülltes Rechteck im Picture modulo Höhe und Breite *)
 BEGIN
 	x:=x MOD px; y:= y MOD py;
@@ -292,10 +292,10 @@ BEGIN
 	END
 END WraplConst;
 
-PROCEDURE Circle(P : Pictures.Picture; xm, ym, r, dc, fac: INTEGER; bres : BOOLEAN; dis: INTEGER);
+PROCEDURE Circle(P : Pictures.Picture; xm, ym, r, dc, fac: SIGNED16; bres : BOOLEAN; dis: SIGNED16);
 (* Zeichnet einen Kreis mit Mittelpunkt xm, ym Radius r, Farbe dc, Schritte fac *)
-VAR x, y  : INTEGER; i, step : REAL;
-      d,dx,dy, h: INTEGER;
+VAR x, y  : SIGNED16; i, step : FLOAT32;
+      d,dx,dy, h: SIGNED16;
 BEGIN
 	IF ~bres THEN
 		step:= fac/r;
@@ -320,11 +320,11 @@ BEGIN
 	END
 END Circle;
 
-PROCEDURE Ellipse(P: Pictures.Picture; a,b, xm, ym, col : INTEGER; both: BOOLEAN);
+PROCEDURE Ellipse(P: Pictures.Picture; a,b, xm, ym, col : SIGNED16; both: BOOLEAN);
 (* Zeichnet eine Ellipse mit Mittelpunkt (xm,ym), Achsen a,b und Farbe col *)
 (* both=1: zeichnet ganze Ellipse *)
 (* both=0: zeichnet nur die obere Hälfte *)
-VAR x, y1, y2, y, i, step : REAL;
+VAR x, y1, y2, y, i, step : FLOAT32;
 BEGIN
 	i:= 0; step:= 0.5;
 	WHILE i<2*a DO
@@ -340,12 +340,12 @@ BEGIN
 	END
 END Ellipse;
 
-PROCEDURE Spirale(P: Pictures.Picture; r0, r1, a0, a1, xm, ym, col, b : INTEGER);
+PROCEDURE Spirale(P: Pictures.Picture; r0, r1, a0, a1, xm, ym, col, b : SIGNED16);
 (* Zeichnet eine Spirale von Radius r0 bis r1 und von Winkel a0 bis a1 um
 	den Mittelpunkt (xm,ym) *)
 (* b=0: einheitliche Farbe *)
 (* b=1: Farbverlauf *)
-VAR i, x, y : INTEGER; r, dr, coldec, cols : REAL;
+VAR i, x, y : SIGNED16; r, dr, coldec, cols : FLOAT32;
 BEGIN
 	dr:= (r1-r0)/(a1-a0); r:=0;
 	IF b=1 THEN coldec:=col/(a1-a0) ELSE coldec:=0 END;
@@ -365,15 +365,15 @@ END Spirale;
 PROCEDURE Fractal*;
 (* Generiert das Backdrop Fractal *)
 VAR
-		endr, Inc, endi, Inr, dw, w, fr0, fi0, fr1, fi1 : REAL;
-		loops , max, f, k : LONGINT;
+		endr, Inc, endi, Inr, dw, w, fr0, fi0, fr1, fi1 : FLOAT32;
+		loops , max, f, k : SIGNED32;
 		z, c : complex;
 		ret : ptr;		(* Rueckgabe der komplexen Zahl als Pointer *)
 		P : Pictures.Picture;
 		S : Texts.Scanner;
 
 	PROCEDURE complexsqrt(z: complex): ptr;
-		VAR mag : REAL;
+		VAR mag : FLOAT32;
 	BEGIN
 		mag:= Math.sqrt(z.r*z.r+z.i*z.i);
 		IF (mag+z.r) < 0 THEN ret.r:=0
@@ -439,7 +439,7 @@ END Fractal;
 
 PROCEDURE Initnoise;
 (* Füllt das Zufallszahlenfeld *)
-VAR x, y, xx, yy  : INTEGER;
+VAR x, y, xx, yy  : SIGNED16;
 BEGIN
 	FOR x:= 0 TO maxnoise DO
 		FOR y:= 0 TO maxnoise DO
@@ -451,12 +451,12 @@ BEGIN
 	END
 END Initnoise;
 
-PROCEDURE noise(x,y : REAL): REAL;
+PROCEDURE noise(x,y : FLOAT32): FLOAT32;
 (* Berechnet mittels linearer Interpolation eine Zufallswert aus dem bestehenden Feld *)
-VAR ix, iy: LONGINT;
-		ox, oy: REAL;
-		n : INTEGER;
-		n00, n10 : REAL;
+VAR ix, iy: SIGNED32;
+		ox, oy: FLOAT32;
+		n : SIGNED16;
+		n00, n10 : FLOAT32;
 BEGIN
 	x:= x+15000; y:= y+15000;
 	ix:= ENTIER(x) MOD maxnoise;
@@ -471,14 +471,14 @@ END noise;
 
 PROCEDURE Marble*;
 (* Generiert das Backdrop Marble *)
-VAR c, prim : INTEGER;
-		konst, fac, scale : REAL;
-		i,j : LONGINT;
+VAR c, prim : SIGNED16;
+		konst, fac, scale : FLOAT32;
+		i,j : SIGNED32;
 		P : Pictures.Picture;
 		S: Texts.Scanner;
 
-	PROCEDURE marb(u,v: REAL; VAR i : REAL);
-	VAR d, dd : REAL;
+	PROCEDURE marb(u,v: FLOAT32; VAR i : FLOAT32);
+	VAR d, dd : FLOAT32;
 	BEGIN
 		d:= prim*noise(u/100*scale, v/100*scale);
 		dd:= ENTIER(d) MOD 17;
@@ -519,8 +519,8 @@ BEGIN
 	Pictures.Update(P, 0,0, px, py);
 END Marble;
 
-PROCEDURE turbulence(x,y: REAL): REAL;
-VAR mins, t,s : REAL;
+PROCEDURE turbulence(x,y: FLOAT32): FLOAT32;
+VAR mins, t,s : FLOAT32;
 BEGIN
 	t:=0; s:=1; mins:= 1/px;
 	WHILE s>=mins DO
@@ -532,7 +532,7 @@ END turbulence;
 (** Dient zur Vorschau eines Backdrops *)
 PROCEDURE Preview*;
 CONST size=480;					(* Grösse des Pictures *)
-VAR i, j, sx, sy  : INTEGER;
+VAR i, j, sx, sy  : SIGNED16;
 		P : Pictures.Picture;
 		F: Rembrandt.Frame;
 BEGIN
@@ -553,8 +553,8 @@ END Preview;
 (** Backdrops *)
 PROCEDURE Textils*;
 (* Generiert das Backdrop Textils *)
-VAR x, y, col, j : INTEGER;
-		t, m,n: REAL;
+VAR x, y, col, j : SIGNED16;
+		t, m,n: FLOAT32;
 		P : Pictures.Picture;
 		S: Texts.Scanner;
 BEGIN
@@ -580,12 +580,12 @@ END Textils;
 PROCEDURE Clouds*;
 (* Generiert das Backdrop Clouds *)
 CONST kor=24;
-VAR array, update : INTEGER;
-		j, loop  : LONGINT;
-		dir, i,  k : INTEGER;
+VAR array, update : SIGNED16;
+		j, loop  : SIGNED32;
+		dir, i,  k : SIGNED16;
 		P : Pictures.Picture;
 		S: Texts.Scanner;
-		x, y : ARRAY 50 OF INTEGER;
+		x, y : ARRAY 50 OF SIGNED16;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -654,8 +654,8 @@ END Clouds;
 
 PROCEDURE Molecules*;
 (* Generiert das Backdrop Molecules *)
-VAR x, y, r,t, size, dif, dis : INTEGER;
-		frac, col : REAL;
+VAR x, y, r,t, size, dif, dis : SIGNED16;
+		frac, col : FLOAT32;
 		P : Pictures.Picture;
 		S: Texts.Scanner;
 BEGIN
@@ -690,7 +690,7 @@ PROCEDURE Threads*;
 (* Generiert das Backdrop Threads *)
 VAR P : Pictures.Picture;
 		S: Texts.Scanner;
-		x, y, num, j,  i, long, nbr, dir : INTEGER;
+		x, y, num, j,  i, long, nbr, dir : SIGNED16;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -724,9 +724,9 @@ BEGIN
 	END
 END Threads;
 
-PROCEDURE Damage(P: Pictures.Picture; col, dx, dy, x,y,w,h: INTEGER);
+PROCEDURE Damage(P: Pictures.Picture; col, dx, dy, x,y,w,h: SIGNED16);
 (* Generiert die Defekte zum Backdrop Bricks *)
-VAR n, fgd, bgd: INTEGER;
+VAR n, fgd, bgd: SIGNED16;
 BEGIN
 	n:= SHORT(Random() MOD 20)+1;
 	fgd:= col-2; IF fgd<=0 THEN fgd:=1 END;
@@ -742,8 +742,8 @@ BEGIN
 	END
 END Damage;
 
-PROCEDURE Brick(P: Pictures.Picture; col, dam, x,y,w,h: INTEGER);
-VAR fgd, bgd : INTEGER; n : LONGINT;
+PROCEDURE Brick(P: Pictures.Picture; col, dam, x,y,w,h: SIGNED16);
+VAR fgd, bgd : SIGNED16; n : SIGNED32;
 BEGIN
 	WraplConst(P, col,x,y,w,h);
 	fgd:= col-2; IF fgd<=0 THEN fgd:=1 END;
@@ -763,7 +763,7 @@ END Brick;
 PROCEDURE Bricks*;
 (* Generiert das Backdrop Bricks *)
 VAR P : Pictures.Picture;
-		i,x,y,w,h, dam, loop, col, maxw, maxd : INTEGER;
+		i,x,y,w,h, dam, loop, col, maxw, maxd : SIGNED16;
 BEGIN
 	loop:= Integer("brian");
 	dam:= Integer("bride");
@@ -788,8 +788,8 @@ PROCEDURE Surface*;
 (* Generiert das Backdrop Surface *)
 VAR P : Pictures.Picture;
 		S: Texts.Scanner;
-		rnd, t, fgd, bgd, he, dx, dy, update : INTEGER;
-		n, loop : LONGINT;
+		rnd, t, fgd, bgd, he, dx, dy, update : SIGNED16;
+		n, loop : SIGNED32;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -832,7 +832,7 @@ PROCEDURE Plasma*;
 (* Generiert das Backdrop Plasma *)
 VAR P : Pictures.Picture;
 		S: Texts.Scanner;
-		x, y, num, j, k , oldnum, long, nbr : INTEGER;
+		x, y, num, j, k , oldnum, long, nbr : SIGNED16;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -870,7 +870,7 @@ PROCEDURE Coins*;
 (* Generiert das Backdrop Coins *)
 VAR P : Pictures.Picture;
 		S: Texts.Scanner;
-		x, y, r, nbr, loop, j  : INTEGER;
+		x, y, r, nbr, loop, j  : SIGNED16;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -893,8 +893,8 @@ PROCEDURE Bows*;
 (* Generiert das Backdrop Bows *)
 VAR P : Pictures.Picture;
 		S: Texts.Scanner;
-		col, i, j, nbr, loop, x, y, a, b, dick: INTEGER;
-		ud : LONGINT;
+		col, i, j, nbr, loop, x, y, a, b, dick: SIGNED16;
+		ud : SIGNED32;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -926,8 +926,8 @@ END Bows;
 PROCEDURE Spirals*;
 (* Generiert das Backdrop Spir *)
 VAR P : Pictures.Picture;
-		col, i, j,  loop, x, y, rad, bool, diff: INTEGER;
-		rounds : REAL;
+		col, i, j,  loop, x, y, rad, bool, diff: SIGNED16;
+		rounds : FLOAT32;
 BEGIN
 	loop:= Integer("spian");
 	rad:= Integer("spira");
@@ -948,9 +948,9 @@ BEGIN
 	Pictures.Update(P, 0,0, px, py)
 END Spirals;
 
-PROCEDURE Tree(P: Pictures.Picture; x,y, dir, col, count,max, len : INTEGER);
+PROCEDURE Tree(P: Pictures.Picture; x,y, dir, col, count,max, len : SIGNED16);
 (* Rekursion für Tree *)
-VAR num, red : INTEGER; i: LONGINT;
+VAR num, red : SIGNED16; i: SIGNED32;
 BEGIN
 	IF count<max THEN
 		red:=count*(len DIV (max+1));
@@ -983,7 +983,7 @@ PROCEDURE Trees*;
 (* Generiert das Backdrop Trees *)
 VAR P : Pictures.Picture;
 		S: Texts.Scanner;
-		i,  loop, x, y, max, len, start: INTEGER;
+		i,  loop, x, y, max, len, start: SIGNED16;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);
@@ -1017,9 +1017,9 @@ PROCEDURE Cells*;
 (* Generiert das Backdrop Cells *)
 VAR P : Pictures.Picture;
 		S: Texts.Scanner;
-		x, y : ARRAY 500 OF INTEGER;
-		i, r, loop, mloop, size  : INTEGER;
-		dc, incdc : REAL;
+		x, y : ARRAY 500 OF SIGNED16;
+		i, r, loop, mloop, size  : SIGNED16;
+		dc, incdc : FLOAT32;
 BEGIN
 	Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos);
 	Texts.Scan(S);

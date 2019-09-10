@@ -19,13 +19,13 @@ TYPE
 	VAR
 		hc: Sd.HostController;
 		handler: InterruptHandler;
-		state, event: LONGINT;
+		state, event: SIGNED32;
 		card: Sd.Card;
 		halted: BOOLEAN;
 
-		PROCEDURE & Init (base: ADDRESS; int: LONGINT; clock: HUGEINT);
+		PROCEDURE & Init (base: ADDRESS; int: SIGNED32; clock: SIGNED64);
 		VAR
-			result: WORD;
+			result: INTEGER;
 		BEGIN
 			NEW(hc);
 			Sd.InitHostController(hc, base);
@@ -41,7 +41,7 @@ TYPE
 			SdEnvironment.InstallHandler(handler.Handle, int);
 		END Init;
 
-		PROCEDURE HandleEvent (card: Sd.Card; event: LONGINT; param: ANY);
+		PROCEDURE HandleEvent (card: Sd.Card; event: SIGNED32; param: ANY);
 		BEGIN {EXCLUSIVE}
 			AWAIT(state # Running);
 			SELF.event := event;
@@ -89,7 +89,7 @@ TYPE
 			blocked := FALSE
 		END Init;
 
-		PROCEDURE Block (hc: Sd.HostController; mask: SET; timeout: LONGINT): BOOLEAN;
+		PROCEDURE Block (hc: Sd.HostController; mask: SET; timeout: SIGNED32): BOOLEAN;
 		VAR
 			irqs: SET;
 		BEGIN {EXCLUSIVE}
@@ -124,7 +124,7 @@ VAR
 
 	PROCEDURE Init;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		Modules.InstallTermHandler(Cleanup);
 		FOR i := 0 TO Platform.SdNb - 1 DO
@@ -149,7 +149,7 @@ VAR
 
 	PROCEDURE Cleanup;
 	VAR
-		i: LONGINT;
+		i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO LEN(hc) - 1 DO
 			IF hc[i] # NIL THEN hc[i].Stop END
@@ -158,10 +158,10 @@ VAR
 
 	PROCEDURE Statistics * (c: Commands.Context);
 	VAR
-		accesses: LONGINT;
-		byteRead, byteWritten, read, write: HUGEINT;
-		tread, twrite: HUGEINT;
-		speedR, speedW: LONGREAL;
+		accesses: SIGNED32;
+		byteRead, byteWritten, read, write: SIGNED64;
+		tread, twrite: SIGNED64;
+		speedR, speedW: FLOAT64;
 	BEGIN
 		byteRead := Sd.NbyteRead;
 		byteWritten := Sd.NbyteWritten;
@@ -171,27 +171,27 @@ VAR
 		twrite := SdEnvironment.ToMicro(Sd.Twrite);
 
 		IF read > 0 THEN
-			speedR := LONGREAL(byteRead) / LONGREAL(tread);
+			speedR := FLOAT64(byteRead) / FLOAT64(tread);
 			c.out.String("SD Statistics:"); c.out.Ln;
 			c.out.String("  Bytes read: "); c.out.Int(byteRead, 0); c.out.Ln;
 			c.out.String("  Number of reads: "); c.out.Int(read, 0); c.out.Ln;
 			c.out.String("  Read time: "); c.out.Int(tread, 0); c.out.String(" us"); c.out.Ln;
 			c.out.String("  Average read size: "); c.out.Int(byteRead DIV read, 0); c.out.String(" bytes"); c.out.Ln;
 			c.out.String("  Read speed: "); c.out.FloatFix(speedR, 0, 3, 0); c.out.String(" Mb/s"); c.out.Ln;
-			c.out.String("  Average read time: "); c.out.FloatFix(LONGREAL(tread) / LONGREAL(read), 0, 3, 0); c.out.String(" us"); c.out.Ln;
+			c.out.String("  Average read time: "); c.out.FloatFix(FLOAT64(tread) / FLOAT64(read), 0, 3, 0); c.out.String(" us"); c.out.Ln;
 		ELSE
 			c.out.String("No read statistics");
 			c.out.Ln
 		END;
 
 		IF write > 0 THEN
-			speedW := LONGREAL(byteWritten) / LONGREAL(twrite);
+			speedW := FLOAT64(byteWritten) / FLOAT64(twrite);
 			c.out.String("  Bytes written: "); c.out.Int(byteWritten, 0); c.out.Ln;
 			c.out.String("  Number of writes: "); c.out.Int(write, 0); c.out.Ln;
 			c.out.String("  Write time: "); c.out.Int(twrite, 0); c.out.String(" us"); c.out.Ln;
 			c.out.String("  Average write size: "); c.out.Int(byteWritten DIV write, 0); c.out.String(" bytes"); c.out.Ln;
 			c.out.String("  Write speed: "); c.out.FloatFix(speedW, 0, 3, 0); c.out.String(" Mb/s"); c.out.Ln;
-			c.out.String("  Average write time: "); c.out.FloatFix(LONGREAL(twrite) / LONGREAL(write), 0, 3, 0); c.out.String(" us"); c.out.Ln;
+			c.out.String("  Average write time: "); c.out.FloatFix(FLOAT64(twrite) / FLOAT64(write), 0, 3, 0); c.out.String(" us"); c.out.Ln;
 		ELSE
 			c.out.String("No write statistics");
 			c.out.Ln

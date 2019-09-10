@@ -70,7 +70,7 @@ TYPE
 			END Disable;
 
 
-			PROCEDURE GetNativeFrequency*(nr : LONGINT) : LONGINT;
+			PROCEDURE GetNativeFrequency*(nr : SIGNED32) : SIGNED32;
 			BEGIN
 				RETURN 48000;
 			END GetNativeFrequency;
@@ -78,9 +78,9 @@ TYPE
 
 
 			PROCEDURE OpenPlayChannel*(	VAR channel: SoundDevices.Channel;
-												samplingRate, samplingResolution: LONGINT;
-												nofSubChannels, format : LONGINT;
-											VAR res : WORD );
+												samplingRate, samplingResolution: SIGNED32;
+												nofSubChannels, format : SIGNED32;
+											VAR res : INTEGER );
 			BEGIN {EXCLUSIVE}
 				IF ~enabled  THEN
 					Log.Enter;
@@ -146,9 +146,9 @@ TYPE
 
 
 			PROCEDURE OpenRecordChannel*(	VAR channel: SoundDevices.Channel;
-													samplingRate, samplingResolution: LONGINT;
-													 nofSubChannels, format : LONGINT;
-												VAR res : WORD );
+													samplingRate, samplingResolution: SIGNED32;
+													 nofSubChannels, format : SIGNED32;
+												VAR res : INTEGER );
 			BEGIN {EXCLUSIVE}
 				(* not impemented *)
 				res := SoundDevices.ResNoMoreChannels;
@@ -165,12 +165,12 @@ TYPE
 			BEGIN {EXCLUSIVE}
 			END UnregisterMixerChangeListener;
 
-			PROCEDURE GetMixerChannel*(channelNr : LONGINT; VAR channel : SoundDevices.MixerChannel);
+			PROCEDURE GetMixerChannel*(channelNr : SIGNED32; VAR channel : SoundDevices.MixerChannel);
 			BEGIN
 				channel := NIL
 			END GetMixerChannel;
 
-			PROCEDURE GetNofMixerChannels*() : LONGINT;
+			PROCEDURE GetNofMixerChannels*() : SIGNED32;
 			BEGIN
 				RETURN 0
 			END GetNofMixerChannels;
@@ -192,14 +192,14 @@ TYPE
 
 			frequency: AL.ALuint;
 			format: AL.ALenum;
-			count: LONGINT;
+			count: SIGNED32;
 
-			volume: LONGINT;
-			state: LONGINT;
+			volume: SIGNED32;
+			state: SIGNED32;
 
 			driver: Driver;
 
-			PROCEDURE &Initialize*( driver: Driver;  samplingRate, bitsPerSample, nofChannels : LONGINT );
+			PROCEDURE &Initialize*( driver: Driver;  samplingRate, bitsPerSample, nofChannels : SIGNED32 );
 			BEGIN
 				SELF.driver := driver;
 
@@ -283,7 +283,7 @@ TYPE
 			END QueueBuffer;
 
 
-			PROCEDURE SetVolume*( vol : LONGINT );
+			PROCEDURE SetVolume*( vol : SIGNED32 );
 			VAR gain: AL.ALfloat;
 			BEGIN
 				IF vol < 0 THEN  vol := 0
@@ -295,12 +295,12 @@ TYPE
 			END SetVolume;
 
 
-			PROCEDURE GetVolume*() : LONGINT;
+			PROCEDURE GetVolume*() : SIGNED32;
 			BEGIN
 				RETURN SELF.volume
 			END GetVolume;
 
-			PROCEDURE GetPosition*() : LONGINT;
+			PROCEDURE GetPosition*() : SIGNED32;
 			BEGIN
 				RETURN 0
 			END GetPosition;
@@ -367,7 +367,7 @@ VAR  driver: Driver;
 
 	(* Install the driver *)
 	PROCEDURE Install*;
-	VAR res: WORD;
+	VAR res: INTEGER;
 	BEGIN {EXCLUSIVE}
 		(* Avoid multiple installation *)
 		IF driver = NIL THEN

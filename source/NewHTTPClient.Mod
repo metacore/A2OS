@@ -12,16 +12,16 @@ CONST
 TYPE
 	(*LimitedInStream* = OBJECT
 	VAR inR: Streams.Reader;
-		remain: LONGINT;
+		remain: SIGNED32;
 
-		PROCEDURE &Init*(VAR inR, outR: Streams.Reader; size : LONGINT);
+		PROCEDURE &Init*(VAR inR, outR: Streams.Reader; size : SIGNED32);
 		BEGIN
 			SELF.inR := inR;	remain := size;
 			Streams.OpenReader(outR, Receiver);
 		END Init;
 
-		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: LONGINT; VAR len, res: LONGINT);
-		VAR l: LONGINT;
+		PROCEDURE Receiver(VAR buf: ARRAY OF CHAR; ofs, size, min: SIGNED32; VAR len, res: SIGNED32);
+		VAR l: SIGNED32;
 		BEGIN
 			IF remain > 0 THEN
 				ASSERT((size > 0) & (min <= size) & (min >= 0));
@@ -38,7 +38,7 @@ TYPE
 
 	HTTPConnection* = OBJECT
 	VAR host, referer, useragent, accept : ARRAY 128 OF CHAR;
-		port : LONGINT;
+		port : SIGNED32;
 		http11 : BOOLEAN;
 		con : TCP.Connection;
 		requestHeader*: WebHTTP.RequestHeader;
@@ -53,7 +53,7 @@ TYPE
 		PROCEDURE Open;
 		VAR
 			fadr: IP.Adr;
-			res : WORD;
+			res : INTEGER;
 
 		BEGIN
 			IF (con # NIL) & (con.state = TCP.Established) THEN RETURN END;
@@ -69,12 +69,12 @@ TYPE
 			IF con # NIL THEN con.Close; con := NIL END;
 		END Close;
 
-		PROCEDURE Get*(CONST url : ARRAY OF CHAR; http11 : BOOLEAN; VAR out : Streams.Reader; VAR res : WORD);
+		PROCEDURE Get*(CONST url : ARRAY OF CHAR; http11 : BOOLEAN; VAR out : Streams.Reader; VAR res : INTEGER);
 		VAR w : Streams.Writer; r : Streams.Reader;
 			x : WebHTTP.AdditionalField;
 			host : ARRAY 128 OF CHAR;
 			path : ARRAY 2048 OF CHAR;
-			port : LONGINT;
+			port : SIGNED32;
 			dechunk: WebHTTP.ChunkedInStream;
 			lin : WebHTTP.LimitedInStream;
 		BEGIN
@@ -127,13 +127,13 @@ TYPE
 		END Get;
 
 				(*POST HTTP/1.1 message. needs either a Content-Length of the body or a chunked transfer encoding*)
-		PROCEDURE Post*(CONST url : ARRAY OF CHAR; CONST headervars: ARRAY OF CHAR; MIME: ARRAY OF CHAR; body: Streams.Reader; length: SIZE;  VAR out : Streams.Reader; VAR res : WORD);
+		PROCEDURE Post*(CONST url : ARRAY OF CHAR; CONST headervars: ARRAY OF CHAR; MIME: ARRAY OF CHAR; body: Streams.Reader; length: SIZE;  VAR out : Streams.Reader; VAR res : INTEGER);
 		VAR w : Streams.Writer; r : Streams.Reader;
 			x : WebHTTP.AdditionalField;
 			host : ARRAY 128 OF CHAR;
 			path : ARRAY 2048 OF CHAR;
 			buf: ARRAY 1024 OF CHAR;
-			port : LONGINT;
+			port : SIGNED32;
 			dechunk: WebHTTP.ChunkedInStream;
 			lin : WebHTTP.LimitedInStream;
 			len: ARRAY 16 OF CHAR;
@@ -212,7 +212,7 @@ END CleanUp;
 PROCEDURE Test*;
 VAR h : HTTPConnection;
 	r : Streams.Reader;
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	NEW(h);
 	h.Get("http://www.bimbodot.org", TRUE, r, res);
@@ -225,7 +225,7 @@ END Test;
 PROCEDURE Test2*;
 VAR h : HTTPConnection;
 	r : Streams.Reader;
-	res : WORD;
+	res : INTEGER;
 	f:Files.File;
 	fr: Files.Reader;
 BEGIN
@@ -241,7 +241,7 @@ END Test2;
 PROCEDURE TestGoogle*;
 VAR h : HTTPConnection;
 	r : Streams.Reader;
-	res : WORD;
+	res : INTEGER;
 BEGIN
 	NEW(h);
 

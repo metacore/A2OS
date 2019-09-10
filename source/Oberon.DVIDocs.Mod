@@ -83,7 +83,7 @@ CONST
       M: Objects.CopyMsg; (* message to create new viewer *)
       nv: DVIViewers.Frame; (* the new doc's dvi-viewer *)
       num: Objects.Object;
-      i: LONGINT; r: REAL;
+      i: SIGNED32; r: FLOAT32;
    BEGIN
       curr:= Desktops.CurDoc(Gadgets.context);
       v:= curr.dsc(DVIViewers.Frame);
@@ -114,7 +114,7 @@ CONST
    END Copy;
 
    PROCEDURE Grow*;
-   VAR obj: Objects.Object; DW: INTEGER;
+   VAR obj: Objects.Object; DW: SIGNED16;
    BEGIN
       obj := Gadgets.context;
       WHILE (obj # NIL) & ~((obj IS Desktops.DocGadget) OR

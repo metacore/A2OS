@@ -56,15 +56,15 @@ TYPE
 	List* =  POINTER TO ListDesc;
 	ListDesc* = RECORD
 		name*: vyName.tNameArray;
-		x, y, w, h, dsr: INTEGER;
+		x, y, w, h, dsr: SIGNED16;
 		fnt: ARRAY 32 OF CHAR;
-		nr: INTEGER;
+		nr: SIGNED16;
 		next*: List
 	END;
 
 	fofPopup = RECORD
-		x, y, w, h, dh: INTEGER;
-		nr: INTEGER;
+		x, y, w, h, dh: SIGNED16;
+		nr: SIGNED16;
 		e: List
 	END;
 
@@ -72,24 +72,24 @@ TYPE
 	BorderBGColor, BorderFGColor, BGColor, FGColor, SelectColor: Display.Color;  (* for Lists *)
 	inHelp: BOOLEAN;
 
-	Rectangle*: PROCEDURE (x, y, w, h:  INTEGER;  VAR dx, dy: INTEGER);
-	Rectangles*: PROCEDURE (x, y, w, h: ARRAY OF INTEGER;  rectCount: INTEGER;  VAR dx, dy: INTEGER);
-	GrowRectangleRL*: PROCEDURE (x, y, w, h: INTEGER;  VAR dx, dy: INTEGER);
-	GrowRectangleR*: PROCEDURE (x, y, w, h: INTEGER;  VAR dx, dy: INTEGER);
-	ZoomCentralRect*: PROCEDURE (x, y, w, h: INTEGER;  VAR dx, dy: INTEGER);
-	TrackMouse*: PROCEDURE (VAR keys: SET;  VAR X, Y: INTEGER;  marker: Oberon.Marker);
-	ScrollList*: PROCEDURE (e0: List;  x0, y0: INTEGER;  VAR res: List);
-	MoveListEntry*: PROCEDURE (list: List;  VAR x, y, dx, dy: INTEGER);
-	FramedString*: PROCEDURE (X, Y: INTEGER;  fnt, str: ARRAY OF CHAR;  VAR dx, dy: INTEGER);
-	String*: PROCEDURE (X, Y: INTEGER;  fnt, str: ARRAY OF CHAR;  VAR dx, dy: INTEGER);
+	Rectangle*: PROCEDURE (x, y, w, h:  SIGNED16;  VAR dx, dy: SIGNED16);
+	Rectangles*: PROCEDURE (x, y, w, h: ARRAY OF SIGNED16;  rectCount: SIGNED16;  VAR dx, dy: SIGNED16);
+	GrowRectangleRL*: PROCEDURE (x, y, w, h: SIGNED16;  VAR dx, dy: SIGNED16);
+	GrowRectangleR*: PROCEDURE (x, y, w, h: SIGNED16;  VAR dx, dy: SIGNED16);
+	ZoomCentralRect*: PROCEDURE (x, y, w, h: SIGNED16;  VAR dx, dy: SIGNED16);
+	TrackMouse*: PROCEDURE (VAR keys: SET;  VAR X, Y: SIGNED16;  marker: Oberon.Marker);
+	ScrollList*: PROCEDURE (e0: List;  x0, y0: SIGNED16;  VAR res: List);
+	MoveListEntry*: PROCEDURE (list: List;  VAR x, y, dx, dy: SIGNED16);
+	FramedString*: PROCEDURE (X, Y: SIGNED16;  fnt, str: ARRAY OF CHAR;  VAR dx, dy: SIGNED16);
+	String*: PROCEDURE (X, Y: SIGNED16;  fnt, str: ARRAY OF CHAR;  VAR dx, dy: SIGNED16);
 	Help*: PROCEDURE (s: ARRAY OF CHAR);
-	HelpAt*: PROCEDURE (x, y: INTEGER;  s: ARRAY OF CHAR);
+	HelpAt*: PROCEDURE (x, y: SIGNED16;  s: ARRAY OF CHAR);
 	HelpEnd*: PROCEDURE;
-	TrackMouseCont*: PROCEDURE (VAR keys: SET;  VAR x, y:  INTEGER;  marker: Oberon.Marker);
+	TrackMouseCont*: PROCEDURE (VAR keys: SET;  VAR x, y:  SIGNED16;  marker: Oberon.Marker);
 
-PROCEDURE rectangle (x, y, w, h: INTEGER;  VAR dx, dy: INTEGER);
+PROCEDURE rectangle (x, y, w, h: SIGNED16;  VAR dx, dy: SIGNED16);
 	(*vs 0.0a1 md  03.11.94 *)
-	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld: INTEGER;  oldm: INTEGER;
+	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld: SIGNED16;  oldm: SIGNED16;
 BEGIN
 	vyHostDisplay.GetDisplayMode (oldm);
 	vyHostDisplay.SetDisplayMode (vyHostDisplay.invert);
@@ -111,13 +111,13 @@ BEGIN
 END rectangle;
 (*  System.Free vyTracking     vyTracking.RectangleTest   *)
 
-PROCEDURE rectangles (x, y, w, h: ARRAY OF INTEGER;  rectCount: INTEGER;
-VAR dx, dy: INTEGER);
+PROCEDURE rectangles (x, y, w, h: ARRAY OF SIGNED16;  rectCount: SIGNED16;
+VAR dx, dy: SIGNED16);
 	(*vs 0.0a1  md  03.11.94 *)
-	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld, oldm: INTEGER;
+	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld, oldm: SIGNED16;
 
 PROCEDURE FrameRects;
-	VAR i: INTEGER;
+	VAR i: SIGNED16;
 BEGIN i := 0;
 	WHILE i < rectCount DO vyHostDisplay.FrameRect (x[i] + dx, y[i] + dy, w[i], h[i]);  INC (i) END
 END FrameRects;
@@ -142,9 +142,9 @@ BEGIN 	vyHostDisplay.GetDisplayMode (oldm);
 END rectangles;
 (*  System.Free vyTracking     vyTracking.RectanglesTest   *)
 
-PROCEDURE growRectangleRL (x, y, w, h: INTEGER;  VAR dx, dy: INTEGER);
+PROCEDURE growRectangleRL (x, y, w, h: SIGNED16;  VAR dx, dy: SIGNED16);
 	(*vs 0.0a1  md  29.05.95 *)
-	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld: INTEGER;  oldm: INTEGER;
+	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld: SIGNED16;  oldm: SIGNED16;
 BEGIN
 	vyHostDisplay.GetDisplayMode (oldm);
 	vyHostDisplay.SetDisplayMode (vyHostDisplay.invert);
@@ -167,9 +167,9 @@ BEGIN
 END growRectangleRL;
 (*  System.Free vyTracking     vyTracking.GrowRectangleRLTest  *)
 
-PROCEDURE growRectangleR (x, y, w, h: INTEGER;  VAR dx, dy: INTEGER);
+PROCEDURE growRectangleR (x, y, w, h: SIGNED16;  VAR dx, dy: SIGNED16);
 	(*vs 0.0a1  md  29.05.95 *)
-	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld, oldm: INTEGER;
+	VAR keys, keys0: SET;  x1, y1, x0, y0, xOld, yOld, oldm: SIGNED16;
 BEGIN 	vyHostDisplay.GetDisplayMode (oldm);
 	vyHostDisplay.SetDisplayMode (vyHostDisplay.invert);
 	Input.Mouse (keys0, x0, y0);  vyHostDisplay.DrawCursor (x0, y0);  vyHostDisplay.FrameRect (x, y, w, h);
@@ -191,10 +191,10 @@ BEGIN 	vyHostDisplay.GetDisplayMode (oldm);
 END growRectangleR;
 (*  System.Free vyTracking     vyTracking.GrowRectangleRTest  *)
 
-PROCEDURE zoomCentralRect (x, y, w, h: INTEGER;  VAR dx, dy: INTEGER);
+PROCEDURE zoomCentralRect (x, y, w, h: SIGNED16;  VAR dx, dy: SIGNED16);
 	(*vs 0.0a1 md*)
 CONST growBox = 4;
-	VAR keys, keys0: SET;  x0, y0, x1, y1, dxOld, dyOld, oldm: INTEGER;
+	VAR keys, keys0: SET;  x0, y0, x1, y1, dxOld, dyOld, oldm: SIGNED16;
 
 PROCEDURE Prompt;
 
@@ -224,14 +224,14 @@ BEGIN 	vyHostDisplay.GetDisplayMode (oldm);
 END zoomCentralRect;
 (*  System.Free vyTracking     vyTracking.ZoomRectTest   *)
 
-PROCEDURE trackMouse (VAR keys : SET;  VAR x, y: INTEGER;  marker: Oberon.Marker);
+PROCEDURE trackMouse (VAR keys : SET;  VAR x, y: SIGNED16;  marker: Oberon.Marker);
 BEGIN	(* Input.Mouse(keys, x, y); vyHostDisplay.DrawCursor(x, y); *)Effects.TrackMouse(keys, x, y, marker)  END trackMouse;
 
-PROCEDURE  scrollList (e0: List;  x0, y0: INTEGER;  VAR res: List);  (* stable for windows interaction, fof *)
+PROCEDURE  scrollList (e0: List;  x0, y0: SIGNED16;  VAR res: List);  (* stable for windows interaction, fof *)
 	(*vs 0.0a2 fof 26.3.96 *)
 	VAR (*bitmap: Bitmaps.Bitmap;*)Q: Display3.Mask;   list: fofPopup;
 PROCEDURE MakeList;
-	VAR W, H, w0, h0, dsr: INTEGER;  e: List;
+	VAR W, H, w0, h0, dsr: SIGNED16;  e: List;
 BEGIN
 	list.nr := 0;  W := 0;  H := 0;  e := e0;  list.e := e0;
 	WHILE(e # NIL) DO
@@ -255,7 +255,7 @@ BEGIN
 END MakeList;
 
 PROCEDURE ShowList;
-	VAR pens: INTEGER;  e: List;
+	VAR pens: SIGNED16;  e: List;
 BEGIN
 	vyHostDisplay.SetBackColor(BGColor);
 	vyHostDisplay.EraseRect(list.x, list.y, list.w, list.h);
@@ -269,7 +269,7 @@ BEGIN
 END ShowList;
 
 
-PROCEDURE FindNew (x, y: INTEGER): List;
+PROCEDURE FindNew (x, y: SIGNED16): List;
 	VAR e: List;
 BEGIN	e := list.e;
 	WHILE(e # NIL) DO
@@ -297,7 +297,7 @@ BEGIN
 END Deselecte;
 
 PROCEDURE Select (VAR ls: List);
-	VAR xm, ym: INTEGER;  orgkeys, keys: SET;  stoptime: LONGINT;
+	VAR xm, ym: SIGNED16;  orgkeys, keys: SET;  stoptime: SIGNED32;
 BEGIN
 	stoptime := Oberon.Time() + listMaxIdleTime * Input.TimeUnit;   (* stop track mouse after idle *)
 
@@ -336,12 +336,12 @@ BEGIN
 	vyHostDisplay.UseClipMask(Q)
 END scrollList;
 (*
-PROCEDURE MoveListEntry* (list: List; VAR x, y, dx, dy: INTEGER);
+PROCEDURE MoveListEntry* (list: List; VAR x, y, dx, dy: SIGNED16);
 (*vs 0.0a2 fof 28.3.96*)
-VAR (*bitmap: Bitmaps.Bitmap;*) x0, y0, x1, y1: INTEGER; oldkeys, keys: SET; Q: Display3.Mask;
+VAR (*bitmap: Bitmaps.Bitmap;*) x0, y0, x1, y1: SIGNED16; oldkeys, keys: SET; Q: Display3.Mask;
 
 PROCEDURE Show ();
-VAR pens: INTEGER;
+VAR pens: SIGNED16;
 BEGIN
 vyHostDisplay.GetPenSize(pens); vyHostDisplay.SetPenSize(Border);
 vyHostDisplay.SetBackColor(BorderBGColor); vyHostDisplay.SetForeColor(BorderFGColor);
@@ -353,12 +353,12 @@ vyHostDisplay.SetForeColor(FGColor);
 vyHostDisplay.String(list.x, list.y + list.dsr , list.fnt, list.name);
 END Show;
 *)
-PROCEDURE moveListEntry (list: List;  VAR x, y, dx, dy: INTEGER);
+PROCEDURE moveListEntry (list: List;  VAR x, y, dx, dy: SIGNED16);
 	(*vs 0.0a2 fof 28.3.96*)
-	VAR (*bitmap: Bitmaps.Bitmap;*)x0, y0, x1, y1: INTEGER;  oldkeys, keys: SET;  Q: Display3.Mask;
+	VAR (*bitmap: Bitmaps.Bitmap;*)x0, y0, x1, y1: SIGNED16;  oldkeys, keys: SET;  Q: Display3.Mask;
 
 PROCEDURE Show;
-	VAR pens: INTEGER;
+	VAR pens: SIGNED16;
 BEGIN
 	(* fof 010215
 	vyHostDisplay.GetPenSize(pens); vyHostDisplay.SetPenSize(Border);
@@ -408,10 +408,10 @@ BEGIN
 	vyHostDisplay.UseClipMask(Q)
 END moveListEntry;
 
-PROCEDURE ArrayToList* (names: ARRAY OF ARRAY OF CHAR;  nr: INTEGER): List;
+PROCEDURE ArrayToList* (names: ARRAY OF ARRAY OF CHAR;  nr: SIGNED16): List;
 	(*vs 0.0a2 fof 28.3.96*)
 VAR
-	i: INTEGER;  e, e0: List;
+	i: SIGNED16;  e, e0: List;
 BEGIN
 	i := 0;
 	IF nr > 0 THEN NEW(e0);  e := e0  END;
@@ -423,7 +423,7 @@ BEGIN
 	RETURN e0
 END ArrayToList;
 
-PROCEDURE framedString (X, Y: INTEGER;  fnt, str: ARRAY OF CHAR;  VAR dx, dy: INTEGER);
+PROCEDURE framedString (X, Y: SIGNED16;  fnt, str: ARRAY OF CHAR;  VAR dx, dy: SIGNED16);
 	(*vs 0.0a2 fof  28.3.96 *)
 	VAR  e: List;
 BEGIN
@@ -434,9 +434,9 @@ BEGIN
 	MoveListEntry(e, X, Y, dx, dy)
 END framedString;
 
-PROCEDURE string (X, Y: INTEGER;  fnt, str: ARRAY OF CHAR;  VAR dx, dy: INTEGER);
+PROCEDURE string (X, Y: SIGNED16;  fnt, str: ARRAY OF CHAR;  VAR dx, dy: SIGNED16);
 	(*vs 0.0a1  md  04.07.95 *)
-	VAR x0, y0, x1, y1, xOld, yOld, x, y, w, h, dsr, oldm: INTEGER;  keys, keys0: SET;  font: ARRAY 32 OF CHAR;
+	VAR x0, y0, x1, y1, xOld, yOld, x, y, w, h, dsr, oldm: SIGNED16;  keys, keys0: SET;  font: ARRAY 32 OF CHAR;
 BEGIN
 	IF Fonts.This(fnt) = NIL THEN COPY(Font, font) ELSE COPY(fnt, font) END;
 	vyHostDisplay.GetStringFrame (X, Y, font, str, x, y, w, h, dsr);  INC (w);
@@ -463,14 +463,14 @@ BEGIN
 END string;
 
 PROCEDURE help (s: ARRAY OF CHAR);
-VAR set: SET; x,y: INTEGER;
+VAR set: SET; x,y: SIGNED16;
 BEGIN
 	Input.Mouse(set,x,y);
 	HelpAt(x,y,s);
 	(* for consistency with service modules in ANTS used by vyPort *)
 END help;
 
-PROCEDURE helpAt (x, y: INTEGER;  s: ARRAY OF CHAR);
+PROCEDURE helpAt (x, y: SIGNED16;  s: ARRAY OF CHAR);
 BEGIN
 	IF inHelp THEN RETURN END;
 	Texts.WriteString(Wr,"vyTracking Help : ");
@@ -488,9 +488,9 @@ BEGIN
 	(* for consistency with service modules in ANTS used by vyPort *)
 END helpEnd;
 
-PROCEDURE trackMouseCont (VAR keys: SET;  VAR x, y:  INTEGER;  marker: Oberon.Marker);
+PROCEDURE trackMouseCont (VAR keys: SET;  VAR x, y:  SIGNED16;  marker: Oberon.Marker);
 	(* for consistency with ANTS functionality, should be safe procedure for mouse handling*)
-	VAR k: SET;   stoptime: LONGINT;
+	VAR k: SET;   stoptime: SIGNED32;
 BEGIN
 	stoptime := Oberon.Time() + maxIdleTime * Input.TimeUnit;   (* stop track mouse after idle *)
 	Input.Mouse(k, x, y);
@@ -498,7 +498,7 @@ BEGIN
 		Effects.TrackMouse(keys, x, y, marker);
 		IF ~vyPortability.DisplayAvailable() THEN (* Display not available*)RETURN END;
 		IF (k = {}) & (Oberon.Time() > stoptime) THEN
-			Oberon.DrawCursor(Oberon.Mouse, Oberon.Arrow, x, y);   x := MIN(INTEGER);  y := MIN(INTEGER);
+			Oberon.DrawCursor(Oberon.Mouse, Oberon.Arrow, x, y);   x := MIN(SIGNED16);  y := MIN(SIGNED16);
 		RETURN END
 	END;
 	Oberon.DrawCursor(Oberon.Mouse, Effects.Cross, x, y)
@@ -529,7 +529,7 @@ END vyTracking.
 PROCEDURE TestScroll*;
 VAR
 	teststring: ARRAY 10 OF ARRAY 32 OF CHAR;
-	x, y: INTEGER;  resnr: INTEGER;  keys: SET;  res: List;  l, m, n, o: INTEGER;
+	x, y: SIGNED16;  resnr: SIGNED16;  keys: SET;  res: List;  l, m, n, o: SIGNED16;
 BEGIN
 	COPY("test0", teststring[0]);
 	COPY("test1", teststring[1]);
@@ -556,7 +556,7 @@ END TestScroll;
 
 PROCEDURE RectangleTest*;
 	(** vs 0.0d0 *)	(* md  03.11.94 09:19:10 *)
-	VAR x, y, dx, dy: INTEGER;  keys: SET;
+	VAR x, y, dx, dy: SIGNED16;  keys: SET;
 BEGIN vyHostDisplay.SetClipRect (0, 0, 800, 500);
 	REPEAT Input.Mouse (keys, x, y)  UNTIL (keys # {});
 	vyHostDisplay.SetCursor (vyHostDisplay.Crosshair);
@@ -567,7 +567,7 @@ END RectangleTest;
 
 PROCEDURE RectanglesTest*;
 	(** vs 0.0d0 *)	(* md  29.05.95 10:06:49 *)
-	VAR x, y, w, h: ARRAY 10 OF INTEGER;  rectCount, X, Y, dx, dy: INTEGER;  keys: SET;
+	VAR x, y, w, h: ARRAY 10 OF SIGNED16;  rectCount, X, Y, dx, dy: SIGNED16;  keys: SET;
 BEGIN vyHostDisplay.SetClipRect (0, 0, 800, 500);
 	REPEAT Input.Mouse (keys, X, Y)  UNTIL (keys # {});
 	x[0] := X;  y[0] := Y + 10;  w[0] := 20;  h[0] := 150;
@@ -579,7 +579,7 @@ END RectanglesTest;
 
 PROCEDURE GrowRectangleRLTest*;
 	(** vs 0.0d0 *)	(* md  03.11.94 09:19:10 *)
-	VAR x, y, dx, dy: INTEGER;  keys: SET;
+	VAR x, y, dx, dy: SIGNED16;  keys: SET;
 BEGIN vyHostDisplay.SetClipRect (0, 0, 800, 500);
 	REPEAT Input.Mouse (keys, x, y)  UNTIL (keys # {});
 	vyHostDisplay.SetCursor (vyHostDisplay.Crosshair);
@@ -590,7 +590,7 @@ END GrowRectangleRLTest;
 
 PROCEDURE GrowRectangleRTest*;
 	(** vs 0.0d0 *)	(* md  03.11.94 09:19:10 *)
-	VAR x, y, dx, dy: INTEGER;  keys: SET;
+	VAR x, y, dx, dy: SIGNED16;  keys: SET;
 BEGIN vyHostDisplay.SetClipRect (0, 0, 800, 500);
 	REPEAT Input.Mouse (keys, x, y)  UNTIL (keys # {});
 	GrowRectangleR (x - 10, y - 5, 10, 10, dx, dy);
@@ -599,7 +599,7 @@ END GrowRectangleRTest;
 
 PROCEDURE ZoomRectTest*;
 	(** vs 0.0d0 *)	(* md  03.11.94 09:19:10 *)
-	VAR x, y, dx, dy: INTEGER;  keys: SET;
+	VAR x, y, dx, dy: SIGNED16;  keys: SET;
 BEGIN vyHostDisplay.SetClipRect (0, 0, 800, 500);
 	REPEAT Input.Mouse (keys, x, y)  UNTIL (keys # {});
 	ZoomCentralRect (x - 10, y - 10, 40, 20, dx, dy);
@@ -608,7 +608,7 @@ END ZoomRectTest;
 
 PROCEDURE ScrollListTest*;
 	(** vs 0.0d0 *)	(* md  31.05.95 12:29:53 *)
-	VAR t: Texts.Text;  sel, X, Y: INTEGER;  keys: SET;  v: Viewers.Viewer;
+	VAR t: Texts.Text;  sel, X, Y: SIGNED16;  keys: SET;  v: Viewers.Viewer;
 	content: ARRAY 128 OF CHAR;
 BEGIN
 	t := TextFrames.Text ("");
@@ -625,7 +625,7 @@ END ScrollListTest;
 
 PROCEDURE FramedStringTest*;
 	(** vs 0.0d0 *)	(* md  03.11.94 09:19:10 *)
-	VAR x, y, dx, dy: INTEGER;  keys: SET;
+	VAR x, y, dx, dy: SIGNED16;  keys: SET;
 BEGIN vyHostDisplay.SetClipRect (0, 0, 800, 500);
 	REPEAT Input.Mouse (keys, x, y)  UNTIL (keys # {});
 	vyHostDisplay.SetCursor (vyHostDisplay.Crosshair);

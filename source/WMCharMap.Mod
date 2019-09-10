@@ -22,7 +22,7 @@ TYPE
 		copyButton : WMStandardComponents.Button;
 
 		prevFont, font : WMGraphics.Font;
-		nofCharacters, curChar : LONGINT;
+		nofCharacters, curChar : SIGNED32;
 
 		PROCEDURE &New*;
 		VAR vc : WMComponents.VisualComponent;
@@ -46,7 +46,7 @@ TYPE
 		PROCEDURE CreateForm() : WMComponents.VisualComponent;
 		VAR panel : WMStandardComponents.Panel; label : WMStandardComponents.Label;
 		BEGIN
-			NEW(mainPanel); mainPanel.bounds.SetExtents(710, 300); mainPanel.fillColor.Set(LONGINT(0CCCCCCFFH));
+			NEW(mainPanel); mainPanel.bounds.SetExtents(710, 300); mainPanel.fillColor.Set(SIGNED32(0CCCCCCFFH));
 
 			(* -- Info Panel -- *)
 			NEW(panel); panel.alignment.Set(WMComponents.AlignBottom); panel.bounds.SetHeight(20);
@@ -64,7 +64,7 @@ TYPE
 			NEW(decEd); decEd.alignment.Set(WMComponents.AlignLeft); decEd.multiLine.Set(FALSE);
 			decEd.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			decEd.bounds.SetWidth(100); decEd.onEnter.Add(FindChar);
-			decEd.fillColor.Set(LONGINT(0FFFFFFFFH)); decEd.tv.showBorder.Set(TRUE);
+			decEd.fillColor.Set(SIGNED32(0FFFFFFFFH)); decEd.tv.showBorder.Set(TRUE);
 			decEd.tv.borders.Set(WMRectangles.MakeRect(3,3,1,1));
 			panel.AddContent(decEd);
 
@@ -75,7 +75,7 @@ TYPE
 			NEW(hexEd); hexEd.alignment.Set(WMComponents.AlignLeft); hexEd.multiLine.Set(FALSE);
 			hexEd.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			hexEd.bounds.SetWidth(100); hexEd.onEnter.Add(FindChar);
-			hexEd.fillColor.Set(LONGINT(0FFFFFFFFH)); hexEd.tv.showBorder.Set(TRUE);
+			hexEd.fillColor.Set(SIGNED32(0FFFFFFFFH)); hexEd.tv.showBorder.Set(TRUE);
 			hexEd.tv.borders.Set(WMRectangles.MakeRect(3,3,1,1));
 			panel.AddContent(hexEd);
 
@@ -88,7 +88,7 @@ TYPE
 			mainPanel.AddContent(panel);
 
 			NEW(preview); preview.alignment.Set(WMComponents.AlignLeft); preview.bounds.SetWidth(200);
-			preview.fillColor.Set(LONGINT(0FFFFFFCCH));
+			preview.fillColor.Set(SIGNED32(0FFFFFFCCH));
 			preview.textColor.Set(0000000FFH); preview.caption.SetAOC("");
 			preview.alignH.Set(WMGraphics.AlignCenter); preview.alignV.Set(WMGraphics.AlignCenter);
 			panel.AddContent(preview);
@@ -107,18 +107,18 @@ TYPE
 		VAR pos, dx, dy : SIZE; i: SIZE; charString : ARRAY 16 OF CHAR;
 		BEGIN
 			IF WMGrids.CellSelected IN state THEN
-				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(08888FFFFH), WMGraphics.ModeCopy)
+				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), SIGNED32(08888FFFFH), WMGraphics.ModeCopy)
 			ELSIF WMGrids.CellHighlighted IN state THEN
-				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(0FFFF00FFH), WMGraphics.ModeCopy)
+				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), SIGNED32(0FFFF00FFH), WMGraphics.ModeCopy)
 			ELSE
-				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), LONGINT(0FFFFFFFFH), WMGraphics.ModeCopy)
+				canvas.Fill(WMRectangles.MakeRect(0, 0, w, h), SIGNED32(0FFFFFFFFH), WMGraphics.ModeCopy)
 			END;
 			pos := y * NofCols + x;
 
 			IF pos < nofCharacters THEN
 				canvas.SetColor(0FFH);
 				canvas.SetFont(font);
-				IF ~UTF8Strings.EncodeChar(pos(LONGINT), charString, i) THEN COPY("", charString) END;
+				IF ~UTF8Strings.EncodeChar(pos(SIGNED32), charString, i) THEN COPY("", charString) END;
 				font.GetStringSize(charString, dx, dy);
 				canvas.DrawString(w-30+((30 - dx) DIV 2) ,h-8 , charString);
 			END
@@ -131,7 +131,7 @@ TYPE
 			pos := t * NofCols + l;
 
 			IF pos < nofCharacters THEN
-				curChar := pos(LONGINT); i := 0;
+				curChar := pos(SIGNED32); i := 0;
 				IF UTF8Strings.EncodeChar(curChar, charString, i) THEN preview.caption.SetAOC(charString)
 				ELSE preview.caption.SetAOC("") END;
 
@@ -144,7 +144,7 @@ TYPE
 
 		PROCEDURE FindChar(sender, data : ANY);
 		VAR tempString : ARRAY 16 OF CHAR;
-			pos: LONGINT; res: WORD;
+			pos: SIGNED32; res: INTEGER;
 		BEGIN
 			IF sender IS WMEditors.Editor THEN
 				IF sender(WMEditors.Editor) = hexEd THEN
@@ -193,7 +193,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*;
 VAR winstance : Window;

@@ -18,44 +18,44 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 		Winding* = 0;	(** non_zero winding rule **)
 		EvenOdd* = 1;	(** exclusive_or rule **)
 
-		(** interval of valid region coordinates (UBound - LBound is still representable within INTEGER **)
-		UBound* = MAX(INTEGER) DIV 2;
-		LBound* = MIN(INTEGER) DIV 2;
+		(** interval of valid region coordinates (UBound - LBound is still representable within SIGNED16 **)
+		UBound* = MAX(SIGNED16) DIV 2;
+		LBound* = MIN(SIGNED16) DIV 2;
 
 		BlockSize = 512;	(* size increment for region data blocks *)
 		Enter = 1; Exit = -1;	(* direction of bounding curve at scanline intersection *)
 		FirstSlice = 2;	(* index of first slice *)
-		Bottom = MIN(INTEGER); Top = MAX(INTEGER);	(* sentinel values *)
+		Bottom = MIN(SIGNED16); Top = MAX(SIGNED16);	(* sentinel values *)
 
 
 	TYPE
-		RegionData = POINTER TO ARRAY OF LONGINT;
+		RegionData = POINTER TO ARRAY OF SIGNED32;
 
 		(** regions of arbitrary shape **)
 		Region* = POINTER TO RegionDesc;
 		RegionDesc* = RECORD
-			llx*, lly*, urx*, ury*: INTEGER;	(** bounding box **)
-			mode*: INTEGER;	(** mode for reducing region to non_overlapping areas (Winding/EvenOdd) **)
+			llx*, lly*, urx*, ury*: SIGNED16;	(** bounding box **)
+			mode*: SIGNED16;	(** mode for reducing region to non_overlapping areas (Winding/EvenOdd) **)
 			valid: BOOLEAN;	(* flag if points in data array are consistent (i.e. sorted & compacted) *)
 			data: RegionData;	(* points defining region boundary *)
-			points: LONGINT;	(* number of data points actually used *)
+			points: SIGNED32;	(* number of data points actually used *)
 		END;
 
 		(** region enumeration **)
 		EnumData* = RECORD END;
-		Enumerator* = PROCEDURE (llx, lly, urx, ury: INTEGER; VAR edata: EnumData);
+		Enumerator* = PROCEDURE (llx, lly, urx, ury: SIGNED16; VAR edata: EnumData);
 
 
 	VAR
 		Data: RegionData;	(* temporary region data for merging *)
-		DataSize: LONGINT;	(* number of points allocated for Data *)
+		DataSize: SIGNED32;	(* number of points allocated for Data *)
 		RectRegion: Region;	(* temporary rectangular region for boolean operations *)
 
 
 	(**--- Rectangles ---**)
 
 	(** make rectangle large enough to include a point **)
-	PROCEDURE IncludePoint* (VAR llx, lly, urx, ury: INTEGER; x, y: INTEGER);
+	PROCEDURE IncludePoint* (VAR llx, lly, urx, ury: SIGNED16; x, y: SIGNED16);
 	BEGIN
 		IF x < llx THEN llx := x END;
 		IF x > urx THEN urx := x END;
@@ -64,7 +64,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END IncludePoint;
 
 	(** make rectangle large enough to include other rectangle **)
-	PROCEDURE IncludeRect* (VAR llx, lly, urx, ury: INTEGER; illx, illy, iurx, iury: INTEGER);
+	PROCEDURE IncludeRect* (VAR llx, lly, urx, ury: SIGNED16; illx, illy, iurx, iury: SIGNED16);
 	BEGIN
 		IF illx < llx THEN llx := illx END;
 		IF iurx > urx THEN urx := iurx END;
@@ -73,7 +73,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END IncludeRect;
 
 	(** shrink rectangle to area within other rectangle **)
-	PROCEDURE ClipRect* (VAR llx, lly, urx, ury: INTEGER; cllx, clly, curx, cury: INTEGER);
+	PROCEDURE ClipRect* (VAR llx, lly, urx, ury: SIGNED16; cllx, clly, curx, cury: SIGNED16);
 	BEGIN
 		IF cllx > llx THEN llx := cllx END;
 		IF curx < urx THEN urx := curx END;
@@ -82,25 +82,25 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END ClipRect;
 
 	(** return whether rectangle is empty **)
-	PROCEDURE RectEmpty* (llx, lly, urx, ury: INTEGER): BOOLEAN;
+	PROCEDURE RectEmpty* (llx, lly, urx, ury: SIGNED16): BOOLEAN;
 	BEGIN
 		RETURN (llx >= urx) OR (lly >= ury)
 	END RectEmpty;
 
 	(** return whether (non_empty) rectangle is completely inside other rectangle **)
-	PROCEDURE RectInRect* (llx, lly, urx, ury, illx, illy, iurx, iury: INTEGER): BOOLEAN;
+	PROCEDURE RectInRect* (llx, lly, urx, ury, illx, illy, iurx, iury: SIGNED16): BOOLEAN;
 	BEGIN
 		RETURN (llx >= illx) & (urx <= iurx) & (lly >= illy) & (ury <= iury)
 	END RectInRect;
 
 	(** return whether (non_empty) rectangle intersects other rectangle **)
-	PROCEDURE RectsIntersect* (llx, lly, urx, ury, illx, illy, iurx, iury: INTEGER): BOOLEAN;
+	PROCEDURE RectsIntersect* (llx, lly, urx, ury, illx, illy, iurx, iury: SIGNED16): BOOLEAN;
 	BEGIN
 		RETURN (llx < iurx) & (urx > illx) & (lly < iury) & (ury > illy)
 	END RectsIntersect;
 
 	(** return whether rectangle contains point **)
-	PROCEDURE PointInRect* (x, y: INTEGER; llx, lly, urx, ury: INTEGER): BOOLEAN;
+	PROCEDURE PointInRect* (x, y: SIGNED16; llx, lly, urx, ury: SIGNED16): BOOLEAN;
 	BEGIN
 		RETURN (x >= llx) & (x < urx) & (y >= lly) & (y < ury)
 	END PointInRect;
@@ -116,7 +116,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 		Every point on a scanline has a direction attribute, which specifies whether the point starts a span (Enter) or ends
 		one (Exit), allowing spans to nest or overlap.
 
-		The x_ and y_coordinates of a point along with its direction are encoded into a LONGINT. The chosen encoding
+		The x_ and y_coordinates of a point along with its direction are encoded into a SIGNED32. The chosen encoding
 		weights the y_coordinate most, followed by the x_coordinate and the direction of an intersection. Visiting all
 		encoded points in ascending order therefore traverses all spans of the region from the bottom left corner to the
 		top right corner.
@@ -138,23 +138,23 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	*)
 
 
-	(* encode point coordinates and curve direction into a LONGINT *)
-	PROCEDURE Encode (VAR item: LONGINT; u, v, dir: LONGINT);
+	(* encode point coordinates and curve direction into a SIGNED32 *)
+	PROCEDURE Encode (VAR item: SIGNED32; u, v, dir: SIGNED32);
 	BEGIN
 		item := ASH(v, 16) + ASH((u + 4000H) MOD 8000H, 1) + ASH(1 + dir, -1)
 	END Encode;
 
-	(* restore point coordinates and curve direction from an encoded LONGINT *)
-	PROCEDURE Decode (item: LONGINT; VAR u, v, dir: INTEGER);
+	(* restore point coordinates and curve direction from an encoded SIGNED32 *)
+	PROCEDURE Decode (item: SIGNED32; VAR u, v, dir: SIGNED16);
 	BEGIN
-		v := INTEGER(ASH(item, -16));
-		u := INTEGER(ASH(item, -1) MOD 8000H - 4000H);
-		dir := INTEGER(ASH(item MOD 2, 1) - 1)
+		v := SIGNED16(ASH(item, -16));
+		u := SIGNED16(ASH(item, -1) MOD 8000H - 4000H);
+		dir := SIGNED16(ASH(item MOD 2, 1) - 1)
 	END Decode;
 
 	(* copy points between region data blocks *)
-	PROCEDURE CopyPoints (src, dst: RegionData; points: LONGINT);
-		VAR i: LONGINT;
+	PROCEDURE CopyPoints (src, dst: RegionData; points: SIGNED32);
+		VAR i: SIGNED32;
 	BEGIN
 		i := 0;
 		WHILE (i < points) & (i < LEN(dst)) & (i < LEN(src)) DO
@@ -164,7 +164,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END CopyPoints;
 
 	(* append point to region data *)
-	PROCEDURE Append (reg: Region; u, v, dir: INTEGER);
+	PROCEDURE Append (reg: Region; u, v, dir: SIGNED16);
 		VAR size: SIZE; data: RegionData;
 	BEGIN
 		IF reg.data = NIL THEN
@@ -181,7 +181,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(* copy region data *)
 	PROCEDURE CopyData (src, dst: Region);
-		VAR size: LONGINT;
+		VAR size: SIGNED32;
 	BEGIN
 		IF src.points > 0 THEN
 			IF (dst.data = NIL) OR (LEN(dst.data^) < src.points) THEN
@@ -198,7 +198,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(* re_calculate bounding box of (valid!) region *)
 	PROCEDURE CalcRect (reg: Region);
-		VAR data: RegionData; n: LONGINT; u, v, dir, x: INTEGER;
+		VAR data: RegionData; n: SIGNED32; u, v, dir, x: SIGNED16;
 	BEGIN
 		ASSERT(reg.valid);
 		IF reg.points > 0 THEN
@@ -222,9 +222,9 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END CalcRect;
 
 	(* quick sort with limited recursion guarantee *)
-	PROCEDURE SafeQuickSort(VAR data: ARRAY OF LONGINT; lo, hi: LONGINT);
+	PROCEDURE SafeQuickSort(VAR data: ARRAY OF SIGNED32; lo, hi: SIGNED32);
 	CONST limit = 8;
-	VAR i, x, j, t, shortLo, shortHi, longLo, longHi: LONGINT;
+	VAR i, x, j, t, shortLo, shortHi, longLo, longHi: SIGNED32;
 	BEGIN
 		WHILE (hi > lo) DO
 			IF hi - lo < limit THEN	(* use straight insertion for less than limit entries... *)
@@ -268,8 +268,8 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END SafeQuickSort;
 
 	(*	haven't needed this in a long time but better keep my fingers crossed
-	PROCEDURE Show* (data: RegionData; points: LONGINT);
-		VAR n: LONGINT; y, x, dir, v: INTEGER;
+	PROCEDURE Show* (data: RegionData; points: SIGNED32);
+		VAR n: SIGNED32; y, x, dir, v: SIGNED16;
 	BEGIN
 		n := 0;
 		Decode(data[n], x, y, dir);
@@ -301,7 +301,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(* eliminate duplicate slices *)
 	PROCEDURE Compact (reg: Region; src: RegionData);
-		VAR rslice, dslice, sn, rn, dn: LONGINT; dst: RegionData; su, sv, sdir, ru, rv, rdir, sy, ry: INTEGER;
+		VAR rslice, dslice, sn, rn, dn: SIGNED32; dst: RegionData; su, sv, sdir, ru, rv, rdir, sy, ry: SIGNED16;
 	BEGIN
 		rslice := 0;	(* start of current reference slice is the bottom sentinel slice *)
 		dslice := FirstSlice;	(* start of current destination slice *)
@@ -346,8 +346,8 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END Compact;
 
 	(* merge two runs of data points *)
-	PROCEDURE Merge (reg: Region; split: LONGINT);
-		VAR data: RegionData; n, N, m, M, p, tmp: LONGINT; nu, nv, ndir, mu, mv, mdir, sum, u, v, inc, nsum: INTEGER;
+	PROCEDURE Merge (reg: Region; split: SIGNED32);
+		VAR data: RegionData; n, N, m, M, p, tmp: SIGNED32; nu, nv, ndir, mu, mv, mdir, sum, u, v, inc, nsum: SIGNED16;
 	BEGIN{EXCLUSIVE}
 		data := reg.data;
 		n := 0; N := split;
@@ -432,7 +432,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(* bring region data into consistent state *)
 	PROCEDURE Validate (reg: Region);
-		VAR data: RegionData; points, rn, wn, tmp: LONGINT; u, v, dir, y, sum, x, inc: INTEGER;
+		VAR data: RegionData; points, rn, wn, tmp: SIGNED32; u, v, dir, y, sum, x, inc: SIGNED16;
 	BEGIN
 		IF ~reg.valid THEN
 			data := reg.data;
@@ -509,8 +509,8 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END Validate;
 
 	(* find first point on line y or higher *)
-	PROCEDURE FindUpper (reg: Region; y: INTEGER; VAR n: LONGINT);
-		VAR item, i, j, m: LONGINT;
+	PROCEDURE FindUpper (reg: Region; y: SIGNED16; VAR n: SIGNED32);
+		VAR item, i, j, m: SIGNED32;
 	BEGIN
 		item := ASH(LONG(y), 16);	(* leftmost possible point on line y *)
 		i := 0; j := reg.points;
@@ -526,14 +526,14 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END FindUpper;
 
 	(* find first point on line y or lower *)
-	PROCEDURE FindLower (reg: Region; y: INTEGER; VAR n: LONGINT);
-		VAR v: INTEGER;
+	PROCEDURE FindLower (reg: Region; y: SIGNED16; VAR n: SIGNED32);
+		VAR v: SIGNED16;
 	BEGIN
 		FindUpper(reg, y, n);
-		v := INTEGER(ASH(reg.data[n], -16));
+		v := SIGNED16(ASH(reg.data[n], -16));
 		IF v > y THEN	(* => find leftmost point on lower slice *)
 			DEC(n);
-			y := INTEGER(ASH(reg.data[n], -16));
+			y := SIGNED16(ASH(reg.data[n], -16));
 			REPEAT
 				DEC(n)
 			UNTIL (n < 0) OR (ASH(reg.data[n], -16) < y);
@@ -542,8 +542,8 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END FindLower;
 
 	(* enumerate (inverted) region within rectangle *)
-	PROCEDURE Enum (reg: Region; llx, lly, urx, ury: INTEGER; enum: Enumerator; VAR edata: EnumData; enter: INTEGER);
-		VAR data: RegionData; n, lo, hi: LONGINT; u, v, dir, y, top, x: INTEGER;
+	PROCEDURE Enum (reg: Region; llx, lly, urx, ury: SIGNED16; enum: Enumerator; VAR edata: EnumData; enter: SIGNED16);
+		VAR data: RegionData; n, lo, hi: SIGNED32; u, v, dir, y, top, x: SIGNED16;
 	BEGIN
 		Validate(reg);
 		ClipRect(llx, lly, urx, ury, LBound, LBound, UBound, UBound);
@@ -622,8 +622,8 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END IsRect;
 
 	(** return whether point is inside (non_empty) region **)
-	PROCEDURE PointInside* (x, y: INTEGER; reg: Region): BOOLEAN;
-		VAR data: RegionData; n: LONGINT; u, v, dir: INTEGER;
+	PROCEDURE PointInside* (x, y: SIGNED16; reg: Region): BOOLEAN;
+		VAR data: RegionData; n: SIGNED32; u, v, dir: SIGNED16;
 	BEGIN
 		IF ~PointInRect(x, y, reg.llx, reg.lly, reg.urx, reg.ury) THEN	(* point not even within region rectangle *)
 			RETURN FALSE
@@ -643,8 +643,8 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END PointInside;
 
 	(** return whether (non_empty) rectangle is completely inside (non_empty) region **)
-	PROCEDURE RectInside* (llx, lly, urx, ury: INTEGER; reg: Region): BOOLEAN;
-		VAR data: RegionData; n: LONGINT; u, v, dir, y: INTEGER;
+	PROCEDURE RectInside* (llx, lly, urx, ury: SIGNED16; reg: Region): BOOLEAN;
+		VAR data: RegionData; n: SIGNED32; u, v, dir, y: SIGNED16;
 	BEGIN
 		IF ~RectInRect(llx, lly, urx, ury, reg.llx, reg.lly, reg.urx, reg.ury) THEN	(* not even within bounding rectangle *)
 			RETURN FALSE
@@ -676,8 +676,8 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END RectInside;
 
 	(** return whether (non_empty) rectangle overlaps (non_empty) region **)
-	PROCEDURE RectOverlaps* (llx, lly, urx, ury: INTEGER; reg: Region): BOOLEAN;
-		VAR data: RegionData; n: LONGINT; u, v, dir, y: INTEGER;
+	PROCEDURE RectOverlaps* (llx, lly, urx, ury: SIGNED16; reg: Region): BOOLEAN;
+		VAR data: RegionData; n: SIGNED32; u, v, dir, y: SIGNED16;
 	BEGIN
 		IF ~RectsIntersect(llx, lly, urx, ury, reg.llx, reg.lly, reg.urx, reg.ury) THEN
 			RETURN FALSE	(* rect does not even intersect region rectangle *)
@@ -711,7 +711,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(** return whether region is completely within another region **)
 	PROCEDURE RegionInside* (inner, outer: Region): BOOLEAN;
-		VAR idata, odata: RegionData; in, on, is, os: LONGINT; iu, iv, idir, ou, ov, odir, iy, oy: INTEGER;
+		VAR idata, odata: RegionData; in, on, is, os: SIGNED32; iu, iv, idir, ou, ov, odir, iy, oy: SIGNED16;
 	BEGIN
 		IF ~RectInRect(inner.llx, inner.lly, inner.urx, inner.ury, outer.llx, outer.lly, outer.urx, outer.ury) THEN
 			RETURN FALSE	(* inner rect not even within outer rect *)
@@ -767,7 +767,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(** return whether two regions intersect each other **)
 	PROCEDURE RegionOverlaps* (reg, arg: Region): BOOLEAN;
-		VAR rdata, adata: RegionData; bot, top, ru, rv, rdir, au, av, adir, ry, ay: INTEGER; rn, an, rs, as: LONGINT;
+		VAR rdata, adata: RegionData; bot, top, ru, rv, rdir, au, av, adir, ry, ay: SIGNED16; rn, an, rs, as: SIGNED32;
 	BEGIN
 		IF ~RectsIntersect(reg.llx, reg.lly, reg.urx, reg.ury, arg.llx, arg.lly, arg.urx, arg.ury) THEN
 			RETURN FALSE	(* rect does not even intersect arg's bounding box *)
@@ -818,7 +818,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END RegionOverlaps;
 
 	(** enumerate region within rectangle **)
-	PROCEDURE Enumerate* (reg: Region; llx, lly, urx, ury: INTEGER; enum: Enumerator; VAR edata: EnumData);
+	PROCEDURE Enumerate* (reg: Region; llx, lly, urx, ury: SIGNED16; enum: Enumerator; VAR edata: EnumData);
 	BEGIN
 		IF RectsIntersect(reg.llx, reg.lly, reg.urx, reg.ury, llx, lly, urx, ury) THEN
 			ClipRect(llx, lly, urx, ury, reg.llx, reg.lly, reg.urx, reg.ury);
@@ -833,7 +833,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END Enumerate;
 
 	(** enumerate parts of rectangle not within region **)
-	PROCEDURE EnumerateInv* (reg: Region; llx, lly, urx, ury: INTEGER; enum: Enumerator; VAR edata: EnumData);
+	PROCEDURE EnumerateInv* (reg: Region; llx, lly, urx, ury: SIGNED16; enum: Enumerator; VAR edata: EnumData);
 	BEGIN
 		IF RectsIntersect(reg.llx, reg.lly, reg.urx, reg.ury, llx, lly, urx, ury) THEN
 			IF IsRect(reg) & RectInRect(reg.llx, reg.lly, reg.urx, reg.ury, llx, lly, urx, ury) THEN
@@ -862,13 +862,13 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END Clear;
 
 	(** set region mode **)
-	PROCEDURE SetMode* (reg: Region; mode: INTEGER);
+	PROCEDURE SetMode* (reg: Region; mode: SIGNED16);
 	BEGIN
 		reg.mode := mode
 	END SetMode;
 
 	(** initialize region **)
-	PROCEDURE Init* (reg: Region; mode: INTEGER);
+	PROCEDURE Init* (reg: Region; mode: SIGNED16);
 	BEGIN
 		reg.mode := mode;
 		(* reg.data := NIL; *)
@@ -876,7 +876,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END Init;
 
 	(** make region rectangular **)
-	PROCEDURE SetToRect* (reg: Region; llx, lly, urx, ury: INTEGER);
+	PROCEDURE SetToRect* (reg: Region; llx, lly, urx, ury: SIGNED16);
 	BEGIN
 		IF RectEmpty(llx, lly, urx, ury) THEN
 			Clear(reg)
@@ -889,8 +889,8 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END SetToRect;
 
 	(** shift region **)
-	PROCEDURE Shift* (reg: Region; dx, dy: INTEGER);
-		VAR rdata: RegionData; rn: LONGINT; ru, rv, rdir: INTEGER;
+	PROCEDURE Shift* (reg: Region; dx, dy: SIGNED16);
+		VAR rdata: RegionData; rn: SIGNED32; ru, rv, rdir: SIGNED16;
 	BEGIN
 		IF (dx # 0) OR (dy # 0) THEN
 			INC(reg.llx, dx); INC(reg.lly, dy); INC(reg.urx, dx); INC(reg.ury, dy);
@@ -923,7 +923,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(** add second region to first **)
 	PROCEDURE Add* (reg, arg: Region);
-		VAR rdata, adata: RegionData; points, aslice, an, rn, rslice: LONGINT; au, av, adir, ru, rv, rdir, top, ry, ay, y: INTEGER;
+		VAR rdata, adata: RegionData; points, aslice, an, rn, rslice: SIGNED32; au, av, adir, ru, rv, rdir, top, ry, ay, y: SIGNED16;
 	BEGIN
 		IF ~RectEmpty(arg.llx, arg.lly, arg.urx, arg.ury) THEN
 			IF RectEmpty(reg.llx, reg.lly, reg.urx, reg.ury) THEN
@@ -1004,7 +1004,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END Add;
 
 	(** add rectangle to region **)
-	PROCEDURE AddRect* (reg: Region; llx, lly, urx, ury: INTEGER);
+	PROCEDURE AddRect* (reg: Region; llx, lly, urx, ury: SIGNED16);
 	BEGIN{EXCLUSIVE}
 		SetToRect(RectRegion, llx, lly, urx, ury);
 		Add(reg, RectRegion)
@@ -1012,7 +1012,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(** subtract second region from first **)
 	PROCEDURE Subtract* (reg, arg: Region);
-		VAR rdata, adata: RegionData; points, rn, an, rslice, aslice: LONGINT; ru, rv, rdir, au, av, adir, top, ry, ay, y: INTEGER;
+		VAR rdata, adata: RegionData; points, rn, an, rslice, aslice: SIGNED32; ru, rv, rdir, au, av, adir, top, ry, ay, y: SIGNED16;
 	BEGIN
 		IF ~RectEmpty(arg.llx, arg.lly, arg.urx, arg.ury) THEN
 			IF RectEmpty(reg.llx, reg.lly, reg.urx, reg.ury) OR RegionInside(reg, arg) THEN
@@ -1070,7 +1070,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END Subtract;
 
 	(** subtract rectangle from region **)
-	PROCEDURE SubtractRect* (reg: Region; llx, lly, urx, ury: INTEGER);
+	PROCEDURE SubtractRect* (reg: Region; llx, lly, urx, ury: SIGNED16);
 	BEGIN{EXCLUSIVE}
 		SetToRect(RectRegion, llx, lly, urx, ury);
 		Subtract(reg, RectRegion)
@@ -1078,7 +1078,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(** intersect first region with second region **)
 	PROCEDURE Intersect* (reg, arg: Region);
-		VAR rdata, adata: RegionData; points, rn, an, rslice, aslice: LONGINT; ru, rv, rdir, au, av, adir, ry, ay, y: INTEGER;
+		VAR rdata, adata: RegionData; points, rn, an, rslice, aslice: SIGNED32; ru, rv, rdir, au, av, adir, ry, ay, y: SIGNED16;
 	BEGIN
 		IF ~RectsIntersect(reg.llx, reg.lly, reg.urx, reg.ury, arg.llx, arg.lly, arg.urx, arg.ury) THEN
 			Clear(reg)
@@ -1166,7 +1166,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	END Intersect;
 
 	(** intersect region with rectangle **)
-	PROCEDURE IntersectRect* (reg: Region; llx, lly, urx, ury: INTEGER);
+	PROCEDURE IntersectRect* (reg: Region; llx, lly, urx, ury: SIGNED16);
 	BEGIN{EXCLUSIVE}
 		SetToRect(RectRegion, llx, lly, urx, ury);
 		Intersect(reg, RectRegion)
@@ -1174,7 +1174,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 
 	(** invert region **)
 	PROCEDURE Invert* (reg: Region);
-		VAR data: RegionData; points, n: LONGINT; u, v, dir, y: INTEGER;
+		VAR data: RegionData; points, n: SIGNED32; u, v, dir, y: SIGNED16;
 	BEGIN
 		IF RectEmpty(reg.llx, reg.lly, reg.urx, reg.ury) THEN
 			SetToRect(reg, LBound, LBound, UBound, UBound)
@@ -1230,7 +1230,7 @@ MODULE GfxRegions; (** portable *)	(* eos  *)
 	**)
 
 	(** add a scanline intersection to a region **)
-	PROCEDURE AddPoint* (reg: Region; x, y, dy: INTEGER);
+	PROCEDURE AddPoint* (reg: Region; x, y, dy: SIGNED16);
 	BEGIN
 		IF (dy # 0) & (y >= LBound) & (y <= UBound) THEN
 			IF x < LBound THEN x := LBound

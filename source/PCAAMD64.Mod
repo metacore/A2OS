@@ -90,11 +90,11 @@ CONST
 TYPE
 	Name = ARRAY maxName OF CHAR;
 
-	Size = LONGINT;
+	Size = SIGNED32;
 
 	Label = POINTER TO RECORD;
 		name: Name;
-		pc, pass: LONGINT;
+		pc, pass: SIGNED32;
 		equ: BOOLEAN;
 		next: Label;
 	END;
@@ -108,9 +108,9 @@ TYPE
 
 	Reg* = OBJECT (Operand)
 	VAR
-		index-: LONGINT;
+		index-: SIGNED32;
 
-		PROCEDURE &New *(i: LONGINT);
+		PROCEDURE &New *(i: SIGNED32);
 		BEGIN index := i END New;
 
 	END Reg;
@@ -285,7 +285,7 @@ TYPE
 	VAR
 		size-: Size;
 		seg, reg, index: Reg;
-		scale, displacement: LONGINT;
+		scale, displacement: SIGNED32;
 		fixup: PCM.Attribute;
 
 		PROCEDURE &New *(s: Size);
@@ -335,11 +335,11 @@ TYPE
 	Imm* = OBJECT (Operand)
 	VAR
 		size: Size;
-		val-: HUGEINT;
-		pc-: LONGINT;
+		val-: SIGNED64;
+		pc-: SIGNED32;
 		fixup: PCM.Attribute;
 
-		PROCEDURE &New *(s: Size; v: HUGEINT);
+		PROCEDURE &New *(s: Size; v: SIGNED64);
 		BEGIN size:= s; val := v; pc := -1
 		END New;
 
@@ -388,13 +388,13 @@ TYPE
 
 	Pntr1616 = OBJECT (Operand)
 	VAR
-		selector, offset: LONGINT;
+		selector, offset: SIGNED32;
 
 		PROCEDURE Matches (type: ASM.OperandType): BOOLEAN;
 		BEGIN RETURN type = ASM.pntr1616;
 		END Matches;
 
-		PROCEDURE &New *(s, o: LONGINT);
+		PROCEDURE &New *(s, o: SIGNED32);
 		BEGIN selector := s; offset := o
 		END New;
 
@@ -412,7 +412,7 @@ TYPE
 	Assembly* = OBJECT (PCLIR.AsmInline)
 
 		VAR
-			pc-, pcOffset, errPos*: LONGINT;
+			pc-, pcOffset, errPos*: SIGNED32;
 			current: PCLIR.AsmBlock;
 			bits: Size;
 			cpuoptions: ASM.CPUOptions;
@@ -438,7 +438,7 @@ TYPE
 			cpuoptions := {ASM.cpu8086 .. ASM.cpuAMD64} + ASM.cpuOptions;
 		END Reset;
 
-		PROCEDURE SetPC* (newPC: LONGINT);
+		PROCEDURE SetPC* (newPC: SIGNED32);
 		BEGIN
 			current := code;
 			pc := newPC;
@@ -449,7 +449,7 @@ TYPE
 			END;
 		END SetPC;
 
-		PROCEDURE AddFixup (adr: PCM.Attribute; offset: LONGINT);
+		PROCEDURE AddFixup (adr: PCM.Attribute; offset: SIGNED32);
 		VAR asmFixup: PCLIR.AsmFixup;
 		BEGIN
 			NEW (asmFixup);
@@ -459,7 +459,7 @@ TYPE
 			fixup := asmFixup;
 		END AddFixup;
 
-		PROCEDURE PutByte* (b: LONGINT);
+		PROCEDURE PutByte* (b: SIGNED32);
 		BEGIN
 			IF pc - pcOffset = LEN (current.code) THEN
 				IF current.next = NIL THEN
@@ -484,16 +484,16 @@ TYPE
 			RETURN current.code[pc - pcOffset - 1];
 		END GetByte;
 
-		PROCEDURE GetWord* (): INTEGER;
-		VAR word: INTEGER;
+		PROCEDURE GetWord* (): SIGNED16;
+		VAR word: SIGNED16;
 		BEGIN
 			word := ORD (GetByte ());
 			INC (word, ORD (GetByte ()) * 100H);
 			RETURN word;
 		END GetWord;
 
-		PROCEDURE GetDWord* (): LONGINT;
-		VAR dword, byte: LONGINT;
+		PROCEDURE GetDWord* (): SIGNED32;
+		VAR dword, byte: SIGNED32;
 		BEGIN
 			dword := ORD (GetByte ());
 			INC (dword, LONG (ORD (GetByte ())) * 100H);
@@ -503,13 +503,13 @@ TYPE
 			RETURN dword + byte * 1000000H;
 		END GetDWord;
 
-		PROCEDURE PutWord* (w: LONGINT);
+		PROCEDURE PutWord* (w: SIGNED32);
 		BEGIN
 			PutByte (w MOD 100H);
 			PutByte ((w DIV 100H) MOD 100H);
 		END PutWord;
 
-		PROCEDURE PutDWord* (d: LONGINT);
+		PROCEDURE PutDWord* (d: SIGNED32);
 		BEGIN
 			PutByte (d MOD 100H);
 			PutByte ((d DIV 100H) MOD 100H);
@@ -517,8 +517,8 @@ TYPE
 			PutByte ((d DIV 1000000H) MOD 100H);
 		END PutDWord;
 
-		PROCEDURE PutQWord* (q: HUGEINT);
-		VAR d: LONGINT;
+		PROCEDURE PutQWord* (q: SIGNED64);
+		VAR d: SIGNED32;
 		BEGIN
 			SYSTEM.GET (ADDRESSOF (q), d);
 			PutDWord (d);
@@ -526,7 +526,7 @@ TYPE
 			PutDWord (d);
 		END PutQWord;
 
-		PROCEDURE Put (data: LONGINT; size: Size);
+		PROCEDURE Put (data: SIGNED32; size: Size);
 		BEGIN
 			CASE size OF
 			size8: PutByte (data);
@@ -561,15 +561,15 @@ TYPE
 		PROCEDURE Assemble (scan: PCS.Scanner;  scope: PCT.Scope;  exported, inlined, inlineAssembly: BOOLEAN);
 		VAR
 			scanner: PCS.Scanner;
-			symbol, reg: LONGINT;
+			symbol, reg: SIGNED32;
 			ident, idents: Name;
-			val, times, val2, val3: LONGINT;
+			val, times, val2, val3: SIGNED32;
 			currentLabel: Label;
-			prevPC: LONGINT;
-			pass: LONGINT;
+			prevPC: SIGNED32;
+			pass: SIGNED32;
 			absoluteMode: BOOLEAN;
-			absoluteOffset: LONGINT;
-			orgOffset: LONGINT;
+			absoluteOffset: SIGNED32;
+			orgOffset: SIGNED32;
 
 			PROCEDURE NextChar;
 			BEGIN IF (listing # NIL) & (pass = maxPasses) THEN listing.Char (scanner.ch) END; scanner.NextChar
@@ -584,8 +584,8 @@ TYPE
 				END;
 			END SkipBlanks;
 
-			PROCEDURE GetNumber (VAR intval: LONGINT);
-			VAR i, m, n: INTEGER; dig: ARRAY 24 OF CHAR;
+			PROCEDURE GetNumber (VAR intval: SIGNED32);
+			VAR i, m, n: SIGNED16; dig: ARRAY 24 OF CHAR;
 			BEGIN
 				i := 0; m := 0; n := 0;
 				WHILE ('0' <= scanner.ch) & (scanner.ch <= '9') OR ('A' <= CAP (scanner.ch)) & (CAP (scanner.ch) <= 'F') DO
@@ -608,7 +608,7 @@ TYPE
 			END GetNumber;
 
 			PROCEDURE GetIdentifier;
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 			BEGIN
 				i := 0;
 				REPEAT
@@ -625,7 +625,7 @@ TYPE
 			END GetIdentifier;
 
 			PROCEDURE GetString;
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 			BEGIN
 				i := 0;
 				NextChar;
@@ -709,7 +709,7 @@ TYPE
 				END;
 			END SkipLine;
 
-			PROCEDURE Ensure (desiredSymbol, errNumber : LONGINT) : BOOLEAN;
+			PROCEDURE Ensure (desiredSymbol, errNumber : SIGNED32) : BOOLEAN;
 			BEGIN
 				IF symbol = desiredSymbol THEN
 					NextSymbol;
@@ -720,7 +720,7 @@ TYPE
 				END;
 			END Ensure;
 
-			PROCEDURE SetBits (newBits: LONGINT): BOOLEAN;
+			PROCEDURE SetBits (newBits: SIGNED32): BOOLEAN;
 			BEGIN
 				CASE newBits OF
 				16: bits := size16;
@@ -733,7 +733,7 @@ TYPE
 			END SetBits;
 
 			PROCEDURE GetCPU (cumulateOptions: BOOLEAN): BOOLEAN;
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 			BEGIN
 				SkipBlanks;
 				GetIdentifier;
@@ -759,7 +759,7 @@ TYPE
 				RETURN PCT.Find (scope, scope, idx, PCT.procdeclared, TRUE);
 			END GetScopeSymbol;
 
-			PROCEDURE Factor (VAR x: LONGINT; critical: BOOLEAN): BOOLEAN;
+			PROCEDURE Factor (VAR x: SIGNED32; critical: BOOLEAN): BOOLEAN;
 			VAR label: Label; scopeSymbol: PCT.Symbol; l: SIZE;
 			BEGIN
 				IF symbol = symNumber THEN
@@ -821,8 +821,8 @@ TYPE
 				RETURN FALSE
 			END Factor;
 
-			PROCEDURE Term (VAR x: LONGINT; critical: BOOLEAN): BOOLEAN;
-			VAR y, op : LONGINT;
+			PROCEDURE Term (VAR x: SIGNED32; critical: BOOLEAN): BOOLEAN;
+			VAR y, op : SIGNED32;
 			BEGIN
 				IF Factor (x, critical) THEN
 					WHILE (symbol = symTimes) OR (symbol = symDiv) OR (symbol = symMod) DO
@@ -842,8 +842,8 @@ TYPE
 				END;
 			END Term;
 
-			PROCEDURE Expression (VAR x: LONGINT; critical: BOOLEAN): BOOLEAN;
-			VAR y, op : LONGINT;
+			PROCEDURE Expression (VAR x: SIGNED32; critical: BOOLEAN): BOOLEAN;
+			VAR y, op : SIGNED32;
 			BEGIN
 				IF symbol = symMinus THEN
 					op := symbol; NextSymbol;
@@ -879,7 +879,7 @@ TYPE
 			END Expression;
 
 			PROCEDURE PutData (size: Size): BOOLEAN;
-			VAR i: LONGINT;
+			VAR i: SIGNED32;
 			BEGIN
 				NextSymbol;
 
@@ -911,8 +911,8 @@ TYPE
 				RETURN TRUE;
 			END PutData;
 
-			PROCEDURE Duplicate (size: LONGINT; fixup: PCLIR.AsmFixup);
-			VAR i: LONGINT; buffer: ARRAY 100 OF CHAR;
+			PROCEDURE Duplicate (size: SIGNED32; fixup: PCLIR.AsmFixup);
+			VAR i: SIGNED32; buffer: ARRAY 100 OF CHAR;
 			BEGIN
 				IF times = 1 THEN RETURN END;
 
@@ -1001,7 +1001,7 @@ TYPE
 
 			PROCEDURE GetInstruction (): BOOLEAN;
 			VAR
-				mnem, opCount: LONGINT;
+				mnem, opCount: SIGNED32;
 				size: Size;
 				operands: ARRAY ASM.maxOperands OF Operand;
 				prevFixup: PCLIR.AsmFixup;
@@ -1331,11 +1331,11 @@ TYPE
 			END;
 		END Assemble;
 
-		PROCEDURE EmitPrefix* (prefix: LONGINT);
+		PROCEDURE EmitPrefix* (prefix: SIGNED32);
 		BEGIN PutByte (prefix);
 		END EmitPrefix;
 
-		PROCEDURE Emit* (mnem: LONGINT; op1, op2, op3: Operand);
+		PROCEDURE Emit* (mnem: SIGNED32; op1, op2, op3: Operand);
 		VAR operands: ARRAY ASM.maxOperands OF Operand; res: BOOLEAN;
 		BEGIN
 			operands[0] := op1;
@@ -1345,20 +1345,20 @@ TYPE
 			res := EmitInstr (mnem, operands, TRUE);
 		END Emit;
 
-		PROCEDURE EmitInstr (mnem: LONGINT; operands: ARRAY OF Operand; lastPass: BOOLEAN): BOOLEAN;
-		VAR instr, i, oppos, op: LONGINT;
-			val: LONGINT;
-			regOperand: LONGINT;
-			addressOperand: LONGINT;
-			regField, modField, rmField: LONGINT;
-			scaleField, indexField, baseField: LONGINT;
+		PROCEDURE EmitInstr (mnem: SIGNED32; operands: ARRAY OF Operand; lastPass: BOOLEAN): BOOLEAN;
+		VAR instr, i, oppos, op: SIGNED32;
+			val: SIGNED32;
+			regOperand: SIGNED32;
+			addressOperand: SIGNED32;
+			regField, modField, rmField: SIGNED32;
+			scaleField, indexField, baseField: SIGNED32;
 			free: ARRAY ASM.maxOperands OF BOOLEAN;
-			byte: LONGINT;
-			offset: LONGINT;
+			byte: SIGNED32;
+			offset: SIGNED32;
 			mem: Mem;
-			lastPC: LONGINT;
+			lastPC: SIGNED32;
 			opPrefix, adrPrefix: BOOLEAN;
-			segPrefix: LONGINT; rexPrefix: SET;
+			segPrefix: SIGNED32; rexPrefix: SET;
 
 			PROCEDURE MatchesInstruction (): BOOLEAN;
 			BEGIN
@@ -1374,8 +1374,8 @@ TYPE
 				RETURN TRUE;
 			END MatchesInstruction;
 
-			PROCEDURE GetRegOperand (): LONGINT;
-			VAR i: LONGINT;
+			PROCEDURE GetRegOperand (): SIGNED32;
+			VAR i: SIGNED32;
 			BEGIN
 				FOR i := 0 TO ASM.maxOperands -1 DO
 					CASE ASM.instructions[instr].operands[i] OF
@@ -1387,8 +1387,8 @@ TYPE
 				RETURN ASM.none;
 			END GetRegOperand;
 
-			PROCEDURE GetAddressOperand (): LONGINT;
-			VAR i: LONGINT;
+			PROCEDURE GetAddressOperand (): SIGNED32;
+			VAR i: SIGNED32;
 			BEGIN
 				FOR i := 0 TO ASM.maxOperands -1 DO
 					CASE ASM.instructions[instr].operands[i] OF
@@ -1404,8 +1404,8 @@ TYPE
 				RETURN ASM.none;
 			END GetAddressOperand;
 
-			PROCEDURE GetSpecialOperand (): LONGINT;
-			VAR i: LONGINT;
+			PROCEDURE GetSpecialOperand (): SIGNED32;
+			VAR i: SIGNED32;
 			BEGIN
 				FOR i := 0 TO ASM.maxOperands -1 DO
 					CASE ASM.instructions[instr].operands[i] OF
@@ -1417,11 +1417,11 @@ TYPE
 				RETURN ASM.none;
 			END GetSpecialOperand;
 
-			PROCEDURE ModRM (mod, reg, rm: LONGINT);
+			PROCEDURE ModRM (mod, reg, rm: SIGNED32);
 			BEGIN PutByte (mod MOD 4 * 40H + reg MOD 8 * 8H + rm MOD 8);
 			END ModRM;
 
-			PROCEDURE SIB (scale, index, base: LONGINT);
+			PROCEDURE SIB (scale, index, base: SIGNED32);
 			BEGIN PutByte (scale MOD 4 * 40H + index MOD 8 * 8H + base MOD 8);
 			END SIB;
 
@@ -1876,7 +1876,7 @@ TYPE
 PROCEDURE AssembleText(
 	text : Texts.Text;
 	CONST source: ARRAY OF CHAR;
-	pos: LONGINT; (* ignore *)
+	pos: SIGNED32; (* ignore *)
 	CONST pc,opt: ARRAY OF CHAR; (* filename *)
 	log: Streams.Writer; diagnostics : Diagnostics.Diagnostics; VAR error: BOOLEAN);
 VAR
@@ -1917,7 +1917,7 @@ END AssembleText;
 
 PROCEDURE AssembleFile* (CONST fileName: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics; labels, listing: Streams.Writer);
 VAR
-	format: LONGINT; res: WORD;
+	format: SIGNED32; res: INTEGER;
 	text: Texts.Text;
 	assembly: Assembly;
 	destFile: ARRAY Files.NameLength OF CHAR;
@@ -1997,7 +1997,7 @@ BEGIN
 END WriteBinary;
 
 PROCEDURE ReplaceSuffix (VAR destFile : ARRAY OF CHAR; CONST suffix: ARRAY OF CHAR);
-VAR i, j: LONGINT; fileName : Files.FileName;
+VAR i, j: SIGNED32; fileName : Files.FileName;
 BEGIN
 	COPY(destFile, fileName);
 	i := 0; WHILE (fileName[i] # 0X) & (fileName[i] # '.') DO destFile[i] := fileName[i];  INC(i) END;
@@ -2005,26 +2005,26 @@ BEGIN
 	destFile[i+j] := 0X;
 END ReplaceSuffix;
 
-PROCEDURE Ord (ch: CHAR): INTEGER;
+PROCEDURE Ord (ch: CHAR): SIGNED16;
 BEGIN RETURN ORD (ch) - ORD ("0")
 END Ord;
 
-PROCEDURE HexOrd (ch: CHAR): INTEGER;
+PROCEDURE HexOrd (ch: CHAR): SIGNED16;
 BEGIN
 	IF ch <= "9" THEN RETURN ORD (ch) - ORD ("0")
 	ELSE RETURN ORD (CAP (ch)) - ORD ("A") + 10
 	END
 END HexOrd;
 
-PROCEDURE ValueInByteRange (value: HUGEINT): BOOLEAN;
-BEGIN RETURN SHORTINT(value) = value
+PROCEDURE ValueInByteRange (value: SIGNED64): BOOLEAN;
+BEGIN RETURN SIGNED8(value) = value
 END ValueInByteRange;
 
-PROCEDURE ValueInWordRange (value: HUGEINT): BOOLEAN;
-BEGIN RETURN INTEGER(value) = value
+PROCEDURE ValueInWordRange (value: SIGNED64): BOOLEAN;
+BEGIN RETURN SIGNED16(value) = value
 END ValueInWordRange;
 
-PROCEDURE NewReg (type, index: LONGINT): Reg;
+PROCEDURE NewReg (type, index: SIGNED32): Reg;
 BEGIN
 	CASE type OF
 	ASM.reg8: RETURN NewReg8 (index);
@@ -2041,77 +2041,77 @@ BEGIN
 	END;
 END NewReg;
 
-PROCEDURE NewReg8* (index: LONGINT): Reg8;
+PROCEDURE NewReg8* (index: SIGNED32): Reg8;
 VAR reg8: Reg8;
 BEGIN
 	NEW (reg8, index);
 	RETURN reg8;
 END NewReg8;
 
-PROCEDURE NewReg16* (index: LONGINT): Reg16;
+PROCEDURE NewReg16* (index: SIGNED32): Reg16;
 VAR reg16: Reg16;
 BEGIN
 	NEW (reg16, index);
 	RETURN reg16;
 END NewReg16;
 
-PROCEDURE NewReg32* (index: LONGINT): Reg32;
+PROCEDURE NewReg32* (index: SIGNED32): Reg32;
 VAR reg32: Reg32;
 BEGIN
 	NEW (reg32, index);
 	RETURN reg32;
 END NewReg32;
 
-PROCEDURE NewReg64* (index: LONGINT): Reg64;
+PROCEDURE NewReg64* (index: SIGNED32): Reg64;
 VAR reg64: Reg64;
 BEGIN
 	NEW (reg64, index);
 	RETURN reg64;
 END NewReg64;
 
-PROCEDURE NewRegCR* (index: LONGINT): RegCR;
+PROCEDURE NewRegCR* (index: SIGNED32): RegCR;
 VAR regCR: RegCR;
 BEGIN
 	NEW (regCR, index);
 	RETURN regCR;
 END NewRegCR;
 
-PROCEDURE NewRegDR* (index: LONGINT): RegDR;
+PROCEDURE NewRegDR* (index: SIGNED32): RegDR;
 VAR regDR: RegDR;
 BEGIN
 	NEW (regDR, index);
 	RETURN regDR;
 END NewRegDR;
 
-PROCEDURE NewSegReg* (index: LONGINT): SegReg;
+PROCEDURE NewSegReg* (index: SIGNED32): SegReg;
 VAR segReg: SegReg;
 BEGIN
 	NEW (segReg, index);
 	RETURN segReg;
 END NewSegReg;
 
-PROCEDURE NewFPReg* (index: LONGINT): FPReg;
+PROCEDURE NewFPReg* (index: SIGNED32): FPReg;
 VAR fpReg: FPReg;
 BEGIN
 	NEW (fpReg, index);
 	RETURN fpReg;
 END NewFPReg;
 
-PROCEDURE NewMMXReg* (index: LONGINT): MMXReg;
+PROCEDURE NewMMXReg* (index: SIGNED32): MMXReg;
 VAR mmxReg: MMXReg;
 BEGIN
 	NEW (mmxReg, index);
 	RETURN mmxReg;
 END NewMMXReg;
 
-PROCEDURE NewXMMReg* (index: LONGINT): XMMReg;
+PROCEDURE NewXMMReg* (index: SIGNED32): XMMReg;
 VAR xmmReg: XMMReg;
 BEGIN
 	NEW (xmmReg, index);
 	RETURN xmmReg;
 END NewXMMReg;
 
-PROCEDURE NewMem (size: Size; reg: Reg; displacement: LONGINT): Mem;
+PROCEDURE NewMem (size: Size; reg: Reg; displacement: SIGNED32): Mem;
 VAR mem: Mem;
 BEGIN
 	NEW (mem, size);
@@ -2120,80 +2120,80 @@ BEGIN
 	RETURN mem;
 END NewMem;
 
-PROCEDURE NewMem8* (reg: Reg; displacement: LONGINT): Mem;
+PROCEDURE NewMem8* (reg: Reg; displacement: SIGNED32): Mem;
 BEGIN RETURN NewMem (size8, reg, displacement);
 END NewMem8;
 
-PROCEDURE NewMem16* (reg: Reg; displacement: LONGINT): Mem;
+PROCEDURE NewMem16* (reg: Reg; displacement: SIGNED32): Mem;
 BEGIN RETURN NewMem (size16, reg, displacement);
 END NewMem16;
 
-PROCEDURE NewMem32* (reg: Reg; displacement: LONGINT): Mem;
+PROCEDURE NewMem32* (reg: Reg; displacement: SIGNED32): Mem;
 BEGIN RETURN NewMem (size32, reg, displacement);
 END NewMem32;
 
-PROCEDURE NewMem64* (reg: Reg; displacement: LONGINT): Mem;
+PROCEDURE NewMem64* (reg: Reg; displacement: SIGNED32): Mem;
 BEGIN RETURN NewMem (size64, reg, displacement);
 END NewMem64;
 
-PROCEDURE NewMem128* (reg: Reg; displacement: LONGINT): Mem;
+PROCEDURE NewMem128* (reg: Reg; displacement: SIGNED32): Mem;
 BEGIN RETURN NewMem (size128, reg, displacement);
 END NewMem128;
 
-PROCEDURE NewImm* (size: LONGINT; val: HUGEINT): Imm;
+PROCEDURE NewImm* (size: SIGNED32; val: SIGNED64): Imm;
 VAR imm: Imm;
 BEGIN
 	NEW (imm, size, val);
 	RETURN imm;
 END NewImm;
 
-PROCEDURE NewImm8* (val: HUGEINT): Imm;
+PROCEDURE NewImm8* (val: SIGNED64): Imm;
 BEGIN RETURN NewImm (size8, val);
 END NewImm8;
 
-PROCEDURE NewImm16* (val: HUGEINT): Imm;
+PROCEDURE NewImm16* (val: SIGNED64): Imm;
 BEGIN RETURN NewImm (size16, val);
 END NewImm16;
 
-PROCEDURE NewImm32* (val: HUGEINT): Imm;
+PROCEDURE NewImm32* (val: SIGNED64): Imm;
 BEGIN RETURN NewImm (size32, val);
 END NewImm32;
 
-PROCEDURE NewImm64* (val: HUGEINT): Imm;
+PROCEDURE NewImm64* (val: SIGNED64): Imm;
 BEGIN RETURN NewImm (size64, val);
 END NewImm64;
 
-PROCEDURE NewOffset* (size: LONGINT; val: HUGEINT): Offset;
+PROCEDURE NewOffset* (size: SIGNED32; val: SIGNED64): Offset;
 VAR offset: Offset;
 BEGIN
 	NEW (offset, size, val);
 	RETURN offset;
 END NewOffset;
 
-PROCEDURE NewOffset8* (val: HUGEINT): Offset;
+PROCEDURE NewOffset8* (val: SIGNED64): Offset;
 BEGIN RETURN NewOffset (size8, val);
 END NewOffset8;
 
-PROCEDURE NewOffset16* (val: HUGEINT): Offset;
+PROCEDURE NewOffset16* (val: SIGNED64): Offset;
 BEGIN RETURN NewOffset (size16, val);
 END NewOffset16;
 
-PROCEDURE NewOffset32* (val: HUGEINT): Offset;
+PROCEDURE NewOffset32* (val: SIGNED64): Offset;
 BEGIN RETURN NewOffset (size32, val);
 END NewOffset32;
 
-PROCEDURE NewOffset64* (val: HUGEINT): Offset;
+PROCEDURE NewOffset64* (val: SIGNED64): Offset;
 BEGIN RETURN NewOffset (size64, val);
 END NewOffset64;
 
-PROCEDURE NewPntr1616* (s, o: LONGINT): Pntr1616;
+PROCEDURE NewPntr1616* (s, o: SIGNED32): Pntr1616;
 VAR pntr1616: Pntr1616;
 BEGIN
 	NEW (pntr1616, s, o);
 	RETURN pntr1616;
 END NewPntr1616;
 
-PROCEDURE NewPntr1632* (s, o: LONGINT): Pntr1632;
+PROCEDURE NewPntr1632* (s, o: SIGNED32): Pntr1632;
 VAR pntr1632: Pntr1632;
 BEGIN
 	NEW (pntr1632, s, o);

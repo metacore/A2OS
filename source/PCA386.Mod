@@ -125,7 +125,7 @@ MODULE PCA386; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: i80386 assembler pa
 
 		InstrDesc = RECORD
 					name: Mnemo;
-					start, end: INTEGER;	 (* index in the opcode-tab *)
+					start, end: SIGNED16;	 (* index in the opcode-tab *)
 					target: SET;
 				END;
 
@@ -135,24 +135,24 @@ MODULE PCA386; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: i80386 assembler pa
 				if opc # -1 => modr/m . opc = opc. ( extension of the opcode )
 		*)
 		OpCode = RECORD
-				op: ARRAY 3 OF INTEGER;		(* mode of the dst/src operands, if needed *)
-				op0, op1, op2: INTEGER;	   (* opcode *)
-				opc: INTEGER;			(* value stored in reg/opcode of modr/m. -1 = none *)
-				reg: INTEGER;			(* where is the register stored: none / rm /op *)
+				op: ARRAY 3 OF SIGNED16;		(* mode of the dst/src operands, if needed *)
+				op0, op1, op2: SIGNED16;	   (* opcode *)
+				opc: SIGNED16;			(* value stored in reg/opcode of modr/m. -1 = none *)
+				reg: SIGNED16;			(* where is the register stored: none / rm /op *)
 			END;
 
 		Operand = RECORD
-					mode: LONGINT;		(* the mode: Reg8.... *)
-					imm: LONGINT;		(* the constant *)
-					disp: LONGINT;
-					index, base, reg: INTEGER;
-					seg, scale: INTEGER;	(* segment override *)
+					mode: SIGNED32;		(* the mode: Reg8.... *)
+					imm: SIGNED32;		(* the constant *)
+					disp: SIGNED32;
+					index, base, reg: SIGNED16;
+					seg, scale: SIGNED16;	(* segment override *)
 					obj: Symbol;			(* the jmp label for forward jumps / the object referenced *)
 				END;
 
 		SymDesc = RECORD
-							typ: LONGINT;
-							val, size:  LONGINT;		(* if typ <0 => pos of first use of this label *)
+							typ: SIGNED32;
+							val, size:  SIGNED32;		(* if typ <0 => pos of first use of this label *)
 							name: Name;
 							left, right, next: Symbol;
 							fix: FixPnt;
@@ -160,27 +160,27 @@ MODULE PCA386; (** AUTHOR "prk"; PURPOSE "Parallel Compiler: i80386 assembler pa
 					 END;
 
 		FixPntDesc = RECORD
-						pc: LONGINT;
+						pc: SIGNED32;
 						next: FixPnt;
 					END;
 
 VAR
 	(* Global structures *)
 		OpTab: POINTER TO ARRAY OF OpCode;	(* Table with the opcodes *)
-		OpTabLen: LONGINT;		(* nof opcodes in the table *)
+		OpTabLen: SIGNED32;		(* nof opcodes in the table *)
 		InstrTab: POINTER TO ARRAY OF InstrDesc;	(* Table with the instructions !!Hash *)
-		InstrTabLen: LONGINT;
-		SizeTab: ARRAY 17 OF SHORTINT;		(* size of the oberon types *)
+		InstrTabLen: SIGNED32;
+		SizeTab: ARRAY 17 OF SIGNED8;		(* size of the oberon types *)
 		TargetTab: ARRAY 32 OF RECORD  name: Name;  flag: SET  END;
-		TargetCount: LONGINT;
+		TargetCount: SIGNED32;
 
 		loaded: BOOLEAN;		(*is the table loaded? Load only at first use*)
 
 (* ------------------------------------------------------------------- *)
 (* Special functions *)
 
-	PROCEDURE AND(a,b: LONGINT):LONGINT;
-	BEGIN RETURN LONGINT(SET32(a) * SET32(b))
+	PROCEDURE AND(a,b: SIGNED32):SIGNED32;
+	BEGIN RETURN SIGNED32(SET32(a) * SET32(b))
 	END AND;
 
 	PROCEDURE IsFix(name: Mnemo): BOOLEAN;
@@ -201,7 +201,7 @@ VAR
 (* ------------------------------------------------------------------- *)
 (* Addressing Mode functions *)
 
-	PROCEDURE ModeSize(mode: LONGINT): LONGINT;
+	PROCEDURE ModeSize(mode: SIGNED32): SIGNED32;
 	BEGIN
 		CASE mode OF
 		  Imm8, Const1, Const3, Rel8, RegAL, RegCL, Reg8, RM8, M8, SImm8:
@@ -222,81 +222,81 @@ VAR
 		END
 	END ModeSize;
 
-	PROCEDURE ConstSize(i: LONGINT; signed: BOOLEAN):INTEGER;
+	PROCEDURE ConstSize(i: SIGNED32; signed: BOOLEAN):SIGNED16;
 	BEGIN
-		IF (MIN(SHORTINT) <= i) & (MAX(SHORTINT) >= i) OR (~signed & (AND(i,LONGINT(0FFFFFF00H))=0)) THEN
+		IF (MIN(SIGNED8) <= i) & (MAX(SIGNED8) >= i) OR (~signed & (AND(i,SIGNED32(0FFFFFF00H))=0)) THEN
 			RETURN(1)
-		ELSIF (MIN(INTEGER) <= i) & (MAX(INTEGER) >= i) OR (~signed & (AND(i,LONGINT(0FFFF0000H))=0))THEN
+		ELSIF (MIN(SIGNED16) <= i) & (MAX(SIGNED16) >= i) OR (~signed & (AND(i,SIGNED32(0FFFF0000H))=0))THEN
 			RETURN(2)
 		ELSE
 			RETURN(4)
 		END
 	END ConstSize;
 
-	PROCEDURE IsRegMode(m: LONGINT; strict: BOOLEAN):BOOLEAN;
+	PROCEDURE IsRegMode(m: SIGNED32; strict: BOOLEAN):BOOLEAN;
 	BEGIN
 		RETURN((m=Reg8)OR(m=Reg16)OR(m=Reg32)OR
 			(~strict &((m=RegAL)OR(m=RegAX)OR(m=RegEAX)OR(m=RegDX))))
 	END IsRegMode;
 
-	PROCEDURE IsSRegMode(m: LONGINT; strict: BOOLEAN):BOOLEAN;
+	PROCEDURE IsSRegMode(m: SIGNED32; strict: BOOLEAN):BOOLEAN;
 	BEGIN
 		RETURN((m=SReg)OR (~strict &(m=RegCS)OR(m=RegDS)OR(m=RegES)OR
 			(m=RegFS)OR(m=RegGS)OR(m=RegSS)))
 	END IsSRegMode;
 
-	PROCEDURE IsSpecRegMode(m: LONGINT):BOOLEAN;
+	PROCEDURE IsSpecRegMode(m: SIGNED32):BOOLEAN;
 	BEGIN
 		RETURN((m=CRReg)OR(m=DRReg)OR(m=TRReg))
 	END IsSpecRegMode;
 
-	PROCEDURE IsMMode(m: LONGINT):BOOLEAN;
+	PROCEDURE IsMMode(m: SIGNED32):BOOLEAN;
 	BEGIN
 		RETURN((m=M)OR(m=M8)OR(m=M16)OR(m=M32)OR(m=M64)OR(m=M80)OR(m = M128))
 	END IsMMode;
 
-	PROCEDURE IsRMMode(m: LONGINT):BOOLEAN;
+	PROCEDURE IsRMMode(m: SIGNED32):BOOLEAN;
 	BEGIN
 		RETURN((m=RM)OR(m=RM8)OR(m=RM16)OR(m=RM32) (*OR IsMMode(m)*))
 	END IsRMMode;
 
-	PROCEDURE IsMMMode(m: LONGINT):BOOLEAN;
+	PROCEDURE IsMMMode(m: SIGNED32):BOOLEAN;
 	BEGIN
 		RETURN(m=MM)OR(m=MM32)OR(m=MM64)
 	END IsMMMode;
 
-	PROCEDURE IsXMMMode(m: LONGINT): BOOLEAN;
+	PROCEDURE IsXMMMode(m: SIGNED32): BOOLEAN;
 	BEGIN
 		RETURN (m = XMM) OR (m = XMM32) OR (m = XMM64) OR (m = XMM128)
 	END IsXMMMode;
 
-	PROCEDURE IsFRegMode(m: LONGINT; strict: BOOLEAN):BOOLEAN;
+	PROCEDURE IsFRegMode(m: SIGNED32; strict: BOOLEAN):BOOLEAN;
 	BEGIN
 		RETURN((m=FReg) OR (~strict & (m=FRegST)))
 	END IsFRegMode;
 
-	PROCEDURE IsRegister(mode: LONGINT): BOOLEAN;
+	PROCEDURE IsRegister(mode: SIGNED32): BOOLEAN;
 	BEGIN
 		RETURN IsRegMode(mode,TRUE) OR IsSRegMode(mode, FALSE) OR IsSpecRegMode(mode) OR (mode = MReg) OR (mode = XReg)
 	END IsRegister;
 
-	PROCEDURE NeedModRM(mode, regpos: LONGINT): BOOLEAN;
+	PROCEDURE NeedModRM(mode, regpos: SIGNED32): BOOLEAN;
 	BEGIN
 		RETURN(IsRMMode(mode) OR IsMMode(mode) OR IsMMMode(mode) OR IsXMMMode(mode) OR
 						((regpos = OmReg) OR (regpos =  OmRM) OR (regpos =  OmRMReg)) & IsRegister(mode))
 	END NeedModRM;
 
-	PROCEDURE IsImmMode(m: LONGINT):BOOLEAN;
+	PROCEDURE IsImmMode(m: SIGNED32):BOOLEAN;
 	BEGIN
 		RETURN((m=Imm8)OR(m=Imm16)OR(m=Imm32)OR(m=SImm8)OR(m=Imm))
 	END IsImmMode;
 
-	PROCEDURE IsRelMode(m: LONGINT):BOOLEAN;
+	PROCEDURE IsRelMode(m: SIGNED32):BOOLEAN;
 	BEGIN
 		RETURN((m=Rel8)OR(m=Rel16)OR(m=Rel32))
 	END IsRelMode;
 (*
-	PROCEDURE Evaluate(VAR op: Operand; mode: LONGINT): LONGINT;
+	PROCEDURE Evaluate(VAR op: Operand; mode: SIGNED32): SIGNED32;
 	BEGIN
 		IF mode = op.mode THEN RETURN Hit	(* 80% of the checks, now the 20% special cases *)
 		ELSIF IsModRmMode(mode) THEN
@@ -355,7 +355,7 @@ VAR
 		END
 	END Evaluate;
 *)
-	PROCEDURE Evaluate(VAR op: Operand; mode: LONGINT): LONGINT;
+	PROCEDURE Evaluate(VAR op: Operand; mode: SIGNED32): SIGNED32;
 	BEGIN
 		IF mode = op.mode THEN RETURN Hit	(* 80% of the checks, now the 20% special cases *)
 		ELSIF IsRMMode(mode) THEN
@@ -433,8 +433,8 @@ VAR
 		RETURN NoMatch	(*fall through*)
 	END Evaluate;
 
-	PROCEDURE Match(ind: LONGINT; VAR op: ARRAY OF Operand;  errpos: LONGINT): LONGINT;
-		VAR start, end, i, j, k, best: LONGINT;
+	PROCEDURE Match(ind: SIGNED32; VAR op: ARRAY OF Operand;  errpos: SIGNED32): SIGNED32;
+		VAR start, end, i, j, k, best: SIGNED32;
 	BEGIN
 		start := InstrTab[ind].start; end := InstrTab[ind].end; ind := -1; best := 0;
 		WHILE start < end DO
@@ -464,8 +464,8 @@ VAR
 	END Match;
 
 	(* Generates the hash index k for the n-th try. n>=0 *)
-	PROCEDURE HashFn(VAR name: ARRAY OF CHAR; VAR k, n: LONGINT);
-		VAR i: LONGINT;
+	PROCEDURE HashFn(VAR name: ARRAY OF CHAR; VAR k, n: SIGNED32);
+		VAR i: SIGNED32;
 	BEGIN
 		IF n = 0 THEN
 			i := 0; k := 0;
@@ -489,23 +489,23 @@ VAR
 
 	(*configuration*)
 	Target: SET;						(* The target processor*)
-	pc: LONGINT;	(* program counter. Should be used only for pc-rel jumps !! *)
+	pc: SIGNED32;	(* program counter. Should be used only for pc-rel jumps !! *)
 	export, inline: BOOLEAN;		(* code is exported / inlined *)
 
 	(* Scanner variables *)
-	sym: LONGINT; 	(* last token read *)
+	sym: SIGNED32; 	(* last token read *)
 	ident: Name;		(* last identifier read *)
-	val: LONGINT;	  (* last value read *)
+	val: SIGNED32;	  (* last value read *)
 	str: ARRAY MaxStrLen OF CHAR;
-	errpos: LONGINT;	(* starting position of the last instruction *)
+	errpos: SIGNED32;	(* starting position of the last instruction *)
 
 
-	PROCEDURE err(n: LONGINT);
+	PROCEDURE err(n: SIGNED32);
 	BEGIN PCM.Error(n, errpos, "")
 	END err;
 
-	PROCEDURE FindInstruction(VAR name: ARRAY OF CHAR; VAR inx: LONGINT);
-		VAR n: LONGINT;
+	PROCEDURE FindInstruction(VAR name: ARRAY OF CHAR; VAR inx: SIGNED32);
+		VAR n: SIGNED32;
 	BEGIN
 		n := 0;
 		REPEAT
@@ -517,7 +517,7 @@ VAR
 	END FindInstruction;
 
 	PROCEDURE insert(VAR name: ARRAY OF CHAR; VAR obj: Symbol);
-		VAR ob0, ob1: Symbol; d: LONGINT;
+		VAR ob0, ob1: Symbol; d: SIGNED32;
 	BEGIN ob0 := root; ob1 := ob0.right; d := 1;
 		LOOP
 			IF ob1 = NIL THEN (*insert undefined label*)
@@ -600,7 +600,7 @@ VAR
 	END skipBlanks;
 
 	PROCEDURE GetIdent(VAR name: Name);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 	BEGIN i := 0; errpos := scanner.curpos - 1;
 		REPEAT
 			IF i < NameLen-1 THEN name[i] := scanner.ch; INC(i) END;
@@ -609,10 +609,10 @@ VAR
 		name[i] := 0X
 	END GetIdent;
 
-	PROCEDURE Get(VAR sym: LONGINT);
+	PROCEDURE Get(VAR sym: SIGNED32);
 
 		PROCEDURE Str;
-			VAR och: CHAR; i: LONGINT;
+			VAR och: CHAR; i: SIGNED32;
 		BEGIN
 			och := scanner.ch; i := 0;
 			LOOP
@@ -627,10 +627,10 @@ VAR
 			str[i] := 0X; val := i;
 		END Str;
 
-		PROCEDURE Number(VAR intval: LONGINT);
-		VAR i, m, n, d: INTEGER; dig: ARRAY 24 OF CHAR;
+		PROCEDURE Number(VAR intval: SIGNED32);
+		VAR i, m, n, d: SIGNED16; dig: ARRAY 24 OF CHAR;
 
-			PROCEDURE Ord(ch: CHAR; hex: BOOLEAN): INTEGER;
+			PROCEDURE Ord(ch: CHAR; hex: BOOLEAN): SIGNED16;
 			BEGIN (* ("0" <= ch) & (ch <= "9") OR ("A" <= ch) & (ch <= "F") *)
 				IF ch <= "9" THEN RETURN ORD(ch) - ORD("0")
 				ELSIF hex THEN RETURN ORD(ch) - ORD("A") + 10
@@ -664,7 +664,7 @@ VAR
 					END
 				ELSE (* decimal *)
 					WHILE i < n DO d := Ord(dig[i], FALSE); INC(i);
-						IF intval <= (MAX(LONGINT) - d) DIV 10 THEN intval := intval*10 + d
+						IF intval <= (MAX(SIGNED32) - d) DIV 10 THEN intval := intval*10 + d
 						ELSE err(203)
 						END
 					END
@@ -714,13 +714,13 @@ VAR
 		END
 	END Get;
 
-	PROCEDURE Check(s: LONGINT);
+	PROCEDURE Check(s: SIGNED32);
 	BEGIN IF sym # s THEN PCM.Error(s, errpos, "") END;
 		Get(sym)
 	END Check;
 
 	PROCEDURE Qualident(VAR obj: Symbol);
-	VAR i: LONGINT; idx: StringPool.Index;
+	VAR i: SIGNED32; idx: StringPool.Index;
 	BEGIN
 		obj := NIL;
 		IF sym = ScIdent THEN
@@ -754,10 +754,10 @@ VAR
 		END
 	END Qualident;
 
-	PROCEDURE Expression(VAR x: LONGINT);
-		VAR y, op : LONGINT;
+	PROCEDURE Expression(VAR x: SIGNED32);
+		VAR y, op : SIGNED32;
 
-		PROCEDURE Factor(VAR x: LONGINT);
+		PROCEDURE Factor(VAR x: SIGNED32);
 		BEGIN
 			IF sym = ScNumber THEN x := val; Get(sym)
 			ELSIF sym = ScLPar THEN
@@ -767,8 +767,8 @@ VAR
 			END
 		END Factor;
 
-		PROCEDURE Term(VAR x: LONGINT);
-			VAR y, op : LONGINT;
+		PROCEDURE Term(VAR x: SIGNED32);
+			VAR y, op : SIGNED32;
 		BEGIN
 			Factor(x);
 			WHILE (sym = ScMult) OR (sym = ScDiv) DO
@@ -789,7 +789,7 @@ VAR
 		END
 	END Expression;
 
-	PROCEDURE GetBaseIndex(VAR o: Operand; VAR size: LONGINT);
+	PROCEDURE GetBaseIndex(VAR o: Operand; VAR size: SIGNED32);
 		VAR obj: Symbol; isNumber: BOOLEAN; minus: BOOLEAN;
 	BEGIN
 		o.disp := 0; o.imm := 0;
@@ -866,7 +866,7 @@ VAR
 	END GetBaseIndex;
 
 	PROCEDURE GetOperand(VAR o: Operand);
-		VAR obj: Symbol; size: LONGINT;
+		VAR obj: Symbol; size: SIGNED32;
 	BEGIN
 		o.reg := none; o.disp := 0; o.base := none; o.index := none; o.imm := 0;
 		o.seg := none; o.scale := none; o.obj := NIL;
@@ -970,7 +970,7 @@ VAR
 		END
 	END CheckLabels;
 
-	PROCEDURE InsertFix(obj: Symbol; pc: LONGINT);
+	PROCEDURE InsertFix(obj: Symbol; pc: SIGNED32);
 		VAR fix: FixPnt; x: PCLIR.AsmFixup;
 	BEGIN
 		CASE obj.typ OF
@@ -990,7 +990,7 @@ VAR
 	END InsertFix;
 
 	PROCEDURE FixDisp(fix: FixPnt);
-	VAR  i, offs, disp: LONGINT; cur: PCLIR.AsmBlock;
+	VAR  i, offs, disp: SIGNED32; cur: PCLIR.AsmBlock;
 	BEGIN
 		cur := first; offs := fix.pc-4;
 		disp := pc - fix.pc;
@@ -1007,7 +1007,7 @@ VAR
 (* ------------------------------------------------------------------- *)
 (* Code Generation functions *)
 
-PROCEDURE PutByte(b: LONGINT);
+PROCEDURE PutByte(b: SIGNED32);
 BEGIN
 	(*IF last.len >= LEN(last.code) THEN*)	(*emulate the way OPA works, because of the f**king fingerprint*)
 	IF last.len >= 255 THEN
@@ -1020,7 +1020,7 @@ BEGIN
 	INC(pc)
 END PutByte;
 
-PROCEDURE PutBytes(b, size: LONGINT);
+PROCEDURE PutBytes(b, size: SIGNED32);
 BEGIN
 	IF last.len >= 256-size THEN	(*emulate the way OPA works, because of the f**king fingerprint*)
 		NEW(last.next);
@@ -1035,8 +1035,8 @@ BEGIN
 END PutBytes;
 
 
-PROCEDURE ModRM(VAR modrm: LONGINT; VAR op: Operand; mode, regpos: LONGINT; UseSpecReg, fix: BOOLEAN);
-	VAR mod: LONGINT;
+PROCEDURE ModRM(VAR modrm: SIGNED32; VAR op: Operand; mode, regpos: SIGNED32; UseSpecReg, fix: BOOLEAN);
+	VAR mod: SIGNED32;
 BEGIN
 	IF (IsRegMode(mode,TRUE) & ~UseSpecReg) OR IsSRegMode(mode, FALSE)
 			OR IsSpecRegMode(mode) OR (mode = MReg) OR (mode = XReg) THEN
@@ -1084,8 +1084,8 @@ BEGIN
 	END
 END ModRM;
 
-PROCEDURE SIB(op: Operand): SHORTINT;
-	VAR val: LONGINT;
+PROCEDURE SIB(op: Operand): SIGNED8;
+	VAR val: SIGNED32;
 BEGIN
 	IF op.index = 4 THEN 	(* ESP not allowed *)
 		PCM.Error(501, errpos, "")
@@ -1103,9 +1103,9 @@ BEGIN
 	RETURN(SHORT(SHORT(val)))
 END SIB;
 
-PROCEDURE GenCode(ind: LONGINT; VAR op: ARRAY OF Operand);
-	VAR i, instr, opi: LONGINT; name: Mnemo; fixobj: Symbol;
-		UseRM, UseImm, UseSpecReg, UseSegReg, UseDisp, fix: BOOLEAN; seg, reg, modrm, sib, imm, immSize, disp: LONGINT;
+PROCEDURE GenCode(ind: SIGNED32; VAR op: ARRAY OF Operand);
+	VAR i, instr, opi: SIGNED32; name: Mnemo; fixobj: Symbol;
+		UseRM, UseImm, UseSpecReg, UseSegReg, UseDisp, fix: BOOLEAN; seg, reg, modrm, sib, imm, immSize, disp: SIGNED32;
 BEGIN
 (* Initialisation *)
 	disp := 0;
@@ -1235,7 +1235,7 @@ END GenCode;
 	END ParseLabel;
 
 	PROCEDURE ParseInstruction;
-		VAR	ind, size: LONGINT; i: LONGINT; op: ARRAY 3 OF Operand; name: Name;
+		VAR	ind, size: SIGNED32; i: SIGNED32; op: ARRAY 3 OF Operand; name: Name;
 	BEGIN
 		(* Read Mnemonic *)
 			IF (ident = "DB") OR (ident = "DW") OR (ident = "DD") THEN
@@ -1315,13 +1315,13 @@ END GenCode;
 (* ------------------------------------------------------------------- *)
 (* Initialisation functions *)
 
-	PROCEDURE InsertReg(name: ARRAY OF CHAR; t, v: LONGINT);
+	PROCEDURE InsertReg(name: ARRAY OF CHAR; t, v: SIGNED32);
 		VAR obj: Symbol;
 	BEGIN
 		insert(name, obj); obj.typ := t; obj.val := v; obj.size := 0
 	END InsertReg;
 
-	PROCEDURE InsertType(name: ARRAY OF CHAR; s: LONGINT);
+	PROCEDURE InsertType(name: ARRAY OF CHAR; s: SIGNED32);
 		VAR obj: Symbol;
 	BEGIN
 		insert(name, obj); obj.typ := StType; obj.val := none; obj.size := s
@@ -1411,7 +1411,7 @@ END Assemble;
 
 
 	PROCEDURE BodyInit;
-		VAR s: INTEGER; i: LONGINT; f: Files.File; r: Files.Reader;
+		VAR s: SIGNED16; i: SIGNED32; f: Files.File; r: Files.Reader;
 
 		PROCEDURE InsertTarget(name: ARRAY OF CHAR; flag: SET);
 		BEGIN
@@ -1490,5 +1490,5 @@ END PCA386.
 	11.07.01	prk	support for fields and methods with same name in scope
 	02.07.01	prk	access flags, new design
 	30.05.01	prk	destination (\d) compiler-option to install the back-end
-	30.05.01	pjm	support for HUGEINT types (by pjm)
+	30.05.01	pjm	support for SIGNED64 types (by pjm)
 *)

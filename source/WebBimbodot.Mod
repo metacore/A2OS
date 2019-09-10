@@ -100,7 +100,7 @@ TYPE
 		END Tail;
 
 		PROCEDURE TAHTMLString(CONST s : ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE s[i] # 0X DO
@@ -116,7 +116,7 @@ TYPE
 		END TAHTMLString;
 
 		PROCEDURE HTMLString(CONST s : ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE s[i] # 0X DO
@@ -133,7 +133,7 @@ TYPE
 		END HTMLString;
 
 		PROCEDURE URIString(CONST s : ARRAY OF CHAR);
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 		BEGIN
 			i := 0;
 			WHILE s[i] # 0X DO
@@ -150,7 +150,7 @@ TYPE
 	Version = OBJECT
 	VAR title, department, category, author, email, posterUID, date, text, cache  : String;
 		articleID : String;
-		authorUID : LONGINT;
+		authorUID : SIGNED32;
 		errors : BOOLEAN;
 
 		PROCEDURE &New*;
@@ -251,7 +251,7 @@ TYPE
 
 	Article* = OBJECT
 	VAR uid, path, filename, stateFileName : String;
-		nofVersions : LONGINT;
+		nofVersions : SIGNED32;
 		current : Version;
 		archive : Archives.Archive;
 		site : Archive;
@@ -294,7 +294,7 @@ TYPE
 		(* count the number of article versions in the archive file *)
 		PROCEDURE CountVersions;
 		VAR index : Archives.Index;
-			i: SIZE; count : LONGINT;
+			i: SIZE; count : SIGNED32;
 			n : String;
 		BEGIN
 			archive.Acquire;
@@ -336,7 +336,7 @@ TYPE
 			Files.Register(f)
 		END StoreState;
 
-		PROCEDURE GetVersion*(nr : LONGINT) : Version;
+		PROCEDURE GetVersion*(nr : SIGNED32) : Version;
 		VAR v : Version;
 			receiver : Streams.Receiver;
 			r : Streams.Reader;
@@ -405,7 +405,7 @@ TYPE
 
 	Archive= OBJECT
 	VAR articles : Articles;
-		nofLoadedArticles : LONGINT;
+		nofLoadedArticles : SIGNED32;
 		aList, path, title : ARRAY 256 OF CHAR;
 		id : ARRAY 32 OF CHAR;
 		frontPage : Strings.Buffer;
@@ -415,9 +415,9 @@ TYPE
 		alive : BOOLEAN;
 
 		authorList : ARRAY MaxAuthor OF Author;
-		nofAuthor : LONGINT;
+		nofAuthor : SIGNED32;
 
-		nofCategories : LONGINT;
+		nofCategories : SIGNED32;
 		categoryStrings : CategoryStrings;
 
 		PROCEDURE LoadCategories;
@@ -515,7 +515,7 @@ TYPE
 		VAR w : Streams.Writer;
 			h : HTMLWriter;
 			al : ArticleList;
-			a : Article; count : LONGINT;
+			a : Article; count : SIGNED32;
 			b : Strings.Buffer;
 			l : ARRAY 128 OF CHAR;
 		BEGIN
@@ -555,7 +555,7 @@ TYPE
 		END LoadArticle;
 
 		PROCEDURE AddLoadedArticle(a : Article);
-		VAR grow : Articles; i : LONGINT;
+		VAR grow : Articles; i : SIGNED32;
 		BEGIN
 			IF nofLoadedArticles >= LEN(articles) THEN
 				NEW(grow, LEN(articles) * 2);
@@ -566,7 +566,7 @@ TYPE
 		END AddLoadedArticle;
 
 		PROCEDURE InternalGetArticle(CONST uid : ARRAY OF CHAR) : Article;
-		VAR i : LONGINT;
+		VAR i : SIGNED32;
 			a : Article;
 		BEGIN
 			FOR i := 0 TO nofLoadedArticles - 1 DO
@@ -585,7 +585,7 @@ TYPE
 		END GetArticle;
 
 
-		PROCEDURE GetVersion*(CONST uid : ARRAY OF CHAR; vNr : LONGINT) : Version;
+		PROCEDURE GetVersion*(CONST uid : ARRAY OF CHAR; vNr : SIGNED32) : Version;
 		VAR a : Article;
 		BEGIN {EXCLUSIVE}
 			a := InternalGetArticle(uid);
@@ -594,7 +594,7 @@ TYPE
 
 		PROCEDURE GetUID(VAR uid : ARRAY OF CHAR);
 		VAR t, ts : ARRAY 32 OF CHAR;
-			i : LONGINT;
+			i : SIGNED32;
 		BEGIN
 			uid := "D";
 			Strings.FormatDateTime("yyyymmdd", Dates.Now(), t);
@@ -668,7 +668,7 @@ VAR
 	uriLiteral : ARRAY 256 OF BOOLEAN;
 	empty : String;
 	archiveList : ArchiveList;
-	nofArchive : LONGINT;
+	nofArchive : SIGNED32;
 
 PROCEDURE MakeListLink(archive : Archive; VAR l : ARRAY OF CHAR);
 BEGIN
@@ -704,7 +704,7 @@ PROCEDURE FindVersion(archive : Archive; r : HTTPSupport.HTTPRequest) : Version;
 VAR
 	article : Article;
 	var: HTTPSupport.HTTPVariable;
-	vNr : LONGINT;
+	vNr : SIGNED32;
 BEGIN
 	var := r.GetVariableByName("article");
 	IF var # NIL THEN
@@ -747,7 +747,7 @@ VAR context : WebCGI.CGIContext;
 	 tv : String;
 	now : ARRAY 64 OF CHAR;
 	h : HTMLWriter;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN
 	IF (data # NIL) & (data IS WebCGI.CGIContext) THEN
 		context := data(WebCGI.CGIContext);
@@ -818,7 +818,7 @@ VAR context : WebCGI.CGIContext;
 	var: HTTPSupport.HTTPVariable;
 	editor, pw : ARRAY 64 OF CHAR;
 	l : ARRAY 256 OF CHAR;
-	id : LONGINT;
+	id : SIGNED32;
 BEGIN
 	IF (data # NIL) & (data IS WebCGI.CGIContext) THEN
 		context := data(WebCGI.CGIContext);
@@ -914,14 +914,14 @@ END Publish;
 PROCEDURE ShowArticle*(archive : Archive; data : ANY) : ANY;
 VAR r : HTTPSupport.HTTPRequest;
 	context : WebCGI.CGIContext;
-	i : LONGINT;
+	i : SIGNED32;
 	var: HTTPSupport.HTTPVariable;
 	w : Streams.Writer;
 	chunker : WebHTTP.ChunkedOutStream;
 
 	article : Article;
 	version : Version;
-	vNr : LONGINT;
+	vNr : SIGNED32;
 	h : HTMLWriter;
 	l : ARRAY 128 OF CHAR;
 BEGIN
@@ -1058,7 +1058,7 @@ END Access;
 
 PROCEDURE AddArchive(CONST id, path, title: ARRAY OF CHAR);
 VAR new : ArchiveList;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN
 	IF nofArchive >= LEN(archiveList) THEN
 		NEW(new, LEN(archiveList) * 2);
@@ -1072,7 +1072,7 @@ BEGIN
 END AddArchive;
 
 PROCEDURE GetArchiveInternal(CONST id : ARRAY OF CHAR) : Archive;
-VAR i : LONGINT; result : Archive;
+VAR i : SIGNED32; result : Archive;
 BEGIN
 	i := 0;
 	WHILE (i < nofArchive) & (result = NIL)  DO
@@ -1118,7 +1118,7 @@ END LoadArchiveList;
 PROCEDURE StoreArchiveList;
 VAR f : Files.File;
 	w : Files.Writer;
-	i : LONGINT;
+	i : SIGNED32;
 BEGIN {EXCLUSIVE}
 	f := Files.New(BimbodotConfigFile);
 	Files.OpenWriter(w, f, 0);
@@ -1149,7 +1149,7 @@ BEGIN
 END Create;
 
 PROCEDURE Finalizer;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 	t : Kernel.Timer;
 BEGIN
 	FOR i := 0 TO nofArchive - 1 DO
@@ -1160,7 +1160,7 @@ BEGIN
 END Finalizer;
 
 PROCEDURE InitURILiterals;
-VAR i : LONGINT;
+VAR i : SIGNED32;
 BEGIN
 	FOR i := 0 TO 255 DO uriLiteral[i] := FALSE END;
 	FOR i :=  61H TO  7AH DO uriLiteral[i] := TRUE END;(* RFC2396 lowalpha *)

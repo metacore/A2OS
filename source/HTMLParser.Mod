@@ -82,7 +82,7 @@ TYPE
 			scanner: Scanner.Scanner;
 			openTagStack : OpenTagStack;
 			elemReg*: XML.ElementRegistry;
-			reportError*: PROCEDURE {DELEGATE} (pos, line, row: LONGINT; msg: ARRAY OF CHAR);
+			reportError*: PROCEDURE {DELEGATE} (pos, line, row: SIGNED32; msg: ARRAY OF CHAR);
 			closedTag : String;
 			newTagName : String;
 			closedTagPremature : BOOLEAN;
@@ -482,7 +482,7 @@ TYPE
 		RETURN i = len
 	END IsPubidLiteral;
 
-	PROCEDURE DefaultReportError(pos, line, col: LONGINT; msg: ARRAY OF CHAR);
+	PROCEDURE DefaultReportError(pos, line, col: SIGNED32; msg: ARRAY OF CHAR);
 	BEGIN
 		KernelLog.Enter; KernelLog.Char(CHR(9H)); KernelLog.Char(CHR(9H)); KernelLog.String("pos "); KernelLog.Int(pos, 6);
 		KernelLog.String(", line "); KernelLog.Int(line, 0); KernelLog.String(", column "); KernelLog.Int(col, 0);

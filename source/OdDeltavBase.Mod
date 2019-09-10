@@ -437,7 +437,7 @@ VersionProperties * = OBJECT
 		END get;
 
 		PROCEDURE store;
-			VAR erg: LONGINT; w: Files.Writer; field: WebHTTP.AdditionalField;
+			VAR erg: SIGNED32; w: Files.Writer; field: WebHTTP.AdditionalField;
 			PROCEDURE nameVal(name, value: ARRAY OF CHAR (*OdUtil.Line*));
 			BEGIN
 				IF value # '' THEN
@@ -486,8 +486,8 @@ VAR
 	PROCEDURE newHistory*(res: OdUtil.Line): OdUtil.Line;
 	CONST PLog = FALSE;
 	VAR enum: Files.Enumerator;
-		flags, entryFlags: SET; time, date, size: LONGINT; pattern, last, hist, name, dir, base: OdUtil.Line;
-		numPos: LONGINT; prefix: OdUtil.Line;
+		flags, entryFlags: SET; time, date, size: SIGNED32; pattern, last, hist, name, dir, base: OdUtil.Line;
+		numPos: SIGNED32; prefix: OdUtil.Line;
 	BEGIN
 		numPos := Strings.Length(prefix);
 		flags := {}; last := prefix;
@@ -538,7 +538,7 @@ WorkspaceManager * = OBJECT
 		COPY(prefix, SELF.prefix);
 	END SetPrefix;
 
-	PROCEDURE prefixLen(): LONGINT;
+	PROCEDURE prefixLen(): SIGNED32;
 	BEGIN
 		RETURN Strings.Length(prefix);
 	END prefixLen;
@@ -557,7 +557,7 @@ Server * = OBJECT
 	(**                                                      freeze                                                      **)
 	PROCEDURE freezeResource(conf, res, hist: OdUtil.Line; log: OdVCSBase.TLog; flags: SET);
 		CONST Log = FALSE;
-		VAR historyName, fileName: OdVCSBase.TFileName; nv: LONGINT; ver, verStr: OdUtil.Line;
+		VAR historyName, fileName: OdVCSBase.TFileName; nv: SIGNED32; ver, verStr: OdUtil.Line;
 		BEGIN
 			ver := ResFileName(conf, res); COPY(ver, fileName); (* Compiler problem. *)
 			COPY(root, historyName); Strings.Append(historyName, hist); (* Prefix added to history. *)
@@ -599,7 +599,7 @@ Server * = OBJECT
 
 	PROCEDURE equalVersion(conf, res, hist, ver: OdUtil.Line): BOOLEAN;
 		CONST TempBase = "equal";
-		VAR erg: LONGINT; f1, f2: Files.File; equal: BOOLEAN; resName, resPropName, tempDir: OdUtil.Line;
+		VAR erg: SIGNED32; f1, f2: Files.File; equal: BOOLEAN; resName, resPropName, tempDir: OdUtil.Line;
 		BEGIN
 			resName := ResFileName(workMan.TempDir, TempBase);
 			resPropName := ResPropFileName(workMan.TempDir, TempBase);
@@ -646,7 +646,7 @@ Server * = OBJECT
 		list of the frozen VCRs from checking and only delete unnecessary VCRs or with the wrong version. *)
 	PROCEDURE deleteFrozenVCRs(conf: OdUtil.Line);
 	CONST PLog = FALSE;
-	VAR lines: OdUtil.Lines; erg: LONGINT; resName, resPropName, fileName: OdUtil.Line;
+	VAR lines: OdUtil.Lines; erg: SIGNED32; resName, resPropName, fileName: OdUtil.Line;
 	BEGIN
 		(* Delete existing resources *)
 		IF PLog THEN OdUtil.Msg2("deleteFrozenVCRs:", conf); END;
@@ -676,7 +676,7 @@ Server * = OBJECT
 		in case of success. Check also VCRs of subconfigurations but don't add them to writer (root= FALSE) *)
 	PROCEDURE checkFrozenVCRs(conf: OdUtil.Line; root: BOOLEAN; VAR w: Files.Writer): BOOLEAN;
 	CONST PLog = FALSE;
-	VAR allFrozen: BOOLEAN; subconfs, lines: OdUtil.Lines; confLen: LONGINT; res:OdUtil.Line; props: VersionProperties;
+	VAR allFrozen: BOOLEAN; subconfs, lines: OdUtil.Lines; confLen: SIGNED32; res:OdUtil.Line; props: VersionProperties;
 	BEGIN
 		IF PLog THEN OdUtil.Msg2("checkFrozenVCRs:", conf); END;
 		lines := findVCRs(conf); (* from filesystem *)
@@ -716,8 +716,8 @@ Server * = OBJECT
 	(** Freeze a configuration and recursively it's subconfigurations. Only freeze if all VCRs are frozen. *)
 	PROCEDURE freezeConfiguration(mode, conf, hist: OdUtil.Line; log: OdVCSBase.TLog; flags: SET);(* BASELINE-CONTROL  *)
 		CONST PLog = FALSE;
-		VAR subconf: OdUtil.Line; subconfs: OdUtil.Lines; textLen: LONGINT; allFrozen: BOOLEAN; props: VersionProperties;
-			f: Files.File; r: Files.Rider; erg: INTEGER; fileName: OdUtil.Line; w: Files.Writer;
+		VAR subconf: OdUtil.Line; subconfs: OdUtil.Lines; textLen: SIGNED32; allFrozen: BOOLEAN; props: VersionProperties;
+			f: Files.File; r: Files.Rider; erg: SIGNED16; fileName: OdUtil.Line; w: Files.Writer;
 		BEGIN
 			fileName := ConfDataFileName(conf);
 			IF PLog THEN OdUtil.Msg3("freezeConfiguration.ConfDataFileName:", conf, fileName); END;
@@ -802,7 +802,7 @@ Server * = OBJECT
 		Version URL has history and version number combined. *)
 	PROCEDURE selectResource(conf, res, hist, ver: OdUtil.Line);(*  VERSION-CONTROL  *)
 		CONST PLog = FALSE;
-		VAR historyName, fileName: OdVCSBase.TFileName; version, pos, erg, verPos: LONGINT;
+		VAR historyName, fileName: OdVCSBase.TFileName; version, pos, erg, verPos: SIGNED32;
 			log: OdVCSBase.TLog;
 			props: VersionProperties;  line: OdUtil.Line;
 			errMsg: ARRAY 256 OF CHAR; f: Files.File;
@@ -866,7 +866,7 @@ $END*)
 
 	PROCEDURE selectInitialResource*(conf, res, versionUrl: OdUtil.Line); (*  VERSION-CONTROL  *)
 		CONST PLog = FALSE;
-		VAR histPos, verPos, pos: LONGINT; histName: OdUtil.Line;
+		VAR histPos, verPos, pos: SIGNED32; histName: OdUtil.Line;
 			confProps, props: VersionProperties;
 		BEGIN
 			preCond := OdCond.Ok;
@@ -905,7 +905,7 @@ $END*)
 		(* TODO: Not yet clear whether to use <history file> or the pure number. *)
 		PROCEDURE selectOtherResource*(conf, res, ver: OdUtil.Line); (* UPDATE  *)
 		CONST PLog = FALSE;
-		VAR confProps, props: VersionProperties; verPos, pos: LONGINT;
+		VAR confProps, props: VersionProperties; verPos, pos: SIGNED32;
 		BEGIN
 			preCond := OdCond.Ok;
 			IF PLog THEN OdUtil.Msg6("soR: conf, res, ver =",conf, ":", res, ":", ver); END;
@@ -949,7 +949,7 @@ $END*)
 		VAR f: Files.File; w: Files.Writer; r: Files.Reader; line, res, resVer, subConf: OdUtil.Line;
 			confProps: VersionProperties; absConf, confData: OdUtil.Line;
 			dir: Files.File; splitter: OdXml.StringSplitter; ok: BOOLEAN;
-			status: LONGINT; errMsg: ARRAY 128 OF CHAR;
+			status: SIGNED32; errMsg: ARRAY 128 OF CHAR;
 		BEGIN
 			IF Log0 THEN OdUtil.Msg4("sC:", mode, conf, ver); END;
 			(* check whether collection exists *)
@@ -1183,12 +1183,12 @@ $END*)
 	(* Create the vcc.baseline-collection information. Just as data in memory at the moment. Checkout just the configuration
 		data to ConfBase = "temp/<confName>(0..9)_". Create the datastructure which also can can contain subbaselines. In this case
 		it's necessary to have baseline data files of different levels. *)
-	PROCEDURE reportBaseline*(confName, baselineUrl: OdUtil.Line; vccList: VccList; level: INTEGER; VAR statusCode: LONGINT);
+	PROCEDURE reportBaseline*(confName, baselineUrl: OdUtil.Line; vccList: VccList; level: SIGNED16; VAR statusCode: SIGNED32);
 		(* PROPFIND vcc.baseline-collection  *)
 		CONST PLog = FALSE;
 		VAR confPropFileName, confDataFileName, line, res, ver: OdUtil.Line;
 			vcrList: VcrList; subList: VccList;
-			rc: LONGINT; f: Files.File; r: Files.Reader; splitter: OdXml.StringSplitter; ok: BOOLEAN;
+			rc: SIGNED32; f: Files.File; r: Files.Reader; splitter: OdXml.StringSplitter; ok: BOOLEAN;
 		BEGIN
 			IF level > 9 THEN
 				statusCode := WebHTTP.InternalServerError; preCond := OdCond.ErrorMsg;
@@ -1235,7 +1235,7 @@ $END*)
 		baseline-controlled-collection.version-controlled-configuration.checked-(in|out).baseline.baseline-collection
 		REPORT  *)
 	PROCEDURE webReportBaseline*(host: ARRAY OF CHAR; baseline: OdUtil.Line; VAR xmlDoc: XML.Document;
-		VAR statusCode: LONGINT);
+		VAR statusCode: SIGNED32);
 		CONST conf = "bl"; (* Just a dummy *)
 		VAR vcc: VccList; brRes: OdXml.BaselineReportRes;
 		BEGIN NEW(vcc, conf, "top");
@@ -1246,7 +1246,7 @@ $END*)
 		END webReportBaseline;
 
 	(* Create the vcc.baseline-collection information. Just as data in memory at the moment. *)
-	PROCEDURE compareBaseline*(a, b: OdUtil.Line; VAR vccDiff: VccDiff; VAR statusCode: LONGINT); (* REPORT baseline-compare  *)
+	PROCEDURE compareBaseline*(a, b: OdUtil.Line; VAR vccDiff: VccDiff; VAR statusCode: SIGNED32); (* REPORT baseline-compare  *)
 		CONST PLog = FALSE;
 		VAR blA, blB: VccList;
 		BEGIN
@@ -1261,7 +1261,7 @@ $END*)
 
 	(* REPORT compare-baseline 12.7.1  *)
 		PROCEDURE reportCompareBaseline*(host: ARRAY OF CHAR; baseline0, baseline1: OdUtil.Line;
-			VAR xmlOut: XML.Document; VAR statusCode: LONGINT);
+			VAR xmlOut: XML.Document; VAR statusCode: SIGNED32);
 		CONST PLog = FALSE;
 		VAR vccDiff: VccDiff; cbrRes: OdXml.CompareBaselineReportRes;
 			BEGIN
@@ -1276,7 +1276,7 @@ $END*)
 		END reportCompareBaseline;
 
 	PROCEDURE reportHistory*(hist: OdUtil.Line);(* REPORT  *)
-		VAR historyName: OdVCSBase.TFileName; version, newestVersion: LONGINT;
+		VAR historyName: OdVCSBase.TFileName; version, newestVersion: SIGNED32;
 			log: OdVCSBase.TLog;
 		BEGIN
 			COPY(root, historyName); Strings.Append(historyName, hist);
@@ -1295,7 +1295,7 @@ $END*)
 	(* REPORT version-tree 3.7  *)
 	PROCEDURE reportVersionTree*(host: ARRAY OF CHAR; conf, res: OdUtil.Line; VAR xmlDoc: XML.Document);
 		CONST PLog = FALSE;
-		VAR historyName: OdVCSBase.TFileName; version, newestVersion: LONGINT; temp: ARRAY 8 OF CHAR;
+		VAR historyName: OdVCSBase.TFileName; version, newestVersion: SIGNED32; temp: ARRAY 8 OF CHAR;
 			log: OdVCSBase.TLog; props: VersionProperties; vtRes: OdXml.VersionTreeRes; w: Streams.Writer;
 		BEGIN
 			NEW(props, conf, res);
@@ -1317,7 +1317,7 @@ $END*)
 	PROCEDURE PropNames(VAR href: ARRAY OF CHAR; propfindRes: OdXml.PropfindCollectionRes);
 	VAR
 		props: VersionProperties;
-		host: ARRAY 64 OF CHAR; path: ARRAY 256 OF CHAR; port: LONGINT;
+		host: ARRAY 64 OF CHAR; path: ARRAY 256 OF CHAR; port: SIGNED32;
 	BEGIN
 		(* TODO: really check for href. E.g. whether it's a VCR or a normal resource or a collection. *)
 		(* Standard properties *)
@@ -1348,10 +1348,10 @@ $END*)
 
 	(* Iterate over a list of requested properties and add its values to the result body. *)
 	PROCEDURE doPropfindList(propfindRes: OdXml.PropfindCollectionRes; propList: XML.Document;
-		href, type, dateTime: ARRAY OF CHAR; length: LONGINT);
+		href, type, dateTime: ARRAY OF CHAR; length: SIGNED32);
 	VAR propfindEl, propEl, prop: XML.Element; elName: ARRAY 128 OF CHAR; p: ANY;
 		resourceProps: VersionProperties;
-		host, path: ARRAY 128 OF CHAR; value: ARRAY 512 OF CHAR; port: LONGINT;
+		host, path: ARRAY 128 OF CHAR; value: ARRAY 512 OF CHAR; port: SIGNED32;
 		propName, absName: OdUtil.Line; props: XMLObjects.Enumerator;
 	BEGIN
 		propfindRes.addResponse(href);
@@ -1431,10 +1431,10 @@ $END*)
 		propList: XML.Document; VAR propResults: XML.Document);
 		(* REPORT version-tree 3.7  *)
 		CONST PLog = FALSE;
-		VAR historyName: OdVCSBase.TFileName; version, pos: LONGINT; prefixLen: LONGINT;
+		VAR historyName: OdVCSBase.TFileName; version, pos: SIGNED32; prefixLen: SIGNED32;
 			log: OdVCSBase.TLog; w: Streams.Writer;
 			propfindRes: OdXml.PropfindCollectionRes;
-			enum: Files.Enumerator; pattern, fullPattern, name, href: OdUtil.Line; time, date, size: LONGINT;
+			enum: Files.Enumerator; pattern, fullPattern, name, href: OdUtil.Line; time, date, size: SIGNED32;
 			entryFlags, flags: SET;
 			dateTimeStr, timeStr, depthString: ARRAY 32 OF CHAR;
 			hostPrefix, parentColl, coll, absColl: ARRAY 64 OF CHAR;
@@ -1546,7 +1546,7 @@ $END*)
 	CONST PLog = FALSE;
 		SplitChar = 0DX; (* gives nice display for raw edit of property file. Could be escaped later in case of problems. *)
 	VAR versionProps: VersionProperties; key: OdUtil.Line; value, oldValue: ARRAY 1024 OF CHAR;
-		pos: LONGINT;
+		pos: SIGNED32;
 	BEGIN
 		NEW(versionProps, conf, res);
 		IF PLog THEN OdUtil.Msg4("conf = ", conf, "res = ", res); END;
@@ -1678,7 +1678,7 @@ $END*)
 
 	PROCEDURE delete * (uri: ARRAY OF CHAR);
 	CONST PLog = FALSE;
-	VAR absName, name: OdUtil.Line; rc, pos: LONGINT;
+	VAR absName, name: OdUtil.Line; rc, pos: SIGNED32;
 	BEGIN
 		preCond := OdCond.Ok;
 		COPY(uri, name);
@@ -1732,8 +1732,8 @@ $END*)
 		END;
 	END delete;
 
-	PROCEDURE mkcol * (uri: ARRAY OF CHAR; VAR statusCode: LONGINT);
-	VAR absName, name: OdUtil.Line; rc: LONGINT; errMsg: ARRAY 256 OF CHAR;
+	PROCEDURE mkcol * (uri: ARRAY OF CHAR; VAR statusCode: SIGNED32);
+	VAR absName, name: OdUtil.Line; rc: SIGNED32; errMsg: ARRAY 256 OF CHAR;
 	BEGIN
 		preCond := OdCond.Ok;
 		absName := ResFileName("", uri);
@@ -1758,7 +1758,7 @@ VAR
 	RepoPath: ARRAY 256 OF CHAR;
 
 	frozenDeleted: BOOLEAN;
-	preCond*, postCond*: INTEGER; (* pre and post condition codes of repository functions (DAVDeltavBase.Server) *)
+	preCond*, postCond*: SIGNED16; (* pre and post condition codes of repository functions (DAVDeltavBase.Server) *)
 	repMan: RepositoryManager;
 	workMan * : WorkspaceManager;
 	hostName * : ARRAY 64 OF CHAR;
@@ -1770,7 +1770,7 @@ VAR
 
 (** Get the suffix of str. The suffix is started by the last dot in str. Copied from Strings.Mod*)
 	PROCEDURE GetSuffix*(VAR str(** in *), suf(** out *): ARRAY OF CHAR);
-		VAR i, j, l, dot: LONGINT;
+		VAR i, j, l, dot: SIGNED32;
 	BEGIN
 		dot := -1; i := 0;
 		WHILE str[i] # 0X DO
@@ -1794,12 +1794,12 @@ VAR
 
 
 (* A little string utility *)
-PROCEDURE Slice*(src: ARRAY OF CHAR; pos, len: LONGINT; VAR dest: ARRAY OF CHAR);
+PROCEDURE Slice*(src: ARRAY OF CHAR; pos, len: SIGNED32; VAR dest: ARRAY OF CHAR);
 BEGIN dest[len] := 0X; WHILE len > 0 DO dest[len-1] := src[pos+len-1]; DEC(len); END; END Slice;
 (* Split an absolute path in conf and res. At the moment conf is an input parameter. But in principle this could
 	be changed later if there are uses where conf isn't already known. *)
 PROCEDURE splitConfRes*(confRes: OdUtil.Line; VAR conf, res: OdUtil.Line);
-VAR confPos: LONGINT;
+VAR confPos: SIGNED32;
 BEGIN
 	IF conf # "" THEN
 		padConfiguration(conf);
@@ -1811,7 +1811,7 @@ BEGIN
 END splitConfRes;
 (* confResVer = '<conf><res>.<ver>' conf has a trailing CollCh *)
 PROCEDURE splitConfResVer*(confResVer: OdUtil.Line; VAR conf, res, ver: OdUtil.Line);
-VAR resVer: OdUtil.Line; verPos: INTEGER; pos: LONGINT;
+VAR resVer: OdUtil.Line; verPos: SIGNED16; pos: SIGNED32;
 BEGIN
 	splitConfRes(confResVer, conf, resVer);
 	(* find version number *)
@@ -1823,7 +1823,7 @@ BEGIN
 	Slice(resVer, verPos+1, Strings.Length(resVer)-verPos-1, ver);
 END splitConfResVer;
 PROCEDURE splitDirBase(dirBase: OdUtil.Line; VAR dir, base: OdUtil.Line);
-VAR resVer: OdUtil.Line; basePos: INTEGER; pos: LONGINT;
+VAR resVer: OdUtil.Line; basePos: SIGNED16; pos: SIGNED32;
 BEGIN
 	(* find version number *)
 	basePos:= -1;
@@ -1855,7 +1855,7 @@ BEGIN
 END isConfiguration;
 
 PROCEDURE isConfDataFileName*(res: ARRAY OF CHAR): BOOLEAN;
-VAR len: LONGINT;
+VAR len: SIGNED32;
 BEGIN
 	IF res # "" THEN
 		RETURN res[Strings.Length(res)-1] = PropCh;
@@ -1864,7 +1864,7 @@ BEGIN
 	END;
 END isConfDataFileName;
 PROCEDURE isConfPropFileName(res: OdUtil.Line): BOOLEAN;
-VAR len: LONGINT;
+VAR len: SIGNED32;
 BEGIN len := Strings.Length(res);
 	IF len > 1 THEN
 		RETURN (res[len-1] = PropCh);
@@ -1897,7 +1897,7 @@ END unpadConfiguration;
 (** resFileName = workMan.prefix conf "/" res. Also <mountpoint>:.. is possible. *)
 PROCEDURE ResFileName*(conf, res: ARRAY OF CHAR): OdUtil.Line;
 CONST PLog = FALSE;
-VAR name: OdUtil.Line; pos: LONGINT;
+VAR name: OdUtil.Line; pos: SIGNED32;
 BEGIN
 	IF conf # "" THEN
 		COPY(workMan.prefix, name); unpadConfiguration(name);
@@ -1922,7 +1922,7 @@ END ResFileName;
 (** resHrefName = http:// host "/" conf "/" res. *)
 PROCEDURE ResHrefName * (host, conf, res: ARRAY OF CHAR): OdUtil.Line;
 CONST PLog = FALSE;
-VAR name: OdUtil.Line; pos: LONGINT;
+VAR name: OdUtil.Line; pos: SIGNED32;
 BEGIN
 	IF host#"" THEN Strings.Concat("http://", host, name); ELSE Strings.Concat("http://", DefaultHostName, name);  END; (*PH XXX*)
 	padConfiguration(name);
@@ -1978,7 +1978,7 @@ END AbsWorkPath;
 
 (* <confname>/ -> <confname>_ *)
 PROCEDURE ConfDataFileName*(conf: ARRAY OF CHAR): OdUtil.Line;
-VAR name: OdUtil.Line; pos: LONGINT;
+VAR name: OdUtil.Line; pos: SIGNED32;
 BEGIN (* <ws>:<conf>/_ *)
 	pos := Strings.Pos(workMan.prefix, conf);
 	IF pos # 0 THEN
@@ -2019,7 +2019,7 @@ BEGIN (* prefix is added later in the resource stage *)
 END ConfShortDataFileName;
 
 PROCEDURE ConfHistFileName*(conf: ARRAY OF CHAR): OdUtil.Line;
-VAR name: OdUtil.Line; pos, slash: LONGINT;
+VAR name: OdUtil.Line; pos, slash: SIGNED32;
 BEGIN (* <last path segment of configuration> *)
 	slash := 0; FOR pos := 0 TO Strings.Length(conf) -1 DO IF conf[pos] = CollCh THEN slash := pos END; END;
 	INC(slash); pos := 0;
@@ -2051,7 +2051,7 @@ BEGIN
 END ConfFullFileName;
 
 PROCEDURE Data2HistFileName*(VAR conf: OdUtil.Line);
-VAR segment: OdUtil.Line; pos, slash: LONGINT;
+VAR segment: OdUtil.Line; pos, slash: SIGNED32;
 BEGIN (* [<segment>/]<last segment>/_ => <last segment>_ *)
 	pos := Strings.Length(conf); conf[pos-2] := PropCh; conf[pos-1] := 0X; (* .../_ => ..._ *)
 	slash := -1; FOR pos := 0 TO Strings.Length(conf) -1 DO IF conf[pos] = CollCh THEN slash := pos END; END;
@@ -2158,7 +2158,7 @@ CONST
 	PLog = FALSE;
 VAR enum: Files.Enumerator;
 	(* <conf><resDir><resBase>: pattern =  <conf><resDir>* *)
-	pattern, name, confResDir: OdUtil.Line; time, date, size: LONGINT;
+	pattern, name, confResDir: OdUtil.Line; time, date, size: SIGNED32;
 	entryFlags, flags: SET;
 	f: Files.File;
 BEGIN
@@ -2246,7 +2246,7 @@ END thawedVCRs;
 (* REPORT  *)
 (* REPORT  *)
 
-PROCEDURE GetErrorMsg(res: WORD; VAR s: ARRAY OF CHAR);
+PROCEDURE GetErrorMsg(res: INTEGER; VAR s: ARRAY OF CHAR);
 VAR temp: ARRAY 8 OF CHAR;
 BEGIN
 (***********
@@ -2276,7 +2276,7 @@ END GetErrorMsg;
 (** Create a FAT Directory: path. Includes prefix, e.g. "FTP:/New Folder/A/B/C" *)
 PROCEDURE CreDir*(path: ARRAY OF CHAR);
 VAR p: ARRAY 1024 OF CHAR;
-	res: WORD; msg: ARRAY 256 OF CHAR;
+	res: INTEGER; msg: ARRAY 256 OF CHAR;
 BEGIN
 	COPY(path, p);
 	OdUtil.Msg3("Creating directory: ", p, ": ");
@@ -2295,7 +2295,7 @@ END CreDir;
 (** Remove a FAT Directory: path ["\F"]. Includes prefix, e.g. "FTP:/A/B/C". Use 'force' for  deletion of non-empty dirs. *)
 PROCEDURE RemDir*(path: ARRAY OF CHAR; force: BOOLEAN);
 VAR p: ARRAY 1024 OF CHAR;
-	res: WORD; msg: ARRAY 256 OF CHAR;
+	res: INTEGER; msg: ARRAY 256 OF CHAR;
 BEGIN
 	COPY(path, p);
 	OdUtil.Msg3("Deleting directory: ", p, ": ");

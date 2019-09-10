@@ -24,7 +24,7 @@ CONST
 	TraceBoot = FALSE;
 
 PROCEDURE BootCommand(CONST config: ARRAY OF CHAR; flags: SET);
-VAR i, j: LONGINT; res: WORD; par: ARRAY 32 OF CHAR; s: ARRAY 256 OF CHAR;
+VAR i, j: SIGNED32; res: INTEGER; par: ARRAY 32 OF CHAR; s: ARRAY 256 OF CHAR;
 BEGIN
 	COPY(config, par);
 	i := 0; j := 0; WHILE par[j] # 0X DO INC(j) END;
@@ -41,8 +41,8 @@ BEGIN
 	END
 END BootCommand;
 
-PROCEDURE GetString(VAR i: LONGINT; CONST r : ARRAY OF CHAR; VAR s: ARRAY OF CHAR): BOOLEAN;
-VAR j: LONGINT;
+PROCEDURE GetString(VAR i: SIGNED32; CONST r : ARRAY OF CHAR; VAR s: ARRAY OF CHAR): BOOLEAN;
+VAR j: SIGNED32;
 BEGIN
 	WHILE r[i] = " " DO INC(i) END;
 	j := 0; WHILE r[i] > " " DO s[j] := r[i]; INC(j); INC(i) END;
@@ -51,8 +51,8 @@ BEGIN
 	RETURN j # 0
 END GetString;
 
-PROCEDURE Error(CONST config, val: ARRAY OF CHAR; i: LONGINT);
-VAR j: LONGINT; s: ARRAY 32 OF CHAR;
+PROCEDURE Error(CONST config, val: ARRAY OF CHAR; i: SIGNED32);
+VAR j: SIGNED32; s: ARRAY 32 OF CHAR;
 BEGIN
 	s := "BootConsole: Bad ";
 	KernelLog.String(s);
@@ -67,7 +67,7 @@ END Error;
 
 PROCEDURE Generate(CONST name: ARRAY OF CHAR; par: Files.Parameters): BOOLEAN;
 VAR
-	factory : Files.FileSystemFactory; res: WORD; msg: ARRAY 256 OF CHAR;
+	factory : Files.FileSystemFactory; res: INTEGER; msg: ARRAY 256 OF CHAR;
 	moduleName, procedureName : Modules.Name;
 BEGIN
 	Commands.Split(name, moduleName, procedureName, res, msg);
@@ -87,7 +87,7 @@ END Generate;
 
 PROCEDURE OpenVolume(CONST config: ARRAY OF CHAR);
 VAR
-	i, j, k: LONGINT; parvol, parfs: Files.Parameters;
+	i, j, k: SIGNED32; parvol, parfs: Files.Parameters;
 	volReady : BOOLEAN;
 	prefix, alias: Files.Prefix; gen: ARRAY 64 OF CHAR; s: ARRAY 256 OF CHAR;
 	argVol, argFs : Streams.StringReader;
@@ -146,7 +146,7 @@ BEGIN
 END OpenVolume;
 
 PROCEDURE OpenVolumes;
-VAR config: ARRAY 16 OF CHAR; i: LONGINT;
+VAR config: ARRAY 16 OF CHAR; i: SIGNED32;
 BEGIN
 	config := "BootVol#";
 	FOR i := 1 TO 9 DO

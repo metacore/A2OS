@@ -11,16 +11,16 @@ CONST
 VAR
 	w: Texts.Writer;
 	dev, dev2: Network.LinkDevice;
-	replies: LONGINT;
-	received: LONGINT;
+	replies: SIGNED32;
+	received: SIGNED32;
 	peer: Network.LinkAdr;
-	nofpkt: LONGINT;
-	startTime: LONGINT;
+	nofpkt: SIGNED32;
+	startTime: SIGNED32;
 
 (** Show all registered link devices. *)
 
 PROCEDURE ShowDevices*;
-VAR table: Plugins.Table; dev: Network.LinkDevice; i: LONGINT; s: ARRAY 32 OF CHAR;
+VAR table: Plugins.Table; dev: Network.LinkDevice; i: SIGNED32; s: ARRAY 32 OF CHAR;
 BEGIN
 	Network.registry.GetAll(table);
 	IF table # NIL THEN
@@ -40,7 +40,7 @@ BEGIN
 			Texts.WriteString(w, s); Texts.Write(w, " ");
 			Texts.WriteInt(w, dev.mtu, 1); Texts.Write(w, " ");
 
-			(* does not work with HUGEINT:
+			(* does not work with SIGNED64:
 			Texts.WriteInt(w, dev.sendCount, 1); Texts.Write(w, " ");
 			Texts.WriteInt(w, dev.recvCount, 1);
 			*)
@@ -52,7 +52,7 @@ BEGIN
 END ShowDevices;
 
 PROCEDURE FindDevice(name: ARRAY OF CHAR): Network.LinkDevice;
-VAR table: Plugins.Table; i: LONGINT;
+VAR table: Plugins.Table; i: SIGNED32;
 BEGIN
 	Network.registry.GetAll(table);
 	IF table # NIL THEN
@@ -63,7 +63,7 @@ BEGIN
 	RETURN NIL
 END FindDevice;
 
-PROCEDURE Receiver(dev: Network.LinkDevice; type: LONGINT; buf: Network.Buffer);
+PROCEDURE Receiver(dev: Network.LinkDevice; type: SIGNED32; buf: Network.Buffer);
 (* VAR s: ARRAY 32 OF CHAR; *)
 BEGIN
 (*
@@ -129,7 +129,7 @@ END SetDevice2;
 (** Broadcast a test packet. *)
 
 PROCEDURE SendBroadcast*;
-VAR i: LONGINT; data: ARRAY 100 OF CHAR;
+VAR i: SIGNED32; data: ARRAY 100 OF CHAR;
 BEGIN
 	IF dev # NIL THEN
 		replies := 0;
@@ -143,7 +143,7 @@ END SendBroadcast;
 (** Send test packets to peer. *)
 
 PROCEDURE SendTest*;	(* n ~ *)
-VAR i, n: LONGINT; data: ARRAY 1500 OF CHAR;
+VAR i, n: SIGNED32; data: ARRAY 1500 OF CHAR;
 BEGIN
 	In.Open; In.LongInt(n);
 	IF (dev # NIL) & In.Done THEN

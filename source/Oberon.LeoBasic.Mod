@@ -20,7 +20,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 
 		Link* = POINTER TO LinkDesc;
 		LinkDesc* = RECORD (LeoPaths.PointDesc)
-			lx*, ly*: REAL;	(** logical coordinates within frame **)
+			lx*, ly*: FLOAT32;	(** logical coordinates within frame **)
 		END;
 
 		Rectangle* = Frame;
@@ -38,7 +38,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END CopyLink;
 
 	PROCEDURE HandleLink* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR l, copy: Link; ver: LONGINT;
+		VAR l, copy: Link; ver: SIGNED32;
 	BEGIN
 		l := obj(Link);
 		IF msg IS Leonardo.ValidateMsg THEN
@@ -83,7 +83,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 		END
 	END HandleLink;
 
-	PROCEDURE InitLink* (l: Link; lx, ly: REAL);
+	PROCEDURE InitLink* (l: Link; lx, ly: FLOAT32);
 	BEGIN
 		LeoPaths.InitPoint(l, lx, ly); l.handle := HandleLink;
 		l.lx := lx; l.ly := ly
@@ -157,7 +157,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END ValidateFrame;
 
 	PROCEDURE TransformFrame* (f: Frame; VAR msg: Leonardo.TransformMsg);
-		VAR glm, mat, lgm: GfxMatrix.Matrix; cur, down: Leonardo.Shape; l: Link; x0, y0, x1, y1: REAL;
+		VAR glm, mat, lgm: GfxMatrix.Matrix; cur, down: Leonardo.Shape; l: Link; x0, y0, x1, y1: FLOAT32;
 	BEGIN
 		IF (msg.id = Leonardo.apply) & (msg.stamp # f.stamp) THEN
 			f.stamp := msg.stamp;
@@ -288,7 +288,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END CopyFrame;
 
 	PROCEDURE HandleFrame* (obj: Objects.Object; VAR msg: Objects.ObjMsg);
-		VAR f, copy: Frame; lgm: GfxMatrix.Matrix; ver, pos: LONGINT; forker: LeoPens.Forker;
+		VAR f, copy: Frame; lgm: GfxMatrix.Matrix; ver, pos: SIGNED32; forker: LeoPens.Forker;
 	BEGIN
 		f := obj(Frame);
 		IF msg IS Leonardo.ShapeMsg THEN
@@ -397,7 +397,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	(**--- Rectangles ---**)
 
 	PROCEDURE ConsumeRect (rect: Rectangle; VAR msg: Leonardo.ConsumeMsg);
-		VAR lm: LeoPaths.LinkMsg; lgm: GfxMatrix.Matrix; x, y: REAL; l: Link;
+		VAR lm: LeoPaths.LinkMsg; lgm: GfxMatrix.Matrix; x, y: FLOAT32; l: Link;
 	BEGIN
 		IF (msg.recv = NIL) & (msg.bottom = msg.top) & (msg.top.cont # rect) &
 			(msg.llx <= rect.urx) & (rect.llx <= msg.urx) & (msg.lly <= rect.ury) & (rect.lly <= msg.ury)
@@ -431,7 +431,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END ConsumeRect;
 
 	PROCEDURE SplitRect (rect: Rectangle; VAR msg: LeoPaths.SplitMsg);
-		VAR lgm, glm: GfxMatrix.Matrix; llx, lly, urx, ury, x, y: REAL; l: Link;
+		VAR lgm, glm: GfxMatrix.Matrix; llx, lly, urx, ury, x, y: FLOAT32; l: Link;
 	BEGIN
 		IF (rect.llx <= msg.urx) & (msg.llx <= rect.urx) & (rect.lly <= msg.ury) & (msg.lly <= rect.ury) THEN
 			GfxMatrix.Concat(rect.mat, msg.lgm, lgm);
@@ -453,7 +453,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END SplitRect;
 
 	PROCEDURE DrawRect (rect: Rectangle; pen: LeoPens.Pen);
-		VAR x0, y0, x1, y1, x2, y2, x3, y3: REAL;
+		VAR x0, y0, x1, y1, x2, y2, x3, y3: FLOAT32;
 	BEGIN
 		x0 := rect.mat[2, 0]; y0 := rect.mat[2, 1]; x1 := x0 + rect.mat[0, 0]; y1 := y0 + rect.mat[0, 1];
 		x2 := x1 + rect.mat[1, 0]; y2 := y1 + rect.mat[1, 1]; x3 := x0 + rect.mat[1, 0]; y3 := y0 + rect.mat[1, 1];
@@ -463,7 +463,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END DrawRect;
 
 	PROCEDURE RenderRect (rect: Rectangle; VAR msg: Leonardo.RenderMsg);
-		VAR llx, lly, urx, ury: REAL; ctm, lgm: GfxMatrix.Matrix; state: Gfx.State; len: ARRAY 1 OF REAL;
+		VAR llx, lly, urx, ury: FLOAT32; ctm, lgm: GfxMatrix.Matrix; state: Gfx.State; len: ARRAY 1 OF FLOAT32;
 	BEGIN
 		llx := rect.llx - rect.bw; lly := rect.lly - rect.bw; urx := rect.urx + rect.bw; ury := rect.ury + rect.bw;
 		IF (llx < msg.urx) & (msg.llx < urx) & (lly < msg.ury) & (msg.lly < ury) THEN
@@ -491,7 +491,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END RenderRect;
 
 	PROCEDURE LocateRect (rect: Rectangle; VAR msg: Leonardo.LocateMsg);
-		VAR lgm, glm: GfxMatrix.Matrix; llx, lly, urx, ury: REAL;
+		VAR lgm, glm: GfxMatrix.Matrix; llx, lly, urx, ury: FLOAT32;
 	BEGIN
 		IF (msg.id = Leonardo.inside) & (msg.llx <= rect.llx) & (rect.urx <= msg.urx) & (msg.lly <= rect.lly) & (rect.ury <= msg.ury) THEN
 			rect.slink := msg.res; msg.res := rect
@@ -550,7 +550,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END HandleRect;
 
 	(** initialize rectangle with current default pen **)
-	PROCEDURE InitRect* (rect: Rectangle; x0, y0, x1, y1: REAL; pen: LeoPens.Pen);
+	PROCEDURE InitRect* (rect: Rectangle; x0, y0, x1, y1: FLOAT32; pen: LeoPens.Pen);
 		VAR m: GfxMatrix.Matrix;
 	BEGIN
 		GfxMatrix.Init(m, x1 - x0, 0, 0, y1 - y0, x0, y0);
@@ -569,7 +569,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	(**--- Ellipses ---**)
 
 	PROCEDURE ConsumeEllipse (e: Ellipse; VAR msg: Leonardo.ConsumeMsg);
-		VAR lm: LeoPaths.LinkMsg; lgm: GfxMatrix.Matrix; x, y: REAL; l: Link;
+		VAR lm: LeoPaths.LinkMsg; lgm: GfxMatrix.Matrix; x, y: FLOAT32; l: Link;
 	BEGIN
 		IF (msg.recv = NIL) & (msg.bottom = msg.top) & (msg.top.cont # e) &
 			(msg.llx <= e.urx) & (e.llx <= msg.urx) & (msg.lly <= e.ury) & (e.lly <= msg.ury)
@@ -600,7 +600,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END ConsumeEllipse;
 
 	PROCEDURE DrawEllipse (e: Ellipse; pen: LeoPens.Pen);
-		VAR rx1, rx2, ry1, ry2, x0, y0, x1, y1, x2, y2: REAL;
+		VAR rx1, rx2, ry1, ry2, x0, y0, x1, y1, x2, y2: FLOAT32;
 	BEGIN
 		rx1 := 0.5*e.mat[0, 0]; rx2 := 0.5*e.mat[1, 0];
 		ry1 := 0.5*e.mat[0, 1]; ry2 := 0.5*e.mat[1, 1];
@@ -612,7 +612,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END DrawEllipse;
 
 	PROCEDURE RenderEllipse (e: Ellipse; VAR msg: Leonardo.RenderMsg);
-		VAR llx, lly, urx, ury: REAL; ctm, lgm: GfxMatrix.Matrix; state: Gfx.State; len: ARRAY 1 OF REAL;
+		VAR llx, lly, urx, ury: FLOAT32; ctm, lgm: GfxMatrix.Matrix; state: Gfx.State; len: ARRAY 1 OF FLOAT32;
 	BEGIN
 		llx := e.llx - e.bw; lly := e.lly - e.bw; urx := e.urx + e.bw; ury := e.ury + e.bw;
 		IF (llx < msg.urx) & (msg.llx < urx) & (lly < msg.ury) & (msg.lly < ury) THEN
@@ -640,7 +640,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END RenderEllipse;
 
 	PROCEDURE LocateEllipse (e: Ellipse; VAR msg: Leonardo.LocateMsg);
-		VAR lgm, glm: GfxMatrix.Matrix; llx, lly, urx, ury, min, max, x, y, d: REAL;
+		VAR lgm, glm: GfxMatrix.Matrix; llx, lly, urx, ury, min, max, x, y, d: FLOAT32;
 	BEGIN
 		IF (msg.id = Leonardo.inside) & (msg.llx <= e.llx) & (e.urx <= msg.urx) & (msg.lly <= e.lly) & (e.ury <= msg.ury) THEN
 			e.slink := msg.res; msg.res := e
@@ -710,7 +710,7 @@ MODULE LeoBasic IN Oberon; (** portable **)	(* eos  *)
 	END HandleEllipse;
 
 	(** initialize ellipse with current default pen **)
-	PROCEDURE InitEllipse* (e: Ellipse; x, y, rx, ry: REAL; pen: LeoPens.Pen);
+	PROCEDURE InitEllipse* (e: Ellipse; x, y, rx, ry: FLOAT32; pen: LeoPens.Pen);
 		VAR m: GfxMatrix.Matrix;
 	BEGIN
 		GfxMatrix.Init(m, 2*rx, 0, 0, 2*ry, x - rx, y - ry);

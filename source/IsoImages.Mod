@@ -34,23 +34,23 @@ TYPE
 	BCValidationEntry = RECORD
 		HeaderId: CHAR;
 		PlatformId: CHAR;
-		Reserved: INTEGER;
+		Reserved: SIGNED16;
 		IdString: ARRAY 24 OF CHAR;
-		Checksum: INTEGER;
+		Checksum: SIGNED16;
 		KeyBytes: ARRAY 2 OF CHAR;
 	END;
 	BCInitialDefaultEntry = RECORD
 		BootIndicator: CHAR;
 		BootMediaType: CHAR;
-		LoadSegment: INTEGER;
+		LoadSegment: SIGNED16;
 		SystemType: CHAR;
 		Unused1: CHAR;
-		SectorCount: INTEGER;
-		LoadRBA: LONGINT;
+		SectorCount: SIGNED16;
+		LoadRBA: SIGNED32;
 		Unused2: ARRAY 20 OF CHAR;
 	END;
 
-PROCEDURE WriteImage(w: Streams.Writer; r: Streams.Reader; imageSize: LONGINT);
+PROCEDURE WriteImage(w: Streams.Writer; r: Streams.Reader; imageSize: SIGNED32);
 VAR read, padLen: SIZE; buf: ARRAY CDSectorSize OF CHAR;
 BEGIN
 	padLen := CDSectorSize - (imageSize MOD CDSectorSize);
@@ -75,7 +75,7 @@ BEGIN
 END WriteElToritoDescriptor;
 
 PROCEDURE WriteBootCatalog(w: Streams.Writer);
-VAR entry: BCValidationEntry; entry2: BCInitialDefaultEntry; len: LONGINT;
+VAR entry: BCValidationEntry; entry2: BCInitialDefaultEntry; len: SIGNED32;
 BEGIN
 	len := 0;
 
@@ -169,7 +169,7 @@ BEGIN
 	WriteByteRep(w, 0X, CDSectorSize - 9);
 END WriteTypeMPathTable;
 
-PROCEDURE WritePrimaryVolumeDescriptor(w: Streams.Writer; isoImageSectorCount: LONGINT);
+PROCEDURE WritePrimaryVolumeDescriptor(w: Streams.Writer; isoImageSectorCount: SIGNED32);
 VAR now: Dates.DateTime; dtBuf: ARRAY 20 OF CHAR;
 BEGIN
 	now := Dates.Now();
@@ -241,8 +241,8 @@ BEGIN
 	w.Char(0X); (* self indicator *)
 END WriteDirectoryRecord;
 
-PROCEDURE CalcIsoImageSectorCount(inputImageSize: LONGINT): LONGINT;
-VAR imageSectors: LONGINT;
+PROCEDURE CalcIsoImageSectorCount(inputImageSize: SIGNED32): SIGNED32;
+VAR imageSectors: SIGNED32;
 BEGIN
 	imageSectors := inputImageSize DIV CDSectorSize;
 	IF (inputImageSize MOD CDSectorSize # 0) THEN
@@ -258,13 +258,13 @@ BEGIN
 		imageSectors;
 END CalcIsoImageSectorCount;
 
-PROCEDURE WriteBothByteOrder32(w: Streams.Writer; x: LONGINT);
+PROCEDURE WriteBothByteOrder32(w: Streams.Writer; x: SIGNED32);
 BEGIN
 	w.RawLInt(x);
 	w.Net32(x);
 END WriteBothByteOrder32;
 
-PROCEDURE WriteBothByteOrder16(w: Streams.Writer; x:INTEGER);
+PROCEDURE WriteBothByteOrder16(w: Streams.Writer; x:SIGNED16);
 BEGIN
 	w.RawInt(x);
 	w.Net16(x);
@@ -278,7 +278,7 @@ BEGIN
 	END;
 END WriteByteRep;
 
-PROCEDURE WriteStringWithPadding(w: Streams.Writer; CONST str: ARRAY OF CHAR; padChar: CHAR; len: LONGINT);
+PROCEDURE WriteStringWithPadding(w: Streams.Writer; CONST str: ARRAY OF CHAR; padChar: CHAR; len: SIGNED32);
 VAR strLen: SIZE;
 BEGIN
 	strLen := LEN(str) - 1; (* we don't write the terminating 0X *)
@@ -286,8 +286,8 @@ BEGIN
 	WriteByteRep(w, padChar, len - strLen);
 END WriteStringWithPadding;
 
-PROCEDURE WriteEmptySectors(w: Streams.Writer; n: LONGINT);
-VAR i, s, nLongs: LONGINT;
+PROCEDURE WriteEmptySectors(w: Streams.Writer; n: SIGNED32);
+VAR i, s, nLongs: SIGNED32;
 BEGIN
 	nLongs := CDSectorSize DIV 4; (* number of 32bits per sector *)
 	FOR s := 1 TO n DO
@@ -298,7 +298,7 @@ BEGIN
 END WriteEmptySectors;
 
 (*
-PROCEDURE WriteStringWithPaddingToBuffer(buf: ARRAY OF CHAR; offset: LONGINT; str: ARRAY OF CHAR;
+PROCEDURE WriteStringWithPaddingToBuffer(buf: ARRAY OF CHAR; offset: SIGNED32; str: ARRAY OF CHAR;
 	padChar: CHAR; len: SIZE);
 VAR i, strLen: SIZE;
 BEGIN
@@ -310,8 +310,8 @@ BEGIN
 END WriteStringWithPaddingToBuffer;
 *)
 
-PROCEDURE CalcChecksum16(CONST buf: ARRAY OF CHAR): INTEGER;
-VAR checksum: LONGINT; i, numWords: SIZE;
+PROCEDURE CalcChecksum16(CONST buf: ARRAY OF CHAR): SIGNED16;
+VAR checksum: SIGNED32; i, numWords: SIZE;
 BEGIN
 	checksum := 0;
 	numWords := LEN(buf) DIV 2;
@@ -321,8 +321,8 @@ BEGIN
 	RETURN SHORT(10000H - checksum);
 END CalcChecksum16;
 
-PROCEDURE MakeImage*(CONST input, output: ARRAY OF CHAR; VAR imageSize , res : LONGINT);
-VAR fOut, fIn: Files.File; out: Files.Writer; in: Files.Reader; numSectors: LONGINT;
+PROCEDURE MakeImage*(CONST input, output: ARRAY OF CHAR; VAR imageSize , res : SIGNED32);
+VAR fOut, fIn: Files.File; out: Files.Writer; in: Files.Reader; numSectors: SIGNED32;
 BEGIN
 	res := Ok;
 
@@ -338,7 +338,7 @@ BEGIN
 		RETURN;
 	END;
 
-	numSectors := CalcIsoImageSectorCount(fIn.Length()(LONGINT));
+	numSectors := CalcIsoImageSectorCount(fIn.Length()(SIGNED32));
 
 	Files.Register(fOut);
 	Files.OpenWriter(out, fOut, 0);
@@ -350,17 +350,17 @@ BEGIN
 	WriteBootCatalog(out);
 	WriteIsoFSData(out);
 	Files.OpenReader(in, fIn, 0); (* open a reader on the raw input image *)
-	WriteImage(out, in, fIn.Length()(LONGINT)); (* write the raw image *)
+	WriteImage(out, in, fIn.Length()(SIGNED32)); (* write the raw image *)
 
 	out.Update;
 	fOut.Update;
-	imageSize := fOut.Length()(LONGINT);
+	imageSize := fOut.Length()(SIGNED32);
 END MakeImage;
 
 PROCEDURE Make*(context : Commands.Context);
 VAR
 	imageSource, isoDest: ARRAY MaxPathLen OF CHAR;
-	imageSize, res : LONGINT;
+	imageSize, res : SIGNED32;
 BEGIN
 	context.arg.SkipWhitespace; context.arg.String(isoDest);
 	context.arg.SkipWhitespace; context.arg.String(imageSource);

@@ -9,7 +9,7 @@ TYPE
 
 	SystemTab* = OBJECT(WMComponents.VisualComponent)
 	VAR
-		clockrate : LONGINT; (* MHz, -1 if invalid *)
+		clockrate : SIGNED32; (* MHz, -1 if invalid *)
 
 		(* GC Statistics *)
 		gcCurrentRun : Perf.Indicator;
@@ -20,8 +20,8 @@ TYPE
 
 		(* Timers *)
 		milliTimer : Kernel.MilliTimer;
-		lastTimestamp : HUGEINT;
-		lastGcCyclesAllRuns : HUGEINT;
+		lastTimestamp : SIGNED64;
+		lastGcCyclesAllRuns : SIGNED64;
 		lastNgc : SIZE;
 		started : BOOLEAN;
 		startBtn : WMStandardComponents.Button;
@@ -38,10 +38,10 @@ TYPE
 		timer : Kernel.Timer;
 		alive, dead : BOOLEAN;
 
-		PROCEDURE EstimateClockRate() : LONGINT;
+		PROCEDURE EstimateClockRate() : SIGNED32;
 		CONST Tries = 10;
 		VAR
-			try : LONGINT; done : BOOLEAN; clockrate : LONGINT;
+			try : SIGNED32; done : BOOLEAN; clockrate : SIGNED32;
 			string, nbr : ARRAY 128 OF CHAR;
 		BEGIN
 			cpuClockrate.SetCaption("   CPU clock rate estimation...");
@@ -66,7 +66,7 @@ TYPE
 		PROCEDURE HandleGcButton(sender, data : ANY);
 		VAR
 			string, nbr : ARRAY 128 OF CHAR;
-			lastGcCyclesTot : HUGEINT;
+			lastGcCyclesTot : SIGNED64;
 			w : Streams.StringWriter;
 		BEGIN
 			IF clockrate = -1 THEN clockrate := EstimateClockRate(); END;
@@ -117,7 +117,7 @@ TYPE
 		END HandleDetectButton;
 
 		PROCEDURE HandleTimerButton(sender, data : ANY);
-		VAR string, nbr : ARRAY 128 OF CHAR; msTicks, msTimestamp, msGc, msDiff : LONGINT;
+		VAR string, nbr : ARRAY 128 OF CHAR; msTicks, msTimestamp, msGc, msDiff : SIGNED32;
 		BEGIN
 			IF clockrate = -1 THEN clockrate := EstimateClockRate(); END;
 			IF started THEN
@@ -150,7 +150,7 @@ TYPE
 		END HandleTimerButton;
 
 		PROCEDURE HandleUnloadButton(sender, data : ANY);
-		VAR msg : ARRAY 128 OF CHAR; res : WORD;
+		VAR msg : ARRAY 128 OF CHAR; res : INTEGER;
 		BEGIN
 			Commands.Call("System.FreeDownTo WMPerfMonPlugins", {}, res, msg);
 		END HandleUnloadButton;

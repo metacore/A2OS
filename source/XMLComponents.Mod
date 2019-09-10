@@ -21,19 +21,19 @@ TYPE
 	END StateMessage;
 
 	ValueMessage* = OBJECT (*Message*)
-		VAR value*: LONGINT;
+		VAR value*: SIGNED32;
 	END ValueMessage;
 
 	MouseMessage* = OBJECT (*Message*)
 		VAR
-			x*, y*: LONGINT;
+			x*, y*: SIGNED32;
 			keys*: SET
 	END MouseMessage;
 
 	KeyMessage* = OBJECT (*Message*)
 		VAR
 			ch*: CHAR;
-			keySym*: LONGINT;
+			keySym*: SIGNED32;
 			flags*: SET
 	END KeyMessage;
 
@@ -187,7 +187,7 @@ TYPE
 
 	Component* = OBJECT (XML.Element)
 		VAR
-			locks: LONGINT;
+			locks: SIGNED32;
 
 		PROCEDURE AddAttribute*(attribute: XML.Attribute);
 		BEGIN
@@ -210,12 +210,12 @@ TYPE
 			RETURN locks > 0
 		END IsLocked;
 
-		PROCEDURE GetNumberOfEvents*(): LONGINT;
+		PROCEDURE GetNumberOfEvents*(): SIGNED32;
 		BEGIN
 			RETURN 0
 		END GetNumberOfEvents;
 
-		PROCEDURE GetEventName*(i: LONGINT): String;
+		PROCEDURE GetEventName*(i: SIGNED32): String;
 		BEGIN
 			RETURN NIL
 		END GetEventName;
@@ -223,12 +223,12 @@ TYPE
 		PROCEDURE AddEventListener*(listener: Listener; event: ARRAY OF CHAR);
 		END AddEventListener;
 
-		PROCEDURE GetNumberOfListeners*(): LONGINT;
+		PROCEDURE GetNumberOfListeners*(): SIGNED32;
 		BEGIN
 			RETURN 0
 		END GetNumberOfListeners;
 
-		PROCEDURE GetListenerName*(i: LONGINT): String;
+		PROCEDURE GetListenerName*(i: SIGNED32): String;
 		BEGIN
 			RETURN NIL
 		END GetListenerName;
@@ -280,7 +280,7 @@ TYPE
 		END ConnectAttribute;
 
 		PROCEDURE RegisterListener(listener: Listener; VAR event, path: ARRAY OF CHAR; offset, len: SIZE);
-		VAR elem: XML.Element; retComp: Component; s1, s2: String; i: LONGINT;
+		VAR elem: XML.Element; retComp: Component; s1, s2: String; i: SIGNED32;
 			contents: XMLObjects.Enumerator; content: ANY; quoteChar: CHAR; attr: XML.Attribute;
 
 			PROCEDURE SkipWhiteSpace;
@@ -452,9 +452,9 @@ TYPE
 
 	Box* = OBJECT
 		VAR
-			x*, y*, w*, h*: LONGINT;
+			x*, y*, w*, h*: SIGNED32;
 
-		PROCEDURE InBox*(x, y: LONGINT): BOOLEAN;
+		PROCEDURE InBox*(x, y: SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN (SELF.x <= x) & (x < SELF.x + w) & (SELF.y <= y) & (y < SELF.y + h)
 		END InBox;
@@ -469,7 +469,7 @@ TYPE
 			x := box.x; y := box.y; w := box.w; h := box.h
 		END SetBox;
 
-		PROCEDURE SetRect*(x, y, w, h: LONGINT);
+		PROCEDURE SetRect*(x, y, w, h: SIGNED32);
 		BEGIN
 			SELF.x := x; SELF.y := y; SELF.w := w; SELF.h := h
 		END SetRect;
@@ -479,7 +479,7 @@ TYPE
 			RETURN (x < box.x + box.w) & (box.x < x + w) & (y < box.y + box.h) & (box.y < y + h)
 		END Intersect;
 
-		PROCEDURE IntersectRect*(x, y, w, h: LONGINT): BOOLEAN;
+		PROCEDURE IntersectRect*(x, y, w, h: SIGNED32): BOOLEAN;
 		BEGIN
 			RETURN (SELF.x < x + w) & (x < SELF.x + SELF.w) & (SELF.y < y + h) & (y < SELF.y + SELF.h)
 		END IntersectRect;
@@ -489,8 +489,8 @@ TYPE
 			ClipRect(box.x, box.y, box.w, box.h)
 		END Clip;
 
-		PROCEDURE ClipRect*(x, y, w, h: LONGINT);
-		VAR ur: LONGINT;
+		PROCEDURE ClipRect*(x, y, w, h: SIGNED32);
+		VAR ur: SIGNED32;
 		BEGIN
 			ur := MIN(SELF.x + SELF.w, x + w); SELF.x := MAX(SELF.x, x); SELF.w := MAX(0, ur - SELF.x);
 			ur := MIN(SELF.y + SELF.h, y + h); SELF.y := MAX(SELF.y, y); SELF.h := MAX(0, ur - SELF.y)
@@ -501,8 +501,8 @@ TYPE
 			ExtendRect(box.x, box.y, box.w, box.h)
 		END Extend;
 
-		PROCEDURE ExtendRect*(x, y, w, h: LONGINT);
-		VAR ur: LONGINT;
+		PROCEDURE ExtendRect*(x, y, w, h: SIGNED32);
+		VAR ur: SIGNED32;
 		BEGIN
 			ur := MAX(SELF.x + SELF.w, x + w); SELF.x := MIN(SELF.x, x); SELF.w := ur - SELF.x;
 			ur := MAX(SELF.y + SELF.h, y + h); SELF.y := MIN(SELF.y, y); SELF.h := ur - SELF.y
@@ -518,7 +518,7 @@ TYPE
 			pointerOwner, focusOwner: VisualComponent;
 			isHovered*, hasFocus*, isActive*, isLink*, isVisited*, dragable*: BOOLEAN;
 			lastMouseKeys-: SET;
-			lastX-, lastY-: LONGINT;
+			lastX-, lastY-: SIGNED32;
 			trueStateMsg, falseStateMsg: StateMessage;
 
 		PROCEDURE &Init*;
@@ -562,23 +562,23 @@ TYPE
 			IF bounds # NIL THEN SELF.bounds.SetBox(bounds) END
 		END SetBounds;
 
-(*		PROCEDURE GetSize*(VAR w, h: LONGINT);
+(*		PROCEDURE GetSize*(VAR w, h: SIGNED32);
 		BEGIN
 			w := GetWidth(); h := GetHeight()
 		END GetSize;
 
-		PROCEDURE SetSize*(w, h: LONGINT);
+		PROCEDURE SetSize*(w, h: SIGNED32);
 		VAR vp: CSS2Properties.VisualProperties;
 		BEGIN
 			SetWidth(w); SetHeight(h);
 		END SetSize;*)
 
-		PROCEDURE GetWidth*(): LONGINT;
+		PROCEDURE GetWidth*(): SIGNED32;
 		BEGIN
 			RETURN bounds.w
 		END GetWidth;
 
-		PROCEDURE SetWidth*(w: LONGINT);
+		PROCEDURE SetWidth*(w: SIGNED32);
 		VAR vp: CSS2Properties.VisualProperties;
 		BEGIN
 			vp := properties(CSS2Properties.VisualProperties);
@@ -587,12 +587,12 @@ TYPE
 			ComputeWidths()
 		END SetWidth;
 
-		PROCEDURE GetHeight*(): LONGINT;
+		PROCEDURE GetHeight*(): SIGNED32;
 		BEGIN
 			RETURN bounds.h
 		END GetHeight;
 
-		PROCEDURE SetHeight*(h: LONGINT);
+		PROCEDURE SetHeight*(h: SIGNED32);
 		VAR vp: CSS2Properties.VisualProperties;
 		BEGIN
 			vp := properties(CSS2Properties.VisualProperties);
@@ -601,23 +601,23 @@ TYPE
 			ComputeHeights()
 		END SetHeight;
 
-		PROCEDURE GetX*(): LONGINT;
+		PROCEDURE GetX*(): SIGNED32;
 		BEGIN
 			RETURN bounds.x
 		END GetX;
 
-		PROCEDURE SetX*(x: LONGINT);
+		PROCEDURE SetX*(x: SIGNED32);
 		BEGIN
 			lastX := lastX - (x - bounds.x); bounds.x := x;
 			IF ~IsHit(lastX, lastY) THEN PointerUp(lastX, lastY, lastMouseKeys) END
 		END SetX;
 
-		PROCEDURE GetY*(): LONGINT;
+		PROCEDURE GetY*(): SIGNED32;
 		BEGIN
 			RETURN bounds.y
 		END GetY;
 
-		PROCEDURE SetY*(y: LONGINT);
+		PROCEDURE SetY*(y: SIGNED32);
 		BEGIN
 			lastY := lastY - (y - bounds.y); bounds.y := y;
 			IF ~IsHit(lastX, lastY) THEN PointerUp(lastX, lastY, lastMouseKeys) END
@@ -634,34 +634,34 @@ TYPE
 			SELF.contentBox.SetBox(contentBox)
 		END SetContentBox;
 
-		PROCEDURE GetContentWidth*(): LONGINT;
+		PROCEDURE GetContentWidth*(): SIGNED32;
 		BEGIN
 			RETURN contentBox.w
 		END GetContentWidth;
 
-		PROCEDURE SetContentWidth*(w: LONGINT);
+		PROCEDURE SetContentWidth*(w: SIGNED32);
 		BEGIN
 			properties(CSS2Properties.VisualProperties).width.computed := w;
 			ComputeWidths()
 		END SetContentWidth;
 
-		PROCEDURE GetContentHeight*(): LONGINT;
+		PROCEDURE GetContentHeight*(): SIGNED32;
 		BEGIN
 			RETURN contentBox.h
 		END GetContentHeight;
 
-		PROCEDURE SetContentHeight*(h: LONGINT);
+		PROCEDURE SetContentHeight*(h: SIGNED32);
 		BEGIN
 			properties(CSS2Properties.VisualProperties).height.computed := h;
 			ComputeHeights()
 		END SetContentHeight;
 
-		PROCEDURE GetContentX*(): LONGINT;
+		PROCEDURE GetContentX*(): SIGNED32;
 		BEGIN
 			RETURN contentBox.x
 		END GetContentX;
 
-		PROCEDURE GetContentY*(): LONGINT;
+		PROCEDURE GetContentY*(): SIGNED32;
 		BEGIN
 			RETURN contentBox.y
 		END GetContentY;
@@ -672,22 +672,22 @@ TYPE
 			NEW(box); box.SetBox(borderBox); RETURN box
 		END GetBorderBox;
 
-		PROCEDURE GetBorderWidth*(): LONGINT;
+		PROCEDURE GetBorderWidth*(): SIGNED32;
 		BEGIN
 			RETURN borderBox.w
 		END GetBorderWidth;
 
-		PROCEDURE GetBorderHeight*(): LONGINT;
+		PROCEDURE GetBorderHeight*(): SIGNED32;
 		BEGIN
 			RETURN borderBox.h
 		END GetBorderHeight;
 
-		PROCEDURE GetBorderX*(): LONGINT;
+		PROCEDURE GetBorderX*(): SIGNED32;
 		BEGIN
 			RETURN borderBox.x
 		END GetBorderX;
 
-		PROCEDURE GetBorderY*(): LONGINT;
+		PROCEDURE GetBorderY*(): SIGNED32;
 		BEGIN
 			RETURN borderBox.y
 		END GetBorderY;
@@ -698,22 +698,22 @@ TYPE
 			NEW(box); box.SetBox(paddingBox); RETURN box
 		END GetPaddingBox;
 
-		PROCEDURE GetPaddingWidth*(): LONGINT;
+		PROCEDURE GetPaddingWidth*(): SIGNED32;
 		BEGIN
 			RETURN paddingBox.w
 		END GetPaddingWidth;
 
-		PROCEDURE GetPaddingHeight*(): LONGINT;
+		PROCEDURE GetPaddingHeight*(): SIGNED32;
 		BEGIN
 			RETURN paddingBox.h
 		END GetPaddingHeight;
 
-		PROCEDURE GetPaddingX*(): LONGINT;
+		PROCEDURE GetPaddingX*(): SIGNED32;
 		BEGIN
 			RETURN paddingBox.x
 		END GetPaddingX;
 
-		PROCEDURE GetPaddingY*(): LONGINT;
+		PROCEDURE GetPaddingY*(): SIGNED32;
 		BEGIN
 			RETURN paddingBox.y
 		END GetPaddingY;
@@ -751,12 +751,12 @@ TYPE
 			IF ~IsHit(lastX, lastY) THEN PointerUp(lastX, lastY, lastMouseKeys) END
 		END ComputeHeights;
 
-		PROCEDURE GetNumberOfEvents*(): LONGINT;
+		PROCEDURE GetNumberOfEvents*(): SIGNED32;
 		BEGIN
 			RETURN GetNumberOfEvents^() + 4
 		END GetNumberOfEvents;
 
-		PROCEDURE GetEventName*(i: LONGINT): String;
+		PROCEDURE GetEventName*(i: SIGNED32): String;
 		VAR s: String;
 		BEGIN
 			CASE i - GetNumberOfEvents^() OF
@@ -817,7 +817,7 @@ TYPE
 			RETURN pointerOwner
 		END GetPointerOwner;
 
-		PROCEDURE IsHit*(x, y: LONGINT): BOOLEAN;
+		PROCEDURE IsHit*(x, y: SIGNED32): BOOLEAN;
 		VAR contents: XMLObjects.Enumerator; content: ANY;
 		BEGIN
 			IF ((properties(CSS2Properties.VisualProperties).overflow.computed = CSS2Properties.Visible) OR contentBox.InBox(x, y))
@@ -837,7 +837,7 @@ TYPE
 			RETURN FALSE
 		END IsHit;
 
-		PROCEDURE PositionOwner*(x, y: LONGINT): VisualComponent;
+		PROCEDURE PositionOwner*(x, y: SIGNED32): VisualComponent;
 		VAR contents: XMLObjects.Enumerator; content: ANY; po: VisualComponent;
 		BEGIN
 			IF (properties(CSS2Properties.VisualProperties).overflow.computed = CSS2Properties.Visible) OR contentBox.InBox(x, y) THEN
@@ -870,13 +870,13 @@ TYPE
 			END
 		END PointerLeave;
 
-		PROCEDURE PointerDown*(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerDown*(x, y: SIGNED32; keys: SET);
 		BEGIN
 			IF dragable & (keys = {0}) THEN lastX := x; lastY := y END;
 			SetActive(IsHit(x, y))
 		END PointerDown;
 
-		PROCEDURE PointerMove*(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerMove*(x, y: SIGNED32; keys: SET);
 		BEGIN
 			lastX := x; lastY := y;
 			LockUpdate();
@@ -903,12 +903,12 @@ TYPE
 			UnlockUpdate()
 		END PointerMove;
 
-		PROCEDURE PointerUp*(x, y: LONGINT; keys: SET);
+		PROCEDURE PointerUp*(x, y: SIGNED32; keys: SET);
 		BEGIN
 			SetActive(FALSE)
 		END PointerUp;
 
-		PROCEDURE KeyPressed*(ch: CHAR; flags: SET; VAR keySym: LONGINT);
+		PROCEDURE KeyPressed*(ch: CHAR; flags: SET; VAR keySym: SIGNED32);
 		END KeyPressed;
 
 		PROCEDURE FocusReceived*;
@@ -926,7 +926,7 @@ TYPE
 		END FocusLost;
 
 		PROCEDURE ProcessMessage*(m: ANY);
-		VAR newPointerOwner: VisualComponent; kd, kdp: SHORTINT;
+		VAR newPointerOwner: VisualComponent; kd, kdp: SIGNED8;
 		BEGIN
 			IF m IS MouseMessage THEN
 				WITH m: MouseMessage DO
@@ -1032,7 +1032,7 @@ TYPE
 			IF properties(CSS2Properties.VisualProperties).dimensionChanged THEN Resized() END
 		END PropertiesChanged;
 
-		PROCEDURE InvalidateRange*(x, y, w, h: LONGINT);
+		PROCEDURE InvalidateRange*(x, y, w, h: SIGNED32);
 		VAR parent: XML.Element;
 		BEGIN
 			IF IsLocked() THEN
@@ -1054,7 +1054,7 @@ TYPE
 		END Invalidate;
 
 		PROCEDURE Draw*(ctxt: Gfx.Context);
-		VAR enum: XMLObjects.Enumerator; p: ANY; state1, state2: Gfx.State; llx, lly, urx, ury: REAL;
+		VAR enum: XMLObjects.Enumerator; p: ANY; state1, state2: Gfx.State; llx, lly, urx, ury: FLOAT32;
 		BEGIN
 			IF properties(CSS2Properties.VisualProperties).overflow.computed = CSS2Properties.Hidden THEN
 				Gfx.Save(ctxt, {Gfx.clip}, state1);
@@ -1087,7 +1087,7 @@ TYPE
 
 	END VisualComponent;
 
-	PROCEDURE NoReportError(pos, line, row: LONGINT; msg: ARRAY OF CHAR);
+	PROCEDURE NoReportError(pos, line, row: SIGNED32; msg: ARRAY OF CHAR);
 	END NoReportError;
 
 	PROCEDURE NewString*(value: ARRAY OF CHAR): String;
@@ -1098,8 +1098,8 @@ TYPE
 		RETURN s
 	END NewString;
 
-(*	PROCEDURE DrawClipRect*(ctxt: Gfx.Context; x, y, w, h: LONGINT);
-	VAR llx, lly, urx, ury: INTEGER;
+(*	PROCEDURE DrawClipRect*(ctxt: Gfx.Context; x, y, w, h: SIGNED32);
+	VAR llx, lly, urx, ury: SIGNED16;
 	BEGIN
 		IF ctxt IS GfxRaster.Context THEN
 			WITH ctxt: GfxRaster.Context DO

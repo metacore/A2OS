@@ -30,12 +30,12 @@ IMPORT antsObjects, antsFunctions, Objects, Files, Gadgets, antsNeighbourhoods, 
 	antsCaches, vyRanBase, Links;
 
 TYPE
-	intArray = POINTER TO ARRAY OF INTEGER;
-	realArray = POINTER TO ARRAY OF LONGREAL;
+	intArray = POINTER TO ARRAY OF SIGNED16;
+	realArray = POINTER TO ARRAY OF FLOAT64;
 
 	tModel* = POINTER TO tModelDesc;
 	tModelDesc* = RECORD (antsModels.tModelDesc);
-		dim-: LONGINT;
+		dim-: SIGNED32;
 		n*: antsNeighbourhoods.Neighbours;
 		f: antsFunctions.Function;
 		dataf: antsFunctions.Function;
@@ -53,7 +53,7 @@ TYPE
 	END StoreM;
 
 	PROCEDURE LoadM( VAR R: Files.Rider;  s: tModel );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		Files.ReadInt( R, version );  Files.ReadLInt( R, s.dim );  Gadgets.ReadRef( R, s.lib, objsub );
 		IF objsub # NIL THEN s.n := objsub( antsNeighbourhoods.Neighbours ) END;
@@ -68,8 +68,8 @@ TYPE
 	(* Potential Function U : *)
 (* values: Values in neighbourhood, v[0] is central pixel *)
 
-	PROCEDURE U( VAR values: ARRAY OF INTEGER;  M: tModel ): LONGREAL;
-	VAR i: LONGINT;  theta: LONGREAL;  pars: antsNeighbourhoods.pars;  fcache: realArray;
+	PROCEDURE U( VAR values: ARRAY OF SIGNED16;  M: tModel ): FLOAT64;
+	VAR i: SIGNED32;  theta: FLOAT64;  pars: antsNeighbourhoods.pars;  fcache: realArray;
 	BEGIN
 		pars := M.n.cpar;  fcache := M.fcache;
 
@@ -81,16 +81,16 @@ TYPE
 		RETURN theta
 	END U;
 
-	PROCEDURE GetNeighbourValues( o, orig: antsArrayObjects.tINTEGERObject;  n: antsNeighbourhoods.Neighbours;  y, x: LONGINT;
-														  VAR values: ARRAY OF INTEGER );
-	VAR i: LONGINT;
+	PROCEDURE GetNeighbourValues( o, orig: antsArrayObjects.tINTEGERObject;  n: antsNeighbourhoods.Neighbours;  y, x: SIGNED32;
+														  VAR values: ARRAY OF SIGNED16 );
+	VAR i: SIGNED32;
 	BEGIN
 		FOR i := 0 TO n.clen - 1 DO values[i] := o.A[(y + n.cy[i]) MOD o.h, (x + n.cx[i]) MOD o.w] END;
 		IF orig # NIL THEN values[i] := orig.A[y, x] END
 	END GetNeighbourValues;
 
-	PROCEDURE PseudoLikTab*( o: antsArrayObjects.tINTEGERObject;  M: tModel;  VAR values: ARRAY OF ARRAY OF LONGREAL );
-	VAR sum: LONGREAL;  x, y, x0, y0, w0, h0: LONGINT;  f: antsFunctions.Function;  u, z: LONGREAL;  count: INTEGER;  value: intArray;
+	PROCEDURE PseudoLikTab*( o: antsArrayObjects.tINTEGERObject;  M: tModel;  VAR values: ARRAY OF ARRAY OF FLOAT64 );
+	VAR sum: FLOAT64;  x, y, x0, y0, w0, h0: SIGNED32;  f: antsFunctions.Function;  u, z: FLOAT64;  count: SIGNED16;  value: intArray;
 	BEGIN
 		antsRegions.Get( M.region, o, x0, y0, w0, h0 );  DEC( w0 );  DEC( h0 );  MakeCaches( M, o.depth, FALSE );  Sync1( M );
 		value := M.current;
@@ -107,17 +107,17 @@ TYPE
 
 	PROCEDURE PseudoLikPrepare*( o: antsArrayObjects.tINTEGERObject;  M: tModel;
 														 VAR T: antsNeighbourhoods.NeighbourTable );
-	VAR x0, y0, w0, h0: LONGINT;
+	VAR x0, y0, w0, h0: SIGNED32;
 	BEGIN
 		antsRegions.Get( M.region, o, x0, y0, w0, h0 );
 		T := antsNeighbourhoods.MakeNeighbourTable( o, x0, y0, w0, h0, M.n );  MakeCaches( M, o.depth, FALSE );  Sync1( M )
 	END PseudoLikPrepare;
 
-	PROCEDURE PseudoLik*( o: antsNeighbourhoods.NeighbourTable;  M: tModel;  AIC: BOOLEAN ): LONGREAL;
-	VAR sum: LONGREAL;  u, z: LONGREAL;  len, i: LONGINT;  center: LONGINT;  count: INTEGER;  id: INTEGER;  fcache: realArray;  clen: LONGINT;  pars: antsNeighbourhoods.pars;
+	PROCEDURE PseudoLik*( o: antsNeighbourhoods.NeighbourTable;  M: tModel;  AIC: BOOLEAN ): FLOAT64;
+	VAR sum: FLOAT64;  u, z: FLOAT64;  len, i: SIGNED32;  center: SIGNED32;  count: SIGNED16;  id: SIGNED16;  fcache: realArray;  clen: SIGNED32;  pars: antsNeighbourhoods.pars;
 
-		PROCEDURE U( VAR value: ARRAY OF LONGINT ): LONGREAL;
-		VAR theta: LONGREAL;  i: LONGINT;
+		PROCEDURE U( VAR value: ARRAY OF SIGNED32 ): FLOAT64;
+		VAR theta: FLOAT64;  i: SIGNED32;
 		BEGIN
 
 			theta := 2 * pars[0] * value[0];   (* factor 2 for consistency with Ising Model *)
@@ -130,7 +130,7 @@ TYPE
 	BEGIN
 		fcache := M.fcache;  pars := M.n.cpar;
 
-		len := LONGINT( LEN( o[0] ) - 1 );  id := INTEGER( LEN( fcache ) - 1 );  clen := M.n.clen - 1;
+		len := SIGNED32( LEN( o[0] ) - 1 );  id := SIGNED16( LEN( fcache ) - 1 );  clen := M.n.clen - 1;
 		ASSERT ( len - 1 = clen );
 
 		sum := 0;
@@ -149,8 +149,8 @@ TYPE
 
 (*
 made inline
-PROCEDURE Local (o,c,orig: antsArrayObjects.tINTEGERObject;      x, y: LONGINT;       M: tModel);
-VAR ran, u, z: LONGREAL;             count: INTEGER;       vals: realArray;      values: intArray;
+PROCEDURE Local (o,c,orig: antsArrayObjects.tINTEGERObject;      x, y: SIGNED32;       M: tModel);
+VAR ran, u, z: FLOAT64;             count: SIGNED16;       vals: realArray;      values: intArray;
 BEGIN
 vals := M.currentR;
 values := M.current;
@@ -176,8 +176,8 @@ END;
 c.A[(y) MOD o.h, (x) MOD o.w] := count
 END Local;
 
-PROCEDURE CLocal (o,c,orig: antsArrayObjects.tINTEGERObject;     x, y: LONGINT;     M: tModel);
-VAR    ran, u: LONGREAL;    count: INTEGER;     cv: intArray;     cpos: LONGINT;
+PROCEDURE CLocal (o,c,orig: antsArrayObjects.tINTEGERObject;     x, y: SIGNED32;     M: tModel);
+VAR    ran, u: FLOAT64;    count: SIGNED16;     cv: intArray;     cpos: SIGNED32;
 BEGIN
 cv := M.current;
 
@@ -198,7 +198,7 @@ END CLocal;
 
 
 	PROCEDURE Sync1( m: tModel );
-	VAR i, max: LONGINT;
+	VAR i, max: SIGNED32;
 	BEGIN
 		max := LEN( m.fcache ) - 1;
 		FOR i := 0 TO max DO m.fcache[i] := m.f.get( m.f, i / max ) END;
@@ -208,7 +208,7 @@ END CLocal;
 		m.synced := TRUE
 	END Sync1;
 
-	PROCEDURE MakeCaches( m: tModel;  depth: LONGINT;  data: BOOLEAN );
+	PROCEDURE MakeCaches( m: tModel;  depth: SIGNED32;  data: BOOLEAN );
 	BEGIN
 		IF (m.fcache = NIL ) OR (LEN( m.fcache ) # depth) THEN NEW( m.fcache, depth ) END;
 		IF data & (m.dataf # NIL ) THEN
@@ -219,10 +219,10 @@ END CLocal;
 		IF (m.current = NIL ) OR (LEN( m.current ) < m.n.clen + 1) THEN NEW( m.current, m.n.clen + 1 ) END  (* +1 corresponds to data term *)
 	END MakeCaches;
 
-	PROCEDURE Sync( m: tModel;  depth: LONGINT );
-	VAR i: INTEGER;  c: antsCaches.FullCache;
-		cv: POINTER TO ARRAY OF INTEGER;
-		offset: LONGINT;  s: LONGREAL;
+	PROCEDURE Sync( m: tModel;  depth: SIGNED32 );
+	VAR i: SIGNED16;  c: antsCaches.FullCache;
+		cv: POINTER TO ARRAY OF SIGNED16;
+		offset: SIGNED32;  s: FLOAT64;
 	BEGIN
 		ASSERT ( m.fcache # NIL );
 		Sync1( m );
@@ -255,10 +255,10 @@ END CLocal;
 	END Sync;
 
 	PROCEDURE OneSweep*( M: antsKernel.samplingMsg );
-	VAR A, Orig: antsArrayObjects.tINTEGERObject;  model: tModel;  dim, x, y, w, h: LONGINT;  x0, y0, w0, h0: LONGINT;  orig: Objects.Object;
-		count: INTEGER;  uv: realArray;  nb: intArray;  z, cooling, ran: LONGREAL;  max: INTEGER;  cpos, nclen: LONGINT;  cache: antsCaches.FullCache;
-		cx, cy: antsNeighbourhoods.Index;  i: LONGINT;  pars: antsNeighbourhoods.pars;  theta: LONGREAL;  fcache, datafcache: realArray;
-		position, posi: LONGINT;  s: antsKernel.Kernel;  visit: antsKernel.visitingScheme;  parallel: BOOLEAN;
+	VAR A, Orig: antsArrayObjects.tINTEGERObject;  model: tModel;  dim, x, y, w, h: SIGNED32;  x0, y0, w0, h0: SIGNED32;  orig: Objects.Object;
+		count: SIGNED16;  uv: realArray;  nb: intArray;  z, cooling, ran: FLOAT64;  max: SIGNED16;  cpos, nclen: SIGNED32;  cache: antsCaches.FullCache;
+		cx, cy: antsNeighbourhoods.Index;  i: SIGNED32;  pars: antsNeighbourhoods.pars;  theta: FLOAT64;  fcache, datafcache: realArray;
+		position, posi: SIGNED32;  s: antsKernel.Kernel;  visit: antsKernel.visitingScheme;  parallel: BOOLEAN;
 		destA, srcA: antsArrayObjects.tINTEGERArray;
 	BEGIN
 		s := M.dlink( antsKernel.Kernel );  visit := s.visit;  parallel := s.parallel;
@@ -350,9 +350,9 @@ END CLocal;
 	END OneSweep;
 
 	PROCEDURE Metropolis( msg: antsKernel.samplingMsg );
-	VAR A, Ao: antsArrayObjects.tINTEGERObject;  model: tModel;  dim: LONGINT;  x0, y0, w0, h0: LONGINT;  zvax, zvay, zva: LONGINT;  M: tModel;
-		gen: vyRanBase.tRandom;  h, h1, h2, cooling: LONGREAL;  AA: antsArrayObjects.tINTEGERArray;  W, H, depth: LONGINT;
-		orig: antsArrayObjects.tINTEGERObject;  obj: Objects.Object;  cv: intArray;  posi, position: LONGINT;  bool: BOOLEAN;  start, stop: LONGINT;
+	VAR A, Ao: antsArrayObjects.tINTEGERObject;  model: tModel;  dim: SIGNED32;  x0, y0, w0, h0: SIGNED32;  zvax, zvay, zva: SIGNED32;  M: tModel;
+		gen: vyRanBase.tRandom;  h, h1, h2, cooling: FLOAT64;  AA: antsArrayObjects.tINTEGERArray;  W, H, depth: SIGNED32;
+		orig: antsArrayObjects.tINTEGERObject;  obj: Objects.Object;  cv: intArray;  posi, position: SIGNED32;  bool: BOOLEAN;  start, stop: SIGNED32;
 		s: antsKernel.Kernel;  visit: antsKernel.visitingScheme;  parallel: BOOLEAN;
 	BEGIN
 		s := msg.dlink( antsKernel.Kernel );  visit := s.visit;  parallel := s.parallel;
@@ -407,10 +407,10 @@ END CLocal;
 	END Metropolis;
 
 	PROCEDURE Exchange( msg: antsKernel.samplingMsg );
-	VAR A, Ao: antsArrayObjects.tINTEGERObject;  model: tModel;  dim: LONGINT;  x0, y0, w0, h0: LONGINT;  M: tModel;
-		gen: vyRanBase.tRandom;  h, h1, h2, cooling: LONGREAL;  AA: antsArrayObjects.tINTEGERArray;  W, H, depth: LONGINT;
-		orig: antsArrayObjects.tINTEGERObject;  obj: Objects.Object;  cv: intArray;  posi, position: LONGINT;
-		zvax1, zvay1, zvax2, zvay2, zva1, zva2: LONGINT;  s: antsKernel.Kernel;  visit: antsKernel.visitingScheme;  parallel: BOOLEAN;
+	VAR A, Ao: antsArrayObjects.tINTEGERObject;  model: tModel;  dim: SIGNED32;  x0, y0, w0, h0: SIGNED32;  M: tModel;
+		gen: vyRanBase.tRandom;  h, h1, h2, cooling: FLOAT64;  AA: antsArrayObjects.tINTEGERArray;  W, H, depth: SIGNED32;
+		orig: antsArrayObjects.tINTEGERObject;  obj: Objects.Object;  cv: intArray;  posi, position: SIGNED32;
+		zvax1, zvay1, zvax2, zvay2, zva1, zva2: SIGNED32;  s: antsKernel.Kernel;  visit: antsKernel.visitingScheme;  parallel: BOOLEAN;
 	BEGIN
 		s := msg.dlink( antsKernel.Kernel );  visit := s.visit;  parallel := s.parallel;
 
@@ -620,7 +620,7 @@ antsMC.Forward chain  1 50 ~
 System.Time ~
 ~
 Optimizing history: (8sec) = > (6sec)
-(* PROCEDURE U (y, x, val: LONGINT): LONGREAL;
+(* PROCEDURE U (y, x, val: SIGNED32): FLOAT64;
 BEGIN
 theta := 0;
 FOR i := 0 TO M.dim DO
@@ -637,12 +637,12 @@ END;
 RETURN theta
 END U;
 *)
-(*PROCEDURE Local (o: antsArrayObjects.tObject;   dim: LONGINT;   par: array;    x, y: LONGINT;   M: tModel;
+(*PROCEDURE Local (o: antsArrayObjects.tObject;   dim: SIGNED32;   par: array;    x, y: SIGNED32;   M: tModel;
 s: antsKernel.Kernel);
-VAR theta: LONGREAL;   k: LONGINT;   f: antsFunctions.Function;   ran, u, z: LONGREAL;   count: INTEGER;
+VAR theta: FLOAT64;   k: SIGNED32;   f: antsFunctions.Function;   ran, u, z: FLOAT64;   count: SIGNED16;
 
-PROCEDURE U (y, x, val: LONGINT): LONGREAL;
-VAR i: LONGINT;
+PROCEDURE U (y, x, val: SIGNED32): FLOAT64;
+VAR i: SIGNED32;
 BEGIN
 theta := 0;
 FOR i := 1 TO M.n.clen-1 DO
@@ -652,7 +652,7 @@ END;
 RETURN theta
 END U;
 
-PROCEDURE Penalize (y, x, val: LONGINT): LONGREAL;
+PROCEDURE Penalize (y, x, val: SIGNED32): FLOAT64;
 BEGIN
 IF s.Aorig # NIL THEN
 RETURN - par[0] * o.depth * (val - s.Aorig(antsArrayObjects.tObject).A[y, x]) * (val - s.Aorig(antsArrayObjects.tObject).A[y, x])

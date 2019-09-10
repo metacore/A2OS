@@ -28,7 +28,7 @@ CONST
 	LineHeight* = 20;
 	ButtonWidth* = 80;
 	PerfViewFillColor = 0444444FFH;
-	PerfViewColor = LONGINT(0FF0000FFH);
+	PerfViewColor = SIGNED32(0FF0000FFH);
 
 	UseSkinColors* = FALSE;
 
@@ -63,7 +63,7 @@ TYPE
 		END AlignSubComponents;
 
 		(* Only used in LocatePlugins! *)
-		PROCEDURE AddPlugin*(plugin : Plugins.Plugin; viewType : LONGINT);
+		PROCEDURE AddPlugin*(plugin : Plugins.Plugin; viewType : SIGNED32);
 		VAR pv : PluginView; graphView : PluginGraphView; gridView : PluginGridView;
 		BEGIN
 			ASSERT(plugin # NIL);
@@ -103,8 +103,8 @@ TYPE
 
 	UpdateInfo = RECORD
 		events : SET;
-		perf : REAL;
-		sampleInterval, sampleBufferSize, screenInterval : LONGINT;
+		perf : FLOAT32;
+		sampleInterval, sampleBufferSize, screenInterval : SIGNED32;
 	END;
 
 	(* Displays a list of all plugins registered at Updater. The user may select a plugin and open a window for it *)
@@ -139,7 +139,7 @@ TYPE
 			Resized^;
 		END Resized;
 
-		PROCEDURE CreatePluginWindows(viewType : LONGINT);
+		PROCEDURE CreatePluginWindows(viewType : SIGNED32);
 		VAR
 			graphWindow : PluginGraphWindow; gridWindow : PluginGridWindow; chartWindow : PluginChartWindow;
 			p : Plugins.Plugin; changed : BOOLEAN;
@@ -176,7 +176,7 @@ TYPE
 		END CreatePluginWindows;
 
 		PROCEDURE ButtonHandler(sender, data : ANY);
-		VAR b : WMStandardComponents.Button; ui, si, bs : LONGINT;
+		VAR b : WMStandardComponents.Button; ui, si, bs : SIGNED32;
 		BEGIN
 			IF (sender # NIL) & (sender IS WMStandardComponents.Button) THEN
 				b := sender (WMStandardComponents.Button);
@@ -198,7 +198,7 @@ TYPE
 			END;
 		END ButtonHandler;
 
-		PROCEDURE GetSampleParameters(VAR ui, bs, si : LONGINT);
+		PROCEDURE GetSampleParameters(VAR ui, bs, si : SIGNED32);
 		VAR string : ARRAY 16 OF CHAR;
 		BEGIN
 			sampleIntervalEditor.GetAsString(string); Strings.StrToInt(string, ui);
@@ -206,7 +206,7 @@ TYPE
 			sampleBufferSizeEditor.GetAsString(string); Strings.StrToInt(string, bs);
 		END GetSampleParameters;
 
-		PROCEDURE SetSampleParameters(ui, bs, si : LONGINT);
+		PROCEDURE SetSampleParameters(ui, bs, si : SIGNED32);
 		VAR string : ARRAY 16 OF CHAR;
 		BEGIN
 			Strings.IntToStr(ui, string); sampleIntervalEditor.SetAsString(string);
@@ -215,14 +215,14 @@ TYPE
 		END SetSampleParameters;
 
 		PROCEDURE UpdateGrid;
-		VAR ca : Plugins.PluginArray; row : LONGINT;
+		VAR ca : Plugins.PluginArray; row : SIGNED32;
 		BEGIN
 			ca := Plugins.updater.GetPlugins();
 			IF ca # NIL THEN
 				grid.Acquire;
 				grid.model.Acquire;
-				grid.model.SetNofRows(LEN(ca)(LONGINT)+1);
-				FOR row := 0 TO LEN(ca)(LONGINT)-1 DO
+				grid.model.SetNofRows(LEN(ca)(SIGNED32)+1);
+				FOR row := 0 TO LEN(ca)(SIGNED32)-1 DO
 					grid.model.SetCellTextAOC(0, row+1, 0, ca[row].p.name);
 					grid.model.SetCellTextAOC(1, row+1, 0, ca[row].p.description);
 					grid.model.SetCellTextAOC(2, row+1, 0, ca[row].p.devicename);
@@ -327,7 +327,7 @@ TYPE
 			Plugins.updater.AddListener({Plugins.EventPerfUpdate} + {Plugins.EventParametersChanged} + {Plugins.EventPluginsChanged}, EventHandler);
 		END Init;
 
-		PROCEDURE EventHandler(events : SET; perf : REAL);
+		PROCEDURE EventHandler(events : SET; perf : FLOAT32);
 		BEGIN {EXCLUSIVE}
 			updateInfo.events := events;
 			updateInfo.perf := perf;
@@ -378,7 +378,7 @@ TYPE
 	Indicator* = OBJECT(WMStandardComponents.Panel)
 	VAR
 		value : ARRAY 128 OF CHAR;
-		textColor : LONGINT;
+		textColor : SIGNED32;
 
 		PROCEDURE &Init*;
 		BEGIN
@@ -460,7 +460,7 @@ TYPE
 			plugin.DecNbrOfClients;
 		END Finalize;
 
-		PROCEDURE ScaleDataset(scale : REAL; VAR dataset : WMDiagramComponents.Dataset);
+		PROCEDURE ScaleDataset(scale : FLOAT32; VAR dataset : WMDiagramComponents.Dataset);
 		VAR i : SIZE;
 		BEGIN
 			FOR i := 0 TO LEN(dataset)-1 DO
@@ -516,7 +516,7 @@ TYPE
 			pview.SetExtUpdate(Update);
 
 			NEW(info); info.bounds.SetHeight(LineHeight); info.alignment.Set(WMComponents.AlignBottom);
-			IF ~UseSkinColors THEN info.fillColor.Set(LONGINT(0CCCCCCFFH)); info.textColor := WMGraphics.Black; END;
+			IF ~UseSkinColors THEN info.fillColor.Set(SIGNED32(0CCCCCCFFH)); info.textColor := WMGraphics.Black; END;
 			info.SetFont(WMGraphics.GetFont("Courier", 10, {}));
 			pview.min.Set(plugin.p.min); IF plugin.p.max # 0 THEN pview.max.Set(plugin.p.max); END;
 			pview.autoMin.Set(plugin.p.autoMin); pview.autoMax.Set(plugin.p.autoMax);
@@ -533,7 +533,7 @@ TYPE
 		END InitView;
 
 		PROCEDURE ShowStats;
-		VAR string : ARRAY 256 OF CHAR; statsMax0 : REAL;
+		VAR string : ARRAY 256 OF CHAR; statsMax0 : FLOAT32;
 
 			PROCEDURE ShowUnit;
 			BEGIN
@@ -543,14 +543,14 @@ TYPE
 				END;
 			END ShowUnit;
 
-			PROCEDURE ShowPercent(value : REAL);
+			PROCEDURE ShowPercent(value : FLOAT32);
 			BEGIN
 				IF plugin.p.showPercent & (plugin.p.max > 0) THEN
 					stats.String(" ("); stats.FloatFix(100.0 * value / statsMax0, 5, 1, 0); stats.String("%)")
 				END;
 			END ShowPercent;
 
-			PROCEDURE ShowValue(CONST name : ARRAY OF CHAR; value : REAL);
+			PROCEDURE ShowValue(CONST name : ARRAY OF CHAR; value : FLOAT32);
 			BEGIN
 				stats.String(name); stats.FloatFix(value, plugin.p.minDigits, plugin.p.fraction, 0); ShowUnit; ShowPercent(value);
 			END ShowValue;
@@ -580,11 +580,11 @@ TYPE
 		grid : WMStringGrids.StringGrid;
 		ds : Plugins.DatasetDescriptor;
 		spacings : WMGrids.Spacings;
-		nofRows : LONGINT;
+		nofRows : SIGNED32;
 
-		PROCEDURE NbrToStr(nbr :LONGREAL; VAR string : ARRAY OF CHAR);
+		PROCEDURE NbrToStr(nbr :FLOAT64; VAR string : ARRAY OF CHAR);
 		BEGIN
-			IF nbr < MAX(LONGINT) THEN
+			IF nbr < MAX(SIGNED32) THEN
 				Strings.IntToStr(ENTIER(nbr), string);
 			ELSE
 				Strings.FloatToStr(nbr, 0, 0, 3, string);
@@ -593,7 +593,7 @@ TYPE
 
 		PROCEDURE UpdateGrid(sender, data : ANY);
 		CONST MaxLength = 32;
-		VAR row : LONGINT; string : ARRAY MaxLength OF CHAR;
+		VAR row : SIGNED32; string : ARRAY MaxLength OF CHAR;
 		BEGIN
 			IF UpdateStats() THEN
 				grid.Acquire;
@@ -625,7 +625,7 @@ TYPE
 		END UpdateGrid;
 
 		PROCEDURE InitGrid;
-		VAR col, row : LONGINT;
+		VAR col, row : SIGNED32;
 		BEGIN
 			NEW(grid);
 			grid.fixedRows.Set(1);
@@ -669,7 +669,7 @@ TYPE
 		BEGIN
 			ds := plugin.p.datasetDescriptor;
 			IF ds # NIL THEN
-				nofRows := LEN(ds)(LONGINT) + 1;
+				nofRows := LEN(ds)(SIGNED32) + 1;
 			ELSE
 				nofRows := 2;
 			END;
@@ -725,7 +725,7 @@ TYPE
 	VAR
 		barChart : WMDiagramComponents.BarChart;
 		ds : Plugins.DatasetDescriptor;
-		heights : POINTER TO ARRAY OF LONGREAL;
+		heights : POINTER TO ARRAY OF FLOAT64;
 
 		PROCEDURE InitView*;
 		VAR
@@ -745,7 +745,7 @@ TYPE
 			NEW(barChart); barChart.alignment.Set(WMComponents.AlignClient);
 			barChart.backgroundColor.Set(WMGraphics.White);
 			barChart.textColor.Set(WMGraphics.Black);
-			barChart.SetData(heights^, LEN(heights)(LONGINT));
+			barChart.SetData(heights^, LEN(heights)(SIGNED32));
 			barChart.SetLabels(labels^);
 			barChart.SetColors(colors^);
 			AddInternalComponent(barChart);
@@ -755,10 +755,10 @@ TYPE
 		END InitView;
 
 		PROCEDURE UpdateChart(sender, data : ANY);
-		VAR max : REAL;  i : SIZE;
+		VAR max : FLOAT32;  i : SIZE;
 
-			PROCEDURE FindMax() : REAL;
-			VAR i : SIZE; max : REAL;
+			PROCEDURE FindMax() : FLOAT32;
+			VAR i : SIZE; max : FLOAT32;
 			BEGIN
 				max := 0.0;
 				FOR i := 0 TO LEN(statistics.cur)-1 DO
@@ -779,7 +779,7 @@ TYPE
 						heights[i] := 0.0;
 					END;
 				END;
-				barChart.SetData(heights^, LEN(heights)(LONGINT));
+				barChart.SetData(heights^, LEN(heights)(SIGNED32));
 			END;
 		END UpdateChart;
 
@@ -828,7 +828,7 @@ TYPE
 			SetGenerator("WMPerfMonComponents.GenPerfMonSimpleGraph");
 		END Init;
 
-		PROCEDURE InitDiagram(pluginInstance : Plugins.Plugin; index : LONGINT);
+		PROCEDURE InitDiagram(pluginInstance : Plugins.Plugin; index : SIGNED32);
 		VAR temp : ARRAY 16 OF CHAR;
 		BEGIN
 			ASSERT(plugin # NIL);
@@ -842,7 +842,7 @@ TYPE
 		END InitDiagram;
 
 		PROCEDURE InstallPlugin;
-		VAR string : Strings.String; msg : ARRAY 32 OF CHAR; index : LONGINT;
+		VAR string : Strings.String; msg : ARRAY 32 OF CHAR; index : SIGNED32;
 		BEGIN
 			label.visible.Set(TRUE); pview.visible.Set(FALSE);
 			IF pluginInstance # NIL THEN
@@ -1277,7 +1277,7 @@ VAR
 	StrPerfMonSimpleGraph, StrYes, StrNo, StrNotAvailable, StrIndicator,
 	StrColor, StrName, StrCurrent, StrMin, StrMax, StrAvg, StrSum, StrMode, StrHidden, StrNormal : Strings.String;
 
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE GenPerfMonSimpleGraph*() : XML.Element;
 VAR sg : PerfMonSimpleGraph;
@@ -1327,7 +1327,7 @@ BEGIN
 	RETURN button;
 END NewButton;
 
-PROCEDURE NewGroupPanel*(CONST caption : ARRAY OF CHAR; alignment, height : LONGINT) : WMStandardComponents.GroupPanel;
+PROCEDURE NewGroupPanel*(CONST caption : ARRAY OF CHAR; alignment, height : SIGNED32) : WMStandardComponents.GroupPanel;
 VAR panel : WMStandardComponents.GroupPanel;
 BEGIN
 	NEW(panel); panel.alignment.Set(alignment); panel.bounds.SetHeight(height);
@@ -1339,7 +1339,7 @@ BEGIN
 	RETURN panel;
 END NewGroupPanel;
 
-PROCEDURE NewIndicator*(CONST caption : ARRAY OF CHAR; alignment, width, height : LONGINT) : Indicator;
+PROCEDURE NewIndicator*(CONST caption : ARRAY OF CHAR; alignment, width, height : SIGNED32) : Indicator;
 VAR i : Indicator;
 BEGIN
 	NEW(i); i.alignment.Set(alignment); i.bounds.SetExtents(width, height);
@@ -1350,7 +1350,7 @@ BEGIN
 	RETURN i;
 END NewIndicator;
 
-PROCEDURE NewLabel*(CONST caption : ARRAY OF CHAR; alignment, width, height : LONGINT) : WMStandardComponents.Label;
+PROCEDURE NewLabel*(CONST caption : ARRAY OF CHAR; alignment, width, height : SIGNED32) : WMStandardComponents.Label;
 VAR label : WMStandardComponents.Label;
 BEGIN
 	NEW(label); label.alignment.Set(alignment); label.bounds.SetExtents(width, height);
@@ -1361,7 +1361,7 @@ BEGIN
 	RETURN label;
 END NewLabel;
 
-PROCEDURE NewTextField*(width : LONGINT) : WMEditors.TextField;
+PROCEDURE NewTextField*(width : SIGNED32) : WMEditors.TextField;
 VAR textfield : WMEditors.TextField;
 BEGIN
 	NEW(textfield); textfield.bounds.SetWidth(width); textfield.alignment.Set(WMComponents.AlignLeft);
@@ -1369,7 +1369,7 @@ BEGIN
 	RETURN textfield;
 END NewTextField;
 
-PROCEDURE NewPanel*(alignment, width, height : LONGINT) : WMStandardComponents.Panel;
+PROCEDURE NewPanel*(alignment, width, height : SIGNED32) : WMStandardComponents.Panel;
 VAR panel : WMStandardComponents.Panel;
 BEGIN
 	NEW(panel); panel.alignment.Set(alignment); panel.bounds.SetExtents(width, height);
@@ -1384,7 +1384,7 @@ VAR
 	identification, view : XML.Element;
 	name : Plugins.Name;  devicename : Plugins.DeviceName; plugin : Plugins.Plugin;
 	graphWindow : PluginGraphWindow; gridWindow : PluginGridWindow;
-	viewType : LONGINT;
+	viewType : SIGNED32;
 BEGIN
 	ASSERT(c # NIL);
 	name := ""; devicename := "";

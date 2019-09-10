@@ -59,7 +59,7 @@ VAR
 	processPointer	: Unix.Key_t;
 
 	newProcess: Process;
-	nextPID: WORD;
+	nextPID: INTEGER;
 
 	finalizerCaller	: FinalizerCaller;
 	mainthread: Unix.Thread_t;
@@ -72,7 +72,7 @@ TYPE
 		mtx, enter: ADDRESS;
 	END;
 
-	CpuCyclesArray* = ARRAY Machine.MaxCPU OF HUGEINT;
+	CpuCyclesArray* = ARRAY Machine.MaxCPU OF SIGNED64;
 
 	ProtectedObject = POINTER TO RECORD END;
 
@@ -87,7 +87,7 @@ TYPE
 	Timer* =  OBJECT
 	VAR
 		next: Timer;
-		trigger: LONGINT;
+		trigger: SIGNED32;
 		handler: EventHandler
 	END Timer;
 
@@ -205,25 +205,25 @@ TYPE
 		threadId-			: Unix.Thread_t;
 		nextProcess-	: Process;	(* next in list of all processes *)
 		stackBottom	-	: ADDRESS;
-		id-				: WORD;
+		id-				: INTEGER;
 		body			: Body;
-		mode-		: WORD;
+		mode-		: INTEGER;
 		flags-			: SET;
-		priority-		: WORD;	(* only effective if Aos is running SUID root *)
+		priority-		: INTEGER;	(* only effective if Aos is running SUID root *)
 		succ			: Process;   		  	(* in ProcessQueue *)
 		obj-			: ProtectedObject;	(* associated active object *)
 		condition-	: Condition;   			(* awaited process' condition *)
 		condFP-		: ADDRESS;			(* awaited process' condition's context *)
 		continue		: Unix.Condition_t;	(* gets signaled when condition yields true *)
 		waitingOn-	: ProtectedObject;
-		procID-		: LONGINT;				(*! processor ID where running, not used in UnixAos *)
+		procID-		: SIGNED32;				(*! processor ID where running, not used in UnixAos *)
 		state-			: Machine.State;
 		state0	: ARRAY 2048 OF CHAR;		(* thread state at body start, used for restart after trap *)
 		context: ANY; (* commands context *)
-		lastThreadTimes: HUGEINT;
+		lastThreadTimes: SIGNED64;
 		gcContext: GCContext;
 
-		PROCEDURE SetMode (mode: WORD);
+		PROCEDURE SetMode (mode: INTEGER);
 		BEGIN
 				Machine.Acquire(Machine.Heaps);(* process does not silently stop or run when GC is active *)
 				SELF.mode := mode;
@@ -325,13 +325,13 @@ TYPE
 			END
 		END Cancel;
 
-		PROCEDURE GetPriority( ): WORD;
+		PROCEDURE GetPriority( ): INTEGER;
 		BEGIN
 			RETURN Unix.ThrGetPriority( threadId )
 		END GetPriority;
 
-		PROCEDURE SetPriority( prio: WORD );
-		VAR pr: WORD;
+		PROCEDURE SetPriority( prio: INTEGER );
+		VAR pr: INTEGER;
 		BEGIN
 		(*
 			Linux/Solaris11: works only with SUID root and FIFO threads
@@ -344,7 +344,7 @@ TYPE
 		END SetPriority;
 
 
-		PROCEDURE & Initialize( obj: ProtectedObject;  bodyProc: Body;  prio: WORD; fl: SET; stacksize: SIZE);
+		PROCEDURE & Initialize( obj: ProtectedObject;  bodyProc: Body;  prio: INTEGER; fl: SET; stacksize: SIZE);
 		BEGIN
 			SELF.obj := obj;  condition := NIL;  continue := Unix.NewCond( );
 			flags := fl;
@@ -403,7 +403,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 
 	PROCEDURE BodyStarter;
-	VAR p: Process;  res: WORD; sp: ADDRESS;
+	VAR p: Process;  res: INTEGER; sp: ADDRESS;
 	BEGIN
 		(* make sure the process cannot be GCed in an intermediate unsafe state *)
 		Machine.Acquire(Machine.Heaps);
@@ -454,7 +454,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	END InitProtHeader;
 
 
-	PROCEDURE CreateProcess*( body: Body;  priority: WORD;  flags: SET;  obj: ProtectedObject );
+	PROCEDURE CreateProcess*( body: Body;  priority: INTEGER;  flags: SET;  obj: ProtectedObject );
 	VAR p: Process;  hdr{UNTRACED}: ObjectHeader;
 	BEGIN
 		Unix.MtxLock( createProcess );
@@ -564,14 +564,14 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		p.Cancel
 	END TerminateThis;
 
-	PROCEDURE SetPriority*( pri: WORD );		(* Set the current process' priority. *)
+	PROCEDURE SetPriority*( pri: INTEGER );		(* Set the current process' priority. *)
 	VAR me: Process;
 	BEGIN
 		me := CurrentProcess();
 		me.SetPriority( pri )
 	END SetPriority;
 
-	PROCEDURE Sleep*( ms: LONGINT );
+	PROCEDURE Sleep*( ms: SIGNED32 );
 	BEGIN
 		Unix.ThrSleep( ms );
 	END Sleep;
@@ -649,7 +649,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		RETURN bp  # NIL;
 	END NextValidStackSegment;
 
-	PROCEDURE GetProcessID*( ): WORD;
+	PROCEDURE GetProcessID*( ): INTEGER;
 	VAR p: Process;
 	BEGIN
 		p := CurrentProcess();
@@ -658,7 +658,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 
 	PROCEDURE GetCpuCycles*( process : Process; VAR cpuCycles: CpuCyclesArray; all: BOOLEAN );
-	VAR temp : HUGEINT;
+	VAR temp : SIGNED64;
 	BEGIN
 		ASSERT(process # NIL);
 		cpuCycles[0] := Machine.GetTimer();
@@ -777,7 +777,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		Unix.MtxUnlock( timerListMutex )
 	END Insert;
 
-	PROCEDURE SetTimeout*( t: Timer;  h: EventHandler;  ms: LONGINT );
+	PROCEDURE SetTimeout*( t: Timer;  h: EventHandler;  ms: SIGNED32 );
 	BEGIN
 		ASSERT( ( t # NIL) & ( h # NIL) );
 		Remove( t );
@@ -787,7 +787,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		timerActivity.Restart
 	END SetTimeout;
 
-	PROCEDURE SetTimeoutAt*( t: Timer;  h: EventHandler;  ms: LONGINT );
+	PROCEDURE SetTimeoutAt*( t: Timer;  h: EventHandler;  ms: SIGNED32 );
 	BEGIN
 		ASSERT( (t # NIL) & (h # NIL) );
 		Remove( t );
@@ -891,12 +891,12 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		LOOP Sleep( 100 ) END
 	END GCLoop;
 
-	PROCEDURE CurrentProcessTime*(): HUGEINT;
+	PROCEDURE CurrentProcessTime*(): SIGNED64;
 	BEGIN
 		RETURN  Machine.GetTimer()
 	END CurrentProcessTime;
 
-	PROCEDURE TimerFrequency*(): HUGEINT;
+	PROCEDURE TimerFrequency*(): SIGNED64;
 	BEGIN
 		RETURN Machine.mhz * 1000000
 	END TimerFrequency;

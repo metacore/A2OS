@@ -7,41 +7,41 @@ CONST HPETSignature* = 54455048H;
 CONST RDSPSignature* = 2052545020445352H;
 
 TYPE Address* = RECORD
-	value: LONGINT;
+	value: SIGNED32;
 END;
 
 TYPE Header* = RECORD
-	signature-: LONGINT;
-	length-: LONGINT;
-	revision-: SHORTINT;
-	checksum-: SHORTINT;
+	signature-: SIGNED32;
+	length-: SIGNED32;
+	revision-: SIGNED8;
+	checksum-: SIGNED8;
 	oemID-: ARRAY 6 OF CHAR;
 	oemTableID-: ARRAY 8 OF CHAR;
-	oemRevision-: LONGINT;
-	creatorID-: LONGINT;
-	creatorRevision-: LONGINT;
+	oemRevision-: SIGNED32;
+	creatorID-: SIGNED32;
+	creatorRevision-: SIGNED32;
 END;
 
 TYPE HPET* = RECORD (Header)
-	eventTimerBlockID-: LONGINT;
+	eventTimerBlockID-: SIGNED32;
 	baseAddress-: RECORD
-		addressSpaceID-: SHORTINT;
-		registerBitWidth-: SHORTINT;
-		registerBitOffset-: SHORTINT;
-		reserved-: SHORTINT;
+		addressSpaceID-: SIGNED8;
+		registerBitWidth-: SIGNED8;
+		registerBitOffset-: SIGNED8;
+		reserved-: SIGNED8;
 		addressLow-: Address;
 		addressHigh-: Address;
 	END;
-	hpetNumber-: SHORTINT;
-	mainCounterMinimum-: INTEGER;
-	oemAttribute-: SHORTINT;
+	hpetNumber-: SIGNED8;
+	mainCounterMinimum-: SIGNED16;
+	oemAttribute-: SIGNED8;
 END;
 
 TYPE RDSP* = RECORD
-	signature-: HUGEINT;
-	checksum-: SHORTINT;
+	signature-: SIGNED64;
+	checksum-: SIGNED8;
 	oemID-: ARRAY 6 OF CHAR;
-	revision-: SHORTINT;
+	revision-: SIGNED8;
 	rsdtAddress-: Address;
 END;
 
@@ -51,8 +51,8 @@ END;
 
 VAR rdsp- {UNTRACED} := NIL: POINTER {UNSAFE} TO RDSP;
 
-PROCEDURE Checksum (address: ADDRESS; size: SIZE): SHORTINT;
-VAR checksum := 0: SHORTINT; block {UNTRACED}: POINTER {UNSAFE} TO ARRAY OF SHORTINT;
+PROCEDURE Checksum (address: ADDRESS; size: SIZE): SIGNED8;
+VAR checksum := 0: SIGNED8; block {UNTRACED}: POINTER {UNSAFE} TO ARRAY OF SIGNED8;
 BEGIN {UNCOOPERATIVE, UNCHECKED} block := address; WHILE size # 0 DO DEC (size); INC (checksum, block[size]) END; RETURN checksum;
 END Checksum;
 
@@ -60,11 +60,11 @@ PROCEDURE Convert- (CONST address: Address): ADDRESS;
 VAR result: ADDRESS; masked {UNTRACED}: POINTER {UNSAFE} TO RECORD value: SET END;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	result := address.value; masked := ADDRESS OF result;
-	masked.value := masked.value * {0 .. SIZE OF LONGINT * 8 - 1};
+	masked.value := masked.value * {0 .. SIZE OF SIGNED32 * 8 - 1};
 	RETURN result;
 END Convert;
 
-PROCEDURE GetTable- (signature: LONGINT): ADDRESS;
+PROCEDURE GetTable- (signature: SIGNED32): ADDRESS;
 VAR address: ADDRESS; rsdt {UNTRACED}: POINTER {UNSAFE} TO RSDT; header {UNTRACED}: POINTER {UNSAFE} TO Header; i: SIZE;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (rdsp # NIL);
@@ -78,7 +78,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END GetTable;
 
 PROCEDURE Initialize-;
-TYPE BiosEBDA = POINTER {UNSAFE} TO RECORD val: INTEGER END;
+TYPE BiosEBDA = POINTER {UNSAFE} TO RECORD val: SIGNED16 END;
 VAR address := 0E0000H: ADDRESS; size := 020000H: SIZE; biosEBDA {UNTRACED}: BiosEBDA;
 
 BEGIN {UNCOOPERATIVE, UNCHECKED}

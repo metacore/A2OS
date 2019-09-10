@@ -20,7 +20,7 @@ TYPE
 	(* generic property object that provides lock-free access to its value *)
 	Property* = OBJECT
 	VAR
-		locks: WORD;
+		locks: INTEGER;
 		container*: OBJECT;
 
 		PROCEDURE &InitProperty;
@@ -28,7 +28,7 @@ TYPE
 		END InitProperty;
 
 		PROCEDURE AcquireRead;
-		VAR locks: WORD;
+		VAR locks: INTEGER;
 		BEGIN
 			LOOP
 				locks := SELF.locks;
@@ -42,7 +42,7 @@ TYPE
 		END ReleaseRead;
 
 		PROCEDURE AcquireWrite;
-		VAR locks: WORD;
+		VAR locks: INTEGER;
 		BEGIN
 			LOOP
 				locks := SELF.locks;
@@ -96,34 +96,34 @@ TYPE
 
 	Integer* = OBJECT (Property)
 	VAR
-		value: WORD;
+		value: INTEGER;
 		handlers: ARRAY MaxHandlers OF IntegerHandler;
 
-		PROCEDURE &InitInteger* (value: WORD);
+		PROCEDURE &InitInteger* (value: INTEGER);
 		BEGIN InitProperty; SELF.value := value;
 		END InitInteger;
 
-		PROCEDURE Get* (): WORD;
-		VAR value: WORD;
+		PROCEDURE Get* (): INTEGER;
+		VAR value: INTEGER;
 		BEGIN AcquireRead; value := SELF.value; ReleaseRead; RETURN value;
 		END Get;
 
-		PROCEDURE Set* (value: WORD);
+		PROCEDURE Set* (value: INTEGER);
 		VAR changed: BOOLEAN;
 		BEGIN AcquireWrite; changed := SELF.value # value; SELF.value := value; ReleaseWrite; IF changed THEN Changed (value) END;
 		END Set;
 
-		PROCEDURE Inc* (step: WORD);
+		PROCEDURE Inc* (step: INTEGER);
 		VAR changed: BOOLEAN;
 		BEGIN AcquireWrite; changed := step # 0; INC (value, step); ReleaseWrite; IF changed THEN Changed (value) END;
 		END Inc;
 
-		PROCEDURE Dec* (step: WORD);
+		PROCEDURE Dec* (step: INTEGER);
 		VAR changed: BOOLEAN;
 		BEGIN AcquireWrite; changed := step # 0; DEC (value, step); ReleaseWrite; IF changed THEN Changed (value) END;
 		END Dec;
 
-		PROCEDURE Changed (value: WORD);
+		PROCEDURE Changed (value: INTEGER);
 		VAR i: SIZE;
 		BEGIN i := 0; WHILE handlers[i] # NIL DO handlers[i] (SELF, value); INC (i) END;
 		END Changed;
@@ -137,24 +137,24 @@ TYPE
 
 	Real* = OBJECT (Property)
 	VAR
-		value: REAL;
+		value: FLOAT32;
 		handlers: ARRAY MaxHandlers OF RealHandler;
 
-		PROCEDURE &InitReal* (value: REAL);
+		PROCEDURE &InitReal* (value: FLOAT32);
 		BEGIN InitProperty; SELF.value := value;
 		END InitReal;
 
-		PROCEDURE Get* (): REAL;
-		VAR value: REAL;
+		PROCEDURE Get* (): FLOAT32;
+		VAR value: FLOAT32;
 		BEGIN AcquireRead; value := SELF.value; ReleaseRead; RETURN value;
 		END Get;
 
-		PROCEDURE Set* (value: REAL);
+		PROCEDURE Set* (value: FLOAT32);
 		VAR changed: BOOLEAN;
 		BEGIN AcquireWrite; changed := SELF.value # value; SELF.value := value; ReleaseWrite; IF changed THEN Changed (value) END;
 		END Set;
 
-		PROCEDURE Changed (value: REAL);
+		PROCEDURE Changed (value: FLOAT32);
 		VAR i: SIZE;
 		BEGIN i := 0; WHILE handlers[i] # NIL DO handlers[i] (SELF, value); INC (i) END;
 		END Changed;
@@ -185,12 +185,12 @@ TYPE
 		BEGIN AcquireWrite; changed := SELF.value # value; SELF.value := value; ReleaseWrite; IF changed THEN Changed (value) END;
 		END Set;
 
-		PROCEDURE Incl* (element: WORD);
+		PROCEDURE Incl* (element: INTEGER);
 		VAR changed: BOOLEAN;
 		BEGIN AcquireWrite; changed := ~(element IN value); INCL (value, element); ReleaseWrite; IF changed THEN Changed (value) END;
 		END Incl;
 
-		PROCEDURE Excl* (element: WORD);
+		PROCEDURE Excl* (element: INTEGER);
 		VAR changed: BOOLEAN;
 		BEGIN AcquireWrite; changed := element IN value; EXCL (value, element); ReleaseWrite; IF changed THEN Changed (value) END;
 		END Excl;
@@ -240,7 +240,7 @@ TYPE
 	(* generic message to be handled by the sequencer *)
 	Message* = OBJECT
 	VAR
-		next: Message; time: LONGINT;
+		next: Message; time: SIGNED32;
 
 		PROCEDURE &InitMessage*;
 		BEGIN SELF.next := NIL; time := NoDelay;
@@ -282,10 +282,10 @@ TYPE
 
 	TYPE IntegerMessage*  = OBJECT (Message)
 	VAR
-		value: WORD;
+		value: INTEGER;
 		procedure: IntegerProcedure;
 
-		PROCEDURE &InitIntegerMessage* (value: WORD; procedure: IntegerProcedure);
+		PROCEDURE &InitIntegerMessage* (value: INTEGER; procedure: IntegerProcedure);
 		BEGIN InitMessage; SELF.value := value; SELF.procedure := procedure;
 		END InitIntegerMessage;
 
@@ -297,10 +297,10 @@ TYPE
 
 	TYPE IntegerIntegerMessage*  = OBJECT (Message)
 	VAR
-		value0, value1: WORD;
+		value0, value1: INTEGER;
 		procedure: IntegerIntegerProcedure;
 
-		PROCEDURE &InitIntegerIntegerMessage* (value0, value1: WORD; procedure: IntegerIntegerProcedure);
+		PROCEDURE &InitIntegerIntegerMessage* (value0, value1: INTEGER; procedure: IntegerIntegerProcedure);
 		BEGIN InitMessage; SELF.value0 := value0; SELF.value1 := value1; SELF.procedure := procedure;
 		END InitIntegerIntegerMessage;
 
@@ -312,10 +312,10 @@ TYPE
 
 	TYPE RealMessage*  = OBJECT (Message)
 	VAR
-		value: REAL;
+		value: FLOAT32;
 		procedure: RealProcedure;
 
-		PROCEDURE &InitRealMessage* (value: REAL; procedure: RealProcedure);
+		PROCEDURE &InitRealMessage* (value: FLOAT32; procedure: RealProcedure);
 		BEGIN InitMessage; SELF.value := value; SELF.procedure := procedure;
 		END InitRealMessage;
 
@@ -382,10 +382,10 @@ TYPE
 
 	IntegerRequest* = OBJECT (Request)
 	VAR
-		value: WORD;
+		value: INTEGER;
 		procedure: IntegerProcedure;
 
-		PROCEDURE &InitIntegerRequest* (value: WORD; procedure: IntegerProcedure);
+		PROCEDURE &InitIntegerRequest* (value: INTEGER; procedure: IntegerProcedure);
 		BEGIN InitRequest; SELF.value := value; SELF.procedure := procedure;
 		END InitIntegerRequest;
 
@@ -413,7 +413,7 @@ TYPE
 	RequestInteger* = OBJECT (Request)
 	VAR
 		procedure: ProcedureInteger;
-		result-: WORD;
+		result-: INTEGER;
 
 		PROCEDURE &InitRequestInteger* (procedure: ProcedureInteger);
 		BEGIN InitRequest; SELF.procedure := procedure;
@@ -428,7 +428,7 @@ TYPE
 	RequestReal* = OBJECT (Request)
 	VAR
 		procedure: ProcedureReal;
-		result-: REAL;
+		result-: FLOAT32;
 
 		PROCEDURE &InitRequestReal* (procedure: ProcedureReal);
 		BEGIN InitRequest; SELF.procedure := procedure;
@@ -442,11 +442,11 @@ TYPE
 
 	IntegerRequestBoolean* = OBJECT (Request)
 	VAR
-		value: WORD;
+		value: INTEGER;
 		procedure: IntegerProcedureBoolean;
 		result-: BOOLEAN;
 
-		PROCEDURE &InitIntegerRequestBoolean* (value: WORD; procedure: IntegerProcedureBoolean);
+		PROCEDURE &InitIntegerRequestBoolean* (value: INTEGER; procedure: IntegerProcedureBoolean);
 		BEGIN InitRequest; SELF.value := value; SELF.procedure := procedure;
 		END InitIntegerRequestBoolean;
 
@@ -458,11 +458,11 @@ TYPE
 
 	RealRequestInteger* = OBJECT (Request)
 	VAR
-		value: REAL;
+		value: FLOAT32;
 		procedure: RealProcedureInteger;
-		result-: WORD;
+		result-: INTEGER;
 
-		PROCEDURE &InitRealRequestInteger* (value: REAL; procedure: RealProcedureInteger);
+		PROCEDURE &InitRealRequestInteger* (value: FLOAT32; procedure: RealProcedureInteger);
 		BEGIN InitRequest; SELF.value := value; SELF.procedure := procedure;
 		END InitRealRequestInteger;
 
@@ -495,7 +495,7 @@ TYPE
 			END;
 		END HandleMessages;
 
-		PROCEDURE Add*(message: Message; time: LONGINT);
+		PROCEDURE Add*(message: Message; time: SIGNED32);
 		VAR prev, next: Message;
 		BEGIN
 			BEGIN {EXCLUSIVE}
@@ -519,12 +519,12 @@ TYPE
 		BEGIN NEW (message, value, procedure); Add (message, NoDelay);
 		END AddBooleanMessage;
 
-		PROCEDURE AddIntegerMessage* (value: WORD; procedure: IntegerProcedure);
+		PROCEDURE AddIntegerMessage* (value: INTEGER; procedure: IntegerProcedure);
 		VAR message: IntegerMessage;
 		BEGIN NEW (message, value, procedure); Add (message, NoDelay);
 		END AddIntegerMessage;
 
-		PROCEDURE AddRealMessage* (value: REAL; procedure: RealProcedure);
+		PROCEDURE AddRealMessage* (value: FLOAT32; procedure: RealProcedure);
 		VAR message: RealMessage;
 		BEGIN NEW (message, value, procedure); Add (message, NoDelay);
 		END AddRealMessage;
@@ -539,12 +539,12 @@ TYPE
 		BEGIN NEW (message, value, procedure); Add (message, NoDelay);
 		END AddStringMessage;
 
-		PROCEDURE AddIntegerIntegerMessage* (value0, value1: WORD; procedure: IntegerIntegerProcedure);
+		PROCEDURE AddIntegerIntegerMessage* (value0, value1: INTEGER; procedure: IntegerIntegerProcedure);
 		VAR message: IntegerIntegerMessage;
 		BEGIN NEW (message, value0, value1, procedure); Add (message, NoDelay);
 		END AddIntegerIntegerMessage;
 
-		PROCEDURE AddIntegerRequest* (value: WORD; procedure: IntegerProcedure);
+		PROCEDURE AddIntegerRequest* (value: INTEGER; procedure: IntegerProcedure);
 		VAR request: IntegerRequest;
 		BEGIN NEW (request, value, procedure); Add (request, NoDelay);
 		END AddIntegerRequest;
@@ -554,22 +554,22 @@ TYPE
 		BEGIN NEW (request, procedure); Add (request, NoDelay); RETURN request.result;
 		END AddRequestBoolean;
 
-		PROCEDURE AddRequestInteger* (procedure: ProcedureInteger): WORD;
+		PROCEDURE AddRequestInteger* (procedure: ProcedureInteger): INTEGER;
 		VAR request: RequestInteger;
 		BEGIN NEW (request, procedure); Add (request, NoDelay); RETURN request.result;
 		END AddRequestInteger;
 
-		PROCEDURE AddRequestReal* (procedure: ProcedureReal): REAL;
+		PROCEDURE AddRequestReal* (procedure: ProcedureReal): FLOAT32;
 		VAR request: RequestReal;
 		BEGIN NEW (request, procedure); Add (request, NoDelay); RETURN request.result;
 		END AddRequestReal;
 
-		PROCEDURE AddIntegerRequestBoolean* (value: WORD; procedure: IntegerProcedureBoolean): BOOLEAN;
+		PROCEDURE AddIntegerRequestBoolean* (value: INTEGER; procedure: IntegerProcedureBoolean): BOOLEAN;
 		VAR request: IntegerRequestBoolean;
 		BEGIN NEW (request, value, procedure); Add (request, NoDelay); RETURN request.result;
 		END AddIntegerRequestBoolean;
 
-		PROCEDURE AddRealRequestInteger* (value: REAL; procedure: RealProcedureInteger): WORD;
+		PROCEDURE AddRealRequestInteger* (value: FLOAT32; procedure: RealProcedureInteger): INTEGER;
 		VAR request: RealRequestInteger;
 		BEGIN NEW (request, value, procedure); Add (request, NoDelay); RETURN request.result;
 		END AddRealRequestInteger;
@@ -609,28 +609,28 @@ TYPE
 
 (* helper types *)
 	BooleanHandler = PROCEDURE {DELEGATE} (property: Boolean; value: BOOLEAN);
-	IntegerHandler = PROCEDURE {DELEGATE} (property: Integer; value: WORD);
-	RealHandler = PROCEDURE {DELEGATE} (property: Real; value: REAL);
+	IntegerHandler = PROCEDURE {DELEGATE} (property: Integer; value: INTEGER);
+	RealHandler = PROCEDURE {DELEGATE} (property: Real; value: FLOAT32);
 	SetHandler = PROCEDURE {DELEGATE} (property: Set; value: SET);
 	StringHandler = PROCEDURE {DELEGATE} (property: String; CONST value: ARRAY OF CHAR);
 
 	Procedure = PROCEDURE {DELEGATE};
 	BooleanProcedure = PROCEDURE {DELEGATE} (value: BOOLEAN);
-	IntegerProcedure = PROCEDURE {DELEGATE} (value: WORD);
-	IntegerIntegerProcedure = PROCEDURE {DELEGATE} (value0, value1: WORD);
-	RealProcedure = PROCEDURE {DELEGATE} (value: REAL);
+	IntegerProcedure = PROCEDURE {DELEGATE} (value: INTEGER);
+	IntegerIntegerProcedure = PROCEDURE {DELEGATE} (value0, value1: INTEGER);
+	RealProcedure = PROCEDURE {DELEGATE} (value: FLOAT32);
 	SetProcedure = PROCEDURE {DELEGATE} (value: SET);
 	StringProcedure = PROCEDURE {DELEGATE} (CONST value: ARRAY OF CHAR);
 
 	ProcedureBoolean = PROCEDURE {DELEGATE} (): BOOLEAN;
-	ProcedureInteger = PROCEDURE {DELEGATE} (): WORD;
-	ProcedureReal = PROCEDURE {DELEGATE} (): REAL;
+	ProcedureInteger = PROCEDURE {DELEGATE} (): INTEGER;
+	ProcedureReal = PROCEDURE {DELEGATE} (): FLOAT32;
 
-	IntegerProcedureBoolean = PROCEDURE {DELEGATE} (value: WORD): BOOLEAN;
-	RealProcedureInteger = PROCEDURE {DELEGATE} (value: REAL): WORD;
+	IntegerProcedureBoolean = PROCEDURE {DELEGATE} (value: INTEGER): BOOLEAN;
+	RealProcedureInteger = PROCEDURE {DELEGATE} (value: FLOAT32): INTEGER;
 
 (* helper function for delayed execution *)
-PROCEDURE Delay* (delay: LONGINT): LONGINT;
+PROCEDURE Delay* (delay: SIGNED32): SIGNED32;
 BEGIN RETURN delay + Kernel.GetTicks ();
 END Delay;
 

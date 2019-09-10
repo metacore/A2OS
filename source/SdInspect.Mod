@@ -7,7 +7,7 @@ IMPORT
 VAR
 	hc: Sd.HostController;
 	card: Sd.Card;
-	result: LONGINT;
+	result: SIGNED32;
 
 	(** SdInspect.Command [-a|--acmd] [-d|--data] [-r|--read] [--auto12] [--auto23] [-m|-multi] [-c|--count] [--dma] cmd arg resp rca [datalen] ~ *)
 	PROCEDURE Command * (context: Commands.Context);
@@ -15,7 +15,7 @@ VAR
 		rsp: ARRAY 32 OF CHAR;
 		opt: Options.Options;
 		command: Sd.Command;
-		datalen, rca: LONGINT;
+		datalen, rca: SIGNED32;
 		data: POINTER TO ARRAY OF CHAR;
 	BEGIN
 		NEW(opt);
@@ -140,7 +140,7 @@ VAR
 	PROCEDURE Read *;
 	VAR
 		data: ARRAY 512 OF CHAR;
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		IF ~Sd.Read(card, 0, 512, data, 0, res) THEN
 			KernelLog.String("Read Failed: ");
@@ -158,7 +158,7 @@ VAR
 		Size = 1024 * 1024;
 	VAR
 		data: ARRAY Size OF CHAR;
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		IF ~Sd.Read(card, 0, Size, data, 0, res) THEN
 			KernelLog.String("Read Failed: ");
@@ -174,7 +174,7 @@ VAR
 	PROCEDURE Write *;
 	VAR
 		data: ARRAY 512 OF CHAR;
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		IF ~Sd.Write(card, 0, 512, data, 0, res) THEN
 			KernelLog.String("Write Failed: ");
@@ -190,7 +190,7 @@ VAR
 	PROCEDURE Writes *;
 	VAR
 		data: ARRAY 8 * 512 OF CHAR;
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		IF ~Sd.Write(card, 0, 8 * 512, data, 0, res) THEN
 			KernelLog.String("Write Failed: ");
@@ -206,7 +206,7 @@ VAR
 	PROCEDURE Test *;
 	VAR
 		command: Sd.Command;
-		res: LONGINT;
+		res: SIGNED32;
 	BEGIN
 		command.hc := hc;
 		command.rca := 7;

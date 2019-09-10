@@ -36,18 +36,18 @@ TYPE
 	tLayer* = POINTER TO tLayerDesc;
 	tLayerDesc* = RECORD (antsViews.tLayerDesc)
 		E-: antsArrayObjects.tINTEGERObject;
-		type: INTEGER
+		type: SIGNED16
 	END;
 
 VAR
-	newlayer-: tLayer;  maxw, maxh: INTEGER;  texture: BOOLEAN;
+	newlayer-: tLayer;  maxw, maxh: SIGNED16;  texture: BOOLEAN;
 
 	PROCEDURE Copy( source, dest: tLayer );
 	BEGIN
 		dest^ := source^
 	END Copy;
 
-	PROCEDURE GetRunX( A: antsArrayObjects.tINTEGERArray;  VAR col: INTEGER;  VAR x, y, w: INTEGER );
+	PROCEDURE GetRunX( A: antsArrayObjects.tINTEGERArray;  VAR col: SIGNED16;  VAR x, y, w: SIGNED16 );
 	BEGIN
 		col := A[y, x];
 		WHILE (A[y, x] = col) DO
@@ -57,7 +57,7 @@ VAR
 		RETURN
 	END GetRunX;
 
-	PROCEDURE GetRunY( A: antsArrayObjects.tINTEGERArray;  VAR col: INTEGER;  VAR x, y, h: INTEGER );
+	PROCEDURE GetRunY( A: antsArrayObjects.tINTEGERArray;  VAR col: SIGNED16;  VAR x, y, h: SIGNED16 );
 	BEGIN
 		col := A[y, x];
 		WHILE (A[y, x] = col) DO
@@ -68,7 +68,7 @@ VAR
 	END GetRunY;
 
 	PROCEDURE Recall( layer: tLayer );
-	VAR px, py, pw, ph, px0, py0, col, width: INTEGER;  y0, x0: INTEGER;  vx, vy, vpx, vpy, vpw, vph: INTEGER;  c: antsPictCoordinate.tCoordinate;
+	VAR px, py, pw, ph, px0, py0, col, width: SIGNED16;  y0, x0: SIGNED16;  vx, vy, vpx, vpy, vpw, vph: SIGNED16;  c: antsPictCoordinate.tCoordinate;
 		pal: antsColors.Palette;
 	BEGIN
 		antsViews.CheckColors( layer, layer.E( antsArrayObjects.tINTEGERObject ).depth );
@@ -135,7 +135,7 @@ VAR
 	END Recall;
 
 	PROCEDURE Responsible( layer: tLayer;  VAR event: vyEvents.EventMsg );
-	VAR priority: INTEGER;
+	VAR priority: SIGNED16;
 	BEGIN
 		priority := vyEvents.PrioNone;
 		IF ((event.gesture = vyEvents.EvtIdent)) THEN priority := vyEvents.PrioNormal END;
@@ -150,7 +150,7 @@ VAR
 	END Center;
 
 	PROCEDURE HandleFileMsg( obj: tLayer;  VAR msg: Objects.FileMsg );
-	VAR objsub: Objects.Object;  version: INTEGER;
+	VAR objsub: Objects.Object;  version: SIGNED16;
 	BEGIN
 		IF msg.id = Objects.load THEN
 			Files.ReadInt( msg.R, version );  antsViews.Handler( obj, msg );  Gadgets.ReadRef( msg.R, obj.lib, objsub );
@@ -249,7 +249,7 @@ VAR
 		antsViews.Init( layer );  layer.handle := Handler;  vyCommandMenus.Add( layer.commands, Center, "Center" )
 	END Init;
 
-	PROCEDURE Open*( layer: tLayer;  E: antsArrayObjects.tINTEGERObject;  type: INTEGER );
+	PROCEDURE Open*( layer: tLayer;  E: antsArrayObjects.tINTEGERObject;  type: SIGNED16 );
 	VAR id: vyName.tNameArray;
 	BEGIN
 		Init( layer );  id := "ViewI:";  vyName.AppendObjId( E, id );  vyPort.OpenLayer( layer, id );  layer.E := E;  layer.pal.first := 0;
@@ -263,8 +263,8 @@ VAR
 		aM.cmd;  NEW( newlayer );  Init( newlayer );  Objects.NewObj := newlayer
 	END New;
 
-	PROCEDURE DoShow*( E: antsArrayObjects.tINTEGERObject;  type: INTEGER;  add: BOOLEAN;  VAR c: antsPictCoordinate.tCoordinate ): tLayer;
-	VAR port: vyPort.Frame;  picture: vyPort.Picture;  layer: tLayer;  w, h: INTEGER;
+	PROCEDURE DoShow*( E: antsArrayObjects.tINTEGERObject;  type: SIGNED16;  add: BOOLEAN;  VAR c: antsPictCoordinate.tCoordinate ): tLayer;
+	VAR port: vyPort.Frame;  picture: vyPort.Picture;  layer: tLayer;  w, h: SIGNED16;
 	BEGIN
 		NEW( layer );  Open( layer, E, type );
 		IF c = NIL THEN NEW( c );  antsPictCoordinate.OpenC( c, 1, 1 ) END;
@@ -286,7 +286,7 @@ VAR
 
 	PROCEDURE Show*;
 	VAR l: antsCommands.tScanList;  obj, o: vyBase.Object;  la: tLayer;  name: vyName.tNameArray;  hor, ver, add: BOOLEAN;
-		c: antsPictCoordinate.tCoordinate;  type: INTEGER;
+		c: antsPictCoordinate.tCoordinate;  type: SIGNED16;
 	BEGIN
 		l := antsCommands.ScanFromPar( "name=NAME [>hEdges|>vEdges|>Vertices] [>add] [>texture]" );
 		IF antsCommands.ExpectNameFromKeyword( l, "name", name ) THEN

@@ -26,7 +26,7 @@ TYPE
 	END;
 	In*=POINTER TO InDesc;
 	InDesc*=RECORD
-		type*: SHORTINT;
+		type*: SIGNED8;
 		fe*: FilterElement;
 	END;
 	FilterElement*=OBJECT
@@ -78,7 +78,7 @@ TYPE
 	feBlend*=OBJECT(FilterElement)
 		VAR
 			in2*: In;
-			mode*: SHORTINT;
+			mode*: SIGNED8;
 
 		(* Apply this filter element *)
 		PROCEDURE ApplyFilter*(window: FilterWindow; target: Buffer);
@@ -175,12 +175,12 @@ TYPE
 	END feOffset;
 
 	ColorMatrix*=RECORD
-		a: ARRAY 5,4 OF LONGREAL;
+		a: ARRAY 5,4 OF FLOAT64;
 	END;
 
 	feColorMatrix*=OBJECT(FilterElement)
 		VAR
-			type*: SHORTINT;
+			type*: SIGNED8;
 			matrix*: ColorMatrix;
 
 		(* Apply this filter element *)
@@ -209,9 +209,9 @@ TYPE
 			source: Buffer;
 			pix: Raster.Pixel;
 			temp: Buffer;
-			kernel: POINTER TO ARRAY OF LONGREAL;
+			kernel: POINTER TO ARRAY OF FLOAT64;
 			kernelSizeX, kernelSizeY, kernelHalfX, kernelHalfY: SIZE;
-			norm, sSquared2: LONGREAL;
+			norm, sSquared2: FLOAT64;
 			sum: SVGColors.ColorSum;
 		BEGIN
 		(* Gaussian Kernel is seperable into a vertical part and a horizontal part. *)
@@ -477,7 +477,7 @@ TYPE
 	END FilterStack;
 
 (* Parse some in attribute of a filter element *)
-PROCEDURE ParseIn*(value: SVG.String; VAR in: SHORTINT);
+PROCEDURE ParseIn*(value: SVG.String; VAR in: SIGNED8);
 BEGIN
 	IF value^ = "SourceGraphic" THEN in := InSourceGraphic
 	ELSE
@@ -486,7 +486,7 @@ BEGIN
 END ParseIn;
 
 (* Parse the blendMode attribute of some feBlend element *)
-PROCEDURE ParseBlendMode*(value: SVG.String; VAR mode: SHORTINT);
+PROCEDURE ParseBlendMode*(value: SVG.String; VAR mode: SIGNED8);
 BEGIN
 	IF value^ = "normal" THEN mode := BlendModeNormal
 	ELSIF value^ = "multiply" THEN mode := BlendModeMultiply
@@ -500,7 +500,7 @@ BEGIN
 END ParseBlendMode;
 
 (* Parse some type attribute of some feColorMatrix element *)
-PROCEDURE ParseColorMatrixType*(value: XML.String; VAR type: SHORTINT);
+PROCEDURE ParseColorMatrixType*(value: XML.String; VAR type: SIGNED8);
 BEGIN
 	IF value^ = "matrix" THEN type := ColorMatrixTypeMatrix
 	ELSIF value^ = "saturate" THEN type := ColorMatrixTypeSaturate
@@ -513,9 +513,9 @@ BEGIN
 END ParseColorMatrixType;
 
 (* Parse some values attribute of some feColorMatrix element *)
-PROCEDURE ParseColorMatrixValues*(values: XML.String; type: SHORTINT; VAR matrix: ColorMatrix):BOOLEAN;
+PROCEDURE ParseColorMatrixValues*(values: XML.String; type: SIGNED8; VAR matrix: ColorMatrix):BOOLEAN;
 VAR pos: SIZE; i,j: SIZE;
-	angle, s,c: LONGREAL;
+	angle, s,c: FLOAT64;
 BEGIN
 	(* Init to the zero matrix *)
 	FOR i := 0 TO 4 DO
@@ -569,7 +569,7 @@ END ParseColorMatrixValues;
 
 (* Transform a pixel by a matrix *)
 PROCEDURE TransformByColorMatrix(VAR pix: Raster.Pixel; VAR matrix: ColorMatrix);
-VAR p, result: ARRAY 4 OF LONGREAL;
+VAR p, result: ARRAY 4 OF FLOAT64;
 BEGIN
 	p[0] := ORD(pix[0])/255.0;
 	p[1] := ORD(pix[1])/255.0;

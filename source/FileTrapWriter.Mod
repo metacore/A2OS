@@ -3,7 +3,7 @@ MODULE FileTrapWriter; (** AUTHOR "fof"; PURPOSE "trap file writer"; *)
 IMPORT
 	Trace, Modules, Streams, TrapWriters, Files, Dates, Strings;
 
-PROCEDURE GenerateName*(CONST prefix: ARRAY OF CHAR; index: LONGINT; VAR str: ARRAY OF CHAR);
+PROCEDURE GenerateName*(CONST prefix: ARRAY OF CHAR; index: SIGNED32; VAR str: ARRAY OF CHAR);
 VAR startTime: Dates.DateTime; num: ARRAY 32 OF CHAR;
 BEGIN
 	startTime := Dates.Now();
@@ -18,7 +18,7 @@ BEGIN
 END GenerateName;
 
 PROCEDURE GetNewFile*(CONST prefix: ARRAY OF CHAR; VAR name: ARRAY OF CHAR): Files.File;
-VAR index: LONGINT;
+VAR index: SIGNED32;
 BEGIN
 	index := 0;
 	REPEAT

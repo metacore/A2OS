@@ -17,8 +17,8 @@ TYPE
 		obj*: Objects.Object
 	END;
 
-PROCEDURE Atom(lib: Objects.Library; name: ARRAY OF CHAR): INTEGER;
-VAR ref: INTEGER;
+PROCEDURE Atom(lib: Objects.Library; name: ARRAY OF CHAR): SIGNED16;
+VAR ref: SIGNED16;
 BEGIN
 	Objects.GetKey(lib.dict, name, ref); RETURN ref
 END Atom;
@@ -46,7 +46,7 @@ BEGIN
 END WriteRef;
 
 PROCEDURE ReadRef(VAR r: Files.Rider; lib: Objects.Library; VAR obj: Objects.Object);
-VAR i, l: INTEGER; F: Objects.Library; name: ARRAY 32 OF CHAR;
+VAR i, l: SIGNED16; F: Objects.Library; name: ARRAY 32 OF CHAR;
 BEGIN
 	Files.ReadInt(r, i);
 	IF i = -1 THEN obj := NIL

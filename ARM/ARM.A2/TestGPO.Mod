@@ -14,7 +14,7 @@ const
 	GpoPortAddr = Chan0Addr;
 	
 var
-	i: longint; inp: longint;
+	i: signed32; inp: signed32;
 begin
 	loop
 		for i := 0 to 255 do

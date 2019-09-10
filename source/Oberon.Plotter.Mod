@@ -10,21 +10,21 @@ CONST MaxPoints = 362;
 TYPE
 	Plotter = POINTER TO PlotterDesc;
 	PlotterDesc = RECORD (Gadgets.FrameDesc)
-		points: ARRAY MaxPoints OF LONGINT;
-		min, max: LONGINT;
-		end: INTEGER
+		points: ARRAY MaxPoints OF SIGNED32;
+		min, max: SIGNED32;
+		end: SIGNED16
 	END;
 
-PROCEDURE Min(x, y: LONGINT): LONGINT;
+PROCEDURE Min(x, y: SIGNED32): SIGNED32;
 BEGIN  IF x < y THEN RETURN x ELSE RETURN y END
 END Min;
 
-PROCEDURE Max(x, y: LONGINT): LONGINT;
+PROCEDURE Max(x, y: SIGNED32): SIGNED32;
 BEGIN  IF x > y THEN RETURN x ELSE RETURN y END
 END Max;
 
-PROCEDURE DisplayPlotter(P: Plotter; X, Y, W, H: INTEGER; VAR M: Display3.Mask);
-VAR i, p : INTEGER; range, min: LONGINT;
+PROCEDURE DisplayPlotter(P: Plotter; X, Y, W, H: SIGNED16; VAR M: Display3.Mask);
+VAR i, p : SIGNED16; range, min: SIGNED32;
 BEGIN
 	Display3.FilledRect3D(M, Display3.white, Display3.black, 12, X, Y, W, H, 1, Display.replace);
 	range := P.max - P.min + 10; min := P.min - 5;
@@ -39,8 +39,8 @@ BEGIN
 	IF Gadgets.selected IN P.state THEN Display3.FillPattern(M, Display3.black, Display3.selectpat, X, Y, X, Y, W, H, Display.paint) END
 END DisplayPlotter;
 
-PROCEDURE Plot(P: Plotter; value: LONGINT; X, Y, W, H: INTEGER; VAR M: Display3.Mask);
-VAR i, p, end : INTEGER; oldrange, range, min: LONGINT;
+PROCEDURE Plot(P: Plotter; value: SIGNED32; X, Y, W, H: SIGNED16; VAR M: Display3.Mask);
+VAR i, p, end : SIGNED16; oldrange, range, min: SIGNED32;
 BEGIN
 	oldrange := P.max - P.min + 10;
 	IF oldrange = 0 THEN oldrange := 1 END;
@@ -53,7 +53,7 @@ BEGIN
 		RETURN
 	END;
 
-	P.min := MAX(LONGINT); P.max := MIN(LONGINT);
+	P.min := MAX(SIGNED32); P.max := MIN(SIGNED32);
 	i := 0;
 	WHILE i # P.end DO
 		P.min := Min(P.min, P.points[i]); P.max := Max(P.max, P.points[i]);
@@ -70,7 +70,7 @@ BEGIN
 END Plot;
 
 PROCEDURE PlotterHandler(P: Objects.Object; VAR M: Objects.ObjMsg);
-VAR x, y, w, h: INTEGER; P0: Plotter; R: Display3.Mask;
+VAR x, y, w, h: SIGNED16; P0: Plotter; R: Display3.Mask;
 BEGIN
 	WITH P: Plotter DO
 		IF M IS Objects.AttrMsg THEN

@@ -10,13 +10,13 @@ CONST
 	VERSION* = 1;
 
 TYPE
-	Value* = ArrayXd.Value;  Index* = LONGINT;  Array* = ArrayXd.Array;  Map* = ArrayXd.Map;  ArrayC* = ArrayXd.Array3;
+	Value* = ArrayXd.Value;  Index* = SIGNED32;  Array* = ArrayXd.Array;  Map* = ArrayXd.Map;  ArrayC* = ArrayXd.Array3;
 
 	(** Type Cube is DataIO registered, instances of it can therefore be made persistent. *)
 
 	Cube* = OBJECT (Array)
-	VAR lenx-, leny-, lenz-: LONGINT;   (* lenx = nr.Columns, leny = nr.Rows *)
-		ox-, oy-, oz-: LONGINT;
+	VAR lenx-, leny-, lenz-: SIGNED32;   (* lenx = nr.Columns, leny = nr.Rows *)
+		ox-, oy-, oz-: SIGNED32;
 		Get-: PROCEDURE {DELEGATE} ( x, y, z: Index ): Value;
 
 		(* override *)
@@ -39,7 +39,7 @@ TYPE
 			lenx := len[0];  leny := len[1];  lenz := len[2];  ox := origin[0];  oy := origin[1];  oz := origin[2];
 		END ValidateCache;
 
-		PROCEDURE SetBoundaryCondition*( c: SHORTINT );   (* called by new, load and directly *)
+		PROCEDURE SetBoundaryCondition*( c: SIGNED8 );   (* called by new, load and directly *)
 		BEGIN
 			SetBoundaryCondition^( c );
 			CASE c OF
@@ -61,7 +61,7 @@ TYPE
 		END SetBoundaryCondition;
 
 	(** new *)
-		PROCEDURE & New*( ox, w, oy, h, oz, d: LONGINT );
+		PROCEDURE & New*( ox, w, oy, h, oz, d: SIGNED32 );
 		BEGIN
 			NewXdB( ArrayXdBytes.Array3( ox, oy, oz ), ArrayXdBytes.Array3( w, h, d ) );
 		END New;
@@ -72,7 +72,7 @@ TYPE
 			copy := AlikeX();  RETURN copy( Cube );
 		END Alike;
 
-		PROCEDURE NewRange*( ox, w, oy, h, oz, d: LONGINT;  copydata: BOOLEAN );
+		PROCEDURE NewRange*( ox, w, oy, h, oz, d: SIGNED32;  copydata: BOOLEAN );
 		BEGIN
 			IF (w # len[0]) OR (h # len[1]) OR (d # len[2]) OR (ox # origin[0]) OR (oy # origin[1]) OR (oz # origin[2]) THEN
 				NewRangeX^( ArrayXdBytes.Array3( ox, oy, oz ), ArrayXdBytes.Array3( w, h, d ), copydata )
@@ -127,7 +127,7 @@ TYPE
 								   ArrayXdBytes.Index4( destx, desty, destz, destt ), slen );
 		END CopyToHCube;
 
-		PROCEDURE CopyTo1dArray*( VAR dest: ARRAY OF Value;  sx, sy, sz, slenx, sleny, slenz: Index;  dpos, dlen: LONGINT );
+		PROCEDURE CopyTo1dArray*( VAR dest: ARRAY OF Value;  sx, sy, sz, slenx, sleny, slenz: Index;  dpos, dlen: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -139,7 +139,7 @@ TYPE
 		END CopyTo1dArray;
 
 		PROCEDURE CopyTo2dArray*( VAR dest: ARRAY OF ARRAY OF Value;  sx, sy, sz, slenx, sleny, slenz: Index;
-													   dposx, dposy, dlenx, dleny: LONGINT );
+													   dposx, dposy, dlenx, dleny: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -151,7 +151,7 @@ TYPE
 		END CopyTo2dArray;
 
 		PROCEDURE CopyTo3dArray*( VAR dest: ARRAY OF ARRAY OF ARRAY OF Value;  sx, sy, sz, slenx, sleny, slenz: Index;
-													   dposx, dposy, dposz, dlenx, dleny, dlenz: LONGINT );
+													   dposx, dposy, dposz, dlenx, dleny, dlenz: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -165,7 +165,7 @@ TYPE
 		END CopyTo3dArray;
 
 		PROCEDURE CopyTo4dArray*( VAR dest: ARRAY OF ARRAY OF ARRAY OF ARRAY OF Value;  sx, sy, sz, slenx, sleny, slenz: Index;
-													   dposx, dposy, dposz, dpost, dlenx, dleny, dlenz, dlent: LONGINT );
+													   dposx, dposy, dposz, dpost, dlenx, dleny, dlenz, dlent: SIGNED32 );
 		VAR destm: ArrayXdBytes.ArrayMemoryStructure;
 		BEGIN
 			destm :=
@@ -322,7 +322,7 @@ TYPE
 
 (* The procedures needed to register type Cube so that its instances can be made persistent. *)
 	PROCEDURE LoadCube( R: DataIO.Reader;  VAR obj: OBJECT );
-	VAR a: Cube;  version: SHORTINT;  ver: NbrInt.Integer;
+	VAR a: Cube;  version: SIGNED8;  ver: NbrInt.Integer;
 	BEGIN
 		R.RawSInt( version );
 		IF version = -1 THEN

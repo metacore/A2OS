@@ -43,7 +43,7 @@ END GetTextFrame;
 
 PROCEDURE NewOutput* ; 	(** vs 0.01d fof*)
 	VAR	S: Texts.Scanner;
-	v: Display.Frame;  F: Display.Frame;  i, j: INTEGER;
+	v: Display.Frame;  F: Display.Frame;  i, j: SIGNED16;
 BEGIN
 	v := Oberon.MarkedViewer(); F := GetTextFrame(v);
 		IF F#NIL THEN

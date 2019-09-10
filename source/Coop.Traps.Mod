@@ -10,7 +10,7 @@ CONST
 	TestTrap = TRUE;
 
 VAR
-	trapState: ARRAY Machine.MaxCPU OF LONGINT;	(* indexed by Machine.ID() *)
+	trapState: ARRAY Machine.MaxCPU OF SIGNED32;	(* indexed by Machine.ID() *)
 
 PROCEDURE HandleTrap (number: SIZE);
 VAR frame {UNTRACED}: POINTER {UNSAFE} TO RECORD descriptor, previous, caller, parameters: ADDRESS END; w: Streams.Writer; id: SIZE;
@@ -42,7 +42,7 @@ BEGIN
 			|16: w.String(" procedure returned")
 			|17: w.String(" nil pointer access")
 			ELSE
-				IF (number > MAX(INTEGER)+1) OR (number < MIN(INTEGER)) THEN
+				IF (number > MAX(SIGNED16)+1) OR (number < MIN(SIGNED16)) THEN
 					w.String(" module freed?")
 				END
 		END;

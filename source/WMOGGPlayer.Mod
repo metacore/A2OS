@@ -39,8 +39,8 @@ TYPE
 			button : WMStandardComponents.Button;
 
 		BEGIN
-			NEW(panel); panel.bounds.SetExtents(200, 700); panel.fillColor.Set(LONGINT(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
-			NEW(toolbar); toolbar.fillColor.Set(LONGINT(0A0A0A0FFH)); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
+			NEW(panel); panel.bounds.SetExtents(200, 700); panel.fillColor.Set(SIGNED32(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
+			NEW(toolbar); toolbar.fillColor.Set(SIGNED32(0A0A0A0FFH)); toolbar.bounds.SetHeight(20); toolbar.alignment.Set(WMComponents.AlignTop);
 			panel.AddContent(toolbar);
 			NEW(button); button.alignment.Set(WMComponents.AlignLeft); button.caption.SetAOC("Play");
 			toolbar.AddContent(button);
@@ -87,7 +87,7 @@ TYPE
 		PROCEDURE FillList(OGGlist : ARRAY OF CHAR);
 		VAR entry : PlaylistEntry;
 			first : BOOLEAN;
-			i : LONGINT;
+			i : SIGNED32;
 			r : Files.Reader;
 			f : Files.File;
 			url, name : ARRAY 256 OF CHAR;
@@ -156,7 +156,7 @@ TYPE
 	END Window;
 
 VAR
-	nofWindows : LONGINT;
+	nofWindows : SIGNED32;
 
 PROCEDURE Open*(context : Commands.Context);
 VAR win : Window; filename : Files.FileName;

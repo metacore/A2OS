@@ -54,7 +54,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 			next: Password
 		END;
 
-		Bytes = ARRAY MAX( LONGINT ) OF CHAR;
+		Bytes = ARRAY MAX( SIGNED32 ) OF CHAR;
 
 	VAR
 		hostIP* : IPAdr;	(** the ip-number of host name *)
@@ -67,7 +67,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 
 
 	PROCEDURE Start*;
-	VAR res: WORD;
+	VAR res: INTEGER;
 	BEGIN
 		DNS.GetHostName( hostName, res );
 		IF res = DNS.Ok  THEN
@@ -93,7 +93,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 
 
 	PROCEDURE AsyncGetIP*( VAR hostInfo: HostInfo; name: ARRAY OF CHAR );
-	VAR res: WORD;
+	VAR res: INTEGER;
 	BEGIN
 		NEW( hostInfo ); Strings.Lower( name, name );
 		hostInfo.next := NIL; COPY( name, hostInfo.name );
@@ -124,7 +124,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	END GetIP;
 
 	PROCEDURE AsyncGetName*( VAR hostInfo: HostInfo; IP: IPAdr );
-	VAR res: WORD;
+	VAR res: INTEGER;
 	BEGIN
 			NEW( hostInfo );
 			hostInfo.getip := FALSE; hostInfo.next := NIL;
@@ -216,7 +216,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 			ch: CHAR;
 
 		PROCEDURE Next(VAR str: ARRAY OF CHAR);
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			Texts.Read(R, ch);
 			WHILE ~R.eot & ((ch <= " ") OR (ch = ":") OR (ch = "@") OR (ch = "/") OR ~(R.lib IS Fonts.Font)) DO
@@ -230,7 +230,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 		END Next;
 
 		PROCEDURE ReadPwd;
-		VAR i: LONGINT;
+		VAR i: SIGNED32;
 		BEGIN
 			Out.String("Password: ");
 			Input.Read(ch); i := 0;
@@ -321,15 +321,15 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 (************************************** TCP ****************************************)
 
 
-	PROCEDURE Available* (conn: Connection): LONGINT;
+	PROCEDURE Available* (conn: Connection): SIGNED32;
 	BEGIN
 		RETURN conn.Available()
 	END Available;
 
 
-	PROCEDURE OpenConnection* ( VAR conn: Connection; locPort: INTEGER; remIP: IPAdr; remPort: INTEGER;
-													VAR res: INTEGER );
-	VAR r: LONGINT;
+	PROCEDURE OpenConnection* ( VAR conn: Connection; locPort: SIGNED16; remIP: IPAdr; remPort: SIGNED16;
+													VAR res: SIGNED16 );
+	VAR r: SIGNED32;
 	BEGIN
 		IF remPort = anyport THEN remIP := anyIP END;
 		NEW( conn );
@@ -337,8 +337,8 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 		IF r = TCP.Ok THEN res := done  ELSE  res := error  END
 	END OpenConnection;
 
-	PROCEDURE AsyncOpenConnection* (  VAR conn: Connection; locPort: INTEGER; remIP: IPAdr; remPort: INTEGER;
-																 VAR res: INTEGER );
+	PROCEDURE AsyncOpenConnection* (  VAR conn: Connection; locPort: SIGNED16; remIP: IPAdr; remPort: SIGNED16;
+																 VAR res: SIGNED16 );
 	BEGIN
 		OpenConnection( conn, locPort, remIP, remPort, res )
 	END AsyncOpenConnection;
@@ -354,14 +354,14 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 		RETURN (conn.state = listening) & conn.Requested()
 	END Requested;
 
-	PROCEDURE Accept* ( conn: Connection; VAR newC: Connection; VAR res: INTEGER );
-	VAR r: LONGINT;
+	PROCEDURE Accept* ( conn: Connection; VAR newC: Connection; VAR res: SIGNED16 );
+	VAR r: SIGNED32;
 	BEGIN
 		conn.Accept( newC, r );
 		IF r = TCP.Ok THEN res := done  ELSE  res := error  END
 	END Accept;
 
-	PROCEDURE State* (conn: Connection): INTEGER;
+	PROCEDURE State* (conn: Connection): SIGNED16;
 	BEGIN
 		CASE conn.state OF
 		| TCP.Closed:		RETURN closed
@@ -372,7 +372,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 		END
 	END State;
 
-	PROCEDURE GetPartner* (conn:Connection; VAR remIP: IPAdr; VAR remPort: INTEGER);
+	PROCEDURE GetPartner* (conn:Connection; VAR remIP: IPAdr; VAR remPort: SIGNED16);
 	BEGIN
 		remIP := conn.fip;
 		remPort := SHORT( conn.fport )
@@ -381,27 +381,27 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	(*----- Read -----*)
 
 	PROCEDURE Read* (conn: Connection; VAR ch: CHAR);
-	VAR l: SIZE; r: WORD; bytes: ARRAY 1 OF CHAR;
+	VAR l: SIZE; r: INTEGER; bytes: ARRAY 1 OF CHAR;
 	BEGIN
 		conn.Receive( bytes, 0, 1, 1, l, r );
 		ch := bytes[0];
 	END Read;
 
-	PROCEDURE ReadBytes* ( conn: Connection; pos, len: LONGINT; VAR buf: ARRAY OF S.BYTE );
-	VAR l: SIZE; r: WORD;
+	PROCEDURE ReadBytes* ( conn: Connection; pos, len: SIGNED32; VAR buf: ARRAY OF S.BYTE );
+	VAR l: SIZE; r: INTEGER;
 	BEGIN
 		conn.Receive( S.VAL( Bytes, buf ), pos, len, len, l, r );
 	END ReadBytes;
 
 	PROCEDURE ReadBool* (conn: Connection; VAR b: BOOLEAN);
-	VAR l: SIZE; r: WORD; bytes: ARRAY 1 OF CHAR;
+	VAR l: SIZE; r: INTEGER; bytes: ARRAY 1 OF CHAR;
 	BEGIN
 		conn.Receive(bytes, 0, 1, 1, l, r );
 		b := ODD(ORD(bytes[0]));
 	END ReadBool;
 
-	PROCEDURE ReadInt* ( conn: Connection; VAR x: INTEGER );
-	VAR buf: ARRAY 4 OF CHAR; len: SIZE; res: WORD;
+	PROCEDURE ReadInt* ( conn: Connection; VAR x: SIGNED16 );
+	VAR buf: ARRAY 4 OF CHAR; len: SIZE; res: INTEGER;
 	BEGIN
 		conn.Receive( buf, 0, 2, 2, len, res );
 		IF (res = 0) & (len = 2) THEN
@@ -411,8 +411,8 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 		END
 	END ReadInt;
 
-	PROCEDURE ReadLInt* (conn: Connection; VAR x: LONGINT);
-	VAR buf: ARRAY 4 OF CHAR; len: SIZE; res: WORD;
+	PROCEDURE ReadLInt* (conn: Connection; VAR x: SIGNED32);
+	VAR buf: ARRAY 4 OF CHAR; len: SIZE; res: INTEGER;
 	BEGIN
 		conn.Receive( buf, 0, 4, 4, len, res );
 		IF (res = 0) & (len = 4) THEN
@@ -426,7 +426,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	PROCEDURE ReadString* (conn: Connection; VAR s: ARRAY OF CHAR);
 	VAR
 		ch, ch0: CHAR;
-		i, l: SIZE; r: WORD;
+		i, l: SIZE; r: INTEGER;
 		bytes: ARRAY 1 OF CHAR;
 	BEGIN
 		i := -1; ch := 0X;
@@ -447,35 +447,35 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	(*----- Write -----*)
 
 	PROCEDURE Write* (conn: Connection; ch: CHAR);
-	VAR r: LONGINT; bytes: ARRAY 1 OF CHAR;
+	VAR r: SIGNED32; bytes: ARRAY 1 OF CHAR;
 	BEGIN
 		bytes[0] := ch;
 		conn.Send( bytes, 0, 1, TRUE, r )
 	END Write;
 
-	PROCEDURE WriteBytes* (conn: Connection; pos, len: LONGINT; CONST buf: ARRAY OF S.BYTE );
-	VAR r: LONGINT;
+	PROCEDURE WriteBytes* (conn: Connection; pos, len: SIGNED32; CONST buf: ARRAY OF S.BYTE );
+	VAR r: SIGNED32;
 	BEGIN
 		conn.Send( S.VAL( Bytes, buf ), pos, len, TRUE, r)
 	END WriteBytes;
 
 	PROCEDURE WriteBool* (conn: Connection; b: BOOLEAN);
-	VAR r: LONGINT; bytes: ARRAY 1 OF CHAR;
+	VAR r: SIGNED32; bytes: ARRAY 1 OF CHAR;
 	BEGIN
 		IF b THEN bytes[0] := 1X ELSE bytes[0] := 0X END;
 		conn.Send( bytes, 0, 1, TRUE, r )
 	END WriteBool;
 
-	PROCEDURE WriteInt* (conn: Connection; x: INTEGER);
-	VAR buf: ARRAY 2 OF CHAR; r: LONGINT;
+	PROCEDURE WriteInt* (conn: Connection; x: SIGNED16);
+	VAR buf: ARRAY 2 OF CHAR; r: SIGNED32;
 	BEGIN
 		buf[0] := CHR(x DIV 100H MOD 100H);
 		buf[1] := CHR(x MOD 100H);
 		conn.Send( buf, 0, 2, TRUE, r )
 	END WriteInt;
 
-	PROCEDURE WriteLInt* (conn: Connection; x: LONGINT);
-	VAR buf: ARRAY 4 OF CHAR; r: LONGINT;
+	PROCEDURE WriteLInt* (conn: Connection; x: SIGNED32);
+	VAR buf: ARRAY 4 OF CHAR; r: SIGNED32;
 	BEGIN
 		buf[0] := CHR(x DIV 1000000H MOD 100H);
 		buf[1] := CHR(x DIV 10000H MOD 100H);
@@ -487,7 +487,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 	PROCEDURE WriteString* (conn: Connection; CONST s: ARRAY OF CHAR);
 	VAR
 		cs: ARRAY 2 OF CHAR;
-		i, r: LONGINT;
+		i, r: SIGNED32;
 	BEGIN  i := 0;
 		WHILE s[i] # 0X DO  INC( i )  END;
 		conn.Send( s, 0, i, FALSE, r);
@@ -498,8 +498,8 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 (******************************** UDP **************************************)
 
 
-	PROCEDURE OpenSocket* ( VAR soc: Socket; locPort: INTEGER; VAR res: INTEGER );
-	VAR r: LONGINT;
+	PROCEDURE OpenSocket* ( VAR soc: Socket; locPort: SIGNED16; VAR res: SIGNED16 );
+	VAR r: SIGNED32;
 	BEGIN
 		NEW( soc, LONG( locPort ) MOD 10000H, r );
 		IF r = UDP.Ok THEN res := done  ELSE  res := error  END
@@ -510,30 +510,30 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 		S.Close();
 	END CloseSocket;
 
-	PROCEDURE AvailableDG* (soc: Socket): LONGINT;
+	PROCEDURE AvailableDG* (soc: Socket): SIGNED32;
 	BEGIN
 		RETURN 0
 	END AvailableDG;
 
-	PROCEDURE SendDG* ( soc: Socket; remIP: IPAdr; remport: INTEGER; pos, len: LONGINT; CONST buf: ARRAY OF S.BYTE );
-	VAR res: WORD;
+	PROCEDURE SendDG* ( soc: Socket; remIP: IPAdr; remport: SIGNED16; pos, len: SIGNED32; CONST buf: ARRAY OF S.BYTE );
+	VAR res: INTEGER;
 	BEGIN
 		soc.Send( remIP, LONG(remport) MOD 10000H, S.VAL( Bytes, buf ), pos, len, res )
 	END SendDG;
 
-	PROCEDURE ReceiveDG* ( soc: Socket; VAR remIP: IPAdr; VAR remport: INTEGER;
-							pos: LONGINT; VAR len: LONGINT; VAR buf: ARRAY OF S.BYTE );
-	VAR res, port: LONGINT; length: SIZE;
+	PROCEDURE ReceiveDG* ( soc: Socket; VAR remIP: IPAdr; VAR remport: SIGNED16;
+							pos: SIGNED32; VAR len: SIGNED32; VAR buf: ARRAY OF S.BYTE );
+	VAR res, port: SIGNED32; length: SIZE;
 	BEGIN
 		soc.Receive( S.VAL( Bytes, buf ), pos, len, 0, remIP, port, length, res );
-		len := length(LONGINT);
+		len := length(SIGNED32);
 		remport := SHORT( port)
 	END ReceiveDG;
 
 
 	(** Write 2 bytes in network byte ordering to buf[pos]. *)
 
-	PROCEDURE PutInt* (VAR buf: ARRAY OF S.BYTE; pos: INTEGER; x: INTEGER);
+	PROCEDURE PutInt* (VAR buf: ARRAY OF S.BYTE; pos: SIGNED16; x: SIGNED16);
 	BEGIN
 		buf[pos] := CHR(x DIV 100H MOD 100H);
 		buf[pos+1] := CHR(x MOD 100H)
@@ -541,7 +541,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 
 	(** Write 4 bytes in network byte ordering to buf[pos]. *)
 
-	PROCEDURE PutLInt* (VAR buf: ARRAY OF S.BYTE; pos: INTEGER; x: LONGINT);
+	PROCEDURE PutLInt* (VAR buf: ARRAY OF S.BYTE; pos: SIGNED16; x: SIGNED32);
 	BEGIN
 		buf[pos] := CHR(x DIV 1000000H MOD 100H);
 		buf[pos+1] := CHR(x DIV 10000H MOD 100H);
@@ -551,7 +551,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 
 	(** Read 2 bytes in network byte ordering from buf[pos]. *)
 
-	PROCEDURE GetInt* (CONST buf: ARRAY OF S.BYTE; pos: INTEGER; VAR x: INTEGER);
+	PROCEDURE GetInt* (CONST buf: ARRAY OF S.BYTE; pos: SIGNED16; VAR x: SIGNED16);
 	BEGIN
 		x := ORD(buf[pos])*100H +
 			ORD(buf[pos+1])
@@ -559,7 +559,7 @@ IMPORT S := SYSTEM, IP IN A2, DNS := DNS IN A2, TCP := TCP IN A2,  UDP := UDP IN
 
 	(** Read 4 bytes in network byte ordering from buf[pos]. *)
 
-	PROCEDURE GetLInt* (CONST buf: ARRAY OF S.BYTE; pos: INTEGER; VAR x: LONGINT);
+	PROCEDURE GetLInt* (CONST buf: ARRAY OF S.BYTE; pos: SIGNED16; VAR x: SIGNED32);
 	BEGIN
 		x := ORD( buf[pos] )*1000000H +
 			ORD( buf[pos+1] )*10000H +
@@ -571,7 +571,7 @@ BEGIN
 	anyIP := IP.NilAdr;
 	allIP := IP.NilAdr;
 	allIP.usedProtocol := IP.IPv4;
-	allIP.ipv4Adr := LONGINT( 0FFFFFFFFH );
+	allIP.ipv4Adr := SIGNED32( 0FFFFFFFFH );
 
 	passwords := NIL;
 	Start

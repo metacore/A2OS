@@ -408,9 +408,9 @@ TYPE
 		VAR
 			ctrl: Controller;
 
-		PROCEDURE & Constr * (type, mtu, adrSize: LONGINT);
+		PROCEDURE & Constr * (type, mtu, adrSize: SIGNED32);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			Constr^(type, mtu, adrSize);
 			FOR i := 0 TO LEN(broadcast) - 1 DO
@@ -418,12 +418,12 @@ TYPE
 			END;
 		END Constr;
 
-		PROCEDURE Linked * (): LONGINT;
+		PROCEDURE Linked * (): SIGNED32;
 		BEGIN
 			RETURN Network.LinkLinked
 		END Linked;
 
-		PROCEDURE DoSend * (dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE DoSend * (dst: Network.LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32);
 		BEGIN
 			ctrl.SendFrame(dst, type, l3hdr, l4hdr, data, h3len, h4len, dofs, dlen);
 		END DoSend;
@@ -442,8 +442,8 @@ TYPE
 			iobase: ADDRESS;
 			dev: LinkDevice;
 			phy: Phy;
-			state, isStarted: LONGINT;
-			speed: LONGINT;
+			state, isStarted: SIGNED32;
+			speed: SIGNED32;
 			timer: Kernel.Timer;
 			rxFrames: POINTER TO ARRAY OF Buffer;
 			txFrame: Buffer;
@@ -457,14 +457,14 @@ TYPE
 			buffer: POINTER TO ARRAY OF CHAR;
 
 			(** Statistics *)
-			nbrRxFrames, nbrtxFrames, nbrRxErrors, nbrTxErrors: LONGINT;
+			nbrRxFrames, nbrtxFrames, nbrRxErrors, nbrTxErrors: SIGNED32;
 
 		(** Initializes the controller.
 			iobase: base address of the registers
 		*)
 		PROCEDURE & Init * (iobase: ADDRESS; ld: LinkDevice);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 			reg: SET;
 			(* TEST *)arp: ARRAY 28 OF CHAR;
 			buf: ARRAY 256 OF Network.Buffer;
@@ -587,7 +587,7 @@ TYPE
 		(** Stop and restart device *)
 		PROCEDURE Reset;
 		VAR
-			i, tmp: LONGINT;
+			i, tmp: SIGNED32;
 			reg: SET;
 		BEGIN
 			IF Trace THEN KernelLog.String("XEmac resetting controller"); KernelLog.Ln END;
@@ -653,9 +653,9 @@ TYPE
 			ClearOptions(-options)
 		END ResetDevice;
 
-		PROCEDURE SendFrame (CONST dst: Network.LinkAdr; type: LONGINT; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: LONGINT);
+		PROCEDURE SendFrame (CONST dst: Network.LinkAdr; type: SIGNED32; CONST l3hdr, l4hdr, data: ARRAY OF CHAR; h3len, h4len, dofs, dlen: SIGNED32);
 		VAR
-			txLen, offset: LONGINT;
+			txLen, offset: SIGNED32;
 			bufferAdr, txbd: ADDRESS;
 			intsEnabled: BOOLEAN;
 			reg: SET;
@@ -673,7 +673,7 @@ TYPE
 			(*txFrame[6]:=000X;txFrame[7]:=00AX;txFrame[8]:=035X;txFrame[9]:=000X;txFrame[10]:=001X;txFrame[11]:=002X;*)
 
 			(* set upper layer type, bring type from host to network byte order *)
-			SYSTEM.PUT16(bufferAdr + 12, ROT(SYSTEM.VAL(INTEGER, SHORT(type)), 8));
+			SYSTEM.PUT16(bufferAdr + 12, ROT(SYSTEM.VAL(SIGNED16, SHORT(type)), 8));
 
 			(*IF Trace THEN
 				KernelLog.Buffer(txFrame, 0, txLen);
@@ -744,10 +744,10 @@ TYPE
 		PROCEDURE ReceiveFrame;
 		VAR
 			currentBd, adr: ADDRESS;
-			len, i: LONGINT;
+			len, i: SIGNED32;
 			reg: SET;
 			buf: Network.Buffer;
-			type: INTEGER;
+			type: SIGNED16;
 		BEGIN
 			(*IF Trace THEN KernelLog.String("Receiving frame"); KernelLog.Ln END;*)
 			currentBd := lastRxQBar;
@@ -772,7 +772,7 @@ TYPE
 				ELSE
 					IF Trace THEN KernelLog.String("Receiving frame"); KernelLog.Ln END;
 					SYSTEM.GET(currentBd + BdStatOffset, reg);
-					len := SYSTEM.VAL(LONGINT, reg * RxBufLen);
+					len := SYSTEM.VAL(SIGNED32, reg * RxBufLen);
 					(* Invalidate DCache *)
 					(* no need to flush/invalidate cache for BD memory space
 					Machine.InvalidateDCacheRange(currentBd,BdSize);
@@ -789,7 +789,7 @@ TYPE
 
 					SYSTEM.MOVE(adr+6,ADDRESSOF(buf.src[0]),6);
 
-					type := INTEGER(SYSTEM.GET8(adr + 12)) * 100H + INTEGER(SYSTEM.GET8(adr + 13));
+					type := SIGNED16(SYSTEM.GET8(adr + 12)) * 100H + SIGNED16(SYSTEM.GET8(adr + 13));
 					SYSTEM.MOVE(adr,ADDRESSOF(buf.data[0]),len);
 					dev.QueueBuffer(buf, type)
 				END
@@ -826,7 +826,7 @@ TYPE
 			(* Grab current register contents *)
 			SYSTEM.GET(iobase + Nwcfg, regNetCfg);
 			regNewNetCfg := regNetCfg;
-			IF Trace THEN KernelLog.String("regNetCfg="); KernelLog.Hex(SYSTEM.VAL(LONGINT, regNetCfg), -8); KernelLog.Ln END;
+			IF Trace THEN KernelLog.String("regNetCfg="); KernelLog.Hex(SYSTEM.VAL(SIGNED32, regNetCfg), -8); KernelLog.Ln END;
 			(*
 			 * It is configured to max 1536.
 			 *)
@@ -880,14 +880,14 @@ TYPE
 			IF regNetCfg # regNewNetCfg THEN
 				SYSTEM.PUT(iobase + Nwcfg, regNewNetCfg);
 			END;
-			IF Trace THEN KernelLog.String("regNewNetCfg="); KernelLog.Hex(SYSTEM.VAL(LONGINT, regNewNetCfg), -8); KernelLog.Ln END;
+			IF Trace THEN KernelLog.String("regNewNetCfg="); KernelLog.Hex(SYSTEM.VAL(SIGNED32, regNewNetCfg), -8); KernelLog.Ln END;
 
 			(* Enable TX checksum offload *)
 			IF TxChksumEnable IN opts  THEN
 				SYSTEM.GET(iobase + Dmacr, reg);
 				reg := reg + {DmacrTcpChksum};
 				SYSTEM.PUT(iobase + Dmacr, reg);
-				IF Trace THEN KernelLog.String("DMACR_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(LONGINT, reg), -8); KernelLog.Ln END;
+				IF Trace THEN KernelLog.String("DMACR_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(SIGNED32, reg), -8); KernelLog.Ln END;
 			END;
 
 			(* Enable transmitter *)
@@ -895,7 +895,7 @@ TYPE
 				SYSTEM.GET(iobase + Nwctrl, reg);
 				reg := reg + NwctrlTxEn;
 				SYSTEM.PUT(iobase + Nwctrl, reg);
-				IF Trace THEN KernelLog.String("NWCTRL_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(LONGINT, reg), -8); KernelLog.Ln END;
+				IF Trace THEN KernelLog.String("NWCTRL_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(SIGNED32, reg), -8); KernelLog.Ln END;
 			END;
 
 			(* Enable receiver *)
@@ -903,7 +903,7 @@ TYPE
 				SYSTEM.GET(iobase + Nwctrl, reg);
 				reg := reg + NwctrlRxEn;
 				SYSTEM.PUT(iobase + Nwctrl, reg);
-				IF Trace THEN KernelLog.String("NWCTRL_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(LONGINT, reg), -8); KernelLog.Ln END;
+				IF Trace THEN KernelLog.String("NWCTRL_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(SIGNED32, reg), -8); KernelLog.Ln END;
 			END;
 
 			(* The remaining options not handled here are managed elsewhere in the
@@ -978,14 +978,14 @@ TYPE
 			IF reg # old THEN
 				SYSTEM.PUT(iobase + Nwcfg, reg);
 			END;
-			IF Trace THEN KernelLog.String("regNewNetCfg="); KernelLog.Hex(SYSTEM.VAL(LONGINT, reg), -8); KernelLog.Ln END;
+			IF Trace THEN KernelLog.String("regNewNetCfg="); KernelLog.Hex(SYSTEM.VAL(SIGNED32, reg), -8); KernelLog.Ln END;
 
 			(* Disable TX checksum offload *)
 			IF TxChksumEnable IN opts  THEN
 				SYSTEM.GET(iobase + Dmacr, reg);
 				EXCL(reg, DmacrTcpChksum);
 				SYSTEM.PUT(iobase + Dmacr, reg);
-				IF Trace THEN KernelLog.String("DMACR_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(LONGINT, reg), -8); KernelLog.Ln END;
+				IF Trace THEN KernelLog.String("DMACR_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(SIGNED32, reg), -8); KernelLog.Ln END;
 			END;
 
 			(* Disable transmitter *)
@@ -993,7 +993,7 @@ TYPE
 				SYSTEM.GET(iobase + Nwctrl, reg);
 				reg := reg * SET(-NwctrlTxEn);
 				SYSTEM.PUT(iobase + Nwctrl, reg);
-				IF Trace THEN KernelLog.String("NWCTRL_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(LONGINT, reg), -8); KernelLog.Ln END;
+				IF Trace THEN KernelLog.String("NWCTRL_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(SIGNED32, reg), -8); KernelLog.Ln END;
 			END;
 
 			(* Disable receiver *)
@@ -1001,7 +1001,7 @@ TYPE
 				SYSTEM.GET(iobase + Nwctrl, reg);
 				reg := reg * SET(-NwctrlRxEn);
 				SYSTEM.PUT(iobase + Nwctrl, reg);
-				IF Trace THEN KernelLog.String("NWCTRL_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(LONGINT, reg), -8); KernelLog.Ln END;
+				IF Trace THEN KernelLog.String("NWCTRL_OFFSET reg="); KernelLog.Hex(SYSTEM.VAL(SIGNED32, reg), -8); KernelLog.Ln END;
 			END;
 
 			SELF.options := SELF.options * (-opts);
@@ -1015,7 +1015,7 @@ TYPE
 			SYSTEM.PUT32(iobase + HashH, 0)
 		END ClearHash;
 
-		PROCEDURE SetMdioDivisor (divisor: LONGINT);
+		PROCEDURE SetMdioDivisor (divisor: SIGNED32);
 			VAR
 				reg: SET;
 		BEGIN
@@ -1029,7 +1029,7 @@ TYPE
 			SYSTEM.PUT(iobase + Nwcfg, reg);
 		END SetMdioDivisor;
 
-		PROCEDURE SetOperatingSpeed (speed: LONGINT);
+		PROCEDURE SetOperatingSpeed (speed: SIGNED32);
 		VAR
 			reg: SET;
 		BEGIN
@@ -1056,7 +1056,7 @@ TYPE
 		END SetOperatingSpeed;
 
 		(*! TODO: change parameter interface to a more convenient one *)
-		PROCEDURE SetMacAddress(index: LONGINT; mac: Network.LinkAdr);
+		PROCEDURE SetMacAddress(index: SIGNED32; mac: Network.LinkAdr);
 		VAR
 			reg: SET;
 		BEGIN
@@ -1082,7 +1082,7 @@ TYPE
 			END
 		END SetMacAddress;
 
-		PROCEDURE SetTypeIdCheck(index, idCheck: LONGINT): LONGINT;
+		PROCEDURE SetTypeIdCheck(index, idCheck: SIGNED32): SIGNED32;
 		BEGIN
 			ASSERT(state = IsReady);
 			ASSERT((index > 0) & (index <= MaxTypeId));
@@ -1100,7 +1100,7 @@ TYPE
 		VAR
 			beginAdr, endAdr, adr: ADDRESS;
 			reg: SET;
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			IF Trace THEN KernelLog.String("XEmac: Starting DMA"); KernelLog.Ln END;
 
@@ -1248,10 +1248,10 @@ TYPE
 		PROCEDURE ReceiveHandler;
 		(*VAR
 			buf: Network.Buffer;
-			type: LONGINT;*)
+			type: SIGNED32;*)
 		VAR
 			reg: SET;
-			tmp: LONGINT;
+			tmp: SIGNED32;
 		BEGIN
 			IF Trace THEN KernelLog.String("XEmac.ReceiveHandler"); KernelLog.Ln END;
 			SYSTEM.GET(iobase + Rxsr, reg);
@@ -1359,9 +1359,9 @@ TYPE
 			IF Trace THEN KernelLog.String("Frame sent"); KernelLog.Ln END
 		END SendTestFrame;
 
-		PROCEDURE DumpDBMem(start: ADDRESS; count: LONGINT);
+		PROCEDURE DumpDBMem(start: ADDRESS; count: SIGNED32);
 		VAR
-			i: LONGINT;
+			i: SIGNED32;
 		BEGIN
 			FOR i := 0 TO count DO
 				KernelLog.Address(start); KernelLog.String(":	");
@@ -1400,7 +1400,7 @@ TYPE
 	Phy = OBJECT
 	VAR
 		iobase, phybase: ADDRESS;
-		linkSpeed: LONGINT;
+		linkSpeed: SIGNED32;
 		timer: Kernel.Timer;
 
 		PROCEDURE & Setup * (iobase: ADDRESS);
@@ -1437,7 +1437,7 @@ TYPE
 
 		PROCEDURE Detect (): ADDRESS;
 		VAR
-			status, phyReg: LONGINT;
+			status, phyReg: SIGNED32;
 			phyAdr: ADDRESS;
 		BEGIN
 			IF Trace THEN KernelLog.String("XEmac: Detecting PHY"); KernelLog.Ln END;
@@ -1454,26 +1454,26 @@ TYPE
 			RETURN 0
 		END Detect;
 
-		PROCEDURE GetIEEEPhySpeed (): LONGINT;
+		PROCEDURE GetIEEEPhySpeed (): SIGNED32;
 		VAR
-			temp, control, res, status, capabilities: LONGINT;
+			temp, control, res, status, capabilities: SIGNED32;
 			phyAdr: ADDRESS;
 		BEGIN
 			phyAdr := Detect();
 			IF Trace THEN KernelLog.String("Start PHY autonegociation"); KernelLog.Ln END;
 			res := Write(phyAdr, IeeePageAddressRegister, 2);
 			res := Read(phyAdr, IeeeControlRegMac, control);
-			control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + IeeeRgmiiTxRxClockDelayed);
+			control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + IeeeRgmiiTxRxClockDelayed);
 			res := Write(phyAdr, IeeeControlRegMac, control);
 
 			res := Write(phyAdr, IeeePageAddressRegister, 0);
 
 			res := Read(phyAdr, IeeeAutonegoAdvertiseReg, control);
-			control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + IeeeAsymmetricPause + IeeePause + Advertise100 + Advertise10);
+			control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + IeeeAsymmetricPause + IeeePause + Advertise100 + Advertise10);
 			res := Write(phyAdr, IeeeAutonegoAdvertiseReg, control);
 
 			res := Read(phyAdr, Ieee1000AdvertiseReg, control);
-			control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + Advertise1000);
+			control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + Advertise1000);
 			res := Write(phyAdr, Ieee1000AdvertiseReg, control);
 
 			res := Write(phyAdr, IeeePageAddressRegister, 0);
@@ -1483,12 +1483,12 @@ TYPE
 			res := Write(phyAdr, IeeeCopperSpecificControlReg, control);
 
 			res := Read(phyAdr, IeeeControlReg, control);
-			control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + IeeeCtrlAutonegotiateEnable);
-			control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + IeeeStatAutonegotiateRestart);
+			control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + IeeeCtrlAutonegotiateEnable);
+			control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + IeeeStatAutonegotiateRestart);
 			res := Write(phyAdr, IeeeControlReg, control);
 
 			res := Read(phyAdr, IeeeControlReg, control);
-			control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + IeeeCtrlReset);
+			control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + IeeeCtrlReset);
 			res := Write(phyAdr, IeeeControlReg, control);
 
 			REPEAT
@@ -1520,41 +1520,41 @@ TYPE
 			END
 		END GetIEEEPhySpeed;
 
-		PROCEDURE ConfigureIEEEPhySpeed (speed: LONGINT);
+		PROCEDURE ConfigureIEEEPhySpeed (speed: SIGNED32);
 		VAR
-			control, res, wait: LONGINT;
+			control, res, wait: SIGNED32;
 			phyAdr: ADDRESS;
 		BEGIN
 			phyAdr := Detect();
 			res := Write(phyAdr, IeeePageAddressRegister, 2);
 			res := Read(phyAdr, IeeeControlRegMac, control);
-			control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + IeeeRgmiiTxRxClockDelayed);
+			control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + IeeeRgmiiTxRxClockDelayed);
 			res := Write(phyAdr, IeeeControlRegMac, control);
 
 			res := Write(phyAdr, IeeePageAddressRegister, 0);
 
 			res := Read(phyAdr, IeeeAutonegoAdvertiseReg, control);
-			control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + IeeeAsymmetricPause);
-			control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + IeeePause);
+			control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + IeeeAsymmetricPause);
+			control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + IeeePause);
 			res := Write(phyAdr, IeeeAutonegoAdvertiseReg, control);
 
 			res := Read(phyAdr, IeeeControlReg, control);
-			control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) * (-IeeeCtrlLinkSpeed1000M) * (-IeeeCtrlLinkSpeed100M) * (-IeeeCtrlLinkSpeed10M));
+			control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) * (-IeeeCtrlLinkSpeed1000M) * (-IeeeCtrlLinkSpeed100M) * (-IeeeCtrlLinkSpeed10M));
 
 			IF linkSpeed = 1000 THEN
-				control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + IeeeCtrlLinkSpeed1000M)
+				control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + IeeeCtrlLinkSpeed1000M)
 			ELSIF linkSpeed = 100 THEN
-				control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + IeeeCtrlLinkSpeed100M)
+				control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + IeeeCtrlLinkSpeed100M)
 				(* Don't advertise PHY speed of 1000 MBPS *)
 			ELSIF linkSpeed = 10 THEN
-				control := SYSTEM.VAL(LONGINT, SYSTEM.VAL(SET, control) + IeeeCtrlLinkSpeed10M)
+				control := SYSTEM.VAL(SIGNED32, SYSTEM.VAL(SET, control) + IeeeCtrlLinkSpeed10M)
 			END;
 		END ConfigureIEEEPhySpeed;
 
-		PROCEDURE SetUpSLCRDivisors (div: LONGINT);
+		PROCEDURE SetUpSLCRDivisors (div: SIGNED32);
 		END SetUpSLCRDivisors;
 
-		PROCEDURE Write (address, register: ADDRESS; data: LONGINT): LONGINT;
+		PROCEDURE Write (address, register: ADDRESS; data: SIGNED32): SIGNED32;
 		VAR
 			reg, mgtcr, ipisr: SET;
 		BEGIN
@@ -1578,7 +1578,7 @@ TYPE
 			RETURN Success
 		END Write;
 
-		PROCEDURE Read (address, register: ADDRESS; VAR data: LONGINT): LONGINT;
+		PROCEDURE Read (address, register: ADDRESS; VAR data: SIGNED32): SIGNED32;
 		VAR
 			reg, ipisr, mgtcr: SET;
 		BEGIN
@@ -1602,7 +1602,7 @@ TYPE
 	END Phy;
 
 PROCEDURE Install* (context: Commands.Context);
-VAR ld: LinkDevice; res: WORD;
+VAR ld: LinkDevice; res: INTEGER;
 BEGIN {EXCLUSIVE}
 	NEW(ld, Network.TypeEthernet, 1500, 6); (*! What is the correct MTU? *)
 	ld.SetName("XEmac");

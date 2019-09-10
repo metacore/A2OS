@@ -11,7 +11,7 @@ TYPE Context* = OBJECT
 
 VAR
 	Stack: ARRAY 20 OF Matrix;
-	spointer: INTEGER;
+	spointer: SIGNED16;
 PROCEDURE & new*;
 BEGIN
 	Stack[0]:= identity;
@@ -77,7 +77,7 @@ END Context;
 (* All routines use VAR parameters for efficiency, so beware of alias problems *)
 
  PROCEDURE ConcatMatrix (VAR A, B, C: Matrix);
-VAR i: INTEGER; a0, a1, a2: SREAL;
+VAR i: SIGNED16; a0, a1, a2: SREAL;
 BEGIN
 	FOR i := 0 TO 2 DO
 		a0 := A[i, 0]; a1 := A[i, 1]; a2 := A[i, 2];
@@ -115,7 +115,7 @@ BEGIN
 END GetRotation;
 
 PROCEDURE Translate (VAR M: Matrix; dx, dy, dz: SREAL);
-VAR i: INTEGER; m0, m1, m2: SREAL;
+VAR i: SIGNED16; m0, m1, m2: SREAL;
 BEGIN
 	FOR i := 0 TO 2 DO
 		m0 := M[i, 0]; m1 := M[i, 1]; m2 := M[i, 2];
@@ -132,7 +132,7 @@ BEGIN
 END Rotate;
 
 PROCEDURE Scale (VAR M: Matrix; sx, sy, sz: SREAL);
-VAR i: INTEGER;
+VAR i: SIGNED16;
 BEGIN
 	FOR i:= 0 TO 2 DO
 		M[i, 0] := sx*M[i, 0];

@@ -24,7 +24,7 @@ MODULE HTTPDocs0 IN Oberon;	(** portable *)
 		Entry* = POINTER TO EntryDesc;
 		Worker* = POINTER TO WorkerDesc;
 		EntryDesc* = RECORD
-			basekey*, key*, pos*: LONGINT;
+			basekey*, key*, pos*: SIGNED32;
 			attrs*: Attributes.Attr;
 			text*: Texts.Text;
 			ol*: ObjList;
@@ -35,27 +35,27 @@ MODULE HTTPDocs0 IN Oberon;	(** portable *)
 		END;
 		WorkerDesc* = RECORD (Oberon.TaskDesc)
 			entry*: Entry;
-			state*: INTEGER; (* 0: connect, 1: reading response, 2: reading data, 3: open doc, 4: kill, 5: retry later *)
+			state*: SIGNED16; (* 0: connect, 1: reading response, 2: reading data, 3: open doc, 4: kill, 5: retry later *)
 			local*: BOOLEAN
 		END;
 		Proxy* = POINTER TO ProxyDesc;
 		ProxyDesc* = RECORD
 			host*: ARRAY 64 OF CHAR;
-			port*: INTEGER
+			port*: SIGNED16
 		END;
 
 	VAR
 		buf: ARRAY 2048 OF CHAR;
 		entries*: Entry;
-		noWorkers: INTEGER;
+		noWorkers: SIGNED16;
 		ImgHandle*: Objects.Handler;
 		W: Texts.Writer;
 		curNode*: HyperDocs.Node;
 		httpProxy*: Proxy;
-		requestDoc*: PROCEDURE (D: Documents.Document; proxy: Proxy; VAR key: LONGINT; method: ARRAY OF CHAR; main: BOOLEAN; E: Entry; query: Texts.Text);
+		requestDoc*: PROCEDURE (D: Documents.Document; proxy: Proxy; VAR key: SIGNED32; method: ARRAY OF CHAR; main: BOOLEAN; E: Entry; query: Texts.Text);
 
-	PROCEDURE StripLoc*(key: LONGINT): LONGINT;
-		VAR i: LONGINT;
+	PROCEDURE StripLoc*(key: SIGNED32): SIGNED32;
+		VAR i: SIGNED32;
 	BEGIN
 		HyperDocs.RetrieveLink(key, buf);
 		i := 0;
@@ -67,7 +67,7 @@ MODULE HTTPDocs0 IN Oberon;	(** portable *)
 	END StripLoc;
 
 (** Register a new http url. *)
-	PROCEDURE RegisterHTTPAdr*(VAR host, path, label: ARRAY OF CHAR; VAR port: INTEGER): LONGINT;
+	PROCEDURE RegisterHTTPAdr*(VAR host, path, label: ARRAY OF CHAR; VAR port: SIGNED16): SIGNED32;
 		VAR portS: ARRAY 8 OF CHAR;
 	BEGIN
 		buf := "http://";
@@ -91,10 +91,10 @@ MODULE HTTPDocs0 IN Oberon;	(** portable *)
 	END RegisterHTTPAdr;
 
 (** Parsing of an http url. *)
-	PROCEDURE SplitHTTPAdr*(VAR url, host, path, label: ARRAY OF CHAR; VAR port: INTEGER): LONGINT;
+	PROCEDURE SplitHTTPAdr*(VAR url, host, path, label: ARRAY OF CHAR; VAR port: SIGNED16): SIGNED32;
 		VAR
 			i, j, l: SIZE;
-			key: LONGINT;
+			key: SIGNED32;
 			iskey: BOOLEAN;
 		PROCEDURE Blanks;
 		BEGIN
@@ -250,9 +250,9 @@ MODULE HTTPDocs0 IN Oberon;	(** portable *)
 	PROCEDURE Wait*;
 		VAR
 			best, e: Entry;
-			time: LONGINT;
+			time: SIGNED32;
 	BEGIN
-		time := MAX(LONGINT); best := NIL; e := entries;
+		time := MAX(SIGNED32); best := NIL; e := entries;
 		WHILE e # NIL DO
 			IF (e.working # NIL) & (e.working.time < time) THEN
 				best := e; time := best.working.time
@@ -454,7 +454,7 @@ Links.SetLink(mainD.dsc, "Picture", L.obj);
 	END Install;
 
 (** Requests the document ientified by key. *)
-	PROCEDURE RequestDoc*(D: Documents.Document; proxy: Proxy; VAR key: LONGINT; method: ARRAY OF CHAR;
+	PROCEDURE RequestDoc*(D: Documents.Document; proxy: Proxy; VAR key: SIGNED32; method: ARRAY OF CHAR;
 		main: BOOLEAN; E: Entry; query: Texts.Text);
 		VAR
 			s: HyperDocs.LinkScheme;

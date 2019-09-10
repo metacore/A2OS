@@ -22,7 +22,7 @@ CODE
 			d32		0F57FF06FH 	; isb to sync the change to the CacheSizeID reg
 END isb;
 
-PROCEDURE DCacheFlushRange*(adr:ADDRESS; len:LONGINT);
+PROCEDURE DCacheFlushRange*(adr:ADDRESS; len:SIGNED32);
 VAR
 	end:ADDRESS;
 	L2CCOffset:ADDRESS;
@@ -57,7 +57,7 @@ BEGIN
 	REPEAT UNTIL S.GET32(L2CCCacheSync) = 0;
 END DCacheFlushRange;
 
-PROCEDURE DCacheInvalidateRange*(adr:ADDRESS; len:LONGINT);
+PROCEDURE DCacheInvalidateRange*(adr:ADDRESS; len:SIGNED32);
 VAR
 	end:ADDRESS;
 	L2CCOffset:ADDRESS;

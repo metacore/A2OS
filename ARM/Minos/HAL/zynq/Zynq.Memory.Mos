@@ -395,16 +395,16 @@ BEGIN
 END ShowStack;
 
 (** SHR - logical shift right *)
-PROCEDURE SHR(value, shift: ADDRESS): SIGNED32;
+PROCEDURE Shr(value, shift: ADDRESS): SIGNED32;
 CODE
 	LDR R0, [FP, #value]
 	LDR R1, [FP, #shift]
 
 	MOV R0, R0, LSR R1
-END SHR;
+END Shr;
 
 (** SHRL - shift right and left. Mask out 'shift' lowest bits *)
-PROCEDURE SHRL(value, shift: SIGNED32): SIGNED32;
+PROCEDURE Shrl(value, shift: SIGNED32): SIGNED32;
 (*CODE
 	LDR R0, [FP, #value]
 	LDR R1, [FP, #shift]
@@ -415,7 +415,7 @@ BEGIN
 	value := LSH(value, -shift);
 	value := LSH(value, shift);
 	RETURN value
-END SHRL;
+END Shrl;
 
 (** Fills 'size' bytes with 'filler', from 'destAdr' on. size must be multiple of 4 *)
 PROCEDURE Fill32*(destAdr: ADDRESS; size: SIZE; filler: SIGNED32);
@@ -465,8 +465,8 @@ PROCEDURE AllocateMmu*(virtualAddress, physicalAddress, size: ADDRESS; accessPer
 VAR i, index, entry: SIGNED32;
 BEGIN
 	ASSERT(size MOD M = 0);
-	index := SHR(virtualAddress, LogM - 2);
-	FOR i := 0 TO SHR(size, LogM)-1 DO
+	index := Shr(virtualAddress, LogM - 2);
+	FOR i := 0 TO Shr(size, LogM)-1 DO
 		(* Trace.String("AllocateMmu: page entry address: "); Trace.Address( virtualPageTable + index ); Trace.Ln; *)
 		entry := SYSTEM.GET32( virtualPageTable + index );
 		ASSERT(entry MOD 4 = 0); (* entry must be free *)

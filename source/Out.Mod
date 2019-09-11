@@ -29,12 +29,12 @@ BEGIN
 	Commands.GetContext().out.Set(s);
 END Set;
 
-PROCEDURE Int*(i: SIGNED64; n = 1: INTEGER);
+PROCEDURE Int*(i: SIGNED64; n := 1: INTEGER);
 BEGIN
 	Commands.GetContext().out.Int(i,n);
 END Int;
 
-PROCEDURE Hex*(i: SIGNED64; n = -16: INTEGER);
+PROCEDURE Hex*(i: SIGNED64; n := -16: INTEGER);
 BEGIN
 	Commands.GetContext().out.Hex(i,n);
 END Hex;
@@ -44,7 +44,7 @@ BEGIN
 	Commands.GetContext().out.Address(a);
 END Address;
 
-PROCEDURE Float*(x: FLOAT64; n = 4, f= 3, d=0: INTEGER);
+PROCEDURE Float*(x: FLOAT64; n := 4, f := 3, d := 0: INTEGER);
 BEGIN
 	Commands.GetContext().out.FloatFix(x,n,f,d);
 END Float;

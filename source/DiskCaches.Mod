@@ -25,7 +25,7 @@ IMPORT SYSTEM, Disks;
 		blocksPerCacheLine: SIGNED32;
 		transfer: TransferProcedure;
 
-		PROCEDURE &Init*(transfer: TransferProcedure; blocksPerCacheLine = 32: SIGNED32);
+		PROCEDURE &Init*(transfer: TransferProcedure; blocksPerCacheLine := 32: SIGNED32);
 		VAR i: SIZE;
 		BEGIN
 			SELF.transfer := transfer;

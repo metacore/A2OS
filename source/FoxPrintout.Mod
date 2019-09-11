@@ -1179,7 +1179,7 @@ TYPE
 					END;
 					PrintSymbol(x); Flags(x);
 					IF x.defaultValue # NIL THEN
-						w.String("= "); Expression(x.defaultValue);
+						w.String(":= "); Expression(x.defaultValue);
 					END;
 
 					WHILE (next # NIL) & (next.type = x.type) & (next.kind = x.kind) & ((next.access # SyntaxTree.Hidden) OR (mode > SourceCode)) DO

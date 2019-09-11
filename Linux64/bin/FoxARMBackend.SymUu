@@ -326,7 +326,7 @@ TYPE
 		PROCEDURE ^ RegisterFromValue(value: SIGNED32; registerHint: Operand): Operand; 
 		PROCEDURE ^ AllocateStack(allocationSize: SIZE; doUpdateStackSize: BOOLEAN; clear: BOOLEAN); 
 		PROCEDURE ^ IsSameRegister(CONST a, b: Operand): BOOLEAN; 
-		PROCEDURE ^ MovIfDifferent(CONST a, b: Operand; part= Low: SIGNED32); 
+		PROCEDURE ^ MovIfDifferent(CONST a, b: Operand; part:= Low: SIGNED32); 
 		PROCEDURE ^ AcquireDestinationRegister(CONST irDestinationOperand: IntermediateCode.Operand; part: SIGNED32; registerHint: Operand): Operand; 
 		PROCEDURE ^ WriteBack(VAR irDestinationOperand: IntermediateCode.Operand; part: SIGNED32; register: Operand); 
 		PROCEDURE ^ ZeroExtendOperand(operand: Operand; sizeInBits: SIGNED32); 

@@ -17,7 +17,7 @@ TYPE
 		blocksPerCacheLine: SIGNED32; 
 		transfer: TransferProcedure; 
 
-		PROCEDURE ^  & Init*(transfer: TransferProcedure; blocksPerCacheLine= 32: SIGNED32); 
+		PROCEDURE ^  & Init*(transfer: TransferProcedure; blocksPerCacheLine:= 32: SIGNED32); 
 		PROCEDURE ^ Transfer*(op: SIGNED32; block, num: SIGNED32; VAR data: ARRAY OF CHAR; ofs: SIZE; VAR res: INTEGER); 
 	END Cache; 
 BEGIN

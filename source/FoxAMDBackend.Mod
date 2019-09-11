@@ -1040,7 +1040,7 @@ TYPE
 		END GetRegister;
 
 		(* make physical operand from virtual operand, if ticket given then write result into phyiscal register represented by ticket *)
-		PROCEDURE MakeOperand(CONST vop: IntermediateCode.Operand; part: SIGNED32; VAR op: Assembler.Operand; ticket: Ticket; pushOrCmp = FALSE: BOOLEAN);
+		PROCEDURE MakeOperand(CONST vop: IntermediateCode.Operand; part: SIGNED32; VAR op: Assembler.Operand; ticket: Ticket; pushOrCmp := FALSE: BOOLEAN);
 		VAR tmp: Assembler.Operand;
 		BEGIN
 			TryAllocate(vop,part);

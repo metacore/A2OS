@@ -1732,7 +1732,7 @@ TYPE
 		(** emit a MOV instruction if the two operands do not represent the same register
 		- for moves involving floating point registers special VFP instructions opFCPYS, opFMSR and opFMRS are used
 		**)
-		PROCEDURE MovIfDifferent(CONST a, b: Operand; part = Low: SIGNED32);
+		PROCEDURE MovIfDifferent(CONST a, b: Operand; part := Low: SIGNED32);
 		BEGIN
 			IF ~IsSameRegister(a, b) THEN
 				ASSERT(a.mode = InstructionSet.modeRegister);

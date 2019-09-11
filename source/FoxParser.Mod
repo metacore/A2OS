@@ -1908,7 +1908,7 @@ TYPE
 				parameter := SyntaxTree.NewParameter(position,procedureType,name,kind);
 				IF Optional(Scanner.LeftBrace) THEN parameter.SetModifiers(Flags()) END;
 				procedureType.AddParameter(parameter);
-				IF Optional(Scanner.Becomes) OR Optional(Scanner.Equal) THEN
+				IF Optional(Scanner.Becomes) THEN
 					parameter.SetDefaultValue(Expression());
 				END
 			UNTIL ~Optional( Scanner.Comma );

@@ -1186,7 +1186,7 @@ TYPE
 						w.String(", ");
 						PrintSymbol(next); Flags(next);
 						IF next.defaultValue # NIL THEN
-							w.String("= "); Expression(next.defaultValue);
+							w.String(":= "); Expression(next.defaultValue);
 						END;
 						next := next.nextParameter;
 					END;

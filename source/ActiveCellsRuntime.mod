@@ -15,6 +15,10 @@ type
 	var
 		c: any;
 	end Cell;
+	
+	LengthType = signed32;
+	WidthType = signed32;
+	DepthType = signed32;
 
 	Context*= object
 	var
@@ -25,13 +29,13 @@ type
 		procedure Allocate*(scope: any; var c: any; t: Modules.TypeDesc; const name: array of char; isCellNet, isEngine: boolean);
 		end Allocate;
 		
-		procedure AddPort*(c: any; var p: any; const name: array of char; inout: set; width: signed32);
+		procedure AddPort*(c: any; var p: any; const name: array of char; inout: set; width: WidthType);
 		end AddPort;
 		
-		procedure AddPortArray*(c: any; var ports: any; const name: array of char; inout: set; width: signed32; const lens: array of signed32);
+		procedure AddPortArray*(c: any; var ports: any; const name: array of char; inout: set; width: WidthType; const lens: array of LengthType);
 		end AddPortArray;
 
-		procedure AddStaticPortArray*(c: any; var ports: array of any; const name: array of char; inout: set; width: signed32);
+		procedure AddStaticPortArray*(c: any; var ports: array of any; const name: array of char; inout: set; width: WidthType);
 		end AddStaticPortArray;
 
 		procedure AddPortIntegerProperty*(p: any; const name: array of char; value: signed32);
@@ -58,7 +62,7 @@ type
 		procedure FinishedProperties*(var c: any);
 		end FinishedProperties;
 
-		procedure Connect*(outPort, inPort: any; depth: signed32);
+		procedure Connect*(outPort, inPort: any; depth: DepthType);
 		end Connect;
 
 		procedure Delegate*(netPort: any; cellPort: any);
@@ -176,19 +180,19 @@ type
 		AllocateOnContext(GetContext(), scope, c, tag, name, isCellnet, isEngine);
 	end Allocate;
 
-	procedure AddPort*(c: Cell; var p: any; const name: array of char; inout: set; width: signed32);
+	procedure AddPort*(c: Cell; var p: any; const name: array of char; inout: set; width: WidthType);
 	begin
 		if EnableTrace then trace(c,p,name, inout, width); end;
 		GetContext().AddPort(c.c, p, name, inout, width);
 	end AddPort;
 
-	procedure AddPortArray*(c: Cell; var ports: any; const name: array of char; inout: set; width: signed32; const lens: array of signed32);
+	procedure AddPortArray*(c: Cell; var ports: any; const name: array of char; inout: set; width: WidthType; const lens: array of LengthType);
 	begin
 		if EnableTrace then trace(name, inout, width, len(lens)); end;
 		GetContext().AddPortArray(c.c, ports, name, inout, width, lens);
 	end AddPortArray;
 
-	procedure AddStaticPortArray*(c: Cell; var ports: array of any; const name: array of char; inout: set; width: signed32);
+	procedure AddStaticPortArray*(c: Cell; var ports: array of any; const name: array of char; inout: set; width: WidthType);
 	begin
 		if EnableTrace then trace(name, inout, width, len(ports)); end;
 		GetContext().AddStaticPortArray(c.c, ports, name, inout, width);
@@ -247,7 +251,7 @@ type
 		GetContext().FinishedProperties(c.c);
 	end FinishedProperties;
 
-	procedure Connect*(outPort, inPort: any; depth: signed32);
+	procedure Connect*(outPort, inPort: any; depth: DepthType);
 	begin
 		if EnableTrace then trace(outPort, inPort, outPort, inPort, depth); end;
 		GetContext().Connect(outPort, inPort, depth);

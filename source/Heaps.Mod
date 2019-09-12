@@ -81,8 +81,8 @@ TYPE
 	HeapBlock* = POINTER TO HeapBlockDesc;	(* base object of all heap blocks *)
 	HeapBlockU = POINTER {UNSAFE,UNTRACED} TO HeapBlockDesc;	(* base object of all heap blocks *)
 	HeapBlockDesc* = RECORD
-		heapBlock {FICTIVE =HeapBlockOffset}: ADDRESS;
-		typeDesc {FICTIVE =TypeDescOffset}: POINTER {UNSAFE,UNTRACED} TO StaticTypeDesc;
+		heapBlock {OFFSET=HeapBlockOffset}: ADDRESS;
+		typeDesc {OFFSET=TypeDescOffset}: POINTER {UNSAFE,UNTRACED} TO StaticTypeDesc;
 		(* when this is changed --> change constant in Machine too and provide changes in FoxIntermediateBackend where noted *)
 		mark: SIZE;
 		dataAdr-: ADDRESS;
@@ -133,7 +133,7 @@ TYPE
 	StaticTypeBlock*= POINTER TO StaticTypeDesc;
 	StaticTypeBlockU= POINTER {UNSAFE,UNTRACED} TO StaticTypeDesc;
 	StaticTypeDesc = RECORD
-		info {FICTIVE =TypeDescOffset}: TypeInfo;
+		info {OFFSET =TypeDescOffset}: TypeInfo;
 		recSize: SIZE;
 		pointerOffsets* {UNTRACED}: PointerOffsets;
 	END;
@@ -141,14 +141,14 @@ TYPE
 	PointerOffsets = POINTER TO ARRAY OF SIZE;
 
 	Block*= POINTER	{UNSAFE,UNTRACED} TO RECORD
-		heapBlock {FICTIVE =HeapBlockOffset}: HeapBlock;
-		typeBlock {FICTIVE =TypeDescOffset}: StaticTypeBlock;
+		heapBlock {OFFSET =HeapBlockOffset}: HeapBlock;
+		typeBlock {OFFSET =TypeDescOffset}: StaticTypeBlock;
 	END;
 
 	DataBlockU = POINTER {UNSAFE,UNTRACED} TO DataBlockDesc;
 	DataBlockDesc*= RECORD
-		heapBlock {FICTIVE =HeapBlockOffset}: POINTER {UNSAFE,UNTRACED} TO HeapBlockDesc;
-		typeDesc {FICTIVE =TypeDescOffset}: POINTER {UNSAFE,UNTRACED} TO StaticTypeDesc;
+		heapBlock {OFFSET =HeapBlockOffset}: POINTER {UNSAFE,UNTRACED} TO HeapBlockDesc;
+		typeDesc {OFFSET =TypeDescOffset}: POINTER {UNSAFE,UNTRACED} TO StaticTypeDesc;
 	END;
 
 	ArrayDataBlockU = POINTER {UNSAFE,UNTRACED} TO ArrayDataBlockDesc;
@@ -314,7 +314,7 @@ VAR orgBlock: ADDRESS;(*: ADDRESS*); staticTypeBlock {UNTRACED}: StaticTypeBlock
 	currentArrayElemAdr, lastArrayElemAdr: ADDRESS; i: SIZE;
 	protected {UNTRACED}: ProtRecBlock;
 	b {UNTRACED}: POINTER {UNSAFE} TO RECORD p: ANY END;
-	meta {UNTRACED }: POINTER {UNSAFE} TO RECORD staticTypeBlock {FICTIVE=TypeDescOffset}: StaticTypeBlock; numElems: SIZE; first: ADDRESS END;
+	meta {UNTRACED }: POINTER {UNSAFE} TO RECORD staticTypeBlock {OFFSET=TypeDescOffset}: StaticTypeBlock; numElems: SIZE; first: ADDRESS END;
 	block {UNTRACED}: ANY;
 BEGIN{UNCHECKED} (* omit any range checks etc.*)
 	IF Stats THEN INC(Nmark) END;

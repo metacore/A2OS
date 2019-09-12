@@ -310,7 +310,7 @@ TYPE
 	(** A 64-bit signed integer value. *)
 	LargeInteger* = RECORD
 		LowPart*, HighPart*: SIGNED32;
-		QuadPart*{ FICTIVE = 0 }: SIGNED64;
+		QuadPart*{ OFFSET = 0 }: SIGNED64;
 	END;
 
 	(** A 64-bit unsigned integer value. *)
@@ -1254,7 +1254,7 @@ VAR hout: HANDLE;
 			are patched by the PE linker.
 			[CF. Microsoft Portable Executable and Common Object File Format Specification]
 		*)
-		PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint*;
+		PROCEDURE {NOPAF, OFFSET(401000H)} EntryPoint*;
 		CODE{SYSTEM.i386}
 			JMP  DWORD end;
 			DB 0
@@ -1304,7 +1304,7 @@ VAR hout: HANDLE;
 			are patched by the PE linker.
 			[CF. Microsoft Portable Executable and Common Object File Format Specification]
 		*)
-		PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint*;
+		PROCEDURE {NOPAF, OFFSET(401000H)} EntryPoint*;
 		CODE{SYSTEM.AMD64}
 			JMP  DWORD end;
 			DB 0

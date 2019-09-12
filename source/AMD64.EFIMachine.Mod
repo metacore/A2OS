@@ -61,7 +61,7 @@ NX:
 END JumpTo;
 *)
 
-PROCEDURE {NOPAF, FIXED(401000H)} EntryPoint;
+PROCEDURE {NOPAF, OFFSET(401000H)} EntryPoint;
 CODE {SYSTEM.AMD64}
 	MOV [EFI.imageHandle], RCX;
 	MOV [EFI.table], RDX

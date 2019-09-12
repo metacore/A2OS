@@ -139,7 +139,7 @@ BEGIN
 		s := a * (s MOD q) - r * (s DIV q);
 		IF s < 0 THEN s := s + m END;  (* Parks & Miller *)
 
-		nrs[i] := SHORT (s * scalefact)
+		nrs[i] := FLOAT32 (s * scalefact)
 	END;
 	gen.seed (vyRanBase.tLongintSeed).val := s
 END RandomUV;

@@ -423,7 +423,7 @@ positive: real literal with positive scale factor
 	CONST Real = 0.3E+8
 	END Test.
 
-negative: real literal with positive too large scale factor
+positive: float64 literal with positive large scale factor
 
 	MODULE Test;
 	CONST Real= 0.3E+80;
@@ -435,7 +435,7 @@ positive: real literal with negative scale factor
 	CONST Real = 0.E-30
 	END Test.
 
-negative: real literal with too small negative scale factor
+positive: literal with small negative scale factor
 
 	MODULE Test;
 	CONST Real = 0.E-54
@@ -4542,7 +4542,7 @@ positive: constant long real in valid long real range
 	CONST Result = 1.D10;
 	END Test.
 
-negative: constant real exceeding valid real range
+positive: constant float64 exceeding valid float32 range
 
 	MODULE Test;
 	CONST Result = 1.E100;

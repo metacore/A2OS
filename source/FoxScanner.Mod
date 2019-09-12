@@ -768,19 +768,13 @@ TYPE
 					END
 				END;
 				DEC( e, i - d - m );   (* decimal point shift *)
-				IF expCh = "E" THEN
-					token.numberType := Real;
-					IF (1 - MaxRealExponent < e) & (e <= MaxRealExponent) THEN
-						IF e < 0 THEN token.real :=  f / Ten( -e ) ELSE token.real := f * Ten( e )  END;
-						token.real := FLOAT32 (token.real);
-					ELSE Error( Basic.NumberTooLarge )
-					END
-				ELSE
+				token.numberType := Real;
+				IF e > MaxRealExponent THEN 
 					token.numberType := Longreal;
-					IF (1 - MaxLongrealExponent < e) & (e <= MaxLongrealExponent) THEN
-						IF e < 0 THEN token.real := f / Ten( -e ) ELSE token.real := f * Ten( e ) END
-					ELSE Error( Basic.NumberTooLarge )
-					END
+				END;
+				IF (1 - MaxLongrealExponent < e) & (e <= MaxLongrealExponent) THEN
+					IF e < 0 THEN token.real := f / Ten( -e ) ELSE token.real := f * Ten( e ) END
+				ELSE Error( Basic.NumberTooLarge )
 				END
 			END;
 			token.identifierString[si] := 0X;

@@ -829,25 +829,14 @@ TYPE
 		PROCEDURE FormatedFloat(value: FLOAT64; subtype: SIGNED32);
 		VAR string: ARRAY 128 OF CHAR; i: SIGNED32;
 		BEGIN
-			IF subtype = Scanner.Real THEN
-				ws.SetPos(0); ws.Float(value,11(*mantissa X.XXXXXXX *)+5(*exponent E+XXX *)); ws.Get(string);
-				i := 0;
-				WHILE(i<LEN(string)) & (string[i] # 0X) DO
-					IF string[i] = "D" THEN string[i] := "E" END;
-					INC(i);
-				END;
-				w.String(string);
-			ELSIF subtype = Scanner.Longreal THEN
-				ws.SetPos(0); ws.Float(value,20(*mantissa X.X..(16)..X *)+5(*exponent E+XXX *) ); ws.Get(string);
-				i := 0;
-				WHILE(i<LEN(string)) & (string[i] # 0X) DO
-					IF string[i] = "E" THEN string[i] := "D" END;
-					INC(i);
-				END;
-				w.String(string);
-			ELSE
-				w.Float(value,31)
+			ASSERT((subtype = Scanner.Real) OR (subtype = Scanner.Longreal));
+			ws.SetPos(0); ws.Float(value,20(*mantissa X.X..(16)..X *)+5(*exponent E+XXX *) ); ws.Get(string);
+			i := 0;
+			WHILE(i<LEN(string)) & (string[i] # 0X) DO
+				IF string[i] = "D" THEN string[i] := "E" END;
+				INC(i);
 			END;
+			w.String(string);
 		END FormatedFloat;
 
 		PROCEDURE VisitRealValue*(x: SyntaxTree.RealValue);

@@ -830,7 +830,7 @@ TYPE
 		VAR string: ARRAY 128 OF CHAR; i: SIGNED32;
 		BEGIN
 			ASSERT((subtype = Scanner.Real) OR (subtype = Scanner.Longreal));
-			ws.SetPos(0); ws.Float(value,20(*mantissa X.X..(16)..X *)+5(*exponent E+XXX *) ); ws.Get(string);
+			ws.SetPos(0); ws.Float(value,1); ws.Get(string);
 			i := 0;
 			WHILE(i<LEN(string)) & (string[i] # 0X) DO
 				IF string[i] = "D" THEN string[i] := "E" END;

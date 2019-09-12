@@ -17,7 +17,7 @@ VAR g: SIGNED32;
 BEGIN
 	g := a*(Z MOD q) - r*(Z DIV q);
 	IF g > 0 THEN Z := g ELSE Z := g + m END;
-	RETURN SHORT(Z*1.0D0/m)	(* must compute this in double precision, e.g. (m-1)/m *)
+	RETURN FLOAT32(Z*1.0D0/m)	(* must compute this in double precision, e.g. (m-1)/m *)
 END Uniform;
 
 (** Return an exponentially distributed random number r. *)

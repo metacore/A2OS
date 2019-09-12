@@ -375,11 +375,12 @@ TYPE
 		END Date822;
 
 
-	(** Write FLOAT64 x  using n character positions. *)
+	(** Write FLOAT64 x  using at least n character positions. *)
 		PROCEDURE Float*( x: FLOAT64;  n: INTEGER );
 		VAR
 			buf: ARRAY 32 OF CHAR;
 		BEGIN
+			WHILE (n>31) DO Char(" "); DEC(n) END;
 			RC.RealToString( x, n, buf );
 			String( buf )
 		END Float;

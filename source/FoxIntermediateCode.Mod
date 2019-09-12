@@ -643,7 +643,7 @@ TYPE
 						w.Int(SHORT(operand.intValue),1);
 					END
 				ELSE
-					w.Float(operand.floatValue,24);
+					w.Float(operand.floatValue,1);
 				END;
 			END;
 		|ModeString:

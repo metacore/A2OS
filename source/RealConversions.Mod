@@ -89,12 +89,12 @@ VAR
 		IF neg THEN y := -y END;
 		r := y
 	END StringToReal;
-
-	(**	Convert FLOAT64 x  to string using n character positions. *)
-	PROCEDURE RealToString*( x: FLOAT64;  n: INTEGER;  VAR buf: ARRAY OF CHAR );
+	
+	(**	Convert FLOAT64 x using at least n character positions. *)
+	PROCEDURE RealToString*( x: FLOAT64; n: INTEGER; VAR buf: ARRAY OF CHAR );
 	(* BM 1993.4.22. Do not simplify rounding! *)
 	VAR
-		e, h, l, i, pos: SIGNED32;  z: FLOAT64;  d: ARRAY 16 OF CHAR;
+		e, h, l, i, pos: SIGNED32;  z: FLOAT64;  d: ARRAY 16 OF CHAR; m: INTEGER; 
 
 		PROCEDURE Char( c: CHAR );
 		BEGIN
@@ -112,41 +112,66 @@ VAR
 		pos := 0;
 		e := ExpoL( x );
 		IF e = 2047 THEN
-			WHILE n > 5 DO  Char( " " );  DEC( n )  END;
 			NaNCodeL( x, h, l );
-			IF (h # 0) OR (l # 0) THEN  String( "  NaN" )
-			ELSIF x < 0 THEN  String(" -INF" )
-			ELSE  String("  INF" )
+			IF (h # 0) OR (l # 0) THEN  String( "NaN" )
+			ELSIF x < 0 THEN  String("-INF" )
+			ELSE  String("+INF" )
 			END
 		ELSE
-			IF n <= 9 THEN  n := 1  ELSE  DEC( n, 8 )  END;
-			REPEAT  Char( " " );  DEC( n )  UNTIL n <= 15;   (* 0 <= n <= 15 fraction digits *)
-			IF (e # 0) & (x < 0) THEN  Char( "-" );  x := -x  ELSE  Char( " " )  END;
+			IF (e # 0) & (x < 0) THEN 
+				Char( "-" );  
+				x := -x  
+			END;
 			IF e = 0 THEN
 				h := 0;  l := 0 (* no denormals *)
 			ELSE
 				e := (e - 1023) * 301029 DIV 1000000;   (* ln(2)/ln(10) = 0.301029996 *)
 				z := Ten( e + 1 );
 				IF x >= z THEN  x := x / z;  INC( e )  ELSE  x := x * Ten( -e )  END;
-				IF x >= 10 THEN  x := x * Ten( -1 ) + 0.5D0 / Ten( n );  INC( e )
+				IF x >= 10 THEN  x := x * Ten( -1 ) + 0.5D0 / Ten( 15 );  INC( e )
 				ELSE
-					x := x + 0.5D0 / Ten( n );
+					x := x + 0.5D0 / Ten( 15 );
 					IF x >= 10 THEN  x := x * Ten( -1 );  INC( e )  END
 				END;
 				x := x * Ten( 7 );  h := ENTIER( x );  x := (x - h) * Ten( 8 );  l := ENTIER( x )
 			END;
 			i := 15;
 			WHILE i > 7 DO  d[i] := CHR( l MOD 10 + ORD( "0" ) );  l := l DIV 10;  DEC( i )  END;
-			WHILE i >= 0 DO  d[i] := CHR( h MOD 10 + ORD( "0" ) );  h := h DIV 10;  DEC( i )  END;
-			Char( d[0] );  Char( "." );  i := 1;
-			WHILE i <= n DO  Char( d[i] );  INC( i )  END;
-			IF e < 0 THEN  String( "E-" );  e := -e  ELSE  String( "E+" )  END;
-			Char( CHR( e DIV 100 + ORD( "0" ) ) );  e := e MOD 100;
-			Char( CHR( e DIV 10 + ORD( "0" ) ) );  Char( CHR( e MOD 10 + ORD( "0" ) ) )
+			WHILE i >= 0 DO d[i] := CHR( h MOD 10 + ORD( "0" ) );  h := h DIV 10;  DEC( i )  END;
+			
+			Char( d[0] ); Char( "." );
+			m := 15; 
+			WHILE (m>0) & (d[m] = '0') DO 
+				DEC(m) 
+			END;
+			FOR i := 1 TO m DO 
+				Char( d[i] ); 
+			END;
+			IF e # 0 THEN
+				IF e < 0 THEN  
+					String( "E-" );  e := -e  
+				ELSE  
+					String( "E+" )
+				END;
+				IF e >= 100 THEN Char( CHR( e DIV 100 + ORD( "0" ))) END;
+				IF e >= 10 THEN Char( CHR( e MOD 100 DIV 10 + ORD( "0" ))) END;
+				Char( CHR( e MOD 10 + ORD( "0" )))
+			END;
 		END;
-		Char( 0X )
+		buf[pos] := 0X;
+		INC(n);
+		IF n > pos THEN
+			WHILE(pos >= 0) DO
+				buf[n] := buf[pos];
+				DEC(pos); 
+				DEC(n); 
+			END;
+			WHILE (n>=0) DO
+				buf[n] := " ";
+				DEC(n);
+			END;
+		END;
 	END RealToString;
-
 
 	(**	Convert FLOAT64 x to string in a fixed point notation.
 		n is the overall minimal length for the output field, f the number of fraction digits following the decimal point,

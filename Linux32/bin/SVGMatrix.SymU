@@ -1,7 +1,7 @@
 MODULE SVGMatrix;
 	IMPORT Math;
 CONST 
-	Eps =   9.9999997E-006; 
+	Eps = 1.E-5; 
 TYPE 
 	Number* = FLOAT64; 
 

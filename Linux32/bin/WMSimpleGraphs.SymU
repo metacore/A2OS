@@ -59,7 +59,7 @@ TYPE
 	GraphXY* = OBJECT {EXCLUSIVE} (Window)
 	CONST 
 		border = 5; 
-		scaleRatio =   9.4999999E-001; 
+		scaleRatio = 9.5E-1; 
 	VAR 
 		minx, miny, maxx, maxy: FLOAT64; 
 		ticks: ARRAY [*, *] OF FLOAT64; 

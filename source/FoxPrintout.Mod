@@ -1042,11 +1042,9 @@ TYPE
 			BEGIN
 				first := TRUE;
 				IF x.fixed THEN
-					Value(Global.NameFixed,x.alignment,first)
+					Value(Global.NameOffset,x.alignment,first)
 				ELSIF x.alignment > 1 THEN
 					Value(Global.NameAligned,x.alignment,first)
-				ELSIF x.fictive THEN
-					Value(Global.NameFictive, x.fictiveOffset, first);
 				ELSIF x.preferRegister THEN
 					Flag(Global.NameRegister,first);
 				END;
@@ -1222,7 +1220,7 @@ TYPE
 				IF (type.noReturn) THEN Flag(Global.NameNoReturn,first) END;
 				IF (x.isAbstract) THEN Flag(Global.NameAbstract,first) END;
 				IF (x.isFinal) THEN Flag(Global.NameFinal,first) END;
-				IF (x.fixed) THEN Value(Global.NameFixed, x.alignment,first)
+				IF (x.fixed) THEN Value(Global.NameOffset, x.alignment,first)
 				ELSIF (x.alignment >1) THEN Value(Global.NameAligned, x.alignment, first)
 				END;
 				IF type.callingConvention = SyntaxTree.WinAPICallingConvention THEN

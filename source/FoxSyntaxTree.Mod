@@ -2923,8 +2923,6 @@ TYPE
 	VAR
 		nextVariable-: Variable;
 		untraced-: BOOLEAN;
-		fictive-: BOOLEAN; (* variable is not allocated but has a fixed offset *)
-		fictiveOffset-: SIZE; (* offset of fictive as provided by the source code *)
 
 		registerNumber-: SIZE;
 		inRegister-: BOOLEAN;
@@ -2948,7 +2946,6 @@ TYPE
 			registerNumber := -1;
 			usedAsReference := FALSE;
 			initializer := NIL;
-			fictive := FALSE;
 		END InitVariable;
 
 		PROCEDURE SetKind*(kind: SIGNED32);
@@ -2992,12 +2989,6 @@ TYPE
 		BEGIN
 			registerNumber := reg
 		END RegisterNumber;
-
-		PROCEDURE SetFictive*(offset: SIZE);
-		BEGIN
-			fictive := TRUE;
-			fictiveOffset := offset;
-		END SetFictive;
 
 		PROCEDURE SetModifiers*(flag: Modifier);
 		BEGIN SELF.modifiers := flag;

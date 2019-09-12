@@ -18,8 +18,7 @@ CONST
 	StringEntry* = "INITIAL";
 	StringExit*= "FINAL";
 	StringNoPAF*="NOPAF";
-	StringFixed*="FIXED";
-	StringFictive*="FICTIVE";
+	StringOffset*="OFFSET";
 	StringAligned*="ALIGNED";
 	StringAlignStack*="ALIGNSTACK";
 	StringFinal*="FINAL";
@@ -194,7 +193,7 @@ VAR
 	(* names *)
 	SelfParameterName-,ReturnParameterName-,SystemName-,systemName-,PointerReturnName-, ResultName-,
 	A2Name-,ArrayBaseName-, ComplexNumbersName-, RecordBodyName-,ModuleBodyName-,
-	NameWinAPI-,NameC-,NamePlatformCC-,NameMovable-,NameUntraced-, NameUntracked-, NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameFixed-,NameFictive-, NameAligned-,NameStackAligned-,
+	NameWinAPI-,NameC-,NamePlatformCC-,NameMovable-,NameUntraced-, NameUntracked-, NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameOffset-, NameAligned-,NameStackAligned-,
 	NameExclusive-,NameActive-,NamePriority-,NameSafe-,NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-
 	, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-,NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-,
 	NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-,NameNoReturn-,NamePlain-,NameUnsafe-,NameDisposable-,NameUnchecked-,NameUncooperative-: SyntaxTree.Identifier;
@@ -318,7 +317,7 @@ TYPE
 
 			variable := x.recordScope.firstVariable;
 			WHILE (variable # NIL) DO
-				IF ~variable.fictive THEN
+				IF ~variable.fixed THEN
 					size := SizeOf(variable.type.resolved);
 					IF size < 0 THEN RETURN FALSE END;
 
@@ -333,7 +332,7 @@ TYPE
 					variable.SetOffset(offset);
 					INC(offset,size);
 				ELSE
-					variable.SetOffset(baseOffset + variable.fictiveOffset * dataUnit);
+					variable.SetOffset(baseOffset + variable.alignment * dataUnit);
 				END;
 				variable := variable.nextVariable;
 			END;
@@ -408,7 +407,7 @@ TYPE
 			(* variables *)
 			variable := x.cellScope.firstVariable;
 			WHILE (variable # NIL) DO
-				IF ~variable.fictive THEN
+				IF ~variable.fixed THEN
 					size := SizeOf(variable.type.resolved);
 					IF size < 0 THEN RETURN FALSE END;
 
@@ -460,7 +459,7 @@ TYPE
 					IF variable.offsetInBits = MIN(SIZE) THEN
 						IF (variable.externalName # NIL) THEN
 							variable.SetOffset(offset)
-						ELSIF ~variable.fictive & ~variable.preferRegister THEN
+						ELSIF ~variable.fixed & ~variable.preferRegister THEN
 							size := SizeOfVariable(variable);
 							IF size < 0 THEN RETURN FALSE END;
 							DEC(offset,size);
@@ -1781,8 +1780,7 @@ TYPE
 		NameNoPAF := SyntaxTree.NewIdentifier(StringNoPAF);
 		NameEntry := SyntaxTree.NewIdentifier(StringEntry);
 		NameExit := SyntaxTree.NewIdentifier(StringExit);
-		NameFixed := SyntaxTree.NewIdentifier(StringFixed);
-		NameFictive := SyntaxTree.NewIdentifier(StringFictive);
+		NameOffset := SyntaxTree.NewIdentifier(StringOffset);
 		NameAligned := SyntaxTree.NewIdentifier(StringAligned);
 		NameStackAligned := SyntaxTree.NewIdentifier(StringAlignStack);
 		NameExclusive := SyntaxTree.NewIdentifier(StringExclusive);

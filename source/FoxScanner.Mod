@@ -265,10 +265,11 @@ TYPE
 		Identifier			= Letter {Letter | Digit | '_'}.
 		Letter					= 'A' | 'B' | .. | 'Z' | 'a' | 'b' | .. | 'z'.
 		Digit						= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' .
+		BinaryDigit  	= '0' | '1'.
 		String					= '"' {Character} '"' | "'" {Character} "'".
 		Character			= Digit [HexDigit] 'X'.
 		Number				= Integer | Real.
-		Integer				= Digit {Digit} | Digit {HexDigit} 'H' | '0x' {HexDigit}.
+		Integer				= Digit {Digit} | Digit {HexDigit} 'H' | '0x' {HexDigit} | '0b {["'"]BinaryDigit}.
 		Real						= Digit {Digit} '.' {Digit} [ScaleFactor].
 		ScaleFactor		= ('E' | 'D') ['+' | '-'] digit {digit}.
 		HexDigit			= Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'.
@@ -587,7 +588,7 @@ TYPE
 
 		(**
 		Number       =  Integer | Real.
-		Integer      =  Digit {Digit} | Digit {HexDigit} 'H' | '0x' {HexDigit}.
+		Integer      =  Digit {Digit} | Digit {HexDigit} 'H' | '0x' {HexDigit} | '0b' {["'"]BinaryDigit}.
 		Real         =  Digit {Digit} '.' {Digit} [ScaleFactor].
 		ScaleFactor  =  ('E' | 'D') ['+' | '-'] digit {digit}.
 		HexDigit     =  Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'.
@@ -1011,7 +1012,7 @@ TYPE
 		BinaryDigit	= '0' | '1' .
 		Number			= Integer | Real.
 		Character		= Digit [HexDigit] 'X'.
-		Integer			=  Digit {Digit} | Digit {HexDigit} 'H' | '0x' {HexDigit} | '0b' {BinaryDigit}.
+		Integer			=  Digit {Digit} | Digit {HexDigit} 'H' | '0x' {HexDigit} | '0b' {["'"]BinaryDigit}.
 		Real					= Digit {Digit} '.' {Digit} [ScaleFactor].
 		ScaleFactor	= ('E' | 'D') ['+' | '-'] digit {digit}.
 		HexDigit		= Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'.
@@ -1396,13 +1397,13 @@ TYPE
 		NEW(keywordsLower,EndOfText+1);
 
 		(* constructs and statements *)
-		Enter( "cell", Cell );
-		Enter( "cellnet", CellNet);
 		Enter( "await" , Await);
 		Enter( "begin" , Begin);
 		Enter( "by" , By);
 		Enter( "const" , Const);
 		Enter( "case" , Case);
+		Enter( "cell", Cell );
+		Enter( "cellnet", CellNet);
 		Enter( "code" , Code);
 		Enter( "definition", Definition);
 		Enter( "do" , Do);

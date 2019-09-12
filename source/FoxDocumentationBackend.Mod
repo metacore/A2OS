@@ -972,7 +972,7 @@ TYPE
 			first := TRUE;
 			IF type.stackAlignment > 1 THEN Value(Global.NameStackAligned,type.stackAlignment,first) END;
 			IF (type.isRealtime) THEN Flag(Global.NameRealtime,first) END;
-			IF (x.fixed) THEN Value(Global.NameFixed, x.alignment,first)
+			IF (x.fixed) THEN Value(Global.NameOffset, x.alignment,first)
 			ELSIF (x.alignment >1) THEN Value(Global.NameAligned, x.alignment, first)
 			END;
 			FlagEnd(first);

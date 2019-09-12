@@ -6202,18 +6202,12 @@ TYPE
 						END;
 					END;
 					variable.SetAlignment(FALSE,value(SIZE));
-				ELSIF HasValue(modifiers, Global.NameFixed,position, value) THEN
+				ELSIF HasValue(modifiers, Global.NameOffset,position, value) THEN
 					IF (variable.scope IS SyntaxTree.ProcedureScope) THEN
 						Error(position, "fixed position not possible in procedure");
 					END;
 					variable.SetAlignment(TRUE,value(SIZE));
-				ELSIF HasValue(modifiers, Global.NameFictive, position, value) THEN
-					IF (variable.scope IS SyntaxTree.ProcedureScope) THEN
-						Error(position,"fictive offset not possible in procedure");
-					END;
-					variable.SetFictive(value(SIZE));
 					variable.SetOffset(value(SIZE)*system.dataUnit);
-					IF ContainsPointer(variable.type) THEN variable.SetUntraced(TRUE) END;
 				END;
 				IF HasFlag(modifiers, Global.NameRegister, position) THEN variable.PreferRegister(TRUE) END;
 				IF variable.type.resolved IS SyntaxTree.CellType THEN
@@ -6348,7 +6342,7 @@ TYPE
 					END;
 				END;
 				IF HasValue(modifiers,Global.NameAligned,position,value) THEN procedure.SetAlignment(FALSE,value(SIZE));
-				ELSIF HasValue(modifiers,Global.NameFixed,position,value) THEN procedure.SetAlignment(TRUE,value(SIZE));
+				ELSIF HasValue(modifiers,Global.NameOffset,position,value) THEN procedure.SetAlignment(TRUE,value(SIZE));
 				END;
 				IF HasValue(modifiers,Global.NameStackAligned, position, value) THEN
 					IF ~PowerOf2(value) THEN

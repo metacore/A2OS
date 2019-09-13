@@ -248,7 +248,7 @@ TYPE
 
 	LargeInteger* = RECORD 
 		LowPart*, HighPart*: SIGNED32; 
-		QuadPart*{FICTIVE(0)} : SIGNED64; 
+		QuadPart*{OFFSET(0)} : SIGNED64; 
 	END; 
 
 	ULargeInteger* = LargeInteger; 
@@ -505,6 +505,6 @@ VAR
 	PROCEDURE ^ ShutdownP(l: SIGNED32); 
 	PROCEDURE ^ Init*; 
 	PROCEDURE ^ SetTraceConsole; 
-	PROCEDURE ^ {FIXED(4198400)} EntryPoint*; 
+	PROCEDURE ^ {OFFSET(4198400)} EntryPoint*; 
 BEGIN
 END Kernel32.

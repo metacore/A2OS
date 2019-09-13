@@ -510,14 +510,13 @@ TYPE
 		numberParameters-: SIGNED32; 
 		returnParameter-: Parameter; 
 		selfParameter-: Parameter; 
-		isDelegate-, isInterrupt-, noPAF-, noReturn-: BOOLEAN; 
+		isDelegate-, isInterrupt-, noReturn-: BOOLEAN; 
 		pcOffset-: SIZE; 
 		callingConvention-: CallingConvention; 
 		stackAlignment-: SIZE; 
 		parametersOffset-: SIZE; 
 
 		PROCEDURE ^  & InitProcedureType(position: Position; scope: Scope); 
-		PROCEDURE ^ SetNoPAF*(noPAF: BOOLEAN); 
 		PROCEDURE ^ SetNoReturn*(noReturn: BOOLEAN); 
 		PROCEDURE ^ SetPcOffset*(pcOffset: SIZE); 
 		PROCEDURE ^ SetInterrupt*(isInterrupt: BOOLEAN); 
@@ -944,8 +943,6 @@ TYPE
 	VAR 
 		nextVariable-: Variable; 
 		untraced-: BOOLEAN; 
-		fictive-: BOOLEAN; 
-		fictiveOffset-: SIZE; 
 		registerNumber-: SIZE; 
 		inRegister-: BOOLEAN; 
 		preferRegister-: BOOLEAN; 
@@ -962,7 +959,6 @@ TYPE
 		PROCEDURE ^ PreferRegister*(b: BOOLEAN); 
 		PROCEDURE ^ InRegister*(b: BOOLEAN); 
 		PROCEDURE ^ RegisterNumber*(reg: SIZE); 
-		PROCEDURE ^ SetFictive*(offset: SIZE); 
 		PROCEDURE ^ SetModifiers*(flag: Modifier); 
 		PROCEDURE ^ SetInitializer*(initializer: Expression); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
@@ -1020,7 +1016,7 @@ TYPE
 		super-: Procedure; 
 		level-: SIGNED32; 
 		methodNumber-: SIZE; 
-		isBodyProcedure-, isConstructor-, isFinalizer-, isInline-, isOberonInline-, isEntry-, isExit-, isFinal-, isAbstract-, isOverwritten-: BOOLEAN; 
+		isBodyProcedure-, isConstructor-, isFinalizer-, isInline-, isOberonInline-, isOpening-, isClosing-, isFinal-, isAbstract-, isOverwritten-, isPlain-: BOOLEAN; 
 		resolving-: SIGNED32; 
 
 		PROCEDURE ^  & InitProcedure(position: Position; name: Identifier; scope: ProcedureScope); 
@@ -1031,8 +1027,9 @@ TYPE
 		PROCEDURE ^ SetFinalizer*(isFinalizer: BOOLEAN); 
 		PROCEDURE ^ SetInline*(isInline: BOOLEAN); 
 		PROCEDURE ^ SetOberonInline*(isInline: BOOLEAN); 
-		PROCEDURE ^ SetEntry*(entry: BOOLEAN); 
-		PROCEDURE ^ SetExit*(exit: BOOLEAN); 
+		PROCEDURE ^ SetOpening*(opening: BOOLEAN); 
+		PROCEDURE ^ SetClosing*(closing: BOOLEAN); 
+		PROCEDURE ^ SetPlain*(plain: BOOLEAN); 
 		PROCEDURE ^ SetFinal*(final: BOOLEAN); 
 		PROCEDURE ^ SetOverwritten*(locallyOverwritten: BOOLEAN); 
 		PROCEDURE ^ SetAbstract*(abstract: BOOLEAN); 

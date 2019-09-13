@@ -112,7 +112,6 @@ TYPE
 		PROCEDURE ^ AliasList(x: SyntaxTree.Alias); 
 		PROCEDURE ^ VisitParameter*(x: SyntaxTree.Parameter); 
 		PROCEDURE ^ ParameterList*(x: SyntaxTree.Parameter); 
-		PROCEDURE ^ Access(access: SET); 
 		PROCEDURE ^ VisitProcedure*(x: SyntaxTree.Procedure); 
 		PROCEDURE ^ VisitOperator*(x: SyntaxTree.Operator); 
 		PROCEDURE ^ ProcedureList(list: SyntaxTree.ProcedureList); 

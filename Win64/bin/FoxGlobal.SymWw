@@ -10,11 +10,9 @@ CONST
 	StringDelegate* = \"DELEGATE"\; 
 	StringInterrupt* = \"INTERRUPT"\; 
 	StringPcOffset* = \"PCOFFSET"\; 
-	StringEntry* = \"INITIAL"\; 
-	StringExit* = \"FINAL"\; 
-	StringNoPAF* = \"NOPAF"\; 
-	StringFixed* = \"FIXED"\; 
-	StringFictive* = \"FICTIVE"\; 
+	StringOpening* = \"OPENING"\; 
+	StringClosing* = \"CLOSING"\; 
+	StringOffset* = \"OFFSET"\; 
 	StringAligned* = \"ALIGNED"\; 
 	StringAlignStack* = \"ALIGNSTACK"\; 
 	StringFinal* = \"FINAL"\; 
@@ -244,7 +242,7 @@ TYPE
 		PROCEDURE ^ IsLynx*(): BOOLEAN; 
 	END System; 
 VAR 
-	SelfParameterName-, ReturnParameterName-, SystemName-, systemName-, PointerReturnName-, ResultName-, A2Name-, ArrayBaseName-, ComplexNumbersName-, RecordBodyName-, ModuleBodyName-, NameWinAPI-, NameC-, NamePlatformCC-, NameMovable-, NameUntraced-, NameUntracked-, NameDelegate-, NameInterrupt-, NamePcOffset-, NameNoPAF-, NameEntry-, NameExit-, NameFixed-, NameFictive-, NameAligned-, NameStackAligned-, NameExclusive-, NameActive-, NamePriority-, NameSafe-, NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-, NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-, NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-, NameNoReturn-, NamePlain-, NameUnsafe-, NameDisposable-, NameUnchecked-, NameUncooperative-: SyntaxTree.Identifier; 
+	SelfParameterName-, ReturnParameterName-, SystemName-, systemName-, PointerReturnName-, ResultName-, A2Name-, ArrayBaseName-, ComplexNumbersName-, RecordBodyName-, ModuleBodyName-, NameWinAPI-, NameC-, NamePlatformCC-, NameMovable-, NameUntraced-, NameUntracked-, NameDelegate-, NameInterrupt-, NamePcOffset-, NameOpening-, NameClosing-, NameOffset-, NameAligned-, NameStackAligned-, NameExclusive-, NameActive-, NamePriority-, NameSafe-, NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-, NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-, NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-, NameNoReturn-, NamePlain-, NameUnsafe-, NameDisposable-, NameUnchecked-, NameUncooperative-: SyntaxTree.Identifier; 
 	NameGlobal-, Nameglobal: SyntaxTree.Identifier; 
 	identifiers: ARRAY 2 OF ARRAY end OF SyntaxTree.Identifier; 
 	Signed8-, Signed16-, Signed32-, Signed64-: SyntaxTree.IntegerType; 

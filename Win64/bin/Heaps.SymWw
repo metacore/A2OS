@@ -59,8 +59,8 @@ TYPE
 	HeapBlockU = POINTER {UNSAFE, UNTRACED} TO HeapBlockDesc; 
 
 	HeapBlockDesc* = RECORD 
-		heapBlock{FICTIVE(-16)} : ADDRESS; 
-		typeDesc{FICTIVE(-8), UNTRACED} : POINTER {UNSAFE, UNTRACED} TO StaticTypeDesc; 
+		heapBlock{OFFSET(-16)} : ADDRESS; 
+		typeDesc{OFFSET(-8)} : POINTER {UNSAFE, UNTRACED} TO StaticTypeDesc; 
 		mark: SIZE; 
 		dataAdr-: ADDRESS; 
 		size-: SIZE; 
@@ -122,7 +122,7 @@ TYPE
 	StaticTypeBlockU = POINTER {UNSAFE, UNTRACED} TO StaticTypeDesc; 
 
 	StaticTypeDesc = RECORD 
-		info{FICTIVE(-8), UNTRACED} : TypeInfo; 
+		info{OFFSET(-8)} : TypeInfo; 
 		recSize: SIZE; 
 		pointerOffsets*{UNTRACED} : PointerOffsets; 
 	END; 
@@ -130,15 +130,15 @@ TYPE
 	PointerOffsets = POINTER TO ARRAY OF SIZE; 
 
 	Block* = POINTER {UNSAFE, UNTRACED} TO RECORD 
-		heapBlock{FICTIVE(-16), UNTRACED} : HeapBlock; 
-		typeBlock{FICTIVE(-8), UNTRACED} : StaticTypeBlock; 
+		heapBlock{OFFSET(-16)} : HeapBlock; 
+		typeBlock{OFFSET(-8)} : StaticTypeBlock; 
 	END; 
 
 	DataBlockU = POINTER {UNSAFE, UNTRACED} TO DataBlockDesc; 
 
 	DataBlockDesc* = RECORD 
-		heapBlock{FICTIVE(-16), UNTRACED} : POINTER {UNSAFE, UNTRACED} TO HeapBlockDesc; 
-		typeDesc{FICTIVE(-8), UNTRACED} : POINTER {UNSAFE, UNTRACED} TO StaticTypeDesc; 
+		heapBlock{OFFSET(-16)} : POINTER {UNSAFE, UNTRACED} TO HeapBlockDesc; 
+		typeDesc{OFFSET(-8)} : POINTER {UNSAFE, UNTRACED} TO StaticTypeDesc; 
 	END; 
 
 	ArrayDataBlockU = POINTER {UNSAFE, UNTRACED} TO ArrayDataBlockDesc; 

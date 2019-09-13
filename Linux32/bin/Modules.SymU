@@ -141,7 +141,7 @@ VAR
 	PROCEDURE ^ Register-(module{UNTRACED} : Module); 
 	PROCEDURE ^ Unregister(m: Module); 
 	PROCEDURE ^ PublishRegisteredModules; 
-	PROCEDURE ^ {FINAL} Main-; 
+	PROCEDURE ^ Main-; 
 	PROCEDURE ^ Init; 
 BEGIN
 END Modules.

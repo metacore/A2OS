@@ -4,6 +4,6 @@ VAR
 	p0, p1: ADDRESS; 
 
 	PROCEDURE ^ JumpTo*(adr: ADDRESS; rax, rsi, rdi, rcx, rdx: SIGNED64); 
-	PROCEDURE ^ {FIXED(4198400)} EntryPoint; 
+	PROCEDURE ^ {OFFSET(4198400)} EntryPoint; 
 BEGIN
 END EFIMachine.

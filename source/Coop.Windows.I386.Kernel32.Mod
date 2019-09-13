@@ -245,7 +245,7 @@ TYPE
 	(** A 64-bit signed integer value. *)
 	LargeInteger* = RECORD
 		LowPart*, HighPart*: SIGNED32;
-		QuadPart*{ FICTIVE = 0 }: SIGNED64;
+		QuadPart*{ OFFSET = 0 }: SIGNED64;
 	END;
 
 	(** A 64-bit unsigned integer value. *)

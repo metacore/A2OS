@@ -1177,7 +1177,7 @@ VAR
 	END InitMPMemory;
 
 	(** Init code fo a non-booting processor. No local variable allowed. *)
-	PROCEDURE {NOPAF} BootMP;
+	PROCEDURE {PLAIN} BootMP;
 	BEGIN
 		(* Setup stack *)
 		SYSTEM.LDPSR( 0, Platform.IRQMode + Platform.FIQDisabled + Platform.IRQDisabled );
@@ -1802,7 +1802,7 @@ VAR
 		- using ICIP (interrupt Pending Register) instead of IRR (Interrupt Request Register)
 		- after handler call we don't turn interrupts off explicitly
 	*)
-	PROCEDURE {NOPAF} IRQGlue;
+	PROCEDURE {PLAIN} IRQGlue;
 	CODE
 		CLREX
 		SUB		SP, SP, #72						; Room for the State record
@@ -1898,7 +1898,7 @@ VAR
 	END IRQCaller;
 
 	(** Undefined Exception Handler. Saves the processor state and calls the registered handler. *)
-	PROCEDURE {NOPAF} undefGlue;
+	PROCEDURE {PLAIN} undefGlue;
 	CODE
 		CLREX
 		SUB		SP, SP, #72						; Room for the State record
@@ -1948,7 +1948,7 @@ VAR
 	 * Software Interrupt Handler. Saves the processor state and calls the registered handler.
 	 * The SWI number is stored into the INT field of the state record.
 	 *)
-	PROCEDURE {NOPAF} SWIGlue;
+	PROCEDURE {PLAIN} SWIGlue;
 	CODE
 		SUB		SP, SP, #72						; Room for the State record
 		STMIA		SP, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, FP, SP, LR}^
@@ -1999,7 +1999,7 @@ VAR
 	 * Prefetch Abort Handler. Saves the processor state and calls the registered handler.
 	 * The PC field of the state record holds the address at which the prefetch fault occurred.
 	 *)
-	PROCEDURE {NOPAF} prefetchGlue;
+	PROCEDURE {PLAIN} prefetchGlue;
 	CODE
 		CLREX
 		SUB		SP, SP, #72						; Room for the State record
@@ -2049,7 +2049,7 @@ VAR
 	 * Data Abort Handler. Saves the processor state and calls the registered handler.
 	 * Use procedure GetPageFault to get abort status and address.
 	 *)
-	PROCEDURE {NOPAF} dataGlue;
+	PROCEDURE {PLAIN} dataGlue;
 	CODE
 		CLREX
 		SUB		SP, SP, #72						; Room for the State record
@@ -2096,7 +2096,7 @@ VAR
 	END dataGlue;
 
 	(** Fast Interrupt Handler. Saves the processor state and calls the registered handler *)
-	PROCEDURE {NOPAF} fiqGlue;
+	PROCEDURE {PLAIN} fiqGlue;
 	CODE
 		CLREX
 		SUB		SP, SP, #72						; Room for the State record
@@ -3338,7 +3338,7 @@ VAR
 	END PutNVByte;
 
 	(* empty section allocated at end of bootfile *)
-	PROCEDURE {NOPAF, ALIGNED(32)} LastAddress;
+	PROCEDURE {PLAIN, ALIGNED(32)} LastAddress;
 	CODE
 	END LastAddress;
 
@@ -3591,7 +3591,7 @@ VAR
 		InitGlobalTimer
 	END Init;
 
-	PROCEDURE {INITIAL} Initial;
+	PROCEDURE {OPENING} Initial;
 	BEGIN
 		Init;
 	END Initial;

@@ -153,7 +153,7 @@ VAR
 
 		Based on the code presented in "Barrier Litmus Tests and Cookbook" by Richard Grisenthwaite, ARM, 26.11.2009,
 	*)
-	PROCEDURE {NOPAF} -AcquireResource;
+	PROCEDURE {PLAIN} -AcquireResource;
 	CODE
 		MOV R0, #1
 	Loop:
@@ -179,7 +179,7 @@ VAR
 
 		Based on the code presented in "Barrier Litmus Tests and Cookbook" by Richard Grisenthwaite, ARM, 26.11.2009,
 	*)
-	PROCEDURE {NOPAF} -ReleaseResource;
+	PROCEDURE {PLAIN} -ReleaseResource;
 	CODE
 		MOV R0, #0
 		DMB ; ensure all previous accesses are observed before the lock is cleared

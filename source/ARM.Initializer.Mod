@@ -36,7 +36,7 @@ VAR
 			- put secondary processors into the sleeping loop
 			- allow CPU0 to continue kernel initialization
 	*)
-	PROCEDURE {INITIAL,NOPAF} Init;
+	PROCEDURE {OPENING, PLAIN} Init;
 	CODE
 		; set IRQ vector base register to zero
 		MOV	R2, #0
@@ -146,7 +146,7 @@ VAR
 	startKernel:
 	END Init;
 
-	PROCEDURE {NOPAF} InvalidateDCache *;
+	PROCEDURE {PLAIN} InvalidateDCache *;
 	CODE
 		invalidate_dcache:
 			mrc	p15, 1, r0, c0, c0, 1		; read CLIDR

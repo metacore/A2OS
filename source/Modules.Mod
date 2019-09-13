@@ -876,7 +876,7 @@ END Main;
 #ELSE
 
 (* procedure that will be called last in a linked kernel *)
-PROCEDURE {FINAL, NOPAF} Main-;
+PROCEDURE {CLOSING} Main-;
 PROCEDURE ExitA2 EXTERN "Objects.ExitA2"();
 BEGIN
 	(*Machine.Init;*)

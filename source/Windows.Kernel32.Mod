@@ -1254,7 +1254,7 @@ VAR hout: HANDLE;
 			are patched by the PE linker.
 			[CF. Microsoft Portable Executable and Common Object File Format Specification]
 		*)
-		PROCEDURE {NOPAF, OFFSET(401000H)} EntryPoint*;
+		PROCEDURE {PLAIN, OFFSET(401000H)} EntryPoint*;
 		CODE{SYSTEM.i386}
 			JMP  DWORD end;
 			DB 0
@@ -1304,7 +1304,7 @@ VAR hout: HANDLE;
 			are patched by the PE linker.
 			[CF. Microsoft Portable Executable and Common Object File Format Specification]
 		*)
-		PROCEDURE {NOPAF, OFFSET(401000H)} EntryPoint*;
+		PROCEDURE {PLAIN, OFFSET(401000H)} EntryPoint*;
 		CODE{SYSTEM.AMD64}
 			JMP  DWORD end;
 			DB 0

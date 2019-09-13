@@ -739,7 +739,7 @@ BEGIN
 	*)
 END Init;
 
-	PROCEDURE {INITIAL, NOPAF} Start*;
+	PROCEDURE {OPENING} Start*;
 	BEGIN
 		stackBottom := SYSTEM.GetStackPointer();
 		Init; (* cannot allocate variables in here *)

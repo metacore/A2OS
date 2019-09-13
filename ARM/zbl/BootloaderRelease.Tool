@@ -71,6 +71,18 @@ BUILDS
 		PATH ""
 		DISABLED "FALSE"
 	}
+	
+	CoraZ7_07S {
+		INCLUDE "ZYNQ CoraZ7_07S"
+		COMPILER "Compiler.Compile"
+		COMPILEOPTIONS "-p=Minos --useFPU32 --useFPU64 --metaData=simple --objectFile=Minos --replacements=ARM/zbl/CoraZ7_07S.Replacements.txt --symbolFileExtension=.Syb --traceModule=Trace"
+		TARGET "ARM"
+		LINKER "MinosLinker.Link"
+		LINKEROPTIONS "Init.Bin 0H Zbl.Bin"
+		EXCLUDEPACKAGES "Fpga Scheduler"
+		PATH ""
+		DISABLED "FALSE"
+	}
 END
 
 #### Core Packages ####
@@ -84,6 +96,7 @@ PACKAGE Bootstrap ARCHIVE "Bootstrap.zip" SOURCE "BootstrapSrc.zip" DESCRIPTION 
 	KRM { ARM/zbl/KRM.TclInit.Mos }
 	TE0726 { ARM/zbl/TE0726.TclInit.Mos }
 	TE0720 { ARM/zbl/TE0720.TclInit.Mos }
+	CoraZ7_07S { ARM/zbl/CoraZ7_07S.TclInit.Mos }
 
 	ARM/Minos/HAL/zynq/Zynq.Initializer.Mos
 	ARM.FPE64.Mod

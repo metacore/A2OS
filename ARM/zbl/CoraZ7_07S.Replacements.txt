@@ -1,0 +1,15 @@
+Board.PsRefClockHz = 50000000;
+Board.CpuNb = 1;
+Board.CpuClockHz = 650000000;
+Board.KernelOutputUart = 0;
+Board.UartInputClockHz = 100000000;
+Board.SdInputClockHz = 100000000;
+Board.SdEnable0 = TRUE;
+Board.SdEnable1 = FALSE;
+EnetBase.ThreadSafe = FALSE;
+EnetEmacPs7.AllowZeroPhyAddr0 = TRUE;
+EnetEmacPs7.AllowZeroPhyAddr1 = TRUE;
+EnetEmacPs7.EnableTrace = FALSE;
+Memory.InitTrace = FALSE;
+Sd.Synchronize = FALSE;
+

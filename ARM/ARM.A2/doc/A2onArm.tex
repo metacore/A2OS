@@ -174,7 +174,7 @@ Following files are providing basic support for ARM platforms:
 Now we go through the purposes of these modules with a little description.
 \subsubsection{Initializer.Zynq.Mod}
 
-This module provides \textbf{Init} procedure. This procedure is placed first in the image file (because of \{INITIAL\} modifier). It provides basic CPU initialization: disables MMU and sets the stack pointer. We disable MMU it make sure that we are working with physical addresses. And we set up the stack to be able to call procedures. We set stack address as $0x00030000$: this is the top of the stack. The stack grows downwards, so the new data will be written into the smallest stack address.  See Fig.\ref{figStack}.
+This module provides \textbf{Init} procedure. This procedure is placed first in the image file (because of \{OPENING\} modifier). It provides basic CPU initialization: disables MMU and sets the stack pointer. We disable MMU it make sure that we are working with physical addresses. And we set up the stack to be able to call procedures. We set stack address as $0x00030000$: this is the top of the stack. The stack grows downwards, so the new data will be written into the smallest stack address.  See Fig.\ref{figStack}.
 
 \begin{figure}[H]
 \center
@@ -184,7 +184,7 @@ This module provides \textbf{Init} procedure. This procedure is placed first in 
 
 It also calls procedure \textbf{InvalidateDCache}. 
 
-Module also has \textbf{Finalize} procedure that is written at the end of the image file because of \{FINAL\} modifier. This procedure is necessary to terminate the initial process. We will explain later what the initial process does.
+Module also has \textbf{Finalize} procedure that is written at the end of the image file because of \{CLOSING\} modifier. This procedure is necessary to terminate the initial process. We will explain later what the initial process does.
 
 \subsubsection{Runtime.Mod}
 

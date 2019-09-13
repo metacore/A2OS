@@ -69,7 +69,7 @@ System.DoCommands
 
 		MODULE DllMainExit;
 		IMPORT SYSTEM;
-			PROCEDURE {FINAL, NOPAF} Exit*;
+			PROCEDURE {CLOSING} Exit*;
 			CODE{SYSTEM.i386}
 				POP EDI
 				POP ESI

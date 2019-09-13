@@ -24,7 +24,7 @@ VAR
 	environ-: ADDRESS;
 
 
-	PROCEDURE {INITIAL, NOPAF} Header;		(* header needed by OberonLoader *)
+	PROCEDURE {OPENING} Header;		(* header needed by OberonLoader *)
 	CODE
 	#IF I386 THEN
 		DB 'Oberon32G.binary'	; ID (24 byte)
@@ -73,7 +73,7 @@ VAR
 		SYSTEM.PUT( adr, val );
 	END Dlsym;
 
-	PROCEDURE {INITIAL, NOPAF} Init0;
+	PROCEDURE {OPENING} Init0;
 	CONST CR = 0DX; NL = 0AX;
 	BEGIN
 		baseAdr := ADDRESSOF( Header );

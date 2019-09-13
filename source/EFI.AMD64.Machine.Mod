@@ -2558,7 +2558,7 @@ END GetExceptionState;
 		--	--	locals	<-- RSP
 *)
 
-PROCEDURE {NOPAF} FieldInterrupt;
+PROCEDURE {PLAIN} FieldInterrupt;
 CONST SizeOfHandlerRec = SIZEOF(HandlerRec);
 CODE {SYSTEM.AMD64, SYSTEM.Privileged}
 entry:
@@ -2633,7 +2633,7 @@ loop:	; call all handlers for the interrupt
 	IRETQ
 END FieldInterrupt;
 
-PROCEDURE {NOPAF} FieldIRQ;
+PROCEDURE {PLAIN} FieldIRQ;
 CONST SizeOfHandlerRec = SIZEOF(HandlerRec);
 CODE {SYSTEM.AMD64}
 entry:
@@ -3766,7 +3766,7 @@ END InitTrace;
 
 
 (* The following procedure is linked as the first block in the bootfile *)
-PROCEDURE {NOPAF, FIXED(0100000H)} FirstAddress;
+PROCEDURE {PLAIN, OFFSET(0100000H)} FirstAddress;
 BEGIN
 	CODE{SYSTEM.AMD64}
 		; save arguments passed by bootloader
@@ -3782,7 +3782,7 @@ END FirstAddress;
 
 (*
 (* The following procedure is linked as the first block in the bootfile *)
-PROCEDURE {NOPAF, FIXED(0100000H)} FirstAddress;
+PROCEDURE {PLAIN, OFFSET(0100000H)} FirstAddress;
 CODE{SYSTEM.AMD64}
 	; relocate the bootfile from 0x1000 to target address 0x100000
 
@@ -3826,7 +3826,7 @@ END FirstAddress;
 *)
 
 (* empty section allocated at end of bootfile *)
-PROCEDURE {NOPAF} LastAddress;
+PROCEDURE {PLAIN} LastAddress;
 CODE {SYSTEM.AMD64}
 END LastAddress;
 

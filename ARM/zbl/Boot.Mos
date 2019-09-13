@@ -5,7 +5,7 @@ MODULE Boot;
 *)
 IMPORT SYSTEM;
 
-	PROCEDURE {OPENING, PLAIN} Boot;
+	PROCEDURE {OPENING} Boot;
 	CODE
 		; interrupt vectors at address 0
 	RESET: 	LDR	PC, [PC, #reset-$-8]		; RESET

@@ -3,7 +3,7 @@ MODULE ZynqInitializer;
 IMPORT SYSTEM;
 
 	(** Performs hardware initialization, initial stack setup and interrupt vector setup *)
-	PROCEDURE {INITIAL} Init;
+	PROCEDURE {OPENING} Init;
 	CODE
 		; interrupt vectors at address 0
 		RESET: 	ldr pc, [pc, #reset-$-8]; 			RESET

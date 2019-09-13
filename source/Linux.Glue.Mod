@@ -244,7 +244,7 @@ VAR
 	END EntryPoint;
 
 	(*
-	PROCEDURE {FINAL} ExitPoint;
+	PROCEDURE {CLOSING} ExitPoint;
 	BEGIN
 		Trace.String("exiting"); Trace.Ln;
 		exit(0);

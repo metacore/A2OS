@@ -122,7 +122,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Interrupts.Terminate;
 END Terminate;
 
-PROCEDURE {NOPAF, INITIAL, FIXED(100000H)} KernelBegin;
+PROCEDURE {OPENING, OFFSET(100000H)} KernelBegin;
 CODE
 	; initialize SP
 	MOV	SP, #0x8000
@@ -138,7 +138,7 @@ CODE
 skip:
 END KernelBegin;
 
-PROCEDURE {NOPAF, FINAL, ALIGNED(32)} KernelEnd;
+PROCEDURE {CLOSING, ALIGNED(32)} KernelEnd;
 CODE
 END KernelEnd;
 

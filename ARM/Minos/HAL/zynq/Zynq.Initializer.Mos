@@ -6,8 +6,8 @@ CONST
 	InitialStackPointer = 30000H;
 
 	(* initialization, minimal setup: setup initial stack pointer and mask interrupts*)
-	(* PROCEDURE {INITIAL} Init; *)
-	(*PROCEDURE {NOPAF, FIXED(Board.StartAddress)} Init;
+	(* PROCEDURE {OPENING} Init; *)
+	(*PROCEDURE {PLAIN, OFFSET(Board.StartAddress)} Init;
 	CODE
 			; set IRQ vector base register to zero
 			mov	r0, #0
@@ -33,7 +33,7 @@ CONST
 		end:
 	END Init;*)
 
-	PROCEDURE {FINAL} Finalize;
+	PROCEDURE {CLOSING} Finalize;
 	BEGIN
 		LOOP END;
 	END Finalize;

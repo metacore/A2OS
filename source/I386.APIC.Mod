@@ -52,7 +52,7 @@ CODE
 	MOV	[EDI - 4], EAX
 END CopyBootCode;
 
-PROCEDURE {NOPAF} BootCode;
+PROCEDURE {PLAIN} BootCode;
 CONST ID = 20H; Interrupts = CPU.Interrupts;
 CODE
 bootcodebegin:

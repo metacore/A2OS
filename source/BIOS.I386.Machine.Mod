@@ -3563,7 +3563,7 @@ BEGIN
 END InitTrace;
 
 (* The following procedure is linked as the first block in the bootfile *)
-PROCEDURE {NOPAF, FIXED(0100000H)} FirstAddress;
+PROCEDURE {PLAIN, OFFSET(0100000H)} FirstAddress;
 (* ; RELOCATION HAS BECOME VOID WITH NEW RELOCATING BOOTLOADER
 ;	; relocate the bootfile from 0x1000 to target address 0x100000
 ;	PUSHAD
@@ -3590,7 +3590,7 @@ BEGIN (* no PAF --> no variables !! *)
 END FirstAddress;
 
 (* empty section allocated at end of bootfile *)
-PROCEDURE {NOPAF, ALIGNED(32)} LastAddress;
+PROCEDURE {PLAIN, ALIGNED(32)} LastAddress;
 CODE {SYSTEM.i386}
 END LastAddress;
 

@@ -36,7 +36,7 @@ VAR
 			- put secondary processors into the sleeping loop
 			- allow CPU0 to continue kernel initialization
 	*)
-	PROCEDURE {OPENING, PLAIN} Init;
+	PROCEDURE {OPENING} Init;
 	CODE
 		; set IRQ vector base register to zero
 		MOV	R2, #0

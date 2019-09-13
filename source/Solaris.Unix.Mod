@@ -1226,7 +1226,7 @@ VAR
 	END LinkToX;
 
 
-	PROCEDURE {INITIAL} Init0;
+	PROCEDURE {OPENING} Init0;
 	BEGIN
 		Init;
 	END Init0;

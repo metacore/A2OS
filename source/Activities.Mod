@@ -451,7 +451,7 @@ BEGIN{UNCOOPERATIVE, UNCHECKED}
 	currentActivity.stackLimit := ADDRESS OF newStack[SafeStackSize + 3 * SIZE OF ADDRESS];
 END ReturnToStackSegment;
 
-PROCEDURE {NOPAF} ReturnToStackSegment0;
+PROCEDURE {PLAIN} ReturnToStackSegment0;
 BEGIN{UNCOOPERATIVE, UNCHECKED}
 	CPU.SaveResult;
 	ReturnToStackSegment;

@@ -4,7 +4,7 @@ IMPORT EFIGraphicalConsole, Machine, Trace;
 
 VAR fbadr: ADDRESS;
 
-	PROCEDURE {INITIAL} First ;
+	PROCEDURE {OPENING} First ;
 	BEGIN
 		Trace.String("first ? "); Trace.Ln;
 		Trace.Address(Machine.fbadr);  Trace.Ln;

@@ -288,7 +288,7 @@ vector_end:
 	MSR	CPSR_c, R2
 END Initialize;
 
-PROCEDURE {NOPAF} UndefinedInstructionHandler;
+PROCEDURE {PLAIN} UndefinedInstructionHandler;
 CODE
 	STMDB	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
 	MOV	R2, #UndefinedInstruction
@@ -302,7 +302,7 @@ handle:
 	d32	HandleInterrupt
 END UndefinedInstructionHandler;
 
-PROCEDURE {NOPAF} SoftwareInterruptHandler;
+PROCEDURE {PLAIN} SoftwareInterruptHandler;
 CODE
 	STMDB	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
 	MOV	R2, #SoftwareInterrupt
@@ -316,7 +316,7 @@ handle:
 	d32	HandleInterrupt
 END SoftwareInterruptHandler;
 
-PROCEDURE {NOPAF} PrefetchAbortHandler;
+PROCEDURE {PLAIN} PrefetchAbortHandler;
 CODE
 	STMDB	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
 	MOV	R2, #PrefetchAbort
@@ -330,7 +330,7 @@ handle:
 	d32	HandleInterrupt
 END PrefetchAbortHandler;
 
-PROCEDURE {NOPAF} DataAbortHandler;
+PROCEDURE {PLAIN} DataAbortHandler;
 CODE
 	STMDB	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
 	MOV	R2, #DataAbort
@@ -344,7 +344,7 @@ handle:
 	d32	HandleInterrupt
 END DataAbortHandler;
 
-PROCEDURE {NOPAF} IRQHandler;
+PROCEDURE {PLAIN} IRQHandler;
 CODE
 	STMDB	SP!, {R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, LR}
 	MOV	R2, #IRQ

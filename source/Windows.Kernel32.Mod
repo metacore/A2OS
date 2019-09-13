@@ -1147,7 +1147,7 @@ VAR hout: HANDLE;
 
 			BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 		*)
-		PROCEDURE {INITIAL, NOPAF} EntryPoint*;
+		PROCEDURE {OPENING} EntryPoint*;
 		CODE{SYSTEM.i386}
 			JMP  DWORD end;
 				DB 0

@@ -411,7 +411,7 @@ VAR high: SIGNED32;
 
 	(*! should not be used, linker cannot deal with fixup here -- late time code generation does not help because this is a code section *)
 	(*
-	PROCEDURE {NOPAF} LastAddress; (* empty procedure, linker places this always at the end of code memory *)
+	PROCEDURE {PLAIN} LastAddress; (* empty procedure, linker places this always at the end of code memory *)
 	CODE
 	END LastAddress;
 	*)

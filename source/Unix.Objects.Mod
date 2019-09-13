@@ -1012,7 +1012,7 @@ VAR main: MainThread;
 		Unix.exit( 0 );
 	END MainThreadSleep;
 
-	PROCEDURE {FINAL} Final;
+	PROCEDURE {CLOSING} Final;
 	BEGIN
 		MainThreadSleep;
 	END Final;

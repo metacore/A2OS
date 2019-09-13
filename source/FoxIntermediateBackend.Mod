@@ -354,7 +354,7 @@ TYPE
 			END Initialize;
 
 		BEGIN
-			IF x.externalName # NIL THEN RETURN END;
+			IF (x.externalName # NIL) OR (x.fixed) THEN RETURN END;
 			IF (currentScope IS SyntaxTree.ModuleScope) OR (currentScope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN
 				(* code section for variable *)
 				Global.GetSymbolSegmentedName(x,name);
@@ -9893,9 +9893,13 @@ TYPE
 				result.availability := GetAvailability(x);
 			ELSIF (x.scope = moduleScope) OR (x.scope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN (* global variable *)
 				InitOperand(result,ModeReference);
-				GetCodeSectionNameForSymbol(x,name);
-				symbol := NewSection(module.allSections, Sections.VarSection, name,x,commentPrintout # NIL);
-				IntermediateCode.InitAddress(result.op, addressType, symbol.name, GetFingerprint(symbol.symbol), 0);
+				IF x.fixed THEN
+					IntermediateCode.InitImmediate(result.op, addressType, x.alignment);
+				ELSE
+					GetCodeSectionNameForSymbol(x,name);
+					symbol := NewSection(module.allSections, Sections.VarSection, name,x,commentPrintout # NIL);
+					IntermediateCode.InitAddress(result.op, addressType, symbol.name, GetFingerprint(symbol.symbol), 0);
+				END; 
 			ELSIF x.scope IS SyntaxTree.ModuleScope THEN (* global variable in imported module *)
 				InitOperand(result,ModeReference);
 				GetCodeSectionNameForSymbol(x,name);

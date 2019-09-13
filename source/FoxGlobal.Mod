@@ -15,9 +15,8 @@ CONST
 	StringDelegate* = "DELEGATE";
 	StringInterrupt*= "INTERRUPT";
 	StringPcOffset* = "PCOFFSET";
-	StringEntry* = "INITIAL";
-	StringExit*= "FINAL";
-	StringNoPAF*="NOPAF";
+	StringOpening* = "OPENING";
+	StringClosing*= "CLOSING";
 	StringOffset*="OFFSET";
 	StringAligned*="ALIGNED";
 	StringAlignStack*="ALIGNSTACK";
@@ -193,7 +192,7 @@ VAR
 	(* names *)
 	SelfParameterName-,ReturnParameterName-,SystemName-,systemName-,PointerReturnName-, ResultName-,
 	A2Name-,ArrayBaseName-, ComplexNumbersName-, RecordBodyName-,ModuleBodyName-,
-	NameWinAPI-,NameC-,NamePlatformCC-,NameMovable-,NameUntraced-, NameUntracked-, NameDelegate-,NameInterrupt-, NamePcOffset-, NameNoPAF-,NameEntry-, NameExit-, NameOffset-, NameAligned-,NameStackAligned-,
+	NameWinAPI-,NameC-,NamePlatformCC-,NameMovable-,NameUntraced-, NameUntracked-, NameDelegate-,NameInterrupt-, NamePcOffset-, NameOpening-, NameClosing-, NameOffset-, NameAligned-,NameStackAligned-,
 	NameExclusive-,NameActive-,NamePriority-,NameSafe-,NameRealtime-, NameDynamic-, NameFingerprint-, NameDataMemorySize-, NameCodeMemorySize-
 	, NameChannelWidth-, NameChannelDepth-, NameChannelModule-, NameVector-, NameFloatingPoint-, NameNoMul-,NameNonBlockingIO-, NameTRM-, NameTRMS-, NameEngine-, NameFinal-, NameAbstract-,
 	NameBackend-, NameRuntime-, NameFrequencyDivider-, NameRegister-,NameNoReturn-,NamePlain-,NameUnsafe-,NameDisposable-,NameUnchecked-,NameUncooperative-: SyntaxTree.Identifier;
@@ -1777,9 +1776,8 @@ TYPE
 		NameDelegate := SyntaxTree.NewIdentifier(StringDelegate);
 		NameInterrupt := SyntaxTree.NewIdentifier(StringInterrupt);
 		NamePcOffset := SyntaxTree.NewIdentifier(StringPcOffset);
-		NameNoPAF := SyntaxTree.NewIdentifier(StringNoPAF);
-		NameEntry := SyntaxTree.NewIdentifier(StringEntry);
-		NameExit := SyntaxTree.NewIdentifier(StringExit);
+		NameOpening := SyntaxTree.NewIdentifier(StringOpening);
+		NameClosing := SyntaxTree.NewIdentifier(StringClosing);
 		NameOffset := SyntaxTree.NewIdentifier(StringOffset);
 		NameAligned := SyntaxTree.NewIdentifier(StringAligned);
 		NameStackAligned := SyntaxTree.NewIdentifier(StringAlignStack);

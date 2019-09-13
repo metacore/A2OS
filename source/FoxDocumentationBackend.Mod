@@ -444,7 +444,6 @@ TYPE
 			first := TRUE;
 			IF x.isDelegate THEN Flag(Global.NameDelegate,first) END;
 			IF x.isInterrupt THEN Flag(Global.NameInterrupt,first) END;
-			IF x.noPAF THEN Flag(Global.NameNoPAF,first) END;
 			IF x.callingConvention = SyntaxTree.WinAPICallingConvention THEN
 				Flag(Global.NameWinAPI,first)
 			ELSIF x.callingConvention = SyntaxTree.CCallingConvention THEN

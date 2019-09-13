@@ -6335,10 +6335,10 @@ TYPE
 				END;
 				IF HasValue(modifiers, Global.NamePcOffset, position, value) THEN procedureType.SetPcOffset(value(SIZE)) END;
 
-				IF HasFlag(modifiers,Global.NameNoPAF,position) THEN procedureType.SetNoPAF(TRUE) END;
+				IF HasFlag(modifiers,Global.NamePlain,position) THEN procedure.SetPlain(TRUE) END;
 				IF (procedure.scope IS SyntaxTree.ModuleScope) THEN
-					IF HasFlag(modifiers, Global.NameEntry,position) THEN procedure.SetEntry(TRUE);
-					ELSIF HasFlag(modifiers, Global.NameExit, position) THEN procedure.SetExit(TRUE);
+					IF HasFlag(modifiers, Global.NameOpening,position) THEN procedure.SetOpening(TRUE); procedure.SetPlain(TRUE);
+					ELSIF HasFlag(modifiers, Global.NameClosing, position) THEN procedure.SetClosing(TRUE); procedure.SetPlain(TRUE);
 					END;
 				END;
 				IF HasValue(modifiers,Global.NameAligned,position,value) THEN procedure.SetAlignment(FALSE,value(SIZE));
@@ -7873,7 +7873,7 @@ TYPE
 					END;
 					IF ~procedure.Resolving(FALSE) THEN (*HALT(100)*) END;
 				END;
-				IF procedureType.noPAF THEN
+				IF procedure.isPlain THEN
 					IF scope.firstVariable # NIL THEN
 						Error(procedure.position, "forbidden variable in procedure without activation frame");
 					ELSIF procedureType.firstParameter # NIL THEN

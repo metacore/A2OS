@@ -623,8 +623,8 @@ TYPE
 				ir.SetExported(IsExported(x));
 			ELSE
 				inline := FALSE;
-				IF x.isEntry OR x.isExit THEN
-					IF x.isEntry THEN
+				IF x.isOpening OR x.isClosing THEN
+					IF x.isOpening THEN
 						ir := implementationEmitter.NewSection(module.allSections, Sections.EntryCodeSection, name,x,dump);
 					ELSE
 						ir := implementationEmitter.NewSection(module.allSections, Sections.ExitCodeSection, name,x,dump);
@@ -690,7 +690,7 @@ TYPE
 						END;
 					END;
 
-					IF ~procedureType.noPAF THEN (* no procedure activation frame ! *)
+					IF ~x.isPlain THEN (* no procedure activation frame ! *)
 						implementationEmitter.EmitEnter(ir,x.position,x,callingConvention,ToMemoryUnits(system,stackSize));
 					END;
 					pc := ir.pc-1;
@@ -732,7 +732,7 @@ TYPE
 
 				implementationEmitter.Body(scope.body,currentScope,ir,isModuleBody);
 
-				IF ~inline & ~(procedureType.noPAF) & ~x.isEntry & ~x.isExit THEN
+				IF ~inline & ~(x.isPlain) & ~x.isOpening & ~x.isClosing THEN
 					IF scope.lastVariable # NIL THEN
 						stackSize := scope.lastVariable.offsetInBits;
 					END;
@@ -744,7 +744,7 @@ TYPE
 					Basic.Align(stackSize,system.AlignmentOf(system.parameterAlignment,system.byteType));  (* round up to parameter alignment *)
 				END;
 
-				IF ~inline  & ~(procedureType.noPAF) & ~x.isEntry & ~x.isExit THEN
+				IF ~inline  & ~(x.isPlain) & ~x.isOpening & ~x.isClosing THEN
 					(*
 					IF ToMemoryUnits(system,stackSize) > 4*1024-256 THEN (* stack frame potentially larger than page size *) (*! get page size from backend *)
 						(*! unnecessary with new implementation of ENTER -- should potentially be called by backend
@@ -1486,7 +1486,7 @@ TYPE
 				procedureType := procedure.type(SyntaxTree.ProcedureType);
 			ELSE procedureType := NIL;
 			END;
-			ASSERT((procedure = NIL) OR ~procedureType.noPAF);
+			ASSERT((procedure = NIL) OR ~procedure.isPlain);
 			prevSection := SELF.section;
 			SELF.section := section;
 			prevDump := dump;
@@ -6980,7 +6980,7 @@ TYPE
 				index := temporaries.registerIndex; INC(temporaries.registerIndex);
 			END;
 			scope := currentScope;
-			IF (scope IS SyntaxTree.ProcedureScope) & (scope(SyntaxTree.ProcedureScope).ownerProcedure.type(SyntaxTree.ProcedureType).noPAF) THEN
+			IF (scope IS SyntaxTree.ProcedureScope) & (scope(SyntaxTree.ProcedureScope).ownerProcedure.isPlain) THEN
 				Error(scope(SyntaxTree.ProcedureScope).ownerProcedure.position,"implementation restriction: cannot allocate temporary variable in procedure without activation frame");
 			END;
 			(*
@@ -11536,7 +11536,7 @@ TYPE
 
 
 
-				IF backend.preciseGC & (x.code = NIL) & (~procedureType.noPAF) & ~procedure.isEntry & ~procedure.isExit THEN
+				IF backend.preciseGC & (x.code = NIL) & (~procedure.isPlain) & ~procedure.isOpening & ~procedure.isClosing THEN
 					GetCodeSectionNameForSymbol(procedure, name);
 					Basic.SuffixSegmentedName (name, Basic.MakeString ("@Descriptor"));
 					IntermediateCode.InitAddress(right, addressType, name, 0, 0);

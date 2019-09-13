@@ -417,7 +417,6 @@ TYPE
 			first := TRUE;
 			IF x.isDelegate THEN Flag(Global.NameDelegate,first) END;
 			IF x.isInterrupt THEN Flag(Global.NameInterrupt,first) END;
-			IF x.noPAF THEN Flag(Global.NameNoPAF,first) END;
 			IF x.noReturn THEN Flag(Global.NameNoReturn,first) END;
 			IF x.callingConvention = SyntaxTree.WinAPICallingConvention THEN
 				Flag(Global.NameWinAPI,first)
@@ -1189,16 +1188,6 @@ TYPE
 			END;
 			w.String( ")" );
 		END ParameterList;
-
-		PROCEDURE Access(access: SET);
-		BEGIN
-			IF SyntaxTree.PublicWrite IN access THEN w.String(" PublicWrite") END;
-			IF SyntaxTree.ProtectedWrite IN access THEN w.String(" ProtectedWrite") END;
-			IF SyntaxTree.InternalWrite IN access THEN w.String(" InternalWrite") END;
-			IF SyntaxTree.PublicRead IN access THEN w.String(" PublicRead") END;
-			IF SyntaxTree.ProtectedRead IN access THEN w.String(" ProtectedRead") END;
-			IF SyntaxTree.InternalRead IN access THEN w.String(" InternalRead") END;
-		END Access;
 
 		PROCEDURE VisitProcedure*(x: SyntaxTree.Procedure);
 		VAR type: SyntaxTree.ProcedureType;  first: BOOLEAN; fp: SyntaxTree.Fingerprint;

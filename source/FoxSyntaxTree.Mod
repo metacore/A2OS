@@ -1736,7 +1736,7 @@ TYPE
 			returnParameter-: Parameter; (* not really necessary in syntax tree but very handy for backends *)
 			selfParameter-: Parameter;
 
-			isDelegate-,isInterrupt-,noPAF-,noReturn-: BOOLEAN;
+			isDelegate-,isInterrupt-,noReturn-: BOOLEAN;
 			pcOffset-: SIZE; (* PC offset: used for ARM interrupt procedures *)
 			callingConvention-: CallingConvention;
 			stackAlignment-: SIZE;
@@ -1750,7 +1750,7 @@ TYPE
 			firstParameter := NIL; lastParameter := NIL; numberParameters := 0; returnParameter := NIL;
 			returnType := NIL;
 			stackAlignment := 1;
-			isDelegate := FALSE; isInterrupt := FALSE; noPAF := FALSE;
+			isDelegate := FALSE; isInterrupt := FALSE;
 			callingConvention := OberonCallingConvention;
 			parametersOffset := 0;
 			pcOffset := 0;
@@ -1758,10 +1758,6 @@ TYPE
 			returnTypeModifiers := NIL;
 			selfParameter := NIL;
 		END InitProcedureType;
-
-		PROCEDURE SetNoPAF*(noPAF: BOOLEAN);
-		BEGIN SELF.noPAF := noPAF
-		END SetNoPAF;
 
 		PROCEDURE SetNoReturn*(noReturn: BOOLEAN);
 		BEGIN SELF.noReturn := noReturn
@@ -3132,7 +3128,7 @@ TYPE
 			super-: Procedure;
 			level-: SIGNED32;
 			methodNumber-: SIZE;
-			isBodyProcedure-, isConstructor-,isFinalizer-,isInline-,isOberonInline-, isEntry-, isExit-,isFinal-,isAbstract-,isOverwritten-: BOOLEAN;
+			isBodyProcedure-, isConstructor-,isFinalizer-,isInline-,isOberonInline-, isOpening-, isClosing-,isFinal-,isAbstract-,isOverwritten-,isPlain-: BOOLEAN;
 			resolving-: SIGNED32; (* for recursion detection during inlining *)
 
 		PROCEDURE & InitProcedure( position: Position;  name: Identifier; scope: ProcedureScope);
@@ -3151,11 +3147,12 @@ TYPE
 			isFinalizer := FALSE;
 			isInline := FALSE;
 			isOberonInline := FALSE;
-			isEntry := FALSE;
-			isExit := FALSE;
+			isOpening := FALSE;
+			isClosing := FALSE;
 			isFinal := FALSE;
 			isAbstract := FALSE;
 			isOverwritten := FALSE;
+			isPlain := FALSE;
 		END InitProcedure;
 
 		(* cycle detection during inlining *)
@@ -3192,13 +3189,17 @@ TYPE
 		BEGIN SELF.isOberonInline := isInline
 		END SetOberonInline;
 
-		PROCEDURE SetEntry*(entry: BOOLEAN);
-		BEGIN SELF.isEntry := entry
-		END SetEntry;
+		PROCEDURE SetOpening*(opening: BOOLEAN);
+		BEGIN SELF.isOpening := opening
+		END SetOpening;
 
-		PROCEDURE SetExit*(exit: BOOLEAN);
-		BEGIN SELF.isExit := exit
-		END SetExit;
+		PROCEDURE SetClosing*(closing: BOOLEAN);
+		BEGIN SELF.isClosing := closing
+		END SetClosing;
+
+		PROCEDURE SetPlain*(plain: BOOLEAN);
+		BEGIN SELF.isPlain := plain;
+		END SetPlain;
 
 		PROCEDURE SetFinal*(final: BOOLEAN);
 		BEGIN SELF.isFinal := final

@@ -41,7 +41,7 @@ END StartAll;
 
 PROCEDURE {NORETURN, PLAIN} Boot;
 PROCEDURE Idle EXTERN "Activities.Idle";
-PROCEDURE Execute EXTERN "Activities.Execute" (procedure: PROCEDURE);
+PROCEDURE Execute (procedure: PROCEDURE) EXTERN "Activities.Execute";
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Counters.Inc (running);
 	SuspendCurrentProcessor;

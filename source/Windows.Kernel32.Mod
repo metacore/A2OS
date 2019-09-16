@@ -1125,19 +1125,19 @@ VAR hout: HANDLE;
 	#IF SHAREDLIB THEN
 
 		PROCEDURE ObjectsAttachThread();
-		PROCEDURE AttachThread EXTERN "Objects.AttachThread"();
+		PROCEDURE AttachThread () EXTERN "Objects.AttachThread";
 		BEGIN
 			AttachThread;
 		END ObjectsAttachThread;
 
 		PROCEDURE ObjectsDetachThread();
-		PROCEDURE DetachThread EXTERN "Objects.DetachThread"();
+		PROCEDURE DetachThread () EXTERN "Objects.DetachThread";
 		BEGIN
 			DetachThread;
 		END ObjectsDetachThread;
 
 		PROCEDURE ObjectsDetachProcess();
-		PROCEDURE DetachProcess EXTERN "Objects.DetachProcess"();
+		PROCEDURE DetachProcess () EXTERN "Objects.DetachProcess";
 		BEGIN
 			DetachProcess;
 		END ObjectsDetachProcess;

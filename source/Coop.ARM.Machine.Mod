@@ -170,7 +170,7 @@ END TranslateVirtual;
 	END Fill32;
 
 	PROCEDURE GetConfig* ( CONST name: ARRAY OF CHAR;  VAR val: ARRAY OF CHAR );
-	PROCEDURE GetString EXTERN "Environment.GetString" ( CONST name: ARRAY OF CHAR;  VAR val: ARRAY OF CHAR );
+	PROCEDURE GetString ( CONST name: ARRAY OF CHAR;  VAR val: ARRAY OF CHAR ) EXTERN "Environment.GetString" ;
 	BEGIN GetString (name, val);
 	END GetConfig;
 

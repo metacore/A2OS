@@ -122,7 +122,7 @@ BEGIN {UNCOOPERATIVE, UNCHECKED}
 END RestoreActivity;
 
 PROCEDURE TrapHandler ( sig: SIGNED32; mc: Unix.Mcontext );
-PROCEDURE Trap EXTERN "Runtime.Trap" (number: SIZE);
+PROCEDURE Trap  (number: SIZE) EXTERN "Runtime.Trap";
 BEGIN
 	RestoreActivity;
 	Trap (sig);

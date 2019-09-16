@@ -141,7 +141,7 @@ VAR
 
 	allocationLogger-: PROCEDURE(p: ANY);
 
-PROCEDURE Assign* EXTERN "GarbageCollector.Assign" (VAR dest: ADDRESS; src: ADDRESS);
+PROCEDURE Assign* (VAR dest: ADDRESS; src: ADDRESS) EXTERN "GarbageCollector.Assign" ;
 
 (* for low level debugging of allocation -- beware: errors or traps in allocation logger can produce catastrophy - loggers may not allocate memory  *)
 PROCEDURE SetAllocationLogger*(a: PROCEDURE (p:ANY));
@@ -150,7 +150,7 @@ BEGIN
 END SetAllocationLogger;
 
 (** Mark - Mark an object and its decendents. Used by findRoots. *)
-PROCEDURE Mark* EXTERN "GarbageCollector.Mark" (p {UNTRACED}: ANY);
+PROCEDURE Mark*  (p {UNTRACED}: ANY) EXTERN "GarbageCollector.Mark";
 
 (* CheckCandidates - Check which candidates could be pointers, and mark them. (exported for debugging only) *)
 PROCEDURE CheckCandidates*;
@@ -297,7 +297,7 @@ BEGIN
 	SYSTEM.PUT(freeBlockAdr + HeapBlockOffset, NilVal)
 END InitFreeBlock;
 
-PROCEDURE NewBlock EXTERN "Runtime.New" (size: SIZE): ADDRESS;
+PROCEDURE NewBlock (size: SIZE): ADDRESS EXTERN "Runtime.New" ;
 
 (** NewSys - Implementation of SYSTEM.NEW. *)
 PROCEDURE NewSys*(VAR p: ANY; size: SIZE; isRealtime: BOOLEAN);

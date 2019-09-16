@@ -28,7 +28,7 @@ END Trap;
 PROCEDURE New- (size: SIZE): ADDRESS;
 VAR result: ADDRESS; tries: SIZE;
 PROCEDURE CollectGarbage EXTERN "GarbageCollector.Collect";
-PROCEDURE Allocate EXTERN "Environment.Allocate" (size: SIZE): ADDRESS;
+PROCEDURE Allocate (size: SIZE): ADDRESS EXTERN "Environment.Allocate" ;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	FOR tries := 1 TO 10 DO
 		result := Allocate (size);
@@ -41,8 +41,8 @@ END New;
 (** This procedure releases memory that was previously acquired by a call to the [[Runtime.New]] procedure. *)
 (** The compiler implements DISPOSE statements on types marked as disposable with a call to this procedure. *)
 PROCEDURE Dispose- (VAR pointer {UNTRACED}: BaseTypes.Pointer);
-PROCEDURE Deallocate EXTERN "Environment.Deallocate" (address: ADDRESS);
-PROCEDURE Watch EXTERN "GarbageCollector.Watch" (pointer {UNTRACED}: BaseTypes.Pointer);
+PROCEDURE Deallocate (address: ADDRESS) EXTERN "Environment.Deallocate" ;
+PROCEDURE Watch (pointer {UNTRACED}: BaseTypes.Pointer) EXTERN "GarbageCollector.Watch" ;
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	ASSERT (pointer # NIL);
 	IF pointer IS BaseTypes.Object THEN pointer(BaseTypes.Object).Finalize END;

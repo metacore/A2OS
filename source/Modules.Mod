@@ -847,7 +847,7 @@ END PublishRegisteredModules;
 
 PROCEDURE FinalizeModules;
 VAR module {UNTRACED}: Module;
-PROCEDURE Finalize EXTERN "BaseTypes.Object.Finalize" (module {UNTRACED}: Module);
+PROCEDURE Finalize  (module {UNTRACED}: Module) EXTERN "BaseTypes.Object.Finalize";
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	module := root;
 	WHILE module # NIL DO
@@ -877,7 +877,7 @@ END Main;
 
 (* procedure that will be called last in a linked kernel *)
 PROCEDURE {CLOSING} Main-;
-PROCEDURE ExitA2 EXTERN "Objects.ExitA2"();
+PROCEDURE ExitA2 () EXTERN "Objects.ExitA2";
 BEGIN
 	(*Machine.Init;*)
 	IF TraceBoot THEN

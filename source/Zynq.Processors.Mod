@@ -15,7 +15,7 @@ VAR count-: SIZE;
 VAR running: Counters.AlignedCounter; (* counts the number of application processors currently running *)
 
 (** Returns the unique index of the processor executing this procedure call. *)
-PROCEDURE GetCurrentIndex- EXTERN "Activities.GetCurrentProcessorIndex" (): SIZE;
+PROCEDURE GetCurrentIndex- (): SIZE EXTERN "Activities.GetCurrentProcessorIndex" ;
 
 (** Suspends the execution of the current processor. *)
 (** A suspended processor must be resumed by a call to the Processors.ResumeAnyProcessor procedure. *)

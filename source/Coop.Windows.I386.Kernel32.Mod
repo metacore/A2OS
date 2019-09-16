@@ -785,7 +785,7 @@ VAR
 
 	PROCEDURE {WINAPI} ExceptionHandler( VAR excpRec: ExceptionRecord; excpFrame: ExcpFrmPtr;
 	 										VAR context: Context;  dispatch: SIGNED32 ): SIGNED32;
-	PROCEDURE Trap EXTERN "Runtime.Trap" (number: SIZE);
+	PROCEDURE Trap  (number: SIZE) EXTERN "Runtime.Trap";
 	PROCEDURE RestoreActivity EXTERN "Environment.RestoreActivity";
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		RestoreActivity;

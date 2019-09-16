@@ -16,7 +16,7 @@ VAR barrier: Unix.Barrier;
 VAR thread: ARRAY Maximum OF Unix.Thread_t;
 
 (** Returns the unique index of the processor executing this procedure call. *)
-PROCEDURE GetCurrentIndex- EXTERN "Activities.GetCurrentProcessorIndex" (): SIZE;
+PROCEDURE GetCurrentIndex- (): SIZE EXTERN "Activities.GetCurrentProcessorIndex";
 
 (** Suspends the execution of the current processor. *)
 (** A suspended processor must be resumed by a call to the ResumeAnyProcessor procedure. *)
@@ -42,7 +42,7 @@ END StartAll;
 
 (* Start routine for each Posix thread. *)
 PROCEDURE {C} Start (arg: ADDRESS): ADDRESS;
-PROCEDURE Execute EXTERN "Activities.Execute" (procedure: PROCEDURE);
+PROCEDURE Execute  (procedure: PROCEDURE) EXTERN "Activities.Execute";
 PROCEDURE Idle EXTERN "Activities.Idle";
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	StartAll;

@@ -43,7 +43,7 @@ END Array;
 TYPE PointerArray* = OBJECT {DISPOSABLE,PLAIN} (Array)
 
 	PROCEDURE Trace-;
-	PROCEDURE MarkPointerArray EXTERN "GarbageCollector.MarkPointerArray" (length: SIZE; address: ADDRESS);
+	PROCEDURE MarkPointerArray (length: SIZE; address: ADDRESS) EXTERN "GarbageCollector.MarkPointerArray";
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		MarkPointerArray (length, data);
 	END Trace;
@@ -54,7 +54,7 @@ END PointerArray;
 TYPE RecordArray* = OBJECT {DISPOSABLE,PLAIN} (Array)
 
 	PROCEDURE Trace-;
-	PROCEDURE MarkRecordArray EXTERN "GarbageCollector.MarkRecordArray" (address: ADDRESS; length: SIZE; descriptor {UNTRACED}: Descriptor);
+	PROCEDURE MarkRecordArray (address: ADDRESS; length: SIZE; descriptor {UNTRACED}: Descriptor) EXTERN "GarbageCollector.MarkRecordArray" ;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		MarkRecordArray (data, length, descriptor);
 	END Trace;
@@ -64,7 +64,7 @@ END RecordArray;
 TYPE DelegateArray* = OBJECT {DISPOSABLE,PLAIN} (Array)
 
 	PROCEDURE Trace-;
-	PROCEDURE MarkDelegateArray EXTERN "GarbageCollector.MarkDelegateArray" (length: SIZE; address: ADDRESS);
+	PROCEDURE MarkDelegateArray (length: SIZE; address: ADDRESS) EXTERN "GarbageCollector.MarkDelegateArray" ;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		MarkDelegateArray (length, data);
 	END Trace;
@@ -105,7 +105,7 @@ TYPE Object* = OBJECT {DISPOSABLE,PLAIN} (Pointer)
 	(** It is guaranteed to be called during the disposal of any object instance. *)
 	PROCEDURE ~Finalize-;
 	VAR BaseDescriptor {UNTRACED} EXTERN "BaseTypes.Pointer": Descriptor;
-	PROCEDURE Unlink EXTERN "Activities.Process.Unlink" (activity {UNTRACED}: OBJECT);
+	PROCEDURE Unlink  (activity {UNTRACED}: OBJECT) EXTERN "Activities.Process.Unlink";
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		IF action # NIL THEN
 			IF action.activity # NIL THEN Unlink (action.activity); action.activity := NIL END;

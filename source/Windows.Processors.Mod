@@ -16,7 +16,7 @@ VAR semaphore: Kernel32.HANDLE;
 VAR thread: ARRAY Maximum OF Kernel32.HANDLE;
 
 (** Returns the unique index of the processor executing this procedure call. *)
-PROCEDURE GetCurrentIndex- EXTERN "Activities.GetCurrentProcessorIndex" (): SIZE;
+PROCEDURE GetCurrentIndex-  (): SIZE EXTERN "Activities.GetCurrentProcessorIndex";
 
 (** Suspends the execution of the current processor. *)
 (** A suspended processor must be resumed by a call to the ResumeAnyProcessor procedure. *)
@@ -44,7 +44,7 @@ END StartAll;
 
 (* Start routine for each Windows thread. *)
 PROCEDURE {WINAPI} Start (lpParameter {UNTRACED}: ANY): SIGNED32;
-PROCEDURE Execute EXTERN "Activities.Execute" (procedure: PROCEDURE);
+PROCEDURE Execute (procedure: PROCEDURE) EXTERN "Activities.Execute";
 PROCEDURE Idle EXTERN "Activities.Idle";
 BEGIN {UNCOOPERATIVE, UNCHECKED}
 	Kernel32.InstallExceptionHandler;

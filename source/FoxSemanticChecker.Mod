@@ -6213,7 +6213,7 @@ TYPE
 					variable.SetExtern(ConstantExpression(variable.extern));
 					IF IsIntegerValue(variable.extern, value) THEN
 						variable.SetAlignment(TRUE,value(SIZE));
-						variable.SetOffset(value*system.dataUnit);
+						variable.SetOffset(value(SIZE)*system.dataUnit);
 					ELSIF IsStringValue(variable.extern, string) THEN
 						variable.SetExternName(string);
 					ELSE
@@ -6387,7 +6387,7 @@ TYPE
 					procedure.SetExtern(ConstantExpression(procedure.extern));
 					IF IsIntegerValue(procedure.extern, value) THEN
 						procedure.SetAlignment(TRUE,value(SIZE));
-						procedure.SetOffset(value*system.dataUnit);
+						procedure.SetOffset(value(SIZE)*system.dataUnit);
 					ELSIF IsStringValue(procedure.extern, string) THEN
 						procedure.SetExternName(string);
 					ELSE

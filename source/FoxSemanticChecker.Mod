@@ -6169,7 +6169,7 @@ TYPE
 			- check symbol
 		**)
 		PROCEDURE ResolveVariable(variable: SyntaxTree.Variable);
-		VAR modifiers: SyntaxTree.Modifier; value: Basic.Integer; position: Position; pointerType: SyntaxTree.PointerType;
+		VAR modifiers: SyntaxTree.Modifier; value: Basic.Integer; position: Position; pointerType: SyntaxTree.PointerType; string: Scanner.StringType;
 		BEGIN
 			IF Trace THEN D.Str("ResolveVariable "); D.Str0(variable.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(variable) THEN
@@ -6209,6 +6209,17 @@ TYPE
 					variable.SetAlignment(TRUE,value(SIZE));
 					variable.SetOffset(value(SIZE)*system.dataUnit);
 				END;
+				IF variable.extern # NIL THEN
+					variable.SetExtern(ConstantExpression(variable.extern));
+					IF IsIntegerValue(variable.extern, value) THEN
+						variable.SetAlignment(TRUE,value(SIZE));
+						variable.SetOffset(value*system.dataUnit);
+					ELSIF IsStringValue(variable.extern, string) THEN
+						variable.SetExternName(string);
+					ELSE
+						Error(position, "invalid type for extern origin specification")
+					END; 
+				END; 
 				IF HasFlag(modifiers, Global.NameRegister, position) THEN variable.PreferRegister(TRUE) END;
 				IF variable.type.resolved IS SyntaxTree.CellType THEN
 					IF HasValue(modifiers, Global.NameCodeMemorySize, position, value) THEN END;
@@ -6301,6 +6312,7 @@ TYPE
 			selfParameter: SyntaxTree.Parameter; qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 			qualifiedType: SyntaxTree.QualifiedType;
 			value: Basic.Integer;
+			string: Scanner.StringType;
 			modifiers: SyntaxTree.Modifier; recentIsRealtime, recentIsBodyProcedure: BOOLEAN;
 			position: Position;
 			fp: SyntaxTree.Fingerprint;
@@ -6365,10 +6377,24 @@ TYPE
 
 				CheckModifiers(modifiers, TRUE);
 
+
+
 				modifiers := procedureType.returnTypeModifiers;
 				procedureType.SetUntracedReturn(HasFlag(modifiers, Global.NameUntraced, position));
 				CheckModifiers(modifiers, TRUE);
 
+				IF procedure.extern # NIL THEN
+					procedure.SetExtern(ConstantExpression(procedure.extern));
+					IF IsIntegerValue(procedure.extern, value) THEN
+						procedure.SetAlignment(TRUE,value(SIZE));
+						procedure.SetOffset(value*system.dataUnit);
+					ELSIF IsStringValue(procedure.extern, string) THEN
+						procedure.SetExternName(string);
+					ELSE
+						Error(procedure.position, "invalid type for extern origin specification")
+					END; 
+				END; 
+				
 				procedure.SetState(SyntaxTree.Resolved);
 
 				FixProcedureType(procedureType);
@@ -9696,7 +9722,7 @@ TYPE
 			END;
 			IF d # NIL THEN
 				symbol := d(SyntaxTree.SymbolDesignator).symbol;
-				RETURN (symbol.scope IS SyntaxTree.ProcedureScope) & (symbol.externalName = NIL);
+				RETURN (symbol.scope IS SyntaxTree.ProcedureScope) & (symbol.extern = NIL);
 			END;
 		END;
 		RETURN FALSE;

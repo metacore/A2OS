@@ -926,11 +926,6 @@ TYPE
 				IF info THEN BeginComment; w.String("<- hidden"); EndComment  END;
 			END;
 
-			IF x.externalName # NIL THEN
-				Keyword(" EXTERN " ); w.Char('"');
-				w.String(x.externalName^); w.Char('"');
-			END;
-
 			IF info THEN
 				BeginComment;
 				IF x.offsetInBits # MIN(SIZE) THEN
@@ -1019,6 +1014,11 @@ TYPE
 					IF x.initializer # NIL THEN
 						w.String( " := " ); Expression (x.initializer);
 					END;
+					IF x.extern # NIL THEN
+						Keyword(" EXTERN " ); 
+						Expression(x.extern); 
+					END;
+
 					w.String( ": " );
 					Type(x.type);
 					Comments(x.comment,x,TRUE);
@@ -1040,9 +1040,9 @@ TYPE
 			VAR first: BOOLEAN;
 			BEGIN
 				first := TRUE;
-				IF x.fixed THEN
+				IF x.fixed & (x.extern = NIL) THEN
 					Value(Global.NameOffset,x.alignment,first)
-				ELSIF x.alignment > 1 THEN
+				ELSIF ~x.fixed & (x.alignment > 1) THEN
 					Value(Global.NameAligned,x.alignment,first)
 				ELSIF x.preferRegister THEN
 					Flag(Global.NameRegister,first);
@@ -1064,6 +1064,11 @@ TYPE
 					IF x.initializer # NIL THEN
 						w.String( " := " ); Expression (x.initializer);
 					END;
+					IF x.extern # NIL THEN
+						Keyword(" EXTERN " ); 
+						Expression(x.extern); 
+					END;
+					
 					WHILE(next # NIL) & (next.type = x.type) & ((next.access # SyntaxTree.Hidden) OR (mode > SourceCode)) DO
 
 						w.String(", "); PrintSymbol(next); Flags(next);
@@ -1209,7 +1214,7 @@ TYPE
 				IF (type.noReturn) THEN Flag(Global.NameNoReturn,first) END;
 				IF (x.isAbstract) THEN Flag(Global.NameAbstract,first) END;
 				IF (x.isFinal) THEN Flag(Global.NameFinal,first) END;
-				IF (x.fixed) THEN Value(Global.NameOffset, x.alignment,first)
+				IF (x.fixed) & (x.extern = NIL) THEN Value(Global.NameOffset, x.alignment,first)
 				ELSIF (x.alignment >1) THEN Value(Global.NameAligned, x.alignment, first)
 				END;
 				IF type.callingConvention = SyntaxTree.WinAPICallingConvention THEN
@@ -1260,7 +1265,7 @@ TYPE
 					Symbol(type.returnParameter);
 					EndComment;
 				END;
-				IF x.externalName = NIL THEN
+				IF x.extern = NIL THEN
 					IF (mode > SymbolFile) OR (mode = SymbolFile) & (x.isInline OR x.isOberonInline) THEN
 						w.String( ";" );
 						Comments(x.comment,x,TRUE);
@@ -1269,6 +1274,9 @@ TYPE
 						END;
 						Indent;  Keyword("END " );  Identifier(x.name);
 					END;
+				ELSE
+					w.String(" EXTERN "); 
+					Expression(x.extern);
 				END;
 			END;
 		END VisitProcedure;
@@ -1312,7 +1320,7 @@ TYPE
 					EndComment;
 				END;
 
-				IF x.externalName = NIL THEN
+				IF x.extern = NIL THEN
 					IF (mode > SymbolFile) OR (mode = SymbolFile) & (x.isInline OR x.isOberonInline) THEN
 						w.String( ";" );
 						Comments(x.comment,x,TRUE);

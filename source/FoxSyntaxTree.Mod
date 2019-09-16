@@ -2692,7 +2692,8 @@ TYPE
 		nextSymbol-: Symbol;
 
 		name-: Identifier; (* constant / variable / parameter / type name / module name *)
-		externalName-: Scanner.StringType;  (* variable / procedure *)
+		extern-: Expression; (* const expression: either address or String *)
+		externName-: Scanner.StringType; 
 		access-: SET; (* access flags (exported, readonly etc.) *)
 		type-: Type; (* type of constant / variable / parameter / procedure return type *)
 		scope-:Scope; (* container of symbol *)
@@ -2712,7 +2713,7 @@ TYPE
 			SELF.end := invalidPosition;
 			nextSymbol := NIL;
 			SELF.name := name;
-			externalName := NIL;
+			extern := NIL;
 			scope:= NIL;
 			type := NIL;
 			access := Internal;
@@ -2786,9 +2787,14 @@ TYPE
 		BEGIN SELF.comment := comment
 		END SetComment;
 
-		PROCEDURE SetExternalName*(name: Scanner.StringType);
-		BEGIN externalName := name;
-		END SetExternalName;
+		PROCEDURE SetExtern*(e: Expression);
+		BEGIN extern := e;
+		END SetExtern;
+		
+		PROCEDURE SetExternName*(name: Scanner.StringType);
+		BEGIN
+			externName := name;
+		END SetExternName;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN RETURN FALSE;
@@ -2995,7 +3001,7 @@ TYPE
 		END SetInitializer;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
-		BEGIN RETURN ~untraced & (externalName = NIL) & type.NeedsTrace ();
+		BEGIN RETURN ~untraced & (extern = NIL) & type.NeedsTrace ();
 		END NeedsTrace;
 
 	END Variable;

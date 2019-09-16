@@ -456,7 +456,7 @@ TYPE
 				variable := scope.firstVariable;
 				WHILE (variable # NIL) DO
 					IF variable.offsetInBits = MIN(SIZE) THEN
-						IF (variable.externalName # NIL) THEN
+						IF (variable.extern # NIL) THEN
 							variable.SetOffset(offset)
 						ELSIF ~variable.fixed & ~variable.preferRegister THEN
 							size := SizeOfVariable(variable);

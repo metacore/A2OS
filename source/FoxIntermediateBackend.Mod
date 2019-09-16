@@ -354,7 +354,7 @@ TYPE
 			END Initialize;
 
 		BEGIN
-			IF (x.externalName # NIL) OR (x.fixed) THEN RETURN END;
+			IF (x.extern # NIL) OR (x.fixed) THEN RETURN END;
 			IF (currentScope IS SyntaxTree.ModuleScope) OR (currentScope IS SyntaxTree.CellScope) & ~backend.cellsAreObjects THEN
 				(* code section for variable *)
 				Global.GetSymbolSegmentedName(x,name);
@@ -575,7 +575,7 @@ TYPE
 
 			CONST DefaultDataMemorySize=512;
 		BEGIN
-			IF x.externalName # NIL THEN RETURN END;
+			IF x.extern # NIL THEN RETURN END;
 			(*
 			IF Trace & (dump # NIL) THEN dump.String("DeclarationEmitter:Procedure"); dump.Ln END;
 			*)
@@ -9877,9 +9877,9 @@ TYPE
 					UseRegister(reg);
 				END;
 				IntermediateCode.InitRegister(result.op,IntermediateCode.GetType(system, type),IntermediateCode.GeneralPurposeRegister,reg);
-			ELSIF x.externalName # NIL THEN
+			ELSIF x.externName # NIL THEN
 				InitOperand(result,ModeReference);
-				Basic.ToSegmentedName(x.externalName^, name);
+				Basic.ToSegmentedName(x.externName^, name);
 				IntermediateCode.InitAddress(result.op, addressType, name, 0, 0);
 			ELSIF (x.scope IS SyntaxTree.ProcedureScope)  OR (x.scope IS SyntaxTree.BlockScope) THEN (* local variable (potentially via nested procedure) *)
 				InitOperand(result,ModeReference);
@@ -10162,8 +10162,8 @@ TYPE
 			ELSE
 				sectionType := Sections.CodeSection;
 			END;
-			IF x.externalName # NIL THEN
-				Basic.ToSegmentedName(x.externalName^, name);
+			IF x.externName # NIL THEN
+				Basic.ToSegmentedName(x.externName^, name);
 				IntermediateCode.InitAddress(reg, addressType, name, 0, 0);
 			ELSE
 				GetCodeSectionNameForSymbol(x, name);
@@ -12757,7 +12757,7 @@ TYPE
 				VAR s: Sections.Section; procedureType: SyntaxTree.ProcedureType; parameter: SyntaxTree.Parameter; pos: SIGNED32;
 					flags: SET;
 				BEGIN
-					IF procedure.externalName # NIL THEN RETURN END;
+					IF procedure.extern # NIL THEN RETURN END;
 					IF RefInfo THEN Info(section, "Procedure") END;
 					pos := CurrentIndex();
 					procedureType := procedure.type.resolved(SyntaxTree.ProcedureType);
@@ -12808,8 +12808,8 @@ TYPE
 					String0(section, variable.name);
 					IF (variable.scope # NIL) & (variable.scope IS SyntaxTree.ModuleScope) THEN
 						Char(section, sfAbsolute);
-						IF variable.externalName # NIL THEN
-							sn := variable.externalName^;
+						IF variable.externName # NIL THEN
+							sn := variable.externName^;
 							NamedSymbol(section, sn,NIL, 0,0);
 						ELSE
 							implementationEmitter.GetCodeSectionNameForSymbol(variable, sn);
@@ -13467,7 +13467,7 @@ TYPE
 			ELSIF scope IS SyntaxTree.ModuleScope THEN
 				variable := scope(SyntaxTree.ModuleScope).firstVariable;
 				WHILE variable # NIL DO
-					IF ~(variable.untraced) & (variable.externalName = NIL) THEN
+					IF ~(variable.untraced) & (variable.extern = NIL) THEN
 						symbol := module.allSections.FindBySymbol(variable);
 						ASSERT(symbol # NIL);
 						Pointers(0,symbol, source,variable.type,numberPointers);
@@ -13485,7 +13485,7 @@ TYPE
 					(* a self parameter does not need to be traced *)
 					variable := scope(SyntaxTree.ProcedureScope).firstVariable;
 					WHILE(variable # NIL) DO
-						IF ~(variable.untraced) & (variable.externalName = NIL) THEN
+						IF ~(variable.untraced) & (variable.extern = NIL) THEN
 							Pointers(ToMemoryUnits(module.system,variable.offsetInBits), NIL,  source, variable.type, numberPointers);
 						END;
 						variable := variable.nextVariable
@@ -14571,7 +14571,7 @@ TYPE
 
 	PROCEDURE IsNested(procedure: SyntaxTree.Procedure): BOOLEAN;
 	BEGIN
-		RETURN (procedure.scope IS SyntaxTree.ProcedureScope) & (procedure.externalName = NIL);
+		RETURN (procedure.scope IS SyntaxTree.ProcedureScope) & (procedure.extern = NIL);
 	END IsNested;
 
 	PROCEDURE InCellScope(scope: SyntaxTree.Scope): BOOLEAN;

@@ -2046,8 +2046,7 @@ TYPE
 			recentCommentItem := symbol
 		END CommentWithPart;
 
-		(** ProcedureDeclaration = 'procedure' ['^'|'&'|'~'|'-'|Flags ['-']] IdentifierDefinition [FormalParameters]';'
-					DeclarationSequence  [Body] 'end' Identifier.
+		(** ProcedureDeclaration = 'procedure' ['^'|'&'|'~'|'-'|Flags ['-']] IdentifierDefinition [FormalParameters] (';' DeclarationSequence [Body] 'end' Identifier | 'extern' ConstExpression ';').
 			Forward declarations ignored.
 		**)
 		PROCEDURE ProcedureDeclaration( parentScope: SyntaxTree.Scope);
@@ -2133,10 +2132,11 @@ TYPE
 
 			procedureType.SetModifiers(modifiers);
 			procedure.SetType(procedureType);
-			IF Optional(Scanner.Extern) & MandatoryString(string) THEN procedure.SetExternalName(string); END;
 			IF Optional(Scanner.LeftParenthesis) THEN FormalParameters( procedureType, procedureScope) END;
 
-			IF (procedure.externalName = NIL) & ~forwardDeclaration THEN
+			IF Optional(Scanner.Extern)  THEN 
+				procedure.SetExtern(Expression());
+			ELSIF ~forwardDeclaration THEN
 				IF Lax THEN Ignore(Scanner.Semicolon) ELSE Check( Scanner.Semicolon ) END;
 				DeclarationSequence( procedureScope);
 				IF Peek(Scanner.Begin) OR Peek(Scanner.Code) THEN
@@ -2233,7 +2233,7 @@ TYPE
 				CommentSymbol(variable);
 				IF Optional(Scanner.LeftBrace) THEN variable.SetModifiers(Flags()) END;
 				IF Optional(Scanner.Becomes) THEN variable.SetInitializer (Expression());
-				ELSIF Optional(Scanner.Extern) & MandatoryString(string) THEN variable.SetExternalName(string); END;
+				ELSIF Optional(Scanner.Extern) THEN variable.SetExtern(Expression()); END;
 				variable.SetAccess(access);
 				scope.AddVariable(variable);
 			UNTIL ~Optional( Scanner.Comma );

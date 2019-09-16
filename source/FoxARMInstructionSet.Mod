@@ -2879,7 +2879,7 @@ CONST
 								value := instruction.operands[1].offsetImmediate + adr(INTEGER) + 8;
 							END;
 							WriteReference(value, TRUE, w);
-							IF (value>=0) & (value * 8 + 32 < bitSet.GetSize()) THEN
+							IF (value>=0) & (value * 8 + 32 <= bitSet.GetSize()) THEN
 								WriteReference(bitSet.GetBits(value * 8, 32) - codeDisplacement, TRUE, w); (* note that data references cannot be resolved like this *)
 							END
 						END

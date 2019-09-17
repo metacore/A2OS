@@ -2,6 +2,7 @@ MODULE CyrillicUtilities; (** AUTHOR "SAGE"; PURPOSE "Cyrillic charsets text uti
 
 (*
 	History:
+	11/09/2019 - SAGE:	Added CP1250 encoding
 	21/07/2010 - SAGE:	Calculate the range of unicode char codes on hash table construction,
 									and check that input unicode char is within this range on encoding.
 									Bug 'Code present in table, but not used in current encoding' fixed.
@@ -25,17 +26,20 @@ CONST
 	(* Prime number for hash table *)
 	PRIME = 977;
 
-	(* Available encoding tables  *)
-	CP1251 = 0;
-	KOI8R = CP1251 + 1;
-	KOI8U = KOI8R + 1;
-	CP866 = KOI8U + 1;
-	ISO88595 = CP866 + 1;
-	ENCODINGS_HIGH = ISO88595;
-
 	CR = 0DX; LF = 0AX;
 
 TYPE
+
+	Encodings = ENUM
+
+		(* Cyrillic encodings *)
+		CP1251, KOI8R, KOI8U, CP866, ISO88595,
+
+		(* Central and Eastern European encoding *)
+		CP1250,
+
+		HIGH
+	END;
 
 	Char32 = Texts.Char32;
 
@@ -44,11 +48,88 @@ TYPE
 	HashTable  = ARRAY PRIME OF
 		RECORD
 			ucs32: Char32;
-			encodings: SET;
-			ch: ARRAY ENCODINGS_HIGH + 1 OF CHAR;
+			encodings: SET64;
+			ch: ARRAY SIGNED8(Encodings.HIGH) + 1 OF CHAR;
 		END;
 
-	LowBound = ARRAY ENCODINGS_HIGH + 1 OF SIGNED16;
+	LowBound = ARRAY SIGNED8(Encodings.HIGH) + 1 OF UNSIGNED8;
+
+	CP1250Decoder = OBJECT(Codecs.TextDecoder)
+	VAR errors : BOOLEAN;
+		in : Streams.Reader;
+		text : Texts.Text;
+
+		PROCEDURE Error(CONST x : ARRAY OF CHAR);
+		BEGIN
+			KernelLog.String("CP1250 Decoder Error: ");
+			KernelLog.String(x); KernelLog.Ln;
+			errors := TRUE
+		END Error;
+
+		PROCEDURE Open*(in : Streams.Reader; VAR res : INTEGER);
+		VAR i, m: SIZE;
+			tempUCS32 : ARRAY 1024 OF Char32;
+			ch : CHAR;
+		BEGIN
+			errors := FALSE;
+			res := Codecs.ResFailed;
+			IF in = NIL THEN Error("Input Stream is NIL"); RETURN; END;
+			SELF.in := in;
+			NEW(text);
+			text.AcquireWrite;
+			m := LEN(tempUCS32) - 1;
+			i := 0;
+			REPEAT
+				in.Char(ch);
+				IF i = m  THEN tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32); i := 0 END;
+				tempUCS32[i] := cp1250[ORD(ch)];
+				INC(i)
+			UNTIL (in.res # Streams.Ok);
+			tempUCS32[i] := 0; text.InsertUCS32(text.GetLength(), tempUCS32);
+			res := Codecs.ResOk;
+			text.ReleaseWrite
+		END Open;
+
+		PROCEDURE GetText*() : Texts.Text;
+		BEGIN
+			RETURN text
+		END GetText;
+
+	END CP1250Decoder;	
+	
+	CP1250Encoder = OBJECT(Codecs.TextEncoder)
+	VAR out: Streams.Writer;
+
+		PROCEDURE Open*(out : Streams.Writer);
+		BEGIN
+			IF out = NIL THEN KernelLog.String("CP1250 Encoder Error: output stream is NIL");
+			ELSE SELF.out := out
+			END
+		END Open;
+
+		PROCEDURE WriteText*(text : Texts.Text; VAR res : INTEGER);
+		VAR r : Texts.TextReader; ch : Texts.Char32; i : SIZE;
+			c: CHAR;
+		BEGIN
+			res :=  -1;
+			text.AcquireRead;
+			NEW(r, text);
+			FOR i := 0 TO text.GetLength() - 1 DO
+				r.ReadCh(ch);
+
+				IF ch < aLowBound[SIGNED8(Encodings.CP1250)] THEN
+					out.Char(CHR(ch))
+				ELSIF hashSearch(SIGNED8(Encodings.CP1250), FALSE, ch, c) THEN
+					out.Char(c)
+				END;
+
+			END;
+			out.Update;
+			text.ReleaseRead;
+			res := Codecs.ResOk
+		END WriteText;
+
+	END CP1250Encoder;
 
 	CP1251Decoder = OBJECT(Codecs.TextDecoder)
 	VAR errors : BOOLEAN;
@@ -119,9 +200,9 @@ TYPE
 			FOR i := 0 TO text.GetLength() - 1 DO
 				r.ReadCh(ch);
 
-				IF ch < aLowBound[CP1251] THEN
+				IF ch < aLowBound[SIGNED8(Encodings.CP1251)] THEN
 					out.Char(CHR(ch))
-				ELSIF hashSearch(CP1251, FALSE, ch, c) THEN
+				ELSIF hashSearch(SIGNED8(Encodings.CP1251), FALSE, ch, c) THEN
 					out.Char(c)
 				END;
 
@@ -203,9 +284,9 @@ TYPE
 			FOR i := 0 TO text.GetLength() - 1 DO
 				r.ReadCh(ch);
 
-				IF ch < aLowBound[KOI8R] THEN
+				IF ch < aLowBound[SIGNED8(Encodings.KOI8R)] THEN
 					out.Char(CHR(ch))
-				ELSIF hashSearch(KOI8R, FALSE, ch, c) THEN
+				ELSIF hashSearch(SIGNED8(Encodings.KOI8R), FALSE, ch, c) THEN
 					out.Char(c)
 				END;
 
@@ -286,9 +367,9 @@ TYPE
 			FOR i := 0 TO text.GetLength() - 1 DO
 				r.ReadCh(ch);
 
-				IF ch < aLowBound[KOI8U] THEN
+				IF ch < aLowBound[SIGNED8(Encodings.KOI8U)] THEN
 					out.Char(CHR(ch))
-				ELSIF hashSearch(KOI8U, FALSE, ch, c) THEN
+				ELSIF hashSearch(SIGNED8(Encodings.KOI8U), FALSE, ch, c) THEN
 					out.Char(c)
 				END;
 
@@ -369,9 +450,9 @@ TYPE
 			FOR i := 0 TO text.GetLength() - 1 DO
 				r.ReadCh(ch);
 
-				IF ch < aLowBound[CP866] THEN
+				IF ch < aLowBound[SIGNED8(Encodings.CP866)] THEN
 					out.Char(CHR(ch))
-				ELSIF hashSearch(CP866, FALSE, ch, c) THEN
+				ELSIF hashSearch(SIGNED8(Encodings.CP866), FALSE, ch, c) THEN
 					out.Char(c)
 				END
 
@@ -452,9 +533,9 @@ TYPE
 			FOR i := 0 TO text.GetLength() - 1 DO
 				r.ReadCh(ch);
 
-				IF ch < aLowBound[ISO88595] THEN
+				IF ch < aLowBound[SIGNED8(Encodings.ISO88595)] THEN
 					out.Char(CHR(ch))
-				ELSIF hashSearch(ISO88595, FALSE, ch, c) THEN
+				ELSIF hashSearch(SIGNED8(Encodings.ISO88595), FALSE, ch, c) THEN
 					out.Char(c)
 				END;
 
@@ -468,10 +549,10 @@ TYPE
 
 VAR
 	aLowBound: LowBound;
-	koi8r, koi8u, cp1251, cp866, iso88595: StaticTable;
+	koi8r, koi8u, cp1250, cp1251, cp866, iso88595: StaticTable;
 	hash: HashTable;
 	bFirst: BOOLEAN;
-	setInitDone: SET;
+	setInitDone: SET64;
 	nCollisions: SIZE;
 	ucs32Min, ucs32Max: Char32;
 
@@ -546,10 +627,10 @@ VAR
 		c: CHAR;
 	BEGIN
 
-		IF ~(KOI8R IN setInitDone) THEN
-			setInitDone := setInitDone + {KOI8R};
+		IF ~(SIGNED8(Encodings.KOI8R) IN setInitDone) THEN
+			setInitDone := setInitDone + {SIGNED8(Encodings.KOI8R)};
 
-			FOR i := 0 TO aLowBound[KOI8R] - 1 DO
+			FOR i := 0 TO aLowBound[SIGNED8(Encodings.KOI8R)] - 1 DO
 				koi8r[i] := i
 			END;
 
@@ -682,9 +763,9 @@ VAR
 			koi8r[0FEH] := 00427H;  (* CYRILLIC CAPITAL LETTER CHE *)
 			koi8r[0FFH] := 0042AH;  (* CYRILLIC CAPITAL LETTER HARD SIGN *)
 
-			FOR i := aLowBound[KOI8R] TO 255 DO
+			FOR i := aLowBound[SIGNED8(Encodings.KOI8R)] TO 255 DO
 				c := CHR(i);
-				b := hashSearch(KOI8R, TRUE, koi8r[i], c)
+				b := hashSearch(SIGNED8(Encodings.KOI8R), TRUE, koi8r[i], c)
 			END
 
 		END
@@ -697,10 +778,10 @@ VAR
 		c: CHAR;
 	BEGIN
 
-		IF ~(KOI8U IN setInitDone) THEN
-			setInitDone := setInitDone + {KOI8U};
+		IF ~(SIGNED8(Encodings.KOI8U) IN setInitDone) THEN
+			setInitDone := setInitDone + {SIGNED8(Encodings.KOI8U)};
 
-			FOR i := 0 TO aLowBound[KOI8U] - 1 DO
+			FOR i := 0 TO aLowBound[SIGNED8(Encodings.KOI8U)] - 1 DO
 				koi8u[i] := i
 			END;
 
@@ -833,14 +914,165 @@ VAR
 			koi8u[0FEH] := 00427H; (* CYRILLIC CAPITAL LETTER CHE *)
 			koi8u[0FFH] := 0042AH; (* CYRILLIC CAPITAL LETTER HARD SIGN *)
 
-			FOR i := aLowBound[KOI8U] TO 255 DO
+			FOR i := aLowBound[SIGNED8(Encodings.KOI8U)] TO 255 DO
 				c := CHR(i);
-				b := hashSearch(KOI8U, TRUE, koi8u[i], c)
+				b := hashSearch(SIGNED8(Encodings.KOI8U), TRUE, koi8u[i], c)
 			END
 
 		END
 
 	END koi8uInit;
+	
+	PROCEDURE cp1250Init;
+	VAR
+		i: SIGNED16; b: BOOLEAN;
+		c: CHAR;
+	BEGIN
+
+		IF ~(SIGNED8(Encodings.CP1250) IN setInitDone) THEN
+			setInitDone := setInitDone + {SIGNED8(Encodings.CP1250)};
+
+			FOR i := 0 TO aLowBound[SIGNED8(Encodings.CP1250)] - 1 DO
+				cp1250[i] := i
+			END;
+
+			cp1250[080H] := 020ACH; (* EURO SIGN *)
+			cp1250[081H] := 00081H; (* UNDEFINED *)
+			cp1250[082H] := 0201AH; (* SINGLE LOW-9 QUOTATION MARK *)
+			cp1250[083H] := 00083H; (* UNDEFINED *)
+			cp1250[084H] := 0201EH; (* DOUBLE LOW-9 QUOTATION MARK *)
+			cp1250[085H] := 02026H; (* HORIZONTAL ELLIPSIS *)
+			cp1250[086H] := 02020H; (* DAGGER *)
+			cp1250[087H] := 02021H; (* DOUBLE DAGGER *)
+			cp1250[088H] := 00088H; (* UNDEFINED *)
+			cp1250[089H] := 02030H; (* PER MILLE SIGN *)
+			cp1250[08AH] := 00160H; (* LATIN CAPITAL LETTER S WITH CARON *)
+			cp1250[08BH] := 02039H; (* SINGLE LEFT-POINTING ANGLE QUOTATION MARK *)
+			cp1250[08CH] := 0015AH; (* LATIN CAPITAL LETTER S WITH ACUTE *)
+			cp1250[08DH] := 00164H; (* LATIN CAPITAL LETTER T WITH CARON *)
+			cp1250[08EH] := 0017DH; (* LATIN CAPITAL LETTER Z WITH CARON *)
+			cp1250[08FH] := 00179H; (* LATIN CAPITAL LETTER Z WITH ACUTE *)
+			cp1250[090H] := 00090H; (* UNDEFINED *)
+			cp1250[091H] := 02018H; (* LEFT SINGLE QUOTATION MARK *)
+			cp1250[092H] := 02019H; (* RIGHT SINGLE QUOTATION MARK *)
+			cp1250[093H] := 0201CH; (* LEFT DOUBLE QUOTATION MARK *)
+			cp1250[094H] := 0201DH; (* RIGHT DOUBLE QUOTATION MARK *)
+			cp1250[095H] := 02022H; (* BULLET *)
+			cp1250[096H] := 02013H; (* EN DASH *)
+			cp1250[097H] := 02014H; (* EM DASH *)
+			cp1250[098H] := 00098H; (* UNDEFINED *)
+			cp1250[099H] := 02122H; (* TRADE MARK SIGN *)
+			cp1250[09AH] := 00161H; (* LATIN SMALL LETTER S WITH CARON *)
+			cp1250[09BH] := 0203AH; (* SINGLE RIGHT-POINTING ANGLE QUOTATION MARK *)
+			cp1250[09CH] := 0015BH; (* LATIN SMALL LETTER S WITH ACUTE *)
+			cp1250[09DH] := 00165H; (* LATIN SMALL LETTER T WITH CARON *)
+			cp1250[09EH] := 0017EH; (* LATIN SMALL LETTER Z WITH CARON *)
+			cp1250[09FH] := 0017AH; (* LATIN SMALL LETTER Z WITH ACUTE *)
+			cp1250[0A0H] := 000A0H; (* NO-BREAK SPACE *)
+			cp1250[0A1H] := 002C7H; (* CARON *)
+			cp1250[0A2H] := 002D8H; (* BREVE *)
+			cp1250[0A3H] := 00141H; (* LATIN CAPITAL LETTER L WITH STROKE *)
+			cp1250[0A4H] := 000A4H; (* CURRENCY SIGN *)
+			cp1250[0A5H] := 00104H; (* LATIN CAPITAL LETTER A WITH OGONEK *)
+			cp1250[0A6H] := 000A6H; (* BROKEN BAR *)
+			cp1250[0A7H] := 000A7H; (* SECTION SIGN *)
+			cp1250[0A8H] := 000A8H; (* DIAERESIS *)
+			cp1250[0A9H] := 000A9H; (* COPYRIGHT SIGN *)
+			cp1250[0AAH] := 0015EH; (* LATIN CAPITAL LETTER S WITH CEDILLA *)
+			cp1250[0ABH] := 000ABH; (* LEFT-POINTING DOUBLE ANGLE QUOTATION MARK *)
+			cp1250[0ACH] := 000ACH; (* NOT SIGN *)
+			cp1250[0ADH] := 000ADH; (* SOFT HYPHEN *)
+			cp1250[0AEH] := 000AEH; (* REGISTERED SIGN *)
+			cp1250[0AFH] := 0017BH; (* LATIN CAPITAL LETTER Z WITH DOT ABOVE *)
+			cp1250[0B0H] := 000B0H; (* DEGREE SIGN *)
+			cp1250[0B1H] := 000B1H; (* PLUS-MINUS SIGN *)
+			cp1250[0B2H] := 002DBH; (* OGONEK *)
+			cp1250[0B3H] := 00142H; (* LATIN SMALL LETTER L WITH STROKE *)
+			cp1250[0B4H] := 000B4H; (* ACUTE ACCENT *)
+			cp1250[0B5H] := 000B5H; (* MICRO SIGN *)
+			cp1250[0B6H] := 000B6H; (* PILCROW SIGN *)
+			cp1250[0B7H] := 000B7H; (* MIDDLE DOT *)
+			cp1250[0B8H] := 000B8H; (* CEDILLA *)
+			cp1250[0B9H] := 00105H; (* LATIN SMALL LETTER A WITH OGONEK *)
+			cp1250[0BAH] := 0015FH; (* LATIN SMALL LETTER S WITH CEDILLA *)
+			cp1250[0BBH] := 000BBH; (* RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK *)
+			cp1250[0BCH] := 0013DH; (* LATIN CAPITAL LETTER L WITH CARON *)
+			cp1250[0BDH] := 002DDH; (* DOUBLE ACUTE ACCENT *)
+			cp1250[0BEH] := 0013EH; (* LATIN SMALL LETTER L WITH CARON *)
+			cp1250[0BFH] := 0017CH; (* LATIN SMALL LETTER Z WITH DOT ABOVE *)
+			cp1250[0C0H] := 00154H; (* LATIN CAPITAL LETTER R WITH ACUTE *)
+			cp1250[0C1H] := 000C1H; (* LATIN CAPITAL LETTER A WITH ACUTE *)
+			cp1250[0C2H] := 000C2H; (* LATIN CAPITAL LETTER A WITH CIRCUMFLEX *)
+			cp1250[0C3H] := 00102H; (* LATIN CAPITAL LETTER A WITH BREVE *)
+			cp1250[0C4H] := 000C4H; (* LATIN CAPITAL LETTER A WITH DIAERESIS *)
+			cp1250[0C5H] := 00139H; (* LATIN CAPITAL LETTER L WITH ACUTE *)
+			cp1250[0C6H] := 00106H; (* LATIN CAPITAL LETTER C WITH ACUTE *)
+			cp1250[0C7H] := 000C7H; (* LATIN CAPITAL LETTER C WITH CEDILLA *)
+			cp1250[0C8H] := 0010CH; (* LATIN CAPITAL LETTER C WITH CARON *)
+			cp1250[0C9H] := 000C9H; (* LATIN CAPITAL LETTER E WITH ACUTE *)
+			cp1250[0CAH] := 00118H; (* LATIN CAPITAL LETTER E WITH OGONEK *)
+			cp1250[0CBH] := 000CBH; (* LATIN CAPITAL LETTER E WITH DIAERESIS *)
+			cp1250[0CCH] := 0011AH; (* LATIN CAPITAL LETTER E WITH CARON *)
+			cp1250[0CDH] := 000CDH; (* LATIN CAPITAL LETTER I WITH ACUTE *)
+			cp1250[0CEH] := 000CEH; (* LATIN CAPITAL LETTER I WITH CIRCUMFLEX *)
+			cp1250[0CFH] := 0010EH; (* LATIN CAPITAL LETTER D WITH CARON *)
+			cp1250[0D0H] := 00110H; (* LATIN CAPITAL LETTER D WITH STROKE *)
+			cp1250[0D1H] := 00143H; (* LATIN CAPITAL LETTER N WITH ACUTE *)
+			cp1250[0D2H] := 00147H; (* LATIN CAPITAL LETTER N WITH CARON *)
+			cp1250[0D3H] := 000D3H; (* LATIN CAPITAL LETTER O WITH ACUTE *)
+			cp1250[0D4H] := 000D4H; (* LATIN CAPITAL LETTER O WITH CIRCUMFLEX *)
+			cp1250[0D5H] := 00150H; (* LATIN CAPITAL LETTER O WITH DOUBLE ACUTE *)
+			cp1250[0D6H] := 000D6H; (* LATIN CAPITAL LETTER O WITH DIAERESIS *)
+			cp1250[0D7H] := 000D7H; (* MULTIPLICATION SIGN *)
+			cp1250[0D8H] := 00158H; (* LATIN CAPITAL LETTER R WITH CARON *)
+			cp1250[0D9H] := 0016EH; (* LATIN CAPITAL LETTER U WITH RING ABOVE *)
+			cp1250[0DAH] := 000DAH; (* LATIN CAPITAL LETTER U WITH ACUTE *)
+			cp1250[0DBH] := 00170H; (* LATIN CAPITAL LETTER U WITH DOUBLE ACUTE *)
+			cp1250[0DCH] := 000DCH; (* LATIN CAPITAL LETTER U WITH DIAERESIS *)
+			cp1250[0DDH] := 000DDH; (* LATIN CAPITAL LETTER Y WITH ACUTE *)
+			cp1250[0DEH] := 00162H; (* LATIN CAPITAL LETTER T WITH CEDILLA *)
+			cp1250[0DFH] := 000DFH; (* LATIN SMALL LETTER SHARP S *)
+			cp1250[0E0H] := 00155H; (* LATIN SMALL LETTER R WITH ACUTE *)
+			cp1250[0E1H] := 000E1H; (* LATIN SMALL LETTER A WITH ACUTE *)
+			cp1250[0E2H] := 000E2H; (* LATIN SMALL LETTER A WITH CIRCUMFLEX *)
+			cp1250[0E3H] := 00103H; (* LATIN SMALL LETTER A WITH BREVE *)
+			cp1250[0E4H] := 000E4H; (* LATIN SMALL LETTER A WITH DIAERESIS *)
+			cp1250[0E5H] := 0013AH; (* LATIN SMALL LETTER L WITH ACUTE *)
+			cp1250[0E6H] := 00107H; (* LATIN SMALL LETTER C WITH ACUTE *)
+			cp1250[0E7H] := 000E7H; (* LATIN SMALL LETTER C WITH CEDILLA *)
+			cp1250[0E8H] := 0010DH; (* LATIN SMALL LETTER C WITH CARON *)
+			cp1250[0E9H] := 000E9H; (* LATIN SMALL LETTER E WITH ACUTE *)
+			cp1250[0EAH] := 00119H; (* LATIN SMALL LETTER E WITH OGONEK *)
+			cp1250[0EBH] := 000EBH; (* LATIN SMALL LETTER E WITH DIAERESIS *)
+			cp1250[0ECH] := 0011BH; (* LATIN SMALL LETTER E WITH CARON *)
+			cp1250[0EDH] := 000EDH; (* LATIN SMALL LETTER I WITH ACUTE *)
+			cp1250[0EEH] := 000EEH; (* LATIN SMALL LETTER I WITH CIRCUMFLEX *)
+			cp1250[0EFH] := 0010FH; (* LATIN SMALL LETTER D WITH CARON *)
+			cp1250[0F0H] := 00111H; (* LATIN SMALL LETTER D WITH STROKE *)
+			cp1250[0F1H] := 00144H; (* LATIN SMALL LETTER N WITH ACUTE *)
+			cp1250[0F2H] := 00148H; (* LATIN SMALL LETTER N WITH CARON *)
+			cp1250[0F3H] := 000F3H; (* LATIN SMALL LETTER O WITH ACUTE *)
+			cp1250[0F4H] := 000F4H; (* LATIN SMALL LETTER O WITH CIRCUMFLEX *)
+			cp1250[0F5H] := 00151H; (* LATIN SMALL LETTER O WITH DOUBLE ACUTE *)
+			cp1250[0F6H] := 000F6H; (* LATIN SMALL LETTER O WITH DIAERESIS *)
+			cp1250[0F7H] := 000F7H; (* DIVISION SIGN *)
+			cp1250[0F8H] := 00159H; (* LATIN SMALL LETTER R WITH CARON *)
+			cp1250[0F9H] := 0016FH; (* LATIN SMALL LETTER U WITH RING ABOVE *)
+			cp1250[0FAH] := 000FAH; (* LATIN SMALL LETTER U WITH ACUTE *)
+			cp1250[0FBH] := 00171H; (* LATIN SMALL LETTER U WITH DOUBLE ACUTE *)
+			cp1250[0FCH] := 000FCH; (* LATIN SMALL LETTER U WITH DIAERESIS *)
+			cp1250[0FDH] := 000FDH; (* LATIN SMALL LETTER Y WITH ACUTE *)
+			cp1250[0FEH] := 00163H; (* LATIN SMALL LETTER T WITH CEDILLA *)
+			cp1250[0FFH] := 002D9H; (* DOT ABOVE *)
+
+			FOR i := aLowBound[SIGNED8(Encodings.CP1250)] TO 255 DO
+				c := CHR(i);
+				b := hashSearch(SIGNED8(Encodings.CP1250), TRUE, cp1250[i], c)
+			END
+
+		END
+
+	END cp1250Init;
 
 	PROCEDURE cp1251Init;
 	VAR
@@ -848,10 +1080,10 @@ VAR
 		c: CHAR;
 	BEGIN
 
-		IF ~(CP1251 IN setInitDone) THEN
-			setInitDone := setInitDone + {CP1251};
+		IF ~(SIGNED8(Encodings.CP1251) IN setInitDone) THEN
+			setInitDone := setInitDone + {SIGNED8(Encodings.CP1251)};
 
-			FOR i := 0 TO aLowBound[CP1251] - 1 DO
+			FOR i := 0 TO aLowBound[SIGNED8(Encodings.CP1251)] - 1 DO
 				cp1251[i] := i
 			END;
 
@@ -984,9 +1216,9 @@ VAR
 			cp1251[0FEH] := 0044EH; (* CYRILLIC SMALL LETTER YU *)
 			cp1251[0FFH] := 0044FH; (* CYRILLIC SMALL LETTER YA *)
 
-			FOR i := aLowBound[CP1251] TO 255 DO
+			FOR i := aLowBound[SIGNED8(Encodings.CP1251)] TO 255 DO
 				c := CHR(i);
-				b := hashSearch(CP1251, TRUE, cp1251[i], c)
+				b := hashSearch(SIGNED8(Encodings.CP1251), TRUE, cp1251[i], c)
 			END
 
 		END
@@ -999,10 +1231,10 @@ VAR
 		c: CHAR;
 	BEGIN
 
-		IF ~(CP866 IN setInitDone) THEN
-			setInitDone := setInitDone + {CP866};
+		IF ~(SIGNED8(Encodings.CP866) IN setInitDone) THEN
+			setInitDone := setInitDone + {SIGNED8(Encodings.CP866)};
 
-			FOR i := 0 TO aLowBound[CP866] - 1 DO
+			FOR i := 0 TO aLowBound[SIGNED8(Encodings.CP866)] - 1 DO
 				cp866[i] := i
 			END;
 
@@ -1135,9 +1367,9 @@ VAR
 			cp866[0FEH] := 025A0H; (* BLACK SQUARE *)
 			cp866[0FFH] := 000A0H; (* NO-BREAK SPACE *)
 
-			FOR i := aLowBound[CP866] TO 255 DO
+			FOR i := aLowBound[SIGNED8(Encodings.CP866)] TO 255 DO
 				c := CHR(i);
-				b := hashSearch(CP866, TRUE, cp866[i], c)
+				b := hashSearch(SIGNED8(Encodings.CP866), TRUE, cp866[i], c)
 			END
 
 		END
@@ -1149,10 +1381,10 @@ VAR
 		c: CHAR;
 	BEGIN
 
-		IF ~(ISO88595 IN setInitDone) THEN
-			setInitDone := setInitDone + {ISO88595};
+		IF ~(SIGNED8(Encodings.ISO88595) IN setInitDone) THEN
+			setInitDone := setInitDone + {SIGNED8(Encodings.ISO88595)};
 
-			FOR i := 0 TO aLowBound[ISO88595] - 1 DO
+			FOR i := 0 TO aLowBound[SIGNED8(Encodings.ISO88595)] - 1 DO
 				iso88595[i] := i
 			END;
 
@@ -1253,13 +1485,30 @@ VAR
 			iso88595[0FEH] := 0045EH; (* CYRILLIC SMALL LETTER SHORT U *)
 			iso88595[0FFH] := 0045FH; (* CYRILLIC SMALL LETTER DZHE U *)
 
-			FOR i := aLowBound[ISO88595] TO 255 DO
+			FOR i := aLowBound[SIGNED8(Encodings.ISO88595)] TO 255 DO
 				c := CHR(i);
-				b := hashSearch(ISO88595, TRUE, iso88595[i], c)
+				b := hashSearch(SIGNED8(Encodings.ISO88595), TRUE, iso88595[i], c)
 			END
 
 		END
 	END iso88595Init;
+	
+(* CP1250 File Format *)
+PROCEDURE CP1250DecoderFactory*(): Codecs.TextDecoder;
+VAR p: CP1250Decoder;
+BEGIN
+	cp1250Init;
+	NEW(p);
+	RETURN p
+END CP1250DecoderFactory;
+
+PROCEDURE CP1250EncoderFactory*(): Codecs.TextEncoder;
+VAR p: CP1250Encoder;
+BEGIN
+	cp1250Init;
+	NEW(p);
+	RETURN p
+END CP1250EncoderFactory;
 
 (* CP1251 File Format *)
 PROCEDURE CP1251DecoderFactory*(): Codecs.TextDecoder;
@@ -1354,11 +1603,12 @@ BEGIN
 		hash[i].ucs32 := 0;
 		hash[i].encodings := {}
 	END;
-	aLowBound[CP1251] := 080H;
-	aLowBound[KOI8R] := 080H;
-	aLowBound[KOI8U] := 080H;
-	aLowBound[CP866] := 080H;
-	aLowBound[ISO88595] := 0A0H;
+	aLowBound[SIGNED8(Encodings.CP1250)] := 080H;
+	aLowBound[SIGNED8(Encodings.CP1251)] := 080H;
+	aLowBound[SIGNED8(Encodings.KOI8R)] := 080H;
+	aLowBound[SIGNED8(Encodings.KOI8U)] := 080H;
+	aLowBound[SIGNED8(Encodings.CP866)] := 080H;
+	aLowBound[SIGNED8(Encodings.ISO88595)] := 0A0H;
 	setInitDone := {};
 	nCollisions := 0;
 	bFirst := TRUE;

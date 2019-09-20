@@ -235,7 +235,6 @@ TYPE
 			contextPos: SIZE; suspended: BOOLEAN;
 		BEGIN {UNTRACKED}
 			IF (mode < Running) OR (mode = Terminated) THEN  RETURN  END;
-
 			suspended := FALSE;
 			IF SELF = CurrentProcess() THEN
 				state.SP := SYSTEM.GetStackPointer( );
@@ -284,7 +283,7 @@ TYPE
 							IF desc # NIL THEN
 								a0 := ADDRESSOF( desc.offsets );
 								a1 :=  SYSTEM.VAL( ADDRESS, desc.offsets );
-								ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );
+								ASSERT( a0+SIZEOF( ADDRESS ) = a1, 54321 );	
 								FOR i := 0 TO LEN( desc.offsets ) - 1 DO
 									adr := bp + desc.offsets[i]; (* pointer at offset *)
 									SYSTEM.GET( adr, p ); (* load pointer *)
@@ -880,16 +879,6 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		Unix.MtxUnlock( processList );
 	END ResumeActivities;
 
-	PROCEDURE GCLoop*;	(* Timer and GC activity *)
-	BEGIN
-		(*
-		If using BootConsole keep main thread running.
-		If the thread is blocked by a mutex (MainThreadSleep)
-		the signals SIGHUP, SIGINT and SIGQUIT don't branch into SignalHandler
-		but terminate A2 (at least in Solaris).
-		*)
-		LOOP Sleep( 100 ) END
-	END GCLoop;
 
 	PROCEDURE CurrentProcessTime*(): SIGNED64;
 	BEGIN
@@ -963,7 +952,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 	BEGIN
 		(* make current thread the first active object  *)
 		mainthread := Unix.ThrThis();
-		NEW(o); (* alibi object, e.g. for Locks *)
+		NEW( o ); (* alibi object, e.g. for Locks *)
 		NEW( p, o, NIL, 0, {}, 0 );
 	END Convert;
 

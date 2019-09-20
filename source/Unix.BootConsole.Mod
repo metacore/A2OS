@@ -1,28 +1,12 @@
 MODULE BootConsole;	(** AUTHOR "G.F."; PURPOSE "Boot console"; *)
 
-IMPORT S := SYSTEM, Trace, Glue, Unix, Machine, Modules, Objects, Commands, KernelLog;
+IMPORT S := SYSTEM, Trace, Unix, Machine, Modules, Objects, Commands, KernelLog;
 
 TYPE
 	Module = Modules.Module;
 	CommandProc = PROCEDURE;
 
-	CommandThread = OBJECT
-	VAR
-		mod, cmd: Modules.Name;
 
-		PROCEDURE &Init( CONST modName, cmdName: Modules.Name );
-		BEGIN
-			mod := modName;  cmd := cmdName
-		END Init;
-
-	BEGIN {ACTIVE}
-		Execute( mod, cmd );
-		Modules.Shutdown( Modules.Reboot )
-	END CommandThread;
-
-
-VAR
-	appl: CommandThread;
 
 	PROCEDURE LoadModule( CONST name: Modules.Name );
 	VAR
@@ -33,6 +17,7 @@ VAR
 			Trace.String( "could not load module " );  Trace.String( name );  Trace.Ln
 		END
 	END LoadModule;
+	
 
 	PROCEDURE Command( CONST cmd: Modules.Name );
 	VAR
@@ -58,6 +43,7 @@ VAR
 			RETURN NIL
 		END
 	END ThisCommand;
+	
 
 	PROCEDURE Execute( CONST modName, procName: Modules.Name );
 	VAR m: Module;  cmd: PROCEDURE;  res: INTEGER;
@@ -80,69 +66,8 @@ VAR
 	END Execute;
 
 
-	PROCEDURE CommandError( CONST cmd, msg: ARRAY OF CHAR );
-	BEGIN
-		Trace.String( "bad command line parameter: -x " );  Trace.String( cmd );
-		Trace.String( ": " );  Trace.String( msg );  Trace.Ln;
-	END CommandError;
 
-
-	PROCEDURE TryCommand( ): BOOLEAN;
-	VAR
-		cmd: ARRAY 128 OF CHAR; ci: SIGNED16;
-		modName, cmdName: Modules.Name;
-
-		PROCEDURE IsCharacter( c: CHAR ): BOOLEAN;
-		BEGIN  RETURN (('a' <= c) & (c <= 'z')) OR (( 'A' <= c) & (c <= 'Z'))
-		END IsCharacter;
-
-		PROCEDURE IsCharOrDigit( c: CHAR ): BOOLEAN;
-		BEGIN  RETURN IsCharacter( c ) OR (("0" <= c) & (c <= "9"))
-		END IsCharOrDigit;
-
-		PROCEDURE GetName( VAR name: ARRAY OF CHAR ): BOOLEAN;
-		VAR j: SIGNED32;  c: CHAR;
-		BEGIN
-			j := -1;
-			IF IsCharacter( cmd[ci] ) THEN
-				REPEAT c := cmd[ci];  INC( ci );  INC( j );  name[j] := c  UNTIL ~IsCharOrDigit( c ) OR (j = 31);
-				IF c = '.' THEN  name[j] := 0X
-				ELSIF c # 0X THEN
-					IF IsCharOrDigit( c ) THEN  CommandError( cmd, "name too long" )
-					ELSE  CommandError( cmd, "invalid name" )
-					END;
-					RETURN FALSE
-				END;
-				RETURN TRUE
-			ELSE
-				CommandError( cmd, "name must start with a character" );
-				RETURN FALSE
-			END
-		END GetName;
-
-	BEGIN
-		Unix.GetArgval( "-x", cmd );
-		IF cmd # "" THEN
-			ci := 0;
-			IF GetName( modName ) & GetName( cmdName ) THEN
-				IF Glue.debug # {} THEN
-					Trace.String( "Starting " );
-					Trace.String( modName );  Trace.Char( "." );  Trace.String( cmdName );
-					Trace.Ln
-				END;
-				NEW( appl, modName, cmdName );
-				RETURN TRUE
-			ELSE
-				(* invalid command string*)
-				Unix.exit( 1 )
-			END
-		END;
-		RETURN FALSE
-	END TryCommand;
-
-
-
-	PROCEDURE InitializeCoreModules;
+(*	PROCEDURE InitializeCoreModules;
 	TYPE Body = PROCEDURE;
 	VAR m: Modules.Module;  body: Body;  trace: BOOLEAN;
 	BEGIN
@@ -159,24 +84,20 @@ VAR
 			body;
 			m := m.next
 		END
-	END InitializeCoreModules;
+	END InitializeCoreModules;	*)
 
 
 	PROCEDURE StartSystem;
 	BEGIN
-		IF ~TryCommand()  THEN
-			Machine.VerboseLog( );
-			KernelLog.String( Machine.version );  KernelLog.Ln;
-			(* normal system start *)
-			LoadModule( "Clock" );
-			Execute( "XDisplay",  "Install" );
-			Execute( "KbdMouse",  "Init" );
+		KernelLog.String( Machine.version );  KernelLog.Ln;
+		LoadModule( "Clock" );
+		Execute( "XDisplay",  "Install" );
+		Execute( "KbdMouse",  "Init" );
 
-			Command( "WindowManager.Install" );
-			Command( "DisplayRefresher.Install" );
+		Command( "WindowManager.Install" );
+		Command( "DisplayRefresher.Install" );
 
-			Command( "Autostart.Run" );
-		END
+		Command( "Autostart.Run" );
 	END StartSystem;
 
 	PROCEDURE InitSignalHandling;
@@ -198,12 +119,20 @@ VAR
 
 BEGIN
 	Machine.VerboseLog;
-	InitializeCoreModules;
+(*	InitializeCoreModules;	*)
+	
+	(* make current Frame the last one in FindRoots() *)
+	S.PUT( S.GetFramePointer(), ADDRESS( 0 ) );
+	
 	InitSignalHandling;
 	StartSystem;
 	#IF ~COOP THEN
-		Objects.GCLoop;
-	#END
+		(*	Keep main thread running.
+			If the thread is blocked by a mutex (Objects.MainThreadSleep)
+			the signals SIGHUP, SIGINT and SIGQUIT don't branch into SignalHandler
+			but terminate A2 (at least in Solaris).	*)
+		LOOP  Objects.Sleep( 100 ) END;
+	#END;
 END BootConsole.
 
 

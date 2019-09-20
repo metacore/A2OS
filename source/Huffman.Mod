@@ -6,7 +6,7 @@ TYPE
 	BitReader = OBJECT
 		VAR
 			in: Streams.Reader;
-			curByte, curBit: SIGNED32;
+			curByte, curBit: INTEGER;
 
 			PROCEDURE &New( r: Streams.Reader );
 			BEGIN
@@ -18,9 +18,9 @@ TYPE
 				curBit := -1;  curByte := 0
 			END Initialize;
 
-			PROCEDURE Bit( ): SIGNED32;
+			PROCEDURE Bit( ): INTEGER;
 			VAR
-				bit: SIGNED32;  ch: CHAR;
+				bit: INTEGER;  ch: CHAR;
 			BEGIN
 				IF curBit < 0 THEN
 					in.Char( ch );  curByte := ORD( ch );  curBit := 7
@@ -37,14 +37,14 @@ TYPE
 	BitWriter = OBJECT
 		VAR
 			out: Streams.Writer;
-			curByte, curBit: SIGNED32;
+			curByte, curBit: INTEGER;
 
 			PROCEDURE &New( w: Streams.Writer );
 			BEGIN
 				out := w;  curBit := 0;  curByte := 0
 			END New;
 
-			PROCEDURE Bit( bit: SIGNED32 );
+			PROCEDURE Bit( bit: INTEGER );
 			BEGIN
 				curByte := 2*curByte + bit;
 				INC( curBit );
@@ -63,21 +63,21 @@ TYPE
 
 
 TYPE
-	PatternCounts = ARRAY 256 OF SIGNED32;		(* scaled to 0 .. 101H *)
+	PatternCounts = ARRAY 256 OF INTEGER;		(* scaled to 0 .. 101H *)
 
-	Pattern = RECORD  patt, weight: SIGNED32  END;
+	Pattern = RECORD  patt, weight: INTEGER  END;
 	PatternWeights = POINTER TO ARRAY OF Pattern;		(* weights of patterns contained in block *)
 
-	HuffCode = RECORD  bits, val: SIGNED32  END;
+	HuffCode = RECORD  bits, val: INTEGER  END;
 
 TYPE
 	Node = OBJECT
 		VAR
-			weight: SIGNED32;
-			pattern: SIGNED32;		(* node pattern if node is leaf *)
+			weight: INTEGER;
+			pattern: INTEGER;		(* node pattern if node is leaf *)
 			left, right: Node;		(* both NIL in case of leaf *)
 
-			PROCEDURE &Init( patt, w: SIGNED32 );
+			PROCEDURE &Init( patt, w: INTEGER );
 			BEGIN
 				pattern := patt;  weight := w;  left := NIL;  right := NIL
 			END Init;
@@ -123,15 +123,15 @@ TYPE
 			END WriteFrequencies;
 
 
-			PROCEDURE CountPatterns( CONST source: ARRAY OF CHAR; len: SIZE ): PatternWeights;
+			PROCEDURE CountPatterns( CONST source: ARRAY OF CHAR; len: INTEGER ): PatternWeights;
 			VAR
-				i: SIZE;  pc: PatternCounts;
+				i: INTEGER;  pc: PatternCounts;
 			BEGIN
 				FOR i := 0 TO 255 DO  pc[i] := 0  END;
 				FOR i := 0 TO len - 1 DO  INC( pc[ORD( source[i] )] )  END;
 				FOR i := 0 TO 255 DO
 					IF pc[i] > 0 THEN (* scale => [1..101H] *)
-						pc[i] := 100H * pc[i] DIV len(SIGNED32) + 1;
+						pc[i] := 100H * pc[i] DIV len + 1;
 					END;
 				END;
 				RETURN ContainedPatterns( pc )
@@ -162,7 +162,7 @@ TYPE
 
 
 			PROCEDURE PutCode( code: HuffCode );
-			VAR len, val: SIGNED32;
+			VAR len, val: INTEGER;
 			BEGIN
 				len := code.bits;  val := code.val;
 				WHILE len > 0 DO
@@ -171,7 +171,7 @@ TYPE
 			END PutCode;
 
 
-			PROCEDURE CompressBlock*( CONST source: ARRAY OF CHAR; len: SIZE );
+			PROCEDURE CompressBlock*( CONST source: ARRAY OF CHAR; len: INTEGER );
 			VAR
 				i: SIZE;
 				pw: PatternWeights;
@@ -202,7 +202,7 @@ TYPE
 
 			PROCEDURE ReadFrequencies( r: Streams.Reader ): PatternWeights;
 			VAR
-				i, n: SIGNED32;  c: CHAR;
+				i, n: INTEGER;  c: CHAR;
 				pw: PatternWeights;
 				pc: PatternCounts;
 			BEGIN
@@ -218,9 +218,9 @@ TYPE
 			END ReadFrequencies;
 
 
-			PROCEDURE ExtractBlock*( VAR buf: ARRAY OF CHAR; len: SIGNED32 );
+			PROCEDURE ExtractBlock*( VAR buf: ARRAY OF CHAR; len: INTEGER );
 			VAR
-				i: SIGNED32;  n: Node;
+				i: INTEGER;  n: Node;
 			BEGIN
 				tree := BuildTree( ReadFrequencies( r ) );
 				in.Initialize;
@@ -243,13 +243,13 @@ TYPE
 	(* sort patterns by weight, omit unused patterns *)
 	PROCEDURE ContainedPatterns( VAR pc: PatternCounts ): PatternWeights;
 	VAR
-		i, n, start: SIGNED32;
+		i, n, start: INTEGER;
 		pw: PatternWeights;
 		a: ARRAY 256 OF Pattern;
 
-		PROCEDURE Sort( low, high: SIGNED32 );
+		PROCEDURE Sort( low, high: INTEGER );
 		VAR
-			i, j, m: SIGNED32;  tmp: Pattern;
+			i, j, m: INTEGER;  tmp: Pattern;
 		BEGIN
 			IF low < high THEN
 				i := low;  j := high;  m := (i + j) DIV 2;
@@ -282,7 +282,7 @@ TYPE
 	VAR
 		i, start, top: SIZE;  node, n2: Node;
 		a: POINTER TO ARRAY OF Node;
-		patt: SIGNED32;
+		patt: INTEGER;
 	BEGIN
 		NEW( a, LEN( pw^ ) );  top := LEN( pw^ ) - 1;
 		FOR i := 0 TO top DO  NEW( a[i], pw[i].patt, pw[i].weight )  END;

@@ -28,7 +28,7 @@ CONST
 			r.Bytes( buffer, 0, BlockSize, len );
 			IF len = 0 THEN  EXIT  END;
 			w.RawNum( len );
-			w.RawNum( bw.EncodeBlock( buffer, len ) );
+			w.RawNum( bw.EncodeBlock( buffer, INTEGER(len) ) );
 			huff.CompressBlock( buffer, len );
 		END;
 		w.RawNum( 0 );	(* mark end of stream *)

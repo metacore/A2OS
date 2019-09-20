@@ -2,7 +2,7 @@ MODULE CryptoAES;   (** AES (Rijndael) de/encryption *)
 
 (*	2002.07.22	g.f.  *)
 
-IMPORT  S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
+IMPORT  Ciphers := CryptoCiphers, U := CryptoUtils;
 
 CONST
 	MaxRounds = 14;
@@ -24,13 +24,13 @@ TYPE
 	Cipher* = OBJECT (Ciphers.Cipher)
 			TYPE
 				Block = ARRAY 4 OF SET32;
-				Ind4 = RECORD a, b, c, d: SIGNED32 END;
+				Ind4 = RECORD a, b, c, d: INTEGER END;
 			VAR
 				rounds: SIGNED8;
 				key, dkey: RKeys;
 				iv: Block;
 
-				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: SIGNED32 );
+				PROCEDURE InitKey*( CONST src: ARRAY OF CHAR; keybits: INTEGER );
 				BEGIN
 					InitKey^( src, keybits );
 					IF keybits = 128 THEN  rounds := Init128( src )
@@ -47,12 +47,12 @@ TYPE
 				END SetIV;
 
 				PROCEDURE IncIV;
-				VAR i, x: SIGNED32;
+				VAR i, x: INTEGER;
 				BEGIN
 					i := 4;
 					REPEAT
 						DEC( i );
-						x := S.VAL( SIGNED32, iv[i] ) + 1;  iv[i] := S.VAL( SET32, x )
+						x := INTEGER( iv[i] ) + 1;  iv[i] := SET32( x )
 					UNTIL (x # 0) OR (i = 0)
 				END IncIV;
 
@@ -113,7 +113,7 @@ TYPE
 
 
 				PROCEDURE RoundE( VAR b: Block );
-				VAR p, r: SIGNED32;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
+				VAR p, r: INTEGER;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
 				BEGIN
 					split( b[0], s0 );  split( b[1], s1 );  split( b[2], s2 );  split( b[3], s3 );
 					r := rounds DIV 2;  p := 0;
@@ -136,7 +136,7 @@ TYPE
 				END RoundE;
 
 				PROCEDURE RoundD( VAR b: Block );
-				VAR p, r: SIGNED32;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
+				VAR p, r: INTEGER;  t0, t1, t2, t3, s0, s1, s2, s3: Ind4;
 				BEGIN
 					split( b[0], s0 );  split( b[1], s1 );  split( b[2], s2 );  split( b[3], s3 );
 					r := rounds DIV 2;  p := 0;
@@ -160,15 +160,15 @@ TYPE
 
 				PROCEDURE -split( s: SET32;  VAR b: Ind4 );   (* split set into 4 indexes *)
 				BEGIN
-					b.a := S.VAL( SIGNED32, s ) MOD 100H;
-					b.b := S.VAL( SIGNED32, s ) DIV 100H MOD 100H;
-					b.c := S.VAL( SIGNED32, s ) DIV 10000H MOD 100H;
-					b.d := S.VAL( SIGNED32, s ) DIV 1000000H MOD 100H;
+					b.a := INTEGER( s ) MOD 100H;
+					b.b := INTEGER( s ) DIV 100H MOD 100H;
+					b.c := INTEGER( s ) DIV 10000H MOD 100H;
+					b.d := INTEGER( s ) DIV 1000000H MOD 100H;
 				END split;
 
 
 				PROCEDURE Init128( CONST src: ARRAY OF CHAR ): SIGNED8;
-				VAR i, p: SIGNED32;  ib: Ind4;
+				VAR i, p: INTEGER;  ib: Ind4;
 				BEGIN
 					FOR i := 0 TO 3 DO  key[i] := U.SetFromBufferBE( src, 4*i )  END;
 					p := 0;  i := 0;
@@ -186,7 +186,7 @@ TYPE
 				END Init128;
 
 				PROCEDURE Init192( CONST src: ARRAY OF CHAR ): SIGNED8;
-				VAR i, p: SIGNED32;  ib: Ind4;
+				VAR i, p: INTEGER;  ib: Ind4;
 				BEGIN
 					FOR i := 0 TO 5 DO  key[i] := U.SetFromBufferBE( src, 4*i )  END;
 					p := 0;  i := 0;
@@ -206,7 +206,7 @@ TYPE
 				END Init192;
 
 				PROCEDURE Init256( CONST src: ARRAY OF CHAR ): SIGNED8;
-				VAR i, p: SIGNED32;  ib: Ind4;
+				VAR i, p: INTEGER;  ib: Ind4;
 				BEGIN
 					FOR i := 0 TO 7 DO  key[i] := U.SetFromBufferBE( src, 4*i )  END;
 					p := 0;  i := 0;
@@ -230,11 +230,11 @@ TYPE
 
 
 				PROCEDURE InvertKeys;
-				VAR i, j, k, p: SIGNED32;  t: SET32;  ib: Ind4;
+				VAR i, j, k, p: INTEGER;  t: SET32;  ib: Ind4;
 
-					PROCEDURE ind( s: SET32 ): SIGNED32;   (* extract index byte 0 *)
+					PROCEDURE ind( s: SET32 ): INTEGER;   (* extract index byte 0 *)
 					BEGIN
-						RETURN S.VAL( SIGNED32, s ) MOD 100H
+						RETURN  INTEGER( s ) MOD 100H
 					END ind;
 
 				BEGIN
@@ -277,16 +277,16 @@ TYPE
 
 	PROCEDURE Initialize;
 	VAR
-		i1, i2, i4, i8, i9, ib, id, ie, v1, v2, v3, t: SIGNED32;
+		i1, i2, i4, i8, i9, ib, id, ie, v1, v2, v3, t: INTEGER;
 		buf: U.InitBuffer;
 
-		PROCEDURE xor( a, b: SIGNED32 ): SIGNED32;
+		PROCEDURE xor( a, b: INTEGER ): INTEGER;
 		BEGIN
-			RETURN S.VAL( SIGNED32, S.VAL( SET32, a ) / S.VAL( SET32, b ) )
+			RETURN  INTEGER( SET32( a ) / SET32( b ) )
 		END xor;
 
-		PROCEDURE f1( x: SIGNED32 ): SIGNED32;
-		VAR y: SIGNED32;
+		PROCEDURE f1( x: INTEGER ): INTEGER;
+		VAR y: INTEGER;
 		BEGIN
 			y := 2*x;
 			IF y < 256 THEN  RETURN y  ELSE  RETURN xor( y, 11BH )  END
@@ -316,21 +316,21 @@ TYPE
 			i2 := f1( i1 );  i4 := f1( i2 );  i8 := f1( i4 );  i9 := xor( i8, i1 );
 			ib := xor( i9, i2 );  id := xor( i9, i4 );  ie := xor( i8, xor( i4, i2 ) );
 
-			e0[i1] := S.VAL( SET32, ((v2*100H + v1)*100H + v1)*100H + v3 );
-			e1[i1] := S.VAL( SET32, ((v3*100H + v2)*100H + v1)*100H + v1 );
-			e2[i1] := S.VAL( SET32, ((v1*100H + v3)*100H + v2)*100H + v1 );
-			e3[i1] := S.VAL( SET32, ((v1*100H + v1)*100H + v3)*100H + v2 );
-			e4[i1] := S.VAL( SET32, ((v1*100H + v1)*100H + v1)*100H + v1 );
+			e0[i1] := SET32( ((v2*100H + v1)*100H + v1)*100H + v3 );
+			e1[i1] := SET32( ((v3*100H + v2)*100H + v1)*100H + v1 );
+			e2[i1] := SET32( ((v1*100H + v3)*100H + v2)*100H + v1 );
+			e3[i1] := SET32( ((v1*100H + v1)*100H + v3)*100H + v2 );
+			e4[i1] := SET32( ((v1*100H + v1)*100H + v1)*100H + v1 );
 
-			d0[v1] := S.VAL( SET32, ((ie*100H + i9)*100H + id)*100H + ib );
-			d1[v1] := S.VAL( SET32, ((ib*100H + ie)*100H + i9)*100H + id );
-			d2[v1] := S.VAL( SET32, ((id*100H + ib)*100H + ie)*100H + i9 );
-			d3[v1] := S.VAL( SET32, ((i9*100H + id)*100H + ib)*100H + ie );
-			d4[v1] := S.VAL( SET32, ((i1*100H + i1)*100H + i1)*100H + i1 );
+			d0[v1] := SET32( ((ie*100H + i9)*100H + id)*100H + ib );
+			d1[v1] := SET32( ((ib*100H + ie)*100H + i9)*100H + id );
+			d2[v1] := SET32( ((id*100H + ib)*100H + ie)*100H + i9 );
+			d3[v1] := SET32( ((i9*100H + id)*100H + ib)*100H + ie );
+			d4[v1] := SET32( ((i1*100H + i1)*100H + i1)*100H + i1 );
 		END;
 		t := 1;
 		FOR i1 := 0 TO 9 DO
-			rcon[i1] := S.VAL( SET32, ASH( t, 24 ) );
+			rcon[i1] := SET32( ASH( t, 24 ) );
 			t := f1( t );
 		END;
 	END Initialize;

@@ -14,7 +14,7 @@ TYPE
 
 
 			PROCEDURE Initialize;
-			VAR n: Node;  i: SIGNED32;
+			VAR n: Node;  i: INTEGER;
 			BEGIN
 				alpha := NIL;
 				FOR i := 0 TO 255 DO
@@ -23,7 +23,7 @@ TYPE
 			END Initialize;
 
 			PROCEDURE Encode( VAR buf: ARRAY OF CHAR; len: SIZE );
-			VAR l, m: Node;  i: SIZE;  k: SIGNED32; ch: CHAR;
+			VAR l, m: Node;  i: SIZE;  k: INTEGER; ch: CHAR;
 			BEGIN
 				Initialize;
 				FOR i := 0 TO len - 1 DO
@@ -41,7 +41,7 @@ TYPE
 			END Encode;
 
 			PROCEDURE Decode( VAR buf: ARRAY OF CHAR; len: SIZE );
-			VAR l, m: Node;  i: SIZE;  c: SIGNED32;  ch: CHAR;
+			VAR l, m: Node;  i: SIZE;  c: INTEGER;  ch: CHAR;
 			BEGIN
 				Initialize;
 				FOR i := 0 TO len - 1 DO
@@ -60,12 +60,10 @@ TYPE
 
 TYPE
 	Encoder* = OBJECT
-		TYPE
-			Index = SIZE;
 		VAR
-			mtf: MTF;  length: SIZE;
-			sbuf: ARRAY 2*BlockSize OF CHAR;
-			rotation: ARRAY BlockSize OF Index;
+			mtf: MTF;
+			sbuf: ARRAY 2*BlockSize OF CHAR;  bufLength: INTEGER;
+			rotation: ARRAY BlockSize OF SIGNED16;
 
 			PROCEDURE &New*;
 			BEGIN
@@ -73,25 +71,25 @@ TYPE
 			END New;
 
 
-			PROCEDURE Less( a, b: Index ): BOOLEAN;
-			VAR i1, i2: Index;  n, diff: SIGNED32;
+			PROCEDURE Less( a, b: INTEGER ): BOOLEAN;
+			VAR i1, i2, n, diff: INTEGER;
 			BEGIN
 				n := 0;  i1 := rotation[a];  i2 := rotation[b];
 				REPEAT
 					diff := ORD( sbuf[i1]) - ORD( sbuf[i2] );
 					INC( i1 );  INC( i2 );  INC( n );
-				UNTIL (diff # 0) OR (n = length);
+				UNTIL (diff # 0) OR (n = bufLength);
 				RETURN diff < 0
 			END Less;
 
-			PROCEDURE Swap( a, b: Index );
-			VAR  tmp: Index;
+			PROCEDURE Swap( a, b: INTEGER );
+			VAR  tmp: SIGNED16;
 			BEGIN
 				tmp := rotation[a];  rotation[a] := rotation[b];  rotation[b] := tmp
 			END Swap;
 
-			PROCEDURE InsertSort( lo, hi: Index );
-			VAR x, i, l, m, ip, tmp: Index;
+			PROCEDURE InsertSort( lo, hi: INTEGER );
+			VAR x, i, l, m, ip: INTEGER;  tmp: SIGNED16;
 			BEGIN
 				x := lo + 1;
 				WHILE x <= hi DO
@@ -111,8 +109,8 @@ TYPE
 				END
 			END InsertSort;
 
-			PROCEDURE SortR( lo, hi: SIZE );
-			VAR i, j, m, n: SIZE;
+			PROCEDURE SortR( lo, hi: INTEGER );
+			VAR i, j, m, n: INTEGER;
 			BEGIN
 				IF lo < hi THEN
 					n := hi - lo + 1;
@@ -136,18 +134,18 @@ TYPE
 				END
 			END SortR;
 
-			PROCEDURE EncodeBlock*( VAR buf: ARRAY OF CHAR; len: SIZE ): SIGNED32;
-			VAR  i: SIZE;  index: SIGNED32;
+			PROCEDURE EncodeBlock*( VAR buf: ARRAY OF CHAR; len: INTEGER ): INTEGER;
+			VAR  i, index: INTEGER;
 			BEGIN
-				ASSERT( len <= BlockSize );  length := len;
-				FOR i := 0 TO length - 1 DO  sbuf[i] := buf[i];  sbuf[i+length] := buf[i]  END;
-				FOR i := 0 TO length - 1 DO  rotation[i] := SIGNED16( i )  END;
-				SortR( 0, length - 1 );
+				ASSERT( len <= BlockSize );  bufLength := len;
+				FOR i := 0 TO bufLength - 1 DO  sbuf[i] := buf[i];  sbuf[i+bufLength] := buf[i]  END;
+				FOR i := 0 TO bufLength - 1 DO  rotation[i] := SIGNED16( i )  END;
+				SortR( 0, bufLength - 1 );
 				(* find index of the original row *)
 				index := 0;  WHILE rotation[index] # 0 DO  INC( index )  END;
 				(* replace buf by column L *)
-				FOR i := 0 TO length -1 DO  buf[i] := sbuf[rotation[i] + length - 1]  END;
-				mtf.Encode( buf, length );
+				FOR i := 0 TO bufLength -1 DO  buf[i] := sbuf[rotation[i] + bufLength - 1]  END;
+				mtf.Encode( buf, bufLength );
 				RETURN index
 			END EncodeBlock;
 
@@ -156,8 +154,6 @@ TYPE
 
 TYPE
 	Decoder* = OBJECT
-		TYPE
-			Index = SIZE;
 		VAR
 			mtf: MTF;
 			f, l: ARRAY BlockSize OF CHAR;
@@ -169,15 +165,15 @@ TYPE
 			END New;
 
 
-			PROCEDURE -Swap( a, b: Index );
+			PROCEDURE -Swap( a, b: INTEGER );
 			VAR  tmp: CHAR;
 			BEGIN
 				tmp := f[a];  f[a] := f[b];  f[b] := tmp
 			END Swap;
 
 
-			PROCEDURE SortF( lo, hi: Index );
-			VAR i, j, m: Index;
+			PROCEDURE SortF( lo, hi: INTEGER );
+			VAR i, j, m: INTEGER;
 			BEGIN
 				IF lo < hi THEN
 					IF (hi - lo) = 1 THEN
@@ -199,9 +195,9 @@ TYPE
 			END SortF;
 
 
-			PROCEDURE DecodeBlock*( VAR buf: ARRAY OF CHAR; len, index: SIZE );
+			PROCEDURE DecodeBlock*( VAR buf: ARRAY OF CHAR; len, index: INTEGER );
 			VAR
-				i, j: SIZE; n: SIGNED32;  ch: CHAR;
+				i, j, n: INTEGER;  ch: CHAR;
 				xn: ARRAY 256 OF SIGNED16;
 			BEGIN
 				ASSERT( len <= BlockSize );

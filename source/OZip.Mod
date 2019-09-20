@@ -32,8 +32,8 @@ CONST
 			r.Bytes( buffer, 0, BlockSize, len );
 			IF len = 0 THEN  EXIT  END;
 			w.RawNum( len );
-			w.RawNum( bw.EncodeBlock( buffer, len ) );
-			huff.CompressBlock( buffer, len );
+			w.RawNum( bw.EncodeBlock( buffer, INTEGER(len) ) );
+			huff.CompressBlock( buffer, INTEGER(len) );
 		END;
 		w.RawNum( 0 );	(* mark end of stream *)
 		w.Update
@@ -44,7 +44,7 @@ CONST
 	PROCEDURE Uncompress*( r: Streams.Reader;  w: Streams.Writer ): BOOLEAN;
 	VAR
 		huff: Huffman.Decoder;
-		tag, len, bwIndex: SIGNED32;
+		tag, len, bwIndex: INTEGER;
 		bw: BW.Decoder;
 		buffer: ARRAY BlockSize OF CHAR;
 	BEGIN

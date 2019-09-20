@@ -25,8 +25,8 @@ TYPE
 		END New;
 
 		(* Calculate a polygon in form of a circle *)
-		PROCEDURE MakeCircle(x, y, r, nofPoints: LONGINTEGER; VAR p : ARRAY OF WMGraphics.Point2d);
-		VAR i : INTEGER;
+		PROCEDURE MakeCircle(x, y, r, nofPoints: SIZE; VAR p : ARRAY OF WMGraphics.Point2d);
+		VAR i : SIZE;
 			inv : FLOAT32;
 		BEGIN
 			inv := 2 * Math.pi / nofPoints;
@@ -49,7 +49,7 @@ TYPE
 
 		PROCEDURE FillDemo;
 		VAR circle : ARRAY  64 OF WMGraphics.Point2d;
-			x , y, r, i : LONGINTEGER;
+			x , y, r, i : SIZE;
 		BEGIN
 			x := bild.width DIV 2;
 			y := bild.height DIV 2;
@@ -139,7 +139,7 @@ VAR s : TestWindow;
 
 (*Gfx offers advanced drawing features, see GfxOverview.html and GfxHowTo.html*)
 PROCEDURE TestGfx*;
-VAR w:WMWindowManager.BufferWindow; c: WMGraphicsGfx.Canvas; t,x0,y0,x,y:SIGNED32;
+VAR w:WMWindowManager.BufferWindow; c: WMGraphicsGfx.Canvas; t: INTEGER; x0,y0,x,y:SIZE;
 BEGIN
 	NEW(w, 500,500, FALSE);
 	w.SetCanvasGenerator(WMGraphicsGfx.GenCanvas);

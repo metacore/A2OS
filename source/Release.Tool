@@ -1324,7 +1324,7 @@ PACKAGE Fun ARCHIVE "Fun.zip" SOURCE "FunSrc.zip" DESCRIPTION "Games, Demos and 
 
 	# Demos
 	WMScribble.Mod
-	#WMGraphicsDemo.Mod
+	WMGraphicsDemo.Mod
 	SortDemo.Mod
 	Demos.rep
 	FractalDemo.Mod

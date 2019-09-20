@@ -160,7 +160,7 @@ CONST
 	(*--------------------------- Threads -------------------------------*)
 
 TYPE
-	Thread_t* = SIGNED32;
+	Thread_t* = INTEGER;
 	PthreadAttributeDesc = RECORD attr: ADDRESS END;
 
 	Key_t* = ADDRESS;
@@ -263,7 +263,7 @@ TYPE
 	Termios* = RECORD
 		iflags*, oflags*, cflags*, lflags*: SET32;
 		cc*: ARRAY 19 OF CHAR;
-		dummy-: ARRAY 2 OF SIGNED32
+		dummy-: ARRAY 2 OF INTEGER
 	END;
 
 	(*------------------------------------------------------------------*)
@@ -329,16 +329,16 @@ TYPE
 
 	TmPtr* = POINTER TO Tm;
 	Tm* = RECORD
-				sec*, min*, hour*, mday*, mon*, year*, wday*, yday*, isdst*: SIGNED32;
-				gmtoff*, tmzone*: SIGNED32;
+				sec*, min*, hour*, mday*, mon*, year*, wday*, yday*, isdst*: INTEGER;
+				gmtoff*, tmzone*: INTEGER;
 			END;
 
 	Tms* = RECORD
-				utime*, stime*, cutime*, cstime*: SIGNED32
+				utime*, stime*, cutime*, cstime*: INTEGER
 			END;
 
 	Timezone* = RECORD
-				minuteswest*, dsttime*: SIGNED32
+				minuteswest*, dsttime*: INTEGER
 			END;
 
 	Itimerval* = RECORD
@@ -359,7 +359,7 @@ TYPE
 			END;
 
 	Sigset = ARRAY 4 OF SET32;
-	SignalTrap = PROCEDURE ( sig: SIGNED32; mc: Mcontext );
+	SignalTrap = PROCEDURE ( sig: INTEGER; mc: Mcontext );
 
 	Stack* = RECORD
 				sp-	: ADDRESS;
@@ -445,13 +445,13 @@ TYPE
 			END;
 
 	Sched_param = RECORD
-		sched_priority: SIGNED32;
-		unused: ARRAY 8 OF SIGNED32;
+		sched_priority: INTEGER;
+		unused: ARRAY 8 OF INTEGER;
 	END;
 
 
-	OberonXErrorHandler* = PROCEDURE ( disp, err: ADDRESS ): SIGNED32;
-	OberonXIOErrorHandler* = PROCEDURE ( disp: ADDRESS ): SIGNED32;
+	OberonXErrorHandler* = PROCEDURE ( disp, err: ADDRESS ): INTEGER;
+	OberonXIOErrorHandler* = PROCEDURE ( disp: ADDRESS ): INTEGER;
 
 
 VAR
@@ -459,7 +459,7 @@ VAR
 	mainthread: Thread_t;
 	thread_exit: Key_t;
 
-	argc-: SIGNED32;  argv-: ADDRESS;  environ: ADDRESS;
+	argc-: INTEGER;  argv-: ADDRESS;  environ: ADDRESS;
 
 	trap: SignalTrap;
 
@@ -472,7 +472,7 @@ VAR
 
 	sigstack-: ARRAY 32*4096 OF CHAR;
 
-	sysconf	: PROCEDURE {C} ( name: SIGNED32 ): INTEGER;
+	sysconf	: PROCEDURE {C} ( name: INTEGER ): LONGINTEGER;
 
 	pthread_mutex_init		: PROCEDURE {C} ( mutex: ADDRESS; mutexattr: ADDRESS ): INTEGER;
 	pthread_mutex_destroy	: PROCEDURE {C} ( mutex: ADDRESS ): INTEGER;
@@ -490,7 +490,7 @@ VAR
 	pthread_create	: PROCEDURE {C} ( newthread: ADDRESS; attr: ADDRESS; start_routine: PROCEDURE {C} (arg: PROCEDURE):ADDRESS; arg:PROCEDURE): Thread_t;
 	pthread_exit		: PROCEDURE {C} ( thr: ADDRESS );
 	pthread_detach	: PROCEDURE {C} ( thr: Thread_t );
-	pthread_kill		: PROCEDURE {C} ( thr: Thread_t; sigid: SIGNED32 ): SIGNED32;
+	pthread_kill		: PROCEDURE {C} ( thr: Thread_t; sigid: INTEGER ): INTEGER;
 	pthread_cancel	: PROCEDURE {C} ( thr: Thread_t );
 	pthread_self		: PROCEDURE {C} ( ): Thread_t;
 
@@ -503,79 +503,79 @@ VAR
 	pthread_attr_setdetachstate	: PROCEDURE {C} ( attr: ADDRESS; set: INTEGER );
 	pthread_attr_setstacksize		: PROCEDURE {C} ( attr: ADDRESS; stackSize: SIZE );
 
-	sched_get_priority_max		: PROCEDURE {C} ( policy: SIGNED32 ): SIGNED32;
-	sched_get_priority_min		: PROCEDURE {C} ( policy: SIGNED32 ): SIGNED32;
-	pthread_setschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: SIGNED32; param: ADDRESS ): INTEGER;
+	sched_get_priority_max		: PROCEDURE {C} ( policy: INTEGER ): INTEGER;
+	sched_get_priority_min		: PROCEDURE {C} ( policy: INTEGER ): INTEGER;
+	pthread_setschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: INTEGER; param: ADDRESS ): INTEGER;
 	pthread_getschedparam		: PROCEDURE {C} ( thread: Thread_t; policy: ADDRESS; param: ADDRESS ): INTEGER;
-	pthread_setcancelstate		: PROCEDURE {C} ( state: SIGNED32; oldstate: ADDRESS ): SIGNED32;
-	pthread_setcanceltype		: PROCEDURE {C} ( type: SIGNED32; oldtype: ADDRESS ): SIGNED32;
+	pthread_setcancelstate		: PROCEDURE {C} ( state: INTEGER; oldstate: ADDRESS ): INTEGER;
+	pthread_setcanceltype		: PROCEDURE {C} ( type: INTEGER; oldtype: ADDRESS ): INTEGER;
 
-	thr_suspend		: PROCEDURE {C} ( thread: Thread_t ): SIGNED32;
-	thr_continue		: PROCEDURE {C} ( thread: Thread_t ): SIGNED32;
+	thr_suspend		: PROCEDURE {C} ( thread: Thread_t ): INTEGER;
+	thr_continue		: PROCEDURE {C} ( thread: Thread_t ): INTEGER;
 
-	sigaction			: PROCEDURE {C} ( signum: SIGNED32; CONST act, oldact: ADDRESS ): SIGNED32;
+	sigaction			: PROCEDURE {C} ( signum: INTEGER; CONST act, oldact: ADDRESS ): INTEGER;
 	sigemptyset		: PROCEDURE {C} ( set: ADDRESS );
-	sigfillset			: PROCEDURE {C} ( set: ADDRESS ): SIGNED32;
-	sigsuspend		: PROCEDURE {C} ( set: ADDRESS ): SIGNED32;
-	sigaddset			: PROCEDURE {C} ( set: ADDRESS; signo: SIGNED32 );
-	sigdelset			: PROCEDURE {C} ( set: ADDRESS; signo: SIGNED32 );
-	nanosleep			: PROCEDURE {C} ( req, rem: ADDRESS ): SIGNED32;
-	sigaltstack		: PROCEDURE {C} ( ss, oss: ADDRESS ): SIGNED32;
-	pthread_sigmask	: PROCEDURE {C} ( how: SIGNED32; set: ADDRESS; oldset: ADDRESS ): SIGNED32;
+	sigfillset			: PROCEDURE {C} ( set: ADDRESS ): INTEGER;
+	sigsuspend		: PROCEDURE {C} ( set: ADDRESS ): INTEGER;
+	sigaddset			: PROCEDURE {C} ( set: ADDRESS; signo: INTEGER );
+	sigdelset			: PROCEDURE {C} ( set: ADDRESS; signo: INTEGER );
+	nanosleep			: PROCEDURE {C} ( req, rem: ADDRESS ): INTEGER;
+	sigaltstack		: PROCEDURE {C} ( ss, oss: ADDRESS ): INTEGER;
+	pthread_sigmask	: PROCEDURE {C} ( how: INTEGER; set: ADDRESS; oldset: ADDRESS ): INTEGER;
 
 	(*pid: return param for process id. Only set if initialized non-null. path: pointer to string denoting the executable. file_actions: modify which files are open for the new process, if NIL it inherits open files from parent process. attrp: sets process groups, scheduler, signals etc, leave NIL. argv, evp: char** to the arguments and env. variables*)
-	posix_spawnp- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): SIGNED32;
+	posix_spawnp- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): INTEGER;
 	(*more restrictive than spawnp*)
-	posix_spawn- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): SIGNED32;
-	waitpid-			: PROCEDURE {C} ( pid: pid_t; status: ADDRESS; options: SIGNED32 ): pid_t;
-	pipe-				: PROCEDURE {C} ( pipefd: ADDRESS ): SIGNED32; (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)
-	dup2-				: PROCEDURE {C} ( oldfd,newfd: SIGNED32 ): SIGNED32; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
-	dup-				: PROCEDURE {C} ( oldfd: SIGNED32 ): SIGNED32;
+	posix_spawn- 	: PROCEDURE {C} ( pid: ADDRESS; path: ADDRESS; file_actions: ADDRESS; attrp: ADDRESS; argv: ADDRESS ; envp: ADDRESS ): INTEGER;
+	waitpid-			: PROCEDURE {C} ( pid: pid_t; status: ADDRESS; options: INTEGER ): pid_t;
+	pipe-				: PROCEDURE {C} ( pipefd: ADDRESS ): INTEGER; (*pipefd is assumed to be a pointer to a C array of 2 elements, after pipe creation the array will contain file descriptors for the input and output end of the pipe. returns 0 on success, or -1 on fail*)
+	dup2-				: PROCEDURE {C} ( oldfd,newfd: INTEGER ): INTEGER; (*overwrites file descriptor newfd with a copy of oldfd. useful for redirecting pipes.*)
+	dup-				: PROCEDURE {C} ( oldfd: INTEGER ): INTEGER;
 
-	read-			: PROCEDURE {C} ( fd: SIGNED32; buf: ADDRESS; n: SIZE ): SIZE;
-	write-			: PROCEDURE {C} ( fd: SIGNED32; buf: ADDRESS; n: SIZE ): SIZE;
-	open-			: PROCEDURE {C} ( name: ADDRESS;  flags: SET32;  mode: mode_t ): SIGNED32;
-	close-		: PROCEDURE {C} ( fd: SIGNED32 ): SIGNED32;
-	lseek-		: PROCEDURE {C} ( fd: SIGNED32; offset: off_t; origin: INTEGER ): off_t;
-	fsync-		: PROCEDURE {C} ( fd: SIGNED32 ): SIGNED32;
-	ioctl-			: PROCEDURE {C} ( fd: SIGNED32; request: SIGNED32; arg: ADDRESS ): SIGNED32;
-	unlink-		: PROCEDURE {C} ( name: ADDRESS ): SIGNED32;
-	rename-		: PROCEDURE {C} ( oldname, newname: ADDRESS ): SIGNED32;
-	ftruncate-		: PROCEDURE {C} ( fd: SIGNED32;  length: SIZE ): SIGNED32;
-	chmod-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): SIGNED32;
-	utime-		: PROCEDURE {C} ( name: ADDRESS;  tb: ADDRESS ): SIGNED32;
-	access-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): SIGNED32;
-	select-		: PROCEDURE {C} ( width: SIGNED32; rd, wr, ex: ADDRESS;  VAR timeout: Timeval ): SIGNED32;
+	read-			: PROCEDURE {C} ( fd: INTEGER; buf: ADDRESS; n: SIZE ): SIZE;
+	write-			: PROCEDURE {C} ( fd: INTEGER; buf: ADDRESS; n: SIZE ): SIZE;
+	open-			: PROCEDURE {C} ( name: ADDRESS;  flags: SET32;  mode: mode_t ): INTEGER;
+	close-		: PROCEDURE {C} ( fd: INTEGER ): INTEGER;
+	lseek-		: PROCEDURE {C} ( fd: INTEGER; offset: off_t; origin: INTEGER ): off_t;
+	fsync-		: PROCEDURE {C} ( fd: INTEGER ): INTEGER;
+	ioctl-			: PROCEDURE {C} ( fd: INTEGER; request: INTEGER; arg: ADDRESS ): INTEGER;
+	unlink-		: PROCEDURE {C} ( name: ADDRESS ): INTEGER;
+	rename-		: PROCEDURE {C} ( oldname, newname: ADDRESS ): INTEGER;
+	ftruncate-		: PROCEDURE {C} ( fd: INTEGER;  length: SIZE ): INTEGER;
+	chmod-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): INTEGER;
+	utime-		: PROCEDURE {C} ( name: ADDRESS;  tb: ADDRESS ): INTEGER;
+	access-		: PROCEDURE {C} ( name: ADDRESS;  mode: SET ): INTEGER;
+	select-		: PROCEDURE {C} ( width: INTEGER; rd, wr, ex: ADDRESS;  VAR timeout: Timeval ): INTEGER;
 	realpath-		: PROCEDURE {C} ( file_name: ADDRESS; resolved_name: ADDRESS ): ADDRESS;
 
-	chdir-			: PROCEDURE {C} ( name: ADDRESS ): SIGNED32;
-	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: mode_t ): SIGNED32;
-	rmdir-			: PROCEDURE {C} ( path: ADDRESS ): SIGNED32;
+	chdir-			: PROCEDURE {C} ( name: ADDRESS ): INTEGER;
+	mkdir-		: PROCEDURE {C} ( name: ADDRESS;  mode: mode_t ): INTEGER;
+	rmdir-			: PROCEDURE {C} ( path: ADDRESS ): INTEGER;
 
-	stat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): SIGNED32;
-	lstat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): SIGNED32;
-	fstat-			: PROCEDURE {C} ( fd: SIGNED32;  VAR buf: Status ): SIGNED32;
+	stat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): INTEGER;
+	lstat-			: PROCEDURE {C} ( name: ADDRESS;  VAR buf: Status ): INTEGER;
+	fstat-			: PROCEDURE {C} ( fd: INTEGER;  VAR buf: Status ): INTEGER;
 
-	getpid-		: PROCEDURE {C} ( ): SIGNED32;
-	getuid-		: PROCEDURE {C} ( ): SIGNED32;
+	getpid-		: PROCEDURE {C} ( ): INTEGER;
+	getuid-		: PROCEDURE {C} ( ): INTEGER;
 
 	malloc-		: PROCEDURE {C} ( size: SIZE ): ADDRESS;
-	posix_memalign-	: PROCEDURE {C} ( VAR p: ADDRESS; alignment, size: SIZE ): SIGNED32;
+	posix_memalign-	: PROCEDURE {C} ( VAR p: ADDRESS; alignment, size: SIZE ): INTEGER;
 	free-			: PROCEDURE {C} ( p: ADDRESS );
-	mprotect-	: PROCEDURE {C} ( p: ADDRESS; len: SIZE; prot: SIGNED32 ): SIGNED32;
+	mprotect-	: PROCEDURE {C} ( p: ADDRESS; len: SIZE; prot: INTEGER ): INTEGER;
 
-	alarm-		: PROCEDURE {C} ( ms: SIGNED32 ): SIGNED32;
-	setitimer-		: PROCEDURE {C} ( which: SIGNED32;  VAR value, ovalue: Itimerval ): SIGNED32;
-	getitimer-		: PROCEDURE {C} ( which: SIGNED32;  VAR value: Itimerval ): SIGNED32;
+	alarm-		: PROCEDURE {C} ( ms: INTEGER ): INTEGER;
+	setitimer-		: PROCEDURE {C} ( which: INTEGER;  VAR value, ovalue: Itimerval ): INTEGER;
+	getitimer-		: PROCEDURE {C} ( which: INTEGER;  VAR value: Itimerval ): INTEGER;
 
-	gettimeofday-	: PROCEDURE {C} ( VAR tv: Timeval;  VAR tz: Timezone ): SIGNED32;
-	mktime-		: PROCEDURE {C} ( VAR tm: Tm ): SIGNED32;
+	gettimeofday-	: PROCEDURE {C} ( VAR tv: Timeval;  VAR tz: Timezone ): INTEGER;
+	mktime-		: PROCEDURE {C} ( VAR tm: Tm ): INTEGER;
 	localtime-	: PROCEDURE {C} ( CONST tv: Timeval ): TmPtr;
-	time-			: PROCEDURE {C} ( VAR tv: Timeval ): SIGNED32;
-	times-		: PROCEDURE {C} ( VAR tms: Tms ): SIGNED32;
+	time-			: PROCEDURE {C} ( VAR tv: Timeval ): INTEGER;
+	times-		: PROCEDURE {C} ( VAR tms: Tms ): INTEGER;
 
 	system-		: PROCEDURE {C} ( cmd: ADDRESS );
-	uname-		: PROCEDURE {C} ( utsname: ADDRESS ): SIGNED32;
+	uname-		: PROCEDURE {C} ( utsname: ADDRESS ): INTEGER;
 
 	getcwd-		: PROCEDURE {C} ( buf: ADDRESS;  len: SIZE ): ADDRESS;
 	getenv-		: PROCEDURE {C} ( name: ADDRESS ): ADDRESS;
@@ -584,11 +584,11 @@ VAR
 	readdir-		: PROCEDURE {C} ( dir: ADDRESS ): Dirent;
 	closedir-		: PROCEDURE {C} ( dir: ADDRESS );
 
-	sigsetjmp-	: PROCEDURE {C} ( env: ADDRESS;  savemask: SIGNED32 ): SIGNED32;
-	siglongjmp-	: PROCEDURE {C} ( env: ADDRESS;  val: SIGNED32 );
+	sigsetjmp-	: PROCEDURE {C} ( env: ADDRESS;  savemask: INTEGER ): INTEGER;
+	siglongjmp-	: PROCEDURE {C} ( env: ADDRESS;  val: INTEGER );
 
-	kill-			: PROCEDURE {C} ( pid, sig: SIGNED32 ): SIGNED32;
-	exit-			: PROCEDURE {C} ( status: SIGNED32 );
+	kill-			: PROCEDURE {C} ( pid, sig: INTEGER ): INTEGER;
+	exit-			: PROCEDURE {C} ( status: INTEGER );
 	perror-		: PROCEDURE {C} ( msg: ADDRESS );
 
 	errno_location	: PROCEDURE {C} ( ): ADDRESS;
@@ -601,7 +601,7 @@ VAR
 	libx-: ADDRESS;
 
 	libraryPaths: ARRAY 7 OF ARRAY 32 OF CHAR;
-	noPaths: SIGNED32;
+	noPaths: INTEGER;
 
 	PROCEDURE ModifyContext*( cont: Mcontext;  pc, bp, sp: ADDRESS );
 	BEGIN
@@ -621,14 +621,14 @@ VAR
 		perror( ADDRESSOF( msg ) )
 	END Perror;
 
-	PROCEDURE errno*(): SIGNED32;
+	PROCEDURE errno*(): INTEGER;
 	VAR loc: ADDRESS;
 	BEGIN
 		loc := errno_location();
 		RETURN S.GET32( loc );
 	END errno;
 
-	PROCEDURE getnprocs* ( ): SIGNED32;
+	PROCEDURE getnprocs* ( ): LONGINTEGER;
 	BEGIN
 		RETURN sysconf( 15 ); (* 14 for number of processors configured, 15 for number of processors online *)
 	END getnprocs;
@@ -657,7 +657,7 @@ VAR
 	VAR suspendHandler*: PROCEDURE( c: Ucontext );
 
 
-	PROCEDURE {C} SigHandler( sig: SIGNED32; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
+	PROCEDURE {C} SigHandler( sig: INTEGER; scp: ADDRESS; ucp: Ucontext ); (* reversed arguments !! *)
 	BEGIN
 		IF sig = SIGUSR1 THEN
 			suspendHandler( ucp );
@@ -675,7 +675,7 @@ VAR
 	END InstallTrap;
 
 
-	PROCEDURE InstallHandler( sig: SIGNED32 );
+	PROCEDURE InstallHandler( sig: INTEGER );
 	VAR
 		act: Sigaction;
 		mask: Sigset;
@@ -694,7 +694,7 @@ VAR
 	END InstallHandler;
 
 
-	PROCEDURE HandleSignal*( sig: SIGNED32 );
+	PROCEDURE HandleSignal*( sig: INTEGER );
 	BEGIN
 		InstallHandler( sig )
 	END HandleSignal;
@@ -702,7 +702,7 @@ VAR
 	(*-------------------------------------------------------------------------------------------------------------*)
 
 
-	PROCEDURE ThrInitialize*( VAR low, high: SIGNED32 ): BOOLEAN;
+	PROCEDURE ThrInitialize*( VAR low, high: INTEGER ): BOOLEAN;
 	BEGIN
 		mainthread := pthread_self();
 		high := sched_get_priority_max( SCHED_OTHER );
@@ -755,7 +755,7 @@ VAR
 		state: ARRAY 2048 OF CHAR;
 
 		param: Sched_param;
-		r: SIGNED32;
+		r: INTEGER;
 	BEGIN
 		me := pthread_self();
 		SetSigaltstack();
@@ -797,7 +797,7 @@ VAR
 		RETURN id;
 	END ThrStart;
 
-	PROCEDURE ThrSleep*( ms: SIGNED32 );
+	PROCEDURE ThrSleep*( ms: INTEGER );
 	VAR
 		sltime, rem: RECORD
 			tv_sec: LONGINTEGER;        (* seconds *)
@@ -856,10 +856,10 @@ VAR
 		siglongjmp( pthread_getspecific( thread_exit ), 1 )
 	END ThrExit;
 
-	PROCEDURE ThrSetPriority*( thr: Thread_t; prio: SIGNED32 );
+	PROCEDURE ThrSetPriority*( thr: Thread_t; prio: INTEGER );
 	VAR
 		param: Sched_param;
-		policy, r: SIGNED32;
+		policy, r: INTEGER;
 	BEGIN
 	(*	r := pthread_getschedparam( thr, ADDRESSOF( policy ), ADDRESSOF( param ) );
 		param.sched_priority := prio;
@@ -868,10 +868,10 @@ VAR
 		END	*)
 	END ThrSetPriority;
 
-	PROCEDURE ThrGetPriority*( thr: Thread_t ):SIGNED32;
+	PROCEDURE ThrGetPriority*( thr: Thread_t ):INTEGER;
 	VAR
 		param: Sched_param;
-		policy, r: SIGNED32;
+		policy, r: INTEGER;
 	BEGIN
 	    r := pthread_getschedparam( thr, ADDRESSOF( policy ), ADDRESSOF( param ) );
 	    RETURN  param.sched_priority;
@@ -892,7 +892,7 @@ VAR
 	VAR
 		mtx: Mutex_t;
 		attr: MutexAttributeDesc;
-		r: SIGNED32;
+		r: INTEGER;
 	CONST
 		PTHREAD_MUTEX_RECURSIVE = 4;
 	BEGIN
@@ -981,7 +981,7 @@ VAR
 
 
 	PROCEDURE Dlsym*( lib: ADDRESS;  CONST sym: ARRAY OF CHAR;  objAddr: ADDRESS );
-	VAR val: SIGNED32;
+	VAR val: INTEGER;
 	BEGIN
 		Glue.Dlsym( lib, sym, objAddr );
 		S.GET( objAddr, val );
@@ -991,8 +991,8 @@ VAR
 		END
 	END Dlsym;
 
-	PROCEDURE Dlopen*( CONST libname: ARRAY OF CHAR;  mode: SIGNED32 ): ADDRESS;
-	VAR h: ADDRESS;  i, j, k: SIGNED16;
+	PROCEDURE Dlopen*( CONST libname: ARRAY OF CHAR;  mode: INTEGER ): ADDRESS;
+	VAR h: ADDRESS;  i, j, k: INTEGER;
 		p: ARRAY 256 OF CHAR;
 	BEGIN
 		IF libname[0] = '/' THEN  h := Glue.dlopen( ADDRESSOF( libname ), mode );
@@ -1018,8 +1018,8 @@ VAR
 		Glue.dlclose( lib )
 	END Dlclose;
 
-	PROCEDURE GetArg*( no: SIGNED32;  VAR val: ARRAY OF CHAR );
-	VAR ch: CHAR;  adr: ADDRESS;  i: SIGNED32;
+	PROCEDURE GetArg*( no: INTEGER;  VAR val: ARRAY OF CHAR );
+	VAR ch: CHAR;  adr: ADDRESS;  i: INTEGER;
 	BEGIN
 		IF no >= argc THEN  val[0] := 0X
 		ELSE
@@ -1029,7 +1029,7 @@ VAR
 	END GetArg;
 
 	PROCEDURE GetArgval*(  CONST argName: ARRAY OF CHAR;  VAR val: ARRAY OF CHAR );
-	VAR i: SIGNED16;
+	VAR i: INTEGER;
 		buf: ARRAY 40 OF CHAR;
 	BEGIN
 		i := 1;
@@ -1042,11 +1042,11 @@ VAR
 	END GetArgval;
 
 	PROCEDURE getSysinfo;
-	VAR res: INTEGER;  p: SIGNED16;
+	VAR res: INTEGER;  p: INTEGER;
 		buf: ARRAY 4096 OF CHAR;
 
-		PROCEDURE copy( VAR p: SIGNED16;  VAR dest: ARRAY OF CHAR );
-		VAR i: SIGNED16;
+		PROCEDURE copy( VAR p: INTEGER;  VAR dest: ARRAY OF CHAR );
+		VAR i: INTEGER;
 		BEGIN
 			WHILE buf[p] <= ' ' DO  INC( p )  END;
 			i := 0;

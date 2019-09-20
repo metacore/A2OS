@@ -25,18 +25,18 @@ TYPE
 		END New;
 
 		(* Calculate a polygon in form of a circle *)
-		PROCEDURE MakeCircle(x, y, r, nofPoints: SIGNED32; VAR p : ARRAY OF WMGraphics.Point2d);
-		VAR i : SIGNED32;
+		PROCEDURE MakeCircle(x, y, r, nofPoints: LONGINTEGER; VAR p : ARRAY OF WMGraphics.Point2d);
+		VAR i : INTEGER;
 			inv : FLOAT32;
 		BEGIN
 			inv := 2 * Math.pi / nofPoints;
-			FOR i := 0 TO nofPoints - 1 DO
+			FOR i := 0 TO INTEGER(nofPoints) - 1 DO
 				p[i].x := x + ENTIER(r * Math.cos(i * inv));
 				p[i].y := y + ENTIER(r * Math.sin(i * inv));
 			END
 		END MakeCircle;
 
-		PROCEDURE Filler(canvas : WMGraphics.Canvas; y, x0, x1 : SIGNED32);
+		PROCEDURE Filler(canvas : WMGraphics.Canvas; y, x0, x1 : SIZE);
 		BEGIN
 			canvas.ScaleImage(bild, WMRectangles.MakeRect(x0, y, x1 + 1, y + 1),
 				WMRectangles.MakeRect(x0, y, x1 + 1, y + 1), WMGraphics.ModeCopy, WMGraphics.ScaleBox);
@@ -49,7 +49,7 @@ TYPE
 
 		PROCEDURE FillDemo;
 		VAR circle : ARRAY  64 OF WMGraphics.Point2d;
-			x , y, r, i : SIGNED32;
+			x , y, r, i : LONGINTEGER;
 		BEGIN
 			x := bild.width DIV 2;
 			y := bild.height DIV 2;

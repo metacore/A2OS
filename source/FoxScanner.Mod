@@ -588,8 +588,8 @@ TYPE
 
 		(**
 		Number       =  Integer | Real.
-		Integer      =  Digit {Digit} | Digit {HexDigit} 'H' | '0x' {HexDigit} | '0b' {["'"]BinaryDigit}.
-		Real         =  Digit {Digit} '.' {Digit} [ScaleFactor].
+		Integer      =  Digit {["'"]Digit} | Digit {["'"]HexDigit} 'H' | '0x' {["'"]HexDigit} | '0b' {["'"]BinaryDigit}.
+		Real         =  Digit {["'"]Digit} '.' {Digit} [ScaleFactor].
 		ScaleFactor  =  ('E' | 'D') ['+' | '-'] digit {digit}.
 		HexDigit     =  Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'.
 		Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' .
@@ -599,7 +599,7 @@ TYPE
 			dig: ARRAY 24 OF CHAR;
 			f: FLOAT64;  expCh: CHAR;  neg, long: BOOLEAN;
 			result: Symbol;
-			hugeint, tenh, number, nextInt: SIGNED64;
+			hugeint, number, nextInt: SIGNED64;
 			digits: SIGNED32;
 
 			(** 10^e **)
@@ -640,6 +640,12 @@ TYPE
 			BEGIN
 				RETURN (ch >= "0") & (ch <= "1")
 			END IsBinaryDigit;
+			
+			PROCEDURE IsDecimalDigit(ch: CHAR): BOOLEAN;
+			BEGIN
+				RETURN (ch >= "0") & (ch <= '9');
+			END IsDecimalDigit;
+			
 
 		BEGIN  (* ("0" <= ch) & (ch <= "9") *)
 			result := Number;
@@ -685,7 +691,8 @@ TYPE
 			END;
 
 			LOOP  (* read mantissa *)
-				IF ("0" <= ch) & (ch <= "9") OR (d = 0) & ("A" <= ch) & (ch <= "F") THEN
+				IF (ch = "'") & (d = 0) & IsHexDigit(reader.Peek()) THEN GetNextCharacter END;
+				IF IsDecimalDigit(ch) OR (d = 0) & IsHexDigit(ch) THEN
 					IF (m > 0) OR (ch # "0") THEN  (* ignore leading zeros *)
 						IF n < LEN( dig ) THEN dig[n] := ch;  INC( n ) END;
 						INC( m )
@@ -697,7 +704,6 @@ TYPE
 					ELSIF d = 0 THEN  (* i > 0 *) d := i
 					ELSE Error( Basic.NumberIllegalCharacter )
 					END
-				ELSIF ch = "'" THEN GetNextCharacter; (* ignore *)
 				ELSE EXIT
 				END
 			END;   (* 0 <= n <= m <= i, 0 <= d <= i *)
@@ -736,12 +742,11 @@ TYPE
 						IF long THEN
 							i := 0; (* restart computation , artificial limit because of compiler problems with hugeint *)
 							hugeint := 0;
-							tenh := 10; (* compiler does not like constants here ! *)
 							token.numberType := Hugeint;
 							WHILE i < n DO
 								d := Decimal( dig[i] );  INC( i );
 								IF hugeint > MAX(SIGNED64) DIV 10 THEN Error( Basic.NumberTooLarge) END;
-								hugeint := hugeint * tenh + d;
+								hugeint := hugeint * 10 + d;
 								IF hugeint < 0 THEN Error( Basic.NumberTooLarge ) END
 							END;
 							token.integer := hugeint;

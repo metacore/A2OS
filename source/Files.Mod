@@ -798,9 +798,14 @@ END Remove;
 
 (* Find the file system with specified prefix. *)
 
-PROCEDURE FindFS(CONST prefix: ARRAY OF CHAR): FileSystem;
-VAR fs: FileSystem;
+PROCEDURE FindFS(prefix: ARRAY OF CHAR): FileSystem;
+VAR
+	fs: FileSystem;
 BEGIN
+	(* Capitalize one-letter prefix, because it is always capitalised on File System layer *)
+	IF (prefix[0] # 0X) & (prefix[1] = 0X) THEN
+		prefix[0] := CAP(prefix[0])
+	END;
 	fs := fsroot; WHILE (fs # NIL) & (fs.prefix # prefix) DO fs := fs.next END;
 	RETURN fs
 END FindFS;

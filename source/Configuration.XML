@@ -169,6 +169,7 @@ To update: Configuration.Init ~
 		<Setting name="tar" value="Tar"/>
 		<Setting name="skin" value="Tar"/>
 		<Setting name="rep" value="Tar"/>
+		<Setting name="zip" value="Zip"/>
 	</Section>
 
 <!-- Codecs -->

@@ -4,7 +4,7 @@ Refer to the "General ETH Oberon System Source License" contract available at: h
 MODULE Zip; (** AUTHOR "Stefan Walthert"; PURPOSE "ZIP codec"  **)
 
 IMPORT
-	Streams, Files, Zlib, ZlibReaders, ZlibWriters;
+	Strings, Streams, Files, Archives, Locks, Zlib, ZlibReaders, ZlibWriters;
 
 CONST
 
@@ -29,6 +29,8 @@ CONST
 	DefaultStrategy* = ZlibWriters.DefaultStrategy;
 	Filtered* = ZlibWriters.Filtered;
 	HuffmanOnly* = ZlibWriters.HuffmanOnly;
+	
+	EntryNameSize = 256;
 
 	(* support *)
 	Supported = 0;	(* can extract file *)
@@ -50,7 +52,7 @@ CONST
 TYPE
 	Entry* = POINTER TO EntryDesc;	(** description of a file stored in the zip-archive **)
 	EntryDesc* = RECORD
-		name-: ARRAY 256 OF CHAR;	(** name of file stored in the zip-archive **)
+		name-: ARRAY EntryNameSize OF CHAR;	(** name of file stored in the zip-archive **)
 		method: SIGNED16;	(* compression method *)
 		time-, date-: SIGNED32;	(** (Oberon) time and date when file was last modified **)
 		crc32: SIGNED32;	(* checksum of uncompressed file data *)
@@ -75,6 +77,7 @@ TYPE
 		offset: SIGNED32;	(* offset of end of central dir record *)
 		firstEntry, lastEntry: Entry	(* first and last Entry of Archive *)
 	END;
+	
 
 	Reader* = POINTER TO ReaderDesc;
 	ReaderDesc* = RECORD	(** structure for reading from a zip-file into a buffer **)
@@ -93,6 +96,187 @@ TYPE
 	DefReaderDesc = RECORD (ReaderDesc)	(* structure for reading from a deflated entry *)
 		zr: ZlibReaders.Reader
 	END;
+	
+	(* for internal use only. lets read a specified amount of data *)
+	SizeReader = OBJECT
+	VAR
+		r: Reader;
+		max: SIZE;
+		arc: ArchiveObj;
+
+		PROCEDURE &Init*(r: Reader; size: SIGNED32; arc: ArchiveObj);
+		BEGIN
+			SELF.r := r; SELF.max := size; SELF.arc := arc
+		END Init;
+
+		PROCEDURE Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER);
+		BEGIN
+			IF max = 0 THEN
+				res := Streams.Invalid;
+				RETURN
+			END;
+			IF size < min THEN size := min END;
+			IF size > max THEN size := max END;
+
+			ReadBytes(r, buf, ofs, size, len);
+			
+			DEC(max, len);
+			
+			IF len > 0 THEN
+				res := Streams.Ok
+			ELSE
+				res := Streams.EOF
+			END
+			
+		END Receive;
+
+	END SizeReader;
+	
+	EntryInfo* = OBJECT(Archives.EntryInfo)
+	VAR
+		name : ARRAY EntryNameSize OF CHAR;
+		size : SIGNED32;
+
+		PROCEDURE & Init*(CONST name : ARRAY OF CHAR; size : SIGNED32);
+		BEGIN
+			COPY(name, SELF.name); SELF.size := size
+		END Init;
+
+		PROCEDURE GetName*() : Strings.String;
+		VAR n : Strings.String;
+		BEGIN
+			NEW(n, EntryNameSize); COPY(name, n^);
+			RETURN n
+		END GetName;
+
+		PROCEDURE GetSize*() : SIGNED32;
+		BEGIN
+			RETURN size
+		END GetSize;
+
+		PROCEDURE GetInfoString*() : Strings.String;
+		VAR s : Strings.String;
+			temp : ARRAY 10 OF CHAR;
+		BEGIN
+			NEW(s, 128);
+			Strings.Append(s^, "Name : ");
+			Strings.Append(s^, name);
+			Strings.Append(s^, "; Size : ");
+			Strings.IntToStr(size, temp);
+			Strings.Append(s^, temp);
+			Strings.Append(s^, ";");
+			RETURN s
+		END GetInfoString;
+
+	END EntryInfo;
+	
+	ArchiveObj* = OBJECT(Archives.Archive)
+	VAR
+		arc: Archive;
+		lock: Locks.RecursiveLock;
+
+		PROCEDURE & Init*(f: Files.File);
+		VAR
+			res: INTEGER;
+		BEGIN
+			arc := OpenArchiveFile(f, res);
+			NEW(lock)
+		END Init;
+
+		PROCEDURE Acquire*;
+		BEGIN
+			lock.Acquire
+		END Acquire;
+
+		PROCEDURE Release*;
+		BEGIN
+			lock.Release
+		END Release;
+
+		(** return list of archive entries *)
+		PROCEDURE GetIndex*(): Archives.Index;
+		VAR i : SIGNED32;
+			e : Entry;
+			result : Archives.Index;
+			ei : EntryInfo;
+		BEGIN
+			ASSERT(lock.HasLock());
+			IF arc = NIL THEN
+				RETURN NIL
+			END;
+			NEW(result, arc.nofEntries);
+			i := 0;
+			e := arc.firstEntry;
+			WHILE e # NIL DO
+				NEW(ei, e.name, e.uncompSize);
+				result[i] := ei;
+				e := e.next;
+				INC(i)
+			END;
+			RETURN result
+		END GetIndex;
+
+		(** get info for a specific entry. return NIL if no such entry exists *)
+		PROCEDURE GetEntryInfo*(CONST name: ARRAY OF CHAR) : Archives.EntryInfo;
+		VAR
+			res: INTEGER;
+			e: Entry;
+			ei: EntryInfo;
+		BEGIN
+			ASSERT(lock.HasLock());
+			e := GetEntry(arc, name, res);
+			IF e = NIL THEN RETURN NIL END;
+			NEW(ei, e.name, e.uncompSize);
+			RETURN ei
+		END GetEntryInfo;
+
+		(** remove named entry *)
+		PROCEDURE RemoveEntry*(CONST name: ARRAY OF CHAR);
+		VAR
+			res: INTEGER;
+			e: Entry;
+		BEGIN
+			ASSERT(lock.HasLock());
+			e := GetEntry(arc, name, res);
+			IF e # NIL THEN
+				DeleteEntry(arc, e, res)
+			END
+		END RemoveEntry;
+
+		(** rename an archive entry. return new EntryInfo or NIL if failed. *)
+		PROCEDURE RenameEntry*(CONST from, to : ARRAY OF CHAR) : Archives.EntryInfo;
+		BEGIN HALT(301)
+		END RenameEntry;
+
+		(** open a sender to write an entry with name to archive. the data will be written when Update is called *)
+		PROCEDURE OpenSender*(CONST name : ARRAY OF CHAR) : Streams.Sender;
+		BEGIN HALT(301)
+		END OpenSender;
+
+		(** read entry from archive *)
+		PROCEDURE OpenReceiver*(CONST name : ARRAY OF CHAR): Streams.Receiver;
+		VAR
+			res: INTEGER;
+			e: Entry;
+			r: Reader;
+			s: SizeReader;
+		BEGIN
+			ASSERT(lock.HasLock());
+			e := GetEntry(arc, name, res);
+			IF e = NIL THEN RETURN NIL END;
+			r := OpenReader(arc, e);
+			NEW(s, r, e.uncompSize, SELF);
+			RETURN s.Receive
+		END OpenReceiver;
+
+		(** save a clone of the archive under a different name *)
+		PROCEDURE Copy*(CONST name : ARRAY OF CHAR) : Archives.Archive;
+		BEGIN HALT(301)
+		END Copy;
+
+		(* ----- internal functions ------------------------------------------------*)
+
+	END ArchiveObj;
 
 PROCEDURE ShowError*(errorCode : INTEGER; out : Streams.Writer);
 BEGIN
@@ -334,17 +518,27 @@ END WriteCentralDirectory;
 	- Ok: operation was successful
 	- FileError: file with specified name does not exist
 	- NotZipArchiveError: file is not a correct zipfile **)
+
 PROCEDURE OpenArchive*(CONST name: ARRAY OF CHAR; VAR res: INTEGER): Archive;
 VAR
 	arc: Archive;
-	ent: Entry;
 	f: Files.File;
+BEGIN
+	res := Ok;
+	f := Files.Old(name);
+	arc := OpenArchiveFile(f, res);
+	RETURN arc
+END OpenArchive;
+
+PROCEDURE OpenArchiveFile(f: Files.File; VAR res: INTEGER): Archive;
+VAR
+	arc: Archive;
+	ent: Entry;
 	r: Files.Rider;
 	longDummy: SIGNED32;
 	intDummy: SIGNED16;
 BEGIN
 	res := Ok;
-	f := Files.Old(name);
 	IF f = NIL THEN
 		res := FileError
 	ELSIF f.Length() < 22 THEN
@@ -394,7 +588,7 @@ BEGIN
 		END
 	END;
 	RETURN arc
-END OpenArchive;
+END OpenArchiveFile;
 
 (** Returns an Archive that corresponds to a file with specified name;
 	if there is already a zip-file with the same name, this already existing archive is returned;
@@ -753,5 +947,34 @@ BEGIN
 		r.res := ReaderError
 	END
 END Close;
+
+(* ----- api --------------------------------------------------------------------------- *)
+
+(** open an existing archive. applications should use the method Old in the superclass *)
+PROCEDURE Old*(name: Archives.StringObject): Archives.Archive;
+VAR
+	archive: ArchiveObj;
+	file: Files.File;
+BEGIN
+	file := Files.Old(name.value);
+	IF file = NIL THEN
+		RETURN NIL
+	ELSE
+		NEW(archive, file);
+		RETURN archive
+	END
+END Old;
+
+(** create a new archive, overwrite existing. applications should use the method New in the superclass *)
+PROCEDURE New*(name: Archives.StringObject): Archives.Archive;
+VAR
+	archive: ArchiveObj;
+	file: Files.File;
+BEGIN
+	file := Files.New(name.value);
+	Files.Register(file);
+	NEW(archive, file);
+	RETURN archive
+END New;
 
 END Zip.

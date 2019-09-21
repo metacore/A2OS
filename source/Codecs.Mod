@@ -1,7 +1,7 @@
 MODULE Codecs; (** AUTHOR "TF"; PURPOSE "CODEC repository"; *)
 
 IMPORT
-	Streams, Commands, Files, SoundDevices, Raster, Modules, Strings, Configuration, Unzip, Texts, Archives;
+	Streams, Commands, Files, SoundDevices, Raster, Modules, Strings, Configuration, Texts, Archives;
 
 CONST
 	ResFailed* = -1;
@@ -669,10 +669,7 @@ VAR f : Files.File;
 	inpStream : Streams.Reader;
 	r : Streams.Receiver;
 	tp, protocol, filename : ARRAY 1024 OF CHAR;
-	zf : Unzip.ZipFile;
-	entry : Unzip.Entry;
 	archive : Archives.Archive;
-	res : INTEGER;
 BEGIN
 	SplitName(name, protocol, filename);
 	COPY(protocol, tp); Strings.LowerCase(tp);
@@ -682,21 +679,17 @@ BEGIN
 		NEW(is, f, 0);
 		RETURN is
 	ELSIF Strings.Match("*.zip", tp) THEN
-		f := Files.Old(protocol);
-		IF f = NIL THEN RETURN NIL END;
-		NEW(zf, f, res);
-		IF res = 0 THEN
-			entry := zf.FindEntry(filename);
-			IF entry # NIL THEN
-				zf.OpenReceiver(r, entry, res);
-				IF res = 0 THEN
-					NEW(inpStream, r, 1024);
-					RETURN inpStream
-				ELSE RETURN NIL
-				END
-			ELSE RETURN NIL
+		archive := Archives.Old(protocol, "zip");
+		IF archive = NIL THEN
+			RETURN NIL
+		ELSE
+			archive.Acquire; r := archive.OpenReceiver(filename); archive.Release;
+			IF r = NIL THEN
+				RETURN NIL
+			ELSE
+				NEW(inpStream, r, 1024);
+				RETURN inpStream
 			END
-		ELSE RETURN NIL
 		END
 	ELSIF Strings.Match("*.skin", tp) THEN
 		archive := Archives.Old(protocol, "skin");

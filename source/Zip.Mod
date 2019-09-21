@@ -968,12 +968,15 @@ END Old;
 (** create a new archive, overwrite existing. applications should use the method New in the superclass *)
 PROCEDURE New*(name: Archives.StringObject): Archives.Archive;
 VAR
+	res: INTEGER;
+	arc: Archive;
 	archive: ArchiveObj;
-	file: Files.File;
 BEGIN
-	file := Files.New(name.value);
-	Files.Register(file);
-	NEW(archive, file);
+	archive := NIL;
+	arc := CreateArchive(name.value, res);
+	IF res = Ok THEN
+		NEW(archive, arc.file)
+	END;
 	RETURN archive
 END New;
 

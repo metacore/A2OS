@@ -193,6 +193,7 @@ To update: Configuration.Init ~
 				<Setting name="ISO-8859-5" value="CyrillicUtilities.ISO88595EncoderFactory"/>
 				<Setting name="KOI8-R" value="CyrillicUtilities.KOI8REncoderFactory"/>
 				<Setting name="KOI8-U" value="CyrillicUtilities.KOI8UEncoderFactory"/>
+				<Setting name="CP1250" value="CyrillicUtilities.CP1250EncoderFactory"/>
 				<Setting name="CP1251" value="CyrillicUtilities.CP1251EncoderFactory"/>
  				<Setting name="CP866" value="CyrillicUtilities.CP866EncoderFactory"/>
 			</Section>
@@ -217,6 +218,7 @@ To update: Configuration.Init ~
 				<Setting name="ISO-8859-5" value="CyrillicUtilities.ISO88595DecoderFactory"/>
 				<Setting name="KOI8-R" value="CyrillicUtilities.KOI8RDecoderFactory"/>
 				<Setting name="KOI8-U" value="CyrillicUtilities.KOI8UDecoderFactory"/>
+				<Setting name="CP1250" value="CyrillicUtilities.CP1250DecoderFactory"/>
 				<Setting name="CP1251" value="CyrillicUtilities.CP1251DecoderFactory"/>
 				<Setting name="CP866" value="CyrillicUtilities.CP866DecoderFactory"/>
 			</Section>

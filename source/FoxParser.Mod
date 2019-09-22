@@ -1100,7 +1100,7 @@ TYPE
                         ['else' StatementSequence]
                         'end'
                      | 'with' Identifier ':' QualifiedIdentifier 'do' StatementSequence
-                         {'|' [Identifier ':'] QualifiedIdentifier 'do' StatementSequence}
+                         {'|' QualifiedIdentifier 'do' StatementSequence}
                          [else StatementSequence]
                          'end'
                      | 'case' Expression 'of' ['|'] Case {'|' Case} ['else' StatementSequence] 'end'
@@ -1114,6 +1114,8 @@ TYPE
                      | 'await' Expression
                      | 'begin' StatementBlock 'end'
                      | 'code' {any} 'end'
+                     | 'IGNORE' Designator
+                     
                      ].
 		**)
 		PROCEDURE Statement*( statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN;
@@ -1573,7 +1575,7 @@ TYPE
 		END ObjectType;
 
 		(** CellType = 'cell' [Flags] [PortList] [';'] {ImportList} DeclarationSequence [Body] 'end' [Identifier]
-              | 'object'. **)
+     **)
 		PROCEDURE CellType(position: Position;  name: SyntaxTree.Identifier; parentScope: SyntaxTree.Scope; isCellNet: BOOLEAN): SyntaxTree.Type;
 		VAR
 			cellType: SyntaxTree.CellType;

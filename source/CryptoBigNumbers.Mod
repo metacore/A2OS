@@ -7,7 +7,7 @@ MODULE CryptoBigNumbers;  (* g.f.	2001.10.07 *)
 (* 2010.01.12	g.f.	interface cleanup, most procedures got funtions *)
 
 
-IMPORT S := SYSTEM, Streams, Random, Kernel, Out := KernelLog;
+IMPORT Streams, Random, Kernel, Log := KernelLog;
 
 CONST
 	BufferPoolSize = 16;
@@ -38,7 +38,7 @@ TYPE
 				BEGIN
 					w := bits DIV 32;  b := bits MOD 32;  len := w;
 					IF b # 0 THEN  INC( len );
-						d[w] := S.VAL( UNSIGNED32,  S.VAL( SET32, d[w] ) * SET32({0..b}) )
+						d[w] := UNSIGNED32(  SET32( d[w] ) * SET32( {0..b} ) )
 					END
 				END Mask;
 
@@ -158,7 +158,7 @@ TYPE
 				BEGIN
 					w := n DIV 32;  bit := n MOD 32;
 					IF w >= len THEN  RETURN FALSE
-					ELSE  RETURN  bit IN S.VAL( SET32, d[w] )
+					ELSE  RETURN  bit IN SET32( d[w] )
 					END
 				END BitSet;
 
@@ -227,7 +227,7 @@ TYPE
 
 VAR
 	bufferPool: ARRAY BufferPoolSize OF digits;
-	nextFreeBuffer: SIGNED32;
+	nextFreeBuffer: INTEGER;
 
 	randomgenerator: Random.Generator;
 
@@ -266,9 +266,9 @@ VAR
 		END;
 		b.len := (bits + 31) DIV 32;
 		topbit := (bits - 1)  MOD 32;
-		topword := SET32( S.VAL( SET32, b.d[b.len - 1] ) * {0..topbit} );
+		topword := SET32( b.d[b.len - 1] ) * SET32( {0..topbit} );
 		IF top > 0 THEN INCL( topword, topbit ) END;
-		b.d[b.len - 1] := S.VAL( SIGNED32, topword );
+		b.d[b.len - 1] := INTEGER( topword );
 		IF (bottom > 0) & ~ODD( b.d[0] ) THEN  INC( b.d[0] )  END;
 		RETURN b
 	END NewRand;
@@ -286,8 +286,8 @@ VAR
 		WHILE (len > 0) & (d[len - 1] = 0) DO  DEC( len )  END;
 	END fixlen;
 
-	PROCEDURE h2i( c: CHAR ): SIGNED32;
-	VAR v: SIGNED32;
+	PROCEDURE h2i( c: CHAR ): INTEGER;
+	VAR v: INTEGER;
 	BEGIN
 		CASE c OF
 		| '0'..'9':  v := ORD( c ) - ORD( '0' )
@@ -340,7 +340,7 @@ VAR
 		END
 	END GetBinaryValue;
 
-	PROCEDURE AssignInt*( VAR b: BigNumber;  val: SIGNED32 );
+	PROCEDURE AssignInt*( VAR b: BigNumber;  val: INTEGER );
 	BEGIN
 		NEW( b, 64 );
 		IF val < 0 THEN  b.neg := TRUE;  val := ABS( val ) END;
@@ -390,7 +390,7 @@ VAR
 
 	PROCEDURE Invert( x: BNdigit ): BNdigit;
 	BEGIN
-		RETURN S.VAL( BNdigit, -S.VAL( SET32, x ) )
+		RETURN BNdigit( -SET32( x ) )
 	END Invert;
 
 	PROCEDURE add( a, b: digits; VAR c: digits;  al, bl: SIZE;  VAR cl: SIZE );
@@ -518,11 +518,11 @@ VAR
 		RETURN c
 	END Mul;
 
-	PROCEDURE div64( CONST a: dig2;  VAR b: BNdigit ): SIGNED32;   (* a div b *)
-	VAR bit, q: SIGNED32;  r: BNdigit;  overflow: BOOLEAN;
+	PROCEDURE div64( CONST a: dig2;  VAR b: BNdigit ): INTEGER;   (* a div b *)
+	VAR bit: INTEGER; q: SET32;  r: BNdigit;  overflow: BOOLEAN;
 	BEGIN
 		IF a[1] = 0 THEN
-			IF (a[0] < 80000000H) & (b < 80000000H ) THEN  RETURN SIGNED32( a[0] DIV b )
+			IF (a[0] < 80000000H) & (b < 80000000H ) THEN  RETURN INTEGER( a[0] DIV b )
 			ELSIF a[0] < b THEN  RETURN 0
 			ELSIF a[0] = b THEN  RETURN 1
 			END;
@@ -530,21 +530,21 @@ VAR
 		ELSIF a[1] = b THEN  RETURN -1
 		ELSE bit := 63
 		END;
-		q := 0;  r := 0;
-		WHILE (bit >= 0) & ~(bit MOD 32 IN S.VAL( SET32, a[bit DIV 32]) ) DO  DEC( bit )  END;
+		q := {};  r := 0;
+		WHILE (bit >= 0) & ~(bit MOD 32 IN SET32( a[bit DIV 32] ) ) DO  DEC( bit )  END;
 		WHILE bit >= 0 DO
-			overflow := 31 IN S.VAL( SET32, r );  r := ASH( r, 1 );
-			IF bit MOD 32 IN S.VAL( SET32, a[bit DIV 32] ) THEN  INC( r )  END;
+			overflow := 31 IN SET32( r );  r := ASH( r, 1 );
+			IF bit MOD 32 IN SET32( a[bit DIV 32] ) THEN  INC( r )  END;
 			IF overflow OR (b <= r) THEN  r := r - b;
-				IF bit < 32 THEN  INCL( S.VAL( SET32, q ), bit )  ELSE  q := -1  END;
+				IF bit < 32 THEN  INCL( q, bit )  ELSE  q := {0..31}  END;
 			END;
 			DEC( bit )
 		END;
-		RETURN q
+		RETURN INTEGER( q )
 	END div64;
 
-	PROCEDURE div96( CONST a: dig3;  CONST b: dig2 ): SIGNED32;   (* a div b *)
-	VAR bit: SIGNED32;  r: dig2;  q: SIGNED32;  overflow, borrow: BOOLEAN;
+	PROCEDURE div96( CONST a: dig3;  CONST b: dig2 ): INTEGER;   (* a div b *)
+	VAR bit: INTEGER;  r: dig2;  q: SET32;  overflow, borrow: BOOLEAN;
 
 		PROCEDURE ge( CONST a, b: dig2 ): BOOLEAN;
 		BEGIN
@@ -555,8 +555,8 @@ VAR
 
 		PROCEDURE shift( VAR x: dig2 );
 		BEGIN
-			overflow := 31 IN S.VAL( SET32, x[1] );  x[1] := ASH( x[1], 1 );
-			IF 31 IN S.VAL( SET32, x[0] ) THEN  INC( x[1] )  END;
+			overflow := 31 IN SET32( x[1] );  x[1] := ASH( x[1], 1 );
+			IF 31 IN SET32( x[0] ) THEN  INC( x[1] )  END;
 			x[0] := ASH( x[0], 1 );
 		END shift;
 
@@ -566,23 +566,23 @@ VAR
 			bit := 63
 		ELSE  bit := 95
 		END;
-		q := 0;  r[0] := 0;  r[1] := 0;
-		WHILE (bit >= 0) & ~(bit MOD 32 IN S.VAL( SET32, a[bit DIV 32]) ) DO  DEC( bit )  END;
+		q := {};  r[0] := 0;  r[1] := 0;
+		WHILE (bit >= 0) & ~(bit MOD 32 IN SET32( a[bit DIV 32]) ) DO  DEC( bit )  END;
 		WHILE bit >= 0 DO
 			shift( r );	(* r := r*2 *)
-			IF bit MOD 32 IN S.VAL( SET32, a[bit DIV 32] ) THEN  INC( r[0] )  END;
+			IF bit MOD 32 IN SET32( a[bit DIV 32] ) THEN  INC( r[0] )  END;
 			IF overflow OR ge( r, b ) THEN
 				borrow := r[0] <= b[0];  r[0] := r[0] - b[0];  r[1] := r[1] - b[1];
 				IF borrow  THEN  DEC( r[1] )  END;
-				IF bit < 32 THEN  INCL( S.VAL( SET32, q ), bit )  ELSE  q := -1  END;
+				IF bit < 32 THEN  INCL( q, bit )  ELSE  q := {0..31}  END;
 			END;
 			DEC( bit )
 		END;
-		RETURN q
+		RETURN INTEGER( q )
 	END div96;
 
 	PROCEDURE Div2*( a, b: BigNumber;  VAR q, r: BigNumber );   (** q = a div b;  r = a mod b *)
-	VAR td, sd, bd, qd: digits;  x: SIGNED32; i, tail, bl, tl, sl, ql, qi: SIZE;
+	VAR td, sd, bd, qd: digits;  x: INTEGER; i, tail, bl, tl, sl, ql, qi: SIZE;
 		t3: dig3;  t2, d0: dig2;
 		aq, ar: ADDRESS;
 	BEGIN
@@ -820,19 +820,19 @@ VAR
 	PROCEDURE Print*( b: BigNumber );
 	VAR i: SIZE;
 	BEGIN
-		IF b.neg THEN Out.String( "-" ) END;
-		IF b.len = 0 THEN  Out.String( "00000000" )
+		IF b.neg THEN Log.String( "-" ) END;
+		IF b.len = 0 THEN  Log.String( "00000000" )
 		ELSE  i := b.len;
 			WHILE i > 0 DO
-				DEC( i );  Out.Hex( b.d[i], -8 );
+				DEC( i );  Log.Hex( b.d[i], -8 );
 				IF i > 0 THEN
-					IF i MOD 6 = 0 THEN  Out.Ln
-					ELSE  Out.String( "  " )
+					IF i MOD 6 = 0 THEN  Log.Ln
+					ELSE  Log.String( "  " )
 					END
 				END
 			END
 		END;
-		Out.Char( '.' );  Out.Ln
+		Log.Char( '.' );  Log.Ln
 	END Print;
 
 
@@ -861,7 +861,7 @@ VAR
 	(*--------------------------- File I/O ---------------------------------*)
 
 	PROCEDURE FileRead*( r: Streams.Reader;  VAR b: BigNumber );
-	VAR i, j, v: SIGNED32;
+	VAR i, j, v: INTEGER;
 	BEGIN
 		r.RawLInt( j );
 		NEW( b, 32 * j );
@@ -870,9 +870,9 @@ VAR
 	END FileRead;
 
 	PROCEDURE FileWrite*( w: Streams.Writer;  b: BigNumber );
-	VAR i, j, v: SIGNED32;
+	VAR i, j, v: INTEGER;
 	BEGIN
-		j := b.len(SIGNED32);
+		j := INTEGER( b.len );
 		w.RawLInt( j );
 		FOR i := 0 TO j - 1 DO  w.RawLInt( v ); b.d[ i ] := v  END
 	END FileWrite;
@@ -907,7 +907,7 @@ VAR
 	END InitRandomgenerator;
 
 BEGIN
-	ASSERT( SIGNED32({0}) = 1 );		(* little endian SETs! *)
+	ASSERT( INTEGER( {0} ) = 1 );		(* little endian SETs! *)
 	FOR nextFreeBuffer := 0 TO BufferPoolSize - 1 DO
 		NEW( bufferPool[nextFreeBuffer], 256 )
 	END;

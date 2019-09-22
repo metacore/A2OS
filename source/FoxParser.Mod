@@ -124,10 +124,10 @@ CONST
 	MulOp = '*' | '**' | '.*' | '+*' | '/' | '\' | './' | 'div' | 'mod' | '&'.
 
 	Factor = Number [DesignatorOperations] | Character | String | 'nil' | 'imag' | 'true' | 'false' | Set
-							| '(' Expression ')' [DesignatorOperations] | '~' Factor | Factor '`' | Designator | MathArray.
+							| '(' Expression ')' [DesignatorOperations] | '~' Factor | Factor '`' | Designator | ArrayLiteral.
 							| 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator
 
-	MathArray = '[' Expression {',' Expression} ']'.
+	ArrayLiteral = '[' Expression {',' Expression} ']'.
 
 	Set = '{' [ RangeExpression {',' RangeExpression} ] '}'.
 
@@ -820,6 +820,9 @@ TYPE
 			RETURN designator
 		END Designator;
 
+		(* DesignatorOperations = { "(" ExpressionList ")" | "." Identifier | '[' ExpressionList ']' | '^' }. 
+		
+		*)
 		PROCEDURE DesignatorOperations (expression: SyntaxTree.Expression): SyntaxTree.Expression;
 		VAR position: Position; expressionList: SyntaxTree.ExpressionList; identifier: SyntaxTree.Identifier; designator: SyntaxTree.Designator;
 		BEGIN
@@ -879,8 +882,8 @@ TYPE
 			RETURN set
 		END Set;
 
-		(* MathArray = '[' Expression {',' Expression} ']'. *)
-		PROCEDURE MathArray(): SyntaxTree.Expression;
+		(* ArrayLiteral = '[' Expression {',' Expression} ']'. *)
+		PROCEDURE ArrayLiteral(): SyntaxTree.Expression;
 		VAR array: SyntaxTree.MathArrayExpression; element: SyntaxTree.Expression;
 		BEGIN
 			array := SyntaxTree.NewMathArrayExpression(token.position, SyntaxTree.NewExpressionList());
@@ -893,11 +896,12 @@ TYPE
 			END;
 			array.End(token.position);
 			RETURN array
-		END MathArray;
+		END ArrayLiteral;
 
 		(** Factor = Number [DesignatorOperations] | Character | String | 'nil' | 'imag' | 'true' | 'false' | Set
-						| '(' Expression ')' [DesignatorOperations] | '~' Factor | Factor '`' | Designator | MathArray.
+						| '(' Expression ')' [DesignatorOperations] | '~' Factor | Factor '`' | Designator | ArrayLiteral.
 						| 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator | 'ALIAS' OF Expression
+						| 'SELF' | 'IMAG' | 'RESULT' | 'NEW' 
 						**)
 		PROCEDURE Factor( ): SyntaxTree.Expression;
 		VAR factor: SyntaxTree.Expression; position: Position; operator: SIGNED32;
@@ -975,7 +979,7 @@ TYPE
 					factor.End( token.position);
 			| Scanner.LeftBracket:
 					NextToken;
-					factor := MathArray();
+					factor := ArrayLiteral();
 					factor.End(token.position);
 			ELSE
 				Error( position, Basic.ValueStartIncorrectSymbol, "" );
@@ -1042,11 +1046,10 @@ TYPE
 		END SimpleExpression;
 
 		(**
-			Expression           = RangeExpression [RelationOp RangeExpression].
-			RelationOp           = '=' | '.=' | '#' | '.#'
-						| '<' | '.<' | '<=' | '.<=' | '>' | '.>' | '>=' | '.>='
-						| '??' | '!!' | '<<?' | '>>?'
-						| 'in' | 'is'
+			Expression = RangeExpression [RelationOp RangeExpression].
+			RelationOp = '=' | '#' | '<' | '<=' | '>' | '>=' | 'IN' | 'IS'
+			             | '.=' | '.#' | '.<' | '.<=' | '.>'  '.>='
+			             | '??' | '!!' | '<<?' | '>>?'.
 		**)
 		PROCEDURE Expression*( ): SyntaxTree.Expression;
 		VAR expression, rightExpression: SyntaxTree.Expression;  operator: SIGNED32;  position: Position;

@@ -327,7 +327,7 @@ positive: uppercase hexadecimal character literal
 	CONST Character = 0ABX
 	END Test.
 
-negative: lowercase hexadecimal character literal
+positive: lowercase hexadecimal character literal
 
 	MODULE Test;
 	CONST Character = 0efX
@@ -363,7 +363,7 @@ positive: uppercase hexadecimal integer literal
 	CONST Integer = 1EDH
 	END Test.
 
-negative: lowercase hexadecimal integer literal
+positive: lowercase hexadecimal integer literal
 
 	MODULE Test;
 	CONST Integer = 4faH

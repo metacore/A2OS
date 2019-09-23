@@ -161,10 +161,14 @@ TYPE
 			ELSE
 				tree.SetNodeCaption(node, StrUNKNOWN);
 			END;
+			IF module.parameters # NIL THEN
+				AddPostfixToCaption(node, StrParenthesis);
+			END;
 			IF (module.context # NIL) & (module.context.name # NIL) THEN
 				AddPostfixToCaption(node, StrIN);
 				AddPostfixToCaption(node, module.context.name);
 			END;
+			AddModuleParameters(node, module.parameters);
 			AddImportList(node, module.importList, showImportedModules);
 			AddDefinitions(node, module.definitions);
 			AddDeclSeq(node, module.declSeq);
@@ -404,11 +408,65 @@ TYPE
 			node.pos.SetPosition(pos(SIZE));
 		END AddBody;
 
+		PROCEDURE AddModuleParameters(parent: WMTrees.TreeNode; parameters: ModuleParser.TemplateParameter);
+		VAR n: ModuleParser.NodeList;
+			newNode, parameterNode := NIL: TreeNode;
+			moduleParameter : ModuleParser.TemplateParameter;
+			nofParameters := 0: SIZE;
+		BEGIN
+			n := parameters;
+			IF n # NIL THEN
+				NEW(parameterNode);
+				SetNodeInfo( parameterNode, parameters, NIL, FALSE, SortNo, treeView.clTextDefault.Get(), {});
+				tree.SetNodeCaption(parameterNode, StrPARAMETERS);
+				tree.AddChildNode(parent, parameterNode);
+			END;
+			WHILE n # NIL DO
+				moduleParameter := n(ModuleParser.TemplateParameter);
+
+				newNode := AddInfoItem(parameterNode, moduleParameter, moduleParameter.ident, TRUE, SortNo, treeView.clTextDefault.Get(), {});
+
+				IF moduleParameter.type = ModuleParser.TemplateType.Const THEN
+					AddPostfixToCaption(newNode, StrCONSTPostfix);
+				ELSIF moduleParameter.type = ModuleParser.TemplateType.Type THEN
+					AddPostfixToCaption(newNode, StrTYPEPostfix);
+				END;
+
+				INC(nofParameters);
+				n := n.next;
+			END;
+			IF (nofParameters > 0) THEN AddNumberPostfixToCaption(parameterNode, nofParameters); END;
+		END AddModuleParameters;
+
+		PROCEDURE AddImportArguments(parent: WMTrees.TreeNode; arguments: ModuleParser.TemplateParameter);
+		VAR n: ModuleParser.NodeList;
+			newNode, argumentNode := NIL: TreeNode;
+			importArgument : ModuleParser.TemplateParameter;
+			nofArguments := 0: SIZE;
+		BEGIN
+			n := arguments;
+			IF n # NIL THEN
+				NEW(argumentNode);
+				SetNodeInfo( argumentNode, arguments, NIL, FALSE, SortNo, treeView.clTextDefault.Get(), {});
+				tree.SetNodeCaption(argumentNode, StrARGUMENTS);
+				tree.AddChildNode(parent, argumentNode);
+			END;
+			WHILE n # NIL DO
+				importArgument := n(ModuleParser.TemplateParameter);
+
+				newNode := AddInfoItem(argumentNode, importArgument, importArgument.ident, TRUE, SortNo, treeView.clTextDefault.Get(), {});
+
+				INC(nofArguments);
+				n := n.next;
+			END;
+			IF (nofArguments > 0) THEN AddNumberPostfixToCaption(argumentNode, nofArguments); END;
+		END AddImportArguments;
+
 		PROCEDURE AddImportList(parent: WMTrees.TreeNode; importList: ModuleParser.Import; showImportedModules : BOOLEAN);
 		VAR
 			module : ModuleParser.Module; filename : Files.FileName;
 			n: ModuleParser.NodeList;
-			newNode, importNode: TreeNode;
+			newNode, importNode := NIL: TreeNode;
 			import: ModuleParser.Import;
 			nofImports : SIZE;
 		BEGIN
@@ -418,8 +476,6 @@ TYPE
 				SetNodeInfo(importNode, importList, NIL, FALSE, SortIgnore, treeView.clTextDefault.Get(), {});
 				tree.SetNodeCaption(importNode, StrIMPORT);
 				tree.AddChildNode(parent, importNode);
-			ELSE
-				importNode := NIL;
 			END;
 			nofImports := 0;
 			WHILE n # NIL DO
@@ -432,6 +488,10 @@ TYPE
 				IF import.context # NIL THEN
 					AddPostfixToCaption(newNode, StrIN);
 					AddPostfixToCaption(newNode, import.context.name);
+				END;
+				IF import.parameters # NIL THEN
+					AddPostfixToCaption(newNode, StrParenthesis);
+					AddImportArguments(newNode, import.parameters);
 				END;
 				IF (newNode # NIL) THEN INC(nofImports); END;
 				IF showImportedModules THEN
@@ -606,9 +666,9 @@ TYPE
 					(* Make parameters always visible *)
 					EXCL(newNode.flags, NotPublic);
 					IF n(ModuleParser.FPSection).var THEN
-						AddPostfixToCaption(newNode, Strings.NewString(" (VAR)"));
+						AddPostfixToCaption(newNode, StrVARPostfix);
 					ELSIF n(ModuleParser.FPSection).const THEN
-						AddPostfixToCaption(newNode, Strings.NewString(" (CONST)"));
+						AddPostfixToCaption(newNode, StrCONSTPostfix);
 					END;
 					AddType(newNode, n(ModuleParser.FPSection).type, FALSE);
 					l := l.next;
@@ -965,7 +1025,7 @@ TYPE
 			node : ModuleParser.Node; infoItem: ModuleParser.InfoItem;
 			isPublic : BOOLEAN; sortHint: INTEGER; color: WMGraphics.Color; style: SET) : TreeNode;
 		VAR
-			newNode: TreeNode;
+			newNode := NIL: TreeNode;
 		BEGIN
 			IF (infoItem # NIL) & (parent # NIL) THEN
 				NEW(newNode);
@@ -981,7 +1041,8 @@ TYPE
 VAR
 	PrototypeShowTypeHierarchy, PrototypeShowImportedModules : WMProperties.BooleanProperty;
 	StrUNKNOWN, StrVAR, StrCONST, StrIMPORT, StrIN, StrBODY, StrRETURN, StrARRAY, StrOF,
-	StrBecomes, StrAmpersand, StrMinus, StrStar, StrQuote, StrOverwritten, StrOverwrite : Strings.String;
+	StrBecomes, StrAmpersand, StrMinus, StrStar, StrQuote, StrOverwritten, StrOverwrite,
+	StrPARAMETERS, StrARGUMENTS, StrVARPostfix, StrCONSTPostfix, StrTYPEPostfix, StrParenthesis: Strings.String;
 
 PROCEDURE GetColor(modifiers : SET; defaultColor : WMGraphics.Color) : WMGraphics.Color;
 VAR color : WMGraphics.Color;
@@ -1012,6 +1073,8 @@ BEGIN
 	StrRETURN := Strings.NewString("RETURN");
 	StrARRAY := Strings.NewString("ARRAY ");
 	StrOF := Strings.NewString("OF");
+	StrPARAMETERS := Strings.NewString("PARAMETERS");
+	StrARGUMENTS := Strings.NewString("ARGUMENTS");
 	StrBecomes := Strings.NewString(" := ");
 	StrAmpersand := Strings.NewString("& ");
 	StrMinus := Strings.NewString("-");
@@ -1019,6 +1082,10 @@ BEGIN
 	StrQuote := Strings.NewString('"');
 	StrOverwritten := Strings.NewString(" [overwritten]");
 	StrOverwrite := Strings.NewString(" [overwrite]");
+	StrVARPostfix := Strings.NewString(" (VAR)");
+	StrCONSTPostfix := Strings.NewString(" (CONST)");
+	StrTYPEPostfix := Strings.NewString(" (TYPE)");
+	StrParenthesis := Strings.NewString("(...)");
 END InitStrings;
 
 BEGIN

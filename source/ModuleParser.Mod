@@ -75,6 +75,7 @@ TYPE
 	Import* = OBJECT (NodeList)
 	VAR
 		ident*, alias*, context*: InfoItem;
+		parameters*: TemplateParameter;
 	END Import;
 
 	Definition* = OBJECT (NodeList)
@@ -340,7 +341,17 @@ TYPE
 		external*: Strings.String;
 	END IdentDef;
 
-	IdentList* = OBJECT (NodeList)
+	TemplateType*= ENUM
+		Type*, Const*, Empty*
+	END;
+
+	TemplateParameter*= OBJECT(NodeList)
+	VAR
+		type*: TemplateType;
+		ident*: InfoItem;
+	END TemplateParameter;
+
+	IdentList* = OBJECT(NodeList)
 	VAR
 		identDef*: IdentDef;
 	END IdentList;
@@ -355,6 +366,7 @@ TYPE
 		bodyPos- : Streams.Position;
 		hasError-: BOOLEAN;
 		resolved* : BOOLEAN;
+		parameters* : TemplateParameter;
 
 		PROCEDURE FindTypeDecl*(CONST name : ARRAY OF CHAR) : TypeDecl;
 		VAR typeDecl := NIL : TypeDecl;
@@ -405,6 +417,7 @@ TYPE
 		VAR
 			modName: FoxScanner.IdentifierString;
 			definition: Definition;
+			parameter: TemplateParameter;
 		BEGIN
 			NextToken;
 			IF (token.symbol = FoxScanner.Module) OR (token.symbol = FoxScanner.CellNet) THEN
@@ -417,6 +430,19 @@ TYPE
 					module.ident.pos := token.position.start;
 				END;
 				NextToken;
+				IF token.symbol = FoxScanner.LeftParenthesis THEN
+					parameter := NEW TemplateParameter(module);
+					TemplateParameterP(parameter);
+					module.parameters := parameter;
+
+					WHILE token.symbol = FoxScanner.Comma DO
+						parameter.next := NEW TemplateParameter(module);
+						parameter := parameter.next(TemplateParameter);
+						TemplateParameterP(parameter);
+					END;
+
+					Check (FoxScanner.RightParenthesis);
+				END;
 				IF token.symbol = FoxScanner.In THEN
 					NextToken;
 					IF token.symbol = FoxScanner.Identifier THEN
@@ -452,9 +478,7 @@ TYPE
 					module.bodyPos := 0;
 				END;
 				BodyP(FALSE, module.modifiers);
-				IF (token.symbol = FoxScanner.Identifier) & (token.identifierString = modName) THEN
-					(* correct *)
-				ELSE
+				IF (token.symbol # FoxScanner.Identifier) OR (token.identifierString # modName) THEN
 					(* maybe missing END or wrong module name *)
 					hasError := TRUE;
 					KernelLog.String("err3: "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
@@ -463,10 +487,47 @@ TYPE
 			END;
 		END ModuleP;
 
+		PROCEDURE TemplateParameterP(parameter: TemplateParameter);
+		BEGIN
+				NextToken;
+
+				IF token.symbol = FoxScanner.Const THEN
+					parameter.type := TemplateType.Const;
+					NextToken;
+				ELSIF token.symbol = FoxScanner.Type THEN
+					parameter.type := TemplateType.Type;
+					NextToken;
+				ELSE
+					hasError := TRUE;
+					parameter.type := TemplateType.Empty;
+					KernelLog.String("err (missing 'CONST' or 'TYPE'): "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
+				END;
+
+				NEW(parameter.ident);
+				IF token.symbol = FoxScanner.Identifier THEN
+					parameter.ident.name := Strings.NewString(token.identifierString);
+					parameter.ident.pos := token.position.start;
+					NextToken;
+				ELSE
+					parameter.ident.name := Strings.NewString("");
+					hasError := TRUE;
+					KernelLog.String("err: "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
+				END;
+		END TemplateParameterP;
+
+		PROCEDURE TemplateArgumentP(parameter: TemplateParameter);
+		BEGIN
+			NextToken;
+
+			NEW(parameter.ident);
+			ConstExprP(FoxScanner.Comma, FoxScanner.RightParenthesis, parameter.ident);
+		END TemplateArgumentP;
+
 		PROCEDURE ImportListP(import: Import);
 		VAR newImport: Import;
+			parameter: TemplateParameter;
 		BEGIN
-			WHILE token.symbol = FoxScanner.Import DO
+			REPEAT
 				NextToken;
 				WHILE token.symbol = FoxScanner.Identifier DO
 					NEW(import.ident);
@@ -486,6 +547,21 @@ TYPE
 							KernelLog.String("err2: "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
 						END;
 					END;
+
+					IF token.symbol = FoxScanner.LeftParenthesis THEN
+						parameter := NEW TemplateParameter(import);
+						TemplateArgumentP(parameter);
+						import.parameters := parameter;
+
+						WHILE token.symbol = FoxScanner.Comma DO
+							parameter.next := NEW TemplateParameter(import);
+							parameter := parameter.next(TemplateParameter);
+							TemplateArgumentP(parameter);
+						END;
+
+						Check (FoxScanner.RightParenthesis);
+					END;
+
 					IF token.symbol = FoxScanner.In THEN
 						NextToken;
 						IF token.symbol = FoxScanner.Identifier THEN
@@ -503,7 +579,7 @@ TYPE
 					import := newImport;
 				END;
 				Check(FoxScanner.Semicolon);
-			END;
+			UNTIL token.symbol # FoxScanner.Import;
 		END ImportListP;
 
 		PROCEDURE DefinitionP(definition: Definition);
@@ -804,7 +880,7 @@ TYPE
 				fpSection.identList.ident.pos := token.position.start;
 				NextToken;
 				*)
-				IF token.symbol = FoxScanner.Equal THEN NextToken; ConstExprP(FoxScanner.Comma, FoxScanner.Colon, dummy) END; (* added for optional parameters *)
+				IF token.symbol = FoxScanner.Becomes THEN NextToken; ConstExprP(FoxScanner.Comma, FoxScanner.Colon, dummy) END; (* added for optional parameters *)
 
 				WHILE token.symbol = FoxScanner.Comma DO
 					NEW(identList, fpSection.identList);
@@ -824,7 +900,7 @@ TYPE
 						NextToken;
 					END;
 					*)
-					IF token.symbol = FoxScanner.Equal THEN NextToken; ConstExprP(FoxScanner.Comma, FoxScanner.Colon, dummy) END; (* added for optional parameters *)
+					IF token.symbol = FoxScanner.Becomes THEN NextToken; ConstExprP(FoxScanner.Comma, FoxScanner.Colon, dummy) END; (* added for optional parameters *)
 				END;
 				Check(FoxScanner.Colon);
 				NEW(fpSection.type, fpSection);

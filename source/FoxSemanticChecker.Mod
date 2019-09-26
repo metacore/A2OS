@@ -6350,7 +6350,7 @@ TYPE
 					ELSIF HasFlag(modifiers, Global.NameClosing, position) THEN procedure.SetClosing(TRUE); procedure.SetPlain(TRUE);
 					END;
 				ELSIF procedure.scope IS SyntaxTree.ProcedureScope THEN
-					procedureType.SetNested(TRUE);
+					procedureType.SetNested(procedure.extern = NIL);
 				END;
 				IF HasValue(modifiers,Global.NameAligned,position,value) THEN procedure.SetAlignment(FALSE,value(SIZE));
 				ELSIF HasValue(modifiers,Global.NameOffset,position,value) THEN procedure.SetAlignment(TRUE,value(SIZE));

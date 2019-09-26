@@ -1736,7 +1736,7 @@ TYPE
 			returnParameter-: Parameter; (* not really necessary in syntax tree but very handy for backends *)
 			selfParameter-: Parameter;
 
-			isDelegate-,isInterrupt-,noReturn-: BOOLEAN;
+			isDelegate-,isInterrupt-,noReturn-,isNested-: BOOLEAN;
 			pcOffset-: SIZE; (* PC offset: used for ARM interrupt procedures *)
 			callingConvention-: CallingConvention;
 			stackAlignment-: SIZE;
@@ -1757,6 +1757,7 @@ TYPE
 			hasUntracedReturn := FALSE;
 			returnTypeModifiers := NIL;
 			selfParameter := NIL;
+			isNested := FALSE;
 		END InitProcedureType;
 
 		PROCEDURE SetNoReturn*(noReturn: BOOLEAN);
@@ -1774,7 +1775,12 @@ TYPE
 		PROCEDURE SetModifiers*(flags: Modifier);
 		BEGIN modifiers := flags
 		END SetModifiers;
-
+		
+		PROCEDURE SetNested*(nested: BOOLEAN);
+		BEGIN
+			isNested := nested;
+		END SetNested;
+		
 		PROCEDURE SetReturnTypeModifiers*(flags: Modifier);
 		BEGIN returnTypeModifiers := flags
 		END SetReturnTypeModifiers;
@@ -1857,6 +1863,7 @@ TYPE
 					result := result & (callingConvention = this.callingConvention);
 					result := result & (noReturn = this.noReturn);
 					result :=  result & (isInterrupt = this.isInterrupt);
+					result := result & (isNested = this.isNested);
 					IF result THEN
 
 						p1 := selfParameter; p2 := this.selfParameter;

@@ -39572,3 +39572,16 @@ positive: use array size for array size
 	VAR a: ARRAY LEN(Data,0) OF SIGNED32;
 	END Test.
 
+negative: nested procedure as parameter
+	MODULE Test;
+
+	PROCEDURE P (p: PROCEDURE);
+	END P;
+
+	PROCEDURE Q;
+	    PROCEDURE R; END R;
+	BEGIN
+	    P (R);
+	END Q;
+
+	END Test.

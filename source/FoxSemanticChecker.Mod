@@ -795,7 +795,7 @@ TYPE
 			IF HasFlag(modifiers, Global.NameDelegate,position) THEN procedureType.SetDelegate(TRUE) END;
 			IF HasFlag(modifiers, Global.NameRealtime,position) THEN procedureType.SetRealtime(TRUE) END;
 			CheckModifiers(modifiers, TRUE);
-
+			
 			modifiers := procedureType.returnTypeModifiers;
 			procedureType.SetUntracedReturn(HasFlag(modifiers, Global.NameUntraced, position));
 			CheckModifiers(modifiers, TRUE);
@@ -1331,9 +1331,6 @@ TYPE
 					Printout.Info("left",left);
 					Printout.Info("right",right);
 				END;
-			ELSIF (right IS SyntaxTree.SymbolDesignator) & (right(SyntaxTree.SymbolDesignator).symbol IS SyntaxTree.Procedure) &
-				(right(SyntaxTree.SymbolDesignator).symbol(SyntaxTree.Procedure).scope IS SyntaxTree.ProcedureScope) THEN
-				Error(right.position,"forbidden assignment of a nested procedure");
 			ELSE
 				result := TRUE
 			END;
@@ -6352,6 +6349,8 @@ TYPE
 					IF HasFlag(modifiers, Global.NameOpening,position) THEN procedure.SetOpening(TRUE); procedure.SetPlain(TRUE);
 					ELSIF HasFlag(modifiers, Global.NameClosing, position) THEN procedure.SetClosing(TRUE); procedure.SetPlain(TRUE);
 					END;
+				ELSIF procedure.scope IS SyntaxTree.ProcedureScope THEN
+					procedureType.SetNested(TRUE);
 				END;
 				IF HasValue(modifiers,Global.NameAligned,position,value) THEN procedure.SetAlignment(FALSE,value(SIZE));
 				ELSIF HasValue(modifiers,Global.NameOffset,position,value) THEN procedure.SetAlignment(TRUE,value(SIZE));
@@ -6376,8 +6375,7 @@ TYPE
 				END;
 
 				CheckModifiers(modifiers, TRUE);
-
-
+	
 
 				modifiers := procedureType.returnTypeModifiers;
 				procedureType.SetUntracedReturn(HasFlag(modifiers, Global.NameUntraced, position));

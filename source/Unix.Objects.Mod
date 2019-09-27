@@ -552,7 +552,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 
 	(*-------------------------------------------------------------------------*)
 
-	PROCEDURE Terminate*;
+	PROCEDURE Terminate-;
 	BEGIN
 		Exit
 	END Terminate;
@@ -575,7 +575,7 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		Unix.ThrSleep( ms );
 	END Sleep;
 
-	PROCEDURE Yield*;	(* Relinquish control. *)
+	PROCEDURE Yield-;	(* Relinquish control. *)
 	BEGIN
 		Unix.ThrYield( );
 	END Yield;
@@ -730,10 +730,14 @@ TYPE	GCStatusExt = OBJECT (Heaps.GCStatus)
 		Unix.ThrExit( );
 	END Exit;
 
-	PROCEDURE ExitTrap*;
+	PROCEDURE ExitTrap-;
 	VAR p: Process;
 	BEGIN
 		p := CurrentProcess();
+		IF p.id = 0 THEN
+			(* main thread *)
+			Unix.exit( 1 )
+		END;
 		(* restart the object body if it was given the SAFE flag *)
 		IF Restart IN p.flags THEN
 			Unix.siglongjmp( ADDRESSOF( p.state0[0] ), 1 )

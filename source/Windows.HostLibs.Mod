@@ -5,13 +5,29 @@
 MODULE HostLibs;
 
 IMPORT
-	SYSTEM, Kernel32;
+	SYSTEM, Kernel32, Files;
 
 TYPE
 	LibHandle* = Kernel32.HANDLE; (** dynamic library handle type *)
 
 CONST
 	NilLibHandle* = Kernel32.NULL; (** invalid library handle *)
+
+	DONT_RESOLVE_DLL_REFERENCES = 0;
+	LOAD_LIBRARY_AS_DATAFILE = 1;
+	(* reserved for internal LOAD_PACKAGED_LIBRARY = 2; *)
+	LOAD_WITH_ALTERED_SEARCH_PATH = 3;
+	LOAD_IGNORE_CODE_AUTHZ_LEVEL = 4;
+	LOAD_LIBRARY_AS_IMAGE_RESOURCE = 5;
+	LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE = 6;
+	LOAD_LIBRARY_REQUIRE_SIGNED_TARGET = 7;
+	LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR = 8;
+	LOAD_LIBRARY_SEARCH_APPLICATION_DIR = 9;
+	LOAD_LIBRARY_SEARCH_USER_DIRS = 10;
+	LOAD_LIBRARY_SEARCH_SYSTEM32 = 11;
+	LOAD_LIBRARY_SEARCH_DEFAULT_DIRS = 12;
+	LOAD_LIBRARY_SAFE_CURRENT_DIRS = 13;
+	LOAD_LIBRARY_SEARCH_SYSTEM32_NO_FORWARDER = 14;
 
 	(**
 		Load a dynamic library
@@ -22,14 +38,26 @@ CONST
 		Return: TRUE in case of success
 	*)
 	PROCEDURE LoadLibrary*(CONST fileName: ARRAY OF CHAR; VAR lib: LibHandle): BOOLEAN;
-	VAR err: SIGNED32;
+	VAR
+		err: SIGNED32;
+		fullName: Files.FileName;
+		flags: SET;
+		i: SIZE;
 	BEGIN
-		lib := Kernel32.LoadLibrary(fileName);
-		IF lib # NilLibHandle THEN
-			RETURN TRUE;
+		IF Files.Exists(fileName, fullName, flags) THEN
+			WHILE fullName[i] # 0X DO
+				IF fullName[i] = "/" THEN fullName[i] := "\"; END;
+				INC(i);
+			END;
+			lib := Kernel32.LoadLibraryEx(fullName, NIL, {LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR,LOAD_LIBRARY_SEARCH_APPLICATION_DIR,LOAD_LIBRARY_SEARCH_SYSTEM32,LOAD_LIBRARY_SEARCH_DEFAULT_DIRS});
+			IF lib # NilLibHandle THEN
+				RETURN TRUE;
+			END;
+			err := Kernel32.GetLastError();
+			TRACE(fullName, err);
+		ELSE
+			err := 126; (* ERROR_MOD_NOT_FOUND *)
 		END;
-		err := Kernel32.GetLastError();
-		TRACE(fileName, err);
 	FINALLY
 		RETURN FALSE;
 	END LoadLibrary;

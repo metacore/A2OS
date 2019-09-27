@@ -425,6 +425,7 @@ VAR
 	getProcAddress-: PROCEDURE {WINAPI} ( hModule: HMODULE;  CONST  lpProcName: ARRAY   OF CHAR ): ADDRESS;
 	(** The LoadLibrary function maps the specified executable module into the address space of the calling process. *)
 	LoadLibrary-: PROCEDURE {WINAPI} ( CONST lpLibFileName: ARRAY   OF CHAR ): HINSTANCE;   (* must be patched by linker / PE loader *)
+	LoadLibraryEx-: PROCEDURE {WINAPI} (CONST lpLibFileName: ARRAY OF CHAR; hFile: HANDLE; dwFlags: INTEGERSET): HINSTANCE;
 	(** registers a vectored continue handler. **)
 	AddVectoredContinueHandler-: PROCEDURE {WINAPI} (firstHandler: ULONG; vectoredHandler: VectoredExceptionHandler);
 	(** registers a vectored exception handler. **)
@@ -1040,6 +1041,7 @@ VAR
 
 		GetProcAddress(mod, "LeaveCriticalSection",SYSTEM.VAL(ADDRESS,LeaveCriticalSection));
 		(* must be done by linker: GetProcAddress(mod, "LoadLibraryA",SYSTEM.VAL(ADDRESS,LoadLibrary)); *)
+		GetProcAddress(mod, "LoadLibraryExA",SYSTEM.VAL(ADDRESS,LoadLibraryEx));
 		GetProcAddress(mod, "LocalFileTimeToFileTime",SYSTEM.VAL(ADDRESS,LocalFileTimeToFileTime));
 		GetProcAddress(mod, "MoveFileExA",SYSTEM.VAL(ADDRESS,MoveFileEx));
 		GetProcAddress(mod, "OutputDebugStringA",SYSTEM.VAL(ADDRESS,outputDebugString));

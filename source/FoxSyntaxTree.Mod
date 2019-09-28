@@ -1954,6 +1954,11 @@ TYPE
 		BEGIN
 			SELF.original := original;
 		END SetOriginal;
+		
+		(* overwritten in designators *)
+		PROCEDURE SetRelatedRhs*(expression: Expression);
+		BEGIN
+		END SetRelatedRhs;
 
 		PROCEDURE NeedsTrace* (): BOOLEAN;
 		BEGIN RETURN FALSE;

@@ -7061,8 +7061,8 @@ TYPE
 			procedureCallDesignator: SyntaxTree.ProcedureCallDesignator;
 		BEGIN
 			right := ResolveExpression(assignment.right);
+			assignment.left.SetRelatedRhs(right);
 			left := ResolveDesignator(assignment.left);
-			left.SetRelatedRhs(right);
 			
 			IF (left = SyntaxTree.invalidDesignator) OR (right = SyntaxTree.invalidExpression) THEN
 				(* error already handled *)

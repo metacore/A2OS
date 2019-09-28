@@ -324,11 +324,20 @@ END RandomV;
 		IF max < 0 THEN max2 := max1 - MIN( SIGNED32 );  max1 := MAX( SIGNED32 ) ELSE max2 := -1;  max1 := max END;
 		c := max1 MOD top + 1;
 		IF c = top THEN m1 := max1 ELSE m1 := max1 - c END;
-		ASSERT ( -1 MOD 3 = -1, 100 );   (* if not, the cases max2 = -1 and max3 = -1
+		ASSERT ( (-1) MOD 3 = 1, 100 );   (* the cases max2 = -1 and max3 = -1
 	must be handled separately when setting m2 and m3 *)
-		c := max2 MOD top + 1;
+		IF max2 < 0 THEN
+			c := -((-max2) MOD top) + 1;
+		ELSE
+			c := max2 MOD top + 1;
+		END; 
 		IF c = top THEN m2 := max2 ELSE m2 := max2 - c END;
-		max3 := max1 - m1 + max2 - m2 - 1;  c := max3 MOD top + 1;
+		max3 := max1 - m1 + max2 - m2 - 1;  
+		IF max3 < 0 THEN
+			c := -((-max3) MOD top) + 1;
+		ELSE
+			c := max3 MOD top + 1;
+		END; 
 		IF c = top THEN m3 := max3 ELSE m3 := max3 - c END;
 
 		nTry := 1;

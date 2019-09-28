@@ -2928,7 +2928,7 @@ Intel i386 :
 					(*compute array size, align to 4, reserve stack*)
 				TypeSize(res, size, step, scale);
 				IF size.mode=Con THEN
-					MakeCon(negsize, OPT.linttyp, -size.adr - (-size.adr MOD 4));
+					MakeCon(negsize, OPT.linttyp, -size.adr - (-(size.adr MOD 4)));
 					INC(sp.offs, negsize.adr);
 					IF res.mode#Var THEN load(negsize) END;	(*only if needed!*)
 				ELSE

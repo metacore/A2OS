@@ -330,14 +330,14 @@ PROCEDURE GetXbyY (axe: tAxe;  yval: Coordinate): Coordinate;
 BEGIN IF axe.y1 < axe.y2 THEN
 		RETURN (axe.x2 - axe.x1) * (yval - axe.y1) DIV (axe.y2 - axe.y1)
 	ELSIF axe.y1 > axe.y2 THEN
-		RETURN - (axe.x2 - axe.x1) * (yval - axe.y1) DIV (axe.y1 - axe.y2)
+		RETURN - ((axe.x2 - axe.x1) * (yval - axe.y1) DIV (axe.y1 - axe.y2))
 	ELSE RETURN infinity END END GetXbyY;
 
 PROCEDURE GetYbyX (axe: tAxe ;  xval: Coordinate): Coordinate;
 BEGIN IF axe.x1 < axe.x2 THEN
 		RETURN (axe.y2 - axe.y1) * (xval - axe.x1) DIV (axe.x2 - axe.x1)
 	ELSIF axe.x1 > axe.x2 THEN
-		RETURN - (axe.y2 - axe.y1) * (xval - axe.x1) DIV (axe.x1 - axe.x2)
+		RETURN - ((axe.y2 - axe.y1) * (xval - axe.x1) DIV (axe.x1 - axe.x2))
 	ELSE RETURN infinity END END GetYbyX;
 
 PROCEDURE GetXYbyR (axe: tAxe;  r: Real;  VAR x, y: Coordinate);

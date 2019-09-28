@@ -679,7 +679,7 @@ TYPE
 
 							(* print number in hexadecimal form *)
 							code.comments.String("0");
-							code.comments.Hex(x.value, -size DIV 4);
+							code.comments.Hex(x.value, -(size DIV 4));
 							code.comments.String("H");
 
 							code.comments.Ln;

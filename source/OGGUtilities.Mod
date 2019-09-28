@@ -545,7 +545,7 @@ TYPE
 		ady := ABS(dy);
 		(* adx is always positive, dy negative or positive *)
 		IF (dy < 0) THEN
-			base := -1 * ABS(dy) DIV adx (* must round towards zero, DIV-operator does not *)
+			base := -(ABS(dy) DIV adx) (* must round towards zero, DIV-operator does not *)
 		ELSE
 			base := dy DIV adx
 		END;

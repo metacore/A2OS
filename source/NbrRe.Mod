@@ -30,7 +30,7 @@ VAR
 	BEGIN
 		num := NbrRat.Numer( n );  den := NbrRat.Denom( n );  denomR := den;
 		IF num > 0 THEN int := num DIV den;  intR := int;  frac := num MOD den;  fracR := frac;  r := intR + fracR / denomR
-		ELSIF num < 0 THEN int := -num DIV den;  intR := int;  frac := -num MOD den;  fracR := frac;  r := -intR - fracR / denomR
+		ELSIF num < 0 THEN int := -(num DIV den);  intR := int;  frac := -(num MOD den);  fracR := frac;  r := -intR - fracR / denomR
 		ELSE r := 0
 		END;
 		RETURN r

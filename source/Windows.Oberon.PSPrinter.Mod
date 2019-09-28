@@ -1097,13 +1097,13 @@ MODULE PSPrinter IN Oberon; (** portable *)	(*UNIX version: JT 11.5.90, RC 2.7.9
 				|twoup:
 					Str(printR, "90 rotate"); Ln(printR);
 					Str(printR, "0.7071 0.7071 scale"); Ln(printR);
-					Str(printR, "0 "); Int(printR, -3520 * 3048 DIV P.Unit); Str(printR, " translate"); Ln(printR)
+					Str(printR, "0 "); Int(printR, -(3520 * 3048 DIV P.Unit)); Str(printR, " translate"); Ln(printR)
 				|fourup:
 					Str(printR, "0.5 0.5 scale"); Ln(printR);
 					Str(printR, "0 "); Int(printR, 3520 * 3048 DIV P.Unit); Str(printR, " translate"); Ln(printR)
 				|rotated:
 					Str(printR, "90 rotate"); Ln(printR);
-					Str(printR, "0 "); Int(printR, -2489 * 3048 DIV P.Unit); Str(printR, " translate"); Ln(printR)
+					Str(printR, "0 "); Int(printR, -(2489 * 3048 DIV P.Unit)); Str(printR, " translate"); Ln(printR)
 			END;
 			Str(printR, "save"); Ln(printR); Ln(printR);
 			Str(printR, "%%EndProlog"); Ln(printR);

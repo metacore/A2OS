@@ -346,8 +346,8 @@ END keepsel;
 
 	PROCEDURE CalcV( c: tCoordinate );
 	BEGIN
-		IF c.x >= 0 THEN c.vx := c.x;  c.px := 0 ELSE c.vx := ((c.x) MOD c.dx) - c.dx;  c.px := -c.x DIV c.dx - 1 END;
-		IF c.y >= 0 THEN c.vy := c.y;  c.py := 0 ELSE c.vy := ((c.y) MOD c.dy) - c.dy;  c.py := -c.y DIV c.dy - 1 END;   (* ?? *)
+		IF c.x >= 0 THEN c.vx := c.x;  c.px := 0 ELSE c.vx := ((c.x) MOD c.dx) - c.dx;  c.px := -(c.x DIV c.dx) - 1 END;
+		IF c.y >= 0 THEN c.vy := c.y;  c.py := 0 ELSE c.vy := ((c.y) MOD c.dy) - c.dy;  c.py := -(c.y DIV c.dy) - 1 END;   (* ?? *)
 
 		IF c.W > c.x THEN c.pw := (c.W - c.vx) DIV c.dx + 1 ELSE c.pw := 0 END;
 		IF c.H > c.y THEN c.ph := (c.H - c.vy) DIV c.dy + 1 ELSE c.ph := 0 END;

@@ -578,7 +578,7 @@ BEGIN
 	Panels.NewPanel; obj := Objects.NewObj(Panels.Panel);
 	obj.W := PanelW;
 
-	x := C1-40; y := -3*ButtonH DIV 2; v := NIL;
+	x := C1-40; y := -(3*ButtonH DIV 2); v := NIL;
 	f := f.list;
 	WHILE f # NIL DO
 		IF f.name = "" THEN
@@ -594,7 +594,7 @@ BEGIN
 	IF v = NIL THEN RETURN END;	(* no buttons inserted *)
 	obj.H := ButtonH DIV 2 - y;
 	v := NewButton ("Close", "HPCalc.RemoveFunctions");
-	Panels.InsertChild (obj, v(Gadgets.Frame), C3, -3*ButtonH DIV 2);
+	Panels.InsertChild (obj, v(Gadgets.Frame), C3, -(3*ButtonH DIV 2));
 	Attributes.SetBool (obj, "Locked", TRUE);
 	Links.SetLink(obj, "Context", Gadgets.context);
 	m.SubPanel := obj;

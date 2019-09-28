@@ -2733,7 +2733,7 @@ TYPE
 				END;
 				FOR i := 0 TO SHORT(instruction.op2.intValue)-1 DO
 					IF down THEN
-						Assembler.InitMem(dest,SHORT(SHORT(sizeInBits DIV 8)),reg,-i*sizeInBits DIV 8);
+						Assembler.InitMem(dest,SHORT(SHORT(sizeInBits DIV 8)),reg,-(i*sizeInBits DIV 8));
 					ELSE
 						Assembler.InitMem(dest,SHORT(SHORT(sizeInBits DIV 8 )),reg,i*sizeInBits DIV 8);
 					END;
@@ -3065,7 +3065,7 @@ TYPE
 					Move(op, memop, vop.type)
 				END;
 				IF sizeInBytes * length * 8 < cpuBits THEN
-					ModifyStackPointer(-cpuBits DIV 8);
+					ModifyStackPointer(-(cpuBits DIV 8));
 				ELSE
 					ModifyStackPointer(-sizeInBytes*length);
 				END;

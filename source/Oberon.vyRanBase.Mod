@@ -682,7 +682,7 @@ END FixDefaults;
 	BEGIN
 		ASSERT ( SIZEOF( SIGNED32 ) = sysBitsTypeSize, 100 );   (* jb 28.3.00 *)
 		ASSERT ( sysMaxUnsigned = -1, 101 );   (* jb 10.1.01 *)
-		ASSERT ( sysHalfBitsType = LSH( 80000000H, -(sysBitsTypeSize * 8) DIV 2 + 1 ), 102 );   (* jb 10.1.01 *)
+		ASSERT ( sysHalfBitsType = LSH( 80000000H, -((sysBitsTypeSize * 8) DIV 2) + 1 ), 102 );   (* jb 10.1.01 *)
 		tmp := 1;
 		ASSERT ( LSH( tmp, sysSHL ) = 2, 103 );   (* jb 2.3.01 *)
 		tmp := -1;

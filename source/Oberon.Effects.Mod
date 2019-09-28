@@ -483,12 +483,12 @@ BEGIN
 		IF tracker.H > tracker.W THEN bX :=  tracker.X - MX;
 			IF (MY < tracker.Y0) OR (MY >  tracker.Y0 + tracker.X0) THEN (* not in bar *)
 				tracker.Y0 := Max(tracker.Y+1,Min(MY - tracker.X0 DIV 2,tracker.Y + tracker.H - tracker.X0 - 2));
-				bY :=  -tracker.X0  DIV 2
+				bY :=  -(tracker.X0  DIV 2)
 			ELSE bY :=  tracker.Y0 - MY END
 		ELSE bY :=  tracker.Y - MY;
 			IF (MX < tracker.X0) OR (MX >  tracker.X0 + tracker.Y0) THEN (* not in bar *)
 				tracker.X0 := Max(tracker.X+1,Min(MX - tracker.Y0 DIV 2, tracker.X + tracker.W - tracker.Y0 - 2));
-				bX :=  -tracker.Y0  DIV 2
+				bX :=  -(tracker.Y0  DIV 2)
 			ELSE bX :=  tracker.X0 - MX END
 		END
 	END;

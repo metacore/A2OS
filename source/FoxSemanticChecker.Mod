@@ -7020,7 +7020,7 @@ TYPE
 			- check return type = NIL (otherwise must be assignment statement)
 		**)
 		PROCEDURE ResolveProcedureCallStatement(procedureCall: SyntaxTree.ProcedureCallStatement): SyntaxTree.Statement;
-		VAR call: SyntaxTree.Designator;
+		VAR call: SyntaxTree.Expression;
 		BEGIN
 			IF Trace THEN D.Str("ResolveProcedureCallStatement"); D.Ln; END;
 			call := procedureCall.call;
@@ -7061,9 +7061,9 @@ TYPE
 			procedureCallDesignator: SyntaxTree.ProcedureCallDesignator;
 		BEGIN
 			right := ResolveExpression(assignment.right);
-			assignment.left.SetRelatedRhs(right);
 			left := ResolveDesignator(assignment.left);
-
+			left.SetRelatedRhs(right);
+			
 			IF (left = SyntaxTree.invalidDesignator) OR (right = SyntaxTree.invalidExpression) THEN
 				(* error already handled *)
 			ELSIF IsIndexOperator(left) & left.assignable THEN

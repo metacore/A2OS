@@ -3441,9 +3441,9 @@ TYPE
 	(** << call(...) >> **)
 	ProcedureCallStatement*= OBJECT(Statement)
 		VAR ignore-: BOOLEAN;
-		VAR call-: Designator;
+		VAR call-: Expression;
 
-		PROCEDURE & InitProcedureCallStatement(position: Position; ignore: BOOLEAN; call: Designator; outer: Statement);
+		PROCEDURE & InitProcedureCallStatement(position: Position; ignore: BOOLEAN; call: Expression; outer: Statement);
 		BEGIN	InitStatement(position,outer); SELF.ignore := ignore; SELF.call := call;
 		END InitProcedureCallStatement;
 
@@ -3451,14 +3451,14 @@ TYPE
 		BEGIN	SELF.ignore := ignore;
 		END SetIgnore;
 
-		PROCEDURE SetCall*(call: Designator);
+		PROCEDURE SetCall*(call: Expression);
 		BEGIN	SELF.call := call;
 		END SetCall;
 
 		PROCEDURE Clone(): Statement;
 		VAR copy: ProcedureCallStatement;
 		BEGIN
-			NEW(copy, position, ignore, CloneDesignator(call), outer);
+			NEW(copy, position, ignore, CloneExpression(call), outer);
 			RETURN copy
 		END Clone;
 
@@ -3466,9 +3466,9 @@ TYPE
 
 	(** << left := right >> **)
 	Assignment* = OBJECT (Statement)
-	VAR left-: Designator; right-: Expression;
+	VAR left-: Expression; right-: Expression;
 
-		PROCEDURE & InitAssignment*( position: Position;  left: Designator;  right: Expression; outer: Statement );
+		PROCEDURE & InitAssignment*( position: Position;  left: Expression;  right: Expression; outer: Statement );
 		BEGIN
 			InitStatement( position,outer );  SELF.left := left;  SELF.right := right;
 		END InitAssignment;
@@ -3484,7 +3484,7 @@ TYPE
 		PROCEDURE Clone(): Statement;
 		VAR copy: Assignment;
 		BEGIN
-			NEW(copy, position, CloneDesignator(left), CloneExpression(right), outer);
+			NEW(copy, position, CloneExpression(left), CloneExpression(right), outer);
 			RETURN copy
 		END Clone;
 
@@ -3493,9 +3493,9 @@ TYPE
 	(** << left ('!' | '?' | '<<' | '>>') right >> **)
 	CommunicationStatement* = OBJECT (Statement)
 	VAR
-		left-: Designator; right-: Expression; op-: SIGNED32;
+		left-: Expression; right-: Expression; op-: SIGNED32;
 
-		PROCEDURE & InitAssignment*( position: Position; op: SIGNED32; left: Designator;  right: Expression; outer: Statement );
+		PROCEDURE & InitAssignment*( position: Position; op: SIGNED32; left: Expression;  right: Expression; outer: Statement );
 		BEGIN
 			InitStatement( position,outer );  SELF.op := op; SELF.left := left;  SELF.right := right;
 		END InitAssignment;
@@ -5749,19 +5749,19 @@ VAR
 		NEW( ifStatement, position,outer );  RETURN ifStatement
 	END NewIfStatement;
 
-	PROCEDURE NewAssignment*( position: Position;  left: Designator; right: Expression; outer: Statement): Assignment;
+	PROCEDURE NewAssignment*( position: Position;  left: Expression; right: Expression; outer: Statement): Assignment;
 	VAR assignment: Assignment;
 	BEGIN
 		NEW( assignment, position, left, right,outer );  RETURN assignment
 	END NewAssignment;
 
-	PROCEDURE NewCommunicationStatement*( position: Position;  op: SIGNED32; left: Designator; right: Expression; outer: Statement): CommunicationStatement;
+	PROCEDURE NewCommunicationStatement*( position: Position;  op: SIGNED32; left: Expression; right: Expression; outer: Statement): CommunicationStatement;
 	VAR communication: CommunicationStatement;
 	BEGIN
 		NEW( communication, position, op, left, right,outer );  RETURN communication
 	END NewCommunicationStatement;
 
-	PROCEDURE NewProcedureCallStatement*(position: Position; ignore: BOOLEAN; call: Designator; outer: Statement): ProcedureCallStatement;
+	PROCEDURE NewProcedureCallStatement*(position: Position; ignore: BOOLEAN; call: Expression; outer: Statement): ProcedureCallStatement;
 	VAR caller: ProcedureCallStatement;
 	BEGIN
 		NEW(caller,position,ignore,call,outer); RETURN caller

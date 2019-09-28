@@ -961,7 +961,7 @@ TYPE
 		END VisitStatement;
 
 		PROCEDURE VisitProcedureCallStatement*(x: SyntaxTree.ProcedureCallStatement);
-		VAR call: SyntaxTree.Designator;
+		VAR call: SyntaxTree.Expression;
 		BEGIN
 			IF ~(x.call IS SyntaxTree.ParameterDesignator) THEN
 				call := SyntaxTree.NewParameterDesignator(x.position,x.call,SyntaxTree.NewExpressionList());
@@ -1028,7 +1028,7 @@ TYPE
 		BEGIN IF ~GetBoolean(x, b) THEN Error("invalid value - must be boolean"); RETURN FALSE ELSE RETURN TRUE END;
 		END ExpectBoolean;
 
-		PROCEDURE PutValue(x: SyntaxTree.Designator; v: Value);
+		PROCEDURE PutValue(x: SyntaxTree.Expression; v: Value);
 		BEGIN
 			VExpression(x);
 			IF (item.object # NIL) & item.object(Result).SetV(v) THEN

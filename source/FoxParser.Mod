@@ -7,166 +7,11 @@ CONST
 	Trace = FALSE;
 	CascadedWithSupport = TRUE;
 
-	(** the parser reflects the following EBNF:
-
-		Module = ('module' | 'cellnet' [Flags]) Identifier ['in' Identifier]';'
-								{ImportList} DeclarationSequence [Body]
-								'end' Identifier '.'.
-
-		ImportList = 'import' Import { ',' Import } ';'.
-
-		Import     = Identifier [':=' Identifier] ['in' Identifier].
-
-		DeclarationSequence  =  {
-							'const' [ConstDeclaration] {';' [ConstDeclaration]}
-							|'type'  [TypeDeclaration] {';' [TypeDeclaration]}
-							|'var'   [VariableDeclaration] {';' [VariableDeclaration]}
-							| ProcedureDeclaration
-							| OperatorDeclaration
-							| ';'
-							}
-
-	Declaration = IdentifierDefinition '=' Expression.
-
-	TypeDeclaration = IdentifierDefinition '=' Type.
-
-	VariableDeclaration = VariableNameList ':' Type.
-
-	VariableNameList = IdentifierDefinition [Flags] [':=' Expression | 'extern' String] {',' IdentifierDefinition [Flags] [':=' Expression | 'extern' String] }.
-
-	OperatorDeclaration  = 'operator' [Flags] ['-'] String ['*'|'-'] FormalParameters ';'
-															DeclarationSequence [Body] 'end' String.
-
-	ProcedureDeclaration = 'procedure' ['^'|'&'|'~'|'-'|Flags ['-']] IdentifierDefinition [FormalParameters]';'
-															DeclarationSequence  [Body] 'end' Identifier.
-
-	Flags = '{' [Identifier ['(' Expression ')'|'=' Expression]  {',' Identifier ['(' Expression ')' | '=' Expression ] } ]  '}'.
-
-	FormalParameters = '(' [ParameterDeclaration {';' ParameterDeclaration}] ')' [':' [Flags] Type].
-
-	ParameterDeclaration = ['var'|'const'] Identifier [Flags] ['= Expression] {',' Identifier [Flags] ['= Expression]}':' Type.
-
-	PortList = '(' [PortDeclaration {';' PortDeclaration}] ')'.
-
-	PortDeclaration = Identifier [Flags] {',' Identifier [Flags]}':' Type.
-
-	Type = ArrayType | RecordType | PointerType | ObjectType | CellType | CellnetType | PortType
-						| ProcedureType | EnumerationType | QualifiedIdentifier.
-
-	PortType = 'port' ('in'|'out') ['(' Expression ')']
-
-	EnumerationType = 'enum' ['('QualifiedIdentifier')'] IdentifierDefinition ['=' Expression]
-													{',' IdentifierDefinition ['=' Expression]} 'end'.
-
-	ArrayType     = 'array' 'of' Type | 'array' Expression {',' Expression} 'of' Type
-										| 'array' '[' MathArraySize {',' MathArraySize} ']' ['of' Type].
-
-	MathArraySize = Expression | '*' | '?'.
-
-	RecordType = 'record' [Flags] ['(' QualifiedIdentifier ')'] [VariableDeclaration {';' VariableDeclaration}] 'end'.
-
-	PointerType = 'pointer' [Flags] 'to' Type.
-
-	CellType = 'cell' [Flags] [PortList] [';'] DeclarationSequence [Body] 'end' [Identifier].
-
-	ObjectType = 'object' | 'object' [Flags] ['(' (QualifiedIdentifier) ')'] DeclarationSequence [Body] 'end' [Identifier] .
-
-	ProcedureType = 'procedure' [Flags] [FormalParameters].
-
-	Body = 'begin' [Flags] StatementSequence ['finally' StatementSequence]
-						| 'code' Code.
-
-	Code = {  any \ 'end' \ 'with' } ['with' {('in'|'out') StatementSequence}] .
-
-	StatementBlock = [Flags] StatementSequence.
-
-	StatementSequence = Statement {';' Statement}.
-
-	Statement =
-				[
-					Designator [':=' Expression |'!' Expression | '?' Expression | '<<' Expresssion | '>>' Expression]
-					| 'if' Expression 'then' StatementSequence
-						{'elsif' Expression 'then' StatementSequence}
-						['else' StatementSequence]
-						'end'
-					| 'with' Identifier ':' QualifiedIdentifier 'do' StatementSequence
-						{['|' Identifier ':'] QualifiedIdentifier 'do' StatementSequence}
-						[else StatementSequence]
-						'end'
-					| 'case' Expression 'of' ['|'] Case {'|' Case} ['else' StatementSequence] 'end'
-					| 'while' Expression 'do' StatementSequence 'end'
-					| 'repeat' StatementSequence 'until' Expression
-					| 'for' Identifier ':=' Expression 'to' Expression ['by' Expression] 'do'
-						StatementSequence 'end'
-					| 'loop' StatementSequence 'end'
-					| 'exit'
-					| 'return' [Expression]
-					| 'await' Expression
-					| 'begin' StatementBlock 'end'
-					| 'code' {any} 'end'
-				].
-
-	Case = RangeExpression {',' RangeExpression} ':' StatementSequence.
-
-	Expression	= RangeExpression [RelationOp RangeExpression].
-
-	RelationOp	= '=' | '.=' | '#' | '.#'
-									| '<' | '.<' | '<=' | '.<=' | '>' | '.>' | '>=' | '.>='
-									| '??' | '!!' | '<<?' | '>>?'
-									| 'in' | 'is'
-
-	SimpleExpression     = ['+'|'-'] Term {AddOp Term}.
-
-	AddOp    = '+' | '-' | 'or'.
-
-	Term = Factor {MulOp Factor}.
-
-	MulOp = '*' | '**' | '.*' | '+*' | '/' | '\' | './' | 'div' | 'mod' | '&'.
-
-	Factor = Number [DesignatorOperations] | Character | String | 'nil' | 'imag' | 'true' | 'false' | Set
-							| '(' Expression ')' [DesignatorOperations] | '~' Factor | Factor '`' | Designator | ArrayLiteral.
-							| 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator
-
-	ArrayLiteral = '[' Expression {',' Expression} ']'.
-
-	Set = '{' [ RangeExpression {',' RangeExpression} ] '}'.
-
-	Designator  = ('self' | 'result' | Identifier) [DesignatorOperations] [Flags].
-
-	DesignatorOperations = {'.' Identifier  | '[' IndexList ']' | '(' [ExpressionList] ')' | '^'}.
-
-	RangeExpression = SimpleExpression | [SimpleExpression] '..' [SimpleExpression] ['by' SimpleExpression] | '*'.
-
-	IndexList = '?' [',' ExpressionList ] | ExpressionList [',' '?'].
-
-	ExpressionList = Expression { ',' Expression }.
-
-	IdentifierDefinition = Identifier [ '*' | '-' ].
-
-	QualifiedIdentifier = Identifier ['.' Identifier].
-
-	Identifier           = Letter {Letter | Digit | '_'}.
-
-	Letter               = 'A' | 'B' | .. | 'Z' | 'a' | 'b' | .. | 'z'.
-
-	String               = '"' {Character} '"' | "'" {Character} "'".
-
-	Number               = Integer | Real.
-
-	Integer              = Digit {Digit} | '0' 'x' {HexDigit} | Digit {HexDigit} 'H' .
-
-	Real                 = Digit {Digit} '.' {Digit} [ScaleFactor].
-
-	ScaleFactor          = ('E' | 'D') ['+' | '-'] digit {digit}.
-
-	HexDigit             = Digit | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'
-
-	Digit                = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' .
-
-	**)
+	(** the parser reflects the EBNF specified at the procedures implementing the productions **)
 
 TYPE
 	Position*=Scanner.Position;
+	Operator*= SIGNED32;
 
 	Parser* = OBJECT
 	VAR scanner-: Scanner.Scanner;
@@ -684,18 +529,10 @@ TYPE
 			IF Trace THEN E( "IndexList" ) END;
 		END IndexList;
 
-		(** RangeExpression = SimpleExpression | [SimpleExpression] '..' [SimpleExpression] ['by' SimpleExpression] | '*'.
-			i.e., a RangeExpression can have one of the following forms:
-				'*'
-				'..' [delimiter]
-				'..' 'by' SimpleExpression
-				'..' SimpleExpression
-				'..' SimpleExpression 'by' SimpleExpression
-				SimpleExpression
-				SimpleExpression '..' [delimiter]
-				SimpleExpression '..' 'by' SimpleExpression
-				SimpleExpression '..' SimpleExpression
-				SimpleExpression '..' SimpleExpression 'by' SimpleExpression
+		(** 
+			RangeExpression = SimpleExpression
+           | [SimpleExpression] '..' [SimpleExpression]['by' SimpleExpression]
+           | '*' .
 
 			a RangeExpression is always delimited by any of the following symbols: ",", ";", ":", "]", ")", "}", "=", "#", "END".
 		**)
@@ -764,30 +601,91 @@ TYPE
 			RETURN expression
 		END RangeExpression;
 
-		(** Designator  = ('self' | 'result' | Identifier) [DesignatorOperations] [Flags].
-			DesignatorOperations = {'.' Identifier  | '[' IndexList ']' | '(' [ExpressionList] ')' | '^'}.
+		(**
+			PrimaryExpression = Number | Character | String | Set | Array
+	        | 'NIL' | 'IMAG' | 'TRUE' | 'FALSE' |
+	        | 'SELF' | 'RESULT' | 'ADDRESS' | 'SIZE' 
+	        | 'SIZE' 'OF' Factor | 'ADDRESS' 'OF' Factor
+	        | 'ALIAS' OF Factor
+	        | 'NEW' QualifiedIdentifier '(' ExpressionList ')'
+	        | '(' Expression ')'
+	        | Identifier.
 		**)
-		PROCEDURE Designator( ): SyntaxTree.Designator;
+     PROCEDURE PrimaryExpression( ) : SyntaxTree.Expression;
 		VAR
-			designator: SyntaxTree.Designator;  expressionList: SyntaxTree.ExpressionList;
+			expression: SyntaxTree.Expression;
+			factor: SyntaxTree.Expression;
+			operator: Operator;
+			expressionList: SyntaxTree.ExpressionList;
 			identifier: SyntaxTree.Identifier; position: Position;
 			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 			qualifiedType : SyntaxTree.QualifiedType;
 		BEGIN
-			IF Trace THEN S( "Designator" ) END;
-			position := token.position;
-			IF Optional(Scanner.Self) THEN
-				designator := SyntaxTree.NewSelfDesignator(position, NIL);
-			ELSIF Optional(Scanner.Result) THEN
-				designator := SyntaxTree.NewResultDesignator(position);
-			(* ADDRESS AND SIZE can be type identifiers used for type conversion *)
-			ELSIF (Symbol() = Scanner.Address) OR (Symbol()=Scanner.Size) THEN
+			CASE Symbol() OF
+			| Scanner.Number:
+					IF (token.numberType = Scanner.Integer) OR (token.numberType = Scanner.Hugeint) THEN
+						expression := SyntaxTree.NewIntegerValue( position, token.integer);
+					ELSIF (token.numberType = Scanner.Real) OR (token.numberType = Scanner.Longreal) THEN
+						expression := SyntaxTree.NewRealValue( position, token.real, token.numberType);
+					ELSE HALT( 100 )
+					END;
+					NextToken;
+			| Scanner.Character:
+					expression := SyntaxTree.NewCharacterValue(position,token.character);
+					NextToken;
+			| Scanner.String:
+					expression := SyntaxTree.NewStringValue( position, token.string );
+					NextToken;
+					WHILE (Symbol() = Scanner.String) OR (Symbol() = Scanner.Character) DO
+						IF Symbol() = Scanner.Character THEN
+							expression(SyntaxTree.StringValue).AppendChar(token.character);
+						ELSE
+							expression(SyntaxTree.StringValue).Append(token.string);
+						END;
+						NextToken;
+					END;
+			| Scanner.LeftBrace:
+					expression := Set();
+			| Scanner.LeftBracket:
+					NextToken;
+					expression := ArrayLiteral();
+			| Scanner.Nil:
+					expression := SyntaxTree.NewNilValue( position );
+					NextToken;
+			| Scanner.Imag:
+					expression := SyntaxTree.NewComplexValue(position, 0, 1, Scanner.Real);
+					NextToken;
+			| Scanner.True:
+					expression := SyntaxTree.NewBooleanValue( position, TRUE );
+					NextToken;
+			| Scanner.False:
+					expression := SyntaxTree.NewBooleanValue( position, FALSE );
+					NextToken;
+        | Scanner.Self: 
+					expression := SyntaxTree.NewSelfDesignator(position, NIL);
+					NextToken;
+       	| Scanner.Result: 
+					expression := SyntaxTree.NewResultDesignator(position);
+					NextToken;
+			| Scanner.Address, Scanner.Size:
+					operator := Symbol();
+					identifier := token.identifier;
+					expression := SyntaxTree.NewIdentifierDesignator(position,identifier);
+					NextToken;
+					IF Optional(Scanner.Of) THEN
+						factor := Factor();
+						expression := SyntaxTree.NewUnaryExpression( position, factor, operator );
+					END;
+			| Scanner.Alias:
+					operator := Symbol();
+					NextToken();
+					IF Mandatory(Scanner.Of) THEN
+						factor := Factor();
+						expression := SyntaxTree.NewUnaryExpression( position, factor, operator );
+					END;
+			| Scanner.New:
 				identifier := token.identifier;
-				designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
-				NextToken;
-			ELSIF (Symbol() = Scanner.New) THEN
-				identifier := token.identifier;
-				designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
+				expression := SyntaxTree.NewIdentifierDesignator(position,identifier);
 				NextToken;
 				IF Symbol() # Scanner.LeftParenthesis THEN (* NEW Type () *)
 					qualifiedIdentifier := QualifiedIdentifier();
@@ -799,32 +697,76 @@ TYPE
 							Check( Scanner.RightParenthesis )
 						END;
 					END;
-					designator := SyntaxTree.NewBuiltinCallDesignator(position, NIL, Global.New, NIL, expressionList);
-					designator(SyntaxTree.BuiltinCallDesignator).SetReturnType(qualifiedType);
-					(* special case: NEW Type() *)
+					expression := SyntaxTree.NewBuiltinCallDesignator(position, NIL, Global.New, NIL, expressionList);
+					expression(SyntaxTree.BuiltinCallDesignator).SetReturnType(qualifiedType);
 				END;
+			| Scanner.LeftParenthesis:
+					NextToken;
+					expression := Expression();
+					Check( Scanner.RightParenthesis );
 			ELSE
 				identifier := Identifier(position);
-				designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
+				expression := SyntaxTree.NewIdentifierDesignator(position,identifier);
 			END;
-			designator.End(token.position);
-			designator := DesignatorOperations (designator)(SyntaxTree.Designator);
-
-			IF OptionalB(Scanner.LeftBrace) THEN
-				designator.SetModifiers(Flags());
-			END;
-
-			(*IF OptionalB(Scanner.Escape) THEN END; (* skip breaking signal *)*)
-
-			IF Trace THEN E( "Designator" ) END;
-			RETURN designator
-		END Designator;
-
-		(* DesignatorOperations = { "(" ExpressionList ")" | "." Identifier | '[' ExpressionList ']' | '^' }. 
+			expression.End(token.position);
+			RETURN expression;
+		END PrimaryExpression;
 		
-		*)
+		(** 
+			UnaryExpression = PrimaryExpression [DesignatorOperations] [Flags].
+		**)
+		PROCEDURE UnaryExpression( ): SyntaxTree.Expression;
+		VAR primary, expression: SyntaxTree.Expression;
+		BEGIN
+			primary := PrimaryExpression();
+			expression := DesignatorOperations(primary);
+			IF OptionalB(Scanner.LeftBrace) THEN
+				expression(SyntaxTree.Designator).SetModifiers(Flags());
+			END;
+			RETURN expression;
+		END UnaryExpression;
+		
+		(**
+			Factor = UnaryExpression | UnaryOperation Factor.
+			UnaryOperation = '~' | '+' | '-'.
+		**)
+		PROCEDURE Factor( ): SyntaxTree.Expression;
+		VAR factor: SyntaxTree.Expression; position: Position;
+		BEGIN
+			IF Trace THEN S( "Factor" ) END;
+			position := token.position;
+			CASE Symbol() OF
+			| Scanner.Not:
+					NextToken;
+					factor := Factor();
+					factor := SyntaxTree.NewUnaryExpression( position, factor, Scanner.Not );
+					factor.End( token.position);
+			| Scanner.Minus:
+					NextToken;
+					factor := Factor();
+					factor := SyntaxTree.NewUnaryExpression( position, factor, Scanner.Minus );
+					factor.End( token.position);
+			| Scanner.Plus:
+					NextToken;
+					factor := Factor();
+					factor := SyntaxTree.NewUnaryExpression( position, factor, Scanner.Plus );
+					factor.End( token.position);
+			ELSE
+				factor := UnaryExpression( )
+			END;
+			RETURN factor
+		END Factor; 
+
+		(** 
+			DesignatorOperations = { "(" [ExpressionList] ")"
+			                       | "." Identifier
+			                       | '[' IndexList ']'
+			                       | '^'
+			                       | '`'
+			                    } .
+		**)
 		PROCEDURE DesignatorOperations (expression: SyntaxTree.Expression): SyntaxTree.Expression;
-		VAR position: Position; expressionList: SyntaxTree.ExpressionList; identifier: SyntaxTree.Identifier; designator: SyntaxTree.Designator;
+		VAR position: Position; expressionList: SyntaxTree.ExpressionList; identifier: SyntaxTree.Identifier;
 		BEGIN
 			LOOP
 				position := token.position;
@@ -834,7 +776,7 @@ TYPE
 						ExpressionList( expressionList );
 						Check( Scanner.RightParenthesis )
 					END;
-					designator := SyntaxTree.NewParameterDesignator( position,expression,expressionList);
+					expression := SyntaxTree.NewParameterDesignator( position,expression,expressionList);
 				ELSIF OptionalB( Scanner.Period ) THEN
 					IF ~Optional(Scanner.Identifier) THEN (* make sure token is read *) END;
 					position := token.position;
@@ -846,22 +788,25 @@ TYPE
 					ELSE
 						identifier := Identifier(position);
 					END;
-					designator := SyntaxTree.NewSelectorDesignator(position,expression,identifier);
+					expression := SyntaxTree.NewSelectorDesignator(position,expression,identifier);
 				ELSIF OptionalB( Scanner.LeftBracket ) THEN
 					expressionList := SyntaxTree.NewExpressionList();
 					IndexList( expressionList );
 					Check( Scanner.RightBracket );
-					designator:= SyntaxTree.NewBracketDesignator( position,expression,expressionList );
+					expression := SyntaxTree.NewBracketDesignator( position,expression,expressionList );
 				ELSIF OptionalB( Scanner.Arrow ) THEN
-					designator:= SyntaxTree.NewArrowDesignator( position,expression );
+					expression := SyntaxTree.NewArrowDesignator( position,expression );
+				ELSIF OptionalB( Scanner.Transpose ) THEN
+					expression := SyntaxTree.NewUnaryExpression( position, expression, Scanner.Transpose );
 				ELSE RETURN expression;
 				END;
-				designator.End(token.position);
-				expression := designator;
+				expression.End(token.position);
 			END;
 		END DesignatorOperations;
 
-		(** Set = '{' [ RangeExpression {',' RangeExpression} ] '}'. **)
+		(** 
+			Set = '{' [ RangeExpression {',' RangeExpression} ] '}'. 
+		**)
 		PROCEDURE Set( ): SyntaxTree.Expression;
 		VAR
 			set: SyntaxTree.Set;
@@ -898,113 +843,13 @@ TYPE
 			RETURN array
 		END ArrayLiteral;
 
-		(** Factor = Number [DesignatorOperations] | Character | String | 'nil' | 'imag' | 'true' | 'false' | Set
-						| '(' Expression ')' [DesignatorOperations] | '~' Factor | Factor '`' | Designator | ArrayLiteral.
-						| 'SIZE' 'OF' Designator | 'ADDRESS' 'OF' Designator | 'ALIAS' OF Expression
-						| 'SELF' | 'IMAG' | 'RESULT' | 'NEW' 
-						**)
-		PROCEDURE Factor( ): SyntaxTree.Expression;
-		VAR factor: SyntaxTree.Expression; position: Position; operator: SIGNED32;
-		BEGIN
-			IF Trace THEN S( "Factor" ) END;
-			position := token.position;
-			CASE Symbol() OF
-			| Scanner.Number:
-					IF (token.numberType = Scanner.Integer) OR (token.numberType = Scanner.Hugeint) THEN
-						factor := SyntaxTree.NewIntegerValue( position, token.integer);
-					ELSIF (token.numberType = Scanner.Real) OR (token.numberType = Scanner.Longreal) THEN
-						factor := SyntaxTree.NewRealValue( position, token.real, token.numberType);
-					ELSE HALT( 100 )
-					END;
-					NextToken;
-					factor := DesignatorOperations (factor);
-			| Scanner.Character:
-					factor := SyntaxTree.NewCharacterValue(position,token.character);
-					NextToken;
-			| Scanner.String:
-					factor := SyntaxTree.NewStringValue( position, token.string );
-					NextToken;
-					WHILE (Symbol() = Scanner.String) OR (Symbol() = Scanner.Character) DO
-						IF Symbol() = Scanner.Character THEN
-							factor(SyntaxTree.StringValue).AppendChar(token.character);
-						ELSE
-							factor(SyntaxTree.StringValue).Append(token.string);
-						END;
-						factor.End(token.position);
-						NextToken;
-					END;
-			| Scanner.Nil:
-					factor := SyntaxTree.NewNilValue( position );
-					NextToken;
-			| Scanner.Imag:
-					factor := SyntaxTree.NewComplexValue(position, 0, 1, Scanner.Real);
-					NextToken;
-			| Scanner.True:
-					factor := SyntaxTree.NewBooleanValue( position, TRUE );
-					NextToken;
-			| Scanner.False:
-					factor := SyntaxTree.NewBooleanValue( position, FALSE );
-					NextToken;
-			| Scanner.LeftBrace:
-					factor := Set();
-			| Scanner.LeftParenthesis:
-					NextToken;
-					factor := Expression();
-					Check( Scanner.RightParenthesis );
-					factor.End( token.position);
-					factor := DesignatorOperations (factor);
-			| Scanner.Not:
-					NextToken;
-					factor := Factor();
-					factor := SyntaxTree.NewUnaryExpression( position, factor, Scanner.Not );
-					factor.End( token.position);
-			| Scanner.Address, Scanner.Size:
-					operator := Symbol();
-					factor := Designator(); (* ADDRESS AND SIZE can be type identifiers used for type conversion *)
-					IF Optional(Scanner.Of) THEN
-						factor := Designator();
-						factor := SyntaxTree.NewUnaryExpression( position, factor, operator );
-					END;
-					factor.End (token.position)
-			| Scanner.Alias:
-					operator := Symbol();
-					NextToken();
-					IF Mandatory(Scanner.Of) THEN
-						factor := Factor();
-						factor := SyntaxTree.NewUnaryExpression( position, factor, operator );
-					END;
-					factor.End (token.position)
-			| Scanner.Self, Scanner.Result, Scanner.Identifier, Scanner.New:
-					factor := Designator();
-					factor.End( token.position);
-			| Scanner.LeftBracket:
-					NextToken;
-					factor := ArrayLiteral();
-					factor.End(token.position);
-			ELSE
-				Error( position, Basic.ValueStartIncorrectSymbol, "" );
-				NextToken;  factor := SyntaxTree.invalidExpression;
-			END;
-			(* suffix *)
-			IF OptionalB(Scanner.Transpose) THEN
-				IF (factor IS SyntaxTree.UnaryExpression) & (factor(SyntaxTree.UnaryExpression).operator = Scanner.Transpose) THEN
-					(* transpose operator has higher precedence than not, reevaluate expression: *)
-					factor := factor(SyntaxTree.UnaryExpression).left;
-					factor := SyntaxTree.NewUnaryExpression(position,factor,Scanner.Transpose);
-					factor := SyntaxTree.NewUnaryExpression(position,factor,Scanner.Not);
-				ELSE
-					factor := SyntaxTree.NewUnaryExpression(position,factor,Scanner.Transpose);
-				END;
-			END;
-			IF Trace THEN E( "Factor" ) END;
-			RETURN factor
-		END Factor;
-
-		(** Term = Factor {MulOp Factor}.
-			MulOp = '*' | '**' | '.*' | '+*' | '/' | '\' | './' | 'div' | 'mod' | '&'.
+		(** 
+			Term  = Factor {MulOp Factor}.
+			MulOp = '*' | '/' | 'DIV' | 'MOD' | '&'
+			        | '.*' | './' | '\' | '**' | '+*' .
 		**)
 		PROCEDURE Term( ): SyntaxTree.Expression;
-		VAR term, factor: SyntaxTree.Expression;  operator: SIGNED32; position: Position;
+		VAR term, factor: SyntaxTree.Expression;  operator: Operator; position: Position;
 		BEGIN
 			IF Trace THEN S( "Term" ) END;
 			position := token.position;
@@ -1020,21 +865,16 @@ TYPE
 			RETURN term
 		END Term;
 
-		(** SimpleExpression     = ['+'|'-'] Term {AddOp Term}.
-			AddOp                = '+' | '-' | 'or'.
+		(**
+			SimpleExpression = Term {AddOp Term}.
+			AddOp = '+' | '-' | 'or'.
 		**)
 		PROCEDURE SimpleExpression( ): SyntaxTree.Expression;
-		VAR operator: SIGNED32;  term, expression: SyntaxTree.Expression;  position: Position;
+		VAR operator: Operator;  term, expression: SyntaxTree.Expression;  position: Position;
 		BEGIN
 			IF Trace THEN S( "SimpleExpression" ) END;
 			position := token.position;
-			IF Peek(Scanner.Plus) OR Peek(Scanner.Minus) THEN (* sign should be part of the factor *)
-				operator := Symbol();
-				NextToken;
-				term := Term();
-				expression := SyntaxTree.NewUnaryExpression( position, term, operator );
-			ELSE expression := Term();
-			END;
+			expression := Term();
 			WHILE (TokenB() >= Scanner.Or) & (TokenB() <= Scanner.Minus) DO
 				operator := Symbol();
 				NextToken;
@@ -1052,7 +892,7 @@ TYPE
 			             | '??' | '!!' | '<<?' | '>>?'.
 		**)
 		PROCEDURE Expression*( ): SyntaxTree.Expression;
-		VAR expression, rightExpression: SyntaxTree.Expression;  operator: SIGNED32;  position: Position;
+		VAR expression, rightExpression: SyntaxTree.Expression;  operator: Operator;  position: Position;
 		BEGIN
 			IF Trace THEN S( "Expression" ) END;
 			expression := RangeExpression();
@@ -1092,34 +932,44 @@ TYPE
 			IF Trace THEN E( "Case" ) END;
 		END Case;
 
-		(**		Statement =
-                     [
-                     Designator [':=' Expression |'!' Expression | '?' Expression | '<<' Expresssion | '>>' Expression]
-                     | 'if' Expression 'then' StatementSequence
-                        {'elsif' Expression 'then' StatementSequence}
-                        ['else' StatementSequence]
-                        'end'
-                     | 'with' Identifier ':' QualifiedIdentifier 'do' StatementSequence
-                         {'|' QualifiedIdentifier 'do' StatementSequence}
-                         [else StatementSequence]
-                         'end'
-                     | 'case' Expression 'of' ['|'] Case {'|' Case} ['else' StatementSequence] 'end'
-                     | 'while' Expression 'do' StatementSequence 'end'
-                     | 'repeat' StatementSequence 'until' Expression
-                     | 'for' Identifier ':=' Expression 'to' Expression ['by' Expression] 'do'
-                         StatementSequence 'end'
-                     | 'loop' StatementSequence 'end'
-                     | 'exit'
-                     | 'return' [Expression]
-                     | 'await' Expression
-                     | 'begin' StatementBlock 'end'
-                     | 'code' {any} 'end'
-                     | 'IGNORE' Designator
-                     
-                     ].
+		(**		
+			Statement = [
+			  UnaryExpression 
+			    [':=' Expression 
+			    | '!' Expression | '?' Expression | '<<' Expresssion | '>>' Expression
+			    ]
+			  | 'IF' Expression 'THEN' StatementSequence
+			    {'ELSIF' Expression 'THEN' StatementSequence}
+			    ['ELSE' StatementSequence]
+			    'END'
+			  | 'WITH' Identifier ':' QualifiedIdentifier 'DO' StatementSequence
+			    {'|' QualifiedIdentifier 'DO' StatementSequence}
+			    [ELSE StatementSequence]
+			    'END'
+			  | 'CASE' Expression 'OF' ['|'] Case 
+			    {'|' Case} 
+			    ['ELSE' StatementSequence] 
+			    'END'
+			  | 'WHILE' Expression 'DO' 
+			      StatementSequence 
+			    'END'
+			  | 'REPEAT' 
+			      StatementSequence 
+			    'UNTIL' Expression
+			  | 'FOR' Identifier ':=' Expression 'TO' Expression ['BY' Expression] 'DO'
+			      StatementSequence 
+			    'END'
+			  | 'LOOP' StatementSequence 'END'
+			  | 'EXIT'
+			  | 'RETURN' [Expression]
+			  | 'AWAIT' Expression
+			  | StatementBlock 
+			  | 'CODE' {any} 'END'
+			  | 'IGNORE' Expression  
+			].
 		**)
 		PROCEDURE Statement*( statements: SyntaxTree.StatementSequence; outer: SyntaxTree.Statement): BOOLEAN;
-		VAR qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;  expression: SyntaxTree.Expression; designator: SyntaxTree.Designator;  statement: SyntaxTree.Statement;
+		VAR qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;  expression: SyntaxTree.Expression; designator: SyntaxTree.Expression;  statement: SyntaxTree.Statement;
 			ifStatement: SyntaxTree.IfStatement; elsifPart: SyntaxTree.IfPart;   statementSequence: SyntaxTree.StatementSequence;  withStatement: SyntaxTree.WithStatement;
 			withPart: SyntaxTree.WithPart; caller: SyntaxTree.ProcedureCallStatement;
 			caseStatement: SyntaxTree.CaseStatement;  whileStatement: SyntaxTree.WhileStatement;  repeatStatement: SyntaxTree.RepeatStatement;  forStatement: SyntaxTree.ForStatement;
@@ -1130,7 +980,7 @@ TYPE
 			IF Trace THEN S( "Statement" ) END;
 			CASE Symbol() OF
 			| Scanner.Identifier, Scanner.Self, Scanner.Result, Scanner.New:
-					designator := Designator();
+					designator := UnaryExpression();
 					position := token.position;
 					IF OptionalB( Scanner.Becomes ) THEN
 						expression := Expression();
@@ -1148,7 +998,7 @@ TYPE
 						CommentStatement(statement);
 					END;
 					statement.End(prevPosition);
-					statements.AddStatement( statement );
+					statements.AddStatement( statement );					
 					(*IF OptionalB(Scanner.Escape) THEN END;*)
 					result := TRUE
 			| Scanner.If:
@@ -1189,8 +1039,7 @@ TYPE
 					IF Optional(Scanner.Period) & Optional(Scanner.Identifier) THEN
 						Error(position,Basic.InvalidCode,"forbidden qualified identifier in with statement");
 					END;
-					designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
-					withStatement.SetVariable(designator);
+					withStatement.SetVariable(SyntaxTree.NewIdentifierDesignator(position,identifier));
 					Check( Scanner.Colon );
 
 					IF Optional(Scanner.Bar) THEN (* ignore *) END;
@@ -1271,8 +1120,7 @@ TYPE
 					IF Optional(Scanner.Period) & Optional(Scanner.Identifier) THEN
 						Error(position,Basic.InvalidCode,"forbidden non-local counter variable");
 					END;
-					designator := SyntaxTree.NewIdentifierDesignator(position,identifier);
-					forStatement.SetVariable( designator );
+					forStatement.SetVariable(SyntaxTree.NewIdentifierDesignator(position,identifier));
 					Check( Scanner.Becomes );
 					expression := Expression();
 					forStatement.SetFrom( expression );
@@ -1320,7 +1168,7 @@ TYPE
 			| Scanner.Ignore:
 					position := token.position;
 					NextToken;
-					designator := Designator();
+					designator := Expression();
 					caller := SyntaxTree.NewProcedureCallStatement(designator.position, TRUE, designator,outer);
 					CommentStatement(caller);
 					statements.AddStatement( caller );
@@ -2066,7 +1914,6 @@ TYPE
 			isInline: BOOLEAN;
 			modifiers: SyntaxTree.Modifier;
 			forwardDeclaration: BOOLEAN;
-			string: Scanner.StringType;
 			parameter: SyntaxTree.Parameter;
 			qualifiedIdentifier : SyntaxTree.QualifiedIdentifier;
 			identifier: SyntaxTree.Identifier;
@@ -2227,7 +2074,7 @@ TYPE
 
 		(** VariableNameList = IdentifierDefinition [Flags] [':=' Expression | 'extern' String] {',' IdentifierDefinition [Flags] [':=' Expression | 'extern' String] }.**)
 		PROCEDURE VariableNameList( scope: SyntaxTree.Scope );
-		VAR varname: SyntaxTree.Identifier;  position: Position; variable: SyntaxTree.Variable;  flags,access: SET; string: Scanner.StringType;
+		VAR varname: SyntaxTree.Identifier;  position: Position; variable: SyntaxTree.Variable;  flags,access: SET;
 		BEGIN
 			IF Trace THEN S( "VariableNameList" ) END;
 			REPEAT

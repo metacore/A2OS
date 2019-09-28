@@ -849,13 +849,20 @@ TYPE
 			        | '.*' | './' | '\' | '**' | '+*' .
 		**)
 		PROCEDURE Term( ): SyntaxTree.Expression;
-		VAR term, factor: SyntaxTree.Expression;  operator: Operator; position: Position;
+		VAR term, factor: SyntaxTree.Expression;  operator: Operator; position: Position; warning: BOOLEAN; 
 		BEGIN
 			IF Trace THEN S( "Term" ) END;
 			position := token.position;
+			warning := TokenB() = Scanner.Minus; 
+			
 			term := Factor();
 			WHILE (TokenB() >= Scanner.Times) & (TokenB() <= Scanner.And)  DO
 				operator := Symbol();
+				IF (operator = Scanner.Div) OR (operator = Scanner.Mod) THEN
+					IF warning THEN
+						Basic.Warning(diagnostics, scanner.source^, token.position, "changed syntax: negation has precedence now !");
+					END; 
+				END; 
 				NextToken;
 				factor := Factor();
 				term := SyntaxTree.NewBinaryExpression( position, term, factor, operator );

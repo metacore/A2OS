@@ -356,6 +356,7 @@ VAR
 	getProcAddress-: PROCEDURE {WINAPI} ( hModule: HMODULE;  CONST  lpProcName: ARRAY   OF CHAR ): ADDRESS;
 	(** The LoadLibrary function maps the specified executable module into the address space of the calling process. *)
 	LoadLibrary-: PROCEDURE {WINAPI} ( CONST lpLibFileName: ARRAY   OF CHAR ): HINSTANCE;   (* must be patched by linker / PE loader *)
+	LoadLibraryEx-: PROCEDURE {WINAPI} (CONST lpLibFileName: ARRAY OF CHAR; hFile: HANDLE; dwFlags: INTEGERSET): HINSTANCE;
 
 
 	(** The AllocConsole function allocates a new console for the calling process. *)
@@ -940,6 +941,7 @@ VAR
 		GetProcAddress(mod, "IsDebuggerPresent",SYSTEM.VAL(ADDRESS,IsDebuggerPresent));
 		GetProcAddress(mod, "LeaveCriticalSection",SYSTEM.VAL(ADDRESS,LeaveCriticalSection));
 		(* must be done by linker: GetProcAddress(mod, "LoadLibraryA",SYSTEM.VAL(ADDRESS,LoadLibrary)); *)
+		GetProcAddress(mod, "LoadLibraryExA",SYSTEM.VAL(ADDRESS,LoadLibraryEx));
 		GetProcAddress(mod, "LocalFileTimeToFileTime",SYSTEM.VAL(ADDRESS,LocalFileTimeToFileTime));
 		GetProcAddress(mod, "MoveFileExA",SYSTEM.VAL(ADDRESS,MoveFileEx));
 		GetProcAddress(mod, "OutputDebugStringA",SYSTEM.VAL(ADDRESS,outputDebugString));

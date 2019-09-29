@@ -8513,8 +8513,25 @@ TYPE
 		PutPtr( dest, p );
 	END AllocateVector;
 
+	PROCEDURE ZeroData(dest: ADDRESS);
+	VAR adr: ADDRESS; size,len,dim: SIZE;
+	BEGIN
+		adr := GetAdr(dest);
+		size := GetSize(dest);
+		dim := GetDim(dest); 
+		(* reset dimensions, array might have been transposed *)
+		WHILE (dim > 0) DO
+			DEC( dim );  
+			len := GetLen( dest, dim );
+			PutInc( dest, dim, size ); 
+			size := size * len;
+		END;
+		INC(size, (-size) MOD 4);
+		Machine.Fill32(adr, size, 0);
+	END ZeroData;
+
 	PROCEDURE ApplyMatMulLoop*( dest, left, right: ADDRESS;  Size: SIZE;
-														loop: BinaryAASLoop;
+														loop: BinaryAASLoop; increment: BOOLEAN;
 	fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr: ADDRESS; dadri, radri, rowsL, colsL, rowsR, colsR, incL, incR, incD, strideR, strideL, strideD, colsRi: SIZE;
 		p: ANY;  overlap: BOOLEAN;  destOld: UnsafeArray;  destNew: UnsafeArrayT;
@@ -8542,20 +8559,27 @@ TYPE
 		(* check geometric restriction *)
 		IF colsL # rowsR THEN Halt( GeometryMismatch, left, right, 0 );  END;
 
-		IF GetAdr( dest ) = 0 THEN p := AllocateMatrix( dest, rowsL, colsR, Size );
+		IF GetAdr( dest ) = 0 THEN 
+			p := AllocateMatrix( dest, rowsL, colsR, Size );
+			increment := TRUE;
 		ELSIF (GetLen( dest, 0 ) # rowsL) OR (GetLen( dest, 1 ) # colsR) THEN
 			IF RangeFlag IN GetFlags( dest ) THEN
 				Halt( GeometryMismatch, left, right, dest )
 			ELSE p := AllocateMatrix( dest, rowsL, colsR, Size );
 			END;
+			increment := TRUE;
 		END;
 
 		overlap := Overlap( left, dest ) OR Overlap( right, dest );
 		IF overlap THEN
 			destOld := dest;  destNew := NIL;
 			IF AllocateSameT( destNew, destOld, Size ) THEN END;
-			CopyContent( destNew, destOld, Size );   (* for INCMUL ! *)
+			IF increment THEN 
+				CopyContent( destNew, destOld, Size );   (* for INCMUL ! *)
+			END;
 			dest := destNew;
+		ELSIF ~increment THEN
+			ZeroData(dest);
 		END;
 
 		IF (GetLen( dest, 0 ) # rowsL) OR (GetLen( dest, 1 ) # colsR) THEN
@@ -8595,7 +8619,7 @@ TYPE
 	END ApplyMatMulLoop;
 
 	PROCEDURE ApplyMatVecMulLoop( dest, left, right: ADDRESS;
-															Size: SIZE;  loop: BinaryAASLoop;
+															Size: SIZE;  loop: BinaryAASLoop; increment: BOOLEAN;
 															fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr: ADDRESS; li1, li0, ri0, di0, l1, l2: SIZE;
 		overlap: BOOLEAN;  destOld, destNew: UnsafeArrayT;
@@ -8620,20 +8644,24 @@ TYPE
 
 		l1 := GetLen( left, 0 );   (* number of destination's rows *)
 		l2 := GetLen( left, 1 );   (* inner loop len *)
-		IF GetAdr( dest ) = 0 THEN AllocateVector( dest, l1, Size );
+		IF GetAdr( dest ) = 0 THEN AllocateVector( dest, l1, Size ); increment := TRUE; 
 		ELSIF (GetLen( dest, 0 ) # l1) THEN
 			IF RangeFlag IN GetFlags( dest ) THEN
 				Halt( GeometryMismatch, left, right, dest );
 			ELSE AllocateVector( dest, l1, Size );
 			END;
+			increment := TRUE;
 		END;
 
 		overlap := Overlap( left, dest ) OR Overlap( right, dest );
 		IF overlap THEN
 			destOld := dest;  destNew := NIL;
 			IF AllocateSameT( destNew, destOld, Size ) THEN END;
-			CopyContent( destNew, destOld, Size );   (* for INCMUL ! *)
+			IF increment THEN
+				CopyContent( destNew, destOld, Size );   (* for INCMUL ! *)
+			END;
 			dest := destNew;
+		ELSIF ~increment THEN ZeroData(dest)
 		END;
 
 		(*
@@ -8661,7 +8689,7 @@ TYPE
 	END ApplyMatVecMulLoop;
 
 	PROCEDURE ApplyVecMatMulLoop( dest, left, right: ADDRESS;
-															Size: SIZE;  loop: BinaryAASLoop;
+															Size: SIZE;  loop: BinaryAASLoop; increment: BOOLEAN;
 															fast: FastMatMul );   (* Size= element-size *)
 	VAR ladr, radr, dadr: ADDRESS;  li0, ri1, ri0, di0, l0, l2: SIZE;  p: ANY;
 		overlap: BOOLEAN;  destOld, destNew: UnsafeArrayT;
@@ -8682,19 +8710,24 @@ TYPE
 
 		l0 := GetLen( right, 1 );   (* number of destination's column *)
 		l2 := GetLen( right, 0 );   (* inner loop len *)
-		IF GetAdr( dest ) = 0 THEN AllocateVector( dest, l0, Size );
+		IF GetAdr( dest ) = 0 THEN AllocateVector( dest, l0, Size ); increment := TRUE;
 		ELSIF (GetLen( dest, 0 ) # l0) THEN
 			IF RangeFlag IN GetFlags( dest ) THEN HALT( GeometryMismatch )
 			ELSE AllocateVector( dest, l0, Size );
 			END;
+			increment := TRUE;
 		END;
 
 		overlap := Overlap( left, dest ) OR Overlap( right, dest );
 		IF overlap THEN
 			destOld := dest;  destNew := NIL;
 			IF AllocateSameT( destNew, destOld, Size ) THEN END;
-			CopyContent( destNew, destOld, Size );   (* for INCMUL ! *)
+			IF increment THEN
+				CopyContent( destNew, destOld, Size );   (* for INCMUL ! *)
+			END;
 			dest := destNew;
+		ELSIF ~increment THEN
+			ZeroData(dest);
 		END;
 
 		(*
@@ -8736,21 +8769,21 @@ TYPE
 	OPERATOR "*"*(CONST left, right: ARRAY [ * , * ] OF SIGNED8 ): ARRAY [ * , * ] OF SIGNED8;
 	BEGIN
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-									SIZEOF( SIGNED8 ), MatMulASASLoop, NIL );
+									SIZEOF( SIGNED8 ), MatMulASASLoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
 	OPERATOR "*"*(CONST left: ARRAY [ * , * ] OF SIGNED8; CONST right: ARRAY [ * ] OF SIGNED8): ARRAY [ * ] OF SIGNED8;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED8 ), MatMulASASLoop, NIL );
+											SIZEOF( SIGNED8 ), MatMulASASLoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
 	OPERATOR "*"*( CONST left: ARRAY [ * ] OF SIGNED8; CONST right: ARRAY [ * , * ] OF SIGNED8  ): ARRAY [ * ] OF SIGNED8;
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED8 ), MatMulASASLoop, NIL );
+											SIZEOF( SIGNED8 ), MatMulASASLoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -8769,7 +8802,7 @@ TYPE
 	OPERATOR "*"*(  CONST left, right: ARRAY [ * , * ] OF SIGNED16 ): ARRAY [ * , * ] OF SIGNED16;
 	BEGIN
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-									SIZEOF( SIGNED16 ), MatMulAIAILoop, NIL );
+									SIZEOF( SIGNED16 ), MatMulAIAILoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -8777,7 +8810,7 @@ TYPE
 													CONST right: ARRAY [ * ] OF SIGNED16  ): ARRAY [ * ] OF SIGNED16;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED16 ), MatMulAIAILoop, NIL );
+											SIZEOF( SIGNED16 ), MatMulAIAILoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -8785,7 +8818,7 @@ TYPE
 													CONST right: ARRAY [ * , * ] OF SIGNED16 ): ARRAY [ * ] OF SIGNED16;
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED16 ), MatMulAIAILoop, NIL );
+											SIZEOF( SIGNED16 ), MatMulAIAILoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -8812,14 +8845,14 @@ TYPE
 		*)
 
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-									SIZEOF( SIGNED32 ), MatMulALALLoop, NIL );
+									SIZEOF( SIGNED32 ), MatMulALALLoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
 	OPERATOR "*"*(CONST left: ARRAY [ * , * ] OF SIGNED32; CONST right: ARRAY [ * ] OF SIGNED32  ): ARRAY [ * ] OF SIGNED32;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED32 ), MatMulALALLoop, NIL );
+											SIZEOF( SIGNED32 ), MatMulALALLoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -8827,7 +8860,7 @@ TYPE
 														CONST right: ARRAY [ * , * ] OF SIGNED32): ARRAY [ * ] OF SIGNED32;
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED32 ), MatMulALALLoop, NIL );
+											SIZEOF( SIGNED32 ), MatMulALALLoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -8931,11 +8964,11 @@ TYPE
 					END;
 			ELSE
 				ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right, SIZEOF( FLOAT32 ),
-									loopMatMulARAR, matMulR );
+									loopMatMulARAR, FALSE, matMulR );
 			END;
 		ELSE
 			ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right, SIZEOF( FLOAT32 ),
-									loopMatMulARAR, matMulR );
+									loopMatMulARAR, FALSE, matMulR );
 		END;
 		RETURN RESULT
 	END "*";
@@ -9009,7 +9042,7 @@ TYPE
 
 		ELSE
 			ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT32 ), loopMatMulARAR, matMulR );
+											SIZEOF( FLOAT32 ), loopMatMulARAR, FALSE, matMulR );
 		END;
 		RETURN RESULT
 	END "*";
@@ -9018,7 +9051,7 @@ TYPE
 														CONST right: ARRAY [ * , * ] OF FLOAT32  ): ARRAY [ * ] OF FLOAT32;
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT32 ), loopMatMulARAR, matMulR );
+											SIZEOF( FLOAT32 ), loopMatMulARAR, FALSE, matMulR );
 		RETURN RESULT
 	END "*";
 
@@ -9122,11 +9155,11 @@ TYPE
 					END;
 			ELSE
 				ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right, SIZEOF( FLOAT64 ),
-									loopMatMulAXAX, matMulX );
+									loopMatMulAXAX, FALSE, matMulX );
 			END;
 		ELSE
 			ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right, SIZEOF( FLOAT64 ),
-									loopMatMulAXAX, matMulX );
+									loopMatMulAXAX, FALSE, matMulX );
 		END;
 		RETURN RESULT
 	END "*";
@@ -9200,7 +9233,7 @@ TYPE
 
 		ELSE
 			ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT64 ), loopMatMulAXAX, matMulX );
+											SIZEOF( FLOAT64 ), loopMatMulAXAX, FALSE, matMulX );
 		END;
 		RETURN RESULT
 	END "*";
@@ -9209,7 +9242,7 @@ TYPE
 														CONST right: ARRAY [ * , * ] OF FLOAT64  ): ARRAY [ * ] OF FLOAT64;
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT64 ), loopMatMulAXAX, matMulX );
+											SIZEOF( FLOAT64 ), loopMatMulAXAX, FALSE, matMulX );
 		RETURN RESULT
 	END "*";
 
@@ -9229,7 +9262,7 @@ TYPE
 	OPERATOR "INCMUL"*(CONST left, right: ARRAY [ * , * ] OF SIGNED8 ): ARRAY [ * , * ] OF SIGNED8;
 	BEGIN
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-									SIZEOF( SIGNED8 ), MatMulIncASASLoop, NIL );
+									SIZEOF( SIGNED8 ), MatMulIncASASLoop, TRUE, NIL );
 		RETURN RESULT
 	END "INCMUL";
 
@@ -9237,7 +9270,7 @@ TYPE
 															CONST right: ARRAY [ * ] OF SIGNED8  ): ARRAY [ * ] OF SIGNED8;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED8 ), MatMulIncASASLoop, NIL );
+											SIZEOF( SIGNED8 ), MatMulIncASASLoop, TRUE, NIL );
 		RETURN RESULT
 	END "INCMUL";
 
@@ -9245,7 +9278,7 @@ TYPE
 															CONST right: ARRAY [ * , * ] OF SIGNED8  ): ARRAY [ * ] OF SIGNED8;
 		BEGIN
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED8 ), MatMulIncASASLoop, NIL );
+											SIZEOF( SIGNED8 ), MatMulIncASASLoop, TRUE, NIL );
 		RETURN RESULT
 	END "INCMUL";
 
@@ -9253,7 +9286,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-									SIZEOF( SIGNED8 ), MatMulIncASASLoop, NIL );
+									SIZEOF( SIGNED8 ), MatMulIncASASLoop, TRUE, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9263,7 +9296,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED8 ), MatMulIncASASLoop, NIL );
+											SIZEOF( SIGNED8 ), MatMulIncASASLoop, TRUE, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9273,7 +9306,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED8 ), MatMulIncASASLoop, NIL );
+											SIZEOF( SIGNED8 ), MatMulIncASASLoop, TRUE, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9293,21 +9326,21 @@ TYPE
 	OPERATOR "INCMUL"*(CONST left, right: ARRAY [ * , * ] OF SIGNED16 ): ARRAY [ * , * ] OF SIGNED16;
 	BEGIN
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-									SIZEOF( SIGNED16 ), MatMulIncAIAILoop, NIL );
+									SIZEOF( SIGNED16 ), MatMulIncAIAILoop, TRUE, NIL );
 		RETURN RESULT
 	END "INCMUL";
 
 	OPERATOR "INCMUL"*(CONST left: ARRAY [ * , * ] OF SIGNED16; CONST right: ARRAY [ * ] OF SIGNED16): ARRAY [ * ] OF SIGNED16;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED16 ), MatMulIncAIAILoop, NIL );
+											SIZEOF( SIGNED16 ), MatMulIncAIAILoop, TRUE, NIL );
 		RETURN RESULT
 	END "INCMUL";
 
 	OPERATOR "INCMUL"*( CONST left: ARRAY [ * ] OF SIGNED16; CONST right: ARRAY [ * , * ] OF SIGNED16 ): ARRAY [ * ] OF SIGNED16;
 		BEGIN
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED16 ), MatMulIncAIAILoop, NIL );
+											SIZEOF( SIGNED16 ), MatMulIncAIAILoop, TRUE, NIL );
 		RETURN RESULT
 	END "INCMUL";
 
@@ -9315,7 +9348,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-									SIZEOF( SIGNED16 ), MatMulIncAIAILoop, NIL );
+									SIZEOF( SIGNED16 ), MatMulIncAIAILoop, TRUE, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9324,7 +9357,7 @@ TYPE
 		BEGIN
 		RESULT := -RESULT;
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED16 ), MatMulIncAIAILoop, NIL );
+											SIZEOF( SIGNED16 ), MatMulIncAIAILoop, TRUE, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9333,7 +9366,7 @@ TYPE
 		BEGIN
 		RESULT := -RESULT;
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED16 ), MatMulIncAIAILoop, NIL );
+											SIZEOF( SIGNED16 ), MatMulIncAIAILoop, TRUE, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9353,21 +9386,21 @@ TYPE
 	OPERATOR "INCMUL"*(CONST left, right: ARRAY [ * , * ] OF SIGNED32 ): ARRAY [ * , * ] OF SIGNED32;
 	BEGIN
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-									SIZEOF( SIGNED32 ), MatMulIncALALLoop, NIL );
+									SIZEOF( SIGNED32 ), MatMulIncALALLoop, TRUE, NIL );
 		RETURN RESULT
 	END "INCMUL";
 
 	OPERATOR "INCMUL"*(CONST left: ARRAY [ * , * ] OF SIGNED32; CONST right: ARRAY [ * ] OF SIGNED32 ): ARRAY [ * ] OF SIGNED32;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED32 ), MatMulIncALALLoop, NIL );
+											SIZEOF( SIGNED32 ), MatMulIncALALLoop, TRUE, NIL );
 		RETURN RESULT
 	END "INCMUL";
 
 	OPERATOR "INCMUL"*( CONST left: ARRAY [ * ] OF SIGNED32; CONST right: ARRAY [ * , * ] OF SIGNED32 ): ARRAY [ * ] OF SIGNED32;
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED32 ), MatMulIncALALLoop, NIL );
+											SIZEOF( SIGNED32 ), MatMulIncALALLoop, TRUE, NIL );
 		RETURN RESULT
 	END "INCMUL";
 
@@ -9375,7 +9408,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-									SIZEOF( SIGNED32 ), MatMulIncALALLoop, NIL );
+									SIZEOF( SIGNED32 ), MatMulIncALALLoop, TRUE, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9384,7 +9417,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED32 ), MatMulIncALALLoop, NIL );
+											SIZEOF( SIGNED32 ), MatMulIncALALLoop, TRUE, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9393,7 +9426,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( SIGNED32 ), MatMulIncALALLoop, NIL );
+											SIZEOF( SIGNED32 ), MatMulIncALALLoop, TRUE, NIL );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9413,21 +9446,21 @@ TYPE
 	OPERATOR "INCMUL"*(CONST left, right: ARRAY [ * , * ] OF FLOAT32 ): ARRAY [ * , * ] OF FLOAT32;
 	BEGIN
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right, SIZEOF( FLOAT32 ),
-									loopMatMulIncARAR, matMulIncR );
+									loopMatMulIncARAR, TRUE, matMulIncR );
 		RETURN RESULT
 	END "INCMUL";
 
 	OPERATOR "INCMUL"*(CONST left: ARRAY [ * , * ] OF FLOAT32;CONST right: ARRAY [ * ] OF FLOAT32 ): ARRAY [ * ] OF FLOAT32;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT32 ), loopMatMulIncARAR, matMulIncR );
+											SIZEOF( FLOAT32 ), loopMatMulIncARAR, TRUE, matMulIncR );
 		RETURN RESULT
 	END "INCMUL";
 
 	OPERATOR "INCMUL"*( CONST left: ARRAY [ * ] OF FLOAT32; CONST right: ARRAY [ * , * ] OF FLOAT32 ): ARRAY [ * ] OF FLOAT32;
 	BEGIN
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT32 ), loopMatMulIncARAR, matMulIncR );
+											SIZEOF( FLOAT32 ), loopMatMulIncARAR, TRUE, matMulIncR );
 		RETURN RESULT
 	END "INCMUL";
 
@@ -9435,7 +9468,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right, SIZEOF( FLOAT32 ),
-									loopMatMulIncARAR, matMulIncR );
+									loopMatMulIncARAR, TRUE, matMulIncR );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9444,7 +9477,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT32 ), loopMatMulIncARAR, matMulIncR );
+											SIZEOF( FLOAT32 ), loopMatMulIncARAR, TRUE, matMulIncR );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9453,7 +9486,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT32 ), loopMatMulIncARAR, matMulIncR );
+											SIZEOF( FLOAT32 ), loopMatMulIncARAR, TRUE, matMulIncR );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9473,21 +9506,21 @@ TYPE
 	OPERATOR "INCMUL"*(CONST left, right: ARRAY [ * , * ] OF FLOAT64  ): ARRAY [ * , * ] OF FLOAT64;
 	BEGIN
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-									SIZEOF( FLOAT64 ), loopMatMulIncAXAX, matMulIncX );
+									SIZEOF( FLOAT64 ), loopMatMulIncAXAX, TRUE, matMulIncX );
 		RETURN RESULT
 	END "INCMUL";
 
 	OPERATOR "INCMUL"*(CONST left: ARRAY [ * , * ] OF FLOAT64; CONST right: ARRAY [ * ] OF FLOAT64  ): ARRAY [ * ] OF FLOAT64;
 	BEGIN
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT64 ), loopMatMulIncAXAX, matMulIncX );
+											SIZEOF( FLOAT64 ), loopMatMulIncAXAX, TRUE, matMulIncX );
 		RETURN RESULT
 	END "INCMUL";
 
 	OPERATOR "INCMUL"*( CONST left: ARRAY [ * ] OF FLOAT64; CONST right: ARRAY [ * , * ] OF FLOAT64 ): ARRAY [ * ] OF FLOAT64;
 		BEGIN
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT64 ), loopMatMulIncAXAX, matMulIncX );
+											SIZEOF( FLOAT64 ), loopMatMulIncAXAX, TRUE, matMulIncX );
 		RETURN RESULT
 	END "INCMUL";
 
@@ -9495,7 +9528,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-									SIZEOF( FLOAT64 ), loopMatMulIncAXAX, matMulIncX );
+									SIZEOF( FLOAT64 ), loopMatMulIncAXAX, TRUE, matMulIncX );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9504,7 +9537,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyMatVecMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT64 ), loopMatMulIncAXAX, matMulIncX );
+											SIZEOF( FLOAT64 ), loopMatMulIncAXAX, TRUE, matMulIncX );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9513,7 +9546,7 @@ TYPE
 	BEGIN
 		RESULT := -RESULT;
 		ApplyVecMatMulLoop( ADDRESS OF RESULT, ADDRESS OF left, ADDRESS OF right,
-											SIZEOF( FLOAT64 ), loopMatMulIncAXAX, matMulIncX );
+											SIZEOF( FLOAT64 ), loopMatMulIncAXAX, TRUE, matMulIncX );
 		RESULT := -RESULT;
 		RETURN RESULT
 	END "DECMUL";
@@ -9595,7 +9628,7 @@ TYPE
 		ELSE HALT(200);
 		END;
 		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( FLOAT64 ),
-									loopMatMulAXAX, matMulX );
+									loopMatMulAXAX, FALSE, matMulX );
 		RETURN RESULT
 	END "*";
 
@@ -9609,7 +9642,7 @@ TYPE
 		END;
 
 		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( FLOAT32 ),
-									loopMatMulARAR, matMulR );
+									loopMatMulARAR, FALSE, matMulR );
 		RETURN RESULT
 	END "*";
 
@@ -9622,7 +9655,7 @@ TYPE
 		ELSE HALT(200);
 		END;
 		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right),  SIZEOF( SIGNED32 ),
-									MatMulALALLoop, NIL );
+									MatMulALALLoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -9635,7 +9668,7 @@ TYPE
 		ELSE HALT(200);
 		END;
 		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( SIGNED16 ),
-									MatMulAIAILoop,NIL );
+									MatMulAIAILoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -9648,7 +9681,7 @@ TYPE
 		ELSE HALT(200);
 		END;
 		ApplyMatMulLoop(SYSTEM.VAL(Tensor, RESULT), SYSTEM.VAL(Tensor, left), SYSTEM.VAL(Tensor, right), SIZEOF( SIGNED8 ),
-									MatMulASASLoop, NIL );
+									MatMulASASLoop, FALSE, NIL );
 		RETURN RESULT
 	END "*";
 
@@ -9763,7 +9796,7 @@ TYPE
 		END CopyLoop;
 
 	BEGIN
-		IF TemporaryFlag IN GetFlags( dest ) THEN  (* destination is on the stack: can optimize transposition *)
+		IF (TemporaryFlag IN GetFlags( dest )) THEN  (* destination is on the stack: can optimize transposition *)
 			PutAdr( dest, GetAdr( left ) );  PutPtr( dest, GetPtr( left ) );
 			PutLen( dest, 1, GetLen( left, 0 ) );  PutLen( dest, 0, GetLen( left, 1 ) );
 			PutInc( dest, 1, GetIncr( left, 0 ) );  PutInc( dest, 0, GetIncr( left, 1 ) );

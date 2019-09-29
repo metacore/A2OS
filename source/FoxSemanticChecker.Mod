@@ -2567,7 +2567,11 @@ TYPE
 							IF hr = 0 THEN
 								Error(binaryExpression.position,"division by zero");
 							ELSE
-								NewInteger(hl MOD hr, left.type);
+								IF IsUnsignedIntegerType(type) THEN
+									NewInteger(Basic.Integer(UNSIGNED64(hl) MOD UNSIGNED64(hr)), left.type);
+								ELSE
+									NewInteger(hl MOD hr, left.type);
+								END;
 								(* bootstrap64
 								NewInteger(hl - Machine.DivH(hl,hr)*hr,left.type);
 								*)
@@ -2576,7 +2580,11 @@ TYPE
 							IF hr = 0 THEN
 								Error(binaryExpression.position,"division by zero");
 							ELSE
-								NewInteger(hl DIV hr, left.type);
+								IF IsUnsignedIntegerType(type) THEN
+									NewInteger(Basic.Integer(UNSIGNED64(hl) DIV UNSIGNED64(hr)), left.type);
+								ELSE
+									NewInteger(hl DIV hr, left.type);
+								END;
 								(* bootstrap64
 								NewInteger(Machine.DivH(hl,hr),left.type);
 								*)

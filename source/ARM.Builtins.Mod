@@ -10,7 +10,7 @@ CONST
 
 TYPE
 	ULONGINT = SIGNED32; (* alias to make distinction between signed and unsigned more clear *)
-	UHUGEINT = SIGNED64;
+	UHUGEINT = UNSIGNED64;
 	Single = SIGNED32; (* alias to make clear that the integer actually contains a IEEE single float *)
 	Double = SIGNED64; (* alias to make clear that the integer actually contains a IEEE double float *)
 	DoubleWord = RECORD
@@ -42,6 +42,11 @@ TYPE
 	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS64(left, right, result, dummy); RETURN result
 	END DivS64;
 
+	PROCEDURE DivU64*(left, right: UNSIGNED64): UNSIGNED64;
+	VAR result, dummy: SIGNED64;
+	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModU64(left, right, result, dummy); RETURN result
+	END DivU64;
+
 	PROCEDURE ModS8*(left, right: SIGNED8): SIGNED8;
 	VAR result, dummy: SIGNED32;
 	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS32(left, right, dummy, result); RETURN SIGNED8(result)
@@ -67,6 +72,12 @@ TYPE
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 			DivModS64(left, right, dummy, result); RETURN result
 	END ModS64;
+
+	PROCEDURE ModU64*(left, right: UNSIGNED64): UNSIGNED64;
+	VAR result, dummy: SIGNED64;
+	BEGIN {UNCOOPERATIVE, UNCHECKED}
+			DivModU64(left, right, dummy, result); RETURN result
+	END ModU64;
 
 	PROCEDURE RolS64*(source: SIGNED64; amount: ULONGINT): SIGNED64;
 	CODE

@@ -2389,7 +2389,9 @@ TYPE
 				dividend := opAX;
 				quotient := opAL;
 				remainder := opAH;
-				emitter.Emit0(InstructionSet.opCBW);
+				IF instruction.op1.type.form = IntermediateCode.SignedInteger THEN
+					emitter.Emit0(InstructionSet.opCBW);
+				END;
 			| IntermediateCode.Bits16:
 				Spill(physicalRegisters.Mapped(AX)); ra := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int16,AX,inPC);
 				emitter.Emit2(InstructionSet.opMOV,opAX,op2);
@@ -2397,7 +2399,9 @@ TYPE
 				dividend := opAX;
 				quotient := dividend;
 				remainder := opDX;
-				emitter.Emit0(InstructionSet.opCWD);
+				IF instruction.op1.type.form = IntermediateCode.SignedInteger THEN
+					emitter.Emit0(InstructionSet.opCWD);
+				END;
 			| IntermediateCode.Bits32:
 				Spill(physicalRegisters.Mapped(EAX)); ra := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int32,EAX,inPC);
 				emitter.Emit2(InstructionSet.opMOV,opEAX,op2);
@@ -2405,7 +2409,11 @@ TYPE
 				dividend := opEAX;
 				quotient := dividend;
 				remainder := opEDX;
-				emitter.Emit0(InstructionSet.opCDQ);
+				IF instruction.op1.type.form = IntermediateCode.SignedInteger THEN
+					emitter.Emit0(InstructionSet.opCDQ);
+				ELSE
+					emitter.Emit2(InstructionSet.opXOR,opEDX,opEDX);
+				END;
 			| IntermediateCode.Bits64:
 				Spill(physicalRegisters.Mapped(RAX)); ra := ReservePhysicalRegister(IntermediateCode.GeneralPurposeRegister,IntermediateCode.int64,RAX,inPC);
 				emitter.Emit2(InstructionSet.opMOV,opRA,op2);
@@ -2413,7 +2421,11 @@ TYPE
 				dividend := opRA;
 				quotient := dividend;
 				remainder := registerOperands[RDX];
-				emitter.Emit0(InstructionSet.opCQO);
+				IF instruction.op1.type.form = IntermediateCode.SignedInteger THEN
+					emitter.Emit0(InstructionSet.opCQO);
+				ELSE
+					emitter.Emit2(InstructionSet.opXOR,opRD,opRD);					
+				END;
 			END;
 			(* registers might have been changed, so we make the operands now *)
 			MakeOperand(instruction.op1,Low,op1,NIL);
@@ -2427,24 +2439,35 @@ TYPE
 				emitter.Emit2(InstructionSet.opMOV,memop,op3);
 				op3 := memop;
 			END;
-			emitter.Emit1(InstructionSet.opIDIV,op3);
-
-			IF instruction.opcode = IntermediateCode.mod THEN
-				imm := Assembler.NewImm8 (0);
-				emitter.Emit2(InstructionSet.opCMP, remainder, imm);
-				Assembler.InitImm8(target,0);
-				emitter.Emit1(InstructionSet.opJGE, target);
-				emitter.Emit2( InstructionSet.opADD, remainder, op3);
-				emitter.code.PutByteAt(target.pc,(emitter.code.pc -target.pc - 1)(SIGNED32));
-				emitter.Emit2(InstructionSet.opMOV, op1, remainder);
+			IF instruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
+				emitter.Emit1(InstructionSet.opDIV,op3);
 			ELSE
-				imm := Assembler.NewImm8 (1);
-				emitter.Emit2(InstructionSet.opSHL, remainder, imm);
-				imm := Assembler.NewImm8 (0);
-				emitter.Emit2(InstructionSet.opSBB, quotient, imm);
-				emitter.Emit2(InstructionSet.opMOV, op1, quotient);
+				emitter.Emit1(InstructionSet.opIDIV,op3);
+			END; 
+			
+			IF instruction.op1.type.form = IntermediateCode.UnsignedInteger THEN
+				IF instruction.opcode = IntermediateCode.mod THEN
+					emitter.Emit2(InstructionSet.opMOV, op1, remainder);
+				ELSE
+					emitter.Emit2(InstructionSet.opMOV, op1, quotient);
+				END;
+			ELSE
+				IF instruction.opcode = IntermediateCode.mod THEN
+					imm := Assembler.NewImm8 (0);
+					emitter.Emit2(InstructionSet.opCMP, remainder, imm);
+					Assembler.InitImm8(target,0);
+					emitter.Emit1(InstructionSet.opJGE, target);
+					emitter.Emit2( InstructionSet.opADD, remainder, op3);
+					emitter.code.PutByteAt(target.pc,(emitter.code.pc -target.pc - 1)(SIGNED32));
+					emitter.Emit2(InstructionSet.opMOV, op1, remainder);
+				ELSE
+					imm := Assembler.NewImm8 (1);
+					emitter.Emit2(InstructionSet.opSHL, remainder, imm);
+					imm := Assembler.NewImm8 (0);
+					emitter.Emit2(InstructionSet.opSBB, quotient, imm);
+					emitter.Emit2(InstructionSet.opMOV, op1, quotient);
+				END;
 			END;
-
 			IF instruction.op3.mode = IntermediateCode.ModeImmediate THEN
 				size := instruction.op3.type.sizeInBits DIV 8;
 				Basic.Align(size, cpuBits DIV 8 );

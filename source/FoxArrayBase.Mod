@@ -3,7 +3,7 @@ MODULE FoxArrayBase; (* stubs for array base runtime - can only be compiled by o
 
 (*! do  do: MAX(array,scalar) and MAX(array,array) for all datatypes*)
 
-IMPORT SYSTEM, KernelLog, Heaps, MathL;
+IMPORT SYSTEM, KernelLog, Heaps, Machine, MathL;
 
 TYPE
 
@@ -10112,7 +10112,14 @@ TYPE
 		END NewData;
 
 		PROCEDURE ClearData;
-			(*! todo *)
+		VAR size, i: SIZE;
+		BEGIN
+			size := elementSize;
+			FOR i := 0 TO dim-1 DO
+				size := size * GetLen(dest, i);
+			END;
+			INC(size, (-size) MOD 4); (* round up to next multiple of 4 *)
+			Machine.Fill32(GetAdr(dest), size, 0);
 		END ClearData;
 
 	BEGIN
@@ -10172,7 +10179,14 @@ TYPE
 		END NewData;
 
 		PROCEDURE ClearData;
-			(*! todo *)
+		VAR size, i: SIZE;
+		BEGIN
+			size := Size;
+			FOR i := 0 TO dim-1 DO
+				size := size * GetLen(dest, i);
+			END;
+			INC(size, (-size) MOD 4); (* round up to next multiple of 4 *)
+			Machine.Fill32(GetAdr(dest), size, 0);
 		END ClearData;
 
 	BEGIN

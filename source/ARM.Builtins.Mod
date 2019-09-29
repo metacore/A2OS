@@ -9,8 +9,6 @@ CONST
 	MAXFLOAT32 = SIGNED32(7F7FFFFFH);
 
 TYPE
-	ULONGINT = SIGNED32; (* alias to make distinction between signed and unsigned more clear *)
-	UHUGEINT = UNSIGNED64;
 	Single = SIGNED32; (* alias to make clear that the integer actually contains a IEEE single float *)
 	Double = SIGNED64; (* alias to make clear that the integer actually contains a IEEE double float *)
 	DoubleWord = RECORD
@@ -32,8 +30,8 @@ TYPE
 	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS32(left, right, result, dummy); RETURN result
 	END DivS32;
 
-	PROCEDURE DivU32*(left, right: ULONGINT): ULONGINT;
-	VAR result, dummy: SIGNED32;
+	PROCEDURE DivU32*(left, right: UNSIGNED32): UNSIGNED32;
+	VAR result, dummy: UNSIGNED32;
 	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModU32(left, right, result, dummy); RETURN result
 	END DivU32;
 
@@ -43,7 +41,7 @@ TYPE
 	END DivS64;
 
 	PROCEDURE DivU64*(left, right: UNSIGNED64): UNSIGNED64;
-	VAR result, dummy: SIGNED64;
+	VAR result, dummy: UNSIGNED64;
 	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModU64(left, right, result, dummy); RETURN result
 	END DivU64;
 
@@ -62,8 +60,8 @@ TYPE
 	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModS32(left, right, dummy, result); RETURN result
 	END ModS32;
 
-	PROCEDURE ModU32*(left, right: ULONGINT): ULONGINT;
-	VAR result, dummy: SIGNED32;
+	PROCEDURE ModU32*(left, right: UNSIGNED32): UNSIGNED32;
+	VAR result, dummy: UNSIGNED32;
 	BEGIN {UNCOOPERATIVE, UNCHECKED} DivModU32(left, right, dummy, result); RETURN result
 	END ModU32;
 
@@ -74,12 +72,12 @@ TYPE
 	END ModS64;
 
 	PROCEDURE ModU64*(left, right: UNSIGNED64): UNSIGNED64;
-	VAR result, dummy: SIGNED64;
+	VAR result, dummy: UNSIGNED64;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 			DivModU64(left, right, dummy, result); RETURN result
 	END ModU64;
 
-	PROCEDURE RolS64*(source: SIGNED64; amount: ULONGINT): SIGNED64;
+	PROCEDURE RolS64*(source: SIGNED64; amount: UNSIGNED32): SIGNED64;
 	CODE
 		LDR R2, [FP, #+8] ; R2 := amount
 		LDR R3, [FP, #+12] ; R3 := source[Low]
@@ -109,15 +107,15 @@ TYPE
 		; result = R1:R0
 	END RolS64;
 
-	PROCEDURE RolU64*(source: SIGNED64; amount: ULONGINT): SIGNED64;
+	PROCEDURE RolU64*(source: SIGNED64; amount: UNSIGNED32): SIGNED64;
 	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN RolS64(source, amount)
 	END RolU64;
 
-	PROCEDURE RorS64*(source: SIGNED64; amount: ULONGINT): SIGNED64;
+	PROCEDURE RorS64*(source: SIGNED64; amount: UNSIGNED32): SIGNED64;
 	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN RolS64(source, 64 - (amount MOD 64))
 	END RorS64;
 
-	PROCEDURE RorU64*(source: SIGNED64; amount: ULONGINT): SIGNED64;
+	PROCEDURE RorU64*(source: SIGNED64; amount: UNSIGNED32): SIGNED64;
 	BEGIN {UNCOOPERATIVE, UNCHECKED} RETURN RolS64(source, 64 - (amount MOD 64))
 	END RorU64;
 
@@ -125,14 +123,18 @@ TYPE
 	- note: this implements the mathematical definition of DIV and MOD in contrast to the symmetric one
 	*)
 	PROCEDURE DivModS32(dividend, divisor: SIGNED32; VAR quotient, remainder: SIGNED32);
+	VAR uquotient, uremainder: UNSIGNED32;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(divisor > 0);
 		IF dividend >= 0 THEN
-			DivModU32(dividend, divisor, quotient, remainder)
+			DivModU32(dividend, divisor, uquotient, uremainder);
+			quotient := SIGNED32(uquotient); 
+			remainder := SIGNED32(uremainder);
 		ELSE
 			dividend := -dividend;
-			DivModU32(dividend, divisor, quotient, remainder);
-			quotient := -quotient;
+			DivModU32(dividend, divisor, uquotient, uremainder);
+			quotient := -SIGNED32(quotient);
+			remainder := SIGNED32(remainder); 
 			IF remainder # 0 THEN
 				DEC(quotient);
 				remainder := divisor - remainder
@@ -143,7 +145,7 @@ TYPE
 	(*
 		Fast 32-bit unsigned integer division/modulo (author Alexey Morozov)
 	*)
-	PROCEDURE DivModU32*(dividend, divisor: ULONGINT; VAR quotient, remainder: ULONGINT);
+	PROCEDURE DivModU32*(dividend, divisor: UNSIGNED32; VAR quotient, remainder: UNSIGNED32);
 	CODE
 		MOV R2, #0 ; quotient will be stored in R2
 
@@ -189,14 +191,18 @@ TYPE
 	- note: this implements the mathematical definition of DIV and MOD in contrast to the symmetric one
 	*)
 	PROCEDURE DivModS64*(dividend, divisor: SIGNED64; VAR quotient, remainder: SIGNED64);
+	VAR uquotient, uremainder: UNSIGNED64;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		ASSERT(divisor > 0);
 		IF dividend >= 0 THEN
-			DivModU64(dividend, divisor, quotient, remainder)
+			DivModU64(dividend, divisor, uquotient, uremainder);
+			quotient := SIGNED64(uquotient); 
+			remainder := SIGNED64(uremainder); 
 		ELSE
 			dividend := -dividend;
-			DivModU64(dividend, divisor, quotient, remainder);
-			quotient := -quotient;
+			DivModU64(dividend, divisor, uquotient, uremainder);
+			quotient := -SIGNED64(uquotient);
+			remainder := SIGNED64(uremainder);
 			IF remainder # 0 THEN
 				DEC(quotient);
 				remainder := divisor - remainder
@@ -205,7 +211,7 @@ TYPE
 	END DivModS64;
 
 	(* Count leading zeros in a binary representation of a given 64-bit integer number *)
-	PROCEDURE Clz64*(x: UHUGEINT): SIGNED32;
+	PROCEDURE Clz64*(x: UNSIGNED64): SIGNED32;
 	CODE
 		; high-half
 		LDR R1, [FP,#x+4]
@@ -227,7 +233,7 @@ TYPE
 	(*
 		Fast 64-bit unsigned integer division/modulo (Alexey Morozov)
 	*)
-	PROCEDURE DivModU64*(dividend, divisor: UHUGEINT; VAR quotient, remainder: UHUGEINT);
+	PROCEDURE DivModU64*(dividend, divisor: UNSIGNED64; VAR quotient, remainder: UNSIGNED64);
 	VAR m: SIGNED32;
 	BEGIN {UNCOOPERATIVE, UNCHECKED}
 		quotient := 0;

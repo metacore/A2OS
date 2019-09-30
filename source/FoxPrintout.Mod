@@ -793,7 +793,11 @@ TYPE
 
 		PROCEDURE VisitIntegerValue*(x: SyntaxTree.IntegerValue);
 		BEGIN
-			w.Int(x.value,1);
+			IF Global.IsSignedInteger(x.value,64) THEN
+				w.Int(x.value,1);
+			ELSE
+				w.String("0x"); w.Hex(x.value,1);
+			END;
 		END VisitIntegerValue;
 
 		PROCEDURE VisitCharacterValue*(x: SyntaxTree.CharacterValue);

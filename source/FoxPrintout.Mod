@@ -793,7 +793,7 @@ TYPE
 
 		PROCEDURE VisitIntegerValue*(x: SyntaxTree.IntegerValue);
 		BEGIN
-			IF Global.IsSignedInteger(x.value,64) THEN
+			IF x.value # MIN(SIGNED64) THEN
 				w.Int(x.value,1);
 			ELSE
 				w.String("0x"); w.Hex(x.value,1);

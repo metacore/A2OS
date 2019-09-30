@@ -1542,8 +1542,7 @@ TYPE
 		ELSIF (system.SizeOf(Unsigned16) = 16) & IsUnsignedInteger(this,16) THEN RETURN Unsigned16
 		ELSIF IsSignedInteger(this, 32) THEN RETURN Signed32
 		ELSIF IsUnsignedInteger(this,32) THEN RETURN Unsigned32
-		ELSIF IsSignedInteger(this,64) THEN RETURN Signed64 
-		ELSE RETURN Unsigned64
+		ELSE RETURN Signed64
 		END;
 	END GetIntegerType;
 

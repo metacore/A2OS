@@ -5596,7 +5596,7 @@ TYPE
 							IF actualParameter = SyntaxTree.invalidExpression THEN
 							ELSIF ~ParameterCompatible(formalParameter,actualParameter) THEN
 								Error(position,  "incompatible parameter")
-							ELSE
+							ELSIF formalParameter.kind # SyntaxTree.VarParameter THEN
 								actualParameter := NewConversion(actualParameter.position, actualParameter, formalParameter.type, NIL)
 							END;
 							actualParameters.SetExpression(i, actualParameter);

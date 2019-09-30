@@ -12689,7 +12689,7 @@ TYPE
 							IF (type = Global.Complex32) OR (type.sizeInBits = 64) THEN
 								IF RefInfo THEN Info(section,"COMPLEX32") END;
 								Char(section, sfTypeCOMPLEX);
-							ELSIF (type = Global.Complex64) OR (type.sizeInBits = 12) THEN
+							ELSIF (type = Global.Complex64) OR (type.sizeInBits = 128) THEN
 								IF RefInfo THEN Info(section,"COMPLEX64") END;
 								Char(section, sfTypeLONGCOMPLEX);
 							ELSE

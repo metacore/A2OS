@@ -3759,8 +3759,8 @@ VAR
 		startinner:
 		CMP	RAX, 0	;
 		JLE	endinner	;
-		MOV	RDX, [RSI]	;
-		MOV	[RDI], RDX	;
+		MOV	EDX, [RSI]	;
+		MOV	[RDI], EDX	;
 		ADD	RSI, RBX	;
 		ADD	RDI, RCX	;
 		DEC	RAX	;
@@ -3871,8 +3871,6 @@ VAR
 		JLE	endinner	;
 		MOV	RDX, [RSI]	;
 		MOV	[RDI], RDX	;
-		MOV	RDX, [RSI+4]	;
-		MOV	[RDI+4], RDX	;
 		ADD	RSI, RBX	;
 		ADD	RDI, RCX	;
 		DEC	RAX	;

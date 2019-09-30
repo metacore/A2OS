@@ -6628,9 +6628,16 @@ TYPE
 			ELSIF type IS SyntaxTree.MathArrayType THEN
 				WITH type: SyntaxTree.MathArrayType DO
 					IF type.form = SyntaxTree.Open THEN
+						
 						dim := DynamicDim(type);
 						imm := IntermediateCode.Immediate(addressType,dim);
 						PutMathArrayFieldOffset(adr,imm,MathDimOffset,offset);
+						imm := IntermediateCode.Immediate(addressType,0);
+						FOR i := 0 TO dim-1 DO
+								PutMathArrayLength(adr,imm,i);
+								PutMathArrayIncrement(adr,imm,i);
+						END;
+
 						baseType := SemanticChecker.ArrayBase(type,dim);
 						IF baseType = NIL THEN size := 0 ELSE size := system.AlignedSizeOf(baseType) END;
 						imm := IntermediateCode.Immediate(addressType,ToMemoryUnits(system,size));

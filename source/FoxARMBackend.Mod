@@ -3585,8 +3585,8 @@ TYPE
 			New; AddressPar; Finish("SetLNK", SetLNK);
 			New; IntPar; SizePar;  Finish("LDPSR", LDPSR);
 			New; IntPar; SizeVarPar; Finish("STPSR", STPSR);
-			New; IntPar; SizePar; IntPar; Finish("LDCPR", LDCPR);
-			New; IntPar; SizeVarPar; IntVarPar; Finish("STCPR", STCPR);
+			New; IntPar; IntPar; SizePar; Finish("LDCPR", LDCPR);
+			New; IntPar; IntPar; SizeVarPar; Finish("STCPR", STCPR);
 			New; IntPar; Finish("FLUSH", FLUSH);
 			New; BoolRet; IntPar; Finish("NULL", NULL);
 			New; IntRet; IntPar; IntPar; Finish("XOR", XOR);

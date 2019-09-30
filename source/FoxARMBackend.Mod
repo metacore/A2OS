@@ -3538,6 +3538,13 @@ TYPE
 				parameter.SetType(Global.Signed32); procedureType.AddParameter(parameter)
 			END IntPar;
 
+			PROCEDURE SizePar;
+			BEGIN
+				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.ValueParameter);
+				parameter.SetAutoConvert(TRUE);
+				parameter.SetType(system.sizeType); procedureType.AddParameter(parameter)
+			END SizePar;
+						
 			PROCEDURE AddressPar;
 			BEGIN
 				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.ValueParameter);
@@ -3549,7 +3556,14 @@ TYPE
 				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);
 				parameter.SetType(Global.Signed32); procedureType.AddParameter(parameter)
 			END IntVarPar;
-
+			
+			PROCEDURE SizeVarPar;
+			BEGIN
+				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);
+				parameter.SetAutoConvert(TRUE);
+				parameter.SetType(system.sizeType); procedureType.AddParameter(parameter)
+			END SizeVarPar;
+			
 			PROCEDURE RealVarPar;
 			BEGIN
 				parameter := SyntaxTree.NewParameter(Basic.invalidPosition, procedureType, SyntaxTree.NewIdentifier(""), SyntaxTree.VarParameter);
@@ -3569,10 +3583,10 @@ TYPE
 			New; AddressPar; Finish("SetPC", SetPC);
 			New; IntRet; Finish("LNK", GetLNK);
 			New; AddressPar; Finish("SetLNK", SetLNK);
-			New; IntPar; IntPar;  Finish("LDPSR", LDPSR);
-			New; IntPar; IntVarPar; Finish("STPSR", STPSR);
-			New; IntPar; IntPar; IntPar; Finish("LDCPR", LDCPR);
-			New; IntPar; IntPar; IntVarPar; Finish("STCPR", STCPR);
+			New; IntPar; SizePar;  Finish("LDPSR", LDPSR);
+			New; IntPar; SizeVarPar; Finish("STPSR", STPSR);
+			New; IntPar; SizePar; IntPar; Finish("LDCPR", LDCPR);
+			New; IntPar; SizeVarPar; IntVarPar; Finish("STCPR", STCPR);
 			New; IntPar; Finish("FLUSH", FLUSH);
 			New; BoolRet; IntPar; Finish("NULL", NULL);
 			New; IntRet; IntPar; IntPar; Finish("XOR", XOR);

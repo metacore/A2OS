@@ -1253,6 +1253,8 @@ TYPE
 						Printout.Info("actual",actual);
 						Printout.Info("formal",formal);
 					END;
+				ELSIF (formal.autoConvert) (* to support special builtins only! *) THEN
+					result := system.SizeOf(actualType) = system.SizeOf(formalType);
 				ELSIF (formalType IS SyntaxTree.ByteType) OR (formalType IS SyntaxTree.RecordType) & (~formalType(SyntaxTree.RecordType).isObject) THEN
 					result := CompatibleTo(system,actualType,formalType);
 				ELSIF (formalType IS SyntaxTree.ArrayType) & (formalType(SyntaxTree.ArrayType).form = SyntaxTree.Open) THEN
@@ -1279,9 +1281,13 @@ TYPE
 				ELSIF (formalType IS SyntaxTree.ArrayType) & (formalType(SyntaxTree.ArrayType).form = SyntaxTree.Open) THEN
 					result := OpenArrayCompatible(formalType(SyntaxTree.ArrayType),actualType);
 				ELSE
-					result := CompatibleTo(system,actualType,formalType);
-					IF result & (formalType IS SyntaxTree.MathArrayType) & (formalType(SyntaxTree.MathArrayType).form = SyntaxTree.Static) & (actualType(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
-						Error(actual.position,"incompatible non-static actual type");
+					IF (formal.autoConvert) (* to support special builtins only! *) THEN
+						result := TRUE; (* failure of conversion will be reported separately, if any *)
+					ELSE
+						result := CompatibleTo(system,actualType,formalType);
+						IF result & (formalType IS SyntaxTree.MathArrayType) & (formalType(SyntaxTree.MathArrayType).form = SyntaxTree.Static) & (actualType(SyntaxTree.MathArrayType).form # SyntaxTree.Static) THEN
+							Error(actual.position,"incompatible non-static actual type");
+						END;
 					END;
 				END;
 			END;

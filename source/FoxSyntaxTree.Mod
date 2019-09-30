@@ -3033,6 +3033,7 @@ TYPE
 		untraced-: BOOLEAN;
 		movable-: BOOLEAN;
 		selfParameter-: BOOLEAN;
+		autoConvert-: BOOLEAN; (* for the support of builtin-functions in backends only *)
 
 		registerNumber-: SIZE;
 		inRegister-: BOOLEAN;
@@ -3053,6 +3054,7 @@ TYPE
 			preferRegister := FALSE;
 			inRegister := FALSE;
 			registerNumber := -1;
+			autoConvert := FALSE; 
 		END InitParameter;
 
 		PROCEDURE PreferRegister*(b: BOOLEAN);
@@ -3069,6 +3071,12 @@ TYPE
 		BEGIN
 			registerNumber := reg
 		END RegisterNumber;
+		
+		PROCEDURE SetAutoConvert*(auto: BOOLEAN);
+		BEGIN
+			autoConvert := auto;
+		END SetAutoConvert;
+		
 
 		PROCEDURE SetModifiers*(flag: Modifier);
 		BEGIN SELF.modifiers := flag;

@@ -617,10 +617,12 @@ TYPE
 			factor: SyntaxTree.Expression;
 			operator: Operator;
 			expressionList: SyntaxTree.ExpressionList;
-			identifier: SyntaxTree.Identifier; position: Position;
+			identifier: SyntaxTree.Identifier; 
+			position: Position;
 			qualifiedIdentifier: SyntaxTree.QualifiedIdentifier;
 			qualifiedType : SyntaxTree.QualifiedType;
 		BEGIN
+			position := token.position;
 			CASE Symbol() OF
 			| Scanner.Number:
 					IF (token.numberType = Scanner.Integer) OR (token.numberType = Scanner.Hugeint) THEN

@@ -1,0 +1,25 @@
+#!/bin/sh
+
+directory="/var/tmp/libraries/"
+update () { svn checkout --non-interactive --quiet https://svn-dept.inf.ethz.ch/svn/lecturers/a2/trunk/tools/builds/a2 "$directory" && (cd "$directory" && svn patch libraries.patch) && svn update "$directory" && make --directory "$directory" --quiet dependencies && version=$(svnversion "$directory/source"); }
+check () { make --question --directory "$directory" --quiet "$target"; }
+build () { timeout 1h make --directory "$directory" --quiet "$target"; }
+notify () { echo "$output" | echo "Libraries" "$target" "$version" "$status"; }
+
+update || exit 1
+
+process ()
+{
+	local target="$1"
+	check && exit 0
+	local status="Building" output=""
+	notify
+	trap notify exit
+	trap "status=Aborted" int term kill
+	status="Failed" output=$(build 2>&1)
+	test $? -eq 0 && status="Succeeded" output=""
+	trap exit
+	notify
+}
+
+process "Matrix Library"

@@ -1,0 +1,154 @@
+Index: makefile
+===================================================================
+--- makefile	(revision 9553)
++++ makefile	(working copy)
+@@ -11,8 +11,8 @@
+ 
+ target := Linux64
+ pltfrm := Unix64
+-object := .Gof
+-symbol := .Sym
++object := .GofUu
++symbol := .SymUu
+ 
+ # module dependencies
+ 
+@@ -47,6 +47,11 @@
+ Oberon.Execution.Test.Diff: oberon source/Oberon.Execution.Test
+ 	@./oberon FoxTest.Compile --prolog=\"Compiler.Compile --symbolFileExtension=$(symbol) TesterInput.txt\" source/Oberon.Execution.Test
+ 
++Matrix\ Library: Matrix.Test.Diff
++
++Matrix.Test.Diff: oberon source/Matrix/Matrix.Test $(addsuffix $(object), MatrixBase MatrixSVD)
++	@./oberon FoxTest.Compile --prolog=\"Compiler.Compile --symbolFileExtension=$(symbol) TesterInput.txt\" source/Matrix/Matrix.Test
++
+ # A2 Builds
+ 
+ builds:
+Index: .
+===================================================================
+--- .	(revision 9553)
++++ .	(working copy)
+
+Property changes on: .
+___________________________________________________________________
+Modified: svn:externals
+## -1 +1,2 ##
+ ../../../source source
++https://www.ocp.inf.ethz.ch/svn/ocp/trunk/Matrix source/Matrix
+Index: source/Release.Tool
+===================================================================
+--- source/Release.Tool	(revision 9553)
++++ source/Release.Tool	(working copy)
+@@ -2127,3 +2127,111 @@
+ 	Oberon20.Pr6.Fnt Oberon20b.Pr6.Fnt Oberon20i.Pr6.Fnt
+ 	Oberon24.Pr6.Fnt Oberon24b.Pr6.Fnt Oberon24i.Pr6.Fnt
+ END
++
++PACKAGE Matrix ARCHIVE "Matrix.zip" SOURCE "MatrixSrc.zip" DESCRIPTION "Matrix Library"
++	Matrix/MatrixBase.Mod 
++
++	Matrix/ComplexMathL.Mod 
++	Matrix/MatrixUtilities.Mod 
++	Matrix/MatrixStreams.Mod
++	Matrix/PMath.Mod 
++
++	Matrix/LinearMath.Mod 
++	Matrix/LinearFilters.Mod 
++	Matrix/LinearFIRConvolveLongReal.Mod 
++	Matrix/LinearIIRConvolveLongReal.Mod 
++	Matrix/LinearConvolve.Mod 
++	Matrix/Wavelets.Mod
++
++	Matrix/LinearFFT.Mod 
++	Matrix/MatrixInterpolation.Mod
++	Matrix/MatrixBSplineInterpolation.Mod
++
++	Matrix/PlanarBase.Mod 
++	Matrix/PlanarMath.Mod 
++	Matrix/PlanarFFT.Mod
++	Matrix/PlanarNabla.Mod
++	Matrix/PlanarNorms.Mod
++	Matrix/PlanarTransform.Mod
++	Matrix/PlanarPDE.Mod
++	Matrix/PlanarWavelets.Mod
++
++	Matrix/MatrixMoments.Mod
++	Matrix/LinearTransform.Mod 
++
++	Matrix/TensorMath.Mod
++
++	Matrix/VolumeBase.Mod 
++	Matrix/VolumeFFT.Mod
++	Matrix/VolumeNabla.Mod
++	Matrix/VolumeTransform.Mod 
++	Matrix/VolumePDE.Mod
++	Matrix/VolumeMoments.Mod
++
++	Matrix/HypercubeBase.Mod  
++	Matrix/HypercubeNabla.Mod
++	Matrix/HypercubeTransform.Mod 
++	Matrix/HypercubeMoments.Mod
++
++
++	Matrix/MatrixStandardSolvers.Mod
++
++	Matrix/MatrixTransforms.Mod
++	Matrix/MatrixIterativeSolvers.Mod
++	Matrix/MatrixAlgebraicMultigrid.Mod
++	Matrix/MatrixNorms.Mod
++	Matrix/MatrixPolynomEq.Mod
++	Matrix/MatrixSVD.Mod
++	Matrix/MatrixEigen.Mod
++	Matrix/MatrixFastMatrixMultiply.Mod
++	Matrix/MatrixLeastSquares.Mod
++	Matrix/MatrixPrincipalComponents.Mod
++
++	Matrix/MatrixRoots.Mod
++	Matrix/MatrixKrylovCGS.Mod
++	Matrix/MatrixKrylovGMRES.Mod
++	Matrix/MatrixKrylovMINRES.Mod
++	Matrix/MatrixOptim.Mod
++	Matrix/TestMatrixOptim.Mod
++
++	Matrix/MatrixActive.Mod
++	Matrix/MatrixComputeObjects.Mod
++	Matrix/MatrixBlockSolvers.Mod
++
++	Matrix/MatrixFigures.Mod
++	Matrix/MatrixAVI.Mod
++	Matrix/MatrixRaster.Mod
++	Matrix/WMMatrix.Mod
++	Matrix/WMMatrixGraph.Mod
++	Matrix/WMStack.Mod
++	Matrix/WMTensor.Mod
++	Matrix/WMArrayPanel.Mod
++	Matrix/WMMatrixLoader.Mod
++
++	Matrix/PlanarMorphology.Mod
++	Matrix/VolumeMorphology.Mod
++
++
++	Matrix/MLBase.Mod
++	Matrix/ErrorBase.Mod
++	Matrix/ExtraSort.Mod
++	Matrix/MLClassifier.Mod
++	Matrix/MLKernels.Mod
++	Matrix/MLKernelMeans.Mod
++	Matrix/MLRegression.Mod
++	Matrix/MLRidgeRegression.Mod
++	Matrix/StatisticsBase.Mod
++	Matrix/StatisticsHistograms.Mod
++	Matrix/StatisticsFunctions.Mod
++	Matrix/StatisticsLinearRegression.Mod
++	Matrix/StatisticsCombinatorics.Mod
++
++	Matrix/TestComplexMathL.Mod
++	Matrix/TestMatrixStandardSolvers.Mod
++	Matrix/TestPlanarPDE.Mod
++	Matrix/TestVolumePDE.Mod
++	Matrix/TestPlanarWavelets.Mod
++	Matrix/LinpackBenchmark.Mod
++
++	Matrix/MatrixWarp.Mod
++END

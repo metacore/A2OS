@@ -100,7 +100,7 @@ TYPE
 		sectionOffset: SIGNED32;
 		flags: SET;
 		backendName: ARRAY 32 OF CHAR;
-
+		
 		PROCEDURE FinalMessage(error: BOOLEAN; CONST msg: ARRAY OF CHAR);
 		VAR message: ARRAY 256 OF CHAR;
 		BEGIN
@@ -242,10 +242,10 @@ TYPE
 						FinalMessage(TRUE, " could not be compiled (object file errors).");
 						RETURN FALSE
 					END;
+				(* PH experimental *)
+					IF TestModule#NIL THEN TestModule(module) END;
+				(*/ PH *)				
 				END;
-
-
-
 				IF options.documentation # NIL THEN
 					options.documentation.Initialize(diagnostics,log, flags,checker,system);
 					generatedModule := options.documentation.ProcessSyntaxTreeModule(module);
@@ -523,6 +523,7 @@ TYPE
 	VAR
 		platforms: Options.Defaults;
 		defaultPlatform: ARRAY 32 OF CHAR;
+		TestModule*: PROCEDURE{DELEGATE}(m:SyntaxTree.Module); (*experimental feature, may be removed*)
 
 	PROCEDURE DoAddPlatform(CONST name: ARRAY OF CHAR; CONST defaults: ARRAY OF CHAR);
 	BEGIN
@@ -593,3 +594,5 @@ BEGIN
 
 	SetupDefaults;
 END Compiler.
+
+System.FreeDownTo Compiler~

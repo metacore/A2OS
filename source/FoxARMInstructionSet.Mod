@@ -660,7 +660,7 @@ CONST
 	PROCEDURE MakeInstruction*(VAR instruction: Instruction; mnemonic, condition: SIGNED32; flags: SET; CONST operands: ARRAY OF Operand): BOOLEAN;
 	VAR
 		format: InstructionFormat;
-		i: SIZE; dummyEncoding: SIGNED32;
+		i: SIZE;
 		result: BOOLEAN;
 
 		PROCEDURE OperandMatches(encoding: SIGNED32; CONST operand: Operand): BOOLEAN;
@@ -839,7 +839,7 @@ CONST
 		format: InstructionFormat; codeSet: SET; i: SIGNED32; error: BOOLEAN;
 		flags: SET;
 	CONST
-		P=24; U=23; B=22; W=21; L=20; S=6; H=5;
+		P=24; U=23; B=22; W=21; S=6; H=5;
 
 		PROCEDURE Unsigned(val: SIGNED32; from,to: SIGNED32);
 		VAR i: SIGNED32;
@@ -1737,7 +1737,7 @@ CONST
 	BEGIN
 		codeSet := NumberToSet(code);
 		IF TraceDecode THEN
-			D.String("decoding:"); D.Hex(code, -8); D.String(":"); D.Set(codeSet); D.Ln;
+			D.String("decoding:"); D.String("0x");D.Hex(code, -8); D.String(":"); D.Set(codeSet); D.Ln;
 		END;
 		P := 24 IN codeSet;
 		U := 23 IN codeSet;
@@ -1995,29 +1995,6 @@ CONST
 			D.String("L:          "); D.Set(L); D.Ln;
 			D.String("o:          "); D.Set(o); D.Ln;*)
 		END ParseInstructionFormat;
-
-		(** Adds the given sets to the corresponding record fields of the last entered instruction. Sets the instruction to be a NEON instruction. *)
-		PROCEDURE UpdateNEONInstruction(U, Q, S, L, F, O: SET);
-		VAR
-			last: SIGNED32;
-			i: SIGNED16;
-		BEGIN
-			(*ASSERT(instructionCount # 0);*)
-			last := instructionCount - 1;
-			instructionFormats[last].isNEON := TRUE;
-			instructionFormats[last].Unsigned := U;
-			instructionFormats[last].Quadword := Q;
-			(*instructionFormats[last].Size := S;*)
-			instructionFormats[last].Length := L;
-			instructionFormats[last].Float := F;
-			instructionFormats[last].Operation := O;
-
-			FOR i := 0 TO 31 DO
-				IF i IN S THEN
-					instructionFormats[last].SizeH := i
-				END
-			END
-		END UpdateNEONInstruction;
 
 		(** Enter a NEON Instruction, using a string format descriptor.
 		*)
@@ -2683,6 +2660,16 @@ CONST
 		ASSERT(foundIndex # None);
 		w.String(registerEntries[foundIndex].name);
 	END DumpRegisterName;
+	
+	PROCEDURE DumpImmediate(w: Streams.Writer; value: SIGNED32);
+	BEGIN
+		IF (value < 256) & (value > -256) THEN
+			w.Int(value,0)
+		ELSE
+			w.String("0x");w.Hex(value,0)
+		END;
+	END DumpImmediate;
+	
 
 	PROCEDURE DumpOperand*(w: Streams.Writer; CONST operand: Operand);
 	VAR i: SIGNED32; first: BOOLEAN; mode: SIGNED32;
@@ -2692,8 +2679,8 @@ CONST
 			| None: w.String("NONE!")
 			| modeCoprocessor: w.String("P"); w.Int(operand.coprocessor, 1)
 
-			| modeImmediate: w.String("#"); w.Int(operand.immediate, 1)
-
+			| modeImmediate: w.String("#"); 
+				DumpImmediate(w,operand.immediate);
 			| modeMemory: w.String("[");
 				IF operand.register # None THEN
 					DumpRegisterName(w, operand.register)
@@ -2710,10 +2697,7 @@ CONST
 				ELSE HALT(100);
 				END;
 				IF operand.offsetRegister= None THEN
-					(*
-					w.Hex(operand.offsetImmediate, 1);w.String("H");
-					*)
-					w.Int(operand.offsetImmediate, 0)
+					DumpImmediate(w, operand.offsetImmediate);
 				ELSE
 					DumpRegisterName(w, operand.offsetRegister)
 				END;
@@ -2892,7 +2876,7 @@ CONST
 
 		END Disasm;
 
-	VAR disassembler: Disasm; codeFileName, dataFileName, logFileName: Files.FileName; codeFile, logFile: Files.File;code: BitSets.BitSet; options: Options.Options;
+	VAR disassembler: Disasm; codeFileName, logFileName: Files.FileName; codeFile, logFile: Files.File;code: BitSets.BitSet; options: Options.Options;
 		address, offset: INTEGER;
 	BEGIN
 		IF context.arg.GetString(codeFileName) THEN
@@ -2923,7 +2907,4 @@ BEGIN Init;
 END FoxARMInstructionSet.
 
 System.FreeDownTo FoxARMInstructionSet ~
-
-FoxARMInstructionSet.Test BLEQSB  ~
-FoxARMInstructionSet.Test2 ~
-FoxARMInstructionSet.Test3 "E:/Systembau11/WinAos/Work/Minos.boot"  ~
+FoxARMInstructionSet.Disassemble kernel.img ~ 

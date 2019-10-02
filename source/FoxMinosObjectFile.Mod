@@ -3,7 +3,7 @@ MODULE FoxMinosObjectFile; (** AUTHOR "fof"; PURPOSE "Oberon Compiler Minos Obje
 IMPORT
 	Scanner := FoxScanner, Basic := FoxBasic, SyntaxTree := FoxSyntaxTree, Global := FoxGlobal, SemanticChecker := FoxSemanticChecker, Fingerprinter := FoxFingerprinter, Sections := FoxSections,
 	Streams, D := Debugging, Files, SYSTEM,Strings, BinaryCode := FoxBinaryCode, KernelLog, Diagnostics, SymbolFileFormat := FoxTextualSymbolFile, Options,
-	Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine;
+	Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine, FoxSemanticChecker;
 
 CONST
 	Trace=FALSE;
@@ -258,49 +258,52 @@ TYPE
 		code: ByteArray;
 		fp: SyntaxTree.Fingerprint;
 		error : BOOLEAN;
+
 		(** helper procedures *)
 		PROCEDURE GetEntries(moduleScope: SyntaxTree.ModuleScope; VAR numberEntries: SIZE; VAR entries: ARRAY 256 OF IntermediateCode.Section);
 		VAR symbol: SyntaxTree.Symbol; p: Sections.Section;
 
-			PROCEDURE ConstantNeedsSection(constant: SyntaxTree.Constant): BOOLEAN;
-			BEGIN
-				RETURN FALSE;
-				(* constant sections are not used any more in importing modules, they are copied instead *)
-			END ConstantNeedsSection;
-
 			PROCEDURE TypeNeedsSection(type: SyntaxTree.TypeDeclaration): BOOLEAN;
+			VAR t: SyntaxTree.Type;
 			BEGIN
-				RETURN (type.declaredType.resolved IS SyntaxTree.RecordType)
+				t := type.declaredType.resolved; 
+				WITH t: SyntaxTree.RecordType DO RETURN TRUE
+				| t: SyntaxTree.PointerType DO 
+					RETURN (t.pointerBase.resolved IS SyntaxTree.RecordType) &
+						(t.pointerBase.resolved(SyntaxTree.RecordType).pointerType = t);
+				ELSE
+					RETURN FALSE;
+				END;
 			END TypeNeedsSection;
 
 		BEGIN
 			numberEntries := 0;
 			symbol := moduleScope.firstSymbol;
 			WHILE symbol # NIL DO
-				IF (symbol.access * SyntaxTree.Public # {}) THEN
-					IF (symbol IS SyntaxTree.Procedure) & ~(symbol(SyntaxTree.Procedure).isInline)
-							OR (symbol IS SyntaxTree.Variable)
-							OR (symbol IS SyntaxTree.TypeDeclaration) & TypeNeedsSection(symbol(SyntaxTree.TypeDeclaration))
-							OR (symbol IS SyntaxTree.Constant) & (ConstantNeedsSection(symbol(SyntaxTree.Constant))) THEN
-						p := module.allSections.FindBySymbol(symbol);
-						IF p = NIL THEN
-							p := module.importedSections.FindBySymbol(symbol);
-						END;
+				IF (symbol.access * SyntaxTree.Public # {}) & 
+					((symbol IS SyntaxTree.Procedure) & ~(symbol(SyntaxTree.Procedure).isInline)
+						OR (symbol IS SyntaxTree.Variable)
+					)
+						OR (symbol IS SyntaxTree.TypeDeclaration) & TypeNeedsSection(symbol(SyntaxTree.TypeDeclaration))
+				THEN
+					p := module.allSections.FindBySymbol(symbol);
+					IF p = NIL THEN
+						p := module.importedSections.FindBySymbol(symbol);
+					END;
+					IF p # NIL THEN
 						INC(numberEntries); (* start at 1 !! *)
-						IF p # NIL THEN
-							entries[numberEntries] := p(IntermediateCode.Section);
-							IF Trace THEN
-								IF moduleScope = module.module.moduleScope (* self *) THEN
-									D.String("Entry "); D.Int(numberEntries,1); D.String(": "); D.Str0(symbol.name); D.String(" @"); D.Int(p.offset,1); D.Ln;
-								ELSE
-									D.String("Imported Entry "); D.Int(numberEntries,1); D.String(": "); D.Str0(symbol.name); D.String(" @"); D.Int(p.offset,1); D.Ln;
-								END;
-							END;
-						ELSE
-							entries[numberEntries] := NIL;
+						entries[numberEntries] := p(IntermediateCode.Section);
+						IF Trace THEN
 							IF moduleScope = module.module.moduleScope (* self *) THEN
-								HALT(100); (* must not happen: all symbols that need a section in this module must have a section *)
+								D.String("Entry "); D.Int(numberEntries,1); D.String(": "); D.Str0(symbol.name); D.String(" @"); D.Int(p.offset,1); D.Ln;
+							ELSE
+								D.String("Imported Entry "); D.Int(numberEntries,1); D.String(": "); D.Str0(symbol.name); D.String(" @"); D.Int(p.offset,1); D.Ln;
 							END;
+						END;
+					ELSE
+						entries[numberEntries] := NIL;
+						IF moduleScope = module.module.moduleScope (* self *) THEN
+							HALT(100); (* must not happen: all symbols that need a section in this module must have a section *)
 						END;
 					END;
 				END;

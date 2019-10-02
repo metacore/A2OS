@@ -178,7 +178,9 @@ TYPE
 			WHILE mod # NIL DO
 				(* Module *)
 (*		W.String (mod.name); W.String (": "); W.Hex (heap + len * 4,9); W.Ln; W.Update; *)
-				code[len] := prevmod; prevmod := heap + len * 4; INC (len);
+				code[len] := 0; INC(len); (* TD *)
+				code[len] := prevmod; (* next *)
+				prevmod := heap + len * 4; INC (len);
 				code[len] := mod.key; INC (len);
 				code[len] := mod.dbase; INC (len);
 				code[len] := mod.pbase; INC (len);

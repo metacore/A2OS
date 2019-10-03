@@ -597,6 +597,7 @@ TYPE
 				recordType.SetBaseType(recordBaseType);
 				recordType.SetProtected(HasFlag(modifiers, Global.NameExclusive, position));
 				recordType.SetAbstract(HasFlag(modifiers, Global.NameAbstract, position));
+				recordType.SetFinal(HasFlag(modifiers, Global.NameFinal, position));
 			END;
 			CheckModifiers(modifiers, TRUE);
 			typeFixes.Add(x,currentScope);
@@ -837,6 +838,7 @@ TYPE
 			modifiers := x.modifiers;
 			IF HasValue(modifiers,Global.NameAligned,position,value) THEN x.SetAlignmentInBits(value(SIZE)*system.dataUnit) END;
 			IF HasFlag(modifiers,Global.NameAbstract,position) THEN x.SetAbstract(TRUE) END;
+			IF HasFlag(modifiers,Global.NameFinal,position) THEN x.SetFinal(TRUE) END;
 			CheckModifiers(modifiers, TRUE);
 
 			IF x.baseType # NIL THEN
@@ -846,7 +848,9 @@ TYPE
 				resolved := baseType.resolved;
 				hasPointers := hasPointers OR resolved.hasPointers;
 
-				IF x.isObject THEN (* object *)
+				IF IsFinalRecord (baseType) THEN
+					Error(position,"extending final record or object")
+				ELSIF x.isObject THEN (* object *)
 					ASSERT(x.pointerType # NIL);
 					IF resolved = SyntaxTree.invalidType THEN (* error already handled *)
 					ELSIF resolved IS SyntaxTree.ObjectType THEN (* the type denoted by the <<OBJECT>> alone *)
@@ -6425,6 +6429,7 @@ TYPE
 				END;
 				IF procedure.scope IS SyntaxTree.RecordScope THEN
 					record := procedure.scope(SyntaxTree.RecordScope).ownerRecord;
+					IF record.isFinal THEN procedure.SetFinal(TRUE) END;
 					procedureType.SetDelegate(TRUE);
 
 					IF (record.pointerType # NIL) & (procedureType.selfParameter = NIL) THEN
@@ -9281,6 +9286,16 @@ TYPE
 		END;
 		RETURN result
 	END IsPointerToRecord;
+
+	PROCEDURE IsFinalRecord(type: SyntaxTree.Type): BOOLEAN;
+	BEGIN
+		type := type.resolved;
+		WITH type :
+		| SyntaxTree.PointerType DO RETURN IsFinalRecord (type.pointerBase);
+		| SyntaxTree.RecordType DO RETURN type.isFinal;
+		ELSE RETURN FALSE;
+		END;
+	END IsFinalRecord;
 
 	PROCEDURE IsPointerToObject(type: SyntaxTree.Type): BOOLEAN;
 	VAR result: BOOLEAN;

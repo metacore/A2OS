@@ -1481,6 +1481,7 @@ TYPE
 			modifiers-: Modifier;
 			isObject-,isProtected: BOOLEAN;
 			isAbstract-: BOOLEAN;
+			isFinal-: BOOLEAN;
 
 		PROCEDURE & InitRecordType( position: Position; scope: Scope; recordScope: RecordScope);
 		BEGIN
@@ -1495,6 +1496,7 @@ TYPE
 			isObject := FALSE; isProtected := FALSE;
 			modifiers := NIL;
 			isAbstract := FALSE;
+			isFinal := FALSE;
 		END InitRecordType;
 
 		PROCEDURE SetAbstract*(abstract: BOOLEAN);
@@ -1604,6 +1606,10 @@ TYPE
 		BEGIN
 			RETURN TRUE;
 		END IsRecordType;
+
+		PROCEDURE SetFinal*(final: BOOLEAN);
+		BEGIN SELF.isFinal := final
+		END SetFinal;
 
 	END RecordType;
 
@@ -1775,12 +1781,12 @@ TYPE
 		PROCEDURE SetModifiers*(flags: Modifier);
 		BEGIN modifiers := flags
 		END SetModifiers;
-		
+
 		PROCEDURE SetNested*(nested: BOOLEAN);
 		BEGIN
 			isNested := nested;
 		END SetNested;
-		
+
 		PROCEDURE SetReturnTypeModifiers*(flags: Modifier);
 		BEGIN returnTypeModifiers := flags
 		END SetReturnTypeModifiers;
@@ -2705,7 +2711,7 @@ TYPE
 
 		name-: Identifier; (* constant / variable / parameter / type name / module name *)
 		extern-: Expression; (* const expression: either address or String *)
-		externName-: Scanner.StringType; 
+		externName-: Scanner.StringType;
 		access-: SET; (* access flags (exported, readonly etc.) *)
 		type-: Type; (* type of constant / variable / parameter / procedure return type *)
 		scope-:Scope; (* container of symbol *)
@@ -2802,7 +2808,7 @@ TYPE
 		PROCEDURE SetExtern*(e: Expression);
 		BEGIN extern := e;
 		END SetExtern;
-		
+
 		PROCEDURE SetExternName*(name: Scanner.StringType);
 		BEGIN
 			externName := name;

@@ -5399,7 +5399,7 @@ TYPE
 					Pass((operand.op));
 				ELSE (* var parameter *)
 					Designate(expression,operand);
-					IF (type IS SyntaxTree.RecordType) & (parameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.VarParameter}) THEN
+					IF (type IS SyntaxTree.RecordType) & ~type(SyntaxTree.RecordType).isFinal & (parameter.kind IN {SyntaxTree.ConstParameter, SyntaxTree.VarParameter}) THEN
 						IF callingConvention = SyntaxTree.OberonCallingConvention  THEN
 							Pass((operand.tag));
 						END;
@@ -5716,7 +5716,9 @@ TYPE
 
 			IF procedureType.selfParameter # NIL THEN (* type bound procedure in a record *)
 				Designate(x.left(SyntaxTree.Designator).left, operand);
-				Emit(Push(position, operand.tag));
+				IF ~procedureType.selfParameter.type.resolved(SyntaxTree.RecordType).isFinal THEN
+					Emit(Push(position, operand.tag));
+				END;
 				Emit(Push(position, operand.op));
 				Symbol(symbol, operand);
 				LoadValue(operand, symbol.type);
@@ -8473,7 +8475,7 @@ TYPE
 				ReuseCopy(reg,s0.op);
 				IF IsIntegerConstant(p1,hint) THEN
 					IntermediateCode.InitImmediate(s1.op,s1.op.type,hint);
-				END; 
+				END;
 				ReuseCopy(tmp,s1.op);
 				Convert(tmp,s1.op.type);
 				IF x.id = Global.Shl THEN Emit(Shl(position,reg,reg,tmp))
@@ -9100,7 +9102,7 @@ TYPE
 				ReuseCopy(reg,s0.op);
 				IF IsIntegerConstant(p1,hint) THEN
 					IntermediateCode.InitImmediate(s1.op,s1.op.type,hint);
-				END; 
+				END;
 				IF x.id = Global.Shl THEN Emit(Shl(position,reg,reg,s1.op))
 				ELSIF x.id = Global.Shr THEN Emit(Shr(position,reg,reg,s1.op))
 				ELSIF x.id = Global.Rol THEN Emit(Rol(position,reg,reg,s1.op))
@@ -9906,7 +9908,7 @@ TYPE
 					GetCodeSectionNameForSymbol(x,name);
 					symbol := NewSection(module.allSections, Sections.VarSection, name,x,commentPrintout # NIL);
 					IntermediateCode.InitAddress(result.op, addressType, symbol.name, GetFingerprint(symbol.symbol), 0);
-				END; 
+				END;
 			ELSIF x.scope IS SyntaxTree.ModuleScope THEN (* global variable in imported module *)
 				InitOperand(result,ModeReference);
 				GetCodeSectionNameForSymbol(x,name);
@@ -9966,7 +9968,7 @@ TYPE
 					IntermediateCode.MakeMemory(result.op,addressType);
 				END;
 			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType = NIL) THEN
-				IF x.kind = SyntaxTree.ValueParameter THEN
+				IF (x.kind = SyntaxTree.ValueParameter) OR type(SyntaxTree.RecordType).isFinal THEN
 					ReleaseIntermediateOperand(result.tag);
 					result.tag := TypeDescriptorAdr(type);
 					UseIntermediateOperand(result.tag);
@@ -10101,16 +10103,18 @@ TYPE
 					result.tag := nil;
 				END;
 			(* tag for pointer type computed not here but during dereferencing *)
-			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) & (x.kind IN {SyntaxTree.VarParameter, SyntaxTree.ConstParameter}) (* & ~(x.selfParameter) *) THEN
-				ReleaseIntermediateOperand(result.tag);
-				result.tag := basereg;
-				IntermediateCode.AddOffset(result.tag,ToMemoryUnits(system,x.offsetInBits+system.addressSize));
-				IntermediateCode.MakeMemory(result.tag,addressType);
-				UseIntermediateOperand(result.tag);
-			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) & ((x.kind = SyntaxTree.ValueParameter) OR x.selfParameter) THEN
-				ReleaseIntermediateOperand(result.tag);
-				result.tag := TypeDescriptorAdr(type);
-				UseIntermediateOperand(result.tag);
+			ELSIF (type IS SyntaxTree.RecordType) & (type(SyntaxTree.RecordType).pointerType= NIL) THEN
+				IF (x.kind = SyntaxTree.ValueParameter) OR x.selfParameter OR type(SyntaxTree.RecordType).isFinal THEN
+					ReleaseIntermediateOperand(result.tag);
+					result.tag := TypeDescriptorAdr(type);
+					UseIntermediateOperand(result.tag);
+				ELSE
+					ReleaseIntermediateOperand(result.tag);
+					result.tag := basereg;
+					IntermediateCode.AddOffset(result.tag,ToMemoryUnits(system,x.offsetInBits+system.addressSize));
+					IntermediateCode.MakeMemory(result.tag,addressType);
+					UseIntermediateOperand(result.tag);
+				END;
 			END;
 			IF Trace THEN TraceExit("DesignateParameter") END;
 		END DesignateParameter;
@@ -13943,7 +13947,7 @@ TYPE
 
 					Global.GetModuleName(import.module, name);
 					IF ~exports.ContainsName(name) THEN
-						exports.AddName(name); 
+						exports.AddName(name);
 						NEW(implementationEmitter,system,checker,supportedInstruction, supportedImmediate, Compiler.FindPC IN flags, builtinsModuleName, SELF);
 						NEW(declarationEmitter,system,implementationEmitter,SELF,Compiler.ForceModuleBodies IN flags,trace & (Compiler.Info IN flags));
 						NEW(meta, implementationEmitter, declarationEmitter,simpleMetaData);
@@ -13952,8 +13956,8 @@ TYPE
 						IF ~meta.simple THEN
 							meta.Module(implementationEmitter.moduleBodySection);
 						END;
-						
-						FOR i := 0 TO module.allSections.Length()-1 DO 
+
+						FOR i := 0 TO module.allSections.Length()-1 DO
 							sections.AddSection(module.allSections.GetSection(i));
 						END;
 					END;

@@ -121,9 +121,9 @@ CONST
 	(* for backend specific extensions *)
 	systemSpecial*= Receive+1;
 	(* shifts with fixed direction, arithmetic or logical depending on argument type *)
-	Shl*= systemSpecial+1; Shr*= Shl+1; 
-	Rol*= Shr+1; Ror*= Rol+1; 
-	
+	Shl*= systemSpecial+1; Shr*= Shl+1;
+	Rol*= Shr+1; Ror*= Rol+1;
+
 	Flt*= Ror+1; Conversion*= Flt+1; DotTimesPlus*= Conversion+1; AtMulDec*= DotTimesPlus+1; AtMulInc*= AtMulDec+1; DecMul*= AtMulInc+1; IncMul*= DecMul+1; endFox*= IncMul+1;
 
 	VectorCapability* = 0;
@@ -670,7 +670,7 @@ TYPE
 				IF par.selfParameter THEN
 					RETURN addressSize
 				ELSIF (par.kind IN {SyntaxTree.ConstParameter,SyntaxTree.VarParameter}) THEN
-					IF IsOberonProcedure(par.ownerType) THEN
+					IF IsOberonProcedure(par.ownerType) & ~par.type.resolved(SyntaxTree.RecordType).isFinal THEN
 						RETURN 2*addressSize
 					ELSE
 						RETURN addressSize
@@ -914,7 +914,7 @@ TYPE
 		NewBuiltin(Rol,"ROL",system.globalScope,TRUE);
 		NewBuiltin(Shl,"SHL",system.globalScope,TRUE);
 		NewBuiltin(Shr,"SHR",system.globalScope,TRUE);
-		
+
 		NewBuiltin(Incr,"INCR",system.globalScope,TRUE);
 
 		NewBuiltin(Short,"SHORT",system.globalScope,TRUE);

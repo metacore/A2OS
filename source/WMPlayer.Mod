@@ -476,8 +476,6 @@ WMPlayer.Open flags.avi~
 WMPlayer.Open Filme:/test.wav ~
 WMPlayer.Open Filme:/test2.wav ~
 WMPlayer.Open Filme:/test.mp3 ~
-WMPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_163128.mp4" ~
-WMPlayer.Open "HIGHDIM:/Data/Sperm/CRYPTOZOOSPERMIA1.wmv" ~
 
 FfmpegCodecs.Install -f "WORK" ~
 

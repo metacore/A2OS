@@ -102,6 +102,7 @@ TYPE
 			definesEdit.tv.showBorder.Set(TRUE);
 			definesEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
 			definesEdit.multiLine.Set(FALSE);
+			definesEdit.onEnter.Add (RefreshHandler);
 			toolbar.AddContent(definesEdit);
 		END Init;
 

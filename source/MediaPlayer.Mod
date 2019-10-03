@@ -36,8 +36,9 @@ CONST
 	NotReady* = 1;		(* No files opened, not playing anything 	*)
 	Ready* = 2;	 		(* Player is ready to play 				*)
 	Playing* = 3;	 	(* Player is playing a video 				*)
-	Paused* = 4;		(* Player is paused 						*)
+	Paused* = 4;			(* Player is paused 						*)
 	Stopped* = 5;		(* Player is stopped 					 	*)
+	Stepping* = 6; 	(* Framewise stepping*)
 	InTransition* = 7;	(* Transition between two videos 		*)
 	Finished* = 9;		(* Finished video/audio					*)
 	Closed* = 10;		(* Player has been closed 				*)
@@ -78,13 +79,13 @@ CONST
 	TraceRendering = {6}; 	(* Per frame rendering stats 	*)
 	TraceEof = {7};			(* Trace calls to end of file handlers *)
 
-	Trace = TraceNone;
+	Trace = {2,4,5};
 
 	Debug = TRUE;
 
 TYPE
 	(* video buffer *)
-	VideoBuffer = WMGraphics.Image;
+	VideoBuffer* = WMGraphics.Image;
 
 	(* buffer pool for the video frames *)
 	VideoBufferPool = OBJECT
@@ -508,18 +509,18 @@ TYPE
 
 	(* Decouples end-of-file handlers from media player main loop. This enables eof handlers to call methods
 	 * of the media player *)
-	EofHandler = OBJECT
+	EofHandler* = OBJECT
 	VAR
-		proc : EofProc;
-		player : Player;
+		proc* : EofProc;
+		player* : Player;
 		alive, dead, called : BOOLEAN;
 
-		PROCEDURE Call;
+		PROCEDURE Call*;
 		BEGIN {EXCLUSIVE}
 			called := TRUE;
 		END Call;
 
-		PROCEDURE Terminate;
+		PROCEDURE Terminate*;
 		BEGIN
 			IF Trace * TraceEof # {} THEN KernelLog.String("MediaPlayer: Terminating EOF handler."); KernelLog.Ln; END;
 			BEGIN {EXCLUSIVE} alive := FALSE; END;
@@ -585,7 +586,7 @@ TYPE
 		setup* : PROCEDURE {DELEGATE} (data : Setup);											(* init for GUI *)
 		update* : PROCEDURE {DELEGATE} (state, pos, maxpos, displayTime: SIGNED32);			(* update for GUI *)
 		eof : EofHandler;																		(* fired on End of File *)
-
+		pointerDownHandler*: PROCEDURE {DELEGATE}(x,y: SIZE; keys:SET);
 		(** -- Player Controls ----------------------------------------------- *)
 
 		(* Open the given uri *)
@@ -609,6 +610,11 @@ TYPE
 		BEGIN
 			RequestState(Playing, NIL);
 		END Play;
+
+		PROCEDURE Step*;
+		BEGIN
+			SetState(Stepping);
+		END Step;
 
 		(* pos & duration set in number of video frames *)
 		PROCEDURE DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration : SIGNED32; VAR msg : ARRAY OF CHAR; VAR res : INTEGER);
@@ -733,7 +739,7 @@ TYPE
 			END;
 		END SetPos;
 
-		PROCEDURE SetEofAction(proc : EofProc);
+		PROCEDURE SetEofAction*(proc : EofProc);
 		BEGIN {EXCLUSIVE}
 			IF eof = NIL THEN NEW(eof, SELF); END;
 			eof.proc := proc;
@@ -798,16 +804,21 @@ TYPE
 			requestProcessed := TRUE;
 		END GetRequestedState;
 
-		PROCEDURE SetState(state : SIGNED32);
+		PROCEDURE SetState*(state : SIGNED32);
 		BEGIN {EXCLUSIVE}
 			IF Trace * TraceStates # {} THEN KernelLog.String("MediaPlayer: Set state to "); KernelLog.Int(state, 0); KernelLog.Ln; END;
 			SELF.state := state;
 		END SetState;
 
-		PROCEDURE GetState() : SIGNED32;
+		PROCEDURE GetState*() : SIGNED32;
 		BEGIN {EXCLUSIVE}
 			RETURN state;
 		END GetState;
+
+		PROCEDURE GetCurrentFrame*() : VideoBuffer;
+		BEGIN {EXCLUSIVE}
+			RETURN current.vBuffer;
+		END GetCurrentFrame;
 
 		PROCEDURE ToggleFullScreen*(sender, data : ANY);
 		BEGIN {EXCLUSIVE}
@@ -823,6 +834,7 @@ TYPE
 				ELSIF (pw = NIL) OR (pw.GetWidth() # context.width) OR (pw.GetHeight() # context.height) THEN
 					oldPw := pw;
 					NEW(pw, context.width, context.height, FALSE, SELF, TRUE);
+					pw.extPointerDownHandler:=pointerDownHandler;
 					IF ForceFullscreen THEN pw.ToggleFullscreen; END;
 					IF oldPw # NIL THEN oldPw.Close; END;
 				END;
@@ -1034,13 +1046,19 @@ TYPE
 			END;
 		END FreeContext;
 
-		PROCEDURE Loop(sender, data: ANY);
+		PROCEDURE NoAction*(sender, data: ANY);
+		BEGIN
+			IF Trace * TraceEof # {} THEN KernelLog.String("MediaPlayer: EOF NoAction."); KernelLog.Ln; END;
+			Stop;
+		END NoAction;
+
+		PROCEDURE Loop*(sender, data: ANY);
 		BEGIN
 			IF Trace * TraceEof # {} THEN KernelLog.String("MediaPlayer: EOF Loop."); KernelLog.Ln; END;
 			Stop; Play;
 		END Loop;
 
-		PROCEDURE Quit(sender, data: ANY);
+		PROCEDURE Quit*(sender, data: ANY);
 		BEGIN
 			IF Trace * TraceEof # {} THEN KernelLog.String("MediaPlayer: EOF Quit."); KernelLog.Ln; END;
 			Close;
@@ -1274,10 +1292,11 @@ TYPE
 			res := FALSE;
 			CASE from OF
 				|NotReady:		IF (to = Ready) OR (to = InTransition) THEN res := TRUE; END;
-				|Ready:			IF (to = Ready) OR (to = Playing) OR (to = InTransition) THEN res := TRUE; END;
-				|Playing:		IF (to = Ready) OR (to = Paused) OR (to = Stopped) OR (to = InTransition) THEN res := TRUE; END;
-				|Paused:		IF (to = Ready) OR (to = Playing) OR (to = Stopped) OR (to = Paused) OR (to = InTransition) THEN res := TRUE; END;
+				|Ready:			IF (to = Ready) OR (to = Playing) OR (to = InTransition) OR (to = Stepping) THEN res := TRUE; END;
+				|Playing:		IF (to = Ready) OR (to = Paused)  OR (to = Stepping) OR (to = Stopped) OR (to = InTransition) THEN res := TRUE; END;
+				|Paused:		IF (to = Ready) OR (to = Playing) OR (to = Stepping) OR (to = Stopped) OR (to = Paused) OR (to = InTransition) THEN res := TRUE; END;
 				|Stopped:		IF (to = Ready) OR (to = Playing) OR (to = InTransition) THEN res := TRUE; END;
+				|Stepping:	IF	(to = Ready) OR (to = Playing) OR (to = Stepping) OR (to = Paused)   OR (to = InTransition) THEN res := TRUE; END;
 				|Finished:		IF (to = Ready) OR (to = Playing) OR (to = Stopped) OR (to = InTransition) THEN res := TRUE; END;
 				|InTransition:	IF (to = Ready) OR (to = Paused) OR (to = Stopped) OR (to = InTransition) THEN res := TRUE; END;
 				|Error: 			(* Do not execute commands anymore *)
@@ -1299,16 +1318,24 @@ TYPE
 			temp : SIGNED32;
 		BEGIN
 			GetRequestedState(nextState, nextContext); oldState := state;
+			IF state=Stepping THEN nextState:= Paused END;
 			IF (nextState # NoRequest) THEN
 				isValid :=  IsValidStateTransition(state, nextState);
 				IF isValid THEN
 					CASE nextState OF
-						NoRequest: (* Rest in current state *)
+						NoRequest: (* Remain in current state *)
 						|Ready: (* Abort whatever the player is doing and go to 'Ready' state *)
 							OpenIntern(nextContext);
 							SetState(Ready);
 						|Playing:
 							StartPlayIntern; SetState(Playing);
+						(*|Stepping:
+							ResumeIntern; SetState(Playing);
+							(*IF state=Paused THEN 
+								ResumeIntern; SetState(Playing);
+							ELSE 
+								PauseIntern; SetState(Paused);
+							END;*)*)
 						|Paused:
 							IF state = Paused THEN
 								ResumeIntern; SetState(Playing);
@@ -1392,11 +1419,11 @@ TYPE
 	BEGIN {ACTIVE}
 		WHILE state < Closed DO
 			(* Synchronization to player commands *)
-			BEGIN {EXCLUSIVE} AWAIT((state = Playing) OR (state = InTransition) OR (state >= Closed) OR (nextState # NoRequest)); END;
+			BEGIN {EXCLUSIVE} AWAIT((state = Playing) OR (state = Stepping) OR (state = InTransition) OR (state >= Closed) OR (nextState # NoRequest)); END;
 			IF state < Closed THEN
 				(* Within this IF statement we have exlusive access to all Context objects *)
 				(* Render next video/audio frame *)
-				IF nextState = NoRequest THEN Render(current, next); END;
+				IF nextState IN {NoRequest, Stepping} THEN Render(current, next); END;
 				(* State management (process state change requests and current state *)
 				EvaluateState;
 			END;
@@ -1429,6 +1456,28 @@ BEGIN {EXCLUSIVE}
 		context.error.String(msg); context.error.String(")"); context.error.Ln;
 	END;
 END Open;
+
+PROCEDURE Pause*(context : Commands.Context); (** <filename> ~ *)
+VAR filename, msg : ARRAY 256 OF CHAR; res : INTEGER;
+BEGIN {EXCLUSIVE}
+	context.arg.String(filename);
+	IF mplayer # NIL THEN 
+		(*mplayer.SetState(Paused);*)
+		mplayer.RequestState(Paused, NIL);
+	ELSE
+		context.error.String("MediaPlayer: no player open "); context.error.Ln; context.error.Update;
+	END;
+END Pause;
+
+PROCEDURE Step*(context : Commands.Context); (** <filename> ~ *)
+VAR filename, msg : ARRAY 256 OF CHAR; res : INTEGER;
+BEGIN {EXCLUSIVE}
+	IF mplayer # NIL THEN 
+		mplayer.Step;
+	ELSE
+		context.error.String("MediaPlayer: no player open "); context.error.Ln; context.error.Update;
+	END;
+END Step;
 
 (** Do a transition to the specified video/audio file (of the specified duration) *)
 PROCEDURE TransitionTo*(context : Commands.Context); (** <filename> [transitionDuration] ~ *)
@@ -1502,11 +1551,27 @@ System.Free WMPlayer MediaPlayer ~
 WMPlayer.Open flags.avi~
 
 MediaPlayer.Open flags.avi~
-
 MediaPlayer.TransitionTo flags.avi 25 ~
-
 MediaPlayer.TransitionTo flags.avi 300 ~
 
+MediaPlayer.Pause ~
+MediaPlayer.Step ~
+
+FfmpegCodecs.Install -f "WORK" ~
+
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI1.wmv" ~
+WMPlayer.Open "HIGHDIM:/Data/Sperm/IMSI1.wmv" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI2.wmv" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI3.wmv" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI4.wmv" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI5.wmv" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI6.wmv" ~
+
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_155655.mp4" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_160050.mp4" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_163128.mp4" ~
+
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/CRYPTOZOOSPERMIA1.wmv" ~
 MediaPlayer.Close ~
 
 MediaPlayer.SetEofAction none ~

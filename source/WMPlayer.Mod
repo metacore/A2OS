@@ -113,7 +113,7 @@ TYPE
 
 	Control = OBJECT(WMComponents.VisualComponent)
 	VAR
-		playBtn, stopBtn, pauseBtn : WMStandardComponents.Button;
+		playBtn, stepBtn, stopBtn, pauseBtn, rewBtn, ffBtn : WMStandardComponents.Button;
 		owner : Window;
 
 		PROCEDURE ButtonHandler(sender, data : ANY);
@@ -122,8 +122,14 @@ TYPE
 				owner.ButtonHandler(owner.playBtn, NIL);
 			ELSIF (sender = pauseBtn) THEN
 				owner.ButtonHandler(owner.pauseBtn, NIL);
+			ELSIF (sender = stepBtn) THEN
+				owner.ButtonHandler(owner.stepBtn, NIL);
 			ELSIF (sender = stopBtn) THEN
 				owner.ButtonHandler(owner.stopBtn, NIL);
+			ELSIF (sender = rewBtn) THEN
+				owner.ButtonHandler(owner.rewBtn, NIL);
+			ELSIF (sender = ffBtn) THEN
+				owner.ButtonHandler(owner.ffBtn, NIL);
 			END;
 		END ButtonHandler;
 
@@ -148,10 +154,26 @@ TYPE
 			pauseBtn.onClick.Add(ButtonHandler);
 			panel.AddContent(pauseBtn);
 
+			NEW(stepBtn); stepBtn.alignment.Set(WMComponents.AlignLeft);
+			stepBtn.caption.SetAOC("Step");
+			stepBtn.onClick.Add(ButtonHandler);
+			panel.AddContent(stepBtn);
+
 			NEW(stopBtn); stopBtn.alignment.Set(WMComponents.AlignLeft);
 			stopBtn.caption.SetAOC("Stop");
 			stopBtn.onClick.Add(ButtonHandler);
 			panel.AddContent(stopBtn);
+
+			NEW(rewBtn); rewBtn.alignment.Set(WMComponents.AlignLeft);
+			rewBtn.caption.SetAOC("<<");
+			rewBtn.onClick.Add(ButtonHandler);
+			panel.AddContent(rewBtn);
+
+			NEW(ffBtn); ffBtn.alignment.Set(WMComponents.AlignLeft);
+			ffBtn.caption.SetAOC(">>");
+			ffBtn.onClick.Add(ButtonHandler);
+			panel.AddContent(ffBtn);
+
 		END New;
 
 	END Control;
@@ -160,7 +182,7 @@ TYPE
 
 	Window* = OBJECT (WMComponents.FormWindow)
 	VAR
-		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn : WMStandardComponents.Button;
+		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn, stepBtn : WMStandardComponents.Button;
 		search: WMStandardComponents.Scrollbar;
 
 		timeLbl, totTimeLbl: WMStandardComponents.Label;
@@ -199,6 +221,9 @@ TYPE
 
 			NEW(pauseBtn); pauseBtn.alignment.Set(WMComponents.AlignLeft); pauseBtn.caption.SetAOC("Pause");
 			toolbar.AddContent(pauseBtn);
+			
+			NEW(stepBtn); stepBtn.alignment.Set(WMComponents.AlignLeft); stepBtn.caption.SetAOC("Step");
+			toolbar.AddContent(stepBtn);
 
 			NEW(stopBtn); stopBtn.alignment.Set(WMComponents.AlignLeft); stopBtn.caption.SetAOC("Stop");
 			toolbar.AddContent(stopBtn);
@@ -242,6 +267,7 @@ TYPE
 			playBtn.onClick.Add(ButtonHandler);
 			stopBtn.onClick.Add(ButtonHandler);
 			pauseBtn.onClick.Add(ButtonHandler);
+			stepBtn.onClick.Add(ButtonHandler);
 			ffBtn.onClick.Add(ButtonHandler);
 			rewBtn.onClick.Add(ButtonHandler);
 			infoBtn.onClick.Add(ButtonHandler);
@@ -297,6 +323,7 @@ TYPE
 					IF b = playBtn THEN player.Play;
 					ELSIF b = stopBtn THEN player.Stop;
 					ELSIF b = pauseBtn THEN player.Pause;
+					ELSIF b = stepBtn THEN player.Step;
 					ELSIF b = ffBtn THEN player.SetPos(player.GetPos() + stepSize);
 					ELSIF b = rewBtn THEN player.SetPos(player.GetPos() - 2*stepSize);
 					ELSIF b = infoBtn THEN
@@ -449,6 +476,10 @@ WMPlayer.Open flags.avi~
 WMPlayer.Open Filme:/test.wav ~
 WMPlayer.Open Filme:/test2.wav ~
 WMPlayer.Open Filme:/test.mp3 ~
+WMPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_163128.mp4" ~
+WMPlayer.Open "HIGHDIM:/Data/Sperm/CRYPTOZOOSPERMIA1.wmv" ~
+
+FfmpegCodecs.Install -f "WORK" ~
 
 MediaPlayer.Open Filme:/test.mp3 ~
 

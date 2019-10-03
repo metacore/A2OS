@@ -266,9 +266,10 @@ TYPE
 			PROCEDURE TypeNeedsSection(type: SyntaxTree.TypeDeclaration): BOOLEAN;
 			VAR t: SyntaxTree.Type;
 			BEGIN
-				t := type.declaredType.resolved; 
-				WITH t: SyntaxTree.RecordType DO RETURN TRUE
-				| t: SyntaxTree.PointerType DO 
+				t := type.declaredType.resolved;
+				WITH t:
+				| SyntaxTree.RecordType DO RETURN TRUE
+				| SyntaxTree.PointerType DO
 					RETURN (t.pointerBase.resolved IS SyntaxTree.RecordType) &
 						(t.pointerBase.resolved(SyntaxTree.RecordType).pointerType = t);
 				ELSE
@@ -280,7 +281,7 @@ TYPE
 			numberEntries := 0;
 			symbol := moduleScope.firstSymbol;
 			WHILE symbol # NIL DO
-				IF (symbol.access * SyntaxTree.Public # {}) & 
+				IF (symbol.access * SyntaxTree.Public # {}) &
 					((symbol IS SyntaxTree.Procedure) & ~(symbol(SyntaxTree.Procedure).isInline)
 						OR (symbol IS SyntaxTree.Variable)
 					)

@@ -6,7 +6,7 @@ IMPORT
 	Formats := FoxFormats, IntermediateCode := FoxIntermediateCode, Machine, FoxSemanticChecker;
 
 CONST
-	Trace=FALSE;
+	Trace=TRUE;
 
 TYPE Name=ARRAY 256 OF CHAR;
 	ByteArray = POINTER TO ARRAY OF CHAR;
@@ -290,8 +290,8 @@ TYPE
 					IF p = NIL THEN
 						p := module.importedSections.FindBySymbol(symbol);
 					END;
+					INC(numberEntries); (* start at 1 !! *)
 					IF p # NIL THEN
-						INC(numberEntries); (* start at 1 !! *)
 						entries[numberEntries] := p(IntermediateCode.Section);
 						IF Trace THEN
 							IF moduleScope = module.module.moduleScope (* self *) THEN

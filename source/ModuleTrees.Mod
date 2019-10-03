@@ -307,7 +307,7 @@ TYPE
 			ELSE
 				NEW(reader, editor.text);
 				scanner := FoxScanner.NewScanner("ModuleTrees", reader, 0, diagnostics);
-				ModuleParser.Parse(scanner, module);
+				ModuleParser.Parse(scanner, module, "");
 				SELF.module := module;
 				IF module # NIL THEN
 					IF showTypeHierarchy.Get() THEN

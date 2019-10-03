@@ -1431,7 +1431,7 @@ BEGIN
 		NEW(diagnostics, writer);
 		NEW(reader, text);
 		scanner := FoxScanner.NewScanner(filename, reader, 0, diagnostics);
-		ModuleParser.Parse(scanner, module);
+		ModuleParser.Parse(scanner, module, "");
 		IF (module # NIL) THEN
 			ModuleParser.SetSuperTypes(module);
 		END;

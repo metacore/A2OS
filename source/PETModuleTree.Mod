@@ -2,7 +2,7 @@ MODULE PETModuleTree; (** AUTHOR "?"; PURPOSE "Visualize module structure as tre
 
 IMPORT
 	Commands, Diagnostics, Streams, Files, TextUtilities, WMStandardComponents, WMGraphics, WMProperties, WMComponents,
-	Strings, WMTrees, FoxScanner, ModuleParser, PETTrees;
+	Strings, WMTrees, FoxScanner, ModuleParser, PETTrees, WMEditors;
 
 CONST
 	Title = " Program Structure";
@@ -73,6 +73,7 @@ TYPE
 		moduleName : Name;
 
 		detailsBtn, publicBtn: WMStandardComponents.Button;
+		definesEdit: WMEditors.Editor;
 		showPublicOnly : BOOLEAN;
 
 		PROCEDURE & Init*;
@@ -90,12 +91,18 @@ TYPE
 			detailsBtn.onClick.Add(ShowDetailsHandler);
 			toolbar.AddContent(detailsBtn);
 
-			NEW(publicBtn); publicBtn.alignment.Set(WMComponents.AlignClient);
-			publicBtn.caption.SetAOC("PublicOnly");
+			NEW(publicBtn); publicBtn.alignment.Set(WMComponents.AlignLeft);
+			publicBtn.caption.SetAOC("Public");
 			publicBtn.SetPressed(FALSE);
 			publicBtn.isToggle.Set(TRUE);
 			publicBtn.onClick.Add(ShowPublicHandler);
 			toolbar.AddContent(publicBtn);
+
+			NEW(definesEdit); definesEdit.alignment.Set(WMComponents.AlignClient);
+			definesEdit.tv.showBorder.Set(TRUE);
+			definesEdit.tv.textAlignV.Set(WMGraphics.AlignCenter);
+			definesEdit.multiLine.Set(FALSE);
+			toolbar.AddContent(definesEdit);
 		END Init;
 
 		PROCEDURE PropertyChanged*(sender, data : ANY);
@@ -186,13 +193,14 @@ TYPE
 		END GetNewNode;
 
 		PROCEDURE AddNodes*(parent : PETTrees.TreeNode; diagnostics : Diagnostics.Diagnostics; log : Streams.Writer);
-		VAR module : ModuleParser.Module; scanner : FoxScanner.Scanner; reader : TextUtilities.TextReader;
+		VAR module : ModuleParser.Module; scanner : FoxScanner.Scanner; reader : TextUtilities.TextReader; definitions: ARRAY 32 OF CHAR;
 		BEGIN
 			ASSERT(diagnostics # NIL);
 			AddNodes^(parent, diagnostics, log);
 			NEW(reader, editor.text);
+			definesEdit.GetAsString(definitions);
 			scanner := FoxScanner.NewScanner("PETModuleTree", reader, 0, diagnostics);
-			ModuleParser.Parse(scanner, module);
+			ModuleParser.Parse(scanner, module, definitions);
 			IF (module # NIL) THEN
 				IF (module.ident # NIL) & (module.ident.name # NIL) THEN
 					COPY(module.ident.name^, moduleName);

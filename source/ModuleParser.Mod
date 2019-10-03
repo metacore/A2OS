@@ -5,7 +5,7 @@ MODULE ModuleParser;	(** AUTHOR "mb"; PURPOSE "Active Oberon parser for use with
  *)
 
 IMPORT
-	Strings, Files, Streams, Diagnostics, FoxScanner, KernelLog, Texts, TextUtilities;
+	Strings, Files, Streams, Diagnostics, FoxScanner, KernelLog, Texts, TextUtilities, StringPool;
 
 CONST
 	(* visibilities *)
@@ -399,18 +399,149 @@ TYPE
 		scanner: FoxScanner.Scanner;
 		hasError: BOOLEAN;
 
-		PROCEDURE & Init*(scanner: FoxScanner.Scanner);
+		(* conditional compilation *)
+		CONST Processing = 0; ProcessingElse = 1; Skipping = 2; Ignoring = 3; IgnoringElse = 4;
+
+		VAR conditional: INTEGER;
+		VAR conditionals: ARRAY 10 OF INTEGER;
+		VAR definitions: ARRAY 10 OF FoxScanner.IdentifierType;
+		VAR conditionalCount, definitionCount: SIZE;
+
+		PROCEDURE & Init*(scanner: FoxScanner.Scanner; CONST definitions: ARRAY OF CHAR);
+		VAR begin, end: SIZE; definition: ARRAY 32 OF CHAR;
 		BEGIN
 			ASSERT(scanner # NIL);
-			SELF.scanner := scanner;
 			hasError := FALSE;
+			SELF.scanner := scanner;
+
+			conditional := Processing;
+			conditionalCount := 0;
+			definitionCount := 0;
+			begin := 0;
+			REPEAT
+				end := Strings.Find (definitions, begin, ',');
+				IF end # -1 THEN
+					Strings.Copy (definitions, begin, end - begin, definition);
+					begin := end + 1;
+				ELSE
+					Strings.Copy (definitions, begin, Strings.Length (definitions) - begin, definition);
+				END;
+				IF definition # "" THEN
+					StringPool.GetIndex (definition, SELF.definitions[definitionCount]);
+					INC (definitionCount);
+				END;
+			UNTIL end = -1;
 		END Init;
+
+		(* conditional compilation according to the following syntax *)
+		(* Block = '#' 'if' Condition 'then' Block { '#' 'elsif' Condition 'then' Block } ['#' 'else' Block] '#' 'end' | any symbol until next new line. *)
+		PROCEDURE GetNextToken(VAR token: FoxScanner.Token): BOOLEAN;
+		VAR line, startPos, endPos: Streams.Position; end: FoxScanner.Symbol;
+		BEGIN
+			LOOP
+				line := token.position.line;
+				IF ~scanner.GetNextToken (token) THEN RETURN FALSE END;
+				IF (token.symbol = FoxScanner.Unequal) & (token.position.line # line) THEN
+					IF ~ConditionalStatement (token) THEN RETURN FALSE END;
+				ELSIF (conditional = Processing) OR (conditional = ProcessingElse) THEN
+					RETURN TRUE;
+				ELSIF token.symbol = FoxScanner.Code THEN
+					end := scanner.SkipToEndOfCode(startPos, endPos, token);
+					WHILE end = FoxScanner.Unequal DO
+						REPEAT scanner.GetNextCharacter() UNTIL (scanner.ch # FoxScanner.LF) & (scanner.ch # 0X);
+						end := scanner.SkipToEndOfCode(startPos, endPos, token);
+					END;
+				END;
+			END;
+		END GetNextToken;
+
+		PROCEDURE ConditionalStatement(VAR token: FoxScanner.Token): BOOLEAN;
+		VAR value: BOOLEAN;
+
+			(* Factor = Identifier | '~' Factor | '(' Condition ')'. *)
+			PROCEDURE Factor (VAR value: BOOLEAN): BOOLEAN;
+			VAR i: SIZE;
+			BEGIN
+				IF token.symbol = FoxScanner.Identifier THEN
+					value := FALSE; i := 0;
+					WHILE (i # definitionCount) & ~value DO value := token.identifier = definitions[i]; INC (i) END;
+					IF ~scanner.GetNextToken (token) THEN RETURN FALSE END;
+				ELSIF token.symbol = FoxScanner.Not THEN
+					IF ~scanner.GetNextToken (token) THEN RETURN FALSE END;
+					IF ~Factor (value) THEN RETURN FALSE END;
+					value := ~value;
+				ELSIF token.symbol = FoxScanner.LeftParenthesis THEN
+					IF ~scanner.GetNextToken (token) THEN RETURN FALSE END;
+					IF ~Condition (value) THEN RETURN FALSE END;
+					IF token.symbol # FoxScanner.RightParenthesis THEN hasError := TRUE; RETURN FALSE END;
+					IF ~scanner.GetNextToken (token) THEN RETURN FALSE END;
+				ELSE
+					hasError := TRUE; RETURN FALSE;
+				END;
+				RETURN TRUE;
+			END Factor;
+
+			(* Term = Factor {'&' Factor}. *)
+			PROCEDURE Term (VAR value: BOOLEAN): BOOLEAN;
+			VAR next: BOOLEAN;
+			BEGIN
+				IF ~Factor (value) THEN RETURN FALSE END;
+				WHILE token.symbol = FoxScanner.And DO
+					IF ~scanner.GetNextToken (token) THEN RETURN FALSE END;
+					IF ~Factor (next) THEN RETURN FALSE END;
+					IF ~next THEN value := FALSE END;
+				END;
+				RETURN TRUE;
+			END Term;
+
+			(* Condition = Term {'or' Term}. *)
+			PROCEDURE Condition (VAR value: BOOLEAN): BOOLEAN;
+			VAR next: BOOLEAN;
+			BEGIN
+				IF ~Term (value) THEN RETURN FALSE END;
+				WHILE token.symbol = FoxScanner.Or DO
+					IF ~scanner.GetNextToken (token) THEN RETURN FALSE END;
+					IF ~Term (next) THEN RETURN FALSE END;
+					IF next THEN value := TRUE END;
+				END;
+				RETURN TRUE;
+			END Condition;
+
+		BEGIN
+			IF ~scanner.GetNextToken (token) THEN RETURN FALSE END;
+			IF token.symbol = FoxScanner.If THEN
+				IF ~scanner.GetNextToken (token) THEN RETURN FALSE END;
+				IF ~Condition (value) THEN RETURN FALSE END;
+				IF token.symbol # FoxScanner.Then THEN hasError := TRUE; RETURN FALSE END;
+				conditionals[conditionalCount] := conditional; INC (conditionalCount);
+				IF (conditional # Processing) & (conditional # ProcessingElse) THEN conditional := Ignoring;
+				ELSIF value THEN conditional := Processing ELSE conditional := Skipping;
+				END;
+			ELSIF token.symbol = FoxScanner.Elsif THEN
+				IF ~scanner.GetNextToken (token) THEN RETURN FALSE END;
+				IF ~Condition (value) THEN RETURN FALSE END;
+				IF token.symbol # FoxScanner.Then THEN hasError := TRUE; RETURN FALSE END;
+				IF (conditional = Processing) & (conditionalCount # 0) OR (conditional = Ignoring) THEN conditional := Ignoring;
+				ELSIF conditional = Skipping THEN IF value THEN conditional := Processing ELSE conditional := Skipping END;
+				ELSE hasError := TRUE; RETURN FALSE END;
+			ELSIF token.symbol = FoxScanner.Else THEN
+				IF (conditional = Processing) & (conditionalCount # 0) OR (conditional = Ignoring) THEN conditional := IgnoringElse;
+				ELSIF conditional = Skipping THEN conditional := ProcessingElse;
+				ELSE hasError := TRUE; RETURN FALSE END;
+			ELSIF token.symbol = FoxScanner.End THEN
+				IF conditionalCount # 0 THEN DEC (conditionalCount); conditional := conditionals[conditionalCount];
+				ELSE hasError := TRUE; RETURN FALSE END;
+			ELSE
+				hasError := TRUE; RETURN FALSE;
+			END;
+			RETURN TRUE;
+		END ConditionalStatement;
 
 		PROCEDURE NextToken;
 		VAR ignore : BOOLEAN;
 		BEGIN
-			ignore := scanner.GetNextToken(token);
-			WHILE (token.symbol = FoxScanner.Comment) DO ignore := scanner.GetNextToken(token); END;
+			ignore := GetNextToken(token);
+			WHILE (token.symbol = FoxScanner.Comment) DO ignore := GetNextToken(token); END;
 		END NextToken;
 
 		PROCEDURE ModuleP(VAR module: Module);
@@ -1721,7 +1852,7 @@ BEGIN
 	IF (res = 0) THEN
 		NEW(reader, text);
 		scanner := FoxScanner.NewScanner(filename, reader, 0, diagnostics);
-		Parse(scanner, module);
+		Parse(scanner, module, "");
 	ELSIF (diagnostics # NIL) THEN
 		diagnostics.Error("ModuleParser", Streams.Invalid, "File not found");
 	END;
@@ -1744,10 +1875,10 @@ BEGIN
 	cache.Enumerate(ResolveMethodOverwrites);
 END SetSuperTypes;
 
-PROCEDURE Parse*(scanner: FoxScanner.Scanner; VAR module: Module);
+PROCEDURE Parse*(scanner: FoxScanner.Scanner; VAR module: Module; CONST definitions: ARRAY OF CHAR);
 VAR parser: Parser;
 BEGIN
-	NEW(parser, scanner);
+	NEW(parser, scanner, definitions);
 	parser.ModuleP(module);
 END Parse;
 

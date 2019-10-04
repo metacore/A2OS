@@ -736,6 +736,8 @@ TYPE
 					current.oldPos := current.pos-1;
 				END;
 				(* IF update # NIL THEN update(state, pos, current.maxFrames, pos) END *)
+			ELSIF (current # NIL) & ~current.canSeek THEN
+				IF Debug THEN KernelLog.String("MediaPlayer: Warning: can not set position "); KernelLog.Int(pos, 0); KernelLog.String("!?!"); KernelLog.Ln; END;
 			END;
 		END SetPos;
 
@@ -1053,9 +1055,16 @@ TYPE
 		END NoAction;
 
 		PROCEDURE Loop*(sender, data: ANY);
+		VAR msg: ARRAY 256 OF CHAR; res:INTEGER;
 		BEGIN
 			IF Trace * TraceEof # {} THEN KernelLog.String("MediaPlayer: EOF Loop."); KernelLog.Ln; END;
-			Stop; Play;
+			Stop; 
+			IF current.canSeek THEN 
+				Play
+			ELSE
+				Open(current.uri, msg, res);
+				Play
+			END;
 		END Loop;
 
 		PROCEDURE Quit*(sender, data: ANY);
@@ -1329,13 +1338,8 @@ TYPE
 							SetState(Ready);
 						|Playing:
 							StartPlayIntern; SetState(Playing);
-						(*|Stepping:
-							ResumeIntern; SetState(Playing);
-							(*IF state=Paused THEN 
-								ResumeIntern; SetState(Playing);
-							ELSE 
-								PauseIntern; SetState(Paused);
-							END;*)*)
+						|Stepping:
+							(* Stepping is used in state, not in nextState *)
 						|Paused:
 							IF state = Paused THEN
 								ResumeIntern; SetState(Playing);
@@ -1557,7 +1561,22 @@ MediaPlayer.TransitionTo flags.avi 300 ~
 MediaPlayer.Pause ~
 MediaPlayer.Step ~
 
+FfmpegCodecs.Install -f "WORK" ~
 
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI1.wmv" ~
+WMPlayer.Open "HIGHDIM:/Data/Sperm/IMSI1.wmv" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI2.wmv" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI3.wmv" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI4.wmv" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI5.wmv" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI6.wmv" ~
+
+WMPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_155655.mp4" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_155655.mp4" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_160050.mp4" ~
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_163128.mp4" ~
+
+MediaPlayer.Open "HIGHDIM:/Data/Sperm/CRYPTOZOOSPERMIA1.wmv" ~
 MediaPlayer.Close ~
 
 MediaPlayer.SetEofAction none ~

@@ -40,7 +40,9 @@ TYPE
 		BEGIN
 			NEW(panel); panel.bounds.SetExtents(300, 100); panel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 
-			NEW(tv);tv.alignment.Set(WMComponents.AlignClient);
+			NEW(tv);
+			tv.SetText(text);
+			tv.alignment.Set(WMComponents.AlignClient);
 			tv.isMultiLine.Set(TRUE); tv.showBorder.Set(TRUE); tv.alwaysShowCursor.Set(FALSE);
 			panel.AddContent(tv);
 
@@ -93,7 +95,7 @@ TYPE
 			END;
 			tw.Ln;
 			tw.Update;
-			tv.SetText(text);
+			(*tv.SetText(text);*)
 		END CreateContent;
 
 		PROCEDURE &New*(setupData : MediaPlayer.Setup);
@@ -101,7 +103,8 @@ TYPE
 		BEGIN
 			ASSERT(setupData # NIL);
 			data := setupData;
-			vc := CreateForm(); CreateContent;
+			CreateContent;
+			vc := CreateForm(); 
 			Init(vc.bounds.GetWidth(), vc.bounds.GetHeight(), FALSE);
 			SetContent(vc);
 			SetTitle(Strings.NewString("Content Info"));

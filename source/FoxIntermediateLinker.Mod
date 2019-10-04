@@ -31,7 +31,8 @@ TYPE
 		isSorted, alreadyPrearrangedSinceLastSort: BOOLEAN;
 		originalRestrictions: POINTER TO ARRAY OF ArrangementRestriction;
 		objectFile-: IRObjectFile.ObjectFileFormat;
-
+		codeUnit: Backend.SizeInBits;
+		
 		PROCEDURE & Init*(diagnostics: Diagnostics.Diagnostics; defaultBackend: Backend.Backend);
 		BEGIN
 			IF diagnostics = NIL THEN
@@ -46,8 +47,16 @@ TYPE
 			NEW(importList, 128);
 			NEW(loadedModules, 128);
 			NEW(objectFile); objectFile.Initialize(diagnostics);
-			isSorted := FALSE
+			isSorted := FALSE;
+			codeUnit := defaultBackend.system.codeUnit; 
 		END Init;
+		
+		PROCEDURE SetInstructionWidth*(unit: Backend.SizeInBits);
+		BEGIN
+			codeUnit := unit;
+		END SetInstructionWidth;
+		
+		
 
 		PROCEDURE PatchStackSize*(CONST typeName: SectionName; size: SIZE);
 		VAR sectionName: SectionName; section: Sections.Section; pooledName: Basic.SegmentedName; op1, op2, op3: IntermediateCode.Operand; instruction: IntermediateCode.Instruction;
@@ -640,6 +649,7 @@ TYPE
 
 			(* generate binary code *)
 			backend.Initialize(diagnostics, log, {}, NIL, backend.GetSystem());
+			backend.SetCodeUnit(codeUnit);
 			binaryModule := backend.ProcessIntermediateCodeModule(intermediateCodeModule); count := 0;
 
 			(* iterative compilation until all sections remain fixed at their position *)
@@ -689,252 +699,6 @@ TYPE
 	END Linker;
 
 TYPE
-	(*
-	CellLinker = OBJECT
-	VAR
-		backend: Backend.Backend;
-		irLinker: Linker;
-
-		outputFormat: Formats.ObjectFileFormat;
-
-		system: Global.System;
-		diagnostics: Diagnostics.Diagnostics;
-		error: BOOLEAN;
-
-		typeName: SectionName;
-
-		PROCEDURE &Init(b: Backend.Backend; output: Formats.ObjectFileFormat; CONST inExtension: ARRAY OF CHAR; d: Diagnostics.Diagnostics);
-		BEGIN
-			error := FALSE;
-			SELF.backend := b;
-			SELF.diagnostics := d;
-			IF diagnostics = NIL THEN diagnostics := Basic.GetDefaultDiagnostics() END;
-			SELF.outputFormat := output;
-			NEW(irLinker, diagnostics, backend, ""); (* TODO: pass an optional path as third parameter *)
-			IF (inExtension # "") THEN irLinker.objectFile.SetExtension(inExtension) END;
-			IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).builtinsModuleName, TRUE) THEN
-				error := TRUE;
-				Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).builtinsModuleName,Streams.Invalid, "could not load ir file");
-			END;
-			backend := irLinker.backend;
-			system := backend.system;
-		END Init;
-
-		PROCEDURE SetInstance*(CONST type: ARRAY OF CHAR): BOOLEAN;
-		VAR segmentedName: Basic.SegmentedName; filename: Files.FileName;
-		BEGIN
-			COPY(type, typeName);
-			SectionNameToFileName(type, filename);
-			irLinker.MarkReachabilityOfAll(FALSE);
-			IF irLinker.LoadModule(filename, TRUE) THEN
-				segmentedName := type;
-				irLinker.MarkAsReachableStartingWith(segmentedName, {Sections.InitCodeSection, Sections.BodyCodeSection});
-				RETURN TRUE;
-			ELSE
-				RETURN FALSE;
-			END;
-		END SetInstance;
-
-		PROCEDURE Generate(CONST instanceName: ARRAY OF CHAR): BOOLEAN;
-		BEGIN
-			irLinker.PrearrangeReachableDataSections;
-			IF irLinker.GenerateObjectFile(outputFormat, NIL, instanceName) THEN
-				Basic.Information(diagnostics, instanceName, Streams.Invalid, "generated.");
-				RETURN TRUE
-			ELSE
-				RETURN FALSE
-			END;
-		END Generate;
-
-		(*PROCEDURE LinkInstance(CONST typeName, instanceName: ARRAY OF CHAR): BOOLEAN;
-		VAR
-			codeFileName, dataFileName: Files.FileName;
-			typeName, instanceName, linkRoot: SectionName;
-			code, data: Linker.Arrangement; linker: GenericLinker.Linker;
-			i: SIZE;
-			logFile: Files.File; linkerLog: Files.Writer;
-			type: ActiveCells.Type;
-			msg: MessageString;
-			objectFileExtension: ARRAY 32 OF CHAR;
-			instructionMemorySize, dataMemorySize: SIZE;
-			parameter: ActiveCells.Parameter;
-			value: SyntaxTree.Value;
-			pooledName: Basic.SegmentedName;
-			device: ActiveCells.Device;
-			error : BOOLEAN;
-		CONST MinimalStackSize=64;
-		BEGIN
-			error := FALSE;
-			type := instance.instanceType;
-			type.GetFullName(typeName,NIL);
-			instance.GetFullName(instanceName,NIL);
-			IF TraceLinking THEN
-				D.String("assembling instance "); D.String(instanceName); D.String(" of type "); D.String(typeName); D.Ln;
-			END;
-			IF instance.IsEngine() THEN
-				IF TraceLinking THEN
-					D.String("instance "); D.String(instanceName); D.String(" is engine "); D.Ln;
-				END;
-				RETURN TRUE;
-			END;
-
-			backend.SetCapabilities(instance.capabilities);
-			irLinker.MarkReachabilityOfAll(FALSE);
-			COPY(typeName, linkRoot);
-			Strings.Append(linkRoot,".@BodyStub");
-			irLinker.MarkAsReachableByName(linkRoot);
-			irLinker.PatchStackSize(typeName, instance.dataMemorySize);
-
-			FOR i := 0 TO instance.parameters.Length()-1 DO
-				parameter := instance.parameters.GetParameter(i);
-				IF parameter.parameterType = 0 THEN (* Boolean *)
-					value := SyntaxTree.NewBooleanValue(-1, parameter.boolean); value.SetType(system.booleanType);
-				ELSE
-					value := SyntaxTree.NewIntegerValue(-1, parameter.integer); value.SetType(Global.Signed16);
-				END;
-				Basic.ToSegmentedName(parameter.name, pooledName);
-				irLinker.PatchValueInSection(pooledName,value);
-			END;
-
-			FOR i := 0 TO type.specification.supportedDevices.Length()-1 DO
-				device := type.specification.supportedDevices.GetDevice(i);
-				IF instance.instanceType.devices.ByName(device.name) = NIL THEN
-					IF irLinker.ModuleIsReachable(Basic.MakeString(device.name)) THEN
-						msg := "Missing device capability ";
-						Strings.Append(msg, device.name);
-						Strings.Append(msg," in cell ");
-						instance.AppendToMsg(msg);
-						Basic.Error(diagnostics, specification.name,Streams.Invalid, msg);
-						error := TRUE;
-					END;
-				ELSE
-					IF ~irLinker.ModuleIsReachable(Basic.MakeString(device.name)) THEN
-						msg := "Unused device ";
-						Strings.Append(msg, device.name);
-						Strings.Append(msg," in cell ");
-						instance.AppendToMsg(msg);
-						Basic.Warning(diagnostics, specification.name,Streams.Invalid,msg);
-					END;
-				END;
-			END;
-
-			IF error THEN RETURN FALSE END;
-
-			objectFileFormat.GetExtension(objectFileExtension);
-			irLinker.PrearrangeReachableDataSections;
-			IF ~irLinker.GenerateObjectFile(objectFileFormat, specification.log, instanceName) THEN
-				Basic.Error(diagnostics, specification.name,Streams.Invalid, "could not generate object file");
-				RETURN FALSE
-			END;
-
-			IF TraceLinking THEN
-				D.String("assembling instance done. "); D.Ln;
-			END;
-
-			NEW (code, 0); NEW (data, 0);
-			COPY(instanceName, msg); Strings.Append(msg,".log");	logFile := Files.New(msg);
-			IF logFile # NIL THEN NEW(linkerLog,logFile,0) ELSE logFile := NIL END;
-			NEW (linker, specification.diagnostics, linkerLog, GenericLinker.UseInitCode, code, data);
-
-			linker.SetLinkRoot("" (* linkRoot *)); (* take all initcode sections *)
-			Linker.ReadObjectFile(instanceName, "",objectFileExtension,linker);
-
-			(* do linking after having read in all blocks to account for potential constraints *)
-			IF ~linker.error THEN linker.Link; END;
-
-			system := backend.GetSystem();
-
-			instructionMemorySize := instance.instructionMemorySize;
-			dataMemorySize := instance.dataMemorySize;
-
-			IF instructionMemorySize = 0 THEN
-				instructionMemorySize := type.instructionMemorySize
-			END;
-			IF dataMemorySize = 0 THEN
-				dataMemorySize := type.dataMemorySize
-			END;
-
-			IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
-				Basic.Error(diagnostics, instanceName,Streams.Invalid, "specified instruction memory size too small");
-				error := TRUE;
-			ELSIF instructionMemorySize = 0 THEN
-				instructionMemorySize := code.SizeInBits() DIV system.codeUnit;
-			END;
-
-			dataMemorySize := MAX(data.SizeInBits() DIV system.dataUnit, dataMemorySize);
-			instance.SetInstructionMemorySize(instructionMemorySize);
-			instance.SetDataMemorySize(dataMemorySize);
-
-			IF (dataMemorySize - data.SizeInBits() DIV system.dataUnit) < MinimalStackSize THEN
-				Basic.Error(diagnostics, specification.name,Streams.Invalid, "specified data memory size too small");
-				error := TRUE;
-			END;
-
-			Files.JoinExtension(instanceName,ActiveCells.CodeFileExtension,codeFileName);
-			Files.JoinExtension(instanceName,ActiveCells.DataFileExtension,dataFileName);
-
-			IF ~linker.error THEN
-				Linker.WriteOutputFile (code, codeFileName, linker, Linker.WriteTRMCodeFile);
-				Linker.WriteOutputFile (data, dataFileName, linker, Linker.WriteTRMDataFile);
-				IF linkerLog # NIL THEN linkerLog.Update; Files.Register(logFile) END;
-				IF specification.log # NIL THEN
-					specification.log.String(instanceName);
-					specification.log.String(" linked. IM = ");specification.log.Int(instructionMemorySize,1);
-					specification.log.String(" (used: "); specification.log.Int(code.SizeInBits() DIV system.codeUnit,1);
-					specification.log.String("), DM = "); specification.log.Int(dataMemorySize,1);
-					specification.log.String(" (used: "); specification.log.Int(data.SizeInBits() DIV system.dataUnit,1);
-					specification.log.String(")");
-					specification.log.Ln; specification.log.Update;
-
-					specification.log.String("generated code file: ");specification.log.String(codeFileName); specification.log.Ln;
-					specification.log.String("generated data file: ");specification.log.String(dataFileName); specification.log.Ln;
-
-				END;
-			ELSE
-				msg := "could not link ";
-				Strings.Append(msg,linkRoot);
-				Basic.Error(diagnostics, "",Streams.Invalid, msg);
-			END;
-			RETURN ~linker.error & ~error
-		END LinkInstance;
-		*)
-
-	END CellLinker;
-	*)
-
-	(*
-	SpecificationLinker=OBJECT (Backend.Backend)
-	VAR objectFileFormat: Formats.ObjectFileFormat;
-
-		PROCEDURE &Init;
-		BEGIN
-			InitBackend;
-			objectFileFormat := Formats.GetObjectFileFormat("Generic");
-		END Init;
-
-		PROCEDURE Emit(backend: Backend.Backend): BOOLEAN;
-		BEGIN
-			RETURN LinkActiveCells(activeCellsSpecification, backend, objectFileFormat);
-		END Emit;
-
-		PROCEDURE DefineOptions(options: Options.Options);
-		BEGIN
-			objectFileFormat.DefineOptions(options);
-		END DefineOptions;
-
-		PROCEDURE GetOptions(options: Options.Options);
-		BEGIN
-			objectFileFormat.GetOptions(options);
-		END GetOptions;
-
-	END SpecificationLinker;
-
-	PROCEDURE Get*(): Backend.Backend;
-	VAR backend: SpecificationLinker;
-	BEGIN
-		NEW(backend); RETURN backend
-	END Get;
-	*)
 
 	PROCEDURE FileNameToModuleName(CONST filename: ARRAY OF CHAR; VAR moduleName: ARRAY OF CHAR);
 	VAR extension: Files.FileName;
@@ -984,181 +748,6 @@ TYPE
 			END;
 		END;
 	END CopySections;
-
-(*
-	PROCEDURE LinkActiveCells*(activeCellsSpecification: ActiveCells.Specification; backend: Backend.Backend; objectFileFormat: Formats.ObjectFileFormat): BOOLEAN;
-	TYPE
-		LinkerObject= OBJECT
-		VAR
-			specification: ActiveCells.Specification;
-			backend: Backend.Backend;
-			diagnostics: Diagnostics.Diagnostics;
-			irLinker: Linker;
-			objectFileFormat: Formats.ObjectFileFormat;
-			error: BOOLEAN;
-			system: Global.System;
-
-			PROCEDURE &Init(activeCellsSpecification: ActiveCells.Specification; b: Backend.Backend; objectFileFormat: Formats.ObjectFileFormat);
-			BEGIN
-				error := FALSE;
-				SELF.specification := activeCellsSpecification;
-				SELF.backend := b;
-				SELF.diagnostics := specification.diagnostics;
-				IF diagnostics = NIL THEN diagnostics := Basic.GetDefaultDiagnostics() END;
-				SELF.objectFileFormat := objectFileFormat;
-				NEW(irLinker, specification.diagnostics, backend, ""); (* TODO: pass an optional path as third parameter *)
-				IF ~irLinker.LoadModule(backend(IntermediateCode.IntermediateBackend).builtinsModuleName, TRUE) THEN
-					error := TRUE;
-					Basic.Error(diagnostics, backend(IntermediateCode.IntermediateBackend).builtinsModuleName,Streams.Invalid, "could not load ir file");
-				END;
-				IF ~irLinker.LoadModule(specification.name,TRUE) THEN
-					error := TRUE;
-					Basic.Error(diagnostics, specification.name,Streams.Invalid, "could not load ir file");
-				END;
-				backend := irLinker.backend;
-				system := backend.system;
-			END Init;
-
-			PROCEDURE LinkInstance(instance: ActiveCells.Instance): BOOLEAN;
-			VAR
-				codeFileName, dataFileName: Files.FileName;
-				typeName, instanceName, linkRoot: SectionName;
-				code, data: Linker.Arrangement; linker: GenericLinker.Linker;
-				i: SIZE;
-				logFile: Files.File; linkerLog: Files.Writer;
-				type: ActiveCells.Type;
-				msg: MessageString;
-				objectFileExtension: ARRAY 32 OF CHAR;
-				instructionMemorySize, dataMemorySize: SIZE;
-				parameter: ActiveCells.Parameter;
-				value: SyntaxTree.Value;
-				pooledName: Basic.SegmentedName;
-				error : BOOLEAN;
-			CONST MinimalStackSize=64;
-			BEGIN
-				error := FALSE;
-				type := instance.instanceType;
-				type.GetFullName(typeName,NIL);
-				instance.GetFullName(instanceName,NIL);
-				IF TraceLinking THEN
-					D.String("assembling instance "); D.String(instanceName); D.String(" of type "); D.String(typeName); D.Ln;
-				END;
-				IF instance.IsEngine() THEN
-					IF TraceLinking THEN
-						D.String("instance "); D.String(instanceName); D.String(" is engine "); D.Ln;
-					END;
-					RETURN TRUE;
-				END;
-
-				backend.SetCapabilities(instance.capabilities);
-				irLinker.MarkReachabilityOfAll(FALSE);
-				COPY(typeName, linkRoot);
-				Strings.Append(linkRoot,".@BodyStub");
-				irLinker.MarkAsReachableByName(linkRoot);
-				irLinker.PatchStackSize(typeName, instance.dataMemorySize);
-
-				FOR i := 0 TO instance.parameters.Length()-1 DO
-					parameter := instance.parameters.GetParameter(i);
-					IF parameter.parameterType = 0 THEN (* Boolean *)
-						value := SyntaxTree.NewBooleanValue(-1, parameter.boolean); value.SetType(system.booleanType);
-					ELSE
-						value := SyntaxTree.NewIntegerValue(-1, parameter.integer); value.SetType(Global.Signed16);
-					END;
-					Basic.ToSegmentedName(parameter.name, pooledName);
-					irLinker.PatchValueInSection(pooledName,value);
-				END;
-
-				IF error THEN RETURN FALSE END;
-
-				objectFileFormat.GetExtension(objectFileExtension);
-				irLinker.PrearrangeReachableDataSections;
-				IF ~irLinker.GenerateObjectFile(objectFileFormat, specification.log, instanceName) THEN
-					Basic.Error(diagnostics, specification.name,Streams.Invalid, "could not generate object file");
-					RETURN FALSE
-				END;
-
-				IF TraceLinking THEN
-					D.String("assembling instance done. "); D.Ln;
-				END;
-
-				NEW (code, 0); NEW (data, 0);
-				COPY(instanceName, msg); Strings.Append(msg,".log");	logFile := Files.New(msg);
-				IF logFile # NIL THEN NEW(linkerLog,logFile,0) ELSE logFile := NIL END;
-				NEW (linker, specification.diagnostics, linkerLog, GenericLinker.UseInitCode, code, data);
-
-				linker.SetLinkRoot("" (* linkRoot *)); (* take all initcode sections *)
-				Linker.ReadObjectFile(instanceName, "",objectFileExtension,linker);
-
-				(* do linking after having read in all blocks to account for potential constraints *)
-				IF ~linker.error THEN linker.Link; END;
-
-				system := backend.GetSystem();
-
-				instructionMemorySize := instance.instructionMemorySize;
-				dataMemorySize := instance.dataMemorySize;
-
-				IF instructionMemorySize = 0 THEN
-					instructionMemorySize := type.instructionMemorySize
-				END;
-				IF dataMemorySize = 0 THEN
-					dataMemorySize := type.dataMemorySize
-				END;
-
-				IF (instructionMemorySize > 0) & (instructionMemorySize < code.SizeInBits() DIV system.codeUnit) THEN
-					Basic.Error(diagnostics, instanceName,Streams.Invalid, "specified instruction memory size too small");
-					error := TRUE;
-				ELSIF instructionMemorySize = 0 THEN
-					instructionMemorySize := code.SizeInBits() DIV system.codeUnit;
-				END;
-
-				dataMemorySize := MAX(data.SizeInBits() DIV system.dataUnit, dataMemorySize);
-				instance.SetInstructionMemorySize(instructionMemorySize);
-				instance.SetDataMemorySize(dataMemorySize);
-
-				IF (dataMemorySize - data.SizeInBits() DIV system.dataUnit) < MinimalStackSize THEN
-					Basic.Error(diagnostics, specification.name,Streams.Invalid, "specified data memory size too small");
-					error := TRUE;
-				END;
-
-				Files.JoinExtension(instanceName,ActiveCells.CodeFileExtension,codeFileName);
-				Files.JoinExtension(instanceName,ActiveCells.DataFileExtension,dataFileName);
-
-				IF ~linker.error THEN
-					Linker.WriteOutputFile (code, codeFileName, linker, Linker.WriteTRMCodeFile);
-					Linker.WriteOutputFile (data, dataFileName, linker, Linker.WriteTRMDataFile);
-					IF linkerLog # NIL THEN linkerLog.Update; Files.Register(logFile) END;
-					IF specification.log # NIL THEN
-						specification.log.String(instanceName);
-						specification.log.String(" linked. IM = ");specification.log.Int(instructionMemorySize,1);
-						specification.log.String(" (used: "); specification.log.Int(code.SizeInBits() DIV system.codeUnit,1);
-						specification.log.String("), DM = "); specification.log.Int(dataMemorySize,1);
-						specification.log.String(" (used: "); specification.log.Int(data.SizeInBits() DIV system.dataUnit,1);
-						specification.log.String(")");
-						specification.log.Ln; specification.log.Update;
-
-						specification.log.String("generated code file: ");specification.log.String(codeFileName); specification.log.Ln;
-						specification.log.String("generated data file: ");specification.log.String(dataFileName); specification.log.Ln;
-
-					END;
-				ELSE
-					msg := "could not link ";
-					Strings.Append(msg,linkRoot);
-					Basic.Error(diagnostics, "",Streams.Invalid, msg);
-				END;
-				RETURN ~linker.error & ~error
-			END LinkInstance;
-
-		END LinkerObject;
-
-	VAR obj: LinkerObject; spec: ActiveCells.Specification;
-	BEGIN
-		spec := ActiveCells.Clone(activeCellsSpecification)(ActiveCells.Specification);
-		ActiveCells.FlattenNetwork(spec);
-		NEW(obj,spec,backend,objectFileFormat);
-		IF obj.error THEN RETURN FALSE END;
-		RETURN spec.ForEachInstanceDo(obj.LinkInstance);
-	END LinkActiveCells;
-	*)
 
 	PROCEDURE Link*(context: Commands.Context);
 	VAR

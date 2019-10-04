@@ -6,7 +6,8 @@ IMPORT
 
 TYPE
 	SectionName = ARRAY 256 OF CHAR;
-
+	SizeInBits* = SIZE; 
+	
 	Backend* = OBJECT
 	VAR
 		diagnostics-: Diagnostics.Diagnostics;
@@ -20,9 +21,10 @@ TYPE
 		findSectionOffset-: SIGNED32;
 		capabilities-: SET;
 		oberon07-: BOOLEAN;
-		instructionWidth -: SIZE;
 		hasLinkRegister-: BOOLEAN;
 		name-: ARRAY 32 OF CHAR;
+		
+		codeUnit-: SizeInBits;
 
 		(* constructor *)
 		PROCEDURE & InitBackend *;
@@ -34,8 +36,8 @@ TYPE
 			error := FALSE;
 			findSectionName := "";
 			findSectionOffset := 0;
-			instructionWidth := -1;
 			hasLinkRegister := FALSE;
+			codeUnit := -1; 
 		END InitBackend;
 
 		PROCEDURE SetOberon07*;
@@ -57,11 +59,10 @@ TYPE
 			hasLinkRegister := TRUE;
 		END SetHasLinkRegister;
 
-		PROCEDURE SetInstructionWidth* (instructionWidth: SIZE);
+		PROCEDURE SetCodeUnit* (unit: SizeInBits);
 		BEGIN
-			SELF.instructionWidth := instructionWidth;
-			(*TRACE(instructionWidth);*)
-		END SetInstructionWidth;
+			SELF.codeUnit := unit;
+		END SetCodeUnit;
 
 		PROCEDURE ResetError*;
 		BEGIN error := FALSE

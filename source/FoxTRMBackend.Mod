@@ -35,8 +35,8 @@ CONST
 
 	VectorSupportFlag = "vectorSupport";
 	FloatingPointSupportFlag ="floatingPoint";
-	FPSupportFlag = "supportFP";
 	PatchSpartan6 ="patchSpartan6";
+	InstructionWidth = "instructionWidth";
 
 TYPE
 	Operand=InstructionSet.Operand;
@@ -198,7 +198,6 @@ TYPE
 		builtinsModuleName: SyntaxTree.IdentifierString;
 
 		forwardFixups: ForwardFixupList;
-		spillStackStart: SIGNED32;
 		backend: BackendTRM;
 		supportFP: BOOLEAN;
 		pushChainLength: SIGNED32;
@@ -544,7 +543,7 @@ TYPE
 		END ExchangeTickets;
 
 		PROCEDURE CheckFixups;
-		VAR  fixup, forward, newFixup: BinaryCode.Fixup; fixupOp: InstructionSet.Operand; checkPC, iterCount: SIGNED32;
+		VAR  fixup, forward, newFixup: BinaryCode.Fixup; fixupOp: InstructionSet.Operand; iterCount: SIGNED32;
 
 			PROCEDURE CheckPC(): BinaryCode.Unit;
 			CONST safety=16; (* max number of TRM instructions to emit IR instruction *)
@@ -603,7 +602,7 @@ TYPE
 		END IsFloat;
 
 		PROCEDURE Generate*(VAR instruction: IntermediateCode.Instruction);
-		VAR opcode: SIGNED8; ticket: Ticket; hwreg, lastUse: SIGNED32;
+		VAR opcode: SIGNED8; 
 		BEGIN
 			CheckFixups;
 
@@ -757,7 +756,7 @@ TYPE
 		END AllocateStack;
 
 		PROCEDURE EmitEnter(CONST instr: IntermediateCode.Instruction);
-		VAR cc: SIGNED32; mem: InstructionSet.Operand;
+		VAR cc: SIGNED32; 
 		BEGIN
 			stackSize := 0;
 			(*
@@ -780,7 +779,6 @@ TYPE
 		END EmitEnter;
 
 		PROCEDURE EmitLeave(CONST instr: IntermediateCode.Instruction);
-		VAR cc: SIGNED32; mem: InstructionSet.Operand;
 		BEGIN
 			IF ~supportFP THEN (* frame pointer might have been used *)
 				AllocateStack(-stackSize, FALSE);
@@ -789,7 +787,7 @@ TYPE
 		END EmitLeave;
 
 		PROCEDURE EmitExit(CONST instr: IntermediateCode.Instruction);
-		VAR cc: SIGNED32; mem: InstructionSet.Operand;
+		VAR mem: InstructionSet.Operand;
 		BEGIN
 			instructionSet.InitMemory(mem, InstructionSet.SP, 0);
 			Emit2(opLD, opLR, mem);
@@ -1174,33 +1172,8 @@ TYPE
 			RETURN FALSE
 		END UnsignedImmediate;
 
-		PROCEDURE HardwareIntegerRegister(index: SIGNED32; sizeInBits: SIGNED32): SIGNED32;
-		BEGIN RETURN index
-		END HardwareIntegerRegister;
-
-		PROCEDURE HardwareFloatRegister(index: SIGNED32; sizeInBits: SIGNED32): SIGNED32;
-		BEGIN RETURN index
-		END HardwareFloatRegister;
-
-		PROCEDURE GetTypedHardwareRegister(index: SIGNED32; type: IntermediateCode.Type): SIGNED32;
-		VAR size: SIGNED32;
-		BEGIN
-			IF type.form IN IntermediateCode.Integer THEN
-				RETURN HardwareIntegerRegister(index, type.sizeInBits)
-			ELSIF type.form = IntermediateCode.Float THEN
-				RETURN HardwareFloatRegister(index, type.sizeInBits)
-			ELSE
-				HALT(100);
-			END;
-		END GetTypedHardwareRegister;
-
-		PROCEDURE ParameterRegister(CONST type: IntermediateCode.Type; index: SIGNED32): SIGNED32;
-		BEGIN
-			RETURN GetTypedHardwareRegister(index, type)
-		END ParameterRegister;
-
 		PROCEDURE PhysicalRegister(virtualReg: SIZE; part: SIGNED32; VAR offset: SIGNED32): SIGNED32;
-		VAR register: SIGNED32; fpOffset: SIGNED32; ticket: Ticket;
+		VAR register: SIGNED32; ticket: Ticket;
 		BEGIN
 			IF virtualReg = IntermediateCode.FP THEN
 				IF stackSizeKnown THEN
@@ -1229,7 +1202,7 @@ TYPE
 
 		PROCEDURE GetRegister(CONST virtual: IntermediateCode.Operand; part:SIGNED32; VAR physical: Operand);
 		VAR type: IntermediateCode.Type; virtualRegister: SIZE; physicalRegister: SIGNED32;
-			tmp,imm: Operand; offset: SIGNED32; ticket: Ticket; ops: SIGNED32;
+			tmp,imm: Operand; offset: SIGNED32; ops: SIGNED32;
 		BEGIN
 			ASSERT(virtual.mode = IntermediateCode.ModeRegister);
 			GetPartType(virtual.type,part,type);
@@ -1365,7 +1338,6 @@ TYPE
 		END ReleaseDestinationRegister;
 
 		PROCEDURE FinishOp(VAR vop: IntermediateCode.Operand; part: SIGNED32; dest, left: Assembler.Operand);
-		VAR op: Operand;
 		BEGIN
 			IF vop.mode = IntermediateCode.ModeMemory THEN
 				ASSERT(left.type = InstructionSet.Register);
@@ -1399,7 +1371,7 @@ TYPE
 		END EmitAdd;
 
 		PROCEDURE EmitFAdd(VAR instruction: IntermediateCode.Instruction);
-		VAR destLow, destHigh, leftLow, rightLow, leftHigh, rightHigh: Operand; negateLow, negateHigh: BOOLEAN;
+		VAR destLow, leftLow, rightLow: Operand;
 		BEGIN
 			PrepareFOp3(instruction,destLow, leftLow,rightLow);
 			Emit2(opFADD,leftLow,rightLow);
@@ -1434,7 +1406,7 @@ TYPE
 		END EmitSub;
 
 		PROCEDURE EmitFSub(VAR instruction: IntermediateCode.Instruction);
-		VAR destLow, destHigh, leftLow, rightLow, leftHigh, rightHigh: Operand; negateLow, negateHigh: BOOLEAN;
+		VAR destLow, leftLow, rightLow: Operand;
 		BEGIN
 			PrepareFOp3(instruction,destLow, leftLow,rightLow);
 			Emit2(opFSUB,leftLow,rightLow);
@@ -1443,7 +1415,7 @@ TYPE
 
 		PROCEDURE EmitMul(VAR instruction: IntermediateCode.Instruction);
 		VAR negate: BOOLEAN;
-			op1Low, op2Low, op3Low, op1High, op2High, op3High, destLow, destHigh: Operand;
+			op1Low, op2Low, op3Low, op1High, op2High, op3High, destLow: Operand;
 			value: SIGNED64; exp: SIGNED32; iop3: IntermediateCode.Operand;
 			inst: IntermediateCode.Instruction;
 		BEGIN
@@ -1479,7 +1451,7 @@ TYPE
 		END EmitMul;
 
 		PROCEDURE EmitFMul(VAR instruction: IntermediateCode.Instruction);
-		VAR destLow, destHigh, leftLow, rightLow, leftHigh, rightHigh: Operand; negateLow, negateHigh: BOOLEAN;
+		VAR destLow, leftLow, rightLow: Operand;
 		BEGIN
 			PrepareFOp3(instruction,destLow, leftLow,rightLow);
 			Emit2(opFMUL,leftLow,rightLow);
@@ -1806,7 +1778,7 @@ TYPE
 					float,negate: BOOLEAN; identifier: ObjectFile.Identifier;
 
 			PROCEDURE JmpDest(brop: SIGNED32);
-			VAR op1: Operand; fixupOp: InstructionSet.Operand; oldLR, thisPC: Operand; ticket1, ticket2: Ticket;
+			VAR op1: Operand; oldLR, thisPC: Operand; ticket1, ticket2: Ticket;
 			BEGIN
 				IF instr.op1.mode = IntermediateCode.ModeImmediate THEN
 					Assert(instr.op1.symbol.name # "", "branch without symbol destination");
@@ -2199,7 +2171,6 @@ TYPE
 		cg: CodeGeneratorTRM;
 		patchSpartan6: BOOLEAN;
 		myInstructionSet: InstructionSet.InstructionSet;
-		recentInstructionWidth : SIGNED32;
 
 		PROCEDURE &InitBackendTRM;
 		BEGIN
@@ -2207,35 +2178,32 @@ TYPE
 			SetSimpleMetaData(TRUE);
 			myInstructionSet:=defaultInstructionSet;
 			SetHasLinkRegister;
-			recentInstructionWidth := Sections.UnknownSize;
 			SetName("TRM");
+			SetCodeUnit(18); 
 		END InitBackendTRM;
 
 		PROCEDURE Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System);
 		VAR
 		BEGIN
 			Initialize^(diagnostics, log, flags, checker, system); (*goes up the inheritance hierarchy all the way to Backend.Mod*)
-
 			NEW(cg, builtinsModuleName, diagnostics, SELF,myInstructionSet);
 			cg.patchSpartan6 := patchSpartan6;
-			recentInstructionWidth := Sections.UnknownSize;
 		END Initialize;
 
 		PROCEDURE SetInstructionWidth* (instructionWidth: SIZE);  (*override*)
 		BEGIN
-			IF SELF.instructionWidth # instructionWidth THEN
-				SetInstructionWidth^(instructionWidth);
+			IF myInstructionSet.instructionW # instructionWidth THEN 
 				NEW(myInstructionSet,instructionWidth(SIGNED32));
-				cg.SetInstructionSet(myInstructionSet);
-			END;
+				cg.SetInstructionSet(myInstructionSet);				
+			END; 
 		END SetInstructionWidth;
 
 		PROCEDURE GetSystem*(): Global.System;
 		VAR system: System; variableOffset: INTEGER;
 		BEGIN
 			IF preciseGC THEN variableOffset := -32 ELSE variableOffset := 0 END;
-			NEW(system, 18, 32, 32, 32, 32, 32, 32, 64(* parameter offset 0: handled locally *), variableOffset,  cooperative);
-			Global.SetDefaultDeclarations(system,32);
+			NEW(system, SIGNED32(codeUnit), 32, 32, 32, 32, 32, 32, 64(* parameter offset 0: handled locally *), variableOffset,  cooperative);
+			Global.SetDefaultDeclarations(system,8);
 			Global.SetDefaultOperators(system);
 			RETURN system
 		END GetSystem;
@@ -2358,7 +2326,6 @@ TYPE
 		BEGIN
 			ASSERT(intermediateCodeModule IS Sections.Module);
 			result := ProcessIntermediateCodeModule^(intermediateCodeModule);
-			recentInstructionWidth := Sections.UnknownSize;
 
 			IF ~error THEN
 				GenerateBinary(result(Sections.Module), dump);
@@ -2395,16 +2362,18 @@ TYPE
 			options.Add(0X,VectorSupportFlag,Options.Flag);
 			options.Add(0X,FloatingPointSupportFlag,Options.Flag);
 			options.Add(0X,PatchSpartan6, Options.Flag);
+			options.Add(0X,InstructionWidth, Options.Integer);
 			DefineOptions^(options);
 		END DefineOptions;
 
 		PROCEDURE GetOptions*(options: Options.Options);
-		VAR capabilities: SET;
+		VAR capabilities: SET; width: INTEGER;
 		BEGIN
 			capabilities := SELF.capabilities;
 			IF options.GetFlag(VectorSupportFlag) THEN INCL(capabilities, Global.VectorCapability) END;
 			IF options.GetFlag(FloatingPointSupportFlag) THEN INCL(capabilities, Global.FloatingPointCapability) END;
 			IF options.GetFlag(PatchSpartan6) THEN D.String("patchSpartan6=TRUE"); D.Ln; patchSpartan6 := TRUE END;
+			IF options.GetInteger(InstructionWidth, width) THEN SetCodeUnit(width) END;
 			SetCapabilities(capabilities);
 			GetOptions^(options);
 		END GetOptions;
@@ -2459,7 +2428,7 @@ TYPE
 		END CheckCodeAddress;
 
 		PROCEDURE ResolvedSection(in: IntermediateCode.Section): BinaryCode.Section;
-		VAR section: BinaryCode.Section; unit: SIGNED32;
+		VAR section: BinaryCode.Section; unit: SIZE;
 		BEGIN
 
 			(*VAR and CONST sections go to the data memory, only code sections go to code memory
@@ -2470,16 +2439,7 @@ TYPE
 			ELSIF in.type IN {Sections.VarSection, Sections.ConstSection} THEN
 				unit := 32;
 			ELSE
-				IF (recentInstructionWidth # Sections.UnknownSize) THEN
-					unit := recentInstructionWidth(* instructionWidth*);
-				ELSE
-					unit:=18;
-				END
-
-			END;
-
-			IF in.IsCode() THEN
-				recentInstructionWidth := unit;
+				unit:= codeUnit;
 			END;
 
 			IF in.resolved = NIL THEN
@@ -2489,6 +2449,7 @@ TYPE
 			ELSE
 				section := in.resolved
 			END;
+			TRACE(in.type, in.bitsPerUnit, unit, section.os.unit);
 			RETURN section
 		END ResolvedSection;
 
@@ -2502,11 +2463,6 @@ TYPE
 	BEGIN
 		ASSERT(b, 100);
 	END Assert;
-
-	PROCEDURE Halt(CONST s: ARRAY OF CHAR);
-	BEGIN
-		HALT(100);
-	END Halt;
 
 	PROCEDURE Init;
 	BEGIN

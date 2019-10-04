@@ -460,8 +460,7 @@ TYPE
 		END QualifiedIdentifier;
 
 		(** IdentifierDefinition = Identifier [ '*' | '-' ].  **)
-		PROCEDURE IdentifierDefinition( VAR name: SyntaxTree.Identifier;  VAR access: SET; allowedReadOnly: BOOLEAN);
-		VAR position: Position;
+		PROCEDURE IdentifierDefinition( VAR name: SyntaxTree.Identifier;  VAR access: SET; allowedReadOnly: BOOLEAN; VAR position: Position);
 		BEGIN
 			IF Trace THEN S( "IdentifierDefinition" ) END;
 			name := Identifier(position);
@@ -1637,8 +1636,7 @@ TYPE
 				Check( Scanner.RightParenthesis )
 			END;
 			REPEAT
-				IdentifierDefinition(identifier,access,FALSE);
-				position := token.position;
+				IdentifierDefinition(identifier,access,FALSE, position);
 				constant := SyntaxTree.NewConstant( position, identifier );
 				CommentSymbol(constant);
 				constant.SetAccess(access);
@@ -1982,7 +1980,7 @@ TYPE
 			END;
 
 			position:= token.position;
-			IdentifierDefinition( name, access,TRUE);
+			IdentifierDefinition( name, access,TRUE, position);
 
 			procedure := SyntaxTree.NewProcedure( position, name, procedureScope);
 			procedure.SetConstructor(isConstructor);
@@ -2088,8 +2086,7 @@ TYPE
 			IF Trace THEN S( "VariableNameList" ) END;
 			REPEAT
 				flags := {};
-				position := token.position;
-				IdentifierDefinition( varname, access,TRUE);
+				IdentifierDefinition( varname, access,TRUE, position);
 				variable := SyntaxTree.NewVariable( position, varname );
 				CommentSymbol(variable);
 				IF Optional(Scanner.LeftBrace) THEN variable.SetModifiers(Flags()) END;
@@ -2126,8 +2123,7 @@ TYPE
 		VAR name: SyntaxTree.Identifier;  position: Position; type: SyntaxTree.Type; typeDeclaration: SyntaxTree.TypeDeclaration;   access: SET;
 		BEGIN
 			IF Trace THEN S( "TypeDeclaration" ) END;
-			position := token.position;
-			IdentifierDefinition( name, access,FALSE);
+			IdentifierDefinition( name, access,FALSE, position);
 			typeDeclaration := SyntaxTree.NewTypeDeclaration( position,name);
 			CommentSymbol(typeDeclaration);
 			Check( Scanner.Equal );
@@ -2147,8 +2143,7 @@ TYPE
 		VAR name: SyntaxTree.Identifier;  position: Position; constant: SyntaxTree.Constant;  expression: SyntaxTree.Expression;  access: SET;
 		BEGIN
 			IF Trace THEN S( "ConstDeclaration" ) END;
-			IdentifierDefinition( name, access, FALSE);
-			position := token.position;
+			IdentifierDefinition( name, access, FALSE, position);
 			constant := SyntaxTree.NewConstant( position, name );
 			CommentSymbol(constant);
 			constant.SetAccess(access);
@@ -2313,11 +2308,13 @@ TYPE
 				IF Optional(Scanner.LeftParenthesis) THEN
 					NEW(parameters);
 					module.SetParameters(parameters);
-					parameters.Add(TemplateParameter(position));
-					WHILE Optional(Scanner.Comma) DO
+					IF ~Optional(Scanner.RightParenthesis) THEN
 						parameters.Add(TemplateParameter(position));
+						WHILE Optional(Scanner.Comma) DO
+							parameters.Add(TemplateParameter(position));
+						END;
+						Check(Scanner.RightParenthesis);
 					END;
-					Check(Scanner.RightParenthesis);
 				END;
 
 				IF Optional(Scanner.In) THEN

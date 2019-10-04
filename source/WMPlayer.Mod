@@ -36,6 +36,7 @@ TYPE
 		VAR
 			panel : WMStandardComponents.Panel;
 			tabPositions : WMTextView.TabPositions; tabStops : WMTextView.CustomTabStops;
+			text: Texts.Text;
 		BEGIN
 			NEW(panel); panel.bounds.SetExtents(300, 100); panel.fillColor.Set(SIGNED32(0FFFFFFFFH));
 
@@ -45,6 +46,8 @@ TYPE
 
 			NEW(tabPositions, 2); tabPositions[0] := 70; tabPositions[1] := 150;
 			NEW(tabStops, tabPositions);
+			NEW(text);
+			tv.SetText(text);
 			tv.SetTabStops(tabStops);
 			RETURN panel;
 		END CreateForm;

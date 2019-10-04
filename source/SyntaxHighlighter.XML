@@ -562,6 +562,7 @@
 					VAR CONST
 					ARRAY POINTER
 					CELL CELLNET PORT
+					IN OUT
 				</Group>
 				<Group style="Bold">
 					NEW SELF CONNECT DELEGATE
@@ -570,10 +571,9 @@
 					ABS ASH CAP CHR ORD
 					COPY GETPROCEDURE LEN
 					MAX MIN ODD SIZEOF SHORT LONG ENTIER ENTIERH
-					DIV MOD IN IS OR
+					DIV MOD IS OR
 					INCL EXCL INC DEC
 					SEND RECEIVE
-					OUT
 				</Group>
 				<Group style="Checks">
 					ASSERT

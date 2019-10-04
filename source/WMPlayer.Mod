@@ -22,7 +22,7 @@ TYPE
 TYPE
 
 	(* Small window showing information about the currently loaded content (framerate, etc. ) *)
-	InfoWindow = OBJECT(WMComponents.FormWindow)
+	InfoWindow* = OBJECT(WMComponents.FormWindow)
 	VAR
 		data : MediaPlayer.Setup;
 
@@ -32,27 +32,6 @@ TYPE
 
 		next : InfoWindow;
 
-		PROCEDURE CreateForm() : WMComponents.VisualComponent;
-		VAR
-			panel : WMStandardComponents.Panel;
-			tabPositions : WMTextView.TabPositions; tabStops : WMTextView.CustomTabStops;
-			text: Texts.Text;
-		BEGIN
-			NEW(panel); panel.bounds.SetExtents(300, 100); panel.fillColor.Set(SIGNED32(0FFFFFFFFH));
-
-			NEW(tv);
-			tv.SetText(text);
-			tv.alignment.Set(WMComponents.AlignClient);
-			tv.isMultiLine.Set(TRUE); tv.showBorder.Set(TRUE); tv.alwaysShowCursor.Set(FALSE);
-			panel.AddContent(tv);
-
-			NEW(tabPositions, 2); tabPositions[0] := 70; tabPositions[1] := 150;
-			NEW(tabStops, tabPositions);
-			NEW(text);
-			tv.SetText(text);
-			tv.SetTabStops(tabStops);
-			RETURN panel;
-		END CreateForm;
 
 		PROCEDURE CreateContent;
 		VAR framerate : FLOAT32; hours, minutes, seconds : SIGNED32;
@@ -64,14 +43,18 @@ TYPE
 			tw.String("________________________________________________");
 			tw.Ln;
 			tw.SetFontStyle(StyleBold); tw.String("Duration"); tw.Char(Tab); tw.SetFontStyle(StyleRegular);
-			ConvertTime(data.maxTime*100, hours, minutes, seconds);
-			IF hours # 0 THEN tw.Int(hours, 0); tw.String("h "); END;
-			IF (hours # 0) OR (minutes # 0) THEN tw.Int(minutes, 0); tw.String("min "); END;
-			tw.Int(seconds, 0); tw.String("s");
+			IF data.maxTime>0 THEN
+				ConvertTime(data.maxTime*100, hours, minutes, seconds);
+				IF hours # 0 THEN tw.Int(hours, 0); tw.String("h "); END;
+				IF (hours # 0) OR (minutes # 0) THEN tw.Int(minutes, 0); tw.String("min "); END;
+				tw.Int(seconds, 0); tw.String("s");
+			ELSE tw.String(" unknown")
+			END;
 			tw.Ln;
 			tw.SetFontStyle(StyleBold); tw.String("Video"); tw.Char(Tab); tw.SetFontStyle(StyleRegular);
 			IF data.hasVideo THEN
-				tw.Int(data.width, 0); tw.String("x"); tw.Int(data.height, 0); tw.String(", ");
+				tw.Int(data.width, 0); tw.String("x"); tw.Int(data.height, 0); tw.String(", "); 
+				IF data.maxFrames>0 THEN tw.Int(data.maxFrames,0); tw.String(" frames, ") END;
 				IF data.mspf # 0 THEN
 					framerate := 1000 / data.mspf;
 					tw.Int(ENTIER(framerate), 0);
@@ -95,8 +78,26 @@ TYPE
 			END;
 			tw.Ln;
 			tw.Update;
-			(*tv.SetText(text);*)
 		END CreateContent;
+		
+		PROCEDURE CreateForm() : WMComponents.VisualComponent;
+		VAR
+			panel : WMStandardComponents.Panel;
+			tabPositions : WMTextView.TabPositions; tabStops : WMTextView.CustomTabStops;
+		BEGIN
+			NEW(panel); panel.bounds.SetExtents(600, 110); panel.fillColor.Set(SIGNED32(0FFFFFFFFH));
+
+			NEW(tv);
+			tv.alignment.Set(WMComponents.AlignClient);tv.isMultiLine.Set(TRUE); tv.showBorder.Set(TRUE); tv.alwaysShowCursor.Set(FALSE);
+			(*NEW(text);*) (*created in CreateContent*)
+			tv.SetText(text);
+			NEW(tabPositions, 2); tabPositions[0] := 70; tabPositions[1] := 150;
+			NEW(tabStops, tabPositions);
+			tv.SetTabStops(tabStops);
+			
+			panel.AddContent(tv);
+			RETURN panel;
+		END CreateForm;
 
 		PROCEDURE &New*(setupData : MediaPlayer.Setup);
 		VAR vc : WMComponents.VisualComponent;
@@ -191,19 +192,19 @@ TYPE
 		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn, stepBtn : WMStandardComponents.Button;
 		search: WMStandardComponents.Scrollbar;
 
-		timeLbl, totTimeLbl: WMStandardComponents.Label;
+		timeLbl*, totTimeLbl*, frameLbl*, maxFrameLbl*: WMStandardComponents.Label;
 
-		player : MediaPlayer.Player;
+		player* : MediaPlayer.Player;
 		stepSize : SIGNED32;
 
 		(* Info about currently loaded content *)
 		filename : Files.FileName;
-		setupData : MediaPlayer.Setup;
-		infos : InfoWindow;
+		setupData* : MediaPlayer.Setup;
+		infos* : InfoWindow;
 
-		windowInfo : WMWindowManager.WindowInfo;
+		windowInfo* : WMWindowManager.WindowInfo;
 
-		PROCEDURE CreateForm(): WMComponents.VisualComponent;
+		PROCEDURE CreateForm*(): WMComponents.VisualComponent;
 		VAR
 			panel, toolbar : WMStandardComponents.Panel;
 			label: WMStandardComponents.Label;
@@ -254,7 +255,20 @@ TYPE
 			panel.AddContent(label); label.caption.SetAOC("Total Time: ");
 
 			NEW(totTimeLbl); totTimeLbl.bounds.SetWidth(100); totTimeLbl.alignment.Set(WMComponents.AlignLeft);
-			panel.AddContent(totTimeLbl); timeLbl.caption.SetAOC("00:00:00");
+			panel.AddContent(totTimeLbl); totTimeLbl.caption.SetAOC("");
+
+			NEW(label); label.bounds.SetWidth(100); label.alignment.Set(WMComponents.AlignLeft);
+			panel.AddContent(label); label.caption.SetAOC("Frame: ");
+
+			NEW(frameLbl); frameLbl.bounds.SetWidth(100); frameLbl.alignment.Set(WMComponents.AlignLeft);
+			panel.AddContent(frameLbl); frameLbl.caption.SetAOC("0");
+
+			NEW(label); label.bounds.SetWidth(100); label.alignment.Set(WMComponents.AlignLeft);
+			panel.AddContent(label); label.caption.SetAOC("Total Frames: ");
+
+			NEW(maxFrameLbl); maxFrameLbl.bounds.SetWidth(100); maxFrameLbl.alignment.Set(WMComponents.AlignLeft);
+			panel.AddContent(maxFrameLbl); maxFrameLbl.caption.SetAOC("");
+
 
 			RETURN panel;
 		END CreateForm;
@@ -306,6 +320,9 @@ TYPE
 		BEGIN
 			COPY(fileName, filename);
 			player.Open(filename, msg, res);
+			player.SetEofAction(player.Reset);
+			ffBtn.visible.Set(player.CanSeek());
+			rewBtn.visible.Set(player.CanSeek());
 			IF res # MediaPlayer.Ok THEN
 				WMDialogs.Error(WindowTitle, msg);
 				SetTitle(Strings.NewString("Media Player"));
@@ -318,7 +335,7 @@ TYPE
 			SetInfo(windowInfo);
 		END Open;
 
-		PROCEDURE ButtonHandler(sender, data : ANY);
+		PROCEDURE ButtonHandler*(sender, data : ANY);
 		VAR b : WMStandardComponents.Button; info : InfoWindow;
 		BEGIN
 			IF ~IsCallFromSequencer() THEN
@@ -330,8 +347,8 @@ TYPE
 					ELSIF b = stopBtn THEN player.Stop;
 					ELSIF b = pauseBtn THEN player.Pause;
 					ELSIF b = stepBtn THEN player.Step;
-					ELSIF b = ffBtn THEN player.SetPos(player.GetPos() + stepSize);
-					ELSIF b = rewBtn THEN player.SetPos(player.GetPos() - 2*stepSize);
+					ELSIF b = ffBtn THEN player.SetPos(player.GetFrame() + stepSize); (*?use time units or frame units *)
+					ELSIF b = rewBtn THEN player.SetPos(player.GetFrame() - 2*stepSize);
 					ELSIF b = infoBtn THEN
 						IF setupData # NIL THEN
 							NEW(info, setupData);
@@ -368,11 +385,20 @@ TYPE
 		END SliderSearch;
 
 		(* Update the Info Labels *)
-		PROCEDURE Update*(status, pos, maxpos, displayTime: SIGNED32);
+		PROCEDURE Update*(status, pos, maxpos, time, displayTime: SIGNED32);
 		VAR temp : ARRAY 16 OF CHAR;
 		BEGIN
-			ConvertTimeToStr(displayTime * 100, temp);
+			ConvertTimeToStr(time * 100, temp);
 			timeLbl.caption.SetAOC(temp);
+			IF displayTime>0 THEN 
+				ConvertTimeToStr(displayTime * 100, temp);totTimeLbl.caption.SetAOC(temp);
+			END;
+			Strings.IntToStr(pos,temp);
+			frameLbl.caption.SetAOC(temp);
+			IF maxpos>0 THEN 
+				Strings.IntToStr(maxpos,temp);maxFrameLbl.caption.SetAOC(temp);
+			END;
+			
 			IF (setupData # NIL) & (setupData.hasVideo) THEN
 				search.pos.Set(pos);
 			ELSE
@@ -396,10 +422,15 @@ TYPE
 					search.pageSize.Set(setup.maxTime DIV 100);
 				END;
 			ELSE
-				search.visible.Set(FALSE)
+			search.visible.Set(FALSE)
 			END;
-			ConvertTimeToStr(setup.maxTime * 100, temp);
-			totTimeLbl.caption.SetAOC(temp)
+			IF setup.maxTime>0 THEN 
+				ConvertTimeToStr(setup.maxTime * 100, temp);totTimeLbl.caption.SetAOC(temp);
+			END;
+
+			IF setup.maxFrames>0 THEN 
+				Strings.IntToStr(setup.maxFrames, temp); maxFrameLbl.caption.SetAOC(temp);
+			END;
 		END SetUpController;
 
 	END Window;
@@ -474,6 +505,7 @@ END WMPlayer.
 
 ------------------------------------------------------------------------------
 System.Free WMPlayer ~
+System.FreeDownTo WMPlayer ~
 WMPlayer.Open track.mp3~
 WMPlayer.Open test.wav~
 WMPlayer.Open FAT:tndx.avi~

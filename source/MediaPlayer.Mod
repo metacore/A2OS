@@ -363,10 +363,10 @@ TYPE
 			drop := n
 		END DropFrames;
 
-		PROCEDURE GetPos(): SIGNED32;
+		PROCEDURE GetFrame(): SIGNED32;
 		BEGIN {EXCLUSIVE}
 			 RETURN videoDecoder.GetCurrentFrame()
-		END GetPos;
+		END GetFrame;
 
 		PROCEDURE SeekAndGetFrame(pos: SIGNED32; VAR f : WMGraphics.Image; VAR res : SIGNED32);
 		BEGIN  {EXCLUSIVE}
@@ -584,7 +584,7 @@ TYPE
 
 		(* Delegates *)
 		setup* : PROCEDURE {DELEGATE} (data : Setup);											(* init for GUI *)
-		update* : PROCEDURE {DELEGATE} (state, pos, maxpos, displayTime: SIGNED32);			(* update for GUI *)
+		update* : PROCEDURE {DELEGATE} (state, frame, maxFrame, time, displayTime: SIGNED32);			(* update for GUI *)
 		eof : EofHandler;																		(* fired on End of File *)
 		pointerDownHandler*: PROCEDURE {DELEGATE}(x,y: SIZE; keys:SET);
 		(** -- Player Controls ----------------------------------------------- *)
@@ -687,18 +687,31 @@ TYPE
 		END Pause;
 
 		(* Get in  1/10 sec. Returns -1 if information is not available. *)
-		PROCEDURE GetPos*(): SIGNED32;
+		PROCEDURE GetTimePos*(): SIGNED32;
 		VAR context : Context; res : INTEGER;
 		BEGIN {EXCLUSIVE}
 			res := -1;
 			context := current;
 			IF context # NIL THEN
-				IF context.hasVideo THEN res := 10*current.filler.GetPos() DIV (1000 DIV current.mspf);
+				IF context.hasVideo THEN res := 10*current.filler.GetFrame() DIV (1000 DIV current.mspf);
 				ELSIF current.hasAudio THEN res := current.audio.GetCurrentTime();
 				END;
 			END;
 			RETURN res;
-		END GetPos;
+		END GetTimePos;
+
+		PROCEDURE GetFrame*(): SIGNED32;
+		VAR context : Context; res : INTEGER;
+		BEGIN {EXCLUSIVE}
+			res := -1;
+			context := current;
+			IF context # NIL THEN
+				IF context.hasVideo THEN res := 10*current.filler.GetFrame();
+				ELSIF current.hasAudio THEN res := current.audio.GetCurrentTime();
+				END;
+			END;
+			RETURN res;
+		END GetFrame;
 
 		(* Set position *)
 		PROCEDURE SetPos*(pos: SIGNED32);
@@ -816,6 +829,14 @@ TYPE
 		BEGIN {EXCLUSIVE}
 			RETURN state;
 		END GetState;
+		
+		PROCEDURE CanSeek*():BOOLEAN;
+		BEGIN
+			IF current#NIL THEN RETURN current.canSeek
+			ELSE RETURN FALSE
+			END;
+		END CanSeek;
+		
 
 		PROCEDURE GetCurrentFrame*() : VideoBuffer;
 		BEGIN {EXCLUSIVE}
@@ -1053,6 +1074,17 @@ TYPE
 			IF Trace * TraceEof # {} THEN KernelLog.String("MediaPlayer: EOF NoAction."); KernelLog.Ln; END;
 			Stop;
 		END NoAction;
+
+		PROCEDURE Reset*(sender, data: ANY);
+		VAR msg: ARRAY 256 OF CHAR; res:INTEGER;
+		BEGIN
+			IF Trace * TraceEof # {} THEN KernelLog.String("MediaPlayer: EOF Reset."); KernelLog.Ln; END;
+			Stop;
+			IF ~ current.canSeek THEN 
+				Open(current.uri, msg, res);
+			END;
+		END Reset;
+
 
 		PROCEDURE Loop*(sender, data: ANY);
 		VAR msg: ARRAY 256 OF CHAR; res:INTEGER;
@@ -1414,9 +1446,9 @@ TYPE
 				END;
 				temp := Kernel.GetTicks();
 				callUpdate := (update # NIL) & ((state = Finished) OR (nextState # NoRequest) OR (temp - lastUpdate >= UpdateInterval));
-				IF callUpdate THEN lastUpdate := temp; update(state, current.pos, current.maxFrames, currentTime); END;
+				IF callUpdate THEN lastUpdate := temp; update(state, current.pos, current.maxFrames, currentTime, current.maxTime); END;
 			ELSE
-				IF update # NIL THEN update(state, 0, 0, 0); END;
+				IF update # NIL THEN update(state, 0, 0, 0, 0); END;
 			END;
 		END EvaluateState;
 
@@ -1520,6 +1552,9 @@ BEGIN
 		IF Strings.Match("none", command) THEN
 			mplayer.eof := NIL;
 			context.out.String("MediaPlayer: Set EOF to NIL.");
+		ELSIF Strings.Match("reset", command) THEN
+			mplayer.SetEofAction(mplayer.Reset);
+			context.out.String("MediaPlayer: Set EOF to Reset.");
 		ELSIF Strings.Match("loop", command) THEN
 			mplayer.SetEofAction(mplayer.Loop);
 			context.out.String("MediaPlayer: Set EOF to Loop.");
@@ -1580,6 +1615,7 @@ MediaPlayer.Open "HIGHDIM:/Data/Sperm/CRYPTOZOOSPERMIA1.wmv" ~
 MediaPlayer.Close ~
 
 MediaPlayer.SetEofAction none ~
+MediaPlayer.SetEofAction reset ~
 MediaPlayer.SetEofAction loop ~
 MediaPlayer.SetEofAction quit ~
 

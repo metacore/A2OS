@@ -562,17 +562,20 @@ TYPE
 				END;
 				NextToken;
 				IF token.symbol = FoxScanner.LeftParenthesis THEN
-					parameter := NEW TemplateParameter(module);
-					TemplateParameterP(parameter);
-					module.parameters := parameter;
-
-					WHILE token.symbol = FoxScanner.Comma DO
-						parameter.next := NEW TemplateParameter(module);
-						parameter := parameter.next(TemplateParameter);
+					NextToken;
+					IF token.symbol # FoxScanner.RightParenthesis THEN
+						NEW(parameter, module);
 						TemplateParameterP(parameter);
-					END;
+						module.parameters := parameter;
 
-					Check (FoxScanner.RightParenthesis);
+						WHILE token.symbol = FoxScanner.Comma DO
+							NextToken;
+							NEW(parameter, module);
+							TemplateParameterP(parameter);
+							AppendLast(module.parameters, parameter);
+						END;
+					END;
+					Check(FoxScanner.RightParenthesis);
 				END;
 				IF token.symbol = FoxScanner.In THEN
 					NextToken;
@@ -581,7 +584,7 @@ TYPE
 						module.context.name := Strings.NewString(token.identifierString);
 						module.context.pos := token.position.start;
 					END;
-					Check (FoxScanner.Identifier);
+					Check(FoxScanner.Identifier);
 				END;
 				IF token.symbol = FoxScanner.LeftBrace THEN
 					WHILE (token.symbol # FoxScanner.Semicolon) & (token.symbol # FoxScanner.EndOfText) DO NextToken END;
@@ -620,36 +623,33 @@ TYPE
 
 		PROCEDURE TemplateParameterP(parameter: TemplateParameter);
 		BEGIN
+			IF token.symbol = FoxScanner.Const THEN
+				parameter.type := TemplateType.Const;
 				NextToken;
+			ELSIF token.symbol = FoxScanner.Type THEN
+				parameter.type := TemplateType.Type;
+				NextToken;
+			ELSE
+				hasError := TRUE;
+				parameter.type := TemplateType.Empty;
+				KernelLog.String("err (missing 'CONST' or 'TYPE'): "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
+			END;
 
-				IF token.symbol = FoxScanner.Const THEN
-					parameter.type := TemplateType.Const;
-					NextToken;
-				ELSIF token.symbol = FoxScanner.Type THEN
-					parameter.type := TemplateType.Type;
-					NextToken;
-				ELSE
-					hasError := TRUE;
-					parameter.type := TemplateType.Empty;
-					KernelLog.String("err (missing 'CONST' or 'TYPE'): "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
-				END;
-
-				NEW(parameter.ident);
-				IF token.symbol = FoxScanner.Identifier THEN
-					parameter.ident.name := Strings.NewString(token.identifierString);
-					parameter.ident.pos := token.position.start;
-					NextToken;
-				ELSE
-					parameter.ident.name := Strings.NewString("");
-					hasError := TRUE;
-					KernelLog.String("err: "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
-				END;
+			NEW(parameter.ident);
+			IF token.symbol = FoxScanner.Identifier THEN
+				parameter.ident.name := Strings.NewString(token.identifierString);
+				parameter.ident.pos := token.position.start;
+				NextToken;
+			ELSE
+				parameter.ident.name := Strings.NewString("<???>");
+				parameter.ident.pos := token.position.start;
+				hasError := TRUE;
+				KernelLog.String("err (missing template parameter): "); KernelLog.Int(token.position.start, 0); KernelLog.Ln;
+			END;
 		END TemplateParameterP;
 
 		PROCEDURE TemplateArgumentP(parameter: TemplateParameter);
 		BEGIN
-			NextToken;
-
 			NEW(parameter.ident);
 			ConstExprP(FoxScanner.Comma, FoxScanner.RightParenthesis, parameter.ident);
 		END TemplateArgumentP;
@@ -680,16 +680,18 @@ TYPE
 					END;
 
 					IF token.symbol = FoxScanner.LeftParenthesis THEN
-						parameter := NEW TemplateParameter(import);
-						TemplateArgumentP(parameter);
-						import.parameters := parameter;
-
-						WHILE token.symbol = FoxScanner.Comma DO
-							parameter.next := NEW TemplateParameter(import);
-							parameter := parameter.next(TemplateParameter);
+						NextToken;
+						IF token.symbol # FoxScanner.RightParenthesis THEN
+							NEW(parameter, import);
 							TemplateArgumentP(parameter);
+							import.parameters := parameter;
+							WHILE token.symbol = FoxScanner.Comma DO
+								NextToken;
+								NEW(parameter, import);
+								TemplateArgumentP(parameter);
+								AppendLast(import.parameters, parameter);
+							END;
 						END;
-
 						Check (FoxScanner.RightParenthesis);
 					END;
 

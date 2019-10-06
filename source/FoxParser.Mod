@@ -2118,19 +2118,32 @@ TYPE
 		(** VariableDeclaration = VariableNameList ':' Type. **)
 		PROCEDURE VariableDeclaration(parentScope: SyntaxTree.Scope );
 		VAR
-			variable, firstVariable: SyntaxTree.Variable; type: SyntaxTree.Type;
+			variable, firstVariable: SyntaxTree.Variable; type: SyntaxTree.Type; needsType: BOOLEAN;
 		BEGIN
 			IF Trace THEN S( "VariableDeclaration" ) END;
 			firstVariable := parentScope.lastVariable;
 			VariableNameList( parentScope );
-			Check( Scanner.Colon );
-			type := Type( SyntaxTree.invalidIdentifier, parentScope );
-
+			
 			variable := firstVariable;
 			IF firstVariable #  NIL THEN variable := firstVariable.nextVariable ELSE variable := parentScope.firstVariable END;
-			WHILE variable # NIL  DO
-				variable.SetType( type );
-				variable := variable.nextVariable;
+
+			needsType := FALSE;
+			WHILE (variable # NIL) DO
+				IF variable.initializer = NIL THEN
+					needsType := TRUE
+				END; 
+				variable := variable.nextVariable;				
+			END;
+			
+			IF needsType & Mandatory(Scanner.Colon) OR Optional(Scanner.Colon) THEN
+				type := Type( SyntaxTree.invalidIdentifier, parentScope );
+				variable := firstVariable;
+				IF firstVariable #  NIL THEN variable := firstVariable.nextVariable ELSE variable := parentScope.firstVariable END;
+
+				WHILE variable # NIL  DO
+					variable.SetType( type );
+					variable := variable.nextVariable;
+				END;
 			END;
 			IF Trace THEN E( "VariableDeclaration" ) END;
 		END VariableDeclaration;

@@ -6189,18 +6189,22 @@ TYPE
 			IF Trace THEN D.Str("ResolveVariable "); D.Str0(variable.name);  D.Ln;  END;
 			IF SymbolNeedsResolution(variable) THEN
 
-				modifiers := variable.modifiers;
-				(*
-				flags := Flags(variable.modifiers,{SyntaxTree.UntracedFlag, SyntaxTree.AlignedFlag, SyntaxTree.FixedFlag});
-				variable.AddFlags(flags);
-				*)
-				variable.SetType(ResolveType(variable.type));
+				CheckSymbolVisibility(variable);
+				IF variable.type = NIL THEN (* implies that initializer exists *)
+					variable.SetInitializer (ResolveExpression(variable.initializer));
+					variable.SetType(variable.initializer.type);
+				ELSE 
+					variable.SetType(ResolveType(variable.type));
+					IF variable.initializer # NIL THEN
+						variable.SetInitializer (CompatibleConversion (variable.initializer.position, ResolveExpression(variable.initializer), variable.type));
+					END
+				END;
 				IF variable.type.resolved IS SyntaxTree.ArrayType THEN
 					IF variable.type.resolved(SyntaxTree.ArrayType).length = NIL THEN
 						Error(variable.position,"forbidden open array variable");
 					END;
 				END;
-				CheckSymbolVisibility(variable);
+				modifiers := variable.modifiers;
 				IF HasFlag(modifiers, Global.NameUntraced,position) THEN
 					variable.SetUntraced(TRUE);
 					IF ~ContainsPointer(variable.type) THEN
@@ -6241,9 +6245,6 @@ TYPE
 					IF HasValue(modifiers, Global.NameDataMemorySize, position, value) THEN END;
 				END;
 				CheckModifiers(modifiers, ~InCellNetScope(variable.scope) & ~(variable.type.resolved IS SyntaxTree.CellType) & ~(variable.type.resolved IS SyntaxTree.PortType));
-				IF variable.initializer # NIL THEN
-					variable.SetInitializer (CompatibleConversion (variable.initializer.position, ResolveExpression(variable.initializer), variable.type));
-				END;
 
 				IF (variable.type.resolved IS SyntaxTree.CellType) (*& (cellsAreObjects)*) THEN
 					pointerType := SyntaxTree.NewPointerType(variable.position, variable.scope);

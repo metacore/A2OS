@@ -127,6 +127,7 @@ TYPE
 	KeyEventHandler* = PROCEDURE {DELEGATE} (ucs : SIZE; flags : SET; keysym : SIZE);
 
 	PointerDownHandler* = PROCEDURE {DELEGATE} (x, y : SIZE; keys : SET);
+	ContextMenuHandler* = PROCEDURE {DELEGATE} (sender : ANY; x, y: SIZE);
 
 	(** default Player Window where the video is played *)
 	PlayerWindow* =  OBJECT(WMWindowManager.DoubleBufferWindow)
@@ -137,7 +138,7 @@ TYPE
 
 		(* Fullscreen functionality related *)
 		fullscreen- : BOOLEAN;
-		lastFrame : WMGraphics.Image;
+		lastFrame- : WMGraphics.Image;
 		posX, posY : SIZE; (* Last window position in windowed-mode *)
 
 		(* Pointer invisible functionality related *)
@@ -146,6 +147,7 @@ TYPE
 
 		(* External handlers for key/pointer events. CURRENTLY ACCESS IS NOT SYNCHRONIZED! *)
 		extPointerDownHandler* : PointerDownHandler;
+		extContextMenuHandler* : ContextMenuHandler;
 		extKeyEventHandler* : KeyEventHandler;
 
 		(* Active object control *)
@@ -175,7 +177,7 @@ TYPE
 			END;
 			fullscreen := FALSE;
 		END New;
-
+		
 		(** Toggle between fullscreen and window mode *)
 		PROCEDURE ToggleFullscreen*;
 		VAR view : WMWindowManager.ViewPort; width, height : SIZE;
@@ -269,8 +271,10 @@ TYPE
 			IF PointerInvisibleAfter > 0 THEN
 				lastTimestamp := Kernel.GetTicks();
 				SetPointerVisible(TRUE);
-				IF keys # {2} THEN ToggleFullscreen; END;
-				IF extPointerDownHandler # NIL THEN extPointerDownHandler(x, y, keys); END;
+				IF keys = {0} THEN ToggleFullscreen; 
+				ELSIF (keys = {2}) & (extContextMenuHandler#NIL) THEN extContextMenuHandler(SELF(*.img*),x,y) 
+				ELSIF extPointerDownHandler # NIL THEN extPointerDownHandler(x, y, keys); 
+				END;
 			END;
 		END PointerDown;
 
@@ -296,7 +300,6 @@ TYPE
 	END PlayerWindow;
 
 TYPE
-
 	(* buffer filler thread *)
 	Filler = OBJECT
 	VAR
@@ -453,7 +456,6 @@ TYPE
 	END Filler;
 
 TYPE
-
 	Setup* = POINTER TO RECORD
 		uri- : ARRAY 256 OF CHAR;
 
@@ -504,7 +506,6 @@ TYPE
 	END;
 
 TYPE
-
 	EofProc = PROCEDURE {DELEGATE} (sender, data: ANY);
 
 	(* Decouples end-of-file handlers from media player main loop. This enables eof handlers to call methods
@@ -552,7 +553,7 @@ TYPE
 	Player*= OBJECT
 	VAR
 		(* Access the fields 'state', 'current' and 'next' only from within exclusive regions! *)
-		state : SIGNED32;												(* Current state of player *)
+		state- : SIGNED32;												(* Current state of player *)
 		current, next : Context;
 
 		(* State change request fields. Access via RequestState and GetRequestedState. *)
@@ -570,7 +571,7 @@ TYPE
 		channelName : ARRAY 128 OF CHAR;							(* Audio Mixer Channel Name *)
 
 		(* player window *)
-		pw : PlayerWindow;												(* Video Window *)
+		pw- : PlayerWindow;												(* Video Window *)
 
 		(* Timing *)
 		timer : Kernel.Timer;
@@ -837,7 +838,6 @@ TYPE
 			END;
 		END CanSeek;
 		
-
 		PROCEDURE GetCurrentFrame*() : VideoBuffer;
 		BEGIN {EXCLUSIVE}
 			RETURN current.vBuffer;
@@ -1084,7 +1084,6 @@ TYPE
 				Open(current.uri, msg, res);
 			END;
 		END Reset;
-
 
 		PROCEDURE Loop*(sender, data: ANY);
 		VAR msg: ARRAY 256 OF CHAR; res:INTEGER;

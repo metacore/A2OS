@@ -32,7 +32,6 @@ TYPE
 
 		next : InfoWindow;
 
-
 		PROCEDURE CreateContent;
 		VAR framerate : FLOAT32; hours, minutes, seconds : SIGNED32;
 		BEGIN
@@ -94,7 +93,6 @@ TYPE
 			NEW(tabPositions, 2); tabPositions[0] := 70; tabPositions[1] := 150;
 			NEW(tabStops, tabPositions);
 			tv.SetTabStops(tabStops);
-			
 			panel.AddContent(tv);
 			RETURN panel;
 		END CreateForm;
@@ -268,7 +266,6 @@ TYPE
 
 			NEW(maxFrameLbl); maxFrameLbl.bounds.SetWidth(100); maxFrameLbl.alignment.Set(WMComponents.AlignLeft);
 			panel.AddContent(maxFrameLbl); maxFrameLbl.caption.SetAOC("");
-
 
 			RETURN panel;
 		END CreateForm;
@@ -488,7 +485,7 @@ BEGIN {EXCLUSIVE}
 	DEC(nofWindows);
 END DecCount;
 
-PROCEDURE Cleanup;
+PROCEDURE Cleanup*;
 VAR die : KillerMsg;
 	 msg : WMMessages.Message;
 	 m : WMWindowManager.WindowManager;

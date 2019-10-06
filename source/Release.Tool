@@ -1258,6 +1258,8 @@ PACKAGE GuiApplications ARCHIVE "GuiApplications.zip" SOURCE "GuiApplicationsSrc
 
 	WMScreenShot.Mod
 	WMBackdrop.Mod mars.png BluebottlePic0.png	# Backdrop
+	
+	WMLanguageSwitcher.Mod	#	Language switcher
 
 	# Installer
 	WMInstaller.Mod WMInstaller.tar

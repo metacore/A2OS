@@ -61,7 +61,7 @@ To update: Configuration.Init ~
 			<Setting value="WMPinyinIME.Test"/>
 		-->
 
-		<Setting name="Tasklist" value="WMNavigate.Open -vs 1 0 0 Navigation:TaskList"/>
+		<!-- Setting name="Tasklist" value="WMNavigate.Open -vs -n 1 0 0 Navigation:TaskList"/ -->
 		<Setting name="Hotkey support" value="HotKeys.Open"/>
 		<!-- Setting name="Hardware Detection" value="PCITools.DetectHardware"/-->
 	</Section>

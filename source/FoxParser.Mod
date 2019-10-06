@@ -983,7 +983,7 @@ TYPE
 			caseStatement: SyntaxTree.CaseStatement;  whileStatement: SyntaxTree.WhileStatement;  repeatStatement: SyntaxTree.RepeatStatement;  forStatement: SyntaxTree.ForStatement;
 			identifier: SyntaxTree.Identifier;  loopStatement: SyntaxTree.LoopStatement;  returnStatement: SyntaxTree.ReturnStatement;  awaitStatement: SyntaxTree.AwaitStatement;
 			qualifiedType: SyntaxTree.QualifiedType; code : SyntaxTree.Code; position: Position; result: BOOLEAN;
-			commToken: Scanner.Symbol;
+			commToken: Scanner.Symbol; variable: SyntaxTree.Variable; type: SyntaxTree.Type;
 		BEGIN
 			IF Trace THEN S( "Statement" ) END;
 			CASE Symbol() OF
@@ -1009,6 +1009,23 @@ TYPE
 					statements.AddStatement( statement );					
 					(*IF OptionalB(Scanner.Escape) THEN END;*)
 					result := TRUE
+			| Scanner.Var:
+				NextToken;
+				identifier := Identifier(position);
+				expression := NIL;
+				IF Optional(Scanner.Becomes) THEN
+					expression := Expression();
+				END;
+				type := NIL;
+				IF (expression = NIL) & Mandatory(Scanner.Colon) OR Optional(Scanner.Colon) THEN
+					type := Type(SyntaxTree.invalidIdentifier, NIL);
+				END;
+				variable := SyntaxTree.NewVariable(position, identifier);
+				variable.SetInitializer(expression);
+				variable.SetType(type);
+				statement := SyntaxTree.NewDeclarationStatement(position, variable, outer);
+				statements.AddStatement(statement);
+				result := TRUE; 
 			| Scanner.If:
 					NextToken;
 					ifStatement := SyntaxTree.NewIfStatement( token.position ,outer);

@@ -1595,7 +1595,7 @@ TYPE
 		END EmitLeave;
 
 		PROCEDURE Statement(x: SyntaxTree.Statement);
-		VAR use: VariableUse; result: Operand; pos: Streams.Position;
+		VAR use: VariableUse; result: Operand; pos: Streams.Position; reference: SyntaxTree.Expression;
 		BEGIN
 			pos := x.position.start;
 			temporaries.GetUsage(use);
@@ -1619,6 +1619,13 @@ TYPE
 				ELSE
 					Designate(x.call, result)
 				END;
+			| SyntaxTree.DeclarationStatement DO 
+					IF x.variable.initializer # NIL THEN
+						reference := SyntaxTree.NewSymbolDesignator(x.variable.initializer.position,NIL, NIL,x.variable);
+						reference.SetType(x.variable.type.resolved);
+						reference.SetAssignable(TRUE);
+						Assign(reference,x.variable.initializer);
+					END;
 			| SyntaxTree.Assignment DO Assign(x.left, x.right );
 			| SyntaxTree.CommunicationStatement DO CommunicationStatement(x)
 			| SyntaxTree.IfStatement DO IfStatement(x)

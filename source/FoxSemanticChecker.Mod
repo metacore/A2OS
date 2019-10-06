@@ -6997,6 +6997,7 @@ TYPE
 			result := x;
 			WITH x:
 			SyntaxTree.ProcedureCallStatement DO result := ResolveProcedureCallStatement(x)
+			| SyntaxTree.DeclarationStatement DO result := ResolveDeclarationStatement(x)
 			| SyntaxTree.Assignment DO result := ResolveAssignment(x)
 			| SyntaxTree.CommunicationStatement DO result := ResolveCommunicationStatement(x)
 			| SyntaxTree.IfStatement DO result := ResolveIfStatement(x)
@@ -7032,6 +7033,26 @@ TYPE
 				END;
 			END;
 		END StatementSequence;
+		
+		PROCEDURE ResolveDeclarationStatement(x: SyntaxTree.DeclarationStatement): SyntaxTree.Statement;
+		VAR duplicate: BOOLEAN;
+		BEGIN
+			IF x.variable.type = NIL THEN
+				x.variable.SetInitializer (ResolveExpression(x.variable.initializer));
+				x.variable.SetType(x.variable.initializer.type);
+			ELSIF x.variable.initializer # NIL THEN
+				x.variable.SetType(ResolveType(x.variable.type));
+				x.variable.SetInitializer (CompatibleConversion (x.variable.initializer.position, ResolveExpression(x.variable.initializer), x.variable.type));
+			END;
+			currentScope.AddVariable(x.variable);
+			currentScope.EnterSymbol(x.variable, duplicate);
+			IF duplicate THEN
+				Error(x.variable.position, "duplicate variable");
+			END;
+ 			ASSERT(system.GenerateVariableOffsets(currentScope));
+			
+			RETURN x;
+		END ResolveDeclarationStatement;
 
 		(** check and resolve procedure call statement procedureCall() or procedureCall;
 			- check if call is a procedure call designator, if not (procedure type symbol) try to make one out of it

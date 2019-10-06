@@ -3003,7 +3003,7 @@ TYPE
 		PROCEDURE InRegister*(b: BOOLEAN);
 		BEGIN
 			inRegister := b;
-		END InRegister
+		END InRegister;
 
 		PROCEDURE RegisterNumber*(reg: SIZE);
 		BEGIN
@@ -3071,7 +3071,7 @@ TYPE
 		PROCEDURE InRegister*(b: BOOLEAN);
 		BEGIN
 			inRegister := b;
-		END InRegister
+		END InRegister;
 
 		PROCEDURE RegisterNumber*(reg: SIZE);
 		BEGIN
@@ -3083,7 +3083,6 @@ TYPE
 			autoConvert := auto;
 		END SetAutoConvert;
 		
-
 		PROCEDURE SetModifiers*(flag: Modifier);
 		BEGIN SELF.modifiers := flag;
 		END SetModifiers;
@@ -3456,6 +3455,16 @@ TYPE
 			end := pos;
 		END End;
 	END Statement;
+
+	DeclarationStatement*= OBJECT(Statement)
+	VAR 
+		variable-: Variable;
+	
+		PROCEDURE & InitDeclarationStatement(position: Position; v: Variable; outer: Statement);
+		BEGIN	InitStatement(position,outer); SELF.variable := v;
+		END InitDeclarationStatement;
+	
+	END DeclarationStatement;
 
 	(** << call(...) >> **)
 	ProcedureCallStatement*= OBJECT(Statement)
@@ -5780,6 +5789,12 @@ VAR
 		NEW( communication, position, op, left, right,outer );  RETURN communication
 	END NewCommunicationStatement;
 
+	PROCEDURE NewDeclarationStatement*(position: Position; variable: Variable; outer: Statement): DeclarationStatement;
+	VAR declaration: DeclarationStatement;
+	BEGIN
+		NEW(declaration,position,variable,outer); RETURN declaration
+	END NewDeclarationStatement;
+	
 	PROCEDURE NewProcedureCallStatement*(position: Position; ignore: BOOLEAN; call: Expression; outer: Statement): ProcedureCallStatement;
 	VAR caller: ProcedureCallStatement;
 	BEGIN

@@ -10,7 +10,7 @@ CONST
 	BlockSize* = (8 * SIZEOF(ADDRESS)); 
 	ArrayAlignment* = 8; 
 	BlockHeaderSize* = (2 * AddressSize); 
-	HeapBlockOffset* =  -(2 * AddressSize); 
+	HeapBlockOffset* = ( -2 * AddressSize); 
 	TypeDescOffset* =  -AddressSize; 
 	MaxCandidates = 1024; 
 	ProtTypeBit* = 31; 

@@ -7,7 +7,7 @@ CONST
 	Dist = 1.E+1; 
 	ScaleX = 8.E-1; 
 	ScaleY = 9.E-1; 
-	MinVar =  -(3 * M.pi); 
+	MinVar = ( -3 * M.pi); 
 	MaxVar = (3 * M.pi); 
 	MinPeak = ((1.5 * M.pi) / 1.8E+2); 
 	MaxPeak = ((3.5 * M.pi) / 1.8E+2); 

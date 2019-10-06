@@ -6,6 +6,8 @@ CONST
 TYPE 
 	Position* = Scanner.Position; 
 
+	Operator* = SIGNED32; 
+
 	Parser* = OBJECT 
 	CONST 
 		Processing = 0; 
@@ -58,15 +60,16 @@ TYPE
 		PROCEDURE ^ OptionalB*(symbol: Scanner.Symbol): BOOLEAN; 
 		PROCEDURE ^ Ignore(symbol: Scanner.Symbol); 
 		PROCEDURE ^ QualifiedIdentifier*(): SyntaxTree.QualifiedIdentifier; 
-		PROCEDURE ^ IdentifierDefinition(VAR name: SyntaxTree.Identifier; VAR access: SET; allowedReadOnly: BOOLEAN); 
+		PROCEDURE ^ IdentifierDefinition(VAR name: SyntaxTree.Identifier; VAR access: SET; allowedReadOnly: BOOLEAN; VAR position: Position); 
 		PROCEDURE ^ ExpressionList(expressionList: SyntaxTree.ExpressionList); 
 		PROCEDURE ^ IndexList(expressionList: SyntaxTree.ExpressionList); 
 		PROCEDURE ^ RangeExpression(): SyntaxTree.Expression; 
-		PROCEDURE ^ Designator(): SyntaxTree.Designator; 
+		PROCEDURE ^ PrimaryExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ UnaryExpression(): SyntaxTree.Expression; 
+		PROCEDURE ^ Factor(): SyntaxTree.Expression; 
 		PROCEDURE ^ DesignatorOperations(expression: SyntaxTree.Expression): SyntaxTree.Expression; 
 		PROCEDURE ^ Set(): SyntaxTree.Expression; 
-		PROCEDURE ^ MathArray(): SyntaxTree.Expression; 
-		PROCEDURE ^ Factor(): SyntaxTree.Expression; 
+		PROCEDURE ^ ArrayLiteral(): SyntaxTree.Expression; 
 		PROCEDURE ^ Term(): SyntaxTree.Expression; 
 		PROCEDURE ^ SimpleExpression(): SyntaxTree.Expression; 
 		PROCEDURE ^ Expression*(): SyntaxTree.Expression; 

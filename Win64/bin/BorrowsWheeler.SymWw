@@ -17,32 +17,28 @@ TYPE
 	END MTF; 
 
 	Encoder* = OBJECT 
-	TYPE 
-		Index = SIZE; 
 	VAR 
 		mtf: MTF; 
-		length: SIZE; 
 		sbuf: ARRAY (2 * BlockSize) OF CHAR; 
-		rotation: ARRAY BlockSize OF Index; 
+		bufLength: INTEGER; 
+		rotation: ARRAY BlockSize OF SIGNED16; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE ^ Less(a, b: Index): BOOLEAN; 
-		PROCEDURE ^ Swap(a, b: Index); 
-		PROCEDURE ^ InsertSort(lo, hi: Index); 
-		PROCEDURE ^ SortR(lo, hi: SIZE); 
-		PROCEDURE ^ EncodeBlock*(VAR buf: ARRAY OF CHAR; len: SIZE): SIGNED32; 
+		PROCEDURE ^ Less(a, b: INTEGER): BOOLEAN; 
+		PROCEDURE ^ Swap(a, b: INTEGER); 
+		PROCEDURE ^ InsertSort(lo, hi: INTEGER); 
+		PROCEDURE ^ SortR(lo, hi: INTEGER); 
+		PROCEDURE ^ EncodeBlock*(VAR buf: ARRAY OF CHAR; len: INTEGER): INTEGER; 
 	END Encoder; 
 
 	Decoder* = OBJECT 
-	TYPE 
-		Index = SIZE; 
 	VAR 
 		mtf: MTF; 
 		f, l: ARRAY BlockSize OF CHAR; 
 		lc, fc: ARRAY BlockSize OF SIGNED16; 
 
 		PROCEDURE ^  & New*; 
-		PROCEDURE  - Swap(a, b: Index);
+		PROCEDURE  - Swap(a, b: INTEGER);
 		VAR 
 			tmp: CHAR; 
 		BEGIN
@@ -50,8 +46,8 @@ TYPE
 			f[a] := f[b]; 
 			f[b] := tmp
 		END Swap; 
-		PROCEDURE ^ SortF(lo, hi: Index); 
-		PROCEDURE ^ DecodeBlock*(VAR buf: ARRAY OF CHAR; len, index: SIZE); 
+		PROCEDURE ^ SortF(lo, hi: INTEGER); 
+		PROCEDURE ^ DecodeBlock*(VAR buf: ARRAY OF CHAR; len, index: INTEGER); 
 	END Decoder; 
 BEGIN
 END BorrowsWheeler.

@@ -23,8 +23,10 @@ TYPE
 		isSorted, alreadyPrearrangedSinceLastSort: BOOLEAN; 
 		originalRestrictions: POINTER TO ARRAY OF ArrangementRestriction; 
 		objectFile-: IRObjectFile.ObjectFileFormat; 
+		codeUnit: Backend.SizeInBits; 
 
 		PROCEDURE ^  & Init*(diagnostics: Diagnostics.Diagnostics; defaultBackend: Backend.Backend); 
+		PROCEDURE ^ SetInstructionWidth*(unit: Backend.SizeInBits); 
 		PROCEDURE ^ PatchStackSize*(CONST typeName: SectionName; size: SIZE); 
 		PROCEDURE ^ EmitAt(section: IntermediateCode.Section; index: SIZE; CONST instruction: IntermediateCode.Instruction); 
 		PROCEDURE ^ PatchIntegerValue*(CONST sectionName: ARRAY OF CHAR; index: SIZE; value: SIGNED64; type: SyntaxTree.Type): BOOLEAN; 

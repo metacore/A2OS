@@ -550,6 +550,7 @@ VAR
 	PROCEDURE ^ Init*; 
 	PROCEDURE ^ DumpConditionName*(w: Streams.Writer; CONST conditionNumber: SIGNED32); 
 	PROCEDURE ^ DumpRegisterName*(w: Streams.Writer; registerNumber: SIGNED32); 
+	PROCEDURE ^ DumpImmediate(w: Streams.Writer; value: SIGNED32); 
 	PROCEDURE ^ DumpOperand*(w: Streams.Writer; CONST operand: Operand); 
 	PROCEDURE ^ DumpInstruction*(w: Streams.Writer; CONST instruction: Instruction); 
 	PROCEDURE ^ Test*(context: Commands.Context); 

@@ -11,7 +11,7 @@ TYPE
 	KillerMsg = OBJECT 
 	END KillerMsg; 
 
-	InfoWindow = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
+	InfoWindow* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
 		data: MediaPlayer.Setup; 
 		tv: WMTextView.TextView; 
@@ -19,14 +19,14 @@ TYPE
 		tw: TextUtilities.TextWriter; 
 		next: InfoWindow; 
 
-		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^ CreateContent; 
+		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*(setupData: MediaPlayer.Setup); 
 	END InfoWindow; 
 
 	Control = OBJECT {EXCLUSIVE} (WMComponents.VisualComponent)
 	VAR 
-		playBtn, stopBtn, pauseBtn: WMStandardComponents.Button; 
+		playBtn, stepBtn, stopBtn, pauseBtn, rewBtn, ffBtn: WMStandardComponents.Button; 
 		owner: Window; 
 
 		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
@@ -35,25 +35,25 @@ TYPE
 
 	Window* = OBJECT {EXCLUSIVE} (WMComponents.FormWindow)
 	VAR 
-		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn: WMStandardComponents.Button; 
+		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn, stepBtn: WMStandardComponents.Button; 
 		search: WMStandardComponents.Scrollbar; 
-		timeLbl, totTimeLbl: WMStandardComponents.Label; 
-		player: MediaPlayer.Player; 
+		timeLbl*, totTimeLbl*, frameLbl*, maxFrameLbl*: WMStandardComponents.Label; 
+		player*: MediaPlayer.Player; 
 		stepSize: SIGNED32; 
 		filename: Files.FileName; 
-		setupData: MediaPlayer.Setup; 
-		infos: InfoWindow; 
-		windowInfo: WMWindowManager.WindowInfo; 
+		setupData*: MediaPlayer.Setup; 
+		infos*: InfoWindow; 
+		windowInfo*: WMWindowManager.WindowInfo; 
 
-		PROCEDURE ^ CreateForm(): WMComponents.VisualComponent; 
+		PROCEDURE ^ CreateForm*(): WMComponents.VisualComponent; 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ GenerateControl*(): ANY; 
 		PROCEDURE ^ Open*(CONST fileName: ARRAY OF CHAR); 
-		PROCEDURE ^ ButtonHandler(sender, data: ANY); 
+		PROCEDURE ^ ButtonHandler*(sender, data: ANY); 
 		PROCEDURE ^ Close*; 
 		PROCEDURE ^ Handle*(VAR x: WMMessages.Message); 
 		PROCEDURE ^ SliderSearch(sender, data: ANY); 
-		PROCEDURE ^ Update*(status, pos, maxpos, displayTime: SIGNED32); 
+		PROCEDURE ^ Update*(status, pos, maxpos, time, displayTime: SIGNED32); 
 		PROCEDURE ^ SetUpController*(setup: MediaPlayer.Setup); 
 	END Window; 
 VAR 
@@ -64,6 +64,6 @@ VAR
 	PROCEDURE ^ Open*(context: Commands.Context); 
 	PROCEDURE ^ IncCount; 
 	PROCEDURE ^ DecCount; 
-	PROCEDURE ^ Cleanup; 
+	PROCEDURE ^ Cleanup*; 
 BEGIN
 END WMPlayer.

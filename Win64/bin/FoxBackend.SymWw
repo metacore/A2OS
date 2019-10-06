@@ -4,6 +4,8 @@ CONST
 TYPE 
 	SectionName = ARRAY 256 OF CHAR; 
 
+	SizeInBits* = SIZE; 
+
 	Backend* = OBJECT 
 	VAR 
 		diagnostics-: Diagnostics.Diagnostics; 
@@ -17,15 +19,15 @@ TYPE
 		findSectionOffset-: SIGNED32; 
 		capabilities-: SET; 
 		oberon07-: BOOLEAN; 
-		instructionWidth-: SIZE; 
 		hasLinkRegister-: BOOLEAN; 
 		name-: ARRAY 32 OF CHAR; 
+		codeUnit-: SizeInBits; 
 
 		PROCEDURE ^  & InitBackend*; 
 		PROCEDURE ^ SetOberon07*; 
 		PROCEDURE ^ SetCapabilities*(capabilities: SET); 
 		PROCEDURE ^ SetHasLinkRegister*; 
-		PROCEDURE ^ SetInstructionWidth*(instructionWidth: SIZE); 
+		PROCEDURE ^ SetCodeUnit*(unit: SizeInBits); 
 		PROCEDURE ^ ResetError*; 
 		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System); 
 		PROCEDURE ^ SetName*(CONST name: ARRAY OF CHAR); 

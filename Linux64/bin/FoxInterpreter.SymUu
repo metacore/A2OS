@@ -145,7 +145,7 @@ TYPE
 		PROCEDURE ^ ExpectInteger(x: SyntaxTree.Expression; VAR i: Integer): BOOLEAN; 
 		PROCEDURE ^ GetBoolean(x: SyntaxTree.Expression; VAR i: Boolean): BOOLEAN; 
 		PROCEDURE ^ ExpectBoolean(x: SyntaxTree.Expression; VAR b: Boolean): BOOLEAN; 
-		PROCEDURE ^ PutValue(x: SyntaxTree.Designator; v: Value); 
+		PROCEDURE ^ PutValue(x: SyntaxTree.Expression; v: Value); 
 		PROCEDURE ^ VisitAssignment*(x: SyntaxTree.Assignment); 
 		PROCEDURE ^ IfPart(ifPart: SyntaxTree.IfPart): BOOLEAN; 
 		PROCEDURE ^ VisitIfStatement*(x: SyntaxTree.IfStatement); 

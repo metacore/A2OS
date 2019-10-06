@@ -163,11 +163,11 @@ VAR
 	PROCEDURE ^ FindCondition(VAR q: ProcessQueue): Process; 
 	PROCEDURE ^ Get(VAR queue: ProcessQueue; VAR new: Process); 
 	PROCEDURE ^ Put(VAR queue: ProcessQueue; t: Process); 
-	PROCEDURE ^ Terminate*; 
+	PROCEDURE ^ Terminate-; 
 	PROCEDURE ^ TerminateThis*(p: Process; unbreakable: BOOLEAN); 
 	PROCEDURE ^ SetPriority*(pri: INTEGER); 
 	PROCEDURE ^ Sleep*(ms: SIGNED32); 
-	PROCEDURE ^ Yield*; 
+	PROCEDURE ^ Yield-; 
 	PROCEDURE ^ CurrentProcess*(): {UNTRACED} Process; 
 	PROCEDURE ^ CurrentContext*(): ANY; 
 	PROCEDURE ^ SetContext*(context: ANY); 
@@ -182,7 +182,7 @@ VAR
 	PROCEDURE ^ FinalizeProtObject(obj: ANY); 
 	PROCEDURE ^ FinalizeProcess(obj: ANY); 
 	PROCEDURE ^ Exit; 
-	PROCEDURE ^ ExitTrap*; 
+	PROCEDURE ^ ExitTrap-; 
 	PROCEDURE ^ Remove(t: Timer); 
 	PROCEDURE ^ Insert(t: Timer); 
 	PROCEDURE ^ SetTimeout*(t: Timer; h: EventHandler; ms: SIGNED32); 
@@ -194,7 +194,6 @@ VAR
 	PROCEDURE ^ Resume(p: Process); 
 	PROCEDURE ^ SuspendActivities; 
 	PROCEDURE ^ ResumeActivities; 
-	PROCEDURE ^ GCLoop*; 
 	PROCEDURE ^ CurrentProcessTime*(): SIGNED64; 
 	PROCEDURE ^ TimerFrequency*(): SIGNED64; 
 	PROCEDURE ^ LeaveA2*; 
@@ -204,7 +203,7 @@ VAR
 	PROCEDURE ^ Convert; 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ MainThreadSleep; 
-	PROCEDURE ^ {FINAL} Final; 
+	PROCEDURE ^ Final; 
 	PROCEDURE ^ GCStatusFactory(): Heaps.GCStatus; 
 BEGIN
 END Objects.

@@ -1,0 +1,27 @@
+MODULE WMGraphicsDemo;
+	IMPORT WMWindowManager, Strings, WMGraphics, WMGraphicsGfx, WMRectangles, Modules, Math, Kernel;
+CONST 
+	ShortFrameDelay = 10; 
+	LongFrameDelay = 20; 
+TYPE 
+	TestWindow = OBJECT {EXCLUSIVE} (WMWindowManager.DoubleBufferWindow)
+	VAR 
+		bild: WMGraphics.Image; 
+		timer: Kernel.Timer; 
+
+		PROCEDURE ^  & New*; 
+		PROCEDURE ^ MakeCircle(x, y, r, nofPoints: SIZE; VAR p: ARRAY OF WMGraphics.Point2d); 
+		PROCEDURE ^ Filler(canvas: WMGraphics.Canvas; y, x0, x1: SIZE); 
+		PROCEDURE ^ Clear; 
+		PROCEDURE ^ FillDemo; 
+		PROCEDURE ^ TheEnd; 
+	BEGIN
+	END TestWindow; 
+VAR 
+	s: TestWindow; 
+
+	PROCEDURE ^ TestGfx*; 
+	PROCEDURE ^ Open*; 
+	PROCEDURE ^ Cleanup; 
+BEGIN
+END WMGraphicsDemo.

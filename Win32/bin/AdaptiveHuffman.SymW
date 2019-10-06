@@ -10,20 +10,20 @@ TYPE
 	BitReader = OBJECT 
 	VAR 
 		in: Streams.Reader; 
-		curByte, curBit: SIGNED32; 
+		curByte, curBit: INTEGER; 
 
 		PROCEDURE ^  & New(r: Streams.Reader); 
 		PROCEDURE ^ Initialize; 
-		PROCEDURE ^ Bit(): SIGNED32; 
+		PROCEDURE ^ Bit(): INTEGER; 
 	END BitReader; 
 
 	BitWriter = OBJECT 
 	VAR 
 		out: Streams.Writer; 
-		curByte, curBit: SIGNED32; 
+		curByte, curBit: INTEGER; 
 
 		PROCEDURE ^  & New(w: Streams.Writer); 
-		PROCEDURE ^ Bit(bit: SIGNED32); 
+		PROCEDURE ^ Bit(bit: INTEGER); 
 		PROCEDURE ^ Finish; 
 	END BitWriter; 
 
@@ -75,7 +75,7 @@ TYPE
 		huff: HuffmanCoder; 
 
 		PROCEDURE ^  & New*(archive: Streams.Reader); 
-		PROCEDURE ^ ExtractBlock*(VAR buf: ARRAY OF CHAR; len: SIGNED32); 
+		PROCEDURE ^ ExtractBlock*(VAR buf: ARRAY OF CHAR; len: INTEGER); 
 	END Decoder; 
 BEGIN
 END AdaptiveHuffman.

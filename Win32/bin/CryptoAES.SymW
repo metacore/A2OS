@@ -1,5 +1,5 @@
 MODULE CryptoAES;
-	IMPORT S := SYSTEM, Ciphers := CryptoCiphers, U := CryptoUtils;
+	IMPORT Ciphers := CryptoCiphers, U := CryptoUtils;
 CONST 
 	MaxRounds = 14; 
 	ECB = Ciphers.ECB; 
@@ -19,14 +19,14 @@ TYPE
 		Block = ARRAY 4 OF SET32; 
 
 		Ind4 = RECORD 
-			a, b, c, d: SIGNED32; 
+			a, b, c, d: INTEGER; 
 		END; 
 	VAR 
 		rounds: SIGNED8; 
 		key, dkey: RKeys; 
 		iv: Block; 
 
-		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: SIGNED32); 
+		PROCEDURE ^ InitKey*(CONST src: ARRAY OF CHAR; keybits: INTEGER); 
 		PROCEDURE ^ SetIV*(CONST src: ARRAY OF CHAR; mode: SIGNED8); 
 		PROCEDURE ^ IncIV; 
 		PROCEDURE ^ Encrypt*(VAR buf: ARRAY OF CHAR; ofs, len: SIZE); 
@@ -35,10 +35,10 @@ TYPE
 		PROCEDURE ^ RoundD(VAR b: Block); 
 		PROCEDURE  - split(s: SET32; VAR b: Ind4);
 		BEGIN
-			b.a := (S.VAL(SIGNED32, s) MOD 256); 
-			b.b := ((S.VAL(SIGNED32, s) DIV 256) MOD 256); 
-			b.c := ((S.VAL(SIGNED32, s) DIV 65536) MOD 256); 
-			b.d := ((S.VAL(SIGNED32, s) DIV 16777216) MOD 256)
+			b.a := (INTEGER(s) MOD 256); 
+			b.b := ((INTEGER(s) DIV 256) MOD 256); 
+			b.c := ((INTEGER(s) DIV 65536) MOD 256); 
+			b.d := ((INTEGER(s) DIV 16777216) MOD 256)
 		END split; 
 		PROCEDURE ^ Init128(CONST src: ARRAY OF CHAR): SIGNED8; 
 		PROCEDURE ^ Init192(CONST src: ARRAY OF CHAR): SIGNED8; 

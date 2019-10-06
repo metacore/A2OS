@@ -15,6 +15,7 @@ CONST
 	Playing* = 3; 
 	Paused* = 4; 
 	Stopped* = 5; 
+	Stepping* = 6; 
 	InTransition* = 7; 
 	Finished* = 9; 
 	Closed* = 10; 
@@ -37,10 +38,10 @@ CONST
 	TraceStates = {5}; 
 	TraceRendering = {6}; 
 	TraceEof = {7}; 
-	Trace = TraceNone; 
+	Trace = {2, 4, 5}; 
 	Debug = TRUE; 
 TYPE 
-	VideoBuffer = WMGraphics.Image; 
+	VideoBuffer* = WMGraphics.Image; 
 
 	VideoBufferPool = OBJECT {EXCLUSIVE} 
 	VAR 
@@ -57,17 +58,20 @@ TYPE
 
 	PointerDownHandler* = PROCEDURE {DELEGATE}(x, y: SIZE; keys: SET); 
 
+	ContextMenuHandler* = PROCEDURE {DELEGATE}(sender: ANY; x, y: SIZE); 
+
 	PlayerWindow* = OBJECT {EXCLUSIVE} (WMWindowManager.DoubleBufferWindow)
 	VAR 
 		player: Player; 
 		rect: WMRectangles.Rectangle; 
 		videoWidth, videoHeight: SIZE; 
 		fullscreen-: BOOLEAN; 
-		lastFrame: WMGraphics.Image; 
+		lastFrame-: WMGraphics.Image; 
 		posX, posY: SIZE; 
 		timer: Kernel.Timer; 
 		lastTimestamp, timestamp: SIGNED32; 
 		extPointerDownHandler*: PointerDownHandler; 
+		extContextMenuHandler*: ContextMenuHandler; 
 		extKeyEventHandler*: KeyEventHandler; 
 		alive, dead: BOOLEAN; 
 
@@ -103,7 +107,7 @@ TYPE
 		PROCEDURE ^ GetNextBuffer(): VideoBuffer; 
 		PROCEDURE ^ ReturnBuffer(buf: VideoBuffer); 
 		PROCEDURE ^ DropFrames(n: SIGNED32); 
-		PROCEDURE ^ GetPos(): SIGNED32; 
+		PROCEDURE ^ GetFrame(): SIGNED32; 
 		PROCEDURE ^ SeekAndGetFrame(pos: SIGNED32; VAR f: WMGraphics.Image; VAR res: SIGNED32); 
 		PROCEDURE ^ SeekFrame(pos: SIGNED32; isKeyFrame: BOOLEAN; VAR res: SIGNED32); 
 		PROCEDURE ^ NofFullBuffers(): SIZE; 
@@ -149,21 +153,21 @@ TYPE
 
 	EofProc = PROCEDURE {DELEGATE}(sender, data: ANY); 
 
-	EofHandler = OBJECT {EXCLUSIVE} 
+	EofHandler* = OBJECT {EXCLUSIVE} 
 	VAR 
-		proc: EofProc; 
-		player: Player; 
+		proc*: EofProc; 
+		player*: Player; 
 		alive, dead, called: BOOLEAN; 
 
-		PROCEDURE ^ Call; 
-		PROCEDURE ^ Terminate; 
+		PROCEDURE ^ Call*; 
+		PROCEDURE ^ Terminate*; 
 		PROCEDURE ^  & New*(player: Player); 
 	BEGIN{ACTIVE} 
 	END EofHandler; 
 
 	Player* = OBJECT {EXCLUSIVE} 
 	VAR 
-		state: SIGNED32; 
+		state-: SIGNED32; 
 		current, next: Context; 
 		nextState: SIGNED32; 
 		nextContext: Context; 
@@ -173,7 +177,7 @@ TYPE
 		soundDevice: SoundDevices.Driver; 
 		mixerChannel, pcmChannel, mChannel: SoundDevices.MixerChannel; 
 		channelName: ARRAY 128 OF CHAR; 
-		pw: PlayerWindow; 
+		pw-: PlayerWindow; 
 		timer: Kernel.Timer; 
 		tickStart: SIGNED32; 
 		tickDelay: SIGNED32; 
@@ -181,31 +185,38 @@ TYPE
 		videoFramesPlayed: SIGNED32; 
 		mspf: SIGNED32; 
 		setup*: PROCEDURE {DELEGATE}(data: Setup); 
-		update*: PROCEDURE {DELEGATE}(state, pos, maxpos, displayTime: SIGNED32); 
+		update*: PROCEDURE {DELEGATE}(state, frame, maxFrame, time, displayTime: SIGNED32); 
 		eof: EofHandler; 
+		pointerDownHandler*: PROCEDURE {DELEGATE}(x, y: SIZE; keys: SET); 
 
 		PROCEDURE ^ Open*(CONST uri: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Play*; 
+		PROCEDURE ^ Step*; 
 		PROCEDURE ^ DoTransition*(CONST uri: ARRAY OF CHAR; pos, duration: SIGNED32; VAR msg: ARRAY OF CHAR; VAR res: INTEGER); 
 		PROCEDURE ^ Stop*; 
 		PROCEDURE ^ Pause*; 
-		PROCEDURE ^ GetPos*(): SIGNED32; 
+		PROCEDURE ^ GetTimePos*(): SIGNED32; 
+		PROCEDURE ^ GetFrame*(): SIGNED32; 
 		PROCEDURE ^ SetPos*(pos: SIGNED32); 
-		PROCEDURE ^ SetEofAction(proc: EofProc); 
+		PROCEDURE ^ SetEofAction*(proc: EofProc); 
 		PROCEDURE ^  & New*; 
 		PROCEDURE ^ Acquire; 
 		PROCEDURE ^ Release; 
 		PROCEDURE ^ RequestState(state: SIGNED32; context: Context); 
 		PROCEDURE ^ GetRequestedState(VAR state: SIGNED32; VAR context: Context); 
-		PROCEDURE ^ SetState(state: SIGNED32); 
-		PROCEDURE ^ GetState(): SIGNED32; 
+		PROCEDURE ^ SetState*(state: SIGNED32); 
+		PROCEDURE ^ GetState*(): SIGNED32; 
+		PROCEDURE ^ CanSeek*(): BOOLEAN; 
+		PROCEDURE ^ GetCurrentFrame*(): VideoBuffer; 
 		PROCEDURE ^ ToggleFullScreen*(sender, data: ANY); 
 		PROCEDURE ^ CheckWindow(context: Context); 
 		PROCEDURE ^ InitTime; 
 		PROCEDURE ^ GetContext(CONST uri: ARRAY OF CHAR; VAR msg: ARRAY OF CHAR; VAR res: INTEGER): Context; 
 		PROCEDURE ^ FreeContext(context: Context); 
-		PROCEDURE ^ Loop(sender, data: ANY); 
-		PROCEDURE ^ Quit(sender, data: ANY); 
+		PROCEDURE ^ NoAction*(sender, data: ANY); 
+		PROCEDURE ^ Reset*(sender, data: ANY); 
+		PROCEDURE ^ Loop*(sender, data: ANY); 
+		PROCEDURE ^ Quit*(sender, data: ANY); 
 		PROCEDURE ^ RenderAudio(c: Context); 
 		PROCEDURE ^ RenderVideo(c: Context); 
 		PROCEDURE ^ RenderVideoTransition(from, to: Context); 
@@ -224,6 +235,8 @@ VAR
 	mplayer: Player; 
 
 	PROCEDURE ^ Open*(context: Commands.Context); 
+	PROCEDURE ^ Pause*(context: Commands.Context); 
+	PROCEDURE ^ Step*(context: Commands.Context); 
 	PROCEDURE ^ TransitionTo*(context: Commands.Context); 
 	PROCEDURE ^ Close*; 
 	PROCEDURE ^ SetEofAction*(context: Commands.Context); 

@@ -1,5 +1,5 @@
 MODULE Zip;
-	IMPORT Streams, Files, Zlib, ZlibReaders, ZlibWriters;
+	IMPORT Strings, Streams, Files, Archives, Locks, Zlib, ZlibReaders, ZlibWriters;
 CONST 
 	Ok* = 0; 
 	FileError* =  -1; 
@@ -17,6 +17,7 @@ CONST
 	DefaultStrategy* = ZlibWriters.DefaultStrategy; 
 	Filtered* = ZlibWriters.Filtered; 
 	HuffmanOnly* = ZlibWriters.HuffmanOnly; 
+	EntryNameSize = 256; 
 	Supported = 0; 
 	IncompatibleVersion = 1; 
 	Encrypted = 2; 
@@ -32,7 +33,7 @@ TYPE
 	Entry* = POINTER TO EntryDesc; 
 
 	EntryDesc* = RECORD 
-		name-: ARRAY 256 OF CHAR; 
+		name-: ARRAY EntryNameSize OF CHAR; 
 		method: SIGNED16; 
 		time-, date-: SIGNED32; 
 		crc32: SIGNED32; 
@@ -80,6 +81,44 @@ TYPE
 		zr: ZlibReaders.Reader; 
 	END; 
 
+	SizeReader = OBJECT 
+	VAR 
+		r: Reader; 
+		max: SIZE; 
+		arc: ArchiveObj; 
+
+		PROCEDURE ^  & Init*(r: Reader; size: SIGNED32; arc: ArchiveObj); 
+		PROCEDURE ^ Receive(VAR buf: ARRAY OF CHAR; ofs, size, min: SIZE; VAR len: SIZE; VAR res: INTEGER); 
+	END SizeReader; 
+
+	EntryInfo* = OBJECT (Archives.EntryInfo)
+	VAR 
+		name: ARRAY EntryNameSize OF CHAR; 
+		size: SIGNED32; 
+
+		PROCEDURE ^  & Init*(CONST name: ARRAY OF CHAR; size: SIGNED32); 
+		PROCEDURE ^ GetName*(): Strings.String; 
+		PROCEDURE ^ GetSize*(): SIGNED32; 
+		PROCEDURE ^ GetInfoString*(): Strings.String; 
+	END EntryInfo; 
+
+	ArchiveObj* = OBJECT (Archives.Archive)
+	VAR 
+		arc: Archive; 
+		lock: Locks.RecursiveLock; 
+
+		PROCEDURE ^  & Init*(f: Files.File); 
+		PROCEDURE ^ Acquire*; 
+		PROCEDURE ^ Release*; 
+		PROCEDURE ^ GetIndex*(): Archives.Index; 
+		PROCEDURE ^ GetEntryInfo*(CONST name: ARRAY OF CHAR): Archives.EntryInfo; 
+		PROCEDURE ^ RemoveEntry*(CONST name: ARRAY OF CHAR); 
+		PROCEDURE ^ RenameEntry*(CONST from, to: ARRAY OF CHAR): Archives.EntryInfo; 
+		PROCEDURE ^ OpenSender*(CONST name: ARRAY OF CHAR): Streams.Sender; 
+		PROCEDURE ^ OpenReceiver*(CONST name: ARRAY OF CHAR): Streams.Receiver; 
+		PROCEDURE ^ Copy*(CONST name: ARRAY OF CHAR): Archives.Archive; 
+	END ArchiveObj; 
+
 	PROCEDURE ^ ShowError*(errorCode: INTEGER; out: Streams.Writer); 
 	PROCEDURE ^ StringLength(CONST str: ARRAY OF CHAR): SIZE; 
 	PROCEDURE ^ OberonToDosTime(t: SIGNED32): SIGNED16; 
@@ -93,6 +132,7 @@ TYPE
 	PROCEDURE ^ WriteEndOfCentDir(arc: Archive; VAR r: Files.Rider); 
 	PROCEDURE ^ WriteCentralDirectory(arc: Archive; VAR r: Files.Rider); 
 	PROCEDURE ^ OpenArchive*(CONST name: ARRAY OF CHAR; VAR res: INTEGER): Archive; 
+	PROCEDURE ^ OpenArchiveFile(f: Files.File; VAR res: INTEGER): Archive; 
 	PROCEDURE ^ CreateArchive*(CONST name: ARRAY OF CHAR; VAR res: INTEGER): Archive; 
 	PROCEDURE ^ FirstEntry*(arc: Archive): Entry; 
 	PROCEDURE ^ NextEntry*(ent: Entry): Entry; 
@@ -104,5 +144,7 @@ TYPE
 	PROCEDURE ^ ReadBytes*(r: Reader; VAR buf: ARRAY OF CHAR; offset, len: SIZE; VAR read: SIZE); 
 	PROCEDURE ^ Read*(r: Reader; VAR ch: CHAR); 
 	PROCEDURE ^ Close*(r: Reader); 
+	PROCEDURE ^ Old*(name: Archives.StringObject): Archives.Archive; 
+	PROCEDURE ^ New*(name: Archives.StringObject): Archives.Archive; 
 BEGIN
 END Zip.

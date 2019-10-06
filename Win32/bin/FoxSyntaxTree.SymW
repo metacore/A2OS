@@ -454,6 +454,7 @@ TYPE
 		modifiers-: Modifier; 
 		isObject-, isProtected: BOOLEAN; 
 		isAbstract-: BOOLEAN; 
+		isFinal-: BOOLEAN; 
 
 		PROCEDURE ^  & InitRecordType(position: Position; scope: Scope; recordScope: RecordScope); 
 		PROCEDURE ^ SetAbstract*(abstract: BOOLEAN); 
@@ -472,6 +473,7 @@ TYPE
 		PROCEDURE ^ IsComposite*(): BOOLEAN; 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 		PROCEDURE ^ IsRecordType*(): BOOLEAN; 
+		PROCEDURE ^ SetFinal*(final: BOOLEAN); 
 	END RecordType; 
 
 	CellType* = OBJECT (Type)
@@ -510,7 +512,7 @@ TYPE
 		numberParameters-: SIGNED32; 
 		returnParameter-: Parameter; 
 		selfParameter-: Parameter; 
-		isDelegate-, isInterrupt-, noReturn-: BOOLEAN; 
+		isDelegate-, isInterrupt-, noReturn-, isNested-: BOOLEAN; 
 		pcOffset-: SIZE; 
 		callingConvention-: CallingConvention; 
 		stackAlignment-: SIZE; 
@@ -521,6 +523,7 @@ TYPE
 		PROCEDURE ^ SetPcOffset*(pcOffset: SIZE); 
 		PROCEDURE ^ SetInterrupt*(isInterrupt: BOOLEAN); 
 		PROCEDURE ^ SetModifiers*(flags: Modifier); 
+		PROCEDURE ^ SetNested*(nested: BOOLEAN); 
 		PROCEDURE ^ SetReturnTypeModifiers*(flags: Modifier); 
 		PROCEDURE ^ SetDelegate*(delegate: BOOLEAN); 
 		PROCEDURE ^ SetUntracedReturn*(untraced: BOOLEAN); 
@@ -557,6 +560,7 @@ TYPE
 		PROCEDURE ^ SetResolved*(value: Value); 
 		PROCEDURE ^ SetAssignable*(assignable: BOOLEAN); 
 		PROCEDURE ^ SetOriginal*(original: Expression); 
+		PROCEDURE ^ SetRelatedRhs*(expression: Expression); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 		PROCEDURE ^ Equals*(other: Expression): BOOLEAN; 
 	END Expression; 
@@ -874,7 +878,8 @@ TYPE
 	VAR 
 		nextSymbol-: Symbol; 
 		name-: Identifier; 
-		externalName-: Scanner.StringType; 
+		extern-: Expression; 
+		externName-: Scanner.StringType; 
 		access-: SET; 
 		type-: Type; 
 		scope-: Scope; 
@@ -901,7 +906,8 @@ TYPE
 		PROCEDURE ^ MarkWritten*; 
 		PROCEDURE ^ GetName*(VAR str: ARRAY OF CHAR); 
 		PROCEDURE ^ SetComment*(comment: Comment); 
-		PROCEDURE ^ SetExternalName*(name: Scanner.StringType); 
+		PROCEDURE ^ SetExtern*(e: Expression); 
+		PROCEDURE ^ SetExternName*(name: Scanner.StringType); 
 		PROCEDURE ^ NeedsTrace*(): BOOLEAN; 
 		PROCEDURE ^ NeedsSection*(): BOOLEAN; 
 	END Symbol; 
@@ -974,6 +980,7 @@ TYPE
 		untraced-: BOOLEAN; 
 		movable-: BOOLEAN; 
 		selfParameter-: BOOLEAN; 
+		autoConvert-: BOOLEAN; 
 		registerNumber-: SIZE; 
 		inRegister-: BOOLEAN; 
 		preferRegister-: BOOLEAN; 
@@ -982,6 +989,7 @@ TYPE
 		PROCEDURE ^ PreferRegister*(b: BOOLEAN); 
 		PROCEDURE ^ InRegister*(b: BOOLEAN); 
 		PROCEDURE ^ RegisterNumber*(reg: SIZE); 
+		PROCEDURE ^ SetAutoConvert*(auto: BOOLEAN); 
 		PROCEDURE ^ SetModifiers*(flag: Modifier); 
 		PROCEDURE ^ SetUntraced*(untraced: BOOLEAN); 
 		PROCEDURE ^ SetMoveable*(movable: BOOLEAN); 
@@ -1115,20 +1123,20 @@ TYPE
 	ProcedureCallStatement* = OBJECT (Statement)
 	VAR 
 		ignore-: BOOLEAN; 
-		call-: Designator; 
+		call-: Expression; 
 
-		PROCEDURE ^  & InitProcedureCallStatement(position: Position; ignore: BOOLEAN; call: Designator; outer: Statement); 
+		PROCEDURE ^  & InitProcedureCallStatement(position: Position; ignore: BOOLEAN; call: Expression; outer: Statement); 
 		PROCEDURE ^ SetIgnore*(ignore: BOOLEAN); 
-		PROCEDURE ^ SetCall*(call: Designator); 
+		PROCEDURE ^ SetCall*(call: Expression); 
 		PROCEDURE ^ Clone(): Statement; 
 	END ProcedureCallStatement; 
 
 	Assignment* = OBJECT (Statement)
 	VAR 
-		left-: Designator; 
+		left-: Expression; 
 		right-: Expression; 
 
-		PROCEDURE ^  & InitAssignment*(position: Position; left: Designator; right: Expression; outer: Statement); 
+		PROCEDURE ^  & InitAssignment*(position: Position; left: Expression; right: Expression; outer: Statement); 
 		PROCEDURE ^ SetLeft*(left: Designator); 
 		PROCEDURE ^ SetRight*(right: Expression); 
 		PROCEDURE ^ Clone(): Statement; 
@@ -1136,11 +1144,11 @@ TYPE
 
 	CommunicationStatement* = OBJECT (Statement)
 	VAR 
-		left-: Designator; 
+		left-: Expression; 
 		right-: Expression; 
 		op-: SIGNED32; 
 
-		PROCEDURE ^  & InitAssignment*(position: Position; op: SIGNED32; left: Designator; right: Expression; outer: Statement); 
+		PROCEDURE ^  & InitAssignment*(position: Position; op: SIGNED32; left: Expression; right: Expression; outer: Statement); 
 		PROCEDURE ^ SetLeft*(left: Designator); 
 		PROCEDURE ^ SetRight*(right: Expression); 
 	END CommunicationStatement; 
@@ -1699,9 +1707,9 @@ VAR
 	PROCEDURE ^ NewBody*(position: Position; scope: ProcedureScope): Body; 
 	PROCEDURE ^ NewIfPart*(): IfPart; 
 	PROCEDURE ^ NewIfStatement*(position: Position; outer: Statement): IfStatement; 
-	PROCEDURE ^ NewAssignment*(position: Position; left: Designator; right: Expression; outer: Statement): Assignment; 
-	PROCEDURE ^ NewCommunicationStatement*(position: Position; op: SIGNED32; left: Designator; right: Expression; outer: Statement): CommunicationStatement; 
-	PROCEDURE ^ NewProcedureCallStatement*(position: Position; ignore: BOOLEAN; call: Designator; outer: Statement): ProcedureCallStatement; 
+	PROCEDURE ^ NewAssignment*(position: Position; left: Expression; right: Expression; outer: Statement): Assignment; 
+	PROCEDURE ^ NewCommunicationStatement*(position: Position; op: SIGNED32; left: Expression; right: Expression; outer: Statement): CommunicationStatement; 
+	PROCEDURE ^ NewProcedureCallStatement*(position: Position; ignore: BOOLEAN; call: Expression; outer: Statement): ProcedureCallStatement; 
 	PROCEDURE ^ NewCaseStatement*(position: Position; outer: Statement): CaseStatement; 
 	PROCEDURE ^ NewCasePart*(): CasePart; 
 	PROCEDURE ^ NewWithPart*(): WithPart; 

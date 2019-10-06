@@ -4,42 +4,42 @@ TYPE
 	BitReader = OBJECT 
 	VAR 
 		in: Streams.Reader; 
-		curByte, curBit: SIGNED32; 
+		curByte, curBit: INTEGER; 
 
 		PROCEDURE ^  & New(r: Streams.Reader); 
 		PROCEDURE ^ Initialize; 
-		PROCEDURE ^ Bit(): SIGNED32; 
+		PROCEDURE ^ Bit(): INTEGER; 
 	END BitReader; 
 
 	BitWriter = OBJECT 
 	VAR 
 		out: Streams.Writer; 
-		curByte, curBit: SIGNED32; 
+		curByte, curBit: INTEGER; 
 
 		PROCEDURE ^  & New(w: Streams.Writer); 
-		PROCEDURE ^ Bit(bit: SIGNED32); 
+		PROCEDURE ^ Bit(bit: INTEGER); 
 		PROCEDURE ^ Finish; 
 	END BitWriter; 
 
-	PatternCounts = ARRAY 256 OF SIGNED32; 
+	PatternCounts = ARRAY 256 OF INTEGER; 
 
 	Pattern = RECORD 
-		patt, weight: SIGNED32; 
+		patt, weight: INTEGER; 
 	END; 
 
 	PatternWeights = POINTER TO ARRAY OF Pattern; 
 
 	HuffCode = RECORD 
-		bits, val: SIGNED32; 
+		bits, val: INTEGER; 
 	END; 
 
 	Node = OBJECT 
 	VAR 
-		weight: SIGNED32; 
-		pattern: SIGNED32; 
+		weight: INTEGER; 
+		pattern: INTEGER; 
 		left, right: Node; 
 
-		PROCEDURE ^  & Init(patt, w: SIGNED32); 
+		PROCEDURE ^  & Init(patt, w: INTEGER); 
 		PROCEDURE ^ AddChildren(l, r: Node); 
 	END Node; 
 
@@ -51,10 +51,10 @@ TYPE
 
 		PROCEDURE ^  & New*(output: Streams.Writer); 
 		PROCEDURE ^ WriteFrequencies(pw: PatternWeights); 
-		PROCEDURE ^ CountPatterns(CONST source: ARRAY OF CHAR; len: SIZE): PatternWeights; 
+		PROCEDURE ^ CountPatterns(CONST source: ARRAY OF CHAR; len: INTEGER): PatternWeights; 
 		PROCEDURE ^ BuildCodeTable(pw: PatternWeights); 
 		PROCEDURE ^ PutCode(code: HuffCode); 
-		PROCEDURE ^ CompressBlock*(CONST source: ARRAY OF CHAR; len: SIZE); 
+		PROCEDURE ^ CompressBlock*(CONST source: ARRAY OF CHAR; len: INTEGER); 
 	END Encoder; 
 
 	Decoder* = OBJECT 
@@ -65,7 +65,7 @@ TYPE
 
 		PROCEDURE ^  & New*(input: Streams.Reader); 
 		PROCEDURE ^ ReadFrequencies(r: Streams.Reader): PatternWeights; 
-		PROCEDURE ^ ExtractBlock*(VAR buf: ARRAY OF CHAR; len: SIGNED32); 
+		PROCEDURE ^ ExtractBlock*(VAR buf: ARRAY OF CHAR; len: INTEGER); 
 	END Decoder; 
 
 	PROCEDURE ^ ContainedPatterns(VAR pc: PatternCounts): PatternWeights; 

@@ -1,5 +1,5 @@
 MODULE Codecs;
-	IMPORT Streams, Commands, Files, SoundDevices, Raster, Modules, Strings, Configuration, Unzip, Texts, Archives;
+	IMPORT Streams, Commands, Files, SoundDevices, Raster, Modules, Strings, Configuration, Texts, Archives;
 CONST 
 	ResFailed* =  -1; 
 	ResOk* = 0; 

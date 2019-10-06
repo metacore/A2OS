@@ -1,5 +1,5 @@
 MODULE FoxArrayBase;
-	IMPORT SYSTEM, KernelLog, Heaps, MathL, ComplexNumbers;
+	IMPORT SYSTEM, KernelLog, Heaps, Machine, MathL, ComplexNumbers;
 CONST 
 	debug = FALSE; 
 	statistics = FALSE; 
@@ -1065,9 +1065,10 @@ VAR
 	OPERATOR ^ ":="-(VAR dest: ARRAY [?] OF COMPLEX64; right: COMPLEX64); 
 	PROCEDURE ^ AllocateMatrix(dest: ADDRESS; rows, cols, elementsize: SIZE): ANY; 
 	PROCEDURE ^ AllocateVector(CONST dest: UnsafeArrayT; l0, elementsize: SIZE); 
-	PROCEDURE ^ ApplyMatMulLoop*(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; fast: FastMatMul); 
-	PROCEDURE ^ ApplyMatVecMulLoop(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; fast: FastMatMul); 
-	PROCEDURE ^ ApplyVecMatMulLoop(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; fast: FastMatMul); 
+	PROCEDURE ^ ZeroData(dest: ADDRESS); 
+	PROCEDURE ^ ApplyMatMulLoop*(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; increment: BOOLEAN; fast: FastMatMul); 
+	PROCEDURE ^ ApplyMatVecMulLoop(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; increment: BOOLEAN; fast: FastMatMul); 
+	PROCEDURE ^ ApplyVecMatMulLoop(dest, left, right: ADDRESS; Size: SIZE; loop: BinaryAASLoop; increment: BOOLEAN; fast: FastMatMul); 
 	PROCEDURE ^ MatMulASASLoop(ladr, radr, dadr: ADDRESS; linc, rinc, len: SIZE); 
 	OPERATOR ^ "*"-(CONST left, right: ARRAY [*, *] OF SIGNED8): ARRAY [*, *] OF SIGNED8; 
 	OPERATOR ^ "*"-(CONST left: ARRAY [*, *] OF SIGNED8; CONST right: ARRAY [*] OF SIGNED8): ARRAY [*] OF SIGNED8; 

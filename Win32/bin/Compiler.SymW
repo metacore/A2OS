@@ -36,6 +36,7 @@ TYPE
 VAR 
 	platforms: Options.Defaults; 
 	defaultPlatform: ARRAY 32 OF CHAR; 
+	TestModule*: PROCEDURE {DELEGATE}(m: SyntaxTree.Module); 
 
 	PROCEDURE ^ ParseReplacements(CONST filename: ARRAY OF CHAR; VAR replacement: SemanticChecker.Replacement; diagnostics: Diagnostics.Diagnostics): BOOLEAN; 
 	PROCEDURE ^ Modules*(CONST source: ARRAY OF CHAR; reader: Streams.Reader; position: SIGNED32; diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; CONST options: CompilerOptions; VAR importCache: SyntaxTree.ModuleScope): BOOLEAN; 

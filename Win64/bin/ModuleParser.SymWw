@@ -1,5 +1,5 @@
 MODULE ModuleParser;
-	IMPORT Strings, Files, Streams, Diagnostics, FoxScanner, KernelLog, Texts, TextUtilities;
+	IMPORT Strings, Files, Streams, Diagnostics, FoxScanner, KernelLog, Texts, TextUtilities, StringPool;
 CONST 
 	Public* = 1; 
 	PublicRO* = 2; 
@@ -50,6 +50,7 @@ TYPE
 	Import* = OBJECT (NodeList)
 	VAR 
 		ident*, alias*, context*: InfoItem; 
+		parameters*: TemplateParameter; 
 	END Import; 
 
 	Definition* = OBJECT (NodeList)
@@ -257,6 +258,14 @@ TYPE
 		external*: Strings.String; 
 	END IdentDef; 
 
+	TemplateType* = ENUM Type* = 0, Const* = 1, Empty* = 2 END; 
+
+	TemplateParameter* = OBJECT (NodeList)
+	VAR 
+		type*: TemplateType; 
+		ident*: InfoItem; 
+	END TemplateParameter; 
+
 	IdentList* = OBJECT (NodeList)
 	VAR 
 		identDef*: IdentDef; 
@@ -272,20 +281,35 @@ TYPE
 		bodyPos-: Streams.Position; 
 		hasError-: BOOLEAN; 
 		resolved*: BOOLEAN; 
+		parameters*: TemplateParameter; 
 
 		PROCEDURE ^ FindTypeDecl*(CONST name: ARRAY OF CHAR): TypeDecl; 
 		PROCEDURE ^ FindImport*(CONST name: ARRAY OF CHAR): Import; 
 	END Module; 
 
 	Parser = OBJECT 
+	CONST 
+		Processing = 0; 
+		ProcessingElse = 1; 
+		Skipping = 2; 
+		Ignoring = 3; 
+		IgnoringElse = 4; 
 	VAR 
 		token: FoxScanner.Token; 
 		scanner: FoxScanner.Scanner; 
 		hasError: BOOLEAN; 
+		conditional: INTEGER; 
+		conditionals: ARRAY 10 OF INTEGER; 
+		definitions: ARRAY 10 OF FoxScanner.IdentifierType; 
+		conditionalCount, definitionCount: SIZE; 
 
-		PROCEDURE ^  & Init*(scanner: FoxScanner.Scanner); 
+		PROCEDURE ^  & Init*(scanner: FoxScanner.Scanner; CONST definitions: ARRAY OF CHAR); 
+		PROCEDURE ^ GetNextToken(VAR token: FoxScanner.Token): BOOLEAN; 
+		PROCEDURE ^ ConditionalStatement(VAR token: FoxScanner.Token): BOOLEAN; 
 		PROCEDURE ^ NextToken; 
 		PROCEDURE ^ ModuleP(VAR module: Module); 
+		PROCEDURE ^ TemplateParameterP(parameter: TemplateParameter); 
+		PROCEDURE ^ TemplateArgumentP(parameter: TemplateParameter); 
 		PROCEDURE ^ ImportListP(import: Import); 
 		PROCEDURE ^ DefinitionP(definition: Definition); 
 		PROCEDURE ^ DeclSeqP(declSeq: DeclSeq); 
@@ -346,6 +370,6 @@ TYPE
 	PROCEDURE ^ ResolveMethodOverwrites(module: Module; cache: ModuleCache); 
 	PROCEDURE ^ ParseFile*(CONST filename: ARRAY OF CHAR; diagnostics: Diagnostics.Diagnostics): Module; 
 	PROCEDURE ^ SetSuperTypes*(module: Module); 
-	PROCEDURE ^ Parse*(scanner: FoxScanner.Scanner; VAR module: Module); 
+	PROCEDURE ^ Parse*(scanner: FoxScanner.Scanner; VAR module: Module; CONST definitions: ARRAY OF CHAR); 
 BEGIN
 END ModuleParser.

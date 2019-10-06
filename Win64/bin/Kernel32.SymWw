@@ -347,6 +347,7 @@ VAR
 	isEXE-: BOOLEAN; 
 	getProcAddress-: PROCEDURE {WINAPI}(hModule: HMODULE; CONST lpProcName: ARRAY OF CHAR):ADDRESS; 
 	LoadLibrary-: PROCEDURE {WINAPI}(CONST lpLibFileName: ARRAY OF CHAR):HINSTANCE; 
+	LoadLibraryEx-: PROCEDURE {WINAPI}(CONST lpLibFileName: ARRAY OF CHAR; hFile: HANDLE; dwFlags: INTEGERSET):HINSTANCE; 
 	AddVectoredContinueHandler-: PROCEDURE {WINAPI}(firstHandler: ULONG; vectoredHandler: VectoredExceptionHandler); 
 	AddVectoredExceptionHandler-: PROCEDURE {WINAPI}(firstHandler: ULONG; vectoredHandler: VectoredExceptionHandler); 
 	AllocConsole-: PROCEDURE {WINAPI}():BOOL; 

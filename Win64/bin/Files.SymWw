@@ -201,7 +201,7 @@ VAR
 	PROCEDURE ^ DeleteFS(fs: FileSystem); 
 	PROCEDURE ^ Promote*(fs: FileSystem); 
 	PROCEDURE ^ Remove*(fs: FileSystem); 
-	PROCEDURE ^ FindFS(CONST prefix: ARRAY OF CHAR): FileSystem; 
+	PROCEDURE ^ FindFS(prefix: ARRAY OF CHAR): FileSystem; 
 	PROCEDURE ^ This*(CONST prefix: ARRAY OF CHAR): FileSystem; 
 	PROCEDURE ^ GetList*(VAR list: FileSystemTable); 
 	PROCEDURE ^ OpenOld(enum: FileSearcher; fs: FileSystem; CONST fname: ARRAY OF CHAR): File; 

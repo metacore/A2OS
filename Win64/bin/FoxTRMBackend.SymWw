@@ -47,8 +47,8 @@ CONST
 	opSPSR* = InstructionSet.opSPSR; 
 	VectorSupportFlag = \"vectorSupport"\; 
 	FloatingPointSupportFlag = \"floatingPoint"\; 
-	FPSupportFlag = \"supportFP"\; 
 	PatchSpartan6 = \"patchSpartan6"\; 
+	InstructionWidth = \"instructionWidth"\; 
 TYPE 
 	Operand = InstructionSet.Operand; 
 
@@ -98,7 +98,6 @@ TYPE
 		inStackAllocation: BOOLEAN; 
 		builtinsModuleName: SyntaxTree.IdentifierString; 
 		forwardFixups: ForwardFixupList; 
-		spillStackStart: SIGNED32; 
 		backend: BackendTRM; 
 		supportFP: BOOLEAN; 
 		pushChainLength: SIGNED32; 
@@ -146,10 +145,6 @@ TYPE
 		PROCEDURE ^ Load(VAR vop: IntermediateCode.Operand; part: SIGNED32; CONST register: Operand); 
 		PROCEDURE ^ Store(VAR vop: IntermediateCode.Operand; part: SIGNED32; CONST register: Operand); 
 		PROCEDURE ^ UnsignedImmediate(vop: IntermediateCode.Operand; part: SIGNED32; bits: SIGNED32; allowNegation: BOOLEAN; VAR neg: BOOLEAN; VAR rop: Operand): BOOLEAN; 
-		PROCEDURE ^ HardwareIntegerRegister(index: SIGNED32; sizeInBits: SIGNED32): SIGNED32; 
-		PROCEDURE ^ HardwareFloatRegister(index: SIGNED32; sizeInBits: SIGNED32): SIGNED32; 
-		PROCEDURE ^ GetTypedHardwareRegister(index: SIGNED32; type: IntermediateCode.Type): SIGNED32; 
-		PROCEDURE ^ ParameterRegister(CONST type: IntermediateCode.Type; index: SIGNED32): SIGNED32; 
 		PROCEDURE ^ PhysicalRegister(virtualReg: SIZE; part: SIGNED32; VAR offset: SIGNED32): SIGNED32; 
 		PROCEDURE ^ GetRegister(CONST virtual: IntermediateCode.Operand; part: SIGNED32; VAR physical: Operand); 
 		PROCEDURE ^ IsSameRegister(CONST a, b: InstructionSet.Operand): BOOLEAN; 
@@ -198,7 +193,6 @@ TYPE
 		cg: CodeGeneratorTRM; 
 		patchSpartan6: BOOLEAN; 
 		myInstructionSet: InstructionSet.InstructionSet; 
-		recentInstructionWidth: SIGNED32; 
 
 		PROCEDURE ^  & InitBackendTRM; 
 		PROCEDURE ^ Initialize*(diagnostics: Diagnostics.Diagnostics; log: Streams.Writer; flags: SET; checker: SemanticChecker.Checker; system: Global.System); 
@@ -222,7 +216,6 @@ VAR
 	emptyOperand: InstructionSet.Operand; 
 
 	PROCEDURE ^ Assert(b: BOOLEAN; CONST s: ARRAY OF CHAR); 
-	PROCEDURE ^ Halt(CONST s: ARRAY OF CHAR); 
 	PROCEDURE ^ Init; 
 	PROCEDURE ^ Get*(): Backend.Backend; 
 BEGIN

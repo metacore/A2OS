@@ -4,7 +4,7 @@ CONST
 	Ok* = 0; 
 	AddressSize = SIZEOF(ADDRESS); 
 	MaxTags* = 16; 
-	Tag0Ofs* =  -(AddressSize * 2); 
+	Tag0Ofs* = ( -AddressSize * 2); 
 	Mth0Ofs* = (Tag0Ofs - (AddressSize * MaxTags)); 
 	Ptr0Ofs* = AddressSize; 
 	MaxObjFormats = 5; 

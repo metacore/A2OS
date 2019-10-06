@@ -280,6 +280,7 @@ TYPE
 	PROCEDURE ^ IsUnsafePointer*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsDisposable*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsPointerToRecord(type: SyntaxTree.Type): BOOLEAN; 
+	PROCEDURE ^ IsFinalRecord(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsPointerToObject(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ ContainsPointer*(type: SyntaxTree.Type): BOOLEAN; 
 	PROCEDURE ^ IsStringType*(type: SyntaxTree.Type): BOOLEAN; 

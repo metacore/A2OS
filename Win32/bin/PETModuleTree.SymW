@@ -1,5 +1,5 @@
 MODULE PETModuleTree;
-	IMPORT Commands, Diagnostics, Streams, Files, TextUtilities, WMStandardComponents, WMGraphics, WMProperties, WMComponents, Strings, WMTrees, FoxScanner, ModuleParser, PETTrees;
+	IMPORT Commands, Diagnostics, Streams, Files, TextUtilities, WMStandardComponents, WMGraphics, WMProperties, WMComponents, Strings, WMTrees, FoxScanner, ModuleParser, PETTrees, WMEditors;
 CONST 
 	Title = \" Program Structure"\; 
 	TitleError = \" Program Structure (Errors)"\; 
@@ -41,6 +41,7 @@ TYPE
 		showTypeHierarchy-, showImportedModules-: WMProperties.BooleanProperty; 
 		moduleName: Name; 
 		detailsBtn, publicBtn: WMStandardComponents.Button; 
+		definesEdit: WMEditors.Editor; 
 		showPublicOnly: BOOLEAN; 
 
 		PROCEDURE ^  & Init*; 
@@ -61,6 +62,8 @@ TYPE
 		PROCEDURE ^ GetModuleNode(node: ModuleParser.Node): ModuleParser.Module; 
 		PROCEDURE ^ GetProcedureType(procHead: ModuleParser.ProcHead): INTEGER; 
 		PROCEDURE ^ AddBody(root: WMTrees.TreeNode; pnode: ModuleParser.Node; modifiers: SET; pos: Streams.Position); 
+		PROCEDURE ^ AddModuleParameters(parent: WMTrees.TreeNode; parameters: ModuleParser.TemplateParameter); 
+		PROCEDURE ^ AddImportArguments(parent: WMTrees.TreeNode; arguments: ModuleParser.TemplateParameter); 
 		PROCEDURE ^ AddImportList(parent: WMTrees.TreeNode; importList: ModuleParser.Import; showImportedModules: BOOLEAN); 
 		PROCEDURE ^ AddDefinitions(parent: WMTrees.TreeNode; definitions: ModuleParser.Definition); 
 		PROCEDURE ^ AddDeclSeq(parent: WMTrees.TreeNode; declSeq: ModuleParser.DeclSeq); 
@@ -91,7 +94,7 @@ TYPE
 	END ModuleTree; 
 VAR 
 	PrototypeShowTypeHierarchy, PrototypeShowImportedModules: WMProperties.BooleanProperty; 
-	StrUNKNOWN, StrVAR, StrCONST, StrIMPORT, StrIN, StrBODY, StrRETURN, StrARRAY, StrOF, StrBecomes, StrAmpersand, StrMinus, StrStar, StrQuote, StrOverwritten, StrOverwrite: Strings.String; 
+	StrUNKNOWN, StrVAR, StrCONST, StrIMPORT, StrIN, StrBODY, StrRETURN, StrARRAY, StrOF, StrBecomes, StrAmpersand, StrMinus, StrStar, StrQuote, StrOverwritten, StrOverwrite, StrUNDEFPostfix, StrPARAMETERS, StrARGUMENTS, StrVARPostfix, StrCONSTPostfix, StrTYPEPostfix, StrParenthesis: Strings.String; 
 
 	PROCEDURE ^ GetColor(modifiers: SET; defaultColor: WMGraphics.Color): WMGraphics.Color; 
 	PROCEDURE ^ GenModuleTree*(): PETTrees.Tree; 

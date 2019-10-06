@@ -1,5 +1,5 @@
 MODULE CryptoBigNumbers;
-	IMPORT S := SYSTEM, Streams, Random, Kernel, Out := KernelLog;
+	IMPORT Streams, Random, Kernel, Log := KernelLog;
 CONST 
 	BufferPoolSize = 16; 
 TYPE 
@@ -45,7 +45,7 @@ TYPE
 	END Montgomery; 
 VAR 
 	bufferPool: ARRAY BufferPoolSize OF digits; 
-	nextFreeBuffer: SIGNED32; 
+	nextFreeBuffer: INTEGER; 
 	randomgenerator: Random.Generator; 
 
 	PROCEDURE ^ RandomBytes*(VAR buf: ARRAY OF CHAR; p, n: SIZE); 
@@ -53,11 +53,11 @@ VAR
 	PROCEDURE ^ NewRand*(bits: SIZE; top, bottom: SIGNED8): BigNumber; 
 	PROCEDURE ^ NewRandRange*(range: BigNumber): BigNumber; 
 	PROCEDURE ^ fixlen(VAR d: digits; VAR len: SIZE); 
-	PROCEDURE ^ h2i(c: CHAR): SIGNED32; 
+	PROCEDURE ^ h2i(c: CHAR): INTEGER; 
 	PROCEDURE ^ AssignHex*(VAR b: BigNumber; CONST hex: ARRAY OF CHAR; len: SIZE); 
 	PROCEDURE ^ AssignBin*(VAR b: BigNumber; CONST buf: ARRAY OF CHAR; pos, len: SIZE); 
 	PROCEDURE ^ GetBinaryValue*(VAR b: BigNumber; VAR data: ARRAY OF CHAR; ofs: SIZE); 
-	PROCEDURE ^ AssignInt*(VAR b: BigNumber; val: SIGNED32); 
+	PROCEDURE ^ AssignInt*(VAR b: BigNumber; val: INTEGER); 
 	PROCEDURE ^ cmpd(VAR a, b: digits; len: SIZE): SIGNED8; 
 	PROCEDURE ^ ucmp(VAR a, b: BigNumber): SIGNED8; 
 	PROCEDURE ^ Cmp*(a, b: BigNumber): SIGNED8; 
@@ -71,8 +71,8 @@ VAR
 	PROCEDURE ^ mul(a, b: digits; VAR c: digits; al, bl: SIZE; VAR cl: SIZE); 
 	PROCEDURE ^ muls(a: digits; b: BNdigit; c: digits; al: SIZE; VAR cl: SIZE); 
 	PROCEDURE ^ Mul*(a, b: BigNumber): BigNumber; 
-	PROCEDURE ^ div64(CONST a: dig2; VAR b: BNdigit): SIGNED32; 
-	PROCEDURE ^ div96(CONST a: dig3; CONST b: dig2): SIGNED32; 
+	PROCEDURE ^ div64(CONST a: dig2; VAR b: BNdigit): INTEGER; 
+	PROCEDURE ^ div96(CONST a: dig3; CONST b: dig2): INTEGER; 
 	PROCEDURE ^ Div2*(a, b: BigNumber; VAR q, r: BigNumber); 
 	PROCEDURE ^ ModWord*(VAR a: BigNumber; b: BNdigit): BNdigit; 
 	PROCEDURE ^ Div*(a, b: BigNumber): BigNumber; 

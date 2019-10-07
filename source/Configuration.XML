@@ -196,6 +196,7 @@ To update: Configuration.Init ~
 				<Setting name="CP1250" value="CyrillicUtilities.CP1250EncoderFactory"/>
 				<Setting name="CP1251" value="CyrillicUtilities.CP1251EncoderFactory"/>
  				<Setting name="CP866" value="CyrillicUtilities.CP866EncoderFactory"/>
+				<Setting name="ODT" value="OpenDocument.TextEncoderFactory"/>
 			</Section>
 			<Section name="Image">
 				<Setting name="BMP" value="BMPCodec.EncoderFactory"/>
@@ -221,6 +222,7 @@ To update: Configuration.Init ~
 				<Setting name="CP1250" value="CyrillicUtilities.CP1250DecoderFactory"/>
 				<Setting name="CP1251" value="CyrillicUtilities.CP1251DecoderFactory"/>
 				<Setting name="CP866" value="CyrillicUtilities.CP866DecoderFactory"/>
+				<Setting name="ODT" value="OpenDocument.TextDecoderFactory"/>
 			</Section>
 			<Section name="Image">
 				<Setting name="JP2" value="JPEG2000Decoder.Factory"/>
@@ -230,12 +232,17 @@ To update: Configuration.Init ~
 				<Setting name="JPEG" value="JPEGDecoder.Factory"/>
 				<Setting name="JPG" value="JPEGDecoder.Factory"/>
 				<Setting name="SVG" value="SVGDecoder.Factory"/>
+				<Setting name="TIF" value="TIFCodec.DecoderFactory"/>
 			</Section>
 			<Section name="Video">
 				<Setting name="DivX" value="DivXDecoder.Factory"/>
 				<Setting name="DIVX" value="DivXDecoder.Factory"/>
 				<Setting name="divx" value="DivXDecoder.Factory"/>
 				<Setting name="MPG" value="MPEGVideoDecoder.DecoderFactory"/>
+				<Setting name="MP4" value="FfmpegCodecs.VideoDecoderFactory"/>
+				<Setting name="mp4" value="FfmpegCodecs.VideoDecoderFactory"/>
+				<Setting name="WMV" value="FfmpegCodecs.VideoDecoderFactory"/>
+				<Setting name="wmv" value="FfmpegCodecs.VideoDecoderFactory"/>
 			</Section>
 			<Section name="Audio">
 				<Setting name="MP3" value="MP3Decoder.Factory"/>
@@ -342,7 +349,10 @@ To update: Configuration.Init ~
 			<Setting name="Open" value="PET.Open"/>
 			<Setting name="Compile" value="Compiler.Compile @filename"/>
 		</Section>
-			<Section name="sym">
+		<Section name="mta">
+			<Setting name="Open" value="WMMatrixLoader.Open"/>
+		</Section>
+		<Section name="sym">
 				<Setting name="Open" value="PET.Open"/>
 			</Section>
 			<Section name="gof">
@@ -360,6 +370,9 @@ To update: Configuration.Init ~
 			<Setting name="Open" value="WMPlayer.Open"/>
 		</Section>
 		<Section name="mpg">
+			<Setting name="Open" value="WMPlayer.Open"/>
+		</Section>
+		<Section name="mp4">
 			<Setting name="Open" value="WMPlayer.Open"/>
 		</Section>
 		<Section name="abx">
@@ -408,6 +421,10 @@ To update: Configuration.Init ~
 		<Section name="test">
 			<Setting name="Open" value="PET.Open"/>
 		</Section>
+		<Section name="tif">
+			<Setting name="Open" value="WMPicView.Open"/>
+			<Setting name="Set as background" value="WMBackdrop.AddBackdropImage '@filename' ? ? ? ?"/>
+		</Section>
 		<Section name="text">
 			<Setting name="Open" value="Notepad.Open"/>
 		</Section>
@@ -418,6 +435,9 @@ To update: Configuration.Init ~
 			<Setting name="Open" value="PET.Open"/>
 		</Section>
 		<Section name="wav">
+			<Setting name="Open" value="WMPlayer.Open"/>
+		</Section>
+		<Section name="wmv">
 			<Setting name="Open" value="WMPlayer.Open"/>
 		</Section>
 		<Section name="xml">

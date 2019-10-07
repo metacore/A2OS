@@ -6643,8 +6643,8 @@ TYPE
 						PutMathArrayFieldOffset(adr,imm,MathDimOffset,offset);
 						imm := IntermediateCode.Immediate(addressType,0);
 						FOR i := 0 TO dim-1 DO
-							PutMathArrayFieldOffset(adr,imm,(MathIncrOffset+2*i)*addressType.sizeInBits ,offset);
-							PutMathArrayFieldOffset(adr,imm,(MathLenOffset+2*i)*addressType.sizeInBits ,offset);
+							PutMathArrayFieldOffset(adr,imm, MathIncrOffset+2*i ,offset);
+							PutMathArrayFieldOffset(adr,imm, MathLenOffset+2*i ,offset);
 						END;
 
 						baseType := SemanticChecker.ArrayBase(type,dim);

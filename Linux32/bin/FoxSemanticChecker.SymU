@@ -188,6 +188,7 @@ TYPE
 		PROCEDURE ^ ResolveImport(x: SyntaxTree.Import); 
 		PROCEDURE ^ ResolveStatement*(x: SyntaxTree.Statement): SyntaxTree.Statement; 
 		PROCEDURE ^ StatementSequence(statementSequence: SyntaxTree.StatementSequence); 
+		PROCEDURE ^ ResolveDeclarationStatement(x: SyntaxTree.DeclarationStatement): SyntaxTree.Statement; 
 		PROCEDURE ^ ResolveProcedureCallStatement(procedureCall: SyntaxTree.ProcedureCallStatement): SyntaxTree.Statement; 
 		PROCEDURE ^ ResolveAssignment(assignment: SyntaxTree.Assignment): SyntaxTree.Statement; 
 		PROCEDURE ^ ResolveCommunicationStatement(communication: SyntaxTree.CommunicationStatement): SyntaxTree.Statement; 

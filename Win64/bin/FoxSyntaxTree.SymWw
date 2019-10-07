@@ -1120,6 +1120,13 @@ TYPE
 		PROCEDURE ^ End*(pos: Position); 
 	END Statement; 
 
+	DeclarationStatement* = OBJECT (Statement)
+	VAR 
+		variable-: Variable; 
+
+		PROCEDURE ^  & InitDeclarationStatement(position: Position; v: Variable; outer: Statement); 
+	END DeclarationStatement; 
+
 	ProcedureCallStatement* = OBJECT (Statement)
 	VAR 
 		ignore-: BOOLEAN; 
@@ -1709,6 +1716,7 @@ VAR
 	PROCEDURE ^ NewIfStatement*(position: Position; outer: Statement): IfStatement; 
 	PROCEDURE ^ NewAssignment*(position: Position; left: Expression; right: Expression; outer: Statement): Assignment; 
 	PROCEDURE ^ NewCommunicationStatement*(position: Position; op: SIGNED32; left: Expression; right: Expression; outer: Statement): CommunicationStatement; 
+	PROCEDURE ^ NewDeclarationStatement*(position: Position; variable: Variable; outer: Statement): DeclarationStatement; 
 	PROCEDURE ^ NewProcedureCallStatement*(position: Position; ignore: BOOLEAN; call: Expression; outer: Statement): ProcedureCallStatement; 
 	PROCEDURE ^ NewCaseStatement*(position: Position; outer: Statement): CaseStatement; 
 	PROCEDURE ^ NewCasePart*(): CasePart; 

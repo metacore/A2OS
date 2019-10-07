@@ -1216,20 +1216,14 @@ TYPE
 	PROCEDURE GetModuleSectionName*(name, context: SyntaxTree.Identifier; VAR n: ARRAY OF CHAR);
 	VAR s: SyntaxTree.IdentifierString;
 	BEGIN
-		IF context # SyntaxTree.invalidIdentifier THEN
+		IF (context # SyntaxTree.invalidIdentifier) & (context # A2Name) & (name # SystemName) & (name # systemName) THEN
 			Basic.GetString(context,n);
-			IF n = "A2" THEN
-				Basic.GetString(name,n);
-				RETURN;
-			END;
 			Basic.GetString(name,s);
 			Strings.Append(n,"-");Strings.Append(n,s);
+		ELSIF name # SyntaxTree.invalidIdentifier THEN
+			Basic.GetString(name,n);
 		ELSE
-			IF name # SyntaxTree.invalidIdentifier THEN
-				Basic.GetString(name,n);
-			ELSE
-				n := ""
-			END
+			n := ""
 		END;
 	END GetModuleSectionName;
 

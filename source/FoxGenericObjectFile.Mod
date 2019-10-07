@@ -2,7 +2,7 @@ MODULE FoxGenericObjectFile; (** AUTHOR "negelef"; PURPOSE "Generic Object File 
 
 IMPORT
 	Streams, Commands, Basic := FoxBasic, Formats := FoxFormats, Sections := FoxSections, IntermediateCode := FoxIntermediateCode,
-	SyntaxTree := FoxSyntaxTree, BinaryCode := FoxBinaryCode,
+	SyntaxTree := FoxSyntaxTree, BinaryCode := FoxBinaryCode, Global := FoxGlobal,
 	Fingerprinter := FoxFingerprinter, Files, Options, ObjectFile, SymbolFileFormat := FoxTextualSymbolFile, Strings, KernelLog, D := Debugging;
 
 CONST
@@ -251,7 +251,7 @@ TYPE
 					import := module.module.moduleScope.firstImport;
 					WHILE import # NIL DO
 						IF import.direct & (import.parameters = NIL) THEN
-							import.module.GetName(name);
+							Global.ModuleFileName(import.moduleName, import.context, name);
 							requires[numImports] := name;
 							INC(numImports);
 						END;

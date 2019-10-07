@@ -8172,8 +8172,8 @@ TYPE
 					ResolveSymbol(import);
 					import := import.nextImport;
 				END;
+				IF error THEN RETURN END;
 			END;
-
 
 			symbol := scope.firstSymbol;
 			WHILE(symbol # NIL) DO

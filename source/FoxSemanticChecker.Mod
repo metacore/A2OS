@@ -7041,9 +7041,11 @@ TYPE
 			IF x.variable.type = NIL THEN
 				x.variable.SetInitializer (ResolveExpression(x.variable.initializer));
 				x.variable.SetType(x.variable.initializer.type);
-			ELSIF x.variable.initializer # NIL THEN
+			ELSE
 				x.variable.SetType(ResolveType(x.variable.type));
-				x.variable.SetInitializer (CompatibleConversion (x.variable.initializer.position, ResolveExpression(x.variable.initializer), x.variable.type));
+				IF x.variable.initializer # NIL THEN
+					x.variable.SetInitializer (CompatibleConversion (x.variable.initializer.position, ResolveExpression(x.variable.initializer), x.variable.type));
+				END;
 			END;
 			currentScope.AddVariable(x.variable);
 			currentScope.EnterSymbol(x.variable, duplicate);

@@ -7036,21 +7036,27 @@ TYPE
 		END StatementSequence;
 		
 		PROCEDURE ResolveDeclarationStatement(x: SyntaxTree.DeclarationStatement): SyntaxTree.Statement;
-		VAR duplicate: BOOLEAN;
+		VAR duplicate: BOOLEAN; variable: SyntaxTree.Variable; i: SIZE; type: SyntaxTree.Type; initializer: SyntaxTree.Expression;
 		BEGIN
-			IF x.variable.type = NIL THEN
-				x.variable.SetInitializer (ResolveExpression(x.variable.initializer));
-				x.variable.SetType(x.variable.initializer.type);
-			ELSE
-				x.variable.SetType(ResolveType(x.variable.type));
-				IF x.variable.initializer # NIL THEN
-					x.variable.SetInitializer (CompatibleConversion (x.variable.initializer.position, ResolveExpression(x.variable.initializer), x.variable.type));
+			type := ResolveType(x.type);
+			x.SetType(type);
+			FOR i := 0 TO x.variables.Length()-1 DO
+				variable := x.variables.Get(i);
+				initializer := ResolveExpression(x.initializers.GetExpression(i)); 
+				IF type = NIL THEN
+					x.initializers.SetExpression(i, initializer);
+					variable.SetType(initializer.type);
+				ELSE
+					variable.SetType(type);
+					IF initializer # NIL THEN
+						x.initializers.SetExpression(i, CompatibleConversion (initializer.position, initializer, type));
+					END;
 				END;
-			END;
-			currentScope.AddVariable(x.variable);
-			currentScope.EnterSymbol(x.variable, duplicate);
-			IF duplicate THEN
-				Error(x.variable.position, "duplicate variable");
+				currentScope.AddVariable(variable);
+				currentScope.EnterSymbol(variable, duplicate);
+				IF duplicate THEN
+					Error(variable.position, "duplicate variable");
+				END;
 			END;
  			ASSERT(system.GenerateVariableOffsets(currentScope));
 			

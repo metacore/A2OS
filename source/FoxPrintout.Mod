@@ -157,7 +157,7 @@ TYPE
 				(* Problem: how to distinguish betwteen type aliases, e.g. Status = SIGNED32 and actual use of SIGNED32?
 					This tries to use scope level: if the type is declared in the global scope, it should be a basic type use. *)
 				IF x.resolved # NIL THEN
-					useCase := (x.resolved IS SyntaxTree.BasicType) & (x.scope.Level() = 0);
+					useCase := (x.resolved IS SyntaxTree.BasicType) & (x.scope # NIL) & (x.scope.Level() = 0);
 				END;
 				QualifiedIdentifier(x.qualifiedIdentifier);
 				useCase := FALSE;
@@ -1535,6 +1535,27 @@ TYPE
 		BEGIN
 			Expression(x.left); w.String( " := " );  Expression(x.right);
 		END VisitAssignment;
+
+		PROCEDURE VisitDeclarationStatement*(x: SyntaxTree.DeclarationStatement);
+		VAR variable: SyntaxTree.Variable; init: SyntaxTree.Expression; i: SIZE;
+		BEGIN
+			Keyword("VAR ");
+			FOR i := 0 TO x.variables.Length()-1 DO
+				IF i > 0 THEN 
+					w.String(", ");
+				END; 
+				variable := x.variables.Get(i);
+				init := x.initializers.GetExpression(i);
+				Identifier(variable.name);
+				IF init # NIL THEN
+					w.String(" := "); 
+					Expression(init);
+				END;
+			END;
+			IF x.type # NIL THEN 
+				w.String(": "); Type(x.type);
+			END;
+		END VisitDeclarationStatement;
 
 		PROCEDURE VisitCommunicationStatement*(x: SyntaxTree.CommunicationStatement);
 		VAR identifier: SyntaxTree.Identifier;

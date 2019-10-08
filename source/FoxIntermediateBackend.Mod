@@ -1595,7 +1595,7 @@ TYPE
 		END EmitLeave;
 
 		PROCEDURE Statement(x: SyntaxTree.Statement);
-		VAR use: VariableUse; result: Operand; pos: Streams.Position; reference: SyntaxTree.Expression;
+		VAR use: VariableUse; result: Operand; pos: Streams.Position;
 		BEGIN
 			pos := x.position.start;
 			temporaries.GetUsage(use);
@@ -1619,13 +1619,7 @@ TYPE
 				ELSE
 					Designate(x.call, result)
 				END;
-			| SyntaxTree.DeclarationStatement DO 
-					IF x.variable.initializer # NIL THEN
-						reference := SyntaxTree.NewSymbolDesignator(x.variable.initializer.position,NIL, NIL,x.variable);
-						reference.SetType(x.variable.type.resolved);
-						reference.SetAssignable(TRUE);
-						Assign(reference,x.variable.initializer);
-					END;
+			| SyntaxTree.DeclarationStatement DO DeclarationStatement(x)
 			| SyntaxTree.Assignment DO Assign(x.left, x.right );
 			| SyntaxTree.CommunicationStatement DO CommunicationStatement(x)
 			| SyntaxTree.IfStatement DO IfStatement(x)
@@ -10638,6 +10632,21 @@ TYPE
 			lastSwitchPC := section.pc; CallThis(position,"Activities","Switch",0); SetLabel(skip);
 			INC(statCoopSwitch, section.pc - pc);
 		END EmitCooperativeSwitch;
+
+		PROCEDURE DeclarationStatement(x: SyntaxTree.DeclarationStatement);
+		VAR i: SIZE; init: SyntaxTree.Expression; variable: SyntaxTree.Variable; reference: SyntaxTree.Expression;
+		BEGIN
+			FOR i := 0 TO x.variables.Length()-1 DO 
+				variable := x.variables.Get(i);
+				init := x.initializers.GetExpression(i);
+				IF init # NIL THEN
+					reference := SyntaxTree.NewSymbolDesignator(init.position,NIL, NIL,variable);
+					reference.SetType(variable.type.resolved);
+					reference.SetAssignable(TRUE);
+					Assign(reference,init);
+				END;
+			END;
+		END DeclarationStatement;
 
 		PROCEDURE CommunicationStatement(communication: SyntaxTree.CommunicationStatement);
 		VAR p0,p1,tmp: SyntaxTree.Expression; s0,s1: Operand; size: SIGNED32;

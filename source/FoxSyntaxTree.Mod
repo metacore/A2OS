@@ -402,6 +402,9 @@ TYPE
 		PROCEDURE VisitAssignment*(x: Assignment);
 		BEGIN HALT(100) (* abstract *) END VisitAssignment;
 
+		PROCEDURE VisitDeclarationStatement*(x: DeclarationStatement);
+		BEGIN HALT(100) (* abstract *) END VisitDeclarationStatement;
+
 		PROCEDURE VisitCommunicationStatement*(x: CommunicationStatement);
 		BEGIN HALT(100) (* abstract *) END VisitCommunicationStatement;
 
@@ -449,6 +452,7 @@ TYPE
 			WITH x:
 			ProcedureCallStatement DO VisitProcedureCallStatement(x)
 			| Assignment DO VisitAssignment(x)
+			| DeclarationStatement DO VisitDeclarationStatement(x)
 			| CommunicationStatement DO VisitCommunicationStatement(x)
 			| IfStatement DO VisitIfStatement(x)
 			| WithStatement DO VisitWithStatement(x)
@@ -2863,6 +2867,39 @@ TYPE
 	END Symbols;
 
 
+	(** <<expression, expression, ...>> **)
+	Variables* = OBJECT
+		VAR list: Basic.List;
+
+		PROCEDURE & InitList*;
+		BEGIN NEW( list,8 );
+		END InitList;
+
+		PROCEDURE Length*( ): SIZE;
+		BEGIN RETURN list.Length();
+		END Length;
+
+		PROCEDURE Add*( d: Variable );
+		BEGIN list.Add(d)
+		END Add;
+
+		PROCEDURE Get*( index: SIZE ): Variable;
+		VAR p: ANY;
+		BEGIN
+			p := list.Get(index); RETURN p(Variable);
+		END Get;
+
+		PROCEDURE Set*(index: SIZE; symbol: Variable);
+		BEGIN list.Set(index,symbol)
+		END Set;
+
+		PROCEDURE Remove*(i: SIZE);
+		BEGIN list.RemoveByIndex(i);
+		END Remove;
+
+	END Variables;
+
+
 	(**
 		<<TYPE name = declaredType>>
 		TypeDeclaration symbol represents a type declaration of the form TYPE name  = declaredType.
@@ -3458,12 +3495,19 @@ TYPE
 
 	DeclarationStatement*= OBJECT(Statement)
 	VAR 
-		variable-: Variable;
+		variables-: Variables;
+		initializers-: ExpressionList;
+		type-: Type;
 	
-		PROCEDURE & InitDeclarationStatement(position: Position; v: Variable; outer: Statement);
-		BEGIN	InitStatement(position,outer); SELF.variable := v;
+		PROCEDURE & InitDeclarationStatement(position: Position; outer: Statement);
+		BEGIN	InitStatement(position,outer); NEW(variables); NEW(initializers);
 		END InitDeclarationStatement;
-	
+		
+		PROCEDURE SetType*(t: Type);
+		BEGIN
+			type := t;
+		END SetType;
+		
 	END DeclarationStatement;
 
 	(** << call(...) >> **)
@@ -5789,10 +5833,10 @@ VAR
 		NEW( communication, position, op, left, right,outer );  RETURN communication
 	END NewCommunicationStatement;
 
-	PROCEDURE NewDeclarationStatement*(position: Position; variable: Variable; outer: Statement): DeclarationStatement;
+	PROCEDURE NewDeclarationStatement*(position: Position; outer: Statement): DeclarationStatement;
 	VAR declaration: DeclarationStatement;
 	BEGIN
-		NEW(declaration,position,variable,outer); RETURN declaration
+		NEW(declaration,position,outer); RETURN declaration
 	END NewDeclarationStatement;
 	
 	PROCEDURE NewProcedureCallStatement*(position: Position; ignore: BOOLEAN; call: Expression; outer: Statement): ProcedureCallStatement;

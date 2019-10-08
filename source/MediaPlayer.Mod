@@ -1597,20 +1597,7 @@ MediaPlayer.Step ~
 
 FfmpegCodecs.Install -f "WORK" ~
 
-MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI1.wmv" ~
-WMPlayer.Open "HIGHDIM:/Data/Sperm/IMSI1.wmv" ~
-MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI2.wmv" ~
-MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI3.wmv" ~
-MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI4.wmv" ~
-MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI5.wmv" ~
-MediaPlayer.Open "HIGHDIM:/Data/Sperm/IMSI6.wmv" ~
 
-WMPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_155655.mp4" ~
-MediaPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_155655.mp4" ~
-MediaPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_160050.mp4" ~
-MediaPlayer.Open "HIGHDIM:/Data/Sperm/ICSI_20190905/20190329_163128.mp4" ~
-
-MediaPlayer.Open "HIGHDIM:/Data/Sperm/CRYPTOZOOSPERMIA1.wmv" ~
 MediaPlayer.Close ~
 
 MediaPlayer.SetEofAction none ~

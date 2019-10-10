@@ -1561,7 +1561,7 @@ TYPE
 
 		PROCEDURE GetBaseRecord*():RecordType;
 		BEGIN
-			IF baseType = NIL THEN RETURN NIL; END;
+			IF (baseType = NIL) OR (baseType.resolved = NIL) THEN RETURN NIL; END;
 			IF baseType.resolved IS RecordType THEN
 				RETURN baseType.resolved(RecordType);
 			ELSIF baseType.resolved IS PointerType THEN
@@ -1964,7 +1964,7 @@ TYPE
 		BEGIN
 			SELF.original := original;
 		END SetOriginal;
-		
+
 		(* overwritten in designators *)
 		PROCEDURE SetRelatedRhs*(expression: Expression);
 		BEGIN
@@ -3097,7 +3097,7 @@ TYPE
 			preferRegister := FALSE;
 			inRegister := FALSE;
 			registerNumber := -1;
-			autoConvert := FALSE; 
+			autoConvert := FALSE;
 		END InitParameter;
 
 		PROCEDURE PreferRegister*(b: BOOLEAN);
@@ -3114,12 +3114,12 @@ TYPE
 		BEGIN
 			registerNumber := reg
 		END RegisterNumber;
-		
+
 		PROCEDURE SetAutoConvert*(auto: BOOLEAN);
 		BEGIN
 			autoConvert := auto;
 		END SetAutoConvert;
-		
+
 		PROCEDURE SetModifiers*(flag: Modifier);
 		BEGIN SELF.modifiers := flag;
 		END SetModifiers;
@@ -3494,20 +3494,20 @@ TYPE
 	END Statement;
 
 	DeclarationStatement*= OBJECT(Statement)
-	VAR 
+	VAR
 		variables-: Variables;
 		initializers-: ExpressionList;
 		type-: Type;
-	
+
 		PROCEDURE & InitDeclarationStatement(position: Position; outer: Statement);
 		BEGIN	InitStatement(position,outer); NEW(variables); NEW(initializers);
 		END InitDeclarationStatement;
-		
+
 		PROCEDURE SetType*(t: Type);
 		BEGIN
 			type := t;
 		END SetType;
-		
+
 	END DeclarationStatement;
 
 	(** << call(...) >> **)
@@ -5838,7 +5838,7 @@ VAR
 	BEGIN
 		NEW(declaration,position,outer); RETURN declaration
 	END NewDeclarationStatement;
-	
+
 	PROCEDURE NewProcedureCallStatement*(position: Position; ignore: BOOLEAN; call: Expression; outer: Statement): ProcedureCallStatement;
 	VAR caller: ProcedureCallStatement;
 	BEGIN

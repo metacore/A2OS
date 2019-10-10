@@ -3629,7 +3629,11 @@ TYPE
 
 							ASSERT(indexDesignator # NIL);
 							AppendMathIndex(expression.position, indexDesignator, expression, type(SyntaxTree.MathArrayType));
-							IF type(SyntaxTree.MathArrayType).form # SyntaxTree.Tensor THEN type := type(SyntaxTree.MathArrayType).arrayBase.resolved END;
+							IF type(SyntaxTree.MathArrayType).arrayBase = NIL THEN
+								Error(bracketDesignator.position,"indexing math array without element type");
+							ELSIF type(SyntaxTree.MathArrayType).form # SyntaxTree.Tensor THEN
+								type := type(SyntaxTree.MathArrayType).arrayBase.resolved;
+							END;
 							INC(i)
 						ELSE
 							Error(expression.position,"indexing over non-array type");

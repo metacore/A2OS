@@ -935,6 +935,7 @@ TYPE
 						RETURN NIL;
 					END;
 				END;
+				IF (audioDecoder=NIL)&(videoDecoder=NIL) THEN res := NoDecoders; END; 
 			ELSE
 				IF Trace * TraceOpen # {} THEN KernelLog.String("MediaPlayer: Demux found: "); KernelLog.String(ext); KernelLog.Ln; END;
 				demux.Open(in, res);
@@ -1447,7 +1448,7 @@ TYPE
 				callUpdate := (update # NIL) & ((state = Finished) OR (nextState # NoRequest) OR (temp - lastUpdate >= UpdateInterval));
 				IF callUpdate THEN lastUpdate := temp; update(state, current.pos, current.maxFrames, currentTime, current.maxTime); END;
 			ELSE
-				IF update # NIL THEN update(state, 0, 0, 0, 0); END;
+				IF (update # NIL)&(state<Closed) THEN update(state, 0, 0, 0, 0); END;
 			END;
 		END EvaluateState;
 
@@ -1493,7 +1494,7 @@ BEGIN {EXCLUSIVE}
 END Open;
 
 PROCEDURE Pause*(context : Commands.Context); (** <filename> ~ *)
-VAR filename, msg : ARRAY 256 OF CHAR; res : INTEGER;
+VAR filename: ARRAY 256 OF CHAR;
 BEGIN {EXCLUSIVE}
 	context.arg.String(filename);
 	IF mplayer # NIL THEN 
@@ -1505,7 +1506,6 @@ BEGIN {EXCLUSIVE}
 END Pause;
 
 PROCEDURE Step*(context : Commands.Context); (** <filename> ~ *)
-VAR filename, msg : ARRAY 256 OF CHAR; res : INTEGER;
 BEGIN {EXCLUSIVE}
 	IF mplayer # NIL THEN 
 		mplayer.Step;
@@ -1585,6 +1585,7 @@ System.Free WMPlayer MediaPlayer DivXDecoder DivXHelper DivXTypes AVI~
 PC.Compile AVI.Mod DivXTypes.Mod DivXHelper.Mod DivXDecoder.Mod MediaPlayer.Mod WMPlayer.Mod~
 
 System.Free WMPlayer MediaPlayer ~
+System.FreeDownTo MediaPlayer ~
 
 WMPlayer.Open flags.avi~
 

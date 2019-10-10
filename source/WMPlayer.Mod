@@ -1,7 +1,7 @@
 MODULE WMPlayer; (** AUTHOR "PL"; PURPOSE "MediaPlayer GUI"; *)
 
 IMPORT
-	Strings, Modules, Commands, Files, Texts, TextUtilities,
+	Strings, Modules, Commands, Files, Texts, TextUtilities,Models,
 	WMGraphics, WMMessages, WMComponents, WMStandardComponents, WMWindowManager, WMTextView, WMDialogs,
 	MediaPlayer;
 
@@ -189,22 +189,24 @@ TYPE
 	VAR
 		playBtn, stopBtn, pauseBtn, ffBtn, rewBtn, infoBtn, stepBtn : WMStandardComponents.Button;
 		search: WMStandardComponents.Scrollbar;
-
+		
+		toolbar* : WMStandardComponents.Panel;
 		timeLbl*, totTimeLbl*, frameLbl*, maxFrameLbl*: WMStandardComponents.Label;
 
 		player* : MediaPlayer.Player;
 		stepSize : SIGNED32;
 
 		(* Info about currently loaded content *)
-		filename : Files.FileName;
+		filename- : Files.FileName;
 		setupData* : MediaPlayer.Setup;
 		infos* : InfoWindow;
-
+		
+		res* : INTEGER; 
 		windowInfo* : WMWindowManager.WindowInfo;
 
 		PROCEDURE CreateForm*(): WMComponents.VisualComponent;
 		VAR
-			panel, toolbar : WMStandardComponents.Panel;
+			panel : WMStandardComponents.Panel;
 			label: WMStandardComponents.Label;
 		BEGIN
 			NEW(panel); panel.bounds.SetExtents(DefaultWidth, DefaultHeight); panel.fillColor.Set(SIGNED32(0FFFFFFFFH)); panel.takesFocus.Set(TRUE);
@@ -259,7 +261,7 @@ TYPE
 			panel.AddContent(label); label.caption.SetAOC("Frame: ");
 
 			NEW(frameLbl); frameLbl.bounds.SetWidth(100); frameLbl.alignment.Set(WMComponents.AlignLeft);
-			panel.AddContent(frameLbl); frameLbl.caption.SetAOC("0");
+			panel.AddContent(frameLbl); frameLbl.model.Set(Models.GenInteger()(Models.Model)); (*frameLbl.caption.SetAOC("0");*)
 
 			NEW(label); label.bounds.SetWidth(100); label.alignment.Set(WMComponents.AlignLeft);
 			panel.AddContent(label); label.caption.SetAOC("Total Frames: ");
@@ -313,7 +315,7 @@ TYPE
 		END GenerateControl;
 
 		PROCEDURE Open*(CONST fileName : ARRAY OF CHAR);
-		VAR res : INTEGER; msg : ARRAY 256 OF CHAR;
+		VAR msg : ARRAY 256 OF CHAR;
 		BEGIN
 			COPY(fileName, filename);
 			player.Open(filename, msg, res);
@@ -390,12 +392,8 @@ TYPE
 			IF displayTime>0 THEN 
 				ConvertTimeToStr(displayTime * 100, temp);totTimeLbl.caption.SetAOC(temp);
 			END;
-			Strings.IntToStr(pos,temp);
-			frameLbl.caption.SetAOC(temp);
-			IF maxpos>0 THEN 
-				Strings.IntToStr(maxpos,temp);maxFrameLbl.caption.SetAOC(temp);
-			END;
-			
+			frameLbl.model.Get()(Models.Integer).Set(pos);
+			IF maxpos>0 THEN Strings.IntToStr(maxpos,temp); maxFrameLbl.caption.SetAOC(temp) END;
 			IF (setupData # NIL) & (setupData.hasVideo) THEN
 				search.pos.Set(pos);
 			ELSE
